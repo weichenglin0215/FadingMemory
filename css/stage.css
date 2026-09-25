@@ -1,0 +1,151 @@
+/* ═══════════════════════════════════════════════════════════════════
+   stage.css — 2D＋3D 混合舞台的版面與觸控規範
+   ───────────────────────────────────────────────────────────────────
+   層級（由下往上）：
+     body（裱框底色）
+       #world  3D 畫布層：由 stage.js 擺在與 #stage 相同的螢幕矩形，
+               但「不」被 CSS transform 縮放，畫布用真實解析度繪製。
+       #stage  2D 介面層：固定 500×850 邏輯 px，transform: scale() 整體縮放。
+               疊在 3D 上時加 .stage--overlay：本身不吃觸控，
+               只有標了 .hit 的元件（搖桿、按鈕、對話框）才吃觸控，
+               其他地方的點擊會穿透到 3D 畫布。
+   規則：
+     1. 舞台內一律用 px，不用 rem / em / vw / vh。
+     2. 根元素不捲動、不回彈；需要捲動的區塊自己設 overflow。
+     3. 全站禁止瀏覽器縮放手勢（雙指、點兩下）。只有搖桿與 3D 畫布
+        用 touch-action: none（它們要自己處理拖曳）。
+     4. 不要在任何元素寫 touch-action: auto，那會讓該元素重新能縮放整頁。
+   ═══════════════════════════════════════════════════════════════════ */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* iOS 橫向時會自動放大文字；Android 部分瀏覽器有文字自動放大 */
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+/* 只允許捲動，不允許縮放（含點兩下放大）。寫在 * 上，
+   內層捲動區也會繼承到，避免在捲動區裡點兩下仍能放大。 */
+* {
+    touch-action: pan-x pan-y;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+    background: var(--c-frame);
+}
+
+/* body 必須是定位基準：縮放套上之前，未縮放的 500×850 舞台
+   不會把頁面撐得比手機螢幕寬（iOS 會因此放寬禁止縮放）。 */
+body {
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+}
+
+button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: none;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+/* ─── 2D 介面層 ─── */
+#stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 500px;
+    height: 850px;
+    transform-origin: 0 0;
+    overflow: hidden;
+    z-index: 2;
+    background: var(--c-paper);
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+#stage.stage--overlay {
+    background: transparent;
+    pointer-events: none;
+}
+
+#stage.stage--overlay .hit {
+    pointer-events: auto;
+}
+
+/* ─── 3D 畫布層 ─── */
+#world {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 500px;
+    height: 850px;
+    z-index: 1;
+    overflow: hidden;
+    background: var(--c-paper);
+    touch-action: none;
+}
+
+#world canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    outline: none;
+    touch-action: none;
+}
+
+/* 讀取 safe-area（瀏海、Home 條）用的探針 */
+.sa-probe {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    visibility: hidden;
+    pointer-events: none;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+}
+
+/* 縮放算好之前先藏起來，避免閃一下未縮放的舞台 */
+html:not(.stage-ready) #stage,
+html:not(.stage-ready) #world {
+    visibility: hidden;
+}
+
+/* 網址加 ?debug 會顯示縮放資訊 */
+.stage-debug {
+    position: fixed;
+    right: 4px;
+    top: 4px;
+    z-index: 99;
+    padding: 4px 6px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    font: 12px/1.35 monospace;
+    white-space: pre;
+    pointer-events: none;
+}

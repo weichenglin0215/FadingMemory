@@ -1,0 +1,449 @@
+/* ═══════════════════════════════════════════════════════════════════
+   theme.css — 整體風格變數 ＋ 共用元件
+   ───────────────────────────────────────────────────────────────────
+   ★ 要調整介面風格，只需要改最上面 :root 的變數。
+     所有 class 都只取用這些變數，不寫死顏色／字級／圓角。
+   ★ 單位一律是「邏輯 px」：畫面固定 500 × 850，由 stage.js 整體縮放，
+     所以不受手機系統字體大小影響，手機與電腦看到的比例一致。
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+    /* ── 字體 ───────────────────────────────────────────── */
+    --font-ui: "Noto Sans TC", "PingFang TC", "Heiti TC", "Microsoft JhengHei", sans-serif;
+    --font-note: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+    --fw-regular: 500;
+    --fw-bold: 700;
+    --fw-black: 900;
+
+    /* ── 字級（基本刻度）──────────────────────────────── */
+    --fs-xs: 22px;
+    --fs-sm: 26px;
+    --fs-md: 30px;
+    --fs-lg: 34px;
+    --fs-xl: 40px;
+    --fs-xxl: 58px;
+
+    /* ── 字級（用途）：自動縮字的上限／下限 ──────────── */
+    --fs-bar-title: var(--fs-lg);
+    --fs-question: var(--fs-xl);
+    --fs-question-min: 26px;
+    --fs-option: var(--fs-lg);
+    --fs-option-min: 24px;
+    --fs-note: var(--fs-lg);
+    --fs-note-min: 26px;
+    --fs-dialog: var(--fs-md);
+
+    --lh-tight: 1.2;
+    --lh-body: 1.4;
+    --lh-note: 1.55;
+
+    /* ── 顏色：宣紙底 ＋ 黃／綠／藍 ＋ 少量橘 ─────────── */
+    --c-frame: #EFE3B8;         /* 舞台外的裱框色 */
+    --c-paper: #FBF3D9;         /* 宣紙底 */
+    --c-card: #FFFDF3;          /* 卡片、紙條 */
+    --c-card-alt: #FFF6D8;      /* 選項、關卡卡片 */
+    --c-ink: #4A3B1E;           /* 主文字（暖棕） */
+    --c-ink-soft: #7E6A3C;      /* 次要文字 */
+    --c-on-accent: #FFFFFF;     /* 彩色按鈕上的字 */
+
+    --c-yellow: #E0AA25;
+    --c-green: #4C9A5B;
+    --c-blue: #3E86C4;
+    --c-orange: #E8822E;
+
+    --c-yellow-soft: rgba(224, 170, 37, 0.18);
+    --c-green-soft: rgba(76, 154, 91, 0.16);
+    --c-blue-soft: rgba(62, 134, 196, 0.15);
+    --c-orange-soft: rgba(232, 130, 46, 0.16);
+
+    --c-ok: var(--c-green);
+    --c-ok-soft: var(--c-green-soft);
+    --c-bad: #D46F3C;           /* 答錯：暖橘紅，不用刺眼的紅 */
+    --c-bad-soft: rgba(212, 111, 60, 0.16);
+
+    /* ── 邊框／圓角／陰影 ─────────────────────────────── */
+    --bd-w: 2px;
+    --bd-c: #E3D19A;
+    --bd: var(--bd-w) solid var(--bd-c);
+    --r-sm: 10px;
+    --r-md: 16px;
+    --r-lg: 22px;
+    --r-pill: 999px;
+    --shadow-card: 0 3px 10px rgba(74, 59, 30, 0.08);
+    --shadow-pop: 0 10px 30px rgba(74, 59, 30, 0.22);
+
+    /* ── 間距（刻意壓小，讓一個畫面裝得下）───────────── */
+    --sp-1: 4px;
+    --sp-2: 8px;
+    --sp-3: 12px;
+    --sp-4: 16px;
+    --sp-5: 24px;
+    --pad-screen: 14px;
+    --pad-card: 12px;
+
+    /* ── 按鈕 ─────────────────────────────────────────── */
+    --btn-h: 84px;
+    --btn-h-sm: 68px;
+    --btn-r: var(--r-md);
+    --btn-fs: var(--fs-md);
+    --btn-fw: var(--fw-bold);
+
+    --btn-primary-bg: linear-gradient(135deg, #F3B24F 0%, var(--c-orange) 100%);
+    --btn-primary-fg: var(--c-on-accent);
+    --btn-primary-shadow: 0 4px 14px rgba(232, 130, 46, 0.35);
+
+    --btn-go-bg: linear-gradient(135deg, #6CBD79 0%, var(--c-green) 100%);
+    --btn-go-fg: var(--c-on-accent);
+    --btn-go-shadow: 0 4px 14px rgba(76, 154, 91, 0.32);
+
+    --btn-sky-bg: linear-gradient(135deg, #71B0E2 0%, var(--c-blue) 100%);
+    --btn-sky-fg: var(--c-on-accent);
+    --btn-sky-shadow: 0 4px 14px rgba(62, 134, 196, 0.3);
+
+    --btn-line-bg: var(--c-card);
+    --btn-line-fg: var(--c-blue);
+    --btn-line-bd: var(--bd-w) solid var(--c-blue);
+
+    /* ── 答案選項 ─────────────────────────────────────── */
+    --opt-h: 96px;
+    --opt-bg: var(--c-card-alt);
+    --opt-bd: var(--bd);
+    --opt-badge: 54px;
+
+    /* ── 版面 ─────────────────────────────────────────── */
+    --bar-h: 78px;
+
+    /* ── 正式模式 HUD ─────────────────────────────────── */
+    --hud-edge: 16px;
+    --hud-chip-h: 60px;
+    --joy-size: 200px;
+    --joy-knob: 90px;
+    --act-size: 150px;
+}
+
+/* ═══ 基本 ═══ */
+body {
+    font-family: var(--font-ui);
+    font-weight: var(--fw-regular);
+    color: var(--c-ink);
+}
+
+.icon {
+    width: 1em;
+    height: 1em;
+    flex: 0 0 auto;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* ═══ 按鈕 ═══ */
+.btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+    width: 100%;
+    height: var(--btn-h);
+    padding: 0 var(--sp-3);
+    border: none;
+    border-radius: var(--btn-r);
+    font-family: var(--font-ui);
+    font-size: var(--btn-fs);
+    font-weight: var(--btn-fw);
+    line-height: var(--lh-tight);
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.1s ease, filter 0.15s ease, opacity 0.15s ease;
+}
+
+.btn:active {
+    transform: scale(0.97);
+}
+
+.btn:focus-visible,
+.opt:focus-visible,
+.lv:focus-visible {
+    outline: 4px solid var(--c-blue);
+    outline-offset: 3px;
+}
+
+.btn[disabled] {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.btn--primary {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-fg);
+    box-shadow: var(--btn-primary-shadow);
+}
+
+.btn--go {
+    background: var(--btn-go-bg);
+    color: var(--btn-go-fg);
+    box-shadow: var(--btn-go-shadow);
+}
+
+.btn--sky {
+    background: var(--btn-sky-bg);
+    color: var(--btn-sky-fg);
+    box-shadow: var(--btn-sky-shadow);
+}
+
+.btn--line {
+    background: var(--btn-line-bg);
+    color: var(--btn-line-fg);
+    border: var(--btn-line-bd);
+}
+
+.btn--sm {
+    height: var(--btn-h-sm);
+}
+
+.row {
+    display: flex;
+    gap: var(--sp-3);
+}
+
+.row > * {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+/* ═══ 卡片／標籤 ═══ */
+.card {
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+}
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-1);
+    height: 44px;
+    padding: 0 var(--sp-4);
+    border-radius: var(--r-pill);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    white-space: nowrap;
+}
+
+.pill--blue {
+    color: var(--c-blue);
+    background: var(--c-blue-soft);
+}
+
+.pill--yellow {
+    color: #9A6D0B;
+    background: var(--c-yellow-soft);
+}
+
+.pill--green {
+    color: var(--c-green);
+    background: var(--c-green-soft);
+}
+
+.pill--orange {
+    color: var(--c-orange);
+    background: var(--c-orange-soft);
+}
+
+/* ═══ 上方標題列 ═══ */
+.bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: var(--bar-h);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: 0 var(--sp-3);
+    background: var(--c-card);
+    border-bottom: var(--bd);
+    z-index: 5;
+}
+
+.bar__back {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-1);
+    height: 58px;
+    padding: 0 var(--sp-3) 0 var(--sp-2);
+    border-radius: var(--r-md);
+    border: var(--btn-line-bd);
+    background: var(--btn-line-bg);
+    color: var(--btn-line-fg);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+.bar__title {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: center;
+    font-size: var(--fs-bar-title);
+    font-weight: var(--fw-black);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bar__meta {
+    flex: 0 0 auto;
+    min-width: 96px;
+    text-align: right;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    font-variant-numeric: tabular-nums;
+}
+
+.bar__progress {
+    position: absolute;
+    left: 0;
+    bottom: calc(-1 * var(--bd-w));
+    height: 6px;
+    width: 0;
+    background: linear-gradient(90deg, var(--c-yellow), var(--c-green));
+    transition: width 0.25s ease;
+}
+
+/* ═══ 畫面容器（標題列下方的一整塊，不捲動）═══ */
+.screen {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: var(--bar-h);
+    bottom: 0;
+    padding: var(--pad-screen);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+    overflow: hidden;
+}
+
+.screen--full {
+    top: 0;
+}
+
+/* 自動縮字的容器：高度由版面決定，字太多就縮字，不捲動 */
+.fit {
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* ═══ 答案選項 ═══ */
+.opt {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    width: 100%;
+    height: var(--opt-h);
+    padding: 0 var(--sp-3);
+    background: var(--opt-bg);
+    border: var(--opt-bd);
+    border-radius: var(--r-md);
+    color: var(--c-ink);
+    font-family: var(--font-ui);
+    font-size: var(--fs-option);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-tight);
+    text-align: left;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.opt:active {
+    transform: scale(0.98);
+}
+
+.opt__badge {
+    flex: 0 0 var(--opt-badge);
+    width: var(--opt-badge);
+    height: var(--opt-badge);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-yellow-soft);
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+}
+
+.opt__text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.opt.is-ok {
+    background: var(--c-ok-soft);
+    border-color: var(--c-ok);
+}
+
+.opt.is-ok .opt__badge {
+    background: var(--c-ok);
+    color: var(--c-on-accent);
+}
+
+.opt.is-bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad);
+}
+
+.opt.is-bad .opt__badge {
+    background: var(--c-bad);
+    color: var(--c-on-accent);
+}
+
+.opt[disabled] {
+    cursor: default;
+}
+
+/* ═══ 紙條 ═══ */
+.note {
+    position: relative;
+    background: var(--c-card);
+    border: var(--bd);
+    border-left: 8px solid var(--c-orange);
+    border-radius: var(--r-sm) var(--r-lg) var(--r-lg) var(--r-sm);
+    box-shadow: var(--shadow-card);
+    padding: var(--sp-4) var(--sp-4) var(--sp-4) var(--sp-5);
+    font-family: var(--font-note);
+    font-size: var(--fs-note);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-note);
+    color: var(--c-ink);
+    transition: opacity 0.7s ease, filter 0.7s ease, transform 0.7s ease;
+}
+
+.note p + p {
+    margin-top: var(--sp-2);
+}
+
+.note.is-burning {
+    opacity: 0;
+    filter: blur(4px) brightness(1.35) saturate(1.5);
+    transform: translateY(-18px) scale(1.04) rotate(1.5deg);
+}
+
+.hint {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    text-align: center;
+    line-height: var(--lh-body);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .note,
+    .btn,
+    .opt,
+    .bar__progress {
+        transition: none;
+    }
+}

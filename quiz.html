@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>回家的路 — 測試模式</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/stage.css">
+    <link rel="stylesheet" href="css/quiz.css">
+</head>
+
+<body>
+    <div id="stage">
+        <div class="bar">
+            <button class="bar__back" id="bar-back"></button>
+            <div class="bar__title" id="bar-title">測試模式</div>
+            <div class="bar__meta" id="bar-meta"></div>
+            <div class="bar__progress" id="bar-progress"></div>
+        </div>
+        <div class="screen" id="screen"></div>
+        <div class="confirm" id="confirm" hidden></div>
+    </div>
+
+    <script src="js/stage.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/quiz_data.js"></script>
+    <script src="js/quiz.js"></script>
+</body>
+
+</html>

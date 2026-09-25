@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <!--
+    ★ 關鍵 meta：
+    · initial-scale=1 → 預設不縮放
+    · user-scalable=no → 防止手機雙指縮放（遊戲通常需要）
+    · viewport-fit=cover → iPhone 瀏海/圓角安全區支援
+  -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0,
+                 maximum-scale=1.0, user-scalable=no,
+                 viewport-fit=cover">
+    <title>滿版遊戲 UI 範例</title>
+
+    <!-- Google Font（可替換） -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- 外部樣式表 -->
+    <link rel="stylesheet" href="screen_adaptive.css">
+</head>
+
+<body>
+
+    <!-- 舞台容器：邏輯尺寸 500×850，JS 負責縮放置中 -->
+    <div id="stage">
+
+        <!-- 標題欄 -->
+        <div id="header">
+            <div>
+                <div class="logo">⬡ ARCANE</div>
+                <div class="subtitle">Adventure System v2.0</div>
+            </div>
+            <div id="scale-info">
+                <div id="info-scale">scale —</div>
+                <div id="info-size">— × —</div>
+            </div>
+        </div>
+
+        <!-- 主內容區 -->
+        <div id="content">
+
+            <!-- 下拉式選單 -->
+            <div class="form-group">
+                <label for="sel-class">選擇角色職業</label>
+                <select class="field" id="sel-class">
+                    <option value="">— 請選擇 —</option>
+                    <option value="warrior">⚔️ 戰士（Warrior）</option>
+                    <option value="mage">🔮 法師（Mage）</option>
+                    <option value="rogue">🗡️ 盜賊（Rogue）</option>
+                    <option value="healer">✨ 治療師（Healer）</option>
+                </select>
+            </div>
+
+            <!-- 單行輸入 -->
+            <div class="form-group">
+                <label for="inp-name">角色名稱</label>
+                <input type="text" class="field" id="inp-name" placeholder="輸入你的角色名稱…" maxlength="20">
+            </div>
+
+            <!-- 多行輸入 -->
+            <div class="form-group">
+                <label for="inp-story">角色背景故事</label>
+                <textarea class="field" id="inp-story" placeholder="描述你的角色來歷、個性、特殊技能…&#10;（可多行輸入）"></textarea>
+            </div>
+
+            <!-- 說明用 Label -->
+            <div class="info-label">
+                <strong>💡 提示：</strong>職業選擇將決定初始屬性分配。
+                戰士擅長近戰防禦，法師擅長範圍魔法，盜賊擅長速攻與暗殺，治療師則能強化隊伍生存。
+            </div>
+
+            <!-- 按鈕列 -->
+            <div class="btn-row">
+                <button class="btn btn-secondary" onclick="onReset()">重置</button>
+                <button class="btn btn-primary" onclick="onSubmit()">確認建立 →</button>
+            </div>
+
+        </div><!-- /content -->
+
+        <!-- 狀態欄 -->
+        <div id="statusbar">
+            <span id="status-text">等待輸入…</span>
+            <div class="status-dot"></div>
+        </div>
+
+    </div><!-- /stage -->
+
+    <!-- 外部腳本（defer：DOM 解析完成後執行） -->
+    <script src="screen_adaptive.js" defer></script>
+
+</body>
+
+</html>

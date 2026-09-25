@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>回家的路 — 正式模式</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/stage.css">
+    <link rel="stylesheet" href="css/world.css">
+</head>
+
+<body>
+    <!-- 3D 畫布層（不被 CSS 縮放，stage.js 負責對齊） -->
+    <div id="world"></div>
+
+    <!-- 2D 介面層（500×850，疊在 3D 上；只有 .hit 元件吃觸控） -->
+    <div id="stage" class="stage--overlay">
+        <div id="hud"></div>
+    </div>
+
+    <!-- 3D 引擎：Three.js r158（傳統 script 版，雙擊 HTML 開啟也能用）；主 CDN 失敗改用備援 -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+    <script>
+        window.THREE || document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.158.0/three.min.js"><\/script>');
+    </script>
+
+    <script src="js/stage.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/world/hud.js"></script>
+    <script src="js/world/kit.js"></script>
+    <script src="js/world/core.js"></script>
+    <script src="js/world/scenes.js"></script>
+    <script src="js/world/story.js"></script>
+</body>
+
+</html>

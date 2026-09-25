@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>回家的路 — 記憶力練習</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/stage.css">
+    <link rel="stylesheet" href="css/menu.css">
+</head>
+
+<body>
+    <div id="stage">
+        <div class="screen screen--full menu">
+            <div class="menu__head">
+                <div class="menu__logo" id="menu-logo"></div>
+                <h1 class="menu__title">回家的路</h1>
+                <p class="menu__sub">讀一次紙條，憑記憶平安回家</p>
+            </div>
+
+            <a class="mode mode--test" href="quiz.html">
+                <span class="mode__icon" id="icon-test"></span>
+                <span class="mode__text">
+                    <span class="mode__name">測試模式</span>
+                    <span class="mode__desc">純 2D 題目・8 關</span>
+                </span>
+            </a>
+
+            <a class="mode mode--world" href="world.html">
+                <span class="mode__icon" id="icon-world"></span>
+                <span class="mode__text">
+                    <span class="mode__name">正式模式</span>
+                    <span class="mode__desc">3D 場景＋2D 選單</span>
+                </span>
+            </a>
+
+            <p class="menu__foot">記憶力練習原型・非醫療診斷工具</p>
+        </div>
+    </div>
+
+    <script src="js/stage.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            Stage.init();
+            document.getElementById('menu-logo').innerHTML = UI.art('home', 'menu__art');
+            document.getElementById('icon-test').innerHTML = UI.icon('list');
+            document.getElementById('icon-world').innerHTML = UI.icon('cube');
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,392 @@
+/* ═══════════════════════════════════════════════════════════════════
+   world.css — 正式模式的 2D HUD（疊在 3D 畫面上）
+   #stage 有 .stage--overlay：預設不吃觸控，
+   只有加了 .hit 的元件（搖桿、按鈕、對話框）會接收點擊，
+   其他位置的點擊會穿透到下層 3D 畫布（用來點選物件）。
+   ═══════════════════════════════════════════════════════════════════ */
+
+#hud {
+    position: absolute;
+    inset: 0;
+}
+
+/* ─── 上方：選單鈕、地點＋時間、隨身物品 ─── */
+.hud-top {
+    position: absolute;
+    left: var(--hud-edge);
+    right: var(--hud-edge);
+    top: var(--hud-edge);
+    height: var(--hud-chip-h);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+}
+
+.hud-menu {
+    flex: 0 0 var(--hud-chip-h);
+    height: var(--hud-chip-h);
+    border-radius: var(--r-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 253, 243, 0.92);
+    border: var(--bd);
+    color: var(--c-ink);
+    font-size: 38px;
+    box-shadow: var(--shadow-card);
+}
+
+.hud-chip {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: var(--hud-chip-h);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+    padding: 0 var(--sp-3);
+    border-radius: var(--r-pill);
+    background: rgba(255, 253, 243, 0.92);
+    border: var(--bd);
+    box-shadow: var(--shadow-card);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.hud-chip__time {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-1);
+    color: var(--c-blue);
+    font-variant-numeric: tabular-nums;
+}
+
+.hud-inv {
+    flex: 0 0 auto;
+    display: flex;
+    gap: var(--sp-1);
+}
+
+.hud-inv__item {
+    width: var(--hud-chip-h);
+    height: var(--hud-chip-h);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-card);
+    border: var(--bd-w) solid var(--c-green);
+    color: var(--c-green);
+    font-size: 34px;
+    box-shadow: var(--shadow-card);
+    animation: pop-in 0.4s ease;
+}
+
+@keyframes pop-in {
+    0% { transform: scale(0.2); }
+    70% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
+/* ─── 提示訊息／廣播 ─── */
+.hud-toast {
+    position: absolute;
+    left: var(--hud-edge);
+    right: var(--hud-edge);
+    top: calc(var(--hud-edge) + var(--hud-chip-h) + var(--sp-3));
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.hud-toast.is-hidden {
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+.hud-toast__box {
+    max-width: 100%;
+    padding: var(--sp-3) var(--sp-4);
+    border-radius: var(--r-md);
+    background: rgba(74, 59, 30, 0.86);
+    color: #FFF8E6;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-body);
+    text-align: center;
+}
+
+.hud-banner {
+    position: absolute;
+    left: var(--hud-edge);
+    right: var(--hud-edge);
+    top: calc(var(--hud-edge) + var(--hud-chip-h) + var(--sp-3));
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    min-height: 92px;
+    padding: var(--sp-2) var(--sp-4);
+    border-radius: var(--r-lg);
+    background: var(--btn-sky-bg);
+    color: var(--c-on-accent);
+    box-shadow: var(--shadow-pop);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    line-height: var(--lh-tight);
+}
+
+.hud-banner .icon {
+    font-size: 52px;
+}
+
+/* ─── 虛擬搖桿（左下）─── */
+.joy {
+    position: absolute;
+    left: var(--hud-edge);
+    bottom: var(--hud-edge);
+    width: var(--joy-size);
+    height: var(--joy-size);
+    border-radius: 50%;
+    touch-action: none;
+}
+
+.joy__base {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(255, 253, 243, 0.55);
+    border: 3px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 0 6px 20px rgba(74, 59, 30, 0.2), inset 0 0 24px rgba(62, 134, 196, 0.18);
+}
+
+.joy__arrows {
+    position: absolute;
+    inset: 0;
+    color: rgba(74, 59, 30, 0.5);
+    font-size: 40px;
+}
+
+.joy__arrows .icon {
+    position: absolute;
+}
+
+.joy__knob {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--joy-knob);
+    height: var(--joy-knob);
+    margin: calc(var(--joy-knob) / -2) 0 0 calc(var(--joy-knob) / -2);
+    border-radius: 50%;
+    background: var(--btn-sky-bg);
+    border: 4px solid #fff;
+    box-shadow: var(--btn-sky-shadow);
+    will-change: transform;
+}
+
+.joy.is-active .joy__base {
+    background: rgba(255, 253, 243, 0.75);
+}
+
+/* ─── 互動鍵（右下）─── */
+.act {
+    position: absolute;
+    right: var(--hud-edge);
+    bottom: calc(var(--hud-edge) + 24px);
+    width: var(--act-size);
+    height: var(--act-size);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-fg);
+    border: 4px solid #fff;
+    box-shadow: var(--btn-primary-shadow);
+    animation: act-breathe 1.6s ease-in-out infinite;
+}
+
+.act .icon {
+    font-size: 50px;
+}
+
+.act__label {
+    max-width: 124px;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    line-height: 1.1;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+@keyframes act-breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* ─── 對話框 ─── */
+.dlg {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: var(--sp-3);
+    background: rgba(74, 59, 30, 0.28);
+}
+
+.dlg--center {
+    align-items: center;
+}
+
+.dlg__card {
+    width: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+    padding: var(--sp-4);
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-pop);
+    animation: dlg-in 0.22s ease;
+}
+
+@keyframes dlg-in {
+    from { transform: translateY(24px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+}
+
+.dlg__head {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+}
+
+.dlg__art {
+    flex: 0 0 96px;
+    height: 96px;
+}
+
+.dlg__art svg {
+    width: 100%;
+    height: 100%;
+}
+
+.dlg__title {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    line-height: var(--lh-tight);
+}
+
+.dlg__text {
+    font-size: var(--fs-dialog);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-body);
+    white-space: pre-line;
+}
+
+.dlg__choices {
+    display: grid;
+    gap: var(--sp-3);
+}
+
+.dlg__choices--2 {
+    grid-template-columns: 1fr 1fr;
+}
+
+.dlg__choices--3 {
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+.dlg__choices .btn {
+    min-width: 0;
+}
+
+.btn--big {
+    height: 104px;
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+/* 紙條（全螢幕） */
+.dlg--note .dlg__card {
+    height: 100%;
+}
+
+.dlg--note .note {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.tone-ok {
+    color: var(--c-green);
+}
+
+.tone-bad {
+    color: var(--c-bad);
+}
+
+.tone-blue {
+    color: var(--c-blue);
+}
+
+/* ─── 轉場淡出淡入 ─── */
+.fade {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    background: var(--c-paper);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+}
+
+.fade.is-on {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.fade__text {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 46%;
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+}
+
+/* ─── 載入／錯誤 ─── */
+.hud-loading {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-4);
+    padding: var(--sp-5);
+    background: var(--c-paper);
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    white-space: pre-line;
+}
+
+.hud-loading__art {
+    width: 180px;
+    height: 180px;
+    animation: act-breathe 1.4s ease-in-out infinite;
+}

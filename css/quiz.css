@@ -1,0 +1,383 @@
+/* ═══ quiz.css — 測試模式（純 2D）版面：每個畫面都不需要上下捲動 ═══ */
+
+/* ─── 關卡列表：8 張卡片平均分配整個高度 ─── */
+.lv-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+}
+
+.lv {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    padding: 0 var(--sp-3);
+    background: var(--c-card-alt);
+    border: var(--bd);
+    border-radius: var(--r-md);
+    text-align: left;
+    transition: transform 0.1s ease;
+}
+
+.lv:active {
+    transform: scale(0.98);
+}
+
+.lv__num {
+    flex: 0 0 58px;
+    height: 58px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-orange);
+    color: var(--c-on-accent);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+}
+
+.lv__main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.lv__name {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    line-height: 1.15;
+}
+
+.lv__tag {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lv__side {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    line-height: 1.2;
+}
+
+.lv__count {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    color: var(--c-blue);
+}
+
+.lv__best {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--c-green);
+}
+
+/* ─── 紙條 ─── */
+.note-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.note--page {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* ─── 題目 ─── */
+.q-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-2);
+}
+
+.q-text {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--sp-2);
+}
+
+.q-text__inner {
+    width: 100%;
+    font-size: var(--fs-question);
+    font-weight: var(--fw-black);
+    line-height: 1.3;
+    text-align: center;
+}
+
+.q-opts {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+}
+
+/* ─── 情境更新（天氣）─── */
+.event {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-3);
+    padding: var(--sp-4);
+    background: var(--c-blue-soft);
+    border: var(--bd-w) dashed var(--c-blue);
+    border-radius: var(--r-lg);
+    text-align: center;
+}
+
+.event__art {
+    width: 220px;
+    height: 220px;
+}
+
+.event__title {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-blue);
+}
+
+.event__text {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-body);
+}
+
+/* ─── 結果 ─── */
+.res-top {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    padding: var(--sp-2) var(--sp-3);
+}
+
+.ring {
+    position: relative;
+    flex: 0 0 176px;
+    height: 176px;
+}
+
+.ring svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.ring__num {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.1;
+}
+
+.ring__pct {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.ring__frac {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+.res-msg {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+}
+
+.res-msg__title {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    line-height: var(--lh-tight);
+}
+
+.res-msg__stars {
+    display: flex;
+    gap: var(--sp-1);
+    font-size: 44px;
+    color: var(--c-yellow);
+}
+
+.res-msg__stars .icon {
+    fill: currentColor;
+}
+
+.res-msg__stars .off {
+    color: var(--bd-c);
+}
+
+.res-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: minmax(0, 76px);
+    align-content: start;
+    gap: var(--sp-2);
+}
+
+.dom {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--sp-1);
+    padding: 0 var(--sp-3);
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-md);
+}
+
+.dom__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    line-height: 1.2;
+}
+
+.dom__frac {
+    font-weight: var(--fw-black);
+    font-variant-numeric: tabular-nums;
+}
+
+.dom__bar {
+    height: 8px;
+    border-radius: var(--r-pill);
+    background: var(--c-yellow-soft);
+    overflow: hidden;
+}
+
+.dom__fill {
+    height: 100%;
+    border-radius: var(--r-pill);
+    background: var(--c-green);
+}
+
+.dom.is-weak .dom__fill {
+    background: var(--c-orange);
+}
+
+.dom.is-weak .dom__frac {
+    color: var(--c-orange);
+}
+
+/* ─── 錯題回顧 ─── */
+.rev {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+    padding: var(--sp-4);
+}
+
+.rev__q {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rev__q-inner {
+    width: 100%;
+    font-size: var(--fs-question);
+    font-weight: var(--fw-black);
+    line-height: 1.3;
+    text-align: center;
+}
+
+.rev__line {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    min-height: 80px;
+    padding: var(--sp-2) var(--sp-4);
+    border-radius: var(--r-md);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-tight);
+}
+
+.rev__line .icon {
+    font-size: 40px;
+}
+
+.rev__line--bad {
+    background: var(--c-bad-soft);
+    color: var(--c-bad);
+}
+
+.rev__line--ok {
+    background: var(--c-ok-soft);
+    color: var(--c-ok);
+}
+
+.rev__label {
+    flex: 0 0 auto;
+    font-size: var(--fs-sm);
+    color: var(--c-ink-soft);
+}
+
+.rev__value {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/* ─── 確認視窗 ─── */
+.confirm {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sp-5);
+    background: rgba(74, 59, 30, 0.35);
+}
+
+.confirm__card {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+    padding: var(--sp-5) var(--sp-4) var(--sp-4);
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
+}
+
+.confirm__text {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    line-height: var(--lh-body);
+    white-space: pre-line;
+}
