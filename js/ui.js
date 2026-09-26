@@ -24,6 +24,12 @@
         return new Promise(function (res) { global.setTimeout(res, ms); });
     };
 
+    /* DOM 準備好就執行（程式是由 boot.js 動態載入的，DOMContentLoaded 可能早就觸發過了） */
+    UI.ready = function (fn) {
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+        else fn();
+    };
+
     /* UI.h('div', {class:'a', text:'b', html:'<i></i>', on:{click:fn}, attrs:{type:'button'}}, [children]) */
     UI.h = function (tag, props, children) {
         var el = document.createElement(tag);

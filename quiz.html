@@ -4,15 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache">
     <title>回家的路 — 測試模式</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/theme.css">
-    <link rel="stylesheet" href="css/stage.css">
-    <link rel="stylesheet" href="css/quiz.css">
+    <!-- 版本檢查＋載入：見 js/boot.js -->
+    <style>html:not(.stage-ready) body { visibility: hidden; }</style>
+    <script>window.FM_PAGE = 'quiz';</script>
+    <script>document.write('<script src="js/boot.js?t=' + Date.now() + '"><\/script>');</script>
 </head>
 
 <body>
@@ -26,11 +28,6 @@
         <div class="screen" id="screen"></div>
         <div class="confirm" id="confirm" hidden></div>
     </div>
-
-    <script src="js/stage.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/quiz_data.js"></script>
-    <script src="js/quiz.js"></script>
 </body>
 
 </html>

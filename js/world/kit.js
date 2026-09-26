@@ -398,13 +398,18 @@
         var dx = x1 - x0;
         var dz = z1 - z0;
         var len = Math.sqrt(dx * dx + dz * dz);
-        var m = new T.Mesh(G.plane, o.mat || K.mat(color));
+        /* 每面牆有自己的材質，擋住鏡頭時才能單獨變半透明 */
+        var m = new T.Mesh(G.plane, o.mat || K.own(new T.MeshLambertMaterial({ color: color })));
         m.scale.set(len, h, 1);
         m.position.set((x0 + x1) / 2, h / 2 + (o.y || 0), (z0 + z1) / 2);
         /* 平面預設朝 +z；讓它朝向「由 (x0,z0) 走到 (x1,z1) 時的右手邊」。
            房間四面牆請用 K.room()，它會自動讓每面牆都朝向房內。 */
         m.rotation.y = Math.atan2(-dz, dx);
-        ctx.root.add(m);
+        /* 牆和踢腳板放同一組：牆擋住視線時變半透明，踢腳板一起隱藏 */
+        var g = new T.Group();
+        g.add(m);
+        ctx.root.add(g);
+        if (o.occluder !== false) ctx.occluder(m, g);
         if (o.collide !== false) {
             var t = 0.12;
             ctx.block(Math.min(x0, x1) - t, Math.max(x0, x1) + t, Math.min(z0, z1) - t, Math.max(z0, z1) + t);
@@ -416,7 +421,7 @@
             s.rotation.y = m.rotation.y;
             var n = new T.Vector3(0, 0, 1).applyAxisAngle(new T.Vector3(0, 1, 0), m.rotation.y);
             s.position.addScaledVector(n, 0.01);
-            ctx.root.add(s);
+            g.add(s);
         }
         return m;
     };
@@ -670,7 +675,8 @@
     K.streetSign = function (ctx, x, z, text, ry) {
         var g = new T.Group();
         g.position.set(x, 0, z);
-        K.cyl(g, 0, 0, 0, 0.07, 3.8, C.dark);
+        /* 桿子只到招牌下緣，不要穿過招牌擋住字 */
+        K.cyl(g, 0, 0, 0, 0.07, 2.95, C.dark);
         K.sign(g, text, { sw: 2.8, sh: 0.8, x: 0, y: 3.35, z: 0, ry: ry || 0, bg: '#2F6FB0', fg: '#FFFFFF', border: '#FFFFFF', bw: 10, both: true });
         ctx.add(g);
         ctx.blockRect(x, z, 0.3, 0.3);
@@ -682,8 +688,8 @@
         var g = new T.Group();
         g.position.set(o.x, 0, o.z);
         g.rotation.y = o.ry || 0;
-        /* 站牌 */
-        K.cyl(g, 0, 0, 0, 0.08, 3.4, C.dark);
+        /* 站牌：桿子只到路線牌下緣（2.19），招牌疊在桿子頂上，桿子不會擋住字 */
+        K.cyl(g, 0, 0, 0, 0.08, 2.19, C.dark);
         K.sign(g, o.name, { sw: 2.2, sh: 0.75, x: 0, y: 3.2, z: 0.02, bg: '#4C9A5B', fg: '#FFFFFF', border: '#FFFFFF', bw: 10, both: true });
         K.sign(g, o.routes, { sw: 2.2, sh: 0.62, x: 0, y: 2.5, z: 0.02, bg: '#FFFDF6', fg: '#3E86C4', border: '#4C9A5B', bw: 10, both: true });
         /* 候車亭（在站牌後方） */
@@ -734,7 +740,8 @@
         var body = o.body || C.white;
         K.box(g, 0, 0.45, 0, 11, 2.7, 2.6, body);
         K.box(g, 0, 0.55, 0, 11.04, 0.45, 2.64, o.stripe || C.green);
-        K.box(g, 0, 2.95, 0, 11.04, 0.2, 2.64, o.stripe2 || C.blue);
+        /* 上緣色帶頂面要比車頂低一點，否則兩個面重疊在同一高度會閃爍（z-fighting） */
+        K.box(g, 0, 2.95, 0, 11.04, 0.18, 2.64, o.stripe2 || C.blue);
         K.box(g, -0.5, 1.45, 0, 9.4, 1.2, 2.66, K.mat(0x5C8DB5, { emissive: 0x1A3346 }));
         K.box(g, 5.46, 1.35, 0, 0.12, 1.45, 2.3, K.mat(0x6F9EC4, { emissive: 0x1A3346 }));
         K.box(g, 0, 3.15, 0, 7, 0.3, 1.8, C.metal);
@@ -879,19 +886,19 @@
         return g;
     };
 
-    /* ─── 可互動標記：上下浮動的橘色箭頭 ─── */
+    /* ─── 可互動標記：上下浮動的橘色倒三角錐 ───
+       原點在標記「頂端」（白圈的位置），尖端往下 0.55 公尺。
+       擺放位置：頂端貼著招牌下緣，或人物頭頂上方。 */
     var markerMat = null;
     K.marker = function () {
         if (!markerMat) markerMat = new T.MeshBasicMaterial({ color: 0xF08A2E });
         var g = new T.Group();
         var cone = new T.Mesh(G.cone, markerMat);
-        cone.scale.set(0.5, 0.6, 0.5);
+        cone.scale.set(0.42, 0.55, 0.42);
         cone.rotation.x = Math.PI;
-        cone.position.y = 0.6;
         g.add(cone);
         var ring = new T.Mesh(G.ring, K.basic(0xFFFFFF));
-        ring.scale.set(0.55, 0.55, 0.55);
-        ring.position.y = 0.66;
+        ring.scale.set(0.46, 0.46, 0.46);
         g.add(ring);
         return g;
     };

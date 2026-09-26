@@ -30,9 +30,12 @@
         cp: { id: 'office', params: {}, inv: [] },
         fails: 0,
         started: 0,
+        pausedMs: 0,     /* 暫停的時間不算進「花了幾分鐘」 */
+        pauseAt: 0,
         clock: 17 * 3600,
         clockOn: false,
         failing: false,
+        voiceHeld: false,
         voice: UI.store.get('fm.voice', true)
     };
 
@@ -73,21 +76,138 @@
         } catch (e) { }
     }
 
-    /* ─── 語音廣播（瀏覽器有中文語音才會念）─── */
-    function speak(text) {
-        if (!st.voice || !global.speechSynthesis) return;
-        try {
-            speechSynthesis.cancel();
-            var u = new SpeechSynthesisUtterance(text);
+    /* ─── 語音朗讀（瀏覽器有中文語音才會念）───
+       · 排隊一句一句念；長段落切成短句（有些瀏覽器一次念太長會被截斷）
+       · hold：跟著畫面（對話框、紙條）——畫面關掉就停，不會過期
+       · 其他（廣播、提示、轉場字）排超過 maxWait 毫秒還輪不到就跳過，免得念的時候已經過站
+       · 暫停時停住，繼續時從被打斷的那一句重念
+       · 瀏覽器規定：頁面被點過一下之後才能發出語音，所以開場先有一張「開始」標題卡 */
+    var Voice = (function () {
+        var synth = global.speechSynthesis || null;
+        var queue = [];
+        var cur = null;
+        var gen = 0;
+        var seq = 0;
+        var paused = false;
+        var pausedAt = 0;
+        var hushAt = 0;
+        var voice = null;
+
+        function pickVoice() {
+            try {
+                var vs = synth.getVoices();
+                voice = vs.filter(function (x) { return /zh[-_]TW/i.test(x.lang); })[0] ||
+                    vs.filter(function (x) { return /^(zh|cmn)/i.test(x.lang); })[0] || null;
+            } catch (e) { voice = null; }
+        }
+        if (synth) {
+            pickVoice();
+            try { synth.addEventListener('voiceschanged', pickVoice); } catch (e) { }
+        }
+
+        /* 畫面上的寫法 → 念起來順的寫法 */
+        function clean(t) {
+            return String(t)
+                .replace(/(\d{1,2}):(\d{2})/g, function (m, hh, mm) { return hh + '點' + (mm === '00' ? '' : mm + '分'); })
+                .replace(/\bB(\d+)\b/g, '地下$1樓')
+                .replace(/(\d+)F\b/g, '$1樓')
+                .replace(/UBIKE/gi, 'U bike')
+                .replace(/[～~]/g, '，')
+                .replace(/…+|\.{3,}/g, '。')
+                .replace(/[・‧→]/g, '，')
+                .replace(/\s*\n+\s*/g, '。')
+                .replace(/([，。！？、；：])[，。]+/g, '$1')
+                .replace(/^[，。\s]+/, '')
+                .trim();
+        }
+
+        /* 切成短句；太短的併到前一句 */
+        function chunks(t) {
+            var out = [];
+            (t.match(/[^。！？；]+[。！？；」』]*/g) || []).forEach(function (p) {
+                p = p.trim();
+                while (p.length > 40) {
+                    var cut = p.lastIndexOf('，', 40);
+                    cut = cut < 8 ? 40 : cut + 1;
+                    out.push(p.slice(0, cut));
+                    p = p.slice(cut);
+                }
+                if (p) out.push(p);
+            });
+            var merged = [];
+            out.forEach(function (p) {
+                var n = merged.length;
+                if (n && merged[n - 1].length + p.length <= 24) merged[n - 1] += p;
+                else merged.push(p);
+            });
+            return merged;
+        }
+
+        function hush() {
+            gen++;
+            cur = null;
+            hushAt = performance.now();
+            try { synth.cancel(); } catch (e) { }
+        }
+
+        function next() {
+            if (cur || paused || !synth || !st.voice) return;
+            var now = performance.now();
+            /* cancel() 之後馬上 speak()，有些瀏覽器會把新的一句吃掉：稍等一下 */
+            if (now - hushAt < 80) { setTimeout(next, 90); return; }
+            while (queue.length && queue[0].until && queue[0].until < now) queue.shift();
+            var item = queue.shift();
+            if (!item) return;
+            cur = item;
+            var my = ++gen;
+            var u = new SpeechSynthesisUtterance(item.text);
             u.lang = 'zh-TW';
             u.rate = 0.9;
-            var voices = speechSynthesis.getVoices();
-            var v = voices.filter(function (x) { return /zh[-_]TW/i.test(x.lang); })[0] ||
-                voices.filter(function (x) { return /^zh/i.test(x.lang); })[0];
-            if (v) u.voice = v;
-            speechSynthesis.speak(u);
-        } catch (e) { }
-    }
+            if (voice) u.voice = voice;
+            u.onend = u.onerror = function () {
+                if (my !== gen) return;
+                cur = null;
+                next();
+            };
+            item.u = u; /* 留著參照：utterance 被回收的話，有些瀏覽器就不會觸發 onend */
+            try { synth.speak(u); } catch (e) { cur = null; }
+        }
+
+        return {
+            /* 念一段話 → 回傳 tag（給 drop 用） */
+            say: function (text, o) {
+                o = o || {};
+                if (!synth || !st.voice || !text) return 0;
+                var tag = ++seq;
+                var until = o.hold ? 0 : performance.now() + (o.maxWait || 3500);
+                chunks(clean(text)).forEach(function (c) { queue.push({ text: c, tag: tag, until: until }); });
+                next();
+                return tag;
+            },
+            /* 某個畫面關掉了：它還沒念完的部分不念了 */
+            drop: function (tag) {
+                if (!tag) return;
+                queue = queue.filter(function (x) { return x.tag !== tag; });
+                if (cur && cur.tag === tag) { hush(); next(); }
+            },
+            stop: function () { queue = []; hush(); },
+            pause: function () {
+                if (paused) return;
+                paused = true;
+                pausedAt = performance.now();
+                if (cur) { cur.until = 0; queue.unshift(cur); }
+                hush();
+            },
+            resume: function () {
+                if (!paused) return;
+                paused = false;
+                var d = performance.now() - pausedAt;
+                queue.forEach(function (x) { if (x.until) x.until += d; });
+                next();
+            }
+        };
+    })();
+    HUD.voice = Voice;
 
     /* ─── 時鐘：真實 1 秒 = 遊戲 10 秒 ─── */
     function clockText() {
@@ -116,6 +236,38 @@
         HUD.controls(!on && !!ctx && ctx.mode !== 'none');
     }
 
+    /* ─── 暫停：整個遊戲停住（3D 世界、補間、等待、時鐘、語音、音效）───
+       和 freeze 分開：暫停不動 frozen／搖桿，繼續時原樣接回去 */
+    var resumeWaiters = [];
+    function setPaused(on) {
+        on = !!on;
+        if (FM.core.paused === on) return;
+        FM.core.paused = on;
+        if (on) {
+            st.pauseAt = performance.now();
+            Voice.pause();
+            if (ac && ac.state === 'running') try { ac.suspend(); } catch (e) { }
+        } else {
+            if (st.started) st.pausedMs += performance.now() - st.pauseAt;
+            if (ac && ac.state === 'suspended') try { ac.resume(); } catch (e) { }
+            Voice.resume();
+            var ws = resumeWaiters;
+            resumeWaiters = [];
+            ws.forEach(function (r) { r(); });
+        }
+    }
+    /* 暫停中不開新的對話框：等繼續之後才出現 */
+    function whenRunning(fn) {
+        if (!FM.core.paused) return fn();
+        return new Promise(function (r) { resumeWaiters.push(r); }).then(fn);
+    }
+    function canPause() {
+        return !!FM.core.ctx && !FM.core.busy && !FM.core.paused && !st.failing && !HUD.isModal();
+    }
+    function playSeconds() {
+        return st.started ? Math.round((performance.now() - st.started - st.pausedMs) / 1000) : 0;
+    }
+
     /* ─── 換場景 ─── */
     async function go(id, params, opts) {
         opts = opts || {};
@@ -124,9 +276,11 @@
         FM.core.frozen = true;
         HUD.banner(null);
         HUD.controls(false);
-        if (global.speechSynthesis) try { speechSynthesis.cancel(); } catch (e) { }
+        Voice.stop();
         await HUD.fade(true, opts.text || '');
         FM.core.load(id, params || {}, api);
+        /* 從暫停選單按「重來這一段」：舊場景的劇情已隨換場景作廢，這時才解除暫停 */
+        if (FM.core.paused) setPaused(false);
         HUD.setPlace(FM.core.ctx.place);
         if (opts.checkpoint !== false) st.cp = { id: id, params: params || {}, inv: st.inv.slice() };
         await UI.wait(opts.text ? 450 : 150);
@@ -171,13 +325,14 @@
         st.clockOn = false;
         if (first) {
             await HUD.note(NOTE);
-            await UI.wait(300);
+            await FM.core.wait(300);
         }
         sfx('bell');
         HUD.toast('噹～噹～下午五點了！', 2600);
-        await UI.wait(1400);
-        var a = await HUD.ask({
+        await FM.core.wait(1400);
+        var a = await api.ask({
             title: '下午 5:00', art: 'sun', center: true, text: '下班時間到了，你要？', big: true,
+            speak: '下午五點，下班時間到了。你要下班，還是加班？',
             choices: [{ label: '下班', value: 'go', kind: 'go' }, { label: '加班', value: 'stay', kind: 'line' }]
         });
         if (a === 'stay') {
@@ -205,14 +360,14 @@
             FM.core.camTo(new THREE.Vector3(49.6, 3.0, -61.2), new THREE.Vector3(53.6, 1.5, -66.8), 2);
         }
         sfx('win');
-        var secs = st.started ? Math.round((performance.now() - st.started) / 1000) : 0;
+        var secs = playSeconds();
         var mm = Math.floor(secs / 60);
         var ss = secs % 60;
         var best = UI.store.get('fm.world.best', null);
         var isBest = best == null || secs < best;
         if (isBest) UI.store.set('fm.world.best', secs);
-        await UI.wait(2600);
-        var a = await HUD.ask({
+        await FM.core.wait(2600);
+        var a = await api.ask({
             title: '平安到家了！', tone: 'ok', art: 'home', center: true,
             text: '老婆：「生日禮物和巧克力蛋糕都拿到了，謝謝你！」\n' +
                 '花了 ' + mm + ' 分 ' + ss + ' 秒・重來 ' + st.fails + ' 次' + (isBest ? '\n刷新最佳紀錄！' : ''),
@@ -222,35 +377,51 @@
         else location.href = 'index.html';
     }
 
-    /* ─── 選單 ─── */
+    /* ─── 暫停選單：一打開就先暫停，按「繼續」才接著玩 ─── */
     async function menu() {
-        if (FM.core.busy || st.failing) return;
-        var wasFrozen = FM.core.frozen;
-        freeze(true);
-        var a = await HUD.ask({
-            title: '暫停', center: true,
-            choices: [
-                { label: '繼續', value: 'resume', kind: 'go', icon: 'play' },
-                { label: '重來這一段', value: 'retry', kind: 'sky', icon: 'refresh' },
-                { label: '語音廣播：' + (st.voice ? '開' : '關'), value: 'voice', kind: 'line', icon: st.voice ? 'volume' : 'mute' },
-                { label: '回主選單', value: 'home', kind: 'line', icon: 'home' }
-            ]
-        });
-        if (a === 'retry') { restart(); return; }
-        if (a === 'home') { location.href = 'index.html'; return; }
-        if (a === 'voice') {
-            st.voice = !st.voice;
-            UI.store.set('fm.voice', st.voice);
-            HUD.toast('語音廣播已' + (st.voice ? '開啟' : '關閉'));
+        if (!canPause()) return;
+        setPaused(true);
+        for (; ;) {
+            var a = await HUD.ask({
+                title: '暫停', center: true, speak: false,
+                text: '遊戲停住了，時間也不會走。',
+                choices: [
+                    { label: '繼續', value: 'resume', kind: 'go', icon: 'play' },
+                    { label: '重來這一段', value: 'retry', kind: 'sky', icon: 'refresh' },
+                    { label: '語音：' + (st.voice ? '開' : '關'), value: 'voice', kind: 'line', icon: st.voice ? 'volume' : 'mute' },
+                    { label: '回主選單', value: 'home', kind: 'line', icon: 'home' }
+                ]
+            });
+            if (a === 'voice') {
+                /* 切換後留在暫停選單，按鈕上的字會跟著變 */
+                st.voice = !st.voice;
+                UI.store.set('fm.voice', st.voice);
+                if (!st.voice) Voice.stop();
+                continue;
+            }
+            if (a === 'home') { location.href = 'index.html'; return; }
+            if (a === 'retry') { Voice.stop(); restart(); return; } /* 換好場景才解除暫停（見 go） */
+            setPaused(false);
+            return;
         }
-        freeze(wasFrozen);
     }
+
+    /* 手機切到別的 App、螢幕關掉：自動打開暫停選單，回來時先停著，按「繼續」再玩 */
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+            if (canPause()) menu();
+            else if (!FM.core.paused) { Voice.pause(); st.voiceHeld = true; }
+        } else if (st.voiceHeld) {
+            st.voiceHeld = false;
+            if (!FM.core.paused) Voice.resume();
+        }
+    });
 
     /* ─── 給場景用的 API ─── */
     var api = {
-        ask: function (o) { return HUD.ask(o); },
-        say: function (o) { return HUD.say(o); },
-        toast: function (t, ms) { HUD.toast(t, ms); },
+        ask: function (o) { return whenRunning(function () { return HUD.ask(o); }); },
+        say: function (o) { return whenRunning(function () { return HUD.say(o); }); },
+        toast: function (t, ms, o) { HUD.toast(t, ms, o); },
         banner: function (t) { HUD.banner(t); },
         place: function (t) { HUD.setPlace(t); },
         freeze: freeze,
@@ -260,7 +431,8 @@
         fail: fail,
         win: win,
         sfx: sfx,
-        speak: speak
+        /* 即時廣播（到站等）：排太久輪不到就跳過 */
+        speak: function (t) { Voice.say(t); }
     };
     FM.api = api;
 
@@ -289,6 +461,7 @@
             return FM.debug.info();
         },
         step: function (sec) { FM.core.step(sec); return FM.debug.info(); },
+        menu: function () { menu(); return FM.core.paused; },
         act: function () { FM.core.use(FM.core.near); },
         pick: function (text) {
             var b = Array.prototype.filter.call(document.querySelectorAll('.dlg button'), function (x) {
@@ -304,7 +477,7 @@
     };
 
     /* ─── 啟動 ─── */
-    document.addEventListener('DOMContentLoaded', async function () {
+    UI.ready(async function () {
         Stage.init();
         HUD.init(document.getElementById('hud'));
         if (!global.THREE || !FM.core || !FM.core.init) {
@@ -338,12 +511,18 @@
         FM.core.frozen = true;
         HUD.loading(null);
         audio();
+        /* 標題卡：瀏覽器要先被點一下才准發出聲音，所以說明放在下一張、才念得出來 */
         await HUD.ask({
-            title: '回家的路', art: 'home', center: true,
-            text: '等一下會給你一張紙條，看完就會燒掉。\n請憑記憶，把紙條上的事一件一件辦好，平安回家！\n\n左下搖桿：往上走、往下退、左右轉彎。\n靠近東西時，點它或按右下的「互動」。',
+            title: '回家的路', art: 'home', center: true, speak: false,
+            text: '記憶力練習・正式模式',
             choices: [{ label: '開始', value: 1, kind: 'primary', icon: 'play' }]
         });
         audio();
+        await HUD.ask({
+            title: '怎麼玩', center: true,
+            text: '等一下會給你一張紙條，看完就會燒掉。\n請憑記憶，把紙條上的事一件一件辦好，平安回家！\n\n左下搖桿：往上走、往下退、左右轉彎。\n面對東西走近，右下會出現按鈕，例如「開門」。',
+            choices: [{ label: '我知道了', value: 1, kind: 'go', icon: 'check' }]
+        });
         officeBell(true);
     });
 })(window);

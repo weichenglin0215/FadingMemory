@@ -32,6 +32,7 @@
 
     Core.frozen = false;   /* 劇情演出中：玩家不能動 */
     Core.busy = false;     /* 換場景中 */
+    Core.paused = false;   /* 暫停中：整個世界停住（移動、路人、公車、補間、等待、時鐘），只繼續畫圖 */
     Core.near = null;
     Core.elapsed = 0;
 
@@ -54,7 +55,8 @@
         this.updaters = [];
         this.occluders = [];
         this.spawn = { x: 0, z: 0, yaw: 0 };
-        this.cam = { dist: 6.5, height: 4.6, look: 1.3, ahead: 2.2 };
+        /* 鏡頭：預設值在 config.js（FM.CONFIG.camera），場景可覆寫 distance / pitchDeg / ahead */
+        this.cam = {};
         this.mode = 'walk';
         this.camScript = null;
         this.place = '';
@@ -79,14 +81,23 @@
         this.zones.push(z);
         return z;
     };
-    /* 可互動物件：{ label, x, z, y, r, hit:[Object3D], enabled(), use() } */
+    /* 可互動物件：
+         label   互動鍵上的字（用動詞，例如「搭電梯」）
+         x, z    站在這附近（半徑 r）才能互動
+         fx, fz  物件本身的位置（要「面對」這一點，標記也畫在這裡）；省略時 = x, z
+         y       橘色標記的「頂端」高度：放在招牌下緣、或人物頭頂上方
+         hit     點擊判定用的 3D 物件
+         enabled()、use() */
     Ctx.prototype.item = function (def) {
         def.r = def.r || 2.8;
         def.y = def.y == null ? 2.6 : def.y;
+        if (def.fx == null) def.fx = def.x;
+        if (def.fz == null) def.fz = def.z;
         if (def.marker !== false) {
             def.markerObj = K.marker();
-            def.markerObj.position.set(def.x, def.y, def.z);
+            def.markerObj.position.set(def.fx, def.y, def.fz);
             def.markerObj.userData.fmItem = def;
+            def.markerObj.userData.isMarker = true;
             this.root.add(def.markerObj);
         }
         (def.hit || []).forEach(function (o) { o.userData.fmItem = def; });
@@ -109,7 +120,7 @@
 
         scene = new T.Scene();
         scene.fog = new T.Fog(0xFFF1D2, 70, 210);
-        camera = new T.PerspectiveCamera(52, Stage.W / Stage.H, 0.1, 230);
+        camera = new T.PerspectiveCamera(FM.CONFIG.camera.fovDeg, Stage.W / Stage.H, 0.1, 230);
 
         hemi = new T.HemisphereLight(0xFFF6E3, 0xC9DDB0, 1.85);
         scene.add(hemi);
@@ -166,16 +177,16 @@
         var dt = last ? Math.min(0.05, (now - last) / 1000) : 0.016;
         last = now;
         if (document.hidden) return;
-        update(dt);
+        if (!Core.paused) update(dt);
         renderer.render(scene, camera);
         watchPerf(dt);
     }
 
-    /* 驗證用：用固定時間步長推進遊戲 seconds 秒（不依賴螢幕更新頻率） */
+    /* 驗證用：用固定時間步長推進遊戲 seconds 秒（不依賴螢幕更新頻率；暫停中不會推進） */
     Core.step = function (seconds, fps) {
         var dt = 1 / (fps || 30);
         var n = Math.max(1, Math.round(seconds / dt));
-        for (var i = 0; i < n; i++) update(dt);
+        if (!Core.paused) for (var i = 0; i < n; i++) update(dt);
         renderer.render(scene, camera);
     };
 
@@ -196,12 +207,16 @@
 
     Core.onFrame = function (fn) { hooks.push(fn); };
 
-    /* 補間：duration 秒內每幀呼叫 fn(t: 0→1) */
+    /* 補間：duration 秒內每幀呼叫 fn(t: 0→1)
+       走「遊戲時間」：暫停、切到背景時會停住。
+       換了場景就作廢（不再呼叫、也不會 resolve），原本那一段劇情流程就停在那裡，不會跑到新場景裡。 */
     Core.tween = function (duration, fn) {
+        var owner = ctx;
         return new Promise(function (resolve) {
             var t = 0;
             function step(dt) {
-                t = Math.min(1, t + dt / duration);
+                if (ctx !== owner) { hooks.splice(hooks.indexOf(step), 1); return; }
+                t = duration > 0 ? Math.min(1, t + dt / duration) : 1;
                 fn(t);
                 if (t >= 1) {
                     hooks.splice(hooks.indexOf(step), 1);
@@ -211,12 +226,15 @@
             hooks.push(step);
         });
     };
+    /* 遊戲時間的等待：劇情演出一律用這個（不要用 setTimeout / UI.wait，暫停時才會一起停） */
+    Core.wait = function (ms) { return Core.tween(ms / 1000, function () { }); };
     Core.ease = function (t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; };
 
     /* ─── 玩家移動 ─── */
+    var CTRL = FM.CONFIG.controls;
     var CFG = {
-        walk: { speed: 3.4, back: 0.5, turn: 2.3, accel: 9 },
-        bike: { speed: 8.0, back: 0.3, turn: 1.7, accel: 3.2 }
+        walk: { speed: CTRL.walkSpeed, back: 0.5, turn: CTRL.turnWalk, accel: 9 },
+        bike: { speed: CTRL.bikeSpeed, back: 0.3, turn: CTRL.turnBike, accel: 3.2 }
     };
 
     function blocked(x, z) {
@@ -255,8 +273,7 @@
         var iy = Math.abs(inp.y) < 0.14 ? 0 : inp.y;
         var cfg = CFG[P.mode] || CFG.walk;
 
-        var turnScale = P.mode === 'bike' ? 0.45 + 0.55 * Math.min(1, Math.abs(P.speed) / 3) : 1;
-        P.yaw -= ix * cfg.turn * turnScale * dt;
+        P.yaw -= ix * cfg.turn * dt;
 
         var target = -iy * cfg.speed;
         if (target < 0) target *= cfg.back;
@@ -303,7 +320,7 @@
         }
     }
 
-    /* ─── 可互動物件：找最近的、顯示互動鍵、標記浮動 ─── */
+    /* ─── 可互動物件：靠近「而且面對」才出現互動鍵；標記浮動 ─── */
     function updateItems(dt) {
         var best = null;
         var bestD = Infinity;
@@ -311,22 +328,28 @@
         var can = ctx.mode !== 'none' && !Core.frozen && !Core.busy && !HUD.isModal();
         var cp = camera.position;
         var camToPlayer = Math.hypot(cp.x - P.pos.x, cp.z - P.pos.z);
+        var fwdX = -Math.sin(P.yaw);
+        var fwdZ = -Math.cos(P.yaw);
+        var cosFace = Math.cos(FM.CONFIG.faceAngleDeg * Math.PI / 180);
         for (var i = 0; i < ctx.items.length; i++) {
             var it = ctx.items[i];
             var en = it.enabled ? it.enabled() : true;
             var d = Math.sqrt((it.x - P.pos.x) * (it.x - P.pos.x) + (it.z - P.pos.z) * (it.z - P.pos.z));
             it.dist = d;
+            /* 面向判斷：角色正前方與「角色→物件」的夾角 */
+            var ox = it.fx - P.pos.x;
+            var oz = it.fz - P.pos.z;
+            var od = Math.sqrt(ox * ox + oz * oz);
+            it.facing = od < 0.7 || (ox * fwdX + oz * fwdZ) / od >= cosFace;
             if (it.markerObj) {
                 /* 標記如果比玩家更靠近鏡頭（在玩家背後），就先不顯示，免得擋住畫面 */
-                var behind = Math.hypot(cp.x - it.x, cp.z - it.z) < camToPlayer - 0.5;
-                /* 已經站在旁邊（互動鍵已出現）就不必再顯示頭上的標記 */
-                it.markerObj.visible = en && can && !behind && d > 1.8 && d < (it.markerRange || 16);
-                it.markerObj.position.y = it.y + Math.sin(t * 3 + i) * 0.15;
+                var behind = Math.hypot(cp.x - it.fx, cp.z - it.fz) < camToPlayer - 0.5;
+                /* 已經站在旁邊、互動鍵已出現，就不必再顯示標記 */
+                it.markerObj.visible = en && can && !behind && it !== Core.near && d < (it.markerRange || 16);
+                it.markerObj.position.y = it.y + Math.sin(t * 3 + i) * 0.1;
                 it.markerObj.rotation.y += dt * 1.6;
-                var s = (it === Core.near) ? 1.35 : 1;
-                it.markerObj.scale.setScalar(s);
             }
-            if (can && en && d <= it.r && d < bestD) { best = it; bestD = d; }
+            if (can && en && it.facing && d <= it.r && d < bestD) { best = it; bestD = d; }
         }
         if (best !== Core.near) {
             Core.near = best;
@@ -387,13 +410,20 @@
         Core.use(it);
     }
 
-    /* ─── 相機 ─── */
+    /* ─── 相機：從對準點沿著 pitchDeg 往後上方拉開（pitchDeg 就是實際往下看的角度） ─── */
     function desiredCam(out, look) {
+        var CAM = FM.CONFIG.camera;
         var c = ctx.cam;
+        var dist = c.distance || CAM.distance;
+        var ahead = c.ahead != null ? c.ahead : CAM.ahead;
+        var th = c.targetHeight || CAM.targetHeight;
+        var pitch = (c.pitchDeg != null ? c.pitchDeg : CAM.pitchDeg) * Math.PI / 180;
         var fx = -Math.sin(P.yaw);
         var fz = -Math.cos(P.yaw);
-        out.set(P.pos.x - fx * c.dist, c.height, P.pos.z - fz * c.dist);
-        look.set(P.pos.x + fx * c.ahead, c.look, P.pos.z + fz * c.ahead);
+        look.set(P.pos.x + fx * ahead, th, P.pos.z + fz * ahead);
+        var len = dist + ahead;
+        var back = len * Math.cos(pitch);
+        out.set(look.x - fx * back, th + len * Math.sin(pitch), look.z - fz * back);
     }
 
     Core.snapCamera = function () {
@@ -408,7 +438,7 @@
             return;
         }
         desiredCam(tmpV, tmpV2);
-        var k = 1 - Math.exp(-dt * 4.5);
+        var k = 1 - Math.exp(-dt * FM.CONFIG.camera.follow);
         camera.position.lerp(tmpV, k);
         camLook.lerp(tmpV2, 1 - Math.exp(-dt * 7));
         camera.lookAt(camLook);
@@ -440,19 +470,123 @@
         }
     }
 
-    function updateOccluders(dt) {
-        if (!ctx.occluders.length) return;
-        var from = tmpV.set(P.pos.x, 1.3, P.pos.z);
-        if (ctx.camScript) from.copy(camLook);
-        var dir = tmpV2.subVectors(camera.position, from);
-        var dist = dir.length();
-        dir.normalize();
-        raycaster.set(from, dir);
-        raycaster.far = dist;
-        var hits = raycaster.intersectObjects(ctx.occluders, false);
-        raycaster.far = Infinity;
+    /* 一條視線要「雙向」各打一次射線：
+       單面牆只能被正面打到——鏡頭在牆的正面那側時，要從鏡頭往角色打才打得到；
+       建築方塊則相反，鏡頭在方塊裡面時，要從角色往鏡頭打才打得到外牆。 */
+    var occRay = new T.Raycaster();
+    var occDir = new T.Vector3();
+    var occBack = new T.Vector3();
+    function castSight(from, to, list, hitSet) {
+        if (!list.length) return;
+        occDir.subVectors(to, from);
+        var dist = occDir.length();
+        if (dist < 0.01) return;
+        occDir.divideScalar(dist);
+        occRay.far = dist;
+        occRay.set(from, occDir);
+        var hits = occRay.intersectObjects(list, false);
+        for (var i = 0; i < hits.length; i++) hitSet[hits[i].object.id] = hits[i].object;
+        occRay.set(to, occBack.copy(occDir).negate());
+        hits = occRay.intersectObjects(list, false);
+        for (var j = 0; j < hits.length; j++) hitSet[hits[j].object.id] = hits[j].object;
+    }
+
+    /* 對一組物件檢查「角色 ↔ 鏡頭」的視線，回傳擋到的物件 */
+    function sightHits(list) {
         var hitSet = {};
-        for (var i = 0; i < hits.length; i++) hitSet[hits[i].object.id] = true;
+        if (ctx.camScript) {
+            castSight(camLook, camera.position, list, hitSet);
+        } else {
+            /* 看得到角色的胸口和頭頂，才算沒被擋住 */
+            castSight(tmpV.set(P.pos.x, 1.2, P.pos.z), camera.position, list, hitSet);
+            castSight(tmpV.set(P.pos.x, 1.95, P.pos.z), camera.position, list, hitSet);
+        }
+        return hitSet;
+    }
+
+    /* ─── 其他任何擋住視線的東西（招牌、門框、櫃子、路人…）：暫時換成半透明材質 ───
+       同一個原始材質共用一份半透明複本；擋住時換上，不擋了 0.25 秒後換回來。 */
+    var blockCandidates = [];
+    var fadedMeshes = [];
+    var fadedMats = new Map();
+
+    function isGroundGeo(g) { return g === K.G.ground || g === K.G.circle; }
+
+    function collectBlockCandidates() {
+        blockCandidates = [];
+        fadedMeshes = [];
+        fadedMats = new Map();
+        var occ = {};
+        ctx.occluders.forEach(function (m) { occ[m.id] = true; });
+        ctx.root.traverse(function (o) {
+            if (!o.isMesh || o.isInstancedMesh || occ[o.id] || isGroundGeo(o.geometry)) return;
+            var a = o.parent;
+            while (a && a !== ctx.root) {
+                if (a.userData.isMarker) return;        /* 互動標記本身不算 */
+                a = a.parent;
+            }
+            blockCandidates.push(o);
+        });
+    }
+
+    function fadedOf(mat) {
+        var f = fadedMats.get(mat);
+        if (!f) {
+            f = K.own(mat.clone());
+            f.transparent = true;
+            f.opacity = 0.25;
+            f.depthWrite = false;
+            fadedMats.set(mat, f);
+        }
+        return f;
+    }
+
+    /* 人物要整個一起變淡（不然只有被打到的手或頭變淡） */
+    function blockUnit(mesh) {
+        var a = mesh.parent;
+        while (a && a !== ctx.root) {
+            if (a.userData.parts) {
+                var list = [];
+                a.traverse(function (o) { if (o.isMesh && !isGroundGeo(o.geometry)) list.push(o); });
+                return list;
+            }
+            a = a.parent;
+        }
+        return [mesh];
+    }
+
+    function updateBlockers(dt) {
+        var hits = sightHits(blockCandidates);
+        var now = {};
+        Object.keys(hits).forEach(function (id) {
+            blockUnit(hits[id]).forEach(function (m) { now[m.id] = m; });
+        });
+        Object.keys(now).forEach(function (id) {
+            var m = now[id];
+            if (!m.userData.origMat) {
+                if (Array.isArray(m.material)) return;
+                m.userData.origMat = m.material;
+                m.material = fadedOf(m.material);
+                fadedMeshes.push(m);
+            }
+            m.userData.blockTtl = 0.25;
+        });
+        for (var i = fadedMeshes.length - 1; i >= 0; i--) {
+            var b = fadedMeshes[i];
+            if (now[b.id]) continue;
+            b.userData.blockTtl -= dt;
+            if (b.userData.blockTtl <= 0) {
+                b.material = b.userData.origMat;
+                b.userData.origMat = null;
+                fadedMeshes.splice(i, 1);
+            }
+        }
+    }
+
+    function updateOccluders(dt) {
+        updateBlockers(dt);
+        if (!ctx.occluders.length) return;
+        var hitSet = sightHits(ctx.occluders);
         for (var j = 0; j < ctx.occluders.length; j++) {
             var m = ctx.occluders[j];
             var target = hitSet[m.id] ? 0.22 : 1;
@@ -485,6 +619,7 @@
         HUD.action(null);
         def.build(ctx, K, api, params || {});
         scene.add(ctx.root);
+        collectBlockCandidates();
 
         Core.setMode(ctx.mode);
         P.pos.set(ctx.spawn.x, 0, ctx.spawn.z);
@@ -511,7 +646,7 @@
             scene: ctx && ctx.id,
             x: +P.pos.x.toFixed(2), z: +P.pos.z.toFixed(2), yaw: +P.yaw.toFixed(2),
             mode: P.mode, near: Core.near && Core.near.label,
-            frozen: Core.frozen, busy: Core.busy, modal: HUD.isModal(),
+            frozen: Core.frozen, busy: Core.busy, paused: Core.paused, modal: HUD.isModal(),
             fps: Math.round(perf.fps), quality: quality,
             calls: renderer.info.render.calls, tris: renderer.info.render.triangles,
             geos: renderer.info.memory.geometries, texs: renderer.info.memory.textures

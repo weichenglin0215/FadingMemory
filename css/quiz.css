@@ -129,37 +129,43 @@
     gap: var(--sp-3);
 }
 
-/* ─── 情境更新（天氣）─── */
-.event {
-    flex: 1 1 auto;
-    min-height: 0;
+/* ─── 答錯的回饋：題目區改成「正確答案＋為什麼」，選項變矮，下方多一顆「下一題」─── */
+.screen.is-feedback {
+    --opt-h: 76px;
+}
+
+.fb {
+    width: 100%;
     display: flex;
     flex-direction: column;
+    gap: 0.35em;
+    text-align: center;
+    line-height: 1.3;
+}
+
+.fb__q {
+    font-size: 0.8em;
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+.fb__ans {
+    display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--sp-3);
-    padding: var(--sp-4);
-    background: var(--c-blue-soft);
-    border: var(--bd-w) dashed var(--c-blue);
-    border-radius: var(--r-lg);
-    text-align: center;
-}
-
-.event__art {
-    width: 220px;
-    height: 220px;
-}
-
-.event__title {
-    font-size: var(--fs-xl);
+    gap: 0.3em;
+    font-size: 1.15em;
     font-weight: var(--fw-black);
-    color: var(--c-blue);
+    color: var(--c-ok);
 }
 
-.event__text {
-    font-size: var(--fs-lg);
+.fb__ans .icon {
+    flex: 0 0 auto;
+}
+
+.fb__why {
     font-weight: var(--fw-bold);
-    line-height: var(--lh-body);
+    color: var(--c-bad);
 }
 
 /* ─── 結果 ─── */
@@ -230,60 +236,87 @@
     color: var(--bd-c);
 }
 
-.res-grid {
+/* 混淆類型分析：最容易被騙的 2～3 種 */
+.conf {
     flex: 1 1 auto;
     min-height: 0;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-auto-rows: minmax(0, 76px);
-    align-content: start;
-    gap: var(--sp-2);
-}
-
-.dom {
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    gap: var(--sp-1);
-    padding: 0 var(--sp-3);
+    gap: var(--sp-2);
+    padding: var(--sp-3);
     background: var(--c-card);
     border: var(--bd);
     border-radius: var(--r-md);
 }
 
-.dom__row {
+.conf__head {
     display: flex;
+    align-items: center;
     justify-content: space-between;
+    gap: var(--sp-2);
+}
+
+.conf__title {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    line-height: var(--lh-tight);
+}
+
+.conf__more {
+    flex: 0 0 auto;
+    min-height: 52px;
+    padding: 0 var(--sp-3);
+    border: var(--bd-w) solid var(--c-blue);
+    border-radius: var(--r-pill);
+    background: var(--c-blue-soft);
+    color: var(--c-blue);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-black);
+}
+
+.conf__row {
+    padding: var(--sp-2) var(--sp-3);
+    border-left: 8px solid var(--c-orange);
+    border-radius: var(--r-sm);
+    background: var(--c-orange-soft);
+}
+
+.conf__line {
+    display: flex;
     align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-2);
+}
+
+.conf__name {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-orange);
+}
+
+.conf__frac {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    white-space: nowrap;
+}
+
+.conf__desc {
     font-size: var(--fs-sm);
     font-weight: var(--fw-bold);
-    line-height: 1.2;
+    line-height: var(--lh-tight);
 }
 
-.dom__frac {
+.conf__none {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-lg);
     font-weight: var(--fw-black);
-    font-variant-numeric: tabular-nums;
-}
-
-.dom__bar {
-    height: 8px;
-    border-radius: var(--r-pill);
-    background: var(--c-yellow-soft);
-    overflow: hidden;
-}
-
-.dom__fill {
-    height: 100%;
-    border-radius: var(--r-pill);
-    background: var(--c-green);
-}
-
-.dom.is-weak .dom__fill {
-    background: var(--c-orange);
-}
-
-.dom.is-weak .dom__frac {
-    color: var(--c-orange);
+    color: var(--c-green);
+    text-align: center;
 }
 
 /* ─── 錯題回顧 ─── */
@@ -348,6 +381,18 @@
 .rev__value {
     flex: 1 1 auto;
     min-width: 0;
+}
+
+.rev__tags {
+    display: flex;
+    gap: var(--sp-2);
+}
+
+.rev__why {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-tight);
+    color: var(--c-bad);
 }
 
 /* ─── 確認視窗 ─── */

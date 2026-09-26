@@ -26,7 +26,8 @@
 
     /* ─── 小工具 ─── */
     function v3(a) { return new T.Vector3(a[0], a[1], a[2]); }
-    function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+    /* 劇情用的等待走遊戲時間：暫停時會停住、換場景就作廢（不要用 setTimeout） */
+    function wait(ms) { return FM.core.wait(ms); }
     function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
     function shuffle(a) {
         for (var i = a.length - 1; i > 0; i--) {
@@ -63,7 +64,7 @@
         }));
         api.sfx('ding');
         var pick = await api.ask({
-            title: '公車來了！', text: '要搭幾號公車？', cols: 3, big: true,
+            title: '公車來了！', text: '要搭幾號公車？', cols: 3, big: true, speak: '要搭幾號公車？',
             choices: shuffle(o.routes.slice()).map(function (r) { return { label: r, value: r, kind: 'sky' }; })
         });
         var bus = buses[o.routes.indexOf(pick)];
@@ -224,7 +225,8 @@
     function cornerSign(ctx, x, z, nameNS, nameEW) {
         var g = new T.Group();
         g.position.set(x, 0, z);
-        K.cyl(g, 0, 0, 0, 0.08, 4.2, C.dark);
+        /* 桿子只到下面那塊路名牌的下緣（2.25），不穿過招牌 */
+        K.cyl(g, 0, 0, 0, 0.08, 2.25, C.dark);
         if (nameEW) K.sign(g, nameEW, { sw: 3.2, sh: 0.9, x: 0, y: 3.7, z: 0, bg: '#2F6FB0', fg: '#FFFFFF', border: '#FFFFFF', bw: 10, both: true });
         if (nameNS) K.sign(g, nameNS, { sw: 3.2, sh: 0.9, x: 0, y: 2.7, z: 0, ry: Math.PI / 2, bg: '#2F6FB0', fg: '#FFFFFF', border: '#FFFFFF', bw: 10, both: true });
         ctx.add(g);
@@ -328,7 +330,7 @@
             var R = ctx.root;
             ctx.place = '辦公室 12F';
             ctx.bounds = { x0: -8, x1: 17, z0: -6, z1: 6 };
-            ctx.cam = { dist: 5.4, height: 6.6, look: 0.9, ahead: 1.6 };
+            ctx.cam = { distance: 5.2 };
             ctx.spawn = { x: -5.4, z: 3.75, yaw: 0 };
 
             K.ground(R, 4, 0, 120, 90, 0xE9E3D2, -0.03);
@@ -387,25 +389,26 @@
                 K.animPerson(c1, 0, 0, 'wave', t);
                 K.animPerson(c2, 0, 0, 'idle', t);
             });
-            ctx.item({ label: '同事', x: -1.0, z: -4.9, y: 2.6, r: 2.4, hit: [c1], use: function () { api.toast('同事：辛苦了，明天見！'); } });
-            ctx.item({ label: '同事', x: 5.9, z: -0.4, y: 2.6, r: 2.4, hit: [c2], use: function () { api.toast('同事：今天準時下班喔！路上小心。'); } });
+            ctx.item({ label: '說話', x: -1.0, z: -4.9, y: 2.75, r: 2.4, hit: [c1], use: function () { api.toast('同事：辛苦了，明天見！'); } });
+            ctx.item({ label: '說話', x: 5.9, z: -0.4, y: 2.75, r: 2.4, hit: [c2], use: function () { api.toast('同事：今天準時下班喔！路上小心。'); } });
 
             /* 南牆：茶水間、會議室（不是出口） */
             [[-4, '茶水間', '這是茶水間，不是出口。'], [3, '會議室', '會議室裡沒人，大家都下班了。']].forEach(function (d) {
                 var door = K.box(R, d[0], 0, 5.93, 1.2, 2.3, 0.08, C.woodDark);
                 K.sign(R, d[1], { sw: 1.3, sh: 0.4, x: d[0], y: 2.6, z: 5.9, ry: Math.PI, bg: '#FFFDF6', fg: '#4A3B1E', border: '#B98A5A', bw: 8 });
-                ctx.item({ label: d[1], x: d[0], z: 5.2, y: 3.0, r: 2.2, hit: [door], use: function () { api.toast(d[2]); } });
+                ctx.item({ label: '開門', x: d[0], z: 5.2, fx: d[0], fz: 5.93, y: 2.35, r: 2.2, hit: [door], use: function () { api.toast(d[2]); } });
             });
 
             /* 東牆：出口（要先開門） */
-            var door = K.box(R, 8.08, 0, 1.5, 0.1, 2.45, 2.0, 0xE9CFA6);
+            var door = K.box(R, 8.08, 0, 1.5, 0.1, 2.45, 2.0, K.own(new T.MeshLambertMaterial({ color: 0xE9CFA6 })));
+            ctx.occluder(door);
             K.box(R, 8.0, 2.45, 1.5, 0.3, 0.14, 2.3, C.white);
             K.sign(R, '出口 EXIT', { sw: 1.5, sh: 0.45, x: 7.94, y: 2.85, z: 1.5, ry: -Math.PI / 2, bg: '#3C9A55', fg: '#FFFFFF', border: '#FFFFFF', bw: 8 });
             ctx.block(7.9, 8.2, 0.5, 2.5);
             var doorCol = ctx.lastCollider();
             ctx.data.doorOpen = false;
             ctx.item({
-                label: '出口', x: 7.2, z: 1.5, y: 3.3, r: 2.4, hit: [door],
+                label: '開門', x: 7.2, z: 1.5, fx: 8.0, fz: 1.5, y: 2.4, r: 2.4, hit: [door],
                 enabled: function () { return !ctx.data.doorOpen; },
                 use: function () {
                     ctx.data.doorOpen = true;
@@ -419,7 +422,7 @@
             /* 走廊：洗手間、海報、電梯 */
             var wc = K.box(R, 12, 0, -0.93, 1.1, 2.3, 0.08, C.sky);
             K.sign(R, '洗手間', { sw: 1.2, sh: 0.4, x: 12, y: 2.6, z: -0.9, bg: '#FFFDF6', fg: '#3E86C4', border: '#3E86C4', bw: 8 });
-            ctx.item({ label: '洗手間', x: 12, z: -0.2, y: 3.0, r: 2.0, hit: [wc], use: function () { api.toast('這是洗手間。'); } });
+            ctx.item({ label: '開門', x: 12, z: -0.2, fx: 12, fz: -0.93, y: 2.35, r: 2.0, hit: [wc], use: function () { api.toast('這是洗手間。'); } });
             K.sign(R, '健康步行・快樂回家', { sw: 2.6, sh: 0.7, x: 12.5, y: 1.8, z: 3.93, ry: Math.PI, bg: '#FFF1D0', fg: '#4C9A5B', border: '#E0AA25', bw: 8 });
             K.plant(R, 9.2, 3.4, 1);
             ctx.blockRect(9.2, 3.4, 0.8, 0.8);
@@ -431,7 +434,7 @@
             K.sign(R, '電梯 12F', { sw: 1.6, sh: 0.45, x: 16.9, y: 2.95, z: 1.5, ry: -Math.PI / 2, bg: '#1D1B20', fg: '#FFB23F', bw: 0 });
             K.box(R, 16.9, 1.0, 3.1, 0.06, 0.4, 0.22, C.champagne);
             ctx.item({
-                label: '電梯', x: 15.9, z: 1.5, y: 3.9, r: 2.6, hit: [dl, dr],
+                label: '搭電梯', x: 15.9, z: 1.5, fx: 16.9, fz: 1.5, y: 2.65, r: 2.6, hit: [dl, dr],
                 use: async function () {
                     var a = await api.ask({
                         title: '電梯', text: '要搭電梯下樓嗎？',
@@ -457,16 +460,15 @@
                 L: 42, park: true, skipN: [-3, 7, 18],
                 north: [
                     { x0: -42, x1: -24, h: 8, color: C.mint, sign: '花店', signBg: '#4C9A5B', awning: C.green, d: 12 },
-                    { x0: -22, x1: 14, h: 34, color: C.sky, sign: '晴空大樓', signBg: '#3E86C4', signW: 9, signH: 1.6, doorX: 4, d: 20 },
+                    { x0: -22, x1: 14, h: 34, color: C.sky, sign: '晴空大樓', signBg: '#3E86C4', signW: 9, signH: 1.6, doorX: 1, d: 20 },
                     { x0: 16, x1: 42, h: 9, color: C.cream, sign: '便利商店', signBg: '#E8822E', awning: C.green, d: 12 }
                 ]
             });
             ctx.spawn = { x: -3, z: -8.2, yaw: Math.PI };
-            ctx.cam = { dist: 7, height: 4.6, look: 1.3, ahead: 2.6 };
 
             var stop = K.busStop(ctx, { x: 7, z: -5.9, name: '公司前站', routes: '236・263・326', ry: 0, shelterX: 2.8 });
             ctx.item({
-                label: '公車站牌', x: 7, z: -6.6, y: 4.2, r: 3, hit: [stop],
+                label: '等公車', x: 7, z: -6.6, fx: 7, fz: -5.9, y: 2.15, r: 3, hit: [stop],
                 use: async function () {
                     if (!(await askWait(api))) return;
                     var pick = await busSequence(ctx, api, {
@@ -477,7 +479,7 @@
                     else api.fail('搭錯車了！這是 ' + pick + ' 號公車。');
                 }
             });
-            ctx.item({ label: '公司大門', x: -3, z: -9.2, y: 4, r: 2.6, use: function () { api.toast('已經下班了，回家吧！'); } });
+            ctx.item({ label: '進公司', x: -3, z: -8.6, fx: -3, fz: -9, y: 2.75, r: 2.6, use: function () { api.toast('已經下班了，回家吧！'); } });
         }
     };
 
@@ -514,7 +516,7 @@
             p.stops.forEach(function (name, i) {
                 var sx = gap * (i + 1);
                 ctx.data.stopX.push(sx);
-                K.cyl(R, sx, 0, 5.8, 0.08, 3.6, C.dark);
+                K.cyl(R, sx, 0, 5.8, 0.08, 2.8, C.dark);
                 K.sign(R, name, { sw: 3.2, sh: 1.0, x: sx, y: 3.3, z: 5.8, ry: -Math.PI / 2, bg: '#4C9A5B', fg: '#FFFFFF', border: '#FFFFFF', bw: 10, both: true });
                 K.box(R, sx + 4, 2.5, 7.6, 4.4, 0.14, 1.8, C.green);
                 K.box(R, sx + 2, 0, 7.6, 0.1, 2.5, 0.1, C.dark);
@@ -534,8 +536,8 @@
             ctx.camScript = function (dt, cam, cl) {
                 var bx = bus.position.x;
                 if (ctx.data.camMode === 'chase') {
-                    camPos.set(bx - 15, 7.5, 7.5);
-                    look.set(bx + 12, 1.2, 3.5);
+                    camPos.set(bx - 15, 7.5, 5.8);
+                    look.set(bx + 12, 1.2, 3.2);
                 } else {
                     var sx = ctx.data.focusX;
                     camPos.set(sx - 11, 4.4, 8.2);
@@ -546,8 +548,8 @@
                 cl.lerp(look, k);
                 cam.lookAt(cl);
             };
-            camPos.set(-15, 7.5, 7.5);
-            look.set(12, 1.2, 3.5);
+            camPos.set(-15, 7.5, 5.8);
+            look.set(12, 1.2, 3.2);
             FM.core.camera().position.copy(camPos);
         },
 
@@ -555,7 +557,8 @@
             var bus = ctx.data.bus;
             var passed = false;
             api.freeze(true);
-            api.toast(p.route + ' 號公車出發了！注意聽廣播。', 3000);
+            /* 不念：把時間留給到站廣播 */
+            api.toast(p.route + ' 號公車出發了！注意聽廣播。', 3000, { silent: true });
             for (var i = 0; i < p.stops.length; i++) {
                 var name = p.stops[i];
                 var from = bus.position.x;
@@ -579,7 +582,7 @@
                 api.speak(name + '，到了');
                 await wait(700);
                 var a = await api.ask({
-                    title: name + ' 到了', text: '要在這一站下車嗎？',
+                    title: name + ' 到了', text: '要在這一站下車嗎？', speak: '要在這一站下車嗎？',
                     choices: [{ label: '下車', value: 'off', kind: 'go' }, { label: '繼續坐', value: 'stay', kind: 'line' }]
                 });
                 api.banner(null);
@@ -625,19 +628,18 @@
             var stop = K.busStop(ctx, { x: -14, z: -5.9, name: '衡陽路站', routes: '236・758・578', ry: 0, shelterX: -4 });
             if (p.from === 'dept') ctx.spawn = { x: 12, z: -8.1, yaw: Math.PI };
             else ctx.spawn = { x: -10, z: -7.4, yaw: -Math.PI / 2 };
-            ctx.cam = { dist: 7, height: 4.6, look: 1.3, ahead: 2.6 };
 
             ctx.item({
-                label: '遠東百貨', x: 12, z: -9.2, y: 4.2, r: 3, hit: [north[2].obj],
+                label: '進百貨', x: 12, z: -8.6, fx: 12, fz: -9, y: 3.1, r: 3, hit: [north[2].obj],
                 use: function () {
                     if (api.has('gift')) { api.toast('禮物已經買好了！'); return; }
                     api.go('dept1f', {}, { text: '走進遠東百貨' });
                 }
             });
-            ctx.item({ label: '銀行', x: -34, z: -9.2, y: 4, r: 2.6, use: function () { api.toast('銀行已經下班關門了。'); } });
-            ctx.item({ label: '書店', x: -16, z: -9.2, y: 4, r: 2.6, use: function () { api.toast('書店：歡迎參觀！'); } });
+            ctx.item({ label: '進銀行', x: -34, z: -8.6, fx: -34, fz: -9, y: 2.9, r: 2.6, use: function () { api.toast('銀行已經下班關門了。'); } });
+            ctx.item({ label: '進書店', x: -16, z: -8.6, fx: -16, fz: -9, y: 3.1, r: 2.6, use: function () { api.toast('書店：歡迎參觀！'); } });
             ctx.item({
-                label: '公車站牌', x: -14, z: -6.6, y: 4.2, r: 3, hit: [stop],
+                label: '等公車', x: -14, z: -6.6, fx: -14, fz: -5.9, y: 2.15, r: 3, hit: [stop],
                 use: async function () {
                     if (!(await askWait(api))) return;
                     var pick = await busSequence(ctx, api, {
@@ -686,11 +688,12 @@
             var dz = tgt[1] - p.position.z;
             var d = Math.sqrt(dx * dx + dz * dz);
             if (d < 0.2) { i = (i + 1) % pts.length; return; }
-            var s = Math.min(d, 1.3 * dt);
+            var speed = FM.CONFIG.npcSpeed;
+            var s = Math.min(d, speed * dt);
             p.position.x += dx / d * s;
             p.position.z += dz / d * s;
             p.rotation.y = Math.atan2(-dx, -dz);
-            phase += dt * 4.3;
+            phase += dt * 3.3 * speed;
             K.animPerson(p, phase, 0.8, 'walk', t);
         });
         return p;
@@ -701,7 +704,7 @@
             var R = ctx.root;
             ctx.place = '遠東百貨 1F';
             ctx.bounds = { x0: -12, x1: 12, z0: -10, z1: 10 };
-            ctx.cam = { dist: 6, height: 7, look: 1, ahead: 1.8 };
+            ctx.cam = { distance: 5.4 };
             K.ground(R, 0, 0, 120, 120, 0xE8E0CC, -0.03);
             K.floor(ctx, 0, 0, 24, 20, K.tiles(0xFFF8E6, 0xF6EACB, 8, 7));
             K.room(ctx, -12, 12, -10, 10, 5, 0xFFF8EA, { s: [[-2.5, 2.5]] });
@@ -757,7 +760,7 @@
             else ctx.spawn = { x: 0, z: 8.3, yaw: 0 };
 
             ctx.item({
-                label: '電梯', x: 7.7, z: -8.7, y: 4.6, r: 3, hit: [e1, e2],
+                label: '搭電梯', x: 7.7, z: -8.7, fx: 7.7, fz: -9.9, y: 3.4, r: 3, hit: [e1, e2],
                 use: async function () {
                     var f = await api.ask({
                         title: '電梯', text: '要去幾樓？', cols: 3, big: true,
@@ -771,8 +774,8 @@
                     else api.fail('走錯樓層了！' + f + ' 沒有要買的東西。');
                 }
             });
-            ctx.item({ label: '大門出口', x: 0, z: 9.3, y: 3.2, r: 2.6, use: function () { api.go('street_hengyang', { from: 'dept' }, { text: '走出百貨公司' }); } });
-            ctx.item({ label: '服務台', x: -7, z: 6.2, y: 3, r: 2.4, hit: [clerk], use: function () { api.toast('服務台：歡迎光臨遠東百貨！'); } });
+            ctx.item({ label: '出去', x: 0, z: 9.3, fx: 0, fz: 10, y: 2.4, r: 2.6, use: function () { api.go('street_hengyang', { from: 'dept' }, { text: '走出百貨公司' }); } });
+            ctx.item({ label: '詢問', x: -7, z: 6.2, y: 2.75, r: 2.4, hit: [clerk], use: function () { api.toast('服務台：歡迎光臨遠東百貨！'); } });
         }
     };
 
@@ -824,7 +827,7 @@
             var R = ctx.root;
             ctx.place = '遠東百貨 3F';
             ctx.bounds = { x0: -14, x1: 14, z0: -12, z1: 12 };
-            ctx.cam = { dist: 6, height: 7, look: 1, ahead: 1.8 };
+            ctx.cam = { distance: 5.4 };
             ctx.spawn = { x: 0, z: 9.4, yaw: 0 };
             K.ground(R, 0, 0, 120, 120, 0xE8E0CC, -0.03);
             K.floor(ctx, 0, 0, 28, 24, K.tiles(0xF9F4E2, 0xEEE6CD, 9, 8));
@@ -886,7 +889,7 @@
             });
 
             ctx.item({
-                label: '玉器櫃台', x: -8.5, z: -8.4, y: 2.8, r: 2.6, hit: [jClerk],
+                label: '買東西', x: -8.5, z: -8.4, fx: -8.5, fz: -10.6, y: 2.75, r: 2.6, hit: [jClerk],
                 use: async function () {
                     if (api.has('gift')) { api.toast('禮物已經買好了！'); return; }
                     var v = await api.ask({
@@ -899,11 +902,11 @@
                     await api.say({ title: '買好了！', text: '店員：翡翠手鐲幫您包裝好了，祝夫人生日快樂！', ok: '謝謝', kind: 'go' });
                 }
             });
-            ctx.item({ label: '名錶櫃台', x: 8.5, z: -8.4, y: 2.8, r: 2.6, hit: [wClerk], use: function () { api.toast('名錶店：歡迎參觀！'); } });
-            ctx.item({ label: '皮件櫃台', x: -10.6, z: 3, y: 2.6, r: 2.4, use: function () { api.toast('皮件精品：歡迎參觀！'); } });
-            ctx.item({ label: '服飾櫃台', x: 10.6, z: 3, y: 2.6, r: 2.4, use: function () { api.toast('女裝服飾：歡迎參觀！'); } });
+            ctx.item({ label: '逛逛', x: 8.5, z: -8.4, fx: 8.5, fz: -10.6, y: 2.75, r: 2.6, hit: [wClerk], use: function () { api.toast('名錶店：歡迎參觀！'); } });
+            ctx.item({ label: '逛逛', x: -10.6, z: 3, fx: -11.8, fz: 3, y: 2.2, r: 2.4, use: function () { api.toast('皮件精品：歡迎參觀！'); } });
+            ctx.item({ label: '逛逛', x: 10.6, z: 3, fx: 11.8, fz: 3, y: 2.2, r: 2.4, use: function () { api.toast('女裝服飾：歡迎參觀！'); } });
             ctx.item({
-                label: '電梯', x: 0, z: 10.6, y: 3.8, r: 2.8, hit: [el],
+                label: '搭電梯', x: 0, z: 10.6, fx: 0, fz: 11.9, y: 2.5, r: 2.8, hit: [el],
                 use: async function () {
                     var f = await api.ask({
                         title: '電梯', text: '要去幾樓？', cols: 3, big: true,
@@ -956,25 +959,24 @@
                 K.box(ub, -1.3 + b * 1.1, 0, -0.9, 0.12, 0.9, 0.12, C.dark);
             }
             K.sign(ub, 'UBIKE 租借站', { sw: 3.2, sh: 0.7, x: 0.3, y: 2.6, z: -0.9, bg: '#F2B33D', fg: '#FFFFFF', border: '#FFFFFF', bw: 8, both: true });
-            K.cyl(ub, 0.3, 0, -0.9, 0.06, 2.3, C.dark);
+            K.cyl(ub, 0.3, 0, -0.9, 0.06, 2.25, C.dark);
             ctx.add(ub);
             ctx.block(9.9, 17, -7.5, -5.6);
 
             if (p.from === 'shop') ctx.spawn = { x: -2, z: -8.1, yaw: Math.PI };
             else ctx.spawn = { x: -14, z: -7.4, yaw: -Math.PI / 2 };
-            ctx.cam = { dist: 7, height: 4.6, look: 1.3, ahead: 2.6 };
 
             ctx.item({
-                label: '蘭陽蛋糕店', x: -2, z: -9.2, y: 4.2, r: 3, hit: [north[2].obj],
+                label: '進店', x: -2, z: -8.6, fx: -2, fz: -9, y: 3.1, r: 3, hit: [north[2].obj],
                 use: function () {
                     if (api.has('cake')) { api.toast('蛋糕已經拿好了！'); return; }
                     api.go('cakeshop', {}, { text: '走進蘭陽蛋糕店' });
                 }
             });
-            ctx.item({ label: '阿美麵包坊', x: -19, z: -9.2, y: 4.2, r: 2.8, hit: [north[1].obj], use: function () { api.toast('麵包坊：今天的麵包賣完囉！'); } });
-            ctx.item({ label: '花店', x: 15, z: -9.2, y: 4, r: 2.6, use: function () { api.toast('花店：今天的花很新鮮喔！'); } });
+            ctx.item({ label: '進店', x: -19, z: -8.6, fx: -19, fz: -9, y: 3.1, r: 2.8, hit: [north[1].obj], use: function () { api.toast('阿美麵包坊：今天的麵包賣完囉！'); } });
+            ctx.item({ label: '進店', x: 15, z: -8.6, fx: 15, fz: -9, y: 3.1, r: 2.6, use: function () { api.toast('花店：今天的花很新鮮喔！'); } });
             ctx.item({
-                label: 'UBIKE', x: 13, z: -5.4, y: 3.2, r: 3.2, hit: [ub],
+                label: '租單車', x: 13, z: -5.4, fx: 13.3, fz: -7.3, y: 2.2, r: 3.2, hit: [ub],
                 use: async function () {
                     var a = await api.ask({
                         title: 'UBIKE 租借站', text: '要租一台 UBIKE 出發嗎？',
@@ -986,7 +988,7 @@
                 }
             });
             ctx.item({
-                label: '公車站牌', x: -18, z: -6.6, y: 4.2, r: 3, hit: [stop],
+                label: '等公車', x: -18, z: -6.6, fx: -18, fz: -5.9, y: 2.15, r: 3, hit: [stop],
                 use: async function () {
                     if (!(await askWait(api))) return;
                     api.fail('這一段不是搭公車，要改騎 UBIKE！');
@@ -1003,7 +1005,7 @@
             var R = ctx.root;
             ctx.place = '蘭陽蛋糕店';
             ctx.bounds = { x0: -6, x1: 6, z0: -5, z1: 5 };
-            ctx.cam = { dist: 5, height: 6, look: 1, ahead: 1.4 };
+            ctx.cam = { distance: 4.6 };
             ctx.spawn = { x: 0, z: 3.9, yaw: 0 };
             K.ground(R, 0, 0, 80, 80, 0xE9DCC4, -0.03);
             K.floor(ctx, 0, 0, 12, 10, K.tiles(0xFFF4E2, 0xF7E2C6, 5, 4));
@@ -1057,7 +1059,7 @@
             }
 
             ctx.item({
-                label: '櫃台取貨', x: 0, z: -2.1, y: 2.6, r: 2.6, hit: [clerk],
+                label: '取蛋糕', x: 0, z: -2.1, fx: 0, fz: -3.75, y: 2.75, r: 2.6, hit: [clerk],
                 use: async function () {
                     if (api.has('cake')) { api.toast('蛋糕已經拿好了！'); return; }
                     var v = await api.ask({
@@ -1070,7 +1072,7 @@
                     await api.say({ title: '拿到了！', text: '店員：這是您的巧克力蛋糕，用正方形盒子裝好了，路上小心！', ok: '謝謝', kind: 'go' });
                 }
             });
-            ctx.item({ label: '出口', x: 0, z: 4.6, y: 2.9, r: 2.2, use: function () { api.go('street_cake', { from: 'shop' }, { text: '走出蛋糕店' }); } });
+            ctx.item({ label: '出去', x: 0, z: 4.6, fx: 0, fz: 5, y: 2.4, r: 2.2, use: function () { api.go('street_cake', { from: 'shop' }, { text: '走出蛋糕店' }); } });
         }
     };
 
@@ -1092,7 +1094,7 @@
             ctx.mode = 'bike';
             ctx.place = '中華路';
             ctx.spawn = { x: 0, z: 8, yaw: 0 };
-            ctx.cam = { dist: 7.6, height: 4.4, look: 1.4, ahead: 4 };
+            ctx.cam = { distance: 7.0, ahead: 3.0 };
             K.ground(R, 30, -60, 700, 700, C.grass, -0.05);
             GRID.forEach(function (s) { ctx.walkable(s.x0, s.x1, s.z0, s.z1, s.name); });
             var cross = [
@@ -1233,7 +1235,7 @@
             var R = ctx.root;
             ctx.place = '西藏路';
             ctx.spawn = { x: 6, z: 8, yaw: 0 };
-            ctx.cam = { dist: 6.4, height: 5.2, look: 1.3, ahead: 2.4 };
+            ctx.cam = { distance: 5.6 };
             K.ground(R, 25, -35, 500, 500, C.grass, -0.05);
             ALLEYS.forEach(function (s) { ctx.walkable(s.x0, s.x1, s.z0, s.z1, s.name); });
             drawRoads(ctx, [ALLEYS[0]], { sidewalk: 2, y: 0.006 });
@@ -1247,13 +1249,13 @@
                 var zc = -51 - i * 8;
                 var hh = house(ctx, R, { x: 54 + 4.2, z: zc, w: 8, d: 7.6, h: 7 + (i % 2) * 2, face: 'w', color: K.FACADES[i + 2], num: num });
                 occupied.push({ x0: 54, x1: 62.4, z0: zc - 4, z1: zc + 4 });
-                doors.push({ num: num, obj: hh, x: 54.6, z: zc });
+                doors.push({ num: num, obj: hh, x: 53.2, z: zc, fx: 54.2 });
             });
             [7, 9, 11, 13].forEach(function (num, i) {
                 var zc = -51 - i * 8;
                 var hh = house(ctx, R, { x: 50 - 4.2, z: zc, w: 8, d: 7.6, h: 7 + ((i + 1) % 2) * 2, face: 'e', color: K.FACADES[i + 5], num: num });
                 occupied.push({ x0: 41.6, x1: 50, z0: zc - 4, z1: zc + 4 });
-                doors.push({ num: num, obj: hh, x: 49.4, z: zc });
+                doors.push({ num: num, obj: hh, x: 50.8, z: zc, fx: 49.8 });
             });
             var occ = fillBuildings(ctx, ALLEYS, {
                 only: [1, 2, 3, 4, 5, 6], occupied: occupied, sidewalk: 0.6, minW: 6, maxW: 9, depth: 8, minH: 6, maxH: 11, rooftop: true, collide: false,
@@ -1310,7 +1312,7 @@
             doors.forEach(function (d) {
                 if (d.num === 12) ctx.data.homeDoor = d.obj.userData.door;
                 ctx.item({
-                    label: d.num + ' 號', x: d.x, z: d.z, y: 3.2, r: 2.4, hit: [d.obj.userData.door],
+                    label: '按門鈴', x: d.x, z: d.z, fx: d.fx, fz: d.z, y: 2.2, r: 2.2, hit: [d.obj.userData.door],
                     use: function () {
                         if (d.num === 12) api.win();
                         else api.fail('這是 ' + d.num + ' 號，不是我家！');

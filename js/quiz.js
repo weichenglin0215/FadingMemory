@@ -1,21 +1,22 @@
 /* ═══════════════════════════════════════════════════════════════════
    quiz.js — 測試模式（純 2D）
-   畫面：選關卡 → 紙條（自動分頁，只能看一次）→ 答題 → 結果 → 錯題回顧
-   每個畫面都設計成「不用上下捲動」：題目與選項會依空間自動縮字。
+   畫面：選關卡 → 紙條（自動分頁，看完燒掉）→ 答題 → 結果（混淆類型分析）→ 錯題回顧
+   · 題目由 quiz_gen.js 產生：從主選單進來就是新的一局，一局之內重玩同一關題目不變。
+   · 答對：自動跳下一題。答錯：標出正確答案＋一句「為什麼會錯」，按「下一題」繼續。
+   · 每個畫面都設計成「不用上下捲動」：題目與選項會依空間自動縮字。
    ═══════════════════════════════════════════════════════════════════ */
 
 (function () {
     'use strict';
 
-    var LEVELS = window.QUIZ_LEVELS;
-    var DOMAINS = window.QUIZ_DOMAINS;
+    var LEVELS = [];
+    var KINDS = window.QuizGen.KINDS;
     var h = UI.h;
 
     var S = {
         lv: 0,
         qi: 0,
         answers: [],
-        weather: 'clear',
         pages: [],
         page: 0,
         locked: false,
@@ -40,16 +41,10 @@
     function clear() {
         screen.innerHTML = '';
         screen.scrollTop = 0;
+        screen.classList.remove('is-feedback');
     }
 
     function bestKey(id) { return 'fm.quiz.best.' + id; }
-
-    function domainOf(tag) {
-        for (var i = 0; i < DOMAINS.length; i++) {
-            if (DOMAINS[i].tags.indexOf(tag) >= 0) return DOMAINS[i];
-        }
-        return DOMAINS[0];
-    }
 
     function askConfirm(text, yesLabel, noLabel) {
         return new Promise(function (resolve) {
@@ -70,7 +65,7 @@
         });
     }
 
-    /* ═══ ① 選關卡 ═══ */
+    /* ═══ ① 選關卡（← 回主選單＝這一局結束，下次進來換新題目）═══ */
     function showLevels() {
         setBar('測試模式', '共 8 關', null, function () { location.href = 'index.html'; });
         clear();
@@ -92,13 +87,11 @@
         screen.appendChild(list);
     }
 
-    /* ═══ ② 紙條：自動分頁，看完燒掉 ═══ */
+    /* ═══ ② 紙條：自動分頁，可以翻回上一頁，看完燒掉 ═══ */
     function startLevel(idx) {
         S.lv = idx;
         S.qi = 0;
         S.answers = [];
-        S.weather = Math.random() < 0.5 ? 'rain' : 'clear';
-        S.eventShown = false;
         S.page = 0;
         S.locked = false;
         var lv = LEVELS[idx];
@@ -129,7 +122,6 @@
     }
 
     function renderNotePage(note, pager, btns) {
-        var lv = LEVELS[S.lv];
         var total = S.pages.length;
 
         barMeta.textContent = total > 1 ? (S.page + 1) + ' / ' + total + ' 頁' : '';
@@ -164,37 +156,19 @@
         /* 按鈕列放好後才放紙條內容；單一段落長到一頁放不下時，縮字到下限 */
         UI.renderParas(note, S.pages[S.page]);
         UI.fit(note, px('--fs-note', 34), px('--fs-note-min', 26));
-        void lv;
     }
 
     /* ═══ ③ 答題 ═══ */
-    function resolveQ(raw) {
-        if (!raw.dyn) return raw;
-        var rain = S.weather === 'rain';
-        if (raw.dyn === 'weather') return { q: '現在的天氣如何？', o: ['晴天', '下雨'], c: rain ? 1 : 0, t: '條件判斷' };
-        if (raw.dyn === 'first') return { q: '照規則，現在先做什麼？', o: ['買傘', '去銀行', '買便當', '回家'], c: rain ? 0 : 1, t: '條件判斷' };
-        return { q: '今天一共要辦幾件事？', o: ['2 件', '3 件', '4 件', '5 件'], c: rain ? 2 : 1, t: '條件判斷' };
-    }
-
     function showQuestion() {
         var lv = LEVELS[S.lv];
-        var raw = lv.qs[S.qi];
+        var q = lv.qs[S.qi];
         var total = lv.qs.length;
         setBar('第 ' + lv.id + ' 關', (S.qi + 1) + ' / ' + total, S.qi / total, leaveLevel);
-
-        if (raw.dyn === 'weather' && !S.eventShown) {
-            showEvent();
-            return;
-        }
-
-        var q = resolveQ(raw);
         clear();
         S.locked = false;
 
-        var head = h('div', { 'class': 'q-head' }, [
-            h('span', { 'class': 'pill pill--blue', text: q.t }),
-            h('span', { 'class': 'hint', text: lv.name })
-        ]);
+        var side = h('span', { 'class': 'hint', text: lv.name });
+        var head = h('div', { 'class': 'q-head' }, [h('span', { 'class': 'pill pill--blue', text: q.t }), side]);
         var inner = h('div', { 'class': 'q-text__inner', text: q.q });
         var box = h('div', { 'class': 'q-text' }, [inner]);
         var opts = h('div', { 'class': 'q-opts' });
@@ -204,7 +178,7 @@
             var t = h('span', { 'class': 'opt__text', text: label });
             var b = h('button', { 'class': 'opt' }, [h('span', { 'class': 'opt__badge', text: letters[i] }), t]);
             pairs.push([t, b]);
-            b.addEventListener('click', function () { answer(q, i, opts); });
+            b.addEventListener('click', function () { answer(q, i, { opts: opts, box: box, side: side, pairs: pairs }); });
             opts.appendChild(b);
         });
 
@@ -213,39 +187,53 @@
         screen.appendChild(opts);
 
         UI.fit(inner, px('--fs-question', 40), px('--fs-question-min', 26), box);
+        fitOptions(pairs);
+    }
+
+    function fitOptions(pairs) {
         pairs.forEach(function (p) { UI.fit(p[0], px('--fs-option', 34), px('--fs-option-min', 24), p[1]); });
     }
 
-    function showEvent() {
-        S.eventShown = true;
-        var rain = S.weather === 'rain';
-        clear();
-        screen.appendChild(h('div', { 'class': 'event' }, [
-            h('div', { 'class': 'event__art', html: UI.art(rain ? 'rain' : 'sun', 'event__art') }),
-            h('div', { 'class': 'event__title', text: '情境更新' }),
-            h('div', { 'class': 'event__text', text: rain ? '你走出辦公室，今天下雨了。' : '你走出辦公室，今天是晴天。' })
-        ]));
-        screen.appendChild(h('button', {
-            'class': 'btn btn--primary', text: '知道了，繼續',
-            on: { click: showQuestion }
-        }));
+    function nextQuestion() {
+        S.qi++;
+        if (S.qi >= LEVELS[S.lv].qs.length) showResult();
+        else showQuestion();
     }
 
-    function answer(q, i, opts) {
+    function answer(q, i, ui) {
         if (S.locked) return;
         S.locked = true;
         var ok = i === q.c;
-        S.answers.push({ q: q.q, t: q.t, chosen: q.o[i], correct: q.o[q.c], ok: ok });
-        Array.prototype.forEach.call(opts.children, function (b, idx) {
+        S.answers.push({
+            q: q.q, t: q.t, chosen: q.o[i], correct: q.o[q.c], ok: ok,
+            kind: q.k[i], why: q.w[i], kinds: q.k.filter(function (k) { return k; })
+        });
+        Array.prototype.forEach.call(ui.opts.children, function (b, idx) {
             b.disabled = true;
             if (idx === q.c) b.classList.add('is-ok');
             else if (idx === i) b.classList.add('is-bad');
         });
-        setTimeout(function () {
-            S.qi++;
-            if (S.qi >= LEVELS[S.lv].qs.length) showResult();
-            else showQuestion();
-        }, ok ? 650 : 1100);
+        if (ok) {
+            setTimeout(nextQuestion, 650);
+            return;
+        }
+        showFeedback(q, i, ui);
+    }
+
+    /* 答錯：題目區改成「正確答案＋為什麼會錯」，選項變矮一點，下方多一顆「下一題」 */
+    function showFeedback(q, i, ui) {
+        screen.classList.add('is-feedback');
+        ui.side.replaceWith(h('span', { 'class': 'pill pill--orange', text: q.k[i] }));
+        ui.box.innerHTML = '';
+        var fb = h('div', { 'class': 'fb' }, [
+            h('div', { 'class': 'fb__q', text: q.q }),
+            h('div', { 'class': 'fb__ans', html: UI.icon('check') + '<span>' + UI.esc(q.o[q.c]) + '</span>' }),
+            h('div', { 'class': 'fb__why', text: q.w[i] })
+        ]);
+        ui.box.appendChild(fb);
+        screen.appendChild(h('button', { 'class': 'btn btn--primary', html: '<span>下一題</span>', on: { click: nextQuestion } }));
+        fitOptions(ui.pairs);
+        UI.fit(fb, px('--fs-md', 30), 20, ui.box);
     }
 
     function leaveLevel() {
@@ -254,7 +242,21 @@
         });
     }
 
-    /* ═══ ④ 結果：依記憶類型統計 ═══ */
+    /* ═══ ④ 結果：答對率＋「最容易被哪一種混淆騙到」═══ */
+    function confusionStats() {
+        var st = {};
+        S.answers.forEach(function (a) {
+            a.kinds.filter(function (k, i, arr) { return arr.indexOf(k) === i; }).forEach(function (k) {
+                st[k] = st[k] || { seen: 0, hit: 0 };
+                st[k].seen++;
+            });
+            if (!a.ok && a.kind) st[a.kind].hit++;
+        });
+        return Object.keys(st).filter(function (k) { return st[k].hit > 0; }).sort(function (a, b) {
+            return st[b].hit - st[a].hit || st[b].hit / st[b].seen - st[a].hit / st[a].seen;
+        }).slice(0, 3).map(function (k) { return { k: k, hit: st[k].hit, seen: st[k].seen }; });
+    }
+
     function showResult() {
         var lv = LEVELS[S.lv];
         var total = S.answers.length;
@@ -292,31 +294,38 @@
             ])
         ]));
 
-        /* 各記憶類型的答對率 */
-        var grid = h('div', { 'class': 'res-grid' });
-        DOMAINS.forEach(function (d) {
-            var list = S.answers.filter(function (a) { return d.tags.indexOf(a.t) >= 0; });
-            if (!list.length) return;
-            var ok = list.filter(function (a) { return a.ok; }).length;
-            var ratio = ok / list.length;
-            grid.appendChild(h('div', { 'class': 'dom' + (ratio < 0.6 ? ' is-weak' : '') }, [
-                h('div', { 'class': 'dom__row' }, [
-                    h('span', { text: d.name }),
-                    h('span', { 'class': 'dom__frac', text: ok + '/' + list.length })
-                ]),
-                h('div', { 'class': 'dom__bar' }, [h('div', { 'class': 'dom__fill', style: { width: (ratio * 100) + '%' } })])
-            ]));
-        });
-        screen.appendChild(grid);
+        /* 混淆類型：被騙到的次數／遇到這一類誘答的題數 */
+        var top = confusionStats();
+        var panel = h('div', { 'class': 'conf' }, [
+            h('div', { 'class': 'conf__head' }, [
+                h('span', { 'class': 'conf__title', text: top.length ? '最容易被哪一種騙到' : '混淆分析' }),
+                S.wrong.length ? h('button', {
+                    'class': 'conf__more', text: '看錯題 (' + S.wrong.length + ')',
+                    on: { click: function () { S.rev = 0; showReview(); } }
+                }) : null
+            ])
+        ]);
+        if (!top.length) {
+            panel.appendChild(h('div', { 'class': 'conf__none', text: '這一關沒有被任何混淆騙到！' }));
+        } else {
+            top.forEach(function (c) {
+                panel.appendChild(h('div', { 'class': 'conf__row' }, [
+                    h('div', { 'class': 'conf__line' }, [
+                        h('span', { 'class': 'conf__name', text: c.k }),
+                        h('span', { 'class': 'conf__frac', text: '騙到 ' + c.hit + '／' + c.seen + ' 次' })
+                    ]),
+                    h('div', { 'class': 'conf__desc', text: KINDS[c.k] || '' })
+                ]));
+            });
+        }
+        screen.appendChild(panel);
 
-        var wrongBtn = h('button', {
-            'class': 'btn btn--line', text: S.wrong.length ? '看錯題 (' + S.wrong.length + ')' : '全部答對',
-            on: { click: function () { S.rev = 0; showReview(); } }
-        });
-        if (!S.wrong.length) wrongBtn.disabled = true;
+        var last = S.lv >= LEVELS.length - 1;
         screen.appendChild(h('div', { 'class': 'row' }, [
-            wrongBtn,
-            h('button', { 'class': 'btn btn--primary', text: '再玩一次', on: { click: function () { startLevel(S.lv); } } })
+            h('button', { 'class': 'btn btn--line', html: UI.icon('refresh') + '<span>再玩一次</span>', on: { click: function () { startLevel(S.lv); } } }),
+            last
+                ? h('button', { 'class': 'btn btn--primary', html: UI.icon('home') + '<span>回主選單</span>', on: { click: function () { location.href = 'index.html'; } } })
+                : h('button', { 'class': 'btn btn--primary', html: '<span>下一關</span>', on: { click: function () { startLevel(S.lv + 1); } } })
         ]));
         screen.appendChild(h('button', { 'class': 'btn btn--sky btn--sm', text: '選其他關卡', on: { click: showLevels } }));
     }
@@ -331,10 +340,14 @@
         var inner = h('div', { 'class': 'rev__q-inner', text: a.q });
         var qbox = h('div', { 'class': 'rev__q' }, [inner]);
         var card = h('div', { 'class': 'card rev' }, [
-            h('span', { 'class': 'pill pill--blue', style: { 'align-self': 'flex-start' }, text: a.t }),
+            h('div', { 'class': 'rev__tags' }, [
+                h('span', { 'class': 'pill pill--blue', text: a.t }),
+                a.kind ? h('span', { 'class': 'pill pill--orange', text: a.kind }) : null
+            ]),
             qbox,
             h('div', { 'class': 'rev__line rev__line--bad', html: UI.icon('cross') + '<span class="rev__label">你的答案</span>' }, [h('span', { 'class': 'rev__value', text: a.chosen })]),
-            h('div', { 'class': 'rev__line rev__line--ok', html: UI.icon('check') + '<span class="rev__label">正確答案</span>' }, [h('span', { 'class': 'rev__value', text: a.correct })])
+            h('div', { 'class': 'rev__line rev__line--ok', html: UI.icon('check') + '<span class="rev__label">正確答案</span>' }, [h('span', { 'class': 'rev__value', text: a.correct })]),
+            a.why ? h('div', { 'class': 'rev__why', text: a.why }) : null
         ]);
         screen.appendChild(card);
 
@@ -348,8 +361,16 @@
         UI.fit(inner, px('--fs-question', 40), px('--fs-question-min', 26), qbox);
     }
 
+    /* ─── 驗證用（主控台）：FMQuiz.question(關卡索引, 題目索引)、FMQuiz.pick(選項索引) ─── */
+    window.FMQuiz = {
+        levels: function () { return LEVELS; },
+        question: function (lv, qi) { S.lv = lv; S.qi = qi; S.answers = []; showQuestion(); },
+        pick: function (i) { var b = screen.querySelectorAll('.opt')[i]; if (b) b.click(); return !!b; },
+        result: function (lv, answers) { S.lv = lv; S.answers = answers; showResult(); }
+    };
+
     /* ─── 啟動 ─── */
-    document.addEventListener('DOMContentLoaded', function () {
+    UI.ready(function () {
         Stage.init();
         screen = document.getElementById('screen');
         barTitle = document.getElementById('bar-title');
@@ -358,9 +379,18 @@
         barProgress = document.getElementById('bar-progress');
         confirmEl = document.getElementById('confirm');
         barBack.addEventListener('click', function () { if (backAction) backAction(); });
+
+        try {
+            LEVELS = window.QuizGen.session().levels;
+        } catch (e) {
+            setBar('測試模式', '', null, function () { location.href = 'index.html'; });
+            screen.appendChild(h('div', { 'class': 'conf__none', text: '題目產生失敗，請回主選單再進來一次。' }));
+            if (window.console) console.error(e);
+            return;
+        }
         UI.fonts(['900 30px "Noto Sans TC"', '700 30px "Noto Sans TC"'], '測試模式選關卡新手暖身', 1500).then(showLevels);
 
-        /* 給驗證用：?level=3 直接進某關 */
+        /* 給驗證用：?level=3 直接進某關；?seed=數字 重現某一局 */
         var m = /[?&]level=(\d+)/.exec(location.search);
         if (m) setTimeout(function () { startLevel(Math.max(0, Math.min(LEVELS.length - 1, +m[1] - 1))); }, 1600);
     });

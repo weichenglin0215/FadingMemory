@@ -23,6 +23,12 @@
     var keys = {};
     var JOY_TRAVEL = 0.34; /* 搖桿頭可移動半徑 = 底座寬度 × 0.34 */
 
+    /* 語音朗讀：由 story.js 接上 HUD.voice = { say(text, {hold, maxWait}) → tag, drop(tag) }
+       對話框、紙條、提示、轉場字都會念；對話框關掉時，它還沒念完的部分就停掉 */
+    HUD.voice = null;
+    function speak(text, opt) { return HUD.voice && text ? HUD.voice.say(text, opt) : 0; }
+    function unspeak(tag) { if (HUD.voice && tag) HUD.voice.drop(tag); }
+
     HUD.init = function (el) {
         root = el;
 
@@ -171,8 +177,11 @@
             actEl.hidden = true;
             return;
         }
-        actLabel.textContent = label;
         actEl.hidden = false;
+        if (actLabel.textContent !== label) {
+            actLabel.textContent = label;
+            UI.fit(actLabel, UI.cssPx('--fs-sm', 26), 18);
+        }
     };
 
     HUD.onAction = function (fn) { actionHandler = fn; };
@@ -200,7 +209,9 @@
         fitChip();
     };
 
-    HUD.toast = function (text, ms) {
+    /* opt.silent：不念出來 */
+    HUD.toast = function (text, ms, opt) {
+        if (!(opt && opt.silent)) speak(text);
         toastBox.textContent = text;
         toastEl.classList.remove('is-hidden');
         clearTimeout(toastTimer);
@@ -214,6 +225,7 @@
     };
 
     HUD.fade = function (on, text) {
+        if (on && text) speak(text, { maxWait: 6000 });
         fadeText.textContent = text || '';
         fadeEl.classList.toggle('is-on', !!on);
         return UI.wait(380);
@@ -233,12 +245,14 @@
 
     /* ─── 對話框 ───
        HUD.ask({ title, text, art:'sun'|'rain'|'home', choices:[{label, value, kind:'primary'|'go'|'sky'|'line'}],
-                 cols:1|2|3, big:true, center:true }) → Promise(value) */
+                 cols:1|2|3, big:true, center:true,
+                 speak: '要念的字' | false（省略＝念標題＋內文） }) → Promise(value) */
     HUD.ask = function (o) {
         return new Promise(function (resolve) {
             modal++;
             releaseJoy();
             HUD.action(null);
+            var tag = o.speak === false ? 0 : speak(o.speak || [o.title, o.text].filter(Boolean).join('\n'), { hold: true });
             var layer = h('div', { 'class': 'dlg hit' + (o.center ? ' dlg--center' : '') });
             var card = h('div', { 'class': 'dlg__card' });
             var head = h('div', { 'class': 'dlg__head' });
@@ -258,6 +272,7 @@
                         click: function () {
                             if (layer.dataset.done) return;
                             layer.dataset.done = '1';
+                            unspeak(tag);
                             layer.remove();
                             modal = Math.max(0, modal - 1);
                             resolve(c.value);
@@ -273,17 +288,18 @@
 
     HUD.say = function (o) {
         return HUD.ask({
-            title: o.title, text: o.text, html: o.html, art: o.art, tone: o.tone, center: o.center,
+            title: o.title, text: o.text, html: o.html, art: o.art, tone: o.tone, center: o.center, speak: o.speak,
             choices: [{ label: o.ok || '好', value: true, kind: o.kind || 'primary' }]
         });
     };
 
-    /* 紙條：自動分頁，最後一頁按「看完了」就燒掉 → Promise */
+    /* 紙條：自動分頁，最後一頁按「看完了」就燒掉 → Promise（每翻到一頁就念那一頁） */
     HUD.note = function (paras) {
         return new Promise(function (resolve) {
             modal++;
             releaseJoy();
             HUD.action(null);
+            var tag = 0;
             var layer = h('div', { 'class': 'dlg dlg--note dlg--center hit' });
             var note = h('div', { 'class': 'note' });
             var pager = h('div', { 'class': 'hint' });
@@ -323,6 +339,7 @@
                             click: function () {
                                 if (layer.dataset.done) return;
                                 layer.dataset.done = '1';
+                                unspeak(tag);
                                 note.classList.add('is-burning');
                                 setTimeout(function () {
                                     layer.remove();
@@ -335,6 +352,8 @@
                 }
                 UI.renderParas(note, pages[page]);
                 UI.fit(note, maxFs, minFs);
+                unspeak(tag);
+                tag = speak(pages[page].join(''), { hold: true });
             }
 
             UI.fonts(['700 34px "Noto Serif TC"'], paras.join(''), 2500).then(function () {
