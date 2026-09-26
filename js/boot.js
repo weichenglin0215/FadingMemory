@@ -30,7 +30,7 @@
         },
         quiz: {
             css: BASE_CSS.concat(['css/quiz.css']),
-            js: BASE_JS.concat(['js/quiz_pools.js', 'js/quiz_gen.js', 'js/quiz.js'])
+            js: BASE_JS.concat(['js/quiz_pools.js', 'js/quiz_gen.js', 'js/quiz_travel.js', 'js/quiz_health.js', 'js/quiz.js'])
         },
         world: {
             css: BASE_CSS.concat(['css/world.css']),

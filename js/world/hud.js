@@ -340,12 +340,10 @@
                                 if (layer.dataset.done) return;
                                 layer.dataset.done = '1';
                                 unspeak(tag);
-                                note.classList.add('is-burning');
-                                setTimeout(function () {
-                                    layer.remove();
-                                    modal = Math.max(0, modal - 1);
-                                    resolve();
-                                }, 750);
+                                /* 燒掉紙條後直接繼續（5→1 水流倒數已取消；js/waterflow.js 保留備用） */
+                                layer.remove();
+                                modal = Math.max(0, modal - 1);
+                                resolve();
                             }
                         }
                     }));

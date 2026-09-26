@@ -110,6 +110,15 @@
     --opt-bd: var(--bd);
     --opt-badge: 54px;
 
+    /* ── 紙條消失的水流特效（js/waterflow.js）─────────────
+       倒數 5→1，每個數字的墨色與水流顏色：紫、藍、綠、黃、紅 */
+    --flow-ink-5: #8A6CC8;                     /* 紫 */
+    --flow-ink-4: var(--c-blue);               /* 藍 */
+    --flow-ink-3: var(--c-green);              /* 綠 */
+    --flow-ink-2: var(--c-yellow);             /* 黃 */
+    --flow-ink-1: #D9483B;                     /* 紅 */
+    --flow-stroke: 56px;                       /* 數字筆畫粗細（邏輯 px） */
+
     /* ── 版面 ─────────────────────────────────────────── */
     --bar-h: 78px;
 

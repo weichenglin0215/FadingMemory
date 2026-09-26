@@ -18,20 +18,10 @@
     var P = global.QUIZ_POOLS;
     var QuizGen = {};
 
-    var GEN_V = 1;                       /* 存檔格式版本：格式改了就加一（舊存檔作廢、重新產生） */
+    var GEN_V = 2;                       /* 存檔格式版本：格式改了就加一（舊存檔作廢、重新產生） */
     var KEY = 'fm.quiz.session';
     var FRESH = 'fm.quiz.fresh';         /* 主選單按「測試模式」時設為 true → 進來就開新的一局 */
 
-    var META = [
-        { name: '新手暖身', tag: '條列・一件事', n: 4 },
-        { name: '兩件差事', tag: '口語・數字很像', n: 6 },
-        { name: '先後順序', tag: '講的順序≠做的順序', n: 8 },
-        { name: '顏色形狀', tag: '特徵互相搭配', n: 12 },
-        { name: '兩段行程', tag: '誰要的・可以買哪種', n: 16 },
-        { name: '臨時改口', tag: '買菜清單一改再改', n: 20 },
-        { name: '一通電話', tag: '新舊兩個版本', n: 24 },
-        { name: '回家的路', tag: '綜合大魔王', n: 32 }
-    ];
 
     /* 混淆類型（結果頁的名稱與白話說明） */
     var KINDS = QuizGen.KINDS = {
@@ -289,15 +279,16 @@
     function people(G, n, exclude) { return G.pick(P.friends, n, exclude); }
 
     /* ═══ 第 1 關：新手暖身（條列、一件事，幾乎沒有干擾）═══ */
-    function L1(G) {
-        var e = G.pick(P.errands1);
+    function L1(G, S, X) {
+        var e = G.pick(X.errands1);
+        var head = X.head1(G, S);
         var bus = G.num(12, 98, null, twoDiff);
         var stop = G.pick(P.stops);
         var floor = G.num(2, 5, null, null, 'floor');
         var n = G.num(2, 4, [floor], null, 'n');
         var v = { bus: bus, stop: stop, place: e.place, floor: floor, act: e.act, n: n, u: e.u, thing: e.thing };
         var note = [
-            '你下班要辦一件事：',
+            head,
             T('搭 {bus} 號公車，在{stop}下車，', v),
             T('去{place} {floor} 樓，{act} {n} {u}{thing}。', v)
         ];
@@ -315,9 +306,10 @@
     }
 
     /* ═══ 第 2 關：兩件差事（口語；門牌號碼是公車號碼倒過來）═══ */
-    function L2(G) {
+    function L2(G, S, X) {
         var who = G.pick(P.home.concat(P.friends));
-        var cs = G.pick(P.shops, 2);
+        var ctx = X.ctx2(G, S);
+        var cs = G.pick(X.shops, 2);
         var c1 = cs[0];
         var c2 = cs[1];
         var i1 = G.pick(c1.items);
@@ -333,10 +325,10 @@
         var n2 = G.num(1, 4, [n1], null, 'n2');
         var v = {
             who: who, bus: bus, stop: stop, s1: c1.shop, s2: c2.shop, n1: cnCount(n1), n2: cnCount(n2),
-            u1: c1.u, u2: c2.u, i1: i1, i2: i2, lure: lure, house: house
+            u1: c1.u, u2: c2.u, i1: i1, i2: i2, lure: lure, house: house, ctx: ctx
         };
         var note = [
-            T('{who}打電話來說：「下班後幫我跑兩個地方好不好？先搭 {bus} 號公車到{stop}，去{s1}買{n1}{u1}{i1}。」', v),
+            T('{who}打電話來說：「{ctx}，下班後幫我跑兩個地方好不好？先搭 {bus} 號公車到{stop}，去{s1}買{n1}{u1}{i1}。」', v),
             T('「然後走到{s2}，買{n2}{u2}{i2}。上次你買成{lure}，這次別再買錯囉！」掛電話前，{who}還說自己家的門牌換新了，是 {house} 號。', v)
         ];
         var f1 = function (x) { return cnCount(x) + c1.u; };
@@ -359,10 +351,11 @@
     }
 
     /* ═══ 第 3 關：先後順序（講的順序和做的順序不一樣）═══ */
-    function L3(G) {
+    function L3(G, S, X) {
         var who = G.pick(P.home.concat(P.friends));
         var nb = people(G, null, [who]);
-        var es = G.pick(P.errands3, 3);
+        var head = X.head3(G, S);
+        var es = G.pick(X.errands3, 3);
         var A = es[0];
         var B = es[1];
         var C = es[2];
@@ -400,7 +393,7 @@
                 T('「喔不對，這兩件之前，要先去{Ap}{Aa}，因為{Ae}。{Cp}那件放最後，因為{Cl}。」', v)
             ];
         }
-        var note = body.concat([
+        var note = [head].concat(body, [
             T('{who}還提醒你，去{Xp}要搭 {bus} 號公車，比較快。', v),
             T('聽完語音，你想起{nb}說過，{Cp}旁邊新開了一家{ns}，開幕送{nn}{nu}{nt}，不過今天沒空去。', v)
         ]);
@@ -432,7 +425,7 @@
     }
 
     /* ═══ 第 4 關：顏色形狀（四樣東西共用三種顏色、三種形狀；反常理的水果；三個特徵的罐子）═══ */
-    function L4(G) {
+    function L4(G, S, X) {
         var who = G.pick(P.home);
         var nb = people(G, null, [who]);
         var g = G.pick(P.grand);
@@ -443,7 +436,7 @@
         var shop = G.pick(['雜貨店', '生活百貨', '五金百貨']);
         var cols = G.pick(P.colors, 3);
         var shs = G.pick(P.shapes, 3);
-        var things = G.pick(P.things4, 4);
+        var things = G.pick(X.things4, 4);
         var si = G.shuffle([0, 1, 2]);
         var x;
         var y;
@@ -467,7 +460,7 @@
         };
         objs.forEach(function (o, i) { v['c' + i] = o.c; v['s' + i] = o.s; v['n' + i] = o.n; });
         var note = [
-            T('{g}下個禮拜生日，{who}拜託你下班去{street}的{shop}，買幾樣布置生日會的東西。', v),
+            T(X.head4, v),
             T('「要一個{c0}的{s0}{n0}，還有一個{c1}的{s1}{n1}。」', v),
             T('{who}想了想又說：「再買一個{c2}的{s2}{n2}，和一個{c3}的{s3}{n3}。」', v),
             T('{nb}在旁邊聽到，說：「上次我在別家買的{n0}是{lc}的，用沒多久就壞了。」', v),
@@ -541,9 +534,9 @@
             fruitColorQ(0), fruitColorQ(1), fruitCountQ(0), fruitCountQ(1), jarQ,
             G.q(shop + '在哪一條路？', '地點', street, [L(alt, '差一點點', '「' + alt + '」和「' + street + '」很像，紙條上是「' + street + '」。')]
                 .concat(G.others(P.streetPairs.map(function (p) { return p[0]; }), [street, alt], '差一點點', 2))),
-            G.q('誰下個禮拜生日？', '人物', g, [L(who, '張冠李戴', who + '是拜託你買東西的人。'), L(nb, '似曾相識', nb + '只是在旁邊聽到。'),
+            G.q('誰最近只吃那兩種蔬果？', '人物', g, [L(who, '張冠李戴', who + '是拜託你買東西的人。'), L(nb, '似曾相識', nb + '只是在旁邊聽到。'),
                 L(g === '孫子' ? '孫女' : '孫子', '差一點點')]),
-            G.q('是誰拜託你買這些東西？', '人物', who, [L(nb, '似曾相識', nb + '只是在旁邊聽到。'), L(g, '張冠李戴', g + '是要過生日的人。')]
+            G.q('是誰拜託你買這些東西？', '人物', who, [L(nb, '似曾相識', nb + '只是在旁邊聽到。'), L(g, '張冠李戴', g + '是只吃那兩種蔬果的人。')]
                 .concat(G.others(P.friends.concat(P.home), [who, nb], '差一點點', 2)))
         ];
         return { note: note, qs: finish(G, qs, 12) };
@@ -551,7 +544,8 @@
 
     /* ═══ 第 5 關：兩段行程（兩班號碼很像的公車、兩個很像的站名、誰要的、花的範圍、四個特徵的盒子）═══ */
     function L5(G) {
-        var ps = G.pick(P.kin.concat(P.friends), 2);
+        var bday = G.pick(P.kin.concat(P.friends));
+        var ps = G.pick(P.kin.concat(P.friends), 2, [bday]);
         var p1 = ps[0];
         var p2 = ps[1];
         var nb = people(G, null, ps);
@@ -583,12 +577,13 @@
         var content = G.pick(P.boxThings);
         var food = G.pick(['油飯', '紅蛋', '喜餅', '蛋糕']);
         var v = {
-            p1: p1, p2: p2, nb: nb, bus1: bus1, bus2: bus2, stop1: stop1, stop2: stop2, place1: pk.place, thing1: pk.thing, closeT: closeT,
+            bday: bday, p1: p1, p2: p2, nb: nb, bus1: bus1, bus2: bus2, stop1: stop1, stop2: stop2, place1: pk.place, thing1: pk.thing, closeT: closeT,
             shop2: cat.shop, n2: cnCount(n2), u2: cat.u, i2: i2, lure: lureItem, fl: flower, f1: fs.ok[0], f2: fs.ok[1], f3: fs.ok[2],
             fx: fs.no, fxr: fs.noWhy, pos: pos, pc: pc, lid: lid ? '有蓋子' : '沒有蓋子', shape: shape, mat: mat, content: content, food: food
         };
         var note = [
-            T('星期天，{p1}和{p2}各拜託你一件事。{p1}要你搭 {bus1} 號公車，在{stop1}下車，去{place1}幫忙拿{thing1}，{place1}{closeT}就關門了。', v),
+            T('星期天是{bday}的生日，大家都在準備，好幾個人都找你幫忙。', v),
+            T('{p1}和{p2}各拜託你一件事。{p1}要你搭 {bus1} 號公車，在{stop1}下車，去{place1}幫忙拿{thing1}，{place1}{closeT}就關門了。', v),
             T('{p2}則要你回程搭 {bus2} 號公車，在{stop2}下車，到{shop2}買{n2}{u2}{i2}。{p2}說上次買成{lure}，這次不要。', v),
             T('{p1}還想要一束{fl}，{f1}、{f2}或{f3}都可以，就是不要{fx}的，因為{fxr}。', v),
             T('另外，{p2}上次放在你家{pos}的那個盒子，這次要順便帶去還。那是一個畫著{pc}線條、{lid}的{shape}{mat}盒，裡面裝著{content}。', v),
@@ -673,7 +668,7 @@
             h2q: '一' + H2.u + H2.n, B1: B1, B2: B2, V: V, k1: fs.ok[0], k2: fs.ok[1], k3: fs.ok[2], fx: fs.no
         };
         var note = [
-            T('明天是星期六，{p4}一家要回來吃午飯。{who}早上出門前交代你：「下午記得去{market}買菜，{rt}以前要回到家喔！」', v),
+            T('明天是{p4}的生日，{p4}一家要回來吃午飯慶生。{who}早上出門前交代你：「下午記得去{market}買菜，{rt}以前要回到家喔！」', v),
             T('「先買{hq}、一瓶醬油、一罐白醋，還有{e1}盒雞蛋。{H}要挑{good}一點的，上次你買的{H}太{bad}了，{res}。」', v),
             T('{who}想了想又說：「魚要買兩條，一條{f1}、一條{f2}，{fT}記得請老闆{treat}。魚攤在市場{ff}最裡面。」', v),
             T('{nb}剛好經過，說市場二樓的豬肉攤今天特價，一斤只要 {pork} 元，不過你們家這個禮拜說好不吃豬肉。', v),
@@ -1005,7 +1000,44 @@
         return { note: note, qs: finish(G, qs, 32, 6) };
     }
 
-    var BUILDERS = [L1, L2, L3, L4, L5, L6, L7, L8];
+    /* ═══ 故事主軸（範本）═══
+       每一局先挑一個主軸，8 關都用同一個主軸（不混用），讓關與關之間也互相干擾。
+       主軸：{ id, name, names:[8 個關名], setup(G) → 整局共用的參數 S, levels:[8 個 fn(G, S, X)], X:主軸專用的文字與題庫 }
+       新增主軸：在另一個檔案呼叫 QuizGen.addTheme({...})，並加到 boot.js 的載入清單（quiz_gen.js 之後）。 */
+    var THEMES = {};
+    var ORDER = [];
+    QuizGen.addTheme = function (th) {
+        if (!THEMES[th.id]) ORDER.push(th.id);
+        THEMES[th.id] = th;
+    };
+    QuizGen.themes = function () { return ORDER.map(function (id) { return { id: id, name: THEMES[id].name }; }); };
+
+    /* 第 1～4 關的共用結構：各主軸只換開場文字與題庫 */
+    QuizGen.lib = {
+        P: P, T: T, L: L, cnNum: cnNum, cnCount: cnCount, twoDiff: twoDiff, threeDiff: threeDiff, rev2: rev2, perms: perms,
+        finish: finish, flowerSet: flowerSet, flowerQs: flowerQs, turnQ: turnQ, people: people,
+        L1: L1, L2: L2, L3: L3, L4: L4
+    };
+
+    /* 主軸一：生日（不同人的生日、不同的需求） */
+    QuizGen.addTheme({
+        id: 'birthday', name: '生日',
+        names: ['新手暖身', '兩件差事', '先後順序', '顏色形狀', '兩段行程', '臨時改口', '一通電話', '回家的路'],
+        setup: function () { return {}; },
+        X: {
+            errands1: P.errands1,
+            head1: function (G) { return '明天是' + G.pick(P.kin.concat(P.friends)) + '的生日，你下班要先辦一件事：'; },
+            ctx2: function () { return '這個禮拜六是我的生日'; },
+            shops: P.shops,
+            head3: function (G) { return '後天是' + G.pick(P.kin.concat(P.friends)) + '的生日，大家忙著準備慶生。'; },
+            errands3: P.errands3,
+            head4: '{g}下個禮拜生日，{who}拜託你下班去{street}的{shop}，買幾樣布置生日會的東西。',
+            things4: P.things4
+        },
+        levels: [L1, L2, L3, L4, L5, L6, L7, L8]
+    });
+
+    var TAGS = ['條列・一件事', '口語・數字很像', '講的順序≠做的順序', '特徵互相搭配', '兩段行程・誰要的', '一改再改', '新舊兩個版本', '綜合大魔王'];
 
     /* ═══ 一局 ═══ */
     function newSeed() {
@@ -1018,15 +1050,15 @@
         }
     }
 
-    function buildLevel(i, seed, avoid) {
+    function buildLevel(th, S, i, seed, avoid) {
         var err = null;
         for (var attempt = 0; attempt < 12; attempt++) {
             var G = new Gen((seed + (i + 1) * 7919 + attempt * 104729) >>> 0, avoid);
             try {
-                var body = BUILDERS[i](G);
+                var body = th.levels[i](G, S, th.X);
                 return {
                     level: {
-                        id: i + 1, name: META[i].name, tag: META[i].tag, note: body.note,
+                        id: i + 1, name: th.names[i], tag: TAGS[i], note: body.note,
                         qs: body.qs.map(function (q) { return { q: q.q, t: q.t, o: q.o, c: q.c, k: q.k, w: q.w, old: q.old }; })
                     },
                     used: G.used
@@ -1036,30 +1068,40 @@
         throw err;
     }
 
-    /* 產生一整局（prevUsed：上一局每一關用過的值 → 這一局避開） */
-    QuizGen.create = function (seed, prevUsed) {
+    /* 產生一整局。prev：上一局（避開它的主軸與每一關用過的值）；theme：指定主軸（驗證用） */
+    QuizGen.create = function (seed, prev, theme) {
         seed = seed == null ? newSeed() : seed >>> 0;
+        prev = prev || {};
+        var pr = mulberry32(seed ^ 0x5bd1e995);
+        var ids = ORDER.filter(function (id) { return id !== prev.theme; });
+        if (!ids.length) ids = ORDER.slice();
+        var themeId = THEMES[theme] ? theme : ids[Math.floor(pr() * ids.length)];
+        var th = THEMES[themeId];
+        var prevUsed = prev.theme === themeId ? prev.used : null;
+        var SG = new Gen((seed ^ 0x9e3779b9) >>> 0, prevUsed && prevUsed.shared);
+        var S = th.setup(SG);
         var levels = [];
-        var used = {};
-        BUILDERS.forEach(function (b, i) {
-            var r = buildLevel(i, seed, prevUsed && prevUsed[i + 1]);
+        var used = { shared: SG.used };
+        for (var i = 0; i < 8; i++) {
+            var r = buildLevel(th, S, i, seed, prevUsed && prevUsed[i + 1]);
             levels.push(r.level);
             used[i + 1] = r.used;
-        });
-        return { v: GEN_V, seed: seed, created: Date.now(), levels: levels, used: used };
+        }
+        return { v: GEN_V, seed: seed, theme: themeId, themeName: th.name, created: Date.now(), levels: levels, used: used };
     };
-
     /* 取得這一局：主選單剛按「測試模式」→ 新的一局；否則沿用存著的（重新整理也一樣）。
        網址加 ?seed=數字 可以重現某一局（驗證用）。 */
     QuizGen.session = function () {
         var s = UI.store.get(KEY, null);
         if (s && s.v !== GEN_V) s = null;
         var m = /[?&]seed=(\d+)/.exec(global.location.search);
+        var tm = /[?&]theme=([a-z]+)/.exec(global.location.search);
+        var want = tm ? tm[1] : null;
         var make = null;
-        if (m) { if (!s || s.seed !== (+m[1] >>> 0)) make = +m[1]; }
-        else if (!s || UI.store.get(FRESH, false)) make = newSeed();
+        if (m) { if (!s || s.seed !== (+m[1] >>> 0) || (want && s.theme !== want)) make = +m[1]; }
+        else if (!s || UI.store.get(FRESH, false) || (want && s.theme !== want)) make = newSeed();
         if (make != null) {
-            s = QuizGen.create(make, s && s.used);
+            s = QuizGen.create(make, s, want);
             UI.store.set(KEY, s);
         }
         UI.store.set(FRESH, false);
@@ -1074,7 +1116,7 @@
         var issues = [];
         levels.forEach(function (lv) {
             var tag = '第' + lv.id + '關';
-            if (lv.qs.length !== META[lv.id - 1].n) issues.push(tag + ' 題數 ' + lv.qs.length);
+            if (lv.qs.length !== [4, 6, 8, 12, 16, 20, 24, 32][lv.id - 1]) issues.push(tag + ' 題數 ' + lv.qs.length);
             lv.note.forEach(function (p) { if (p.length > 90) issues.push(tag + ' 段落 ' + p.length + ' 字：' + p.slice(0, 10)); });
             var old = 0;
             var asked = {};

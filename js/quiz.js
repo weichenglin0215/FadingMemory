@@ -10,6 +10,7 @@
     'use strict';
 
     var LEVELS = [];
+    var THEME = '';
     var KINDS = window.QuizGen.KINDS;
     var h = UI.h;
 
@@ -67,7 +68,7 @@
 
     /* ═══ ① 選關卡（← 回主選單＝這一局結束，下次進來換新題目）═══ */
     function showLevels() {
-        setBar('測試模式', '共 8 關', null, function () { location.href = 'index.html'; });
+        setBar('測試模式', THEME ? '主題：' + THEME : '共 8 關', null, function () { location.href = 'index.html'; });
         clear();
         var list = h('div', { 'class': 'lv-list' });
         LEVELS.forEach(function (lv, idx) {
@@ -145,9 +146,8 @@
                 on: {
                     click: function () {
                         if (S.locked) return;
-                        S.locked = true;
-                        note.classList.add('is-burning');
-                        setTimeout(function () { S.locked = false; showQuestion(); }, 720);
+                        /* 燒掉紙條後直接進入第一題（1.6.x 的 5→1 水流倒數已取消；js/waterflow.js 保留備用） */
+                        showQuestion();
                     }
                 }
             }));
@@ -381,7 +381,9 @@
         barBack.addEventListener('click', function () { if (backAction) backAction(); });
 
         try {
-            LEVELS = window.QuizGen.session().levels;
+            var sess = window.QuizGen.session();
+            LEVELS = sess.levels;
+            THEME = sess.themeName || '';
         } catch (e) {
             setBar('測試模式', '', null, function () { location.href = 'index.html'; });
             screen.appendChild(h('div', { 'class': 'conf__none', text: '題目產生失敗，請回主選單再進來一次。' }));

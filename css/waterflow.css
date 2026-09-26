@@ -1,0 +1,27 @@
+/* ═══ waterflow.css — 紙條消失的水流特效（js/waterflow.js）的外框 ═══
+   ★ 1.7.0 起停用、保留備用（目前沒有頁面載入）
+   不另外鋪底：畫布上是紙條的複本＋墨色，直接蓋在原本的紙條位置上 */
+
+.wflow {
+    position: absolute;
+    inset: 0;
+    z-index: 60;
+    overflow: hidden;
+    pointer-events: auto;       /* 特效進行中擋住所有點擊 */
+    touch-action: none;
+    transition: opacity 0.8s ease, filter 0.8s ease;
+}
+
+.wflow__water {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 500px;
+    height: 850px;
+}
+
+/* 結束：整個畫面模糊、淡出，露出題目 */
+.wflow.is-leaving {
+    opacity: 0;
+    filter: blur(16px);
+}
