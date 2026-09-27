@@ -2,8 +2,8 @@
    quiz_health.js — 測試模式・主軸三：看病
    · 長者日常最需要記清楚的事：哪家醫院、哪一科、哪位醫師、第幾診、掛號號碼、
      藥的樣子與吃法（什麼時候、吃幾顆）、回診日期、空腹、健康檢查要帶的東西、醫療費用。
-   · 一局抽 2 家醫院，8 關重複使用（同一家醫院在不同關卡看不同的科，更容易混淆）。
-   · 第 1～4 關沿用共用結構（quiz_gen.js 的 L1～L4），第 5～8 關是看病專屬的故事。
+   · 一局抽 2 家醫院，8 關重複使用（同一家醫院在不同關卡看不同的科，更容易混淆）；
+     這兩家醫院從第 1 關就開始出現，8 關完全獨立撰寫。
    ═══════════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -23,6 +23,7 @@
     var finish = lib.finish;
     var addDays = lib.addDays;
     var people = lib.people;
+    var timeline = lib.timeline;
 
     function others(list, not) { return list.filter(function (x) { return [].concat(not).indexOf(x) < 0; }); }
     var yuan = function (n) { return n + ' 元'; };
@@ -30,6 +31,14 @@
     var DOSES = ['半顆', '一顆', '一顆半', '兩顆', '三顆'];
     var FAST = ['晚上八點', '晚上十點', '半夜十二點'];
     var FRUITS = ['蘋果', '芭樂', '木瓜', '香蕉', '葡萄', '西瓜', '鳳梨', '奇異果'];
+
+    /* 第 4 關：常見成藥「一般是什麼顏色」與「這次要買的顏色」（借用水果反常理顏色的手法） */
+    var H_ODDMEDS = [
+        { n: '普拿疼', u: '盒', typ: '白色', odd: ['綠色', '藍色'] },
+        { n: '感冒糖漿', u: '瓶', typ: '黃色', odd: ['紅色'] },
+        { n: '腸胃藥', u: '瓶', typ: '白色', odd: ['粉紅色'] },
+        { n: '維他命C', u: '瓶', typ: '橘色', odd: ['白色', '綠色'] }
+    ];
 
     /* 藥的樣子：顏色＋形狀（每一種藥各不相同） */
     function looks(G, n) {
@@ -39,6 +48,287 @@
             if (out.indexOf(c) < 0) out.push(c);
         }
         return out;
+    }
+
+    /* ═══ 第 1 關：新手暖身（陪家人去醫院前，先辦一件差事） ═══ */
+    function H1(G, S) {
+        var D = S.tl[S.i];
+        var p = G.pick(P.kin);
+        var h = S.h[0];
+        var e = G.pick(P.healthErrands1);
+        var bus = G.num(12, 98, null, twoDiff);
+        var stop = G.pick(P.stops);
+        var floor = G.num(2, 5, null, null, 'floor');
+        var n = G.num(2, 4, [floor], null, 'n');
+        var v = { p: p, h: h, bus: bus, stop: stop, place: e.place, floor: floor, act: e.act, n: n, u: e.u, thing: e.thing, today: D.today.sw, ev: D.ev.sw };
+        var note = [
+            T('今天是{today}。{ev}要陪{p}去{h}看病，你今天下班先辦一件事：', v),
+            T('搭 {bus} 號公車，在{stop}下車，', v),
+            T('去{place} {floor} 樓，{act} {n} {u}{thing}。', v)
+        ];
+        var fl = function (x) { return x + ' 樓'; };
+        var cu = function (x) { return x + ' ' + e.u; };
+        var qs = [
+            G.dateQ('哪一天要去看病？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是今天。')], { must: true }),
+            G.q('要陪誰去看病？', '人物', p, G.others(P.kin, p, '差一點點')),
+            G.q('要去哪家醫院？', '地點', h, [L(S.h[1], '差一點點', '這次是去' + h + '。')].concat(G.others(P.hospitals, [h, S.h[1]], '差一點點', 2))),
+            G.q('要搭幾號公車？', '數字', bus, G.near(bus, String, { lo: 10, hi: 99 })),
+            G.q('要在哪一站下車？', '地點', stop, G.others(P.stops, stop)),
+            G.q(T('{place}在幾樓？', v), '數字', fl(floor),
+                [L(fl(n), '張冠李戴', n + ' 是' + e.thing + '的數量，不是樓層。')].concat(G.near(floor, fl, { lo: 1, hi: 9, swap: false }))),
+            G.q(T('要{act}幾{u}{thing}？', v), '數字', cu(n),
+                [L(cu(floor), '張冠李戴', floor + ' 是樓層，不是' + e.thing + '的數量。')].concat(G.near(n, cu, { lo: 1, hi: 9, swap: false })))
+        ];
+        return { note: note, qs: finish(G, qs, 4) };
+    }
+
+    /* ═══ 第 2 關：兩件差事（打電話來的人交代回診的事，順路買兩樣醫療用品） ═══ */
+    function H2(G, S) {
+        var D = S.tl[S.i];
+        var who = G.pick(P.home.concat(P.friends));
+        var dep = G.pick(P.clinics);
+        var h = S.h[0];
+        var cs = G.pick(P.healthShops, 2);
+        var c1 = cs[0];
+        var c2 = cs[1];
+        var i1 = G.pick(c1.items);
+        var i2 = G.pick(c2.items);
+        var rest2 = G.shuffle(c2.items.filter(function (x) { return x !== i2; }));
+        var lure = rest2[0];
+        var sib2 = rest2[1];
+        var sib1 = G.any(c1.items.filter(function (x) { return x !== i1; }));
+        var bus = G.num(12, 98, null, twoDiff);
+        var house = rev2(bus);
+        var stop = G.pick(P.stops);
+        var n1 = G.num(1, 4, null, null, 'n1');
+        var n2 = G.num(1, 4, [n1], null, 'n2');
+        var v = {
+            who: who, dep: dep, h: h, bus: bus, stop: stop, s1: c1.shop, s2: c2.shop, n1: cnCount(n1), n2: cnCount(n2),
+            u1: c1.u, u2: c2.u, i1: i1, i2: i2, lure: lure, house: house, today: D.today.sw, ev: D.ev.sw
+        };
+        var note = [
+            T('今天是{today}，{who}打電話來說：「我{ev}要去{h}看{dep}回診。」', v),
+            T('「下班後幫我跑兩個地方好不好？先搭 {bus} 號公車到{stop}，去{s1}買{n1}{u1}{i1}。」', v),
+            T('「然後走到{s2}，買{n2}{u2}{i2}。上次你買成{lure}，這次別再買錯囉！」掛電話前，{who}還說自己家的門牌換新了，是 {house} 號。', v)
+        ];
+        var f1 = function (x) { return cnCount(x) + c1.u; };
+        var f2 = function (x) { return cnCount(x) + c2.u; };
+        var lureWhy = '「' + lure + '」是上次買錯的。';
+        var qs = [
+            G.dateQ(who + '哪一天要回診？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是打電話來的那天。')], { must: true }),
+            G.weekQ(who + '回診是星期幾？', D.ev, [L(D.today.w, '張冠李戴', D.today.w + '是打電話來的那天。')]),
+            G.q(who + '要回診看哪一科？', '科別', dep, G.others(P.clinics, dep)),
+            G.q(who + '要去哪家醫院回診？', '地點', h, G.others(P.hospitals, h)),
+            G.q('要搭幾號公車？', '數字', bus,
+                [L(house, '似曾相識', house + ' 是' + who + '家的門牌號碼。')].concat(G.near(bus, String, { lo: 10, hi: 99 }))),
+            G.q('要在哪一站下車？', '地點', stop, G.others(P.stops, stop)),
+            G.q(T('在{s1}要買什麼？', v), '物品', i1,
+                [L(i2, '張冠李戴', i2 + '是在' + c2.shop + '買的。'), L(lure, '似曾相識', lureWhy), L(sib1, '差一點點')]),
+            G.q(T('在{s1}要買幾{u1}？', v), '數字', f1(n1),
+                [L(f1(n2), '張冠李戴', '「' + cnCount(n2) + '」是在' + c2.shop + '買的數量。')].concat(G.near(n1, f1, { lo: 1, hi: 6, swap: false }))),
+            G.q(T('在{s2}要買什麼？', v), '物品', i2,
+                [L(lure, '似曾相識', lureWhy), L(i1, '張冠李戴', i1 + '是在' + c1.shop + '買的。'), L(sib2, '差一點點')]),
+            G.q(T('在{s2}要買幾{u2}？', v), '數字', f2(n2),
+                [L(f2(n1), '張冠李戴', '「' + cnCount(n1) + '」是在' + c1.shop + '買的數量。')].concat(G.near(n2, f2, { lo: 1, hi: 6, swap: false })))
+        ];
+        return { note: note, qs: finish(G, qs, 6) };
+    }
+
+    /* ═══ 第 3 關：先後順序（陪家人看診前，還有幾件差事要先辦好） ═══ */
+    function H3(G, S) {
+        var D = S.tl[S.i];
+        var who = G.pick(P.home.concat(P.friends));
+        var nb = people(G, null, [who]);
+        var p = G.pick(P.kin);
+        var h = S.h[1];
+        var es = G.pick(P.healthErrands3, 3);
+        var A = es[0];
+        var B = es[1];
+        var C = es[2];
+        var nA = G.num(1, 5, null, null, 'nA');
+        var nB = G.num(1, 5, [nA], null, 'nB');
+        var ns = [nA, nB, G.num(1, 5, [nA, nB], null, 'nC')];
+        var noise = G.pick(P.noiseShops);
+        var nn = G.num(1, 5, ns, null, 'nn');
+        var BE = es[G.int(0, 2)];
+        var bus = G.num(12, 98, null, twoDiff);
+        var act = function (e, i) { return T(e.act, { n: cnCount(ns[i]) }); };
+        var v = {
+            who: who, nb: nb, p: p, h: h, bus: bus, Ap: A.place, Aa: act(A, 0), Ae: A.early, Bp: B.place, Ba: act(B, 1),
+            Cp: C.place, Ca: act(C, 2), Cl: C.late, Xp: BE.place, ns: noise.shop, nn: cnCount(nn), nu: noise.u, nt: noise.thing,
+            today: D.today.sw, ev: D.ev.s
+        };
+        var form = G.int(0, 2);
+        var narr;
+        var body;
+        if (form === 0) {
+            narr = [B, A, C];
+            body = [
+                T('{who}傳來一段語音：「今天下班，幫我去{Bp}{Ba}。不過去{Bp}之前，要先到{Ap}{Aa}，因為{Ae}。」', v),
+                T('「還有，{Cp}那邊要{Ca}，這件放在最後，因為{Cl}。」', v)
+            ];
+        } else if (form === 1) {
+            narr = [C, A, B];
+            body = [
+                T('{who}傳來一段語音：「今天回家前，最後記得去{Cp}{Ca}，因為{Cl}。」', v),
+                T('「但一出門，第一件事是去{Ap}{Aa}，因為{Ae}。做完這件，再去{Bp}{Ba}。」', v)
+            ];
+        } else {
+            narr = [B, C, A];
+            body = [
+                T('{who}傳來一段語音：「今天下班，幫我去{Bp}{Ba}，然後去{Cp}{Ca}。」', v),
+                T('「喔不對，這兩件之前，要先去{Ap}{Aa}，因為{Ae}。{Cp}那件放最後，因為{Cl}。」', v)
+            ];
+        }
+        var note = [T('今天是{today}。{ev}一早要陪{p}去{h}看診，{who}傳語音交代你幾件事。', v)].concat(body, [
+            T('{who}還提醒你，去{Xp}要搭 {bus} 號公車，比較快。', v),
+            T('聽完語音，你想起{nb}說過，{Cp}旁邊新開了一家{ns}，開幕送{nn}{nu}{nt}，不過今天沒空去。', v)
+        ]);
+
+        var exec = [A, B, C];
+        var ord = ['第一件', '第二件', '最後一件'];
+        var noiseLabel = '逛' + noise.shop;
+        var noiseWhy = noise.shop + '只是順口提到的新店。';
+        var qs = [];
+        exec.forEach(function (e, i) {
+            var lures = [];
+            if (narr[i] !== e) lures.push(L(narr[i].k, '順序顛倒', '紙條上先講到「' + narr[i].k + '」，但它是' + ord[exec.indexOf(narr[i])] + '。'));
+            exec.forEach(function (o, j) { if (j !== i) lures.push(L(o.k, '順序顛倒', '「' + o.k + '」是' + ord[j] + '。')); });
+            lures.push(L(noiseLabel, '似曾相識', noiseWhy));
+            qs.push(G.q(ord[i] + '要做什麼？', '順序', e.k, lures));
+        });
+        qs.push(G.q('哪一件事要搭公車？', '配對', BE.k,
+            exec.filter(function (e) { return e !== BE; }).map(function (e) { return L(e.k, '張冠李戴', '搭公車是為了去' + BE.place + '。'); })
+                .concat([L(noiseLabel, '似曾相識', noiseWhy)])));
+        qs.push(G.q('要搭幾號公車？', '數字', bus, G.near(bus, String, { lo: 10, hi: 99 })));
+        exec.forEach(function (e, i) {
+            var f = function (x) { return cnCount(x) + e.u; };
+            var lures = [];
+            exec.forEach(function (o, j) { if (j !== i) lures.push(L(f(ns[j]), '張冠李戴', '「' + cnCount(ns[j]) + '」是' + o.k + '的數量。')); });
+            lures.push(L(f(nn), '似曾相識', '「' + cnCount(nn) + '」是新店開幕送的數量。'));
+            qs.push(G.q(e.q, '數字', f(ns[i]), lures.concat(G.near(ns[i], f, { lo: 1, hi: 7, swap: false }))));
+        });
+        qs.push(G.dateQ('哪一天要陪家人看診？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是今天。')], { must: true }));
+        qs.push(G.daysQ('今天離看診還有幾天？', D.today, D.ev));
+        qs.push(G.q('要陪誰去看診？', '人物', p, G.others(P.kin, p, '差一點點')));
+        return { note: note, qs: finish(G, qs, 8) };
+    }
+
+    /* ═══ 第 4 關：顏色形狀（打包住院用品、成藥的顏色、平時吃藥用的杯子） ═══ */
+    function H4(G, S) {
+        var D = S.tl[S.i];
+        var who = G.pick(P.home);
+        var nb = people(G, null, [who]);
+        var pair = G.pick(P.streetPairs);
+        var a = G.coin() ? 0 : 1;
+        var street = pair[a];
+        var alt = pair[1 - a];
+        var shop = G.pick(['醫療用品店', '藥局', '生活百貨']);
+        var cols = G.pick(P.colors, 3);
+        var shs = G.pick(P.shapes, 3);
+        var things = G.pick(P.healthThings4, 4);
+        var si = G.shuffle([0, 1, 2]);
+        var x;
+        var y;
+        do { x = G.int(0, 2); y = G.int(0, 2); } while (si[x] === y);
+        var objs = G.shuffle([0, 1, 2].map(function (i) { return { n: things[i], c: cols[i], s: shs[si[i]] }; })
+            .concat([{ n: things[3], c: cols[x], s: shs[y] }]));
+        var meds = G.pick(H_ODDMEDS, 2);
+        var fc = [G.any(meds[0].odd)];
+        var odd2 = meds[1].odd.filter(function (c) { return c !== fc[0]; });
+        fc.push(G.any(odd2.length ? odd2 : meds[1].odd));
+        var fn0 = G.num(1, 4, null, null, 'fn1');
+        var fn = [fn0, G.num(1, 4, [fn0], null, 'fn2')];
+        var jar = G.pick(P.jars);
+        var mat = G.pick(jar.mats);
+        var pos = G.pick(P.places);
+        var jc = cols[G.int(0, 2)];
+        var lc = G.any(P.colors.filter(function (c) { return cols.indexOf(c) < 0 && fc.indexOf(c) < 0; }));
+        var v = {
+            who: who, nb: nb, street: street, shop: shop, lc: lc, pos: pos, jc: jc, mat: mat, jar: jar.n,
+            m1: meds[0].n, m2: meds[1].n, fc1: fc[0], fc2: fc[1], fn1: cnCount(fn[0]), fn2: cnCount(fn[1]), fu1: meds[0].u, fu2: meds[1].u,
+            today: D.today.sw, ev: D.ev.sw
+        };
+        objs.forEach(function (o, i) { v['c' + i] = o.c; v['s' + i] = o.s; v['n' + i] = o.n; });
+        var note = [
+            T('今天是{today}。{who}{ev}要住院檢查，拜託你下班去{street}的{shop}，買幾樣要帶的東西。', v),
+            T('「要一個{c0}的{s0}{n0}，還有一個{c1}的{s1}{n1}。」', v),
+            T('{who}想了想又說：「再買一個{c2}的{s2}{n2}，和一個{c3}的{s3}{n3}。」', v),
+            T('{nb}在旁邊聽到，說：「上次我在別家買的{n0}是{lc}的，用沒多久就壞了。」', v),
+            T('順便買{fc1}的{m1}{fn1}{fu1}、{fc2}的{m2}{fn2}{fu2}，醫生說這兩種{who}可以吃。', v),
+            T('最後，{who}交代：家裡放在{pos}的那個{jc}{mat}{jar}，是平時配水吃藥用的，記得也放進住院包裡。', v)
+        ];
+
+        var ownerOfColor = function (c) { return objs.filter(function (o) { return o.c === c; })[0].n; };
+        var ownerOfShape = function (s) { return objs.filter(function (o) { return o.s === s; })[0].n; };
+        var spareColor = function (not) { return G.any(P.colors.filter(function (c) { return cols.indexOf(c) < 0 && not.indexOf(c) < 0; })); };
+        var order = G.shuffle(objs);
+
+        function colorQ(o) {
+            var lures = [];
+            if (o === objs[0]) lures.push(L(lc, '似曾相識', '「' + lc + '」是' + nb + '上次在別家買的。'));
+            cols.forEach(function (c) { if (c !== o.c) lures.push(L(c, '張冠李戴', '「' + c + '」是' + ownerOfColor(c) + '的顏色。')); });
+            lures.push(L(fc[0], '張冠李戴', '「' + fc[0] + '」是' + meds[0].n + '的顏色。'));
+            lures.push(L(spareColor([lc]), '差一點點'));
+            return G.q(o.n + '是什麼顏色？', '顏色', o.c, lures);
+        }
+        function shapeQ(o) {
+            var lures = [];
+            shs.forEach(function (s) { if (s !== o.s) lures.push(L(s, '張冠李戴', '「' + s + '」是' + ownerOfShape(s) + '的形狀。')); });
+            return G.q(o.n + '是什麼形狀？', '形狀', o.s, lures.concat(G.others(P.shapes, shs)));
+        }
+        function revQ(o) {
+            var lures = objs.filter(function (p) { return p !== o; }).map(function (p) {
+                return L(p.n, '張冠李戴', '「' + p.n + '」是' + p.c + '的' + p.s + '。');
+            });
+            return G.q('「' + o.c + '的' + o.s + '」是哪一樣？', '組合', o.n, lures);
+        }
+        function conjQ(o) {
+            var others2 = objs.filter(function (p) { return p !== o; });
+            var lures = [];
+            others2.forEach(function (p) {
+                if (p.c !== o.c) lures.push(L(p.c + '的' + o.s + o.n, '張冠李戴', o.n + '是' + o.c + '的；' + p.c + '是' + p.n + '的顏色。'));
+                if (p.s !== o.s) lures.push(L(o.c + '的' + p.s + o.n, '張冠李戴', o.n + '是' + o.s + '的；' + p.s + '是' + p.n + '的形狀。'));
+                if (p.c !== o.c && p.s !== o.s) lures.push(L(p.c + '的' + p.s + o.n, '拼湊組合', '這是把' + p.n + '的顏色和形狀，拼到' + o.n + '上了。'));
+            });
+            return G.q('哪一個是' + o.n + '正確的樣子？', '組合', o.c + '的' + o.s + o.n, G.shuffle(lures), { must: true });
+        }
+        function medColorQ(k) {
+            var m = meds[k];
+            var lures = [L(m.typ, '常理陷阱', m.n + '一般是' + m.typ + '，但這次要' + fc[k] + '的。')];
+            lures.push(L(fc[1 - k], '張冠李戴', '「' + fc[1 - k] + '」是' + meds[1 - k].n + '的顏色。'));
+            lures.push(L(cols[0], '張冠李戴', '「' + cols[0] + '」是' + ownerOfColor(cols[0]) + '的顏色。'));
+            lures.push(L(spareColor([m.typ].concat(fc)), '差一點點'));
+            return G.q(m.n + '要買什麼顏色的？', '顏色', fc[k], lures, { must: true });
+        }
+        function medCountQ(k) {
+            var m = meds[k];
+            var fmt = function (n) { return cnCount(n) + m.u; };
+            return G.q(m.n + '要買幾' + m.u + '？', '數字', fmt(fn[k]),
+                [L(fmt(fn[1 - k]), '張冠李戴', '「' + cnCount(fn[1 - k]) + '」是' + meds[1 - k].n + '的數量。')].concat(G.near(fn[k], fmt, { lo: 1, hi: 6, swap: false })));
+        }
+        var jarQ = G.attrQ('關於那個' + jar.n + '子，哪一個說法完全正確？', [
+            { val: pos, alts: G.others(P.places, pos, '差一點點', 2) },
+            {
+                val: jc, alts: cols.filter(function (c) { return c !== jc; }).map(function (c) {
+                    return L(c, '張冠李戴', jar.n + '子是' + jc + '的；' + c + '是' + ownerOfColor(c) + '的顏色。');
+                })
+            },
+            { val: mat, alts: G.others(jar.mats, mat, '差一點點', 2) }
+        ], function (vals) {
+            return (vals[0] ? vals[0] + '的' : '') + (vals[1] || '') + (vals[2] ? vals[2] + jar.n : jar.n + '子');
+        }, 2);
+
+        var qs = [
+            colorQ(order[0]), shapeQ(order[1]), revQ(order[2]), conjQ(order[3]),
+            medColorQ(0), medColorQ(1), medCountQ(0), medCountQ(1), jarQ,
+            G.q(shop + '在哪一條路？', '地點', street, [L(alt, '差一點點', '「' + alt + '」和「' + street + '」很像，紙條上是「' + street + '」。')]
+                .concat(G.others(P.streetPairs.map(function (p) { return p[0]; }), [street, alt], '差一點點', 2))),
+            G.q('是誰要住院檢查？', '人物', who, [L(nb, '似曾相識', nb + '只是在旁邊聽到。')].concat(G.others(P.home, who, '差一點點'))),
+            G.dateQ('哪一天要住院檢查？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是今天。')], { must: true }),
+            G.weekQ('住院檢查是星期幾？', D.ev, [L(D.today.w, '張冠李戴', D.today.w + '是今天。')])
+        ];
+        return { note: note, qs: finish(G, qs, 12) };
     }
 
     /* ═══ 第 5 關：兩個人看病（兩家醫院、兩科、兩位醫師、倒過來的掛號號碼、可以吃的水果、藥盒）═══ */
@@ -155,7 +445,7 @@
             pc: pc, lid: lid ? '有蓋子' : '沒有蓋子', shape: shape, mat: mat, pos: pos
         };
         var note = [
-            T('今天是{today}上午十一點，{who}從{h}看完{dep}回來，醫生換了新的藥，要你幫忙記清楚。', v),
+            T('今天是{today}，{who}從{h}看完{dep}回來，醫生換了新的藥，要你幫忙記清楚。', v),
             T('「{m1}是{l1}的，每天{tm1}吃{d1}；{m2}是{l2}的，{tm2}吃{d2}。」', v),
             T('「還有{m3}，{l3}的，只有頭痛的時候才吃，一天最多{max}顆。」', v),
             T('下次回診是{rv}，要先抽血，前一天{fastT}以後不能吃東西。', v),
@@ -319,7 +609,7 @@
             today: today.sw, ev: ev.sw, rv1: rvs[0].sw, rv2: rvs[1].sw
         };
         var note = [
-            T('今天是{today}晚上。明天{ev}是忙碌的一天，你要陪{p1}和{p2}看病，身上帶了 {cash} 元。', v),
+            T('今天是{today}。明天{ev}是忙碌的一天，你要陪{p1}和{p2}看病，身上帶了 {cash} 元。', v),
             T('早上{t1}先搭 {bus1} 號公車，在{stopA}下車，陪{p1}去{h1}的{dep1}，{doc1}，第{rm1}診。', v),
             T('看完病，到一樓藥局領藥：{m1}是{l1}的，早餐後吃一顆；{m2}是{l2}的，睡前吃半顆。', v),
             T('中午在醫院附近吃{meal}，然後搭 {bus2} 號公車去{h2}，陪{p2}看{dep2}，{doc2}，掛號{no2}號。', v),
@@ -367,10 +657,10 @@
             G.q('自費檢查最後多少錢？', '更正', yuan(self2), [L(yuan(self), '新舊混淆', self + ' 元是漲價之前。')].concat(G.near(self2, yuan, { step: 50, swap: false })), { must: true }),
             G.q('自費檢查原本多少錢？', '一開始', yuan(self), [L(yuan(self2), '新舊混淆', self2 + ' 元是漲價之後。')].concat(G.near(self, yuan, { step: 50, swap: false })), { old: true }),
             G.q('最後一共要付多少錢？', '計算', yuan(total), [L(yuan(oldTotal), '新舊混淆', '這是漲價之前的總數。'), L(yuan(fee + self2), '計算失誤', '掛號費有兩個人。'),
-                L(yuan(total + 100), '計算失誤'), L(yuan(total - 50), '計算失誤')], { must: true }),
+            L(yuan(total + 100), '計算失誤'), L(yuan(total - 50), '計算失誤')], { must: true }),
             G.q('身上的錢夠不夠？', '計算', '不夠', [L('夠', '新舊混淆', '原本夠，自費漲價後一共 ' + total + ' 元，就不夠了。'), L('剛剛好', '差一點點'), L('不用付錢', '差一點點')], { must: true }),
             G.q('要付的錢和身上的錢相差多少？', '計算', yuan(diff), [L(yuan(cash - oldTotal), '新舊混淆', '那是漲價之前剩下的錢。'), L(yuan(self2 - self), '計算失誤', '那是自費漲的價錢。'),
-                L(yuan(diff + 50), '計算失誤'), L(yuan(diff + 100), '計算失誤')]),
+            L(yuan(diff + 50), '計算失誤'), L(yuan(diff + 100), '計算失誤')]),
             G.q('身上帶了多少錢？', '數字', yuan(cash), G.near(cash, yuan, { step: 100, swap: false, lo: 100 })),
             G.dateQ('陪兩個人看病是哪一天？', ev, [L(today.s, '張冠李戴', today.s + '是前一天晚上。')], { must: true }),
             G.dateQ(p1 + '下次回診是哪一天？', rvs[0], [L(rvs[1].s, '張冠李戴', rvs[1].s + '是' + p2 + '回診的日子。')], { must: true }),
@@ -384,53 +674,7 @@
         id: 'health', name: '看病',
         names: ['看病前一天', '幫忙跑兩趟', '就醫前三件事', '住院要帶的', '兩個人看病', '醫生換了藥', '健康檢查', '陪診的一天'],
         /* 時間軸：每一關隔 3～9 天；看病、回診的日期在 2～6 天後 */
-        setup: function (G) { return { h: G.pick(P.hospitals, 2), tl: lib.timeline(G, [3, 9], [2, 6]) }; },
-        X: {
-            errands1: P.healthErrands1,
-            head1: function (G, S, D) {
-                var p = G.pick(P.kin);
-                return {
-                    line: '今天是' + D.today.sw + '。' + D.ev.sw + '早上要陪' + p + '去' + S.h[0] + '看病，今天下班要先辦一件事：',
-                    qs: [
-                        G.dateQ('哪一天要去看病？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是今天。')], { must: true }),
-                        G.q('要陪誰去看病？', '人物', p, G.others(P.kin, p, '差一點點'))
-                    ]
-                };
-            },
-            ctx2: function (G, S, D, who) {
-                return {
-                    when: D.today.sw + '中午十二點',
-                    ctx: '我' + D.ev.sw + '要去' + S.h[0] + '回診',
-                    qs: [
-                        G.dateQ(who + '哪一天要回診？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是打電話來的那天。')], { must: true }),
-                        G.weekQ(who + '回診是星期幾？', D.ev, [L(D.today.w, '張冠李戴', D.today.w + '是打電話來的那天。')])
-                    ]
-                };
-            },
-            shops: P.healthShops,
-            head3: function (G, S, D) {
-                var p = G.pick(P.kin);
-                return {
-                    line: '今天是' + D.today.sw + '。' + D.ev.s + '一早要陪' + p + '去' + S.h[1] + '看診，今天還有幾件事要先辦好。',
-                    qs: [
-                        G.dateQ('哪一天要陪家人看診？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是今天。')], { must: true }),
-                        G.daysQ('今天離看診還有幾天？', D.today, D.ev)
-                    ]
-                };
-            },
-            errands3: P.healthErrands3,
-            head4: function (G, S, D, v) {
-                return {
-                    line: T('今天是{t}晚上八點。{who}{d}要住院檢查，拜託你下班去{street}的{shop}，買幾樣要帶的東西。',
-                        { t: D.today.sw, d: D.ev.sw, who: v.who, street: v.street, shop: v.shop }),
-                    qs: [
-                        G.dateQ('哪一天要住院檢查？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是今天。')], { must: true }),
-                        G.weekQ('住院檢查是星期幾？', D.ev, [L(D.today.w, '張冠李戴', D.today.w + '是今天。')])
-                    ]
-                };
-            },
-            things4: P.healthThings4
-        },
-        levels: [lib.L1, lib.L2, lib.L3, lib.L4, H5, H6, H7, H8]
+        setup: function (G) { return { h: G.pick(P.hospitals, 2), tl: timeline(G, [3, 9], [2, 6]) }; },
+        levels: [H1, H2, H3, H4, H5, H6, H7, H8]
     });
 })();

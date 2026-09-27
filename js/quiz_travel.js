@@ -1,9 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════
    quiz_travel.js — 測試模式・主軸二：旅遊
    · 一局抽 3 個真實的台灣旅遊地點（quiz_pools.js 的 trips），8 關重複使用：
-     同一個地點會在不同關卡、不同的人、不同的行程裡再出現，更容易混淆。
+     同一個地點會在不同關卡、不同的人、不同的行程裡再出現，更容易混淆；
+     這 3 個地點從第 1 關就開始出現，8 關完全獨立撰寫。
    · 內容：挑地點、訂房、交通、人數、景點特色與歷史、美食、名產／伴手禮、突發事件、天氣、時間安排與調整。
-   · 第 1～4 關沿用共用結構（quiz_gen.js 的 L1～L4），只換開場文字與題庫；第 5～8 關是旅遊專屬的故事。
    ═══════════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -16,16 +16,21 @@
     var L = lib.L;
     var cnNum = lib.cnNum;
     var cnCount = lib.cnCount;
+    var twoDiff = lib.twoDiff;
+    var threeDiff = lib.threeDiff;
+    var rev2 = lib.rev2;
+    var perms = lib.perms;
     var finish = lib.finish;
     var addDays = lib.addDays;
     var wearOf = lib.wearOf;
     var people = lib.people;
 
     function names(arr) { return arr.map(function (x) { return x.n; }); }
+    function others(list, not) { return list.filter(function (x) { return [].concat(not).indexOf(x) < 0; }); }
 
     /* 時間軸：一局橫跨大半年，每一關的出發日期落在不同的月份（季節不同 → 要帶的衣服不同）。
-       只用季節很明確的月份（3、6、9 月這種換季的月份不用），出發前 3～10 天是「今天」。 */
-    var MONTHS = [1, 2, 4, 5, 7, 8, 10, 11, 12];
+       只用季節很明確的月份（2、3、6、9 月這種換季的月份不用），出發前 3～10 天是「今天」。 */
+    var MONTHS = [1, 4, 5, 7, 8, 10, 11, 12];
     function travelTimeline(G) {
         var s = G.int(0, MONTHS.length - 1);
         var out = [];
@@ -37,9 +42,296 @@
         }
         return out;
     }
-    function others(list, not) { return list.filter(function (x) { return [].concat(not).indexOf(x) < 0; }); }
     var ppl = function (n) { return cnCount(n) + '個人'; };
     var yuan = function (n) { return n + ' 元'; };
+
+    /* 第 4 關：借用 quiz_pools 的反常理零食顏色，當旅行點心的誘答 */
+    var T_LUGGAGE_MATS = ['布', '硬殼', '鋁框', '塑膠'];
+
+    /* ═══ 第 1 關：出發前一天（一件差事，幾乎沒有干擾） ═══ */
+    function T1(G, S) {
+        var D = S.tl[S.i];
+        var p = G.pick(P.kin);
+        var dest = S.d[0].n;
+        var e = G.pick(P.travelErrands1);
+        var bus = G.num(12, 98, null, twoDiff);
+        var stop = G.pick(P.stops);
+        var floor = G.num(2, 5, null, null, 'floor');
+        var n = G.num(2, 4, [floor], null, 'n');
+        var v = { p: p, dest: dest, bus: bus, stop: stop, place: e.place, floor: floor, act: e.act, n: n, u: e.u, thing: e.thing, today: D.today.sw, ev: D.ev.sw };
+        var note = [
+            T('今天是{today}。{ev}要和{p}去{dest}玩，出發前要先辦一件事：', v),
+            T('搭 {bus} 號公車，在{stop}下車，', v),
+            T('去{place} {floor} 樓，{act} {n} {u}{thing}。', v)
+        ];
+        var fl = function (x) { return x + ' 樓'; };
+        var cu = function (x) { return x + ' ' + e.u; };
+        var qs = [
+            G.dateQ('哪一天出發？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是今天。')], { must: true }),
+            G.wearQ('這趟要帶哪一種衣服？', D.ev),
+            G.q('要和誰一起去玩？', '人物', p, G.others(P.kin, p, '差一點點')),
+            G.q('這趟出發要去哪裡？', '地點', dest, [L(S.d[1].n, '差一點點'), L(S.d[2].n, '差一點點')]
+                .concat(G.others(others(names(P.trips), [dest, S.d[1].n, S.d[2].n]), [], '差一點點', 1))),
+            G.q('要搭幾號公車？', '數字', bus, G.near(bus, String, { lo: 10, hi: 99 })),
+            G.q('要在哪一站下車？', '地點', stop, G.others(P.stops, stop)),
+            G.q(T('{place}在幾樓？', v), '數字', fl(floor),
+                [L(fl(n), '張冠李戴', n + ' 是' + e.thing + '的數量，不是樓層。')].concat(G.near(floor, fl, { lo: 1, hi: 9, swap: false }))),
+            G.q(T('要{act}幾{u}{thing}？', v), '數字', cu(n),
+                [L(cu(floor), '張冠李戴', floor + ' 是樓層，不是' + e.thing + '的數量。')].concat(G.near(n, cu, { lo: 1, hi: 9, swap: false })))
+        ];
+        return { note: note, qs: finish(G, qs, 4) };
+    }
+
+    /* ═══ 第 2 關：兩件差事（打電話來的人交代自己出發前要跑的兩個地方） ═══ */
+    function T2(G, S) {
+        var D = S.tl[S.i];
+        var who = G.pick(P.home.concat(P.friends));
+        var dest = S.d[1].n;
+        var cs = G.pick(P.travelShops, 2);
+        var c1 = cs[0];
+        var c2 = cs[1];
+        var i1 = G.pick(c1.items);
+        var i2 = G.pick(c2.items);
+        var rest2 = G.shuffle(c2.items.filter(function (x) { return x !== i2; }));
+        var lure = rest2[0];
+        var sib2 = rest2[1];
+        var sib1 = G.any(c1.items.filter(function (x) { return x !== i1; }));
+        var bus = G.num(12, 98, null, twoDiff);
+        var house = rev2(bus);
+        var stop = G.pick(P.stops);
+        var n1 = G.num(1, 4, null, null, 'n1');
+        var n2 = G.num(1, 4, [n1], null, 'n2');
+        var v = {
+            who: who, dest: dest, bus: bus, stop: stop, s1: c1.shop, s2: c2.shop, n1: cnCount(n1), n2: cnCount(n2),
+            u1: c1.u, u2: c2.u, i1: i1, i2: i2, lure: lure, house: house, today: D.today.sw, ev: D.ev.sw
+        };
+        var note = [
+            T('{today}下午三點，{who}打電話來說：「我{ev}要去{dest}玩。」', v),
+            T('「下班後幫我跑兩個地方好不好？先搭 {bus} 號公車到{stop}，去{s1}買{n1}{u1}{i1}。」', v),
+            T('「然後走到{s2}，買{n2}{u2}{i2}。上次你買成{lure}，這次別再買錯囉！」掛電話前，{who}還說自己家的門牌換新了，是 {house} 號。', v)
+        ];
+        var f1 = function (x) { return cnCount(x) + c1.u; };
+        var f2 = function (x) { return cnCount(x) + c2.u; };
+        var lureWhy = '「' + lure + '」是上次買錯的。';
+        var qs = [
+            G.dateQ(who + '哪一天要去玩？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是打電話來的那天。')], { must: true }),
+            G.wearQ(who + '要帶哪一種衣服？', D.ev),
+            G.q(who + '要去哪裡玩？', '地點', dest, [L(S.d[0].n, '差一點點'), L(S.d[2].n, '差一點點')]
+                .concat(G.others(others(names(P.trips), [dest, S.d[0].n, S.d[2].n]), [], '差一點點', 1))),
+            G.q('要搭幾號公車？', '數字', bus,
+                [L(house, '似曾相識', house + ' 是' + who + '家的門牌號碼。')].concat(G.near(bus, String, { lo: 10, hi: 99 }))),
+            G.q('要在哪一站下車？', '地點', stop, G.others(P.stops, stop)),
+            G.q(T('在{s1}要買什麼？', v), '物品', i1,
+                [L(i2, '張冠李戴', i2 + '是在' + c2.shop + '買的。'), L(lure, '似曾相識', lureWhy), L(sib1, '差一點點')]),
+            G.q(T('在{s1}要買幾{u1}？', v), '數字', f1(n1),
+                [L(f1(n2), '張冠李戴', '「' + cnCount(n2) + '」是在' + c2.shop + '買的數量。')].concat(G.near(n1, f1, { lo: 1, hi: 6, swap: false }))),
+            G.q(T('在{s2}要買什麼？', v), '物品', i2,
+                [L(lure, '似曾相識', lureWhy), L(i1, '張冠李戴', i1 + '是在' + c1.shop + '買的。'), L(sib2, '差一點點')]),
+            G.q(T('在{s2}要買幾{u2}？', v), '數字', f2(n2),
+                [L(f2(n1), '張冠李戴', '「' + cnCount(n1) + '」是在' + c1.shop + '買的數量。')].concat(G.near(n2, f2, { lo: 1, hi: 6, swap: false })))
+        ];
+        return { note: note, qs: finish(G, qs, 6) };
+    }
+
+    /* ═══ 第 3 關：先後順序（出發前，還有幾件差事要先辦好） ═══ */
+    function T3(G, S) {
+        var D = S.tl[S.i];
+        var who = G.pick(P.home.concat(P.friends));
+        var nb = people(G, null, [who]);
+        var p = G.pick(P.kin);
+        var dest = S.d[2].n;
+        var es = G.pick(P.travelErrands3, 3);
+        var A = es[0];
+        var B = es[1];
+        var C = es[2];
+        var nA = G.num(1, 5, null, null, 'nA');
+        var nB = G.num(1, 5, [nA], null, 'nB');
+        var ns = [nA, nB, G.num(1, 5, [nA, nB], null, 'nC')];
+        var noise = G.pick(P.noiseShops);
+        var nn = G.num(1, 5, ns, null, 'nn');
+        var BE = es[G.int(0, 2)];
+        var bus = G.num(12, 98, null, twoDiff);
+        var act = function (e, i) { return T(e.act, { n: cnCount(ns[i]) }); };
+        var v = {
+            who: who, nb: nb, p: p, dest: dest, bus: bus, Ap: A.place, Aa: act(A, 0), Ae: A.early, Bp: B.place, Ba: act(B, 1),
+            Cp: C.place, Ca: act(C, 2), Cl: C.late, Xp: BE.place, ns: noise.shop, nn: cnCount(nn), nu: noise.u, nt: noise.thing,
+            today: D.today.sw, ev: D.ev.s
+        };
+        var form = G.int(0, 2);
+        var narr;
+        var body;
+        if (form === 0) {
+            narr = [B, A, C];
+            body = [
+                T('{who}傳來一段語音：「今天下班，幫我去{Bp}{Ba}。不過去{Bp}之前，要先到{Ap}{Aa}，因為{Ae}。」', v),
+                T('「還有，{Cp}那邊要{Ca}，這件放在最後，因為{Cl}。」', v)
+            ];
+        } else if (form === 1) {
+            narr = [C, A, B];
+            body = [
+                T('{who}傳來一段語音：「今天回家前，最後記得去{Cp}{Ca}，因為{Cl}。」', v),
+                T('「但一出門，第一件事是去{Ap}{Aa}，因為{Ae}。做完這件，再去{Bp}{Ba}。」', v)
+            ];
+        } else {
+            narr = [B, C, A];
+            body = [
+                T('{who}傳來一段語音：「今天下班，幫我去{Bp}{Ba}，然後去{Cp}{Ca}。」', v),
+                T('「喔不對，這兩件之前，要先去{Ap}{Aa}，因為{Ae}。{Cp}那件放最後，因為{Cl}。」', v)
+            ];
+        }
+        var note = [T('今天是{today}早上十點。{ev}就要和{p}出發去{dest}了，{who}傳語音交代你幾件事。', v)].concat(body, [
+            T('{who}還提醒你，去{Xp}要搭 {bus} 號公車，比較快。', v),
+            T('聽完語音，你想起{nb}說過，{Cp}旁邊新開了一家{ns}，開幕送{nn}{nu}{nt}，不過今天沒空去。', v)
+        ]);
+
+        var exec = [A, B, C];
+        var ord = ['第一件', '第二件', '最後一件'];
+        var noiseLabel = '逛' + noise.shop;
+        var noiseWhy = noise.shop + '只是順口提到的新店。';
+        var qs = [];
+        exec.forEach(function (e, i) {
+            var lures = [];
+            if (narr[i] !== e) lures.push(L(narr[i].k, '順序顛倒', '紙條上先講到「' + narr[i].k + '」，但它是' + ord[exec.indexOf(narr[i])] + '。'));
+            exec.forEach(function (o, j) { if (j !== i) lures.push(L(o.k, '順序顛倒', '「' + o.k + '」是' + ord[j] + '。')); });
+            lures.push(L(noiseLabel, '似曾相識', noiseWhy));
+            qs.push(G.q(ord[i] + '要做什麼？', '順序', e.k, lures));
+        });
+        qs.push(G.q('哪一件事要搭公車？', '配對', BE.k,
+            exec.filter(function (e) { return e !== BE; }).map(function (e) { return L(e.k, '張冠李戴', '搭公車是為了去' + BE.place + '。'); })
+                .concat([L(noiseLabel, '似曾相識', noiseWhy)])));
+        qs.push(G.q('要搭幾號公車？', '數字', bus, G.near(bus, String, { lo: 10, hi: 99 })));
+        exec.forEach(function (e, i) {
+            var f = function (x) { return cnCount(x) + e.u; };
+            var lures = [];
+            exec.forEach(function (o, j) { if (j !== i) lures.push(L(f(ns[j]), '張冠李戴', '「' + cnCount(ns[j]) + '」是' + o.k + '的數量。')); });
+            lures.push(L(f(nn), '似曾相識', '「' + cnCount(nn) + '」是新店開幕送的數量。'));
+            qs.push(G.q(e.q, '數字', f(ns[i]), lures.concat(G.near(ns[i], f, { lo: 1, hi: 7, swap: false }))));
+        });
+        qs.push(G.dateQ('哪一天出發？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是今天。')], { must: true }));
+        qs.push(G.daysQ('今天離出發還有幾天？', D.today, D.ev));
+        qs.push(G.wearQ('這趟要帶哪一種衣服？', D.ev));
+        return { note: note, qs: finish(G, qs, 8) };
+    }
+
+    /* ═══ 第 4 關：顏色形狀（打包行李、旅行零食、上次旅行留下的行李箱） ═══ */
+    function T4(G, S) {
+        var D = S.tl[S.i];
+        var who = G.pick(P.home);
+        var nb = people(G, null, [who]);
+        var dest = S.d[1].n;
+        var pair = G.pick(P.streetPairs);
+        var a = G.coin() ? 0 : 1;
+        var street = pair[a];
+        var alt = pair[1 - a];
+        var shop = G.pick(['行李用品店', '雜貨店', '生活百貨']);
+        var cols = G.pick(P.colors, 3);
+        var shs = G.pick(P.shapes, 3);
+        /* 排除「行李箱」：結尾那段另外講的是家裡舊行李箱，同名會混淆是哪一個 */
+        var things = G.pick(P.travelThings4.filter(function (x) { return x !== '行李箱'; }), 4);
+        var si = G.shuffle([0, 1, 2]);
+        var x;
+        var y;
+        do { x = G.int(0, 2); y = G.int(0, 2); } while (si[x] === y);
+        var objs = G.shuffle([0, 1, 2].map(function (i) { return { n: things[i], c: cols[i], s: shs[si[i]] }; })
+            .concat([{ n: things[3], c: cols[x], s: shs[y] }]));
+        var sn = G.pick(P.oddSnacks, 2).map(function (s) { return { n: s.n, u: '包', typ: s.typ, odd: [s.odd] }; });
+        var fc = [G.any(sn[0].odd)];
+        var odd2 = sn[1].odd.filter(function (c) { return c !== fc[0]; });
+        fc.push(G.any(odd2.length ? odd2 : sn[1].odd));
+        var fn0 = G.num(1, 4, null, null, 'fn1');
+        var fn = [fn0, G.num(1, 4, [fn0], null, 'fn2')];
+        var mat = G.pick(T_LUGGAGE_MATS);
+        var pos = G.pick(P.places);
+        var jc = cols[G.int(0, 2)];
+        var content = G.pick(P.boxThings);
+        var lc = G.any(P.colors.filter(function (c) { return cols.indexOf(c) < 0 && fc.indexOf(c) < 0; }));
+        var v = {
+            who: who, nb: nb, dest: dest, street: street, shop: shop, lc: lc, pos: pos, jc: jc, mat: mat,
+            sk1: sn[0].n, sk2: sn[1].n, fc1: fc[0], fc2: fc[1], fn1: cnCount(fn[0]), fn2: cnCount(fn[1]), su1: sn[0].u, su2: sn[1].u, content: content,
+            today: D.today.sw, ev: D.ev.sw
+        };
+        objs.forEach(function (o, i) { v['c' + i] = o.c; v['s' + i] = o.s; v['n' + i] = o.n; });
+        var note = [
+            T('今天是{today}。{who}說{ev}要去{dest}玩，拜託你下班去{street}的{shop}，買幾樣出門要帶的東西。', v),
+            T('「要一個{c0}的{s0}{n0}，還有一個{c1}的{s1}{n1}。」', v),
+            T('{who}想了想又說：「再買一個{c2}的{s2}{n2}，和一個{c3}的{s3}{n3}。」', v),
+            T('{nb}在旁邊聽到，說：「上次我在別家買的{n0}是{lc}的，用沒多久就壞了。」', v),
+            T('在{shop}也順便買點車上吃的零食：{fc1}的{sk1}{fn1}{su1}、{fc2}的{sk2}{fn2}{su2}。', v),
+            T('最後，{who}交代：家裡放在{pos}的那個{jc}{mat}行李箱，裡面還裝著上次旅行留下的{content}，記得清一清、順便帶去。', v)
+        ];
+
+        var ownerOfColor = function (c) { return objs.filter(function (o) { return o.c === c; })[0].n; };
+        var ownerOfShape = function (s) { return objs.filter(function (o) { return o.s === s; })[0].n; };
+        var spareColor = function (not) { return G.any(P.colors.filter(function (c) { return cols.indexOf(c) < 0 && not.indexOf(c) < 0; })); };
+        var order = G.shuffle(objs);
+
+        function colorQ(o) {
+            var lures = [];
+            if (o === objs[0]) lures.push(L(lc, '似曾相識', '「' + lc + '」是' + nb + '上次在別家買的。'));
+            cols.forEach(function (c) { if (c !== o.c) lures.push(L(c, '張冠李戴', '「' + c + '」是' + ownerOfColor(c) + '的顏色。')); });
+            lures.push(L(fc[0], '張冠李戴', '「' + fc[0] + '」是' + sn[0].n + '的顏色。'));
+            lures.push(L(spareColor([lc]), '差一點點'));
+            return G.q(o.n + '是什麼顏色？', '顏色', o.c, lures);
+        }
+        function shapeQ(o) {
+            var lures = [];
+            shs.forEach(function (s) { if (s !== o.s) lures.push(L(s, '張冠李戴', '「' + s + '」是' + ownerOfShape(s) + '的形狀。')); });
+            return G.q(o.n + '是什麼形狀？', '形狀', o.s, lures.concat(G.others(P.shapes, shs)));
+        }
+        function revQ(o) {
+            var lures = objs.filter(function (p) { return p !== o; }).map(function (p) {
+                return L(p.n, '張冠李戴', '「' + p.n + '」是' + p.c + '的' + p.s + '。');
+            });
+            return G.q('「' + o.c + '的' + o.s + '」是哪一樣？', '組合', o.n, lures);
+        }
+        function conjQ(o) {
+            var others2 = objs.filter(function (p) { return p !== o; });
+            var lures = [];
+            others2.forEach(function (p) {
+                if (p.c !== o.c) lures.push(L(p.c + '的' + o.s + o.n, '張冠李戴', o.n + '是' + o.c + '的；' + p.c + '是' + p.n + '的顏色。'));
+                if (p.s !== o.s) lures.push(L(o.c + '的' + p.s + o.n, '張冠李戴', o.n + '是' + o.s + '的；' + p.s + '是' + p.n + '的形狀。'));
+                if (p.c !== o.c && p.s !== o.s) lures.push(L(p.c + '的' + p.s + o.n, '拼湊組合', '這是把' + p.n + '的顏色和形狀，拼到' + o.n + '上了。'));
+            });
+            return G.q('哪一個是' + o.n + '正確的樣子？', '組合', o.c + '的' + o.s + o.n, G.shuffle(lures), { must: true });
+        }
+        function snackColorQ(k) {
+            var s = sn[k];
+            var lures = [L(s.typ, '常理陷阱', s.n + '一般是' + s.typ + '，但這次要' + fc[k] + '的。')];
+            lures.push(L(fc[1 - k], '張冠李戴', '「' + fc[1 - k] + '」是' + sn[1 - k].n + '的顏色。'));
+            lures.push(L(cols[0], '張冠李戴', '「' + cols[0] + '」是' + ownerOfColor(cols[0]) + '的顏色。'));
+            lures.push(L(spareColor([s.typ].concat(fc)), '差一點點'));
+            return G.q(s.n + '要買什麼顏色的？', '顏色', fc[k], lures, { must: true });
+        }
+        function snackCountQ(k) {
+            var s = sn[k];
+            var fmt = function (n) { return cnCount(n) + s.u; };
+            return G.q(s.n + '要買幾' + s.u + '？', '數字', fmt(fn[k]),
+                [L(fmt(fn[1 - k]), '張冠李戴', '「' + cnCount(fn[1 - k]) + '」是' + sn[1 - k].n + '的數量。')].concat(G.near(fn[k], fmt, { lo: 1, hi: 6, swap: false })));
+        }
+        var luggageQ = G.attrQ('關於那個行李箱，哪一個說法完全正確？', [
+            { val: pos, alts: G.others(P.places, pos, '差一點點', 2) },
+            {
+                val: jc, alts: cols.filter(function (c) { return c !== jc; }).map(function (c) {
+                    return L(c, '張冠李戴', '行李箱是' + jc + '的；' + c + '是' + ownerOfColor(c) + '的顏色。');
+                })
+            },
+            { val: mat, alts: G.others(T_LUGGAGE_MATS, mat, '差一點點', 2) }
+        ], function (vals) {
+            var s = [vals[0], vals[1]].filter(Boolean).join('、');
+            return (s ? s + '的' : '') + (vals[2] ? vals[2] + '行李箱' : '行李箱');
+        }, 2);
+
+        var qs = [
+            colorQ(order[0]), shapeQ(order[1]), revQ(order[2]), conjQ(order[3]),
+            snackColorQ(0), snackColorQ(1), snackCountQ(0), snackCountQ(1), luggageQ,
+            G.q(shop + '在哪一條路？', '地點', street, [L(alt, '差一點點', '「' + alt + '」和「' + street + '」很像，紙條上是「' + street + '」。')]
+                .concat(G.others(P.streetPairs.map(function (p) { return p[0]; }), [street, alt], '差一點點', 2))),
+            G.q('是誰交代你出發前要辦這些事？', '人物', who, [L(nb, '似曾相識', nb + '只是在旁邊聽到。')].concat(G.others(P.home, who, '差一點點'))),
+            G.dateQ('哪一天出發去玩？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是今天。')], { must: true }),
+            G.wearQ('這趟要帶哪一種衣服？', D.ev, [], { must: true })
+        ];
+        return { note: note, qs: finish(G, qs, 12) };
+    }
 
     /* ═══ 第 5 關：兩家人的旅行（兩個地點、兩種交通、兩種住宿、誰想去哪、伴手禮的範圍）═══ */
     function T5(G, S) {
@@ -72,7 +364,7 @@
             today: D.today.sw, evA: evA.sw, evB: evB.sw
         };
         var note = [
-            T('今天是{today}晚上八點。{p1}和{p2}最近都要去旅行，出發前都找你幫忙。', v),
+            T('今天是{today}。{p1}和{p2}最近都要去旅行，出發前都找你幫忙。', v),
             T('{p1}一家{nA}個人{evA}要去{dA}，搭{tA}去，住在{stA}。{p1}說到了{dA}一定要去{spA}，那裡是{fA}。', v),
             T('{p2}和朋友{nB}個人{evB}要去{dB}，搭{tB}去，住{stB}。{p2}想去{spB}，聽說是{fB}。', v),
             T('兩個人都要你幫忙查天氣：{dA}那幾天{wA}，{dB}那幾天{wB}。', v),
@@ -141,7 +433,7 @@
             today: D.today.sw, ev: D.ev.sw
         };
         var note = [
-            T('今天是{today}晚上九點。{who}在規劃{ev}出發、去{d}三天兩夜的旅行，一共{n}個人，早上{t1}出發。', v),
+            T('今天是{today}。{who}在規劃{ev}出發、去{d}三天兩夜的旅行，一共{n}個人，早上{t1}出發。', v),
             T('「住的地方訂在{stay}，訂了{r}間{rt}，下午{ci}以後才能入住。」', v),
             T('「第一天早上去{s1}，那裡是{f1}；下午去{s2}，晚上吃{fb}。第二天早上去{s3}，中午吃{fa}。」', v),
             T('「回程前要買{gn}盒{g}當伴手禮，其中一盒要送{nb}。」', v),
@@ -331,7 +623,7 @@
             G.q('房價最後一間多少錢？', '更正', yuan(room2), [L(yuan(room), '新舊混淆', room + ' 元是漲價之前。')].concat(G.near(room2, yuan, { step: 100, swap: false })), { must: true }),
             G.q('房價一開始一間多少錢？', '一開始', yuan(room), [L(yuan(room2), '新舊混淆', room2 + ' 元是漲價之後。')].concat(G.near(room, yuan, { step: 100, swap: false })), { old: true }),
             G.q('住宿費最後一共多少錢？', '計算', yuan(room2 * r), [L(yuan(room * r), '新舊混淆', '這是漲價之前的總數。'), L(yuan(room2), '計算失誤', '要乘上' + cnCount(r) + '間。'),
-                L(yuan(room2 * r + 100), '計算失誤'), L(yuan(room2 * r - 100), '計算失誤')], { must: true }),
+            L(yuan(room2 * r + 100), '計算失誤'), L(yuan(room2 * r - 100), '計算失誤')], { must: true }),
             G.q('要不要改訂便宜一點的房間？', '計算', '要，超過了', [L('不用，沒超過', '新舊混淆', '漲價後一共 ' + room2 * r + ' 元，超過 ' + cap + ' 元。'), L('改住別的地方', '差一點點'), L('少住一晚', '差一點點')], { must: true }),
             G.q('住宿費最多能花多少？', '數字', yuan(cap), [L(yuan(room2 * r), '計算失誤', '那是漲價後的住宿費。')].concat(G.near(cap, yuan, { step: 100, swap: false }))),
             G.q(who + '要什麼伴手禮？', '名產', gs[0], [L(gs[1], '張冠李戴', gs[1] + '是' + p + '要的。'), L(gs[2], '張冠李戴', gs[2] + '是' + nb + '原本拜託的。'), L(g0, '似曾相識', g0 + '是上次買的。')]),
@@ -357,54 +649,6 @@
         id: 'travel', name: '旅遊',
         names: ['出發前一天', '旅行的準備', '行前三件事', '行李怎麼帶', '兩家人的旅行', '改了行程', '一通揪團電話', '兩天一夜'],
         setup: function (G) { return { d: G.pick(P.trips, 3), tl: travelTimeline(G) }; },
-        X: {
-            errands1: P.travelErrands1,
-            head1: function (G, S, D) {
-                var p = G.pick(P.kin);
-                return {
-                    line: '今天是' + D.today.sw + '晚上八點。' + D.ev.sw + '要和' + p + '去' + S.d[0].n + '玩，出發前要先辦一件事：',
-                    qs: [
-                        G.dateQ('哪一天出發？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是今天。')], { must: true }),
-                        G.wearQ('這趟要帶哪一種衣服？', D.ev),
-                        G.q('要和誰一起去玩？', '人物', p, G.others(P.kin, p, '差一點點'))
-                    ]
-                };
-            },
-            ctx2: function (G, S, D, who) {
-                return {
-                    when: D.today.sw + '下午三點',
-                    ctx: '我' + D.ev.sw + '要去' + S.d[1].n + '玩',
-                    qs: [
-                        G.dateQ(who + '哪一天要去玩？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是打電話來的那天。')], { must: true }),
-                        G.wearQ(who + '要帶哪一種衣服？', D.ev)
-                    ]
-                };
-            },
-            shops: P.travelShops,
-            head3: function (G, S, D) {
-                var p = G.pick(P.kin);
-                return {
-                    line: '今天是' + D.today.sw + '早上十點。' + D.ev.s + '就要和' + p + '出發去' + S.d[2].n + '了，還有幾件事要先辦好。',
-                    qs: [
-                        G.dateQ('哪一天出發？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是今天。')], { must: true }),
-                        G.daysQ('今天離出發還有幾天？', D.today, D.ev),
-                        G.wearQ('這趟要帶哪一種衣服？', D.ev)
-                    ]
-                };
-            },
-            errands3: P.travelErrands3,
-            head4: function (G, S, D, v) {
-                return {
-                    line: T('今天是{t}晚上七點。{who}說{d}要去{dest}玩，拜託你下班去{street}的{shop}，買幾樣出門要帶的東西。',
-                        { t: D.today.sw, d: D.ev.s, who: v.who, dest: S.d[1].n, street: v.street, shop: v.shop }),
-                    qs: [
-                        G.dateQ('哪一天出發去玩？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是今天。')], { must: true }),
-                        G.wearQ('這趟要帶哪一種衣服？', D.ev, [], { must: true })
-                    ]
-                };
-            },
-            things4: P.travelThings4
-        },
-        levels: [lib.L1, lib.L2, lib.L3, lib.L4, T5, T6, T7, T8]
+        levels: [T1, T2, T3, T4, T5, T6, T7, T8]
     });
 })();

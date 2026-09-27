@@ -37,7 +37,8 @@ js/stage.js      Stage.init / onResize / rect / toLogical
 js/ui.js         UI.h / fit / paginate / icon / art / fonts / store / ready
 js/world/config.js ★ 3D 手感參數（鏡頭 pitchDeg、轉彎速度、NPC 速度、面向角度）
 js/world/hud.js  kit.js  core.js  scenes.js  story.js
-js/quiz_pools.js  quiz_gen.js  quiz.js   測試模式（題庫池／題目產生器／畫面）
+js/quiz_pools.js  quiz_gen.js  quiz.js   測試模式（題庫池／題目產生器引擎／畫面）
+js/quiz_happyBirthday.js  quiz_travel.js  quiz_health.js   測試模式的三個主軸（各自完整撰寫 1～8 關）
 vendor/three.min.js   Three.js r158（UMD 版）
 ```
 
@@ -87,10 +88,10 @@ vendor/three.min.js   Three.js r158（UMD 版）
 
 ### 6.1.1 故事主軸
 - 每一局先挑一個主軸（`QuizGen.create` 會避開上一局的主軸），8 關都用同一個主軸，**不混用**。
-- 主軸 = `QuizGen.addTheme({ id, name, names:[8 個關名], setup(G) → 整局共用參數 S, X:{第 1～4 關的開場文字與題庫}, levels:[8 個 fn(G, S, X)] })`。
-- `setup` 抽的是整局共用的參數（旅遊：3 個地點；看病：2 家醫院），讓同一個地點／醫院在不同關卡重複出現，製造跨關干擾。記錄在 `used.shared`，下一局同主軸會避開。
-- 第 1～4 關三個主軸共用 `L1`～`L4`（只換 `X`）；第 5～8 關各主軸自己寫。
-- 新增主軸：新檔案呼叫 `QuizGen.addTheme`，加到 `boot.js` 的 quiz 清單（`quiz_gen.js` 之後、`quiz.js` 之前）。改了存檔格式要把 `GEN_V` 加一（1.4.0 已改為 2）。
+- 主軸 = `QuizGen.addTheme({ id, name, names:[8 個關名], setup(G) → 整局共用參數 S, levels:[8 個 fn(G, S)] })`。
+- `setup` 抽的是整局共用的參數（旅遊：3 個地點；看病：2 家醫院；生日：只有時間軸），讓同一個地點／醫院在不同關卡（1.9.0 起連第 1～4 關也一起）重複出現，製造跨關干擾。記錄在 `used.shared`，下一局同主軸會避開。
+- 1.9.0 起，1～8 關**都由各主軸自己的檔案完整撰寫**，不再共用 `L1`～`L4`／`X`；三個主軸各自的第 1～4 關會用自己主軸的題庫池（例如看病用 `P.healthErrands1`、旅遊用 `P.travelErrands1`），內容要緊貼主軸，不能只是把公車／樓層／數量套個殼。
+- 新增主軸：新檔案呼叫 `QuizGen.addTheme`，加到 `boot.js` 的 quiz 清單（`quiz_gen.js` 之後、`quiz.js` 之前）。改了存檔格式要把 `GEN_V` 加一（1.9.0 已改為 4）。
 - 景點特色要寫成名詞片語（「看日出和神木的高山」），才能放進「那裡是＿＿」；原因要合乎常理（懸崖不會「休館」，要用「封路」）。
 
 ### 6.1.2 時間軸、角色名字、回想題（1.8.0）
@@ -99,16 +100,16 @@ vendor/three.min.js   Three.js r158（UMD 版）
   - **每一關紙條的第一句一定有「今天是○月○日（星期○）」＋時間**，並有具名角色。
   - 日期題工具：`G.dateQ`（誘答：前後一兩天、差一個禮拜、月日對調＋自訂）、`G.weekQ`、`G.daysQ`（還有幾天，要記兩個日期）、`G.wearQ`（日期→季節→衣服；季節對照：12～2 冬／3～5 春／6～8 夏／9～11 秋）。
   - 旅遊紙條**不可再出現「晚上很冷要帶外套」這類句子**，會讓衣服題變成兩個答案。
-- **第 1～4 關的開場**：`X.head1/head3(G,S,D)`、`X.head4(G,S,D,v)` 回傳 `{ line, qs }`；`X.ctx2(G,S,D,who)` 回傳 `{ when, ctx, qs }`。`qs` 是主軸自己的日期題，第一題設 `must`。
+- **第 1～4 關的開場**：1.9.0 起沒有共用的 `X.head1/ctx2/head3/head4`，每個主軸的 1～4 關直接在自己的關卡函式裡寫開場白＋日期題（第一題設 `must`），不透過共用介面。
 - **角色名字**：`applyCast` 在每一局開始時把 `P.home/kin/kids/relatives/grand` 換成「女兒淑芬」這種具名版本（原始稱呼在 `ROLES`）。程式裡**不可再寫死「孫子」「女兒」字串去比對**，要用 `otherGrand(g)`、`P.home.concat(P.kin)`。
 - **回想題**：`RECALL = {5:[1], 6:[2], 7:[2,3], 8:[2,3,4,4]}`。8 關產生完後，`addRecalls` 從來源關卡的題目裡抽（不抽「一開始」題、優先抽題目文字不重複的），選項重新洗牌，插在第 2 題之後的隨機位置；題目多 `from`（來源關卡）。畫面上方標「回想第 N 關」。
 - 題數：4、6、8、12、17、21、26、36（`QuizGen.check` 會一併檢查回想題的來源）。
 - 題庫池名稱不可重複：1.8.0 前看病的科別和百貨公司都叫 `depts`，後者被蓋掉；科別已改名 `clinics`。
 
 ### 6.2 檔案
-- `js/quiz_pools.js`：題庫池（台北真實路名、地標、市場、百貨；東西都帶量詞 `{n, u}`；反常理顏色 `typ/odd`）。
-- `js/quiz_gen.js`：`Gen`（可重現亂數、避開上一局、誘答工具）、主軸登記、共用的 `L1`～`L4`、生日主軸的 `L5`～`L8`。
-- `js/quiz_travel.js`（`T5`～`T8`）、`js/quiz_health.js`（`H5`～`H8`）：旅遊、看病主軸。
+- `js/quiz_pools.js`：題庫池（台北真實路名、地標、市場、百貨；東西都帶量詞 `{n, u}`；反常理顏色 `typ/odd`）。不含任何關卡內容，三個主軸共用。
+- `js/quiz_gen.js`：只有引擎（`Gen`：可重現亂數、避開上一局、誘答工具；日期／角色名字／回想題／`QuizGen.lib` 共用工具；主軸登記 `addTheme`）。**不含任何關卡內容**。
+- `js/quiz_happyBirthday.js`（`B1`～`B8`）、`js/quiz_travel.js`（`T1`～`T8`）、`js/quiz_health.js`（`H1`～`H8`）：生日、旅遊、看病三個主軸，各自完整撰寫 1～8 關，互不共用關卡邏輯。
 - 題目格式：`{ q, t:題型標籤, o:[4], c:正解索引, k:[每個選項的混淆類型，正解為 null], w:[答錯時的說明], old:是否「一開始」題, from?:回想題的來源關卡, fromName? }`；關卡另有 `date`（那一關的「今天」）。
 
 ### 6.3 寫故事範本與出題的規則
