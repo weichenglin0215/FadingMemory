@@ -68,7 +68,7 @@
 
     /* ═══ ① 選關卡（← 回主選單＝這一局結束，下次進來換新題目）═══ */
     function showLevels() {
-        setBar('測試模式', THEME ? '主題：' + THEME : '共 8 關', null, function () { location.href = 'index.html'; });
+        setBar('明明還記得...', THEME ? '主題：' + THEME : '共 8 關', null, function () { location.href = 'index.html'; });
         clear();
         var list = h('div', { 'class': 'lv-list' });
         LEVELS.forEach(function (lv, idx) {
@@ -167,8 +167,12 @@
         clear();
         S.locked = false;
 
-        var side = h('span', { 'class': 'hint', text: lv.name });
-        var head = h('div', { 'class': 'q-head' }, [h('span', { 'class': 'pill pill--blue', text: q.t }), side]);
+        /* 跨關回想題：標出是哪一關的紙條 */
+        var side = h('span', { 'class': 'hint', text: q.from ? '想想第 ' + q.from + ' 關的紙條' : lv.name });
+        var head = h('div', { 'class': 'q-head' }, [
+            q.from ? h('span', { 'class': 'pill pill--orange', text: '回想第 ' + q.from + ' 關' }) : h('span', { 'class': 'pill pill--blue', text: q.t }),
+            side
+        ]);
         var inner = h('div', { 'class': 'q-text__inner', text: q.q });
         var box = h('div', { 'class': 'q-text' }, [inner]);
         var opts = h('div', { 'class': 'q-opts' });
@@ -205,7 +209,7 @@
         S.locked = true;
         var ok = i === q.c;
         S.answers.push({
-            q: q.q, t: q.t, chosen: q.o[i], correct: q.o[q.c], ok: ok,
+            q: q.q, t: q.from ? '回想第 ' + q.from + ' 關' : q.t, chosen: q.o[i], correct: q.o[q.c], ok: ok,
             kind: q.k[i], why: q.w[i], kinds: q.k.filter(function (k) { return k; })
         });
         Array.prototype.forEach.call(ui.opts.children, function (b, idx) {
@@ -223,7 +227,7 @@
     /* 答錯：題目區改成「正確答案＋為什麼會錯」，選項變矮一點，下方多一顆「下一題」 */
     function showFeedback(q, i, ui) {
         screen.classList.add('is-feedback');
-        ui.side.replaceWith(h('span', { 'class': 'pill pill--orange', text: q.k[i] }));
+        ui.side.replaceWith(h('span', { 'class': 'pill pill--' + (q.from ? 'yellow' : 'orange'), text: q.k[i] }));
         ui.box.innerHTML = '';
         var fb = h('div', { 'class': 'fb' }, [
             h('div', { 'class': 'fb__q', text: q.q }),
@@ -385,12 +389,12 @@
             LEVELS = sess.levels;
             THEME = sess.themeName || '';
         } catch (e) {
-            setBar('測試模式', '', null, function () { location.href = 'index.html'; });
+            setBar('明明還記得...', '', null, function () { location.href = 'index.html'; });
             screen.appendChild(h('div', { 'class': 'conf__none', text: '題目產生失敗，請回主選單再進來一次。' }));
             if (window.console) console.error(e);
             return;
         }
-        UI.fonts(['900 30px "Noto Sans TC"', '700 30px "Noto Sans TC"'], '測試模式選關卡新手暖身', 1500).then(showLevels);
+        UI.fonts(['900 30px "Noto Sans TC"', '700 30px "Noto Sans TC"'], '明明還記得...選關卡新手暖身', 1500).then(showLevels);
 
         /* 給驗證用：?level=3 直接進某關；?seed=數字 重現某一局 */
         var m = /[?&]level=(\d+)/.exec(location.search);

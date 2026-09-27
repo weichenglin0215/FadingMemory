@@ -18,7 +18,7 @@
     var P = global.QUIZ_POOLS;
     var QuizGen = {};
 
-    var GEN_V = 2;                       /* 存檔格式版本：格式改了就加一（舊存檔作廢、重新產生） */
+    var GEN_V = 3;                      /* 存檔格式版本：格式改了就加一（舊存檔作廢、重新產生） */
     var KEY = 'fm.quiz.session';
     var FRESH = 'fm.quiz.fresh';         /* 主選單按「測試模式」時設為 true → 進來就開新的一局 */
 
@@ -85,6 +85,64 @@
     }
 
     function keyOf(v) { return typeof v === 'object' ? JSON.stringify(v) : String(v); }
+
+    /* ═══ 日曆：每一關都有明確的日期（年份不寫出來，只拿來算星期幾）═══ */
+    var YEAR = 2026;
+    var WEEK = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+    var DAY_MS = 86400000;
+    function dayOf(ms) {
+        var t = new Date(ms);
+        var m = t.getUTCMonth() + 1;
+        var d = t.getUTCDate();
+        var w = WEEK[t.getUTCDay()];
+        return { t: ms, m: m, d: d, w: w, s: m + '月' + d + '日', sw: m + '月' + d + '日（' + w + '）' };
+    }
+    function mkDay(m, d) { return dayOf(Date.UTC(YEAR, m - 1, d)); }
+    function addDays(day, n) { return dayOf(day.t + n * DAY_MS); }
+    function between(a, b) { return Math.round((b.t - a.t) / DAY_MS); }
+    /* 「後天」「五天後」 */
+    function fromNow(today, day) {
+        var n = between(today, day);
+        return n === 1 ? '明天' : n === 2 ? '後天' : cnNum(n) + '天後';
+    }
+
+    /* 季節與衣服（旅遊主軸：記住出發日期 → 換算季節 → 決定帶什麼衣服） */
+    var SEASON = ['冬天', '冬天', '春天', '春天', '春天', '夏天', '夏天', '夏天', '秋天', '秋天', '秋天', '冬天'];
+    var WEAR = { '春天': '春天的薄外套', '夏天': '夏天的短袖', '秋天': '秋天的長袖', '冬天': '冬天的羽絨衣' };
+    function seasonOf(day) { return SEASON[day.m - 1]; }
+    function wearOf(day) { return WEAR[seasonOf(day)]; }
+
+    /* 每一局的時間軸：8 關各有「今天」today 與「那件事的日期」ev，一關比一關晚 */
+    function timeline(G, step, ev) {
+        var t = mkDay(G.int(1, 12), G.int(1, 20));
+        var out = [];
+        for (var i = 0; i < 8; i++) {
+            if (i) t = addDays(t, G.int(step[0], step[1]));
+            out.push({ today: t, ev: addDays(t, G.int(ev[0], ev[1])) });
+        }
+        return out;
+    }
+
+    /* ═══ 角色名字：每一局替家人取名字（同一局裡，女兒永遠是同一個名字）═══ */
+    var CAST = {
+        '老伴': ['秀英', '玉蘭', '阿雄', '文雄', '素珠'],
+        '女兒': ['淑芬', '雅婷', '佩君', '怡君'],
+        '兒子': ['志明', '俊傑', '家豪', '建宏'],
+        '媳婦': ['惠美', '淑惠', '美華', '麗娟'],
+        '女婿': ['文彬', '國華', '冠宇', '承翰'],
+        '孫子': ['小寶', '阿翔', '小宇', '阿凱'],
+        '孫女': ['小萱', '欣欣', '小晴', '安安'],
+        '姪子': ['阿德', '明哲', '宗翰'],
+        '外甥女': ['佳穎', '筱雯', '思妤']
+    };
+    var ROLES = {};
+    ['home', 'kin', 'kids', 'relatives', 'grand'].forEach(function (k) { ROLES[k] = P[k].slice(); });
+    function applyCast(G) {
+        var nm = {};
+        Object.keys(CAST).forEach(function (r) { nm[r] = r + G.any(CAST[r]); });
+        Object.keys(ROLES).forEach(function (k) { P[k] = ROLES[k].map(function (r) { return nm[r]; }); });
+        return nm;
+    }
 
     /* 誘答：v 選項文字、k 混淆類型、w 答錯時的說明（省略就用預設說法） */
     function L(v, k, w) { return { v: v, k: k, w: w }; }
@@ -229,6 +287,42 @@
         return this.q(text, '組合', ans, this.shuffle(lures), { must: true });
     };
 
+    /* ═══ 日期題 ═══ */
+    /* 哪一天？誘答＝前後一天、差一個禮拜、月日對調；extra＝放最前面的誘答（例如「今天的日期」） */
+    Gen.prototype.dateQ = function (text, day, extra, opt) {
+        var lures = (extra || []).slice();
+        if (day.d <= 12 && day.d !== day.m) lures.push(L(day.d + '月' + day.m + '日', '數字相近', '月和日對調了，是「' + day.s + '」。'));
+        var near = this.shuffle([1, -1, 2, -2]).map(function (n) { return L(addDays(day, n).s, '數字相近'); });
+        lures = lures.concat(near.slice(0, 2), [L(addDays(day, 7).s, '數字相近', '差了一個禮拜，是「' + day.s + '」。')], near.slice(2));
+        return this.q(text, '日期', day.s, lures, opt);
+    };
+    Gen.prototype.weekQ = function (text, day, extra, opt) {
+        var i = WEEK.indexOf(day.w);
+        var lures = (extra || []).concat([WEEK[(i + 1) % 7], WEEK[(i + 6) % 7], WEEK[(i + 2) % 7], WEEK[(i + 5) % 7]].map(function (w) {
+            return L(w, '差一點點', '那天是' + day.w + '。');
+        }));
+        return this.q(text, '日期', day.w, lures, opt);
+    };
+    /* 還有幾天？（要同時記住兩個日期） */
+    Gen.prototype.daysQ = function (text, from, to, opt) {
+        var n = between(from, to);
+        var f = function (x) { return cnCount(x) + '天'; };
+        var why = from.s + '到' + to.s + '，是' + cnNum(n) + '天。';
+        var lures = [L(f(n + 1), '計算失誤', why)];
+        if (n > 1) lures.push(L(f(n - 1), '計算失誤', why));
+        if (n + 7 <= 60) lures.push(L(f(n + 7), '計算失誤', why));
+        lures = lures.concat(this.near(n, f, { lo: 1, hi: 60, swap: false }).map(function (l) { return L(l.v, '計算失誤', why); }));
+        return this.q(text, '日期', f(n), lures, opt);
+    };
+    /* 要帶哪一種衣服？extra＝別的日期對應的衣服（張冠李戴） */
+    Gen.prototype.wearQ = function (text, day, extra, opt) {
+        var ans = wearOf(day);
+        var why = day.s + '是' + seasonOf(day) + '，要帶' + ans.slice(3) + '。';
+        var lures = (extra || []).filter(function (l) { return l.v !== ans; });
+        Object.keys(WEAR).forEach(function (s) { if (WEAR[s] !== ans) lures.push(L(WEAR[s], '差一點點', why)); });
+        return this.q(text, '季節', ans, lures, opt);
+    };
+
     /* 從候選題裡挑出這一關的題數：must 一定要、「一開始」題不超過 maxOld，最後打亂順序 */
     function finish(G, cands, count, maxOld) {
         var out = cands.filter(function (q) { return q.must; });
@@ -277,18 +371,19 @@
     }
 
     function people(G, n, exclude) { return G.pick(P.friends, n, exclude); }
+    function otherGrand(g) { return P.grand.filter(function (x) { return x !== g; })[0]; }
 
     /* ═══ 第 1 關：新手暖身（條列、一件事，幾乎沒有干擾）═══ */
     function L1(G, S, X) {
         var e = G.pick(X.errands1);
-        var head = X.head1(G, S);
+        var hd = X.head1(G, S, S.tl[S.i]);
         var bus = G.num(12, 98, null, twoDiff);
         var stop = G.pick(P.stops);
         var floor = G.num(2, 5, null, null, 'floor');
         var n = G.num(2, 4, [floor], null, 'n');
         var v = { bus: bus, stop: stop, place: e.place, floor: floor, act: e.act, n: n, u: e.u, thing: e.thing };
         var note = [
-            head,
+            hd.line,
             T('搭 {bus} 號公車，在{stop}下車，', v),
             T('去{place} {floor} 樓，{act} {n} {u}{thing}。', v)
         ];
@@ -302,13 +397,14 @@
             G.q(T('要{act}幾{u}{thing}？', v), '數字', cu(n),
                 [L(cu(floor), '張冠李戴', floor + ' 是樓層，不是' + e.thing + '的數量。')].concat(G.near(n, cu, { lo: 1, hi: 9, swap: false })))
         ];
-        return { note: note, qs: finish(G, qs, 4) };
+        return { note: note, qs: finish(G, qs.concat(hd.qs), 4) };
     }
 
     /* ═══ 第 2 關：兩件差事（口語；門牌號碼是公車號碼倒過來）═══ */
     function L2(G, S, X) {
         var who = G.pick(P.home.concat(P.friends));
-        var ctx = X.ctx2(G, S);
+        var cx = X.ctx2(G, S, S.tl[S.i], who);
+        var ctx = cx.ctx;
         var cs = G.pick(X.shops, 2);
         var c1 = cs[0];
         var c2 = cs[1];
@@ -325,10 +421,11 @@
         var n2 = G.num(1, 4, [n1], null, 'n2');
         var v = {
             who: who, bus: bus, stop: stop, s1: c1.shop, s2: c2.shop, n1: cnCount(n1), n2: cnCount(n2),
-            u1: c1.u, u2: c2.u, i1: i1, i2: i2, lure: lure, house: house, ctx: ctx
+            u1: c1.u, u2: c2.u, i1: i1, i2: i2, lure: lure, house: house, ctx: ctx, when: cx.when
         };
         var note = [
-            T('{who}打電話來說：「{ctx}，下班後幫我跑兩個地方好不好？先搭 {bus} 號公車到{stop}，去{s1}買{n1}{u1}{i1}。」', v),
+            T('{when}，{who}打電話來說：「{ctx}。」', v),
+            T('「下班後幫我跑兩個地方好不好？先搭 {bus} 號公車到{stop}，去{s1}買{n1}{u1}{i1}。」', v),
             T('「然後走到{s2}，買{n2}{u2}{i2}。上次你買成{lure}，這次別再買錯囉！」掛電話前，{who}還說自己家的門牌換新了，是 {house} 號。', v)
         ];
         var f1 = function (x) { return cnCount(x) + c1.u; };
@@ -347,14 +444,14 @@
             G.q(T('在{s2}要買幾{u2}？', v), '數字', f2(n2),
                 [L(f2(n1), '張冠李戴', '「' + cnCount(n1) + '」是在' + c1.shop + '買的數量。')].concat(G.near(n2, f2, { lo: 1, hi: 6, swap: false })))
         ];
-        return { note: note, qs: finish(G, qs, 6) };
+        return { note: note, qs: finish(G, qs.concat(cx.qs), 6) };
     }
 
     /* ═══ 第 3 關：先後順序（講的順序和做的順序不一樣）═══ */
     function L3(G, S, X) {
         var who = G.pick(P.home.concat(P.friends));
         var nb = people(G, null, [who]);
-        var head = X.head3(G, S);
+        var hd = X.head3(G, S, S.tl[S.i]);
         var es = G.pick(X.errands3, 3);
         var A = es[0];
         var B = es[1];
@@ -393,7 +490,7 @@
                 T('「喔不對，這兩件之前，要先去{Ap}{Aa}，因為{Ae}。{Cp}那件放最後，因為{Cl}。」', v)
             ];
         }
-        var note = [head].concat(body, [
+        var note = [hd.line].concat(body, [
             T('{who}還提醒你，去{Xp}要搭 {bus} 號公車，比較快。', v),
             T('聽完語音，你想起{nb}說過，{Cp}旁邊新開了一家{ns}，開幕送{nn}{nu}{nt}，不過今天沒空去。', v)
         ]);
@@ -421,7 +518,7 @@
             lures.push(L(f(nn), '似曾相識', '「' + cnCount(nn) + '」是新店開幕送的數量。'));
             qs.push(G.q(e.q, '數字', f(ns[i]), lures.concat(G.near(ns[i], f, { lo: 1, hi: 7, swap: false }))));
         });
-        return { note: note, qs: finish(G, qs, 8) };
+        return { note: note, qs: finish(G, qs.concat(hd.qs), 8) };
     }
 
     /* ═══ 第 4 關：顏色形狀（四樣東西共用三種顏色、三種形狀；反常理的水果；三個特徵的罐子）═══ */
@@ -459,8 +556,9 @@
             f1: fr[0].n, f2: fr[1].n, fc1: fc[0], fc2: fc[1], fn1: cnCount(fn[0]), fn2: cnCount(fn[1]), fu1: fr[0].u, fu2: fr[1].u
         };
         objs.forEach(function (o, i) { v['c' + i] = o.c; v['s' + i] = o.s; v['n' + i] = o.n; });
+        var hd = X.head4(G, S, S.tl[S.i], v);
         var note = [
-            T(X.head4, v),
+            hd.line,
             T('「要一個{c0}的{s0}{n0}，還有一個{c1}的{s1}{n1}。」', v),
             T('{who}想了想又說：「再買一個{c2}的{s2}{n2}，和一個{c3}的{s3}{n3}。」', v),
             T('{nb}在旁邊聽到，說：「上次我在別家買的{n0}是{lc}的，用沒多久就壞了。」', v),
@@ -535,15 +633,16 @@
             G.q(shop + '在哪一條路？', '地點', street, [L(alt, '差一點點', '「' + alt + '」和「' + street + '」很像，紙條上是「' + street + '」。')]
                 .concat(G.others(P.streetPairs.map(function (p) { return p[0]; }), [street, alt], '差一點點', 2))),
             G.q('誰最近只吃那兩種蔬果？', '人物', g, [L(who, '張冠李戴', who + '是拜託你買東西的人。'), L(nb, '似曾相識', nb + '只是在旁邊聽到。'),
-                L(g === '孫子' ? '孫女' : '孫子', '差一點點')]),
+                L(otherGrand(g), '差一點點')]),
             G.q('是誰拜託你買這些東西？', '人物', who, [L(nb, '似曾相識', nb + '只是在旁邊聽到。'), L(g, '張冠李戴', g + '是只吃那兩種蔬果的人。')]
                 .concat(G.others(P.friends.concat(P.home), [who, nb], '差一點點', 2)))
         ];
-        return { note: note, qs: finish(G, qs, 12) };
+        return { note: note, qs: finish(G, qs.concat(hd.qs), 12) };
     }
 
     /* ═══ 第 5 關：兩段行程（兩班號碼很像的公車、兩個很像的站名、誰要的、花的範圍、四個特徵的盒子）═══ */
-    function L5(G) {
+    function L5(G, S) {
+        var D = S.tl[S.i];
         var bday = G.pick(P.kin.concat(P.friends));
         var ps = G.pick(P.kin.concat(P.friends), 2, [bday]);
         var p1 = ps[0];
@@ -579,10 +678,11 @@
         var v = {
             bday: bday, p1: p1, p2: p2, nb: nb, bus1: bus1, bus2: bus2, stop1: stop1, stop2: stop2, place1: pk.place, thing1: pk.thing, closeT: closeT,
             shop2: cat.shop, n2: cnCount(n2), u2: cat.u, i2: i2, lure: lureItem, fl: flower, f1: fs.ok[0], f2: fs.ok[1], f3: fs.ok[2],
-            fx: fs.no, fxr: fs.noWhy, pos: pos, pc: pc, lid: lid ? '有蓋子' : '沒有蓋子', shape: shape, mat: mat, content: content, food: food
+            fx: fs.no, fxr: fs.noWhy, pos: pos, pc: pc, lid: lid ? '有蓋子' : '沒有蓋子', shape: shape, mat: mat, content: content, food: food,
+            today: D.today.sw, ev: D.ev.sw
         };
         var note = [
-            T('星期天是{bday}的生日，大家都在準備，好幾個人都找你幫忙。', v),
+            T('今天是{today}下午兩點。{ev}是{bday}的生日，大家都在準備，好幾個人都找你幫忙。', v),
             T('{p1}和{p2}各拜託你一件事。{p1}要你搭 {bus1} 號公車，在{stop1}下車，去{place1}幫忙拿{thing1}，{place1}{closeT}就關門了。', v),
             T('{p2}則要你回程搭 {bus2} 號公車，在{stop2}下車，到{shop2}買{n2}{u2}{i2}。{p2}說上次買成{lure}，這次不要。', v),
             T('{p1}還想要一束{fl}，{f1}、{f2}或{f3}都可以，就是不要{fx}的，因為{fxr}。', v),
@@ -621,13 +721,18 @@
             G.q('盒子要還給誰？', '人物', p2, [L(p1, '張冠李戴'), L(nb, '似曾相識')].concat(G.others(P.friends, [p1, p2, nb], '差一點點', 1))),
             G.q(T('在{shop2}要買什麼？', v), '物品', i2, [L(lureItem, '似曾相識', '「' + lureItem + '」是上次買錯的。'), L(food, '似曾相識', food + '是' + nb + '要請大家吃的。')]
                 .concat(G.others(rest.slice(1), [], '差一點點', 2))),
-            G.q(T('在{shop2}要買幾{u2}？', v), '數字', f2(n2), G.near(n2, f2, { lo: 1, hi: 7, swap: false }))
+            G.q(T('在{shop2}要買幾{u2}？', v), '數字', f2(n2), G.near(n2, f2, { lo: 1, hi: 7, swap: false })),
+            G.dateQ('大家在準備的生日是哪一天？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是今天，生日是' + D.ev.s + '。')], { must: true }),
+            G.weekQ('那個生日是星期幾？', D.ev, [L(D.today.w, '張冠李戴', D.today.w + '是今天。')]),
+            G.q('是誰要過生日？', '人物', bday, [L(p1, '張冠李戴', p1 + '是拜託你拿東西的人。'), L(p2, '張冠李戴', p2 + '是拜託你買東西的人。'), L(nb, '似曾相識', nb + '只是在公車上聊天。')])
         ].concat(flowerQs(G, fs, flower));
         return { note: note, qs: finish(G, qs, 16) };
     }
 
     /* ═══ 第 6 關：臨時改口（買菜清單在電話裡被改掉；擾句；五個特徵的點心瓶）═══ */
-    function L6(G) {
+    function L6(G, S) {
+        var today = S.tl[S.i].today;
+        var ev = addDays(today, 1);      /* 這一關：明天就是生日，今天去買菜 */
         var who = G.pick(P.home);
         var p4 = G.pick(P.relatives, null, [who]);
         var g = G.pick(P.grand);
@@ -665,10 +770,12 @@
             e1: cnCount(e1), e2: cnCount(e2), f1: fish[0], f2: fish[1], fT: fT, treat: treat, ff: fishFloor, nb: nb, pork: pork,
             fr1: fr[0].n, fr2: fr[1].n, fc1: fc[0], fc2: fc[1], fn1: cnCount(fn[0]), fn2: cnCount(fn[1]), fu1: fr[0].u, fu2: fr[1].u, g: g,
             pos: pos, pc: pc, lid: lid ? '有蓋子' : '沒有蓋子', shape: shape, mat: mat, sc: sn.odd, snack: sn.n,
-            h2q: '一' + H2.u + H2.n, B1: B1, B2: B2, V: V, k1: fs.ok[0], k2: fs.ok[1], k3: fs.ok[2], fx: fs.no
+            h2q: '一' + H2.u + H2.n, B1: B1, B2: B2, V: V, k1: fs.ok[0], k2: fs.ok[1], k3: fs.ok[2], fx: fs.no,
+            today: today.sw, ev: ev.sw
         };
         var note = [
-            T('明天是{p4}的生日，{p4}一家要回來吃午飯慶生。{who}早上出門前交代你：「下午記得去{market}買菜，{rt}以前要回到家喔！」', v),
+            T('今天是{today}。明天{ev}是{p4}的生日，{p4}一家要回來吃午飯慶生。', v),
+            T('{who}早上八點出門前交代你：「下午記得去{market}買菜，{rt}以前要回到家喔！」', v),
             T('「先買{hq}、一瓶醬油、一罐白醋，還有{e1}盒雞蛋。{H}要挑{good}一點的，上次你買的{H}太{bad}了，{res}。」', v),
             T('{who}想了想又說：「魚要買兩條，一條{f1}、一條{f2}，{fT}記得請老闆{treat}。魚攤在市場{ff}最裡面。」', v),
             T('{nb}剛好經過，說市場二樓的豬肉攤今天特價，一斤只要 {pork} 元，不過你們家這個禮拜說好不吃豬肉。', v),
@@ -744,13 +851,17 @@
                 L(pc + '的' + sn.n, '張冠李戴', pc + '是點心瓶線條的顏色。')
             ].concat(other(P.oddSnacks, sn).map(function (s) { return L(sn.odd + '的' + s.n, '差一點點'); })), { must: true }),
             G.q('點心瓶是誰最喜歡的？', '人物', p4, [L(g, '張冠李戴', g + '喜歡的是蔬果。'), L(who, '張冠李戴', who + '是交代你買菜的人。'), L(nb, '似曾相識', nb + '只是剛好經過。')]),
-            G.q('後來打電話來改口的是誰？', '人物', who, [L(nb, '似曾相識', nb + '只是剛好經過。'), L(p4, '張冠李戴', p4 + '是明天要回來吃飯的人。'), L(g, '張冠李戴', g + '是只吃那兩種水果的人。')])
+            G.q('後來打電話來改口的是誰？', '人物', who, [L(nb, '似曾相識', nb + '只是剛好經過。'), L(p4, '張冠李戴', p4 + '是明天要回來吃飯的人。'), L(g, '張冠李戴', g + '是只吃那兩種水果的人。')]),
+            G.dateQ('回來吃午飯慶生是哪一天？', ev, [L(today.s, '張冠李戴', today.s + '是去買菜的那天，慶生是隔天。')], { must: true }),
+            G.weekQ('去市場買菜那天是星期幾？', today, [L(ev.w, '張冠李戴', ev.w + '是隔天慶生的日子。')])
         ].concat(flowerQs(G, fs, '花'));
         return { note: note, qs: finish(G, qs, 20) };
     }
 
     /* ═══ 第 7 關：一通電話（前面幾頁的計畫，被最後一通電話大幅更改）═══ */
-    function L7(G) {
+    function L7(G, S) {
+        var D = S.tl[S.i];
+        var ev2 = addDays(D.ev, -1);     /* 電話裡：生日會改到生日的前一天 */
         var who = G.pick(P.home);
         var p = G.pick(P.kids, null, [who]);
         var g = G.pick(P.grand);
@@ -791,19 +902,21 @@
             g: g, who: who, p: p, nb: nb, agec: cnNum(age), age2c: cnNum(age2), street1: street1, street2: street2,
             cake: cks[0], cake2: cks[1], F1: F1, F2: F2, F3: F3, F4: F4, inchc: cnNum(inch), dept: dept, floorc: cnNum(floor), GC: GC, GC2: GC2,
             gift: gift.n, gu: gift.u, bus1: bus1, stop1: stop1, shop3: shop3, bnc: cnCount(bn), thing3: things[0],
-            time0: time0, time1: time1, time2: time2, time3: time3
+            time0: time0, time1: time1, time2: time2, time3: time3, today: D.today.sw, ev: D.ev.sw, ev2: ev2.sw
         };
         var note = [
-            T('下個禮拜六是{g}的{agec}歲生日，{who}要你這個週末先把東西準備好。第一件事，是去{street1}的{cake}蛋糕店拿預訂的蛋糕。', v),
+            T('今天是{today}晚上七點。{ev}是{g}的{agec}歲生日，{who}要你先把東西準備好。', v),
+            T('第一件事，是去{street1}的{cake}蛋糕店拿預訂的蛋糕。', v),
             T('「要{F1}口味、{inchc}吋的，」{who}說，「{p}說上次的奶油蛋糕很好吃，但是這次{g}想吃{F1}口味。」', v),
             T('蠟燭要{agec}根，數字造型的不要，要一般的彩色蠟燭。第二件事，是去{dept}{floorc}樓買生日禮物：一{gu}{GC}的{gift}。', v),
             T('去百貨公司要搭 {bus1} 號公車，在{stop1}下車。{who}還交代，順便在{shop3}買{bnc}包氣球和一盒{thing3}。', v),
-            T('生日會{time1}開始，東西最晚{time0}要送到{p}家。', v),
+            T('生日會就在生日當天{time1}開始，東西最晚{time0}要送到{p}家。', v),
             T('{who}又說，今年{p}家要請{g}的同學一起來，大概會有十幾個小朋友，所以蛋糕千萬不能買太小。', v),
             T('{nb}聽說要辦生日會，熱心地說{street2}有一家{cake2}蛋糕店，{F3}蛋糕買一送一，不過你們已經訂好了。', v),
             T('你想起去年{g}生日時，買的是{F4}蛋糕，結果{g}只吃了一口，剩下的都是大人吃掉的。', v),
             T('傍晚，{who}又打電話來，說計畫要改：「{g}說還是想吃{F2}口味，蛋糕改成{F2}的。還有，{g}今年是{age2c}歲，不是{agec}歲，蠟燭要{age2c}根才對。」', v),
-            T('「禮物的顏色也改一下，{g}最近喜歡{GC2}，改買{GC2}的{gift}。氣球不用買了，{p}家還有。生日會改到{time2}開始，東西{time3}前送到就好。」', v)
+            T('「禮物的顏色也改一下，{g}最近喜歡{GC2}，改買{GC2}的{gift}。氣球不用買了，{p}家還有。」', v),
+            T('「生日會改到前一天，{ev2}{time2}開始，東西{time3}前送到就好。」', v)
         ];
 
         var fk = function (f) { return f + '口味'; };
@@ -846,8 +959,11 @@
                 L(time2, '張冠李戴', time2 + '是生日會開始的時間。'), L(time1, '張冠李戴', time1 + '是原本生日會開始的時間。')], { must: true }),
             G.q('東西要送到誰家？', '人物', p + '家', [L(nb + '家', '似曾相識', nb + '只是推薦了另一家蛋糕店。')]
                 .concat(G.others(P.kids.concat(['表妹美玲', '老朋友周大哥']), [p], '差一點點', 2).map(function (l) { return L(l.v + '家', l.k); }))),
-            G.q('是誰要過生日？', '人物', g, [L(p, '張冠李戴', p + '是生日會的主人家。'), L(g === '孫子' ? '孫女' : '孫子', '差一點點'), L(nb, '似曾相識', nb + '只是推薦了蛋糕店。')]),
+            G.q('是誰要過生日？', '人物', g, [L(p, '張冠李戴', p + '是生日會的主人家。'), L(otherGrand(g), '差一點點'), L(nb, '似曾相識', nb + '只是推薦了蛋糕店。')]),
             G.q('打電話來改計畫的是誰？', '人物', who, [L(p, '張冠李戴', p + '是生日會的主人家。'), L(nb, '似曾相識', nb + '只是推薦了蛋糕店。'), L(g, '差一點點', g + '是要過生日的人。')]),
+            G.dateQ('生日會最後改到哪一天？', ev2, [L(D.ev.s, '新舊混淆', D.ev.s + '是生日當天，生日會改到前一天。'), L(D.today.s, '張冠李戴', D.today.s + '是接到交代的那天。')], { must: true }),
+            G.dateQ('過生日的那一天是幾月幾日？', D.ev, [L(ev2.s, '張冠李戴', ev2.s + '是生日會改到的日子，生日沒有變。'), L(D.today.s, '張冠李戴', D.today.s + '是接到交代的那天。')], { must: true }),
+            G.weekQ('生日會最後是星期幾？', ev2, [L(D.ev.w, '新舊混淆', D.ev.w + '是生日當天，生日會改到前一天。')]),
             (function () {
                 var same = G.any(['蛋糕的吋數', '禮物是什麼', '百貨公司', '公車號碼']);
                 return G.q('電話裡「沒有」改到的是哪一個？', '更正', same, ['蛋糕的口味', '蠟燭的數量', '禮物的顏色', '開始的時間'].map(function (c) {
@@ -859,9 +975,10 @@
     }
 
     /* ═══ 第 8 關：回家的路（全部混合：三班公車、禮物、蛋糕、UBIKE、巷子、預算，最後兩通電話大改）═══ */
-    function L8(G) {
+    function L8(G, S) {
+        var today = S.tl[S.i].today;
         var who = G.pick(P.home);
-        var p = G.pick(['老伴', '女兒', '兒子', '媳婦', '女婿', '孫子', '孫女'], null, [who]);
+        var p = G.pick(P.home.concat(P.kin).filter(function (x, i, a) { return a.indexOf(x) === i; }), null, [who]);
         var nbs = people(G, 2);
         var nb = nbs[0];
         var nb2 = nbs[1];
@@ -915,10 +1032,11 @@
             dept: dept, floorc: cnNum(floor), gc: gc, gc2: gc2, gift: gift.n, gu: gift.u, g1: g1, cake: cake, flavor1: fl[0], flavor2: fl[1],
             lureFlavor: fl[2], c1: c1, c2: c2, box: box, noiseThing: noiseThing, noiseN: noiseN, s1: s1, s1b: s1b, s2: s2, s3: s3,
             t1: t1, t2: t2, t3: t3, t4: t4, a1c: cnNum(a1), a2c: cnCount(a2), side: side, kc: cnNum(k), house: house, stc: cnNum(st),
-            lastGift: lastGift.n, lu: lastGift.u, gc3: gc3
+            lastGift: lastGift.n, lu: lastGift.u, gc3: gc3, today: today.sw
         };
         var note = [
-            T('下班前，{who}傳訊息提醒你：今天是{p}的生日，下班後要辦幾件事再回家。你身上只帶了 {cash} 元現金。', v),
+            T('今天是{today}。下午四點，{who}傳訊息提醒你：今天是{p}的生日，下班後要辦幾件事再回家。', v),
+            T('你身上只帶了 {cash} 元現金。', v),
             T('你想起{p}去年生日時，你送了一{lu}{gc3}的{lastGift}，{p}到現在還常常用。', v),
             T('「先搭 {bus1} 號公車，在{stopA}下車，去{dept}{floorc}樓買生日禮物：一{gu}{gc}的{gift}，要 {g1} 元。」{who}說{p}上次看到就很喜歡。', v),
             T('「走出百貨公司的時候，先傳簡訊跟我說『禮物買好了』。然後搭 {bus2} 號公車去{cake}蛋糕店，拿{flavor1}蛋糕，{c1} 元，用{box}的盒子裝。」', v),
@@ -995,7 +1113,9 @@
             G.q('今天是誰的生日？', '人物', p, [L(who, '張冠李戴', who + '是傳訊息給你的人。'), L(nb, '似曾相識', nb + '只是說過蛋糕好吃。'),
                 L(nb2, '似曾相識', nb2 + '是騎車跌倒的人。')]),
             G.q('誰打電話來改計畫？', '人物', who, [L(p, '張冠李戴', p + '是今天生日的人。'), L(nb, '似曾相識', nb + '只是說過蛋糕好吃。'),
-                L(nb2, '似曾相識', nb2 + '是騎車跌倒的人。')])
+                L(nb2, '似曾相識', nb2 + '是騎車跌倒的人。')]),
+            G.dateQ('今天（生日那天）是幾月幾日？', today, [], { must: true }),
+            G.weekQ('今天是星期幾？', today)
         ];
         return { note: note, qs: finish(G, qs, 32, 6) };
     }
@@ -1015,7 +1135,8 @@
     /* 第 1～4 關的共用結構：各主軸只換開場文字與題庫 */
     QuizGen.lib = {
         P: P, T: T, L: L, cnNum: cnNum, cnCount: cnCount, twoDiff: twoDiff, threeDiff: threeDiff, rev2: rev2, perms: perms,
-        finish: finish, flowerSet: flowerSet, flowerQs: flowerQs, turnQ: turnQ, people: people,
+        finish: finish, flowerSet: flowerSet, flowerQs: flowerQs, turnQ: turnQ, people: people, otherGrand: otherGrand,
+        mkDay: mkDay, addDays: addDays, between: between, fromNow: fromNow, timeline: timeline, seasonOf: seasonOf, wearOf: wearOf, WEEK: WEEK,
         L1: L1, L2: L2, L3: L3, L4: L4
     };
 
@@ -1023,15 +1144,53 @@
     QuizGen.addTheme({
         id: 'birthday', name: '生日',
         names: ['新手暖身', '兩件差事', '先後順序', '顏色形狀', '兩段行程', '臨時改口', '一通電話', '回家的路'],
-        setup: function () { return {}; },
+        /* 時間軸：每一關隔 4～10 天；每一關都有一個人在 2～9 天後過生日 */
+        setup: function (G) { return { tl: timeline(G, [4, 10], [2, 9]) }; },
         X: {
             errands1: P.errands1,
-            head1: function (G) { return '明天是' + G.pick(P.kin.concat(P.friends)) + '的生日，你下班要先辦一件事：'; },
-            ctx2: function () { return '這個禮拜六是我的生日'; },
+            head1: function (G, S, D) {
+                var p = G.pick(P.kin.concat(P.friends));
+                var ps = [L(D.today.s, '張冠李戴', D.today.s + '是今天，生日是' + D.ev.s + '。')];
+                return {
+                    line: '今天是' + D.today.sw + '。' + D.ev.sw + '是' + p + '的生日，你下午五點下班，要先幫忙辦一件事：',
+                    qs: [
+                        G.dateQ('生日是哪一天？', D.ev, ps, { must: true }),
+                        G.q('是誰要過生日？', '人物', p, G.others(P.kin.concat(P.friends), p, '差一點點'))
+                    ]
+                };
+            },
+            ctx2: function (G, S, D, who) {
+                return {
+                    when: D.today.sw + '下午四點',
+                    ctx: D.ev.sw + '是我的生日',
+                    qs: [
+                        G.dateQ(who + '的生日是哪一天？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是打電話來的那天。')], { must: true }),
+                        G.weekQ(who + '的生日是星期幾？', D.ev, [L(D.today.w, '張冠李戴', D.today.w + '是打電話來的那天。')])
+                    ]
+                };
+            },
             shops: P.shops,
-            head3: function (G) { return '後天是' + G.pick(P.kin.concat(P.friends)) + '的生日，大家忙著準備慶生。'; },
+            head3: function (G, S, D) {
+                var p = G.pick(P.kin.concat(P.friends));
+                return {
+                    line: '今天是' + D.today.sw + '早上九點。' + D.ev.s + '是' + p + '的生日，大家忙著準備慶生。',
+                    qs: [
+                        G.dateQ('大家準備慶生的生日是哪一天？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是今天。')], { must: true }),
+                        G.daysQ('今天離那個生日還有幾天？', D.today, D.ev)
+                    ]
+                };
+            },
             errands3: P.errands3,
-            head4: '{g}下個禮拜生日，{who}拜託你下班去{street}的{shop}，買幾樣布置生日會的東西。',
+            head4: function (G, S, D, v) {
+                return {
+                    line: T('今天是{t}晚上七點。{d}是{g}的生日，{who}拜託你下班去{street}的{shop}，買幾樣布置生日會的東西。',
+                        { t: D.today.sw, d: D.ev.sw, g: v.g, who: v.who, street: v.street, shop: v.shop }),
+                    qs: [
+                        G.dateQ('生日會是哪一天？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是今天。')], { must: true }),
+                        G.weekQ('生日會是星期幾？', D.ev, [L(D.today.w, '張冠李戴', D.today.w + '是今天。')])
+                    ]
+                };
+            },
             things4: P.things4
         },
         levels: [L1, L2, L3, L4, L5, L6, L7, L8]
@@ -1055,10 +1214,11 @@
         for (var attempt = 0; attempt < 12; attempt++) {
             var G = new Gen((seed + (i + 1) * 7919 + attempt * 104729) >>> 0, avoid);
             try {
+                S.i = i;
                 var body = th.levels[i](G, S, th.X);
                 return {
                     level: {
-                        id: i + 1, name: th.names[i], tag: TAGS[i], note: body.note,
+                        id: i + 1, name: th.names[i], tag: TAGS[i], note: body.note, date: S.tl[i].today.sw,
                         qs: body.qs.map(function (q) { return { q: q.q, t: q.t, o: q.o, c: q.c, k: q.k, w: q.w, old: q.old }; })
                     },
                     used: G.used
@@ -1078,6 +1238,7 @@
         var themeId = THEMES[theme] ? theme : ids[Math.floor(pr() * ids.length)];
         var th = THEMES[themeId];
         var prevUsed = prev.theme === themeId ? prev.used : null;
+        var cast = applyCast(new Gen((seed ^ 0x2545f491) >>> 0));
         var SG = new Gen((seed ^ 0x9e3779b9) >>> 0, prevUsed && prevUsed.shared);
         var S = th.setup(SG);
         var levels = [];
@@ -1087,8 +1248,38 @@
             levels.push(r.level);
             used[i + 1] = r.used;
         }
-        return { v: GEN_V, seed: seed, theme: themeId, themeName: th.name, created: Date.now(), levels: levels, used: used };
+        addRecalls(levels, new Gen((seed ^ 0x7f4a7c15) >>> 0));
+        return { v: GEN_V, seed: seed, theme: themeId, themeName: th.name, cast: cast, created: Date.now(), levels: levels, used: used };
     };
+
+    /* ═══ 跨關回想題：後面的關卡，隨機插進前面關卡的題目，故意打亂思緒 ═══
+       第 5 關＋1 題第 1 關；第 6 關＋1 題第 2 關；第 7 關＋第 2、3 關各 1 題；第 8 關＋第 2、3 關各 1 題、第 4 關 2 題。
+       同一局的 8 關是一起產生的，所以回想題問的就是這一局前面那幾關的紙條。 */
+    var RECALL = { 5: [1], 6: [2], 7: [2, 3], 8: [2, 3, 4, 4] };
+    QuizGen.RECALL = RECALL;
+    function addRecalls(levels, G) {
+        Object.keys(RECALL).forEach(function (id) {
+            var lv = levels[id - 1];
+            var texts = lv.qs.map(function (q) { return q.q; });
+            var picked = [];
+            RECALL[id].forEach(function (src) {
+                var pool = levels[src - 1].qs.filter(function (q) { return !q.old && picked.indexOf(q) < 0; });
+                var fresh = pool.filter(function (q) { return texts.indexOf(q.q) < 0; });
+                var q = G.any(fresh.length ? fresh : pool);
+                picked.push(q);
+                texts.push(q.q);
+                /* 選項重新洗牌，不能靠「上次選第幾個」作答 */
+                var idx = G.shuffle([0, 1, 2, 3]);
+                var copy = {
+                    q: q.q, t: q.t, old: false, from: src, fromName: levels[src - 1].name,
+                    o: idx.map(function (j) { return q.o[j]; }), k: idx.map(function (j) { return q.k[j]; }), w: idx.map(function (j) { return q.w[j]; })
+                };
+                copy.c = copy.k.indexOf(null);
+                /* 插在第 2 題以後的隨機位置 */
+                lv.qs.splice(G.int(1, lv.qs.length), 0, copy);
+            });
+        });
+    }
     /* 取得這一局：主選單剛按「測試模式」→ 新的一局；否則沿用存著的（重新整理也一樣）。
        網址加 ?seed=數字 可以重現某一局（驗證用）。 */
     QuizGen.session = function () {
@@ -1116,14 +1307,18 @@
         var issues = [];
         levels.forEach(function (lv) {
             var tag = '第' + lv.id + '關';
-            if (lv.qs.length !== [4, 6, 8, 12, 16, 20, 24, 32][lv.id - 1]) issues.push(tag + ' 題數 ' + lv.qs.length);
+            var want = [4, 6, 8, 12, 16, 20, 24, 32][lv.id - 1] + (RECALL[lv.id] || []).length;
+            if (lv.qs.length !== want) issues.push(tag + ' 題數 ' + lv.qs.length + '／' + want);
             lv.note.forEach(function (p) { if (p.length > 90) issues.push(tag + ' 段落 ' + p.length + ' 字：' + p.slice(0, 10)); });
             var old = 0;
             var asked = {};
+            var recalls = [];
             lv.qs.forEach(function (q) {
                 if (q.old) old++;
-                if (asked[q.q]) issues.push(tag + ' 重複的題目：' + q.q);
-                asked[q.q] = 1;
+                if (q.from) recalls.push(q.from);
+                var key = (q.from || '') + q.q;
+                if (asked[key]) issues.push(tag + ' 重複的題目：' + q.q);
+                asked[key] = 1;
                 if (q.o.length !== 4) issues.push(tag + ' 選項不是 4 個：' + q.q);
                 if (q.o.filter(function (o, i) { return q.o.indexOf(o) !== i; }).length) issues.push(tag + ' 選項重複：' + q.q);
                 if (q.k[q.c] !== null || q.k.filter(function (x) { return x === null; }).length !== 1) issues.push(tag + ' 正解標記錯誤：' + q.q);
@@ -1131,6 +1326,7 @@
                 if (q.q.length > 22) issues.push(tag + ' 題目太長：' + q.q);
             });
             if (old > Math.floor(lv.qs.length / 5)) issues.push(tag + ' 「一開始」題太多：' + old);
+            if (recalls.sort().join() !== (RECALL[lv.id] || []).slice().sort().join()) issues.push(tag + ' 回想題不對：' + recalls.join());
         });
         return issues;
     };

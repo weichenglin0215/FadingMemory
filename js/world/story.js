@@ -514,7 +514,7 @@
         /* 標題卡：瀏覽器要先被點一下才准發出聲音，所以說明放在下一張、才念得出來 */
         await HUD.ask({
             title: '回家的路', art: 'home', center: true, speak: false,
-            text: '記憶力練習・正式模式',
+            text: '記憶模糊・出去走走',
             choices: [{ label: '開始', value: 1, kind: 'primary', icon: 'play' }]
         });
         audio();
