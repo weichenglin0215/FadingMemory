@@ -39,6 +39,7 @@ js/world/config.js ★ 3D 手感參數（鏡頭 pitchDeg、轉彎速度、NPC �
 js/world/hud.js  kit.js  core.js  scenes.js  story.js
 js/quiz_pools.js  quiz_gen.js  quiz.js   測試模式（題庫池／題目產生器引擎／畫面）
 js/quiz_happyBirthday.js  quiz_travel.js  quiz_health.js   測試模式的三個主軸（各自完整撰寫 1～8 關）
+js/menu.js  js/share.js   主選單（入口）／右上角分享按鈕（QR Code 彈窗）
 vendor/three.min.js   Three.js r158（UMD 版）
 ```
 

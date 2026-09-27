@@ -107,3 +107,119 @@
     font-size: var(--fs-xs);
     color: var(--c-ink-soft);
 }
+
+/* ═══ 右上角分享按鈕 ═══ */
+.share-btn {
+    position: absolute;
+    top: var(--sp-4);
+    right: var(--sp-4);
+    z-index: 6;
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--c-card);
+    color: var(--c-blue);
+    border: var(--btn-line-bd);
+    box-shadow: var(--shadow-card);
+    font-size: 26px;
+    cursor: pointer;
+    transition: transform 0.1s ease, filter 0.15s ease;
+}
+
+.share-btn:active {
+    transform: scale(0.93);
+}
+
+.share-btn:focus-visible {
+    outline: 4px solid var(--c-blue);
+    outline-offset: 3px;
+}
+
+/* ═══ 分享 QR Code 彈窗 ═══ */
+.share-dlg {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sp-5);
+    background: rgba(74, 59, 30, 0.35);
+}
+
+.share-dlg__card {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-4);
+    padding: var(--sp-5) var(--sp-4) var(--sp-4);
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
+    animation: share-dlg-in 0.2s ease;
+}
+
+@keyframes share-dlg-in {
+    from {
+        transform: translateY(18px);
+        opacity: 0;
+    }
+
+    to {
+        transform: none;
+        opacity: 1;
+    }
+}
+
+.share-dlg__title {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.share-dlg__qr {
+    width: 300px;
+    height: 300px;
+    padding: var(--sp-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #FFFFFF;
+    border: var(--bd);
+    border-radius: var(--r-md);
+}
+
+.share-dlg__qr img {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.share-dlg__url {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    word-break: break-all;
+}
+
+.share-dlg__hint {
+    font-size: var(--fs-xs);
+    color: var(--c-ink-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .share-dlg__card,
+    .share-btn {
+        animation: none;
+        transition: none;
+    }
+}

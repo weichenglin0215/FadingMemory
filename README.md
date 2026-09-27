@@ -90,6 +90,7 @@ js/stage.js                            舞台縮放核心（手機＝電腦畫�
 js/ui.js                               共用小工具（自動縮字、分頁、圖示）
 js/waterflow.js                        水流特效（GPU 流體模擬；1.7.0 起停用、保留備用）
 js/menu.js                             主選單
+js/share.js                            主選單右上角的分享按鈕（QR Code 彈窗，掃碼開啟 GitHub Pages 網址）
 js/quiz_pools.js                       「明明還記得...」題庫池（每一局從這裡抽參數）
 js/quiz_gen.js                         「明明還記得...」題目產生器引擎（可重現亂數、誘答、混淆類型、日期、主軸登記、回想題；不含任何關卡內容）
 js/quiz_happyBirthday.js               「明明還記得...」・生日主軸（1～8 關完整撰寫）
@@ -112,6 +113,9 @@ screen_adaptive.*                      早期專案的參考檔，遊戲不引�
 ---
 
 ## 版本更新紀錄
+
+### V1.10.0（2026-09-27）
+- 主選單（`index.html`）右上角新增分享按鈕：點擊彈出 QR Code 對話框，掃碼開啟 `https://weichenglin0215.github.io/FadingMemory/`；對話框也附「複製連結」按鈕，支援 Web Share API 的裝置（手機為主）還會多一顆「分享出去」。新增 `js/share.js`；QR Code 用 qrcodejs（CDN，第一次點開才載入）。配色沿用宣紙＋黃綠藍風格，不是深色底。
 
 ### V1.9.0（2026-09-27）
 - 拆檔：`quiz_gen.js` 只留題目產生器引擎（不再含任何關卡內容）；生日主軸獨立成新檔案 `js/quiz_happyBirthday.js`。三個主軸（生日、旅遊、看病）的 1～8 關現在都在各自的檔案裡完整撰寫，不再共用第 1～4 關的邏輯。

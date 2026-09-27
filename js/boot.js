@@ -26,7 +26,7 @@
     var PAGES = {
         menu: {
             css: BASE_CSS.concat(['css/menu.css']),
-            js: BASE_JS.concat(['js/menu.js'])
+            js: BASE_JS.concat(['js/menu.js', 'js/share.js'])
         },
         quiz: {
             css: BASE_CSS.concat(['css/quiz.css']),
