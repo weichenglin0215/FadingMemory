@@ -170,7 +170,7 @@
         /* 跨關回想題：明白標出「第 X 關的回想題」，不藏著考玩家 */
         var side = h('span', { 'class': 'hint', text: q.from ? '想想第 ' + q.from + ' 關的紙條' : lv.name });
         var head = h('div', { 'class': 'q-head' }, [
-            q.from ? h('span', { 'class': 'pill pill--orange', text: '第 ' + q.from + ' 關的回想題' }) : h('span', { 'class': 'pill pill--blue', text: q.t }),
+            q.from ? h('span', { 'class': 'pill pill--orange pill--blink', text: '第 ' + q.from + ' 關的回想題' }) : h('span', { 'class': 'pill pill--blue', text: q.t }),
             side
         ]);
         var inner = h('div', { 'class': 'q-text__inner', text: q.q });

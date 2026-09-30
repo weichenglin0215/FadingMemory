@@ -1,0 +1,310 @@
+/* ═══ reaction.css — 秒反應（reaction.html）：說明彈窗＋共用結果卡＋三個小遊戲 ═══ */
+
+/* ─── 上方列的「?」規則按鈕 ─── */
+.bar__help {
+    flex: 0 0 auto;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 50%;
+    border: var(--btn-line-bd);
+    background: var(--btn-line-bg);
+    color: var(--btn-line-fg);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    cursor: pointer;
+}
+
+.bar__help:active {
+    transform: scale(0.93);
+}
+
+/* ─── 說明彈窗（進場、或按「?」重看）─── */
+.rule-dlg {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sp-5);
+    background: rgba(74, 59, 30, 0.35);
+}
+
+.rule-dlg__card {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+    padding: var(--sp-5) var(--sp-4) var(--sp-4);
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
+    animation: rule-dlg-in 0.2s ease;
+}
+
+@keyframes rule-dlg-in {
+    from {
+        transform: translateY(18px);
+        opacity: 0;
+    }
+
+    to {
+        transform: none;
+        opacity: 1;
+    }
+}
+
+.rule-dlg__title {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.rule-dlg__text {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-body);
+    color: var(--c-ink-soft);
+    text-align: left;
+}
+
+/* ─── 共用：結果卡（三個遊戲都用）─── */
+.rx-result {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-3);
+    text-align: center;
+}
+
+.rx-result__num {
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-blue);
+}
+
+.rx-result__label {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.hint--ok {
+    color: var(--c-green);
+    font-weight: var(--fw-black);
+}
+
+.rx-result .btn {
+    width: 260px;
+    margin-top: var(--sp-3);
+}
+
+/* ═══ 遊戲一：零秒出手 ═══ */
+.speed-wrap {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-3);
+}
+
+.speed-num {
+    font-variant-numeric: tabular-nums;
+    font-size: 88px;
+    font-weight: var(--fw-black);
+    color: var(--c-blue);
+    min-height: 1.1em;
+}
+
+.speed-btn {
+    height: 140px;
+    font-size: var(--fs-xl);
+}
+
+/* ═══ 遊戲二：神準落下 ═══ */
+.drop-field {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+}
+
+.drop-tri {
+    position: absolute;
+    z-index: 3;
+    background: var(--c-blue);
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+/* 會被放大的整塊「尺」：畫面放大只放大這一層，三角形（釘子）在它外面，永遠不動 */
+.drop-zoom-root {
+    position: absolute;
+    inset: 0;
+}
+
+.drop-strip {
+    position: absolute;
+    display: flex;
+}
+
+.drop-cell {
+    position: relative;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background: var(--c-ink);
+    color: var(--c-on-accent);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+}
+
+.drop-cell--mid {
+    background: var(--flow-ink-1);
+}
+
+/* 插中紅色：紅色格內再放 9 格子分格（紅底、中間黃）；座標完全對齊父格，
+   放大鏡頭時整塊 zoom-root 一起放大，這個子分格自然填滿父格 */
+.drop-substrip {
+    position: absolute;
+    inset: 0;
+    display: flex;
+}
+
+.drop-subcell {
+    position: relative;
+    flex: 1 1 0;
+    height: 100%;
+    background: var(--flow-ink-1);
+    border-right: 0.3px solid var(--c-ink);
+}
+
+.drop-subcell--mid {
+    background: var(--c-yellow);
+}
+
+/* 插中黃色核心：再放 9 格子分格（黃底、中間紫）*/
+.drop-subsubstrip {
+    position: absolute;
+    inset: 0;
+    display: flex;
+}
+
+.drop-subsubcell {
+    flex: 1 1 0;
+    height: 100%;
+    background: var(--c-yellow);
+    border-right: 0.035px solid var(--c-ink);
+}
+
+.drop-subsubcell--mid {
+    background: var(--flow-ink-5);
+}
+
+/* 置中靠 .drop-field 的 flex（align/justify-content: center），不是 left:50%+
+   transform:translate(-50%,-50%)——那個寫法跟全域 .btn:active{transform:scale(0.97)}
+   搶同一個 transform 屬性，優先度較高的 :active 規則會整個蓋掉置中用的 translate（不是疊加），
+   按下的瞬間按鈕就從畫面中央跳到「左上角頂到中心點」的位置，往右下角偏移了半個按鈕的寬高，
+   導致手指按下時按鈕已經跳出手指範圍，看起來像「按了沒反應」。改用 flex 置中，
+   transform 這個屬性就只剩 :active 的 scale 在用，不會再互搶。 */
+.drop-btn {
+    position: relative;
+    z-index: 5;
+    flex: 0 0 auto;
+    width: 140px;
+    height: 72px;
+}
+
+/* 開場特寫：最深一層（8 黃＋中間紫）zoom out 露出真正的初始畫面 */
+.drop-intro {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: flex;
+    pointer-events: none;
+    transform-origin: 50% 50%;
+    animation: drop-intro-out 900ms ease forwards;
+}
+
+.drop-intro span {
+    flex: 1 1 0;
+    background: var(--c-yellow);
+    border: 3px solid var(--c-ink);
+}
+
+.drop-intro span.drop-intro__mid {
+    background: var(--flow-ink-5);
+}
+
+@keyframes drop-intro-out {
+    0% {
+        transform: scale(5);
+        opacity: 1;
+    }
+
+    70% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 0;
+    }
+}
+
+/* ═══ 遊戲三：大家來找碴 ═══ */
+.spot-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: var(--sp-3);
+}
+
+.spot-tile {
+    border: none;
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    padding: 0;
+    transition: transform 0.1s ease;
+}
+
+.spot-tile:active {
+    transform: scale(0.96);
+}
+
+.spot-tile--ok {
+    outline: 5px solid var(--c-ok);
+    outline-offset: -5px;
+}
+
+.spot-tile--bad {
+    outline: 5px solid var(--c-bad);
+    outline-offset: -5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .rule-dlg__card,
+    .drop-intro {
+        animation: none;
+    }
+
+    .drop-zoom-root {
+        transition: none !important;
+    }
+}

@@ -28,6 +28,10 @@
             css: BASE_CSS.concat(['css/menu.css']),
             js: BASE_JS.concat(['js/menu.js', 'js/share.js'])
         },
+        reaction: {
+            css: BASE_CSS.concat(['css/reaction.css']),
+            js: BASE_JS.concat(['js/reaction_core.js', 'js/reaction_speed.js', 'js/reaction_drop.js', 'js/reaction_spot.js', 'js/reaction.js'])
+        },
         quiz: {
             css: BASE_CSS.concat(['css/quiz.css']),
             js: BASE_JS.concat(['js/quiz_pools.js', 'js/quiz_gen.js', 'js/quiz_happyBirthday.js', 'js/quiz_travel.js', 'js/quiz_health.js', 'js/quiz.js'])

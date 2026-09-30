@@ -7,7 +7,7 @@
 
 ## 0. 專案一句話
 
-長者記憶力練習網頁遊戲。兩種模式：`quiz.html`（純 2D 題目）、`world.html`（Three.js 3D＋2D HUD）。主選單 `index.html`。全部是靜態檔案、傳統 `<script>`（不用 ES Modules，才能雙擊 HTML 開啟）。
+長者記憶力練習網頁遊戲。三種模式：`quiz.html`（純 2D 題目）、`world.html`（Three.js 3D＋2D HUD）、`reaction.html`（3 選 1 反應力小遊戲）。主選單 `index.html`。全部是靜態檔案、傳統 `<script>`（不用 ES Modules，才能雙擊 HTML 開啟）。
 
 ---
 
@@ -28,7 +28,7 @@
 ## 2. 檔案結構與載入
 
 ```
-index.html / quiz.html / world.html  只放骨架 DOM＋設定 window.FM_PAGE，再用時間戳載入 js/boot.js
+index.html / quiz.html / world.html / reaction.html  只放骨架 DOM＋設定 window.FM_PAGE，再用時間戳載入 js/boot.js
 js/boot.js       讀 version.json，依 PAGES 清單載入 CSS/JS（加 ?v=版本號）
 version.json     {"version","date","notes"}
 css/theme.css    ★ 變數＋共用元件（.btn .opt .note .bar .screen .pill .card…）
@@ -40,6 +40,8 @@ js/world/hud.js  kit.js  core.js  scenes.js  story.js
 js/quiz_pools.js  quiz_gen.js  quiz.js   測試模式（題庫池／題目產生器引擎／畫面）
 js/quiz_happyBirthday.js  quiz_travel.js  quiz_health.js   測試模式的三個主軸（各自完整撰寫 1～8 關）
 js/menu.js  js/share.js   主選單（入口）／右上角分享按鈕（QR Code 彈窗）
+js/reaction_core.js  reaction_speed.js  reaction_drop.js  reaction_spot.js  reaction.js
+                 「秒反應」：共用引擎（登記清單／最佳紀錄）／三個小遊戲／進場控制（隨機挑選＋說明彈窗）
 vendor/three.min.js   Three.js r158（UMD 版）
 ```
 
@@ -150,6 +152,26 @@ vendor/three.min.js   Three.js r158（UMD 版）
 - 只複製紙條本身；標題列、提示、按鈕是 DOM，不會被擾動（墨色可以流到它們上面）。
 - 需要半浮點紋理；不支援就把數字直接疊在紙條上淡入淡出，節奏相同。分頁在背景時暫停。
 - 驗證：`WaterNote.play({ stage, note, manual: true })` 後用 `WaterNote.last.step(秒)` 逐格推進再截圖。
+
+## 6.6 秒反應（`js/reaction_*.js`、`reaction.html`）
+- 引擎／內容分離，跟測試模式同一個做法：`reaction_core.js` 只提供 `Reaction.register({id, name, rule, mount})` 登記清單與最佳紀錄存取（`Reaction.getBest/setBest`，存在 `localStorage['fm.reaction.best.<id>']`），**不含任何遊戲內容**；三個小遊戲檔案各自呼叫 `Reaction.register` 登記自己；`reaction.js`（進場控制，必須最後載入）才在 `UI.ready` 裡從 `Reaction.list()` 隨機挑一個、顯示說明彈窗、呼叫 `game.mount(screen, {setMeta})`。
+- **載入順序很重要**：`reaction_core.js` 必須在三個遊戲檔案之前、`reaction.js` 必須最後——`reaction.js` 的 `UI.ready(fn)` 若在文件已載入完畢時呼叫會立刻同步執行 `fn()`，若清單還沒登記完就會抽到空清單。`js/boot.js` 的 `PAGES.reaction.js` 陣列順序＝執行順序，跟 `quiz_gen.js → 三個主軸 → quiz.js` 是同一個道理。
+- 每個小遊戲的 `mount(container, ctx)` 自己管理整個生命週期（畫面、重玩、分數），`ctx.setMeta(text)` 更新上方列右側文字（通常顯示最佳紀錄）。返回主選單一律用整頁導覽（`location.href='index.html'`），不做 SPA 切換。
+- 說明彈窗（`.rule-dlg`）只在**進頁面第一次**顯示，看完「開始挑戰」才 `mount`；右上角「?」可以隨時重看規則（不影響進行中的遊戲，因為彈窗只是蓋在畫面上）。
+- 配色：白底／黑格／紅／黃／紫等是遊戲二（神準落下）的**功能色**，不是隨意選的——直接沿用專案既有色票（`--c-card` 當白底、`--c-ink` 當黑、`--flow-ink-1` 當紅、`--c-yellow` 當黃、`--flow-ink-5` 當紫），沒有新增任何色碼，維持整體美術風格一致。遊戲三（大家來找碴）的方格顏色本質上是隨機 HSL（色彩知覺測試需要），不受主題色票限制。
+- 遊戲二的精準判定是**遞迴九等分**：9 格（1234-5-4321，中間紅）→ 插中紅色再細分 9 格（8 紅 1 黃）→ 插中黃色再細分 9 格（8 黃 1 紫）。同一次落下的水平座標，依序對 9 取模／整除即可算出三層的格子索引，不是三次獨立判定。
+- **遊戲二（1.12.1）：結果在按下「落下」那一刻就先算好**——尺左右反彈的位置是純函式 `bouncePos(start, dir, speed, t, max)`（輸入經過的時間，回傳位置；用三角波公式 fold 處理反彈與負時間，不用逐格累加），按下當下就用同一個函式算出「落地那一刻」的位置與三層格子索引；畫面上的下落動畫只是把同一組結果重新演一次（每一影格呼叫同一個函式），保證看到的落點跟算出的結果一定一致。
+  - **重力**：三角形的 `top` 用 `start + (target-start) * p * p`（`p` = 經過時間 / 總時間）驅動，不用 CSS transition——位置 ∝ 時間平方＝等加速度，一開始慢、越落越快；之前用 CSS transition＋`transitionend` 事件判斷落地，這個事件在某些情況下不會觸發，改成每一影格自己算位置後，`transitionend` 的問題解決了，但「按了常常沒反應」還是會發生——**真正的關鍵原因是 `requestAnimationFrame` 本身**：瀏覽器會在分頁切到背景、視窗被蓋住、省電模式等情況下直接暫停整個 `requestAnimationFrame`（不是變慢，是完全不再執行），按鈕按下去那一刻已經 `disabled`／隱藏了，`frame()` 卻可能永遠不會再被呼叫，遊戲卡在半空中。**修正：`setTimeout(land, FALL_MS + 400)` 當安全網**，時間到了不管 `requestAnimationFrame` 有沒有正常跑完，都強制呼叫同一個 `land()` 判定落地（`landed` 旗標防止重複觸發）；`setTimeout` 是獨立於畫面渲染的計時器，同樣情況下最多被延後執行，不會被整個停掉。用「完全停用 `requestAnimationFrame`」模擬最壞情況驗證過：遊戲仍會在時間到了之後正常跑完，不會卡住。這個安全網的邏輯也適用在其他地方新增靠 `requestAnimationFrame` 推進的遊戲流程時，別只靠它，一定要加計時器保底。
+  - **落下時間與尺的速度要互相配合**：尺速度是為了「反應力遊戲要看得出移動」而定的（不能太慢），但落下時間如果太長，不管尺多快，落下期間尺都會移動超過好幾格，變成怎麼按都插不到中間。目前 `FALL_MS = 380`、尺速度 60～130 px/s，落下期間尺大約移動 1～3 格，插中紅色是靠算時機做得到的，不是純運氣。這兩個數字要一起調，不能只改其中一個。
+  - **接觸點＝畫面放大的錨點，且永遠不動**：三角形是 `.drop-field` 的直接子元素（不在會被縮放的 `.drop-zoom-root` 裡），固定在畫面上同一個像素位置；`.drop-zoom-root` 的 `transform-origin` 設成接觸點的座標，之後只改 `transform: scale()`，數學上錨點座標必定原地不動（可以用一個放在 zoom-root 外、座標固定的 marker，縮放前後量 `getBoundingClientRect()` 驗證：位移一定是 0）。三角形因此「釘住不放」，玩家看到的是鏡頭往同一點持續拉近，不是切換到另一張畫面。
+  - **落點在尺的範圍外＝真的插空了**，不能夾到最邊上那一格冒充插中（那樣會誤導玩家「按這裡總會插中什麼」）；`computeOutcome` 判斷 `localX` 是否落在 `[0, stripW)`，不在範圍內就回傳 `{ miss: true }`，直接顯示「插空了」，不進放大流程。
+  - **按鈕置中不能用 `left:50%+transform:translate(-50%,-50%)`**（1.12.3 修正）：`.btn:active{transform:scale(0.97)}`（`theme.css`，全域）的 specificity（class+pseudo-class）比 `.drop-btn`（單一 class）高，同一個 `transform` 屬性只會留下優先度較高的那個，不會疊加——手指一按下去，置中用的 translate 整個被蓋掉，按鈕瞬間往右下角跳開半個按鈕的寬高（140×72 就是跳 70×36px），跳出手指原本按著的範圍，變成「按了沒反應」。改成用 `.drop-field { display:flex; align-items:center; justify-content:center; }` 置中，`.drop-btn` 不再用 `transform` 定位，`transform` 這個屬性就只剩 `:active` 的縮放在用，不會再互搶。**任何用 `transform` 置中的可點擊元件，只要它或其父層可能有 `:active`／`:hover` 也去動 `transform`，都要檢查這個坑**——驗證方法：對元件送一個真的 `mousedown` 事件（純改 class 沒辦法觸發 `:active` 偽類），比較送之前跟送之後的 `getBoundingClientRect()`，位移應該是 0。
+  - **判定要用 `pointerdown`，不要用 `click`**（1.12.3 修正）：這是「算準時機」的遊戲，`click` 在觸控裝置上要等手指離開螢幕（`touchend`）才觸發，玩家看準時機按下去的那一刻，跟遊戲真正判定的時間點會差了手指按著不放的時間，時機全部算錯。改用 `pointerdown`（手指一碰到螢幕就觸發，滑鼠／觸控／筆通用），並在 handler 裡 `e.preventDefault()`（同一個按鈕之後可能還會再收到瀏覽器補發的相容 `click`，但按鈕這時候已經 `disabled`，原本的 guard 就會擋掉，不會重複觸發）。
+- 遊戲一（1.12.1 起）畫面與結果一律顯示**秒**（`X.XXX`，小數點後三位），不用「毫秒」這個詞——內部計時仍用 `performance.now()`（不是 `Date.now()`）以毫秒整數比大小（precise、無浮點誤差），只有顯示才換算成秒；倒數畫面在剩餘時間 > 3.000 秒才顯示數字，之後刻意留白讓玩家自己默數。判定也在 1.12.3 改成 `pointerdown`，理由跟遊戲二一樣（用 `click` 會多算手指按著不放的時間）。
+- 遊戲三（大家來找碴）的差異**隨關卡線性遞減**（`start - step*(level-1)`，碰到 `floor` 就不再變小），不是等比例縮小（乘某個 <1 的係數）——等比例縮小前幾關降得快、十幾關後幾乎不再變難，很快卡在下限；線性遞減才會每一關都確實比上一關更難一點點。色相／飽和度／亮度三個頻道分別校正 `start/step/floor`，讓下限落在差不多的關卡數（目前約第 19～20 關），同一關不管抽到哪個頻道，難度感受接近。底色的飽和度／亮度刻意收在中段（52～68％／44～60％），避免抽到太淡或太暗的底色時，色相差異變得幾乎看不出來，導致難度失控。
+  - **色相差異要用「繞圈最短距離」算，不能直接 `|a-b|`**（1.12.3 修正）：色相是 0～360 度的圓，345 度跟 23 度只差 38 度（繞 0/360 這條近路），直接 `|345-23|=322` 會在跨過 0／360 的地方算出離譜的超大差異，跟畫面上實際看到的差異程度對不起來。`hueDiff(a,b) = d>180 ? 360-d : d`（`d=|a-b|%360`）；飽和度／亮度是 0～100 的直線刻度，`Math.abs` 本來就是對的，不用這個處理。
+  - 驗證用（兩層）：`mount()` 一開始呼叫 `logLevelTable()`，在主控台印出第 1～21 關「正常格」與「差異格」各自的 H／S／L 與差異量（`console.table`），方便看難度曲線的**趨勢**，但這是另外獨立抽樣，顏色不會跟畫面上實際玩到的相同；`round()` 裡另外印出**這一關實際顯示在畫面上的**那一組真實數值（同一個 `diffRow()` 把兩處算法統一），要核對「螢幕上這格顏色到底差多少」要看這一個，不是開頭那張表。
+
 ## 7. 3D 規範
 
 ### 7.1 座標慣例

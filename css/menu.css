@@ -2,8 +2,8 @@
 
 .menu {
     justify-content: center;
-    gap: var(--sp-5);
-    padding: var(--sp-5) var(--sp-5);
+    gap: var(--sp-3);
+    padding: var(--sp-4) var(--sp-5);
     background:
         radial-gradient(ellipse 80% 40% at 50% 0%, var(--c-yellow-soft), transparent 70%),
         var(--c-paper);
@@ -17,8 +17,8 @@
 }
 
 .menu__logo {
-    width: 190px;
-    height: 190px;
+    width: 128px;
+    height: 128px;
 }
 
 .menu__art {
@@ -45,7 +45,7 @@
     display: flex;
     align-items: center;
     gap: var(--sp-4);
-    height: 176px;
+    height: 130px;
     padding: 0 var(--sp-5);
     border-radius: var(--r-lg);
     text-decoration: none;
@@ -67,6 +67,12 @@
     box-shadow: var(--btn-sky-shadow);
 }
 
+.mode--reaction {
+    background: var(--btn-go-bg);
+    color: var(--btn-go-fg);
+    box-shadow: var(--btn-go-shadow);
+}
+
 .mode--world {
     background: var(--btn-primary-bg);
     color: var(--btn-primary-fg);
@@ -74,14 +80,14 @@
 }
 
 .mode__icon {
-    flex: 0 0 104px;
-    height: 104px;
+    flex: 0 0 82px;
+    height: 82px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     background: rgba(255, 255, 255, 0.25);
-    font-size: 60px;
+    font-size: 46px;
 }
 
 .mode__text {

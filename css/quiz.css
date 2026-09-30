@@ -104,6 +104,33 @@
     gap: var(--sp-2);
 }
 
+/* 跨關回想題：橘色標籤閃爍，提醒玩家這是回想題 */
+.pill--blink {
+    animation: pill-blink 1.5s ease-in-out infinite;
+}
+
+@keyframes pill-blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    65% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.4;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pill--blink {
+        animation: none;
+    }
+}
+
 .q-text {
     flex: 1 1 auto;
     min-height: 0;

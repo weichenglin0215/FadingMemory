@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache">
+    <title>秒反應 — 記憶模糊</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
+
+    <!-- 版本檢查＋載入：見 js/boot.js -->
+    <style>html:not(.stage-ready) body { visibility: hidden; }</style>
+    <script>window.FM_PAGE = 'reaction';</script>
+    <script>document.write('<script src="js/boot.js?t=' + Date.now() + '"><\/script>');</script>
+</head>
+
+<body>
+    <div id="stage">
+        <div class="bar">
+            <button class="bar__back" id="bar-back"></button>
+            <div class="bar__title" id="bar-title">秒反應</div>
+            <div class="bar__meta" id="bar-meta"></div>
+            <button class="bar__help" id="bar-help">?</button>
+        </div>
+        <div class="screen" id="screen"></div>
+        <div class="rule-dlg" id="rule-dlg" hidden></div>
+    </div>
+</body>
+
+</html>
