@@ -167,10 +167,10 @@
         clear();
         S.locked = false;
 
-        /* 跨關回想題：標出是哪一關的紙條 */
+        /* 跨關回想題：明白標出「第 X 關的回想題」，不藏著考玩家 */
         var side = h('span', { 'class': 'hint', text: q.from ? '想想第 ' + q.from + ' 關的紙條' : lv.name });
         var head = h('div', { 'class': 'q-head' }, [
-            q.from ? h('span', { 'class': 'pill pill--orange', text: '回想第 ' + q.from + ' 關' }) : h('span', { 'class': 'pill pill--blue', text: q.t }),
+            q.from ? h('span', { 'class': 'pill pill--orange', text: '第 ' + q.from + ' 關的回想題' }) : h('span', { 'class': 'pill pill--blue', text: q.t }),
             side
         ]);
         var inner = h('div', { 'class': 'q-text__inner', text: q.q });
@@ -209,7 +209,7 @@
         S.locked = true;
         var ok = i === q.c;
         S.answers.push({
-            q: q.q, t: q.from ? '回想第 ' + q.from + ' 關' : q.t, chosen: q.o[i], correct: q.o[q.c], ok: ok,
+            q: q.q, t: q.from ? '第 ' + q.from + ' 關的回想題' : q.t, chosen: q.o[i], correct: q.o[q.c], ok: ok,
             kind: q.k[i], why: q.w[i], kinds: q.k.filter(function (k) { return k; })
         });
         Array.prototype.forEach.call(ui.opts.children, function (b, idx) {
@@ -365,6 +365,28 @@
         UI.fit(inner, px('--fs-question', 40), px('--fs-question-min', 26), qbox);
     }
 
+    /* ─── 驗證用：進來就把這一局 8 關的紙條、題目、選項與正解印在主控台（F12 開）─── */
+    var LETTERS = ['A', 'B', 'C', 'D'];
+    function logSession(sess) {
+        if (!window.console || !console.group) return;
+        console.group('明明還記得... 本局內容（主題：' + (sess.themeName || '') + '，種子 ' + sess.seed + '）');
+        sess.levels.forEach(function (lv) {
+            console.group('第 ' + lv.id + ' 關・' + lv.name + '（' + lv.tag + '・' + lv.date + '・共 ' + lv.qs.length + ' 題）');
+            console.log('紙條：\n' + lv.note.join('\n'));
+            console.table(lv.qs.map(function (q, i) {
+                return {
+                    題號: i + 1,
+                    題目: q.q,
+                    A: q.o[0], B: q.o[1], C: q.o[2], D: q.o[3],
+                    正解: LETTERS[q.c] + '．' + q.o[q.c],
+                    回想題: q.from ? '第 ' + q.from + ' 關' : ''
+                };
+            }));
+            console.groupEnd();
+        });
+        console.groupEnd();
+    }
+
     /* ─── 驗證用（主控台）：FMQuiz.question(關卡索引, 題目索引)、FMQuiz.pick(選項索引) ─── */
     window.FMQuiz = {
         levels: function () { return LEVELS; },
@@ -388,6 +410,7 @@
             var sess = window.QuizGen.session();
             LEVELS = sess.levels;
             THEME = sess.themeName || '';
+            logSession(sess);
         } catch (e) {
             setBar('明明還記得...', '', null, function () { location.href = 'index.html'; });
             screen.appendChild(h('div', { 'class': 'conf__none', text: '題目產生失敗，請回主選單再進來一次。' }));
