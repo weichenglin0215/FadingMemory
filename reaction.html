@@ -1,3 +1,11 @@
+<!-- ═══════════════════════════════════════════════════════════════════
+     reaction.html — 「秒反應」小遊戲的遊戲頁（骨架頁，幾乎沒有內容）
+     跟 quiz.html 同一個套路：這裡只搭空殼，真正的畫面由 JS 動態塞進 #screen。
+     流程：js/reaction.js 讀 ?game= 參數決定玩哪一款（找不到才隨機挑），
+     找到對應的遊戲模組（js/reaction_speed.js／reaction_drop.js／reaction_spot.js，
+     透過 js/reaction_core.js 的 Reaction.register() 註冊進來），呼叫它的 mount()
+     把畫面畫進 #screen。要改某一款遊戲的玩法/畫面，去改對應的 reaction_*.js。
+     ═══════════════════════════════════════════════════════════════════ -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 
@@ -19,13 +27,17 @@
 
 <body>
     <div id="stage">
+        <!-- 頂部固定列：返回鍵、標題（會被改成目前這款遊戲的名字）、meta（例如「最佳 1000 分」）、
+             右上角「?」（#bar-help）：點了重新彈出這款遊戲的玩法說明（#rule-dlg）。 -->
         <div class="bar">
             <button class="bar__back" id="bar-back"></button>
             <div class="bar__title" id="bar-title">秒反應</div>
             <div class="bar__meta" id="bar-meta"></div>
             <button class="bar__help" id="bar-help">?</button>
         </div>
+        <!-- #screen：目前這款小遊戲的畫面，由該遊戲模組的 mount(root, ctx) 函式畫進來 -->
         <div class="screen" id="screen"></div>
+        <!-- #rule-dlg：玩法說明彈窗，進遊戲時會先彈一次，之後按「?」可以重看 -->
         <div class="rule-dlg" id="rule-dlg" hidden></div>
     </div>
 </body>

@@ -1,4 +1,8 @@
-/* ═══ reaction.css — 秒反應（reaction.html）：說明彈窗＋共用結果卡＋三個小遊戲 ═══ */
+/* ═══ reaction.css — 秒反應（reaction.html）：說明彈窗＋共用結果卡＋三個小遊戲 ═══
+   檔案分四段：最上面是三款遊戲共用的東西（說明彈窗 .rule-dlg、結算文字 .rx-result）；
+   再來依序是「零秒出手」（.speed-）、「神準落下」（.drop-）、「大家來找碴」（.spot-）
+   各自專屬的樣式，對應的 DOM／邏輯在同名的 js/reaction_speed.js／reaction_drop.js／
+   reaction_spot.js。 */
 
 /* ─── 上方列的「?」規則按鈕 ─── */
 .bar__help {
@@ -71,7 +75,12 @@
     text-align: left;
 }
 
-/* ─── 共用：結果卡（三個遊戲都用）─── */
+/* ─── 共用：結果卡（三個遊戲都用）───
+   注意：這裡的 .rx-result 系列 class 是「零秒出手」結束時清空整個畫面、
+   從頭畫一份結果畫面用的；「神準落下」「大家來找碴」後來改成「不清空畫面、
+   結果疊在遊戲畫面上」的做法（見下面 .drop-result-overlay/-card），但疊上去的
+   卡片內部文字仍然沿用同一組 .rx-result__num/__label class，只是外層容器
+   換成 .drop-result-card，不是 .rx-result 本身。 */
 .rx-result {
     flex: 1 1 auto;
     display: flex;
@@ -104,7 +113,10 @@
     margin-top: var(--sp-3);
 }
 
-/* ═══ 遊戲一：零秒出手 ═══ */
+/* ═══ 遊戲一：零秒出手 ═══
+   .speed-num 是中間那個大大的倒數數字；數字到了 3 秒內會被 js/reaction_speed.js
+   清空文字內容（不是用 CSS 隱藏），所以這裡的樣式只需要管「數字還顯示的時候」
+   長什麼樣子就好。 */
 .speed-wrap {
     flex: 1 1 auto;
     display: flex;
@@ -148,70 +160,57 @@
     clip-path: polygon(0 0, 100% 0, 50% 100%);
 }
 
-/* 會被放大的整塊「尺」：畫面放大只放大這一層，三角形（釘子）在它外面，永遠不動 */
-.drop-zoom-root {
+/* 尺本身是一份向量圖（SVG），位置算相對 .drop-field（position:relative）：
+   三層遞迴九等分一次畫好，格線本來就在那裡，只是太細看不到，鏡頭放大
+   （js/reaction_drop.js 的 zoom()，改的是 viewBox 不是 CSS transform，
+   這樣縮放永遠是重新算向量、不是拉伸點陣圖，才會一直銳利）才看得清楚，
+   像顯微鏡發現本來就存在的精細刻度；分隔線不用 vector-effect:non-scaling-stroke，
+   故意讓它跟著畫面一起放大變粗。三角形（釘子）是獨立的 .drop-tri，
+   不受尺的 viewBox 影響，永遠停在螢幕上同一個位置。 */
+.drop-strip-svg {
     position: absolute;
-    inset: 0;
+    display: block;
 }
 
-.drop-strip {
-    position: absolute;
-    display: flex;
+.drop-rect {
+    fill: var(--c-ink);
 }
 
-.drop-cell {
-    position: relative;
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    background: var(--c-ink);
-    color: var(--c-on-accent);
+.drop-rect--mid {
+    fill: var(--flow-ink-1);
+}
+
+.drop-label {
+    fill: var(--c-on-accent);
+    font-family: var(--font-ui);
     font-size: var(--fs-sm);
     font-weight: var(--fw-black);
 }
 
-.drop-cell--mid {
-    background: var(--flow-ink-1);
+/* 插中紅色才看得清楚：紅色格底下的 9 細格（紅底、中間黃） */
+.drop-subrect {
+    fill: var(--flow-ink-1);
 }
 
-/* 插中紅色：紅色格內再放 9 格子分格（紅底、中間黃）；座標完全對齊父格，
-   放大鏡頭時整塊 zoom-root 一起放大，這個子分格自然填滿父格 */
-.drop-substrip {
-    position: absolute;
-    inset: 0;
-    display: flex;
+.drop-subrect--mid {
+    fill: var(--c-yellow);
 }
 
-.drop-subcell {
-    position: relative;
-    flex: 1 1 0;
-    height: 100%;
-    background: var(--flow-ink-1);
-    border-right: 0.3px solid var(--c-ink);
+.drop-tick2 {
+    stroke: var(--c-ink);
 }
 
-.drop-subcell--mid {
-    background: var(--c-yellow);
+/* 插中黃色核心才看得清楚：黃色格底下的 9 細格（黃底、中間紫） */
+.drop-subsubrect {
+    fill: var(--c-yellow);
 }
 
-/* 插中黃色核心：再放 9 格子分格（黃底、中間紫）*/
-.drop-subsubstrip {
-    position: absolute;
-    inset: 0;
-    display: flex;
+.drop-subsubrect--mid {
+    fill: var(--flow-ink-5);
 }
 
-.drop-subsubcell {
-    flex: 1 1 0;
-    height: 100%;
-    background: var(--c-yellow);
-    border-right: 0.035px solid var(--c-ink);
-}
-
-.drop-subsubcell--mid {
-    background: var(--flow-ink-5);
+.drop-tick3 {
+    stroke: var(--c-ink);
 }
 
 /* 置中靠 .drop-field 的 flex（align/justify-content: center），不是 left:50%+
@@ -228,41 +227,36 @@
     height: 72px;
 }
 
-/* 開場特寫：最深一層（8 黃＋中間紫）zoom out 露出真正的初始畫面 */
-.drop-intro {
+/* 結算畫面：不清空 #screen，三角形釘在方塊上、鏡頭停在最後放大倍率的那一幕
+   留在背景，這層半透明卡片疊在上面——玩家看得到自己剛剛插中的樣子。 */
+.drop-result-overlay {
     position: absolute;
     inset: 0;
-    z-index: 4;
+    z-index: 6;
     display: flex;
-    pointer-events: none;
-    transform-origin: 50% 50%;
-    animation: drop-intro-out 900ms ease forwards;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sp-5);
+    background: rgba(74, 59, 30, 0.45);
 }
 
-.drop-intro span {
-    flex: 1 1 0;
-    background: var(--c-yellow);
-    border: 3px solid var(--c-ink);
+.drop-result-card {
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-3);
+    padding: var(--sp-5) var(--sp-4) var(--sp-4);
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
 }
 
-.drop-intro span.drop-intro__mid {
-    background: var(--flow-ink-5);
-}
-
-@keyframes drop-intro-out {
-    0% {
-        transform: scale(5);
-        opacity: 1;
-    }
-
-    70% {
-        opacity: 1;
-    }
-
-    100% {
-        transform: scale(1);
-        opacity: 0;
-    }
+.drop-result-card .btn {
+    width: 100%;
 }
 
 /* ═══ 遊戲三：大家來找碴 ═══ */
@@ -288,23 +282,30 @@
 }
 
 .spot-tile--ok {
-    outline: 5px solid var(--c-ok);
+    outline: 10px dashed var(--c-ok-light);
     outline-offset: -5px;
 }
 
 .spot-tile--bad {
-    outline: 5px solid var(--c-bad);
+    /*outline: 10px dotted var(--c-bad-light);*/
+    outline: 10px dashed var(--c-bad-light);
     outline-offset: -5px;
+}
+
+/* 遊戲介面底色改純黑：色彩判斷類的遊戲，背景色會透過同時對比影響色塊看起來的樣子，
+   黑色是最中性的底，不偏向任何色相或亮度；只在這個遊戲的 #screen 生效，上方的
+   標題列（.bar）不受影響，答錯的結算畫面文字也要跟著換成亮色才看得清楚。 */
+.spot-dark-bg {
+    background: #000;
+}
+
+.hint--on-dark {
+    color: hsl(0, 0%, 70%);
 }
 
 @media (prefers-reduced-motion: reduce) {
 
-    .rule-dlg__card,
-    .drop-intro {
+    .rule-dlg__card {
         animation: none;
-    }
-
-    .drop-zoom-root {
-        transition: none !important;
     }
 }

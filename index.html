@@ -1,3 +1,15 @@
+<!-- ═══════════════════════════════════════════════════════════════════
+     index.html — 主選單（整個網站的進入頁）
+     三個按鈕對應三種玩法：
+       明明還記得...（quiz.html）：純 2D 文字記憶題，按下去會先彈出「選主軸」的
+         視窗（#theme-dlg，內容由 js/menu.js 動態建出來），不是直接跳轉。
+       秒反應（reaction.html）：3 款小遊戲，按下去先彈出「選遊戲」的視窗
+         （#game-dlg，同樣由 js/menu.js 動態建出來）。
+       出去走走（world.html）：3D 場景，用一般 <a href> 直接連過去，不需要選主軸。
+     這個專案沒有 build 流程（不用 npm/webpack），所有頁面都是純 HTML/CSS/JS，
+     瀏覽器打開就能跑；載入哪些 CSS/JS 檔案、怎麼做「改版本號就不怕瀏覽器快取
+     舊檔案」，是 js/boot.js 的工作（看下面 <head> 裡的說明）。
+     ═══════════════════════════════════════════════════════════════════ -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 
@@ -11,15 +23,35 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
 
-    <!-- 版本檢查＋載入：CSS/JS 由 js/boot.js 依 version.json 的版本號載入（版本一改就自動抓新檔） -->
+    <!-- 版本檢查＋載入：CSS/JS 由 js/boot.js 依 version.json 的版本號載入（版本一改就自動抓新檔）。
+         做法：boot.js 內有一份「這一頁需要哪些 CSS／JS」的清單（依 window.FM_PAGE 決定是
+         哪一頁），逐一插入 <link>/<script> 標籤，並在檔名後面加上 ?v=<版本號>——瀏覽器會把
+         不同版本號當成不同網址，不會沿用快取的舊檔案。所以：改了 CSS/JS 之後，一定要同時
+         把 version.json 的 version 字串改掉，否則瀏覽器可能還在用舊版本，看不到修改結果
+         （這是本專案最常見的「明明改了程式碼、畫面卻沒變」的原因）。 -->
+    <!-- 在 boot.js 真正載入完所有 CSS 之前，先把整個畫面藏起來（body{visibility:hidden}）：
+         避免瀏覽器先用瀏覽器預設樣式畫一次（沒有任何 CSS 的「素顏」畫面），CSS 載入完成後
+         又重畫一次變成正式樣式，中間那一下「閃一下沒套好樣式的畫面」會很醜。boot.js 準備好
+         之後會把 class="stage-ready" 加到 <html> 上，這條 CSS 規則才會失效、畫面才顯示出來。 -->
     <style>html:not(.stage-ready) body { visibility: hidden; }</style>
+    <!-- 告訴 boot.js「現在是哪一頁」，boot.js 才知道要載入哪一組 CSS/JS 清單（看 js/boot.js 裡的 PAGES） -->
     <script>window.FM_PAGE = 'menu';</script>
+    <!-- 用 document.write 插入 <script> 標籤（而不是直接寫一個固定的 <script src="js/boot.js">）：
+         目的是在網址後面加上 ?t=目前時間戳記，保證「boot.js 這個檔案本身」一定不會被快取
+         （下面它載入的其他 CSS/JS 才輪到用 version.json 的版本號控制快取，兩層快取控制各司其職）。 -->
     <script>document.write('<script src="js/boot.js?t=' + Date.now() + '"><\/script>');</script>
 </head>
 
 <body>
+    <!-- #stage：整個網站共用的「畫面容器」，js/stage.js 負責把它縮放成固定比例、
+         置中在視窗裡（手機、平板、桌機視窗大小都不一樣，但遊戲內部版面永遠照同一套
+         固定尺寸設計、不用寫一堆響應式 CSS），所有畫面（含下面的彈窗）都要放在裡面
+         才會跟著一起縮放。 -->
     <div id="stage">
+        <!-- .screen：每一個「畫面」共用的基礎樣式（見 css/theme.css），.screen--full 是
+             滿版變化版；.menu 是這一頁專屬的樣式（見 css/menu.css）。 -->
         <div class="screen screen--full menu">
+            <!-- 右上角分享按鈕：點了會彈出 #share-dlg（QR Code／複製連結），邏輯在 js/share.js -->
             <button class="share-btn" id="share-btn" type="button" aria-label="分享這個遊戲">
                 <span id="icon-share"></span>
             </button>
@@ -29,21 +61,25 @@
                 <p class="menu__sub">讀一次紙條，憑記憶辦妥所有事情</p>
             </div>
 
-            <a class="mode mode--test" href="quiz.html">
+            <!-- 這兩個是 <button>（不是 <a>），因為點下去不是直接換頁，而是先彈出一個
+                 「選一個」的視窗（js/menu.js 的 pickTheme()/pickGame() 聽這兩個按鈕的
+                 click 事件，動態把 #theme-dlg／#game-dlg 填滿內容再顯示出來）。
+                 底下的「出去走走」維持用 <a href>，因為它不用選、按下去就是直接換頁。 -->
+            <button class="mode mode--test" type="button" id="mode-test">
                 <span class="mode__icon" id="icon-test"></span>
                 <span class="mode__text">
                     <span class="mode__name">明明還記得...</span>
                     <span class="mode__desc">純 2D 題目・8 關</span>
                 </span>
-            </a>
+            </button>
 
-            <a class="mode mode--reaction" href="reaction.html">
+            <button class="mode mode--reaction" type="button" id="mode-reaction">
                 <span class="mode__icon" id="icon-reaction"></span>
                 <span class="mode__text">
                     <span class="mode__name">秒反應</span>
                     <span class="mode__desc">3 選 1・無限重玩拚高分</span>
                 </span>
-            </a>
+            </button>
 
             <a class="mode mode--world" href="world.html">
                 <span class="mode__icon" id="icon-world"></span>
@@ -53,9 +89,17 @@
                 </span>
             </a>
 
+            <!-- #menu-version 這個空 <span> 會被 js/menu.js 填上 version.json 的版本號，
+                 方便回報問題時知道對方用的是哪一版 -->
             <p class="menu__foot">記憶力練習原型・非醫療診斷工具<br><span id="menu-version"></span></p>
         </div>
+        <!-- 三個彈窗容器，一開始都是空的＋hidden：內容都是點了對應按鈕之後，
+             才由 JS 第一次動態建出來塞進去（這個套路叫 lazy-build，避免一開始
+             就把用不到的 DOM 全部建好，也方便之後要新增/修改彈窗內容時，
+             只要改 JS、不用回來動這個 HTML 檔）。 -->
         <div class="share-dlg" id="share-dlg" hidden></div>
+        <div class="theme-dlg" id="theme-dlg" hidden></div>
+        <div class="game-dlg" id="game-dlg" hidden></div>
     </div>
 </body>
 

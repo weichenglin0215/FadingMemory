@@ -31,6 +31,11 @@
             var t0 = performance.now();
             var clicked = false;
 
+            /* 每一影格都重新算「現在剩幾毫秒」，不是遞減一個計數器變數——這樣不管
+               這一影格跟上一影格之間實際間隔多久（不同裝置的更新頻率不一樣），
+               算出來的剩餘時間永遠準確對應真實經過的時間，不會因為掉幀而計時跑掉。
+               remain > HIDE_AT - 1：剩餘時間還大於 3000 毫秒（HIDE_AT）才顯示數字，
+               一跨過這個門檻，textContent 直接設成空字串，數字瞬間消失。 */
             function tick(now) {
                 var el = now - t0;
                 var remain = Math.max(0, TOTAL - el);
@@ -54,6 +59,10 @@
         function finish(diffMs) {
             var abs = Math.abs(diffMs);
             var label = diffMs === 0 ? '完美！剛剛好 0 秒' : diffMs > 0 ? '慢了 ' + sec(abs) + ' 秒' : '快了 ' + sec(abs) + ' 秒';
+            /* 這款遊戲是「跟 0 秒差越少越好」，所以傳給 setBest 的比較函式是
+               v < b（新差值比舊紀錄小才算更好）——跟「神準落下」的分數（越大越好）
+               方向相反，這就是 reaction_core.js 的 setBest 要求呼叫端自己傳比較
+               函式、而不是寫死「數字越大越好」的原因。 */
             var isNew = Reaction.setBest(ID, abs, function (v, b) { return v < b; });
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 

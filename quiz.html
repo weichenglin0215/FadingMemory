@@ -1,3 +1,10 @@
+<!-- ═══════════════════════════════════════════════════════════════════
+     quiz.html — 「明明還記得...」主軸的遊戲頁（骨架頁，幾乎沒有內容）
+     這個檔案本身只搭一個空殼：上面的 .bar（標題列）＋空的 #screen。真正的題目、
+     紙條、選項全部都是 js/quiz.js 在執行時動態塞進 #screen 裡的（看 ?theme= 參數
+     決定玩哪個主軸，主軸內容來自 js/quiz_gen.js + js/quiz_<主軸名>.js）。
+     要改畫面顯示的文字／版面，大多要去改 js/quiz.js，不是這個 HTML 檔。
+     ═══════════════════════════════════════════════════════════════════ -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 
@@ -19,13 +26,19 @@
 
 <body>
     <div id="stage">
+        <!-- 頂部固定列：返回鍵、標題（js/quiz.js 會視情況改成「第 X 關」等文字）、
+             右側 meta 區塊（例如「主題：旅遊」）、進度條（#bar-progress，答題進度）。 -->
         <div class="bar">
             <button class="bar__back" id="bar-back"></button>
             <div class="bar__title" id="bar-title">明明還記得...</div>
             <div class="bar__meta" id="bar-meta"></div>
             <div class="bar__progress" id="bar-progress"></div>
         </div>
+        <!-- #screen：主要內容區，從「挑主軸後的紙條頁」到「逐題作答」到「結果頁」，
+             每一個畫面都是 js/quiz.js 用 innerHTML 整個換掉這裡的內容，不是多個
+             各自獨立的 <div> 切換顯示/隱藏。 -->
         <div class="screen" id="screen"></div>
+        <!-- #confirm：「確定要回主選單嗎？」之類需要玩家二次確認的彈窗，用到才會填內容、顯示 -->
         <div class="confirm" id="confirm" hidden></div>
     </div>
 </body>

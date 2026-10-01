@@ -7,6 +7,11 @@
      所以不受手機系統字體大小影響，手機與電腦看到的比例一致。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* :root 是整個頁面最外層的「全域」選擇器，寫在這裡的 --變數名: 值 在任何其他
+   CSS 規則、任何子元素裡都能用 var(--變數名) 讀到。這個專案的規矩是：顏色、
+   字級、間距、圓角這些「數值」只能寫在這裡一個地方，其他所有 .css 檔案裡的
+   規則都只能用 var(--...) 引用，不能自己寫死一個顏色碼或 px 數字——這樣要
+   整站換個主色調、調整字級比例，只要改這裡，不用到處找哪裡寫死了舊的值。 */
 :root {
     /* ── 字體 ───────────────────────────────────────────── */
     --font-ui: "Noto Sans TC", "PingFang TC", "Heiti TC", "Microsoft JhengHei", sans-serif;
@@ -38,16 +43,24 @@
     --lh-note: 1.55;
 
     /* ── 顏色：宣紙底 ＋ 黃／綠／藍 ＋ 少量橘 ─────────── */
-    --c-frame: #EFE3B8;         /* 舞台外的裱框色 */
-    --c-paper: #FBF3D9;         /* 宣紙底 */
-    --c-card: #FFFDF3;          /* 卡片、紙條 */
-    --c-card-alt: #FFF6D8;      /* 選項、關卡卡片 */
-    --c-ink: #4A3B1E;           /* 主文字（暖棕） */
-    --c-ink-soft: #7E6A3C;      /* 次要文字 */
-    --c-on-accent: #FFFFFF;     /* 彩色按鈕上的字 */
+    --c-frame: #EFE3B8;
+    /* 舞台外的裱框色 */
+    --c-paper: #FBF3D9;
+    /* 宣紙底 */
+    --c-card: #FFFDF3;
+    /* 卡片、紙條 */
+    --c-card-alt: #FFF6D8;
+    /* 選項、關卡卡片 */
+    --c-ink: #4A3B1E;
+    /* 主文字（暖棕） */
+    --c-ink-soft: #7E6A3C;
+    /* 次要文字 */
+    --c-on-accent: #FFFFFF;
+    /* 彩色按鈕上的字 */
 
     --c-yellow: #E0AA25;
     --c-green: #4C9A5B;
+    --c-green-light: hsl(132, 72%, 80%);
     --c-blue: #3E86C4;
     --c-orange: #E8822E;
 
@@ -57,9 +70,17 @@
     --c-orange-soft: rgba(232, 130, 46, 0.16);
 
     --c-ok: var(--c-green);
+    --c-ok-light: var(--c-green-light);
     --c-ok-soft: var(--c-green-soft);
-    --c-bad: #D46F3C;           /* 答錯：暖橘紅，不用刺眼的紅 */
+    --c-bad: #D46F3C;
+    /* 答錯：暖橘紅，不用刺眼的紅 */
+    --c-bad-light: hsl(6, 77%, 60%);
     --c-bad-soft: rgba(212, 111, 60, 0.16);
+
+    --c-recall: #B23A2E;
+    /* 回想題標籤：磚紅，刻意跟 --c-bad 區分，加強提醒效果 */
+    --c-recall-soft: #F8D9D2;
+    /* 回想題標籤：粉底 */
 
     /* ── 邊框／圓角／陰影 ─────────────────────────────── */
     --bd-w: 2px;
@@ -112,12 +133,18 @@
 
     /* ── 紙條消失的水流特效（js/waterflow.js）─────────────
        倒數 5→1，每個數字的墨色與水流顏色：紫、藍、綠、黃、紅 */
-    --flow-ink-5: #8A6CC8;                     /* 紫 */
-    --flow-ink-4: var(--c-blue);               /* 藍 */
-    --flow-ink-3: var(--c-green);              /* 綠 */
-    --flow-ink-2: var(--c-yellow);             /* 黃 */
-    --flow-ink-1: #D9483B;                     /* 紅 */
-    --flow-stroke: 56px;                       /* 數字筆畫粗細（邏輯 px） */
+    --flow-ink-5: #8A6CC8;
+    /* 紫 */
+    --flow-ink-4: var(--c-blue);
+    /* 藍 */
+    --flow-ink-3: var(--c-green);
+    /* 綠 */
+    --flow-ink-2: var(--c-yellow);
+    /* 黃 */
+    --flow-ink-1: #D9483B;
+    /* 紅 */
+    --flow-stroke: 56px;
+    /* 數字筆畫粗細（邏輯 px） */
 
     /* ── 版面 ─────────────────────────────────────────── */
     --bar-h: 78px;
@@ -137,6 +164,8 @@ body {
     color: var(--c-ink);
 }
 
+/* 搭配 js/ui.js 的 UI.icon()：那邊產生的 <svg class="icon">，大小統一用
+   1em×1em（跟目前文字大小一樣大，字級一變圖示也跟著變大小，不用另外調） */
 .icon {
     width: 1em;
     height: 1em;
@@ -145,7 +174,10 @@ body {
     vertical-align: middle;
 }
 
-/* ═══ 按鈕 ═══ */
+/* ═══ 按鈕 ═══
+   .btn 是所有按鈕共用的「底」（大小、排版、按下去縮一下的動畫），下面幾個
+   .btn--xxx 只負責換顏色/背景（primary 橘色強調、go 綠色、sky 藍色、line 外框
+   樣式），一個按鈕通常是 class="btn btn--primary" 這樣兩個 class 疊著用。 */
 .btn {
     display: flex;
     align-items: center;
@@ -165,10 +197,15 @@ body {
     transition: transform 0.1s ease, filter 0.15s ease, opacity 0.15s ease;
 }
 
+/* 按下去的瞬間縮小一點點（97%），給觸控一個「有按到」的視覺回饋 */
 .btn:active {
     transform: scale(0.97);
 }
 
+/* :focus-visible（不是 :focus）：只有「用鍵盤 Tab 切換焦點」時才顯示這個藍色外框，
+   滑鼠/觸控點擊不會顯示——滑鼠點擊後还留著一圈外框通常被認為是視覺雜訊，
+   但鍵盤操作的使用者需要外框才知道目前焦點在哪裡，:focus-visible 讓瀏覽器
+   自動幫忙判斷該不該顯示，不用自己寫 JS 去分辨輸入裝置。 */
 .btn:focus-visible,
 .opt:focus-visible,
 .lv:focus-visible {
@@ -209,12 +246,15 @@ body {
     height: var(--btn-h-sm);
 }
 
+/* .row：一排並排的按鈕（例如結果頁的「再玩一次／下一關」），每個子元素
+   （.row > *）用 flex:1 1 0 平分寬度，min-width:0 是避免文字太長的子元素
+   把 flex 容器撐爆（flex 預設子元素不會縮小到比內容還窄，加這個才會真的平分）。 */
 .row {
     display: flex;
     gap: var(--sp-3);
 }
 
-.row > * {
+.row>* {
     flex: 1 1 0;
     min-width: 0;
 }
@@ -227,6 +267,9 @@ body {
     box-shadow: var(--shadow-card);
 }
 
+/* .pill：膠囊形狀的小標籤（圓角 999px＝視覺上兩端完全是半圓），用來標註
+   「這是第幾關」「這是回想題」之類的簡短狀態文字。.pill 本身只管形狀，
+   顏色由下面的 .pill--藍/黃/綠/橘/recall 這些修飾用 class 決定。 */
 .pill {
     display: inline-flex;
     align-items: center;
@@ -257,6 +300,13 @@ body {
 .pill--orange {
     color: var(--c-orange);
     background: var(--c-orange-soft);
+}
+
+/* 跨關回想題標籤：紅框粉底紅字，比一般標籤更顯眼（配色專用，閃爍動畫在 quiz.css） */
+.pill--recall {
+    color: var(--c-recall);
+    background: var(--c-recall-soft);
+    border: 2px solid var(--c-recall);
 }
 
 /* ═══ 上方標題列 ═══ */
@@ -290,6 +340,9 @@ body {
     font-weight: var(--fw-bold);
 }
 
+/* white-space:nowrap + overflow:hidden + text-overflow:ellipsis 這三個一定要
+   一起出現：標題文字太長、塞不進可用寬度時，不換行、裁掉超出的部分，
+   在裁掉的地方顯示「…」，而不是把標題列撐高或讓文字溢出版面。 */
 .bar__title {
     flex: 1 1 auto;
     min-width: 0;
@@ -301,6 +354,9 @@ body {
     text-overflow: ellipsis;
 }
 
+/* font-variant-numeric: tabular-nums：數字改用等寬字（0~9 每個數字寬度一樣），
+   像「最佳 1000 分」這種會動態更新的數字，不會因為「1」比「8」窄，每次更新
+   數字時文字寬度跟著抖動、旁邊文字跟著輕微晃動。 */
 .bar__meta {
     flex: 0 0 auto;
     min-width: 96px;
@@ -321,7 +377,11 @@ body {
     transition: width 0.25s ease;
 }
 
-/* ═══ 畫面容器（標題列下方的一整塊，不捲動）═══ */
+/* ═══ 畫面容器（標題列下方的一整塊，不捲動）═══
+   這是每一頁 #screen 元素的基礎樣式（quiz.html/reaction.html 的 HTML 裡都有
+   一個 id="screen" 的空殼，詳見這兩個檔案的註解）；top: var(--bar-h) 讓它
+   從標題列下面開始，不會被標題列蓋住。各遊戲/各畫面要自己在這個容器裡面
+   排版（JS 把內容塞進去的時候，外層容器的 flex 排版已經先決定好了）。 */
 .screen {
     position: absolute;
     left: 0;
@@ -345,7 +405,12 @@ body {
     overflow: hidden;
 }
 
-/* ═══ 答案選項 ═══ */
+/* ═══ 答案選項 ═══
+   .opt 是「明明還記得...」答題畫面裡每一個選項按鈕的樣式；.opt__badge 是
+   選項前面那個圓形的 A/B/C/D 字母徽章，.opt__text 是選項文字本身。
+   .is-ok／.is-bad 是答題後才會加上的狀態 class（JS 動態加的，見 js/quiz.js）：
+   答對的那一個（或答錯後系統公布的正確答案）變綠色，使用者自己點錯的那個
+   變橘紅色，讓玩家一眼就看出「我選了哪個、正確答案是哪個」。 */
 .opt {
     display: flex;
     align-items: center;
@@ -413,7 +478,13 @@ body {
     cursor: default;
 }
 
-/* ═══ 紙條 ═══ */
+/* ═══ 紙條 ═══
+   .note 是「明明還記得...」每一局最開始給玩家看、看完要「燒掉」的那張紙條
+   （主軸的故事內容、要記住的細節都寫在這裡）。font-family 故意用 --font-note
+   （襯線字型 Noto Serif TC）而不是介面其他地方用的 --font-ui（黑體），
+   是想營造「手寫便條紙」的質感，跟介面其餘部分的現代感按鈕/標籤做區隔。
+   .is-burning 是「按下燒掉」那一刻加上的 class：淡出＋模糊＋提高亮度對比度＋
+   往上飄走並放大旋轉一點點，做出「燒成灰燼飛走」的動態效果。 */
 .note {
     position: relative;
     background: var(--c-card);
@@ -430,7 +501,7 @@ body {
     transition: opacity 0.7s ease, filter 0.7s ease, transform 0.7s ease;
 }
 
-.note p + p {
+.note p+p {
     margin-top: var(--sp-2);
 }
 
@@ -448,7 +519,13 @@ body {
     line-height: var(--lh-body);
 }
 
+/* prefers-reduced-motion：作業系統裡有一個「減少動態效果」的無障礙設定
+   （給容易暈動症、前庭功能敏感的使用者），開啟之後瀏覽器會把這個 media query
+   判定為 true。這裡把幾個比較明顯的動畫效果（transition）直接關掉，
+   JS 那邊（例如 js/reaction_drop.js 的 REDUCED 變數）也會讀同一個系統設定，
+   讓不想看到大幅度動態效果的玩家，操作起來更直接、更舒服。 */
 @media (prefers-reduced-motion: reduce) {
+
     .note,
     .btn,
     .opt,

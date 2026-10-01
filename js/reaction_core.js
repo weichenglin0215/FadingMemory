@@ -10,16 +10,31 @@
 (function (global) {
     'use strict';
 
+    /* GAMES：所有小遊戲註冊進來的清單（陣列），每個元素長相是
+       { id, name, rule, mount(container, ctx) }：
+       · id／name：給 ?game= 參數比對、標題列顯示用。
+       · rule：玩法說明文字，reaction.js 開場彈窗直接顯示。
+       · mount(container, ctx)：真正開始這個遊戲的函式，container 是要把畫面畫進去
+         的 DOM 元素（reaction.html 的 #screen），ctx 是給遊戲用的小工具物件
+         （目前只有 ctx.setMeta(text) 可以改標題列右側文字）。
+       這個檔案本身不知道、也不在乎 GAMES 裡實際有哪些遊戲——三款遊戲各自的檔案
+       （reaction_speed.js／reaction_drop.js／reaction_spot.js）在自己檔案最下面
+       呼叫 Reaction.register({...}) 把自己登記進來，彼此互不相依。 */
     var GAMES = [];
     var Reaction = {};
 
-    /* game = { id, name, rule, mount(container, ctx) } */
     Reaction.register = function (game) { GAMES.push(game); };
     Reaction.list = function () { return GAMES; };
 
+    /* 最佳紀錄用 localStorage 存，key 用 'fm.reaction.best.' + 遊戲 id 區分
+       （例如 'fm.reaction.best.drop'），每款遊戲各自獨立不會互相覆蓋。 */
     Reaction.bestKey = function (id) { return 'fm.reaction.best.' + id; };
     Reaction.getBest = function (id) { return UI.store.get(Reaction.bestKey(id), null); };
-    /* better(新值, 舊最佳) → true 表示新值更好；回傳這次是否刷新了紀錄 */
+    /* better(新值, 舊最佳) → true 表示新值更好；回傳這次是否刷新了紀錄。
+       刻意把「新紀錄要怎麼比較」交給呼叫端傳進來的 better 函式，而不是寫死
+       「數字越大越好」：因為「神準落下」是分數越高越好，但如果之後哪款遊戲是
+       「時間越短越好」，這個共用函式完全不用改，呼叫端自己傳一個反過來比較的
+       函式就行了。 */
     Reaction.setBest = function (id, val, better) {
         var b = Reaction.getBest(id);
         var isNew = b == null || better(val, b);

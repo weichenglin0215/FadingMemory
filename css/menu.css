@@ -1,5 +1,14 @@
-/* ═══ menu.css — 入口畫面（index.html）═══ */
+/* ═══ menu.css — 入口畫面（index.html）═══
+   這個檔案管三組東西：最上面的主選單本身（.menu 開頭的 class）、
+   右上角分享按鈕＋QR Code 彈窗（.share- 開頭）、
+   「明明還記得...」／「秒反應」的 3×2 挑選彈窗（.theme-dlg／.game-dlg，
+   這兩組幾乎是同一套樣式各用一次，所以很多規則用逗號併在一起共用，
+   例如 `.theme-dlg, .game-dlg { ... }`，對應的 DOM 結構見 js/menu.js）。 */
 
+/* .menu 繼承自 css/theme.css 的 .screen（HTML 上同時有 class="screen screen--full menu"），
+   這裡只補主選單專屬的背景：兩層疊起來——底層是純色宣紙 --c-paper，上面疊一個
+   「橢圓形、只在畫面上方」的淡黃色放射狀漸層（radial-gradient），讓畫面頂端
+   （logo 附近）看起來比較柔和明亮，不是整片死板的單一顏色。 */
 .menu {
     justify-content: center;
     gap: var(--sp-3);
@@ -41,14 +50,29 @@
     color: var(--c-ink-soft);
 }
 
+/* .mode：三個主選單大按鈕（「明明還記得...」「秒反應」「出去走走」）共用的底。
+   前兩個現在是 <button>（之前是 <a>，改成按鈕是因為按下去要先彈出挑選視窗，
+   不是直接換頁，見 index.html 的說明），<button> 元素瀏覽器內建一堆自己的樣式
+   （邊框、背景、字型、游標…），這裡這一串 border/background/color/font/
+   text-align/text-decoration/cursor 就是把這些瀏覽器預設樣式通通清掉、改成
+   跟原本的 <a class="mode"> 一模一樣，這樣不管用 <button> 還是 <a>，兩種
+   「大按鈕」看起來才會完全一致（第三個「出去走走」目前仍是 <a>，見下面
+   .mode--world）。 */
 .mode {
     display: flex;
     align-items: center;
     gap: var(--sp-4);
+    width: 100%;
     height: 130px;
     padding: 0 var(--sp-5);
+    border: none;
     border-radius: var(--r-lg);
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
     text-decoration: none;
+    cursor: pointer;
     transition: transform 0.1s ease;
 }
 
@@ -221,10 +245,174 @@
     color: var(--c-ink-soft);
 }
 
+/* ═══ 主軸／遊戲挑選彈窗（點「明明還記得...」「秒反應」先選，不再亂數）═══
+   3×2 格：左上→右上、左下→右下；還沒做出來的格子顯示「構想中」，不可點。 */
+.theme-dlg,
+.game-dlg {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sp-5);
+    background: rgba(74, 59, 30, 0.35);
+}
+
+.theme-dlg__card,
+.game-dlg__card {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+    padding: var(--sp-5) var(--sp-4) var(--sp-4);
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
+    animation: share-dlg-in 0.2s ease;
+}
+
+.theme-dlg__title,
+.game-dlg__title {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.theme-grid,
+.game-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: var(--sp-3);
+}
+
+/* .theme-grid／.game-grid：CSS Grid 排出 3 欄 × 2 列、每一格等寬等高的格線，
+   repeat(3, 1fr) 等同手寫 1fr 1fr 1fr（3 欄各占可用寬度的 1 等份），
+   這是使用者指定的「寬三格、高兩格」版面需求最直接的 CSS 寫法。 */
+
+/* ─── 主軸格：直式文字（CJK 預設 text-orientation:mixed，中文字會保持正立）─── */
+.theme-cell {
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: var(--r-md);
+    background: var(--btn-sky-bg);
+    box-shadow: var(--btn-sky-shadow);
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+.theme-cell:active {
+    transform: scale(0.96);
+}
+
+.theme-cell__name {
+    writing-mode: vertical-rl;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--btn-sky-fg);
+    letter-spacing: 4px;
+}
+
+.theme-cell--soon {
+    background: var(--c-card-alt);
+    border: 2px dashed var(--bd-c);
+    box-shadow: none;
+    cursor: default;
+}
+
+.theme-cell--soon:active {
+    transform: none;
+}
+
+.theme-cell__soon {
+    writing-mode: vertical-rl;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    letter-spacing: 2px;
+}
+
+/* ─── 遊戲格：150×270 的直式圖片（由使用者自行放進 img/reaction/，
+       還沒放圖時 <img> onerror 隱藏，底色＋名稱條照常顯示，不會是破圖）─── */
+/* aspect-ratio: 150/270：不管格子實際被 Grid 排出來多寬，瀏覽器都會自動算出
+   對應高度維持 150:270 這個比例（就是使用者要求的縮圖規格），不用自己算 px。 */
+.game-cell {
+    position: relative;
+    aspect-ratio: 150 / 270;
+    overflow: hidden;
+    border: none;
+    border-radius: var(--r-md);
+    background: var(--c-card-alt);
+    box-shadow: var(--shadow-card);
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+.game-cell:active {
+    transform: scale(0.96);
+}
+
+/* object-fit: cover：圖片不管原始尺寸、比例是多少，都會「裁切」成剛好填滿
+   這個元素的框（不會變形拉伸，也不會留白邊），跟手機相簿縮圖的裁切邏輯一樣。 */
+.game-cell img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 名稱條疊在圖片下緣：position:absolute + left/right/bottom:0 讓它貼齊卡片
+   底邊、寬度撐滿；半透明深色底（rgba(74,59,30,0.55)）＋白字，不管底下蓋著
+   的圖片是亮是暗，文字都還看得清楚。 */
+.game-cell__name {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: var(--sp-2) var(--sp-1);
+    background: rgba(74, 59, 30, 0.55);
+    color: #FFFFFF;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-black);
+    line-height: var(--lh-tight);
+}
+
+.game-cell--soon {
+    border: 2px dashed var(--bd-c);
+    box-shadow: none;
+    cursor: default;
+}
+
+.game-cell--soon:active {
+    transform: none;
+}
+
+.game-cell__soon {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
 @media (prefers-reduced-motion: reduce) {
 
     .share-dlg__card,
-    .share-btn {
+    .share-btn,
+    .theme-dlg__card,
+    .game-dlg__card,
+    .theme-cell,
+    .game-cell {
         animation: none;
         transition: none;
     }

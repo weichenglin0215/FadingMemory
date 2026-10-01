@@ -38,7 +38,7 @@ js/ui.js         UI.h / fit / paginate / icon / art / fonts / store / ready
 js/world/config.js ★ 3D 手感參數（鏡頭 pitchDeg、轉彎速度、NPC 速度、面向角度）
 js/world/hud.js  kit.js  core.js  scenes.js  story.js
 js/quiz_pools.js  quiz_gen.js  quiz.js   測試模式（題庫池／題目產生器引擎／畫面）
-js/quiz_happyBirthday.js  quiz_travel.js  quiz_health.js   測試模式的三個主軸（各自完整撰寫 1～8 關）
+js/quiz_happyBirthday.js  quiz_travel.js  quiz_health.js  quiz_dining.js   測試模式的四個主軸（各自完整撰寫 1～8 關）
 js/menu.js  js/share.js   主選單（入口）／右上角分享按鈕（QR Code 彈窗）
 js/reaction_core.js  reaction_speed.js  reaction_drop.js  reaction_spot.js  reaction.js
                  「秒反應」：共用引擎（登記清單／最佳紀錄）／三個小遊戲／進場控制（隨機挑選＋說明彈窗）
@@ -93,7 +93,7 @@ vendor/three.min.js   Three.js r158（UMD 版）
 - 每一局先挑一個主軸（`QuizGen.create` 會避開上一局的主軸），8 關都用同一個主軸，**不混用**。
 - 主軸 = `QuizGen.addTheme({ id, name, names:[8 個關名], setup(G) → 整局共用參數 S, levels:[8 個 fn(G, S)] })`。
 - `setup` 抽的是整局共用的參數（旅遊：3 個地點；看病：2 家醫院；生日：只有時間軸），讓同一個地點／醫院在不同關卡（1.9.0 起連第 1～4 關也一起）重複出現，製造跨關干擾。記錄在 `used.shared`，下一局同主軸會避開。
-- 1.9.0 起，1～8 關**都由各主軸自己的檔案完整撰寫**，不再共用 `L1`～`L4`／`X`；三個主軸各自的第 1～4 關會用自己主軸的題庫池（例如看病用 `P.healthErrands1`、旅遊用 `P.travelErrands1`），內容要緊貼主軸，不能只是把公車／樓層／數量套個殼。
+- 1.9.0 起，1～8 關**都由各主軸自己的檔案完整撰寫**，不再共用 `L1`～`L4`／`X`；各主軸自己的第 1～4 關會用自己主軸的題庫池（例如看病用 `P.healthErrands1`、旅遊用 `P.travelErrands1`、聚餐用 `P.diningErrands1`），內容要緊貼主軸，不能只是把公車／樓層／數量套個殼。
 - 新增主軸：新檔案呼叫 `QuizGen.addTheme`，加到 `boot.js` 的 quiz 清單（`quiz_gen.js` 之後、`quiz.js` 之前）。改了存檔格式要把 `GEN_V` 加一（1.9.0 已改為 4）。
 - 景點特色要寫成名詞片語（「看日出和神木的高山」），才能放進「那裡是＿＿」；原因要合乎常理（懸崖不會「休館」，要用「封路」）。
 
@@ -110,9 +110,9 @@ vendor/three.min.js   Three.js r158（UMD 版）
 - 題庫池名稱不可重複：1.8.0 前看病的科別和百貨公司都叫 `depts`，後者被蓋掉；科別已改名 `clinics`。
 
 ### 6.2 檔案
-- `js/quiz_pools.js`：題庫池（台北真實路名、地標、市場、百貨；東西都帶量詞 `{n, u}`；反常理顏色 `typ/odd`）。不含任何關卡內容，三個主軸共用。
+- `js/quiz_pools.js`：題庫池（台北真實路名、地標、市場、百貨；東西都帶量詞 `{n, u}`；反常理顏色 `typ/odd`）。不含任何關卡內容，各主軸共用。
 - `js/quiz_gen.js`：只有引擎（`Gen`：可重現亂數、避開上一局、誘答工具；日期／角色名字／回想題／`QuizGen.lib` 共用工具；主軸登記 `addTheme`）。**不含任何關卡內容**。
-- `js/quiz_happyBirthday.js`（`B1`～`B8`）、`js/quiz_travel.js`（`T1`～`T8`）、`js/quiz_health.js`（`H1`～`H8`）：生日、旅遊、看病三個主軸，各自完整撰寫 1～8 關，互不共用關卡邏輯。
+- `js/quiz_happyBirthday.js`（`B1`～`B8`）、`js/quiz_travel.js`（`T1`～`T8`）、`js/quiz_health.js`（`H1`～`H8`）、`js/quiz_dining.js`（`D1`～`D8`）：生日、旅遊、看病、聚餐四個主軸，各自完整撰寫 1～8 關，互不共用關卡邏輯。
 - 題目格式：`{ q, t:題型標籤, o:[4], c:正解索引, k:[每個選項的混淆類型，正解為 null], w:[答錯時的說明], old:是否「一開始」題, from?:回想題的來源關卡, fromName? }`；關卡另有 `date`（那一關的「今天」）。
 
 ### 6.3 寫故事範本與出題的規則

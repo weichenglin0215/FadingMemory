@@ -17,6 +17,13 @@
      4. 不要在任何元素寫 touch-action: auto，那會讓該元素重新能縮放整頁。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* 「CSS Reset」：瀏覽器對不同元素（<p>、<h1>、<button>…）本來就有各自內建的
+   margin/padding，不同瀏覽器給的預設值還不完全一樣。這段規則把所有元素的
+   margin/padding 先歸零，版面間距全部靠這個專案自己的 CSS 變數（--sp-*）控制，
+   才不會每個元素的起始狀態都不一樣、到處要個別處理。
+   box-sizing: border-box：讓一個元素寫的 width/height 包含它自己的 padding 和
+   border（瀏覽器預設是 content-box，width 不含 padding/border，算版面會很麻煩、
+   容易爆版），border-box 下「寫 100px 就是畫面上量到的 100px」比較符合直覺。 */
 *,
 *::before,
 *::after {
@@ -84,6 +91,12 @@ button {
     -webkit-touch-callout: none;
 }
 
+/* pointer-events: none 讓這個元素（連同它底下所有子元素）完全「不接收」滑鼠/
+   觸控事件，點擊會直接穿透到它後面（z-index 更低）的元素——world.html 的 #stage
+   疊在 3D 畫布上面時用這招，才能讓玩家直接點到/拖曳底下的 3D 場景。
+   .hit 這個 class 再把 pointer-events 設回 auto：只有特別標上 .hit 的元件
+   （搖桿、按鈕等真正需要互動的 UI）才會重新接收事件，其餘疊在 3D 上面的
+   裝飾性 2D 介面元素都讓觸控穿透過去。 */
 #stage.stage--overlay {
     background: transparent;
     pointer-events: none;

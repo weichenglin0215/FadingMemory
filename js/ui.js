@@ -14,12 +14,20 @@
 
     var UI = {};
 
+    /* 把文字裡的 &<>"' 換成 HTML 實體：這個專案很多地方用字串拼接（+ '<p>' + 文字 + '</p>'）
+       組出 HTML，再整段塞進 innerHTML；如果文字本身剛好含有 < 或 & 之類的字元，
+       沒先跳脫（escape）的話，瀏覽器會把它當成真正的 HTML 標籤解析，畫面就會跑版
+       甚至出現非預期的元素。凡是「使用者看得到、但不是我們自己寫死的文字」要塞進
+       innerHTML，都要先過一次 UI.esc()。 */
     UI.esc = function (s) {
         return String(s).replace(/[&<>"']/g, function (c) {
             return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
         });
     };
 
+    /* 包成 Promise 的 setTimeout，方便寫 UI.wait(500).then(fn) 這種「等一下再做」的程式碼，
+       比起到處寫 setTimeout(fn, 500) 更容易串接多個先後動作（看 js/reaction_drop.js
+       的放大動畫就是一長串 .then() 接起來的）。 */
     UI.wait = function (ms) {
         return new Promise(function (res) { global.setTimeout(res, ms); });
     };
@@ -30,7 +38,17 @@
         else fn();
     };
 
-    /* UI.h('div', {class:'a', text:'b', html:'<i></i>', on:{click:fn}, attrs:{type:'button'}}, [children]) */
+    /* 整個專案用來「建 DOM 元素」的小工具，取代一行一行寫 document.createElement +
+       setAttribute + appendChild。用法：
+       UI.h('div', {class:'a', text:'b', html:'<i></i>', on:{click:fn}, attrs:{type:'button'}}, [子元素們])
+       · text：用 textContent 設定（安全，不會被當 HTML 解析）
+       · html：用 innerHTML 設定（信任這段字串本身就是合法 HTML，呼叫端要自己確保
+         安全，例如先用 UI.icon()/UI.art() 產生的 SVG 字串）
+       · attrs：其他 HTML 屬性（像 type="button"、aria-label 等 class/style/on 以外的東西）
+       · on：事件監聽，{click: function(){...}} 這樣的物件
+       · 第三個參數 children：可以是字串（會自動轉成文字節點）或已經建好的元素，
+         陣列裡的 null/undefined 會被跳過（方便寫「只有某個條件成立才要這個子元素」
+         的三元運算式，例如 isNew ? h(...) : null）。 */
     UI.h = function (tag, props, children) {
         var el = document.createElement(tag);
         props = props || {};
@@ -54,7 +72,10 @@
         return el;
     };
 
-    /* 讀 CSS 變數（px 數值） */
+    /* 讀 CSS 變數（px 數值）：例如 CSS 裡定義了 --sp-4: 16px，JS 想知道這個數字
+       是多少（用來算版面）時呼叫 UI.cssPx('--sp-4', 16)，拿不到就回傳 fallback。
+       這樣「間距、字級」這些數字只要寫在 CSS 的 :root 一個地方，JS 不用另外
+       寫死一份重複的數字（製作規範要求 CSS 變數是唯一來源）。 */
     UI.cssPx = function (name, fallback) {
         var v = parseFloat(global.getComputedStyle(document.documentElement).getPropertyValue(name));
         return isNaN(v) ? fallback : v;
@@ -75,6 +96,9 @@
             }
             return el.scrollHeight > el.clientHeight + TOL || el.scrollWidth > el.clientWidth + TOL;
         }
+        /* guard：防呆用的「最多縮幾次」上限，不是真的期望跑到 80 次——如果 over()
+           量出來的結果一直不穩定（理論上不該發生，但量測 DOM 尺寸偶爾會有誤差），
+           這個上限保證迴圈一定會結束，不會把瀏覽器分頁卡死在無窮迴圈。 */
         var guard = 80;
         while (size > min && guard-- > 0 && over()) {
             size -= 1;
@@ -83,7 +107,15 @@
         return size;
     };
 
-    /* 分頁：把段落依序塞進 box，塞不下就換頁。box 要有固定高度。 */
+    /* 分頁：把段落（paras，一個字串陣列，每個字串是一段）依序塞進 box，塞不下就換頁。
+       box 要有固定高度——做法是「真的把段落畫進 box、量一下有沒有溢出」，不是用字數
+       去估算，所以不管字型多大、box 多高都準，換字型/改版面也不用跟著調整這段邏輯。
+       流程：一段一段加進目前這頁（cur），加完就畫出來量看看有沒有超過 box 的高度；
+       超過的話，把剛剛那一段「吐回去」（cur.pop()），目前這頁收尾存進 pages，
+       剛剛那段變成下一頁的開頭繼續塞。「cur.length > 1」的條件是避免「單獨一段
+       自己就塞不下」時卡在無窮迴圈（那種情況就讓它自己超出，不強制再切更細）。
+       回傳值是 pages（陣列的陣列，每個子陣列是一頁的段落），呼叫端自己決定要怎麼
+       顯示每一頁；跑完會把 box 清空，因為這個函式只是拿來「測量」，不負責畫面顯示。 */
     UI.paginate = function (paras, box) {
         var pages = [];
         var cur = [];
@@ -110,7 +142,12 @@
         box.innerHTML = list.map(function (p) { return '<p>' + UI.esc(p) + '</p>'; }).join('');
     };
 
-    /* 等字型載入；逾時也照常繼續 */
+    /* 等 Google Fonts 真的載好再畫畫面：網路字型（繁中標題用的 Noto Serif/Sans TC）
+       剛進頁面時瀏覽器可能還沒下載完，如果這時候就量文字尺寸（UI.fit/UI.paginate
+       都要量），量到的是瀏覽器暫時拿系統預設字型畫出來的尺寸，字型真正載好之後
+       尺寸一變，排版就跑掉了。所以重要的排版動作前，先 await UI.fonts(...) 一下。
+       Promise.race 保證「字型載好」跟「等了 timeout 毫秒」兩者先到就先繼續，
+       不會因為字型來源一時連不上，讓玩家永遠卡在空白畫面。 */
     UI.fonts = function (fontSpecs, text, timeout) {
         if (!document.fonts || !document.fonts.load) return Promise.resolve();
         var loads = fontSpecs.map(function (f) {
@@ -119,6 +156,10 @@
         return Promise.race([Promise.all(loads), UI.wait(timeout || 2500)]);
     };
 
+    /* localStorage 包一層 try/catch＋JSON 轉換：跟 boot.js 的 storeGet/storeSet 是
+       同樣的理由（私密瀏覽模式等情境下，存取 localStorage 可能直接丟例外），
+       多做的是自動 JSON.stringify/JSON.parse，呼叫端可以直接存/讀物件或陣列，
+       不用每次自己轉。全站的「最佳紀錄」「這一局的題目資料」都存在這裡。 */
     UI.store = {
         get: function (key, fallback) {
             try {
@@ -131,7 +172,12 @@
         }
     };
 
-    /* ─── 線條圖示（24×24，跟著文字顏色）─── */
+    /* ─── 線條圖示（24×24，跟著文字顏色）───
+       每一個值是一段 SVG 的內部內容（<path>/<circle>/<rect> 等），不含外層 <svg>
+       標籤——外層統一由下面的 UI.icon() 加上，這樣所有圖示共用同一套大小／顏色／
+       線條粗細設定，要整批調整（例如把所有圖示線條調粗）只要改 UI.icon() 一個地方。
+       故意不用 emoji 當圖示：emoji 在不同作業系統、不同廠牌手機上的長相差異很大
+       （有些還會整個顯示不出來變成方框），線條圖示用 SVG 畫，所有裝置看起來保證一致。 */
     var ICONS = {
         back: '<path d="M15 4.5 7.5 12 15 19.5"/>',
         home: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-5.5h4V20"/>',
@@ -160,13 +206,19 @@
         bolt: '<path d="M13 3 5 13.5h6L10.5 21 19 10h-6.5z" stroke-linejoin="round"/>'
     };
 
+    /* 回傳一段 <svg> 字串（不是 DOM 元素），通常搭配 UI.h(...,{html: UI.icon('back')})
+       或直接拼進別的 HTML 字串裡使用。stroke="currentColor" 是關鍵：圖示的顏色會
+       自動跟著套用的文字顏色（CSS color 屬性）走，不用另外幫每個圖示指定顏色。 */
     UI.icon = function (name, cls) {
         return '<svg class="icon ' + (cls || '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
             'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
             (ICONS[name] || '') + '</svg>';
     };
 
-    /* ─── 彩色插圖 ─── */
+    /* ─── 彩色插圖（太陽、下雨、小屋）───
+       跟上面的線條圖示不同：這些是多色、寫死顏色碼的插圖（晴天黃色太陽、雨天藍色雨滴），
+       用在比較需要情境感的地方（例如看病主軸問「那天天氣如何」的插圖提示），
+       不需要跟著文字顏色變化，所以顏色直接寫在 SVG 路徑的 fill/stroke 屬性裡。 */
     UI.art = function (name, cls) {
         var body = '';
         if (name === 'sun') {

@@ -9,11 +9,23 @@
 (function () {
     'use strict';
 
-    var LEVELS = [];
+    var LEVELS = [];   /* 這一局的 8 關（從 QuizGen.session() 拿到，整局一進來就全部產生好） */
     var THEME = '';
     var KINDS = window.QuizGen.KINDS;
     var h = UI.h;
 
+    /* S：這一「關」目前進行到哪裡的狀態（跟 LEVELS 不同，LEVELS 是整局的題目內容，
+       S 是「玩家現在在哪一關、答到第幾題、答過什麼」這些會隨著操作不斷改變的狀態）。
+       這個檔案沒有用任何框架（React/Vue 之類），畫面更新的方式很直接：狀態變了，
+       就呼叫對應的 show*() 函式，把 screen.innerHTML 整個清掉重畫一次
+       （見下面的 clear()），不是局部更新 DOM。
+       · lv/qi：目前第幾關（index，從 0 算）／第幾題。
+       · answers：這一關目前答過的每一題記錄（對/錯、選了什麼、混淆類型…），
+         結果頁跟錯題回顧都從這裡面統計／列出。
+       · pages/page：紙條分頁後的內容，與目前翻到第幾頁。
+       · locked：防止同一題被連點兩次（答案送出到切換下一題之間鎖住）。
+       · wrong：answers 裡篩出答錯的，給錯題回顧（showReview）用。
+       · rev：錯題回顧目前看到第幾題（index）。 */
     var S = {
         lv: 0,
         qi: 0,
@@ -31,6 +43,10 @@
     /* ─── 共用 ─── */
     function px(name, fallback) { return UI.cssPx(name, fallback); }
 
+    /* 統一設定頂部標題列：title/meta 是文字，progress 是 0~1 的小數（null＝不顯示
+       進度條，答題畫面才會給實際比例），back 是按「返回」要做的事——每個畫面
+       呼叫 setBar() 時傳不同的 back 函式，所以同一顆「返回」按鈕在選關頁、
+       紙條頁、答題頁、結果頁的行為都不一樣（見下面各個 show*() 函式開頭）。 */
     function setBar(title, meta, progress, back) {
         barTitle.textContent = title;
         barMeta.textContent = meta || '';
@@ -39,6 +55,9 @@
         barBack.innerHTML = UI.icon('back') + '<span>返回</span>';
     }
 
+    /* 每個畫面切換前都呼叫一次：整個清空 #screen 準備重畫（這個檔案的畫面切換
+       套路是「整頁重建」，不是局部更新），順便重置捲動位置跟 is-feedback 這個
+       答錯回饋專用的 class（見 css/quiz.css 的 .screen.is-feedback）。 */
     function clear() {
         screen.innerHTML = '';
         screen.scrollTop = 0;
@@ -115,6 +134,9 @@
         pager.textContent = '看完就按下方按鈕，紙條會燒掉';
         btns.appendChild(h('button', { 'class': 'btn btn--sky', text: '…' }));
 
+        /* 要先等字型真的載好（UI.fonts），才能用 UI.paginate() 測量文字塞不塞得下
+           ——紙條用的是襯線字型（Noto Serif TC），如果字型還沒下載完就先拿系統
+           預設字型量一次，量出來的分頁結果之後字型真的套上去就會不準。 */
         UI.fonts(['700 34px "Noto Serif TC"'], lv.note.join(''), 2500).then(function () {
             note.style.fontSize = px('--fs-note', 34) + 'px';
             S.pages = UI.paginate(lv.note, note);
@@ -170,7 +192,7 @@
         /* 跨關回想題：明白標出「第 X 關的回想題」，不藏著考玩家 */
         var side = h('span', { 'class': 'hint', text: q.from ? '想想第 ' + q.from + ' 關的紙條' : lv.name });
         var head = h('div', { 'class': 'q-head' }, [
-            q.from ? h('span', { 'class': 'pill pill--orange pill--blink', text: '第 ' + q.from + ' 關的回想題' }) : h('span', { 'class': 'pill pill--blue', text: q.t }),
+            q.from ? h('span', { 'class': 'pill pill--recall pill--blink', text: '第 ' + q.from + ' 關的回想題' }) : h('span', { 'class': 'pill pill--blue', text: q.t }),
             side
         ]);
         var inner = h('div', { 'class': 'q-text__inner', text: q.q });
@@ -204,6 +226,9 @@
         else showQuestion();
     }
 
+    /* q：這一題的資料（見 quiz_gen.js 的 Gen.prototype.q 回傳格式）；i：玩家點的
+       選項 index；ui：剛剛 showQuestion() 建好的相關 DOM 元素，方便這裡直接改樣式
+       （答對/答錯變色），不用重新查詢一次 DOM。 */
     function answer(q, i, ui) {
         if (S.locked) return;
         S.locked = true;
@@ -247,6 +272,12 @@
     }
 
     /* ═══ ④ 結果：答對率＋「最容易被哪一種混淆騙到」═══ */
+    /* 統計「這一關答錯的題目，最常是被哪幾種混淆類型騙到」，取前 3 名顯示在結果頁。
+       st[k].seen：這一關總共出現過幾次「這個混淆類型的誘答選項」（不管有沒有選到它，
+       只要題目裡有這個類型的選項就算遇到過）；st[k].hit：玩家實際被騙選中的次數。
+       排序：先比「被騙次數」多的排前面，次數一樣再比「被騙機率」（hit/seen）高的——
+       這樣「出現很多次、但玩家幾乎都沒上當」的類型，不會因為基數大而排到「出現
+       次數少、但每次都中招」的類型前面。 */
     function confusionStats() {
         var st = {};
         S.answers.forEach(function (a) {
@@ -276,6 +307,11 @@
         var stars = pct >= 90 ? 3 : pct >= 70 ? 2 : pct >= 40 ? 1 : 0;
         var msg = pct >= 90 ? '太厲害了！' : pct >= 70 ? '很不錯喔！' : pct >= 40 ? '再接再厲！' : '慢慢來！';
 
+        /* 答對率圓環：用 SVG 的 stroke-dasharray 技巧畫「圓形進度條」——圓周長
+           C＝2πR，把彩色那條圓弧的「虛線段長度」設成 C*pct/100（實線那一段）
+           接著 C（空白那一段，反正繞一圈後面的虛線段用不到），視覺上就只會畫出
+           pct% 那麼長的一段弧。配合 css/quiz.css 的 .ring svg{transform:rotate(-90deg)}，
+           圓弧會從正上方（12 點鐘方向）開始往順時鐘畫。 */
         var R = 76;
         var C = 2 * Math.PI * R;
         var ring = h('div', {
@@ -365,7 +401,11 @@
         UI.fit(inner, px('--fs-question', 40), px('--fs-question-min', 26), qbox);
     }
 
-    /* ─── 驗證用：進來就把這一局 8 關的紙條、題目、選項與正解印在主控台（F12 開）─── */
+    /* ─── 驗證用：進來就把這一局 8 關的紙條、題目、選項與正解印在主控台（F12 開）───
+       這不是給一般玩家看的功能，是開發/除錯/人工驗證用的：想確認「這一局的題目
+       到底合不合理、誘答有沒有寫對」，不用在畫面上一題一題點過去，打開瀏覽器
+       開發者工具（F12）的 Console 分頁，展開這裡印出來的 console.group/
+       console.table 就能一次看完整局 8 關的所有紙條與題目。 */
     var LETTERS = ['A', 'B', 'C', 'D'];
     function logSession(sess) {
         if (!window.console || !console.group) return;
@@ -387,7 +427,12 @@
         console.groupEnd();
     }
 
-    /* ─── 驗證用（主控台）：FMQuiz.question(關卡索引, 題目索引)、FMQuiz.pick(選項索引) ─── */
+    /* ─── 驗證用（主控台）：FMQuiz.question(關卡索引, 題目索引)、FMQuiz.pick(選項索引) ───
+       同樣是開發用的「後門」，掛在 window 上，在瀏覽器主控台可以直接呼叫：
+       例如想快速跳到第 3 關第 10 題看畫面，不用真的從頭玩過去，直接下指令
+       `FMQuiz.question(2, 9)`（索引從 0 算）即可；FMQuiz.pick(i) 模擬點擊第 i
+       個選項，方便寫自動化測試腳本一路點完整關。一般玩家不會用到、也不會
+       注意到這個介面。 */
     window.FMQuiz = {
         levels: function () { return LEVELS; },
         question: function (lv, qi) { S.lv = lv; S.qi = qi; S.answers = []; showQuestion(); },
@@ -406,6 +451,10 @@
         confirmEl = document.getElementById('confirm');
         barBack.addEventListener('click', function () { if (backAction) backAction(); });
 
+        /* QuizGen.session() 理論上不該丟出例外（buildLevel 內部已經有重試機制），
+           但畢竟是跨好幾個檔案、好幾層的產生邏輯，這裡用 try/catch 當最後一道
+           防線：萬一真的出了狀況，不要讓整頁變成一片空白、什麼訊息都沒有，
+           至少顯示一句「請回主選單再進來一次」，並把詳細錯誤印到主控台方便除錯。 */
         try {
             var sess = window.QuizGen.session();
             LEVELS = sess.levels;
