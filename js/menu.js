@@ -26,8 +26,8 @@
         { id: 'spot', name: '大家來找碴', img: 'img/reaction/spot.png' },
         { id: 'speed', name: '零秒出手', img: 'img/reaction/speed.png' },
         { id: 'drop', name: '神準落下', img: 'img/reaction/drop.png' },
-        null,
-        null,
+        { id: 'impossible', name: '不可能任務', img: 'img/reaction/impossible.png' },
+        { id: 'shapes', name: '形形色色', img: 'img/reaction/shapes.png' },
         null
     ];
 

@@ -1,8 +1,9 @@
-/* ═══ reaction.css — 秒反應（reaction.html）：說明彈窗＋共用結果卡＋三個小遊戲 ═══
-   檔案分四段：最上面是三款遊戲共用的東西（說明彈窗 .rule-dlg、結算文字 .rx-result）；
-   再來依序是「零秒出手」（.speed-）、「神準落下」（.drop-）、「大家來找碴」（.spot-）
-   各自專屬的樣式，對應的 DOM／邏輯在同名的 js/reaction_speed.js／reaction_drop.js／
-   reaction_spot.js。 */
+/* ═══ reaction.css — 秒反應（reaction.html）：說明彈窗＋共用結果卡＋五個小遊戲 ═══
+   檔案分段：最上面是遊戲共用的東西（說明彈窗 .rule-dlg、結算文字 .rx-result）；
+   再來依序是「零秒出手」（.speed-）、「神準落下」（.drop-）、「大家來找碴」（.spot-）、
+   「不可能任務」（.imp-）、「形形色色」（.shapes-）各自專屬的樣式，對應的 DOM／
+   邏輯在同名的 js/reaction_speed.js／reaction_drop.js／reaction_spot.js／
+   reaction_impossible.js／reaction_shapes.js。 */
 
 /* ─── 上方列的「?」規則按鈕 ─── */
 .bar__help {
@@ -301,6 +302,226 @@
 
 .hint--on-dark {
     color: hsl(0, 0%, 70%);
+}
+
+/* ═══ 遊戲四：不可能任務 ═══ */
+.imp-white-bg {
+    background: #FFFFFF;
+}
+
+.imp-field {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    border-radius: var(--r-lg);
+    border: var(--bd);
+}
+
+.imp-img {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 150px;
+    transform: translateX(-50%);
+    z-index: 2;
+}
+
+.imp-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 10px;
+    background: var(--flow-ink-1);
+    z-index: 1;
+}
+
+.imp-hint {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0 var(--sp-4);
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    pointer-events: none;
+    z-index: 3;
+}
+
+.imp-hint--danger {
+    color: var(--flow-ink-1);
+}
+
+/* 結算：把「圖片下緣～警戒線上緣」這一小段距離放大到填滿整個 .imp-field，
+   上下用文字標出兩端是什麼，中間一條藍色量尺線＋頭尾箭頭＋公分數——
+   等於是鏡頭特寫這一小段距離，不是真的用數學去拉伸縮放整個畫面。
+   top／height 刻意不寫在這裡：js/reaction_impossible.js 的 tweenRect() 會
+   每一影格自己算、直接設在 inline style 上，從「剛好蓋住那段距離」的小長
+   方形，補間到 top:0／height:100%，看起來就像鏡頭慢慢推近、把這段距離
+   放大到佔滿整個畫面。 */
+.imp-measure {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 4;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #FFFFFF;
+}
+
+.imp-measure__edge {
+    flex: 0 0 auto;
+    padding: var(--sp-3) 0;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+    white-space: nowrap;
+}
+
+.imp-measure__edge--bottom {
+    color: var(--flow-ink-1);
+}
+
+/* 「成功！」／「任務失敗」：疊在特寫畫面裡面，不是另外蓋一張卡片上去——
+   鏡頭推進到底之後，這行字自然就跟著放大到看得清楚的大小。 */
+.imp-measure__title {
+    flex: 0 0 auto;
+    padding: var(--sp-1) 0;
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    white-space: nowrap;
+}
+
+.imp-measure__title--ok {
+    color: var(--c-green);
+}
+
+.imp-measure__title--bad {
+    color: var(--flow-ink-1);
+}
+
+.imp-measure__gap {
+    flex: 1 1 auto;
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.imp-measure__bar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 4px;
+    background: var(--c-blue);
+    transform: translateX(-50%);
+}
+
+.imp-measure__arrow {
+    position: absolute;
+    left: 50%;
+    width: 0;
+    height: 0;
+    transform: translateX(-50%);
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+}
+
+.imp-measure__arrow--up {
+    top: 0;
+    border-bottom: 16px solid var(--c-blue);
+}
+
+.imp-measure__arrow--down {
+    bottom: 0;
+    border-top: 16px solid var(--c-blue);
+}
+
+.imp-measure__num {
+    position: relative;
+    z-index: 1;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-pill);
+    padding: var(--sp-2) var(--sp-4);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-blue);
+}
+
+/* 「再挑戰一次」：小小一顆、浮在畫面最下方，不是整張蓋住畫面的卡片——
+   鏡頭特寫（成功/失敗＋公分數）要一直看得到，只多這一顆按鈕疊上去。 */
+.imp-restart-btn {
+    position: absolute;
+    left: 50%;
+    bottom: var(--sp-4);
+    transform: translateX(-50%);
+    z-index: 10;
+    width: auto;
+    min-width: 220px;
+    height: var(--btn-h-sm);
+    padding: 0 var(--sp-5);
+    box-shadow: var(--shadow-pop);
+}
+
+/* ═══ 遊戲五：形形色色 ═══ */
+.shapes-dark-bg {
+    background: #000;
+}
+
+.shapes-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.shapes-board {
+    display: grid;
+    gap: 2px;
+}
+
+.shapes-cell {
+    background: #161616;
+    border: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.shapes-cell--ok {
+    outline: 3px dashed var(--c-ok-light);
+    outline-offset: -3px;
+}
+
+.shapes-cell--bad {
+    outline: 3px dashed var(--c-bad-light);
+    outline-offset: -3px;
+}
+
+/* 93% ＝使用者要求「圖案再放大 1.33 倍」（70% × 1.33 ≈ 93%），盡量佈滿整個
+   格子，不要留下太多空白；文字型圖案的對應放大在 js/reaction_shapes.js
+   （字級係數 0.6 → 0.8）。 */
+.shapes-glyph-svg {
+    width: 93%;
+    height: 93%;
+}
+
+.shapes-glyph-text {
+    font-weight: var(--fw-black);
+    line-height: 1;
+    font-family: var(--font-ui);
 }
 
 @media (prefers-reduced-motion: reduce) {

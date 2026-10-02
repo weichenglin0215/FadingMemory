@@ -43,10 +43,12 @@
      會比尺本身還窄，三角形能插中的格子永遠只剩邊緣那一兩格，9 格有 8 格摸不到
      （見下面 computeOutcome 旁的說明）。改成尺固定不動、三角形移動，滿版顯示
      跟「9 格都插得到」這兩個需求才能同時成立。
-   · 按下「落下」那一刻，三角形的左右位置就直接定住、垂直落下——不會再沿用
-     按下前的左右移動速度／方向繼續滑動（不計算慣性）。玩家按下「落下」當下
-     三角形在哪一格，就是會插在那一格，判斷時機時不用在腦中多想一層「按下去
-     之後慣性還會再往哪邊飄一點」，單純就是「看準位置、按下去」。
+   · 按下「落下」之後，三角形的左右位置不會瞬間定住：垂直方向是重力下墜，
+     水平方向則延續按下那一刻的移動速度／方向繼續算慣性（跟按下前的彈跳是
+     同一條公式、同一個時間軸算出來的，見 bouncePos()），兩個方向同時進行，
+     最終插在哪裡要同時考慮「按下的時機」跟「按下後慣性還會飄多遠」——這也是
+     為什麼速度刻意不能太快（見下面「按「落下」之前」的說明），不然慣性飄走
+     的距離會大到讓玩家完全猜不到會插在哪裡。
    · 開放按「落下」之後，上方的提示文字（算準時機按「落下」…）會變透明：
      避免玩家拿這行固定文字的位置／寬度當參考基準，去推算三角形目前的座標，
      變相降低了抓時機的難度；文字本身還在（只是 opacity: 0），版面不會跳動，
@@ -264,9 +266,9 @@
             }
 
             /* 按「落下」之前：三角形一般的來回反彈，還不需要預測結果。
-               速度刻意不要太快：反彈要看得出節奏感、玩家才來得及判斷時機；
-               按下「落下」之後三角形不會再繼續移動（見下面 fall()），要抓的是
-               「按下那一刻三角形在哪裡」，不用考慮按下去之後慣性還會往哪邊飄。 */
+               速度刻意放慢：落下要 380 毫秒，速度太快的話，不管什麼時候按，三角形都會在
+               這段時間內移動超過一整格的寬度，變成「怎麼按都插不到中間」──
+               放慢之後，落下時三角形大約只移動不到一格，只要抓對時機，插中紅色是真的做得到的。 */
             var dir = Math.random() < 0.5 ? -1 : 1;
             var speed = (60 + Math.random() * 70) / 1000; /* px/ms */
             var raf = null, lastT = null, idle = true;
@@ -288,7 +290,7 @@
                 idle = false;
                 cancelAnimationFrame(raf);
                 phase = 'falling';
-                fall(triLeft, forceFinalLeft);
+                fall(triLeft, dir, speed, forceFinalLeft);
             }
             /* ALT+A：強迫三角形最終停在尺的正中央（stripW/2），接觸點剛好落在正中央的紫色核心 */
             triggerPerfect = function () { startFall(stripW / 2 - triW / 2); };
@@ -302,18 +304,14 @@
                 startFall();
             });
 
-            /* forceFinalLeft：ALT+A 測試熱鍵用，直接釘死落點座標（見檔案最上面的說明）；
-               其餘流程（物理下落動畫、判定、變焦）跟正常玩一模一樣。
-               垂直落下、不計算左右慣性：finalLeft 一般情況下就是按下「落下」那一刻
-               三角形所在的位置（startLeft）本身，不再用 bouncePos() 去算「如果慣性
-               繼續帶著它滑動，380 毫秒後會滑到哪裡」——左右位置從按下的瞬間就固定，
-               接下來整段下墜動畫只有垂直方向（tri.style.top）在變。 */
-            function fall(startLeft, forceFinalLeft) {
-                var finalLeft = forceFinalLeft != null ? forceFinalLeft : startLeft;
-                tri.style.left = finalLeft + 'px';
+            /* forceFinalLeft：ALT+A 測試熱鍵用，直接釘死落點座標（見檔案最上面的說明），
+               其餘流程（物理下落動畫、判定、變焦）跟正常玩一模一樣。 */
+            function fall(startLeft, dir0, speed0, forceFinalLeft) {
+                var finalLeft = forceFinalLeft != null ? forceFinalLeft : bouncePos(startLeft, dir0, speed0, FALL_MS, maxTriLeft);
                 var outcome = computeOutcome(finalLeft);
 
                 if (REDUCED) {
+                    tri.style.left = finalLeft + 'px';
                     tri.style.top = triTargetTop + 'px';
                     onLand(outcome, finalLeft);
                     return;
@@ -331,6 +329,7 @@
                 function land() {
                     if (landed) return;
                     landed = true;
+                    tri.style.left = finalLeft + 'px';
                     tri.style.top = triTargetTop + 'px';
                     onLand(outcome, finalLeft);
                 }
@@ -340,9 +339,9 @@
                     if (landed) return;
                     var el = Math.min(FALL_MS, now - t0);
                     var p = el / FALL_MS;
-                    /* 重力自由落下：位置 ∝ 時間平方，一開始慢、越落越快，不是等速被丟出去。
-                       只動 top，left 在 fall() 一開始就定住了（垂直落下、不計算慣性）。 */
+                    /* 重力自由落下：位置 ∝ 時間平方，一開始慢、越落越快，不是等速被丟出去 */
                     tri.style.top = (triStartTop + (triTargetTop - triStartTop) * p * p) + 'px';
+                    tri.style.left = bouncePos(startLeft, dir0, speed0, el, maxTriLeft) + 'px';
                     if (el < FALL_MS) requestAnimationFrame(frame);
                     else land();
                 }
@@ -456,6 +455,19 @@
         });
 
         round();
+    }
+
+    /* 三角形左右來回彈跳移動的位置：純函數（輸入經過的時間，回傳位置）。
+       閒置時的反彈（idleLoop）跟按下「落下」後繼續算的慣性（fall() 裡的
+       finalLeft／frame()）都呼叫同一個函式、帶同樣的參數，兩者必定完全一致
+       ——這是先前「按了常常沒反應」的根因：原本用 CSS transition 讓三角形
+       落下，transitionend 有時不會觸發，遊戲就卡住；現在改成每一影格都自己
+       算位置，不依賴瀏覽器的轉場事件，一定會落地。 */
+    function bouncePos(start, dir, speed, t, max) {
+        var period = 2 * max;
+        var raw = start + dir * speed * t;
+        var m = ((raw % period) + period) % period;
+        return m <= max ? m : period - m;
     }
 
     Reaction.register({

@@ -43,7 +43,7 @@
         },
         reaction: {
             css: BASE_CSS.concat(['css/reaction.css']),
-            js: BASE_JS.concat(['js/reaction_core.js', 'js/reaction_speed.js', 'js/reaction_drop.js', 'js/reaction_spot.js', 'js/reaction.js'])
+            js: BASE_JS.concat(['js/reaction_core.js', 'js/reaction_speed.js', 'js/reaction_drop.js', 'js/reaction_spot.js', 'js/reaction_impossible.js', 'js/reaction_shapes.js', 'js/reaction.js'])
         },
         quiz: {
             css: BASE_CSS.concat(['css/quiz.css']),
@@ -123,10 +123,14 @@
     }
 
     /* 讀 version.json，拿到裡面的版本號／日期／更新說明。
-       file:// 開啟（雙擊 index.html）時瀏覽器的 fetch() 常常會被安全限制擋掉
-       （跨來源限制對本機檔案特別嚴格），所以這種情況直接放棄讀取、回傳 null；
-       之後會改用「目前的時間戳記」當版本號（見下面主流程），一樣能達到
-       「每次都載入最新檔案」的效果，只是沒辦法顯示真正的版本號文字。 */
+       file:// 開啟（雙擊 index.html）時，Chrome 會直接擋掉對本機其他檔案的 fetch()
+       （file:// 的跨來源限制），擋下來的時候主控台一定會印出一行刺眼的紅字錯誤
+       ——即使程式碼用 .catch 接住、不影響遊戲照常執行，那行錯誤還是會出現在
+       主控台（這是瀏覽器自己印的，不是 JS 丟出來的例外，程式碼攔不住）。
+       與其每次 file:// 開啟都讓玩家看到一次這種嚇人的錯誤訊息，不如直接偵測到
+       file:// 協定就不要嘗試，一律使用「目前的時間戳記」當版本號（見下面主流程）
+       ——一樣能做到「每次都載入最新檔案」，只是沒辦法顯示真正的版本號文字，
+       主控台也乾乾淨淨。用本機伺服器（http://localhost:...）開啟完全不受影響。 */
     function fetchVersion() {
         if (location.protocol === 'file:' || !global.fetch) return Promise.resolve(null);
         return fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
