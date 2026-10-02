@@ -43,7 +43,7 @@
         },
         reaction: {
             css: BASE_CSS.concat(['css/reaction.css']),
-            js: BASE_JS.concat(['js/reaction_core.js', 'js/reaction_speed.js', 'js/reaction_drop.js', 'js/reaction_spot.js', 'js/reaction_impossible.js', 'js/reaction_shapes.js', 'js/reaction.js'])
+            js: BASE_JS.concat(['js/reaction_core.js', 'js/reaction_speed.js', 'js/reaction_drop.js', 'js/reaction_spot.js', 'js/reaction_impossible.js', 'js/reaction_shapes.js', 'js/reaction_matchcolor.js', 'js/reaction_rainbow.js', 'js/reaction.js'])
         },
         quiz: {
             css: BASE_CSS.concat(['css/quiz.css']),

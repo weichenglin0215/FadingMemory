@@ -3,12 +3,12 @@
    畫面上緣是阿湯哥、下緣是一條紅色警戒線。點一下畫面讓他開始自由落體下墜，
    算準時機再點一下讓他停住。停下來（或直接摔到警戒線上）先定格一秒，接著
    鏡頭平順地推進，放大「阿湯哥下緣～警戒線上緣」這一小段距離，讓玩家看清楚
-   自己到底有多驚險；停在警戒線 100 公分以內才算任務成功，其餘（含直接摔上去）
-   都算失敗。
+   自己到底有多驚險；停在警戒線上方「低於 30 公分」才算任務成功，其餘（含直接摔上去）
+   都算失敗。直接摔上警戒線的瞬間，阿湯哥的照片會變成紅色（透明部分維持透明）。
    ───────────────────────────────────────────────────────────────────
    · 整個畫面（阿湯哥的照片＋警戒線）都畫在同一個 <svg> 裡，鏡頭推進＝補間
      這個 SVG 的 viewBox，從「看得到整個欄位」慢慢縮小到「照片（完全不裁切）
-     ＋警戒線＋底下一點空間」——這是跟「神準落下」完全同一種手法：鏡頭看到的
+     ＋警戒線」（框的下緣＝警戒線下緣＝畫面下緣）——這是跟「神準落下」完全同一種手法：鏡頭看到的
      從頭到尾都是同一份內容（同一張照片、同一條警戒線），只是框住的範圍
      在變小，不是切換到另一個畫面、也不是另外疊一個東西上去遮住原本畫面。
      推進的目標框「上緣」永遠等於照片自己的上緣，所以畫面上看起來就是照片
@@ -24,8 +24,10 @@
      影格可能跟真正點擊的瞬間差了一影格（<16ms），這點誤差對這個遊戲的節奏
      來說完全不影響，不需要更精準的做法。
    · 分數／最佳紀錄只在「成功」時更新，越小越好；顯示的「公分」數字刻意放大
-     10 倍＋顯示到小數點兩位（見 MEASURE_PX_PER_CM 旁的說明），不是真實的
+     20 倍＋顯示到小數點兩位（見 MEASURE_PX_PER_CM 旁的說明），不是真實的
      公制單位，純粹是為了讓數字看起來更精準、更有戲劇效果。
+   · 鏡頭推進到底的最終畫面：照片上緣貼齊遊戲畫面上緣、紅色警戒線的下緣
+     貼齊遊戲畫面下緣（警戒線永遠在畫面最底部，不會浮到畫面中間）。
    ═══════════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -40,7 +42,7 @@
     var GRAVITY = 9.8;      /* 重力加速度（公尺／秒²），真實世界的數字 */
     var PX_PER_M = 50;      /* 下墜速度用這個換算 1 公尺等於多少邏輯 px——想讓下墜更快/更慢，調這個數字就好 */
     var ACCEL = GRAVITY * PX_PER_M; /* px/s² */
-    var SUCCESS_CM = 100;    /* 停在警戒線幾「公分」以內才算成功（跟 MEASURE_PX_PER_CM 是配套的，見下面說明） */
+    var SUCCESS_CM = 30;     /* 停在警戒線上方「低於」幾「公分」才算成功（跟 MEASURE_PX_PER_CM 是配套的，見下面說明） */
     /* MEASURE_PX_PER_CM：量距離、算成不成功用的換算比例，刻意跟上面下墜速度
        用的 PX_PER_M 不是同一把尺！如果距離也套用「50px=1公尺」，10 公分只有
        5px，用 ACCEL=490 算一下：落地瞬間速度約 828 px/s，5px 的容許誤差換算
@@ -49,11 +51,13 @@
        換算成時間才會是玩家靠練習、抓節奏真的碰得到的範圍——下墜本身仍然是
        道地的 9.8 m/s² 重力感，只有「量尺的粗細」不一樣，兩者本來就是「動畫
        節奏」跟「判定寬容度」兩件不同的事，不需要共用同一把尺。
-       數字特意放大 10 倍（1px 算 1「公分」，不是 10px 算 1 公分）＋顯示到
-       小數點兩位，純粹是為了讓玩家覺得畫面上的數字很精準、很有戲劇效果；
-       SUCCESS_CM 也跟著從 10 放大成 100，兩個一起放大、容許的「真實」誤差
-       跟放大前完全一樣，只是看起來的數字更大、更好看。 */
-    var MEASURE_PX_PER_CM = 1;
+       這個比例是「1 公分＝幾 px」，所以 1/2 表示 1px ＝ 2 公分。顯示的數字
+       只是為了讓玩家覺得很精準、很有戲劇效果，不是真實的公制單位（原本
+       1px＝0.1 公分，後來放大到 1px＝1 公分、6 公分，最後縮成 1px＝2 公分）。
+       ★ 注意：SUCCESS_CM 現在是 30 公分＝只有 15px 的容許誤差，落地瞬間的速度
+       約 828 px/s，換算成時間只有約 18 毫秒、大約一格畫面（16.7 毫秒）——
+       這是使用者指定的超高難度（"不可能任務"）。想放寬就調大 SUCCESS_CM。 */
+    var MEASURE_PX_PER_CM = 1 / 2;
     var IMG_W = 150;         /* 阿湯哥照片顯示寬度（邏輯 px），高度照片自己的長寬比算 */
     var BAR_H = 10;          /* 警戒線高度 */
     var PAUSE_BEFORE_MS = 1000; /* 停下來（或摔到線上）先定格這麼久，玩家才看得清楚剛剛發生了什麼事 */
@@ -61,11 +65,13 @@
     var HOLD_AFTER_MS = 2000;   /* 推進完、看清楚結果之後，停留多久才出現「再挑戰一次」 */
     var REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 
-    /* cmOf 回傳沒有四捨五入的精確數字，拿來比較（<=SUCCESS_CM）跟存最佳紀錄；
+    /* cmOf 回傳沒有四捨五入的精確數字，拿來比較（<SUCCESS_CM）跟存最佳紀錄；
        要「顯示」（含小數點兩位）一律另外呼叫 fmtCm()，兩件事分開處理。 */
     function cmOf(px) { return Math.max(0, px) / MEASURE_PX_PER_CM; }
     function fmtCm(cm) { return cm.toFixed(2) + ' 公分'; }
-    function fmtBest(v) { return v == null ? '' : '最佳 ' + fmtCm(v); }
+    /* 最佳紀錄存的是「停下來離警戒線幾 px」（不是公分），顯示時才換算成公分——
+       這樣以後不管把顯示的公分倍率再調成多少，舊紀錄都還是對的。 */
+    function fmtBest(v) { return v == null ? '' : '最佳 ' + fmtCm(cmOf(v)); }
     function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
 
     function svgEl(tag, attrs) {
@@ -144,6 +150,26 @@
             var svg = svgEl('svg', { 'class': 'imp-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'xMidYMid slice' });
             field.appendChild(svg);
 
+            /* 摔到警戒線時照片要變紅：用 SVG 濾鏡 feColorMatrix 重新計算每個像素的 RGB，
+               alpha（透明度）那一列原封不動（0 0 0 1 0＝輸出 alpha ＝ 輸入 alpha），
+               所以照片本來透明的部分仍然透明、半透明的邊緣也維持原本的半透明。
+               RGB 三列：R＝0.78＋0.22×亮度、G／B＝0.08×亮度（亮度＝0.2126R＋0.7152G＋0.0722B）
+               ——整張照片染成鮮紅，同時保留一點深淺，不會變成完全平的紅色剪影。
+               color-interpolation-filters="sRGB"：不然瀏覽器預設在線性 RGB 空間算，顏色會偏掉。 */
+            var defs = svgEl('defs', {});
+            var hitFilter = svgEl('filter', { id: 'imp-hit-red', 'color-interpolation-filters': 'sRGB' });
+            hitFilter.appendChild(svgEl('feColorMatrix', {
+                type: 'matrix',
+                values: [
+                    '0.0468 0.1573 0.0159 0 0.78',
+                    '0.0170 0.0572 0.0058 0 0',
+                    '0.0170 0.0572 0.0058 0 0',
+                    '0 0 0 1 0'
+                ].join(' ')
+            }));
+            defs.appendChild(hitFilter);
+            svg.appendChild(defs);
+
             var imgEl = svgEl('image', { x: imgX, y: 0, width: IMG_W, height: imgH });
             imgEl.setAttributeNS(XLINKNS, 'href', IMG_SRC);
             imgEl.setAttribute('href', IMG_SRC);
@@ -199,25 +225,23 @@
                 finish(false, parseFloat(imgEl.getAttribute('y')) || 0);
             }
 
-            /* 推進目標：簡單規則——鏡頭框住「整張照片（從它自己的上緣開始，完全
-               不裁切）＋阿湯哥下緣到警戒線的距離＋警戒線本身＋底下留一點空間放
-               「警戒線」文字標籤」，框的上緣永遠等於照片的上緣（vy = imgY）。
-               推進到底的時候，viewBox 的上緣會跟照片的上緣重合，畫面上看起來
-               就是「照片一直往上升、一直放大，直到頂到畫面最上面才停下來」
-               ——這就是使用者要的效果，不用另外算什麼置中、留白，單純讓整張
-               照片（不裁切）＋它下面的東西，一起撐滿整個畫面高度。
-               寬高比跟欄位本身一致，推進到底不會變形。 */
-            var LABEL_SPACE = 50; /* 警戒線下方要留給「警戒線」文字的空間 */
+            /* 推進目標：簡單規則——鏡頭框的上緣＝照片自己的上緣（vy = imgY），
+               框的下緣＝警戒線的下緣（vy + vh = barY + BAR_H = FH，也就是整個
+               欄位的下緣）。推進到底的時候：
+               · 照片上緣貼齊遊戲畫面上緣（照片一直往上升、一直放大，直到頂到
+                 畫面最上面才停下來）；
+               · 紅色警戒線下緣貼齊遊戲畫面下緣（警戒線永遠在畫面最底部，
+                 不會浮到畫面中間，推進的整段過程也是——因為起點跟終點的
+                 vy + vh 都剛好是 FH，補間出來的每一影格也都是 FH）。
+               照片（不裁切高度）、阿湯哥下緣到警戒線的距離、警戒線本身，三樣
+               一起撐滿整個畫面高度；寬高比跟欄位本身一致，推進到底不會變形。
+               「警戒線」文字標籤因此沒有地方放在警戒線下面了，改成寫在警戒線
+               本身上面（見 addMeasure）。 */
             function zoomBoxFor(imgY, gapPx) {
                 var gapTop = imgY + imgH, gapBottom = gapTop + gapPx, gapMid = (gapTop + gapBottom) / 2;
-                var vh = Math.min(FH, imgH + gapPx + BAR_H + LABEL_SPACE);
-                var vw = vh * (FW / FH);
-                /* vy 一定要等於 imgY，不能再夾到「不超過 FH-vh」——欄位本身到警戒線
-                   下緣就結束了（barY+BAR_H 剛好等於 FH），LABEL_SPACE 那塊空間本來
-                   就得畫到 FH 以外（SVG 沒有畫布邊界限制，FH 以外沒有其他內容、
-                   只是空白，不會露出奇怪的東西）。之前多加的那個上限夾住會讓 vy
-                   被往回拉，造成「照片上緣沒有真的貼齊畫面上緣」，正是這次要修的問題。 */
                 var vy = Math.max(0, imgY);
+                var vh = FH - vy;
+                var vw = vh * (FW / FH);
                 var vx = (FW - vw) / 2;
                 return { vx: vx, vy: vy, vw: vw, vh: vh, gapTop: gapTop, gapBottom: gapBottom, gapMid: gapMid };
             }
@@ -228,92 +252,111 @@
                畫面一起被放大到看得清楚，不是推進完才突然冒出來。 */
             function addMeasure(box, success, cm, isNew) {
                 var midX = FW / 2;
+                var k = FH / box.vh;                 /* 推進到底之後，1 個 SVG 單位在畫面上是幾 px */
                 var lineW = Math.max(2, box.vh * 0.012);
-                var arrowSize = box.vh * 0.045;
                 var titleSize = box.vh * 0.085;
                 var numSize = box.vh * 0.09;
-                var labelSize = box.vh * 0.055;
-                var pillW = numSize * 4.3, pillH = numSize * 1.5;
+                var newSize = box.vh * 0.05;
+                var pillH = numSize * 1.5;
 
                 /* 量尺線＋箭頭：照實際距離畫（gapTop 到 gapBottom）——距離越小，
-                   這條線本身自然就越短（甚至是 0，距離剛好是 0 的時候），這是
-                   誠實呈現，不用造假。
-                   標題／數字的「位置」則是另一回事：真正的距離很小、甚至是 0 時，
-                   如果硬要把標題跟數字都塞在 gapTop～gapBottom 這一小段裡，兩個
-                   會疊在一起看不清楚（這是「公分數跟標題疊在一起」這個問題的
-                   根本原因）。所以位置改成「從照片下緣往下依序排」：標題先排，
-                   數字接著排在標題下面、保留足夠間距，不夠放的時候才會疊到照片
-                   下緣本身（文字有底色，疊在照片上還是看得清楚）；數字如果真的
-                   有足夠空間（距離夠大），還是會優先擺在 gapMid（量尺線的正中央）
-                   比較好看，只有空間不夠時才會被往下推開。 */
-                /* titleY 不能單純「貼著照片下緣往下一點」：距離很小（甚至是 0）時，
-                   gapTop 會很接近、甚至等於 gapBottom（警戒線上緣），往下一點就
-                   直接疊到警戒線本身上面去了——「任務失敗」剛好也是跟警戒線一樣
-                   的紅色，疊上去等於紅字疊紅底，完全看不見。所以多加一個上限：
-                   標題的視覺下緣最多只能頂到警戒線上緣（gapBottom）為止，距離
-                   真的太小時，標題會被往上推、疊到照片下緣本身（而不是疊到警戒
-                   線），文字有自己的顏色跟粗體，疊在照片上還是看得清楚。 */
-                var titleMaxY = box.gapBottom - titleSize * 0.25;
-                var titleY = Math.min(box.gapTop + titleSize * 0.95, titleMaxY);
-                var numY = Math.max(box.gapMid, titleY + titleSize * 0.5 + pillH / 2 + 8);
-                var labelY = Math.max(box.gapBottom + BAR_H + labelSize * 1.3, numY + pillH / 2 + labelSize * 1.1);
+                   這條線本身自然就越短（距離是 0 的時候整條線跟箭頭都不畫），
+                   這是誠實呈現，不用造假；箭頭太大塞不進很短的距離時，箭頭跟著縮小。 */
+                if (box.gapBottom - box.gapTop > 0.5) {
+                    var arrowSize = Math.min(box.vh * 0.045, (box.gapBottom - box.gapTop) / 2.2);
+                    svg.appendChild(svgEl('line', {
+                        'class': 'imp-measure-line', x1: midX, y1: box.gapTop, x2: midX, y2: box.gapBottom, 'stroke-width': lineW
+                    }));
+                    svg.appendChild(svgEl('polygon', {
+                        'class': 'imp-measure-line',
+                        points: (midX - arrowSize) + ',' + (box.gapTop + arrowSize) + ' ' + (midX + arrowSize) + ',' + (box.gapTop + arrowSize) + ' ' + midX + ',' + box.gapTop
+                    }));
+                    svg.appendChild(svgEl('polygon', {
+                        'class': 'imp-measure-line',
+                        points: (midX - arrowSize) + ',' + (box.gapBottom - arrowSize) + ' ' + (midX + arrowSize) + ',' + (box.gapBottom - arrowSize) + ' ' + midX + ',' + box.gapBottom
+                    }));
+                }
 
-                svg.appendChild(svgEl('line', {
-                    'class': 'imp-measure-line', x1: midX, y1: box.gapTop, x2: midX, y2: box.gapBottom, 'stroke-width': lineW
-                }));
-                svg.appendChild(svgEl('polygon', {
-                    'class': 'imp-measure-line',
-                    points: (midX - arrowSize) + ',' + (box.gapTop + arrowSize) + ' ' + (midX + arrowSize) + ',' + (box.gapTop + arrowSize) + ' ' + midX + ',' + box.gapTop
-                }));
-                svg.appendChild(svgEl('polygon', {
-                    'class': 'imp-measure-line',
-                    points: (midX - arrowSize) + ',' + (box.gapBottom - arrowSize) + ' ' + (midX + arrowSize) + ',' + (box.gapBottom - arrowSize) + ' ' + midX + ',' + box.gapBottom
-                }));
+                /* 標題／數字／（新紀錄）排成一疊，整疊的位置規則：
+                   · 距離夠大：整疊置中在量尺線的正中央（gapMid）；
+                   · 距離很小（甚至是 0）：塞不進 gapTop～gapBottom 這一小段，整疊
+                     往上推，下緣最多頂到警戒線上緣（gapBottom）為止，多出來的部分
+                     疊在照片下緣上——絕對不能疊到警戒線本身：「任務失敗」跟警戒線
+                     都是紅色，紅字疊紅底等於看不見。
+                   警戒線下緣就是整個畫面的下緣，畫面下面已經沒有空間可以往下排了，
+                   所以只能往上推。 */
+                var pad = box.vh * 0.02;
+                var titleH = titleSize * 1.15;
+                var newH = newSize * 1.3;
+                var stackH = titleH + pad + pillH + (isNew ? pad + newH : 0);
+                var stackBottom = Math.min(box.gapMid + stackH / 2, box.gapBottom - pad * 0.5);
+                var stackTop = Math.max(stackBottom - stackH, box.vy + pad);
+                var titleY = stackTop + titleSize * 0.95;
+                var numY = stackTop + titleH + pad + pillH / 2;
 
                 var title = svgEl('text', {
                     'class': 'imp-measure-title ' + (success ? 'imp-measure-title--ok' : 'imp-measure-title--bad'),
-                    x: midX, y: titleY, 'font-size': titleSize, 'text-anchor': 'middle'
+                    x: midX, y: titleY, 'font-size': titleSize, 'text-anchor': 'middle', 'stroke-width': titleSize * 0.14
                 });
                 title.textContent = success ? '成功！' : '任務失敗';
                 svg.appendChild(title);
 
-                /* pillW 加寬：數字現在顯示到小數點兩位（例如「123.45 公分」比以前的
-                   整數「12 公分」長不少），字寬得留夠空間才不會被裁掉。 */
-                svg.appendChild(svgEl('rect', {
-                    'class': 'imp-measure-pill', x: midX - pillW / 2, y: numY - pillH / 2, width: pillW, height: pillH, rx: pillH / 2
-                }));
+                /* 數字最長會長到「4200.00 公分」這種寬度，所以 pill 的寬度不是猜的，
+                   而是先把字畫上去、量出字實際多寬（getComputedTextLength），再包一圈
+                   留白；萬一比整個鏡頭框還寬（鏡頭推得很近時框很窄），就把字級等比縮小。 */
+                var pill = svgEl('rect', { 'class': 'imp-measure-pill', height: pillH, rx: pillH / 2 });
+                svg.appendChild(pill);
                 var numText = svgEl('text', {
                     'class': 'imp-measure-num', x: midX, y: numY, 'font-size': numSize, 'text-anchor': 'middle', 'dominant-baseline': 'central'
                 });
                 numText.textContent = fmtCm(cm);
                 svg.appendChild(numText);
-
-                var label = svgEl('text', {
-                    'class': 'imp-measure-label', x: midX, y: labelY, 'font-size': labelSize, 'text-anchor': 'middle'
-                });
-                label.textContent = '警戒線';
-                svg.appendChild(label);
+                var textW = numText.getComputedTextLength();
+                var shrink = Math.min(1, (box.vw * 0.96) / (textW + numSize * 0.9));
+                if (shrink < 1) { numText.setAttribute('font-size', numSize * shrink); textW *= shrink; }
+                var pillW = textW + numSize * 0.9 * shrink;
+                pill.setAttribute('x', midX - pillW / 2);
+                pill.setAttribute('y', numY - pillH / 2);
+                pill.setAttribute('width', pillW);
 
                 if (isNew) {
                     var newRec = svgEl('text', {
-                        'class': 'imp-measure-newrec', x: midX, y: labelY + labelSize * 1.3, 'font-size': labelSize, 'text-anchor': 'middle'
+                        'class': 'imp-measure-newrec', x: midX, y: numY + pillH / 2 + pad + newSize, 'font-size': newSize,
+                        'text-anchor': 'middle', 'stroke-width': newSize * 0.14
                     });
                     newRec.textContent = '新紀錄！';
                     svg.appendChild(newRec);
                 }
+
+                /* 「警戒線」標籤：寫在警戒線本身上面（靠左），白字＋紅色描邊。
+                   字級依「警戒線在畫面上的厚度」決定（厚度＝BAR_H × k）：推進得很近、
+                   警戒線很粗的時候，字剛好塞得進線裡；距離很遠、警戒線只有幾 px 厚
+                   的時候，字至少維持 13px 才讀得到，多出來的部分往上超出警戒線，
+                   靠紅色描邊在白底上也讀得清楚。字貼著畫面下緣擺（只會往上超出，
+                   不會被畫面下緣切掉），靠左是為了避開置中的「再挑戰一次」按鈕。 */
+                var labelPx = Math.max(13, Math.min(28, BAR_H * k * 0.75));
+                var labelSize = labelPx / k;
+                var labelBottomPad = Math.max(0, (BAR_H - labelSize) / 2);
+                var label = svgEl('text', {
+                    'class': 'imp-measure-label', x: box.vx + box.vw * 0.03, y: box.vy + box.vh - labelBottomPad - labelSize * 0.2,
+                    'font-size': labelSize, 'text-anchor': 'start', 'stroke-width': labelSize * 0.16
+                });
+                label.textContent = '警戒線';
+                svg.appendChild(label);
             }
 
             /* crashed：true＝還沒點擊就先摔到警戒線上了；false＝玩家自己停下來的。
                不管哪一種都接著做同一套「定格→鏡頭推進」演出，推進完才判定成功
                或失敗——碰到警戒線（crashed）一律算失敗，沒碰到的話要停在
-               SUCCESS_CM 以內才算成功，純粹停下來、但離警戒線太遠，也算失敗。 */
+               低於 SUCCESS_CM 才算成功，純粹停下來、但離警戒線太遠，也算失敗。 */
             function finish(crashed, imgY) {
                 phase = 'done';
+                if (crashed) imgEl.setAttribute('filter', 'url(#imp-hit-red)');   /* 撞到地面：照片變紅 */
                 var gapPx = Math.max(0, barY - (imgY + imgH));
                 var cm = cmOf(gapPx);
-                var success = !crashed && cm <= SUCCESS_CM;
+                var success = !crashed && cm < SUCCESS_CM;
 
-                var isNew = success && Reaction.setBest(ID, cm, function (v, b) { return v < b; });
+                var isNew = success && Reaction.setBest(ID, gapPx, function (v, b) { return v < b; });
                 ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
                 /* 定格一秒（參考使用者給的示意圖：剛停下來那一刻，提示文字都還在、
@@ -337,7 +380,7 @@
     Reaction.register({
         id: ID,
         name: '不可能任務',
-        rule: '畫面上方是阿湯哥，下方是一條紅色警戒線。點一下畫面，他就會像自由落體一樣開始往下墜落；算準時機再點一下畫面，就能讓他停在半空中。停下來之後鏡頭會平順地推進拉近，讓你看清楚他跟警戒線之間還差幾公分——停在 100 公分以內才算任務成功，其餘（包含直接摔到警戒線上）都算失敗！',
+        rule: '畫面上方是阿湯哥，下方是一條紅色警戒線。點一下畫面，他就會像自由落體一樣開始往下墜落；算準時機再點一下畫面，就能讓他停在半空中。停下來之後鏡頭會平順地推進拉近，讓你看清楚他跟警戒線之間還差幾公分——停在 30 公分以下才算任務成功（要低於 30），其餘（包含直接摔到警戒線上，他會變成紅色）都算失敗！',
         mount: mount
     });
 })();

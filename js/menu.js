@@ -1,6 +1,6 @@
 /* ═══ menu.js — 入口畫面（index.html） ═══
    · 「明明還記得...」「秒反應」兩個按鈕不再直接導覽或亂數挑選：
-     先彈出一個 3×2 的挑選彈窗，玩家自己選要練習的主軸／要玩的小遊戲，
+     先彈出挑選彈窗（主軸是 3×2、小遊戲是 3×3），玩家自己選要練習的主軸／要玩的小遊戲，
      還沒做出來的格子顯示「構想中」（不可點）。彈窗做法跟 js/share.js 的
      QR Code 彈窗同一套：裝在 #stage 裡才會跟著整體縮放、第一次打開才建、
      點背景關閉。
@@ -12,7 +12,7 @@
 
     var h = UI.h;
 
-    /* 六格的位置＝陣列順序（左上→右上，再左下→右下）；null＝「構想中」佔位格 */
+    /* 主軸六格（3×2）的位置＝陣列順序（左上→右上，再左下→右下）；null＝「構想中」佔位格 */
     var THEME_CELLS = [
         { id: 'birthday', name: '生日' },
         { id: 'travel', name: '旅遊' },
@@ -22,12 +22,16 @@
         null
     ];
 
+    /* 小遊戲九格（3×3）：同樣由左到右、由上到下排；null＝「構想中」佔位格 */
     var GAME_CELLS = [
         { id: 'spot', name: '大家來找碴', img: 'img/reaction/spot.png' },
         { id: 'speed', name: '零秒出手', img: 'img/reaction/speed.png' },
         { id: 'drop', name: '神準落下', img: 'img/reaction/drop.png' },
         { id: 'impossible', name: '不可能任務', img: 'img/reaction/impossible.png' },
         { id: 'shapes', name: '形形色色', img: 'img/reaction/shapes.png' },
+        { id: 'matchcolor', name: '色不異空', img: 'img/reaction/matchcolor.png' },
+        { id: 'rainbow', name: '七彩陷阱', img: 'img/reaction/rainbow.png' },
+        null,
         null
     ];
 

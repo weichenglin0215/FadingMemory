@@ -40,8 +40,9 @@ js/world/hud.js  kit.js  core.js  scenes.js  story.js
 js/quiz_pools.js  quiz_gen.js  quiz.js   測試模式（題庫池／題目產生器引擎／畫面）
 js/quiz_happyBirthday.js  quiz_travel.js  quiz_health.js  quiz_dining.js   測試模式的四個主軸（各自完整撰寫 1～8 關）
 js/menu.js  js/share.js   主選單（入口）／右上角分享按鈕（QR Code 彈窗）
-js/reaction_core.js  reaction_speed.js  reaction_drop.js  reaction_spot.js  reaction.js
-                 「秒反應」：共用引擎（登記清單／最佳紀錄）／三個小遊戲／進場控制（隨機挑選＋說明彈窗）
+js/reaction_core.js  reaction_speed.js  reaction_drop.js  reaction_spot.js  reaction_impossible.js  reaction_shapes.js
+                     reaction_matchcolor.js  reaction_rainbow.js  reaction.js
+                 「秒反應」：共用引擎（登記清單／最佳紀錄）／七個小遊戲／進場控制（?game= 指定、沒帶才隨機挑選＋說明彈窗）
 vendor/three.min.js   Three.js r158（UMD 版）
 ```
 
@@ -154,8 +155,8 @@ vendor/three.min.js   Three.js r158（UMD 版）
 - 驗證：`WaterNote.play({ stage, note, manual: true })` 後用 `WaterNote.last.step(秒)` 逐格推進再截圖。
 
 ## 6.6 秒反應（`js/reaction_*.js`、`reaction.html`）
-- 引擎／內容分離，跟測試模式同一個做法：`reaction_core.js` 只提供 `Reaction.register({id, name, rule, mount})` 登記清單與最佳紀錄存取（`Reaction.getBest/setBest`，存在 `localStorage['fm.reaction.best.<id>']`），**不含任何遊戲內容**；三個小遊戲檔案各自呼叫 `Reaction.register` 登記自己；`reaction.js`（進場控制，必須最後載入）才在 `UI.ready` 裡從 `Reaction.list()` 隨機挑一個、顯示說明彈窗、呼叫 `game.mount(screen, {setMeta})`。
-- **載入順序很重要**：`reaction_core.js` 必須在三個遊戲檔案之前、`reaction.js` 必須最後——`reaction.js` 的 `UI.ready(fn)` 若在文件已載入完畢時呼叫會立刻同步執行 `fn()`，若清單還沒登記完就會抽到空清單。`js/boot.js` 的 `PAGES.reaction.js` 陣列順序＝執行順序，跟 `quiz_gen.js → 三個主軸 → quiz.js` 是同一個道理。
+- 引擎／內容分離，跟測試模式同一個做法：`reaction_core.js` 只提供 `Reaction.register({id, name, rule, mount})` 登記清單與最佳紀錄存取（`Reaction.getBest/setBest`，存在 `localStorage['fm.reaction.best.<id>']`），**不含任何遊戲內容**；各小遊戲檔案各自呼叫 `Reaction.register` 登記自己；`reaction.js`（進場控制，必須最後載入）才在 `UI.ready` 裡依 `?game=<id>` 從 `Reaction.list()` 找出要玩的那一個（沒帶參數或找不到才隨機挑）、顯示說明彈窗、呼叫 `game.mount(screen, {setMeta})`。
+- **載入順序很重要**：`reaction_core.js` 必須在所有遊戲檔案之前、`reaction.js` 必須最後——`reaction.js` 的 `UI.ready(fn)` 若在文件已載入完畢時呼叫會立刻同步執行 `fn()`，若清單還沒登記完就會抽到空清單。`js/boot.js` 的 `PAGES.reaction.js` 陣列順序＝執行順序，跟 `quiz_gen.js → 三個主軸 → quiz.js` 是同一個道理。
 - 每個小遊戲的 `mount(container, ctx)` 自己管理整個生命週期（畫面、重玩、分數），`ctx.setMeta(text)` 更新上方列右側文字（通常顯示最佳紀錄）。返回主選單一律用整頁導覽（`location.href='index.html'`），不做 SPA 切換。
 - 說明彈窗（`.rule-dlg`）只在**進頁面第一次**顯示，看完「開始挑戰」才 `mount`；右上角「?」可以隨時重看規則（不影響進行中的遊戲，因為彈窗只是蓋在畫面上）。
 - 配色：白底／黑格／紅／黃／紫等是遊戲二（神準落下）的**功能色**，不是隨意選的——直接沿用專案既有色票（`--c-card` 當白底、`--c-ink` 當黑、`--flow-ink-1` 當紅、`--c-yellow` 當黃、`--flow-ink-5` 當紫），沒有新增任何色碼，維持整體美術風格一致。遊戲三（大家來找碴）的方格顏色本質上是隨機 HSL（色彩知覺測試需要），不受主題色票限制。
@@ -167,6 +168,8 @@ vendor/three.min.js   Three.js r158（UMD 版）
   - **落點在尺的範圍外＝真的插空了**，不能夾到最邊上那一格冒充插中（那樣會誤導玩家「按這裡總會插中什麼」）；`computeOutcome` 判斷 `localX` 是否落在 `[0, stripW)`，不在範圍內就回傳 `{ miss: true }`，直接顯示「插空了」，不進放大流程。
   - **按鈕置中不能用 `left:50%+transform:translate(-50%,-50%)`**（1.12.3 修正）：`.btn:active{transform:scale(0.97)}`（`theme.css`，全域）的 specificity（class+pseudo-class）比 `.drop-btn`（單一 class）高，同一個 `transform` 屬性只會留下優先度較高的那個，不會疊加——手指一按下去，置中用的 translate 整個被蓋掉，按鈕瞬間往右下角跳開半個按鈕的寬高（140×72 就是跳 70×36px），跳出手指原本按著的範圍，變成「按了沒反應」。改成用 `.drop-field { display:flex; align-items:center; justify-content:center; }` 置中，`.drop-btn` 不再用 `transform` 定位，`transform` 這個屬性就只剩 `:active` 的縮放在用，不會再互搶。**任何用 `transform` 置中的可點擊元件，只要它或其父層可能有 `:active`／`:hover` 也去動 `transform`，都要檢查這個坑**——驗證方法：對元件送一個真的 `mousedown` 事件（純改 class 沒辦法觸發 `:active` 偽類），比較送之前跟送之後的 `getBoundingClientRect()`，位移應該是 0。
   - **判定要用 `pointerdown`，不要用 `click`**（1.12.3 修正）：這是「算準時機」的遊戲，`click` 在觸控裝置上要等手指離開螢幕（`touchend`）才觸發，玩家看準時機按下去的那一刻，跟遊戲真正判定的時間點會差了手指按著不放的時間，時機全部算錯。改用 `pointerdown`（手指一碰到螢幕就觸發，滑鼠／觸控／筆通用），並在 handler 裡 `e.preventDefault()`（同一個按鈕之後可能還會再收到瀏覽器補發的相容 `click`，但按鈕這時候已經 `disabled`，原本的 guard 就會擋掉，不會重複觸發）。
+- **新增小遊戲的 checklist（1.14.0 新增）**：① 遊戲 `id` 只能是**小寫英文字母**（`reaction.js` 用 `/[?&]game=([a-z]+)/` 讀參數，有數字或底線會比對不到）；② 新檔案加進 `js/boot.js` 的 `PAGES.reaction.js`（在 `reaction_core.js` 之後、`reaction.js` 之前）；③ 在 `js/menu.js` 的 `GAME_CELLS` 加一格（目前 3×3＝9 格，用 `null` 補「構想中」）——舞台只有 850px 高，小遊戲彈窗的 `.game-dlg__card` 因此限制 `max-width:400px`，格子才不會讓三排 150:270 縮圖超出舞台；④ 色彩判斷／反應型遊戲用純黑底時，要寫 `.screen.xxx-bg { background:#000; padding:0 }`（用 `.screen.` 開頭是為了 specificity 一定贏過 `theme.css` 的 `.screen` padding）；⑤ 時機型遊戲一律用 `pointerdown`，不用 `click`（理由見遊戲二）；⑥ 標題列右側的 `ctx.setMeta()` 文字要短，太長會把中間的遊戲名稱擠成「七…」；⑦ 最佳紀錄存**與顯示倍率無關的原始值**（例如不可能任務存 px、不存公分），以後調顯示倍率舊紀錄才不會失準。
+- 遊戲六（色不異空）：差異度用 CIE L*a*b* 的 ΔE76 直接當百分比（黑白＝100），比較的是 8 位元 RGB 四捨五入之後的**畫面實際顏色**；凍結的是「最後一次畫出來的那一幀」，不是點下去那瞬間才重算的顏色。遊戲七（七彩陷阱）：換方塊用 `setTimeout` 鏈（不是 `setInterval`）、每一局用世代編號 `gen` 作廢舊計時器；「?」規則彈窗開著時換方塊會暫停，彈窗關掉後重給完整一個間隔，避免看規則就莫名超時。
 - 遊戲一（1.12.1 起）畫面與結果一律顯示**秒**（`X.XXX`，小數點後三位），不用「毫秒」這個詞——內部計時仍用 `performance.now()`（不是 `Date.now()`）以毫秒整數比大小（precise、無浮點誤差），只有顯示才換算成秒；倒數畫面在剩餘時間 > 3.000 秒才顯示數字，之後刻意留白讓玩家自己默數。判定也在 1.12.3 改成 `pointerdown`，理由跟遊戲二一樣（用 `click` 會多算手指按著不放的時間）。
 - 遊戲三（大家來找碴）的差異**隨關卡線性遞減**（`start - step*(level-1)`，碰到 `floor` 就不再變小），不是等比例縮小（乘某個 <1 的係數）——等比例縮小前幾關降得快、十幾關後幾乎不再變難，很快卡在下限；線性遞減才會每一關都確實比上一關更難一點點。色相／飽和度／亮度三個頻道分別校正 `start/step/floor`，讓下限落在差不多的關卡數（目前約第 19～20 關），同一關不管抽到哪個頻道，難度感受接近。底色的飽和度／亮度刻意收在中段（52～68％／44～60％），避免抽到太淡或太暗的底色時，色相差異變得幾乎看不出來，導致難度失控。
   - **色相差異要用「繞圈最短距離」算，不能直接 `|a-b|`**（1.12.3 修正）：色相是 0～360 度的圓，345 度跟 23 度只差 38 度（繞 0/360 這條近路），直接 `|345-23|=322` 會在跨過 0／360 的地方算出離譜的超大差異，跟畫面上實際看到的差異程度對不起來。`hueDiff(a,b) = d>180 ? 360-d : d`（`d=|a-b|%360`）；飽和度／亮度是 0～100 的直線刻度，`Math.abs` 本來就是對的，不用這個處理。

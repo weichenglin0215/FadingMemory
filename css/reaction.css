@@ -1,9 +1,10 @@
-/* ═══ reaction.css — 秒反應（reaction.html）：說明彈窗＋共用結果卡＋五個小遊戲 ═══
+/* ═══ reaction.css — 秒反應（reaction.html）：說明彈窗＋共用結果卡＋七個小遊戲 ═══
    檔案分段：最上面是遊戲共用的東西（說明彈窗 .rule-dlg、結算文字 .rx-result）；
    再來依序是「零秒出手」（.speed-）、「神準落下」（.drop-）、「大家來找碴」（.spot-）、
-   「不可能任務」（.imp-）、「形形色色」（.shapes-）各自專屬的樣式，對應的 DOM／
-   邏輯在同名的 js/reaction_speed.js／reaction_drop.js／reaction_spot.js／
-   reaction_impossible.js／reaction_shapes.js。 */
+   「不可能任務」（.imp-）、「形形色色」（.shapes-）、「色不異空」（.mc-）、
+   「七彩陷阱」（.rb-）各自專屬的樣式，對應的 DOM／邏輯在同名的
+   js/reaction_speed.js／reaction_drop.js／reaction_spot.js／reaction_impossible.js／
+   reaction_shapes.js／reaction_matchcolor.js／reaction_rainbow.js。 */
 
 /* ─── 上方列的「?」規則按鈕 ─── */
 .bar__help {
@@ -364,10 +365,13 @@
     fill: var(--c-blue);
 }
 
+/* vector-effect: non-scaling-stroke：邊線寬度用「螢幕上的 px」算，不跟著 viewBox
+   的放大倍率變粗——否則鏡頭推得越近（公分數越小），膠囊的邊框就越粗。 */
 .imp-measure-pill {
     fill: var(--c-card);
     stroke: var(--bd-c);
-    stroke-width: var(--bd-w);
+    stroke-width: 3px;
+    vector-effect: non-scaling-stroke;
 }
 
 .imp-measure-num {
@@ -376,9 +380,15 @@
     font-weight: 900;
 }
 
+/* 標題／新紀錄：paint-order: stroke 讓白色描邊畫在字的「底下」（只露出字外面
+   那一圈），文字壓在量尺線或照片上時有一圈白邊隔開，不會跟背景糊在一起。
+   描邊粗細（stroke-width）由 js 依字級算好寫在 SVG 屬性上。 */
 .imp-measure-title {
     font-family: var(--font-ui);
     font-weight: 900;
+    stroke: #FFFFFF;
+    stroke-linejoin: round;
+    paint-order: stroke;
 }
 
 .imp-measure-title--ok {
@@ -389,30 +399,38 @@
     fill: var(--flow-ink-1);
 }
 
+/* 「警戒線」標籤直接寫在紅色警戒線上：白字＋紅色描邊（描邊畫在字底下），
+   在紅色線條裡描邊跟線條融在一起、只看到白字；字比線還粗而往上超出的部分，
+   紅色描邊讓白字在白色背景上也讀得清楚。 */
 .imp-measure-label {
-    fill: var(--flow-ink-1);
+    fill: #FFFFFF;
+    stroke: var(--flow-ink-1);
+    stroke-linejoin: round;
+    paint-order: stroke;
     font-family: var(--font-ui);
     font-weight: 900;
-    text-anchor: middle;
 }
 
 .imp-measure-newrec {
     fill: var(--c-green);
+    stroke: #FFFFFF;
+    stroke-linejoin: round;
+    paint-order: stroke;
     font-family: var(--font-ui);
     font-weight: 700;
-    text-anchor: middle;
 }
 
-/* 「再挑戰一次」：小小一顆、浮在畫面最下方，不是整張蓋住畫面的卡片——
-   鏡頭特寫（成功/失敗＋公分數）要一直看得到，只多這一顆按鈕疊上去。 */
+/* 「再挑戰一次」：小小一顆、浮在畫面最下方（疊在警戒線上），不是整張蓋住畫面
+   的卡片——鏡頭特寫（成功/失敗＋公分數）要一直看得到，只多這一顆按鈕疊上去。
+   靠右擺：量尺線的下箭頭在正中央、「警戒線」標籤在左邊，按鈕靠右才不會
+   蓋住它們。 */
 .imp-restart-btn {
     position: absolute;
-    left: 50%;
-    bottom: var(--sp-4);
-    transform: translateX(-50%);
+    right: var(--sp-3);
+    bottom: var(--sp-3);
     z-index: 10;
     width: auto;
-    min-width: 220px;
+    min-width: 180px;
     height: var(--btn-h-sm);
     padding: 0 var(--sp-5);
     box-shadow: var(--shadow-pop);
@@ -468,6 +486,171 @@
     font-weight: var(--fw-black);
     line-height: 1;
     font-family: var(--font-ui);
+}
+
+/* ═══ 遊戲六：色不異空 ═══
+   整個遊戲畫面純黑底（色彩判斷的遊戲，背景會透過同時對比影響色塊看起來的顏色，
+   黑色最中性），而且 padding 歸零：左右兩個色塊盡量滿版、直接頂到畫面邊緣。
+   中間那條「黑色長方形」其實就是透出來的黑色背景，不用另外上色；它的寬度
+   （100px，由 js 的 GAP_PX 寫在 flex-basis 上）收到 0 的過程就是兩個色塊互相
+   靠攏、緊貼的動畫，時間由 --mc-close-ms 決定。 */
+.screen.mc-bg {
+    background: #000;
+    padding: 0;
+}
+
+.mc-field {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+}
+
+.mc-block {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.mc-gap {
+    flex: 0 0 100px;
+    transition: flex-basis var(--mc-close-ms, 500ms) cubic-bezier(0.3, 0, 0.2, 1);
+}
+
+.mc-gap--closed {
+    flex-basis: 0 !important;
+}
+
+/* 下方文字區高度固定：玩的時候顯示說明文字、結算時換成大字＋按鈕，兩個階段
+   佔的高度一樣，色塊的高度才不會在點擊的瞬間跳動。 */
+.mc-foot {
+    flex: 0 0 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+    padding: 0 var(--sp-4);
+}
+
+.mc-hint {
+    color: #FFFFFF;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-body);
+    text-align: center;
+    white-space: pre-line;
+}
+
+.mc-result {
+    color: #FFFFFF;
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+.mc-newrec {
+    color: var(--c-green-light);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-black);
+}
+
+.mc-again {
+    width: 260px;
+    height: var(--btn-h-sm);
+    margin-top: var(--sp-1);
+}
+
+/* ═══ 遊戲七：七彩陷阱 ═══
+   純黑底、padding 歸零：上緣約 10% 高度放提示文字，其餘空間放正方形的 2×2 棋盤
+   （邊長由 js 量出來設定），四格緊緊貼在一起、沒有縫隙。 */
+.screen.rb-bg {
+    background: #000;
+    padding: 0;
+}
+
+.rb-top {
+    flex: 0 0 10%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--sp-3);
+    color: #FFFFFF;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1.3;
+    text-align: center;
+}
+
+.rb-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rb-board {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    background: #000;
+}
+
+.rb-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    overflow: hidden;
+}
+
+/* 最新換上去的方塊＝白邊（inset box-shadow：邊框畫在方塊內側，不會把方塊撐大
+   或擠到隔壁）；下一個方塊出現時 js 會把這個 class 拿掉。 */
+.rb-cell--new {
+    box-shadow: inset 0 0 0 10px #FFFFFF;
+}
+
+/* 失敗標記：先蓋一圈黑色內框、再疊虛線——不管方塊本身是什麼顏色，虛線都
+   看得清楚。bad＝你點錯的那一格（鮮紅色），missed＝本來該點、卻沒點到的那一格
+   （白色，超時時標的就是它）。 */
+.rb-cell--bad,
+.rb-cell--missed {
+    box-shadow: inset 0 0 0 14px #000;
+    outline-style: dashed;
+    outline-width: 8px;
+    outline-offset: -11px;
+}
+
+.rb-cell--bad {
+    outline-color: #FF0000;
+}
+
+.rb-cell--missed {
+    outline-color: #FFFFFF;
+}
+
+/* 干擾字：寬度約方塊的 80%（字級由 js 依方塊大小算好），pointer-events:none
+   讓點擊直接穿透到底下的方塊。 */
+.rb-letter {
+    font-family: var(--font-ui);
+    font-weight: var(--fw-black);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+}
+
+.rb-rule-text {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-body);
+    color: var(--c-ink-soft);
+}
+
+.rb-rule-targets {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    letter-spacing: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
