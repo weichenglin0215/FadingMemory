@@ -318,23 +318,22 @@
     border: var(--bd);
 }
 
-.imp-img {
+/* 整個畫面（阿湯哥的照片＋警戒線，結算時再加上量尺／文字）都畫在這一個
+   SVG 裡：鏡頭推進＝js/reaction_impossible.js 的 tweenViewBox() 補間這個
+   SVG 的 viewBox，從「看得到整個欄位」縮小到「只看得到阿湯哥下緣～警戒線
+   這一小段」。從頭到尾都是同一份 SVG 內容在重新畫，不是切換成另一個畫面、
+   也不是疊別的東西上去遮住——這樣鏡頭推進才會看起來平順、連續。 */
+.imp-svg {
     position: absolute;
-    left: 50%;
-    top: 0;
-    width: 150px;
-    transform: translateX(-50%);
-    z-index: 2;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: 1;
 }
 
-.imp-bar {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 10px;
-    background: var(--flow-ink-1);
-    z-index: 1;
+.imp-bar-rect {
+    fill: var(--flow-ink-1);
 }
 
 .imp-hint {
@@ -356,105 +355,52 @@
     color: var(--flow-ink-1);
 }
 
-/* 結算：把「圖片下緣～警戒線上緣」這一小段距離放大到填滿整個 .imp-field，
-   上下用文字標出兩端是什麼，中間一條藍色量尺線＋頭尾箭頭＋公分數——
-   等於是鏡頭特寫這一小段距離，不是真的用數學去拉伸縮放整個畫面。
-   top／height 刻意不寫在這裡：js/reaction_impossible.js 的 tweenRect() 會
-   每一影格自己算、直接設在 inline style 上，從「剛好蓋住那段距離」的小長
-   方形，補間到 top:0／height:100%，看起來就像鏡頭慢慢推近、把這段距離
-   放大到佔滿整個畫面。 */
-.imp-measure {
-    position: absolute;
-    left: 0;
-    right: 0;
-    z-index: 4;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: #FFFFFF;
+/* 量尺（藍線＋上下箭頭）跟結算文字，字級／線寬都是 js 依推進目標框的高度
+   算出來直接寫在 SVG 屬性上（font-size／stroke-width），這裡只管顏色跟
+   字體——鏡頭還沒推進時這些東西在完整畫面裡小到幾乎看不見，推進的過程
+   會跟著整個畫面一起被放大，不需要另外做淡入。 */
+.imp-measure-line {
+    stroke: var(--c-blue);
+    fill: var(--c-blue);
 }
 
-.imp-measure__edge {
-    flex: 0 0 auto;
-    padding: var(--sp-3) 0;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    color: var(--c-ink-soft);
-    white-space: nowrap;
+.imp-measure-pill {
+    fill: var(--c-card);
+    stroke: var(--bd-c);
+    stroke-width: var(--bd-w);
 }
 
-.imp-measure__edge--bottom {
-    color: var(--flow-ink-1);
+.imp-measure-num {
+    fill: var(--c-blue);
+    font-family: var(--font-ui);
+    font-weight: 900;
 }
 
-/* 「成功！」／「任務失敗」：疊在特寫畫面裡面，不是另外蓋一張卡片上去——
-   鏡頭推進到底之後，這行字自然就跟著放大到看得清楚的大小。 */
-.imp-measure__title {
-    flex: 0 0 auto;
-    padding: var(--sp-1) 0;
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
-    white-space: nowrap;
+.imp-measure-title {
+    font-family: var(--font-ui);
+    font-weight: 900;
 }
 
-.imp-measure__title--ok {
-    color: var(--c-green);
+.imp-measure-title--ok {
+    fill: var(--c-green);
 }
 
-.imp-measure__title--bad {
-    color: var(--flow-ink-1);
+.imp-measure-title--bad {
+    fill: var(--flow-ink-1);
 }
 
-.imp-measure__gap {
-    flex: 1 1 auto;
-    position: relative;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.imp-measure-label {
+    fill: var(--flow-ink-1);
+    font-family: var(--font-ui);
+    font-weight: 900;
+    text-anchor: middle;
 }
 
-.imp-measure__bar {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 50%;
-    width: 4px;
-    background: var(--c-blue);
-    transform: translateX(-50%);
-}
-
-.imp-measure__arrow {
-    position: absolute;
-    left: 50%;
-    width: 0;
-    height: 0;
-    transform: translateX(-50%);
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-}
-
-.imp-measure__arrow--up {
-    top: 0;
-    border-bottom: 16px solid var(--c-blue);
-}
-
-.imp-measure__arrow--down {
-    bottom: 0;
-    border-top: 16px solid var(--c-blue);
-}
-
-.imp-measure__num {
-    position: relative;
-    z-index: 1;
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-pill);
-    padding: var(--sp-2) var(--sp-4);
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
-    color: var(--c-blue);
+.imp-measure-newrec {
+    fill: var(--c-green);
+    font-family: var(--font-ui);
+    font-weight: 700;
+    text-anchor: middle;
 }
 
 /* 「再挑戰一次」：小小一顆、浮在畫面最下方，不是整張蓋住畫面的卡片——
