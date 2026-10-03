@@ -232,11 +232,13 @@
         function answer(ok, cellEl, board, oddIdx) {
             Array.prototype.forEach.call(board.children, function (c) { c.disabled = true; });
             if (ok) {
+                if (window.Sfx) Sfx.play('ok');
                 cellEl.classList.add('shapes-cell--ok');
                 level++;
                 UI.wait(450).then(round);
                 return;
             }
+            if (window.Sfx) Sfx.play('bad');
             cellEl.classList.add('shapes-cell--bad');
             board.children[oddIdx].classList.add('shapes-cell--ok');
             var isNew = Reaction.setBest(ID, level, function (v, b) { return v > b; });
@@ -244,7 +246,7 @@
             UI.wait(700).then(function () {
                 /* 不清空畫面：保留剛剛的棋盤（哪格答錯、哪格才是真正不一樣的）
                    留在背景，結算卡片疊一層半透明底蓋上去——跟其他遊戲同一套做法。 */
-                root.appendChild(h('div', { 'class': 'drop-result-overlay' }, [
+                root.appendChild(h('div', { 'class': 'drop-result-overlay', attrs: { 'data-sfx': level >= 8 ? 'win' : 'fail' } }, [
                     h('div', { 'class': 'drop-result-card' }, [
                         h('div', { 'class': 'rx-result__num', text: '第 ' + level + ' 關' }),
                         h('div', { 'class': 'rx-result__label', text: '答錯了，挑戰結束' }),

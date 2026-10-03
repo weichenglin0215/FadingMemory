@@ -257,6 +257,7 @@
                稍等一下再疊上結算卡片，跟其他遊戲同一套做法。 */
             function fail(reason, badIdx, missedIdx) {
                 state = 'over';
+                if (window.Sfx) Sfx.play('bad');
                 clearTimeout(timer);
                 if (badIdx != null) cells[badIdx].classList.add('rb-cell--bad');
                 if (missedIdx != null) cells[missedIdx].classList.add('rb-cell--missed');
@@ -264,7 +265,7 @@
                 updateMeta();
                 UI.wait(700).then(function () {
                     if (myGen !== gen) return;
-                    root.appendChild(h('div', { 'class': 'drop-result-overlay' }, [
+                    root.appendChild(h('div', { 'class': 'drop-result-overlay', attrs: { 'data-sfx': hits >= 15 ? 'win' : 'fail' } }, [
                         h('div', { 'class': 'drop-result-card' }, [
                             h('div', { 'class': 'rx-result__num', text: hits + ' 個' }),
                             h('div', { 'class': 'rx-result__label', text: reason }),

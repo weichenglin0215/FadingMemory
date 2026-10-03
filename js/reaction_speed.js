@@ -51,6 +51,7 @@
                 if (clicked) return;
                 e.preventDefault();
                 clicked = true;
+                if (window.Sfx) Sfx.play('click');
                 cancelAnimationFrame(raf);
                 finish(Math.round(performance.now() - t0 - TOTAL));
             });
@@ -67,7 +68,7 @@
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
             root.innerHTML = '';
-            root.appendChild(h('div', { 'class': 'rx-result' }, [
+            root.appendChild(h('div', { 'class': 'rx-result', attrs: { 'data-sfx': abs <= 30 ? 'perfect' : (abs <= 150 ? 'win' : 'neutral') } }, [
                 h('div', { 'class': 'rx-result__num', text: sec(abs) + ' 秒' }),
                 h('div', { 'class': 'rx-result__label', text: label }),
                 isNew ? h('div', { 'class': 'hint hint--ok', text: '新紀錄！' }) : null,

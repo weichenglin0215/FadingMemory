@@ -1,0 +1,302 @@
+/* ═══════════════════════════════════════════════════════════════════
+   reaction_tissue.js — 秒反應・抽光它
+   手指在螢幕上一直往下滑，把一整捲衛生紙拉出來；要抽滿 100 個螢幕高度，比誰最快。
+   ───────────────────────────────────────────────────────────────────
+   · 全螢幕都是操作區（touch-action:none，避免瀏覽器的下拉重新整理）。
+   · 計時從「第一次有效往下滑動」開始（不是從按鈕開始，避免反應時間混進來）；
+     抽光那一刻停表。累加距離與「抽光」判定全部寫在 pointermove 裡，不依賴 rAF；
+     rAF 只負責畫面。
+   · 防手抖灌水：不是「只要 dy>0 就累加」（手指停著的微抖會被灌水）。每一筆往下滑
+     只計入「這一筆目前到達的最遠點」的增量（strokeMaxY）；往上反向超過
+     REVERSAL_PX 才算新的一筆。所以「往下刷、抬起、回頂端再刷」都合法，
+     原地抖動不算。
+   · 紙捲半徑隨抽出的長度縮小：紙長 ∝ 面積，所以 R = sqrt(核² + (滿² − 核²)×(1−p))，
+     是平方根縮小，不是線性；同時依 pulled／R 轉動（越小越轉得快）。
+   · 單指（只認 isPrimary）；ALLOW_MULTI=true 時兩指各自累加。滑鼠：按住拖曳或滾輪。
+   ═══════════════════════════════════════════════════════════════════ */
+
+(function () {
+    'use strict';
+
+    var ID = 'tissue';
+    var h = UI.h;
+    var kit = Reaction.kit;
+
+    /* ═══ 可以自己調的參數 ═══ */
+    var TARGET_SCREENS = 50;   /* 要抽幾個螢幕高度的紙 */
+    var GAIN = 1.0;             /* 手指移動 1px 抽出幾 px 的紙（覺得太久就調高） */
+    var REVERSAL_PX = 6;        /* 往上反向超過幾 px 才算新的一筆 */
+    var SHEET_H = 170;          /* 一張衛生紙的長度（撕裂虛線的間距） */
+    var PAPER_W = 300;          /* 紙的寬度 */
+    var R_FULL = 108, R_CORE = 30;      /* 紙捲滿的半徑／只剩紙筒的半徑 */
+    var ROLL_CY = 118;          /* 紙捲圓心離畫面上緣 */
+    var WHEEL_CAP = 200;        /* 滑鼠滾輪每次事件最多算幾 px */
+    var HAPTIC = true;          /* 每抽過一屏輕震一下（手機） */
+    var ALLOW_MULTI = false;    /* true：兩指各自累加 */
+    var SWIPE_MIN_PX = 120;     /* 一筆至少滑多長才算「一下」（統計滑動次數用） */
+
+    function fmtBest(v) { return v == null ? '' : '最佳 ' + kit.sec(v) + ' 秒'; }
+
+    /* 紙面圖樣（一張紙：斜紋壓花＋底部撕裂虛線），做成可重複鋪的 SVG 背景 */
+    function paperTile() {
+        var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + PAPER_W + '" height="' + SHEET_H + '">' +
+            '<rect width="100%" height="100%" fill="#FFFEF8"/>' +
+            '<g stroke="#EFE6CC" stroke-width="1.2">' + diag() + '</g>' +
+            '<line x1="0" y1="' + (SHEET_H - 1.5) + '" x2="' + PAPER_W + '" y2="' + (SHEET_H - 1.5) + '" stroke="#B9A878" stroke-width="2.4" stroke-dasharray="10 7"/>' +
+            '</svg>';
+        return 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")';
+        function diag() {
+            var out = '';
+            for (var x = -SHEET_H; x < PAPER_W + SHEET_H; x += 14) out += '<line x1="' + x + '" y1="0" x2="' + (x + SHEET_H) + '" y2="' + SHEET_H + '"/>';
+            return out;
+        }
+    }
+
+    /* 紙捲半徑：紙長 ∝ 面積（純函式，也給 Node 測試用） */
+    function rollRadius(p) {
+        p = Math.min(1, Math.max(0, p));
+        return Math.sqrt(R_CORE * R_CORE + (R_FULL * R_FULL - R_CORE * R_CORE) * (1 - p));
+    }
+
+    /* 一筆一筆累加的「抽出長度」計算器（純邏輯，不碰 DOM，方便測試）：
+       feed(y) 傳入手指目前的 y（邏輯 px），回傳這次新增的紙長（已乘 GAIN） */
+    function makePuller(opts) {
+        opts = opts || {};
+        var reversal = opts.reversal == null ? REVERSAL_PX : opts.reversal;
+        var gain = opts.gain == null ? GAIN : opts.gain;
+        var s = { maxY: null, strokeLen: 0, strokes: 0, last: null };
+        return {
+            start: function (y) { s.maxY = y; s.strokeLen = 0; },
+            feed: function (y) {
+                if (s.maxY == null) { s.maxY = y; return 0; }
+                if (y > s.maxY) {
+                    var inc = (y - s.maxY);
+                    s.maxY = y;
+                    s.strokeLen += inc;
+                    return inc * gain;
+                }
+                if (s.maxY - y >= reversal) {         /* 往上反向夠多：新的一筆開始 */
+                    if (s.strokeLen >= SWIPE_MIN_PX) s.strokes++;
+                    s.strokeLen = 0;
+                    s.maxY = y;
+                }
+                return 0;
+            },
+            end: function () {
+                if (s.strokeLen >= SWIPE_MIN_PX) s.strokes++;
+                s.strokeLen = 0; s.maxY = null;
+            },
+            strokes: function () { return s.strokes; }
+        };
+    }
+
+    function mount(root, ctx) {
+        var R = null;
+
+        function round() {
+            if (R) R.dispose();
+            R = kit.round();
+            var my = R;
+            root.innerHTML = '';
+            root.classList.add('ts-bg');
+            ctx.setMeta(fmtBest(Reaction.getBest(ID)));
+
+            var W = 500;          /* 畫面（#screen）是滿版 500 寬 */
+            var H = Stage.H;
+            var TARGET_PX = TARGET_SCREENS * H;
+
+            /* 紙 */
+            var paper = h('div', { 'class': 'ts-paper' });
+            paper.style.width = PAPER_W + 'px';
+            paper.style.backgroundImage = paperTile();
+            root.appendChild(paper);
+
+            /* 紙捲（SVG，圓心固定，半徑隨抽出的長度縮小） */
+            var svg = kit.svg('svg', { 'class': 'ts-roll', viewBox: '0 0 ' + W + ' 260', preserveAspectRatio: 'xMidYMin meet' });
+            var cx = W / 2;
+            var bodyC = kit.svg('circle', { 'class': 'ts-roll__body', cx: cx, cy: ROLL_CY, r: R_FULL }, svg);
+            var spin = kit.svg('g', {}, svg);
+            [0, 120, 240].forEach(function (a) {
+                kit.svg('path', { 'class': 'ts-roll__mark', 'vector-effect': 'non-scaling-stroke', d: 'M0 -0.5 L0 -0.84', transform: 'rotate(' + a + ')' }, spin);
+            });
+            var coreC = kit.svg('circle', { 'class': 'ts-roll__core', cx: cx, cy: ROLL_CY, r: R_CORE }, svg);
+            kit.svg('circle', { 'class': 'ts-roll__hole', cx: cx, cy: ROLL_CY, r: R_CORE * 0.55 }, svg);
+            root.appendChild(svg);
+
+            /* 抬頭顯示 */
+            var timeEl = h('div', { 'class': 'ts-time', text: '0.000 秒' });
+            var progText = h('div', { 'class': 'ts-prog', text: '0.0／' + TARGET_SCREENS + ' 屏' });
+            var bar = h('div', { 'class': 'ts-bar' }, [h('div', { 'class': 'ts-bar__fill' })]);
+            var prompt = h('div', { 'class': 'ts-prompt', text: '往下滑開始' });
+            root.appendChild(timeEl);
+            root.appendChild(progText);
+            root.appendChild(bar);
+            root.appendChild(prompt);
+            var barFill = bar.firstChild;
+
+            /* ─── 狀態 ─── */
+            var pulled = 0;                 /* 已抽出的紙長（邏輯 px） */
+            var tStart = null, tEnd = null;
+            var phase = 'ready';            /* ready／pulling／done */
+            var activeId = null;
+            var puller = makePuller();
+            var samples = [];               /* [時間ms, pulled]，算「最快 1 秒」用 */
+            var splits = [];                /* 每 10 屏的經過時間 */
+            var lastScreenInt = 0, lastSheet = 0;
+
+            function render() {
+                var p = pulled / TARGET_PX;
+                var rr = rollRadius(p);
+                bodyC.setAttribute('r', rr.toFixed(2));
+                var deg = (pulled / Math.max(rr, 18)) * 180 / Math.PI;
+                /* spin 裡的記號是用單位圓（半徑 1，圓心在原點）畫的：先縮放到目前半徑、轉動、再平移到紙捲圓心 */
+                spin.setAttribute('transform', 'translate(' + cx + ' ' + ROLL_CY + ') rotate(' + deg.toFixed(1) + ') scale(' + rr.toFixed(2) + ')');
+                var top = ROLL_CY + rr;
+                paper.style.top = top.toFixed(1) + 'px';
+                paper.style.backgroundPositionY = (pulled % SHEET_H).toFixed(1) + 'px';
+                barFill.style.height = (p * 100).toFixed(2) + '%';
+                progText.textContent = (pulled / H).toFixed(1) + '／' + TARGET_SCREENS + ' 屏';
+            }
+            function renderTime() {
+                if (tStart == null) return;
+                var t = (tEnd == null ? performance.now() : tEnd) - tStart;
+                timeEl.textContent = kit.sec(t) + ' 秒';
+            }
+
+            /* 一個位置樣本進來（pointermove／wheel 都走這裡）；t＝事件時間 */
+            function addSample(y, t) {
+                if (phase === 'done') return;
+                var inc = puller.feed(y);
+                if (inc <= 0) return;
+                if (phase === 'ready') {
+                    phase = 'pulling';
+                    tStart = t;
+                    prompt.style.display = 'none';
+                    samples.push([t, 0]);
+                }
+                pulled = Math.min(TARGET_PX, pulled + inc);
+                samples.push([t, pulled]);
+
+                /* 每抽過一屏、每 10 屏的進度記錄 */
+                var scr = Math.floor(pulled / H);
+                if (scr > lastScreenInt) {
+                    if (HAPTIC && navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) { try { navigator.vibrate(4); } catch (e) { } }
+                    if (scr % 10 === 0) { splits.push(t - tStart); Sfx.play('flip'); }
+                    lastScreenInt = scr;
+                }
+                if (pulled >= TARGET_PX) finish(t);
+            }
+
+            function finish(t) {
+                phase = 'done';
+                tEnd = t;
+                puller.end();
+                render();
+                renderTime();
+                activeId = null;
+                paper.classList.add('ts-paper--gone');
+                var total = tEnd - tStart;
+                var isNew = Reaction.setBest(ID, total, function (v, b) { return v < b; });
+                ctx.setMeta(fmtBest(Reaction.getBest(ID)));
+
+                /* 統計：平均速度、最快 1 秒、滑動次數、每 10 屏用時 */
+                var avg = TARGET_SCREENS / (total / 1000);
+                var best1 = 0;
+                for (var i = 0, j = 0; i < samples.length; i++) {
+                    while (samples[i][0] - samples[j][0] > 1000) j++;
+                    var d = (samples[i][1] - samples[j][1]) / H;
+                    if (d > best1) best1 = d;
+                }
+                var chunk = [];
+                for (var k = 0; k < splits.length; k++) chunk.push(splits[k] - (k ? splits[k - 1] : 0));
+                var maxChunk = Math.max.apply(null, chunk.concat([1]));
+                var chart = h('div', { 'class': 'ts-chart' }, chunk.map(function (c) {
+                    var b = h('div', { 'class': 'ts-chart__bar' });
+                    b.style.height = Math.max(6, c / maxChunk * 100) + '%';
+                    return b;
+                }));
+                Sfx.play('perfect');
+                my.after(900, function () {
+                    kit.result(root, {
+                        num: kit.sec(total) + ' 秒', label: '抽光了！', isNew: isNew, sfx: 'win',
+                        lines: ['平均速度 ' + avg.toFixed(2) + ' 屏／秒', '最快的 1 秒抽了 ' + best1.toFixed(2) + ' 屏', '滑了 ' + puller.strokes() + ' 下'],
+                        extra: [h('div', { 'class': 'hint', text: '每 10 屏用時（越矮越快）' }), chart],
+                        onAgain: round
+                    });
+                });
+            }
+
+            /* ─── 輸入 ─── */
+            function pointerSamples(e) {
+                var list = (e.getCoalescedEvents && e.getCoalescedEvents()) || [];
+                return list.length ? list : [e];
+            }
+            function onDown(e) {
+                if (phase === 'done') return;
+                if (e.target && e.target.closest && e.target.closest('button')) return;
+                if (!ALLOW_MULTI && !e.isPrimary) return;
+                if (activeId != null && !ALLOW_MULTI) return;
+                e.preventDefault();
+                activeId = e.pointerId;
+                try { root.setPointerCapture(e.pointerId); } catch (err) { }
+                puller.start(kit.pt(e).y);
+            }
+            function onMove(e) {
+                if (phase === 'done' || e.pointerId !== activeId) return;
+                var list = pointerSamples(e);
+                for (var i = 0; i < list.length; i++) addSample(kit.pt(list[i]).y, kit.evT(list[i]));
+            }
+            function onUp(e) {
+                if (e.pointerId !== activeId) return;
+                activeId = null;
+                puller.end();
+            }
+            function onWheel(e) {
+                if (phase === 'done') return;
+                e.preventDefault();
+                var dy = Math.min(WHEEL_CAP, Math.max(0, e.deltaY));
+                if (dy > 0) { puller.start(0); puller.feed(0); addSample(dy, kit.evT(e)); puller.end(); }
+            }
+            root.addEventListener('pointerdown', onDown);
+            root.addEventListener('pointermove', onMove);
+            root.addEventListener('pointerup', onUp);
+            root.addEventListener('pointercancel', onUp);
+            root.addEventListener('wheel', onWheel, { passive: false });
+            my.onDispose(function () {
+                root.removeEventListener('pointerdown', onDown);
+                root.removeEventListener('pointermove', onMove);
+                root.removeEventListener('pointerup', onUp);
+                root.removeEventListener('pointercancel', onUp);
+                root.removeEventListener('wheel', onWheel);
+                root.classList.remove('ts-bg');
+            });
+
+            render();
+            /* 計時顯示（畫面用；成績一律用事件時間，不受這裡影響） */
+            var drawn = -1;
+            my.loop(function () {
+                if (pulled !== drawn) { drawn = pulled; render(); }
+                renderTime();
+            });
+
+            /* 測試／除錯：直接餵 y 位置，走跟真的手指一樣的路徑 */
+            G.debug = {
+                state: function () { return { pulled: pulled, phase: phase, strokes: puller.strokes(), tStart: tStart, tEnd: tEnd, TARGET_PX: TARGET_PX }; },
+                down: function (y) { puller.start(y); activeId = 'dbg'; },
+                move: function (y, t) { addSample(y, t == null ? performance.now() : t); },
+                up: function () { activeId = null; puller.end(); }
+            };
+        }
+
+        round();
+    }
+
+    var G = {
+        id: ID,
+        name: '抽光它',
+        rule: '把整捲衛生紙抽光！手指在螢幕上一直往下滑，紙就一路被拉出來；要抽滿 50 個螢幕高度，看你多快。從第一次往下滑才開始計時。',
+        mount: mount,
+        test: { rollRadius: rollRadius, makePuller: makePuller }
+    };
+    Reaction.register(G);
+})();

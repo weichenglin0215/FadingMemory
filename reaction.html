@@ -28,11 +28,17 @@
 <body>
     <div id="stage">
         <!-- 頂部固定列：返回鍵、標題（會被改成目前這款遊戲的名字）、meta（例如「最佳 1000 分」）、
+             右上角「喇叭」（#bar-sound）：開關音效（js/sfx.js）；
              右上角「?」（#bar-help）：點了重新彈出這款遊戲的玩法說明（#rule-dlg）。 -->
         <div class="bar">
             <button class="bar__back" id="bar-back"></button>
-            <div class="bar__title" id="bar-title">秒反應</div>
-            <div class="bar__meta" id="bar-meta"></div>
+            <!-- 標題與 meta 上下疊在中間：喇叭＋「?」兩顆圓鈕占掉右側空間後，
+                 兩者橫排會把遊戲名稱擠成「…」，所以改成上下兩行 -->
+            <div class="bar__mid">
+                <div class="bar__title" id="bar-title">秒反應</div>
+                <div class="bar__meta" id="bar-meta"></div>
+            </div>
+            <button class="bar__help bar__sound" id="bar-sound" type="button" aria-label="音效"></button>
             <button class="bar__help" id="bar-help">?</button>
         </div>
         <!-- #screen：目前這款小遊戲的畫面，由該遊戲模組的 mount(root, ctx) 函式畫進來 -->

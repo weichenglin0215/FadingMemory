@@ -193,8 +193,8 @@
                手指按著不放的時間，時機全部算錯（跟「神準落下」的 dropBtn 用
                同一個理由、同一招）。 */
             field.addEventListener('pointerdown', function (e) {
-                if (phase === 'idle') { e.preventDefault(); startFall(); }
-                else if (phase === 'falling') { e.preventDefault(); stopFall(); }
+                if (phase === 'idle') { e.preventDefault(); if (window.Sfx) Sfx.play('whoosh'); startFall(); }
+                else if (phase === 'falling') { e.preventDefault(); if (window.Sfx) Sfx.play('click'); stopFall(); }
             });
 
             function startFall() {
@@ -369,7 +369,7 @@
                 }).then(function () {
                     return UI.wait(HOLD_AFTER_MS);
                 }).then(function () {
-                    field.appendChild(h('button', { 'class': 'btn btn--primary imp-restart-btn', text: '再挑戰一次', on: { click: round } }));
+                    field.appendChild(h('button', { 'class': 'btn btn--primary imp-restart-btn', text: '再挑戰一次', attrs: { 'data-sfx': success ? (cm < 1 ? 'perfect' : 'win') : 'fail' }, on: { click: round } }));
                 });
             }
         }

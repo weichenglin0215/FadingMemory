@@ -301,6 +301,7 @@
             dropBtn.addEventListener('pointerdown', function (e) {
                 if (dropBtn.disabled) return;
                 e.preventDefault();
+                if (window.Sfx) Sfx.play('whoosh');
                 startFall();
             });
 
@@ -424,7 +425,7 @@
                 /* 不清空畫面：三角形釘在方塊上、鏡頭停在最後放大倍率的那一幕留在背景，
                    結算卡片疊一層半透明底蓋在上面——玩家看得到自己剛剛插中的樣子。 */
                 phase = 'result';
-                root.appendChild(h('div', { 'class': 'drop-result-overlay' }, [
+                root.appendChild(h('div', { 'class': 'drop-result-overlay', attrs: { 'data-sfx': score >= 1000 ? 'perfect' : (score >= 500 ? 'win' : (score >= 100 ? 'neutral' : 'fail')) } }, [
                     h('div', { 'class': 'drop-result-card' }, [
                         h('div', { 'class': 'rx-result__num', text: score + ' 分' }),
                         h('div', { 'class': 'rx-result__label', text: label }),

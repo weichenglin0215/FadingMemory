@@ -7,7 +7,7 @@
 
 ## 0. 專案一句話
 
-長者記憶力練習網頁遊戲。三種模式：`quiz.html`（純 2D 題目）、`world.html`（Three.js 3D＋2D HUD）、`reaction.html`（3 選 1 反應力小遊戲）。主選單 `index.html`。全部是靜態檔案、傳統 `<script>`（不用 ES Modules，才能雙擊 HTML 開啟）。
+長者記憶力練習網頁遊戲。三種模式：`quiz.html`（純 2D 題目）、`world.html`（Three.js 3D＋2D HUD）、`reaction.html`（26 款反應力／視覺／記憶小遊戲，從主選單的挑選彈窗進入）。主選單 `index.html`。全部是靜態檔案、傳統 `<script>`（不用 ES Modules，才能雙擊 HTML 開啟）。
 
 ---
 
@@ -40,9 +40,9 @@ js/world/hud.js  kit.js  core.js  scenes.js  story.js
 js/quiz_pools.js  quiz_gen.js  quiz.js   測試模式（題庫池／題目產生器引擎／畫面）
 js/quiz_happyBirthday.js  quiz_travel.js  quiz_health.js  quiz_dining.js   測試模式的四個主軸（各自完整撰寫 1～8 關）
 js/menu.js  js/share.js   主選單（入口）／右上角分享按鈕（QR Code 彈窗）
-js/reaction_core.js  reaction_speed.js  reaction_drop.js  reaction_spot.js  reaction_impossible.js  reaction_shapes.js
-                     reaction_matchcolor.js  reaction_rainbow.js  reaction.js
-                 「秒反應」：共用引擎（登記清單／最佳紀錄）／七個小遊戲／進場控制（?game= 指定、沒帶才隨機挑選＋說明彈窗）
+js/sfx.js         共用音效模組（Web Audio 合成，必須在所有遊戲之前載入）
+js/reaction_core.js  reaction_kit.js  reaction_<id>.js × 26  reaction.js
+                 「秒反應」：共用引擎（登記清單／最佳紀錄）／共用工具 kit／26 個小遊戲（每個一檔）／進場控制（?game= 指定、沒帶才隨機挑選＋說明彈窗＋靜音鈕＋結算音樂偵測）
 vendor/three.min.js   Three.js r158（UMD 版）
 ```
 
@@ -168,12 +168,28 @@ vendor/three.min.js   Three.js r158（UMD 版）
   - **落點在尺的範圍外＝真的插空了**，不能夾到最邊上那一格冒充插中（那樣會誤導玩家「按這裡總會插中什麼」）；`computeOutcome` 判斷 `localX` 是否落在 `[0, stripW)`，不在範圍內就回傳 `{ miss: true }`，直接顯示「插空了」，不進放大流程。
   - **按鈕置中不能用 `left:50%+transform:translate(-50%,-50%)`**（1.12.3 修正）：`.btn:active{transform:scale(0.97)}`（`theme.css`，全域）的 specificity（class+pseudo-class）比 `.drop-btn`（單一 class）高，同一個 `transform` 屬性只會留下優先度較高的那個，不會疊加——手指一按下去，置中用的 translate 整個被蓋掉，按鈕瞬間往右下角跳開半個按鈕的寬高（140×72 就是跳 70×36px），跳出手指原本按著的範圍，變成「按了沒反應」。改成用 `.drop-field { display:flex; align-items:center; justify-content:center; }` 置中，`.drop-btn` 不再用 `transform` 定位，`transform` 這個屬性就只剩 `:active` 的縮放在用，不會再互搶。**任何用 `transform` 置中的可點擊元件，只要它或其父層可能有 `:active`／`:hover` 也去動 `transform`，都要檢查這個坑**——驗證方法：對元件送一個真的 `mousedown` 事件（純改 class 沒辦法觸發 `:active` 偽類），比較送之前跟送之後的 `getBoundingClientRect()`，位移應該是 0。
   - **判定要用 `pointerdown`，不要用 `click`**（1.12.3 修正）：這是「算準時機」的遊戲，`click` 在觸控裝置上要等手指離開螢幕（`touchend`）才觸發，玩家看準時機按下去的那一刻，跟遊戲真正判定的時間點會差了手指按著不放的時間，時機全部算錯。改用 `pointerdown`（手指一碰到螢幕就觸發，滑鼠／觸控／筆通用），並在 handler 裡 `e.preventDefault()`（同一個按鈕之後可能還會再收到瀏覽器補發的相容 `click`，但按鈕這時候已經 `disabled`，原本的 guard 就會擋掉，不會重複觸發）。
-- **新增小遊戲的 checklist（1.14.0 新增）**：① 遊戲 `id` 只能是**小寫英文字母**（`reaction.js` 用 `/[?&]game=([a-z]+)/` 讀參數，有數字或底線會比對不到）；② 新檔案加進 `js/boot.js` 的 `PAGES.reaction.js`（在 `reaction_core.js` 之後、`reaction.js` 之前）；③ 在 `js/menu.js` 的 `GAME_CELLS` 加一格（目前 3×3＝9 格，用 `null` 補「構想中」）——舞台只有 850px 高，小遊戲彈窗的 `.game-dlg__card` 因此限制 `max-width:400px`，格子才不會讓三排 150:270 縮圖超出舞台；④ 色彩判斷／反應型遊戲用純黑底時，要寫 `.screen.xxx-bg { background:#000; padding:0 }`（用 `.screen.` 開頭是為了 specificity 一定贏過 `theme.css` 的 `.screen` padding）；⑤ 時機型遊戲一律用 `pointerdown`，不用 `click`（理由見遊戲二）；⑥ 標題列右側的 `ctx.setMeta()` 文字要短，太長會把中間的遊戲名稱擠成「七…」；⑦ 最佳紀錄存**與顯示倍率無關的原始值**（例如不可能任務存 px、不存公分），以後調顯示倍率舊紀錄才不會失準。
+- **新增小遊戲的 checklist（1.14.0 新增，1.15.0 更新）**：① 遊戲 `id` 用**小寫英文字母與數字**（`reaction.js` 用 `/[?&]game=([a-z0-9]+)/` 讀參數，有底線或大寫會比對不到）；② 新檔案加進 `js/boot.js` 的 `PAGES.reaction.js`（在 `reaction_core.js` 之後、`reaction.js` 之前）；③ 在 `js/menu.js` 的 `GAME_CELLS` 加一格（每頁 `PAGE_SIZE`＝9 格＝3×3，超過自動多一頁，不用改別的）——舞台只有 850px 高，小遊戲彈窗的 `.game-dlg__card` 因此限制 `max-width:380px`，格子才不會讓三排 150:270 縮圖超出舞台；④ 色彩判斷／反應型遊戲用純黑底時，要寫 `.screen.xxx-bg { background:#000; padding:0 }`（用 `.screen.` 開頭是為了 specificity 一定贏過 `theme.css` 的 `.screen` padding）；⑤ 時機型遊戲一律用 `pointerdown`，不用 `click`（理由見遊戲二）；⑥ 標題列右側的 `ctx.setMeta()` 文字要短，太長會把中間的遊戲名稱擠成「七…」；⑦ 最佳紀錄存**與顯示倍率無關的原始值**（例如不可能任務存 px、不存公分），以後調顯示倍率舊紀錄才不會失準。
 - 遊戲六（色不異空）：差異度用 CIE L*a*b* 的 ΔE76 直接當百分比（黑白＝100），比較的是 8 位元 RGB 四捨五入之後的**畫面實際顏色**；凍結的是「最後一次畫出來的那一幀」，不是點下去那瞬間才重算的顏色。遊戲七（七彩陷阱）：換方塊用 `setTimeout` 鏈（不是 `setInterval`）、每一局用世代編號 `gen` 作廢舊計時器；「?」規則彈窗開著時換方塊會暫停，彈窗關掉後重給完整一個間隔，避免看規則就莫名超時。
+
 - 遊戲一（1.12.1 起）畫面與結果一律顯示**秒**（`X.XXX`，小數點後三位），不用「毫秒」這個詞——內部計時仍用 `performance.now()`（不是 `Date.now()`）以毫秒整數比大小（precise、無浮點誤差），只有顯示才換算成秒；倒數畫面在剩餘時間 > 3.000 秒才顯示數字，之後刻意留白讓玩家自己默數。判定也在 1.12.3 改成 `pointerdown`，理由跟遊戲二一樣（用 `click` 會多算手指按著不放的時間）。
 - 遊戲三（大家來找碴）的差異**隨關卡線性遞減**（`start - step*(level-1)`，碰到 `floor` 就不再變小），不是等比例縮小（乘某個 <1 的係數）——等比例縮小前幾關降得快、十幾關後幾乎不再變難，很快卡在下限；線性遞減才會每一關都確實比上一關更難一點點。色相／飽和度／亮度三個頻道分別校正 `start/step/floor`，讓下限落在差不多的關卡數（目前約第 19～20 關），同一關不管抽到哪個頻道，難度感受接近。底色的飽和度／亮度刻意收在中段（52～68％／44～60％），避免抽到太淡或太暗的底色時，色相差異變得幾乎看不出來，導致難度失控。
   - **色相差異要用「繞圈最短距離」算，不能直接 `|a-b|`**（1.12.3 修正）：色相是 0～360 度的圓，345 度跟 23 度只差 38 度（繞 0/360 這條近路），直接 `|345-23|=322` 會在跨過 0／360 的地方算出離譜的超大差異，跟畫面上實際看到的差異程度對不起來。`hueDiff(a,b) = d>180 ? 360-d : d`（`d=|a-b|%360`）；飽和度／亮度是 0～100 的直線刻度，`Math.abs` 本來就是對的，不用這個處理。
   - 驗證用（兩層）：`mount()` 一開始呼叫 `logLevelTable()`，在主控台印出第 1～21 關「正常格」與「差異格」各自的 H／S／L 與差異量（`console.table`），方便看難度曲線的**趨勢**，但這是另外獨立抽樣，顏色不會跟畫面上實際玩到的相同；`round()` 裡另外印出**這一關實際顯示在畫面上的**那一組真實數值（同一個 `diffRow()` 把兩處算法統一），要核對「螢幕上這格顏色到底差多少」要看這一個，不是開頭那張表。
+
+### 6.6.1 秒反應共用基礎（1.15.0）
+- **`js/reaction_kit.js`（`Reaction.kit`）**：所有新遊戲都用它，不要各自重寫。
+  - `kit.round()`：一局的生命週期。`after(ms, fn)`／`loop(fn)`／`tween(ms, fn)`／`wait(ms)` 排出來的計時器、rAF 迴圈，在 `dispose()`（重開一局時呼叫舊的）時全部作廢；`tween` 有 `setTimeout` 保底，rAF 被暫停（瀏覽器分頁在背景）時也會跳到終點。**每個遊戲的 `round()` 開頭都要 `if (R) R.dispose(); R = kit.round();`。**
+  - `kit.ramp(level, start, end, maxLevel)`：**線性**難度（第 1 關＝start、第 maxLevel 關＝end、之後維持 end）。使用者明確要求難度都是線性，不要乘係數縮小。
+  - `kit.result(root, {num, label, lines, isNew, sfx, bgm, onAgain})`：結算卡片，帶 `data-sfx`（`win／fail／perfect／neutral`）讓 `reaction.js` 自動播短旋律＋結算背景音樂；`bgm:false` 只播短旋律（多關卡遊戲每一關的小結算）。
+  - `kit.tweenViewBox`（SVG 鏡頭推進）、`kit.hold`（按住／放開，切到背景視為放開）、`kit.pt／evT`（pointer 事件換成舞台邏輯座標／時間戳記）。
+- **`js/sfx.js`（`Sfx`）**：`Sfx.play('ok'|'bad'|'tick'|'go'|'click'|'flip'|'win'|'perfect'|'fail'|'pop'|'whoosh'|'zoom'|'done'|'noteL/C/R'|'kick')`、`Sfx.inflateStart/Stop`、`Sfx.pourStart/Stop`、`Sfx.bgm('result')／stopBgm`、`Sfx.toggle`。瀏覽器要有使用者手勢才會出聲，`reaction.js` 在整頁的 pointerdown／click／keydown 都呼叫 `Sfx.unlock()`。**沒有 Web Audio 時所有呼叫都是空操作**，舊遊戲用 `if (window.Sfx) Sfx.play(...)` 保護。
+- **這一輪踩到的坑（寫新遊戲前先看）**：
+  - 瀏覽器預覽窗被隱藏時會暫停 `requestAnimationFrame`：所有判定／計時一律用 `setTimeout` 或「時間戳記的純函式」（例如倒水的 `levelAt(t)`、吹氣球的 `capacityAt(t)`、鐘擺的 `thetaAt(t)`），rAF 只拿來畫畫面；測試時把 `requestAnimationFrame` 換成 `setTimeout(…,16)`。
+  - SVG 放大到 ×80 以上時，超大的圖形（巨大的圓、很寬很高的水體）會讓瀏覽器算圖超時：放大時把遠處的圖形藏掉，或只畫到鏡頭附近；**SVG 的 `<text>` 在 ×77 放大下也會超時**，倍率很高時文字改用 HTML 疊上去。
+  - 檔案換行格式混用（有的是 CRLF、有的是 LF）：用腳本做字串取代前先偵測 `\r\n`，不然多行的搜尋字串比對不到。
+  - 彈出結算卡片的 `data-sfx` 要放在「被加進 DOM 的那個節點」或它的子孫上，`reaction.js` 的偵測用 `node.matches || node.querySelector`。
+  - 開發驗證用的旋鈕放在 `G.dev`（例如強制題型、延長結算停留時間），正式遊戲不會設定；判定用的純函式放在 `G.test`，Node 測試（`test/reaction/load.js` 會 stub 掉 UI／Sfx／Stage；`node test/reaction/run_all.js` 一次跑完）直接呼叫。
+- **26 款的 id 與檔案**：`spot speed drop impossible shapes matchcolor rainbow pendulum tissue landolt lights cups pattern illusion pour coins invoice paint diff bread candy curves rps balloon price heartbeat`，檔案都是 `js/reaction_<id>.js`，CSS 都在 `css/reaction.css` 各自的區塊（class 前綴：`pend- ts- ld- lt- cp- pt- il- pour- cn- iv- pa- df- bk- cd- cv- rp- bl- pr- hb-`）。
 
 ## 7. 3D 規範
 

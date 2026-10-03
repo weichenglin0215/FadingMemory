@@ -43,7 +43,7 @@
         },
         reaction: {
             css: BASE_CSS.concat(['css/reaction.css']),
-            js: BASE_JS.concat(['js/reaction_core.js', 'js/reaction_speed.js', 'js/reaction_drop.js', 'js/reaction_spot.js', 'js/reaction_impossible.js', 'js/reaction_shapes.js', 'js/reaction_matchcolor.js', 'js/reaction_rainbow.js', 'js/reaction.js'])
+            js: BASE_JS.concat(['js/sfx.js', 'js/reaction_core.js', 'js/reaction_kit.js', 'js/reaction_speed.js', 'js/reaction_drop.js', 'js/reaction_spot.js', 'js/reaction_impossible.js', 'js/reaction_shapes.js', 'js/reaction_matchcolor.js', 'js/reaction_rainbow.js', 'js/reaction_pendulum.js', 'js/reaction_tissue.js', 'js/reaction_landolt.js', 'js/reaction_lights.js', 'js/reaction_cups.js', 'js/reaction_pattern.js', 'js/reaction_illusion.js', 'js/reaction_pour.js', 'js/reaction_coins.js', 'js/reaction_invoice.js', 'js/reaction_paint.js', 'js/reaction_diff.js', 'js/reaction_bread.js', 'js/reaction_candy.js', 'js/reaction_curves.js', 'js/reaction_rps.js', 'js/reaction_balloon.js', 'js/reaction_price.js', 'js/reaction_heartbeat.js', 'js/reaction.js'])
         },
         quiz: {
             css: BASE_CSS.concat(['css/quiz.css']),

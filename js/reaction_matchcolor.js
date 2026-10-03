@@ -189,7 +189,8 @@
                 gapEl.classList.add('mc-gap--closed');
 
                 foot.innerHTML = '';
-                foot.appendChild(h('div', { 'class': 'mc-result', text: '顏色差異度 ' + fmtPct(diff) }));
+                if (window.Sfx) Sfx.play('click');
+                foot.appendChild(h('div', { 'class': 'mc-result', text: '顏色差異度 ' + fmtPct(diff), attrs: { 'data-sfx': diff <= 1 ? 'perfect' : (diff <= 5 ? 'win' : 'neutral') } }));
                 if (isNew) foot.appendChild(h('div', { 'class': 'mc-newrec', text: '新紀錄！' }));
                 foot.appendChild(h('button', { 'class': 'btn btn--primary mc-again', text: '再玩一次', on: { click: round } }));
             });

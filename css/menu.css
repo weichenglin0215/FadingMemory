@@ -428,3 +428,88 @@
         transition: none;
     }
 }
+/* ═══ 小遊戲挑選彈窗：翻頁列＋沒有縮圖時的「印章」底圖 ═══ */
+.game-dlg__card {
+    max-width: 380px;
+    gap: var(--sp-3);
+}
+
+.game-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-2);
+}
+
+.game-nav__btn {
+    flex: 0 0 auto;
+    min-width: 112px;
+    height: var(--btn-h-sm);
+    padding: 0 var(--sp-3);
+    border: var(--btn-line-bd);
+    border-radius: var(--btn-r);
+    background: var(--btn-line-bg);
+    color: var(--btn-line-fg);
+    font-family: var(--font-ui);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    cursor: pointer;
+}
+
+.game-nav__btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.game-nav__dots {
+    display: flex;
+    gap: 8px;
+}
+
+.game-nav__dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--c-card-alt);
+    border: 2px solid var(--bd-c);
+}
+
+.game-nav__dot--on {
+    background: var(--c-blue);
+    border-color: var(--c-blue);
+}
+
+/* 沒有縮圖的遊戲：四種淡底色輪流（藍、綠、黃、橘），中間一顆名字第一個字的圓印章 */
+.game-cell--tone0 {
+    background: var(--c-blue-soft);
+}
+
+.game-cell--tone1 {
+    background: var(--c-ok-soft);
+}
+
+.game-cell--tone2 {
+    background: var(--c-yellow-soft);
+}
+
+.game-cell--tone3 {
+    background: var(--c-orange-soft);
+}
+
+.game-cell__seal {
+    position: absolute;
+    left: 50%;
+    top: 38%;
+    width: 64px;
+    height: 64px;
+    margin: -32px 0 0 -32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid var(--bd-c);
+    border-radius: 50%;
+    background: rgba(255, 253, 243, 0.8);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}

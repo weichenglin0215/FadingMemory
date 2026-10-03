@@ -164,11 +164,13 @@
         function answer(ok, tile, grid, oddIdx) {
             Array.prototype.forEach.call(grid.children, function (t) { t.disabled = true; });
             if (ok) {
+                if (window.Sfx) Sfx.play('ok');
                 tile.classList.add('spot-tile--ok');
                 level++;
                 UI.wait(450).then(round);
                 return;
             }
+            if (window.Sfx) Sfx.play('bad');
             tile.classList.add('spot-tile--bad');
             grid.children[oddIdx].classList.add('spot-tile--ok');
             var isNew = Reaction.setBest(ID, level, function (v, b) { return v > b; });
@@ -180,7 +182,7 @@
                    css/reaction.css，是跨遊戲共用的樣式，不是神準落下專屬）。卡片本身
                    是亮色（--c-card），所以卡片裡的文字要用一般（亮底深字）樣式，
                    不能用給純黑底用的 --on-dark 版本，不然字會變成白色、看不清楚。 */
-                root.appendChild(h('div', { 'class': 'drop-result-overlay' }, [
+                root.appendChild(h('div', { 'class': 'drop-result-overlay', attrs: { 'data-sfx': level >= 8 ? 'win' : 'fail' } }, [
                     h('div', { 'class': 'drop-result-card' }, [
                         h('div', { 'class': 'rx-result__num', text: '第 ' + level + ' 關' }),
                         h('div', { 'class': 'rx-result__label', text: '答錯了，挑戰結束' }),
