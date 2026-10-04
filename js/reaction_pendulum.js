@@ -1,23 +1,23 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_pendulum.js — 秒反應・六點鐘方向
-   鐘擺左右搖動，玩家點一下讓它「停住」，越接近正下方（六點鐘方向）越好。
+   鐘擺從五點鐘的位置出發，順時針往下擺過六點鐘、擺到七點鐘再擺回來（左右各 30 度），
+   玩家點一下讓它「停住」，越接近正下方（六點鐘方向）越好。每一局只有一次機會，沒有關卡。
    結算時鏡頭以「針尖」為固定錨點持續推進，看清楚到底差了幾度（目標 0.00 度）。
    ───────────────────────────────────────────────────────────────────
-   · 鐘擺的角度是「時間的純函式」：θ(t) = A·sin(2π·t/T + φ)，不逐格累加。
+   · 鐘擺的角度是「時間的純函式」：θ(t) = A·cos(2π·t/T)，不逐格累加。t=0 時 θ=+A=+30°
+     （螢幕右邊＝五點鐘），之後先往 0°（六點鐘）擺＝順時針。
      點下去那一刻用事件的 e.timeStamp 代進去算停止角度，不用 rAF 當下影格的時間
      ——畫面就算卡了一下，成績也不會失真；rAF 被瀏覽器暫停時，點擊照樣算得出
      正確角度，結算流程全部用 setTimeout／補間保底推進，不會卡住。
-   · 關卡制（線性）：第 n 關振幅 A、週期 T 往「更大、更快」線性走，過關門檻
-     PASS(n) 線性變嚴；誤差在門檻內自動可以進下一關，超過就結束。
-     想要純粹「一擺定勝負」，把 PASS0 調成很大即可。
+   · 速度：週期 T 是 PERIOD_S＝1.5 秒（原本第 1 關是 3.0 秒，現在快成 200%），振幅固定 30°，
+     最大角速度約 125°/秒，所以早按或晚按 10 毫秒就差 1 度多。沒有關卡、沒有過關門檻。
    · 鏡頭推進（跟「神準落下」「不可能任務」同一套手法）：整個畫面是一個 SVG，
      推進＝補間 viewBox；針尖在螢幕上的位置固定不動（錨點），倍率 ZOOMS＝
      [8, 80, 800]，每一段刻度精細 10 倍（×8 時 1° 一格、×80 時 0.1° 一格、
      ×800 時 0.01° 一格）。放大到「再放大紅線就會跑出畫面」為止。
      細刻度（0.1°、0.01°）本來就畫在那裡，只是放大前太細看不到，鏡頭推進時
      才淡入，像用顯微鏡發現本來就存在的刻度。
-   · 成績：主成績＝所有回合裡最小的誤差（越小越好，顯示兩位小數，內部全精度比大小）；
-     副成績＝最高關卡（另存 pendulum_lv）。
+   · 成績：歷來最小的誤差（越小越好，顯示兩位小數，內部全精度比大小）。
    ═══════════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -33,9 +33,8 @@
     var BOB_R = 34;          /* 擺錘半徑 */
     var NEEDLE = 16;         /* 擺錘下方的針長度 */
     var ARC_MAX_DEG = 55;    /* 刻度盤畫到左右各幾度 */
-    var A0 = 15, A_STEP = 1.5, A_MAX = 40;        /* 振幅（度） */
-    var T0 = 3.0, T_STEP = 0.1, T_MIN = 1.4;      /* 週期（秒） */
-    var PASS0 = 5.0, PASS_STEP = 0.25, PASS_MIN = 0.5;   /* 過關門檻（度） */
+    var START_DEG = 30;      /* 起點與振幅：五點鐘（右）到七點鐘（左）各 30 度 */
+    var PERIOD_S = 1.5;      /* 擺動週期（秒）：原本 3.0 秒的 200% 速度 */
     var ARM_MS = 400;        /* 每關開始後，前這麼久點了不算（避免上一關的手指殘留） */
     var FREEZE_MS = 500;     /* 點下去後定格多久才開始推進 */
     var ZOOMS = [8, 80, 800];
@@ -49,16 +48,9 @@
     function fmtBest(v) { return v == null ? '' : '最佳 ' + fmtDeg(v) + '°'; }
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function paramsFor(level, rand) {
-        rand = rand || Math.random;
-        return {
-            A: Math.min(A_MAX, A0 + A_STEP * (level - 1)),
-            T: Math.max(T_MIN, T0 - T_STEP * (level - 1)),
-            phi: rand() * Math.PI * 2
-        };
-    }
-    function passFor(level) { return Math.max(PASS_MIN, PASS0 - PASS_STEP * (level - 1)); }
-    /* 角度（度）：正＝往螢幕右邊擺 */
+    /* 鐘擺參數：固定的。phi＝π/2 讓 sin 變成 cos，t=0 時正好在最右邊（五點鐘） */
+    function params() { return { A: START_DEG, T: PERIOD_S, phi: Math.PI / 2 }; }
+    /* 角度（度）：正＝往螢幕右邊擺（五點鐘那一側）；從 +A 出發，先往 0（六點鐘）擺＝順時針 */
     function thetaAt(p, tSec) { return p.A * Math.sin(2 * Math.PI * tSec / p.T + p.phi); }
 
     /* 要推進到哪些倍率：ZOOMS 裡「紅線仍在畫面內（≤ VIEW_RED_PX）」的最大一段為止；
@@ -88,13 +80,10 @@
 
     function mount(root, ctx) {
         var R = null;            /* 這一關的生命週期物件（kit.round） */
-        var level = 1;
-        var bestErr = Reaction.getBest(ID);
-        var runBest = null;      /* 這一輪（從第 1 關開始）最小誤差 */
         var state = 'idle';
 
         function updateMeta() {
-            ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))]));
+            ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
         }
 
         function round() {
@@ -164,8 +153,7 @@
                 gPend.setAttribute('transform', 'rotate(' + (-deg) + ' ' + Px + ' ' + Py + ')');
             }
 
-            var p = paramsFor(level);
-            var thr = passFor(level);
+            var p = params();
             var t0 = performance.now();
             setAngle(thetaAt(p, 0));
             var swing = my.loop(function (now) { setAngle(thetaAt(p, (now - t0) / 1000)); });
@@ -199,7 +187,7 @@
                 setAngle(theta);
                 Sfx.play('click');
                 hint.style.visibility = 'hidden';
-                G.debug.last = { theta: theta, err: err, level: level };
+                G.debug.last = { theta: theta, err: err };
 
                 /* 針尖停下來的位置（世界座標）＝鏡頭推進的固定錨點 */
                 var tip = polar(theta, LEN);
@@ -255,43 +243,25 @@
                 if (plan.length >= 3) layer(gFine3, 0.01, 0.04, lo - 0.06, hi + 0.06);
             }
 
-            /* ─── 結算 ─── */
+            /* ─── 結算（只有一次機會：永遠是「再挑戰一次」）─── */
             function verdict(theta, err) {
                 state = 'verdict';
-                var pass = err <= thr;
                 var side = Math.abs(theta) < 0.005 ? '' : (theta < 0 ? '偏左' : '偏右');
                 var isNewErr = Reaction.setBest(ID, err, function (v, b) { return v < b; });
-                if (runBest == null || err < runBest) runBest = err;
-                var passed = pass ? level : level - 1;
-                var isNewLv = passed > 0 && Reaction.setBest(ID + '_lv', passed, function (v, b) { return v > b; });
                 updateMeta();
 
-                var perfect = err < 0.05;
-                var sfx = pass ? (perfect ? 'perfect' : 'win') : 'fail';
-                var lines = [
-                    side ? '針尖在紅線' + (theta < 0 ? '左' : '右') + '邊（' + side + '）' : '針尖正好壓在紅線上',
-                    '第 ' + level + ' 關門檻 ' + fmtDeg(thr) + ' 度：' + (pass ? '通過！' : '沒通過')
-                ];
+                var sfx = err < 0.05 ? 'perfect' : (err < 1 ? 'win' : 'fail');
                 var kids = [
                     h('div', { 'class': 'rx-result__label', text: err < 0.005 ? '差了 0.00 度・分毫不差！' : '差了 ' + fmtDeg(err) + ' 度' }),
-                    h('div', { 'class': 'rx-result__num pend-verdict__num', text: rating(err) })
+                    h('div', { 'class': 'rx-result__num pend-verdict__num', text: rating(err) }),
+                    h('div', { 'class': 'hint rx-result__line', text: side ? '針尖在紅線' + (theta < 0 ? '左' : '右') + '邊（' + side + '）' : '針尖正好壓在紅線上' })
                 ];
-                lines.forEach(function (t) { kids.push(h('div', { 'class': 'hint rx-result__line', text: t })); });
                 if (isNewErr) kids.push(h('div', { 'class': 'hint hint--ok', text: '新紀錄！最小誤差' }));
-                if (!pass) kids.push(h('div', { 'class': 'hint rx-result__note', text: '這一輪闖到第 ' + Math.max(0, level - 1) + ' 關通過' + (isNewLv ? '（新紀錄！）' : '') }));
                 kids.push(h('button', {
-                    'class': 'btn btn--primary', text: pass ? '下一關' : '再玩一次',
-                    on: {
-                        click: function () {
-                            Sfx.play('click');
-                            if (pass) { level++; } else { level = 1; runBest = null; }
-                            round();
-                        }
-                    }
+                    'class': 'btn btn--primary', text: '再挑戰一次',
+                    on: { click: function () { Sfx.play('click'); round(); } }
                 }));
-                var attrs = { 'data-sfx': sfx };
-                if (pass) attrs['data-bgm'] = '0';      /* 過關只播短旋律，不接結算背景音樂 */
-                field.appendChild(h('div', { 'class': 'pend-verdict', attrs: attrs }, kids));
+                field.appendChild(h('div', { 'class': 'pend-verdict', attrs: { 'data-sfx': sfx } }, kids));
             }
         }
 
@@ -302,9 +272,9 @@
     var G = {
         id: ID,
         name: '六點鐘方向',
-        rule: '鐘擺左右搖動，點一下讓它停住，越接近正下方（六點鐘方向）越好。過關門檻會越來越嚴；停住後鏡頭會放大，告訴你差了幾度，目標是 0.00 度！',
+        rule: '鐘擺從五點鐘的位置出發，順時針往下擺，點一下讓它停住，越接近正下方（六點鐘方向）越好。每局只有一次機會；停住後鏡頭會放大，告訴你差了幾度，目標是 0.00 度！',
         mount: mount,
-        test: { paramsFor: paramsFor, passFor: passFor, thetaAt: thetaAt, zoomPlan: zoomPlan, rating: rating, PX_PER_DEG: PX_PER_DEG }
+        test: { params: params, thetaAt: thetaAt, START_DEG: START_DEG, PERIOD_S: PERIOD_S, zoomPlan: zoomPlan, rating: rating, PX_PER_DEG: PX_PER_DEG }
     };
     Reaction.register(G);
 })();

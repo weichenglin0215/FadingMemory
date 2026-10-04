@@ -337,7 +337,7 @@
         name: '刷油漆',
         rule: '用手指把白色的正方形整個刷上顏色，一個角落、一條縫都不能漏。點下方的圓形沾油漆：每沾一次，筆刷會縮小 10%，而且只能刷方塊寬度 2 倍的長度，用完就要再沾。沾油漆的次數越少越厲害，小心別重複刷到已經塗過的地方！',
         mount: mount,
-        test: { makeMask: makeMask, stampDisc: stampDisc, stampSegment: stampSegment, holes: holes, brushAfter: brushAfter, SQ: SQ, BRUSH_START: BRUSH_START, BUDGET_MULT: BUDGET_MULT }
+        test: { makeMask: makeMask, stampDisc: stampDisc, stampSegment: stampSegment, holes: holes, brushAfter: brushAfter, BRUSH_MIN: BRUSH_MIN, SQ: SQ, BRUSH_START: BRUSH_START, BUDGET_MULT: BUDGET_MULT }
     };
     Reaction.register(G);
 })();

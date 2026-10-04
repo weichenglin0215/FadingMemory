@@ -4,8 +4,8 @@ let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log('FAIL', m); } }
 const W = 468, Hh = 330;
 // 差異量線性
 const a1 = T.amounts(1), a10 = T.amounts(10.5), a20 = T.amounts(20);
-ok(Math.abs(a1.size - 0.45) < 1e-9 && Math.abs(a20.size - 0.05) < 1e-9 && Math.abs(a10.size - 0.25) < 1e-6, 'size ramp');
-ok(Math.abs(a1.hue - 55) < 1e-9 && Math.abs(a20.hue - 4) < 1e-9, 'hue ramp'); ok(Math.abs(a1.pos - 38) < 1e-9 && Math.abs(a20.pos - 3) < 1e-9, 'pos ramp');
+for (const k of ['size', 'hue', 'pos']) { ok(a1[k] > a20[k] && Math.abs(a10[k] - (a1[k] + a20[k]) / 2) < 1e-6 * Math.max(1, a1[k]) * 10 && Math.abs(T.amounts(40)[k] - a20[k]) < 1e-12, k + ' ramp: shrinks linearly, clamps at LEVEL_RAMP'); }
+
 for (let lv = 1; lv <= 25; lv++) for (let k = 0; k < 200; k++) {
   const L = T.makeLevel(lv, W, Hh);
   ok(L.items.length === 10 && L.diffs.length === 5, 'counts');

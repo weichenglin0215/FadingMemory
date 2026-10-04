@@ -1,16 +1,24 @@
 const { game } = require('./load.js');
 const G = game('reaction_landolt.js'); const T = G.test;
 let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log('FAIL', m); } };
-ok(T.sizeFor(1.0) === 40 && T.sizeFor(2.0) === 20 && Math.abs(T.sizeFor(0.1) - 400) < 1e-9, 'sizes');
-ok(Math.abs(T.timeFor(0) - 3.0) < 1e-9 && Math.abs(T.timeFor(12) - 1.2) < 1e-9, 'time ends');
-// 線性：相鄰差相等
-const d1 = T.timeFor(0) - T.timeFor(1), d2 = T.timeFor(5) - T.timeFor(6); ok(Math.abs(d1 - d2) < 1e-9, 'time linear');
-ok(T.dirsFor(0).length === 4 && T.dirsFor(6).length === 4 && T.dirsFor(7).length === 8, 'diag from row 8');
-const d4 = [0, 90, 180, 270], d8 = [0, 45, 90, 135, 180, 225, 270, 315];
-ok(T.dirFromDelta(0, -30, d4) === 0, 'up'); ok(T.dirFromDelta(30, 0, d4) === 90, 'right'); ok(T.dirFromDelta(0, 30, d4) === 180, 'down'); ok(T.dirFromDelta(-30, 0, d4) === 270, 'left');
-ok(T.dirFromDelta(30, -30, d8) === 45, 'up-right 8'); ok(T.dirFromDelta(-30, 30, d8) === 225, 'down-left 8'); ok(T.dirFromDelta(10, -30, d8) === 0, 'mostly up -> up');
-// 4 向時斜向滑動歸到最近的 4 向
-ok([0, 90].includes(T.dirFromDelta(30, -29, d4)), 'diag in 4-dir');
-// 掃 360 度每個角度，8 向 / 4 向都不會回傳 undefined
-for (let a = 0; a < 360; a++) { const dx = Math.sin(a * Math.PI / 180) * 40, dy = -Math.cos(a * Math.PI / 180) * 40; ok(d8.includes(T.dirFromDelta(dx, dy, d8)) && d4.includes(T.dirFromDelta(dx, dy, d4)), 'sweep ' + a); }
+
+// 尺寸：視力 1.0＝40px、2.0＝20px、0.1＝400px；第 n 個 E 比前一個小到 90%（每一個都縮，不是三個才縮）
+ok(T.sizeFor(1.0) === 40 && T.sizeFor(2.0) === 20 && Math.abs(T.sizeFor(0.1) - 400) < 1e-9, 'sizeFor');
+ok(Math.abs(T.sizeAt(1) - 400) < 1e-9, 'first E = 400px');
+for (let n = 2; n <= T.N_MAX; n++) ok(Math.abs(T.sizeAt(n) / T.sizeAt(n - 1) - 0.9) < 1e-12, 'shrink 90% at ' + n);
+ok(Math.abs(T.sizeAt(4) - 400 * 0.9 * 0.9 * 0.9) < 1e-9, '4th = 400×0.9³');
+// 視力往上、最後一個不超過 2.0，再多一個就超過
+ok(T.acuityAt(T.N_MAX) <= 2.0 + 1e-9 && T.acuityAt(T.N_MAX + 1) > 2.0, 'N_MAX covers up to acuity 2.0 (N=' + T.N_MAX + ', last ' + T.acuityAt(T.N_MAX).toFixed(3) + ')');
+// 時限線性
+ok(Math.abs(T.timeAt(1) - 3.0) < 1e-9 && Math.abs(T.timeAt(T.N_MAX) - 1.2) < 1e-9, 'time ends');
+const d1 = T.timeAt(1) - T.timeAt(2), d2 = T.timeAt(10) - T.timeAt(11); ok(Math.abs(d1 - d2) < 1e-9, 'time linear');
+// 只有上下左右 4 個方向；每次方向一定不同
+ok(JSON.stringify(T.DIRS) === '[0,90,180,270]', '4 directions only');
+let prev = null; for (let i = 0; i < 5000; i++) { const d = T.nextDir(prev); ok(T.DIRS.indexOf(d) >= 0 && d !== prev, 'nextDir differs'); prev = d; }
+const cnt = {}; prev = 0; for (let i = 0; i < 6000; i++) { prev = T.nextDir(prev); cnt[prev] = (cnt[prev] || 0) + 1; }
+ok(Object.keys(cnt).length === 4 && Object.values(cnt).every(c => c > 1200), 'all 4 directions used evenly ' + JSON.stringify(cnt));
+// 滑動方向 → 上下左右
+ok(T.dirFromDelta(0, -30) === 0, 'up'); ok(T.dirFromDelta(30, 0) === 90, 'right'); ok(T.dirFromDelta(0, 30) === 180, 'down'); ok(T.dirFromDelta(-30, 0) === 270, 'left');
+ok(T.dirFromDelta(30, -29) === 90, 'diag -> right (|dx|>|dy|)'); ok(T.dirFromDelta(10, -30) === 0, 'mostly up -> up');
+for (let a = 0; a < 360; a++) { const dx = Math.sin(a * Math.PI / 180) * 40, dy = -Math.cos(a * Math.PI / 180) * 40; ok(T.DIRS.indexOf(T.dirFromDelta(dx, dy)) >= 0, 'sweep ' + a); }
 console.log(bad ? 'FAILED ' + bad : 'ALL PASS');

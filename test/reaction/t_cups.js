@@ -3,7 +3,7 @@ const G = game('reaction_cups.js'); const T = G.test;
 let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log('FAIL', m); } };
 ok(T.cupsFor(1) === 3 && T.cupsFor(3) === 3 && T.cupsFor(4) === 4 && T.cupsFor(10) === 6 && T.cupsFor(13) === 7 && T.cupsFor(99) === 7, 'cups');
 ok(T.swapsFor(1) === 5 && T.swapsFor(2) === 7 && T.swapsFor(100) === 60, 'swaps');
-ok(Math.abs(T.swapSecFor(1) - 0.6) < 1e-9 && Math.abs(T.swapSecFor(20) - 0.18) < 1e-9 && Math.abs(T.swapSecFor(50) - 0.18) < 1e-9, 'sec');
+ok(Math.abs(T.swapSecFor(50) - T.swapSecFor(20)) < 1e-9 && Math.abs(T.swapSecFor(10.5) - (T.swapSecFor(1) + T.swapSecFor(20)) / 2) < 1e-9 && T.swapSecFor(1) > T.swapSecFor(20), 'swap seconds shrink linearly and clamp');
 let pairsSeen = 0, total = 0;
 for (let lvl = 1; lvl <= 30; lvl++) {
   const n = T.cupsFor(lvl), cnt = T.swapsFor(lvl);

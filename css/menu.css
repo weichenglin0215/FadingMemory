@@ -301,7 +301,8 @@
 }
 
 .game-dlg__card {
-    max-width: 400px;
+    min-width: 420px;
+    max-width: 450px;
 }
 
 /* ─── 主軸格：直式文字（CJK 預設 text-orientation:mixed，中文字會保持正立）─── */
@@ -428,6 +429,7 @@
         transition: none;
     }
 }
+
 /* ═══ 小遊戲挑選彈窗：翻頁列＋沒有縮圖時的「印章」底圖 ═══ */
 .game-dlg__card {
     max-width: 380px;

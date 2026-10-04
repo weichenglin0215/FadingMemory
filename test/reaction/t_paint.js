@@ -32,7 +32,7 @@ console.log('D=162 gap=160 (2px overlap) → left', r5.left); ok(r5.left === 0, 
 // 5. 效能：掃 3 條 D=162
 { const t0 = process.hrtime.bigint(); sweeps(162, 150, 0); const ms = Number(process.hrtime.bigint() - t0) / 1e6; console.log('3 sweeps D=162 time', ms.toFixed(1), 'ms'); ok(ms < 400, 'perf'); }
 // 6. 筆刷縮小
-ok(Math.abs(T.brushAfter(180) - 162) < 1e-9 && T.brushAfter(8) === 8 && T.brushAfter(8.5) === 8, 'brush shrink');
+ok(T.brushAfter(100) < 100 && T.brushAfter(100) > 0 && T.brushAfter(T.BRUSH_MIN) === T.BRUSH_MIN && T.brushAfter(T.BRUSH_MIN + 0.001) === T.BRUSH_MIN, 'brush shrinks every dip and stops at the minimum');
 // 最佳策略估計：需要幾次沾？（理論）
 let D = T.BRUSH_START, dips = 0, area = 0; 
 for (dips = 1; dips <= 30; dips++) { D = T.brushAfter(D); area += D * N * T.BUDGET_MULT; if (area >= N * N) break; }

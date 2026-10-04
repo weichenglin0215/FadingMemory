@@ -951,31 +951,6 @@
     color: var(--c-ink);
 }
 
-.ld-dots {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    min-height: 22px;
-}
-
-.ld-dot {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: var(--c-yellow-soft);
-    border: 2px solid var(--bd-c);
-}
-
-.ld-dot--ok {
-    background: var(--c-ok);
-    border-color: var(--c-ok);
-}
-
-.ld-dot--bad {
-    background: var(--c-bad);
-    border-color: var(--c-bad);
-}
-
 .ld-field {
     flex: 1 1 auto;
     min-height: 0;
@@ -993,20 +968,16 @@
     flex: none;
 }
 
-.ld-ring__c {
-    stroke: var(--c-ink);
+.ld-e {
+    fill: var(--c-ink);
 }
 
-.ld-ring__c--ok {
-    stroke: var(--c-ok);
+.ld-e--ok {
+    fill: var(--c-ok);
 }
 
-.ld-ring__c--bad {
-    stroke: var(--c-bad);
-}
-
-.ld-ring__gap {
-    fill: var(--c-card);
+.ld-e--bad {
+    fill: var(--c-bad);
 }
 
 .ld-time {

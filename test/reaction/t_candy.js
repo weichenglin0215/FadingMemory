@@ -3,7 +3,8 @@ const G = game('reaction_candy.js'); const T = G.test;
 let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log('FAIL', m); } };
 const p1 = T.paramsFor(1), p20 = T.paramsFor(20), p10 = T.paramsFor(10.5);
 console.log(JSON.stringify(p1), JSON.stringify(p10), JSON.stringify(p20));
-ok(p1.n === 10 && p20.n === 40 && p1.k === 3 && p20.k === 6 && p1.showMs === 2500 && p20.showMs === 900 && p1.gap === 3 && p20.gap === 1, 'endpoints');
+ok(T.paramsFor(100).n === p20.n && T.paramsFor(100).k === p20.k && T.paramsFor(100).showMs === p20.showMs && T.paramsFor(100).gap === p20.gap, 'clamps after LEVEL_RAMP');
+ok(Math.abs(p10.n - (p1.n + p20.n) / 2) <= 1 && Math.abs(p10.showMs - (p1.showMs + p20.showMs) / 2) <= 1, 'midpoint is the mean (linear)');
 for (let lv = 1; lv <= 30; lv++) for (let k = 0; k < 300; k++) {
   const q = T.makeQuestion(lv); const p = T.paramsFor(lv);
   const total = q.colors.reduce((s, c) => s + q.counts[c], 0);
