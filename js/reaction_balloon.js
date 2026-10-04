@@ -6,11 +6,12 @@
    · 容量（分數）用簡單的累積加法：每一幀（固定 60 幀／秒，用時間換算，所以跟裝置幀率無關）
      累加 1、2、3 …，也就是 n 幀後的容量 = 1 + 2 + … + n = n(n+1)/2。
      （不是真的算氣球體積。）
-   · 每顆氣球有一個藏起來的「爆破時間」Tb（隨機 BURST_MIN ~ BURST_MAX 秒，開局決定好）：
-     按住超過 Tb 秒就爆（0 分）。若 Tb 在區間裡均勻分布，期望分數最高的放手時間是 2/3 × BURST_MAX，
-     所以沒有「保證最佳解」，是膽量與觀察力的遊戲。
-   · 線索（刻意有雜訊，不能全信）：氣球顏色會愈來愈淡、吹氣聲音調愈來愈高，
-     顏色淡的程度 = 實際進度 + 隨機雜訊。
+   · 每一局的「灌氣速度」s 不一樣（隨機 SPEED_MIN ~ SPEED_MAX 倍）：按住 t 秒相當於灌了 s×t 秒的氣，
+     容量 ＝ capacityAt(s×t)。但氣球的「總容量」每局幾乎相同（TAU_BURST 秒的容量，正負 CAP_TOL＝2%），
+     所以爆破的時間 Tb ＝ 總容量對應的虛擬時間 ÷ s：灌得快的氣球早爆、灌得慢的晚爆，
+     玩家不能背「幾秒會爆」。放手拿到的分數仍是放手那一刻的容量，大家的分數可以直接比。
+   · 線索（刻意有雜訊，不能全信）：氣球大小與吹氣聲音只跟「按住幾秒」有關（看不出速度）；
+     氣球顏色會愈來愈淡，淡的程度 ＝ 實際進度（容量比例，也就是 t／Tb）＋ 隨機雜訊。
    · 干擾：充氣時氣球以每影格的高頻率微微晃動（位置、大小隨機抖動），不看大小的精準變化。
    · 結算：爆了 → 「砰」＋0 分；沒爆 → 容量數字從 0 數上來；兩種情況都會告訴你這顆氣球其實撐到幾秒、
      最多能拿多少分，讓你知道自己離極限多近。
@@ -24,9 +25,11 @@
     var kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var BURST_MIN = 4.75, BURST_MAX = 4.85;      /* 爆破時間範圍（秒） */
+    var SPEED_MIN = 0.8, SPEED_MAX = 1.2;        /* 每局灌氣速度的範圍（倍）*/
+    var TAU_BURST = 8.0;                         /* 標準速度（×1）時，氣球撐到爆需要的秒數；總容量 ＝ 這段時間的容量 */
+    var CAP_TOL = 0.02;                          /* 每局總容量的誤差 ±2% */
     var FPS = 60;                              /* 容量累加用的固定幀率 */
-    var R0 = 46, R1 = 330, T_FULL = 9;         /* 氣球半徑：0 秒＝R0，T_FULL 秒＝R1，線性增加 */
+    var R0 = 46, R1 = 330, T_FULL = 10.5;      /* 氣球半徑：0 秒＝R0，T_FULL 秒＝R1，線性增加（要比最慢的爆破時間長）*/
     var JIT_MIN = 1.5, JIT_MAX = 6;            /* 晃動幅度（px），隨氣球變大而增加 */
     var CUE_NOISE = 0.18;                      /* 顏色線索的雜訊大小（占進度的比例） */
 
@@ -34,10 +37,19 @@
     function fmtBest(v) { return v == null ? '' : '最高 ' + fmtNum(v); }
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function capacityAt(t) { var n = Math.floor(Math.max(0, t) * FPS); return n * (n + 1) / 2; }
+    /* 灌了 tau 秒（標準速度）的容量 */
+    function capacityAt(tau) { var n = Math.floor(Math.max(0, tau) * FPS); return n * (n + 1) / 2; }
+    function capOfFrames(n) { return n * (n + 1) / 2; }
     function radiusAt(t) { return R0 + (R1 - R0) * Math.min(1, Math.max(0, t) / T_FULL); }
     function jitterAmp(t) { return JIT_MIN + (JIT_MAX - JIT_MIN) * Math.min(1, Math.max(0, t) / T_FULL); }
-    function makeBurst(rand) { return kit.randFloat(BURST_MIN, BURST_MAX, rand); }
+    /* 一局的氣球：灌氣速度 speed、總容量 capBurst（±CAP_TOL）、爆破要按住的真實秒數 burstT */
+    function makeBurst(rand) {
+        var speed = kit.randFloat(SPEED_MIN, SPEED_MAX, rand);
+        var delta = kit.randFloat(-CAP_TOL, CAP_TOL, rand);
+        var n0 = TAU_BURST * FPS, nB = (-1 + Math.sqrt(1 + 8 * capOfFrames(n0) * (1 + delta))) / 2;     /* 解 n(n+1)/2 = 總容量 */
+        var tauB = nB / FPS;
+        return { speed: speed, delta: delta, capBurst: capOfFrames(nB), tauB: tauB, burstT: tauB / speed };
+    }
     function rating(frac) {
         if (frac >= 0.95) return '膽量爆表！';
         if (frac >= 0.8) return '很敢吹！';
@@ -54,11 +66,11 @@
             var my = R;
             root.innerHTML = '';
 
-            var burstT = makeBurst();
+            var BB = makeBurst(), burstT = BB.burstT, speed = BB.speed;
             var state = 'ready';           /* ready／blow／result */
             var tDown = 0, tHeld = 0;
             var cueNoise = 0, lastNoiseAt = 0;
-            try { console.info('[吹氣球] 這顆氣球會在按住 ' + burstT.toFixed(2) + ' 秒時爆（容量 ' + fmtNum(capacityAt(burstT)) + '）。玩家看不到這個數字。'); } catch (e) { }
+            try { console.info('[吹氣球] 這局灌氣速度 ×' + speed.toFixed(3) + '，總容量 ' + fmtNum(BB.capBurst) + '（標準 ' + fmtNum(capacityAt(TAU_BURST)) + '，誤差 ' + (BB.delta * 100).toFixed(2) + '%），會在按住 ' + burstT.toFixed(2) + ' 秒時爆。玩家看不到這些數字。'); } catch (e) { }
             ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
 
             var hint = h('div', { 'class': 'hint', text: '按住畫面充氣，覺得夠了就放手（爆了就 0 分）' });
@@ -136,12 +148,12 @@
                     explode();
                     my.after(1100, function () { showResult(0, true); });
                 } else {
-                    var cap = capacityAt(tHeld);
+                    var cap = capacityAt(tHeld * speed);
                     drawBalloon(radiusAt(tHeld), 0, 0, 1, kit.clamp(tHeld / burstT, 0, 1));
                     hint.textContent = '放手了！看看容量…';
                     my.after(500, function () { showResult(cap, false); });
                 }
-                G.debug.last = { held: tHeld, burst: burstNow, burstT: burstT, cap: burstNow ? 0 : capacityAt(tHeld) };
+                G.debug.last = { held: tHeld, burst: burstNow, burstT: burstT, speed: speed, cap: burstNow ? 0 : capacityAt(tHeld * speed) };
             }
 
             function explode() {
@@ -159,13 +171,13 @@
             }
 
             function showResult(cap, burst) {
-                var maxCap = capacityAt(burstT);
+                var maxCap = BB.capBurst;
                 var isNew = !burst && Reaction.setBest(ID, cap, function (v, b) { return v > b; });
                 ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
                 var frac = burst ? 0 : cap / maxCap;
                 var lines = [
-                    burst ? '按太久了，氣球在 ' + burstT.toFixed(2) + ' 秒爆掉' : '你撐了 ' + tHeld.toFixed(2) + ' 秒（第 ' + Math.floor(tHeld * FPS) + ' 幀）',
-                    '這顆氣球最多撐到 ' + burstT.toFixed(2) + ' 秒，容量 ' + fmtNum(maxCap)
+                    burst ? '按太久了，氣球在 ' + burstT.toFixed(2) + ' 秒爆掉' : '你撐了 ' + tHeld.toFixed(2) + ' 秒',
+                    '這局灌氣比標準' + (speed >= 1 ? '快 ' : '慢 ') + (Math.abs(speed - 1) * 100).toFixed(0) + '%，最多撐到 ' + burstT.toFixed(2) + ' 秒，總容量 ' + fmtNum(maxCap)
                 ];
                 if (!burst) lines.push('拿到極限的 ' + (frac * 100).toFixed(1) + '%');
                 state = 'result';
@@ -183,8 +195,10 @@
 
             G.debug = {
                 burstT: burstT,
+                speed: speed,
+                capBurst: BB.capBurst,
                 last: null,
-                state: function () { return { state: state, burstT: burstT }; },
+                state: function () { return { state: state, burstT: burstT, speed: speed, capBurst: BB.capBurst }; },
                 /* 模擬按住 sec 秒後放手（用 setTimeout，不真的按） */
                 hold: function (sec) {
                     if (state !== 'ready') return state;
@@ -203,9 +217,9 @@
     var G = {
         id: ID,
         name: '吹氣球',
-        rule: '按住畫面開始充氣，放手就結算氣球的「容量」。畫面上不會顯示任何數字，氣球還會一直晃動干擾你，只能憑感覺決定什麼時候放手。吹太久氣球會爆，爆了就是 0 分。每局只有一次機會！',
+        rule: '按住畫面開始充氣，放手就結算氣球的「容量」。畫面上不會顯示任何數字，氣球還會一直晃動干擾你，而且每一局灌氣的快慢都不一樣，只能憑感覺決定什麼時候放手。吹太久氣球會爆，爆了就是 0 分。每局只有一次機會！',
         mount: mount,
-        test: { capacityAt: capacityAt, radiusAt: radiusAt, jitterAmp: jitterAmp, makeBurst: makeBurst, rating: rating, BURST_MIN: BURST_MIN, BURST_MAX: BURST_MAX, FPS: FPS }
+        test: { capacityAt: capacityAt, capOfFrames: capOfFrames, radiusAt: radiusAt, jitterAmp: jitterAmp, makeBurst: makeBurst, rating: rating, SPEED_MIN: SPEED_MIN, SPEED_MAX: SPEED_MAX, TAU_BURST: TAU_BURST, CAP_TOL: CAP_TOL, T_FULL: T_FULL, FPS: FPS }
     };
     Reaction.register(G);
 })();

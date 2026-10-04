@@ -240,7 +240,7 @@
             var g = c.createGain();
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(140, c.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(900, c.currentTime + 7);
+            osc.frequency.exponentialRampToValueAtTime(900, c.currentTime + 10);
             g.gain.setValueAtTime(0.0001, c.currentTime);
             g.gain.linearRampToValueAtTime(0.07, c.currentTime + 0.05);
             osc.connect(g);

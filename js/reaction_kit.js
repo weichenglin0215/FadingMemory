@@ -203,7 +203,18 @@
         if (o.isNew) kids.push(h('div', { 'class': 'hint hint--ok', text: '新紀錄！' }));
         if (o.note) kids.push(h('div', { 'class': 'hint rx-result__note', text: o.note }));
         (o.extra || []).forEach(function (n) { if (n) kids.push(n); });
-        if (o.onAgain) kids.push(h('button', {
+        if (o.resume && o.resume.level > 1 && o.onAgain) {
+            /* 闖關式遊戲失敗：預設從「失敗關卡的前 RESUME_BACK 關」繼續，也可以從第 1 關重來。
+               進度只存在這一頁的記憶體（closure）裡，回主選單再進來一律是第 1 關。 */
+            kids.push(h('button', {
+                'class': 'btn btn--primary', text: '從第 ' + o.resume.level + ' 關繼續',
+                on: { click: function () { Sfx.play('click'); o.resume.run(); } }
+            }));
+            kids.push(h('button', {
+                'class': 'btn btn--line', text: '從第 1 關重來',
+                on: { click: function () { Sfx.play('click'); o.onAgain(); } }
+            }));
+        } else if (o.onAgain) kids.push(h('button', {
             'class': 'btn btn--primary', text: o.againText || '再挑戰一次',
             on: { click: function () { Sfx.play('click'); o.onAgain(); } }
         }));
@@ -251,6 +262,27 @@
 
     /* 回傳遊戲 id 專屬的 meta 文字小工具：把「第 N 關・最佳 …」這類字串接起來 */
     kit.meta = function (parts) { return parts.filter(function (p) { return p; }).join('・'); };
+
+    /* ─── 1.16.0 新增的小工具 ─── */
+    /* 事件座標換成「某個元素左上角」為原點的邏輯 px（舞台縮放後也準） */
+    kit.localPt = function (e, el) {
+        var r = el.getBoundingClientRect();
+        var a = Stage.toLogical(e.clientX, e.clientY), o = Stage.toLogical(r.left, r.top);
+        return { x: a.x - o.x, y: a.y - o.y };
+    };
+    /* 時間條：回傳 { el, set(0~1) }，樣式沿用 .ld-time */
+    kit.timebar = function (parent) {
+        var fill = h('div', { 'class': 'ld-time__fill' });
+        var bar = h('div', { 'class': 'ld-time' }, [fill]);
+        if (parent) parent.appendChild(bar);
+        return { el: bar, set: function (f) { fill.style.width = (100 * kit.clamp(f, 0, 1)).toFixed(1) + '%'; } };
+    };
+    kit.lerp = function (a, b, t) { return a + (b - a) * t; };
+
+    /* 闖關式遊戲失敗後，預設從「失敗關卡的前 RESUME_BACK 關」繼續（最少第 1 關）。
+       進度只存在各遊戲頁面的記憶體裡，回主選單再進來就是第 1 關。 */
+    kit.RESUME_BACK = 5;
+    kit.resumeFrom = function (failLevel) { return Math.max(1, failLevel - kit.RESUME_BACK); };
 
     kit.REDUCED = REDUCED;
     Reaction.kit = kit;

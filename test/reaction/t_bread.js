@@ -7,7 +7,8 @@ ok(T.thrFor(1) === 10 && T.thrFor(2) === 9 && T.thrFor(10) === 1 && T.thrFor(11)
 ok(Math.abs(T.polyArea([[0, 0], [360, 0], [360, 140], [0, 140]]) - 50400) < 1e-9, 'rect area');
 for (let lv = 1; lv <= 25; lv++) for (let k = 0; k < 300; k++) {
   const B = T.makeBread(lv); const total = T.polyArea(B.pts);
-  ok((lv <= 3 && B.type === 'rect') || (lv > 3 && lv <= 7 && B.type === 'trap') || (lv > 7 && B.type === 'tri'), 'type lv' + lv);
+  ok((lv <= 1 && B.type === 'rect') || (lv > 1 && lv <= 7 && B.type === 'trap') || (lv > 7 && B.type === 'tri'), 'type lv' + lv);
+  if (B.type === 'trap') { const hsr = (T.HB - Math.max(B.pts[0][1], B.pts[1][1] - 0)) / T.HB; const want = T.TRAP_START - (lv - 2) * T.TRAP_STEP; const hs2 = B.pts[0][1] === 0 ? (T.HB - B.pts[1][1]) / T.HB : (T.HB - B.pts[0][1]) / T.HB; ok(Math.abs(hs2 - want) < 1e-9, 'trap ratio follows 0.95 - 0.1*(lv-2): lv' + lv + ' got ' + hs2 + ' want ' + want); }
   ok(B.pts.every(p => p[0] >= -1e-9 && p[0] <= T.W + 1e-9 && p[1] >= -1e-9 && p[1] <= T.HB + 1e-9), 'inside bbox');
   // 對半切點：左右面積相等
   const bx = T.balanceX(B.pts); const aL = T.areaLeft(B.pts, bx);
@@ -18,7 +19,7 @@ for (let lv = 1; lv <= 25; lv++) for (let k = 0; k < 300; k++) {
   ok(Math.abs(a - total) < 1e-6 * total, 'areas sum');
   // 三角形的頂點不在正中央（不等邊）；梯形比例
   if (B.type === 'tri') { const ax = B.pts[0][0] / T.W; ok(Math.abs(ax - 0.5) >= 0.15 - 1e-9 && Math.abs(ax - 0.5) <= 0.35 + 1e-9, 'apex pos'); }
-  if (B.type === 'trap') { const hs = Math.min(B.pts[0][1] === 0 ? T.HB : T.HB - B.pts[0][1], B.pts[1][1] === 0 ? T.HB : T.HB - B.pts[1][1]); ok(hs / T.HB >= 0.45 - 1e-9 && hs / T.HB <= 0.8 + 1e-9, 'trap ratio'); }
+  if (B.type === 'trap') { const hs = Math.min(B.pts[0][1] === 0 ? T.HB : T.HB - B.pts[0][1], B.pts[1][1] === 0 ? T.HB : T.HB - B.pts[1][1]); ok(hs / T.HB >= 0.45 - 1e-9 && hs / T.HB <= 0.95 + 1e-9, 'trap ratio'); }
 }
 // 不同形狀「正中央切」的差距
 {

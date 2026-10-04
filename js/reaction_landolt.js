@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════
-   reaction_landolt.js — 秒反應・缺口在哪？（E 字視力表）
+   reaction_landolt.js — 秒反應・E視力檢查（E 字視力表）
    中央一個「E」字，開口（三隻腳）朝哪就往哪滑；每換一次方向，E 就縮小成 90%，
    看你能看清楚多小的 E。只要錯一次（滑錯方向或超時）就結束。
    ───────────────────────────────────────────────────────────────────
@@ -73,14 +73,15 @@
     function mount(root, ctx) {
         var R = null;
 
-        function round() {
+        /* from：從第幾個 E 開始（失敗後可從前 5 個繼續；視力用第幾個 E 換算，所以尺寸跟原本一樣）*/
+        function round(from) {
             if (R) R.dispose();
             R = kit.round();
             var my = R;
             root.innerHTML = '';
 
-            var n = 0;               /* 目前是第幾個 E（從 1 起算；0＝還沒開始） */
-            var passed = 0;          /* 已答對幾個 */
+            var n = (from || 1) - 1; /* 目前是第幾個 E（從 1 起算；0＝還沒開始） */
+            var passed = n;          /* 已答對幾個（從前面繼續的話，前面的都算答對）*/
             var rts = [];            /* 反應時間（毫秒） */
             var prevDir = null;
             var state = 'idle';      /* idle／ask／gap／done */
@@ -109,7 +110,7 @@
                 updateHead();
                 var dir = nextDir(prevDir);
                 prevDir = dir;
-                console.info('[缺口在哪？] 第 ' + n + ' 個 E：開口朝' + ({ 0: '上', 90: '右', 180: '下', 270: '左' })[dir] +
+                console.info('[E視力檢查] 第 ' + n + ' 個 E：開口朝' + ({ 0: '上', 90: '右', 180: '下', 270: '左' })[dir] +
                     '，外徑 ' + sizeAt(n).toFixed(1) + 'px（視力 ' + fmtV(acuityAt(n)) + '），時限 ' + timeAt(n).toFixed(2) + ' 秒');
                 field.innerHTML = '';
                 field.appendChild(eSvg(sizeAt(n), dir));
@@ -151,13 +152,15 @@
                 var isNew = v > 0 && Reaction.setBest(ID, v, function (a, b) { return a > b; });
                 ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
                 var avg = rts.length ? rts.reduce(function (a, b) { return a + b; }, 0) / rts.length : 0;
+                var back = kit.resumeFrom(n);
                 kit.result(root, {
                     num: v > 0 ? '視力 ' + fmtV(v) : '視力 < ' + fmtV(ACUITY_START),
                     label: allClear ? reason : (v >= 1.0 ? '視力很好！' : (v > 0 ? '再努力看看！' : '第一個就看不清楚…')) + (reason ? '（' + reason + '）' : ''),
                     lines: ['看清楚了 ' + passed + ' 個 E', rts.length ? '平均反應 ' + (avg / 1000).toFixed(3) + ' 秒' : ''].filter(Boolean),
                     note: '遊戲視力，不是真正的視力檢查',
                     isNew: isNew, sfx: allClear ? 'perfect' : (v >= 0.5 ? 'win' : 'fail'),
-                    onAgain: round
+                    onAgain: function () { round(1); },
+                    resume: allClear ? null : { level: back, run: function () { round(back); } }
                 });
             }
 
@@ -196,15 +199,15 @@
             };
         }
 
-        round();
+        round(1);
     }
 
     var G = {
         id: ID,
-        name: '缺口在哪？',
+        name: 'E視力檢查',
         rule: '畫面中央有一個「E」字，開口（三隻腳）朝哪個方向，就用手指往那個方向滑一下（只有上下左右）。每換一次方向，E 就縮小成 90%，只要錯一次就結束，看你能看清楚多小的 E！',
         mount: mount,
-        test: { sizeFor: sizeFor, sizeAt: sizeAt, acuityAt: acuityAt, timeAt: timeAt, nextDir: nextDir, dirFromDelta: dirFromDelta, N_MAX: N_MAX, DIRS: DIRS, SHRINK: SHRINK }
+        test: { sizeFor: sizeFor, sizeAt: sizeAt, acuityAt: acuityAt, timeAt: timeAt, nextDir: nextDir, dirFromDelta: dirFromDelta, N_MAX: N_MAX, DIRS: DIRS, SHRINK: SHRINK, ACUITY_MAX: ACUITY_MAX, TIME_START: TIME_START, TIME_END: TIME_END }
     };
     Reaction.register(G);
 })();

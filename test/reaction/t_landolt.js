@@ -2,15 +2,15 @@ const { game } = require('./load.js');
 const G = game('reaction_landolt.js'); const T = G.test;
 let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log('FAIL', m); } };
 
-// 尺寸：視力 1.0＝40px、2.0＝20px、0.1＝400px；第 n 個 E 比前一個小到 90%（每一個都縮，不是三個才縮）
+// 尺寸：視力 1.0＝40px、2.0＝20px、0.1＝400px；第 n 個 E 比前一個小到 SHRINK 倍（每一個都縮，不是三個才縮）
 ok(T.sizeFor(1.0) === 40 && T.sizeFor(2.0) === 20 && Math.abs(T.sizeFor(0.1) - 400) < 1e-9, 'sizeFor');
 ok(Math.abs(T.sizeAt(1) - 400) < 1e-9, 'first E = 400px');
-for (let n = 2; n <= T.N_MAX; n++) ok(Math.abs(T.sizeAt(n) / T.sizeAt(n - 1) - 0.9) < 1e-12, 'shrink 90% at ' + n);
-ok(Math.abs(T.sizeAt(4) - 400 * 0.9 * 0.9 * 0.9) < 1e-9, '4th = 400×0.9³');
+for (let n = 2; n <= T.N_MAX; n++) ok(Math.abs(T.sizeAt(n) / T.sizeAt(n - 1) - T.SHRINK) < 1e-12, 'shrink by SHRINK at ' + n);
+ok(Math.abs(T.sizeAt(4) - 400 * Math.pow(T.SHRINK, 3)) < 1e-9, '4th = 400×SHRINK³');
 // 視力往上、最後一個不超過 2.0，再多一個就超過
-ok(T.acuityAt(T.N_MAX) <= 2.0 + 1e-9 && T.acuityAt(T.N_MAX + 1) > 2.0, 'N_MAX covers up to acuity 2.0 (N=' + T.N_MAX + ', last ' + T.acuityAt(T.N_MAX).toFixed(3) + ')');
+ok(T.acuityAt(T.N_MAX) <= T.ACUITY_MAX + 1e-9 && T.acuityAt(T.N_MAX + 1) > T.ACUITY_MAX, 'N_MAX covers up to ACUITY_MAX (N=' + T.N_MAX + ', last ' + T.acuityAt(T.N_MAX).toFixed(3) + ')');
 // 時限線性
-ok(Math.abs(T.timeAt(1) - 3.0) < 1e-9 && Math.abs(T.timeAt(T.N_MAX) - 1.2) < 1e-9, 'time ends');
+ok(Math.abs(T.timeAt(1) - T.TIME_START) < 1e-9 && Math.abs(T.timeAt(T.N_MAX) - T.TIME_END) < 1e-9, 'time ends');
 const d1 = T.timeAt(1) - T.timeAt(2), d2 = T.timeAt(10) - T.timeAt(11); ok(Math.abs(d1 - d2) < 1e-9, 'time linear');
 // 只有上下左右 4 個方向；每次方向一定不同
 ok(JSON.stringify(T.DIRS) === '[0,90,180,270]', '4 directions only');

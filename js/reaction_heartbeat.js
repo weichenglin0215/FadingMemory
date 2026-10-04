@@ -45,6 +45,9 @@
 
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 拍'; }
 
+    /* 心形（以原點為中心，寬約 ±37、高約 −27～40，再由 mount 縮放並上移到視覺中心）*/
+    var HEART_D = 'M0,40 C-60,0 -38,-42 0,-14 C38,-42 60,0 0,40 Z';
+
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function baseInterval(beatNo) { return kit.ramp(beatNo, INT_START, INT_END, RAMP_BEATS); }
     function spacingFor(beatNo, nBalls) { return baseInterval(beatNo) + EXTRA_PER_BALL * Math.max(0, nBalls - 1); }
@@ -136,6 +139,7 @@
             var beatNo = 0, cleared = 0, lives = LIVES, newRec = false, state = 'idle';
             var gen = new Generator();
             var alive = [null, null, null];             /* 每個位置目前的球：{born, life, beat, el, ring} */
+            var ghost = [null, null, null];             /* 已經點掉（或空拍）、只剩倒數圈還在跑的：到下一拍出現才移除 */
             var lastPop = [0, 0, 0];
             var pending = {};                           /* 每一拍還沒點完的球數：beatIdx → 剩幾顆 */
             var nextAt = 0, timerId = null;
@@ -177,10 +181,11 @@
                 } catch (e) { }
                 pending[idx] = n;
                 var now = performance.now();
+                clearGhosts();                           /* 上一拍留下的倒數圈，這一拍出現就收掉（它剛好也在這一刻跑完）*/
                 balls.forEach(function (s) {
                     if (alive[s]) expire(s, true);       /* 同位置還有舊球（不應該發生，保險） */
                     var g = kit.svg('g', { 'class': 'hb-ball hb-ball--' + SLOTS[s] }, slotG[s]);
-                    kit.svg('circle', { 'class': 'hb-ball__body', r: RB }, g);
+                    kit.svg('path', { 'class': 'hb-ball__body', d: HEART_D, transform: 'translate(0 -8) scale(1.3)' }, g);
                     var ring = kit.svg('circle', { 'class': 'hb-ring', r: RR, 'stroke-dasharray': CIRC.toFixed(1), 'stroke-dashoffset': 0, transform: 'rotate(-90)' }, g);
                     var b = { born: now, life: spacing * 1000, beat: idx, el: g, ring: ring, slot: s };
                     alive[s] = b;
@@ -188,7 +193,10 @@
                 });
                 beatNo++;
                 if (n === 0) {
-                    /* 空拍：什麼都不用做，這一拍結束就算撐過 */
+                    /* 空拍：中間畫一個沒有心的空倒數圈（讓節拍看得見），這一拍結束就算撐過 */
+                    var eg = kit.svg('g', { 'class': 'hb-ball hb-ball--E' }, slotG[1]);
+                    var er = kit.svg('circle', { 'class': 'hb-ring hb-ring--empty', r: RR, 'stroke-dasharray': CIRC.toFixed(1), 'stroke-dashoffset': 0, transform: 'rotate(-90)' }, eg);
+                    ghost[1] = { born: now, life: spacing * 1000, beat: idx, el: eg, ring: er, slot: 1 };
                     my.after(spacing * 1000, function () { if (state === 'run') beatDone(idx); });
                 }
                 paintHead(plan.combo === 'none' ? '這拍沒有球' : '');
@@ -229,12 +237,27 @@
                     flashSlot(s, 'hb-slot--bad');
                 }
             }
+            function clearGhosts() {
+                for (var s = 0; s < 3; s++) {
+                    var g = ghost[s];
+                    if (g) { if (g.el.parentNode) g.el.parentNode.removeChild(g.el); ghost[s] = null; }
+                }
+            }
             function kill(s, how) {
                 var b = alive[s];
                 if (!b) return;
                 my.cancel(b.timer);
                 alive[s] = null;
-                b.el.classList.add(how === 'hit' ? 'hb-ball--hit' : 'hb-ball--miss');
+                if (how === 'hit') {
+                    /* 心在原位消失，倒數圈留在原位（變綠色）繼續跑完，下一拍要等圈跑完才出現 */
+                    var heart = b.el.querySelector('.hb-ball__body');
+                    if (heart && heart.parentNode) heart.parentNode.removeChild(heart);
+                    b.ring.classList.remove('hb-ring--late');
+                    b.ring.classList.add('hb-ring--done');
+                    ghost[s] = b;
+                    return;
+                }
+                b.el.classList.add('hb-ball--miss');
                 my.after(260, function () { if (b.el.parentNode) b.el.parentNode.removeChild(b.el); });
             }
             function expire(s, silent) {
@@ -276,10 +299,13 @@
                 if (state === 'over') return false;
                 for (var s = 0; s < 3; s++) {
                     var b = alive[s];
-                    if (!b) continue;
-                    var f = Math.min(1, (now - b.born) / b.life);
-                    b.ring.setAttribute('stroke-dashoffset', (CIRC * f).toFixed(1));
-                    b.ring.classList.toggle('hb-ring--late', f > 0.7);
+                    if (b) {
+                        var f = Math.min(1, (now - b.born) / b.life);
+                        b.ring.setAttribute('stroke-dashoffset', (CIRC * f).toFixed(1));
+                        b.ring.classList.toggle('hb-ring--late', f > 0.7);
+                    }
+                    var gh = ghost[s];
+                    if (gh) gh.ring.setAttribute('stroke-dashoffset', (CIRC * Math.min(1, (now - gh.born) / gh.life)).toFixed(1));
                 }
             });
 
@@ -292,7 +318,7 @@
             });
 
             G.debug = {
-                state: function () { return { state: state, beatNo: beatNo, cleared: cleared, lives: lives, alive: alive.map(function (b) { return b ? b.beat : null; }), pending: pending }; },
+                state: function () { return { state: state, beatNo: beatNo, cleared: cleared, lives: lives, alive: alive.map(function (b) { return b ? b.beat : null; }), ghost: ghost.map(function (b) { return b ? b.beat : null; }), pending: pending }; },
                 tap: function (s) { tap(s, performance.now()); },
                 aliveSlots: function () { return alive.map(function (b, i) { return b ? i : -1; }).filter(function (x) { return x >= 0; }); },
                 /* 自動全部點對（用在測試）：每 40ms 檢查有球就點 */

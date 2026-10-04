@@ -3,25 +3,35 @@
    上面是一張 8 碼發票，下面是這一期的開獎號碼，點出它中了哪一個獎（或沒中獎）。100 張發票，
    看你能兌對幾張。
    ───────────────────────────────────────────────────────────────────
-   【開獎號碼】每一局先抽三組 8 碼號碼（互不相同）：
+   【開獎號碼】每一局先抽三組 8 碼號碼：
         F  = 第一獎號碼        S1 = 一號特別獎        S2 = 二號特別獎
+     三組的關係（makeAnnounce 保證）：
+        · 末 2 碼三組「故意完全一樣」→ 只看最後一兩個數字，什麼都排除不了；
+        · 倒數第 3 碼三組各不相同；
+        · 前 5 碼三組彼此差很多（任兩組至少 4 碼不同）；
+        · F 的末 3 碼三個數字都不一樣（才有「重排」「對調」的干擾可以做）。
    下面 9 個按鈕由上而下：
         ① 六獎＝F 的末 3 碼　② 五獎＝末 4 碼　③ 四獎＝末 5 碼　④ 三獎＝末 6 碼
         ⑤ 二獎＝末 7 碼　　⑥ 一獎＝末 8 碼（F 全部）　⑦ 一號特別獎(8 碼)　⑧ 二號特別獎(8 碼)
-        ⑨ 沒中獎（使用者企劃只有 8 個按鈕，但有 67 張不會中獎的發票，所以多了這一個）
+        ⑨ 沒中獎
    【判定】發票的「末幾碼」跟 F 的末幾碼相同，取最多碼的那一級；整張等於 S1／S2 才算特別獎；
    末 3 碼都對不上又不是特別獎，就是沒中獎。
 
    【100 張發票的組成（先產生再洗牌，所以每一局都一樣公平）】
-        特別獎 S1×1、S2×1、一獎×1、二獎×2、三獎×4、四獎×6、五獎×8、六獎×10 ＝ 33 張有獎
-        不會中獎的干擾 67 張：
-          · 25 張「差一個字」：跟 F 一模一樣，只有末 3 碼裡的 1~2 個數字換成「長得像」的數字
-          · 14 張「特別獎差一碼」：S1／S2 其中一碼換成長得像的數字（各 7 張）
-          · 12 張「前面一樣」：前 5 碼跟 F 相同，後 3 碼不同（從前面對的人會被騙）
-          ·  8 張「順序亂掉」：末 3 碼是 F 末 3 碼打散重排
-          ·  8 張完全隨機
-   【長得像的數字】0↔8↔6↔9、1↔7、2↔7、3↔8↔5、4↔9、5↔6，有獎的發票「剛好差一級」的那一碼
-   也優先用長得像的數字（例如五獎：第 5 碼跟 F 差一個長得像的字，所以看起來像四獎）。
+        有獎 33 張：特別獎 S1×1、S2×1、一獎×1、二獎×2、三獎×4、四獎×6、五獎×8、六獎×10。
+          有獎的發票幾乎都是「F 只換一個長得像的數字」：換在哪一位，就決定中幾獎（換在倒數第 4 碼只中六獎、
+          換在最後 3 碼就沒獎），所以看起來全都像大獎，只有仔細對才知道是哪一級。
+        沒中獎 67 張（每一張的末 3 碼都至少有 2 個數字跟 F 的末 3 碼一樣，所以只看尾巴排除不了）：
+          · near    18 張：F 的末 3 碼有一碼換成長得像的數字（再有一半機率前面也換一碼）
+          · num      5 張：F 的末 3 碼有一碼換成「差 1」的數字（例如 5→6，不是形狀像）
+          · trans    5 張：F 的末幾碼相鄰兩碼對調
+          · shift    4 張：整串 F 向左或向右平移一格
+          · rev      4 張：F 的末 3～4 碼反過來
+          · collage  5 張：前面幾碼是 F、後面幾碼是 S1／S2（拼貼）
+          · sNear    6 張：特別獎有一碼換成長得像的數字
+          （num／trans／shift／rev／collage 另外有 70% 機率在前 4 碼再換一個長得像的數字，每局的樣子都不一樣）
+          · rand    20 張：8 碼完全隨機（讓整體看起來自然；不會中獎）
+   【長得像的數字】0↔8↔6↔9、1↔7、2↔7、3↔8↔5、4↔9、5↔6。
 
    難度：每張發票的限時從 TIME_START 線性縮短到 TIME_END；發票順序依難易度＋雜訊排序，
    前面比較容易、後面「差一個字」越來越多。
@@ -39,7 +49,9 @@
     var TIME_START = 10, TIME_END = 4;        /* 每張限時（秒），從第 1 張線性縮到第 100 張 */
     var NEXT_OK_MS = 450, NEXT_BAD_MS = 1100; /* 答完多久換下一張（答錯停久一點讓人看正解） */
     var WIN_COUNTS = { 6: 10, 5: 8, 4: 6, 3: 4, 2: 2, 1: 1 };        /* 各獎項發票張數 */
-    var DECOY_COUNTS = { near: 25, sNear: 14, front: 12, perm: 8, rand: 8 };
+    var DECOY_COUNTS = { near: 18, num: 5, trans: 5, shift: 4, rev: 4, collage: 5, sNear: 6, rand: 20 };
+    var WIN_COPY_FRONT = 0.9;                 /* 有獎發票前面的數字跟 F 一樣的機率（看起來像更大的獎）*/
+    var ANNOUNCE_MIN_DIFF = 4;                /* 三組開獎號碼的前 5 碼，任兩組至少幾碼不同 */
     /* 長得像的數字 */
     var SIM = { 0: [8, 6, 9], 1: [7, 4], 2: [7, 3], 3: [8, 5, 9], 4: [9, 1], 5: [6, 3, 8], 6: [8, 5, 0], 7: [1, 2], 8: [0, 6, 3, 9], 9: [4, 8, 0] };
     /* 九個按鈕：prize 1~6＝一獎~六獎（k＝末幾碼）、'S1'／'S2'、0＝沒中獎 */
@@ -84,57 +96,79 @@
         if (m >= 3) return m - 3;       /* 3→0(六獎) … 8→5(一獎) */
         return 8;
     }
-    /* 抽開獎號碼：三組互不相同，且特別獎的末 3 碼不能跟 F 的末 3 碼一樣（避免一張同時中兩種） */
+    function hamming(a, b) { var d = 0; for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) d++; return d; }
+    /* 兩個號碼的末 3 碼，有幾個數字相同（把末 3 碼當成可重複的集合比對，不看位置）*/
+    function tailOverlap(num, F) {
+        var pool = F.slice(5).split(''), n = 0;
+        num.slice(5).split('').forEach(function (c) { var k = pool.indexOf(c); if (k >= 0) { pool.splice(k, 1); n++; } });
+        return n;
+    }
+    /* 抽開獎號碼：末 2 碼三組一樣、倒數第 3 碼三組各不同、前 5 碼彼此差很多、F 的末 3 碼三個數字都不同 */
     function makeAnnounce(rand) {
-        for (var t = 0; t < 200; t++) {
-            var F = randDigits(8, rand), S1 = randDigits(8, rand), S2 = randDigits(8, rand);
-            if (F === S1 || F === S2 || S1 === S2) continue;
-            if (new Set(F.slice(5).split('')).size < 3) continue;       /* F 的末 3 碼要三個都不同，才有足夠的「重排」干擾 */
-            if (S1.slice(5) === F.slice(5) || S2.slice(5) === F.slice(5)) continue;
-            if (suffixMatch(S1, F) >= 3 || suffixMatch(S2, F) >= 3) continue;
+        for (var t = 0; t < 2000; t++) {
+            var tail2 = randDigits(2, rand);
+            var thirds = kit.shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], rand).slice(0, 3);
+            var f5 = randDigits(5, rand), a5 = randDigits(5, rand), b5 = randDigits(5, rand);
+            if (hamming(f5, a5) < ANNOUNCE_MIN_DIFF || hamming(f5, b5) < ANNOUNCE_MIN_DIFF || hamming(a5, b5) < ANNOUNCE_MIN_DIFF) continue;
+            var F = f5 + thirds[0] + tail2, S1 = a5 + thirds[1] + tail2, S2 = b5 + thirds[2] + tail2;
+            if (new Set(F.slice(5).split('')).size < 3) continue;
             return { F: F, S1: S1, S2: S2 };
         }
-        return { F: '71524863', S1: '09375126', S2: '48260917' };
+        return { F: '71524863', S1: '09375163', S2: '48260963' };
     }
 
-    /* 有獎發票：末 k 碼跟 F 相同，第 k+1 碼（從後面數）故意不同 */
+    /* 有獎發票：末 k 碼跟 F 相同，第 k+1 碼（從後面數）故意不同（多半是長得像的數字）*/
     function mkWin(A, k, rand) {
         var F = A.F, out = F;
-        var copyFront = rand() < 0.55;       /* 前面的字跟 F 一樣 → 看起來更像大獎 */
+        var copyFront = rand() < WIN_COPY_FRONT;       /* 前面的字跟 F 一樣 → 看起來更像大獎 */
         for (var i = 0; i < 8 - k; i++) out = setCh(out, i, copyFront ? F[i] : String(kit.randInt(0, 9, rand)));
         if (k < 8) {
             var idx = 7 - k;                 /* 第 k+1 碼（從後面數）的位置 */
-            out = setCh(out, idx, rand() < 0.75 ? simDigit(F[idx], rand) : otherDigit(F[idx], rand));
+            out = setCh(out, idx, rand() < 0.8 ? simDigit(F[idx], rand) : otherDigit(F[idx], rand));
         }
         return out;
+    }
+    function neighborDigit(ch, rand) { var d = +ch + (rand() < 0.5 ? -1 : 1); if (d < 0) d = 1; if (d > 9) d = 8; return String(d); }
+    function swapCh(s, i, j) { var a = s[i], b = s[j]; return setCh(setCh(s, i, b), j, a); }
+    /* 前 4 碼裡有 p 的機率換成一個長得像的數字（不動末 3 碼），讓每一類干擾有足夠多種變化 */
+    function frontTweak(out, p, rand) {
+        if (rand() >= p) return out;
+        var q = kit.randInt(0, 3, rand);
+        return setCh(out, q, simDigit(out[q], rand));
     }
     /* 沒中獎的干擾 */
     function mkDecoy(A, kind, rand) {
         var F = A.F, out, i;
         if (kind === 'near') {
             out = F;
-            var nSwap = rand() < 0.35 ? 2 : 1;
-            var pos = kit.shuffle([5, 6, 7], rand).slice(0, nSwap);
-            pos.forEach(function (p) { out = setCh(out, p, simDigit(F[p], rand)); });
-            if (rand() < 0.4) { var q = kit.randInt(0, 4, rand); out = setCh(out, q, simDigit(F[q], rand)); }     /* 前面也可能多換一個 */
+            var p = kit.randInt(5, 7, rand);                          /* 末 3 碼裡剛好換一碼 */
+            out = setCh(out, p, simDigit(F[p], rand));
+            if (rand() < 0.5) { var q = kit.randInt(0, 4, rand); out = setCh(out, q, simDigit(F[q], rand)); }     /* 前面也可能多換一個 */
+        } else if (kind === 'num') {
+            var p3 = kit.randInt(5, 7, rand);
+            out = frontTweak(setCh(F, p3, neighborDigit(F[p3], rand)), 0.5, rand);
+        } else if (kind === 'trans') {
+            var at = kit.pick([[6, 7], [5, 6], [4, 5]], rand);
+            out = frontTweak(swapCh(F, at[0], at[1]), 0.7, rand);
+        } else if (kind === 'shift') {
+            out = frontTweak(rand() < 0.5 ? F.slice(1) + F[0] : F[7] + F.slice(0, 7), 0.7, rand);
+        } else if (kind === 'rev') {
+            var L = rand() < 0.5 ? 3 : 4;
+            out = frontTweak(F.slice(0, 8 - L) + F.slice(8 - L).split('').reverse().join(''), 0.7, rand);
+        } else if (kind === 'collage') {
+            var S = rand() < 0.5 ? A.S1 : A.S2, cut = kit.pick([4, 5], rand);
+            out = frontTweak(F.slice(0, cut) + S.slice(cut), 0.7, rand);
         } else if (kind === 'sNear') {
-            var S = rand() < 0.5 ? A.S1 : A.S2;
+            var S2 = rand() < 0.5 ? A.S1 : A.S2;
             var p2 = kit.randInt(0, 7, rand);
-            out = setCh(S, p2, simDigit(S[p2], rand));
-        } else if (kind === 'front') {
-            out = F.slice(0, 5) + randDigits(3, rand);
-        } else if (kind === 'perm') {
-            var tail = F.slice(5).split('');
-            var perm = tail;
-            for (var t = 0; t < 20 && perm.join('') === F.slice(5); t++) perm = kit.shuffle(tail.slice(), rand);
-            out = (rand() < 0.5 ? F.slice(0, 5) : randDigits(5, rand)) + perm.join('');
+            out = setCh(S2, p2, simDigit(S2[p2], rand));
         } else {
             out = randDigits(8, rand);
         }
         return out;
     }
     /* 這一類發票的難度分數（0~1），用來決定出現順序 */
-    var DIFF = { near: 0.95, sNear: 0.85, front: 0.45, perm: 0.65, rand: 0.1 };
+    var DIFF = { near: 0.95, num: 0.7, trans: 0.8, shift: 0.6, rev: 0.6, collage: 0.75, sNear: 0.85, rand: 0.1 };
 
     /* 產生整局的 100 張發票。回傳 { A, deck:[{num, btn, kind, prize}] } */
     function makeDeck(rand) {
@@ -165,6 +199,7 @@
             for (var n = 0, guard = 0; n < need && guard < 5000; guard++) {
                 var num = mkDecoy(A, kind, rand);
                 if (classify(num, A) !== 8) continue;
+                if (kind !== 'rand' && tailOverlap(num, A.F) < 2) continue;        /* 干擾的末 3 碼至少 2 個數字跟 F 一樣 */
                 if (add(num, kind, DIFF[kind])) n++;
             }
         });
@@ -297,9 +332,9 @@
     var G = {
         id: ID,
         name: '對發票',
-        rule: '上面是一張 8 碼發票，下面是這一期的開獎號碼。發票的「末幾碼」跟第一獎相同，就中對應的獎（末 3 碼六獎，末 8 碼一獎）；特別獎要整張 8 碼完全相同；都沒中就按「沒中獎」。共 100 張，小心長得很像的數字！',
+        rule: '上面是一張 8 碼發票，下面是這一期的開獎號碼。發票的「末幾碼」跟第一獎相同，就中對應的獎（末 3 碼六獎，末 8 碼一獎）；特別獎要整張 8 碼完全相同；都沒中就按「沒中獎」。三組開獎號碼的最後兩碼故意一樣，共 100 張，小心長得很像的數字、對調過的數字、拼貼的號碼！',
         mount: mount,
-        test: { makeDeck: makeDeck, classify: classify, suffixMatch: suffixMatch, makeAnnounce: makeAnnounce, timeFor: timeFor, BTNS: BTNS, TOTAL: TOTAL, SIM: SIM }
+        test: { makeDeck: makeDeck, classify: classify, suffixMatch: suffixMatch, makeAnnounce: makeAnnounce, tailOverlap: tailOverlap, hamming: hamming, timeFor: timeFor, BTNS: BTNS, TOTAL: TOTAL, SIM: SIM, DECOY_COUNTS: DECOY_COUNTS, ANNOUNCE_MIN_DIFF: ANNOUNCE_MIN_DIFF }
     };
     Reaction.register(G);
 })();

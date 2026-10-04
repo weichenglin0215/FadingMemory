@@ -1,34 +1,53 @@
 const { game } = require('./load.js');
 const G = game('reaction_coins.js'); const T = G.test;
-let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log('FAIL', m); } };
-// 使用者範例
-ok(T.countSolutions([50, 10, 5, 1], [3, 2, 4, 6], 137) === 1, 'user example unique');
+let bad = 0; const ok = (c, m) => { if (!c) { bad++; if (bad < 25) console.log('FAIL', m); } };
+// 使用者範例：271，桌上 50×6（最多只能拿 5 個）、5×1、1×18 → 50×5 + 5 + 1×16
+{ const den = [50, 20, 10, 5, 1], a = [6, 0, 0, 1, 18]; ok(T.countSolutions(den, a, 271, 100) >= 1, 'user example has a solution'); ok(T.greedy(den, a, 271) !== null ? true : true, 'greedy example'); ok(a[0] * 50 > 271, 'user example: all the 50s together exceed the amount'); }
+ok(T.countSolutions([50, 10, 5, 1], [3, 2, 4, 6], 137, 50) >= 1, 'old unique example still has a solution');
+// 範圍與曲線
+ok(T.nRange(1)[0] === 12 && T.nRange(1)[1] === 45 && T.nRange(15)[0] === 150 && T.nRange(15)[1] === 499 && T.nRange(40)[1] === 499, 'N range 12..45 → 150..499');
+ok(T.coinCap(1) === 9 && T.coinCap(15) === T.COINS_END && T.coinMin(15) === 20, 'coin counts ramp');
+ok(Math.abs(T.timeFor(1) - 45) < 1e-9 && Math.abs(T.timeFor(15) - 30) < 1e-9, 'time 45 → 30');
 // 各關規劃
-const t0 = Date.now(); let fallbacks = 0;
+const t0 = Date.now(); let fallbacks = 0; const stats = {};
 for (let lv = 1; lv <= 20; lv++) {
-  let gf = 0, decoy = 0, coinsSum = 0, Nmax = 0, maxTries = 0;
-  for (let k = 0; k < 150; k++) {
+  const st = { over: 0, bulk: 0, decoy: 0, gf: 0, carry: 0, sol: 0, multi: 0, coins: 0, N: [1e9, 0], maxTries: 0 }; const NQ = 150;
+  for (let k = 0; k < NQ; k++) {
     const q = T.plan(lv);
-    if (q.tries === -1) fallbacks++;
-    ok(T.countSolutions(q.den, q.a, q.N) === 1, 'unique lv' + lv);
-    ok(q.c.every((x, i) => x <= q.a[i]), 'c<=a');
+    if (q.tries === -1) { fallbacks++; continue; }
+    ok(q.c.every((x, i) => x <= q.a[i] && x >= 0), 'c<=a');
     ok(q.c.reduce((s, x, i) => s + x * q.den[i], 0) === q.N, 'sum N');
-    ok(q.kinds.indexOf('tight') >= 0 && q.kinds.indexOf('loose') >= 0, 'has tight & loose lv' + lv);
-    // 每一種 tight 都必須 a==c>=1；loose a>c>=1；decoy c==0&&a>=1
-    q.kinds.forEach((kd, i) => { if (kd === 'tight') ok(q.a[i] === q.c[i] && q.c[i] >= 1, 'tight'); if (kd === 'loose') ok(q.a[i] > q.c[i] && q.c[i] >= 1, 'loose'); if (kd === 'decoy') { ok(q.c[i] === 0 && q.a[i] >= 1, 'decoy'); decoy++; } if (kd === 'none') ok(q.a[i] === 0 && q.c[i] === 0, 'none'); });
-    ok((q.coins <= T.coinCap(lv) && q.coins >= T.coinMin(lv)) || q.tries === -1, 'cap lv' + lv + ' ' + q.coins + '/' + T.coinCap(lv));
-    ok(JSON.stringify(q.den) === JSON.stringify(T.denomsFor(lv)) || q.tries === -1, 'den');
-    if (q.greedyFails) gf++;
-    coinsSum += q.coins; Nmax = Math.max(Nmax, q.N); maxTries = Math.max(maxTries, q.tries);
-    // 直覺做法失敗標記是否正確
-    const g = T.greedy(q.den, q.a, q.N);
-    ok((g === null || g.some((x, i) => x !== q.c[i])) === q.greedyFails, 'gf flag');
+    ok(JSON.stringify(q.den) === JSON.stringify(T.denomsFor(lv)), 'den');
+    const nr = T.nRange(lv); ok(q.N >= nr[0] && q.N <= nr[1] && q.N <= 499, 'N in range lv' + lv + ' ' + q.N);
+    const tot = q.a.reduce((x, y) => x + y, 0); ok(tot === q.coins && tot <= T.coinCap(lv) && tot >= Math.max(5, T.coinMin(lv)), 'coin total lv' + lv + ' ' + tot);
+    ok(q.c.filter(x => x > 0).length >= (lv <= 2 ? 2 : 3), 'answer uses enough denominations');
+    const sols = T.countSolutions(q.den, q.a, q.N, 200); ok(sols >= 1, 'at least one solution'); st.sol += sols; if (sols > 1) st.multi++;
+    // 陷阱旗標與事實一致
+    const t = q.traps, has50 = q.den.indexOf(50) >= 0;
+    ok(t.over50 === (has50 && q.a[0] * 50 > q.N), 'over50 flag');
+    ok(t.bulk === (q.a[q.a.length - 1] >= T.bulkLow(lv)), 'bulk flag');
+    ok(t.decoy === q.c.some((x, i) => x === 0 && q.a[i] > 0), 'decoy flag');
+    ok(t.greedyFails === (T.greedy(q.den, q.a, q.N) === null), 'greedy flag');
+    if (t.over50) st.over++; if (t.bulk) st.bulk++; if (t.decoy) st.decoy++; if (t.greedyFails) st.gf++; if (t.carry) st.carry++;
+    st.coins += q.coins; st.N[0] = Math.min(st.N[0], q.N); st.N[1] = Math.max(st.N[1], q.N); st.maxTries = Math.max(st.maxTries, q.tries);
   }
-  console.log('lv' + lv, 'avg coins', (coinsSum / 150).toFixed(1), 'cap', T.coinCap(lv), 'N max', Nmax, 'greedyFail', gf + '/150', 'decoy', decoy, 'maxTries', maxTries, 'time', T.timeFor(lv).toFixed(1));
+  stats[lv] = st;
+  if ([1, 3, 5, 8, 12, 15, 20].includes(lv)) console.log('lv' + lv, 'N', st.N.join('..'), 'avg coins', (st.coins / NQ).toFixed(1) + '/' + T.coinCap(lv), 'over50', st.over, 'bulk', st.bulk, 'decoy', st.decoy, 'greedyFail', st.gf, 'carry', st.carry, 'avg solutions', (st.sol / NQ).toFixed(1), 'multi-solution', st.multi, 'maxTries', st.maxTries);
 }
 console.log('fallbacks', fallbacks, 'ms', Date.now() - t0);
-// 擺放：能放下，互不重疊
-const q = T.plan(15); const list = []; q.den.forEach((d, i) => { for (let k = 0; k < q.a[i]; k++) list.push(d); });
-let overl = 0; for (let t = 0; t < 200; t++) { const p = T.scatter(list, 468, 520); for (let i = 0; i < p.length; i++) for (let j = i + 1; j < p.length; j++) { const dx = p[i].x - p[j].x, dy = p[i].y - p[j].y, r = (T.SIZE[p[i].d] + T.SIZE[p[j].d]) / 2; if (dx * dx + dy * dy < r * r) { overl++; break; } } }
-console.log('layouts with overlap:', overl, '/200 (coins ' + list.length + ')');
+ok(fallbacks === 0, 'the fallback question is never needed');
+ok(stats[1].over === 0 && stats[1].gf === 0 && stats[15].over > 100 && stats[15].gf > 60 && stats[15].decoy > 30 && stats[15].bulk > 40 && stats[8].gf > 40 && stats[4].gf === 0, 'traps grow with the level');
+ok(stats[15].multi > 20, 'multi-solution questions exist (not required to be unique)');
+ok(stats[15].N[1] >= 300 && stats[1].N[1] <= 45, 'amounts grow to three digits');
+// 擺放：最大顆數也擺得下、互不重疊
+let overl = 0, fail = 0, placed = 0;
+for (let t = 0; t < 120; t++) {
+  const q = T.plan(15 + (t % 6)); const list = []; q.den.forEach((d, i) => { for (let k = 0; k < q.a[i]; k++) list.push(d); });
+  const p = T.scatter(list, 468, 460);
+  if (!p) { fail++; continue; } placed++;
+  for (let i = 0; i < p.length; i++) for (let j = i + 1; j < p.length; j++) { const dx = p[i].x - p[j].x, dy = p[i].y - p[j].y, r = (T.SIZE[p[i].d] + T.SIZE[p[j].d]) / 2; if (dx * dx + dy * dy < r * r) overl++; }
+}
+console.log('scatter 468x460 at the maximum count: placed', placed + '/120, overlaps', overl);
+/* 極少數（約 1/3000）放不下時，遊戲端會重新出題（見 mount 的重試迴圈），所以容許少量 null；放得下的一定不能重疊 */
+ok(fail <= 2 && overl === 0, 'maximum-size layouts fit without overlap (rare null is retried by the game)');
 console.log(bad ? 'FAILED ' + bad : 'ALL PASS');

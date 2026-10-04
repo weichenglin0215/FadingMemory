@@ -10,8 +10,9 @@
         大小：半徑差 SIZE_START(45%) → SIZE_END(5%)
         顏色：色相差 HUE_START(55°) → HUE_END(4°)
         位置：位移   POS_START(38px) → POS_END(3px)
-   · 點到沒有差異的圖形：扣 PENALTY_S 秒；每一關限時從 TIME_START 線性縮到 TIME_END。
-     時間到就結束，成績＝通過幾關。結束時會把沒找到的差異圈出來。
+   · 不限時間。點到沒有差異的圖形：每一關第一次點錯不算，第 MISTAKES_MAX 次（第二次）點錯就結束。
+     畫面上只顯示本關已經花了多久（不影響成績）。成績＝通過幾關。結束時會把沒找到的差異圈出來。
+   · 失敗之後可以從「失敗關卡 − 5」繼續。
    ═══════════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -26,8 +27,7 @@
     var SIZE_START = 0.3, SIZE_END = 0.05;
     var HUE_START = 40, HUE_END = 5;
     var POS_START = 30, POS_END = 5;
-    var TIME_START = 20, TIME_END = 40;         /* 每關限時（秒） */
-    var PENALTY_S = 3;                         /* 點錯扣幾秒 */
+    var MISTAKES_MAX = 2;                      /* 同一關點到第幾個沒有差異的圖形就結束 */
     var NEXT_MS = 700;
     var COLS = 4, ROWS = 3, N_SHAPES = 10, N_DIFF = 5;
     var BASE_R = 30;
@@ -44,7 +44,6 @@
             pos: kit.ramp(level, POS_START, POS_END, LEVEL_RAMP)
         };
     }
-    function timeFor(level) { return kit.ramp(level, TIME_START, TIME_END, LEVEL_RAMP); }
 
     /* 產生一關。W×Hh 是每一格（上或下）的大小。回傳：
        { items:[{shape,hue,r,x,y}] (原本的 10 個), diffs:[{i, kind, panel('top'|'bot'), amount, dh, ds, dx, dy}] } */
@@ -120,29 +119,33 @@
     function mount(root, ctx) {
         var R = null;
 
-        function round() {
+        /* start：從第幾關開始（失敗後可從前 5 關繼續）*/
+        function round(start) {
             if (R) R.dispose();
             R = kit.round();
             var my = R;
             root.innerHTML = '';
-            var levelNo = 1, cleared = 0, newRec = false;
+            var levelNo = start || 1, cleared = levelNo - 1, newRec = false;
 
-            var head = h('div', { 'class': 'df-head' });
-            var bar = h('div', { 'class': 'ld-time' }, [h('div', { 'class': 'ld-time__fill' })]);
-            var fill = bar.firstChild;
+            /* 先放不斷行空白佔住高度：startLevel 一開頭就量上下格的大小，文字晚填會讓量到的比最後的大 */
+            var head = h('div', { 'class': 'df-head' }, [h('span', { 'class': 'df-head__main', text: '\u00a0' }), h('span', { 'class': 'df-head__sub', text: '\u00a0' })]);
             var top = h('div', { 'class': 'df-panel' });
             var bot = h('div', { 'class': 'df-panel' });
-            var flash = h('div', { 'class': 'df-penalty', text: '- ' + PENALTY_S + ' 秒' });
+            var flash = h('div', { 'class': 'df-penalty', text: '點錯了' });
             root.appendChild(head);
-            root.appendChild(bar);
             root.appendChild(top);
             root.appendChild(bot);
             root.appendChild(flash);
 
-            var L = null, found = 0, svgs = {}, t0 = 0, limitMs = 0, spent = 0, state = 'idle', loop = null, timer = null, foundSet = {};
+            var L = null, found = 0, svgs = {}, t0 = 0, state = 'idle', foundSet = {}, mistakes = 0;
 
             function meta() { ctx.setMeta(kit.meta(['第 ' + levelNo + ' 關', fmtBest(Reaction.getBest(ID))])); }
-            function paintHead() { head.textContent = '第 ' + levelNo + ' 關　找到 ' + found + ' / ' + N_DIFF; }
+            function paintHead() {
+                var left = MISTAKES_MAX - 1 - mistakes;
+                head.innerHTML = '';
+                head.appendChild(h('span', { 'class': 'df-head__main', text: '第 ' + levelNo + ' 關　找到 ' + found + ' / ' + N_DIFF }));
+                head.appendChild(h('span', { 'class': 'df-head__sub' + (left <= 0 ? ' df-head__sub--warn' : ''), text: (left > 0 ? '還能點錯 ' + left + ' 次' : '再點錯就結束了') + '　本關 ' + Math.floor((performance.now() - t0) / 1000) + ' 秒' }));
+            }
 
             function drawPanel(el, panel, W, Hh) {
                 el.innerHTML = '';
@@ -171,25 +174,17 @@
             function startLevel() {
                 if (my.dead) return;
                 L = makeLevel(levelNo, top.clientWidth, top.clientHeight);
-                found = 0; foundSet = {}; state = 'play';
+                found = 0; foundSet = {}; mistakes = 0; state = 'play'; t0 = performance.now();
                 drawPanel(top, 'top', top.clientWidth, top.clientHeight);
                 drawPanel(bot, 'bot', bot.clientWidth, bot.clientHeight);
                 paintHead(); meta();
-                limitMs = timeFor(levelNo) * 1000; spent = 0; t0 = performance.now();
                 try {
                     console.info('[哪裡怪怪的] 第 ' + levelNo + ' 關 差異量：大小 ±' + (L.amt.size * 100).toFixed(1) + '%、色相 ±' + L.amt.hue.toFixed(1) + '°、位置 ' + L.amt.pos.toFixed(1) + 'px；' +
                         L.diffs.map(function (d) { return '圖' + (d.i + 1) + ':' + ({ size: '大小', hue: '顏色', pos: '位置' })[d.kind] + '(' + (d.panel === 'top' ? '上' : '下') + '格改)'; }).join('、'));
                 } catch (e) { }
-                loop = my.loop(function (now) {
-                    if (state !== 'play') return false;
-                    fill.style.width = (100 * Math.max(0, 1 - (now - t0 + spent) / limitMs)).toFixed(1) + '%';
-                });
-                armTimer();
-            }
-            function armTimer() {
-                my.cancel(timer);
-                var remain = limitMs - (performance.now() - t0 + spent);
-                timer = my.after(Math.max(0, remain), timeUp);
+                /* 每 0.5 秒更新一次「本關已花幾秒」（只是顯示，用 setTimeout，不靠 rAF）*/
+                var lv = levelNo;
+                (function tick() { my.after(500, function () { if (state === 'play' && lv === levelNo) { paintHead(); tick(); } }); })();
             }
 
             function tap(i, panel, g) {
@@ -204,18 +199,16 @@
                 } else {
                     g.querySelector('.df-ring').classList.add('df-ring--bad');
                     my.after(450, function () { g.querySelector('.df-ring').classList.remove('df-ring--bad'); });
-                    spent += PENALTY_S * 1000;
+                    mistakes++;
                     Sfx.play('bad');
                     flash.classList.remove('df-penalty--on'); void flash.offsetWidth; flash.classList.add('df-penalty--on');
-                    armTimer();
-                    if (limitMs - (performance.now() - t0 + spent) <= 0) timeUp();
+                    paintHead();
+                    if (mistakes >= MISTAKES_MAX) gameOver();
                 }
             }
 
             function levelClear() {
                 state = 'clear';
-                my.cancel(timer); loop.stop();
-                fill.style.width = '0%';
                 cleared = levelNo;
                 if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
                 Sfx.play('win');
@@ -223,18 +216,21 @@
                 my.after(NEXT_MS, startLevel);
             }
 
-            function timeUp() {
+            function gameOver() {
                 if (state !== 'play') return;
                 state = 'over';
-                my.cancel(timer); loop.stop();
-                fill.style.width = '0%';
                 L.diffs.forEach(function (d) { if (!foundSet[d.i]) ringBoth(d.i, 'df-ring--miss'); });
-                head.textContent = '時間到了！黃圈是沒找到的';
+                head.innerHTML = '';
+                head.appendChild(h('span', { 'class': 'df-head__main', text: '第二次點錯了！' }));
+                head.appendChild(h('span', { 'class': 'df-head__sub', text: '黃圈是沒找到的' }));
+                var failLevel = levelNo, back = kit.resumeFrom(failLevel), secs = Math.round((performance.now() - t0) / 1000);
                 my.after(2200, function () {
                     kit.result(root, {
-                        num: cleared + ' 關', label: '時間到了',
-                        lines: ['第 ' + levelNo + ' 關找到 ' + found + ' / ' + N_DIFF],
-                        isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail', onAgain: round
+                        num: cleared + ' 關', label: '點錯兩次了',
+                        lines: ['第 ' + failLevel + ' 關找到 ' + found + ' / ' + N_DIFF + '，花了 ' + secs + ' 秒'],
+                        isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail',
+                        onAgain: function () { round(1); },
+                        resume: { level: back, run: function () { round(back); } }
                     });
                 });
             }
@@ -244,20 +240,21 @@
                 state: function () { return { levelNo: levelNo, found: found, state: state, cleared: cleared }; },
                 tapIdx: function (i, panel) { var g = svgs[panel || 'top'].querySelector('g[data-i="' + i + '"]'); tap(i, panel || 'top', g); },
                 solve: function () { L.diffs.forEach(function (d) { if (!foundSet[d.i]) G.debug.tapIdx(d.i, d.panel === 'top' ? 'bot' : 'top'); }); },
-                timeUp: timeUp
+                timeUp: gameOver,
+                mistakes: function () { return mistakes; }
             };
             my.after(400, startLevel);
         }
 
-        round();
+        round(1);
     }
 
     var G = {
         id: ID,
         name: '哪裡怪怪的',
-        rule: '畫面分成上下兩格，各有 10 個一樣的圖形，其中 5 個的大小、顏色或位置不一樣。上格、下格的圖形都可以點，找齊 5 個就進下一關，而且差異會越來越小。點到沒有差異的圖形會扣 3 秒！',
+        rule: '畫面分成上下兩格，各有 10 個一樣的圖形，其中 5 個的大小、顏色或位置不一樣。上格、下格的圖形都可以點，找齊 5 個就進下一關，而且差異會越來越小。不限時間，慢慢找！但是每一關第一次點到沒有差異的圖形不要緊，第二次點錯就結束了。',
         mount: mount,
-        test: { amounts: amounts, timeFor: timeFor, makeLevel: makeLevel, itemIn: itemIn, polyPoints: polyPoints, N_DIFF: N_DIFF, N_SHAPES: N_SHAPES, KINDS: KINDS, LEVEL_RAMP: LEVEL_RAMP }
+        test: { amounts: amounts, MISTAKES_MAX: MISTAKES_MAX, makeLevel: makeLevel, itemIn: itemIn, polyPoints: polyPoints, N_DIFF: N_DIFF, N_SHAPES: N_SHAPES, KINDS: KINDS, LEVEL_RAMP: LEVEL_RAMP }
     };
     Reaction.register(G);
 })();

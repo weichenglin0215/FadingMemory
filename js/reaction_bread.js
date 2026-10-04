@@ -6,8 +6,9 @@
    · 過關標準：兩邊重量差距 = |左 − 右| ÷ 較重的那一邊。第 1 關 10.00%，之後每關少 1.00%，
      第 10 關起固定 1.00%（thrFor）。
    · 麵包的形狀（均勻密度，重量＝面積）：
-        第 1~3 關   橫向長方形
-        第 4~7 關   梯形（橫向長方形，其中一邊的高度比另一邊矮，矮邊/高邊比 0.8 → 0.45 線性縮小）
+        第 1 關     橫向長方形
+        第 2~7 關   梯形（橫向長方形，其中一邊的高度比另一邊矮，矮邊/高邊比 0.95 → 0.45，每關少 0.1，
+                    所以第 2 關就是「稍微斜一點」的梯形，斜度每關線性加大）
         第 8 關起   不等邊三角形（頂點的位置在底邊 15%~35% 或 65%~85% 處，不會是正中央）
      每一關的總重量也不一樣（250~480 公克），所以不能背數字。
    · 操作：在麵包上拖曳決定刀的位置——手指一碰，刀先跳到手指下面（粗調），之後手指移動時
@@ -31,6 +32,7 @@
     var W = 360, HB = 140;                              /* 麵包的寬、最高的高度（SVG 單位） */
     var G_MIN = 250, G_MAX = 480;                       /* 總重量範圍（公克） */
     var BREAD_Y = 40;                                   /* 麵包上緣 y（麵包區的 SVG 座標） */
+    var TRAP_START = 0.95, TRAP_STEP = 0.1;             /* 梯形的矮邊/高邊比：第 2 關 0.95，之後每關少 0.1（第 7 關 0.45）*/
     var NUDGE = 0.5;                                    /* ◀ ▶ 每次移動多少 px */
     var GAIN_MIN = 0.2, GAIN_MAX = 1, SPEED_FULL = 1.0; /* 手指速度（px/ms）到 SPEED_FULL 以上時 gain＝1 */
     var FALL_MS = 650;
@@ -43,12 +45,12 @@
     /* 麵包的形狀（多邊形，座標原點在麵包的左上角，y 向下，底邊在 y=HB）。type：rect／trap／tri */
     function makeBread(level, rand) {
         rand = rand || Math.random;
-        var type = level <= 3 ? 'rect' : (level <= 7 ? 'trap' : 'tri');
+        var type = level <= 1 ? 'rect' : (level <= 7 ? 'trap' : 'tri');
         var pts;
         if (type === 'rect') {
             pts = [[0, 0], [W, 0], [W, HB], [0, HB]];
         } else if (type === 'trap') {
-            var ratio = kit.ramp(level, 0.8, 0.45, 7);          /* 矮邊 / 高邊 */
+            var ratio = TRAP_START - (level - 2) * TRAP_STEP;    /* 矮邊 / 高邊 */
             var hs = HB * ratio, left = rand() < 0.5;           /* 左邊矮還是右邊矮 */
             pts = left ? [[0, HB - hs], [W, 0], [W, HB], [0, HB]] : [[0, 0], [W, HB - hs], [W, HB], [0, HB]];
         } else {
@@ -103,12 +105,13 @@
     function mount(root, ctx) {
         var R = null;
 
-        function round() {
+        /* start：從第幾關開始（失敗後可從前 5 關繼續）*/
+        function round(start) {
             if (R) R.dispose();
             R = kit.round();
             var my = R;
             root.innerHTML = '';
-            var level = 1, cleared = 0, newRec = false;
+            var level = start || 1, cleared = level - 1, newRec = false;
 
             var info = h('div', { 'class': 'bk-info' });
             var zone = h('div', { 'class': 'bk-zone' });
@@ -280,6 +283,7 @@
                 } else {
                     info.textContent = '差距 ' + wc.diff.toFixed(2) + '%，超過標準 ' + thr.toFixed(2) + '%';
                     info.classList.add('bk-info--bad');
+                    var back = kit.resumeFrom(level);
                     my.after(1600, function () {
                         info.classList.remove('bk-info--bad');
                         kit.result(root, {
@@ -289,7 +293,9 @@
                                 '差距 ' + wc.diff.toFixed(2) + '%，標準是 ' + thr.toFixed(2) + '%',
                                 '你切在寬度 ' + myPct.toFixed(1) + '% 處，剛好對半是 ' + balPct.toFixed(1) + '% 處'
                             ],
-                            isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail', onAgain: round
+                            isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail',
+                            onAgain: function () { round(1); },
+                            resume: { level: back, run: function () { round(back); } }
                         });
                     });
                 }
@@ -307,16 +313,16 @@
             drawBread();
         }
 
-        round();
+        round(1);
     }
 
     var G = {
         id: ID,
         name: '秤麵包重量',
-        rule: '把麵包切成左右兩半，兩半會掉到左右兩個電子秤上秤重。拖曳手指決定刀的位置（慢慢移動可以微調，也可以按 ◀ ▶），按「切下去」就切。兩邊重量差距要在標準以內才能過關：第 1 關 10%，每關少 1%，後面的麵包會變成梯形和三角形，不能再切正中間！',
+        rule: '把麵包切成左右兩半，兩半會掉到左右兩個電子秤上秤重。拖曳手指決定刀的位置（慢慢移動可以微調，也可以按 ◀ ▶），按「切下去」就切。兩邊重量差距要在標準以內才能過關：第 1 關 10%，每關少 1%，第 2 關開始麵包會變成斜邊的梯形，越來越斜，後面還有三角形，不能再切正中間！',
         mount: mount,
         dev: { next: null },          /* 開發驗證用：延長過關畫面停留時間，正式遊戲不會設定 */
-        test: { thrFor: thrFor, makeBread: makeBread, polyArea: polyArea, clipV: clipV, areaLeft: areaLeft, balanceX: balanceX, weighCut: weighCut, W: W, HB: HB }
+        test: { TRAP_START: TRAP_START, TRAP_STEP: TRAP_STEP, thrFor: thrFor, makeBread: makeBread, polyArea: polyArea, clipV: clipV, areaLeft: areaLeft, balanceX: balanceX, weighCut: weighCut, W: W, HB: HB }
     };
     Reaction.register(G);
 })();

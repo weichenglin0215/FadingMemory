@@ -190,6 +190,15 @@ vendor/three.min.js   Three.js r158（UMD 版）
   - 彈出結算卡片的 `data-sfx` 要放在「被加進 DOM 的那個節點」或它的子孫上，`reaction.js` 的偵測用 `node.matches || node.querySelector`。
   - 開發驗證用的旋鈕放在 `G.dev`（例如強制題型、延長結算停留時間），正式遊戲不會設定；判定用的純函式放在 `G.test`，Node 測試（`test/reaction/load.js` 會 stub 掉 UI／Sfx／Stage；`node test/reaction/run_all.js` 一次跑完）直接呼叫。
 - **26 款的 id 與檔案**：`spot speed drop impossible shapes matchcolor rainbow pendulum tissue landolt lights cups pattern illusion pour coins invoice paint diff bread candy curves rps balloon price heartbeat`，檔案都是 `js/reaction_<id>.js`，CSS 都在 `css/reaction.css` 各自的區塊（class 前綴：`pend- ts- ld- lt- cp- pt- il- pour- cn- iv- pa- df- bk- cd- cv- rp- bl- pr- hb-`）。
+- **1.16 新增的 24 款**：`sticks schulte same backnum setclock tearcal pillbox fridge scallion hangpic mirror witness halfchar followme chicks bounce cake seven teacher dualtask pipes lightsout seq polyrhythm`，樣式都在 `css/reaction2.css`（每款自己的 class 前綴，新款加在檔案最後那行 END 標記之前）。共用工具 `Reaction.kit` 另有 `localPt`（事件座標→元素內邏輯座標）、`timebar`、`lerp`、`resumeFrom`（失敗後從「失敗關卡 − 5」繼續）。
+- **闖關式遊戲的「失敗後從前 5 關繼續」**：遊戲的 `round(startAt)` 接受起始關卡，失敗時 `kit.result(root, { onAgain: function () { round(1); }, resume: { level: kit.resumeFrom(失敗關卡), run: function () { round(那一關); } } })`；`kit.result` 會自動畫出「從第 N 關繼續」「從第 1 關重來」兩顆按鈕（起始關卡為 1 時只畫一顆）。進度只存在 closure 裡，不要存 localStorage（回主選單再進來一律從第 1 關）。
+- **這一輪（1.16）又踩到的坑**：
+  - 全域有 `[hidden] { display: none !important }`（`css/stage.css`），用 `hidden` 屬性藏的按鈕不佔位、會讓版面跳動；要佔位就用 `style.visibility`。
+  - 一開頭就用 `clientWidth／clientHeight` 量場地大小的遊戲（找回小雞、哪裡怪怪的），標題與提示列要先放不斷行空白（` `）佔住高度，文字晚填會讓量到的比最後的大；提示文字也要控制在一行（`white-space: nowrap`）。
+  - 不要用 CSS 的 `d: path()` 換 SVG 路徑（Safari 不支援），用 JS 改 `d` 屬性。
+  - SVG 圖形放在半徑 48 以內才不會旋轉時被畫布切掉。
+  - 預覽瀏覽器會快取 `?v=` 相同的 js／css：改了檔案要先在頁面裡對每個 `<script src>`／`<link href>` 做 `fetch(url, { cache: 'reload' })` 再重新整理，或直接改 `version.json`。
+  - 使用者會自己調常數：測試不要寫死數字，改驗「線性、會變難、之後固定」（`t_setclock`／`t_tearcal`／`t_witness`／`t_landolt` 都這樣寫）。
 
 ## 7. 3D 規範
 
