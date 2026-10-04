@@ -28,16 +28,22 @@
    · 最佳紀錄＝歷來最小的差異度，越小越好。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* （這款是較早寫的遊戲：只玩一局、沒有關卡，所以不用 kit.round，直接在 mount 裡寫；共通結構見 js/reaction_sticks.js 開頭的「新手導讀」） */
 (function () {
     'use strict';
 
+    /* 遊戲代號 */
     var ID = 'matchcolor';
+    /* UI.h：建立 HTML 元素的小工具 */
     var h = UI.h;
 
+    /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
+    /* 兩個色塊中間黑色長方形的寬度 */
     var GAP_PX = 100;           /* 兩個色塊中間黑色長方形的寬度（邏輯 px） */
     var CLOSE_MS = 500;         /* 點擊之後，兩個色塊互相靠攏的時間 */
 
+    /* DIMS：三個維度（色相 h、彩度 s、亮度 v）各自的設定：speed 變化速度、off 起點離左邊多遠、lo／hi 上下限 */
     /* 三個維度各自的設定：
        speed＝右邊色塊每秒變化多少（色相是「度」、彩度／亮度是「%」）；
        off＝起點離左邊色塊多遠（lo～hi 之間隨機）；
@@ -49,15 +55,21 @@
         s: { name: '彩度', speed: 9, off: [28, 45], lo: 8, hi: 100 },
         v: { name: '亮度', speed: 9, off: [28, 45], lo: 18, hi: 100 }
     };
+    /* 三個維度的代號 */
     var DIM_KEYS = ['h', 's', 'v'];
 
+    /* 差異度的顯示格式 */
     function fmtPct(v) { return v.toFixed(2) + '%'; }
+    /* 最佳紀錄文字 */
     function fmtBest(v) { return v == null ? '' : '最佳 ' + fmtPct(v); }
+    /* 隨機取 lo～hi 之間的小數 */
     function rand(lo, hi) { return lo + Math.random() * (hi - lo); }
 
+    /* 顏色換算 */
     /* ═══ 顏色換算 ═══
        CSS 沒有原生的 hsv() 函式，所以先自己算成 rgb()；顏色差異度要用
        L*a*b* 空間算，所以還要 sRGB → 線性 → XYZ（D65 白點）→ L*a*b*。 */
+    /* HSV 轉 RGB：CSS 沒有原生 hsv() 函式，要先換算 */
     function hsvToRgb(hh, ss, vv) {
         var s = ss / 100, v = vv / 100;
         var c = v * s;
@@ -73,13 +85,17 @@
         var m = v - c;
         return { r: Math.round((r1 + m) * 255), g: Math.round((g1 + m) * 255), b: Math.round((b1 + m) * 255) };
     }
+    /* 把顏色轉成 CSS 的 rgb() 字串 */
     function cssRgb(c) { return 'rgb(' + c.r + ',' + c.g + ',' + c.b + ')'; }
 
+    /* sRGB → 線性光（去掉 gamma 曲線），色差計算要用 */
     function toLinear(u) {
         var c = u / 255;
         return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
     }
+    /* L*a*b* 轉換用的輔助函式 */
     function labF(t) { return t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116; }
+    /* RGB → L*a*b*：先轉成 XYZ（D65 白點）再轉成 L*a*b*，這個色彩空間的距離接近人眼感受到的色差 */
     function rgbToLab(c) {
         var r = toLinear(c.r), g = toLinear(c.g), b = toLinear(c.b);
         var x = (0.4124564 * r + 0.3575761 * g + 0.1804375 * b) / 0.95047;
@@ -88,12 +104,14 @@
         var fx = labF(x), fy = labF(y), fz = labF(z);
         return { L: 116 * fy - 16, a: 500 * (fx - fy), b: 200 * (fy - fz) };
     }
+    /* 顏色差異度（%）＝ΔE76：兩個顏色在 L*a*b* 空間裡的直線距離（黑白的 ΔE 剛好是 100） */
     /* 顏色差異度（％）＝ ΔE76：兩個顏色在 L*a*b* 空間裡的直線距離 */
     function diffPercent(c1, c2) {
         var p = rgbToLab(c1), q = rgbToLab(c2);
         return Math.sqrt(Math.pow(p.L - q.L, 2) + Math.pow(p.a - q.a, 2) + Math.pow(p.b - q.b, 2));
     }
 
+    /* 把 u 折回 [lo, hi]：像三角波來回走，讓彩度／亮度一直來回掃，不會衝出範圍 */
     /* 把 u 折回 [lo, hi]：碰到上限就往回走、碰到下限再往回走（像三角波），
        讓彩度／亮度可以一直來回掃，不會衝出範圍。 */
     function fold(u, lo, hi) {
@@ -102,9 +120,11 @@
         return lo + (m <= span ? m : 2 * span - m);
     }
 
+    /* 開一個新局：決定哪個維度在變、左邊色塊的顏色、右邊色塊從哪開始往哪個方向走 */
     /* 開一個新局：決定哪個維度在變、左邊色塊是什麼顏色、右邊色塊從哪開始往哪個方向走。
        回傳 { dim, left:{h,s,v}, valueAt(秒) → 右邊色塊那個維度在第幾秒的值 }。 */
     function newRound() {
+        /* 隨機挑一個維度 */
         var dim = DIM_KEYS[Math.floor(Math.random() * DIM_KEYS.length)];
         var cfg = DIMS[dim];
         /* 左邊色塊：色相整圈隨機；彩度／亮度落在中段，上下留餘裕給右邊色塊來回掃 */
@@ -112,6 +132,7 @@
         if (dim === 's') left.s = rand(40, 75);
         if (dim === 'v') left.v = rand(45, 78);
 
+        /* 起點離左邊的值一段距離，並且朝著左邊靠近 */
         var off = rand(cfg.off[0], cfg.off[1]);
         var dir = Math.random() < 0.5 ? 1 : -1;
         var start;
@@ -122,6 +143,7 @@
             /* 起點超出上下限就改成從另一邊往回靠近，保證一開始一定是朝著左邊的值前進 */
             if (start < cfg.lo || start > cfg.hi) { dir = -dir; start = left[dim] - dir * off; }
         }
+        /* valueAt(秒)：右邊色塊那個維度在第幾秒的值（時間的函式） */
         function valueAt(sec) {
             var u = start + dir * cfg.speed * sec;
             if (dim === 'h') return ((u % 360) + 360) % 360;
@@ -130,9 +152,12 @@
         return { dim: dim, left: left, valueAt: valueAt };
     }
 
+    /* mount：遊戲進場點 */
     function mount(root, ctx) {
+        /* 替整個畫面加上黑底 class（樣式在 css/reaction.css 的 .mc-bg） */
         root.classList.add('mc-bg');
 
+        /* round：開一局 */
         function round() {
             root.innerHTML = '';
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
@@ -140,6 +165,7 @@
             var rd = newRound();
             var leftRgb = hsvToRgb(rd.left.h, rd.left.s, rd.left.v);
 
+            /* 左色塊、中間縫、右色塊 */
             var leftEl = h('div', { 'class': 'mc-block' });
             var gapEl = h('div', { 'class': 'mc-gap' });
             var rightEl = h('div', { 'class': 'mc-block' });
@@ -152,11 +178,13 @@
             ]);
             root.appendChild(foot);
 
+            /* phase 目前階段；raf 動畫的編號；shownRgb 玩家眼睛實際看到的最後一次畫出來的顏色 */
             var phase = 'running';
             var raf = null;
             var shownRgb = null;     /* 玩家眼睛實際看到的、最後一次畫出來的右邊顏色 */
             var t0 = performance.now();
 
+            /* 畫一個畫面：算出右邊色塊現在的顏色 */
             function paint(now) {
                 var v = rd.valueAt((now - t0) / 1000);
                 var c = { h: rd.left.h, s: rd.left.s, v: rd.left.v };
@@ -164,6 +192,7 @@
                 shownRgb = hsvToRgb(c.h, c.s, c.v);
                 rightEl.style.background = cssRgb(shownRgb);
             }
+            /* requestAnimationFrame：瀏覽器每次畫面更新時呼叫，持續更新顏色 */
             function frame(now) {
                 if (phase !== 'running') return;
                 paint(now);
@@ -172,6 +201,7 @@
             paint(t0);
             raf = requestAnimationFrame(frame);
 
+            /* 點擊畫面任一處（pointerdown 一碰就算，不是 click）：凍結最後一次畫出來的顏色，算差異度 */
             /* 點擊畫面任一處：整個 root 監聽（不是某顆按鈕）。phase 不是 running 的時候
                （已經結算了），點畫面不做事，只有「再玩一次」按鈕能重來。 */
             root.addEventListener('pointerdown', function onDown(e) {
@@ -185,6 +215,7 @@
                 var isNew = Reaction.setBest(ID, diff, function (v, b) { return v < b; });
                 ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
+                /* 兩個色塊靠攏：黑色縫的寬度用 CSS transition 縮到 0 */
                 /* 兩個色塊靠攏：黑色長方形的寬度用 CSS transition 縮到 0（見 .mc-gap） */
                 gapEl.classList.add('mc-gap--closed');
 
@@ -199,12 +230,14 @@
         round();
     }
 
+    /* Reaction.register：把這款遊戲登記到遊戲清單 */
     Reaction.register({
         id: ID,
         name: '色不異空',
         rule: '畫面左右各有一個色塊，中間隔著一條黑色長方形。左邊的色塊顏色不會變，右邊的色塊顏色會一直在變（每一局只有色相、彩度、亮度其中一種在變）。用眼睛仔細看，覺得兩個色塊的顏色「完全相同」的那一刻，馬上點擊畫面！兩個色塊會靠在一起，並告訴你實際的顏色差異度，越接近 0% 就越準。',
         mount: mount
     });
+    /* 讓 CLOSE_MS 同時決定 CSS transition 的時間（用 CSS 變數 --mc-close-ms） */
     /* 讓 CLOSE_MS 這個參數同時決定 CSS transition 的時間（見 mount 之後的 style 設定） */
     document.documentElement.style.setProperty('--mc-close-ms', CLOSE_MS + 'ms');
 })();

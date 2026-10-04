@@ -15,6 +15,7 @@
      成績＝連續答對題數（越多越好）。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
 (function () {
     'use strict';
 
@@ -22,35 +23,44 @@
     var h = UI.h;
     var kit = Reaction.kit;
 
+    /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
+    /* 真實差距（相對比例）、錯覺陷阱比例、每題限時，都隨關卡線性變化到第 LEVEL_RAMP 關 */
     var DELTA_START = 0.15, DELTA_END = 0.02;     /* 真實差距（相對比例）：第 1 關 → LEVEL_RAMP 關 */
     var TRAP_START = 0.2, TRAP_END = 0.8;         /* 錯覺陷阱的比例 */
     var TIME_START = 4.0, TIME_END = 2.5;         /* 每題限時（秒） */
     var LEVEL_RAMP = 20;
     var REVEAL_MS = 1500;       /* 答完後揭曉真相停多久 */
+    /* 五種錯覺的代號 */
     var KINDS = ['muller', 'ebbinghaus', 'ponzo', 'vh', 'contrast'];
 
     function fmtBest(v) { return v == null ? '' : '最佳連對 ' + v; }
 
+    /* 出題（純函式，也給 Node 測試用）：決定錯覺種類、真實差距、哪個選項才是對的 */
     /* ═══ 出題（純函式，也給 Node 測試用）═══
        回傳：{ kind, delta, help, big(較大／較亮那個選項的編號 0 或 1), q0, q1(兩個選項的真實數量), ... } */
     function makeQuestion(level, rand, avoidKind, forceKind) {
         rand = rand || Math.random;
         var delta = kit.ramp(level, DELTA_START, DELTA_END, LEVEL_RAMP);
         var trap = kit.ramp(level, TRAP_START, TRAP_END, LEVEL_RAMP);
+        /* help＝true 表示「錯覺幫忙」（錯覺方向和真相一致）；false 是「錯覺陷阱」（錯覺方向與真相相反） */
         var help = rand() >= trap;
+        /* 連續兩題不出同一種錯覺（avoidKind） */
         var pool = KINDS.filter(function (k) { return k !== avoidKind; });
         var kind = forceKind || pool[Math.floor(rand() * pool.length)];
         var q = { kind: kind, delta: delta, help: help };
+        /* big：真實數量比較大的那個選項（0 或 1）。有些錯覺的方向綁定位置（上面／垂直／深色底），所以由 help 決定 */
         /* big：真實數量比較大的那個選項。ponzo／vh／contrast 的錯覺方向跟「位置」綁死
            （上面／垂直／深色底那一個看起來比較大），所以由 help 決定；
            muller／ebbinghaus 的錯覺方向跟「圖案樣式」綁，位置可以隨機。 */
         if (kind === 'ponzo' || kind === 'vh' || kind === 'contrast') q.big = help ? 0 : 1;
         else q.big = rand() < 0.5 ? 0 : 1;
+        /* base：較小那個的基準數值（不同錯覺用不同單位） */
         var base = kind === 'ebbinghaus' ? 40 : (kind === 'contrast' ? 120 : 200);
         if (kind === 'ponzo') base = 96;
         if (kind === 'muller') base = 250;
         q.base = base;
+        /* 較小的是 base，較大的是 base × (1 + Δ)；灰階題改用灰階差（Δ × 255） */
         /* 較小的是 base，較大的是 base × (1 + Δ)；contrast 用灰階差：Δ × 255 */
         if (kind === 'contrast') {
             var gap = Math.round(delta * 255);
@@ -64,24 +74,30 @@
         q.time = kit.ramp(level, TIME_START, TIME_END, LEVEL_RAMP);
         return q;
     }
+    /* 兩個選項真實數量相差幾 % */
     /* 兩個選項真實數量差了多少 %（相對較小的那個） */
     function realPct(q) {
         var a = q.v[q.big], b = q.v[1 - q.big];
         return (a - b) / b * 100;
     }
 
+    /* 畫題目：每種錯覺一個函式，回傳 { hits 兩個選項的點擊範圍, guides 揭曉時畫輔助線的函式 } */
     /* ═══ 畫題目：每一種錯覺一個函式，回傳 { hits:[選項0的點擊區, 選項1的點擊區], guides(g) } ═══ */
+    /* DRAW 物件：用錯覺代號當鍵，存放對應的畫圖函式 */
     var DRAW = {};
 
+    /* 點擊範圍：透明的矩形，蓋在圖形上讓手指好點 */
     function hitRect(svg, x, y, w, hh) {
         return kit.svg('rect', { 'class': 'il-hit', x: x, y: y, width: w, height: hh, rx: 18 }, svg);
     }
 
+    /* 繆勒－萊爾：兩條一樣長（或差一點）的線，箭尾向外的看起來比較長 */
     /* 繆勒－萊爾：選項 0＝上面那條、1＝下面那條 */
     DRAW.muller = function (svg, FW, FH, q) {
         var cx = FW / 2, ys = [FH * 0.32, FH * 0.68], hits = [], fin = 36;
         for (var i = 0; i < 2; i++) {
             var L = q.v[i], isBig = i === q.big;
+            /* tail＝這條線用「箭尾」（翼向外）還是「箭頭」（翼向內） */
             /* 錯覺幫忙：較長的那條用箭尾（向外，看起來更長）；陷阱：較長的那條用箭頭（向內，看起來更短） */
             var tail = q.help ? isBig : !isBig;
             var x1 = cx - L / 2, x2 = cx + L / 2, y = ys[i];
@@ -103,6 +119,7 @@
         };
     };
 
+    /* 艾賓豪斯：中間的圓被周圍的小圓圍住，看起來比被大圓圍住的大 */
     /* 艾賓豪斯：選項 0＝左邊、1＝右邊 */
     DRAW.ebbinghaus = function (svg, FW, FH, q) {
         var cy = FH * 0.5, xs = [FW * 0.27, FW * 0.73], hits = [];
@@ -126,6 +143,7 @@
         };
     };
 
+    /* 龐佐：兩條橫線放在鐵軌（透視）上，靠遠處（上方）的看起來比較長 */
     /* 龐佐：選項 0＝上面那條橫線、1＝下面那條 */
     DRAW.ponzo = function (svg, FW, FH, q) {
         var cx = FW / 2, yTop = FH * 0.1, yBot = FH * 0.92;
@@ -133,6 +151,7 @@
         [-1, 1].forEach(function (s) {
             kit.svg('line', { 'class': 'il-rail', x1: cx + s * wBot, y1: yBot, x2: cx + s * wTop, y2: yTop }, svg);
         });
+        /* 枕木增加透視感 */
         for (var k = 0; k < 7; k++) {      /* 枕木，增加透視感 */
             var t = k / 6, y = yBot - (yBot - yTop) * (0.04 + 0.96 * t);
             var w = wBot - (wBot - wTop) * ((yBot - y) / (yBot - yTop));
@@ -153,6 +172,7 @@
         };
     };
 
+    /* 垂直水平：倒 T 形，垂直那條看起來比較長 */
     /* 垂直水平：倒 T。選項 0＝垂直線、1＝水平線 */
     DRAW.vh = function (svg, FW, FH, q) {
         var cx = FW / 2, baseY = FH * 0.74;
@@ -163,6 +183,7 @@
         return { hits: hits, guides: function () { } };
     };
 
+    /* 同時對比：兩個灰方塊，放在深色底上的看起來比較亮 */
     /* 同時對比：選項 0＝深色底上的方塊（左）、1＝淺色底上的方塊（右） */
     DRAW.contrast = function (svg, FW, FH, q) {
         var half = FW / 2, side = 120, cy = FH * 0.5, hits = [];
@@ -176,6 +197,7 @@
         return { hits: hits, guides: function () { } };
     };
 
+    /* 題目文字與選項名稱 */
     var QTEXT = {
         muller: '哪一條線比較長？', ponzo: '哪一條橫線比較長？', vh: '哪一條線比較長？',
         ebbinghaus: '中間哪個圓比較大？', contrast: '哪一個方塊比較亮？'
@@ -185,17 +207,21 @@
         ebbinghaus: ['左邊的圓', '右邊的圓'], contrast: ['左邊的方塊', '右邊的方塊']
     };
 
+    /* mount：遊戲進場點 */
     function mount(root, ctx) {
         var R = null;
         var newRec = false;
 
+        /* round：開一局 */
         function round() {
             if (R) R.dispose();
             R = kit.round();
             var my = R;
             root.innerHTML = '';
             newRec = false;
+            /* streak 連續答對題數；lastKind 上一題的種類 */
             var streak = 0, lastKind = null;
+            /* 時間條 */
             var bar = h('div', { 'class': 'ld-time' }, [h('div', { 'class': 'ld-time__fill' })]);
             var fill = bar.firstChild;
             var hint = h('div', { 'class': 'il-q', text: '' });
@@ -208,10 +234,12 @@
             function meta() { ctx.setMeta(kit.meta(['連對 ' + streak, fmtBest(Reaction.getBest(ID))])); }
             meta();
 
+            /* 出一題 */
             function ask() {
                 if (my.dead) return;
                 field.innerHTML = '';
                 var level = streak + 1;
+                /* G.dev：開發驗證用的強制設定（正式遊戲都是 null） */
                 var q = makeQuestion(level, null, lastKind, G.dev.kind);
                 if (G.dev.time) q.time = G.dev.time;
                 lastKind = q.kind;
@@ -221,12 +249,15 @@
                 hint.textContent = QTEXT[q.kind];
                 var answered = false;
                 var t0 = performance.now(), limit = q.time * 1000;
+                /* my.loop：每個畫面更新一次，更新倒數條 */
                 var loop = my.loop(function (now) {
                     if (answered) return false;
                     fill.style.width = (100 * Math.max(0, 1 - (now - t0) / limit)).toFixed(1) + '%';
                 });
+                /* 時間到：answer(-1) */
                 var timer = my.after(limit, function () { if (!answered) answer(-1); });
 
+                /* 作答：標示對錯、畫輔助線、揭曉真相；答對繼續，答錯結算 */
                 function answer(idx) {
                     if (answered) return;
                     answered = true;
@@ -237,6 +268,7 @@
                         if (i === q.big) el.classList.add('il-hit--ok');
                         else if (i === idx) el.classList.add('il-hit--bad');
                     });
+                    /* 揭曉：畫出對齊的輔助線，讓玩家看見真正的長度／大小 */
                     d.guides(gGuides);
                     var pct = realPct(q);
                     var what = q.kind === 'contrast' ? '亮' : (q.kind === 'ebbinghaus' ? '大' : '長');
@@ -261,25 +293,32 @@
                         });
                     }
                 }
+                /* 替每個選項的點擊範圍綁 pointerdown */
                 d.hits.forEach(function (el, i) {
                     el.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(i); });
                 });
+                /* G.debug：測試用後門 */
                 G.debug = { q: q, answer: answer, streak: function () { return streak; } };
             }
 
+            /* 開場等 500 毫秒再出第一題 */
             my.after(500, ask);
         }
 
         round();
     }
 
+    /* 遊戲身分證 */
     var G = {
         id: ID,
         name: '錯覺大師',
         rule: '兩個圖形比一比，哪個比較長、比較大、比較亮？眼睛會騙人！有時候錯覺會幫你，有時候剛好相反，而且真正的差距會越來越小。答完立刻揭曉真相，連對越多越好。',
         mount: mount,
+        /* dev 是開發用設定 */
         dev: { kind: null, time: null, reveal: null },      /* 開發驗證用：強制題型／限時，正式遊戲不會設定 */
+        /* test 匯出純函式給 Node 自動測試 */
         test: { makeQuestion: makeQuestion, realPct: realPct, KINDS: KINDS, TRAP_END: TRAP_END }
     };
+    /* 登記到遊戲清單 */
     Reaction.register(G);
 })();

@@ -22,6 +22,7 @@
    · 答錯就結束，成績＝過幾關；失敗後可以從「失敗關卡 − 5」繼續。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
 (function () {
     'use strict';
 
@@ -29,34 +30,47 @@
     var h = UI.h;
     var kit = Reaction.kit;
 
+    /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
+    /* 長度差（%）：第 1 關 30%，每關少 3%，最低 3% */
     var DIFF_START = 30, DIFF_STEP = 3, DIFF_MIN = 3;     /* 長度差（%）：30、27、24 … 3，之後維持 3 */
+    /* 轉折點數量隨關卡增加 */
     var K_START = 3, K_END = 7, K_RAMP = 12;              /* 轉折點的數量 */
+    /* 轉折點上下打亂的幅度（>1 時路線會往回走） */
     var YJIT_START = 0.8, YJIT_END = 1.3;               /* 轉折點上下打亂的幅度（倍的間距，> 1 就會往回走）*/
     var MIN_SWING = 0.8;                                  /* 相鄰兩個轉折點的左右距離，至少是半幅寬的幾倍 */
     var TRAP_END = 0.7;                                   /* 「短的那條轉折比較多」的機率（線性上升到這個） */
+    /* 第 4 關起畫成虛線（無法靠數段數比長度） */
     var DASH_FROM = 4;                                    /* 第幾關起是虛線 */
+    /* 球的速度下限；繩子太長時會加快，讓短的那條在 5 秒內到 */
     var BALL_SPEED = 230;                                 /* 球的速度（px/秒）下限 */
     var TRAVEL_MAX_S = 5;                                 /* 短的那條最多滑幾秒（繩子太長就加快）*/
     var VW = 468;                                         /* SVG 寬 */
     var PAD_TOP = 36, PAD_BOT = 36;
     var SIDE_PAD = 22;                                    /* 繩子離自己那半邊的左右邊緣至少這麼遠 */
     var STEP_PX = 3;                                      /* 取樣間隔 */
+    /* 路徑不重疊：弧長相隔超過 SEP_PX 的兩點，距離要 ≥ CLEAR_PX */
     var CLEAR_PX = 24, SEP_PX = 70;                       /* 路徑不重疊：弧長相隔 > SEP_PX 的兩點距離 ≥ CLEAR_PX */
     var ALPHA_MIN = 0.2;
     var CTRL_FRAC = 0.86;                                 /* 轉折點最多伸到半幅寬的這個比例（曲線過彎時會稍微衝出去，要留空間）*/
 
+    /* 這一關的長度差 */
     function diffFor(level) { return Math.max(DIFF_MIN, DIFF_START - (level - 1) * DIFF_STEP); }
+    /* 這一關的轉折點基本數量 */
     function kBase(level) { return Math.round(kit.ramp(level, K_START, K_END, K_RAMP)); }
+    /* 這一關的上下打亂幅度 */
     function yjitFor(level) { return kit.ramp(level, YJIT_START, YJIT_END, K_RAMP); }
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 關'; }
 
+    /* 純函式（也給 Node 測試用） */
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 點到線段的距離（先把點投影到線段上，再算兩點距離） */
     /* 點 p 到線段 q-r 的距離 */
     function ptSeg(p, q, r) {
         var dx = r.x - q.x, dy = r.y - q.y, l2 = dx * dx + dy * dy, t = l2 ? Math.max(0, Math.min(1, ((p.x - q.x) * dx + (p.y - q.y) * dy) / l2)) : 0;
         var ex = q.x + t * dx - p.x, ey = q.y + t * dy - p.y; return Math.sqrt(ex * ex + ey * ey);
     }
+    /* 兩條線段之間的最短距離；若相交就是 0（ccw 判斷三點的轉向，轉向相異即表示相交） */
     /* 兩條線段（a-b、c-d）之間的最短距離 */
     function segDist(a, b, c, d) {
         var pd = ptSeg;
@@ -64,6 +78,7 @@
         if (ccw(a, c, d) !== ccw(b, c, d) && ccw(a, b, c) !== ccw(a, b, d)) return 0;      /* 相交 */
         return Math.min(pd(a, c, d), pd(b, c, d), pd(c, a, b), pd(d, a, b));
     }
+    /* 轉折點連成的折線（含起點終點）有沒有自己交叉或靠太近 */
     /* 轉折點連成的折線（含起點終點）有沒有自己交叉／靠太近。dims＝{halfW, h}（畫面像素）；alpha＝左右伸展倍率 */
     function polyOk(shape, alpha, dims) {
         var P = [{ x: 0, y: 0 }];
@@ -79,6 +94,7 @@
         }
         return true;
     }
+    /* 產生一條繩子的形狀：k 個轉折點（u 左右位置 −1～1、v 上下位置 0～1），一個一個加上去，每次檢查折線是否交叉；做不出來回傳 null */
     /* 一條繩子的形狀：k 個轉折點，u＝左右位置（−1～1，相對半幅寬）、v＝上下位置（0～1）。
        轉折點是一個一個加上去的，連成的折線不能交叉、不能靠太近；做不出來回傳 null。 */
     function makeShape(k, yjit, rand, dims) {
@@ -104,6 +120,7 @@
         }
         return null;
     }
+    /* 把轉折點用 Catmull-Rom 曲線連成平滑曲線，每 3px 取一點，並記錄累積弧長 s */
     /* 取樣：shape（上面的轉折點）＋ α（左右伸展倍率）→ 折線點 [{x,y,s}]，s＝累積弧長 */
     function buildPath(shape, alpha, cx, halfW, y0, y1) {
         var ctrl = [{ x: cx, y: y0 }];
@@ -113,12 +130,14 @@
         function at(i) { return ctrl[Math.max(0, Math.min(n - 1, i))]; }
         for (var i = 0; i < n - 1; i++) {
             var p0 = at(i - 1), p1 = at(i), p2 = at(i + 1), p3 = at(i + 2);
+            /* 曲線取樣點數只看「伸展倍率 1」時的弦長，不隨 α 改變——這樣曲線總長度對 α 是連續的，二分搜尋才能精確命中 */
             /* 每一段取幾個點只看「伸展倍率 1」時的弦長，不隨 α 改變，這樣曲線長度對 α 是連續的，二分搜尋才能精確命中 */
             var q1 = shape[i - 1] || { u: 0, v: i === 0 ? 0 : 1 }, q2 = shape[i] || { u: 0, v: 1 };
             var dx1 = (q2.u - q1.u) * halfW * CTRL_FRAC, dy1 = (q2.v - q1.v) * (y1 - y0);
             var m = Math.max(2, Math.ceil(Math.sqrt(dx1 * dx1 + dy1 * dy1) / STEP_PX));
             for (var j = (i === 0 ? 0 : 1); j <= m; j++) {
                 var t = j / m, t2 = t * t, t3 = t2 * t;
+                /* Catmull-Rom 曲線公式：用四個相鄰控制點算出段內位置 */
                 var x = 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
                 var y = 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
                 if (pts.length) { var q = pts[pts.length - 1]; s += Math.sqrt((x - q.x) * (x - q.x) + (y - q.y) * (y - q.y)); }
@@ -128,6 +147,7 @@
         return pts;
     }
     function pathLen(pts) { return pts[pts.length - 1].s; }
+    /* 二分搜尋左右伸展倍率 α，讓路線長度剛好等於目標長度；超出範圍回傳 null */
     /* 二分搜尋 α，讓長度等於 target；超出範圍回傳 null */
     function solveAlpha(shape, cx, halfW, y0, y1, target) {
         var lo = ALPHA_MIN, hi = 1;
@@ -138,6 +158,7 @@
         }
         return (lo + hi) / 2;
     }
+    /* 檢查路徑有沒有重疊、有沒有跑出自己那半邊：用「格子雜湊」把點分到格子裡，只比較相鄰格子的點，比逐一比較快很多 */
     /* 路徑不重疊、不出自己的半邊：回傳 true／false（用格子雜湊，O(n)）*/
     function validRope(pts, box) {
         var cell = CLEAR_PX, grid = {}, i;
@@ -162,6 +183,7 @@
         }
         return true;
     }
+    /* 產生一關：先做短的那條，再做長的那條的形狀，用 α 調整成剛好長 (1+差) 倍，所以每關的長度差是精確的 */
     /* 產生一關：回傳 { shortSide, d, y0, y1, L:{pts,len,k,alpha,cx}, R:{…}, ratio, speed }；H 是畫面高度、W 是畫面寬度 */
     function makeLevel(level, H, rand, W) {
         rand = rand || Math.random;
@@ -172,7 +194,9 @@
         var cxS = shortSide === 'L' ? VWd * 0.25 : VWd * 0.75, cxL = shortSide === 'L' ? VWd * 0.75 : VWd * 0.25;
         var dims = { halfW: halfW, h: y1 - y0 };
         var boxOf = function (cx) { return { x0: cx - halfW - 1e-6, x1: cx + halfW + 1e-6, y0: y0, y1: y1 }; };
+        /* 最多嘗試 1500 次 */
         for (var tries = 0; tries < 1500; tries++) {
+            /* isTrap：視覺陷阱——故意讓「較短的那條」轉折比較多 */
             var isTrap = rand() < trap;
             var kS = Math.max(2, kb + (isTrap ? kit.randInt(1, 2, rand) : kit.randInt(-1, 1, rand)));
             var kL = Math.max(2, kb + (isTrap ? -kit.randInt(1, 2, rand) : kit.randInt(-1, 1, rand)));
@@ -192,13 +216,16 @@
         }
         return null;
     }
+    /* 球的速度（px／秒） */
     function speedFor(shortLen) { return Math.max(BALL_SPEED, shortLen / TRAVEL_MAX_S); }
+    /* 虛線的紅段／白段長度：左右兩條差很多，無法靠數虛線段數來比長度 */
     /* 虛線的紅段／白段長度：左右兩條差很多 */
     function dashFor(rand) {
         rand = rand || Math.random;
         var a = kit.pick([[6, 6], [8, 5], [10, 8]], rand), b = kit.pick([[34, 20], [38, 26], [30, 34]], rand);
         return rand() < 0.5 ? { L: a, R: b } : { L: b, R: a };
     }
+    /* 弧長 s 對應的位置（二分搜尋，再線性內插） */
     /* 弧長 s 對應的位置（二分搜尋） */
     function pointAt(pts, s) {
         if (s <= 0) return pts[0];
@@ -210,19 +237,24 @@
         return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, s: s };
     }
 
+    /* mount：遊戲進場點 */
     function mount(root, ctx) {
+        /* Rd 是這一局的計時器管家 */
         var Rd = null;
 
         /* start：從第幾關開始（失敗後可從前 5 關繼續）*/
+        /* round：開一局（失敗後可從前 5 關繼續） */
         function round(start) {
             if (Rd) Rd.dispose();
             Rd = kit.round();
             var my = Rd;
             root.innerHTML = '';
+            /* 替整個畫面加上黑底 class（樣式在 css/reaction.css 的 .cv-bg） */
             root.classList.add('cv-bg');
             my.onDispose(function () { root.classList.remove('cv-bg'); });
             var level = start || 1, cleared = level - 1, newRec = false, state = 'idle';
 
+            /* 建立畫面元素：標題、場地、橫幅、左右兩顆選擇按鈕 */
             var head = h('div', { 'class': 'cv-head' });
             var field = h('div', { 'class': 'cv-field' });
             var banner = h('div', { 'class': 'cv-banner' });
@@ -239,6 +271,7 @@
 
             function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }
 
+            /* 出下一關：產生左右兩條繩子並畫出來（有虛線就畫白底線疊紅色虛線） */
             function nextLevel() {
                 if (my.dead) return;
                 var H = field.clientHeight, W = field.clientWidth;
@@ -269,12 +302,14 @@
                 balls = [kit.svg('circle', { 'class': 'cv-ball', r: 13, cx: ptsL[0].x, cy: ptsL[0].y }, svg), kit.svg('circle', { 'class': 'cv-ball', r: 13, cx: ptsR[0].x, cy: ptsR[0].y }, svg)];
                 bL.disabled = bR.disabled = false;
                 bL.className = bR.className = 'cv-btn';
+                /* 主控台印出這關的實際長度、轉折點數、答案，方便驗證 */
                 try {
                     console.info('[誰先到？] 第 ' + level + ' 關 長度差 ' + (Lv.d * 100).toFixed(0) + '%：左 ' + Lv.L.len.toFixed(1) + ' px（' + Lv.L.k + ' 個轉折點、伸展 ' + Lv.L.alpha.toFixed(2) + '）／右 ' + Lv.R.len.toFixed(1) + ' px（' + Lv.R.k + ' 個轉折點、伸展 ' + Lv.R.alpha.toFixed(2) + '）→ ' +
                         (Lv.shortSide === 'L' ? '左' : '右') + '邊比較短，長/短 = ' + Lv.ratio.toFixed(4) + (dash ? '；虛線 左 ' + dash.L.join('/') + '、右 ' + dash.R.join('/') : '；實線'));
                 } catch (e) { }
             }
 
+            /* 玩家選了哪一邊比較短：兩顆球用同樣的速度沿著繩子滑下去，先到的那顆一到就公布結果 */
             function choose(side) {
                 if (state !== 'pick') return;
                 state = 'run';
@@ -285,6 +320,7 @@
                 head.textContent = '兩顆球一樣的速度，看誰先到…';
                 var t0 = performance.now(), done = { L: false, R: false }, first = null;
                 var lenL = Lv.L.len, lenR = Lv.R.len;
+                /* 依經過時間算出兩顆球的弧長位置 */
                 function place(now) {
                     var s = (now - t0) / 1000 * Lv.speed;
                     var pl = pointAt(ptsL, s), pr = pointAt(ptsR, s);
@@ -305,11 +341,13 @@
                     if (done.L && done.R) return false;
                 });
                 /* 保底：rAF 被暫停時，時間到了直接定位到終點並公布 */
+                /* 保底：rAF 被暫停時，時間到了直接定位到終點並公布 */
                 var total = Math.max(lenL, lenR) / Lv.speed * 1000;
                 my.after(Math.min(lenL, lenR) / Lv.speed * 1000 + 200, function () { if (!arrived) { place(t0 + Math.min(lenL, lenR) / Lv.speed * 1000 + 1); } });
                 my.after(total + 400, function () { lp.stop(); place(t0 + total + 1); });
             }
 
+            /* 公布結果：答對進下一關，答錯結算 */
             function verdict(ok, first) {
                 var msg = '長度：左 ' + Lv.L.len.toFixed(0) + '、右 ' + Lv.R.len.toFixed(0) + '（差 ' + ((Lv.ratio - 1) * 100).toFixed(1) + '%）';
                 if (ok) {
@@ -341,9 +379,11 @@
                 }
             }
 
+            /* 兩顆按鈕：pointerdown 一碰就觸發 */
             bL.addEventListener('pointerdown', function (e) { e.preventDefault(); choose('L'); });
             bR.addEventListener('pointerdown', function (e) { e.preventDefault(); choose('R'); });
 
+            /* G.debug：測試用後門 */
             G.debug = {
                 state: function () { return { level: level, state: state, cleared: cleared }; },
                 level: function () { return Lv; },
@@ -352,18 +392,22 @@
                 chooseRight: function () { choose(Lv.shortSide); },
                 chooseWrong: function () { choose(Lv.shortSide === 'L' ? 'R' : 'L'); }
             };
+            /* 開場等 400 毫秒再開始第一關 */
             my.after(400, nextLevel);
         }
 
         round(1);
     }
 
+    /* 遊戲身分證 */
     var G = {
         id: ID,
         name: '誰先到？',
         rule: '黑色畫面上有左右兩條彎彎曲曲的尋寶路線，判斷哪一條比較短，按下方的按鈕。按下去之後，兩顆球會用一樣的速度沿著路線滑下來，看看誰先到。第 1 關長度差 30%，每關縮小 3%，後面還會變成虛線，轉彎越來越多！',
         mount: mount,
+        /* test 匯出純函式給 Node 自動測試 */
         test: { segDist: segDist, polyOk: polyOk, diffFor: diffFor, kBase: kBase, yjitFor: yjitFor, makeShape: makeShape, buildPath: buildPath, solveAlpha: solveAlpha, validRope: validRope, makeLevel: makeLevel, speedFor: speedFor, dashFor: dashFor, pointAt: pointAt, pathLen: pathLen, MIN_SWING: MIN_SWING, CLEAR_PX: CLEAR_PX, SEP_PX: SEP_PX, SIDE_PAD: SIDE_PAD, PAD_TOP: PAD_TOP, PAD_BOT: PAD_BOT, VW: VW }
     };
+    /* 登記到遊戲清單 */
     Reaction.register(G);
 })();

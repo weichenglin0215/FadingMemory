@@ -11,6 +11,7 @@
    · 每張限時 3.0 → 1.2 秒（線性），有 LIVES 次機會，答錯或超時扣一次。成績＝連續放對的張數。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
 (function () {
     'use strict';
 
@@ -18,15 +19,20 @@
     var h = UI.h;
     var kit = Reaction.kit;
 
+    /* 難度設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
+    /* 難度從第 1 張線性變到第 RAMP_N 張 */
     var RAMP_N = 30;
     var TIME_START = 3.0, TIME_END = 1.2;
     var TRICKY_START = 0.10, TRICKY_END = 0.50;
+    /* 同一個存放區域最多連續出現幾張（避免連續答同一個答案） */
     var ZONE_RUN_MAX = 3;
     var LIVES = 3;
     var NEXT_MS = 650;
 
+    /* 三個存放區域的名稱 */
     var ZONES = { freeze: '冷凍庫', cool: '冷藏室', pantry: '櫥櫃（不用冰）' };
+    /* FOODS 是「資料表」：每個物品一筆 { name 名稱, zone 該放哪, hue 圖示顏色, icon 圖示形狀, tricky 是否反直覺, tip 答錯時的提示 }。想新增食物只要在這裡加一筆，不用改別的程式 */
     /* hue：圖示顏色；icon：圖示形狀；tricky：反直覺 */
     var FOODS = [
         /* 冷凍 */
@@ -53,36 +59,48 @@
         { name: '地瓜', zone: 'pantry', hue: 18, icon: 'round', tricky: true, tip: '地瓜怕冷，放陰涼處' }, { name: '洋芋片', zone: 'pantry', hue: 48, icon: 'bag' }
     ];
 
+    /* 最佳紀錄顯示文字 */
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 張'; }
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 第 n 張的限時（越來越短） */
     function timeFor(n) { return kit.ramp(n, TIME_START, TIME_END, RAMP_N); }
+    /* 第 n 張出「反直覺」食物的機率（越來越高） */
     function trickyP(n) { return kit.ramp(n, TRICKY_START, TRICKY_END, RAMP_N); }
+    /* 抽下一張牌：不能和上一張相同，同一區也不能連續太多張 */
     /* 第 n 張（從 1 起算）要出哪一樣；history＝之前出過的物品陣列 */
     function nextFood(n, history, rand) {
         rand = rand || Math.random;
         var last = history.length ? history[history.length - 1] : null;
         var run = 0;
+        /* 算出目前同一區連續出現幾張（run） */
         for (var i = history.length - 1; i >= 0 && last && history[i].zone === last.zone; i--) run++;
+        /* 依機率決定這一張要不要出反直覺的食物 */
         var wantTricky = rand() < trickyP(n);
+        /* 最多抽 100 次，避免遇到無解條件時卡死 */
         for (var tries = 0; tries < 100; tries++) {
+            /* filter：從 FOODS 篩出符合條件的子集合（!!f.tricky 把 undefined 轉成 false 方便比較） */
             var pool = FOODS.filter(function (f) { return !!f.tricky === wantTricky; });
             var f = kit.pick(pool, rand);
             if (last && f.name === last.name) continue;
             if (last && run >= ZONE_RUN_MAX && f.zone === last.zone) continue;
             return f;
         }
+        /* 保底：萬一都不符合就回傳第一項 */
         return FOODS[0];
     }
+    /* （舊版的滑動操作用的函式，現在改成點按鈕，保留給測試） */
     /* 滑動向量 → 區域：上＝冷凍、左＝冷藏、右＝櫥櫃，往下＝null */
     function zoneFromDelta(dx, dy) {
         if (Math.abs(dx) >= Math.abs(dy)) return dx > 0 ? 'pantry' : 'cool';
         return dy < 0 ? 'freeze' : null;
     }
 
+    /* 畫食物圖示：全部用 SVG 向量圖，座標系 100×100，顏色由 hue（色相）自動配出主色、深色、淺色三種 */
     /* 圖示（viewBox 0 0 100 100）*/
     function drawIcon(icon, hue, parent) {
         var fill = 'hsl(' + hue + ',68%,60%)', dark = 'hsl(' + hue + ',55%,32%)', light = 'hsl(' + hue + ',75%,82%)';
+        /* 小工具 S(標籤, 屬性)：建立一個形狀，沒指定填色就用主色，沒指定外框就用深色 */
         var S = function (tag, a) { a = a || {}; if (a.fill === undefined && !a.stroke) a.fill = fill; if (a.stroke === undefined && a.fill !== 'none') { a.stroke = dark; a['stroke-width'] = 3; a['stroke-linejoin'] = 'round'; } return kit.svg(tag, a, parent); };
         if (icon === 'bottle') { S('rect', { x: 34, y: 34, width: 32, height: 58, rx: 8 }); S('rect', { x: 42, y: 14, width: 16, height: 22, rx: 3, fill: light }); S('rect', { x: 40, y: 8, width: 20, height: 9, rx: 3, fill: dark }); }
         else if (icon === 'box') { S('rect', { x: 18, y: 22, width: 64, height: 66, rx: 6 }); S('line', { x1: 18, y1: 40, x2: 82, y2: 40, stroke: dark, 'stroke-width': 3 }); S('circle', { cx: 50, cy: 64, r: 12, fill: light }); }
@@ -100,18 +118,22 @@
         else { /* cake */ S('rect', { x: 16, y: 52, width: 68, height: 34, rx: 6 }); S('rect', { x: 16, y: 52, width: 68, height: 12, rx: 6, fill: light }); S('circle', { cx: 50, cy: 42, r: 9, fill: 'hsl(0,75%,52%)' }); }
     }
 
+    /* mount：遊戲進場點 */
     function mount(root, ctx) {
         var R = null;
 
         /* startAt：從第幾關開始（失敗後可從前 5 關繼續）*/
+        /* round：開一局 */
         function round(startAt) {
             if (R) R.dispose();
             R = kit.round();
             var my = R;
             root.innerHTML = '';
 
+            /* n 目前第幾張；right 連續答對數；lives 機會；history 已出過的食物；cur 目前這張；cardId 每張 +1，讓舊計時器知道自己過期 */
             var n = (startAt || 1) - 1, right = n, lives = LIVES, newRec = false, state = 'idle', history = [], cur = null, cardId = 0;
 
+            /* 建立畫面元素：三個答案區（冷藏室、冷凍庫、櫥櫃）、題目卡片、時間條、提示 */
             var head = h('div', { 'class': 'fg-head' });
             var zCool = h('button', { 'class': 'fg-zone fg-zone--cool' }, [h('span', { 'class': 'fg-zone__v', text: ZONES.cool })]);
             var zFreeze = h('button', { 'class': 'fg-zone fg-zone--freeze' }, [h('span', { 'class': 'fg-zone__v', text: ZONES.freeze })]);
@@ -121,40 +143,53 @@
             var tb = kit.timebar();
             var tip = h('div', { 'class': 'fg-tip' });
             arena.appendChild(card);
+            /* 排版：左邊一欄放冷藏室＋冷凍庫（上下），右邊放櫥櫃（版面細節在 css/reaction2.css 的 .fg-answers） */
             var answers = h('div', { 'class': 'fg-answers' }, [h('div', { 'class': 'fg-col' }, [zCool, zFreeze]), zPantry]);
             [head, arena, tb.el, tip, answers].forEach(function (x) { root.appendChild(x); });
+            /* zEl：區域代號 → 按鈕元素，方便用代號操作 */
             var zEl = { freeze: zFreeze, cool: zCool, pantry: zPantry };
 
+            /* 更新標題列右側的小字 */
             function meta() { ctx.setMeta(kit.meta(['連對 ' + right, '機會 ' + lives])); }
 
+            /* 出下一張卡 */
             function nextCard() {
                 if (my.dead) return;
                 n++;
                 var id = ++cardId;
                 cur = nextFood(n, history);
                 history.push(cur);
+                /* 主控台印出這張的實際資料（食物、答案、限時、反直覺機率），方便驗證 */
                 try { console.info('[冰箱歸位] 第 ' + n + ' 張：' + cur.name + ' → ' + ZONES[cur.zone] + (cur.tricky ? '（反直覺）' : '') + '；限時 ' + timeFor(n).toFixed(2) + ' 秒；反直覺機率 ' + trickyP(n).toFixed(2)); } catch (e) { }
                 head.textContent = '第 ' + n + ' 張';
                 tip.textContent = '';
                 card.innerHTML = '';
                 card.className = 'fg-card';
+                /* 畫食物圖示和名稱 */
                 var svg = kit.svg('svg', { 'class': 'fg-icon', viewBox: '0 0 100 100' }, card);
                 drawIcon(cur.icon, cur.hue, svg);
                 card.appendChild(h('div', { 'class': 'fg-name', text: cur.name }));
                 state = 'ask';
                 meta();
+                /* 倒數時間條 */
                 var t0 = performance.now(), lim = timeFor(n) * 1000;
                 my.loop(function (now) { if (id !== cardId || state !== 'ask') return false; tb.set(1 - (now - t0) / lim); });
+                /* 時間到：judge(null) 表示沒有作答 */
                 my.after(lim, function () { if (id === cardId && state === 'ask') judge(null); });
             }
 
+            /* 判定：zone 是玩家選的區域（null＝超時） */
             function judge(zone) {
                 if (state !== 'ask') return;
                 state = 'reveal';
                 tb.set(0);
+                /* 選的區域＝食物該放的區域就是答對 */
                 var ok = zone === cur.zone;
+                /* 先清掉上一張留下的綠／橘標記 */
                 Object.keys(zEl).forEach(function (k) { zEl[k].classList.remove('fg-zone--ok', 'fg-zone--bad'); });
+                /* 不論對錯，都把正確答案的區域標成綠色 */
                 zEl[cur.zone].classList.add('fg-zone--ok');
+                /* 答對：加一分、播音效、稍後出下一張 */
                 if (ok) {
                     right++;
                     card.classList.add('fg-card--ok');
@@ -164,14 +199,17 @@
                     my.after(NEXT_MS, function () { Object.keys(zEl).forEach(function (k) { zEl[k].classList.remove('fg-zone--ok', 'fg-zone--bad'); }); nextCard(); });
                     return;
                 }
+                /* 答錯：扣一次機會，玩家選的區域標橘色，並顯示提示 */
                 lives--;
                 if (zone) zEl[zone].classList.add('fg-zone--bad');
                 card.classList.add('fg-card--bad');
                 Sfx.play('bad');
                 tip.textContent = (zone == null ? '時間到！' : '放錯了…') + cur.name + '要放' + ZONES[cur.zone] + (cur.tip ? '（' + cur.tip + '）' : '');
                 meta();
+                /* 沒有機會了 → 結算 */
                 if (lives <= 0) {
                     my.after(1800, function () {
+                        /* kit.resumeFrom：失敗後可從前 5 張繼續 */
                         var back = kit.resumeFrom(n);
                         kit.result(root, {
                             num: right + ' 張', label: right >= 20 ? '收納高手！' : (right >= 10 ? '很會整理！' : '再試一次，會更快！'),
@@ -185,25 +223,31 @@
                 }
             }
 
+            /* 替三個答案按鈕各綁定 pointerdown（一碰就觸發，比 click 即時） */
             Object.keys(zEl).forEach(function (k) { zEl[k].addEventListener('pointerdown', function (e) { e.preventDefault(); judge(k); }); });
 
+            /* G.debug：測試用後門 */
             G.debug = {
                 state: function () { return { n: n, state: state, right: right, lives: lives, cur: cur }; },
                 answerRight: function () { judge(cur.zone); return state; },
                 answerWrong: function () { judge(cur.zone === 'cool' ? 'pantry' : 'cool'); return state; }
             };
+            /* 開場等 400 毫秒再出第一張 */
             my.after(400, nextCard);
         }
 
         round(1);
     }
 
+    /* 遊戲身分證 */
     var G = {
         id: ID,
         name: '冰箱歸位',
         rule: '買菜回來，東西一樣一樣出現在上面的大格子裡。下面有三顆按鈕：左上「冷藏室」、左下「冷凍庫」、右邊「櫥櫃（不用冰）」，點一下把東西放進去。有些東西很容易放錯，要在時間內放對喔！',
         mount: mount,
+        /* test 匯出純函式給 Node 自動測試 */
         test: { FOODS: FOODS, ZONES: ZONES, timeFor: timeFor, trickyP: trickyP, nextFood: nextFood, zoneFromDelta: zoneFromDelta, ZONE_RUN_MAX: ZONE_RUN_MAX, RAMP_N: RAMP_N }
     };
+    /* 登記到遊戲清單 */
     Reaction.register(G);
 })();

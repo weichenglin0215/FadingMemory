@@ -6,7 +6,15 @@
    js/reaction_speed.js／reaction_drop.js／reaction_spot.js／reaction_impossible.js／
    reaction_shapes.js／reaction_matchcolor.js／reaction_rainbow.js。 */
 
+/* 【新手導讀】
+   · 這個檔案的規則都長得像 .名稱 { 屬性: 值; }：「.名稱」是 class 選擇器，JS 把同名 class 貼到元素上，下面的樣式就會生效。
+   · 顏色、字級、間距一律用 var(--xxx)，變數定義在 css/theme.css 的 :root 裡（要換風格改那邊就好）。
+   · 名稱裡的「__」代表「某元素裡的零件」（例如 .rule-dlg__card = 說明彈窗裡的卡片），「--」代表「變化版」
+     （例如 .spot-tile--ok = 答對時的樣子）。這是 BEM 命名習慣，看名字就能猜到用途。
+   · :active 是「手指／滑鼠正按著」的狀態，常用來做按下去縮小一點的回饋。
+   · 想知道哪個 class 是哪個遊戲的？看上面檔頭的對照表，前綴相同的就是同一款遊戲。 */
 /* ─── 上方列的「?」規則按鈕 ─── */
+/* 「?」說明按鈕：圓形（border-radius:50%）、固定 48×48，flex:0 0 auto 表示不被擠壓 */
 .bar__help {
     flex: 0 0 auto;
     width: 48px;
@@ -21,11 +29,14 @@
     cursor: pointer;
 }
 
+/* 按下去時縮小到 93%，給手指「有按到」的回饋 */
 .bar__help:active {
     transform: scale(0.93);
 }
 
 /* ─── 說明彈窗（進場、或按「?」重看）─── */
+/* 說明彈窗：position:absolute + inset:0 蓋滿整個畫面，z-index:20 浮在遊戲上面；
+   半透明暖棕色底（rgba 最後的 0.35 是透明度），flex 置中卡片 */
 .rule-dlg {
     position: absolute;
     inset: 0;
@@ -37,6 +48,7 @@
     background: rgba(74, 59, 30, 0.35);
 }
 
+/* 彈窗裡的白色卡片 */
 .rule-dlg__card {
     width: 100%;
     display: flex;
@@ -48,9 +60,11 @@
     border-radius: var(--r-lg);
     box-shadow: var(--shadow-pop);
     text-align: center;
+    /* 進場動畫：0.2 秒；rule-dlg-in 在下面用 @keyframes 定義 */
     animation: rule-dlg-in 0.2s ease;
 }
 
+/* 進場動畫內容：從往下 18px 且全透明 → 回到原位且不透明（from 是起點，to 是終點） */
 @keyframes rule-dlg-in {
     from {
         transform: translateY(18px);
@@ -63,12 +77,14 @@
     }
 }
 
+/* 彈窗標題 */
 .rule-dlg__title {
     font-size: var(--fs-lg);
     font-weight: var(--fw-black);
     color: var(--c-ink);
 }
 
+/* 彈窗規則內文（靠左對齊，其餘文字都是置中） */
 .rule-dlg__text {
     font-size: var(--fs-sm);
     font-weight: var(--fw-bold);
@@ -83,6 +99,7 @@
    結果疊在遊戲畫面上」的做法（見下面 .drop-result-overlay/-card），但疊上去的
    卡片內部文字仍然沿用同一組 .rx-result__num/__label class，只是外層容器
    換成 .drop-result-card，不是 .rx-result 本身。 */
+/* 結算頁容器：垂直排列、置中 */
 .rx-result {
     flex: 1 1 auto;
     display: flex;
@@ -93,23 +110,27 @@
     text-align: center;
 }
 
+/* 結算頁的大數字（成績） */
 .rx-result__num {
     font-size: var(--fs-xxl);
     font-weight: var(--fw-black);
     color: var(--c-blue);
 }
 
+/* 結算頁的評語 */
 .rx-result__label {
     font-size: var(--fs-lg);
     font-weight: var(--fw-black);
     color: var(--c-ink);
 }
 
+/* 提示文字的「成功」版本（綠色） */
 .hint--ok {
     color: var(--c-green);
     font-weight: var(--fw-black);
 }
 
+/* 結算頁裡的按鈕 */
 .rx-result .btn {
     width: 260px;
     margin-top: var(--sp-3);
@@ -119,6 +140,7 @@
    .speed-num 是中間那個大大的倒數數字；數字到了 3 秒內會被 js/reaction_speed.js
    清空文字內容（不是用 CSS 隱藏），所以這裡的樣式只需要管「數字還顯示的時候」
    長什麼樣子就好。 */
+/* 零秒出手的外層容器 */
 .speed-wrap {
     flex: 1 1 auto;
     display: flex;
@@ -128,6 +150,7 @@
     gap: var(--sp-3);
 }
 
+/* 倒數大數字，tabular-nums 讓每個數字等寬、跳動時不會抖 */
 .speed-num {
     font-variant-numeric: tabular-nums;
     font-size: 88px;
@@ -136,12 +159,14 @@
     min-height: 1.1em;
 }
 
+/* 大按鈕 */
 .speed-btn {
     height: 140px;
     font-size: var(--fs-xl);
 }
 
 /* ═══ 遊戲二：神準落下 ═══ */
+/* 場地：relative 是裡面 absolute 元素的定位基準；overflow:hidden 把超出邊界的東西裁掉 */
 .drop-field {
     position: relative;
     flex: 1 1 auto;
@@ -155,6 +180,7 @@
     overflow: hidden;
 }
 
+/* 三角形指標：clip-path:polygon(...) 用三個點把方塊「裁」成倒三角形 */
 .drop-tri {
     position: absolute;
     z-index: 3;
@@ -169,11 +195,13 @@
    像顯微鏡發現本來就存在的精細刻度；分隔線不用 vector-effect:non-scaling-stroke，
    故意讓它跟著畫面一起放大變粗。三角形（釘子）是獨立的 .drop-tri，
    不受尺的 viewBox 影響，永遠停在螢幕上同一個位置。 */
+/* 尺的 SVG */
 .drop-strip-svg {
     position: absolute;
     display: block;
 }
 
+/* 尺上的色塊 */
 .drop-rect {
     fill: var(--c-ink);
 }
@@ -182,6 +210,7 @@
     fill: var(--flow-ink-1);
 }
 
+/* 色塊上的文字標籤 */
 .drop-label {
     fill: var(--c-on-accent);
     font-family: var(--font-ui);
@@ -221,6 +250,7 @@
    按下的瞬間按鈕就從畫面中央跳到「左上角頂到中心點」的位置，往右下角偏移了半個按鈕的寬高，
    導致手指按下時按鈕已經跳出手指範圍，看起來像「按了沒反應」。改用 flex 置中，
    transform 這個屬性就只剩 :active 的 scale 在用，不會再互搶。 */
+/* 「插」按鈕（置中方式見上方說明） */
 .drop-btn {
     position: relative;
     z-index: 5;
@@ -231,6 +261,7 @@
 
 /* 結算畫面：不清空 #screen，三角形釘在方塊上、鏡頭停在最後放大倍率的那一幕
    留在背景，這層半透明卡片疊在上面——玩家看得到自己剛剛插中的樣子。 */
+/* 結算疊層：蓋在遊戲畫面上的半透明背景 */
 .drop-result-overlay {
     position: absolute;
     inset: 0;
@@ -242,6 +273,7 @@
     background: rgba(74, 59, 30, 0.45);
 }
 
+/* 結算疊層裡的卡片 */
 .drop-result-card {
     width: 100%;
     max-width: 380px;
@@ -262,6 +294,7 @@
 }
 
 /* ═══ 遊戲三：大家來找碴 ═══ */
+/* 大家來找碴：4×4 的格子，其中一格顏色不同 */
 .spot-grid {
     flex: 1 1 auto;
     min-height: 0;
@@ -271,6 +304,7 @@
     gap: var(--sp-3);
 }
 
+/* 單個色塊按鈕，transition 讓縮放有 0.1 秒的過渡動畫，不會「啪」一下 */
 .spot-tile {
     border: none;
     border-radius: var(--r-md);
@@ -283,11 +317,13 @@
     transform: scale(0.96);
 }
 
+/* 答對：用綠色虛線 outline 框住（outline-offset 為負數 = 框畫在格子內側） */
 .spot-tile--ok {
     outline: 10px dashed var(--c-ok-light);
     outline-offset: -5px;
 }
 
+/* 答錯：用橘紅色虛線框 */
 .spot-tile--bad {
     /*outline: 10px dotted var(--c-bad-light);*/
     outline: 10px dashed var(--c-bad-light);
@@ -297,19 +333,24 @@
 /* 遊戲介面底色改純黑：色彩判斷類的遊戲，背景色會透過同時對比影響色塊看起來的樣子，
    黑色是最中性的底，不偏向任何色相或亮度；只在這個遊戲的 #screen 生效，上方的
    標題列（.bar）不受影響，答錯的結算畫面文字也要跟著換成亮色才看得清楚。 */
+/* 黑色背景版面 */
 .spot-dark-bg {
     background: #000;
 }
 
+/* 黑底上的提示文字改亮灰色 */
 .hint--on-dark {
     color: hsl(0, 0%, 70%);
 }
 
+/* 不可能任務 */
 /* ═══ 遊戲四：不可能任務 ═══ */
+/* 白色背景 */
 .imp-white-bg {
     background: #FFFFFF;
 }
 
+/* 鏡頭畫面的外框 */
 .imp-field {
     position: relative;
     flex: 1 1 auto;
@@ -333,10 +374,12 @@
     z-index: 1;
 }
 
+/* 警戒線的長方形 */
 .imp-bar-rect {
     fill: var(--flow-ink-1);
 }
 
+/* 提示文字：absolute 加 top:50% + translateY(-50%) 是傳統的「垂直置中」寫法 */
 .imp-hint {
     position: absolute;
     left: 0;
@@ -352,6 +395,7 @@
     z-index: 3;
 }
 
+/* 危險時的提示變紅色 */
 .imp-hint--danger {
     color: var(--flow-ink-1);
 }
@@ -360,6 +404,7 @@
    算出來直接寫在 SVG 屬性上（font-size／stroke-width），這裡只管顏色跟
    字體——鏡頭還沒推進時這些東西在完整畫面裡小到幾乎看不見，推進的過程
    會跟著整個畫面一起被放大，不需要另外做淡入。 */
+/* 量尺線（藍） */
 .imp-measure-line {
     stroke: var(--c-blue);
     fill: var(--c-blue);
@@ -367,6 +412,7 @@
 
 /* vector-effect: non-scaling-stroke：邊線寬度用「螢幕上的 px」算，不跟著 viewBox
    的放大倍率變粗——否則鏡頭推得越近（公分數越小），膠囊的邊框就越粗。 */
+/* 量尺數字的膠囊底 */
 .imp-measure-pill {
     fill: var(--c-card);
     stroke: var(--bd-c);
@@ -374,6 +420,7 @@
     vector-effect: non-scaling-stroke;
 }
 
+/* 量尺數字 */
 .imp-measure-num {
     fill: var(--c-blue);
     font-family: var(--font-ui);
@@ -383,6 +430,7 @@
 /* 標題／新紀錄：paint-order: stroke 讓白色描邊畫在字的「底下」（只露出字外面
    那一圈），文字壓在量尺線或照片上時有一圈白邊隔開，不會跟背景糊在一起。
    描邊粗細（stroke-width）由 js 依字級算好寫在 SVG 屬性上。 */
+/* 標題文字（白邊描邊） */
 .imp-measure-title {
     font-family: var(--font-ui);
     font-weight: 900;
@@ -391,10 +439,12 @@
     paint-order: stroke;
 }
 
+/* 成功標題（綠） */
 .imp-measure-title--ok {
     fill: var(--c-green);
 }
 
+/* 失敗標題（紅） */
 .imp-measure-title--bad {
     fill: var(--flow-ink-1);
 }
@@ -402,6 +452,7 @@
 /* 「警戒線」標籤直接寫在紅色警戒線上：白字＋紅色描邊（描邊畫在字底下），
    在紅色線條裡描邊跟線條融在一起、只看到白字；字比線還粗而往上超出的部分，
    紅色描邊讓白字在白色背景上也讀得清楚。 */
+/* 「警戒線」標籤 */
 .imp-measure-label {
     fill: #FFFFFF;
     stroke: var(--flow-ink-1);
@@ -411,6 +462,7 @@
     font-weight: 900;
 }
 
+/* 「新紀錄」文字 */
 .imp-measure-newrec {
     fill: var(--c-green);
     stroke: #FFFFFF;
@@ -424,6 +476,7 @@
    的卡片——鏡頭特寫（成功/失敗＋公分數）要一直看得到，只多這一顆按鈕疊上去。
    靠右擺：量尺線的下箭頭在正中央、「警戒線」標籤在左邊，按鈕靠右才不會
    蓋住它們。 */
+/* 再挑戰按鈕，浮在畫面右下 */
 .imp-restart-btn {
     position: absolute;
     right: var(--sp-3);
@@ -436,11 +489,13 @@
     box-shadow: var(--shadow-pop);
 }
 
+/* 形形色色：在一堆圖案中找出不一樣的那個 */
 /* ═══ 遊戲五：形形色色 ═══ */
 .shapes-dark-bg {
     background: #000;
 }
 
+/* 外層容器，把棋盤置中 */
 .shapes-wrap {
     flex: 1 1 auto;
     min-height: 0;
@@ -449,11 +504,13 @@
     justify-content: center;
 }
 
+/* 棋盤：display:grid 格子排版，欄數與格子大小由 JS 算出後寫進去 */
 .shapes-board {
     display: grid;
     gap: 2px;
 }
 
+/* 一格圖案 */
 .shapes-cell {
     background: #161616;
     border: none;
@@ -464,11 +521,13 @@
     overflow: hidden;
 }
 
+/* 答對 */
 .shapes-cell--ok {
     outline: 3px dashed var(--c-ok-light);
     outline-offset: -3px;
 }
 
+/* 答錯 */
 .shapes-cell--bad {
     outline: 3px dashed var(--c-bad-light);
     outline-offset: -3px;
@@ -477,11 +536,13 @@
 /* 93% ＝使用者要求「圖案再放大 1.33 倍」（70% × 1.33 ≈ 93%），盡量佈滿整個
    格子，不要留下太多空白；文字型圖案的對應放大在 js/reaction_shapes.js
    （字級係數 0.6 → 0.8）。 */
+/* SVG 圖案：占格子的 93% */
 .shapes-glyph-svg {
     width: 93%;
     height: 93%;
 }
 
+/* 文字型圖案 */
 .shapes-glyph-text {
     font-weight: var(--fw-black);
     line-height: 1;
@@ -494,33 +555,39 @@
    中間那條「黑色長方形」其實就是透出來的黑色背景，不用另外上色；它的寬度
    （100px，由 js 的 GAP_PX 寫在 flex-basis 上）收到 0 的過程就是兩個色塊互相
    靠攏、緊貼的動畫，時間由 --mc-close-ms 決定。 */
+/* 色不異空：黑底、不留邊 */
 .screen.mc-bg {
     background: #000;
     padding: 0;
 }
 
+/* 兩個色塊所在的橫列 */
 .mc-field {
     flex: 1 1 auto;
     min-height: 0;
     display: flex;
 }
 
+/* 單個色塊，flex:1 1 0 讓左右平分寬度 */
 .mc-block {
     flex: 1 1 0;
     min-width: 0;
 }
 
+/* 兩色塊中間的縫，transition 讓它縮到 0 時有動畫（cubic-bezier 是自訂加速曲線） */
 .mc-gap {
     flex: 0 0 100px;
     transition: flex-basis var(--mc-close-ms, 500ms) cubic-bezier(0.3, 0, 0.2, 1);
 }
 
+/* 縫關閉：flex-basis 歸零（!important 優先於 JS 寫的行內樣式） */
 .mc-gap--closed {
     flex-basis: 0 !important;
 }
 
 /* 下方文字區高度固定：玩的時候顯示說明文字、結算時換成大字＋按鈕，兩個階段
    佔的高度一樣，色塊的高度才不會在點擊的瞬間跳動。 */
+/* 下方說明區，固定高度 200px */
 .mc-foot {
     flex: 0 0 200px;
     display: flex;
@@ -531,6 +598,7 @@
     padding: 0 var(--sp-4);
 }
 
+/* 說明文字（white-space:pre-line = 保留 \n 換行） */
 .mc-hint {
     color: #FFFFFF;
     font-size: var(--fs-sm);
@@ -540,6 +608,7 @@
     white-space: pre-line;
 }
 
+/* 結果大字 */
 .mc-result {
     color: #FFFFFF;
     font-size: var(--fs-xl);
@@ -548,12 +617,14 @@
     text-align: center;
 }
 
+/* 新紀錄 */
 .mc-newrec {
     color: var(--c-green-light);
     font-size: var(--fs-xs);
     font-weight: var(--fw-black);
 }
 
+/* 再來一次按鈕 */
 .mc-again {
     width: 260px;
     height: var(--btn-h-sm);
@@ -563,11 +634,13 @@
 /* ═══ 遊戲七：七彩陷阱 ═══
    純黑底、padding 歸零：上緣約 10% 高度放提示文字，其餘空間放正方形的 2×2 棋盤
    （邊長由 js 量出來設定），四格緊緊貼在一起、沒有縫隙。 */
+/* 七彩陷阱：黑底 */
 .screen.rb-bg {
     background: #000;
     padding: 0;
 }
 
+/* 上方提示列 */
 .rb-top {
     flex: 0 0 10%;
     display: flex;
@@ -581,6 +654,7 @@
     text-align: center;
 }
 
+/* 棋盤外層（置中） */
 .rb-wrap {
     flex: 1 1 auto;
     min-height: 0;
@@ -589,6 +663,7 @@
     justify-content: center;
 }
 
+/* 2×2 棋盤 */
 .rb-board {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -596,6 +671,7 @@
     background: #000;
 }
 
+/* 一格色塊 */
 .rb-cell {
     display: flex;
     align-items: center;
@@ -606,6 +682,7 @@
 
 /* 最新換上去的方塊＝白邊（inset box-shadow：邊框畫在方塊內側，不會把方塊撐大
    或擠到隔壁）；下一個方塊出現時 js 會把這個 class 拿掉。 */
+/* 最新換上的方塊：白色邊框 */
 .rb-cell--new {
     box-shadow: inset 0 0 0 10px #FFFFFF;
 }
@@ -613,6 +690,7 @@
 /* 失敗標記：先蓋一圈黑色內框、再疊虛線——不管方塊本身是什麼顏色，虛線都
    看得清楚。bad＝你點錯的那一格（鮮紅色），missed＝本來該點、卻沒點到的那一格
    （白色，超時時標的就是它）。 */
+/* 失敗標記（共用） */
 .rb-cell--bad,
 .rb-cell--missed {
     box-shadow: inset 0 0 0 14px #000;
@@ -621,16 +699,19 @@
     outline-offset: -11px;
 }
 
+/* 點錯的那一格：紅色虛線 */
 .rb-cell--bad {
     outline-color: #FF0000;
 }
 
+/* 漏掉的那一格：白色虛線 */
 .rb-cell--missed {
     outline-color: #FFFFFF;
 }
 
 /* 干擾字：寬度約方塊的 80%（字級由 js 依方塊大小算好），pointer-events:none
    讓點擊直接穿透到底下的方塊。 */
+/* 干擾字 */
 .rb-letter {
     font-family: var(--font-ui);
     font-weight: var(--fw-black);
@@ -639,6 +720,7 @@
     user-select: none;
 }
 
+/* 規則彈窗的說明字 */
 .rb-rule-text {
     font-size: var(--fs-sm);
     font-weight: var(--fw-bold);
@@ -646,6 +728,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 規則彈窗中的目標色 */
 .rb-rule-targets {
     font-size: var(--fs-lg);
     font-weight: var(--fw-black);
@@ -653,6 +736,7 @@
     letter-spacing: 2px;
 }
 
+/* @media 是「媒體查詢」：使用者在系統設定了「減少動態效果」時，關掉彈窗進場動畫（無障礙貼心設計） */
 @media (prefers-reduced-motion: reduce) {
 
     .rule-dlg__card {
@@ -665,16 +749,19 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 /* 標題列右側的喇叭（開關音效）：跟「?」同一個圓鈕樣式，兩顆並排時縮一點間距 */
+/* 音效開關按鈕 */
 .bar__sound {
     font-size: var(--fs-md);
 }
 
+/* 喇叭圖示大小 */
 .bar__sound .icon {
     width: 28px;
     height: 28px;
 }
 
 /* 共用結算卡片裡的小字 */
+/* 結算卡片裡的小字 */
 .rx-result__line {
     text-align: center;
 }
@@ -683,6 +770,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 六點鐘方向：看鐘擺擺動，在鐘擺到達 6 點鐘方向的瞬間點擊 */
 /* ═══ 六點鐘方向（.pend-）═══ */
 .pend-field {
     position: relative;
@@ -694,6 +782,7 @@
     border-radius: var(--r-lg);
 }
 
+/* 鐘擺的 SVG 畫面，鋪滿場地 */
 .pend-svg {
     position: absolute;
     inset: 0;
@@ -702,26 +791,31 @@
     display: block;
 }
 
+/* 弧形刻度線 */
 .pend-arc {
     stroke: var(--c-ink-soft);
     stroke-width: 1.5px;
 }
 
+/* 刻度線（粗） */
 .pend-tick {
     stroke: var(--c-ink-soft);
     stroke-width: 1.5px;
 }
 
+/* 細刻度線 */
 .pend-tick--fine {
     stroke: var(--c-ink);
     stroke-width: 1.5px;
 }
 
+/* 正下方 0 度（6 點鐘）的紅色基準線 */
 .pend-zero {
     stroke: var(--flow-ink-1);
     stroke-width: 3px;
 }
 
+/* 刻度數字 */
 .pend-num {
     fill: var(--c-ink-soft);
     font-family: var(--font-ui);
@@ -734,27 +828,32 @@
     font-size: 34px;
 }
 
+/* 擺桿 */
 .pend-rod {
     stroke: var(--c-ink);
     stroke-width: 5px;
 }
 
+/* 擺錘（藍色圓球） */
 .pend-bob {
     fill: var(--c-blue);
     stroke: var(--c-ink);
     stroke-width: 3px;
 }
 
+/* 指針 */
 .pend-needle {
     stroke: var(--c-ink);
     stroke-width: 3px;
 }
 
+/* 擺動的轉軸（中心圓點） */
 .pend-pivot {
     fill: var(--c-ink);
 }
 
 /* 結算：浮在欄位上緣（針尖在畫面中下方，不會被蓋住） */
+/* 結算視窗（見上方說明）：absolute 浮在場地上緣 */
 .pend-verdict {
     position: absolute;
     left: var(--sp-3);
@@ -783,6 +882,7 @@
 }
 
 /* 標題列中間：遊戲名稱在上、meta（第 N 關・最佳…）在下，兩行疊起來 */
+/* 標題列中間區：遊戲名稱在上、說明（第 N 關…）在下 */
 .bar__mid {
     flex: 1 1 auto;
     min-width: 0;
@@ -799,6 +899,7 @@
     font-size: var(--fs-md);
 }
 
+/* 說明文字：單行顯示，太長就用 ... 省略（text-overflow:ellipsis 要搭配 overflow:hidden + nowrap） */
 .bar__mid .bar__meta {
     flex: none;
     min-width: 0;
@@ -814,6 +915,7 @@
    滿版暖米色牆面、padding 歸零；整個 #screen 是操作區，touch-action:none 避免
    瀏覽器把往下滑當成「下拉重新整理」。紙用重複鋪的 SVG 背景捲動（background-position-y），
    不建立大量 DOM。 */
+/* 抽光它：整個畫面就是操作區（見上方說明） */
 .screen.ts-bg {
     background: var(--c-paper);
     padding: 0;
@@ -823,6 +925,7 @@
     -webkit-user-select: none;
 }
 
+/* 衛生紙：用 background-repeat 重複貼同一張圖，不用建立一堆 DOM 元素，效能比較好 */
 .ts-paper {
     position: absolute;
     left: calc(50% - 150px);
@@ -834,11 +937,13 @@
     transition: transform 0.6s ease, opacity 0.6s ease;
 }
 
+/* 抽完後淡出並往下掉 */
 .ts-paper--gone {
     opacity: 0;
     transform: translateY(80px);
 }
 
+/* 衛生紙捲（SVG） */
 .ts-roll {
     position: absolute;
     left: 0;
@@ -849,12 +954,14 @@
     pointer-events: none;
 }
 
+/* 紙捲本體 */
 .ts-roll__body {
     fill: #FFFEF8;
     stroke: #D8C99A;
     stroke-width: 3px;
 }
 
+/* 紙捲上的紋路 */
 .ts-roll__mark {
     stroke: #E0D4AE;
     stroke-width: 3px;
@@ -862,16 +969,19 @@
     stroke-linecap: round;
 }
 
+/* 紙捲中心的紙筒 */
 .ts-roll__core {
     fill: #C9A56B;
     stroke: #A8803F;
     stroke-width: 3px;
 }
 
+/* 紙筒的孔 */
 .ts-roll__hole {
     fill: var(--c-paper);
 }
 
+/* 計時文字 */
 .ts-time {
     position: absolute;
     top: var(--sp-3);
@@ -883,6 +993,7 @@
     color: var(--c-blue);
 }
 
+/* 進度文字 */
 .ts-prog {
     position: absolute;
     top: 56px;
@@ -894,6 +1005,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 左邊的進度條底 */
 .ts-bar {
     position: absolute;
     left: var(--sp-2);
@@ -906,6 +1018,7 @@
     overflow: hidden;
 }
 
+/* 進度條填滿部分，高度由 JS 設定 */
 .ts-bar__fill {
     position: absolute;
     top: 0;
@@ -915,6 +1028,7 @@
     background: var(--c-green);
 }
 
+/* 中央提示文字 */
 .ts-prompt {
     position: absolute;
     left: 0;
@@ -929,6 +1043,7 @@
     text-shadow: 0 0 10px var(--c-paper), 0 0 10px var(--c-paper);
 }
 
+/* 結算長條圖：align-items:flex-end 讓每根長條底部對齊 */
 .ts-chart {
     display: flex;
     align-items: flex-end;
@@ -937,12 +1052,14 @@
     height: 70px;
 }
 
+/* 單根長條 */
 .ts-chart__bar {
     flex: 1;
     background: var(--c-orange);
     border-radius: 4px 4px 0 0;
 }
 
+/* 缺口在哪？：看視力表上的 E，找出缺口（開口）朝哪個方向。 */
 /* ═══ 缺口在哪？（.ld-）═══ */
 .ld-head {
     text-align: center;
@@ -951,6 +1068,7 @@
     color: var(--c-ink);
 }
 
+/* 放 E 字的區域 */
 .ld-field {
     flex: 1 1 auto;
     min-height: 0;
@@ -963,23 +1081,28 @@
     overflow: hidden;
 }
 
+/* E 字外圈 */
 .ld-ring {
     display: block;
     flex: none;
 }
 
+/* E 字（深色） */
 .ld-e {
     fill: var(--c-ink);
 }
 
+/* 答對：綠色 */
 .ld-e--ok {
     fill: var(--c-ok);
 }
 
+/* 答錯：橘色 */
 .ld-e--bad {
     fill: var(--c-bad);
 }
 
+/* 時間條（底） */
 .ld-time {
     height: 10px;
     border-radius: 5px;
@@ -987,13 +1110,16 @@
     overflow: hidden;
 }
 
+/* 時間條（填滿部分） */
 .ld-time__fill {
     height: 100%;
     width: 0;
     background: var(--c-blue);
 }
 
+/* 點燈記憶：記住燈亮的順序，再依序點回去。 */
 /* ═══ 點燈記憶（.lt-）═══ */
+/* 燈盤外框 */
 .lt-panel {
     flex: 1 1 auto;
     min-height: 0;
@@ -1005,12 +1131,14 @@
     border-radius: var(--r-lg);
 }
 
+/* 燈的排列：欄列數由 JS 算好 */
 .lt-grid {
     display: grid;
     gap: 10px;
     padding: 10px;
 }
 
+/* 一顆燈（熄滅狀態）：border-radius:50% 做成圓形，radial-gradient 做出圓球的立體感 */
 .lt-lamp {
     border: 8px solid var(--bd-c);
     border-radius: 50%;
@@ -1020,29 +1148,35 @@
     transition: background 0.06s ease, box-shadow 0.06s ease;
 }
 
+/* 亮起：換成亮黃色並加上光暈（box-shadow） */
 .lt-lamp--lit {
     border-color: #F4C542;
     background: radial-gradient(circle at 35% 30%, #FFF6BF, #FFD43B 55%, #F2A81D);
     box-shadow: 0 0 22px 6px rgba(255, 212, 59, 0.75);
 }
 
+/* 點對（綠） */
 .lt-lamp--hit {
     border-color: var(--c-ok);
     background: radial-gradient(circle at 35% 30%, #D8F5DF, #6CBD79 60%, #4C9A5B);
 }
 
+/* 點錯（橘） */
 .lt-lamp--bad {
     border-color: var(--c-bad);
     background: radial-gradient(circle at 35% 30%, #FFE3D3, #E8956B 60%, #D46F3C);
 }
 
+/* 揭曉時標出該點的燈（虛線邊框） */
 .lt-lamp--reveal {
     border-color: hsl(122, 80%, 45%);
     border-style: dashed;
     box-shadow: 0 0 14px 3px rgba(255, 212, 59, 0.7);
 }
 
+/* 球在哪杯：看杯子交換位置，猜球在哪一杯下面。 */
 /* ═══ 球在哪杯（.cp-）═══ */
+/* 場地 */
 .cp-field {
     position: relative;
     flex: 1 1 auto;
@@ -1054,6 +1188,7 @@
     touch-action: none;
 }
 
+/* 杯子 SVG */
 .cp-svg {
     position: absolute;
     inset: 0;
@@ -1062,6 +1197,7 @@
     display: block;
 }
 
+/* 杯身（紅色） */
 .cp-cup__body {
     fill: #D9483B;
     stroke: #8F2A20;
@@ -1069,10 +1205,12 @@
     stroke-linejoin: round;
 }
 
+/* 杯口 */
 .cp-cup__rim {
     fill: #8F2A20;
 }
 
+/* 杯身高光 */
 .cp-cup__shine {
     stroke: rgba(255, 255, 255, 0.55);
     stroke-width: 5px;
@@ -1080,13 +1218,16 @@
     fill: none;
 }
 
+/* 球 */
 .cp-ball {
     fill: var(--c-yellow);
     stroke: #9A6D0B;
     stroke-width: 3px;
 }
 
+/* 解鎖圖案：像手機的九宮格解鎖，記住畫出來的路徑再自己畫一次。 */
 /* ═══ 解鎖圖案（.pt-）═══ */
+/* 場地 */
 .pt-field {
     position: relative;
     flex: 1 1 auto;
@@ -1098,6 +1239,7 @@
     touch-action: none;
 }
 
+/* 圖案 SVG */
 .pt-svg {
     position: absolute;
     inset: 0;
@@ -1106,51 +1248,61 @@
     display: block;
 }
 
+/* 一個圓點 */
 .pt-node {
     fill: var(--c-card-alt);
     stroke: var(--c-ink-soft);
     stroke-width: 4px;
 }
 
+/* 經過的點（藍色） */
 .pt-node--on {
     fill: var(--c-blue);
     stroke: var(--c-blue);
 }
 
+/* 起點（黃色） */
 .pt-node--start {
     fill: var(--c-yellow);
     stroke: #9A6D0B;
 }
 
+/* 路徑線段 */
 .pt-seg {
     stroke: var(--c-blue);
     stroke-width: 10px;
     stroke-linecap: round;
 }
 
+/* 示範的線段 */
 .pt-seg--demo {
     stroke: var(--c-blue);
 }
 
+/* 玩家畫的線段 */
 .pt-seg--mine {
     stroke: var(--c-blue);
 }
 
+/* 正確（綠） */
 .pt-seg--ok {
     stroke: var(--c-ok);
 }
 
+/* 錯誤（半透明橘） */
 .pt-seg--bad {
     stroke: var(--c-bad);
     opacity: 0.55;
 }
 
+/* 揭曉正確答案：虛線點狀（dasharray 2 18 = 短線段加長空白，看起來像點點） */
 .pt-seg--answer {
     stroke: var(--c-ok);
     stroke-dasharray: 2 18;
     stroke-width: 12px;
 }
 
+/* 手指正在拖曳中、尚未連到點的線 */
 .pt-live {
     stroke: var(--c-blue);
     stroke-width: 6px;
@@ -1159,7 +1311,9 @@
     pointer-events: none;
 }
 
+/* 錯覺大師：判斷視覺錯覺圖案中，哪條線比較長、哪個圓比較大等等。 */
 /* ═══ 錯覺大師（.il-）═══ */
+/* 題目文字 */
 .il-q {
     min-height: 2.4em;
     display: flex;
@@ -1172,6 +1326,7 @@
     line-height: 1.3;
 }
 
+/* 場地 */
 .il-field {
     position: relative;
     flex: 1 1 auto;
@@ -1183,6 +1338,7 @@
     touch-action: none;
 }
 
+/* SVG */
 .il-svg {
     position: absolute;
     inset: 0;
@@ -1191,41 +1347,48 @@
     display: block;
 }
 
+/* 一般線條 */
 .il-line {
     stroke: var(--c-ink);
     stroke-width: 6px;
     stroke-linecap: round;
 }
 
+/* 粗橫條 */
 .il-bar {
     stroke: var(--c-ink);
     stroke-width: 12px;
     stroke-linecap: butt;
 }
 
+/* 軌道線 */
 .il-rail {
     stroke: var(--c-ink-soft);
     stroke-width: 6px;
     stroke-linecap: round;
 }
 
+/* 枕木 */
 .il-tie {
     stroke: var(--c-ink-soft);
     stroke-width: 4px;
     opacity: 0.6;
 }
 
+/* 中央圓（橘） */
 .il-center {
     fill: var(--c-orange, #E8956B);
     stroke: none;
 }
 
+/* 周圍的圓（藍） */
 .il-surround {
     fill: var(--c-blue);
     stroke: none;
     opacity: 0.85;
 }
 
+/* 輔助虛線 */
 .il-guide {
     stroke: var(--c-bad);
     stroke-width: 3px;
@@ -1234,25 +1397,30 @@
     pointer-events: none;
 }
 
+/* 點擊熱區：fill:transparent 看不到但仍可被點到 */
 .il-hit {
     fill: transparent;
     stroke: none;
     cursor: pointer;
 }
 
+/* 選對（半透明綠） */
 .il-hit--ok {
     fill: rgba(108, 189, 121, 0.28);
     stroke: var(--c-ok);
     stroke-width: 5px;
 }
 
+/* 選錯（半透明橘） */
 .il-hit--bad {
     fill: rgba(232, 149, 107, 0.28);
     stroke: var(--c-bad);
     stroke-width: 5px;
 }
 
+/* 倒到八分滿：長按倒水，在水位到達目標線時放開。 */
 /* ═══ 倒到八分滿（.pour-）═══ */
+/* 場地 */
 .pour-field {
     position: relative;
     flex: 1 1 auto;
@@ -1265,6 +1433,7 @@
     user-select: none;
 }
 
+/* SVG */
 .pour-svg {
     position: absolute;
     inset: 0;
@@ -1273,12 +1442,14 @@
     display: block;
 }
 
+/* 水（半透明藍：fill-opacity） */
 .pour-water {
     fill: var(--c-blue);
     fill-opacity: 0.55;
     stroke: none;
 }
 
+/* 水面線；vector-effect:non-scaling-stroke 讓線寬不隨縮放改變 */
 .pour-surface {
     fill: none;
     stroke: var(--c-blue);
@@ -1287,6 +1458,7 @@
     vector-effect: non-scaling-stroke;
 }
 
+/* 玻璃杯外框 */
 .pour-glass {
     fill: none;
     stroke: var(--c-ink-soft);
@@ -1296,6 +1468,7 @@
     opacity: 0.8;
 }
 
+/* 玻璃杯高光 */
 .pour-glass-shine {
     fill: none;
     stroke: rgba(255, 255, 255, 0.8);
@@ -1303,6 +1476,7 @@
     stroke-linecap: round;
 }
 
+/* 倒下來的水柱 */
 .pour-stream {
     fill: none;
     stroke: var(--c-blue);
@@ -1310,11 +1484,13 @@
     stroke-linecap: round;
 }
 
+/* 水花 */
 .pour-splash {
     fill: var(--c-blue);
     fill-opacity: 0.6;
 }
 
+/* 水壺身 */
 .pour-pitcher__body {
     fill: var(--c-yellow-soft);
     stroke: #9A6D0B;
@@ -1322,6 +1498,7 @@
     stroke-linejoin: round;
 }
 
+/* 水壺把手 */
 .pour-pitcher__handle {
     fill: none;
     stroke: #9A6D0B;
@@ -1329,6 +1506,7 @@
     stroke-linecap: round;
 }
 
+/* 水壺高光 */
 .pour-pitcher__shine {
     fill: none;
     stroke: rgba(255, 255, 255, 0.7);
@@ -1336,15 +1514,18 @@
     stroke-linecap: round;
 }
 
+/* 目標線：一開始看不到(opacity:0)，揭曉時淡入 */
 .pour-target {
     opacity: 0;
     transition: opacity 0.4s ease;
 }
 
+/* 顯示目標線 */
 .pour-target--on {
     opacity: 1;
 }
 
+/* 目標線的虛線 */
 .pour-target__line {
     stroke: var(--c-ok);
     stroke-width: 3px;
@@ -1352,26 +1533,31 @@
     vector-effect: non-scaling-stroke;
 }
 
+/* 尺：同樣一開始隱藏 */
 .pour-ruler {
     opacity: 0;
     transition: opacity 0.5s ease;
 }
 
+/* 顯示尺 */
 .pour-ruler--on {
     opacity: 1;
 }
 
+/* 尺的刻度 */
 .pour-tick {
     stroke: var(--c-ink);
     stroke-width: 3px;
     vector-effect: non-scaling-stroke;
 }
 
+/* 0 刻度（綠色） */
 .pour-tick--zero {
     stroke: var(--c-ok);
     stroke-width: 5px;
 }
 
+/* 刻度數字層：animation: ... both 表示動畫開始前與結束後都維持關鍵影格的樣式 */
 .pour-labels {
     position: absolute;
     inset: 0;
@@ -1379,6 +1565,7 @@
     animation: pour-fade 0.5s ease both;
 }
 
+/* 淡入動畫 */
 @keyframes pour-fade {
     from {
         opacity: 0;
@@ -1389,6 +1576,7 @@
     }
 }
 
+/* 刻度數字 */
 .pour-ticklabel {
     position: absolute;
     transform: translateY(-50%);
@@ -1398,10 +1586,12 @@
     text-shadow: 0 0 4px var(--c-card), 0 0 4px var(--c-card), 0 0 4px var(--c-card);
 }
 
+/* 0 刻度的數字（綠） */
 .pour-ticklabel--zero {
     color: var(--c-ok);
 }
 
+/* 放大倍數提示（右上角） */
 .pour-zoomlabel {
     position: absolute;
     right: var(--sp-3);
@@ -1416,6 +1606,7 @@
     pointer-events: none;
 }
 
+/* 結果卡片（浮在場地下方） */
 .pour-verdict {
     position: absolute;
     left: var(--sp-3);
@@ -1434,16 +1625,20 @@
     text-align: center;
 }
 
+/* 結果大數字 */
 .pour-verdict__num {
     font-size: var(--fs-xl);
 }
 
+/* 結果卡片裡的按鈕 */
 .pour-verdict .btn {
     width: 100%;
     height: var(--btn-h-sm);
 }
 
+/* 零錢分類：把桌上的零錢分成指定金額。 */
 /* ═══ 零錢分類（.cn-）═══ */
+/* 目標金額（大字） */
 .cn-target {
     text-align: center;
     font-size: var(--fs-xl);
@@ -1452,6 +1647,7 @@
     line-height: 1.1;
 }
 
+/* 目前已選的總額；超過目標變橘、剛好變綠 */
 .cn-sum {
     text-align: center;
     font-size: var(--fs-md);
@@ -1460,14 +1656,17 @@
     min-height: 1.4em;
 }
 
+/* 超過目標 */
 .cn-sum--over {
     color: var(--c-bad);
 }
 
+/* 剛好等於目標 */
 .cn-sum--ok {
     color: var(--c-ok);
 }
 
+/* 桌面：硬幣用 position:absolute 隨機散落在上面，位置由 JS 算 */
 .cn-table {
     position: relative;
     flex: 1 1 auto;
@@ -1479,6 +1678,7 @@
     touch-action: none;
 }
 
+/* 硬幣共用樣式：圓形、有立體的底部陰影，transition 讓選取時的上浮動畫平滑 */
 .cn-coin {
     position: absolute;
     padding: 0;
@@ -1492,49 +1692,59 @@
     transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
 
+/* 50 元硬幣：radial-gradient 是「放射狀漸層」，做出金屬光澤；字也最大 */
 .cn-coin--50 {
     background: radial-gradient(circle at 35% 30%, #FFF0B0, #F0C23C 60%, #C99A1E);
     font-size: 34px;
 }
 
+/* 20 元 */
 .cn-coin--20 {
     background: radial-gradient(circle at 35% 30%, #F8DDB0, #D9A557 60%, #B07A30);
     font-size: 32px;
 }
 
+/* 10 元 */
 .cn-coin--10 {
     background: radial-gradient(circle at 35% 30%, #FFFFFF, #D6D6D6 60%, #A8A8A8);
     font-size: 30px;
 }
 
+/* 5 元 */
 .cn-coin--5 {
     background: radial-gradient(circle at 35% 30%, #F2F7FF, #BCCBE0 60%, #8EA2BE);
     font-size: 27px;
 }
 
+/* 1 元 */
 .cn-coin--1 {
     background: radial-gradient(circle at 35% 30%, #F4CBA6, #C98B5A 60%, #9E6636);
     font-size: 24px;
 }
 
+/* 被選取的硬幣：往上浮 5px 並放大 1.1 倍 */
 .cn-coin--on {
     transform: translateY(-5px) scale(1.1);
     border-color: var(--c-blue);
     box-shadow: 0 8px 0 rgba(0, 0, 0, 0.2), 0 0 0 5px rgba(107, 140, 196, 0.45);
 }
 
+/* 揭曉：選對的硬幣（綠色光圈） */
 .cn-coin--ok {
     border-color: var(--c-ok);
     box-shadow: 0 8px 0 rgba(0, 0, 0, 0.2), 0 0 0 6px rgba(108, 189, 121, 0.6);
 }
 
+/* 揭曉：正確答案的硬幣（黃色光圈） */
 .cn-coin--answer {
     border-color: #F4C542;
     box-shadow: 0 0 0 6px rgba(255, 212, 59, 0.75);
 }
 
 
+/* 對發票：看獎號，判斷手上的發票有沒有中獎。 */
 /* ═══ 對發票（.iv-）═══ */
+/* 上方資訊文字 */
 .iv-info {
     text-align: center;
     font-size: var(--fs-md);
@@ -1542,6 +1752,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 發票卡片 */
 .iv-card {
     flex: none;
     display: flex;
@@ -1555,18 +1766,21 @@
     box-shadow: 0 3px 0 rgba(0, 0, 0, 0.12);
 }
 
+/* 發票標題 */
 .iv-card__head {
     font-size: var(--fs-sm);
     letter-spacing: 0.5em;
     color: var(--c-ink-soft);
 }
 
+/* 發票號碼那一排數字 */
 .iv-digits {
     display: flex;
     gap: 4px;
     justify-content: center;
 }
 
+/* 單個數字格 */
 .iv-d {
     width: 48px;
     height: 76px;
@@ -1582,16 +1796,19 @@
     transition: background 0.15s ease, color 0.15s ease;
 }
 
+/* 與中獎號碼相符的數字（綠） */
 .iv-d--m {
     background: #CDEBD3;
     color: #2E7A40;
 }
 
+/* 特別獎的數字（黃） */
 .iv-d--sp {
     background: #FFE48A;
     color: #8A5A00;
 }
 
+/* 底下的獎項按鈕列（直向排列） */
 .iv-btns {
     flex: 1 1 auto;
     min-height: 0;
@@ -1600,6 +1817,7 @@
     gap: 6px;
 }
 
+/* 單個獎項按鈕 */
 .iv-btn {
     flex: 1 1 0;
     min-height: 0;
@@ -1621,6 +1839,7 @@
     background: var(--c-blue-soft);
 }
 
+/* 獎項名稱（上面粗體、下面小字） */
 .iv-btn__name {
     display: flex;
     flex-direction: column;
@@ -1640,6 +1859,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 獎號 */
 .iv-btn__num {
     font-size: 34px;
     font-weight: 800;
@@ -1647,6 +1867,7 @@
     font-variant-numeric: tabular-nums;
 }
 
+/* 「沒中獎」按鈕 */
 .iv-btn--none {
     justify-content: center;
     color: var(--c-ink-soft);
@@ -1657,22 +1878,27 @@
     font-size: 26px;
 }
 
+/* 選對（綠） */
 .iv-btn--ok {
     background: hsl(132, 43%, 86%);
     border-color: var(--c-ok);
 }
 
+/* 漏掉的（黃） */
 .iv-btn--miss {
     background: hsl(47, 100%, 86%);
     border-color: #E0A81C;
 }
 
+/* 選錯（橘） */
 .iv-btn--bad {
     background: hsl(19, 79%, 87%);
     border-color: var(--c-bad);
 }
 
+/* 刷油漆：按住畫筆在方塊內塗滿，不要塗出界。 */
 /* ═══ 刷油漆（.pa-）═══ */
+/* 上方資訊文字 */
 .pa-info {
     text-align: center;
     font-size: var(--fs-md);
@@ -1680,6 +1906,7 @@
     color: var(--c-ink);
 }
 
+/* 場地 */
 .pa-field {
     position: relative;
     flex: 1 1 auto;
@@ -1695,6 +1922,7 @@
     overflow: hidden;
 }
 
+/* 要塗的白色方塊；pointer-events:none 讓手指事件穿過它交給外層處理 */
 .pa-square {
     position: relative;
     flex: none;
@@ -1703,16 +1931,19 @@
     pointer-events: none;
 }
 
+/* 畫布 (canvas)：用 JS 在上面畫點陣圖 */
 .pa-canvas {
     display: block;
 }
 
+/* 標記層（出界的地方會標記） */
 .pa-marks {
     position: absolute;
     inset: 0;
     pointer-events: none;
 }
 
+/* 單個出界標記：animation ... infinite alternate 讓它一直來回脈動 */
 .pa-mark {
     position: absolute;
     width: 34px;
@@ -1724,6 +1955,7 @@
     animation: pa-pulse 0.7s ease-in-out infinite alternate;
 }
 
+/* 脈動動畫：縮小淡出 → 放大完全不透明 */
 @keyframes pa-pulse {
     from {
         transform: scale(0.7);
@@ -1736,6 +1968,7 @@
     }
 }
 
+/* 警告層：全蓋住畫面，一開始透明，需要時加 --on */
 .pa-warn {
     position: absolute;
     inset: 0;
@@ -1755,14 +1988,17 @@
     transition: opacity 0.2s ease;
 }
 
+/* 顯示警告 */
 .pa-warn--on {
     opacity: 1;
 }
 
+/* 成功時警告層變綠 */
 .pa-warn--ok {
     background: rgba(63, 164, 106, 0.55);
 }
 
+/* 下方操作區 */
 .pa-zone {
     flex: none;
     display: flex;
@@ -1771,6 +2007,7 @@
     gap: var(--sp-2);
 }
 
+/* 油漆量的長條（底） */
 .pa-gauge {
     width: 100%;
     height: 14px;
@@ -1779,6 +2016,7 @@
     overflow: hidden;
 }
 
+/* 油漆量的長條（目前剩餘） */
 .pa-gauge__fill {
     height: 100%;
     width: 0;
@@ -1786,6 +2024,7 @@
     transition: width 0.08s linear;
 }
 
+/* 畫筆外框 */
 .pa-brushwrap {
     height: 190px;
     display: flex;
@@ -1793,6 +2032,7 @@
     justify-content: center;
 }
 
+/* 畫筆（圓形按鈕） */
 .pa-brush {
     flex: none;
     padding: 0;
@@ -1802,11 +2042,13 @@
     box-shadow: 0 4px 0 rgba(0, 0, 0, 0.18);
 }
 
+/* 沒有油漆時虛線外框 */
 .pa-brush--empty {
     border-style: dashed;
     box-shadow: none;
 }
 
+/* 畫筆上的文字 */
 .pa-brushlabel {
     font-size: var(--fs-md);
     font-weight: 700;
@@ -1814,7 +2056,9 @@
     min-height: 1.4em;
 }
 
+/* 哪裡怪怪的：兩張圖找出不一樣的地方。 */
 /* ═══ 哪裡怪怪的（.df-）═══ */
+/* 標題 */
 .df-head {
     text-align: center;
     font-size: var(--fs-md);
@@ -1822,10 +2066,12 @@
     color: var(--c-ink);
 }
 
+/* 標題主要文字 */
 .df-head__main {
     display: block;
 }
 
+/* 標題次要文字 */
 .df-head__sub {
     display: block;
     font-size: var(--fs-sm);
@@ -1833,10 +2079,12 @@
     color: var(--c-ink-soft);
 }
 
+/* 警示色的次要文字 */
 .df-head__sub--warn {
     color: var(--c-bad);
 }
 
+/* 圖片面板 */
 .df-panel {
     position: relative;
     flex: 1 1 0;
@@ -1848,6 +2096,7 @@
     touch-action: none;
 }
 
+/* SVG */
 .df-svg {
     position: absolute;
     inset: 0;
@@ -1856,17 +2105,20 @@
     display: block;
 }
 
+/* 圖案 */
 .df-shape {
     stroke: rgba(0, 0, 0, 0.35);
     stroke-width: 2px;
     stroke-linejoin: round;
 }
 
+/* 點擊熱區（透明但可點） */
 .df-hit {
     fill: transparent;
     cursor: pointer;
 }
 
+/* 標記圈（預設透明） */
 .df-ring {
     fill: none;
     stroke: transparent;
@@ -1874,19 +2126,23 @@
     pointer-events: none;
 }
 
+/* 找對（綠） */
 .df-ring--ok {
     stroke: var(--c-ok);
 }
 
+/* 點錯（橘） */
 .df-ring--bad {
     stroke: var(--c-bad);
 }
 
+/* 漏找的（黃色虛線） */
 .df-ring--miss {
     stroke: #F4C542;
     stroke-dasharray: 10 6;
 }
 
+/* 「扣分」浮字：一開始透明，加 --on 才播放往上飄的動畫 */
 .df-penalty {
     position: absolute;
     left: 0;
@@ -1901,10 +2157,12 @@
     pointer-events: none;
 }
 
+/* 播放飄升動畫 */
 .df-penalty--on {
     animation: df-pen 0.9s ease-out;
 }
 
+/* 飄升動畫：從原位不透明 → 往上 40px 並消失 */
 @keyframes df-pen {
     0% {
         opacity: 1;
@@ -1917,7 +2175,9 @@
     }
 }
 
+/* 秤麵包重量：切下指定重量的麵包。 */
 /* ═══ 秤麵包重量（.bk-）═══ */
+/* 資訊文字 */
 .bk-info {
     text-align: center;
     font-size: var(--fs-md);
@@ -1929,14 +2189,17 @@
     justify-content: center;
 }
 
+/* 切對（綠） */
 .bk-info--ok {
     color: var(--c-ok);
 }
 
+/* 切錯（橘） */
 .bk-info--bad {
     color: var(--c-bad);
 }
 
+/* 場地 */
 .bk-zone {
     position: relative;
     flex: 1 1 auto;
@@ -1949,6 +2212,7 @@
     user-select: none;
 }
 
+/* SVG */
 .bk-svg {
     position: absolute;
     inset: 0;
@@ -1957,6 +2221,7 @@
     display: block;
 }
 
+/* 麵包 */
 .bk-bread {
     fill: #E7BC72;
     stroke: #B5762A;
@@ -1964,26 +2229,31 @@
     stroke-linejoin: round;
 }
 
+/* 刀線（虛線） */
 .bk-knife__line {
     stroke: var(--c-bad);
     stroke-width: 3px;
     stroke-dasharray: 8 5;
 }
 
+/* 刀把 */
 .bk-knife__grip {
     fill: var(--c-bad);
 }
 
+/* 秤的底座 */
 .bk-sbase {
     fill: #D8D2C0;
     stroke: var(--c-ink-soft);
     stroke-width: 4px;
 }
 
+/* 秤的液晶螢幕 */
 .bk-slcd {
     fill: #263238;
 }
 
+/* 秤上的克數 */
 .bk-sgram {
     fill: #8FA29A;
     font-size: 34px;
@@ -1992,34 +2262,41 @@
     font-variant-numeric: tabular-nums;
 }
 
+/* 秤顯示綠字 */
 .bk-sgram--on {
     fill: #7CFF9B;
 }
 
+/* 切下來的麵包片 */
 .bk-splat {
     fill: #B9B29C;
     stroke: var(--c-ink-soft);
     stroke-width: 3px;
 }
 
+/* 下方控制列 */
 .bk-ctrl {
     flex: none;
     display: flex;
     gap: var(--sp-3);
 }
 
+/* 左右微調 */
 .bk-ctrl .bk-nudge {
     flex: 0 0 22%;
     width: auto;
     font-size: var(--fs-lg);
 }
 
+/* 「切」按鈕 */
 .bk-ctrl .bk-cut {
     flex: 1 1 auto;
     width: auto;
 }
 
+/* 幾顆糖：看一堆糖果，估計某個顏色有幾顆。 */
 /* ═══ 幾顆糖（.cd-）═══ */
+/* 標題 */
 .cd-head {
     text-align: center;
     font-size: var(--fs-md);
@@ -2027,6 +2304,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 問題列（「紅色有幾顆」） */
 .cd-ask {
     display: flex;
     align-items: center;
@@ -2041,6 +2319,7 @@
     line-height: 1.25;
 }
 
+/* 顏色小膠囊（border-radius:999px = 完全圓角） */
 .cd-chip {
     display: inline-flex;
     align-items: center;
@@ -2053,6 +2332,7 @@
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
+/* 糖果盤 */
 .cd-tray {
     position: relative;
     flex: 1 1 auto;
@@ -2063,6 +2343,7 @@
     border-radius: var(--r-lg);
 }
 
+/* SVG */
 .cd-svg {
     position: absolute;
     inset: 0;
@@ -2071,6 +2352,7 @@
     display: block;
 }
 
+/* 蓋住糖果的遮罩（記憶階段結束後蓋住） */
 .cd-cover {
     position: absolute;
     inset: 0;
@@ -2084,10 +2366,12 @@
     background: var(--c-card-alt);
 }
 
+/* 遮罩消失 */
 .cd-cover--off {
     display: none;
 }
 
+/* 四個選項（2×2 格） */
 .cd-opts {
     flex: none;
     display: grid;
@@ -2096,6 +2380,7 @@
     min-height: 140px;
 }
 
+/* 單個選項 */
 .cd-opt {
     height: 66px;
     border: var(--bd);
@@ -2112,17 +2397,21 @@
     background: var(--c-blue-soft);
 }
 
+/* 選對（綠） */
 .cd-opt--ok {
     background: #CDEBD3;
     border-color: var(--c-ok);
 }
 
+/* 選錯（橘） */
 .cd-opt--bad {
     background: #F8D3C2;
     border-color: var(--c-bad);
 }
 
+/* 誰先到？：哪條彎曲路線上的球先到終點。 */
 /* ═══ 誰先到？（.cv-）═══ 黑底畫面 */
+/* 黑底畫面 */
 .screen.cv-bg {
     background: #000000;
     padding: 0;
@@ -2132,6 +2421,7 @@
     user-select: none;
 }
 
+/* 標題 */
 .cv-head {
     flex: none;
     padding: var(--sp-3) var(--sp-3) var(--sp-2);
@@ -2142,6 +2432,7 @@
     min-height: 2.6em;
 }
 
+/* 路線場地 */
 .cv-field {
     position: relative;
     flex: 1 1 auto;
@@ -2149,6 +2440,7 @@
     overflow: hidden;
 }
 
+/* SVG */
 .cv-svg {
     position: absolute;
     inset: 0;
@@ -2157,35 +2449,42 @@
     display: block;
 }
 
+/* 路線 */
 .cv-line {
     fill: none;
     stroke-width: 7px;
     stroke-linejoin: round;
 }
 
+/* 白色路線（逗號 = 兩個 class 共用一個樣式） */
 .cv-line--solid,
 .cv-line--white {
     stroke: #FFFFFF;
 }
 
+/* 紅色路線 */
 .cv-line--red {
     stroke: #E0342A;
 }
 
+/* 起點 */
 .cv-start {
     fill: #3FA46A;
 }
 
+/* 終點 */
 .cv-end {
     fill: #F2C230;
 }
 
+/* 球 */
 .cv-ball {
     fill: #4AB5FF;
     stroke: #FFFFFF;
     stroke-width: 3px;
 }
 
+/* 大標語（浮在場地上，pointer-events:none 不擋點擊） */
 .cv-banner {
     position: absolute;
     left: 0;
@@ -2200,14 +2499,17 @@
     pointer-events: none;
 }
 
+/* 大標語：答對（亮綠） */
 .cv-banner--ok {
     color: #7CFF9B;
 }
 
+/* 大標語：答錯（亮橘） */
 .cv-banner--bad {
     color: #FF9C7A;
 }
 
+/* 下方的選擇按鈕列 */
 .cv-btns {
     flex: none;
     display: flex;
@@ -2215,6 +2517,7 @@
     padding: var(--sp-3);
 }
 
+/* 單顆選擇按鈕（深色底） */
 .cv-btn {
     flex: 1 1 0;
     height: 58px;
@@ -2228,25 +2531,31 @@
     cursor: pointer;
 }
 
+/* 手指按著時變亮一點 */
 .cv-btn:active {
     background: #3A3A3A;
 }
 
+/* 選對 */
 .cv-btn--ok {
     border-color: #7CFF9B;
     color: #7CFF9B;
 }
 
+/* 選錯 */
 .cv-btn--bad {
     border-color: #FF9C7A;
     color: #FF9C7A;
 }
 
+/* [disabled] 是屬性選擇器：按鈕被設成 disabled（不可按）時才套用 */
 .cv-btn[disabled] {
     opacity: 0.8;
 }
 
+/* 猜拳必贏：電腦出拳後，要出能「贏」它的那一個。 */
 /* ═══ 猜拳必贏（.rp-）═══ */
+/* 上半部：電腦／結果顯示區 */
 .rp-top {
     position: relative;
     flex: 1 1 auto;
@@ -2261,6 +2570,7 @@
 }
 
 /* 中間：倒數的數字（或結果文字）＋ 倒數橫條，夾在電腦與你之間 */
+/* 中間：倒數大字或結果文字，加上倒數橫條 */
 .rp-mid {
     flex: none;
     display: flex;
@@ -2272,6 +2582,7 @@
     background: var(--c-card);
 }
 
+/* 大字（倒數數字） */
 .rp-big {
     text-align: center;
     font-size: 96px;
@@ -2281,6 +2592,7 @@
     min-height: 1.05em;
 }
 
+/* 改顯示訊息時使用較小字 */
 .rp-big--msg {
     font-size: var(--fs-xl);
     min-height: 2.4em;
@@ -2289,18 +2601,22 @@
     justify-content: center;
 }
 
+/* 贏了（綠） */
 .rp-big--win {
     color: var(--c-ok);
 }
 
+/* 輸了（橘） */
 .rp-big--lose {
     color: var(--c-bad);
 }
 
+/* 平手（灰） */
 .rp-big--tie {
     color: var(--c-ink-soft);
 }
 
+/* 出拳顯示區 */
 .rp-body {
     min-height: 150px;
     display: flex;
@@ -2310,6 +2626,7 @@
     gap: 2px;
 }
 
+/* 左右（上下）兩半各占一半 */
 .rp-half {
     flex: 1 1 0;
     min-height: 0;
@@ -2320,32 +2637,38 @@
     gap: 4px;
 }
 
+/* 電腦那半（淡紅底） */
 .rp-half--comp {
     background: #FCE9E6;
 }
 
+/* 玩家那半（淡藍底） */
 .rp-half--me {
     background: #E8F0FB;
 }
 
+/* 「電腦」「你」標籤 */
 .rp-who {
     font-size: var(--fs-md);
     font-weight: 800;
     color: var(--c-ink-soft);
 }
 
+/* 拳頭圖示（石頭、剪刀、布） */
 .rp-icon {
     width: 120px;
     height: 120px;
     display: block;
 }
 
+/* 出拳名稱 */
 .rp-name {
     font-size: var(--fs-lg);
     font-weight: 800;
     color: var(--c-ink);
 }
 
+/* 還沒出拳時的「…」 */
 .rp-none {
     height: 120px;
     display: flex;
@@ -2355,6 +2678,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 結果橫幅：用 left:50% + translate(-50%,-50%) 置中（這是傳統置中方式，因為這顆橫幅沒有 :active 的 transform，不會互搶） */
 .rp-banner {
     position: absolute;
     left: 50%;
@@ -2370,20 +2694,24 @@
     white-space: nowrap;
 }
 
+/* 橫幅：贏 */
 .rp-banner--win {
     color: var(--c-ok);
     border-color: var(--c-ok);
 }
 
+/* 橫幅：輸 */
 .rp-banner--lose {
     color: var(--c-bad);
     border-color: var(--c-bad);
 }
 
+/* 橫幅：平手 */
 .rp-banner--tie {
     color: var(--c-ink-soft);
 }
 
+/* 下方三顆出拳按鈕，等寬三欄 */
 .rp-btns {
     flex: none;
     display: grid;
@@ -2391,6 +2719,7 @@
     gap: var(--sp-3);
 }
 
+/* 單顆出拳按鈕：底部有陰影像凸起的按鈕 */
 .rp-btn {
     height: 168px;
     display: flex;
@@ -2407,6 +2736,7 @@
     box-shadow: 0 5px 0 rgba(0, 0, 0, 0.18);
 }
 
+/* 按下去時：往下沉 3px、陰影縮小、變亮，模擬「真的按下去」的手感 */
 .rp-btn:active,
 .rp-btn--pick {
     transform: translateY(3px);
@@ -2414,17 +2744,21 @@
     filter: brightness(1.1);
 }
 
+/* 按鈕上的圖示 */
 .rp-btn__ico .rp-icon {
     width: 88px;
     height: 88px;
 }
 
+/* 按鈕上的文字 */
 .rp-btn__txt {
     font-size: var(--fs-lg);
     font-weight: 800;
 }
 
+/* 吹氣球：長按吹氣，在氣球快爆之前放手。 */
 /* ═══ 吹氣球（.bl-）═══ */
+/* 天空背景：linear-gradient 線性漸層（上藍下白） */
 .bl-field {
     position: relative;
     flex: 1 1 auto;
@@ -2437,6 +2771,7 @@
     user-select: none;
 }
 
+/* SVG */
 .bl-svg {
     position: absolute;
     inset: 0;
@@ -2445,19 +2780,23 @@
     display: block;
 }
 
+/* 氣球本體 */
 .bl-body {
     stroke: rgba(120, 30, 20, 0.45);
     stroke-width: 3px;
 }
 
+/* 高光 */
 .bl-shine {
     fill: rgba(255, 255, 255, 0.6);
 }
 
+/* 氣球打結處 */
 .bl-knot {
     fill: #B93A2E;
 }
 
+/* 氣球繩子 */
 .bl-string {
     fill: none;
     stroke: #6B5B4B;
@@ -2465,13 +2804,16 @@
     stroke-linecap: round;
 }
 
+/* 爆炸後的碎片 */
 .bl-piece {
     fill: #E8685A;
     stroke: rgba(120, 30, 20, 0.45);
     stroke-width: 2px;
 }
 
+/* 價格陷阱：比較兩張折扣標籤，哪一個比較便宜。 */
 /* ═══ 價格陷阱（.pr-）═══ */
+/* 標題 */
 .pr-head {
     text-align: center;
     font-size: var(--fs-md);
@@ -2483,6 +2825,7 @@
     justify-content: center;
 }
 
+/* 兩張標籤的容器 */
 .pr-wrap {
     flex: 1 1 auto;
     min-height: 0;
@@ -2491,6 +2834,7 @@
     gap: var(--sp-3);
 }
 
+/* 單張價格標籤：像吊牌，粗邊框，作答前黑框 */
 .pr-tag {
     position: relative;
     flex: 1 1 0;
@@ -2510,10 +2854,12 @@
     box-shadow: 0 5px 0 rgba(120, 30, 20, 0.2);
 }
 
+/* 按下時微微變暗 */
 .pr-tag:active {
     filter: brightness(0.96);
 }
 
+/* 吊牌的洞 */
 .pr-tag__hole {
     position: absolute;
     left: 18px;
@@ -2525,29 +2871,34 @@
     background: var(--c-card-alt);
 }
 
+/* 標籤小標 */
 .pr-tag__lbl {
     font-size: var(--fs-sm);
     font-weight: 700;
     color: var(--c-ink-soft);
 }
 
+/* 原價（大字） */
 .pr-tag__orig {
     font-size: 50px;
     font-weight: 800;
     line-height: 1.1;
 }
 
+/* 屬性選擇器：data-n 是 JS 記下的位數，位數越多字越小才放得下 */
 .pr-tag__orig[data-n="9"],
 .pr-tag__orig[data-n="10"] {
     font-size: 44px;
 }
 
+/* 更多位數：字更小 */
 .pr-tag__orig[data-n="11"],
 .pr-tag__orig[data-n="12"],
 .pr-tag__orig[data-n="13"] {
     font-size: 36px;
 }
 
+/* 折扣說明區 */
 .pr-tag__disc {
     display: flex;
     flex-direction: column;
@@ -2555,6 +2906,7 @@
     gap: 2px;
 }
 
+/* 折扣文字行 */
 .pr-tag__line {
     font-size: 32px;
     font-weight: 800;
@@ -2564,11 +2916,13 @@
 }
 
 /* 兩張都有的「會員再享 N 折」：混淆用，不用算，所以用淡一點的顏色 */
+/* 兩張都有的「會員再享 N 折」：混淆用，不用算，所以用淡一點的顏色 */
 .pr-tag__line--member {
     font-size: 28px;
     color: var(--c-ink-soft);
 }
 
+/* 計算結果提示 */
 .pr-tag__calc {
     min-height: 1.3em;
     font-size: 26px;
@@ -2578,22 +2932,27 @@
     line-height: 1.2;
 }
 
+/* 答案揭曉：便宜的那張（綠） */
 .pr-tag--low {
     border-color: var(--c-ok);
     background: #E3F5E7;
 }
 
+/* 貴的那張（紅） */
 .pr-tag--high {
     border-color: var(--c-bad-light);
     background: #FBE3DC;
 }
 
+/* 被點的那張邊框加粗 */
 /* 被點的那張：邊框加粗 */
 .pr-tag--pick {
     border-width: 11px;
 }
 
+/* 心跳複製：跟著節奏點擊（複製電腦的心跳節奏）。 */
 /* ═══ 心跳複製（.hb-）═══ */
+/* 標題 */
 .hb-head {
     text-align: center;
     font-size: var(--fs-md);
@@ -2605,6 +2964,7 @@
     justify-content: center;
 }
 
+/* 場地 */
 .hb-field {
     position: relative;
     flex: 1 1 auto;
@@ -2617,6 +2977,7 @@
     user-select: none;
 }
 
+/* SVG */
 .hb-svg {
     position: absolute;
     inset: 0;
@@ -2625,6 +2986,7 @@
     display: block;
 }
 
+/* 空位置（虛線圈） */
 .hb-slot {
     fill: none;
     stroke: var(--c-ink-soft);
@@ -2633,6 +2995,7 @@
     opacity: 0.5;
 }
 
+/* 錯誤的位置（粗紅線） */
 .hb-slot--bad {
     stroke: var(--c-bad);
     stroke-width: 8px;
@@ -2640,23 +3003,28 @@
     opacity: 1;
 }
 
+/* 心形球的外框 */
 .hb-ball__body {
     stroke: rgba(0, 0, 0, 0.3);
     stroke-width: 3px;
 }
 
+/* 左邊的球（藍） */
 .hb-ball--L .hb-ball__body {
     fill: #4A90D9;
 }
 
+/* 中間的球（橘） */
 .hb-ball--C .hb-ball__body {
     fill: #F08A24;
 }
 
+/* 右邊的球（綠） */
 .hb-ball--R .hb-ball__body {
     fill: #3FA46A;
 }
 
+/* 倒數圈 */
 .hb-ring {
     fill: none;
     stroke: var(--c-ink);
@@ -2664,6 +3032,7 @@
     stroke-linecap: round;
 }
 
+/* 晚了的倒數圈（紅） */
 .hb-ring--late {
     stroke: #E0342A;
 }
@@ -2679,15 +3048,18 @@
     opacity: 0.55;
 }
 
+/* 點中：放大並淡出（pop 動畫） */
 .hb-ball--hit {
     transform-origin: center;
     animation: hb-pop 0.26s ease-out forwards;
 }
 
+/* 漏掉：只淡出 */
 .hb-ball--miss {
     animation: hb-fade 0.26s ease-out forwards;
 }
 
+/* pop 動畫：1 倍不透明 → 1.5 倍透明 */
 @keyframes hb-pop {
     from {
         opacity: 1;
@@ -2700,6 +3072,7 @@
     }
 }
 
+/* 淡出動畫 */
 @keyframes hb-fade {
     from {
         opacity: 1;
@@ -2710,6 +3083,7 @@
     }
 }
 
+/* 受傷閃紅光（全畫面半透明紅） */
 .hb-hurt {
     position: absolute;
     inset: 0;
@@ -2718,10 +3092,12 @@
     pointer-events: none;
 }
 
+/* 觸發受傷閃光 */
 .hb-hurt--on {
     animation: hb-hurt 0.35s ease-out;
 }
 
+/* 閃光動畫 */
 @keyframes hb-hurt {
     from {
         opacity: 1;

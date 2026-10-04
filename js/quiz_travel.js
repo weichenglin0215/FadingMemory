@@ -23,13 +23,19 @@
    混淆手法（對調順序、更正、新舊版本混淆…），對照 note/FadingMemory記憶混淆說明.md
    會更清楚每一種寫法想測的是哪一種記憶錯誤。 */
 
+/* 【新手導讀】這個檔案裡 T1～T8 每個函式寫「一關」。第 1 關（T1）最簡單，建議先看懂它，其他關都是同樣的寫法再疊加更多干擾。 */
 (function () {
     'use strict';
 
+    /* Q：共用的出題引擎（js/quiz_gen.js 提供） */
     var Q = window.QuizGen;
+    /* lib：引擎提供的工具箱（抽亂數、轉中文數字、組選項的小函式…），下面把常用的取出來，名字取短比較好寫 */
     var lib = Q.lib;
+    /* P：題庫素材（人名、地點、公車站名…，在 js/quiz_pools.js） */
     var P = lib.P;
+    /* T：範本代入函式：T('今天是{today}', v) 會把 {today} 換成 v.today 的值 */
     var T = lib.T;
+    /* L：做一個「誘答選項」：L(文字, 混淆類型, 為什麼會選錯的說明) */
     var L = lib.L;
     var cnNum = lib.cnNum;
     var cnCount = lib.cnCount;
@@ -42,6 +48,7 @@
     var wearOf = lib.wearOf;
     var people = lib.people;
 
+    /* names：把一串物件的名稱 n 抽出來變成陣列；others：從清單中排除某些項目 */
     function names(arr) { return arr.map(function (x) { return x.n; }); }
     function others(list, not) { return list.filter(function (x) { return [].concat(not).indexOf(x) < 0; }); }
 
@@ -50,7 +57,9 @@
        這是旅遊主軸自己專屬的時間軸邏輯（跟 quiz_gen.js 共用的 timeline() 不同），
        因為旅遊這個主軸需要「每一關的季節都不一樣」這個額外要求（靠季節換算該帶
        什麼衣服，是這個主軸的特色題型，見下面各關的 G.wearQ() 呼叫）。 */
+    /* MONTHS：季節明確的月份，每一關的出發日期落在不同月份，要帶的衣服也不同 */
     var MONTHS = [1, 4, 5, 7, 8, 10, 11, 12];
+    /* 旅遊專用的時間軸：8 關各一組「今天」與「出發日」 */
     function travelTimeline(G) {
         var s = G.int(0, MONTHS.length - 1);
         var out = [];
@@ -62,46 +71,63 @@
         }
         return out;
     }
+    /* ppl／yuan：把數字格式化成「三個人」「500 元」的小函式 */
     var ppl = function (n) { return cnCount(n) + '個人'; };
     var yuan = function (n) { return n + ' 元'; };
 
     /* 第 4 關：借用 quiz_pools 的反常理零食顏色，當旅行點心的誘答 */
     var T_LUGGAGE_MATS = ['布', '硬殼', '鋁框', '塑膠'];
 
+    /* 【第 1 關範例逐行說明】T1(G, S)：G 是這一關專屬的出題器，S 是整局 8 關共用的資料（例如 3 個旅遊地點）；最後回傳 { note 紙條, qs 題目 } */
     /* ═══ 第 1 關：出發前一天（一件差事，幾乎沒有干擾） ═══ */
     function T1(G, S) {
+        /* D：這一關的「今天」與「出發日」 */
         var D = S.tl[S.i];
+        /* G.pick(清單)：從清單隨機挑一個（不會跟這局其他地方挑到重複的） */
         var p = G.pick(P.kin);
+        /* dest：這關的旅遊地點（整局 3 個地點中的第 1 個） */
         var dest = S.d[0].n;
         var e = G.pick(P.travelErrands1);
+        /* G.num(最小, 最大, 避開的數字, 規則)：抽一個數字；twoDiff 規則表示兩位數不能有重複的數字，避免太好記 */
         var bus = G.num(12, 98, null, twoDiff);
         var stop = G.pick(P.stops);
         var floor = G.num(2, 5, null, null, 'floor');
         var n = G.num(2, 4, [floor], null, 'n');
+        /* v：範本用的資料包；紙條與題目的文字都用 T('...{欄位}...', v) 代入 */
         var v = { p: p, dest: dest, bus: bus, stop: stop, place: e.place, floor: floor, act: e.act, n: n, u: e.u, thing: e.thing, today: D.today.sw, ev: D.ev.sw };
+        /* note：紙條內容，一個陣列，每個元素是一段文字（太長會自動分頁） */
         var note = [
             T('今天是{today}。{ev}要和{p}去{dest}玩，出發前要先辦一件事：', v),
             T('搭 {bus} 號公車，在{stop}下車，', v),
             T('去{place} {floor} 樓，{act} {n} {u}{thing}。', v)
         ];
+        /* fl、cu：把答案格式化成「3 樓」「2 袋」之類的顯示文字的小函式 */
         var fl = function (x) { return x + ' 樓'; };
         var cu = function (x) { return x + ' ' + e.u; };
+        /* qs：這一關的候選題目（比最後要出的多，由 finish 挑選） */
         var qs = [
+            /* G.dateQ：日期題；第三個參數是額外的誘答；must:true 表示這題一定要出 */
             G.dateQ('哪一天出發？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是今天。')], { must: true }),
+            /* G.wearQ：依季節問「要帶哪種衣服」 */
             G.wearQ('這趟要帶哪一種衣服？', D.ev),
+            /* G.q(題目, 題型, 正確答案, [誘答…])：一般題；G.others 從素材挑相似的當誘答 */
             G.q('要和誰一起去玩？', '人物', p, G.others(P.kin, p, '差一點點')),
             G.q('這趟出發要去哪裡？', '地點', dest, [L(S.d[1].n, '差一點點'), L(S.d[2].n, '差一點點')]
                 .concat(G.others(others(names(P.trips), [dest, S.d[1].n, S.d[2].n]), [], '差一點點', 1))),
+            /* G.near(正確答案, 格式函式, 範圍)：自動產生「數字很接近」的誘答 */
             G.q('要搭幾號公車？', '數字', bus, G.near(bus, String, { lo: 10, hi: 99 })),
             G.q('要在哪一站下車？', '地點', stop, G.others(P.stops, stop)),
+            /* 特別設計的誘答：把「別的數字」當成這題的誘答（張冠李戴），並說明為什麼會選錯 */
             G.q(T('{place}在幾樓？', v), '數字', fl(floor),
                 [L(fl(n), '張冠李戴', n + ' 是' + e.thing + '的數量，不是樓層。')].concat(G.near(floor, fl, { lo: 1, hi: 9, swap: false }))),
             G.q(T('要{act}幾{u}{thing}？', v), '數字', cu(n),
                 [L(cu(floor), '張冠李戴', floor + ' 是樓層，不是' + e.thing + '的數量。')].concat(G.near(n, cu, { lo: 1, hi: 9, swap: false })))
         ];
+        /* finish(G, qs, 4)：從候選題目中挑出要用的 4 題（必出題先選），回傳題目陣列 */
         return { note: note, qs: finish(G, qs, 4) };
     }
 
+    /* 第 2 關起每關加一點干擾（兩件差事、順序、更正…），寫法與第 1 關相同 */
     /* ═══ 第 2 關：兩件差事（打電話來的人交代自己出發前要跑的兩個地方） ═══ */
     function T2(G, S) {
         var D = S.tl[S.i];

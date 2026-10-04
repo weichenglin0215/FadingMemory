@@ -5,12 +5,15 @@
    其他位置的點擊會穿透到下層 3D 畫布（用來點選物件）。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* HUD 的最外層：absolute + inset:0 蓋滿整個舞台（#stage），裡面的元件再各自用 absolute 擺到上下左右。
+   （HUD = Head-Up Display，遊戲畫面上的操作介面，像是搖桿、按鈕、時間顯示。） */
 #hud {
     position: absolute;
     inset: 0;
 }
 
 /* ─── 上方：選單鈕、地點＋時間、隨身物品 ─── */
+/* 最上方的橫條：左邊選單鈕、中間地點與時間、右邊物品欄，用 flex 排成一列 */
 .hud-top {
     position: absolute;
     left: var(--hud-edge);
@@ -22,6 +25,7 @@
     gap: var(--sp-2);
 }
 
+/* 選單按鈕（方形圓角） */
 .hud-menu {
     flex: 0 0 var(--hud-chip-h);
     height: var(--hud-chip-h);
@@ -36,6 +40,7 @@
     box-shadow: var(--shadow-card);
 }
 
+/* 中間的「地點＋時間」膠囊；flex:1 1 auto 吃掉剩餘寬度，min-width:0 讓文字太長時可以縮 */
 .hud-chip {
     flex: 1 1 auto;
     min-width: 0;
@@ -55,6 +60,7 @@
     overflow: hidden;
 }
 
+/* 時間文字：tabular-nums 讓數字等寬，不會因為數字不同寬度而左右抖動 */
 .hud-chip__time {
     display: flex;
     align-items: center;
@@ -63,12 +69,14 @@
     font-variant-numeric: tabular-nums;
 }
 
+/* 物品欄：拿到的道具一顆顆排在這裡 */
 .hud-inv {
     flex: 0 0 auto;
     display: flex;
     gap: var(--sp-1);
 }
 
+/* 單個道具圖示：圓形；animation: pop-in 讓它拿到時「彈」出來 */
 .hud-inv__item {
     width: var(--hud-chip-h);
     height: var(--hud-chip-h);
@@ -84,6 +92,7 @@
     animation: pop-in 0.4s ease;
 }
 
+/* pop-in 動畫：0% 縮到 0.2 倍 → 70% 放大過頭到 1.15 倍 → 100% 回到正常大小，產生彈跳感 */
 @keyframes pop-in {
     0% { transform: scale(0.2); }
     70% { transform: scale(1.15); }
@@ -91,6 +100,7 @@
 }
 
 /* ─── 提示訊息／廣播 ─── */
+/* 提示訊息（短暫浮出又消失）；pointer-events:none 讓它不擋住底下的點擊 */
 .hud-toast {
     position: absolute;
     left: var(--hud-edge);
@@ -102,11 +112,13 @@
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
+/* 隱藏狀態：變透明並往上移 10px */
 .hud-toast.is-hidden {
     opacity: 0;
     transform: translateY(-10px);
 }
 
+/* 提示訊息的深色小框 */
 .hud-toast__box {
     max-width: 100%;
     padding: var(--sp-3) var(--sp-4);
@@ -119,6 +131,7 @@
     text-align: center;
 }
 
+/* 任務橫幅（比提示訊息大，帶圖示） */
 .hud-banner {
     position: absolute;
     left: var(--hud-edge);
@@ -138,6 +151,7 @@
     line-height: var(--lh-tight);
 }
 
+/* 橫幅裡的圖示 */
 .hud-banner .icon {
     font-size: 52px;
 }
@@ -157,6 +171,7 @@
     touch-action: none;
 }
 
+/* 搖桿底座（固定不動的外圈） */
 .joy__base {
     position: absolute;
     inset: 0;
@@ -166,6 +181,7 @@
     box-shadow: 0 6px 20px rgba(74, 59, 30, 0.2), inset 0 0 24px rgba(62, 134, 196, 0.18);
 }
 
+/* 底座上的上下左右箭頭 */
 .joy__arrows {
     position: absolute;
     inset: 0;
@@ -173,10 +189,12 @@
     font-size: 40px;
 }
 
+/* 每個箭頭圖示用 absolute 擺在各自方向 */
 .joy__arrows .icon {
     position: absolute;
 }
 
+/* 搖桿圓鈕：margin 設成負的一半大小，是把圓心擺到正中間的技巧（不用 transform，因為 JS 要用 transform 移動它） */
 .joy__knob {
     position: absolute;
     left: 50%;
@@ -191,6 +209,7 @@
     will-change: transform;
 }
 
+/* 手指按著搖桿時底座變得比較不透明 */
 .joy.is-active .joy__base {
     background: rgba(255, 253, 243, 0.75);
 }
@@ -198,6 +217,7 @@
 /* ─── 互動鍵（右下）───
    act-breathe 這個「呼吸」動畫（規律地放大縮小一點點）讓這顆按鈕看起來像
    在輕輕脈動，吸引玩家注意「這裡可以互動」，不用額外寫文字說明。 */
+/* 互動鍵：在右下角 */
 .act {
     position: absolute;
     right: var(--hud-edge);
@@ -217,10 +237,12 @@
     animation: act-breathe 1.6s ease-in-out infinite;
 }
 
+/* 互動鍵上的圖示 */
 .act .icon {
     font-size: 50px;
 }
 
+/* 互動鍵的文字（例如「開門」） */
 .act__label {
     max-width: 124px;
     font-size: var(--fs-sm);
@@ -231,6 +253,7 @@
     overflow: hidden;
 }
 
+/* 呼吸動畫：每 1.6 秒放大 5% 再回來 */
 @keyframes act-breathe {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.05); }
@@ -240,6 +263,7 @@
    跟劇情人物說話、做選擇的彈窗。.dlg__choices 用 CSS Grid 排選項按鈕，
    --2／--3 這兩個變化版對應「兩個選項」「三個選項」時各自要分成幾欄
    （欄數依選項內容而定，由 JS 動態決定要加哪一個 class）。 */
+/* 對話框：absolute 蓋滿畫面，align-items:flex-end 讓卡片貼在畫面下方 */
 .dlg {
     position: absolute;
     inset: 0;
@@ -251,10 +275,12 @@
     background: rgba(74, 59, 30, 0.28);
 }
 
+/* 置中版本 */
 .dlg--center {
     align-items: center;
 }
 
+/* 對話框的卡片 */
 .dlg__card {
     width: 100%;
     max-height: 100%;
@@ -269,33 +295,39 @@
     animation: dlg-in 0.22s ease;
 }
 
+/* 進場動畫：從下方 24px 滑上來並淡入 */
 @keyframes dlg-in {
     from { transform: translateY(24px); opacity: 0; }
     to { transform: none; opacity: 1; }
 }
 
+/* 卡片上方：人物圖 + 標題 */
 .dlg__head {
     display: flex;
     align-items: center;
     gap: var(--sp-3);
 }
 
+/* 人物插圖 */
 .dlg__art {
     flex: 0 0 96px;
     height: 96px;
 }
 
+/* 插圖 SVG 填滿 */
 .dlg__art svg {
     width: 100%;
     height: 100%;
 }
 
+/* 標題 */
 .dlg__title {
     font-size: var(--fs-xl);
     font-weight: var(--fw-black);
     line-height: var(--lh-tight);
 }
 
+/* 對話內文（pre-line 讓 \n 換行） */
 .dlg__text {
     font-size: var(--fs-dialog);
     font-weight: var(--fw-bold);
@@ -303,40 +335,48 @@
     white-space: pre-line;
 }
 
+/* 選項按鈕區（grid） */
 .dlg__choices {
     display: grid;
     gap: var(--sp-3);
 }
 
+/* 兩個選項：2 欄 */
 .dlg__choices--2 {
     grid-template-columns: 1fr 1fr;
 }
 
+/* 三個選項：3 欄 */
 .dlg__choices--3 {
     grid-template-columns: 1fr 1fr 1fr;
 }
 
+/* min-width:0 讓按鈕在格子裡可以縮小，不撐破版面 */
 .dlg__choices .btn {
     min-width: 0;
 }
 
+/* 特大按鈕 */
 .btn--big {
     height: 104px;
     font-size: var(--fs-xl);
     font-weight: var(--fw-black);
 }
 
+/* 紙條對話框：卡片佔滿高度 */
 /* 紙條（全螢幕） */
 .dlg--note .dlg__card {
     height: 100%;
 }
 
+/* 紙條本身吃掉剩餘高度 */
 .dlg--note .note {
     flex: 1 1 auto;
     min-height: 0;
     overflow: hidden;
 }
 
+/* 文字顏色小工具 class（綠／橘／藍），JS 想讓一段文字變色就加上它 */
 .tone-ok {
     color: var(--c-green);
 }
@@ -354,6 +394,7 @@
    JS 趁看不到的時候切換場景內容、再淡出露出新場景，玩家不會看到切換瞬間
    的畫面跳動或還沒準備好的狀態。is-on 這個 class 是 JS 在切場景時動態加/
    移除的開關。 */
+/* 轉場的色塊：平常 opacity:0 看不見也點不到，加了 is-on 才淡入蓋住畫面 */
 .fade {
     position: absolute;
     inset: 0;
@@ -364,11 +405,13 @@
     transition: opacity 0.35s ease;
 }
 
+/* 轉場開啟時：完全不透明，並且擋住點擊 */
 .fade.is-on {
     opacity: 1;
     pointer-events: auto;
 }
 
+/* 轉場時畫面中央的文字 */
 .fade__text {
     position: absolute;
     left: 0;
@@ -381,6 +424,7 @@
 }
 
 /* ─── 載入／錯誤 ─── */
+/* 載入／錯誤畫面 */
 .hud-loading {
     position: absolute;
     inset: 0;
@@ -398,6 +442,7 @@
     white-space: pre-line;
 }
 
+/* 載入畫面的插圖，套用呼吸動畫 */
 .hud-loading__art {
     width: 180px;
     height: 180px;

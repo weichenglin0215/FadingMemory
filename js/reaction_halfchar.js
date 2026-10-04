@@ -14,6 +14,7 @@
    · 有 LIVES 次機會，成績＝答對題數（越多越好）。答完把整個字亮出來並說明「相似的是 X，關鍵是 Y」。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
 (function () {
     'use strict';
 
@@ -21,14 +22,18 @@
     var h = UI.h;
     var kit = Reaction.kit;
 
+    /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
     var LEVEL_RAMP = 20;
+    /* SLIVER：差異部件露出的比例，第 1 題露 55%，越後面越少（到 25%） */
     var SLIVER_START = 0.55, SLIVER_END = 0.25; /* 差異部件從貼著相似處的那一側露出幾成（第 1 題最多，越後面越少）*/
     var TIME_START = 8, TIME_END = 3.5;
     var LIVES = 3;
     var NEXT_MS = 1300;
+    /* 最近出過的 10 題不會再出現 */
     var AVOID_RECENT = 10;                      /* 最近出過的幾題不重複 */
 
+    /* 拆字表：每個字拆成兩個部件 [第一個, 第二個]。左右結構是 [左, 右]；上下結構是 [上, 下] */
     /* 拆字表：[第一個部件, 第二個部件]；左右結構＝[左, 右]，上下結構＝[上, 下] */
     var DECOMP = {
         '湖': ['氵', '胡'], '河': ['氵', '可'], '海': ['氵', '每'], '油': ['氵', '由'], '清': ['氵', '青'], '洗': ['氵', '先'], '港': ['氵', '巷'], '流': ['氵', '㐬'], '泡': ['氵', '包'], '汀': ['氵', '丁'],
@@ -52,14 +57,18 @@
         '想': ['相', '心'], '思': ['田', '心'], '念': ['今', '心'], '息': ['自', '心'],
         '雲': ['雨', '云'], '雪': ['雨', '彐'], '電': ['雨', '电'], '霜': ['雨', '相']
     };
+    /* side 對應的部件索引：left/top 是第 0 個部件，right/bottom 是第 1 個 */
     var SIDE_IDX = { left: 0, top: 0, right: 1, bottom: 1 };
+    /* BOUNDS：第一個部件占整個字寬（或字高）的比例＝兩部件的分界線，用來決定遮罩的切點 */
     /* 第一個部件（左或上）占整個字的寬／高幾成＝兩個部件的分界線；用 b 欄位可以逐字覆蓋 */
     var BOUNDS = {
         '氵': 0.32, '言': 0.42, '忄': 0.32, '日': 0.38, '女': 0.36, '金': 0.42, '食': 0.40, '米': 0.50, '扌': 0.36, '足': 0.48, '口': 0.40, '木': 0.40,
         '亻': 0.34, '子': 0.34, '彳': 0.34, '目': 0.44, '片': 0.44, '土': 0.40, '石': 0.46, '虫': 0.44, '車': 0.46, '犭': 0.34, '王': 0.40, '田': 0.56,
         '艹': 0.38, '宀': 0.45, '相': 0.58, '今': 0.54, '自': 0.58, '雨': 0.60, '卓': 0.55
     };
+    /* 題庫 ENTRIES（手工審校）：{ a 答案, side 差異部件在字的哪一側, d 三個干擾字 }。想新增題目只要加一筆，並跑 checkData 檢查 */
     var ENTRIES = [
+        /* 這一組：差異部件在右側（被遮住），相似的左半部件（例如「氵」）露出 */
         /* 露出右半（干擾字有被遮住的左半部件）*/
         { a: '湖', side: 'right', d: ['河', '海', '油'] }, { a: '清', side: 'right', d: ['洗', '港', '流'] }, { a: '請', side: 'right', d: ['說', '話', '語'] },
         { a: '情', side: 'right', d: ['快', '怕', '慢'] }, { a: '晴', side: 'right', d: ['明', '時', '昨'] }, { a: '媽', side: 'right', d: ['姐', '妹', '好'] },
@@ -68,6 +77,7 @@
         { a: '跳', side: 'right', d: ['跑', '路', '跟'] }, { a: '吃', side: 'right', d: ['喝', '叫', '吸'] }, { a: '喝', side: 'right', d: ['吃', '叫', '吸'] },
         { a: '校', side: 'right', d: ['樹', '林', '桌'] }, { a: '你', side: 'right', d: ['他', '住', '做'] }, { a: '孩', side: 'right', d: ['孫', '孔', '孤'] },
         { a: '河', side: 'right', d: ['湖', '海', '油'] }, { a: '洗', side: 'right', d: ['河', '海', '油'] }, { a: '他', side: 'right', d: ['你', '住', '做'] },
+        /* 這一組：差異部件在左側（被遮住），相似的右半部件露出 */
         /* 露出左半（干擾字有被遮住的右半部件）*/
         { a: '媽', side: 'left', d: ['嗎', '碼', '螞'] }, { a: '請', side: 'left', d: ['情', '清', '晴'] }, { a: '情', side: 'left', d: ['請', '清', '晴'] },
         { a: '清', side: 'left', d: ['請', '情', '晴'] }, { a: '晴', side: 'left', d: ['請', '情', '清'] }, { a: '銀', side: 'left', d: ['很', '眼', '根'] },
@@ -75,19 +85,25 @@
         { a: '海', side: 'left', d: ['悔', '梅', '侮'] }, { a: '校', side: 'left', d: ['較', '咬', '狡'] }, { a: '跑', side: 'left', b: 0.42, d: ['抱', '飽', '泡'] },
         { a: '打', side: 'left', d: ['町', '訂', '汀'] }, { a: '孩', side: 'left', d: ['該', '咳', '核'] },
         /* 上下結構 */
+        /* 上下結構 */
         { a: '草', side: 'bottom', d: ['花', '苦', '英'] }, { a: '花', side: 'bottom', d: ['草', '苦', '英'] }, { a: '苦', side: 'bottom', d: ['草', '花', '英'] },
         { a: '英', side: 'bottom', d: ['草', '花', '苦'] }, { a: '家', side: 'bottom', d: ['字', '守', '宅'] }, { a: '字', side: 'bottom', d: ['家', '守', '宅'] },
         { a: '想', side: 'top', d: ['思', '念', '息'] }, { a: '思', side: 'top', d: ['想', '念', '息'] }, { a: '念', side: 'top', d: ['想', '思', '息'] },
         { a: '息', side: 'top', d: ['想', '思', '念'] }, { a: '雲', side: 'bottom', d: ['雪', '電', '霜'] }, { a: '霜', side: 'bottom', d: ['雲', '雪', '電'] }
     ];
 
+    /* 最佳紀錄顯示文字 */
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 題'; }
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 這個字的分界線位置：題庫有寫 b 就用它，否則查 BOUNDS，再沒有就用 0.45 */
     function boundOf(entry) { return entry.b != null ? entry.b : (BOUNDS[DECOMP[entry.a][0]] != null ? BOUNDS[DECOMP[entry.a][0]] : 0.45); }
+    /* 這題露出差異部件的比例（線性隨題號變少） */
     function revealOf(level) { return kit.ramp(level, SLIVER_START, SLIVER_END, LEVEL_RAMP); }
     /* 露出的是哪一側：差異部件的另一側（相似處那一側） */
+    /* 露出的是哪一側：差異部件的另一側（相似處那一側） */
     function exposedSide(entry) { return { left: 'right', right: 'left', top: 'bottom', bottom: 'top' }[entry.side]; }
+    /* 算出要露出的區間 { from, to }（0～1）：相似部件整個露出，再加上差異部件貼著分界線的一小段 */
     /* 露出的區間 { from, to }（占字寬或字高的比例，0～1）：相似部件整個露出，加上差異部件貼著分界線的 SLIVER 那一段。
        差異在右／下（相似處在左／上）：[0, b + f·(1−b)]；差異在左／上（相似處在右／下）：[b − f·b, 1] */
     function visRegion(entry, level) {
@@ -95,6 +111,7 @@
         if (entry.side === 'right' || entry.side === 'bottom') return { from: 0, to: b + f * (1 - b) };
         return { from: b - f * b, to: 1 };
     }
+    /* 把區間轉成 CSS clip-path: inset(上 右 下 左) 字串——clip-path 能「裁掉」元素的一部分不顯示 */
     /* clip-path 的 inset(上 右 下 左) */
     function clipFor(side, reg) {
         var lo = (reg.from * 100).toFixed(1) + '%', hi = ((1 - reg.to) * 100).toFixed(1) + '%';
@@ -103,10 +120,13 @@
         if (side === 'bottom') return 'inset(' + lo + ' 0 0 0)';
         return 'inset(0 0 ' + hi + ' 0)';
     }
+    /* 每題的限時 */
     function timeFor(level) { return kit.ramp(level, TIME_START, TIME_END, LEVEL_RAMP); }
+    /* visiblePart＝相似的部件（完整露出）；hiddenPart＝差異的部件（大部分被遮住） */
     /* visiblePart＝相似處（整個露出）；hiddenPart＝差異處（大部分遮住） */
     function visiblePart(entry) { return DECOMP[entry.a][1 - SIDE_IDX[entry.side]]; }
     function hiddenPart(entry) { return DECOMP[entry.a][SIDE_IDX[entry.side]]; }
+    /* 題庫檢查：回傳問題清單，空陣列代表全部合格（Node 測試會呼叫它） */
     /* 題庫檢查：回傳問題清單（空陣列＝全部合格）*/
     function checkData() {
         var bad = [];
@@ -114,17 +134,22 @@
             var tag = '#' + (i + 1) + e.a + '(' + e.side + ')';
             if (!DECOMP[e.a]) { bad.push(tag + ' 答案沒有拆字'); return; }
             if (SIDE_IDX[e.side] === undefined) bad.push(tag + ' side 不合法');
+            /* new Set(e.d).size：Set 會去除重複，大小為 3 就代表三個干擾字都不同 */
             if (!e.d || e.d.length !== 3 || new Set(e.d).size !== 3) bad.push(tag + ' 干擾字要 3 個不重複');
+            /* diff＝差異部件；same＝相似部件 */
             var diff = DECOMP[e.a] && DECOMP[e.a][SIDE_IDX[e.side]], same = DECOMP[e.a] && DECOMP[e.a][1 - SIDE_IDX[e.side]];
             (e.d || []).forEach(function (c) {
                 if (c === e.a) bad.push(tag + ' 干擾字等於答案');
                 if (!DECOMP[c]) { bad.push(tag + ' 干擾字 ' + c + ' 沒有拆字'); return; }
+                /* 規則 1：干擾字不能含有答案的差異部件（否則干擾字也可能是正解） */
                 if (DECOMP[c][0] === diff || DECOMP[c][1] === diff) bad.push(tag + ' 干擾字 ' + c + ' 也含有答案的差異部件 ' + diff);
+                /* 規則 2：干擾字一定要含有那個相似部件（所以露出的部分看起來四個字都像） */
                 if (DECOMP[c][0] !== same && DECOMP[c][1] !== same) bad.push(tag + ' 干擾字 ' + c + ' 沒有露出的相似部件 ' + same);
             });
         });
         return bad;
     }
+    /* 挑一題：避開最近出過的 */
     function pickEntry(recent, rand) {
         rand = rand || Math.random;
         for (var t = 0; t < 100; t++) {
@@ -133,23 +158,28 @@
         }
         return kit.randInt(0, ENTRIES.length - 1, rand);
     }
+    /* 四個選項（答案 + 三個干擾字）洗牌，並記下答案在第幾個 */
     /* 四個選項（洗牌），回傳 { options, answer（索引）}*/
     function makeOptions(entry, rand) {
         var opts = kit.shuffle([entry.a].concat(entry.d), rand);
         return { options: opts, answer: opts.indexOf(entry.a) };
     }
 
+    /* mount：遊戲進場點 */
     function mount(root, ctx) {
         var R = null;
 
         /* startAt：從第幾關開始（失敗後可從前 5 關繼續）*/
+        /* round：開一局 */
         function round(startAt) {
             if (R) R.dispose();
             R = kit.round();
             var my = R;
             root.innerHTML = '';
 
+            /* q 目前題號；right 答對數；lives 機會；state 目前階段；qid 每題 +1；recent 最近出過的題；E 這題的題庫資料；O 這題的選項 */
             var q = (startAt || 1) - 1, right = q, lives = LIVES, newRec = false, state = 'idle', qid = 0, recent = [], cur = null, E = null, O = null;
+            /* 建立畫面元素：標題、提示、大字框、時間條、四個選項、解說 */
             var head = h('div', { 'class': 'hc-head' });
             var prompt = h('div', { 'class': 'hc-prompt' });
             var charBox = h('div', { 'class': 'hc-box' });
@@ -162,46 +192,60 @@
 
             function meta() { ctx.setMeta(kit.meta(['答對 ' + right, '機會 ' + lives])); }
 
+            /* 出下一題 */
             function next() {
                 if (my.dead) return;
                 q++;
                 var id = ++qid;
                 var idx = pickEntry(recent);
                 recent.push(idx); if (recent.length > AVOID_RECENT) recent.shift();
+                /* E 是題庫的一筆；O 是這題的四個選項 */
                 E = ENTRIES[idx]; O = makeOptions(E);
+                /* 算出這題要露出哪個區間 */
                 var reg = visRegion(E, q);
                 state = 'ask';
                 head.textContent = '第 ' + q + ' 題';
                 prompt.textContent = '字被遮住一半（相似處露出、差異處遮住），是哪一個？';
                 tip.textContent = '';
                 big.textContent = E.a;
+                /* 用 CSS clip-path 把大字遮住一部分（webkitClipPath 是舊版 Safari 的寫法） */
                 big.style.clipPath = clipFor(exposedSide(E), reg);
                 big.style.webkitClipPath = big.style.clipPath;
                 charBox.className = 'hc-box';
                 opts.innerHTML = '';
+                /* 建立四顆選項按鈕 */
                 O.options.forEach(function (c, i) {
                     var b = h('button', { 'class': 'hc-opt', text: c });
                     b.addEventListener('pointerdown', function (e) { e.preventDefault(); judge(i); });
                     opts.appendChild(b);
                 });
+                /* 字級要先縮小再依字框大小放大，量到的框高度才準 */
                 big.style.fontSize = '120px';          /* 先縮小，量到的字框高度才不會被大字撐開 */
                 big.style.fontSize = Math.floor(Math.min(charBox.clientHeight, charBox.clientWidth) * 0.92) + 'px';
                 meta();
+                /* 主控台印出這題的細節（答案、露出哪一側、相似與差異部件、分界線、限時），方便驗證 */
                 try { console.info('[半邊字] 第 ' + q + ' 題：答案「' + E.a + '」露出' + ({ left: '左', right: '右', top: '上', bottom: '下' })[exposedSide(E)] + '半（相似的「' + visiblePart(E) + '」整個露出，差異的「' + hiddenPart(E) + '」只露出 ' + (revealOf(q) * 100).toFixed(0) + '%，分界線 ' + boundOf(E).toFixed(2) + '）；選項 ' + O.options.join('、') + '；限時 ' + timeFor(q).toFixed(1) + ' 秒'); } catch (e) { }
                 var t0 = performance.now(), lim = timeFor(q) * 1000;
+                /* 倒數時間條 */
                 my.loop(function (now) { if (id !== qid || state !== 'ask') return false; tb.set(1 - (now - t0) / lim); });
+                /* 時間到：judge(-1) 代表沒有選 */
                 my.after(lim, function () { if (id === qid && state === 'ask') judge(-1); });
             }
 
+            /* 判定：i 是玩家選的第幾個（−1＝超時） */
             function judge(i) {
                 if (state !== 'ask') return;
                 state = 'reveal';
                 tb.set(0);
+                /* 揭曉：拿掉遮罩，整個字亮出來 */
                 big.style.clipPath = 'none'; big.style.webkitClipPath = 'none';        /* 揭曉：整個字亮出來 */
                 var ok = i === O.answer;
+                /* 正確選項標綠，選錯的標橘 */
                 [].forEach.call(opts.children, function (b, k) { if (k === O.answer) b.classList.add('hc-opt--ok'); else if (k === i) b.classList.add('hc-opt--bad'); });
                 charBox.classList.add(ok ? 'hc-box--ok' : 'hc-box--bad');
+                /* 解說：「大家都有 X，關鍵是 Y，合起來就是 Z」 */
                 tip.textContent = '大家都有「' + visiblePart(E) + '」，關鍵是「' + hiddenPart(E) + '」，合起來就是「' + E.a + '」';
+                /* 答對 */
                 if (ok) {
                     right++;
                     Sfx.play('ok');
@@ -210,12 +254,15 @@
                     my.after(NEXT_MS, next);
                     return;
                 }
+                /* 答錯：扣機會 */
                 lives--;
                 Sfx.play('bad');
                 prompt.textContent = i < 0 ? '時間到！' : '選錯了…';
                 meta();
+                /* 沒有機會了 → 結算 */
                 if (lives <= 0) {
                     my.after(1900, function () {
+                        /* kit.resumeFrom：失敗後可從前 5 題繼續 */
                         var back = kit.resumeFrom(q);
                         kit.result(root, {
                             num: right + ' 題', label: right >= 20 ? '識字高手！' : (right >= 10 ? '眼力不錯！' : '再試一次，會更準！'),
@@ -227,24 +274,29 @@
                 } else my.after(2000, next);
             }
 
+            /* G.debug：測試用後門 */
             G.debug = {
                 state: function () { return { q: q, state: state, right: right, lives: lives, E: E, O: O }; },
                 answerRight: function () { judge(O.answer); return state; },
                 answerWrong: function () { judge((O.answer + 1) % 4); return state; },
                 jump: function (n) { q = n - 1; }
             };
+            /* 開場等 300 毫秒再出第一題 */
             my.after(300, next);
         }
 
         round(1);
     }
 
+    /* 遊戲身分證 */
     var G = {
         id: ID,
         name: '半邊字',
         rule: '畫面上的字只露出一半，從下面四個字裡選出最可能的那一個。露出的部分會越來越少，每題時間也越來越短！',
         mount: mount,
+        /* test 匯出純函式給 Node 自動測試 */
         test: { exposedSide: exposedSide, SLIVER_START: SLIVER_START, SLIVER_END: SLIVER_END, ENTRIES: ENTRIES, DECOMP: DECOMP, SIDE_IDX: SIDE_IDX, visRegion: visRegion, revealOf: revealOf, boundOf: boundOf, BOUNDS: BOUNDS, clipFor: clipFor, timeFor: timeFor, visiblePart: visiblePart, hiddenPart: hiddenPart, checkData: checkData, pickEntry: pickEntry, makeOptions: makeOptions, LEVEL_RAMP: LEVEL_RAMP }
     };
+    /* 登記到遊戲清單 */
     Reaction.register(G);
 })();

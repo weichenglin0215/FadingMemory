@@ -21,28 +21,39 @@
    跟遊戲其餘 2D 部分（js/quiz_*.js、js/reaction_*.js）是完全獨立的兩套系統，
    只共用最底層的 js/stage.js／js/ui.js。 */
 
+/* 【新手導讀：3D 的幾個基本名詞】Three.js 是一個 3D 繪圖函式庫（全域變數 THREE）。Scene（場景）放所有 3D 物件；Camera（相機）決定從哪看；Renderer（渲染器）把場景畫成畫面；Mesh（網格）＝形狀＋材質的 3D 物件；Vector3 是 (x,y,z) 三維座標。這個遊戲的地面是 x、z 平面，y 軸是高度。 */
 (function (global) {
     'use strict';
 
+    /* T：Three.js */
     var T = global.THREE;
+    /* FM：整個 3D 模式共用的命名空間物件（各檔案把自己的東西掛在上面） */
     var FM = global.FM = global.FM || {};
+    /* 沒有載入 Three.js 就整個檔案不做事 */
     if (!T) return;
+    /* K：kit.js 提供的零件庫 */
     var K = FM.kit;
 
     var Core = FM.core = {};
 
+    /* 這些是引擎的核心物件：renderer 渲染器、scene 場景、camera 相機、sky 天空球、hemi 與 sun 兩盞燈 */
     var renderer, scene, camera, sky, hemi, sun;
+    /* ctx：目前載入的場景資料（牆、可走區域、互動物件…） */
     var ctx = null;
     var last = 0;
     var hooks = [];
+    /* raycaster：射線偵測，用來判斷「點到了哪個 3D 物件」 */
     var raycaster = new T.Raycaster();
     var ndc = new T.Vector2();
     var camLook = new T.Vector3();
+    /* camLook、tmpV…：暫時用的向量，重複使用以免每個畫面都新建物件（省效能） */
     var tmpV = new T.Vector3();
     var tmpV2 = new T.Vector3();
+    /* quality：畫質比例，畫面太慢時自動降低 */
     var quality = 1;
     var perf = { acc: 0, n: 0, fps: 60 };
 
+    /* Core.frozen 等：引擎的狀態旗標 */
     Core.frozen = false;   /* 劇情演出中：玩家不能動 */
     Core.busy = false;     /* 換場景中 */
     Core.paused = false;   /* 暫停中：整個世界停住（移動、路人、公車、補間、等待、時鐘），只繼續畫圖 */
@@ -50,11 +61,13 @@
     Core.elapsed = 0;
 
     /* ─── 玩家 ─── */
+    /* P：玩家（位置、朝向 yaw、速度、動畫相位、走路或騎車模式） */
     var P = Core.player = {
         group: null, person: null, bike: null,
         pos: new T.Vector3(), yaw: 0, speed: 0, phase: 0, mode: 'walk'
     };
 
+    /* Ctx：一個場景的資料容器；scenes.js 的場景會呼叫它的方法登記牆、可走區域、互動物件… */
     /* ─── 場景內容器 ─── */
     function Ctx(id, params) {
         this.id = id;
@@ -76,6 +89,7 @@
         this.data = {};
     }
     Ctx.prototype.add = function (o) { this.root.add(o); return o; };
+    /* block：新增一個矩形障礙物（碰撞方塊）；x、z 是地面座標 */
     Ctx.prototype.block = function (x0, x1, z0, z1) {
         this.colliders.push({ x0: Math.min(x0, x1), x1: Math.max(x0, x1), z0: Math.min(z0, z1), z1: Math.max(z0, z1) });
     };
@@ -85,15 +99,18 @@
         if (i >= 0) this.colliders.splice(i, 1);
     };
     Ctx.prototype.lastCollider = function () { return this.colliders[this.colliders.length - 1]; };
+    /* walkable：新增一塊「可走區域」 */
     Ctx.prototype.walkable = function (x0, x1, z0, z1, name) {
         (this.walk = this.walk || []).push({ x0: Math.min(x0, x1), x1: Math.max(x0, x1), z0: Math.min(z0, z1), z1: Math.max(z0, z1), name: name });
     };
+    /* 觸發區：玩家走進去時呼叫 enter */
     /* 觸發區：走進去時呼叫 enter */
     Ctx.prototype.zone = function (x0, x1, z0, z1, enter, opt) {
         var z = { x0: Math.min(x0, x1), x1: Math.max(x0, x1), z0: Math.min(z0, z1), z1: Math.max(z0, z1), enter: enter, inside: false, once: opt && opt.once, done: false, leave: opt && opt.leave };
         this.zones.push(z);
         return z;
     };
+    /* 可互動物件：靠近並面對它時，右下角出現互動鍵 */
     /* 可互動物件：
          label   互動鍵上的字（用動詞，例如「搭電梯」）
          x, z    站在這附近（半徑 r）才能互動
@@ -117,7 +134,9 @@
         this.items.push(def);
         return def;
     };
+    /* tick：登記每個畫面都要執行的更新函式（例如公車移動） */
     Ctx.prototype.tick = function (fn) { this.updaters.push(fn); };
+    /* 擋視線時會變半透明的物件（occluder） */
     /* 擋視線時會變半透明的物件；group 是它的附屬裝飾（招牌、店面），擋住時一起隱藏 */
     Ctx.prototype.occluder = function (mesh, group) {
         mesh.userData.fade = 1;
@@ -125,6 +144,7 @@
         this.occluders.push(mesh);
     };
 
+    /* 初始化：建立渲染器、場景、相機、燈光、天空、玩家，並啟動主迴圈 */
     /* ─── 初始化 ─── */
     Core.init = function (worldEl) {
         renderer = new T.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -135,6 +155,7 @@
         scene.fog = new T.Fog(0xFFF1D2, 70, 210);
         camera = new T.PerspectiveCamera(FM.CONFIG.camera.fovDeg, Stage.W / Stage.H, 0.1, 230);
 
+        /* 兩盞光：半球光（天空與地面的環境光）＋平行光（太陽） */
         hemi = new T.HemisphereLight(0xFFF6E3, 0xC9DDB0, 1.85);
         scene.add(hemi);
         sun = new T.DirectionalLight(0xFFF0D6, 1.9);
@@ -144,6 +165,7 @@
         sky = K.skyDome();
         scene.add(sky);
 
+        /* 玩家：上班族模型＋（騎車時才出現的）UBIKE */
         /* 玩家：上班族＋（騎車時才出現的）UBIKE */
         P.group = new T.Group();
         P.person = K.person({ shirt: 0x7DB3E0, pants: 0x5B6470, tie: K.mat(0xEE8E3A), hair: 0x3E2F24 });
@@ -153,6 +175,7 @@
         P.group.add(P.bike);
         scene.add(P.group);
 
+        /* Stage.onResize：螢幕尺寸改變時重新設定畫布與相機 */
         Stage.onResize(resize);
         bindTap(renderer.domElement);
         HUD.onAction(function () { if (Core.near) Core.use(Core.near); });
@@ -161,6 +184,7 @@
         requestAnimationFrame(frame);
     };
 
+    /* 重設畫布解析度與相機長寬比 */
     function resize(r) {
         if (!renderer) return;
         renderer.setPixelRatio(r.dpr * quality);
@@ -169,6 +193,7 @@
         camera.updateProjectionMatrix();
     }
 
+    /* 每幀：依序更新玩家、觸發區、互動物件、場景更新函式、相機、擋視線的建築 */
     /* ─── 每幀 ─── */
     function update(dt) {
         Core.elapsed += dt;
@@ -185,6 +210,7 @@
         sky.position.copy(camera.position);
     }
 
+    /* 整個 3D 世界的主迴圈（requestAnimationFrame 遞迴呼叫）：邏輯更新（update）與畫面重繪（render）分開 */
     /* 整個 3D 世界的主迴圈：每一影格都呼叫自己一次（requestAnimationFrame 的
        遞迴呼叫模式），「遊戲邏輯更新」（update，算角色移動、碰撞、鏡頭…）跟
        「畫面重繪」（renderer.render）分開兩步——跟 js/reaction_drop.js 的
@@ -205,6 +231,7 @@
         watchPerf(dt);
     }
 
+    /* 驗證用：用固定時間步長推進遊戲 seconds 秒 */
     /* 驗證用：用固定時間步長推進遊戲 seconds 秒（不依賴螢幕更新頻率；暫停中不會推進） */
     Core.step = function (seconds, fps) {
         var dt = 1 / (fps || 30);
@@ -213,6 +240,7 @@
         renderer.render(scene, camera);
     };
 
+    /* 效能監測：每 2 秒算平均 fps，太慢（低於 24）就降低畫質 */
     function watchPerf(dt) {
         perf.acc += dt;
         perf.n++;
@@ -228,8 +256,10 @@
         }
     }
 
+    /* 註冊每幀都要執行的函式 */
     Core.onFrame = function (fn) { hooks.push(fn); };
 
+    /* 補間：duration 秒內每幀呼叫 fn(t: 0→1)；用「遊戲時間」，暫停時會停住；換場景就作廢 */
     /* 補間：duration 秒內每幀呼叫 fn(t: 0→1)
        走「遊戲時間」：暫停、切到背景時會停住。
        換了場景就作廢（不再呼叫、也不會 resolve），原本那一段劇情流程就停在那裡，不會跑到新場景裡。 */
@@ -249,17 +279,22 @@
             hooks.push(step);
         });
     };
+    /* 遊戲時間的等待：劇情演出一律用這個（暫停時才會一起停） */
     /* 遊戲時間的等待：劇情演出一律用這個（不要用 setTimeout / UI.wait，暫停時才會一起停） */
     Core.wait = function (ms) { return Core.tween(ms / 1000, function () { }); };
+    /* 緩動函式：先慢後快再慢 */
     Core.ease = function (t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; };
 
+    /* 玩家移動 */
     /* ─── 玩家移動 ─── */
     var CTRL = FM.CONFIG.controls;
+    /* 走路與騎車各自的速度、倒退比例、轉彎速度、加速度（數值來自 config.js） */
     var CFG = {
         walk: { speed: CTRL.walkSpeed, back: 0.5, turn: CTRL.turnWalk, accel: 9 },
         bike: { speed: CTRL.bikeSpeed, back: 0.3, turn: CTRL.turnBike, accel: 3.2 }
     };
 
+    /* 判斷座標 (x, z) 能不能站：碰撞判定是簡化的矩形範圍檢查（超出邊界、不在可走區域、或碰到障礙物都不行） */
     /* 判斷座標 (x, z) 這個點「能不能站」：3D 世界的碰撞判定不是用真正的物理
        引擎，是簡化成一堆矩形範圍的數學檢查（夠用、夠快，不需要精確的物理模擬）。
        r＝角色半徑（騎車比走路佔的空間大，所以 bike 模式用更大的 r）。
@@ -289,6 +324,7 @@
         return false;
     }
 
+    /* 嘗試移動：先試斜著走，不行再試只動 x、只動 z（這樣貼著牆會「滑行」而不是被卡住） */
     function tryMove(dx, dz) {
         var nx = P.pos.x + dx;
         var nz = P.pos.z + dz;
@@ -298,6 +334,7 @@
         P.speed *= 0.4;
     }
 
+    /* 更新玩家：依搖桿方向轉向與加減速，再移動並播放走路／騎車動畫 */
     function updatePlayer(dt) {
         var active = ctx.mode !== 'none' && !Core.frozen && !Core.busy;
         var inp = active ? HUD.input() : { x: 0, y: 0 };
@@ -305,14 +342,18 @@
         var iy = Math.abs(inp.y) < 0.14 ? 0 : inp.y;
         var cfg = CFG[P.mode] || CFG.walk;
 
+        /* 轉彎：yaw（朝向角）依左右輸入增減 */
         P.yaw -= ix * cfg.turn * dt;
 
+        /* 目標速度：往上推＝前進（負號是因為搖桿往上 y 是負） */
         var target = -iy * cfg.speed;
         if (target < 0) target *= cfg.back;
+        /* 加速度：速度逐漸趨近目標速度（讓起步停步平順） */
         P.speed += (target - P.speed) * Math.min(1, cfg.accel * dt);
         if (!target && Math.abs(P.speed) < 0.05) P.speed = 0;
 
         if (P.speed) {
+            /* 前進方向向量：yaw 角的 sin／cos */
             var fx = -Math.sin(P.yaw);
             var fz = -Math.cos(P.yaw);
             tryMove(fx * P.speed * dt, fz * P.speed * dt);
@@ -325,6 +366,7 @@
         K.animPerson(P.person, P.phase, moving ? Math.min(1, Math.abs(P.speed) / 2.5) : 0, P.mode === 'bike' ? 'bike' : (moving ? 'walk' : 'idle'), Core.elapsed);
     }
 
+    /* 切換模式：走路或騎車 */
     Core.setMode = function (mode) {
         P.mode = mode === 'bike' ? 'bike' : 'walk';
         P.bike.visible = mode === 'bike';
@@ -332,6 +374,7 @@
         P.speed = 0;
     };
 
+    /* 觸發區：玩家剛進入時呼叫 enter、剛離開時呼叫 leave */
     function updateZones() {
         var x = P.pos.x;
         var z = P.pos.z;
@@ -352,6 +395,7 @@
         }
     }
 
+    /* 可互動物件：靠近而且面對才出現互動鍵；標記上下浮動 */
     /* ─── 可互動物件：靠近「而且面對」才出現互動鍵；標記浮動 ─── */
     function updateItems(dt) {
         var best = null;
@@ -372,6 +416,7 @@
             var ox = it.fx - P.pos.x;
             var oz = it.fz - P.pos.z;
             var od = Math.sqrt(ox * ox + oz * oz);
+            /* 面向判斷：玩家正前方與「玩家→物件」的夾角（用內積 dot product 比較 cos 值） */
             it.facing = od < 0.7 || (ox * fwdX + oz * fwdZ) / od >= cosFace;
             if (it.markerObj) {
                 /* 標記如果比玩家更靠近鏡頭（在玩家背後），就先不顯示，免得擋住畫面 */
@@ -389,6 +434,7 @@
         }
     }
 
+    /* 使用一個互動物件 */
     Core.use = function (it) {
         if (!it || Core.frozen || Core.busy || HUD.isModal()) return;
         if (it.enabled && !it.enabled()) return;
@@ -397,6 +443,7 @@
         it.use();
     };
 
+    /* 點擊 3D 物件：pointerdown 與 pointerup 之間移動很少、時間很短才算「點一下」 */
     /* ─── 點擊 3D 物件 ─── */
     function bindTap(canvas) {
         var start = null;
@@ -420,6 +467,7 @@
         return null;
     }
 
+    /* 射線偵測：把點擊位置換成射線，找出第一個被打到的物件 */
     function tap(cx, cy) {
         if (!ctx || Core.frozen || Core.busy || HUD.isModal() || ctx.mode === 'none') return;
         var r = renderer.domElement.getBoundingClientRect();
@@ -442,6 +490,7 @@
         Core.use(it);
     }
 
+    /* 相機：從對準點沿著俯角往後上方拉開 */
     /* ─── 相機：從對準點沿著 pitchDeg 往後上方拉開（pitchDeg 就是實際往下看的角度） ─── */
     function desiredCam(out, look) {
         var CAM = FM.CONFIG.camera;
@@ -464,6 +513,7 @@
         camera.lookAt(camLook);
     };
 
+    /* 更新相機：平滑跟隨玩家（用指數趨近 lerp） */
     function updateCamera(dt) {
         if (ctx.camScript) {
             ctx.camScript(dt, camera, camLook);
@@ -476,6 +526,7 @@
         camera.lookAt(camLook);
     }
 
+    /* 劇情用：把相機平滑移到指定位置、看向指定點 */
     /* 劇情用：把相機平滑移到 pos、看向 look */
     Core.camTo = function (pos, look, speed) {
         var p = pos.clone();
@@ -490,6 +541,7 @@
     Core.camFollow = function () { if (ctx) ctx.camScript = null; };
     Core.camera = function () { return camera; };
 
+    /* 擋住視線的建築變半透明 */
     /* ─── 擋住視線的建築變半透明 ─── */
     function setFade(mesh, v) {
         var mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
@@ -502,6 +554,7 @@
         }
     }
 
+    /* 一條視線要「雙向」各打一次射線：單面牆只能從正面被打到 */
     /* 一條視線要「雙向」各打一次射線：
        單面牆只能被正面打到——鏡頭在牆的正面那側時，要從鏡頭往角色打才打得到；
        建築方塊則相反，鏡頭在方塊裡面時，要從角色往鏡頭打才打得到外牆。 */
@@ -524,6 +577,7 @@
     }
 
     /* 對一組物件檢查「角色 ↔ 鏡頭」的視線，回傳擋到的物件 */
+    /* 對一組物件檢查「角色 ↔ 鏡頭」的視線，回傳擋到的物件 */
     function sightHits(list) {
         var hitSet = {};
         if (ctx.camScript) {
@@ -536,6 +590,7 @@
         return hitSet;
     }
 
+    /* 其他任何擋住視線的東西（招牌、門框、路人…）：暫時換成半透明材質 */
     /* ─── 其他任何擋住視線的東西（招牌、門框、櫃子、路人…）：暫時換成半透明材質 ───
        同一個原始材質共用一份半透明複本；擋住時換上，不擋了 0.25 秒後換回來。 */
     var blockCandidates = [];
@@ -573,6 +628,7 @@
         return f;
     }
 
+    /* 人物要整個一起變淡（不然只有被打到的手或頭變淡） */
     /* 人物要整個一起變淡（不然只有被打到的手或頭變淡） */
     function blockUnit(mesh) {
         var a = mesh.parent;
@@ -639,6 +695,7 @@
         }
     }
 
+    /* 載入場景：清掉舊場景、建新的、放好玩家、對準鏡頭 */
     /* ─── 載入場景 ─── */
     Core.load = function (id, params, api) {
         var def = FM.scenes[id];
@@ -666,6 +723,7 @@
         return ctx;
     };
 
+    /* 傳送玩家到指定位置 */
     Core.teleport = function (x, z, yaw) {
         P.pos.set(x, 0, z);
         if (yaw != null) P.yaw = yaw;
@@ -673,6 +731,7 @@
         Core.snapCamera();
     };
 
+    /* 驗證用：回傳目前的狀態資訊（位置、fps、畫質、繪圖統計…） */
     Core.info = function () {
         return {
             scene: ctx && ctx.id,

@@ -19,6 +19,7 @@
    · 8 回合，成績＝平均誤差（猜的收集口與實際差幾格，越小越好；0.00 ＝每次都猜中）。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
 (function () {
     'use strict';
 
@@ -26,32 +27,47 @@
     var h = UI.h;
     var kit = Reaction.kit;
 
+    /* 設定集中在這一區（改數字就能調整檯子與難度） */
     /* ═══ 可以自己調的參數 ═══ */
+    /* 8 回合 */
     var ROUNDS = 8;
+    /* 7 個收集口、每個寬 64px */
     var SLOTS = 7, W = 64;                      /* 收集口數量與寬度 */
     var BW = SLOTS * W;                         /* 檯面寬 448 */
+    /* 珠子半徑：直徑是收集口寬度的 80% */
     var BALL_R = 0.4 * W;                       /* 珠子半徑（直徑＝收集口寬度的 80%）*/
     var PEG_R = 4;
+    /* 釘子列距 52px、第一列的 y、共 8 列 */
     var ROW_GAP = 52, ROW0_Y = 70, ROWS = 8;
     var SLOT_H = 60, LEAD_BALLS = 1.5;
     var BH = 560;
+    /* 簾子的高度＝收集口高度 + 若干顆珠子的高度；CURTAIN_Y 是簾子上緣的 y 座標 */
     var HIDDEN_H = SLOT_H + LEAD_BALLS * 4 * BALL_R;   /* 簾子高度 */
     var CURTAIN_Y = BH - HIDDEN_H;
+    /* DIV_Y：分隔線上緣；珠子中心越過這條線就算「掉進收集口」 */
     var DIV_Y = BH - SLOT_H;                    /* 分隔線頂端：越過它就算進了收集口 */
+    /* 重力、初速左右最大值、簾子後的作答時限，都隨回合線性變化 */
     var G_START = 1500, G_END = 2400;
     var VX_START = 0, VX_END = 180;
     var LIMIT_START = 6, LIMIT_END = 2.5;
+    /* E_PEG／E_WALL：碰撞後速度剩幾成（恢復係數，0.5＝彈起來的速度是撞擊速度的一半） */
     var E_PEG = 0.5, E_WALL = 0.5;
     var DROP_MIN = W * 1.0;                     /* 珠子從上方掉下來的位置：離左右牆至少一個收集口寬（太靠牆的落點會讓結果偏向兩邊）*/
+    /* DT：物理模擬的時間步長（1/240 秒）；MAX_SIM_S 最多模擬 12 秒（保險） */
     var DT = 1 / 240, MAX_SIM_S = 12;
     var NEXT_MS = 2200;
 
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v.toFixed(2) + ' 格'; }
 
+    /* 純函式（只靠輸入算結果，也給 Node 測試用） */
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 這一回合的重力 */
     function gFor(r) { return kit.ramp(r, G_START, G_END, ROUNDS); }
+    /* 這一回合的初速上限 */
     function vxFor(r) { return kit.ramp(r, VX_START, VX_END, ROUNDS); }
+    /* 這一回合作答的時限 */
     function limitFor(r) { return kit.ramp(r, LIMIT_START, LIMIT_END, ROUNDS); }
+    /* 全部釘子的位置：偶數列在收集口中央、奇數列在分隔線上，這樣上下兩列互相錯開半格，珠子一定會碰到釘子 */
     /* 全部釘子：偶數列在收集口中央 (k+0.5)w，k=0..6；奇數列在分隔線 k·w，k=1..6 */
     function makePegs() {
         var pegs = [];
@@ -63,17 +79,22 @@
         }
         return pegs;
     }
+    /* PEGS 是釘子的資料，程式一載入就先算好 */
     var PEGS = makePegs();
+    /* 物理模擬：從 (x0, 最上方) 開始，用固定時間步長一步一步算珠子的位置，記錄每一步，直到越過分隔線 */
     /* 模擬一顆珠子：回傳 { xs, ys（每 DT 一個取樣點）, slot, tCross（越過分隔線的時間，秒）, tHide（整顆珠子被簾子蓋住的時間）, steps } */
     function simulate(x0, vx0, g) {
         var x = x0, y = BALL_R + 4, vx = vx0, vy = 0, xs = [x], ys = [y], t = 0, yMark = y, tHide = null, tCross = null, nudged = 0;
+        /* vy（垂直速度）每步加 g×DT（重力加速度）；位置每步加 速度×DT */
         var maxSteps = Math.round(MAX_SIM_S / DT);
         for (var step = 0; step < maxSteps; step++) {
             vy += g * DT;
             x += vx * DT; y += vy * DT;
+            /* 碰到左右牆：把珠子推回牆內，並讓水平速度反向（乘 E_WALL 損耗） */
             /* 左右牆 */
             if (x < BALL_R) { x = BALL_R; if (vx < 0) vx = -vx * E_WALL; }
             if (x > BW - BALL_R) { x = BW - BALL_R; if (vx > 0) vx = -vx * E_WALL; }
+            /* 釘子碰撞：只檢查附近的釘子；兩圓相交（距離 < 兩半徑和）就把珠子推出去，並讓速度沿著碰撞方向反彈 */
             /* 釘子（只檢查附近的列）*/
             for (var i = 0; i < PEGS.length; i++) {
                 var p = PEGS[i];
@@ -82,6 +103,7 @@
                 if (d2 < rr * rr) {
                     var d = Math.sqrt(d2) || 1e-6, nx = dx / d, ny = dy / d;
                     x = p.x + nx * rr; y = p.y + ny * rr;
+                    /* vn 是速度在碰撞方向上的分量；vn < 0 表示正在靠近釘子，才需要反彈 */
                     var vn = vx * nx + vy * ny;
                     if (vn < 0) { vx -= (1 + E_PEG) * vn * nx; vy -= (1 + E_PEG) * vn * ny; }
                 }
@@ -90,6 +112,7 @@
             xs.push(x); ys.push(y);
             if (tHide == null && y - BALL_R >= CURTAIN_Y) tHide = t;
             if (y >= DIV_Y) { tCross = t; break; }
+            /* 防卡住：每 0.5 秒檢查一次，珠子如果幾乎沒往下掉，就給一個朝檯面中央的小推力（只看位置，所以結果永遠一樣） */
             /* 卡住保險：每 0.5 秒看一次，沒怎麼往下掉就朝檯面中央推一下（決定性：只看位置）*/
             if (step % 120 === 119) {
                 if (y - yMark < 4) { vx += (x < BW / 2 ? 1 : -1) * 70; nudged++; }
@@ -98,13 +121,16 @@
         }
         if (tCross == null) tCross = t;
         if (tHide == null) tHide = tCross;
+        /* 落點收集口＝珠子 x 座標除以收集口寬度取整，並限制在 0～6 之間 */
         var slot = Math.max(0, Math.min(SLOTS - 1, Math.floor(x / W)));
         return { xs: xs, ys: ys, slot: slot, tCross: tCross, tHide: tHide, steps: xs.length - 1, xEnd: x, nudged: nudged };
     }
+    /* 查表：回傳模擬在時間 t 的位置（在兩個取樣點之間做線性插值），畫面播放用 */
     function pathAt(sim, t) {
         var f = Math.max(0, t) / DT, i = Math.min(sim.steps, Math.floor(f)), j = Math.min(sim.steps, i + 1), u = f - i;
         return { x: sim.xs[i] + (sim.xs[j] - sim.xs[i]) * u, y: sim.ys[i] + (sim.ys[j] - sim.ys[i]) * u };
     }
+    /* 出一回合：隨機決定起點與初速，預先把整條軌跡模擬完（所以答案在珠子落下前就確定，不受畫面卡頓影響） */
     function makeRound(r, rand) {
         rand = rand || Math.random;
         var x0 = kit.randFloat(DROP_MIN, BW - DROP_MIN, rand), vmax = vxFor(r), vx0 = kit.randFloat(-vmax, vmax, rand), g = gFor(r);
@@ -112,15 +138,18 @@
         return { x0: x0, vx0: vx0, g: g, sim: sim, limit: limitFor(r) };
     }
 
+    /* mount：遊戲進場點 */
     function mount(root, ctx) {
         var R = null;
 
+        /* round：開一局（固定 8 回合） */
         function round() {
             if (R) R.dispose();
             R = kit.round();
             var my = R;
             root.innerHTML = '';
 
+            /* r 目前第幾回合；errs 每回合的誤差（猜的收集口與實際差幾格）；hits 猜中次數；cur 這回合的資料；picked 玩家猜的收集口 */
             var r = 0, errs = [], hits = 0, state = 'idle', rid = 0, cur = null, picked = null;
             var head = h('div', { 'class': 'bo-head' });
             var banner = h('div', { 'class': 'bo-banner' });
@@ -129,15 +158,20 @@
             [head, banner, field, tb.el].forEach(function (n) { root.appendChild(n); });
             ctx.setMeta('');
 
+            /* 畫檯面（SVG）：底板、釘子、分隔線、軌跡、珠子、簾子、7 個可點的收集口 */
             /* 檯面（SVG）*/
             var svg = kit.svg('svg', { 'class': 'bo-svg', viewBox: '0 0 ' + BW + ' ' + BH, preserveAspectRatio: 'xMidYMid meet' }, field);
             kit.svg('rect', { 'class': 'bo-board', x: 0, y: 0, width: BW, height: BH }, svg);
             PEGS.forEach(function (p) { kit.svg('circle', { 'class': 'bo-peg', cx: p.x, cy: p.y, r: PEG_R }, svg); });
+            /* 分隔線 */
             for (var k = 1; k < SLOTS; k++) kit.svg('line', { 'class': 'bo-div', x1: k * W, y1: DIV_Y, x2: k * W, y2: BH }, svg);
+            /* 軌跡線（polyline，揭曉時才畫） */
             var trail = kit.svg('polyline', { 'class': 'bo-trail', points: '' }, svg);
             var ball = kit.svg('circle', { 'class': 'bo-ball', cx: -100, cy: -100, r: BALL_R }, svg);
+            /* 簾子（遮住最下面的收集口） */
             var curtain = kit.svg('rect', { 'class': 'bo-curtain', x: 0, y: CURTAIN_Y, width: BW, height: HIDDEN_H }, svg);
             var slotEls = [];
+            /* 7 個收集口：用立即執行函式 (function (s) {...})(s) 讓每個按鈕記住自己的編號 s（var 沒有區塊範圍，不這樣寫所有按鈕都會共用最後一個 s） */
             for (var s = 0; s < SLOTS; s++) {
                 (function (s) {
                     var g = kit.svg('g', { 'class': 'bo-slot' }, svg);
@@ -149,6 +183,7 @@
                 })(s);
             }
 
+            /* 開始一回合 */
             function startRound() {
                 if (my.dead) return;
                 r++;
@@ -162,8 +197,10 @@
                 ball.setAttribute('cx', -100);
                 tb.set(0);
                 state = 'fall';
+                /* 主控台印出這回合的實際資料（起點、初速、全程秒數、落在哪個收集口），方便驗證 */
                 try { console.info('[球會跑去哪] 第 ' + r + ' 回合：起點 x=' + cur.x0.toFixed(1) + '、初速 ' + cur.vx0.toFixed(0) + ' px/秒、g=' + cur.g.toFixed(0) + '；全程 ' + cur.sim.tCross.toFixed(2) + ' 秒、被簾子蓋住時 ' + cur.sim.tHide.toFixed(2) + ' 秒；會掉進第 ' + (cur.sim.slot + 1) + ' 個收集口；作答時限 ' + cur.limit.toFixed(1) + ' 秒（從蓋住算起）'); } catch (e) { }
                 var t0 = performance.now();
+                /* my.loop：每個畫面更新一次，用「現在時間」查表算出珠子位置 */
                 my.loop(function (now) {
                     if (id !== rid || state === 'done') return false;
                     var t = (now - t0) / 1000;
@@ -171,11 +208,14 @@
                         var p = pathAt(cur.sim, Math.min(t, cur.sim.tCross));
                         ball.setAttribute('cx', p.x.toFixed(1)); ball.setAttribute('cy', p.y.toFixed(1));
                     }
+                    /* 珠子被簾子蓋住後，才開始倒數作答時限 */
                     if (t >= cur.sim.tHide) tb.set(1 - (t - cur.sim.tHide) / cur.limit);
                 });
+                /* 時間到還沒點：reveal(null)＝沒猜 */
                 my.after((cur.sim.tHide + cur.limit) * 1000, function () { if (id === rid && (state === 'fall')) reveal(null); });
             }
 
+            /* 玩家點了第 s 號收集口 */
             function choose(s) {
                 if (state !== 'fall') return;
                 picked = s;
@@ -184,16 +224,19 @@
                 reveal(s);
             }
 
+            /* 揭曉：簾子變透明、畫出完整軌跡、顯示實際落點 */
             function reveal(s) {
                 if (state !== 'fall') return;
                 state = 'reveal';
                 tb.set(0);
                 var actual = cur.sim.slot;
+                /* 誤差＝猜的號碼和實際差幾格；沒猜就算最糟的誤差 */
                 var err = s == null ? Math.max(actual, SLOTS - 1 - actual) : Math.abs(s - actual);     /* 沒猜＝最糟的誤差 */
                 errs.push(err); if (err === 0) hits++;
                 /* 簾子拉開，畫出完整軌跡，珠子停在實際的收集口 */
                 curtain.setAttribute('opacity', 0.12);
                 slotEls.forEach(function (g) { g.style.display = 'none'; });
+                /* 軌跡太密，每隔幾個取樣點取一個，避免畫太多點 */
                 var pts = [], step = Math.max(1, Math.floor(cur.sim.steps / 160));
                 for (var i = 0; i <= cur.sim.steps; i += step) pts.push(cur.sim.xs[i].toFixed(1) + ',' + cur.sim.ys[i].toFixed(1));
                 trail.setAttribute('points', pts.join(' '));
@@ -203,12 +246,14 @@
                 if (s != null && s !== actual) kit.svg('rect', { 'class': 'bo-result__bg bo-result__bg--you', x: s * W + 2, y: DIV_Y, width: W - 4, height: SLOT_H - 4, rx: 8 }, tag);
                 Sfx.play(err === 0 ? 'win' : 'bad');
                 banner.textContent = (err === 0 ? '猜中了！' : s == null ? '時間到！' : '差了 ' + err + ' 格') + '　珠子掉進第 ' + (actual + 1) + ' 號';
+                /* 等一下再進下一回合，8 回合結束就結算 */
                 my.after(NEXT_MS, function () {
                     if (tag.parentNode) tag.parentNode.removeChild(tag);
                     if (r >= ROUNDS) finish(); else startRound();
                 });
             }
 
+            /* 結算：平均誤差，越小越好 */
             function finish() {
                 state = 'done';
                 var avg = errs.reduce(function (a, b) { return a + b; }, 0) / errs.length;
@@ -221,6 +266,7 @@
                 });
             }
 
+            /* G.debug：測試用後門 */
             G.debug = {
                 state: function () { return { r: r, state: state, errs: errs.slice(), hits: hits, slot: cur && cur.sim.slot, cur: cur }; },
                 choose: choose,
@@ -228,18 +274,22 @@
                 chooseWrong: function () { choose((cur.sim.slot + 3) % SLOTS); },
                 timeoutNow: function () { reveal(null); }
             };
+            /* 開場等 400 毫秒再開始第一回合 */
             my.after(400, startRound);
         }
 
         round();
     }
 
+    /* 遊戲身分證 */
     var G = {
         id: ID,
         name: '球會跑去哪',
         rule: '彈珠從上面掉下來，在釘子之間彈來彈去，最下面一小段被簾子蓋住。猜猜它最後會掉進哪一個收集口（共 7 個），點下面的號碼。共 8 回合，看誰猜得準！',
         mount: mount,
+        /* test 匯出純函式給 Node 自動測試 */
         test: { gFor: gFor, vxFor: vxFor, limitFor: limitFor, PEGS: PEGS, makePegs: makePegs, simulate: simulate, pathAt: pathAt, makeRound: makeRound, SLOTS: SLOTS, W: W, BW: BW, BH: BH, BALL_R: BALL_R, PEG_R: PEG_R, CURTAIN_Y: CURTAIN_Y, DIV_Y: DIV_Y, HIDDEN_H: HIDDEN_H, SLOT_H: SLOT_H, LEAD_BALLS: LEAD_BALLS, ROW_GAP: ROW_GAP, ROWS: ROWS, DT: DT, ROUNDS: ROUNDS }
     };
+    /* 登記到遊戲清單 */
     Reaction.register(G);
 })();

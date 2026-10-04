@@ -55,34 +55,47 @@
      下一局重新開始時會恢復顯示。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* （這款是較早寫的遊戲：只有一局、沒有關卡，所以不用 kit.round；共通結構見 js/reaction_sticks.js 開頭的「新手導讀」） */
 (function () {
     'use strict';
 
+    /* 遊戲代號 */
     var ID = 'drop';
+    /* UI.h：建立 HTML 元素的小工具 */
     var h = UI.h;
+    /* SVG 的 XML 命名空間網址：用 createElementNS 建立 SVG 元素時一定要帶 */
     var SVGNS = 'http://www.w3.org/2000/svg';
     /* 落下的時間刻意調短：尺要來回移動得夠明顯（有反應力遊戲的節奏感），速度就不能太慢；
        但落下（650ms）這麼久的話，就算尺速度不快，落下期間尺也會移動超過好幾格，
        變成「怎麼按都插不到中間」。改成 380ms、尺的速度也調低，落下期間尺大約只移動
        1～3 格，插中紅色是真的靠算時機做得到的，不是純運氣。 */
+    /* 落下的總時間（毫秒） */
     var FALL_MS = 380;          /* 重力落下的總時間 */
+    /* 放大時多留一點邊，看得到相鄰格子的邊 */
     var ROW_MARGIN = 1.15;      /* 放大到「這一層整排 9 格」之後，再多留一點，看得到相鄰格的邊 */
+    /* 9 格的分數標示（中間紅格不寫數字） */
     var LABELS = [1, 2, 3, 4, null, 4, 3, 2, 1]; /* index 4＝紅（不寫數字，寫「5」）*/
+    /* 每一段放大的時間／放大後停格的時間 */
     var ZOOM_STAGE_MS = 1150;   /* 每一段放大本身的時間（使用者要求：比原本再加 0.5 秒） */
     var ZOOM_PAUSE_MS = 850;    /* 放大到那一層之後，停格的時間（使用者要求：比原本再加 0.3 秒） */
+    /* 使用者設定「減少動態效果」時不播放動畫 */
     var REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 
+    /* 最佳紀錄文字 */
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 分'; }
 
+    /* 建立 SVG 元素的小工具 */
     function svgEl(tag, attrs) {
         var el = document.createElementNS(SVGNS, tag);
         for (var k in attrs) el.setAttribute(k, attrs[k]);
         return el;
     }
 
+    /* 兩種緩動函式：easeOutCubic 先快後慢；easeInOutCubic 先慢後快再慢 */
     function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
     function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
 
+    /* 設定 SVG 的 viewBox：改 viewBox 就是移動／放大「鏡頭」，而且是向量重畫，永遠銳利 */
     function setViewBox(svg, box) {
         svg.setAttribute('viewBox', box.vx + ' ' + box.vy + ' ' + box.vw + ' ' + box.vh);
     }
@@ -97,6 +110,7 @@
        這個 tween 就會卡住、連帶整條開場演出／放大動畫的 Promise 鏈都卡死。
        用 setTimeout 當安全網：時間到了不管 rAF 有沒有正常跑完，都強制跳到
        終點、resolve 掉，動畫鏈才不會真的卡住。 */
+    /* 把 viewBox 從 from 補間到 to（逐影格算位置）；setTimeout 當安全網，分頁在背景時 rAF 暫停也會強制跳到終點 */
     function tweenViewBox(svg, from, to, duration, ease) {
         ease = ease || easeInOutCubic;
         return new Promise(function (resolve) {
@@ -127,6 +141,7 @@
         });
     }
 
+    /* 向量尺：三層遞迴九等分（9 格 → 9×9 → 9×9×9）一次畫好，格線本來就在，放大才看得清楚 */
     /* 向量尺：三層遞迴九等分，一次畫好。depth1＝9 個 <rect>（中間紅，其餘黑，標數字）；
        depth1 的中間格底下疊 depth2（9 個 <rect>，中間黃，其餘紅，細分隔線）；
        depth2 的中間格底下再疊 depth3（9 個 <rect>，中間紫，其餘黃，更細的分隔線）。 */
@@ -161,6 +176,7 @@
         return root;
     }
 
+    /* 第二層：中間紅格裡的 9 個子格（中間黃） */
     function buildSub(root, baseX, stripH, subW, subsubW) {
         var tickW = Math.max(0.03, subW * 0.05);
         for (var j = 0; j < 9; j++) {
@@ -177,6 +193,7 @@
         }
     }
 
+    /* 第三層：中間黃格裡的 9 個孫格（中間紫） */
     function buildSubSub(root, baseX, stripH, subsubW) {
         var tickW = Math.max(0.01, subsubW * 0.05);
         for (var k = 0; k < 9; k++) {
@@ -192,15 +209,18 @@
         }
     }
 
+    /* mount：遊戲進場點 */
     function mount(root, ctx) {
         ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
+        /* 橫跨每一局的狀態：ALT+A 熱鍵的監聽只註冊一次，所以用 mount 層級的變數讓它讀得到「這一局」的狀態 */
         /* 橫跨每一局（round）的狀態：ALT+A 的鍵盤監聽只註冊一次（見檔案最下面），
            但每次 round() 都會整個重建畫面與閉包，所以用這兩個 mount 層級的變數
            讓監聽器永遠讀得到「這一局」目前的狀態與觸發函式。 */
         var phase = 'intro';      /* intro：開場倒帶演出／idle：尺在閒置反彈／falling：下落＋變焦中／result：結果畫面 */
         var triggerPerfect = null;
 
+        /* round：開一局 */
         function round() {
             phase = 'intro';
             root.innerHTML = '';
@@ -209,6 +229,7 @@
             var field = h('div', { 'class': 'drop-field' });
             root.appendChild(field);
 
+            /* FW／FH 場地大小；triW／triH 三角形大小；stripW 尺的寬 */
             var FW = field.clientWidth, FH = field.clientHeight;
             var triW = FW / 10, triH = triW * 2;
             var stripW = FW, cellW = stripW / 9, subW = cellW / 9; /* 尺滿版顯示 */
@@ -223,6 +244,7 @@
             strip.style.width = stripW + 'px';
             field.appendChild(strip);
 
+            /* 三角形（釘子）獨立於尺之外：放大只改尺的 viewBox，三角形位置不變，才有「釘住不動」的感覺 */
             /* 三角形（釘子）獨立於尺之外：放大只改尺的 viewBox，不影響三角形的位置，
                才會有「釘住不動」的感覺。三角形的水平位置（left）會在下面的 idleLoop
                左右來回彈跳，尺本身固定在 left:0、寬度滿版，從頭到尾不移動。 */
@@ -238,6 +260,7 @@
             dropBtn.style.display = 'none';    /* 開場演出播完才顯示，避免玩家在演出時誤按 */
             field.appendChild(dropBtn);
 
+            /* 放大目標：stage 0 完整畫面、1 推進到「這一格的 9 個子格」、2 再推進到「9 個孫格」；localCX 是接觸點在尺上的位置 */
             /* 放大目標：stage 0＝完整畫面；stage 1＝推進到「這一格的 9 個子格」整排露出；
                stage 2＝再推進到「子格裡那一格的 9 個孫格」整排露出。localCX＝接觸點在尺
                自己座標系裡的位置，從落地那一刻起到這局結束都不會變，用它才能保證放大時
@@ -249,6 +272,7 @@
                 return { vx: localCX * (1 - k), vy: 0, vw: stripW * k, vh: stripH * k };
             }
 
+            /* 開場：把「放大」的動畫倒過來播一次，先讓玩家知道最準會看到紫色 */
             /* 開場：把「放大」的同一組 stage 用時間倒過來演一次（紫色的那一層退到完整畫面），
                先讓玩家知道「插得越準會看到紫色」。尺釘在正中央，跟 ALT+A 完美落點同一個算法
                （localCX = stripW/2，數學上保證同時是三層的正中央）。 */
@@ -265,14 +289,17 @@
                     .then(onDone);
             }
 
+            /* 按「落下」之前：三角形左右來回反彈 */
             /* 按「落下」之前：三角形一般的來回反彈，還不需要預測結果。
                速度刻意放慢：落下要 380 毫秒，速度太快的話，不管什麼時候按，三角形都會在
                這段時間內移動超過一整格的寬度，變成「怎麼按都插不到中間」──
                放慢之後，落下時三角形大約只移動不到一格，只要抓對時機，插中紅色是真的做得到的。 */
+            /* dir 方向（−1 左／1 右）；speed 速度（px／毫秒） */
             var dir = Math.random() < 0.5 ? -1 : 1;
             var speed = (60 + Math.random() * 70) / 1000; /* px/ms */
             var raf = null, lastT = null, idle = true;
 
+            /* 閒置反彈：每個畫面依經過的時間更新位置，碰到邊就反向 */
             function idleLoop(now) {
                 if (lastT == null) lastT = now;
                 var dt = Math.min(48, now - lastT);
@@ -284,6 +311,7 @@
                 if (idle) raf = requestAnimationFrame(idleLoop);
             }
 
+            /* 開始落下 */
             function startFall(forceFinalLeft) {
                 dropBtn.disabled = true;
                 dropBtn.style.display = 'none';
@@ -292,9 +320,11 @@
                 phase = 'falling';
                 fall(triLeft, dir, speed, forceFinalLeft);
             }
+            /* ALT+A：測試用熱鍵，強制三角形停在正中央，看完整的紅→黃→紫演出 */
             /* ALT+A：強迫三角形最終停在尺的正中央（stripW/2），接觸點剛好落在正中央的紫色核心 */
             triggerPerfect = function () { startFall(stripW / 2 - triW / 2); };
 
+            /* 用 pointerdown（一碰就觸發）而不是 click，時機才準 */
             /* 用 pointerdown（手指一碰到螢幕就觸發），不是 click——click 在觸控裝置上要等
                手指離開螢幕（touchend）才會觸發，對「算準時機」的遊戲來說，玩家看準時機按下去
                的那一刻跟遊戲真正判定的時間點會差了手指按著不放的時間，時機全部算錯。 */
@@ -307,6 +337,7 @@
 
             /* forceFinalLeft：ALT+A 測試熱鍵用，直接釘死落點座標（見檔案最上面的說明），
                其餘流程（物理下落動畫、判定、變焦）跟正常玩一模一樣。 */
+            /* 落下：垂直方向是重力（位置 ∝ 時間平方），水平方向延續按下時的速度（慣性） */
             function fall(startLeft, dir0, speed0, forceFinalLeft) {
                 var finalLeft = forceFinalLeft != null ? forceFinalLeft : bouncePos(startLeft, dir0, speed0, FALL_MS, maxTriLeft);
                 var outcome = computeOutcome(finalLeft);
@@ -318,6 +349,7 @@
                     return;
                 }
 
+                /* 重要：rAF 可能被瀏覽器暫停（切分頁等），所以用 setTimeout 當安全網，時間到強制判定落地，遊戲不會卡住 */
                 /* 關鍵修正（按「落下」常常沒反應的根因）：瀏覽器會在分頁被切到背景、視窗
                    被其他視窗蓋住、省電模式等情況下，直接暫停 requestAnimationFrame——不是
                    偶爾慢一點，是完全不會再執行。按鈕點下去那一刻就已經 disabled／隱藏了，
@@ -340,6 +372,7 @@
                     if (landed) return;
                     var el = Math.min(FALL_MS, now - t0);
                     var p = el / FALL_MS;
+                    /* 重力自由落下：位置 ∝ 時間平方，越落越快 */
                     /* 重力自由落下：位置 ∝ 時間平方，一開始慢、越落越快，不是等速被丟出去 */
                     tri.style.top = (triStartTop + (triTargetTop - triStartTop) * p * p) + 'px';
                     tri.style.left = bouncePos(startLeft, dir0, speed0, el, maxTriLeft) + 'px';
@@ -350,6 +383,7 @@
                 setTimeout(land, FALL_MS + 400);
             }
 
+            /* 判定落點：算出接觸點落在第幾格（idx1），中間格再往下算第幾子格（idx2）、第幾孫格（idx3） */
             function computeOutcome(finalTriLeft) {
                 /* 接觸點＝三角形中心，尺固定滿版蓋住三角形整個可移動範圍，理論上不會再
                    插空；保留這個邊界檢查只是防呆（浮點數誤差等極端狀況），不是常態。 */
@@ -368,12 +402,14 @@
                 return out;
             }
 
+            /* 落地後：沒插到尺直接結算，否則開始放大 */
             function onLand(outcome, finalLeft) {
                 if (outcome.miss) { UI.wait(REDUCED ? 0 : 500).then(function () { finish(outcome); }); return; }
                 var localCX = finalLeft + triW / 2;
                 UI.wait(REDUCED ? 0 : 300).then(function () { zoom(outcome, localCX); });
             }
 
+            /* 依插中的層數，逐層推進鏡頭並停格 */
             /* 推進到「插中的那一層整排」，停留看清楚，插更準才繼續推進到下一層；
                沒插中紅色就只停在完整畫面（stage 0），不會硬推進到沒有意義的層。 */
             function zoom(outcome, localCX) {
@@ -398,6 +434,7 @@
                 chain.then(function () { finish(outcome); });
             }
 
+            /* 算分數與評語：插中紫色 1000 分，其餘依距離中心遠近給分 */
             function finish(outcome) {
                 var score, label;
                 if (outcome.miss) {
@@ -422,6 +459,7 @@
                 var isNew = score > 0 && Reaction.setBest(ID, score, function (v, b) { return v > b; });
                 ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
+                /* 結算卡片疊在畫面上（不清空畫面） */
                 /* 不清空畫面：三角形釘在方塊上、鏡頭停在最後放大倍率的那一幕留在背景，
                    結算卡片疊一層半透明底蓋在上面——玩家看得到自己剛剛插中的樣子。 */
                 phase = 'result';
@@ -435,6 +473,7 @@
                 ]));
             }
 
+            /* 開場演出播完：顯示「落下」按鈕，隱藏提示文字（避免玩家拿固定文字當位置參考），開始左右反彈 */
             playIntro(function () {
                 phase = 'idle';
                 dropBtn.style.display = '';
@@ -446,6 +485,7 @@
             });
         }
 
+        /* ALT+A 熱鍵：整個頁面只註冊一次 */
         /* ALT+A：測試熱鍵，整個頁面只註冊一次（見檔案最上面的說明）。
            結果畫面時先重開一局，再觸發；開場演出／下落／變焦中按了不理會，避免狀態衝突。 */
         document.addEventListener('keydown', function (e) {
@@ -458,6 +498,7 @@
         round();
     }
 
+    /* 三角形左右來回彈跳的位置：純函式，閒置反彈與按下後的慣性都用同一個，所以必定一致（用「折返」的數學：位置在 0 到 max 之間來回） */
     /* 三角形左右來回彈跳移動的位置：純函數（輸入經過的時間，回傳位置）。
        閒置時的反彈（idleLoop）跟按下「落下」後繼續算的慣性（fall() 裡的
        finalLeft／frame()）都呼叫同一個函式、帶同樣的參數，兩者必定完全一致
@@ -471,6 +512,7 @@
         return m <= max ? m : period - m;
     }
 
+    /* Reaction.register：把這款遊戲登記到遊戲清單 */
     Reaction.register({
         id: ID,
         name: '神準落下',

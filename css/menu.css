@@ -5,6 +5,9 @@
    這兩組幾乎是同一套樣式各用一次，所以很多規則用逗號併在一起共用，
    例如 `.theme-dlg, .game-dlg { ... }`，對應的 DOM 結構見 js/menu.js）。 */
 
+/* 【新手導讀】這個檔案的命名規則：「__」是某個東西裡面的零件（.menu__logo = 主選單的 logo），
+   「--」是變化版（.mode--test = 「明明還記得」那顆按鈕的顏色版本）。顏色與間距都用 var(--xxx)，
+   實際數值定義在 css/theme.css。 */
 /* .menu 繼承自 css/theme.css 的 .screen（HTML 上同時有 class="screen screen--full menu"），
    這裡只補主選單專屬的背景：兩層疊起來——底層是純色宣紙 --c-paper，上面疊一個
    「橢圓形、只在畫面上方」的淡黃色放射狀漸層（radial-gradient），讓畫面頂端
@@ -18,6 +21,7 @@
         var(--c-paper);
 }
 
+/* 標題區：logo + 標題 + 副標題，垂直排列並水平置中（flex-direction:column 讓子元素由上往下排） */
 .menu__head {
     display: flex;
     flex-direction: column;
@@ -25,17 +29,20 @@
     gap: var(--sp-2);
 }
 
+/* Logo 外框的大小 */
 .menu__logo {
     width: 128px;
     height: 128px;
 }
 
+/* Logo 插圖（SVG）填滿外框 */
 .menu__art {
     width: 100%;
     height: 100%;
     display: block;
 }
 
+/* 大標題「記憶模糊」，letter-spacing 是字與字之間的間距 */
 .menu__title {
     font-size: var(--fs-xxl);
     font-weight: var(--fw-black);
@@ -44,6 +51,7 @@
     line-height: var(--lh-tight);
 }
 
+/* 副標題 */
 .menu__sub {
     font-size: var(--fs-sm);
     font-weight: var(--fw-bold);
@@ -76,15 +84,18 @@
     transition: transform 0.1s ease;
 }
 
+/* 手指按住大按鈕時縮小一點點，給「有按到」的回饋 */
 .mode:active {
     transform: scale(0.97);
 }
 
+/* 用鍵盤 Tab 選到按鈕時顯示的藍色外框（:focus-visible 只在鍵盤操作時出現，滑鼠點不會） */
 .mode:focus-visible {
     outline: 4px solid var(--c-blue);
     outline-offset: 4px;
 }
 
+/* 三顆大按鈕各自的顏色：數值都來自 theme.css 的按鈕變數 */
 .mode--test {
     background: var(--btn-sky-bg);
     color: var(--btn-sky-fg);
@@ -103,6 +114,7 @@
     box-shadow: var(--btn-primary-shadow);
 }
 
+/* 按鈕左邊的圓形圖示底 */
 .mode__icon {
     flex: 0 0 82px;
     height: 82px;
@@ -114,24 +126,28 @@
     font-size: 46px;
 }
 
+/* 按鈕右邊的文字區（名稱在上、說明在下） */
 .mode__text {
     display: flex;
     flex-direction: column;
     gap: var(--sp-1);
 }
 
+/* 按鈕名稱 */
 .mode__name {
     font-size: var(--fs-xl);
     font-weight: var(--fw-black);
     letter-spacing: 2px;
 }
 
+/* 按鈕說明文字（opacity 0.92 = 稍微淡一點） */
 .mode__desc {
     font-size: var(--fs-sm);
     font-weight: var(--fw-bold);
     opacity: 0.92;
 }
 
+/* 畫面最下方的版本文字 */
 .menu__foot {
     text-align: center;
     font-size: var(--fs-xs);
@@ -139,6 +155,7 @@
 }
 
 /* ═══ 右上角分享按鈕 ═══ */
+/* 分享按鈕：absolute 固定在右上角，圓形 */
 .share-btn {
     position: absolute;
     top: var(--sp-4);
@@ -160,10 +177,12 @@
     transition: transform 0.1s ease, filter 0.15s ease;
 }
 
+/* 按下時縮小 */
 .share-btn:active {
     transform: scale(0.93);
 }
 
+/* 鍵盤選取時的外框 */
 .share-btn:focus-visible {
     outline: 4px solid var(--c-blue);
     outline-offset: 3px;
@@ -181,6 +200,7 @@
     background: rgba(74, 59, 30, 0.35);
 }
 
+/* 彈窗中間的白色卡片 */
 .share-dlg__card {
     width: 100%;
     max-width: 480px;
@@ -194,9 +214,11 @@
     border-radius: var(--r-lg);
     box-shadow: var(--shadow-pop);
     text-align: center;
+    /* 進場動畫 share-dlg-in（下面定義） */
     animation: share-dlg-in 0.2s ease;
 }
 
+/* 進場動畫：從往下 18px 且透明 → 回到原位且不透明 */
 @keyframes share-dlg-in {
     from {
         transform: translateY(18px);
@@ -209,12 +231,14 @@
     }
 }
 
+/* 彈窗標題 */
 .share-dlg__title {
     font-size: var(--fs-lg);
     font-weight: var(--fw-black);
     color: var(--c-ink);
 }
 
+/* QR Code 的外框（白底，QR Code 一定要白底才掃得到） */
 .share-dlg__qr {
     width: 300px;
     height: 300px;
@@ -227,12 +251,14 @@
     border-radius: var(--r-md);
 }
 
+/* QR Code 圖片填滿外框 */
 .share-dlg__qr img {
     display: block;
     width: 100%;
     height: 100%;
 }
 
+/* 網址文字（break-all = 太長時可以在任意位置換行） */
 .share-dlg__url {
     font-size: var(--fs-xs);
     font-weight: var(--fw-bold);
@@ -240,6 +266,7 @@
     word-break: break-all;
 }
 
+/* 底下提示文字 */
 .share-dlg__hint {
     font-size: var(--fs-xs);
     color: var(--c-ink-soft);
@@ -282,6 +309,7 @@
     color: var(--c-ink);
 }
 
+/* 格子容器（3 欄 × 2 列） */
 .theme-grid,
 .game-grid {
     display: grid;
@@ -306,6 +334,7 @@
 }
 
 /* ─── 主軸格：直式文字（CJK 預設 text-orientation:mixed，中文字會保持正立）─── */
+/* 主軸格：高度固定 150px */
 .theme-cell {
     height: 150px;
     display: flex;
@@ -319,10 +348,12 @@
     transition: transform 0.1s ease;
 }
 
+/* 按下時縮小一點 */
 .theme-cell:active {
     transform: scale(0.96);
 }
 
+/* 主軸名稱：writing-mode:vertical-rl 讓中文字「直書」（由上往下、由右至左） */
 .theme-cell__name {
     writing-mode: vertical-rl;
     font-size: var(--fs-md);
@@ -331,6 +362,7 @@
     letter-spacing: 4px;
 }
 
+/* 「構想中」的格子：虛線外框、灰底、游標不變成手指（cursor:default） */
 .theme-cell--soon {
     background: var(--c-card-alt);
     border: 2px dashed var(--bd-c);
@@ -338,10 +370,12 @@
     cursor: default;
 }
 
+/* 構想中的格子按了不縮小 */
 .theme-cell--soon:active {
     transform: none;
 }
 
+/* 「構想中」字樣（也是直書） */
 .theme-cell__soon {
     writing-mode: vertical-rl;
     font-size: var(--fs-sm);
@@ -354,6 +388,7 @@
        還沒放圖時 <img> onerror 隱藏，底色＋名稱條照常顯示，不會是破圖）─── */
 /* aspect-ratio: 150/270：不管格子實際被 Grid 排出來多寬，瀏覽器都會自動算出
    對應高度維持 150:270 這個比例（就是使用者要求的縮圖規格），不用自己算 px。 */
+/* 遊戲格：aspect-ratio 固定直式比例（寬 150 : 高 270） */
 .game-cell {
     position: relative;
     aspect-ratio: 150 / 270;
@@ -366,6 +401,7 @@
     transition: transform 0.1s ease;
 }
 
+/* 按下時縮小一點 */
 .game-cell:active {
     transform: scale(0.96);
 }
@@ -396,16 +432,19 @@
     line-height: var(--lh-tight);
 }
 
+/* 「構想中」遊戲格 */
 .game-cell--soon {
     border: 2px dashed var(--bd-c);
     box-shadow: none;
     cursor: default;
 }
 
+/* 構想中的格子按了不縮小 */
 .game-cell--soon:active {
     transform: none;
 }
 
+/* 「構想中」文字置中 */
 .game-cell__soon {
     position: absolute;
     inset: 0;
@@ -417,6 +456,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 使用者在系統設定「減少動態效果」時，關掉彈窗動畫與縮放過渡 */
 @media (prefers-reduced-motion: reduce) {
 
     .share-dlg__card,
@@ -430,12 +470,14 @@
     }
 }
 
+/* 這一段是後來追加的：翻頁列，以及沒有縮圖時的「印章」底圖 */
 /* ═══ 小遊戲挑選彈窗：翻頁列＋沒有縮圖時的「印章」底圖 ═══ */
 .game-dlg__card {
     max-width: 380px;
     gap: var(--sp-3);
 }
 
+/* 翻頁列：左邊上一頁、中間頁數小圓點、右邊下一頁，space-between 把三個推開 */
 .game-nav {
     display: flex;
     align-items: center;
@@ -443,6 +485,7 @@
     gap: var(--sp-2);
 }
 
+/* 上一頁／下一頁按鈕 */
 .game-nav__btn {
     flex: 0 0 auto;
     min-width: 112px;
@@ -458,16 +501,19 @@
     cursor: pointer;
 }
 
+/* :disabled = 已經是第一頁（或最後一頁）時按鈕變淡、不可按 */
 .game-nav__btn:disabled {
     opacity: 0.35;
     cursor: default;
 }
 
+/* 頁數小圓點容器 */
 .game-nav__dots {
     display: flex;
     gap: 8px;
 }
 
+/* 單個小圓點 */
 .game-nav__dot {
     width: 12px;
     height: 12px;
@@ -476,6 +522,7 @@
     border: 2px solid var(--bd-c);
 }
 
+/* 目前所在頁的圓點（藍色實心） */
 .game-nav__dot--on {
     background: var(--c-blue);
     border-color: var(--c-blue);
@@ -498,6 +545,7 @@
     background: var(--c-orange-soft);
 }
 
+/* 印章：絕對定位在格子中央偏上，margin 負值把圓心移到正中間 */
 .game-cell__seal {
     position: absolute;
     left: 50%;

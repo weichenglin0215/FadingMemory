@@ -7,11 +7,19 @@
    · 選主軸：quiz.html?theme=<id>（js/quiz_gen.js 的 QuizGen.session() 已支援）。
    · 選遊戲：reaction.html?game=<id>（js/reaction.js 讀這個參數指定要玩哪一個）。 */
 
+/* 【新手導讀】整個檔案用 (function () { ... })(); 包起來，叫做「立即執行函式」(IIFE)：
+   裡面宣告的變數（THEME_CELLS、gamePage...）只在這個範圍內有效，不會變成全域變數，
+   所以不會跟其他 .js 檔案裡的同名變數撞在一起。 */
 (function () {
+    /* 'use strict' 是「嚴格模式」：打錯變數名稱、用了不安全的寫法時，瀏覽器會直接報錯，
+       而不是默默讓程式帶著錯誤繼續跑，比較容易找到 bug。 */
     'use strict';
 
+    /* UI.h 是 js/ui.js 提供的「建立 HTML 元素」小工具，h('div', {class:'x'}, [子元素...]) 等於
+       document.createElement('div') 再設定屬性、塞入子元素。把它存成短短的 h，後面寫起來比較省事。 */
     var h = UI.h;
 
+    /* var 是宣告變數；[ ... ] 是「陣列」(一排資料)，{ ... } 是「物件」(有名字的資料欄位：id、name)。 */
     /* 主軸六格（3×2）的位置＝陣列順序（左上→右上，再左下→右下）；null＝「構想中」佔位格 */
     var THEME_CELLS = [
         { id: 'birthday', name: '生日' },
@@ -22,10 +30,15 @@
         null
     ];
 
+    /* 這裡的資料只是「清單」：想新增一款遊戲，只要在 GAME_CELLS 裡加一行 { id, name, img }，
+       選單就會自動多一格，不用改下面任何程式。 */
     /* 小遊戲：由左到右、由上到下排，每頁 9 格（3×3），超過就翻頁。
        順序＝出現在選單裡的順序；沒有縮圖的遊戲會顯示彩色底＋名字的第一個字（印章）。
        null＝「構想中」佔位格（整頁補滿用）。 */
+    /* 每頁顯示幾格（3 欄 × 3 列 = 9）。 */
     var PAGE_SIZE = 9;
+    /* id 要跟 js/reaction_<id>.js 裡 Reaction.register({ id: ... }) 的 id 一樣，
+       點下去才會跳到 reaction.html?game=<id>。img 是縮圖路徑，檔案不存在時會自動改顯示「印章」(見 gameCell)。 */
     var GAME_CELLS = [
         { id: 'spot', name: '大家來找碴', img: 'img/reaction/spot.png' },
         { id: 'speed', name: '零秒出手', img: 'img/reaction/speed.png' },
@@ -78,8 +91,10 @@
         { id: 'seq', name: '猜下一個', img: 'img/reaction/seq.png' },
         { id: 'polyrhythm', name: '左右不同拍', img: 'img/reaction/polyrhythm.png' }
     ];
+    /* 目前在第幾頁（從 0 開始算，0 就是第一頁）。 */
     var gamePage = 0;
 
+    /* function 是「函式」：把一段會重複使用的程式取個名字。soonCell 負責做出一個「構想中」的灰色格子。 */
     /* 「構想中」佔位格：兩個彈窗共用同一個函式，cls 參數是 'theme' 或 'game'，
        拼出對應的 class 名稱（theme-cell--soon／game-cell--soon），disabled
        屬性讓這個按鈕看起來能按、但實際點不了也不會有 hover/active 效果。 */
@@ -89,23 +104,32 @@
         ]);
     }
 
+    /* 點彈窗的暗色背景就關閉彈窗：hidden = true 是 HTML 的「隱藏」屬性。 */
     function closeOnBg(dlg) {
         dlg.addEventListener('click', function () { dlg.hidden = true; });
     }
 
+    /* 先宣告變數、稍後 UI.ready 裡才指定值；Built 旗標讓彈窗「第一次打開才建立」，之後重複使用，省效能。 */
     var themeDlg, gameDlg;
     var themeBuilt = false, gameBuilt = false;
 
+    /* 玩家選了一個主軸後做的事： */
     function pickTheme(id) {
         /* 從這裡進測試模式＝新的一局：題目在 quiz.html 一進去就全部重新產生（見 js/quiz_gen.js） */
+        /* UI.store 是 localStorage 的小包裝（瀏覽器關掉也會記住的資料）。這裡先做個記號，
+           告訴 quiz 頁「這是全新的一局」，題目要重新產生。 */
         UI.store.set('fm.quiz.fresh', true);
+        /* 改變 location.href 就會跳到另一個網頁；? 後面是「查詢參數」，另一頁用它得知要玩哪個主軸。 */
         location.href = 'quiz.html?theme=' + id;
     }
 
+    /* 建立「選主軸」彈窗的內容。THEME_CELLS.map(...) 的意思是：把清單裡每一項轉成一個按鈕，回傳新陣列。 */
     function buildThemeDlg() {
         themeBuilt = true;
         var cells = THEME_CELLS.map(function (c) {
             if (!c) return soonCell('theme');
+            /* on: { click: ... } 是綁定「點擊事件」。e.stopPropagation() 表示事件到此為止，
+               不要往上傳給外層的背景（不然點按鈕時背景的「點了就關閉」也會一起觸發）。 */
             return h('button', {
                 'class': 'theme-cell', type: 'button',
                 on: { click: function (e) { e.stopPropagation(); pickTheme(c.id); } }
@@ -123,6 +147,7 @@
         location.href = 'reaction.html?game=' + id;
     }
 
+    /* 這個函式負責做出一格遊戲按鈕（縮圖＋名字）。 */
     /* 一格遊戲。縮圖載入失敗（還沒有圖檔）→ 把 <img> 藏起來，改顯示彩色底＋名字第一個字的「印章」，
        圖檔補齊之後會自動正常顯示，不用再改程式。 */
     function gameCell(c, idx) {
@@ -133,19 +158,23 @@
             'class': 'game-cell game-cell--tone' + (idx % 4), type: 'button',
             on: { click: function (e) { e.stopPropagation(); pickGame(c.id); } }
         }, [seal, img, h('span', { 'class': 'game-cell__name', text: c.name })]);
+        /* load / error 是圖片的事件：載入成功就藏起印章；載入失敗（沒有圖檔）就藏起圖片，只顯示印章。 */
         img.addEventListener('load', function () { seal.hidden = true; });
         img.addEventListener('error', function () { img.hidden = true; });
         return cell;
     }
 
+    /* 建立「選遊戲」彈窗：有標題、3×3 格子、上一頁／下一頁、頁數小圓點。 */
     function buildGameDlg() {
         gameBuilt = true;
+        /* Math.ceil 是「無條件進位」：25 款 ÷ 9 = 2.8 → 3 頁。 */
         var pages = Math.ceil(GAME_CELLS.length / PAGE_SIZE);
         var title = h('div', { 'class': 'game-dlg__title' });
         var grid = h('div', { 'class': 'game-grid' });
         var prev = h('button', { 'class': 'game-nav__btn', type: 'button', text: '上一頁' });
         var next = h('button', { 'class': 'game-nav__btn', type: 'button', text: '下一頁' });
         var dots = h('div', { 'class': 'game-nav__dots' });
+        /* render() 負責「重畫目前這一頁」：每次翻頁都清空 grid 再重新放入該頁的 9 格。 */
         function render() {
             title.textContent = '選一個想玩的遊戲';
             grid.innerHTML = '';
@@ -160,6 +189,7 @@
         }
         prev.addEventListener('click', function (e) { e.stopPropagation(); if (gamePage > 0) { gamePage--; render(); } });
         next.addEventListener('click', function (e) { e.stopPropagation(); if (gamePage < pages - 1) { gamePage++; render(); } });
+        /* 左右滑動翻頁：記下按下去的 x 座標，放開時看移動了多少 (dx)，超過 60 像素就翻頁。 */
         /* 在格子上左右滑也能翻頁 */
         var sx = null;
         grid.addEventListener('pointerdown', function (e) { sx = e.clientX; });
@@ -176,6 +206,7 @@
         closeOnBg(gameDlg);
     }
 
+    /* UI.ready()：等網頁 DOM 都準備好了才執行裡面的程式（這時才找得到 getElementById 要找的元素）。 */
     /* UI.ready()：整個檔案真正開始跑的進入點，等 DOM 準備好才動手找元素、綁事件
        （見 js/ui.js 的說明）。Stage.init() 一定要在這裡呼叫一次，整個頁面的
        縮放置中才會開始運作。 */
@@ -185,10 +216,12 @@
         document.getElementById('icon-test').innerHTML = UI.icon('list');
         document.getElementById('icon-reaction').innerHTML = UI.icon('bolt');
         document.getElementById('icon-world').innerHTML = UI.icon('cube');
+/* getElementById 用 id 找到 HTML 裡的元素，再替它放進圖示。 */
 
         themeDlg = document.getElementById('theme-dlg');
         gameDlg = document.getElementById('game-dlg');
 
+        /* 替兩個大按鈕綁定點擊：第一次點才建立彈窗，之後只是把 hidden 設成 false 讓它顯示出來。 */
         document.getElementById('mode-test').addEventListener('click', function () {
             if (!themeBuilt) buildThemeDlg();
             themeDlg.hidden = false;
@@ -198,6 +231,7 @@
             gameDlg.hidden = false;
         });
 
+        /* window.FM_VERSION 是 js/boot.js 讀完 version.json 後存起來的版本資訊，這裡拿來顯示在選單底部。 */
         var v = window.FM_VERSION;
         var el = document.getElementById('menu-version');
         if (v && el) {

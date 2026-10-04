@@ -30,6 +30,7 @@
     var people = lib.people;
     var timeline = lib.timeline;
 
+    /* others：從清單中排除某些項目 */
     function others(list, not) { return list.filter(function (x) { return [].concat(not).indexOf(x) < 0; }); }
     var yuan = function (n) { return n + ' 元'; };
     var DAILY = ['降血壓藥', '降血糖藥', '胃藥', '鈣片', '維他命', '降血脂藥'];
@@ -46,6 +47,7 @@
     ];
 
     /* 藥的樣子：顏色＋形狀（每一種藥各不相同） */
+    /* looks：產生「長得像」的選項（看病主軸用） */
     function looks(G, n) {
         var out = [];
         while (out.length < n) {
@@ -56,24 +58,32 @@
     }
 
     /* ═══ 第 1 關：新手暖身（陪家人去醫院前，先辦一件差事） ═══ */
+    /* 【新手導讀】寫法與 js/quiz_travel.js 完全相同（共用 js/quiz_gen.js 的出題引擎）：G 是這一關的出題器，S 是整局共用資料，T 是範本代入，L 是誘答選項，finish 挑出要用的題目。H1 是看病主軸的第 1 關（最簡單），H2～H8 逐關加干擾；逐行說明請看 quiz_travel.js 的第 1 關。 */
     function H1(G, S) {
         var D = S.tl[S.i];
+        /* G.pick：隨機挑一個 */
         var p = G.pick(P.kin);
+        /* S.h[0]：整局共用的兩家醫院之一 */
         var h = S.h[0];
         var e = G.pick(P.healthErrands1);
+        /* G.num：抽數字，twoDiff 避免兩位數有重複數字 */
         var bus = G.num(12, 98, null, twoDiff);
         var stop = G.pick(P.stops);
         var floor = G.num(2, 5, null, null, 'floor');
         var n = G.num(2, 4, [floor], null, 'n');
         var v = { p: p, h: h, bus: bus, stop: stop, place: e.place, floor: floor, act: e.act, n: n, u: e.u, thing: e.thing, today: D.today.sw, ev: D.ev.sw };
+        /* v：範本代入用的資料包 */
         var note = [
+            /* note：紙條，每個元素是一段文字 */
             T('今天是{today}。{ev}要陪{p}去{h}看病，你今天下班先辦一件事：', v),
             T('搭 {bus} 號公車，在{stop}下車，', v),
             T('去{place} {floor} 樓，{act} {n} {u}{thing}。', v)
         ];
         var fl = function (x) { return x + ' 樓'; };
+        /* fl、cu：把答案格式化成「3 樓」「2 袋」的小函式 */
         var cu = function (x) { return x + ' ' + e.u; };
         var qs = [
+            /* qs：候選題目；G.dateQ 日期題、G.q(題目, 題型, 正解, [誘答])、L(文字, 混淆類型, 說明) 做誘答 */
             G.dateQ('哪一天要去看病？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是今天。')], { must: true }),
             G.q('要陪誰去看病？', '人物', p, G.others(P.kin, p, '差一點點')),
             G.q('要去哪家醫院？', '地點', h, [L(S.h[1], '差一點點', '這次是去' + h + '。')].concat(G.others(P.hospitals, [h, S.h[1]], '差一點點', 2))),
@@ -84,6 +94,7 @@
             G.q(T('要{act}幾{u}{thing}？', v), '數字', cu(n),
                 [L(cu(floor), '張冠李戴', floor + ' 是樓層，不是' + e.thing + '的數量。')].concat(G.near(n, cu, { lo: 1, hi: 9, swap: false })))
         ];
+        /* finish：從候選題目挑出這關要用的 4 題 */
         return { note: note, qs: finish(G, qs, 4) };
     }
 
@@ -675,6 +686,7 @@
         return { note: note, qs: finish(G, qs, 32, 6) };
     }
 
+    /* 把整個看病主軸登記進引擎：id、顯示名稱、8 關的關卡名稱、setup（整局共用資料）、levels（8 個關卡函式） */
     Q.addTheme({
         id: 'health', name: '看病',
         names: ['看病前一天', '幫忙跑兩趟', '就醫前三件事', '住院要帶的', '兩個人看病', '醫生換了藥', '健康檢查', '陪診的一天'],

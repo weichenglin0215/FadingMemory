@@ -14,16 +14,21 @@
    用 go() 接起來的結果；實際「現在劇情進行到哪、物品有沒有拿到」這些進度
    資訊不在這裡管，是 js/world/story.js 的事，這裡只呼叫 api 提供的方法。 */
 
+/* 【新手導讀】每個場景是 SC.場景id = { build: function (ctx, K, api, params) {...}, enter: function (...) {...} }：build 蓋出場景（用 K 的零件函式擺放建築、馬路、樹，並用 ctx.block 登記碰撞、ctx.walkable 登記可走區域、ctx.item 登記可互動物件）；enter 是玩家進場後的演出（例如對話、廣播）。下面依序有 10 個場景，每個前面有 ①～⑩ 的標題。 */
 (function (global) {
     'use strict';
 
+    /* T：Three.js；FM：共用命名空間 */
     var T = global.THREE;
     var FM = global.FM = global.FM || {};
     if (!T) return;
+    /* K：kit.js 的零件庫；C：色票 */
     var K = FM.kit;
     var C = K.C;
+    /* SC：場景表（以場景 id 當鍵），story.js 的 go('id') 會到這裡找場景 */
     var SC = FM.scenes = {};
 
+    /* 路線設定：每條公車路線的路線號碼、各站名稱、要下車的站、下車後去哪個場景 */
     /* ─── 路線設定 ─── */
     var ROUTES = FM.ROUTES = {
         r236: { route: '236', stops: ['館前路', '衡陽路', '南門市場'], target: '衡陽路', next: 'street_hengyang', nextParams: { from: 'bus' } },
@@ -31,11 +36,16 @@
         r52: { route: '52', stops: ['南海路', '植物園', '西藏路', '萬大路'], target: '西藏路', next: 'xizang', nextParams: {} }
     };
 
+    /* 小工具 */
     /* ─── 小工具 ─── */
+    /* 把 [x,y,z] 陣列轉成 Three.js 的 Vector3（三維座標） */
     function v3(a) { return new T.Vector3(a[0], a[1], a[2]); }
     /* 劇情用的等待走遊戲時間：暫停時會停住、換場景就作廢（不要用 setTimeout） */
+    /* 等 ms 毫秒（用遊戲時間，暫停時會停住） */
     function wait(ms) { return FM.core.wait(ms); }
+    /* 緩動函式：先快後慢 */
     function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+    /* 洗牌（打亂陣列順序） */
     function shuffle(a) {
         for (var i = a.length - 1; i > 0; i--) {
             var j = Math.floor(Math.random() * (i + 1));
@@ -43,9 +53,11 @@
         }
         return a;
     }
+    /* 在清單裡找離 x 最近的值（距離不超過 d） */
     function near(x, list, d) {
         return (list || []).some(function (v) { return Math.abs(v - x) < (d || 4); });
     }
+    /* 可重現的偽亂數：同一個 n 永遠得到同一個 0～1 的小數（sin 乘大數取小數部分的老技巧），讓路人與裝飾每次進場位置都相同 */
     function hash(n) { var x = Math.sin(n * 127.1) * 43758.5453; return x - Math.floor(x); }
 
     /* 等公車：三輛公車依序進站，再讓玩家選。o = {stopX, laneZ, dir, routes, cam:{pos,look}} */
@@ -79,6 +91,7 @@
         return pick;
     }
 
+    /* 暫停時的詢問：等遊戲繼續後再問 */
     function askWait(api) {
         return api.ask({
             title: '公車站', text: '要在這裡等公車嗎？',
@@ -87,6 +100,7 @@
     }
 
     /* 街道（道路沿 x 軸，z = -5..5；人行道 z = ±5..±9；兩側建築） */
+    /* street：蓋一條街（道路、人行道、路燈、行道樹…） */
     function street(ctx, o) {
         var R = ctx.root;
         var L = o.L || 44;
@@ -144,6 +158,7 @@
     }
 
     /* 沿著一組街道（可走區）的兩側自動蓋房子；回傳佔用的地塊 */
+    /* fillBuildings：在街道兩側填滿建築 */
     function fillBuildings(ctx, streets, o) {
         var occupied = (o.occupied || []).slice();
         var sw = o.sidewalk == null ? 3 : o.sidewalk;
@@ -197,6 +212,7 @@
     }
 
     /* 道路外觀：給一組可走區畫柏油＋人行道＋分隔線 */
+    /* drawRoads：畫道路本體、中線與斑馬線 */
     function drawRoads(ctx, streets, o) {
         var R = ctx.root;
         o = o || {};
@@ -229,6 +245,7 @@
     }
 
     /* 路口的路名牌（台北式：一根柱子兩塊互相垂直的藍牌） */
+    /* cornerSign：路口的路名牌 */
     function cornerSign(ctx, x, z, nameNS, nameEW) {
         var g = new T.Group();
         g.position.set(x, 0, z);
@@ -242,6 +259,7 @@
 
     /* 路口前的懸臂式路名牌（掛在路中間上方，騎車時一眼就看得到）
        pole：柱子位置；plate：牌子中心；ry：牌子朝向（面對駛來的方向） */
+    /* gantry：跨在道路上方的指示牌架 */
     function gantry(ctx, px, pz, cx, cz, text, ry) {
         var R = ctx.root;
         K.cyl(R, px, 0, pz, 0.12, 5.6, C.dark);
@@ -251,9 +269,11 @@
         K.sign(R, text, { sw: 4.2, sh: 1.15, x: cx, y: 4.5, z: cz, ry: ry, bg: '#2F6FB0', fg: '#FFFFFF', border: '#FFFFFF', bw: 12, both: true });
     }
 
+    /* 場景一：辦公室 */
     /* ═══════════════════════════════════════════════════════════════
        ① 辦公室（12 樓）：找出口 → 走廊 → 電梯下樓
        ═══════════════════════════════════════════════════════════════ */
+    /* desk：辦公桌（桌面、電腦、椅子） */
     function desk(ctx, x, z) {
         var g = new T.Group();
         g.position.set(x, 0, z);
@@ -271,6 +291,7 @@
         return g;
     }
 
+    /* drawOfficeWindows：在 canvas 上畫辦公室的窗外風景，當作貼圖 */
     function drawOfficeWindows(g, w, h) {
         g.fillStyle = '#FFF6E4';
         g.fillRect(0, 0, w, h);
@@ -307,6 +328,7 @@
         }
     }
 
+    /* drawClock：在 canvas 上畫牆上的時鐘 */
     function drawClock(g, w, h) {
         var cx = w / 2;
         var cy = h / 2;
@@ -457,6 +479,7 @@
         }
     };
 
+    /* 場景二：公司門口的公車站 */
     /* ═══════════════════════════════════════════════════════════════
        ② 公司門口：公車站（236）
        ═══════════════════════════════════════════════════════════════ */
@@ -490,6 +513,7 @@
         }
     };
 
+    /* 場景三：公車上 */
     /* ═══════════════════════════════════════════════════════════════
        ③ 公車上：依序廣播到站，選對站下車
        ═══════════════════════════════════════════════════════════════ */
@@ -604,6 +628,7 @@
         }
     };
 
+    /* 場景四：衡陽路 */
     /* ═══════════════════════════════════════════════════════════════
        ④ 衡陽路：遠東百貨、公車站（758）
        ═══════════════════════════════════════════════════════════════ */
@@ -661,10 +686,12 @@
         }
     };
 
+    /* 場景五：遠東百貨 1F */
     /* ═══════════════════════════════════════════════════════════════
        ⑤ 遠東百貨 1F：電梯選樓層
        ═══════════════════════════════════════════════════════════════ */
     /* 電梯門：用單面平板（像室內牆一樣），鏡頭在牆後時自動看穿，不會擋住玩家 */
+    /* elevatorDoors：電梯門（可開關的兩扇門，並登記互動物件） */
     function elevatorDoors(ctx, R, x, z, ry, label) {
         var g = new T.Group();
         g.position.set(x, 0, z);
@@ -682,6 +709,7 @@
         return g;
     }
 
+    /* shopper：逛街的路人（沿著一串路徑點 pts 走動） */
     function shopper(ctx, pts, look) {
         var p = K.person(look);
         ctx.add(p);
@@ -786,9 +814,11 @@
         }
     };
 
+    /* 場景六：遠東百貨 3F */
     /* ═══════════════════════════════════════════════════════════════
        ⑥ 遠東百貨 3F：找到玉器珠寶店，買翡翠手鐲
        ═══════════════════════════════════════════════════════════════ */
+    /* shopUnit：一間店面（招牌、玻璃、櫃檯） */
     function shopUnit(ctx, R, o) {
         /* o: {x0,x1,z0,z1, open:[a,b] 開口（沿正面）, front:'s'|'n'|'e'|'w', color, sign, signBg} */
         var h = 2.8;
@@ -822,6 +852,7 @@
         K.floor(ctx, (o.x0 + o.x1) / 2, (o.z0 + o.z1) / 2, o.x1 - o.x0, o.z1 - o.z0, K.tiles(o.floor || 0xFFFDF4, o.floor2 || 0xF3EBD6, 3, 3), null, 0.015);
     }
 
+    /* counter：櫃檯 */
     function counter(ctx, R, x, z, w, d, color) {
         K.box(R, x, 0, z, w, 0.95, d, C.white);
         K.box(R, x, 0.2, z + d / 2 + 0.01, w - 0.2, 0.5, 0.02, color);
@@ -929,6 +960,7 @@
         }
     };
 
+    /* 場景七：蘭陽蛋糕店門口 */
     /* ═══════════════════════════════════════════════════════════════
        ⑦ 蘭陽蛋糕店門口：拿蛋糕、租 UBIKE
        ═══════════════════════════════════════════════════════════════ */
@@ -1004,6 +1036,7 @@
         }
     };
 
+    /* 場景八：蘭陽蛋糕店內 */
     /* ═══════════════════════════════════════════════════════════════
        ⑧ 蘭陽蛋糕店：拿巧克力蛋糕
        ═══════════════════════════════════════════════════════════════ */
@@ -1083,6 +1116,7 @@
         }
     };
 
+    /* 場景九：騎 UBIKE */
     /* ═══════════════════════════════════════════════════════════════
        ⑨ 騎 UBIKE：開封街右轉、漢口街左轉 → 博愛路公車站（52）
        ═══════════════════════════════════════════════════════════════ */
@@ -1201,6 +1235,7 @@
         }
     };
 
+    /* 場景十：西藏路 */
     /* ═══════════════════════════════════════════════════════════════
        ⑩ 西藏路：第三個巷子右轉，過兩個巷子左轉，右手第三間 12 號
        ═══════════════════════════════════════════════════════════════ */
@@ -1215,6 +1250,7 @@
         { x0: 50, x1: 54, z0: -82, z1: -31, name: '巷子' }
     ];
 
+    /* house：一間住家（門牌號碼、門、窗） */
     function house(ctx, R, o) {
         /* o: {x, z, w, d, h, face, color, num, door:true} */
         var g = K.building(ctx, { x: o.x, z: o.z, w: o.w, d: o.d, h: o.h, color: o.color, face: o.face, shop: false, rooftop: true, collide: false });

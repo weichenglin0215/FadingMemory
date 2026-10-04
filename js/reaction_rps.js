@@ -16,6 +16,7 @@
    · 失敗後可以從「失敗關卡 − 5」繼續（kit.resumeFrom）。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
 (function () {
     'use strict';
 
@@ -23,23 +24,31 @@
     var h = UI.h;
     var kit = Reaction.kit;
 
+    /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
+    /* 倒數每個數字停留 0.75 秒 */
     var COUNT_MS = 750;            /* 倒數每個數字停留多久 */
+    /* 0 出現之後，要在 500 毫秒內出拳 */
     var WINDOW_MS = 500;           /* 0 出現之後，要在幾毫秒內出拳 */
+    /* 緩衝：電腦出拳後，你還剩多少秒可以看，從 0.5 秒線性減到 0.03 秒（電腦出得越來越晚） */
     var BUFFER_START = 0.5, BUFFER_END = 0.03, BUFFER_RAMP = 20;      /* 電腦出拳後，你還剩多少秒可以出（秒）*/
     var REVEAL_MS = 1700;          /* 公布結果後多久進下一回合 */
+    /* 三種拳：剪刀、石頭、布 */
     var KINDS = ['scissors', 'rock', 'paper'];
     var NAMES = { scissors: '剪刀', rock: '石頭', paper: '布' };
 
     function fmtBest(v) { return v == null ? '' : '最佳連贏 ' + v; }
 
+    /* 純函式（也給 Node 測試用） */
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 判定勝負：0 平手、1 是 a 贏、−1 是 b 贏（剪刀勝布、石頭勝剪刀、布勝石頭） */
     /* 0＝平手、1＝a 贏、-1＝b 贏 */
     function judge(a, b) {
         if (a === b) return 0;
         if ((a === 'scissors' && b === 'paper') || (a === 'rock' && b === 'scissors') || (a === 'paper' && b === 'rock')) return 1;
         return -1;
     }
+    /* 電腦的拳：優先用 crypto.getRandomValues（真正的亂數），不行才用 Math.random；r 是 0、1、2，對應三種拳 */
     function randomKind() {
         var r;
         try {
@@ -49,19 +58,23 @@
         } catch (e) { r = Math.floor(Math.random() * 3); }
         return KINDS[r];
     }
+    /* 第 level 關：緩衝與電腦延遲（延遲＝限時 0.5 秒 − 緩衝） */
     /* 第 level 關：電腦出拳後，你還剩幾秒；以及電腦在 0 之後多久才出拳 */
     function bufferFor(level) { return kit.ramp(level, BUFFER_START, BUFFER_END, BUFFER_RAMP); }
     function delayFor(level) { return WINDOW_MS / 1000 - bufferFor(level); }
+    /* 連贏 n 關的機率文字（每關贏的機率 1/2 → 0.5 的 n 次方） */
     function chanceText(n) {
         if (n <= 0) return '';
         var p = Math.pow(0.5, n) * 100;
         return '連贏 ' + n + ' 關的機率只有 ' + (p >= 1 ? p.toFixed(1) : p.toFixed(2)) + '%';
     }
 
+    /* 手勢圖示：用簡單的向量圖（SVG）畫，不用 emoji；100×100 座標 */
     /* 手勢圖示（簡單向量圖，不用 emoji）：100×100 */
     function handIcon(kind, color) {
         var svg = kit.svg('svg', { 'class': 'rp-icon', viewBox: '0 0 100 100' });
         var st = { fill: color, stroke: 'rgba(0,0,0,0.45)', 'stroke-width': 3, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' };
+        /* 小工具 el(標籤, 屬性)：建立形狀並自動合併共用的填色、外框 */
         function el(tag, attrs, parent) { var a = {}; for (var k in st) a[k] = st[k]; for (var k2 in attrs) a[k2] = attrs[k2]; return kit.svg(tag, a, parent || svg); }
         if (kind === 'rock') {
             el('rect', { x: 20, y: 28, width: 60, height: 52, rx: 20 });
@@ -81,17 +94,21 @@
         return svg;
     }
 
+    /* mount：遊戲進場點 */
     function mount(root, ctx) {
         var R = null;
 
         /* start：從第幾關開始（失敗後可從前 5 關繼續）*/
+        /* round：開一局（失敗後可從失敗關卡前 5 關繼續） */
         function round(start) {
             if (R) R.dispose();
             R = kit.round();
             var my = R;
             root.innerHTML = '';
+            /* wins 連贏數；rounds 總回合；ties 平手次數；state 目前階段（count 倒數中/open 可出拳/reveal 揭曉/over 結束）；comp 電腦的拳 */
             var wins = (start || 1) - 1, newRec = false, rounds = 0, ties = 0, state = 'idle', comp = null, lastWhy = '', lastDelay = 0;
 
+            /* 畫面：電腦（上）／ 中間的數字與倒數橫條 ／ 你（下）／ 三顆按鈕 */
             /* 畫面：電腦（上）／ 中間的數字與倒數橫條 ／ 你（下）／ 三顆按鈕 */
             var compWho = h('div', { 'class': 'rp-who', text: '電腦' });
             var compBody = h('div', { 'class': 'rp-body' });
@@ -107,6 +124,7 @@
             root.appendChild(top);
             root.appendChild(btns);
             var btnEls = {};
+            /* 建立三顆出拳按鈕（剪刀、石頭、布），pointerdown 一碰就出拳；kit.evT(e) 取事件發生的精確時間 */
             KINDS.forEach(function (k) {
                 var b = h('button', { 'class': 'rp-btn rp-btn--' + k }, [h('span', { 'class': 'rp-btn__ico' }), h('span', { 'class': 'rp-btn__txt', text: NAMES[k] })]);
                 b.firstChild.appendChild(handIcon(k, '#FFE9B0'));
@@ -115,6 +133,7 @@
                 btnEls[k] = b;
             });
 
+            /* 更新標題列右側的小字 */
             function meta() { ctx.setMeta(kit.meta(['連贏 ' + wins, fmtBest(Reaction.getBest(ID))])); }
             function placeholder(txt) { return h('div', { 'class': 'rp-none', text: txt }); }
             function setComp(kind) {
@@ -129,10 +148,12 @@
             }
             function setMid(text, cls) { big.textContent = text; big.className = 'rp-big' + (cls ? ' ' + cls : ''); }
 
+            /* 一回合：倒數 3、2、1、0 → 0.5 秒出拳時限 */
             /* ─── 一回合：倒數 3、2、1、0 → 0.5 秒出拳時限 ─── */
             function play() {
                 if (my.dead) return;
                 var level = wins + 1, delay = delayFor(level);
+                /* 電腦的拳先決定好，不受玩家影響（所以公平） */
                 comp = randomKind();             /* 先決定好，不受玩家影響 */
                 lastDelay = delay;
                 state = 'count';
@@ -142,12 +163,15 @@
                 [].forEach.call(btns.children, function (b) { b.classList.remove('rp-btn--pick'); });
                 compWho.textContent = '電腦　第 ' + level + ' 關';
                 setComp(null); setMe(null, '');
+                /* 主控台印出電腦這回合的拳與延遲，方便驗證 */
                 try { console.info('[猜拳必贏] 第 ' + level + ' 關（第 ' + rounds + ' 回合）電腦已決定出：' + NAMES[comp] + '；0 之後電腦延遲 ' + delay.toFixed(3) + ' 秒才出（你看得到的緩衝 ' + bufferFor(level).toFixed(3) + ' 秒）'); } catch (e) { }
                 setMid('3'); Sfx.play('tick');
+                /* 用 my.after 依序排：0.75 秒顯示 2、1.5 秒顯示 1、2.25 秒開放出拳 */
                 my.after(COUNT_MS, function () { setMid('2'); Sfx.play('tick'); });
                 my.after(COUNT_MS * 2, function () { setMid('1'); Sfx.play('tick'); });
                 my.after(COUNT_MS * 3, function () { openWindow(delay); });
             }
+            /* 開放出拳：顯示 0，開始倒數時間條；電腦在 delay 秒後出拳 */
             function openWindow(delay) {
                 state = 'open';
                 setMid('0');
@@ -159,13 +183,17 @@
                 });
                 R.winLoop = lp;
                 /* 電腦在 0 之後 delay 秒出拳（第 1 關是 0 秒，也就是同一刻）*/
+                /* 第 1 關延遲接近 0 秒，電腦同一刻出拳 */
                 if (delay <= 0.0005) { setComp(comp); Sfx.play('pop'); }
                 else R.compTimer = my.after(delay * 1000, function () { if (state === 'open') { setComp(comp); Sfx.play('pop'); } });
+                /* 0.5 秒到了玩家還沒出拳 → 慢出，輸 */
                 R.winTimer = my.after(WINDOW_MS, function () { if (state === 'open') { lp.stop(); press(null, performance.now()); } });
             }
 
+            /* 玩家按了某個拳（kind 為 null 代表超時沒按） */
             function press(kind, t) {
                 if (state === 'count') {
+                    /* 0 出現之前就按：搶拳犯規 */
                     /* 0 出現之前就按：搶拳犯規 */
                     if (kind) { state = 'reveal'; fill.style.width = '0%'; btnEls[kind].classList.add('rp-btn--pick'); reveal(kind, 'early'); }
                     return;
@@ -178,22 +206,26 @@
                 reveal(kind, kind ? null : 'late');
             }
 
+            /* 揭曉結果：贏了進下一回合、平手重來、輸了結束 */
             function reveal(kind, foul) {
                 var res = foul ? -1 : judge(kind, comp);
                 setComp(comp);
                 setMe(kind, foul === 'late' ? '來不及' : '');
                 var msg = foul === 'early' ? '搶拳犯規！要等 0' : (foul === 'late' ? '慢出了…' : (res > 0 ? '你贏了！' : (res < 0 ? '你輸了…' : '平手，重來')));
                 setMid(msg, 'rp-big--msg rp-big--' + (res > 0 ? 'win' : (res < 0 ? 'lose' : 'tie')));
+                /* 贏 */
                 if (res > 0) {
                     wins++;
                     if (Reaction.setBest(ID, wins, function (v, b) { return v > b; })) newRec = true;
                     meta();
                     Sfx.play('win');
                     my.after(G.dev.reveal || REVEAL_MS, play);
+                /* 平手：同一關重來 */
                 } else if (res === 0) {
                     ties++;
                     Sfx.play('click');
                     my.after(REVEAL_MS - 400, play);
+                /* 輸：顯示原因，結算時提供「從失敗關卡 − 5 繼續」 */
                 } else {
                     Sfx.play('bad');
                     state = 'over';
@@ -212,6 +244,7 @@
                 }
             }
 
+            /* G.debug：測試用後門 */
             G.debug = {
                 state: function () { return { wins: wins, state: state, comp: comp, ties: ties, rounds: rounds, delay: lastDelay }; },
                 press: function (k) { press(k, performance.now()); },
@@ -221,19 +254,24 @@
                 lose: function () { return KINDS.find(function (k) { return judge(k, comp) < 0; }); },
                 compShown: function () { return compBody.querySelector('.rp-icon') != null; }
             };
+            /* 開場等 500 毫秒再開始 */
             my.after(500, play);
         }
 
         round(1);
     }
 
+    /* 遊戲身分證 */
     var G = {
         id: ID,
         name: '猜拳必贏',
         rule: '上面倒數 3、2、1、0。數字變成 0 的時候電腦出拳，你只有 0.5 秒可以按下「剪刀／石頭／布」，太早（還沒到 0）或太慢都算輸。前面的關卡可以先看電腦出什麼再出，越後面電腦出得越晚，留給你看的時間越短！贏了才能進下一關，平手重來。',
         mount: mount,
+        /* dev 是開發用設定 */
         dev: { reveal: null },          /* 開發驗證用：延長公布結果的停留時間 */
+        /* test 匯出純函式給 Node 自動測試 */
         test: { judge: judge, randomKind: randomKind, chanceText: chanceText, bufferFor: bufferFor, delayFor: delayFor, KINDS: KINDS, WINDOW_MS: WINDOW_MS, BUFFER_RAMP: BUFFER_RAMP }
     };
+    /* 登記到遊戲清單 */
     Reaction.register(G);
 })();

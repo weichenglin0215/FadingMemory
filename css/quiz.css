@@ -11,6 +11,8 @@
    的 UI.fit() 自動縮字、UI.paginate() 自動分頁，兩者一起合作才能做到
    「字太多就縮小／分頁，絕不捲動」）。 */
 
+/* 【新手導讀】.lv-list 是外層容器，.lv 是裡面的每一張關卡卡片：「flex-direction:column」讓卡片由上往下排，
+   每張卡片 flex:1 1 0 平分整個高度，所以不管有幾張都剛好塞滿、不用捲動。 */
 /* ─── 關卡列表：8 張卡片平均分配整個高度 ─── */
 .lv-list {
     flex: 1 1 auto;
@@ -20,6 +22,7 @@
     gap: var(--sp-2);
 }
 
+/* 單張關卡卡片：內容（編號、名稱、成績）水平排列，align-items:center 讓它們垂直置中 */
 .lv {
     flex: 1 1 0;
     min-height: 0;
@@ -38,6 +41,7 @@
     transform: scale(0.98);
 }
 
+/* 左邊的圓形編號（border-radius:50% 做成圓形） */
 .lv__num {
     flex: 0 0 58px;
     height: 58px;
@@ -51,6 +55,7 @@
     font-weight: var(--fw-black);
 }
 
+/* 中間的文字區：關卡名稱在上、說明標籤在下 */
 .lv__main {
     flex: 1 1 auto;
     min-width: 0;
@@ -58,12 +63,14 @@
     flex-direction: column;
 }
 
+/* 關卡名稱 */
 .lv__name {
     font-size: var(--fs-md);
     font-weight: var(--fw-black);
     line-height: 1.15;
 }
 
+/* 說明標籤：單行顯示，太長用 ... 省略（nowrap + overflow:hidden + ellipsis 三個要一起用） */
 .lv__tag {
     font-size: var(--fs-xs);
     font-weight: var(--fw-bold);
@@ -74,6 +81,7 @@
     text-overflow: ellipsis;
 }
 
+/* 右邊的成績區（答對題數、最佳紀錄），靠右對齊 */
 .lv__side {
     flex: 0 0 auto;
     display: flex;
@@ -82,12 +90,14 @@
     line-height: 1.2;
 }
 
+/* 答對題數（藍色） */
 .lv__count {
     font-size: var(--fs-sm);
     font-weight: var(--fw-black);
     color: var(--c-blue);
 }
 
+/* 最佳紀錄（綠色） */
 .lv__best {
     font-size: var(--fs-xs);
     font-weight: var(--fw-bold);
@@ -95,12 +105,14 @@
 }
 
 /* ─── 紙條 ─── */
+/* 紙條頂端的標題列：標題在左，頁碼在右 */
 .note-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
+/* 紙條本文：吃掉剩下空間、超出的部分裁掉（超長文字由 JS 的 UI.paginate 分頁處理） */
 .note--page {
     flex: 1 1 auto;
     min-height: 0;
@@ -108,6 +120,7 @@
 }
 
 /* ─── 題目 ─── */
+/* 答題畫面頂端：題號在左，標籤（例如「回想題」）在右 */
 .q-head {
     display: flex;
     align-items: center;
@@ -149,6 +162,7 @@
     }
 }
 
+/* 題目文字區：吃掉剩下空間，內容垂直水平置中 */
 .q-text {
     flex: 1 1 auto;
     min-height: 0;
@@ -159,6 +173,7 @@
     padding: 0 var(--sp-2);
 }
 
+/* 題目文字本身，字級用 --fs-question，JS 的 UI.fit 會依字數自動縮小 */
 .q-text__inner {
     width: 100%;
     font-size: var(--fs-question);
@@ -167,6 +182,7 @@
     text-align: center;
 }
 
+/* 下方的四個選項：垂直排列，高度固定不拉伸（flex:0 0 auto） */
 .q-opts {
     flex: 0 0 auto;
     display: flex;
@@ -186,6 +202,7 @@
     --opt-h: 76px;
 }
 
+/* 答錯回饋的外層：題目、正確答案、原因由上往下排列 */
 .fb {
     width: 100%;
     display: flex;
@@ -195,12 +212,14 @@
     line-height: 1.3;
 }
 
+/* 被問的問題（縮小一點，灰色） */
 .fb__q {
     font-size: 0.8em;
     font-weight: var(--fw-bold);
     color: var(--c-ink-soft);
 }
 
+/* 正確答案（綠色，前面有打勾圖示） */
 .fb__ans {
     display: flex;
     align-items: center;
@@ -211,16 +230,19 @@
     color: var(--c-ok);
 }
 
+/* 圖示不被壓縮 */
 .fb__ans .icon {
     flex: 0 0 auto;
 }
 
+/* 為什麼會選錯的原因（橘色） */
 .fb__why {
     font-weight: var(--fw-bold);
     color: var(--c-bad);
 }
 
 /* ─── 結果 ─── */
+/* 結果頁頂部：圓環在左、評語在右 */
 .res-top {
     display: flex;
     align-items: center;
@@ -267,18 +289,21 @@
     color: var(--c-ink-soft);
 }
 
+/* 評語區 */
 .res-msg {
     display: flex;
     flex-direction: column;
     gap: var(--sp-2);
 }
 
+/* 評語大標題 */
 .res-msg__title {
     font-size: var(--fs-xl);
     font-weight: var(--fw-black);
     line-height: var(--lh-tight);
 }
 
+/* 星星（1～3 顆）；fill:currentColor 讓 SVG 星星填滿目前文字顏色 */
 .res-msg__stars {
     display: flex;
     gap: var(--sp-1);
@@ -290,12 +315,14 @@
     fill: currentColor;
 }
 
+/* 沒得到的星星用灰色 */
 .res-msg__stars .off {
     color: var(--bd-c);
 }
 
 /* 混淆類型分析：最容易被騙的 2～3 種（九種混淆類型見 README／
    note/FadingMemory記憶混淆說明.md，這裡只管排版，判斷邏輯在 js/quiz.js） */
+/* 「混淆分析」面板：外框 */
 .conf {
     flex: 1 1 auto;
     min-height: 0;
@@ -309,6 +336,7 @@
     border-radius: var(--r-md);
 }
 
+/* 面板標題列：標題在左，「看更多」在右 */
 .conf__head {
     display: flex;
     align-items: center;
@@ -316,12 +344,14 @@
     gap: var(--sp-2);
 }
 
+/* 面板標題 */
 .conf__title {
     font-size: var(--fs-md);
     font-weight: var(--fw-black);
     line-height: var(--lh-tight);
 }
 
+/* 「看更多」按鈕（膠囊形：border-radius 用 --r-pill） */
 .conf__more {
     flex: 0 0 auto;
     min-height: 52px;
@@ -334,6 +364,7 @@
     font-weight: var(--fw-black);
 }
 
+/* 單一混淆類型的列：左側粗橘色邊條 + 淡橘底 */
 .conf__row {
     padding: var(--sp-2) var(--sp-3);
     border-left: 8px solid var(--c-orange);
@@ -341,6 +372,7 @@
     background: var(--c-orange-soft);
 }
 
+/* 類型名稱與次數同一行，baseline 對齊文字基線 */
 .conf__line {
     display: flex;
     align-items: baseline;
@@ -348,12 +380,14 @@
     gap: var(--sp-2);
 }
 
+/* 類型名稱 */
 .conf__name {
     font-size: var(--fs-md);
     font-weight: var(--fw-black);
     color: var(--c-orange);
 }
 
+/* 次數分數（例如 2/5） */
 .conf__frac {
     font-size: var(--fs-xs);
     font-weight: var(--fw-bold);
@@ -361,12 +395,14 @@
     white-space: nowrap;
 }
 
+/* 類型說明 */
 .conf__desc {
     font-size: var(--fs-sm);
     font-weight: var(--fw-bold);
     line-height: var(--lh-tight);
 }
 
+/* 都沒有混淆時顯示的鼓勵訊息 */
 .conf__none {
     flex: 1 1 auto;
     display: flex;
@@ -382,6 +418,7 @@
    結果頁按「看錯題」會逐題顯示：題目＋玩家當初選的（紅底 .rev__line--bad）
    跟正確答案（綠底 .rev__line--ok）並排對照，底下再顯示當初為什麼會選錯的
    原因（.rev__why，跟答題當下的回饋文字共用同一套理由文字）。 */
+/* 錯題回顧外層 */
 .rev {
     flex: 1 1 auto;
     min-height: 0;
@@ -391,6 +428,7 @@
     padding: var(--sp-4);
 }
 
+/* 題目區 */
 .rev__q {
     flex: 1 1 auto;
     min-height: 0;
@@ -400,6 +438,7 @@
     justify-content: center;
 }
 
+/* 題目文字 */
 .rev__q-inner {
     width: 100%;
     font-size: var(--fs-question);
@@ -408,6 +447,7 @@
     text-align: center;
 }
 
+/* 一行「你選的」或「正確的」 */
 .rev__line {
     display: flex;
     align-items: center;
@@ -420,36 +460,43 @@
     line-height: var(--lh-tight);
 }
 
+/* 圖示大小 */
 .rev__line .icon {
     font-size: 40px;
 }
 
+/* 你選的（紅色） */
 .rev__line--bad {
     background: var(--c-bad-soft);
     color: var(--c-bad);
 }
 
+/* 正確答案（綠色） */
 .rev__line--ok {
     background: var(--c-ok-soft);
     color: var(--c-ok);
 }
 
+/* 小標籤（「你選了」「答案」） */
 .rev__label {
     flex: 0 0 auto;
     font-size: var(--fs-sm);
     color: var(--c-ink-soft);
 }
 
+/* 答案文字 */
 .rev__value {
     flex: 1 1 auto;
     min-width: 0;
 }
 
+/* 標籤列 */
 .rev__tags {
     display: flex;
     gap: var(--sp-2);
 }
 
+/* 為什麼選錯的說明 */
 .rev__why {
     font-size: var(--fs-sm);
     font-weight: var(--fw-bold);
@@ -458,6 +505,7 @@
 }
 
 /* ─── 確認視窗 ─── */
+/* 確認視窗：蓋住整個畫面的半透明背景 */
 .confirm {
     position: absolute;
     inset: 0;
@@ -469,6 +517,7 @@
     background: rgba(74, 59, 30, 0.35);
 }
 
+/* 確認視窗卡片（white-space:pre-line 讓文字裡的 \n 變成真正換行） */
 .confirm__card {
     width: 100%;
     display: flex;

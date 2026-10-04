@@ -18,6 +18,7 @@
    東西／量詞」要在兩關之間保持一致（第 7 關說要帶，第 8 關要問帶了幾個），
    所以抽出來放在檔案最上層，不是寫在某一關的函式裡面。 */
 
+/* 【新手導讀】寫法與 js/quiz_travel.js 完全相同（共用 js/quiz_gen.js 的出題引擎）：Q 是引擎，lib 是工具箱，P 是素材，T 是範本代入，L 是誘答選項。T1 的逐行說明在 quiz_travel.js 的第 1 關；這裡的 D1～D8 是聚餐主軸的 8 關。 */
 (function () {
     'use strict';
 
@@ -40,6 +41,7 @@
     var turnQ = lib.turnQ;
     var timeline = lib.timeline;
 
+    /* 把數字格式化成「500 元」 */
     function yuan(n) { return n + ' 元'; }
 
     /* 第 7、8 關共用：去取某樣聚餐要用的東西（place 跟 item 配對，拿去當誘答池時用 item 名稱） */
@@ -52,24 +54,32 @@
     var PICKUP_UNITS = { '兒童椅': '張', '伴手禮': '份', '花束': '束', '蛋糕盒': '個' };
 
     /* ═══ 第 1 關：新手暖身（一件事，幾乎沒有干擾） ═══ */
+    /* 第 1 關：最簡單的一關（一件差事，幾乎沒有干擾），可以對照 quiz_travel.js 的 T1 看 */
     function D1(G, S) {
         var D = S.tl[S.i];
+        /* G.pick：隨機挑一個 */
         var p = G.pick(P.kin.concat(P.friends));
         var e = G.pick(P.diningErrands1);
+        /* G.num：抽一個數字，twoDiff 規則避免兩位數有重複數字 */
         var bus = G.num(12, 98, null, twoDiff);
         var stop = G.pick(P.stops);
         var floor = G.num(2, 5, null, null, 'floor');
         var n = G.num(2, 4, [floor], null, 'n');
+        /* S.r[0]：整局共用的兩家候選餐廳之一 */
         var r = S.r[0];
         var v = { p: p, bus: bus, stop: stop, place: e.place, floor: floor, act: e.act, n: n, u: e.u, thing: e.thing, r: r, today: D.today.sw, ev: D.ev.sw };
+        /* v：範本代入用的資料包 */
         var note = [
+            /* note：紙條，每個元素是一段文字 */
             T('{ev}要去{r}聚餐，{p}找了大家一起吃飯。你下午五點下班，要先幫忙辦一件事：', v),
             T('搭 {bus} 號公車，在{stop}下車，', v),
             T('去{place} {floor} 樓，{act} {n} {u}{thing}。', v)
         ];
         var fl = function (x) { return x + ' 樓'; };
+        /* fl、cu：把答案格式化成「3 樓」「2 袋」之類的小函式 */
         var cu = function (x) { return x + ' ' + e.u; };
         var qs = [
+            /* qs：候選題目；G.dateQ 是日期題，G.q(題目, 題型, 正解, [誘答])，L(文字, 混淆類型, 說明) 做誘答 */
             G.dateQ('聚餐是哪一天？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是今天，聚餐是' + D.ev.s + '。')], { must: true }),
             G.q('是誰找大家一起吃飯？', '人物', p, G.others(P.kin.concat(P.friends), p, '差一點點')),
             G.q('要搭幾號公車？', '數字', bus, G.near(bus, String, { lo: 10, hi: 99 })),
@@ -79,6 +89,7 @@
             G.q(T('要{act}幾{u}{thing}？', v), '數字', cu(n),
                 [L(cu(floor), '張冠李戴', floor + ' 是樓層，不是' + e.thing + '的數量。')].concat(G.near(n, cu, { lo: 1, hi: 9, swap: false })))
         ];
+        /* finish：從候選題目挑出這一關要用的 4 題 */
         return { note: note, qs: finish(G, qs, 4) };
     }
 
@@ -323,6 +334,7 @@
         return { note: note, qs: finish(G, qs, 12) };
     }
 
+    /* 把整個聚餐主軸登記進引擎：id、顯示名稱、8 關的關卡名稱、setup（整局共用資料：時間軸與兩家餐廳）、levels（8 個關卡函式） */
     Q.addTheme({
         id: 'dining', name: '聚餐',
         names: ['新手暖身', '兩件差事', '先後順序', '顏色形狀', '座位與飲料', '臨時改口', '一通電話', '結帳回家'],

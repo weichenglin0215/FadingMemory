@@ -16,6 +16,7 @@
    · 有 LIVES 次機會，答錯或超時扣一次。成績＝答對題數（越多越好）。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
 (function () {
     'use strict';
 
@@ -23,31 +24,49 @@
     var h = UI.h;
     var kit = Reaction.kit;
 
+    /* 難度與題型的設定都集中在這裡，想調難度只改這一區 */
     /* ═══ 可以自己調的參數 ═══ */
+    /* 難度從第 1 題線性變到第 RAMP_Q 題，之後維持最難 */
     var RAMP_Q = 30;
     var SHOW_START = 1.0, SHOW_END = 0.5;       /* 上格顯示秒數 */
     var BLANK_START = 0.5, BLANK_END = 1.0;     /* 上格空白秒數 */
     var ASK_START = 4.0, ASK_END = 2.0;         /* 看到下格後的作答時限（秒） */
     var SIM_START = 0, SIM_END = 0.85;          /* 「不一樣」題用相似選項的機率 */
+    /* 物件 { 名稱: 數字 }：每種題型從第幾題起解鎖 */
     var UNLOCK = { fruit: 1, shape: 7, number: 13, expr1: 19, expr2: 25 };   /* 第幾題起解鎖 */
+    /* LIVES：有幾次機會（答錯或超時扣一次） */
     var LIVES = 3;
+    /* 揭曉答案後停多久（毫秒）才出下一題 */
     var REVEAL_MS = 1000;
 
+    /* 候選水果清單（字串是 drawFruit 裡用來判斷畫哪種水果的代號） */
     var FRUITS = ['apple', 'banana', 'orange', 'grape', 'strawberry', 'pear', 'watermelon', 'cherry'];
+    /* 代號 → 中文名稱，用在主控台輸出與結算畫面 */
     var FRUIT_NAME = { apple: '蘋果', banana: '香蕉', orange: '橘子', grape: '葡萄', strawberry: '草莓', pear: '梨子', watermelon: '西瓜', cherry: '櫻桃' };
+    /* 長得像的水果分成一組：「不相同」的題目越後面越會從同組挑，故意讓人容易看錯 */
     var FRUIT_GROUPS = [['apple', 'strawberry', 'cherry'], ['banana', 'pear', 'orange'], ['grape', 'watermelon']];
+    /* 圖形的種類 */
     var SHAPES = ['circle', 'square', 'triangle', 'hexagon', 'star', 'diamond'];
+    /* 長得像的圖形對照表（例如正方形和菱形像） */
     var SIM_SHAPE = { circle: ['hexagon'], square: ['diamond'], diamond: ['square', 'triangle'], triangle: ['diamond'], hexagon: ['circle', 'star'], star: ['hexagon'] };
+    /* 圖形縮放比例的上下限，避免圖形太小看不到或超出格子 */
     var SCALE_MIN = 0.35, SCALE_MAX = 1.0;
 
+    /* 最佳紀錄顯示文字 */
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 題'; }
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 難度進度 0～1：clamp 把值限制在 0 到 1 之間 */
     function prog(q) { return kit.clamp((q - 1) / (RAMP_Q - 1), 0, 1); }
+    /* 上格顯示秒數（隨題號線性變短） */
     function showSec(q) { return kit.ramp(q, SHOW_START, SHOW_END, RAMP_Q); }
+    /* 空白秒數（隨題號線性變長，考記憶） */
     function blankSec(q) { return kit.ramp(q, BLANK_START, BLANK_END, RAMP_Q); }
+    /* 作答時限（隨題號線性變短） */
     function askSec(q) { return kit.ramp(q, ASK_START, ASK_END, RAMP_Q); }
+    /* 「不相同」題使用相似選項的機率（越後面越高） */
     function simP(q) { return kit.ramp(q, SIM_START, SIM_END, RAMP_Q); }
+    /* 目前這一題有哪些題型可選（依解鎖題號累加） */
     function unlockedTypes(q) {
         var t = [];
         if (q >= UNLOCK.fruit) t.push('fruit');
@@ -56,42 +75,58 @@
         if (q >= UNLOCK.expr1) t.push('expr');
         return t;
     }
+    /* 挑這一題的題型：只有一種就選它；有多種時 50% 選最新解鎖的，其他平均分配（讓新題型更常出現） */
     /* 這一題的題型：只有一種就是它；多種時 50% 挑最新解鎖的，其餘平均 */
+    /* rand = rand || Math.random：外面沒有傳亂數函式就用內建的 Math.random。測試時會傳固定種子的亂數，讓結果可重現 */
     function pickType(q, rand) {
         rand = rand || Math.random;
         var t = unlockedTypes(q);
         if (t.length === 1) return t[0];
         return rand() < 0.5 ? t[t.length - 1] : kit.pick(t, rand);
     }
+    /* 每 10 題裡 5 題「相同」、5 題「不相同」，洗牌決定順序（不是每題擲骰子，才不會連續出現同一種答案太多次） */
     /* 每 10 題裡 5 題一樣、5 題不一樣（洗牌）。blockIdx＝第幾個 10 題 */
     function sameFlags(rand) {
         var a = [true, true, true, true, true, false, false, false, false, false];
         return kit.shuffle(a, rand);
     }
 
+    /* 出水果題：same 為 true 兩邊相同；否則 B 換成別種（越後面越有機會是長得像的） */
     function makeFruit(q, same, rand) {
+        /* a：上格的水果；b 先設成跟 a 一樣 */
         var a = kit.pick(FRUITS, rand), b = a;
         if (!same) {
+            /* 找出 a 所屬的相似群組 */
             var grp = FRUIT_GROUPS.filter(function (g) { return g.indexOf(a) >= 0; })[0];
+            /* 同組裡「不是 a」的水果＝長得像的候選 */
             var near = grp.filter(function (f) { return f !== a; });
+            /* 有長得像的候選，而且亂數小於相似機率時，就選長得像的 */
             if (near.length && rand() < simP(q)) b = kit.pick(near, rand);
+            /* 否則一直重抽直到跟 a 不同（do...while 至少會執行一次） */
             else { do { b = kit.pick(FRUITS, rand); } while (b === a); }
         }
+        /* 回傳一個題目物件：A、B 是兩格要畫的東西，same 是正確答案 */
         return { type: 'fruit', prompt: '是同一種水果嗎？', A: { kind: 'fruit', fruit: a }, B: { kind: 'fruit', fruit: b }, same: same };
     }
 
+    /* 出圖形題：每題只比較「大小／形狀／顏色」其中一項，題目會告訴玩家比哪一項 */
     function makeShape(q, same, rand) {
         var attr = kit.pick(['size', 'shape', 'color'], rand);
+        /* p：難度進度，用在 kit.lerp（線性插值）算出差距，越後面差距越小越難分辨 */
         var p = prog(q);
+        /* 隨機產生一個圖形（形狀、色相 hue 0~359、縮放） */
         function randItem() { return { kind: 'shape', shape: kit.pick(SHAPES, rand), hue: kit.randInt(0, 359, rand), scale: kit.randFloat(0.55, 1.0, rand) }; }
         var A = randItem(), B = randItem();
+        /* 比大小：不相同時，B 的縮放是 A 的 r 倍（變大或變小）；r 隨難度從 1.7 縮到 1.12 */
         if (attr === 'size') {
             if (same) B.scale = A.scale;
             else {
                 var r = kit.lerp(1.7, 1.12, p), up = rand() < 0.5;
                 B.scale = up ? A.scale * r : A.scale / r;
+                /* 如果超出上下限，就反方向 */
                 if (B.scale > SCALE_MAX || B.scale < SCALE_MIN) B.scale = up ? A.scale / r : A.scale * r;
             }
+        /* 比形狀 */
         } else if (attr === 'shape') {
             if (same) B.shape = A.shape;
             else {
@@ -99,6 +134,7 @@
                 if (rand() < simP(q)) B.shape = kit.pick(sim, rand);
                 else { do { B.shape = kit.pick(SHAPES, rand); } while (B.shape === A.shape); }
             }
+        /* 比顏色：色相差距從 110 度縮到 22 度；加 720 再取 360 的餘數，避免出現負數 */
         } else {
             if (same) B.hue = A.hue;
             else {
@@ -106,14 +142,18 @@
                 B.hue = (A.hue + (rand() < 0.5 ? d : -d) + 720) % 360;
             }
         }
+        /* 題目文字 */
         var promptMap = { size: '比一比：大小一樣嗎？', shape: '比一比：形狀一樣嗎？', color: '比一比：顏色一樣嗎？' };
         return { type: 'shape', attr: attr, prompt: promptMap[attr], A: A, B: B, same: same };
     }
 
+    /* 製造「只差一點」的數字：對調相鄰兩位，或其中一位 ±1（結果不能和原數相同、不能 0 開頭） */
     /* 兩個數字「只差一點」：對調相鄰兩位，或其中一位 ±1（結果不能等於原數、不能以 0 開頭） */
     function nearNumber(n, rand) {
         var s = String(n);
+        /* 最多試 30 次，避免無窮迴圈 */
         for (var tries = 0; tries < 30; tries++) {
+            /* split('') 把數字字串拆成一個一個字元的陣列 */
             var arr = s.split('');
             if (rand() < 0.5) {
                 var i = kit.randInt(0, arr.length - 2, rand);
@@ -123,13 +163,16 @@
                 var v = (+arr[j] + (rand() < 0.5 ? 1 : 9)) % 10;
                 arr[j] = String(v);
             }
+            /* join('') 再接回字串 */
             var out = arr.join('');
             if (out !== s && out.charAt(0) !== '0') return +out;
         }
         return n + 1;
     }
+    /* 出數字題：第 UNLOCK.expr1 題之前 2 位數，之後 3 位數 */
     function makeNumber(q, same, rand) {
         var digits = q < UNLOCK.expr1 ? 2 : 3;
+        /* Math.pow(10, 位數-1)＝該位數的最小值（例如 3 位數是 100），hi 是最大值（999） */
         var lo = Math.pow(10, digits - 1), hi = Math.pow(10, digits) - 1;
         var a = kit.randInt(lo, hi, rand), b = a;
         if (!same) {
@@ -139,10 +182,12 @@
         return { type: 'number', prompt: '是同一個數字嗎？', A: { kind: 'text', text: String(a), value: a }, B: { kind: 'text', text: String(b), value: b }, same: same };
     }
 
+    /* 把數值 v 寫成算式（例如 12 → "7 + 5"）；寫不出來（例如質數沒辦法用乘法）就回傳 null */
     /* 用運算符號把數值 v 寫成算式；寫不出來（例如質數用乘法）回傳 null */
     function exprFor(v, op, rand) {
         if (op === '+') { if (v < 2) return null; var a = kit.randInt(1, v - 1, rand); return a + ' + ' + (v - a); }
         if (op === '-') { var b = kit.randInt(1, 9, rand); return (v + b) + ' − ' + b; }
+        /* 乘法：找 v 的因數 */
         if (op === '×') {
             var f = [];
             for (var x = 2; x * x <= v; x++) if (v % x === 0) f.push(x);
@@ -150,9 +195,11 @@
             var x1 = kit.pick(f, rand), y1 = v / x1;
             return rand() < 0.5 ? x1 + ' × ' + y1 : y1 + ' × ' + x1;
         }
+        /* 除法：v×k ÷ k = v；超過 200 就放棄，避免算式太大 */
         if (op === '÷') { var k = kit.randInt(2, 9, rand); if (v * k > 200) return null; return (v * k) + ' ÷ ' + k; }
         return null;
     }
+    /* 最多試 60 次寫出一個和 avoid 不同的算式；實在不行就用 "v + 0" 保底 */
     function makeExprText(v, ops, rand, avoid) {
         for (var tries = 0; tries < 60; tries++) {
             var t = exprFor(v, kit.pick(ops, rand), rand);
@@ -160,13 +207,17 @@
         }
         return v + ' + 0';
     }
+    /* 出算式題：兩邊算式不同寫法，算出的答案要不要一樣由 same 決定 */
     function makeExpr(q, same, rand) {
         var ops = q >= UNLOCK.expr2 ? ['+', '−', '×', '÷'] : ['+', '−'];
+        /* 顯示用的減號 − 要換成一般的 -（內部計算用） */
         ops = ops.map(function (o) { return o === '−' ? '-' : o; });
+        /* 數值上限：加減題小一點，四則題大一點 */
         var vMax = q >= UNLOCK.expr2 ? 60 : 25;
         var va = kit.randInt(6, vMax, rand);
         var vb = va;
         if (!same) {
+            /* 不相同時，答案差 d（越後面差越小，最小 1） */
             var d = Math.max(1, Math.round(kit.lerp(3, 1, prog(q))));
             vb = va + (rand() < 0.5 ? d : -d);
             if (vb < 2) vb = va + d;
@@ -176,6 +227,7 @@
         return { type: 'expr', prompt: '算出來的答案一樣嗎？', A: { kind: 'text', text: ta, value: va }, B: { kind: 'text', text: tb, value: vb }, same: same };
     }
 
+    /* 依題型分派到對應的出題函式 */
     function makeQuestion(q, same, rand) {
         rand = rand || Math.random;
         var type = pickType(q, rand);
@@ -185,7 +237,9 @@
         return makeExpr(q, same, rand);
     }
 
+    /* 畫圖函式：把水果、圖形畫成 SVG 向量圖。座標系固定（水果 200×200、圖形以 0,0 為中心），畫面縮放時永遠銳利 */
     /* ═══ 畫圖 ═══ */
+    /* S 是簡寫：建立一個 SVG 元素並放進 svg。每個 S('path', {d: ...}) 畫一條路徑；d 是 SVG 路徑指令（M 移動、C 曲線、Z 封閉） */
     function drawFruit(kind, svg) {
         var S = function (tag, attrs) { return kit.svg(tag, attrs, svg); };
         if (kind === 'apple') {
@@ -224,11 +278,13 @@
             S('path', { d: 'M108 26 C 126 10, 152 16, 158 32 C 140 42, 120 40, 108 26 Z', fill: 'hsl(120,45%,40%)' });
         }
     }
+    /* 正多邊形的頂點座標字串（n 個頂點、半徑 r、起始角 rot）：用三角函式 cos／sin 算出每個頂點 */
     function polyPts(n, r, rot) {
         var pts = [];
         for (var k = 0; k < n; k++) { var a = rot + k * 2 * Math.PI / n; pts.push((r * Math.cos(a)).toFixed(1) + ',' + (r * Math.sin(a)).toFixed(1)); }
         return pts.join(' ');
     }
+    /* 畫一個圖形（圓、方、三角、六邊形、菱形、星星）；顏色用 hsl(色相, 飽和度, 亮度) */
     function drawShape(item, svg) {
         var R = 92 * item.scale;
         var fill = 'hsl(' + Math.round(item.hue) + ',72%,56%)', stroke = 'hsl(' + Math.round(item.hue) + ',60%,30%)';
@@ -243,8 +299,10 @@
         for (var k = 0; k < 10; k++) { var rr = k % 2 ? R * 0.45 : R * 1.08, a = -Math.PI / 2 + k * Math.PI / 5; pts.push((rr * Math.cos(a)).toFixed(1) + ',' + (rr * Math.sin(a)).toFixed(1)); }
         return kit.svg('polygon', mix({ points: pts.join(' ') }, common), svg);
     }
+    /* 合併兩個物件（b 的欄位蓋過 a 的欄位） */
     function mix(a, b) { var o = {}, k; for (k in a) o[k] = a[k]; for (k in b) o[k] = b[k]; return o; }
 
+    /* 把一個東西畫進格子 box：水果／圖形畫 SVG，其他（數字、算式）畫文字 */
     function renderItem(box, item) {
         box.innerHTML = '';
         if (!item) return;
@@ -259,19 +317,25 @@
         }
     }
 
+    /* mount：遊戲進場點 */
     function mount(root, ctx) {
         var R = null;
 
         /* startAt：從第幾關開始（失敗後可從前 5 關繼續）*/
+        /* round：開一局 */
         function round(startAt) {
+            /* 有舊的一局就先清掉（計時器、動畫迴圈都會停） */
             if (R) R.dispose();
             R = kit.round();
             var my = R;
             root.innerHTML = '';
 
+            /* q 目前題號（從 0 起算，next() 會先 +1）；right 答對數；lives 剩餘機會；state 目前階段（showA/blank/ask/reveal）；cur 目前這題 */
             var q = (startAt || 1) - 1, right = q, lives = LIVES, newRec = false, state = 'idle', cur = null;
+            /* flags：這一輪 10 題的「相同／不相同」配額；genId：每出一題 +1，用來讓舊計時器知道自己過期了 */
             var flags = sameFlags(), genId = 0;   /* 從中間某題開始（失敗後繼續）時，這一輪 10 題的「相同／不相同」配額也要有 */
 
+            /* 建立各個畫面元素：標題、提示、上格、下格、時間條、兩顆按鈕 */
             var head = h('div', { 'class': 'sm-head' });
             var prompt = h('div', { 'class': 'sm-prompt' });
             var boxA = h('div', { 'class': 'sm-box' });
@@ -280,18 +344,24 @@
             var bNo = h('button', { 'class': 'btn btn--primary sm-btn', text: '不相同' });
             var bYes = h('button', { 'class': 'btn btn--go sm-btn', text: '相同' });
             var btns = h('div', { 'class': 'sm-btns' }, [bNo, bYes]);
+            /* 按鈕一開始先隱藏（style.visibility='hidden' 隱藏但仍佔位置，版面不會跳動） */
             btns.style.visibility = 'hidden';
+            /* 把所有元素依序放進畫面 */
             [head, prompt, boxA, boxB, tb.el, btns].forEach(function (n) { root.appendChild(n); });
 
             function meta() { ctx.setMeta(kit.meta(['答對 ' + right, '機會 ' + lives])); }
             function paintHead() { head.textContent = '第 ' + q + ' 題'; }
 
+            /* next：出下一題 */
             function next() {
                 if (my.dead) return;
                 q++;
+                /* my_id：這題的編號；之後每個計時器回呼都檢查 my_id === genId，確認自己沒過期 */
                 var my_id = ++genId;
+                /* 每 10 題重新洗一次「相同／不相同」配額 */
                 if ((q - 1) % 10 === 0) flags = sameFlags();
                 cur = makeQuestion(q, flags[(q - 1) % 10]);
+                /* 主控台印出這題的實際內容與時間設定（除錯用） */
                 try {
                     console.info('[相同嗎？] 第 ' + q + ' 題（' + cur.type + '）' + cur.prompt + ' 上：' + describe(cur.A) + '／下：' + describe(cur.B) + ' ⇒ ' + (cur.same ? '相同' : '不相同') +
                         '；上格 ' + showSec(q).toFixed(2) + ' 秒、空白 ' + blankSec(q).toFixed(2) + ' 秒、作答 ' + askSec(q).toFixed(2) + ' 秒');
@@ -305,6 +375,7 @@
                 state = 'showA';
                 renderItem(boxA, cur.A);
                 Sfx.play('go');
+                /* 上格顯示 showSec 秒後清空，進入空白階段；再等 blankSec 秒後顯示下格 */
                 my.after(showSec(q) * 1000, function () {
                     if (my_id !== genId) return;
                     boxA.innerHTML = '';
@@ -314,22 +385,29 @@
                         renderItem(boxB, cur.B);
                         btns.style.visibility = 'visible';
                         state = 'ask';
+                        /* 作答階段開始：記錄開始時間 t0 與作答時限 lim（毫秒） */
                         var t0 = performance.now(), lim = askSec(q) * 1000;
+                        /* my.loop：每個畫面更新一次，更新時間條；回傳 false 停止 */
                         my.loop(function (now) {
                             if (my_id !== genId || state !== 'ask') return false;
                             tb.set(1 - (now - t0) / lim);
                         });
+                        /* 時間到還沒作答，視同答錯（answer(null)） */
                         my.after(lim, function () { if (my_id === genId && state === 'ask') answer(null); });
                     });
                 });
             }
+            /* 把一格的內容轉成文字（主控台輸出用） */
             function describe(it) { return it.kind === 'fruit' ? FRUIT_NAME[it.fruit] : (it.kind === 'shape' ? it.shape + ' 色相' + Math.round(it.hue) + ' 大小' + it.scale.toFixed(2) : it.text + (it.value != null && String(it.value) !== it.text ? '（=' + it.value + '）' : '')); }
 
+            /* answer：處理作答（isSame 是 true/false，null 代表超時） */
             function answer(isSame) {
                 if (state !== 'ask') return;
                 state = 'reveal';
                 tb.set(0);
+                /* isSame === cur.same 就是答對 */
                 var ok = isSame === cur.same;
+                /* 揭曉：把上格內容重新顯示，兩格都標上對錯顏色 */
                 renderItem(boxA, cur.A);       /* 揭曉：上格再亮出來，兩格一起看 */
                 boxA.classList.add(ok ? 'sm-box--ok' : 'sm-box--bad');
                 boxB.classList.add(ok ? 'sm-box--ok' : 'sm-box--bad');
@@ -337,8 +415,10 @@
                 else { lives--; Sfx.play('bad'); }
                 prompt.textContent = (isSame == null ? '時間到！' : (ok ? '答對了！' : '答錯了…')) + '　正確是「' + (cur.same ? '相同' : '不相同') + '」';
                 meta();
+                /* 沒有機會了 → 結算；否則稍後出下一題 */
                 if (lives <= 0) {
                     my.after(REVEAL_MS + 400, function () {
+                        /* kit.resumeFrom：失敗後「從失敗題號往前 5 題」可繼續玩 */
                         var back = kit.resumeFrom(q);
                         kit.result(root, {
                             num: right + ' 題', label: right >= 20 ? '記性真好！' : (right >= 10 ? '很不錯！' : '再試一次，會更準！'),
@@ -349,21 +429,25 @@
                     });
                 } else my.after(REVEAL_MS, next);
             }
+            /* 兩顆按鈕：pointerdown 一碰到就作答 */
             bNo.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(false); });
             bYes.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(true); });
 
+            /* G.debug：測試用後門 */
             G.debug = {
                 state: function () { return { q: q, state: state, right: right, lives: lives, cur: cur }; },
                 answerRight: function () { if (state === 'ask') answer(cur.same); return state; },
                 answerWrong: function () { if (state === 'ask') answer(!cur.same); return state; },
                 jump: function (n) { q = n - 1; }
             };
+            /* 開場等 400 毫秒再出第一題 */
             my.after(400, next);
         }
 
         round(1);
     }
 
+    /* 遊戲的身分證：id、name、rule、mount、test */
     var G = {
         id: ID,
         name: '相同嗎？',
@@ -372,4 +456,5 @@
         test: { makeQuestion: makeQuestion, sameFlags: sameFlags, pickType: pickType, unlockedTypes: unlockedTypes, nearNumber: nearNumber, exprFor: exprFor, showSec: showSec, blankSec: blankSec, askSec: askSec, simP: simP, FRUITS: FRUITS, SHAPES: SHAPES, UNLOCK: UNLOCK, RAMP_Q: RAMP_Q }
     };
     Reaction.register(G);
+/* 登記到遊戲清單 */
 })();

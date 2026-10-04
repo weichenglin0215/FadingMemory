@@ -10,30 +10,40 @@
    來控制／監聽，兩個檔案透過這組小小的介面各自獨立運作，不互相知道對方的
    內部實作。 */
 
+/* （HUD = Head-Up Display，疊在 3D 畫面上的 2D 操作介面。它的樣式在 css/world.css） */
 (function (global) {
     'use strict';
 
+    /* UI.h：建立 HTML 元素的小工具 */
     var h = UI.h;
+    /* HUD 是對外的介面物件，其他檔案呼叫 HUD.toast()、HUD.ask() 等 */
     var HUD = {};
 
+    /* 這些變數存放畫面上的各個元素（下面 HUD.init 才建立） */
     var root, chipPlace, chipTime, invEl, toastEl, toastBox, bannerEl;
     var joyEl, knobEl, actEl, actLabel, fadeEl, fadeText, loadingEl, menuBtn;
+    /* modal：目前開著幾個彈窗（對話框、紙條），大於 0 時搖桿與互動鍵都停用 */
     var modal = 0;
     var toastTimer = 0;
     var actionHandler = null;
     var menuHandler = null;
     var controlsOn = true;
+    /* joy：搖桿目前的方向 x、y（−1～1）與正在操作的手指編號 id */
     var joy = { x: 0, y: 0, id: null };
+    /* sim：驗證用的「模擬搖桿」，until 是模擬結束的時間 */
     var sim = { x: 0, y: 0, until: 0 };
+    /* keys：鍵盤方向鍵目前按著哪些 */
     var keys = {};
     var JOY_TRAVEL = 0.34; /* 搖桿頭可移動半徑 = 底座寬度 × 0.34 */
 
+    /* 語音朗讀：由 story.js 接上；對話框、紙條、提示都會念出來 */
     /* 語音朗讀：由 story.js 接上 HUD.voice = { say(text, {hold, maxWait}) → tag, drop(tag) }
        對話框、紙條、提示、轉場字都會念；對話框關掉時，它還沒念完的部分就停掉 */
     HUD.voice = null;
     function speak(text, opt) { return HUD.voice && text ? HUD.voice.say(text, opt) : 0; }
     function unspeak(tag) { if (HUD.voice && tag) HUD.voice.drop(tag); }
 
+    /* HUD.init：建立所有 2D 介面元素（上方列、提示、橫幅、搖桿、互動鍵、轉場） */
     HUD.init = function (el) {
         root = el;
 
@@ -59,6 +69,7 @@
         bannerEl.hidden = true;
         root.appendChild(bannerEl);
 
+        /* 搖桿：底座、四個方向箭頭、中間可移動的圓鈕 */
         /* 搖桿 */
         var arrows = h('div', {
             'class': 'joy__arrows', html:
@@ -89,12 +100,15 @@
         bindKeys();
     };
 
+    /* 搖桿 */
     /* ─── 搖桿 ─── */
+    /* 移動圓鈕：translate 平移，距離＝方向 × 可移動半徑 */
     function setKnob(x, y) {
         var travel = UI.cssPx('--joy-size', 200) * JOY_TRAVEL;
         knobEl.style.transform = (x || y) ? 'translate(' + (x * travel) + 'px,' + (y * travel) + 'px)' : '';
     }
 
+    /* 放開搖桿：方向歸零、圓鈕回中 */
     function releaseJoy() {
         joy.id = null;
         joy.x = 0;
@@ -103,6 +117,7 @@
         setKnob(0, 0);
     }
 
+    /* 綁定搖桿的手指事件：pointerdown 記下手指編號，pointermove 依手指與底座中心的距離算方向，超過半徑就縮回半徑長度（向量除以長度＝單位向量） */
     function bindJoystick() {
         function move(e) {
             var r = joyEl.getBoundingClientRect();
@@ -126,6 +141,7 @@
         joyEl.addEventListener('pointermove', function (e) {
             if (e.pointerId === joy.id) move(e);
         });
+        /* 放開（或手指被取消）就釋放搖桿 */
         ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (ev) {
             joyEl.addEventListener(ev, function (e) {
                 if (e.pointerId === joy.id) releaseJoy();
@@ -133,6 +149,7 @@
         });
     }
 
+    /* 鍵盤：方向鍵／WASD 移動，空白鍵／Enter／E 互動，Esc 開選單 */
     function bindKeys() {
         var map = {
             ArrowUp: 'u', KeyW: 'u', ArrowDown: 'd', KeyS: 'd',
@@ -148,9 +165,11 @@
         global.addEventListener('keyup', function (e) {
             if (map[e.code]) keys[map[e.code]] = false;
         });
+        /* 視窗失焦時（切到別的視窗）清掉按鍵狀態，避免卡住一直前進 */
         global.addEventListener('blur', function () { keys = {}; releaseJoy(); });
     }
 
+    /* 目前的移動輸入 {x, y} */
     /* 目前的移動輸入 {x, y}：x 右為正，y 下為正（搖桿往上推 = y 負 = 前進） */
     /* core.js 每影格呼叫這個函式問「現在搖桿方向是多少」，回傳 {x, y}（各自
        -1~1，x 左右、y 前後）。四種輸入來源依優先序只會用一種：彈窗開著或
@@ -166,6 +185,7 @@
     };
 
     /* 驗證用：模擬搖桿推 ms 毫秒 */
+    /* 驗證用：模擬搖桿推 ms 毫秒 */
     HUD.simulate = function (x, y, ms) {
         sim.x = x;
         sim.y = y;
@@ -175,12 +195,14 @@
         return UI.wait(ms);
     };
 
+    /* 開關搖桿（劇情演出時關掉） */
     HUD.controls = function (on) {
         controlsOn = on;
         joyEl.hidden = !on;
         if (!on) { releaseJoy(); HUD.action(null); }
     };
 
+    /* 顯示或隱藏互動鍵，label 是按鈕上的字 */
     HUD.action = function (label) {
         if (!label || !controlsOn) {
             actEl.hidden = true;
@@ -193,10 +215,13 @@
         }
     };
 
+    /* 註冊互動鍵、選單鍵被按下時要做的事 */
     HUD.onAction = function (fn) { actionHandler = fn; };
     HUD.onMenu = function (fn) { menuHandler = fn; };
+    /* 是否有彈窗開著 */
     HUD.isModal = function () { return modal > 0; };
 
+    /* 上方資訊（字太長時自動縮小，不會被切掉） */
     /* ─── 上方資訊（字太長時自動縮小，不會被切掉）─── */
     function fitChip() {
         var chip = chipPlace.parentNode;
@@ -208,6 +233,7 @@
             chip.style.fontSize = size + 'px';
         }
     }
+    /* 設定地點、時間、隨身物品 */
     HUD.setPlace = function (text) { chipPlace.textContent = text || ''; fitChip(); };
     HUD.setTime = function (text) { chipTime.innerHTML = text ? UI.icon('clock') + '<span>' + text + '</span>' : ''; fitChip(); };
     HUD.setInventory = function (items) {
@@ -218,6 +244,7 @@
         fitChip();
     };
 
+    /* 提示訊息（toast）：短暫浮出又消失 */
     /* opt.silent：不念出來 */
     HUD.toast = function (text, ms, opt) {
         if (!(opt && opt.silent)) speak(text);
@@ -227,12 +254,14 @@
         toastTimer = setTimeout(function () { toastEl.classList.add('is-hidden'); }, ms || 2600);
     };
 
+    /* 橫幅（banner）：任務提示，常駐 */
     HUD.banner = function (text) {
         if (!text) { bannerEl.hidden = true; return; }
         bannerEl.innerHTML = UI.icon('bus') + '<span>' + UI.esc(text) + '</span>';
         bannerEl.hidden = false;
     };
 
+    /* 轉場：蓋一層色塊淡入（並可顯示文字） */
     HUD.fade = function (on, text) {
         if (on && text) speak(text, { maxWait: 6000 });
         fadeText.textContent = text || '';
@@ -240,6 +269,7 @@
         return UI.wait(380);
     };
 
+    /* 載入畫面 */
     HUD.loading = function (text, art) {
         if (!text) {
             if (loadingEl) { loadingEl.remove(); loadingEl = null; }
@@ -252,6 +282,7 @@
         loadingEl.innerHTML = UI.art(art || 'home', 'hud-loading__art') + '<div>' + UI.esc(text) + '</div>';
     };
 
+    /* 對話框 ask：回傳 Promise，玩家按下某個選項時 resolve 該選項的 value，所以呼叫端可以寫 HUD.ask({...}).then(function (v) {...}) */
     /* ─── 對話框 ───
        HUD.ask({ title, text, art:'sun'|'rain'|'home', choices:[{label, value, kind:'primary'|'go'|'sky'|'line'}],
                  cols:1|2|3, big:true, center:true,
@@ -295,6 +326,7 @@
         });
     };
 
+    /* say：只有一顆「好」按鈕的簡單對話框 */
     HUD.say = function (o) {
         return HUD.ask({
             title: o.title, text: o.text, html: o.html, art: o.art, tone: o.tone, center: o.center, speak: o.speak,
@@ -302,6 +334,7 @@
         });
     };
 
+    /* 紙條：自動分頁，最後一頁按「看完了」就燒掉；回傳 Promise */
     /* 紙條：自動分頁，最後一頁按「看完了」就燒掉 → Promise（每翻到一頁就念那一頁） */
     HUD.note = function (paras) {
         return new Promise(function (resolve) {
@@ -363,6 +396,7 @@
                 tag = speak(pages[page].join(''), { hold: true });
             }
 
+            /* 等字型載好再分頁（量文字高度需要字型就緒） */
             UI.fonts(['700 34px "Noto Serif TC"'], paras.join(''), 2500).then(function () {
                 note.style.fontSize = maxFs + 'px';
                 pages = UI.paginate(paras, note);
@@ -371,5 +405,6 @@
         });
     };
 
+    /* 掛到 window 上讓其他檔案使用 */
     global.HUD = HUD;
 })(window);

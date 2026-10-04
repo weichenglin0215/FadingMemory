@@ -15,6 +15,7 @@
    · 單指（只認 isPrimary）；ALLOW_MULTI=true 時兩指各自累加。滑鼠：按住拖曳或滾輪。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
 (function () {
     'use strict';
 
@@ -22,12 +23,16 @@
     var h = UI.h;
     var kit = Reaction.kit;
 
+    /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
+    /* 要抽幾個螢幕高度的紙 */
     var TARGET_SCREENS = 50;   /* 要抽幾個螢幕高度的紙 */
     var GAIN = 1.0;             /* 手指移動 1px 抽出幾 px 的紙（覺得太久就調高） */
+    /* 往上反向超過 6px 才算新的一筆（避免手指微抖被重複計算） */
     var REVERSAL_PX = 6;        /* 往上反向超過幾 px 才算新的一筆 */
     var SHEET_H = 170;          /* 一張衛生紙的長度（撕裂虛線的間距） */
     var PAPER_W = 300;          /* 紙的寬度 */
+    /* 紙捲滿的時候與只剩紙筒時的半徑 */
     var R_FULL = 108, R_CORE = 30;      /* 紙捲滿的半徑／只剩紙筒的半徑 */
     var ROLL_CY = 118;          /* 紙捲圓心離畫面上緣 */
     var WHEEL_CAP = 200;        /* 滑鼠滾輪每次事件最多算幾 px */
@@ -35,8 +40,10 @@
     var ALLOW_MULTI = false;    /* true：兩指各自累加 */
     var SWIPE_MIN_PX = 120;     /* 一筆至少滑多長才算「一下」（統計滑動次數用） */
 
+    /* 最佳紀錄文字 */
     function fmtBest(v) { return v == null ? '' : '最佳 ' + kit.sec(v) + ' 秒'; }
 
+    /* 紙面圖樣：用 SVG 字串畫一張紙的斜紋壓花與撕裂虛線，轉成 data URI 當背景圖，CSS 可以重複鋪滿，不用建立一堆元素 */
     /* 紙面圖樣（一張紙：斜紋壓花＋底部撕裂虛線），做成可重複鋪的 SVG 背景 */
     function paperTile() {
         var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + PAPER_W + '" height="' + SHEET_H + '">' +
@@ -52,22 +59,26 @@
         }
     }
 
+    /* 紙捲半徑：紙長與面積成正比，所以半徑是平方根縮小（不是線性） */
     /* 紙捲半徑：紙長 ∝ 面積（純函式，也給 Node 測試用） */
     function rollRadius(p) {
         p = Math.min(1, Math.max(0, p));
         return Math.sqrt(R_CORE * R_CORE + (R_FULL * R_FULL - R_CORE * R_CORE) * (1 - p));
     }
 
+    /* 「抽出長度」計算器（純邏輯不碰畫面，方便測試）：feed(y) 傳入手指目前的 y，回傳這次新增的紙長 */
     /* 一筆一筆累加的「抽出長度」計算器（純邏輯，不碰 DOM，方便測試）：
        feed(y) 傳入手指目前的 y（邏輯 px），回傳這次新增的紙長（已乘 GAIN） */
     function makePuller(opts) {
         opts = opts || {};
         var reversal = opts.reversal == null ? REVERSAL_PX : opts.reversal;
         var gain = opts.gain == null ? GAIN : opts.gain;
+        /* s 狀態：maxY 這一筆到過的最遠點；strokeLen 這一筆累積長度；strokes 一共滑了幾下 */
         var s = { maxY: null, strokeLen: 0, strokes: 0, last: null };
         return {
             start: function (y) { s.maxY = y; s.strokeLen = 0; },
             feed: function (y) {
+                /* 只計入「超過這一筆最遠點」的部分，手指停在原地微抖不會灌水 */
                 if (s.maxY == null) { s.maxY = y; return 0; }
                 if (y > s.maxY) {
                     var inc = (y - s.maxY);
@@ -75,6 +86,7 @@
                     s.strokeLen += inc;
                     return inc * gain;
                 }
+                /* 往上反向超過 reversal 才算新的一筆開始 */
                 if (s.maxY - y >= reversal) {         /* 往上反向夠多：新的一筆開始 */
                     if (s.strokeLen >= SWIPE_MIN_PX) s.strokes++;
                     s.strokeLen = 0;
@@ -90,27 +102,33 @@
         };
     }
 
+    /* mount：遊戲進場點 */
     function mount(root, ctx) {
         var R = null;
 
+        /* round：開一局 */
         function round() {
             if (R) R.dispose();
             R = kit.round();
             var my = R;
             root.innerHTML = '';
+            /* 替整個畫面加上暖米色背景 class（樣式在 css/reaction.css 的 .ts-bg） */
             root.classList.add('ts-bg');
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
+            /* 畫面寬 500，高度用 Stage.H（850） */
             var W = 500;          /* 畫面（#screen）是滿版 500 寬 */
             var H = Stage.H;
             var TARGET_PX = TARGET_SCREENS * H;
 
+            /* 紙：重複鋪的背景圖，高度由 JS 設定 */
             /* 紙 */
             var paper = h('div', { 'class': 'ts-paper' });
             paper.style.width = PAPER_W + 'px';
             paper.style.backgroundImage = paperTile();
             root.appendChild(paper);
 
+            /* 紙捲：SVG 圓，半徑隨抽出的長度縮小；三條記號隨轉動 */
             /* 紙捲（SVG，圓心固定，半徑隨抽出的長度縮小） */
             var svg = kit.svg('svg', { 'class': 'ts-roll', viewBox: '0 0 ' + W + ' 260', preserveAspectRatio: 'xMidYMin meet' });
             var cx = W / 2;
@@ -123,6 +141,7 @@
             kit.svg('circle', { 'class': 'ts-roll__hole', cx: cx, cy: ROLL_CY, r: R_CORE * 0.55 }, svg);
             root.appendChild(svg);
 
+            /* 抬頭顯示：計時、進度、進度條、提示 */
             /* 抬頭顯示 */
             var timeEl = h('div', { 'class': 'ts-time', text: '0.000 秒' });
             var progText = h('div', { 'class': 'ts-prog', text: '0.0／' + TARGET_SCREENS + ' 屏' });
@@ -134,16 +153,20 @@
             root.appendChild(prompt);
             var barFill = bar.firstChild;
 
+            /* 狀態 */
             /* ─── 狀態 ─── */
+            /* pulled 已抽出的紙長（px）；tStart／tEnd 開始與結束的時間；phase ready/pulling/done */
             var pulled = 0;                 /* 已抽出的紙長（邏輯 px） */
             var tStart = null, tEnd = null;
             var phase = 'ready';            /* ready／pulling／done */
             var activeId = null;
             var puller = makePuller();
+            /* samples 每次的時間與已抽長度，結算算「最快 1 秒」用 */
             var samples = [];               /* [時間ms, pulled]，算「最快 1 秒」用 */
             var splits = [];                /* 每 10 屏的經過時間 */
             var lastScreenInt = 0, lastSheet = 0;
 
+            /* 重畫：紙捲半徑、轉動角度、紙的位置、進度條與文字 */
             function render() {
                 var p = pulled / TARGET_PX;
                 var rr = rollRadius(p);
@@ -157,12 +180,14 @@
                 barFill.style.height = (p * 100).toFixed(2) + '%';
                 progText.textContent = (pulled / H).toFixed(1) + '／' + TARGET_SCREENS + ' 屏';
             }
+            /* 更新計時顯示 */
             function renderTime() {
                 if (tStart == null) return;
                 var t = (tEnd == null ? performance.now() : tEnd) - tStart;
                 timeEl.textContent = kit.sec(t) + ' 秒';
             }
 
+            /* 一個位置樣本進來（pointermove 或滾輪都走這裡）：第一次有效往下滑才開始計時 */
             /* 一個位置樣本進來（pointermove／wheel 都走這裡）；t＝事件時間 */
             function addSample(y, t) {
                 if (phase === 'done') return;
@@ -180,6 +205,7 @@
                 /* 每抽過一屏、每 10 屏的進度記錄 */
                 var scr = Math.floor(pulled / H);
                 if (scr > lastScreenInt) {
+                    /* 每抽過一屏手機輕震一下（navigator.vibrate） */
                     if (HAPTIC && navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) { try { navigator.vibrate(4); } catch (e) { } }
                     if (scr % 10 === 0) { splits.push(t - tStart); Sfx.play('flip'); }
                     lastScreenInt = scr;
@@ -187,6 +213,7 @@
                 if (pulled >= TARGET_PX) finish(t);
             }
 
+            /* 抽光了：停表、存紀錄、統計平均速度／最快 1 秒／滑動次數／每 10 屏用時 */
             function finish(t) {
                 phase = 'done';
                 tEnd = t;
@@ -202,6 +229,7 @@
                 /* 統計：平均速度、最快 1 秒、滑動次數、每 10 屏用時 */
                 var avg = TARGET_SCREENS / (total / 1000);
                 var best1 = 0;
+                /* 滑動視窗：找出最快的連續 1 秒抽了多少 */
                 for (var i = 0, j = 0; i < samples.length; i++) {
                     while (samples[i][0] - samples[j][0] > 1000) j++;
                     var d = (samples[i][1] - samples[j][1]) / H;
@@ -226,11 +254,14 @@
                 });
             }
 
+            /* 輸入處理 */
             /* ─── 輸入 ─── */
+            /* getCoalescedEvents：取回被瀏覽器合併掉的中間點，快速滑動也不會漏掉 */
             function pointerSamples(e) {
                 var list = (e.getCoalescedEvents && e.getCoalescedEvents()) || [];
                 return list.length ? list : [e];
             }
+            /* 手指按下：只認主要手指（isPrimary），避免多指干擾 */
             function onDown(e) {
                 if (phase === 'done') return;
                 if (e.target && e.target.closest && e.target.closest('button')) return;
@@ -241,6 +272,7 @@
                 try { root.setPointerCapture(e.pointerId); } catch (err) { }
                 puller.start(kit.pt(e).y);
             }
+            /* 手指移動：每個樣本都餵給計算器 */
             function onMove(e) {
                 if (phase === 'done' || e.pointerId !== activeId) return;
                 var list = pointerSamples(e);
@@ -251,17 +283,20 @@
                 activeId = null;
                 puller.end();
             }
+            /* 滑鼠滾輪也可以抽 */
             function onWheel(e) {
                 if (phase === 'done') return;
                 e.preventDefault();
                 var dy = Math.min(WHEEL_CAP, Math.max(0, e.deltaY));
                 if (dy > 0) { puller.start(0); puller.feed(0); addSample(dy, kit.evT(e)); puller.end(); }
             }
+            /* 綁定手指與滾輪事件；{ passive: false } 讓 preventDefault 生效 */
             root.addEventListener('pointerdown', onDown);
             root.addEventListener('pointermove', onMove);
             root.addEventListener('pointerup', onUp);
             root.addEventListener('pointercancel', onUp);
             root.addEventListener('wheel', onWheel, { passive: false });
+            /* 這一局結束時把事件監聽拿掉 */
             my.onDispose(function () {
                 root.removeEventListener('pointerdown', onDown);
                 root.removeEventListener('pointermove', onMove);
@@ -272,6 +307,7 @@
             });
 
             render();
+            /* 計時顯示每個畫面更新（只是畫面；成績一律用事件時間） */
             /* 計時顯示（畫面用；成績一律用事件時間，不受這裡影響） */
             var drawn = -1;
             my.loop(function () {
@@ -279,6 +315,7 @@
                 renderTime();
             });
 
+            /* 測試／除錯：直接餵 y 位置，走跟真的手指一樣的路徑 */
             /* 測試／除錯：直接餵 y 位置，走跟真的手指一樣的路徑 */
             G.debug = {
                 state: function () { return { pulled: pulled, phase: phase, strokes: puller.strokes(), tStart: tStart, tEnd: tEnd, TARGET_PX: TARGET_PX }; },
@@ -291,12 +328,15 @@
         round();
     }
 
+    /* 遊戲身分證 */
     var G = {
         id: ID,
         name: '抽光它',
         rule: '把整捲衛生紙抽光！手指在螢幕上一直往下滑，紙就一路被拉出來；要抽滿 50 個螢幕高度，看你多快。從第一次往下滑才開始計時。',
         mount: mount,
+        /* test 匯出純函式給 Node 自動測試 */
         test: { rollRadius: rollRadius, makePuller: makePuller }
     };
+    /* 登記到遊戲清單 */
     Reaction.register(G);
 })();

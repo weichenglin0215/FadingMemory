@@ -6,11 +6,14 @@
    · 每個畫面都設計成「不用上下捲動」：題目與選項會依空間自動縮字。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* 【新手導讀】這個檔案管「明明還記得...」測驗模式的所有畫面，流程是：選關卡 showLevels → 看紙條 startLevel → 答題 showQuestion → 結果 showResult → 錯題回顧 showReview。每個畫面都是一個函式，切換畫面＝清空 #screen 再重畫。 */
 (function () {
     'use strict';
 
+    /* LEVELS：這一局的 8 關題目資料（由 js/quiz_gen.js 產生） */
     var LEVELS = [];   /* 這一局的 8 關（從 QuizGen.session() 拿到，整局一進來就全部產生好） */
     var THEME = '';
+    /* KINDS：九種「混淆類型」的說明文字（結果頁顯示用） */
     var KINDS = window.QuizGen.KINDS;
     var h = UI.h;
 
@@ -37,10 +40,13 @@
         rev: 0
     };
 
+    /* screen 是放畫面內容的元素；bar* 是頂端標題列的各個元素；confirmEl 是確認彈窗 */
     var screen, barTitle, barMeta, barBack, barProgress, confirmEl;
+    /* backAction：按「返回」時要做的事，每個畫面不同，由 setBar 設定 */
     var backAction = null;
 
     /* ─── 共用 ─── */
+    /* 讀 CSS 變數的數值（px），讓字級只定義在 css/theme.css 一個地方 */
     function px(name, fallback) { return UI.cssPx(name, fallback); }
 
     /* 統一設定頂部標題列：title/meta 是文字，progress 是 0~1 的小數（null＝不顯示
@@ -64,8 +70,10 @@
         screen.classList.remove('is-feedback');
     }
 
+    /* 最佳紀錄在 localStorage 的鍵名：每一關各自一個 */
     function bestKey(id) { return 'fm.quiz.best.' + id; }
 
+    /* 確認彈窗：回傳 Promise，玩家按「是」resolve(true)、按「否」resolve(false)，呼叫端用 .then 接結果 */
     function askConfirm(text, yesLabel, noLabel) {
         return new Promise(function (resolve) {
             confirmEl.innerHTML = '';
@@ -86,10 +94,12 @@
     }
 
     /* ═══ ① 選關卡（← 回主選單＝這一局結束，下次進來換新題目）═══ */
+    /* 選關卡畫面：每一關一張卡片，點下去 startLevel */
     function showLevels() {
         setBar('明明還記得...', THEME ? '主題：' + THEME : '共 8 關', null, function () { location.href = 'index.html'; });
         clear();
         var list = h('div', { 'class': 'lv-list' });
+        /* forEach 處理每一關；UI.store.get 讀這一關的最佳答對率 */
         LEVELS.forEach(function (lv, idx) {
             var best = UI.store.get(bestKey(lv.id), null);
             list.appendChild(h('button', { 'class': 'lv', on: { click: function () { startLevel(idx); } } }, [
@@ -108,6 +118,7 @@
     }
 
     /* ═══ ② 紙條：自動分頁，可以翻回上一頁，看完燒掉 ═══ */
+    /* 開始一關：重設狀態，顯示紙條 */
     function startLevel(idx) {
         S.lv = idx;
         S.qi = 0;
@@ -137,6 +148,7 @@
         /* 要先等字型真的載好（UI.fonts），才能用 UI.paginate() 測量文字塞不塞得下
            ——紙條用的是襯線字型（Noto Serif TC），如果字型還沒下載完就先拿系統
            預設字型量一次，量出來的分頁結果之後字型真的套上去就會不準。 */
+        /* 等字型載好再分頁：UI.paginate 要量文字高度，字型沒載好量出來會不準 */
         UI.fonts(['700 34px "Noto Serif TC"'], lv.note.join(''), 2500).then(function () {
             note.style.fontSize = px('--fs-note', 34) + 'px';
             S.pages = UI.paginate(lv.note, note);
@@ -144,6 +156,7 @@
         });
     }
 
+    /* 畫紙條的某一頁：上一頁／下一頁／看完了按鈕 */
     function renderNotePage(note, pager, btns) {
         var total = S.pages.length;
 
@@ -181,6 +194,7 @@
     }
 
     /* ═══ ③ 答題 ═══ */
+    /* 答題畫面：題目、四個選項（A～D） */
     function showQuestion() {
         var lv = LEVELS[S.lv];
         var q = lv.qs[S.qi];
@@ -192,6 +206,7 @@
         /* 跨關回想題：明白標出「第 X 關的回想題」，不藏著考玩家 */
         var side = h('span', { 'class': 'hint', text: q.from ? '想想第 ' + q.from + ' 關的紙條' : lv.name });
         var head = h('div', { 'class': 'q-head' }, [
+            /* 跨關回想題用會閃爍的標籤特別標出來；一般題顯示題型 */
             q.from ? h('span', { 'class': 'pill pill--recall pill--blink', text: '第 ' + q.from + ' 關的回想題' }) : h('span', { 'class': 'pill pill--blue', text: q.t }),
             side
         ]);
@@ -204,6 +219,7 @@
             var t = h('span', { 'class': 'opt__text', text: label });
             var b = h('button', { 'class': 'opt' }, [h('span', { 'class': 'opt__badge', text: letters[i] }), t]);
             pairs.push([t, b]);
+            /* 選項點擊：交給 answer 判定 */
             b.addEventListener('click', function () { answer(q, i, { opts: opts, box: box, side: side, pairs: pairs }); });
             opts.appendChild(b);
         });
@@ -212,6 +228,7 @@
         screen.appendChild(box);
         screen.appendChild(opts);
 
+        /* UI.fit：題目與選項字太多時自動縮字，保證不用捲動 */
         UI.fit(inner, px('--fs-question', 40), px('--fs-question-min', 26), box);
         fitOptions(pairs);
     }
@@ -220,6 +237,7 @@
         pairs.forEach(function (p) { UI.fit(p[0], px('--fs-option', 34), px('--fs-option-min', 24), p[1]); });
     }
 
+    /* 下一題；做完最後一題就顯示結果 */
     function nextQuestion() {
         S.qi++;
         if (S.qi >= LEVELS[S.lv].qs.length) showResult();
@@ -229,6 +247,7 @@
     /* q：這一題的資料（見 quiz_gen.js 的 Gen.prototype.q 回傳格式）；i：玩家點的
        選項 index；ui：剛剛 showQuestion() 建好的相關 DOM 元素，方便這裡直接改樣式
        （答對/答錯變色），不用重新查詢一次 DOM。 */
+    /* 判定答案：記錄到 S.answers；答對 0.65 秒後自動下一題，答錯顯示回饋 */
     function answer(q, i, ui) {
         if (S.locked) return;
         S.locked = true;
@@ -249,6 +268,7 @@
         showFeedback(q, i, ui);
     }
 
+    /* 答錯回饋：題目區改成「正確答案＋為什麼會錯」，並多一顆「下一題」按鈕 */
     /* 答錯：題目區改成「正確答案＋為什麼會錯」，選項變矮一點，下方多一顆「下一題」 */
     function showFeedback(q, i, ui) {
         screen.classList.add('is-feedback');
@@ -265,12 +285,14 @@
         UI.fit(fb, px('--fs-md', 30), 20, ui.box);
     }
 
+    /* 答題途中按返回：先跳出確認視窗 */
     function leaveLevel() {
         askConfirm('要離開這一關嗎？\n作答進度不會保留。', '離開', '繼續作答').then(function (yes) {
             if (yes) showLevels();
         });
     }
 
+    /* 結果：答對率＋「最容易被哪一種混淆騙到」 */
     /* ═══ ④ 結果：答對率＋「最容易被哪一種混淆騙到」═══ */
     /* 統計「這一關答錯的題目，最常是被哪幾種混淆類型騙到」，取前 3 名顯示在結果頁。
        st[k].seen：這一關總共出現過幾次「這個混淆類型的誘答選項」（不管有沒有選到它，
@@ -278,6 +300,7 @@
        排序：先比「被騙次數」多的排前面，次數一樣再比「被騙機率」（hit/seen）高的——
        這樣「出現很多次、但玩家幾乎都沒上當」的類型，不會因為基數大而排到「出現
        次數少、但每次都中招」的類型前面。 */
+    /* 統計各混淆類型被騙到的次數，取前三名（先比次數，再比被騙機率） */
     function confusionStats() {
         var st = {};
         S.answers.forEach(function (a) {
@@ -292,6 +315,7 @@
         }).slice(0, 3).map(function (k) { return { k: k, hit: st[k].hit, seen: st[k].seen }; });
     }
 
+    /* 結果畫面：答對率圓環、評語星星、混淆分析、按鈕 */
     function showResult() {
         var lv = LEVELS[S.lv];
         var total = S.answers.length;
@@ -304,9 +328,11 @@
         setBar('第 ' + lv.id + ' 關・結果', okCount + ' / ' + total, 1, showLevels);
         clear();
 
+        /* 依答對率給星星與評語 */
         var stars = pct >= 90 ? 3 : pct >= 70 ? 2 : pct >= 40 ? 1 : 0;
         var msg = pct >= 90 ? '太厲害了！' : pct >= 70 ? '很不錯喔！' : pct >= 40 ? '再接再厲！' : '慢慢來！';
 
+        /* 圓形進度條：SVG 圓弧用 stroke-dasharray（虛線）技巧——把實線段長設成「圓周長 × 百分比」 */
         /* 答對率圓環：用 SVG 的 stroke-dasharray 技巧畫「圓形進度條」——圓周長
            C＝2πR，把彩色那條圓弧的「虛線段長度」設成 C*pct/100（實線那一段）
            接著 C（空白那一段，反正繞一圈後面的虛線段用不到），視覺上就只會畫出
@@ -370,6 +396,7 @@
         screen.appendChild(h('button', { 'class': 'btn btn--sky btn--sm', text: '選其他關卡', on: { click: showLevels } }));
     }
 
+    /* 錯題回顧：一題一頁，列出你的答案、正確答案與原因 */
     /* ═══ ⑤ 錯題回顧（一題一頁）═══ */
     function showReview() {
         var a = S.wrong[S.rev];
@@ -401,6 +428,7 @@
         UI.fit(inner, px('--fs-question', 40), px('--fs-question-min', 26), qbox);
     }
 
+    /* 驗證用：進來就把這一局的紙條、題目、選項與正解印在主控台（按 F12 開啟），方便人工檢查題目是否合理 */
     /* ─── 驗證用：進來就把這一局 8 關的紙條、題目、選項與正解印在主控台（F12 開）───
        這不是給一般玩家看的功能，是開發/除錯/人工驗證用的：想確認「這一局的題目
        到底合不合理、誘答有沒有寫對」，不用在畫面上一題一題點過去，打開瀏覽器
@@ -427,6 +455,7 @@
         console.groupEnd();
     }
 
+    /* 驗證用後門 FMQuiz：在主控台可呼叫 FMQuiz.question(關卡, 題號) 直接跳到某題 */
     /* ─── 驗證用（主控台）：FMQuiz.question(關卡索引, 題目索引)、FMQuiz.pick(選項索引) ───
        同樣是開發用的「後門」，掛在 window 上，在瀏覽器主控台可以直接呼叫：
        例如想快速跳到第 3 關第 10 題看畫面，不用真的從頭玩過去，直接下指令
@@ -440,6 +469,7 @@
         result: function (lv, answers) { S.lv = lv; S.answers = answers; showResult(); }
     };
 
+    /* 啟動：等頁面準備好後，產生這一局的題目並顯示選關卡畫面 */
     /* ─── 啟動 ─── */
     UI.ready(function () {
         Stage.init();
@@ -451,6 +481,7 @@
         confirmEl = document.getElementById('confirm');
         barBack.addEventListener('click', function () { if (backAction) backAction(); });
 
+        /* 產生題目用 try/catch 保護：萬一出錯，至少顯示一句訊息，不要整頁空白 */
         /* QuizGen.session() 理論上不該丟出例外（buildLevel 內部已經有重試機制），
            但畢竟是跨好幾個檔案、好幾層的產生邏輯，這裡用 try/catch 當最後一道
            防線：萬一真的出了狀況，不要讓整頁變成一片空白、什麼訊息都沒有，
@@ -468,6 +499,7 @@
         }
         UI.fonts(['900 30px "Noto Sans TC"', '700 30px "Noto Sans TC"'], '明明還記得...選關卡新手暖身', 1500).then(showLevels);
 
+        /* 給驗證用：網址加 ?level=3 直接進某關 */
         /* 給驗證用：?level=3 直接進某關；?seed=數字 重現某一局 */
         var m = /[?&]level=(\d+)/.exec(location.search);
         if (m) setTimeout(function () { startLevel(Math.max(0, Math.min(LEVELS.length - 1, +m[1] - 1))); }, 1600);

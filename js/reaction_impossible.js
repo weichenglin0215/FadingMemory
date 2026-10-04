@@ -30,17 +30,23 @@
      貼齊遊戲畫面下緣（警戒線永遠在畫面最底部，不會浮到畫面中間）。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* （這款是較早寫的遊戲：只有一局、沒有關卡，所以不用 kit.round；共通結構見 js/reaction_sticks.js 開頭的「新手導讀」） */
 (function () {
     'use strict';
 
+    /* 遊戲代號 */
     var ID = 'impossible';
     var h = UI.h;
+    /* SVG 的 XML 命名空間網址：用 document.createElementNS 建立 SVG 元素時一定要帶（和一般 HTML 元素不同） */
     var SVGNS = 'http://www.w3.org/2000/svg';
     var XLINKNS = 'http://www.w3.org/1999/xlink';
+    /* 照片路徑 */
     var IMG_SRC = 'images/Impossible.png';
 
+    /* 重力加速度 9.8 公尺／秒² */
     var GRAVITY = 9.8;      /* 重力加速度（公尺／秒²），真實世界的數字 */
     var PX_PER_M = 50;      /* 下墜速度用這個換算 1 公尺等於多少邏輯 px——想讓下墜更快/更慢，調這個數字就好 */
+    /* ACCEL：換算成 px／秒²（加速度 = 9.8 × 每公尺的 px 數） */
     var ACCEL = GRAVITY * PX_PER_M; /* px/s² */
     var SUCCESS_CM = 30;     /* 停在警戒線上方「低於」幾「公分」才算成功（跟 MEASURE_PX_PER_CM 是配套的，見下面說明） */
     /* MEASURE_PX_PER_CM：量距離、算成不成功用的換算比例，刻意跟上面下墜速度
@@ -57,28 +63,36 @@
        ★ 注意：SUCCESS_CM 現在是 30 公分＝只有 15px 的容許誤差，落地瞬間的速度
        約 828 px/s，換算成時間只有約 18 毫秒、大約一格畫面（16.7 毫秒）——
        這是使用者指定的超高難度（"不可能任務"）。想放寬就調大 SUCCESS_CM。 */
+    /* 1 公分對應幾 px（這裡 1px ＝ 2 公分） */
     var MEASURE_PX_PER_CM = 1 / 2;
+    /* 照片顯示寬度；高度依照片長寬比算 */
     var IMG_W = 150;         /* 阿湯哥照片顯示寬度（邏輯 px），高度照片自己的長寬比算 */
     var BAR_H = 10;          /* 警戒線高度 */
     var PAUSE_BEFORE_MS = 1000; /* 停下來（或摔到線上）先定格這麼久，玩家才看得清楚剛剛發生了什麼事 */
     var ZOOM_MS = 1300;      /* 鏡頭推進（viewBox 補間）的時間 */
     var HOLD_AFTER_MS = 2000;   /* 推進完、看清楚結果之後，停留多久才出現「再挑戰一次」 */
+    /* REDUCED：使用者在系統設定了「減少動態效果」時，不播放推進動畫 */
     var REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 
+    /* cmOf：px 換算成公分（不四捨五入，用來比較與存紀錄） */
     /* cmOf 回傳沒有四捨五入的精確數字，拿來比較（<SUCCESS_CM）跟存最佳紀錄；
        要「顯示」（含小數點兩位）一律另外呼叫 fmtCm()，兩件事分開處理。 */
     function cmOf(px) { return Math.max(0, px) / MEASURE_PX_PER_CM; }
+    /* fmtCm：顯示用（小數點兩位） */
     function fmtCm(cm) { return cm.toFixed(2) + ' 公分'; }
     /* 最佳紀錄存的是「停下來離警戒線幾 px」（不是公分），顯示時才換算成公分——
        這樣以後不管把顯示的公分倍率再調成多少，舊紀錄都還是對的。 */
     function fmtBest(v) { return v == null ? '' : '最佳 ' + fmtCm(cmOf(v)); }
+    /* 緩動函式：先慢後快再慢（三次方曲線），讓鏡頭推進比較自然 */
     function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
 
+    /* 建立 SVG 元素的小工具（和 kit.svg 同功能，這款比 kit 早寫所以自己有一份） */
     function svgEl(tag, attrs) {
         var el = document.createElementNS(SVGNS, tag);
         for (var k in attrs) el.setAttribute(k, attrs[k]);
         return el;
     }
+    /* 設定 SVG 的 viewBox（x y 寬 高）：改 viewBox 就是「鏡頭」移動與放大 */
     function setViewBox(svg, box) {
         svg.setAttribute('viewBox', box.vx + ' ' + box.vy + ' ' + box.vw + ' ' + box.vh);
     }
@@ -88,8 +102,10 @@
        setTimeout 當安全網，分頁被切到背景、requestAnimationFrame 整個暫停時，
        時間到了還是會強制跳到終點、resolve 掉，後面「暫停兩秒再出現按鈕」的
        流程才不會卡住。 */
+    /* 把 viewBox 從 from 補間到 to（逐影格算位置）；setTimeout 當安全網，分頁在背景時 rAF 暫停也會強制跳到終點 */
     function tweenViewBox(svg, from, to, duration) {
         return new Promise(function (resolve) {
+            /* Promise：代表「之後會完成的事」，resolve() 表示完成 */
             if (REDUCED || duration <= 0) { setViewBox(svg, to); resolve(); return; }
             var done = false;
             function finishOnce() {
@@ -116,13 +132,16 @@
         });
     }
 
+    /* mount：遊戲進場點 */
     function mount(root, ctx) {
+        /* 替整個畫面加上白底 class */
         root.classList.add('imp-white-bg');
 
         /* 照片的長寬比只需要量一次（不會因為重玩而改變），先用一個不會進畫面的
            Image() 探測，知道比例之後，SVG 裡的 <image> 才能用「寬 150、高照比例
            自動算」正確擺好，不用每次重玩都重新量一次、也不用等它在畫面上真的
            載完才能繼續（量完之後 SVG 再載入同一個網址，瀏覽器會直接用快取）。 */
+        /* 照片的長寬比只量一次：先用不會進畫面的 Image() 探測 */
         var ratio = null;
         function withRatio(cb) {
             if (ratio != null) { cb(); return; }
@@ -132,8 +151,10 @@
             probe.src = IMG_SRC;
         }
 
+        /* round：開一局 */
         function round() { withRatio(startRound); }
 
+        /* startRound：真正畫出畫面 */
         function startRound() {
             root.innerHTML = '';
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
@@ -141,6 +162,7 @@
             var field = h('div', { 'class': 'imp-field' });
             root.appendChild(field);
 
+            /* FW／FH 場地大小；imgH 照片高；maxY 照片最多能掉到哪裡（下緣碰到警戒線） */
             var FW = field.clientWidth, FH = field.clientHeight;
             var imgH = IMG_W * ratio;
             var imgX = (FW - IMG_W) / 2;
@@ -150,6 +172,7 @@
             var svg = svgEl('svg', { 'class': 'imp-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'xMidYMid slice' });
             field.appendChild(svg);
 
+            /* 摔到警戒線時照片要變紅：用 SVG 濾鏡 feColorMatrix 重新計算每個像素的 RGB，alpha 不變，所以透明的部分仍然透明 */
             /* 摔到警戒線時照片要變紅：用 SVG 濾鏡 feColorMatrix 重新計算每個像素的 RGB，
                alpha（透明度）那一列原封不動（0 0 0 1 0＝輸出 alpha ＝ 輸入 alpha），
                所以照片本來透明的部分仍然透明、半透明的邊緣也維持原本的半透明。
@@ -192,18 +215,22 @@
                來說，玩家看準時機點下去的那一刻跟遊戲真正判定的時間點會差了
                手指按著不放的時間，時機全部算錯（跟「神準落下」的 dropBtn 用
                同一個理由、同一招）。 */
+            /* 點畫面：idle 時開始下墜，falling 時停住（用 pointerdown，不是 click，時機才準） */
             field.addEventListener('pointerdown', function (e) {
                 if (phase === 'idle') { e.preventDefault(); if (window.Sfx) Sfx.play('whoosh'); startFall(); }
                 else if (phase === 'falling') { e.preventDefault(); if (window.Sfx) Sfx.play('click'); stopFall(); }
             });
 
+            /* 開始下墜 */
             function startFall() {
                 phase = 'falling';
                 hint.textContent = '點擊畫面讓阿湯哥停止';
                 hint.classList.add('imp-hint--danger');
 
+                /* t0 開始時間 */
                 var t0 = performance.now();
                 var landed = false;
+                /* frame：每個畫面更新一次；自由落體位置 y = ½ × a × t² */
                 function frame(now) {
                     if (landed) return;
                     var t = (now - t0) / 1000;
@@ -220,6 +247,7 @@
                 raf = requestAnimationFrame(frame);
             }
 
+            /* 停止：取消 rAF 的迴圈，記下當下位置 */
             function stopFall() {
                 cancelAnimationFrame(raf);
                 finish(false, parseFloat(imgEl.getAttribute('y')) || 0);
@@ -237,6 +265,7 @@
                一起撐滿整個畫面高度；寬高比跟欄位本身一致，推進到底不會變形。
                「警戒線」文字標籤因此沒有地方放在警戒線下面了，改成寫在警戒線
                本身上面（見 addMeasure）。 */
+            /* 算出鏡頭推進的目標範圍（viewBox）：上緣＝照片上緣，下緣＝警戒線下緣 */
             function zoomBoxFor(imgY, gapPx) {
                 var gapTop = imgY + imgH, gapBottom = gapTop + gapPx, gapMid = (gapTop + gapBottom) / 2;
                 var vy = Math.max(0, imgY);
@@ -250,6 +279,7 @@
                一起加進同一個 SVG——全部用 box.vh 的比例算字級／粗細，鏡頭還沒
                推進時這些東西很小、幾乎看不出來，鏡頭推進的過程中它們會跟著整個
                畫面一起被放大到看得清楚，不是推進完才突然冒出來。 */
+            /* 鏡頭推進後加上量尺（藍線與箭頭）、公分數與成功／失敗文字；大小都用 box.vh 的比例算，所以會跟著畫面一起放大 */
             function addMeasure(box, success, cm, isNew) {
                 var midX = FW / 2;
                 var k = FH / box.vh;                 /* 推進到底之後，1 個 SVG 單位在畫面上是幾 px */
@@ -349,6 +379,7 @@
                不管哪一種都接著做同一套「定格→鏡頭推進」演出，推進完才判定成功
                或失敗——碰到警戒線（crashed）一律算失敗，沒碰到的話要停在
                低於 SUCCESS_CM 才算成功，純粹停下來、但離警戒線太遠，也算失敗。 */
+            /* finish：定格一秒 → 鏡頭推進 → 停留兩秒 → 出現「再挑戰一次」；crashed 為 true 表示直接摔到警戒線 */
             function finish(crashed, imgY) {
                 phase = 'done';
                 if (crashed) imgEl.setAttribute('filter', 'url(#imp-hit-red)');   /* 撞到地面：照片變紅 */
@@ -361,6 +392,7 @@
 
                 /* 定格一秒（參考使用者給的示意圖：剛停下來那一刻，提示文字都還在、
                    畫面維持原樣不動），玩家才看得清楚剛剛發生了什麼事，再開始推進。 */
+                /* UI.wait(毫秒).then(...)：等一下再做，.then 串起連續動作 */
                 UI.wait(REDUCED ? 0 : PAUSE_BEFORE_MS).then(function () {
                     hint.style.display = 'none';
                     var box = zoomBoxFor(imgY, gapPx);
@@ -377,6 +409,7 @@
         round();
     }
 
+    /* Reaction.register：把這款遊戲登記到遊戲清單 */
     Reaction.register({
         id: ID,
         name: '不可能任務',

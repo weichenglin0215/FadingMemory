@@ -44,15 +44,19 @@
      的時間才繼續），不會因為看規則就莫名其妙超時。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* （這款是較早寫的遊戲：只有一局、沒有關卡，所以不用 kit.round，直接用 setTimeout；共通結構見 js/reaction_sticks.js 開頭的「新手導讀」） */
 (function () {
     'use strict';
 
     var ID = 'rainbow';
     var h = UI.h;
 
+    /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
+    /* 每成功點擊幾個目標之後暫停並多加一種顏色 */
     var TARGETS_PER_STAGE = 10;     /* 每個階段成功點擊幾個目標色方塊之後，暫停並加一種新顏色 */
     var MAX_TARGETS = 6;            /* 要點的顏色最多加到幾種 */
+    /* 換方塊的間隔從 800ms 開始，每換一個縮短一點，最短 200ms */
     var START_INTERVAL_MS = 800;   /* 換方塊的間隔起始值（每個方塊一開始停留多久） */
     var MIN_INTERVAL_MS = 200;      /* 間隔最短縮到多少（再短人就按不到了） */
     /* 每換一個方塊，間隔縮短幾毫秒（從 START_INTERVAL_MS 縮到 MIN_INTERVAL_MS 大約
@@ -65,6 +69,7 @@
     var DECOY_PROB = 0.23;          /* 非目標色的方塊上，出現干擾字的機率（原本 0.7，再降成它的 1/3 ≈ 0.23） */
     var RULE_ARM_MS = 1000;         /* 新規則彈窗跳出後，「知道了」按鈕要等多久才按得下去（防止誤觸） */
 
+    /* 七個顏色的資料：id、名稱、提示用符號 emoji、CSS 顏色碼 */
     /* 七個固定的鮮豔七彩顏色。emoji 是提示文字用的圓形符號（靛色沒有，所以不能當目標）。 */
     var COLORS = [
         { id: 'red', name: '紅', emoji: '🔴', css: '#FF1F1F' },
@@ -75,36 +80,50 @@
         { id: 'indigo', name: '靛', emoji: '', css: '#4B2BFF' },
         { id: 'purple', name: '紫', emoji: '🟣', css: '#B026FF' }
     ];
+    /* RED：一開始只要點紅色 */
     var RED = COLORS[0];
+    /* EXTRA_POOL：之後能加進來當目標的顏色（要有符號，所以靛色不能當目標，永遠只是干擾） */
     var EXTRA_POOL = COLORS.filter(function (c) { return c.emoji && c !== RED; });
 
+    /* 2×2 格子在 CSS Grid 的編號是左上0、右上1、左下2、右下3 */
     /* 2×2 格子在 CSS Grid 裡的編號是左上0、右上1、左下2、右下3；
        順時針換方塊的順序就是 左上→右上→右下→左下。 */
+    /* ORDER：順時針換方塊的順序（左上→右上→右下→左下） */
     var ORDER = [0, 1, 3, 2];
 
+    /* 從陣列隨機挑一個 */
     function pickAny(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    /* 提示文字：「請點擊 🔴紅 … 方塊」 */
     function hintTextFor(targets) {
         return '請點擊' + targets.map(function (c) { return c.emoji + c.name; }).join('') + '方塊，超時就失敗。';
     }
 
+    /* mount：遊戲進場點 */
     function mount(root, ctx) {
+        /* 替整個畫面加上黑底 class（樣式在 css/reaction.css 的 .rb-bg） */
         root.classList.add('rb-bg');
+        /* 規則彈窗元素：「?」重看規則時，換方塊要暫停等它關掉 */
         var ruleDlg = document.getElementById('rule-dlg');
         function ruleOpen() { return !!ruleDlg && !ruleDlg.hidden; }
 
+        /* gen：每開一局 +1；上一局還沒跑完的計時器發現世代不一樣就自己停掉 */
         var gen = 0;    /* 每開一局就 +1：上一局還沒跑完的計時器發現世代不一樣就自己停掉 */
 
+        /* round：開一局 */
         function round() {
             var myGen = ++gen;
             root.innerHTML = '';
 
+            /* targets 目前要點的顏色清單；hits 成功點擊數（成績）；steps 已換過幾個方塊（決定間隔縮到多短）；pending 還沒被點掉的目標方塊 */
             var targets = [RED];
             var hits = 0;               /* 成功點擊的目標數（成績） */
             var stageHits = 0;          /* 這個階段已經成功點擊的目標數 */
             var steps = 0;              /* 已經換過幾個方塊（決定間隔縮到多短） */
             var cur = -1;               /* 目前最新的方塊在 ORDER 裡的位置 */
             var pending = null;         /* 還沒被點掉的目標色方塊：{ idx } */
+            /* handled：這一格的目標方塊已點過（再點不算錯，避免連點兩下就失敗） */
             var handled = [false, false, false, false];   /* 這一格的目標色方塊已經成功點過（再點不算錯） */
+            /* state：ready 等第一個方塊/play 進行中/paused 新規則彈窗/over 結束 */
             var state = 'ready';        /* ready：等第一個方塊／play：進行中／paused：新規則彈窗／over：結束 */
             var timer = null;
             var resumeAfterRule = false;
@@ -126,12 +145,14 @@
 
             /* 棋盤是正方形：量 wrap 實際可用的寬高，取小的那個（取偶數，兩格剛好平分）
                當邊長；剩下的空間靠 .rb-wrap 的 flex 置中，留白平均分在兩側／上下。 */
+            /* 棋盤是正方形：取可用寬高較小者，取偶數讓兩格剛好平分 */
             var side = Math.floor(Math.min(wrap.clientWidth, wrap.clientHeight) / 2) * 2;
             board.style.width = side + 'px';
             board.style.height = side + 'px';
             var cellPx = side / 2;
 
             var cells = [];
+            /* 建立 4 個格子，每格綁 pointerdown（一碰就觸發） */
             for (var i = 0; i < 4; i++) {
                 (function (i) {
                     var el = h('div', { 'class': 'rb-cell' });
@@ -142,12 +163,15 @@
             }
 
 
+            /* 目前的間隔（隨換方塊數縮短） */
             function intervalNow() { return Math.max(MIN_INTERVAL_MS, START_INTERVAL_MS - steps * INTERVAL_STEP_MS); }
+            /* 排下一次換方塊 */
             function schedule(ms) {
                 clearTimeout(timer);
                 timer = setTimeout(function () { if (myGen === gen) tick(); }, ms);
             }
 
+            /* 換下一個方塊：①上一個目標沒被點到＝超時失敗 ②拿掉白邊 ③換上新顏色（可能壓干擾字）④排下一次 */
             /* 換下一個方塊。順序固定是：①先檢查上一個目標有沒有被點掉（沒有＝超時）
                ②拿掉上一個方塊的白邊 ③新方塊換上隨機顏色＋白邊（非目標色再看要不要壓干擾字）
                ④排下一次換方塊。 */
@@ -162,6 +186,7 @@
                 cur = (cur + 1) % 4;
                 var idx = ORDER[cur], el = cells[idx];
 
+                /* 依機率決定這個方塊是不是目標色 */
                 var isTarget = Math.random() < TARGET_PROB;
                 var nonTargets = COLORS.filter(function (c) { return targets.indexOf(c) < 0; });
                 var color = isTarget ? pickAny(targets) : pickAny(nonTargets);
@@ -184,6 +209,7 @@
                 schedule(ms);
             }
 
+            /* 玩家點了某一格：必須剛好是待點的目標，否則失敗 */
             function tap(idx) {
                 if (state !== 'play') return;
                 if (handled[idx]) return;
@@ -199,6 +225,7 @@
                 if (stageHits >= TARGETS_PER_STAGE && targets.length < MAX_TARGETS) newStage();
             }
 
+            /* 換階段：暫停、加一種新目標色、彈出新規則視窗 */
             /* 換階段：先暫停（取消換方塊的計時器），再彈出新規則彈窗 */
             function newStage() {
                 state = 'paused';
@@ -206,6 +233,7 @@
                 var extra = pickAny(EXTRA_POOL.filter(function (c) { return targets.indexOf(c) < 0; }));
                 targets.push(extra);
 
+                /* 下一個要出現方塊的那一格先清成黑底，預告位置 */
                 /* 下一個要出現方塊的那一格先清成黑底（舊顏色、干擾字都拿掉），預先讓玩家
                    知道下一個方塊會出現在哪；其他三格維持原樣。 */
                 var nextEl = cells[ORDER[(cur + 1) % 4]];
@@ -223,8 +251,10 @@
                 ]);
                 root.appendChild(overlay);
 
+                /* 「知道了」按鈕剛出現的 1 秒內是灰的（防止手指的「鬼點擊」立刻把彈窗關掉） */
                 setTimeout(function () { if (myGen === gen) okBtn.disabled = false; }, RULE_ARM_MS);
 
+                /* 關掉彈窗：舊方塊全部標成「已處理」，然後倒數 3、2、1 才接著換方塊 */
                 /* 關掉彈窗：棋盤保持原樣（不清空、不重設 cur），舊方塊全部標成「已處理」，
                    然後在下一個位置倒數 3、2、1，倒數完才從那一格接著換方塊。 */
                 function close() {
@@ -237,6 +267,7 @@
                     countdown(COUNTDOWN_FROM);
                 }
 
+                /* 倒數：在下一格顯示白色大數字，每秒減 1，到 0 就換方塊 */
                 /* 在 nextEl 上顯示白色大數字 n，COUNTDOWN_STEP_MS 之後換 n-1；倒數到 0 就
                    把數字拿掉、換下一個方塊（tick）。「?」規則視窗開著的時候先停在原地等它關掉。 */
                 function countdown(n) {
@@ -252,6 +283,7 @@
                 }
             }
 
+            /* 失敗：標出點錯的那一格（紅虛線）與漏掉的那一格（白虛線），稍後顯示結算 */
             /* 失敗：停掉計時器，標出哪一格出事——badIdx＝點錯的那一格（鮮紅色虛線框）、
                missedIdx＝本來該點、卻沒點到的那一格（白色虛線框，告訴玩家「正確的是這個」），
                稍等一下再疊上結算卡片，跟其他遊戲同一套做法。 */
@@ -276,12 +308,14 @@
                 });
             }
 
+            /* 一開始等 900ms 才出第一個方塊 */
             schedule(FIRST_DELAY_MS);
         }
 
         round();
     }
 
+    /* Reaction.register：把這款遊戲登記到遊戲清單 */
     Reaction.register({
         id: ID,
         name: '七彩陷阱',

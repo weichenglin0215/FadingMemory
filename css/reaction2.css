@@ -7,7 +7,21 @@
    顏色一律取 theme.css 的變數；只有「黑底白字」這類使用者指定的畫面才寫死黑白。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* 【新手導讀：這個檔案怎麼讀】
+   · 一款遊戲 = 一組 class 名稱，前綴相同（例如落下棍子全部是 stk-開頭），JS 用 UI.h(..., {class:'stk-field'}) 把它們貼到元素上。
+   · 看到 .xxx--ok / .xxx--bad 是「修飾 class」：答對／答錯時 JS 才把它加到元素上，換顏色給玩家回饋（綠＝對、橘＝錯）。
+   · 常用屬性速查：
+       display:flex          讓子元素排成一列（或一欄），搭配 justify-content / align-items 控制對齊與置中
+       flex:1 1 auto         這個元素把「剩下的空間」吃滿；flex:none 表示不拉伸、只用自己的大小
+       min-height:0          搭配 flex 使用，允許元素「縮到比內容還小」，否則內容多時會把版面撐破（不能捲動的規則）
+       display:grid          格子排版（rows × columns），repeat(6,1fr) = 6 等分
+       position:absolute     脫離一般排版、用 left/top/inset 精準擺位（父元素要有 position:relative）
+       inset:0               上下左右都貼齊父元素（等於 top/right/bottom/left 都是 0）
+       var(--xxx)            讀取 theme.css :root 裡定義的變數（顏色、字級、間距），這裡不寫死數值
+       touch-action:none     告訴手機瀏覽器「這個區域的手指拖曳不要拿去捲動頁面」，拖曳遊戲一定要加
+       @keyframes            自訂動畫的每一格畫面，再由 animation: 名稱 時間 套用到元素 */
 /* ═══ 落下棍子（.stk-）═══ */
+/* 落下棍子：一根根從上面落下的棍子，要在棍子到達目標位置的瞬間點擊。 */  /* 標題列：置中、中等字級、粗體 */
 .stk-head {
     text-align: center;
     font-size: var(--fs-md);
@@ -15,6 +29,7 @@
     color: var(--c-ink);
 }
 
+/* 遊戲場地：棍子落下的區域，overflow:hidden 讓超出場地的部分被裁掉 */
 .stk-field {
     position: relative;
     flex: 1 1 auto;
@@ -26,6 +41,7 @@
     touch-action: none;
 }
 
+/* 場地最上方的黑色橫桿（棍子從這裡鬆手掉下去） */
 .stk-rail {
     position: absolute;
     left: 0;
@@ -36,6 +52,7 @@
     z-index: 3;
 }
 
+/* 單根棍子；will-change:transform 提示瀏覽器「這個元素會一直移動」，讓它事先用顯示卡加速，動畫更順 */
 .stk-stick {
     position: absolute;
     top: 0;
@@ -47,23 +64,28 @@
     will-change: transform;
 }
 
+/* 修飾：點準了（綠色） */
 .stk-stick--ok {
     background: var(--c-ok);
     border-color: var(--c-ok);
 }
 
+/* 修飾：點錯了（橘色） */
 .stk-stick--bad {
     background: var(--c-bad);
     border-color: var(--c-bad);
 }
 
+/* 數字方陣：黑底白字的 6×6 方格，依序點 1、2、3…（Schulte 表）。 */
 /* ═══ 數字方陣（.sch-）黑底白字 ═══ */
+/* .screen.sch-bg：同時有 screen 和 sch-bg 兩個 class 的元素才套用（把整個畫面底色改成純黑） */
 .screen.sch-bg {
     background: #000;
     padding: 0;
     gap: 0;
 }
 
+/* 最上方的狀態列：左邊「下一個數字」、右邊計時，用 space-between 推到兩端 */
 .sch-head {
     flex: none;
     display: flex;
@@ -75,10 +97,12 @@
     font-weight: var(--fw-black);
 }
 
+/* 計時文字：tabular-nums 讓每個數字等寬，數字跳動時文字不會左右抖動 */
 .sch-clock {
     font-variant-numeric: tabular-nums;
 }
 
+/* 6×6 的格子容器：grid-template-columns: repeat(6,1fr) 表示 6 欄、每欄等寬 */
 .sch-grid {
     flex: 1 1 auto;
     min-height: 0;
@@ -91,6 +115,7 @@
     box-sizing: border-box;
 }
 
+/* 每一格數字按鈕 */
 .sch-cell {
     display: flex;
     align-items: center;
@@ -108,16 +133,19 @@
     touch-action: manipulation;
 }
 
+/* 點對的格子：字變淺綠 */
 .sch-cell--ok {
     color: var(--c-ok-light);
 }
 
+/* 點錯的格子：整格變橘紅 */
 .sch-cell--bad {
     background: var(--c-bad-light);
     border-color: var(--c-bad-light);
     color: #fff;
 }
 
+/* 相同嗎？：比較兩個東西（圖形或文字）是否完全相同，按「相同」或「不同」。 */
 /* ═══ 相同嗎？（.sm-）═══ */
 .sm-head {
     text-align: center;
@@ -126,6 +154,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 提示文字（例如「這次要比什麼」） */
 .sm-prompt {
     text-align: center;
     font-size: var(--fs-lg);
@@ -134,6 +163,7 @@
     min-height: 1.3em;
 }
 
+/* 放圖形／文字的大框，內容置中 */
 .sm-box {
     flex: 1 1 0;
     min-height: 0;
@@ -146,22 +176,26 @@
     overflow: hidden;
 }
 
+/* 答對時框變綠 */
 .sm-box--ok {
     background: var(--c-ok-soft);
     border-color: var(--c-ok);
 }
 
+/* 答錯時框變橘 */
 .sm-box--bad {
     background: var(--c-bad-soft);
     border-color: var(--c-bad);
 }
 
+/* SVG 圖形：高度 92%，寬度跟著比例自動（width:auto），不會被拉歪 */
 .sm-svg {
     height: 92%;
     width: auto;
     max-width: 92%;
 }
 
+/* 文字版題目的大字 */
 .sm-text {
     font-size: 120px;
     font-weight: var(--fw-black);
@@ -170,20 +204,24 @@
     white-space: nowrap;
 }
 
+/* 太長的文字改用較小字級，才放得進框裡 */
 .sm-text--long {
     font-size: 84px;
 }
 
+/* 下方「相同／不同」兩顆按鈕的容器 */
 .sm-btns {
     flex: none;
     display: flex;
     gap: var(--sp-3);
 }
 
+/* 單顆按鈕：flex:1 1 0 讓兩顆平分寬度 */
 .sm-btn {
     flex: 1 1 0;
 }
 
+/* 倒背數字：先看電腦依序亮起的數字，再「倒過來」點回去。 */
 /* ═══ 倒背數字（.bn-）═══ */
 .bn-head {
     text-align: center;
@@ -192,6 +230,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 中間的提示橫幅（「記住！」「輪到你」「答對了」…），三種狀態用不同顏色 */
 .bn-banner {
     min-height: 1.5em;
     text-align: center;
@@ -212,6 +251,7 @@
     color: var(--c-bad);
 }
 
+/* 3×3 的數字鍵盤；aspect-ratio:1/1 讓寬高永遠一樣（正方形） */
 .bn-grid {
     flex: none;
     width: 100%;
@@ -222,6 +262,7 @@
     gap: 12px;
 }
 
+/* 單顆數字鍵 */
 .bn-cell {
     min-width: 0;
     padding: 0;
@@ -236,6 +277,7 @@
     box-shadow: var(--shadow-card);
 }
 
+/* 電腦示範時亮起的那一顆（黃色，微微放大 scale(1.05)） */
 .bn-cell--lit {
     background: var(--c-yellow);
     border-color: var(--c-yellow);
@@ -243,18 +285,21 @@
     transform: scale(1.05);
 }
 
+/* 玩家點對（綠） */
 .bn-cell--ok {
     background: var(--c-ok);
     border-color: var(--c-ok);
     color: var(--c-on-accent);
 }
 
+/* 玩家點錯（橘） */
 .bn-cell--bad {
     background: var(--c-bad);
     border-color: var(--c-bad);
     color: var(--c-on-accent);
 }
 
+/* 開場說明的全螢幕蓋板：absolute+inset:0 蓋滿整個遊戲畫面，z-index:5 讓它浮在上面 */
 .bn-splash {
     position: absolute;
     inset: 0;
@@ -267,6 +312,7 @@
     background: var(--c-paper);
 }
 
+/* 蓋板上的大字 */
 .bn-splash__big {
     font-size: 100px;
     font-weight: var(--fw-black);
@@ -274,6 +320,7 @@
     color: var(--c-orange);
 }
 
+/* 蓋板上的小字 */
 .bn-splash__small {
     margin-top: 24px;
     font-size: var(--fs-lg);
@@ -281,6 +328,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 撥時鐘：把時鐘的指針撥到題目要求的時間。 */
 /* ═══ 撥時鐘（.sc-）═══ */
 .sc-head {
     text-align: center;
@@ -289,6 +337,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 上方的數位時間（例如 2:19），tabular-nums = 等寬數字 */
 .sc-digital {
     text-align: center;
     font-size: 112px;
@@ -298,6 +347,7 @@
     font-variant-numeric: tabular-nums;
 }
 
+/* 放時鐘 SVG 的區域 */
 .sc-dial {
     flex: 1 1 auto;
     min-height: 0;
@@ -307,6 +357,7 @@
     border-radius: var(--r-lg);
 }
 
+/* 時鐘本體（SVG）；touch-action:none 才能用手指拖指針而不會捲動頁面 */
 .sc-svg {
     height: 100%;
     width: auto;
@@ -314,32 +365,38 @@
     touch-action: none;
 }
 
+/* 錶面（SVG 的上色用 fill=填滿色、stroke=外框線色） */
 .sc-face {
     fill: var(--c-card);
     stroke: var(--c-ink);
     stroke-width: 6;
 }
 
+/* 撥對時：錶面外框變綠 */
 .sc-dial--ok .sc-face {
     stroke: var(--c-ok);
     fill: var(--c-ok-soft);
 }
 
+/* 撥錯時：錶面外框變橘 */
 .sc-dial--bad .sc-face {
     stroke: var(--c-bad);
     fill: var(--c-bad-soft);
 }
 
+/* 一般刻度線 */
 .sc-tick {
     stroke: var(--c-ink-soft);
     stroke-width: 2;
 }
 
+/* 整點的粗刻度（12、3、6、9 …） */
 .sc-tick--big {
     stroke: var(--c-ink);
     stroke-width: 5;
 }
 
+/* 錶面上的數字 1～12 */
 .sc-num {
     font-family: var(--font-ui);
     font-size: 32px;
@@ -347,32 +404,38 @@
     fill: var(--c-ink);
 }
 
+/* 時針（粗、圓頭） */
 .sc-hand-hour {
     stroke: var(--c-ink);
     stroke-width: 15;
     stroke-linecap: round;
 }
 
+/* 分針（藍色、細一點） */
 .sc-hand-min {
     stroke: var(--c-blue);
     stroke-width: 9;
     stroke-linecap: round;
 }
 
+/* 揭曉時畫出「正確答案」的虛線 (stroke-dasharray = 線段 10 空 8 交錯) */
 .sc-ghost-line {
     stroke: var(--c-ok);
     stroke-dasharray: 10 8;
     stroke-width: 8;
 }
 
+/* 指針中心的小圓點 */
 .sc-cap {
     fill: var(--c-orange);
 }
 
+/* 「好了」按鈕 */
 .sc-done {
     flex: none;
 }
 
+/* 撕日曆：每撕一張，日期往後一天，撕到題目指定的那一天。 */
 /* ═══ 撕日曆（.tc-）═══ */
 .tc-head {
     text-align: center;
@@ -381,6 +444,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 題目橫幅（例如「撕到 4 月 26 日」） */
 .tc-prompt {
     text-align: center;
     padding: 8px 12px;
@@ -392,6 +456,7 @@
     line-height: 1.2;
 }
 
+/* 日曆頁疊放的區域（所有頁面 absolute 疊在同一個位置） */
 .tc-stack {
     position: relative;
     flex: 1 1 auto;
@@ -399,6 +464,7 @@
     touch-action: none;
 }
 
+/* 一張日曆頁；transform-origin:0 0 讓旋轉以左上角為軸心（像被撕走的樣子） */
 .tc-page {
     position: absolute;
     inset: 0;
@@ -414,12 +480,14 @@
     transform-origin: 0 0;
 }
 
+/* 被撕掉的那一張：播放 tcTear 動畫，pointer-events:none 讓它不會擋到下面的點擊 */
 .tc-page--torn {
     z-index: 3;
     pointer-events: none;
     animation: tcTear 0.25s ease-in forwards;
 }
 
+/* tcTear 動畫：0.25 秒內往左上飛走並旋轉、漸漸變透明（只寫終點 to，起點就是目前狀態） */
 @keyframes tcTear {
     to {
         transform: translate(-70px, -140px) rotate(-16deg);
@@ -427,22 +495,26 @@
     }
 }
 
+/* 撕對了（綠） */
 .tc-page--ok {
     border-color: var(--c-ok);
     background: var(--c-ok-soft);
 }
 
+/* 撕錯了（橘） */
 .tc-page--bad {
     border-color: var(--c-bad);
     background: var(--c-bad-soft);
 }
 
+/* 年月文字 */
 .tc-ym {
     font-size: var(--fs-lg);
     font-weight: var(--fw-black);
     color: var(--c-ink-soft);
 }
 
+/* 日期大數字 */
 .tc-day {
     font-size: 190px;
     font-weight: var(--fw-black);
@@ -450,17 +522,20 @@
     color: var(--c-ink);
 }
 
+/* 週末（六、日）的日期與星期用紅橘色 */
 .tc-day--we,
 .tc-wd--we {
     color: var(--c-bad);
 }
 
+/* 星期幾 */
 .tc-wd {
     font-size: var(--fs-xl);
     font-weight: var(--fw-black);
     color: var(--c-ink);
 }
 
+/* 農曆文字 */
 .tc-lunar {
     min-height: 1.3em;
     font-size: var(--fs-lg);
@@ -468,6 +543,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 節日／節氣的標籤列（flex-wrap 允許標籤太多時自動換行） */
 .tc-tags {
     display: flex;
     flex-wrap: wrap;
@@ -477,6 +553,7 @@
     margin-top: 6px;
 }
 
+/* 單個標籤（膠囊形：border-radius 用 --r-pill） */
 .tc-tag {
     padding: 2px 18px;
     border-radius: var(--r-pill);
@@ -485,18 +562,22 @@
     font-weight: var(--fw-black);
 }
 
+/* 國曆節日（橘） */
 .tc-tag--solar {
     background: var(--c-orange);
 }
 
+/* 農曆節日（綠） */
 .tc-tag--lunar {
     background: var(--c-green);
 }
 
+/* 節氣（藍） */
 .tc-tag--term {
     background: var(--c-blue);
 }
 
+/* 底下的操作提示 */
 .tc-hint {
     text-align: center;
     font-size: var(--fs-sm);
@@ -504,11 +585,14 @@
     color: var(--c-ink-soft);
 }
 
+/* 「就是這天」按鈕 */
 .tc-ok {
     flex: none;
 }
 
+/* 分藥盒：看完藥單後，把正確的藥丸拖進下方藥盒的格子。 */
 /* ═══ 分藥盒（.pb-）═══ */
+/* 標題 */
 .pb-head {
     text-align: center;
     font-size: var(--fs-md);
@@ -516,6 +600,7 @@
     color: var(--c-ink);
 }
 
+/* 上方面板：先顯示「藥單」，之後換成「藥丸盤」 */
 .pb-sheet {
     flex: none;
     display: flex;
@@ -529,11 +614,13 @@
     box-shadow: var(--shadow-card);
 }
 
+/* 藥單被蓋起來（等待填藥）時的樣子：內容垂直置中、底色換成宣紙色 */
 .pb-sheet--hidden {
     justify-content: center;
     background: var(--c-paper);
 }
 
+/* 「藥單已收起來」的提示字 */
 .pb-covered {
     text-align: center;
     font-size: var(--fs-lg);
@@ -541,6 +628,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 藥單的一行（時段名 + 藥丸圖案），align-items:center 讓它們垂直對齊 */
 .pb-line {
     display: flex;
     align-items: center;
@@ -548,6 +636,7 @@
     min-height: 48px;
 }
 
+/* 時段名（早／午／晚／睡前）固定 4 個字寬，flex:none 不讓它被擠小 */
 .pb-line__name {
     flex: none;
     width: 4em;
@@ -556,12 +645,14 @@
     color: var(--c-ink);
 }
 
+/* 這一行的藥丸圖案，flex-wrap 讓太多顆時自動換行 */
 .pb-line__pills {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
 }
 
+/* 下方的藥盒：2 欄的格子（grid），每一格是一個時段 */
 .pb-box {
     flex: 1 1 auto;
     min-height: 0;
@@ -570,10 +661,12 @@
     gap: 10px;
 }
 
+/* 看藥單的時候藥盒先變淡（opacity 0.35），表示「還不能放」 */
 .pb-box--dim {
     opacity: 0.35;
 }
 
+/* 藥盒裡的一格；overflow:hidden 防止藥丸太多時超出格子外 */
 .pb-cell {
     display: flex;
     flex-direction: column;
@@ -587,22 +680,26 @@
     overflow: hidden;
 }
 
+/* 目前選取的格子（藍色外框） */
 .pb-cell--sel {
     border-color: var(--c-blue);
     background: var(--c-blue-soft);
 }
 
+/* 判定錯誤的格子（橘色） */
 .pb-cell--bad {
     border-color: var(--c-bad);
     background: var(--c-bad-soft);
 }
 
+/* 格子左上角的時段名 */
 .pb-cell__name {
     font-size: var(--fs-md);
     font-weight: var(--fw-black);
     color: var(--c-ink);
 }
 
+/* 格子裡的藥丸排列區（會自動換行） */
 .pb-cell__pills {
     display: flex;
     flex-wrap: wrap;
@@ -615,11 +712,13 @@
 }
 
 /* 上方的藥丸盤 */
+/* 藥丸盤：沿用 .pb-sheet 的外觀（見上方），只改對齊與底色 */
 .pb-tray {
     justify-content: flex-start;
     background: var(--c-paper);
 }
 
+/* 藥丸盤上方的小標題 */
 .pb-tray__cap {
     text-align: center;
     font-size: var(--fs-sm);
@@ -627,6 +726,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 藥丸排列區：置中、自動換行，藥丸再多也不會捲動（太多時 JS 會縮小圖示） */
 .pb-tray__grid {
     flex: 1 1 auto;
     display: flex;
@@ -636,6 +736,7 @@
     gap: 6px;
 }
 
+/* 單顆藥丸：touch-action:none 才能用手指拖，cursor:grab 在電腦上顯示「小手」游標 */
 .pb-item {
     display: inline-flex;
     padding: 2px;
@@ -644,10 +745,12 @@
     cursor: grab;
 }
 
+/* 正在被拖曳的那一顆在原位變淡（拖曳的是另外跟著手指跑的「分身」） */
 .pb-item--lifted {
     opacity: 0.25;
 }
 
+/* 全畫面透明的「拖曳圖層」：分身畫在這一層，pointer-events:none 讓它不會擋到下面的點擊 */
 .pb-layer {
     position: absolute;
     left: 0;
@@ -658,6 +761,7 @@
     z-index: 60;
 }
 
+/* 跟著手指移動的藥丸分身，加投影讓它看起來「浮」起來 */
 .pb-ghost {
     position: absolute;
     width: 56px;
@@ -665,17 +769,20 @@
     filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
 }
 
+/* 拖到某一格上面時，該格亮綠色提示「可以放這裡」 */
 .pb-cell--over {
     border-color: var(--c-ok);
     background: var(--c-ok-soft);
 }
 
+/* （備用）按鍵列 */
 .pb-keys {
     flex: none;
     display: flex;
     gap: 8px;
 }
 
+/* （備用）單顆按鍵，:active 是「手指正按著」的狀態 */
 .pb-key {
     flex: 1 1 0;
     display: flex;
@@ -696,6 +803,7 @@
     background: var(--c-yellow-soft);
 }
 
+/* 最底下的操作列：「清空這格」「好了」兩顆按鈕平分寬度 */
 .pb-acts {
     flex: none;
     display: flex;
@@ -706,6 +814,7 @@
     flex: 1 1 0;
 }
 
+/* 冰箱歸位：食物出現在最上方大格子，要把它分到冷藏室／冷凍庫／櫥櫃三顆按鈕之一。 */
 /* ═══ 冰箱歸位（.fg-）═══ */
 .fg-head {
     text-align: center;
@@ -714,6 +823,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 三個「答案區」共用的外觀（冷藏室／冷凍庫／櫥櫃），border 寬度用變數 --bd-c 顏色 */
 .fg-zone {
     display: flex;
     align-items: center;
@@ -734,40 +844,48 @@
     touch-action: none;
 }
 
+/* 答案區裡的說明文字（大字） */
 .fg-zone__v {
     font-size: 44px;
     line-height: 1.15;
 }
 
+/* 較小字級的說明 */
 .fg-zone__v--sm {
     font-size: 30px;
 }
 
+/* 冷藏室：綠色系 */
 .fg-zone--cool {
     background: var(--c-green-soft);
     border-color: var(--c-green);
 }
 
+/* 冷凍庫：藍色系 */
 .fg-zone--freeze {
     background: var(--c-blue-soft);
     border-color: var(--c-blue);
 }
 
+/* 櫥櫃（不用冰）：黃色系 */
 .fg-zone--pantry {
     background: var(--c-yellow-soft);
     border-color: var(--c-yellow);
 }
 
+/* 答對：整塊變綠 */
 .fg-zone--ok {
     background: var(--c-ok);
     color: var(--c-on-accent);
 }
 
+/* 答錯：整塊變橘 */
 .fg-zone--bad {
     background: var(--c-bad);
     color: var(--c-on-accent);
 }
 
+/* 下方答案區容器：左邊一欄（上下兩顆）＋右邊一顆高的，固定高度 300px */
 /* 下方三顆答案按鈕：左邊上下兩顆（冷藏室、冷凍庫），右邊一顆高的（櫥櫃） */
 .fg-answers {
     flex: none;
@@ -776,6 +894,7 @@
     height: 300px;
 }
 
+/* 左邊那一欄（直向 flex，裡面上下各一顆答案區） */
 .fg-col {
     flex: 1 1 0;
     min-width: 0;
@@ -784,10 +903,12 @@
     gap: var(--sp-3);
 }
 
+/* > 是「子選擇器」：只作用在 .fg-answers 的直接子元素，讓右邊那顆自己吃滿整個高度 */
 .fg-answers > .fg-zone {
     flex: 1 1 0;
 }
 
+/* 題目區（最上方大格子）：吃掉剩下的所有高度 */
 /* 題目：最上方的大格子 */
 .fg-arena {
     flex: 1 1 0;
@@ -797,6 +918,7 @@
     justify-content: center;
 }
 
+/* 題目卡片：食物圖示＋名稱，垂直排列並置中 */
 .fg-card {
     flex: 1 1 auto;
     display: flex;
@@ -811,21 +933,25 @@
     box-shadow: var(--shadow-pop);
 }
 
+/* 答對時卡片變綠 */
 .fg-card--ok {
     border-color: var(--c-ok);
     background: var(--c-ok-soft);
 }
 
+/* 答錯時卡片變橘 */
 .fg-card--bad {
     border-color: var(--c-bad);
     background: var(--c-bad-soft);
 }
 
+/* 食物圖示大小 */
 .fg-icon {
     width: 210px;
     height: 210px;
 }
 
+/* 食物名稱大字 */
 .fg-name {
     font-size: 58px;
     font-weight: var(--fw-black);
@@ -834,6 +960,7 @@
     text-align: center;
 }
 
+/* 底下的提示說明 */
 .fg-tip {
     min-height: 2.6em;
     text-align: center;
@@ -842,6 +969,7 @@
     color: var(--c-ink);
 }
 
+/* 切蔥花：點一下切一刀，20 秒內切越多段越好。 */
 /* ═══ 切蔥花（.sl-）═══ */
 .sl-head {
     text-align: center;
@@ -850,6 +978,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 上方的計數區：數字和「段」用 baseline 對齊文字底線 */
 .sl-top {
     display: flex;
     align-items: baseline;
@@ -857,6 +986,7 @@
     gap: 10px;
 }
 
+/* 大字計數（切了幾段） */
 .sl-count {
     font-size: 110px;
     font-weight: var(--fw-black);
@@ -865,12 +995,14 @@
     font-variant-numeric: tabular-nums;
 }
 
+/* 單位「段」 */
 .sl-unit {
     font-size: var(--fs-xl);
     font-weight: var(--fw-black);
     color: var(--c-ink);
 }
 
+/* 砧板：蔥、刀子、蔥片都畫在這裡；overflow:hidden 讓蔥從畫面外進來時不會露出界外 */
 .sl-board {
     position: relative;
     flex: 1 1 auto;
@@ -882,6 +1014,7 @@
     touch-action: none;
 }
 
+/* 蔥（綠色長條）；box-shadow inset 在內側畫一條暗色下緣，讓它有立體感 */
 .sl-bar {
     position: absolute;
     background: var(--c-green);
@@ -889,6 +1022,7 @@
     box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.12);
 }
 
+/* 刀子外層：寬度 0，只是一個「定位點」，刀刃和握把相對它擺位；transition 讓下刀動作平滑 */
 .sl-knife {
     position: absolute;
     width: 0;
@@ -896,10 +1030,12 @@
     transition: transform 0.06s ease-out;
 }
 
+/* 下刀：往下移 26px */
 .sl-knife--down {
     transform: translateY(26px);
 }
 
+/* 刀刃 */
 .sl-knife__blade {
     position: absolute;
     left: -3px;
@@ -910,6 +1046,7 @@
     border-radius: 3px;
 }
 
+/* 刀把（橘色） */
 .sl-knife__grip {
     position: absolute;
     left: -14px;
@@ -920,6 +1057,7 @@
     border-radius: 8px;
 }
 
+/* 飛出去的蔥片，位置與動畫由 JS 的 element.animate() 控制 */
 .sl-slice {
     position: absolute;
     background: var(--c-ok-light);
@@ -929,6 +1067,7 @@
     will-change: transform;
 }
 
+/* 底下的操作提示文字 */
 .sl-hint {
     position: absolute;
     left: 0;
@@ -940,6 +1079,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 掛畫：左右按鈕或拖曳，把歪掉的畫框轉成水平。 */
 /* ═══ 掛畫（.hp-）═══ */
 .hp-head {
     text-align: center;
@@ -948,6 +1088,7 @@
     color: var(--c-ink);
 }
 
+/* 牆面區：花紋背景由 SVG 畫在裡面 */
 .hp-field {
     position: relative;
     flex: 1 1 auto;
@@ -958,6 +1099,7 @@
     touch-action: none;
 }
 
+/* SVG 鋪滿整個牆面（inset:0 + 寬高 100%） */
 .hp-svg {
     position: absolute;
     inset: 0;
@@ -966,21 +1108,25 @@
     display: block;
 }
 
+/* 下方控制列：◀ 掛好了 ▶ */
 .hp-ctrl {
     flex: none;
     display: flex;
     gap: var(--sp-3);
 }
 
+/* 「掛好了」吃掉中間剩下的寬度 */
 .hp-ctrl .hp-done {
     flex: 1 1 auto;
 }
 
+/* 左右微調按鈕，固定寬度 */
 .hp-nudge {
     flex: none;
     width: 96px;
 }
 
+/* 揭曉後浮在牆面下方的結果橫幅（一開始 opacity:0 看不見） */
 .hp-verdict {
     position: absolute;
     left: 10px;
@@ -998,10 +1144,12 @@
     pointer-events: none;
 }
 
+/* 顯示橫幅（opacity 變 1） */
 .hp-verdict--on {
     opacity: 1;
 }
 
+/* 左右顛倒：手指往左，球卻往右（鏡像操作）。 */
 /* ═══ 左右顛倒（.mr-）═══ */
 .mr-head {
     text-align: center;
@@ -1010,6 +1158,7 @@
     color: var(--c-ink);
 }
 
+/* 迷宮場地 */
 .mr-field {
     position: relative;
     flex: 1 1 auto;
@@ -1021,6 +1170,7 @@
     touch-action: none;
 }
 
+/* 迷宮 SVG */
 .mr-svg {
     position: absolute;
     inset: 0;
@@ -1028,6 +1178,7 @@
     height: 100%;
 }
 
+/* 牆壁與通道共用：不填色、線頭與轉角都是圓的 */
 .mr-wall,
 .mr-lane {
     fill: none;
@@ -1035,34 +1186,41 @@
     stroke-linejoin: round;
 }
 
+/* 牆壁線條 */
 .mr-wall {
     stroke: var(--c-ink-soft);
 }
 
+/* 通道線條 */
 .mr-lane {
     stroke: var(--c-card-alt);
 }
 
+/* 撞牆時所有牆壁閃橘色 */
 .mr-svg--bump .mr-wall {
     stroke: var(--c-bad);
 }
 
+/* 起點區 */
 .mr-start {
     fill: var(--c-green-soft);
     stroke: var(--c-green);
     stroke-width: 3;
 }
 
+/* 終點區 */
 .mr-goal {
     fill: var(--c-orange-soft);
     stroke: var(--c-orange);
     stroke-width: 4;
 }
 
+/* 到達終點：填綠色 */
 .mr-goal--ok {
     fill: var(--c-ok);
 }
 
+/* 終點上的文字，pointer-events:none 讓手指點到文字時也能穿透 */
 .mr-goal-t {
     font-family: var(--font-ui);
     font-size: 17px;
@@ -1071,6 +1229,7 @@
     pointer-events: none;
 }
 
+/* 示範路徑的殘影（半透明藍線） */
 .mr-ghost {
     fill: none;
     stroke: var(--c-blue);
@@ -1078,12 +1237,14 @@
     opacity: 0.5;
 }
 
+/* 玩家控制的球 */
 .mr-ball {
     fill: var(--c-orange);
     stroke: var(--c-ink);
     stroke-width: 3;
 }
 
+/* 底下的提示文字 */
 .mr-hint {
     text-align: center;
     font-size: var(--fs-sm);
@@ -1091,6 +1252,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 目擊證人：先看一張臉，再從多張臉中選出剛剛那一張。 */
 /* ═══ 目擊證人（.wt-）═══ */
 .wt-head {
     text-align: center;
@@ -1099,6 +1261,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 提示橫幅（「看仔細」「是哪一張」） */
 .wt-banner {
     min-height: 2.6em;
     text-align: center;
@@ -1108,17 +1271,20 @@
     line-height: 1.25;
 }
 
+/* 臉孔區 */
 .wt-stage {
     flex: 1 1 auto;
     min-height: 0;
 }
 
+/* 看臉階段：一張大臉置中 */
 .wt-stage--look {
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
+/* 大臉的卡片，aspect-ratio 固定寬高比 */
 .wt-big {
     height: 100%;
     aspect-ratio: 200 / 270;
@@ -1130,11 +1296,13 @@
     box-sizing: border-box;
 }
 
+/* 大臉裡的 SVG 臉孔填滿卡片 */
 .wt-big .wt-face {
     width: 100%;
     height: 100%;
 }
 
+/* 選臉階段：2 欄的格子 */
 .wt-stage--pick {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1142,6 +1310,7 @@
     gap: 10px;
 }
 
+/* 一張候選臉 */
 .wt-cell {
     min-height: 0;
     padding: 4px;
@@ -1155,22 +1324,26 @@
     height: 100%;
 }
 
+/* 手指按下去時變淺藍色 */
 .wt-cell:active {
     background: var(--c-blue-soft);
 }
 
+/* 選對（綠色粗框） */
 .wt-cell--ok {
     border-color: var(--c-ok);
     background: var(--c-ok-soft);
     border-width: 5px;
 }
 
+/* 選錯（橘色粗框） */
 .wt-cell--bad {
     border-color: var(--c-bad);
     background: var(--c-bad-soft);
     border-width: 5px;
 }
 
+/* 半邊字：字被遮住一半，猜原本是哪個字。 */
 /* ═══ 半邊字（.hc-）═══ */
 .hc-head {
     text-align: center;
@@ -1179,6 +1352,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 題目提示文字 */
 .hc-prompt {
     text-align: center;
     font-size: var(--fs-lg);
@@ -1186,6 +1360,7 @@
     color: var(--c-ink);
 }
 
+/* 顯示被遮住的字的大框 */
 .hc-box {
     flex: 1 1 0;
     min-height: 0;
@@ -1198,16 +1373,19 @@
     overflow: hidden;
 }
 
+/* 答對：框變綠 */
 .hc-box--ok {
     background: var(--c-ok-soft);
     border-color: var(--c-ok);
 }
 
+/* 答錯：框變橘 */
 .hc-box--bad {
     background: var(--c-bad-soft);
     border-color: var(--c-bad);
 }
 
+/* 被遮住的大字（用宋體風格的 --font-note） */
 .hc-char {
     font-family: var(--font-note);
     font-size: 300px;
@@ -1216,6 +1394,7 @@
     color: var(--c-ink);
 }
 
+/* 下方的 4 個選項（2×2 格子） */
 .hc-opts {
     flex: none;
     display: grid;
@@ -1223,6 +1402,7 @@
     gap: var(--sp-3);
 }
 
+/* 單個選項按鈕：固定高度、宋體大字 */
 .hc-opt {
     height: 112px;
     border: var(--bd);
@@ -1235,20 +1415,24 @@
     line-height: 1;
 }
 
+/* 手指按著時變淺藍 */
 .hc-opt:active {
     background: var(--c-blue-soft);
 }
 
+/* 選對（綠） */
 .hc-opt--ok {
     background: var(--c-ok-soft);
     border-color: var(--c-ok);
 }
 
+/* 選錯（橘） */
 .hc-opt--bad {
     background: var(--c-bad-soft);
     border-color: var(--c-bad);
 }
 
+/* 底下的說明文字（答案揭曉時顯示偏旁解說） */
 .hc-tip {
     min-height: 1.4em;
     text-align: center;
@@ -1257,6 +1441,7 @@
     color: var(--c-ink);
 }
 
+/* 照著走：先看小人走到旗子，之後旗子與陷阱消失，要靠記憶自己走一次。 */
 /* ═══ 照著走（.fw-）═══ */
 .fw-head {
     text-align: center;
@@ -1265,6 +1450,7 @@
     color: var(--c-ink);
 }
 
+/* 提示橫幅 */
 .fw-banner {
     min-height: 1.4em;
     text-align: center;
@@ -1273,6 +1459,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 地圖場地：SVG 地圖置中，overflow:hidden 裁掉超出的部分 */
 .fw-field {
     flex: 1 1 0;
     min-height: 0;
@@ -1285,26 +1472,31 @@
     overflow: hidden;
 }
 
+/* 地圖 SVG 填滿場地 */
 .fw-svg {
     display: block;
     width: 100%;
     height: 100%;
 }
 
+/* 棋盤格的兩種底色（奇偶格交錯，像西洋棋盤，方便看清楚格線） */
 .fw-cell--0 {
     fill: var(--c-ok-soft);
 }
 
+/* 棋盤格的第二種底色 */
 .fw-cell--1 {
     fill: var(--c-card-alt);
 }
 
+/* 陷阱（尖刺）方塊：rect 是 SVG 的矩形，這裡設定填色與外框 */
 .fw-trap rect {
     fill: var(--c-bad);
     stroke: var(--c-ink);
     stroke-width: 3;
 }
 
+/* 陷阱上的白色尖刺 */
 .fw-trap__spike {
     fill: var(--c-on-accent);
     stroke: var(--c-ink);
@@ -1312,10 +1504,12 @@
     stroke-linejoin: round;
 }
 
+/* 踩到的陷阱變黑色 */
 .fw-trap--hit rect {
     fill: var(--c-ink);
 }
 
+/* 「起點」文字 */
 .fw-startlbl {
     font-family: var(--font-ui);
     font-size: 16px;
@@ -1323,12 +1517,14 @@
     fill: var(--c-ink-soft);
 }
 
+/* 旗桿 */
 .fw-flag__pole {
     stroke: var(--c-ink);
     stroke-width: 4;
     stroke-linecap: round;
 }
 
+/* 旗子（橘色） */
 .fw-flag__cloth {
     fill: var(--c-orange);
     stroke: var(--c-ink);
@@ -1336,22 +1532,26 @@
     stroke-linejoin: round;
 }
 
+/* 小人：transform-box:view-box 讓旋轉／縮放以整張 SVG 為座標基準，才不會轉出奇怪的位置 */
 .fw-man {
     transform-box: view-box;
 }
 
+/* 下方的「左方／前進／右方」按鈕列 */
 .fw-btns {
     flex: none;
     display: flex;
     gap: var(--sp-2);
 }
 
+/* 單顆方向按鈕（平分寬度） */
 .fw-btn {
     flex: 1 1 0;
     padding: 0;
     font-size: var(--fs-md);
 }
 
+/* 找回小雞：先看哪幾隻小雞有星星，它們混進一群小雞四處亂跑，最後點出星星小雞。 */
 /* ═══ 找回小雞（.ck-）═══ */
 .ck-head {
     text-align: center;
@@ -1360,6 +1560,7 @@
     color: var(--c-ink);
 }
 
+/* 提示橫幅（nowrap = 不換行） */
 .ck-banner {
     min-height: 1.4em;
     white-space: nowrap;
@@ -1370,6 +1571,7 @@
 }
 
 /* 院子：JS 以 clientWidth／clientHeight 算小雞的活動範圍，所以一定要有確定的大小 */
+/* 院子：JS 要靠它的實際寬高來算小雞的活動範圍，所以一定要有確定的大小 */
 .ck-field {
     position: relative;
     flex: 1 1 0;
@@ -1381,6 +1583,7 @@
     touch-action: none;
 }
 
+/* 一隻小雞；位置用 JS 的 transform 控制，will-change 提示瀏覽器預先加速 */
 .ck-chick {
     position: absolute;
     left: 0;
@@ -1391,12 +1594,14 @@
     cursor: pointer;
 }
 
+/* 小雞 SVG */
 .ck-svg {
     display: block;
     width: 100%;
     height: 100%;
 }
 
+/* 小雞頭上的星星：絕對定位在小雞上方，pointer-events:none 不影響點擊 */
 .ck-star {
     position: absolute;
     left: 50%;
@@ -1419,31 +1624,37 @@
     pointer-events: none;
 }
 
+/* 移動結束後仍可點的（星星）小雞 */
 .ck-chick--live {
     cursor: pointer;
 }
 
+/* 被玩家點選（藍色光圈） */
 .ck-chick--pick {
     background: var(--c-blue-soft);
     box-shadow: 0 0 0 4px var(--c-blue);
 }
 
+/* 找對了（綠色光圈） */
 .ck-chick--ok {
     background: var(--c-ok-soft);
     box-shadow: 0 0 0 4px var(--c-ok);
 }
 
+/* 漏掉的星星小雞（揭曉時橘色光圈） */
 .ck-chick--miss {
     background: var(--c-bad-soft);
     box-shadow: 0 0 0 4px var(--c-bad);
 }
 
+/* 點錯的小雞（揭曉時帶紅褐色光圈、半透明） */
 .ck-chick--wrong {
     background: var(--c-bad-soft);
     box-shadow: 0 0 0 4px var(--c-recall);
     opacity: 0.7;
 }
 
+/* （保留）確認按鈕 */
 .ck-ok {
     flex: none;
     align-self: center;
@@ -1452,6 +1663,7 @@
 }
 
 
+/* 球會跑去哪：彈珠檯，看球掉下去、被簾子蓋住，要猜球最後落在哪一格。 */
 /* ═══ 球會跑去哪（.bo-）═══ */
 .bo-head {
     text-align: center;
@@ -1460,6 +1672,7 @@
     color: var(--c-ink);
 }
 
+/* 提示橫幅 */
 .bo-banner {
     min-height: 1.4em;
     text-align: center;
@@ -1468,6 +1681,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 遊戲場地 */
 .bo-field {
     flex: 1 1 0;
     min-height: 0;
@@ -1478,27 +1692,32 @@
     touch-action: none;
 }
 
+/* 彈珠檯 SVG 填滿場地 */
 .bo-svg {
     display: block;
     width: 100%;
     height: 100%;
 }
 
+/* 檯面底板 */
 .bo-board {
     fill: var(--c-card-alt);
     stroke: var(--c-ink-soft);
     stroke-width: 3;
 }
 
+/* 釘子 */
 .bo-peg {
     fill: var(--c-ink-soft);
 }
 
+/* 底部收集口之間的分隔線 */
 .bo-div {
     stroke: var(--c-ink-soft);
     stroke-width: 4;
 }
 
+/* 球的軌跡（揭曉時畫出來；fill:none 只畫線不填色） */
 .bo-trail {
     fill: none;
     stroke: var(--c-blue);
@@ -1508,6 +1727,7 @@
     opacity: 0.75;
 }
 
+/* 球（橘色） */
 .bo-ball {
     fill: var(--c-orange);
     stroke: var(--c-ink);
@@ -1515,20 +1735,24 @@
 }
 
 /* 簾子：蓋住最下方的收集口＋ 1.5 顆珠子的高度 */
+/* 簾子：蓋住最下方的收集口和上方一小段，讓玩家看不到球落在哪 */
 .bo-curtain {
     fill: var(--c-ink);
 }
 
+/* 收集口（可點選） */
 .bo-slot {
     cursor: pointer;
 }
 
+/* 收集口底色 */
 .bo-slot__bg {
     fill: var(--c-card);
     stroke: var(--c-yellow);
     stroke-width: 3;
 }
 
+/* 收集口上的編號文字 */
 .bo-slot__t {
     font-size: 34px;
     font-weight: var(--fw-black);
@@ -1536,32 +1760,38 @@
     pointer-events: none;
 }
 
+/* 玩家選的收集口（藍色） */
 .bo-slot--pick .bo-slot__bg {
     fill: var(--c-blue-soft);
     stroke: var(--c-blue);
 }
 
+/* 揭曉用的標示：實際落點 */
 .bo-result__bg {
     fill: none;
     stroke-width: 5;
 }
 
+/* 猜對（綠） */
 .bo-result__bg--ok {
     fill: var(--c-ok-soft);
     stroke: var(--c-ok);
 }
 
+/* 猜錯（橘） */
 .bo-result__bg--bad {
     fill: var(--c-bad-soft);
     stroke: var(--c-bad);
 }
 
+/* 你猜的位置（藍色虛線框） */
 .bo-result__bg--you {
     fill: none;
     stroke: var(--c-blue);
     stroke-dasharray: 8 6;
 }
 
+/* 分蛋糕：拖曳藍線切蛋糕，每一塊的面積要幾乎一樣大。 */
 /* ═══ 分蛋糕（.ca-）═══ */
 .ca-head {
     text-align: center;
@@ -1570,6 +1800,7 @@
     color: var(--c-ink);
 }
 
+/* 提示橫幅 */
 .ca-banner {
     min-height: 1.4em;
     white-space: nowrap;
@@ -1579,6 +1810,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 蛋糕場地 */
 .ca-field {
     flex: 1 1 0;
     min-height: 0;
@@ -1592,18 +1824,21 @@
     touch-action: none;
 }
 
+/* 蛋糕 SVG */
 .ca-svg {
     display: block;
     width: 100%;
     height: 100%;
 }
 
+/* 蛋糕本體（黃色圓形） */
 .ca-cake {
     fill: var(--c-yellow-soft);
     stroke: var(--c-yellow);
     stroke-width: 5;
 }
 
+/* 蛋糕上的糖霜（虛線圓） */
 .ca-icing {
     fill: var(--c-card);
     stroke: var(--c-orange);
@@ -1612,24 +1847,29 @@
     stroke-linecap: round;
 }
 
+/* 輔助刻度小點（隨關卡淡出） */
 .ca-aid {
     fill: var(--c-ink-soft);
 }
 
+/* 蛋糕中心點 */
 .ca-center {
     fill: var(--c-ink);
 }
 
+/* 切刀線（藍色） */
 .ca-cutline {
     stroke: var(--c-blue);
     stroke-width: 5;
     stroke-linecap: round;
 }
 
+/* 第一刀固定的線（橘色，不能拖） */
 .ca-cutline--first {
     stroke: var(--c-orange);
 }
 
+/* 線頭的圓形把手：可以拖曳 */
 .ca-handle {
     fill: var(--c-card);
     stroke: var(--c-blue);
@@ -1637,22 +1877,27 @@
     cursor: grab;
 }
 
+/* 正在被拖曳的把手變實心藍色 */
 .ca-handle--drag {
     fill: var(--c-blue);
 }
 
+/* 正在被拖曳的切刀線變粗 */
 .ca-cutline--drag {
     stroke-width: 8;
 }
 
+/* 面積百分比文字（小字） */
 .ca-slice__t--sm {
     font-size: 20px;
 }
 
+/* 切開後每一塊會慢慢移開（transition 0.5 秒） */
 .ca-slice {
     transition: transform 0.5s ease-out;
 }
 
+/* 單塊蛋糕的形狀（path） */
 .ca-slice__p {
     fill: var(--c-yellow-soft);
     stroke: var(--c-yellow);
@@ -1660,16 +1905,19 @@
     stroke-linejoin: round;
 }
 
+/* 最大的那塊（橘紅） */
 .ca-slice__p--max {
     fill: var(--c-bad-soft);
     stroke: var(--c-bad);
 }
 
+/* 最小的那塊（藍） */
 .ca-slice__p--min {
     fill: var(--c-blue-soft);
     stroke: var(--c-blue);
 }
 
+/* 每塊上的面積百分比文字 */
 .ca-slice__t {
     font-size: 26px;
     font-weight: var(--fw-black);
@@ -1677,12 +1925,14 @@
     pointer-events: none;
 }
 
+/* 下方的按鈕列 */
 .ca-acts {
     flex: none;
     display: flex;
     gap: var(--sp-2);
 }
 
+/* 「清除」「切下去」兩顆按鈕（逗號 = 同時套用到兩個 class） */
 .ca-clear,
 .ca-cut {
     flex: 1 1 0;
@@ -1690,6 +1940,7 @@
     font-size: var(--fs-md);
 }
 
+/* 逢七過：普通數字點上方數字，遇到 7、7 的倍數或含 7 的數字按下方「跳過」。 */
 /* ═══ 逢七過（.sv-）═══ */
 .sv-head {
     text-align: center;
@@ -1698,6 +1949,7 @@
     color: var(--c-recall);
 }
 
+/* 下方說明文字 */
 .sv-sub {
     min-height: 1.4em;
     text-align: center;
@@ -1707,6 +1959,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 數字卡片：點它就是「點數字」 */
 .sv-card {
     flex: 1 1 0;
     min-height: 0;
@@ -1720,16 +1973,19 @@
     touch-action: none;
 }
 
+/* 點對（綠） */
 .sv-card--ok {
     background: var(--c-ok-soft);
     border-color: var(--c-ok);
 }
 
+/* 點錯（橘） */
 .sv-card--bad {
     background: var(--c-bad-soft);
     border-color: var(--c-bad);
 }
 
+/* 當前數字（超大字） */
 .sv-num {
     font-size: 200px;
     line-height: 1;
@@ -1738,6 +1994,7 @@
     font-variant-numeric: tabular-nums;
 }
 
+/* 下方的「跳過」按鈕區（固定 180px 高）；user-select:none 避免長按時選取到文字 */
 .sv-pad {
     flex: 0 0 180px;
     min-height: 0;
@@ -1751,14 +2008,17 @@
     -webkit-user-select: none;
 }
 
+/* 跳過按鈕：橘色底 */
 .sv-pad--skip {
     background: var(--c-orange);
 }
 
+/* 手指按著時變暗一點（brightness 0.93） */
 .sv-pad:active {
     filter: brightness(0.93);
 }
 
+/* 「跳過」兩個字 */
 .sv-pad__t {
     font-size: var(--fs-xxl);
     font-weight: var(--fw-black);
@@ -1766,7 +2026,9 @@
     pointer-events: none;
 }
 
+/* 老師說：老師說「舉手」才做，沒說「老師說」就不能做。 */
 /* ═══ 老師說（.te-）═══ */
+/* 上方列：老師頭像 + 對話框 */
 .te-top {
     flex: none;
     display: flex;
@@ -1774,38 +2036,45 @@
     gap: var(--sp-3);
 }
 
+/* 老師頭像 */
 .te-teacher {
     flex: none;
     width: 128px;
     height: 128px;
 }
 
+/* 老師臉 SVG */
 .te-face {
     display: block;
     width: 100%;
     height: 100%;
 }
 
+/* 臉 */
 .te-face__head {
     fill: var(--c-card-alt);
     stroke: var(--c-ink-soft);
     stroke-width: 3;
 }
 
+/* 頭髮 */
 .te-face__hair {
     fill: var(--c-ink);
 }
 
+/* 眼鏡 */
 .te-face__glass {
     fill: none;
     stroke: var(--c-ink);
     stroke-width: 3;
 }
 
+/* 眼睛 */
 .te-face__eyes {
     fill: var(--c-ink);
 }
 
+/* 嘴巴 */
 .te-face__mouth {
     fill: none;
     stroke: var(--c-ink);
@@ -1813,6 +2082,7 @@
     stroke-linecap: round;
 }
 
+/* 對話框 */
 .te-bubble {
     flex: 1 1 0;
     min-width: 0;
@@ -1824,21 +2094,25 @@
     border-radius: var(--r-lg);
 }
 
+/* 老師有說「老師說」時的對話框（橘色） */
 .te-bubble--say {
     border-color: var(--c-orange);
     background: var(--c-orange-soft);
 }
 
+/* 做對（綠） */
 .te-bubble--ok {
     border-color: var(--c-ok);
     background: var(--c-ok-soft);
 }
 
+/* 做錯（橘） */
 .te-bubble--bad {
     border-color: var(--c-bad);
     background: var(--c-bad-soft);
 }
 
+/* 對話框第一行（「老師說：」） */
 .te-bubble__pre {
     min-height: 1.3em;
     font-size: var(--fs-lg);
@@ -1847,6 +2121,7 @@
     line-height: 1.3;
 }
 
+/* 對話框動作文字（大字） */
 .te-bubble__act {
     font-size: 48px;
     line-height: 1.25;
@@ -1855,6 +2130,7 @@
     white-space: nowrap;
 }
 
+/* 底下的說明文字 */
 .te-sub {
     min-height: 1.4em;
     text-align: center;
@@ -1864,6 +2140,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 九宮格方向鍵：3×3 格子，只用上下左右四個位置 */
 .te-pad {
     flex: 1 1 0;
     min-height: 0;
@@ -1873,6 +2150,7 @@
     gap: var(--sp-2);
 }
 
+/* 單個方向鍵 */
 .te-btn {
     width: 100%;
     height: 100%;
@@ -1887,32 +2165,39 @@
     touch-action: none;
 }
 
+/* 手指按著時變實心藍色 */
 .te-btn:active {
     background: var(--c-blue);
     color: var(--c-on-accent);
 }
 
+/* 上：放在第 2 欄第 1 列 */
 .te-btn--up {
     grid-column: 2;
     grid-row: 1;
 }
 
+/* 左：第 1 欄第 2 列 */
 .te-btn--left {
     grid-column: 1;
     grid-row: 2;
 }
 
+/* 右：第 3 欄第 2 列 */
 .te-btn--right {
     grid-column: 3;
     grid-row: 2;
 }
 
+/* 下：第 2 欄第 3 列（和上、左、右組成十字形） */
 .te-btn--down {
     grid-column: 2;
     grid-row: 3;
 }
 
+/* 一心二用：左手要即時點綠燈，右手同時回答另一個問題，兩件事一起做。 */
 /* ═══ 一心二用（.du-）═══ */
+/* 上方說明文字 */
 .du-head {
     min-height: 2.8em;
     display: flex;
@@ -1925,6 +2210,7 @@
     color: var(--c-ink);
 }
 
+/* 左右兩半的容器 */
 .du-stage {
     flex: 1 1 0;
     min-height: 0;
@@ -1932,6 +2218,7 @@
     gap: var(--sp-2);
 }
 
+/* 左半或右半（直向 flex，內容置中） */
 .du-side {
     flex: 1 1 0;
     min-width: 0;
@@ -1947,17 +2234,20 @@
     -webkit-user-select: none;
 }
 
+/* 左側：綠燈區，要用手指點（cursor:pointer） */
 .du-side--left {
     background: var(--c-green-soft);
     border: 3px solid var(--c-green);
     cursor: pointer;
 }
 
+/* 右側：不用點的紅燈區（虛線框 dashed） */
 .du-side--right {
     background: var(--c-bad-soft);
     border: 3px dashed var(--c-bad);
 }
 
+/* 燈泡（圓形：border-radius 50%）；pointer-events:none 讓點擊直接穿透到外層區塊 */
 .du-lamp {
     width: 170px;
     height: 170px;
@@ -1968,18 +2258,21 @@
     pointer-events: none;
 }
 
+/* 綠燈亮起：發光（box-shadow 外擴 36px 的光暈）。兩個 class 連在一起寫（.a.b）表示「同時有這兩個 class」才套用 */
 .du-lamp--green.du-lamp--on {
     background: var(--c-ok-light);
     border-color: var(--c-ok);
     box-shadow: 0 0 36px 10px var(--c-ok);
 }
 
+/* 紅燈亮起 */
 .du-lamp--red.du-lamp--on {
     background: var(--c-bad-light);
     border-color: var(--c-recall);
     box-shadow: 0 0 36px 10px var(--c-bad-light);
 }
 
+/* 燈下方的說明文字 */
 .du-cap {
     font-size: var(--fs-md);
     font-weight: var(--fw-black);
@@ -1988,6 +2281,7 @@
     pointer-events: none;
 }
 
+/* 計數文字（已點幾次） */
 .du-cnt {
     min-height: 1.4em;
     font-size: var(--fs-sm);
@@ -1997,6 +2291,7 @@
     pointer-events: none;
 }
 
+/* 問答區 */
 .du-ask {
     flex: none;
     display: flex;
@@ -2004,6 +2299,7 @@
     gap: var(--sp-2);
 }
 
+/* 問題文字 */
 .du-ask__q {
     text-align: center;
     font-size: var(--fs-lg);
@@ -2011,6 +2307,7 @@
     color: var(--c-ink);
 }
 
+/* 四個答案按鈕（4 欄） */
 .du-opts {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -2018,6 +2315,7 @@
     min-height: 100px;
 }
 
+/* 單個答案按鈕 */
 .du-opt {
     padding: 0;
     height: 100px;
@@ -2030,17 +2328,21 @@
     touch-action: none;
 }
 
+/* 答對（綠） */
 .du-opt--ok {
     background: var(--c-ok-soft);
     border-color: var(--c-ok);
 }
 
+/* 答錯（橘） */
 .du-opt--bad {
     background: var(--c-bad-soft);
     border-color: var(--c-bad);
 }
 
+/* 接水管：轉動水管格，讓水從水源一路通到水桶。 */
 /* ═══ 接水管（.pp-）═══ */
+/* 標題 */
 .pp-head {
     text-align: center;
     font-size: var(--fs-lg);
@@ -2048,6 +2350,7 @@
     color: var(--c-ink);
 }
 
+/* 提示橫幅 */
 .pp-banner {
     min-height: 1.4em;
     text-align: center;
@@ -2057,6 +2360,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 水管盤場地 */
 .pp-field {
     flex: 1 1 0;
     min-height: 0;
@@ -2070,43 +2374,51 @@
     touch-action: none;
 }
 
+/* 水管盤 SVG */
 .pp-svg {
     display: block;
     width: 100%;
     height: 100%;
 }
 
+/* 每一格的底板 */
 .pp-tile {
     fill: var(--c-card-alt);
     stroke: var(--c-frame);
     stroke-width: 2;
 }
 
+/* 空格子（沒有水管） */
 .pp-tile--empty {
     fill: var(--c-paper);
     stroke: none;
 }
 
+/* 有水管的格子可以點（點一下轉 90 度） */
 .pp-cell--pipe {
     cursor: pointer;
 }
 
+/* 水管線條（粗 22）；stroke-linecap:butt 表示線頭是平的，相鄰的水管才能接得起來 */
 .pp-pipe {
     stroke: var(--c-ink-soft);
     stroke-width: 22;
     stroke-linecap: butt;
 }
 
+/* 水管中心的圓點 */
 .pp-hub {
     fill: var(--c-ink-soft);
 }
 
+/* 水桶（終點） */
 .pp-bucket {
     fill: var(--c-card);
     stroke: var(--c-ink);
     stroke-width: 5;
 }
 
+/* 通水之後（.pp-cell--wet）整條水管、圓點、水桶都變藍色：後代選擇器「A B」= 在 A 裡面的 B */
 .pp-cell--wet .pp-pipe {
     stroke: var(--c-blue);
 }
@@ -2119,6 +2431,7 @@
     fill: var(--c-blue);
 }
 
+/* 漏水的出口標記 */
 .pp-leak {
     fill: var(--c-recall);
     stroke: var(--c-card);
@@ -2126,15 +2439,18 @@
     pointer-events: none;
 }
 
+/* 水源的水柱 */
 .pp-source {
     stroke: var(--c-blue);
     stroke-width: 22;
 }
 
+/* 水龍頭 */
 .pp-faucet {
     fill: var(--c-ink-soft);
 }
 
+/* 關燈：點一格會讓它和上下左右的燈一起切換，目標是把所有燈關掉。 */
 /* ═══ 關燈（.lo-）═══ */
 .lo-head {
     text-align: center;
@@ -2143,6 +2459,7 @@
     color: var(--c-ink);
 }
 
+/* 提示橫幅 */
 .lo-banner {
     min-height: 1.4em;
     text-align: center;
@@ -2152,6 +2469,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 燈盤場地 */
 .lo-field {
     flex: 1 1 0;
     min-height: 0;
@@ -2165,38 +2483,45 @@
     touch-action: none;
 }
 
+/* 燈盤 SVG */
 .lo-svg {
     display: block;
     width: 100%;
     height: 100%;
 }
 
+/* 一格燈 */
 .lo-cell {
     cursor: pointer;
 }
 
+/* 燈座底板 */
 .lo-tile {
     fill: var(--c-card-alt);
     stroke: var(--c-frame);
     stroke-width: 3;
 }
 
+/* 燈泡（熄滅時是灰褐色） */
 .lo-bulb {
     fill: var(--c-frame);
     stroke: var(--c-ink-soft);
     stroke-width: 3;
 }
 
+/* 亮著的燈：底板變淡黃色（.lo-cell--on 是修飾 class，JS 在燈亮時加上） */
 .lo-cell--on .lo-tile {
     fill: var(--c-yellow-soft);
     stroke: var(--c-yellow);
 }
 
+/* 亮著的燈泡變黃色 */
 .lo-cell--on .lo-bulb {
     fill: var(--c-yellow);
     stroke: var(--c-orange);
 }
 
+/* 提示：虛線藍框標出建議點的位置 */
 .lo-hint {
     fill: none;
     stroke: var(--c-blue);
@@ -2205,6 +2530,7 @@
     pointer-events: none;
 }
 
+/* 猜下一個：看一排有規律的圖形，從四個選項中選出下一個。 */
 /* ═══ 猜下一個（.sq-）═══ */
 .sq-head {
     text-align: center;
@@ -2213,6 +2539,7 @@
     color: var(--c-ink);
 }
 
+/* 上方那排圖形（最後一格是問號） */
 .sq-row {
     flex: none;
     display: flex;
@@ -2223,6 +2550,7 @@
     border-radius: var(--r-lg);
 }
 
+/* 一格圖形（aspect-ratio 讓它保持正方形） */
 .sq-cell {
     flex: 1 1 0;
     min-width: 0;
@@ -2235,6 +2563,7 @@
     background: var(--c-card-alt);
 }
 
+/* 問號格（虛線框） */
 .sq-cell--q {
     font-size: var(--fs-xl);
     font-weight: var(--fw-black);
@@ -2243,18 +2572,21 @@
     border: 3px dashed var(--c-recall);
 }
 
+/* 圖形 SVG */
 .sq-svg {
     display: block;
     width: 100%;
     height: 100%;
 }
 
+/* 圖形外框 */
 .sq-shape {
     stroke: var(--c-ink);
     stroke-width: 4;
     stroke-linejoin: round;
 }
 
+/* 五種顏色的填色（c0～c4）：JS 用 'sq-c' + 顏色編號 組出 class 名稱 */
 .sq-c0 {
     fill: var(--c-blue);
 }
@@ -2275,6 +2607,7 @@
     fill: var(--c-recall);
 }
 
+/* 問題文字 */
 .sq-ask {
     text-align: center;
     font-size: var(--fs-md);
@@ -2282,6 +2615,7 @@
     color: var(--c-ink-soft);
 }
 
+/* 四個選項（2×2 格子） */
 .sq-opts {
     flex: 1 1 0;
     min-height: 0;
@@ -2291,6 +2625,7 @@
     gap: var(--sp-3);
 }
 
+/* 單個選項 */
 .sq-opt {
     width: 100%;
     height: 100%;
@@ -2303,16 +2638,19 @@
     touch-action: none;
 }
 
+/* 選對（綠） */
 .sq-opt--ok {
     background: var(--c-ok-soft);
     border-color: var(--c-ok);
 }
 
+/* 選錯（橘） */
 .sq-opt--bad {
     background: var(--c-bad-soft);
     border-color: var(--c-bad);
 }
 
+/* 底下的解說：說明這個規律是什麼 */
 .sq-note {
     flex: none;
     min-height: 2.8em;
@@ -2323,6 +2661,7 @@
     color: var(--c-ink);
 }
 
+/* 這個遊戲專用的 6 種音符顏色，放在 :root 讓所有 .py- 規則都能用 var(--py-red) 之類的寫法 */
 :root {
     --py-red: #D6453D;
     --py-orange: #F08A24;
@@ -2332,7 +2671,9 @@
     --py-purple: #8E5BB6;
 }
 
+/* 左右不同拍：音樂節奏遊戲，左右兩條軌道各自落下方塊，經過紅色基準線時點擊。 */
 /* ═══ 左右不同拍（.py-）音樂節奏：方塊由上往下掉 ═══ */
+/* 最上方的說明文字（兩行高） */
 .py-head {
     min-height: 2.6em;
     display: flex;
@@ -2345,6 +2686,7 @@
     color: var(--c-ink);
 }
 
+/* 生命（愛心）列 */
 .py-hearts {
     flex: none;
     display: flex;
@@ -2353,6 +2695,7 @@
     min-height: 26px;
 }
 
+/* 一顆愛心（空心圓，剩下的才填滿） */
 .py-heart {
     width: 24px;
     height: 24px;
@@ -2361,10 +2704,12 @@
     box-sizing: border-box;
 }
 
+/* 還有的生命：實心 */
 .py-heart--on {
     background: var(--c-bad);
 }
 
+/* 顏色圖例列（紅 4 拍、橙 2 拍…），flex-wrap 讓一行放不下時換行 */
 .py-legend {
     flex: none;
     display: flex;
@@ -2376,16 +2721,19 @@
     color: var(--c-ink-soft);
 }
 
+/* 圖例的一項：色塊 + 文字 */
 .py-legend__i {
     display: inline-flex;
     align-items: center;
     gap: 4px;
 }
 
+/* 圖例文字（b = 粗體標籤） */
 .py-legend__i b {
     font-weight: var(--fw-bold);
 }
 
+/* 圖例的色塊 */
 .py-dot {
     display: inline-block;
     width: 18px;
@@ -2393,6 +2741,7 @@
     border-radius: 5px;
 }
 
+/* 六種顏色：逗號代表「圖例色塊」與「掉落的音符」兩個 class 共用同一個顏色，一行寫一種 */
 .py-dot--red, .py-note--red { background: var(--py-red); }
 .py-dot--orange, .py-note--orange { background: var(--py-orange); }
 .py-dot--yellow, .py-note--yellow { background: var(--py-yellow); }
@@ -2400,6 +2749,7 @@
 .py-dot--blue, .py-note--blue { background: var(--py-blue); }
 .py-dot--purple, .py-note--purple { background: var(--py-purple); }
 
+/* 兩條軌道的容器：左右並排 */
 .py-stage {
     flex: 1 1 0;
     min-height: 0;
@@ -2408,15 +2758,18 @@
     transition: none;
 }
 
+/* 受傷時閃一下紅框 */
 .py-stage--hurt {
     animation: py-hurt 0.3s ease-out;
 }
 
+/* 受傷閃紅框動畫：從紅框 → 透明 */
 @keyframes py-hurt {
     from { box-shadow: inset 0 0 0 6px var(--c-bad); }
     to { box-shadow: inset 0 0 0 6px transparent; }
 }
 
+/* 一條軌道；relative 讓裡面 absolute 的音符以它為定位基準，overflow:hidden 裁掉超出的音符 */
 .py-lane {
     position: relative;
     flex: 1 1 0;
@@ -2430,25 +2783,30 @@
     cursor: pointer;
 }
 
+/* 左軌：藍色系 */
 .py-lane--left {
     background: var(--c-blue-soft);
     border: 3px solid var(--c-blue);
 }
 
+/* 右軌：橘色系 */
 .py-lane--right {
     background: var(--c-orange-soft);
     border: 3px solid var(--c-orange);
 }
 
+/* 點擊時該軌道閃亮一下 */
 .py-lane--hit {
     animation: py-lane-hit 0.14s ease-out;
 }
 
+/* 閃亮動畫：亮度 1.25 倍 → 恢復 */
 @keyframes py-lane-hit {
     from { filter: brightness(1.25); }
     to { filter: none; }
 }
 
+/* 紅色基準線：音符到這條線的瞬間就是打擊的準確時間 */
 /* 紅色基準線 */
 .py-line {
     position: absolute;
@@ -2461,24 +2819,29 @@
     z-index: 3;
 }
 
+/* 每一拍線條稍微變粗閃一下 */
 .py-line--beat {
     animation: py-beat 0.2s ease-out;
 }
 
+/* 每小節的第一拍閃得更明顯 */
 .py-line--bar {
     animation: py-bar 0.3s ease-out;
 }
 
+/* 每拍閃線動畫 */
 @keyframes py-beat {
     from { opacity: 1; height: 12px; margin-top: -6px; }
     to { opacity: 0.75; height: 8px; margin-top: -4px; }
 }
 
+/* 每小節閃線動畫 */
 @keyframes py-bar {
     from { opacity: 1; height: 20px; margin-top: -10px; }
     to { opacity: 0.75; height: 8px; margin-top: -4px; }
 }
 
+/* 掉落的音符（位置由 JS 每個畫面更新 transform） */
 .py-note {
     position: absolute;
     left: 10%;
@@ -2492,16 +2855,19 @@
     z-index: 2;
 }
 
+/* 打中：淡出並變亮 */
 .py-note--hit {
     opacity: 0;
     filter: brightness(1.5);
     transition: opacity 0.2s;
 }
 
+/* 漏掉：變淡 */
 .py-note--miss {
     opacity: 0.25;
 }
 
+/* 軌道底部的小標題（左手／右手） */
 .py-cap {
     position: absolute;
     left: 0;
@@ -2515,6 +2881,7 @@
     pointer-events: none;
 }
 
+/* 下方的訊息文字 */
 .py-msg {
     flex: none;
     min-height: 1.4em;

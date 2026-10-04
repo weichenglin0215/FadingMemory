@@ -15,15 +15,21 @@
      的樣子；黑色是色彩判斷最中性的背景，不會偏向任何一個色相或亮度。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* （這款是較早寫的遊戲，結構比較簡單：直接在 mount 裡用變數 level 記關卡，不用 kit.round；共通結構的說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
 (function () {
     'use strict';
 
+    /* 遊戲代號 */
     var ID = 'spot';
+    /* UI.h：建立 HTML 元素的小工具 */
     var h = UI.h;
+    /* N：格子總數 16（4×4） */
     var N = 16;
 
+    /* 最佳紀錄文字 */
     function fmtBest(v) { return v == null ? '' : '最佳 第 ' + v + ' 關'; }
 
+    /* 難度曲線都寫成變數，想調難度改這裡就好 */
     /* ═══ 難度曲線：全部寫成變數，覺得曲線不對就直接改這裡 ═══
        PERCEPT：單一一條「知覺差異」線性遞減曲線（跟頻道無關），第幾關減到多少。
        WEIGHT：知覺差異換算成各頻道「原始單位」要乘的倍率——換算基準是
@@ -31,24 +37,30 @@
        倍率是 1.0，H／S 的倍率是 2.0。同一個「知覺差異」數字，套到不同頻道，
        算出來的原始改變量不一樣，但人眼感受到的難度應該接近，不會忽難忽易。
        BASE：底色的 S／V 範圍，刻意收在中段，避免太淡、太暗讓差異看不出來。 */
+    /* PERCEPT：「知覺差異」的線性遞減曲線——start 第 1 關的值，step 每關減多少，floor 下限 */
     var PERCEPT = {
         start: 24,   /* 第 1 關的知覺差異 */
         step: 0.9,   /* 每高一關，知覺差異減少多少 */
         floor: 2.2   /* 知覺差異下限（約第幾關碰到人眼分辨極限，由這個值決定） */
     };
+    /* WEIGHT：把知覺差異換成各頻道原始單位要乘的倍率（人眼對明度最敏感，所以 V 的倍率最小） */
     var WEIGHT = { h: 1.5, s: 2.0, v: 1.0 };
+    /* BASE：底色的飽和度 s、明度 v 範圍 */
     var BASE = {
         s: { lo: 80, hi: 80 },
         v: { lo: 80, hi: 80 }
     };
 
+    /* 第 level 關的知覺差異（線性遞減，但不低於下限） */
     function perceptFor(level) {
         return Math.max(PERCEPT.floor, PERCEPT.start - PERCEPT.step * (level - 1));
     }
+    /* 把知覺差異換算成指定頻道（h 色相、s 彩度、v 明度）要改多少 */
     function diffFor(level, ch) {
         return perceptFor(level) * WEIGHT[ch];
     }
 
+    /* 產生「不一樣的那一格」的顏色：把指定頻道加或減 delta（超出範圍就反方向） */
     function oddColor(base, ch, delta) {
         var sign = Math.random() < 0.5 ? 1 : -1;
         if (ch === 'h') return { h: (base.h + sign * delta + 360) % 360, s: base.s, v: base.v };
@@ -60,6 +72,7 @@
         return out;
     }
 
+    /* HSV 轉 RGB：CSS 沒有原生 hsv() 函式，要先換算成 rgb() 才能畫在畫面上 */
     /* HSV → RGB：CSS 沒有原生 hsv()，顏色要先換算成 rgb() 才能畫上畫面。 */
     function hsvToRgb(hh, ss, vv) {
         var s = ss / 100, v = vv / 100;
@@ -76,11 +89,13 @@
         var m = v - c;
         return { r: Math.round((r1 + m) * 255), g: Math.round((g1 + m) * 255), b: Math.round((b1 + m) * 255) };
     }
+    /* 把 HSV 顏色轉成 CSS 的 rgb() 字串 */
     function css(c) {
         var rgb = hsvToRgb(c.h, c.s, c.v);
         return 'rgb(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ')';
     }
 
+    /* 色相是圓的（0 度＝360 度），所以兩個色相的差要取繞圈最短的那一段 */
     /* 色相是圓的（0 度＝360 度），345 度跟 23 度中間只差 38 度（繞近路），不是 322 度（繞遠路）；
        直接 |a-b| 在跨過 0／360 的地方會算出這種明顯不合理的超大差異，一定要取繞圈最短的那一段。 */
     function hueDiff(a, b) {
@@ -88,6 +103,7 @@
         return d > 180 ? 360 - d : d;
     }
 
+    /* 組出一列資料給 console.table 用，方便核對難度曲線（驗證用） */
     function diffRow(level, ch, base, odd) {
         var CH_NAME = { h: '色相 H', s: '彩度 S', v: '明度 V' };
         return {
@@ -102,6 +118,7 @@
         };
     }
 
+    /* 隨機產生這一關的底色 */
     function randBase() {
         return {
             h: Math.random() * 360,
@@ -110,6 +127,7 @@
         };
     }
 
+    /* 驗證用（一）：把 1～21 關的難度曲線印在主控台，看知覺差異是不是平順遞減 */
     /* 驗證用（一）：把第 1～21 關「正常格」與「差異格」各自抽一組樣本列在主控台，
        方便直接核對「知覺差異」是不是平順遞減、不管抽到哪個頻道都一樣平順——
        注意這是獨立抽樣，跟畫面上實際玩到哪一關用的是不同一次的隨機結果，
@@ -128,28 +146,36 @@
         console.table(rows);
     }
 
+    /* mount：遊戲進場點 */
     function mount(root, ctx) {
+        /* 替整個畫面加上黑底 class（樣式在 css/reaction.css 的 .spot-dark-bg） */
         root.classList.add('spot-dark-bg');
         logLevelTable();
+        /* level：目前關卡 */
         var level = 1;
 
+        /* round：畫一關 */
         function round() {
             root.innerHTML = '';
             var best = fmtBest(Reaction.getBest(ID));
             ctx.setMeta('第 ' + level + ' 關' + (best ? '・' + best : ''));
 
+            /* 決定這一關的底色、哪個頻道不同、不同的那一格的位置和顏色 */
             var base = randBase();
             var ch = ['h', 's', 'v'][Math.floor(Math.random() * 3)];
             var delta = diffFor(level, ch);
             var oddIdx = Math.floor(Math.random() * N);
             var odd = oddColor(base, ch, delta);
 
+            /* 驗證用（二）：印出畫面上實際使用的顏色，可以和畫面核對 */
             /* 驗證用（二）：這一關畫面上實際用的顏色，跟 logLevelTable() 的參考樣本不同，
                這裡印的才是「現在螢幕上看到的」這一組，可以直接拿數值跟畫面截圖核對。 */
             if (window.console && console.table) console.table([diffRow(level, ch, base, odd)]);
 
             root.appendChild(h('div', { 'class': 'hint hint--on-dark', text: '找出顏色不一樣的那一格（第 ' + level + ' 關）' }));
+            /* 16 格的容器，CSS Grid 排成 4×4 */
             var grid = h('div', { 'class': 'spot-grid' });
+            /* (function (i) {...})(i)：立即執行函式，讓每格的點擊事件記住自己的編號 */
             for (var i = 0; i < N; i++) {
                 (function (i) {
                     var tile = h('button', { 'class': 'spot-tile' });
@@ -161,6 +187,7 @@
             root.appendChild(grid);
         }
 
+        /* 答題：答對進下一關；答錯顯示正確位置並結算 */
         function answer(ok, tile, grid, oddIdx) {
             Array.prototype.forEach.call(grid.children, function (t) { t.disabled = true; });
             if (ok) {
@@ -176,6 +203,7 @@
             var isNew = Reaction.setBest(ID, level, function (v, b) { return v > b; });
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
             UI.wait(700).then(function () {
+                /* 結算卡片疊在棋盤上（跟其他遊戲同一套 CSS：drop-result-overlay） */
                 /* 不清空畫面：保留剛剛那一格的提示（哪格答錯了、哪格才是真正不一樣的顏色）
                    留在背景，結算卡片疊一層半透明底蓋在上面——跟「神準落下」結算畫面
                    同一套處理方式、同一組 CSS class（drop-result-overlay/-card 定義在
@@ -196,6 +224,7 @@
         round();
     }
 
+    /* Reaction.register：把這款遊戲登記到遊戲清單 */
     Reaction.register({
         id: ID,
         name: '大家來找碴',

@@ -11,6 +11,7 @@
    · 有 LIVES 次機會（選錯或超時扣一次），成績＝通過關數（越多越好）。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
 (function () {
     'use strict';
 
@@ -18,17 +19,22 @@
     var h = UI.h;
     var kit = Reaction.kit;
 
+    /* 設定集中在這一區（上方檔頭寫的是原始設計值，實際數字以這裡為準，這裡的數字可以自由調整） */
     /* ═══ 可以自己調的參數 ═══ */
     var LEVEL_RAMP = 15;
+    /* D：干擾臉與目標臉「有幾個特徵不同」，越少越難分辨 */
     var D_START = 3, D_END = 1;               /* 干擾臉與目標差幾個特徵 */
     var OPTS_START = 4, OPTS_END = 8;         /* 選項（含目標）數量 */
     var LOOK_START = 4.0, LOOK_END = 6.0;     /* 看臉秒數 */
     var PICK_START = 10, PICK_END = 15;        /* 作答時限（秒） */
     var LIVES = 1;
     var NEXT_MS = 1500;
+    /* 每個特徵有幾種變化：臉型 3、髮型 5、眼睛 3、眉毛 3、鼻子 3、嘴巴 3、配件 4 */
     /* 每個特徵有幾種 */
     var SIZES = [3, 5, 3, 3, 3, 3, 4];
+    /* 特徵名稱 */
     var FEATURE_NAME = ['臉型', '髮型', '眼睛', '眉毛', '鼻子', '嘴巴', '配件'];
+    /* 每個特徵每種變化的名稱（答錯時用來說明哪裡不一樣） */
     var VALUE_NAME = [
         ['圓臉', '長臉', '方臉'], ['短髮', '旁分', '長髮', '捲髮', '刺蝟頭'], ['圓眼', '瞇瞇眼', '大眼'],
         ['平眉', '凶眉', '彎眉'], ['小圓鼻', '三角鼻', '長鼻'], ['微笑', '平嘴', '張嘴'], ['沒有配件', '眼鏡', '鬍子', '帽子']
@@ -37,36 +43,52 @@
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 關'; }
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 這一關干擾臉與目標差幾個特徵 */
     function dFor(level) { return Math.round(kit.ramp(level, D_START, D_END, LEVEL_RAMP)); }
+    /* 這一關有幾張臉可選 */
     function optsFor(level) { return Math.round(kit.ramp(level, OPTS_START, OPTS_END, LEVEL_RAMP)); }
+    /* 看臉的秒數 */
     function lookSec(level) { return kit.ramp(level, LOOK_START, LOOK_END, LEVEL_RAMP); }
+    /* 選臉的作答時限 */
     function pickSec(level) { return kit.ramp(level, PICK_START, PICK_END, LEVEL_RAMP); }
+    /* 隨機產生一張臉：一張臉就是 7 個數字（每個特徵選哪一種） */
     function randFace(rand) { return SIZES.map(function (n) { return kit.randInt(0, n - 1, rand); }); }
+    /* 漢明距離（Hamming distance）：兩張臉有幾個特徵不同 */
     function hamming(a, b) { var d = 0; for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) d++; return d; }
+    /* 把臉轉成字串（例如 "1,0,2,..."），用來判斷是不是同一張臉 */
     function key(f) { return f.join(','); }
+    /* 做出與 base 恰好有 d 個特徵不同的臉：先隨機挑 d 個特徵位置，再把這些位置換成不同的值 */
     /* 與 base 恰好有 d 個特徵不同的一張臉 */
     function variant(base, d, rand) {
+        /* shuffle 洗牌後取前 d 個位置 */
         var idx = kit.shuffle(base.map(function (_, i) { return i; }), rand).slice(0, d), f = base.slice();
         idx.forEach(function (i) {
+            /* do...while：一直重抽，直到抽到和原本不同的值 */
             var v; do { v = kit.randInt(0, SIZES[i] - 1, rand); } while (v === base[i]);
             f[i] = v;
         });
         return f;
     }
+    /* 出一關：目標臉 + 若干干擾臉，洗牌後回傳，並記下目標在第幾個位置（answer） */
     /* 出一關：回傳 { target, faces:[…（含目標，已洗牌）], answer（目標在 faces 的索引）, d } */
     function makeSuspects(level, rand) {
         rand = rand || Math.random;
+        /* seen 記錄已經出現過的臉，避免兩張一模一樣；faces 先放進目標臉 */
         var d = dFor(level), n = optsFor(level), target = randFace(rand), seen = {}, faces = [target];
         seen[key(target)] = 1;
+        /* 最多試 5000 次補滿選項 */
         for (var tries = 0; faces.length < n && tries < 5000; tries++) {
             var v = variant(target, d, rand);
+            /* 已經出現過就跳過（continue） */
             if (seen[key(v)]) continue;
             seen[key(v)] = 1; faces.push(v);
         }
+        /* order 是洗牌後的順序；order.indexOf(0) 找出原本第 0 張（目標）現在排在第幾個 */
         var order = kit.shuffle(faces.map(function (_, i) { return i; }), rand);
         var shuffled = order.map(function (i) { return faces[i]; });
         return { target: target, faces: shuffled, answer: order.indexOf(0), d: d };
     }
+    /* 兩張臉的差異說明（結算時顯示） */
     /* 兩張臉的差異說明（給結算用）*/
     function diffText(a, b) {
         var t = [];
@@ -74,14 +96,18 @@
         return t;
     }
 
+    /* 畫臉：全部用 SVG 向量圖自己畫，不用圖片檔 */
     /* ═══ 畫臉 ═══ */
     var SKIN = 'hsl(28,62%,80%)', HAIR = 'hsl(24,42%,24%)', INK = 'hsl(24,40%,22%)';
+    /* f 是 7 個特徵的向量 [臉型, 髮型, 眼睛, 眉毛, 鼻子, 嘴巴, 配件]；依序畫出髮型（後層）→ 臉 → 髮型（前層）→ 眉毛 → 眼睛 → 鼻子 → 嘴 → 配件 */
     function drawFace(f, parent) {
         var svg = kit.svg('svg', { 'class': 'wt-face', viewBox: '0 -30 200 270' }, parent);
+        /* S(標籤, 屬性)：建立一個 SVG 圖形；L(...) 則是再套用「只有線條」的樣式 */
         var S = function (tag, a) { return kit.svg(tag, a, svg); };
         var line = { fill: 'none', stroke: INK, 'stroke-width': 5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' };
         function L(tag, a) { var o = {}, k; for (k in line) o[k] = line[k]; for (k in a) o[k] = a[k]; return S(tag, o); }
         /* 髮型（畫在臉後面的部分）*/
+        /* 髮型分前後兩層：長髮（2）的後層要畫在臉後面，其他髮型畫在臉前面 */
         var hair = f[1];
         if (hair === 2) S('path', { d: 'M22 196 Q12 40 100 30 Q188 40 178 196 L156 196 Q158 96 100 82 Q42 96 44 196 Z', fill: HAIR });
         /* 臉 */
@@ -122,28 +148,35 @@
         return svg;
     }
 
+    /* mount：遊戲進場點 */
     function mount(root, ctx) {
         var R = null;
 
         /* startAt：從第幾關開始（失敗後可從前 5 關繼續）*/
+        /* round：開一局 */
         function round(startAt) {
             if (R) R.dispose();
             R = kit.round();
             var my = R;
             root.innerHTML = '';
 
+            /* level 關卡；cleared 已過幾關；lives 機會；state 目前階段（look 看臉/pick 選臉/reveal 揭曉）；S 這關的嫌疑人資料 */
             var level = startAt || 1, cleared = level - 1, lives = LIVES, newRec = false, state = 'idle', lvId = 0, S = null;
             var head = h('div', { 'class': 'wt-head' });
             var banner = h('div', { 'class': 'wt-banner' });
             var stage = h('div', { 'class': 'wt-stage' });
             var tb = kit.timebar();
+            /* 把畫面元素放進去 */
             [head, banner, stage, tb.el].forEach(function (n) { root.appendChild(n); });
 
+            /* 更新標題列右側的小字 */
             function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', '機會 ' + lives])); }
 
+            /* 開始一關：先顯示目標臉，倒數後換成選臉 */
             function startLevel() {
                 if (my.dead) return;
                 var id = ++lvId;
+                /* 產生這關 */
                 S = makeSuspects(level);
                 state = 'look';
                 head.textContent = '第 ' + level + ' 關';
@@ -153,12 +186,16 @@
                 var big = h('div', { 'class': 'wt-big' }); stage.appendChild(big);
                 drawFace(S.target, big);
                 meta();
+                /* 主控台印出這關的目標特徵、干擾臉差異、正解位置（驗證用） */
                 try { console.info('[目擊證人] 第 ' + level + ' 關：目標 ' + S.target.map(function (v, i) { return VALUE_NAME[i][v]; }).join('／') + '；干擾臉各差 ' + S.d + ' 個特徵，共 ' + S.faces.length + ' 張，正解是第 ' + (S.answer + 1) + ' 張；看 ' + lookSec(level).toFixed(1) + ' 秒、選 ' + pickSec(level).toFixed(0) + ' 秒'); } catch (e) { }
                 var t0 = performance.now(), lim = lookSec(level) * 1000;
+                /* 看臉的倒數時間條 */
                 my.loop(function (now) { if (id !== lvId || state !== 'look') return false; tb.set(1 - (now - t0) / lim); });
+                /* 時間到：進入選臉階段 */
                 my.after(lim, function () { if (id === lvId && state === 'look') startPick(id); });
             }
 
+            /* 選臉階段：把所有臉並排成格子，每張可點 */
             function startPick(id) {
                 state = 'pick';
                 banner.textContent = '剛才那個人是誰？';
@@ -168,22 +205,27 @@
                 S.faces.forEach(function (f, i) {
                     var cell = h('button', { 'class': 'wt-cell' });
                     drawFace(f, cell);
+                    /* pointerdown：手指一碰就選擇 */
                     cell.addEventListener('pointerdown', function (e) { e.preventDefault(); pick(i); });
                     stage.appendChild(cell);
                 });
                 var t0 = performance.now(), lim = pickSec(level) * 1000;
                 my.loop(function (now) { if (id !== lvId || state !== 'pick') return false; tb.set(1 - (now - t0) / lim); });
+                /* 超過作答時限：pick(-1) 代表沒有選 */
                 my.after(lim, function () { if (id === lvId && state === 'pick') pick(-1); });
             }
 
+            /* 選了第 i 張（−1＝超時） */
             function pick(i) {
                 if (state !== 'pick') return;
                 state = 'reveal';
                 tb.set(0);
                 var cells = stage.children;
+                /* 不管對錯，先把正解標成綠色 */
                 cells[S.answer].classList.add('wt-cell--ok');
                 var ok = i === S.answer;
                 if (!ok && i >= 0) cells[i].classList.add('wt-cell--bad');
+                /* 答對：過關 */
                 if (ok) {
                     cleared = level;
                     if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
@@ -193,13 +235,16 @@
                     my.after(NEXT_MS - 400, startLevel);
                     return;
                 }
+                /* 答錯：扣機會，顯示你選的那張哪裡和目標不同 */
                 lives--;
                 Sfx.play('bad');
                 var diffs = i >= 0 ? diffText(S.faces[i], S.target) : [];
                 banner.textContent = i < 0 ? '時間到！綠框才是嫌疑人' : '抓錯了！綠框才是嫌疑人' + (diffs.length ? '（你選的人' + diffs[0].replace(' → ', '，嫌疑人是') + '）' : '');
                 meta();
+                /* 沒有機會了 → 結算 */
                 if (lives <= 0) {
                     my.after(2200, function () {
+                        /* kit.resumeFrom：失敗後可從前 5 關繼續 */
                         var back = kit.resumeFrom(level);
                         kit.result(root, {
                             num: cleared + ' 關', label: cleared >= 8 ? '火眼金睛！' : (cleared >= 4 ? '記性不錯！' : '再試一次，會更準！'),
@@ -210,24 +255,29 @@
                 } else my.after(2200, startLevel);
             }
 
+            /* G.debug：測試用後門 */
             G.debug = {
                 state: function () { return { level: level, state: state, lives: lives, cleared: cleared, S: S }; },
                 pickRight: function () { if (state === 'pick') pick(S.answer); return state; },
                 pickWrong: function () { if (state === 'pick') pick((S.answer + 1) % S.faces.length); return state; },
                 skipLook: function () { if (state === 'look') startPick(lvId); }
             };
+            /* 開場等 300 毫秒再開始第一關 */
             my.after(300, startLevel);
         }
 
         round(1);
     }
 
+    /* 遊戲身分證 */
     var G = {
         id: ID,
         name: '目擊證人',
         rule: '先看一張嫌疑人的臉，記住他的特徵。臉收起來之後，從一排人裡點出剛才那一個。越後面，大家越像！',
         mount: mount,
+        /* test 匯出純函式給 Node 自動測試 */
         test: { dFor: dFor, optsFor: optsFor, lookSec: lookSec, pickSec: pickSec, randFace: randFace, hamming: hamming, variant: variant, makeSuspects: makeSuspects, diffText: diffText, SIZES: SIZES, LEVEL_RAMP: LEVEL_RAMP }
     };
+    /* 登記到遊戲清單 */
     Reaction.register(G);
 })();

@@ -20,6 +20,7 @@
    · 成績＝通過幾關，只要有一關超過標準就結束。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
 (function () {
     'use strict';
 
@@ -27,21 +28,31 @@
     var h = UI.h;
     var kit = Reaction.kit;
 
+    /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
+    /* 過關標準（兩邊重量差距 %）：第 1 關 10%，每關少 1%，最少 1% */
     var THR_START = 10, THR_STEP = 1, THR_MIN = 1;      /* 差距標準（%）：10、9、8 … 1 */
+    /* 麵包的寬 360、最高的高度 140（SVG 單位） */
     var W = 360, HB = 140;                              /* 麵包的寬、最高的高度（SVG 單位） */
     var G_MIN = 250, G_MAX = 480;                       /* 總重量範圍（公克） */
     var BREAD_Y = 40;                                   /* 麵包上緣 y（麵包區的 SVG 座標） */
+    /* 梯形的矮邊／高邊比例：第 2 關 0.95，之後每關少 0.1 */
     var TRAP_START = 0.95, TRAP_STEP = 0.1;             /* 梯形的矮邊/高邊比：第 2 關 0.95，之後每關少 0.1（第 7 關 0.45）*/
+    /* ◀ ▶ 每按一次，刀移動 0.5px */
     var NUDGE = 0.5;                                    /* ◀ ▶ 每次移動多少 px */
+    /* 手指速度快到 1px/ms 以上時，刀的移動量不打折（gain=1）；慢的時候最多打到 0.2 折，方便微調 */
     var GAIN_MIN = 0.2, GAIN_MAX = 1, SPEED_FULL = 1.0; /* 手指速度（px/ms）到 SPEED_FULL 以上時 gain＝1 */
     var FALL_MS = 650;
     var NEXT_MS = 2000;
 
+    /* 這一關的過關標準 */
     function thrFor(level) { return Math.max(THR_MIN, THR_START - (level - 1) * THR_STEP); }
+    /* 最佳紀錄文字 */
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 關'; }
 
+    /* 純函式（也給 Node 測試用） */
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 麵包的形狀：多邊形頂點的座標。第 1 關長方形、2～7 關梯形、之後三角形 */
     /* 麵包的形狀（多邊形，座標原點在麵包的左上角，y 向下，底邊在 y=HB）。type：rect／trap／tri */
     function makeBread(level, rand) {
         rand = rand || Math.random;
@@ -50,6 +61,7 @@
         if (type === 'rect') {
             pts = [[0, 0], [W, 0], [W, HB], [0, HB]];
         } else if (type === 'trap') {
+            /* 梯形：矮邊高度＝最高 × 比例；矮邊在左或右隨機 */
             var ratio = TRAP_START - (level - 2) * TRAP_STEP;    /* 矮邊 / 高邊 */
             var hs = HB * ratio, left = rand() < 0.5;           /* 左邊矮還是右邊矮 */
             pts = left ? [[0, HB - hs], [W, 0], [W, HB], [0, HB]] : [[0, 0], [W, HB - hs], [W, HB], [0, HB]];
@@ -60,6 +72,7 @@
         }
         return { type: type, pts: pts };
     }
+    /* 多邊形面積（鞋帶公式 shoelace）：把相鄰頂點的座標交叉相乘後加總再除以 2 */
     function polyArea(pts) {
         var s = 0;
         for (var i = 0; i < pts.length; i++) {
@@ -68,6 +81,7 @@
         }
         return Math.abs(s) / 2;
     }
+    /* 用垂直線 x=c 裁切多邊形（Sutherland–Hodgman 演算法）：逐一檢查每條邊，穿過切線時補一個交點 */
     /* 用垂直線 x=c 裁切凸多邊形，keepLeft＝保留左邊（x ≤ c）或右邊 */
     function clipV(pts, c, keepLeft) {
         var out = [];
@@ -83,7 +97,9 @@
         }
         return out;
     }
+    /* 切在 x=c 時，左邊那塊的面積 */
     function areaLeft(pts, c) { var p = clipV(pts, c, true); return p.length < 3 ? 0 : polyArea(p); }
+    /* 找出剛好對半切的 x：二分搜尋法——每次取中間，面積太小往右、太大往左，重複 60 次 */
     /* 剛好把面積切成兩半的 x（二分搜尋） */
     function balanceX(pts) {
         var total = polyArea(pts), lo = 0, hi = W;
@@ -93,6 +109,7 @@
         }
         return (lo + hi) / 2;
     }
+    /* 切在 c，總重 grams：回傳左右兩邊顯示在秤上的重量（四捨五入到 0.1 g）與差距%。判定用「秤上顯示的數字」，所以玩家看到的跟判定一致 */
     /* 切在 c，總重量 grams：回傳左右兩邊顯示在秤上的重量（四捨五入到 0.1 g）和差距% */
     function weighCut(pts, c, grams) {
         var total = polyArea(pts), aL = areaLeft(pts, c);
@@ -102,17 +119,21 @@
         return { wL: wL, wR: wR, diff: diff };
     }
 
+    /* mount：遊戲進場點 */
     function mount(root, ctx) {
         var R = null;
 
         /* start：從第幾關開始（失敗後可從前 5 關繼續）*/
+        /* round：開一局 */
         function round(start) {
             if (R) R.dispose();
             R = kit.round();
             var my = R;
             root.innerHTML = '';
+            /* level 目前關卡；cleared 已過幾關 */
             var level = start || 1, cleared = level - 1, newRec = false;
 
+            /* 建立畫面元素：資訊、麵包區、控制列（◀ 切下去 ▶） */
             var info = h('div', { 'class': 'bk-info' });
             var zone = h('div', { 'class': 'bk-zone' });
             var ctrl = h('div', { 'class': 'bk-ctrl' });
@@ -124,12 +145,15 @@
             root.appendChild(zone);
             root.appendChild(ctrl);
 
+            /* 整個場景畫在一個 SVG：上面麵包、下面兩個電子秤 */
             /* 整個場景畫在一個 SVG：上面麵包、下面兩個秤 */
             var SW = 468, SH = 560;
             var svg = kit.svg('svg', { 'class': 'bk-svg', viewBox: '0 0 ' + SW + ' ' + SH, preserveAspectRatio: 'xMidYMid meet' }, zone);
+            /* 麵包左上角在 SVG 裡的位置（水平置中） */
             var OX = (SW - W) / 2;                       /* 麵包左上角在 SVG 的位置 */
             var gBread = kit.svg('g', { transform: 'translate(' + OX + ' ' + BREAD_Y + ')' }, svg);
             var PLAT_W = 200, PLAT_Y = 400, SCALE_CX = [SW * 0.25, SW * 0.75];
+            /* 畫兩個電子秤（底座、螢幕、克數文字、秤盤） */
             var scaleEls = SCALE_CX.map(function (cx) {
                 var g = kit.svg('g', {}, svg);
                 kit.svg('rect', { 'class': 'bk-sbase', x: cx - 105, y: PLAT_Y + 14, width: 210, height: 96, rx: 14 }, g);
@@ -140,6 +164,7 @@
                 return { cx: cx, txt: txt, plat: plat };
             });
 
+            /* B 這關的麵包；grams 總重；knife 刀的 x 位置；state 目前階段（aim 瞄準/cut 切下去/verdict 揭曉） */
             var B = null, grams = 0, knife = 0, state = 'idle';
             var gKnife = null, pieces = [];
 
@@ -148,6 +173,7 @@
                 ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))]));
             }
 
+            /* 畫新的一塊麵包與刀（刀一開始放在隨機位置） */
             function drawBread() {
                 gBread.innerHTML = '';
                 pieces = [];
@@ -164,25 +190,30 @@
                 moveKnife(knife);
                 state = 'aim';
                 setInfo();
+                /* 主控台印出這關的形狀、總重、標準、剛好對半的位置，方便驗證 */
                 try {
                     var bal = balanceX(B.pts);
                     console.info('[秤麵包重量] 第 ' + level + ' 關 形狀 ' + ({ rect: '長方形', trap: '梯形', tri: '三角形' })[B.type] + '，總重 ' + grams + ' g，標準 ' + thrFor(level).toFixed(2) + '%，' +
                         '剛好對半的切點在寬度 ' + (bal / W * 100).toFixed(2) + '% 處，目前刀在 ' + (knife / W * 100).toFixed(2) + '%');
                 } catch (e) { }
             }
+            /* 移動刀：clamp 限制在麵包範圍內（0～W） */
             function moveKnife(x) {
                 knife = kit.clamp(x, 0, W);
                 gKnife.setAttribute('transform', 'translate(' + knife.toFixed(2) + ' 0)');
             }
 
+            /* 操作：拖曳（速度打折）＋ ◀ ▶ 微調 */
             /* ─── 操作：拖曳（速度打折）＋ ◀ ▶ 微調 ─── */
             var drag = null;
+            /* 把手指螢幕座標轉成 SVG 座標 */
             function svgX(e) {
                 var r = svg.getBoundingClientRect();
                 var s = Math.min(r.width / SW, r.height / SH);
                 var left = r.left + (r.width - SW * s) / 2;
                 return (e.clientX - left) / s - OX;
             }
+            /* 手指按下：刀先跳到手指位置（粗調） */
             zone.addEventListener('pointerdown', function (e) {
                 if (state !== 'aim' || drag) return;
                 e.preventDefault();
@@ -190,6 +221,7 @@
                 drag = { id: e.pointerId, x: svgX(e), t: performance.now() };
                 moveKnife(drag.x);                 /* 粗調：刀先跳到手指下面 */
             });
+            /* 手指移動：移動量依手指速度打折（慢速精細、快速粗略） */
             zone.addEventListener('pointermove', function (e) {
                 if (state !== 'aim' || !drag || e.pointerId !== drag.id) return;
                 var x = svgX(e), now = performance.now();
@@ -203,6 +235,7 @@
             zone.addEventListener('pointerup', endDrag);
             zone.addEventListener('pointercancel', endDrag);
 
+            /* ◀ ▶ 按鈕：按一下移動一次，按住會連續（先等 350ms 三次、之後每 60ms 一次） */
             function nudgeBtn(btn, dir) {
                 var rep = null;
                 function step() { if (state === 'aim') moveKnife(knife + dir * NUDGE); }
@@ -221,12 +254,15 @@
             nudgeBtn(btnL, -1); nudgeBtn(btnR, 1);
             btnCut.addEventListener('pointerdown', function (e) { e.preventDefault(); cut(); });
 
+            /* 切、掉落、秤重 */
             /* ─── 切、掉落、秤重 ─── */
+            /* 切下去：算出左右兩塊，播放掉到秤上的動畫，再顯示重量 */
             function cut() {
                 if (state !== 'aim') return;
                 state = 'cut';
                 Sfx.play('pop');
                 var c = knife;
+                /* 裁切出左半與右半 */
                 var left = clipV(B.pts, c, true), right = clipV(B.pts, c, false);
                 var wc = weighCut(B.pts, c, grams);
                 var bal = balanceX(B.pts);
@@ -243,6 +279,7 @@
                     pt.g = g; pt.tx = tx; pt.ty = ty; pt.dir = pt.side ? 1 : -1;
                 });
                 var plat = scaleEls;
+                /* 掉落動畫：先往兩側分開（水平緩動），同時重力下墜（垂直 e² 加速） */
                 my.tween(FALL_MS, function (e) {
                     /* 先往兩側分開一點，同時重力下墜（ease-in） */
                     parts.forEach(function (pt) {
@@ -255,6 +292,7 @@
                     scaleEls.forEach(function (s) { s.plat.setAttribute('y', PLAT_Y + 4); });
                     /* 秤上的數字從 0 跳到實際重量 */
                     var targets = [wc.wL, wc.wR];
+                    /* 秤上的數字從 0 逐漸跳到實際重量 */
                     return my.tween(600, function (e) {
                         scaleEls.forEach(function (s, i) {
                             s.txt.textContent = (targets[i] * e).toFixed(1) + ' g';
@@ -267,6 +305,7 @@
                 });
             }
 
+            /* 判定：差距在標準內就過關，否則結算並顯示你切在哪裡、剛好對半在哪裡 */
             function verdict(c, bal, wc) {
                 state = 'verdict';
                 var thr = thrFor(level), pass = wc.diff <= thr;
@@ -301,6 +340,7 @@
                 }
             }
 
+            /* G.debug：測試用後門 */
             G.debug = {
                 state: function () { return { level: level, state: state, knife: knife, cleared: cleared, type: B && B.type, grams: grams }; },
                 bread: function () { return B; },
@@ -310,19 +350,24 @@
                 jump: function (n) { if (state === 'aim' || state === 'verdict') { level = n; drawBread(); } },
                 weigh: function (x) { return weighCut(B.pts, x == null ? knife : x, grams); }
             };
+            /* 開場就畫第一塊麵包 */
             drawBread();
         }
 
         round(1);
     }
 
+    /* 遊戲身分證 */
     var G = {
         id: ID,
         name: '秤麵包重量',
         rule: '把麵包切成左右兩半，兩半會掉到左右兩個電子秤上秤重。拖曳手指決定刀的位置（慢慢移動可以微調，也可以按 ◀ ▶），按「切下去」就切。兩邊重量差距要在標準以內才能過關：第 1 關 10%，每關少 1%，第 2 關開始麵包會變成斜邊的梯形，越來越斜，後面還有三角形，不能再切正中間！',
         mount: mount,
+        /* dev 是開發用設定 */
         dev: { next: null },          /* 開發驗證用：延長過關畫面停留時間，正式遊戲不會設定 */
+        /* test 匯出純函式給 Node 自動測試 */
         test: { TRAP_START: TRAP_START, TRAP_STEP: TRAP_STEP, thrFor: thrFor, makeBread: makeBread, polyArea: polyArea, clipV: clipV, areaLeft: areaLeft, balanceX: balanceX, weighCut: weighCut, W: W, HB: HB }
     };
+    /* 登記到遊戲清單 */
     Reaction.register(G);
 })();

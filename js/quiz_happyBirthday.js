@@ -69,22 +69,29 @@
     var B_ODDSNACKS = P.oddSnacks.map(function (s) { return { n: s.n, u: '包', typ: s.typ, odd: [s.odd] }; });
 
     /* ═══ 第 1 關：新手暖身（一件事，幾乎沒有干擾） ═══ */
+    /* 【新手導讀】寫法與 js/quiz_travel.js 完全相同（共用 js/quiz_gen.js 的出題引擎）：G 是這一關的出題器，S 是整局共用資料，T 是範本代入，L 是誘答選項，finish 挑出要用的題目。B1 是生日主軸的第 1 關（最簡單），B2～B8 逐關加干擾；逐行說明請看 quiz_travel.js 的第 1 關。 */
     function B1(G, S) {
         var D = S.tl[S.i];
+        /* G.pick：隨機挑一個 */
         var p = G.pick(P.kin.concat(P.friends));
         var e = G.pick(B_ERRANDS1);
+        /* G.num：抽數字，twoDiff 避免兩位數有重複數字 */
         var bus = G.num(12, 98, null, twoDiff);
         var stop = G.pick(P.stops);
         var floor = G.num(2, 5, null, null, 'floor');
         var n = G.num(2, 4, [floor], null, 'n');
+        /* v：範本代入用的資料包 */
         var v = { p: p, bus: bus, stop: stop, place: e.place, floor: floor, act: e.act, n: n, u: e.u, thing: e.thing, today: D.today.sw, ev: D.ev.sw };
+        /* note：紙條，每個元素是一段文字 */
         var note = [
             T('{ev}是{p}的生日，你下午五點下班，要先幫忙辦一件事：', v),
             T('搭 {bus} 號公車，在{stop}下車，', v),
             T('去{place} {floor} 樓，{act} {n} {u}{thing}。', v)
         ];
+        /* fl、cu：把答案格式化成「3 樓」「2 袋」的小函式 */
         var fl = function (x) { return x + ' 樓'; };
         var cu = function (x) { return x + ' ' + e.u; };
+        /* qs：候選題目；G.dateQ 日期題、G.q(題目, 題型, 正解, [誘答])、L(文字, 混淆類型, 說明) 做誘答 */
         var qs = [
             G.dateQ('生日是哪一天？', D.ev, [L(D.today.s, '張冠李戴', D.today.s + '是今天，生日是' + D.ev.s + '。')], { must: true }),
             G.q('是誰要過生日？', '人物', p, G.others(P.kin.concat(P.friends), p, '差一點點')),
@@ -95,6 +102,7 @@
             G.q(T('要{act}幾{u}{thing}？', v), '數字', cu(n),
                 [L(cu(floor), '張冠李戴', floor + ' 是樓層，不是' + e.thing + '的數量。')].concat(G.near(n, cu, { lo: 1, hi: 9, swap: false })))
         ];
+        /* finish：從候選題目挑出這關要用的 4 題 */
         return { note: note, qs: finish(G, qs, 4) };
     }
 
@@ -828,6 +836,7 @@
         return { note: note, qs: finish(G, qs, 32, 6) };
     }
 
+    /* 把整個生日主軸登記進引擎：id、顯示名稱、8 關的關卡名稱、setup（整局共用資料：時間軸）、levels（8 個關卡函式） */
     Q.addTheme({
         id: 'birthday', name: '生日',
         names: ['新手暖身', '兩件差事', '先後順序', '顏色形狀', '兩段行程', '臨時改口', '一通電話', '回家的路'],

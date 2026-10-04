@@ -11,6 +11,7 @@
    js/world/scenes.js 的工作，呼叫這裡的函式組裝起來。想新增一種可重複使用
    的 3D 零件（例如一種新招牌造型），就加在這個檔案；想調整「某個場景」的
    佈局，去改 scenes.js。 */
+/* 【新手導讀：3D 零件庫怎麼讀】每個 K.xxx = function (...) 是一個「蓋零件」的函式：傳入位置、大小、顏色，它就用 Three.js 的基本形狀（方塊 box、圓柱 cyl、球 sphere…）組出一個 3D 物件並加進場景。座標：x 左右、y 高度、z 前後。ctx 是場景容器（見 core.js 的 Ctx）。 */
 
 (function (global) {
     'use strict';
@@ -39,6 +40,7 @@
     function css(hex) { return '#' + ('000000' + hex.toString(16)).slice(-6); }
     K.css = css;
 
+    /* 場景專屬資源：貼圖與材質用完要釋放（dispose），不然換幾次場景手機記憶體就爆了 */
     /* ─── 場景專屬資源（換場景時釋放）─── */
     var owned = [];
     var signCache = {};
@@ -49,6 +51,7 @@
         signCache = {};
     };
 
+    /* 共用幾何體：先做好一份，各處重複使用（省記憶體）。「原點在底部中心」是指縮放與擺放時，物體底部貼在 y=0 的地面上 */
     /* ─── 共用幾何體（原點在底部中心，方便擺放）─── */
     var G = K.G = {
         box: new T.BoxGeometry(1, 1, 1).translate(0, 0.5, 0),
@@ -68,8 +71,10 @@
         ring: new T.TorusGeometry(0.5, 0.06, 8, 32).rotateX(Math.PI / 2)
     };
 
+    /* 材質：決定物體的顏色與光澤。同樣顏色只建立一份（快取），重複使用 */
     /* ─── 共用材質快取 ─── */
     var matCache = {};
+    /* K.mat：建立（或取用快取的）一般材質，會受光影響（Lambert 材質） */
     K.mat = function (color, opt) {
         var key = 'L' + color + (opt ? JSON.stringify(opt) : '');
         if (!matCache[key]) {
@@ -79,6 +84,7 @@
         }
         return matCache[key];
     };
+    /* K.basic：不受光影響的材質（顏色固定，適合招牌、天空） */
     K.basic = function (color, opt) {
         var key = 'B' + color + (opt ? JSON.stringify(opt) : '');
         if (!matCache[key]) {
@@ -89,7 +95,9 @@
         return matCache[key];
     };
 
+    /* 放置小工具：把一個形狀放到 (x,y,z)、大小 (sx,sy,sz)、繞 y 軸旋轉 ry */
     /* ─── 放置小工具 ─── */
+    /* K.mesh：放一個通用形狀 */
     K.mesh = function (parent, geo, mat, x, y, z, sx, sy, sz, ry) {
         var m = new T.Mesh(geo, mat);
         m.position.set(x || 0, y || 0, z || 0);
@@ -99,17 +107,22 @@
         return m;
     };
     /* 方塊：x,z 是中心，y 是底部 */
+    /* K.box：放一個方塊（寬 w、高 h、深 d） */
     K.box = function (parent, x, y, z, w, h, d, color, ry) {
         return K.mesh(parent, G.box, typeof color === 'number' ? K.mat(color) : color, x, y, z, w, h, d, ry);
     };
+    /* K.cyl：放一個圓柱（半徑 r、高 h） */
     K.cyl = function (parent, x, y, z, r, h, color) {
         return K.mesh(parent, G.cyl, typeof color === 'number' ? K.mat(color) : color, x, y, z, r * 2, h, r * 2);
     };
+    /* K.ball：放一顆球 */
     K.ball = function (parent, x, y, z, r, color) {
         return K.mesh(parent, G.sphere, typeof color === 'number' ? K.mat(color) : color, x, y, z, r * 2, r * 2, r * 2);
     };
 
+    /* 圓角矩形：在畫布（canvas）上畫圓角框，做招牌、貼圖用 */
     /* ─── 圓角矩形 ─── */
+    /* rr：畫一個圓角矩形的路徑 */
     function rr(g, x, y, w, h, r) {
         r = Math.min(r, w / 2, h / 2);
         g.beginPath();
@@ -125,6 +138,7 @@
     var FONT = '"Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif';
 
     /* 畫布貼圖：draw(g, w, h) 自訂畫法；網路字型載入後自動重畫 */
+    /* K.canvasTex：用 canvas 即時畫一張貼圖（不需要圖片檔），字型載好後會自動重畫 */
     K.canvasTex = function (w, h, draw, fontText, owned) {
         var cv = document.createElement('canvas');
         cv.width = w;
@@ -146,6 +160,7 @@
     };
 
     /* 文字招牌貼圖：自動縮字，支援多行（\n） */
+    /* K.textTex：把一段文字畫成貼圖 */
     K.textTex = function (text, o) {
         o = o || {};
         var W = o.w || 512;
@@ -184,6 +199,7 @@
     };
 
     /* 招牌：平面（預設朝 +z），ry 轉向；both=true 兩面都有字 */
+    /* K.sign：蓋一塊招牌（板子＋文字貼圖） */
     K.sign = function (parent, text, o) {
         var sw = o.sw || 2;
         var sh = o.sh || 0.6;
@@ -216,6 +232,7 @@
     };
 
     /* 任意畫布平面（牆上的時鐘、窗景、菜單板…） */
+    /* K.picture：蓋一幅牆上的畫／海報 */
     K.picture = function (parent, w, h, px, py, draw, o) {
         o = o || {};
         var tex = K.canvasTex(px, py, draw, o.fontText);
@@ -229,8 +246,10 @@
         return m;
     };
 
+    /* 陰影圓：用半透明的黑色圓片在腳下當假陰影（比真的陰影便宜很多） */
     /* ─── 陰影圓（便宜的假陰影）─── */
     var blobTex = null;
+    /* K.blob：放一個假陰影 */
     K.blob = function (parent, w, d, opacity) {
         if (!blobTex) {
             blobTex = K.canvasTex(128, 128, function (g) {
@@ -253,10 +272,13 @@
         return m;
     };
 
+    /* 天空：漸層天球＋雲 */
     /* ─── 天空：漸層天球＋雲 ─── */
+    /* srgb：把十六進位顏色轉成 0～1 的 RGB（做漸層用） */
     function srgb(hex) {
         return new T.Vector3(((hex >> 16) & 255) / 255, ((hex >> 8) & 255) / 255, (hex & 255) / 255);
     }
+    /* K.skyDome：建立漸層的天空球 */
     K.skyDome = function () {
         var mat = new T.ShaderMaterial({
             uniforms: {
@@ -282,6 +304,7 @@
         return m;
     };
 
+    /* K.cloud：蓋一朵雲（幾顆球疊起來） */
     K.cloud = function (parent, x, y, z, s) {
         var g = new T.Group();
         var m = K.mat(0xFFFFFF, { emissive: 0x6F6A5E });
@@ -296,6 +319,7 @@
 
     /* 整片雲用一個 InstancedMesh（1 次繪製），每幀慢慢飄 */
     var PUFFS = [[0, 0, 0, 1.6], [1.5, -0.2, 0.2, 1.2], [-1.5, -0.3, 0, 1.1], [0.6, 0.6, -0.3, 1.1], [-0.7, 0.5, 0.4, 0.9]];
+    /* K.clouds：在指定範圍內隨機放一批雲 */
     K.clouds = function (ctx, cx, cz, count, spread) {
         var list = [];
         for (var i = 0; i < count; i++) {
@@ -331,6 +355,7 @@
     };
 
     /* 路面標線（白色虛線、斑馬線）：全部合成一個 InstancedMesh。list = [[x, z, w, d], ...] */
+    /* K.stripes：畫一組條紋（斑馬線、路面標線用） */
     K.stripes = function (parent, list, color) {
         if (!list.length) return null;
         var im = new T.InstancedMesh(G.box, K.mat(color || C.roadLine), list.length);
@@ -348,13 +373,16 @@
         return im;
     };
 
+    /* 地面／道路 */
     /* ─── 地面／道路 ─── */
+    /* K.ground：鋪一塊地面 */
     K.ground = function (parent, x, z, w, d, color, y) {
         return K.mesh(parent, G.ground, typeof color === 'number' ? K.mat(color) : color, x, y || 0, z, w, 1, d);
     };
 
     /* 反覆貼圖（地磚、木地板）：快取基底，平鋪次數由呼叫端決定 */
     var patternCache = {};
+    /* K.pattern：用 canvas 畫一張可重複鋪排的圖案貼圖 */
     K.pattern = function (key, size, draw, repX, repY) {
         if (!patternCache[key]) patternCache[key] = K.canvasTex(size, size, draw, null, false);
         var t = patternCache[key].clone();
@@ -364,6 +392,7 @@
         return K.own(t);
     };
 
+    /* K.tiles：磁磚貼圖（兩色交錯） */
     K.tiles = function (c1, c2, repX, repY) {
         return K.pattern('tile' + c1 + c2, 128, function (g) {
             g.fillStyle = css(c1);
@@ -380,6 +409,7 @@
         }, repX, repY);
     };
 
+    /* K.planks：木地板貼圖 */
     K.planks = function (repX, repY) {
         return K.pattern('planks', 256, function (g) {
             g.fillStyle = '#E9C79A';
@@ -393,12 +423,14 @@
         }, repX, repY);
     };
 
+    /* K.floor：鋪室內地板 */
     K.floor = function (ctx, x, z, w, d, tex, color, y) {
         var mat = K.own(new T.MeshLambertMaterial({ map: tex, color: color || 0xFFFFFF }));
         return K.mesh(ctx.root, G.ground, mat, x, y || 0.01, z, w, 1, d);
     };
 
     /* 室內牆：單面平面朝房內（相機在牆外時自動看穿，不擋視線） */
+    /* K.wall：蓋一面牆（同時登記碰撞方塊，玩家不能穿牆） */
     K.wall = function (ctx, x0, z0, x1, z1, h, color, o) {
         o = o || {};
         var dx = x1 - x0;
@@ -433,6 +465,7 @@
     };
 
     /* 房間：四面牆都朝房內；gaps = {n:[[a,b]], s:[...], e:[...], w:[...]} 是門洞（n/s 沿 x，e/w 沿 z） */
+    /* K.room：用四面牆圍出一個房間，gaps 是留給門的缺口 */
     K.room = function (ctx, x0, x1, z0, z1, h, color, gaps, o) {
         gaps = gaps || {};
         o = o || {};
@@ -461,8 +494,10 @@
         lintels(gaps.w, function (a, b) { K.wall(ctx, x0, b, x0, a, h - doorH, color, lo); });
     };
 
+    /* 建築外牆貼圖（每種顏色快取一張） */
     /* ─── 建築外牆貼圖（每種顏色快取一張）─── */
     var facadeCache = {};
+    /* facadeBase：畫外牆的基本圖案（窗戶、店面） */
     function facadeBase(wall, shop) {
         var key = wall + (shop ? 's' : '');
         if (facadeCache[key]) return facadeCache[key];
@@ -494,6 +529,7 @@
     }
 
     /* 建築本體：一個方塊、一個材質（每面的窗戶重複次數直接寫進 UV），只要 1 次繪製 */
+    /* facadeGeo：外牆用的幾何體 */
     function facadeGeo(w, h, d) {
         var g = new T.BoxGeometry(w, h, d).translate(0, h / 2, 0);
         var uv = g.attributes.uv;
@@ -511,6 +547,7 @@
         return K.own(g);
     }
 
+    /* facadeMat：外牆材質 */
     function facadeMat(wall) {
         var base = facadeBase(wall);
         if (base.wrapS !== T.RepeatWrapping) {
@@ -529,6 +566,7 @@
 
     /* 建築：o = { x, z, w, d, h, color, face:'s'|'n'|'e'|'w'（正面朝向）,
                    sign, signBg, signFg, shop:true, awning:色, door:true, occluder, collide, roof } */
+    /* K.building：蓋一棟建築（外牆貼圖＋屋頂＋碰撞，並登記成會擋住視線時變半透明的物件） */
     K.building = function (ctx, o) {
         var g = new T.Group();
         g.position.set(o.x, 0, o.z);
@@ -575,7 +613,9 @@
         return g;
     };
 
+    /* 樹、燈、花台、長椅 */
     /* ─── 樹、燈、花台、長椅 ─── */
+    /* K.tree：種一棵樹（樹幹＋幾球樹葉） */
     K.tree = function (ctx, x, z, s, collide) {
         s = s || 1;
         var g = new T.Group();
@@ -592,6 +632,7 @@
     };
 
     /* 大量樹木用 InstancedMesh：整片樹只要 4 次繪製，手機也跑得動 */
+    /* K.forest：一次種一批樹 */
     K.forest = function (ctx, spots) {
         if (!spots.length) return;
         var n = spots.length;
@@ -624,6 +665,7 @@
         shadow.renderOrder = 1;
     };
 
+    /* K.lamp：路燈 */
     K.lamp = function (ctx, x, z) {
         var g = new T.Group();
         g.position.set(x, 0, z);
@@ -634,6 +676,7 @@
         return g;
     };
 
+    /* K.flowerBed：花台 */
     K.flowerBed = function (ctx, x, z, w, d) {
         var g = new T.Group();
         g.position.set(x, 0, z);
@@ -652,6 +695,7 @@
         return g;
     };
 
+    /* K.bench：長椅 */
     K.bench = function (ctx, x, z, ry) {
         var g = new T.Group();
         g.position.set(x, 0, z);
@@ -666,6 +710,7 @@
         return g;
     };
 
+    /* K.plant：盆栽 */
     K.plant = function (parent, x, z, s) {
         s = s || 1;
         var g = new T.Group();
@@ -677,7 +722,9 @@
         return g;
     };
 
+    /* 街道元件 */
     /* ─── 街道元件 ─── */
+    /* K.streetSign：路名牌 */
     K.streetSign = function (ctx, x, z, text, ry) {
         var g = new T.Group();
         g.position.set(x, 0, z);
@@ -690,6 +737,7 @@
     };
 
     /* 公車站：站牌＋候車亭。o = {x, z, name, routes, ry（站牌朝向）} */
+    /* K.busStop：公車站牌 */
     K.busStop = function (ctx, o) {
         var g = new T.Group();
         g.position.set(o.x, 0, o.z);
@@ -716,6 +764,7 @@
     };
 
     /* 斑馬線的條紋位置（交給 K.stripes 一次畫完） */
+    /* K.crosswalkStripes：斑馬線的條紋 */
     K.crosswalkStripes = function (list, x, z0, z1, alongZ) {
         var n = Math.floor(Math.abs(z1 - z0) / 1.0);
         for (var i = 0; i < n; i++) {
@@ -726,7 +775,9 @@
         return list;
     };
 
+    /* 公車（車頭朝 +x） */
     /* ─── 公車（車頭朝 +x）─── */
+    /* ledTex：公車前方 LED 路線號碼的貼圖 */
     function ledTex(route) {
         return K.canvasTex(256, 64, function (g, w, h) {
             g.fillStyle = '#1D1B20';
@@ -740,6 +791,7 @@
         }, route);
     }
 
+    /* K.bus：蓋一輛公車 */
     K.bus = function (route, o) {
         o = o || {};
         var g = new T.Group();
@@ -778,7 +830,9 @@
         return g;
     };
 
+    /* 人物（正面朝 −z） */
     /* ─── 人物（正面朝 -z）─── */
+    /* K.person：用方塊、球、圓柱組出一個人（頭、身體、手、腳，各部位分開，才能擺動） */
     K.person = function (o) {
         o = o || {};
         var g = new T.Group();
@@ -841,6 +895,7 @@
     };
 
     /* 人物動畫：mode = 'walk' | 'bike' | 'idle' | 'wave' */
+    /* K.animPerson：依相位 phase 擺動手腳，mode 決定動作：走路、騎車、站著、揮手 */
     K.animPerson = function (g, phase, amount, mode, t) {
         var p = g.userData.parts;
         if (!p) return;
@@ -870,7 +925,9 @@
         p.body.position.y = Math.abs(Math.cos(phase)) * 0.045 * amount + (mode === 'idle' ? Math.sin((t || 0) * 2) * 0.01 : 0);
     };
 
+    /* UBIKE（共享單車，車頭朝 −z，黃色車身） */
     /* ─── UBIKE（車頭朝 -z，黃色車身）─── */
+    /* K.bike：蓋一輛單車 */
     K.bike = function () {
         var g = new T.Group();
         var frame = K.mat(0xF2B33D);
@@ -892,10 +949,12 @@
         return g;
     };
 
+    /* 可互動標記：上下浮動的橘色倒三角錐 */
     /* ─── 可互動標記：上下浮動的橘色倒三角錐 ───
        原點在標記「頂端」（白圈的位置），尖端往下 0.55 公尺。
        擺放位置：頂端貼著招牌下緣，或人物頭頂上方。 */
     var markerMat = null;
+    /* K.marker：蓋一個互動標記 */
     K.marker = function () {
         if (!markerMat) markerMat = new T.MeshBasicMaterial({ color: 0xF08A2E });
         var g = new T.Group();
@@ -909,7 +968,9 @@
         return g;
     };
 
+    /* 彩帶（勝利時） */
     /* ─── 彩帶（勝利時）─── */
+    /* K.confetti：在指定位置噴出彩帶 */
     K.confetti = function (ctx, x, y, z, n) {
         var cols = [C.yellow, C.orange, C.blue, C.green, 0xFFFFFF, 0xF6A6B2];
         var bits = [];

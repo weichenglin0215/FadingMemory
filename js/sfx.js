@@ -29,18 +29,25 @@
      Sfx.unlock()；沒有出聲只會是安靜，不會報錯，也不會卡住遊戲。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* 【新手導讀：Web Audio 是什麼】瀏覽器內建的聲音合成功能。想像一組電子樂器：「振盪器 Oscillator」產生固定波形的聲音（方波、三角波…），「增益 Gain」控制音量，「濾波器 Filter」改變音色，把它們用 connect() 接起來，最後接到 destination（喇叭）就會出聲。這個檔案完全用這些零件即時合成音效，不需要任何音檔。 */
 (function (global) {
     'use strict';
 
     var KEY_MUTED = 'fm.sfx.muted';
+    /* ctx：AudioContext（整個聲音系統），第一次需要時才建立 */
     var ctx = null;          /* AudioContext，第一次需要時才建立 */
+    /* master：總音量節點，所有聲音都要先經過它再到喇叭，所以靜音只要把它設成 0 */
     var master = null;       /* 總音量 */
+    /* noiseBuf：一段預先做好的白噪音（隨機的聲音），爆破、水聲、刷過聲共用 */
     var noiseBuf = null;     /* 一段白噪音，爆破／刷過的聲音共用 */
     var muted = false;
+    /* 讀取上次的靜音設定（localStorage 可能不能用，所以包 try/catch） */
     try { muted = global.localStorage.getItem(KEY_MUTED) === '1'; } catch (e) { }
 
+    /* 總音量 0.5 */
     var MASTER_VOL = 0.5;
 
+    /* ensure：確保 AudioContext 存在（沒有就建立）；瀏覽器不支援就回傳 null，後面的函式遇到 null 就安靜地什麼都不做 */
     function ensure() {
         if (ctx) return ctx;
         var AC = global.AudioContext || global.webkitAudioContext;
@@ -54,9 +61,11 @@
         return ctx;
     }
 
+    /* 音名轉頻率：MIDI 音符編號 69 是 A4＝440Hz，每升高 12 個編號頻率就加倍（所以用 2 的次方） */
     /* 音名 → 頻率：midi 69＝A4＝440Hz */
     function hz(midi) { return 440 * Math.pow(2, (midi - 69) / 12); }
 
+    /* tone：發出一個音。freq 頻率、t0 開始時間、dur 長度；o.type 波形（square 方波＝8-bit 風格、triangle 三角波、sine 正弦、sawtooth 鋸齒）、o.slideTo 結尾音高（滑音） */
     /* 一個音：type 波形、vol 音量、slideTo 結尾音高（做滑音）、attack／release 淡入淡出 */
     function tone(freq, t0, dur, o) {
         var c = ensure();
@@ -64,11 +73,13 @@
         o = o || {};
         var osc = c.createOscillator();
         var g = c.createGain();
+        /* osc.type：波形 */
         osc.type = o.type || 'square';
         osc.frequency.setValueAtTime(freq, t0);
         if (o.slideTo) osc.frequency.exponentialRampToValueAtTime(Math.max(20, o.slideTo), t0 + dur);
         var vol = o.vol == null ? 0.18 : o.vol;
         var atk = o.attack == null ? 0.004 : o.attack;
+        /* 音量包絡：開始時快速升到音量 (attack)，然後指數下降到幾乎 0，聽起來像彈出來的聲音，不會有「啪」的爆音 */
         g.gain.setValueAtTime(0.0001, t0);
         g.gain.linearRampToValueAtTime(vol, t0 + atk);
         g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
@@ -79,10 +90,12 @@
         return osc;
     }
 
+    /* noise：發出一段噪音（爆破聲、水聲）。用帶通／高通濾波器決定聽起來高或低 */
     function noise(t0, dur, o) {
         var c = ensure();
         if (!c) return;
         o = o || {};
+        /* 第一次用時才建立噪音緩衝區：填入隨機數字 −1 ～ 1 */
         if (!noiseBuf) {
             noiseBuf = c.createBuffer(1, c.sampleRate, c.sampleRate);
             var d = noiseBuf.getChannelData(0);
@@ -108,6 +121,7 @@
         src.stop(t0 + dur + 0.03);
     }
 
+    /* seq：依序發出一串音符（notes 是 MIDI 編號，null 代表休止） */
     /* 一串音：notes＝[midi 或 null(休止)]，每個音 step 秒 */
     function seq(notes, t0, step, o) {
         for (var i = 0; i < notes.length; i++) {
@@ -115,6 +129,7 @@
         }
     }
 
+    /* 音效表 SFX：每個音效是一個函式，t 是開始時間；呼叫 Sfx.play('ok') 就會執行對應的函式 */
     /* ═══ 音效表 ═══ */
     var SFX = {
         /* 答對：兩個高音的「叮」（B5→E6），金幣聲的感覺 */
@@ -162,17 +177,22 @@
         done: function (t) { seq([72, 79, 84], t, 0.09, { vol: 0.13 }); }
     };
 
+    /* 結算背景音樂：自己編的 4 小節循環（C 大調和弦 C－Am－F－G） */
     /* ═══ 結算背景音樂：自己編的 4 小節歡樂循環（C - Am - F - G），160 BPM ═══ */
+    /* 八分音符長度：一拍 = 60/160 秒，八分音符是它的一半 */
     var STEP = 60 / 160 / 2;       /* 八分音符的長度（秒） */
+    /* 旋律：每小節 8 個音（MIDI 編號） */
     var LEAD = [
         [76, 79, 84, 79, 76, 79, 84, 88],     /* C  */
         [76, 81, 84, 81, 76, 81, 84, 81],     /* Am */
         [77, 81, 84, 81, 77, 81, 84, 89],     /* F  */
         [74, 79, 83, 79, 74, 83, 79, 83]      /* G  */
     ];
+    /* 低音：各小節的根音 */
     var BASS = [48, 45, 41, 43];                /* 各小節的根音 */
     var bgmTimer = null, bgmName = null, bgmNext = 0, bgmBar = 0, bgmGain = null;
 
+    /* 排程背景音樂：每 80ms 檢查一次，把接下來 0.25 秒內要播的音符先排進去（Web Audio 的時間很精準，所以提前排好，播放才不會卡頓） */
     function bgmSchedule() {
         var c = ctx;
         if (!c || !bgmName || !bgmGain) return;
@@ -189,17 +209,21 @@
         }
     }
 
+    /* Sfx 是對外的介面：其他檔案只呼叫 Sfx.play／bgm／setMuted…，不用管上面的細節 */
     var Sfx = {
+        /* unlock：瀏覽器規定要有使用者操作後才能出聲，所以在使用者第一次點擊時呼叫 resume 解鎖 */
         unlock: function () {
             var c = ensure();
             if (c && c.state === 'suspended' && c.resume) { try { c.resume(); } catch (e) { } }
         },
+        /* play：播放一個音效；靜音或不支援時什麼都不做 */
         play: function (name) {
             if (muted) return;
             var c = ensure();
             if (!c || !SFX[name]) return;
             try { SFX[name](c.currentTime + 0.005); } catch (e) { }
         },
+        /* bgm：開始播放背景音樂（重複呼叫同一首不會重頭播） */
         bgm: function (name) {
             if (muted) return;
             var c = ensure();
@@ -209,12 +233,14 @@
             bgmBar = 0;
             bgmNext = c.currentTime + 0.05;
             /* 背景音樂專用的音量節點：結束時整個淡出，不會突然截斷 */
+            /* 背景音樂專用的音量節點：結束時整個淡出，不會突然截斷 */
             bgmGain = c.createGain();
             bgmGain.gain.value = 1;
             bgmGain.connect(master);
             bgmTimer = global.setInterval(bgmSchedule, 80);
             bgmSchedule();
         },
+        /* stopBgm：停止背景音樂（0.25 秒淡出） */
         stopBgm: function () {
             bgmName = null;
             if (bgmTimer) { global.clearInterval(bgmTimer); bgmTimer = null; }
@@ -231,6 +257,7 @@
         },
         isBgmPlaying: function () { return !!bgmName; },
 
+        /* 吹氣球的長音：按住時鋸齒波的音高一路往上（140Hz → 900Hz），放開停止 */
         /* 吹氣球的長音：按住時音高一路往上，放開停止 */
         inflateStart: function () {
             if (muted) return;
@@ -260,6 +287,7 @@
             } catch (e) { }
         },
 
+        /* 倒水的長音：帶通噪音（水流嘩啦聲），用一個 9Hz 的 LFO（低頻振盪器）讓濾波頻率忽高忽低，做出水聲的起伏；音高固定，不透露水位 */
         /* 倒水的長音：帶通雜訊（水流嘩啦聲），按住時持續，放開淡出。音高固定，不透露水位 */
         pourStart: function () {
             if (muted) return;
@@ -302,6 +330,7 @@
             } catch (e) { }
         },
 
+        /* 是否靜音／設定靜音（記在 localStorage）／切換靜音 */
         isMuted: function () { return muted; },
         setMuted: function (m) {
             muted = !!m;
@@ -312,6 +341,7 @@
         },
         toggle: function () { return Sfx.setMuted(!muted); },
 
+        /* 測試／除錯用：目前 AudioContext 的狀態 */
         /* 測試／除錯用：目前 AudioContext 的狀態，沒有 Web Audio 就是 'none' */
         state: function () { return ctx ? ctx.state : 'none'; }
     };

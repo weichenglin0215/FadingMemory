@@ -4,10 +4,13 @@
    算準 0 秒的瞬間按下按鈕；分數＝跟 0 秒差了幾秒（越小越好，畫面一律顯示到小數點後三位）。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* （這是最簡單的一款遊戲，適合當入門範例：沒有關卡，只有 mount → round → finish 三個函式；共通結構見 js/reaction_sticks.js 開頭的「新手導讀」） */
 (function () {
     'use strict';
 
+    /* 遊戲代號 */
     var ID = 'speed';
+    /* UI.h：建立 HTML 元素的小工具 */
     var h = UI.h;
     var TOTAL = 6000;    /* 倒數總長（毫秒，內部計時用；畫面一律換算成秒顯示） */
     var HIDE_AT = 3000;  /* 倒數到剩這麼多毫秒時，數字開始隱藏 */
@@ -16,11 +19,15 @@
     function sec(ms) { return (ms / 1000).toFixed(3); }
     function fmtBest(v) { return v == null ? '' : '最佳差 ' + sec(v) + ' 秒'; }
 
+    /* mount：遊戲進場點 */
     function mount(root, ctx) {
+        /* raf：保存 requestAnimationFrame 的編號，之後才能取消 */
         var raf = null;
 
+        /* round：開一局 */
         function round() {
             root.innerHTML = '';
+            /* 建立畫面元素：大數字、提示、按鈕 */
             var num = h('div', { 'class': 'speed-num', text: sec(TOTAL) });
             var hint = h('div', { 'class': 'hint', text: '默數到 0，算準時間按下面的按鈕' });
             var btn = h('button', { 'class': 'btn btn--primary speed-btn', text: '按這裡！' });
@@ -28,6 +35,7 @@
             root.appendChild(btn);
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
+            /* t0：這局開始的時間；clicked：玩家按了沒 */
             var t0 = performance.now();
             var clicked = false;
 
@@ -36,10 +44,12 @@
                算出來的剩餘時間永遠準確對應真實經過的時間，不會因為掉幀而計時跑掉。
                remain > HIDE_AT - 1：剩餘時間還大於 3000 毫秒（HIDE_AT）才顯示數字，
                一跨過這個門檻，textContent 直接設成空字串，數字瞬間消失。 */
+            /* tick：每個畫面更新時呼叫，更新倒數數字 */
             function tick(now) {
                 var el = now - t0;
                 var remain = Math.max(0, TOTAL - el);
                 num.textContent = remain > HIDE_AT - 1 ? sec(remain) : '';
+                /* requestAnimationFrame(tick)：請瀏覽器在下一個畫面更新時再呼叫 tick，形成持續更新的迴圈 */
                 if (!clicked) raf = requestAnimationFrame(tick);
             }
             raf = requestAnimationFrame(tick);
@@ -47,16 +57,20 @@
             /* 用 pointerdown（手指一碰到螢幕就觸發），不是 click——這是一個計時遊戲，
                click 在觸控裝置上要等手指離開螢幕（touchend）才觸發，等於多算了「手指按著
                不放」的時間，量到的不是玩家實際反應的那一刻，整個計時就不準了。 */
+            /* pointerdown：手指一碰到就觸發 */
             btn.addEventListener('pointerdown', function (e) {
                 if (clicked) return;
                 e.preventDefault();
+                /* e.preventDefault()：阻止瀏覽器預設行為 */
                 clicked = true;
                 if (window.Sfx) Sfx.play('click');
                 cancelAnimationFrame(raf);
+                /* 算出差了幾毫秒：現在時間 − 開始時間 − 總長度（正＝慢了，負＝快了） */
                 finish(Math.round(performance.now() - t0 - TOTAL));
             });
         }
 
+        /* finish：結算畫面 */
         function finish(diffMs) {
             var abs = Math.abs(diffMs);
             var label = diffMs === 0 ? '完美！剛剛好 0 秒' : diffMs > 0 ? '慢了 ' + sec(abs) + ' 秒' : '快了 ' + sec(abs) + ' 秒';
@@ -79,6 +93,7 @@
         round();
     }
 
+    /* Reaction.register：把這款遊戲登記到遊戲清單（id、名稱、規則說明、進場函式） */
     Reaction.register({
         id: ID,
         name: '零秒出手',

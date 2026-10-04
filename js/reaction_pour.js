@@ -12,6 +12,7 @@
      （誤差越小放得越大），最後畫出刻度尺讓玩家看到差了幾 %。
    ═══════════════════════════════════════════════════════════════════ */
 
+/* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
 (function () {
     'use strict';
 
@@ -19,11 +20,17 @@
     var h = UI.h;
     var kit = Reaction.kit;
 
+    /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
+    /* 目標水位 80% */
     var TARGET = 0.8;                     /* 目標水位（杯高的比例） */
+    /* 從空到滿大約要幾秒（每局隨機），所以不能靠數秒作弊 */
     var FILL_MIN = 4.0, FILL_MAX = 5.5;   /* 從空到滿大約要幾秒（每局隨機） */
+    /* SVG 座標：畫布 400×560 */
     var W = 400, H = 560;                 /* SVG 座標 */
+    /* 杯子內側左右邊界 */
     var GX0 = 105, GX1 = 295;             /* 杯子內側左右 */
+    /* 杯底 y、杯內高度；杯口 y＝杯底 − 杯高＝水位 100% */
     var GB = 510, GH = 330;               /* 杯底 y、杯內高度（杯口 y＝GB−GH＝100% 水位） */
     var RIM = GB - GH;
     var AMP = 7;                          /* 倒水時水面波動的振幅（SVG 單位，約杯高 2%） */
@@ -31,15 +38,19 @@
     var ZOOM_MS = 2200;
     var ANCHOR_Y = 0.3;                   /* 結算鏡頭：目標線與水面中點放在畫面由上往下 30% 處（下方留給結算橫幅） */
     var MIN_WIN = 6;                      /* 鏡頭視窗最小高度（SVG 單位）＝放大約 93 倍 */
+    /* 刻度尺的間距（%）：視窗越小，刻度越密 */
     var STEPS = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20];   /* 刻度尺的間距（%） */
 
+    /* 水位 L（0～1）轉成畫面的 y 座標 */
     var yOf = function (L) { return GB - L * GH; };
     var YT = yOf(TARGET);
 
     function fmtPct(v) { return v.toFixed(2) + '%'; }
     function fmtBest(v) { return v == null ? '' : '最佳誤差 ' + fmtPct(v); }
 
+    /* 純函式（也給 Node 測試用） */
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 每局的流量曲線參數：平均多久滿、起伏幅度 a、起伏頻率 w、相位 phi */
     /* 每局的流量曲線參數 */
     function makeProfile(rand) {
         rand = rand || Math.random;
@@ -50,12 +61,14 @@
             phi: kit.randFloat(0, Math.PI * 2, rand)
         };
     }
+    /* 倒了 t 秒後的水位：流量 = r0×(1 + a·sin(ωt+φ))，對時間積分就得到這個公式；流量永遠為正，所以水位一直上升 */
     /* 倒了 t 秒後的水位（0~1，超過 1 就是滿出來）。流量永遠為正，所以水位單調上升 */
     function levelAt(p, t) {
         if (t <= 0) return 0;
         var r0 = 1 / p.fill;
         return r0 * (t + (p.a / p.w) * (Math.cos(p.phi) - Math.cos(p.w * t + p.phi)));
     }
+    /* 倒多久會滿（水位到 1.0 的秒數）：二分搜尋 */
     /* 倒多久會滿（水位到 1.0 的秒數），二分搜尋 */
     function timeToFull(p) {
         var lo = 0, hi = p.fill * 3;
@@ -65,12 +78,15 @@
         }
         return (lo + hi) / 2;
     }
+    /* 目前流量（相對於平均）：用來決定水柱粗細 */
     /* 目前流量（相對平均流量，用來決定水柱粗細） */
     function flowAt(p, t) { return 1 + p.a * Math.sin(p.w * t + p.phi); }
+    /* 結算鏡頭視窗的高度：誤差越小，放得越大 */
     /* 結算鏡頭視窗的高度（SVG 單位）：誤差的 3.2 倍，最小 MIN_WIN，最大整張圖 */
     function zoomWindow(errPct) {
         return Math.min(H, Math.max(MIN_WIN, Math.abs(errPct) / 100 * GH * 3.2));
     }
+    /* 刻度尺的間距：讓視窗內最多約 10 條刻度 */
     /* 刻度尺間距：視窗內最多約 10 條刻度 */
     function stepFor(win) {
         for (var i = 0; i < STEPS.length; i++) if (win / (STEPS[i] / 100 * GH) <= 10) return STEPS[i];
@@ -85,6 +101,7 @@
         return '倒歪了…';
     }
 
+    /* 水面波形：三個不同頻率的 sin 疊加，沿 x 方向的高度偏移，amp 是目前振幅 */
     /* 水面波形：沿著 x 的高度偏移（SVG 單位），amp 是目前振幅 */
     function waveY(x, t, ph, amp) {
         var s = 0.5 * Math.sin(0.09 * x + 7.0 * t + ph[0]) +
@@ -93,22 +110,29 @@
         return amp * s;
     }
 
+    /* mount：遊戲進場點 */
     function mount(root, ctx) {
         var R = null;
 
+        /* round：開一局（只有一回合） */
         function round() {
             if (R) R.dispose();
             R = kit.round();
             var my = R;
             root.innerHTML = '';
 
+            /* prof 這局的流量曲線；tFull 倒到滿要多久 */
             var prof = makeProfile();
             var tFull = timeToFull(prof);
+            /* state：ready 準備/pour 倒水中/settle 水面平靜/zoom 鏡頭放大/verdict 結算 */
             var state = 'ready';               /* ready／pour／settle／zoom／verdict */
             var tDown = 0, tUp = 0;
+            /* level：放手時的水位 */
             var level = 0;                     /* 放手時的水位 */
             var overflow = false;
+            /* ph：水面波形的隨機相位 */
             var ph = [Math.random() * 6.28, Math.random() * 6.28, Math.random() * 6.28];
+            /* angle：水壺傾斜角，用平滑追蹤目標角度的方式慢慢轉 */
             var angle = 0;                     /* 水壺傾斜角（度），平滑追蹤目標角 */
             var fullTimer = null;
 
@@ -118,6 +142,7 @@
             root.appendChild(hint);
             root.appendChild(field);
 
+            /* SVG 畫布與各個部分：水、水面線、杯子、目標線、刻度尺、水柱、水壺 */
             var svg = kit.svg('svg', { 'class': 'pour-svg', viewBox: '0 0 ' + W + ' ' + H }, field);
             var gWater = kit.svg('g', {}, svg);
             var water = kit.svg('path', { 'class': 'pour-water' }, gWater);
@@ -127,6 +152,7 @@
             kit.svg('path', { 'class': 'pour-glass-shine', d: 'M ' + (GX0 + 12) + ' ' + (RIM + 30) + ' V ' + (RIM + 200) }, gGlass);
             var gTarget = kit.svg('g', { 'class': 'pour-target' }, svg);       /* 結算才顯示 */
             var tline = kit.svg('line', { 'class': 'pour-target__line', x1: 0, x2: W, y1: YT, y2: YT }, gTarget);
+            /* view：目前鏡頭範圍；結算放大時，水體只畫到鏡頭附近，免得超大圖形讓瀏覽器算圖超時 */
             var view = { x: 0, y: 0, w: W, h: H };          /* 目前鏡頭範圍；結算放大時水體只畫到鏡頭附近，免得超大圖形讓瀏覽器算圖超時 */
             var gRuler = kit.svg('g', { 'class': 'pour-ruler' }, svg);
             /* 水壺＋水柱 */
@@ -141,6 +167,7 @@
             var SPOUT_X = (GX0 + GX1) / 2, SPOUT_Y0 = 30, SPOUT_Y1 = 84;     /* 水壺壺嘴：待機位置／倒水位置 */
 
             /* 結算放大時：水面、水體、目標線只畫到「鏡頭範圍左右各多一個寬度、往下兩個高度」 */
+            /* 結算放大時：水面、水體、目標線只畫到「鏡頭範圍左右各多一個寬度、往下兩個高度」 */
             function fitWide(ys) {
                 var x0 = view.x - view.w, x1 = view.x + view.w * 2, yb = Math.min(GB, view.y + view.h * 2);
                 surf.setAttribute('d', 'M ' + x0 + ' ' + ys + ' L ' + x1 + ' ' + ys);
@@ -148,12 +175,14 @@
                 tline.setAttribute('x1', x0); tline.setAttribute('x2', x1);
             }
 
+            /* 水位／水面的繪製（每個畫面更新；結果不靠它，結果由 levelAt 純函式算出） */
             /* ─── 水位／水面的繪製（每影格；結果不靠它）─── */
             function curL(now) {
                 if (state === 'pour') return Math.min(1, levelAt(prof, (now - tDown) / 1000));
                 if (state === 'ready') return 0;
                 return level;
             }
+            /* 畫一個畫面：算出水位、水面波形（倒水中有波動、放手後振幅指數衰減到 0）、水壺角度與水柱 */
             function draw(now) {
                 var L = curL(now);
                 var amp = 0;
@@ -168,6 +197,7 @@
                 } else {
                     var pts = [];
                     /* 整體上下晃一點點＋每個點的高頻雜訊，故意讓水面看起來「抖」 */
+                    /* 整體上下晃一點點＋每個點的高頻雜訊，故意讓水面看起來「抖」 */
                     var bob = amp * 0.45 * Math.sin(t * 31);
                     for (var x = GX0; x <= GX1 + 0.1; x += 5) {
                         var jit = amp ? (Math.random() - 0.5) * amp * 0.5 : 0;
@@ -175,10 +205,12 @@
                     }
                     var line = pts.map(function (p, i) { return (i ? 'L ' : 'M ') + p[0].toFixed(1) + ' ' + p[1].toFixed(2); }).join(' ');
                     surf.setAttribute('d', line);
+                    /* 水體：水面線往下封到杯底 */
                     /* 水體：水面線往下封到杯底，左右拉很寬，鏡頭放大後不會看到邊 */
                     water.setAttribute('d', 'M ' + GX0 + ' ' + GB + ' L ' + GX0 + ' ' + pts[0][1].toFixed(2) + ' L ' + line.substring(2) +
                         ' L ' + GX1 + ' ' + GB + ' Z');
                 }
+                /* 水壺與水柱 */
                 /* 水壺與水柱 */
                 var targetAng = state === 'pour' ? -38 : 0;
                 angle += (targetAng - angle) * 0.25;
@@ -203,9 +235,11 @@
                     splash.forEach(function (c) { c.style.display = 'none'; });
                 }
             }
+            /* my.loop：每個畫面更新一次 */
             my.loop(function (now) { draw(now); if (state === 'zoom' || state === 'verdict') return false; });
             draw(performance.now());
 
+            /* 按住倒水／放手：kit.hold 處理「按住／放開」，切到背景一律視為放開 */
             /* ─── 按住倒水／放手 ─── */
             var holder = kit.hold(field, {
                 enabled: function () { return state === 'ready'; },
@@ -215,12 +249,14 @@
                     hint.textContent = '倒到八分滿，放手！';
                     Sfx.pourStart();
                     /* 保底：水滿了自動停（溢出），用 setTimeout，不靠 rAF */
+                    /* 保底：水滿了自動停（溢出），用 setTimeout，不靠 rAF */
                     fullTimer = my.after(tFull * 1000 + 30, function () { if (state === 'pour') stop(performance.now(), true); });
                 },
                 up: function (e) { if (state === 'pour') stop(e ? kit.evT(e) : performance.now(), false); }
             });
             my.onDispose(function () { holder.destroy(); Sfx.pourStop(); });
 
+            /* 停止倒水：用事件時間算出水位（不受畫面卡頓影響） */
             function stop(t, full) {
                 if (state !== 'pour') return;
                 my.cancel(fullTimer);
@@ -235,6 +271,7 @@
                 G.debug.last = { sec: sec, level: level, err: (level - TARGET) * 100 };
             }
 
+            /* 結算：先亮出目標線，再 ZOOM IN 放大到目標線與水面中間 */
             /* ─── 結算：先亮出目標線，再 ZOOM IN ─── */
             function startZoom() {
                 if (state !== 'settle') return;
@@ -263,6 +300,7 @@
                     /* 放大到杯壁已經在鏡頭外時就不畫（省下超大圖形的算圖）；字也跟著縮 */
                     gGlass.style.display = vh < H * 0.5 ? 'none' : '';
                 }
+                /* my.tween：鏡頭放大動畫；倍率用指數內插，放大感覺比較均勻 */
                 my.tween(ZOOM_MS, function (e) {
                     /* 倍率用指數內插，放大感覺比較均勻 */
                     var vh = Math.exp(Math.log(from.vh) + (Math.log(to.vh) - Math.log(from.vh)) * e);
@@ -274,6 +312,7 @@
                 });
             }
 
+            /* 刻度尺：以目標線為 0%，往上是「多」(+)、往下是「少」(−)，刻度文字用 HTML 疊上去（SVG 文字在大倍率下，瀏覽器會算圖超時） */
             /* 刻度尺：以目標線為 0%，往上是「多」(+)、往下是「少」(−) */
             function drawRuler(win, yTarget, ySurf) {
                 var step = stepFor(win);
@@ -305,6 +344,7 @@
                 gRuler.classList.add('pour-ruler--on');
             }
 
+            /* 結算橫幅：顯示誤差評語與再來一次 */
             /* ─── 結算橫幅 ─── */
             function verdict(errPct, err) {
                 state = 'verdict';
@@ -321,6 +361,7 @@
                 field.appendChild(h('div', { 'class': 'pour-verdict', attrs: { 'data-sfx': sfx } }, kids));
             }
 
+            /* G.debug：測試用後門，pour(ms) 可模擬按住 ms 毫秒 */
             G.debug = {
                 last: null,
                 prof: prof,
@@ -347,12 +388,15 @@
         round();
     }
 
+    /* 遊戲身分證 */
     var G = {
         id: ID,
         name: '倒到八分滿',
         rule: '按住畫面把水倒進杯子，倒到杯子的「八分滿」（高度的 80%）就放手。杯子沒有刻度，水面也一直在抖，只能靠感覺！只有一次機會，放手後會 ZOOM IN 放大看你差了幾 %。',
         mount: mount,
+        /* test 匯出純函式給 Node 自動測試 */
         test: { makeProfile: makeProfile, levelAt: levelAt, timeToFull: timeToFull, flowAt: flowAt, zoomWindow: zoomWindow, stepFor: stepFor, rating: rating, TARGET: TARGET }
     };
+    /* 登記到遊戲清單 */
     Reaction.register(G);
 })();
