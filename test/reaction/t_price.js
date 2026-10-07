@@ -1,6 +1,9 @@
-const { game } = require('./load.js');
+const { game, rng, seedOf } = require('./load.js');
 const G = game('reaction_price.js'); const T = G.test;
 let bad = 0; const ok = (c, m) => { if (!c) { bad++; if (bad < 20) console.log('FAIL', m); } };
+// 出題用固定種子的亂數（test/reaction/load.js 的 rng）：每次跑的題目都一樣，下面那些統計才不會偶爾因為運氣不好而失敗。
+// 想確認「換任何種子都過」：用環境變數 SEED 換種子連跑很多次（PowerShell：$env:SEED = 7; node test/reaction/t_price.js）。
+const SEED = seedOf(20261007); const rnd = rng(SEED);
 const DIG = { 零: 0, 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 壹: 1, 貳: 2, 參: 3, 肆: 4, 伍: 5, 陸: 6, 柒: 7, 捌: 8, 玖: 9 };
 const UNIT = { 十: 10, 百: 100, 千: 1000, 拾: 10, 佰: 100, 仟: 1000 };
 function parseChunk(s) { let total = 0, cur = 0; for (const ch of s) { if (ch in DIG) { if (ch !== '零') cur = DIG[ch]; } else if (ch in UNIT) { total += (cur || 1) * UNIT[ch]; cur = 0; } } return total + cur; }
@@ -34,7 +37,7 @@ const res = {};
 for (let lv = 1; lv <= 30; lv++) {
   const P = T.paramsFor(lv); let kinds = {}, gaps = [], steps = [], lowOrigCheaper = 0, N = 300, formalCnt = 0;
   for (let k = 0; k < N; k++) {
-    const q = T.makeQuestion(lv); cnt++;
+    const q = T.makeQuestion(lv, rnd); cnt++;
     if (q.tries < 0) fallback++;
     const [A, B] = q.tags;
     const pa = T.payOf(A), pb = T.payOf(B);
@@ -68,6 +71,17 @@ for (let lv = 1; lv <= 30; lv++) {
 ok(fallback === 0, 'fallback question never used (' + fallback + ')');
 ok(memberSeen > 0, 'member decoy appears');
 ok(res[1].avgGap > 200 && res[10].avgGap < 100 && res[20].avgGap <= 10 && res[25].avgGap <= 10, 'average gaps follow the schedule');
-ok([1, 5, 10, 20].every(l => res[l].lowCheaper > 0.3 && res[l].lowCheaper < 0.7), 'which card is cheaper is random (neither shortcut works)');
+// 「便宜的是原價低的那張」的比例：不是剛好 50%——題目是先隨機決定哪張比較便宜、再挑出「原價低的那張折扣比例比較小」的組合，
+// 用 6000 題量過：第 1 關約 64%、第 2、3 關約 60%、第 5 關約 56%、第 8 關約 52%、第 10 關起約 50%。
+// 只要不是接近 0% 或 100%（那就變成「永遠選原價低的」或「永遠選原價高的」的必勝捷徑）就好，所以界線仍然訂在 0.3～0.7。
+// 每關只抽 300 題的話標準差約 0.028，第 1 關的 0.64 離上界 0.7 只有 2 個標準差（大約每 25 次執行會失敗 1 次），
+// 所以這個檢查另外每關抽 2000 題（標準差約 0.011，第 1 關離上界 5 個標準差以上）。
+const SHORTCUT_N = 2000, lowShare = {};
+for (const l of [1, 5, 10, 20]) {
+  let lowCheap = 0;
+  for (let k = 0; k < SHORTCUT_N; k++) { const [A, B] = T.makeQuestion(l, rnd).tags; const lowO = A.orig < B.orig ? A : B, highO = lowO === A ? B : A; if (lowO.final < highO.final) lowCheap++; }
+  lowShare[l] = lowCheap / SHORTCUT_N;
+}
+ok([1, 5, 10, 20].every(l => lowShare[l] > 0.3 && lowShare[l] < 0.7), 'which card is cheaper is random (neither shortcut works): ' + [1, 5, 10, 20].map(l => 'lv' + l + ' ' + (lowShare[l] * 100).toFixed(1) + '%').join(', ') + ' (seed ' + SEED + ')');
 ok(res[1].avgSteps === 1 && res[10].avgSteps > res[3].avgSteps, 'later levels combine more discounts');
-console.log(bad ? 'FAILED ' + bad : 'ALL PASS', cnt);
+console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS', cnt);

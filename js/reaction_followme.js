@@ -26,6 +26,10 @@
     'use strict';
 
     var ID = 'followme';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 followme 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 200 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -319,6 +323,7 @@
                 my.after(1900, function () {
                     var back = kit.resumeFrom(level);
                     kit.result(root, {
+                        score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: cleared + ' 關', label: cleared >= 8 ? '記路高手！' : (cleared >= 4 ? '方向感不錯！' : '再試一次，會更穩！'),
                         lines: ['第 ' + level + ' 關：' + (why === 'trap' ? '走進了陷阱格' : '步數用完沒到終點'), '要走 ' + L.steps + ' 步，陷阱 ' + L.trapList.length + ' 個'],
                         isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail', onAgain: function () { round(1); },
@@ -352,6 +357,8 @@
         name: '照著走',
         rule: '先看小人示範走到有旗子的地方，要記住旗子和陷阱的位置。然後小人回到起點，旗子和陷阱都消失。用「左方、前進、右方」自己走，步數要跟示範一樣。不要踩到陷阱，步數用完要站在剛才的終點！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { makeTraps: makeTraps, stepsWanted: stepsWanted, trapsWanted: trapsWanted, rowsFor: rowsFor, colsFor: colsFor, bfs: bfs, randomShortestPath: randomShortestPath, applyMoves: applyMoves, makeLevel: makeLevel, cellKey: cellKey, MOVES: MOVES, LEVEL_RAMP: LEVEL_RAMP }
     };

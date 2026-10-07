@@ -17,6 +17,10 @@
     'use strict';
 
     var ID = 'mirror';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 mirror 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 200 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -182,6 +186,7 @@
                     my.after(700, function () {
                         var back = kit.resumeFrom(level);
                         kit.result(root, {
+                            score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: cleared + ' 關', label: cleared >= 8 ? '腦袋轉得真快！' : (cleared >= 4 ? '適應得不錯！' : '再試一次，會更順！'),
                             lines: ['第 ' + level + ' 關碰牆 ' + BUMPS + ' 次'], isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail', onAgain: function () { round(1); },
                             resume: { level: back, run: function () { round(back); } }
@@ -291,6 +296,8 @@
         name: '左右顛倒',
         rule: '手指往右，球卻往左（左右是反的）。拖動手指，帶小球沿著通道走到終點，不要碰到牆。碰牆三次就結束，越後面通道越窄、控制越反！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { hwFor: hwFor, bendsFor: bendsFor, gainFor: gainFor, flipBoth: flipBoth, mapDelta: mapDelta, distSeg: distSeg, distToPolyline: distToPolyline, turnDeg: turnDeg, makeCenterline: makeCenterline, inCorridor: inCorridor, BALL_R: BALL_R, MAX_TURN_DEG: MAX_TURN_DEG, LEVEL_RAMP: LEVEL_RAMP }
     };

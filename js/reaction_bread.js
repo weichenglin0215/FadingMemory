@@ -18,6 +18,9 @@
    · 判定：用多邊形裁切（Sutherland–Hodgman）算出左右兩塊的面積，換成公克（四捨五入到 0.1 g），
      用「顯示在秤上的數字」算差距，所以玩家看到的數字跟判定一致。
    · 成績＝通過幾關，只要有一關超過標準就結束。
+   · 畫面上的百分比一律 4 位小數：兩邊重量差距是「用秤上顯示的兩個重量算出來的真實數字」，
+     玩家自己拿計算機也算得出來，所以照實顯示、不偽造尾數（過關標準、切點位置也是真實的值）。
+     秤上的克數是遊戲定義的 0.1 公克刻度，維持一位小數。
    ═══════════════════════════════════════════════════════════════════ */
 
 /* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
@@ -25,6 +28,10 @@
     'use strict';
 
     var ID = 'bread';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 bread 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 200 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -169,7 +176,7 @@
             var gKnife = null, pieces = [];
 
             function setInfo() {
-                info.textContent = '第 ' + level + ' 關　兩邊重量差距要在 ' + thrFor(level).toFixed(2) + '% 以內';
+                info.textContent = '第 ' + level + ' 關　兩邊重量差距要在 ' + thrFor(level).toFixed(4) + '% 以內';
                 ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))]));
             }
 
@@ -193,8 +200,8 @@
                 /* 主控台印出這關的形狀、總重、標準、剛好對半的位置，方便驗證 */
                 try {
                     var bal = balanceX(B.pts);
-                    console.info('[秤麵包重量] 第 ' + level + ' 關 形狀 ' + ({ rect: '長方形', trap: '梯形', tri: '三角形' })[B.type] + '，總重 ' + grams + ' g，標準 ' + thrFor(level).toFixed(2) + '%，' +
-                        '剛好對半的切點在寬度 ' + (bal / W * 100).toFixed(2) + '% 處，目前刀在 ' + (knife / W * 100).toFixed(2) + '%');
+                    console.info('[秤麵包重量] 第 ' + level + ' 關 形狀 ' + ({ rect: '長方形', trap: '梯形', tri: '三角形' })[B.type] + '，總重 ' + grams + ' g，標準 ' + thrFor(level).toFixed(4) + '%，' +
+                        '剛好對半的切點在寬度 ' + (bal / W * 100).toFixed(4) + '% 處，目前刀在 ' + (knife / W * 100).toFixed(4) + '%');
                 } catch (e) { }
             }
             /* 移動刀：clamp 限制在麵包範圍內（0～W） */
@@ -315,22 +322,23 @@
                     cleared = level;
                     if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
                     ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))]));
-                    info.textContent = '差距 ' + wc.diff.toFixed(2) + '%（標準 ' + thr.toFixed(2) + '%）過關！';
+                    info.textContent = '差距 ' + wc.diff.toFixed(4) + '%（標準 ' + thr.toFixed(4) + '%）過關！';
                     info.classList.add('bk-info--ok');
                     Sfx.play('win');
                     my.after(G.dev.next || NEXT_MS, function () { info.classList.remove('bk-info--ok'); level++; drawBread(); });
                 } else {
-                    info.textContent = '差距 ' + wc.diff.toFixed(2) + '%，超過標準 ' + thr.toFixed(2) + '%';
+                    info.textContent = '差距 ' + wc.diff.toFixed(4) + '%，超過標準 ' + thr.toFixed(4) + '%';
                     info.classList.add('bk-info--bad');
                     var back = kit.resumeFrom(level);
                     my.after(1600, function () {
                         info.classList.remove('bk-info--bad');
                         kit.result(root, {
+                            score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: cleared + ' 關', label: '差太多了',
                             lines: [
                                 '第 ' + level + ' 關：左 ' + wc.wL.toFixed(1) + ' g、右 ' + wc.wR.toFixed(1) + ' g' + (heavier ? '（' + heavier + '比較重）' : ''),
-                                '差距 ' + wc.diff.toFixed(2) + '%，標準是 ' + thr.toFixed(2) + '%',
-                                '你切在寬度 ' + myPct.toFixed(1) + '% 處，剛好對半是 ' + balPct.toFixed(1) + '% 處'
+                                '差距 ' + wc.diff.toFixed(4) + '%，標準是 ' + thr.toFixed(4) + '%',
+                                '你切在寬度 ' + myPct.toFixed(4) + '% 處，剛好對半是 ' + balPct.toFixed(4) + '% 處'
                             ],
                             isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail',
                             onAgain: function () { round(1); },
@@ -363,6 +371,8 @@
         name: '秤麵包重量',
         rule: '把麵包切成左右兩半，兩半會掉到左右兩個電子秤上秤重。拖曳手指決定刀的位置（慢慢移動可以微調，也可以按 ◀ ▶），按「切下去」就切。兩邊重量差距要在標準以內才能過關：第 1 關 10%，每關少 1%，第 2 關開始麵包會變成斜邊的梯形，越來越斜，後面還有三角形，不能再切正中間！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* dev 是開發用設定 */
         dev: { next: null },          /* 開發驗證用：延長過關畫面停留時間，正式遊戲不會設定 */
         /* test 匯出純函式給 Node 自動測試 */

@@ -18,6 +18,10 @@
     'use strict';
 
     var ID = 'teacher';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 teacher 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連對題數', min: 1, max: 1000 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -201,6 +205,7 @@
                 my.after(FAIL_SHOW_MS, function () {
                     var back = kit.resumeFrom(i);
                         kit.result(root, {
+                        score: streak,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: String(streak), label: rating(streak),
                         lines: [msg], isNew: isNew && streak > 0, sfx: streak >= 8 ? 'win' : 'fail', onAgain: function () { round(1); },
                             resume: { level: back, run: function () { round(back); } }
@@ -241,6 +246,8 @@
         name: '老師說',
         rule: '老師會下指令。只有開頭有「老師說」的才要照做，例如「老師說 點左邊」就點左邊；沒說「老師說」就什麼都不要點。後面還會有「點相反的」，要點反方向。錯一次就結束！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { pSay: pSay, limitFor: limitFor, makeCommand: makeCommand, expectedAction: expectedAction, textOf: textOf, why: why, rating: rating, sameCmd: sameCmd, NO_SAY_RUN_MAX: NO_SAY_RUN_MAX, OPPOSITE_FROM: OPPOSITE_FROM, RAMP_N: RAMP_N, DIRS: DIRS, P_SAY_START: P_SAY_START, P_SAY_END: P_SAY_END, TIME_START: TIME_START, TIME_END: TIME_END }
     };

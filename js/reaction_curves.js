@@ -27,6 +27,10 @@
     'use strict';
 
     var ID = 'curves';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 curves 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 200 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -349,7 +353,7 @@
 
             /* 公布結果：答對進下一關，答錯結算 */
             function verdict(ok, first) {
-                var msg = '長度：左 ' + Lv.L.len.toFixed(0) + '、右 ' + Lv.R.len.toFixed(0) + '（差 ' + ((Lv.ratio - 1) * 100).toFixed(1) + '%）';
+                var msg = '長度：左 ' + Lv.L.len.toFixed(0) + '、右 ' + Lv.R.len.toFixed(0) + '（差 ' + ((Lv.ratio - 1) * 100).toFixed(4) + '%）';
                 if (ok) {
                     cleared = level;
                     if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
@@ -369,8 +373,9 @@
                     var failLevel = level, back = kit.resumeFrom(failLevel);
                     my.after(2300, function () {
                         kit.result(root, {
+                            score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: cleared + ' 關', label: '看走眼了',
-                            lines: ['第 ' + level + ' 關長度差 ' + ((Lv.ratio - 1) * 100).toFixed(1) + '%', (Lv.shortSide === 'L' ? '左' : '右') + '邊才是比較短的'],
+                            lines: ['第 ' + level + ' 關長度差 ' + ((Lv.ratio - 1) * 100).toFixed(4) + '%', (Lv.shortSide === 'L' ? '左' : '右') + '邊才是比較短的'],
                             isNew: newRec, sfx: cleared >= 6 ? 'win' : 'fail',
                             onAgain: function () { round(1); },
                             resume: { level: back, run: function () { round(back); } }
@@ -405,6 +410,8 @@
         name: '誰先到？',
         rule: '黑色畫面上有左右兩條彎彎曲曲的尋寶路線，判斷哪一條比較短，按下方的按鈕。按下去之後，兩顆球會用一樣的速度沿著路線滑下來，看看誰先到。第 1 關長度差 30%，每關縮小 3%，後面還會變成虛線，轉彎越來越多！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { segDist: segDist, polyOk: polyOk, diffFor: diffFor, kBase: kBase, yjitFor: yjitFor, makeShape: makeShape, buildPath: buildPath, solveAlpha: solveAlpha, validRope: validRope, makeLevel: makeLevel, speedFor: speedFor, dashFor: dashFor, pointAt: pointAt, pathLen: pathLen, MIN_SWING: MIN_SWING, CLEAR_PX: CLEAR_PX, SEP_PX: SEP_PX, SIDE_PAD: SIDE_PAD, PAD_TOP: PAD_TOP, PAD_BOT: PAD_BOT, VW: VW }
     };

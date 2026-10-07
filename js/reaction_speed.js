@@ -1,7 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_speed.js — 秒反應・零秒出手
    從 6.000 開始倒數，數字倒數到 3.000 秒就會隱藏，剩下的 3 秒要自己默數，
-   算準 0 秒的瞬間按下按鈕；分數＝跟 0 秒差了幾秒（越小越好，畫面一律顯示到小數點後三位）。
+   算準 0 秒的瞬間按下按鈕；分數＝跟 0 秒差了幾秒（越小越好）。
+   · 倒數的數字（即時畫面）顯示到小數點後 4 位 X.XXXX 秒：那是「真實的剩餘時間」，不偽造
+     （偽造尾數會讓倒數的數字忽大忽小，不能用在連續跳動的數字上）；
+   · 「成績」（結算畫面、最佳紀錄、世界排行榜）一律是秒、小數點後 4 位，
+     而且第 3、4 位不會是 0（Leaderboard.fake4，結算時只產生一次，之後到處都用同一個數字）。
+   · 有接世界排行榜：score 設定在檔案最下面的 Reaction.register，結算時呼叫 Leaderboard.submit。
    ═══════════════════════════════════════════════════════════════════ */
 
 /* （這是最簡單的一款遊戲，適合當入門範例：沒有關卡，只有 mount → round → finish 三個函式；共通結構見 js/reaction_sticks.js 開頭的「新手導讀」） */
@@ -15,12 +20,19 @@
     var TOTAL = 6000;    /* 倒數總長（毫秒，內部計時用；畫面一律換算成秒顯示） */
     var HIDE_AT = 3000;  /* 倒數到剩這麼多毫秒時，數字開始隱藏 */
 
-    /* 內部一律用毫秒整數比大小（精準、不會有浮點誤差），只有顯示才換算成 X.XXX 秒 */
-    function sec(ms) { return (ms / 1000).toFixed(3); }
-    function fmtBest(v) { return v == null ? '' : '最佳差 ' + sec(v) + ' 秒'; }
+    /* 倒數畫面用：毫秒 → X.XXXX 秒（即時顯示的是真實的剩餘時間，4 位小數，不偽造） */
+    function sec(ms) { return (ms / 1000).toFixed(4); }
+    /* 成績規格：結算畫面、最佳紀錄、世界排行榜共用（欄位說明見 js/leaderboard.js 開頭）。
+       成績單位是「秒」、小數 4 位；比大小直接比這個數字，畫面上看到的就是存起來的那個數字。
+       min／max 要跟資料庫 MF_games 的 speed 那一列一致（supabase/MF_leaderboard.sql）。 */
+    var SCORE = { better: 'min', decimals: 4, format: '{v} 秒', label: '與 0 秒的差', min: 0, max: 60 };
+    function fmtBest(v) { return v == null ? '' : '最佳差 ' + Leaderboard.fmt(SCORE, v); }
 
     /* mount：遊戲進場點 */
     function mount(root, ctx) {
+        /* 舊版把最佳紀錄存成「毫秒整數」（例如 123），這一版改存「秒、小數 4 位」（0.1237）：
+           第一次進來把舊紀錄換算一次（只換一次，見 reaction_core.js 的 migrateBest） */
+        Reaction.migrateBest(ID, function (ms) { return Leaderboard.fake4(ms / 1000); });
         /* raf：保存 requestAnimationFrame 的編號，之後才能取消 */
         var raf = null;
 
@@ -42,13 +54,13 @@
             /* 每一影格都重新算「現在剩幾毫秒」，不是遞減一個計數器變數——這樣不管
                這一影格跟上一影格之間實際間隔多久（不同裝置的更新頻率不一樣），
                算出來的剩餘時間永遠準確對應真實經過的時間，不會因為掉幀而計時跑掉。
-               remain > HIDE_AT - 1：剩餘時間還大於 3000 毫秒（HIDE_AT）才顯示數字，
+               remain >= HIDE_AT：剩餘時間還有 3000 毫秒（HIDE_AT）以上才顯示數字（最後看到的是 3.0000 秒附近），
                一跨過這個門檻，textContent 直接設成空字串，數字瞬間消失。 */
             /* tick：每個畫面更新時呼叫，更新倒數數字 */
             function tick(now) {
                 var el = now - t0;
                 var remain = Math.max(0, TOTAL - el);
-                num.textContent = remain > HIDE_AT - 1 ? sec(remain) : '';
+                num.textContent = remain >= HIDE_AT ? sec(remain) : '';
                 /* requestAnimationFrame(tick)：請瀏覽器在下一個畫面更新時再呼叫 tick，形成持續更新的迴圈 */
                 if (!clicked) raf = requestAnimationFrame(tick);
             }
@@ -65,29 +77,37 @@
                 clicked = true;
                 if (window.Sfx) Sfx.play('click');
                 cancelAnimationFrame(raf);
-                /* 算出差了幾毫秒：現在時間 − 開始時間 − 總長度（正＝慢了，負＝快了） */
-                finish(Math.round(performance.now() - t0 - TOTAL));
+                /* 算出差了幾毫秒：現在時間 − 開始時間 − 總長度（正＝慢了，負＝快了）。
+                   不再四捨五入成整數毫秒——保留到 0.1 毫秒，成績才有 4 位小數（秒）可以用 */
+                finish(performance.now() - t0 - TOTAL);
             });
         }
 
-        /* finish：結算畫面 */
+        /* finish：結算畫面。diffMs 是跟 0 秒差的毫秒數（可以有小數） */
         function finish(diffMs) {
             var abs = Math.abs(diffMs);
-            var label = diffMs === 0 ? '完美！剛剛好 0 秒' : diffMs > 0 ? '慢了 ' + sec(abs) + ' 秒' : '快了 ' + sec(abs) + ' 秒';
+            /* 最終成績（秒、小數 4 位、第 3／4 位不為 0）：在這裡只產生「一次」，
+               後面的畫面、最佳紀錄、排行榜全部用這同一個數字，不會出現同一局顯示不同尾數 */
+            var score = Leaderboard.fake4(abs / 1000);
+            var label = score === 0 ? '完美！剛剛好 0 秒' : diffMs > 0 ? '慢了 ' + Leaderboard.fmtNum(score, 4) + ' 秒' : '快了 ' + Leaderboard.fmtNum(score, 4) + ' 秒';
+            console.log('零秒出手：實際差 ' + abs.toFixed(3) + ' 毫秒（' + (abs / 1000).toFixed(6) + ' 秒）→ 成績 ' + Leaderboard.fmtNum(score, 4) + ' 秒');
             /* 這款遊戲是「跟 0 秒差越少越好」，所以傳給 setBest 的比較函式是
                v < b（新差值比舊紀錄小才算更好）——跟「神準落下」的分數（越大越好）
                方向相反，這就是 reaction_core.js 的 setBest 要求呼叫端自己傳比較
                函式、而不是寫死「數字越大越好」的原因。 */
-            var isNew = Reaction.setBest(ID, abs, function (v, b) { return v < b; });
+            var isNew = Reaction.setBest(ID, score, function (v, b) { return v < b; });
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
             root.innerHTML = '';
+            /* 評語與結算音效的門檻用「實際差了幾毫秒」判斷（≤30 毫秒＝超級好、≤150 毫秒＝過關） */
             root.appendChild(h('div', { 'class': 'rx-result', attrs: { 'data-sfx': abs <= 30 ? 'perfect' : (abs <= 150 ? 'win' : 'neutral') } }, [
-                h('div', { 'class': 'rx-result__num', text: sec(abs) + ' 秒' }),
+                h('div', { 'class': 'rx-result__num', text: Leaderboard.fmt(SCORE, score) }),
                 h('div', { 'class': 'rx-result__label', text: label }),
                 isNew ? h('div', { 'class': 'hint hint--ok', text: '新紀錄！' }) : null,
                 h('button', { 'class': 'btn btn--primary', text: '再挑戰一次', on: { click: round } })
             ]));
+            /* 送世界排行榜（非同步，不會卡畫面；進榜了會自己跳出恭喜） */
+            Leaderboard.submit(ID, score);
         }
 
         round();
@@ -97,7 +117,9 @@
     Reaction.register({
         id: ID,
         name: '零秒出手',
-        rule: '請在心裡默數至零，快速點擊按鈕，看看你差了幾秒。從 6.000 開始倒數，畫面會顯示 X.XXX 秒；但倒數到 3.000 秒之後，數字就會隱藏起來，不讓你看到，剩下的 3 秒要靠自己在心裡默數。',
-        mount: mount
+        rule: '請在心裡默數至零，快速點擊按鈕，看看你差了幾秒。從 6.0000 開始倒數，畫面會顯示 X.XXXX 秒；但倒數到 3.0000 秒之後，數字就會隱藏起來，不讓你看到，剩下的 3 秒要靠自己在心裡默數。',
+        mount: mount,
+        /* 世界排行榜的成績規格（資料庫 MF_games 裡 speed 那一列要一致） */
+        score: SCORE
     });
 })();

@@ -20,6 +20,10 @@
     'use strict';
 
     var ID = 'diff';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 diff 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 200 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -260,6 +264,7 @@
                 var failLevel = levelNo, back = kit.resumeFrom(failLevel), secs = Math.round((performance.now() - t0) / 1000);
                 my.after(2200, function () {
                     kit.result(root, {
+                        score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: cleared + ' 關', label: '點錯兩次了',
                         lines: ['第 ' + failLevel + ' 關找到 ' + found + ' / ' + N_DIFF + '，花了 ' + secs + ' 秒'],
                         isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail',
@@ -291,6 +296,8 @@
         name: '哪裡怪怪的',
         rule: '畫面分成上下兩格，各有 10 個一樣的圖形，其中 5 個的大小、顏色或位置不一樣。上格、下格的圖形都可以點，找齊 5 個就進下一關，而且差異會越來越小。不限時間，慢慢找！但是每一關第一次點到沒有差異的圖形不要緊，第二次點錯就結束了。',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { amounts: amounts, MISTAKES_MAX: MISTAKES_MAX, makeLevel: makeLevel, itemIn: itemIn, polyPoints: polyPoints, N_DIFF: N_DIFF, N_SHAPES: N_SHAPES, KINDS: KINDS, LEVEL_RAMP: LEVEL_RAMP }
     };

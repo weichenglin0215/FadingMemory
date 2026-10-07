@@ -11,9 +11,13 @@
        任何 1px 的縫、任何一個角落都不會被漏掉。
        圓的半徑會少算 0.5px（保守），所以只有「整格幾乎都被蓋到」才算塗到，不會因為
        邊緣反鋸齒留下肉眼看得到的白線卻被當成塗完。
-   · 手指停下來、離開畫面 IDLE_HINT_MS 後如果還沒塗完，會在漏掉的地方閃出紅色圓圈
-       （用連通區域找出每一處漏掉的點），不用玩家用眼睛去找 1px 的白點。
-   · 成績＝沾油漆次數（越少越好），另外算「塗料利用率」＝方塊面積 ÷ 所有筆畫掃過的面積總和
+   · 不會自動告訴玩家哪裡還沒塗到：要玩家自己去找。真的找不到，可以按最下面的按鈕
+       「消耗三次沾漆，顯示未完成區域」：沾油漆次數 +HINT_COST（成績會變差），並在方塊上標出
+       「最大的一塊」還沒塗到的區域（紅色脈動圓圈，每按一次只標一處；下一筆開始畫就消失）。
+       找出區域用連通區域（holes）：每一處漏掉的點都能找到，不用玩家用眼睛去找 1px 的白點。
+   · 圓形畫筆變成虛線（沒有油漆了，要去沾）時，圓形右上方會出現一支油漆刷，上下點動提醒玩家來點圓形
+       （高度＝圓形直徑的 200%，圓形縮得很小時刷子最小 POINTER_MIN_H px）。
+   · 成績＝沾油漆次數（越少越好，用了提示的話含提示的次數），另外算「塗料利用率」＝方塊面積 ÷ 所有筆畫掃過的面積總和
        （重複塗到已塗的地方會讓利用率下降）。
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -22,6 +26,10 @@
     'use strict';
 
     var ID = 'paint';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 paint 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'min', decimals: 0, format: '{v} 次', label: '沾油漆', min: 1, max: 500 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -31,16 +39,21 @@
     var SQ = 400;                  /* 方塊邊長（邏輯 px） */
     /* 筆刷一開始直徑 80，每沾一次 ×0.85，最小 4 */
     var BRUSH_START = 80;         /* 第一次沾油漆之前的筆刷直徑 */
-    var SHRINK = 0.85;             /* 每沾一次，直徑 ×0.85 */
-    var BRUSH_MIN = 4;             /* 筆刷最小直徑（再小就畫不完了） */
+    var SHRINK = 0.88;             /* 每沾一次，直徑 ×0.85 */
+    var BRUSH_MIN = 3;             /* 筆刷最小直徑（再小就畫不完了） */
     /* 一次沾油漆可以刷幾倍方塊寬度的長度 */
-    var BUDGET_MULT = 3;           /* 一次沾油漆可以刷幾倍方塊寬度的長度 */
+    var BUDGET_MULT = 1;           /* 一次沾油漆可以刷幾倍方塊寬度的長度 */
     /* 遮罩判定時半徑少算 0.5px（保守：整格幾乎都被蓋到才算塗到） */
     var EDGE_SLACK = 0.5;          /* 遮罩半徑少算幾 px（保守判定） */
-    var IDLE_HINT_MS = 2200;       /* 放開後多久還沒塗完就標出漏掉的地方 */
+    var HINT_COST = 3;             /* 按「顯示未完成區域」要消耗幾次沾漆（直接加進沾油漆次數，成績會變差） */
+    var HINT_R_MIN = 22, HINT_R_MAX = 70;   /* 標出未完成區域的紅圈半徑範圍（px；區域越大圈越大） */
+    var HIT_MIN = 56;              /* 點擊區至少多大（px）：筆刷縮得很小時，圓形旁邊的空白也算點到 */
+    var POINTER_MIN_H = 52, POINTER_MAX_H = 160;   /* 油漆刷提示的高度範圍（px）；正常是圓形直徑的 2 倍 */
     var COLORS = ['#E8685A', '#4A90D9', '#3FA46A', '#9B59B6', '#F08A24', '#1FA2A6', '#D6478C'];
 
     function fmtBest(v) { return v == null ? '' : '最少 ' + v + ' 次'; }
+    /* 按鈕文字用中文數字（HINT_COST 改成 2 或 5，文字會跟著變） */
+    var NUM_CN = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
 
     /* 純函式：遮罩（也給 Node 測試用） */
     /* ═══ 純函式：遮罩（也給 Node 測試用）═══ */
@@ -83,25 +96,35 @@
         }
         return added;
     }
-    /* 找出沒塗到的連通區域（用深度優先搜尋 + 堆疊 stack），回傳各區域的質心，最大的排前面；用來在漏掉的地方閃紅圈 */
-    /* 找出沒塗到的連通區域（4 鄰接），回傳 [{x,y,size}]（質心），最大的在前，最多 limit 個 */
-    /* seen 記錄已處理的格子，stack 是待處理格子的堆疊（後進先出） */
+    /* 找出沒塗到的連通區域（用深度優先搜尋 + 堆疊 stack），回傳各區域的質心，最大的排前面；用來標出還沒塗到的地方 */
+    /* 找出沒塗到的連通區域（4 鄰接），回傳 [{x,y,size,px,py}]，最大的在前，最多 limit 個：
+       x,y＝質心；size＝格數；px,py＝「區域裡面、離質心最近的一格」的中心（環狀或彎曲的區域質心可能落在已經塗到的地方，
+       要標記區域就用 px,py 才一定指在還沒塗到的格子上） */
+    /* seen 記錄已處理的格子，stack 是待處理格子的堆疊（後進先出），order 依序記下這一區的格子（找代表點用） */
     function holes(m, limit) {
         var n = m.n, d = m.data, seen = new Uint8Array(n * n), out = [];
-        var stack = new Int32Array(n * n);
+        var stack = new Int32Array(n * n), order = new Int32Array(n * n);
         for (var s = 0; s < n * n; s++) {
             if (d[s] || seen[s]) continue;
             var sp = 0, sx = 0, sy = 0, cnt = 0;
             stack[sp++] = s; seen[s] = 1;
             while (sp) {
                 var p = stack[--sp], px = p % n, py = (p - px) / n;
+                order[cnt] = p;
                 sx += px; sy += py; cnt++;
                 if (px > 0 && !d[p - 1] && !seen[p - 1]) { seen[p - 1] = 1; stack[sp++] = p - 1; }
                 if (px < n - 1 && !d[p + 1] && !seen[p + 1]) { seen[p + 1] = 1; stack[sp++] = p + 1; }
                 if (py > 0 && !d[p - n] && !seen[p - n]) { seen[p - n] = 1; stack[sp++] = p - n; }
                 if (py < n - 1 && !d[p + n] && !seen[p + n]) { seen[p + n] = 1; stack[sp++] = p + n; }
             }
-            out.push({ x: sx / cnt + 0.5, y: sy / cnt + 0.5, size: cnt });
+            /* 代表點：這一區裡離質心最近的格子 */
+            var cx = sx / cnt, cy = sy / cnt, best = order[0], bestD = Infinity;
+            for (var i = 0; i < cnt; i++) {
+                var q = order[i], qx = q % n, qy = (q - qx) / n, dd = (qx - cx) * (qx - cx) + (qy - cy) * (qy - cy);
+                if (dd < bestD) { bestD = dd; best = q; }
+            }
+            var bx = best % n;
+            out.push({ x: cx + 0.5, y: cy + 0.5, size: cnt, px: bx + 0.5, py: (best - bx) / n + 0.5 });
         }
         out.sort(function (a, b) { return b.size - a.size; });
         return out.slice(0, limit || 20);
@@ -141,8 +164,9 @@
             /* last：目前這一筆的上一個點，沒有在畫＝null；pid 正在畫的手指 */
             var last = null;                     /* 目前這一筆的上一個點（方塊座標），沒有在畫＝null */
             var pid = null;
-            var idleTimer = null;
             var warnTimer = null;
+            var hints = 0;                       /* 用了幾次「顯示未完成區域」 */
+            var hintShown = false;               /* 目前方塊上有沒有正在顯示的未完成區域標記（下一筆開始畫就消失） */
 
             /* 建立畫面元素：資訊、方塊（canvas 畫布）、警語、油漆量長條、筆刷按鈕 */
             var info = h('div', { 'class': 'pa-info' });
@@ -170,10 +194,22 @@
             var gfill = gauge.firstChild;
             var brush = h('button', { 'class': 'pa-brush' });
             var brushLabel = h('div', { 'class': 'pa-brushlabel' });
-            var brushWrap = h('div', { 'class': 'pa-brushwrap' }, [brush]);
+            /* 油漆刷提示：用 SVG 畫（木柄、金屬環、刷毛），刷毛的顏色＝這一局的油漆色；平常隱藏，圓形變成虛線時才顯示（見 refresh） */
+            var pointer = h('div', { 'class': 'pa-pointer' });
+            var ps = kit.svg('svg', { 'class': 'pa-pointer__svg', viewBox: '0 0 50 100', preserveAspectRatio: 'xMidYMax meet' }, pointer);
+            kit.svg('rect', { 'class': 'pa-pt-handle', x: 19, y: 2, width: 12, height: 48, rx: 6 }, ps);
+            kit.svg('rect', { 'class': 'pa-pt-ferrule', x: 14, y: 48, width: 22, height: 14, rx: 2 }, ps);
+            var bristle = kit.svg('path', { 'class': 'pa-pt-bristle', d: 'M15 62 H35 C38 74 33 90 25 98 C17 90 12 74 15 62 Z' }, ps);
+            bristle.style.fill = color;
+            /* 畫筆的點擊區（圓形＋油漆刷提示都放在裡面）；放在下方操作區，圓形貼著下緣 */
+            var brushBox = h('div', { 'class': 'pa-brushbox' }, [brush, pointer]);
+            var brushWrap = h('div', { 'class': 'pa-brushwrap' }, [brushBox]);
+            /* 最下面的按鈕：消耗 HINT_COST 次沾漆，標出最大的一塊未完成區域 */
+            var hintBtn = h('button', { 'class': 'btn btn--line pa-hintbtn', text: '消耗' + (NUM_CN[HINT_COST] || HINT_COST) + '次沾漆，顯示未完成區域。' });
             zone.appendChild(gauge);
             zone.appendChild(brushWrap);
             zone.appendChild(brushLabel);
+            zone.appendChild(hintBtn);
             root.appendChild(info);
             root.appendChild(field);
             root.appendChild(zone);
@@ -184,7 +220,7 @@
             function refresh() {
                 var pct = paintedPct();
                 /* 沒塗完不顯示 100%：用無條件捨去 */
-                var shown = mask.left === 0 ? '100' : (Math.floor(pct * 10) / 10).toFixed(1);
+                var shown = mask.left === 0 ? '100.0000' : (Math.floor(pct * 10000) / 10000).toFixed(4);
                 info.textContent = '沾了 ' + dips + ' 次油漆　已塗 ' + shown + '%';
                 ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
                 gfill.style.width = (100 * budget / budgetMax).toFixed(1) + '%';
@@ -193,6 +229,19 @@
                 brush.style.borderColor = color;
                 brush.classList.toggle('pa-brush--empty', budget <= 0);
                 brushLabel.textContent = budget > 0 ? '油漆剩 ' + Math.round(100 * budget / budgetMax) + '%' : (dips === 0 ? '點圓形沾油漆' : '油漆用完了，點圓形再沾');
+                /* 點擊區：筆刷直徑，但至少 HIT_MIN px（圓形在框的正中間） */
+                var S = Math.max(D, HIT_MIN);
+                brushBox.style.width = brushBox.style.height = S + 'px';
+                /* 油漆刷提示：只在「圓形是虛線（要去沾油漆）」而且遊戲還沒結束時顯示。
+                   高度＝圓形直徑的 2 倍（限制在 POINTER_MIN_H～POINTER_MAX_H），寬度是高度的一半；
+                   筆尖（圖的底邊正中央）壓在圓形中心偏右下的位置，刷子往右上方傾斜，所以整支刷在圓形的右上方、一部分蓋在圓形上 */
+                var ph = Math.max(POINTER_MIN_H, Math.min(POINTER_MAX_H, D * 2));
+                pointer.style.height = ph + 'px'; pointer.style.width = (ph / 2) + 'px';
+                pointer.style.left = (S / 2 + 0.12 * D - ph / 4) + 'px';
+                pointer.style.top = (S / 2 + 0.4 * D - ph) + 'px';
+                pointer.classList.toggle('pa-pointer--on', budget <= 0 && state === 'play');
+                /* 提示按鈕：還沒塗任何東西、已經塗滿、或標記還在顯示時都不能按（避免白白消耗） */
+                hintBtn.disabled = !(state === 'play' && swept > 0 && mask.left > 0 && !hintShown);
             }
             /* 顯示警語一陣子後自動消失 */
             function showWarn(text) {
@@ -213,7 +262,8 @@
                 warn.classList.remove('pa-warn--on');
                 refresh();
             }
-            brush.addEventListener('pointerdown', function (e) { e.preventDefault(); dip(); });
+            brushBox.addEventListener('pointerdown', function (e) { e.preventDefault(); dip(); });
+            hintBtn.addEventListener('pointerdown', function (e) { e.preventDefault(); useHint(); });
 
             /* 畫 */
             /* ─── 畫 ─── */
@@ -266,7 +316,6 @@
                 g.beginPath(); g.arc(x, y, D / 2, 0, Math.PI * 2); g.fill();
                 stampDisc(mask, x, y, D / 2);
                 swept += Math.PI * D * D / 4;
-                my.cancel(idleTimer);
                 clearMarks();
                 refresh();
                 if (mask.left === 0) complete();
@@ -297,7 +346,6 @@
             function onUp(e) {
                 if (e.pointerId !== pid) return;
                 pid = null; last = null;
-                armIdle();
             }
             /* 綁定手指事件；setPointerCapture 讓手指移出方塊外也持續收到事件 */
             field.addEventListener('pointerdown', onDown);
@@ -312,25 +360,28 @@
                 field.removeEventListener('pointercancel', onUp);
             });
 
-            /* 漏掉的地方：手指停下來一陣子後，在沒塗到的位置閃紅圈 */
-            /* ─── 漏掉的地方：閒置一陣子就標出來 ─── */
-            function clearMarks() { marks.innerHTML = ''; }
-            function armIdle() {
-                my.cancel(idleTimer);
-                if (state !== 'play' || mask.left === 0) return;
-                idleTimer = my.after(IDLE_HINT_MS, showHoles);
-            }
-            function showHoles() {
-                if (state !== 'play' || pid != null || mask.left === 0) return;
+            /* ─── 未完成的區域：不會自動標出來，玩家按「顯示未完成區域」按鈕（消耗 HINT_COST 次沾漆）才標一處 ─── */
+            function clearMarks() { marks.innerHTML = ''; hintShown = false; }
+            /* 按鈕：沾油漆次數 +HINT_COST，標出「最大的一塊」還沒塗到的區域（只洩漏最容易看出來的那一處）。
+               標記留在方塊上，直到玩家下一筆開始畫（startAt 會清掉）；標記還在的時候按鈕按不了，不會重複扣。 */
+            function useHint() {
+                if (state !== 'play' || mask.left === 0 || swept <= 0 || hintShown) return;
+                var hl = holes(mask, 1)[0];
+                if (!hl) return;
+                dips += HINT_COST; hints++;
                 clearMarks();
-                holes(mask, 12).forEach(function (hl) {
-                    var m = h('div', { 'class': 'pa-mark' });
-                    m.style.left = hl.x + 'px';
-                    m.style.top = hl.y + 'px';
-                    marks.appendChild(m);
-                });
-                my.cancel(idleTimer);
-                idleTimer = my.after(2600, clearMarks);
+                /* 紅圈半徑：區域越大圈越大（等面積圓的半徑 + 12px），限制在 HINT_R_MIN～HINT_R_MAX */
+                var r = Math.max(HINT_R_MIN, Math.min(HINT_R_MAX, Math.sqrt(hl.size / Math.PI) + 12));
+                var m = h('div', { 'class': 'pa-mark' });
+                m.style.left = hl.px + 'px';
+                m.style.top = hl.py + 'px';
+                m.style.width = m.style.height = (r * 2) + 'px';
+                m.style.margin = (-r) + 'px 0 0 ' + (-r) + 'px';
+                marks.appendChild(m);
+                hintShown = true;
+                Sfx.play('pop');
+                console.log('刷油漆：提示 → 最大的未完成區域 ' + hl.size + ' 格，中心 (' + hl.px.toFixed(1) + ', ' + hl.py.toFixed(1) + ')，沾油漆次數 +' + HINT_COST + ' → ' + dips);
+                refresh();
             }
 
             /* ─── 完成 ─── */
@@ -339,7 +390,7 @@
                 if (state !== 'play') return;
                 state = 'done';
                 pid = null; last = null;
-                my.cancel(idleTimer); clearMarks();
+                clearMarks();
                 refresh();
                 var isNew = Reaction.setBest(ID, dips, function (v, b) { return v < b; });
                 ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
@@ -349,8 +400,9 @@
                 Sfx.play('win');
                 my.after(1100, function () {
                     kit.result(root, {
+                        score: dips,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: dips + ' 次', label: rating(dips),
-                        lines: ['沾油漆 ' + dips + ' 次', '塗料利用率 ' + eff.toFixed(0) + '%（越高代表重複塗得越少）'],
+                        lines: ['沾油漆 ' + dips + ' 次' + (hints ? '（含提示 ' + hints + ' 次，每次算 ' + HINT_COST + ' 次）' : ''), '塗料利用率 ' + eff.toFixed(0) + '%（越高代表重複塗得越少）'],
                         isNew: isNew, sfx: dips <= 3 ? 'perfect' : (dips <= 8 ? 'win' : 'neutral'), onAgain: round
                     });
                 });
@@ -369,11 +421,12 @@
                     if (state !== 'play') return state;
                     startAt(points[0].x, points[0].y);
                     for (var i = 1; i < points.length && last; i++) drawTo(points[i].x, points[i].y);
-                    last = null; armIdle();
+                    last = null;
                     return state;
                 },
                 holes: function () { return holes(mask, 50); },
-                showHoles: showHoles
+                hint: useHint,
+                hintState: function () { return { hints: hints, hintShown: hintShown, disabled: hintBtn.disabled, marks: marks.children.length, pointerOn: pointer.classList.contains('pa-pointer--on'), pointerH: pointer.style.height }; }
             };
         }
 
@@ -384,8 +437,10 @@
     var G = {
         id: ID,
         name: '刷油漆',
-        rule: '用手指把白色的正方形整個刷上顏色，一個角落、一條縫都不能漏。點下方的圓形沾油漆：每沾一次，筆刷會縮小 15%，而且只能刷方塊寬度 3 倍的長度，用完就要再沾。沾油漆的次數越少越厲害，小心別重複刷到已經塗過的地方！',
+        rule: '用手指把白色的正方形整個刷上顏色，一個角落、一條縫都不能漏，哪裡還沒塗到要自己找。點下方的圓形沾油漆：每沾一次，筆刷會縮小 ' + Math.round((1 - SHRINK) * 100) + '%，而且只能刷方塊寬度 ' + BUDGET_MULT + ' 倍的長度，用完就要再沾。沾油漆的次數越少越厲害，小心別重複刷到已經塗過的地方！實在找不到，可以按最下面的按鈕，消耗 ' + HINT_COST + ' 次沾漆，標出最大的一塊未完成區域。',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { makeMask: makeMask, stampDisc: stampDisc, stampSegment: stampSegment, holes: holes, brushAfter: brushAfter, BRUSH_MIN: BRUSH_MIN, SQ: SQ, BRUSH_START: BRUSH_START, BUDGET_MULT: BUDGET_MULT }
     };

@@ -4,6 +4,10 @@
      找不到對應的 id（例如直接開 reaction.html 沒帶參數）才退回舊行為，
      從 Reaction.list() 隨機挑一個。
    · 先彈出說明彈窗，按「開始挑戰」才進遊戲；同一個遊戲可以無限次重玩（見各遊戲檔案）。
+     有接上世界排行榜的遊戲（Reaction.register 時有 score 設定，見 js/leaderboard.js），
+     流程多一步：說明彈窗按「下一步」→ 世界前 30 名彈窗（js/leaderboard_ui.js）→ 按「開始挑戰」才進遊戲；
+     榜單在進場那一刻就開始背景下載（Leaderboard.prefetch），看說明的時候就已經抓好了。
+     右上角「?」重看說明時多一顆「世界排行榜」按鈕，隨時可以再看榜。
    · 左上角「返回」永遠回主選單；右上角「?」可以隨時重看規則；「喇叭」開關音效。
    · 音效（js/sfx.js）統一在這裡接線：
        - 整個頁面的 pointerdown／pointerup／click／keydown 都呼叫 Sfx.unlock()
@@ -20,6 +24,8 @@
     var h = UI.h;
     var screen, barTitle, barMeta, barBack, barHelp, barSound, ruleDlg;
     var game;
+    /* hasBoard：這款遊戲有沒有接上世界排行榜（進場時決定） */
+    var hasBoard = false;
 
     /* 這個函式本身存在的理由：各遊戲模組（reaction_drop.js 等）拿到的 ctx 物件
        只看得到 ctx.setMeta，看不到、也不需要知道 barMeta 這個 DOM 元素變數本身
@@ -28,18 +34,29 @@
     function setMeta(text) { barMeta.textContent = text || ''; }
 
     /* 顯示玩法說明彈窗。onClose 是「使用者按下開始挑戰之後要做什麼」，由呼叫端
-       決定——進場時傳的是「真的開始 mount 遊戲」，右上角「?」重看規則時傳的是
-       空函式（什麼都不用做，因為遊戲早就已經在進行中了）。 */
-    function showRule(onClose) {
-        ruleDlg.innerHTML = '';
-        ruleDlg.appendChild(h('div', { 'class': 'rule-dlg__card' }, [
+       決定——進場時傳的是「真的開始 mount 遊戲」（有排行榜的遊戲是「先彈排行榜」），
+       右上角「?」重看規則時傳的是空函式（什麼都不用做，因為遊戲早就已經在進行中了）。
+       opts.okText：主按鈕文字（預設「開始挑戰」）；
+       opts.softSound：主按鈕只播輕觸聲（下一步不是真的開始，不播「開始」的嗶聲）；
+       opts.boardButton：多放一顆「世界排行榜」按鈕，點了可以隨時看榜。 */
+    function showRule(onClose, opts) {
+        opts = opts || {};
+        var kids = [
             h('div', { 'class': 'rule-dlg__title', text: game.name }),
             h('div', { 'class': 'rule-dlg__text', text: game.rule }),
             h('button', {
-                'class': 'btn btn--primary', text: '開始挑戰',
-                on: { click: function () { Sfx.unlock(); Sfx.play('go'); ruleDlg.hidden = true; onClose(); } }
+                'class': 'btn btn--primary', text: opts.okText || '開始挑戰',
+                on: { click: function () { Sfx.unlock(); Sfx.play(opts.softSound ? 'click' : 'go'); ruleDlg.hidden = true; onClose(); } }
             })
-        ]));
+        ];
+        if (opts.boardButton) {
+            kids.push(h('button', {
+                'class': 'btn btn--line', html: UI.icon('trophy') + '<span>世界排行榜</span>',
+                on: { click: function () { Sfx.unlock(); Sfx.play('click'); Leaderboard.showBoard(game, {}); } }
+            }));
+        }
+        ruleDlg.innerHTML = '';
+        ruleDlg.appendChild(h('div', { 'class': 'rule-dlg__card' }, kids));
         ruleDlg.hidden = false;
     }
 
@@ -60,6 +77,9 @@
         if (!window.MutationObserver) return;
         var showing = null;
         var bgmTimer = null;
+        /* 讓排行榜（js/leaderboard.js）知道「現在畫面上有沒有結算卡片」：
+           沒有就代表玩家已經開始下一局，進榜的恭喜不要用大彈窗打斷他 */
+        Reaction.resultShowing = function () { return !!showing; };
         new MutationObserver(function (list) {
             list.forEach(function (m) {
                 Array.prototype.forEach.call(m.addedNodes, function (n) {
@@ -98,7 +118,10 @@
 
         barBack.innerHTML = UI.icon('back') + '<span>返回</span>';
         barBack.addEventListener('click', function () { Sfx.stopBgm(); location.href = 'index.html'; });
-        barHelp.addEventListener('click', function () { Sfx.play('click'); showRule(function () { }); });
+        barHelp.addEventListener('click', function () {
+            Sfx.play('click');
+            showRule(function () { }, hasBoard ? { okText: '知道了', softSound: true, boardButton: true } : null);
+        });
         if (barSound) {
             paintSound();
             barSound.addEventListener('click', function () {
@@ -123,10 +146,27 @@
         var want = m && list.filter(function (g) { return g.id === m[1]; })[0];
         game = want || list[Math.floor(Math.random() * list.length)];
         barTitle.textContent = game.name;
+        /* 告訴共用工具「現在玩的是哪一款」：kit.result 帶 score 時，會用它把成績送到這一款的世界排行榜 */
+        Reaction.current = game;
+
+        /* 世界排行榜：這款遊戲有 score 設定、而且排行榜的畫面檔有載入，才接上排行榜。
+           Leaderboard.init() 會（稍後）補送上次沒送出去的成績；
+           Leaderboard.prefetch() 馬上開始背景下載這款遊戲的榜單，玩家看玩法說明的時候就抓好了。 */
+        hasBoard = !!(window.Leaderboard && Leaderboard.supports(game) && typeof Leaderboard.showBoard === 'function');
+        if (window.Leaderboard) Leaderboard.init();
+        if (hasBoard) Leaderboard.prefetch(game);
 
         /* 先秀規則彈窗，使用者按「開始挑戰」才真正呼叫 game.mount()——
            把畫面交給選中的那個遊戲模組自己接手畫、自己管理狀態，
-           這個檔案從這之後就不再插手這局遊戲怎麼進行。 */
-        showRule(function () { game.mount(screen, { setMeta: setMeta }); });
+           這個檔案從這之後就不再插手這局遊戲怎麼進行。
+           有排行榜的遊戲：說明彈窗按「下一步」→ 世界前 30 名彈窗 → 按「開始挑戰」才開始。 */
+        function startGame() { game.mount(screen, { setMeta: setMeta }); }
+        if (hasBoard) {
+            showRule(function () {
+                Leaderboard.showBoard(game, { startText: '開始挑戰', onClose: startGame });
+            }, { okText: '下一步', softSound: true });
+        } else {
+            showRule(startGame);
+        }
     });
 })();

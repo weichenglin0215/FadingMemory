@@ -21,6 +21,10 @@
     'use strict';
 
     var ID = 'rps';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 rps 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 200 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -66,7 +70,7 @@
     function chanceText(n) {
         if (n <= 0) return '';
         var p = Math.pow(0.5, n) * 100;
-        return '連贏 ' + n + ' 關的機率只有 ' + (p >= 1 ? p.toFixed(1) : p.toFixed(2)) + '%';
+        return '連贏 ' + n + ' 關的機率只有 ' + p.toFixed(4) + '%';
     }
 
     /* 手勢圖示：用簡單的向量圖（SVG）畫，不用 emoji；100×100 座標 */
@@ -229,12 +233,13 @@
                 } else {
                     Sfx.play('bad');
                     state = 'over';
-                    lastWhy = foul === 'early' ? '在數字 0 出現之前就按了' : (foul === 'late' ? '0.5 秒內沒有出拳' : '輸給電腦的' + NAMES[comp]);
+                    lastWhy = foul === 'early' ? '在數字 0 出現之前就按了' : (foul === 'late' ? '0.5000 秒內沒有出拳' : '輸給電腦的' + NAMES[comp]);
                     var failLevel = wins + 1, back = kit.resumeFrom(failLevel);
                     my.after(REVEAL_MS + 300, function () {
                         kit.result(root, {
+                            score: wins,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: wins + ' 關', label: foul === 'early' ? '太急了' : (foul === 'late' ? '慢了一步' : (wins >= 8 ? '手氣與眼力都好！' : '再試一次')),
-                            lines: ['第 ' + failLevel + ' 關：' + lastWhy, '那一關電腦延遲 ' + lastDelay.toFixed(2) + ' 秒才出拳', '共出拳 ' + rounds + ' 回合（平手 ' + ties + ' 次）'],
+                            lines: ['第 ' + failLevel + ' 關：' + lastWhy, '那一關電腦延遲 ' + lastDelay.toFixed(4) + ' 秒才出拳', '共出拳 ' + rounds + ' 回合（平手 ' + ties + ' 次）'],
                             note: '電腦出拳是亂數決定的，不受你影響',
                             isNew: newRec, sfx: wins >= 4 ? 'win' : 'fail',
                             onAgain: function () { round(1); },
@@ -265,8 +270,10 @@
     var G = {
         id: ID,
         name: '猜拳必贏',
-        rule: '上面倒數 3、2、1、0。數字變成 0 的時候電腦出拳，你只有 0.5 秒可以按下「剪刀／石頭／布」，太早（還沒到 0）或太慢都算輸。前面的關卡可以先看電腦出什麼再出，越後面電腦出得越晚，留給你看的時間越短！贏了才能進下一關，平手重來。',
+        rule: '上面倒數 3、2、1、0。數字變成 0 的時候電腦出拳，你只有 0.5000 秒可以按下「剪刀／石頭／布」，太早（還沒到 0）或太慢都算輸。前面的關卡可以先看電腦出什麼再出，越後面電腦出得越晚，留給你看的時間越短！贏了才能進下一關，平手重來。',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* dev 是開發用設定 */
         dev: { reveal: null },          /* 開發驗證用：延長公布結果的停留時間 */
         /* test 匯出純函式給 Node 自動測試 */

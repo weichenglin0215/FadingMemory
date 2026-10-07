@@ -8,7 +8,7 @@
        kit.svg()          建 SVG 元素
        kit.ramp()         線性難度（start → end，不是等比例縮小）
        kit.rng()          可重現亂數（mulberry32）＋ pick／shuffle／randInt
-       kit.sec()          毫秒 → 「X.XXX」秒字串（畫面一律用秒，不用毫秒）
+       kit.sec()          毫秒 → 「X.XXXX」秒字串（畫面一律用秒，不用毫秒；小數 4 位）
        kit.round()        一局的「生命週期物件」：這一局排的計時器、動畫迴圈，
                           重開一局（dispose）時全部自動作廢，不會有上一局的計時器
                           殘留下來動到新的一局
@@ -16,7 +16,9 @@
                           被瀏覽器整個暫停，沒有保底就會卡死）
        kit.tweenViewBox() SVG 鏡頭推進（改 viewBox，向量永遠銳利）
        kit.result()       結算卡片（疊在遊戲畫面上）；data-sfx 讓 reaction.js 自動
-                          播「過關／失敗」短旋律＋結算背景音樂
+                          播「過關／失敗」短旋律＋結算背景音樂；
+                          帶 score（這一局的最終成績，要跟 Reaction.setBest 存的同一個數字）
+                          就會在卡片出現之後自動送到這一款遊戲的世界排行榜
        kit.hold()         「按住／放開」輸入（切到背景一律視為放開）
        kit.pt()／kit.evT()  取得事件的邏輯座標／高精度時間
    ═══════════════════════════════════════════════════════════════════ */
@@ -93,9 +95,10 @@
         return a;
     };
 
-    /* 顯示格式：時間一律用「秒」X.XXX */
-    /* ─── 顯示格式：時間一律用「秒」，X.XXX ─── */
-    kit.sec = function (ms) { return (ms / 1000).toFixed(3); };
+    /* 顯示格式：時間一律用「秒」X.XXXX（小數 4 位，原本是 3 位，見 note/世界排行榜說明.md 第 4 節） */
+    /* ─── 顯示格式：時間一律用「秒」，X.XXXX ─── */
+    /* 注意：這個函式只負責「照實格式化」。要當成績顯示的數字，要先用 Leaderboard.fake4() 產生一次最終成績（第 3、4 位不為 0），再格式化 */
+    kit.sec = function (ms) { return (ms / 1000).toFixed(4); };
     kit.clamp = function (v, lo, hi) { return Math.min(hi, Math.max(lo, v)); };
 
     /* 事件座標（轉成 500×850 舞台座標）與高精度時間 */
@@ -217,7 +220,8 @@
         }, ease || kit.easeInOutCubic);
     };
 
-    /* 結算卡片：疊在遊戲畫面上。o.num 大數字、o.label 評語、o.lines 說明、o.isNew 新紀錄、o.onAgain 再玩一次、o.resume 失敗後從前幾關繼續 */
+    /* 結算卡片：疊在遊戲畫面上。o.num 大數字、o.label 評語、o.lines 說明、o.isNew 新紀錄、o.onAgain 再玩一次、o.resume 失敗後從前幾關繼續、
+       o.score 這一局的最終成績（有給才會送世界排行榜；超出該遊戲 score.min～max 的成績，例如 0 關，Leaderboard.submit 會自己略過） */
     /* ═══ 結算卡片 ═══
        疊在遊戲畫面上（跟舊遊戲同一套 .drop-result-overlay／-card）。
        o.sfx：'win'（過關）／'fail'（失敗）／'perfect'／'neutral'——reaction.js 的
@@ -253,6 +257,9 @@
             h('div', { 'class': 'drop-result-card' }, kids)
         ]);
         root.appendChild(ov);
+        /* 世界排行榜：一定要等結算卡片「已經在畫面上」才送——排行榜靠畫面上有沒有結算卡片
+           （Reaction.resultShowing）判斷玩家是不是還在看結果，太早送的話，進榜的恭喜就只剩小提示。 */
+        if (o.score != null && global.Leaderboard && Reaction.current) global.Leaderboard.submit(Reaction.current, o.score);
         return ov;
     };
 

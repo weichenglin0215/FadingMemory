@@ -27,6 +27,10 @@
 
     /* 遊戲代號 */
     var ID = 'shapes';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 shapes 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 200 };
     /* UI.h：建立 HTML 元素的小工具 */
     var h = UI.h;
 
@@ -290,6 +294,8 @@
                         h('button', { 'class': 'btn btn--primary', text: '再挑戰一次', on: { click: function () { level = 1; round(); } } })
                     ])
                 ]));
+                /* 送世界排行榜（結算卡片已經在畫面上了） */
+                Leaderboard.submit(ID, level);
             });
         }
 
@@ -301,6 +307,8 @@
         id: ID,
         name: '形形色色',
         rule: '畫面會被分成一格一格，裡面幾乎所有格子都長得一模一樣，只有一格不一樣（形狀不同，或是形狀和顏色都不同）。找出那一格，點下去；答對就進下一關，格子會越來越多、越來越小，越後面要越仔細看。答錯就結束，比比看能撐到第幾關。',
-        mount: mount
+        mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE
     });
 })();

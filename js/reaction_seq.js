@@ -20,6 +20,10 @@
     'use strict';
 
     var ID = 'seq';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 seq 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '答對題數', min: 1, max: 500 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -312,6 +316,7 @@
                 my.after(WRONG_MS, function () {
                     var back = kit.resumeFrom(q);
                         kit.result(root, {
+                        score: correctN,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: String(correctN), label: rating(correctN),
                         lines: ['第 ' + q + ' 題沒猜中，規律是：'].concat(exp),
                         isNew: newRec && correctN > 0, sfx: correctN >= 6 ? 'win' : 'fail', onAgain: function () { round(1); },
@@ -340,6 +345,8 @@
         name: '猜下一個',
         rule: '上面一排圖案有規律：形狀、顏色、方向或大小，會照著某種順序改變。看出規律，從下面四個選項裡，點出「下一個」應該長什麼樣子。每題有時間限制，規律會越來越難發現！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { nAttrFor: nAttrFor, kFor: kFor, timeFor: timeFor, nextCycle: nextCycle, nextRotation: nextRotation, nextSize: nextSize, consistentNext: consistentNext, isUnique: isUnique, visualKey: visualKey, makeSequence: makeSequence, itemAt: itemAt, makeOptions: makeOptions, explain: explain, rating: rating, LEVEL_RAMP: LEVEL_RAMP, SHOWN: SHOWN, SIZE_MAX: SIZE_MAX, SHAPES_ASYM: SHAPES_ASYM, SHAPES_SYM: SHAPES_SYM }
     };

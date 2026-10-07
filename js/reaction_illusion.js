@@ -20,6 +20,10 @@
     'use strict';
 
     var ID = 'illusion';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 illusion 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連對題數', min: 1, max: 500 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -273,7 +277,7 @@
                     var pct = realPct(q);
                     var what = q.kind === 'contrast' ? '亮' : (q.kind === 'ebbinghaus' ? '大' : '長');
                     var truth = (idx === -1 ? '時間到！' : (ok ? '答對了！' : '答錯了…')) + ' 其實是「' + NAMES[q.kind][q.big] + '」比較' + what +
-                        (q.kind === 'contrast' ? '（灰階 ' + q.v[q.big] + ' 對 ' + q.v[1 - q.big] + '）' : '（多了 ' + pct.toFixed(1) + '%）') +
+                        (q.kind === 'contrast' ? '（灰階 ' + q.v[q.big] + ' 對 ' + q.v[1 - q.big] + '）' : '（多了 ' + pct.toFixed(4) + '%）') +
                         (q.help ? '' : '　（錯覺陷阱）');
                     hint.textContent = truth;
                     if (ok) {
@@ -286,6 +290,7 @@
                         Sfx.play('bad');
                         my.after(REVEAL_MS + 300, function () {
                             kit.result(root, {
+                                score: streak,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                                 num: streak + ' 題', label: idx === -1 ? '時間到了' : '被錯覺騙到了',
                                 note: truth,
                                 isNew: newRec, sfx: streak >= 8 ? 'win' : 'fail', onAgain: round
@@ -314,6 +319,8 @@
         name: '錯覺大師',
         rule: '兩個圖形比一比，哪個比較長、比較大、比較亮？眼睛會騙人！有時候錯覺會幫你，有時候剛好相反，而且真正的差距會越來越小。答完立刻揭曉真相，連對越多越好。',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* dev 是開發用設定 */
         dev: { kind: null, time: null, reveal: null },      /* 開發驗證用：強制題型／限時，正式遊戲不會設定 */
         /* test 匯出純函式給 Node 自動測試 */

@@ -6,9 +6,8 @@ const near = (a, b, e) => Math.abs(a - b) < (e || 1e-9);
 // 角度正規化：矩形轉 180° 看起來一樣
 ok(near(T.norm180(0), 0) && near(T.norm180(90), 90) && near(T.norm180(91), -89) && near(T.norm180(180), 0) && near(T.norm180(-95), 85) && near(T.norm180(45), 45) && near(T.norm180(-180.5), -0.5), 'norm180');
 ok(near(T.errDeg(-0.37), 0.37) && near(T.errDeg(180.2), 0.2) && near(T.errDeg(359.9), 0.1, 1e-9), 'errDeg');
-// 難度：畫框與牆面的亮度差、起始歪斜角度都線性縮小
-ok(near(T.contrast(1), 10) && near(T.contrast(T.ROUNDS), 4) && near(T.contrast(3), 7, 1e-9), 'contrast 10 -> 4');
-ok(near(T.devMax(1), 25) && near(T.devMax(T.ROUNDS), 8) && near(T.devMax(3), 16.5, 1e-9), 'start deviation 25 -> 8');
+// 難度固定（只有一次機會，不再逐回合變難）：畫框比牆面暗 CONTRAST、起始歪斜最大 START_DEV 度
+ok(T.CONTRAST > 0 && T.CONTRAST < 10 && T.START_DEV > 8 && T.START_DEV < 25, 'single-round difficulty sits between the old first and last round: ' + T.CONTRAST + ' / ' + T.START_DEV);
 // 手指轉動增益：慢→GAIN_MIN，快→1，中間線性
 ok(near(T.gainFor(0), 0.12) && near(T.gainFor(0.25), 1) && near(T.gainFor(5), 1) && near(T.gainFor(0.125), (0.12 + 1) / 2, 1e-9), 'gain');
 ok(near(T.angDelta(350, 10), 20) && near(T.angDelta(10, 350), -20), 'angDelta');
@@ -19,14 +18,14 @@ ok(zp(40) === '[5]' && zp(300) === '[]', 'zoom plan when error is large: ' + zp(
 ok(near(T.cornerDrop(0), 0) && near(T.cornerDrop(1), 300 * Math.sin(Math.PI / 180), 1e-9) && T.cornerDrop(-2) < 0, 'cornerDrop');
 // 出題：牆面不能有水平或垂直線條
 let stripes = 0, flowers = 0;
-for (let r = 1; r <= 5; r++) {
-  for (let k = 0; k < 3000; k++) {
-    const R = T.makeRound(r);
+{
+  for (let k = 0; k < 15000; k++) {
+    const R = T.makeRound();
     ok(R.wall === 'stripes' || R.wall === 'flowers', 'wall type');
     if (R.wall === 'stripes') { stripes++; const a = Math.abs(R.alpha); ok((a >= 12 && a <= 38) || (a >= 52 && a <= 78), 'stripe angle never near horizontal/vertical: ' + R.alpha.toFixed(1)); } else flowers++;
     const m = Math.abs(R.start);
-    ok(m >= 0.6 * T.devMax(r) - 1e-9 && m <= T.devMax(r) + 1e-9, 'start deviation within range');
-    ok(near(R.contrast, T.contrast(r)), 'contrast by round');
+    ok(m >= 0.6 * T.START_DEV - 1e-9 && m <= T.START_DEV + 1e-9, 'start deviation within range');
+    ok(near(R.contrast, T.CONTRAST), 'contrast is fixed');
     ok(R.hue >= 0 && R.hue < 360, 'hue');
   }
 }

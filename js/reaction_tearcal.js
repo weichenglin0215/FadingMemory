@@ -25,6 +25,10 @@
     'use strict';
 
     var ID = 'tearcal';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 tearcal 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 200 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -403,6 +407,7 @@
                     my.after(1800, function () {
                         var back = kit.resumeFrom(level);
                         kit.result(root, {
+                            score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: cleared + ' 關', label: cleared >= 10 ? '日子都在心裡！' : (cleared >= 5 ? '很會翻日曆！' : '再試一次，會更快！'),
                             lines: ['最後一關：' + L.prompt, '目標 ' + ti.y + ' 年 ' + ti.m + ' 月 ' + ti.d + ' 日　' + ti.wdName + (ti.lunarText ? '　農曆' + ti.lunarText : '')],
                             isNew: newRec, sfx: cleared >= 6 ? 'win' : 'fail', onAgain: function () { round(1); },
@@ -435,6 +440,8 @@
         name: '撕日曆',
         rule: '這是一天一張的日曆，點一下撕掉一張、換成隔天，不能回頭。要在時間內撕到上面指定的日子（日期、星期、節日、節氣…），到了按「就是這天」。撕過頭就失敗！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出很多純函式，給 Node 自動測試（test/reaction/t_tearcal.js）使用 */
         test: {
             dnum: dnum, ymd: ymd, weekday: weekday, daysIn: daysIn, lunarOf: lunarOf, lunarSupported: lunarSupported, lunarText: lunarText, termsOfYear: termsOfYear, termOf: termOf,

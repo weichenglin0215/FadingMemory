@@ -16,6 +16,10 @@
     'use strict';
 
     var ID = 'fridge';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 fridge 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 張', label: '收納張數', min: 1, max: 500 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -212,6 +216,7 @@
                         /* kit.resumeFrom：失敗後可從前 5 張繼續 */
                         var back = kit.resumeFrom(n);
                         kit.result(root, {
+                            score: right,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: right + ' 張', label: right >= 20 ? '收納高手！' : (right >= 10 ? '很會整理！' : '再試一次，會更快！'),
                             lines: [cur.name + '要放' + ZONES[cur.zone] + (cur.tip ? '：' + cur.tip : '')],
                             isNew: newRec, sfx: right >= 10 ? 'win' : 'fail', onAgain: function () { round(1); },
@@ -245,6 +250,8 @@
         name: '冰箱歸位',
         rule: '買菜回來，東西一樣一樣出現在上面的大格子裡。下面有三顆按鈕：左上「冷藏室」、左下「冷凍庫」、右邊「櫥櫃（不用冰）」，點一下把東西放進去。有些東西很容易放錯，要在時間內放對喔！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { FOODS: FOODS, ZONES: ZONES, timeFor: timeFor, trickyP: trickyP, nextFood: nextFood, zoneFromDelta: zoneFromDelta, ZONE_RUN_MAX: ZONE_RUN_MAX, RAMP_N: RAMP_N }
     };

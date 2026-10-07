@@ -22,6 +22,10 @@
     'use strict';
 
     var ID = 'candy';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 candy 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '答對題數', min: 1, max: 500 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -348,6 +352,7 @@
                     var back = kit.resumeFrom(failLevel);
                     my.after(REVEAL_MS + 400, function () {
                         kit.result(root, {
+                            score: right,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: right + ' 題', label: '機會用完了', lines: ['第 ' + failLevel + ' 題沒數對：' + COLORS[Q.target].name + '色（全堆最多的顏色）有 ' + Q.answer + ' 顆'],
                             isNew: newRec, sfx: right >= 8 ? 'win' : 'fail',
                             onAgain: function () { round(1); },
@@ -378,6 +383,8 @@
         name: '幾顆糖',
         rule: '先告訴你要數哪一種顏色的糖果（那是整堆糖果裡數量最多的顏色），接著一堆糖果會閃一下就蓋起來，憑感覺選出那個顏色有幾顆。糖果會互相疊在一起，但每一顆都看得到。越後面糖果越多、閃得越快，選項也越接近。只有一次機會，答錯就結束！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { paramsFor: paramsFor, makeQuestion: makeQuestion, scatter: scatter, visibleFractions: visibleFractions, inCandy: inCandy, COLORS: COLORS, R: R, LEVEL_RAMP: LEVEL_RAMP, MIN_VIS: MIN_VIS, N_END: N_END }
     };

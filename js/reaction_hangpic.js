@@ -2,17 +2,19 @@
    reaction_hangpic.js — 秒反應・掛畫
    把相框轉到「剛好是水平的」。牆面沒有任何水平或垂直的線條，只有刻意傾斜的條紋或碎花，
    畫框的顏色又跟牆面很接近，很難靠對比判斷。按「掛好了」之後，鏡頭推進看差了幾度。
+   只有一次機會（就像零秒出手）：玩家追求的是「單次」的最小誤差，想再拚就按「再挑戰一次」。
    ───────────────────────────────────────────────────────────────────
    · 牆面兩種：斜條紋（傾斜角 12°～78°，故意不是水平也不是垂直）或碎花（位置抖動、方向隨機，
      沒有成列成行的對齊線索）。
-   · 畫框顏色與牆面的亮度差 CONTRAST_START → CONTRAST_END（%，第 1 → ROUNDS 回合線性變小，越來越難分辨）。
-   · 起始歪斜角度 START_DEV_START → START_DEV_END 度（隨機左右）。
+   · 畫框顏色比牆面暗 CONTRAST 個亮度 %（越小越難分辨）。
+   · 起始歪斜角度最大 START_DEV 度（隨機左右，實際是最大值的 60%～100%）。
+   · （舊版是 5 回合、難度逐回合變難、成績取平均；改成單次之後，難度固定在原本第 3 回合的程度。）
    · 轉動：手指在畫面上繞著相框中心轉，轉動量依手指速度打折（慢 ×GAIN_MIN、快 ×1），所以可以微調；
      另有 ◀ ▶ 每次 0.1°（按住會連續）。過程中不顯示任何刻度。
    · 判定值＝相框相對真水平的夾角（全精度；矩形轉 180° 看起來一樣，所以取 (-90°, 90°]）。
    · 結算：以相框右下角為固定錨點，鏡頭推進 ×8／×80／×800（紅色水平線是真水平，從左下角拉出來），
      放大到「紅線還在畫面內」為止，最後寫「差了 X.XX 度」。
-   · 5 回合，成績＝平均誤差（度，越小越好）。
+   · 成績＝這一次的誤差（度，越小越好）；誤差的第 3、4 位若是 0 會偽造成非 0（Leaderboard.fake4，結算時只產生一次）。
    ═══════════════════════════════════════════════════════════════════ */
 
 /* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
@@ -20,16 +22,19 @@
     'use strict';
 
     var ID = 'hangpic';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 hangpic 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'min', decimals: 4, format: '{v} 度', label: '誤差', min: 0, max: 91 };
     var h = UI.h;
     var kit = Reaction.kit;
 
     /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
-    /* 共 5 回合；相框大小與外框粗細（px） */
-    var ROUNDS = 5;
+    /* 相框大小與外框粗細（px） */
     var FRAME_W = 300, FRAME_H = 220, BORDER = 16;
-    var CONTRAST_START = 10, CONTRAST_END = 4;          /* 畫框比牆面暗幾個 L%（越小越難分） */
-    var START_DEV_START = 25, START_DEV_END = 8;       /* 起始歪斜角度上限（度） */
+    var CONTRAST = 7;                                   /* 畫框比牆面暗幾個 L%（越小越難分；舊版第 1 → 5 回合是 10 → 4，單次取中間） */
+    var START_DEV = 16;                                 /* 起始歪斜角度上限（度；舊版第 1 → 5 回合是 25 → 8，單次取中間） */
     /* 手指轉動的「增益」：轉得慢時 ×0.12（方便微調），轉得快時 ×1 */
     var GAIN_MIN = 0.12, SPEED_FULL = 0.25;            /* 手指轉動：慢 ×0.12，快到 0.25 度／毫秒以上 ×1 */
     var NUDGE_DEG = 0.1;
@@ -39,8 +44,8 @@
     var NEXT_MS = 1600;
     var DEAD_ZONE = 30;                                /* 離相框中心多近就不理（px，客戶端座標）*/
 
-    /* 最佳紀錄顯示文字（平均誤差，度） */
-    function fmtBest(v) { return v == null ? '' : '最佳 ' + v.toFixed(2) + '°'; }
+    /* 最佳紀錄顯示文字（單次誤差，度，4 位小數） */
+    function fmtBest(v) { return v == null ? '' : '最佳 ' + v.toFixed(4) + '°'; }
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 角度正規化：矩形轉 180 度長得一樣，所以把角度整理到 −90～90 度之間。 ((deg % 180) + 180) % 180 可以讓負數也得到正確結果 */
@@ -48,10 +53,6 @@
     function norm180(deg) { var d = ((deg % 180) + 180) % 180; return d > 90 ? d - 180 : d; }
     /* 誤差＝相框離水平差幾度（取絕對值） */
     function errDeg(theta) { return Math.abs(norm180(theta)); }
-    /* 畫框和牆面的亮度差（隨回合線性變小＝越來越難分辨） */
-    function contrast(r) { return kit.ramp(r, CONTRAST_START, CONTRAST_END, ROUNDS); }
-    /* 起始歪斜角度的上限（隨回合線性變小） */
-    function devMax(r) { return kit.ramp(r, START_DEV_START, START_DEV_END, ROUNDS); }
     /* 依手指轉動速度算增益：kit.lerp 線性插值，kit.clamp 把速度限制在 0～1 */
     function gainFor(speed) { return kit.lerp(GAIN_MIN, 1, kit.clamp(speed / SPEED_FULL, 0, 1)); }
     /* 兩個角度之間的最短有號差（避免 359 度到 1 度被誤認為轉了 358 度） */
@@ -68,22 +69,22 @@
     /* 相框右下角比左下角低多少 px（邊長 × sin 角度）＝要放大多少倍的依據 */
     /* 相框右下角與左下角的高度差（px）＝推進的依據 */
     function cornerDrop(theta) { return FRAME_W * Math.sin(theta * Math.PI / 180); }
-    /* 出一回合：隨機決定牆面種類（條紋／碎花）、傾斜角度、起始歪斜、顏色 */
-    /* 出一回合：牆面種類／參數、起始角度 */
-    function makeRound(r, rand) {
+    /* 出題：隨機決定牆面種類（條紋／碎花）、傾斜角度、起始歪斜、顏色（難度固定，每一次挑戰都一樣難） */
+    /* 出題：牆面種類／參數、起始角度 */
+    function makeRound(rand) {
         rand = rand || Math.random;
         var wall = rand() < 0.5 ? 'stripes' : 'flowers';
         var mag = kit.randFloat(12, 38, rand);
         /* 牆面條紋的傾斜角：刻意避開 0 度（水平）與 90 度（垂直），才不會有線索 */
         var alpha = (rand() < 0.5 ? 1 : -1) * (rand() < 0.5 ? mag : 90 - mag + 0);      /* 12～38° 或 52～78° */
-        var dev = devMax(r) * kit.randFloat(0.6, 1, rand);
+        var dev = START_DEV * kit.randFloat(0.6, 1, rand);
         return {
             hue: kit.randInt(0, 359, rand), wall: wall, alpha: alpha,
-            start: (rand() < 0.5 ? 1 : -1) * dev, contrast: contrast(r),
+            start: (rand() < 0.5 ? 1 : -1) * dev, contrast: CONTRAST,
             seed: kit.randInt(1, 1e9, rand)
         };
     }
-    /* 依平均誤差給評語 */
+    /* 依這一次的誤差給評語 */
     function rating(e) {
         if (e < 0.05) return '神乎其技！';
         if (e < 0.2) return '高手！';
@@ -94,17 +95,19 @@
 
     /* mount：遊戲進場點 */
     function mount(root, ctx) {
+        /* 舊版的最佳紀錄是「五回合的平均誤差」，跟現在的「單次誤差」不能比：第一次進來清掉，從頭累積（只清一次） */
+        Reaction.migrateBest(ID, function () { return null; }, '.single');
         var R = null;
 
-        /* round：開一局（這款固定 5 回合） */
+        /* round：開一局（只有一次機會） */
         function round() {
             if (R) R.dispose();
             R = kit.round();
             var my = R;
             root.innerHTML = '';
 
-            /* r 目前第幾回合；errs 每回合的誤差；theta 相框目前的旋轉角度；cfg 這回合的設定；runId 流水號 */
-            var r = 0, errs = [], theta = 0, state = 'idle', cfg = null, lastErr = null, runId = 0;
+            /* theta 相框目前的旋轉角度；cfg 這一次的設定；lastErr 這一次的誤差（按下「掛好了」之後才有） */
+            var theta = 0, state = 'idle', cfg = null, lastErr = null;
             /* 建立畫面元素：標題、牆面場地、◀ 掛好了 ▶ 按鈕列、結果橫幅 */
             var head = h('div', { 'class': 'hp-head' });
             var field = h('div', { 'class': 'hp-field' });
@@ -181,19 +184,17 @@
             /* 轉到角度 t：設定 SVG 的 rotate(角度 圓心x 圓心y) */
             function setTheta(t) { theta = t; gFrame.setAttribute('transform', 'rotate(' + t.toFixed(4) + ' ' + CX + ' ' + CY + ')'); }
 
-            /* 開始一回合 */
+            /* 開始（只有一次機會） */
             function startRound() {
                 if (my.dead) return;
-                r++;
-                var id = ++runId;
-                /* 產生這回合的設定 */
-                cfg = makeRound(r);
+                /* 產生這一次的設定 */
+                cfg = makeRound();
                 theta = cfg.start;
                 build();
                 verdict.textContent = ''; verdict.classList.remove('hp-verdict--on');
                 state = 'play';
-                head.textContent = '第 ' + r + '／' + ROUNDS + ' 回合　把相框轉成水平';
-                try { console.info('[掛畫] 第 ' + r + ' 回合：牆面 ' + cfg.wall + (cfg.wall === 'stripes' ? '（條紋傾斜 ' + cfg.alpha.toFixed(1) + '°）' : '') + '，畫框比牆暗 ' + cfg.contrast.toFixed(1) + '%，起始歪斜 ' + cfg.start.toFixed(2) + '°'); } catch (e) { }
+                head.textContent = '只有一次機會　把相框轉成水平';
+                try { console.info('[掛畫] 牆面 ' + cfg.wall + (cfg.wall === 'stripes' ? '（條紋傾斜 ' + cfg.alpha.toFixed(1) + '°）' : '') + '，畫框比牆暗 ' + cfg.contrast.toFixed(1) + '%，起始歪斜 ' + cfg.start.toFixed(2) + '°'); } catch (e) { }
             }
 
             /* 手指轉動相框的處理 */
@@ -259,8 +260,12 @@
             function submit() {
                 if (state !== 'play') return;
                 state = 'zoom';
-                var e = errDeg(theta);
-                lastErr = e; errs.push(e);
+                /* 這一次的誤差（度）＝最終成績：第 3、4 位不為 0，只產生這一次；畫面上的文字、最佳紀錄、世界排行榜都用它。
+                   放大看到的紅線與綠線（zoomPlan）仍然是真實的角度差 */
+                var realE = errDeg(theta);
+                var e = Leaderboard.fake4(realE);
+                console.log('掛畫：實際差 ' + realE.toFixed(6) + ' 度 → 成績 ' + e.toFixed(4) + ' 度');
+                lastErr = e;
                 Sfx.play('click');
                 var bl = corner(-1), br = corner(1);
                 refLine.setAttribute('y1', bl.y); refLine.setAttribute('y2', bl.y); refLine.setAttribute('opacity', 1);
@@ -281,32 +286,31 @@
                 });
                 chain.then(function () {
                     var side = norm180(theta) > 0.005 ? '（順時針歪）' : (norm180(theta) < -0.005 ? '（逆時針歪）' : '');
-                    verdict.textContent = e < 0.005 ? '差了 0.00 度・分毫不差！' : '差了 ' + e.toFixed(2) + ' 度' + side;
+                    verdict.textContent = e < 0.005 ? '差了 ' + e.toFixed(4) + ' 度・分毫不差！' : '差了 ' + e.toFixed(4) + ' 度' + side;
                     verdict.classList.add('hp-verdict--on');
                     Sfx.play(e < 0.2 ? 'win' : 'click');
-                    my.after(NEXT_MS, function () {
-                        if (r >= ROUNDS) finish(); else startRound();
-                    });
+                    /* 讓玩家看一下放大後的畫面，再蓋上結算卡片（有「再挑戰一次」） */
+                    my.after(NEXT_MS, function () { finish(e, side); });
                 });
             }
 
-            /* 五回合結束，算平均誤差並顯示結算 */
-            function finish() {
+            /* 結算：這一次的誤差就是成績（只有一次機會，想再拚就按「再挑戰一次」） */
+            function finish(e, side) {
                 state = 'done';
-                var avg = errs.reduce(function (s, x) { return s + x; }, 0) / errs.length;
                 /* 這個遊戲誤差「越小越好」，所以比較函式是 v < b */
-                var isNew = Reaction.setBest(ID, avg, function (v, b) { return v < b; });
+                var isNew = Reaction.setBest(ID, e, function (v, b) { return v < b; });
                 ctx.setMeta(fmtBest(Reaction.getBest(ID)));
                 kit.result(root, {
-                    num: avg.toFixed(2) + ' 度', label: rating(avg),
-                    lines: ['五回合平均誤差', errs.map(function (x) { return x.toFixed(2); }).join('／') + ' 度'],
-                    isNew: isNew, sfx: avg < 0.5 ? 'perfect' : (avg < 1.5 ? 'win' : 'fail'), onAgain: round
+                    score: e,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
+                    num: e.toFixed(4) + ' 度', label: rating(e),
+                    lines: ['相框' + (side ? side.replace(/[（）]/g, '') : '剛好水平'), '只有一次機會，想拚更準就再挑戰一次'],
+                    isNew: isNew, sfx: e < 0.5 ? 'perfect' : (e < 1.5 ? 'win' : 'fail'), onAgain: round
                 });
             }
 
             /* G.debug：測試用後門，spin 可以用真的 PointerEvent 模擬手指轉動 */
             G.debug = {
-                state: function () { return { r: r, state: state, theta: theta, errs: errs.slice(), cfg: cfg, last: lastErr }; },
+                state: function () { return { state: state, theta: theta, cfg: cfg, last: lastErr }; },
                 setTheta: setTheta,
                 submit: submit,
                 spin: function (deg) {      /* 用真的 PointerEvent 繞著相框中心轉 deg 度（快速） */
@@ -330,10 +334,12 @@
     var G = {
         id: ID,
         name: '掛畫',
-        rule: '把相框轉到剛好水平。牆上沒有水平或垂直的線，畫框顏色又和牆很像，只能靠眼睛判斷。手指繞著相框轉，慢慢轉可以微調，也可以按 ◀ ▶。最後看差了幾度！',
+        rule: '把相框轉到剛好水平。牆上沒有水平或垂直的線，畫框顏色又和牆很像，只能靠眼睛判斷。手指繞著相框轉，慢慢轉可以微調，也可以按 ◀ ▶。每次只有一次機會，按「掛好了」之後鏡頭會放大，告訴你差了幾度，目標是 0.0000 度！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
-        test: { norm180: norm180, errDeg: errDeg, contrast: contrast, devMax: devMax, gainFor: gainFor, angDelta: angDelta, zoomPlan: zoomPlan, cornerDrop: cornerDrop, makeRound: makeRound, rating: rating, ROUNDS: ROUNDS, FRAME_W: FRAME_W }
+        test: { norm180: norm180, errDeg: errDeg, gainFor: gainFor, angDelta: angDelta, zoomPlan: zoomPlan, cornerDrop: cornerDrop, makeRound: makeRound, rating: rating, CONTRAST: CONTRAST, START_DEV: START_DEV, FRAME_W: FRAME_W }
     };
     /* 登記到遊戲清單 */
     Reaction.register(G);

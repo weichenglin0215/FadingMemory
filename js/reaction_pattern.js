@@ -18,6 +18,10 @@
     'use strict';
 
     var ID = 'pattern';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 pattern 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 點', label: '最長圖案', min: 3, max: 14 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -312,7 +316,7 @@
                 hint.textContent = '答對了！';
                 if (level >= LEVEL_MAX) {
                     my.after(900, function () {
-                        kit.result(root, { num: '最長 ' + bestLen + ' 點', label: '全部記住了，太厲害了！', sfx: 'perfect', isNew: newRec, onAgain: restart });
+                        kit.result(root, { score: bestLen, num: '最長 ' + bestLen + ' 點', label: '全部記住了，太厲害了！', sfx: 'perfect', isNew: newRec, onAgain: restart });
                     });
                     return;
                 }
@@ -332,6 +336,7 @@
                 nodes[target[0]].classList.add('pt-node--start');
                 my.after(RESULT_DELAY_MS, function () {
                     kit.result(root, {
+                        score: bestLen,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: bestLen ? '最長 ' + bestLen + ' 點' : '再試一次',
                         label: reason,
                         lines: ['這一關的圖案有 ' + len + ' 個點'],
@@ -359,6 +364,8 @@
         name: '解鎖圖案',
         rule: '像手機的圖案解鎖：先看一次示範的連線，再用手指在點陣上畫出同樣的圖案，不能重複經過同一個點。圖案一關比一關長，看你最長能記住幾個點！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { gridFor: gridFor, lenFor: lenFor, between: between, validPath: validPath, genPath: genPath, LEVEL_MAX: LEVEL_MAX }
     };

@@ -32,6 +32,10 @@
     'use strict';
 
     var ID = 'price';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 price 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '答對題數', min: 1, max: 500 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -336,6 +340,7 @@
                     var failLevel = level, back = kit.resumeFrom(failLevel);
                     my.after(REVEAL_MS + 400, function () {
                         kit.result(root, {
+                            score: right,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: right + ' 題', label: i < 0 ? '來不及算' : '被折扣騙到了',
                             lines: ['便宜的是 ' + calcText(Q.tags[Q.lowIdx]), '貴的是 ' + calcText(Q.tags[1 - Q.lowIdx])],
                             isNew: newRec, sfx: right >= 8 ? 'win' : 'fail',
@@ -365,6 +370,8 @@
         name: '價格陷阱',
         rule: '上下兩張價格標籤，原價用中文數字寫，再加上各種優惠（打折、現折、每滿減、滿額折、折價券）。算一算實際要付多少錢，點出比較便宜的那一張。兩邊都有的「會員再打幾折」不用算！越後面兩張價錢差越少，時間也越短。',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { toChinese: toChinese, priceText: priceText, foldText: foldText, applyStep: applyStep, payOf: payOf, discLines: discLines, calcText: calcText, stepKey: stepKey, rateOf: rateOf, gapFor: gapFor, paramsFor: paramsFor, kindsFor: kindsFor, maxSteps: maxSteps, makeQuestion: makeQuestion, GAP_LOW: GAP_LOW, LEVEL_RAMP: LEVEL_RAMP }
     };

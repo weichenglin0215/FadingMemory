@@ -15,6 +15,10 @@
     'use strict';
 
     var ID = 'lights';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 lights 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 盞', label: '記住盞數', min: 1, max: 32 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -140,6 +144,7 @@
                 /* 通過最大盞數：直接結束（只會發生在 N_MAX） */
                 state = 'done';
                 kit.result(root, {
+                    score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                     num: '記住 ' + cleared + ' 盞', label: '太強了，全部記住！', sfx: 'perfect',
                     isNew: newRec, onAgain: restart
                 });
@@ -156,6 +161,7 @@
                 my.after(1100, function () {
                     state = 'done';
                     kit.result(root, {
+                        score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: '記住 ' + cleared + ' 盞', label: reason,
                         lines: ['這一關要記 ' + n + ' 盞，你點對了 ' + hits + ' 盞'],
                         isNew: newRec, sfx: cleared >= 6 ? 'win' : 'fail',
@@ -208,6 +214,8 @@
         name: '點燈記憶',
         rule: '燈板上有幾盞燈會同時短暫亮起，記住它們的位置。熄滅後，把剛才亮過的燈一個一個點出來。全對就多亮一盞，點錯或超時就結束，看你最多記得住幾盞！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { gridFor: gridFor, showSecFor: showSecFor, recallSecFor: recallSecFor, pickCells: pickCells, N_START: N_START, N_MAX: N_MAX }
     };

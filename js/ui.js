@@ -203,7 +203,10 @@
         right: '<path d="M9 4.5 16.5 12 9 19.5"/>',
         star: '<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.8z"/>',
         share: '<polyline points="15.5 6.5 12 3 8.5 6.5"/><line x1="12" y1="4" x2="12" y2="14.5"/><path d="M5.5 12.5v6a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5v-6"/>',
-        bolt: '<path d="M13 3 5 13.5h6L10.5 21 19 10h-6.5z" stroke-linejoin="round"/>'
+        bolt: '<path d="M13 3 5 13.5h6L10.5 21 19 10h-6.5z" stroke-linejoin="round"/>',
+        /* 世界排行榜用：獎盃與皇冠（js/leaderboard_ui.js） */
+        trophy: '<path d="M7.5 3.5h9v6a4.5 4.5 0 0 1-9 0z"/><path d="M7.5 5.5H5a1 1 0 0 0-1 1v.8a3.7 3.7 0 0 0 3.9 3.7M16.5 5.5H19a1 1 0 0 1 1 1v.8a3.7 3.7 0 0 1-3.9 3.7"/><path d="M12 14v3.5M9.5 17.5h5M8 20.5h8"/>',
+        crown: '<path d="M3.5 18.5 2.5 7.5l5 4.2L12 5l4.5 6.7 5-4.2-1 11z"/><path d="M5 21.2h14"/>'
     };
 
     /* 回傳一段 <svg> 字串（不是 DOM 元素），通常搭配 UI.h(...,{html: UI.icon('back')})

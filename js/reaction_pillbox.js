@@ -26,6 +26,10 @@
     'use strict';
 
     var ID = 'pillbox';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 pillbox 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 200 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -154,13 +158,24 @@
         var decoys = [4, 5, 6, 7].slice(0, 4), want = Math.min(4, decoyKinds(level));
         var order = decoys.slice().sort(function (a, b) { return (a - 4 < K ? 0 : 1) - (b - 4 < K ? 0 : 1); });      /* 對應的單子藥丸存在的排前面 */
         order.slice(0, want).forEach(function (d) { var c = kit.randInt(1, 3, rand); for (var i = 0; i < c; i++) list.push(d); });
-        /* 總數超過 MAX_TRAY 就隨機拿掉多餘的藥丸（只拿「多放的」和「干擾的」，絕不拿掉必要的） */
-        /* 太多放不下就拿掉多餘的（先拿掉故意多放的、再拿掉干擾藥丸），絕不拿掉必要的 */
+        /* 總數超過 MAX_TRAY（大約每 30 個高關卡的藥丸盤會有 1 個）就拿掉多餘的藥丸，絕不拿掉必要的。
+           拿的順序有三層，每一層都是在同一層的候選裡隨機挑一顆，這一層拿光了才換下一層：
+             ① 先拿「故意多放」的（單子上有的藥種，超過需要顆數的那些）；
+             ② 再拿干擾藥丸的「第 2 顆以後」——每一種干擾藥丸都至少留 1 顆，干擾藥丸的種類數才會照關卡（1 → 4 種）；
+             ③ 還是放不下，才拿干擾藥丸的最後一顆（實際上不會發生：單子最多只需要 44 顆左右，再加 4 種干擾藥丸各 1 顆也不到 50）。
+           （以前是把 ①② 混在一起隨機拿，偶爾會把某一種干擾藥丸整種拿光，甚至一次少兩三種，跟上面寫的順序不一樣。） */
         var need2 = Array(N_KINDS).fill(0);
         for (var kk = 0; kk < K; kk++) sheet.forEach(function (row) { need2[kk] += row[kk]; });
         var have = Array(N_KINDS).fill(0); list.forEach(function (c) { have[c]++; });
         while (list.length > MAX_TRAY) {
-            var cand = []; list.forEach(function (c, i) { if (have[c] > need2[c]) cand.push(i); });
+            var extraIdx = [], decoyMoreIdx = [], decoyLastIdx = [];
+            list.forEach(function (c, i) {
+                if (have[c] <= need2[c]) return;                  /* 必要的藥丸絕不拿 */
+                if (c < 4) extraIdx.push(i);                      /* 編號 0～3：單子上會出現的藥種，多出來的就是「故意多放」 */
+                else if (have[c] >= 2) decoyMoreIdx.push(i);      /* 編號 4～7 是干擾藥丸：這一種還有 2 顆以上，可以拿 */
+                else decoyLastIdx.push(i);                        /* 這一種只剩最後 1 顆 */
+            });
+            var cand = extraIdx.length ? extraIdx : (decoyMoreIdx.length ? decoyMoreIdx : decoyLastIdx);
             if (!cand.length) break;
             var drop = cand[Math.floor(rand() * cand.length)]; have[list[drop]]--; list.splice(drop, 1);
         }
@@ -416,6 +431,7 @@
                         /* kit.resumeFrom：失敗後可從前 5 關繼續 */
                         var back = kit.resumeFrom(level);
                         kit.result(root, {
+                            score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: cleared + ' 關', label: cleared >= 8 ? '細心的好幫手！' : (cleared >= 4 ? '記得很清楚！' : '再試一次，會更準！'),
                             lines: wrong.slice(0, 3), note: '藥丸是虛構的圖案，不是用藥建議；遊戲成績，不是醫療檢查',
                             isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail', onAgain: function () { round(1); },
@@ -460,6 +476,8 @@
         name: '分藥盒',
         rule: '先看吃藥單，記住每個時段有哪些顏色、什麼形狀、幾顆藥丸。單子收起來後，上面會出現一堆藥丸（還混了顏色或形狀不一樣的干擾藥丸，數量也故意多放），用手指把正確的藥丸拖曳到下面藥盒的格子，按「好了」。藥丸是虛構的圖案，這是記憶遊戲，不是用藥建議。',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式，給 Node 自動測試（test/reaction/t_pillbox.js）用 */
         test: { MAX_TRAY: MAX_TRAY, makeTray: makeTray, extraMax: extraMax, decoyKinds: decoyKinds, needTotal: needTotal, pad: pad, N_KINDS: N_KINDS, KIND_NAME: KIND_NAME, EXTRA_END: EXTRA_END, slotCount: slotCount, kindCount: kindCount, maxCnt: maxCnt, showSec: showSec, fillSec: fillSec, makeSheet: makeSheet, judge: judge, rowDiff: rowDiff, sameRow: sameRow, total: total, LEVEL_RAMP: LEVEL_RAMP }
     };

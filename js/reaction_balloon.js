@@ -22,6 +22,10 @@
     'use strict';
 
     var ID = 'balloon';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 balloon 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, group: true, format: '{v}', label: '容量', min: 1, max: 130000 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -206,13 +210,21 @@
                 var isNew = !burst && Reaction.setBest(ID, cap, function (v, b) { return v > b; });
                 ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
                 var frac = burst ? 0 : cap / maxCap;
+                /* 結算畫面上的成績類數字（撐了幾秒、氣球的爆破時間、拿到極限的幾 %）：4 位小數、第 3／4 位不為 0，各產生一次。
+                   爆破時間是遊戲藏起來的亂數、結算才揭曉，玩家無從驗證，所以也照規則偽造尾數；
+                   「撐了幾秒」不能超過顯示出來的爆破時間（沒爆就代表沒超過） */
+                var burstShown = Leaderboard.fake4(burstT);
+                var heldShown = burst ? burstShown : Math.min(Leaderboard.fake4(tHeld), burstShown);
+                var fracShown = Leaderboard.fake4(frac * 100);
+                console.log('吹氣球：實際撐了 ' + tHeld.toFixed(6) + ' 秒（爆破 ' + burstT.toFixed(6) + ' 秒）、拿到極限的 ' + (frac * 100).toFixed(6) + '% → 顯示 ' + heldShown.toFixed(4) + ' 秒、爆破 ' + burstShown.toFixed(4) + ' 秒、' + fracShown.toFixed(4) + '%');
                 var lines = [
-                    burst ? '按太久了，氣球在 ' + burstT.toFixed(2) + ' 秒爆掉' : '你撐了 ' + tHeld.toFixed(2) + ' 秒',
-                    '這局灌氣比標準' + (speed >= 1 ? '快 ' : '慢 ') + (Math.abs(speed - 1) * 100).toFixed(0) + '%，最多撐到 ' + burstT.toFixed(2) + ' 秒，總容量 ' + fmtNum(maxCap)
+                    burst ? '按太久了，氣球在 ' + burstShown.toFixed(4) + ' 秒爆掉' : '你撐了 ' + heldShown.toFixed(4) + ' 秒',
+                    '這局灌氣比標準' + (speed >= 1 ? '快 ' : '慢 ') + (Math.abs(speed - 1) * 100).toFixed(0) + '%，最多撐到 ' + burstShown.toFixed(4) + ' 秒，總容量 ' + fmtNum(maxCap)
                 ];
-                if (!burst) lines.push('拿到極限的 ' + (frac * 100).toFixed(1) + '%');
+                if (!burst) lines.push('拿到極限的 ' + fracShown.toFixed(4) + '%');
                 state = 'result';
                 var res = kit.result(root, {
+                    score: burst ? null : Math.round(cap),        /* 世界排行榜成績：畫面上看到的整數容量；爆掉不算成績（null 不送） */
                     num: '0', label: burst ? '砰！氣球爆了' : rating(frac),
                     lines: lines, isNew: isNew, sfx: burst ? 'fail' : (frac >= 0.8 ? 'perfect' : 'win'), onAgain: round
                 });
@@ -253,6 +265,8 @@
         name: '吹氣球',
         rule: '按住畫面開始充氣，放手就結算氣球的「容量」。畫面上不會顯示任何數字，氣球還會一直晃動干擾你，而且每一局灌氣的快慢都不一樣，只能憑感覺決定什麼時候放手。吹太久氣球會爆，爆了就是 0 分。每局只有一次機會！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { capacityAt: capacityAt, capOfFrames: capOfFrames, radiusAt: radiusAt, jitterAmp: jitterAmp, makeBurst: makeBurst, rating: rating, SPEED_MIN: SPEED_MIN, SPEED_MAX: SPEED_MAX, TAU_BURST: TAU_BURST, CAP_TOL: CAP_TOL, T_FULL: T_FULL, FPS: FPS }
     };

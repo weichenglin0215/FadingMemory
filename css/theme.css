@@ -146,6 +146,33 @@
     --flow-stroke: 56px;
     /* 數字筆畫粗細（邏輯 px） */
 
+    /* ── 世界排行榜（js/leaderboard_ui.js、css/leaderboard.css）──────
+       前三名用金／銀／銅：bg 是名次徽章的漸層底、row 是整列的底色、ink 是文字色、
+       edge 是邊框與皇冠色、glow 是外圈光暈。要換顏色或調整列高，只改這裡。 */
+    --lb-overlay: rgba(74, 59, 30, 0.5);
+    --lb-shine: rgba(255, 255, 255, 0.55);
+    --lb-gold-bg: linear-gradient(135deg, #FFEFB8 0%, #F2C14B 100%);
+    --lb-gold-row: linear-gradient(135deg, #FFF6D6 0%, #FFE08A 100%);
+    --lb-gold-ink: #6B4700;
+    --lb-gold-edge: #E0AA25;
+    --lb-gold-glow: rgba(224, 170, 37, 0.45);
+    --lb-silver-bg: linear-gradient(135deg, #FAFBFC 0%, #BFC7D2 100%);
+    --lb-silver-row: linear-gradient(135deg, #F7F9FB 0%, #DDE3EA 100%);
+    --lb-silver-ink: #46515F;
+    --lb-silver-edge: #A9B3C0;
+    --lb-silver-glow: rgba(150, 162, 178, 0.4);
+    --lb-bronze-bg: linear-gradient(135deg, #FBE0C4 0%, #D79A5C 100%);
+    --lb-bronze-row: linear-gradient(135deg, #FFF0E0 0%, #F3CFA6 100%);
+    --lb-bronze-ink: #6A3A10;
+    --lb-bronze-edge: #CC8A4A;
+    --lb-bronze-glow: rgba(204, 138, 74, 0.4);
+    --lb-row-h: 64px;
+    /* 一般名次的列高 */
+    --lb-row-h-top: 88px;
+    /* 前三名的列高（比較高、比較顯眼） */
+    --lb-rank-col: 64px;
+    /* 名次欄寬 */
+
     /* ── 版面 ─────────────────────────────────────────── */
     --bar-h: 78px;
 

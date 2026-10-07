@@ -13,6 +13,9 @@
    · 紙捲半徑隨抽出的長度縮小：紙長 ∝ 面積，所以 R = sqrt(核² + (滿² − 核²)×(1−p))，
      是平方根縮小，不是線性；同時依 pulled／R 轉動（越小越轉得快）。
    · 單指（只認 isPrimary）；ALLOW_MULTI=true 時兩指各自累加。滑鼠：按住拖曳或滾輪。
+   · 數字一律 4 位小數：計時與抽出的進度是真實數字；抽光那一刻才用 Leaderboard.fake4() 產生
+     最終成績（秒，第 3、4 位不為 0，只產生一次），畫面、最佳紀錄用同一個數字。
+     最佳紀錄存的單位是「秒」（舊版存毫秒，第一次進來會自動換算）。
    ═══════════════════════════════════════════════════════════════════ */
 
 /* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
@@ -20,6 +23,10 @@
     'use strict';
 
     var ID = 'tissue';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 tissue 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'min', decimals: 4, format: '{v} 秒', label: '時間', min: 1.5, max: 600 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -40,8 +47,8 @@
     var ALLOW_MULTI = false;    /* true：兩指各自累加 */
     var SWIPE_MIN_PX = 120;     /* 一筆至少滑多長才算「一下」（統計滑動次數用） */
 
-    /* 最佳紀錄文字 */
-    function fmtBest(v) { return v == null ? '' : '最佳 ' + kit.sec(v) + ' 秒'; }
+    /* 最佳紀錄文字（v 是「秒」，已經是最終成績，直接格式化到 4 位小數） */
+    function fmtBest(v) { return v == null ? '' : '最佳 ' + v.toFixed(4) + ' 秒'; }
 
     /* 紙面圖樣：用 SVG 字串畫一張紙的斜紋壓花與撕裂虛線，轉成 data URI 當背景圖，CSS 可以重複鋪滿，不用建立一堆元素 */
     /* 紙面圖樣（一張紙：斜紋壓花＋底部撕裂虛線），做成可重複鋪的 SVG 背景 */
@@ -104,6 +111,8 @@
 
     /* mount：遊戲進場點 */
     function mount(root, ctx) {
+        /* 舊版最佳紀錄存的是「毫秒」；現在存「秒、4 位小數、第 3／4 位不為 0」。第一次進來換算一次 */
+        Reaction.migrateBest(ID, function (ms) { return Leaderboard.fake4(ms / 1000); });
         var R = null;
 
         /* round：開一局 */
@@ -143,8 +152,8 @@
 
             /* 抬頭顯示：計時、進度、進度條、提示 */
             /* 抬頭顯示 */
-            var timeEl = h('div', { 'class': 'ts-time', text: '0.000 秒' });
-            var progText = h('div', { 'class': 'ts-prog', text: '0.0／' + TARGET_SCREENS + ' 屏' });
+            var timeEl = h('div', { 'class': 'ts-time', text: '0.0000 秒' });
+            var progText = h('div', { 'class': 'ts-prog', text: '0.0000／' + TARGET_SCREENS + ' 屏' });
             var bar = h('div', { 'class': 'ts-bar' }, [h('div', { 'class': 'ts-bar__fill' })]);
             var prompt = h('div', { 'class': 'ts-prompt', text: '往下滑開始' });
             root.appendChild(timeEl);
@@ -165,6 +174,8 @@
             var samples = [];               /* [時間ms, pulled]，算「最快 1 秒」用 */
             var splits = [];                /* 每 10 屏的經過時間 */
             var lastScreenInt = 0, lastSheet = 0;
+            /* 抽光後的「最終成績」（秒，已偽造尾數）；有值之後計時顯示就固定顯示它，不再顯示即時的真實時間 */
+            var finalSec = null;
 
             /* 重畫：紙捲半徑、轉動角度、紙的位置、進度條與文字 */
             function render() {
@@ -178,11 +189,12 @@
                 paper.style.top = top.toFixed(1) + 'px';
                 paper.style.backgroundPositionY = (pulled % SHEET_H).toFixed(1) + 'px';
                 barFill.style.height = (p * 100).toFixed(2) + '%';
-                progText.textContent = (pulled / H).toFixed(1) + '／' + TARGET_SCREENS + ' 屏';
+                progText.textContent = (pulled / H).toFixed(4) + '／' + TARGET_SCREENS + ' 屏';
             }
             /* 更新計時顯示 */
             function renderTime() {
                 if (tStart == null) return;
+                if (finalSec != null) { timeEl.textContent = finalSec.toFixed(4) + ' 秒'; return; }
                 var t = (tEnd == null ? performance.now() : tEnd) - tStart;
                 timeEl.textContent = kit.sec(t) + ' 秒';
             }
@@ -218,16 +230,21 @@
                 phase = 'done';
                 tEnd = t;
                 puller.end();
+                /* 最終成績（秒）：先產生（第 3、4 位不為 0，只做這一次），再更新畫面，計時顯示、最佳紀錄、結算畫面都用它 */
+                var total = tEnd - tStart;
+                finalSec = Leaderboard.fake4(total / 1000);
+                console.log('抽光它：實際 ' + (total / 1000).toFixed(6) + ' 秒 → 成績 ' + finalSec.toFixed(4) + ' 秒');
                 render();
                 renderTime();
                 activeId = null;
                 paper.classList.add('ts-paper--gone');
-                var total = tEnd - tStart;
-                var isNew = Reaction.setBest(ID, total, function (v, b) { return v < b; });
+                var isNew = Reaction.setBest(ID, finalSec, function (v, b) { return v < b; });
                 ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
-                /* 統計：平均速度、最快 1 秒、滑動次數、每 10 屏用時 */
-                var avg = TARGET_SCREENS / (total / 1000);
+                /* 統計：平均速度、最快 1 秒、滑動次數、每 10 屏用時。
+                   平均速度＝總屏數 ÷ 畫面上顯示的成績（秒），玩家自己除一次也會得到同樣的數字，所以用真實的除法結果；
+                   最快 1 秒是獨立量到的另一個數字，照規則偽造尾數 */
+                var avg = TARGET_SCREENS / finalSec;
                 var best1 = 0;
                 /* 滑動視窗：找出最快的連續 1 秒抽了多少 */
                 for (var i = 0, j = 0; i < samples.length; i++) {
@@ -243,11 +260,13 @@
                     b.style.height = Math.max(6, c / maxChunk * 100) + '%';
                     return b;
                 }));
+                best1 = Leaderboard.fake4(best1);
                 Sfx.play('perfect');
                 my.after(900, function () {
                     kit.result(root, {
-                        num: kit.sec(total) + ' 秒', label: '抽光了！', isNew: isNew, sfx: 'win',
-                        lines: ['平均速度 ' + avg.toFixed(2) + ' 屏／秒', '最快的 1 秒抽了 ' + best1.toFixed(2) + ' 屏', '滑了 ' + puller.strokes() + ' 下'],
+                        score: finalSec,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
+                        num: finalSec.toFixed(4) + ' 秒', label: '抽光了！', isNew: isNew, sfx: 'win',
+                        lines: ['平均速度 ' + avg.toFixed(4) + ' 屏／秒', '最快的 1 秒抽了 ' + best1.toFixed(4) + ' 屏', '滑了 ' + puller.strokes() + ' 下'],
                         extra: [h('div', { 'class': 'hint', text: '每 10 屏用時（越矮越快）' }), chart],
                         onAgain: round
                     });
@@ -334,6 +353,8 @@
         name: '抽光它',
         rule: '把整捲衛生紙抽光！手指在螢幕上一直往下滑，紙就一路被拉出來；要抽滿 50 個螢幕高度，看你多快。從第一次往下滑才開始計時。',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { rollRadius: rollRadius, makePuller: makePuller }
     };

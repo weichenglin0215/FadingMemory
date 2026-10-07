@@ -1,6 +1,9 @@
-const { game } = require('./load.js');
+const { game, rng, seedOf } = require('./load.js');
 const G = game('reaction_curves.js'); const T = G.test;
 let bad = 0; const ok = (c, m) => { if (!c) { bad++; if (bad < 25) console.log('FAIL', m); } };
+// 出題用固定種子的亂數（test/reaction/load.js 的 rng）：每次跑的繩子都一樣，下面那些「80 條繩子裡有幾條往上爬」的統計才不會偶爾因為運氣不好而失敗。
+// 想確認「換任何種子都過」：用環境變數 SEED 換種子連跑很多次（PowerShell：$env:SEED = 7; node test/reaction/t_curves.js；這支測試要跑約 30 秒）。
+const SEED = seedOf(20261007); const rnd = rng(SEED);
 ok(T.diffFor(1) === 30 && T.diffFor(2) === 27 && T.diffFor(10) === 3 && T.diffFor(11) === 3 && T.diffFor(50) === 3, 'diff schedule');
 ok(T.kBase(1) === 3 && T.kBase(12) === 7 && T.kBase(40) === 7 && T.kBase(6) > T.kBase(1) && T.yjitFor(1) < T.yjitFor(12), 'turn count and y-jitter ramps');
 const H = 600, W = 468; let N = 0, nullCount = 0;
@@ -8,7 +11,7 @@ const stats = {};
 for (let lv = 1; lv <= 30; lv++) {
   let worst = 0, trap = 0, cnt = 0, upward = 0, tries = 0, maxT = 0, minSep = 1e9, closeMin = 1e9, maxDx = [];
   for (let k = 0; k < 40; k++) {
-    const L = T.makeLevel(lv, H, null, W); N++; cnt++;
+    const L = T.makeLevel(lv, H, rnd, W); N++; cnt++;
     if (!L) { nullCount++; continue; }
     tries += L.tries;
     const lenL = L.L.pts[L.L.pts.length - 1].s, lenR = L.R.pts[L.R.pts.length - 1].s, sL = L.L.len, sR = L.R.len;
@@ -37,12 +40,18 @@ for (let lv = 1; lv <= 30; lv++) {
 }
 [1, 2, 5, 8, 12, 20, 30].forEach(l => console.log('lv' + l, 'diff', T.diffFor(l) + '%', 'k', T.kBase(l), 'max |err|', stats[l].worst.toExponential(1), 'short-has-more-turns', (stats[l].trap * 100).toFixed(0) + '%', 'ropes that climb up', (stats[l].upward * 100).toFixed(0) + '%', 'avg tries', stats[l].tries.toFixed(1), 'avg lateral span', stats[l].width.toFixed(0), 'px', 'max travel', stats[l].maxT.toFixed(1) + 's'));
 ok(nullCount === 0, 'makeLevel never fails (' + nullCount + ')');
-ok(stats[1].upward > 0.2 && stats[12].upward > 0.5, 'ropes climb back up even at level 1, and more often later (' + stats[1].upward.toFixed(2) + ' → ' + stats[12].upward.toFixed(2) + ')');
-ok(stats[12].trap > stats[1].trap, 'short-rope-has-more-turns trap grows');
-ok([1, 5, 12, 30].every(l => stats[l].width > 105), 'ropes use most of the width (big swings): ' + [1, 5, 12, 30].map(l => stats[l].width.toFixed(0)).join('/'));
+// 下面三個統計的平均值（用 40 組不同種子量過；每關 40 局、每局 2 條繩子＝ 80 條繩子）：
+//   有往上爬的繩子比例：第 1 關約 32%（標準差約 5%）、第 12 關約 67%（約 5%）；
+//   「短的那條繩子轉折點比較多」的比例：第 1 關幾乎是 0%、第 12 關約 26%（標準差約 7%）；
+//   繩子左右伸展的平均寬度：第 1、5 關約 111 px、第 12、30 關約 120 px（標準差約 2 px）。
+// 門檻訂在平均值下方 4 個以上標準差，換任何種子都不會因為運氣失敗；
+// 以前 upward > 0.2、width > 105 只離平均 2.3～3 個標準差，大約每 25 次執行會有 1 次失敗。
+ok(stats[1].upward > 0.1 && stats[12].upward > 0.4 && stats[12].upward > stats[1].upward, 'ropes climb back up even at level 1, and more often later (' + stats[1].upward.toFixed(2) + ' → ' + stats[12].upward.toFixed(2) + ', seed ' + SEED + ')');
+ok(stats[12].trap > stats[1].trap, 'short-rope-has-more-turns trap grows (' + stats[1].trap.toFixed(3) + ' → ' + stats[12].trap.toFixed(3) + ', seed ' + SEED + ')');
+ok([1, 5, 12, 30].every(l => stats[l].width > 100), 'ropes use most of the width (big swings): ' + [1, 5, 12, 30].map(l => stats[l].width.toFixed(0)).join('/') + ' (seed ' + SEED + ')');
 // 轉折點的左右位置：相鄰差異大、不會對齊
 { let aligned = 0, total = 0, mags = new Set();
-  for (let k = 0; k < 3000; k++) { const sh = T.makeShape(5, 0.8); for (let i = 1; i < sh.length; i++) { total++; if (Math.abs(sh[i].u - sh[i - 1].u) < T.MIN_SWING) aligned++; mags.add(Math.round(Math.abs(sh[i].u) * 10)); } }
+  for (let k = 0; k < 3000; k++) { const sh = T.makeShape(5, 0.8, rnd); for (let i = 1; i < sh.length; i++) { total++; if (Math.abs(sh[i].u - sh[i - 1].u) < T.MIN_SWING) aligned++; mags.add(Math.round(Math.abs(sh[i].u) * 10)); } }
   ok(aligned / total < 0.08, 'adjacent turning points differ a lot sideways (' + (aligned / total * 100).toFixed(1) + '% too close)'); ok(mags.size >= 6, 'turning point sizes vary'); }
 // validRope：會交叉／貼太近的路徑要被擋下來
 { const mk = (pts) => { let s = 0; return pts.map((p, i) => { if (i) s += Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]); return { x: p[0], y: p[1], s }; }); };
@@ -55,7 +64,7 @@ ok([1, 5, 12, 30].every(l => stats[l].width > 105), 'ropes use most of the width
   ok(T.validRope(fine, { x0: 0, x1: 300, y0: 0, y1: 400 }), 'well separated strands are fine');
   ok(!T.validRope(fine, { x0: 60, x1: 300, y0: 0, y1: 400 }), 'leaving the box is rejected'); }
 // 球的位置
-{ const L = T.makeLevel(5, H, null, W); const pts = L.L.pts; const mid = pts[pts.length >> 1]; const q = T.pointAt(pts, mid.s); ok(Math.abs(q.x - mid.x) < 1e-6 && Math.abs(q.y - mid.y) < 1e-6, 'pointAt'); ok(T.pointAt(pts, -1) === pts[0] && T.pointAt(pts, 1e9) === pts[pts.length - 1], 'pointAt ends'); }
+{ const L = T.makeLevel(5, H, rnd, W); const pts = L.L.pts; const mid = pts[pts.length >> 1]; const q = T.pointAt(pts, mid.s); ok(Math.abs(q.x - mid.x) < 1e-6 && Math.abs(q.y - mid.y) < 1e-6, 'pointAt'); ok(T.pointAt(pts, -1) === pts[0] && T.pointAt(pts, 1e9) === pts[pts.length - 1], 'pointAt ends'); }
 // 虛線的紅/白段長度，左右明顯不同
-for (let k = 0; k < 200; k++) { const d = T.dashFor(); ok(Math.abs((d.L[0] + d.L[1]) - (d.R[0] + d.R[1])) >= 8 || Math.abs(d.L[0] - d.R[0]) >= 10, 'dash differ'); }
-console.log('levels generated', N, bad ? 'FAILED ' + bad : 'ALL PASS');
+for (let k = 0; k < 200; k++) { const d = T.dashFor(rnd); ok(Math.abs((d.L[0] + d.L[1]) - (d.R[0] + d.R[1])) >= 8 || Math.abs(d.L[0] - d.R[0]) >= 10, 'dash differ'); }
+console.log('levels generated', N, bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

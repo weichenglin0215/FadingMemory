@@ -16,6 +16,10 @@
     'use strict';
 
     var ID = 'witness';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 witness 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 200 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -247,6 +251,7 @@
                         /* kit.resumeFrom：失敗後可從前 5 關繼續 */
                         var back = kit.resumeFrom(level);
                         kit.result(root, {
+                            score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: cleared + ' 關', label: cleared >= 8 ? '火眼金睛！' : (cleared >= 4 ? '記性不錯！' : '再試一次，會更準！'),
                             lines: diffs.slice(0, 3), isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail', onAgain: function () { round(1); },
                             resume: { level: back, run: function () { round(back); } }
@@ -275,6 +280,8 @@
         name: '目擊證人',
         rule: '先看一張嫌疑人的臉，記住他的特徵。臉收起來之後，從一排人裡點出剛才那一個。越後面，大家越像！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { dFor: dFor, optsFor: optsFor, lookSec: lookSec, pickSec: pickSec, randFace: randFace, hamming: hamming, variant: variant, makeSuspects: makeSuspects, diffText: diffText, SIZES: SIZES, LEVEL_RAMP: LEVEL_RAMP }
     };

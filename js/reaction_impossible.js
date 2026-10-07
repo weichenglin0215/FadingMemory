@@ -24,8 +24,10 @@
      影格可能跟真正點擊的瞬間差了一影格（<16ms），這點誤差對這個遊戲的節奏
      來說完全不影響，不需要更精準的做法。
    · 分數／最佳紀錄只在「成功」時更新，越小越好；顯示的「公分」數字刻意放大
-     20 倍＋顯示到小數點兩位（見 MEASURE_PX_PER_CM 旁的說明），不是真實的
+     20 倍＋顯示到小數點後四位（見 MEASURE_PX_PER_CM 旁的說明），不是真實的
      公制單位，純粹是為了讓數字看起來更精準、更有戲劇效果。
+     這個公分數是「最終成績」：結算那一刻用 Leaderboard.fake4() 產生一次（第 3、4 位不為 0），
+     鏡頭推進後顯示的數字、最佳紀錄用的是同一個數字。
    · 鏡頭推進到底的最終畫面：照片上緣貼齊遊戲畫面上緣、紅色警戒線的下緣
      貼齊遊戲畫面下緣（警戒線永遠在畫面最底部，不會浮到畫面中間）。
    ═══════════════════════════════════════════════════════════════════ */
@@ -36,6 +38,10 @@
 
     /* 遊戲代號 */
     var ID = 'impossible';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 impossible 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'min', decimals: 4, format: '{v} 公分', label: '距離', min: 0, max: 30 };
     var h = UI.h;
     /* SVG 的 XML 命名空間網址：用 document.createElementNS 建立 SVG 元素時一定要帶（和一般 HTML 元素不同） */
     var SVGNS = 'http://www.w3.org/2000/svg';
@@ -74,15 +80,14 @@
     /* REDUCED：使用者在系統設定了「減少動態效果」時，不播放推進動畫 */
     var REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 
-    /* cmOf：px 換算成公分（不四捨五入，用來比較與存紀錄） */
-    /* cmOf 回傳沒有四捨五入的精確數字，拿來比較（<SUCCESS_CM）跟存最佳紀錄；
-       要「顯示」（含小數點兩位）一律另外呼叫 fmtCm()，兩件事分開處理。 */
+    /* cmOf：px 換算成公分（沒有四捨五入的真實數字） */
     function cmOf(px) { return Math.max(0, px) / MEASURE_PX_PER_CM; }
-    /* fmtCm：顯示用（小數點兩位） */
-    function fmtCm(cm) { return cm.toFixed(2) + ' 公分'; }
-    /* 最佳紀錄存的是「停下來離警戒線幾 px」（不是公分），顯示時才換算成公分——
-       這樣以後不管把顯示的公分倍率再調成多少，舊紀錄都還是對的。 */
-    function fmtBest(v) { return v == null ? '' : '最佳 ' + fmtCm(cmOf(v)); }
+    /* fmtCm：顯示用（小數點後四位） */
+    function fmtCm(cm) { return cm.toFixed(4) + ' 公分'; }
+    /* 最佳紀錄存的是「公分」（已經是最終成績：4 位小數、第 3／4 位不為 0），這樣畫面上看到的最佳紀錄
+       跟結算時看到的是同一個數字。舊版存的是「px」，第一次進來會用 cmOf() 換算一次（見 mount）。
+       ★ 以後如果又調整 MEASURE_PX_PER_CM，已經存下來的最佳紀錄不會跟著變（它是公分，不是 px）。 */
+    function fmtBest(v) { return v == null ? '' : '最佳 ' + fmtCm(v); }
     /* 緩動函式：先慢後快再慢（三次方曲線），讓鏡頭推進比較自然 */
     function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
 
@@ -134,6 +139,8 @@
 
     /* mount：遊戲進場點 */
     function mount(root, ctx) {
+        /* 舊版最佳紀錄存的是 px，現在存公分（4 位小數、第 3／4 位不為 0）：第一次進來換算一次 */
+        Reaction.migrateBest(ID, function (px) { return Leaderboard.fake4(cmOf(px)); });
         /* 替整個畫面加上白底 class */
         root.classList.add('imp-white-bg');
 
@@ -384,10 +391,14 @@
                 phase = 'done';
                 if (crashed) imgEl.setAttribute('filter', 'url(#imp-hit-red)');   /* 撞到地面：照片變紅 */
                 var gapPx = Math.max(0, barY - (imgY + imgH));
-                var cm = cmOf(gapPx);
+                /* 最終成績（公分）：第 3、4 位不為 0，只產生這一次；判定成功、最佳紀錄、鏡頭推進後顯示的數字都用它
+                   （真實的距離 gapPx 仍然用來決定鏡頭放大的範圍，畫面上的量尺線是照實際距離畫的） */
+                var rawCm = cmOf(gapPx);
+                var cm = Leaderboard.fake4(rawCm);
+                console.log('不可能任務：實際 ' + rawCm.toFixed(6) + ' 公分（' + gapPx.toFixed(4) + ' px）→ 成績 ' + cm.toFixed(4) + ' 公分');
                 var success = !crashed && cm < SUCCESS_CM;
 
-                var isNew = success && Reaction.setBest(ID, gapPx, function (v, b) { return v < b; });
+                var isNew = success && Reaction.setBest(ID, cm, function (v, b) { return v < b; });
                 ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
                 /* 定格一秒（參考使用者給的示意圖：剛停下來那一刻，提示文字都還在、
@@ -402,6 +413,10 @@
                     return UI.wait(HOLD_AFTER_MS);
                 }).then(function () {
                     field.appendChild(h('button', { 'class': 'btn btn--primary imp-restart-btn', text: '再挑戰一次', attrs: { 'data-sfx': success ? (cm < 1 ? 'perfect' : 'win') : 'fail' }, on: { click: round } }));
+                    /* 送世界排行榜：這個帶 data-sfx 的按鈕出現，才算「結算畫面出現了」。
+                       只有「成功」才送！摔到警戒線（crashed）時距離是 0 公分，如果不判斷 success 就送，
+                       失敗會變成世界第一名的 0.0000 公分；離太遠的失敗（≥ 30 公分）則本來就不在有效範圍 */
+                    if (success) Leaderboard.submit(ID, cm);
                 });
             }
         }
@@ -414,6 +429,8 @@
         id: ID,
         name: '不可能任務',
         rule: '畫面上方是阿湯哥，下方是一條紅色警戒線。點一下畫面，他就會像自由落體一樣開始往下墜落；算準時機再點一下畫面，就能讓他停在半空中。停下來之後鏡頭會平順地推進拉近，讓你看清楚他跟警戒線之間還差幾公分——停在 30 公分以下才算任務成功（要低於 30），其餘（包含直接摔到警戒線上，他會變成紅色）都算失敗！',
-        mount: mount
+        mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE
     });
 })();

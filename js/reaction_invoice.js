@@ -42,6 +42,10 @@
     'use strict';
 
     var ID = 'invoice';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 invoice 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 張', label: '答對張數', min: 1, max: 100 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -352,8 +356,10 @@
                 for (var b = 0; b < 6; b++) { win += byBtn[b].ok; winN += byBtn[b].n; }
                 lines.push('有獎的發票：' + (win + sp) + ' / ' + (winN + spN) + ' 張兌對');
                 lines.push('沒中獎的發票：' + byBtn[8].ok + ' / ' + byBtn[8].n + ' 張看穿');
-                if (rts.length) lines.push('答對的平均反應 ' + kit.sec(avg) + ' 秒');
+                /* 平均反應（秒）：4 位小數、第 3／4 位不為 0，結算時產生一次 */
+                if (rts.length) lines.push('答對的平均反應 ' + Leaderboard.fake4(avg / 1000).toFixed(4) + ' 秒');
                 kit.result(root, {
+                    score: right,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                     num: right + ' / ' + TOTAL, label: right >= 90 ? '眼力超強的對獎達人！' : (right >= 70 ? '很會對發票！' : '再仔細看看數字喔'),
                     lines: lines, isNew: isNew, sfx: right >= 90 ? 'perfect' : (right >= 60 ? 'win' : 'fail'), onAgain: round
                 });
@@ -381,6 +387,8 @@
         name: '對發票',
         rule: '上面是一張 8 碼發票，下面是這一期的開獎號碼。發票的「末幾碼」跟第一獎相同，就中對應的獎（末 3 碼六獎，末 8 碼一獎）；特別獎要整張 8 碼完全相同；都沒中就按「沒中獎」。三組開獎號碼的最後兩碼故意一樣，共 100 張，小心長得很像的數字、對調過的數字、拼貼的號碼！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { makeDeck: makeDeck, classify: classify, suffixMatch: suffixMatch, makeAnnounce: makeAnnounce, tailOverlap: tailOverlap, hamming: hamming, timeFor: timeFor, BTNS: BTNS, TOTAL: TOTAL, SIM: SIM, DECOY_COUNTS: DECOY_COUNTS, ANNOUNCE_MIN_DIFF: ANNOUNCE_MIN_DIFF }
     };

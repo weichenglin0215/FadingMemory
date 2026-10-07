@@ -2024,12 +2024,24 @@
     transition: width 0.08s linear;
 }
 
-/* 畫筆外框 */
+/* 畫筆外框：圓形貼著下緣擺（油漆刷提示會往上長出來，上方要留空間）；
+   高度 122px ＝ 下方操作區（264px）扣掉油漆量長條、提示文字、最下面的按鈕和間距 */
 .pa-brushwrap {
-    height: 190px;
+    height: 122px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+/* 畫筆的點擊區：大小由 JS 設定成「筆刷直徑，但至少 56px」（筆刷縮得很小時還是好點到），
+   圓形畫筆與油漆刷提示都定位在這個框裡面 */
+.pa-brushbox {
+    position: relative;
+    flex: none;
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
 }
 
 /* 畫筆（圓形按鈕） */
@@ -2048,12 +2060,86 @@
     box-shadow: none;
 }
 
-/* 畫筆上的文字 */
+/* 油漆刷提示：圓形變成虛線（要去沾油漆）時，在圓形右上方出現一支油漆刷，上下循環移動提醒玩家來點。
+   位置、大小（高度＝圓形直徑的 200%）都由 JS 依目前筆刷大小設定；整支刷往右傾一點，筆尖壓在圓形上。
+   pointer-events: none：手指點到它等於點到下面的圓形（點擊區是 .pa-brushbox，事件會冒泡上去） */
+.pa-pointer {
+    position: absolute;
+    display: none;
+    transform-origin: 50% 100%;
+    transform: rotate(20deg);
+    pointer-events: none;
+}
+
+.pa-pointer--on {
+    display: block;
+}
+
+/* 油漆刷圖：沿著刷子的軸往筆尖方向「點」下去再彈回來（跟著旋轉後的座標，所以是順著刷子動） */
+.pa-pointer__svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    animation: pa-tap 0.9s ease-in-out infinite;
+}
+
+/* 往下點、再回到原位（最高的位置就是靜止位置，不會往上超出去） */
+@keyframes pa-tap {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(14%);
+    }
+}
+
+/* 油漆刷各部分的顏色：木柄、金屬環、刷毛（刷毛顏色是這一局的油漆色，由 JS 設定） */
+.pa-pt-handle {
+    fill: var(--c-yellow);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+    vector-effect: non-scaling-stroke;
+}
+
+.pa-pt-ferrule {
+    fill: var(--c-ink-soft);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+    vector-effect: non-scaling-stroke;
+}
+
+.pa-pt-bristle {
+    stroke: var(--c-ink);
+    stroke-width: 3;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+
+/* 畫筆上的文字（圓形下方，最下面的按鈕上方） */
 .pa-brushlabel {
     font-size: var(--fs-md);
     font-weight: 700;
     color: var(--c-ink-soft);
     min-height: 1.4em;
+    text-align: center;
+}
+
+/* 最下面的「消耗三次沾漆，顯示未完成區域」按鈕：字比一般按鈕小一點才放得進一行（15 個字） */
+.pa-hintbtn {
+    flex: none;
+    height: 60px;
+    font-size: var(--fs-sm);
+}
+
+/* 系統設定「減少動態效果」時，油漆刷不要動 */
+@media (prefers-reduced-motion: reduce) {
+    .pa-pointer__svg {
+        animation: none;
+    }
 }
 
 /* 哪裡怪怪的：兩張圖找出不一樣的地方。 */

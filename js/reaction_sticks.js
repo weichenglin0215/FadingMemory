@@ -34,6 +34,10 @@
 
     /* 遊戲的代號（跟檔名 reaction_sticks.js、網址 ?game=sticks、選單 GAME_CELLS 的 id 都要一致） */
     var ID = 'sticks';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 sticks 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 200 };
     /* UI.h：建立 HTML 元素的小工具（見 js/ui.js）。 */
     var h = UI.h;
     /* kit：Reaction.kit（js/reaction_kit.js）共用工具箱：亂數、動畫迴圈、結算畫面… */
@@ -260,6 +264,7 @@
                         var back = kit.resumeFrom(level);
                         /* kit.result：顯示結算畫面（成績、評語、再玩一次、從某關繼續…） */
                         kit.result(root, {
+                            score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: cleared + ' 關',
                             label: cleared >= 8 ? '眼明手快！' : (cleared >= 4 ? '反應不錯！' : '再試一次，會更快！'),
                             lines: ['第 ' + level + ' 關錯失了 ' + misses + ' 根棍子', '那一關棍長 ' + Math.round(len) + ' px'],
@@ -327,6 +332,8 @@
         name: '落下棍子',
         rule: '上面掛著六根棍子，會在不同時間掉下來。要在棍子掉出畫面之前點到它！點到還沒掉的棍子也算錯失。每一關只能錯失一根，棍子會越來越短喔！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         test: { stickLen: stickLen, gravity: gravity, topAt: topAt, exitSec: exitSec, makeSchedule: makeSchedule, judgeTap: judgeTap, N: N, GAP_MIN: GAP_MIN, REACT_MIN_S: REACT_MIN_S, HIT_W: HIT_W, HIT_PAD: HIT_PAD, MISS_ALLOWED: MISS_ALLOWED }
     };
     /* 把這款遊戲登記到清單（js/reaction_core.js） */

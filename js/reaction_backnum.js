@@ -17,6 +17,10 @@
     'use strict';
 
     var ID = 'backnum';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 backnum 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 200 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -184,6 +188,7 @@
                         /* kit.resumeFrom：失敗後可從前 5 關繼續 */
                         var back = kit.resumeFrom(level);
                         kit.result(root, {
+                            score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: cleared + ' 關', label: cleared >= 8 ? '記憶力驚人！' : (cleared >= 4 ? '很不錯！' : '再試一次，會更準！'),
                             lines: ['第 ' + level + ' 關要按：' + want.join('、'), '你按到 ' + n + '，應該是 ' + want[idx]],
                             isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail', onAgain: function () { round(1); },
@@ -222,6 +227,8 @@
         name: '倒背數字',
         rule: '九宮格會依序亮起幾個數字，請「倒著順序」把它們按回去，例如亮 1、2、3 就按 3、2、1。每關多一個數字，按錯會再給你看一次，但機會有限！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         test: { seqLen: seqLen, chances: chances, litSec: litSec, makeSeq: makeSeq, reversed: reversed, SEQ_START: SEQ_START }
     };
     /* 登記到遊戲清單 */

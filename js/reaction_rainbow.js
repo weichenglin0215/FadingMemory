@@ -49,6 +49,10 @@
     'use strict';
 
     var ID = 'rainbow';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 rainbow 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 個', label: '點中個數', min: 1, max: 1000 };
     var h = UI.h;
 
     /* 設定集中在這一區 */
@@ -305,6 +309,8 @@
                             h('button', { 'class': 'btn btn--primary', text: '再挑戰一次', on: { click: round } })
                         ])
                     ]));
+                    /* 送世界排行榜（結算卡片已經在畫面上了；0 個不在有效範圍，會自己略過） */
+                    Leaderboard.submit(ID, hits);
                 });
             }
 
@@ -320,6 +326,8 @@
         id: ID,
         name: '七彩陷阱',
         rule: '畫面上有 2×2 四個方塊，會照順時針的順序，一個接一個換上七彩顏色（最新的那個有白邊），而且換得越來越快。一開始只要點「紅色」方塊：紅色一出現，就要在下一個方塊出現之前馬上點下去！來不及，或是點到別的方塊，都算失敗。小心，其他顏色的方塊上面可能壓著「紅」字來騙你。每成功點擊幾個之後，遊戲會暫停並增加新的顏色也要點，看你能撐多久！',
-        mount: mount
+        mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE
     });
 })();

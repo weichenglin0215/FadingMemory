@@ -21,6 +21,10 @@
     'use strict';
 
     var ID = 'chicks';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 chicks 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 200 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -327,6 +331,7 @@
                     var failLevel = level, back = kit.resumeFrom(failLevel);
                     my.after(2200, function () {
                         kit.result(root, {
+                            score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: cleared + ' 關', label: cleared >= 8 ? '小雞守護者！' : (cleared >= 4 ? '眼力不錯！' : '再試一次，會更準！'),
                             lines: ['第 ' + failLevel + ' 關要找 ' + S.targets.length + ' 隻，找到 ' + found.length + ' 隻'], isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail',
                             onAgain: function () { round(1); },
@@ -357,6 +362,8 @@
         name: '找回小雞',
         rule: '先記住頭上有星星的小雞。星星消失後，小雞會到處亂跑，還會互相遮住。等牠們停下來，直接點剛才有星星的那幾隻：只有星星小雞點得到，點到別的地方就失敗了！越後面小雞越多、跑得越快！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { stopSpots: stopSpots, startSpots: startSpots, hexSpots: hexSpots, makePath: makePath, judgeTap: judgeTap, kFor: kFor, totalFor: totalFor, speedFor: speedFor, moveFor: moveFor, posAt: posAt, minDist: minDist, makeLevel: makeLevel, MIN_STOP_DIST: MIN_STOP_DIST, MIN_START_DIST: MIN_START_DIST, MIN_LEG: MIN_LEG, CHICK: CHICK, MARGIN: MARGIN, LEVEL_RAMP: LEVEL_RAMP }
     };

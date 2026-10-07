@@ -21,6 +21,10 @@
     'use strict';
 
     var ID = 'pipes';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 pipes 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 200 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -310,8 +314,9 @@
                     /* kit.resumeFrom：失敗後可從前 5 關繼續 */
                     var back = kit.resumeFrom(level);
                         kit.result(root, {
+                        score: passed,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: passed + ' 關', label: rating(passed),
-                        lines: ['第 ' + level + ' 關（' + L.N + '×' + L.N + '、' + L.B + ' 個水桶）沒接完'].concat(avg != null ? ['過關平均 ' + avg.toFixed(3) + ' 秒'] : []),
+                        lines: ['第 ' + level + ' 關（' + L.N + '×' + L.N + '、' + L.B + ' 個水桶）沒接完'].concat(avg != null ? ['過關平均 ' + Leaderboard.fake4(avg).toFixed(4) + ' 秒'] : []),
                         isNew: newRec && passed > 0, sfx: passed >= 3 ? 'win' : 'fail', onAgain: function () { round(1); },
                             resume: { level: back, run: function () { round(back); } }
                     });
@@ -340,6 +345,8 @@
         name: '接水管',
         rule: '點一格水管，它就轉一下。把左上角水龍頭流出來的水，接到每一個水桶，而且管子不能漏水（紅點就是漏水的地方）。每一關都有時間限制，看你能接幾關！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { rot: rot, rotN: rotN, bits: bits, gridFor: gridFor, bucketsFor: bucketsFor, timeFor: timeFor, sizeFor: sizeFor, makeTree: makeTree, flow: flow, solved: solved, tapsFor: tapsFor, tapsToSolve: tapsToSolve, makeLevel: makeLevel, rating: rating, N_: N_, E_: E_, S_: S_, W_: W_, LEVEL_RAMP: LEVEL_RAMP, MIN_TAPS: MIN_TAPS }
     };

@@ -61,6 +61,10 @@
 
     /* 遊戲代號 */
     var ID = 'drop';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 drop 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 分', label: '分數', min: 1, max: 1000 };
     /* UI.h：建立 HTML 元素的小工具 */
     var h = UI.h;
     /* SVG 的 XML 命名空間網址：用 createElementNS 建立 SVG 元素時一定要帶 */
@@ -471,6 +475,8 @@
                         h('button', { 'class': 'btn btn--primary', text: '再挑戰一次', on: { click: round } })
                     ])
                 ]));
+                /* 送世界排行榜（結算卡片已經在畫面上了；0 分不在有效範圍，Leaderboard.submit 會自己略過） */
+                Leaderboard.submit(ID, score);
             }
 
             /* 開場演出播完：顯示「落下」按鈕，隱藏提示文字（避免玩家拿固定文字當位置參考），開始左右反彈 */
@@ -517,6 +523,8 @@
         id: ID,
         name: '神準落下',
         rule: '畫面上方是藍色倒三角形，下方 9 格方塊會左右來回移動、撞到邊緣就反彈。請預測落下的時機，點擊「落下」——三角形會像自由落體一樣越落越快，釘在方塊上就不再移動。插中中間的紅色格，畫面會往釘住的那一點持續放大，讓你看清楚插得有多準；再插中紅色裡的黃色核心、再插中黃色裡的紫色核心，就是最高分！',
-        mount: mount
+        mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE
     });
 })();

@@ -22,6 +22,10 @@
     'use strict';
 
     var ID = 'cake';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 cake 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 200 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -175,7 +179,7 @@
                 gAid.setAttribute('opacity', aidOpacity(level).toFixed(2));
                 head.textContent = '第 ' + level + ' 關　分給 ' + st.n + ' 個人';
                 /* 主控台印出這關的人數、第一刀角度、過關標準與起始差距，方便驗證 */
-                banner.textContent = '拖曳藍線，差 ≤ ' + tolerancePct(st.n).toFixed(1) + '% 就過關';
+                banner.textContent = '拖曳藍線，差 ≤ ' + tolerancePct(st.n).toFixed(4) + '% 就過關';
                 acts.style.visibility = 'visible'; cutBtn.disabled = false;
                 buildLines(); meta();
                 try { console.info('[分蛋糕] 第 ' + level + ' 關：' + st.n + ' 個人、第一刀 ' + first.toFixed(1) + '°；標準 ' + (PASS_RATIO * 100).toFixed(0) + '%＝每塊差距最多 ' + tolerancePct(st.n).toFixed(2) + '% 的蛋糕（' + (360 * PASS_RATIO / st.n).toFixed(2) + '°）；起始差距 ' + (spreadRatio(sliceAngles([first].concat(lines))) * 100).toFixed(0) + '% 平均塊；輔助刻度透明度 ' + aidOpacity(level).toFixed(2)); } catch (e) { }
@@ -239,15 +243,26 @@
                     /* 最大塊紅色、最小塊藍色，方便玩家看出誰最大誰最小 */
                     var cls = 'ca-slice__p' + (Math.abs(angs[i] - mx) < 1e-9 ? ' ca-slice__p--max' : (Math.abs(angs[i] - mn) < 1e-9 ? ' ca-slice__p--min' : ''));
                     kit.svg('path', { 'class': cls, d: sectorPath(a0, a1, R_CAKE - 2) }, g);
-                    var tx = C + (R_CAKE * (n > 8 ? 0.7 : 0.62)) * Math.sin(mid), ty = C - (R_CAKE * (n > 8 ? 0.7 : 0.62)) * Math.cos(mid);
+                    /* 標籤放在這一塊的中線上、離圓心 0.6 倍半徑處 */
+                    var lr = R_CAKE * 0.6;
+                    var tx = C + lr * Math.sin(mid), ty = C - lr * Math.cos(mid);
                     var t = kit.svg('text', { 'class': 'ca-slice__t' + (n > 8 ? ' ca-slice__t--sm' : ''), x: tx, y: ty, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, g);
-                    t.textContent = (angs[i] / 360 * 100).toFixed(1) + '%';
+                    t.textContent = (angs[i] / 360 * 100).toFixed(4) + '%';
+                    /* 百分比是 4 位小數（例如 8.3333%），比原本長很多：塊數多的時候橫著擺會互相疊在一起。
+                       塊數 ≥ 6 就把字沿著「這一塊的中線」轉過去（從圓心往外讀，左半邊轉 180 度讓字保持朝上），
+                       字的長度順著半徑方向，有 150px 可以用，不會跟隔壁那塊的字撞在一起 */
+                    if (n >= 6) {
+                        var rot = mid * 180 / Math.PI - 90;
+                        if (Math.sin(mid) < 0) rot += 180;
+                        t.setAttribute('transform', 'rotate(' + rot.toFixed(1) + ' ' + tx.toFixed(1) + ' ' + ty.toFixed(1) + ')');
+                    }
                     var out = 14;
                     /* 每塊沿著中心方向往外移一點，產生「切開散開」的效果 */
                     g.style.transform = 'translate(' + (out * Math.sin(mid)).toFixed(1) + 'px,' + (-out * Math.cos(mid)).toFixed(1) + 'px)';
                 }
                 /* 顯示最大、最小與標準 */
-                banner.textContent = '最大 ' + (mx / 3.6).toFixed(1) + '％ − 最小 ' + (mn / 3.6).toFixed(1) + '％ ＝ ' + diffPct.toFixed(2) + '％（標準 ≤ ' + tolerancePct(n).toFixed(2) + '％）';
+                /* 4 位小數的算式很長，分成兩行（.ca-banner 用 white-space: pre-line 讓字串裡的換行符號真的換行） */
+                banner.textContent = '最大 ' + (mx / 3.6).toFixed(4) + '％ − 最小 ' + (mn / 3.6).toFixed(4) + '％\n＝ ' + diffPct.toFixed(4) + '％（標準 ≤ ' + tolerancePct(n).toFixed(4) + '％）';
                 /* 過關 */
                 if (ok) {
                     cleared = level;
@@ -266,8 +281,9 @@
                 var failLevel = level, back = kit.resumeFrom(failLevel);
                 my.after(NEXT_MS, function () {
                     kit.result(root, {
+                        score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: cleared + ' 關', label: rating(cleared),
-                        lines: ['第 ' + failLevel + ' 關（分 ' + n + ' 塊）最大塊比最小塊多 ' + diffPct.toFixed(2) + '%', '標準是 ' + tolerancePct(n).toFixed(2) + '%（平均一塊的 15%）'],
+                        lines: ['第 ' + failLevel + ' 關（分 ' + n + ' 塊）最大塊比最小塊多 ' + diffPct.toFixed(4) + '%', '標準是 ' + tolerancePct(n).toFixed(4) + '%（平均一塊的 15%）'],
                         isNew: newRec, sfx: cleared >= 3 ? 'win' : 'fail',
                         onAgain: function () { round(1); },
                         resume: { level: back, run: function () { round(back); } }
@@ -296,6 +312,8 @@
         name: '分蛋糕',
         rule: '蛋糕要平分給幾個人。蛋糕上有切線，橘色那條固定不動，用手指拖曳藍色的線，讓每一塊都一樣大，調好按「切下去」。最大塊和最小塊的差距要小於平均一塊的 15% 才過關，一關比一關分給更多人！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { nFor: nFor, aidOpacity: aidOpacity, norm360: norm360, angleOf: angleOf, sliceAngles: sliceAngles, spreadRatio: spreadRatio, passes: passes, tolerancePct: tolerancePct, nearestIndex: nearestIndex, makeStart: makeStart, rating: rating, N_START: N_START, N_MAX: N_MAX, PASS_RATIO: PASS_RATIO, JITTER: JITTER, PICK_MAX_DEG: PICK_MAX_DEG }
     };

@@ -17,7 +17,9 @@
      ×800 時 0.01° 一格）。放大到「再放大紅線就會跑出畫面」為止。
      細刻度（0.1°、0.01°）本來就畫在那裡，只是放大前太細看不到，鏡頭推進時
      才淡入，像用顯微鏡發現本來就存在的刻度。
-   · 成績：歷來最小的誤差（越小越好，顯示兩位小數，內部全精度比大小）。
+   · 成績：歷來最小的誤差（越小越好，顯示 4 位小數）。停住的那一刻用 Leaderboard.fake4() 產生一次
+     「最終成績」（第 3、4 位不為 0），結算文字、評語、最佳紀錄都用這個數字；
+     鏡頭推進（zoomPlan）仍然用真實的誤差，所以放大看到的是真實的刻度位置。
    ═══════════════════════════════════════════════════════════════════ */
 
 /* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
@@ -25,6 +27,10 @@
     'use strict';
 
     var ID = 'pendulum';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 pendulum 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'min', decimals: 4, format: '{v} 度', label: '誤差', min: 0, max: 31 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -51,8 +57,8 @@
     /* 1 度對應弧線上幾 px（弧長 = 半徑 × 弧度） */
     var PX_PER_DEG = LEN * Math.PI / 180;   /* 1° 對應弧上幾 px（約 6.28） */
 
-    /* 角度的顯示格式（兩位小數） */
-    function fmtDeg(v) { return v.toFixed(2); }
+    /* 角度的顯示格式（四位小數） */
+    function fmtDeg(v) { return v.toFixed(4); }
     function fmtBest(v) { return v == null ? '' : '最佳 ' + fmtDeg(v) + '°'; }
 
     /* 純函式（也給 Node 測試用） */
@@ -93,6 +99,8 @@
 
     /* mount：遊戲進場點 */
     function mount(root, ctx) {
+        /* 舊版最佳紀錄只有兩位小數的真實誤差：第一次進來換算成「4 位、第 3／4 位不為 0」 */
+        Reaction.migrateBest(ID, function (v) { return Leaderboard.fake4(v); });
         /* R：這一局的計時器管家 */
         var R = null;            /* 這一關的生命週期物件（kit.round） */
         var state = 'idle';
@@ -283,15 +291,18 @@
 
             /* 結算：顯示差了幾度與評語 */
             /* ─── 結算（只有一次機會：永遠是「再挑戰一次」）─── */
-            function verdict(theta, err) {
+            function verdict(theta, realErr) {
                 state = 'verdict';
                 var side = Math.abs(theta) < 0.005 ? '' : (theta < 0 ? '偏左' : '偏右');
+                /* 最終成績：第 3、4 位不為 0，只產生這一次（之後的評語、最佳紀錄、畫面文字都用它） */
+                var err = Leaderboard.fake4(realErr);
+                console.log('六點鐘方向：實際差 ' + realErr.toFixed(6) + ' 度 → 成績 ' + fmtDeg(err) + ' 度');
                 var isNewErr = Reaction.setBest(ID, err, function (v, b) { return v < b; });
                 updateMeta();
 
                 var sfx = err < 0.05 ? 'perfect' : (err < 1 ? 'win' : 'fail');
                 var kids = [
-                    h('div', { 'class': 'rx-result__label', text: err < 0.005 ? '差了 0.00 度・分毫不差！' : '差了 ' + fmtDeg(err) + ' 度' }),
+                    h('div', { 'class': 'rx-result__label', text: err < 0.005 ? '差了 ' + fmtDeg(err) + ' 度・分毫不差！' : '差了 ' + fmtDeg(err) + ' 度' }),
                     h('div', { 'class': 'rx-result__num pend-verdict__num', text: rating(err) }),
                     h('div', { 'class': 'hint rx-result__line', text: side ? '針尖在紅線' + (theta < 0 ? '左' : '右') + '邊（' + side + '）' : '針尖正好壓在紅線上' })
                 ];
@@ -301,6 +312,8 @@
                     on: { click: function () { Sfx.play('click'); round(); } }
                 }));
                 field.appendChild(h('div', { 'class': 'pend-verdict', attrs: { 'data-sfx': sfx } }, kids));
+                /* 送世界排行榜（結算畫面已經在畫面上了） */
+                Leaderboard.submit(ID, err);
             }
         }
 
@@ -313,8 +326,10 @@
     var G = {
         id: ID,
         name: '六點鐘方向',
-        rule: '鐘擺從五點鐘的位置出發，順時針往下擺，點一下讓它停住，越接近正下方（六點鐘方向）越好。每局只有一次機會；停住後鏡頭會放大，告訴你差了幾度，目標是 0.00 度！',
+        rule: '鐘擺從五點鐘的位置出發，順時針往下擺，點一下讓它停住，越接近正下方（六點鐘方向）越好。每局只有一次機會；停住後鏡頭會放大，告訴你差了幾度，目標是 0.0000 度！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { params: params, thetaAt: thetaAt, START_DEG: START_DEG, PERIOD_S: PERIOD_S, zoomPlan: zoomPlan, rating: rating, PX_PER_DEG: PX_PER_DEG }
     };

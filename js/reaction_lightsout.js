@@ -19,6 +19,10 @@
     'use strict';
 
     var ID = 'lightsout';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 lightsout 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 200 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -234,6 +238,7 @@
                 my.after(ANSWER_MS, function () {
                     var back = kit.resumeFrom(level);
                         kit.result(root, {
+                        score: passed,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: passed + ' 關', label: rating(passed),
                         lines: ['完美 ' + perfect + ' 關'].concat(logs.slice(-3)),
                         isNew: newRec && passed > 0, sfx: passed >= 5 ? 'win' : 'fail', onAgain: function () { round(1); },
@@ -262,6 +267,8 @@
         name: '關燈',
         rule: '點一盞燈，它和上下左右的燈都會「亮變暗、暗變亮」。想辦法在時間內把所有的燈都關掉！剛好用最少的步數過關，會得到「完美」。',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { sizeFor: sizeFor, kFor: kFor, timeFor: timeFor, toggleMask: toggleMask, popcount: popcount, applyPresses: applyPresses, solveMin: solveMin, makePuzzle: makePuzzle, rating: rating, LEVEL_RAMP: LEVEL_RAMP }
     };

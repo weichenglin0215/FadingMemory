@@ -15,6 +15,10 @@
     'use strict';
 
     var ID = 'scallion';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 scallion 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 段', label: '切段數', min: 1, max: 400 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -206,8 +210,9 @@
                 /* 等 500 毫秒再顯示結算，讓玩家看到最後一刀 */
                 my.after(500, function () {
                     kit.result(root, {
+                        score: n,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: n + ' 段', label: rating(n),
-                        lines: ['平均每秒切 ' + (n / DURATION).toFixed(1) + ' 刀'],
+                        lines: ['平均每秒切 ' + (n / DURATION).toFixed(4) + ' 刀'],
                         isNew: isNew, sfx: n >= 100 ? 'win' : (n >= 70 ? 'win' : 'neutral'), onAgain: round
                     });
                 });
@@ -239,6 +244,8 @@
         name: '切蔥花',
         rule: '蔥條會慢慢往前送，點一下就切一刀。20 秒內看你能切成幾段，段數越多越厲害！只有一次機會，不用在意切得整不整齊。',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { makeSpeeds: makeSpeeds, posAt: posAt, makeCutter: makeCutter, rating: rating, DURATION: DURATION, CUT_CD: CUT_CD, MIN_LEN: MIN_LEN, SEG_S: SEG_S, BASE_V: BASE_V, V_LO: V_LO, V_HI: V_HI }
     };

@@ -19,6 +19,10 @@
     'use strict';
 
     var ID = 'halfchar';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 halfchar 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '答對題數', min: 1, max: 500 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -265,6 +269,7 @@
                         /* kit.resumeFrom：失敗後可從前 5 題繼續 */
                         var back = kit.resumeFrom(q);
                         kit.result(root, {
+                            score: right,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: right + ' 題', label: right >= 20 ? '識字高手！' : (right >= 10 ? '眼力不錯！' : '再試一次，會更準！'),
                             lines: ['最後一題：「' + E.a + '」', '大家都有「' + visiblePart(E) + '」，關鍵是「' + hiddenPart(E) + '」'],
                             isNew: newRec, sfx: right >= 10 ? 'win' : 'fail', onAgain: function () { round(1); },
@@ -294,6 +299,8 @@
         name: '半邊字',
         rule: '畫面上的字只露出一半，從下面四個字裡選出最可能的那一個。露出的部分會越來越少，每題時間也越來越短！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { exposedSide: exposedSide, SLIVER_START: SLIVER_START, SLIVER_END: SLIVER_END, ENTRIES: ENTRIES, DECOMP: DECOMP, SIDE_IDX: SIDE_IDX, visRegion: visRegion, revealOf: revealOf, boundOf: boundOf, BOUNDS: BOUNDS, clipFor: clipFor, timeFor: timeFor, visiblePart: visiblePart, hiddenPart: hiddenPart, checkData: checkData, pickEntry: pickEntry, makeOptions: makeOptions, LEVEL_RAMP: LEVEL_RAMP }
     };

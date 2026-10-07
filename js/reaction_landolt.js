@@ -21,6 +21,10 @@
     'use strict';
 
     var ID = 'landolt';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 landolt 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 4, format: '視力 {v}', label: '視力', min: 0.1, max: 31 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -41,8 +45,8 @@
     /* 方向用角度表示：0 上、90 右、180 下、270 左（順時針） */
     var DIRS = [0, 90, 180, 270];       /* 角度：0＝上，順時針（只有上下左右） */
 
-    /* 視力的顯示格式（兩位小數） */
-    function fmtV(v) { return v.toFixed(2); }
+    /* 視力的顯示格式（四位小數） */
+    function fmtV(v) { return v.toFixed(4); }
     /* 最佳紀錄文字 */
     function fmtBest(v) { return v == null ? '' : '最佳視力 ' + fmtV(v); }
 
@@ -90,6 +94,13 @@
 
     /* mount：遊戲進場點 */
     function mount(root, ctx) {
+        /* 舊版最佳紀錄只有兩位小數的真實數字：第一次進來換算成「4 位、第 3／4 位不為 0」（只換算一次） */
+        Reaction.migrateBest(ID, function (v) { return Leaderboard.fake4(v); });
+        /* 視力的「顯示用數字」：每一個 E 的視力（標題與結算都顯示）照規則偽造尾數（第 3、4 位不為 0），
+           而且同一個 E 在這一頁裡永遠顯示同一個數字——標題上看到的視力，跟結算時的「視力 X」才會一致。
+           （E 的實際大小仍然照真實視力算，只有顯示的數字被偽造） */
+        var shownAcuity = {};
+        function acuityShown(n) { return shownAcuity[n] != null ? shownAcuity[n] : (shownAcuity[n] = Leaderboard.fake4(acuityAt(n))); }
         var R = null;
 
         /* from：從第幾個 E 開始（失敗後可從前 5 個繼續；視力用第幾個 E 換算，所以尺寸跟原本一樣）*/
@@ -123,7 +134,7 @@
             /* 更新標題與右上角文字 */
             function updateHead() {
                 var nn = Math.max(1, n);
-                head.textContent = '第 ' + nn + ' 個・視力 ' + fmtV(acuityAt(nn));
+                head.textContent = '第 ' + nn + ' 個・視力 ' + fmtV(acuityShown(nn));
                 ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
             }
 
@@ -177,15 +188,17 @@
             /* 結束：算視力與平均反應；視力是「遊戲視力」，不是真正的視力檢查 */
             function finish(allClear, reason) {
                 state = 'done';
-                var v = passed > 0 ? acuityAt(passed) : 0;
+                var v = passed > 0 ? acuityShown(passed) : 0;
                 var isNew = v > 0 && Reaction.setBest(ID, v, function (a, b) { return a > b; });
                 ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
                 var avg = rts.length ? rts.reduce(function (a, b) { return a + b; }, 0) / rts.length : 0;
+                var avgSec = Leaderboard.fake4(avg / 1000);      /* 平均反應（秒）：結算時產生一次，第 3、4 位不為 0 */
                 var back = kit.resumeFrom(n);
                 kit.result(root, {
+                    score: v,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                     num: v > 0 ? '視力 ' + fmtV(v) : '視力 < ' + fmtV(ACUITY_START),
                     label: allClear ? reason : (v >= 1.0 ? '視力很好！' : (v > 0 ? '再努力看看！' : '第一個就看不清楚…')) + (reason ? '（' + reason + '）' : ''),
-                    lines: ['看清楚了 ' + passed + ' 個 E', rts.length ? '平均反應 ' + (avg / 1000).toFixed(3) + ' 秒' : ''].filter(Boolean),
+                    lines: ['看清楚了 ' + passed + ' 個 E', rts.length ? '平均反應 ' + avgSec.toFixed(4) + ' 秒' : ''].filter(Boolean),
                     note: '遊戲視力，不是真正的視力檢查',
                     isNew: isNew, sfx: allClear ? 'perfect' : (v >= 0.5 ? 'win' : 'fail'),
                     onAgain: function () { round(1); },
@@ -242,6 +255,8 @@
         name: 'E視力檢查',
         rule: '畫面中央有一個「E」字，開口（三隻腳）朝哪個方向，就用手指往那個方向滑一下（只有上下左右）。每換一次方向，E 就縮小成 90%，只要錯一次就結束，看你能看清楚多小的 E！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { sizeFor: sizeFor, sizeAt: sizeAt, acuityAt: acuityAt, timeAt: timeAt, nextDir: nextDir, dirFromDelta: dirFromDelta, N_MAX: N_MAX, DIRS: DIRS, SHRINK: SHRINK, ACUITY_MAX: ACUITY_MAX, TIME_START: TIME_START, TIME_END: TIME_END }
     };

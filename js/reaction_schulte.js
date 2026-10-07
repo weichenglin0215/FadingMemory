@@ -5,7 +5,9 @@
    · 數字盡量放大、充滿格子；點對的數字變綠色 0.6 秒再變回白色（不留記號，要靠記憶看哪個點過了）。
    · 點錯：那一格變紅底白字，並且一直留著，讓玩家知道錯在哪；遊戲結束，停留 1.5 秒才跳出結算。
    · 計時從第一次點擊開始（pointerdown 的事件時間），點到 36 停表。只有完整點完才算成績。
-   · 成績＝完成時間（X.XXX 秒，越小越好）。
+   · 成績＝完成時間（秒、小數點後 4 位 X.XXXX，越小越好）。計時中的數字是真實時間；
+     完成的那一刻才用 Leaderboard.fake4() 產生最終成績（第 3、4 位不為 0，只產生一次，
+     之後畫面、最佳紀錄用的是同一個數字）。
    ═══════════════════════════════════════════════════════════════════ */
 
 /* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」：參數 → 純函式 → mount → G.debug → register） */
@@ -14,6 +16,10 @@
 
     /* 遊戲代號，與檔名、選單 id 一致 */
     var ID = 'schulte';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 schulte 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'min', decimals: 4, format: '{v} 秒', label: '時間', min: 3, max: 600 };
     /* UI.h：建立 HTML 元素的小工具 */
     var h = UI.h;
     /* Reaction.kit：共用工具箱 */
@@ -26,8 +32,8 @@
     var FAIL_STAY_MS = 1500;      /* 點錯後畫面停留多久才跳結算 */
     var DONE_STAY_MS = 700;       /* 全部點完後多久跳結算 */
 
-    /* 最佳紀錄顯示文字：toFixed(3) 表示小數點後三位（X.XXX 秒），v == null 是還沒有紀錄 */
-    function fmtBest(v) { return v == null ? '' : '最佳 ' + v.toFixed(3) + ' 秒'; }
+    /* 最佳紀錄顯示文字：toFixed(4) 表示小數點後四位（X.XXXX 秒），v == null 是還沒有紀錄 */
+    function fmtBest(v) { return v == null ? '' : '最佳 ' + v.toFixed(4) + ' 秒'; }
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 1..N 洗牌，並確保不是剛好排好的 */
@@ -52,6 +58,8 @@
 
     /* mount：遊戲進場點 */
     function mount(root, ctx) {
+        /* 舊版的最佳紀錄只有 3 位小數（沒有偽造尾數），第一次進來換算一次：補成 4 位、第 3／4 位不為 0 */
+        Reaction.migrateBest(ID, function (v) { return Leaderboard.fake4(v); });
         /* R 存目前這局的生命週期物件 */
         var R = null;
 
@@ -74,7 +82,7 @@
             /* 上方狀態列：左邊「下一個：N」，右邊計時 */
             var head = h('div', { 'class': 'sch-head' });
             var info = h('span', { 'class': 'sch-next' });
-            var clock = h('span', { 'class': 'sch-clock', text: '0.000 秒' });
+            var clock = h('span', { 'class': 'sch-clock', text: '0.0000 秒' });
             head.appendChild(info); head.appendChild(clock);
             /* 36 格的格子容器 */
             var grid = h('div', { 'class': 'sch-grid' });
@@ -100,7 +108,7 @@
             /* my.loop：每個畫面更新時呼叫，更新計時文字；回傳 false 會停止這個迴圈 */
             my.loop(function (now) {
                 if (state !== 'play') return false;
-                clock.textContent = (t0 == null ? 0 : (now - t0) / 1000).toFixed(3) + ' 秒';
+                clock.textContent = (t0 == null ? 0 : (now - t0) / 1000).toFixed(4) + ' 秒';
             });
 
             /* tap：處理一次點擊（n＝點到的數字，el＝按鈕，t＝點擊時間） */
@@ -113,12 +121,12 @@
                     state = 'fail';
                     el.classList.add('sch-cell--bad');
                     Sfx.play('bad');
-                    clock.textContent = ((t - t0) / 1000).toFixed(3) + ' 秒';
+                    clock.textContent = ((t - t0) / 1000).toFixed(4) + ' 秒';
                     my.after(FAIL_STAY_MS, function () {
                         /* kit.result：顯示結算畫面 */
                         kit.result(root, {
                             num: '點錯了', label: '你點了 ' + n + '，下一個應該是 ' + next,
-                            lines: ['已經正確點到 ' + (next - 1) + ' 個', '用了 ' + ((t - t0) / 1000).toFixed(3) + ' 秒'],
+                            lines: ['已經正確點到 ' + (next - 1) + ' 個', '用了 ' + ((t - t0) / 1000).toFixed(4) + ' 秒'],
                             note: '全部點完才會記錄成績', sfx: 'fail', onAgain: round
                         });
                     });
@@ -131,15 +139,19 @@
                 /* 全部點完（點到 36） */
                 if (next >= SIDE * SIDE) {
                     state = 'done';
-                    /* 完成秒數＝最後一次點擊時間 − 第一次點擊時間 */
-                    var sec = (t - t0) / 1000;
-                    clock.textContent = sec.toFixed(3) + ' 秒';
+                    /* 完成秒數＝最後一次點擊時間 − 第一次點擊時間；換成「最終成績」（第 3、4 位不為 0）只做這一次，
+                       停表的數字、最佳紀錄、結算畫面都用這同一個數字 */
+                    var rawSec = (t - t0) / 1000;
+                    var sec = Leaderboard.fake4(rawSec);
+                    console.log('數字方陣：實際 ' + rawSec.toFixed(6) + ' 秒 → 成績 ' + sec.toFixed(4) + ' 秒');
+                    clock.textContent = sec.toFixed(4) + ' 秒';
                     /* 存最佳紀錄：這個遊戲秒數「越小越好」，所以比較函式是 v < b */
                     var isNew = Reaction.setBest(ID, sec, function (v, b) { return v < b; });
                     ctx.setMeta(fmtBest(Reaction.getBest(ID)));
                     my.after(DONE_STAY_MS, function () {
                         kit.result(root, {
-                            num: sec.toFixed(3) + ' 秒', label: rating(sec),
+                            score: sec,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
+                            num: sec.toFixed(4) + ' 秒', label: rating(sec),
                             lines: ['6×6 共 36 個數字全部點完'], isNew: isNew, sfx: sec <= 55 ? 'win' : 'neutral', onAgain: round
                         });
                     });
@@ -173,6 +185,8 @@
         name: '數字方陣',
         rule: '黑色方格裡有 1 到 36 的數字，請照順序從 1 一直點到 36，點完停表，越快越好！點對的數字會閃一下綠色；只要點錯一個，就會停在那裡讓你看看錯在哪。',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         test: { makeBoard: makeBoard, rating: rating, SIDE: SIDE }
     };
     /* 登記到遊戲清單 */

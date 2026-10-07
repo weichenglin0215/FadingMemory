@@ -18,6 +18,10 @@
     'use strict';
 
     var ID = 'seven';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 seven 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 個', label: '通過數字', min: 1, max: 1000 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -55,8 +59,8 @@
         if (n >= 15) return '不錯喔！';
         return '再試一次，會更遠！';
     }
-    /* 把秒數格式化成 X.XXX 秒 */
-    function fmtSec(s) { return s.toFixed(3) + ' 秒'; }
+    /* 把秒數格式化成 X.XXXX 秒（4 位小數；平均反應在結算時用 Leaderboard.fake4 產生過，見 fail） */
+    function fmtSec(s) { return s.toFixed(4) + ' 秒'; }
 
     /* mount：遊戲進場點 */
     function mount(root, ctx) {
@@ -132,8 +136,9 @@
                 my.after(FAIL_SHOW_MS, function () {
                     var avg = rts.length ? rts.reduce(function (a, b) { return a + b; }, 0) / rts.length : null;
                     kit.result(root, {
+                        score: passed,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: String(passed), label: rating(passed),
-                        lines: [msg].concat(avg != null ? ['答對的平均反應 ' + fmtSec(avg)] : []),
+                        lines: [msg].concat(avg != null ? ['答對的平均反應 ' + fmtSec(Leaderboard.fake4(avg))] : []),
                         isNew: isNew && passed > 0, sfx: passed >= 15 ? 'win' : 'fail',
                         onAgain: function () { round(1); },
                         resume: { level: back, run: function () { round(back); } }
@@ -178,6 +183,8 @@
         name: '逢七過',
         rule: '上面的數字會一個一個往上加。普通的數字要點上面的數字格子；遇到 7、7 的倍數（14、21、28…），或是數字裡有 7（17、27、70～79…），要按下面的「跳過」。每個數字都有倒數，越後面越短。錯一次就結束，看你能數到幾！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { isSkip: isSkip, dwellFor: dwellFor, skipReason: skipReason, why: why, rating: rating, DWELL_START: DWELL_START, DWELL_END: DWELL_END, RAMP_N: RAMP_N }
     };

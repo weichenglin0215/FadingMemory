@@ -17,6 +17,10 @@
     'use strict';
 
     var ID = 'pour';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 pour 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'min', decimals: 4, format: '{v}%', label: '誤差', min: 0, max: 100 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -45,7 +49,8 @@
     var yOf = function (L) { return GB - L * GH; };
     var YT = yOf(TARGET);
 
-    function fmtPct(v) { return v.toFixed(2) + '%'; }
+    /* 百分比的顯示格式：4 位小數（水位誤差等；成績用 Leaderboard.fake4 產生過，見 verdict） */
+    function fmtPct(v) { return v.toFixed(4) + '%'; }
     function fmtBest(v) { return v == null ? '' : '最佳誤差 ' + fmtPct(v); }
 
     /* 純函式（也給 Node 測試用） */
@@ -112,6 +117,8 @@
 
     /* mount：遊戲進場點 */
     function mount(root, ctx) {
+        /* 舊版最佳紀錄只有兩位小數的真實誤差：第一次進來換算成「4 位、第 3／4 位不為 0」 */
+        Reaction.migrateBest(ID, function (v) { return Leaderboard.fake4(v); });
         var R = null;
 
         /* round：開一局（只有一回合） */
@@ -346,8 +353,14 @@
 
             /* 結算橫幅：顯示誤差評語與再來一次 */
             /* ─── 結算橫幅 ─── */
-            function verdict(errPct, err) {
+            function verdict(errPct, realErr) {
                 state = 'verdict';
+                /* 最終成績（誤差 %）：第 3、4 位不為 0，只產生這一次；評語、最佳紀錄、畫面文字都用它。
+                   「水位」是由它推出來的（80% ± 誤差），這樣玩家自己拿水位減 80 也會得到同一個誤差；
+                   放大看到的刻度尺仍然是真實的水位。 */
+                var err = Leaderboard.fake4(realErr);
+                var shownLevel = TARGET * 100 + (errPct > 0 ? err : -err);
+                console.log('倒到八分滿：實際誤差 ' + realErr.toFixed(6) + '% → 成績 ' + err.toFixed(4) + '%（水位 ' + fmtPct(shownLevel) + '）');
                 var isNew = Reaction.setBest(ID, err, function (v, b) { return v < b; });
                 ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
                 hint.textContent = '';
@@ -355,10 +368,12 @@
                 var kids = [];
                 kids.push(h('div', { 'class': 'rx-result__num pour-verdict__num', text: rating(err) }));
                 kids.push(h('div', { 'class': 'rx-result__label', text: overflow ? '水滿出來了，水位 100%' : (err < 0.005 ? '分毫不差！' : (errPct > 0 ? '多倒了 ' : '少倒了 ') + fmtPct(err)) }));
-                kids.push(h('div', { 'class': 'hint rx-result__line', text: '水位 ' + fmtPct(level * 100) + '，目標 80%' }));
+                kids.push(h('div', { 'class': 'hint rx-result__line', text: '水位 ' + fmtPct(overflow ? 100 : shownLevel) + '，目標 80%' }));
                 if (isNew) kids.push(h('div', { 'class': 'hint hint--ok', text: '新紀錄！最小誤差' }));
                 kids.push(h('button', { 'class': 'btn btn--primary', text: '再倒一次', on: { click: function () { Sfx.play('click'); round(); } } }));
                 field.appendChild(h('div', { 'class': 'pour-verdict', attrs: { 'data-sfx': sfx } }, kids));
+                /* 送世界排行榜（結算畫面已經在畫面上了） */
+                Leaderboard.submit(ID, err);
             }
 
             /* G.debug：測試用後門，pour(ms) 可模擬按住 ms 毫秒 */
@@ -394,6 +409,8 @@
         name: '倒到八分滿',
         rule: '按住畫面把水倒進杯子，倒到杯子的「八分滿」（高度的 80%）就放手。杯子沒有刻度，水面也一直在抖，只能靠感覺！只有一次機會，放手後會 ZOOM IN 放大看你差了幾 %。',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { makeProfile: makeProfile, levelAt: levelAt, timeToFull: timeToFull, flowAt: flowAt, zoomWindow: zoomWindow, stepFor: stepFor, rating: rating, TARGET: TARGET }
     };

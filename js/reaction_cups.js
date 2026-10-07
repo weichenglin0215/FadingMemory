@@ -16,6 +16,10 @@
     'use strict';
 
     var ID = 'cups';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 cups 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 200 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -234,6 +238,7 @@
                         var passed = level - 1;
                         var isNew = passed > 0 && Reaction.getBest(ID) === passed && bestLevel !== passed;
                         kit.result(root, {
+                            score: passed,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: '通過 ' + passed + ' 關', label: '猜錯了，球在另一個杯子', sfx: passed >= 5 ? 'win' : 'fail',
                             lines: ['這一關有 ' + n + ' 個杯子、換了 ' + swapsFor(level) + ' 次'],
                             isNew: isNew, onAgain: function () { bestLevel = Reaction.getBest(ID); round(1); }
@@ -274,6 +279,8 @@
         name: '球在哪杯',
         rule: '球藏在其中一個杯子下面。先看清楚球在哪裡，杯子蓋回後會快速成對交換位置，眼睛盯緊！最後點出球在哪個杯子。答對進下一關，杯子會變多、換得更多更快。',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { cupsFor: cupsFor, swapsFor: swapsFor, swapSecFor: swapSecFor, makeSwaps: makeSwaps, applySwaps: applySwaps }
     };

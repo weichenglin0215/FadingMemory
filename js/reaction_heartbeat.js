@@ -28,6 +28,10 @@
     'use strict';
 
     var ID = 'heartbeat';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 heartbeat 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 拍', label: '撐過拍數', min: 1, max: 1000 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -194,7 +198,7 @@
             /* 更新標題列右側的小字 */
             function meta() { ctx.setMeta(kit.meta(['機會 ' + lives, fmtBest(Reaction.getBest(ID))])); }
             function paintHead(extra) {
-                head.textContent = '撐過 ' + cleared + ' 拍　每拍 ' + baseInterval(beatNo).toFixed(2) + ' 秒' + (extra ? '　' + extra : '');
+                head.textContent = '撐過 ' + cleared + ' 拍　每拍 ' + baseInterval(beatNo).toFixed(4) + ' 秒' + (extra ? '　' + extra : '');
             }
             meta(); paintHead();
 
@@ -328,8 +332,9 @@
                 for (var s = 0; s < 3; s++) if (alive[s]) { my.cancel(alive[s].timer); }
                 my.after(900, function () {
                     kit.result(root, {
+                        score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: cleared + ' 拍', label: '節奏亂掉了',
-                        lines: ['最後一拍：' + why, '最快的間隔 ' + baseInterval(beatNo).toFixed(2) + ' 秒'],
+                        lines: ['最後一拍：' + why, '最快的間隔 ' + baseInterval(beatNo).toFixed(4) + ' 秒'],
                         isNew: newRec, sfx: cleared >= 30 ? 'win' : 'fail', onAgain: round
                     });
                 });
@@ -385,6 +390,8 @@
         name: '心跳複製',
         rule: '左、中、右三個位置會冒出球（有時一顆、有時兩顆、有時三顆，有時這一拍什麼都沒有），球外面有一圈倒數圈，要在圈跑完之前點到球。節奏一開始很規律，然後會突然改變！拍子越來越快，兩顆以上要全部點完。點到沒有球的位置、或圈跑完了，都會失去一次機會。',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { baseInterval: baseInterval, spacingFor: spacingFor, pool: pool, makeCycle: makeCycle, makeBreak: makeBreak, makeSegment: makeSegment, Generator: Generator, COMBOS: COMBOS, ballsOf: ballsOf, RAMP_BEATS: RAMP_BEATS }
     };

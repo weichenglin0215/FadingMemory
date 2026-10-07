@@ -17,6 +17,8 @@
        Sfx.play('zoom')     鏡頭推進（往上掃的音）
        Sfx.play('flip')     翻牌、換字
        Sfx.play('noteL'/'noteC'/'noteR')  三個位置的短音（C5／E5／G5），Sfx.play('kick') 底鼓
+       Sfx.play('fanfare')  進榜的歡呼號角（約 3 秒，世界排行榜用）
+       Sfx.play('boom')     煙火爆開（低沉的「咚」加一串閃亮高音，世界排行榜用）
    · 結算背景音樂：Sfx.bgm('result') 開始循環、Sfx.stopBgm() 停止（重複呼叫不會重頭播）。
      js/reaction.js 會自己偵測結算畫面（有 data-sfx 或 .rx-result__num 的卡片）
      自動播「過關／失敗」短旋律，接著接上背景音樂；卡片被移除就停。
@@ -174,7 +176,23 @@
         whoosh: function (t) { noise(t, 0.28, { freq: 500, freqTo: 4000, q: 1.2, vol: 0.12 }); },
         zoom: function (t) { tone(300, t, 0.6, { type: 'sine', vol: 0.12, slideTo: 1500, attack: 0.05 }); },
         /* 結算前的「完成」短音（不知道輸贏時用） */
-        done: function (t) { seq([72, 79, 84], t, 0.09, { vol: 0.13 }); }
+        done: function (t) { seq([72, 79, 84], t, 0.09, { vol: 0.13 }); },
+        /* 進榜歡呼號角（約 3 秒）：G-C-E-G 往上衝 → 高音 C 長音配和弦 → 一串閃亮高音 → 最後的 C 大調長和弦 */
+        fanfare: function (t) {
+            seq([67, 72, 76, 79], t, 0.1, { vol: 0.16 });
+            tone(hz(84), t + 0.45, 0.55, { vol: 0.16 });
+            [72, 76, 79].forEach(function (m) { tone(hz(m), t + 0.45, 0.9, { vol: 0.09, type: 'triangle' }); });
+            seq([79, 84, 88, 91, 88, 91, 96], t + 1.1, 0.09, { vol: 0.14 });
+            [60, 72, 76, 79, 84].forEach(function (m) { tone(hz(m), t + 1.8, 1.3, { vol: 0.09, type: 'triangle' }); });
+            tone(hz(96), t + 1.8, 1.1, { vol: 0.12 });
+            noise(t + 1.8, 0.5, { filter: 'highpass', freq: 6000, vol: 0.05 });
+        },
+        /* 煙火爆開：低沉的「咚」＋一小串往上的閃亮音 */
+        boom: function (t) {
+            tone(130, t, 0.2, { type: 'sine', vol: 0.2, slideTo: 50 });
+            noise(t, 0.4, { filter: 'highpass', freq: 3000, freqTo: 8000, vol: 0.07 });
+            seq([91, 95, 98, 103], t + 0.04, 0.05, { vol: 0.05, type: 'triangle' });
+        }
     };
 
     /* 結算背景音樂：自己編的 4 小節循環（C 大調和弦 C－Am－F－G） */

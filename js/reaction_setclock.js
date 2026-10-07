@@ -21,6 +21,10 @@
     'use strict';
 
     var ID = 'setclock';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 setclock 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 200 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -172,15 +176,19 @@
                 if (state !== 'play') return;
                 state = 'judged';
                 tb.set(0);
-                /* diff：目前和目標的差距（分鐘） */
+                /* diff：目前和目標的差距（分鐘，真實的）；dispDiff＝畫面上顯示的差距（4 位小數、第 3／4 位不為 0，只產生一次）。
+                   撥對的那一關（ok）顯示的差距不能超過容許誤差 TOL，不然會變成「撥對了、卻顯示差得比容許的還多」 */
                 var diff = circDiff(cur, L.target);
+                var dispDiff = Leaderboard.fake4(Math.abs(diff));
+                if (ok) dispDiff = Math.min(dispDiff, TOL);
+                console.log('撥時鐘：第 ' + level + ' 關 實際差 ' + Math.abs(diff).toFixed(6) + ' 分鐘 → 顯示 ' + dispDiff.toFixed(4) + ' 分鐘');
                 /* 撥對：過關，存最佳紀錄、顯示綠色，稍後進下一關 */
                 if (ok) {
                     cleared = level;
                     if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
                     dial.classList.add('sc-dial--ok');
                     Sfx.play('win');
-                    head.textContent = (timeout ? '時間到，剛好撥對了！' : '準確！') + '差 ' + Math.abs(diff).toFixed(1) + ' 分鐘以內';
+                    head.textContent = (timeout ? '時間到，剛好撥對了！' : '準確！') + '差 ' + dispDiff.toFixed(4) + ' 分鐘以內';
                     level++;
                     my.after(NEXT_MS, startLevel);
                     return;
@@ -194,7 +202,7 @@
                 ghostH.setAttribute('transform', 'rotate(' + hourAngle(L.target).toFixed(2) + ' ' + CX + ' ' + CY + ')');
                 ghostM.setAttribute('transform', 'rotate(' + minuteAngle(L.target).toFixed(2) + ' ' + CX + ' ' + CY + ')');
                 ghost.setAttribute('opacity', 1);
-                head.textContent = (timeout ? '時間到！' : '差了 ' + Math.abs(diff).toFixed(1) + ' 分鐘') + '　綠色虛線是正確的位置';
+                head.textContent = (timeout ? '時間到！' : '差了 ' + dispDiff.toFixed(4) + ' 分鐘') + '　綠色虛線是正確的位置';
                 meta();
                 /* 沒有機會了：顯示結算畫面 */
                 if (lives <= 0) {
@@ -202,8 +210,9 @@
                         /* kit.resumeFrom：失敗後可從前 5 關繼續 */
                         var back = kit.resumeFrom(level);
                         kit.result(root, {
+                            score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: cleared + ' 關', label: cleared >= 10 ? '時間掌握大師！' : (cleared >= 5 ? '很會看時間！' : '再試一次，會更準！'),
-                            lines: ['最後一關目標 ' + fmt12(L.target), timeout ? '時間到了還沒撥好' : '你撥到 ' + fmt12(cur) + '，差 ' + Math.abs(diff).toFixed(1) + ' 分鐘'],
+                            lines: ['最後一關目標 ' + fmt12(L.target), timeout ? '時間到了還沒撥好' : '你撥到 ' + fmt12(cur) + '，差 ' + dispDiff.toFixed(4) + ' 分鐘'],
                             note: '遊戲成績，不是醫療檢查', isNew: newRec, sfx: cleared >= 6 ? 'win' : 'fail', onAgain: function () { round(1); },
                             resume: { level: back, run: function () { round(back); } }
                         });
@@ -288,6 +297,8 @@
         name: '撥時鐘',
         rule: '上面是數字時鐘，下面是圓形時鐘。用手指轉動分針（時針會跟著走），在時間內撥到一樣的時間，按「好了」。誤差不能超過一分鐘，時間會越來越短！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         test: { norm: norm, circDiff: circDiff, minuteAngle: minuteAngle, hourAngle: hourAngle, fmt12: fmt12, timeLimit: timeLimit, hourOffsetMax: hourOffsetMax, makeLevel: makeLevel, isRight: isRight, pointerAngle: pointerAngle, angDelta: angDelta, TOL: TOL, LEVEL_RAMP: LEVEL_RAMP }
     };
     /* 登記到遊戲清單 */

@@ -26,6 +26,10 @@
     /* N：格子總數 16（4×4） */
     var N = 16;
 
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭；資料庫 MF_games 裡 spot 那一列要一致）。
+       成績是「撐到第幾關」＝整數、越大越好，所以不需要 4 位小數那一套（decimals: 0）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '第 {v} 關', label: '關卡', min: 1, max: 200 };
+
     /* 最佳紀錄文字 */
     function fmtBest(v) { return v == null ? '' : '最佳 第 ' + v + ' 關'; }
 
@@ -218,6 +222,11 @@
                         h('button', { 'class': 'btn btn--primary', text: '再挑戰一次', on: { click: function () { level = 1; round(); } } })
                     ])
                 ]));
+                /* 送世界排行榜（非同步，不會卡畫面；進榜了會自己跳出恭喜）。
+                   一定要放在結算卡片「已經在畫面上」之後：排行榜靠「畫面上有沒有結算卡片」
+                   判斷玩家是不是還在看結果（見 Reaction.resultShowing），太早送的話，
+                   伺服器回覆時卡片還沒出現，會被當成玩家已經開始下一局，恭喜就只剩小提示。 */
+                Leaderboard.submit(ID, level);
             });
         }
 
@@ -229,6 +238,8 @@
         id: ID,
         name: '大家來找碴',
         rule: '4×4 共 16 個方格，其中 15 格顏色完全一樣，只有 1 格的顏色略有不同（色相、彩度或明度）。點下你覺得不一樣的那一格；答對就進下一關，差異會越來越小，越後面要越仔細看。答錯就結束，比比看能撐到第幾關。',
-        mount: mount
+        mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE
     });
 })();

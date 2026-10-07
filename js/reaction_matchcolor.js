@@ -34,6 +34,10 @@
 
     /* 遊戲代號 */
     var ID = 'matchcolor';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 matchcolor 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'min', decimals: 4, format: '{v}%', label: '差異度', min: 0, max: 300 };
     /* UI.h：建立 HTML 元素的小工具 */
     var h = UI.h;
 
@@ -58,8 +62,8 @@
     /* 三個維度的代號 */
     var DIM_KEYS = ['h', 's', 'v'];
 
-    /* 差異度的顯示格式 */
-    function fmtPct(v) { return v.toFixed(2) + '%'; }
+    /* 差異度的顯示格式（4 位小數；成績用 Leaderboard.fake4 產生過，見 onDown） */
+    function fmtPct(v) { return v.toFixed(4) + '%'; }
     /* 最佳紀錄文字 */
     function fmtBest(v) { return v == null ? '' : '最佳 ' + fmtPct(v); }
     /* 隨機取 lo～hi 之間的小數 */
@@ -154,6 +158,8 @@
 
     /* mount：遊戲進場點 */
     function mount(root, ctx) {
+        /* 舊版最佳紀錄只有兩位小數的真實差異度：第一次進來換算成「4 位、第 3／4 位不為 0」 */
+        Reaction.migrateBest(ID, function (v) { return Leaderboard.fake4(v); });
         /* 替整個畫面加上黑底 class（樣式在 css/reaction.css 的 .mc-bg） */
         root.classList.add('mc-bg');
 
@@ -211,7 +217,10 @@
                 cancelAnimationFrame(raf);
                 root.removeEventListener('pointerdown', onDown);
 
-                var diff = diffPercent(leftRgb, shownRgb);
+                /* 最終成績（顏色差異度 %）：第 3、4 位不為 0，只產生這一次，結算文字、評語、最佳紀錄都用它 */
+                var realDiff = diffPercent(leftRgb, shownRgb);
+                var diff = Leaderboard.fake4(realDiff);
+                console.log('色不異空：實際差異度 ' + realDiff.toFixed(6) + '% → 成績 ' + fmtPct(diff));
                 var isNew = Reaction.setBest(ID, diff, function (v, b) { return v < b; });
                 ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
@@ -224,6 +233,8 @@
                 foot.appendChild(h('div', { 'class': 'mc-result', text: '顏色差異度 ' + fmtPct(diff), attrs: { 'data-sfx': diff <= 1 ? 'perfect' : (diff <= 5 ? 'win' : 'neutral') } }));
                 if (isNew) foot.appendChild(h('div', { 'class': 'mc-newrec', text: '新紀錄！' }));
                 foot.appendChild(h('button', { 'class': 'btn btn--primary mc-again', text: '再玩一次', on: { click: round } }));
+                /* 送世界排行榜（結算文字已經在畫面上了） */
+                Leaderboard.submit(ID, diff);
             });
         }
 
@@ -235,7 +246,9 @@
         id: ID,
         name: '色不異空',
         rule: '畫面左右各有一個色塊，中間隔著一條黑色長方形。左邊的色塊顏色不會變，右邊的色塊顏色會一直在變（每一局只有色相、彩度、亮度其中一種在變）。用眼睛仔細看，覺得兩個色塊的顏色「完全相同」的那一刻，馬上點擊畫面！兩個色塊會靠在一起，並告訴你實際的顏色差異度，越接近 0% 就越準。',
-        mount: mount
+        mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE
     });
     /* 讓 CLOSE_MS 同時決定 CSS transition 的時間（用 CSS 變數 --mc-close-ms） */
     /* 讓 CLOSE_MS 這個參數同時決定 CSS transition 的時間（見 mount 之後的 style 設定） */

@@ -21,6 +21,10 @@
     'use strict';
 
     var ID = 'same';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 same 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '答對題數', min: 1, max: 500 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -421,6 +425,7 @@
                         /* kit.resumeFrom：失敗後「從失敗題號往前 5 題」可繼續玩 */
                         var back = kit.resumeFrom(q);
                         kit.result(root, {
+                            score: right,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: right + ' 題', label: right >= 20 ? '記性真好！' : (right >= 10 ? '很不錯！' : '再試一次，會更準！'),
                             lines: ['一共出了 ' + q + ' 題', '最後一題：' + describe(cur.A) + ' ／ ' + describe(cur.B)],
                             isNew: newRec, sfx: right >= 10 ? 'win' : 'fail', onAgain: function () { round(1); },
@@ -453,6 +458,8 @@
         name: '相同嗎？',
         rule: '先看上面一格的東西，它消失之後，下面一格會出現第二個東西。判斷兩個是不是一樣，點「相同」或「不相同」。會有水果、圖形、數字和算式，越後面越像、越快！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         test: { makeQuestion: makeQuestion, sameFlags: sameFlags, pickType: pickType, unlockedTypes: unlockedTypes, nearNumber: nearNumber, exprFor: exprFor, showSec: showSec, blankSec: blankSec, askSec: askSec, simP: simP, FRUITS: FRUITS, SHAPES: SHAPES, UNLOCK: UNLOCK, RAMP_Q: RAMP_Q }
     };
     Reaction.register(G);

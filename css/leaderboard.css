@@ -1,0 +1,612 @@
+/* ═══════════════════════════════════════════════════════════════════
+   leaderboard.css — 秒反應「世界排行榜」的彈窗樣式
+   ───────────────────────────────────────────────────────────────────
+   對應 js/leaderboard_ui.js：世界前 30 名彈窗（.lb-card／.lb-row…）、輸入暱稱彈窗
+   （.lb-card--small）、進榜恭喜彈窗（.lb-card--congrats）、煙火畫布（.lb-fw）、小提示（.lb-toast）。
+   顏色、列高等數值全部在 css/theme.css 的 :root（「世界排行榜」那一段），這裡只引用變數。
+   命名規則跟其他 css 一樣：「__」是零件、「--」是變化版（例如 .lb-row--r1 ＝ 第一名那一列）。
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* 彈窗外框：蓋滿整個舞台的半透明底。z-index 比玩法說明彈窗（20）高，
+   這樣從「?」玩法說明裡打開排行榜，關掉之後會回到玩法說明。 */
+.lb-dlg {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sp-4) var(--sp-3);
+    background: var(--lb-overlay);
+}
+
+/* 彈窗裡的卡片（預設鋪滿整個高度，排行榜用；其他彈窗用下面的 --small／--congrats 改成依內容高度） */
+.lb-card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+    padding: var(--sp-4) var(--sp-3) var(--sp-3);
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-pop);
+    animation: lb-pop 0.22s ease;
+}
+
+/* 卡片是直向排列：只有榜單視窗（.lb-viewport）吃掉剩餘的高度，其他區塊（標題、欄位標題、提示、按鈕）
+   高度固定、不准被壓縮——不然榜單很長的時候，底下的按鈕會被擠成一條細線 */
+.lb-card>* {
+    flex: 0 0 auto;
+}
+
+.lb-card>.lb-viewport {
+    flex: 1 1 0;
+}
+
+@keyframes lb-pop {
+    from {
+        transform: translateY(18px) scale(0.97);
+        opacity: 0;
+    }
+
+    to {
+        transform: none;
+        opacity: 1;
+    }
+}
+
+/* ═══ 世界前 30 名：標題區 ═══ */
+.lb-head {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+}
+
+/* 左側金色圓形獎盃 */
+.lb-head__icon {
+    flex: 0 0 auto;
+    width: 68px;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--lb-gold-bg);
+    color: var(--lb-gold-ink);
+    font-size: 40px;
+    box-shadow: 0 3px 10px var(--lb-gold-glow);
+}
+
+.lb-head__txt {
+    min-width: 0;
+}
+
+.lb-title {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    line-height: var(--lh-tight);
+}
+
+.lb-sub {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 「暱稱：xxx　[修改]」那一行 */
+.lb-nickline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-2);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+.lb-nickline__t {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lb-nickline__btn {
+    flex: 0 0 auto;
+    height: 40px;
+    cursor: pointer;
+}
+
+/* 欄位標題：名次／暱稱／成績（欄寬跟下面的 .lb-row 一樣） */
+.lb-cols {
+    display: grid;
+    grid-template-columns: var(--lb-rank-col) 1fr auto;
+    gap: var(--sp-2);
+    padding: 0 var(--sp-3);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+.lb-cols span:first-child {
+    text-align: center;
+}
+
+.lb-cols span:last-child {
+    text-align: right;
+}
+
+/* ═══ 可拖曳捲動的榜單視窗 ═══
+   touch-action: none：告訴瀏覽器「這塊的手指拖曳我自己處理」，不要同時觸發瀏覽器的捲動／縮放
+   （慣性捲動是 js/leaderboard_ui.js 的 makeScroller 做的）。 */
+.lb-viewport {
+    position: relative;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+    touch-action: none;
+    cursor: grab;
+    border-radius: var(--r-md);
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.lb-viewport.is-drag {
+    cursor: grabbing;
+}
+
+/* 裡面很長的內容，由 JS 用 transform 上下平移；上方多留一點空間，讓第一名的皇冠不會被切到 */
+.lb-list {
+    will-change: transform;
+    padding: var(--sp-5) 0 var(--sp-4);
+}
+
+/* 右側的小滑桿：平常看不見，捲動時浮現，讓玩家知道這裡可以滑 */
+.lb-thumb {
+    position: absolute;
+    top: 0;
+    right: 3px;
+    width: 8px;
+    border-radius: var(--r-pill);
+    background: var(--c-ink-soft);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+}
+
+.lb-thumb.is-on {
+    opacity: 0.55;
+}
+
+/* 榜單底下的提示（進榜門檻、空位、連線狀態） */
+.lb-note {
+    min-height: 30px;
+    text-align: center;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-body);
+    color: var(--c-ink-soft);
+}
+
+/* ═══ 一列：名次 ｜ 暱稱 ｜ 成績 ═══ */
+.lb-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--lb-rank-col) 1fr auto;
+    align-items: center;
+    gap: var(--sp-2);
+    height: var(--lb-row-h);
+    margin-bottom: var(--sp-2);
+    padding: 0 var(--sp-3);
+    border-radius: var(--r-md);
+    background: var(--c-card-alt);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+/* 偶數名次換個底色，一列一列比較好對 */
+.lb-row--alt {
+    background: var(--c-paper);
+}
+
+.lb-rank {
+    position: relative;
+    text-align: center;
+}
+
+.lb-rank--n {
+    color: var(--c-ink-soft);
+    font-weight: var(--fw-black);
+}
+
+.lb-nick {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    min-width: 0;
+}
+
+/* 暱稱太長就用「…」收尾，不會把版面撐壞（暱稱本身最多 8 個字，正常放得下） */
+.lb-nick__t {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 「你」：標出這一列是自己 */
+.lb-you {
+    flex: 0 0 auto;
+    padding: 0 var(--sp-2);
+    height: 32px;
+    line-height: 32px;
+    border-radius: var(--r-pill);
+    background: var(--c-blue);
+    color: var(--c-on-accent);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-black);
+}
+
+/* tabular-nums：數字等寬，一整排成績的小數點才會對齊 */
+.lb-score {
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--fw-black);
+    color: var(--c-blue);
+}
+
+.lb-row--mine {
+    outline: 3px solid var(--c-blue);
+    outline-offset: -3px;
+}
+
+/* ═══ 前三名：特別凸顯（金／銀／銅底色、金屬徽章、比較高的列，第一名還有皇冠與流光） ═══ */
+.lb-row--top {
+    height: var(--lb-row-h-top);
+    border: 3px solid transparent;
+}
+
+.lb-row--top .lb-score {
+    color: inherit;
+    font-size: var(--fs-md);
+}
+
+.lb-row--r1 {
+    background: var(--lb-gold-row);
+    color: var(--lb-gold-ink);
+    border-color: var(--lb-gold-edge);
+    box-shadow: 0 4px 16px var(--lb-gold-glow);
+}
+
+.lb-row--r2 {
+    background: var(--lb-silver-row);
+    color: var(--lb-silver-ink);
+    border-color: var(--lb-silver-edge);
+    box-shadow: 0 4px 14px var(--lb-silver-glow);
+}
+
+.lb-row--r3 {
+    background: var(--lb-bronze-row);
+    color: var(--lb-bronze-ink);
+    border-color: var(--lb-bronze-edge);
+    box-shadow: 0 4px 14px var(--lb-bronze-glow);
+}
+
+/* 名次徽章：圓形金屬牌，數字在中間 */
+.lb-medal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 3px solid var(--c-on-accent);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    box-shadow: 0 2px 8px var(--lb-gold-glow);
+}
+
+.lb-row--r1 .lb-medal {
+    background: var(--lb-gold-bg);
+    color: var(--lb-gold-ink);
+}
+
+.lb-row--r2 .lb-medal {
+    background: var(--lb-silver-bg);
+    color: var(--lb-silver-ink);
+    box-shadow: 0 2px 8px var(--lb-silver-glow);
+}
+
+.lb-row--r3 .lb-medal {
+    background: var(--lb-bronze-bg);
+    color: var(--lb-bronze-ink);
+    box-shadow: 0 2px 8px var(--lb-bronze-glow);
+}
+
+/* 第一名徽章上方的皇冠 */
+.lb-crown {
+    position: absolute;
+    left: 50%;
+    top: -22px;
+    transform: translateX(-50%);
+    font-size: 30px;
+    line-height: 1;
+    color: var(--lb-gold-edge);
+}
+
+/* 皇冠圖示預設只有線條，這裡填滿成實心 */
+.lb-crown .icon {
+    width: 1em;
+    height: 1em;
+    fill: currentColor;
+}
+
+/* 第一名那一列定時掃過一道流光（clip-path 把光裁在圓角列的範圍內） */
+.lb-row--r1::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    clip-path: inset(0 round var(--r-md));
+    background: linear-gradient(105deg, transparent 38%, var(--lb-shine) 50%, transparent 62%);
+    transform: translateX(-120%);
+    animation: lb-shine 3.4s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes lb-shine {
+
+    0%,
+    55% {
+        transform: translateX(-120%);
+    }
+
+    100% {
+        transform: translateX(120%);
+    }
+}
+
+/* ═══ 載入中／空榜單／連不上 ═══ */
+.lb-msg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-3);
+    padding: var(--sp-5) var(--sp-4);
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-body);
+    color: var(--c-ink-soft);
+}
+
+.lb-msg--first {
+    color: var(--c-ink);
+    font-weight: var(--fw-black);
+}
+
+.lb-msg__icon {
+    width: 96px;
+    height: 96px;
+    color: var(--lb-gold-edge);
+}
+
+.lb-msg__sub {
+    font-size: var(--fs-sm);
+    color: var(--c-orange);
+}
+
+.lb-spin {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 6px solid var(--c-yellow-soft);
+    border-top-color: var(--c-orange);
+    animation: lb-spin 0.9s linear infinite;
+}
+
+@keyframes lb-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ═══ 輸入暱稱彈窗 ═══ */
+.lb-card--small {
+    height: auto;
+    gap: var(--sp-4);
+    padding: var(--sp-5) var(--sp-4) var(--sp-4);
+    text-align: center;
+}
+
+.lb-nick-title {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+}
+
+.lb-nick-text {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-body);
+    color: var(--c-ink-soft);
+}
+
+/* user-select: text：舞台整體禁止選取文字（stage.css），輸入框要例外，不然手機上打不了字 */
+.lb-input {
+    width: 100%;
+    height: var(--btn-h);
+    padding: 0 var(--sp-4);
+    border: var(--bd);
+    border-radius: var(--r-md);
+    background: var(--c-paper);
+    color: var(--c-ink);
+    font-family: var(--font-ui);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    text-align: center;
+    outline: none;
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+.lb-input:focus {
+    border-color: var(--c-blue);
+    box-shadow: 0 0 0 4px var(--c-blue-soft);
+}
+
+/* ═══ 進榜恭喜彈窗 ═══ */
+.lb-card--congrats {
+    height: auto;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-5) var(--sp-4) var(--sp-4);
+    text-align: center;
+}
+
+/* 煙火畫布：鋪滿整個舞台、疊在卡片上方（卡片幾乎佔滿畫面，放在後面會被擋住）、不吃觸控（按鈕照常能按） */
+.lb-fw {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.lb-cg__badge {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 128px;
+    height: 128px;
+    border-radius: 50%;
+    border: 5px solid var(--c-on-accent);
+    font-size: 68px;
+    font-weight: var(--fw-black);
+    animation: lb-bounce 1.3s ease-in-out infinite;
+}
+
+.lb-cg__badge--r1 {
+    margin-top: 40px;
+    background: var(--lb-gold-bg);
+    color: var(--lb-gold-ink);
+    box-shadow: 0 6px 20px var(--lb-gold-glow);
+}
+
+.lb-cg__badge--r2 {
+    background: var(--lb-silver-bg);
+    color: var(--lb-silver-ink);
+    box-shadow: 0 6px 20px var(--lb-silver-glow);
+}
+
+.lb-cg__badge--r3 {
+    background: var(--lb-bronze-bg);
+    color: var(--lb-bronze-ink);
+    box-shadow: 0 6px 20px var(--lb-bronze-glow);
+}
+
+.lb-cg__badge--n {
+    background: var(--btn-sky-bg);
+    color: var(--c-on-accent);
+    box-shadow: var(--btn-sky-shadow);
+}
+
+.lb-crown--big {
+    top: -46px;
+    font-size: 56px;
+}
+
+@keyframes lb-bounce {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.08);
+    }
+}
+
+.lb-cg__title {
+    margin-top: var(--sp-3);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-orange);
+}
+
+.lb-cg__rank {
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    line-height: var(--lh-tight);
+    color: var(--c-ink);
+}
+
+.lb-cg__sub {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+.lb-cg__score {
+    margin: var(--sp-2) 0;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-blue);
+    font-variant-numeric: tabular-nums;
+}
+
+.lb-cg__btns {
+    width: 100%;
+    margin-top: var(--sp-2);
+}
+
+/* ═══ 小提示（畫面下方浮出一行字，幾秒後淡出） ═══ */
+.lb-toast {
+    position: absolute;
+    left: var(--sp-5);
+    right: var(--sp-5);
+    bottom: var(--sp-5);
+    z-index: 40;
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-body);
+    color: var(--c-ink);
+    pointer-events: none;
+    animation: lb-pop 0.25s ease;
+    transition: opacity 0.4s ease;
+}
+
+.lb-toast.is-out {
+    opacity: 0;
+}
+
+/* 使用者在系統設定了「減少動態效果」：關掉彈出、流光、跳動（載入中的轉圈圈是狀態指示，保留） */
+@media (prefers-reduced-motion: reduce) {
+
+    .lb-card,
+    .lb-toast,
+    .lb-cg__badge,
+    .lb-row--r1::after {
+        animation: none;
+    }
+
+    .lb-thumb {
+        transition: none;
+    }
+}

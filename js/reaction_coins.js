@@ -28,6 +28,10 @@
     'use strict';
 
     var ID = 'coins';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 coins 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 200 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -372,6 +376,7 @@
                 my.after(1800, function () {
                     var ans = q.den.map(function (d, i) { return q.c[i] > 0 ? d + ' 元 ×' + q.c[i] : null; }).filter(Boolean).join('、');
                     kit.result(root, {
+                        score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: cleared + ' 關', label: '時間到了',
                         lines: ['第 ' + failLevel + ' 關要湊 ' + q.N, '其中一組答案：' + ans],
                         isNew: newRec, sfx: cleared >= 6 ? 'win' : 'fail',
@@ -409,6 +414,8 @@
         name: '零錢分類',
         rule: '上面是題目數字，桌上散著各種硬幣。點選硬幣，讓「已選」的總和剛好等於題目，湊法可能不只一種。小心：50 元拿太多會超過，零頭要用小硬幣細算，有的硬幣一枚都不該拿！每題有時間限制，看你能過幾關。',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { findSolution: findSolution, planGreedyFail: planGreedyFail, coinMin: coinMin, plan: plan, countSolutions: countSolutions, greedy: greedy, decompose: decompose, denomsFor: denomsFor, coinCap: coinCap, timeFor: timeFor, nRange: nRange, bulkLow: bulkLow, cntMax: cntMax, scatter: scatter, SIZE: SIZE, LEVEL_RAMP: LEVEL_RAMP, COINS_END: COINS_END }
     };

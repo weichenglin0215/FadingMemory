@@ -1,0 +1,12 @@
+{
+  "name": "fadingmemory-leaderboard-tests",
+  "private": true,
+  "description": "世界排行榜資料庫腳本（supabase/MF_leaderboard.sql）的測試，用 PGlite（跑在 WASM 的真 PostgreSQL）執行，不需要連 Supabase",
+  "type": "module",
+  "scripts": {
+    "test": "node sql_test.mjs && node e2e_client_sql.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8"
+  }
+}

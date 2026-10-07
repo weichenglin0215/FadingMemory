@@ -1803,7 +1803,8 @@
 /* 提示橫幅 */
 .ca-banner {
     min-height: 1.4em;
-    white-space: nowrap;
+    /* pre-line：文字裡的換行符號會真的換行；結算時的算式（4 位小數）比較長，分成兩行 */
+    white-space: pre-line;
     text-align: center;
     font-size: var(--fs-md);
     font-weight: var(--fw-bold);
@@ -2234,15 +2235,15 @@
     -webkit-user-select: none;
 }
 
-/* 左側：綠燈區，要用手指點（cursor:pointer） */
-.du-side--left {
+/* 右側：綠燈區，要用手指點（cursor:pointer）——放在右邊，右手好點，手也不會擋住左邊的紅燈 */
+.du-side--tap {
     background: var(--c-green-soft);
     border: 3px solid var(--c-green);
     cursor: pointer;
 }
 
-/* 右側：不用點的紅燈區（虛線框 dashed） */
-.du-side--right {
+/* 左側：不用點、只要用眼睛數的紅燈區（虛線框 dashed） */
+.du-side--count {
     background: var(--c-bad-soft);
     border: 3px dashed var(--c-bad);
 }
@@ -2307,19 +2308,18 @@
     color: var(--c-ink);
 }
 
-/* 四個答案按鈕（4 欄） */
+/* 十個答案按鈕：10 個連續的號碼，上下兩排各 5 個（5 欄、自動排成 2 列） */
 .du-opts {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-columns: repeat(5, 1fr);
     gap: var(--sp-2);
-    min-height: 100px;
 }
 
-/* 單個答案按鈕 */
+/* 單個答案按鈕（兩位數的號碼，字級用 --fs-xl 才放得進 5 欄） */
 .du-opt {
     padding: 0;
-    height: 100px;
-    font-size: var(--fs-xxl);
+    height: 84px;
+    font-size: var(--fs-xl);
     font-weight: var(--fw-black);
     color: var(--c-ink);
     background: var(--c-blue-soft);

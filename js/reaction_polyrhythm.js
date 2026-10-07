@@ -28,6 +28,10 @@
     'use strict';
 
     var ID = 'polyrhythm';
+
+    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 polyrhythm 那一列要一致
+       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 小節', label: '撐過小節', min: 1, max: 500 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -203,10 +207,14 @@
                 msg.textContent = '生命用完了！';
                 var acc = hits + misses + extras > 0 ? hits / (hits + misses + extras) * 100 : 0;
                 var bias = biasN ? biasSum / biasN : 0;
+                /* 結算畫面上的秒數類數字：4 位小數、第 3／4 位不為 0，各產生一次 */
+                var secsShown = Leaderboard.fake4(secs), biasShown = Leaderboard.fake4(Math.abs(bias));
+                console.log('左右不同拍：撐了 ' + secs.toFixed(6) + ' 秒、平均偏差 ' + bias.toFixed(6) + ' 秒 → 顯示 ' + secsShown.toFixed(4) + ' 秒、' + biasShown.toFixed(4) + ' 秒');
                 my.after(1100, function () {
                     kit.result(root, {
+                        score: n,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: n + ' 小節', label: rating(n),
-                        lines: ['撐了 ' + secs.toFixed(1) + ' 秒，最後的速度 ' + Math.round(bpmFor(curM)) + ' BPM', '打中 ' + hits + '、漏掉 ' + misses + '、多點 ' + extras + '（命中率 ' + acc.toFixed(0) + '%）', biasN ? (Math.abs(bias) < 0.005 ? '節奏很準' : (bias < 0 ? '平均偏早 ' : '平均偏晚 ') + Math.abs(bias).toFixed(3) + ' 秒') : ''].filter(Boolean),
+                        lines: ['撐了 ' + secsShown.toFixed(4) + ' 秒，最後的速度 ' + Math.round(bpmFor(curM)) + ' BPM', '打中 ' + hits + '、漏掉 ' + misses + '、多點 ' + extras + '（命中率 ' + acc.toFixed(0) + '%）', biasN ? (Math.abs(bias) < 0.005 ? '節奏很準' : (bias < 0 ? '平均偏早 ' : '平均偏晚 ') + biasShown.toFixed(4) + ' 秒') : ''].filter(Boolean),
                         isNew: isNew && n > 0, sfx: n >= 12 ? 'win' : 'neutral', onAgain: round
                     });
                 });
@@ -324,6 +332,8 @@
         name: '左右不同拍',
         rule: '左右各有一條軌道，有顏色的方塊會由上往下掉，碰到下方紅線的那一刻，就點該邊（左手點左邊、右手點右邊）。顏色代表到下一個方塊隔幾拍：紅 4 拍、橙 2 拍、黃 1 拍、綠半拍、藍四分之一拍、紫八分之一拍。左右兩邊每一小節各換一次顏色，而且兩邊不一樣，速度也會越來越快。漏掉方塊或亂點都會扣生命，看你能撐幾小節！',
         mount: mount,
+        /* 世界排行榜的成績規格 */
+        score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: { DENSE_S: DENSE_S, bpmFor: bpmFor, beatSec: beatSec, measureSec: measureSec, allowedColors: allowedColors, laneRate: laneRate, nextMeasure: nextMeasure, makeChart: makeChart, windowFor: windowFor, matchTap: matchTap, rating: rating, COLORS: COLORS, UNLOCK: UNLOCK, LEAD_S: LEAD_S, FALL_S: FALL_S, HIT_WIN: HIT_WIN, MIN_INTERVAL_S: MIN_INTERVAL_S, MAX_LANE_RATE: MAX_LANE_RATE, MAX_TOTAL_RATE: MAX_TOTAL_RATE, BPM_START: BPM_START, BPM_MAX: BPM_MAX, BPM_STEP: BPM_STEP, HEALTH_MAX: HEALTH_MAX }
     };
