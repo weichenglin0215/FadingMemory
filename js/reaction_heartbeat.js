@@ -173,6 +173,9 @@
             var lastPop = [0, 0, 0];
             var pending = {};                           /* 每一拍還沒點完的球數：beatIdx → 剩幾顆 */
             var nextAt = 0, timerId = null;
+            /* 操作提示（只在第一次進遊戲時）：第一顆心出現時，手指縮放擺在那顆心上（見 spawnBeat）；玩家第一次碰畫面就不再提示 */
+            var hintWanted = Reaction.kit.once('heartbeat.hint'), hintObj = null;
+            root.addEventListener('pointerdown', function () { hintWanted = false; }, { capture: true, once: true });
 
             /* 建立畫面元素：標題、場地 */
             var head = h('div', { 'class': 'hb-head' });
@@ -206,6 +209,7 @@
             /* ─── 發球 ─── */
             function spawnBeat(plan) {
                 var balls = ballsOf(plan.combo), n = balls.length;
+                if (hintObj) { hintObj.remove(); hintObj = null; }
                 var spacing = spacingFor(beatNo, n);
                 var idx = beatNo;
                 Sfx.play('kick');
@@ -225,6 +229,7 @@
                     var ring = kit.svg('circle', { 'class': 'hb-ring', r: RR, 'stroke-dasharray': CIRC.toFixed(1), 'stroke-dashoffset': 0, transform: 'rotate(-90)' }, g);
                     var b = { born: now, life: spacing * 1000, beat: idx, el: g, ring: ring, slot: s };
                     alive[s] = b;
+                    if (hintWanted && !hintObj) hintObj = Reaction.kit.hintOn(root, g, { mode: 'tap', text: '請點擊出現的愛心' });
                     b.timer = my.after(b.life, function () { if (alive[s] === b) expire(s, false); });
                 });
                 beatNo++;
@@ -263,8 +268,6 @@
                 e.preventDefault();
                 tap(slotOf(e), kit.evT(e));
             });
-            /* 操作提示（只在第一次進遊戲時）：點出現的圓球 → 手指縮放 */
-            if (Reaction.kit.once('heartbeat.hint')) Reaction.kit.hintOn(root, field, { mode: 'tap' });
             /* 玩家點了第 s 個位置：有球就打中，沒球就失誤（剛點掉的球 160ms 內再點不算，雙擊保護） */
             function tap(s, t) {
                 if (state !== 'run') return;

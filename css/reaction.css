@@ -1,5 +1,5 @@
 /* ═══ reaction.css — 秒反應（reaction.html）：說明彈窗＋共用結果卡＋七個小遊戲 ═══
-   檔案分段：最上面是遊戲共用的東西（說明彈窗 .rule-dlg、結算文字 .rx-result）；
+   檔案分段：最上面是遊戲共用的東西（結算彈窗裡的文字 .rx-result；彈窗外框與卡片是公版，見 css/dialog.css）；
    再來依序是「零秒出手」（.speed-）、「神準落下」（.drop-）、「大家來找碴」（.spot-）、
    「不可能任務」（.imp-）、「形形色色」（.shapes-）、「色不異空」（.mc-）、
    「七彩陷阱」（.rb-）各自專屬的樣式，對應的 DOM／邏輯在同名的
@@ -9,7 +9,7 @@
 /* 【新手導讀】
    · 這個檔案的規則都長得像 .名稱 { 屬性: 值; }：「.名稱」是 class 選擇器，JS 把同名 class 貼到元素上，下面的樣式就會生效。
    · 顏色、字級、間距一律用 var(--xxx)，變數定義在 css/theme.css 的 :root 裡（要換風格改那邊就好）。
-   · 名稱裡的「__」代表「某元素裡的零件」（例如 .rule-dlg__card = 說明彈窗裡的卡片），「--」代表「變化版」
+   · 名稱裡的「__」代表「某元素裡的零件」（例如 .dlg__card = 彈窗公版裡的卡片），「--」代表「變化版」
      （例如 .spot-tile--ok = 答對時的樣子）。這是 BEM 命名習慣，看名字就能猜到用途。
    · :active 是「手指／滑鼠正按著」的狀態，常用來做按下去縮小一點的回饋。
    · 想知道哪個 class 是哪個遊戲的？看上面檔頭的對照表，前綴相同的就是同一款遊戲。 */
@@ -34,82 +34,9 @@
     transform: scale(0.93);
 }
 
-/* ─── 說明彈窗（進場、或按「?」重看）─── */
-/* 說明彈窗：position:absolute + inset:0 蓋滿整個畫面，z-index:20 浮在遊戲上面；
-   半透明暖棕色底（rgba 最後的 0.35 是透明度），flex 置中卡片 */
-.rule-dlg {
-    position: absolute;
-    inset: 0;
-    z-index: 20;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--sp-5);
-    background: rgba(74, 59, 30, 0.35);
-}
-
-/* 彈窗裡的白色卡片 */
-.rule-dlg__card {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-4);
-    padding: var(--sp-5) var(--sp-4) var(--sp-4);
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-pop);
-    text-align: center;
-    /* 進場動畫：0.2 秒；rule-dlg-in 在下面用 @keyframes 定義 */
-    animation: rule-dlg-in 0.2s ease;
-}
-
-/* 進場動畫內容：從往下 18px 且全透明 → 回到原位且不透明（from 是起點，to 是終點） */
-@keyframes rule-dlg-in {
-    from {
-        transform: translateY(18px);
-        opacity: 0;
-    }
-
-    to {
-        transform: none;
-        opacity: 1;
-    }
-}
-
-/* 彈窗標題 */
-.rule-dlg__title {
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-}
-
-/* 彈窗規則內文（靠左對齊，其餘文字都是置中） */
-.rule-dlg__text {
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-body);
-    color: var(--c-ink-soft);
-    text-align: left;
-}
-
-/* ─── 共用：結果卡（三個遊戲都用）───
-   注意：這裡的 .rx-result 系列 class 是「零秒出手」結束時清空整個畫面、
-   從頭畫一份結果畫面用的；「神準落下」「大家來找碴」後來改成「不清空畫面、
-   結果疊在遊戲畫面上」的做法（見下面 .drop-result-overlay/-card），但疊上去的
-   卡片內部文字仍然沿用同一組 .rx-result__num/__label class，只是外層容器
-   換成 .drop-result-card，不是 .rx-result 本身。 */
-/* 結算頁容器：垂直排列、置中 */
-.rx-result {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--sp-3);
-    text-align: center;
-}
-
+/* ─── 共用：結算彈窗裡的文字 ───
+   結算彈窗（Reaction.kit.result）的外框與卡片是彈窗公版（css/dialog.css）；
+   卡片裡的大數字、評語用下面這組 .rx-result__num／__label。 */
 /* 結算頁的大數字（成績） */
 .rx-result__num {
     font-size: var(--fs-xxl);
@@ -257,40 +184,6 @@
     flex: 0 0 auto;
     width: 140px;
     height: 72px;
-}
-
-/* 結算畫面：不清空 #screen，三角形釘在方塊上、鏡頭停在最後放大倍率的那一幕
-   留在背景，這層半透明卡片疊在上面——玩家看得到自己剛剛插中的樣子。 */
-/* 結算疊層：蓋在遊戲畫面上的半透明背景 */
-.drop-result-overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 6;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--sp-5);
-    background: rgba(74, 59, 30, 0.45);
-}
-
-/* 結算疊層裡的卡片 */
-.drop-result-card {
-    width: 100%;
-    max-width: 380px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--sp-3);
-    padding: var(--sp-5) var(--sp-4) var(--sp-4);
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-pop);
-    text-align: center;
-}
-
-.drop-result-card .btn {
-    width: 100%;
 }
 
 /* ═══ 遊戲三：大家來找碴 ═══ */
@@ -472,23 +365,6 @@
     font-weight: 700;
 }
 
-/* 「再挑戰一次」：小小一顆、浮在畫面最下方（疊在警戒線上），不是整張蓋住畫面
-   的卡片——鏡頭特寫（成功/失敗＋公分數）要一直看得到，只多這一顆按鈕疊上去。
-   靠右擺：量尺線的下箭頭在正中央、「警戒線」標籤在左邊，按鈕靠右才不會
-   蓋住它們。 */
-/* 再挑戰按鈕，浮在畫面右下 */
-.imp-restart-btn {
-    position: absolute;
-    right: var(--sp-3);
-    bottom: var(--sp-3);
-    z-index: 10;
-    width: auto;
-    min-width: 180px;
-    height: var(--btn-h-sm);
-    padding: 0 var(--sp-5);
-    box-shadow: var(--shadow-pop);
-}
-
 /* 形形色色：在一堆圖案中找出不一樣的那個 */
 /* ═══ 遊戲五：形形色色 ═══ */
 .shapes-dark-bg {
@@ -608,29 +484,6 @@
     white-space: pre-line;
 }
 
-/* 結果大字 */
-.mc-result {
-    color: #FFFFFF;
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
-    font-variant-numeric: tabular-nums;
-    text-align: center;
-}
-
-/* 新紀錄 */
-.mc-newrec {
-    color: var(--c-green-light);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-black);
-}
-
-/* 再來一次按鈕 */
-.mc-again {
-    width: 260px;
-    height: var(--btn-h-sm);
-    margin-top: var(--sp-1);
-}
-
 /* ═══ 遊戲七：七彩陷阱 ═══
    純黑底、padding 歸零：上緣約 10% 高度放提示文字，其餘空間放正方形的 2×2 棋盤
    （邊長由 js 量出來設定），四格緊緊貼在一起、沒有縫隙。 */
@@ -687,6 +540,12 @@
     box-shadow: inset 0 0 0 10px #FFFFFF;
 }
 
+/* 點對了：方塊外圍變成粗黑框，粗細是白框的兩倍（20px），給玩家「點到了」的回饋感；
+   寫在 --new 後面，同時有兩個 class 時黑框蓋掉白框。方塊被換成新顏色時 js 會把它拿掉。 */
+.rb-cell--hit {
+    box-shadow: inset 0 0 0 20px #000;
+}
+
 /* 失敗標記：先蓋一圈黑色內框、再疊虛線——不管方塊本身是什麼顏色，虛線都
    看得清楚。bad＝你點錯的那一格（鮮紅色），missed＝本來該點、卻沒點到的那一格
    （白色，超時時標的就是它）。 */
@@ -736,13 +595,6 @@
     letter-spacing: 2px;
 }
 
-/* @media 是「媒體查詢」：使用者在系統設定了「減少動態效果」時，關掉彈窗進場動畫（無障礙貼心設計） */
-@media (prefers-reduced-motion: reduce) {
-
-    .rule-dlg__card {
-        animation: none;
-    }
-}
 
 /* ═══════════════════════════════════════════════════════════════════
    以下是第二批新遊戲（js/reaction_kit.js 的共用工具＋各款遊戲專屬樣式）
@@ -850,35 +702,6 @@
 /* 擺動的轉軸（中心圓點） */
 .pend-pivot {
     fill: var(--c-ink);
-}
-
-/* 結算：浮在欄位上緣（針尖在畫面中下方，不會被蓋住） */
-/* 結算視窗（見上方說明）：absolute 浮在場地上緣 */
-.pend-verdict {
-    position: absolute;
-    left: var(--sp-3);
-    right: var(--sp-3);
-    top: var(--sp-3);
-    z-index: 5;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--sp-2);
-    padding: var(--sp-4);
-    background: rgba(255, 253, 243, 0.94);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-pop);
-    text-align: center;
-}
-
-.pend-verdict__num {
-    font-size: var(--fs-xl);
-}
-
-.pend-verdict .btn {
-    width: 100%;
-    height: var(--btn-h-sm);
 }
 
 /* 標題列中間：遊戲名稱在上、meta（第 N 關・最佳…）在下，兩行疊起來 */
@@ -1604,36 +1427,6 @@
     border: var(--bd);
     border-radius: var(--r-md, 12px);
     pointer-events: none;
-}
-
-/* 結果卡片（浮在場地下方） */
-.pour-verdict {
-    position: absolute;
-    left: var(--sp-3);
-    right: var(--sp-3);
-    bottom: var(--sp-3);
-    z-index: 5;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--sp-2);
-    padding: var(--sp-4);
-    background: rgba(255, 253, 243, 0.94);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-pop);
-    text-align: center;
-}
-
-/* 結果大數字 */
-.pour-verdict__num {
-    font-size: var(--fs-xl);
-}
-
-/* 結果卡片裡的按鈕 */
-.pour-verdict .btn {
-    width: 100%;
-    height: var(--btn-h-sm);
 }
 
 /* 零錢分類：把桌上的零錢分成指定金額。 */

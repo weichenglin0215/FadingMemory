@@ -134,7 +134,8 @@
             right.classList.remove('cr-block--info'); right.innerHTML = '';
             ctrl.forEach(function (e) { e.style.display = ''; });
             paint();
-            hint = kit.fingerHint(stage, { mode: 'drag', x: x0 + t * TRACK_W, y: trackY + 4, dx: t < 0.5 ? 100 : -100, dy: 0, delay: 300 });
+            /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從圓點現在的位置往「剛剛那個顏色的位置」重複移動（第一次的正確答案） */
+            if (kit.once('colorrecall.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: x0 + t * TRACK_W, y: trackY + 4, dx: (tFor(cfg.dim, cfg.target[dimKey(cfg.dim)]) - t) * TRACK_W, dy: 0, delay: 300 });
             Sfx.play('go');
         }
         function hideHint() { if (hint) { hint.remove(); hint = null; } }

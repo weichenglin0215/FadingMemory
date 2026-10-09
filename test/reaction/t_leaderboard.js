@@ -1,7 +1,7 @@
 // 世界排行榜（js/leaderboard.js、js/leaderboard_ui.js）的純函式與用戶端邏輯測試：
 //   fake4 偽造位數、成績格式、進榜判斷、暱稱清理、慣性捲動物理、
 //   用「假 fetch」驗證快取／去重／離線／待送佇列／慶祝流程，
-//   以及「全部 78 款遊戲裡的 score 設定」跟「資料庫 MF_games 的設定」是否一致（防止兩邊改了一邊忘了另一邊）、
+//   以及「全部 85 款遊戲裡的 score 設定」跟「資料庫 MF_games 的設定」是否一致（防止兩邊改了一邊忘了另一邊）、
 //   每款遊戲有沒有真的接上送榜（kit.result 帶 score，或手動呼叫 Leaderboard.submit）。
 // 資料庫函式本身的測試在 test/leaderboard/（需要另外安裝 PGlite，見那邊的 README）。
 const fs = require('fs');
@@ -75,7 +75,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok(LB.isBetter(2, 1, 'max') && !LB.isBetter(1, 2, 'max') && !LB.isBetter(1, 1, 'max'), 'isBetter max（同分不算更好）');
 
   // ═══ 3. 全部遊戲：score 設定合法，而且跟資料庫 MF_games 的設定一致 ═══
-  ok(games.length === 78, '秒反應共 78 款遊戲（boot.js 的清單）：' + games.length);
+  ok(games.length === 85, '秒反應共 85 款遊戲（boot.js 的清單）：' + games.length);
   ok(new Set(games.map(g => g.id)).size === games.length, '遊戲 id 不重複');
   ok(new Set(games.map(g => g.name)).size === games.length, '遊戲名稱不重複（排行榜標題靠名稱辨認）');
   const sql = fs.readFileSync(ROOT + 'supabase/MF_leaderboard.sql', 'utf8').replace(/\r\n/g, '\n');
@@ -165,9 +165,9 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     ok(bodies2.length === 2 && bodies2.every(b => b && /\bscore\s*:/.test(b)), 'reaction_kit2.js 的兩個 kit.result 都要帶 score：' + bodies2.length);
   }
   const manualGames = Object.keys(wiring).filter(id => wiring[id].manual > 0).sort().join();
-  ok(manualGames === 'drop,impossible,matchcolor,pendulum,pour,rainbow,shapes,spot,speed'.split(',').sort().join(),
-    '手刻結算卡片（手動送榜）的遊戲清單有變動，請確認新加的遊戲接線正確：' + manualGames);
-  say('全部 ' + games.length + ' 款遊戲：score 設定合法、與資料庫一致；kit.result 自動送榜 ' + Object.keys(wiring).filter(id => wiring[id].viaKit > 0).length + ' 款、手動送榜 ' + manualGames.split(',').length + ' 款');
+  // V1.21.0 起所有遊戲的結算都走公版彈窗 kit.result（含「我有話要說」），不再有手刻結算卡片
+  ok(manualGames === '', '所有遊戲的結算都應該用公版 kit.result（帶 score），不要手刻結算卡片後手動送榜：' + manualGames);
+  say('全部 ' + games.length + ' 款遊戲：score 設定合法、與資料庫一致；kit.result 自動送榜 ' + Object.keys(wiring).filter(id => wiring[id].viaKit > 0).length + ' 款、手動送榜 ' + (manualGames ? manualGames.split(',').length : 0) + ' 款');
 
   // ═══ 4. 進榜判斷 qualifies ═══
   const board = (better, scores, mineIdx, limit) => ({ better, limit: limit || 30, top: scores.map((s, i) => ({ rank: i + 1, nick: 'n' + i, score: s, mine: i === mineIdx })) });
@@ -423,7 +423,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok(typeof rv === 'object', 'kit.result 仍回傳結算卡片元素');
   LB.submit = realSubmit; global.Reaction.current = null;
 
-  // ═══ 11. Leaderboard.submit 對全部 78 款遊戲：範圍檢查與完整送榜流程 ═══
+  // ═══ 11. Leaderboard.submit 對全部 85 款遊戲：範圍檢查與完整送榜流程 ═══
   // 假資料庫認得全部遊戲，行為跟 MF_submit_score 一樣：不認得的遊戲 → unknown_game
   const posted = [];
   global.fetch = (url, opt) => {
@@ -437,7 +437,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(out) });
   };
   let flowChecked = 0;
-  console.log = () => { };                    // 78 款 × 6 次送榜，模組的主控台訊息太多，這一段先靜音（FAIL 仍用 say 印出）
+  console.log = () => { };                    // 85 款 × 6 次送榜，模組的主控台訊息太多，這一段先靜音（FAIL 仍用 say 印出）
   for (const g of games) {
     const s = g.score;
     resetClient(); LB.setNick('測試員'); ui.celebrated.length = 0; posted.length = 0;

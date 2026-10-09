@@ -80,15 +80,18 @@
     box-shadow: inset 0 0 0 6px var(--c-bad);
 }
 
-/* ═══ 共用：操作提示（手指圖示） ═══
-   · 點擊物件：.rx-hint--tap，手指縮放＋指尖處一圈波紋
-   · 拖曳：.rx-hint--drag，淡淡的箭頭＋手指沿著箭頭來回移動
+/* ═══ 共用：操作提示（手指圖示＋一句短文字） ═══
+   · 點擊物件：.rx-hint--tap，手指縮放＋指尖處一圈波紋（手指擺在第一關的正確位置）
+   · 拖曳：.rx-hint--drag，淡淡的箭頭＋手指從起始位置往目標位置重複移動
+   · 四個方向都能拖：.rx-hint--drag4，四支箭頭，手指依序往上、右、下、左各走一趟
+   · 持續按住：.rx-hint--hold，手指按下去不放＋波紋
+   · 短文字：.rx-hint__label（例如「請點擊色塊」「請往左右拖曳」「請持續按住螢幕」）
    整個提示不攔截任何點擊（pointer-events:none） */
 .rx-hint {
     position: absolute;
     width: 0;
     height: 0;
-    z-index: 30;
+    z-index: 15;
     pointer-events: none;
 }
 
@@ -120,6 +123,32 @@
 
 .rx-hint--drag .rx-hint__finger {
     animation: rx-drag 1.4s ease-in-out infinite;
+}
+
+.rx-hint--drag4 .rx-hint__finger {
+    animation: rx-drag4 6s ease-in-out infinite;
+}
+
+/* 持續按住：手指按下去（縮小一點、往下壓）之後不放，波紋一圈圈往外擴 */
+.rx-hint--hold .rx-hint__finger {
+    transform-origin: 17px 3px;
+    animation: rx-hold 1.8s ease-in-out infinite;
+}
+
+/* 短文字：圓角小標籤，放在手指旁邊（位置由 js/reaction_kit2.js 的 kit.fingerHint 算，不會超出畫面） */
+.rx-hint__label {
+    position: absolute;
+    z-index: 16;
+    padding: var(--sp-1) var(--sp-4);
+    border-radius: var(--r-pill);
+    border: 3px solid var(--c-orange);
+    background: var(--c-card);
+    box-shadow: var(--shadow-card);
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    white-space: nowrap;
+    pointer-events: none;
 }
 
 /* 箭頭：從起點指向終點；以起點為旋轉中心，寬度＝距離（JS 設定） */
@@ -208,6 +237,60 @@
     100% {
         transform: scale(1.5);
         opacity: 0;
+    }
+}
+
+/* 四個方向：往上、回中心、往右、回中心、往下、回中心、往左、回中心，每趟約占 1/4 的時間（--l＝箭頭長度） */
+@keyframes rx-drag4 {
+
+    0%,
+    100% {
+        transform: translate(0, 0);
+    }
+
+    12% {
+        transform: translate(0, calc(var(--l) * -1));
+    }
+
+    25% {
+        transform: translate(0, 0);
+    }
+
+    37% {
+        transform: translate(var(--l), 0);
+    }
+
+    50% {
+        transform: translate(0, 0);
+    }
+
+    62% {
+        transform: translate(0, var(--l));
+    }
+
+    75% {
+        transform: translate(0, 0);
+    }
+
+    87% {
+        transform: translate(calc(var(--l) * -1), 0);
+    }
+}
+
+@keyframes rx-hold {
+
+    0%,
+    15% {
+        transform: translateY(0) scale(1);
+    }
+
+    35%,
+    85% {
+        transform: translateY(6px) scale(0.84);
+    }
+
+    100% {
+        transform: translateY(0) scale(1);
     }
 }
 

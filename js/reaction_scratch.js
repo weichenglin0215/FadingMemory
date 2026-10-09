@@ -124,8 +124,8 @@
             cells.push({ el: el, cv: cv, g: g, open: false, tick: 0 });
         })(i);
 
-        /* 操作提示：拖曳（手指在第一格上來回刮） */
-        hint = kit.fingerHint(stage, { mode: 'drag', x: x0 + CELL / 2 - 40, y: y0 + CELL / 2 + 20, dx: 80, dy: 0, delay: 400 });
+        /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，在第一格上左右來回刮（刮哪一格沒有標準答案，只是示範怎麼刮） */
+        if (kit.once('scratch.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: x0 + CELL / 2 - 40, y: y0 + CELL / 2 + 20, dx: 80, dy: 0, delay: 400, text: '請在格子上左右刮' });
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
 
         function openCell(i) {

@@ -121,8 +121,8 @@
         var okBtn = h('button', { 'class': 'btn btn--go st-ok', text: '蓋章' });
         stage.appendChild(okBtn);
 
-        /* 操作提示：拖曳（手指放在印章中央，往紙張方向來回） */
-        hint = kit.fingerHint(stage, { mode: 'drag', x: st.x, y: st.y, dx: 0, dy: -90, delay: 400 });
+        /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從印章中央往「紅框中央」重複移動（第一次的正確答案） */
+        if (kit.once('stamp.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: st.x, y: st.y, dx: cfg.frame.x - st.x, dy: cfg.frame.y - st.y, delay: 400, text: '請把印章拖到紅框中央' });
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
 
         kit.dragDamp(stage, {

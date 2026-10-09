@@ -145,8 +145,8 @@
         }
         paint();
 
-        /* 操作提示：拖曳（手指從水位線右邊的把手出發，上下來回） */
-        hint = kit.fingerHint(stage, { mode: 'drag', x: CX + 150, y: yOf(L), dx: 0, dy: -70, delay: 400 });
+        /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從水位線右邊的把手往「剛好一半容量的高度」重複移動（第一次的正確答案） */
+        if (kit.once('halfvol.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: CX + 150, y: yOf(L), dx: 0, dy: yOf(cfg.hs) - yOf(L), delay: 400 });
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
 
         kit.dragDamp(stage, {

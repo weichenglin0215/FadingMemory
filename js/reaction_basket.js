@@ -105,7 +105,11 @@
         var bPay = h('button', { 'class': 'btn btn--go', text: '結帳' });
         [big, tip, grid, info, h('div', { 'class': 'rx-btnrow' }, [bClear, bPay])].forEach(function (e) { stage.appendChild(e); });
         var hint = null;
-        if (level === 1) hint = kit.fingerHint(stage, { mode: 'tap', x: 84, y: 255, delay: 300 });
+        /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「正確組合裡的一樣菜」上（第一關的正確答案之一） */
+        if (level === 1 && kit.once('basket.hint')) {
+            var firstIdx = 0; while (firstIdx < tiles.length - 1 && !(q.mask & (1 << firstIdx))) firstIdx++;
+            hint = kit.hintOn(stage, tiles[firstIdx], { mode: 'tap', text: '請點擊要買的菜' });
+        }
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
 
         function paint() { tiles.forEach(function (el, i) { el.classList.toggle('bk-tile--on', !!(mask & (1 << i))); }); }

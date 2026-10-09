@@ -48,7 +48,7 @@
         { id: 'matchcolor', name: '色不異空', img: 'img/reaction/matchcolor.png' },
         { id: 'rainbow', name: '七彩陷阱', img: 'img/reaction/rainbow.png' },
         { id: 'pendulum', name: '六點鐘方向', img: 'img/reaction/pendulum.png' },
-        { id: 'tissue', name: '抽光它', img: 'img/reaction/tissue.png' },
+        { id: 'tissue', name: '抽光衛生紙', img: 'img/reaction/tissue.png' },
         { id: 'landolt', name: 'E視力檢查', img: 'img/reaction/landolt.png' },
         { id: 'lights', name: '點燈記憶', img: 'img/reaction/lights.png' },
         { id: 'cups', name: '球在哪杯', img: 'img/reaction/cups.png' },
@@ -117,7 +117,14 @@
         { id: 'watchoff', name: '哪支錶不準', img: 'img/reaction/watchoff.png' },
         { id: 'handsmeet', name: '兩針重疊', img: 'img/reaction/handsmeet.png' },
         { id: 'clearer', name: '越看越清楚', img: 'img/reaction/clearer.png' },
-        { id: 'twobags', name: '兩袋一樣重', img: 'img/reaction/twobags.png' }
+        { id: 'twobags', name: '兩袋一樣重', img: 'img/reaction/twobags.png' },
+        { id: 'stackup', name: '重心疊疊樂', img: 'img/reaction/stackup.png' },
+        { id: 'bridge', name: '搭一座橋', img: 'img/reaction/bridge.png' },
+        { id: 'halfcrowd', name: '一半的人', img: 'img/reaction/halfcrowd.png' },
+        { id: 'catroad', name: '貓咪走山路', img: 'img/reaction/catroad.png' },
+        { id: 'numline', name: '數線落點', img: 'img/reaction/numline.png' },
+        { id: 'twinsock', name: '找出雙胞胎襪子', img: 'img/reaction/twinsock.png' },
+        { id: 'mixcolor', name: '混出什麼色', img: 'img/reaction/mixcolor.png' }
     ];
     /* 目前在第幾頁（從 0 開始算，0 就是第一頁）。 */
     var gamePage = 0;

@@ -467,16 +467,12 @@
                 /* 不清空畫面：三角形釘在方塊上、鏡頭停在最後放大倍率的那一幕留在背景，
                    結算卡片疊一層半透明底蓋在上面——玩家看得到自己剛剛插中的樣子。 */
                 phase = 'result';
-                root.appendChild(h('div', { 'class': 'drop-result-overlay', attrs: { 'data-sfx': score >= 1000 ? 'perfect' : (score >= 500 ? 'win' : (score >= 100 ? 'neutral' : 'fail')) } }, [
-                    h('div', { 'class': 'drop-result-card' }, [
-                        h('div', { 'class': 'rx-result__num', text: score + ' 分' }),
-                        h('div', { 'class': 'rx-result__label', text: label }),
-                        isNew ? h('div', { 'class': 'hint hint--ok', text: '新紀錄！' }) : null,
-                        h('button', { 'class': 'btn btn--primary', text: '再挑戰一次', on: { click: round } })
-                    ])
-                ]));
-                /* 送世界排行榜（結算卡片已經在畫面上了；0 分不在有效範圍，Leaderboard.submit 會自己略過） */
-                Leaderboard.submit(ID, score);
+                /* 結算彈窗（公版 kit.result）：帶 score 會在彈窗出現之後自動送世界排行榜（0 分不在有效範圍，會自己略過） */
+                Reaction.kit.result(root, {
+                    num: score + ' 分', label: label, isNew: isNew, score: score,
+                    sfx: score >= 1000 ? 'perfect' : (score >= 500 ? 'win' : (score >= 100 ? 'neutral' : 'fail')),
+                    onAgain: round
+                });
             }
 
             /* 開場演出播完：顯示「落下」按鈕，隱藏提示文字（避免玩家拿固定文字當位置參考），開始左右反彈 */

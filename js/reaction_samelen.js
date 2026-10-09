@@ -73,8 +73,8 @@
         var msg = h('div', { 'class': 'sl-msg' });
         stage.appendChild(msg);
 
-        /* 操作提示：拖曳（手指從起點往右來回移動） */
-        hint = kit.fingerHint(stage, { mode: 'drag', x: START.x, y: sy, dx: 150, dy: 0, delay: 300 });
+        /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從起點往右移動「參考線一樣長」的距離（第一次的正確答案） */
+        if (kit.once('samelen.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: START.x, y: sy, dx: cfg.L, dy: 0, delay: 300 });
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
         function say(t) { msg.textContent = t; msg.classList.toggle('sl-msg--on', !!t); }
         function paint() {

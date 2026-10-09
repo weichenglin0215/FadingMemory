@@ -1,62 +1,18 @@
 /* ═══════════════════════════════════════════════════════════════════
    leaderboard.css — 秒反應「世界排行榜」的彈窗樣式
    ───────────────────────────────────────────────────────────────────
-   對應 js/leaderboard_ui.js：世界前 30 名彈窗（.lb-card／.lb-row…）、輸入暱稱彈窗
-   （.lb-card--small）、進榜恭喜彈窗（.lb-card--congrats）、煙火畫布（.lb-fw）、小提示（.lb-toast）。
+   對應 js/leaderboard_ui.js：世界前 30 名彈窗的內容（.lb-row…）、進榜恭喜彈窗的內容（.lb-cg__…）、
+   煙火畫布（.lb-fw）。彈窗的外框與卡片（位置、暗底、寬度、圓角、陰影、按鈕）、輸入框、小提示
+   全部是「彈窗公版」，樣式在 css/dialog.css（js/dialog.js 的 Dlg.open 產生）；這裡只寫各彈窗「卡片裡面」的專屬內容。
    顏色、列高等數值全部在 css/theme.css 的 :root（「世界排行榜」那一段），這裡只引用變數。
    命名規則跟其他 css 一樣：「__」是零件、「--」是變化版（例如 .lb-row--r1 ＝ 第一名那一列）。
    ═══════════════════════════════════════════════════════════════════ */
 
-/* 彈窗外框：蓋滿整個舞台的半透明底。z-index 比玩法說明彈窗（20）高，
-   這樣從「?」玩法說明裡打開排行榜，關掉之後會回到玩法說明。 */
-.lb-dlg {
-    position: absolute;
-    inset: 0;
-    z-index: 30;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--sp-4) var(--sp-3);
-    background: var(--lb-overlay);
-}
-
-/* 彈窗裡的卡片（預設鋪滿整個高度，排行榜用；其他彈窗用下面的 --small／--congrats 改成依內容高度） */
-.lb-card {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-2);
-    padding: var(--sp-4) var(--sp-3) var(--sp-3);
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-pop);
-    animation: lb-pop 0.22s ease;
-}
-
-/* 卡片是直向排列：只有榜單視窗（.lb-viewport）吃掉剩餘的高度，其他區塊（標題、欄位標題、提示、按鈕）
-   高度固定、不准被壓縮——不然榜單很長的時候，底下的按鈕會被擠成一條細線 */
-.lb-card>* {
-    flex: 0 0 auto;
-}
-
-.lb-card>.lb-viewport {
+/* 世界前 30 名彈窗的卡片是直向排列：只有榜單視窗（.lb-viewport）吃掉剩餘的高度，
+   其他區塊（標題、欄位標題、提示、按鈕）高度固定、不准被壓縮（.dlg__card>* 在 css/dialog.css）——
+   不然榜單很長的時候，底下的按鈕會被擠成一條細線。 */
+.dlg__card>.lb-viewport {
     flex: 1 1 0;
-}
-
-@keyframes lb-pop {
-    from {
-        transform: translateY(18px) scale(0.97);
-        opacity: 0;
-    }
-
-    to {
-        transform: none;
-        opacity: 1;
-    }
 }
 
 /* ═══ 世界前 30 名：標題區 ═══ */
@@ -419,56 +375,10 @@
     }
 }
 
-/* ═══ 輸入暱稱彈窗 ═══ */
-.lb-card--small {
-    height: auto;
-    gap: var(--sp-4);
-    padding: var(--sp-5) var(--sp-4) var(--sp-4);
-    text-align: center;
-}
-
-.lb-nick-title {
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-}
-
-.lb-nick-text {
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-body);
-    color: var(--c-ink-soft);
-}
-
-/* user-select: text：舞台整體禁止選取文字（stage.css），輸入框要例外，不然手機上打不了字 */
-.lb-input {
-    width: 100%;
-    height: var(--btn-h);
-    padding: 0 var(--sp-4);
-    border: var(--bd);
-    border-radius: var(--r-md);
-    background: var(--c-paper);
-    color: var(--c-ink);
-    font-family: var(--font-ui);
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-bold);
-    text-align: center;
-    outline: none;
-    -webkit-user-select: text;
-    user-select: text;
-}
-
-.lb-input:focus {
-    border-color: var(--c-blue);
-    box-shadow: 0 0 0 4px var(--c-blue-soft);
-}
-
-/* ═══ 進榜恭喜彈窗 ═══ */
-.lb-card--congrats {
-    height: auto;
+/* ═══ 進榜恭喜彈窗（外框與卡片是公版，這裡只調卡片裡的對齊與間距）═══ */
+.dlg--congrats .dlg__card {
     align-items: center;
     gap: var(--sp-2);
-    padding: var(--sp-5) var(--sp-4) var(--sp-4);
-    text-align: center;
 }
 
 /* 煙火畫布：鋪滿整個舞台、疊在卡片上方（卡片幾乎佔滿畫面，放在後面會被擋住）、不吃觸控（按鈕照常能按） */
@@ -565,42 +475,9 @@
     font-variant-numeric: tabular-nums;
 }
 
-.lb-cg__btns {
-    width: 100%;
-    margin-top: var(--sp-2);
-}
-
-/* ═══ 小提示（畫面下方浮出一行字，幾秒後淡出） ═══ */
-.lb-toast {
-    position: absolute;
-    left: var(--sp-5);
-    right: var(--sp-5);
-    bottom: var(--sp-5);
-    z-index: 40;
-    padding: var(--sp-3) var(--sp-4);
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-md);
-    box-shadow: var(--shadow-pop);
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-body);
-    color: var(--c-ink);
-    pointer-events: none;
-    animation: lb-pop 0.25s ease;
-    transition: opacity 0.4s ease;
-}
-
-.lb-toast.is-out {
-    opacity: 0;
-}
-
 /* 使用者在系統設定了「減少動態效果」：關掉彈出、流光、跳動（載入中的轉圈圈是狀態指示，保留） */
 @media (prefers-reduced-motion: reduce) {
 
-    .lb-card,
-    .lb-toast,
     .lb-cg__badge,
     .lb-row--r1::after {
         animation: none;

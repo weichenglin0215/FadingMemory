@@ -105,7 +105,8 @@
         function begin() {
             if (started) return;
             started = true; clock.start();
-            hint = kit.fingerHint(stage, { mode: 'tap', x: 236 + 30, y: 56 + 5 * CELL, delay: 300 });
+            /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「被偷改的格子」上（第一次的正確答案之一） */
+            if (kit.once('timestable.hint')) hint = kit.hintOn(stage, els[tb.tampered[0].a + ',' + tb.tampered[0].b], { mode: 'tap', delay: 300, text: '請點擊答案算錯的格子' });
         }
         var cover = kit.startCover(stage, { text: '9×9 乘法表裡有 3 格答案被偷偷改了。\n找出來！點錯一格加 3 秒。', onStart: begin });
         function hideHint() { if (hint) { hint.remove(); hint = null; } }

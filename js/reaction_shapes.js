@@ -69,6 +69,23 @@
         { type: 'text', a: '士', b: '土', colorable: true },
         { type: 'text', a: '大', b: '犬', colorable: true },
         { type: 'text', a: '未', b: '末', colorable: true },
+        /* V1.21.0 新增：筆畫很多（約 19～25 畫）、長得很像的中文字（hard:true）。格子越小越難分辨，第 4 關起才會抽到，
+           出現機率隨關卡增加（見 hardChance）；一樣要找「只有一格不一樣」。 */
+        { type: 'text', a: '讚', b: '讀', colorable: true, hard: true },
+        { type: 'text', a: '驚', b: '警', colorable: true, hard: true },
+        { type: 'text', a: '響', b: '饗', colorable: true, hard: true },
+        { type: 'text', a: '灣', b: '彎', colorable: true, hard: true },
+        { type: 'text', a: '麟', b: '鱗', colorable: true, hard: true },
+        { type: 'text', a: '讓', b: '壤', colorable: true, hard: true },
+        { type: 'text', a: '蘿', b: '羅', colorable: true, hard: true },
+        { type: 'text', a: '躍', b: '耀', colorable: true, hard: true },
+        { type: 'text', a: '贏', b: '羸', colorable: true, hard: true },
+        { type: 'text', a: '鑑', b: '鑒', colorable: true, hard: true },
+        { type: 'text', a: '體', b: '髓', colorable: true, hard: true },
+        { type: 'text', a: '欖', b: '攬', colorable: true, hard: true },
+        { type: 'text', a: '籬', b: '籮', colorable: true, hard: true },
+        { type: 'text', a: '鑲', b: '鑰', colorable: true, hard: true },
+        { type: 'text', a: '戀', b: '孿', colorable: true, hard: true },
         { type: 'text', a: '2', b: '3', colorable: true },
         { type: 'text', a: '3', b: '8', colorable: true },
         { type: 'text', a: '6', b: '9', colorable: true },
@@ -81,6 +98,17 @@
     ];
     /* COLORABLE：篩出能套用顏色的組合（emoji 自帶顏色，不能套） */
     var COLORABLE = PAIRS.filter(function (p) { return p.colorable; });
+    /* 筆畫多的中文字組合（hard:true）出現的機率：第 1～3 關完全不出現，第 4 關 15%，之後線性升到第 20 關的 55%（純函式） */
+    function hardChance(level) {
+        if (level < 4) return 0;
+        return Math.min(0.55, 0.15 + (level - 4) * (0.4 / 16));
+    }
+    /* 從 pool 裡挑一組：先依 hardChance 決定這關要不要抽「筆畫多」的，再從對應的那一堆隨機挑 */
+    function pickPair(pool, level) {
+        var hard = pool.filter(function (p) { return p.hard; }), easy = pool.filter(function (p) { return !p.hard; });
+        if (hard.length && Math.random() < hardChance(level || 1)) return pickAny(hard);
+        return pickAny(easy.length ? easy : pool);
+    }
 
     /* 向量圖形：用公式畫正多邊形與星形，不用一個一個手刻座標 */
     /* ═══ 向量圖形：全部用正多邊形／星形的參數公式畫，不用一個一個手刻 ═══ */
@@ -182,9 +210,9 @@
     /* 算出「多數格」與「少數格」各自要顯示的 HTML；fontPx 是文字型圖案的字級 */
     /* 算出「多數格」跟「少數格」各自要顯示的 HTML：fontPx 是文字型圖案的字級
        （向量圖形用 % 寬高自動縮放，不需要這個）。 */
-    function buildRender(type, fontPx) {
+    function buildRender(type, fontPx, level) {
         if (type === 'shape') {
-            var pair = pickAny(PAIRS);
+            var pair = pickPair(PAIRS, level);
             var flip = Math.random() < 0.5;
             var baseKind = flip ? pair.b : pair.a, oddKind = flip ? pair.a : pair.b;
             var color = randShapeColor();
@@ -196,7 +224,7 @@
         /* mixed：形狀與顏色同時不一樣，少數格的色相與多數格差 150～210 度，一眼就看得出來 */
         /* mixed：形狀跟顏色同時不一樣，顏色故意拉開一大段色相差，讓它一眼就看得出來
            （安排在最前面幾關出現機率較高，兩種線索疊在一起找，比單一線索容易） */
-        var p3 = pickAny(COLORABLE);
+        var p3 = pickPair(COLORABLE, level);
         var flip3 = Math.random() < 0.5;
         var bKind = flip3 ? p3.b : p3.a, oKind = flip3 ? p3.a : p3.b;
         var bColor = randBaseColor();
@@ -254,7 +282,7 @@
                不要留下太多空白；向量圖形那邊同一個 1.33 倍反映在
                .shapes-glyph-svg 的寬高百分比（css/reaction.css，70% → 93%）。 */
             /* 產生多數格與少數格的圖案 */
-            var render = buildRender(type, Math.round(cell * 0.8));
+            var render = buildRender(type, Math.round(cell * 0.8), level);
             /* for 迴圈建立 n 個格子，只有 oddIdx 那一格用「少數」圖案 */
             for (var i = 0; i < n; i++) {
                 /* (function (i) {...})(i)：立即執行函式，讓每格的點擊事件記住自己的編號 */
@@ -265,8 +293,8 @@
                     board.appendChild(cellEl);
                 })(i);
             }
-            /* 操作提示（只在第一次進遊戲時）：點格子 → 手指縮放 */
-            if (Reaction.kit.once('shapes.hint')) Reaction.kit.hintOn(root, board, { mode: 'tap' });
+            /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在這一關「不一樣的那一格」上（也等於第一關的答案） */
+            if (Reaction.kit.once('shapes.hint')) Reaction.kit.hintOn(root, board.children[oddIdx], { mode: 'tap', text: '請點擊不一樣的圖形' });
         }
 
         /* 答題：答對進下一關；答錯顯示正確位置並結算 */
@@ -288,16 +316,11 @@
             UI.wait(700).then(function () {
                 /* 不清空畫面：保留剛剛的棋盤（哪格答錯、哪格才是真正不一樣的）
                    留在背景，結算卡片疊一層半透明底蓋上去——跟其他遊戲同一套做法。 */
-                root.appendChild(h('div', { 'class': 'drop-result-overlay', attrs: { 'data-sfx': level >= 8 ? 'win' : 'fail' } }, [
-                    h('div', { 'class': 'drop-result-card' }, [
-                        h('div', { 'class': 'rx-result__num', text: '第 ' + level + ' 關' }),
-                        h('div', { 'class': 'rx-result__label', text: '答錯了，挑戰結束' }),
-                        isNew ? h('div', { 'class': 'hint hint--ok', text: '新紀錄！' }) : null,
-                        h('button', { 'class': 'btn btn--primary', text: '再挑戰一次', on: { click: function () { level = 1; round(); } } })
-                    ])
-                ]));
-                /* 送世界排行榜（結算卡片已經在畫面上了） */
-                Leaderboard.submit(ID, level);
+                /* 結算彈窗（公版 kit.result）：帶 score 會在彈窗出現之後自動送世界排行榜 */
+                Reaction.kit.result(root, {
+                    num: '第 ' + level + ' 關', label: '答錯了，挑戰結束', isNew: isNew, score: level,
+                    sfx: level >= 8 ? 'win' : 'fail', onAgain: function () { level = 1; round(); }
+                });
             });
         }
 
@@ -311,6 +334,8 @@
         rule: '畫面會被分成一格一格，裡面幾乎所有格子都長得一模一樣，只有一格不一樣（形狀不同，或是形狀和顏色都不同）。找出那一格，點下去；答對就進下一關，格子會越來越多、越來越小，越後面要越仔細看。答錯就結束，比比看能撐到第幾關。',
         mount: mount,
         /* 世界排行榜的成績規格 */
-        score: SCORE
+        score: SCORE,
+        /* test 匯出純函式給 Node 自動測試 */
+        test: { PAIRS: PAIRS, hardChance: hardChance, pickPair: pickPair, COLORABLE: COLORABLE }
     });
 })();

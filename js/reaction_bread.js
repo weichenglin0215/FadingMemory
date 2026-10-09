@@ -197,6 +197,11 @@
                 moveKnife(knife);
                 state = 'aim';
                 setInfo();
+                /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從刀子現在的位置往「剛好對半的位置」重複移動（第一關的正確答案） */
+                if (Reaction.kit.once('bread.hint')) {
+                    var sr = svg.getBoundingClientRect(), pxPerUnit = Math.min(sr.width / SW, sr.height / SH) / ((root.getBoundingClientRect().width / root.clientWidth) || 1);
+                    Reaction.kit.hintOn(root, gKnife.querySelector('.bk-knife__line'), { mode: 'drag', dx: (balanceX(B.pts) - knife) * pxPerUnit, dy: 0, text: '請往左右拖曳刀子' });
+                }
                 /* 主控台印出這關的形狀、總重、標準、剛好對半的位置，方便驗證 */
                 try {
                     var bal = balanceX(B.pts);
@@ -228,8 +233,6 @@
                 drag = { id: e.pointerId, x: svgX(e), t: performance.now() };
                 moveKnife(drag.x);                 /* 粗調：刀先跳到手指下面 */
             });
-            /* 操作提示（只在第一次進遊戲時）：左右拖曳刀子 → 手指＋箭頭 */
-            if (Reaction.kit.once('bread.hint')) Reaction.kit.hintOn(root, zone, { mode: 'drag', dx: 90, dy: 0, fx: 0.35 });
             /* 手指移動：移動量依手指速度打折（慢速精細、快速粗略） */
             zone.addEventListener('pointermove', function (e) {
                 if (state !== 'aim' || !drag || e.pointerId !== drag.id) return;

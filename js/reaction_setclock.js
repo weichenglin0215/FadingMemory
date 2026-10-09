@@ -161,6 +161,14 @@
                 dial.classList.remove('sc-dial--ok', 'sc-dial--bad');
                 setHands(cur);
                 meta();
+                /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從分針針尖現在的位置往「目標時間的分針針尖位置」重複移動（第一關的正確答案）；
+                   分針針尖在鐘面半徑的 0.4 倍處（跟 G.debug.spin 一樣） */
+                if (Reaction.kit.once('setclock.hint')) {
+                    var tip = function (total) { var a = minuteAngle(total) * Math.PI / 180; return { fx: 0.5 + 0.4 * Math.sin(a), fy: 0.5 - 0.4 * Math.cos(a) }; };
+                    var p0 = tip(cur), p1 = tip(L.target);
+                    var q0 = Reaction.kit.ptIn(root, svg, p0.fx, p0.fy), q1 = Reaction.kit.ptIn(root, svg, p1.fx, p1.fy);
+                    Reaction.kit.hintOn(root, null, { mode: 'drag', x: q0.x, y: q0.y, dx: q1.x - q0.x, dy: q1.y - q0.y, text: '請轉動分針到目標時間' });
+                }
                 /* 主控台印出這關實際數值（目標、起始、要轉幾分鐘、限時…），方便除錯與驗證 */
                 try { console.info('[撥時鐘] 第 ' + level + ' 關 目標 ' + fmt12(L.target) + '（' + L.target + ' 分）起始 ' + fmt12(L.start) + '，要轉 ' + circDiff(L.target, L.start).toFixed(1) + ' 分鐘；限時 ' + L.limit.toFixed(1) + ' 秒；隱藏數字 ' + L.hideNum + '、隱藏刻度 ' + L.hideTick); } catch (e) { }
                 /* 倒數：記錄開始時間 t0 與限時 lim（毫秒） */
@@ -225,8 +233,6 @@
             /* 按「好了」：用目前撥到的時間判定 */
             done.addEventListener('pointerdown', function (e) { e.preventDefault(); if (state === 'play') finishLevel(isRight(cur, L.target), false); });
 
-            /* 操作提示（只在第一次進遊戲時）：繞著鐘面轉分針 → 手指＋箭頭 */
-            if (Reaction.kit.once('setclock.hint')) Reaction.kit.hintOn(root, svg, { mode: 'drag', dx: 100, dy: 30, fx: 0.5, fy: 0.4 });
             /* 手指轉分針的處理：只看「手指角度的變化量」累加到分鐘數，這樣可以連續轉很多圈也可以倒轉 */
             /* ─── 手指轉分針 ─── */
             /* drag 記錄目前正在拖曳的手指（id 與上一個角度） */

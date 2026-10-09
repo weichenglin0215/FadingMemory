@@ -1,7 +1,7 @@
 -- ═══════════════════════════════════════════════════════════════════
 -- MF_leaderboard.sql — 記憶模糊（FadingMemory）「世界排行榜」資料庫
 -- ───────────────────────────────────────────────────────────────────
--- 用途：記錄「秒反應」每一款遊戲的世界前 30 名成績。
+-- 用途：記錄「秒反應」每一款遊戲的世界前 30 名成績，以及玩家在結算彈窗寫下的意見（第 5 節，MF_feedback，分遊戲記錄）。
 -- 執行方式：Supabase 專案 LoveIsABitMessy-DB → 左側 SQL Editor → New query →
 --           貼上本檔全文 → Run。可以重複執行（全部都是「已存在就略過／覆蓋」的寫法）。
 -- 共用專案提醒：這個專案同時也是 LoveIsABitMessy 在用，所以本檔
@@ -275,7 +275,7 @@ insert into public."MF_games" (game_id, title, better, min_score, max_score) val
     ('matchcolor',   '色不異空', 'min', 0, 300),
     ('rainbow',      '七彩陷阱', 'max', 1, 1000),
     ('pendulum',     '六點鐘方向', 'min', 0, 31),
-    ('tissue',       '抽光它', 'min', 1.5, 600),
+    ('tissue',       '抽光衛生紙', 'min', 1.5, 600),
     ('landolt',      'E視力檢查', 'max', 0.1, 31),
     ('lights',       '點燈記憶', 'max', 1, 32),
     ('cups',         '球在哪杯', 'max', 1, 200),
@@ -345,11 +345,120 @@ insert into public."MF_games" (game_id, title, better, min_score, max_score) val
     ('handsmeet',    '兩針重疊', 'min', 0, 180),
     ('clearer',      '越看越清楚', 'max', 0.0001, 1000),
     ('twobags',      '兩袋一樣重', 'max', 1, 20),
+    ('stackup',      '重心疊疊樂', 'max', 1, 60),
+    ('bridge',       '搭一座橋', 'max', 1, 60),
+    ('halfcrowd',    '一半的人', 'max', 1, 40),
+    ('catroad',      '貓咪走山路', 'max', 1, 600),
+    ('numline',      '數線落點', 'max', 1, 40),
+    ('twinsock',     '找出雙胞胎襪子', 'max', 1, 40),
+    ('mixcolor',     '混出什麼色', 'min', 0, 300),
     -- <<< 自動產生結束
     ('zz_test', '（測試用，可刪）', 'max', 0, 1000)
 on conflict (game_id) do update
     set title = excluded.title, better = excluded.better,
         min_score = excluded.min_score, max_score = excluded.max_score;
+
+-- ═══ 5. 玩家意見（結算彈窗最下方的「我有話要說」）═══
+-- 每一則意見記著是哪一款遊戲（game_id，必須是 MF_games 登記過的），所以可以分遊戲看。
+-- 防濫用：同一位玩家（player_id）24 小時內最多 20 則；10 分鐘內重複送同樣的內容只算一則；
+--         內容 2～300 字，控制字元與零寬字元會被清掉。
+-- 管理者在 SQL Editor 查看意見（資料表名稱有大寫，一定要加雙引號）：
+--   select created_at, game_id, nickname, message, app_version
+--     from public."MF_feedback" order by created_at desc limit 100;                 -- 最新 100 則
+--   select game_id, count(*) from public."MF_feedback" group by 1 order by 2 desc;  -- 哪款遊戲被提最多意見
+--   select created_at, nickname, message from public."MF_feedback"
+--    where game_id = 'coins' order by created_at desc;                               -- 單一遊戲的意見
+--   delete from public."MF_feedback" where created_at < now() - interval '180 days'; -- 清掉舊的
+
+create table if not exists public."MF_feedback" (
+    id          bigint       generated always as identity primary key,
+    game_id     text         not null references public."MF_games" (game_id) on delete cascade on update cascade,
+    player_id   uuid         not null,
+    nickname    text         check (nickname is null or char_length(nickname) between 1 and 12),
+    message     text         not null check (char_length(message) between 2 and 300),
+    app_version text         check (app_version is null or char_length(app_version) <= 32),
+    created_at  timestamptz  not null default now()
+);
+
+-- 「某款遊戲的最新意見」「某位玩家最近寄了幾則」都靠這兩個索引
+create index if not exists "MF_feedback_game_idx"   on public."MF_feedback" (game_id, created_at desc);
+create index if not exists "MF_feedback_player_idx" on public."MF_feedback" (player_id, created_at desc);
+
+-- 跟成績表一樣鎖住：開啟 RLS 而且不建 policy，anon 不能直接讀寫，只能呼叫下面的函式
+alter table public."MF_feedback" enable row level security;
+revoke all on table public."MF_feedback" from public, anon, authenticated;
+
+-- 寫入：送出一則意見。
+--   回傳 { ok:true, saved:true }；重複送同樣內容回傳 { ok:true, saved:false, duplicate:true }；
+--   失敗回傳 { ok:false, error:'unknown_game' | 'bad_args' | 'too_many' }。
+create or replace function public."MF_submit_feedback"(
+    p_game_id   text,
+    p_player_id uuid,
+    p_message   text,
+    p_nickname  text default null,
+    p_version   text default null
+)
+returns jsonb
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+    c_max_len   constant int := 300;     -- 意見最多幾個字（前端的輸入框也是 300）
+    c_per_day   constant int := 20;      -- 同一位玩家 24 小時內最多幾則
+    v_msg       text;
+    v_nick      text;
+    v_ver       text;
+    v_count     int;
+begin
+    -- (1) 遊戲要登記過
+    if not exists (select 1 from public."MF_games" where game_id = p_game_id and enabled) then
+        return jsonb_build_object('ok', false, 'error', 'unknown_game');
+    end if;
+    if p_player_id is null then
+        return jsonb_build_object('ok', false, 'error', 'bad_args');
+    end if;
+    -- (2) 清理內容：換行統一成 \n；控制字元（保留換行與 Tab）、零寬字元、文字方向控制字元換成空格；
+    --     行內連續空白縮成一個；連續三個以上的換行縮成兩個；去頭尾空白；最多 300 個字
+    v_msg := replace(replace(coalesce(p_message, ''), E'\r\n', E'\n'), E'\r', E'\n');
+    v_msg := regexp_replace(v_msg, '[\x01-\x08\x0b\x0c\x0e-\x1f\x7f​-‏‪-‮⁠-⁤﻿]+', ' ', 'g');
+    v_msg := regexp_replace(v_msg, '[ \t]+', ' ', 'g');
+    v_msg := regexp_replace(v_msg, ' ?\n ?', E'\n', 'g');
+    v_msg := regexp_replace(v_msg, '\n{3,}', E'\n\n', 'g');
+    v_msg := btrim(left(btrim(v_msg), c_max_len));
+    if char_length(v_msg) < 2 then
+        return jsonb_build_object('ok', false, 'error', 'bad_args');
+    end if;
+    -- 暱稱與版本是選填；不合格式就當作沒有
+    v_nick := btrim(left(btrim(regexp_replace(coalesce(p_nickname, ''),
+                  '[[:cntrl:][:space:]​-‏‪-‮⁠-⁤﻿]+', ' ', 'g')), 8));
+    if char_length(v_nick) < 1 then v_nick := null; end if;
+    v_ver := left(btrim(coalesce(p_version, '')), 32);
+    if char_length(v_ver) < 1 then v_ver := null; end if;
+    -- (3) 同一位玩家的寫入排隊，避免同時送很多則繞過次數限制
+    perform pg_advisory_xact_lock(hashtextextended('MF_feedback:' || p_player_id::text, 0));
+    -- (4) 10 分鐘內同一位玩家、同一款遊戲、同樣內容：不重複寫入
+    if exists (select 1 from public."MF_feedback"
+                where player_id = p_player_id and game_id = p_game_id and message = v_msg
+                  and created_at > now() - interval '10 minutes') then
+        return jsonb_build_object('ok', true, 'saved', false, 'duplicate', true);
+    end if;
+    -- (5) 24 小時內的上限
+    select count(*) into v_count from public."MF_feedback"
+     where player_id = p_player_id and created_at > now() - interval '24 hours';
+    if v_count >= c_per_day then
+        return jsonb_build_object('ok', false, 'error', 'too_many');
+    end if;
+    insert into public."MF_feedback" (game_id, player_id, nickname, message, app_version)
+    values (p_game_id, p_player_id, v_nick, v_msg, v_ver);
+    return jsonb_build_object('ok', true, 'saved', true);
+end;
+$$;
+
+revoke all on function public."MF_submit_feedback"(text, uuid, text, text, text) from public;
+grant execute on function public."MF_submit_feedback"(text, uuid, text, text, text) to anon, authenticated;
+
 
 -- 讓 Supabase 的 API 層立刻認得新函式（不執行也會在幾秒內自動更新）
 notify pgrst, 'reload schema';

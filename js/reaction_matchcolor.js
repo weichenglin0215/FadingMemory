@@ -183,8 +183,8 @@
                 h('div', { 'class': 'mc-hint', text: '當你覺得兩個方塊顏色是完全相同時，\n請點擊畫面確認。' })
             ]);
             root.appendChild(foot);
-            /* 操作提示（只在第一次進遊戲時）：點畫面 → 手指縮放，指在會變色的右邊色塊上 */
-            if (Reaction.kit.once('matchcolor.hint')) Reaction.kit.hintOn(root, rightEl, { mode: 'tap' });
+            /* 操作提示（只在第一次進遊戲時）：點畫面任一處 → 手指縮放，放在畫面下方（不擋住兩個色塊） */
+            if (Reaction.kit.once('matchcolor.hint')) Reaction.kit.hintOn(root, root, { mode: 'tap', fy: 0.82, text: '請點擊畫面' });
 
             /* phase 目前階段；raf 動畫的編號；shownRgb 玩家眼睛實際看到的最後一次畫出來的顏色 */
             var phase = 'running';
@@ -232,11 +232,12 @@
 
                 foot.innerHTML = '';
                 if (window.Sfx) Sfx.play('click');
-                foot.appendChild(h('div', { 'class': 'mc-result', text: '顏色差異度 ' + fmtPct(diff), attrs: { 'data-sfx': diff <= 1 ? 'perfect' : (diff <= 5 ? 'win' : 'neutral') } }));
-                if (isNew) foot.appendChild(h('div', { 'class': 'mc-newrec', text: '新紀錄！' }));
-                foot.appendChild(h('button', { 'class': 'btn btn--primary mc-again', text: '再玩一次', on: { click: round } }));
-                /* 送世界排行榜（結算文字已經在畫面上了） */
-                Leaderboard.submit(ID, diff);
+                /* 結算彈窗（公版 kit.result）：貼在畫面下緣、背後不壓暗，兩個色塊靠攏的揭曉才看得到；
+                   帶 score 會在彈窗出現之後自動送世界排行榜 */
+                Reaction.kit.result(root, {
+                    num: '顏色差異度 ' + fmtPct(diff), isNew: isNew, score: diff, dock: 'bottom',
+                    sfx: diff <= 1 ? 'perfect' : (diff <= 5 ? 'win' : 'neutral'), againText: '再玩一次', onAgain: round
+                });
             });
         }
 

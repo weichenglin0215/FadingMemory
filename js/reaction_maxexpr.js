@@ -124,7 +124,8 @@
         bOk.disabled = true;
         [expr, tip, grid, info, h('div', { 'class': 'rx-btnrow' }, [bReset, bOk])].forEach(function (e) { stage.appendChild(e); });
         var hint = null;
-        if (level === 1) hint = kit.fingerHint(stage, { mode: 'tap', x: 78, y: 300, delay: 300 });
+        /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「最大算式的第一張牌」上（第一關的正確答案） */
+        if (level === 1 && kit.once('maxexpr.hint')) hint = kit.hintOn(stage, cardEls[q.arrs[0][0]], { mode: 'tap', text: '請依序點擊數字牌' });
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
 
         function paint() {

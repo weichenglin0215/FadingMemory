@@ -262,6 +262,8 @@
                 up: function (e) { if (state === 'pour') stop(e ? kit.evT(e) : performance.now(), false); }
             });
             my.onDispose(function () { holder.destroy(); Sfx.pourStop(); });
+            /* 操作提示（只在第一次進遊戲時）：手指按住不放 → 「請持續按住螢幕」，放在場地下方 */
+            if (Reaction.kit.once('pour.hint')) Reaction.kit.hintOn(root, field, { mode: 'hold', fy: 0.8, text: '請持續按住螢幕' });
 
             /* 停止倒水：用事件時間算出水位（不受畫面卡頓影響） */
             function stop(t, full) {
@@ -365,15 +367,14 @@
                 ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
                 hint.textContent = '';
                 var sfx = err < 0.5 ? 'perfect' : (err < 4 ? 'win' : 'fail');
-                var kids = [];
-                kids.push(h('div', { 'class': 'rx-result__num pour-verdict__num', text: rating(err) }));
-                kids.push(h('div', { 'class': 'rx-result__label', text: overflow ? '水滿出來了，水位 100%' : (err < 0.005 ? '分毫不差！' : (errPct > 0 ? '多倒了 ' : '少倒了 ') + fmtPct(err)) }));
-                kids.push(h('div', { 'class': 'hint rx-result__line', text: '水位 ' + fmtPct(overflow ? 100 : shownLevel) + '，目標 80%' }));
-                if (isNew) kids.push(h('div', { 'class': 'hint hint--ok', text: '新紀錄！最小誤差' }));
-                kids.push(h('button', { 'class': 'btn btn--primary', text: '再倒一次', on: { click: function () { Sfx.play('click'); round(); } } }));
-                field.appendChild(h('div', { 'class': 'pour-verdict', attrs: { 'data-sfx': sfx } }, kids));
-                /* 送世界排行榜（結算畫面已經在畫面上了） */
-                Leaderboard.submit(ID, err);
+                /* 結算彈窗（公版 kit.result）：貼在畫面下緣、背後不壓暗——放大後的水位刻度還要看得到；
+                   帶 score 會在彈窗出現之後自動送世界排行榜 */
+                kit.result(root, {
+                    num: rating(err),
+                    label: overflow ? '水滿出來了，水位 100%' : (err < 0.005 ? '分毫不差！' : (errPct > 0 ? '多倒了 ' : '少倒了 ') + fmtPct(err)),
+                    lines: ['水位 ' + fmtPct(overflow ? 100 : shownLevel) + '，目標 80%'],
+                    isNew: isNew, score: err, dock: 'bottom', sfx: sfx, againText: '再倒一次', onAgain: round
+                });
             }
 
             /* G.debug：測試用後門，pour(ms) 可模擬按住 ms 毫秒 */

@@ -2,9 +2,11 @@
    reaction_kit2.js — 第二批共用工具（V1.20.0 的 28 款新遊戲用）
    ───────────────────────────────────────────────────────────────────
    載入順序：reaction_kit.js 之後、各遊戲之前。內容（都掛在 Reaction.kit 底下）：
-     kit.fingerHint()  操作提示：
-                         · 點擊物件（不是按鈕）→ 手指圖示＋縮放動畫（mode:'tap'）
-                         · 拖曳 → 手指圖示＋箭頭，手指沿著箭頭來回移動（mode:'drag'）
+     kit.fingerHint()  操作提示（每一種都附一句短文字，例如「請點擊色塊」「請往左右拖曳」）：
+                         · 點擊物件（不是按鈕）→ 手指圖示＋縮放動畫（mode:'tap'）；手指擺在「第一關的正確位置」
+                         · 拖曳 → 手指圖示＋箭頭，手指從「第一關的起始位置」往「目標位置」重複移動（mode:'drag'）
+                         · 上下左右四個方向都能拖 → 四個箭頭，手指依序往四個方向移動（mode:'drag4'）
+                         · 需要持續按住 → 手指按下去不放＋波紋＋「請持續按住螢幕」（mode:'hold'）
      kit.onTap()       綁 pointerdown（本專案規定判定一律用 pointerdown，不用 click）
      kit.dragDamp()    「慢速微調」拖曳：手指移動越慢，實際變化量越小（可以微調到很細），
                        手指移動越快，變化量越接近 1:1（粗調很快）
@@ -30,40 +32,107 @@
         'fill="#FFFDF3" stroke="#4A3B1E" stroke-width="2.4" stroke-linejoin="round"/></svg>';
     var FINGER_TIP = { x: 17, y: 3 };       /* 指尖在 svg 裡的位置（px，svg 顯示大小 56×70，viewBox 48×60，比例 1.1667） */
 
-    /* kit.fingerHint(parent, o)：在 parent（要是 position:relative 的容器）裡顯示操作提示。
-       o.mode：'tap'（縮放）或 'drag'（來回移動＋箭頭）
-       o.x, o.y：指尖的位置（parent 左上角為原點，邏輯 px）
-       o.dx, o.dy：drag 模式，手指要移動到的位置相對起點的位移
+    /* 拖曳方向 → 短文字：橫向「請往左右拖曳」、直向「請往上下拖曳」、斜向「請往上下左右拖曳」 */
+    kit.dragText = function (dx, dy) {
+        var ax = Math.abs(dx || 0), ay = Math.abs(dy || 0);
+        if (ax > ay * 2) return '請往左右拖曳';
+        if (ay > ax * 2) return '請往上下拖曳';
+        return '請往上下左右拖曳';
+    };
+
+    /* kit.fingerHint(parent, o)：在 parent（要是 position:relative 的容器）裡顯示操作提示（手指圖示＋一句短文字）。
+       o.mode：'tap'（縮放＋波紋）／'drag'（從起點往終點重複移動＋箭頭）／'drag4'（上下左右四個方向）／'hold'（按住不放）
+       o.x, o.y：指尖的位置（parent 左上角為原點，邏輯 px）。tap／hold＝要點（按）的位置；drag＝第一關的「起始位置」
+       o.dx, o.dy：drag 模式，終點（目標位置）相對起點的位移；drag4 的 o.len＝四個箭頭各多長（預設 80）
+       o.text：短文字（例如「請點擊色塊」）；drag／drag4／hold 沒給就依方向自動產生（kit.dragText）
+       o.labelAbove：true＝文字放在手指上方（預設放下方，放不下會自動翻到另一邊）
        o.delay：幾毫秒後才顯示（預設 0）
-       回傳 { el, remove() }；提示不攔截任何點擊（pointer-events:none）。 */
+       回傳 { el, label, remove() }；提示不攔截任何點擊（pointer-events:none）。 */
     kit.fingerHint = function (parent, o) {
         var mode = o.mode || 'tap';
         var root = h('div', { 'class': 'rx-hint rx-hint--' + mode });
         root.style.left = o.x + 'px';
         root.style.top = o.y + 'px';
-        if (o.delay) root.style.animationDelay = o.delay + 'ms';
         var fx = FINGER_TIP.x * 56 / 48, fy = FINGER_TIP.y * 70 / 60;
         var finger = h('div', { 'class': 'rx-hint__finger', html: FINGER_SVG });
         finger.style.marginLeft = (-fx) + 'px';
         finger.style.marginTop = (-fy) + 'px';
+        /* box：整個提示佔的範圍（parent 座標），用來決定文字放哪裡 */
+        var box = { l: o.x - 30, r: o.x + 40, t: o.y - 30, b: o.y + 72 };
+        var text = o.text;
         if (mode === 'drag') {
             var dx = o.dx || 0, dy = o.dy || 0;
             var len = Math.sqrt(dx * dx + dy * dy), ang = Math.atan2(dy, dx) * 180 / Math.PI;
-            /* 箭頭：從起點畫到終點（淡淡的線＋箭頭尖端），手指沿著它來回移動 */
+            /* 箭頭：從起點畫到終點（淡淡的線＋箭頭尖端），手指沿著它重複移動 */
             var arrow = h('div', { 'class': 'rx-hint__arrow' });
             arrow.style.width = len + 'px';
             arrow.style.transform = 'rotate(' + ang.toFixed(2) + 'deg)';
             root.appendChild(arrow);
             finger.style.setProperty('--dx', dx + 'px');
             finger.style.setProperty('--dy', dy + 'px');
+            box.l = Math.min(o.x, o.x + dx) - 30; box.r = Math.max(o.x, o.x + dx) + 40;
+            box.t = Math.min(o.y, o.y + dy) - 30; box.b = Math.max(o.y, o.y + dy) + 72;
+            if (!text) text = kit.dragText(dx, dy);
+        } else if (mode === 'drag4') {
+            /* 四個方向各一支箭頭；手指依序往上、右、下、左各走一趟再回到中心（見 css 的 rx-drag4） */
+            var L = o.len || 80;
+            [[0, -1, -90], [1, 0, 0], [0, 1, 90], [-1, 0, 180]].forEach(function (d) {
+                var a = h('div', { 'class': 'rx-hint__arrow' });
+                a.style.width = L + 'px';
+                a.style.transform = 'rotate(' + d[2] + 'deg)';
+                root.appendChild(a);
+            });
+            finger.style.setProperty('--l', L + 'px');
+            box.l = o.x - L - 30; box.r = o.x + L + 40; box.t = o.y - L - 30; box.b = o.y + L + 72;
+            if (!text) text = '請往上下左右拖曳';
+        } else if (mode === 'hold') {
+            root.appendChild(h('div', { 'class': 'rx-hint__ring' }));
+            if (!text) text = '請持續按住螢幕';
         } else {
             root.appendChild(h('div', { 'class': 'rx-hint__ring' }));
         }
         root.appendChild(finger);
         parent.appendChild(root);
+        /* 短文字：放在提示範圍的下方；下方放不下就翻到上方，再放不下就貼邊 */
+        var label = null;
+        if (text) {
+            label = h('div', { 'class': 'rx-hint__label', text: text });
+            parent.appendChild(label);
+            var pw = parent.clientWidth || 500, ph = parent.clientHeight || 850;
+            var lw = label.offsetWidth, lh = label.offsetHeight;
+            var left = Math.max(6, Math.min(pw - lw - 6, (box.l + box.r) / 2 - lw / 2));
+            var top = o.labelAbove ? box.t - lh - 8 : box.b + 8;
+            if (top + lh > ph - 6) top = box.t - lh - 8;
+            if (top < 6) top = Math.max(6, Math.min(ph - lh - 6, top));
+            label.style.left = left + 'px';
+            label.style.top = top + 'px';
+        }
+        /* 延遲出現：先藏起來，時間到才顯示 */
+        if (o.delay) {
+            root.style.visibility = 'hidden';
+            if (label) label.style.visibility = 'hidden';
+            setTimeout(function () {
+                root.style.visibility = '';
+                if (label) label.style.visibility = '';
+            }, o.delay);
+        }
         return {
-            el: root,
-            remove: function () { if (root.parentNode) root.parentNode.removeChild(root); }
+            el: root, label: label,
+            remove: function () {
+                if (root.parentNode) root.parentNode.removeChild(root);
+                if (label && label.parentNode) label.parentNode.removeChild(label);
+            }
+        };
+    };
+
+    /* kit.ptIn(host, el, fx, fy)：元素 el 的某個位置（寬的 fx、高的 fy，預設正中央）在 host 裡的座標（邏輯 px）。
+       操作提示的手指要擺在「正確的點擊位置」，就用它從答案元素算出座標。 */
+    kit.ptIn = function (host, el, fx, fy) {
+        var hr = host.getBoundingClientRect(), r = el.getBoundingClientRect();
+        var sc = hr.width / (host.clientWidth || hr.width) || 1;
+        return {
+            x: (r.left - hr.left + r.width * (fx == null ? 0.5 : fx)) / sc,
+            y: (r.top - hr.top + r.height * (fy == null ? 0.5 : fy)) / sc
         };
     };
 
@@ -146,19 +215,23 @@
 
 
     /* kit.hintOn(host, el, o)：把操作提示放在「某個元素」上（舊的 35 款遊戲用）。
-       host：提示的容器（要是 position:relative／absolute，例如 #screen 或遊戲區）；el：要提示的元素；
-       o.mode：'tap'（手指縮放）或 'drag'（手指＋箭頭來回）；o.fx／o.fy：指尖落在元素寬／高的幾分之幾（預設正中央）；
+       host：提示的容器（要是 position:relative／absolute，例如 #screen 或遊戲區）；
+       el：手指要擺的元素——tap／hold＝要點（按）的正確元素；drag＝第一關拖曳的「起始元素」；
+       o.fx／o.fy：指尖落在元素寬／高的幾分之幾（預設正中央）；
        el 給 null 時改用 o.x／o.y（host 左上角起算的邏輯座標），用在「整個畫面都可以點／滑」的遊戲。
-       o.dx／o.dy：drag 的位移；o.delay：延遲幾毫秒才出現。
+       drag 的目標位置：o.to ＝目標元素（o.tfx／o.tfy 指定落在它的哪裡，預設正中央）或 { x, y }（host 座標）；
+       或直接給位移 o.dx／o.dy。
+       o.mode：'tap'／'drag'／'drag4'／'hold'；o.text：短文字（例如「請點擊色塊」）；o.delay：延遲幾毫秒才出現。
        玩家在 host 裡第一次按下（pointerdown）就自動消失；回傳 { remove() }。 */
     kit.hintOn = function (host, el, o) {
         o = o || {};
-        var x = o.x, y = o.y;
-        if (el) {
-            var hr = host.getBoundingClientRect(), r = el.getBoundingClientRect(), sc = hr.width / (host.clientWidth || hr.width) || 1;
-            x = (r.left - hr.left + r.width * (o.fx == null ? 0.5 : o.fx)) / sc; y = (r.top - hr.top + r.height * (o.fy == null ? 0.5 : o.fy)) / sc;
+        var x = o.x, y = o.y, dx = o.dx, dy = o.dy;
+        if (el) { var p = kit.ptIn(host, el, o.fx, o.fy); x = p.x; y = p.y; }
+        if (o.to) {
+            var q = o.to.getBoundingClientRect ? kit.ptIn(host, o.to, o.tfx, o.tfy) : o.to;
+            dx = q.x - x; dy = q.y - y;
         }
-        var hint = kit.fingerHint(host, { mode: o.mode || 'tap', x: x, y: y, dx: o.dx, dy: o.dy, delay: o.delay });
+        var hint = kit.fingerHint(host, { mode: o.mode || 'tap', x: x, y: y, dx: dx, dy: dy, len: o.len, text: o.text, labelAbove: o.labelAbove, delay: o.delay });
         function off() { hint.remove(); host.removeEventListener('pointerdown', off, true); }
         host.addEventListener('pointerdown', off, true);
         return { remove: off, el: hint.el };

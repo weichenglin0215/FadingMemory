@@ -136,7 +136,11 @@
             side[i] = where; pans[where].appendChild(els[i]);
             okBtn.disabled = side.some(function (s) { return s === 'T'; });
         }
-        if (level === 1) hint = kit.fingerHint(stage, { mode: 'drag', x: 6 + 14 + q.d[0] / 2, y: 64 + 10 + q.d[0] / 2, dx: 90, dy: 190, delay: 400 });
+        /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從第一顆石頭往「它在最佳分法裡的那一邊袋子」重複移動（第一關的正確答案） */
+        if (level === 1 && kit.once('twobags.hint')) {
+            var hz = (q.best.mask & 1) ? zl : zr, hx = 6 + 14 + q.d[0] / 2, hy = 64 + 10 + q.d[0] / 2;
+            hint = kit.fingerHint(stage, { mode: 'drag', x: hx, y: hy, dx: hz.offsetLeft + hz.offsetWidth / 2 - hx, dy: hz.offsetTop + hz.offsetHeight / 2 - hy, delay: 400, text: '請把石頭拖進' + ((q.best.mask & 1) ? '左' : '右') + '邊的袋子' });
+        }
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
 
         /* 拖曳：按到石頭 → 做一顆跟著手指的「分身」，原本那顆先變透明；放開時看手指在哪個區域 */

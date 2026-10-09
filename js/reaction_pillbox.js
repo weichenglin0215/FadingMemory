@@ -385,8 +385,17 @@
                     if (id !== lvId || state !== 'show') return;
                     state = 'fill';
                     drawTray(); drawBox();
-                    /* 操作提示（只在第一次進遊戲時）：把藥丸拖到格子裡 → 手指＋箭頭 */
-                    if (root.querySelector('.pb-item')) if (Reaction.kit.once('pillbox.hint')) Reaction.kit.hintOn(root, root.querySelector('.pb-item'), { mode: 'drag', dx: 0, dy: 150 });
+                    /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從藥盤裡「第一顆該放的藥丸」往「它要放進的藥盒格子」重複移動（第一關的正確放法） */
+                    if (Reaction.kit.once('pillbox.hint')) (function () {
+                        for (var s = 0; s < Sh.slots; s++) {
+                            for (var k = 0; k < Sh.kinds; k++) {
+                                if (!(Sh.sheet[s][k] > 0)) continue;
+                                var pill = pills.filter(function (p) { return p.kind === k && p.where < 0; })[0];
+                                var itemEl = pill && root.querySelector('.pb-item[data-id="' + pill.id + '"]');
+                                if (itemEl && boxEl.children[s]) { Reaction.kit.hintOn(root, itemEl, { mode: 'drag', to: boxEl.children[s], text: '請把藥丸拖進藥盒格子' }); return; }
+                            }
+                        }
+                    })();
                     head.textContent = '第 ' + level + ' 關　把正確的藥丸拖曳到格子裡';
                     acts.style.visibility = 'visible'; boxEl.classList.remove('pb-box--dim');
                     Sfx.play('go');

@@ -6,8 +6,10 @@
      Leaderboard.showBoard(遊戲, {startText, onClose})  世界前 30 名彈窗（reaction.js 在玩法說明之後呼叫）
      Leaderboard.ui.askNickname(opts)                    「輸入暱稱」彈窗，回傳 Promise<暱稱或 ''>
      Leaderboard.ui.celebrate(info)                      進榜慶祝：恭喜彈窗＋煙火＋歡呼音樂
-     Leaderboard.ui.toast(文字)                          畫面下方短暫的小提示
-   樣式在 css/leaderboard.css，顏色／尺寸變數在 css/theme.css 的 :root（「世界排行榜」那一段）。
+     Leaderboard.ui.toast(文字)                          畫面下方短暫的小提示（就是 Dlg.toast）
+   四個彈窗的外框與卡片都是「彈窗公版」（js/dialog.js 的 Dlg.open、css/dialog.css）：
+   位置、暗底、寬度、圓角、陰影、按鈕尺寸與顏色跟玩法說明、結算彈窗完全一致；這個檔案只決定卡片裡放什麼。
+   榜單內容的樣式在 css/leaderboard.css，顏色／尺寸變數在 css/theme.css 的 :root（「世界排行榜」那一段）。
 
    【手指拖曳＋慣性捲動是怎麼做的】
    瀏覽器原生的捲動在電腦上不能用滑鼠拖曳、各瀏覽器的慣性手感也不一致，所以這裡自己做：
@@ -105,12 +107,6 @@
 
     function sfx(name) { if (global.Sfx) { global.Sfx.unlock(); global.Sfx.play(name); } }
 
-    /* 建一個蓋滿舞台的彈窗外框，回傳 DOM（關閉時整個移除，不留殘影） */
-    function makeOverlay(cls) {
-        var el = h('div', { 'class': 'lb-dlg ' + (cls || '') });
-        stageEl().appendChild(el);
-        return el;
-    }
     function removeEl(el) { if (el && el.parentNode) el.parentNode.removeChild(el); }
 
     /* ═══════════════════════════════════════════════════════════════
@@ -276,7 +272,6 @@
         var g = (ref && typeof ref === 'object') ? ref : null;
         if (!g || !g.score) { if (opts.onClose) opts.onClose(); return; }
         var spec = g.score, closed = false;
-        var ov = makeOverlay('lb-dlg--board');
 
         var nickLine = h('div', { 'class': 'lb-nickline' });
         var note = h('div', { 'class': 'lb-note' });
@@ -329,32 +324,29 @@
             scroller.refresh();
         }
 
-        var mainBtn = h('button', {
-            'class': 'btn ' + (opts.startText ? 'btn--primary' : 'btn--sky'), text: opts.startText || '關閉',
-            on: { click: function () {
-                if (closed) return;
-                closed = true;
-                sfx(opts.startText ? 'go' : 'click');
-                scroller.destroy();
-                removeEl(ov);
-                if (opts.onClose) opts.onClose();
-            } }
+        /* 公版彈窗（卡片拉到整個高度）：榜單視窗吃掉剩下的高度，主按鈕在最底下。
+           彈窗關掉時（不管怎麼關）onClose 會把捲動元件收掉、並讓背景更新的結果不再重畫。 */
+        var ctl = Dlg.open({
+            tall: true, cls: 'dlg--board',
+            onClose: function () { closed = true; scroller.destroy(); },
+            children: [
+                h('div', { 'class': 'lb-head' }, [
+                    h('div', { 'class': 'lb-head__icon', html: global.UI.icon('trophy') }),
+                    h('div', { 'class': 'lb-head__txt' }, [
+                        h('div', { 'class': 'lb-title', text: '世界前 ' + ((LB.cached(g.id) || {}).limit || LB.CFG.LIMIT_DEFAULT) + ' 名' }),
+                        h('div', { 'class': 'lb-sub', text: g.name })
+                    ])
+                ]),
+                nickLine,
+                h('div', { 'class': 'lb-cols' }, [h('span', { text: '名次' }), h('span', { text: '暱稱' }), h('span', { text: spec.label || '成績' })]),
+                viewport,
+                note
+            ],
+            buttons: [{
+                text: opts.startText || '關閉', kind: opts.startText ? 'primary' : 'sky', sfx: opts.startText ? 'go' : 'click',
+                onClick: function () { if (opts.onClose) opts.onClose(); }
+            }]
         });
-
-        ov.appendChild(h('div', { 'class': 'lb-card' }, [
-            h('div', { 'class': 'lb-head' }, [
-                h('div', { 'class': 'lb-head__icon', html: global.UI.icon('trophy') }),
-                h('div', { 'class': 'lb-head__txt' }, [
-                    h('div', { 'class': 'lb-title', text: '世界前 ' + ((LB.cached(g.id) || {}).limit || LB.CFG.LIMIT_DEFAULT) + ' 名' }),
-                    h('div', { 'class': 'lb-sub', text: g.name })
-                ])
-            ]),
-            nickLine,
-            h('div', { 'class': 'lb-cols' }, [h('span', { text: '名次' }), h('span', { text: '暱稱' }), h('span', { text: spec.label || '成績' })]),
-            viewport,
-            note,
-            mainBtn
-        ]));
         paintNick();
 
         /* 有舊榜單（記憶體或上次存的）就先畫出來，再背景更新；完全沒有才顯示「載入中」 */
@@ -373,37 +365,37 @@
     function askNickname(opts) {
         opts = opts || {};
         return new Promise(function (resolve) {
-            var ov = makeOverlay('lb-dlg--nick');
             var input = h('input', {
-                'class': 'lb-input',
+                'class': 'dlg-input',
                 attrs: {
                     type: 'text', maxlength: String(LB.CFG.NICK_MAX), autocomplete: 'off', autocapitalize: 'off',
                     spellcheck: 'false', enterkeyhint: 'done', placeholder: '例如：快樂阿嬤', 'aria-label': '暱稱'
                 }
             });
             input.value = opts.initial || '';
-            var ok = h('button', { 'class': 'btn btn--primary', text: opts.okText || '確定' });
-            var skip = h('button', { 'class': 'btn btn--line', text: opts.skipText || '先不要' });
             var done = false;
             function value() { return LB.cleanNick(input.value); }
-            function sync() { ok.disabled = !value(); }
             function finish(v) {
                 if (done) return;
                 done = true;
-                removeEl(ov);
+                ctl.close();
                 resolve(v);
             }
+            /* 公版彈窗：標題、說明、輸入框、兩顆按鈕。按鈕都設 keep（不自動關），由 finish 統一關閉 */
+            var ctl = Dlg.open({
+                cls: 'dlg--nick',
+                title: opts.title || '請輸入暱稱',
+                sub: '排行榜上會顯示這個名字（最多 ' + LB.CFG.NICK_MAX + ' 個字）。',
+                children: [input],
+                buttons: [
+                    { text: opts.okText || '確定', kind: 'primary', keep: true, sfx: 'ok', onClick: function () { if (value()) finish(value()); } },
+                    { text: opts.skipText || '先不要', kind: 'line', keep: true, onClick: function () { finish(''); } }
+                ]
+            });
+            var ok = ctl.buttons[0];
+            function sync() { ok.disabled = !value(); }
             input.addEventListener('input', sync);
             input.addEventListener('keydown', function (e) { if (e.key === 'Enter' && value()) { sfx('ok'); finish(value()); } });
-            ok.addEventListener('click', function () { if (!value()) return; sfx('ok'); finish(value()); });
-            skip.addEventListener('click', function () { sfx('click'); finish(''); });
-            ov.appendChild(h('div', { 'class': 'lb-card lb-card--small' }, [
-                h('div', { 'class': 'lb-nick-title', text: opts.title || '請輸入暱稱' }),
-                h('div', { 'class': 'lb-nick-text', text: '排行榜上會顯示這個名字（最多 ' + LB.CFG.NICK_MAX + ' 個字）。' }),
-                input,
-                ok,
-                skip
-            ]));
             sync();
             try { input.focus(); } catch (e) { }
         });
@@ -501,8 +493,7 @@
        ═══════════════════════════════════════════════════════════════ */
     function celebrate(info) {
         var rank = info.rank, limit = (info.board && info.board.limit) || LB.CFG.LIMIT_DEFAULT;
-        var ov = makeOverlay('lb-dlg--congrats');
-        var fw = fireworks(ov);
+        var fw = null;
         var top = rank <= 3;
         var title = rank === 1 ? '世界第一名！' : (rank <= 3 ? '前三名！' : (rank <= 10 ? '前十名！' : '恭喜進榜！'));
         var badge = top
@@ -512,24 +503,23 @@
             ])
             : h('div', { 'class': 'lb-cg__badge lb-cg__badge--n', html: global.UI.icon('trophy') });
 
-        function close(thenBoard) {
-            fw.stop();
-            removeEl(ov);
-            sfx('click');
-            if (thenBoard) showBoard(info.game, {});
-        }
-
-        ov.appendChild(h('div', { 'class': 'lb-card lb-card--congrats' }, [
-            badge,
-            h('div', { 'class': 'lb-cg__title', text: title }),
-            h('div', { 'class': 'lb-cg__rank', text: '第 ' + rank + ' 名' }),
-            h('div', { 'class': 'lb-cg__sub', text: '進入世界前 ' + limit + ' 名' }),
-            h('div', { 'class': 'lb-cg__score', text: info.game.name + '　' + LB.fmt(info.spec, info.score) }),
-            h('div', { 'class': 'row lb-cg__btns' }, [
-                h('button', { 'class': 'btn btn--sky', text: '看排行榜', on: { click: function () { close(true); } } }),
-                h('button', { 'class': 'btn btn--primary', text: '太棒了', on: { click: function () { close(false); } } })
-            ])
-        ]));
+        /* 公版彈窗：徽章、標題、名次、說明、成績，底下兩顆並排的按鈕；煙火畫布疊在整個彈窗上（關掉時停掉） */
+        var ctl = Dlg.open({
+            cls: 'dlg--congrats', btnRow: true,
+            onClose: function () { if (fw) fw.stop(); },
+            children: [
+                badge,
+                h('div', { 'class': 'lb-cg__title', text: title }),
+                h('div', { 'class': 'lb-cg__rank', text: '第 ' + rank + ' 名' }),
+                h('div', { 'class': 'lb-cg__sub', text: '進入世界前 ' + limit + ' 名' }),
+                h('div', { 'class': 'lb-cg__score', text: info.game.name + '　' + LB.fmt(info.spec, info.score) })
+            ],
+            buttons: [
+                { text: '看排行榜', kind: 'sky', onClick: function () { showBoard(info.game, {}); } },
+                { text: '太棒了', kind: 'primary' }
+            ]
+        });
+        fw = fireworks(ctl.el);
 
         /* 音樂：先把結算背景音樂停掉，讓歡呼號角聽得清楚；號角播完（約 3 秒）如果結算畫面還在，再把背景音樂接回去 */
         if (global.Sfx) {
@@ -545,12 +535,7 @@
     /* ═══════════════════════════════════════════════════════════════
        八、小提示（toast）：畫面下方浮出一行字，幾秒後自己消失
        ═══════════════════════════════════════════════════════════════ */
-    function toast(text) {
-        var el = h('div', { 'class': 'lb-toast', text: text });
-        stageEl().appendChild(el);
-        global.setTimeout(function () { el.classList.add('is-out'); }, 3200);
-        global.setTimeout(function () { removeEl(el); }, 3700);
-    }
+    function toast(text) { Dlg.toast(text); }
 
     /* ═══ 對外介面 ═══ */
     LB.ui = { askNickname: askNickname, celebrate: celebrate, toast: toast, showBoard: showBoard, fireworks: fireworks };

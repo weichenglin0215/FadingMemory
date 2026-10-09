@@ -112,10 +112,9 @@
         return (t > 0 && t <= now + 50 && t > now - 60000) ? t : now;
     };
 
-    /* 規則彈窗是否開著 */
+    /* 玩法說明彈窗是否開著（Dlg.rule，見 js/dialog.js） */
     kit.ruleOpen = function () {
-        var d = document.getElementById('rule-dlg');
-        return !!d && !d.hidden;
+        return !!(global.Dlg && Dlg.ruleOpen && Dlg.ruleOpen());
     };
 
     /* 【一局的生命週期】每款遊戲的 round() 開頭都 new 一個 kit.round()，所有計時器、動畫迴圈都從它身上排；重玩時呼叫舊的 dispose()，這一局排過的東西全部作廢（計時器清掉、迴圈停掉）。 */
@@ -220,12 +219,19 @@
         }, ease || kit.easeInOutCubic);
     };
 
-    /* 結算卡片：疊在遊戲畫面上。o.num 大數字、o.label 評語、o.lines 說明、o.isNew 新紀錄、o.onAgain 再玩一次、o.resume 失敗後從前幾關繼續、
-       o.score 這一局的最終成績（有給才會送世界排行榜；超出該遊戲 score.min～max 的成績，例如 0 關，Leaderboard.submit 會自己略過） */
-    /* ═══ 結算卡片 ═══
-       疊在遊戲畫面上（跟舊遊戲同一套 .drop-result-overlay／-card）。
-       o.sfx：'win'（過關）／'fail'（失敗）／'perfect'／'neutral'——reaction.js 的
-       MutationObserver 看到 data-sfx 就會自動播對應短旋律＋結算背景音樂。 */
+    /* ═══ 結算彈窗（所有遊戲共用的公版）═══
+       疊在遊戲畫面上，外框與卡片是彈窗公版（js/dialog.js 的 Dlg.open、css/dialog.css），
+       所以寬度、暗底、字級、按鈕尺寸與顏色跟玩法說明、世界前 30 名完全一樣。
+       內容由上到下：o.num 大數字、o.label 評語、o.lines 說明行、o.isNew 新紀錄、o.note 備註、o.extra 其他元素、
+       按鈕（o.onAgain 再玩一次；o.resume 闖關失敗後從前幾關繼續）、最底下一顆「我有話要說」（打開意見彈窗，
+       意見會連同這是哪一款遊戲一起存進資料庫）。
+       o.score：這一局的最終成績——有給才會送世界排行榜（超出該遊戲 score.min～max 的成績，例如 0 關，
+       Leaderboard.submit 會自己略過）。
+       o.sfx：'win'（過關）／'fail'（失敗）／'perfect'／'neutral'——reaction.js 的 MutationObserver 看到 data-sfx
+       就會自動播對應短旋律＋結算背景音樂；o.bgm === false 只播短旋律。
+       o.dock：'top'／'bottom'——結算畫面需要讓玩家看到後面的「放大揭曉」（六點鐘方向、倒到八分滿、不可能任務、
+       色不異空）時，彈窗改成貼在畫面上緣／下緣、背後不壓暗，按鈕併成一排，揭曉的畫面才不會被蓋住。
+       回傳彈窗外框的 DOM 元素。 */
     kit.result = function (root, o) {
         var kids = [];
         if (o.num != null) kids.push(h('div', { 'class': 'rx-result__num', text: o.num }));
@@ -234,33 +240,35 @@
         if (o.isNew) kids.push(h('div', { 'class': 'hint hint--ok', text: '新紀錄！' }));
         if (o.note) kids.push(h('div', { 'class': 'hint rx-result__note', text: o.note }));
         (o.extra || []).forEach(function (n) { if (n) kids.push(n); });
+        var btns = [];
         /* 闖關式遊戲失敗：預設從「失敗關卡的前 5 關」繼續，也可以從第 1 關重來；進度只存在這一頁的記憶體，回主選單再進來就是第 1 關 */
         if (o.resume && o.resume.level > 1 && o.onAgain) {
             /* 闖關式遊戲失敗：預設從「失敗關卡的前 RESUME_BACK 關」繼續，也可以從第 1 關重來。
                進度只存在這一頁的記憶體（closure）裡，回主選單再進來一律是第 1 關。 */
-            kids.push(h('button', {
-                'class': 'btn btn--primary', text: '從第 ' + o.resume.level + ' 關繼續',
-                on: { click: function () { Sfx.play('click'); o.resume.run(); } }
-            }));
-            kids.push(h('button', {
-                'class': 'btn btn--line', text: '從第 1 關重來',
-                on: { click: function () { Sfx.play('click'); o.onAgain(); } }
-            }));
-        } else if (o.onAgain) kids.push(h('button', {
-            'class': 'btn btn--primary', text: o.againText || '再挑戰一次',
-            on: { click: function () { Sfx.play('click'); o.onAgain(); } }
-        }));
+            btns.push({ text: '從第 ' + o.resume.level + ' 關繼續', kind: 'primary', onClick: function () { o.resume.run(); } });
+            btns.push({ text: '從第 1 關重來', kind: 'line', onClick: function () { o.onAgain(); } });
+        } else if (o.onAgain) {
+            btns.push({ text: o.againText || '再挑戰一次', kind: 'primary', onClick: function () { o.onAgain(); } });
+        }
+        /* 最底下：我有話要說（keep：按了不關結算彈窗，意見彈窗疊在上面） */
+        if (o.feedback !== false) {
+            btns.push({
+                html: UI.icon('chat') + '<span>我有話要說</span>', kind: 'line', cls: 'btn--sm dlg__feedback', keep: true,
+                onClick: function () { if (global.Dlg && Dlg.feedback) Dlg.feedback(Reaction.current); }
+            });
+        }
         /* data-sfx 屬性讓 js/reaction.js 自動播過關／失敗的短旋律與結算背景音樂 */
         var attrs = { 'data-sfx': o.sfx || 'neutral' };
         if (o.bgm === false) attrs['data-bgm'] = '0';
-        var ov = h('div', { 'class': 'drop-result-overlay', attrs: attrs }, [
-            h('div', { 'class': 'drop-result-card' }, kids)
-        ]);
-        root.appendChild(ov);
+        var ctl = Dlg.open({
+            host: root, attrs: attrs, children: kids, buttons: btns,
+            cls: 'dlg--result' + (o.dock ? ' dlg--dock dlg--dock-' + o.dock : ''),
+            btnRow: !!o.dock && btns.length === 2
+        });
         /* 世界排行榜：一定要等結算卡片「已經在畫面上」才送——排行榜靠畫面上有沒有結算卡片
            （Reaction.resultShowing）判斷玩家是不是還在看結果，太早送的話，進榜的恭喜就只剩小提示。 */
         if (o.score != null && global.Leaderboard && Reaction.current) global.Leaderboard.submit(Reaction.current, o.score);
-        return ov;
+        return ctl.el;
     };
 
     /* 按住／放開：down 在 pointerdown 呼叫，up 在放開時呼叫一次；分頁切到背景、視窗失焦一律視為放開 */

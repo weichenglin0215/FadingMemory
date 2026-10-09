@@ -100,8 +100,8 @@
         }
         paint();
 
-        /* 操作提示：拖曳（手指放在圓點上，沿軌道左右來回） */
-        hint = kit.fingerHint(stage, { mode: 'drag', x: x0 + f * TRACK_W, y: trackY + 4, dx: f < 0.5 ? 110 : -110, dy: 0, delay: 400 });
+        /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從圓點現在的位置往「最清楚的位置（刻度標記）」重複移動（第一次的正確答案） */
+        if (kit.once('focus.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: x0 + f * TRACK_W, y: trackY + 4, dx: (cfg.f0 - f) * TRACK_W, dy: 0, delay: 400 });
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
 
         kit.dragDamp(stage, {

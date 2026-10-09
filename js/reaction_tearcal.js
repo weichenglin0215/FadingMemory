@@ -421,7 +421,7 @@
             stack.addEventListener('pointerdown', function (e) { e.preventDefault(); tear(); });
             ok.addEventListener('pointerdown', function (e) { e.preventDefault(); confirm(); });
             /* 操作提示（只在第一次進遊戲時）：點日曆撕一張 → 手指縮放 */
-            if (Reaction.kit.once('tearcal.hint')) Reaction.kit.hintOn(root, stack, { mode: 'tap' });
+            if (Reaction.kit.once('tearcal.hint')) Reaction.kit.hintOn(root, stack, { mode: 'tap', text: '請點擊日曆撕一張' });
 
             /* G.debug：測試用後門 */
             G.debug = {

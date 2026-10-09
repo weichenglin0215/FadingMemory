@@ -97,7 +97,7 @@
     }
     /* ═══ 亂點打不到的遊戲：各自的「驗證用操作」（多半靠遊戲自己的 G.debug；2026-10-07 逐款驗證過） ═══
        沒列在這裡的遊戲，亂點就會自己失敗進入結算。新增遊戲如果亂點到不了結算，在這裡補一個 driver。 */
-    var done = function (W) { return !!W.document.querySelector('.drop-result-overlay'); };
+    var done = function (W) { return !!W.document.querySelector('.dlg--result[data-sfx]'); };
     var waitState = async function (W, st, ms) {
         var t0 = Date.now();
         while (Date.now() - t0 < (ms || 10000)) { if (W.Reaction.current.debug.state().state === st) return true; await sleep(60); }

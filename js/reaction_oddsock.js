@@ -104,10 +104,8 @@
             return el;
         });
         var hint = null;
-        if (level === 1) {
-            hint = kit.fingerHint(stage, { mode: 'tap', x: x0 + CELL + GAP + CELL / 2 + 10, y: y0 + 66 + CELL + GAP + CELL / 2 + 10, delay: 400 });
-            stage.addEventListener('pointerdown', function () { if (hint) { hint.remove(); hint = null; } }, { once: true });
-        }
+        /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「落單的那一隻」上（第一關的正確答案） */
+        if (level === 1 && kit.once('oddsock.hint')) hint = kit.hintOn(stage, cells[q.odd], { mode: 'tap', text: '請點擊沒有伴的襪子' });
         api.timer(timeMs(level), function () { judge(-1); });
 
         function judge(i) {

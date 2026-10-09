@@ -92,8 +92,8 @@
         var msg = h('div', { 'class': 'ra-msg' });
         stage.appendChild(msg);
 
-        /* 操作提示：拖曳（手指從起點往右上來回移動；方向只是示範，不是答案） */
-        hint = kit.fingerHint(stage, { mode: 'drag', x: s.x, y: s.y, dx: 90, dy: -30, delay: 300 });
+        /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從起點往「標準垂線的方向」重複移動（第一次的正確答案） */
+        if (kit.once('rightangle.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: s.x, y: s.y, dx: 110 * Math.cos(rad(cfg.ans)), dy: -110 * Math.sin(rad(cfg.ans)), delay: 300, text: '請拖曳畫出垂直的線' });
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
         function say(t) { msg.textContent = t; msg.classList.toggle('ra-msg--on', !!t); }
         function pos(e) { var p = kit.localPt(e, stage); return { x: p.x, y: p.y - off }; }

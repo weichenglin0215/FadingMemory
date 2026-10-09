@@ -7,6 +7,9 @@ global.UI = { h: () => ({}), store: { get: (k, f) => f, set() { } }, wait: ms =>
 global.Sfx = { play() { }, bgm() { }, stopBgm() { }, unlock() { } };
 global.Stage = { toLogical: (x, y) => ({ x, y }) };
 global.crypto = require('crypto').webcrypto;
+// 彈窗公版（js/dialog.js）要操作真的 DOM，Node 裡用替身：kit.result 只需要「放進容器、回傳一個物件」
+global.Dlg = { open: (o) => { if (o && o.host && o.host.appendChild) o.host.appendChild({}); return { el: {}, card: {}, buttons: [], isOpen: () => true, close() { } }; }, ruleOpen: () => false, toast() { }, feedback() { }, rule() { } };
+global.UI.icon = () => '';
 require(ROOT + 'js/reaction_core.js');
 require(ROOT + 'js/reaction_kit.js');
 require(ROOT + 'js/leaderboard.js');       // 遊戲的結算流程會呼叫 Leaderboard.fake4／fmtNum／submit（測試只呼叫純函式，但要找得到它）

@@ -149,7 +149,36 @@
     /* ── 世界排行榜（js/leaderboard_ui.js、css/leaderboard.css）──────
        前三名用金／銀／銅：bg 是名次徽章的漸層底、row 是整列的底色、ink 是文字色、
        edge 是邊框與皇冠色、glow 是外圈光暈。要換顏色或調整列高，只改這裡。 */
-    --lb-overlay: rgba(74, 59, 30, 0.5);
+    /* ── 彈窗公版（js/dialog.js、css/dialog.css）──────────────────
+       玩法說明、世界前 30 名、輸入暱稱、進榜恭喜、結算、我有話要說，全部用同一個外框與卡片，
+       要統一調整彈窗的長相，只改這一段：
+       overlay＝背後壓暗的顏色；pad＝卡片距離舞台邊緣；card-pad＝卡片內側留白；gap＝卡片裡各區塊的間距；
+       w＝卡片最寬多少；title-fs／text-fs＝標題與內文字級。按鈕尺寸用上面的 --btn-h、顏色用 --btn-*-bg。 */
+    --dlg-overlay: rgba(74, 59, 30, 0.45);
+    --dlg-pad: var(--sp-5);
+    --dlg-card-pad: var(--sp-5) var(--sp-4) var(--sp-4);
+    --dlg-gap: var(--sp-3);
+    --dlg-w: 452px;
+    --dlg-title-fs: var(--fs-lg);
+    --dlg-text-fs: var(--fs-sm);
+
+    /* ── 貓咪走山路（js/reaction_catroad.js，畫在 canvas 上，程式用 getComputedStyle 讀這些顏色）──
+       lava＝岩漿的兩個顏色；cliff＝斷崖邊緣；road＝山路與山路邊線；cat＝貓咪身體；cat-ink＝貓咪的線條與眼睛 */
+    --cr-lava-1: #D9421F;
+    --cr-lava-2: #F4A53A;
+    --cr-cliff: #5B4630;
+    --cr-road: #C9B58A;
+    --cr-road-edge: #8A6F43;
+    --cr-cat: #F3B24F;
+    --cr-cat-ink: #4A3B1E;
+
+    /* ── 混出什麼色（js/reaction_mixcolor.js）：六顆按鈕的底色，亮色＝增加、暗色＝減少 ── */
+    --cm-r-hi: #FF5A4D;
+    --cm-r-lo: #8E2A22;
+    --cm-g-hi: #48D66B;
+    --cm-g-lo: #22703A;
+    --cm-b-hi: #4F86FF;
+    --cm-b-lo: #213F94;
     --lb-shine: rgba(255, 255, 255, 0.55);
     --lb-gold-bg: linear-gradient(135deg, #FFEFB8 0%, #F2C14B 100%);
     --lb-gold-row: linear-gradient(135deg, #FFF6D6 0%, #FFE08A 100%);

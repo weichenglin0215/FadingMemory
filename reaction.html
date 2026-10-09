@@ -29,7 +29,7 @@
     <div id="stage">
         <!-- 頂部固定列：返回鍵、標題（會被改成目前這款遊戲的名字）、meta（例如「最佳 1000 分」）、
              右上角「喇叭」（#bar-sound）：開關音效（js/sfx.js）；
-             右上角「?」（#bar-help）：點了重新彈出這款遊戲的玩法說明（#rule-dlg）。 -->
+             右上角「?」（#bar-help）：點了重新彈出這款遊戲的玩法說明（Dlg.rule）。 -->
         <div class="bar">
             <button class="bar__back" id="bar-back"></button>
             <!-- 標題與 meta 上下疊在中間：喇叭＋「?」兩顆圓鈕占掉右側空間後，
@@ -43,8 +43,8 @@
         </div>
         <!-- #screen：目前這款小遊戲的畫面，由該遊戲模組的 mount(root, ctx) 函式畫進來 -->
         <div class="screen" id="screen"></div>
-        <!-- #rule-dlg：玩法說明彈窗，進遊戲時會先彈一次，之後按「?」可以重看 -->
-        <div class="rule-dlg" id="rule-dlg" hidden></div>
+        <!-- 玩法說明、排行榜、結算等彈窗都由 js/dialog.js 的 Dlg.open 動態加進 #stage（蓋在標題列下面）；
+             進遊戲時會先彈一次玩法說明，之後按「?」可以重看 -->
     </div>
 </body>
 

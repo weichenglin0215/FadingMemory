@@ -122,8 +122,8 @@
             var field = h('div', { 'class': 'pend-field' });
             root.appendChild(hint);
             root.appendChild(field);
-            /* 操作提示（只在第一次進遊戲時）：點畫面 → 手指縮放 */
-            if (Reaction.kit.once('pendulum.hint')) Reaction.kit.hintOn(root, field, { mode: 'tap' });
+            /* 操作提示（只在第一次進遊戲時）：點畫面任一處 → 手指縮放，放在畫面下方（不擋住鐘擺） */
+            if (Reaction.kit.once('pendulum.hint')) Reaction.kit.hintOn(root, field, { mode: 'tap', fy: 0.9, text: '請點擊畫面' });
 
             /* FW／FH 場地大小；Px、Py 支點位置 */
             var FW = field.clientWidth, FH = field.clientHeight;
@@ -303,19 +303,13 @@
                 updateMeta();
 
                 var sfx = err < 0.05 ? 'perfect' : (err < 1 ? 'win' : 'fail');
-                var kids = [
-                    h('div', { 'class': 'rx-result__label', text: err < 0.005 ? '差了 ' + fmtDeg(err) + ' 度・分毫不差！' : '差了 ' + fmtDeg(err) + ' 度' }),
-                    h('div', { 'class': 'rx-result__num pend-verdict__num', text: rating(err) }),
-                    h('div', { 'class': 'hint rx-result__line', text: side ? '針尖在紅線' + (theta < 0 ? '左' : '右') + '邊（' + side + '）' : '針尖正好壓在紅線上' })
-                ];
-                if (isNewErr) kids.push(h('div', { 'class': 'hint hint--ok', text: '新紀錄！最小誤差' }));
-                kids.push(h('button', {
-                    'class': 'btn btn--primary', text: '再挑戰一次',
-                    on: { click: function () { Sfx.play('click'); round(); } }
-                }));
-                field.appendChild(h('div', { 'class': 'pend-verdict', attrs: { 'data-sfx': sfx } }, kids));
-                /* 送世界排行榜（結算畫面已經在畫面上了） */
-                Leaderboard.submit(ID, err);
+                /* 結算彈窗（公版 kit.result）：貼在畫面上緣、背後不壓暗——針尖放大後的細節還要看得到；
+                   帶 score 會在彈窗出現之後自動送世界排行榜 */
+                kit.result(root, {
+                    num: rating(err), label: err < 0.005 ? '差了 ' + fmtDeg(err) + ' 度・分毫不差！' : '差了 ' + fmtDeg(err) + ' 度',
+                    lines: [side ? '針尖在紅線' + (theta < 0 ? '左' : '右') + '邊（' + side + '）' : '針尖正好壓在紅線上'],
+                    isNew: isNewErr, score: err, dock: 'top', sfx: sfx, onAgain: round
+                });
             }
         }
 

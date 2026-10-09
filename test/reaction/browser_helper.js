@@ -34,7 +34,7 @@
         __ev(el, 'pointerup', pts[pts.length - 1][0], pts[pts.length - 1][1]);
     };
     window.__result = function () {
-        var c = document.querySelector('.drop-result-card');
+        var c = document.querySelector('.dlg--result[data-sfx] .dlg__card');
         return c ? c.innerText : null;
     };
     window.__stage = function () { return document.querySelector('.rx-stage'); };

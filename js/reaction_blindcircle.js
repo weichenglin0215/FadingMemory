@@ -108,9 +108,9 @@
         var msg = h('div', { 'class': 'bc-msg' });
         stage.appendChild(msg);
 
-        /* 操作提示：拖曳（手指從起點出發，沿著圓的切線方向來回；順時針往左下） */
+        /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從起點出發，沿著圓的切線方向（順時針）重複移動 */
         var tx = -Math.sin(cfg.ang), ty = Math.cos(cfg.ang);
-        hint = kit.fingerHint(stage, { mode: 'drag', x: cfg.start.x, y: cfg.start.y, dx: tx * 80, dy: ty * 80, delay: 300 });
+        if (kit.once('blindcircle.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: cfg.start.x, y: cfg.start.y, dx: tx * 80, dy: ty * 80, delay: 300, text: '請繞著圓心畫一圈' });
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
         function say(t) { msg.textContent = t; msg.classList.toggle('bc-msg--on', !!t); }
 

@@ -221,7 +221,7 @@
             /* 點砧板任何位置都是切一刀 */
             board.addEventListener('pointerdown', function (e) { e.preventDefault(); cut(kit.evT(e)); });
             /* 操作提示（只在第一次進遊戲時）：點砧板切一刀 → 手指縮放 */
-            if (Reaction.kit.once('scallion.hint')) Reaction.kit.hintOn(root, board, { mode: 'tap' });
+            if (Reaction.kit.once('scallion.hint')) Reaction.kit.hintOn(root, board, { mode: 'tap', text: '請連續點擊砧板' });
 
             /* G.debug：測試用後門，mash 可以模擬連續點擊 */
             G.debug = {

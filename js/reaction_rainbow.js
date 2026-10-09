@@ -107,8 +107,7 @@
         /* 替整個畫面加上黑底 class（樣式在 css/reaction.css 的 .rb-bg） */
         root.classList.add('rb-bg');
         /* 規則彈窗元素：「?」重看規則時，換方塊要暫停等它關掉 */
-        var ruleDlg = document.getElementById('rule-dlg');
-        function ruleOpen() { return !!ruleDlg && !ruleDlg.hidden; }
+        function ruleOpen() { return Reaction.kit.ruleOpen(); }
 
         /* gen：每開一局 +1；上一局還沒跑完的計時器發現世代不一樣就自己停掉 */
         var gen = 0;    /* 每開一局就 +1：上一局還沒跑完的計時器發現世代不一樣就自己停掉 */
@@ -131,6 +130,9 @@
             var state = 'ready';        /* ready：等第一個方塊／play：進行中／paused：新規則彈窗／over：結束 */
             var timer = null;
             var resumeAfterRule = false;
+            /* 操作提示（只在第一次進遊戲時）：第一個「要點的顏色」方塊出現時，手指縮放擺在那個方塊上（也提醒玩家要點哪個顏色）；玩家第一次碰畫面就不再提示 */
+            var hintWanted = Reaction.kit.once('rainbow.hint'), hintObj = null;
+            root.addEventListener('pointerdown', function () { hintWanted = false; }, { capture: true, once: true });
 
             /* 標題列右側的文字要短：太長會把中間的遊戲名稱擠成「七…」，所以只寫
                「N 個・最佳 M」，不像結算卡片那樣寫完整的「成功／個」。 */
@@ -165,8 +167,6 @@
                     cells.push(el);
                 })(i);
             }
-            /* 操作提示（只在第一次進遊戲時）：點方塊 → 手指縮放 */
-            if (Reaction.kit.once('rainbow.hint')) Reaction.kit.hintOn(root, board, { mode: 'tap' });
 
 
             /* 目前的間隔（隨換方塊數縮短） */
@@ -187,6 +187,7 @@
                 if (resumeAfterRule) { resumeAfterRule = false; schedule(intervalNow()); return; }
                 if (pending) { fail('超時了，來不及點！', null, pending.idx); return; }
                 state = 'play';
+                if (hintObj) { hintObj.remove(); hintObj = null; }
 
                 if (cur >= 0) cells[ORDER[cur]].classList.remove('rb-cell--new');
                 cur = (cur + 1) % 4;
@@ -198,9 +199,11 @@
                 var color = isTarget ? pickAny(targets) : pickAny(nonTargets);
                 el.style.background = color.css;
                 el.innerHTML = '';
+                el.classList.remove('rb-cell--hit');
                 handled[idx] = false;
                 if (isTarget) {
                     pending = { idx: idx };
+                    if (hintWanted) hintObj = Reaction.kit.hintOn(root, el, { mode: 'tap', text: '請點擊' + color.name + '色的方塊' });
                 } else if (Math.random() < DECOY_PROB) {
                     var inkPool = targets.map(function (c) { return c.css; }).concat(['#FFFFFF', '#000000']);
                     var letter = h('span', { 'class': 'rb-letter', text: pickAny(targets).name });
@@ -221,7 +224,8 @@
                 if (handled[idx]) return;
                 if (!pending || idx !== pending.idx) { fail('點錯了！那不是要點的方塊', idx, pending ? pending.idx : null); return; }
 
-                /* 成功：方塊維持原本的顏色（不變黑），白邊也留著直到下一個方塊出現 */
+                /* 成功：方塊維持原本的顏色（不變黑）；外圍變成粗黑框（白框的兩倍粗）當作點對了的回饋，直到下一個方塊出現 */
+                cells[idx].classList.add('rb-cell--hit');
                 handled[idx] = true;
                 pending = null;
                 hits++;
@@ -246,16 +250,20 @@
                 nextEl.style.background = '#000';
                 nextEl.innerHTML = '';
 
-                var okBtn = h('button', { 'class': 'btn btn--primary', text: '知道了', attrs: { disabled: 'disabled' }, on: { click: close } });
-                var overlay = h('div', { 'class': 'drop-result-overlay' }, [
-                    h('div', { 'class': 'drop-result-card' }, [
-                        h('div', { 'class': 'rx-result__label', text: '新規則！' }),
+                /* 公版彈窗（放在遊戲畫面裡）：標題、新規則說明、目前要點的顏色、「知道了」。
+                   按鈕設 keep：由 close() 檢查完狀態才關（避免鬼點擊或換局之後誤關） */
+                var dlg = Dlg.open({
+                    host: root, cls: 'dlg--result',
+                    title: '新規則！',
+                    children: [
                         h('div', { 'class': 'rb-rule-text', text: '除了原本的顏色，現在' + extra.emoji + extra.name + '色的方塊也要點！其他顏色一律不能點，來不及點或點錯，都算失敗。' }),
-                        h('div', { 'class': 'rb-rule-targets', text: targets.map(function (c) { return c.emoji + c.name; }).join('　') }),
-                        okBtn
-                    ])
-                ]);
-                root.appendChild(overlay);
+                        h('div', { 'class': 'rb-rule-targets', text: targets.map(function (c) { return c.emoji + c.name; }).join('　') })
+                    ],
+                    buttons: [{ text: '知道了', kind: 'primary', keep: true, onClick: function () { close(); } }]
+                });
+                var okBtn = dlg.buttons[0];
+                okBtn.disabled = true;
+                var overlay = dlg.el;
 
                 /* 「知道了」按鈕剛出現的 1 秒內是灰的（防止手指的「鬼點擊」立刻把彈窗關掉） */
                 setTimeout(function () { if (myGen === gen) okBtn.disabled = false; }, RULE_ARM_MS);
@@ -303,16 +311,11 @@
                 updateMeta();
                 UI.wait(700).then(function () {
                     if (myGen !== gen) return;
-                    root.appendChild(h('div', { 'class': 'drop-result-overlay', attrs: { 'data-sfx': hits >= 15 ? 'win' : 'fail' } }, [
-                        h('div', { 'class': 'drop-result-card' }, [
-                            h('div', { 'class': 'rx-result__num', text: hits + ' 個' }),
-                            h('div', { 'class': 'rx-result__label', text: reason }),
-                            isNew ? h('div', { 'class': 'hint hint--ok', text: '新紀錄！' }) : null,
-                            h('button', { 'class': 'btn btn--primary', text: '再挑戰一次', on: { click: round } })
-                        ])
-                    ]));
-                    /* 送世界排行榜（結算卡片已經在畫面上了；0 個不在有效範圍，會自己略過） */
-                    Leaderboard.submit(ID, hits);
+                    /* 結算彈窗（公版）：帶 score 就會在彈窗出現之後自動送世界排行榜（0 個不在有效範圍，會自己略過） */
+                    Reaction.kit.result(root, {
+                        num: hits + ' 個', label: reason, isNew: isNew, score: hits,
+                        sfx: hits >= 15 ? 'win' : 'fail', onAgain: round
+                    });
                 });
             }
 

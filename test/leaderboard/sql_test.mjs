@@ -199,5 +199,58 @@ for (const g of Object.keys(specs)) {
   eq(dbRows, modelRows, g + ' 最終資料表內容 = 模型前 30 名');
 }
 
+// ═══ I. 玩家意見（MF_submit_feedback，結算彈窗的「我有話要說」）═══
+{
+  const fb = async (g, p, m, nick, ver) => (await asAnon('select public."MF_submit_feedback"($1,$2::uuid,$3,$4,$5) as r', [g, p, m, nick ?? null, ver ?? null]))[0].r;
+  const rows = async (where = 'true', params = []) => (await db.query('select * from public."MF_feedback" where ' + where + ' order by id', params)).rows;
+  // 權限：anon 不能直接讀寫意見表
+  for (const q of ['select * from public."MF_feedback"', `insert into public."MF_feedback"(game_id,player_id,message) values ('speed','${uuid(900)}','hello')`, 'delete from public."MF_feedback"']) {
+    const r = await asAnon(q);
+    ok(r.sqlError && /permission denied/i.test(r.sqlError), 'anon 直接碰意見表應被擋：' + q);
+  }
+  // 參數檢查
+  eq(await fb('nope', uuid(900), '很好玩'), { ok: false, error: 'unknown_game' }, '意見：不存在的遊戲');
+  eq(await fb('speed', null, '很好玩'), { ok: false, error: 'bad_args' }, '意見：player null');
+  eq(await fb('speed', uuid(900), ''), { ok: false, error: 'bad_args' }, '意見：空內容');
+  eq(await fb('speed', uuid(900), '好'), { ok: false, error: 'bad_args' }, '意見：只有 1 個字');
+  eq(await fb('speed', uuid(900), '  \n\t ​ '), { ok: false, error: 'bad_args' }, '意見：全是空白與零寬字元');
+  eq(await fb('speed', uuid(900), null), { ok: false, error: 'bad_args' }, '意見：null');
+  ok((await rows()).length === 0, '意見：失敗的呼叫不會寫入任何列');
+  // 正常寫入：記著是哪一款遊戲，內容被清理
+  eq(await fb('speed', uuid(901), '  第一行\r\n\r\n\r\n\r\n第二行\u0007有控制字元  ', '阿嬤', '1.20.1'), { ok: true, saved: true }, '意見：寫入成功');
+  let r1 = await rows(`player_id = $1::uuid`, [uuid(901)]);
+  ok(r1.length === 1 && r1[0].game_id === 'speed', '意見：記著遊戲代號 speed');
+  eq(r1[0].message, '第一行\n\n第二行 有控制字元', '意見：換行統一、連續換行縮成兩個、控制字元換成空格、頭尾去空白');
+  ok(r1[0].nickname === '阿嬤' && r1[0].app_version === '1.20.1', '意見：暱稱與版本有存');
+  // 同一位玩家對不同遊戲的意見可以區別
+  eq(await fb('coins', uuid(901), '零錢分類太容易'), { ok: true, saved: true }, '意見：另一款遊戲');
+  const byGame = (await db.query(`select game_id, count(*)::int as n from public."MF_feedback" group by 1 order by 1`)).rows;
+  eq(byGame, [{ game_id: 'coins', n: 1 }, { game_id: 'speed', n: 1 }], '意見：依遊戲分開統計');
+  // 暱稱／版本是選填：亂填也不會讓寫入失敗
+  eq(await fb('speed', uuid(902), '沒有暱稱', '   ', ''), { ok: true, saved: true }, '意見：空白暱稱與版本當作沒有');
+  const r2 = await rows(`player_id = $1::uuid`, [uuid(902)]);
+  ok(r2[0].nickname === null && r2[0].app_version === null, '意見：空白暱稱與版本存成 null');
+  // 太長：只留 300 個字
+  eq(await fb('speed', uuid(903), '長'.repeat(500)), { ok: true, saved: true }, '意見：超長內容仍可寫入');
+  ok((await rows(`player_id = $1::uuid`, [uuid(903)]))[0].message.length === 300, '意見：只留前 300 個字');
+  // 10 分鐘內重複送一樣的內容：不重複寫入
+  eq(await fb('speed', uuid(901), '第一行\n\n第二行 有控制字元'), { ok: true, saved: false, duplicate: true }, '意見：重複送出不重複寫入');
+  ok((await rows(`player_id = $1::uuid`, [uuid(901)])).length === 2, '意見：重複的不增加列數');
+  // 24 小時內最多 20 則
+  for (let i = 0; i < 20; i++) await fb('spot', uuid(904), '第 ' + i + ' 則意見');
+  eq(await fb('spot', uuid(904), '第 21 則意見'), { ok: false, error: 'too_many' }, '意見：第 21 則被擋');
+  ok((await rows(`player_id = $1::uuid`, [uuid(904)])).length === 20, '意見：被擋的不寫入');
+  eq(await fb('spot', uuid(905), '別人不受影響'), { ok: true, saved: true }, '意見：別的玩家不受限');
+  // 一天以前的不算進上限
+  await db.exec(`update public."MF_feedback" set created_at = now() - interval '25 hours' where player_id = '${uuid(904)}'`);
+  eq(await fb('spot', uuid(904), '隔天可以再寄'), { ok: true, saved: true }, '意見：超過 24 小時的不算進上限');
+  // 刪除遊戲時意見跟著刪（on delete cascade）；zz_test 是手寫的測試遊戲
+  await fb('zz_test', uuid(906), '測試遊戲的意見');
+  await db.exec(`delete from public."MF_games" where game_id = 'zz_test'`);
+  ok((await rows(`game_id = 'zz_test'`)).length === 0, '意見：遊戲被刪，意見跟著刪');
+  await db.exec(sql);   // 再執行一次整份 SQL：把 zz_test 補回來，也確認有意見資料時重新執行不會出錯
+  ok((await rows()).length > 0, '意見：重新執行 SQL 不會清掉既有的意見');
+}
+
 console.log(bad ? 'FAILED ' + bad + ' / ' + total : 'ALL PASS（' + total + ' 項檢查）');
 process.exit(bad ? 1 : 0);

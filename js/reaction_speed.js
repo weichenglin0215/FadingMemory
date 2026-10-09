@@ -98,16 +98,12 @@
             var isNew = Reaction.setBest(ID, score, function (v, b) { return v < b; });
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
-            root.innerHTML = '';
-            /* 評語與結算音效的門檻用「實際差了幾毫秒」判斷（≤30 毫秒＝超級好、≤150 毫秒＝過關） */
-            root.appendChild(h('div', { 'class': 'rx-result', attrs: { 'data-sfx': abs <= 30 ? 'perfect' : (abs <= 150 ? 'win' : 'neutral') } }, [
-                h('div', { 'class': 'rx-result__num', text: Leaderboard.fmt(SCORE, score) }),
-                h('div', { 'class': 'rx-result__label', text: label }),
-                isNew ? h('div', { 'class': 'hint hint--ok', text: '新紀錄！' }) : null,
-                h('button', { 'class': 'btn btn--primary', text: '再挑戰一次', on: { click: round } })
-            ]));
-            /* 送世界排行榜（非同步，不會卡畫面；進榜了會自己跳出恭喜） */
-            Leaderboard.submit(ID, score);
+            /* 結算彈窗（公版 kit.result）：帶 score 會在彈窗出現之後自動送世界排行榜（非同步，進榜了會自己跳出恭喜）。
+               評語與結算音效的門檻用「實際差了幾毫秒」判斷（≤30 毫秒＝超級好、≤150 毫秒＝過關） */
+            Reaction.kit.result(root, {
+                num: Leaderboard.fmt(SCORE, score), label: label, isNew: isNew, score: score,
+                sfx: abs <= 30 ? 'perfect' : (abs <= 150 ? 'win' : 'neutral'), onAgain: round
+            });
         }
 
         round();

@@ -302,8 +302,8 @@
                 d.hits.forEach(function (el, i) {
                     el.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(i); });
                 });
-                /* 操作提示（只在第一次進遊戲時）：點選項 → 手指縮放 */
-                if (Reaction.kit.once('illusion.hint')) Reaction.kit.hintOn(root, d.hits[0], { mode: 'tap' });
+                /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「這題真正比較大（長、亮）的那個」上（第一題的正確答案） */
+                if (Reaction.kit.once('illusion.hint')) Reaction.kit.hintOn(root, d.hits[q.big], { mode: 'tap', text: '請點擊' + (q.kind === 'contrast' ? '比較亮' : (q.kind === 'ebbinghaus' ? '比較大' : '比較長')) + '的那個' });
                 /* G.debug：測試用後門 */
                 G.debug = { q: q, answer: answer, streak: function () { return streak; } };
             }

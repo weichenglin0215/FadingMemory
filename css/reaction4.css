@@ -1,0 +1,618 @@
+/* ═══════════════════════════════════════════════════════════════════
+   reaction4.css — 第四批秒反應遊戲（V1.21.0 的 7 款「復活版」）的樣式
+   ───────────────────────────────────────────────────────────────────
+   · 重心疊疊樂（.su-）、搭一座橋（.br-）、一半的人（.hc-）、貓咪走山路（.cr-）、
+     數線落點（.nl-）、找出雙胞胎襪子（.tw-）、混出什麼色（.cm-，版面沿用色不異空的 .mc-）。
+   · 顏色、字級、間距、圓角一律用 css/theme.css 的 var(--…)，不寫死色碼。
+   · 共用元件（.rx-stage 遊戲區、.rx-head 標題列、.rx-hint 手指提示）在 css/reaction3.css。
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ═══ 重心疊疊樂（.su-）═══ */
+.su-svg {
+    display: block;
+}
+
+.su-block {
+    stroke: var(--c-ink);
+    stroke-width: 3;
+    stroke-linejoin: round;
+}
+
+/* 上方預覽的那一塊：半透明＋虛線框，看得出還沒放下 */
+.su-block--prev {
+    opacity: 0.88;
+    stroke-dasharray: 8 5;
+}
+
+.su-ceil {
+    stroke: var(--c-bad);
+    stroke-width: 3;
+    stroke-dasharray: 10 8;
+    opacity: 0.55;
+}
+
+.su-floor {
+    fill: var(--c-yellow-soft);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+/* 方塊中心往下的導引線（只是讓你看出落下的位置） */
+.su-guide {
+    stroke: var(--c-ink-soft);
+    stroke-width: 2;
+    stroke-dasharray: 4 8;
+    opacity: 0.5;
+}
+
+.su-bar {
+    position: relative;
+    height: 56px;
+    margin-top: 8px;
+    touch-action: none;
+    cursor: ew-resize;
+}
+
+.su-track {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    top: 23px;
+    height: 10px;
+    border-radius: var(--r-pill);
+    background: var(--c-yellow-soft);
+    border: 2px solid var(--c-ink-soft);
+}
+
+.su-knob {
+    position: absolute;
+    top: 4px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--c-orange);
+    border: var(--bd);
+    box-shadow: var(--shadow-card);
+}
+
+.su-ok {
+    margin-top: 12px;
+}
+
+.su-msg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 108px;
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    pointer-events: none;
+}
+
+.su-msg--ok {
+    color: var(--c-green);
+}
+
+.su-msg--bad {
+    color: var(--c-recall);
+}
+
+/* ═══ 搭一座橋（.br-）═══ */
+.br-svg {
+    display: block;
+}
+
+.br-ground {
+    fill: var(--c-yellow-soft);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+.br-block {
+    fill: var(--c-blue);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.br-plank {
+    fill: var(--c-orange);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.br-plank--ok {
+    fill: var(--c-green);
+}
+
+/* 橫板兩端往下的導引線：提醒你「方塊要移到這兩條線的下面」 */
+.br-guide {
+    stroke: var(--c-ink-soft);
+    stroke-width: 2;
+    stroke-dasharray: 4 8;
+    opacity: 0.55;
+}
+
+.br-ok {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.br-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 6px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+.br-msg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 150px;
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    pointer-events: none;
+}
+
+.br-msg--ok {
+    color: var(--c-green);
+}
+
+.br-msg--bad {
+    color: var(--c-recall);
+}
+
+/* ═══ 一半的人（.hc-）═══ */
+.hc-count {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-3);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    font-variant-numeric: tabular-nums;
+    color: var(--c-ink);
+}
+
+.hc-count__g {
+    color: var(--c-green);
+}
+
+.hc-count__r {
+    color: var(--c-recall);
+}
+
+.hc-count--ok {
+    color: var(--c-green);
+}
+
+.hc-count--bad .hc-count__vs {
+    color: var(--c-recall);
+}
+
+.hc-svg {
+    position: absolute;
+    left: 0;
+    display: block;
+    pointer-events: none;
+}
+
+/* 圓：白底（一開始全部是白色），圓心有黑點 */
+.hc-circle {
+    fill: var(--c-on-accent);
+    stroke: var(--c-ink-soft);
+    stroke-width: 1.5;
+    fill-opacity: 0.92;
+}
+
+.hc-dot {
+    fill: var(--c-ink);
+}
+
+.hc-circle--g {
+    fill: var(--c-green-light);
+    stroke: var(--c-green);
+}
+
+.hc-circle--r {
+    fill: var(--c-bad-light);
+    stroke: var(--c-recall);
+}
+
+.hc-line {
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.hc-line--ans {
+    stroke: var(--c-green);
+    stroke-dasharray: 8 6;
+}
+
+.hc-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 96px;
+    height: 56px;
+    touch-action: none;
+    cursor: ew-resize;
+}
+
+.hc-track {
+    position: absolute;
+    left: 22px;
+    right: 22px;
+    top: 23px;
+    height: 10px;
+    border-radius: var(--r-pill);
+    background: var(--c-yellow-soft);
+    border: 2px solid var(--c-ink-soft);
+}
+
+.hc-knob {
+    position: absolute;
+    top: 6px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--c-orange);
+    border: var(--bd);
+    box-shadow: var(--shadow-card);
+}
+
+.hc-nudge {
+    position: absolute;
+    bottom: 0;
+    width: 70px;
+    height: 84px;
+    padding: 0;
+    font-size: var(--fs-lg);
+}
+
+.hc-nudge--l {
+    left: 0;
+}
+
+.hc-nudge--r {
+    right: 0;
+}
+
+.hc-ok {
+    position: absolute;
+    left: 78px;
+    right: 78px;
+    bottom: 0;
+    width: auto;
+}
+
+.hc-msg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 48px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    pointer-events: none;
+}
+
+.hc-msg--ok {
+    color: var(--c-green);
+}
+
+.hc-msg--bad {
+    color: var(--c-recall);
+}
+
+/* ═══ 貓咪走山路（.cr-）═══ */
+.cr-canvas {
+    display: block;
+    border-radius: var(--r-md);
+}
+
+.cr-time {
+    position: absolute;
+    left: 12px;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    border-radius: var(--r-pill);
+    background: var(--c-card);
+    border: var(--bd);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    font-variant-numeric: tabular-nums;
+    color: var(--c-ink);
+}
+
+.cr-time--dead {
+    color: var(--c-recall);
+}
+
+.cr-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-radius: var(--r-md);
+    background: var(--c-card-alt);
+    border: 3px solid var(--c-ink-soft);
+    touch-action: none;
+    cursor: ew-resize;
+}
+
+.cr-track {
+    position: absolute;
+    left: 30px;
+    right: 30px;
+    top: 34px;
+    height: 10px;
+    border-radius: var(--r-pill);
+    background: var(--c-yellow-soft);
+    border: 2px solid var(--c-ink-soft);
+}
+
+.cr-knob {
+    position: absolute;
+    top: 9px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--c-orange);
+    border: var(--bd);
+    box-shadow: var(--shadow-card);
+}
+
+/* ═══ 數線落點（.nl-）═══ */
+.nl-big {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 6px;
+    text-align: center;
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-blue);
+}
+
+.nl-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 84px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+.nl-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+}
+
+.nl-line {
+    stroke: var(--c-ink);
+    stroke-width: 6;
+    stroke-linecap: round;
+}
+
+.nl-tick {
+    stroke: var(--c-ink);
+    stroke-width: 5;
+}
+
+.nl-label {
+    fill: var(--c-ink);
+    font-size: 34px;
+    font-weight: 900;
+}
+
+.nl-stem {
+    stroke: var(--c-orange);
+    stroke-width: 5;
+}
+
+.nl-dot {
+    fill: var(--c-orange);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.nl-tol {
+    fill: var(--c-green-soft);
+}
+
+.nl-ans {
+    stroke: var(--c-green);
+    stroke-width: 6;
+}
+
+.nl-anslabel {
+    fill: var(--c-green);
+    font-size: 28px;
+    font-weight: 900;
+}
+
+.nl-pad {
+    position: absolute;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: var(--sp-4);
+    border: 3px dashed var(--c-ink-soft);
+    border-radius: var(--r-md);
+    background: var(--c-card-alt);
+    touch-action: none;
+    cursor: ew-resize;
+}
+
+.nl-pad__text {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    pointer-events: none;
+}
+
+.nl-ok {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.nl-msg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    pointer-events: none;
+}
+
+.nl-msg--ok {
+    color: var(--c-green);
+}
+
+.nl-msg--bad {
+    color: var(--c-recall);
+}
+
+/* ═══ 找出雙胞胎襪子（.tw-）═══ */
+.tw-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 6px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+.tw-cell {
+    position: absolute;
+    border-radius: var(--r-md);
+    background: var(--c-card-alt);
+    border: 3px solid var(--c-ink-soft);
+    overflow: hidden;
+}
+
+/* 目標（左上角）：藍色底，跟其他格子一眼就分得出來；不轉動 */
+.tw-cell--target {
+    background: var(--c-blue-soft);
+    border-color: var(--c-blue);
+}
+
+.tw-cell--ok {
+    border-color: var(--c-green);
+    box-shadow: 0 0 0 5px var(--c-green);
+}
+
+.tw-cell--bad {
+    border-color: var(--c-bad-light);
+    box-shadow: 0 0 0 5px var(--c-bad-light);
+}
+
+.tw-sock {
+    width: 100%;
+    height: 100%;
+    padding: 8%;
+}
+
+.tw-sock svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* 轉動：旋轉一圈的時間由 js 依轉速算好，寫在 animation-duration（方向用 animation-direction） */
+.tw-sock--spin {
+    animation: tw-spin linear infinite;
+}
+
+@keyframes tw-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ═══ 混出什麼色（.cm-，上方的兩個色塊與黑色長方形沿用 css/reaction.css 的 .mc-）═══ */
+.cm-foot {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-3) var(--sp-3);
+}
+
+.cm-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 74px);
+    gap: var(--sp-2);
+}
+
+.cm-btn {
+    border-radius: var(--r-md);
+    border: 3px solid var(--c-on-accent);
+    color: var(--c-on-accent);
+    font-size: 48px;
+    font-weight: var(--fw-black);
+    line-height: 1;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 0.08s ease, filter 0.08s ease;
+}
+
+.cm-btn--on {
+    transform: scale(0.95);
+    filter: brightness(1.25);
+}
+
+.cm-btn--r-hi {
+    background: var(--cm-r-hi);
+}
+
+.cm-btn--r-lo {
+    background: var(--cm-r-lo);
+}
+
+.cm-btn--g-hi {
+    background: var(--cm-g-hi);
+}
+
+.cm-btn--g-lo {
+    background: var(--cm-g-lo);
+}
+
+.cm-btn--b-hi {
+    background: var(--cm-b-hi);
+}
+
+.cm-btn--b-lo {
+    background: var(--cm-b-lo);
+}

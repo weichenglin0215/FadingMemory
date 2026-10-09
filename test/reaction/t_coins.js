@@ -8,9 +8,11 @@ const SEED = seedOf(20261007); const rnd = rng(SEED);
 { const den = [50, 20, 10, 5, 1], a = [6, 0, 0, 1, 18]; ok(T.countSolutions(den, a, 271, 100) >= 1, 'user example has a solution'); ok(T.greedy(den, a, 271) !== null ? true : true, 'greedy example'); ok(a[0] * 50 > 271, 'user example: all the 50s together exceed the amount'); }
 ok(T.countSolutions([50, 10, 5, 1], [3, 2, 4, 6], 137, 50) >= 1, 'old unique example still has a solution');
 // 範圍與曲線
-ok(T.nRange(1)[0] === 12 && T.nRange(1)[1] === 45 && T.nRange(15)[0] === 150 && T.nRange(15)[1] === 499 && T.nRange(40)[1] === 499, 'N range 12..45 → 150..499');
+ok(T.nRange(1)[0] === 60 && T.nRange(1)[1] === 100 && T.nRange(15)[0] === 250 && T.nRange(15)[1] === 650 && T.nRange(40)[1] === 650, 'N range 60..100 → 250..650');
 ok(T.coinCap(1) === 9 && T.coinCap(15) === T.COINS_END && T.coinMin(15) === 20, 'coin counts ramp');
-ok(Math.abs(T.timeFor(1) - 45) < 1e-9 && Math.abs(T.timeFor(15) - 30) < 1e-9, 'time 45 → 30');
+ok(Math.abs(T.timeFor(1) - 15) < 1e-9 && Math.abs(T.timeFor(15) - 10) < 1e-9, 'time 15 → 10（原本 45 → 30 的三分之一）');
+ok(JSON.stringify(T.denomsFor(1)) === '[50,20,10,5,1]' && JSON.stringify(T.denomsFor(15)) === '[50,20,10,5,1]', '每一關都是五種幣值');
+ok(T.minRatio(1) > 0.49 && T.minRatio(15) > 0.71, '題目金額至少是桌上總額的 0.5 → 0.72');
 // 各關規劃
 const t0 = Date.now(); let fallbacks = 0; const stats = {};
 for (let lv = 1; lv <= 20; lv++) {
@@ -21,7 +23,13 @@ for (let lv = 1; lv <= 20; lv++) {
     ok(q.c.every((x, i) => x <= q.a[i] && x >= 0), 'c<=a');
     ok(q.c.reduce((s, x, i) => s + x * q.den[i], 0) === q.N, 'sum N');
     ok(JSON.stringify(q.den) === JSON.stringify(T.denomsFor(lv)), 'den');
-    const nr = T.nRange(lv); ok(q.N >= nr[0] && q.N <= nr[1] && q.N <= 499, 'N in range lv' + lv + ' ' + q.N);
+    const nr = T.nRange(lv); ok(q.N >= nr[0] && q.N <= nr[1] && q.N <= 650, 'N in range lv' + lv + ' ' + q.N);
+    // 使用者的要求：每一關桌上五種幣值都至少有一枚（以前常常沒有 10、5）；題目不能比桌上總額小太多（不再桌上一堆 50、題目只有 186）
+    ok(q.a.every(x => x >= 1), '每種幣值桌上至少 1 枚 lv' + lv + ' ' + q.a.join(','));
+    const tableSum = q.a.reduce((s, x, i) => s + x * q.den[i], 0);
+    ok(q.N <= tableSum, '題目金額不超過桌上總額');
+    if (q.pass < 2) ok(q.N >= tableSum * T.minRatio(lv) - 1e-9, '題目金額 ≥ 桌上總額 × 比例 lv' + lv + ' N=' + q.N + ' 總額=' + tableSum);
+    st.ratio = (st.ratio || 0) + q.N / tableSum;
     const tot = q.a.reduce((x, y) => x + y, 0); ok(tot === q.coins && tot <= T.coinCap(lv) && tot >= Math.max(5, T.coinMin(lv)), 'coin total lv' + lv + ' ' + tot);
     ok(q.c.filter(x => x > 0).length >= (lv <= 2 ? 2 : 3), 'answer uses enough denominations');
     const sols = T.countSolutions(q.den, q.a, q.N, 200); ok(sols >= 1, 'at least one solution'); st.sol += sols; if (sols > 1) st.multi++;
@@ -39,14 +47,14 @@ for (let lv = 1; lv <= 20; lv++) {
 }
 console.log('fallbacks', fallbacks, 'ms', Date.now() - t0);
 ok(fallbacks === 0, 'the fallback question is never needed');
-// 「陷阱隨關卡增加」：第 1、4 關完全沒有陷阱（沒有 50 元、還沒到「直覺會失敗」的關卡），第 15 關每種陷阱都常出現。
-// 每一關抽 150 題，各陷阱題數的平均值（用 400 組不同種子量過）：第 15 關 over 約 127、gf 約 90、decoy 約 59、bulk 約 52，第 8 關 gf 約 61；
-// 標準差約 4.5～6 題（抽 150 題的二項分布）。門檻訂在平均值下方約 5 個標準差，換任何種子都不會因為運氣失敗；
-// 以前 bulk > 40、第 8 關 gf > 40 只離平均 2～3.5 個標準差，大約每 25 次執行會有 1 次失敗。
-ok(stats[1].over === 0 && stats[1].gf === 0 && stats[15].over > 100 && stats[15].gf > 60 && stats[15].decoy > 30 && stats[15].bulk > 25 && stats[8].gf > 30 && stats[4].gf === 0,
-  'traps grow with the level (seed ' + SEED + '): lv15 over/gf/decoy/bulk = ' + [stats[15].over, stats[15].gf, stats[15].decoy, stats[15].bulk].join('/') + ', lv8 gf = ' + stats[8].gf);
+// 「陷阱隨關卡增加」：V1.21.0 起每關五種幣值都有，「直覺做法失敗」已關掉（gf 一律 0）；
+// 「大量 1 元」bulk 隨關卡增加（第 1 關約 17／150 題 → 第 15 關約 60／150 題，標準差約 6，門檻訂在平均下方 4 個標準差以上）。
+ok(stats[1].gf === 0 && stats[15].gf === 0 && stats[8].gf === 0, '直覺做法失敗的題目已關閉');
+ok(stats[15].bulk > stats[1].bulk + 15 && stats[15].bulk > 35, 'bulk traps grow with the level (seed ' + SEED + '): lv1/lv15 = ' + stats[1].bulk + '/' + stats[15].bulk);
+ok(stats[15].over > 20 && stats[15].decoy > 100, 'over50／decoy traps are common (seed ' + SEED + '): ' + stats[15].over + '/' + stats[15].decoy);
 ok(stats[15].multi > 20, 'multi-solution questions exist (not required to be unique)');
-ok(stats[15].N[1] >= 300 && stats[1].N[1] <= 45, 'amounts grow to three digits');
+ok(stats[15].N[1] >= 450 && stats[1].N[1] <= 100 && stats[1].N[0] >= 60, 'amounts grow to three digits（第 1 關 60～100、第 15 關最高 450 以上）');
+ok(stats[1].ratio / 150 >= 0.5 && stats[15].ratio / 150 >= 0.72, '題目金額佔桌上總額的比例平均：第 1 關 ' + (stats[1].ratio / 150).toFixed(2) + '、第 15 關 ' + (stats[15].ratio / 150).toFixed(2));
 // 擺放：最大顆數也擺得下、互不重疊
 let overl = 0, fail = 0, placed = 0;
 for (let t = 0; t < 120; t++) {

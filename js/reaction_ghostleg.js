@@ -156,7 +156,8 @@
         var msg = h('div', { 'class': 'gl-msg', text: '從橘色的起點，沿線往下描，遇到橫線就轉過去' });
         stage.appendChild(msg);
         var hint = null;
-        if (level === 1) hint = kit.fingerHint(stage, { mode: 'drag', x: colX(q.start), y: Y_TOP - 28, dx: 0, dy: 110, delay: 300 });
+        /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從橘色的起點往「終點」重複移動（第一關的正確答案） */
+        if (level === 1 && kit.once('ghostleg.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: colX(q.start), y: Y_TOP - 28, dx: colX(q.end) - colX(q.start), dy: Y_BOT + 30 - (Y_TOP - 28), delay: 300, text: '請沿著線描到終點' });
 
         var drawing = false, pid = null, pts = [], progress = 0;
         stage.addEventListener('pointerdown', function (e) {

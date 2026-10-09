@@ -166,6 +166,8 @@
                 }
             });
             my.onDispose(function () { holder.destroy(); Sfx.inflateStop(); });
+            /* 操作提示（只在第一次進遊戲時）：手指按住不放 → 「請持續按住螢幕」，放在場地下方 */
+            if (Reaction.kit.once('balloon.hint')) Reaction.kit.hintOn(root, field, { mode: 'hold', fy: 0.82, text: '請持續按住螢幕' });
 
             /* 結算：burst 為 true 表示氣球爆了 */
             function finish(t, burst) {

@@ -16,10 +16,12 @@
    3. 答案不要求唯一：只要選的硬幣加起來剛好等於 N 就過關（多解也行）。為了讓每一題都可以解，出題時一定
       是從答案 c 反推桌上的硬幣，所以至少有一組解；測試會統計平均有幾組解，供參考。
    4. 關卡一路往上調（全部線性）：
-        · 第 1–2 關幣值 {10, 5, 1}，第 3–4 關加入 50，第 5 關起再加入 20；
+        · V1.21.0 起每一關桌上「五種幣值 {50, 20, 10, 5, 1} 都至少有一枚」（答案用不到的幣值就當干擾）；
         · N 的範圍、每種幣值的「答案枚數」上限、「多給的枚數」上限、桌上硬幣總數上下限隨關卡線性增加
           （總數最多 COINS_END 枚，擺得下是 t_coins.js 驗證過的上限）；
-        · 每一題的時間從 TIME_START 線性縮短到 TIME_END。
+        · 題目金額不能比桌上的硬幣總額小太多：N ≥ 桌上總額 × 比例（比例從 RATIO_START 線性升到 RATIO_END），
+          不會出現「桌上一堆 50 元、題目卻只有 186」；
+        · 每一題的時間從 TIME_START 線性縮短到 TIME_END（V1.21.0 縮成原來的三分之一）。
    5. 失敗之後可以從「失敗關卡 − 5」繼續。
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -39,15 +41,20 @@
     /* ═══ 可以自己調的參數 ═══ */
     /* 難度升到頂的關卡 */
     var LEVEL_RAMP = 15;           /* 難度升到頂的關卡 */
-    /* 每題限時從 45 秒線性縮短到 30 秒 */
-    var TIME_START = 45, TIME_END = 30;     /* 每題限時（秒） */
-    /* 題目金額範圍、桌上硬幣數、「多給」的枚數，都隨關卡線性增加 */
-    var N_LO_START = 12, N_LO_END = 150;    /* 題目金額的下限／上限範圍（隨關卡變大） */
-    var N_HI_START = 45, N_HI_END = 499;
+    /* 每題限時從 15 秒線性縮短到 10 秒（V1.21.0：原本 45→30 秒，太容易，縮成三分之一） */
+    var TIME_START = 15, TIME_END = 10;     /* 每題限時（秒） */
+    /* 題目金額範圍、桌上硬幣數、「多給」的枚數，都隨關卡線性增加（V1.21.0 把題目金額調大，第 1 關就是 60～100） */
+    var N_LO_START = 60, N_LO_END = 250;    /* 題目金額的下限／上限範圍（隨關卡變大） */
+    var N_HI_START = 100, N_HI_END = 650;
+    /* 題目金額至少是桌上硬幣總額的幾成（比例隨關卡線性升高）：避免桌上一大堆硬幣、題目卻很小 */
+    var RATIO_START = 0.5, RATIO_END = 0.72;
     var COINS_START = 9, COINS_END = 32;    /* 桌上硬幣總數上限（t_coins.js 驗證擺得下） */
     var MIN_START = 6, MIN_END = 20;        /* 桌上硬幣總數下限（避免後面的關卡硬幣還是很少） */
     var SURP_START = 1, SURP_END = 5;       /* 每種幣值「多給」枚數上限 */
-    var GREEDY_FROM = 5;           /* 第幾關起，部分題目要求直覺（由大到小）做法失敗 */
+    /* 第幾關起，部分題目要求直覺（由大到小）做法失敗。V1.21.0 起每一關五種幣值都至少有一枚，這時
+       「由大到小盡量拿」幾乎不可能走偏（t_coins.js 隨機試過 20 萬組都找不到），所以關掉（設成 1000）；
+       要再打開，要同時讓某些面額桌上沒有，才有機會出現這種題目。 */
+    var GREEDY_FROM = 1000;
     var NEXT_MS = 1000;            /* 答對後多久進下一題 */
     /* 硬幣直徑（邏輯 px）：面額越大硬幣越大 */
     var SIZE = { 50: 74, 20: 68, 10: 62, 5: 56, 1: 48 };       /* 硬幣直徑（邏輯 px） */
@@ -56,8 +63,10 @@
 
     /* 純函式（也給 Node 測試用） */
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    /* 這一關有哪些面額：第 1–2 關 {10,5,1}、第 3–4 關加 50、第 5 關起再加 20 */
-    function denomsFor(level) { return level <= 2 ? [10, 5, 1] : (level <= 4 ? [50, 10, 5, 1] : [50, 20, 10, 5, 1]); }
+    /* 這一關有哪些面額：V1.21.0 起每一關都是五種（桌上每一種至少有一枚）；level 參數保留，之後要依關卡增減面額時用 */
+    function denomsFor(level) { return [50, 20, 10, 5, 1]; }
+    /* 題目金額至少要是桌上總額的幾成（比例隨關卡線性升高） */
+    function minRatio(level) { return kit.ramp(level, RATIO_START, RATIO_END, LEVEL_RAMP); }
     function timeFor(level) { return kit.ramp(level, TIME_START, TIME_END, LEVEL_RAMP); }
     /* 答案裡每種面額最多拿幾枚 */
     /* 答案裡每種幣值最多拿幾枚 */
@@ -126,12 +135,21 @@
     function planGreedyFail(level, den, rand) {
         var cap = coinCap(level), capMin = Math.max(5, coinMin(level)), nr = nRange(level), minUsed = level <= 2 ? 2 : 3;
         for (var tries = 0; tries < 4000; tries++) {
-            var a = den.map(function (d) { return rand() < 0.15 ? 0 : kit.randInt(1, Math.max(1, Math.min(cntMax(level, d) + surpMax(level), 12)), rand); });
-            var total = a.reduce(function (s0, x) { return s0 + x; }, 0);
-            if (total > cap || total < capMin) continue;
-            var N = kit.randInt(nr[0], nr[1], rand), max = 0;
+            /* 先決定桌上總共幾枚、每種幣值先放一枚，剩下的隨機分給各面額（每種不超過上限） */
+            var total = kit.randInt(Math.max(den.length, capMin), cap, rand);
+            var a = den.map(function () { return 1; });
+            var lim = den.map(function (d) { return Math.max(1, Math.min(cntMax(level, d) + surpMax(level), 12)); });
+            for (var left = total - den.length, guard = 0; left > 0 && guard < 300; guard++) {
+                var pick = kit.randInt(0, den.length - 1, rand);
+                if (a[pick] < lim[pick]) { a[pick]++; left--; }
+            }
+            if (left > 0) continue;
+            var max = 0;
             a.forEach(function (x, i) { max += x * den[i]; });
-            if (N > max - 10) continue;
+            /* 題目金額：落在 nRange 裡、不比桌上總額小太多（minRatio）、也比總額小一點（才有「多給」的陷阱） */
+            var nLo = Math.max(nr[0], Math.ceil(max * minRatio(level))), nHi = Math.min(nr[1], max - 10);
+            if (nLo > nHi) continue;
+            var N = kit.randInt(nLo, nHi, rand);
             var c = findSolution(den, a, N);
             if (!c || c.filter(function (x) { return x > 0; }).length < minUsed) continue;
             if (greedy(den, a, N) !== null) continue;
@@ -192,12 +210,14 @@
                     var d = den[i];
                     /* greedyFail：小面額不多給，讓大面額拿多了就補不回來 */
                     if (x > 0) return x + ((rand() < 0.35 || (wantGF && d <= 5 && rand() < 0.3)) ? 0 : kit.randInt(1, sMax, rand));
-                    return (rand() < pDecoy) ? kit.randInt(1, 3, rand) : 0;
+                    return kit.randInt(1, 2 + (rand() < pDecoy ? 1 : 0), rand);       /* 答案用不到的幣值：桌上也至少放 1 枚（干擾）*/
                 });
                 if (wantOver) a[0] = Math.max(a[0], Math.floor(N / 50) + 1);               /* 桌上的 50 元總額超過 N */
                 if (wantBulk) { var lo = Math.max(c[c.length - 1] + 1, bulkLow(level)); a[a.length - 1] = Math.max(a[a.length - 1], Math.min(19, lo + kit.randInt(0, 4, rand))); }
                 var total = a.reduce(function (s, x) { return s + x; }, 0);
                 if (total > cap || total < Math.max(5, capMin)) continue;
+                /* 題目金額不能比桌上硬幣總額小太多（最後一輪放寬） */
+                if (pass < 2) { var tableSum = 0; a.forEach(function (x, i) { tableSum += x * den[i]; }); if (N < tableSum * minRatio(level)) continue; }
                 var gf = greedy(den, a, N) === null;
                 if (wantGF && !gf) continue;
                 var over50 = has50 && a[0] * 50 > N, bulk = a[a.length - 1] >= bulkLow(level);
@@ -209,7 +229,7 @@
         }
         /* 保底：137＝50×2＋10×2＋5×3＋1×2 */
         /* 保底：137＝50×2＋10×2＋5×3＋1×2 */
-        var f = { den: [50, 10, 5, 1], c: [2, 2, 3, 2], a: [3, 2, 4, 6], N: 137, coins: 15, tries: -1, pass: 3 };
+        var f = { den: [50, 20, 10, 5, 1], c: [2, 0, 2, 3, 2], a: [3, 1, 2, 4, 6], N: 137, coins: 16, tries: -1, pass: 3 };
         f.traps = { over50: true, bulk: false, decoy: false, greedyFails: greedy(f.den, f.a, f.N) === null, carry: true };
         return f;
     }
@@ -335,8 +355,11 @@
                     coins.push(co);
                 });
                 paintSum();
-                /* 操作提示（只在第一次進遊戲時）：點硬幣 → 手指縮放 */
-                if (Reaction.kit.once('coins.hint')) Reaction.kit.hintOn(root, coins[0].el, { mode: 'tap' });
+                /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「答案裡會用到的硬幣」上（第一關的正確答案之一） */
+                if (Reaction.kit.once('coins.hint')) {
+                    var hintCoin = coins.filter(function (co) { return q.c[q.den.indexOf(co.d)] > 0; })[0] || coins[0];
+                    Reaction.kit.hintOn(root, hintCoin.el, { mode: 'tap', text: '請點擊硬幣湊出題目' });
+                }
                 /* 倒數時間條 */
                 var limit = timeFor(level) * 1000, t0 = performance.now();
                 loop = my.loop(function (now) {
@@ -414,12 +437,12 @@
     var G = {
         id: ID,
         name: '零錢分類',
-        rule: '上面是題目數字，桌上散著各種硬幣。點選硬幣，讓「已選」的總和剛好等於題目，湊法可能不只一種。小心：50 元拿太多會超過，零頭要用小硬幣細算，有的硬幣一枚都不該拿！每題有時間限制，看你能過幾關。',
+        rule: '上面是題目數字，桌上散著 50、20、10、5、1 元各種硬幣。點選硬幣，讓「已選」的總和剛好等於題目，湊法可能不只一種。小心：50 元拿太多會超過，零頭要用小硬幣細算，有的硬幣一枚都不該拿！每題只有短短幾秒，看你能過幾關。',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
-        test: { findSolution: findSolution, planGreedyFail: planGreedyFail, coinMin: coinMin, plan: plan, countSolutions: countSolutions, greedy: greedy, decompose: decompose, denomsFor: denomsFor, coinCap: coinCap, timeFor: timeFor, nRange: nRange, bulkLow: bulkLow, cntMax: cntMax, scatter: scatter, SIZE: SIZE, LEVEL_RAMP: LEVEL_RAMP, COINS_END: COINS_END }
+        test: { findSolution: findSolution, planGreedyFail: planGreedyFail, coinMin: coinMin, plan: plan, countSolutions: countSolutions, greedy: greedy, decompose: decompose, denomsFor: denomsFor, minRatio: minRatio, coinCap: coinCap, timeFor: timeFor, nRange: nRange, bulkLow: bulkLow, cntMax: cntMax, scatter: scatter, SIZE: SIZE, LEVEL_RAMP: LEVEL_RAMP, COINS_END: COINS_END }
     };
     /* 登記到遊戲清單 */
     Reaction.register(G);

@@ -10,6 +10,7 @@
     var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
     var IDS = ['area', 'halfvol', 'blindcircle', 'samelen', 'rightangle', 'stamp', 'focus', 'scratch', 'mathcheck', 'sum100', 'timestable', 'fracduel', 'primetrap', 'maxexpr', 'glyphspin', 'oddsock', 'fadee', 'ghostleg', 'euler', 'colorrecall', 'basket', 'passersby', 'seenit', 'whofirst', 'watchoff', 'handsmeet', 'clearer', 'twobags'];
     window.__NEW28 = IDS;
+    window.__NEW7 = ['stackup', 'bridge', 'halfcrowd', 'catroad', 'numline', 'twinsock', 'mixcolor'];        /* V1.21.0 的 7 款復活遊戲 */
 
     async function run(id, mode, maxMs) {
         mode = mode || 'solve'; maxMs = maxMs || 60000;
@@ -44,7 +45,7 @@
             if (btn('下一步')) { btn('下一步').click(); await sleep(250); }
             if (btn('開始挑戰')) btn('開始挑戰').click();
             await sleep(600);
-            var done = function () { return !!W.document.querySelector('.drop-result-overlay'); };
+            var done = function () { return !!W.document.querySelector('.dlg--result[data-sfx]'); };
             var D = function () { return W.Reaction.current.debug; };
             var lastKey = '';
             while (!done() && Date.now() - t0 < maxMs) {
@@ -52,13 +53,15 @@
                 if (d) {
                     var st = d.state ? JSON.stringify(d.state()) : '';
                     /* 同一個狀態每 300ms 才再呼叫一次（等過關動畫） */
-                    try { if (mode === 'wrong' ? d.wrong : d.solve) { (mode === 'wrong' ? d.wrong : d.solve)(); rep.calls++; } } catch (e) { rep.errors.push('debug: ' + e.message); }
+                    /* mode：'solve'＝一直答對；'wrong'＝一開始就答錯；'mixed'＝先答對 3 次再答錯（關卡很多的遊戲用，不用等到全破） */
+                    var useWrong = mode === 'wrong' || (mode === 'mixed' && rep.calls >= 3);
+                    try { if (useWrong ? d.wrong : d.solve) { (useWrong ? d.wrong : d.solve)(); rep.calls++; } } catch (e) { rep.errors.push('debug: ' + e.message); }
                     lastKey = st;
                 }
                 await sleep(300);
             }
             await sleep(500);
-            var card = W.document.querySelector('.drop-result-card');
+            var card = W.document.querySelector('.dlg--result[data-sfx] .dlg__card');
             rep.result = card ? card.innerText.replace(/\s+/g, ' ').slice(0, 160) : null;
             try { rep.state = D().state && D().state(); } catch (e) { }
         } catch (e) { rep.errors.push('harness: ' + e.message); }

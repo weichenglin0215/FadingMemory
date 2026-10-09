@@ -81,8 +81,19 @@
             var out = board(g, b.p_player_id); out.ok = true; out.saved = saved; out.rank = me >= 0 ? me + 1 : null;
             return respond(out, F.latency);
         }
+        /* 玩家意見（結算彈窗的「我有話要說」）：跟 SQL 的 MF_submit_feedback 一樣檢查，記在 F.feedback */
+        if (name === 'MF_submit_feedback') {
+            var fg = b.p_game_id, msg = String(b.p_message || '').trim();
+            if (!specOf(fg)) return respond({ ok: false, error: 'unknown_game' }, F.latency);
+            if (Array.from(msg).length < 2) return respond({ ok: false, error: 'bad_args' }, F.latency);
+            F.feedback = F.feedback || [];
+            if (F.feedback.filter(function (x) { return x.player === b.p_player_id; }).length >= 20) return respond({ ok: false, error: 'too_many' }, F.latency);
+            F.feedback.push({ game: fg, player: b.p_player_id, nick: b.p_nickname, message: msg.slice(0, 300), version: b.p_version, at: Date.now() });
+            return respond({ ok: true, saved: true }, F.latency);
+        }
         return respond(null, 10);
     };
+    F.feedback = [];
     F.seed = seed;
     F.board = function (g) { return board(g, null).top; };
     window.__fake = F;

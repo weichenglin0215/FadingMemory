@@ -140,6 +140,8 @@
             var FW = field.clientWidth, FH = field.clientHeight;
             /* sticks：六根棍子的資料；misses：已錯失幾根；resolved：已處理（接住或錯失）幾根；g：這關的重力 */
             var sticks = [], misses = 0, resolved = 0, g = G_START, len = 0, drawLoop = null;
+            /* 操作提示（只在第一次進遊戲時）：見 release()——第一根棍子鬆手時才顯示 */
+            var hintWanted = Reaction.kit.once('sticks.hint');
 
             /* 更新標題列右側的小字：kit.meta 把陣列用「・」串起來並略過空字串 */
             function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }
@@ -211,6 +213,8 @@
                 s.relT = performance.now();
                 /* Sfx.play('tick')：播放音效（js/sfx.js） */
                 Sfx.play('tick');
+                /* 操作提示（只在第一次進遊戲時）：第一根棍子鬆手時，手指縮放擺在它掉落的路徑上（這一欄、掉了 0.3 秒的位置） */
+                if (hintWanted) { hintWanted = false; Reaction.kit.hintOn(root, field, { mode: 'tap', fx: s.cx / FW, fy: Math.min(0.85, (topAt(g, 0.3) + len * 0.5) / FH), text: '請點擊落下的棍子' }); }
                 /* 排一個計時器：掉出畫面下緣那一刻還沒被接住，就算錯失 */
                 my.after(exitSec(g, FH) * 1000 + 40, function () { if (s.state === 'fall') lose(s, false); });
             }
@@ -298,8 +302,6 @@
                 /* kit.evT(e)：取得事件的精確時間 */
                 handleTap(p.x, p.y, kit.evT(e));
             });
-            /* 操作提示（只在第一次進遊戲時）：點畫面 → 手指縮放 */
-            if (Reaction.kit.once('sticks.hint')) Reaction.kit.hintOn(root, field, { mode: 'tap' });
 
             /* G.debug：除錯／測試用後門，下面的函式讓自動測試可以「假裝玩家」操作 */
             G.debug = {

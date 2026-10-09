@@ -87,7 +87,12 @@
         function begin() {
             if (started) return;
             started = true; clock.start();
-            hint = kit.fingerHint(stage, { mode: 'tap', x: 68 + (cards.indexOf(Math.min.apply(null, cards)) % 4) * 112, y: 106 + Math.floor(cards.indexOf(Math.min.apply(null, cards)) / 4) * 112, delay: 300 });
+            /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「第一組加起來是 100 的牌」的第一張上 */
+            if (kit.once('sum100.hint')) {
+                var pa = -1;
+                for (var i0 = 0; i0 < cards.length && pa < 0; i0++) for (var j0 = i0 + 1; j0 < cards.length; j0++) if (cards[i0] + cards[j0] === 100) { pa = i0; break; }
+                if (pa >= 0) hint = kit.hintOn(stage, els[pa], { mode: 'tap', delay: 300, text: '請點擊兩張加起來是 100 的牌' });
+            }
         }
         var cover = kit.startCover(stage, { text: '16 張牌，點兩張加起來剛好 100 就會消除。\n點錯一組加 3 秒，全部消完就結束。', onStart: begin });
         function hideHint() { if (hint) { hint.remove(); hint = null; } }

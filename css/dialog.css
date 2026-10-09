@@ -1,0 +1,252 @@
+/* ═══════════════════════════════════════════════════════════════════
+   dialog.css — 秒反應「彈窗公版」的樣式（對應 js/dialog.js）
+   ───────────────────────────────────────────────────────────────────
+   玩法說明、世界前 30 名、輸入暱稱、進榜恭喜、結算、「我有話要說」，全部用這一個外框（.dlg）
+   和這一張卡片（.dlg__card），所以位置、背後壓暗的顏色、卡片寬度、圓角、陰影、標題與內文字級、
+   按鈕尺寸與顏色都一模一樣。要統一調整，改 css/theme.css :root 的「彈窗公版」那一段變數即可。
+   · 排行榜、暱稱、恭喜這些彈窗「卡片裡面」的專屬內容樣式，仍在 css/leaderboard.css（lb-xxx）。
+   · 命名：「__」是零件（.dlg__card ＝ 彈窗裡的卡片）、「--」是變化版（.dlg--tall ＝ 卡片拉到整個高度）。
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* 彈窗外框：蓋滿「它所在的容器」的半透明暗底。
+   · 放在整個舞台（#stage）時（.dlg--stage）：從標題列的下緣開始蓋，所以上方的「返回」「喇叭」「?」
+     一直點得到——玩法說明還沒按「開始挑戰」就想離開，也不用先開始遊戲才能按返回；
+   · 放在遊戲畫面（#screen）裡時（.dlg--in，結算彈窗用）：蓋滿遊戲畫面，標題列本來就不在裡面。 */
+.dlg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--dlg-pad);
+    background: var(--dlg-overlay);
+}
+
+/* z-index（全部在 #stage 這一個疊放層裡比大小）：操作提示（手指＋短文字）15～16 ＜ 開始遮罩 20
+   ＜ 結算彈窗 25（放在遊戲畫面裡）＜ 玩法說明 28（--low：結算畫面出來之後按「?」重看玩法，玩法說明要在結算上面）
+   ＜ 其他舞台彈窗 30（世界前 30 名、暱稱、恭喜、我有話要說：從玩法說明或結算裡打開，要疊在它們上面）＜ 小提示 40。
+   這樣從「?」玩法說明裡打開排行榜，排行榜會疊在玩法說明上面，關掉之後回到玩法說明。 */
+.dlg--stage {
+    top: var(--bar-h);
+    z-index: 30;
+}
+
+.dlg--low {
+    z-index: 28;
+}
+
+.dlg--in {
+    z-index: 25;
+}
+
+/* 彈窗裡的卡片：直向排列，所有彈窗共用 */
+.dlg__card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: var(--dlg-w);
+    display: flex;
+    flex-direction: column;
+    gap: var(--dlg-gap);
+    padding: var(--dlg-card-pad);
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
+    animation: dlg-pop 0.22s ease;
+}
+
+/* 卡片裡的區塊高度固定、不准被壓縮（內容多的時候不要把按鈕擠成一條線）；
+   需要吃掉剩餘高度的區塊（例如排行榜的榜單視窗）自己另外設 flex。 */
+.dlg__card>* {
+    flex: 0 0 auto;
+}
+
+/* 卡片拉到整個高度（世界前 30 名用） */
+.dlg--tall .dlg__card {
+    height: 100%;
+}
+
+@keyframes dlg-pop {
+    from {
+        transform: translateY(18px) scale(0.97);
+        opacity: 0;
+    }
+
+    to {
+        transform: none;
+        opacity: 1;
+    }
+}
+
+/* 標題、副標題、內文 */
+.dlg__title {
+    font-size: var(--dlg-title-fs);
+    font-weight: var(--fw-black);
+    line-height: var(--lh-tight);
+    color: var(--c-ink);
+}
+
+.dlg__sub {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 內文靠左對齊（其餘文字都是置中） */
+.dlg__text {
+    font-size: var(--dlg-text-fs);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-body);
+    color: var(--c-ink-soft);
+    text-align: left;
+}
+
+/* 按鈕區：直向排列、每顆都撐滿寬度、高度用 --btn-h（theme.css）。
+   --row：兩顆並排（例如「看排行榜」「太棒了」）。 */
+.dlg__btns {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+    width: 100%;
+}
+
+.dlg__btns--row {
+    flex-direction: row;
+}
+
+.dlg__btns--row>.btn {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+/* 貼邊版（結算畫面後面有「放大揭曉」要讓玩家看的遊戲用：六點鐘方向、倒到八分滿、不可能任務、色不異空）：
+   背後不壓暗、彈窗本身以外的地方可以穿透，卡片貼在上緣或下緣，緊湊一點，揭曉的畫面才不會被蓋住。
+   卡片的寬度、圓角、陰影、字體、按鈕顏色仍然是公版。 */
+.dlg--dock {
+    background: transparent;
+    pointer-events: none;
+    padding: var(--sp-3);
+}
+
+.dlg--dock .dlg__card {
+    pointer-events: auto;
+    gap: var(--sp-2);
+    padding: var(--sp-4) var(--sp-4) var(--sp-3);
+}
+
+.dlg--dock-top {
+    align-items: flex-start;
+}
+
+.dlg--dock-bottom {
+    align-items: flex-end;
+}
+
+.dlg--dock .rx-result__num {
+    font-size: var(--fs-xl);
+}
+
+.dlg--dock .dlg__btns .btn {
+    height: var(--btn-h-sm);
+}
+
+/* 結算彈窗：內容置中（大數字、評語、說明行）；卡片底部的「我有話要說」小一點、放在所有按鈕下面 */
+.dlg--result .dlg__card {
+    align-items: center;
+}
+
+.dlg__feedback {
+    width: 100%;
+    margin-top: var(--sp-1);
+    white-space: nowrap;
+}
+
+/* 貼邊版：兩顆按鈕並排，每顆只有半個寬度，「我有話要說」字級小一點、圖示縮小，才不會折行 */
+.dlg--dock .dlg__feedback {
+    font-size: var(--fs-sm);
+}
+
+.dlg--dock .dlg__feedback .icon {
+    width: 22px;
+    height: 22px;
+}
+
+/* ═══ 輸入框（暱稱、意見共用）═══
+   user-select: text：舞台整體禁止選取文字（stage.css），輸入框要例外，不然手機上打不了字 */
+.dlg-input {
+    width: 100%;
+    height: var(--btn-h);
+    padding: 0 var(--sp-4);
+    border: var(--bd);
+    border-radius: var(--r-md);
+    background: var(--c-paper);
+    color: var(--c-ink);
+    font-family: var(--font-ui);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    text-align: center;
+    outline: none;
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+.dlg-input:focus {
+    border-color: var(--c-blue);
+    box-shadow: 0 0 0 4px var(--c-blue-soft);
+}
+
+/* 多行輸入（我有話要說）：靠左對齊、字級小一點、可以輸入很多字 */
+.dlg-input--area {
+    height: 230px;
+    padding: var(--sp-3) var(--sp-4);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-body);
+    text-align: left;
+    resize: none;
+}
+
+/* 輸入字數計數 */
+.dlg__count {
+    margin-top: calc(var(--sp-2) * -1);
+    text-align: right;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* ═══ 小提示（畫面下方浮出一行字，幾秒後淡出）═══ */
+.dlg-toast {
+    position: absolute;
+    left: var(--sp-5);
+    right: var(--sp-5);
+    bottom: var(--sp-5);
+    z-index: 40;
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-body);
+    color: var(--c-ink);
+    pointer-events: none;
+    animation: dlg-pop 0.25s ease;
+    transition: opacity 0.4s ease;
+}
+
+.dlg-toast.is-out {
+    opacity: 0;
+}
+
+/* 使用者在系統設定了「減少動態效果」：關掉彈出動畫 */
+@media (prefers-reduced-motion: reduce) {
+
+    .dlg__card,
+    .dlg-toast {
+        animation: none;
+    }
+}

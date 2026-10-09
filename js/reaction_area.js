@@ -117,9 +117,8 @@
         var okBtn = h('button', { 'class': 'btn btn--go ar-ok', text: '確定' });
         stage.appendChild(okBtn);
 
-        /* 操作提示：拖曳（手指從手柄出發，沿對角線來回移動；方向隨機，不洩漏答案） */
-        var sign = Math.random() < 0.5 ? 1 : -1;
-        hint = kit.fingerHint(stage, { mode: 'drag', x: ANCHOR.x + s, y: ANCHOR.y + s, dx: sign * 52, dy: sign * 52, delay: 400 });
+        /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從手柄出發，沿對角線往「面積一樣大的位置」重複移動（第一次的正確答案） */
+        if (kit.once('area.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: ANCHOR.x + s, y: ANCHOR.y + s, dx: cfg.sAns - s, dy: cfg.sAns - s, delay: 400, text: '請拖曳圓點調整方塊大小' });
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
 
         kit.dragDamp(stage, {

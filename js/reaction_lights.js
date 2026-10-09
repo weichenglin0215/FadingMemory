@@ -184,8 +184,8 @@
                     hint.textContent = '把剛才亮過的燈點出來（共 ' + n + ' 盞）';
                     my.after(AFTER_LIT_MS, function () {
                         state = 'recall';
-                        /* 操作提示（只在第一次進遊戲時）：點燈 → 手指縮放，指在燈板中央（不洩漏哪盞燈亮過） */
-                        if (Reaction.kit.once('lights.hint')) Reaction.kit.hintOn(root, grid, { mode: 'tap' });
+                        /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「剛才亮過的燈」上（第一關的正確答案之一） */
+                        if (Reaction.kit.once('lights.hint')) Reaction.kit.hintOn(root, lamps[targets[0]], { mode: 'tap', text: '請點擊亮過的燈' });
                         var limit = recallSecFor(n) * 1000;
                         var t0 = performance.now();
                         /* 倒數條 */

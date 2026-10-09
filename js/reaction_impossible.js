@@ -210,8 +210,8 @@
 
             var hint = h('div', { 'class': 'imp-hint', text: '點擊畫面讓阿湯哥下降' });
             field.appendChild(hint);
-            /* 操作提示（只在第一次進遊戲時）：點畫面 → 手指縮放 */
-            if (Reaction.kit.once('impossible.hint')) Reaction.kit.hintOn(root, imgEl, { mode: 'tap' });
+            /* 操作提示（只在第一次進遊戲時）：點畫面任一處 → 手指縮放，放在畫面中下方（不擋住下墜的照片） */
+            if (Reaction.kit.once('impossible.hint')) Reaction.kit.hintOn(root, root, { mode: 'tap', fy: 0.72, text: '請點擊畫面' });
 
             var phase = 'idle';   /* idle：等第一下點擊／falling：下墜中／done：定格、推進或已結束 */
             var raf = null;
@@ -414,11 +414,16 @@
                 }).then(function () {
                     return UI.wait(HOLD_AFTER_MS);
                 }).then(function () {
-                    field.appendChild(h('button', { 'class': 'btn btn--primary imp-restart-btn', text: '再挑戰一次', attrs: { 'data-sfx': success ? (cm < 1 ? 'perfect' : 'win') : 'fail' }, on: { click: round } }));
-                    /* 送世界排行榜：這個帶 data-sfx 的按鈕出現，才算「結算畫面出現了」。
-                       只有「成功」才送！摔到警戒線（crashed）時距離是 0 公分，如果不判斷 success 就送，
-                       失敗會變成世界第一名的 0.0000 公分；離太遠的失敗（≥ 30 公分）則本來就不在有效範圍 */
-                    if (success) Leaderboard.submit(ID, cm);
+                    /* 結算彈窗（公版 kit.result）：貼在畫面下緣、背後不壓暗——放大後的量尺還要看得到。
+                       只有「成功」才給 score（才會送世界排行榜）！摔到警戒線（crashed）時距離是 0 公分，
+                       如果不判斷 success 就送，失敗會變成世界第一名的 0.0000 公分；
+                       離太遠的失敗（≥ 30 公分）則本來就不在有效範圍 */
+                    Reaction.kit.result(root, {
+                        num: success ? cm.toFixed(4) + ' 公分' : (crashed ? '摔到警戒線了' : '離警戒線太遠了'),
+                        label: success ? (cm < 1 ? '超級驚險！' : '成功停在警戒線前') : '挑戰失敗',
+                        isNew: isNew, score: success ? cm : null, dock: 'bottom',
+                        sfx: success ? (cm < 1 ? 'perfect' : 'win') : 'fail', onAgain: round
+                    });
                 });
             }
         }

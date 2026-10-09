@@ -3,7 +3,8 @@
    · 主選單的挑選彈窗（js/menu.js）會帶 ?game=<id> 進來，指定要玩哪一個；
      找不到對應的 id（例如直接開 reaction.html 沒帶參數）才退回舊行為，
      從 Reaction.list() 隨機挑一個。
-   · 先彈出說明彈窗，按「開始挑戰」才進遊戲；同一個遊戲可以無限次重玩（見各遊戲檔案）。
+   · 先彈出說明彈窗（彈窗公版 Dlg.rule，見 js/dialog.js；它蓋在標題列「下面」，所以還沒開始遊戲就能按左上的「返回」），
+     按「開始挑戰」才進遊戲；同一個遊戲可以無限次重玩（見各遊戲檔案）。
      有接上世界排行榜的遊戲（Reaction.register 時有 score 設定，見 js/leaderboard.js），
      流程多一步：說明彈窗按「下一步」→ 世界前 30 名彈窗（js/leaderboard_ui.js）→ 按「開始挑戰」才進遊戲；
      榜單在進場那一刻就開始背景下載（Leaderboard.prefetch），看說明的時候就已經抓好了。
@@ -22,7 +23,7 @@
     'use strict';
 
     var h = UI.h;
-    var screen, barTitle, barMeta, barBack, barHelp, barSound, ruleDlg;
+    var screen, barTitle, barMeta, barBack, barHelp, barSound;
     var game;
     /* hasBoard：這款遊戲有沒有接上世界排行榜（進場時決定） */
     var hasBoard = false;
@@ -33,7 +34,7 @@
        標題列的 HTML 結構，也只要改這個檔案，不用動到任何一個遊戲模組。 */
     function setMeta(text) { barMeta.textContent = text || ''; }
 
-    /* 顯示玩法說明彈窗。onClose 是「使用者按下開始挑戰之後要做什麼」，由呼叫端
+    /* 顯示玩法說明彈窗（彈窗公版 Dlg.rule）。onClose 是「使用者按下開始挑戰之後要做什麼」，由呼叫端
        決定——進場時傳的是「真的開始 mount 遊戲」（有排行榜的遊戲是「先彈排行榜」），
        右上角「?」重看規則時傳的是空函式（什麼都不用做，因為遊戲早就已經在進行中了）。
        opts.okText：主按鈕文字（預設「開始挑戰」）；
@@ -41,23 +42,7 @@
        opts.boardButton：多放一顆「世界排行榜」按鈕，點了可以隨時看榜。 */
     function showRule(onClose, opts) {
         opts = opts || {};
-        var kids = [
-            h('div', { 'class': 'rule-dlg__title', text: game.name }),
-            h('div', { 'class': 'rule-dlg__text', text: game.rule }),
-            h('button', {
-                'class': 'btn btn--primary', text: opts.okText || '開始挑戰',
-                on: { click: function () { Sfx.unlock(); Sfx.play(opts.softSound ? 'click' : 'go'); ruleDlg.hidden = true; onClose(); } }
-            })
-        ];
-        if (opts.boardButton) {
-            kids.push(h('button', {
-                'class': 'btn btn--line', html: UI.icon('trophy') + '<span>世界排行榜</span>',
-                on: { click: function () { Sfx.unlock(); Sfx.play('click'); Leaderboard.showBoard(game, {}); } }
-            }));
-        }
-        ruleDlg.innerHTML = '';
-        ruleDlg.appendChild(h('div', { 'class': 'rule-dlg__card' }, kids));
-        ruleDlg.hidden = false;
+        Dlg.rule(game, { okText: opts.okText, softSound: opts.softSound, boardButton: opts.boardButton, onClose: onClose });
     }
 
     /* 喇叭按鈕：圖示跟著目前是否靜音換 */
@@ -114,7 +99,6 @@
         barBack = document.getElementById('bar-back');
         barHelp = document.getElementById('bar-help');
         barSound = document.getElementById('bar-sound');
-        ruleDlg = document.getElementById('rule-dlg');
 
         barBack.innerHTML = UI.icon('back') + '<span>返回</span>';
         barBack.addEventListener('click', function () { Sfx.stopBgm(); location.href = 'index.html'; });

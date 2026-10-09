@@ -206,7 +206,9 @@
         bolt: '<path d="M13 3 5 13.5h6L10.5 21 19 10h-6.5z" stroke-linejoin="round"/>',
         /* 世界排行榜用：獎盃與皇冠（js/leaderboard_ui.js） */
         trophy: '<path d="M7.5 3.5h9v6a4.5 4.5 0 0 1-9 0z"/><path d="M7.5 5.5H5a1 1 0 0 0-1 1v.8a3.7 3.7 0 0 0 3.9 3.7M16.5 5.5H19a1 1 0 0 1 1 1v.8a3.7 3.7 0 0 1-3.9 3.7"/><path d="M12 14v3.5M9.5 17.5h5M8 20.5h8"/>',
-        crown: '<path d="M3.5 18.5 2.5 7.5l5 4.2L12 5l4.5 6.7 5-4.2-1 11z"/><path d="M5 21.2h14"/>'
+        crown: '<path d="M3.5 18.5 2.5 7.5l5 4.2L12 5l4.5 6.7 5-4.2-1 11z"/><path d="M5 21.2h14"/>',
+        /* 結算彈窗的「我有話要說」：對話框 */
+        chat: '<path d="M4 5.5h16v11H12.5L8 20.5v-4H4z"/><path d="M8 9.5h8M8 12.5h5"/>'
     };
 
     /* 回傳一段 <svg> 字串（不是 DOM 元素），通常搭配 UI.h(...,{html: UI.icon('back')})

@@ -71,6 +71,8 @@
     var KEY_NICK = 'fm.lb.nick';         /* 暱稱 */
     var KEY_PENDING = 'fm.lb.pending';   /* 還沒送出的成績：{ 遊戲id: {score, nick, at} } */
     var KEY_BOARD = 'fm.lb.board.';      /* 榜單快取：fm.lb.board.<遊戲id> */
+    var KEY_FBPEND = 'fm.lb.fbpending';  /* 還沒送出的玩家意見：[ {game, text, at} ]（最多留 5 筆） */
+    var FB_MAX = 300;                    /* 玩家意見最多幾個字（資料庫 MF_feedback 的檢查也是 300） */
 
     var Leaderboard = {};
 
@@ -131,6 +133,19 @@
             .replace(/\s+/g, ' ')
             .trim();
         return Array.from(s).slice(0, CFG.NICK_MAX).join('').trim();
+    }
+
+    /* 玩家意見清理：去掉控制字元（保留換行）、零寬字元、文字方向控制字元，連續空白縮成一個，
+       連續三個以上的換行縮成兩個，去頭尾空白，最多 FB_MAX 個「字」（用 Array.from 切，不會把 emoji 切成兩半）。 */
+    function cleanFeedback(raw) {
+        var s = String(raw == null ? '' : raw)
+            .replace(/\r\n?/g, '\n')
+            .replace(/[\u{0}-\u{8}\u{b}\u{c}\u{e}-\u{1f}\u{7f}-\u{9f}\u{200b}-\u{200f}\u{2028}-\u{202e}\u{2060}-\u{2064}\u{feff}]+/gu, ' ')
+            .replace(/[ \t]+/g, ' ')
+            .replace(/ ?\n ?/g, '\n')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+        return Array.from(s).slice(0, FB_MAX).join('').trim();
     }
 
     /* 這次成績有沒有機會進榜？（只是「在本機先篩一下」，最後以資料庫為準）
@@ -456,9 +471,58 @@
         });
     }
 
-    /* 頁面載入時呼叫一次：稍等一下（不跟進場的榜單讀取搶頻寬）再補送沒送出去的成績 */
+    /* ═══════════════════════════════════════════════════════════════
+       五之二、玩家意見（結算彈窗的「我有話要說」）
+       每一筆意見都帶著遊戲代號，資料庫 MF_feedback 才分得出是哪一款遊戲的意見。
+       連不上網路（或資料庫還沒更新到有這個函式）→ 先存在這支手機，下次開頁面補送；
+       資料庫明確拒絕的（格式不對、遊戲沒登記）就不再重試。
+       回傳 Promise<{status}>，status：sent／queued／too-many／rejected／skip
+       ═══════════════════════════════════════════════════════════════ */
+    function sendFeedback(ref, raw) {
+        var g = resolveGame(ref);
+        var id = g ? g.id : (typeof ref === 'string' ? ref : '');
+        var text = cleanFeedback(raw);
+        if (!id || Array.from(text).length < 2) return Promise.resolve({ status: 'skip' });
+        var args = {
+            p_game_id: id, p_player_id: getPid(), p_message: text,
+            p_nickname: getNick() || null,
+            p_version: (global.FM_VERSION && global.FM_VERSION.version) ? String(global.FM_VERSION.version).slice(0, 32) : null
+        };
+        return rpc('MF_submit_feedback', args, CFG.WRITE_TIMEOUT_MS).then(function (r) {
+            if (r.ok && r.data && r.data.ok) { log('意見已送出', id); return { status: 'sent' }; }
+            if (r.ok && r.data && r.data.error === 'too_many') return { status: 'too-many' };
+            if (r.ok) { log('資料庫拒絕這則意見：', r.data && r.data.error); return { status: 'rejected' }; }
+            if (r.error === 'http_400') return { status: 'rejected' };
+            /* 連不上（逾時、斷線、404＝資料庫還沒建好這個函式）：先存起來 */
+            var q = store().get(KEY_FBPEND, []) || [];
+            q.push({ game: id, text: text, at: Date.now() });
+            store().set(KEY_FBPEND, q.slice(-5));
+            log('意見先存在本機（', r.error, '），下次補送');
+            return { status: 'queued' };
+        });
+    }
+
+    /* 補送之前沒送出去的意見：一筆一筆送，連不上就停；超過 30 天的丟掉 */
+    function flushFeedback() {
+        var q = store().get(KEY_FBPEND, []) || [];
+        if (!q.length) return Promise.resolve();
+        var keep = [], i = 0, stop = false;
+        q = q.filter(function (it) { return it && it.game && it.text && Date.now() - it.at < 30 * 24 * 3600 * 1000; });
+        function next() {
+            if (i >= q.length || stop) { store().set(KEY_FBPEND, keep.concat(q.slice(i))); return Promise.resolve(); }
+            var it = q[i++];
+            return rpc('MF_submit_feedback', { p_game_id: it.game, p_player_id: getPid(), p_message: it.text, p_nickname: getNick() || null, p_version: null }, CFG.WRITE_TIMEOUT_MS)
+                .then(function (r) {
+                    if (!r.ok && r.error !== 'http_400') { stop = true; keep.push(it); }
+                    return next();
+                });
+        }
+        return next();
+    }
+
+    /* 頁面載入時呼叫一次：稍等一下（不跟進場的榜單讀取搶頻寬）再補送沒送出去的成績與意見 */
     function init() {
-        global.UI.wait(1500).then(flushPending);
+        global.UI.wait(1500).then(flushPending).then(flushFeedback);
     }
 
     /* ═══════════════════════════════════════════════════════════════
@@ -477,11 +541,14 @@
     Leaderboard.getNick = getNick;
     Leaderboard.setNick = setNick;
     Leaderboard.cleanNick = cleanNick;
+    Leaderboard.cleanFeedback = cleanFeedback;
+    Leaderboard.sendFeedback = sendFeedback;
     Leaderboard.init = init;
     Leaderboard.ui = null;       /* js/leaderboard_ui.js 載入後會把畫面功能掛在這裡 */
     /* 給 Node 測試用的內部函式與狀態 */
     Leaderboard.test = {
         fake4: fake4, fmt: fmt, isBetter: isBetter, qualifies: qualifies, cleanNick: cleanNick, newUuid: newUuid,
+        cleanFeedback: cleanFeedback, flushFeedback: flushFeedback, KEY_FBPEND: KEY_FBPEND,
         state: state, rpc: rpc, putBoard: putBoard, savePending: savePending, flushPending: flushPending,
         KEY_PID: KEY_PID, KEY_NICK: KEY_NICK, KEY_PENDING: KEY_PENDING, KEY_BOARD: KEY_BOARD
     };

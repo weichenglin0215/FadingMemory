@@ -354,9 +354,9 @@
             field.addEventListener('pointercancel', onUp);
             /* 操作提示（只在第一次進遊戲時）：拖曳塗滿方塊 → 手指＋箭頭 */
             /* 先提示「點下方的圓形沾油漆」（手指縮放）；玩家沾了油漆之後，再提示「拖曳塗滿方塊」（手指＋箭頭） */
-            if (Reaction.kit.once('paint.hint')) Reaction.kit.hintOn(root, brushBox, { mode: 'tap', fy: 0.75 });
+            if (Reaction.kit.once('paint.hint')) Reaction.kit.hintOn(root, brushBox, { mode: 'tap', fy: 0.75, text: '請點擊圓形沾油漆' });
             brushBox.addEventListener('pointerdown', function () {
-                if (Reaction.kit.once('paint.hint2')) Reaction.kit.hintOn(root, field, { mode: 'drag', dx: 140, dy: 40, fx: 0.25, fy: 0.3, delay: 300 });
+                if (Reaction.kit.once('paint.hint2')) Reaction.kit.hintOn(root, field, { mode: 'drag', dx: field.clientWidth * 0.55, dy: 0, fx: 0.2, fy: 0.25, delay: 300, text: '請往左右拖曳塗滿方塊' });
             });
             /* 這一局結束時把事件監聽拿掉 */
             my.onDispose(function () {

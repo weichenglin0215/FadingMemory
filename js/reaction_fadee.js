@@ -103,7 +103,8 @@
         var note = h('div', { 'class': 'fe-note', text: '往 E 的開口方向滑動' });
         stage.appendChild(note);
         var hint = null;
-        if (level === 1) hint = kit.fingerHint(stage, { mode: 'drag', x: 236 - 50, y: 370, dx: 110, dy: 0, delay: 300 });
+        /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，第一個 E 的開口朝右，手指就往右滑（第一關的正確答案） */
+        if (level === 1 && kit.once('fadee.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: 236 - 50, y: 370, dx: 110, dy: 0, delay: 300 });
 
         var start = null, pid = null, judged = false;
         stage.addEventListener('pointerdown', function (e) {

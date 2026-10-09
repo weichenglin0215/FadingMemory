@@ -208,8 +208,8 @@
                 found = 0; foundSet = {}; mistakes = 0; state = 'play'; t0 = performance.now();
                 drawPanel(top, 'top', top.clientWidth, top.clientHeight);
                 drawPanel(bot, 'bot', bot.clientWidth, bot.clientHeight);
-                /* 操作提示（只在第一次進遊戲時）：點圖形 → 手指縮放，指在上面那格的中央（不洩漏哪個圖形不同） */
-                if (Reaction.kit.once('diff.hint')) Reaction.kit.hintOn(root, top, { mode: 'tap' });
+                /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「第一個不一樣的圖形」上（第一關的正確答案之一） */
+                if (Reaction.kit.once('diff.hint')) Reaction.kit.hintOn(root, svgs.top.querySelector('g[data-i="' + L.diffs[0].i + '"] .df-hit'), { mode: 'tap', text: '請點擊不一樣的圖形' });
                 paintHead(); meta();
                 /* 主控台印出這一關三種差異量與 5 個差異的位置（驗證用） */
                 try {

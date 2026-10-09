@@ -189,8 +189,8 @@
                 })(i);
             }
             root.appendChild(grid);
-            /* 操作提示（只在第一次進遊戲時）：點格子 → 手指縮放 */
-            if (Reaction.kit.once('spot.hint')) Reaction.kit.hintOn(root, grid, { mode: 'tap' });
+            /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在這一關「顏色不一樣的那一格」上（提醒玩家怎麼玩，也等於第一關的答案） */
+            if (Reaction.kit.once('spot.hint')) Reaction.kit.hintOn(root, grid.children[oddIdx], { mode: 'tap', text: '請點擊不一樣的色塊' });
         }
 
         /* 答題：答對進下一關；答錯顯示正確位置並結算 */
@@ -216,19 +216,12 @@
                    css/reaction.css，是跨遊戲共用的樣式，不是神準落下專屬）。卡片本身
                    是亮色（--c-card），所以卡片裡的文字要用一般（亮底深字）樣式，
                    不能用給純黑底用的 --on-dark 版本，不然字會變成白色、看不清楚。 */
-                root.appendChild(h('div', { 'class': 'drop-result-overlay', attrs: { 'data-sfx': level >= 8 ? 'win' : 'fail' } }, [
-                    h('div', { 'class': 'drop-result-card' }, [
-                        h('div', { 'class': 'rx-result__num', text: '第 ' + level + ' 關' }),
-                        h('div', { 'class': 'rx-result__label', text: '答錯了，挑戰結束' }),
-                        isNew ? h('div', { 'class': 'hint hint--ok', text: '新紀錄！' }) : null,
-                        h('button', { 'class': 'btn btn--primary', text: '再挑戰一次', on: { click: function () { level = 1; round(); } } })
-                    ])
-                ]));
-                /* 送世界排行榜（非同步，不會卡畫面；進榜了會自己跳出恭喜）。
-                   一定要放在結算卡片「已經在畫面上」之後：排行榜靠「畫面上有沒有結算卡片」
-                   判斷玩家是不是還在看結果（見 Reaction.resultShowing），太早送的話，
-                   伺服器回覆時卡片還沒出現，會被當成玩家已經開始下一局，恭喜就只剩小提示。 */
-                Leaderboard.submit(ID, level);
+                /* 結算彈窗（公版 kit.result）：帶 score 會在彈窗「已經在畫面上」之後才自動送世界排行榜
+                   （排行榜靠「畫面上有沒有結算卡片」判斷玩家是不是還在看結果，太早送的話恭喜就只剩小提示） */
+                Reaction.kit.result(root, {
+                    num: '第 ' + level + ' 關', label: '答錯了，挑戰結束', isNew: isNew, score: level,
+                    sfx: level >= 8 ? 'win' : 'fail', onAgain: function () { level = 1; round(); }
+                });
             });
         }
 
