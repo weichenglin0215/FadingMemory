@@ -136,6 +136,8 @@
                 my.after(t, function () {
                     if (id !== runId) return;
                     state = 'input';
+                    /* 操作提示（只在第一次進遊戲時）：點九宮格 → 手指縮放，指在九宮格中央 */
+                    if (Reaction.kit.once('backnum.hint')) Reaction.kit.hintOn(root, grid, { mode: 'tap' });
                     setBanner('換你了：倒著按！', 'go');
                     Sfx.play('go');
                 });

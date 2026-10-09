@@ -225,6 +225,8 @@
             /* 按「好了」：用目前撥到的時間判定 */
             done.addEventListener('pointerdown', function (e) { e.preventDefault(); if (state === 'play') finishLevel(isRight(cur, L.target), false); });
 
+            /* 操作提示（只在第一次進遊戲時）：繞著鐘面轉分針 → 手指＋箭頭 */
+            if (Reaction.kit.once('setclock.hint')) Reaction.kit.hintOn(root, svg, { mode: 'drag', dx: 100, dy: 30, fx: 0.5, fy: 0.4 });
             /* 手指轉分針的處理：只看「手指角度的變化量」累加到分鐘數，這樣可以連續轉很多圈也可以倒轉 */
             /* ─── 手指轉分針 ─── */
             /* drag 記錄目前正在拖曳的手指（id 與上一個角度） */

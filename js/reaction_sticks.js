@@ -298,6 +298,8 @@
                 /* kit.evT(e)：取得事件的精確時間 */
                 handleTap(p.x, p.y, kit.evT(e));
             });
+            /* 操作提示（只在第一次進遊戲時）：點畫面 → 手指縮放 */
+            if (Reaction.kit.once('sticks.hint')) Reaction.kit.hintOn(root, field, { mode: 'tap' });
 
             /* G.debug：除錯／測試用後門，下面的函式讓自動測試可以「假裝玩家」操作 */
             G.debug = {

@@ -49,7 +49,7 @@ globalThis.fetch = async (url, opt) => {
   } finally { await db.exec('reset role'); }
 };
 
-// ─── 載入真正的用戶端程式與「全部 50 款真正的遊戲檔案」（用假的 UI 環境）───
+// ─── 載入真正的用戶端程式與「全部 78 款真正的遊戲檔案」（用假的 UI 環境）───
 // 遊戲檔案由 all_games.cjs 載入（依 js/boot.js 的清單），拿到的是各遊戲 register 時登記的真實 score 設定，
 // 所以這個測試驗證的是「遊戲檔案裡的設定」與「資料庫腳本」真的對得起來，不是測試自己抄的一份。
 const mem = new Map();
@@ -60,7 +60,7 @@ globalThis.UI = { h: () => ({}), wait: () => Promise.resolve(), store: { get: (k
 globalThis.Reaction.resultShowing = () => true;
 require(ROOT + 'js/leaderboard.js');
 const LB = globalThis.Leaderboard, T = LB.test;
-ok(GAME_LIST.length === 50 && GAMES.speed && GAMES.spot, '載入 50 款遊戲：' + GAME_LIST.length);
+ok(GAME_LIST.length === 78 && GAMES.speed && GAMES.spot, '載入 78 款遊戲：' + GAME_LIST.length);
 const celebrated = [], toasts = [];
 LB.ui = { askNickname: async () => '', celebrate: (i) => celebrated.push(i), toast: (t) => toasts.push(t) };
 
@@ -133,7 +133,7 @@ ok(bad1.ok && bad1.data.ok === false && bad1.data.error === 'out_of_range', '亂
 const bad2 = await T.rpc('MF_submit_score', { p_game_id: 'speed', p_player_id: '00000000-0000-4000-8000-000000000400', p_nickname: 'x', p_extra: 1, p_score: 1 }, 5000);
 ok(!bad2.ok && bad2.error === 'http_404', '多帶不認識的參數 → 404（跟 PostgREST 一樣）');
 
-// ═══ 5. 全部 50 款遊戲：用戶端設定 ↔ 資料庫設定，真的走一遍 ═══
+// ═══ 5. 全部 78 款遊戲：用戶端設定 ↔ 資料庫設定，真的走一遍 ═══
 // 對每一款遊戲：
 //   · 讀榜單：資料庫認得這個 game_id，better 與遊戲檔案一致；
 //   · 兩位玩家分別送「最好端」與「最差端」的合法成績（min／max 兩個端點），名次方向要對（越小越好／越大越好）；

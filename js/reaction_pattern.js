@@ -197,6 +197,8 @@
                 gLines.innerHTML = '';
                 nodes.forEach(function (n) { n.setAttribute('class', 'pt-node'); });
                 state = 'recall';
+                /* 操作提示（只在第一次進遊戲時）：拖過每個點 → 手指＋箭頭 */
+                if (Reaction.kit.once('pattern.hint')) Reaction.kit.hintOn(root, field, { mode: 'drag', dx: 110, dy: 0, fx: 0.3 });
                 hint.textContent = '換你畫！手指拖過每個點';
                 Sfx.play('go');
                 var limit = (RECALL_BASE + RECALL_PER * len) * 1000, t0 = performance.now();

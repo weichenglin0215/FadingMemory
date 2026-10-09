@@ -385,6 +385,8 @@
                     if (id !== lvId || state !== 'show') return;
                     state = 'fill';
                     drawTray(); drawBox();
+                    /* 操作提示（只在第一次進遊戲時）：把藥丸拖到格子裡 → 手指＋箭頭 */
+                    if (root.querySelector('.pb-item')) if (Reaction.kit.once('pillbox.hint')) Reaction.kit.hintOn(root, root.querySelector('.pb-item'), { mode: 'drag', dx: 0, dy: 150 });
                     head.textContent = '第 ' + level + ' 關　把正確的藥丸拖曳到格子裡';
                     acts.style.visibility = 'visible'; boxEl.classList.remove('pb-box--dim');
                     Sfx.play('go');

@@ -122,6 +122,8 @@
             var field = h('div', { 'class': 'pend-field' });
             root.appendChild(hint);
             root.appendChild(field);
+            /* 操作提示（只在第一次進遊戲時）：點畫面 → 手指縮放 */
+            if (Reaction.kit.once('pendulum.hint')) Reaction.kit.hintOn(root, field, { mode: 'tap' });
 
             /* FW／FH 場地大小；Px、Py 支點位置 */
             var FW = field.clientWidth, FH = field.clientHeight;

@@ -189,6 +189,8 @@
                 })(i);
             }
             root.appendChild(grid);
+            /* 操作提示（只在第一次進遊戲時）：點格子 → 手指縮放 */
+            if (Reaction.kit.once('spot.hint')) Reaction.kit.hintOn(root, grid, { mode: 'tap' });
         }
 
         /* 答題：答對進下一關；答錯顯示正確位置並結算 */

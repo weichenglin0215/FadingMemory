@@ -183,6 +183,8 @@
                 h('div', { 'class': 'mc-hint', text: '當你覺得兩個方塊顏色是完全相同時，\n請點擊畫面確認。' })
             ]);
             root.appendChild(foot);
+            /* 操作提示（只在第一次進遊戲時）：點畫面 → 手指縮放，指在會變色的右邊色塊上 */
+            if (Reaction.kit.once('matchcolor.hint')) Reaction.kit.hintOn(root, rightEl, { mode: 'tap' });
 
             /* phase 目前階段；raf 動畫的編號；shownRgb 玩家眼睛實際看到的最後一次畫出來的顏色 */
             var phase = 'running';

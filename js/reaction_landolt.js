@@ -227,6 +227,8 @@
             /* 綁定手指事件 */
             root.addEventListener('pointerdown', onDown);
             root.addEventListener('pointermove', onMove);
+            /* 操作提示（只在第一次進遊戲時）：滑動 → 手指＋箭頭（只是示範怎麼滑，方向不代表答案） */
+            if (Reaction.kit.once('landolt.hint')) Reaction.kit.hintOn(root, null, { mode: 'drag', x: 190, y: 430, dx: 120, dy: 0 });
             /* 這一局結束時把事件監聽拿掉 */
             my.onDispose(function () {
                 root.removeEventListener('pointerdown', onDown);

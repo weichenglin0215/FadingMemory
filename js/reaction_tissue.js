@@ -314,6 +314,8 @@
             root.addEventListener('pointermove', onMove);
             root.addEventListener('pointerup', onUp);
             root.addEventListener('pointercancel', onUp);
+            /* 操作提示（只在第一次進遊戲時）：往下滑 → 手指＋箭頭 */
+            if (Reaction.kit.once('tissue.hint')) Reaction.kit.hintOn(root, null, { mode: 'drag', x: 250, y: 300, dx: 0, dy: 200 });
             root.addEventListener('wheel', onWheel, { passive: false });
             /* 這一局結束時把事件監聽拿掉 */
             my.onDispose(function () {

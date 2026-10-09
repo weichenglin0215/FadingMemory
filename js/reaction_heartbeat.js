@@ -263,6 +263,8 @@
                 e.preventDefault();
                 tap(slotOf(e), kit.evT(e));
             });
+            /* 操作提示（只在第一次進遊戲時）：點出現的圓球 → 手指縮放 */
+            if (Reaction.kit.once('heartbeat.hint')) Reaction.kit.hintOn(root, field, { mode: 'tap' });
             /* 玩家點了第 s 個位置：有球就打中，沒球就失誤（剛點掉的球 160ms 內再點不算，雙擊保護） */
             function tap(s, t) {
                 if (state !== 'run') return;

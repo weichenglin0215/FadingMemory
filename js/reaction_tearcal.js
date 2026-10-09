@@ -420,6 +420,8 @@
             /* 點日曆區域＝撕一張；pointerdown 比 click 更即時 */
             stack.addEventListener('pointerdown', function (e) { e.preventDefault(); tear(); });
             ok.addEventListener('pointerdown', function (e) { e.preventDefault(); confirm(); });
+            /* 操作提示（只在第一次進遊戲時）：點日曆撕一張 → 手指縮放 */
+            if (Reaction.kit.once('tearcal.hint')) Reaction.kit.hintOn(root, stack, { mode: 'tap' });
 
             /* G.debug：測試用後門 */
             G.debug = {

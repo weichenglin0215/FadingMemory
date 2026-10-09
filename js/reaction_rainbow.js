@@ -165,6 +165,8 @@
                     cells.push(el);
                 })(i);
             }
+            /* 操作提示（只在第一次進遊戲時）：點方塊 → 手指縮放 */
+            if (Reaction.kit.once('rainbow.hint')) Reaction.kit.hintOn(root, board, { mode: 'tap' });
 
 
             /* 目前的間隔（隨換方塊數縮短） */

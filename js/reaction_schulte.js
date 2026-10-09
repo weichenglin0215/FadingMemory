@@ -104,6 +104,8 @@
                 /* cells[n] = el：用數字當索引，之後想找「第 n 號按鈕」就能直接取到 */
                 cells[n] = el;
             });
+            /* 操作提示（只在第一次進遊戲時）：點數字（從 1 開始）→ 手指縮放 */
+            if (Reaction.kit.once('schulte.hint')) Reaction.kit.hintOn(root, cells[1], { mode: 'tap' });
 
             /* my.loop：每個畫面更新時呼叫，更新計時文字；回傳 false 會停止這個迴圈 */
             my.loop(function (now) {

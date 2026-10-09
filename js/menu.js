@@ -89,7 +89,35 @@
         { id: 'pipes', name: '接水管', img: 'img/reaction/pipes.png' },
         { id: 'lightsout', name: '關燈', img: 'img/reaction/lightsout.png' },
         { id: 'seq', name: '猜下一個', img: 'img/reaction/seq.png' },
-        { id: 'polyrhythm', name: '左右不同拍', img: 'img/reaction/polyrhythm.png' }
+        { id: 'polyrhythm', name: '左右不同拍', img: 'img/reaction/polyrhythm.png' },
+        { id: 'area', name: '面積一樣大', img: 'img/reaction/area.png' },
+        { id: 'halfvol', name: '容量一半', img: 'img/reaction/halfvol.png' },
+        { id: 'blindcircle', name: '盲畫一個圓', img: 'img/reaction/blindcircle.png' },
+        { id: 'samelen', name: '畫一樣長', img: 'img/reaction/samelen.png' },
+        { id: 'rightangle', name: '畫成直角', img: 'img/reaction/rightangle.png' },
+        { id: 'stamp', name: '蓋在框內', img: 'img/reaction/stamp.png' },
+        { id: 'focus', name: '轉到最清楚', img: 'img/reaction/focus.png' },
+        { id: 'scratch', name: '刮刮樂推理', img: 'img/reaction/scratch.png' },
+        { id: 'mathcheck', name: '算式對不對', img: 'img/reaction/mathcheck.png' },
+        { id: 'fracduel', name: '分數大對決', img: 'img/reaction/fracduel.png' },
+        { id: 'primetrap', name: '質數陷阱', img: 'img/reaction/primetrap.png' },
+        { id: 'sum100', name: '湊百消除', img: 'img/reaction/sum100.png' },
+        { id: 'timestable', name: '乘法表抓錯', img: 'img/reaction/timestable.png' },
+        { id: 'maxexpr', name: '拼出最大的數', img: 'img/reaction/maxexpr.png' },
+        { id: 'glyphspin', name: '鏡中旋轉字', img: 'img/reaction/glyphspin.png' },
+        { id: 'fadee', name: '淡到看不見', img: 'img/reaction/fadee.png' },
+        { id: 'oddsock', name: '落單的襪子', img: 'img/reaction/oddsock.png' },
+        { id: 'ghostleg', name: '鬼腳圖', img: 'img/reaction/ghostleg.png' },
+        { id: 'euler', name: '能一筆畫嗎', img: 'img/reaction/euler.png' },
+        { id: 'colorrecall', name: '記色調色', img: 'img/reaction/colorrecall.png' },
+        { id: 'basket', name: '菜籃總價', img: 'img/reaction/basket.png' },
+        { id: 'passersby', name: '路人走過', img: 'img/reaction/passersby.png' },
+        { id: 'seenit', name: '這個看過嗎', img: 'img/reaction/seenit.png' },
+        { id: 'whofirst', name: '誰先亮', img: 'img/reaction/whofirst.png' },
+        { id: 'watchoff', name: '哪支錶不準', img: 'img/reaction/watchoff.png' },
+        { id: 'handsmeet', name: '兩針重疊', img: 'img/reaction/handsmeet.png' },
+        { id: 'clearer', name: '越看越清楚', img: 'img/reaction/clearer.png' },
+        { id: 'twobags', name: '兩袋一樣重', img: 'img/reaction/twobags.png' }
     ];
     /* 目前在第幾頁（從 0 開始算，0 就是第一頁）。 */
     var gamePage = 0;
@@ -143,8 +171,18 @@
         closeOnBg(themeDlg);
     }
 
+    /* 記住「上次點的是哪一款遊戲」：下次打開「選一個想玩的遊戲」彈窗時，自動翻到那一款所在的頁面，
+       不用每次都從第 1 頁一直翻。存在 localStorage（UI.store），關掉瀏覽器也記得。 */
+    var LAST_GAME_KEY = 'fm.menu.lastGame';
     function pickGame(id) {
+        UI.store.set(LAST_GAME_KEY, id);
         location.href = 'reaction.html?game=' + id;
+    }
+    /* 上次點的遊戲在第幾頁（從 0 起算）；沒記錄、或那款遊戲已經不在清單裡就回傳 0 */
+    function lastGamePage() {
+        var id = UI.store.get(LAST_GAME_KEY, null);
+        for (var i = 0; i < GAME_CELLS.length; i++) if (GAME_CELLS[i] && GAME_CELLS[i].id === id) return Math.floor(i / PAGE_SIZE);
+        return 0;
     }
 
     /* 這個函式負責做出一格遊戲按鈕（縮圖＋名字）。 */
@@ -167,6 +205,7 @@
     /* 建立「選遊戲」彈窗：有標題、3×3 格子、上一頁／下一頁、頁數小圓點。 */
     function buildGameDlg() {
         gameBuilt = true;
+        gamePage = lastGamePage();      /* 自動跳到上次玩的那一款所在的頁面 */
         /* Math.ceil 是「無條件進位」：25 款 ÷ 9 = 2.8 → 3 頁。 */
         var pages = Math.ceil(GAME_CELLS.length / PAGE_SIZE);
         var title = h('div', { 'class': 'game-dlg__title' });

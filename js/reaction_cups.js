@@ -210,6 +210,8 @@
                 })
                 .then(function () {
                     state = 'pick';
+                    /* 操作提示（只在第一次進遊戲時）：點杯子 → 手指縮放，指在場地中央 */
+                    if (Reaction.kit.once('cups.hint')) Reaction.kit.hintOn(root, field, { mode: 'tap' });
                     hint.textContent = '球在哪個杯子？點一下！';
                     Sfx.play('go');
                 });

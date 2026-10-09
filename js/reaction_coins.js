@@ -335,6 +335,8 @@
                     coins.push(co);
                 });
                 paintSum();
+                /* 操作提示（只在第一次進遊戲時）：點硬幣 → 手指縮放 */
+                if (Reaction.kit.once('coins.hint')) Reaction.kit.hintOn(root, coins[0].el, { mode: 'tap' });
                 /* 倒數時間條 */
                 var limit = timeFor(level) * 1000, t0 = performance.now();
                 loop = my.loop(function (now) {

@@ -302,6 +302,8 @@
                 d.hits.forEach(function (el, i) {
                     el.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(i); });
                 });
+                /* 操作提示（只在第一次進遊戲時）：點選項 → 手指縮放 */
+                if (Reaction.kit.once('illusion.hint')) Reaction.kit.hintOn(root, d.hits[0], { mode: 'tap' });
                 /* G.debug：測試用後門 */
                 G.debug = { q: q, answer: answer, streak: function () { return streak; } };
             }

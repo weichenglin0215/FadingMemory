@@ -210,6 +210,8 @@
 
             var hint = h('div', { 'class': 'imp-hint', text: '點擊畫面讓阿湯哥下降' });
             field.appendChild(hint);
+            /* 操作提示（只在第一次進遊戲時）：點畫面 → 手指縮放 */
+            if (Reaction.kit.once('impossible.hint')) Reaction.kit.hintOn(root, imgEl, { mode: 'tap' });
 
             var phase = 'idle';   /* idle：等第一下點擊／falling：下墜中／done：定格、推進或已結束 */
             var raf = null;

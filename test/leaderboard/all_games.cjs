@@ -16,14 +16,14 @@ const quiet = () => new Proxy(function () { }, {
   set: () => true,
 });
 
-// 從 boot.js 抓出 reaction 頁面要載入的 js/reaction_*.js（排除共用的 core／kit，它們不是遊戲）
+// 從 boot.js 抓出 reaction 頁面要載入的 js/reaction_*.js（排除共用的 core／kit／kit2，它們不是遊戲）
 function gameFiles() {
   const boot = fs.readFileSync(ROOT + 'js/boot.js', 'utf8');
   const block = boot.match(/reaction:\s*\{[\s\S]*?js:\s*BASE_JS\.concat\(\[([\s\S]*?)\]\)/);
   if (!block) throw new Error('boot.js 找不到 reaction 的 js 清單');
   return [...block[1].matchAll(/'js\/(reaction_[a-z0-9_]+\.js)'/g)]
     .map(m => m[1])
-    .filter(f => f !== 'reaction_core.js' && f !== 'reaction_kit.js');
+    .filter(f => f !== 'reaction_core.js' && f !== 'reaction_kit.js' && f !== 'reaction_kit2.js');
 }
 
 function loadAllGames() {

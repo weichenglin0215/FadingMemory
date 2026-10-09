@@ -228,6 +228,8 @@
                 drag = { id: e.pointerId, x: svgX(e), t: performance.now() };
                 moveKnife(drag.x);                 /* 粗調：刀先跳到手指下面 */
             });
+            /* 操作提示（只在第一次進遊戲時）：左右拖曳刀子 → 手指＋箭頭 */
+            if (Reaction.kit.once('bread.hint')) Reaction.kit.hintOn(root, zone, { mode: 'drag', dx: 90, dy: 0, fx: 0.35 });
             /* 手指移動：移動量依手指速度打折（慢速精細、快速粗略） */
             zone.addEventListener('pointermove', function (e) {
                 if (state !== 'aim' || !drag || e.pointerId !== drag.id) return;

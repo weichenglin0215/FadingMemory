@@ -298,6 +298,8 @@
                     wrap.appendChild(el);
                     return el;
                 });
+                /* 操作提示（只在第一次進遊戲時）：點價格標籤 → 手指縮放 */
+                if (Reaction.kit.once('price.hint')) Reaction.kit.hintOn(root, tagEls[0], { mode: 'tap' });
                 /* 主控台印出這題兩張標籤與算式、答案，方便驗證 */
                 try {
                     console.info('[價格陷阱] 第 ' + level + ' 題 目標差距 ' + Q.params.gapLow.toFixed(0) + '～' + Q.params.gap.toFixed(0) + ' 元，實際差 ' + Q.gap + ' 元：' +
