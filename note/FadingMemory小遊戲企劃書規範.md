@@ -182,7 +182,7 @@
 - **N1（必須）`id` 用小寫英文字母與數字**（`reaction.js` 用 `/[?&]game=([a-z0-9]+)/` 讀參數，有底線或大寫會比對不到）；不能和已有的 26 款或企劃中的 id 重複。
 - **N2（必須）遊戲名稱是繁體中文，2～6 個字**，口語、好記、讓人想點進去（價格陷阱、誰先到？、吹氣球），不用專業術語（Flanker、n-back 這些只能出現在企劃的「設計依據」欄）。
 - **N3（必須）企劃要寫「和既有遊戲的差異」**，說明核心機制與哪幾款不同。
-- **N4（建議）落地清單**（寫在企劃的「實作重點」，一次都列出來）：新檔 `js/reaction_<id>.js` → `boot.js` 清單 → `menu.js` 的 `GAME_CELLS` → `css/reaction.css`（class 前綴要唯一）→ `SCORE` 排行榜規格＋`gen_games_sql.cjs --write`＋重新執行 SQL（B6）→ `test/reaction/t_<id>.js` → `version.json` 加一 → `README.md` 更新紀錄。
+- **N4（建議）落地清單**（寫在企劃的「實作重點」，一次都列出來）：新檔 `js/reaction_<id>.js` → `boot.js` 清單 → `menu.js` 的 `GAME_CELLS` → `css/reaction.css`（class 前綴要唯一）→ `SCORE` 排行榜規格＋`gen_games_sql.cjs --write`＋重新執行 SQL（B6）→ `test/reaction/t_<id>.js` → **選單縮圖**：本機伺服器開著時執行 `node test/reaction/make_icons.mjs <id>`，產生 `img/reaction/<id>.png`（高 256 像素，遊戲開始 3 秒左右的畫面；第 3 秒是準備階段的遊戲，到 `make_icons.mjs` 的 `WAIT` 表指定等幾毫秒）→ 瀏覽器驗證：`node test/reaction/run_browser.mjs new <id>`（G.debug 玩到結算）、`node test/reaction/run_browser.mjs hints <id>`（操作提示），按鈕／拖曳類的遊戲再到 `input_tests.mjs` 加一個真的送滑鼠事件的情境 → `version.json` 加一 → `README.md` 更新紀錄。
 - **N7（建議）資源需求要標在企劃總表**：需要自繪 SVG 的數量（例如 12 件物品、7 個臉部特徵部件）、需要人工審校的題庫筆數（成語 200 條、半邊字 60 題、食物 36 項）。這兩項是排開發順序時最大的成本，不是程式行數。
 - **N5（必須）可測**：判定、出題、難度曲線放進 `G.test`（純函式）；驗證用的鉤子放 `G.debug`；只給驗證用的開關放 `G.dev`。
 - **N6（建議）主控台印「實際值」**：每題印出這一題的參數與答案（玩家看不到），開發者一眼對得上畫面；不要印另外抽樣的表。

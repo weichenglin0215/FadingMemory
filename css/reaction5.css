@@ -1,0 +1,1345 @@
+/* ═══════════════════════════════════════════════════════════════════
+   reaction5.css — 第五批秒反應遊戲（V1.22.0 的 23 款）的樣式
+   ───────────────────────────────────────────────────────────────────
+   · 照抄曲線 .cpc-｜等不等於 .ieq-｜先乘除 .ord-｜求餘數 .rem-｜遮住的數字 .hdg-｜幾點幾分後 .taf-｜哪一行算錯 .wln-｜
+     支票金額 .chq-｜補上運算符號 .fop-｜誰閃得快 .fbk-｜誰在偷偷動 .snk-｜哪一對離得遠 .fpr-｜骰子少一點 .dce-｜誰說的 .wsd-｜
+     倒著點 .tbk-｜第幾個出現 .nth-｜穿過旋轉縫 .spg-｜數獨猜一格 .sdk-｜左右合字 .mgc-｜手電筒猜圖 .flt-｜誰先衝線 .rcf-｜
+     轉盤停哪格 .spk-｜對準才看得到 .alc-。
+   · 共用的 .qz-（答題文字）、.rx-grid（底部按鈕排）也在這裡；顏色、字級、間距、圓角一律用 css/theme.css 的 var(--…)，不寫死色碼
+     （這批遊戲專用的幾個顏色也放在 theme.css 的「V1.22 新遊戲專用色」）。
+   · 遊戲區（.rx-stage）的座標：左上角是原點，寬約 472、高約 640（邏輯 px）；位置大多用 top／bottom 絕對定位。
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ═══ 共用：答題文字 .qz-、底部按鈕排 .rx-grid ═══ */
+.qz-big {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 70px;
+    text-align: center;
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    line-height: var(--lh-tight);
+    font-variant-numeric: tabular-nums;
+}
+
+.qz-mid {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 40px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    line-height: var(--lh-body);
+}
+
+.qz-note {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-2);
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    line-height: var(--lh-body);
+}
+
+.qz-ok {
+    color: var(--c-ok) !important;
+}
+
+.qz-bad {
+    color: var(--c-bad) !important;
+}
+
+/* 遊戲區底部的按鈕排：用格線（grid）排，欄數由 js 設定；每顆按鈕的高度用 --rx-grid-h */
+.rx-grid {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: grid;
+    gap: var(--sp-3);
+}
+
+.rx-grid .btn {
+    height: var(--rx-grid-h, var(--btn-h-sm));
+    min-width: 0;
+    padding: 0 var(--sp-2);
+}
+
+/* ═══ 等不等於（.ieq-）═══ */
+.ieq-ask {
+    top: 190px;
+}
+
+.ieq-reveal {
+    top: 250px;
+}
+
+.ieq-sign {
+    margin: 0 var(--sp-3);
+    color: var(--c-ink-soft);
+}
+
+/* ═══ 先乘除（.ord-）═══ */
+.ord-ask {
+    top: 170px;
+}
+
+.ord-reveal {
+    top: 230px;
+}
+
+.ord-btn,
+.rem-btn,
+.taf-btn {
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ═══ 求餘數（.rem-）═══ */
+.rem-ask {
+    top: 170px;
+}
+
+.rem-reveal {
+    top: 230px;
+}
+
+.rem-btn {
+    font-size: var(--fs-xl);
+}
+
+/* ═══ 遮住的數字（.hdg-）═══ */
+.hdg-eq {
+    top: 40px;
+}
+
+.hdg-ans {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 140px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--sp-2);
+}
+
+.hdg-eqsign {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+    margin-right: var(--sp-2);
+}
+
+.hdg-box {
+    width: 64px;
+    height: 88px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--r-md);
+    background: var(--c-card);
+    border: var(--bd);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.hdg-box--hide {
+    background: var(--c-yellow-soft);
+    border: 3px dashed var(--c-yellow);
+    color: var(--c-yellow);
+}
+
+.hdg-box--ok {
+    background: var(--c-ok-soft);
+    border: 3px solid var(--c-ok);
+    color: var(--c-ok);
+}
+
+.hdg-box--bad {
+    background: var(--c-bad-soft);
+    border: 3px solid var(--c-bad);
+    color: var(--c-bad);
+}
+
+.hdg-ask {
+    top: 260px;
+}
+
+.hdg-btn {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+/* ═══ 幾點幾分後（.taf-）═══ */
+.taf-reveal {
+    top: 270px;
+}
+
+/* ═══ 哪一行算錯（.wln-）═══ */
+.wln-col {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.wln-ask {
+    position: static;
+}
+
+.wln-sub {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.wln-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.wln-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    padding: 0 var(--sp-4);
+    border-radius: var(--r-md);
+    background: var(--c-card-alt);
+    border: var(--bd);
+    font-family: var(--font-ui);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink);
+    text-align: left;
+    cursor: pointer;
+}
+
+.wln-row:active {
+    transform: scale(0.98);
+}
+
+.wln-no {
+    flex: none;
+    color: var(--c-ink-soft);
+}
+
+.wln-txt {
+    flex: 1 1 auto;
+    line-height: var(--lh-tight);
+    font-variant-numeric: tabular-nums;
+}
+
+.wln-fix {
+    font-size: var(--fs-sm);
+    color: var(--c-bad);
+}
+
+.wln-row--wrong {
+    background: var(--c-bad-soft);
+    border: 3px solid var(--c-bad);
+}
+
+.wln-row--miss {
+    border: 3px solid var(--c-bad-light);
+    opacity: 0.8;
+}
+
+/* ═══ 支票金額（.chq-）═══ */
+.chq-card {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 24px;
+    padding: var(--sp-4) var(--sp-4) var(--sp-5);
+    border-radius: var(--r-md);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    box-shadow: var(--shadow-card);
+}
+
+.chq-card--ok {
+    border-color: var(--c-ok);
+}
+
+.chq-card--bad {
+    border-color: var(--c-bad);
+}
+
+.chq-lab {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    margin-top: var(--sp-2);
+}
+
+.chq-small {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    font-variant-numeric: tabular-nums;
+    border-bottom: 2px solid var(--bd-c);
+    padding-bottom: var(--sp-2);
+}
+
+.chq-big {
+    font-family: var(--font-note);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    line-height: var(--lh-body);
+    word-break: break-all;
+}
+
+.chq-diff {
+    color: var(--c-bad);
+    background: var(--c-bad-soft);
+    border-radius: 6px;
+    padding: 0 2px;
+}
+
+.chq-ask {
+    top: 320px;
+}
+
+.chq-reveal {
+    top: 372px;
+}
+
+/* ═══ 補上運算符號（.fop-）═══ */
+.fop-row {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 66px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+}
+
+.fop-num,
+.fop-fixed {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.fop-fixed {
+    color: var(--c-blue);
+}
+
+.fop-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.fop-op {
+    width: 56px;
+    height: 58px;
+    padding: 0;
+    border-radius: var(--r-sm);
+    background: var(--c-card);
+    border: 3px solid var(--c-blue);
+    font-family: var(--font-ui);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-blue);
+    cursor: pointer;
+}
+
+.fop-op:active {
+    transform: scale(0.94);
+}
+
+.fop-op--on {
+    background: var(--c-blue);
+    color: var(--c-on-accent);
+}
+
+.fop-op--right {
+    background: var(--c-ok);
+    border-color: var(--c-ok);
+    color: var(--c-on-accent);
+}
+
+.fop-op--wrong {
+    background: var(--c-bad);
+    border-color: var(--c-bad);
+    color: var(--c-on-accent);
+}
+
+.fop-target {
+    top: 350px;
+}
+
+.fop-live {
+    top: 436px;
+}
+
+.fop-ok--off {
+    opacity: 0.45;
+}
+
+/* ═══ 誰閃得快（.fbk-）═══ */
+.fbk-dot {
+    position: absolute;
+    border-radius: 50%;
+    border: 5px solid var(--c-ink-soft);
+    opacity: 0.55;
+}
+
+.fbk-dot--a {
+    background: var(--c-yellow);
+}
+
+.fbk-dot--b {
+    background: var(--c-blue);
+}
+
+.fbk-dot--on {
+    opacity: 1;
+    box-shadow: 0 0 36px 8px var(--c-yellow-soft);
+}
+
+.fbk-dot--right {
+    border-color: var(--c-ok);
+    opacity: 1;
+}
+
+.fbk-dot--wrong {
+    border-color: var(--c-bad);
+}
+
+.fbk-hz {
+    position: absolute;
+    width: 200px;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.fbk-tip {
+    bottom: 40px;
+}
+
+/* ═══ 誰在偷偷動（.snk-）═══ */
+.snk-svg,
+.fpr-svg,
+.flt-svg,
+.rcf-svg,
+.spk-svg,
+.spg-svg,
+.mgc-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+}
+
+.snk-dot {
+    fill: var(--c-blue);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+.snk-dot--mover {
+    stroke: var(--c-orange);
+    stroke-width: 6;
+}
+
+.snk-dot--wrong {
+    fill: var(--c-bad);
+}
+
+.snk-trail {
+    stroke: var(--c-orange);
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.snk-start {
+    fill: var(--c-orange);
+}
+
+.snk-tip,
+.fpr-tip {
+    bottom: 4px;
+}
+
+/* ═══ 哪一對離得遠（.fpr-）═══ */
+.fpr-dot {
+    pointer-events: none;
+}
+
+.fpr-line {
+    stroke: var(--c-ink);
+    stroke-width: 5;
+    stroke-linecap: round;
+    fill: none;
+}
+
+.fpr-line--right {
+    stroke: var(--c-ok);
+}
+
+.fpr-line--wrong {
+    stroke: var(--c-bad);
+}
+
+.fpr-dist {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    fill: var(--c-ink);
+    paint-order: stroke;
+    stroke: var(--c-paper);
+    stroke-width: 6px;
+    stroke-linejoin: round;
+}
+
+.fpr-dist.fpr-line--right {
+    fill: var(--c-ok);
+    stroke: var(--c-paper);
+}
+
+.fpr-dist.fpr-line--wrong {
+    fill: var(--c-bad);
+    stroke: var(--c-paper);
+}
+
+/* ═══ 骰子少一點（.dce-）═══ */
+.dce-die {
+    position: absolute;
+    border-radius: 18%;
+    touch-action: none;
+    cursor: pointer;
+}
+
+.dce-die svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.dce-face {
+    fill: var(--c-card);
+    stroke: var(--c-ink);
+    stroke-width: 5;
+}
+
+.dce-pip {
+    fill: var(--c-ink);
+}
+
+.dce-back {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 18%;
+    background: var(--c-blue);
+    border: 5px solid var(--c-ink);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-on-accent);
+}
+
+.dce-die--found {
+    box-shadow: 0 0 0 6px var(--c-ok);
+}
+
+.dce-die--miss {
+    box-shadow: 0 0 0 6px var(--c-orange);
+}
+
+.dce-die--wrong {
+    box-shadow: 0 0 0 6px var(--c-bad);
+}
+
+.dce-chg {
+    position: absolute;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    color: var(--c-orange);
+    background: var(--c-card);
+    border-radius: var(--r-sm);
+    line-height: 1.2;
+}
+
+.dce-msg {
+    bottom: 40px;
+}
+
+/* ═══ 誰說的（.wsd-）═══ */
+.wsd-tip {
+    top: 16px;
+}
+
+.wsd-who {
+    display: inline-block;
+    padding: 0 var(--sp-3);
+    border-radius: var(--r-sm);
+    color: var(--c-on-accent);
+}
+
+.wsd-person {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.wsd-person svg {
+    display: block;
+    width: 78%;
+}
+
+.wsd-name {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+}
+
+/* 漫畫對話泡泡：在小人頭上，有字才顯示，下方有一個小尖角 */
+.wsd-bubble {
+    position: absolute;
+    left: 50%;
+    bottom: 100%;
+    transform: translateX(-50%);
+    min-width: 62px;
+    padding: 0 var(--sp-3);
+    height: 62px;
+    margin-bottom: 8px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 22px;
+    background: var(--c-card);
+    border: 4px solid var(--c-ink);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    white-space: nowrap;
+}
+
+.wsd-bubble::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -16px;
+    margin-left: -9px;
+    border: 9px solid transparent;
+    border-top: 12px solid var(--c-ink);
+    border-bottom: 0;
+}
+
+.wsd-person--say .wsd-bubble,
+.wsd-person--list .wsd-bubble {
+    display: flex;
+}
+
+.wsd-person--list .wsd-bubble {
+    font-size: var(--fs-lg);
+    min-width: 0;
+    height: 52px;
+}
+
+.wsd-person--ask svg {
+    filter: drop-shadow(0 0 8px var(--c-yellow));
+}
+
+.wsd-slots {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 350px;
+    display: flex;
+    justify-content: center;
+    gap: var(--sp-3);
+}
+
+.wsd-slot {
+    width: 64px;
+    height: 78px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--r-md);
+    background: var(--c-card);
+    border: 3px dashed var(--c-ink-soft);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.wsd-slot--ok {
+    border: 3px solid var(--c-ok);
+    background: var(--c-ok-soft);
+    color: var(--c-ok);
+}
+
+.wsd-slot--miss {
+    border: 3px solid var(--c-orange);
+    background: var(--c-orange-soft);
+    color: var(--c-orange);
+}
+
+.wsd-btn {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+/* ═══ 倒著點（.tbk-）═══ */
+.tbk-tip {
+    top: 6px;
+}
+
+.tbk-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 5px dashed var(--c-ink-soft);
+    background: var(--c-card-alt);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.tbk-ring--on {
+    border-style: solid;
+    border-color: var(--c-orange);
+    background: var(--c-yellow);
+    box-shadow: 0 0 30px 6px var(--c-yellow-soft);
+}
+
+.tbk-ring--ok {
+    border-style: solid;
+    border-color: var(--c-ok);
+    background: var(--c-ok-soft);
+}
+
+.tbk-ring--wrong {
+    border-style: solid;
+    border-color: var(--c-bad);
+    background: var(--c-bad-soft);
+}
+
+.tbk-ring--num {
+    border-style: solid;
+    border-color: var(--c-blue);
+}
+
+/* ═══ 第幾個出現（.nth-）═══ */
+.nth-tip {
+    top: 14px;
+}
+
+.nth-tip--ask {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.nth-show {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 84px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nth-show svg {
+    width: 190px;
+    height: 190px;
+}
+
+.nth-strip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 300px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+}
+
+.nth-cell {
+    width: 46px;
+    text-align: center;
+    padding: 4px 0;
+    border-radius: var(--r-sm);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+}
+
+.nth-cell svg {
+    display: block;
+    width: 38px;
+    height: 38px;
+    margin: 0 auto;
+}
+
+.nth-cell--ask {
+    background: var(--c-orange-soft);
+    box-shadow: 0 0 0 3px var(--c-orange);
+    color: var(--c-orange);
+}
+
+.nth-btn svg {
+    width: 62px;
+    height: 62px;
+}
+
+.nth-btn--right {
+    background: var(--c-ok-soft);
+    border-color: var(--c-ok);
+}
+
+.nth-btn--wrong {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad);
+}
+
+/* ═══ 穿過旋轉縫（.spg-）═══ */
+.spg-ring {
+    fill: none;
+    stroke: var(--c-yellow);
+    stroke-linecap: butt;
+}
+
+.spg-mark {
+    fill: var(--c-orange);
+}
+
+.spg-ball {
+    fill: var(--c-ink);
+    stroke: var(--c-card);
+    stroke-width: 2;
+}
+
+.spg-ball--boom {
+    fill: var(--c-bad);
+}
+
+.spg-cannon {
+    position: absolute;
+    width: 120px;
+    height: 150px;
+    pointer-events: none;
+}
+
+.spg-cannon svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.spg-barrel {
+    transition: transform 0.12s ease-out;
+}
+
+.spg-cannon--fire .spg-barrel {
+    transform: translateY(10px);
+}
+
+.spg-iron {
+    fill: var(--c-ink);
+}
+
+.spg-iron-d {
+    fill: var(--c-ink-soft);
+}
+
+.spg-wood {
+    fill: var(--c-orange);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.spg-wood-d {
+    fill: var(--c-yellow);
+    stroke: var(--c-ink);
+    stroke-width: 4;
+}
+
+.spg-spoke {
+    stroke: var(--c-ink);
+    stroke-width: 3;
+    fill: none;
+}
+
+.spg-tip {
+    bottom: 76px;
+}
+
+.spg-msg {
+    bottom: 22px;
+}
+
+/* ═══ 數獨猜一格（.sdk-）═══ */
+.sdk-board {
+    position: absolute;
+    left: 50%;
+    top: 10px;
+    transform: translateX(-50%);
+    display: grid;
+    grid-template-columns: repeat(6, 60px);
+    grid-auto-rows: 60px;
+    border-left: 4px solid var(--c-ink);
+    border-top: 4px solid var(--c-ink);
+    background: var(--c-card);
+}
+
+.sdk-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid var(--bd-c);
+    border-bottom: 1px solid var(--bd-c);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    box-sizing: border-box;
+}
+
+/* 每 3 欄、每 3 排畫一條粗線，隔出四個「宮」 */
+.sdk-c2 {
+    border-right: 4px solid var(--c-ink);
+}
+
+.sdk-r2 {
+    border-bottom: 4px solid var(--c-ink);
+}
+
+.sdk-cell--peer {
+    background: var(--c-yellow-soft);
+}
+
+.sdk-cell--target {
+    background: var(--c-yellow);
+    color: var(--c-ink);
+}
+
+.sdk-cell--fill {
+    color: var(--c-blue);
+}
+
+.sdk-cell--ok {
+    background: var(--c-ok);
+    color: var(--c-on-accent);
+}
+
+.sdk-cell--bad {
+    background: var(--c-bad);
+    color: var(--c-on-accent);
+}
+
+.sdk-tip {
+    top: 384px;
+}
+
+.sdk-btn {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+/* ═══ 左右合字（.mgc-）═══ */
+.mgc-tip {
+    top: 4px;
+}
+
+.mgc-prog {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 36px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    color: var(--c-ok);
+}
+
+.mgc-svg {
+    pointer-events: none;
+}
+
+.mgc-piece {
+    position: absolute;
+    border-radius: var(--r-md);
+    background: var(--c-card-alt);
+    border: 3px solid var(--c-ink-soft);
+    font-family: var(--font-ui);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    padding: 0;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.mgc-piece:active {
+    transform: scale(0.96);
+}
+
+.mgc-piece--sel {
+    background: var(--c-yellow);
+    border-color: var(--c-orange);
+}
+
+.mgc-piece--done {
+    background: var(--c-ok-soft);
+    border-color: var(--c-ok);
+    opacity: 0.75;
+}
+
+.mgc-piece--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad);
+}
+
+.mgc-line {
+    stroke-width: 9;
+    stroke-linecap: round;
+    fill: none;
+}
+
+.mgc-line--ok {
+    stroke: var(--c-ok);
+}
+
+.mgc-line--bad {
+    stroke: var(--c-bad);
+}
+
+.mgc-line--show {
+    stroke: var(--c-ink-soft);
+    stroke-dasharray: 4 14;
+}
+
+.mgc-badge {
+    position: absolute;
+    width: 72px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--c-card);
+    border: 4px solid var(--c-ink-soft);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    z-index: 3;
+    pointer-events: none;
+}
+
+.mgc-badge--ok {
+    border-color: var(--c-ok);
+    color: var(--c-ok);
+}
+
+/* ═══ 手電筒猜圖（.flt-）═══ */
+.flt-stage {
+    background: var(--dk-bg);
+}
+
+.flt-bg {
+    fill: var(--dk-bg);
+}
+
+.flt-pic {
+    color: var(--flt-pic);
+}
+
+.flt-cover {
+    fill: var(--dk-bg);
+}
+
+.flt-ring {
+    fill: none;
+    stroke: var(--c-card);
+    stroke-width: 3;
+    opacity: 0.7;
+}
+
+.flt-scan circle {
+    fill: var(--c-yellow);
+    opacity: 0.12;
+}
+
+.flt-svg {
+    pointer-events: none;
+}
+
+.flt-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 336px;
+    padding: 0 var(--sp-2);
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-paper);
+    line-height: var(--lh-body);
+}
+
+.flt-opt {
+    color: var(--c-ink);
+}
+
+.flt-opt svg {
+    width: 62px;
+    height: 62px;
+}
+
+.flt-opt--right {
+    background: var(--c-ok-soft);
+    border-color: var(--c-ok);
+}
+
+.flt-opt--wrong {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad);
+}
+
+/* ═══ 誰先衝線（.rcf-）═══ */
+.rcf-lane {
+    fill: var(--c-card-alt);
+    stroke: var(--bd-c);
+    stroke-width: 2;
+}
+
+.rcf-dot--wrong {
+    stroke: var(--c-bad) !important;
+    stroke-width: 7;
+}
+
+.rcf-time {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-black);
+    fill: var(--c-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.rcf-start {
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+    stroke-dasharray: 8 8;
+}
+
+.rcf-finish {
+    stroke: var(--c-ink);
+    stroke-width: 10;
+    stroke-dasharray: 14 14;
+}
+
+.rcf-tip {
+    top: 14px;
+}
+
+.rcf-hit {
+    position: absolute;
+    cursor: pointer;
+    z-index: 2;
+}
+
+/* ═══ 轉盤停哪格（.spk-）═══ */
+.spk-sec {
+    stroke: var(--c-card);
+    stroke-width: 3;
+    stroke-linejoin: round;
+}
+
+.spk-sec--right {
+    stroke: var(--c-ink);
+    stroke-width: 8;
+}
+
+.spk-sec--wrong {
+    stroke: var(--c-bad);
+    stroke-width: 8;
+}
+
+.spk-tip {
+    fill: var(--c-ink);
+}
+
+.spk-hub {
+    fill: var(--c-ink);
+    stroke: var(--c-card);
+    stroke-width: 4;
+}
+
+.spk-center {
+    position: absolute;
+    width: 180px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border-radius: var(--r-md);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    line-height: var(--lh-tight);
+    pointer-events: none;
+}
+
+.spk-tip-text {
+    top: 18px;
+}
+
+/* ═══ 對準才看得到（.alc-）═══ */
+.alc-canvas {
+    position: absolute;
+    border-radius: var(--r-md);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    box-sizing: content-box;
+    margin-left: -3px;
+}
+
+.alc-tip {
+    top: 346px;
+}
+
+.alc-opt {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.alc-opt--right {
+    background: var(--c-ok-soft);
+    border-color: var(--c-ok);
+}
+
+.alc-opt--wrong {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad);
+}
+
+/* ═══ 照抄曲線（.cpc-）═══ */
+.cpc-lab {
+    position: absolute;
+    top: 8px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+    transition: opacity 0.4s;
+}
+
+.cpc-panel {
+    position: absolute;
+    border-radius: var(--r-md);
+    background: var(--cc-board);
+    border: 3px solid var(--c-ink);
+    box-sizing: border-box;
+    overflow: hidden;
+    transition: transform 0.9s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.9s, border-color 0.9s;
+    touch-action: none;
+}
+
+.cpc-panel--L {
+    z-index: 1;
+}
+
+.cpc-panel--R {
+    z-index: 2;
+    cursor: crosshair;
+}
+
+.cpc-svg {
+    display: block;
+    pointer-events: none;
+}
+
+.cpc-curve {
+    fill: none;
+    stroke: var(--cc-curve);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.cpc-draw {
+    fill: none;
+    stroke: var(--cc-draw);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.cpc-start {
+    fill: var(--cc-start);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.cpc-end {
+    fill: var(--cc-end);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.cpc-msg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink);
+    line-height: var(--lh-body);
+}
+
+/* 畫完之後：左右兩張往中間靠攏，右邊那張變透明（底下的綠色曲線才看得到）*/
+.cpc-stage--merge .cpc-panel--L {
+    transform: translateX(var(--cpc-shift));
+}
+
+.cpc-stage--merge .cpc-panel--R {
+    transform: translateX(calc(-1 * var(--cpc-shift)));
+    background-color: transparent;
+    border-color: transparent;
+}
+
+.cpc-stage--merge .cpc-lab {
+    opacity: 0;
+}

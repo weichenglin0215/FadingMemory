@@ -18,8 +18,24 @@ node test/reaction/t_coins.js        # 只跑一支
 - 失敗訊息帶上種子，用 `$env:SEED = 種子; node test/reaction/t_xxx.js`（PowerShell）就能重現；
 - 改過門檻或出題程式之後，用 `node test/reaction/sweep_seeds.js t_coins.js 200` 換 200 個種子各跑一次，失敗次數要是 0（可以同時跑好幾個，`t_curves.js` 一次要約 10～30 秒，建議加第三個參數開 8 個以上同時跑）。
 
-目前這樣處理的測試：`t_coins.js`、`t_curves.js`、`t_pillbox.js`、`t_price.js`。
+目前這樣處理的測試：`t_coins.js`、`t_curves.js`、`t_pillbox.js`、`t_price.js`，以及 V1.22.0 新增的 23 支（`t_isequal.js`…`t_sudokuone.js`；2026-10-10 每支都換 40 個種子各跑一次，全部 0 失敗）。
 
 ## 其他測試
 
 `t_leaderboard.js` 測的是世界排行榜（`js/leaderboard.js`、`js/leaderboard_ui.js`）：偽造位數統計、進榜判斷、暱稱清理、慣性捲動物理、快取／離線／待送佇列；並且對**全部 50 款遊戲**（遊戲清單讀 `js/boot.js`，載入器在 `test/leaderboard/all_games.cjs`）檢查：`score` 設定合法、跟 `supabase/MF_leaderboard.sql` 逐款一致（含 SQL 的自動產生區塊有沒有過期）、每款都接了送榜（`kit.result` 帶 `score`，或手動呼叫 `Leaderboard.submit(ID, …)`，不會送兩次）、送榜流程。新增遊戲忘了做排行榜這幾步，這支測試會失敗。資料庫腳本本身的測試在 `test/leaderboard/`（要另外安裝 PGlite，見 `note/世界排行榜說明.md` 第 8 節）。
+
+## 瀏覽器端驗證（V1.22.0 起，headless Chrome／Edge，不用裝任何套件）
+
+先把專案用本機伺服器開起來（`python -m http.server 8743`），再執行：
+
+```
+node test/reaction/run_browser.mjs new23            V1.22.0 的 23 款：各用 G.debug 玩「答對 3 關再答錯」到結算，檢查沒有 JS 錯誤、成績有送榜
+node test/reaction/run_browser.mjs new copycurve    指定幾款
+node test/reaction/run_browser.mjs hints            操作提示檢查（browser_hints.js 的 81 款）：模式、短文字、位置、碰一下會消失
+node test/reaction/input_tests.mjs                  用 Chrome DevTools Protocol 送「真的滑鼠事件」操作 23 款（照抄曲線真的畫一遍、手電筒真的拖曳、轉盤真的點角度…）
+VIEW=390x844 node test/reaction/input_tests.mjs     同上，但用手機大小的視窗（驗證舞台縮放後的座標換算）
+node test/reaction/make_icons.mjs                   拍選單縮圖：img/reaction/<id>.png（高 256 像素），詳見 README「選單縮圖」
+```
+
+`cdp.mjs` 是共用的小工具：啟動看不見視窗的瀏覽器（遠端除錯埠用 0＝自動挑、結束時用 `taskkill /T` 殺整棵行程樹，不會留下孤兒行程）、送 CDP 指令、開啟某款遊戲並略過說明彈窗。
+`browser_new28.js`／`browser_hints.js` 是放在頁面裡跑的檢查程式（也可以手動貼進瀏覽器主控台），`run_browser.mjs` 只是自動把它們載進去跑。

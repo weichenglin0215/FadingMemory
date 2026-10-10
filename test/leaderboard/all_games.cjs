@@ -23,7 +23,7 @@ function gameFiles() {
   if (!block) throw new Error('boot.js 找不到 reaction 的 js 清單');
   return [...block[1].matchAll(/'js\/(reaction_[a-z0-9_]+\.js)'/g)]
     .map(m => m[1])
-    .filter(f => f !== 'reaction_core.js' && f !== 'reaction_kit.js' && f !== 'reaction_kit2.js');
+    .filter(f => f !== 'reaction_core.js' && f !== 'reaction_kit.js' && f !== 'reaction_kit2.js' && f !== 'reaction_kit3.js');
 }
 
 function loadAllGames() {

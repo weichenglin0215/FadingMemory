@@ -124,7 +124,30 @@
         { id: 'catroad', name: '貓咪走山路', img: 'img/reaction/catroad.png' },
         { id: 'numline', name: '數線落點', img: 'img/reaction/numline.png' },
         { id: 'twinsock', name: '找出雙胞胎襪子', img: 'img/reaction/twinsock.png' },
-        { id: 'mixcolor', name: '混出什麼色', img: 'img/reaction/mixcolor.png' }
+        { id: 'mixcolor', name: '混出什麼色', img: 'img/reaction/mixcolor.png' },
+        { id: 'copycurve', name: '照抄曲線', img: 'img/reaction/copycurve.png' },
+        { id: 'isequal', name: '等不等於', img: 'img/reaction/isequal.png' },
+        { id: 'orderops', name: '先乘除', img: 'img/reaction/orderops.png' },
+        { id: 'remainder', name: '求餘數', img: 'img/reaction/remainder.png' },
+        { id: 'hiddendigit', name: '遮住的數字', img: 'img/reaction/hiddendigit.png' },
+        { id: 'timeafter', name: '幾點幾分後', img: 'img/reaction/timeafter.png' },
+        { id: 'wrongline', name: '哪一行算錯', img: 'img/reaction/wrongline.png' },
+        { id: 'fillop', name: '補上運算符號', img: 'img/reaction/fillop.png' },
+        { id: 'fastblink', name: '誰閃得快', img: 'img/reaction/fastblink.png' },
+        { id: 'sneakmove', name: '誰在偷偷動', img: 'img/reaction/sneakmove.png' },
+        { id: 'farpair', name: '哪一對離得遠', img: 'img/reaction/farpair.png' },
+        { id: 'dicechange', name: '骰子少一點', img: 'img/reaction/dicechange.png' },
+        { id: 'whosaid', name: '誰說的', img: 'img/reaction/whosaid.png' },
+        { id: 'tapback', name: '倒著點', img: 'img/reaction/tapback.png' },
+        { id: 'nthshape', name: '第幾個出現', img: 'img/reaction/nthshape.png' },
+        { id: 'spingap', name: '穿過旋轉縫', img: 'img/reaction/spingap.png' },
+        { id: 'sudokuone', name: '數獨猜一格', img: 'img/reaction/sudokuone.png' },
+        { id: 'chequeamt', name: '支票金額', img: 'img/reaction/chequeamt.png' },
+        { id: 'mergechar', name: '左右合字', img: 'img/reaction/mergechar.png' },
+        { id: 'flashlight', name: '手電筒猜圖', img: 'img/reaction/flashlight.png' },
+        { id: 'racefirst', name: '誰先衝線', img: 'img/reaction/racefirst.png' },
+        { id: 'spinpick', name: '轉盤停哪格', img: 'img/reaction/spinpick.png' },
+        { id: 'alignchar', name: '對準才看得到', img: 'img/reaction/alignchar.png' }
     ];
     /* 目前在第幾頁（從 0 開始算，0 就是第一頁）。 */
     var gamePage = 0;

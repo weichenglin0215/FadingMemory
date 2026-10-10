@@ -1,7 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_speed.js — 秒反應・零秒出手
-   從 6.000 開始倒數，數字倒數到 3.000 秒就會隱藏，剩下的 3 秒要自己默數，
-   算準 0 秒的瞬間按下按鈕；分數＝跟 0 秒差了幾秒（越小越好）。
+   從 7.0000 開始倒數；倒數到 4.0000 秒時數字開始慢慢變透明，到 3.0000 秒完全看不見，
+   剩下的 3 秒要自己默數，算準 0 秒的瞬間按下按鈕；分數＝跟 0 秒差了幾秒（越小越好）。
+   （V1.22.0：原本是 6 秒開始、數字到 3 秒突然消失；第一次玩的人常以為是 BUG，
+     所以多給一段「慢慢變透明」的預告，讓人有心理準備。）
    · 倒數的數字（即時畫面）顯示到小數點後 4 位 X.XXXX 秒：那是「真實的剩餘時間」，不偽造
      （偽造尾數會讓倒數的數字忽大忽小，不能用在連續跳動的數字上）；
    · 「成績」（結算畫面、最佳紀錄、世界排行榜）一律是秒、小數點後 4 位，
@@ -17,8 +19,17 @@
     var ID = 'speed';
     /* UI.h：建立 HTML 元素的小工具 */
     var h = UI.h;
-    var TOTAL = 6000;    /* 倒數總長（毫秒，內部計時用；畫面一律換算成秒顯示） */
-    var HIDE_AT = 3000;  /* 倒數到剩這麼多毫秒時，數字開始隱藏 */
+    var TOTAL = 7000;       /* 倒數總長（毫秒，內部計時用；畫面一律換算成秒顯示） */
+    var FADE_AT = 4000;     /* 倒數到剩這麼多毫秒時，數字開始慢慢變透明 */
+    var HIDE_AT = 3000;     /* 倒數到剩這麼多毫秒時，數字完全透明（看不見了） */
+
+    /* 數字的不透明度（純函式，也給 Node 測試用）：剩餘時間 ≥ FADE_AT → 1（完全看得見）；
+       FADE_AT → HIDE_AT 之間線性從 1 變到 0；≤ HIDE_AT → 0（完全透明） */
+    function opacityAt(remainMs) {
+        if (remainMs >= FADE_AT) return 1;
+        if (remainMs <= HIDE_AT) return 0;
+        return (remainMs - HIDE_AT) / (FADE_AT - HIDE_AT);
+    }
 
     /* 倒數畫面用：毫秒 → X.XXXX 秒（即時顯示的是真實的剩餘時間，4 位小數，不偽造） */
     function sec(ms) { return (ms / 1000).toFixed(4); }
@@ -54,13 +65,16 @@
             /* 每一影格都重新算「現在剩幾毫秒」，不是遞減一個計數器變數——這樣不管
                這一影格跟上一影格之間實際間隔多久（不同裝置的更新頻率不一樣），
                算出來的剩餘時間永遠準確對應真實經過的時間，不會因為掉幀而計時跑掉。
-               remain >= HIDE_AT：剩餘時間還有 3000 毫秒（HIDE_AT）以上才顯示數字（最後看到的是 3.0000 秒附近），
-               一跨過這個門檻，textContent 直接設成空字串，數字瞬間消失。 */
+               remain >= HIDE_AT：剩餘時間還有 3000 毫秒（HIDE_AT）以上才顯示數字；
+               opacityAt() 讓數字在 4.0000 秒～3.0000 秒之間慢慢變透明，跨過 3.0000 秒就完全透明
+               （textContent 也清成空字串，數字不再佔著畫面）。 */
             /* tick：每個畫面更新時呼叫，更新倒數數字 */
             function tick(now) {
                 var el = now - t0;
                 var remain = Math.max(0, TOTAL - el);
-                num.textContent = remain >= HIDE_AT ? sec(remain) : '';
+                var op = opacityAt(remain);
+                num.textContent = op > 0 ? sec(remain) : '';
+                num.style.opacity = op.toFixed(3);
                 /* requestAnimationFrame(tick)：請瀏覽器在下一個畫面更新時再呼叫 tick，形成持續更新的迴圈 */
                 if (!clicked) raf = requestAnimationFrame(tick);
             }
@@ -113,8 +127,9 @@
     Reaction.register({
         id: ID,
         name: '零秒出手',
-        rule: '請在心裡默數至零，快速點擊按鈕，看看你差了幾秒。從 6.0000 開始倒數，畫面會顯示 X.XXXX 秒；但倒數到 3.0000 秒之後，數字就會隱藏起來，不讓你看到，剩下的 3 秒要靠自己在心裡默數。',
+        rule: '請在心裡默數至零，快速點擊按鈕，看看你差了幾秒。從 7.0000 開始倒數，畫面會顯示 X.XXXX 秒；倒數到 4.0000 秒時，數字會慢慢變透明，到 3.0000 秒就完全看不見，剩下的 3 秒要靠自己在心裡默數。',
         mount: mount,
+        test: { TOTAL: TOTAL, FADE_AT: FADE_AT, HIDE_AT: HIDE_AT, opacityAt: opacityAt },
         /* 世界排行榜的成績規格（資料庫 MF_games 裡 speed 那一列要一致） */
         score: SCORE
     });

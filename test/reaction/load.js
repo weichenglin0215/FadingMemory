@@ -12,6 +12,7 @@ global.Dlg = { open: (o) => { if (o && o.host && o.host.appendChild) o.host.appe
 global.UI.icon = () => '';
 require(ROOT + 'js/reaction_core.js');
 require(ROOT + 'js/reaction_kit.js');
+require(ROOT + 'js/reaction_kit3.js');    // 第三批共用小工具（kit.mod／kit.sample…；V1.22.0）
 require(ROOT + 'js/leaderboard.js');       // 遊戲的結算流程會呼叫 Leaderboard.fake4／fmtNum／submit（測試只呼叫純函式，但要找得到它）
 exports.game = function (file) {
   const before = Reaction.list().length;

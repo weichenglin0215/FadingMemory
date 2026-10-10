@@ -179,6 +179,17 @@
     --cm-g-lo: #22703A;
     --cm-b-hi: #4F86FF;
     --cm-b-lo: #213F94;
+
+    /* ── V1.22 新遊戲專用色（css/reaction5.css）──
+       照抄曲線：cc-board＝兩個長方格的深色底（白色筆跡才看得見）、cc-curve＝綠色的目標曲線、cc-start＝黃色起點、
+       cc-end＝水藍色終點、cc-draw＝玩家畫的白色曲線；dk-bg＝全黑畫面（手電筒猜圖）、flt-pic＝被光照到的圖案顏色 */
+    --cc-board: #3B3222;
+    --cc-curve: #62C470;
+    --cc-start: var(--c-yellow);
+    --cc-end: #5EC8E8;
+    --cc-draw: #FFFFFF;
+    --dk-bg: #000000;
+    --flt-pic: #FFE08A;
     --lb-shine: rgba(255, 255, 255, 0.55);
     --lb-gold-bg: linear-gradient(135deg, #FFEFB8 0%, #F2C14B 100%);
     --lb-gold-row: linear-gradient(135deg, #FFF6D6 0%, #FFE08A 100%);

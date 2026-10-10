@@ -11,6 +11,8 @@
     var IDS = ['area', 'halfvol', 'blindcircle', 'samelen', 'rightangle', 'stamp', 'focus', 'scratch', 'mathcheck', 'sum100', 'timestable', 'fracduel', 'primetrap', 'maxexpr', 'glyphspin', 'oddsock', 'fadee', 'ghostleg', 'euler', 'colorrecall', 'basket', 'passersby', 'seenit', 'whofirst', 'watchoff', 'handsmeet', 'clearer', 'twobags'];
     window.__NEW28 = IDS;
     window.__NEW7 = ['stackup', 'bridge', 'halfcrowd', 'catroad', 'numline', 'twinsock', 'mixcolor'];        /* V1.21.0 的 7 款復活遊戲 */
+    window.__NEW23 = ['copycurve', 'isequal', 'orderops', 'remainder', 'hiddendigit', 'timeafter', 'wrongline', 'fillop', 'fastblink', 'sneakmove', 'farpair', 'dicechange', 'whosaid', 'tapback', 'nthshape', 'spingap',
+        'sudokuone', 'chequeamt', 'mergechar', 'flashlight', 'racefirst', 'spinpick', 'alignchar'];                 /* V1.22.0 的 23 款 */
 
     async function run(id, mode, maxMs) {
         mode = mode || 'solve'; maxMs = maxMs || 60000;
@@ -54,7 +56,9 @@
                     var st = d.state ? JSON.stringify(d.state()) : '';
                     /* 同一個狀態每 300ms 才再呼叫一次（等過關動畫） */
                     /* mode：'solve'＝一直答對；'wrong'＝一開始就答錯；'mixed'＝先答對 3 次再答錯（關卡很多的遊戲用，不用等到全破） */
-                    var useWrong = mode === 'wrong' || (mode === 'mixed' && rep.calls >= 3);
+                    /* 'mixed' 以「已經過了幾關」判斷（有的遊戲前面有看示範的階段，solve／wrong 在那之前不會有作用，不能用呼叫次數算） */
+                    var cleared = 0; try { cleared = d.state ? (d.state().cleared || 0) : 0; } catch (e) { }
+                    var useWrong = mode === 'wrong' || (mode === 'mixed' && cleared >= 3);
                     try { if (useWrong ? d.wrong : d.solve) { (useWrong ? d.wrong : d.solve)(); rep.calls++; } } catch (e) { rep.errors.push('debug: ' + e.message); }
                     lastKey = st;
                 }

@@ -234,7 +234,7 @@
         var hint = kit.fingerHint(host, { mode: o.mode || 'tap', x: x, y: y, dx: dx, dy: dy, len: o.len, text: o.text, labelAbove: o.labelAbove, delay: o.delay });
         function off() { hint.remove(); host.removeEventListener('pointerdown', off, true); }
         host.addEventListener('pointerdown', off, true);
-        return { remove: off, el: hint.el };
+        return { remove: off, el: hint.el, label: hint.label };
     };
 
 
