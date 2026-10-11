@@ -17,6 +17,8 @@
      過程中不顯示任何比例或重量，只能憑眼睛判斷。
    · 判定：用多邊形裁切（Sutherland–Hodgman）算出左右兩塊的面積，換成公克（四捨五入到 0.1 g），
      用「顯示在秤上的數字」算差距，所以玩家看到的數字跟判定一致。
+   · 麵包掉到秤上、秤上的克數跳出來的同時，秤的正下方也會同時出現「差距 X.XXXX%」（數字跟著克數一起往上跳）
+     與大大的「過關！／沒過關」，不用再另外找結果在哪裡看。
    · 成績＝通過幾關，只要有一關超過標準就結束。
    · 畫面上的百分比一律 4 位小數：兩邊重量差距是「用秤上顯示的兩個重量算出來的真實數字」，
      玩家自己拿計算機也算得出來，所以照實顯示、不偽造尾數（過關標準、切點位置也是真實的值）。
@@ -159,7 +161,8 @@
             /* 麵包左上角在 SVG 裡的位置（水平置中） */
             var OX = (SW - W) / 2;                       /* 麵包左上角在 SVG 的位置 */
             var gBread = kit.svg('g', { transform: 'translate(' + OX + ' ' + BREAD_Y + ')' }, svg);
-            var PLAT_W = 200, PLAT_Y = 400, SCALE_CX = [SW * 0.25, SW * 0.75];
+            /* 秤的位置：平台在 y=350（以前是 400，往上移 50），秤的下面留出約 100 個單位的空間顯示「差距 X.XXXX%」與「過關！／沒過關」 */
+            var PLAT_W = 200, PLAT_Y = 350, SCALE_CX = [SW * 0.25, SW * 0.75];
             /* 畫兩個電子秤（底座、螢幕、克數文字、秤盤） */
             var scaleEls = SCALE_CX.map(function (cx) {
                 var g = kit.svg('g', {}, svg);
@@ -170,6 +173,14 @@
                 var plat = kit.svg('rect', { 'class': 'bk-splat', x: cx - PLAT_W / 2, y: PLAT_Y, width: PLAT_W, height: 14, rx: 6 }, g);
                 return { cx: cx, txt: txt, plat: plat };
             });
+            /* 判定結果（秤的正下方）：第一行差距百分比、第二行「過關！／沒過關」；平常是空的（透明），秤重時才出現 */
+            var diffTxt = kit.svg('text', { 'class': 'bk-vd', x: SW / 2, y: PLAT_Y + 142, 'text-anchor': 'middle' }, svg);
+            var wordTxt = kit.svg('text', { 'class': 'bk-vw', x: SW / 2, y: PLAT_Y + 186, 'text-anchor': 'middle' }, svg);
+            /* 清掉上一塊麵包的判定結果 */
+            function clearVerdict() {
+                diffTxt.textContent = ''; diffTxt.setAttribute('class', 'bk-vd');
+                wordTxt.textContent = ''; wordTxt.setAttribute('class', 'bk-vw');
+            }
 
             /* B 這關的麵包；grams 總重；knife 刀的 x 位置；state 目前階段（aim 瞄準/cut 切下去/verdict 揭曉） */
             var B = null, grams = 0, knife = 0, state = 'idle';
@@ -184,6 +195,7 @@
             function drawBread() {
                 gBread.innerHTML = '';
                 pieces = [];
+                clearVerdict();
                 B = makeBread(level);
                 grams = Math.round(kit.randFloat(G_MIN, G_MAX) * 10) / 10;
                 scaleEls.forEach(function (s) { s.txt.textContent = '0.0 g'; s.txt.classList.remove('bk-sgram--on'); s.plat.setAttribute('y', PLAT_Y); });
@@ -304,12 +316,14 @@
                     scaleEls.forEach(function (s) { s.plat.setAttribute('y', PLAT_Y + 4); });
                     /* 秤上的數字從 0 跳到實際重量 */
                     var targets = [wc.wL, wc.wR];
-                    /* 秤上的數字從 0 逐漸跳到實際重量 */
+                    /* 秤上的數字從 0 逐漸跳到實際重量；差距百分比跟著一起往上跳，跳完的那一刻就是真實的差距 */
                     return my.tween(600, function (e) {
                         scaleEls.forEach(function (s, i) {
                             s.txt.textContent = (targets[i] * e).toFixed(1) + ' g';
                             s.txt.classList.add('bk-sgram--on');
                         });
+                        diffTxt.textContent = '差距 ' + (wc.diff * e).toFixed(4) + '%';
+                        diffTxt.setAttribute('class', 'bk-vd bk-vd--on');
                     }, kit.easeOutCubic);
                 }).then(function () {
                     if (my.dead) return;
@@ -323,6 +337,11 @@
                 var thr = thrFor(level), pass = wc.diff <= thr;
                 var heavier = wc.wL > wc.wR ? '左邊' : (wc.wL < wc.wR ? '右邊' : '');
                 var balPct = bal / W * 100, myPct = c / W * 100;
+                /* 秤的正下方：差距百分比（真實值）＋「過關！／沒過關」，跟剛跳完的克數同時看得到 */
+                diffTxt.textContent = '差距 ' + wc.diff.toFixed(4) + '%';
+                diffTxt.setAttribute('class', 'bk-vd bk-vd--on');
+                wordTxt.textContent = pass ? '過關！' : '沒過關';
+                wordTxt.setAttribute('class', 'bk-vw ' + (pass ? 'bk-vw--ok' : 'bk-vw--bad'));
                 if (pass) {
                     cleared = level;
                     if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;

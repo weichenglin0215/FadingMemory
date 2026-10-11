@@ -8,7 +8,7 @@
    · 抽牌：不連續同一樣東西、同一區不連續超過 ZONE_RUN_MAX 張；反直覺的物品比例隨張數線性升高
      （TRICKY_START → TRICKY_END，第 1 → RAMP_N 張）。
    · 判定：點下面三顆按鈕（pointerdown），沒有滑動手勢。
-   · 每張限時 3.0 → 1.2 秒（線性），有 LIVES 次機會，答錯或超時扣一次。成績＝連續放對的張數。
+   · 每張限時 3.0 → 1.2 秒（線性），答錯或超時就結束（沒有「機會」次數）。成績＝連續放對的張數。
    ═══════════════════════════════════════════════════════════════════ */
 
 /* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
@@ -31,7 +31,6 @@
     var TRICKY_START = 0.10, TRICKY_END = 0.50;
     /* 同一個存放區域最多連續出現幾張（避免連續答同一個答案） */
     var ZONE_RUN_MAX = 3;
-    var LIVES = 3;
     var NEXT_MS = 650;
 
     /* 三個存放區域的名稱 */
@@ -134,8 +133,8 @@
             var my = R;
             root.innerHTML = '';
 
-            /* n 目前第幾張；right 連續答對數；lives 機會；history 已出過的食物；cur 目前這張；cardId 每張 +1，讓舊計時器知道自己過期 */
-            var n = (startAt || 1) - 1, right = n, lives = LIVES, newRec = false, state = 'idle', history = [], cur = null, cardId = 0;
+            /* n 目前第幾張；right 連續答對數；history 已出過的食物；cur 目前這張；cardId 每張 +1，讓舊計時器知道自己過期 */
+            var n = (startAt || 1) - 1, right = n, newRec = false, state = 'idle', history = [], cur = null, cardId = 0;
 
             /* 建立畫面元素：三個答案區（冷藏室、冷凍庫、櫥櫃）、題目卡片、時間條、提示 */
             var head = h('div', { 'class': 'fg-head' });
@@ -154,7 +153,7 @@
             var zEl = { freeze: zFreeze, cool: zCool, pantry: zPantry };
 
             /* 更新標題列右側的小字 */
-            function meta() { ctx.setMeta(kit.meta(['連對 ' + right, '機會 ' + lives])); }
+            function meta() { ctx.setMeta(kit.meta(['連對 ' + right, fmtBest(Reaction.getBest(ID))])); }
 
             /* 出下一張卡 */
             function nextCard() {
@@ -203,29 +202,23 @@
                     my.after(NEXT_MS, function () { Object.keys(zEl).forEach(function (k) { zEl[k].classList.remove('fg-zone--ok', 'fg-zone--bad'); }); nextCard(); });
                     return;
                 }
-                /* 答錯：扣一次機會，玩家選的區域標橘色，並顯示提示 */
-                lives--;
+                /* 答錯或超時：一次就結束。玩家選的區域標橘色，並顯示提示，稍後結算 */
                 if (zone) zEl[zone].classList.add('fg-zone--bad');
                 card.classList.add('fg-card--bad');
                 Sfx.play('bad');
                 tip.textContent = (zone == null ? '時間到！' : '放錯了…') + cur.name + '要放' + ZONES[cur.zone] + (cur.tip ? '（' + cur.tip + '）' : '');
                 meta();
-                /* 沒有機會了 → 結算 */
-                if (lives <= 0) {
-                    my.after(1800, function () {
-                        /* kit.resumeFrom：失敗後可從前 5 張繼續 */
-                        var back = kit.resumeFrom(n);
-                        kit.result(root, {
-                            score: right,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
-                            num: right + ' 張', label: right >= 20 ? '收納高手！' : (right >= 10 ? '很會整理！' : '再試一次，會更快！'),
-                            lines: [cur.name + '要放' + ZONES[cur.zone] + (cur.tip ? '：' + cur.tip : '')],
-                            isNew: newRec, sfx: right >= 10 ? 'win' : 'fail', onAgain: function () { round(1); },
-                            resume: { level: back, run: function () { round(back); } }
-                        });
+                my.after(1800, function () {
+                    /* kit.resumeFrom：失敗後可從前 5 張繼續 */
+                    var back = kit.resumeFrom(n);
+                    kit.result(root, {
+                        score: right,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
+                        num: right + ' 張', label: right >= 20 ? '收納高手！' : (right >= 10 ? '很會整理！' : '再試一次，會更快！'),
+                        lines: [cur.name + '要放' + ZONES[cur.zone] + (cur.tip ? '：' + cur.tip : '')],
+                        isNew: newRec, sfx: right >= 10 ? 'win' : 'fail', onAgain: function () { round(1); },
+                        resume: { level: back, run: function () { round(back); } }
                     });
-                } else {
-                    my.after(1700, function () { Object.keys(zEl).forEach(function (k) { zEl[k].classList.remove('fg-zone--ok', 'fg-zone--bad'); }); nextCard(); });
-                }
+                });
             }
 
             /* 替三個答案按鈕各綁定 pointerdown（一碰就觸發，比 click 即時） */
@@ -233,7 +226,7 @@
 
             /* G.debug：測試用後門 */
             G.debug = {
-                state: function () { return { n: n, state: state, right: right, lives: lives, cur: cur }; },
+                state: function () { return { n: n, state: state, right: right, cur: cur }; },
                 answerRight: function () { judge(cur.zone); return state; },
                 answerWrong: function () { judge(cur.zone === 'cool' ? 'pantry' : 'cool'); return state; }
             };
@@ -248,7 +241,7 @@
     var G = {
         id: ID,
         name: '冰箱歸位',
-        rule: '買菜回來，東西一樣一樣出現在上面的大格子裡。下面有三顆按鈕：左上「冷藏室」、左下「冷凍庫」、右邊「櫥櫃（不用冰）」，**點一下把東西放進去**。**有些東西很容易放錯**，要在時間內放對喔！',
+        rule: '買菜回來，東西一樣一樣出現在上面的大格子裡。下面有三顆按鈕：左上「冷藏室」、左下「冷凍庫」、右邊「櫥櫃（不用冰）」，**點一下把東西放進去**。**有些東西很容易放錯**，要在時間內放對喔，**放錯一次就結束**！',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,

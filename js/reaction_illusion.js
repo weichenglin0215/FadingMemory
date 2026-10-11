@@ -2,13 +2,20 @@
    reaction_illusion.js — 秒反應・錯覺大師
    兩個圖形比一比，哪個比較長／大／亮？眼睛會騙人，看你能不能不被騙。
    ───────────────────────────────────────────────────────────────────
-   · 五種經典錯覺，全部用 SVG 依參數畫出（長度、半徑、灰階都是精確的數值，所以
+   · 十一種經典錯覺（原本 5 種，玩家說題目類型太少，V1.24 再加 6 種），全部用 SVG 依參數畫出（長度、半徑、面積、灰階都是精確的數值，所以
      「真實差距」才準）：
        muller    繆勒－萊爾：兩條線哪條長（箭尾向外的那條看起來比較長）
        ebbinghaus 艾賓豪斯：中間哪個圓大（被小圓圍著的看起來比較大）
        ponzo     龐佐：鐵軌上的兩條橫線哪條長（靠遠處的上面那條看起來比較長）
        vh        垂直水平：倒 T 的兩條線哪條長（垂直那條看起來比較長）
        contrast  同時對比：兩個灰方塊哪個亮（放在深色底上的看起來比較亮）
+     ── 新增的 6 種 ──
+       delboeuf  德爾貝夫：兩個圓外面各圍一圈環，哪個圓大（環貼得近的看起來比較大，環離得遠的看起來比較小）
+       oppel     奧本－昆特：兩條線哪條長（中間有刻度分割的那條看起來比較長）
+       irradiation 光渗：黑底上的白圓和白底上的黑圓，哪個圓大（黑底上的白圓看起來比較大）
+       hat       禮帽：帽子的高度與帽簷的寬度哪個長（垂直的高度看起來比較長）
+       rectarea  長方形面積：直的和橫的兩個長方形（長寬比相同），哪個面積大（直的看起來比較大）
+       cornsweet 柯恩斯威特：左右兩邊的灰色哪邊亮（交界處的邊緣有明暗的漸層，亮邊那一側整片看起來比較亮）
    · 每題的「錯覺方向」和「真相」有時一致（錯覺幫忙）、有時相反（錯覺陷阱）；陷阱比例隨
      關卡線性提高（TRAP_START → TRAP_END）。真實差距 Δ 也線性縮小。
    · 答完立刻揭曉真相（畫出對齊的輔助線、寫出數字）1 秒多，答錯或超時就結束。
@@ -36,7 +43,14 @@
     var LEVEL_RAMP = 20;
     var REVEAL_MS = 1500;       /* 答完後揭曉真相停多久 */
     /* 五種錯覺的代號 */
-    var KINDS = ['muller', 'ebbinghaus', 'ponzo', 'vh', 'contrast'];
+    var KINDS = ['muller', 'ebbinghaus', 'ponzo', 'vh', 'contrast', 'delboeuf', 'oppel', 'irradiation', 'hat', 'rectarea', 'cornsweet'];
+    /* 錯覺的方向跟「位置」綁死（所以「錯覺幫忙」時較大的那個固定在某個位置）：ponzo／vh／contrast（舊的）與 irradiation／hat／rectarea／cornsweet（新的）；
+       其他（muller／ebbinghaus／delboeuf／oppel）的方向跟「圖案樣式」綁，位置可以隨機 */
+    var POS_BOUND = { ponzo: true, vh: true, contrast: true, irradiation: true, hat: true, rectarea: true, cornsweet: true };
+    /* 用灰階數字比的題型（兩邊的數量是 0～255 的灰階，不是長度或半徑） */
+    var GRAY = { contrast: true, cornsweet: true };
+    /* 問的是「比較長／大／亮」：揭曉與提示的文字用 */
+    var WHAT = { muller: '長', ponzo: '長', vh: '長', oppel: '長', hat: '長', ebbinghaus: '大', delboeuf: '大', irradiation: '大', rectarea: '大', contrast: '亮', cornsweet: '亮' };
 
     function fmtBest(v) { return v == null ? '' : '最佳連對 ' + v; }
 
@@ -57,16 +71,20 @@
         /* big：真實數量比較大的那個選項。ponzo／vh／contrast 的錯覺方向跟「位置」綁死
            （上面／垂直／深色底那一個看起來比較大），所以由 help 決定；
            muller／ebbinghaus 的錯覺方向跟「圖案樣式」綁，位置可以隨機。 */
-        if (kind === 'ponzo' || kind === 'vh' || kind === 'contrast') q.big = help ? 0 : 1;
+        if (POS_BOUND[kind]) q.big = help ? 0 : 1;
         else q.big = rand() < 0.5 ? 0 : 1;
-        /* base：較小那個的基準數值（不同錯覺用不同單位） */
-        var base = kind === 'ebbinghaus' ? 40 : (kind === 'contrast' ? 120 : 200);
+        /* base：較小那個的基準數值（不同錯覺用不同單位：半徑、線長、灰階、面積） */
+        var base = 200;
+        if (kind === 'ebbinghaus' || kind === 'delboeuf') base = 40;
+        if (kind === 'contrast' || kind === 'cornsweet') base = 120;
         if (kind === 'ponzo') base = 96;
         if (kind === 'muller') base = 250;
+        if (kind === 'irradiation') base = 60;
+        if (kind === 'rectarea') base = 20000;           /* 長方形的面積（長寬比 1:2，邊長約 100×200） */
         q.base = base;
         /* 較小的是 base，較大的是 base × (1 + Δ)；灰階題改用灰階差（Δ × 255） */
-        /* 較小的是 base，較大的是 base × (1 + Δ)；contrast 用灰階差：Δ × 255 */
-        if (kind === 'contrast') {
+        /* 較小的是 base，較大的是 base × (1 + Δ)；contrast／cornsweet 用灰階差：Δ × 255 */
+        if (GRAY[kind]) {
             var gap = Math.round(delta * 255);
             var lo = Math.round(kit.randFloat(95, 150, rand));
             q.v = [0, 0];
@@ -201,14 +219,129 @@
         return { hits: hits, guides: function () { } };
     };
 
+    /* ═══ 新增的 6 種錯覺 ═══ */
+    /* 德爾貝夫：兩個橘色的圓，外面各圍一圈環。環貼得近（只比圓大一點點）的那個看起來比較大，環離得遠的看起來比較小。選項 0＝左邊的圓、1＝右邊的圓 */
+    DRAW.delboeuf = function (svg, FW, FH, q) {
+        var cy = FH * 0.5, xs = [FW * 0.26, FW * 0.74], hits = [];
+        for (var i = 0; i < 2; i++) {
+            var r = q.v[i], isBig = i === q.big;
+            /* 錯覺幫忙：較大的圓配「近」的環（看起來更大）；陷阱：較大的圓配「遠」的環 */
+            var near = q.help ? isBig : !isBig, ringR = near ? r + 12 : r + 62;
+            kit.svg('circle', { 'class': 'il-ring', cx: xs[i], cy: cy, r: ringR }, svg);
+            kit.svg('circle', { 'class': 'il-center', cx: xs[i], cy: cy, r: r }, svg);
+            hits.push(kit.svg('circle', { 'class': 'il-hit', cx: xs[i], cy: cy, r: ringR + 10 }, svg));
+        }
+        return {
+            hits: hits,
+            guides: function (g) {
+                for (var i = 0; i < 2; i++) kit.svg('circle', { 'class': 'il-guide', cx: xs[i], cy: cy, r: q.v[q.big], fill: 'none' }, g);
+            }
+        };
+    };
+
+    /* 奧本－昆特：兩條橫線，兩端都有記號；其中一條中間多了刻度（分成 8 段）。有刻度分割的那條看起來比較長。選項 0＝上面那條、1＝下面那條 */
+    DRAW.oppel = function (svg, FW, FH, q) {
+        var cx = FW / 2, ys = [FH * 0.32, FH * 0.68], hits = [];
+        for (var i = 0; i < 2; i++) {
+            var L = q.v[i], isBig = i === q.big, y = ys[i];
+            /* 錯覺幫忙：較長的那條有刻度（看起來更長）；陷阱：較長的那條沒有刻度 */
+            var divided = q.help ? isBig : !isBig, x1 = cx - L / 2, x2 = cx + L / 2;
+            kit.svg('line', { 'class': 'il-bar', x1: x1, y1: y, x2: x2, y2: y }, svg);
+            [x1, x2].forEach(function (x) { kit.svg('line', { 'class': 'il-line', x1: x, y1: y - 22, x2: x, y2: y + 22 }, svg); });
+            if (divided) for (var k = 1; k < 8; k++) { var x = x1 + L * k / 8; kit.svg('line', { 'class': 'il-line', x1: x, y1: y - 12, x2: x, y2: y + 12 }, svg); }
+            hits.push(hitRect(svg, x1 - 24, y - 62, L + 48, 124));
+        }
+        return {
+            hits: hits,
+            guides: function (g) {
+                var L = q.v[1 - q.big];
+                [cx - L / 2, cx + L / 2].forEach(function (x) { kit.svg('line', { 'class': 'il-guide', x1: x, y1: ys[0] - 50, x2: x, y2: ys[1] + 50 }, g); });
+            }
+        };
+    };
+
+    /* 光渗：左半是黑底上的白圓、右半是白底上的黑圓。黑底上的白圓看起來比較大。選項 0＝黑底上的白圓、1＝白底上的黑圓 */
+    DRAW.irradiation = function (svg, FW, FH, q) {
+        var half = FW / 2, cy = FH * 0.5, hits = [];
+        kit.svg('rect', { x: 0, y: 0, width: half, height: FH, fill: '#1F1F1F' }, svg);
+        kit.svg('rect', { x: half, y: 0, width: half, height: FH, fill: '#F4F4F4' }, svg);
+        for (var i = 0; i < 2; i++) {
+            var r = q.v[i], cxi = half * (i + 0.5);
+            kit.svg('circle', { cx: cxi, cy: cy, r: r, fill: i === 0 ? '#FFFFFF' : '#111111' }, svg);
+            hits.push(kit.svg('circle', { 'class': 'il-hit', cx: cxi, cy: cy, r: r + 44 }, svg));
+        }
+        return {
+            hits: hits,
+            guides: function (g) {
+                for (var i = 0; i < 2; i++) kit.svg('circle', { 'class': 'il-guide', cx: half * (i + 0.5), cy: cy, r: q.v[q.big], fill: 'none' }, g);
+            }
+        };
+    };
+
+    /* 禮帽：帽子的高度（帽身，選項 0）與帽簷的寬度（選項 1）。垂直的高度看起來比水平的寬度長 */
+    DRAW.hat = function (svg, FW, FH, q) {
+        var cx = FW / 2, baseY = FH * 0.74, H = q.v[0], Wb = q.v[1], crownW = Wb * 0.56;
+        kit.svg('rect', { 'class': 'il-hat', x: cx - Wb / 2, y: baseY, width: Wb, height: 24, rx: 9 }, svg);                 /* 帽簷 */
+        kit.svg('rect', { 'class': 'il-hat', x: cx - crownW / 2, y: baseY - H, width: crownW, height: H, rx: 12 }, svg);       /* 帽身（從帽簷上緣往上 H） */
+        kit.svg('rect', { 'class': 'il-hatband', x: cx - crownW / 2, y: baseY - 46, width: crownW, height: 28 }, svg);        /* 帽帶 */
+        var hits = [hitRect(svg, cx - crownW / 2 - 12, baseY - H - 12, crownW + 24, H - 6), hitRect(svg, cx - Wb / 2 - 12, baseY - 2, Wb + 24, 64)];
+        return {
+            hits: hits,
+            guides: function (g) {
+                /* 揭曉：把帽身的高度與帽簷的寬度各用一條虛線量出來（高度的線畫在右邊、寬度的線畫在下面），長短一比就知道 */
+                kit.svg('line', { 'class': 'il-guide', x1: cx + Wb / 2 + 26, y1: baseY - H, x2: cx + Wb / 2 + 26, y2: baseY }, g);
+                kit.svg('line', { 'class': 'il-guide', x1: cx - Wb / 2, y1: baseY + 52, x2: cx + Wb / 2, y2: baseY + 52 }, g);
+            }
+        };
+    };
+
+    /* 長方形面積：直的（選項 0）與橫的（選項 1）兩個長寬比一樣（1:2）的長方形，直的看起來比較大。揭曉時把直的轉成橫的疊在橫的上面比 */
+    DRAW.rectarea = function (svg, FW, FH, q) {
+        var cy = FH * 0.5, tall = Math.sqrt(q.v[0] / 2), wide = Math.sqrt(q.v[1] / 2);
+        var r0 = { w: tall, h: tall * 2, cx: FW * 0.26 }, r1 = { w: wide * 2, h: wide, cx: FW * 0.73 }, hits = [];
+        [r0, r1].forEach(function (r) {
+            kit.svg('rect', { 'class': 'il-rect', x: r.cx - r.w / 2, y: cy - r.h / 2, width: r.w, height: r.h, rx: 6 }, svg);
+            hits.push(hitRect(svg, r.cx - r.w / 2 - 14, cy - r.h / 2 - 14, r.w + 28, r.h + 28));
+        });
+        return {
+            hits: hits,
+            guides: function (g) {
+                /* 把直的長方形轉 90 度（寬高對調）疊在橫的長方形的位置，虛線框跟橫的實心框一比，面積誰大誰小就看得出來 */
+                kit.svg('rect', { 'class': 'il-guide', x: r1.cx - r0.h / 2, y: cy - r0.w / 2, width: r0.h, height: r0.w, rx: 6 }, g);
+            }
+        };
+    };
+
+    /* 柯恩斯威特：左右兩片灰色，交界處的邊緣有一小段明暗漸層（左邊靠交界處變亮、右邊靠交界處變暗），
+       所以看起來左邊整片比右邊亮，其實遠離交界處的兩片灰色可能一樣亮（或差一點）。選項 0＝左邊、1＝右邊。q.v 是兩片遠處的灰階 */
+    DRAW.cornsweet = function (svg, FW, FH, q) {
+        var half = FW / 2, CUSP = 30, F = 0.45;                  /* CUSP：交界處亮暗各偏多少灰階；F：漸層占半邊寬度的比例 */
+        function g255(v) { v = Math.max(0, Math.min(255, Math.round(v))); return 'rgb(' + v + ',' + v + ',' + v + ')'; }
+        var defs = kit.svg('defs', {}, svg);
+        function grad(id, stops) {
+            var lg = kit.svg('linearGradient', { id: id, x1: 0, y1: 0, x2: 1, y2: 0 }, defs);
+            stops.forEach(function (s) { kit.svg('stop', { offset: s[0], 'stop-color': s[1] }, lg); });
+        }
+        grad('il-cs-l', [[0, g255(q.v[0])], [1 - F, g255(q.v[0])], [1, g255(q.v[0] + CUSP)]]);      /* 左邊：越靠近交界越亮 */
+        grad('il-cs-r', [[0, g255(q.v[1] - CUSP)], [F, g255(q.v[1])], [1, g255(q.v[1])]]);          /* 右邊：越靠近交界越暗 */
+        kit.svg('rect', { x: 0, y: 0, width: half, height: FH, fill: 'url(#il-cs-l)' }, svg);
+        kit.svg('rect', { x: half, y: 0, width: half, height: FH, fill: 'url(#il-cs-r)' }, svg);
+        var hits = [hitRect(svg, 0, 0, half, FH), hitRect(svg, half, 0, half, FH)];
+        return { hits: hits, guides: function () { } };
+    };
+
     /* 題目文字與選項名稱 */
     var QTEXT = {
         muller: '哪一條線比較長？', ponzo: '哪一條橫線比較長？', vh: '哪一條線比較長？',
-        ebbinghaus: '中間哪個圓比較大？', contrast: '哪一個方塊比較亮？'
+        ebbinghaus: '中間哪個圓比較大？', contrast: '哪一個方塊比較亮？',
+        delboeuf: '中間哪個圓比較大？', oppel: '哪一條線比較長？', irradiation: '哪一個圓比較大？',
+        hat: '帽子的高度和帽簷的寬度，哪個比較長？', rectarea: '哪個長方形的面積比較大？', cornsweet: '遠處的灰色，哪一邊比較亮？'
     };
     var NAMES = {
         muller: ['上面那條', '下面那條'], ponzo: ['上面那條', '下面那條'], vh: ['垂直的那條', '水平的那條'],
-        ebbinghaus: ['左邊的圓', '右邊的圓'], contrast: ['左邊的方塊', '右邊的方塊']
+        ebbinghaus: ['左邊的圓', '右邊的圓'], contrast: ['左邊的方塊', '右邊的方塊'],
+        delboeuf: ['左邊的圓', '右邊的圓'], oppel: ['上面那條', '下面那條'], irradiation: ['黑底上的白圓', '白底上的黑圓'],
+        hat: ['帽子的高度', '帽簷的寬度'], rectarea: ['直的長方形', '橫的長方形'], cornsweet: ['左邊', '右邊']
     };
 
     /* mount：遊戲進場點 */
@@ -275,9 +408,9 @@
                     /* 揭曉：畫出對齊的輔助線，讓玩家看見真正的長度／大小 */
                     d.guides(gGuides);
                     var pct = realPct(q);
-                    var what = q.kind === 'contrast' ? '亮' : (q.kind === 'ebbinghaus' ? '大' : '長');
+                    var what = WHAT[q.kind];
                     var truth = (idx === -1 ? '時間到！' : (ok ? '答對了！' : '答錯了…')) + ' 其實是「' + NAMES[q.kind][q.big] + '」比較' + what +
-                        (q.kind === 'contrast' ? '（灰階 ' + q.v[q.big] + ' 對 ' + q.v[1 - q.big] + '）' : '（多了 ' + pct.toFixed(4) + '%）') +
+                        (GRAY[q.kind] ? '（灰階 ' + q.v[q.big] + ' 對 ' + q.v[1 - q.big] + '）' : '（多了 ' + pct.toFixed(4) + '%）') +
                         (q.help ? '' : '　（錯覺陷阱）');
                     hint.textContent = truth;
                     if (ok) {
@@ -303,7 +436,7 @@
                     el.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(i); });
                 });
                 /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「這題真正比較大（長、亮）的那個」上（第一題的正確答案） */
-                if (Reaction.kit.once('illusion.hint')) Reaction.kit.hintOn(root, d.hits[q.big], { mode: 'tap', text: '請點擊' + (q.kind === 'contrast' ? '比較亮' : (q.kind === 'ebbinghaus' ? '比較大' : '比較長')) + '的那個' });
+                if (Reaction.kit.once('illusion.hint')) Reaction.kit.hintOn(root, d.hits[q.big], { mode: 'tap', text: '請點擊比較' + WHAT[q.kind] + '的那個' });
                 /* G.debug：測試用後門 */
                 G.debug = { q: q, answer: answer, streak: function () { return streak; } };
             }
@@ -319,14 +452,14 @@
     var G = {
         id: ID,
         name: '錯覺大師',
-        rule: '兩個圖形比一比，**哪個比較長、比較大、比較亮**？**眼睛會騙人**！有時候錯覺會幫你，有時候剛好相反，而且真正的差距會越來越小。答完立刻揭曉真相，連對越多越好。',
+        rule: '兩個圖形比一比，**哪個比較長、比較大、比較亮**？**眼睛會騙人**！共有十一種經典的視覺錯覺（線條、圓、帽子、長方形、灰色…），有時候錯覺會幫你，有時候剛好相反，而且真正的差距會越來越小。答完立刻揭曉真相，連對越多越好。',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,
         /* dev 是開發用設定 */
         dev: { kind: null, time: null, reveal: null },      /* 開發驗證用：強制題型／限時，正式遊戲不會設定 */
         /* test 匯出純函式給 Node 自動測試 */
-        test: { makeQuestion: makeQuestion, realPct: realPct, KINDS: KINDS, TRAP_END: TRAP_END }
+        test: { makeQuestion: makeQuestion, realPct: realPct, KINDS: KINDS, POS_BOUND: POS_BOUND, GRAY: GRAY, WHAT: WHAT, QTEXT: QTEXT, NAMES: NAMES, DRAW: DRAW, TRAP_END: TRAP_END }
     };
     /* 登記到遊戲清單 */
     Reaction.register(G);

@@ -4,9 +4,14 @@
    （裡面混了干擾的藥丸），用手指把正確的藥丸**拖曳**到下方藥盒對應的格子。
    藥丸是虛構的彩色圖案，這是記憶遊戲，不是用藥建議。
    ───────────────────────────────────────────────────────────────────
-   · 吃藥單：sheet[時段][藥種] ＝ 顆數。時段（早／午／晚／睡前）2 → 4 個，藥種（白圓／黃橢圓／藍方／粉三角）
-     2 → 4 種，每格每種最多 1 → 3 顆；每個時段至少 1 顆；並且**至少有一對時段只差 1 顆**
-     （近似干擾：早「白2黃1」、晚「白2黃2」，記憶時最容易混）。整張單子不會所有時段都一樣。
+   · 吃藥單：sheet[時段][藥種] ＝ 顆數。時段（早／午／晚／睡前）2 → 4 個（第 1／6／11 關起），每個時段至少 1 顆；
+     並且**至少有一對時段只差 1 顆**（近似干擾：早「白2黃1」、晚「白2黃2」，記憶時最容易混）。整張單子不會所有時段都一樣。
+   · 單子的「描述量」（全部藥丸的總顆數）**一關一關慢慢增加**：第 1 關 3 顆，之後每關 +1（pillTarget）。
+     兩個時段時，「剛好差 1 顆」的那一對加起來一定是奇數顆，所以偶數顆的關卡改成多 1 顆（第 2 關 5 顆、第 3 關 5 顆、第 4、5 關 7 顆…）；
+     三個時段以上就每關都不一樣。藥種數 K、每格每種上限 M 會依總顆數自動撐大（shapeFor：容量 ≥ 1.5 倍總顆數，
+     先加藥種、再加每格上限），所以前幾關不會再長得一模一樣；而且連續兩關的單子一定不同（makeSheet 的 prev）。
+   · 出單子（makeSheet）：先做出「近似的那一對」——A 一列、B＝A 再多 1 顆——再把剩下的顆數隨機分給其他時段，最後隨機排進各時段，
+     所以每張單子的總顆數剛好等於 pillTarget。
    · 上方的藥丸盤（makeTray）：
         ① 單子上用到的每一種藥丸：需要的總顆數（各時段加起來）＋ 隨機多放 0～EXTRA_MAX 顆（故意放多）；
         ② 干擾藥丸：單子上沒有的藥丸，跟單子上的某一種只差「形狀」或只差「顏色」（白橢圓、黃圓、藍三角、粉方），
@@ -14,11 +19,14 @@
         放進格子的藥丸只要種類或顆數跟單子不一樣就算錯，所以要同時記得「哪個時段、什麼藥丸、幾顆」。
    · 操作：按住藥丸拖曳到下方的格子放開；也可以直接點藥盤裡的藥丸（放進目前選取的格子，點格子可換選取）；
      點格子裡的藥丸，藥丸就回到藥盤；「清空這格」把這格的藥丸全部放回去；「好了」送出。
-   · 流程：看單子 SHOW 秒（倒數條）→ 單子蓋起來、藥盤出現 → 限時（FILL_BASE ＋ FILL_PER_PILL × 需要的顆數）填藥盒
+   · 流程：看單子 showSec 秒（倒數條）→ 單子蓋起來、藥盤出現 → 限時（FILL_BASE ＋ FILL_PER_PILL × 需要的顆數）填藥盒
      → 完全相同才算過關。時間到了不會直接算輸：先判斷藥盒，已經放對就過關。
-   · 難度（第 1 → LEVEL_RAMP 關線性或依關卡解鎖）：時段 2/3/4（第 1/6/11 關）、藥種 2 → 4、每格上限 1 → 3、
-     看單子時間 10 → 5 秒、干擾藥丸種類 1 → 4。
-   · 有 LIVES 次機會，成績＝通過關數（越多越好）；失敗後可從「失敗關卡 − 5」繼續。
+   · 看單子的時間＝基本 SHOW_BASE（0.8）秒＋每顆藥丸 perPill 秒：第 1 關每顆 1.4 秒（3 顆共 5 秒，是原本 10 秒的一半），
+     之後每顆的時間線性縮到 0.6 秒（藥丸越多看得越久，但每顆越來越趕）。
+   · 難度（第 1 → LEVEL_RAMP 關線性或依關卡解鎖）：時段 2/3/4（第 1/6/11 關）、單子藥丸總顆數每關 +1、每顆的觀看時間 1.4 → 0.6 秒、
+     干擾藥丸種類 1 → 4。
+   · 下方的藥盒：每個時段一格，所有格子排成一列、平分整個寬度（時段幾個就切幾等分），邊框是粗線（--pb-bd-w）。
+   · 填錯一次就結束（沒有「機會」次數），成績＝通過關數（越多越好）；失敗後可從「失敗關卡 − 5」繼續。
    ═══════════════════════════════════════════════════════════════════ */
 
 /* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
@@ -40,13 +48,17 @@
     var SLOT_AT = [1, 6, 11];               /* 第幾關起時段數變成 2、3、4 */
     var KINDS_START = 2, KINDS_END = 4;
     var MAXCNT_START = 1, MAXCNT_END = 3;
-    var SHOW_START = 10, SHOW_END = 5;      /* 看單子秒數 */
+    /* 看單子的時間＝SHOW_BASE ＋ 每顆藥丸的秒數 × 單子上的藥丸總顆數；每顆的秒數從第 1 關的 1.4 線性縮到 LEVEL_RAMP 關的 0.6
+       （第 1 關 3 顆藥丸＝5 秒，是原本 10 秒的一半） */
+    var SHOW_BASE = 0.8, PER_PILL_START = 1.4, PER_PILL_END = 0.6;
+    /* 單子的總顆數：第 1 關 3 顆，之後每關多 1 顆（PILLS_STEP），最多 PILLS_MAX 顆 */
+    var PILLS_START = 3, PILLS_STEP = 1, PILLS_MAX = 30;
+    var HEADROOM = 1.5;                     /* 單子的容量（時段 × 藥種 × 每格上限）至少是總顆數的幾倍，不夠就加藥種、加每格上限 */
     var FILL_BASE = 12, FILL_PER_PILL = 1.8; /* 填藥盒的限時：基本秒數 + 每顆需要的藥丸再加幾秒（要拖曳，比點的慢）*/
     var EXTRA_START = 1, EXTRA_END = 3;     /* 單子上的藥丸，故意多放幾顆（上限）*/
     var DECOY_START = 1, DECOY_END = 4;     /* 干擾藥丸的種類數 */
     var MAX_TRAY = 50;                      /* 藥丸盤最多放幾顆 */
     var DRAG_MOVE_PX = 8;                   /* 手指移動超過這麼多 px 才算拖曳（不然算點一下）*/
-    var LIVES = 2;
     /* 四個時段的名稱 */
     var SLOT_NAME = ['早', '午', '晚', '睡前'];
     /* 8 種藥丸的名稱：編號 0～3 是單子上會出現的，4～7 是干擾藥丸（和 0～3 只差形狀或只差顏色） */
@@ -66,8 +78,10 @@
     function kindCount(level) { return Math.round(kit.ramp(level, KINDS_START, KINDS_END, LEVEL_RAMP)); }
     /* 每格每種最多幾顆 */
     function maxCnt(level) { return Math.round(kit.ramp(level, MAXCNT_START, MAXCNT_END, LEVEL_RAMP)); }
-    /* 看單子的秒數（越來越短） */
-    function showSec(level) { return kit.ramp(level, SHOW_START, SHOW_END, LEVEL_RAMP); }
+    /* 每顆藥丸給的觀看秒數：第 1 關 1.4 秒，線性縮到第 LEVEL_RAMP 關的 0.6 秒 */
+    function perPill(level) { return kit.ramp(level, PER_PILL_START, PER_PILL_END, LEVEL_RAMP); }
+    /* 看單子的秒數＝基本秒數 ＋ 每顆秒數 × 單子上的藥丸總顆數（單子越複雜看越久；第 1 關 3 顆＝5 秒） */
+    function showSec(level, sheet) { return SHOW_BASE + perPill(level) * needTotal(sheet); }
     /* 故意多放的顆數上限 */
     function extraMax(level) { return Math.round(kit.ramp(level, EXTRA_START, EXTRA_END, LEVEL_RAMP)); }
     /* 干擾藥丸的種類數 */
@@ -83,47 +97,71 @@
     /* 兩列是否完全相同 */
     function sameRow(a, b) { return rowDiff(a, b) === 0; }
 
-    /* 出一張單子：回傳 { slots 時段數, kinds 藥種數, sheet[時段][藥種]＝顆數, nearPair 刻意只差 1 顆的兩個時段 } */
-    /* 出一張單子：回傳 { slots, kinds, sheet:[[顆數…]…], nearPair:[a,b] } */
-    /* rand = rand || Math.random：測試時會傳固定種子的亂數，讓結果可重現 */
-    function makeSheet(level, rand) {
+    /* 這一關單子上藥丸的總顆數（描述量）：第 1 關 3 顆，之後每關多 PILLS_STEP 顆，最多 PILLS_MAX 顆。
+       兩個時段時，「剛好差 1 顆」的那一對加起來一定是奇數，所以偶數顆就多 1 顆（三個時段以上不受這個限制） */
+    function pillTarget(level) {
+        var t = Math.min(PILLS_MAX, PILLS_START + PILLS_STEP * (Math.max(level, 1) - 1));
+        if (slotCount(level) === 2 && t % 2 === 0) t++;
+        return t;
+    }
+    /* 這一關單子的「形狀」：{ S 時段數, K 藥種數, M 每格每種上限, T 總顆數 }。
+       K、M 先取原本的線性曲線（kindCount／maxCnt）當下限；容量 S×K×M 還不到總顆數的 HEADROOM（1.5）倍，就交替往上加：
+       藥種還沒到上限且「藥種進度」不比「每格上限進度」快，就加一種藥，否則加每格上限（先加藥種，兩邊盡量一起長大） */
+    function shapeFor(level) {
+        var S = slotCount(level), T = pillTarget(level), K = kindCount(level), M = maxCnt(level);
+        while (S * K * M < T * HEADROOM && (K < KINDS_END || M < MAXCNT_END)) {
+            var kProg = (K - KINDS_START) / (KINDS_END - KINDS_START), mProg = (M - MAXCNT_START) / (MAXCNT_END - MAXCNT_START);
+            if (K < KINDS_END && (kProg <= mProg || M >= MAXCNT_END)) K++; else M++;
+        }
+        return { S: S, K: K, M: M, T: T };
+    }
+    /* 隨機做出一列：共 t 顆，分在 K 種藥裡，每種最多 M 顆（一顆一顆放，每次從還沒滿的藥種裡隨機挑一種） */
+    function fillRow(t, K, M, rand) {
+        var row = []; for (var k = 0; k < K; k++) row.push(0);
+        for (var i = 0; i < t; i++) {
+            var open = []; for (var j = 0; j < K; j++) if (row[j] < M) open.push(j);
+            row[kit.pick(open, rand)]++;
+        }
+        return row;
+    }
+    /* 把單子轉成字串（拿來判斷「跟上一關的單子是不是一模一樣」） */
+    function sheetKey(sheet) { return sheet.map(function (r) { return r.join(','); }).join('|'); }
+
+    /* 出一張單子：回傳 { slots 時段數, kinds 藥種數, maxCnt 每格上限, sheet[時段][藥種]＝顆數, nearPair 刻意只差 1 顆的兩個時段 }。
+       總顆數剛好是 pillTarget(level)；prev 是上一關的單子，有給的話這一張一定跟它不一樣。
+       做法：① 先做「近似的那一對」：A 一列（tA 顆），B＝A 再多 1 顆（某個還沒滿的藥種 +1）；
+             ② 剩下的 T − (2·tA + 1) 顆隨機分給其他 S−2 個時段（每個時段至少 1 顆、至多 K×M 顆）；
+             ③ A、B 與其他各列隨機排進 S 個時段。
+       rand = rand || Math.random：測試時會傳固定種子的亂數，讓結果可重現 */
+    function makeSheet(level, rand, prev) {
         rand = rand || Math.random;
-        /* S 時段數、K 藥種數、M 每格每種上限 */
-        var S = slotCount(level), K = kindCount(level), M = maxCnt(level);
-        /* 隨機產生一列，並且至少要有 1 顆（do...while：先做再檢查條件） */
-        function randRow() {
-            var row;
-            do { row = []; for (var k = 0; k < K; k++) row.push(kit.randInt(0, M, rand)); } while (total(row) < 1);
-            return row;
-        }
-        /* 最多嘗試 400 次，直到產生符合所有規則的單子 */
-        for (var tries = 0; tries < 400; tries++) {
-            var sheet = []; for (var s = 0; s < S; s++) sheet.push(randRow());
-            /* 挑一對時段，把其中一個改成「只差 1 顆」的近似版本（近似干擾：記憶時最容易混） */
-            /* 挑一對時段，把其中一個改成「只差 1 顆」的近似版本 */
-            var order = kit.shuffle(Array.apply(null, Array(S)).map(function (_, i) { return i; }), rand);
-            var a = order[0], b = order[1];
-            var base = sheet[a], nb = base.slice();
-            var cand = [];
-            for (var k = 0; k < K; k++) {
-                if (nb[k] + 1 <= M) cand.push([k, 1]);
-                if (nb[k] - 1 >= 0) cand.push([k, -1]);
+        var sh = shapeFor(level), S = sh.S, K = sh.K, M = sh.M, T = sh.T, KM = K * M, n = S - 2;
+        var prevKey = prev ? sheetKey(prev.sheet || prev) : null;
+        /* tA 的範圍：2·tA + 1 ＋ 其他列的總顆數（n 列，每列 1～KM 顆）＝ T */
+        var lo = Math.max(1, Math.ceil((T - 1 - n * KM) / 2)), hi = Math.min(KM - 1, Math.floor((T - 1 - n) / 2));
+        for (var tries = 0; tries < 200 && lo <= hi; tries++) {
+            var tA = kit.randInt(lo, hi, rand);
+            var A = fillRow(tA, K, M, rand), open = [];
+            for (var k = 0; k < K; k++) if (A[k] < M) open.push(k);
+            var B = A.slice(); B[kit.pick(open, rand)]++;
+            /* 其餘 n 個時段：每列的顆數在「還能保證剩下的列放得下」的範圍內隨機挑 */
+            var rows = [A, B], rest = T - (2 * tA + 1);
+            for (var i = 0; i < n; i++) {
+                var left = n - i - 1, tmin = Math.max(1, rest - left * KM), tmax = Math.min(KM, rest - left);
+                var ti = kit.randInt(tmin, tmax, rand);
+                rows.push(fillRow(ti, K, M, rand)); rest -= ti;
             }
-            /* shuffle 後用 some 逐一嘗試加或減 1 顆，找到第一個合法的就停（some 回傳 true 會中斷） */
-            kit.shuffle(cand, rand).some(function (c) { var t = nb.slice(); t[c[0]] += c[1]; if (total(t) >= 1) { nb = t; return true; } return false; });
-            if (rowDiff(base, nb) !== 1) continue;
-            sheet[b] = nb;
-            /* 整張單子不能每個時段都一樣 */
-            /* 不能所有時段都一樣（S ≥ 3 時至少有一個不同；S = 2 時兩格本來就差 1 顆）*/
-            var allSame = sheet.every(function (r) { return sameRow(r, sheet[0]); });
-            if (allSame) continue;
-            return { slots: S, kinds: K, sheet: sheet, nearPair: [a, b] };
+            /* 隨機排進各時段，並記下近似那一對的位置 */
+            var order = kit.shuffle(rows.map(function (_, idx) { return idx; }), rand);
+            var sheet = order.map(function (idx) { return rows[idx]; });
+            var a = order.indexOf(0), b = order.indexOf(1);
+            if (prevKey != null && sheetKey(sheet) === prevKey) continue;
+            return { slots: S, kinds: K, maxCnt: M, sheet: sheet, nearPair: [a, b] };
         }
-        /* 保底：理論上不會用到，萬一 400 次都失敗，就給一張固定的簡單單子 */
-        /* 保底（理論上不會用到） */
-        var fb = []; for (var i = 0; i < S; i++) fb.push([1].concat(Array(K - 1).fill(0)));
+        /* 保底：理論上不會用到，萬一都失敗，就給一張固定的簡單單子 */
+        var fb = []; for (var i2 = 0; i2 < S; i2++) fb.push([1].concat(Array(K - 1).fill(0)));
         fb[S - 1] = [1, 1].concat(Array(Math.max(0, K - 2)).fill(0));
-        return { slots: S, kinds: K, sheet: fb, nearPair: [0, S - 1] };
+        return { slots: S, kinds: K, maxCnt: M, sheet: fb, nearPair: [0, S - 1] };
     }
     /* 單子只有 K 種藥丸，補 0 補到 8 種才能和藥盒（8 種）比對 */
     /* 單子的一列補 0 補到 8 種藥丸，才能跟藥盒（8 種）比 */
@@ -210,10 +248,10 @@
             var my = R;
             root.innerHTML = '';
 
-            /* level 關卡；cleared 已過幾關；lives 機會；state 目前階段（show 看單子/fill 填藥盒/judged 已判定）；lvId 關卡流水號 */
-            var level = startAt || 1, cleared = level - 1, lives = LIVES, newRec = false, state = 'idle', lvId = 0;
-            /* Sh 這關的單子；pills 所有藥丸 [{id, kind 種類, where 位置}]，where=-1 在藥盤、0..3 在對應時段的格子；sel 目前選取的格子 */
-            var Sh = null, pills = [], sel = 0, nextId = 1;
+            /* level 關卡；cleared 已過幾關；state 目前階段（show 看單子/fill 填藥盒/judged 已判定）；lvId 關卡流水號 */
+            var level = startAt || 1, cleared = level - 1, newRec = false, state = 'idle', lvId = 0;
+            /* Sh 這關的單子；prevSh 上一關的單子（這一關的單子一定要跟它不一樣）；pills 所有藥丸 [{id, kind 種類, where 位置}]，where=-1 在藥盤、0..3 在對應時段的格子；sel 目前選取的格子 */
+            var Sh = null, prevSh = null, pills = [], sel = 0, nextId = 1;
 
             /* 建立畫面元素：標題、上方面板（先放單子後放藥盤）、藥盒、時間條、按鈕列、拖曳圖層 */
             var head = h('div', { 'class': 'pb-head' });
@@ -227,7 +265,7 @@
             [head, sheetEl, boxEl, tb.el, acts, layer].forEach(function (n) { root.appendChild(n); });
 
             /* 更新標題列右側的小字 */
-            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', '機會 ' + lives])); }
+            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }
 
             /* 統計藥盒每格目前放了什麼：box[時段][藥種]＝顆數 */
             /* 每個格子現在放了哪些藥丸：box[s][k] ＝ 顆數 */
@@ -366,9 +404,11 @@
             function startLevel() {
                 if (my.dead) return;
                 var id = ++lvId;
-                /* 產生這關的單子與藥丸盤 */
-                Sh = makeSheet(level);
+                /* 產生這關的單子（跟上一關不同）與藥丸盤 */
+                Sh = makeSheet(level, null, prevSh); prevSh = Sh;
                 pills = makeTray(Sh.sheet, level).map(function (k) { return { id: nextId++, kind: k, where: -1 }; });
+                /* 藥盒的欄數＝時段數：所有格子排成一列、平分整個寬度 */
+                boxEl.style.gridTemplateColumns = 'repeat(' + Sh.slots + ', minmax(0, 1fr))';
                 sel = 0; state = 'show';
                 head.textContent = '第 ' + level + ' 關　記住每個時段的藥丸';
                 meta();
@@ -376,8 +416,8 @@
                 drawSheet(); drawBox();
                 acts.style.visibility = 'hidden'; boxEl.classList.add('pb-box--dim');
                 /* 主控台印出這關單子與藥盤的實際內容（除錯用） */
-                try { console.info('[分藥盒] 第 ' + level + ' 關 單子：' + Sh.sheet.map(function (r, s) { return SLOT_NAME[s] + '＝' + rowText(r); }).join('；') + '；藥盤共 ' + pills.length + ' 顆（需要 ' + needTotal(Sh.sheet) + ' 顆，其中干擾 ' + pills.filter(function (p) { return p.kind >= 4; }).length + ' 顆）；看 ' + showSec(level).toFixed(1) + ' 秒、填 ' + fillSec(Sh.sheet).toFixed(0) + ' 秒'); } catch (e) { }
-                var t0 = performance.now(), lim = showSec(level) * 1000;
+                try { console.info('[分藥盒] 第 ' + level + ' 關 單子：' + Sh.sheet.map(function (r, s) { return SLOT_NAME[s] + '＝' + rowText(r); }).join('；') + '；藥盤共 ' + pills.length + ' 顆（需要 ' + needTotal(Sh.sheet) + ' 顆，其中干擾 ' + pills.filter(function (p) { return p.kind >= 4; }).length + ' 顆）；看 ' + showSec(level, Sh.sheet).toFixed(1) + ' 秒、填 ' + fillSec(Sh.sheet).toFixed(0) + ' 秒'); } catch (e) { }
+                var t0 = performance.now(), lim = showSec(level, Sh.sheet) * 1000;
                 /* 看單子的倒數時間條 */
                 my.loop(function (now) { if (id !== lvId || state !== 'show') return false; tb.set(1 - (now - t0) / lim); });
                 /* 時間到：蓋掉單子，換成藥丸盤，進入「填藥盒」階段，開始填藥盒的倒數 */
@@ -426,8 +466,7 @@
                     my.after(1400, startLevel);
                     return;
                 }
-                /* 答錯扣一次機會，並列出哪些時段不一樣 */
-                lives--;
+                /* 答錯：一次就結束，並列出哪些時段不一樣 */
                 Sfx.play('bad');
                 var wrong = [];
                 Sh.sheet.forEach(function (r, s) { if (!sameRow(pad(r), box[s])) wrong.push(SLOT_NAME[s] + '：應放 ' + rowText(pad(r)) + '，你放了 ' + rowText(box[s])); });
@@ -436,20 +475,18 @@
                 /* 錯的格子標橘色 */
                 [].forEach.call(boxEl.children, function (c, s) { if (!sameRow(pad(Sh.sheet[s]), box[s])) c.classList.add('pb-cell--bad'); });
                 meta();
-                /* 沒有機會了 → 顯示結算 */
-                if (lives <= 0) {
-                    my.after(2200, function () {
-                        /* kit.resumeFrom：失敗後可從前 5 關繼續 */
-                        var back = kit.resumeFrom(level);
-                        kit.result(root, {
-                            score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
-                            num: cleared + ' 關', label: cleared >= 8 ? '細心的好幫手！' : (cleared >= 4 ? '記得很清楚！' : '再試一次，會更準！'),
-                            lines: wrong.slice(0, 3), note: '藥丸是虛構的圖案，不是用藥建議；遊戲成績，不是醫療檢查',
-                            isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail', onAgain: function () { round(1); },
-                            resume: { level: back, run: function () { round(back); } }
-                        });
+                /* 顯示結算 */
+                my.after(2200, function () {
+                    /* kit.resumeFrom：失敗後可從前 5 關繼續 */
+                    var back = kit.resumeFrom(level);
+                    kit.result(root, {
+                        score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
+                        num: cleared + ' 關', label: cleared >= 8 ? '細心的好幫手！' : (cleared >= 4 ? '記得很清楚！' : '再試一次，會更準！'),
+                        lines: wrong.slice(0, 3), note: '藥丸是虛構的圖案，不是用藥建議；遊戲成績，不是醫療檢查',
+                        isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail', onAgain: function () { round(1); },
+                        resume: { level: back, run: function () { round(back); } }
                     });
-                } else my.after(2200, startLevel);
+                });
             }
             /* 「清空這格」：把目前選取格子的藥丸全部放回藥盤 */
             clear.addEventListener('pointerdown', function (e) { e.preventDefault(); if (state === 'fill') { pills.forEach(function (p) { if (p.where === sel) p.where = -1; }); Sfx.play('click'); redraw(); } });
@@ -458,7 +495,7 @@
 
             /* G.debug：測試用後門，fill() 可以一鍵把藥丸依單子放好 */
             G.debug = {
-                state: function () { return { level: level, state: state, lives: lives, cleared: cleared, sheet: Sh && Sh.sheet, box: Sh && boxCounts(), sel: sel, tray: pills.filter(function (p) { return p.where < 0; }).length, pills: pills.length }; },
+                state: function () { return { level: level, state: state, cleared: cleared, sheet: Sh && Sh.sheet, box: Sh && boxCounts(), sel: sel, tray: pills.filter(function (p) { return p.where < 0; }).length, pills: pills.length }; },
                 /* 依單子把藥丸放進藥盒（wrong＝true 時故意放一顆干擾藥丸進第一格）*/
                 fill: function (wrong) {
                     if (state !== 'fill') return state;
@@ -485,12 +522,12 @@
     var G = {
         id: ID,
         name: '分藥盒',
-        rule: '先看吃藥單，**記住每個時段有哪些顏色、什麼形狀、幾顆藥丸**。單子收起來後，上面會出現一堆藥丸（還混了顏色或形狀不一樣的干擾藥丸，數量也故意多放），用手指把正確的藥丸拖曳到下面藥盒的格子，按「好了」。藥丸是虛構的圖案，**這是記憶遊戲，不是用藥建議**。',
+        rule: '先看吃藥單，**記住每個時段有哪些顏色、什麼形狀、幾顆藥丸**。單子收起來後，上面會出現一堆藥丸（還混了顏色或形狀不一樣的干擾藥丸，數量也故意多放），用手指把正確的藥丸拖曳到下面藥盒的格子，按「好了」。藥丸是虛構的圖案，**這是記憶遊戲，不是用藥建議**。越後面單子上的藥丸越多，**填錯一次就結束**。',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,
         /* test 匯出純函式，給 Node 自動測試（test/reaction/t_pillbox.js）用 */
-        test: { MAX_TRAY: MAX_TRAY, makeTray: makeTray, extraMax: extraMax, decoyKinds: decoyKinds, needTotal: needTotal, pad: pad, N_KINDS: N_KINDS, KIND_NAME: KIND_NAME, EXTRA_END: EXTRA_END, slotCount: slotCount, kindCount: kindCount, maxCnt: maxCnt, showSec: showSec, fillSec: fillSec, makeSheet: makeSheet, judge: judge, rowDiff: rowDiff, sameRow: sameRow, total: total, LEVEL_RAMP: LEVEL_RAMP }
+        test: { MAX_TRAY: MAX_TRAY, makeTray: makeTray, extraMax: extraMax, decoyKinds: decoyKinds, needTotal: needTotal, pad: pad, N_KINDS: N_KINDS, KIND_NAME: KIND_NAME, EXTRA_END: EXTRA_END, slotCount: slotCount, kindCount: kindCount, maxCnt: maxCnt, perPill: perPill, showSec: showSec, fillSec: fillSec, pillTarget: pillTarget, shapeFor: shapeFor, sheetKey: sheetKey, makeSheet: makeSheet, judge: judge, rowDiff: rowDiff, sameRow: sameRow, total: total, LEVEL_RAMP: LEVEL_RAMP, SHOW_BASE: SHOW_BASE, PILLS_START: PILLS_START, PILLS_STEP: PILLS_STEP, PILLS_MAX: PILLS_MAX, HEADROOM: HEADROOM }
     };
     /* 登記到遊戲清單 */
     Reaction.register(G);

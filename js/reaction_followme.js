@@ -6,6 +6,9 @@
    小人站在終點就成功。走進陷阱格就失敗（失敗或過關時，陷阱才會顯示出來）。
    ───────────────────────────────────────────────────────────────────
    · 按鈕：左方＝往左走一格、前進＝往上走一格、右方＝往右走一格（不能後退）。走出地圖外的按鈕沒有作用，也不扣步數。
+   · 結果要等小人「真的走到格子正中央」才揭曉：判定雖然在按下按鈕的瞬間就決定了，但是走進陷阱、或走完最後一步的時候，
+     旗子與全部陷阱要等小人走完這一格（CSS 移動動畫播完，whenArrived）才顯示，不會小人還在路上就先看到結果；
+     這段時間按鈕鎖住（state＝'moving'）。
    · 陷阱怎麼放（makeTraps：**用陷阱「逼」路線轉彎**）：
         陷阱排成一道道「牆」，放在起點與終點之間，牆之間隔一列空地（讓小人可以橫著走）：
         每道牆是一整列，只留 1 格缺口；缺口一左一右輪流開在地圖的最外側（欄 0～1／最右 2 欄），
@@ -283,6 +286,16 @@
                 });
             }
 
+            /* 等小人走到格子正中央（setMan 的 CSS 移動動畫播完）才呼叫 fn。
+               主要靠 transitionend 事件；保底計時器（動畫時間＋150 毫秒）防止事件沒有觸發（例如分頁在背景），兩者只會有一個真的執行 */
+            function whenArrived(fn) {
+                var done = false;
+                function go() { if (done) return; done = true; man.removeEventListener('transitionend', onEnd); fn(); }
+                function onEnd(e) { if (e.propertyName === 'transform') go(); }
+                man.addEventListener('transitionend', onEnd);
+                my.after(DEMO_STEP_MS * 0.8 + 150, go);
+            }
+
             /* 玩家按了方向鈕 m */
             function press(m) {
                 if (state !== 'play') return;
@@ -292,17 +305,21 @@
                 pos = { r: nr, c: nc };
                 remain--;
                 setMan(nr, nc, true);
-                /* 踩到陷阱：立刻失敗 */
-                if (L.traps[cellKey(nr, nc)]) { finish(false, 'trap'); return; }
-                Sfx.play('click');
                 paintHead();
-                /* 步數用完：站在終點才算成功 */
-                if (remain <= 0) finish(pos.r === L.target.r && pos.c === L.target.c, 'steps');
+                var trap = !!L.traps[cellKey(nr, nc)];
+                /* 踩到陷阱、或這是最後一步（步數用完）：這一步會決定結果。先把按鈕鎖住，等小人真的走到這一格的正中央才揭曉
+                   （最後一步：站在終點才算成功） */
+                if (trap || remain <= 0) {
+                    state = 'moving'; setButtons(false);
+                    whenArrived(function () { finish(!trap && pos.r === L.target.r && pos.c === L.target.c, trap ? 'trap' : 'steps'); });
+                    return;
+                }
+                Sfx.play('click');
             }
 
-            /* 一關結束：顯示旗子與全部陷阱 */
+            /* 一關結束：顯示旗子與全部陷阱（呼叫的時候小人已經站在格子正中央） */
             function finish(ok, why) {
-                if (state !== 'play') return;
+                if (state !== 'play' && state !== 'moving') return;
                 state = 'end'; setButtons(false);
                 flag.setAttribute('opacity', 1);
                 showTraps(true);                           /* 結束：陷阱的位置全部亮出來 */
@@ -338,10 +355,10 @@
 
             /* G.debug：測試用後門，play() 可以依示範路線一次按完 */
             G.debug = {
-                state: function () { return { level: level, state: state, remain: remain, pos: pos, L: L, cleared: cleared }; },
+                state: function () { return { level: level, state: state, remain: remain, pos: pos, L: L, cleared: cleared, flagShown: flag.getAttribute('opacity') === '1', trapsShown: Object.keys(trapEls).some(function (k) { return trapEls[k].getAttribute('opacity') === '1'; }) }; },
                 press: press,
                 waitPlay: function () { return state; },
-                /* 依示範路線（或自訂走法）按完 */
+                /* 依示範路線（或自訂走法）按完（最後一步之後 state 是 'moving'，小人走到定位才變成 'end'） */
                 play: function (moves) { (moves || L.path).forEach(function (m) { press(m); }); return state; }
             };
             /* 開場等 300 毫秒再開始第一關 */

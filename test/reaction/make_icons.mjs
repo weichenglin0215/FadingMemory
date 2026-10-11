@@ -31,7 +31,7 @@ const only = args.filter(a => !a.startsWith('--'));
 // 有些遊戲「第 3 秒」剛好是空畫面或準備階段，不夠有特色：在這裡個別指定要等幾毫秒（從按下「開始挑戰」那一刻起算）
 const WAIT = {
   speed: 2000,          // 零秒出手：第 3 秒左右數字還看得清楚（4.0000 秒才開始漸漸變透明）
-  rainbow: 1300,        // 七彩陷阱：太晚就變成「超時了」的結算畫面
+  rainbow: 3300,        // 七彩陷阱：V1.24 起第一格出現前要先倒數 3、2、1（約 2.7 秒），要等紅色方塊出現才有看頭；太晚就變成「超時了」的結算畫面
   rps: 1300,            // 猜拳必贏：太晚就變成「慢出了」
   
   dicechange: 1500,     // 骰子少一點：前 2.6 秒是亮出骰子的記憶階段，之後會蓋住
@@ -47,7 +47,8 @@ const WAIT = {
 // ─── 遊戲清單：讀 js/menu.js 的 GAME_CELLS（id 與名稱）───
 function gameIds() {
   const src = fs.readFileSync(path.join(ROOT, 'js/menu.js'), 'utf8');
-  return [...src.matchAll(/\{\s*id:\s*'([a-z0-9]+)',\s*name:\s*'([^']+)',\s*img:/g)].map(m => ({ id: m[1], name: m[2] }));
+  // V1.23 起每一格多了 cat（分類）欄位，所以 name 和 img 中間可能夾著 cat: '…',
+  return [...src.matchAll(/\{\s*id:\s*'([a-z0-9]+)',\s*name:\s*'([^']+)',\s*(?:cat:\s*'[a-z]+',\s*)?img:/g)].map(m => ({ id: m[1], name: m[2] }));
 }
 
 async function shoot(cdp, game) {

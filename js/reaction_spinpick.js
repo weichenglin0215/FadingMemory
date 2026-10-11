@@ -1,16 +1,21 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_spinpick.js — 秒反應・轉盤停哪格（企劃 218，指針版）
    圓盤正中央有一根旋轉的指針，底下的圓盤像披薩一樣切成好幾格（每格顏色不同）。指針一開始轉得很快，然後慢慢減速、
-   最後停下來。可是從「最後 3 秒」開始，指針會漸漸變成半透明，「最後第 2 秒」完全看不見，等到第 0 秒，
-   中央會出現「請點擊指針指向哪個方向」——請憑指針減速的節奏，推測它最後停在哪一格，點那一格。
+   最後停下來。可是指針會在「不固定的時間點」漸漸變成半透明、然後完全看不見（每一關都不一樣，有時候提早很多），
+   等到停住，中央會出現「請點擊指針指向哪個方向」——請憑指針減速的節奏，推測它最後停在哪一格，點那一格。
    關卡制：點錯或來不及就結束，成績＝通過幾關。第一關圓盤只切成左右兩格，越後面切得越多。
    ───────────────────────────────────────────────────────────────────
    · 指針的角度是時間的純函式（規範 T3）：等減速運動  θ(t) ＝ θ0 ＋ ω0·t − ½·α·t²（α＝ω0÷T，所以剛好在 T 秒停住）。
      θ 是從正上方順時針量的角度（度）；第 k 格涵蓋 [k·360/N, (k+1)·360/N)，第 0 格在右上到右下（N＝2 時就是右半邊）。
    · 出題（規範 Q1、Q15）：先決定「停在第幾格、格內的哪個位置」（離格線至少 20％的格寬），再由 θ_終 ＝ θ0 ＋ ω0·T÷2 反推起始角度 θ0；
      所以答案絕對不會剛好落在格線上，判定不會有爭議。
-   · 難度線性（RAMP_LEVELS 關走到頂）：格數 2 → 12；起轉速度 1.5 → 0.9 圈／秒（越後面轉越慢，看不見的最後 2 秒掃過的角度較小，
-     但格子更小，所以仍然越來越難）；作答限時 6 → 4 秒。旋轉總時間固定 T ＝ 5 秒（看得見 2 秒、漸隱 1 秒、看不見 2 秒）。
+   · 玩家說「太簡單：只要選指針消失位置的 180 度正對面就對了」，因為指針的轉速、消失的時間點每次幾乎都一樣。所以：
+        ① 消失的時間點「不定時提前」：指針完全看不見的時刻，原本固定在停住前 2 秒（FADE_END_BASE），現在每一關再隨機提前 0～earlyMax 秒
+           （第 1 關最多 0.4 秒、第 RAMP_LEVELS 關最多 1.2 秒，EARLY），漸隱的時間固定 FADE_DUR（1 秒）。
+           看不見之後指針還會掃過的角度＝ ω0 × 剩餘時間² ÷ (2T)，剩餘時間每關不一樣，掃過的角度就不一樣，固定的「180 度」猜法行不通；
+        ② 轉速每一關慢慢提高：起轉速度 1.2 → 2.6 圈／秒（原本是 1.5 → 0.9，越後面越慢）。
+   · 難度線性（RAMP_LEVELS 關走到頂）：格數 2 → 12；起轉速度 1.2 → 2.6 圈／秒；最多提前 0.4 → 1.2 秒；作答限時 6 → 4 秒。
+     旋轉總時間固定 T ＝ 5 秒。
    · 揭曉：指針重新出現在停住的位置，正確那一格加粗框；選錯的那一格用橘紅框標出。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
@@ -23,9 +28,11 @@
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 20;                       /* 幾關之後難度到頂 */
     var SECTORS = [2, 12];                      /* 圓盤切成幾格：第 1 關 → 到頂 */
-    var OMEGA_REV = [1.5, 0.9];                 /* 指針起轉速度（圈／秒）：第 1 關 → 到頂 */
+    var OMEGA_REV = [1.2, 2.6];                 /* 指針起轉速度（圈／秒）：第 1 關 → 到頂（越後面越快；原本 1.5 → 0.9） */
     var SPIN_S = 5;                             /* 指針從起轉到停住的總秒數 */
-    var FADE_START = 3, FADE_END = 2;           /* 剩幾秒時開始漸隱／完全看不見（企劃指定：最後 3 秒起半透明、最後第 2 秒全透明） */
+    var FADE_DUR = 1.0;                         /* 指針從「開始變透明」到「完全看不見」花幾秒 */
+    var FADE_END_BASE = 2.0;                    /* 指針「完全看不見」的時刻（離停住還剩幾秒）最少是這麼多（原本固定是 2.0；企劃：最後第 2 秒全透明） */
+    var EARLY = [0.4, 1.2];                     /* 再「不定時提前」的隨機範圍上限（秒）：第 1 關 → 到頂；每一關在 0 ～ 上限之間隨機 */
     var ANS_S = [6, 4];                         /* 停住之後的作答限時（秒）：第 1 關 → 到頂 */
     var MARGIN = 0.2;                           /* 停點離格線至少多遠（格寬的幾分之幾） */
     var DISC_R = 190, NEEDLE_R = 168, DEAD_R = 54;   /* 圓盤半徑、指針長度、中央不能點的半徑 */
@@ -42,12 +49,20 @@
         var tt = Math.min(Math.max(t, 0), sp.T), alpha = sp.omega0 / sp.T;
         return sp.theta0 + sp.omega0 * tt - 0.5 * alpha * tt * tt;
     }
-    /* 指針的不透明度：剩餘時間 ≥ FADE_START → 1；FADE_START → FADE_END 之間線性漸隱；≤ FADE_END → 0 */
-    function alphaAt(t, T) {
-        var rem = T - t;
-        if (rem >= FADE_START) return 1;
-        if (rem <= FADE_END) return 0;
-        return (rem - FADE_END) / (FADE_START - FADE_END);
+    /* 這一關「最多可以再提前幾秒」（線性：第 1 關 0.4 → 第 RAMP_LEVELS 關 1.2） */
+    function earlyMax(level) { return kit.ramp(level, EARLY[0], EARLY[1], RAMP_LEVELS); }
+    /* 這一關指針消失的時間點（都是「離停住還剩幾秒」）：完全看不見的時刻 fadeEnd ＝ FADE_END_BASE ＋ 隨機提前 0～earlyMax，
+       開始變透明的時刻 fadeStart ＝ fadeEnd ＋ FADE_DUR */
+    function fadeTimes(level, rand) {
+        var end = FADE_END_BASE + (rand || Math.random)() * earlyMax(level);
+        return { fadeEnd: end, fadeStart: end + FADE_DUR };
+    }
+    /* 指針的不透明度：剩餘時間 ≥ sp.fadeStart → 1；fadeStart → fadeEnd 之間線性漸隱；≤ fadeEnd → 0（sp 是 makeSpin 的結果） */
+    function alphaAt(t, sp) {
+        var rem = sp.T - t;
+        if (rem >= sp.fadeStart) return 1;
+        if (rem <= sp.fadeEnd) return 0;
+        return (rem - sp.fadeEnd) / (sp.fadeStart - sp.fadeEnd);
     }
     /* 角度 theta 落在 N 格裡的第幾格 */
     function sectorOf(theta, N) { return Math.floor(norm360(theta) / (360 / N)) % N; }
@@ -57,8 +72,8 @@
         var N = sectorsFor(level), w = 360 / N;
         var s = kit.randInt(0, N - 1, rand), offset = kit.randFloat(MARGIN, 1 - MARGIN, rand);
         var thetaF = s * w + offset * w, omega0 = omegaFor(level);
-        var theta0 = norm360(thetaF - omega0 * SPIN_S / 2);
-        return { N: N, s: s, thetaF: thetaF, theta0: theta0, omega0: omega0, T: SPIN_S, offset: offset };
+        var theta0 = norm360(thetaF - omega0 * SPIN_S / 2), fd = fadeTimes(level, rand);
+        return { N: N, s: s, thetaF: thetaF, theta0: theta0, omega0: omega0, T: SPIN_S, offset: offset, fadeEnd: fd.fadeEnd, fadeStart: fd.fadeStart };
     }
     function rating(n) {
         if (n >= 20) return '轉盤預言家！';
@@ -82,7 +97,7 @@
         var stage = api.stage, level = api.level;
         var sp = makeSpin(level, api.rand), N = sp.N, w = 360 / N;
         api.info = sp;
-        console.log('[轉盤停哪格] 第 ' + level + ' 關：' + N + ' 格，停在第 ' + (sp.s + 1) + ' 格（格內 ' + (sp.offset * 100).toFixed(1) + '％）；起轉 ' + sp.omega0.toFixed(2) + ' 度/秒，起始角 ' + sp.theta0.toFixed(2) + ' 度，終點角 ' + sp.thetaF.toFixed(2) + ' 度；限時 ' + ansMs(level) + ' ms');
+        console.log('[轉盤停哪格] 第 ' + level + ' 關：' + N + ' 格，停在第 ' + (sp.s + 1) + ' 格（格內 ' + (sp.offset * 100).toFixed(1) + '％）；起轉 ' + sp.omega0.toFixed(2) + ' 度/秒，起始角 ' + sp.theta0.toFixed(2) + ' 度，終點角 ' + sp.thetaF.toFixed(2) + ' 度；離停住 ' + sp.fadeStart.toFixed(2) + ' 秒時開始變透明、' + sp.fadeEnd.toFixed(2) + ' 秒時完全看不見（看不見之後還會掃過 ' + (thetaAt(sp, sp.T) - thetaAt(sp, sp.T - sp.fadeEnd)).toFixed(1) + ' 度）；限時 ' + ansMs(level) + ' ms');
 
         var W = stage.clientWidth || 472, cx = W / 2, cy = CENTER_Y;
         var svg = kit.svg('svg', { 'class': 'spk-svg', viewBox: '0 0 ' + W + ' 640', width: W, height: 640 }, stage);
@@ -106,7 +121,7 @@
         var phase = 'spin', t0 = performance.now();
         function paint(t) {
             needle.setAttribute('transform', 'rotate(' + thetaAt(sp, t).toFixed(3) + ' ' + cx + ' ' + cy + ')');
-            needle.setAttribute('opacity', alphaAt(t, sp.T).toFixed(3));
+            needle.setAttribute('opacity', alphaAt(t, sp).toFixed(3));
         }
         paint(0);
         var loop = api.my.loop(function () {
@@ -155,12 +170,12 @@
     var G = {
         id: ID,
         name: '轉盤停哪格',
-        rule: '圓盤中央的指針會轉動並慢慢減速到停住。但從最後 3 秒開始，指針會漸漸變透明，**最後 2 秒完全看不見**。請憑它減速的節奏，**推測它最後停在哪一格，點那一格**。點錯或來不及就結束，看你能過幾關。越後面，圓盤切得越多格！',
+        rule: '圓盤中央的指針會轉動並慢慢減速到停住。但指針會在**不固定的時間點**漸漸變透明、**完全看不見**（每一關消失的時間都不一樣，有時候提早很多）。請憑它減速的節奏，**推測它最後停在哪一格，點那一格**。越後面，指針轉得越快、圓盤切得越多格！點錯或來不及就結束，看你能過幾關。',
         mount: mount,
         score: SCORE,
         test: {
-            sectorsFor: sectorsFor, omegaFor: omegaFor, ansMs: ansMs, norm360: norm360, thetaAt: thetaAt, alphaAt: alphaAt, sectorOf: sectorOf, makeSpin: makeSpin, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, SECTORS: SECTORS, OMEGA_REV: OMEGA_REV, SPIN_S: SPIN_S, FADE_START: FADE_START, FADE_END: FADE_END, MARGIN: MARGIN, MAX_LEVEL: MAX_LEVEL
+            sectorsFor: sectorsFor, omegaFor: omegaFor, ansMs: ansMs, norm360: norm360, thetaAt: thetaAt, alphaAt: alphaAt, earlyMax: earlyMax, fadeTimes: fadeTimes, sectorOf: sectorOf, makeSpin: makeSpin, rating: rating,
+            RAMP_LEVELS: RAMP_LEVELS, SECTORS: SECTORS, OMEGA_REV: OMEGA_REV, SPIN_S: SPIN_S, FADE_DUR: FADE_DUR, FADE_END_BASE: FADE_END_BASE, EARLY: EARLY, MARGIN: MARGIN, MAX_LEVEL: MAX_LEVEL
         }
     };
     Reaction.register(G);

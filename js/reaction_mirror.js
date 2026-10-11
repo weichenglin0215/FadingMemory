@@ -8,7 +8,7 @@
    · 通道：從上到下的折線，兩端固定，中間有 bends 個彎（1 → 5）。每個彎的轉角 ≤ MAX_TURN_DEG(100°)，
      通道半寬 hw 64 → 30px；通道用「折線粗描邊」畫成，判定用「球心到折線的距離 ≤ hw − 球半徑」，
      所以畫的跟判的是同一個形狀。最窄時手指的容許誤差約 (hw − 球半徑) ÷ gain ＝ 11px，這是刻意的極限難度。
-   · 碰到牆（球出了通道）→ 球回到起點，累計一次；累計 BUMPS 次結束。到終點圈圈就過關。
+   · 碰到牆（球出了通道）就結束（沒有「碰牆次數」的機會）。到終點圈圈就過關。
    · 成績＝通過關數（越多越好）。不限時。
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -34,7 +34,6 @@
     /* 第幾關起「上下」也顛倒 */
     var FLIP_BOTH_FROM = 8;                    /* 第幾關起上下也反 */
     var BALL_R = 14;
-    var BUMPS = 3;
     /* 每個彎最多轉幾度，避免太銳利轉不過去 */
     var MAX_TURN_DEG = 100;
     var MARGIN_Y = 46, MARGIN_X = 6;
@@ -121,8 +120,8 @@
             var my = R;
             root.innerHTML = '';
 
-            /* level 關卡；cleared 已過幾關；bumps 碰牆次數；state 目前狀態；lvId 關卡流水號 */
-            var level = startAt || 1, cleared = level - 1, bumps = 0, newRec = false, state = 'idle', lvId = 0;
+            /* level 關卡；cleared 已過幾關；state 目前狀態；lvId 關卡流水號 */
+            var level = startAt || 1, cleared = level - 1, newRec = false, state = 'idle', lvId = 0;
             /* pts 通道中心線的點；ball 球的位置；hw 通道半寬；FW／FH 場地大小 */
             var pts = null, ball = { x: 0, y: 0 }, hw = 60, FW = 0, FH = 0;
             /* 建立畫面元素 */
@@ -133,7 +132,7 @@
             var svg = null, ballEl = null, goalEl = null, ghost = null;
 
             /* 更新標題列右側的小字 */
-            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', '碰牆 ' + bumps + '／' + BUMPS])); }
+            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }
 
             /* 畫出通道、起點、終點、球 */
             function build() {
@@ -175,26 +174,21 @@
                 try { console.info('[左右顛倒] 第 ' + level + ' 關：通道半寬 ' + hw.toFixed(1) + 'px、彎 ' + bendsFor(level) + ' 個、增益 ' + gainFor(level).toFixed(2) + '、上下' + (flipBoth(level) ? '也反' : '正常') + '、手指容許誤差約 ±' + ((hw - BALL_R) / gainFor(level)).toFixed(1) + 'px'); } catch (e) { }
             }
 
-            /* 碰牆：計一次，全部碰牆次數達上限就失敗，否則球回到起點 */
+            /* 碰牆：一次就結束（球出了通道的那一下通道會閃紅，稍後顯示結算） */
             function bump() {
                 state = 'bump';
-                bumps++;
                 Sfx.play('bad');
                 svg.classList.add('mr-svg--bump');
                 meta();
-                if (bumps >= BUMPS) {
-                    my.after(700, function () {
-                        var back = kit.resumeFrom(level);
-                        kit.result(root, {
-                            score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
-                            num: cleared + ' 關', label: cleared >= 8 ? '腦袋轉得真快！' : (cleared >= 4 ? '適應得不錯！' : '再試一次，會更順！'),
-                            lines: ['第 ' + level + ' 關碰牆 ' + BUMPS + ' 次'], isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail', onAgain: function () { round(1); },
-                            resume: { level: back, run: function () { round(back); } }
-                        });
+                my.after(700, function () {
+                    var back = kit.resumeFrom(level);
+                    kit.result(root, {
+                        score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
+                        num: cleared + ' 關', label: cleared >= 8 ? '腦袋轉得真快！' : (cleared >= 4 ? '適應得不錯！' : '再試一次，會更順！'),
+                        lines: ['第 ' + level + ' 關碰到牆了'], isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail', onAgain: function () { round(1); },
+                        resume: { level: back, run: function () { round(back); } }
                     });
-                    return;
-                }
-                my.after(600, function () { svg.classList.remove('mr-svg--bump'); setBall(pts[0].x, pts[0].y); state = 'play'; });
+                });
             }
             /* 到達終點：過關 */
             function win() {
@@ -256,7 +250,7 @@
 
             /* G.debug：測試用後門，solve 可以用真的 PointerEvent 反推手指軌跡讓球走到終點 */
             G.debug = {
-                state: function () { return { level: level, state: state, bumps: bumps, cleared: cleared, ball: { x: ball.x, y: ball.y }, pts: pts, hw: hw }; },
+                state: function () { return { level: level, state: state, cleared: cleared, ball: { x: ball.x, y: ball.y }, pts: pts, hw: hw }; },
                 /* 用真的 PointerEvent 讓球沿著中心線走到終點（反推手指要怎麼動）*/
                 solve: function () {
                     var rect = field.getBoundingClientRect(), sc = rect.width / FW;
@@ -294,7 +288,7 @@
     var G = {
         id: ID,
         name: '左右顛倒',
-        rule: '**手指往右，球卻往左**（左右是反的）。拖動手指，帶小球沿著通道走到終點，不要碰到牆。**碰牆三次就結束**，越後面通道越窄、控制越反！',
+        rule: '**手指往右，球卻往左**（左右是反的）。拖動手指，帶小球沿著通道走到終點，不要碰到牆。**碰到牆就結束**，越後面通道越窄、控制越反！',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,

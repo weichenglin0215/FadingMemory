@@ -3,11 +3,14 @@ const G = game('reaction_backnum.js'); const T = G.test;
 let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log('FAIL', m); } };
 const near = (a, b, e) => Math.abs(a - b) < (e || 1e-9);
 
-// 第 1 關 3 個，每關 +1
-ok(T.seqLen(1) === 3 && T.seqLen(2) === 4 && T.seqLen(10) === 12, 'seqLen');
-// 錯誤機會：第 1 關 1 次，之後每 3 關 +1（第 4 關 2 次、第 7 關 3 次）
-const exp = { 1: 1, 2: 1, 3: 1, 4: 2, 5: 2, 6: 2, 7: 3, 10: 4, 13: 5 };
-for (const l in exp) ok(T.chances(+l) === exp[l], 'chances level ' + l + ' = ' + T.chances(+l));
+// 第 1、2 關 3 個，之後每過兩關才多 1 個（第 3、4 關 4 個、第 5、6 關 5 個…）
+ok(T.SEQ_START === 3 && T.SEQ_EVERY === 2, 'SEQ_START / SEQ_EVERY');
+const exp = { 1: 3, 2: 3, 3: 4, 4: 4, 5: 5, 6: 5, 7: 6, 8: 6, 9: 7, 10: 7, 20: 12, 21: 13 };
+for (const l in exp) ok(T.seqLen(+l) === exp[l], 'seqLen level ' + l + ' = ' + T.seqLen(+l) + '（應為 ' + exp[l] + '）');
+// 長度只會不變或 +1，而且「連續兩關」才加一個
+for (let l = 1; l < 60; l++) { const d = T.seqLen(l + 1) - T.seqLen(l); ok(d === 0 || d === 1, 'seqLen step 0/1 at ' + l); ok(d === (l % 2 === 0 ? 1 : 0), 'seqLen grows right after every second level (level ' + l + ')'); }
+// 沒有「機會」這個概念了：按錯一次就結束
+ok(T.chances === undefined, 'chances() 已取消（按錯一次就結束）');
 // 亮燈速度線性
 ok(near(T.litSec(1), 0.7) && near(T.litSec(15), 0.45) && near(T.litSec(8), 0.575, 1e-9) && T.litSec(50) === T.litSec(15), 'litSec linear');
 // 序列

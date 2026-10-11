@@ -5,7 +5,7 @@ const want = [10, 8, 6, 4, 2, 1, 1, 1, 67];
 let randCount = [], kindsSeen = {}, lastDigitSame = 0, lastDigitN = 0, tail2ExcludeRate = 0, N = 0;
 for (let k = 0; k < 400; k++) {
   const { A, deck } = T.makeDeck(); N++;
-  ok(deck.length === 100, 'deck 100 got ' + deck.length);
+  ok(deck.length === 100 && T.BATCH === 100, 'deck 100 got ' + deck.length);
   const cnt = Array(9).fill(0); deck.forEach(d => cnt[d.btn]++);
   ok(JSON.stringify(cnt) === JSON.stringify(want), 'counts ' + cnt);
   ok(new Set(deck.map(d => d.num)).size === deck.length, 'unique numbers');
@@ -47,6 +47,35 @@ ok(lastDigitSame / lastDigitN > 0.55, 'the last digit alone rules out few invoic
 ok(T.suffixMatch('12345678', '99945678') === 5, 'suffix 5'); ok(T.suffixMatch('12345678', '12345679') === 0, 'suffix 0');
 ok(T.classify('88888863', { F: '71524863', S1: '09375126', S2: '48260917' }) === 0, '六獎'); ok(T.classify('71524863', { F: '71524863', S1: '09375126', S2: '48260917' }) === 5, '一獎');
 ok(T.tailOverlap('00000123', '99999321') === 3 && T.tailOverlap('00000124', '99999321') === 2 && T.tailOverlap('00000999', '99999321') === 0, 'tailOverlap counts shared digits as a multiset');
-// 時間線性
-ok(Math.abs(T.timeFor(1) - 10) < 1e-9 && Math.abs(T.timeFor(100) - 4) < 1e-9 && Math.abs(T.timeFor(50.5) - 7) < 1e-9, 'time linear');
+// 時間：第 1 張 10 秒，每一張少 0.25 秒，最短 3 秒（原本 100 張才從 10 秒縮到 4 秒，現在縮得快很多、而且越後面越短）
+ok(T.TIME_START === 10 && T.TIME_STEP === 0.25 && T.TIME_MIN === 3, 'time constants');
+ok(Math.abs(T.timeFor(1) - 10) < 1e-9 && Math.abs(T.timeFor(2) - 9.75) < 1e-9 && Math.abs(T.timeFor(21) - 5) < 1e-9 && Math.abs(T.timeFor(29) - 3) < 1e-9 && T.timeFor(30) === 3 && T.timeFor(500) === 3, 'time 10 → 3 seconds, 0.25 s less per invoice');
+for (let i = 2; i <= 60; i++) ok(T.timeFor(i) <= T.timeFor(i - 1) + 1e-12 && T.timeFor(i) >= 3, 'time never grows, never below 3 s');
+ok(T.timeFor(100) > 2.9 && (T.timeFor(1) - T.timeFor(2)) > 0.06 * 3, 'the limit shrinks much faster than the old 0.06 s per invoice');
+// 沒有張數上限：第一批 100 張用完會再補，開獎號碼不變、號碼不重複、不再含特別獎／一獎那三張
+{
+  for (let k = 0; k < 40; k++) {
+    const D = T.makeDeck(), A = D.A, all = D.deck.slice();
+    ok(all.length === 100 && D.used && Object.keys(D.used).length === 100, 'first batch of 100, used set is kept');
+    for (let b = 1; b <= 3; b++) {
+      const more = T.moreDeck(D);
+      ok(more.length >= 90 && more.length <= 97, 'batch ' + (b + 1) + ' has about 97 invoices (the 3 exact-match ones are not repeated): ' + more.length);
+      const cnt = Array(9).fill(0); more.forEach(d => cnt[d.btn]++);
+      ok(cnt[5] === 0 && cnt[6] === 0 && cnt[7] === 0, 'no 一獎／特別獎 invoices in later batches');
+      more.forEach(d => { ok(/^\d{8}$/.test(d.num) && T.classify(d.num, A) === d.btn, 'classify consistent in later batches'); });
+      all.push.apply(all, more);
+    }
+    ok(new Set(all.map(d => d.num)).size === all.length, 'every invoice number is unique across batches (' + all.length + ')');
+    ok(all.length >= 380, 'four batches give at least 380 invoices: ' + all.length);
+  }
+}
+// 按鈕順序：沒中獎（索引 8）在最上面，接著六獎到一獎、兩個特別獎；每個按鈕只出現一次
+ok(JSON.stringify(T.BTN_ORDER) === '[8,0,1,2,3,4,5,6,7]' && new Set(T.BTN_ORDER).size === 9 && T.BTNS[T.BTN_ORDER[0]].name === '沒中獎' && T.BTNS[T.BTN_ORDER[1]].name === '六獎', '沒中獎在最上面（最小獎六獎的上方）');
+// 獎金：依統一發票的獎金，越大的獎金額越高；沒中獎 0；格式化加千分位
+{
+  const amt = {}; T.BTNS.forEach(b => amt[b.name] = b.amount);
+  ok(amt['六獎'] === 200 && amt['五獎'] === 1000 && amt['四獎'] === 4000 && amt['三獎'] === 10000 && amt['二獎'] === 40000 && amt['一獎'] === 200000 && amt['一號特別獎'] === 10000000 && amt['二號特別獎'] === 2000000 && amt['沒中獎'] === 0, 'prize amounts');
+  ok(amt['六獎'] < amt['五獎'] && amt['五獎'] < amt['四獎'] && amt['四獎'] < amt['三獎'] && amt['三獎'] < amt['二獎'] && amt['二獎'] < amt['一獎'] && amt['一獎'] < amt['二號特別獎'] && amt['二號特別獎'] < amt['一號特別獎'], 'bigger prize pays more');
+  ok(T.fmtMoney(0) === '$0' && T.fmtMoney(200) === '$200' && T.fmtMoney(1000) === '$1,000' && T.fmtMoney(12345678) === '$12,345,678' && T.fmtMoney(200) !== T.fmtMoney(2000), 'fmtMoney');
+}
 console.log(bad ? 'FAILED ' + bad : 'ALL PASS');

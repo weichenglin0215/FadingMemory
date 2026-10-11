@@ -13,6 +13,9 @@
      所以細調很容易、大調也不會太慢）。可以同時按好幾顆（多指）。
    · 紅綠藍各 0～255，用畫面上實際顯示的（四捨五入後）顏色算差異度，所以可以真的剛好 0.0000％。
    · 計時與判定一律用 performance.now()，不依賴 rAF（rAF 被暫停時有備援計時器）。
+   · 防誤觸「確定」：「確定」按下去就結算（單回合、不能反悔），而且它緊貼在下排「－」按鈕的下面，手指點「－」的時候稍微滑到下緣、或放開時
+     碰到它，就會變成「才按一下 ＋／－ 遊戲就結束了」。所以：①「確定」跟按鈕之間隔開一段距離（css/reaction4.css 的 .cm-ok）；
+     ②只要有任何一顆 ＋／－ 還按著、或是剛放開不到 OK_GUARD_MS（0.3 秒），按「確定」都不算。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -26,6 +29,7 @@
     var CLOSE_MS = 500;                         /* 按「確定」後兩個色塊靠攏的時間 */
     var RATE = [28, 150];                       /* 按住時每秒變化多少單位（0～255）：剛按下 → 按住 RAMP_S 秒之後 */
     var RAMP_S = 1.4;
+    var OK_GUARD_MS = 300;                      /* 放開 ＋／－ 之後這麼久之內，按「確定」不算（防止手指滑到、碰到而誤觸） */
     var START_MIN = 30;                         /* 右邊色塊一開始離目標至少多遠（差異度 ΔE） */
     var TARGET_RANGE = [40, 215];               /* 目標顏色每個頻道的範圍（避免太黑太白不好比） */
 
@@ -109,7 +113,7 @@
             root.appendChild(foot);
 
             /* 按住：held[pointerId] ＝ { b: 按鈕, t0: 開始按的時間 }；每個畫面（或備援計時器）依經過的時間改變頻道 */
-            var held = {}, locked = false, lastNow = null, hint = null;
+            var held = {}, locked = false, lastNow = null, hint = null, lastAdjust = -1e9;   /* lastAdjust：最後一次按下／放開 ＋／－ 的時間（防誤觸「確定」用） */
             function anyHeld() { for (var k in held) return true; return false; }
             function tick(now) {
                 if (locked) return;
@@ -130,10 +134,11 @@
                     try { el.setPointerCapture(e.pointerId); } catch (err) { }
                     if (hint) { hint.remove(); hint = null; }
                     held[e.pointerId] = { b: b, t0: performance.now() };
+                    lastAdjust = performance.now();
                     cur[b.ch] = Math.min(255, Math.max(0, cur[b.ch] + b.dir));          /* 一按下去先動 1 個單位（點一下也能微調） */
                     el.classList.add('cm-btn--on'); paint(); Sfx.play('click');
                 });
-                function up(e) { if (held[e.pointerId]) { delete held[e.pointerId]; el.classList.remove('cm-btn--on'); } }
+                function up(e) { if (held[e.pointerId]) { delete held[e.pointerId]; el.classList.remove('cm-btn--on'); lastAdjust = performance.now(); } }
                 el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('lostpointercapture', up);
             });
             /* 操作提示（只在第一次進遊戲時）：手指按住「差最多的那個頻道要按的那顆按鈕」（第一次的正確方向） */
@@ -146,6 +151,8 @@
             /* 確定：右邊色塊定住，兩個色塊靠攏，顯示差異度 */
             kit.onTap(okBtn, function () {
                 if (locked) return;
+                /* 防誤觸：還有 ＋／－ 按著、或剛放開不久，這一下很可能是手指滑到「確定」，不算 */
+                if (anyHeld() || performance.now() - lastAdjust < OK_GUARD_MS) return;
                 locked = true; held = {};
                 if (hint) { hint.remove(); hint = null; }
                 var shown = roundRgb(cur), real = diffPercent(rd.target, shown);
@@ -167,8 +174,8 @@
             });
             G.debug = {
                 state: function () { return { target: rd.target, cur: roundRgb(cur), locked: locked }; },
-                solve: function () { cur.r = rd.target.r; cur.g = rd.target.g; cur.b = rd.target.b; paint(); okBtn.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerId: 91 })); },
-                wrong: function () { cur.r = rd.target.r > 128 ? 0 : 255; cur.g = rd.target.g > 128 ? 0 : 255; cur.b = rd.target.b > 128 ? 0 : 255; paint(); okBtn.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerId: 92 })); },
+                solve: function () { lastAdjust = -1e9; cur.r = rd.target.r; cur.g = rd.target.g; cur.b = rd.target.b; paint(); okBtn.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerId: 91 })); },
+                wrong: function () { lastAdjust = -1e9; cur.r = rd.target.r > 128 ? 0 : 255; cur.g = rd.target.g > 128 ? 0 : 255; cur.b = rd.target.b > 128 ? 0 : 255; paint(); okBtn.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerId: 92 })); },
                 /* 模擬按住某顆按鈕 ms 毫秒（走跟真手指一樣的路徑） */
                 hold: function (id, ms) {
                     var el = btnEls[id];
@@ -186,7 +193,7 @@
         rule: '左邊是目標顏色，右邊是你要調出來的顏色。下方三對按鈕分別控制右邊色塊的紅、綠、藍：亮色的「＋」按住會增加、暗色的「－」按住會減少，按越久變得越快。沒有任何數字，只能靠眼睛比；**調到你覺得兩邊完全一樣時按「確定」**，兩個色塊會靠在一起並告訴你顏色差異度，越接近 0% 越準，**只有一次機會**。',
         mount: mount,
         score: SCORE,
-        test: { rateAt: rateAt, stepChannel: stepChannel, newRound: newRound, diffPercent: diffPercent, roundRgb: roundRgb, RATE: RATE, RAMP_S: RAMP_S, START_MIN: START_MIN, TARGET_RANGE: TARGET_RANGE, BUTTONS: BUTTONS }
+        test: { OK_GUARD_MS: OK_GUARD_MS, rateAt: rateAt, stepChannel: stepChannel, newRound: newRound, diffPercent: diffPercent, roundRgb: roundRgb, RATE: RATE, RAMP_S: RAMP_S, START_MIN: START_MIN, TARGET_RANGE: TARGET_RANGE, BUTTONS: BUTTONS }
     };
     Reaction.register(G);
 })();

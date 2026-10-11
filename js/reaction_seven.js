@@ -11,6 +11,8 @@
    · 兩個數字之間有 GAP_S 秒的空檔，空檔裡的點擊不算（避免連點誤觸下一個數字）。
    · 成績：通過的最大數字（越大越好）。pointerdown 判定，計時用 performance.now（rAF 被暫停時有 setTimeout 後備）。
    · 失敗後可以從「失敗數字 − 5」繼續（kit.resumeFrom）。
+   · 操作提示：第一次玩、數字「1」出現的時候，會在上面的數字格子上顯示手指符號（點擊）＋「請點擊數字」，提醒玩家一般的數字要點上面的格子；
+     玩家碰一下畫面就消失（kit.hintOn）。
    ═══════════════════════════════════════════════════════════════════ */
 
 /* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
@@ -98,6 +100,8 @@
                 state = 'live';
                 shownAt = performance.now(); deadline = shownAt + dwell * 1000;
                 tb.set(1);
+                /* 操作提示（只在第一次玩、數字 1 出現的時候）：手指縮放，擺在上面的數字格子上（1 要點數字） */
+                if (n === 1 && kit.once('seven.hint')) kit.hintOn(root, card, { mode: 'tap', text: '請點擊數字' });
                 /* 主控台印出這個數字應該怎麼做與倒數時間，方便驗證 */
                 try { console.info('[逢七過] ' + n + '：' + (sk ? '要跳過（' + skipReason(n) + '）' : '要點數字') + '，倒數 ' + dwell.toFixed(3) + ' 秒'); } catch (e) { }
                 /* 倒數條 */

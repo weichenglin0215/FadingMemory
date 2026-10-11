@@ -7,13 +7,14 @@
    · 題型隨題號解鎖（第 UNLOCK 題起加入）：
         水果（是不是同一種水果）→ 圖形（比大小／比形狀／比顏色，每題只比其中一項，題目會寫在最上面）
         → 數字（是不是同一個數字）→ 算式（加減，算出來的答案是不是一樣）→ 算式（加減乘除）。
+     圖形題「比大小」時，兩邊一定用「同一種圖案、同一個顏色」，只差大小，才不會有「圓形和三角形哪個比較大」這類爭議。
    · 「一樣」與「不一樣」每 10 題裡各 5 題（洗牌決定哪幾題是一樣），不是每題擲骰子。
    · 「不一樣」的題目越後面越接近：水果換成長得像的、圖形大小差距／色相差距變小、數字只差一位或對調、
      算式答案只差 1～2。「一樣」的題目也不會長得完全一模一樣（圖形的其他屬性會亂換、算式寫法不同），
      所以不能只靠「長得像不像」猜。
    · 難度（第 1 → RAMP_Q 題線性）：上格顯示時間 1.0 → 0.5 秒、空白時間 0.5 → 1.0 秒、
      看到下格後的作答時限 4 → 2 秒、「不一樣」的相似程度 0% → 85%。
-   · 有 LIVES 次機會，答錯或超時扣一次。成績＝答對題數（越多越好）。
+   · 答錯或超時就結束（沒有「機會」次數）。成績＝答對題數（越多越好）。
    ═══════════════════════════════════════════════════════════════════ */
 
 /* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
@@ -38,8 +39,6 @@
     var SIM_START = 0, SIM_END = 0.85;          /* 「不一樣」題用相似選項的機率 */
     /* 物件 { 名稱: 數字 }：每種題型從第幾題起解鎖 */
     var UNLOCK = { fruit: 1, shape: 7, number: 13, expr1: 19, expr2: 25 };   /* 第幾題起解鎖 */
-    /* LIVES：有幾次機會（答錯或超時扣一次） */
-    var LIVES = 3;
     /* 揭曉答案後停多久（毫秒）才出下一題 */
     var REVEAL_MS = 1000;
 
@@ -121,8 +120,10 @@
         /* 隨機產生一個圖形（形狀、色相 hue 0~359、縮放） */
         function randItem() { return { kind: 'shape', shape: kit.pick(SHAPES, rand), hue: kit.randInt(0, 359, rand), scale: kit.randFloat(0.55, 1.0, rand) }; }
         var A = randItem(), B = randItem();
-        /* 比大小：不相同時，B 的縮放是 A 的 r 倍（變大或變小）；r 隨難度從 1.7 縮到 1.12 */
+        /* 比大小：兩邊一定用「同一種圖案、同一個顏色」（B 複製 A 的形狀與色相），只差大小，避免「不同圖案怎麼比面積」的爭議。
+           不相同時，B 的縮放是 A 的 r 倍（變大或變小）；r 隨難度從 1.7 縮到 1.12 */
         if (attr === 'size') {
+            B.shape = A.shape; B.hue = A.hue;
             if (same) B.scale = A.scale;
             else {
                 var r = kit.lerp(1.7, 1.12, p), up = rand() < 0.5;
@@ -334,8 +335,8 @@
             var my = R;
             root.innerHTML = '';
 
-            /* q 目前題號（從 0 起算，next() 會先 +1）；right 答對數；lives 剩餘機會；state 目前階段（showA/blank/ask/reveal）；cur 目前這題 */
-            var q = (startAt || 1) - 1, right = q, lives = LIVES, newRec = false, state = 'idle', cur = null;
+            /* q 目前題號（從 0 起算，next() 會先 +1）；right 答對數；state 目前階段（showA/blank/ask/reveal）；cur 目前這題 */
+            var q = (startAt || 1) - 1, right = q, newRec = false, state = 'idle', cur = null;
             /* flags：這一輪 10 題的「相同／不相同」配額；genId：每出一題 +1，用來讓舊計時器知道自己過期了 */
             var flags = sameFlags(), genId = 0;   /* 從中間某題開始（失敗後繼續）時，這一輪 10 題的「相同／不相同」配額也要有 */
 
@@ -353,7 +354,7 @@
             /* 把所有元素依序放進畫面 */
             [head, prompt, boxA, boxB, tb.el, btns].forEach(function (n) { root.appendChild(n); });
 
-            function meta() { ctx.setMeta(kit.meta(['答對 ' + right, '機會 ' + lives])); }
+            function meta() { ctx.setMeta(kit.meta(['答對 ' + right, fmtBest(Reaction.getBest(ID))])); }
             function paintHead() { head.textContent = '第 ' + q + ' 題'; }
 
             /* next：出下一題 */
@@ -416,11 +417,11 @@
                 boxA.classList.add(ok ? 'sm-box--ok' : 'sm-box--bad');
                 boxB.classList.add(ok ? 'sm-box--ok' : 'sm-box--bad');
                 if (ok) { right++; Sfx.play('ok'); if (Reaction.setBest(ID, right, function (v, b) { return v > b; })) newRec = true; }
-                else { lives--; Sfx.play('bad'); }
+                else Sfx.play('bad');
                 prompt.textContent = (isSame == null ? '時間到！' : (ok ? '答對了！' : '答錯了…')) + '　正確是「' + (cur.same ? '相同' : '不相同') + '」';
                 meta();
-                /* 沒有機會了 → 結算；否則稍後出下一題 */
-                if (lives <= 0) {
+                /* 答錯或超時 → 一次就結束，結算；答對則稍後出下一題 */
+                if (!ok) {
                     my.after(REVEAL_MS + 400, function () {
                         /* kit.resumeFrom：失敗後「從失敗題號往前 5 題」可繼續玩 */
                         var back = kit.resumeFrom(q);
@@ -440,7 +441,7 @@
 
             /* G.debug：測試用後門 */
             G.debug = {
-                state: function () { return { q: q, state: state, right: right, lives: lives, cur: cur }; },
+                state: function () { return { q: q, state: state, right: right, cur: cur }; },
                 answerRight: function () { if (state === 'ask') answer(cur.same); return state; },
                 answerWrong: function () { if (state === 'ask') answer(!cur.same); return state; },
                 jump: function (n) { q = n - 1; }
@@ -456,7 +457,7 @@
     var G = {
         id: ID,
         name: '相同嗎？',
-        rule: '**先看上面一格的東西**，它消失之後，下面一格會出現第二個東西。判斷兩個是不是一樣，**點「相同」或「不相同」**。會有水果、圖形、數字和算式，越後面越像、越快！',
+        rule: '**先看上面一格的東西**，它消失之後，下面一格會出現第二個東西。判斷兩個是不是一樣，**點「相同」或「不相同」**。會有水果、圖形、數字和算式，越後面越像、越快，**答錯一次就結束**！',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,

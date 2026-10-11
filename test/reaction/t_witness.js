@@ -28,4 +28,7 @@ for (let d = 1; d <= 7; d++) for (let k = 0; k < 200; k++) { const b = T.randFac
 // 差異說明
 const a = [0, 0, 0, 0, 0, 0, 0], b = [0, 2, 0, 1, 0, 0, 3];
 const dt = T.diffText(a, b); ok(dt.length === 2 && dt[0].indexOf('髮型') === 0 && dt[1].indexOf('眉毛') === 0 || dt.length === 3, 'diffText lists differing features ' + JSON.stringify(dt));
+// 選臉畫面的網格：每個張數都排得下（欄×列 ≥ 張數）、4 張以內 2 欄、5 張以上 3 欄（超過 4 列會超出畫面，所以列數最多 3）
+for (let n = 1; n <= 9; n++) { const g = T.gridFor(n); ok(g.cols * g.rows >= n && g.cols === (n <= 4 ? 2 : 3) && g.rows === Math.ceil(n / g.cols), 'gridFor(' + n + ') = ' + JSON.stringify(g)); ok(g.rows <= 3, 'at most 3 rows so the faces always fit above the time bar (n=' + n + ')'); }
+ok(T.optsFor(T.LEVEL_RAMP) <= 9, 'the most faces on screen is at most 9 (3×3)');
 console.log(bad ? 'FAILED ' + bad : 'ALL PASS');

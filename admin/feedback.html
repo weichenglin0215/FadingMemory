@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  內容安全政策（CSP）：網頁只准連到 Supabase（*.supabase.co）和本機（測試用），其他來源（外部的圖片、字型、程式）一律不准載入。
+  如果你的 Supabase 不是 xxx.supabase.co 這種網址（自己架的），要把 connect-src 後面改成你的網址。
+-->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://*.supabase.co http://localhost:* http://127.0.0.1:*; img-src data:; base-uri 'none'; form-action 'none'">
+<link rel="icon" href="data:,">
+<title>玩家意見查閱（MF_feedback）</title>
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   樣式：這個網頁跟遊戲是分開的，不用遵守遊戲的美術規範。
+   顏色全部集中在最前面的「變數」（--xxx），要換配色只要改這一段；
+   系統設成深色模式時，會自動換成下面 @media 裡那一組深色變數。
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+    color-scheme: light dark;   /* 告訴瀏覽器：這個網頁有淺色與深色兩種配色，日期選擇器、捲軸、下拉選單才會跟著換 */
+    --bg: #f4f5f7;          /* 整個頁面的底色 */
+    --card: #ffffff;        /* 卡片（白框）的底色 */
+    --text: #1f2430;        /* 一般文字 */
+    --muted: #667085;       /* 次要文字（說明、小字） */
+    --line: #e2e5ea;        /* 框線、分隔線 */
+    --head: #eef1f6;        /* 表格標題列的底色 */
+    --zebra: #fafbfc;       /* 表格雙數列的底色 */
+    --accent: #2563eb;      /* 主色（主要按鈕） */
+    --accent-hover: #1d4ed8;
+    --accent-text: #ffffff; /* 主色上面的文字 */
+    --danger: #b42318;      /* 錯誤文字 */
+    --danger-bg: #fdecea;   /* 錯誤底色 */
+    --warn: #93370d;        /* 提醒文字 */
+    --warn-bg: #fff4e5;     /* 提醒底色 */
+    --ok: #067647;          /* 成功文字 */
+    --ok-bg: #e8f6ee;       /* 成功底色 */
+    --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .10);
+    --radius: 10px;         /* 圓角 */
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #14161a; --card: #1d2026; --text: #e6e8ec; --muted: #9aa3b2; --line: #2e333b;
+        --head: #262b33; --zebra: #20242b; --accent: #5b8def; --accent-hover: #7aa2ff; --accent-text: #0b1220;
+        --danger: #ff9d94; --danger-bg: #3a1f1d; --warn: #ffc785; --warn-bg: #3a2c18; --ok: #6ee7a0; --ok-bg: #16301f;
+        --shadow: 0 1px 2px rgba(0, 0, 0, .5);
+    }
+}
+
+* { box-sizing: border-box; }
+/* hidden 屬性要真的藏起來（有些元件自己設了 display，會蓋過瀏覽器內建的 hidden） */
+[hidden] { display: none !important; }
+body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+    font-size: 16px; line-height: 1.5;
+}
+.page { max-width: 1480px; margin: 0 auto; padding: 14px 22px 50px; }
+h1 { margin: 0 0 4px; font-size: 24px; }
+.sub { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
+
+/* 卡片 */
+.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 12px 18px; margin-bottom: 12px;
+}
+.card > summary { cursor: pointer; font-weight: 700; font-size: 17px; }
+.card[open] > summary { margin-bottom: 10px; }
+.card h2 { margin: 0 0 10px; font-size: 17px; }
+
+/* 表單排列：一列一列，每列裡面的欄位靠左排、放不下自動換行 */
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 7px 0; }
+.row > label.name { min-width: 84px; font-weight: 700; }
+.note { color: var(--muted); font-size: 14px; margin: 4px 0; }
+input[type=text], input[type=number], input[type=datetime-local], select {
+    font: inherit; color: inherit; background: var(--card); border: 1px solid var(--line);
+    border-radius: 7px; padding: 6px 9px;
+}
+input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.w-id { width: 130px; }
+.w-prefix { width: min(380px, 100%); }
+label.check { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+input[type=checkbox] { width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer; }
+/* 最常用的那個勾選框（只顯示三個欄位）：加一圈主色的框，讓它一眼就看得到 */
+label.check.emph { padding: 4px 12px 4px 9px; border: 1.5px solid var(--accent); border-radius: 999px; font-weight: 700; }
+
+/* 按鈕 */
+button {
+    font: inherit; cursor: pointer; border-radius: 7px; border: 1px solid var(--line);
+    background: var(--card); color: var(--text); padding: 6px 14px;
+}
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 700; }
+button.primary:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+button.small { padding: 3px 10px; font-size: 14px; }
+
+/* 狀態列 */
+.status { margin: 0 0 10px; padding: 8px 12px; border-radius: 8px; background: var(--head); font-size: 15px; }
+.status--error { background: var(--danger-bg); color: var(--danger); }
+.status--warn { background: var(--warn-bg); color: var(--warn); }
+.status--ok { background: var(--ok-bg); color: var(--ok); }
+
+/* 結果表格 */
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 8px 0 12px; }
+.table-wrap { overflow: auto; max-height: 68vh; border: 1px solid var(--line); border-radius: 8px; }
+table.grid { border-collapse: collapse; width: 100%; font-size: 15px; }
+table.grid th, table.grid td { border-bottom: 1px solid var(--line); padding: 6px 9px; text-align: left; vertical-align: top; }
+table.grid th {
+    position: sticky; top: 0; z-index: 1; background: var(--head); white-space: nowrap; font-weight: 700;
+}
+/* 標題下面的中文小字：用 ::after 畫出來（不是真的文字，所以用滑鼠選取表格再複製時不會跟著進去） */
+table.grid th[data-zh]::after { content: attr(data-zh); display: block; font-size: 12px; font-weight: 400; color: var(--muted); }
+table.grid tbody tr:nth-child(even) { background: var(--zebra); }
+table.grid tr.off td { opacity: .38; }
+table.grid td.col-id, table.grid td.col-created_at, table.grid td.col-game_id, table.grid td.col-app_version { white-space: nowrap; }
+/* 意見內容：保留換行、再長的字串也會換行，不會把表格撐爆 */
+table.grid td.col-message { min-width: 320px; white-space: pre-wrap; overflow-wrap: anywhere; }
+table.grid td.col-game_title { white-space: nowrap; }
+table.grid .c-pick { width: 38px; text-align: center; padding-left: 8px; padding-right: 4px; }
+/* 用滑鼠拖曳選取表格再 Ctrl+C 時，勾選欄不要跟著被複製（才不會每一列前面多出一個空白欄） */
+table.grid .c-pick { user-select: none; -webkit-user-select: none; }
+.empty { padding: 36px 12px; text-align: center; color: var(--muted); }
+
+/* 右下角的小提示（複製成功…） */
+#toast {
+    position: fixed; right: 22px; bottom: 22px; max-width: 420px; padding: 10px 16px; border-radius: 9px;
+    background: #1f2937; color: #fff; box-shadow: 0 6px 18px rgba(0, 0, 0, .3);
+    opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity .18s, transform .18s;
+}
+#toast.show { opacity: 1; transform: none; }
+details.how ol { margin: 6px 0 0 20px; padding: 0; }
+details.how li { margin: 3px 0; }
+</style>
+</head>
+<body>
+<div class="page">
+    <h1>玩家意見查閱</h1>
+    <p class="sub">資料表 MF_feedback（記憶模糊・秒反應 的「我有話要說」）。意見是公開的，任何人都能查，不需要金鑰或密碼。這是給你自己在電腦上用的管理工具，不是遊戲的一部分。</p>
+
+    <!-- ═══ 一、查詢條件 ═══ -->
+    <form class="card" id="filterForm" autocomplete="off">
+        <h2>查詢條件</h2>
+        <div class="row">
+            <label class="name" for="tFrom">時間範圍</label>
+            <input type="datetime-local" id="tFrom">
+            <span>到</span>
+            <input type="datetime-local" id="tTo">
+            <button type="button" class="small" id="btnToday">今天</button>
+            <button type="button" class="small" id="btn7">最近 7 天</button>
+            <button type="button" class="small" id="btn30">最近 30 天</button>
+            <button type="button" class="small" id="btnAllTime">不限時間</button>
+            <span class="note" id="tzNote"></span>
+        </div>
+        <div class="row">
+            <label class="name" for="idFrom">id 範圍</label>
+            <input type="number" id="idFrom" class="w-id" min="0" step="1" placeholder="起（含）">
+            <span>到</span>
+            <input type="number" id="idTo" class="w-id" min="0" step="1" placeholder="迄（含）">
+            <span class="note">空白＝不限制</span>
+            <!-- 接續上次：貼給 Claude 之後，把「處理到哪個 id」記下來，下次一鍵只查新的意見 -->
+            <b style="margin-left:14px">接續上次</b>
+            <span id="seenText" class="note"></span>
+            <button type="button" class="small" id="btnNext" hidden></button>
+            <button type="button" class="small" id="btnMark" disabled title="貼給 Claude 之後按這個，下次就可以只查更新的意見">把目前結果的最大 id 記為已處理</button>
+            <button type="button" class="small" id="btnClearSeen" hidden>清除記錄</button>
+        </div>
+        <div class="row">
+            <label class="name" for="order">排序</label>
+            <select id="order">
+                <option value="desc">新的在前（id 由大到小）</option>
+                <option value="asc">舊的在前（id 由小到大）</option>
+            </select>
+            <button type="submit" class="primary" id="btnQuery">查詢</button>
+            <button type="button" id="btnClear" title="時間範圍改回「7 天前到今天」，id 範圍清空">恢復預設</button>
+            <label class="check emph"><input type="checkbox" id="only3"> 只顯示 game_id game_title message</label>
+        </div>
+    </form>
+
+    <!-- ═══ 二、結果 ═══ -->
+    <section class="card" id="result">
+        <h2>查詢結果</h2>
+        <p class="status" id="status" role="status">查詢中…</p>
+        <div class="toolbar">
+            <button type="button" class="primary" id="btnCopy" disabled>複製（0 列）</button>
+            <span id="pickInfo" class="note"></span>
+            <label class="check"><input type="checkbox" id="copyHeader" checked> 複製時加上欄位名稱</label>
+            <label class="check"><input type="checkbox" id="prefixOn"> 複製時最前面加一句：</label>
+            <input type="text" id="prefixText" class="w-prefix" spellcheck="false">
+        </div>
+        <div class="table-wrap" id="tableWrap"><div class="empty">還沒有查詢。</div></div>
+    </section>
+
+    <details class="card how">
+        <summary>怎麼用</summary>
+        <ol>
+            <li>打開就會自動查「7 天前到今天」的意見。要看別的時間、別的 id 範圍，就在「查詢條件」改，按「查詢」。時間用這台電腦的時區；「到」的那一分鐘整分鐘都算。</li>
+            <li>只想貼「遊戲、遊戲名稱、意見」給 Claude：勾「只顯示 game_id game_title message」。</li>
+            <li>不想貼的那幾列，把最左邊的勾勾取消。</li>
+            <li>按「複製」，到 Claude 的輸入框貼上。每一列一行、欄位用 Tab 隔開；意見裡的換行會變成「 ⏎ 」，這樣一則意見不會斷成好幾行。</li>
+            <li>貼完按「把目前結果的最大 id 記為已處理」；下次按「從 id N 開始查」，就只會看到新的意見。</li>
+            <li>查詢不需要金鑰：這個網頁用的是遊戲本來就公開的 anon 金鑰，只能讀公開檢視表 MF_feedback_public（不含玩家代號 player_id），不能新增、修改或刪除任何東西。</li>
+        </ol>
+    </details>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   玩家意見查閱：程式
+   做的事很簡單：
+     1. 用 fetch 向 Supabase 的 REST 介面（PostgREST）要「公開檢視表」MF_feedback_public 的資料，
+        網址長這樣：<網址>/rest/v1/MF_feedback_public?select=*&id=gte.10&created_at=gte.2026-10-01T00:00:00.000Z&order=id.desc
+        （gte＝大於等於、lte＝小於等於；同一個欄位寫兩次就是「兩個條件都要成立」）
+     2. 把回來的資料畫成表格。
+     3. 「複製」按鈕把畫面上顯示的欄位、勾選的列組成文字（Tab 分隔）放進剪貼簿。
+   整份程式不用安裝任何東西，雙擊這個 html 檔就能用。
+   為什麼不用密碼：意見不是機密，資料庫（supabase/MF_leaderboard.sql 第 5 節）把去掉 player_id 的內容公開成檢視表，
+   任何人用遊戲本來就公開的 anon 金鑰就讀得到；這個網頁沒有任何祕密。
+   安全：表格的文字一律用 textContent 放進去（不會被當成 HTML 執行），所以意見裡就算有 <script> 也只是一般文字。
+   ═══════════════════════════════════════════════════════════════ */
+(function () {
+    'use strict';
+
+    // ───────── 一、設定（要改就改這裡） ─────────
+    var DEFAULT_URL = 'https://tpdznlutkzeficitudac.supabase.co';  // 跟遊戲（js/leaderboard.js）同一個 Supabase 專案；專案網址本來就是公開的
+    // anon（公開）金鑰：跟 js/leaderboard.js 裡的是同一把，任何人看遊戲的網頁原始碼都拿得到，本來就設計成可以公開
+    var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwZHpubHV0a3plZmljaXR1ZGFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMzI2NTMsImV4cCI6MjA5MTgwODY1M30.Cid4HYePpAHA0oYffdm_5ZlthWt_nyAPpFjFcy4hsik';
+    var VIEW = 'MF_feedback_public';    // 公開檢視表名稱（有大寫，網址裡不用加引號，但大小寫要一模一樣）
+    var DEFAULT_DAYS = 7;               // 打開網頁預設查「幾天前」到今天
+    var PAGE_SIZE = 1000;               // 每次向資料庫要幾列（Supabase 預設一次最多給 1000 列）
+    var MAX_ROWS = 5000;                // 最多讀幾列；再多就停下來並提醒你縮小範圍（人也看不完）
+    var TIMEOUT_MS = 20000;             // 每次請求最多等幾毫秒
+    var STORE_KEY = 'mf.fbview.v1';     // 存在瀏覽器 localStorage 裡的名稱（只存你的選項，不存任何金鑰）
+    var THREE = ['game_id', 'game_title', 'message'];   // 勾「只顯示…」時留下的三個欄位
+    // 欄位的排列順序：想貼給 Claude 的三欄放在一起（game_id、game_title、message）
+    var ORDER = ['id', 'created_at', 'game_id', 'game_title', 'message', 'nickname', 'app_version'];
+    // 欄位的中文說明（顯示在標題列的小字；複製時只用英文欄位名稱）
+    var LABELS = {
+        id: '編號', created_at: '時間', game_id: '遊戲代號', game_title: '遊戲名稱', message: '意見內容',
+        nickname: '暱稱', app_version: '版本'
+    };
+    var DEFAULT_PREFIX = '請根據以下玩家回饋建議去修改程式碼';   // 「複製時最前面加一句」的預設內容（可以在畫面上改）
+
+    // 要連的網址：平常就是上面的 DEFAULT_URL；測試時可以在網頁網址後面加 ?api=http://127.0.0.1:埠號 連到假的伺服器
+    // （只接受 https 或本機網址，其他一律忽略）
+    function cleanUrl(u) {
+        try {
+            var o = new URL(String(u || '').trim());
+            var local = (o.hostname === 'localhost' || o.hostname === '127.0.0.1');
+            if (o.protocol === 'https:' || (o.protocol === 'http:' && local)) return o.origin;
+        } catch (e) { /* 不是網址 */ }
+        return null;
+    }
+    var BASE = cleanUrl(new URLSearchParams(location.search).get('api')) || DEFAULT_URL;
+
+    // ───────── 二、抓畫面上的元件 ─────────
+    function $(id) { return document.getElementById(id); }
+    var els = {
+        filterForm: $('filterForm'), tFrom: $('tFrom'), tTo: $('tTo'), idFrom: $('idFrom'), idTo: $('idTo'),
+        btnToday: $('btnToday'), btn7: $('btn7'), btn30: $('btn30'), btnAllTime: $('btnAllTime'), tzNote: $('tzNote'),
+        seenText: $('seenText'), btnNext: $('btnNext'), btnMark: $('btnMark'), btnClearSeen: $('btnClearSeen'),
+        order: $('order'), btnQuery: $('btnQuery'), btnClear: $('btnClear'), only3: $('only3'),
+        status: $('status'), btnCopy: $('btnCopy'), pickInfo: $('pickInfo'), copyHeader: $('copyHeader'),
+        prefixOn: $('prefixOn'), prefixText: $('prefixText'), tableWrap: $('tableWrap'), toast: $('toast')
+    };
+
+    // ───────── 三、目前的狀態 ─────────
+    var state = {
+        rows: [],          // 查回來的資料，每一列是一個物件，例如 { id: 5, game_id: 'coins', message: '…', … }
+        columns: [],       // 這批資料有哪些欄位（依 ORDER 排好）
+        off: {},           // 被取消勾選的列：{ id: true }（沒有記錄＝要複製）
+        truncated: false,  // 是不是因為超過 MAX_ROWS 而沒讀完
+        busy: false        // 正在查詢中（避免連按好幾次）
+    };
+
+    // ───────── 四、小工具 ─────────
+    function pad2(n) { return n < 10 ? '0' + n : String(n); }
+    // Date → 「2026-10-11 09:30:05」（用這台電腦的時區）
+    function fmtDateTime(d) {
+        return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + ' ' +
+            pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
+    }
+    // Date → <input type="datetime-local"> 要的格式「2026-10-11T09:30」
+    function toInputValue(d) {
+        return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + 'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+    }
+    // 資料庫給的時間字串 → Date。Postgres 會給 6 位小數（…45.123456+00:00），瀏覽器只保證看得懂 3 位，所以先把多的砍掉
+    function parseDbTime(s) {
+        if (!s) return null;
+        var d = new Date(String(s).replace(/(\.\d{3})\d+/, '$1'));
+        return isNaN(d.getTime()) ? null : d;
+    }
+    // 一個格子要顯示（也是要複製）的文字
+    function formatCell(col, value) {
+        if (value === null || value === undefined) return '';
+        if (col === 'created_at') { var d = parseDbTime(value); return d ? fmtDateTime(d) : String(value); }
+        return String(value);
+    }
+
+    // 讀／寫瀏覽器的 localStorage（有些情況會丟出錯誤，所以都包 try）
+    function loadSettings() {
+        try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; }
+    }
+    function saveSettings(patch) {
+        var s = loadSettings();
+        for (var k in patch) { if (Object.prototype.hasOwnProperty.call(patch, k)) s[k] = patch[k]; }
+        try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) { /* 存不了就算了，不影響使用 */ }
+    }
+
+    // 狀態列：kind 可以是 'error'（紅）、'warn'（橘）、'ok'（綠）、不填（灰）
+    function setStatus(text, kind) {
+        els.status.textContent = text;
+        els.status.className = 'status' + (kind ? ' status--' + kind : '');
+    }
+    // 右下角的小提示，2.4 秒後自動消失
+    var toastTimer = null;
+    function toast(text) {
+        els.toast.textContent = text;
+        els.toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { els.toast.classList.remove('show'); }, 2400);
+    }
+
+    // ───────── 五、組查詢條件、向資料庫要資料 ─────────
+    // 讀畫面上的條件。不合理（例如起點比終點晚）就丟出錯誤，訊息會顯示在狀態列
+    function readFilters() {
+        var f = { idFrom: null, idTo: null, timeFrom: null, timeTo: null, order: els.order.value === 'asc' ? 'asc' : 'desc' };
+        function readId(input, name) {
+            var v = input.value.trim();
+            if (v === '') return null;
+            if (!/^\d+$/.test(v)) throw new Error('id ' + name + '要填整數（0 以上）。');
+            return parseInt(v, 10);
+        }
+        f.idFrom = readId(els.idFrom, '起點');
+        f.idTo = readId(els.idTo, '終點');
+        if (f.idFrom !== null && f.idTo !== null && f.idFrom > f.idTo) throw new Error('id 的起點比終點大，請對調。');
+        // 時間：datetime-local 的值是「這台電腦的時區」的時間（2026-10-11T09:30）。
+        // 起點取該分鐘的 0 秒；終點取該分鐘的 59.999 秒（所以「到 23:59」會包含 23:59:59 的意見）。
+        var a = els.tFrom.value ? new Date(els.tFrom.value) : null;
+        var b = els.tTo.value ? new Date(els.tTo.value) : null;
+        if ((a && isNaN(a.getTime())) || (b && isNaN(b.getTime()))) throw new Error('時間格式不對。');
+        if (b) b = new Date(b.getTime() + 59999);
+        if (a && b && a.getTime() > b.getTime()) throw new Error('時間的起點比終點晚，請對調。');
+        f.timeFrom = a ? a.toISOString() : null;      // toISOString 會換成世界標準時間（UTC），資料庫的 created_at 也是 UTC，才能直接比大小
+        f.timeTo = b ? b.toISOString() : null;
+        return f;
+    }
+    // 組出網址問號後面那一串。offset＝跳過前幾列（翻頁用）
+    function buildQuery(f, offset) {
+        var p = ['select=*', 'order=id.' + f.order, 'limit=' + PAGE_SIZE, 'offset=' + offset];
+        if (f.idFrom !== null) p.push('id=gte.' + f.idFrom);
+        if (f.idTo !== null) p.push('id=lte.' + f.idTo);
+        if (f.timeFrom) p.push('created_at=gte.' + encodeURIComponent(f.timeFrom));
+        if (f.timeTo) p.push('created_at=lte.' + encodeURIComponent(f.timeTo));
+        return p.join('&');
+    }
+    // 要一頁資料。失敗時丟出的錯誤物件帶著 http（狀態碼）與 body（資料庫回的錯誤內容），給 explainError 翻成中文
+    async function fetchPage(query) {
+        var ctl = new AbortController();
+        var timer = setTimeout(function () { ctl.abort(); }, TIMEOUT_MS);
+        try {
+            var res = await fetch(BASE + '/rest/v1/' + VIEW + '?' + query, {
+                headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY, 'Accept': 'application/json' },
+                signal: ctl.signal
+            });
+            var text = await res.text();
+            var data = null;
+            try { data = JSON.parse(text); } catch (e) { /* 不是 JSON */ }
+            if (!res.ok) { var err = new Error('HTTP ' + res.status); err.http = res.status; err.body = data; throw err; }
+            if (!Array.isArray(data)) throw new Error('資料庫回傳的格式不是預期的清單。');
+            return data;
+        } finally {
+            clearTimeout(timer);
+        }
+    }
+    // 一頁一頁要，直到要不到為止（伺服器給的筆數上限不一定等於 PAGE_SIZE，所以用「拿到空頁」判斷結束，最保險）
+    async function fetchAll(f, onProgress) {
+        var all = [], seen = {}, offset = 0, truncated = false;
+        for (var page = 0; page < 60; page++) {
+            var rows = await fetchPage(buildQuery(f, offset));
+            if (rows.length === 0) break;
+            rows.forEach(function (r) { if (!seen[r.id]) { seen[r.id] = true; all.push(r); } });    // 用 id 去重（翻頁途中剛好有新意見進來時，不會出現兩次）
+            offset += rows.length;
+            onProgress(all.length);
+            if (all.length >= MAX_ROWS) { truncated = true; all.length = MAX_ROWS; break; }
+        }
+        return { rows: all, truncated: truncated };
+    }
+    // 把錯誤翻成看得懂的中文
+    function explainError(e) {
+        if (e && e.name === 'AbortError') return '等太久沒有回應（超過 ' + (TIMEOUT_MS / 1000) + ' 秒），請檢查網路後再按一次查詢。';
+        if (e && e.http) {
+            var code = e.body && e.body.code;
+            var msg = (e.body && (e.body.message || e.body.msg || e.body.error_description)) || '';
+            // 找不到檢視表、或沒有讀取權限：都代表資料庫還沒執行新版的 SQL（新版才有公開檢視表 MF_feedback_public）
+            if (e.http === 404 || code === 'PGRST205' || code === '42P01' || code === '42501' || /permission denied/i.test(msg)) {
+                return '資料庫還沒有開放公開查閱：請到 Supabase 的 SQL Editor 重新執行最新的 supabase/MF_leaderboard.sql（新版多了公開檢視表 ' + VIEW + '），執行完再按一次查詢。';
+            }
+            if (e.http === 401 || e.http === 403) return '資料庫不接受這把公開金鑰（' + (msg || e.http) + '）：請確認網址是正確的 Supabase 專案。';
+            return '資料庫回報錯誤（' + e.http + '）：' + (msg || '沒有說明');
+        }
+        return '連不上 Supabase：請檢查網路。（' + ((e && e.message) || e) + '）';
+    }
+
+    // ───────── 六、查詢 ─────────
+    function setBusy(b) {
+        state.busy = b;
+        els.btnQuery.disabled = b;
+        els.btnQuery.textContent = b ? '查詢中…' : '查詢';
+    }
+    // 這批資料有哪些欄位：依 ORDER 排好，沒看過的新欄位排在最後
+    function pickColumns(rows) {
+        var seen = {}, extra = [];
+        rows.forEach(function (r) { Object.keys(r).forEach(function (c) { if (!seen[c]) { seen[c] = true; if (ORDER.indexOf(c) < 0) extra.push(c); } }); });
+        return ORDER.filter(function (c) { return seen[c]; }).concat(extra);
+    }
+    function summaryText(r) {
+        var rows = r.rows;
+        if (!rows.length) return '沒有符合條件的意見。';
+        var minId = Infinity, maxId = -Infinity, first = null, last = null;
+        rows.forEach(function (x) {
+            if (typeof x.id === 'number') { if (x.id < minId) minId = x.id; if (x.id > maxId) maxId = x.id; }
+            var d = parseDbTime(x.created_at);
+            if (d) { if (!first || d < first) first = d; if (!last || d > last) last = d; }
+        });
+        var s = '共 ' + rows.length + ' 筆　id ' + minId + ' ～ ' + maxId;
+        if (first) s += '　時間 ' + fmtDateTime(first) + ' ～ ' + fmtDateTime(last);
+        if (r.truncated) s += '　（只讀了前 ' + MAX_ROWS + ' 筆，後面可能還有，請縮小時間或 id 範圍）';
+        return s;
+    }
+    async function runQuery() {
+        if (state.busy) return;
+        var f;
+        try { f = readFilters(); } catch (e) { setStatus(e.message, 'error'); return; }
+        setBusy(true);
+        setStatus('查詢中…');
+        try {
+            var r = await fetchAll(f, function (n) { setStatus('查詢中…已讀到 ' + n + ' 筆'); });
+            state.rows = r.rows; state.columns = pickColumns(r.rows); state.off = {}; state.truncated = r.truncated;
+            renderAll();
+            setStatus(summaryText(r), r.truncated ? 'warn' : (r.rows.length ? 'ok' : ''));
+        } catch (e) {
+            state.rows = []; state.columns = []; state.off = {}; state.truncated = false;
+            renderAll();
+            setStatus(explainError(e), 'error');
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    // ───────── 七、畫表格 ─────────
+    // 目前要顯示（也是要複製）的欄位
+    function visibleColumns() {
+        if (!els.only3.checked) return state.columns;
+        return THREE.filter(function (c) { return state.columns.indexOf(c) >= 0; });
+    }
+    function isChecked(row) { return !state.off[row.id]; }
+    function checkedCount() { var n = 0; state.rows.forEach(function (r) { if (isChecked(r)) n++; }); return n; }
+
+    function renderTable() {
+        var wrap = els.tableWrap;
+        if (!state.rows.length) {
+            var empty = document.createElement('div');
+            empty.className = 'empty';
+            empty.textContent = '沒有資料。';
+            wrap.replaceChildren(empty);
+            return;
+        }
+        var cols = visibleColumns();
+        var table = document.createElement('table');
+        table.className = 'grid';
+        // 標題列
+        var hr = table.createTHead().insertRow();
+        var th0 = document.createElement('th');
+        th0.className = 'c-pick';
+        var all = document.createElement('input');
+        all.type = 'checkbox'; all.id = 'pickAll'; all.title = '全選／全不選';
+        th0.appendChild(all);
+        hr.appendChild(th0);
+        cols.forEach(function (c) {
+            var th = document.createElement('th');
+            th.textContent = c;                          // 標題只放英文欄位名稱（複製、選取時只會有這個）
+            th.dataset.zh = LABELS[c] || '';             // 中文小字放在 data-zh，由 CSS 的 ::after 畫在下面（畫出來的字不會被選取或複製）
+            hr.appendChild(th);
+        });
+        // 每一列資料：所有文字都用 textContent 放進去，不會被當成 HTML
+        var tb = table.createTBody();
+        state.rows.forEach(function (r) {
+            var tr = tb.insertRow();
+            tr.dataset.id = String(r.id);
+            if (!isChecked(r)) tr.className = 'off';
+            var td0 = tr.insertCell();
+            td0.className = 'c-pick';
+            var cb = document.createElement('input');
+            cb.type = 'checkbox'; cb.checked = isChecked(r); cb.className = 'pick'; cb.title = '要複製這一列';
+            td0.appendChild(cb);
+            cols.forEach(function (c) {
+                var td = tr.insertCell();
+                td.className = 'col-' + c;
+                td.textContent = formatCell(c, r[c]);
+            });
+        });
+        wrap.replaceChildren(table);
+        updatePickAll();
+    }
+    // 表頭的「全選」勾勾：全部勾＝打勾、都沒勾＝空白、一部分＝半勾
+    function updatePickAll() {
+        var all = $('pickAll');
+        if (!all) return;
+        var n = checkedCount(), total = state.rows.length;
+        all.checked = n === total && total > 0;
+        all.indeterminate = n > 0 && n < total;
+    }
+    // 複製按鈕上的數字、「已勾選 x / y 列」
+    function updateCounts() {
+        var n = checkedCount(), total = state.rows.length;
+        els.btnCopy.textContent = '複製（' + n + ' 列）';
+        els.btnCopy.disabled = n === 0;
+        els.pickInfo.textContent = total ? '已勾選 ' + n + ' / ' + total + ' 列' : '';
+    }
+    // 「接續上次」那一排：顯示記著的 id、決定哪些按鈕出現
+    function maxIdOfRows() {
+        var m = null;
+        state.rows.forEach(function (r) { if (typeof r.id === 'number' && (m === null || r.id > m)) m = r.id; });
+        return m;
+    }
+    function updateSeenUI() {
+        var seen = loadSettings().seenId;
+        if (typeof seen === 'number') {
+            els.seenText.textContent = '已處理到 id ' + seen;
+            els.btnNext.hidden = false;
+            els.btnNext.textContent = '從 id ' + (seen + 1) + ' 開始查';
+            els.btnClearSeen.hidden = false;
+        } else {
+            els.seenText.textContent = '尚無記錄';
+            els.btnNext.hidden = true;
+            els.btnClearSeen.hidden = true;
+        }
+        var m = maxIdOfRows();
+        els.btnMark.disabled = m === null;
+        els.btnMark.textContent = m === null ? '把目前結果的最大 id 記為已處理' : '把目前結果的最大 id（' + m + '）記為已處理';
+    }
+    function renderAll() { renderTable(); updateCounts(); updateSeenUI(); }
+
+    // ───────── 八、複製 ─────────
+    // 一個格子複製出去的文字：換行改成「 ⏎ 」、Tab 改成空格，這樣一列一定只佔一行，貼到哪裡都不會亂
+    function cellForCopy(col, value) {
+        return formatCell(col, value).replace(/\r\n|\r|\n/g, ' ⏎ ').replace(/\t/g, ' ');
+    }
+    // 組出要複製的整段文字：（最前面的一句話）＋（欄位名稱）＋ 每個勾選的列一行，欄位之間用 Tab 隔開
+    function buildCopyText() {
+        var cols = visibleColumns(), lines = [];
+        var prefix = els.prefixText.value.trim();
+        if (els.prefixOn.checked && prefix) lines.push(prefix);
+        if (els.copyHeader.checked) lines.push(cols.join('\t'));
+        state.rows.forEach(function (r) {
+            if (!isChecked(r)) return;
+            lines.push(cols.map(function (c) { return cellForCopy(c, r[c]); }).join('\t'));
+        });
+        return lines.join('\n');
+    }
+    // 放進剪貼簿。新式做法（navigator.clipboard）不能用時，改用舊式做法（藏一個文字框 → 全選 → 複製）
+    async function copyToClipboard(text) {
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) { await navigator.clipboard.writeText(text); return true; }
+        } catch (e) { /* 被擋了，換舊式做法 */ }
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+        document.body.removeChild(ta);
+        return ok;
+    }
+    async function doCopy() {
+        var n = checkedCount();
+        if (!n) return;
+        var ok = await copyToClipboard(buildCopyText());
+        toast(ok ? '已複製 ' + n + ' 列，可以直接貼到 Claude。' : '複製失敗：請用滑鼠選取表格的文字，再按 Ctrl+C。');
+    }
+
+    // ───────── 九、時間的快速按鈕 ─────────
+    // 設定時間範圍：從「n 天前的 00:00」到「今天 23:59」（n=0 就是今天）；不查詢，只改欄位
+    function setDays(n) {
+        var now = new Date();
+        els.tFrom.value = toInputValue(new Date(now.getFullYear(), now.getMonth(), now.getDate() - n, 0, 0));
+        els.tTo.value = toInputValue(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59));
+    }
+    function setRecentDays(n) { setDays(n); runQuery(); }
+
+    // ───────── 十、綁定事件 ─────────
+    // 按「查詢」或在欄位裡按 Enter
+    els.filterForm.addEventListener('submit', function (e) { e.preventDefault(); runQuery(); });
+    els.btnToday.addEventListener('click', function () { setRecentDays(0); });
+    els.btn7.addEventListener('click', function () { setRecentDays(7); });
+    els.btn30.addEventListener('click', function () { setRecentDays(30); });
+    els.btnAllTime.addEventListener('click', function () { els.tFrom.value = ''; els.tTo.value = ''; runQuery(); });
+    els.btnClear.addEventListener('click', function () {      // 恢復預設：7 天前到今天，id 範圍清空
+        setDays(DEFAULT_DAYS); els.idFrom.value = ''; els.idTo.value = '';
+        runQuery();
+    });
+    // 接續上次
+    els.btnNext.addEventListener('click', function () {
+        var seen = loadSettings().seenId;
+        if (typeof seen !== 'number') return;
+        els.idFrom.value = String(seen + 1);
+        els.idTo.value = '';
+        runQuery();
+    });
+    els.btnMark.addEventListener('click', function () {
+        var m = maxIdOfRows();
+        if (m === null) return;
+        saveSettings({ seenId: m });
+        updateSeenUI();
+        toast('已記下：處理到 id ' + m + '。下次可以按「從 id ' + (m + 1) + ' 開始查」。');
+    });
+    els.btnClearSeen.addEventListener('click', function () {
+        saveSettings({ seenId: null });
+        updateSeenUI();
+    });
+    // 「只顯示三個欄位」與複製的選項：改了就記住，不用重新查詢
+    els.only3.addEventListener('change', function () { saveSettings({ only3: els.only3.checked }); renderAll(); });
+    els.copyHeader.addEventListener('change', function () { saveSettings({ copyHeader: els.copyHeader.checked }); });
+    els.prefixOn.addEventListener('change', function () { saveSettings({ prefixOn: els.prefixOn.checked }); });
+    els.prefixText.addEventListener('change', function () { saveSettings({ prefixText: els.prefixText.value }); });
+    els.btnCopy.addEventListener('click', doCopy);
+    // 表格裡的勾勾（事件委派：只在表格外層放一個監聽，不用每一列各放一個）
+    els.tableWrap.addEventListener('change', function (e) {
+        var t = e.target;
+        if (!t || t.type !== 'checkbox') return;
+        if (t.id === 'pickAll') {                                  // 表頭：全選／全不選
+            state.off = {};
+            if (!t.checked) state.rows.forEach(function (r) { state.off[r.id] = true; });
+            renderTable();
+        } else {                                                   // 某一列
+            var tr = t.closest('tr');
+            if (!tr) return;
+            var id = tr.dataset.id;
+            if (t.checked) delete state.off[id]; else state.off[id] = true;
+            tr.className = t.checked ? '' : 'off';
+            updatePickAll();
+        }
+        updateCounts();
+    });
+
+    // ───────── 十一、開頁面時 ─────────
+    (function init() {
+        var s = loadSettings();
+        // 這個網頁的舊版本要你貼 service_role 金鑰，而且可以「記住」；新版不需要金鑰了，
+        // 如果以前記住過，這裡順手把它從這個瀏覽器清掉（權限很大的金鑰不要留著）
+        if (s.key !== undefined || s.remember !== undefined || s.url !== undefined) saveSettings({ key: undefined, remember: undefined, url: undefined });
+        els.only3.checked = !!s.only3;
+        els.copyHeader.checked = s.copyHeader !== false;          // 沒有記錄過＝預設勾選
+        els.prefixOn.checked = !!s.prefixOn;
+        els.prefixText.value = typeof s.prefixText === 'string' ? s.prefixText : DEFAULT_PREFIX;
+        // 時區說明：Date 的 getTimezoneOffset 是「UTC 減當地」的分鐘數，台灣是 -480，所以前面要加負號
+        var off = -new Date().getTimezoneOffset(), sign = off >= 0 ? '+' : '-';
+        els.tzNote.textContent = '時間以這台電腦的時區計算（UTC' + sign + Math.floor(Math.abs(off) / 60) + (Math.abs(off) % 60 ? ':' + pad2(Math.abs(off) % 60) : '') + '）';
+        setDays(DEFAULT_DAYS);                                     // 預設時間範圍：7 天前 00:00 到今天 23:59
+        renderAll();
+        runQuery();                                                // 打開就直接查（不需要金鑰）
+    })();
+
+    // 給自動測試用的後門（test/admin/check_feedback_viewer.mjs）；平常用不到
+    window.__FV = { state: state, buildCopyText: buildCopyText, visibleColumns: visibleColumns, runQuery: runQuery, buildQuery: buildQuery, readFilters: readFilters, cleanUrl: cleanUrl, config: { base: BASE, key: ANON_KEY, view: VIEW } };
+})();
+</script>
+</body>
+</html>

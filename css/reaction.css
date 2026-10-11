@@ -1238,6 +1238,30 @@
     pointer-events: none;
 }
 
+/* 德爾貝夫的外環 */
+.il-ring {
+    fill: none;
+    stroke: var(--c-ink-soft);
+    stroke-width: 5px;
+}
+
+/* 禮帽：帽身與帽簷（深褐色）、帽帶（橘色） */
+.il-hat {
+    fill: var(--c-ink);
+    stroke: none;
+}
+
+.il-hatband {
+    fill: var(--c-orange);
+    stroke: none;
+}
+
+/* 長方形面積題的長方形（橘色） */
+.il-rect {
+    fill: var(--c-orange);
+    stroke: none;
+}
+
 /* 點擊熱區：fill:transparent 看不到但仍可被點到 */
 .il-hit {
     fill: transparent;
@@ -1733,7 +1757,7 @@
     overflow: hidden;
 }
 
-/* 要塗的白色方塊；pointer-events:none 讓手指事件穿過它交給外層處理 */
+/* 要蓋塗鴉的方塊（底色由 JS 依這一局的顏色設定；這裡的白色只是還沒設定時的預設）；pointer-events:none 讓手指事件穿過它交給外層處理 */
 .pa-square {
     position: relative;
     flex: none;
@@ -1855,11 +1879,11 @@
     cursor: pointer;
 }
 
-/* 畫筆（圓形按鈕） */
+/* 畫筆（圓形按鈕）：裡面填這一局的底色（淡色），外框固定用深色，才看得出圓形 */
 .pa-brush {
     flex: none;
     padding: 0;
-    border: 5px solid var(--c-blue);
+    border: 5px solid var(--c-ink);
     border-radius: 50%;
     cursor: pointer;
     box-shadow: 0 4px 0 rgba(0, 0, 0, 0.18);
@@ -2164,6 +2188,39 @@
     fill: #7CFF9B;
 }
 
+/* 判定結果（秤的正下方）：第一行「差距 X.XXXX%」，第二行大大的「過關！／沒過關」。平常透明，秤重時才顯示 */
+.bk-vd {
+    fill: var(--c-ink);
+    font-size: 30px;
+    font-weight: 800;
+    font-family: var(--font-ui);
+    font-variant-numeric: tabular-nums;
+    opacity: 0;
+}
+
+.bk-vd--on {
+    opacity: 1;
+}
+
+.bk-vw {
+    font-size: 44px;
+    font-weight: 900;
+    font-family: var(--font-ui);
+    opacity: 0;
+}
+
+/* 過關（綠） */
+.bk-vw--ok {
+    fill: var(--c-ok);
+    opacity: 1;
+}
+
+/* 沒過關（橘） */
+.bk-vw--bad {
+    fill: var(--c-bad);
+    opacity: 1;
+}
+
 /* 切下來的麵包片 */
 .bk-splat {
     fill: #B9B29C;
@@ -2268,11 +2325,11 @@
     display: none;
 }
 
-/* 四個選項（2×2 格） */
+/* 六個選項（3 欄×2 列）：答案是連續的一排數字，由小到大排；3 欄的寬度比原本 2 欄窄，所以按鈕上的數字字級照樣放得下（最多 3 位數） */
 .cd-opts {
     flex: none;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: var(--sp-3);
     min-height: 140px;
 }
@@ -2346,11 +2403,34 @@
     display: block;
 }
 
-/* 路線 */
+/* 路線（vector-effect:non-scaling-stroke＝線寬、虛線長度以「畫面上的像素」計，不會因為揭曉時鏡頭放大而變粗） */
 .cv-line {
     fill: none;
     stroke-width: 7px;
     stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+
+/* 揭曉時：長的那條「球停住之後還沒走完的那一段」，用橘色標出來（畫在原本的線上面） */
+.cv-rest {
+    stroke: var(--c-orange);
+    stroke-linecap: round;
+    stroke-dasharray: none;
+}
+
+/* 揭曉時：長的那條的終點圈閃動（提醒玩家看球離終點還有多遠）；opacity 動畫 0.6 秒一次 */
+.cv-end--gap {
+    animation: cv-end-pulse 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes cv-end-pulse {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0.25;
+    }
 }
 
 /* 白色路線（逗號 = 兩個 class 共用一個樣式） */
@@ -2374,11 +2454,12 @@
     fill: #F2C230;
 }
 
-/* 球 */
+/* 球（描邊同樣不隨鏡頭放大而變粗） */
 .cv-ball {
     fill: #4AB5FF;
     stroke: #FFFFFF;
     stroke-width: 3px;
+    vector-effect: non-scaling-stroke;
 }
 
 /* 大標語（浮在場地上，pointer-events:none 不擋點擊） */
@@ -2394,6 +2475,11 @@
     color: #FFFFFF;
     text-shadow: 0 2px 8px #000, 0 0 12px #000;
     pointer-events: none;
+}
+
+/* 揭曉的時候大標語移到場地最上緣，不要蓋住放大後的球與終點 */
+.cv-field--zoom .cv-banner {
+    top: 6px;
 }
 
 /* 大標語：答對（亮綠） */
@@ -2710,13 +2796,13 @@
 
 /* 價格陷阱：比較兩張折扣標籤，哪一個比較便宜。 */
 /* ═══ 價格陷阱（.pr-）═══ */
-/* 標題 */
+/* 標題（一行：字數要控制在 16 個字內，標籤才有最大的空間放大字） */
 .pr-head {
     text-align: center;
     font-size: var(--fs-md);
     font-weight: 700;
     color: var(--c-ink);
-    min-height: 2.6em;
+    min-height: 1.5em;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2731,8 +2817,11 @@
     gap: var(--sp-3);
 }
 
-/* 單張價格標籤：像吊牌，粗邊框，作答前黑框 */
+/* 單張價格標籤：像吊牌，粗邊框，作答前黑框。
+   --pr-k：標籤裡所有文字的放大倍率，預設是 theme.css 的 --pr-scale（1.66＝放大成 166%）；
+   放不下的時候 JS（reaction_price.js 的 fitTags）會在這張標籤上把 --pr-k 往下調，所以下面每個字級都是「原本的字級 × --pr-k」 */
 .pr-tag {
+    --pr-k: var(--pr-scale);
     position: relative;
     flex: 1 1 0;
     min-height: 0;
@@ -2740,8 +2829,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: var(--sp-3);
+    gap: 2px;
+    padding: var(--sp-2) var(--sp-3);
     border: 5px solid var(--c-ink);                /* 作答前兩張都是黑框，作答後才分綠（便宜）／紅（貴）*/
     border-radius: 20px;
     background: #FFF6D6;
@@ -2770,29 +2859,31 @@
 
 /* 標籤小標 */
 .pr-tag__lbl {
-    font-size: var(--fs-sm);
+    font-size: calc(var(--fs-sm) * var(--pr-k));
     font-weight: 700;
     color: var(--c-ink-soft);
+    line-height: 1.15;
 }
 
-/* 原價（大字） */
+/* 原價（大字）：nowrap 不換行——一行放不下就由 JS 把倍率調小，不要把價錢拆成兩行 */
 .pr-tag__orig {
-    font-size: 50px;
+    font-size: calc(50px * var(--pr-k));
     font-weight: 800;
     line-height: 1.1;
+    white-space: nowrap;
 }
 
-/* 屬性選擇器：data-n 是 JS 記下的位數，位數越多字越小才放得下 */
+/* 屬性選擇器：data-n 是 JS 記下的位數，位數越多基本字級越小 */
 .pr-tag__orig[data-n="9"],
 .pr-tag__orig[data-n="10"] {
-    font-size: 44px;
+    font-size: calc(44px * var(--pr-k));
 }
 
 /* 更多位數：字更小 */
 .pr-tag__orig[data-n="11"],
 .pr-tag__orig[data-n="12"],
 .pr-tag__orig[data-n="13"] {
-    font-size: 36px;
+    font-size: calc(36px * var(--pr-k));
 }
 
 /* 折扣說明區 */
@@ -2805,28 +2896,32 @@
 
 /* 折扣文字行 */
 .pr-tag__line {
-    font-size: 32px;
+    font-size: calc(32px * var(--pr-k));
     font-weight: 800;
     color: var(--c-ink);
-    line-height: 1.2;
+    line-height: 1.15;
     text-align: center;
 }
 
 /* 兩張都有的「會員再享 N 折」：混淆用，不用算，所以用淡一點的顏色 */
-/* 兩張都有的「會員再享 N 折」：混淆用，不用算，所以用淡一點的顏色 */
 .pr-tag__line--member {
-    font-size: 28px;
+    font-size: calc(28px * var(--pr-k));
     color: var(--c-ink-soft);
 }
 
-/* 計算結果提示 */
+/* 計算結果提示（算式）：答題前就排好版但是透明（visibility:hidden 不顯示、卻照樣佔位置），
+   答完加上 .pr-tag--rev 才顯示，所以揭曉時版面不會跳動 */
 .pr-tag__calc {
-    min-height: 1.3em;
-    font-size: 26px;
+    font-size: calc(26px * var(--pr-k));
     font-weight: 700;
     color: var(--c-ink-soft);
     text-align: center;
-    line-height: 1.2;
+    line-height: 1.15;
+    visibility: hidden;
+}
+
+.pr-tag--rev .pr-tag__calc {
+    visibility: visible;
 }
 
 /* 答案揭曉：便宜的那張（綠） */

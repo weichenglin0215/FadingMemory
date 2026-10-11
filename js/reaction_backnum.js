@@ -3,9 +3,9 @@
    3×3 九宮格（數字 1～9）。先看格子依序發亮，再「倒著」把順序按回去：
    例如亮 1、2、3，就要按 3、2、1。看你能過第幾關。
    ───────────────────────────────────────────────────────────────────
-   · 第 1 關亮 3 個，之後每關多 1 個（SEQ_START＋關數−1）。
-   · 每一關可以錯 chances(level) 次：第 1 關 1 次，之後每 3 關多 1 次（第 4 關 2 次、第 7 關 3 次…）。
-     錯的次數超過機會就失敗。發生錯誤時，用「同一組數字」再亮一次，加強記憶，然後重新輸入。
+   · 第 1、2 關亮 3 個，之後每過 SEQ_EVERY（2）關才多 1 個（第 3、4 關 4 個、第 5、6 關 5 個…）：
+     數字增加得慢，玩家比較容易一關一關闖下去（同樣個數的兩關，靠亮燈速度變快來增加難度）。
+   · 關卡制，按錯一次就結束（沒有「機會」次數）：結算看你闖到第幾關。
    · 一開始先用很大的字提醒「倒著順序按數字」。
    · 亮燈順序隨機，相鄰兩個不會是同一格（超過 9 個時格子會重複出現，但不會連續相同）。
    · 亮燈速度隨關卡線性加快（每格亮 LIT_START → LIT_END 秒）。
@@ -28,21 +28,19 @@
     /* ═══ 可以自己調的參數 ═══ */
     /* 第 1 關要記幾個數字 */
     var SEQ_START = 3;            /* 第 1 關要記幾個 */
-    var CHANCE_EVERY = 3;         /* 每幾關多一次錯誤機會 */
+    var SEQ_EVERY = 2;            /* 每過幾關，要記的數字才多 1 個（2＝每兩關多一個） */
     var RAMP = 15;                /* 亮燈速度走完的關卡 */
     var LIT_START = 0.7, LIT_END = 0.45;    /* 每格亮多久（秒） */
     var GAP_S = 0.25;             /* 兩格之間的空檔（秒） */
     var SPLASH_MS = 2400;         /* 開場大字提醒停多久 */
     var CLEAR_MS = 900;
-    var REPLAY_MS = 1100;         /* 答錯後多久再亮一次 */
 
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 關'; }
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    /* 第 level 關要記幾個：3 + (關數 − 1) */
-    function seqLen(level) { return SEQ_START + level - 1; }
-    /* 這一關可以錯幾次：Math.floor 是「無條件捨去」，所以每 3 關才多 1 次 */
-    function chances(level) { return 1 + Math.floor((level - 1) / CHANCE_EVERY); }
+    /* 第 level 關要記幾個：3 + 每過 2 關才多 1 個。Math.floor 是「無條件捨去」，
+       所以第 1、2 關都是 3 個（floor(0/2)＝0、floor(1/2)＝0），第 3、4 關是 4 個（floor(2/2)＝1、floor(3/2)＝1）… */
+    function seqLen(level) { return SEQ_START + Math.floor((level - 1) / SEQ_EVERY); }
     /* 每一格亮多久：kit.ramp 是線性難度，隨關卡從 0.7 秒平均縮短到 0.45 秒 */
     function litSec(level) { return kit.ramp(level, LIT_START, LIT_END, RAMP); }
     /* 產生亮燈順序（1～9 的數字）。長度 ≤ 9 時用洗牌取前 L 個（不重複）；超過 9 就逐個隨機挑，但相鄰不能相同 */
@@ -77,8 +75,8 @@
             var my = R;
             root.innerHTML = '';
 
-            /* level 關卡；cleared 已過幾關；errors 這關已錯幾次；seq 亮燈順序；want 要按的順序（倒過來）；idx 目前按到第幾個；runId 每次播放 +1，讓舊的排程知道自己過期 */
-            var level = startAt || 1, cleared = level - 1, newRec = false, state = 'idle', errors = 0, seq = [], want = [], idx = 0, runId = 0;
+            /* level 關卡；cleared 已過幾關；seq 亮燈順序；want 要按的順序（倒過來）；idx 目前按到第幾個；runId 每次播放 +1，讓舊的排程知道自己過期 */
+            var level = startAt || 1, cleared = level - 1, newRec = false, state = 'idle', seq = [], want = [], idx = 0, runId = 0;
             /* 建立畫面元素：標題、橫幅提示、九宮格、開場大字 */
             var head = h('div', { 'class': 'bn-head' });
             var banner = h('div', { 'class': 'bn-banner' });
@@ -102,9 +100,9 @@
 
             /* 更新標題列右側的小字 */
             function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }
-            /* 更新標題文字：顯示第幾關、要記幾個、還能錯幾次 */
+            /* 更新標題文字：顯示第幾關、要記幾個（按錯一次就結束，所以不用顯示「還能錯幾次」） */
             function paintHead() {
-                head.textContent = '第 ' + level + ' 關・' + seqLen(level) + ' 個數字・還能錯 ' + Math.max(0, chances(level) - errors) + ' 次';
+                head.textContent = '第 ' + level + ' 關・' + seqLen(level) + ' 個數字';
             }
             /* 設定橫幅的文字與樣式（cls 是顏色變化版） */
             function setBanner(text, cls) { banner.textContent = text; banner.className = 'bn-banner' + (cls ? ' bn-banner--' + cls : ''); }
@@ -117,14 +115,13 @@
             }
 
             /* 播放亮燈順序：每格依序亮起，最後進入「輸入階段」 */
-            /* 播放亮燈順序（使用同一組 seq），播完進入輸入 */
-            function play(again) {
+            function play() {
                 /* runId 加 1：這次播放的編號 */
                 var id = ++runId;
                 state = 'show';
                 idx = 0;
                 paintHead();
-                setBanner(again ? '再看一次，記清楚！' : '看清楚順序…');
+                setBanner('看清楚順序…');
                 /* lit 每格亮的毫秒數、gap 格子間的空檔、t 目前的時間軸（從 400ms 開始） */
                 var lit = litSec(level) * 1000, gap = GAP_S * 1000, t = 400;
                 /* 用 forEach 為每個數字排一個「幾毫秒後亮起」的計時器：my.after(延遲, 函式) */
@@ -146,14 +143,13 @@
             /* 開始一關 */
             function startLevel() {
                 if (my.dead) return;
-                errors = 0;
                 /* 產生這關的亮燈順序 */
                 seq = makeSeq(seqLen(level));
                 /* 要按的順序＝亮燈順序倒過來 */
                 want = reversed(seq);
-                try { console.info('[倒背數字] 第 ' + level + ' 關：亮燈順序 ' + seq.join('、') + '；要按 ' + want.join('、') + '；可錯 ' + chances(level) + ' 次；每格亮 ' + litSec(level).toFixed(2) + ' 秒'); } catch (e) { }
+                try { console.info('[倒背數字] 第 ' + level + ' 關：亮燈順序 ' + seq.join('、') + '；要按 ' + want.join('、') + '；每格亮 ' + litSec(level).toFixed(2) + ' 秒'); } catch (e) { }
                 meta();
-                play(false);
+                play();
             }
 
             /* tap：處理按下數字 n */
@@ -177,36 +173,27 @@
                     }
                     return;
                 }
-                /* 按錯的處理 */
-                /* 按錯 */
+                /* 按錯：一次就結束（沒有機會次數），先讓錯的那格紅一下，再顯示結算 */
                 state = 'wrong';
                 flash(n, 'bn-cell--bad', 700);
                 Sfx.play('bad');
-                errors++;
-                paintHead();
-                /* 錯誤次數超過這關的機會＝失敗，顯示結算 */
-                if (errors > chances(level)) {
-                    my.after(900, function () {
-                        /* kit.resumeFrom：失敗後可從前 5 關繼續 */
-                        var back = kit.resumeFrom(level);
-                        kit.result(root, {
-                            score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
-                            num: cleared + ' 關', label: cleared >= 8 ? '記憶力驚人！' : (cleared >= 4 ? '很不錯！' : '再試一次，會更準！'),
-                            lines: ['第 ' + level + ' 關要按：' + want.join('、'), '你按到 ' + n + '，應該是 ' + want[idx]],
-                            isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail', onAgain: function () { round(1); },
-                            resume: { level: back, run: function () { round(back); } }
-                        });
+                setBanner('按錯了！', 'bad');
+                my.after(900, function () {
+                    /* kit.resumeFrom：失敗後可從前 5 關繼續 */
+                    var back = kit.resumeFrom(level);
+                    kit.result(root, {
+                        score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
+                        num: cleared + ' 關', label: cleared >= 8 ? '記憶力驚人！' : (cleared >= 4 ? '很不錯！' : '再試一次，會更準！'),
+                        lines: ['第 ' + level + ' 關要按：' + want.join('、'), '你按到 ' + n + '，應該是 ' + want[idx]],
+                        isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail', onAgain: function () { round(1); },
+                        resume: { level: back, run: function () { round(back); } }
                     });
-                /* 還有機會：用同一組數字再亮一次，加強記憶 */
-                } else {
-                    setBanner('按錯了！同一組數字再看一次', 'bad');
-                    my.after(REPLAY_MS, function () { play(true); });
-                }
+                });
             }
 
             /* G.debug：測試用後門 */
             G.debug = {
-                state: function () { return { level: level, state: state, errors: errors, seq: seq.slice(), want: want.slice(), idx: idx, cleared: cleared }; },
+                state: function () { return { level: level, state: state, seq: seq.slice(), want: want.slice(), idx: idx, cleared: cleared }; },
                 tapNext: function () { if (state === 'input') tap(want[idx]); return state; },
                 tapWrong: function () { if (state === 'input') tap(want[idx] === 9 ? 1 : want[idx] + 1); return state; }
             };
@@ -227,11 +214,11 @@
     var G = {
         id: ID,
         name: '倒背數字',
-        rule: '九宮格會依序亮起幾個數字，請**「倒著順序」把它們按回去**，例如亮 1、2、3 就按 3、2、1。每關多一個數字，按錯會再給你看一次，但機會有限！',
+        rule: '九宮格會依序亮起幾個數字，請**「倒著順序」把它們按回去**，例如亮 1、2、3 就按 3、2、1。每過兩關多一個數字、亮得越來越快，**按錯一次就結束**，看你能闖到第幾關！',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,
-        test: { seqLen: seqLen, chances: chances, litSec: litSec, makeSeq: makeSeq, reversed: reversed, SEQ_START: SEQ_START }
+        test: { seqLen: seqLen, litSec: litSec, makeSeq: makeSeq, reversed: reversed, SEQ_START: SEQ_START, SEQ_EVERY: SEQ_EVERY }
     };
     /* 登記到遊戲清單 */
     Reaction.register(G);

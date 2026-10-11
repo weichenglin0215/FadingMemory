@@ -907,18 +907,32 @@
     bottom: 22px;
 }
 
-/* ═══ 數獨猜一格（.sdk-）═══ */
+/* ═══ 數獨猜一格（.sdk-）═══
+   盤面有兩種：4×4（--n4，2×2 的宮）與 9×9（--n9，3×3 的宮）。欄數 --sdk-n 與每格邊長 --sdk-cell 由 --n4／--n9 決定；
+   每個宮的最右一欄（.sdk-cE）、最下一排（.sdk-rE）畫粗線，隔出每一個宮。 */
 .sdk-board {
     position: absolute;
     left: 50%;
     top: 10px;
     transform: translateX(-50%);
     display: grid;
-    grid-template-columns: repeat(6, 60px);
-    grid-auto-rows: 60px;
+    grid-template-columns: repeat(var(--sdk-n), var(--sdk-cell));
+    grid-auto-rows: var(--sdk-cell);
     border-left: 4px solid var(--c-ink);
     border-top: 4px solid var(--c-ink);
     background: var(--c-card);
+}
+
+/* 4×4：每格 88px、數字大；全盤 4×88＋4＝356px */
+.sdk-board--n4 {
+    --sdk-n: 4;
+    --sdk-cell: 88px;
+}
+
+/* 9×9：每格 42px；全盤 9×42＋4＝382px */
+.sdk-board--n9 {
+    --sdk-n: 9;
+    --sdk-cell: 42px;
 }
 
 .sdk-cell {
@@ -927,18 +941,23 @@
     justify-content: center;
     border-right: 1px solid var(--bd-c);
     border-bottom: 1px solid var(--bd-c);
-    font-size: var(--fs-xl);
+    font-size: var(--fs-lg);
     font-weight: var(--fw-black);
     color: var(--c-ink);
     box-sizing: border-box;
 }
 
-/* 每 3 欄、每 3 排畫一條粗線，隔出四個「宮」 */
-.sdk-c2 {
+/* 4×4 的格子大，數字也放大 */
+.sdk-board--n4 .sdk-cell {
+    font-size: 64px;
+}
+
+/* 每個宮的最右一欄、最下一排畫粗線 */
+.sdk-cE {
     border-right: 4px solid var(--c-ink);
 }
 
-.sdk-r2 {
+.sdk-rE {
     border-bottom: 4px solid var(--c-ink);
 }
 
@@ -965,8 +984,17 @@
     color: var(--c-on-accent);
 }
 
+/* 說明文字放在盤面下面：4×4 盤面高 356px、9×9 盤面高 382px */
 .sdk-tip {
     top: 384px;
+}
+
+.sdk-tip--n4 {
+    top: 376px;
+}
+
+.sdk-tip--n9 {
+    top: 402px;
 }
 
 .sdk-btn {

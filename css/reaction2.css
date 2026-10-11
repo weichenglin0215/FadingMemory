@@ -133,9 +133,11 @@
     touch-action: manipulation;
 }
 
-/* 點對的格子：字變淺綠 */
+/* 點對的格子：整格變綠底白字（比原本的「只有字變淺綠」更明顯），OK_FLASH_MS 之後 JS 會拿掉這個 class 變回黑底 */
 .sch-cell--ok {
-    color: var(--c-ok-light);
+    background: var(--c-ok);
+    border-color: var(--c-ok);
+    color: var(--c-on-accent);
 }
 
 /* 點錯的格子：整格變橘紅 */
@@ -480,18 +482,43 @@
     transform-origin: 0 0;
 }
 
-/* 被撕掉的那一張：播放 tcTear 動畫，pointer-events:none 讓它不會擋到下面的點擊 */
+/* 被撕掉的那一張：播放 tcFall 動畫（往下滑落），pointer-events:none 讓它不會擋到下面的點擊。
+   動畫時間 0.6 秒要跟 js/reaction_tearcal.js 的 TEAR_MS 一樣（JS 等動畫播完才把這一張從畫面移除）；
+   transform-origin:50% 0＝以上緣正中間為軸心轉動，像日曆從上面被撕下來之後掉下去 */
 .tc-page--torn {
     z-index: 3;
     pointer-events: none;
-    animation: tcTear 0.25s ease-in forwards;
+    transform-origin: 50% 0;
+    animation: tcFall 0.6s ease-in forwards;
 }
 
-/* tcTear 動畫：0.25 秒內往左上飛走並旋轉、漸漸變透明（只寫終點 to，起點就是目前狀態） */
-@keyframes tcTear {
-    to {
-        transform: translate(-70px, -140px) rotate(-16deg);
+/* tcFall 動畫：先微微往上掀一下（像被撕起來），然後越掉越快往下滑落、稍微歪斜，最後漸漸變透明。
+   translateY 的百分比是「這一張自己的高度」：115%＝整張掉到自己下方 */
+@keyframes tcFall {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+
+    15% {
+        transform: translateY(-3%) rotate(-1.5deg);
+        opacity: 1;
+    }
+
+    70% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(115%) rotate(8deg);
         opacity: 0;
+    }
+}
+
+/* 系統開了「減少動態效果」：不要滑落動畫，被撕掉的那一張直接消失 */
+@media (prefers-reduced-motion: reduce) {
+    .tc-page--torn {
+        animation-duration: 0.01s;
     }
 }
 
@@ -652,12 +679,14 @@
     gap: 4px;
 }
 
-/* 下方的藥盒：2 欄的格子（grid），每一格是一個時段 */
+/* 下方的藥盒：每一格是一個時段，所有格子排成一列、平分整個寬度。
+   欄數由 JS 依時段數設定（2、3、4 個時段就切成 2、3、4 等分，見 reaction_pillbox.js 的 startLevel）；
+   minmax(0, 1fr)＝均分、而且可以縮到 0，不會被裡面的藥丸撐開 */
 .pb-box {
     flex: 1 1 auto;
     min-height: 0;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
 }
 
@@ -666,15 +695,18 @@
     opacity: 0.35;
 }
 
-/* 藥盒裡的一格；overflow:hidden 防止藥丸太多時超出格子外 */
+/* 藥盒裡的一格；overflow:hidden 防止藥丸太多時超出格子外。
+   邊線是粗的深褐色線（--pb-bd-w／--pb-bd-c，theme.css），一眼就看得出每個藥盒的範圍；
+   min-width:0 讓格子能被 grid 的 minmax(0, 1fr) 縮到均分的寬度 */
 .pb-cell {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
-    padding: 8px 10px;
+    min-width: 0;
+    padding: 8px 6px;
     background: var(--c-card);
-    border: var(--bd);
+    border: var(--pb-bd-w) solid var(--pb-bd-c);
     border-radius: var(--r-md);
     font-family: var(--font-ui);
     overflow: hidden;
@@ -1271,9 +1303,10 @@
     line-height: 1.25;
 }
 
-/* 臉孔區 */
+/* 臉孔區：flex 的 basis 設 0（不是 auto），高度完全由「剩下的空間」決定，不會被裡面的臉撐高而超出畫面下方
+   （以前 basis 是 auto，格子變多、排成 3 列以上時，部分瀏覽器會用臉孔圖的原始高度算出比畫面還高的區域，最後一列就掉到螢幕外） */
 .wt-stage {
-    flex: 1 1 auto;
+    flex: 1 1 0;
     min-height: 0;
 }
 
@@ -1302,26 +1335,33 @@
     height: 100%;
 }
 
-/* 選臉階段：2 欄的格子 */
+/* 選臉階段：格子。欄數與列數由 JS 依臉的張數設定（4 張以內 2 欄、5～9 張 3 欄，見 reaction_witness.js 的 gridFor），
+   minmax(0, 1fr)＝每欄、每列均分、而且最小可以縮到 0，不會被裡面的內容撐開 */
 .wt-stage--pick {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-auto-rows: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
     gap: 10px;
 }
 
-/* 一張候選臉 */
+/* 一張候選臉：臉的 SVG 用 absolute 貼在格子裡（不佔版面），格子的大小只由網格決定，臉再縮放去填滿它 */
 .wt-cell {
+    position: relative;
+    min-width: 0;
     min-height: 0;
-    padding: 4px;
+    overflow: hidden;
+    padding: 0;
     background: var(--c-card);
     border: var(--bd);
     border-radius: var(--r-md);
 }
 
 .wt-cell .wt-face {
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    width: calc(100% - 8px);
+    height: calc(100% - 8px);
 }
 
 /* 手指按下去時變淺藍色 */
@@ -1385,16 +1425,17 @@
     border-color: var(--c-bad);
 }
 
-/* 被遮住的大字（用宋體風格的 --font-note） */
+/* 被遮住的大字（用宋體風格的 --font-note）。高關卡會用 transform 歪斜，揭曉時轉正（transition 讓轉正有動畫） */
 .hc-char {
     font-family: var(--font-note);
     font-size: 300px;
     font-weight: 700;
     line-height: 1;
     color: var(--c-ink);
+    transition: transform 0.25s ease;
 }
 
-/* 下方的 4 個選項（2×2 格子） */
+/* 下方的選項：4 個 2×2 格、5～6 個 3×2 格（欄數由 JS 依選項數設定，reaction_halfchar.js 的 next；兩種都是 2 列，高度一樣） */
 .hc-opts {
     flex: none;
     display: grid;
@@ -1601,7 +1642,8 @@
     height: 100%;
 }
 
-/* 小雞頭上的星星：絕對定位在小雞上方，pointer-events:none 不影響點擊 */
+/* 小雞頭上的星星：絕對定位在小雞上方，pointer-events:none 不影響點擊。
+   水藍色，並且用 animation 快速閃爍（0.36 秒一次：亮 → 幾乎消失 → 亮，每秒不到 3 次），引起玩家注意 */
 .ck-star {
     position: absolute;
     left: 50%;
@@ -1614,9 +1656,39 @@
     justify-content: center;
     font-size: var(--fs-lg);
     line-height: 1;
-    color: var(--c-orange);
-    text-shadow: 0 0 3px var(--c-card), 0 0 3px var(--c-card);
+    color: var(--c-sky);
+    text-shadow: 0 0 3px var(--c-card), 0 0 3px var(--c-card), 0 0 6px var(--c-sky);
     pointer-events: none;
+    animation: ck-star-blink 0.36s linear infinite;
+}
+
+/* 閃爍動畫：前半段亮且稍微放大，後半段幾乎消失；0%～49% 和 50%～100% 各維持固定值，所以是「一亮一滅」的硬切換，不是漸變 */
+@keyframes ck-star-blink {
+
+    0%,
+    49% {
+        opacity: 1;
+        transform: scale(1.15);
+    }
+
+    50%,
+    100% {
+        opacity: 0.12;
+        transform: scale(0.85);
+    }
+}
+
+/* 已經找到的星星小雞：星星不再閃爍，穩穩亮著（綠色光圈代表找對了） */
+.ck-chick--ok .ck-star {
+    animation: none;
+    opacity: 1;
+}
+
+/* 系統開了「減少動態效果」：不要閃爍，星星穩穩亮著 */
+@media (prefers-reduced-motion: reduce) {
+    .ck-star {
+        animation: none;
+    }
 }
 
 /* 移動結束後：只有星星小雞可以點，其他小雞沒有點擊功能（點下去等於點到空地）*/

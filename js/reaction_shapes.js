@@ -7,14 +7,16 @@
    · 難度曲線＝格子數量：第 1 關 2×3（6 格），之後每一關高度格數 +1、
      寬度格數＝高度格數 ÷ 1.5 四捨五入（跟畫面本身扣掉文字區後大約 2:3 的
      比例對齊），上限寬 20 格×高 30 格——格子越多、每一格越小，自然越難找。
-   · 兩種考驗，依關卡數決定（不是隨機）：
-     - 第 1～10 關固定是「混合」（mixed）：形狀跟顏色同時不一樣，兩種線索
-       疊在一起找，比較好上手，適合安排在前面。
-     - 第 11 關開始固定是「形狀」（shape）：所有格子同色，一格的形狀跟其他
-       不一樣——這個顏色不是每次都白色，是每一局隨機抽一個鮮明顏色（也可能
-       抽到白色），抽到什麼全部格子就統一用那個顏色，顏色本身不是線索，
-       只有形狀在變（純色彩辨識的版本已經取消，顏色只在「混合」考驗裡當
-       輔助線索，不會單獨出題）。
+   · 難度慢慢增加（玩家說：第 11 關突然出現很複雜的字、難度一下變很難，應該慢慢變難，字要隨機出現）：
+     ① 顏色：第 1 關的顏色最鮮豔（彩度 SAT_START）、之後每關線性變淡，第 SAT_END_LEVEL（15）關起完全沒有彩度（黑白）；
+        「混合」考驗（形狀跟顏色都不一樣）裡，少數格與多數格的色相差也同時從 180 度縮小到 24 度（HUE_START → HUE_END）。
+        第 1～14 關是「混合」，第 15 關起是「形狀」（全部格子同一個白色，顏色不是線索，只有形狀不一樣）。
+     ② 題材：每一組圖案有一個「複雜度」cx（0～1）：向量符號最簡單，其次是 emoji、數字、英文字母，中文字依筆畫由少到多
+        （cx ＝ 0.15 ＋ 0.85 × (筆畫 − 3) ÷ 22，筆畫約 3 → 25 畫）。每一關有一個「目標複雜度」T：第 1～CX_FLAT（10）關固定在最低
+        （符號、數字、筆畫少的字），第 10 關之後線性升高，第 CX_RAMP（30）關到頂（筆畫最多的字）。
+        抽題時每一組的權重＝鐘形 exp(−(cx − T)² ÷ (2σ²))：離目標複雜度越近越容易被抽到，所以符號、數字的機會慢慢減少、
+        中文字的筆畫慢慢變多；另外「比目標複雜度難超過 CX_AHEAD（0.2）」的題材一律不抽（不會突然跳出太難的字，
+        例如前 10 關只會有 6 畫以內的字）；而且每一關都是從題庫「隨機」抽（不是某一關固定出某個字）。
    · 形狀／文字／emoji 的「一對」寫在 PAIRS：colorable:false 的（目前只有
      emoji）沒辦法套用顏色（emoji 是自帶顏色的點陣圖示，CSS color 對它沒用），
      只能出現在「形狀」考驗；其餘（向量圖形、英文字母、中文字、數字）在
@@ -62,34 +64,57 @@
         { type: 'text', a: 'O', b: 'Q', colorable: true },
         { type: 'text', a: 'M', b: 'W', colorable: true },
         { type: 'text', a: 'E', b: 'F', colorable: true },
-        { type: 'text', a: '二', b: '三', colorable: true },
-        { type: 'text', a: '口', b: '回', colorable: true },
-        { type: 'text', a: '上', b: '下', colorable: true },
-        { type: 'text', a: '木', b: '林', colorable: true },
-        { type: 'text', a: '士', b: '土', colorable: true },
-        { type: 'text', a: '大', b: '犬', colorable: true },
-        { type: 'text', a: '未', b: '末', colorable: true },
-        /* V1.21.0 新增：筆畫很多（約 19～25 畫）、長得很像的中文字（hard:true）。格子越小越難分辨，第 4 關起才會抽到，
-           出現機率隨關卡增加（見 hardChance）；一樣要找「只有一格不一樣」。 */
-        { type: 'text', a: '讚', b: '讀', colorable: true, hard: true },
-        { type: 'text', a: '驚', b: '警', colorable: true, hard: true },
-        { type: 'text', a: '響', b: '饗', colorable: true, hard: true },
-        { type: 'text', a: '灣', b: '彎', colorable: true, hard: true },
-        { type: 'text', a: '麟', b: '鱗', colorable: true, hard: true },
-        { type: 'text', a: '讓', b: '壤', colorable: true, hard: true },
-        { type: 'text', a: '蘿', b: '羅', colorable: true, hard: true },
-        { type: 'text', a: '躍', b: '耀', colorable: true, hard: true },
-        { type: 'text', a: '贏', b: '羸', colorable: true, hard: true },
-        { type: 'text', a: '鑑', b: '鑒', colorable: true, hard: true },
-        { type: 'text', a: '體', b: '髓', colorable: true, hard: true },
-        { type: 'text', a: '欖', b: '攬', colorable: true, hard: true },
-        { type: 'text', a: '籬', b: '籮', colorable: true, hard: true },
-        { type: 'text', a: '鑲', b: '鑰', colorable: true, hard: true },
-        { type: 'text', a: '戀', b: '孿', colorable: true, hard: true },
+        { type: 'text', a: '二', b: '三', colorable: true, st: 2.5 },
+        { type: 'text', a: '口', b: '回', colorable: true, st: 4.5 },
+        { type: 'text', a: '上', b: '下', colorable: true, st: 3 },
+        { type: 'text', a: '木', b: '林', colorable: true, st: 6 },
+        { type: 'text', a: '士', b: '土', colorable: true, st: 3 },
+        { type: 'text', a: '大', b: '犬', colorable: true, st: 3.5 },
+        { type: 'text', a: '未', b: '末', colorable: true, st: 5 },
+        /* 筆畫很多（約 19～25 畫）、長得很像的中文字：st＝這一組兩個字的平均筆畫數，第 10 關之後才慢慢常出現（見 targetCx、pickPair） */
+        { type: 'text', a: '讚', b: '讀', colorable: true, st: 22 },
+        { type: 'text', a: '驚', b: '警', colorable: true, st: 21 },
+        { type: 'text', a: '響', b: '饗', colorable: true, st: 22 },
+        { type: 'text', a: '灣', b: '彎', colorable: true, st: 23.5 },
+        { type: 'text', a: '麟', b: '鱗', colorable: true, st: 23.5 },
+        { type: 'text', a: '讓', b: '壤', colorable: true, st: 20 },
+        { type: 'text', a: '蘿', b: '羅', colorable: true, st: 22 },
+        { type: 'text', a: '躍', b: '耀', colorable: true, st: 20.5 },
+        { type: 'text', a: '贏', b: '羸', colorable: true, st: 19.5 },
+        { type: 'text', a: '鑑', b: '鑒', colorable: true, st: 22.5 },
+        { type: 'text', a: '體', b: '髓', colorable: true, st: 21 },
+        { type: 'text', a: '欖', b: '攬', colorable: true, st: 24.5 },
+        { type: 'text', a: '籬', b: '籮', colorable: true, st: 25 },
+        { type: 'text', a: '鑲', b: '鑰', colorable: true, st: 24.5 },
+        { type: 'text', a: '戀', b: '孿', colorable: true, st: 22.5 },
         { type: 'text', a: '2', b: '3', colorable: true },
         { type: 'text', a: '3', b: '8', colorable: true },
         { type: 'text', a: '6', b: '9', colorable: true },
         { type: 'text', a: '0', b: '8', colorable: true },
+        /* 新增（筆畫少與筆畫中等的字，讓筆畫能一點一點增加；st＝平均筆畫數） */
+        { type: 'text', a: '己', b: '已', colorable: true, st: 3 },
+        { type: 'text', a: '日', b: '曰', colorable: true, st: 4 },
+        { type: 'text', a: '千', b: '干', colorable: true, st: 3 },
+        { type: 'text', a: '午', b: '牛', colorable: true, st: 4 },
+        { type: 'text', a: '刀', b: '力', colorable: true, st: 2 },
+        { type: 'text', a: '王', b: '玉', colorable: true, st: 4.5 },
+        { type: 'text', a: '天', b: '夫', colorable: true, st: 4 },
+        { type: 'text', a: '往', b: '住', colorable: true, st: 7.5 },
+        { type: 'text', a: '待', b: '侍', colorable: true, st: 8.5 },
+        { type: 'text', a: '持', b: '特', colorable: true, st: 9.5 },
+        { type: 'text', a: '候', b: '侯', colorable: true, st: 9.5 },
+        { type: 'text', a: '清', b: '情', colorable: true, st: 11 },
+        { type: 'text', a: '現', b: '視', colorable: true, st: 11 },
+        { type: 'text', a: '問', b: '間', colorable: true, st: 11.5 },
+        { type: 'text', a: '場', b: '揚', colorable: true, st: 12 },
+        { type: 'text', a: '晴', b: '睛', colorable: true, st: 12.5 },
+        { type: 'text', a: '幅', b: '福', colorable: true, st: 12.5 },
+        { type: 'text', a: '微', b: '徵', colorable: true, st: 13.5 },
+        { type: 'text', a: '買', b: '賣', colorable: true, st: 13.5 },
+        { type: 'text', a: '暖', b: '緩', colorable: true, st: 14 },
+        { type: 'text', a: '練', b: '煉', colorable: true, st: 14 },
+        { type: 'text', a: '慶', b: '廣', colorable: true, st: 15 },
+        { type: 'text', a: '憂', b: '優', colorable: true, st: 16 },
         { type: 'emoji', a: '😀', b: '😆', colorable: false },
         { type: 'emoji', a: '⚽', b: '🏐', colorable: false },
         { type: 'emoji', a: '🎲', b: '🀄', colorable: false },
@@ -98,16 +123,31 @@
     ];
     /* COLORABLE：篩出能套用顏色的組合（emoji 自帶顏色，不能套） */
     var COLORABLE = PAIRS.filter(function (p) { return p.colorable; });
-    /* 筆畫多的中文字組合（hard:true）出現的機率：第 1～3 關完全不出現，第 4 關 15%，之後線性升到第 20 關的 55%（純函式） */
-    function hardChance(level) {
-        if (level < 4) return 0;
-        return Math.min(0.55, 0.15 + (level - 4) * (0.4 / 16));
+    /* ═══ 難度之一：題材的「複雜度」與每一關的「目標複雜度」（細節見檔頭說明）═══ */
+    var CX_LOW = 0.10, CX_HIGH = 1.0;      /* 目標複雜度的最低（符號、數字、筆畫少的字）與最高（筆畫最多的字） */
+    var CX_FLAT = 10, CX_RAMP = 30;        /* 第 1～CX_FLAT 關維持最低，之後線性升高，第 CX_RAMP 關到頂 */
+    var CX_SIGMA = 0.18;                   /* 鐘形的寬度：越小，越集中在目標複雜度附近 */
+    var CX_AHEAD = 0.20;                   /* 比目標複雜度難超過這麼多的題材一律不抽（避免突然跳出太難的字）；比目標簡單的不限制，只是機會逐漸變小 */
+    /* 一組圖案的複雜度 cx（0～1）：向量符號 0.05 → emoji 0.10 → 數字 0.12 → 英文字母 0.15 → 中文字 0.15～1.0（依平均筆畫 st：3 畫約 0.15、25 畫＝1.0） */
+    function complexityOf(p) {
+        if (p.type === 'svg') return 0.05;
+        if (p.type === 'emoji') return 0.10;
+        if (p.st == null) return /^[0-9]$/.test(p.a) ? 0.12 : 0.15;
+        return 0.15 + 0.85 * Math.min(1, Math.max(0, (p.st - 3) / 22));
     }
-    /* 從 pool 裡挑一組：先依 hardChance 決定這關要不要抽「筆畫多」的，再從對應的那一堆隨機挑 */
-    function pickPair(pool, level) {
-        var hard = pool.filter(function (p) { return p.hard; }), easy = pool.filter(function (p) { return !p.hard; });
-        if (hard.length && Math.random() < hardChance(level || 1)) return pickAny(hard);
-        return pickAny(easy.length ? easy : pool);
+    /* 第 level 關的目標複雜度：前 CX_FLAT 關固定最低，之後線性升高到第 CX_RAMP 關的最高 */
+    function targetCx(level) {
+        if (level <= CX_FLAT) return CX_LOW;
+        return CX_LOW + (CX_HIGH - CX_LOW) * Math.min(1, (level - CX_FLAT) / (CX_RAMP - CX_FLAT));
+    }
+    /* 從 pool 裡挑一組：每一組的權重＝exp(−(cx − T)² ÷ (2σ²))（鐘形；比目標難超過 CX_AHEAD 的權重是 0），再依權重隨機抽
+       （輪盤抽法：總權重乘一個 0～1 的亂數，逐組扣掉權重，扣到小於 0 的那一組就是被抽到的） */
+    function pickPair(pool, level, rand) {
+        rand = rand || Math.random;
+        var T = targetCx(level || 1), w = pool.map(function (p) { var d = complexityOf(p) - T; return d > CX_AHEAD ? 0 : Math.exp(-(d * d) / (2 * CX_SIGMA * CX_SIGMA)); });
+        var sum = w.reduce(function (a, b) { return a + b; }, 0), r = rand() * sum;
+        for (var i = 0; i < pool.length; i++) { r -= w[i]; if (r < 0) return pool[i]; }
+        return pool[pool.length - 1];
     }
 
     /* 向量圖形：用公式畫正多邊形與星形，不用一個一個手刻座標 */
@@ -153,16 +193,14 @@
         return '<span class="shapes-glyph-text" style="color:' + color + ';font-size:' + fontPx + 'px">' + UI.esc(value) + '</span>';
     }
 
-    /* 顏色：只有「混合」考驗用，兩邊各給一個明顯不同的顏色 */
-    /* ═══ 顏色（只給「混合」考驗用：兩邊各給一個明顯不同的顏色）═══
-       純「色彩辨識」的考驗已經取消，所以這裡不需要 js/reaction_spot.js 那種
-       逐關縮小的知覺差異換算，只留下「隨機抽一個底色」＋「HSV→RGB 轉換」
-       （CSS 沒有原生 hsv() 函式，顏色要先換算成 rgb() 才能畫上畫面）。 */
-    /* 底色的飽和度 s 與明度 v 範圍 */
-    var BASE = { s: { lo: 70, hi: 85 }, v: { lo: 70, hi: 90 } };
-    function randBaseColor() {
-        return { h: Math.random() * 360, s: BASE.s.lo + Math.random() * (BASE.s.hi - BASE.s.lo), v: BASE.v.lo + Math.random() * (BASE.v.hi - BASE.v.lo) };
-    }
+    /* ═══ 難度之二：顏色（只給「混合」考驗用：少數格與多數格各給一個顏色）═══
+       彩度（鮮豔程度）第 1 關最高（SAT_START），之後每關線性降低，第 SAT_END_LEVEL 關起是 0（黑白）；
+       兩個顏色的色相差也從 HUE_START 度線性縮小到 HUE_END 度（第 SAT_END_LEVEL − 1 關）。
+       CSS 沒有原生 hsv() 函式，顏色要先用下面的 hsvToRgb 換算成 rgb() 才能畫上畫面。 */
+    var SAT_START = 85, SAT_END_LEVEL = 15, VAL = 90;        /* 第 1 關的彩度（0～100）、起幾關完全無彩度、明度（0～100，黑底上要亮） */
+    var HUE_START = 180, HUE_END = 24;                       /* 「混合」考驗兩個顏色的色相差（度）：第 1 關 → 第 SAT_END_LEVEL − 1 關 */
+    function satFor(level) { return SAT_START * Math.max(0, 1 - (Math.max(level, 1) - 1) / (SAT_END_LEVEL - 1)); }
+    function hueDiffFor(level) { return HUE_START + (HUE_END - HUE_START) * Math.min(1, Math.max(0, (level - 1) / (SAT_END_LEVEL - 2))); }
     /* HSV 轉 RGB：CSS 沒有原生 hsv() 函式，要先換算成 rgb() 才能畫在畫面上 */
     function hsvToRgb(hh, ss, vv) {
         var s = ss / 100, v = vv / 100;
@@ -188,50 +226,38 @@
     /* 從陣列隨機挑一個 */
     function pickAny(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-    /* 依關卡決定考驗類型：1～10 關「混合」（形狀與顏色同時不同，比較好找），之後「形狀」 */
+    /* 依關卡決定考驗類型：第 1～14 關「混合」（形狀與顏色同時不同，顏色逐關變淡），第 15 關起「形狀」（黑白，只剩形狀不同） */
     function typeFor(level) {
-        return level <= 10 ? 'mixed' : 'shape';
+        return level < SAT_END_LEVEL ? 'mixed' : 'shape';
     }
     /* 這一關顯示的提示文字 */
     function hintTextFor(type) {
-        if (type === 'mixed') return '找出形狀和顏色都不一樣的那一格';
+        if (type === 'mixed') return '找出形狀（和顏色）不一樣的那一格';
         return '找出形狀不一樣的那一格';
     }
 
-    /* 「形狀」考驗整局共用的顏色：一半機率白色、一半機率隨機鮮明顏色（顏色本身不是線索） */
-    /* 「形狀」考驗整局共用的顏色：顏色不是線索（全部格子都一樣），所以
-       一半機率乾脆用白色，另一半機率隨機抽一個高飽和度、高明度的鮮明顏色
-       ——單純是視覺上的變化，不影響「找哪一格形狀不一樣」這件事的難度。 */
-    function randShapeColor() {
-        if (Math.random() < 0.5) return '#FFFFFF';
-        return cssColor({ h: Math.random() * 360, s: 80 + Math.random() * 20, v: 85 + Math.random() * 15 });
-    }
-
-    /* 算出「多數格」與「少數格」各自要顯示的 HTML；fontPx 是文字型圖案的字級 */
-    /* 算出「多數格」跟「少數格」各自要顯示的 HTML：fontPx 是文字型圖案的字級
-       （向量圖形用 % 寬高自動縮放，不需要這個）。 */
+    /* 算出「多數格」與「少數格」各自要顯示的 HTML；fontPx 是文字型圖案的字級。回傳 { base, odd, pair }（pair 是這一關抽到的那一組圖案）。 */
     function buildRender(type, fontPx, level) {
+        var flip = Math.random() < 0.5;
         if (type === 'shape') {
+            /* 形狀考驗（第 SAT_END_LEVEL 關起）：所有格子同一個白色（黑白、無彩度），顏色不是線索，只有形狀不一樣；題材含 emoji（emoji 自帶顏色，也只能出現在這裡） */
             var pair = pickPair(PAIRS, level);
-            var flip = Math.random() < 0.5;
             var baseKind = flip ? pair.b : pair.a, oddKind = flip ? pair.a : pair.b;
-            var color = randShapeColor();
             return {
-                base: glyphHtml(pair.type, baseKind, color, fontPx),
-                odd: glyphHtml(pair.type, oddKind, color, fontPx)
+                base: glyphHtml(pair.type, baseKind, '#FFFFFF', fontPx),
+                odd: glyphHtml(pair.type, oddKind, '#FFFFFF', fontPx),
+                pair: pair
             };
         }
-        /* mixed：形狀與顏色同時不一樣，少數格的色相與多數格差 150～210 度，一眼就看得出來 */
-        /* mixed：形狀跟顏色同時不一樣，顏色故意拉開一大段色相差，讓它一眼就看得出來
-           （安排在最前面幾關出現機率較高，兩種線索疊在一起找，比單一線索容易） */
+        /* mixed：形狀跟顏色同時不一樣。兩個顏色的彩度同為 satFor(level)（逐關變淡）、色相差 hueDiffFor(level)（逐關變小），方向隨機 */
         var p3 = pickPair(COLORABLE, level);
-        var flip3 = Math.random() < 0.5;
-        var bKind = flip3 ? p3.b : p3.a, oKind = flip3 ? p3.a : p3.b;
-        var bColor = randBaseColor();
-        var oColor = { h: (bColor.h + 150 + Math.random() * 60) % 360, s: bColor.s, v: bColor.v };
+        var bKind = flip ? p3.b : p3.a, oKind = flip ? p3.a : p3.b;
+        var sat = satFor(level), bColor = { h: Math.random() * 360, s: sat, v: VAL };
+        var oColor = { h: (bColor.h + (Math.random() < 0.5 ? 1 : -1) * hueDiffFor(level) + 360) % 360, s: sat, v: VAL };
         return {
             base: glyphHtml(p3.type, bKind, cssColor(bColor), fontPx),
-            odd: glyphHtml(p3.type, oKind, cssColor(oColor), fontPx)
+            odd: glyphHtml(p3.type, oKind, cssColor(oColor), fontPx),
+            pair: p3
         };
     }
 
@@ -283,6 +309,11 @@
                .shapes-glyph-svg 的寬高百分比（css/reaction.css，70% → 93%）。 */
             /* 產生多數格與少數格的圖案 */
             var render = buildRender(type, Math.round(cell * 0.8), level);
+            /* 主控台印出這一關實際的格數、考驗類型、抽到的圖案與複雜度、彩度與色相差，方便驗證難度 */
+            try {
+                console.info('[形形色色] 第 ' + level + ' 關：' + width + '×' + height + ' 格、' + (type === 'mixed' ? '混合' : '形狀（黑白）') + '；圖案「' + render.pair.a + '」／「' + render.pair.b + '」' + (render.pair.st != null ? '（平均 ' + render.pair.st + ' 畫）' : '') +
+                    '，複雜度 ' + complexityOf(render.pair).toFixed(2) + '（目標 ' + targetCx(level).toFixed(2) + '）' + (type === 'mixed' ? '；彩度 ' + satFor(level).toFixed(1) + '、色相差 ' + hueDiffFor(level).toFixed(1) + ' 度' : '；無彩度'));
+            } catch (e) { }
             /* for 迴圈建立 n 個格子，只有 oddIdx 那一格用「少數」圖案 */
             for (var i = 0; i < n; i++) {
                 /* (function (i) {...})(i)：立即執行函式，讓每格的點擊事件記住自己的編號 */
@@ -331,11 +362,15 @@
     Reaction.register({
         id: ID,
         name: '形形色色',
-        rule: '畫面會被分成一格一格，裡面幾乎所有格子都長得一模一樣，**只有一格不一樣**（形狀不同，或是形狀和顏色都不同）。找出那一格，點下去；答對就進下一關，格子會越來越多、越來越小，越後面要越仔細看。**答錯就結束**，比比看能撐到第幾關。',
+        rule: '畫面會被分成一格一格，裡面幾乎所有格子都長得一模一樣，**只有一格不一樣**。前面的關卡形狀和顏色都不同，顏色很鮮豔；越後面顏色越淡、差異越小，**第 15 關起變成黑白，只剩形狀不同**。圖案會從符號、數字，慢慢變成筆畫越來越多的字。找出那一格，點下去；答對就進下一關，格子會越來越多、越來越小。**答錯就結束**，比比看能撐到第幾關。',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
-        test: { PAIRS: PAIRS, hardChance: hardChance, pickPair: pickPair, COLORABLE: COLORABLE }
+        test: {
+            PAIRS: PAIRS, COLORABLE: COLORABLE, complexityOf: complexityOf, targetCx: targetCx, pickPair: pickPair, satFor: satFor, hueDiffFor: hueDiffFor, typeFor: typeFor, hintTextFor: hintTextFor,
+            hsvToRgb: hsvToRgb, heightFor: heightFor, widthFor: widthFor,
+            CX_LOW: CX_LOW, CX_HIGH: CX_HIGH, CX_FLAT: CX_FLAT, CX_RAMP: CX_RAMP, CX_SIGMA: CX_SIGMA, CX_AHEAD: CX_AHEAD, SAT_START: SAT_START, SAT_END_LEVEL: SAT_END_LEVEL, HUE_START: HUE_START, HUE_END: HUE_END
+        }
     });
 })();

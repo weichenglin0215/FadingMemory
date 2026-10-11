@@ -13,7 +13,7 @@
    · 判定：按「好了」，目標與目前的環狀差（mod 720 分鐘）≤ TOL（1 分鐘）才算對。
    · 難度（第 1 → LEVEL_RAMP 關線性）：限時 TIME_START → TIME_END 秒、起始時間可差的整點數 0 → HOUR_OFFSET_END；
      第 HIDE_NUM_FROM 關起隱藏 1～12 的數字、第 HIDE_TICK_FROM 關起連刻度也隱藏。
-   · 有 LIVES 次機會（超時或判定錯誤扣一次），成績＝通過關數（越多越好）。
+   · 關卡制：超時沒撥對、或按「好了」時誤差超過容許值，就結束（錯一次就失敗，沒有「機會」次數），成績＝通過關數（越多越好）。
    ═══════════════════════════════════════════════════════════════════ */
 
 /* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
@@ -36,7 +36,6 @@
     var HOUR_OFFSET_START = 1, HOUR_OFFSET_END = 6;    /* 起始時間最多可以差幾個整點 */
     var OFFSET_MIN = 15, OFFSET_MAX = 55;      /* 除了整點之外，再差 15～45 分鐘 */
     var TOL = 1;                               /* 容許誤差（分鐘） */
-    var LIVES = 3;
     var HIDE_NUM_FROM = 10, HIDE_TICK_FROM = 16;
     var DEAD_ZONE = 0.12;                      /* 離圓心小於鐘面寬度的這個比例時不理會（角度抖動太大） */
     var NEXT_MS = 1100;
@@ -96,8 +95,8 @@
             var my = R;
             root.innerHTML = '';
 
-            /* level 關卡；cleared 已過幾關；lives 剩餘機會；state 目前狀態；lvId 關卡流水號（讓舊計時器知道自己過期） */
-            var level = startAt || 1, cleared = level - 1, lives = LIVES, newRec = false, state = 'idle', lvId = 0;
+            /* level 關卡；cleared 已過幾關；state 目前狀態；lvId 關卡流水號（讓舊計時器知道自己過期） */
+            var level = startAt || 1, cleared = level - 1, newRec = false, state = 'idle', lvId = 0;
             /* cur 玩家目前撥到的時間（分鐘）；L 這一關的資料 */
             var cur = 0, L = null;
 
@@ -142,7 +141,7 @@
             }
 
             /* 更新標題列右側的小字 */
-            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', '機會 ' + lives])); }
+            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }
 
             /* 開始一關 */
             function startLevel() {
@@ -201,8 +200,7 @@
                     my.after(NEXT_MS, startLevel);
                     return;
                 }
-                /* 撥錯：扣一次機會 */
-                lives--;
+                /* 撥錯：一次就結束 */
                 dial.classList.add('sc-dial--bad');
                 Sfx.play('bad');
                 /* 把正確位置用綠色虛線指針畫出來 */
@@ -212,23 +210,18 @@
                 ghost.setAttribute('opacity', 1);
                 head.textContent = (timeout ? '時間到！' : '差了 ' + dispDiff.toFixed(4) + ' 分鐘') + '　綠色虛線是正確的位置';
                 meta();
-                /* 沒有機會了：顯示結算畫面 */
-                if (lives <= 0) {
-                    my.after(1800, function () {
-                        /* kit.resumeFrom：失敗後可從前 5 關繼續 */
-                        var back = kit.resumeFrom(level);
-                        kit.result(root, {
-                            score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
-                            num: cleared + ' 關', label: cleared >= 10 ? '時間掌握大師！' : (cleared >= 5 ? '很會看時間！' : '再試一次，會更準！'),
-                            lines: ['最後一關目標 ' + fmt12(L.target), timeout ? '時間到了還沒撥好' : '你撥到 ' + fmt12(cur) + '，差 ' + dispDiff.toFixed(4) + ' 分鐘'],
-                            note: '遊戲成績，不是醫療檢查', isNew: newRec, sfx: cleared >= 6 ? 'win' : 'fail', onAgain: function () { round(1); },
-                            resume: { level: back, run: function () { round(back); } }
-                        });
+                /* 顯示結算畫面 */
+                my.after(1800, function () {
+                    /* kit.resumeFrom：失敗後可從前 5 關繼續 */
+                    var back = kit.resumeFrom(level);
+                    kit.result(root, {
+                        score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
+                        num: cleared + ' 關', label: cleared >= 10 ? '時間掌握大師！' : (cleared >= 5 ? '很會看時間！' : '再試一次，會更準！'),
+                        lines: ['最後一關目標 ' + fmt12(L.target), timeout ? '時間到了還沒撥好' : '你撥到 ' + fmt12(cur) + '，差 ' + dispDiff.toFixed(4) + ' 分鐘'],
+                        note: '遊戲成績，不是醫療檢查', isNew: newRec, sfx: cleared >= 6 ? 'win' : 'fail', onAgain: function () { round(1); },
+                        resume: { level: back, run: function () { round(back); } }
                     });
-                } else {
-                    /* 還有機會：同一關換一個新時間再來 */
-                    my.after(1800, startLevel);     /* 同一關換一個新的時間再來一次 */
-                }
+                });
             }
             /* 按「好了」：用目前撥到的時間判定 */
             done.addEventListener('pointerdown', function (e) { e.preventDefault(); if (state === 'play') finishLevel(isRight(cur, L.target), false); });
@@ -273,7 +266,7 @@
 
             /* G.debug：測試用後門 */
             G.debug = {
-                state: function () { return { level: level, state: state, lives: lives, cleared: cleared, cur: cur, target: L && L.target, L: L }; },
+                state: function () { return { level: level, state: state, cleared: cleared, cur: cur, target: L && L.target, L: L }; },
                 setCur: function (t) { cur = norm(t); setHands(cur); },
                 solve: function () { cur = L.target; setHands(cur); G.debug.submit(); },
                 submit: function () { if (state === 'play') finishLevel(isRight(cur, L.target), false); return state; },
@@ -303,7 +296,7 @@
     var G = {
         id: ID,
         name: '撥時鐘',
-        rule: '上面是數字時鐘，下面是圓形時鐘。用手指轉動分針（時針會跟著走），**在時間內撥到一樣的時間**，按「好了」。**誤差不能超過一分鐘**，時間會越來越短！',
+        rule: '上面是數字時鐘，下面是圓形時鐘。用手指轉動分針（時針會跟著走），**在時間內撥到一樣的時間**，按「好了」。**誤差不能超過一分鐘**，時間會越來越短，**錯一次就結束**！',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,

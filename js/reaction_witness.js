@@ -8,7 +8,7 @@
    · 出題（makeSuspects）：目標臉＝隨機向量；每張干擾臉與目標「恰好有 d 個特徵不同」（d 從 4 線性降到 1），
      干擾臉彼此不同、也不等於目標，所以正解唯一（距離 0 的只有目標）。
    · 難度（第 1 → LEVEL_RAMP 關線性）：d 4 → 1、選項數 4 → 8、看臉時間 4.0 → 1.5 秒、作答時限 15 → 8 秒。
-   · 有 LIVES 次機會（選錯或超時扣一次），成績＝通過關數（越多越好）。
+   · 選錯或超時就結束（沒有「機會」次數），成績＝通過關數（越多越好）。
    ═══════════════════════════════════════════════════════════════════ */
 
 /* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
@@ -31,7 +31,6 @@
     var OPTS_START = 4, OPTS_END = 8;         /* 選項（含目標）數量 */
     var LOOK_START = 4.0, LOOK_END = 6.0;     /* 看臉秒數 */
     var PICK_START = 10, PICK_END = 15;        /* 作答時限（秒） */
-    var LIVES = 1;
     var NEXT_MS = 1500;
     /* 每個特徵有幾種變化：臉型 3、髮型 5、眼睛 3、眉毛 3、鼻子 3、嘴巴 3、配件 4 */
     /* 每個特徵有幾種 */
@@ -91,6 +90,11 @@
         var order = kit.shuffle(faces.map(function (_, i) { return i; }), rand);
         var shuffled = order.map(function (i) { return faces[i]; });
         return { target: target, faces: shuffled, answer: order.indexOf(0), d: d };
+    }
+    /* 選臉畫面的網格：4 張以內 2 欄，5 張以上 3 欄（5～9 張排成 3×2、3×3，每張臉比 2 欄多列時大，也不會超出畫面）；回傳 { cols, rows } */
+    function gridFor(n) {
+        var cols = n <= 4 ? 2 : 3;
+        return { cols: cols, rows: Math.ceil(n / cols) };
     }
     /* 兩張臉的差異說明（結算時顯示） */
     /* 兩張臉的差異說明（給結算用）*/
@@ -164,8 +168,8 @@
             var my = R;
             root.innerHTML = '';
 
-            /* level 關卡；cleared 已過幾關；lives 機會；state 目前階段（look 看臉/pick 選臉/reveal 揭曉）；S 這關的嫌疑人資料 */
-            var level = startAt || 1, cleared = level - 1, lives = LIVES, newRec = false, state = 'idle', lvId = 0, S = null;
+            /* level 關卡；cleared 已過幾關；state 目前階段（look 看臉/pick 選臉/reveal 揭曉）；S 這關的嫌疑人資料 */
+            var level = startAt || 1, cleared = level - 1, newRec = false, state = 'idle', lvId = 0, S = null;
             var head = h('div', { 'class': 'wt-head' });
             var banner = h('div', { 'class': 'wt-banner' });
             var stage = h('div', { 'class': 'wt-stage' });
@@ -174,7 +178,7 @@
             [head, banner, stage, tb.el].forEach(function (n) { root.appendChild(n); });
 
             /* 更新標題列右側的小字 */
-            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', '機會 ' + lives])); }
+            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }
 
             /* 開始一關：先顯示目標臉，倒數後換成選臉 */
             function startLevel() {
@@ -187,6 +191,7 @@
                 banner.textContent = '記住這個嫌疑人的臉！';
                 stage.className = 'wt-stage wt-stage--look';
                 stage.innerHTML = '';
+                stage.style.gridTemplateColumns = ''; stage.style.gridTemplateRows = '';
                 var big = h('div', { 'class': 'wt-big' }); stage.appendChild(big);
                 drawFace(S.target, big);
                 meta();
@@ -205,6 +210,10 @@
                 banner.textContent = '剛才那個人是誰？';
                 stage.className = 'wt-stage wt-stage--pick';
                 stage.innerHTML = '';
+                /* 依臉的張數設定網格的欄數與列數（minmax(0, 1fr)：均分、可縮到 0） */
+                var g = gridFor(S.faces.length);
+                stage.style.gridTemplateColumns = 'repeat(' + g.cols + ', minmax(0, 1fr))';
+                stage.style.gridTemplateRows = 'repeat(' + g.rows + ', minmax(0, 1fr))';
                 Sfx.play('go');
                 S.faces.forEach(function (f, i) {
                     var cell = h('button', { 'class': 'wt-cell' });
@@ -239,30 +248,27 @@
                     my.after(NEXT_MS - 400, startLevel);
                     return;
                 }
-                /* 答錯：扣機會，顯示你選的那張哪裡和目標不同 */
-                lives--;
+                /* 答錯或超時：一次就結束，顯示你選的那張哪裡和目標不同 */
                 Sfx.play('bad');
                 var diffs = i >= 0 ? diffText(S.faces[i], S.target) : [];
                 banner.textContent = i < 0 ? '時間到！綠框才是嫌疑人' : '抓錯了！綠框才是嫌疑人' + (diffs.length ? '（你選的人' + diffs[0].replace(' → ', '，嫌疑人是') + '）' : '');
                 meta();
-                /* 沒有機會了 → 結算 */
-                if (lives <= 0) {
-                    my.after(2200, function () {
-                        /* kit.resumeFrom：失敗後可從前 5 關繼續 */
-                        var back = kit.resumeFrom(level);
-                        kit.result(root, {
-                            score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
-                            num: cleared + ' 關', label: cleared >= 8 ? '火眼金睛！' : (cleared >= 4 ? '記性不錯！' : '再試一次，會更準！'),
-                            lines: diffs.slice(0, 3), isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail', onAgain: function () { round(1); },
-                            resume: { level: back, run: function () { round(back); } }
-                        });
+                /* 結算 */
+                my.after(2200, function () {
+                    /* kit.resumeFrom：失敗後可從前 5 關繼續 */
+                    var back = kit.resumeFrom(level);
+                    kit.result(root, {
+                        score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
+                        num: cleared + ' 關', label: cleared >= 8 ? '火眼金睛！' : (cleared >= 4 ? '記性不錯！' : '再試一次，會更準！'),
+                        lines: diffs.slice(0, 3), isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail', onAgain: function () { round(1); },
+                        resume: { level: back, run: function () { round(back); } }
                     });
-                } else my.after(2200, startLevel);
+                });
             }
 
             /* G.debug：測試用後門 */
             G.debug = {
-                state: function () { return { level: level, state: state, lives: lives, cleared: cleared, S: S }; },
+                state: function () { return { level: level, state: state, cleared: cleared, S: S }; },
                 pickRight: function () { if (state === 'pick') pick(S.answer); return state; },
                 pickWrong: function () { if (state === 'pick') pick((S.answer + 1) % S.faces.length); return state; },
                 skipLook: function () { if (state === 'look') startPick(lvId); }
@@ -278,12 +284,12 @@
     var G = {
         id: ID,
         name: '目擊證人',
-        rule: '先看一張嫌疑人的臉，**記住他的特徵**。臉收起來之後，從一排人裡**點出剛才那一個**。越後面，大家越像！',
+        rule: '先看一張嫌疑人的臉，**記住他的特徵**。臉收起來之後，從一排人裡**點出剛才那一個**。越後面，大家越像，**選錯一次就結束**！',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
-        test: { dFor: dFor, optsFor: optsFor, lookSec: lookSec, pickSec: pickSec, randFace: randFace, hamming: hamming, variant: variant, makeSuspects: makeSuspects, diffText: diffText, SIZES: SIZES, LEVEL_RAMP: LEVEL_RAMP }
+        test: { dFor: dFor, optsFor: optsFor, lookSec: lookSec, pickSec: pickSec, randFace: randFace, hamming: hamming, variant: variant, makeSuspects: makeSuspects, diffText: diffText, gridFor: gridFor, SIZES: SIZES, LEVEL_RAMP: LEVEL_RAMP }
     };
     /* 登記到遊戲清單 */
     Reaction.register(G);

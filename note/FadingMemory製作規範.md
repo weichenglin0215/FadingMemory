@@ -202,6 +202,15 @@ vendor/three.min.js   Three.js r158（UMD 版）
   - 零秒出手：剩餘時間低於 4.0000 秒（`countVisible`，嚴格小於）數字下方浮出「請在心中默數至 0」。
   - 資料庫：`MF_feedback.game_title` 是遊戲中文名稱，由 `MF_submit_feedback` 寫入時從 `MF_games.title` 帶入；重新執行 SQL 會補欄位並同步舊意見的名稱（遊戲改名後記得再執行一次 SQL）。
 - **1.23 踩到的坑**：①Chrome DevTools Protocol 的 `Runtime.evaluate`（`returnByValue`）遇到 `-0` 或 DOM／VisualViewport 物件會回傳 undefined 或「Object reference chain is too long」→ 運算式結尾加 `+ 0`、或在 `defineProperty` 後面補一句 `; 0`；②測試裡用 `removeChild` 直接把玩法說明彈窗拿掉，`Dlg.rule` 還是會當它「開著」而回傳舊物件 → 要用 `ctl.close()`；③量彈窗卡片高度要先關掉 `dlg-pop` 動畫（動畫期間縮成 97%，量到的偏小約 3%），或用 `offsetHeight`；④`menu.js` 的 `stageScale()`：`getBoundingClientRect` 量到的是螢幕像素，換算成舞台座標要除以縮放倍率；⑤遊戲改名要同步五個地方：遊戲檔案的 `name`、`menu.js`、`gen_games_sql.cjs --write`（再到 Supabase 重新執行 SQL）、文件、測試（`t_menu.js` 會抓到沒同步的）。
+- **1.24 玩家意見改版（26 款）的共通做法與踩到的坑**：
+  - **每款遊戲的 CSS class 要用自己專屬的前綴，全專案不能重複**：所有遊戲的 CSS（`reaction.css`～`reaction5.css`）是一次全部載入的，兩款遊戲用同一個 class 名稱，後面的規則就會蓋掉（或疊在）前面的，其中一款的版面莫名其妙跑掉。這次實際撞到兩次：`.pb-cell`（分藥盒／路人）、`.bk-info`（秤麵包重量／接籃子），玩家回報的「藥盒寬度」「資訊列位置不對」都是這個原因。新遊戲取前綴前先搜尋（`grep -rn "\.xx-" css/`）；`test/reaction/t_cssclass.js` 會掃全部遊戲檔，兩款以上共用同一個 class 就失敗（允許清單：混出什麼色故意借用記色調色的 `mc-`；`cr-` 是貓咪走山路與記色調色撞名，外觀已經是使用者看過的樣子，先保留）。
+  - **「機會」**：使用者幾乎都要求「錯一次就失敗、不要機會參數」。新遊戲預設就是一次失敗（`kit.run` 的 `api.fail`），不要加 `LIVES`；舊遊戲要拿掉機會時，參數、玩法說明、畫面上的「機會 N」與測試要一起刪。
+  - **用 JS 把文字縮到放得進框裡**（價格陷阱 `fitScale`／`fitTags`）：先用較大的倍率排版，量到溢出就一步一步縮小到剛好放得下，不要寫死字級；使用者要的倍率（例如放大 166%）放在 `theme.css` 變數（`--pr-scale`）。
+  - **「難度要慢慢增加」**：不要寫成「第 N 關突然換一批題」。給每個題目一個連續的「複雜度」，依關卡算出目標值、用鐘形加權挑題（形形色色的 `complexityOf／targetCx／pickPair`），並限制不能比目標難太多（`CX_AHEAD`），再用測試驗證「平均複雜度隨關卡單調不減」。顏色差異、彩度這類連續的量用 `kit.ramp` 線性變化。
+  - **不能讓玩家用「一直點」取巧**（刷油漆）：任何「用掉資源」的操作都要真的扣資源，包含「點一下不拖曳」（用掉一個筆刷直徑的油漆量）。遮罩與畫布要用同一份折線資料畫（`scribbleMask` 與 canvas 繪圖），不要讀畫布像素，判定才不會跟畫面不一致。
+  - **鏡頭放大看差距**（誰先到？）：`kit.tweenViewBox` ＋ 純函式 `zoomCamera`（算出框住兩個點的 viewBox），線條加 `vector-effect: non-scaling-stroke`，放大後粗細才不會變形。
+  - **數獨題目的產生**：先用「基本盤面＋隨機交換排／欄／數字」做出合法解答，再用推理器（這一格只剩一個候選數、或這個數字在這一排／欄／宮只剩一格可放）驗證目標格一定推得出來，不要只靠隨機挖洞（會有多重解）。
+  - **用 Node 腳本批次改檔的坑**：Bash 的 heredoc 太長會出現「unexpected EOF」、反斜線會被吃掉 → 用編輯器工具把腳本寫成檔案再執行；字串取代一律要求「剛好出現一次」才取代（行尾空白也算一個字元）；CRLF 的檔案先偵測再處理（`README.md`、`reaction_shapes.js`、`reaction_rainbow.js` 都是 CRLF）。
 - **這一輪（1.16）又踩到的坑**：
   - 全域有 `[hidden] { display: none !important }`（`css/stage.css`），用 `hidden` 屬性藏的按鈕不佔位、會讓版面跳動；要佔位就用 `style.visibility`。
   - 一開頭就用 `clientWidth／clientHeight` 量場地大小的遊戲（找回小雞、哪裡怪怪的），標題與提示列要先放不斷行空白（` `）佔住高度，文字晚填會讓量到的比最後的大；提示文字也要控制在一行（`white-space: nowrap`）。

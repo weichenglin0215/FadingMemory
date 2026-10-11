@@ -91,10 +91,10 @@
         api.info = q;
         console.log('[路人走過] 第 ' + level + ' 關：' + question(q) + ' 答案 ' + COLORS[q.answer].name + '；速度 ' + q.speed.toFixed(1) + ' px/秒；走完 ' + q.duration.toFixed(2) + ' 秒；5 人：' + q.people.map(function (p) { return PARTS.map(function (k) { return COLORS[p[k]].name; }).join('/'); }).join(' | '));
 
-        var tip = h('div', { 'class': 'pb-tip', text: '看清楚每個人的穿著（帽子、衣服、褲子、鞋子）' });
+        var tip = h('div', { 'class': 'psb-tip', text: '看清楚每個人的穿著（帽子、衣服、褲子、鞋子）' });
         stage.appendChild(tip);
         var els = q.people.map(function (p) {
-            var el = h('div', { 'class': 'pb-person', html: personSvg(p) });
+            var el = h('div', { 'class': 'psb-person', html: personSvg(p) });
             el.style.transform = 'translateX(' + (-PW - 10) + 'px)';
             stage.appendChild(el);
             return el;
@@ -111,27 +111,27 @@
             if (phase !== 'walk') return;
             phase = 'ask'; loop.stop();
             els.forEach(function (el) { el.style.display = 'none'; });
-            tip.textContent = question(q); tip.classList.add('pb-tip--ask');
+            tip.textContent = question(q); tip.classList.add('psb-tip--ask');
             btns = COLORS.map(function (c, i) {
-                var b = h('button', { 'class': 'btn btn--line pb-opt' }, [h('span', { 'class': 'pb-sw' }), h('span', { text: c.name })]);
+                var b = h('button', { 'class': 'btn btn--line psb-opt' }, [h('span', { 'class': 'psb-sw' }), h('span', { text: c.name })]);
                 b.firstChild.style.background = c.hex;
                 kit.onTap(b, function () { judge(i); });
                 return b;
             });
-            var row1 = h('div', { 'class': 'pb-row' }, btns.slice(0, 4)), row2 = h('div', { 'class': 'pb-row' }, btns.slice(4));
-            stage.appendChild(h('div', { 'class': 'pb-opts' }, [row1, row2]));
+            var row1 = h('div', { 'class': 'psb-row' }, btns.slice(0, 4)), row2 = h('div', { 'class': 'psb-row' }, btns.slice(4));
+            stage.appendChild(h('div', { 'class': 'psb-opts' }, [row1, row2]));
             api.timer(ansMs(level), function () { judge(-1); });
             Sfx.play('go');
         }
         function judge(i) {
             if (api.over || phase !== 'ask') return;
             phase = 'done';
-            btns.forEach(function (b, k) { if (k === q.answer) b.classList.add('pb-opt--ok'); else if (k === i) b.classList.add('pb-opt--bad'); });
+            btns.forEach(function (b, k) { if (k === q.answer) b.classList.add('psb-opt--ok'); else if (k === i) b.classList.add('psb-opt--bad'); });
             /* 揭曉：5 個人站成一排，被問的那一件用虛線框起來 */
-            var lineup = h('div', { 'class': 'pb-lineup' });
+            var lineup = h('div', { 'class': 'psb-lineup' });
             q.people.forEach(function (p, k) {
-                var cell = h('div', { 'class': 'pb-cell' + (k === q.who - 1 ? ' pb-cell--ask' : ''), html: personSvg(p, k === q.who - 1 ? q.part : null) });
-                cell.appendChild(h('div', { 'class': 'pb-no', text: String(k + 1) }));
+                var cell = h('div', { 'class': 'psb-cell' + (k === q.who - 1 ? ' psb-cell--ask' : ''), html: personSvg(p, k === q.who - 1 ? q.part : null) });
+                cell.appendChild(h('div', { 'class': 'psb-no', text: String(k + 1) }));
                 lineup.appendChild(cell);
             });
             stage.appendChild(lineup);

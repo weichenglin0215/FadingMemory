@@ -39,6 +39,8 @@ for (let q = 1; q <= 60; q++) {
         ok(A.scale >= 0.35 - 1e-9 && A.scale <= 1.0001 && B.scale >= 0.35 - 1e-9 && B.scale <= 1.0001, 'scale range');
         if (Q.attr === 'size') {
           ok(same ? near(A.scale, B.scale) : !near(A.scale, B.scale), 'size same/diff');
+          // 比大小（面積）時兩邊一定是同一種圖案、同一個顏色，只差大小，避免爭議
+          ok(A.shape === B.shape && near(A.hue, B.hue), 'size questions always compare the SAME figure (shape ' + A.shape + '/' + B.shape + ')');
           if (!same) { const r = Math.max(A.scale, B.scale) / Math.min(A.scale, B.scale); if (q === 7) ratios1.push(r); if (q === 30) ratios30.push(r); }
         }
         if (Q.attr === 'shape') ok((A.shape === B.shape) === same, 'shape same/diff');

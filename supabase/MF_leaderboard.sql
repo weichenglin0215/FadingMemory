@@ -283,7 +283,7 @@ insert into public."MF_games" (game_id, title, better, min_score, max_score) val
     ('illusion',     '錯覺大師', 'max', 1, 500),
     ('pour',         '倒到八分滿', 'min', 0, 100),
     ('coins',        '零錢分類', 'max', 1, 200),
-    ('invoice',      '對發票', 'max', 1, 100),
+    ('invoice',      '對發票', 'max', 1, 500),
     ('paint',        '刷油漆', 'min', 1, 500),
     ('diff',         '哪裡怪怪的', 'max', 1, 200),
     ('bread',        '秤麵包重量', 'max', 1, 200),
@@ -387,6 +387,11 @@ on conflict (game_id) do update
 --         內容 2～300 字，控制字元與零寬字元會被清掉。
 -- 每一則意見除了遊戲代號（game_id，英文），還有「遊戲中文名稱」（game_title）：寫入時自動從 MF_games.title 帶入，
 -- 管理者看資料表時不用再對照英文代號。（遊戲改名之後重新執行這份 SQL，舊的意見也會一起換成新名稱。）
+-- 意見不是機密，所以「任何人都能查閱」：下面建了一個公開的檢視表 MF_feedback_public（除了 player_id 以外的所有欄位），
+-- 只用公開的 anon 金鑰就能讀，不需要任何密碼或 service_role 金鑰（網頁 admin/feedback.html 就是這樣查的）。
+-- 唯一不公開的是 player_id：它是玩家瀏覽器的隨機代號，成績表用它認人（改暱稱、刷新成績都只認它），
+-- 公開出去的話別人就能冒用代號去改那位玩家的暱稱或成績。資料表本身仍然鎖著，所以沒有人能新增、修改或刪除意見，
+-- 只有玩家透過函式 MF_submit_feedback 才寫得進去。
 -- 管理者在 SQL Editor 查看意見（資料表名稱有大寫，一定要加雙引號）：
 --   select created_at, game_title, nickname, message, app_version
 --     from public."MF_feedback" order by created_at desc limit 100;                 -- 最新 100 則
@@ -422,9 +427,19 @@ update public."MF_feedback" f
 create index if not exists "MF_feedback_game_idx"   on public."MF_feedback" (game_id, created_at desc);
 create index if not exists "MF_feedback_player_idx" on public."MF_feedback" (player_id, created_at desc);
 
--- 跟成績表一樣鎖住：開啟 RLS 而且不建 policy，anon 不能直接讀寫，只能呼叫下面的函式
+-- 資料表本身鎖住：開啟 RLS 而且不建 policy，anon 不能直接讀寫，只能呼叫下面的函式（寫入）或讀下面的檢視表（查閱）
 alter table public."MF_feedback" enable row level security;
 revoke all on table public."MF_feedback" from public, anon, authenticated;
+
+-- 公開查閱用的檢視表：除了 player_id 以外的所有欄位，任何人（anon）都只能 select。
+-- 檢視表是以建立者（資料表的擁有者）的權限執行，所以讀得到被 RLS 鎖住的資料表；沒有 insert／update／delete 權限。
+-- （Supabase 的安全檢查若提示「Security Definer View」，這是故意的：就是要公開這一份「去掉 player_id」的內容。）
+create or replace view public."MF_feedback_public" as
+select id, created_at, game_id, game_title, message, nickname, app_version
+  from public."MF_feedback";
+comment on view public."MF_feedback_public" is '玩家意見的公開查閱版（不含 player_id）；任何人都能讀，不能寫';
+revoke all on public."MF_feedback_public" from public, anon, authenticated;
+grant select on public."MF_feedback_public" to anon, authenticated;
 
 -- 寫入：送出一則意見。
 --   回傳 { ok:true, saved:true }；重複送同樣內容回傳 { ok:true, saved:false, duplicate:true }；

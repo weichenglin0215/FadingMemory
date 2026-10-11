@@ -13,7 +13,8 @@
      **只有星星小雞可以點**（其他小雞沒有點擊功能）：點到一隻星星小雞就亮綠色；點到沒有星星的地方（包含別的小雞、空地）
      就失敗；星星小雞全部點到就過關。
    · 難度（第 1 → LEVEL_RAMP 關線性）：目標數 K_START → K_END、小雞總數 TOTAL_START → TOTAL_END、速度、移動秒數。
-   · 有 LIVES 次機會，成績＝通過關數（越多越好）；失敗後可從「失敗關卡 − 5」繼續。
+   · 小雞頭上的星星是水藍色，出現（記憶階段、揭曉漏掉的星星小雞）的時候會快速閃爍，引起玩家注意（css/reaction2.css 的 .ck-star）。
+   · 點錯就結束（沒有「機會」次數），成績＝通過關數（越多越好）；失敗後可從「失敗關卡 − 5」繼續。
    ═══════════════════════════════════════════════════════════════════ */
 
 /* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
@@ -44,7 +45,6 @@
     /* 折線每一段至少多長（走法接近直線、活動範圍大） */
     var MIN_LEG = 90;                          /* 折線每一段至少多長（px）：走法接近直線、範圍大 */
     var MARGIN = 30;
-    var LIVES = 3;
     var NEXT_MS = 1500;
 
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 關'; }
@@ -212,7 +212,7 @@
             root.innerHTML = '';
 
             /* S 這關的資料；els 每隻小雞對應的 HTML 元素；found 已找到的目標編號 */
-            var level = startAt || 1, cleared = level - 1, lives = LIVES, newRec = false, state = 'idle', lvId = 0, S = null, els = [], found = [];
+            var level = startAt || 1, cleared = level - 1, newRec = false, state = 'idle', lvId = 0, S = null, els = [], found = [];
             /* 先放不斷行空白佔住一行高，之後再量院子大小才準 */
             /* 先放不斷行空白佔住一行高：startLevel 一開頭就量院子大小，文字晚一點才填的話，量到的會比最後的大 */
             var head = h('div', { 'class': 'ck-head', text: ' ' });
@@ -220,7 +220,7 @@
             var field = h('div', { 'class': 'ck-field' });
             [head, banner, field].forEach(function (n) { root.appendChild(n); });
 
-            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', '機會 ' + lives])); }
+            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }
             /* 把第 i 隻小雞放到時間 t 的位置：用 CSS transform: translate 移動（比改 left/top 順暢） */
             function place(i, t) {
                 var p = posAt(S.chicks[i], t);
@@ -314,7 +314,7 @@
                 my.after(NEXT_MS, startLevel);
             }
 
-            /* 點錯 → 失敗：把沒找到的星星小雞亮出來 */
+            /* 點錯 → 失敗（一次就結束）：把沒找到的星星小雞亮出來，稍後顯示結算 */
             function fail(idx) {
                 state = 'reveal';
                 /* 沒找到的星星小雞亮出來（橘色），剛才點到的地方標紅 */
@@ -323,27 +323,24 @@
                 });
                 if (idx != null && els[idx]) els[idx].classList.add('ck-chick--wrong');
                 var missed = S.targets.length - found.length;
-                lives--;
                 banner.textContent = '沒點到星星小雞！還有 ' + missed + ' 隻沒找到';
                 Sfx.play('bad'); meta();
-                if (lives <= 0) {
-                    /* 沒有機會了 → 結算；kit.resumeFrom 可以從前 5 關繼續 */
-                    var failLevel = level, back = kit.resumeFrom(failLevel);
-                    my.after(2200, function () {
-                        kit.result(root, {
-                            score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
-                            num: cleared + ' 關', label: cleared >= 8 ? '小雞守護者！' : (cleared >= 4 ? '眼力不錯！' : '再試一次，會更準！'),
-                            lines: ['第 ' + failLevel + ' 關要找 ' + S.targets.length + ' 隻，找到 ' + found.length + ' 隻'], isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail',
-                            onAgain: function () { round(1); },
-                            resume: { level: back, run: function () { round(back); } }
-                        });
+                /* 結算；kit.resumeFrom 可以從前 5 關繼續 */
+                var failLevel = level, back = kit.resumeFrom(failLevel);
+                my.after(2200, function () {
+                    kit.result(root, {
+                        score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
+                        num: cleared + ' 關', label: cleared >= 8 ? '小雞守護者！' : (cleared >= 4 ? '眼力不錯！' : '再試一次，會更準！'),
+                        lines: ['第 ' + failLevel + ' 關要找 ' + S.targets.length + ' 隻，找到 ' + found.length + ' 隻'], isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail',
+                        onAgain: function () { round(1); },
+                        resume: { level: back, run: function () { round(back); } }
                     });
-                } else my.after(2300, startLevel);
+                });
             }
 
             /* G.debug：測試用後門 */
             G.debug = {
-                state: function () { return { level: level, state: state, lives: lives, cleared: cleared, S: S, found: found.slice() }; },
+                state: function () { return { level: level, state: state, cleared: cleared, S: S, found: found.slice() }; },
                 tapChick: function (i) { tap(i); },
                 tapEmpty: function () { tap(null); },
                 findAll: function () { S.targets.forEach(function (t) { tap(t); }); },
@@ -360,7 +357,7 @@
     var G = {
         id: ID,
         name: '找回小雞',
-        rule: '**先記住頭上有星星的小雞**。星星消失後，小雞會到處亂跑，還會互相遮住。等牠們停下來，**直接點剛才有星星的那幾隻**：只有星星小雞點得到，點到別的地方就失敗了！越後面小雞越多、跑得越快！',
+        rule: '**先記住頭上有閃爍藍色星星的小雞**。星星消失後，小雞會到處亂跑，還會互相遮住。等牠們停下來，**直接點剛才有星星的那幾隻**：只有星星小雞點得到，點到別的地方就失敗了！越後面小雞越多、跑得越快！',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,

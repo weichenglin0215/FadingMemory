@@ -89,18 +89,18 @@
         api.info = q;
         console.log('[菜籃總價] 第 ' + level + ' 關：總價 ' + q.total + '；價格 ' + q.prices.join(',') + '；答案 ' + maskText(q, q.mask) + '（' + q.k + ' 樣）；差 1～3 元的組合 ' + q.near + ' 個；限時 ' + timeMs(level) + ' ms');
 
-        var big = h('div', { 'class': 'bk-total', text: '總價 ' + q.total + ' 元' });
-        var tip = h('div', { 'class': 'bk-tip', text: '挑幾樣，讓價格加起來剛好是總價' });
+        var big = h('div', { 'class': 'bsk-total', text: '總價 ' + q.total + ' 元' });
+        var tip = h('div', { 'class': 'bsk-tip', text: '挑幾樣，讓價格加起來剛好是總價' });
         var tiles = q.prices.map(function (p, i) {
-            var el = h('div', { 'class': 'bk-tile' }, [
-                h('div', { 'class': 'bk-ico' }), h('div', { 'class': 'bk-name', text: q.names[i] }), h('div', { 'class': 'bk-price', text: p + ' 元' })
+            var el = h('div', { 'class': 'bsk-tile' }, [
+                h('div', { 'class': 'bsk-ico' }), h('div', { 'class': 'bsk-name', text: q.names[i] }), h('div', { 'class': 'bsk-price', text: p + ' 元' })
             ]);
             el.firstChild.style.background = 'hsl(' + q.hues[i] + ',62%,56%)';
             kit.onTap(el, function () { toggle(i); });
             return el;
         });
-        var grid = h('div', { 'class': 'bk-grid' }, tiles);
-        var info = h('div', { 'class': 'bk-info' });
+        var grid = h('div', { 'class': 'bsk-grid' }, tiles);
+        var info = h('div', { 'class': 'bsk-info' });
         var bClear = h('button', { 'class': 'btn btn--line', text: '全部放回' });
         var bPay = h('button', { 'class': 'btn btn--go', text: '結帳' });
         [big, tip, grid, info, h('div', { 'class': 'rx-btnrow' }, [bClear, bPay])].forEach(function (e) { stage.appendChild(e); });
@@ -112,30 +112,30 @@
         }
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
 
-        function paint() { tiles.forEach(function (el, i) { el.classList.toggle('bk-tile--on', !!(mask & (1 << i))); }); }
+        function paint() { tiles.forEach(function (el, i) { el.classList.toggle('bsk-tile--on', !!(mask & (1 << i))); }); }
         function toggle(i) { if (api.over) return; hideHint(); mask ^= 1 << i; Sfx.play('click'); paint(); }
         kit.onTap(bClear, function () { if (api.over) return; mask = 0; Sfx.play('click'); paint(); });
-        function ans() { tiles.forEach(function (el, i) { if (q.mask & (1 << i)) el.classList.add('bk-tile--ans'); }); }
+        function ans() { tiles.forEach(function (el, i) { if (q.mask & (1 << i)) el.classList.add('bsk-tile--ans'); }); }
         function pay() {
             if (api.over) return;
             hideHint();
             var sum = maskSum(q.prices, mask);
             if (mask && sum === q.total) {
-                info.textContent = '剛剛好！' + maskText(q, mask); info.classList.add('bk-info--ok');
+                info.textContent = '剛剛好！' + maskText(q, mask); info.classList.add('bsk-info--ok');
                 api.pass({ delay: 900 });
                 return;
             }
             var lines = ['你選的合計是 ' + sum + ' 元，不是 ' + q.total + ' 元', '正確的組合：' + maskText(q, q.mask), '一共有 ' + q.near + ' 種合計只差 1～3 元的組合，很容易選錯'];
             var left = api.lose({ lines: lines });
             if (left > 0) {
-                info.textContent = '合計 ' + sum + ' 元，不對喔（還有 ' + left + ' 條命）'; info.classList.add('bk-info--bad');
-                grid.classList.add('bk-grid--shake'); api.after(450, function () { grid.classList.remove('bk-grid--shake'); });
+                info.textContent = '合計 ' + sum + ' 元，不對喔（還有 ' + left + ' 條命）'; info.classList.add('bsk-info--bad');
+                grid.classList.add('bsk-grid--shake'); api.after(450, function () { grid.classList.remove('bsk-grid--shake'); });
                 mask = 0; paint();
-            } else { info.textContent = '正確答案：' + maskText(q, q.mask); info.classList.add('bk-info--bad'); ans(); }
+            } else { info.textContent = '正確答案：' + maskText(q, q.mask); info.classList.add('bsk-info--bad'); ans(); }
         }
         kit.onTap(bPay, pay);
         api.timer(timeMs(level), function () {
-            info.textContent = '時間到！正確答案：' + maskText(q, q.mask); info.classList.add('bk-info--bad'); ans();
+            info.textContent = '時間到！正確答案：' + maskText(q, q.mask); info.classList.add('bsk-info--bad'); ans();
             api.fail({ delay: 2000, lines: ['時間到！', '正確的組合：' + maskText(q, q.mask)] });
         });
         api.solve = function () { mask = q.mask; paint(); pay(); };

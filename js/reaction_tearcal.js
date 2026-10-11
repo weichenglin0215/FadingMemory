@@ -3,6 +3,7 @@
    一天一張的日曆。每撕一張就換成隔天，只能往後撕、不能回頭。上方寫著目標日期（或「中秋節」
    「霜降」這種要自己找的日子），在限時內撕到那一天，按「就是這天」。撕過頭就失敗。
    ───────────────────────────────────────────────────────────────────
+   · 每撕一張，被撕下來的那一頁會「往下滑落」（先微微掀起、越掉越快、稍微歪斜、漸漸變透明，0.6 秒），下面露出隔天。
    · 每張日曆頁顯示：陽曆年月日、星期、農曆日期、陽曆節日、農曆節日、二十四節氣。
    · 資料來源（全部在程式裡算，不用另外的資料檔）：
         - 農曆：用瀏覽器內建的 Intl.DateTimeFormat('zh-TW-u-ca-chinese')。
@@ -17,7 +18,7 @@
         第 21 關起 全部混合，距離更遠。
    · 限時 ＝ 要撕的張數 × tapSec（每張允許幾秒）＋ slack；tapSec、slack 隨關卡線性變小，
      所以時間一定「撕得完」（人點得到的速度），但越來越緊。
-   · 有 LIVES 次機會（超時、撕過頭、按錯日子都扣一次），成績＝通過關數（越多越好）。
+   · 超時、撕過頭、按錯日子都算失敗，一次就結束（沒有「機會」次數），成績＝通過關數（越多越好）。
    ═══════════════════════════════════════════════════════════════════ */
 
 /* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
@@ -40,9 +41,8 @@
     var DMAX_START = 6, DMAX_END = 60;          /* 目標最遠離起點幾天（張） */
     var TAP_START = 0.60, TAP_END = 0.32;       /* 每撕一張允許的秒數 */
     var SLACK_START = 8, SLACK_END = 4;         /* 額外給的秒數 */
-    /* 這個遊戲只有 1 次機會（錯一次就結束） */
-    var LIVES = 1;
     var NEXT_MS = 1100;
+    var TEAR_MS = 600;                          /* 被撕掉的那一張往下滑落的時間（毫秒）；要跟 css/reaction2.css 的 .tc-page--torn 動畫秒數一樣 */
 
     /* 陣列索引 0～6 對應 JS 的 getDay() 星期日～星期六 */
     var WD_NAME = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
@@ -313,8 +313,8 @@
             var my = R;
             root.innerHTML = '';
 
-            /* level 關卡；cleared 已過幾關；lives 機會；state 目前狀態；lvId 關卡流水號 */
-            var level = startAt || 1, cleared = level - 1, lives = LIVES, newRec = false, state = 'idle', lvId = 0;
+            /* level 關卡；cleared 已過幾關；state 目前狀態；lvId 關卡流水號 */
+            var level = startAt || 1, cleared = level - 1, newRec = false, state = 'idle', lvId = 0;
             /* L 這關的資料；cur 目前日曆頁是哪一天；torn 已撕幾張 */
             var L = null, cur = 0, torn = 0;
 
@@ -329,7 +329,7 @@
             var ok = h('button', { 'class': 'btn btn--go tc-ok', text: '就是這天' });
             [head, prompt, tb.el, stack, hint, ok].forEach(function (n) { root.appendChild(n); });
 
-            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', '機會 ' + lives])); }
+            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }
 
             /* 開始一關 */
             function startLevel() {
@@ -357,13 +357,13 @@
             /* 撕一張：點日曆就會呼叫 */
             function tear() {
                 if (state !== 'play') return;
-                /* 撕下來的這張飛走，下面露出隔天 */
-                /* cloneNode(true)：複製目前這頁（含內容），給它「被撕走」的動畫 class，下面的原頁則換成隔天 */
+                /* 撕下來的這張往下滑落，下面露出隔天 */
+                /* cloneNode(true)：複製目前這頁（含內容），給它「被撕下滑落」的動畫 class，下面的原頁則換成隔天 */
                 var old = page.cloneNode(true);
                 old.className = 'tc-page tc-page--torn';
                 stack.appendChild(old);
-                /* 動畫結束（260 毫秒）後把撕下來的那張從畫面移除 */
-                my.after(260, function () { if (old.parentNode) old.parentNode.removeChild(old); });
+                /* 動畫播完（TEAR_MS 毫秒，多留 50 毫秒）後把撕下來的那張從畫面移除 */
+                my.after(TEAR_MS + 50, function () { if (old.parentNode) old.parentNode.removeChild(old); });
                 /* cur++：翻到隔天 */
                 cur++; torn++;
                 renderPage(page, dayInfo(cur));
@@ -397,24 +397,21 @@
                 if (state !== 'play') return;
                 state = 'judged';
                 tb.set(0);
-                lives--;
                 page.classList.add('tc-page--bad');
                 Sfx.play('bad');
                 var ti = dayInfo(L.target);
                 hint.textContent = why + '　目標是 ' + ti.m + ' 月 ' + ti.d + ' 日（' + ti.wdName + '）';
                 meta();
-                if (lives <= 0) {
-                    my.after(1800, function () {
-                        var back = kit.resumeFrom(level);
-                        kit.result(root, {
-                            score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
-                            num: cleared + ' 關', label: cleared >= 10 ? '日子都在心裡！' : (cleared >= 5 ? '很會翻日曆！' : '再試一次，會更快！'),
-                            lines: ['最後一關：' + L.prompt, '目標 ' + ti.y + ' 年 ' + ti.m + ' 月 ' + ti.d + ' 日　' + ti.wdName + (ti.lunarText ? '　農曆' + ti.lunarText : '')],
-                            isNew: newRec, sfx: cleared >= 6 ? 'win' : 'fail', onAgain: function () { round(1); },
-                            resume: { level: back, run: function () { round(back); } }
-                        });
+                my.after(1800, function () {
+                    var back = kit.resumeFrom(level);
+                    kit.result(root, {
+                        score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
+                        num: cleared + ' 關', label: cleared >= 10 ? '日子都在心裡！' : (cleared >= 5 ? '很會翻日曆！' : '再試一次，會更快！'),
+                        lines: ['最後一關：' + L.prompt, '目標 ' + ti.y + ' 年 ' + ti.m + ' 月 ' + ti.d + ' 日　' + ti.wdName + (ti.lunarText ? '　農曆' + ti.lunarText : '')],
+                        isNew: newRec, sfx: cleared >= 6 ? 'win' : 'fail', onAgain: function () { round(1); },
+                        resume: { level: back, run: function () { round(back); } }
                     });
-                } else my.after(1800, startLevel);
+                });
             }
 
             /* 點日曆區域＝撕一張；pointerdown 比 click 更即時 */
@@ -425,7 +422,7 @@
 
             /* G.debug：測試用後門 */
             G.debug = {
-                state: function () { return { level: level, state: state, lives: lives, cleared: cleared, L: L, cur: cur, torn: torn, info: dayInfo(cur) }; },
+                state: function () { return { level: level, state: state, cleared: cleared, L: L, cur: cur, torn: torn, info: dayInfo(cur) }; },
                 tear: function (k) { for (var i = 0; i < (k || 1); i++) tear(); return cur; },
                 tearToTarget: function () { tear.call(null); while (state === 'play' && cur < L.target) tear(); return cur; },
                 confirm: confirm

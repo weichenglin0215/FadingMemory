@@ -19,6 +19,9 @@
      沒辦法靠數虛線段數來比長度。
    · 球的位置＝沿繩子走過的弧長（兩顆球速度相同），所以短的先到。速度預設 BALL_SPEED px/s，繩子太長時
      加快到「短的那條在 TRAVEL_MAX_S 秒內到」。判定在按按鈕的瞬間就決定了（比較兩條繩子的長度）。
+   · 揭曉：短的那顆球一抵達終點，**長的那條繩子上的球立刻停在原地**（弧長相同，所以停的位置就是「還差多少」），
+     並把長繩子「還沒走完的那一段」用橘色標出來、那條的終點圈閃動。如果這一段很短（長度差小），鏡頭（SVG 的 viewBox）會
+     慢慢放大到只框住「停住的球＋剩下的路＋終點」（zoomCamera），讓玩家看清楚球離終點還有多遠；差距夠大就不放大。
    · 答錯就結束，成績＝過幾關；失敗後可以從「失敗關卡 − 5」繼續。
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -56,6 +59,9 @@
     /* 路徑不重疊：弧長相隔超過 SEP_PX 的兩點，距離要 ≥ CLEAR_PX */
     var CLEAR_PX = 24, SEP_PX = 70;                       /* 路徑不重疊：弧長相隔 > SEP_PX 的兩點距離 ≥ CLEAR_PX */
     var ALPHA_MIN = 0.2;
+    /* 揭曉時的鏡頭放大：長繩子「球停住之後還沒走完的那一段」的長度（弧長）不超過 ZOOM_REST_MAX px（差距很小）才放大；
+       放大的框是那一段路的外框（加 ZOOM_PAD 的邊），倍率至少 ZOOM_MIN（不到就不動）、最多 ZOOM_MAX 倍，花 ZOOM_MS 毫秒 */
+    var ZOOM_REST_MAX = 140, ZOOM_MIN = 1.35, ZOOM_MAX = 4.5, ZOOM_PAD = 44, ZOOM_MS = 900;
     var CTRL_FRAC = 0.86;                                 /* 轉折點最多伸到半幅寬的這個比例（曲線過彎時會稍微衝出去，要留空間）*/
 
     /* 這一關的長度差 */
@@ -229,6 +235,27 @@
         var a = kit.pick([[6, 6], [8, 5], [10, 8]], rand), b = kit.pick([[34, 20], [38, 26], [30, 34]], rand);
         return rand() < 0.5 ? { L: a, R: b } : { L: b, R: a };
     }
+    /* 要不要放大鏡頭：剩下那一段路的長度（弧長）夠短（差距很小）才放大；差距大就一眼看得出來，不用放大 */
+    function needZoom(restLen) { return restLen <= ZOOM_REST_MAX; }
+    /* 鏡頭放大：pts 是「長繩子還沒走完的那一段」的點（含停住的球與終點），W×H 是場地大小。
+       回傳 { zoom, box:{vx,vy,vw,vh} }（box 跟場地同寬高比、框住這段路外加 ZOOM_PAD 的邊、不超出場地）；放大倍率不到 ZOOM_MIN 就回傳 null（不用放大）。
+       做法：算出這段路的外框 → 加邊 → 倍率＝min(W÷外框寬, H÷外框高)（最多 ZOOM_MAX）→ 以外框中心為中心取 W÷倍率 × H÷倍率 的框，再夾進 [0,W]×[0,H]。 */
+    function zoomCamera(pts, W, H) {
+        var x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+        pts.forEach(function (p) { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); });
+        var bw = x1 - x0 + 2 * ZOOM_PAD, bh = y1 - y0 + 2 * ZOOM_PAD;
+        var z = Math.min(ZOOM_MAX, W / bw, H / bh);
+        if (z < ZOOM_MIN) return null;
+        var vw = W / z, vh = H / z, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+        var vx = kit.clamp(cx - vw / 2, 0, W - vw), vy = kit.clamp(cy - vh / 2, 0, H - vh);
+        return { zoom: z, box: { vx: vx, vy: vy, vw: vw, vh: vh } };
+    }
+    /* 長繩子「還沒走完的那一段」：從弧長 s0（球停住的位置）到終點的所有點（第一個點是球停的位置） */
+    function restPoints(pts, s0) {
+        var out = [pointAt(pts, s0)];
+        for (var i = 0; i < pts.length; i++) if (pts[i].s > s0) out.push(pts[i]);
+        return out;
+    }
     /* 弧長 s 對應的位置（二分搜尋，再線性內插） */
     /* 弧長 s 對應的位置（二分搜尋） */
     function pointAt(pts, s) {
@@ -271,7 +298,7 @@
             root.appendChild(field);
             root.appendChild(btns);
 
-            var Lv = null, svg = null, balls = null, ptsL = null, ptsR = null;
+            var Lv = null, svg = null, balls = null, ptsL = null, ptsR = null, fw = 0, fh = 0, ends = null;
 
             function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }
 
@@ -279,11 +306,13 @@
             function nextLevel() {
                 if (my.dead) return;
                 var H = field.clientHeight, W = field.clientWidth;
+                fw = W; fh = H;
                 Lv = null;
                 for (var att = 0; att < 40 && !Lv; att++) Lv = makeLevel(level, H, null, W);
                 if (!Lv) throw new Error('curves: cannot build a level');
                 state = 'pick';
                 banner.textContent = ''; banner.className = 'cv-banner';
+                field.classList.remove('cv-field--zoom');
                 head.textContent = '第 ' + level + ' 關　哪一條比較短？';
                 meta();
                 field.querySelectorAll('svg').forEach(function (s) { s.remove(); });
@@ -299,9 +328,10 @@
                         kit.svg('path', { 'class': 'cv-line cv-line--solid', d: d }, svg);
                     }
                 });
+                ends = [];
                 [ptsL, ptsR].forEach(function (pts) {
                     kit.svg('circle', { 'class': 'cv-start', cx: pts[0].x, cy: pts[0].y, r: 7 }, svg);
-                    kit.svg('circle', { 'class': 'cv-end', cx: pts[pts.length - 1].x, cy: pts[pts.length - 1].y, r: 7 }, svg);
+                    ends.push(kit.svg('circle', { 'class': 'cv-end', cx: pts[pts.length - 1].x, cy: pts[pts.length - 1].y, r: 7 }, svg));
                 });
                 balls = [kit.svg('circle', { 'class': 'cv-ball', r: 13, cx: ptsL[0].x, cy: ptsL[0].y }, svg), kit.svg('circle', { 'class': 'cv-ball', r: 13, cx: ptsR[0].x, cy: ptsR[0].y }, svg)];
                 bL.disabled = bR.disabled = false;
@@ -322,38 +352,59 @@
                 (side === 'L' ? bL : bR).classList.add(ok ? 'cv-btn--ok' : 'cv-btn--bad');
                 Sfx.play('whoosh');
                 head.textContent = '兩顆球一樣的速度，看誰先到…';
-                var t0 = performance.now(), done = { L: false, R: false }, first = null;
-                var lenL = Lv.L.len, lenR = Lv.R.len;
-                /* 依經過時間算出兩顆球的弧長位置 */
+                var t0 = performance.now(), arrived = false;
+                var lenS = Math.min(Lv.L.len, Lv.R.len);        /* 短的那條的長度：短的那顆球一到終點，長的那顆就停在這個弧長 */
+                /* 依經過時間算出兩顆球的弧長位置（最多走到 lenS：短的到了終點，長的就停在原地）；還沒到就回傳 true */
                 function place(now) {
-                    var s = (now - t0) / 1000 * Lv.speed;
+                    var s = Math.min((now - t0) / 1000 * Lv.speed, lenS);
                     var pl = pointAt(ptsL, s), pr = pointAt(ptsR, s);
                     balls[0].setAttribute('cx', pl.x.toFixed(1)); balls[0].setAttribute('cy', pl.y.toFixed(1));
                     balls[1].setAttribute('cx', pr.x.toFixed(1)); balls[1].setAttribute('cy', pr.y.toFixed(1));
-                    if (!done.L && s >= lenL) { done.L = true; if (!first) first = 'L'; arrive(); }
-                    if (!done.R && s >= lenR) { done.R = true; if (!first) first = 'R'; arrive(); }
+                    if (s >= lenS) {
+                        if (!arrived) {
+                            arrived = true;     /* 短的那顆球到的瞬間就公布結果；長的那顆停在原地，不再往前 */
+                            Sfx.play('tick');
+                            verdict(ok, Lv.shortSide);
+                        }
+                        return false;
+                    }
+                    return true;
                 }
-                var arrived = false;
-                function arrive() {
-                    if (arrived) return;
-                    arrived = true;     /* 第一顆球到的瞬間就公布結果；另一顆繼續滑到底 */
-                    Sfx.play('tick');
-                    verdict(ok, first);
-                }
-                var lp = my.loop(function (now) {
-                    place(now);
-                    if (done.L && done.R) return false;
+                var lp = my.loop(function (now) { return place(now); });
+                /* 保底：rAF 被暫停時，時間到了直接定位並公布 */
+                my.after(lenS / Lv.speed * 1000 + 300, function () { if (!arrived) { lp.stop(); place(t0 + lenS / Lv.speed * 1000 + 1000); } });
+            }
+
+            /* 揭曉的鏡頭：長繩子還沒走完的那一段用橘色標出來、終點圈閃動；那一段很短（長度差小）就把鏡頭放大到只框住它（zoomCamera），
+               回傳是不是有放大（呼叫端據此決定停留多久）。放大的時候球、起終點圈的半徑反過來縮小（除以倍率），畫面上看起來大小不變，
+               球與終點之間的距離才看得清楚、不會被放大的球蓋住。 */
+            function showGap() {
+                var longSide = Lv.shortSide === 'L' ? 'R' : 'L', pts = longSide === 'L' ? ptsL : ptsR;
+                var lenS = Lv.shortSide === 'L' ? Lv.L.len : Lv.R.len;
+                var rest = restPoints(pts, lenS);
+                var d = rest.map(function (p, i) { return (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(' ');
+                var path = kit.svg('path', { 'class': 'cv-line cv-rest', d: d }, svg);
+                svg.insertBefore(path, balls[0]);                         /* 畫在球的下面 */
+                ends[longSide === 'L' ? 0 : 1].classList.add('cv-end--gap');
+                /* 剩下的路還很長（差距大）就不放大；很短才放大 */
+                var cam = needZoom(rest[rest.length - 1].s - rest[0].s) ? zoomCamera(rest, fw, fh) : null;
+                if (!cam) return false;
+                var from = { vx: 0, vy: 0, vw: fw, vh: fh };
+                var markers = svg.querySelectorAll('.cv-start, .cv-end');
+                kit.tweenViewBox(my, svg, from, cam.box, ZOOM_MS, kit.easeInOutCubic, function (b) {
+                    var z = fw / b.vw;
+                    balls[0].setAttribute('r', (13 / z).toFixed(2)); balls[1].setAttribute('r', (13 / z).toFixed(2));
+                    for (var i = 0; i < markers.length; i++) markers[i].setAttribute('r', (7 / z).toFixed(2));
                 });
-                /* 保底：rAF 被暫停時，時間到了直接定位到終點並公布 */
-                /* 保底：rAF 被暫停時，時間到了直接定位到終點並公布 */
-                var total = Math.max(lenL, lenR) / Lv.speed * 1000;
-                my.after(Math.min(lenL, lenR) / Lv.speed * 1000 + 200, function () { if (!arrived) { place(t0 + Math.min(lenL, lenR) / Lv.speed * 1000 + 1); } });
-                my.after(total + 400, function () { lp.stop(); place(t0 + total + 1); });
+                field.classList.add('cv-field--zoom');
+                return true;
             }
 
             /* 公布結果：答對進下一關，答錯結算 */
             function verdict(ok, first) {
                 var msg = '長度：左 ' + Lv.L.len.toFixed(0) + '、右 ' + Lv.R.len.toFixed(0) + '（差 ' + ((Lv.ratio - 1) * 100).toFixed(4) + '%）';
+                var zoomed = showGap();                      /* 標出長繩子剩下的路；差距小就把鏡頭放大 */
+                var extra = zoomed ? ZOOM_MS : 0;           /* 有放大的話，停留時間加上放大的時間 */
                 if (ok) {
                     cleared = level;
                     if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
@@ -363,7 +414,7 @@
                     meta();
                     Sfx.play('win');
                     level++;
-                    my.after(1900, nextLevel);
+                    my.after(1900 + extra, nextLevel);
                 } else {
                     banner.textContent = (first === 'L' ? '左' : '右') + '邊先到…答錯了';
                     banner.className = 'cv-banner cv-banner--bad';
@@ -371,7 +422,7 @@
                     Sfx.play('bad');
                     state = 'over';
                     var failLevel = level, back = kit.resumeFrom(failLevel);
-                    my.after(2300, function () {
+                    my.after(2300 + extra, function () {
                         kit.result(root, {
                             score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: cleared + ' 關', label: '看走眼了',
@@ -408,12 +459,12 @@
     var G = {
         id: ID,
         name: '誰先到？',
-        rule: '黑色畫面上有左右兩條彎彎曲曲的尋寶路線，**判斷哪一條比較短，按下方的按鈕**。按下去之後，兩顆球會用一樣的速度沿著路線滑下來，看看誰先到。第 1 關長度差 30%，每關縮小 3%，後面還會變成虛線，轉彎越來越多！',
+        rule: '黑色畫面上有左右兩條彎彎曲曲的尋寶路線，**判斷哪一條比較短，按下方的按鈕**。按下去之後，兩顆球會用一樣的速度沿著路線滑下來，**短的那顆一到終點，長的那顆就停住**，看它離終點還差多遠（差距很小的時候，鏡頭還會放大給你看）。第 1 關長度差 30%，每關縮小 3%，後面還會變成虛線，轉彎越來越多！',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
-        test: { segDist: segDist, polyOk: polyOk, diffFor: diffFor, kBase: kBase, yjitFor: yjitFor, makeShape: makeShape, buildPath: buildPath, solveAlpha: solveAlpha, validRope: validRope, makeLevel: makeLevel, speedFor: speedFor, dashFor: dashFor, pointAt: pointAt, pathLen: pathLen, MIN_SWING: MIN_SWING, CLEAR_PX: CLEAR_PX, SEP_PX: SEP_PX, SIDE_PAD: SIDE_PAD, PAD_TOP: PAD_TOP, PAD_BOT: PAD_BOT, VW: VW }
+        test: { segDist: segDist, polyOk: polyOk, diffFor: diffFor, kBase: kBase, yjitFor: yjitFor, makeShape: makeShape, buildPath: buildPath, solveAlpha: solveAlpha, validRope: validRope, makeLevel: makeLevel, speedFor: speedFor, dashFor: dashFor, pointAt: pointAt, pathLen: pathLen, zoomCamera: zoomCamera, restPoints: restPoints, needZoom: needZoom, ZOOM_REST_MAX: ZOOM_REST_MAX, ZOOM_MIN: ZOOM_MIN, ZOOM_MAX: ZOOM_MAX, ZOOM_PAD: ZOOM_PAD, MIN_SWING: MIN_SWING, CLEAR_PX: CLEAR_PX, SEP_PX: SEP_PX, SIDE_PAD: SIDE_PAD, PAD_TOP: PAD_TOP, PAD_BOT: PAD_BOT, VW: VW }
     };
     /* 登記到遊戲清單 */
     Reaction.register(G);

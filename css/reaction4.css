@@ -593,6 +593,11 @@
     filter: brightness(1.25);
 }
 
+/* 「確定」：跟上面的 ＋／－ 按鈕隔開一段距離（原本只隔 8px，手指點下排「－」稍微偏下就按到「確定」，遊戲就結束了） */
+.cm-ok {
+    margin-top: var(--sp-5);
+}
+
 .cm-btn--r-hi {
     background: var(--cm-r-hi);
 }

@@ -35,7 +35,10 @@ export async function connect() {
   const killAll = () => {
     // Windows 上瀏覽器會再開很多子行程，只殺主行程會留下一堆孤兒；用 taskkill /T 連整棵行程樹一起殺
     try { if (process.platform === 'win32') spawnSync('taskkill', ['/pid', String(proc.pid), '/T', '/F'], { stdio: 'ignore' }); else proc.kill('SIGKILL'); } catch (e) { }
-    try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) { }
+    // 瀏覽器剛被殺掉時，行程還在收尾（Windows 還沒放開、瀏覽器退出前還會寫幾個檔案進設定檔資料夾），立刻刪會失敗（錯誤被 catch 吃掉），
+    // 每跑一次就留下幾十 MB 的垃圾（V1.24 清掉過 90 個、共 4 GB）。所以先同步等 0.6 秒再刪，並且讓 rmSync 遇到 EBUSY／EPERM 時自動重試
+    try { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 600); } catch (e) { }
+    try { fs.rmSync(dir, { recursive: true, force: true, maxRetries: 12, retryDelay: 250 }); } catch (e) { }
   };
   if (!port) { killAll(); throw new Error('瀏覽器啟動失敗（找不到 DevToolsActivePort）'); }
   const tab = await (await fetch('http://127.0.0.1:' + port + '/json/new?about:blank', { method: 'PUT' })).json();

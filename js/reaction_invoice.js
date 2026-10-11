@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_invoice.js — 秒反應・對發票
-   上面是一張 8 碼發票，下面是這一期的開獎號碼，點出它中了哪一個獎（或沒中獎）。100 張發票，
-   看你能兌對幾張。
+   上面是一張 8 碼發票，下面是這一期的開獎號碼，點出它中了哪一個獎（或沒中獎）。發票一張接一張出，
+   **沒有張數上限，對錯一張就結束**，看你能兌對幾張；結算以「答對張數」為主、「中獎總金額」為輔。
    ───────────────────────────────────────────────────────────────────
    【開獎號碼】每一局先抽三組 8 碼號碼：
         F  = 第一獎號碼        S1 = 一號特別獎        S2 = 二號特別獎
@@ -10,14 +10,17 @@
         · 倒數第 3 碼三組各不相同；
         · 前 5 碼三組彼此差很多（任兩組至少 4 碼不同）；
         · F 的末 3 碼三個數字都不一樣（才有「重排」「對調」的干擾可以做）。
-   下面 9 個按鈕由上而下：
+   下面 9 個按鈕由上而下（沒中獎放在最上面、最小獎的上方；程式裡仍用 BTNS 的索引，畫面順序見 BTN_ORDER）：
+        ⓪ 沒中獎
         ① 六獎＝F 的末 3 碼　② 五獎＝末 4 碼　③ 四獎＝末 5 碼　④ 三獎＝末 6 碼
         ⑤ 二獎＝末 7 碼　　⑥ 一獎＝末 8 碼（F 全部）　⑦ 一號特別獎(8 碼)　⑧ 二號特別獎(8 碼)
-        ⑨ 沒中獎
+   各獎的獎金（依統一發票）：六獎 200、五獎 1,000、四獎 4,000、三獎 1 萬、二獎 4 萬、一獎 20 萬、
+   一號特別獎（對應特別獎）1,000 萬、二號特別獎（對應特獎）200 萬；沒中獎 0。答對的有獎發票，獎金累計起來。
    【判定】發票的「末幾碼」跟 F 的末幾碼相同，取最多碼的那一級；整張等於 S1／S2 才算特別獎；
    末 3 碼都對不上又不是特別獎，就是沒中獎。
 
-   【100 張發票的組成（先產生再洗牌，所以每一局都一樣公平）】
+   【每一批 100 張發票的組成（先產生再洗牌，所以每一局都一樣公平；100 張用完就再補一批，開獎號碼不變、號碼不重複）】
+     第一批含「特別獎×2、一獎×1」這三張整張相同的發票；之後補的批次不含這三張（號碼已經用過），其餘種類的張數一樣。
         有獎 33 張：特別獎 S1×1、S2×1、一獎×1、二獎×2、三獎×4、四獎×6、五獎×8、六獎×10。
           有獎的發票幾乎都是「F 只換一個長得像的數字」：換在哪一位，就決定中幾獎（換在倒數第 4 碼只中六獎、
           換在最後 3 碼就沒獎），所以看起來全都像大獎，只有仔細對才知道是哪一級。
@@ -33,7 +36,8 @@
           · rand    20 張：8 碼完全隨機（讓整體看起來自然；不會中獎）
    【長得像的數字】0↔8↔6↔9、1↔7、2↔7、3↔8↔5、4↔9、5↔6。
 
-   難度：每張發票的限時從 TIME_START 線性縮短到 TIME_END；發票順序依難易度＋雜訊排序，
+   難度：每張發票的限時從 TIME_START（10 秒）起，每一張少 TIME_STEP（0.25 秒），最短 TIME_MIN（3 秒）——
+   越後面時間越短（原本 100 張才從 10 秒線性縮到 4 秒，現在縮得快很多）；每一批的發票順序依難易度＋雜訊排序，
    前面比較容易、後面「差一個字」越來越多。
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -45,18 +49,18 @@
 
     /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 invoice 那一列要一致
        （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 張', label: '答對張數', min: 1, max: 100 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 張', label: '答對張數', min: 1, max: 500 };
     var h = UI.h;
     var kit = Reaction.kit;
 
     /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
-    /* 共 100 張發票 */
-    var TOTAL = 100;
-    /* 每張限時從 10 秒線性縮短到 4 秒 */
-    var TIME_START = 10, TIME_END = 4;        /* 每張限時（秒），從第 1 張線性縮到第 100 張 */
-    var NEXT_OK_MS = 450, NEXT_BAD_MS = 1100; /* 答完多久換下一張（答錯停久一點讓人看正解） */
-    /* 各獎項的發票張數（鍵是獎項，6＝六獎…） */
+    /* 發票沒有張數上限：每一批 100 張（組成見檔頭），用完再補一批 */
+    var BATCH = 100;
+    /* 每張的限時：第 1 張 10 秒，之後每一張少 0.25 秒，最短 3 秒（越後面時間越短；原本是 100 張才從 10 秒縮到 4 秒，每張只少 0.06 秒） */
+    var TIME_START = 10, TIME_STEP = 0.25, TIME_MIN = 3;
+    var NEXT_OK_MS = 450, NEXT_BAD_MS = 1800; /* 答完多久換下一張／顯示結算（答錯停久一點讓人看正解） */
+    /* 各獎項的發票張數（鍵是獎項，6＝六獎…）；每一批 100 張裡，二獎～六獎的張數（一獎、特別獎只有第一批各 1 張） */
     var WIN_COUNTS = { 6: 10, 5: 8, 4: 6, 3: 4, 2: 2, 1: 1 };        /* 各獎項發票張數 */
     /* 沒中獎的干擾發票各類張數 */
     var DECOY_COUNTS = { near: 18, num: 5, trans: 5, shift: 4, rev: 4, collage: 5, sNear: 6, rand: 20 };
@@ -68,16 +72,20 @@
     /* 九個按鈕：prize 對應獎項、k 是要比對末幾碼 */
     /* 九個按鈕：prize 1~6＝一獎~六獎（k＝末幾碼）、'S1'／'S2'、0＝沒中獎 */
     var BTNS = [
-        { prize: 6, name: '六獎', sub: '末 3 碼', k: 3 },
-        { prize: 5, name: '五獎', sub: '末 4 碼', k: 4 },
-        { prize: 4, name: '四獎', sub: '末 5 碼', k: 5 },
-        { prize: 3, name: '三獎', sub: '末 6 碼', k: 6 },
-        { prize: 2, name: '二獎', sub: '末 7 碼', k: 7 },
-        { prize: 1, name: '一獎', sub: '末 8 碼', k: 8 },
-        { prize: 'S1', name: '一號特別獎', sub: '', k: 8 },
-        { prize: 'S2', name: '二號特別獎', sub: '', k: 8 },
-        { prize: 0, name: '沒中獎', sub: '', k: 0 }
+        { prize: 6, name: '六獎', sub: '末 3 碼', k: 3, amount: 200 },
+        { prize: 5, name: '五獎', sub: '末 4 碼', k: 4, amount: 1000 },
+        { prize: 4, name: '四獎', sub: '末 5 碼', k: 5, amount: 4000 },
+        { prize: 3, name: '三獎', sub: '末 6 碼', k: 6, amount: 10000 },
+        { prize: 2, name: '二獎', sub: '末 7 碼', k: 7, amount: 40000 },
+        { prize: 1, name: '一獎', sub: '末 8 碼', k: 8, amount: 200000 },
+        { prize: 'S1', name: '一號特別獎', sub: '', k: 8, amount: 10000000 },     /* 對應統一發票的「特別獎」1,000 萬 */
+        { prize: 'S2', name: '二號特別獎', sub: '', k: 8, amount: 2000000 },      /* 對應統一發票的「特獎」200 萬 */
+        { prize: 0, name: '沒中獎', sub: '', k: 0, amount: 0 }
     ];
+    /* 畫面上按鈕由上而下的順序（BTNS 的索引）：沒中獎（8）放在最上面（最小獎的上方），接著六獎到一獎（0～5），最後兩個特別獎（6、7） */
+    var BTN_ORDER = [8, 0, 1, 2, 3, 4, 5, 6, 7];
+    /* 金額加千分位逗號，例如 1234567 → $1,234,567 */
+    function fmtMoney(n) { return '$' + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 
     /* 最佳紀錄文字 */
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 張'; }
@@ -200,12 +208,10 @@
     /* 這一類發票的難度分數（0~1），用來決定出現順序 */
     var DIFF = { near: 0.95, num: 0.7, trans: 0.8, shift: 0.6, rev: 0.6, collage: 0.75, sNear: 0.85, rand: 0.1 };
 
-    /* 產生整局的 100 張發票：先依各類張數產生，再依「難度 + 雜訊」排序，前面比較容易 */
-    /* 產生整局的 100 張發票。回傳 { A, deck:[{num, btn, kind, prize}] } */
-    function makeDeck(rand) {
-        rand = rand || Math.random;
-        var A = makeAnnounce(rand);
-        var items = [], used = {};
+    /* 產生一批發票（BATCH 張左右）：先依各類張數產生，再依「難度 + 雜訊」排序，前面比較容易。
+       used：已經用過的號碼（這一局所有批次共用，號碼不重複）；first：是不是第一批（只有第一批含特別獎×2、一獎×1 這三張整張相同的發票） */
+    function buildItems(A, used, rand, first) {
+        var items = [];
         /* add：加入一張發票（不能重複） */
         function add(num, kind, diff) {
             if (used[num]) return false;
@@ -213,10 +219,8 @@
             items.push({ num: num, btn: classify(num, A), kind: kind, diff: diff });
             return true;
         }
-        /* 特別獎、一獎本身 */
-        /* 特別獎與一獎各一張 */
-        add(A.S1, 'S1', 0.55); add(A.S2, 'S2', 0.55); add(A.F, 'win1', 0.45);
-        /* 二獎~六獎 */
+        /* 特別獎與一獎各一張（只有第一批） */
+        if (first) { add(A.S1, 'S1', 0.55); add(A.S2, 'S2', 0.55); add(A.F, 'win1', 0.45); }
         /* 二獎～六獎 */
         [2, 3, 4, 5, 6].forEach(function (pz) {
             var k = 9 - pz;                   /* 二獎末 7、三獎末 6、四獎末 5、五獎末 4、六獎末 3 */
@@ -228,7 +232,6 @@
             }
         });
         /* 沒中獎的干擾 */
-        /* 沒中獎的干擾 */
         Object.keys(DECOY_COUNTS).forEach(function (kind) {
             var need = DECOY_COUNTS[kind];
             for (var n = 0, guard = 0; n < need && guard < 5000; guard++) {
@@ -239,37 +242,46 @@
             }
         });
         /* 順序：難度＋雜訊，前面比較容易 */
-        /* 順序：難度＋雜訊，前面比較容易 */
         items.forEach(function (it) { it.key = it.diff + (rand() - 0.5) * 0.9; });
         items.sort(function (a, b) { return a.key - b.key; });
-        return { A: A, deck: items };
+        return items;
     }
-    /* 第 i 張的限時 */
-    function timeFor(i) { return kit.ramp(i, TIME_START, TIME_END, TOTAL); }
+    /* 產生開獎號碼與第一批發票。回傳 { A, deck:[{num, btn, kind, diff}], used }（used 要留著，補下一批時避免號碼重複） */
+    function makeDeck(rand) {
+        rand = rand || Math.random;
+        var A = makeAnnounce(rand), used = {};
+        return { A: A, deck: buildItems(A, used, rand, true), used: used };
+    }
+    /* 補下一批發票（開獎號碼不變、號碼不跟之前的重複、不含特別獎／一獎那三張）；D 是 makeDeck 的回傳值 */
+    function moreDeck(D, rand) {
+        return buildItems(D.A, D.used, rand || Math.random, false);
+    }
+    /* 第 i 張的限時：第 1 張 10 秒，每一張少 0.25 秒，最短 3 秒（越後面越短） */
+    function timeFor(i) { return Math.max(TIME_MIN, TIME_START - TIME_STEP * (Math.max(i, 1) - 1)); }
 
     /* mount：遊戲進場點 */
     function mount(root, ctx) {
         var R = null;
 
-        /* round：開一局（100 張發票） */
+        /* round：開一局（發票一張一張出，沒有張數上限；答錯或超時就結束） */
         function round() {
             if (R) R.dispose();
             R = kit.round();
             var my = R;
             root.innerHTML = '';
 
-            /* D 整副發票；A 開獎號碼 */
+            /* D 整副發票（每批 BATCH 張，用完補一批，開獎號碼不變）；A 開獎號碼 */
             var D = makeDeck();
             var A = D.A, deck = D.deck;
-            /* idx 目前第幾張；right 答對數；state 目前階段；cur 目前這張 */
-            var idx = 0, right = 0, state = 'idle', cur = null;
+            /* idx 目前第幾張（已經答完幾張）；right 答對數；money 累計獎金；state 目前階段；cur 目前這張 */
+            var idx = 0, right = 0, money = 0, state = 'idle', cur = null;
             var rts = [];
             /* byBtn 統計每種按鈕的答題數與答對數，結算用 */
             var byBtn = BTNS.map(function () { return { n: 0, ok: 0 }; });
-            /* 主控台印出開獎號碼與各獎項張數，方便驗證 */
+            /* 主控台印出開獎號碼與第一批各獎項張數，方便驗證 */
             try {
                 console.info('[對發票] 開獎號碼 第一獎 ' + A.F + '／一號特別獎 ' + A.S1 + '／二號特別獎 ' + A.S2 +
-                    '；100 張：有獎 ' + deck.filter(function (d) { return d.btn !== 8; }).length + ' 張、沒中獎 ' + deck.filter(function (d) { return d.btn === 8; }).length + ' 張');
+                    '；第一批 ' + deck.length + ' 張：有獎 ' + deck.filter(function (d) { return d.btn !== 8; }).length + ' 張、沒中獎 ' + deck.filter(function (d) { return d.btn === 8; }).length + ' 張');
                 var cnt = {};
                 deck.forEach(function (d) { cnt[BTNS[d.btn].name] = (cnt[BTNS[d.btn].name] || 0) + 1; });
                 console.info('[對發票] 各獎項張數', cnt);
@@ -286,8 +298,11 @@
             root.appendChild(bar);
             root.appendChild(btns);
 
-            /* 建立九顆按鈕：每顆顯示獎項名稱與對應的號碼 */
-            var els = BTNS.map(function (b, i) {
+            /* 建立九顆按鈕：每顆顯示獎項名稱與對應的號碼。畫面由上而下依 BTN_ORDER（沒中獎在最上面），
+               els 還是用 BTNS 的索引存（els[i] 是 BTNS[i] 的按鈕），所以判定的程式不用管畫面順序 */
+            var els = [];
+            BTN_ORDER.forEach(function (i) {
+                var b = BTNS[i];
                 var num = i < 6 ? A.F.slice(8 - b.k) : (i === 6 ? A.S1 : (i === 7 ? A.S2 : ''));
                 var el = h('button', { 'class': 'iv-btn' + (i === 8 ? ' iv-btn--none' : '') }, [
                     h('span', { 'class': 'iv-btn__name' }, [h('b', { text: b.name }), b.sub ? h('i', { text: b.sub }) : null]),
@@ -295,20 +310,22 @@
                 ]);
                 el.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(i, kit.evT(e)); });
                 btns.appendChild(el);
-                return el;
+                els[i] = el;
             });
 
             function meta() { ctx.setMeta(kit.meta(['答對 ' + right, fmtBest(Reaction.getBest(ID))])); }
+            /* 上方資訊：第幾張、累計獎金 */
+            function paintInfo() { info.textContent = '第 ' + (idx + 1) + ' 張　獎金 ' + fmtMoney(money); }
 
-            /* 出下一張 */
+            /* 出下一張（這一批用完就補一批新的） */
             function next() {
                 if (my.dead) return;
-                if (idx >= TOTAL) { finish(); return; }
+                if (idx >= deck.length) deck = deck.concat(moreDeck(D));
                 var it = deck[idx];
                 cur = { it: it, t0: performance.now(), limit: timeFor(idx + 1) * 1000 };
                 state = 'ask';
                 els.forEach(function (el) { el.className = el.className.replace(/ iv-btn--(ok|bad|miss)/g, ''); });
-                info.textContent = '第 ' + (idx + 1) + ' / ' + TOTAL + ' 張';
+                paintInfo();
                 card.innerHTML = '';
                 card.appendChild(h('div', { 'class': 'iv-card__head', text: '統一發票' }));
                 var row = h('div', { 'class': 'iv-digits' });
@@ -323,56 +340,64 @@
                 cur.timer = my.after(cur.limit, function () { if (state === 'ask') answer(-1, performance.now()); });
             }
 
-            /* 作答：標示對錯，把相同的末碼標綠，讓玩家看到「到底對上幾碼」 */
+            /* 作答：標示對錯，把相同的末碼標綠，讓玩家看到「到底對上幾碼」；答對換下一張、答錯（或超時）就結束 */
             function answer(i, t) {
                 if (state !== 'ask') return;
                 state = 'fb';
                 my.cancel(cur.timer); cur.loop.stop();
                 var it = cur.it, ok = i === it.btn;
                 byBtn[it.btn].n++;
-                if (ok) { right++; byBtn[it.btn].ok++; rts.push(t - cur.t0); }
+                if (ok) { right++; money += BTNS[it.btn].amount; byBtn[it.btn].ok++; rts.push(t - cur.t0); }
                 els[it.btn].classList.add(ok ? 'iv-btn--ok' : 'iv-btn--miss');
                 if (!ok && i >= 0) els[i].classList.add('iv-btn--bad');
                 /* 把相同的末碼標綠，讓玩家看到「到底對上幾碼」 */
                 var digits = card.querySelectorAll('.iv-d');
                 var m = it.btn >= 6 ? (it.btn === 8 ? 0 : 8) : suffixMatch(it.num, A.F);        /* 沒中獎就不標色 */
                 for (var k = 0; k < m; k++) digits[7 - k].classList.add(it.btn >= 6 ? 'iv-d--sp' : 'iv-d--m');
-                if (ok) Sfx.play('ok'); else Sfx.play('bad');
                 idx++;
                 meta();
                 fill.style.width = '0%';
-                my.after(ok ? NEXT_OK_MS : NEXT_BAD_MS, next);
+                if (ok) {
+                    Sfx.play('ok');
+                    info.textContent = '第 ' + idx + ' 張　獎金 ' + fmtMoney(money);
+                    my.after(NEXT_OK_MS, next);
+                    return;
+                }
+                /* 答錯或超時：一次就結束，停一下讓玩家看到正確答案，再結算 */
+                Sfx.play('bad');
+                info.textContent = (i < 0 ? '時間到！' : '答錯了…') + '這張是「' + BTNS[it.btn].name + '」';
+                my.after(NEXT_BAD_MS, function () { finish(it, i); });
             }
 
-            /* 全部答完：結算（分有獎與沒中獎的答對率、平均反應） */
-            function finish() {
+            /* 結算：主要看答對幾張，另外算中獎總金額、有獎與沒中獎各對幾張、平均反應；failIt 是答錯（或超時）的那一張，picked 是玩家點的按鈕（−1＝超時） */
+            function finish(failIt, picked) {
                 state = 'done';
-                var isNew = Reaction.setBest(ID, right, function (v, b) { return v > b; });
+                var isNew = right > 0 && Reaction.setBest(ID, right, function (v, b) { return v > b; });
                 ctx.setMeta(kit.meta(['答對 ' + right, fmtBest(Reaction.getBest(ID))]));
                 var avg = rts.length ? rts.reduce(function (a, b) { return a + b; }, 0) / rts.length : 0;
                 var lines = [];
                 var sp = byBtn[6].ok + byBtn[7].ok, spN = byBtn[6].n + byBtn[7].n;
                 var win = 0, winN = 0;
                 for (var b = 0; b < 6; b++) { win += byBtn[b].ok; winN += byBtn[b].n; }
-                lines.push('有獎的發票：' + (win + sp) + ' / ' + (winN + spN) + ' 張兌對');
-                lines.push('沒中獎的發票：' + byBtn[8].ok + ' / ' + byBtn[8].n + ' 張看穿');
+                lines.push('中獎總金額 ' + fmtMoney(money) + ' 元');
+                lines.push('有獎的發票對了 ' + (win + sp) + ' 張、沒中獎的發票看穿 ' + byBtn[8].ok + ' 張');
+                lines.push('第 ' + idx + ' 張：' + (picked < 0 ? '時間到，沒來得及按' : '你按了「' + BTNS[picked].name + '」') + '，正確是「' + BTNS[failIt.btn].name + '」');
                 /* 平均反應（秒）：4 位小數、第 3／4 位不為 0，結算時產生一次 */
                 if (rts.length) lines.push('答對的平均反應 ' + Leaderboard.fake4(avg / 1000).toFixed(4) + ' 秒');
                 kit.result(root, {
                     score: right,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
-                    num: right + ' / ' + TOTAL, label: right >= 90 ? '眼力超強的對獎達人！' : (right >= 70 ? '很會對發票！' : '再仔細看看數字喔'),
-                    lines: lines, isNew: isNew, sfx: right >= 90 ? 'perfect' : (right >= 60 ? 'win' : 'fail'), onAgain: round
+                    num: right + ' 張', label: right >= 50 ? '眼力超強的對獎達人！' : (right >= 25 ? '很會對發票！' : '再仔細看看數字喔'),
+                    lines: lines, isNew: isNew, sfx: right >= 40 ? 'perfect' : (right >= 20 ? 'win' : 'fail'), onAgain: round
                 });
             }
 
             /* G.debug：測試用後門 */
             G.debug = {
                 deck: deck, A: A,
-                state: function () { return { idx: idx, right: right, state: state, btn: cur && cur.it.btn }; },
+                state: function () { return { idx: idx, right: right, money: money, state: state, btn: cur && cur.it.btn, deckLen: deck.length }; },
                 answer: function (i) { answer(i, performance.now()); },
                 answerRight: function () { if (state === 'ask') answer(cur.it.btn, performance.now()); return state; },
-                skipTo: function (n) { idx = n; },
-                finish: finish
+                skipTo: function (n) { idx = n; }
             };
             /* 開場等 500 毫秒再出第一張 */
             my.after(500, next);
@@ -385,12 +410,12 @@
     var G = {
         id: ID,
         name: '對發票',
-        rule: '上面是一張 8 碼發票，下面是這一期的開獎號碼。**發票的「末幾碼」跟第一獎相同，就中對應的獎**（末 3 碼六獎，末 8 碼一獎）；特別獎要整張 8 碼完全相同；**都沒中就按「沒中獎」**。三組開獎號碼的最後兩碼故意一樣，共 100 張，小心長得很像的數字、對調過的數字、拼貼的號碼！',
+        rule: '上面是一張 8 碼發票，下面是這一期的開獎號碼。**發票的「末幾碼」跟第一獎相同，就中對應的獎**（末 3 碼六獎，末 8 碼一獎）；特別獎要整張 8 碼完全相同；**都沒中就按「沒中獎」**（在最上面）。三組開獎號碼的最後兩碼故意一樣，小心長得很像的數字、對調過的數字、拼貼的號碼！發票沒有張數上限，越後面時間越短，**答錯一張就結束**；結算看答對幾張，也會算中獎總金額。',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
-        test: { makeDeck: makeDeck, classify: classify, suffixMatch: suffixMatch, makeAnnounce: makeAnnounce, tailOverlap: tailOverlap, hamming: hamming, timeFor: timeFor, BTNS: BTNS, TOTAL: TOTAL, SIM: SIM, DECOY_COUNTS: DECOY_COUNTS, ANNOUNCE_MIN_DIFF: ANNOUNCE_MIN_DIFF }
+        test: { makeDeck: makeDeck, moreDeck: moreDeck, buildItems: buildItems, fmtMoney: fmtMoney, BTN_ORDER: BTN_ORDER, TIME_START: TIME_START, TIME_STEP: TIME_STEP, TIME_MIN: TIME_MIN, BATCH: BATCH, classify: classify, suffixMatch: suffixMatch, makeAnnounce: makeAnnounce, tailOverlap: tailOverlap, hamming: hamming, timeFor: timeFor, BTNS: BTNS, SIM: SIM, DECOY_COUNTS: DECOY_COUNTS, ANNOUNCE_MIN_DIFF: ANNOUNCE_MIN_DIFF }
     };
     /* 登記到遊戲清單 */
     Reaction.register(G);

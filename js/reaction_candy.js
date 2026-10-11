@@ -2,19 +2,22 @@
    reaction_candy.js — 秒反應・幾顆糖
    一堆各種顏色的糖果閃一下就蓋起來，數出「指定顏色」的糖果有幾顆（瞬間數量感）。
    ───────────────────────────────────────────────────────────────────
-   · 每一題先告訴你要數哪個顏色（出題時一定挑整堆糖果裡數量最多的顏色），再閃現糖果 showMs 毫秒，蓋住後四選一。
-   · 難度全部線性（第 1 題 → 第 LEVEL_RAMP 題）：
-        糖果總數 N         N_START → N_END（N_END 是「放得下」的上限，見下面的擺放）
-        顏色種類 K         K_START → K_END
-        閃現時間           SHOW_START → SHOW_END 毫秒
-        選項間隔 gap       3 → 1（最後選項是 正確答案±1、±2 …，很容易猜錯一顆）
-        第一名領先第二名   LEAD_START → LEAD_END 顆（第一名一定比任何其他顏色至少多這麼多顆，沒有並列）
-   · 糖果大小 R = 42（邏輯 px，是原本的兩倍）。糖果可以重疊，但每一顆露出來的面積都要 ≥ MIN_VIS（30%）：
+   · 每一題先告訴你要數哪個顏色（出題時一定挑整堆糖果裡數量最多的顏色），再閃現糖果 showMs 毫秒，蓋住後六選一。
+   · 難度（第 1 題起）：
+        糖果總數 N         第 1 題 N_START（6）顆，之後每題多 N_STEP（2）顆，最多 N_END（放得下的上限，見下面的擺放）
+        顏色種類 K         K_START → K_END（第 1 → LEVEL_RAMP 題線性）
+        閃現時間           SHOW_START → SHOW_END 毫秒（線性）
+        第一名領先第二名   LEAD_START → LEAD_END 顆（線性；第一名一定比任何其他顏色至少多這麼多顆，沒有並列）
+        選項間隔 gap       4 → 1，每 GAP_EVERY（3）題少 1：第 1～3 題差 4、第 4～6 題差 3、第 7～9 題差 2，
+                           第 10 題起差 1。
+   · 六個答案按鈕是「連續的一排數字」（間隔 gap）：正確答案放在其中隨機一格，例如第 10 題起可能是
+     13 14 15 16 17 18；第 1 題間隔 4 時像 1 5 9 13 17 21。按鈕由小到大排成 3 欄×2 列。
+   · 糖果大小 R = 42 × 0.8 = 33.6（邏輯 px；原本 42，依玩家意見縮小成 80%）。糖果可以重疊，但每一顆露出來的面積都要 ≥ MIN_VIS（30%）：
      scatter 一顆一顆往上疊，疊上去之後，前面每一顆被蓋住的比例用取樣點數（糖果形狀內的格點）逐一檢查，
      不夠露出就換位置重擺；放不下整個重排（最多 SCATTER_RESTARTS 次）。
    · 題目頁與答案頁用「同一份擺放」（Q.layout：位置、角度、疊放順序、顏色都一樣），答案頁只是把數量最多的
      顏色圈起來。
-   · 有 LIVES 次機會（目前 1：錯一次就結束）。成績＝答對幾題；失敗後可從「失敗題數 − 5」繼續。
+   · 答錯或超時就結束（沒有「機會」次數）。成績＝答對幾題；失敗後可從「失敗題數 − 5」繼續。
    ═══════════════════════════════════════════════════════════════════ */
 
 /* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
@@ -31,22 +34,23 @@
 
     /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
-    /* 難度從第 1 題線性變到第 LEVEL_RAMP 題 */
+    /* 顏色種類、領先顆數、閃現時間從第 1 題線性變到第 LEVEL_RAMP 題 */
     var LEVEL_RAMP = 20;
-    /* 糖果總數、顏色種類、第一名領先顆數、閃現時間、選項間距 */
-    var N_START = 10, N_END = 70;                  /* 放得下的上限：t_candy.js 會驗證在托盤 W×H 內擺得下 */
+    /* 糖果總數：第 1 題 6 顆，之後每題多 2 顆（難度曲線比原本平緩），最多 N_END 顆 */
+    var N_START = 6, N_STEP = 2, N_END = 70;       /* N_END＝放得下的上限：t_candy.js 會驗證在托盤 W×H 內擺得下 */
+    var OPTION_COUNT = 6;                          /* 答案按鈕有幾顆（連續的一排數字） */
     var K_START = 2, K_END = 5;
     var LEAD_START = 3, LEAD_END = 1;              /* 第一名領先第二名的顆數 */
     /* 每顆糖果至少要露出 30% 的面積（可以重疊，但不能被蓋得看不到） */
     var MIN_VIS = 0.30;                            /* 每顆糖果至少要露出幾成的面積 */
     var SCATTER_RESTARTS = 24;
     var SHOW_START = 2000, SHOW_END = 15000;         /* 閃現時間（毫秒） */
-    var GAP_START = 3, GAP_END = 1;
-    var LIVES = 1;
+    /* 答案按鈕之間的數字間隔：第 1～3 題差 4，之後每 GAP_EVERY 題少 1，第 10 題起差 1（GAP_MIN） */
+    var GAP_START = 4, GAP_EVERY = 3, GAP_MIN = 1;
     var ANSWER_S = 8;                              /* 蓋住後的作答時限（秒） */
     var PREP_MS = 1300;                            /* 告知顏色後多久閃現 */
     var REVEAL_MS = 1800;                          /* 答完揭曉停留 */
-    var R = 42;                                    /* 糖果大小（半徑，邏輯 px） */
+    var R = 42 * 0.8;                              /* 糖果大小（半徑，邏輯 px）：原本 42，依玩家意見縮小成 80% */
     /* 糖果顏色清單：fill 填色、dark 外框深色 */
     var COLORS = [
         { name: '紅', fill: '#E8685A', dark: '#A8342A' },
@@ -62,18 +66,33 @@
 
     /* 純函式（也給 Node 測試用） */
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    /* 這一題的難度參數（隨題號線性變化） */
+    /* 糖果總數：第 1 題 6 顆，每題多 2 顆，最多 N_END。Math.min 取較小的，Math.max(level, 1) 避免題號小於 1 */
+    function countFor(level) { return Math.min(N_END, N_START + N_STEP * (Math.max(level, 1) - 1)); }
+    /* 答案按鈕的數字間隔：第 1～3 題 4、第 4～6 題 3、第 7～9 題 2、第 10 題起 1。
+       Math.floor 是無條件捨去，所以每 GAP_EVERY 題才少 1；Math.max 保證最小是 GAP_MIN */
+    function gapFor(level) { return Math.max(GAP_MIN, GAP_START - Math.floor((Math.max(level, 1) - 1) / GAP_EVERY)); }
+    /* 這一題的難度參數（顆數、間隔是逐題的階梯；顏色種類、領先、閃現時間是線性） */
     function paramsFor(level) {
         return {
-            n: Math.round(kit.ramp(level, N_START, N_END, LEVEL_RAMP)),
+            n: countFor(level),
             k: Math.round(kit.ramp(level, K_START, K_END, LEVEL_RAMP)),
             showMs: Math.round(kit.ramp(level, SHOW_START, SHOW_END, LEVEL_RAMP)),
-            gap: Math.round(kit.ramp(level, GAP_START, GAP_END, LEVEL_RAMP)),
+            gap: gapFor(level),
             lead: Math.round(kit.ramp(level, LEAD_START, LEAD_END, LEVEL_RAMP))
         };
     }
+    /* 六個答案按鈕：連續的一排數字 s, s+gap, s+2gap, …（共 OPTION_COUNT 個），正確答案 c 放在其中隨機一格。
+       起點 s = c − pos×gap，pos 是答案排第幾格（0 起算），要保證每個數字都 ≥ 1，所以 pos ≤ floor((c−1)/gap)。
+       回傳 { options（由小到大）, pos（答案在 options 的索引） } */
+    function makeOptions(c, gap, rand) {
+        rand = rand || Math.random;
+        var posMax = Math.min(OPTION_COUNT - 1, Math.floor((c - 1) / gap));
+        var pos = kit.randInt(0, posMax, rand), s = c - pos * gap, opts = [];
+        for (var i = 0; i < OPTION_COUNT; i++) opts.push(s + i * gap);
+        return { options: opts, pos: pos };
+    }
     /* 出題：先決定哪個顏色要數（一定是數量最多的），再把總數分配給各顏色，最後算出四個選項 */
-    /* 出題：回傳 { n, k, colors:[顏色索引], counts:{顏色:顆數}, target(數量最多的顏色), answer, options:[4 個], showMs, gap, lead }
+    /* 出題：回傳 { n, k, colors:[顏色索引], counts:{顏色:顆數}, target(數量最多的顏色), answer, options:[6 個，由小到大], showMs, gap, lead }
        target 的顆數一定比任何其他顏色至少多 lead 顆（所以最多的顏色是唯一的）。 */
     function makeQuestion(level, rand) {
         rand = rand || Math.random;
@@ -97,12 +116,9 @@
             if (counts[x] < c - lead) { counts[x]++; rest--; }
         }
         counts[target] = c;
-        /* 四個選項：正確答案 ± gap 的倍數（gap 越小，選項越接近、越難分辨） */
-        /* 四個選項：正確答案 ± gap 的倍數 */
-        var cand = [-3, -2, -1, 1, 2, 3].map(function (k) { return c + k * p.gap; }).filter(function (v) { return v >= 1 && v !== c; });
-        var near = kit.shuffle(cand, rand).sort(function (a, b) { return Math.abs(a - c) - Math.abs(b - c); }).slice(0, 4);
-        var options = kit.shuffle([c].concat(kit.shuffle(near, rand).slice(0, 3)), rand);
-        return { n: p.n, k: p.k, colors: colors, counts: counts, target: target, answer: c, options: options, showMs: p.showMs, gap: p.gap, lead: lead };
+        /* 六個選項：連續的一排數字，間隔 gap（gap 越小，選項越接近、越難分辨），正確答案隨機放在其中一格 */
+        var opt = makeOptions(c, p.gap, rand);
+        return { n: p.n, k: p.k, colors: colors, counts: counts, target: target, answer: c, options: opt.options, showMs: p.showMs, gap: p.gap, lead: lead };
     }
 
     /* 糖果形狀判定：以糖果中心為原點，長軸沿 x 軸；中間是橢圓，兩端是蝴蝶結三角形 */
@@ -214,8 +230,8 @@
             R_ = kit.round();
             var my = R_;
             root.innerHTML = '';
-            /* level 目前題號；right 答對數；lives 機會；state 目前階段；Q 這一題 */
-            var level = start || 1, right = level - 1, lives = LIVES, newRec = false, state = 'idle';
+            /* level 目前題號；right 答對數；state 目前階段；Q 這一題 */
+            var level = start || 1, right = level - 1, newRec = false, state = 'idle';
             var Q = null;
 
             /* 建立畫面元素：標題、問題、托盤、蓋子、時間條、選項 */
@@ -233,7 +249,7 @@
             root.appendChild(bar);
             root.appendChild(opts);
 
-            function meta() { ctx.setMeta(kit.meta(['答對 ' + right, '機會 ' + lives, fmtBest(Reaction.getBest(ID))])); }
+            function meta() { ctx.setMeta(kit.meta(['答對 ' + right, fmtBest(Reaction.getBest(ID))])); }
             function setHead() { head.textContent = '第 ' + level + ' 題'; }
 
             /* 出下一題 */
@@ -327,7 +343,7 @@
                 Q.lp = lp;
             }
 
-            /* 作答：判定對錯，揭曉答案；有機會就繼續，沒有就結算 */
+            /* 作答：判定對錯，揭曉答案；答對繼續下一題，答錯或超時就結算 */
             function answer(v, btn) {
                 if (state !== 'ans') return;
                 state = 'rev';
@@ -344,16 +360,17 @@
                 cover.classList.add('cd-cover--off');
                 ask.textContent = (v == null ? '時間到！' : (ok ? '答對了！' : '答錯了…')) + ' 正確是 ' + Q.answer + ' 顆（共 ' + Q.n + ' 顆）';
                 if (ok) { right++; Sfx.play('ok'); if (Reaction.setBest(ID, right, function (a, b) { return a > b; })) newRec = true; }
-                else { lives--; Sfx.play('bad'); }
+                else Sfx.play('bad');
                 var failLevel = level;
                 level++;
                 setHead(); meta();
-                if (lives <= 0) {
+                if (!ok) {
+                    /* 答錯或超時：一次就結束，稍後顯示結算（可從失敗題數前 5 題繼續） */
                     var back = kit.resumeFrom(failLevel);
                     my.after(REVEAL_MS + 400, function () {
                         kit.result(root, {
                             score: right,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
-                            num: right + ' 題', label: '機會用完了', lines: ['第 ' + failLevel + ' 題沒數對：' + COLORS[Q.target].name + '色（全堆最多的顏色）有 ' + Q.answer + ' 顆'],
+                            num: right + ' 題', label: v == null ? '來不及了' : '數錯了', lines: ['第 ' + failLevel + ' 題沒數對：' + COLORS[Q.target].name + '色（全堆最多的顏色）有 ' + Q.answer + ' 顆'],
                             isNew: newRec, sfx: right >= 8 ? 'win' : 'fail',
                             onAgain: function () { round(1); },
                             resume: { level: back, run: function () { round(back); } }
@@ -366,7 +383,7 @@
 
             /* G.debug：測試用後門 */
             G.debug = {
-                state: function () { return { level: level, right: right, lives: lives, state: state, Q: Q }; },
+                state: function () { return { level: level, right: right, state: state, Q: Q }; },
                 answerRight: function () { answer(Q.answer, null); },
                 answerWrong: function () { answer(-999, null); }
             };
@@ -381,12 +398,12 @@
     var G = {
         id: ID,
         name: '幾顆糖',
-        rule: '先告訴你要數哪一種顏色的糖果（那是整堆糖果裡數量最多的顏色），接著一堆糖果會閃一下就蓋起來，**憑感覺選出那個顏色有幾顆**。糖果會互相疊在一起，但每一顆都看得到。越後面糖果越多、閃得越快，選項也越接近。只有一次機會，**答錯就結束**！',
+        rule: '先告訴你要數哪一種顏色的糖果（那是整堆糖果裡數量最多的顏色），接著一堆糖果會閃一下就蓋起來，**憑感覺從六個答案裡選出那個顏色有幾顆**。糖果會互相疊在一起，但每一顆都看得到。越後面糖果越多，六個答案的數字也越來越接近，第 10 題起只差 1。**答錯就結束**！',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
-        test: { paramsFor: paramsFor, makeQuestion: makeQuestion, scatter: scatter, visibleFractions: visibleFractions, inCandy: inCandy, COLORS: COLORS, R: R, LEVEL_RAMP: LEVEL_RAMP, MIN_VIS: MIN_VIS, N_END: N_END }
+        test: { paramsFor: paramsFor, countFor: countFor, gapFor: gapFor, makeOptions: makeOptions, makeQuestion: makeQuestion, scatter: scatter, visibleFractions: visibleFractions, inCandy: inCandy, COLORS: COLORS, R: R, LEVEL_RAMP: LEVEL_RAMP, MIN_VIS: MIN_VIS, N_START: N_START, N_STEP: N_STEP, N_END: N_END, OPTION_COUNT: OPTION_COUNT, GAP_START: GAP_START, GAP_EVERY: GAP_EVERY, GAP_MIN: GAP_MIN }
     };
     /* 登記到遊戲清單 */
     Reaction.register(G);

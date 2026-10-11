@@ -24,6 +24,8 @@ node test/reaction/t_coins.js        # 只跑一支
 
 `t_ruletext.js`（V1.23.0）測玩法說明的排版（`Dlg.test.lines／emParts`：一句一行、引號與括號、`\n` 手動換行、`**重點**` 成對／不成對）與全部 108 款的 `rule`（每款有 1～4 個重點、每個至少 4 個字、不超過全文 60%、排版後沒有字被吃掉、遊戲名稱不超過 5 個字、零秒出手剛好是使用者指定的三行）；`t_menu.js` 測 `js/menu.js` 的清單（108 款、名稱 ≤ 5 個字、縮圖檔存在且高 256、七個分類不重疊且加起來是全部、跟各遊戲檔案的 id／名稱一致、「最近」的規則）；`t_scroller.js` 測 `js/scroller.js` 的互動（拖曳門檻、點一下與拖曳的分辨、慣性、橡皮筋、滾輪、鍵盤、舞台縮放換算；用假的 DOM，不需要瀏覽器）。
 
+`t_cssclass.js`（V1.24.0）掃描全部遊戲檔裡寫的 CSS class 名稱，**兩款以上的遊戲用同一個 class 就失敗**——所有遊戲的 CSS 是一次全部載入的，撞名會讓其中一款的版面跑掉（V1.24 實際發生過：`.pb-cell`、`.bk-info`）。已知而且是故意的共用（混出什麼色借用 `mc-`）與已知但先不處理的共用（`cr-`）列在檔案裡的 `ALLOW`，清單裡的項目如果已經沒有被共用也會失敗（提醒你把它拿掉）。
+
 `t_leaderboard.js` 測的是世界排行榜（`js/leaderboard.js`、`js/leaderboard_ui.js`）：偽造位數統計、進榜判斷、暱稱清理、慣性捲動物理、快取／離線／待送佇列；並且對**全部 50 款遊戲**（遊戲清單讀 `js/boot.js`，載入器在 `test/leaderboard/all_games.cjs`）檢查：`score` 設定合法、跟 `supabase/MF_leaderboard.sql` 逐款一致（含 SQL 的自動產生區塊有沒有過期）、每款都接了送榜（`kit.result` 帶 `score`，或手動呼叫 `Leaderboard.submit(ID, …)`，不會送兩次）、送榜流程。新增遊戲忘了做排行榜這幾步，這支測試會失敗。資料庫腳本本身的測試在 `test/leaderboard/`（要另外安裝 PGlite，見 `note/世界排行榜說明.md` 第 8 節）。
 
 ## 瀏覽器端驗證（V1.22.0 起，headless Chrome／Edge，不用裝任何套件）

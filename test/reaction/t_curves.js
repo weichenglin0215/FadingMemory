@@ -67,4 +67,41 @@ ok([1, 5, 12, 30].every(l => stats[l].width > 100), 'ropes use most of the width
 { const L = T.makeLevel(5, H, rnd, W); const pts = L.L.pts; const mid = pts[pts.length >> 1]; const q = T.pointAt(pts, mid.s); ok(Math.abs(q.x - mid.x) < 1e-6 && Math.abs(q.y - mid.y) < 1e-6, 'pointAt'); ok(T.pointAt(pts, -1) === pts[0] && T.pointAt(pts, 1e9) === pts[pts.length - 1], 'pointAt ends'); }
 // 虛線的紅/白段長度，左右明顯不同
 for (let k = 0; k < 200; k++) { const d = T.dashFor(rnd); ok(Math.abs((d.L[0] + d.L[1]) - (d.R[0] + d.R[1])) >= 8 || Math.abs(d.L[0] - d.R[0]) >= 10, 'dash differ'); }
+// 揭曉的鏡頭：剩下那一段路很短才放大；框跟場地同寬高比、不超出場地、一定框得住那一段路
+{
+  const FW = 472, FH = 560;
+  const straight = (x0, y0, x1, y1, n) => Array.from({ length: n + 1 }, (_, i) => ({ x: x0 + (x1 - x0) * i / n, y: y0 + (y1 - y0) * i / n, s: 100 * i / n }));
+  ok(T.zoomCamera(straight(100, 100, 360, 520, 20), FW, FH) === null, 'a long remaining stretch → no zoom');
+  let zoomed = 0, still = 0;
+  for (let k = 0; k < 600; k++) {
+    const cx = 60 + rnd() * 350, cy = 60 + rnd() * 440, len = 2 + rnd() * 400, ang = rnd() * Math.PI * 2;
+    const pts = straight(cx, cy, cx + len * Math.cos(ang), cy + len * Math.sin(ang), 8);
+    if (pts.some(p => p.x < 0 || p.x > FW || p.y < 0 || p.y > FH)) continue;        // 真正的路線一定在場地裡面
+    const c = T.zoomCamera(pts, FW, FH);
+    if (!c) { still++; continue; }
+    zoomed++;
+    const b = c.box;
+    ok(c.zoom >= T.ZOOM_MIN - 1e-9 && c.zoom <= T.ZOOM_MAX + 1e-9, 'zoom in range ' + c.zoom);
+    ok(Math.abs(b.vw / b.vh - FW / FH) < 1e-9 && Math.abs(b.vw - FW / c.zoom) < 1e-9, 'camera box keeps the field aspect ratio');
+    ok(b.vx >= -1e-9 && b.vy >= -1e-9 && b.vx + b.vw <= FW + 1e-9 && b.vy + b.vh <= FH + 1e-9, 'camera box stays inside the field');
+    // 框得住整段路（放大到最大倍率 ZOOM_MAX 時，外框可能比框大的情況才不要求——但 ZOOM_MAX 的前提是外框加邊後還放得進去）
+    pts.forEach(p => ok(p.x >= b.vx - 1e-6 && p.x <= b.vx + b.vw + 1e-6 && p.y >= b.vy - 1e-6 && p.y <= b.vy + b.vh + 1e-6, 'camera frames every point of the remaining stretch'));
+  }
+  ok(zoomed > 50 && still > 20, 'both cases happen: zoomed ' + zoomed + ', not zoomed ' + still);
+  // 要不要放大：剩下的路很短才放大。差距大的前幾關（長度差 30%、27%、24%）大多不放大；差 3% 的關卡一定放大
+  ok(T.needZoom(20) && T.needZoom(T.ZOOM_REST_MAX) && !T.needZoom(T.ZOOM_REST_MAX + 1) && !T.needZoom(250), 'zoom only when the remaining stretch is short');
+  for (const lv of [1, 2, 3, 4, 5, 6, 8, 10, 14, 25]) {
+    let zoomN = 0, runs = 40;
+    for (let k = 0; k < runs; k++) {
+      const L = T.makeLevel(lv, 560, rnd, 472), shortLen = Math.min(L.L.len, L.R.len), rest = Math.max(L.L.len, L.R.len) - shortLen;
+      if (T.needZoom(rest)) zoomN++;
+    }
+    // 標準是「剩下的路很短（≤ ZOOM_REST_MAX px）」才放大：差距大的前幾關幾乎不放大（路線偏短、剩下的路剛好很短的時候才會）
+    if (lv <= 3) ok(zoomN <= runs * 0.35, 'level ' + lv + ' (big length difference): the camera rarely zooms (' + zoomN + '/' + runs + ')');
+    if (lv >= 10) ok(zoomN === runs, 'level ' + lv + ' (3% difference): the camera always zooms (' + zoomN + '/' + runs + ')');
+  }
+  // restPoints：第一個點是球停住的位置（弧長 s0），後面是 s > s0 的所有點，最後一個是終點
+  const pp = straight(0, 0, 100, 0, 10), rp = T.restPoints(pp, 35);
+  ok(Math.abs(rp[0].x - 35) < 1e-9 && rp[0].s === 35 && rp.length === 1 + pp.filter(p => p.s > 35).length && rp[rp.length - 1] === pp[pp.length - 1], 'restPoints starts at the frozen ball and ends at the end point');
+}
 console.log('levels generated', N, bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

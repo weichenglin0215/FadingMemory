@@ -208,6 +208,17 @@ for (const g of Object.keys(specs)) {
     const r = await asAnon(q);
     ok(r.sqlError && /permission denied/i.test(r.sqlError), 'anon 直接碰意見表應被擋：' + q);
   }
+  // 公開查閱：任何人（anon）都能讀檢視表 MF_feedback_public，但看不到 player_id，也不能透過它寫入
+  {
+    const r = await asAnon('select * from public."MF_feedback_public"');
+    ok(!r.sqlError, '公開檢視表：anon 可以讀（目前是空的）：' + (r.sqlError || ''));
+    const r2 = await asAnon('select player_id from public."MF_feedback_public"');
+    ok(r2.sqlError && /does not exist|permission denied/i.test(r2.sqlError), '公開檢視表：沒有 player_id 這一欄：' + r2.sqlError);
+    for (const q of [`insert into public."MF_feedback_public"(game_id,message) values ('speed','hello')`, `update public."MF_feedback_public" set message = 'x'`, 'delete from public."MF_feedback_public"']) {
+      const w = await asAnon(q);
+      ok(w.sqlError && /permission denied/i.test(w.sqlError), 'anon 不能透過公開檢視表寫入：' + q);
+    }
+  }
   // 參數檢查
   eq(await fb('nope', uuid(900), '很好玩'), { ok: false, error: 'unknown_game' }, '意見：不存在的遊戲');
   eq(await fb('speed', null, '很好玩'), { ok: false, error: 'bad_args' }, '意見：player null');
@@ -223,6 +234,15 @@ for (const g of Object.keys(specs)) {
   ok(r1[0].game_title === '零秒出手', '意見：同時記著遊戲中文名稱（零秒出手）：' + r1[0].game_title);
   eq(r1[0].message, '第一行\n\n第二行 有控制字元', '意見：換行統一、連續換行縮成兩個、控制字元換成空格、頭尾去空白');
   ok(r1[0].nickname === '阿嬤' && r1[0].app_version === '1.20.1', '意見：暱稱與版本有存');
+  // 公開檢視表讀得到剛寫入的意見（任何人），而且只有公開欄位
+  {
+    const pub = await asAnon(`select * from public."MF_feedback_public" where game_id = 'speed' order by id`);
+    ok(!pub.sqlError && pub.length === 1, '公開檢視表：anon 讀得到剛寫入的意見：' + (pub.sqlError || pub.length));
+    eq(Object.keys(pub[0]), ['id', 'created_at', 'game_id', 'game_title', 'message', 'nickname', 'app_version'], '公開檢視表：欄位清單（沒有 player_id）');
+    ok(pub[0].message === '第一行\n\n第二行 有控制字元' && pub[0].game_title === '零秒出手' && pub[0].nickname === '阿嬤', '公開檢視表：內容跟資料表一致');
+    const f = await asAnon(`select count(*)::int as n from public."MF_feedback_public" where id >= $1 and created_at >= now() - interval '1 day'`, [pub[0].id]);
+    ok(!f.sqlError && f[0].n === 1, '公開檢視表：可以用 id、created_at 篩選（網頁就是這樣查的）');
+  }
   // 同一位玩家對不同遊戲的意見可以區別
   eq(await fb('coins', uuid(901), '零錢分類太容易'), { ok: true, saved: true }, '意見：另一款遊戲');
   const byGame = (await db.query(`select game_id, count(*)::int as n from public."MF_feedback" group by 1 order by 1`)).rows;
@@ -267,7 +287,7 @@ for (const g of Object.keys(specs)) {
   await db.exec(sql);
   ok((await rows(`game_id = 'speed' and game_title <> '零秒出手'`)).length === 0, '同步：重新執行 SQL 後，speed 的舊意見全部換成「零秒出手」');
   // (b) 舊資料庫沒有 game_title 這一欄：重新執行 SQL 會補上欄位、並且把所有舊意見補好中文名稱
-  await db.exec(`alter table public."MF_feedback" drop column game_title`);
+  await db.exec(`alter table public."MF_feedback" drop column game_title cascade`);     // cascade：公開檢視表依賴這一欄，一起拿掉（重新執行 SQL 會重建）
   ok((await db.query(`select count(*)::int as n from information_schema.columns where table_name = 'MF_feedback' and column_name = 'game_title'`)).rows[0].n === 0, '升級：模擬舊版資料表（沒有 game_title）');
   await db.exec(sql);
   const up = (await db.query(`select count(*)::int as n, count(game_title)::int as named from public."MF_feedback"`)).rows[0];

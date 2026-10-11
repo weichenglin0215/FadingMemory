@@ -6,6 +6,11 @@
    就要在下一個方塊出現「之前」點下去；來不及（超時）、或是點到不該點的方塊，
    都算失敗。
    ───────────────────────────────────────────────────────────────────
+   · 開局先倒數：第一個方塊（左上角那一格）出現之前，那一格會用白色大字從 3、2、1 倒數（每個數字 COUNTDOWN_STEP_MS 毫秒），
+     倒數完才換上第一個方塊，跟「換階段之後」的倒數是同一套（countdownAt）。
+   · 節奏被打斷之後（開局、每次新規則彈窗關掉並倒數完），「第一個出現的目標色方塊」的反應時間多給 50%
+     （FIRST_TARGET_MULT＝1.5：那個方塊停留的時間是平常間隔的 1.5 倍），讓玩家有比較充裕的時間重新進入節奏；
+     只有那一個方塊加長，之後的方塊照原本的間隔縮短進度繼續。
    · 一開始只要點紅色。每成功點擊 TARGETS_PER_STAGE 個目標色方塊，遊戲就先暫停，
      跳出新規則彈窗：除了原本要點的顏色，再隨機多加一種顏色也要點，提示文字跟著
      改；依此類推，最多到 MAX_TARGETS（6）種。換階段時棋盤上原有的四個方塊
@@ -66,7 +71,8 @@
     /* 每換一個方塊，間隔縮短幾毫秒（從 START_INTERVAL_MS 縮到 MIN_INTERVAL_MS 大約
        要換 (START − MIN) ÷ 這個數字 個方塊） */
     var INTERVAL_STEP_MS = 5.0;
-    var FIRST_DELAY_MS = 900;       /* 一局開始到第一個方塊出現的等待時間 */
+    var FIRST_DELAY_MS = 400;       /* 一局開始到「3」出現的等待時間 */
+    var FIRST_TARGET_MULT = 1.5;    /* 開局、每次新規則之後，第一個目標色方塊的停留時間是平常間隔的幾倍（給玩家比較充裕的反應時間） */
     var COUNTDOWN_FROM = 3;         /* 換階段、關掉新規則彈窗之後，從幾開始倒數 */
     var COUNTDOWN_STEP_MS = 1000;   /* 倒數每個數字停留多久 */
     var TARGET_PROB = 0.3;          /* 每個新方塊是目標色的機率 */
@@ -130,6 +136,8 @@
             var state = 'ready';        /* ready：等第一個方塊／play：進行中／paused：新規則彈窗／over：結束 */
             var timer = null;
             var resumeAfterRule = false;
+            /* extendFirst：節奏剛被打斷（開局、新規則之後）；下一個出現的目標色方塊停留時間 ×FIRST_TARGET_MULT，用掉就關掉 */
+            var extendFirst = true;
             /* 操作提示（只在第一次進遊戲時）：第一個「要點的顏色」方塊出現時，手指縮放擺在那個方塊上（也提醒玩家要點哪個顏色）；玩家第一次碰畫面就不再提示 */
             var hintWanted = Reaction.kit.once('rainbow.hint'), hintObj = null;
             root.addEventListener('pointerdown', function () { hintWanted = false; }, { capture: true, once: true });
@@ -214,8 +222,24 @@
                 el.classList.add('rb-cell--new');
 
                 var ms = intervalNow();
+                /* 節奏剛被打斷之後的第一個目標色方塊：停留時間加長成 1.5 倍（只加長這一個） */
+                if (isTarget && extendFirst) { ms = ms * FIRST_TARGET_MULT; extendFirst = false; }
                 steps++;
                 schedule(ms);
+            }
+
+            /* 倒數：在格子 el 上顯示白色大數字 n，COUNTDOWN_STEP_MS 之後換 n-1；倒數到 0 就把數字拿掉、呼叫 done。
+               開局（等第一個方塊）與換階段（新規則彈窗關掉之後）共用；「?」規則視窗開著的時候先停在原地等它關掉。 */
+            function countdownAt(el, n, done) {
+                if (myGen !== gen || (state !== 'play' && state !== 'ready')) return;
+                if (ruleOpen()) { timer = setTimeout(function () { countdownAt(el, n, done); }, 150); return; }
+                el.innerHTML = '';
+                if (n <= 0) { done(); return; }
+                var num = h('span', { 'class': 'rb-letter', text: String(n) });
+                num.style.fontSize = Math.round(cellPx * 0.8) + 'px';
+                num.style.color = '#FFFFFF';
+                el.appendChild(num);
+                timer = setTimeout(function () { countdownAt(el, n - 1, done); }, COUNTDOWN_STEP_MS);
             }
 
             /* 玩家點了某一格：必須剛好是待點的目標，否則失敗 */
@@ -278,22 +302,8 @@
                     handled = [true, true, true, true];
                     stageHits = 0;
                     state = 'play';
-                    countdown(COUNTDOWN_FROM);
-                }
-
-                /* 倒數：在下一格顯示白色大數字，每秒減 1，到 0 就換方塊 */
-                /* 在 nextEl 上顯示白色大數字 n，COUNTDOWN_STEP_MS 之後換 n-1；倒數到 0 就
-                   把數字拿掉、換下一個方塊（tick）。「?」規則視窗開著的時候先停在原地等它關掉。 */
-                function countdown(n) {
-                    if (myGen !== gen || state !== 'play') return;
-                    if (ruleOpen()) { timer = setTimeout(function () { countdown(n); }, 150); return; }
-                    nextEl.innerHTML = '';
-                    if (n <= 0) { tick(); return; }
-                    var num = h('span', { 'class': 'rb-letter', text: String(n) });
-                    num.style.fontSize = Math.round(cellPx * 0.8) + 'px';
-                    num.style.color = '#FFFFFF';
-                    nextEl.appendChild(num);
-                    timer = setTimeout(function () { countdown(n - 1); }, COUNTDOWN_STEP_MS);
+                    extendFirst = true;                 /* 倒數完之後第一個目標色方塊：反應時間多給 50% */
+                    countdownAt(nextEl, COUNTDOWN_FROM, tick);
                 }
             }
 
@@ -319,8 +329,8 @@
                 });
             }
 
-            /* 一開始等 900ms 才出第一個方塊 */
-            schedule(FIRST_DELAY_MS);
+            /* 開局：等一下，先在第一個方塊要出現的那一格（左上角）倒數 3、2、1，倒數完才出第一個方塊 */
+            timer = setTimeout(function () { if (myGen === gen) countdownAt(cells[ORDER[0]], COUNTDOWN_FROM, tick); }, FIRST_DELAY_MS);
         }
 
         round();
@@ -330,7 +340,7 @@
     Reaction.register({
         id: ID,
         name: '七彩陷阱',
-        rule: '畫面上有 2×2 四個方塊，會照順時針的順序，一個接一個換上七彩顏色（最新的那個有白邊），而且換得越來越快。**一開始只要點「紅色」方塊**：紅色一出現，**就要在下一個方塊出現之前馬上點下去**！來不及，或是點到別的方塊，都算失敗。小心，其他顏色的方塊上面可能**壓著「紅」字來騙你**。每成功點擊幾個之後，遊戲會暫停並增加新的顏色也要點，看你能撐多久！',
+        rule: '畫面上有 2×2 四個方塊，會照順時針的順序，一個接一個換上七彩顏色（最新的那個有白邊），而且換得越來越快。**一開始只要點「紅色」方塊**：紅色一出現，**就要在下一個方塊出現之前馬上點下去**！來不及，或是點到別的方塊，都算失敗。小心，其他顏色的方塊上面可能**壓著「紅」字來騙你**。每成功點擊幾個之後，遊戲會暫停並增加新的顏色也要點，看你能撐多久！**第一個要點的方塊多給 50% 時間**。',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE

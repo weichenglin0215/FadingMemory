@@ -23,6 +23,9 @@
         ① 原價不同；② 所有「會變的優惠」兩張都不一樣（種類相同也要數值不同，例如八折 vs 八五折）；
         ③ 「原價較低的那張」折扣比例比較小（也就是原價高的那張折得比較兇），所以「挑原價低的」「挑折得多的」
            兩種直覺會指向不同張，玩家必須兩個都算；便宜的是哪一張則是隨機的。
+   · 標籤上的字（小標、原價、每一行優惠、算式）都放大成原本的 166%（theme.css 的 --pr-scale）。但標籤的高度有限：優惠行多、原價字數多的時候
+     放不下，fitTags 會把倍率一格一格往下調到「剛好放得下」為止（兩張標籤用同一個倍率，最小 1.0 倍）；
+     算式那一行答題前就先排好版（透明），答完只是顯示出來，所以版面不會跳動。
    · 答完：兩張邊框一綠（便宜）一紅（貴），被點的那張加粗；每張列出算式。答錯或超時就結束。
    · 失敗之後可以從「失敗題數 − 5」繼續（kit.resumeFrom）。
    ═══════════════════════════════════════════════════════════════════ */
@@ -50,6 +53,7 @@
     var GAP_LOW = 0.5;                         /* 實際差距 ≥ 目標 × GAP_LOW */
     var MIN_PAY = 50;
     var REVEAL_MS = 2400;
+    var K_MIN = 1.0, K_STEP = 0.02;            /* 標籤字級倍率最小到 1.0 倍，每次往下調 0.02 */
 
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 題'; }
 
@@ -137,6 +141,13 @@
         return '';
     }
     function discLines(card) { return card.steps.map(function (st, i) { return stepText(st, card.formal, i === 0); }); }
+    /* 字級倍率：從 kMax 開始，每次減 step，找到第一個「放得下」的倍率（fits(k) 回傳 true），最小到 kMin；
+       純函式（fits 由呼叫端提供：瀏覽器裡是量標籤有沒有溢出，測試裡是假的），所以可以在 Node 裡測 */
+    function fitScale(kMax, kMin, step, fits) {
+        var k = kMax;
+        while (k > kMin + 1e-9 && !fits(k)) k = Math.max(kMin, Math.round((k - step) * 1000) / 1000);
+        return k;
+    }
     function calcText(card) { var r = payOf(card); return r.trail.join(' → ') + ' 元'; }
     function stepKey(st) { return st.k + ':' + [st.fold, st.amt, st.every, st.minus, st.min].join(','); }
     function rateOf(card) { return 1 - payOf(card).final / card.orig; }
@@ -276,12 +287,36 @@
 
             function meta() { ctx.setMeta(kit.meta(['答對 ' + right, fmtBest(Reaction.getBest(ID))])); }
 
+            /* 標籤的字級倍率：從 theme.css 的 --pr-scale（1.66）開始，放不下就往下調到剛好放得下。
+               「放得下」＝每張標籤裡的內容（不含吊牌的洞）上下不超出標籤的內側，而且沒有任何一行比標籤還寬 */
+            function fitTags(els) {
+                var kMax = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pr-scale')) || 1.66;
+                function fits(k) {
+                    els.forEach(function (el) { el.style.setProperty('--pr-k', String(k)); });
+                    return els.every(function (el) {
+                        var cs = getComputedStyle(el), r = el.getBoundingClientRect(), s = r.height / (el.offsetHeight || r.height) || 1;
+                        var inner = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+                        var kids = [].filter.call(el.children, function (c) { return c.className.indexOf('pr-tag__hole') < 0; });
+                        var top = Infinity, bottom = -Infinity, wide = false;
+                        kids.forEach(function (c) {
+                            var cr = c.getBoundingClientRect();
+                            top = Math.min(top, cr.top); bottom = Math.max(bottom, cr.bottom);
+                            if (c.scrollWidth > c.clientWidth + 1 || cr.width > el.clientWidth * s + 1) wide = true;
+                        });
+                        return (bottom - top) / s <= inner + 1 && !wide;
+                    });
+                }
+                fitScale(kMax, K_MIN, K_STEP, fits);
+                /* 網頁字型還沒載完就量的話，字寬字高會跟最後的不一樣：字型載好之後再量一次 */
+                if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (!my.dead && els[0].parentNode) fitScale(kMax, K_MIN, K_STEP, fits); });
+            }
+
             /* 出下一題 */
             function next() {
                 if (my.dead) return;
                 Q = makeQuestion(level);
                 state = 'ask';
-                head.textContent = '第 ' + level + ' 題　實際付的錢比較少的是哪一張？';
+                head.textContent = '第 ' + level + ' 題　付得比較少的是哪張？';
                 meta();
                 wrap.innerHTML = '';
                 /* 建立兩張標籤（吊牌造型的按鈕）：原價、優惠行、算式（答完才顯示） */
@@ -292,12 +327,13 @@
                         h('span', { 'class': 'pr-tag__lbl', text: '原價' }),
                         h('span', { 'class': 'pr-tag__orig', text: ot, attrs: { 'data-n': String(ot.length) } }),
                         h('span', { 'class': 'pr-tag__disc' }, discLines(tg).map(function (t, k) { return h('span', { 'class': 'pr-tag__line' + (tg.steps[k].k === 'member' ? ' pr-tag__line--member' : ''), text: t }); })),
-                        h('span', { 'class': 'pr-tag__calc', text: '' })
+                        h('span', { 'class': 'pr-tag__calc', text: calcText(tg) })      /* 算式先排好版（透明），答完才顯示，版面不會跳動 */
                     ]);
                     el.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(i); });
                     wrap.appendChild(el);
                     return el;
                 });
+                fitTags(tagEls);
                 /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「實際付的錢比較少」的那張標籤上（第一題的正確答案） */
                 if (Reaction.kit.once('price.hint')) Reaction.kit.hintOn(root, tagEls[Q.lowIdx], { mode: 'tap', text: '請點擊付得比較少的標籤' });
                 /* 主控台印出這題兩張標籤與算式、答案，方便驗證 */
@@ -324,11 +360,10 @@
                 fill.style.width = '0%';
                 var ok = i === Q.lowIdx;
                 tagEls.forEach(function (el, k) {
-                    el.querySelector('.pr-tag__calc').textContent = calcText(Q.tags[k]);
-                    el.classList.add(k === Q.lowIdx ? 'pr-tag--low' : 'pr-tag--high');
+                    el.classList.add('pr-tag--rev', k === Q.lowIdx ? 'pr-tag--low' : 'pr-tag--high');       /* pr-tag--rev：顯示算式 */
                 });
                 if (i >= 0) tagEls[i].classList.add('pr-tag--pick');
-                head.textContent = (i < 0 ? '時間到！' : (ok ? '答對了！' : '答錯了…')) + ' 比較便宜的是' + (Q.lowIdx ? '下' : '上') + '面那張（差 ' + Q.gap + ' 元）';
+                head.textContent = (i < 0 ? '時間到！' : (ok ? '答對了！' : '答錯了…')) + (Q.lowIdx ? '下' : '上') + '面便宜（差 ' + Q.gap + ' 元）';
                 if (ok) {
                     right++;
                     Sfx.play('ok');
@@ -375,7 +410,7 @@
         /* 世界排行榜的成績規格 */
         score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
-        test: { toChinese: toChinese, priceText: priceText, foldText: foldText, applyStep: applyStep, payOf: payOf, discLines: discLines, calcText: calcText, stepKey: stepKey, rateOf: rateOf, gapFor: gapFor, paramsFor: paramsFor, kindsFor: kindsFor, maxSteps: maxSteps, makeQuestion: makeQuestion, GAP_LOW: GAP_LOW, LEVEL_RAMP: LEVEL_RAMP }
+        test: { fitScale: fitScale, K_MIN: K_MIN, K_STEP: K_STEP, toChinese: toChinese, priceText: priceText, foldText: foldText, applyStep: applyStep, payOf: payOf, discLines: discLines, calcText: calcText, stepKey: stepKey, rateOf: rateOf, gapFor: gapFor, paramsFor: paramsFor, kindsFor: kindsFor, maxSteps: maxSteps, makeQuestion: makeQuestion, GAP_LOW: GAP_LOW, LEVEL_RAMP: LEVEL_RAMP }
     };
     /* 登記到遊戲清單 */
     Reaction.register(G);

@@ -1,15 +1,21 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_sudokuone.js — 秒反應・數獨猜一格（企劃 181「四格數獨」的改版）
-   一個 6×6 的迷你數獨，由四個 3×3 的「宮」組成（左上、右上、左下、右下，每一宮 9 格）。
-   規則：每一宮裡 1～9 各出現一次；同一橫排、同一直排的數字不重複（一排只有 6 格，所以 9 個數字裡只用到 6 個）。
-   盤面上只有一格被標成黃色，只要猜出「那一格」是幾就好，點下面的 1～9 數字鍵。
-   關卡制：猜錯或來不及就結束，成績＝通過幾關。
+   標準的數獨：每一橫排、每一直排、每一個「宮」裡，1～N 各出現一次。盤面上只有一格被標成黃色，
+   只要猜出「那一格」是幾就好，點下面的數字鍵。
    ───────────────────────────────────────────────────────────────────
-   · 出題（規範 Q1、Q2）：先用「隨機回溯」做出一個完整正確的 6×6 盤面（解答），挑一格當目標，
-     再把其他格子一個一個拿掉，每拿一格就用「推理器」deduce() 檢查：只靠邏輯（排除法＋宮裡的「唯一能放的位置」）
+   · 玩家指出原本的設計有問題（6×6 的盤面、4 個 3×3 的宮，一排只有 6 格卻要放 1～9，條件不夠，根本無法作答）。
+     V1.24 改成兩種標準數獨，由簡單到困難：
+        第 1～FOUR_LEVELS（6）關：4×4 四宮格——2×2 的宮共 4 個，數字 1～4，每橫排、每直排、每宮 1～4 各一個；
+        第 7 關起：9×9 九宮格——3×3 的宮共 9 個，數字 1～9，每橫排、每直排、每宮 1～9 各一個（更難）。
+   · 關卡制：猜錯或來不及就結束，成績＝通過幾關。
+   ───────────────────────────────────────────────────────────────────
+   · 出題（規範 Q1、Q2）：先做出一個完整正確的盤面（解答：用「基本圖形＋洗牌」，一定合法），挑一格當目標，
+     再把其他格子一個一個拿掉，每拿一格就用「推理器」deduce() 檢查：只靠邏輯（排除法＋橫排／直排／宮裡的「唯一能放的位置」）
      還能不能推出目標那一格？能才真的拿掉，不能就放回去。所以每一題「可以靠推理得到唯一答案」，不用靠猜。
-   · 難度線性（RAMP_LEVELS 關走到頂）：盤面上留下的提示數字個數 GIVENS 26 → 9（越少越要多繞幾步推理；目標的橫排＋直排＋宮最少要看到 8 種不同數字才能直接排除）；
-     作答限時 30 → 18 秒。盤面上會用淡黃色標出目標那一格所在的橫排、直排和宮，幫你看該看哪裡（不會揭露答案）。
+   · 難度線性（每個階段各自從第 1 關走到頂）：盤面上留下的提示數字個數
+        4×4：11 → 5 個（GIVENS4，第 1 → 6 關）；9×9：34 → 12 個（GIVENS9，第 7 → 30 關，RAMP9＝24 關走到頂）；
+     越少越要多繞幾步推理；作答限時 4×4 20 → 14 秒、9×9 40 → 24 秒。
+     盤面上會用淡黃色標出目標那一格所在的橫排、直排和宮，幫你看該看哪裡（不會揭露答案）。
    · 揭曉：整個盤面的解答都填出來（目標那一格用大字標出）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
@@ -20,125 +26,143 @@
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 25;                       /* 幾關之後難度到頂 */
-    var DEEP_P = [0, 0.9];                      /* 出「要先推出別格、再推目標」這種題目的機率：第 1 關 → 到頂 */
-    var GIVENS = [26, 9];                       /* 盤面上留下幾個提示數字（不含目標那格）：第 1 關 → 到頂；留不下這麼少時，留到不能再拿為止 */
-    var ANS_S = [30, 18];                       /* 作答限時（秒）：第 1 關 → 到頂 */
+    var FOUR_LEVELS = 6;                        /* 前幾關是 4×4（之後是 9×9）。設 0＝全部 9×9；設很大（例如 999）＝全部 4×4 */
+    var RAMP9 = 24;                             /* 9×9 的難度走幾關到頂（第 7 關起算第 1 個 9×9 關卡） */
+    var DEEP_P = [0, 0.9];                      /* 出「要先推出別格、再推目標」這種題目的機率：階段的第 1 關 → 到頂 */
+    var GIVENS4 = [11, 5];                      /* 4×4：盤面上留下幾個提示數字（不含目標那格，共 15 格可留）：第 1 關 → 第 FOUR_LEVELS 關；留不下這麼少時，留到不能再拿為止 */
+    var GIVENS9 = [34, 12];                     /* 9×9：同上（共 80 格可留）：第 1 個 9×9 關卡 → 第 RAMP9 個 */
+    var ANS4_S = [20, 14], ANS9_S = [40, 24];   /* 作答限時（秒）：階段的第 1 關 → 到頂 */
     var MAX_LEVEL = 60;
-    var SIZE = 6;                               /* 盤面邊長 */
-    var BLOCK = 3;                              /* 每一宮的邊長（宮是 3×3） */
-    var ALL = 0x3FE;                            /* 1～9 的位元遮罩（bit1～bit9） */
+    var SLACK = 4;                              /* 提示個數離目標不超過這麼多就收題，否則多試幾次、用提示最少的那次 */
+
+    /* ═══ 盤面的幾何（4×4 與 9×9 各做一份）═══
+       makeGeom(B)：宮的邊長 B（2 或 3），盤面邊長 N＝B×B。
+       rowOf／colOf／blockOf：第 i 格在第幾排／第幾欄／第幾個宮；
+       UNITS：所有「單位」（N 排、N 欄、N 個宮），每個單位是 N 個格子的編號；PEERS[i]：跟第 i 格同單位的其他格；
+       ALL：1～N 的位元遮罩（bit1～bitN，推理器用位元表示「這格還可能放哪些數字」）。 */
+    function makeGeom(B) {
+        var N = B * B, g = { B: B, N: N, cells: N * N, ALL: 0, PEERS: [], UNITS: [], rowOf: null, colOf: null, blockOf: null }, i, j;
+        for (i = 1; i <= N; i++) g.ALL |= (1 << i);
+        g.rowOf = function (c) { return Math.floor(c / N); };
+        g.colOf = function (c) { return c % N; };
+        g.blockOf = function (c) { return Math.floor(g.rowOf(c) / B) * B + Math.floor(g.colOf(c) / B); };
+        var rows = [], cols = [], blocks = [];
+        for (i = 0; i < N; i++) { rows.push([]); cols.push([]); blocks.push([]); }
+        for (i = 0; i < N * N; i++) { rows[g.rowOf(i)].push(i); cols[g.colOf(i)].push(i); blocks[g.blockOf(i)].push(i); }
+        g.UNITS = rows.concat(cols, blocks);
+        g.BLOCKS = blocks;
+        for (i = 0; i < N * N; i++) {
+            var p = [];
+            for (j = 0; j < N * N; j++) if (j !== i && (g.rowOf(j) === g.rowOf(i) || g.colOf(j) === g.colOf(i) || g.blockOf(j) === g.blockOf(i))) p.push(j);
+            g.PEERS.push(p);
+        }
+        return g;
+    }
+    var GEO4 = makeGeom(2), GEO9 = makeGeom(3);
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function givensFor(level) { return Math.round(kit.ramp(level, GIVENS[0], GIVENS[1], RAMP_LEVELS)); }
-    function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }
-    function deepP(level) { return kit.ramp(level, DEEP_P[0], DEEP_P[1], RAMP_LEVELS); }
-    function rowOf(i) { return Math.floor(i / SIZE); }
-    function colOf(i) { return i % SIZE; }
-    function blockOf(i) { return Math.floor(rowOf(i) / BLOCK) * 2 + Math.floor(colOf(i) / BLOCK); }
-    /* 每一格的「鄰居」（同橫排、同直排、同宮的其他格） */
-    var PEERS = [];
-    var BLOCKS = [[], [], [], []];
-    (function () {
-        for (var i = 0; i < SIZE * SIZE; i++) BLOCKS[blockOf(i)].push(i);
-        for (i = 0; i < SIZE * SIZE; i++) {
-            var p = [];
-            for (var j = 0; j < SIZE * SIZE; j++) if (j !== i && (rowOf(j) === rowOf(i) || colOf(j) === colOf(i) || blockOf(j) === blockOf(i))) p.push(j);
-            PEERS.push(p);
-        }
-    })();
+    /* 第 level 關屬於哪個階段：{ g 盤面幾何, idx 這個階段的第幾關（從 1 起算）, len 這個階段走幾關到頂 } */
+    function stageOf(level) {
+        level = Math.max(1, level);
+        if (level <= FOUR_LEVELS) return { g: GEO4, idx: level, len: Math.max(2, FOUR_LEVELS) };
+        return { g: GEO9, idx: level - FOUR_LEVELS, len: RAMP9 };
+    }
+    function givensFor(level) { var s = stageOf(level), r = s.g === GEO4 ? GIVENS4 : GIVENS9; return Math.round(kit.ramp(s.idx, r[0], r[1], s.len)); }
+    function ansMs(level) { var s = stageOf(level), r = s.g === GEO4 ? ANS4_S : ANS9_S; return Math.round(kit.ramp(s.idx, r[0], r[1], s.len) * 1000); }
+    function deepP(level) { var s = stageOf(level); return kit.ramp(s.idx, DEEP_P[0], DEEP_P[1], s.len); }
     function bitCount(m) { var c = 0; while (m) { c += m & 1; m >>= 1; } return c; }
     function onlyDigit(m) { for (var d = 1; d <= 9; d++) if (m === (1 << d)) return d; return 0; }
-    /* 隨機回溯：做出一個完整正確的盤面（36 個數字，每個 1～9） */
-    function makeSolution(rand) {
+    /* 做出一個完整正確的盤面（N×N，每個數字 1～N）。
+       做法（標準的數獨造盤法）：先用公式排出一個一定合法的基本盤面 base(r, c)＝(B×(r mod B)＋⌊r÷B⌋＋c) mod N，
+       再隨機洗牌——數字 1～N 重新對應、「宮列」（每 B 排一組）彼此交換、同一個宮列裡的排互相交換、「宮行」與欄同理——
+       這些洗牌都不會破壞規則，所以每一個結果都是合法的完整盤面。 */
+    function makeSolution(g, rand) {
         rand = rand || Math.random;
-        var g = [], i;
-        for (i = 0; i < SIZE * SIZE; i++) g.push(0);
-        function ok(idx, d) {
-            for (var k = 0; k < PEERS[idx].length; k++) if (g[PEERS[idx][k]] === d) return false;
-            return true;
+        var B = g.B, N = g.N, digits = kit.shuffle(Array.apply(null, Array(N)).map(function (_, i) { return i + 1; }), rand);
+        /* 洗牌後的排／欄順序：先洗「組」的順序，組裡面再各自洗 */
+        function order() {
+            var bands = kit.shuffle(Array.apply(null, Array(B)).map(function (_, i) { return i; }), rand), out = [];
+            bands.forEach(function (b) { kit.shuffle(Array.apply(null, Array(B)).map(function (_, i) { return b * B + i; }), rand).forEach(function (x) { out.push(x); }); });
+            return out;
         }
-        function rec(idx) {
-            if (idx === SIZE * SIZE) return true;
-            var ds = kit.shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9], rand);
-            for (var k = 0; k < 9; k++) if (ok(idx, ds[k])) { g[idx] = ds[k]; if (rec(idx + 1)) return true; g[idx] = 0; }
-            return false;
+        var rowMap = order(), colMap = order(), sol = [];
+        for (var r = 0; r < N; r++) for (var c = 0; c < N; c++) {
+            var rr = rowMap[r], cc = colMap[c];
+            sol.push(digits[(B * (rr % B) + Math.floor(rr / B) + cc) % N]);
         }
-        rec(0);
-        return g;
+        return sol;
     }
     /* 推理器：givens＝每格的數字（0＝空格）。只用兩種邏輯——
          ① 排除法：某格的候選數字只剩一個，就填它；
-         ② 宮裡的唯一位置：某個數字在這一宮裡只剩一格能放，就填它。
+         ② 單位裡的唯一位置：某個數字在某一排／某一欄／某一個宮裡只剩一格能放，就填它。
        反覆做到推不動為止。回傳 { grid（推理後的盤面，0＝推不出）, steps（用了幾輪）, solved（目標是否推出）, value（推出的目標數字或 0） } */
-    function deduce(givens, target) {
-        var cand = [], g = givens.slice(), i, d;
-        for (i = 0; i < SIZE * SIZE; i++) cand.push(ALL);
+    function deduce(g, givens, target) {
+        var cand = [], gr = givens.slice(), i, d, N = g.N;
+        for (i = 0; i < g.cells; i++) cand.push(g.ALL);
         function place(idx, dg) {
-            g[idx] = dg; cand[idx] = 1 << dg;
-            PEERS[idx].forEach(function (p) { if (g[p] !== dg) cand[p] &= ~(1 << dg); });
+            gr[idx] = dg; cand[idx] = 1 << dg;
+            g.PEERS[idx].forEach(function (p) { if (gr[p] !== dg) cand[p] &= ~(1 << dg); });
         }
-        for (i = 0; i < SIZE * SIZE; i++) if (g[i]) place(i, g[i]);
+        for (i = 0; i < g.cells; i++) if (gr[i]) place(i, gr[i]);
         var steps = 0, changed = true;
         while (changed) {
             changed = false;
-            for (i = 0; i < SIZE * SIZE; i++) {
-                if (!g[i] && bitCount(cand[i]) === 1) { place(i, onlyDigit(cand[i])); changed = true; }
+            for (i = 0; i < g.cells; i++) {
+                if (!gr[i] && bitCount(cand[i]) === 1) { place(i, onlyDigit(cand[i])); changed = true; }
             }
-            for (var b = 0; b < 4; b++) {
-                for (d = 1; d <= 9; d++) {
-                    if (BLOCKS[b].some(function (c) { return g[c] === d; })) continue;
-                    var spots = BLOCKS[b].filter(function (c) { return !g[c] && (cand[c] & (1 << d)); });
+            g.UNITS.forEach(function (u) {
+                for (d = 1; d <= N; d++) {
+                    if (u.some(function (c) { return gr[c] === d; })) continue;
+                    var spots = u.filter(function (c) { return !gr[c] && (cand[c] & (1 << d)); });
                     if (spots.length === 1) { place(spots[0], d); changed = true; }
                 }
-            }
+            });
             if (changed) steps++;
-            if (target != null && g[target]) break;
+            if (target != null && gr[target]) break;
         }
-        return { grid: g, steps: steps, solved: target != null ? !!g[target] : false, value: target != null ? g[target] : 0 };
+        return { grid: gr, steps: steps, solved: target != null ? !!gr[target] : false, value: target != null ? gr[target] : 0 };
     }
-    /* 出一題：{ solution（完整解答）, target（要猜的那一格）, givens（提示盤面，0＝空格，目標那格一定是 0）, steps（推理需要幾輪）, answer, count（提示個數） }
+    /* 出一題：{ g, N, solution（完整解答）, target（要猜的那一格）, givens（提示盤面，0＝空格，目標那格一定是 0）, steps（推理需要幾輪）, answer, count（提示個數） }
        做法：試最多 40 次，每次「做出解答 → 挑目標 → 能拿的提示都拿掉」；提示個數離目標（givensFor）不超過 SLACK 個就收，
        否則記下提示最少的那次，最後用它。「繞一圈」題型（先拿目標的鄰居、留下不相干的格子）前 10 次試不到才改用普通的拿法。 */
-    var SLACK = 3;
     function makePuzzle(level, rand) {
         rand = rand || Math.random;
-        var want = givensFor(level), best = null;
+        var g = stageOf(level).g, want = givensFor(level), best = null;
         for (var tr = 0; tr < 40; tr++) {
-            var sol = makeSolution(rand), target = kit.randInt(0, SIZE * SIZE - 1, rand);
+            var sol = makeSolution(g, rand), target = kit.randInt(0, g.cells - 1, rand);
             var givens = sol.slice(); givens[target] = 0;
             var others = [];
-            for (var i = 0; i < SIZE * SIZE; i++) if (i !== target) others.push(i);
+            for (var i = 0; i < g.cells; i++) if (i !== target) others.push(i);
             var count = others.length;
             var order = kit.shuffle(others, rand);
             /* 「繞一圈」的題目：先拿「跟目標同橫排、同直排、同宮」的提示，留下不相干的格子，推理就得先靠它們推出別格，再推目標 */
             if (tr < 10 && rand() < deepP(level)) {
-                var near = order.filter(function (c) { return PEERS[target].indexOf(c) >= 0; }), far = order.filter(function (c) { return PEERS[target].indexOf(c) < 0; });
+                var near = order.filter(function (c) { return g.PEERS[target].indexOf(c) >= 0; }), far = order.filter(function (c) { return g.PEERS[target].indexOf(c) < 0; });
                 order = near.concat(far);
             }
             order.forEach(function (c) {
                 if (count <= want) return;
                 var save = givens[c]; givens[c] = 0;
-                var r = deduce(givens, target);
+                var r = deduce(g, givens, target);
                 if (r.solved && r.value === sol[target]) count--; else givens[c] = save;
             });
-            var fin = deduce(givens, target);
+            var fin = deduce(g, givens, target);
             if (!fin.solved || fin.value !== sol[target]) continue;
-            var pz = { solution: sol, target: target, givens: givens, steps: fin.steps, answer: sol[target], count: count };
+            var pz = { g: g, N: g.N, solution: sol, target: target, givens: givens, steps: fin.steps, answer: sol[target], count: count };
             if (count <= want + SLACK) return pz;
             if (!best || count < best.count) best = pz;
         }
         if (best) return best;
-        /* 保底：目標那一宮其他 8 格都是提示 */
-        var fbSol = makeSolution(rand), fbT = 0, fbG = fbSol.slice(); fbG[fbT] = 0;
-        return { solution: fbSol, target: fbT, givens: fbG, steps: deduce(fbG, fbT).steps, answer: fbSol[fbT], count: 35 };
+        /* 保底：只拿掉目標那一格，其他全是提示 */
+        var fbSol = makeSolution(g, rand), fbT = 0, fbG = fbSol.slice(); fbG[fbT] = 0;
+        return { g: g, N: g.N, solution: fbSol, target: fbT, givens: fbG, steps: deduce(g, fbG, fbT).steps, answer: fbSol[fbT], count: g.cells - 1 };
     }
     function rating(n) {
         if (n >= 25) return '數獨高手！';
         if (n >= 15) return '推理很敏捷！';
         if (n >= 8) return '不錯喔！';
         if (n >= 3) return '再接再厲！';
-        return '先看同一宮缺哪個數字，再來一次！';
+        return '先看同一排、同一欄、同一宮缺哪個數字，再來一次！';
     }
 
     function mount(root, ctx) {
@@ -153,26 +177,29 @@
 
     function setup(api) {
         var stage = api.stage, level = api.level;
-        var q = makePuzzle(level, api.rand);
+        var q = makePuzzle(level, api.rand), g = q.g, N = g.N, B = g.B;
         api.info = q;
-        console.log('[數獨猜一格] 第 ' + level + ' 關：目標第 ' + (rowOf(q.target) + 1) + ' 排第 ' + (colOf(q.target) + 1) + ' 格，答案 ' + q.answer + '；提示 ' + q.count + ' 個（想要 ' + givensFor(level) + '），推理 ' + q.steps + ' 輪；限時 ' + ansMs(level) + ' ms');
+        console.log('[數獨猜一格] 第 ' + level + ' 關：' + N + '×' + N + '（' + B + '×' + B + ' 的宮）目標第 ' + (g.rowOf(q.target) + 1) + ' 排第 ' + (g.colOf(q.target) + 1) + ' 格，答案 ' + q.answer + '；提示 ' + q.count + ' 個（想要 ' + givensFor(level) + '），推理 ' + q.steps + ' 輪；限時 ' + ansMs(level) + ' ms');
 
-        var board = h('div', { 'class': 'sdk-board' });
+        /* 盤面：N 欄 N 列的格子，每一格的邊長由 css 的 .sdk-board--n4／--n9 決定；每個宮的最右一欄、最下一排畫粗線（sdk-cE／sdk-rE） */
+        var board = h('div', { 'class': 'sdk-board sdk-board--n' + N });
         var cells = [];
-        for (var i = 0; i < SIZE * SIZE; i++) {
+        for (var i = 0; i < g.cells; i++) {
             var c = h('div', { 'class': 'sdk-cell' });
-            c.className += ' sdk-r' + (rowOf(i) % BLOCK) + ' sdk-c' + (colOf(i) % BLOCK);
+            if (g.colOf(i) % B === B - 1) c.className += ' sdk-cE';
+            if (g.rowOf(i) % B === B - 1) c.className += ' sdk-rE';
             if (i === q.target) c.className += ' sdk-cell--target';
-            else if (rowOf(i) === rowOf(q.target) || colOf(i) === colOf(q.target) || blockOf(i) === blockOf(q.target)) c.className += ' sdk-cell--peer';
+            else if (g.rowOf(i) === g.rowOf(q.target) || g.colOf(i) === g.colOf(q.target) || g.blockOf(i) === g.blockOf(q.target)) c.className += ' sdk-cell--peer';
             if (q.givens[i]) { c.textContent = String(q.givens[i]); c.className += ' sdk-cell--given'; }
             else if (i === q.target) c.textContent = '？';
             board.appendChild(c); cells.push(c);
         }
-        var tip = h('div', { 'class': 'qz-note sdk-tip', text: '黃色那一格是幾？（一宮 3×3 裡 1～9 各一個）' });
+        var tip = h('div', { 'class': 'qz-note sdk-tip sdk-tip--n' + N, text: '黃色那一格是幾？（每一排、每一欄、每個 ' + B + '×' + B + ' 的宮，1～' + N + ' 各一個）' });
         stage.appendChild(board); stage.appendChild(tip);
         var items = [];
-        for (var d = 1; d <= 9; d++) (function (d) { items.push({ text: String(d), kind: 'sky', cls: 'sdk-btn', onTap: function () { judge(d); } }); })(d);
-        var grid = kit.btnGrid(stage, items, { cols: 3, h: 62, gap: 8 });
+        for (var d = 1; d <= N; d++) (function (d) { items.push({ text: String(d), kind: 'sky', cls: 'sdk-btn', onTap: function () { judge(d); } }); })(d);
+        /* 數字鍵：4×4 排成一排 4 顆（每顆大一點）；9×9 排成 3×3 */
+        var grid = kit.btnGrid(stage, items, N === 4 ? { cols: 4, h: 84, gap: 8 } : { cols: 3, h: 54, gap: 8 });
         api.timer(ansMs(level), function () { judge(null); });
         if (level === 1 && kit.once('sudokuone.hint')) kit.hintOn(stage, grid.btns[q.answer - 1], { mode: 'tap', delay: 700, text: '請點擊數字' });
 
@@ -188,22 +215,22 @@
             kit.flash(stage, false, api.my);
             api.fail({ delay: 2500, lines: [
                 (v == null ? '時間到！' : '你選了 ' + v) + '，黃色那一格是 ' + q.answer,
-                '第 ' + (rowOf(q.target) + 1) + ' 排第 ' + (colOf(q.target) + 1) + ' 格；整個盤面的解答已填出'
+                '第 ' + (g.rowOf(q.target) + 1) + ' 排第 ' + (g.colOf(q.target) + 1) + ' 格；整個盤面的解答已填出'
             ] });
         }
         api.solve = function () { judge(q.answer); };
-        api.wrong = function () { judge(q.answer % 9 + 1); };
+        api.wrong = function () { judge(q.answer % N + 1); };
     }
 
     var G = {
         id: ID,
         name: '數獨猜一格',
-        rule: '6×6 的迷你數獨，由四個 3×3 的宮組成：每一宮裡 1～9 各出現一次，**同一橫排、同一直排不重複**。盤面上黃色的那一格，**只要猜出它是幾就好**。猜錯或來不及就結束，看你能過幾關。越後面，提示數字越少，要多推理幾步！',
+        rule: '標準的數獨：**每一橫排、每一直排、每一個宮裡，數字都不重複**。前面的關卡是 4×4（四個 2×2 的宮，數字 1～4），第 7 關起變成更難的 9×9（九個 3×3 的宮，數字 1～9）。盤面上黃色的那一格，**只要猜出它是幾就好**。猜錯或來不及就結束，看你能過幾關。越後面，提示數字越少，要多推理幾步！',
         mount: mount,
         score: SCORE,
         test: {
-            givensFor: givensFor, ansMs: ansMs, deepP: deepP, rowOf: rowOf, colOf: colOf, blockOf: blockOf, PEERS: PEERS, BLOCKS: BLOCKS, makeSolution: makeSolution, deduce: deduce, makePuzzle: makePuzzle, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, GIVENS: GIVENS, ANS_S: ANS_S, SIZE: SIZE, MAX_LEVEL: MAX_LEVEL
+            GEO4: GEO4, GEO9: GEO9, makeGeom: makeGeom, stageOf: stageOf, givensFor: givensFor, ansMs: ansMs, deepP: deepP, makeSolution: makeSolution, deduce: deduce, makePuzzle: makePuzzle, rating: rating,
+            FOUR_LEVELS: FOUR_LEVELS, RAMP9: RAMP9, GIVENS4: GIVENS4, GIVENS9: GIVENS9, ANS4_S: ANS4_S, ANS9_S: ANS9_S, MAX_LEVEL: MAX_LEVEL
         }
     };
     Reaction.register(G);
