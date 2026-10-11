@@ -4,6 +4,8 @@
    剩下的 3 秒要自己默數，算準 0 秒的瞬間按下按鈕；分數＝跟 0 秒差了幾秒（越小越好）。
    （V1.22.0：原本是 6 秒開始、數字到 3 秒突然消失；第一次玩的人常以為是 BUG，
      所以多給一段「慢慢變透明」的預告，讓人有心理準備。）
+   （V1.23.0：倒數低於 4.0000 秒的那一刻，數字下方再浮出一行明顯的大字「請在心中默數至 0」，
+     明確告訴玩家：從這裡開始要靠自己默數。）
    · 倒數的數字（即時畫面）顯示到小數點後 4 位 X.XXXX 秒：那是「真實的剩餘時間」，不偽造
      （偽造尾數會讓倒數的數字忽大忽小，不能用在連續跳動的數字上）；
    · 「成績」（結算畫面、最佳紀錄、世界排行榜）一律是秒、小數點後 4 位，
@@ -22,6 +24,8 @@
     var TOTAL = 7000;       /* 倒數總長（毫秒，內部計時用；畫面一律換算成秒顯示） */
     var FADE_AT = 4000;     /* 倒數到剩這麼多毫秒時，數字開始慢慢變透明 */
     var HIDE_AT = 3000;     /* 倒數到剩這麼多毫秒時，數字完全透明（看不見了） */
+    var COUNT_AT = FADE_AT; /* 剩餘時間「低於」這麼多毫秒，數字下方就浮出「請在心中默數至 0」 */
+    var COUNT_TEXT = '請在心中默數至 0';
 
     /* 數字的不透明度（純函式，也給 Node 測試用）：剩餘時間 ≥ FADE_AT → 1（完全看得見）；
        FADE_AT → HIDE_AT 之間線性從 1 變到 0；≤ HIDE_AT → 0（完全透明） */
@@ -30,6 +34,9 @@
         if (remainMs <= HIDE_AT) return 0;
         return (remainMs - HIDE_AT) / (FADE_AT - HIDE_AT);
     }
+
+    /* 「請在心中默數至 0」該不該顯示（純函式，也給 Node 測試用）：剩餘時間低於 4.0000 秒（嚴格小於）才顯示 */
+    function countVisible(remainMs) { return remainMs < COUNT_AT; }
 
     /* 倒數畫面用：毫秒 → X.XXXX 秒（即時顯示的是真實的剩餘時間，4 位小數，不偽造） */
     function sec(ms) { return (ms / 1000).toFixed(4); }
@@ -52,9 +59,11 @@
             root.innerHTML = '';
             /* 建立畫面元素：大數字、提示、按鈕 */
             var num = h('div', { 'class': 'speed-num', text: sec(TOTAL) });
+            /* 低於 4.0000 秒才會亮起（一開始透明，但先占好位置，亮起來時畫面不會跳動） */
+            var count = h('div', { 'class': 'speed-count', text: COUNT_TEXT });
             var hint = h('div', { 'class': 'hint', text: '默數到 0，算準時間按下面的按鈕' });
             var btn = h('button', { 'class': 'btn btn--primary speed-btn', text: '按這裡！' });
-            root.appendChild(h('div', { 'class': 'speed-wrap' }, [num, hint]));
+            root.appendChild(h('div', { 'class': 'speed-wrap' }, [num, count, hint]));
             root.appendChild(btn);
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
@@ -75,6 +84,7 @@
                 var op = opacityAt(remain);
                 num.textContent = op > 0 ? sec(remain) : '';
                 num.style.opacity = op.toFixed(3);
+                if (countVisible(remain)) count.classList.add('is-on');
                 /* requestAnimationFrame(tick)：請瀏覽器在下一個畫面更新時再呼叫 tick，形成持續更新的迴圈 */
                 if (!clicked) raf = requestAnimationFrame(tick);
             }
@@ -127,9 +137,9 @@
     Reaction.register({
         id: ID,
         name: '零秒出手',
-        rule: '請在心裡默數至零，快速點擊按鈕，看看你差了幾秒。從 7.0000 開始倒數，畫面會顯示 X.XXXX 秒；倒數到 4.0000 秒時，數字會慢慢變透明，到 3.0000 秒就完全看不見，剩下的 3 秒要靠自己在心裡默數。',
+        rule: '請在**心裡默數至零**，快速點擊按鈕，看看你差了幾秒。從 7.0000 開始倒數，畫面會顯示 X.XXXX 秒；倒數到 4.0000 秒時，數字會慢慢變透明，到 3.0000 秒就完全看不見，**剩下的 3 秒要靠自己在心裡默數**。',
         mount: mount,
-        test: { TOTAL: TOTAL, FADE_AT: FADE_AT, HIDE_AT: HIDE_AT, opacityAt: opacityAt },
+        test: { TOTAL: TOTAL, FADE_AT: FADE_AT, HIDE_AT: HIDE_AT, COUNT_AT: COUNT_AT, COUNT_TEXT: COUNT_TEXT, opacityAt: opacityAt, countVisible: countVisible },
         /* 世界排行榜的成績規格（資料庫 MF_games 裡 speed 那一列要一致） */
         score: SCORE
     });

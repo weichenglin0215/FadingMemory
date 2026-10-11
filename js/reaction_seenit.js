@@ -167,7 +167,7 @@
     var G = {
         id: ID,
         name: '這個看過嗎',
-        rule: '圖案一張一張出現。判斷這個圖案剛才「看過」還是「新的」。小心：新的圖案常常是看過圖案的近親，只差顏色或中心的圓點。答錯或來不及扣一條命，有三條命，看你能累計答對幾題。前四張只讓你記住，不算分。',
+        rule: '圖案一張一張出現。**判斷這個圖案剛才「看過」還是「新的」**。小心：新的圖案常常是看過圖案的近親，只差顏色或中心的圓點。答錯或來不及扣一條命，有三條命，看你能累計答對幾題。**前四張只讓你記住，不算分**。',
         mount: mount,
         score: SCORE,
         test: { baseOf: baseOf, colorOf: colorOf, markOf: markOf, itemCount: itemCount, timeMs: timeMs, nearP: nearP, shapeMarkup: shapeMarkup, itemSvg: itemSvg, diffText: diffText, nextTrial: nextTrial, rating: rating, BASES: BASES, STUDY: STUDY, DIST: DIST, MAX_REPEAT: MAX_REPEAT, RAMP_LEVELS: RAMP_LEVELS, MAX_LEVEL: MAX_LEVEL, LIVES: LIVES, VARIANTS: VARIANTS, NEAR: NEAR, TIME_S: TIME_S }

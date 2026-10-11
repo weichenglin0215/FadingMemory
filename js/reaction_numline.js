@@ -152,7 +152,7 @@
     var G = {
         id: ID,
         name: '數線落點',
-        rule: '畫面上有一條數線，只標了 0 和 1。上方出現一個 0 到 1 之間的數（可能是小數、分數或百分比），在數線下方的拖曳區左右拖曳，把圓點移到你覺得它該在的位置，按「確定」。誤差在容許範圍內才過關，容許範圍一關比一關小，答錯就結束。',
+        rule: '畫面上有一條數線，只標了 0 和 1。上方出現一個 0 到 1 之間的數（可能是小數、分數或百分比），在數線下方的拖曳區左右拖曳，**把圓點移到你覺得它該在的位置**，按「確定」。**誤差在容許範圍內才過關**，容許範圍一關比一關小，答錯就結束。',
         mount: mount,
         score: SCORE,
         test: { tolAt: tolAt, makeQuestion: makeQuestion, judge: judge, gcd: gcd, TOL: TOL, TOL_RAMP: TOL_RAMP, V_MIN: V_MIN, V_MAX: V_MAX, START: START, START_GAP: START_GAP }

@@ -183,7 +183,7 @@
     var G = {
         id: ID,
         name: '混出什麼色',
-        rule: '左邊是目標顏色，右邊是你要調出來的顏色。下方三對按鈕分別控制右邊色塊的紅、綠、藍：亮色的「＋」按住會增加、暗色的「－」按住會減少，按越久變得越快。沒有任何數字，只能靠眼睛比；調到你覺得兩邊完全一樣時按「確定」，兩個色塊會靠在一起並告訴你顏色差異度，越接近 0% 越準，只有一次機會。',
+        rule: '左邊是目標顏色，右邊是你要調出來的顏色。下方三對按鈕分別控制右邊色塊的紅、綠、藍：亮色的「＋」按住會增加、暗色的「－」按住會減少，按越久變得越快。沒有任何數字，只能靠眼睛比；**調到你覺得兩邊完全一樣時按「確定」**，兩個色塊會靠在一起並告訴你顏色差異度，越接近 0% 越準，**只有一次機會**。',
         mount: mount,
         score: SCORE,
         test: { rateAt: rateAt, stepChannel: stepChannel, newRound: newRound, diffPercent: diffPercent, roundRgb: roundRgb, RATE: RATE, RAMP_S: RAMP_S, START_MIN: START_MIN, TARGET_RANGE: TARGET_RANGE, BUTTONS: BUTTONS }

@@ -144,7 +144,7 @@
     var G = {
         id: ID,
         name: '淡到看不見',
-        rule: '灰色背景上有一個 E，開口朝上、下、左、右其中一邊，手指往開口的方向滑。E 一個比一個淡，最後幾乎和背景一樣。答錯或來不及就結束，看你能看清楚幾個。請把螢幕亮度調到中等。遊戲視力，不是真正的視力檢查。',
+        rule: '灰色背景上有一個 E，開口朝上、下、左、右其中一邊，**手指往開口的方向滑**。E 一個比一個淡，最後幾乎和背景一樣。答錯或來不及就結束，看你能看清楚幾個。**請把螢幕亮度調到中等**。遊戲視力，不是真正的視力檢查。',
         mount: mount,
         score: SCORE,
         test: { deltaAt: deltaAt, contrastPct: contrastPct, nextDir: nextDir, inE: inE, dirOf: dirOf, paintE: paintE, rating: rating, DIRS: DIRS, GRAY: GRAY, DELTA_START: DELTA_START, NOISE_FROM: NOISE_FROM, PANEL: PANEL, CELL: CELL, SWIPE_PX: SWIPE_PX }

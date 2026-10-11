@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════
-   reaction_maxexpr.js — 秒反應・拼出最大的數
+   reaction_maxexpr.js — 秒反應・拼出最大數
    上方是算式「□ op □ op □」（兩個運算符號隨機：＋ － × ÷，乘除先算），下方 6 張數字牌；
    依序點 3 張牌填進三個空格，讓算式的值「最大」，再按「確定」。「重來」把已填的牌放回原位。
    關卡制，答錯或逾時就結束，成績＝通過關數。
@@ -107,7 +107,7 @@
         var stage = api.stage, level = api.level;
         var q = makeLevel(level, api.rand), picked = [], used = {};
         api.info = q;
-        console.log('[拼出最大的數] 第 ' + level + ' 關：□ ' + SYM[q.ops[0]] + ' □ ' + SYM[q.ops[1]] + ' □，牌 ' + q.cards.join(',') + '；最大 ' + valText(q.best) + '（' + q.arrs.map(function (a) { return exprText(q.cards[a[0]], q.ops[0], q.cards[a[1]], q.ops[1], q.cards[a[2]]); }).join('；') + '）；直覺做法' + (q.greedyFails ? '失敗' : '可行') + '；限時 ' + timeMs(level) + ' ms');
+        console.log('[拼出最大數] 第 ' + level + ' 關：□ ' + SYM[q.ops[0]] + ' □ ' + SYM[q.ops[1]] + ' □，牌 ' + q.cards.join(',') + '；最大 ' + valText(q.best) + '（' + q.arrs.map(function (a) { return exprText(q.cards[a[0]], q.ops[0], q.cards[a[1]], q.ops[1], q.cards[a[2]]); }).join('；') + '）；直覺做法' + (q.greedyFails ? '失敗' : '可行') + '；限時 ' + timeMs(level) + ' ms');
 
         var slots = [0, 1, 2].map(function () { return h('div', { 'class': 'mx-slot' }); });
         var expr = h('div', { 'class': 'mx-expr' }, [slots[0], h('div', { 'class': 'mx-op', text: SYM[q.ops[0]] }), slots[1], h('div', { 'class': 'mx-op', text: SYM[q.ops[1]] }), slots[2]]);
@@ -169,8 +169,8 @@
 
     var G = {
         id: ID,
-        name: '拼出最大的數',
-        rule: '上方有一個算式，三個空格之間有兩個運算符號（乘除先算）。從下方 6 張數字牌依序選 3 張填進空格，讓算式的值最大，按「確定」。填錯了按「重來」。答錯或時間到就結束，看你能過幾關！',
+        name: '拼出最大數',
+        rule: '上方有一個算式，三個空格之間有兩個運算符號（**乘除先算**）。從下方 6 張數字牌依序選 3 張填進空格，**讓算式的值最大**，按「確定」。填錯了按「重來」。答錯或時間到就結束，看你能過幾關！',
         mount: mount,
         score: SCORE,
         test: { fr: fr, apply: apply, cmp: cmp, evalExpr: evalExpr, valText: valText, exprText: exprText, solve: solve, greedyArr: greedyArr, opsFor: opsFor, rangeFor: rangeFor, timeMs: timeMs, greedyFailFrac: greedyFailFrac, makeLevel: makeLevel, rating: rating, RAMP_LEVELS: RAMP_LEVELS, GREEDY_FAIL: GREEDY_FAIL, GREEDY_FROM: GREEDY_FROM, DIV_FROM: DIV_FROM, TIME_S: TIME_S }

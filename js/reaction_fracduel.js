@@ -144,7 +144,7 @@
     var G = {
         id: ID,
         name: '分數大對決',
-        rule: '兩個分數卡，點比較大的那一張。作答時不會顯示小數，要靠數感判斷。答錯或來不及就結束，看你能連續答對幾題。越後面，兩個分數差得越少、時間越短。',
+        rule: '兩個分數卡，**點比較大的那一張**。作答時不會顯示小數，**要靠數感判斷**。答錯或來不及就結束，看你能連續答對幾題。越後面，兩個分數差得越少、時間越短。',
         mount: mount,
         score: SCORE,
         test: { gapAt: gapAt, timeMs: timeMs, denMax: denMax, val: val, makeQuestion: makeQuestion, nextBigLeft: nextBigLeft, rating: rating, RAMP_LEVELS: RAMP_LEVELS, GAP_START: GAP_START, GAP_END: GAP_END, VAL_MIN: VAL_MIN, VAL_MAX: VAL_MAX, MAX_LEVEL: MAX_LEVEL, SAME_SIDE: SAME_SIDE }

@@ -3,7 +3,7 @@
 給長者練習記憶力的網頁遊戲。一開始看一張「辦事紙條」，看完紙條就燒掉，之後只能憑記憶把所有事情一件一件辦妥。
 
 - **明明還記得...**（原「測試模式」，純 2D）：按下主選單的按鈕會先彈出選主軸的畫面，玩家自己挑一個想練習的故事主軸（生日、旅遊、看病、聚餐），不是亂數決定。8 關，從 4 題到 36 題。**每一局題目都不同**，一個主軸貫穿 8 關；每一關都有明確的日期、時間和有名字的角色，日期本身也會考；第 5～8 關還會突然插進前面關卡的題目；號碼、台北路名、店名、物品、人物、顏色都會換；紙條從精簡條列，逐關變成口語長文，還有跨頁更改、混淆文句。答錯當下說明原因，結果頁分析「最容易被哪一種混淆騙到」。
-- **秒反應**：主選單新按鈕，按下去先彈出選遊戲的畫面，玩家自己挑一個想玩的小遊戲，不是亂數決定——零秒出手（默數倒數、算準 0 秒）、神準落下（抓準時機讓三角形插中移動方塊的中心，尺是向量圖、放大是連續變焦）、大家來找碴（4×4 找出顏色不一樣的格子，越後面差異越小）、不可能任務（算準時機停住自由落體，停完特寫兩者的距離）、形形色色（一堆相同圖案／顏色裡找出唯一不一樣的那一格，格子數量隨關卡越來越多越來越小）、色不異空（左右兩個色塊，右邊的顏色一直在變，覺得兩邊顏色完全相同時點擊畫面，看顏色差異度有多小）、七彩陷阱（2×2 方塊輪流換上七彩顏色，只點要求的顏色，超時或點錯就失敗，過幾個之後會逐步加新顏色）。另外 1.15.0 一次新增 19 款：六點鐘方向（鐘擺從五點鐘出發順時針擺，只有一次機會，凍結後 ZOOM IN 看差幾度）、抽光衛生紙（連續抽 100 個螢幕高度的衛生紙，放手後有慣性滑落）、缺口在哪？（E 字視力表，只有上下左右，每換一次方向縮小成 90%，錯一次就結束）、點燈記憶（記位置）、球在哪杯（猜球在哪個杯子）、解鎖圖案（看一次示範、畫出九宮格圖案）、錯覺大師（繆勒－萊爾、艾賓豪斯等經典錯覺）、倒到八分滿（只有一次機會，水面不斷抖動）、零錢分類（湊出剛好的金額，答案唯一）、對發票（100 張發票看你對中幾張）、刷油漆（不漏一個角落）、哪裡怪怪的（上下兩格找 5 個不同）、秤麵包重量（切成左右兩半讓重量接近）、幾顆糖（瞬間數量感）、誰先到？（比兩條曲線誰短，黑底）、猜拳必贏（純靠運氣）、吹氣球（沒有數字，一次機會）、價格陷阱（中文數字原價＋折扣比誰便宜）、心跳複製（先給規律、再突然打破）。1.20.0 起再新增 28 款、1.21.0 起再新增 7 款「復活版」遊戲（重心疊疊樂、搭一座橋、一半的人、貓咪走山路、數線落點、找出雙胞胎襪子、混出什麼色）、1.22.0 起再新增 23 款（照抄曲線、等不等於、先乘除、求餘數、遮住的數字、幾點幾分後、哪一行算錯、補上運算符號、誰閃得快、誰在偷偷動、哪一對離得遠、骰子少一點、誰說的、倒著點、第幾個出現、穿過旋轉縫、數獨猜一格、支票金額、左右合字、手電筒猜圖、誰先衝線、轉盤停哪格、對準才看得到），**共 108 款**。選遊戲的畫面是每頁 3×3 九格，共 12 頁可翻頁（按鈕或左右滑），會記住上次玩的遊戲所在頁；每一格的縮圖是那款遊戲開始 3 秒左右的真實畫面（`img/reaction/<id>.png`，高 256 像素，用 `node test/reaction/make_icons.mjs` 重拍）。所有彈窗（玩法說明、世界前 30 名、暱稱、進榜恭喜、結算、意見）用同一套公版，不蓋住標題列；每個結算彈窗最下方有「我有話要說」可送出玩家意見（存 Supabase `MF_feedback`，依遊戲區分）。需要操作的遊戲第一次進入會有手指圖示＋短文字提示（點擊／拖曳／持續按住），並指在第一關的正確位置。所有遊戲共用同一組歡樂的 8-bit 音效與結算背景音樂（右上角喇叭可靜音）。同一個遊戲可以無限次重玩，各自累積最佳紀錄。**世界排行榜**（1.17.0 起；1.22.0 起全部 108 款遊戲都接上）：玩法說明之後會多一頁世界前 30 名（手指拖曳捲動、有慣性，前三名特別凸顯），第一次完成遊戲輸入暱稱，成績進榜會跳恭喜彈窗、放煙火、播歡呼音樂；資料存在 Supabase（跟 LoveIsABitMessy 共用專案，資料表以 `MF_` 開頭），設定與設計見 `note/世界排行榜說明.md`。
+- **秒反應**：主選單新按鈕，按下去先彈出選遊戲的畫面，玩家自己挑一個想玩的小遊戲，不是亂數決定——零秒出手（默數倒數、算準 0 秒）、神準落下（抓準時機讓三角形插中移動方塊的中心，尺是向量圖、放大是連續變焦）、大家來找碴（4×4 找出顏色不一樣的格子，越後面差異越小）、不可能任務（算準時機停住自由落體，停完特寫兩者的距離）、形形色色（一堆相同圖案／顏色裡找出唯一不一樣的那一格，格子數量隨關卡越來越多越來越小）、色不異空（左右兩個色塊，右邊的顏色一直在變，覺得兩邊顏色完全相同時點擊畫面，看顏色差異度有多小）、七彩陷阱（2×2 方塊輪流換上七彩顏色，只點要求的顏色，超時或點錯就失敗，過幾個之後會逐步加新顏色）。另外 1.15.0 一次新增 19 款：六點鐘方向（鐘擺從五點鐘出發順時針擺，只有一次機會，凍結後 ZOOM IN 看差幾度）、抽光衛生紙（連續抽 100 個螢幕高度的衛生紙，放手後有慣性滑落）、缺口在哪？（E 字視力表，只有上下左右，每換一次方向縮小成 90%，錯一次就結束）、點燈記憶（記位置）、球在哪杯（猜球在哪個杯子）、解鎖圖案（看一次示範、畫出九宮格圖案）、錯覺大師（繆勒－萊爾、艾賓豪斯等經典錯覺）、倒到八分滿（只有一次機會，水面不斷抖動）、零錢分類（湊出剛好的金額，答案唯一）、對發票（100 張發票看你對中幾張）、刷油漆（不漏一個角落）、哪裡怪怪的（上下兩格找 5 個不同）、秤麵包重量（切成左右兩半讓重量接近）、幾顆糖（瞬間數量感）、誰先到？（比兩條曲線誰短，黑底）、猜拳必贏（純靠運氣）、吹氣球（沒有數字，一次機會）、價格陷阱（中文數字原價＋折扣比誰便宜）、心跳複製（先給規律、再突然打破）。1.20.0 起再新增 28 款、1.21.0 起再新增 7 款「復活版」遊戲（重心疊疊樂、搭一座橋、一半的人、貓咪走山路、數線落點、雙胞胎襪子、混出什麼色）、1.22.0 起再新增 23 款（照抄曲線、等不等於、先乘除、求餘數、遮住的數字、幾點幾分後、哪一行算錯、挑加減乘除、誰閃得快、誰在偷偷動、哪對離最遠、骰子少一點、誰說的、倒著點、第幾個出現、穿過旋轉縫、數獨猜一格、支票金額、左右合字、手電筒猜圖、誰先衝線、轉盤停哪格、對準才看到），**共 108 款**。選遊戲的畫面（V1.23.0 起）是**全螢幕**：左上角「返回」；中間 3 欄的遊戲格子（寬 50：高 85，縮圖寬度撐滿格子、下方是最多 5 個字的遊戲名稱），用**手指或滑鼠上下拖曳捲動、帶慣性**（也支援滾輪、鍵盤）；最下面是直式文字的**分類頁籤**（全部、最近、記憶、視覺、反應、數字、邏輯、手感、目測），會記住上次的頁籤，「全部」會自動捲到上次玩的那一款；每一格的縮圖是那款遊戲開始 3 秒左右的真實畫面（`img/reaction/<id>.png`，高 256 像素，用 `node test/reaction/make_icons.mjs` 重拍）。所有彈窗（玩法說明、世界前 30 名、暱稱、進榜恭喜、結算、意見）用同一套公版，不蓋住標題列；每個結算彈窗最下方有「我有話要說」可送出玩家意見（存 Supabase `MF_feedback`，依遊戲區分）。需要操作的遊戲第一次進入會有手指圖示＋短文字提示（點擊／拖曳／持續按住），並指在第一關的正確位置。所有遊戲共用同一組歡樂的 8-bit 音效與結算背景音樂（右上角喇叭可靜音）。同一個遊戲可以無限次重玩，各自累積最佳紀錄。**世界排行榜**（1.17.0 起；1.22.0 起全部 108 款遊戲都接上）：玩法說明之後會多一頁世界前 30 名（手指拖曳捲動、有慣性，前三名特別凸顯），第一次完成遊戲輸入暱稱，成績進榜會跳恭喜彈窗、放煙火、播歡呼音樂；資料存在 Supabase（跟 LoveIsABitMessy 共用專案，資料表以 `MF_` 開頭），設定與設計見 `note/世界排行榜說明.md`。
 - **出去走走**（原「正式模式」，3D＋2D）：在 3D 城市裡走動、搭公車、逛百貨、騎 UBIKE，照紙條路線回家。
 
 > 本遊戲是記憶力練習原型，**不是醫療診斷工具**。
@@ -68,12 +68,16 @@
 | 「明明還記得...」的題庫池（路名、商品、人物、顏色…） | `js/quiz_pools.js` |
 | 「明明還記得...」的出題規則、第 1～4 關共用結構、生日主軸 | `js/quiz_gen.js`（設計依據：`note/FadingMemory記憶混淆說明.md`） |
 | 旅遊主軸／看病主軸／聚餐主軸 | `js/quiz_travel.js`／`js/quiz_health.js`／`js/quiz_dining.js` |
-| 主選單的主軸／小遊戲挑選彈窗（六格內容與位置） | `js/menu.js`、`css/menu.css` |
-| 「秒反應」新增一個小遊戲 | 新檔案呼叫 `Reaction.register({id, name, rule, mount})`（共用工具用 `Reaction.kit`、音效用 `Sfx.play(...)`），加到 `js/boot.js` 的 `reaction` 清單（`reaction_kit.js` 之後、`reaction.js` 之前），再到 `js/menu.js` 的 `GAME_CELLS` 加一格 |
+| 主選單的主軸挑選彈窗（六格內容與位置）；「選一個想玩的遊戲」全螢幕彈窗（格子、頁籤、版面） | `js/menu.js`、`css/menu.css`（遊戲格子寬高比 `.game-cell` 的 `aspect-ratio: 50 / 85`、頁籤 `.game-tab`） |
+| 遊戲在「選一個想玩的遊戲」裡的**名稱（最多 5 個字）與分類頁籤** | `js/menu.js` 的 `GAME_CELLS`（每款 `{ id, name, cat, img }`，`cat` 是 memory／visual／reaction／number／logic／hand／guess 其中一個）與 `GAME_TABS`（頁籤順序與名稱）；改名要同步改該遊戲檔案 `Reaction.register` 的 `name`，再執行 `node test/leaderboard/gen_games_sql.cjs --write` 並到 Supabase 重新執行 SQL（`t_menu.js`、`t_leaderboard.js` 會檢查兩邊一致） |
+| 手指／滑鼠拖曳＋慣性捲動的手感（遊戲列表、世界排行榜共用） | `js/scroller.js` 最上面的 `PHYS`（摩擦力 `tau`、橡皮筋 `rubber`、最大速度…） |
+| 遊戲開始前「玩法說明」彈窗的排版：一句一行、**重點句子粗體黑字** | 各遊戲檔案 `Reaction.register` 的 `rule` 字串：句尾標點（。！？；）後自動換行，`\n` 手動換行；要標重點就用兩個星號前後包起來（`**重點**`，粗體黑字）；排版程式 `Dlg.richText`（`js/dialog.js`），樣式 `.dlg__line`／`.dlg__em`（`css/dialog.css`，黑色是 `css/theme.css` 的 `--c-black`）；說明太長時卡片會自動縮小內文字級（最小 `--fs-xs`） |
+| 舞台（500×850）怎麼縮放、置中、充滿瀏覽器高度（iPad／手機） | `js/stage.js`（`readViewport`：visualViewport、innerHeight、100dvh 取最大，每 0.4 秒自己重量）；網址加 `?debug` 看各來源量到的數字 |
+| 「秒反應」新增一個小遊戲 | 新檔案呼叫 `Reaction.register({id, name, rule, mount})`（共用工具用 `Reaction.kit`、音效用 `Sfx.play(...)`），加到 `js/boot.js` 的 `reaction` 清單（`reaction_kit.js` 之後、`reaction.js` 之前），再到 `js/menu.js` 的 `GAME_CELLS` 加一格（`{ id, name, cat, img }`：`name` 最多 5 個字、`cat` 選一個分類），玩法說明 `rule` 用 `**重點**` 標出 1～3 個重點句 |
 | 選單「選一個想玩的遊戲」每一格的縮圖（遊戲圖示） | `img/reaction/<id>.png`（高 256 像素的 PNG）；改了遊戲畫面之後，開本機伺服器（`python -m http.server 8743`）再執行 `node test/reaction/make_icons.mjs`（全部）或 `node test/reaction/make_icons.mjs speed spot`（指定幾款）重拍；有些遊戲第 3 秒是準備階段，拍照的等待時間寫在 `make_icons.mjs` 的 `WAIT` 表 |
 | 「秒反應」所有遊戲的音效／結算背景音樂 | `js/sfx.js`（全部用 Web Audio 即時合成，不用音檔；音效表在 `SFX`，背景音樂的和弦與旋律在 `LEAD`／`BASS`） |
 | 世界排行榜：Supabase 網址與金鑰、暱稱字數、快取秒數、逾時 | `js/leaderboard.js` 最上面的 `CFG` |
-| 世界排行榜：前三名金／銀／銅的顏色、列高 | `css/theme.css` 的 `--lb-*` 變數；慣性捲動的摩擦力、橡皮筋、煙火的數量與時間在 `js/leaderboard_ui.js` 的 `PHYS`／`FW` |
+| 世界排行榜：前三名金／銀／銅的顏色、列高 | `css/theme.css` 的 `--lb-*` 變數；慣性捲動的摩擦力、橡皮筋在 `js/scroller.js` 的 `PHYS`，煙火的數量與時間在 `js/leaderboard_ui.js` 的 `FW` |
 | 彈窗（說明／世界前 30 名／暱稱／結算／意見）的尺寸、字級、顏色、按鈕 | `css/theme.css` 的 `--dlg-*` 變數與 `css/dialog.css`；程式在 `js/dialog.js`（`Dlg.open`） |
 
 | 「秒反應」操作提示（手指圖示＋短文字） | `js/reaction_kit2.js` 的 `kit.fingerHint`／`kit.hintOn`（模式 tap／drag／drag4／hold），樣式在 `css/reaction3.css` 的 `.rx-hint` |
@@ -97,15 +101,16 @@
 index.html / quiz.html / world.html / reaction.html   四個頁面（主選單／明明還記得.../出去走走／秒反應）
 version.json                           版本號（自動更新用）
 css/theme.css                          ★ 風格變數＋共用元件
-css/stage.css                          舞台規範（2D／3D 圖層、觸控規則）
+css/stage.css                          舞台規範（2D／3D 圖層、觸控規則、100dvh 高度探針）
 css/menu.css, quiz.css, world.css      各頁面版面
 css/reaction.css                       「秒反應」版面（小遊戲各自用 .xx- 開頭的 class；彈窗已移到 dialog.css）
 css/waterflow.css                      水流特效的外框（停用、保留備用）
 js/boot.js                             版本檢查＋載入所有檔案
-js/stage.js                            舞台縮放核心（手機＝電腦畫面）
+js/stage.js                            舞台縮放核心（手機＝電腦畫面；V1.23.0 起多來源量可視高度、定時監看，iPad 不再縮在上半部）
 js/ui.js                               共用小工具（自動縮字、分頁、圖示）
 js/waterflow.js                        水流特效（GPU 流體模擬；1.7.0 起停用、保留備用）
-js/menu.js                             主選單（含「明明還記得...」主軸挑選彈窗、「秒反應」小遊戲挑選彈窗）
+js/menu.js                             主選單（含「明明還記得...」主軸挑選彈窗、「秒反應」全螢幕遊戲挑選彈窗：返回、可捲動的 3 欄格子、直式分類頁籤、最近玩過）
+js/scroller.js                         手指／滑鼠拖曳＋慣性捲動共用元件（遊戲列表與世界排行榜共用，物理純函式有測試）
 js/share.js                            主選單右上角的分享按鈕（QR Code 彈窗，掃碼開啟 GitHub Pages 網址）
 js/sfx.js                              共用音效模組（8-bit 風格短音效＋結算背景音樂，Web Audio 合成；靜音狀態記在 localStorage）
 js/reaction_core.js                    「秒反應」共用引擎（小遊戲登記清單、最佳紀錄存取；不含任何遊戲內容）
@@ -128,8 +133,8 @@ js/reaction_kit3.js                     「秒反應」第三批共用小工具�
 img/reaction/<id>.png                  選單每一格的縮圖（108 張，高 256 像素；make_icons.mjs 產生）
 css/dialog.css                         ★ 彈窗公版樣式（玩法說明、世界前 30 名、暱稱、進榜恭喜、結算、我有話要說共用一個外框與卡片；數值在 theme.css 的「彈窗公版」段）
 js/dialog.js                           ★ 彈窗公版（Dlg.open／Dlg.rule／Dlg.feedback／Dlg.toast）；彈窗蓋在標題列下面，「返回」隨時點得到
-js/reaction_<id>.js（V1.22 新增 23 款） copycurve 照抄曲線／isequal 等不等於／orderops 先乘除／remainder 求餘數／hiddendigit 遮住的數字／timeafter 幾點幾分後／wrongline 哪一行算錯／fillop 補上運算符號／fastblink 誰閃得快／sneakmove 誰在偷偷動／farpair 哪一對離得遠／dicechange 骰子少一點／whosaid 誰說的／tapback 倒著點／nthshape 第幾個出現／spingap 穿過旋轉縫／sudokuone 數獨猜一格／chequeamt 支票金額／mergechar 左右合字／flashlight 手電筒猜圖／racefirst 誰先衝線／spinpick 轉盤停哪格／alignchar 對準才看得到
-js/reaction_<id>.js（V1.21 新增 7 款）  stackup 重心疊疊樂／bridge 搭一座橋／halfcrowd 一半的人／catroad 貓咪走山路／numline 數線落點／twinsock 找出雙胞胎襪子／mixcolor 混出什麼色
+js/reaction_<id>.js（V1.22 新增 23 款） copycurve 照抄曲線／isequal 等不等於／orderops 先乘除／remainder 求餘數／hiddendigit 遮住的數字／timeafter 幾點幾分後／wrongline 哪一行算錯／fillop 挑加減乘除／fastblink 誰閃得快／sneakmove 誰在偷偷動／farpair 哪對離最遠／dicechange 骰子少一點／whosaid 誰說的／tapback 倒著點／nthshape 第幾個出現／spingap 穿過旋轉縫／sudokuone 數獨猜一格／chequeamt 支票金額／mergechar 左右合字／flashlight 手電筒猜圖／racefirst 誰先衝線／spinpick 轉盤停哪格／alignchar 對準才看到
+js/reaction_<id>.js（V1.21 新增 7 款）  stackup 重心疊疊樂／bridge 搭一座橋／halfcrowd 一半的人／catroad 貓咪走山路／numline 數線落點／twinsock 雙胞胎襪子／mixcolor 混出什麼色
 js/reaction_<id>.js（1.16 新增 24 款）   sticks／schulte／same／backnum／setclock／tearcal／pillbox／fridge／scallion／hangpic／mirror／witness／halfchar／followme／chicks／bounce／cake／seven／teacher／dualtask／pipes／lightsout／seq／polyrhythm
 js/reaction_landolt.js                 「秒反應」・缺口在哪？
 js/reaction_lights.js                  「秒反應」・點燈記憶
@@ -166,7 +171,7 @@ js/world/kit.js                        3D 積木（建築、招牌、公車、�
 js/world/core.js                       3D 引擎核心（鏡頭、移動、碰撞、互動）
 js/world/scenes.js                     各個 3D 場景
 js/world/story.js                      「出去走走」流程（紙條、檢查點、勝利）
-test/reaction/                         「秒反應」純函式測試（node test/reaction/run_all.js 一次跑完全部，含 t_leaderboard.js）；瀏覽器端驗證（headless Chrome／Edge，不用裝套件）：run_browser.mjs（G.debug 玩到結算、操作提示檢查）、input_tests.mjs（真的送滑鼠事件操作 23 款）、make_icons.mjs（拍選單縮圖）
+test/reaction/                         「秒反應」純函式測試（node test/reaction/run_all.js 一次跑完全部，含 t_leaderboard.js）；瀏覽器端驗證（headless Chrome／Edge，不用裝套件）：run_browser.mjs（G.debug 玩到結算、操作提示檢查）、input_tests.mjs（真的送滑鼠事件操作 23 款）、make_icons.mjs（拍選單縮圖）、**menu_check.mjs**（選單全螢幕版面、頁籤、拖曳慣性、觸控、最近）、**stage_check.mjs**（舞台縮放：各種視窗大小、iPad、模擬壞數字／鍵盤／漏發事件）、**rules_check.mjs**（全部 108 款玩法說明的排版與重點樣式、卡片放得進舞台）
 test/leaderboard/                      世界排行榜資料庫腳本測試（PGlite 在本機跑真的 PostgreSQL，另外 npm install）；gen_games_sql.cjs 從 50 款遊戲檔案產生 MF_games 登記列；瀏覽器驗證小工具：fake_backend.js（假資料庫，全部遊戲通用）、browser_check.js（版面／點擊小工具）、browser_smoke.js（把遊戲放進 iframe 亂點到結算，確認有送榜）
 vendor/three.min.js                    Three.js r158（MIT 授權）
 note/FadingMemory企劃書.md              企劃書（給人看）
@@ -178,6 +183,21 @@ screen_adaptive.*                      早期專案的參考檔，遊戲不引�
 ---
 
 ## 版本更新紀錄
+
+### V1.23.0（2026-10-11）
+- **「選一個想玩的遊戲」改成全螢幕**（`js/menu.js`、`css/menu.css`）：
+  - 左上角有「**返回**」；整個彈窗滿版（不再是中間一張小卡片）。
+  - 遊戲格子改成**寬 50：高 85**（包含下方的遊戲名稱），**縮圖寬度撐滿格子**，每排 3 格；取消「上一頁／下一頁／小圓點」，改成可以**用手指或滑鼠上下拖曳捲動，放手帶慣性**（也支援滾輪、鍵盤；右邊有小滑桿）。拖曳時不會誤點到遊戲，點一下才進遊戲；慣性滑行中點一下是「讓它停住」。
+  - 最下面是**分類頁籤，文字直式排列**：**全部**、**最近**（最近玩過的 12 款，最新的在最前面）、**記憶**（16 款）、**視覺**（22）、**反應**（15）、**數字**（21）、**邏輯**（9）、**手感**（15）、**目測**（10）。分類由我決定：記憶＝先記住再回想；視覺＝用眼睛觀察、辨識；反應＝抓時機、拚手速；數字＝計算與數感；邏輯＝推理解謎；手感＝拖曳、畫線、控制力道；目測＝不給數字、憑感覺估重量面積距離數量。每款遊戲只歸一類，想改歸類只要改 `js/menu.js` 的 `GAME_CELLS` 裡那款的 `cat`。
+  - 會記住上次的頁籤；「全部」打開時自動捲到上次玩的那一款（格子外圍藍框）。
+  - 慣性捲動抽成共用元件 `js/scroller.js`，世界排行榜（`js/leaderboard_ui.js`）改用同一份，手感一致。
+- **遊戲名稱最多 5 個字**（格子名稱列放不下更多）：拼出最大的數→**拼出最大數**、找出雙胞胎襪子→**雙胞胎襪子**、補上運算符號→**挑加減乘除**、哪一對離得遠→**哪對離最遠**、對準才看得到→**對準才看到**。遊戲標題列、世界排行榜（`MF_games`）、說明文件同步改名；`test/reaction/t_menu.js` 檢查全部名稱 ≤ 5 個字、選單名稱與遊戲檔案一致。
+- **玩法說明（遊戲一開始的提示文字）重新排版**（全部 108 款）：**一句一行**（句尾標點。！？；後換行），**重點句子用粗體（`--fw-bold`）＋黑色（`--c-black`）**，其他字維持一般粗細；每款我挑了 1～3 個重點句（例如零秒出手：「心裡默數至零」「剩下的 3 秒要靠自己在心裡默數」）。寫法：在 `rule` 字串裡用 `**重點**` 包起來；排版程式 `Dlg.richText`（`js/dialog.js`）。說明很長、卡片放不下時（例如七彩陷阱按「?」重看，多一顆「世界排行榜」按鈕）會自動把內文字級縮小一點，最小 `--fs-xs`。
+- **零秒出手**：倒數低於 **4.0000** 秒的那一刻，數字下方浮出橘色大字「**請在心中默數至 0**」（`.speed-count`）。
+- **iPad 畫面縮在瀏覽器上半部、重新載入也不會變大**：`js/stage.js` 量可視範圍不再只信 `visualViewport` 一個來源——平常（沒在打字、沒被放大）取 `visualViewport`、`innerWidth／innerHeight`、CSS `100dvh` 三者的**最大值**，所以某個來源回報成一半也不會被拖小；輸入文字（鍵盤彈出）或頁面被放大時才改用 `visualViewport`；載入後短時間多量幾次、之後**每 0.4 秒自己重量**（不靠 resize 事件，iPad 轉向、收鍵盤後常漏發）；`html／body` 加 `min-height: 100dvh`。我沒有實體 iPad 可以測，原因是用模擬推論＋模擬壞數字驗證（`stage_check.mjs`）；萬一在你的 iPad 上還是縮小，請在網址後面加 `?debug` 截圖給我，左上角會列出各來源量到的數字。
+- **玩家意見資料表 `MF_feedback` 新增一欄「遊戲中文名稱」`game_title`**：寫入時資料庫自動從 `MF_games.title` 帶入，管理者看資料表不用再對照英文代號；舊資料庫重新執行 SQL 會補上這一欄並把舊意見補好中文名稱，之後遊戲改名再執行一次 SQL，舊意見的名稱也跟著換。順手把 `sql_test.mjs` 的每日上限改成讀 SQL 裡的 `c_per_day`（你把 20 改成 200 之後原本的測試會失敗）。
+- **★ 要做的事（Supabase）**：到 SQL Editor **重新執行最新的 `supabase/MF_leaderboard.sql`**——五款遊戲改名要同步、`MF_feedback` 要補上 `game_title` 欄位。
+- **測試**：新增 `t_ruletext.js`（說明排版與全部 108 款的重點）、`t_menu.js`（選單清單與分類）、`t_scroller.js`（拖曳門檻、點擊與拖曳的分辨、慣性、橡皮筋）；瀏覽器端新增 `menu_check.mjs`、`stage_check.mjs`、`rules_check.mjs`；`t_speed.js`、`sql_test.mjs`（中文名稱的寫入、改名同步、舊資料庫升級）、`t_leaderboard.js` 更新。
 
 ### V1.22.0（2026-10-10）
 - **新增 23 款遊戲**（企劃 `note/新遊戲企劃120款.md` 使用者挑選的那幾款，共 108 款；全部是關卡制／錯一次結束，成績＝通過幾關或連續答對幾題，都接上世界排行榜）：

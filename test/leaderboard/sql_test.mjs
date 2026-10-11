@@ -220,12 +220,19 @@ for (const g of Object.keys(specs)) {
   eq(await fb('speed', uuid(901), '  第一行\r\n\r\n\r\n\r\n第二行\u0007有控制字元  ', '阿嬤', '1.20.1'), { ok: true, saved: true }, '意見：寫入成功');
   let r1 = await rows(`player_id = $1::uuid`, [uuid(901)]);
   ok(r1.length === 1 && r1[0].game_id === 'speed', '意見：記著遊戲代號 speed');
+  ok(r1[0].game_title === '零秒出手', '意見：同時記著遊戲中文名稱（零秒出手）：' + r1[0].game_title);
   eq(r1[0].message, '第一行\n\n第二行 有控制字元', '意見：換行統一、連續換行縮成兩個、控制字元換成空格、頭尾去空白');
   ok(r1[0].nickname === '阿嬤' && r1[0].app_version === '1.20.1', '意見：暱稱與版本有存');
   // 同一位玩家對不同遊戲的意見可以區別
   eq(await fb('coins', uuid(901), '零錢分類太容易'), { ok: true, saved: true }, '意見：另一款遊戲');
   const byGame = (await db.query(`select game_id, count(*)::int as n from public."MF_feedback" group by 1 order by 1`)).rows;
   eq(byGame, [{ game_id: 'coins', n: 1 }, { game_id: 'speed', n: 1 }], '意見：依遊戲分開統計');
+  const titles = (await db.query(`select game_id, game_title from public."MF_feedback" order by game_id, id`)).rows;
+  ok(titles.every(t => t.game_title && /[\u4e00-\u9fff]/.test(t.game_title)), '意見：每一列都有中文名稱，不是英文代號：' + JSON.stringify(titles));
+  ok(titles.find(t => t.game_id === 'coins').game_title === '零錢分類', '意見：coins 的中文名稱是「零錢分類」');
+  // 欄位說明（Table Editor 會顯示）
+  const cm = (await db.query(`select col_description('public."MF_feedback"'::regclass, (select attnum from pg_attribute where attrelid = 'public."MF_feedback"'::regclass and attname = 'game_title')) as c`)).rows[0].c;
+  ok(/遊戲中文名稱/.test(cm || ''), '意見：game_title 欄位有中文說明：' + cm);
   // 暱稱／版本是選填：亂填也不會讓寫入失敗
   eq(await fb('speed', uuid(902), '沒有暱稱', '   ', ''), { ok: true, saved: true }, '意見：空白暱稱與版本當作沒有');
   const r2 = await rows(`player_id = $1::uuid`, [uuid(902)]);
@@ -236,10 +243,12 @@ for (const g of Object.keys(specs)) {
   // 10 分鐘內重複送一樣的內容：不重複寫入
   eq(await fb('speed', uuid(901), '第一行\n\n第二行 有控制字元'), { ok: true, saved: false, duplicate: true }, '意見：重複送出不重複寫入');
   ok((await rows(`player_id = $1::uuid`, [uuid(901)])).length === 2, '意見：重複的不增加列數');
-  // 24 小時內最多 20 則
-  for (let i = 0; i < 20; i++) await fb('spot', uuid(904), '第 ' + i + ' 則意見');
-  eq(await fb('spot', uuid(904), '第 21 則意見'), { ok: false, error: 'too_many' }, '意見：第 21 則被擋');
-  ok((await rows(`player_id = $1::uuid`, [uuid(904)])).length === 20, '意見：被擋的不寫入');
+  // 24 小時內有上限：數字直接讀 SQL 裡的 c_per_day（管理者可能調過，例如 20 → 200），寫滿之後下一則被擋
+  const LIMIT = Number(/c_per_day\s+constant int := (\d+)/.exec(sql)[1]);
+  ok(LIMIT >= 1 && LIMIT <= 1000, '意見：每日上限讀到 ' + LIMIT);
+  for (let i = 0; i < LIMIT; i++) await fb('spot', uuid(904), '第 ' + i + ' 則意見');
+  eq(await fb('spot', uuid(904), '第 ' + (LIMIT + 1) + ' 則意見'), { ok: false, error: 'too_many' }, '意見：第 ' + (LIMIT + 1) + ' 則被擋');
+  ok((await rows(`player_id = $1::uuid`, [uuid(904)])).length === LIMIT, '意見：被擋的不寫入');
   eq(await fb('spot', uuid(905), '別人不受影響'), { ok: true, saved: true }, '意見：別的玩家不受限');
   // 一天以前的不算進上限
   await db.exec(`update public."MF_feedback" set created_at = now() - interval '25 hours' where player_id = '${uuid(904)}'`);
@@ -250,6 +259,26 @@ for (const g of Object.keys(specs)) {
   ok((await rows(`game_id = 'zz_test'`)).length === 0, '意見：遊戲被刪，意見跟著刪');
   await db.exec(sql);   // 再執行一次整份 SQL：把 zz_test 補回來，也確認有意見資料時重新執行不會出錯
   ok((await rows()).length > 0, '意見：重新執行 SQL 不會清掉既有的意見');
+
+  // ── 中文名稱的同步：遊戲改名、或舊資料庫（V1.21.0～V1.22.x）沒有這一欄 ──
+  // (a) 意見裡存的名稱是舊的（遊戲改名前寫入的）→ 重新執行 SQL（MF_games 被更新成新名稱）之後，舊意見也換成新名稱
+  await db.exec(`update public."MF_feedback" set game_title = '舊名稱' where game_id = 'speed'`);
+  ok((await rows(`game_id = 'speed' and game_title = '舊名稱'`)).length > 0, '同步：先弄成舊名稱');
+  await db.exec(sql);
+  ok((await rows(`game_id = 'speed' and game_title <> '零秒出手'`)).length === 0, '同步：重新執行 SQL 後，speed 的舊意見全部換成「零秒出手」');
+  // (b) 舊資料庫沒有 game_title 這一欄：重新執行 SQL 會補上欄位、並且把所有舊意見補好中文名稱
+  await db.exec(`alter table public."MF_feedback" drop column game_title`);
+  ok((await db.query(`select count(*)::int as n from information_schema.columns where table_name = 'MF_feedback' and column_name = 'game_title'`)).rows[0].n === 0, '升級：模擬舊版資料表（沒有 game_title）');
+  await db.exec(sql);
+  const up = (await db.query(`select count(*)::int as n, count(game_title)::int as named from public."MF_feedback"`)).rows[0];
+  ok(up.n > 0 && up.named === up.n, '升級：重新執行 SQL 後欄位補回來，既有的 ' + up.n + ' 則意見全部補好中文名稱（' + up.named + '）');
+  // (c) 新寫入的意見在升級之後仍然帶著中文名稱
+  eq(await fb('hangpic', uuid(907), '升級後的新意見'), { ok: true, saved: true }, '升級：升級後寫入新意見');
+  ok((await rows(`player_id = $1::uuid`, [uuid(907)]))[0].game_title === '掛畫', '升級：新意見的中文名稱是「掛畫」');
+  // (d) 停用的遊戲不能寫意見（跟以前一樣），而且不會因為查名稱而漏判
+  await db.exec(`update public."MF_games" set enabled = false where game_id = 'hangpic'`);
+  eq(await fb('hangpic', uuid(908), '停用後不能寫'), { ok: false, error: 'unknown_game' }, '意見：停用的遊戲不能寫意見');
+  await db.exec(`update public."MF_games" set enabled = true where game_id = 'hangpic'`);
 }
 
 console.log(bad ? 'FAILED ' + bad + ' / ' + total : 'ALL PASS（' + total + ' 項檢查）');

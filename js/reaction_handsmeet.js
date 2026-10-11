@@ -133,7 +133,7 @@
     var G = {
         id: ID,
         name: '兩針重疊',
-        rule: '圓盤上有兩根指針，長針轉得快、短針轉得慢，圓盤沒有任何刻度。在兩根針剛好疊在一起的瞬間按下「重疊！」。每次只能按一次，不用等第一次重疊，任何一次都可以。成績是按下時兩針的夾角，目標是 0.0000 度。',
+        rule: '圓盤上有兩根指針，長針轉得快、短針轉得慢，圓盤沒有任何刻度。**在兩根針剛好疊在一起的瞬間按下「重疊！」**。**每次只能按一次**，不用等第一次重疊，任何一次都可以。成績是按下時兩針的夾角，目標是 0.0000 度。',
         mount: mount,
         score: SCORE,
         test: { makeRound: makeRound, handAngle: handAngle, diffAt: diffAt, nearestOverlap: nearestOverlap, rating: rating, W1: W1, K: K, FIRST_MIN: FIRST_MIN, MAX_S: MAX_S }

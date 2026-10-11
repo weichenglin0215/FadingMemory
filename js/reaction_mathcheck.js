@@ -144,7 +144,7 @@
     var G = {
         id: ID,
         name: '算式對不對',
-        rule: '算式只會閃一下。判斷這個算式是「對」還是「錯」，錯的算式都只差一點點（個位差 1、十位個位對調、差 10…）。答錯或來不及就結束，看你能連續答對幾題。越後面，算式顯示的時間越短！',
+        rule: '**算式只會閃一下**。**判斷這個算式是「對」還是「錯」**，錯的算式都只差一點點（個位差 1、十位個位對調、差 10…）。答錯或來不及就結束，看你能連續答對幾題。越後面，算式顯示的時間越短！',
         mount: mount,
         score: SCORE,
         test: { showMs: showMs, ansMs: ansMs, nextCorrect: nextCorrect, typesFor: typesFor, makeEquation: makeEquation, wrongOf: wrongOf, makeQuestion: makeQuestion, rating: rating, RAMP_LEVELS: RAMP_LEVELS, SHOW_S: SHOW_S, ANS_S: ANS_S, SAME_MAX: SAME_MAX, MAX_LEVEL: MAX_LEVEL }

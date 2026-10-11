@@ -178,7 +178,7 @@
     var G = {
         id: ID,
         name: '畫成直角',
-        rule: '畫面下方中間是起點，左上方有一條題目線。手指從起點往右拖，拖出一條和題目線垂直的線，可以來回調整，放開手指就是答案。沒有任何量角器，只有一次機會，目標是 0.0000 度。',
+        rule: '畫面下方中間是起點，左上方有一條題目線。手指從起點往右拖，**拖出一條和題目線垂直的線**，可以來回調整，**放開手指就是答案**。沒有任何量角器，只有一次機會，目標是 0.0000 度。',
         mount: mount,
         score: SCORE,
         test: { makeRound: makeRound, angleOf: angleOf, errDeg: errDeg, angDiff: angDiff, signedDiff: signedDiff, zoomFor: zoomFor, rating: rating, S: S, ANG_MIN: ANG_MIN, ANG_MAX: ANG_MAX, AVOID: AVOID, Q_LEN: Q_LEN }

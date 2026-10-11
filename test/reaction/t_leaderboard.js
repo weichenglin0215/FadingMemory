@@ -19,6 +19,7 @@ const games = loadAllGames();
 const byId = {}; games.forEach(g => { byId[g.id] = g; });
 const speed = byId.speed, spot = byId.spot;
 require(ROOT + 'js/leaderboard.js');
+require(ROOT + 'js/scroller.js');          // 慣性捲動共用元件（V1.23.0 從 leaderboard_ui.js 抽出來）
 require(ROOT + 'js/leaderboard_ui.js');
 const LB = global.Leaderboard, T = LB.test, S = T.scroll;
 

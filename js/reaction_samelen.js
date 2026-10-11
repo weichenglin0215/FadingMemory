@@ -154,7 +154,7 @@
     var G = {
         id: ID,
         name: '畫一樣長',
-        rule: '上方有一條垂直的線。手指從左下角的起點出發，往右拖出一條橫線，長度要和垂直線一樣長。放開手指就是答案，只有一次機會。小心：垂直線看起來會比同樣長的橫線更長！',
+        rule: '上方有一條垂直的線。手指從左下角的起點出發，往右拖出一條橫線，**長度要和垂直線一樣長**。放開手指就是答案，只有一次機會。小心：**垂直線看起來會比同樣長的橫線更長**！',
         mount: mount,
         score: SCORE,
         test: { makeRound: makeRound, lenFor: lenFor, errPct: errPct, rating: rating, LEN_MIN: LEN_MIN, LEN_MAX: LEN_MAX, START: START, MAX_DRAW: MAX_DRAW, X_MIN: X_MIN, X_MAX: X_MAX, TOP_Y: TOP_Y }

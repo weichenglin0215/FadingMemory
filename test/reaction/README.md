@@ -22,6 +22,8 @@ node test/reaction/t_coins.js        # 只跑一支
 
 ## 其他測試
 
+`t_ruletext.js`（V1.23.0）測玩法說明的排版（`Dlg.test.lines／emParts`：一句一行、引號與括號、`\n` 手動換行、`**重點**` 成對／不成對）與全部 108 款的 `rule`（每款有 1～4 個重點、每個至少 4 個字、不超過全文 60%、排版後沒有字被吃掉、遊戲名稱不超過 5 個字、零秒出手剛好是使用者指定的三行）；`t_menu.js` 測 `js/menu.js` 的清單（108 款、名稱 ≤ 5 個字、縮圖檔存在且高 256、七個分類不重疊且加起來是全部、跟各遊戲檔案的 id／名稱一致、「最近」的規則）；`t_scroller.js` 測 `js/scroller.js` 的互動（拖曳門檻、點一下與拖曳的分辨、慣性、橡皮筋、滾輪、鍵盤、舞台縮放換算；用假的 DOM，不需要瀏覽器）。
+
 `t_leaderboard.js` 測的是世界排行榜（`js/leaderboard.js`、`js/leaderboard_ui.js`）：偽造位數統計、進榜判斷、暱稱清理、慣性捲動物理、快取／離線／待送佇列；並且對**全部 50 款遊戲**（遊戲清單讀 `js/boot.js`，載入器在 `test/leaderboard/all_games.cjs`）檢查：`score` 設定合法、跟 `supabase/MF_leaderboard.sql` 逐款一致（含 SQL 的自動產生區塊有沒有過期）、每款都接了送榜（`kit.result` 帶 `score`，或手動呼叫 `Leaderboard.submit(ID, …)`，不會送兩次）、送榜流程。新增遊戲忘了做排行榜這幾步，這支測試會失敗。資料庫腳本本身的測試在 `test/leaderboard/`（要另外安裝 PGlite，見 `note/世界排行榜說明.md` 第 8 節）。
 
 ## 瀏覽器端驗證（V1.22.0 起，headless Chrome／Edge，不用裝任何套件）
@@ -35,6 +37,9 @@ node test/reaction/run_browser.mjs hints            操作提示檢查（browser
 node test/reaction/input_tests.mjs                  用 Chrome DevTools Protocol 送「真的滑鼠事件」操作 23 款（照抄曲線真的畫一遍、手電筒真的拖曳、轉盤真的點角度…）
 VIEW=390x844 node test/reaction/input_tests.mjs     同上，但用手機大小的視窗（驗證舞台縮放後的座標換算）
 node test/reaction/make_icons.mjs                   拍選單縮圖：img/reaction/<id>.png（高 256 像素），詳見 README「選單縮圖」
+node test/reaction/menu_check.mjs                   主選單「選一個想玩的遊戲」全螢幕彈窗（V1.23.0）：版面（滿版、返回、3 欄、格子 50:85、直式頁籤）、各分類格子數、最近、滑鼠與觸控拖曳＋慣性、滾輪、點一下進遊戲、拖曳不誤點（VIEW=820x1180 換視窗大小，截圖存到 --out）
+node test/reaction/stage_check.mjs                  舞台縮放（V1.23.0）：12 種視窗大小都充滿高度（或寬度）且置中、iPad 直式／橫式截圖；模擬 visualViewport 回報一半、visualViewport 與 innerHeight 都回報一半、鍵盤彈出再收起、漏發 resize 事件、縮小再放大、?debug 資訊
+node test/reaction/rules_check.mjs                  全部 108 款的玩法說明彈窗（V1.23.0）：卡片放得進舞台（一顆按鈕與「?」重看的兩顆按鈕）、一句一個 <p>、重點是粗體黑字、一般文字是一般粗細、沒有水平溢出；代表性的幾款存成截圖
 ```
 
 `cdp.mjs` 是共用的小工具：啟動看不見視窗的瀏覽器（遠端除錯埠用 0＝自動挑、結束時用 `taskkill /T` 殺整棵行程樹，不會留下孤兒行程）、送 CDP 指令、開啟某款遊戲並略過說明彈窗。

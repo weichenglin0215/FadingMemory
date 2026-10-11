@@ -9,10 +9,16 @@
       3D 引擎用 Stage.rect 的寬高 × devicePixelRatio 設定畫布解析度。
       → 3D 不會被 CSS 縮放弄糊；相機長寬比永遠 500/850，
         所以手機與電腦的 3D 構圖一模一樣。
-   3. 可用區域 = visualViewport（網址列收合、鍵盤、系統縮放都會即時更新）
-      再扣掉 safe-area（瀏海、Home 條）。
-      連 visualViewport 的偏移也算進去：就算使用者用無障礙功能強制放大頁面，
-      舞台也會跟著可見區域移動，不會露出底色。
+   3. 可用區域 = 「瀏覽器現在真正看得到的範圍」再扣掉 safe-area（瀏海、Home 條）。
+      量法（V1.23.0 改成更耐用，見 readViewport）：
+        · 平常（沒在打字、沒被放大）：visualViewport、window.innerWidth／innerHeight、CSS 的 100dvh
+          三個來源「取最大」——iPad Safari 偶爾有某個來源回報過小的值（畫面縮在上半部、重新載入也一樣），
+          只要有一個來源是對的，就不會被拖小；
+        · 正在輸入文字（手機鍵盤彈出）或使用者把頁面放大：改用 visualViewport，
+          讓舞台縮進「沒被鍵盤擋住」的範圍／跟著可見區域移動，不會露出底色。
+      而且不只等 resize 事件：載入後短時間內多量幾次，之後每 0.4 秒自己再量一次，數字變了就重算，
+      所以就算瀏覽器漏發事件（iPad 轉向、收起鍵盤之後最常見），畫面也會自己長回正確大小。
+      網址加 ?debug 會顯示各來源量到的數字（iPad 還是不對時，請截圖回報）。
    4. 螢幕座標 → 邏輯座標：Stage.toLogical(clientX, clientY)。
       搖桿、拖曳等 2D 計算一律用邏輯座標。
    5. 禁止瀏覽器縮放手勢、長按選單、拖曳圖片。
@@ -31,7 +37,10 @@
     var stageEl = null;
     var worldEl = null;
     var probeEl = null;
+    var dvhEl = null;        /* 高度是 100dvh 的隱形探針：用 CSS 單位量「目前真正的可視高度」，不經過 JS 的 innerHeight／visualViewport */
     var debugEl = null;
+    var lastSig = '';        /* 上一次套用時的可視範圍簽章；監看時發現數字變了就重算 */
+    var watchTimer = 0;
     var subs = [];
     var pending = 0;
     var rect = { left: 0, top: 0, width: DESIGN_W, height: DESIGN_H, scale: 1, dpr: 1, vw: DESIGN_W, vh: DESIGN_H };
@@ -53,21 +62,54 @@
         };
     }
 
+    /* 目前是不是正在輸入文字（輸入框／文字區有焦點）：手機的螢幕鍵盤會擋住下半部，這時舞台要縮進剩下的範圍 */
+    function isEditing() {
+        var a = document.activeElement;
+        if (!a || a === document.body) return false;
+        var t = String(a.tagName || '').toLowerCase();
+        return t === 'input' || t === 'textarea' || t === 'select' || a.isContentEditable === true;
+    }
+
+    /* 讀「可視範圍」。回傳 { vw, vh, ox, oy, src }：寬、高、可視範圍左上角的偏移、各來源量到的原始數字（?debug 顯示用）。
+       · 一般情況：visualViewport、innerWidth／innerHeight、100dvh 取最大。
+         （為什麼取最大：這些來源正常時完全一樣；iPad 上曾經有某一個來源回報成「螢幕的一半」，而且重新載入也一樣，
+           取最大值就不會被那個錯的數字拖小。）
+       · 輸入文字中、或頁面被放大（visualViewport.scale > 1）：只相信 visualViewport——
+         那時候「可見範圍比版面小」是真的（鍵盤擋住一半、放大後只看得到一部分）。 */
+    function readViewport() {
+        var vv = global.visualViewport;
+        var iw = global.innerWidth || 0, ih = global.innerHeight || 0;
+        var dh = dvhEl ? dvhEl.offsetHeight : 0;
+        var src = {
+            vvW: vv ? vv.width : 0, vvH: vv ? vv.height : 0, vvScale: vv ? vv.scale : 1,
+            iw: iw, ih: ih, dvh: dh, editing: false, trusted: false
+        };
+        var vw = vv ? vv.width : iw;
+        var vh = vv ? vv.height : ih;
+        var ox = vv ? vv.offsetLeft : 0;
+        var oy = vv ? vv.offsetTop : 0;
+        src.editing = isEditing();
+        src.trusted = !!vv && (src.editing || vv.scale > 1.02);
+        if (!src.trusted) {
+            vw = Math.max(vw, iw);
+            vh = Math.max(vh, ih, dh);
+        }
+        return { vw: vw, vh: vh, ox: ox, oy: oy, src: src };
+    }
+
     /* 核心計算：「現在這個裝置的可視範圍」要怎麼縮放、置中成 500×850 的舞台。
-       1. 可視範圍優先用 visualViewport（手機鍵盤彈出、網址列收合都會即時反映在這裡，
-          比 window.innerWidth/innerHeight 準，那兩個在手機上常常不會跟著即時更新）。
+       1. 可視範圍用上面的 readViewport()：平常取 visualViewport、innerWidth／innerHeight、100dvh 的最大值，
+          輸入文字（鍵盤彈出）或頁面被放大時只信 visualViewport（手機鍵盤彈出、網址列收合都會即時反映在那裡）。
        2. 扣掉安全區（aw/ah＝扣完之後「真正能放內容」的寬高）。
        3. scale＝寬和高兩個縮放比例取小的那個（min）：保證 500×850 整塊都放得進可視
-          範圍，不會有任何一邊被裁掉——這就是「等比縮放、維持比例」的實作方式。
+          範圍，不會有任何一邊被裁掉——這就是「等比縮放、維持比例」的實作方式；
+          視窗比 500:850 寬的時候（電腦、iPad），舞台高度就是整個可視高度（充滿高度），左右留裱框底色。
        4. 算出縮放後的實際寬高（w/h），再算 left/top 讓這塊範圍置中在可視範圍內
           （連 visualViewport 的偏移 ox/oy 都算進去，所以強制縮放頁面時舞台還是會
           跟著可見範圍移動，不會跑出去看到背景底色）。 */
     function measure() {
-        var vv = global.visualViewport;
-        var vw = vv ? vv.width : global.innerWidth;
-        var vh = vv ? vv.height : global.innerHeight;
-        var ox = vv ? vv.offsetLeft : 0;
-        var oy = vv ? vv.offsetTop : 0;
+        var vp = readViewport();
+        var vw = vp.vw, vh = vp.vh, ox = vp.ox, oy = vp.oy;
         var sa = readSafeArea();
         var aw = Math.max(1, vw - sa.l - sa.r);
         var ah = Math.max(1, vh - sa.t - sa.b);
@@ -82,8 +124,14 @@
             scale: scale,
             dpr: Math.min(global.devicePixelRatio || 1, MAX_DPR),
             vw: vw,
-            vh: vh
+            vh: vh,
+            src: vp.src
         };
+    }
+
+    /* 可視範圍簽章：寬、高、偏移、安全區任何一個變了，字串就不同（監看用） */
+    function sigOf(r) {
+        return [Math.round(r.vw), Math.round(r.vh), Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)].join(',');
     }
 
     /* 把 measure() 算出來的結果真正「套用」到畫面上：
@@ -105,6 +153,9 @@
         pending = 0;
         if (!stageEl) return;
         var r = measure();
+        /* iOS 打完字或收起鍵盤之後，整個頁面有時被推開一點（即使 overflow:hidden）：沒在輸入就捲回原位 */
+        if (!r.src.editing && (global.pageYOffset || global.pageXOffset)) global.scrollTo(0, 0);
+        lastSig = sigOf(r);
         stageEl.style.transform = 'translate(' + r.left + 'px,' + r.top + 'px) scale(' + r.scale + ')';
         if (worldEl) {
             var s = worldEl.style;
@@ -119,9 +170,14 @@
             try { subs[i](rect); } catch (e) { console.error(e); }
         }
         if (debugEl) {
+            var s = r.src;
             debugEl.textContent =
                 'viewport ' + Math.round(r.vw) + '×' + Math.round(r.vh) +
-                '\nstage ×' + r.scale.toFixed(3) + '  dpr ' + r.dpr;
+                '\nstage ×' + r.scale.toFixed(3) + '  dpr ' + r.dpr +
+                '\nvisualViewport ' + Math.round(s.vvW) + '×' + Math.round(s.vvH) + ' scale ' + s.vvScale +
+                '\ninner ' + s.iw + '×' + s.ih + '  100dvh ' + s.dvh +
+                '\nscreen ' + (global.screen ? global.screen.width + '×' + global.screen.height : '?') +
+                '\n輸入中 ' + (s.editing ? '是' : '否') + '  只信 visualViewport ' + (s.trusted ? '是' : '否');
         }
     }
 
@@ -131,6 +187,14 @@
        apply() 最多只會真正執行一次（pending 旗標避免重複排程）。 */
     function schedule() {
         if (!pending) pending = global.requestAnimationFrame(apply);
+    }
+
+    /* 監看：不靠事件，自己定時重量。可視範圍（或舞台位置）跟上次套用的不一樣就重算。
+       iPad 轉向、收起鍵盤、網址列收合之後，瀏覽器有時漏發 resize 事件，或太早發（那時量到的還是舊數字）；
+       有了這個，最慢 0.4 秒內畫面一定會長回正確大小。量一次只有幾個 getBoundingClientRect 等級的成本，可以放心常駐。 */
+    function watch() {
+        if (!stageEl) return;
+        if (sigOf(measure()) !== lastSig) apply();
     }
 
     function prevent(e) { e.preventDefault(); }
@@ -163,6 +227,9 @@
             probeEl = document.createElement('div');
             probeEl.className = 'sa-probe';
             document.body.appendChild(probeEl);
+            dvhEl = document.createElement('div');
+            dvhEl.className = 'vh-probe';
+            document.body.appendChild(dvhEl);
 
             if (/[?&]debug\b/.test(global.location.search)) {
                 debugEl = document.createElement('div');
@@ -172,11 +239,24 @@
 
             apply();
             global.addEventListener('resize', schedule);
-            global.addEventListener('orientationchange', function () { global.setTimeout(apply, 300); });
+            /* 轉向：瀏覽器常在轉完之前就回報（量到舊的尺寸），所以隔一段時間多量幾次 */
+            global.addEventListener('orientationchange', function () {
+                [100, 300, 700, 1500].forEach(function (ms) { global.setTimeout(apply, ms); });
+            });
             if (global.visualViewport) {
                 global.visualViewport.addEventListener('resize', schedule);
                 global.visualViewport.addEventListener('scroll', schedule);
             }
+            /* 從別的分頁／應用程式切回來、從上一頁（bfcache）回來：重量 */
+            global.addEventListener('pageshow', schedule);
+            document.addEventListener('visibilitychange', function () { if (!document.hidden) schedule(); });
+            /* 輸入框失去焦點（收起鍵盤）：鍵盤收起的動畫要一點時間，等一下再量 */
+            document.addEventListener('focusout', function () { [60, 300, 800].forEach(function (ms) { global.setTimeout(apply, ms); }); });
+            document.addEventListener('focusin', function () { global.setTimeout(apply, 60); });
+            /* 剛載入的前一兩秒，瀏覽器的版面常常還在調整（網址列、字型載入…）：多量幾次 */
+            [60, 250, 700, 1500, 3000].forEach(function (ms) { global.setTimeout(apply, ms); });
+            /* 之後每 0.4 秒自己看一眼 */
+            if (!watchTimer) watchTimer = global.setInterval(watch, 400);
             installGuards();
             return Stage;
         },

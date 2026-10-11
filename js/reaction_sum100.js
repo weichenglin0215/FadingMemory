@@ -148,7 +148,7 @@
     var G = {
         id: ID,
         name: '湊百消除',
-        rule: '16 張數字牌，每次點兩張，加起來剛好是 100 就會消除，全部消完為止。畫面不會幫你加總，要自己算！小心「差一點」的組合（例如 47 和 63 是 110）。點錯一組加 3 秒，用時越短越好。',
+        rule: '16 張數字牌，**每次點兩張，加起來剛好是 100 就會消除**，全部消完為止。畫面不會幫你加總，要自己算！小心「差一點」的組合（例如 47 和 63 是 110）。**點錯一組加 3 秒**，用時越短越好。',
         mount: mount,
         score: SCORE,
         test: { nearMiss: nearMiss, makeBoard: makeBoard, rating: rating, PAIRS: PAIRS, A_MIN: A_MIN, A_MAX: A_MAX, NEAR_MIN: NEAR_MIN, PENALTY_MS: PENALTY_MS }

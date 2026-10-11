@@ -20,7 +20,7 @@
                             o.low       疊放層級低一點（玩法說明用，這樣從它打開排行榜會疊在上面）
                             o.cls／o.cardCls／o.attrs   額外的 class／資料屬性
                             o.onClose   彈窗關掉（不管怎麼關）之後要做的事
-     Dlg.rule(game, o)    玩法說明彈窗（reaction.js 進場與右上角「?」用）
+     Dlg.rule(game, o)    玩法說明彈窗（reaction.js 進場與右上角「?」用）；內文一句一行、**重點**用粗體黑字（Dlg.richText）
      Dlg.feedback(game)   「我有話要說」意見彈窗（結算彈窗最下方的按鈕會打開它）
      Dlg.toast(text)      畫面下方短暫的小提示
    彈窗都蓋在標題列「下面」，所以上方的「返回」「喇叭」「?」隨時都點得到。
@@ -88,8 +88,85 @@
         return ctl;
     };
 
+    /* ═══ 一之二、玩法說明的排版：一句一行＋重點句子用粗體黑字 ═══
+       玩法說明（各遊戲 Reaction.register 的 rule）以前是一整段、同一種顏色，字一多就全擠在一起很難讀。
+       現在 Dlg.richText(text) 會把它排成：
+         · 一句一行：句尾標點（。！？；）後面換行；標點後面如果緊接著右引號／右括號（」』）），
+           要等到「真正的句尾標點」才換行，所以「按下「重疊！」。」不會被切在引號中間。
+           想在別的地方換行，在文字裡寫 \n 就行（例如引號裡的問句結束後）。
+         · 重點句子：用 ** 前後包起來，例如  '請在**心裡默數至零**，快速點擊按鈕。'
+           重點會畫成粗體（--fw-bold）黑色（--c-black），其他字維持一般粗細的次要文字色（樣式在 css/dialog.css）。
+           ** 沒有成對時，那個 ** 會被忽略，整句當一般文字，不會讓後面全部變成粗體。
+       emParts／lines 是純函式（不碰 DOM），Node 測試可以直接驗證（見 test/reaction/t_ruletext.js）。 */
+    var SENT_END = '。！？；';      /* 句尾標點：後面要換行 */
+    var CLOSERS = '」』）)';         /* 緊接在句尾標點後面的右引號／右括號：算同一個句尾，不單獨換行 */
+
+    /* '請在**心裡默數至零**，快速' → [{t:'請在',em:false},{t:'心裡默數至零',em:true},{t:'，快速',em:false}] */
+    function emParts(text) {
+        var parts = String(text == null ? '' : text).split('**');
+        if (parts.length % 2 === 0) {          /* 有一個 ** 沒有成對：把最後一段接回前一段，一律當一般文字 */
+            var last = parts.pop();
+            parts[parts.length - 1] += last;
+        }
+        var out = [];
+        parts.forEach(function (p, i) { if (p) out.push({ t: p, em: i % 2 === 1 }); });
+        return out;
+    }
+
+    /* 把一行的字（每個字帶著 em 旗標）合併成片段：相鄰而且粗細相同的字併在一起 */
+    function mergeRun(chars) {
+        var segs = [];
+        chars.forEach(function (c) {
+            var last = segs[segs.length - 1];
+            if (last && last.em === c.em) last.t += c.c;
+            else segs.push({ t: c.c, em: c.em });
+        });
+        return segs;
+    }
+
+    /* 把說明文字切成一行一行，回傳 [[{t, em}, …], …]（每一行是一串片段）。
+       重點（**）可以跨過標點：先把全部的字展開成 {字, 是否重點}，再決定哪裡換行，所以不會把 ** 切壞。 */
+    function lines(text) {
+        var chars = [];
+        emParts(text).forEach(function (seg) {
+            Array.from(seg.t).forEach(function (c) { chars.push({ c: c, em: seg.em }); });
+        });
+        var out = [], cur = [], i = 0;
+        function flush() {
+            while (cur.length && /\s/.test(cur[0].c)) cur.shift();                      /* 行首、行尾的空白不要 */
+            while (cur.length && /\s/.test(cur[cur.length - 1].c)) cur.pop();
+            if (cur.length) out.push(mergeRun(cur));
+            cur = [];
+        }
+        while (i < chars.length) {
+            var ch = chars[i].c;
+            i++;
+            if (ch === '\n') { flush(); continue; }
+            cur.push({ c: ch, em: chars[i - 1].em });
+            if (SENT_END.indexOf(ch) >= 0) {
+                /* 吃掉緊跟著的句尾標點與右引號／右括號；最後一個字是句尾標點才換行（「…？」下面」這種不換） */
+                while (i < chars.length && (SENT_END.indexOf(chars[i].c) >= 0 || CLOSERS.indexOf(chars[i].c) >= 0)) { cur.push(chars[i]); i++; }
+                if (SENT_END.indexOf(cur[cur.length - 1].c) >= 0) flush();
+            }
+        }
+        flush();
+        return out;
+    }
+
+    /* 玩法說明的內文元素：一句一個 <p class="dlg__line">，重點是 <strong class="dlg__em">（全部用 textContent，文字不會被當成 HTML） */
+    Dlg.richText = function (text) {
+        var box = h('div', { 'class': 'dlg__text dlg__rich' });
+        lines(text).forEach(function (segs) {
+            box.appendChild(h('p', { 'class': 'dlg__line' }, segs.map(function (s) {
+                return s.em ? h('strong', { 'class': 'dlg__em', text: s.t }) : s.t;
+            })));
+        });
+        return box;
+    };
+    Dlg.test = { emParts: emParts, lines: lines };
+
     /* ═══ 二、玩法說明彈窗 ═══
-       game：Reaction.register 登記的遊戲物件（用它的 name 與 rule）
+       game：Reaction.register 登記的遊戲物件（用它的 name 與 rule；rule 的排版見上面的 Dlg.richText）
        o.okText：主按鈕文字（預設「開始挑戰」）；o.softSound：只播輕觸聲（「下一步」不是真的開始，不播「開始」的嗶聲）；
        o.boardButton：多放一顆「世界排行榜」按鈕；o.onClose：玩家按下主按鈕之後要做的事。
        同一時間只會有一個玩法說明：已經開著的時候再呼叫，直接回傳那一個。 */
@@ -107,9 +184,32 @@
                 onClick: function () { if (global.Leaderboard && global.Leaderboard.showBoard) global.Leaderboard.showBoard(game, {}); }
             });
         }
-        ruleCtl = Dlg.open({ low: true, cls: 'dlg--rule', title: game.name, text: game.rule, buttons: btns });
+        ruleCtl = Dlg.open({ low: true, cls: 'dlg--rule', title: game.name, children: [Dlg.richText(game.rule)], buttons: btns });
+        fitRuleCard(ruleCtl);
         return ruleCtl;
     };
+
+    /* 玩法說明太長、卡片比舞台放得下的還高時（說明很長的遊戲，加上右上角「?」重看時多一顆「世界排行榜」按鈕），
+       把內文字級一格一格縮小，縮到剛好放得下為止（最小到 --fs-xs）。
+       可用高度＝彈窗外框（標題列以下的舞台）的高度扣掉上下留白。網路字型載好之後字寬會變，所以載好再重算一次。 */
+    function fitRuleCard(ctl) {
+        var text = ctl.card.querySelector('.dlg__rich');
+        if (!text) return;
+        function run() {
+            text.style.fontSize = '';
+            var cs = global.getComputedStyle(ctl.el);
+            var avail = ctl.el.clientHeight - (parseFloat(cs.paddingTop) || 0) - (parseFloat(cs.paddingBottom) || 0);
+            var size = parseFloat(global.getComputedStyle(text).fontSize) || 26;
+            var min = global.UI.cssPx ? global.UI.cssPx('--fs-xs', 22) : 22;
+            var guard = 40;
+            while (avail > 0 && ctl.card.offsetHeight > avail && size > min && guard-- > 0) {
+                size -= 1;
+                text.style.fontSize = size + 'px';
+            }
+        }
+        run();
+        if (global.document.fonts && global.document.fonts.ready) global.document.fonts.ready.then(function () { if (ctl.isOpen()) run(); });
+    }
 
     /* 玩法說明現在開著嗎（有些遊戲在說明彈窗開著時要先暫停，例如七彩陷阱） */
     Dlg.ruleOpen = function () { return !!(ruleCtl && ruleCtl.isOpen()); };

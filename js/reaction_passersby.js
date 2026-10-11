@@ -149,7 +149,7 @@
     var G = {
         id: ID,
         name: '路人走過',
-        rule: '五個人會從畫面左邊走進來、右邊走出去，每個人的帽子、衣服、褲子、鞋子顏色都不一樣。他們走完之後，會問你「第幾個人的哪一件是什麼顏色」。答錯或來不及就結束，看你能過幾關。越後面走得越快、問的部位越多！',
+        rule: '五個人會從畫面左邊走進來、右邊走出去，**每個人的帽子、衣服、褲子、鞋子顏色都不一樣**。他們走完之後，會問你**「第幾個人的哪一件是什麼顏色」**。答錯或來不及就結束，看你能過幾關。越後面走得越快、問的部位越多！',
         mount: mount,
         score: SCORE,
         test: { speedAt: speedAt, gapAt: gapAt, ansMs: ansMs, partsFor: partsFor, makeLevel: makeLevel, xAt: xAt, question: question, personSvg: personSvg, rating: rating, COLORS: COLORS, PARTS: PARTS, PEOPLE: PEOPLE, PW: PW, MIN_SPACE: MIN_SPACE, RAMP_LEVELS: RAMP_LEVELS, SPEED: SPEED, GAP: GAP, ANS_S: ANS_S, JITTER: JITTER }

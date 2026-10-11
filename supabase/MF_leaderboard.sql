@@ -330,7 +330,7 @@ insert into public."MF_games" (game_id, title, better, min_score, max_score) val
     ('primetrap',    '質數陷阱', 'max', 1, 60),
     ('sum100',       '湊百消除', 'min', 0, 600),
     ('timestable',   '乘法表抓錯', 'min', 0, 600),
-    ('maxexpr',      '拼出最大的數', 'max', 1, 30),
+    ('maxexpr',      '拼出最大數', 'max', 1, 30),
     ('glyphspin',    '鏡中旋轉字', 'max', 1, 40),
     ('fadee',        '淡到看不見', 'max', 1, 40),
     ('oddsock',      '落單的襪子', 'max', 1, 40),
@@ -350,7 +350,7 @@ insert into public."MF_games" (game_id, title, better, min_score, max_score) val
     ('halfcrowd',    '一半的人', 'max', 1, 40),
     ('catroad',      '貓咪走山路', 'max', 1, 600),
     ('numline',      '數線落點', 'max', 1, 40),
-    ('twinsock',     '找出雙胞胎襪子', 'max', 1, 40),
+    ('twinsock',     '雙胞胎襪子', 'max', 1, 40),
     ('mixcolor',     '混出什麼色', 'min', 0, 300),
     ('copycurve',    '照抄曲線', 'max', 1, 60),
     ('isequal',      '等不等於', 'max', 1, 60),
@@ -359,10 +359,10 @@ insert into public."MF_games" (game_id, title, better, min_score, max_score) val
     ('hiddendigit',  '遮住的數字', 'max', 1, 60),
     ('timeafter',    '幾點幾分後', 'max', 1, 60),
     ('wrongline',    '哪一行算錯', 'max', 1, 60),
-    ('fillop',       '補上運算符號', 'max', 1, 60),
+    ('fillop',       '挑加減乘除', 'max', 1, 60),
     ('fastblink',    '誰閃得快', 'max', 1, 60),
     ('sneakmove',    '誰在偷偷動', 'max', 1, 60),
-    ('farpair',      '哪一對離得遠', 'max', 1, 60),
+    ('farpair',      '哪對離最遠', 'max', 1, 60),
     ('dicechange',   '骰子少一點', 'max', 1, 60),
     ('whosaid',      '誰說的', 'max', 1, 60),
     ('tapback',      '倒著點', 'max', 1, 60),
@@ -374,7 +374,7 @@ insert into public."MF_games" (game_id, title, better, min_score, max_score) val
     ('flashlight',   '手電筒猜圖', 'max', 1, 60),
     ('racefirst',    '誰先衝線', 'max', 1, 60),
     ('spinpick',     '轉盤停哪格', 'max', 1, 60),
-    ('alignchar',    '對準才看得到', 'max', 1, 60),
+    ('alignchar',    '對準才看到', 'max', 1, 60),
     -- <<< 自動產生結束
     ('zz_test', '（測試用，可刪）', 'max', 0, 1000)
 on conflict (game_id) do update
@@ -383,25 +383,40 @@ on conflict (game_id) do update
 
 -- ═══ 5. 玩家意見（結算彈窗最下方的「我有話要說」）═══
 -- 每一則意見記著是哪一款遊戲（game_id，必須是 MF_games 登記過的），所以可以分遊戲看。
--- 防濫用：同一位玩家（player_id）24 小時內最多 20 則；10 分鐘內重複送同樣的內容只算一則；
+-- 防濫用：同一位玩家（player_id）24 小時內最多 200 則；10 分鐘內重複送同樣的內容只算一則；
 --         內容 2～300 字，控制字元與零寬字元會被清掉。
+-- 每一則意見除了遊戲代號（game_id，英文），還有「遊戲中文名稱」（game_title）：寫入時自動從 MF_games.title 帶入，
+-- 管理者看資料表時不用再對照英文代號。（遊戲改名之後重新執行這份 SQL，舊的意見也會一起換成新名稱。）
 -- 管理者在 SQL Editor 查看意見（資料表名稱有大寫，一定要加雙引號）：
---   select created_at, game_id, nickname, message, app_version
+--   select created_at, game_title, nickname, message, app_version
 --     from public."MF_feedback" order by created_at desc limit 100;                 -- 最新 100 則
---   select game_id, count(*) from public."MF_feedback" group by 1 order by 2 desc;  -- 哪款遊戲被提最多意見
+--   select game_title, count(*) from public."MF_feedback" group by 1 order by 2 desc; -- 哪款遊戲被提最多意見
 --   select created_at, nickname, message from public."MF_feedback"
---    where game_id = 'coins' order by created_at desc;                               -- 單一遊戲的意見
+--    where game_title = '零錢分類' order by created_at desc;                          -- 單一遊戲的意見（也可以用 game_id = 'coins'）
 --   delete from public."MF_feedback" where created_at < now() - interval '180 days'; -- 清掉舊的
 
 create table if not exists public."MF_feedback" (
     id          bigint       generated always as identity primary key,
     game_id     text         not null references public."MF_games" (game_id) on delete cascade on update cascade,
+    game_title  text,                       -- 遊戲中文名稱（寫入時自動從 MF_games.title 帶入）
     player_id   uuid         not null,
     nickname    text         check (nickname is null or char_length(nickname) between 1 and 12),
     message     text         not null check (char_length(message) between 2 and 300),
     app_version text         check (app_version is null or char_length(app_version) <= 32),
     created_at  timestamptz  not null default now()
 );
+
+-- 舊版資料庫（V1.21.0～V1.22.x）的 MF_feedback 還沒有 game_title：補上這一欄（已經有就略過）。
+-- 注意：Postgres 不能把新欄位插在中間，舊資料表補上的欄位會排在最右邊（Table Editor 裡可以把欄位標題拖到想要的位置）。
+alter table public."MF_feedback" add column if not exists game_title text;
+comment on column public."MF_feedback".game_title is '遊戲中文名稱（寫入時自動從 MF_games.title 帶入）';
+
+-- 把舊的意見補上中文名稱；遊戲改名之後重新執行這份 SQL（上面的遊戲清單已經是新名稱），舊意見也跟著換成新名稱。
+-- 已經一致的列不會被改動，所以重複執行沒有副作用。
+update public."MF_feedback" f
+   set game_title = g.title
+  from public."MF_games" g
+ where g.game_id = f.game_id and f.game_title is distinct from g.title;
 
 -- 「某款遊戲的最新意見」「某位玩家最近寄了幾則」都靠這兩個索引
 create index if not exists "MF_feedback_game_idx"   on public."MF_feedback" (game_id, created_at desc);
@@ -429,14 +444,16 @@ set search_path = ''
 as $$
 declare
     c_max_len   constant int := 300;     -- 意見最多幾個字（前端的輸入框也是 300）
-    c_per_day   constant int := 20;      -- 同一位玩家 24 小時內最多幾則
+    c_per_day   constant int := 200;      -- 同一位玩家 24 小時內最多幾則
+    v_title     text;
     v_msg       text;
     v_nick      text;
     v_ver       text;
     v_count     int;
 begin
-    -- (1) 遊戲要登記過
-    if not exists (select 1 from public."MF_games" where game_id = p_game_id and enabled) then
+    -- (1) 遊戲要登記過（順便取得中文名稱，一起存進意見：管理者看資料表時才看得懂是哪一款遊戲）
+    select title into v_title from public."MF_games" where game_id = p_game_id and enabled;
+    if not found then
         return jsonb_build_object('ok', false, 'error', 'unknown_game');
     end if;
     if p_player_id is null then
@@ -473,8 +490,8 @@ begin
     if v_count >= c_per_day then
         return jsonb_build_object('ok', false, 'error', 'too_many');
     end if;
-    insert into public."MF_feedback" (game_id, player_id, nickname, message, app_version)
-    values (p_game_id, p_player_id, v_nick, v_msg, v_ver);
+    insert into public."MF_feedback" (game_id, game_title, player_id, nickname, message, app_version)
+    values (p_game_id, v_title, p_player_id, v_nick, v_msg, v_ver);
     return jsonb_build_object('ok', true, 'saved', true);
 end;
 $$;

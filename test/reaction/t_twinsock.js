@@ -1,4 +1,4 @@
-// 找出雙胞胎襪子：格數 2×3 → 4×6、恰好一隻跟目標相同、其他只差一個參數、轉速線性變快
+// 雙胞胎襪子：格數 2×3 → 4×6、恰好一隻跟目標相同、其他只差一個參數、轉速線性變快
 const { game, rng, seedOf } = require('./load.js');
 const G = game('reaction_twinsock.js'); const T = G.test;
 let bad = 0; const ok = (c, m) => { if (!c) { bad++; if (bad < 30) console.log('FAIL', m); } };

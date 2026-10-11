@@ -142,7 +142,7 @@
     var G = {
         id: ID,
         name: '質數陷阱',
-        rule: '畫面中央有一個數字，判斷它是「質數」還是「合數」。小心：91、77、119 這些數字長得像質數，其實是合數！答錯或來不及就結束，看你能連續答對幾題。越後面，數字越大、時間越短。',
+        rule: '畫面中央有一個數字，**判斷它是「質數」還是「合數」**。小心：**91、77、119 這些數字長得像質數，其實是合數**！答錯或來不及就結束，看你能連續答對幾題。越後面，數字越大、時間越短。',
         mount: mount,
         score: SCORE,
         test: { isPrime: isPrime, spf: spf, factorText: factorText, rangeFor: rangeFor, timeMs: timeMs, trapFrac: trapFrac, poolsFor: poolsFor, nextPrime: nextPrime, makeQuestion: makeQuestion, rating: rating, RAMP_LEVELS: RAMP_LEVELS, TRAP_START: TRAP_START, TRAP_END: TRAP_END, MAX_LEVEL: MAX_LEVEL, SAME_MAX: SAME_MAX }

@@ -143,7 +143,7 @@
     var G = {
         id: ID,
         name: '轉到最清楚',
-        rule: '畫面上的照片是模糊的。左右拖曳下方的圓點調整對焦，找到最清楚的那一點，可以來回調整，沒有時間限制。滿意就按「確定」，只有一次機會，會告訴你和真正的焦點差幾格。',
+        rule: '畫面上的照片是模糊的。左右拖曳下方的圓點調整對焦，**找到最清楚的那一點**，可以來回調整，沒有時間限制。滿意就按「確定」，**只有一次機會**，會告訴你和真正的焦點差幾格。',
         mount: mount,
         score: SCORE,
         test: { blurPx: blurPx, errGrid: errGrid, makeRound: makeRound, rating: rating, sceneSvg: sceneSvg, SCENES: SCENES, F0_MIN: F0_MIN, F0_MAX: F0_MAX, START_GAP: START_GAP, BLUR_BASE: BLUR_BASE }

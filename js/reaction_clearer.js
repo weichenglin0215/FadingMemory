@@ -125,7 +125,7 @@
     var G = {
         id: ID,
         name: '越看越清楚',
-        rule: '畫面上有一個字，一開始又模糊又轉得很快，會慢慢變清楚、轉慢。下方有五個長得很像的字，認出來就按：越早按對分數越高。但是按錯或來不及就結束！共十關，成績是累計分數，所以不要亂猜，有把握再按。',
+        rule: '畫面上有一個字，一開始又模糊又轉得很快，會慢慢變清楚、轉慢。下方有五個長得很像的字，認出來就按：**越早按對分數越高**。但是**按錯或來不及就結束**！共十關，成績是累計分數，所以不要亂猜，有把握再按。',
         mount: mount,
         score: SCORE,
         test: { limitS: limitS, blurAt: blurAt, spinAt: spinAt, angleAt: angleAt, gainFor: gainFor, clarityPct: clarityPct, makeLevel: makeLevel, rating: rating, FAMILIES: FAMILIES, LEVELS: LEVELS, TIME_S: TIME_S, BLUR_MAX: BLUR_MAX, SPIN_MAX: SPIN_MAX, RUSH_MS: RUSH_MS, RUSH_K: RUSH_K }

@@ -220,7 +220,7 @@
     var G = {
         id: ID,
         name: '能一筆畫嗎',
-        rule: '畫面上是一個由點和線組成的圖形。判斷能不能「不重複走同一條線、筆不離開」，把全部的線一次畫完。答錯或來不及就結束，看你能連續答對幾題。提示：數數看，每個點連著幾條線。',
+        rule: '畫面上是一個由點和線組成的圖形。判斷能不能**「不重複走同一條線、筆不離開」**，把全部的線一次畫完。答錯或來不及就結束，看你能連續答對幾題。提示：數數看，**每個點連著幾條線**。',
         mount: mount,
         score: SCORE,
         test: { edgesAt: edgesAt, timeMs: timeMs, counterFrac: counterFrac, posOf: posOf, candidates: candidates, degrees: degrees, oddNodes: oddNodes, connected: connected, isEulerian: isEulerian, randomTrail: randomTrail, addEdge: addEdge, makeGraph: makeGraph, eulerPath: eulerPath, rating: rating, RAMP_LEVELS: RAMP_LEVELS, MAX_LEVEL: MAX_LEVEL, EDGES: EDGES, COMPLEX_MIN: COMPLEX_MIN, SIMPLE_MAX: SIMPLE_MAX, N: N }

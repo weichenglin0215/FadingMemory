@@ -122,7 +122,7 @@
     var G = {
         id: ID,
         name: '鏡中旋轉字',
-        rule: '畫面中央有一個字，它會左右鏡射、一直旋轉，而且很快就消失。下方有幾個長得很像的字，點出「這個字原本是哪一個」。答錯或來不及就結束，看你能過幾關。越後面轉得越快、消失得越快！',
+        rule: '畫面中央有一個字，它會左右鏡射、一直旋轉，而且很快就消失。下方有幾個長得很像的字，**點出「這個字原本是哪一個」**。答錯或來不及就結束，看你能過幾關。越後面轉得越快、消失得越快！',
         mount: mount,
         score: SCORE,
         test: { spinAt: spinAt, showMs: showMs, optCount: optCount, ansMs: ansMs, makeLevel: makeLevel, angleAt: angleAt, rating: rating, FAMILIES: FAMILIES, SYMMETRIC: SYMMETRIC, RAMP_LEVELS: RAMP_LEVELS, MAX_LEVEL: MAX_LEVEL, SPIN: SPIN, SHOW_S: SHOW_S, OPT: OPT }

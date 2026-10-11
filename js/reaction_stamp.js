@@ -201,7 +201,7 @@
     var G = {
         id: ID,
         name: '蓋在框內',
-        rule: '公文紙上有一個紅框，但只看得到四個角標，紙還歪歪的。拖曳印章移到框的位置，拖曳印章上方的圓點可以旋轉，對準後按「蓋章」。只有一次機會，印下去會告訴你偏差了幾公釐。',
+        rule: '公文紙上有一個紅框，但只看得到四個角標，紙還歪歪的。**拖曳印章移到框的位置**，拖曳印章上方的圓點可以旋轉，對準後按「蓋章」。**只有一次機會**，印下去會告訴你偏差了幾公釐。',
         mount: mount,
         score: SCORE,
         test: { corners: corners, cornerErr: cornerErr, toMm: toMm, makeRound: makeRound, insideStamp: insideStamp, handleOf: handleOf, zoomFor: zoomFor, rating: rating, FW: FW, FH: FH, PAPER: PAPER, PAPER_TILT: PAPER_TILT, FRAME_OFF: FRAME_OFF, ROT_MAX: ROT_MAX }

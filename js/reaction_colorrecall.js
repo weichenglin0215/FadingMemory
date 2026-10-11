@@ -189,7 +189,7 @@
     var G = {
         id: ID,
         name: '記色調色',
-        rule: '先看左邊的色塊 3 秒，記住它的顏色。3 秒後色塊消失，右邊會出現另一塊顏色，拖曳下方橫條，把它調回剛剛看到的顏色。每次只考色相、彩度、明度其中一項。只有一次機會，按「確定」後會告訴你色差。',
+        rule: '先看左邊的色塊 3 秒，**記住它的顏色**。3 秒後色塊消失，右邊會出現另一塊顏色，拖曳下方橫條，**把它調回剛剛看到的顏色**。每次只考色相、彩度、明度其中一項。只有一次機會，按「確定」後會告訴你色差。',
         mount: mount,
         score: SCORE,
         test: { hslToRgb: hslToRgb, rgbToLab: rgbToLab, deltaE: deltaE, valueAt: valueAt, tFor: tFor, unitsPerT: unitsPerT, withDim: withDim, makeRound: makeRound, rating: rating, DIMS: DIMS, START_GAP: START_GAP, L_MIN: L_MIN, L_MAX: L_MAX, TARGET_S: TARGET_S, TARGET_L: TARGET_L }

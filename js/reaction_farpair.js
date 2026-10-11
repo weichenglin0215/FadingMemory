@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════
-   reaction_farpair.js — 秒反應・哪一對離得遠（企劃 158）
+   reaction_farpair.js — 秒反應・哪對離最遠（企劃 158「哪一對離得遠」）
    畫面上有好幾對圓點，每一對是同一個顏色（兩個紅點、兩個綠點、兩個黃點…），
    判斷「哪一對的兩個點相距最遠」，點該對的任何一個圓點。
    關卡制：點錯或來不及就結束，成績＝通過幾關。
@@ -105,7 +105,7 @@
         var W = stage.clientWidth || 472, H = (stage.clientHeight || 640) - 64;          /* 下面留 64 像素放說明文字 */
         var q = makeLevel(level, W, H, api.rand);
         api.info = q;
-        console.log('[哪一對離得遠] 第 ' + level + ' 關：' + q.pairs.length + ' 對；各對距離 ' + q.pairs.map(function (p) { return p.color + p.d.toFixed(4); }).join('、') + '；最遠是 ' + q.pairs[q.best].color + '（最遠÷第二遠＝' + q.ratio.toFixed(4) + '）');
+        console.log('[哪對離最遠] 第 ' + level + ' 關：' + q.pairs.length + ' 對；各對距離 ' + q.pairs.map(function (p) { return p.color + p.d.toFixed(4); }).join('、') + '；最遠是 ' + q.pairs[q.best].color + '（最遠÷第二遠＝' + q.ratio.toFixed(4) + '）');
 
         var svg = kit.svg('svg', { 'class': 'fpr-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
         var gLine = kit.svg('g', {}, svg), gDot = kit.svg('g', {}, svg), gText = kit.svg('g', {}, svg);
@@ -171,8 +171,8 @@
 
     var G = {
         id: ID,
-        name: '哪一對離得遠',
-        rule: '畫面上有好幾對圓點，每一對是同一個顏色。判斷哪一對的兩個點相距最遠，點該對的任何一個圓點。揭曉時會用直線量給你看。點錯或來不及就結束，看你能過幾關。越後面，對數越多、距離差越小！',
+        name: '哪對離最遠',
+        rule: '畫面上有好幾對圓點，每一對是同一個顏色。判斷**哪一對的兩個點相距最遠**，**點該對的任何一個圓點**。揭曉時會用直線量給你看。點錯或來不及就結束，看你能過幾關。越後面，對數越多、距離差越小！',
         mount: mount,
         score: SCORE,
         test: {

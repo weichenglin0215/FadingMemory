@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════
-   reaction_alignchar.js — 秒反應・對準才看得到（企劃 219 的改版）
+   reaction_alignchar.js — 秒反應・對準才看到（企劃 219「對準才看得到」的改版）
    一個中文字被切成許多「直條」，每一條都在上下方向循環移動（有的往上、有的往下，快慢各不相同），
    所以大部分時間看起來是一團破碎的線條；只有每隔一段時間，所有直條「剛好對準」的那一瞬間，
    整個字才會完整浮現。看出它是哪個字，點下面的選項。關卡制：選錯或來不及就結束，成績＝通過幾關。
@@ -105,7 +105,7 @@
         var stage = api.stage, level = api.level;
         var q = makeLevel(level, api.rand);
         api.info = q;
-        console.log('[對準才看得到] 第 ' + level + ' 關：字「' + q.ch + '」，' + q.n + ' 條，速度 ' + q.ks.join(',') + '；週期 ' + q.cycle.toFixed(3) + ' 秒，第一次對準 ' + q.tAlign.toFixed(3) + ' 秒；選項 ' + q.options.join('') + '；限時 ' + timeMs(level) + ' ms');
+        console.log('[對準才看到] 第 ' + level + ' 關：字「' + q.ch + '」，' + q.n + ' 條，速度 ' + q.ks.join(',') + '；週期 ' + q.cycle.toFixed(3) + ' 秒，第一次對準 ' + q.tAlign.toFixed(3) + ' 秒；選項 ' + q.options.join('') + '；限時 ' + timeMs(level) + ' ms');
 
         var W = stage.clientWidth || 472, DPR = 2, cw = PIC.w, ch = PIC.h;
         var cv = h('canvas', { 'class': 'alc-canvas' });
@@ -158,8 +158,8 @@
 
     var G = {
         id: ID,
-        name: '對準才看得到',
-        rule: '一個中文字被切成許多直條，每一條都在上下循環移動，速度各不相同。只有在所有直條剛好對準的那一瞬間，整個字才會完整浮現。看出它是哪個字，點下面的選項。選錯或來不及就結束，看你能過幾關。越後面，直條越細、對準得越快！',
+        name: '對準才看到',
+        rule: '一個中文字被切成許多直條，每一條都在上下循環移動，速度各不相同。只有在**所有直條剛好對準的那一瞬間**，整個字才會完整浮現。**看出它是哪個字**，點下面的選項。選錯或來不及就結束，看你能過幾關。越後面，直條越細、對準得越快！',
         mount: mount,
         score: SCORE,
         test: {

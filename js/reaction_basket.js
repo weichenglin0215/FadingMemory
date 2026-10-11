@@ -145,7 +145,7 @@
     var G = {
         id: ID,
         name: '菜籃總價',
-        rule: '上方是這次要買的總價。從下方六樣蔬菜水果挑幾樣，讓標價加起來剛好等於總價，按「結帳」。畫面不會幫你加總，要自己算。有兩條命，結帳錯一次扣一條。每關有時間限制，越後面要選的樣數越多、差一點點的組合越多。',
+        rule: '上方是這次要買的總價。從下方六樣蔬菜水果挑幾樣，**讓標價加起來剛好等於總價**，按「結帳」。畫面不會幫你加總，**要自己算**。有兩條命，結帳錯一次扣一條。每關有時間限制，越後面要選的樣數越多、差一點點的組合越多。',
         mount: mount,
         score: SCORE,
         test: { kAt: kAt, trapMinAt: trapMinAt, timeMs: timeMs, priceRange: priceRange, subsets: subsets, bitCount: bitCount, makeLevel: makeLevel, maskSum: maskSum, maskText: maskText, rating: rating, ITEMS: ITEMS, RAMP_LEVELS: RAMP_LEVELS, MAX_LEVEL: MAX_LEVEL, K: K, TRAP_MIN: TRAP_MIN, LIVES: LIVES }

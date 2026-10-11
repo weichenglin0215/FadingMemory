@@ -224,7 +224,7 @@
     var G = {
         id: ID,
         name: '鬼腳圖',
-        rule: '這是台灣童玩「阿彌陀佛」。系統指定上方橘色的起點，手指從那裡沿著線往下描，遇到橫線就轉過去，一路描到最下面。手指偏離路線、中途放開、或時間到就失敗。小心，有些橫線很淡，還有只畫一半的假橫線！',
+        rule: '這是台灣童玩「阿彌陀佛」。系統指定上方橘色的起點，**手指從那裡沿著線往下描，遇到橫線就轉過去**，一路描到最下面。**手指偏離路線、中途放開、或時間到就失敗**。小心，有些橫線很淡，還有只畫一半的假橫線！',
         mount: mount,
         score: SCORE,
         test: { colX: colX, rowY: rowY, rungCount: rungCount, fakeCount: fakeCount, alphaAt: alphaAt, timeMs: timeMs, follow: follow, makeRungs: makeRungs, makeFakes: makeFakes, makeLevel: makeLevel, segDist: segDist, nearest: nearest, routeLength: routeLength, rating: rating, COLS: COLS, ROWS: ROWS, RAMP_LEVELS: RAMP_LEVELS, TOL: TOL, Y_TOP: Y_TOP, Y_BOT: Y_BOT, RUNGS: RUNGS, FAKES: FAKES, RUNG_ALPHA: RUNG_ALPHA }

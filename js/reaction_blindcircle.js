@@ -190,7 +190,7 @@
     var G = {
         id: ID,
         name: '盲畫一個圓',
-        rule: '畫面上只有圓心的十字和右下方的起點。手指按住起點，繞著圓心畫一圈回到起點。畫的時候看不到筆跡！只有一次機會，放開手指後會告訴你圓度，目標是 100.0000%。',
+        rule: '畫面上只有圓心的十字和右下方的起點。手指按住起點，**繞著圓心畫一圈回到起點**。**畫的時候看不到筆跡**！只有一次機會，放開手指後會告訴你圓度，目標是 100.0000%。',
         mount: mount,
         score: SCORE,
         test: { makeRound: makeRound, resample: resample, analyze: analyze, rating: rating, CENTER: CENTER, R_MIN: R_MIN, R_MAX: R_MAX, ANG_MIN: ANG_MIN, ANG_MAX: ANG_MAX, TURN_MIN: TURN_MIN, TURN_MAX: TURN_MAX, STEP: STEP }

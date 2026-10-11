@@ -48,6 +48,10 @@ html,
 body {
     width: 100%;
     height: 100%;
+    /* V1.23.0：高度至少是「動態視窗高度」100dvh（網址列收合時會跟著變）。body 因為 overflow:hidden 會把舞台裁在自己的範圍裡，
+       iPad 上有時 height:100% 算出來只有螢幕的一半，舞台就被裁成上半部、重新載入也一樣；
+       有了 min-height:100dvh 就不會比真正的可視高度矮。不支援 dvh 的舊瀏覽器會忽略這一行。 */
+    min-height: 100dvh;
     overflow: hidden;
     overscroll-behavior: none;
     background: var(--c-frame);
@@ -140,6 +144,19 @@ button {
     padding-right: env(safe-area-inset-right, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
     padding-left: env(safe-area-inset-left, 0px);
+}
+
+/* 量「目前可視高度」用的探針（js/stage.js 的 readViewport）：高度 100dvh，用 CSS 單位直接量，
+   不經過 JS 的 innerHeight／visualViewport（那兩個在 iPad 上偶爾會回報過小的值）。
+   瀏覽器不支援 dvh 時這個高度無效（是 0），程式會忽略它。 */
+.vh-probe {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 100dvh;
+    visibility: hidden;
+    pointer-events: none;
 }
 
 /* 縮放算好之前先藏起來，避免閃一下未縮放的舞台 */

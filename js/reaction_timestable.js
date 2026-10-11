@@ -147,7 +147,7 @@
     var G = {
         id: ID,
         name: '乘法表抓錯',
-        rule: '9×9 乘法表裡有 3 格的答案被偷偷改過，找出它們。背過九九乘法表的人很有利，也可以利用對稱（3×7 和 7×3 一樣）來檢查。點錯一格加 3 秒，找齊 3 格就結束，用時越短越好。',
+        rule: '9×9 乘法表裡**有 3 格的答案被偷偷改過，找出它們**。背過九九乘法表的人很有利，也可以利用對稱（3×7 和 7×3 一樣）來檢查。**點錯一格加 3 秒**，找齊 3 格就結束，用時越短越好。',
         mount: mount,
         score: SCORE,
         test: { tamper: tamper, makeTable: makeTable, rating: rating, N: N, FOUND: FOUND, PENALTY_MS: PENALTY_MS, TYPES: TYPES }

@@ -1,9 +1,8 @@
 /* ═══ menu.css — 入口畫面（index.html）═══
    這個檔案管三組東西：最上面的主選單本身（.menu 開頭的 class）、
    右上角分享按鈕＋QR Code 彈窗（.share- 開頭）、
-   「明明還記得...」（3×2）／「秒反應」（3×3）的挑選彈窗（.theme-dlg／.game-dlg，
-   這兩組幾乎是同一套樣式各用一次，所以很多規則用逗號併在一起共用，
-   例如 `.theme-dlg, .game-dlg { ... }`，對應的 DOM 結構見 js/menu.js）。 */
+   「明明還記得...」（3×2 小彈窗，.theme-dlg）／「秒反應」（全螢幕：返回＋可捲動的遊戲格子＋分類頁籤，
+   .game-dlg，V1.23.0 改版）的挑選彈窗，對應的 DOM 結構見 js/menu.js。 */
 
 /* 【新手導讀】這個檔案的命名規則：「__」是某個東西裡面的零件（.menu__logo = 主選單的 logo），
    「--」是變化版（.mode--test = 「明明還記得」那顆按鈕的顏色版本）。顏色與間距都用 var(--xxx)，
@@ -272,11 +271,10 @@
     color: var(--c-ink-soft);
 }
 
-/* ═══ 主軸／遊戲挑選彈窗（點「明明還記得...」「秒反應」先選，不再亂數）═══
-   主軸彈窗 3×2 格、小遊戲彈窗 3×3 格（由左到右、由上到下）；還沒做出來的格子
-   顯示「構想中」，不可點。 */
-.theme-dlg,
-.game-dlg {
+/* ═══ 主軸挑選彈窗（點「明明還記得...」）═══
+   3×2 格（由左到右、由上到下）；還沒做出來的格子顯示「構想中」，不可點。
+   （「秒反應」的遊戲挑選彈窗在下面另一大段，V1.23.0 起是全螢幕。） */
+.theme-dlg {
     position: absolute;
     inset: 0;
     z-index: 30;
@@ -287,8 +285,7 @@
     background: rgba(74, 59, 30, 0.35);
 }
 
-.theme-dlg__card,
-.game-dlg__card {
+.theme-dlg__card {
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -302,35 +299,20 @@
     animation: share-dlg-in 0.2s ease;
 }
 
-.theme-dlg__title,
-.game-dlg__title {
+.theme-dlg__title {
     font-size: var(--fs-lg);
     font-weight: var(--fw-black);
     color: var(--c-ink);
 }
 
-/* 格子容器（3 欄 × 2 列） */
-.theme-grid,
-.game-grid {
+/* .theme-grid：CSS Grid 排出 3 欄 × 2 列、每一格等寬等高的格線，
+   repeat(3, 1fr) 等同手寫 1fr 1fr 1fr（3 欄各占可用寬度的 1 等份），
+   這是使用者指定的「寬三格、高兩格」版面需求最直接的 CSS 寫法。 */
+.theme-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(2, 1fr);
     gap: var(--sp-3);
-}
-
-/* .theme-grid／.game-grid：CSS Grid 排出 3 欄 × 2 列、每一格等寬等高的格線，
-   repeat(3, 1fr) 等同手寫 1fr 1fr 1fr（3 欄各占可用寬度的 1 等份），
-   這是使用者指定的「寬三格、高兩格」版面需求最直接的 CSS 寫法。
-   小遊戲彈窗後來改成 3 欄 × 3 列（九格），舞台高度只有 850px，三排 150:270 的
-   直式縮圖會超出舞台，所以小遊戲的卡片另外縮窄（max-width），格子寬度變小、
-   高度（由 aspect-ratio 自動算）跟著變矮，三排才塞得進舞台。 */
-.game-grid {
-    grid-template-rows: repeat(3, 1fr);
-}
-
-.game-dlg__card {
-    min-width: 420px;
-    max-width: 450px;
 }
 
 /* ─── 主軸格：直式文字（CJK 預設 text-orientation:mixed，中文字會保持正立）─── */
@@ -384,19 +366,102 @@
     letter-spacing: 2px;
 }
 
-/* ─── 遊戲格：150×270 的直式圖片（img/reaction/<遊戲id>.png，高 256 像素，是那款遊戲開始 3 秒左右的畫面，
-       由 node test/reaction/make_icons.mjs 自動拍；少了某張圖時 <img> onerror 隱藏，底色＋名稱條照常顯示，不會是破圖）─── */
-/* aspect-ratio: 150/270：不管格子實際被 Grid 排出來多寬，瀏覽器都會自動算出
-   對應高度維持 150:270 這個比例（就是使用者要求的縮圖規格），不用自己算 px。 */
-/* 遊戲格：aspect-ratio 固定直式比例（寬 150 : 高 270） */
+/* ═══ 遊戲挑選彈窗（點「秒反應」，V1.23.0 起全螢幕）═══
+   由上到下三段：標題列（左上「返回」）／遊戲格子（3 欄，可以用手指或滑鼠上下拖曳捲動，帶慣性，js/scroller.js）／
+   分類頁籤（全部、最近、記憶、視覺、反應、數字、邏輯、手感、目測；文字直式排列）。
+   以前的「上一頁／下一頁／小圓點」翻頁已經取消。對應的 DOM 結構見 js/menu.js 的 buildGameDlg。 */
+.game-dlg {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    background: var(--c-paper);
+    animation: share-dlg-in 0.2s ease;
+}
+
+/* 標題列：跟遊戲畫面的標題列（theme.css 的 .bar）同高、同底色；「返回」靠左（樣式沿用 .bar__back），標題絕對定位置中
+   （不受左邊按鈕寬度影響，pointer-events:none 讓點擊穿透到底下的按鈕） */
+.game-bar {
+    position: relative;
+    flex: 0 0 auto;
+    height: var(--bar-h);
+    display: flex;
+    align-items: center;
+    padding: 0 var(--sp-3);
+    background: var(--c-card);
+    border-bottom: var(--bd);
+}
+
+.game-bar__title {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    pointer-events: none;
+}
+
+/* 看得見的窗口：吃掉標題列與頁籤之外所有的高度；超出的部分被裁掉，內容由 js/scroller.js 用 transform 上下平移。
+   touch-action:none → 手指拖曳由 JS 處理，瀏覽器不要同時捲動或縮放 */
+.game-viewport {
+    position: relative;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.game-list {
+    will-change: transform;
+}
+
+/* 3 欄的格線：每一格寬度相同（1fr），高度由格子自己的 aspect-ratio 決定 */
+.game-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-3);
+    padding: var(--sp-4) var(--sp-4) var(--sp-5);
+}
+
+/* 右邊的小滑桿：平常看不見，捲動時浮現，讓玩家知道這裡可以滑（跟排行榜的 .lb-thumb 同一個做法） */
+.game-thumb {
+    position: absolute;
+    top: 0;
+    right: 3px;
+    width: 8px;
+    border-radius: var(--r-pill);
+    background: var(--c-ink-soft);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+}
+
+.game-thumb.is-on {
+    opacity: 0.55;
+}
+
+/* ─── 遊戲格：寬 50 : 高 85（包含下方的遊戲名稱）───
+   縮圖 img/reaction/<遊戲id>.png（高 256 像素，是那款遊戲開始 3 秒左右的畫面，由 node test/reaction/make_icons.mjs 自動拍）
+   的寬度撐滿格子（width:100%），高度照比例，剩下最下面一條放遊戲名稱（最多 5 個字）。
+   aspect-ratio: 50 / 85：不管格子實際被 Grid 排出來多寬，瀏覽器都會自動算出對應高度，不用自己算 px。 */
 .game-cell {
     position: relative;
-    aspect-ratio: 150 / 270;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    aspect-ratio: 50 / 85;
+    padding: 0;
     overflow: hidden;
     border: none;
     border-radius: var(--r-md);
-    background: var(--c-card-alt);
-    box-shadow: var(--shadow-card);
+    background: var(--c-card);
+    box-shadow: 0 0 0 2px var(--bd-c), var(--shadow-card);
     cursor: pointer;
     transition: transform 0.1s ease;
 }
@@ -406,150 +471,66 @@
     transform: scale(0.96);
 }
 
-/* object-fit: cover：圖片不管原始尺寸、比例是多少，都會「裁切」成剛好填滿
-   這個元素的框（不會變形拉伸，也不會留白邊），跟手機相簿縮圖的裁切邏輯一樣。 */
-.game-cell img {
+/* 上次玩的那一款：外圍一圈藍框，打開「全部」時會自動捲到它 */
+.game-cell--last {
+    box-shadow: 0 0 0 4px var(--c-blue), var(--shadow-card);
+}
+
+/* 縮圖區：吃掉名稱列以外的高度；底色是還沒載入、或沒有圖檔時看到的淡色底 */
+.game-cell__pic {
+    position: relative;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* object-fit: cover：圖片不管原始尺寸、比例是多少，都會「裁切」成剛好填滿框（不會變形拉伸，也不會留白邊），
+   object-position: top：真的要裁的話裁掉下方（遊戲畫面的重點在上半部）。 */
+.game-cell__pic img {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center top;
+    pointer-events: none;
 }
 
-/* 名稱條疊在圖片下緣：position:absolute + left/right/bottom:0 讓它貼齊卡片
-   底邊、寬度撐滿；半透明深色底（rgba(74,59,30,0.55)）＋白字，不管底下蓋著
-   的圖片是亮是暗，文字都還看得清楚。 */
+/* 遊戲名稱：最多 5 個字，一行放得下；不准換行（t_menu.js 會檢查名稱長度） */
 .game-cell__name {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding: var(--sp-2) var(--sp-1);
-    background: rgba(74, 59, 30, 0.55);
-    color: #FFFFFF;
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-black);
-    line-height: var(--lh-tight);
-}
-
-/* 「構想中」遊戲格 */
-.game-cell--soon {
-    border: 2px dashed var(--bd-c);
-    box-shadow: none;
-    cursor: default;
-}
-
-/* 構想中的格子按了不縮小 */
-.game-cell--soon:active {
-    transform: none;
-}
-
-/* 「構想中」文字置中 */
-.game-cell__soon {
-    position: absolute;
-    inset: 0;
+    flex: 0 0 30px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-}
-
-/* 使用者在系統設定「減少動態效果」時，關掉彈窗動畫與縮放過渡 */
-@media (prefers-reduced-motion: reduce) {
-
-    .share-dlg__card,
-    .share-btn,
-    .theme-dlg__card,
-    .game-dlg__card,
-    .theme-cell,
-    .game-cell {
-        animation: none;
-        transition: none;
-    }
-}
-
-/* 這一段是後來追加的：翻頁列，以及沒有縮圖時的「印章」底圖 */
-/* ═══ 小遊戲挑選彈窗：翻頁列＋沒有縮圖時的「印章」底圖 ═══ */
-.game-dlg__card {
-    max-width: 380px;
-    gap: var(--sp-3);
-}
-
-/* 翻頁列：左邊上一頁、中間頁數小圓點、右邊下一頁，space-between 把三個推開 */
-.game-nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sp-2);
-}
-
-/* 上一頁／下一頁按鈕 */
-.game-nav__btn {
-    flex: 0 0 auto;
-    min-width: 112px;
-    height: var(--btn-h-sm);
-    padding: 0 var(--sp-3);
-    border: var(--btn-line-bd);
-    border-radius: var(--btn-r);
-    background: var(--btn-line-bg);
-    color: var(--btn-line-fg);
-    font-family: var(--font-ui);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    cursor: pointer;
-}
-
-/* :disabled = 已經是第一頁（或最後一頁）時按鈕變淡、不可按 */
-.game-nav__btn:disabled {
-    opacity: 0.35;
-    cursor: default;
-}
-
-/* 頁數小圓點容器 */
-.game-nav__dots {
-    display: flex;
-    gap: 8px;
-}
-
-/* 單個小圓點 */
-.game-nav__dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: var(--c-card-alt);
-    border: 2px solid var(--bd-c);
-}
-
-/* 目前所在頁的圓點（藍色實心） */
-.game-nav__dot--on {
-    background: var(--c-blue);
-    border-color: var(--c-blue);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-black);
+    line-height: 1;
+    color: var(--c-ink);
+    white-space: nowrap;
 }
 
 /* 沒有縮圖的遊戲：四種淡底色輪流（藍、綠、黃、橘），中間一顆名字第一個字的圓印章 */
-.game-cell--tone0 {
+.game-cell--tone0 .game-cell__pic {
     background: var(--c-blue-soft);
 }
 
-.game-cell--tone1 {
+.game-cell--tone1 .game-cell__pic {
     background: var(--c-ok-soft);
 }
 
-.game-cell--tone2 {
+.game-cell--tone2 .game-cell__pic {
     background: var(--c-yellow-soft);
 }
 
-.game-cell--tone3 {
+.game-cell--tone3 .game-cell__pic {
     background: var(--c-orange-soft);
 }
 
-/* 印章：絕對定位在格子中央偏上，margin 負值把圓心移到正中間 */
+/* 印章：絕對定位在縮圖區中央，margin 負值把圓心移到正中間 */
 .game-cell__seal {
     position: absolute;
     left: 50%;
-    top: 38%;
+    top: 50%;
     width: 64px;
     height: 64px;
     margin: -32px 0 0 -32px;
@@ -562,4 +543,90 @@
     font-size: var(--fs-lg);
     font-weight: var(--fw-black);
     color: var(--c-ink);
+}
+
+/* 「最近」頁籤還沒有任何紀錄時的提示：橫跨 3 欄、置中 */
+.game-empty {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-5) 0;
+    text-align: center;
+}
+
+.game-empty__t {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.game-empty__s {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* ─── 分類頁籤（最下面一排）───
+   九個頁籤平分寬度；文字用 writing-mode:vertical-rl 直式排列（中文字保持正立）。
+   目前選中的那個填藍色、字變白（aria-selected 與 .is-on 同時標示，給螢幕閱讀器與樣式各自使用）。 */
+.game-tabs {
+    flex: 0 0 auto;
+    display: flex;
+    gap: var(--sp-1);
+    padding: var(--sp-2) var(--sp-2) 0;
+    background: var(--c-card);
+    border-top: var(--bd);
+}
+
+.game-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 100px;
+    padding: 6px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    letter-spacing: 6px;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    border-radius: var(--r-md) var(--r-md) 0 0;
+    background: transparent;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.game-tab:active {
+    background: var(--c-blue-soft);
+}
+
+.game-tab.is-on {
+    background: var(--c-blue);
+    color: var(--c-on-accent);
+    font-weight: var(--fw-black);
+}
+
+.game-tab:focus-visible,
+.game-cell:focus-visible {
+    outline: 4px solid var(--c-blue);
+    outline-offset: -4px;
+}
+
+/* 使用者在系統設定「減少動態效果」時，關掉彈窗動畫與縮放過渡 */
+@media (prefers-reduced-motion: reduce) {
+
+    .share-dlg__card,
+    .share-btn,
+    .theme-dlg__card,
+    .game-dlg,
+    .theme-cell,
+    .game-cell,
+    .game-tab,
+    .game-thumb {
+        animation: none;
+        transition: none;
+    }
 }

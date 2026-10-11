@@ -140,7 +140,7 @@
     var G = {
         id: ID,
         name: '哪支錶不準',
-        rule: '三支錶一起走，秒針每秒跳一格。看 15 秒，其中一支走得比較快或比較慢，看完後選出不準的那一支。三支錶的秒針位置和錶面朝向都不一樣，要看的是跳動的節奏有沒有慢慢滑開。答錯或來不及就結束。',
+        rule: '三支錶一起走，秒針每秒跳一格。看 15 秒，其中一支走得比較快或比較慢，看完後**選出不準的那一支**。三支錶的秒針位置和錶面朝向都不一樣，要看的是**跳動的節奏有沒有慢慢滑開**。答錯或來不及就結束。',
         mount: mount,
         score: SCORE,
         test: { errAt: errAt, ansMs: ansMs, makeLevel: makeLevel, handDeg: handDeg, dialSeconds: dialSeconds, faceSvg: faceSvg, rating: rating, RAMP_LEVELS: RAMP_LEVELS, ERR: ERR, OBS_S: OBS_S, STYLES: STYLES }

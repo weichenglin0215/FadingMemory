@@ -97,10 +97,22 @@
 /* 內文靠左對齊（其餘文字都是置中） */
 .dlg__text {
     font-size: var(--dlg-text-fs);
-    font-weight: var(--fw-bold);
+    /*font-weight: var(--fw-bold);*/
+    font-weight: var(--fw-regular);
     line-height: var(--lh-body);
     color: var(--c-ink-soft);
     text-align: left;
+}
+
+/* 玩法說明的內文（js/dialog.js 的 Dlg.richText）：一句一個 .dlg__line（一行一段，句與句之間留一點空隙，
+   同一句太長折行時行距仍是 --lh-body）；重點句子 .dlg__em 用粗體＋黑色，其他字維持上面 .dlg__text 的一般粗細與次要文字色 */
+.dlg__line+.dlg__line {
+    margin-top: var(--sp-2);
+}
+
+.dlg__em {
+    font-weight: var(--fw-bold);
+    color: var(--c-black);
 }
 
 /* 按鈕區：直向排列、每顆都撐滿寬度、高度用 --btn-h（theme.css）。
@@ -185,7 +197,7 @@
     color: var(--c-ink);
     font-family: var(--font-ui);
     font-size: var(--fs-lg);
-    font-weight: var(--fw-bold);
+    font-weight: var(--fw-regular);
     text-align: center;
     outline: none;
     -webkit-user-select: text;

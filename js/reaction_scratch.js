@@ -238,7 +238,7 @@
     var G = {
         id: ID,
         name: '刮刮樂推理',
-        rule: '12 格刮刮樂裡藏著 3 個一模一樣的圖案。每一格的左上角先露出一小塊碎片，是線索。用手指在格子上來回刮，刮開超過三分之一就整格翻開。找到 3 個相同的就結束，刮開的格數越少越好！',
+        rule: '12 格刮刮樂裡**藏著 3 個一模一樣的圖案**。每一格的左上角先露出一小塊碎片，是線索。用手指在格子上來回刮，刮開超過三分之一就整格翻開。找到 3 個相同的就結束，**刮開的格數越少越好**！',
         mount: mount,
         score: SCORE,
         test: { makeBoard: makeBoard, winner: winner, symbolMarkup: symbolMarkup, clearedRatio: clearedRatio, rating: rating, SYMBOLS: SYMBOLS, LOOKALIKE: LOOKALIKE, COLS: COLS, ROWS: ROWS, CELL: CELL, WINDOW: WINDOW, SCRATCH_PCT: SCRATCH_PCT }

@@ -140,7 +140,7 @@
     var G = {
         id: ID,
         name: '誰先亮',
-        rule: '左右兩盞燈會先後亮起，兩盞都亮了之後，點「先亮的那一盞」。兩盞燈的時間差一關比一關短，最後只差幾個畫面影格。答錯或來不及就結束，看你能過幾關。請讓畫面保持在前景。',
+        rule: '左右兩盞燈會先後亮起，兩盞都亮了之後，**點「先亮的那一盞」**。兩盞燈的時間差一關比一關短，最後只差幾個畫面影格。答錯或來不及就結束，看你能過幾關。請讓畫面保持在前景。',
         mount: mount,
         score: SCORE,
         test: { framesAt: framesAt, median: median, frameFrom: frameFrom, nextSide: nextSide, makeLevel: makeLevel, rating: rating, RAMP_LEVELS: RAMP_LEVELS, MAX_LEVEL: MAX_LEVEL, FRAMES: FRAMES, WAIT_MS: WAIT_MS, SAME_MAX: SAME_MAX, SIZE_JIT: SIZE_JIT }

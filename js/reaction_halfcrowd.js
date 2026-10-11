@@ -226,7 +226,7 @@
     var G = {
         id: ID,
         name: '一半的人',
-        rule: '畫面上有 80～120 個圓形，每個圓的中間有一個黑點（圓心）。拖曳下方的橫桿，把豎線移到「左右兩邊圓心數量一樣多」的位置，旁邊的 ◀ ▶ 可以一次移 1 像素。按「計算數量」後，左邊的圓會一個一個變綠、右邊變紅，兩邊一樣多就過關。圓形的分布會越來越不平均，線不會在正中間喔！',
+        rule: '畫面上有 80～120 個圓形，每個圓的中間有一個黑點（圓心）。拖曳下方的橫桿，把豎線移到**「左右兩邊圓心數量一樣多」**的位置，旁邊的 ◀ ▶ 可以一次移 1 像素。按「計算數量」後，左邊的圓會一個一個變綠、右邊變紅，兩邊一樣多就過關。圓形的分布會越來越不平均，**線不會在正中間喔**！',
         mount: mount,
         score: SCORE,
         test: { skewAt: skewAt, gapAt: gapAt, minDist: minDist, countLeft: countLeft, makeLevel: makeLevel, N_RANGE: N_RANGE, R_RANGE: R_RANGE, EDGE: EDGE, OVERLAP: OVERLAP, SKEW_MAX: SKEW_MAX }

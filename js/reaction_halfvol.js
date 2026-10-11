@@ -194,7 +194,7 @@
     var G = {
         id: ID,
         name: '容量一半',
-        rule: '畫面上是一個花瓶。上下拖曳水位線，讓線以下的容量剛好是整個花瓶的一半。注意：一半的高度不等於一半的容量！每次花瓶都不一樣，只有一次機會，按「確定」後水會倒進去告訴你差了幾 %。',
+        rule: '畫面上是一個花瓶。上下拖曳水位線，**讓線以下的容量剛好是整個花瓶的一半**。注意：**一半的高度不等於一半的容量**！每次花瓶都不一樣，只有一次機會，按「確定」後水會倒進去告訴你差了幾 %。',
         mount: mount,
         score: SCORE,
         test: { radiusAt: radiusAt, cumulative: cumulative, volumeAt: volumeAt, halfHeight: halfHeight, errPct: errPct, makeRound: makeRound, rating: rating, VASE_H: VASE_H, NODES: NODES, R_FLOOR: R_FLOOR, MIN_GAP: MIN_GAP, START_GAP: START_GAP }

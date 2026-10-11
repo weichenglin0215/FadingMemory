@@ -211,7 +211,7 @@
     var G = {
         id: ID,
         name: '兩袋一樣重',
-        rule: '上方有幾顆石頭，大小不同、但密度相同。把石頭拖到下方左右兩個電子秤上，也可以在兩個秤之間搬來搬去。全部放好後按「確認」，兩邊重量差要在容許範圍內才過關。按確認之前秤不會顯示重量，要靠眼睛估。注意：重量和直徑的三次方成正比！',
+        rule: '上方有幾顆石頭，大小不同、但密度相同。把石頭拖到下方左右兩個電子秤上，也可以在兩個秤之間搬來搬去。全部放好後按「確認」，**兩邊重量差要在容許範圍內才過關**。按確認之前秤不會顯示重量，要靠眼睛估。注意：**重量和直徑的三次方成正比**！',
         mount: mount,
         score: SCORE,
         test: { weightOf: weightOf, diameterOf: diameterOf, tolAt: tolAt, countAt: countAt, diffOf: diffOf, bestPartition: bestPartition, areaPartition: areaPartition, altPartition: altPartition, fitArea: fitArea, makeLevel: makeLevel, rating: rating, RAMP_LEVELS: RAMP_LEVELS, N0: N0, TOL: TOL, D_MIN: D_MIN, D_MAX: D_MAX, RATIO_MIN: RATIO_MIN, FIT_AREA: FIT_AREA, HEUR_FROM: HEUR_FROM }

@@ -175,7 +175,7 @@
     var G = {
         id: ID,
         name: '面積一樣大',
-        rule: '左邊是一個圖形，右邊是一個方塊。拖曳方塊右下角的圓點，讓方塊的面積和左邊的圖形一樣大。手指移動越慢，變化越細。沒有任何數字，只有一次機會，按「確定」後會疊在一起告訴你差了幾 %。',
+        rule: '左邊是一個圖形，右邊是一個方塊。拖曳方塊右下角的圓點，**讓方塊的面積和左邊的圖形一樣大**。手指移動越慢，變化越細。沒有任何數字，**只有一次機會**，按「確定」後會疊在一起告訴你差了幾 %。',
         mount: mount,
         score: SCORE,
         test: { polyArea: polyArea, shapeOf: shapeOf, areaOf: areaOf, makeRound: makeRound, errPct: errPct, rating: rating, KINDS: KINDS, EQ_MIN: EQ_MIN, EQ_MAX: EQ_MAX, SQ_MIN: SQ_MIN, SQ_MAX: SQ_MAX }

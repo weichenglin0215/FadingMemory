@@ -86,6 +86,24 @@
     min-height: 1.1em;
 }
 
+/* 倒數低於 4.0000 秒才浮出來的大提示「請在心中默數至 0」（js/reaction_speed.js 在 tick 裡加上 .is-on）：
+   橘色特粗大字，跟藍色的倒數數字區隔開來；平常 opacity 0，但仍占著位置，浮出來時版面不會跳動 */
+.speed-count {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    line-height: var(--lh-tight);
+    color: var(--c-orange);
+    text-align: center;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.speed-count.is-on {
+    opacity: 1;
+    transform: none;
+}
+
 /* 大按鈕 */
 .speed-btn {
     height: 140px;

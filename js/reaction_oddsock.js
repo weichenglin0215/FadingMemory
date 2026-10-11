@@ -127,7 +127,7 @@
     var G = {
         id: ID,
         name: '落單的襪子',
-        rule: '九隻襪子排成九宮格，其中有四對圖案一模一樣，只有一隻沒有伴。找出那隻落單的襪子，點下去。每關有時間限制，答錯或來不及就結束。越後面，落單的襪子和它最像的那一對差得越少！',
+        rule: '九隻襪子排成九宮格，其中有四對圖案一模一樣，只有一隻沒有伴。**找出那隻落單的襪子**，點下去。每關有時間限制，答錯或來不及就結束。越後面，落單的襪子和它最像的那一對差得越少！',
         mount: mount,
         score: SCORE,
         test: { hueDelta: hueDelta, countDelta: countDelta, timeMs: timeMs, makeLevel: makeLevel, sockSvg: sockSvg, key: key, rating: rating, RAMP_LEVELS: RAMP_LEVELS, MAX_LEVEL: MAX_LEVEL, HUE_DELTA: HUE_DELTA, COUNT_DELTA: COUNT_DELTA, MAX_COUNT: MAX_COUNT }
