@@ -2622,6 +2622,13 @@
     border-radius: var(--r-lg);
 }
 
+/* 數字題的一格：數字字級小一點，8 格排得下 */
+.sq-cell--num {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
 /* 一格圖形（aspect-ratio 讓它保持正方形） */
 .sq-cell {
     flex: 1 1 0;
@@ -2710,16 +2717,28 @@
     touch-action: none;
 }
 
-/* 選對（綠） */
-.sq-opt--ok {
-    background: var(--c-ok-soft);
-    border-color: var(--c-ok);
+/* 數字題的選項：大字 */
+.sq-opt--num {
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
 }
 
-/* 選錯（橘） */
+/* 揭曉後：不能再點，但不壓灰色（V1.25 玩家意見：以前用 disabled，會整張變灰很難辨識） */
+.sq-opt--locked {
+    pointer-events: none;
+}
+
+/* 選對：正確答案的卡片加綠色粗邊框 */
+.sq-opt--ok {
+    border: 10px solid var(--c-ok);
+    padding: calc(var(--sp-3) - 7px);
+}
+
+/* 選錯：你選的那張加紅色粗邊框 */
 .sq-opt--bad {
-    background: var(--c-bad-soft);
-    border-color: var(--c-bad);
+    border: 10px solid var(--c-bad-light);
+    padding: calc(var(--sp-3) - 7px);
 }
 
 /* 底下的解說：說明這個規律是什麼 */
@@ -2884,8 +2903,8 @@
     position: absolute;
     left: 0;
     right: 0;
-    height: 8px;
-    margin-top: -4px;
+    height: 16px;
+    margin-top: -8px;
     background: var(--c-recall);
     opacity: 0.75;
     z-index: 3;
@@ -2903,14 +2922,14 @@
 
 /* 每拍閃線動畫 */
 @keyframes py-beat {
-    from { opacity: 1; height: 12px; margin-top: -6px; }
-    to { opacity: 0.75; height: 8px; margin-top: -4px; }
+    from { opacity: 1; height: 24px; margin-top: -12px; }
+    to { opacity: 0.75; height: 16px; margin-top: -8px; }
 }
 
 /* 每小節閃線動畫 */
 @keyframes py-bar {
-    from { opacity: 1; height: 20px; margin-top: -10px; }
-    to { opacity: 0.75; height: 8px; margin-top: -4px; }
+    from { opacity: 1; height: 40px; margin-top: -20px; }
+    to { opacity: 0.75; height: 16px; margin-top: -8px; }
 }
 
 /* 掉落的音符（位置由 JS 每個畫面更新 transform） */
@@ -2919,8 +2938,8 @@
     left: 10%;
     right: 10%;
     top: 0;
-    height: 28px;
-    border-radius: 9px;
+    height: 56px;
+    border-radius: 14px;
     border: 3px solid rgba(74, 59, 30, 0.55);
     box-sizing: border-box;
     will-change: transform;

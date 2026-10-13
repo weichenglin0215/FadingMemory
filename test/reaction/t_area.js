@@ -10,12 +10,18 @@ for (const kind of T.KINDS) {
     ok(Math.abs(T.areaOf(sh) - A) < 1e-6 * A, kind + ' 面積 ' + A + ' → ' + T.areaOf(sh));
   }
 }
-// 十字、L 形的外形大小要放得進左半邊（形狀中心在 x=122，左半邊寬 236）
+// V1.25：題目圖形放上方並加大、答案方塊在下方；手柄是十字箭頭
 for (const kind of T.KINDS) {
-  const sh = T.shapeOf(kind, T.EQ_MAX * T.EQ_MAX);
-  const ext = sh.kind === 'circle' ? sh.r : Math.max.apply(null, sh.pts.map(p => Math.max(Math.abs(p[0]), Math.abs(p[1]))));
-  ok(ext < 118, kind + ' 最大面積時外形半徑 ' + ext.toFixed(1) + ' 應該放得進左半邊');
+  const sh = T.shapeOf(kind, T.EQ_MAX * T.EQ_MAX), pts = kind === 'circle' ? [[-sh.r, -sh.r], [sh.r, sh.r]] : sh.pts;
+  const xs = pts.map(p => T.SHAPE_C.x + p[0]), ys = pts.map(p => T.SHAPE_C.y + p[1]);
+  ok(Math.min(...xs) >= 4 && Math.max(...xs) <= 468 && Math.min(...ys) >= 4, kind + ' 最大的圖形整個在畫面內：x ' + Math.min(...xs).toFixed(0) + '～' + Math.max(...xs).toFixed(0) + '，y ' + Math.min(...ys).toFixed(0) + '～' + Math.max(...ys).toFixed(0));
+  ok(Math.max(...ys) < T.ANCHOR.y - 10, kind + ' 圖形在方塊的上方（不重疊）：圖形底 ' + Math.max(...ys).toFixed(0) + ' < 方塊頂 ' + T.ANCHOR.y);
 }
+ok(T.ANCHOR.y > T.SHAPE_C.y && T.SHAPE_C.x === 236, '題目圖形在上、答案方塊在下，圖形水平置中');
+ok(T.ANCHOR.x + T.SQ_MAX + T.HANDLE / 2 <= 472 && T.ANCHOR.y + T.SQ_MAX + T.HANDLE / 2 <= 590, '方塊拉到最大、手柄也在畫面內（不蓋到「確定」按鈕）：右 ' + (T.ANCHOR.x + T.SQ_MAX + T.HANDLE / 2) + '，下 ' + (T.ANCHOR.y + T.SQ_MAX + T.HANDLE / 2));
+ok(T.EQ_MIN >= 110 && T.EQ_MAX >= 140, '圖形比原本（80～115）大：' + T.EQ_MIN + '～' + T.EQ_MAX);
+{ const p = T.arrowPoints(T.HANDLE); ok(p.length === 24 && Math.max(...p.map(q => q[0])) === T.HANDLE / 2 && Math.min(...p.map(q => q[1])) === -T.HANDLE / 2, '十字箭頭：24 個頂點、總寬 ' + T.HANDLE);
+  ok(p.some(q => q[0] === 0 && q[1] === -T.HANDLE / 2) && p.some(q => q[0] === T.HANDLE / 2 && q[1] === 0) && p.some(q => q[0] === 0 && q[1] === T.HANDLE / 2) && p.some(q => q[0] === -T.HANDLE / 2 && q[1] === 0), '上下左右四個箭頭尖端'); }
 // 出題：5000 題，形狀都出現、起始邊長離答案至少 25%、在可拖範圍內、答案邊長也在可拖範圍內
 const seen = {}; let minDev = 9;
 for (let i = 0; i < 5000; i++) {

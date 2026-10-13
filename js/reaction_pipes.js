@@ -3,7 +3,7 @@
    點一格水管，它就順時針轉 90 度。把左上角水龍頭流出來的水，接到每一個水桶，而且不能漏水。每關有時間限制。
    ───────────────────────────────────────────────────────────────────
    · 一格水管用 4 個 bit 表示開口：N=1、E=2、S=4、W=8（rot 一次＝順時針 90 度：N→E→S→W→N）。
-   · 水從水龍頭進到左上角那格的「上方」，所以左上角那格要有 N 開口才通水。
+   · 水從水龍頭進到「上排某一格」的上方（V1.25：水龍頭的位置每一關隨機，不再固定左上角），那格要有 N 開口才通水。
    · 從答案反推題目（所以一定有解）：
        1. 從左上角那格長出一棵樹：先接一個孩子；之後每一步不是「延長」（選一個尾端往旁邊多接一格），
           就是「分岔」（選一個直通的格子往旁邊長出新的尾端，變成 T 字管）。
@@ -12,7 +12,10 @@
        3. 把每一格隨機轉 0～3 次打亂；打亂後不能已經是解答，而且至少要轉 MIN_TAPS 次才接得通。
    · 判定（每轉一次就算一次）：從水龍頭開始廣度優先搜尋，開口兩邊互相對上才算接通。
      所有水桶都有水、而且有水的格子沒有任何開口朝向空處或沒對上的格子（漏水），就過關。
-   · 難度（第 1 → LEVEL_RAMP 關線性）：棋盤 4×4 → 6×6、水桶 1 → 5（T 管 0 → 4 個）、限時 45 → 90 秒（棋盤越大給越多時間）。
+   · 難度（第 1 → LEVEL_RAMP 關線性；V1.25 玩家意見：第十關起就感覺不到難度提升，所以延長到 30 關、各項上限加大）：
+       棋盤 4×4 → 8×8、水桶 1 → 10（T 管 0 → 9 個）、水管占棋盤的比例 FILL 45% → 70%（路線更長更複雜）、
+       打亂後至少要轉幾下 3 → 14、限時 45 → 150 秒（棋盤越大給越多時間）。
+   · V1.25：長樹時往整個棋盤延伸（離水龍頭越遠越容易被選）、轉彎比直走容易，所以右下方不再空白、水管路線更曲折。
    · 成績：通過的關數（越大越好）。時間到就結束，並顯示答案。
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -31,13 +34,15 @@
     /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
     /* 難度從第 1 關線性變到第 LEVEL_RAMP 關 */
-    var LEVEL_RAMP = 10;
-    var GRID_START = 4, GRID_END = 6;
-    var BUCKETS_START = 1, BUCKETS_END = 5;
-    var TIME_START = 45, TIME_END = 90;
-    /* FILL：水管樹占棋盤格數的比例（其餘是空格） */
-    var FILL = 0.55;                 /* 樹佔棋盤格數的比例 */
-    var MIN_TAPS = 3;                /* 打亂後至少要轉幾次才解得開 */
+    var LEVEL_RAMP = 30;
+    var GRID_START = 4, GRID_END = 8;
+    var BUCKETS_START = 1, BUCKETS_END = 10;
+    var TIME_START = 45, TIME_END = 150;
+    /* FILL：水管樹占棋盤格數的比例（其餘是空格），隨關卡增加 */
+    var FILL = [0.45, 0.7];          /* 樹佔棋盤格數的比例：第 1 關 → 最後 */
+    var MIN_TAPS = [3, 14];          /* 打亂後至少要轉幾次才解得開：第 1 關 → 最後 */
+    var SPREAD_POW = 1.6;            /* 長樹時往遠處長的力道（越大越往棋盤另一端延伸） */
+    var TURN_BONUS = 2;              /* 尾端延長時，轉彎的權重是直走的幾倍 */
     var CELL = 90;                   /* SVG 單位：一格的邊長 */
     var FAUCET_H = 56;               /* 水龍頭那一條的高度 */
     var NEXT_MS = 1300, ANSWER_MS = 2600;
@@ -66,17 +71,22 @@
     /* 這一關限時（棋盤越大給越多時間） */
     function timeFor(level) { return kit.ramp(level, TIME_START, TIME_END, LEVEL_RAMP); }
     /* 樹要占幾格 */
-    function sizeFor(N) { return Math.round(N * N * FILL); }
+    function fillFor(level) { return kit.ramp(level, FILL[0], FILL[1], LEVEL_RAMP); }
+    function sizeFor(N, level) { return Math.round(N * N * fillFor(level == null ? 1 : level)); }
+    /* 打亂後至少要轉幾次 */
+    function minTapsFor(level) { return Math.round(kit.ramp(level, MIN_TAPS[0], MIN_TAPS[1], LEVEL_RAMP)); }
 
-    /* 從答案反推題目：先隨機「長」出一棵水管樹（所以題目一定有解），回傳每格的開口與水桶位置；卡住就回傳 null */
-    /* 長出一棵樹；失敗（卡住）回傳 null */
-    function makeTree(N, B, S, rand) {
+    /* 從答案反推題目：先隨機「長」出一棵水管樹（所以題目一定有解），回傳每格的開口與水桶位置；卡住就回傳 null。
+       f ＝ 水龍頭所在的欄（上排第 f 格，預設 0＝左上角）。
+       V1.25：長樹時「越遠離水龍頭的位置越容易被選中」（權重 (1＋離水龍頭的曼哈頓距離)^SPREAD_POW），
+       所以樹會往整個棋盤延伸，不會只擠在水龍頭附近、讓另一邊空空的；尾端延長時「轉彎」的權重是直走的 TURN_BONUS 倍，路線更曲折。 */
+    function makeTree(N, B, S, rand, f) {
         rand = rand || Math.random;
+        f = f || 0;
+        var fx = f % N, fy = Math.floor(f / N);
         /* cells：每格的開口（0＝空格） */
         var cells = []; for (var i = 0; i < N * N; i++) cells.push(0);
-        /* 左上角那格一定有上方開口（水龍頭接在這裡） */
-        cells[0] = N_;                                          /* 左上角：水從上面進來 */
-        /* free(i)：第 i 格旁邊還空著、可以接出去的方向 */
+        cells[f] = N_;                                          /* 水龍頭那格：水從上面進來 */
         function free(i) {                                       /* 一格旁邊還空著的方向 */
             var x = i % N, y = Math.floor(i / N), out = [];
             DIRS.forEach(function (d) {
@@ -86,40 +96,55 @@
             return out;
         }
         /* attach：把兩格接起來（兩邊各加上對應的開口 bit，|= 是「或」運算） */
-        function attach(i, f) { cells[i] |= f.d; cells[f.j] |= OPP[f.d]; }
-        var f0 = kit.pick(free(0), rand); if (!f0) return null;
-        attach(0, f0);
+        function attach(i, fr) { cells[i] |= fr.d; cells[fr.j] |= OPP[fr.d]; }
+        function dist(j) { return Math.abs((j % N) - fx) + Math.abs(Math.floor(j / N) - fy); }
+        /* 依權重隨機挑一個 */
+        function pickW(list) {
+            var tot = 0, k;
+            for (k = 0; k < list.length; k++) tot += list[k].w;
+            var r = rand() * tot;
+            for (k = 0; k < list.length; k++) { r -= list[k].w; if (r <= 0) return list[k]; }
+            return list[list.length - 1];
+        }
+        var f0 = kit.pick(free(f), rand); if (!f0) return null;
+        attach(f, f0);
         /* 樹要長 S−2 次：其中 B−1 次是「分岔」（T 字管），其餘是「延長」 */
         var steps = S - 2, isBranch = [];
         for (var s = 0; s < steps; s++) isBranch.push(false);
         kit.shuffle(isBranch.map(function (_, k) { return k; }), rand).slice(0, B - 1).forEach(function (k) { isBranch[k] = true; });
         if (steps < B - 1) return null;
-        /* 每一步：挑一個符合條件的格子往旁邊長出新的一格 */
         for (var s2 = 0; s2 < steps; s2++) {
             var cand = [];
             for (var c = 0; c < N * N; c++) {
                 if (cells[c] === 0) continue;
                 var deg = bits(cells[c]);
                 /* 分岔要挑「剛好有 2 個開口」的格子，延長要挑「只有 1 個開口」的尾端 */
-                if (isBranch[s2] ? deg === 2 : (deg === 1 && c !== 0)) { var fr = free(c); if (fr.length) cand.push([c, fr]); }
+                if (isBranch[s2] ? deg === 2 : (deg === 1 && c !== f)) {
+                    free(c).forEach(function (fr) {
+                        var w = Math.pow(1 + dist(fr.j), SPREAD_POW);
+                        if (!isBranch[s2] && fr.d !== OPP[cells[c]]) w *= TURN_BONUS;        /* 尾端延長：轉彎比直走更容易被選 */
+                        cand.push({ c: c, fr: fr, w: w });
+                    });
+                }
             }
             if (!cand.length) return null;
-            var pc = kit.pick(cand, rand);
-            attach(pc[0], kit.pick(pc[1], rand));
+            var pc = pickW(cand);
+            attach(pc.c, pc.fr);
         }
         /* leaves：樹的尾端（只有一個開口的格子）＝水桶位置 */
-        var leaves = []; for (var q = 1; q < N * N; q++) if (cells[q] && bits(cells[q]) === 1) leaves.push(q);
+        var leaves = []; for (var q = 0; q < N * N; q++) if (q !== f && cells[q] && bits(cells[q]) === 1) leaves.push(q);
         return { cells: cells, leaves: leaves };
     }
 
     /* 通水：從水龍頭出發，用深度優先搜尋（stack 堆疊）沿著「兩邊開口互相對上」的路徑找出有水的格子，並找出漏水的開口 */
     /* 通水：回傳 { wet:[bool], leaks:[{i,d}], buckets 是否都有水由 solved 判斷 } */
-    function flow(board, N) {
+    function flow(board, N, f) {
+        f = f || 0;                                              /* 水龍頭在上排第 f 格（預設左上角） */
         var wet = board.map(function () { return false; }), leaks = [];
-        /* 左上角沒有上方開口就完全不通水 */
-        if (!(board[0] & N_)) return { wet: wet, leaks: leaks };
+        /* 水龍頭那格沒有上方開口就完全不通水 */
+        if (!(board[f] & N_)) return { wet: wet, leaks: leaks };
         /* stack 堆疊：後進先出，一直處理到沒有待處理的格子 */
-        var stack = [0]; wet[0] = true;
+        var stack = [f]; wet[f] = true;
         while (stack.length) {
             var i = stack.pop(), x = i % N, y = Math.floor(i / N);
             DIRS.forEach(function (d) {
@@ -137,7 +162,7 @@
             var kx = k % N, ky = Math.floor(k / N);
             DIRS.forEach(function (d) {
                 if (!(board[k] & d)) return;
-                if (k === 0 && d === N_) return;                /* 水龍頭的入口不算漏水 */
+                if (k === f && d === N_) return;                /* 水龍頭的入口不算漏水 */
                 var nx = kx + DX[d], ny = ky + DY[d];
                 if (nx < 0 || ny < 0 || nx >= N || ny >= N || !(board[ny * N + nx] & OPP[d])) leaks.push({ i: k, d: d });
             });
@@ -145,8 +170,8 @@
         return { wet: wet, leaks: leaks };
     }
     /* 解出來：沒有漏水，而且每個水桶都有水 */
-    function solved(board, N, buckets) {
-        var f = flow(board, N);
+    function solved(board, N, buckets, faucet) {
+        var f = flow(board, N, faucet);
         return f.leaks.length === 0 && buckets.every(function (b) { return f.wet[b]; });
     }
     /* 把一格轉成目標形狀至少要點幾下 */
@@ -157,17 +182,19 @@
     /* 出一關：先長出一棵樹當答案，再把每格隨機旋轉打亂，打亂後不能已經是解答、至少要轉 MIN_TAPS 次 */
     function makeLevel(level, rand) {
         rand = rand || Math.random;
-        var N = gridFor(level), B = bucketsFor(level), S = sizeFor(N), tree = null;
+        var N = gridFor(level), B = bucketsFor(level), S = sizeFor(N, level), tree = null;
+        /* 水龍頭的位置：上排隨機一格（每一關都不一樣） */
+        var faucet = kit.randInt(0, N - 1, rand);
         /* 最多嘗試 300 次長出樹 */
-        for (var t = 0; t < 300 && !tree; t++) tree = makeTree(N, B, S, rand);
+        for (var t = 0; t < 300 && !tree; t++) tree = makeTree(N, B, S, rand, faucet);
         if (!tree) throw new Error('pipes: cannot build a tree');
-        var sol = tree.cells, board;
+        var sol = tree.cells, board, need = minTapsFor(level);
         /* 最多嘗試 200 次打亂 */
         for (var a = 0; a < 200; a++) {
             board = sol.map(function (m) { return m ? rotN(m, Math.floor(rand() * 4)) : 0; });
-            if (!solved(board, N, tree.leaves) && tapsToSolve(board, sol) >= MIN_TAPS) break;
+            if (!solved(board, N, tree.leaves, faucet) && tapsToSolve(board, sol) >= need) break;
         }
-        return { level: level, N: N, B: B, S: S, sol: sol, board: board, buckets: tree.leaves, time: timeFor(level) };
+        return { level: level, N: N, B: B, S: S, faucet: faucet, sol: sol, board: board, buckets: tree.leaves, time: timeFor(level) };
     }
     /* 依通過關數給評語 */
     function rating(n) {
@@ -208,7 +235,7 @@
                 var W = L.N * CELL, Ht = L.N * CELL + FAUCET_H;
                 svg = kit.svg('svg', { 'class': 'pp-svg', viewBox: '0 0 ' + W + ' ' + Ht, preserveAspectRatio: 'xMidYMid meet' }, field);
                 /* 水龍頭（在左上角那格的上方）*/
-                var fx = CELL / 2;
+                var fx = L.faucet * CELL + CELL / 2;              /* 水龍頭在上排第 faucet 欄（每關隨機） */
                 kit.svg('line', { 'class': 'pp-source', x1: fx, y1: FAUCET_H - 18, x2: fx, y2: FAUCET_H }, svg);
                 kit.svg('rect', { 'class': 'pp-faucet', x: fx - 34, y: 6, width: 68, height: 22, rx: 8 }, svg);
                 kit.svg('rect', { 'class': 'pp-faucet', x: fx - 12, y: 24, width: 24, height: FAUCET_H - 40, rx: 4 }, svg);
@@ -237,7 +264,7 @@
 
             /* 依目前的開口重畫：顯示有開口的管子、漏水的紅點、有水的格子變藍 */
             function paint() {
-                var f = flow(board, L.N), leakSet = {};
+                var f = flow(board, L.N, L.faucet), leakSet = {};
                 f.leaks.forEach(function (l) { leakSet[l.i + ':' + l.d] = true; });
                 for (var i = 0; i < board.length; i++) {
                     var e = cellEls[i];
@@ -266,7 +293,7 @@
                 ctx.setMeta(kit.meta(['已過 ' + passed + ' 關', Reaction.getBest(ID) != null ? '最佳 ' + Reaction.getBest(ID) : '']));
                 t0 = performance.now();
                 /* 主控台印出這關的實際資料（棋盤大小、水桶數、T 管數、至少要轉幾下、限時） */
-                try { console.info('[接水管] 第 ' + level + ' 關：' + L.N + '×' + L.N + '、水桶 ' + L.B + '、T 管 ' + (L.B - 1) + '、樹 ' + L.S + ' 格、至少要轉 ' + tapsToSolve(L.board, L.sol) + ' 下、限時 ' + L.time.toFixed(1) + ' 秒'); } catch (e) { }
+                try { console.info('[接水管] 第 ' + level + ' 關：' + L.N + '×' + L.N + '、水桶 ' + L.B + '、T 管 ' + (L.B - 1) + '、水龍頭第 ' + (L.faucet + 1) + ' 欄、樹 ' + L.S + ' 格、至少要轉 ' + tapsToSolve(L.board, L.sol) + ' 下、限時 ' + L.time.toFixed(1) + ' 秒'); } catch (e) { }
                 tb.set(1);
                 /* 倒數 */
                 my.loop(function (now) {
@@ -285,7 +312,7 @@
                 Sfx.play('click');
                 var f = paint();
                 /* 接通了 → 過關 */
-                if (solved(board, L.N, L.buckets)) {
+                if (solved(board, L.N, L.buckets, L.faucet)) {
                     state = 'won'; token++;
                     passed = level; times.push((performance.now() - t0) / 1000);
                     tb.set(0);
@@ -325,7 +352,7 @@
 
             /* G.debug：測試用後門，solve() 可以照答案一格一格轉到位 */
             G.debug = {
-                state: function () { return { level: level, passed: passed, state: state, N: L && L.N, B: L && L.B, board: board && board.slice(), sol: L && L.sol.slice(), buckets: L && L.buckets.slice(), time: L && L.time }; },
+                state: function () { return { level: level, passed: passed, state: state, N: L && L.N, B: L && L.B, faucet: L && L.faucet, board: board && board.slice(), sol: L && L.sol.slice(), buckets: L && L.buckets.slice(), time: L && L.time }; },
                 turn: turn,
                 timeUp: function () { if (state === 'play') timeUp(); },
                 /* 照答案把每一格轉到位（用 turn，所以會真的觸發判定）*/
@@ -343,12 +370,12 @@
     var G = {
         id: ID,
         name: '接水管',
-        rule: '點一格水管，它就轉一下。把左上角水龍頭流出來的水，**接到每一個水桶**，而且**管子不能漏水**（紅點就是漏水的地方）。每一關都有時間限制，看你能接幾關！',
+        rule: '點一格水管，它就轉一下。把上方水龍頭流出來的水（**水龍頭的位置每一關都不一樣**），**接到每一個水桶**，而且**管子不能漏水**（紅點就是漏水的地方）。後面的棋盤更大、水桶更多、路線更複雜。每一關都有時間限制，看你能接幾關！',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
-        test: { rot: rot, rotN: rotN, bits: bits, gridFor: gridFor, bucketsFor: bucketsFor, timeFor: timeFor, sizeFor: sizeFor, makeTree: makeTree, flow: flow, solved: solved, tapsFor: tapsFor, tapsToSolve: tapsToSolve, makeLevel: makeLevel, rating: rating, N_: N_, E_: E_, S_: S_, W_: W_, LEVEL_RAMP: LEVEL_RAMP, MIN_TAPS: MIN_TAPS }
+        test: { rot: rot, rotN: rotN, bits: bits, gridFor: gridFor, bucketsFor: bucketsFor, timeFor: timeFor, sizeFor: sizeFor, fillFor: fillFor, minTapsFor: minTapsFor, makeTree: makeTree, flow: flow, solved: solved, tapsFor: tapsFor, tapsToSolve: tapsToSolve, makeLevel: makeLevel, rating: rating, N_: N_, E_: E_, S_: S_, W_: W_, LEVEL_RAMP: LEVEL_RAMP, MIN_TAPS: MIN_TAPS, FILL: FILL, GRID_END: GRID_END, BUCKETS_END: BUCKETS_END }
     };
     /* 登記到遊戲清單 */
     Reaction.register(G);

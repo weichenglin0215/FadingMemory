@@ -10,7 +10,7 @@
    · 題目篩選：至少有 1 盞亮、而且最少步數 ≥ max(2, k 的一半)，避免一按就過的無聊題。
    · 難度（第 1 → LEVEL_RAMP 關）：棋盤 3×3（1–5 關）→ 4×4（6–10 關）→ 5×5（11 關以後，解鎖點），
      打亂次數 k 3 → 12、每關限時 60 → 35 秒（線性）。
-   · 機會 LIVES 次：時間到＝機會 −1，同一關換一個新題目，並把最少步數的解法疊在盤面上給你看。
+   · V1.25（玩家意見）：取消「機會」，時間到就失敗、直接結束，並把最少步數的解法疊在盤面上給你看。
    · 成績：通過的關數（越大越好）；副榜：剛好用最少步數的「完美」關數。
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -34,7 +34,6 @@
     /* 打亂次數 k 與每關限時，隨關卡線性變化 */
     var K_START = 3, K_END = 12;
     var TIME_START = 60, TIME_END = 35;
-    var LIVES = 3;
     var CELL = 100;                           /* SVG 單位：一格邊長 */
     var NEXT_MS = 1500, ANSWER_MS = 2800;
 
@@ -137,8 +136,8 @@
             var my = R;
             root.innerHTML = '';
 
-            /* level 目前關卡；passed 已過幾關；perfect 剛好用最少步數的關數；lives 機會；P 這關的題目；board 目前的盤面（整數）；presses 已按幾下；token 流水號；logs 紀錄 */
-            var level = (startAt || 1) - 1, passed = level, perfect = 0, lives = LIVES, P = null, board = 0, presses = 0, state = 'idle', token = 0, t0 = 0, newRec = false, logs = [];
+            /* level 目前關卡；passed 已過幾關；perfect 剛好用最少步數的關數；P 這關的題目；board 目前的盤面（整數）；presses 已按幾下；token 流水號；logs 紀錄 */
+            var level = (startAt || 1) - 1, passed = level, perfect = 0, P = null, board = 0, presses = 0, state = 'idle', token = 0, t0 = 0, newRec = false, logs = [];
             /* 建立畫面元素 */
             var head = h('div', { 'class': 'lo-head', text: ' ' });
             var banner = h('div', { 'class': 'lo-banner', text: ' ' });
@@ -149,7 +148,7 @@
             /* SVG 與每格的元素 */
             var svg, cellEls = [], hintEls = [];
             /* 更新標題列右側的小字 */
-            function meta() { ctx.setMeta(kit.meta(['已過 ' + passed + ' 關', '機會 ' + lives])); }
+            function meta() { ctx.setMeta(kit.meta(['已過 ' + passed + ' 關'])); }
 
             /* 畫整個棋盤（SVG）：每格有底板、燈泡，以及時間到時用來標出答案的虛線框 */
             function build() {
@@ -223,18 +222,16 @@
                 }
             }
 
-            /* 時間到：扣機會，把最少步數的解答用虛線框疊在盤面上 */
+            /* 時間到：失敗結束，把最少步數的解答用虛線框疊在盤面上 */
             function timeUp() {
                 state = 'over'; token++;
-                lives--; tb.set(0); meta();
+                tb.set(0); meta();
                 head.textContent = '時間到';
                 banner.textContent = '按這幾格就能關燈（最少 ' + P.min + ' 步）';
                 for (var i = 0; i < P.N * P.N; i++) hintEls[i].setAttribute('display', ((P.minMask >> i) & 1) ? 'inline' : 'none');
                 logs.push('第 ' + level + ' 關時間到（最少 ' + P.min + ' 步）');
                 Sfx.play('bad');
-                /* 還有機會就換一個新題目 */
-                if (lives > 0) { my.after(ANSWER_MS, function () { startPuzzle(true); }); return; }
-                /* 沒有機會了 → 結算，kit.resumeFrom 可從前 5 關繼續 */
+                /* 結算，kit.resumeFrom 可從前 5 關繼續 */
                 my.after(ANSWER_MS, function () {
                     var back = kit.resumeFrom(level);
                         kit.result(root, {
@@ -249,7 +246,7 @@
 
             /* G.debug：測試用後門 */
             G.debug = {
-                state: function () { return { level: level, passed: passed, perfect: perfect, lives: lives, state: state, N: P && P.N, board: board, presses: presses, min: P && P.min, minMask: P && P.minMask, time: P && P.time }; },
+                state: function () { return { level: level, passed: passed, perfect: perfect, state: state, N: P && P.N, board: board, presses: presses, min: P && P.min, minMask: P && P.minMask, time: P && P.time }; },
                 press: press,
                 solve: function () { for (var i = 0; i < P.N * P.N; i++) if ((P.minMask >> i) & 1) press(i); },
                 timeUp: function () { if (state === 'play') timeUp(); }
@@ -265,7 +262,7 @@
     var G = {
         id: ID,
         name: '關燈',
-        rule: '點一盞燈，它和上下左右的燈都會「亮變暗、暗變亮」。想辦法在時間內**把所有的燈都關掉**！剛好用**最少的步數**過關，會得到「完美」。',
+        rule: '點一盞燈，它和上下左右的燈都會「亮變暗、暗變亮」。想辦法在時間內**把所有的燈都關掉**！剛好用**最少的步數**過關，會得到「完美」。**時間到就失敗**，一次失敗就結束。',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,

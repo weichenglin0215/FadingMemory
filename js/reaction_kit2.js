@@ -417,7 +417,7 @@
        o.max：成績上限（偽造後不超過）
        api：
          api.stage／api.my／api.setTip(text)
-         api.finish(real, x)：real 是真實成績；x.lines 是結算說明行
+         api.finish(real, x)：real 是真實成績；x.lines 是結算說明行；x.sign（選填，＋1／−1）：結算大字加正負號
        ═══════════════════════════════════════════════════════════════ */
     kit.single = function (root, ctx, o) {
         var R = null, api = null, done = false, G = o.G;
@@ -448,7 +448,8 @@
                     var isNew = Reaction.setBest(o.id, v, better);
                     ctx.setMeta(fmtBest(Reaction.getBest(o.id)));
                     kit.result(root, {
-                        score: v, num: o.numText(v), label: o.rating ? o.rating(v) : '',
+                        /* x.sign（＋1／−1）：結算大字加上正負號（容量一半：＋倒太多、−倒太少）；成績與排行榜仍是不帶號的 v */
+                        score: v, num: (x.sign ? (x.sign > 0 ? '+' : '−') : '') + o.numText(v), label: o.rating ? o.rating(v) : '',
                         lines: x.lines || [], isNew: isNew,
                         sfx: o.sfx ? o.sfx(v) : 'win', onAgain: round
                     });

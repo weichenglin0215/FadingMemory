@@ -172,6 +172,22 @@
     --dlg-title-fs: var(--fs-lg);
     --dlg-text-fs: var(--fs-sm);
 
+    /* ── 五星評價（js/rating.js、css/rating.css，V1.25.0）──────────────
+       on＝實心的黃色星星；off＝選單格子裡還沒塗到的星星空位（淡色）；edge＝評價彈窗星星的外框線；
+       bar-w＝選單格子裡那一排五顆星的總寬度（每顆＝五分之一）；pick＝評價彈窗每顆星星按鈕的大小。 */
+    --rate-on: #F6B400;
+    --rate-off: rgba(126, 106, 60, 0.22);
+    --rate-edge: var(--c-ink-soft);
+    --rate-bar-w: 100px;
+    --rate-pick: 72px;
+
+    /* ── 阿嬤都比你厲害（js/menu.js、css/menu.css，V1.25.0）──
+       rank-ink／rank-edge＝格子上名次數字的「黑字白框」；rank-fs＝名次數字的字級（大尺寸）；heart-fs＝💔的大小 */
+    --gm-rank-ink: var(--c-black);
+    --gm-rank-edge: #FFFFFF;
+    --gm-rank-fs: 56px;
+    --gm-heart-fs: 40px;
+
     /* ── 貓咪走山路（js/reaction_catroad.js，畫在 canvas 上，程式用 getComputedStyle 讀這些顏色）──
        lava＝岩漿的兩個顏色；cliff＝斷崖邊緣；road＝山路與山路邊線；cat＝貓咪身體；cat-ink＝貓咪的線條與眼睛 */
     --cr-lava-1: #D9421F;
@@ -199,6 +215,8 @@
     --cc-end: #5EC8E8;
     --cc-draw: #FFFFFF;
     --dk-bg: #000000;
+    --fe-note: #9A9A9A;
+    /* 淡到看不見：黑底上的提示文字（V1.25） */
     --flt-pic: #FFE08A;
     --lb-shine: rgba(255, 255, 255, 0.55);
     --lb-gold-bg: linear-gradient(135deg, #FFEFB8 0%, #F2C14B 100%);

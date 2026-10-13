@@ -12,7 +12,15 @@
    · 選項：4 個，3 個干擾項各自「只改正解的一個屬性」；4 個選項的「看起來的樣子」（visualKey，
      旋轉要考慮形狀的對稱，例如圓形轉再多度也一樣）必須兩兩不同。
    · 難度（第 1 → LEVEL_RAMP 題線性）：會變的屬性數 1 → 3、循環長度 K 2 → 3、每題限時 15 → 8 秒。
-   · 機會 LIVES 次（答錯或超時各 −1）；成績＝答對題數（越大越好）。
+   · V1.25（玩家意見）：
+       - 取消「機會」：答錯或超時就結束；成績＝答對題數（越大越好）。
+       - 上方題目區最多容納 8 格（7 個題目圖案＋「？」）：顯示的圖案數隨題號 4 → 7 個（shownFor）。
+       - 揭曉答案時不再壓一層灰色：正確答案的卡片加綠色粗邊框，選錯的加紅色粗邊框。
+       - 大小的差異加大：圖案縮放 0.32～1.0（每級差 0.136，原本 0.45～1.0），而且「大小」的干擾選項一定跟正解差 2 級以上，
+         所以題目小圖與下方大卡片比起來也看得出差別。
+       - 新增「數字題」：第 NUM_FROM（3）題起，每題有 NUM_P（35%）機率是數字數列（2、4、6、8、？），從 4 個數字選項裡點出下一個。
+         規則：等差、等比、輪流加兩個數（alt）、差越來越大（grow）、前兩個相加（fib）、乘幾再加減幾（affine）；
+         依題號解鎖，答案唯一（nextNumbers 把規則空間窮舉一遍，推得的下一個只有一個才收這一題）。
    ═══════════════════════════════════════════════════════════════════ */
 
 /* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
@@ -34,9 +42,13 @@
     var ATTR_START = 1, ATTR_END = 3;
     var K_START = 2, K_END = 3;
     var TIME_START = 15, TIME_END = 8;
-    var LIVES = 2;
-    /* 顯示幾個圖案（第 SHOWN+1 個是答案） */
-    var SHOWN = 5;                           /* 顯示幾個圖案（第 SHOWN+1 個是答案）*/
+    /* 顯示幾個圖案（第 n+1 個是答案）：上方最多 8 格＝7 個圖案＋「？」，隨題號 4 → 7 個 */
+    var SHOWN = [4, 7];
+    var NUM_SHOWN = [5, 7];                  /* 數字題顯示幾個數字 */
+    var NUM_FROM = 3, NUM_P = 0.35;          /* 第幾題起有數字題、每題是數字題的機率 */
+    var NUM_CAP = 999;                       /* 數字題裡出現的數字（絕對值）上限 */
+    var SCALE_MIN = 0.32, SCALE_STEP = 0.136;     /* 圖案縮放：大小 1 級 → 0.32、每級加 0.136（6 級＝1.0） */
+    var SIZE_GAP = 2;                        /* 「大小」干擾選項跟正解至少差幾級 */
     var NEXT_MS = 1000, WRONG_MS = 3200;
     var SIZE_MAX = 6;
 
@@ -59,6 +71,8 @@
     function nAttrFor(level) { return Math.round(kit.ramp(level, ATTR_START, ATTR_END, LEVEL_RAMP)); }
     /* 循環的長度 K */
     function kFor(level) { return Math.round(kit.ramp(level, K_START, K_END, LEVEL_RAMP)); }
+    /* 這一題顯示幾個圖案 */
+    function shownFor(level) { return Math.round(kit.ramp(level, SHOWN[0], SHOWN[1], LEVEL_RAMP)); }
     /* 這一題限時 */
     function timeFor(level) { return kit.ramp(level, TIME_START, TIME_END, LEVEL_RAMP); }
     /* 取餘數，確保結果是正數（JS 的 % 對負數會得到負數，所以多加一次） */
@@ -142,19 +156,19 @@
                 rules.sizeKind = kit.pick(['wave', 'up', 'down'], rand);
                 rules.sizeA = kit.randInt(1, SIZE_MAX - 2, rand); rules.sizePh = kit.randInt(0, 3, rand);
             } else { rules.sizeKind = 'const'; rules.sizeA = kit.randInt(3, 5, rand); rules.sizePh = 0; }
-            /* 依規則算出前 6 個圖案 */
-            var items = [];
-            for (var i = 0; i <= SHOWN; i++) items.push(itemAt(rules, i));
-            var shown = items.slice(0, SHOWN);
+            /* 依規則算出前 n＋1 個圖案（前 n 個顯示，最後一個是答案） */
+            var nShown = shownFor(level), items = [];
+            for (var i = 0; i <= nShown; i++) items.push(itemAt(rules, i));
+            var shown = items.slice(0, nShown);
             /* 答案不唯一就重抽 */
             if (!isUnique(shown)) continue;
             var cn = consistentNext(shown);
-            var ans = items[SHOWN];
+            var ans = items[nShown];
             /* 自我檢查：窮舉推出的答案必須和規則算出的答案一樣 */
             if (cn.shape[0] !== ans.shape || cn.color[0] !== ans.color || cn.rotation[0] !== ans.rotation || cn.size[0] !== ans.size) continue;     /* 自我檢查：窮舉得到的答案要等於規則算出的答案 */
             var opt = makeOptions(shown, ans, rules, rand);
             if (!opt) continue;
-            return { level: level, rules: rules, shown: shown, answer: ans, options: opt.options, correct: opt.correct };
+            return { kind: 'shape', level: level, rules: rules, shown: shown, answer: ans, options: opt.options, correct: opt.correct };
         }
         throw new Error('seq: cannot build a sequence');
     }
@@ -177,7 +191,7 @@
             if (a === 'shape') d.shape = kit.pick((rules.vary.indexOf('rotation') >= 0 ? SHAPES_ASYM : SHAPES_SYM.concat(SHAPES_ASYM)).filter(function (s) { return s !== ans.shape; }), rand);
             else if (a === 'color') d.color = kit.pick([0, 1, 2, 3, 4].filter(function (c) { return c !== ans.color; }), rand);
             else if (a === 'rotation') d.rotation = mod(ans.rotation + kit.pick([45, 90, 135, 180, 225, 270, 315], rand), 360);
-            else d.size = kit.pick([1, 2, 3, 4, 5, 6].filter(function (s) { return Math.abs(s - ans.size) >= 1; }), rand);
+            else d.size = kit.pick([1, 2, 3, 4, 5, 6].filter(function (s) { return Math.abs(s - ans.size) >= SIZE_GAP; }), rand);
             var k = visualKey(d);
             if (keys[k]) continue;
             keys[k] = true; list.push(d);
@@ -186,6 +200,98 @@
         var order = kit.shuffle([0, 1, 2, 3], rand);
         return { options: order.map(function (i) { return list[i]; }), correct: order.indexOf(0) };
     }
+    /* ═══ 數字題（V1.25）═══ */
+    /* 窮舉規則空間：回傳所有跟 v 吻合的規則推得的「下一個數字」（不重複）。規則家族：
+       等差、輪流加兩個數、差越來越大（二階等差）、前兩個相加、乘 m 再加 c（含等比） */
+    function nextNumbers(v) {
+        var n = v.length, out = [], d = [], i;
+        function add(x) { if (isFinite(x) && x === Math.round(x) && Math.abs(x) <= NUM_CAP && out.indexOf(x) < 0) out.push(x); }
+        for (i = 1; i < n; i++) d.push(v[i] - v[i - 1]);
+        if (d.every(function (x) { return x === d[0]; })) add(v[n - 1] + d[0]);
+        if (d.length >= 4) { var oka = true; for (i = 2; i < d.length; i++) if (d[i] !== d[i - 2]) oka = false; if (oka) add(v[n - 1] + d[d.length - 2]); }
+        if (d.length >= 3) { var e = d[1] - d[0], okg = true; for (i = 2; i < d.length; i++) if (d[i] - d[i - 1] !== e) okg = false; if (okg) add(v[n - 1] + d[d.length - 1] + e); }
+        if (n >= 4) { var okf = true; for (i = 2; i < n; i++) if (v[i] !== v[i - 1] + v[i - 2]) okf = false; if (okf) add(v[n - 1] + v[n - 2]); }
+        if (n >= 4 && d[0] !== 0) {
+            var m = d[1] / d[0];
+            if (m === Math.round(m)) { var c = v[1] - m * v[0], oka2 = true; for (i = 1; i < n; i++) if (v[i] !== m * v[i - 1] + c) oka2 = false; if (oka2) add(m * v[n - 1] + c); }
+        }
+        return out;
+    }
+    function numShownFor(level) { return Math.round(kit.ramp(level, NUM_SHOWN[0], NUM_SHOWN[1], LEVEL_RAMP)); }
+    /* 這一題可用的數字規則（依題號解鎖） */
+    function numTypesFor(level) {
+        if (level < 6) return ['arith', 'affine0'];
+        if (level < 11) return ['arith', 'affine0', 'alt', 'grow'];
+        return ['arith', 'affine0', 'alt', 'grow', 'fib', 'affine'];
+    }
+    function sgn(x) { return x < 0 ? '減 ' + (-x) : '加 ' + x; }
+    /* 依規則算出 count 個數字，回傳 { values, text }；values 超出範圍就回傳 null（重抽） */
+    function numRule(type, level, rand, count) {
+        var v = [], i, text;
+        if (type === 'arith') {
+            var d = kit.randInt(2, 9, rand) * (level >= 16 && rand() < 0.4 ? -1 : 1), a0 = d < 0 ? kit.randInt(40, 90, rand) : kit.randInt(1, 30, rand);
+            for (i = 0; i < count; i++) v.push(a0 + d * i);
+            text = '每次' + sgn(d);
+        } else if (type === 'affine0') {
+            var r = kit.pick([2, 3], rand), g0 = kit.randInt(1, 4, rand);
+            for (i = 0; i < count; i++) v.push(g0 * Math.pow(r, i));
+            text = '每次乘 ' + r;
+        } else if (type === 'alt') {
+            var p = kit.randInt(2, 9, rand), q = kit.pick([-5, -4, -3, -2, -1, 1, 2, 3, 4], rand), s0 = kit.randInt(10, 40, rand);
+            if (p === q) return null;
+            v.push(s0); for (i = 1; i < count; i++) v.push(v[i - 1] + (i % 2 === 1 ? p : q));
+            text = '輪流' + sgn(p) + '、' + sgn(q);
+        } else if (type === 'grow') {
+            var d0 = kit.randInt(1, 4, rand), e = kit.randInt(1, 3, rand), b0 = kit.randInt(0, 10, rand);
+            v.push(b0); for (i = 1; i < count; i++) v.push(v[i - 1] + d0 + e * (i - 1));
+            text = '相鄰兩數的差一直變大：' + d0 + '、' + (d0 + e) + '、' + (d0 + 2 * e) + '…（每次多 ' + e + '）';
+        } else if (type === 'fib') {
+            var f0 = kit.randInt(1, 6, rand), f1 = kit.randInt(1, 6, rand);
+            if (f0 === f1) return null;
+            v.push(f0, f1); for (i = 2; i < count; i++) v.push(v[i - 1] + v[i - 2]);
+            text = '每個數字 ＝ 前面兩個數字相加';
+        } else {
+            var m = kit.pick([2, 3], rand), c = kit.pick([-3, -2, -1, 1, 2, 3], rand), x0 = kit.randInt(2, 6, rand);
+            v.push(x0); for (i = 1; i < count; i++) v.push(m * v[i - 1] + c);
+            text = '每次乘 ' + m + ' 再' + sgn(c);
+        }
+        if (v.some(function (x) { return Math.abs(x) > NUM_CAP; })) return null;
+        return { values: v, text: text, type: type };
+    }
+    /* 數字題的 3 個干擾項：容易算錯的數字（直線外推、差 1、差 2、差一個公差…），都不等於正解、彼此不同 */
+    function numOptions(shown, ans, rand) {
+        var n = shown.length, last = shown[n - 1], ld = last - shown[n - 2], cands = [last + ld, ans + 1, ans - 1, ans + 2, ans - 2, ans + ld, ans - ld, ans * 2, ans + 10, ans - 10, last + 1];
+        var allowNeg = shown.some(function (x) { return x < 0; }) || ans < 0;
+        cands = cands.filter(function (x, i) { return x !== ans && cands.indexOf(x) === i && Math.abs(x) <= NUM_CAP && (allowNeg || x >= 0); });
+        if (cands.length < 3) return null;
+        var near = cands.slice(0, 5), rest = cands.slice(5);
+        var pickNear = kit.shuffle(near.slice(), rand).concat(kit.shuffle(rest.slice(), rand)).slice(0, 3);
+        var list = [ans].concat(pickNear), order = kit.shuffle([0, 1, 2, 3], rand);
+        return { options: order.map(function (i) { return list[i]; }), correct: order.indexOf(0) };
+    }
+    /* 出一道數字題：回傳 { kind: 'num', shown: [數字], answer, options: [數字], correct, rule: {type, text} } */
+    function makeNumSequence(level, rand) {
+        rand = rand || Math.random;
+        var count = numShownFor(level) + 1;
+        for (var tries = 0; tries < 400; tries++) {
+            var type = kit.pick(numTypesFor(level), rand), r = numRule(type, level, rand, count);
+            if (!r) continue;
+            var shown = r.values.slice(0, count - 1), ans = r.values[count - 1], nx = nextNumbers(shown);
+            if (nx.length !== 1 || nx[0] !== ans) continue;                       /* 答案不唯一（或規則空間推出的跟答案不同）就重抽 */
+            if (type !== 'arith' && new Set(shown).size < 3) continue;
+            var opt = numOptions(shown, ans, rand);
+            if (!opt) continue;
+            return { kind: 'num', level: level, rule: { type: r.type, text: r.text }, shown: shown, answer: ans, options: opt.options, correct: opt.correct };
+        }
+        throw new Error('seq: cannot build a number sequence');
+    }
+    /* 這一題是圖案題還是數字題 */
+    function makeQuestion(level, rand) {
+        rand = rand || Math.random;
+        return (level >= NUM_FROM && rand() < NUM_P) ? makeNumSequence(level, rand) : makeSequence(level, rand);
+    }
+    /* 把規律拆開用文字說明（答錯時顯示）：數字題就是那一句規則 */
+    function explainAny(S) { return S.kind === 'num' ? [S.rule.text] : explain(S); }
     /* 把規律拆開用文字說明（答錯時顯示） */
     /* 把規律拆開說明 */
     function explain(seq) {
@@ -210,7 +316,7 @@
     /* shapeSvg：依形狀、顏色、旋轉、大小畫出一個圖案（SVG） */
     function shapeSvg(it) {
         var svg = kit.svg('svg', { 'class': 'sq-svg', viewBox: '0 0 100 100' });
-        var scale = 0.45 + 0.11 * (it.size - 1);
+        var scale = SCALE_MIN + SCALE_STEP * (it.size - 1);
         /* transform 的順序：先移到圓心、旋轉、縮放，再移回原位，這樣是繞著圖案中心旋轉與縮放 */
         var g = kit.svg('g', { transform: 'translate(50 50) rotate(' + it.rotation + ') scale(' + scale.toFixed(3) + ') translate(-50 -50)' }, svg);
         var cls = 'sq-shape sq-c' + it.color;
@@ -241,8 +347,8 @@
             var my = R;
             root.innerHTML = '';
 
-            /* q 目前第幾題；correctN 答對數；lives 機會；S 這題；state 目前階段；token 流水號 */
-            var q = (startAt || 1) - 1, correctN = q, lives = LIVES, S = null, state = 'idle', token = 0, newRec = false, t0 = 0;
+            /* q 目前第幾題；correctN 答對數；S 這題；state 目前階段；token 流水號 */
+            var q = (startAt || 1) - 1, correctN = q, S = null, state = 'idle', token = 0, newRec = false, t0 = 0;
             /* 建立畫面元素：標題、時間條、上方圖案列、問題、四個選項、說明 */
             var head = h('div', { 'class': 'sq-head', text: ' ' });
             var tb = kit.timebar();
@@ -251,32 +357,34 @@
             var opts = h('div', { 'class': 'sq-opts' });
             var note = h('div', { 'class': 'sq-note', text: ' ' });
             [head, tb.el, row, ask, opts, note].forEach(function (x) { root.appendChild(x); });
-            function meta() { ctx.setMeta(kit.meta(['答對 ' + correctN, '機會 ' + lives])); }
+            function meta() { ctx.setMeta(kit.meta(['答對 ' + correctN])); }
 
             /* 出下一題 */
             function nextQ() {
                 if (my.dead) return;
                 q++;
                 /* 產生這題 */
-                S = makeSequence(q);
+                S = makeQuestion(q);
                 var id = ++token, limit = timeFor(q);
                 state = 'play';
                 head.textContent = '第 ' + q + ' 題';
                 note.textContent = ' ';
                 row.innerHTML = ''; opts.innerHTML = '';
                 /* 上排顯示前 5 個圖案和一個「？」 */
-                S.shown.forEach(function (it) { row.appendChild(h('div', { 'class': 'sq-cell' }, [shapeSvg(it)])); });
+                var isNum = S.kind === 'num';
+                S.shown.forEach(function (it) { row.appendChild(isNum ? h('div', { 'class': 'sq-cell sq-cell--num', text: String(it).replace('-', '−') }) : h('div', { 'class': 'sq-cell' }, [shapeSvg(it)])); });
                 row.appendChild(h('div', { 'class': 'sq-cell sq-cell--q', text: '？' }));
+                ask.textContent = isNum ? '數字有規律，下一個是多少？' : '下一個是哪一個？';
                 /* 四個選項按鈕 */
                 S.options.forEach(function (it, k) {
-                    var b = h('button', { 'class': 'btn sq-opt' }, [shapeSvg(it)]);
+                    var b = isNum ? h('button', { 'class': 'btn sq-opt sq-opt--num', text: String(it).replace('-', '−') }) : h('button', { 'class': 'btn sq-opt' }, [shapeSvg(it)]);
                     b.addEventListener('pointerdown', function (e) { e.preventDefault(); choose(k); });
                     opts.appendChild(b);
                 });
                 meta();
                 t0 = performance.now();
                 /* 主控台印出這題的規律與答案位置 */
-                try { console.info('[猜下一個] 第 ' + q + ' 題：會變 ' + S.rules.vary.join('、') + '（K=' + S.rules.K + '）；' + explain(S).join('；') + '；答案是第 ' + (S.correct + 1) + ' 個；限時 ' + limit.toFixed(1) + ' 秒'); } catch (e) { }
+                try { console.info('[猜下一個] 第 ' + q + ' 題（' + S.kind + '）：' + (S.kind === 'num' ? S.shown.join(',') + ' → ' + S.answer : '會變 ' + S.rules.vary.join('、') + '（K=' + S.rules.K + '）') + '；' + explainAny(S).join('；') + '；答案是第 ' + (S.correct + 1) + ' 個；限時 ' + limit.toFixed(1) + ' 秒'); } catch (e) { }
                 tb.set(1);
                 /* 倒數 */
                 my.loop(function (now) {
@@ -295,8 +403,10 @@
                 tb.set(0);
                 var okAns = k === S.correct;
                 /* 把「？」換成正解 */
-                var qcell = row.lastChild; qcell.className = 'sq-cell'; qcell.textContent = ''; qcell.appendChild(shapeSvg(S.answer));
-                [].forEach.call(opts.children, function (b, i) { b.disabled = true; if (i === S.correct) b.classList.add('sq-opt--ok'); else if (i === k) b.classList.add('sq-opt--bad'); });
+                var qcell = row.lastChild; qcell.className = 'sq-cell' + (S.kind === 'num' ? ' sq-cell--num' : ''); qcell.textContent = '';
+                if (S.kind === 'num') qcell.textContent = String(S.answer).replace('-', '−'); else qcell.appendChild(shapeSvg(S.answer));
+                /* 揭曉：不壓灰色（不用 disabled）；正確答案綠色粗邊框、選錯的紅色粗邊框 */
+                [].forEach.call(opts.children, function (b, i) { b.classList.add('sq-opt--locked'); if (i === S.correct) b.classList.add('sq-opt--ok'); else if (i === k) b.classList.add('sq-opt--bad'); });
                 /* 答對：稍後出下一題 */
                 if (okAns) {
                     correctN++;
@@ -306,13 +416,11 @@
                     my.after(NEXT_MS, nextQ);
                     return;
                 }
-                /* 答錯：扣機會並顯示規律的說明 */
-                lives--; meta();
-                var exp = explain(S);
+                /* 答錯（或超時）：結束，顯示規律的說明，再結算 */
+                var exp = explainAny(S);
                 note.textContent = (k < 0 ? '時間到。' : '') + '規律：' + exp.join('；');
                 Sfx.play('bad');
-                /* 還有機會就繼續；沒有機會 → 結算，kit.resumeFrom 可以從前 5 題繼續 */
-                if (lives > 0) { my.after(WRONG_MS, nextQ); return; }
+                /* 結算，kit.resumeFrom 可以從前 5 題繼續 */
                 my.after(WRONG_MS, function () {
                     var back = kit.resumeFrom(q);
                         kit.result(root, {
@@ -327,7 +435,7 @@
 
             /* G.debug：測試用後門 */
             G.debug = {
-                state: function () { return { q: q, correctN: correctN, lives: lives, state: state, correct: S && S.correct, vary: S && S.rules.vary, shownN: S && S.shown.length, optionsN: S && S.options.length }; },
+                state: function () { return { q: q, correctN: correctN, state: state, kind: S && S.kind, correct: S && S.correct, vary: S && S.rules && S.rules.vary, shownN: S && S.shown.length, optionsN: S && S.options.length }; },
                 choose: choose,
                 chooseRight: function () { choose(S.correct); },
                 chooseWrong: function () { choose((S.correct + 1) % 4); }
@@ -343,12 +451,12 @@
     var G = {
         id: ID,
         name: '猜下一個',
-        rule: '上面一排圖案有規律：形狀、顏色、方向或大小，會照著某種順序改變。**看出規律**，從下面四個選項裡，**點出「下一個」應該長什麼樣子**。每題有時間限制，規律會越來越難發現！',
+        rule: '上面一排圖案有規律：形狀、顏色、方向或大小，會照著某種順序改變；有時候是**一排數字**，要找出數字之間的關係。**看出規律**，從下面四個選項裡，**點出「下一個」是什麼**。每題有時間限制，**答錯就結束**，規律會越來越難發現！',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
-        test: { nAttrFor: nAttrFor, kFor: kFor, timeFor: timeFor, nextCycle: nextCycle, nextRotation: nextRotation, nextSize: nextSize, consistentNext: consistentNext, isUnique: isUnique, visualKey: visualKey, makeSequence: makeSequence, itemAt: itemAt, makeOptions: makeOptions, explain: explain, rating: rating, LEVEL_RAMP: LEVEL_RAMP, SHOWN: SHOWN, SIZE_MAX: SIZE_MAX, SHAPES_ASYM: SHAPES_ASYM, SHAPES_SYM: SHAPES_SYM }
+        test: { shownFor: shownFor, numShownFor: numShownFor, nextNumbers: nextNumbers, numTypesFor: numTypesFor, numRule: numRule, numOptions: numOptions, makeNumSequence: makeNumSequence, makeQuestion: makeQuestion, explainAny: explainAny, NUM_FROM: NUM_FROM, NUM_P: NUM_P, NUM_CAP: NUM_CAP, SCALE_MIN: SCALE_MIN, SCALE_STEP: SCALE_STEP, SIZE_GAP: SIZE_GAP, nAttrFor: nAttrFor, kFor: kFor, timeFor: timeFor, nextCycle: nextCycle, nextRotation: nextRotation, nextSize: nextSize, consistentNext: consistentNext, isUnique: isUnique, visualKey: visualKey, makeSequence: makeSequence, itemAt: itemAt, makeOptions: makeOptions, explain: explain, rating: rating, LEVEL_RAMP: LEVEL_RAMP, SHOWN: SHOWN, SIZE_MAX: SIZE_MAX, SHAPES_ASYM: SHAPES_ASYM, SHAPES_SYM: SHAPES_SYM }
     };
     /* 登記到遊戲清單 */
     Reaction.register(G);

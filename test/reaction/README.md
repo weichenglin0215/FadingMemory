@@ -26,6 +26,10 @@ node test/reaction/t_coins.js        # 只跑一支
 
 `t_cssclass.js`（V1.24.0）掃描全部遊戲檔裡寫的 CSS class 名稱，**兩款以上的遊戲用同一個 class 就失敗**——所有遊戲的 CSS 是一次全部載入的，撞名會讓其中一款的版面跑掉（V1.24 實際發生過：`.pb-cell`、`.bk-info`）。已知而且是故意的共用（混出什麼色借用 `mc-`）與已知但先不處理的共用（`cr-`）列在檔案裡的 `ALLOW`，清單裡的項目如果已經沒有被共用也會失敗（提醒你把它拿掉）。
 
+`t_triple100.js`（V1.26.0）測三張成百：使用者的範例牌組（唯一正解 5 組、陷阱 9 組、共 14 組）、先消陷阱就配不完、產生器 300 副牌都只有唯一分法且陷阱 ≥ 9 組、findTriples／findPartitions 對照暴力。
+
+`t_rating.js`（V1.25.0）測五星評價（`js/rating.js`：台灣時間的「今天」、每款每天一次、送評價的各種結果、平均值的 3 小時快取與失敗退避、評價彈窗的勾選／取消／送出、評完按鈕消失）與「阿嬤都比你厲害」的用戶端（`Leaderboard.overtaken` 的快取、清除、斷線、404），還有 `boot.js` 兩頁的載入順序、SQL 與網頁的時區一致；DOM 用很小的替身，不需要瀏覽器。
+
 `t_leaderboard.js` 測的是世界排行榜（`js/leaderboard.js`、`js/leaderboard_ui.js`）：偽造位數統計、進榜判斷、暱稱清理、慣性捲動物理、快取／離線／待送佇列；並且對**全部 50 款遊戲**（遊戲清單讀 `js/boot.js`，載入器在 `test/leaderboard/all_games.cjs`）檢查：`score` 設定合法、跟 `supabase/MF_leaderboard.sql` 逐款一致（含 SQL 的自動產生區塊有沒有過期）、每款都接了送榜（`kit.result` 帶 `score`，或手動呼叫 `Leaderboard.submit(ID, …)`，不會送兩次）、送榜流程。新增遊戲忘了做排行榜這幾步，這支測試會失敗。資料庫腳本本身的測試在 `test/leaderboard/`（要另外安裝 PGlite，見 `note/世界排行榜說明.md` 第 8 節）。
 
 ## 瀏覽器端驗證（V1.22.0 起，headless Chrome／Edge，不用裝任何套件）
@@ -41,7 +45,7 @@ VIEW=390x844 node test/reaction/input_tests.mjs     同上，但用手機大小�
 node test/reaction/make_icons.mjs                   拍選單縮圖：img/reaction/<id>.png（高 256 像素），詳見 README「選單縮圖」
 node test/reaction/menu_check.mjs                   主選單「選一個想玩的遊戲」全螢幕彈窗（V1.23.0）：版面（滿版、返回、3 欄、格子 50:85、直式頁籤）、各分類格子數、最近、滑鼠與觸控拖曳＋慣性、滾輪、點一下進遊戲、拖曳不誤點（VIEW=820x1180 換視窗大小，截圖存到 --out）
 node test/reaction/stage_check.mjs                  舞台縮放（V1.23.0）：12 種視窗大小都充滿高度（或寬度）且置中、iPad 直式／橫式截圖；模擬 visualViewport 回報一半、visualViewport 與 innerHeight 都回報一半、鍵盤彈出再收起、漏發 resize 事件、縮小再放大、?debug 資訊
-node test/reaction/rules_check.mjs                  全部 108 款的玩法說明彈窗（V1.23.0）：卡片放得進舞台（一顆按鈕與「?」重看的兩顆按鈕）、一句一個 <p>、重點是粗體黑字、一般文字是一般粗細、沒有水平溢出；代表性的幾款存成截圖
+node test/reaction/rules_check.mjs                  全部 109 款的玩法說明彈窗（V1.23.0）：卡片放得進舞台（一顆按鈕與「?」重看的兩顆按鈕）、一句一個 <p>、重點是粗體黑字、一般文字是一般粗細、沒有水平溢出；代表性的幾款存成截圖
 ```
 
 `cdp.mjs` 是共用的小工具：啟動看不見視窗的瀏覽器（遠端除錯埠用 0＝自動挑、結束時用 `taskkill /T` 殺整棵行程樹，不會留下孤兒行程）、送 CDP 指令、開啟某款遊戲並略過說明彈窗。

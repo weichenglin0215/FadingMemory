@@ -5,6 +5,8 @@
          上下拖曳捲動（帶慣性，見 js/scroller.js）；最下面是分類頁籤（全部／最近／記憶／視覺／反應／數字／
          邏輯／手感／目測），頁籤文字是直式排列，取代以前的「上一頁／下一頁」。
      彈窗做法跟 js/share.js 的 QR Code 彈窗同一套：裝在 #stage 裡才會跟著整體縮放、第一次打開才建。
+   · V1.25.0：遊戲格子的名稱下面多一排「五星評價」的平均星數（js/rating.js）；打開遊戲彈窗時，如果這位玩家在某些遊戲
+     被別人超越（世界前 30 名），會自動跳出「阿嬤都比你厲害」彈窗（彈窗公版 Dlg.open，見下面 checkGrandma）。
    · 選主軸：quiz.html?theme=<id>（js/quiz_gen.js 的 QuizGen.session() 已支援）。
    · 選遊戲：reaction.html?game=<id>（js/reaction.js 讀這個參數指定要玩哪一個）。 */
 
@@ -116,7 +118,8 @@
         { id: 'mathcheck', name: '算式對不對', cat: 'number', img: 'img/reaction/mathcheck.png' },
         { id: 'fracduel', name: '分數大對決', cat: 'number', img: 'img/reaction/fracduel.png' },
         { id: 'primetrap', name: '質數陷阱', cat: 'number', img: 'img/reaction/primetrap.png' },
-        { id: 'sum100', name: '湊百消除', cat: 'number', img: 'img/reaction/sum100.png' },
+        { id: 'sum100', name: '兩張成百', cat: 'number', img: 'img/reaction/sum100.png' },
+        { id: 'triple100', name: '三張成百', cat: 'number', img: 'img/reaction/triple100.png' },
         { id: 'timestable', name: '乘法表抓錯', cat: 'number', img: 'img/reaction/timestable.png' },
         { id: 'maxexpr', name: '拼出最大數', cat: 'number', img: 'img/reaction/maxexpr.png' },
         { id: 'glyphspin', name: '鏡中旋轉字', cat: 'visual', img: 'img/reaction/glyphspin.png' },
@@ -261,23 +264,101 @@
         return GAME_TABS.some(function (t) { return t.id === id; });
     }
 
-    /* 這個函式負責做出一格遊戲按鈕（縮圖＋名字）。 */
-    /* 一格遊戲：上面是縮圖（寬度撐滿格子，高度照比例），下面一行遊戲名稱（最多 5 個字）。
+    /* ═══ 五星評價的平均星數（V1.25.0，js/rating.js）═══
+       每一格名稱下面的一排星星。平均值存在手機裡（Rating.loadStats：3 小時才重抓一次，一次拿回全部遊戲），
+       所以格子一做出來就先畫快取裡的值；網路抓到新的再 paintRates() 全部重畫一次。
+       rateEls：選單格子裡的星星（id → 元素）。「阿嬤都比你厲害」彈窗的格子每次都重做，做的時候就畫好，不放進來。 */
+    var rateEls = {};
+    function paintRates() {
+        if (!window.Rating) return;
+        var data = Rating.stats();
+        Object.keys(rateEls).forEach(function (id) { Rating.paint(rateEls[id], id, data); });
+    }
+
+    /* 這個函式負責做出一格遊戲按鈕（縮圖＋名字＋平均星數）。 */
+    /* 一格遊戲：上面是縮圖（寬度撐滿格子，高度照比例），下面一行遊戲名稱（最多 5 個字），再下面一排平均星數。
        縮圖載入失敗（還沒有圖檔）→ 把 <img> 藏起來，改顯示彩色底＋名字第一個字的「印章」，
        圖檔補齊之後會自動正常顯示，不用再改程式。 */
     function gameCell(c) {
         var idx = GAME_CELLS.indexOf(c);
         var img = h('img', { attrs: { src: c.img, alt: '', draggable: 'false', decoding: 'async' } });
         var seal = h('span', { 'class': 'game-cell__seal', text: c.name.charAt(0) });
+        var kids = [h('span', { 'class': 'game-cell__pic' }, [seal, img]), h('span', { 'class': 'game-cell__name', text: c.name })];
+        if (window.Rating) kids.push(h('span', { 'class': 'game-cell__rate' }, [Rating.bar(c.id)]));
         var cell = h('button', {
             'class': 'game-cell game-cell--tone' + (idx % 4), type: 'button',
             attrs: { 'data-id': c.id, 'aria-label': c.name },
             on: { click: function (e) { e.stopPropagation(); pickGame(c.id); } }
-        }, [h('span', { 'class': 'game-cell__pic' }, [seal, img]), h('span', { 'class': 'game-cell__name', text: c.name })]);
+        }, kids);
         /* load / error 是圖片的事件：載入成功就藏起印章；載入失敗（沒有圖檔）就藏起圖片，只顯示印章。 */
         img.addEventListener('load', function () { seal.hidden = true; });
         img.addEventListener('error', function () { img.hidden = true; });
         return cell;
+    }
+
+    /* ═══ 「阿嬤都比你厲害」（V1.25.0）═══
+       玩家按「秒反應」打開「選一個想玩的遊戲」時，查這位玩家在世界排行榜上「被超越」的遊戲——有人在他創下（或刷新）紀錄「之後」才排到他前面；
+       他創紀錄時就已經比他好的人不算，所以不是第一名不會跳，只有真的被別人擠下去才跳
+       （Leaderboard.overtaken → 資料庫 MF_get_overtaken；兩個人的成績都在前 30 名），有的話自動跳出這個彈窗：
+       最多 GRANDMA_MAX 款、最近被超越的排前面；每一格跟選單的格子一樣（縮圖、名稱、平均星數），
+       另外加上 💔 和這位玩家目前的名次（大字、粗體、黑字白框），點格子直接進那款遊戲。
+       · 沒有暱稱（＝從來沒送過成績）的玩家完全不連網；查到的結果存 60 秒，頁面一打開就先在背景抓好。
+       · 打開選單之後 GRANDMA_WAIT_MS 內還沒拿到結果（網路很慢）就這次不跳，免得玩家已經在滑選單時突然被打斷。 */
+    var GRANDMA_MAX = 6;
+    var GRANDMA_WAIT_MS = 4000;
+    var GRANDMA_DELAY_MS = 350;      /* 選單先出現一下下再跳彈窗，玩家才看得出是「選單上又跳出來的通知」 */
+    var grandmaCtl = null;           /* 開著的彈窗（Dlg.open 的控制物件）；null＝沒開 */
+    var grandmaToken = 0;            /* 每次打開／關閉選單都 +1：網路回來時如果號碼不一樣，代表選單已經關掉或重開過，不要再跳 */
+
+    /* 資料庫回傳的清單 → 要顯示的格子：只留選單裡有的遊戲、不重複、名次至少第 2、最多 GRANDMA_MAX 款、順序不變（純函式，t_menu.js 測試） */
+    function grandmaItems(list) {
+        var out = [], seen = {};
+        (Array.isArray(list) ? list : []).forEach(function (x) {
+            if (out.length >= GRANDMA_MAX || !x || !gameById[x.game_id] || seen[x.game_id] || !(x.rank >= 2)) return;
+            seen[x.game_id] = true;
+            out.push({ cell: gameById[x.game_id], rank: x.rank });
+        });
+        return out;
+    }
+
+    /* 一格：跟選單的格子同一個做法（gameCell），再疊上 💔（右上角）與「第 N 名」（縮圖下緣，黑字白框） */
+    function grandmaCell(it) {
+        var cell = gameCell(it.cell);
+        cell.setAttribute('aria-label', it.cell.name + '，你目前是世界第 ' + it.rank + ' 名');
+        var pic = cell.querySelector('.game-cell__pic');
+        pic.appendChild(h('span', { 'class': 'game-cell__heart', text: '💔', attrs: { 'aria-hidden': 'true' } }));
+        pic.appendChild(h('span', { 'class': 'game-cell__rank', attrs: { 'aria-hidden': 'true' } }, [
+            h('small', { text: '第' }), h('b', { text: String(it.rank) }), h('small', { text: '名' })
+        ]));
+        return cell;
+    }
+
+    function closeGrandma() {
+        grandmaToken++;
+        if (grandmaCtl) grandmaCtl.close();
+    }
+
+    function showGrandma(items) {
+        grandmaCtl = Dlg.open({
+            cls: 'dlg--grandma', title: '阿嬤都比你厲害', sub: '有人超越你了，點一款搶回來！',
+            children: [h('div', { 'class': 'gm-grid' }, items.map(grandmaCell))],
+            buttons: [{ text: '關閉', kind: 'line', cls: 'btn--sm' }],
+            onClose: function () { grandmaCtl = null; }
+        });
+    }
+
+    /* 選單打開時呼叫：查被超越的遊戲，有的話跳出彈窗 */
+    function checkGrandma() {
+        if (!window.Leaderboard || !Leaderboard.overtaken || !window.Dlg) return;
+        closeGrandma();
+        var token = grandmaToken, t0 = Date.now();
+        Leaderboard.overtaken().then(function (list) {
+            var items = grandmaItems(list);
+            if (!items.length || token !== grandmaToken || gameDlg.hidden || Date.now() - t0 > GRANDMA_WAIT_MS) return;
+            UI.wait(GRANDMA_DELAY_MS).then(function () {
+                if (token === grandmaToken && !gameDlg.hidden) showGrandma(items);
+            });
+        });
     }
 
     /* 舞台目前的縮放倍率（手機上通常小於 1）：getBoundingClientRect 量到的是「螢幕像素」，要除以它才是舞台裡的像素 */
@@ -292,7 +373,7 @@
         var tabEls = {};             /* 頁籤按鈕（id → 按鈕） */
         var curTab = 'all';
 
-        function hide() { gameDlg.hidden = true; }
+        function hide() { gameDlg.hidden = true; closeGrandma(); }
 
         /* 標題列：左上「返回」（樣式跟遊戲畫面的標題列同一套 .bar__back），標題置中 */
         var back = h('button', {
@@ -332,7 +413,12 @@
                 ]));
             }
             items.forEach(function (c) {
-                var el = cellEls[c.id] || (cellEls[c.id] = gameCell(c));
+                var el = cellEls[c.id];
+                if (!el) {
+                    el = cellEls[c.id] = gameCell(c);
+                    var bar = el.querySelector('.rate-bar');
+                    if (bar) rateEls[c.id] = bar;
+                }
                 el.classList.toggle('game-cell--last', c.id === last);
                 grid.appendChild(el);
             });
@@ -375,14 +461,21 @@
                 if (curTab === 'recent' && !recentIds().length) curTab = 'all';      /* 還沒玩過任何遊戲就別停在空的「最近」 */
                 gameDlg.hidden = false;                                              /* 先顯示出來，下面量尺寸才量得到 */
                 render();
+                paintRates();
                 scroller.scrollTo(0);
                 if (curTab === 'all') scrollToLast();
+                if (window.Rating) Rating.loadStats().then(paintRates);              /* 快取過期才會真的連網 */
+                checkGrandma();
             }
         };
     }
 
     /* 給 Node 測試用（test/reaction/t_menu.js）：資料與純函式；瀏覽器裡沒有人會用它 */
-    window.FMMenu = { GAME_CELLS: GAME_CELLS, GAME_TABS: GAME_TABS, THEME_CELLS: THEME_CELLS, tabGames: tabGames, RECENT_MAX: RECENT_MAX, keys: { last: LAST_GAME_KEY, recent: RECENT_KEY, tab: TAB_KEY } };
+    window.FMMenu = {
+        GAME_CELLS: GAME_CELLS, GAME_TABS: GAME_TABS, THEME_CELLS: THEME_CELLS, tabGames: tabGames, RECENT_MAX: RECENT_MAX,
+        grandmaItems: grandmaItems, GRANDMA_MAX: GRANDMA_MAX,
+        keys: { last: LAST_GAME_KEY, recent: RECENT_KEY, tab: TAB_KEY }
+    };
 
     /* UI.ready()：等網頁 DOM 都準備好了才執行裡面的程式（這時才找得到 getElementById 要找的元素）。 */
     /* UI.ready()：整個檔案真正開始跑的進入點，等 DOM 準備好才動手找元素、綁事件
@@ -407,6 +500,13 @@
         document.getElementById('mode-reaction').addEventListener('click', function () {
             if (!gameMenu) gameMenu = buildGameDlg();
             gameMenu.show();
+        });
+
+        /* 頁面打開一下子之後，先在背景把「平均星數」與「阿嬤都比你厲害」要用的資料抓好（都有快取，沒過期就不連網），
+           玩家按「秒反應」的時候通常已經拿到了，不用等。 */
+        UI.wait(600).then(function () {
+            if (window.Rating) Rating.loadStats().then(paintRates);
+            if (window.Leaderboard && Leaderboard.overtaken) Leaderboard.overtaken();
         });
 
         /* window.FM_VERSION 是 js/boot.js 讀完 version.json 後存起來的版本資訊，這裡拿來顯示在選單底部。 */

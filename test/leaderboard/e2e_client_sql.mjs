@@ -26,7 +26,10 @@ await db.exec(fs.readFileSync(ROOT + 'supabase/MF_leaderboard.sql', 'utf8'));
 const SIG = {
   MF_get_top: [['p_game_id', 'text'], ['p_player_id', 'uuid']],
   MF_submit_score: [['p_game_id', 'text'], ['p_player_id', 'uuid'], ['p_nickname', 'text'], ['p_score', 'numeric']],
-  MF_rename_player: [['p_player_id', 'uuid'], ['p_nickname', 'text']]
+  MF_rename_player: [['p_player_id', 'uuid'], ['p_nickname', 'text']],
+  MF_submit_rating: [['p_game_id', 'text'], ['p_player_id', 'uuid'], ['p_stars', 'int']],      // V1.25.0 五星評價
+  MF_get_ratings: [],
+  MF_get_overtaken: [['p_player_id', 'uuid']]                                                 // V1.25.0 阿嬤都比你厲害
 };
 let httpLog = [];
 globalThis.fetch = async (url, opt) => {
@@ -49,7 +52,7 @@ globalThis.fetch = async (url, opt) => {
   } finally { await db.exec('reset role'); }
 };
 
-// ─── 載入真正的用戶端程式與「全部 108 款真正的遊戲檔案」（用假的 UI 環境）───
+// ─── 載入真正的用戶端程式與「全部 109 款真正的遊戲檔案」（用假的 UI 環境）───
 // 遊戲檔案由 all_games.cjs 載入（依 js/boot.js 的清單），拿到的是各遊戲 register 時登記的真實 score 設定，
 // 所以這個測試驗證的是「遊戲檔案裡的設定」與「資料庫腳本」真的對得起來，不是測試自己抄的一份。
 const mem = new Map();
@@ -60,7 +63,7 @@ globalThis.UI = { h: () => ({}), wait: () => Promise.resolve(), store: { get: (k
 globalThis.Reaction.resultShowing = () => true;
 require(ROOT + 'js/leaderboard.js');
 const LB = globalThis.Leaderboard, T = LB.test;
-ok(GAME_LIST.length === 108 && GAMES.speed && GAMES.spot, '載入 108 款遊戲：' + GAME_LIST.length);
+ok(GAME_LIST.length === 109 && GAMES.speed && GAMES.spot, '載入 109 款遊戲：' + GAME_LIST.length);
 const celebrated = [], toasts = [];
 LB.ui = { askNickname: async () => '', celebrate: (i) => celebrated.push(i), toast: (t) => toasts.push(t) };
 
@@ -133,7 +136,7 @@ ok(bad1.ok && bad1.data.ok === false && bad1.data.error === 'out_of_range', '亂
 const bad2 = await T.rpc('MF_submit_score', { p_game_id: 'speed', p_player_id: '00000000-0000-4000-8000-000000000400', p_nickname: 'x', p_extra: 1, p_score: 1 }, 5000);
 ok(!bad2.ok && bad2.error === 'http_404', '多帶不認識的參數 → 404（跟 PostgREST 一樣）');
 
-// ═══ 5. 全部 108 款遊戲：用戶端設定 ↔ 資料庫設定，真的走一遍 ═══
+// ═══ 5. 全部 109 款遊戲：用戶端設定 ↔ 資料庫設定，真的走一遍 ═══
 // 對每一款遊戲：
 //   · 讀榜單：資料庫認得這個 game_id，better 與遊戲檔案一致；
 //   · 兩位玩家分別送「最好端」與「最差端」的合法成績（min／max 兩個端點），名次方向要對（越小越好／越大越好）；
@@ -182,6 +185,43 @@ console.log = realLog;
 const per = (await db.query('select game_id, count(*)::int as n from public."MF_scores" group by game_id')).rows;
 ok(per.every(p => p.n <= 30), '每款遊戲最多 30 列');
 console.log('全部遊戲：' + checkedGames + ' 款（另外 speed／spot 在前面幾段測過）用戶端設定與資料庫逐一對過，排名方向、範圍邊界、4 位小數都正確');
+
+// ═══ 五星評價、阿嬤都比你厲害（V1.25.0）：真正的 js/rating.js／Leaderboard.overtaken ↔ 真正的 SQL ═══
+{
+  require(ROOT + 'js/rating.js');
+  const R = globalThis.Rating;
+  asPlayer(9001, '評價甲');
+  let r = await R.submit('speed', 4);
+  ok(r.status === 'sent' && r.avg === 4 && r.cnt === 1 && R.ratedToday('speed'), '評價：第一筆送進資料庫：' + JSON.stringify(r));
+  r = await R.submit('speed', 1);
+  ok(r.status === 'already' && r.cnt === 1, '評價：同一天第二次 → already（資料庫擋下）：' + JSON.stringify(r));
+  asPlayer(9002, '評價乙');
+  r = await R.submit(GAMES.speed, 2);
+  ok(r.status === 'sent' && r.avg === 3 && r.cnt === 2, '評價：第二個人 2 顆星 → 平均 3：' + JSON.stringify(r));
+  ok((await R.submit('nope', 3)).status === 'rejected', '評價：沒登記的遊戲 → rejected');
+  const st = await R.loadStats({ force: true });
+  ok(JSON.stringify(st.speed) === '[3,2]', '評價：讀回全部平均，speed 是 [3, 2]：' + JSON.stringify(st));
+  ok(httpLog.every(x => x.name !== 'MF_get_ratings' || JSON.stringify(x.body) === '{}'), '評價：讀平均不帶任何參數');
+  // 阿嬤：甲先上榜、乙後來超越 → 甲查得到「被超越、第 2 名」；甲搶回第一之後就沒有了
+  const zz = { id: 'zz_test', name: '測試', score: { better: 'max', decimals: 0, min: 0, max: 1000 } };
+  asPlayer(9101, '阿嬤甲'); await sleepTick(); await LB.submit(zz, 100);
+  asPlayer(9102, '阿嬤乙'); await sleepTick(); await LB.submit(zz, 200);
+  asPlayer(9101, '阿嬤甲');
+  let ov = await LB.overtaken();
+  ok(ov && ov.length === 1 && ov[0].game_id === 'zz_test' && ov[0].rank === 2 && typeof ov[0].at === 'string', '阿嬤：被超越 → 第 2 名、有時間：' + JSON.stringify(ov));
+  ok(httpLog.some(x => x.name === 'MF_get_overtaken'), '阿嬤：真的呼叫了 MF_get_overtaken');
+  // 丙最後才上榜、排第 3：前面兩個人都比他早創紀錄 → 不是第一名，但沒有被超越 → 不列出
+  asPlayer(9104, '阿嬤丙'); await sleepTick(); await LB.submit(zz, 50);
+  ok(JSON.stringify(await LB.overtaken()) === '[]', '阿嬤：第 3 名但沒有人在他之後超越他 → 不列出');
+  asPlayer(9101, '阿嬤甲');
+  const sr = await LB.submit(zz, 300);
+  ok(sr.status === 'saved', '阿嬤：甲刷新成績搶回第一');
+  ov = await LB.overtaken();
+  ok(Array.isArray(ov) && ov.length === 0, '阿嬤：進榜後快取被清掉、重抓 → 沒有被超越的遊戲：' + JSON.stringify(ov));
+  asPlayer(9103, '');
+  httpLog = [];
+  ok(JSON.stringify(await LB.overtaken()) === '[]' && httpLog.length === 0, '阿嬤：沒有暱稱的玩家完全不連網');
+}
 
 console.log(bad ? 'FAILED ' + bad + ' / ' + total : 'ALL PASS（' + total + ' 項檢查）');
 process.exit(bad ? 1 : 0);

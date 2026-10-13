@@ -1,7 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_area.js — 秒反應・面積一樣大
-   左邊是一個目標形狀（圓、三角形、五角星、十字、L 形隨機抽一種），右邊是一個方塊；
-   拖曳方塊右下角的手柄放大縮小，讓方塊的面積跟左邊的形狀一樣大。只有一次機會，沒有任何數字。
+   上方是一個目標形狀（圓、三角形、五角星、十字、L 形隨機抽一種，盡量畫大，手機上才好觀察），下方是一個方塊；
+   拖曳方塊右下角的「十字箭頭」（上下左右四個箭頭）放大縮小，讓方塊的面積跟上方的形狀一樣大。只有一次機會，沒有任何數字。
+   V1.25（玩家意見）：題目圖形放上方並加大（等效邊長 110～140）、答案方塊放下方；手柄由橘色圓點改成十字箭頭。
    ───────────────────────────────────────────────────────────────────
    · 目標面積 A：等效邊長 EQ_MIN～EQ_MAX（A ＝ 等效邊長²）。
    · 方塊左上角固定在 ANCHOR，邊長 s ＝ 手柄位置決定；初始邊長離答案很遠（×0.45～0.7 或 ×1.4～1.8）。
@@ -18,13 +19,19 @@
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var EQ_MIN = 80, EQ_MAX = 115;                  /* 目標形狀的等效邊長（面積 ＝ 邊長²） */
-    var SQ_MIN = 30, SQ_MAX = 170;                  /* 方塊邊長可拖動的範圍（px） */
-    var ANCHOR = { x: 268, y: 175 };                /* 方塊左上角（固定不動） */
-    var SHAPE_C = { x: 122, y: 300 };               /* 目標形狀的中心 */
-    var HANDLE_R = 22, TOUCH_R = 60;                /* 手柄的畫面半徑、可以抓住的半徑 */
+    var EQ_MIN = 110, EQ_MAX = 140;                 /* 目標形狀的等效邊長（面積 ＝ 邊長²）：盡量大 */
+    var SQ_MIN = 40, SQ_MAX = 180;                  /* 方塊邊長可拖動的範圍（px） */
+    var ANCHOR = { x: 160, y: 335 };                /* 方塊左上角（固定不動）：在畫面下半部 */
+    var SHAPE_C = { x: 236, y: 170 };               /* 目標形狀的中心：在畫面上半部、水平置中 */
+    var HANDLE = 84, TOUCH_R = 62;                  /* 十字箭頭手柄的總寬（px）、可以抓住的半徑 */
     var FAR = [[0.45, 0.7], [1.4, 1.8]];            /* 初始邊長相對答案的倍率範圍（兩段擇一） */
     var KINDS = ['circle', 'triangle', 'star', 'cross', 'ell'];
+    /* 十字型箭頭（上下左右四個箭頭）的多邊形頂點，中心在 (0,0)，總寬 size */
+    function arrowPoints(size) {
+        var a = size / 2, hl = size * 0.19, hw = size * 0.12, sw = size * 0.04, b = a - hl;
+        return [[0, -a], [hw, -b], [sw, -b], [sw, -sw], [b, -sw], [b, -hw], [a, 0], [b, hw], [b, sw], [sw, sw], [sw, b], [hw, b],
+            [0, a], [-hw, b], [-sw, b], [-sw, sw], [-b, sw], [-b, hw], [-a, 0], [-b, -hw], [-b, -sw], [-sw, -sw], [-sw, -b], [-hw, -b]];
+    }
     var STAR_K = 0.4;                               /* 五角星內外半徑比 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
@@ -82,7 +89,7 @@
     function mount(root, ctx) {
         kit.single(root, ctx, {
             id: ID, G: G, better: 'min', max: SCORE.max,
-            title: '拖曳方塊右下角，讓方塊的面積和左邊的圖形一樣大',
+            title: '拖曳方塊右下角的十字箭頭，讓方塊的面積和上方的圖形一樣大',
             numText: function (v) { return v.toFixed(4) + '%'; },
             rating: rating,
             sfx: function (v) { return v < 2 ? 'perfect' : (v < 8 ? 'win' : 'fail'); },
@@ -106,19 +113,19 @@
         /* 方塊（左上角固定）與手柄 */
         var gSq = kit.svg('g', {}, svg);
         var rect = kit.svg('rect', { x: ANCHOR.x, y: ANCHOR.y, width: s, height: s, 'class': 'ar-sq' }, gSq);
-        var handle = kit.svg('circle', { r: HANDLE_R, 'class': 'ar-handle' }, svg);
+        var handle = kit.svg('polygon', { points: arrowPoints(HANDLE).map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '), 'class': 'ar-handle' }, svg);
         var legend = h('div', { 'class': 'ar-legend' });
         stage.appendChild(legend);
         function paint() {
             rect.setAttribute('width', s); rect.setAttribute('height', s);
-            handle.setAttribute('cx', ANCHOR.x + s); handle.setAttribute('cy', ANCHOR.y + s);
+            handle.setAttribute('transform', 'translate(' + (ANCHOR.x + s).toFixed(2) + ' ' + (ANCHOR.y + s).toFixed(2) + ')');
         }
         paint();
         var okBtn = h('button', { 'class': 'btn btn--go ar-ok', text: '確定' });
         stage.appendChild(okBtn);
 
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從手柄出發，沿對角線往「面積一樣大的位置」重複移動（第一次的正確答案） */
-        if (kit.once('area.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: ANCHOR.x + s, y: ANCHOR.y + s, dx: cfg.sAns - s, dy: cfg.sAns - s, delay: 400, text: '請拖曳圓點調整方塊大小' });
+        if (kit.once('area.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: ANCHOR.x + s, y: ANCHOR.y + s, dx: cfg.sAns - s, dy: cfg.sAns - s, delay: 400, text: '請拖曳十字箭頭調整方塊大小' });
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
 
         kit.dragDamp(stage, {
@@ -175,10 +182,10 @@
     var G = {
         id: ID,
         name: '面積一樣大',
-        rule: '左邊是一個圖形，右邊是一個方塊。拖曳方塊右下角的圓點，**讓方塊的面積和左邊的圖形一樣大**。手指移動越慢，變化越細。沒有任何數字，**只有一次機會**，按「確定」後會疊在一起告訴你差了幾 %。',
+        rule: '上方是一個圖形，下方是一個方塊。拖曳方塊右下角的十字箭頭，**讓方塊的面積和上方的圖形一樣大**。手指移動越慢，變化越細。沒有任何數字，**只有一次機會**，按「確定」後會疊在一起告訴你差了幾 %。',
         mount: mount,
         score: SCORE,
-        test: { polyArea: polyArea, shapeOf: shapeOf, areaOf: areaOf, makeRound: makeRound, errPct: errPct, rating: rating, KINDS: KINDS, EQ_MIN: EQ_MIN, EQ_MAX: EQ_MAX, SQ_MIN: SQ_MIN, SQ_MAX: SQ_MAX }
+        test: { arrowPoints: arrowPoints, HANDLE: HANDLE, ANCHOR: ANCHOR, SHAPE_C: SHAPE_C, polyArea: polyArea, shapeOf: shapeOf, areaOf: areaOf, makeRound: makeRound, errPct: errPct, rating: rating, KINDS: KINDS, EQ_MIN: EQ_MIN, EQ_MAX: EQ_MAX, SQ_MIN: SQ_MIN, SQ_MAX: SQ_MAX }
     };
     Reaction.register(G);
 })();

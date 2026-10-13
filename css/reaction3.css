@@ -338,11 +338,12 @@
     fill-opacity: 0.55;
 }
 
-/* 手柄：大圓點，指尖好抓 */
+/* 手柄：十字箭頭（上下左右四個箭頭），指尖好抓 */
 .ar-handle {
     fill: var(--c-orange);
     stroke: var(--c-ink);
     stroke-width: 3;
+    stroke-linejoin: round;
 }
 
 .ar-ok {
@@ -411,9 +412,26 @@
     stroke: var(--c-green);
 }
 
-.hv-ref--h {
-    stroke: var(--c-ink-soft);
-    stroke-dasharray: 10 8;
+/* 水面（橢圓）與水面下方的差異數字（V1.25）：不足＝藍色、超過 50%＝橘紅色 */
+.hv-surface {
+    fill: var(--c-blue);
+    fill-opacity: 0.25;
+    stroke: var(--c-blue);
+    stroke-width: 3;
+}
+
+.hv-diff {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    fill: var(--c-ink);
+    paint-order: stroke;
+    stroke: var(--c-card);
+    stroke-width: 6;
+    stroke-linejoin: round;
+}
+
+.hv-diff--over {
+    fill: var(--c-bad-light);
 }
 
 .hv-msg {
@@ -459,20 +477,20 @@
     stroke-linecap: round;
 }
 
+/* 起點：十字型的箭頭（V1.25 起取代橘色圓點） */
 .bc-start {
     fill: var(--c-orange);
     stroke: var(--c-ink);
     stroke-width: 3;
+    stroke-linejoin: round;
+}
+
+.bc-startdot {
+    fill: var(--c-black);
 }
 
 .bc-start--blink {
     fill: var(--c-bad-light);
-}
-
-.bc-finger {
-    fill: var(--c-blue);
-    stroke: var(--c-ink);
-    stroke-width: 2;
 }
 
 .bc-ref {
@@ -523,15 +541,16 @@
     top: 0;
 }
 
+/* 兩條線的粗細是原本的 300%（8 → 24，V1.25 玩家意見） */
 .sl-ref {
     stroke: var(--c-orange);
-    stroke-width: 8;
+    stroke-width: 24;
     stroke-linecap: round;
 }
 
 .sl-mine {
     stroke: var(--c-blue);
-    stroke-width: 8;
+    stroke-width: 24;
     stroke-linecap: round;
 }
 
@@ -625,6 +644,17 @@
 
 .ra-endu {
     fill: var(--c-orange);
+    fill-opacity: 0.5;
+}
+
+/* 揭曉時橘色的線變 50% 透明，才看得到跟綠色標準線交疊的樣子 */
+.ra-mine--rev {
+    stroke-opacity: 0.5;
+}
+
+/* 兩個圓心的小黑點 */
+.ra-dot {
+    fill: var(--c-black);
 }
 
 .ra-msg {
@@ -820,15 +850,29 @@
     width: auto;
 }
 
-/* ═══ 019 刮刮樂推理（.sc-）═══ */
-.sc-board {
+/* ═══ 019 刮刮樂推理（.sc-，V1.25 改版：上方圖案列＋下方 12 張宮格牌）═══ */
+.sc-reftitle {
     position: absolute;
+    left: 0;
+    right: 0;
+    top: 2px;
+    text-align: center;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
 }
 
-.sc-cell {
+.sc-ref {
     position: absolute;
-    width: 140px;
-    height: 140px;
+    top: 34px;
+    display: flex;
+    justify-content: space-between;
+    padding: var(--sp-2) 0;
+}
+
+.sc-refi {
+    width: 64px;
+    height: 64px;
     border-radius: var(--r-sm);
     background: var(--c-card);
     border: var(--bd);
@@ -836,23 +880,44 @@
     overflow: hidden;
 }
 
-.sc-sym {
-    position: absolute;
-    left: -2px;
-    top: -2px;
-    fill: var(--c-orange);
-    stroke: var(--c-ink);
-    stroke-width: 3;
-    stroke-linejoin: round;
+.sc-refc {
+    display: block;
+    width: 100%;
+    height: 100%;
 }
 
-/* 刮漆層：canvas，翻開時淡出 */
+.sc-board {
+    position: absolute;
+    top: 150px;
+}
+
+.sc-cell {
+    position: absolute;
+    width: 108px;
+    height: 108px;
+    border-radius: var(--r-sm);
+    background: var(--c-card);
+    border: var(--bd);
+    box-sizing: border-box;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.sc-cell:active {
+    transform: scale(0.97);
+}
+
+/* 底下是完整圖案，上面蓋刮刮漆（露出的宮格是透明的）；翻開時漆層淡出 */
+.sc-under,
 .sc-coat {
     position: absolute;
-    left: -2px;
-    top: -2px;
-    width: 140px;
-    height: 140px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.sc-coat {
     transition: opacity 0.35s ease;
 }
 
@@ -877,7 +942,7 @@
     right: 0;
     bottom: 6px;
     text-align: center;
-    font-size: var(--fs-md);
+    font-size: var(--fs-sm);
     font-weight: var(--fw-black);
     color: var(--c-ink);
 }
@@ -895,16 +960,37 @@
     letter-spacing: 2px;
 }
 
-.mc-eq--hide {
-    color: var(--c-ink-soft);
-}
-
 .mc-eq--ok {
     color: var(--c-ok);
 }
 
+/* 答錯、時間到：紅色（V1.25 玩家意見：不要橘色，要紅色） */
 .mc-eq--bad {
-    color: var(--c-bad);
+    color: var(--c-bad-light);
+}
+
+/* 題目算式是錯的：黑色顯示正確算式在題目下面 */
+.mc-fix {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 250px;
+    text-align: center;
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-black);
+}
+
+/* 時間超過沒回答：紅色字 */
+.mc-msg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 330px;
+    text-align: center;
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-bad-light);
 }
 
 /* ═══ 024 分數大對決（.fd-）═══ */
@@ -949,26 +1035,48 @@
     background: var(--c-bad-soft);
 }
 
+/* V1.25：數字加大（兩位數 130px），三位數、帶小數點的依字數縮小才放得進卡片（卡片寬約 226px）；分數線跟著撐滿 */
 .fd-frac {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 90%;
     font-weight: var(--fw-black);
     color: var(--c-ink);
-    font-size: 84px;
+    font-size: 130px;
     line-height: 1.05;
 }
 
+.fd-frac--s2 {
+    font-size: 130px;
+}
+
+.fd-frac--s3 {
+    font-size: 104px;
+}
+
+.fd-frac--s4 {
+    font-size: 84px;
+}
+
+.fd-frac--s5 {
+    font-size: 70px;
+}
+
+.fd-frac--s6 {
+    font-size: 58px;
+}
+
 .fd-bar {
-    width: 120px;
-    height: 6px;
-    border-radius: 3px;
+    align-self: stretch;
+    height: 8px;
+    border-radius: 4px;
     background: var(--c-ink);
     margin: 4px 0;
 }
 
 .fd-val {
-    font-size: var(--fs-md);
+    font-size: var(--fs-lg);
     font-weight: var(--fw-black);
     color: var(--c-ink-soft);
 }
@@ -988,11 +1096,13 @@
 
 .fd-info {
     position: absolute;
-    left: 0;
-    right: 0;
+    left: var(--sp-3);
+    right: var(--sp-3);
     top: 440px;
     text-align: center;
-    font-size: var(--fs-sm);
+    white-space: pre-line;
+    font-size: var(--fs-md);
+    line-height: var(--lh-body);
     font-weight: var(--fw-bold);
     color: var(--c-ink-soft);
 }
@@ -1002,9 +1112,9 @@
     position: absolute;
     left: 0;
     right: 0;
-    top: 130px;
+    top: 90px;
     text-align: center;
-    font-size: 150px;
+    font-size: 230px;
     line-height: 1.1;
     font-weight: var(--fw-black);
     color: var(--c-ink);
@@ -1018,15 +1128,45 @@
     color: var(--c-bad);
 }
 
+/* V1.25：字全部加大；說明（因數分解）與「為什麼看錯」放在數字下面，失敗後停留 5 秒 */
 .pt-note {
     position: absolute;
     left: 0;
     right: 0;
-    top: 320px;
+    top: 340px;
     text-align: center;
-    font-size: var(--fs-lg);
+    font-size: var(--fs-xxl);
     font-weight: var(--fw-bold);
     color: var(--c-ink-soft);
+}
+
+.pt-note--bad {
+    color: var(--c-bad);
+}
+
+.pt-why {
+    position: absolute;
+    left: var(--sp-4);
+    right: var(--sp-4);
+    top: 420px;
+    text-align: center;
+    white-space: pre-line;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-body);
+    color: var(--c-ink);
+}
+
+.pt-btn {
+    font-size: var(--fs-xl);
+    height: 110px;
+    line-height: 1.15;
+}
+
+.pt-btn small {
+    display: block;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
 }
 
 /* ═══ 022 湊百消除（.sm-）═══ */
@@ -1043,12 +1183,12 @@
     top: 56px;
     width: 436px;
     display: grid;
-    grid-template-columns: repeat(4, 100px);
-    gap: 12px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
 }
 
 .sm-card {
-    height: 100px;
+    height: 78px;
     border-radius: var(--r-md);
     background: var(--c-card-alt);
     border: var(--bd);
@@ -1056,7 +1196,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: var(--fs-xxl);
+    font-size: var(--fs-xl);
     font-weight: var(--fw-black);
     color: var(--c-ink);
     cursor: pointer;
@@ -1085,7 +1225,7 @@
     position: absolute;
     left: 0;
     right: 0;
-    top: 520px;
+    top: 580px;
     text-align: center;
     font-size: var(--fs-sm);
     font-weight: var(--fw-bold);
@@ -1254,6 +1394,11 @@
     pointer-events: none;
 }
 
+/* 負數牌：紅色字（V1.25） */
+.mx-card--neg {
+    color: var(--c-bad-light);
+}
+
 .mx-info {
     position: absolute;
     left: 0;
@@ -1286,25 +1431,23 @@
     color: var(--c-ink-soft);
 }
 
+/* 題目字（V1.25）：方框是畫面寬度的 90%（450px），字一直顯示不消失；縮小靠 JS 的 scale（js/reaction_glyphspin.js） */
 .gs-glyph {
     position: absolute;
     left: 50%;
-    top: 190px;
-    width: 260px;
-    height: 260px;
-    margin-left: -130px;
+    top: 56px;
+    width: 450px;
+    height: 450px;
+    margin-left: -225px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: var(--font-note);
-    font-size: 220px;
+    font-size: 440px;
     font-weight: var(--fw-bold);
     color: var(--c-ink);
     line-height: 1;
-}
-
-.gs-glyph--gone {
-    opacity: 0;
+    pointer-events: none;
 }
 
 .gs-opts {
@@ -1328,37 +1471,39 @@
     color: var(--c-bad);
 }
 
-/* ═══ 060 淡到看不見（.fe-）═══ */
+/* ═══ 060 淡到看不見（.fe-）═══
+   V1.25：整個遊戲區是完全的黑色（--dk-bg），沒有灰色方框；E 是白色（越來越暗）；說明文字用淺灰字（黑底上才看得到） */
+.fe-stage {
+    background: var(--dk-bg);
+}
+
 .fe-canvas {
     position: absolute;
     left: 50%;
-    top: 20px;
+    top: 80px;
     margin-left: -180px;
     width: 360px;
     height: 360px;
-    border: 4px solid var(--c-ink);
-    border-radius: var(--r-md);
-    box-sizing: content-box;
-    margin-top: -4px;
-}
-
-.fe-canvas--ok {
-    border-color: var(--c-ok);
-}
-
-.fe-canvas--bad {
-    border-color: var(--c-bad);
+    background: var(--dk-bg);
 }
 
 .fe-note {
     position: absolute;
     left: 0;
     right: 0;
-    top: 410px;
+    top: 500px;
     text-align: center;
     font-size: var(--fs-md);
     font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    color: var(--fe-note);
+}
+
+.fe-canvas--ok~.fe-note {
+    color: var(--c-ok-light);
+}
+
+.fe-canvas--bad~.fe-note {
+    color: var(--c-bad-light);
 }
 
 /* ═══ 054 落單的襪子（.os-）═══ */

@@ -7,8 +7,14 @@
      容量 V(y) ＝ ∫ π r² dy，用 1px 一格的數值積分（累積陣列），找出一半容量的高度 h*。
    · 出題限制：h* 與「一半高度」至少差 MIN_GAP（相對瓶高），不然拉到一半高度就接近正確。
    · 成績 ＝ |V(線以下) − V總÷2| ÷ V總 × 100（%，越小越好，最大 50）。
-   · 揭曉：水從底部倒到你的線，標出線以下／以上的容量 %，再用綠線標出真正的一半容量位置、
-     灰色虛線標出一半高度。
+   · 揭曉（V1.25 玩家意見）：玩家拖的藍線不動，水從瓶底慢慢往上累積到藍線；水面下方即時顯示
+     「目前水量與目標 50% 的差異」，從 −50.0000% 一路往上，過了 0 就變成 ＋XX.XXXX%；水面停住之後才出現代表 50% 的綠線；
+     動畫結束後再停 REVEAL_PAUSE_MS（1.5 秒）才跳出結算彈窗（沒有灰色的一半高度虛線了）。
+     結算彈窗最上面的 % 帶正負號：＋＝水量超過一半（倒太多），－＝不足。
+   · 水量差異的公式（有人覺得視覺跟算出來的差很多，所以特別寫下來）：花瓶是旋轉體，半徑 r(y)，容量 V(y) ＝ ∫₀ʸ π r(t)² dt，
+     差異 ＝ (V(線) − V總÷2) ÷ V總 × 100（%）。公式是對的（test/reaction/t_halfvol.js 用「把花瓶切成很多片圓盤、再逐片相加」
+     的獨立算法核對過）；看起來差很多是因為畫面上的花瓶是「側面剪影」，眼睛看到的是面積 ∫ r dy，容量是 ∫ r² dy，
+     瓶身越寬的地方容量占的比重越大（r 變兩倍，容量變四倍）。所以水面畫成橢圓（有立體感），提醒這是一個圓柱形的容器。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -25,6 +31,9 @@
     var MIN_GAP = 0.08;                     /* 一半容量的高度與一半高度至少差瓶高的幾倍 */
     var START_GAP = 0.15;                   /* 起始水位離答案至少差瓶高的幾倍 */
     var CX = 236, BOTTOM = 575;             /* 花瓶中軸 x、瓶底 y（舞台座標） */
+    var RISE_MS = 2600;                     /* 揭曉時水位從瓶底升到藍線花的時間 */
+    var REVEAL_PAUSE_MS = 1500;             /* 動畫結束（水停住、綠線出現）之後，停多久才出現結算彈窗 */
+    var SURFACE_RY = 0.22;                  /* 水面橢圓的扁度（短軸 ÷ 長軸） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* Catmull-Rom 內插：四個相鄰控制點 p0 p1 p2 p3，t 在 p1～p2 之間 */
@@ -62,6 +71,10 @@
     }
     /* 誤差（%）：線以下的容量與一半總容量的差 ÷ 總容量 */
     function errPct(cum, y) { return Math.abs(volumeAt(cum, y) - cum[VASE_H] / 2) / cum[VASE_H] * 100; }
+    /* 有號的差異（%）：＋＝線以下的容量超過一半、－＝不足。空瓶是 −50、滿瓶是 ＋50 */
+    function signedPct(cum, y) { return (volumeAt(cum, y) - cum[VASE_H] / 2) / cum[VASE_H] * 100; }
+    /* 帶正負號的百分比字串：＋3.1234% ／ −0.5000%（0 算＋） */
+    function fmtSigned(p) { return (p >= 0 ? '+' : '−') + Math.abs(p).toFixed(4) + '%'; }
     /* 出題：隨機控制點半徑；h* 要離一半高度夠遠；起始水位離答案與一半高度都夠遠 */
     function makeRound(rand) {
         rand = rand || Math.random;
@@ -103,7 +116,7 @@
     function setup(api) {
         var stage = api.stage, my = api.my;
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        var cfg = makeRound(), L = cfg.start, locked = false, hint = null;
+        var cfg = makeRound(), L = cfg.start, Wl = L, locked = false, hint = null;
         console.log('[容量一半] 一半容量的高度 ' + cfg.hs.toFixed(2) + '（一半高度 ' + (VASE_H / 2) + '），起始水位 ' + cfg.start.toFixed(2));
         var base = Math.min(BOTTOM, H - 100);
         function yOf(level) { return base - level; }
@@ -119,12 +132,13 @@
         var outline = left.concat(right.slice().reverse());
         kit.svg('polygon', { points: outline.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '), 'class': 'hv-vase' }, svg);
         var water = kit.svg('polygon', { 'class': 'hv-water' }, svg);
+        var surface = kit.svg('ellipse', { 'class': 'hv-surface', cx: CX, cy: 0, rx: 0, ry: 0 }, svg);         /* 水面（橢圓，看起來是立體的容器） */
         kit.svg('polygon', { points: outline.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '), 'class': 'hv-rim' }, svg);
-        var refHalfH = kit.svg('line', { x1: CX - 150, x2: CX + 150, y1: yOf(VASE_H / 2), y2: yOf(VASE_H / 2), 'class': 'hv-ref hv-ref--h', opacity: 0 }, svg);
         var refHalfV = kit.svg('line', { x1: CX - 150, x2: CX + 150, y1: yOf(cfg.hs), y2: yOf(cfg.hs), 'class': 'hv-ref hv-ref--v', opacity: 0 }, svg);
         var line = kit.svg('line', { x1: CX - 150, x2: CX + 150, 'class': 'hv-line' }, svg);
         var hl = kit.svg('circle', { cx: CX - 150, r: 20, 'class': 'hv-knob' }, svg);
         var hr = kit.svg('circle', { cx: CX + 150, r: 20, 'class': 'hv-knob' }, svg);
+        var diffTxt = kit.svg('text', { x: CX, y: 0, 'text-anchor': 'middle', 'class': 'hv-diff', opacity: 0 }, svg);   /* 水面下方：目前水量與 50% 的差異 */
         var msg = h('div', { 'class': 'hv-msg' });
         stage.appendChild(msg);
         var okBtn = h('button', { 'class': 'btn btn--go hv-ok', text: '確定' });
@@ -138,8 +152,11 @@
             pts.push([CX + radiusAt(cfg.rs, 0), yOf(0)]);
             return pts.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' ');
         }
+        /* L ＝ 藍線（玩家拖的）的位置；Wl ＝ 水位（平常等於 L，揭曉時從 0 升到 L，藍線不動） */
         function paint() {
-            water.setAttribute('points', waterPoly(L));
+            water.setAttribute('points', waterPoly(Wl));
+            var rw = radiusAt(cfg.rs, Wl);
+            surface.setAttribute('cy', yOf(Wl)); surface.setAttribute('rx', rw); surface.setAttribute('ry', (rw * SURFACE_RY).toFixed(2));
             line.setAttribute('y1', yOf(L)); line.setAttribute('y2', yOf(L));
             hl.setAttribute('cy', yOf(L)); hr.setAttribute('cy', yOf(L));
         }
@@ -152,7 +169,7 @@
         kit.dragDamp(stage, {
             enabled: function () { return !locked; },
             start: function () { hideHint(); return true; },
-            move: function (dx, dy) { L = kit.clamp(L - dy, 0, VASE_H); paint(); }
+            move: function (dx, dy) { L = kit.clamp(L - dy, 0, VASE_H); Wl = L; paint(); }
         });
         kit.onTap(okBtn, function () { submit(); });
 
@@ -161,19 +178,28 @@
             locked = true; hideHint();
             okBtn.style.display = 'none';
             Sfx.play('click');
-            var real = errPct(cfg.cum, L);
+            var real = errPct(cfg.cum, L), sgn = signedPct(cfg.cum, L) >= 0 ? 1 : -1;
             var below = volumeAt(cfg.cum, L) / cfg.total * 100;
-            /* 揭曉：水從底部倒到你的線 */
-            var target = L; L = 0; paint();
-            my.tween(900, function (e) { L = target * e; paint(); }, kit.easeOutCubic).then(function () {
-                L = target; paint();
-                refHalfH.setAttribute('opacity', 1); refHalfV.setAttribute('opacity', 1);
+            /* 揭曉：藍線不動，水從瓶底慢慢往上累積到藍線；水面下方顯示「目前水量與 50% 的差異」（−50.0000% 一路往上，過 0 變＋）；
+               水面停住之後才出現綠線（真正的一半容量），再停 REVEAL_PAUSE_MS 才結算 */
+            var target = L; Wl = 0; paint();
+            diffTxt.setAttribute('opacity', 1);
+            function showDiff() {
+                var p = signedPct(cfg.cum, Wl);
+                diffTxt.textContent = fmtSigned(p) + '（與 50% 的差）';
+                diffTxt.setAttribute('y', Math.min(yOf(Wl) + 44, base - 10));
+                diffTxt.setAttribute('class', 'hv-diff' + (p >= 0 ? ' hv-diff--over' : ''));
+            }
+            showDiff();
+            my.tween(RISE_MS, function (e) { Wl = target * e; paint(); showDiff(); }, kit.easeInOutCubic).then(function () {
+                Wl = target; paint(); showDiff();
+                refHalfV.setAttribute('opacity', 1);
                 msg.innerHTML = '';
                 msg.appendChild(h('div', { text: '線以下 ' + below.toFixed(4) + '%　線以上 ' + (100 - below).toFixed(4) + '%' }));
-                msg.appendChild(h('div', { 'class': 'hv-msg__sub', text: '綠線＝真正的一半容量　灰虛線＝一半高度' }));
+                msg.appendChild(h('div', { 'class': 'hv-msg__sub', text: '綠線＝真正的一半容量' }));
                 msg.classList.add('hv-msg--on');
-                my.after(1900, function () {
-                    api.finish(real, { lines: [
+                my.after(REVEAL_PAUSE_MS, function () {
+                    api.finish(real, { sign: sgn, lines: [
                         '線以下的容量是 ' + below.toFixed(4) + '%（目標 50.0000%）',
                         '真正的一半容量在 ' + (cfg.hs / VASE_H * 100).toFixed(4) + '% 高度，一半高度是 50.0000%',
                         '只有一次機會，想拚更準就再挑戰一次'
@@ -184,9 +210,9 @@
 
         G.debug = {
             state: function () { return { L: L, cfg: cfg, locked: locked }; },
-            setLevel: function (v) { L = kit.clamp(v, 0, VASE_H); paint(); },
-            solve: function () { L = cfg.hs; paint(); submit(); },
-            wrong: function () { L = VASE_H / 2; paint(); submit(); },
+            setLevel: function (v) { L = kit.clamp(v, 0, VASE_H); Wl = L; paint(); },
+            solve: function () { L = cfg.hs; Wl = L; paint(); submit(); },
+            wrong: function () { L = VASE_H / 2; Wl = L; paint(); submit(); },
             submit: submit
         };
     }
@@ -197,7 +223,7 @@
         rule: '畫面上是一個花瓶。上下拖曳水位線，**讓線以下的容量剛好是整個花瓶的一半**。注意：**一半的高度不等於一半的容量**！每次花瓶都不一樣，只有一次機會，按「確定」後水會倒進去告訴你差了幾 %。',
         mount: mount,
         score: SCORE,
-        test: { radiusAt: radiusAt, cumulative: cumulative, volumeAt: volumeAt, halfHeight: halfHeight, errPct: errPct, makeRound: makeRound, rating: rating, VASE_H: VASE_H, NODES: NODES, R_FLOOR: R_FLOOR, MIN_GAP: MIN_GAP, START_GAP: START_GAP }
+        test: { signedPct: signedPct, fmtSigned: fmtSigned, RISE_MS: RISE_MS, REVEAL_PAUSE_MS: REVEAL_PAUSE_MS, radiusAt: radiusAt, cumulative: cumulative, volumeAt: volumeAt, halfHeight: halfHeight, errPct: errPct, makeRound: makeRound, rating: rating, VASE_H: VASE_H, NODES: NODES, R_FLOOR: R_FLOOR, MIN_GAP: MIN_GAP, START_GAP: START_GAP }
     };
     Reaction.register(G);
 })();

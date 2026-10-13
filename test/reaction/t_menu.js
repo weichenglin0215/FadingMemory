@@ -1,5 +1,5 @@
 // 主選單的遊戲清單（js/menu.js 的 GAME_CELLS／GAME_TABS，V1.23.0）：
-//   · 108 款、id 不重複、名稱最多 5 個字（格子下方的名稱列只放得下 5 個字）、縮圖檔存在且高 256 像素
+//   · 109 款、id 不重複、名稱最多 5 個字（格子下方的名稱列只放得下 5 個字）、縮圖檔存在且高 256 像素
 //   · 每一款都有分類（七個分類加起來剛好是全部，不重疊、沒有空的分類）、頁籤是「全部、最近＋七個分類」共 9 個、名稱都是 2 個字
 //   · 清單裡的 id 與名稱跟各遊戲檔案 Reaction.register 登記的完全一致（改名忘了改一邊，這裡會失敗）
 //   · 「最近」頁籤：最新的在最前面、去掉不存在與重複的、最多 12 款、沒有紀錄時用「上次玩的」當第一筆
@@ -24,7 +24,7 @@ const CELLS = M.GAME_CELLS, TABS = M.GAME_TABS;
 const len = (s) => Array.from(s).length;
 
 // ═══ 1. 清單本身 ═══
-ok(CELLS.length === 108, '共 108 款（' + CELLS.length + '）');
+ok(CELLS.length === 109, '共 109 款（' + CELLS.length + '）');
 const ids = new Set(CELLS.map(c => c.id));
 ok(ids.size === CELLS.length, 'id 不重複');
 CELLS.forEach(c => {
@@ -69,14 +69,14 @@ ok(catTabs.length === 7, '除了「全部」「最近」，有七種分類');
 const counts = {};
 CELLS.forEach(c => { ok(catTabs.indexOf(c.cat) >= 0, c.id + ' 的分類「' + c.cat + '」是七個分類之一'); counts[c.cat] = (counts[c.cat] || 0) + 1; });
 catTabs.forEach(id => ok((counts[id] || 0) >= 5, id + ' 分類至少有 5 款（' + (counts[id] || 0) + '）'));
-ok(catTabs.reduce((a, id) => a + (counts[id] || 0), 0) === 108, '七個分類加起來剛好 108 款');
+ok(catTabs.reduce((a, id) => a + (counts[id] || 0), 0) === 109, '七個分類加起來剛好 109 款');
 console.log('各分類款數：' + TABS.slice(2).map(t => t.name + ' ' + counts[t.id]).join('、'));
 const tg = (t) => M.tabGames(t).map(c => c.id);
 ok(tg('all').join() === CELLS.map(c => c.id).join(), '「全部」＝清單順序');
 catTabs.forEach(id => ok(tg(id).join() === CELLS.filter(c => c.cat === id).map(c => c.id).join(), id + ' 頁籤的順序同「全部」'));
 const seen = new Set(); let overlap = 0;
 catTabs.forEach(id => tg(id).forEach(x => { if (seen.has(x)) overlap++; seen.add(x); }));
-ok(overlap === 0 && seen.size === 108, '分類之間沒有重複、也沒有漏掉（' + seen.size + '）');
+ok(overlap === 0 && seen.size === 109, '分類之間沒有重複、也沒有漏掉（' + seen.size + '）');
 ok(CELLS.filter(c => c.id === 'speed')[0].cat === 'reaction' && CELLS.filter(c => c.id === 'lights')[0].cat === 'memory' && CELLS.filter(c => c.id === 'remainder')[0].cat === 'number', '幾款代表性遊戲的分類');
 
 // ═══ 4. 「最近」頁籤 ═══
@@ -93,6 +93,18 @@ mem.set(K.recent, 'garbage');
 ok(tg('recent').join() === 'spot', '存檔壞掉（不是陣列）→ 退回「上次玩的」');
 mem.set(K.recent, CELLS.slice(0, 30).map(c => c.id));
 ok(tg('recent').length === M.RECENT_MAX && M.RECENT_MAX === 12, '最多 12 款（' + tg('recent').length + '）');
+
+// ═══ 5. 「阿嬤都比你厲害」要顯示哪幾格（V1.25.0：資料庫回傳的被超越清單 → 格子）═══
+const gi = (list) => M.grandmaItems(list).map(x => x.cell.id + ':' + x.rank).join(',');
+ok(M.GRANDMA_MAX === 6, '最多顯示 6 款');
+ok(gi(null) === '' && gi([]) === '' && gi('garbage') === '', '沒有資料 → 一格都沒有（不跳彈窗）');
+ok(gi([{ game_id: 'cake', rank: 3 }, { game_id: 'speed', rank: 2 }]) === 'cake:3,speed:2', '照資料庫的順序（最近被超越的在前）');
+ok(gi([{ game_id: 'nope', rank: 2 }, { game_id: 'zz_test', rank: 2 }, { game_id: 'spot', rank: 4 }]) === 'spot:4', '選單裡沒有的遊戲（測試用 zz_test、已移除的遊戲）略過');
+ok(gi([{ game_id: 'spot', rank: 1 }, { game_id: 'drop', rank: 0 }, { game_id: 'cake' }, null, { game_id: 'pour', rank: 2 }]) === 'pour:2', '名次不是 2 以上（第一名、壞資料）略過');
+ok(gi([{ game_id: 'cake', rank: 3 }, { game_id: 'cake', rank: 5 }]) === 'cake:3', '同一款只出現一次');
+const many = CELLS.slice(0, 10).map((c, i) => ({ game_id: c.id, rank: i + 2 }));
+ok(M.grandmaItems(many).length === 6 && gi(many) === many.slice(0, 6).map(x => x.game_id + ':' + x.rank).join(','), '超過 6 款只取前 6 款');
+ok(M.grandmaItems([{ game_id: 'spot', rank: 4 }])[0].cell === CELLS.filter(c => c.id === 'spot')[0], '每一格用的是選單同一份遊戲資料（縮圖、名稱）');
 
 console.log(bad ? 'FAILED ' + bad + ' / ' + total : 'ALL PASS (' + total + ' checks)');
 process.exitCode = bad ? 1 : 0;

@@ -45,7 +45,7 @@ const attrCount = { 1: [], 20: [] }, allShapes = T.SHAPES_ASYM.concat(T.SHAPES_S
 for (let level = 1; level <= 20; level++) {
   for (let k = 0; k < 250; k++) {
     const S = T.makeSequence(level);
-    if (S.shown.length !== T.SHOWN || !T.isUnique(S.shown)) notUnique++;
+    if (S.shown.length !== T.shownFor(level) || S.kind !== 'shape' || !T.isUnique(S.shown)) notUnique++;
     if (level === 1 || level === 20) attrCount[level].push(S.rules.vary.length);
     if (S.rules.vary.length !== T.nAttrFor(level)) varyBad++;
     // 暴力窮舉的「下一個」要和程式一致
@@ -76,4 +76,56 @@ ok(attrCount[1].every(x => x === 1) && attrCount[20].every(x => x === 3), 'level
 const S0 = T.makeSequence(20); ok(T.explain(S0).length === 3, 'explain lists every varying attribute');
 ok(T.visualKey({ shape: 'circle', color: 1, rotation: 90, size: 3 }) === T.visualKey({ shape: 'circle', color: 1, rotation: 45, size: 3 }) && T.visualKey({ shape: 'square', color: 1, rotation: 90, size: 3 }) === T.visualKey({ shape: 'square', color: 1, rotation: 0, size: 3 }) && T.visualKey({ shape: 'tri', color: 1, rotation: 90, size: 3 }) !== T.visualKey({ shape: 'tri', color: 1, rotation: 0, size: 3 }), 'visualKey respects symmetry');
 ok(T.rating(2) !== T.rating(8) && T.rating(8) !== T.rating(15) && T.rating(15) !== T.rating(22), 'rating tiers');
+// ═══ V1.25：取消機會、最多 8 格、不壓灰、大小差異加大、數字題 ═══
+{ const { rng } = require('./load.js'); const rnd = rng(20261013);
+  // 上方最多 8 格（顯示的圖案最多 7 個＋「？」）：4 → 7 線性
+  ok(T.shownFor(1) === 4 && T.shownFor(20) === 7 && T.shownFor(99) === 7, '顯示圖案數 4 → 7：' + T.shownFor(1) + '、' + T.shownFor(20));
+  for (let l = 1; l <= 20; l++) { ok(T.shownFor(l) + 1 <= 8 && T.numShownFor(l) + 1 <= 8, '第 ' + l + ' 題上方最多 8 格'); if (l > 1) ok(T.shownFor(l) >= T.shownFor(l - 1), '顯示圖案數不減'); }
+  // 大小差異：縮放範圍加大、干擾選項的大小跟正解差 2 級以上
+  ok(T.SCALE_MIN + 5 * T.SCALE_STEP >= 0.99 && T.SCALE_MIN < 0.45 && T.SCALE_STEP > 0.11, '縮放 ' + T.SCALE_MIN + '～' + (T.SCALE_MIN + 5 * T.SCALE_STEP).toFixed(2) + '（原本 0.45～1.0，每級 0.11）');
+  let sizeBad = 0, sizeDist = 0;
+  for (let l = 1; l <= 20; l++) for (let i = 0; i < 200; i++) { const S = T.makeSequence(l, rnd); S.options.forEach((o, j) => { if (j === S.correct) return; if (o.size !== S.answer.size) { sizeDist++; if (Math.abs(o.size - S.answer.size) < T.SIZE_GAP) sizeBad++; } }); }
+  ok(sizeDist > 100 && sizeBad === 0, '「大小」干擾選項跟正解至少差 ' + T.SIZE_GAP + ' 級（出現 ' + sizeDist + ' 次、違規 ' + sizeBad + '）');
+  // nextNumbers 手算
+  const nn = v => JSON.stringify(T.nextNumbers(v));
+  ok(nn([2, 4, 6, 8, 10]) === '[12]' && nn([1, 2, 4, 8, 16]) === '[32]' && nn([5, 3, 1, -1, -3]) === '[-5]', '等差、等比、遞減');
+  ok(nn([10, 17, 15, 22, 20]) === '[27]' && nn([3, 4, 6, 9, 13]) === '[18]' && nn([1, 2, 3, 5, 8]) === '[13]' && nn([3, 5, 9, 17, 33]) === '[65]', '輪流加減、差越來越大、前兩個相加、乘 2 減 1');
+  ok(nn([2, 4, 7, 11, 16]) === '[22]', '差 2、3、4、5 → 下一個差 6');
+  // 暴力核對：獨立地列舉所有參數，比較「下一個」
+  function brute(v) {
+    const out = new Set(), n = v.length, cap = T.NUM_CAP;
+    for (let d = -60; d <= 60; d++) { let fit = true; for (let i = 1; i < n; i++) if (v[i] - v[i - 1] !== d) fit = false; if (fit) out.add(v[n - 1] + d); }                       // 等差
+    for (let a = -60; a <= 60; a++) for (let b = -60; b <= 60; b++) { if (n < 5) continue; let fit = true; for (let i = 1; i < n; i++) if (v[i] - v[i - 1] !== (i % 2 === 1 ? a : b)) fit = false; if (fit) out.add(v[n - 1] + (n % 2 === 1 ? a : b)); }   // 輪流
+    for (let d0 = -60; d0 <= 60; d0++) for (let e = -30; e <= 30; e++) { if (n < 4) continue; let fit = true; for (let i = 1; i < n; i++) if (v[i] - v[i - 1] !== d0 + e * (i - 1)) fit = false; if (fit) out.add(v[n - 1] + d0 + e * (n - 1)); }   // 二階等差
+    { let fit = n >= 4; for (let i = 2; i < n; i++) if (v[i] !== v[i - 1] + v[i - 2]) fit = false; if (fit) out.add(v[n - 1] + v[n - 2]); }                                        // 前兩個相加
+    for (let m = -9; m <= 9; m++) for (let c = -60; c <= 60; c++) { if (n < 4) continue; let fit = true; for (let i = 1; i < n; i++) if (v[i] !== m * v[i - 1] + c) fit = false; if (fit) out.add(m * v[n - 1] + c); }   // 乘 m 加 c
+    return [...out].filter(x => Math.abs(x) <= cap).sort((x, y) => x - y);
+  }
+  let numBad = 0, numTotal = 0, kinds = {};
+  for (let l = T.NUM_FROM; l <= 20; l++) for (let i = 0; i < 80; i++) {
+    const S = T.makeNumSequence(l, rnd); numTotal++; kinds[S.rule.type] = (kinds[S.rule.type] || 0) + 1;
+    const b = brute(S.shown), p = T.nextNumbers(S.shown).slice().sort((x, y) => x - y);
+    if (JSON.stringify(b) !== JSON.stringify(p) || p.length !== 1 || p[0] !== S.answer) numBad++;
+    ok(S.kind === 'num' && S.shown.length === T.numShownFor(l) && S.options.length === 4 && new Set(S.options).size === 4 && S.options[S.correct] === S.answer, '數字題：4 個不同選項、一個正解、顯示 ' + T.numShownFor(l) + ' 個');
+    ok(S.shown.every(x => Number.isInteger(x) && Math.abs(x) <= T.NUM_CAP) && Math.abs(S.answer) <= T.NUM_CAP, '數字都是整數、在範圍內');
+    ok(S.options.every(x => Number.isInteger(x) && Math.abs(x) <= T.NUM_CAP) && (S.shown.some(x => x < 0) || S.answer < 0 || S.options.every(x => x >= 0)), '選項都是整數；數列與答案都沒有負數時選項也沒有');
+    ok(typeof S.rule.text === 'string' && S.rule.text.length > 3, '有規則說明：' + S.rule.text);
+    ok(T.explainAny(S)[0] === S.rule.text, 'explainAny 數字題＝規則說明');
+  }
+  ok(numBad === 0, '數字題：窮舉規則空間推得的下一個唯一，而且等於答案（不一致 ' + numBad + ' / ' + numTotal + '）');
+  ok(Object.keys(kinds).length >= 5, '數字規則都出現過：' + JSON.stringify(kinds));
+  // 規則依題號解鎖
+  ok(T.numTypesFor(3).join() === 'arith,affine0' && T.numTypesFor(6).includes('alt') && T.numTypesFor(6).includes('grow') && !T.numTypesFor(6).includes('fib') && T.numTypesFor(11).includes('fib') && T.numTypesFor(11).includes('affine'), '數字規則依題號解鎖');
+  // 題型比例：第 3 題起數字題約 35%，前 2 題一定是圖案題
+  let nums = 0, total = 0; for (let i = 0; i < 1500; i++) { if (T.makeQuestion(10, rnd).kind === 'num') nums++; total++; }
+  ok(Math.abs(nums / total - T.NUM_P) < 0.05, '第 10 題數字題比例 ' + (nums / total).toFixed(3) + '（目標 ' + T.NUM_P + '）');
+  for (let i = 0; i < 300; i++) ok(T.makeQuestion(2, rnd).kind === 'shape' && T.makeQuestion(1, rnd).kind === 'shape', '第 1、2 題一定是圖案題');
+  // 原始碼／樣式：沒有機會、揭曉不壓灰（不用 disabled）、粗邊框
+  const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_seq.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction2.css'), 'utf8');
+  ok(!/LIVES|lives|機會 '/.test(src.replace(/取消「機會」/g, '')), '程式裡沒有機會（LIVES／lives）的參數與顯示');
+  ok(src.indexOf('b.disabled = true') < 0 && src.indexOf('sq-opt--locked') > 0, '揭曉時不再用 disabled（會變灰），改用 sq-opt--locked');
+  ok(/\.sq-opt--ok \{[^}]*border: 10px solid var\(--c-ok\)/.test(css) && /\.sq-opt--bad \{[^}]*border: 10px solid var\(--c-bad-light\)/.test(css), '正確答案綠色粗邊框、選錯紅色粗邊框');
+  ok(!/\.sq-opt--(ok|bad) \{[^}]*background/.test(css), '正確／錯誤的卡片沒有上色底（不壓一層色）');
+  ok(/\.sq-opt--locked \{[^}]*pointer-events: none/.test(css), '揭曉後不能再點');
+}
 console.log(bad ? 'FAILED ' + bad : 'ALL PASS');

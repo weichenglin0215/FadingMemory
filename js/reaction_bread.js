@@ -208,6 +208,7 @@
                 knife = kit.randFloat(W * 0.2, W * 0.8);
                 moveKnife(knife);
                 state = 'aim';
+                btnCut.disabled = false;
                 setInfo();
                 /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從刀子現在的位置往「剛好對半的位置」重複移動（第一關的正確答案） */
                 if (Reaction.kit.once('bread.hint')) {
@@ -284,6 +285,9 @@
             function cut() {
                 if (state !== 'aim') return;
                 state = 'cut';
+                /* 「切下去」按鈕立刻變成不能按（灰的），一直到算完重量、進入下一關（drawBread）才恢復；
+                   避免過關後手指又不小心按到下一塊麵包的「切下去」（V1.25 玩家意見） */
+                btnCut.disabled = true;
                 Sfx.play('pop');
                 var c = knife;
                 /* 裁切出左半與右半 */

@@ -169,6 +169,48 @@
     align-items: center;
 }
 
+/* 結算卡片萬一比遊戲畫面還高（說明行很多＋闖關的兩顆按鈕＋我有話要說＋五星評價，V1.25.0）：外框可以上下捲動，
+   卡片用 margin:auto 置中——放得下時跟原本一模一樣（上下的 auto 平分空白＝置中），放不下時 auto 變成 0，
+   卡片從頂端開始排、可以往下捲，不會被切掉上半部（只用 align-items:center 的話，超出的上半部捲不到）。
+   貼邊版（--dock）本來就貼在上緣或下緣，不套用。 */
+.dlg--result:not(.dlg--dock) {
+    overflow-y: auto;
+}
+
+.dlg--result:not(.dlg--dock) .dlg__card {
+    margin: auto 0;
+}
+
+/* 結算彈窗最下面一排：「我有話要說」「五星評價」左右並排（各占一半寬，字小一號、圖示縮小，才不會折行；
+   五星評價今天已經評過就不顯示，「我有話要說」獨佔整排）。js/reaction_kit.js 的 kit.result 放的。
+   .dlg--snug：卡片放不下時外框與卡片的留白、區塊間距縮小（js/reaction_kit.js 的 fitResult，跟貼邊版同一組數值）。 */
+.dlg__minor {
+    display: flex;
+    gap: var(--sp-3);
+    width: 100%;
+}
+
+.dlg__minor>.btn {
+    flex: 1 1 0;
+    min-width: 0;
+    margin-top: 0;
+    font-size: var(--fs-sm);
+}
+
+.dlg__minor .icon {
+    width: 22px;
+    height: 22px;
+}
+
+.dlg--snug {
+    padding: var(--sp-2);
+}
+
+.dlg--snug .dlg__card {
+    gap: var(--sp-2);
+    padding: var(--sp-4) var(--sp-4) var(--sp-3);
+}
+
 .dlg__feedback {
     width: 100%;
     margin-top: var(--sp-1);

@@ -84,7 +84,7 @@ const near = (a, b, e, m) => ok(Math.abs(a - b) <= e, m + '（' + a + ' vs ' + b
     ok(/返回/.test(lay.backText), '返回按鈕的文字：' + lay.backText);
     ok(lay.title === '選一個想玩的遊戲', '標題：' + lay.title);
     ok(lay.titleBox.x > lay.back.x + lay.back.w - 1 || true, '標題在返回右邊');
-    ok(lay.cells === 108, '「全部」頁籤有 108 格（' + lay.cells + '）');
+    ok(lay.cells === 109, '「全部」頁籤有 109 格（' + lay.cells + '）');
     ok(lay.cols === 3, '3 欄（' + lay.cols + '）');
     near(lay.c0.w / lay.c0.h, 50 / 85, 0.004, '格子寬高比 50:85');
     near(lay.img0.w, lay.c0.w, 1, '縮圖寬度＝格子寬度');
@@ -113,7 +113,7 @@ const near = (a, b, e, m) => ok(Math.abs(a - b) <= e, m + '（' + a + ' vs ' + b
       if (id !== 'recent') await shot('tab_' + id);
     }
     const sumCats = ids.slice(2).reduce((a, id) => a + expect[id], 0);
-    ok(sumCats === 108, '七個分類加起來剛好 108 款（' + sumCats + '）');
+    ok(sumCats === 109, '七個分類加起來剛好 109 款（' + sumCats + '）');
     await cdp.evalJs('document.querySelector(\'.game-tab[data-tab="all"]\').click()');
     await sleep(60);
 

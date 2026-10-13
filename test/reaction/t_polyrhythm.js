@@ -81,4 +81,13 @@ ok(good.died == null || good.measures >= 10, 'a ±45 ms player survives the slow
 ok(spam.died != null && spam.measures <= 3, 'mashing both lanes dies within a few measures (' + spam.measures + ')');
 ok(idle.died != null && idle.measures <= 3, 'not playing dies quickly (' + idle.measures + ')');
 ok(T.rating(1) !== T.rating(8) && T.rating(8) !== T.rating(15) && T.rating(15) !== T.rating(30) && T.rating(30) !== T.rating(50), 'rating tiers');
+// V1.25 玩家意見：1/4 拍延到第 8 小節、節拍距離 200%、音符高度 200%、判定紅線高度 200%、容錯率提高
+ok(T.UNLOCK.blue === 7 && T.UNLOCK.purple > T.UNLOCK.blue && T.UNLOCK.red === 0 && T.UNLOCK.green === 0, '1/4 拍（藍）第 8 小節（索引 7）才出現，1/8 拍（紫）更晚：' + JSON.stringify(T.UNLOCK));
+for (let m = 0; m < 7; m++) ok(!T.allowedColors(m).includes('blue') && !T.allowedColors(m).includes('purple'), '第 ' + (m + 1) + ' 小節沒有 1/4、1/8 拍');
+ok(T.allowedColors(7).includes('blue'), '第 8 小節起可以出現 1/4 拍');
+ok(T.FALL_S <= 1.7 / 2 + 1e-9, '節拍距離 200%：掉落速度加倍（FALL_S ' + T.FALL_S + '）');
+ok(T.NOTE_H === 56 && T.HIT_WIN >= 0.2 - 1e-9, '音符高度 56px（原本 28 的 200%）、判定視窗 ' + T.HIT_WIN + ' 秒（原本 0.14）');
+{ const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction2.css'), 'utf8');
+  ok(/\.py-line \{[^}]*height: 16px;/.test(css), '判定紅線高度 16px（原本 8px 的 200%）');
+  ok(/\.py-note \{[^}]*height: 56px;/.test(css), '.py-note 高度與 NOTE_H 同步（56px）'); }
 console.log(bad ? 'FAILED ' + bad : 'ALL PASS');

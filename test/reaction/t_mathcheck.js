@@ -5,10 +5,9 @@ const near = (a, b, e) => Math.abs(a - b) < (e || 1e-9);
 const SEED = seedOf(20261009); const rnd = rng(SEED);
 
 // 難度曲線：顯示時間、作答限時線性、第 RAMP_LEVELS 題到頂，之後維持；作答限時永遠 ≥ 顯示時間
-ok(T.showMs(1) === 2000 && T.showMs(T.RAMP_LEVELS) === 600 && T.showMs(T.MAX_LEVEL) === 600, '顯示時間端點');
-ok(T.ansMs(1) === 4000 && T.ansMs(T.RAMP_LEVELS) === 2000 && T.ansMs(T.MAX_LEVEL) === 2000, '作答限時端點');
-for (let l = 2; l <= T.MAX_LEVEL; l++) { ok(T.showMs(l) <= T.showMs(l - 1) && T.ansMs(l) <= T.ansMs(l - 1), '單調不增 ' + l); ok(T.ansMs(l) > T.showMs(l), '限時 > 顯示 ' + l); }
-ok(near(T.showMs(16) - (T.showMs(1) + T.showMs(T.RAMP_LEVELS)) / 2, 0, 30), '中點約等於平均（線性）');
+ok(T.ansMs(1) === 6000 && T.ansMs(T.RAMP_LEVELS) === 3000 && T.ansMs(T.MAX_LEVEL) === 3000, '作答限時端點（V1.24 的 1.5 倍）');
+for (let l = 2; l <= T.MAX_LEVEL; l++) ok(T.ansMs(l) <= T.ansMs(l - 1), '單調不增 ' + l);
+ok(near(T.ansMs(16) - (T.ansMs(1) + T.ansMs(T.RAMP_LEVELS)) / 2, 0, 60), '中點約等於平均（線性）');
 // 題型解鎖
 ok(T.typesFor(1).join() === 'mul1,add1' && T.typesFor(6).join() === 'mul21,add2' && T.typesFor(16).indexOf('sub2') >= 0 && T.typesFor(25).indexOf('mul22') >= 0 && T.typesFor(24).indexOf('mul22') < 0, '題型隨題號解鎖');
 // 算式：每種題型的正解都對、範圍合理

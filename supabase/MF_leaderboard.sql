@@ -1,7 +1,8 @@
 -- ═══════════════════════════════════════════════════════════════════
 -- MF_leaderboard.sql — 記憶模糊（FadingMemory）「世界排行榜」資料庫
 -- ───────────────────────────────────────────────────────────────────
--- 用途：記錄「秒反應」每一款遊戲的世界前 30 名成績，以及玩家在結算彈窗寫下的意見（第 5 節，MF_feedback，分遊戲記錄）。
+-- 用途：記錄「秒反應」每一款遊戲的世界前 30 名成績，以及玩家在結算彈窗寫下的意見（第 5 節，MF_feedback，分遊戲記錄）、
+--       五星評價（第 6 節，MF_ratings／MF_rating_stats）；第 7 節是「阿嬤都比你厲害」用的查詢（這位玩家在哪些遊戲被超越）。
 -- 執行方式：Supabase 專案 LoveIsABitMessy-DB → 左側 SQL Editor → New query →
 --           貼上本檔全文 → Run。可以重複執行（全部都是「已存在就略過／覆蓋」的寫法）。
 -- 共用專案提醒：這個專案同時也是 LoveIsABitMessy 在用，所以本檔
@@ -312,7 +313,7 @@ insert into public."MF_games" (game_id, title, better, min_score, max_score) val
     ('cake',         '分蛋糕', 'max', 1, 200),
     ('seven',        '逢七過', 'max', 1, 1000),
     ('teacher',      '老師說', 'max', 1, 1000),
-    ('dualtask',     '一心二用', 'max', 1, 300),
+    ('dualtask',     '一心二用', 'max', 1, 30),
     ('pipes',        '接水管', 'max', 1, 200),
     ('lightsout',    '關燈', 'max', 1, 200),
     ('seq',          '猜下一個', 'max', 1, 500),
@@ -324,11 +325,11 @@ insert into public."MF_games" (game_id, title, better, min_score, max_score) val
     ('rightangle',   '畫成直角', 'min', 0, 180),
     ('stamp',        '蓋在框內', 'min', 0, 200),
     ('focus',        '轉到最清楚', 'min', 0, 100),
-    ('scratch',      '刮刮樂推理', 'min', 3, 12),
+    ('scratch',      '刮刮樂推理', 'max', 1, 20),
     ('mathcheck',    '算式對不對', 'max', 1, 60),
     ('fracduel',     '分數大對決', 'max', 1, 60),
     ('primetrap',    '質數陷阱', 'max', 1, 60),
-    ('sum100',       '湊百消除', 'min', 0, 600),
+    ('sum100',       '兩張成百', 'min', 0, 180),
     ('timestable',   '乘法表抓錯', 'min', 0, 600),
     ('maxexpr',      '拼出最大數', 'max', 1, 30),
     ('glyphspin',    '鏡中旋轉字', 'max', 1, 40),
@@ -375,6 +376,7 @@ insert into public."MF_games" (game_id, title, better, min_score, max_score) val
     ('racefirst',    '誰先衝線', 'max', 1, 60),
     ('spinpick',     '轉盤停哪格', 'max', 1, 60),
     ('alignchar',    '對準才看到', 'max', 1, 60),
+    ('triple100',    '三張成百', 'min', 0, 180),
     -- <<< 自動產生結束
     ('zz_test', '（測試用，可刪）', 'max', 0, 1000)
 on conflict (game_id) do update
@@ -513,6 +515,171 @@ $$;
 
 revoke all on function public."MF_submit_feedback"(text, uuid, text, text, text) from public;
 grant execute on function public."MF_submit_feedback"(text, uuid, text, text, text) to anon, authenticated;
+
+
+-- ═══ 6. 五星評價（V1.25.0 起：結算彈窗「我有話要說」下方的「五星評價」；選遊戲畫面每一格下方的平均星數）═══
+-- 規則：同一位玩家（player_id）、同一款遊戲、同一天（台灣時間）只能評一次，1～5 顆星。
+--   「同一天只能評一次」由資料庫的 unique (game_id, player_id, rated_on) 決定，不靠網頁；
+--   網頁（js/rating.js）那邊「今天評過就藏起按鈕」只是讓玩家不用白按一次。
+-- 兩張表：
+--   MF_ratings       每一筆評價（哪一款、誰、幾顆星、哪一天）。
+--   MF_rating_stats  每款遊戲的「總星數 total、評價次數 cnt」：每寫入一筆評價就順手把這兩個數字加上去（不重算全部），
+--                    選遊戲畫面讀平均值只讀這張小表（最多一款一列），資料再多也不用每次把所有評價加總一遍。
+-- 網頁把平均值存在手機裡 3 小時才重抓一次（js/rating.js 的 STATS_TTL_MS），所以平均值會晚一點才更新
+-- （使用者的要求：不需要非常即時，避免過度的網路查詢）。
+-- 管理者查詢（資料表名稱有大寫，一定要加雙引號）：
+--   select g.title, s.cnt, round(s.total::numeric / s.cnt, 2) as avg
+--     from public."MF_rating_stats" s join public."MF_games" g using (game_id) order by avg desc;    -- 每款遊戲的平均星數
+--   select rated_on, game_id, stars from public."MF_ratings" order by id desc limit 100;          -- 最新 100 筆評價
+--   delete from public."MF_ratings" where game_id = 'zz_test';   -- 手動刪掉評價之後，重新執行本檔，MF_rating_stats 會自動重算
+
+create table if not exists public."MF_ratings" (
+    id          bigint       generated always as identity primary key,
+    game_id     text         not null references public."MF_games" (game_id) on delete cascade on update cascade,
+    player_id   uuid         not null,
+    stars       smallint     not null check (stars between 1 and 5),
+    rated_on    date         not null,            -- 評價的日期（台灣時間）；同一位玩家、同一款遊戲、同一天只能有一列
+    created_at  timestamptz  not null default now(),
+    unique (game_id, player_id, rated_on)
+);
+
+create table if not exists public."MF_rating_stats" (
+    game_id     text         primary key references public."MF_games" (game_id) on delete cascade on update cascade,
+    total       bigint       not null default 0 check (total >= 0),     -- 總星數
+    cnt         bigint       not null default 0 check (cnt >= 0),       -- 評價次數（平均 = total / cnt）
+    updated_at  timestamptz  not null default now()
+);
+
+-- 兩張表都鎖住（開 RLS、不建 policy、收回所有權限）：寫入只能走 MF_submit_rating，讀平均只能走 MF_get_ratings
+alter table public."MF_ratings"      enable row level security;
+alter table public."MF_rating_stats" enable row level security;
+revoke all on table public."MF_ratings"      from public, anon, authenticated;
+revoke all on table public."MF_rating_stats" from public, anon, authenticated;
+
+-- 重新執行本檔時，用 MF_ratings 把統計重算一次：手動刪過評價、或統計數字不小心被改壞，執行一次就修正。
+-- 已經一致的列不會被改動，所以重複執行沒有副作用。
+insert into public."MF_rating_stats" as s (game_id, total, cnt)
+select game_id, sum(stars), count(*) from public."MF_ratings" group by game_id
+on conflict (game_id) do update
+    set total = excluded.total, cnt = excluded.cnt, updated_at = now()
+    where s.total <> excluded.total or s.cnt <> excluded.cnt;
+delete from public."MF_rating_stats" s
+ where not exists (select 1 from public."MF_ratings" r where r.game_id = s.game_id);
+
+-- 寫入：送出一筆評價（stars：1～5 顆星）。
+--   回傳 { ok:true, saved:true,  day, avg, cnt }：寫入成功；avg／cnt 是這款遊戲「加上這一筆之後」的平均星數與評價次數
+--        { ok:true, saved:false, day, avg, cnt }：這位玩家今天已經評過這款遊戲了（這次不算）
+--        { ok:false, error:'unknown_game' | 'bad_args' }
+--   avg 是小數 2 位；還沒有任何評價時 avg 是 null、cnt 是 0。
+create or replace function public."MF_submit_rating"(
+    p_game_id   text,
+    p_player_id uuid,
+    p_stars     int
+)
+returns jsonb
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+    c_tz   constant text := 'Asia/Taipei';     -- 「一天」用台灣時間算（網頁 js/rating.js 的 TZ_OFFSET_MIN 也是 +8 小時，兩邊要一致）
+    v_day  date;
+    v_id   bigint;
+    v_tot  bigint;
+    v_cnt  bigint;
+begin
+    if not exists (select 1 from public."MF_games" where game_id = p_game_id and enabled) then
+        return jsonb_build_object('ok', false, 'error', 'unknown_game');
+    end if;
+    if p_player_id is null or p_stars is null or p_stars < 1 or p_stars > 5 then
+        return jsonb_build_object('ok', false, 'error', 'bad_args');
+    end if;
+    v_day := (now() at time zone c_tz)::date;
+    -- 同一天已經評過 → on conflict do nothing，v_id 會是 null（兩個請求同時送也只會寫進一筆）
+    insert into public."MF_ratings" (game_id, player_id, stars, rated_on)
+    values (p_game_id, p_player_id, p_stars, v_day)
+    on conflict (game_id, player_id, rated_on) do nothing
+    returning id into v_id;
+    if v_id is not null then
+        insert into public."MF_rating_stats" as s (game_id, total, cnt)
+        values (p_game_id, p_stars, 1)
+        on conflict (game_id) do update
+            set total = s.total + excluded.total, cnt = s.cnt + 1, updated_at = now()
+        returning s.total, s.cnt into v_tot, v_cnt;
+    else
+        select s.total, s.cnt into v_tot, v_cnt from public."MF_rating_stats" s where s.game_id = p_game_id;
+    end if;
+    v_cnt := coalesce(v_cnt, 0);
+    return jsonb_build_object(
+        'ok', true, 'saved', v_id is not null, 'day', v_day,
+        'avg', case when v_cnt > 0 then round(v_tot::numeric / v_cnt, 2) end,
+        'cnt', v_cnt);
+end;
+$$;
+
+-- 讀取：全部遊戲的平均星數，一次拿完（選遊戲畫面用；約 100 款 × 20 字元，幾 KB 而已）。
+--   回傳 { "<game_id>": [平均星數（小數 2 位）, 評價次數], ... }；還沒有人評價的遊戲不會出現。
+create or replace function public."MF_get_ratings"()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+    select coalesce(jsonb_object_agg(s.game_id, jsonb_build_array(round(s.total::numeric / s.cnt, 2), s.cnt)), '{}'::jsonb)
+      from public."MF_rating_stats" s
+      join public."MF_games" g on g.game_id = s.game_id and g.enabled
+     where s.cnt > 0;
+$$;
+
+revoke all on function public."MF_submit_rating"(text, uuid, int) from public;
+revoke all on function public."MF_get_ratings"()                   from public;
+grant execute on function public."MF_submit_rating"(text, uuid, int) to anon, authenticated;
+grant execute on function public."MF_get_ratings"()                   to anon, authenticated;
+
+
+-- ═══ 7. 「阿嬤都比你厲害」：這位玩家在哪些遊戲被別人比下去了（V1.25.0 起）═══
+-- 玩家在主選單按「秒反應」、打開「選一個想玩的遊戲」時，網頁（js/leaderboard.js 的 Leaderboard.overtaken）呼叫這個函式，
+-- 列出這位玩家「被超越」的遊戲，以及他目前的名次；網頁最多顯示前 6 款。
+-- 「被超越」＝有別人排在他前面，而且那個人的紀錄是在這位玩家創下（或刷新）自己的紀錄「之後」才達成的（比較 achieved_at）。
+--   例：我 14:20 拿到第 15 名，別人 14:25 拿到第 10 名（我被擠到第 16 名）→ 14:25 之後我打開選單才會列出這款。
+--   我創紀錄的時候就已經排在我前面的人，不算「超越」我（不是第一名不等於被超越）；
+--   我後來刷新了自己的紀錄（achieved_at 變新），之前超越我的人就不再算，要等再有人在那之後超越我才會再列出。
+-- 「兩個人都要在前 30 名」：MF_scores 每款遊戲只留前 N 名（被擠出榜的人那一列已經刪掉了），所以只要這位玩家還有那一列，
+-- 他和排在他前面的人就一定都在前 N 名，不用另外判斷。
+-- 排序：最近被超越的排最前面（at＝最近一次被超越的時間），同時間照名次。
+-- 回傳 [ { game_id, rank, at }, ... ]；永遠不回傳任何人的 player_id。
+-- 每款遊戲最多 30 列、一位玩家最多一款一列，所以就算每款遊戲都上榜，也只是在幾千列裡查一百多次索引，非常快。
+create or replace function public."MF_get_overtaken"(p_player_id uuid)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+    select coalesce(jsonb_agg(jsonb_build_object('game_id', x.game_id, 'rank', x.rank, 'at', x.last_at)
+                              order by x.last_at desc, x.rank, x.game_id), '[]'::jsonb)
+      from (
+            select m.game_id, g.top_n,
+                   (select count(*) + 1
+                      from public."MF_scores" o
+                     where o.game_id = m.game_id
+                       and (o.rank_key, o.achieved_at, o.id) < (m.rank_key, m.achieved_at, m.id))::int as rank,
+                   (select max(o.achieved_at)
+                      from public."MF_scores" o
+                     where o.game_id = m.game_id
+                       and (o.rank_key, o.achieved_at, o.id) < (m.rank_key, m.achieved_at, m.id)
+                       and o.achieved_at > m.achieved_at) as last_at
+              from public."MF_scores" m
+              join public."MF_games" g on g.game_id = m.game_id and g.enabled
+             where m.player_id = p_player_id
+           ) x
+     where x.last_at is not null and x.rank <= x.top_n;     -- 只列「在我的紀錄之後才超越我」的（沒有這種人＝沒被超越）
+$$;
+
+revoke all on function public."MF_get_overtaken"(uuid) from public;
+grant execute on function public."MF_get_overtaken"(uuid) to anon, authenticated;
 
 
 -- 讓 Supabase 的 API 層立刻認得新函式（不執行也會在幾秒內自動更新）

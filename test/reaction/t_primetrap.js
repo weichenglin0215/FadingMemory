@@ -38,4 +38,5 @@ ok(T.poolsFor(21).traps.length >= 12, '101～300 的陷阱合數夠多：' + T.p
   for (let i = 0; i < 20000; i++) { const w = T.nextPrime(hist, rnd); if (hist.length && hist[hist.length - 1] === w) run++; else run = 1; maxRun = Math.max(maxRun, run); hist.push(w); }
   ok(maxRun <= T.SAME_MAX, '同類最多連續 ' + maxRun); }
 ok(T.rating(2) !== T.rating(6) && T.rating(6) !== T.rating(15) && T.rating(15) !== T.rating(30) && T.rating(30) !== T.rating(45), '評語分級');
+ok(T.FAIL_MS >= 4000, '失敗後錯誤資訊停留至少 4 秒：' + T.FAIL_MS);
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

@@ -7,8 +7,10 @@ const { N_, E_, S_, W_ } = T;
 // 旋轉
 ok(T.rot(N_) === E_ && T.rot(E_) === S_ && T.rot(S_) === W_ && T.rot(W_) === N_ && T.rot(N_ | S_) === (E_ | W_) && T.rotN(N_ | E_, 4) === (N_ | E_) && T.bits(N_ | E_ | W_) === 3, 'rot / bits');
 // 難度曲線（線性）
-ok(T.gridFor(1) === 4 && T.gridFor(10) === 6 && T.bucketsFor(1) === 1 && T.bucketsFor(10) === 5 && near(T.timeFor(1), 45) && near(T.timeFor(10), 90) && near(T.timeFor(5.5), 67.5), 'ramps');
-let prevG = 0, prevB = 0, mono = true; for (let l = 1; l <= 10; l++) { if (T.gridFor(l) < prevG || T.bucketsFor(l) < prevB) mono = false; prevG = T.gridFor(l); prevB = T.bucketsFor(l); }
+ok(T.gridFor(1) === 4 && T.gridFor(30) === 8 && T.bucketsFor(1) === 1 && T.bucketsFor(30) === 10 && near(T.timeFor(1), 45) && near(T.timeFor(30), 150) && T.gridFor(99) === 8 && T.bucketsFor(99) === 10, 'ramps（V1.25：30 關走完，棋盤 4→8、水桶 1→10、限時 45→150）');
+ok(T.LEVEL_RAMP === 30 && near(T.fillFor(1), 0.45) && near(T.fillFor(30), 0.7) && T.minTapsFor(1) === 3 && T.minTapsFor(30) === 14, '水管占比 45%→70%、至少轉的次數 3→14');
+for (let l = 11; l <= 30; l++) ok(T.gridFor(l) > T.gridFor(10) || T.bucketsFor(l) > T.bucketsFor(10) || T.fillFor(l) > T.fillFor(10), '第 10 關之後難度仍在上升：第 ' + l + ' 關');
+let prevG = 0, prevB = 0, mono = true; for (let l = 1; l <= 30; l++) { if (T.gridFor(l) < prevG || T.bucketsFor(l) < prevB) mono = false; prevG = T.gridFor(l); prevB = T.bucketsFor(l); }
 ok(mono, 'grid & buckets never decrease');
 // 手算範例：2×2
 {
@@ -29,33 +31,46 @@ ok(mono, 'grid & buckets never decrease');
 }
 // 大量產生關卡
 let treeFail = 0, tapMin = 1e9, tapsSum = {}, solvedAtStart = 0;
-for (let level = 1; level <= 10; level++) {
+const faucetSeen = {}, quad = { total: 0, full: 0 }, sizeByLevel = {};
+for (let level = 1; level <= 30; level++) {
   tapsSum[level] = [];
-  for (let k = 0; k < 600; k++) {
+  for (let k = 0; k < 100; k++) {
     let L; try { L = T.makeLevel(level); } catch (e) { treeFail++; continue; }
     const N = L.N, sol = L.sol;
     ok(sol.filter(m => m).length === L.S, 'tree has S cells (L' + level + ')');
     const leaves = []; let tees = 0, bad3 = 0;
-    sol.forEach((m, i) => { if (!m) return; const b = T.bits(m); if (b === 1 && i !== 0) leaves.push(i); if (b === 3) tees++; if (b > 3) bad3++; });
+    ok(L.faucet >= 0 && L.faucet < N && sol[L.faucet] & N_, '水龍頭在上排、那格有上方開口 (L' + level + ')');
+    faucetSeen[level] = faucetSeen[level] || new Set(); faucetSeen[level].add(L.faucet);
+    sol.forEach((m, i) => { if (!m) return; const b = T.bits(m); if (b === 1 && i !== L.faucet) leaves.push(i); if (b === 3) tees++; if (b > 3) bad3++; });
     ok(leaves.length === L.B && tees === L.B - 1 && bad3 === 0, 'leaves=B and tees=B-1 (L' + level + ': ' + leaves.length + '/' + tees + ')');
     ok(JSON.stringify(leaves) === JSON.stringify(L.buckets), 'buckets are the leaves');
-    ok(T.solved(sol, N, L.buckets), 'the generating solution is solved');
-    const f = T.flow(sol, N); ok(f.wet.every((w, i) => w === (sol[i] !== 0)) && f.leaks.length === 0, 'solution wets exactly the tree, no leak');
-    ok(!T.solved(L.board, N, L.buckets), 'scrambled board is not solved');
+    ok(T.solved(sol, N, L.buckets, L.faucet), 'the generating solution is solved');
+    const f = T.flow(sol, N, L.faucet); ok(f.wet.every((w, i) => w === (sol[i] !== 0)) && f.leaks.length === 0, 'solution wets exactly the tree, no leak');
+    ok(!T.solved(L.board, N, L.buckets, L.faucet), 'scrambled board is not solved');
     let rotOk = true; L.board.forEach((m, i) => { if (!sol[i]) { if (m !== 0) rotOk = false; } else if (T.tapsFor(m, sol[i]) < 0) rotOk = false; });
     ok(rotOk, 'board cells are rotations of the solution cells');
     const need = T.tapsToSolve(L.board, sol); tapMin = Math.min(tapMin, need); tapsSum[level].push(need);
     // 照答案轉完一定過關
     const b = L.board.slice(); for (let i = 0; i < b.length; i++) if (b[i]) b[i] = T.rotN(b[i], T.tapsFor(b[i], sol[i]));
-    ok(T.solved(b, N, L.buckets), 'applying the planned taps solves the level');
+    ok(T.solved(b, N, L.buckets, L.faucet), 'applying the planned taps solves the level');
+    ok(need >= T.minTapsFor(level), '至少要轉 ' + T.minTapsFor(level) + ' 下：' + need);
+    sizeByLevel[level] = L.S;
+    // 水管要往整個棋盤延伸：棋盤夠大時，樹在左右兩半、上下兩半都有格子（不會只擠在水龍頭附近）
+    if (N >= 6) { quad.total++; const half = N / 2; let l = 0, r = 0, t = 0, bt = 0; sol.forEach((m, i) => { if (!m) return; const x = i % N, y = Math.floor(i / N); if (x < half) l++; else r++; if (y < half) t++; else bt++; }); if (l > 0 && r > 0 && t > 0 && bt > 0 && Math.min(l, r, t, bt) >= 3) quad.full++; }
     ok(Math.abs(L.time - T.timeFor(level)) < 1e-9, 'level time');
     // 邊界：沒有往棋盤外的開口（水龍頭入口除外）
-    sol.forEach((m, i) => { const x = i % N, y = Math.floor(i / N); if (x === 0 && (m & W_)) ok(false, 'opening off the left'); if (x === N - 1 && (m & E_)) ok(false, 'opening off the right'); if (y === N - 1 && (m & S_)) ok(false, 'opening off the bottom'); if (y === 0 && (m & N_) && i !== 0) ok(false, 'opening off the top'); });
+    sol.forEach((m, i) => { const x = i % N, y = Math.floor(i / N); if (x === 0 && (m & W_)) ok(false, 'opening off the left'); if (x === N - 1 && (m & E_)) ok(false, 'opening off the right'); if (y === N - 1 && (m & S_)) ok(false, 'opening off the bottom'); if (y === 0 && (m & N_) && i !== L.faucet) ok(false, 'opening off the top'); });
   }
 }
 ok(treeFail === 0, 'tree generation never fails (' + treeFail + ')');
-ok(tapMin >= T.MIN_TAPS, 'at least MIN_TAPS taps needed (' + tapMin + ')');
+ok(tapMin >= T.MIN_TAPS[0], 'at least MIN_TAPS taps needed (' + tapMin + ')');
+// 水龍頭位置每一關隨機：每個棋盤大小 100 次裡，位置不只一種；第 10 關起有很多不同位置
+for (const lv of [1, 10, 20, 30]) ok(faucetSeen[lv].size >= Math.min(T.gridFor(lv), 3), '第 ' + lv + ' 關水龍頭位置有變化：' + [...faucetSeen[lv]].sort().join(','));
+ok(faucetSeen[30].size >= 7, '8×8 的水龍頭 8 個欄位幾乎都會出現：' + faucetSeen[30].size);
+ok(quad.full / quad.total > 0.97, '大棋盤的水管延伸到整個棋盤（四個象限都有、各至少 3 格）：' + (quad.full / quad.total * 100).toFixed(1) + '%');
+for (let l = 2; l <= 30; l++) ok(sizeByLevel[l] >= sizeByLevel[l - 1] - 8, '水管格數大致隨關卡增加');
+ok(sizeByLevel[30] > sizeByLevel[1] * 4, '水管格數第 30 關 ' + sizeByLevel[30] + ' ≫ 第 1 關 ' + sizeByLevel[1]);
 const avgTaps = l => tapsSum[l].reduce((a, b) => a + b, 0) / tapsSum[l].length;
-ok(avgTaps(1) < avgTaps(5) && avgTaps(5) < avgTaps(10), 'later levels need more taps: ' + [1, 5, 10].map(l => avgTaps(l).toFixed(1)).join(' < '));
+ok(avgTaps(1) < avgTaps(10) && avgTaps(10) < avgTaps(20) && avgTaps(20) < avgTaps(30), 'later levels need more taps: ' + [1, 10, 20, 30].map(l => avgTaps(l).toFixed(1)).join(' < '));
 ok(T.rating(2) !== T.rating(4) && T.rating(4) !== T.rating(7) && T.rating(7) !== T.rating(12), 'rating tiers');
 console.log(bad ? 'FAILED ' + bad : 'ALL PASS');

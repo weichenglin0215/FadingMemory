@@ -28,4 +28,10 @@ ok(T.signedDiff(10, 350) === 20 && T.signedDiff(350, 10) === -20, 'signedDiff');
 ok(T.zoomFor(30, 280) === 1 && T.zoomFor(21, 280) === 1 && T.zoomFor(8, 280) > 1, '誤差大（兩端相距 ≥ 100px）不 ZOOM');
 ok(T.zoomFor(3, 280) > 1 && T.zoomFor(1, 280) > T.zoomFor(3, 280) && T.zoomFor(0, 280) === 40, 'ZOOM 倍率隨誤差變小而變大，最大 40');
 ok(T.rating(0.1) !== T.rating(0.5) && T.rating(0.5) !== T.rating(1.5) && T.rating(1.5) !== T.rating(3) && T.rating(3) !== T.rating(9), '評語分級');
+// V1.25：揭曉時兩個圓心各有一個小黑點；橘色的線與圓 50% 透明（用原始碼與樣式檢查接線）
+{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_rightangle.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction3.css'), 'utf8');
+  ok((src.match(/'class': 'ra-dot'/g) || []).length === 2, '揭曉時畫兩個小黑點（綠圓心、橘圓心）');
+  ok(src.indexOf("'class': 'ra-dot'") > src.indexOf("'class': 'ra-endu'"), '小黑點畫在兩個圓的上層');
+  ok(/\.ra-dot \{[^}]*fill: var\(--c-black\)/.test(css), '小黑點是黑色');
+  ok(/\.ra-endu \{[^}]*fill-opacity: 0\.5/.test(css) && /\.ra-mine--rev \{[^}]*stroke-opacity: 0\.5/.test(css) && src.indexOf('ra-mine--rev') > 0, '橘色圓與橘色線 50% 透明'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

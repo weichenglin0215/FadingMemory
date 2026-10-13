@@ -24,6 +24,7 @@
     var START_R = 56;                           /* 手指要在起點多近的地方按下才算 */
     var MIN_VALID = 20;                         /* 放開時橫線短於這個長度就當作沒畫（重來，不算一次機會） */
     var X_MIN = 170, X_MAX = 330;               /* 垂直線的 x 範圍 */
+    var CAP = 28, CAP_L = 100;                  /* 線兩端黑色記號的半長（線加粗成 24px，記號要比線寬）；CAP_L 只給測試用的預設線長 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function makeRound(rand) {
@@ -31,6 +32,16 @@
         return { L: kit.randFloat(LEN_MIN, LEN_MAX, rand), x: kit.randFloat(X_MIN, X_MAX, rand) };
     }
     /* 手指位置 → 橫線長度（夾在 0～MAX_DRAW） */
+    /* 線的方向角 a（弧度，從 x 軸往下量；垂直向下是 π/2、橫放向右是 0）時，上端記號與下端記號的兩個端點 [x1,y1,x2,y2]。
+       記號永遠垂直於線：線的方向 (cos a, sin a)，垂直方向 (−sin a, cos a)。上端在原點、下端在 L 處。 */
+    function capEnds(a, L) {
+        L = L == null ? CAP_L : L;
+        var dx = Math.cos(a), dy = Math.sin(a), px = -Math.sin(a), py = Math.cos(a);
+        return {
+            t: [-CAP * px, -CAP * py, CAP * px, CAP * py],
+            b: [L * dx - CAP * px, L * dy - CAP * py, L * dx + CAP * px, L * dy + CAP * py]
+        };
+    }
     function lenFor(px) { return kit.clamp(px - START.x, 0, MAX_DRAW); }
     function errPct(len, L) { return Math.abs(len - L) / L * 100; }
     function rating(e) {
@@ -63,12 +74,13 @@
         var gGuide = kit.svg('g', {}, svg);
         var ref = kit.svg('g', {}, svg);
         var refLine = kit.svg('line', { x1: 0, y1: 0, x2: 0, y2: cfg.L, 'class': 'sl-ref' }, ref);
-        kit.svg('line', { x1: -14, y1: 0, x2: 14, y2: 0, 'class': 'sl-cap' }, ref);
-        var capB = kit.svg('line', { x1: -14, y1: cfg.L, x2: 14, y2: cfg.L, 'class': 'sl-cap' }, ref);
+        /* 兩端的黑色記號（垂直於線）：線轉成橫放時，兩個記號都要跟著轉成垂直（V1.25：以前左邊那個一直是水平的，是錯的） */
+        var capT = kit.svg('line', { x1: -CAP, y1: 0, x2: CAP, y2: 0, 'class': 'sl-cap' }, ref);
+        var capB = kit.svg('line', { x1: -CAP, y1: cfg.L, x2: CAP, y2: cfg.L, 'class': 'sl-cap' }, ref);
         ref.setAttribute('transform', 'translate(' + cfg.x.toFixed(2) + ' ' + TOP_Y + ')');
         var mine = kit.svg('line', { x1: START.x, y1: sy, x2: START.x, y2: sy, 'class': 'sl-mine' }, svg);
-        kit.svg('line', { x1: START.x, y1: sy - 14, x2: START.x, y2: sy + 14, 'class': 'sl-cap' }, svg);
-        var endCap = kit.svg('line', { x1: START.x, y1: sy - 14, x2: START.x, y2: sy + 14, 'class': 'sl-cap', opacity: 0 }, svg);
+        kit.svg('line', { x1: START.x, y1: sy - CAP, x2: START.x, y2: sy + CAP, 'class': 'sl-cap' }, svg);
+        var endCap = kit.svg('line', { x1: START.x, y1: sy - CAP, x2: START.x, y2: sy + CAP, 'class': 'sl-cap', opacity: 0 }, svg);
         var dot = kit.svg('circle', { cx: START.x, cy: sy, r: 12, 'class': 'sl-start' }, svg);
         var msg = h('div', { 'class': 'sl-msg' });
         stage.appendChild(msg);
@@ -115,8 +127,9 @@
                 var x = tx0 + (START.x - tx0) * e, y = ty0 + (tgt - ty0) * e, a = Math.PI / 2 * (1 - e);
                 refLine.setAttribute('x1', 0); refLine.setAttribute('y1', 0);
                 refLine.setAttribute('x2', cfg.L * Math.cos(a)); refLine.setAttribute('y2', cfg.L * Math.sin(a));
-                capB.setAttribute('x1', cfg.L * Math.cos(a) - 14 * Math.sin(a)); capB.setAttribute('x2', cfg.L * Math.cos(a) + 14 * Math.sin(a));
-                capB.setAttribute('y1', cfg.L * Math.sin(a) + 14 * Math.cos(a)); capB.setAttribute('y2', cfg.L * Math.sin(a) - 14 * Math.cos(a));
+                var ends = capEnds(a, cfg.L);
+                capT.setAttribute('x1', ends.t[0]); capT.setAttribute('y1', ends.t[1]); capT.setAttribute('x2', ends.t[2]); capT.setAttribute('y2', ends.t[3]);
+                capB.setAttribute('x1', ends.b[0]); capB.setAttribute('y1', ends.b[1]); capB.setAttribute('x2', ends.b[2]); capB.setAttribute('y2', ends.b[3]);
                 ref.setAttribute('transform', 'translate(' + x.toFixed(2) + ' ' + y.toFixed(2) + ')');
             }, kit.easeInOutCubic).then(function () {
                 /* 兩個右端的對照線 */
@@ -157,7 +170,7 @@
         rule: '上方有一條垂直的線。手指從左下角的起點出發，往右拖出一條橫線，**長度要和垂直線一樣長**。放開手指就是答案，只有一次機會。小心：**垂直線看起來會比同樣長的橫線更長**！',
         mount: mount,
         score: SCORE,
-        test: { makeRound: makeRound, lenFor: lenFor, errPct: errPct, rating: rating, LEN_MIN: LEN_MIN, LEN_MAX: LEN_MAX, START: START, MAX_DRAW: MAX_DRAW, X_MIN: X_MIN, X_MAX: X_MAX, TOP_Y: TOP_Y }
+        test: { capEnds: capEnds, CAP: CAP, makeRound: makeRound, lenFor: lenFor, errPct: errPct, rating: rating, LEN_MIN: LEN_MIN, LEN_MAX: LEN_MAX, START: START, MAX_DRAW: MAX_DRAW, X_MIN: X_MIN, X_MAX: X_MAX, TOP_Y: TOP_Y }
     };
     Reaction.register(G);
 })();

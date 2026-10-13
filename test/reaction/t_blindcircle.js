@@ -38,4 +38,13 @@ ok(T.analyze(uneven, C, 120).roundness > 99.9, '取樣疏密不影響圓度');
 const rs = T.resample(circle(120, 0, 1, 600), 4); let maxd = 0, mind = 99; for (let i = 1; i < rs.length - 1; i++) { const d = Math.hypot(rs[i].x - rs[i - 1].x, rs[i].y - rs[i - 1].y); maxd = Math.max(maxd, d); mind = Math.min(mind, d); }
 ok(maxd < 4.0001 && mind > 3.9, 'resample 等距：' + mind + '～' + maxd);
 ok(T.rating(99.5) !== T.rating(97.5) && T.rating(97.5) !== T.rating(91) && T.rating(91) !== T.rating(50), '評語分級');
+// V1.25：半徑加大、起點在畫面內；十字箭頭 200px；畫的過程中不畫任何東西（沒有藍色圓點）
+ok(T.R_MIN >= 180 && T.R_MAX <= 236, '半徑加大（原本 100～150）：' + T.R_MIN + '～' + T.R_MAX);
+for (let i = 0; i < 2000; i++) { const c = T.makeRound(rnd); ok(c.start.x - 8 >= 0 && c.start.x <= 472 && c.start.y <= 600 && C.x - c.R >= 0 && C.x + c.R <= 472 && C.y - c.R >= 20 && C.y + c.R <= 600, '圓與起點都在畫面內'); }
+ok(T.ARROW === 200, '十字箭頭總寬 200px');
+{ const p = T.arrowPoints(T.ARROW), xs = p.map(q => q[0]), ys = p.map(q => q[1]);
+  ok(p.length === 24 && Math.min(...xs) === -100 && Math.max(...xs) === 100 && Math.min(...ys) === -100 && Math.max(...ys) === 100, '箭頭多邊形 24 個頂點、範圍 ±100');
+  ok(p.some(q => q[0] === 0 && q[1] === -100) && p.some(q => q[0] === 100 && q[1] === 0) && p.some(q => q[0] === 0 && q[1] === 100) && p.some(q => q[0] === -100 && q[1] === 0), '上下左右四個箭頭尖端'); }
+{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_blindcircle.js'), 'utf8');
+  ok(src.indexOf('bc-finger') < 0, '取消繪製過程中的藍色圓點'); ok(src.indexOf("'class': 'bc-start'") > 0 && src.indexOf('arrowPoints(ARROW)') > 0, '起點用十字箭頭'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

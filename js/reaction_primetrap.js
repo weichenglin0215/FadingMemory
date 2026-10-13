@@ -8,6 +8,8 @@
    · 陷阱合數：最小質因數 ≥ 7 的合數（49、77、91、119、143…），不能被 2、3、5 整除，看起來像質數。
      陷阱合數佔合數題目的比例 TRAP_START → TRAP_END（線性）；偶數與 5 的倍數只在前期出現。
    · 限時 TIME_S 4.0→1.5 秒（線性）。答錯顯示因數分解（91 ＝ 7 × 13）。
+   · V1.25：所有字放大（數字 220px、說明 40px、按鈕 40px）；失敗時錯誤資訊（因數分解、為什麼會看錯）在畫面上停留
+     FAIL_MS（5 秒）才跳出結算彈窗／前 30 名彈窗，讓玩家看清楚錯在哪。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -21,6 +23,7 @@
     var TIME_S = [4.0, 1.5];                    /* 每題限時（秒） */
     var TRAP_START = 0.2, TRAP_END = 0.8;       /* 陷阱合數佔合數題的比例 */
     var MAX_LEVEL = 60, SAME_MAX = 4;
+    var FAIL_MS = 5000;                         /* 失敗後錯誤資訊停留多久才結算 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function isPrime(n) {
@@ -111,9 +114,10 @@
         console.log('[質數陷阱] 第 ' + level + ' 題：' + q.n + '（' + (q.prime ? '質數' : (q.trap ? '陷阱合數 ' : '合數 ') + factorText(q.n)) + '），限時 ' + timeMs(level) + ' ms');
         var num = h('div', { 'class': 'pt-num', text: String(q.n) });
         var note = h('div', { 'class': 'pt-note' });
-        stage.appendChild(num); stage.appendChild(note);
-        var bComp = h('button', { 'class': 'btn btn--primary', text: '合數（非質數）' });
-        var bPrime = h('button', { 'class': 'btn btn--go', text: '質數' });
+        var why = h('div', { 'class': 'pt-why' });
+        stage.appendChild(num); stage.appendChild(note); stage.appendChild(why);
+        var bComp = h('button', { 'class': 'btn btn--primary pt-btn', html: '合數<small>（非質數）</small>' });
+        var bPrime = h('button', { 'class': 'btn btn--go pt-btn', text: '質數' });
         stage.appendChild(h('div', { 'class': 'rx-btnrow' }, [bComp, bPrime]));
         api.timer(timeMs(level), function () { judge(null); });
 
@@ -126,7 +130,9 @@
                 api.pass({ delay: 600 });
             } else {
                 num.classList.add('pt-num--bad');
-                api.fail({ delay: 1700, lines: [
+                note.classList.add('pt-note--bad');
+                why.textContent = (sayPrime == null ? '時間到！' : '答錯了：') + q.n + (q.prime ? ' 是質數' : ' 不是質數') + (q.trap ? '\n它不能被 2、3、5 整除，看起來像質數，其實是合數' : '');
+                api.fail({ delay: FAIL_MS, lines: [
                     (sayPrime == null ? '時間到！' : '答錯了：') + q.n + (q.prime ? ' 是質數' : ' 不是質數'),
                     text,
                     q.trap ? '它不能被 2、3、5 整除，看起來像質數，其實是合數' : ''
@@ -145,7 +151,7 @@
         rule: '畫面中央有一個數字，**判斷它是「質數」還是「合數」**。小心：**91、77、119 這些數字長得像質數，其實是合數**！答錯或來不及就結束，看你能連續答對幾題。越後面，數字越大、時間越短。',
         mount: mount,
         score: SCORE,
-        test: { isPrime: isPrime, spf: spf, factorText: factorText, rangeFor: rangeFor, timeMs: timeMs, trapFrac: trapFrac, poolsFor: poolsFor, nextPrime: nextPrime, makeQuestion: makeQuestion, rating: rating, RAMP_LEVELS: RAMP_LEVELS, TRAP_START: TRAP_START, TRAP_END: TRAP_END, MAX_LEVEL: MAX_LEVEL, SAME_MAX: SAME_MAX }
+        test: { FAIL_MS: FAIL_MS, isPrime: isPrime, spf: spf, factorText: factorText, rangeFor: rangeFor, timeMs: timeMs, trapFrac: trapFrac, poolsFor: poolsFor, nextPrime: nextPrime, makeQuestion: makeQuestion, rating: rating, RAMP_LEVELS: RAMP_LEVELS, TRAP_START: TRAP_START, TRAP_END: TRAP_END, MAX_LEVEL: MAX_LEVEL, SAME_MAX: SAME_MAX }
     };
     Reaction.register(G);
 })();

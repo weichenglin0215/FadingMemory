@@ -301,5 +301,149 @@ for (const g of Object.keys(specs)) {
   await db.exec(`update public."MF_games" set enabled = true where game_id = 'hangpic'`);
 }
 
+// ═══ J. 五星評價（MF_submit_rating／MF_get_ratings，V1.25.0）═══
+{
+  const rate = async (g, p, s) => (await asAnon('select public."MF_submit_rating"($1,$2::uuid,$3::int) as r', [g, p, s]))[0].r;
+  const stats = async () => (await asAnon('select public."MF_get_ratings"() as r'))[0].r;
+  const count = async (where = 'true', params = []) => (await db.query('select count(*)::int as n from public."MF_ratings" where ' + where, params)).rows[0].n;
+  const today = (await db.query(`select (now() at time zone 'Asia/Taipei')::date::text as d`)).rows[0].d;
+  // 權限：anon 不能直接碰兩張評價表
+  for (const q of ['select * from public."MF_ratings"', 'select * from public."MF_rating_stats"',
+    `insert into public."MF_ratings"(game_id,player_id,stars,rated_on) values ('speed','${uuid(700)}',5,current_date)`,
+    `update public."MF_rating_stats" set total = 999`, 'delete from public."MF_ratings"']) {
+    const r = await asAnon(q);
+    ok(r.sqlError && /permission denied/i.test(r.sqlError), 'anon 直接碰評價表應被擋：' + q);
+  }
+  eq(await stats(), {}, '評價：一開始沒有任何平均值');
+  // 參數檢查
+  eq(await rate('nope', uuid(700), 5), { ok: false, error: 'unknown_game' }, '評價：不存在的遊戲');
+  eq(await rate('speed', null, 5), { ok: false, error: 'bad_args' }, '評價：player null');
+  for (const s of [0, 6, -1, null]) eq(await rate('speed', uuid(700), s), { ok: false, error: 'bad_args' }, '評價：星數 ' + s + ' 不合法');
+  ok(await count() === 0, '評價：失敗的呼叫不會寫入任何列');
+  // 正常寫入：回傳平均與次數，日期是台灣時間的今天
+  eq(await rate('speed', uuid(701), 5), { ok: true, saved: true, day: today, avg: 5, cnt: 1 }, '評價：第一筆 5 顆星');
+  // 同一位玩家、同一款遊戲、同一天：第二次不算（星數維持第一次的 5）
+  eq(await rate('speed', uuid(701), 1), { ok: true, saved: false, day: today, avg: 5, cnt: 1 }, '評價：同一天第二次不算');
+  ok(await count(`player_id = $1::uuid`, [uuid(701)]) === 1, '評價：同一天只有一列');
+  ok((await db.query(`select stars from public."MF_ratings" where player_id = $1::uuid`, [uuid(701)])).rows[0].stars === 5, '評價：第二次沒有覆蓋第一次的星數');
+  // 別人評同一款、自己評別款都不受影響
+  eq(await rate('speed', uuid(702), 2), { ok: true, saved: true, day: today, avg: 3.5, cnt: 2 }, '評價：第二個人 2 顆星 → 平均 3.5');
+  eq(await rate('cake', uuid(701), 4), { ok: true, saved: true, day: today, avg: 4, cnt: 1 }, '評價：同一個人評另一款遊戲');
+  eq(await rate('speed', uuid(703), 3), { ok: true, saved: true, day: today, avg: 3.33, cnt: 3 }, '評價：平均取小數 2 位（10 / 3 = 3.33）');
+  eq(await stats(), { speed: [3.33, 3], cake: [4, 1] }, '評價：MF_get_ratings 一次拿到全部遊戲的平均與次數');
+  // 隔天可以再評一次（把昨天那一筆的日期往前挪一天來模擬「過了一天」）
+  await db.exec(`update public."MF_ratings" set rated_on = rated_on - 1 where player_id = '${uuid(701)}' and game_id = 'speed'`);
+  eq(await rate('speed', uuid(701), 1), { ok: true, saved: true, day: today, avg: 2.75, cnt: 4 }, '評價：隔天可以再評（11 / 4 = 2.75）');
+  // 停用的遊戲：不能評、平均也不會出現在清單裡
+  await db.exec(`update public."MF_games" set enabled = false where game_id = 'cake'`);
+  eq(await rate('cake', uuid(704), 5), { ok: false, error: 'unknown_game' }, '評價：停用的遊戲不能評');
+  eq(Object.keys(await stats()).sort(), ['speed'], '評價：停用的遊戲不出現在平均清單');
+  await db.exec(`update public."MF_games" set enabled = true where game_id = 'cake'`);
+  // 重新執行整份 SQL：統計不變；統計被改壞 → 重新執行會用 MF_ratings 重算修好；評價被手動刪掉 → 統計跟著拿掉
+  await db.exec(sql);
+  eq(await stats(), { speed: [2.75, 4], cake: [4, 1] }, '評價：重新執行 SQL 不影響統計');
+  await db.exec(`update public."MF_rating_stats" set total = 999, cnt = 1 where game_id = 'speed'`);
+  await db.exec(sql);
+  eq(await stats(), { speed: [2.75, 4], cake: [4, 1] }, '評價：統計被改壞，重新執行 SQL 會重算修好');
+  await db.exec(`delete from public."MF_ratings" where game_id = 'cake'`);
+  await db.exec(sql);
+  eq(await stats(), { speed: [2.75, 4] }, '評價：手動刪掉評價後重新執行 SQL，統計跟著拿掉');
+  // 刪除遊戲：評價與統計跟著刪（on delete cascade）
+  await rate('zz_test', uuid(705), 3);
+  ok(await count(`game_id = 'zz_test'`) === 1, '評價：zz_test 有一筆');
+  await db.exec(`delete from public."MF_games" where game_id = 'zz_test'`);
+  ok(await count(`game_id = 'zz_test'`) === 0, '評價：遊戲被刪，評價跟著刪');
+  ok((await db.query(`select count(*)::int as n from public."MF_rating_stats" where game_id = 'zz_test'`)).rows[0].n === 0, '評價：遊戲被刪，統計跟著刪');
+  await db.exec(sql);   // 把 zz_test 補回來
+  // 隨機 600 筆：對照參考模型（同一人同一款同一天只算第一筆），逐筆比對回傳值，最後比對整份統計
+  await db.exec('delete from public."MF_ratings"');
+  await db.exec(sql);
+  let s2 = 41; const rnd = () => (s2 = (s2 * 1103515245 + 12345) >>> 0) / 4294967296;
+  const G = ['speed', 'spot', 'cake', 'drop'], model = {}, seen = new Set();
+  let mismatch = 0;
+  for (let i = 0; i < 600; i++) {
+    const g = G[Math.floor(rnd() * G.length)], p = uuid(710 + Math.floor(rnd() * 40)), st = 1 + Math.floor(rnd() * 5);
+    const k = g + '|' + p, fresh = !seen.has(k);
+    if (fresh) { seen.add(k); model[g] = model[g] || { t: 0, n: 0 }; model[g].t += st; model[g].n++; }
+    const r = await rate(g, p, st), m = model[g];
+    const want = { ok: true, saved: fresh, day: today, avg: Math.round(m.t / m.n * 100) / 100, cnt: m.n };
+    if (canon(r) !== canon(want)) { mismatch++; if (mismatch < 4) eq(r, want, '評價隨機第 ' + i + ' 筆'); }
+  }
+  ok(mismatch === 0, '評價：隨機 600 筆逐筆對照參考模型（不一致 ' + mismatch + ' 筆）');
+  const wantAll = {}; Object.keys(model).forEach(g => { wantAll[g] = [Math.round(model[g].t / model[g].n * 100) / 100, model[g].n]; });
+  eq(await stats(), wantAll, '評價：隨機之後的整份統計');
+  ok(await count() === seen.size, '評價：資料表列數＝不重複的（玩家, 遊戲）數 ' + seen.size);
+}
+
+// ═══ K. 「阿嬤都比你厲害」：MF_get_overtaken（這位玩家在哪些遊戲被別人比下去，V1.25.0）═══
+{
+  const over = async (p) => (await asAnon('select public."MF_get_overtaken"($1::uuid) as r', [p]))[0].r;
+  await db.exec('delete from public."MF_scores"');
+  const A = uuid(801), B = uuid(802), C = uuid(803), D = uuid(804);
+  eq(await over(A), [], '阿嬤：完全沒上榜 → 空陣列');
+  eq(await over(null), [], '阿嬤：沒帶玩家代號 → 空陣列');
+  // zz_test（越大越好）：A 第一名 → 不列出
+  await sub('zz_test', A, 'A', 100);
+  eq(await over(A), [], '阿嬤：自己是第一名 → 不列出');
+  // B 之後打出更好的成績 → A 掉到第 2 名，而且是「被超越」（at 有時間）
+  await sub('zz_test', B, 'B', 200);
+  let r = await over(A);
+  ok(r.length === 1 && r[0].game_id === 'zz_test' && r[0].rank === 2 && r[0].at, '阿嬤：被超越 → 列出、第 2 名、有被超越的時間：' + JSON.stringify(r));
+  ok(!JSON.stringify(r).includes(B) && !JSON.stringify(r).includes(A), '阿嬤：回傳內容不含任何 player_id');
+  eq(await over(B), [], '阿嬤：超越別人的那位是第一名 → 不列出');
+  // speed（越小越好）：C 先達成 0.3，A 之後才打出 0.5 → A 第 2 名，但 C 是在 A 創紀錄「之前」就比較好，不算被超越 → 不列出
+  await sub('speed', C, 'C', 0.3);
+  await sub('speed', A, 'A', 0.5);
+  eq((await over(A)).map(x => x.game_id), ['zz_test'], '阿嬤：不是第一名、但沒有人在我之後超越我 → 不列出');
+  // cake（越大越好）：A 先 10，之後 C、D 依序超越 → A 第 3 名，at＝最近一次（D）被超越的時間
+  await sub('cake', A, 'A', 10);
+  await sub('cake', C, 'C', 20);
+  await sub('cake', D, 'D', 30);
+  r = await over(A);
+  eq(r.map(x => [x.game_id, x.rank]), [['cake', 3], ['zz_test', 2]], '阿嬤：只列被超越的，最近被超越的排最前面');
+  const dAt = (await db.query(`select achieved_at from public."MF_scores" where game_id = 'cake' and player_id = $1::uuid`, [D])).rows[0].achieved_at;
+  ok(new Date(r[0].at).getTime() === new Date(dAt).getTime(), '阿嬤：at 是最近一次被超越（D）的時間');
+  // 使用者的例子（spot，越大越好）：14 個人先上榜；我拿到第 15 名 → 不列出；之後有人拿到第 10 名（我被擠到第 16 名）→ 列出、第 16 名
+  for (let i = 0; i < 14; i++) await sub('spot', uuid(860 + i), 'S' + i, 100 - i);
+  await sub('spot', A, 'A', 50);
+  ok(!(await over(A)).some(x => x.game_id === 'spot'), '阿嬤（例子）：我拿到第 15 名，前面 14 人都比我早 → 不列出');
+  const E = uuid(805), F = uuid(806);
+  await sub('spot', E, 'E', 91.5);
+  r = (await over(A)).filter(x => x.game_id === 'spot');
+  ok(r.length === 1 && r[0].rank === 16, '阿嬤（例子）：之後有人拿到第 10 名、我被擠到第 16 名 → 列出、第 16 名：' + JSON.stringify(r));
+  ok((await over(A))[0].game_id === 'spot', '阿嬤（例子）：剛被超越的排最前面');
+  // 我刷新自己的紀錄（還是第 16 名，不是第一）→ E 是在我新紀錄之前超越的，不再算 → 不列出；之後 F 又超越我 → 再列出、第 17 名
+  await sub('spot', A, 'A', 60);
+  ok(!(await over(A)).some(x => x.game_id === 'spot'), '阿嬤：我刷新紀錄之後，之前超越我的人不再算');
+  await sub('spot', F, 'F', 99.5);
+  r = (await over(A)).filter(x => x.game_id === 'spot');
+  ok(r.length === 1 && r[0].rank === 17, '阿嬤：刷新後又有人超越 → 再列出、第 17 名：' + JSON.stringify(r));
+  await db.exec(`delete from public."MF_scores" where game_id = 'spot'`);
+  // A 刷新 zz_test 拿回第一 → 不再列出
+  await sub('zz_test', A, 'A', 300);
+  eq((await over(A)).map(x => x.game_id), ['cake'], '阿嬤：搶回第一名之後那款就不列出');
+  // 停用的遊戲不列出
+  await db.exec(`update public."MF_games" set enabled = false where game_id = 'cake'`);
+  eq(await over(A), [], '阿嬤：停用的遊戲不列出');
+  await db.exec(`update public."MF_games" set enabled = true where game_id = 'cake'`);
+  // 被擠出前 N 名：把 cake 的 top_n 改成 2（模擬第 3 名已經不在榜上）→ 不列出
+  await db.exec(`update public."MF_games" set top_n = 2 where game_id = 'cake'`);
+  eq(await over(A), [], '阿嬤：名次超過前 N 名的不列出');
+  await db.exec(sql);   // 重新執行 SQL：top_n 不會被 SQL 改回去（只更新名稱與範圍），手動改回來
+  await db.exec(`update public."MF_games" set top_n = 30 where game_id = 'cake'`);
+  // speed 滿 30 名：30 個人依序上榜（A、C 被擠出榜，那一列刪掉）
+  for (let i = 0; i < 30; i++) await sub('speed', uuid(820 + i), 'P' + i, 0.01 + i * 0.001);
+  ok(!(await over(A)).some(x => x.game_id === 'speed'), '阿嬤：被擠出前 30 名（那一列已刪掉）→ 不列出');
+  eq(await over(uuid(820 + 28)), [], '阿嬤：第 29 名、前面的人都比他早 → 不列出');
+  // 之後 Q 拿到很前面的名次：原本第 29 名被擠到第 30 名（還在榜上）→ 列出；原本第 30 名被擠出榜 → 不列出
+  await sub('speed', uuid(851), 'Q', 0.0105);
+  r = await over(uuid(820 + 28));
+  ok(r.length === 1 && r[0].game_id === 'speed' && r[0].rank === 30, '阿嬤：被擠到第 30 名（還在前 30）→ 列出、名次 30：' + JSON.stringify(r));
+  eq(await over(uuid(820 + 29)), [], '阿嬤：被擠到第 31 名（不在前 30）→ 不列出');
+  // anon 不能直接讀成績表（確認函式沒有把權限開大）
+  const d = await asAnon('select * from public."MF_scores"');
+  ok(d.sqlError && /permission denied/i.test(d.sqlError), '阿嬤：anon 仍然不能直接讀成績表');
+}
+
 console.log(bad ? 'FAILED ' + bad + ' / ' + total : 'ALL PASS（' + total + ' 項檢查）');
 process.exit(bad ? 1 : 0);

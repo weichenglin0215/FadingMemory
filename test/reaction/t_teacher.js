@@ -9,7 +9,8 @@ ok(near(T.limitFor(16) - T.limitFor(15), T.limitFor(2) - T.limitFor(1), 1e-9), '
 // 答案
 const c = (say, dir, opposite) => ({ say, dir, opposite });
 ok(T.expectedAction(c(true, 'left', false)) === 'left' && T.expectedAction(c(true, 'left', true)) === 'right' && T.expectedAction(c(true, 'up', true)) === 'down' && T.expectedAction(c(false, 'left', false)) === null && T.expectedAction(c(false, 'up', true)) === null, 'expectedAction');
-ok(T.textOf(c(true, 'left', false)).prefix === '老師說' && T.textOf(c(true, 'left', false)).action === '點左邊' && T.textOf(c(false, 'up', true)).prefix === '' && T.textOf(c(false, 'up', true)).action === '點相反的上面', 'text');
+ok(T.textOf(c(true, 'left', false)).prefix === '老師說' && T.textOf(c(true, 'left', false)).action === '點左邊' && T.textOf(c(false, 'up', true)).prefix === '' && T.textOf(c(false, 'up', true)).action === '點上面的相反', 'text（V1.25：「點上面的相反」，不是「點相反的上面」）');
+ok(T.textOf(c(true, 'left', true)).action === '點左邊的相反' && !/點相反的/.test(T.textOf(c(true, 'right', true)).action), '相反指令的寫法：點左邊的相反');
 // 大量產生：比例、連續沒說上限、開頭、不重複、相反指令解鎖點
 let sayCount = [0, 0], tot = [0, 0], maxNoSay = 0, openBad = 0, repeats = 0, oppEarly = 0, oppLate = 0, lateTot = 0, wrongAns = 0;
 for (let g = 0; g < 4000; g++) {

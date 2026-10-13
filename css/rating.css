@@ -1,0 +1,125 @@
+/* ═══════════════════════════════════════════════════════════════════
+   rating.css — 「五星評價」的樣式（對應 js/rating.js，V1.25.0）
+   ───────────────────────────────────────────────────────────────────
+   · .rate-bar：一排五顆星的平均星數（主選單「選一個想玩的遊戲」每一格的名稱下面、「阿嬤都比你厲害」的格子）；
+   · .rate-pick：「五星評價」彈窗中間那排可以點的星星（外框是彈窗公版 .dlg，見 css/dialog.css）；
+   · .dlg__rate：結算彈窗「我有話要說」下面那顆「五星評價」按鈕。
+   顏色與尺寸都是 css/theme.css :root 的 --rate-* 變數。主選單與秒反應兩頁都會載入這個檔案（js/boot.js）。
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── 平均星數：一排五顆星 ───
+   做法：整條是一個色塊，底色由左到右「先黃後淡」（黃色塗到 --rate-p，js/rating.js 的 Rating.paint 依平均值設定，
+   平均 3.5 顆＝70%），再用「星星形狀」當遮罩（mask，橫向重複 5 次、每顆占五分之一寬），只露出星星的部分。
+   所以平均 3.5 顆就是前 3 顆全黃、第 4 顆左半邊黃，剩下是淡色的空位。
+   遮罩的星星形狀跟 js/rating.js 的 STAR_PATH 一樣（24×24，五個角）。 */
+.rate-bar {
+    --rate-p: 0%;
+    display: block;
+    flex: 0 0 auto;
+    width: var(--rate-bar-w);
+    height: calc(var(--rate-bar-w) / 5);
+    background: linear-gradient(90deg, var(--rate-on) var(--rate-p), var(--rate-off) var(--rate-p));
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.6L14.7 9.38 22.94 9.55 16.37 14.52 18.76 22.4 12 17.7 5.24 22.4 7.63 14.52 1.06 9.55 9.3 9.38Z'/%3E%3C/svg%3E") left center / 20% 100% repeat-x;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.6L14.7 9.38 22.94 9.55 16.37 14.52 18.76 22.4 12 17.7 5.24 22.4 7.63 14.52 1.06 9.55 9.3 9.38Z'/%3E%3C/svg%3E") left center / 20% 100% repeat-x;
+}
+
+/* ─── 評價彈窗 ─── */
+/* 說明文字置中（彈窗公版的內文預設靠左） */
+.dlg--rate .dlg__text {
+    text-align: center;
+}
+
+/* 中間五顆星：平均分配、置中 */
+.rate-pick {
+    display: flex;
+    justify-content: center;
+    gap: var(--sp-2);
+    padding: var(--sp-2) 0 0;
+}
+
+/* 每顆星是一個按鈕：沒有底色與外框，只有星星本身；按下去縮一下 */
+.rate-pick__star {
+    width: var(--rate-pick);
+    height: var(--rate-pick);
+    padding: 0;
+    border: none;
+    border-radius: var(--r-sm);
+    background: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.12s ease;
+}
+
+.rate-pick__star:active {
+    transform: scale(0.9);
+}
+
+.rate-pick__star:focus-visible {
+    outline: 4px solid var(--c-blue);
+    outline-offset: 2px;
+}
+
+.rate-pick__svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* 還沒勾：空心、只有外框線 */
+.rate-pick__svg path {
+    fill: transparent;
+    stroke: var(--rate-edge);
+    stroke-width: 1.6;
+    stroke-linejoin: round;
+    transition: fill 0.15s ease, stroke 0.15s ease;
+}
+
+/* 勾了：實心的黃色星星，彈一下 */
+.rate-pick__star.is-on .rate-pick__svg path {
+    fill: var(--rate-on);
+    stroke: var(--c-yellow);
+}
+
+.rate-pick__star.is-on {
+    animation: rate-pop 0.25s ease;
+}
+
+@keyframes rate-pop {
+    50% {
+        transform: scale(1.18);
+    }
+}
+
+/* 星星下面那句話：「3 顆星：還可以」／還沒選時的提示 */
+.rate-pick__say {
+    min-height: calc(var(--fs-sm) * var(--lh-body));
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-body);
+    color: var(--c-ink-soft);
+}
+
+.rate-pick__say.is-on {
+    color: var(--c-ink);
+}
+
+/* ─── 結算彈窗的「五星評價」按鈕（在「我有話要說」下面；尺寸跟「我有話要說」一樣，見 css/dialog.css 的 .dlg__feedback）─── */
+.dlg__rate {
+    margin-top: 0;
+}
+
+/* 按鈕上的星星圖示塗成黃色實心，一眼看得出是「評星星」 */
+.dlg__rate .icon {
+    fill: var(--rate-on);
+    stroke: var(--c-yellow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .rate-pick__star,
+    .rate-pick__star.is-on,
+    .rate-pick__svg path {
+        animation: none;
+        transition: none;
+    }
+}

@@ -76,5 +76,47 @@ ok(T.roundScore(10, 0, 8, 8) === 10 && T.roundScore(10, 0, 9, 8) === 5 && T.roun
 // ═══ 亮燈判定（每盞綠燈亮的長度不同）═══
 ok(T.litIndex([1, 3, 5], 1.2, 1.0) === 0 && T.litIndex([1, 3, 5], 1.2, 2.199) === 0 && T.litIndex([1, 3, 5], 1.2, 2.2) === -1 && T.litIndex([1, 3, 5], 1.2, 0.99) === -1 && T.litIndex([1, 3, 5], 1.2, 3.5) === 1, 'litIndex with a fixed duration');
 ok(T.litIndex([1, 3, 5], [0.5, 1.0, 0.4], 1.6) === -1 && T.litIndex([1, 3, 5], [0.5, 1.0, 0.4], 3.9) === 1 && T.litIndex([1, 3, 5], [0.5, 1.0, 0.4], 5.39) === 2 && T.litIndex([1, 3, 5], [0.5, 1.0, 0.4], 5.4) === -1, 'litIndex with per-light durations');
-ok(T.rating(5) !== T.rating(15) && T.rating(15) !== T.rating(28), 'rating tiers');
+ok(T.rating(1) !== T.rating(3) && T.rating(3) !== T.rating(6) && T.rating(6) !== T.rating(12), 'rating tiers（通過關數）');
+// ═══ V1.25 關卡制 ═══
+{ const { rng } = require('./load.js'); const rr = rng(20261013);
+  // 曲線：第 1 關很短、間隔 150%；後面時間變長、間隔略縮短
+  ok(T.durationFor(1) === 12 && T.durationFor(15) === 40 && T.durationFor(30) === 40 && T.durationFor(2) > T.durationFor(1), '總時長 12 秒 → 40 秒（第 1 關縮短）');
+  for (let l = 2; l <= 15; l++) ok(T.durationFor(l) >= T.durationFor(l - 1), '總時長不減 ' + l);
+  ok(near(T.ivMult(1), 1.5) && T.ivMult(20) < 1 && near(T.ivMult(20), 0.85) && near(T.ivMult(99), 0.85), '閃燈間隔 150% → 85%（第 1 關比現在長 150%，之後略縮短）');
+  for (let l = 2; l <= 20; l++) ok(T.ivMult(l) < T.ivMult(l - 1), '間隔每關縮短 ' + l);
+  ok(near(T.baseDiff(1), 0) && T.baseDiff(15) > 1 && T.burstCapFor(1) === 1 && T.burstCapFor(15) === 7, '難度值與一串長度上限隨關卡增加');
+  ok(T.redMinFor(1) === 3 && T.redMaxFor(1) === 5 && T.greenMaxFor(1) <= 10, '第 1 關：紅燈 3～5 次、綠燈不多');
+  for (let l = 2; l <= 15; l++) ok(T.redMaxFor(l) >= T.redMaxFor(l - 1) && T.redMinFor(l) >= T.redMinFor(l - 1) && T.greenMaxFor(l) >= T.greenMaxFor(l - 1), '亮燈次數上下限不減 ' + l);
+  // 逐關出事件表：紅燈次數在範圍內、第 1 關 3～5 次；間隔、起點、跨色間距、結束時間都合規；次數平均隨關卡增加
+  const meanR = {}, meanG = {};
+  for (let l = 1; l <= 20; l++) {
+    let sr = 0, sg = 0, n = 150;
+    for (let i = 0; i < n; i++) {
+      const ev = T.makeEvents(rr, l), dur = T.durationFor(l);
+      ok(ev.red.length >= T.redMinFor(l) && ev.red.length <= T.redMaxFor(l) && ev.green.length >= T.greenMinFor(l) && ev.green.length <= T.greenMaxFor(l), '第 ' + l + ' 關次數在範圍內：紅 ' + ev.red.length + '、綠 ' + ev.green.length);
+      if (l === 1) ok(ev.red.length >= 3 && ev.red.length <= 5, '第 1 關紅燈 3～5 次：' + ev.red.length);
+      ok(ev.green.length === ev.greenLit.length, '每盞綠燈有亮燈時間');
+      let sorted = true; for (let j = 1; j < ev.green.length; j++) if (ev.green[j] < ev.green[j - 1]) sorted = false; for (let j = 1; j < ev.red.length; j++) if (ev.red[j] < ev.red[j - 1]) sorted = false;
+      ok(sorted, '事件由小到大');
+      ev.green.forEach((t, j) => ok(t + ev.greenLit[j] <= dur - T.TAIL_S + 1e-9 && t >= T.LEAD_S - 1e-9, '綠燈在這一關的時間內'));
+      ev.red.forEach(t => ok(t + T.RED_LIT <= dur - T.TAIL_S + 1e-9 && t >= T.RED_LEAD_S - 1e-9, '紅燈在這一關的時間內'));
+      ev.green.forEach(g => ev.red.forEach(r => { if (Math.abs(g - r) < T.CROSS_GAP - 1e-9) ok(false, '綠紅開始時間至少相隔 CROSS_GAP'); }));
+      for (let j = 1; j < ev.green.length; j++) if (ev.green[j] - (ev.green[j - 1] + ev.greenLit[j - 1]) < T.MIN_REST - 1e-9) ok(false, '同一盞綠燈熄滅至少 MIN_REST');
+      for (let j = 1; j < ev.red.length; j++) if (ev.red[j] - ev.red[j - 1] < T.RED_LIT - 1e-9) ok(false, '紅燈不重疊');
+      sr += ev.red.length; sg += ev.green.length;
+    }
+    meanR[l] = sr / n; meanG[l] = sg / n;
+  }
+  for (let l = 2; l <= 15; l++) ok(meanR[l] > meanR[l - 1] - 0.5 && meanG[l] > meanG[l - 1] - 0.5, '平均亮燈次數隨關卡增加 ' + l + '：紅 ' + meanR[l].toFixed(1) + '、綠 ' + meanG[l].toFixed(1));
+  ok(meanR[1] < 5.01 && meanR[15] > meanR[1] * 6, '紅燈次數 第 1 關約 ' + meanR[1].toFixed(1) + ' → 第 15 關約 ' + meanR[15].toFixed(1));
+  // 第 1 關的燈號間隔比舊版開頭長 150%：同一串綠燈的亮→亮週期 ≥ 亮 1.2 秒 ＋ 熄滅 0.4 × 1.5
+  { let minCycle = 1e9; for (let i = 0; i < 300; i++) { const ev = T.makeEvents(rr, 1); for (let j = 1; j < ev.green.length; j++) minCycle = Math.min(minCycle, ev.green[j] - ev.green[j - 1]); } ok(minCycle >= 1.2 + 0.4 * 1.5 - 0.1 || minCycle >= 1.2 + 0.1, '第 1 關兩盞綠燈相隔夠遠（最短 ' + minCycle.toFixed(2) + ' 秒）'); }
+  // 過關判定
+  ok(T.passNeedFor(10) === 6 && T.passNeedFor(5) === 3 && T.passNeedFor(31) === 19, '過關要點中 60%：10 次要 6 次、5 次要 3 次');
+  ok(T.levelPassed(6, 0, 10, 7, 7) && !T.levelPassed(5, 0, 10, 7, 7) && !T.levelPassed(10, 0, 10, 8, 7) && !T.levelPassed(8, 3, 10, 7, 7) && T.levelPassed(8, 2, 10, 7, 7), '過關＝紅燈次數答對，而且（命中 − 亂點）夠多');
+  // 原始碼：關卡制的接線
+  const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_dualtask.js'), 'utf8');
+  ok(/makeEvents\(Math\.random, level\)/.test(src) && /durationFor\(level\)/.test(src) && /levelPassed\(hits, strays, ev\.green\.length, v, truth\)/.test(src) && /score: passedN/.test(src), '一關一關闖、成績＝通過關數');
+  ok(G.score.better === 'max' && G.score.max === T.MAX_LEVEL && G.score.format === '{v} 關', '排行榜成績是通過關數');
+}
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

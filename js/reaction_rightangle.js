@@ -9,6 +9,8 @@
    · 玩家的線是「起點到手指」的一條直線，可以來回調整，放開才算；長度要 ≥ LEN_MIN。
    · 成績 ＝ 玩家線方向與標準垂線的夾角差（度，越小越好）。
    · 揭曉：標準垂線（綠色虛線）＋玩家的線（橘色）＋直角記號；兩條線的末端距離很近時鏡頭放大（ZOOM）。
+     V1.25（玩家意見）：綠色圓與橘色圓的中心各畫一個小小的黑色圓點（看清楚兩者之間極微小的距離）；
+     橘色線條與橘色圓改成 50% 透明（看得到兩條線交疊的狀況）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -134,8 +136,11 @@
             var a1 = rad(cfg.th), a2 = rad(cfg.ans), m = 34;
             var p1 = { x: s.x + m * Math.cos(a1), y: s.y - m * Math.sin(a1) }, p2 = { x: s.x + m * Math.cos(a2), y: s.y - m * Math.sin(a2) };
             kit.svg('polyline', { points: [p1.x, p1.y, p1.x + p2.x - s.x, p1.y + p2.y - s.y, p2.x, p2.y].map(function (v) { return v.toFixed(1); }).join(','), 'class': 'ra-sq' }, gRev);
+            mine.setAttribute('class', 'ra-mine ra-mine--rev');
             kit.svg('circle', { cx: ix, cy: iy, r: 6, 'class': 'ra-endi' }, gRev);
             kit.svg('circle', { cx: ux, cy: uy, r: 6, 'class': 'ra-endu' }, gRev);
+            kit.svg('circle', { cx: ix, cy: iy, r: 1.2, 'class': 'ra-dot' }, gRev);      /* 圓心的小黑點（放在最上層，兩個圓疊在一起也看得到） */
+            kit.svg('circle', { cx: ux, cy: uy, r: 1.2, 'class': 'ra-dot' }, gRev);
             var side = signedDiff(thp, cfg.ans) > 0 ? '逆時針' : '順時針';
             var z = zoomFor(real, Rz);
             var mid = { x: (ix + ux) / 2, y: (iy + uy) / 2 };

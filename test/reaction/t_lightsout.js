@@ -50,4 +50,9 @@ ok(tooEasy === 0, 'no puzzle easier than the threshold (' + tooEasy + ')');
 const avg = l => minSum[l].reduce((a, b) => a + b, 0) / minSum[l].length;
 ok(avg(1) < avg(6) && avg(6) < avg(11) && avg(11) <= avg(15) + 0.5, 'minimum presses grow: ' + [1, 6, 11, 15].map(l => avg(l).toFixed(1)).join(' < '));
 ok(T.rating(2) !== T.rating(7) && T.rating(7) !== T.rating(12) && T.rating(12) !== T.rating(15), 'rating tiers');
+// V1.25：取消「機會」，時間到一次失敗就結束（用原始碼檢查）
+{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_lightsout.js'), 'utf8');
+  const body = src.slice(src.indexOf('function timeUp()'), src.indexOf('/* G.debug'));
+  ok(!/LIVES|lives|機會/.test(src.replace(/V1\.25[^\n]*機會[^\n]*/g, '').replace(/取消「機會」/g, '')), '程式裡沒有機會（LIVES／lives）的參數與說明');
+  ok(body.indexOf('kit.result(') > 0 && body.indexOf('startPuzzle(true)') < 0, '時間到直接結算，不再換新題目繼續'); }
 console.log(bad ? 'FAILED ' + bad : 'ALL PASS');

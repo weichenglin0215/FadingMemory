@@ -1,15 +1,15 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_fadee.js — 秒反應・淡到看不見
-   視力表式：一次一個 E（台灣標準 E 字，三隻腳，開口朝上／下／左／右），E 的顏色一個比一個淡，
-   最後幾乎和背景灰融在一起。手指往 E 的開口方向滑（超過 SWIPE_PX 就立刻判定）。
+   視力表式：一次一個 E（台灣標準 E 字，三隻腳，開口朝上／下／左／右），E 的顏色一個比一個暗，
+   最後幾乎和背景黑融在一起。手指往 E 的開口方向滑（超過 SWIPE_PX 就立刻判定）。
    關卡制，答錯或逾時就結束，成績＝通過幾個 E。
    ───────────────────────────────────────────────────────────────────
-   · 背景是中灰（GRAY ＝ 128），E 的灰度 ＝ 128 ＋ Δ；Δ 從 DELTA_START（40）開始，每關減 1，到 1 為止
-     （共 40 個 E）。顯示的「對比」＝ Δ ÷ 128，4 位小數的百分比（Δ＝1 是 0.7813%）。
-   · 背景加細微雜訊（每像素 ±1 階），只在 Δ ≥ NOISE_FROM（3）時加，不然 Δ＝1、2 完全看不到。
+   · 背景是完全的黑色（沒有灰色方框）；E 是白色，第 1 個 E 是 100% 白，線性變暗，第 FADE_LEVELS（25）個 E 是 1% 白，
+     之後（到第 40 個）維持 1% 白。E 的灰階值 ＝ round(255 × 百分比)，1% 白＝灰階 3。
+     顯示的「對比」＝ 這個百分比（4 位小數）。
    · 每個 E 的方向一定和前一個不同（第 1 個固定朝右，配合操作提示）；每個 E 限時 TIME_S 秒（固定）。
-   · E 用 canvas 逐像素畫（灰階值是精確的整數，不經過反鋸齒與顏色換算）。
-   · 答錯：把這個 E 加強對比再畫一次，讓你知道它其實在那裡。
+   · E 用 canvas 逐像素畫（灰階值是精確的整數，不經過反鋸齒與顏色換算），沒有雜訊。
+   · 答錯：把這個 E 畫成 100% 白再畫一次，讓你知道它其實在那裡。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -19,18 +19,27 @@
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var GRAY = 128;                             /* 背景灰階值 */
-    var DELTA_START = 40;                       /* 第 1 個 E 比背景亮幾階 */
-    var NOISE_FROM = 3;                         /* Δ 大於等於這個值才加雜訊 */
-    var TIME_S = 4.0;                           /* 每個 E 的限時（秒） */
+    var MAX_LEVEL = 80;                         /* 共幾個 E（要跟 SCORE.max 一致） */
+    var FADE_LEVELS = 25;                       /* 第幾個 E 暗到最低；之後維持最低 */
+    var FASE_RATE = 0.95;                        /* 每關的亮度遞減百分比 */
+    var PCT_MAX = 50, PCT_MIN = 1;             /* E 的白色百分比：第 1 個 → 第 FADE_LEVELS 個 */
+    var TIME_S = 30.0;                           /* 每個 E 的限時（秒） */
     var SWIPE_PX = 24;                          /* 滑超過多少 px 就判定 */
-    var CELL = 40, PANEL = 360;                 /* E 的每格大小（5×5 格）、灰色面板邊長（px） */
-    var BOOST = 60;                             /* 答錯時揭曉用的加強對比（階） */
+    var CELL = 60, PANEL = 360;                 /* E 的每格大小（5×5 格）、灰色面板邊長（px） */
+    var BOOST_PCT = 100;                        /* 答錯時揭曉用的白色百分比 */
     var DIRS = ['up', 'right', 'down', 'left'];
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function deltaAt(level) { return Math.max(1, DELTA_START + 1 - level); }
-    function contrastPct(delta) { return delta / GRAY * 100; }
+    /* 已取消，第 level 個 E 的白色百分比：第 1 個 100%，線性降到第 FADE_LEVELS 個的 1%，之後維持 1% */
+    function pctAt(level) {
+        //var t = Math.min(1, Math.max(0, (level - 1) / (FADE_LEVELS - 1)));
+        //return PCT_MAX + (PCT_MIN - PCT_MAX) * t;
+        /* 第 level 個 E 的白色百分比：第 1 個 100%，指數遞減 0.95，最低是1%*/
+        var t = Math.pow(FASE_RATE, level - 1);
+        return Math.max(PCT_MIN, PCT_MAX * t);
+    }
+    /* 百分比 → 灰階值（0～255 的整數） */
+    function valueOf(pct) { return Math.round(255 * pct / 100); }
     /* 下一個方向：一定和前一個不同 */
     function nextDir(prev, rand) {
         rand = rand || Math.random;
@@ -52,32 +61,30 @@
         if (Math.abs(dx) >= Math.abs(dy)) return dx >= 0 ? 'right' : 'left';
         return dy >= 0 ? 'down' : 'up';
     }
-    /* 畫一個 E 到 canvas（灰階像素）；回傳畫出的 E 的像素灰階值（給測試與除錯用） */
-    function paintE(cv, dir, delta, rand) {
-        rand = rand || Math.random;
+    /* 畫一個 E 到 canvas（灰階像素）：背景純黑（0），E 是灰階值 value（0～255） */
+    function paintE(cv, dir, value) {
         var g = cv.getContext('2d'), img = g.createImageData(PANEL, PANEL), d = img.data, off = (PANEL - 5 * CELL) / 2;
-        var noisy = delta >= NOISE_FROM;
         for (var y = 0; y < PANEL; y++) for (var x = 0; x < PANEL; x++) {
             var cx = Math.floor((x - off) / CELL), cy = Math.floor((y - off) / CELL);
             var inside = x >= off && y >= off && cx >= 0 && cx < 5 && cy >= 0 && cy < 5 && inE(dir, cy, cx);
-            var v = GRAY + (inside ? delta : 0) + (noisy ? Math.floor(rand() * 3) - 1 : 0), i = (y * PANEL + x) * 4;
+            var v = inside ? value : 0, i = (y * PANEL + x) * 4;
             d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255;
         }
         g.putImageData(img, 0, 0);
     }
     function rating(n) {
-        if (n >= 30) return '鷹眼！';
-        if (n >= 20) return '高手！';
-        if (n >= 10) return '不錯喔！';
+        if (n >= 60) return '鷹眼！';
+        if (n >= 40) return '高手！';
+        if (n >= 20) return '不錯喔！';
         if (n >= 5) return '再接再厲！';
         return '把螢幕亮度調到中等，再試一次！';
     }
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: DELTA_START, goodAt: 6,
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 6,
             head: function (lv) { return '第 ' + lv + ' 個'; },
-            info: function (S) { return '對比 ' + contrastPct(deltaAt(S.level)).toFixed(4) + '%'; },
+            info: function (S) { return '亮度 ' + pctAt(S.level).toFixed(4) + '%'; },
             numText: function (v) { return v + ' 個'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 個 E']; },
@@ -91,14 +98,14 @@
     function setup(api) {
         var stage = api.stage, level = api.level;
         if (level === 1) lastDir = null;
-        var dir = level === 1 ? 'right' : nextDir(lastDir, api.rand), delta = deltaAt(level);
+        var dir = level === 1 ? 'right' : nextDir(lastDir, api.rand), pct = pctAt(level), value = valueOf(pct);
         lastDir = dir;
-        api.info = { dir: dir, delta: delta };
-        console.log('[淡到看不見] 第 ' + level + ' 個：開口朝' + dir + '，Δ ' + delta + ' 階（對比 ' + contrastPct(delta).toFixed(4) + '%）');
+        api.info = { dir: dir, pct: pct, value: value };
+        console.log('[淡到看不見] 第 ' + level + ' 個：開口朝' + dir + '，白色 ' + pct.toFixed(4) + '%（灰階 ' + value + '）');
 
         var cv = document.createElement('canvas');
         cv.width = PANEL; cv.height = PANEL; cv.className = 'fe-canvas';
-        paintE(cv, dir, delta, api.rand);
+        paintE(cv, dir, value);
         stage.appendChild(cv);
         var note = h('div', { 'class': 'fe-note', text: '往 E 的開口方向滑動' });
         stage.appendChild(note);
@@ -128,14 +135,16 @@
             if (api.over) return;
             if (hint) { hint.remove(); hint = null; }
             if (d === dir) { cv.classList.add('fe-canvas--ok'); api.pass({ delay: 320 }); return; }
-            paintE(cv, dir, BOOST, api.rand);
+            paintE(cv, dir, valueOf(BOOST_PCT));
             cv.classList.add('fe-canvas--bad');
-            note.textContent = '加強對比後：E 的開口朝' + { up: '上', down: '下', left: '左', right: '右' }[dir];
-            api.fail({ delay: 1700, lines: [
-                (d == null ? '時間到！' : '滑錯了！') + 'E 的開口朝' + { up: '上', down: '下', left: '左', right: '右' }[dir],
-                '這個 E 的對比是 ' + contrastPct(delta).toFixed(4) + '%（背景灰階 ' + GRAY + '，E 灰階 ' + (GRAY + delta) + '）',
-                '把螢幕亮度調到中等，看得更清楚'
-            ] });
+            note.textContent = '加亮之後：E 的開口朝' + { up: '上', down: '下', left: '左', right: '右' }[dir];
+            api.fail({
+                delay: 1700, lines: [
+                    (d == null ? '時間到！' : '滑錯了！') + 'E 的開口朝' + { up: '上', down: '下', left: '左', right: '右' }[dir],
+                    '這個 E 是 ' + pct.toFixed(4) + '% 的白色（灰階 ' + value + '，背景是純黑 0）',
+                    '把螢幕亮度調到中等，看得更清楚'
+                ]
+            });
         }
         api.solve = function () { judge(dir); };
         api.wrong = function () { judge(DIRS.filter(function (x) { return x !== dir; })[0]); };
@@ -144,10 +153,10 @@
     var G = {
         id: ID,
         name: '淡到看不見',
-        rule: '灰色背景上有一個 E，開口朝上、下、左、右其中一邊，**手指往開口的方向滑**。E 一個比一個淡，最後幾乎和背景一樣。答錯或來不及就結束，看你能看清楚幾個。**請把螢幕亮度調到中等**。遊戲視力，不是真正的視力檢查。',
+        rule: '黑色背景上有一個白色的 E，開口朝上、下、左、右其中一邊，**手指往開口的方向滑**。E 一個比一個暗，最後幾乎和背景一樣黑。答錯或來不及就結束，看你能看清楚幾個。**請把螢幕亮度調到中等**。遊戲視力，不是真正的視力檢查。',
         mount: mount,
         score: SCORE,
-        test: { deltaAt: deltaAt, contrastPct: contrastPct, nextDir: nextDir, inE: inE, dirOf: dirOf, paintE: paintE, rating: rating, DIRS: DIRS, GRAY: GRAY, DELTA_START: DELTA_START, NOISE_FROM: NOISE_FROM, PANEL: PANEL, CELL: CELL, SWIPE_PX: SWIPE_PX }
+        test: { pctAt: pctAt, valueOf: valueOf, nextDir: nextDir, inE: inE, dirOf: dirOf, paintE: paintE, rating: rating, DIRS: DIRS, MAX_LEVEL: MAX_LEVEL, FADE_LEVELS: FADE_LEVELS, PCT_MAX: PCT_MAX, PCT_MIN: PCT_MIN, PANEL: PANEL, CELL: CELL, SWIPE_PX: SWIPE_PX }
     };
     Reaction.register(G);
 })();

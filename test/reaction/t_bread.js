@@ -37,4 +37,12 @@ for (let lv = 1; lv <= 25; lv++) for (let k = 0; k < 300; k++) {
 }
 // weighCut 的差距用顯示值（0.1 g）
 { const w = T.weighCut([[0, 0], [360, 0], [360, 140], [0, 140]], 180, 333.3); ok(w.wL === 166.7 || w.wL === 166.6, 'round to 0.1: ' + w.wL + ',' + w.wR); }
+// V1.25：「切下去」按下去之後按鈕立刻變成不能按，一直到下一塊麵包（drawBread）才恢復（用原始碼檢查接線）
+{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_bread.js'), 'utf8');
+  const cutBody = src.slice(src.indexOf('function cut()'), src.indexOf('function verdict('));
+  const verdictBody = src.slice(src.indexOf('function verdict('), src.indexOf('G.debug'));
+  const drawBody = src.slice(src.indexOf('function drawBread()'), src.indexOf('function moveKnife('));
+  ok(cutBody.indexOf('btnCut.disabled = true') > 0 && cutBody.indexOf('btnCut.disabled = true') < cutBody.indexOf('my.tween'), '切下去：一開始（動畫之前）就停用「切下去」按鈕');
+  ok(cutBody.indexOf('btnCut.disabled = false') < 0 && verdictBody.indexOf('btnCut.disabled = false') < 0, '算重量、判定的過程中不會恢復按鈕');
+  ok(drawBody.indexOf('btnCut.disabled = false') > 0, '進入下一塊麵包（drawBread）才恢復按鈕'); }
 console.log(bad ? 'FAILED ' + bad : 'ALL PASS');

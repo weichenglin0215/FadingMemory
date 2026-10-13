@@ -1371,3 +1371,83 @@
 .cpc-stage--merge .cpc-lab {
     opacity: 0;
 }
+
+/* ═══ 109 三張成百（.t3-，V1.25 新增）═══
+   跟「兩張成百」（.sm-）同一套版面概念：計時在上、牌在中間、失誤計數在下；這款是 5 欄 × 3 列共 15 張，牌放大一點。 */
+.t3-clock {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 6px;
+}
+
+.t3-grid {
+    position: absolute;
+    left: 18px;
+    top: 90px;
+    width: 436px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+}
+
+.t3-card {
+    height: 130px;
+    border-radius: var(--r-md);
+    background: var(--c-card-alt);
+    border: var(--bd);
+    box-shadow: var(--shadow-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    cursor: pointer;
+    transition: transform 0.12s ease, opacity 0.3s ease, background 0.12s ease;
+}
+
+.t3-card--sel {
+    background: var(--c-blue-soft);
+    border-color: var(--c-blue);
+    transform: translateY(-6px) scale(1.04);
+}
+
+.t3-card--gone {
+    opacity: 0;
+    transform: scale(0.6);
+    pointer-events: none;
+}
+
+.t3-card--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad);
+    animation: t3-shake 0.4s ease;
+}
+
+.t3-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 560px;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+@keyframes t3-shake {
+
+    0%,
+    100% {
+        margin-left: 0;
+    }
+
+    25% {
+        margin-left: -8px;
+    }
+
+    75% {
+        margin-left: 8px;
+    }
+}

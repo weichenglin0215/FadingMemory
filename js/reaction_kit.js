@@ -219,12 +219,22 @@
         }, ease || kit.easeInOutCubic);
     };
 
+    /* 結算卡片太高、遊戲畫面放不下時（說明行很多的遊戲＋闖關的兩顆按鈕＋最下面並排的「我有話要說」「五星評價」），
+       把彈窗外框與卡片的留白、區塊間距縮小（.dlg--snug，跟貼邊版一樣的間距）；還是放不下，外框可以上下捲動
+       （css/dialog.css 的 .dlg--result），卡片從頂端開始排，不會被切掉。放得下的卡片完全不動。 */
+    function fitResult(ctl) {
+        var ov = ctl.el, card = ctl.card;
+        if (!ov || !card || !ov.clientHeight || !global.getComputedStyle) return;
+        var cs = global.getComputedStyle(ov);
+        if (card.offsetHeight > ov.clientHeight - (parseFloat(cs.paddingTop) || 0) - (parseFloat(cs.paddingBottom) || 0)) ov.classList.add('dlg--snug');
+    }
+
     /* ═══ 結算彈窗（所有遊戲共用的公版）═══
        疊在遊戲畫面上，外框與卡片是彈窗公版（js/dialog.js 的 Dlg.open、css/dialog.css），
        所以寬度、暗底、字級、按鈕尺寸與顏色跟玩法說明、世界前 30 名完全一樣。
        內容由上到下：o.num 大數字、o.label 評語、o.lines 說明行、o.isNew 新紀錄、o.note 備註、o.extra 其他元素、
-       按鈕（o.onAgain 再玩一次；o.resume 闖關失敗後從前幾關繼續）、最底下一顆「我有話要說」（打開意見彈窗，
-       意見會連同這是哪一款遊戲一起存進資料庫）。
+       按鈕（o.onAgain 再玩一次；o.resume 闖關失敗後從前幾關繼續）、「我有話要說」（打開意見彈窗，
+       意見會連同這是哪一款遊戲一起存進資料庫）、最底下一顆「五星評價」（js/rating.js；同一款遊戲今天評過就不顯示）。
        o.score：這一局的最終成績——有給才會送世界排行榜（超出該遊戲 score.min～max 的成績，例如 0 關，
        Leaderboard.submit 會自己略過）。
        o.sfx：'win'（過關）／'fail'（失敗）／'perfect'／'neutral'——reaction.js 的 MutationObserver 看到 data-sfx
@@ -250,21 +260,26 @@
         } else if (o.onAgain) {
             btns.push({ text: o.againText || '再挑戰一次', kind: 'primary', onClick: function () { o.onAgain(); } });
         }
-        /* 最底下：我有話要說（keep：按了不關結算彈窗，意見彈窗疊在上面） */
+        /* 最底下一排：「我有話要說」「五星評價」左右並排（.dlg__minor，每顆各占一半寬）；
+           五星評價今天已經評過這款就是 null、不顯示（這時「我有話要說」獨佔整排），評完會自己消失。
+           意見彈窗疊在結算彈窗上面（不關結算彈窗）。 */
+        var foot = [];
         if (o.feedback !== false) {
-            btns.push({
-                html: UI.icon('chat') + '<span>我有話要說</span>', kind: 'line', cls: 'btn--sm dlg__feedback', keep: true,
-                onClick: function () { if (global.Dlg && Dlg.feedback) Dlg.feedback(Reaction.current); }
-            });
+            var minorKids = [h('button', {
+                'class': 'btn btn--line btn--sm dlg__feedback', type: 'button', html: UI.icon('chat') + '<span>我有話要說</span>',
+                on: { click: function () { if (global.Sfx) { Sfx.unlock(); Sfx.play('click'); } if (global.Dlg && Dlg.feedback) Dlg.feedback(Reaction.current); } }
+            })];
+            if (global.Rating && Reaction.current) { var rb = global.Rating.button(Reaction.current); if (rb) minorKids.push(rb); }
+            foot.push(h('div', { 'class': 'dlg__minor' }, minorKids));
         }
         /* data-sfx 屬性讓 js/reaction.js 自動播過關／失敗的短旋律與結算背景音樂 */
         var attrs = { 'data-sfx': o.sfx || 'neutral' };
         if (o.bgm === false) attrs['data-bgm'] = '0';
         var ctl = Dlg.open({
-            host: root, attrs: attrs, children: kids, buttons: btns,
-            cls: 'dlg--result' + (o.dock ? ' dlg--dock dlg--dock-' + o.dock : ''),
-            btnRow: !!o.dock && btns.length === 2
+            host: root, attrs: attrs, children: kids, buttons: btns, foot: foot,
+            cls: 'dlg--result' + (o.dock ? ' dlg--dock dlg--dock-' + o.dock : '')
         });
+        if (!o.dock) fitResult(ctl);
         /* 世界排行榜：一定要等結算卡片「已經在畫面上」才送——排行榜靠畫面上有沒有結算卡片
            （Reaction.resultShowing）判斷玩家是不是還在看結果，太早送的話，進榜的恭喜就只剩小提示。 */
         if (o.score != null && global.Leaderboard && Reaction.current) global.Leaderboard.submit(Reaction.current, o.score);

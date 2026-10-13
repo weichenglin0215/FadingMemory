@@ -11,6 +11,8 @@
    · 進場時 Leaderboard.prefetch(遊戲) 先把該款遊戲的前 30 名抓回來存著，
      玩家看完玩法說明、按下一步時，榜單通常已經在手上，不用等網路。
    · 沒網路、連線逾時都不會影響遊戲：成績先存在這支手機，下次開頁面時補送。
+   · V1.25.0 起主選單（index.html）也載入這個檔案：Leaderboard.overtaken() 查「這位玩家在哪些遊戲被別人超越」，
+     給「阿嬤都比你厲害」彈窗用（js/menu.js）；五星評價（js/rating.js）也借用這裡的 rpc 與玩家代號。
 
    【為什麼不用 supabase-js（官方 SDK）】
    LoveIsABitMessy 是用 SDK（createClient）。這裡改成直接用 fetch 呼叫同一個 Supabase
@@ -63,7 +65,8 @@
         CACHE_TTL_MS: 60 * 1000,     /* 榜單快取多久之內不重抓：越短越即時、越長越省流量 */
         READ_TIMEOUT_MS: 8000,       /* 讀榜單最多等幾毫秒（逾時就當作連不上） */
         WRITE_TIMEOUT_MS: 10000,     /* 寫成績最多等幾毫秒 */
-        OFFLINE_COOLDOWN_MS: 60000   /* 連線失敗後，這段時間內不再嘗試連線（成績先存著，之後補送） */
+        OFFLINE_COOLDOWN_MS: 60000,  /* 連線失敗後，這段時間內不再嘗試連線（成績先存著，之後補送） */
+        OVERTAKE_TTL_MS: 60 * 1000   /* 「阿嬤都比你厲害」：被超越的清單多久之內不重抓（主選單每打開一次「秒反應」最多 1 次小查詢） */
     };
 
     /* localStorage 的 key（全部用 fm.lb. 開頭，不會跟 fm.reaction.best.* 或 LoveIsABitMessy 的資料混在一起） */
@@ -72,6 +75,7 @@
     var KEY_PENDING = 'fm.lb.pending';   /* 還沒送出的成績：{ 遊戲id: {score, nick, at} } */
     var KEY_BOARD = 'fm.lb.board.';      /* 榜單快取：fm.lb.board.<遊戲id> */
     var KEY_FBPEND = 'fm.lb.fbpending';  /* 還沒送出的玩家意見：[ {game, text, at} ]（最多留 5 筆） */
+    var KEY_OVERTAKE = 'fm.lb.overtaken'; /* 「阿嬤都比你厲害」的快取：{ at, pid, list: [ {game_id, rank, at}, … ] } */
     var FB_MAX = 300;                    /* 玩家意見最多幾個字（資料庫 MF_feedback 的檢查也是 300） */
 
     var Leaderboard = {};
@@ -193,7 +197,7 @@
        boards：各款遊戲目前手上的榜單 { id: board }；inflight：正在抓的請求（避免同一款重複抓）；
        netDownUntil：連線失敗後，這個時間之前不再嘗試；nickPromise：正在問暱稱的 Promise；
        nickSkipped：玩家按了「先不要」，這一頁就不再追問。 */
-    var state = { boards: {}, inflight: {}, netDownUntil: 0, nickPromise: null, nickSkipped: false };
+    var state = { boards: {}, inflight: {}, netDownUntil: 0, nickPromise: null, nickSkipped: false, overtakeP: null };
 
     function log() {
         if (global.console && console.log) console.log.apply(console, ['[排行榜]'].concat([].slice.call(arguments)));
@@ -228,6 +232,18 @@
     function getNick() {
         var n = store().get(KEY_NICK, '');
         return typeof n === 'string' ? cleanNick(n) : '';
+    }
+
+    /* 這支瀏覽器的玩家代號（只讀，沒有就回傳 ''，不會像 getPid 那樣順手產生一個新的） */
+    function peekPid() {
+        var pid = store().get(KEY_PID, null);
+        return (pid && typeof pid === 'string') ? pid : '';
+    }
+
+    /* 這支瀏覽器「可能有成績在榜上」嗎：要有玩家代號、也要有暱稱（沒有暱稱的人從來沒送過成績）。
+       主選單用它決定要不要查「阿嬤都比你厲害」：第一次來的玩家完全不連網。 */
+    function hasPlayer() {
+        return !!(peekPid() && getNick());
     }
 
     /* 設定暱稱：存到瀏覽器，並（盡力）通知資料庫把這位玩家已上榜的名字一起換掉。
@@ -379,6 +395,7 @@
                     }
                     log('補送成績', id, it.score, r.ok && r.data ? (r.data.saved ? '→ 已進榜' : '→ 沒有進榜') : '→ 被資料庫拒絕');
                     if (r.ok && r.data && r.data.top) putBoard(id, r.data);
+                    if (r.ok && r.data && r.data.saved) forgetOvertaken();
                     delete p[id];
                     return next();
                 });
@@ -459,6 +476,7 @@
                     putBoard(id, d);
                     log('資料庫回覆：', d.saved ? '已進榜，名次 ' + d.rank : '沒有進榜', '（' + r.ms + ' ms）');
                     if (d.saved) {
+                        forgetOvertaken();          /* 名次變了：主選單的「阿嬤都比你厲害」下次要重抓，不能用舊的 */
                         var info = { game: g, spec: spec, score: score, rank: d.rank, board: state.boards[id] };
                         if (Leaderboard.ui) {
                             if (resultShowing() && Leaderboard.ui.celebrate) Leaderboard.ui.celebrate(info);
@@ -520,6 +538,56 @@
         return next();
     }
 
+    /* ═══════════════════════════════════════════════════════════════
+       五之三、「阿嬤都比你厲害」：這位玩家在哪些遊戲被別人比下去了（主選單 js/menu.js 用）
+       呼叫資料庫函式 MF_get_overtaken（supabase/MF_leaderboard.sql 第 7 節），拿回
+         [ { game_id, rank, at }, … ]：這位玩家「被超越」的遊戲（有人在他創下／刷新紀錄「之後」才排到他前面，兩人都在前 30 名）；
+         他創紀錄時就已經比他好的人不算（不是第一名不等於被超越）。最近被超越的排最前面，at 是被超越的時間。
+       網路效能：
+         · 沒有玩家代號或沒有暱稱（＝從來沒送過成績）→ 直接回傳 []，完全不連網；
+         · 結果存在 localStorage，CFG.OVERTAKE_TTL_MS（60 秒）之內再問就直接用；
+         · 自己的成績進榜（名次變了）會清掉快取（forgetOvertaken），下次回主選單一定重抓；
+         · 同時有好幾個地方在問，只會真的連一次。
+       回傳 Promise（一定 resolve）：清單（可能是空陣列）；連不上或資料庫還沒有這個函式（404）回傳 null。
+       ═══════════════════════════════════════════════════════════════ */
+    function forgetOvertaken() {
+        store().set(KEY_OVERTAKE, null);
+    }
+
+    /* 只留格式正確的列（防止資料庫回傳的東西或 localStorage 被改壞時，畫面拿到奇怪的值） */
+    function cleanOvertaken(list) {
+        if (!Array.isArray(list)) return [];
+        return list.filter(function (x) {
+            return x && typeof x.game_id === 'string' && /^[a-z0-9_]{1,32}$/.test(x.game_id) &&
+                typeof x.rank === 'number' && x.rank >= 2 && x.rank === Math.floor(x.rank);
+        }).map(function (x) { return { game_id: x.game_id, rank: x.rank, at: x.at || null }; });
+    }
+
+    function overtaken(opts) {
+        opts = opts || {};
+        var pid = peekPid();
+        if (!pid || !getNick()) return Promise.resolve([]);
+        var c = store().get(KEY_OVERTAKE, null), now = Date.now();
+        if (!opts.force && c && c.pid === pid && Array.isArray(c.list) && now - c.at >= 0 && now - c.at < CFG.OVERTAKE_TTL_MS) {
+            return Promise.resolve(cleanOvertaken(c.list));
+        }
+        if (state.overtakeP) return state.overtakeP;
+        if (now < state.netDownUntil) return Promise.resolve(null);
+        state.overtakeP = rpc('MF_get_overtaken', { p_player_id: pid }, CFG.READ_TIMEOUT_MS).then(function (r) {
+            state.overtakeP = null;
+            if (r.ok && Array.isArray(r.data)) {
+                var list = cleanOvertaken(r.data);
+                store().set(KEY_OVERTAKE, { at: Date.now(), pid: pid, list: list });
+                log('被超越的遊戲', list.length, '款（' + r.ms + ' ms）');
+                return list;
+            }
+            if (r.error === 'http_404') log('資料庫還沒有 MF_get_overtaken（請重新執行 supabase/MF_leaderboard.sql）');
+            else if (!r.ok) state.netDownUntil = Date.now() + CFG.OFFLINE_COOLDOWN_MS;
+            return null;
+        });
+        return state.overtakeP;
+    }
+
     /* 頁面載入時呼叫一次：稍等一下（不跟進場的榜單讀取搶頻寬）再補送沒送出去的成績與意見 */
     function init() {
         global.UI.wait(1500).then(flushPending).then(flushFeedback);
@@ -543,12 +611,17 @@
     Leaderboard.cleanNick = cleanNick;
     Leaderboard.cleanFeedback = cleanFeedback;
     Leaderboard.sendFeedback = sendFeedback;
+    Leaderboard.overtaken = overtaken;
+    Leaderboard.hasPlayer = hasPlayer;
+    Leaderboard.pid = getPid;            /* 玩家代號（沒有就產生一個）：五星評價（js/rating.js）用 */
+    Leaderboard.rpc = rpc;               /* 呼叫資料庫函式（永遠不丟例外）：五星評價（js/rating.js）共用同一組網址與金鑰 */
     Leaderboard.init = init;
     Leaderboard.ui = null;       /* js/leaderboard_ui.js 載入後會把畫面功能掛在這裡 */
     /* 給 Node 測試用的內部函式與狀態 */
     Leaderboard.test = {
         fake4: fake4, fmt: fmt, isBetter: isBetter, qualifies: qualifies, cleanNick: cleanNick, newUuid: newUuid,
         cleanFeedback: cleanFeedback, flushFeedback: flushFeedback, KEY_FBPEND: KEY_FBPEND,
+        cleanOvertaken: cleanOvertaken, KEY_OVERTAKE: KEY_OVERTAKE,
         state: state, rpc: rpc, putBoard: putBoard, savePending: savePending, flushPending: flushPending,
         KEY_PID: KEY_PID, KEY_NICK: KEY_NICK, KEY_PENDING: KEY_PENDING, KEY_BOARD: KEY_BOARD
     };

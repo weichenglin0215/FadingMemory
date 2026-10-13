@@ -509,6 +509,14 @@
     white-space: nowrap;
 }
 
+/* 平均星數（V1.25.0，五星評價）：名稱下面一排五顆星，實心黃色＝平均幾顆（星星本身的畫法在 css/rating.css 的 .rate-bar） */
+.game-cell__rate {
+    flex: 0 0 24px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
 /* 沒有縮圖的遊戲：四種淡底色輪流（藍、綠、黃、橘），中間一顆名字第一個字的圓印章 */
 .game-cell--tone0 .game-cell__pic {
     background: var(--c-blue-soft);
@@ -576,8 +584,9 @@
     display: flex;
     gap: var(--sp-1);
     padding: var(--sp-2) var(--sp-2) 0;
-    background: var(--c-card);
+    background: var(--c-card-alt);
     border-top: var(--bd);
+    border-radius: var(--r-md) var(--r-md) 0 0;
 }
 
 .game-tab {
@@ -615,9 +624,85 @@
     outline-offset: -4px;
 }
 
+/* ═══ 阿嬤都比你厲害（V1.25.0，js/menu.js 的 checkGrandma）═══
+   打開「選一個想玩的遊戲」時，如果這位玩家在某些遊戲被別人超越，就跳出這個彈窗（外框與卡片是彈窗公版 .dlg，css/dialog.css）。
+   格子跟選單的遊戲格子完全一樣（.game-cell），只多兩樣東西：右上角的 💔、縮圖下緣的「第 N 名」（大字、粗體、黑字白框）。 */
+.dlg--grandma {
+    z-index: 35;
+    /* 疊在全螢幕的遊戲選單（.game-dlg，z-index 30）上面 */
+}
+
+.dlg--grandma .dlg__title {
+    color: var(--c-recall);
+}
+
+/* 3 欄，最多 2 排（最多 6 款） */
+.gm-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-3);
+    padding: var(--sp-1) 0;
+}
+
+/* 💔：右上角，一直輕輕地跳動 */
+.game-cell__heart {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    font-size: var(--gm-heart-fs);
+    line-height: 1;
+    pointer-events: none;
+    animation: gm-beat 1.3s ease-in-out infinite;
+}
+
+@keyframes gm-beat {
+
+    0%,
+    40%,
+    100% {
+        transform: scale(1);
+    }
+
+    15% {
+        transform: scale(1.2);
+    }
+}
+
+/* 名次：縮圖下緣置中，「第」「名」小字、數字大字；黑字＋一圈白色外框（用很多層白色 text-shadow 圍出來，
+   比 -webkit-text-stroke 穩定：stroke 會往字裡面吃，讓黑字變細） */
+.game-cell__rank {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 20px;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 2px;
+    color: var(--gm-rank-ink);
+    font-weight: var(--fw-black);
+    line-height: 1;
+    pointer-events: none;
+    text-shadow:
+        4px 0 var(--gm-rank-edge), -4px 0 var(--gm-rank-edge), 0 4px var(--gm-rank-edge), 0 -4px var(--gm-rank-edge),
+        3px 3px var(--gm-rank-edge), -3px 3px var(--gm-rank-edge), 3px -3px var(--gm-rank-edge), -3px -3px var(--gm-rank-edge),
+        4px 2px var(--gm-rank-edge), -4px 2px var(--gm-rank-edge), 4px -2px var(--gm-rank-edge), -4px -2px var(--gm-rank-edge),
+        2px 4px var(--gm-rank-edge), -2px 4px var(--gm-rank-edge), 2px -4px var(--gm-rank-edge), -2px -4px var(--gm-rank-edge);
+}
+
+.game-cell__rank b {
+    font-size: var(--gm-rank-fs);
+    font-weight: var(--fw-black);
+}
+
+.game-cell__rank small {
+    font-size: var(--fs-sm);
+}
+
 /* 使用者在系統設定「減少動態效果」時，關掉彈窗動畫與縮放過渡 */
 @media (prefers-reduced-motion: reduce) {
 
+    .game-cell__heart,
     .share-dlg__card,
     .share-btn,
     .theme-dlg__card,
