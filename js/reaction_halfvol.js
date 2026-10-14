@@ -1,20 +1,20 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_halfvol.js — 秒反應・容量一半
-   一個花瓶（每次曲線都不一樣），拖曳水位線，讓「線以下」的容量剛好是整個花瓶的一半——
+   一個花瓶（每次曲線都不一樣），拖曳水位線，讓「線以下」的花瓶剪影面積剛好是整個花瓶的一半——
    不是一半的高度！只有一次機會。
    ───────────────────────────────────────────────────────────────────
-   · 花瓶是旋轉體：半徑 r(y)（y 從瓶底往上）由 NODES 個隨機控制點用 Catmull-Rom 平滑連起來；
-     容量 V(y) ＝ ∫ π r² dy，用 1px 一格的數值積分（累積陣列），找出一半容量的高度 h*。
+   · 花瓶輪廓：半徑 r(y)（y 從瓶底往上）由 NODES 個隨機控制點用 Catmull-Rom 平滑連起來；
+     V1.27（玩家意見）：「容量」只比「側面剪影的面積」，不再換算成立體容量（人腦沒辦法把 r² 換算出來）：
+     V(y) ＝ ∫ 2r dy，用 1px 一格的數值積分（累積陣列），找出一半面積的高度 h*。
    · 出題限制：h* 與「一半高度」至少差 MIN_GAP（相對瓶高），不然拉到一半高度就接近正確。
-   · 成績 ＝ |V(線以下) − V總÷2| ÷ V總 × 100（%，越小越好，最大 50）。
+   · 成績 ＝ |V(線以下) − V總÷2| ÷ V總 × 100（%，越小越好，最大 50）。畫面上眼睛看到的剪影面積就是計分的面積。
    · 揭曉（V1.25 玩家意見）：玩家拖的藍線不動，水從瓶底慢慢往上累積到藍線；水面下方即時顯示
      「目前水量與目標 50% 的差異」，從 −50.0000% 一路往上，過了 0 就變成 ＋XX.XXXX%；水面停住之後才出現代表 50% 的綠線；
-     動畫結束後再停 REVEAL_PAUSE_MS（1.5 秒）才跳出結算彈窗（沒有灰色的一半高度虛線了）。
+     動畫結束後再停 REVEAL_PAUSE_MS（V1.27 起 2 秒，讓玩家看清楚差距）才跳出結算彈窗（沒有灰色的一半高度虛線了）。
      結算彈窗最上面的 % 帶正負號：＋＝水量超過一半（倒太多），－＝不足。
-   · 水量差異的公式（有人覺得視覺跟算出來的差很多，所以特別寫下來）：花瓶是旋轉體，半徑 r(y)，容量 V(y) ＝ ∫₀ʸ π r(t)² dt，
-     差異 ＝ (V(線) − V總÷2) ÷ V總 × 100（%）。公式是對的（test/reaction/t_halfvol.js 用「把花瓶切成很多片圓盤、再逐片相加」
-     的獨立算法核對過）；看起來差很多是因為畫面上的花瓶是「側面剪影」，眼睛看到的是面積 ∫ r dy，容量是 ∫ r² dy，
-     瓶身越寬的地方容量占的比重越大（r 變兩倍，容量變四倍）。所以水面畫成橢圓（有立體感），提醒這是一個圓柱形的容器。
+   · 差異的公式：V(y) ＝ ∫₀ʸ 2 r(t) dt（水位線以下的剪影面積），差異 ＝ (V(線) − V總÷2) ÷ V總 × 100（%）。
+     （V1.25 曾經用旋轉體容量 ∫ π r² dt，玩家說看起來差很多，V1.27 改成看到什麼就算什麼；
+     test/reaction/t_halfvol.js 用「把剪影切成很多條橫帶、再逐條相加」的獨立算法核對。水面因此是平的直線，不再畫成橢圓。）
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -32,8 +32,7 @@
     var START_GAP = 0.15;                   /* 起始水位離答案至少差瓶高的幾倍 */
     var CX = 236, BOTTOM = 575;             /* 花瓶中軸 x、瓶底 y（舞台座標） */
     var RISE_MS = 2600;                     /* 揭曉時水位從瓶底升到藍線花的時間 */
-    var REVEAL_PAUSE_MS = 1500;             /* 動畫結束（水停住、綠線出現）之後，停多久才出現結算彈窗 */
-    var SURFACE_RY = 0.22;                  /* 水面橢圓的扁度（短軸 ÷ 長軸） */
+    var REVEAL_PAUSE_MS = 2000;             /* 動畫結束（水停住、綠線出現）之後，停多久才出現結算彈窗 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* Catmull-Rom 內插：四個相鄰控制點 p0 p1 p2 p3，t 在 p1～p2 之間 */
@@ -48,30 +47,30 @@
         var p0 = rs[Math.max(0, i - 1)], p1 = rs[i], p2 = rs[i + 1], p3 = rs[Math.min(rs.length - 1, i + 2)];
         return Math.max(R_FLOOR, cr(p0, p1, p2, p3, t));
     }
-    /* 累積容量陣列：cum[k] ＝ 從瓶底到高度 k px 的容量（單位：px³×π，只比較比例所以不用乘 π 以外的東西） */
+    /* 累積面積陣列：cum[k] ＝ 從瓶底到高度 k px 的剪影面積（單位：px²；左右兩邊共 2r，只比較比例） */
     function cumulative(rs) {
         var cum = [0];
         for (var k = 1; k <= VASE_H; k++) {
             var r = radiusAt(rs, k - 0.5);
-            cum.push(cum[k - 1] + Math.PI * r * r);
+            cum.push(cum[k - 1] + 2 * r);
         }
         return cum;
     }
-    /* 高度 y（可以有小數）的容量：在累積陣列上線性內插 */
+    /* 高度 y（可以有小數）以下的面積：在累積陣列上線性內插 */
     function volumeAt(cum, y) {
         y = kit.clamp(y, 0, VASE_H);
         var i = Math.min(VASE_H - 1, Math.floor(y)), t = y - i;
         return cum[i] + (cum[i + 1] - cum[i]) * t;
     }
-    /* 一半容量的高度 h*：二分搜尋 */
+    /* 一半面積的高度 h*：二分搜尋 */
     function halfHeight(cum) {
         var half = cum[VASE_H] / 2, lo = 0, hi = VASE_H;
         for (var it = 0; it < 50; it++) { var mid = (lo + hi) / 2; if (volumeAt(cum, mid) < half) lo = mid; else hi = mid; }
         return (lo + hi) / 2;
     }
-    /* 誤差（%）：線以下的容量與一半總容量的差 ÷ 總容量 */
+    /* 誤差（%）：線以下的面積與一半總面積的差 ÷ 總面積 */
     function errPct(cum, y) { return Math.abs(volumeAt(cum, y) - cum[VASE_H] / 2) / cum[VASE_H] * 100; }
-    /* 有號的差異（%）：＋＝線以下的容量超過一半、－＝不足。空瓶是 −50、滿瓶是 ＋50 */
+    /* 有號的差異（%）：＋＝線以下的面積超過一半、－＝不足。空瓶是 −50、滿瓶是 ＋50 */
     function signedPct(cum, y) { return (volumeAt(cum, y) - cum[VASE_H] / 2) / cum[VASE_H] * 100; }
     /* 帶正負號的百分比字串：＋3.1234% ／ −0.5000%（0 算＋） */
     function fmtSigned(p) { return (p >= 0 ? '+' : '−') + Math.abs(p).toFixed(4) + '%'; }
@@ -91,7 +90,7 @@
             if (start == null) continue;
             return { rs: rs, cum: cum, hs: hs, start: start, total: cum[VASE_H] };
         }
-        /* 保底：瓶底肥、瓶口細 → 一半容量遠低於一半高度 */
+        /* 保底：瓶底肥、瓶口細 → 一半面積遠低於一半高度 */
         var fb = [100, 95, 70, 40, 28, 24, 30], cumF = cumulative(fb);
         return { rs: fb, cum: cumF, hs: halfHeight(cumF), start: 0.85 * VASE_H, total: cumF[VASE_H] };
     }
@@ -99,13 +98,13 @@
         if (e < 0.3) return '神準！';
         if (e < 1) return '很準！';
         if (e < 3) return '不錯喔！';
-        return '容量不等於高度，再試一次！';
+        return '面積不等於高度，再試一次！';
     }
 
     function mount(root, ctx) {
         kit.single(root, ctx, {
             id: ID, G: G, better: 'min', max: SCORE.max,
-            title: '拖曳水位線，讓線以下的容量剛好是整個花瓶的一半',
+            title: '拖曳水位線，讓線以下的花瓶面積剛好是一半',
             numText: function (v) { return v.toFixed(4) + '%'; },
             rating: rating,
             sfx: function (v) { return v < 1 ? 'perfect' : (v < 4 ? 'win' : 'fail'); },
@@ -117,7 +116,7 @@
         var stage = api.stage, my = api.my;
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var cfg = makeRound(), L = cfg.start, Wl = L, locked = false, hint = null;
-        console.log('[容量一半] 一半容量的高度 ' + cfg.hs.toFixed(2) + '（一半高度 ' + (VASE_H / 2) + '），起始水位 ' + cfg.start.toFixed(2));
+        console.log('[容量一半] 一半面積的高度 ' + cfg.hs.toFixed(2) + '（一半高度 ' + (VASE_H / 2) + '），起始水位 ' + cfg.start.toFixed(2));
         var base = Math.min(BOTTOM, H - 100);
         function yOf(level) { return base - level; }
 
@@ -132,7 +131,6 @@
         var outline = left.concat(right.slice().reverse());
         kit.svg('polygon', { points: outline.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '), 'class': 'hv-vase' }, svg);
         var water = kit.svg('polygon', { 'class': 'hv-water' }, svg);
-        var surface = kit.svg('ellipse', { 'class': 'hv-surface', cx: CX, cy: 0, rx: 0, ry: 0 }, svg);         /* 水面（橢圓，看起來是立體的容器） */
         kit.svg('polygon', { points: outline.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '), 'class': 'hv-rim' }, svg);
         var refHalfV = kit.svg('line', { x1: CX - 150, x2: CX + 150, y1: yOf(cfg.hs), y2: yOf(cfg.hs), 'class': 'hv-ref hv-ref--v', opacity: 0 }, svg);
         var line = kit.svg('line', { x1: CX - 150, x2: CX + 150, 'class': 'hv-line' }, svg);
@@ -155,8 +153,6 @@
         /* L ＝ 藍線（玩家拖的）的位置；Wl ＝ 水位（平常等於 L，揭曉時從 0 升到 L，藍線不動） */
         function paint() {
             water.setAttribute('points', waterPoly(Wl));
-            var rw = radiusAt(cfg.rs, Wl);
-            surface.setAttribute('cy', yOf(Wl)); surface.setAttribute('rx', rw); surface.setAttribute('ry', (rw * SURFACE_RY).toFixed(2));
             line.setAttribute('y1', yOf(L)); line.setAttribute('y2', yOf(L));
             hl.setAttribute('cy', yOf(L)); hr.setAttribute('cy', yOf(L));
         }
@@ -196,12 +192,12 @@
                 refHalfV.setAttribute('opacity', 1);
                 msg.innerHTML = '';
                 msg.appendChild(h('div', { text: '線以下 ' + below.toFixed(4) + '%　線以上 ' + (100 - below).toFixed(4) + '%' }));
-                msg.appendChild(h('div', { 'class': 'hv-msg__sub', text: '綠線＝真正的一半容量' }));
+                msg.appendChild(h('div', { 'class': 'hv-msg__sub', text: '綠線＝真正的一半面積' }));
                 msg.classList.add('hv-msg--on');
                 my.after(REVEAL_PAUSE_MS, function () {
                     api.finish(real, { sign: sgn, lines: [
-                        '線以下的容量是 ' + below.toFixed(4) + '%（目標 50.0000%）',
-                        '真正的一半容量在 ' + (cfg.hs / VASE_H * 100).toFixed(4) + '% 高度，一半高度是 50.0000%',
+                        '線以下的面積是 ' + below.toFixed(4) + '%（目標 50.0000%）',
+                        '真正的一半面積在 ' + (cfg.hs / VASE_H * 100).toFixed(4) + '% 高度，一半高度是 50.0000%',
                         '只有一次機會，想拚更準就再挑戰一次'
                     ] });
                 });
@@ -220,7 +216,7 @@
     var G = {
         id: ID,
         name: '容量一半',
-        rule: '畫面上是一個花瓶。上下拖曳水位線，**讓線以下的容量剛好是整個花瓶的一半**。注意：**一半的高度不等於一半的容量**！每次花瓶都不一樣，只有一次機會，按「確定」後水會倒進去告訴你差了幾 %。',
+        rule: '畫面上是一個花瓶。上下拖曳水位線，**讓線以下的花瓶面積剛好是一半**。注意：**一半的高度不等於一半的面積**！每次花瓶都不一樣，只有一次機會，按「確定」後水會升上來告訴你差了幾 %。',
         mount: mount,
         score: SCORE,
         test: { signedPct: signedPct, fmtSigned: fmtSigned, RISE_MS: RISE_MS, REVEAL_PAUSE_MS: REVEAL_PAUSE_MS, radiusAt: radiusAt, cumulative: cumulative, volumeAt: volumeAt, halfHeight: halfHeight, errPct: errPct, makeRound: makeRound, rating: rating, VASE_H: VASE_H, NODES: NODES, R_FLOOR: R_FLOOR, MIN_GAP: MIN_GAP, START_GAP: START_GAP }

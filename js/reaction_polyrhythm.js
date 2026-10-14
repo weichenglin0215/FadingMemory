@@ -43,7 +43,7 @@
     /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
     /* BPM（每分鐘幾拍）：第 m 小節的速度＝起始 + 每小節增加量 × m，不超過上限 */
-    var BPM_START = 48, BPM_STEP = 1.2, BPM_MAX = 120;        /* 第 m 小節的 BPM ＝ BPM_START + BPM_STEP × m（不超過 BPM_MAX）*/
+    var BPM_START = 24, BPM_STEP = 1.2, BPM_MAX = 120;        /* 第 m 小節的 BPM ＝ BPM_START + BPM_STEP × m（不超過 BPM_MAX）*/
     var LEAD_S = 3.0;                                          /* 遊戲開始到第一個小節開始 */
     /* 方塊從畫面頂端掉到紅線要幾秒（固定值，所以 BPM 越快，畫面上的方塊越擠） */
     var FALL_S = 0.85;                                         /* 方塊從頂端掉到基準線要幾秒（V1.24 是 1.7；縮短一半＝同樣的間隔在畫面上距離變 200%） */
@@ -54,7 +54,7 @@
     /* 每邊／兩邊合計每秒最多幾個方塊，避免太密點不完 */
     var MAX_LANE_RATE = 8, MAX_TOTAL_RATE = 10;                /* 每邊／兩邊合計每秒最多幾個方塊 */
     /* 生命 5 顆；連續打中 12 個回復 1 顆 */
-    var HEALTH_MAX = 5, HEAL_EVERY = 12;
+    var HEALTH_MAX = 8, HEAL_EVERY = 12;
     var DENSE_S = 0.2;                                         /* 方塊間隔小於這麼多秒的軌道叫「滾奏」：同一小節同一邊漏掉再多，也只扣 1 顆生命 */
     /* UNLOCK：每個顏色從第幾小節起才會出現（藍色 3、紫色 5，前面太密，讓玩家先熟悉） */
     var UNLOCK = { red: 0, orange: 0, yellow: 0, green: 0, blue: 7, purple: 9 };       /* 第幾小節起可以出現 */
@@ -164,7 +164,7 @@
             var head = h('div', { 'class': 'py-head', text: ' ' });
             var hearts = h('div', { 'class': 'py-hearts' });
             var legend = h('div', { 'class': 'py-legend' });
-            COLORS.forEach(function (c) { legend.appendChild(h('span', { 'class': 'py-legend__i' }, [h('i', { 'class': 'py-dot py-dot--' + c.id }), h('b', { text: c.label })])); });
+            //COLORS.forEach(function (c) { legend.appendChild(h('span', { 'class': 'py-legend__i' }, [h('i', { 'class': 'py-dot py-dot--' + c.id }), h('b', { text: c.label })])); });
             var laneL = h('div', { 'class': 'py-lane py-lane--left' }), laneR = h('div', { 'class': 'py-lane py-lane--right' });
             var lineL = h('div', { 'class': 'py-line' }), lineR = h('div', { 'class': 'py-line' });
             laneL.appendChild(lineL); laneR.appendChild(lineR);
@@ -282,7 +282,8 @@
                     }
                 }
                 var cm = null; for (var z = 0; z < measures.length; z++) if (now >= measures[z].start && now < measures[z].start + measures[z].dur) cm = measures[z];
-                if (cm) head.textContent = '第 ' + (cm.m + 1) + ' 小節　' + Math.round(cm.bpm) + ' BPM　左 ' + BY_ID[cm.L.color].name + '（' + BY_ID[cm.L.color].label + '）／右 ' + BY_ID[cm.R.color].name + '（' + BY_ID[cm.R.color].label + '）';
+                //if (cm) head.textContent = '第 ' + (cm.m + 1) + ' 小節　' + Math.round(cm.bpm) + ' BPM　左 ' + BY_ID[cm.L.color].name + '（' + BY_ID[cm.L.color].label + '）／右 ' + BY_ID[cm.R.color].name + '（' + BY_ID[cm.R.color].label + '）';
+                if (cm) head.textContent = '第 ' + (cm.m + 1) + ' 小節　' + Math.round(cm.bpm) + ' BPM　左 ';
                 else if (now < LEAD_S) head.textContent = '準備…' + Math.ceil(LEAD_S - now) + '　方塊碰到紅線的那一刻點該邊';
             }
             /* 每一拍紅線閃一下（第 1 拍閃得比較亮） */

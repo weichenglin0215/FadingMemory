@@ -21,13 +21,13 @@
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 14;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var MAX_LEVEL = 40;
-    var N_RANGE = [80, 120];                    /* 圓形個數範圍（偶數） */
+    var N_RANGE = [10, 120];                    /* 圓形個數範圍（偶數） */
     var R_RANGE = [11, 16];                     /* 圓形半徑範圍（px） */
-    var OVERLAP = 0.6;                          /* 兩個圓最多重疊多少（0.6＝60%） */
+    var OVERLAP = 0.5;                          /* 兩個圓最多重疊多少（0.6＝60%） */
     var SKEW_MAX = 0.85;                        /* 最後一關的不平均程度（0＝平均分布，1＝幾乎全擠在一處） */
-    var GAP = [9, 3];                           /* 容許的位置寬度（lo～hi 的距離，px）：第 1 關 → 到頂（最少值） */
+    var GAP = [60, 3];                           /* 容許的位置寬度（lo～hi 的距離，px）：第 1 關 → 到頂（最少值） */
     var EDGE = 18;                              /* 圓心離畫面邊緣至少多遠（px） */
     var COUNT_STEP_MS = 1500;                   /* 「計算數量」整個動畫的時間 */
     var TRIES = 60;

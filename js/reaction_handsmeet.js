@@ -18,12 +18,12 @@
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var W1 = [120, 300];                        /* 長針角速度範圍（度／秒） */
-    var K = [2, 5];                             /* 長針是短針的幾倍快 */
-    var FIRST_MIN = 2.5;                        /* 第一次重疊至少在幾秒之後 */
-    var MAX_S = 12;                             /* 指針最多轉幾秒 */
-    var CX = 236, CY = 270, R = 150;            /* 圓盤中心與半徑（舞台座標） */
-    var LEN1 = 128, LEN2 = 90;                  /* 長針、短針長度 */
+    var W1 = [240, 300];                        /* 長針角速度範圍（度／秒） */
+    var K = [4, 5];                             /* 長針是短針的幾倍快 */
+    var FIRST_MIN = 1.0;                        /* 第一次重疊至少在幾秒之後 */
+    var MAX_S = 30;                             /* 指針最多轉幾秒 */
+    var CX = 236, CY = 270, R = 220;            /* 圓盤中心與半徑（舞台座標） */
+    var LEN1 = 200, LEN2 = 160;                  /* 長針、短針長度 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 出題：回傳 { w1, w2, th1, th2, d0, rel, t0（第一次重疊的秒數）} */
@@ -112,11 +112,13 @@
             var off = Math.abs(sec - ts);
             msg.textContent = '夾角 ' + real.toFixed(4) + ' 度　你' + (early ? '早了 ' : '晚了 ') + off.toFixed(4) + ' 秒';
             my.after(2200, function () {
-                api.finish(real, { lines: [
-                    '按下的瞬間，兩針夾角 ' + real.toFixed(4) + ' 度',
-                    '最近的一次重疊在第 ' + ts.toFixed(4) + ' 秒，你' + (early ? '早了 ' : '晚了 ') + off.toFixed(4) + ' 秒',
-                    '只有一次機會，想拚更準就再挑戰一次'
-                ] });
+                api.finish(real, {
+                    lines: [
+                        '按下的瞬間，兩針夾角 ' + real.toFixed(4) + ' 度',
+                        '最近的一次重疊在第 ' + ts.toFixed(4) + ' 秒，你' + (early ? '早了 ' : '晚了 ') + off.toFixed(4) + ' 秒',
+                        '只有一次機會，想拚更準就再挑戰一次'
+                    ]
+                });
             });
         }
         kit.onTap(btn, function (e) { tapAtMs(kit.evT(e) - t0); });

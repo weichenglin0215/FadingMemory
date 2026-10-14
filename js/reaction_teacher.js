@@ -30,10 +30,10 @@
     /* 難度隨題號線性變化到第 RAMP_N 題 */
     var RAMP_N = 30;
     /* 「老師說」出現的機率：70% → 50%（越後面越常是陷阱） */
-    var P_SAY_START = 0.7, P_SAY_END = 0.5;
-    var TIME_START = 2.5, TIME_END = 0.9;           /* 每題限時（秒）*/
-    /* 第 15 題起才出現「相反」指令，出現機率 35% */
-    var OPPOSITE_FROM = 15, P_OPPOSITE = 0.35;
+    var P_SAY_START = 0.75, P_SAY_END = 0.5;
+    var TIME_START = 2.5, TIME_END = 0.6;           /* 每題限時（秒）*/
+    /* 第 10 題起才出現「相反」指令，出現機率 35% */
+    var OPPOSITE_FROM = 10, P_OPPOSITE = 0.35;
     /* 沒說「老師說」的題目最多連續幾題 */
     var NO_SAY_RUN_MAX = 3;
     var GAP_S = 0.3;                                /* 答完到下一題之間的空檔（空檔內的點擊不算）*/
@@ -204,11 +204,11 @@
                 var isNew = Reaction.setBest(ID, streak, function (v, b) { return v > b; });
                 my.after(FAIL_SHOW_MS, function () {
                     var back = kit.resumeFrom(i);
-                        kit.result(root, {
+                    kit.result(root, {
                         score: streak,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: String(streak), label: rating(streak),
                         lines: [msg], isNew: isNew && streak > 0, sfx: streak >= 8 ? 'win' : 'fail', onAgain: function () { round(1); },
-                            resume: { level: back, run: function () { round(back); } }
+                        resume: { level: back, run: function () { round(back); } }
                     });
                 });
             }

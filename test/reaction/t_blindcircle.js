@@ -41,10 +41,23 @@ ok(T.rating(99.5) !== T.rating(97.5) && T.rating(97.5) !== T.rating(91) && T.rat
 // V1.25：半徑加大、起點在畫面內；十字箭頭 200px；畫的過程中不畫任何東西（沒有藍色圓點）
 ok(T.R_MIN >= 180 && T.R_MAX <= 236, '半徑加大（原本 100～150）：' + T.R_MIN + '～' + T.R_MAX);
 for (let i = 0; i < 2000; i++) { const c = T.makeRound(rnd); ok(c.start.x - 8 >= 0 && c.start.x <= 472 && c.start.y <= 600 && C.x - c.R >= 0 && C.x + c.R <= 472 && C.y - c.R >= 20 && C.y + c.R <= 600, '圓與起點都在畫面內'); }
-ok(T.ARROW === 200, '十字箭頭總寬 200px');
+ok(T.ARROW === 150, '十字箭頭總寬 150px（V1.27：縮小成 75%）');
 { const p = T.arrowPoints(T.ARROW), xs = p.map(q => q[0]), ys = p.map(q => q[1]);
-  ok(p.length === 24 && Math.min(...xs) === -100 && Math.max(...xs) === 100 && Math.min(...ys) === -100 && Math.max(...ys) === 100, '箭頭多邊形 24 個頂點、範圍 ±100');
-  ok(p.some(q => q[0] === 0 && q[1] === -100) && p.some(q => q[0] === 100 && q[1] === 0) && p.some(q => q[0] === 0 && q[1] === 100) && p.some(q => q[0] === -100 && q[1] === 0), '上下左右四個箭頭尖端'); }
+  ok(p.length === 24 && Math.min(...xs) === -75 && Math.max(...xs) === 75 && Math.min(...ys) === -75 && Math.max(...ys) === 75, '箭頭多邊形 24 個頂點、範圍 ±75');
+  ok(p.some(q => q[0] === 0 && q[1] === -75) && p.some(q => q[0] === 75 && q[1] === 0) && p.some(q => q[0] === 0 && q[1] === 75) && p.some(q => q[0] === -75 && q[1] === 0), '上下左右四個箭頭尖端'); }
 { const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_blindcircle.js'), 'utf8');
   ok(src.indexOf('bc-finger') < 0, '取消繪製過程中的藍色圓點'); ok(src.indexOf("'class': 'bc-start'") > 0 && src.indexOf('arrowPoints(ARROW)') > 0, '起點用十字箭頭'); }
+// V1.27：拖曳軌跡只留手指身後 160px
+ok(T.TRAIL_LEN === 160, '軌跡長度 160px');
+{ const len = (a) => { let s = 0; for (let i = 1; i < a.length; i++) s += Math.hypot(a[i].x - a[i - 1].x, a[i].y - a[i - 1].y); return s; };
+  const line = []; for (let i = 0; i <= 100; i++) line.push({ x: i * 3, y: 0 });                                 // 300px 的直線
+  const tl = T.tailOf(line, 160); ok(Math.abs(len(tl) - 160) < 1e-6, '直線 300px → 尾巴剛好 160px：' + len(tl));
+  ok(tl[tl.length - 1].x === 300 && Math.abs(tl[0].x - 140) < 1e-6, '尾巴接在最新的點上、起點被裁在 x=140');
+  ok(T.tailOf(line.slice(0, 20), 160).length === 20 && Math.abs(len(T.tailOf(line.slice(0, 20), 160)) - 57) < 1e-6, '不到 160px 時整條都留著');
+  ok(T.tailOf([], 160).length === 0 && T.tailOf([{ x: 1, y: 2 }], 160).length === 1, '空與單點');
+  const C = T.CENTER, R = 190, arc = []; for (let i = 0; i <= 400; i++) { const a = i / 400 * 2 * Math.PI; arc.push({ x: C.x + R * Math.cos(a), y: C.y + R * Math.sin(a) }); }
+  for (const k of [50, 150, 300, 400]) { const t = T.tailOf(arc.slice(0, k + 1), 160), L = len(t); ok(L <= 160 + 1e-6 && (L > 159 || len(arc.slice(0, k + 1)) < 160), '圓弧 ' + k + ' 點：尾巴長度 ' + L.toFixed(2)); }
+  const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_blindcircle.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction3.css'), 'utf8');
+  ok(src.indexOf('tailOf(pts, TRAIL_LEN)') > 0 && /pts\.push\(loc\(e\)\);[^\n]*\n\s*paintTrail\(\)/.test(src), '每次 pointermove 更新軌跡');
+  ok(/\.bc-trail \{[^}]*stroke: #000;[^}]*stroke-width: 1;[^}]*stroke-dasharray/.test(css), '軌跡是 1px 黑色虛線'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

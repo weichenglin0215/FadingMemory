@@ -84,7 +84,7 @@
 
         var glyph = h('div', { 'class': 'cl-glyph', text: q.target });
         var clock = h('div', { 'class': 'cl-clock', text: '計時 0.0000 秒' });
-        var note = h('div', { 'class': 'cl-note', text: level === 1 ? '字會越來越清楚。認出來就按——按錯就結束！' : '認出來就按，越早按對分數越高' });
+        var note = h('div', { 'class': 'cl-note', text: level === 1 ? '字越來越清楚，認出就按，按錯結束' : '越快按，分數越高' });
         stage.appendChild(note); stage.appendChild(glyph); stage.appendChild(clock);
         var btns = q.options.map(function (c) {
             var b = h('button', { 'class': 'btn btn--line cl-opt', text: c });

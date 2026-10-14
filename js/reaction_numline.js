@@ -104,7 +104,7 @@
         paint();
         /* 拖曳區：數線下方一大塊，手指在這裡橫向移動，圓點跟著走（手指不會擋住圓點） */
         var pad = h('div', { 'class': 'nl-pad' });
-        pad.style.top = (LY + 70) + 'px'; pad.style.height = (H - LY - 70 - 84 - 12) + 'px';
+        pad.style.top = (LY + 100) + 'px'; pad.style.height = (H - LY - 70 - 84 - 12 - 30) + 'px';
         var okBtn = h('button', { 'class': 'btn btn--go nl-ok', text: '確定' });
         stage.appendChild(pad); stage.appendChild(okBtn);
         var locked = false, hint = null, dragging = null;

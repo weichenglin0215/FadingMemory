@@ -22,7 +22,7 @@
     var MAX_LEVEL = 40;
     var HUE_DELTA = [100, 15];                  /* 落單襪子和它最像的那一對，底色色相差（度） */
     var COUNT_DELTA = [3, 1];                   /* 條紋數／圓點數差 */
-    var TIME_S = [30, 10];                      /* 每關限時（秒） */
+    var TIME_S = [15, 4];                      /* 每關限時（秒） */
     var MAX_COUNT = 8;                          /* 條紋、圓點最多幾個 */
     var CELL = 140, GAP = 14;                   /* 格子大小與間距（px） */
 
@@ -115,10 +115,12 @@
             q.socks.forEach(function (s, k) { if (k !== odd && key(s) === key(q.mate) && s.hue === q.mate.hue) cells[k].classList.add('os-cell--mate'); });
             if (i === odd) { api.pass({ delay: 800 }); return; }
             if (i >= 0) cells[i].classList.add('os-cell--bad');
-            api.fail({ delay: 2000, lines: [
-                (i < 0 ? '時間到！' : '選錯了！') + '落單的是第 ' + (Math.floor(odd / 3) + 1) + ' 列第 ' + (odd % 3 + 1) + ' 隻',
-                '它和最像的那一對只差' + WHAT_NAME[q.what] + '：' + (q.what === 'hue' ? '色相差 ' + hueDelta(level).toFixed(4) + ' 度' : '差 ' + countDelta(level) + ' 個')
-            ] });
+            api.fail({
+                delay: 2000, lines: [
+                    (i < 0 ? '時間到！' : '選錯了！') + '落單的是第 ' + (Math.floor(odd / 3) + 1) + ' 列第 ' + (odd % 3 + 1) + ' 隻',
+                    '它和最像的那一對只差' + WHAT_NAME[q.what] + '：' + (q.what === 'hue' ? '色相差 ' + hueDelta(level).toFixed(4) + ' 度' : '差 ' + countDelta(level) + ' 個')
+                ]
+            });
         }
         api.solve = function () { judge(q.odd); };
         api.wrong = function () { judge(q.odd === 0 ? 1 : 0); };

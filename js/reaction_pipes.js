@@ -37,11 +37,11 @@
     var LEVEL_RAMP = 30;
     var GRID_START = 4, GRID_END = 8;
     var BUCKETS_START = 1, BUCKETS_END = 10;
-    var TIME_START = 45, TIME_END = 150;
+    var TIME_START = 30, TIME_END = 180;
     /* FILL：水管樹占棋盤格數的比例（其餘是空格），隨關卡增加 */
-    var FILL = [0.45, 0.7];          /* 樹佔棋盤格數的比例：第 1 關 → 最後 */
-    var MIN_TAPS = [3, 14];          /* 打亂後至少要轉幾次才解得開：第 1 關 → 最後 */
-    var SPREAD_POW = 1.6;            /* 長樹時往遠處長的力道（越大越往棋盤另一端延伸） */
+    var FILL = [0.5, 0.8];          /* 樹佔棋盤格數的比例：第 1 關 → 最後 */
+    var MIN_TAPS = [5, 20];          /* 打亂後至少要轉幾次才解得開：第 1 關 → 最後 */
+    var SPREAD_POW = 2.0;            /* 長樹時往遠處長的力道（越大越往棋盤另一端延伸） */
     var TURN_BONUS = 2;              /* 尾端延長時，轉彎的權重是直走的幾倍 */
     var CELL = 90;                   /* SVG 單位：一格的邊長 */
     var FAUCET_H = 56;               /* 水龍頭那一條的高度 */
@@ -340,12 +340,12 @@
                     var avg = times.length ? times.reduce(function (a, b) { return a + b; }, 0) / times.length : null;
                     /* kit.resumeFrom：失敗後可從前 5 關繼續 */
                     var back = kit.resumeFrom(level);
-                        kit.result(root, {
+                    kit.result(root, {
                         score: passed,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: passed + ' 關', label: rating(passed),
                         lines: ['第 ' + level + ' 關（' + L.N + '×' + L.N + '、' + L.B + ' 個水桶）沒接完'].concat(avg != null ? ['過關平均 ' + Leaderboard.fake4(avg).toFixed(4) + ' 秒'] : []),
                         isNew: newRec && passed > 0, sfx: passed >= 3 ? 'win' : 'fail', onAgain: function () { round(1); },
-                            resume: { level: back, run: function () { round(back); } }
+                        resume: { level: back, run: function () { round(back); } }
                     });
                 });
             }

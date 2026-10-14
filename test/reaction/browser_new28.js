@@ -8,7 +8,7 @@
      window.__job = __new28All(); window.__rows   一次跑全部（不要 await，工具會逾時）；__rows 讀進度 */
 (function () {
     var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
-    var IDS = ['area', 'halfvol', 'blindcircle', 'samelen', 'rightangle', 'stamp', 'focus', 'scratch', 'mathcheck', 'sum100', 'timestable', 'fracduel', 'primetrap', 'maxexpr', 'glyphspin', 'oddsock', 'fadee', 'ghostleg', 'euler', 'colorrecall', 'basket', 'passersby', 'seenit', 'whofirst', 'watchoff', 'handsmeet', 'clearer', 'twobags'];
+    var IDS = ['area', 'halfvol', 'blindcircle', 'samelen', 'rightangle', 'stamp', 'scratch', 'mathcheck', 'sum100', 'timestable', 'fracduel', 'primetrap', 'maxexpr', 'glyphspin', 'oddsock', 'fadee', 'ghostleg', 'euler', 'colorrecall', 'basket', 'passersby', 'seenit', 'whofirst', 'watchoff', 'handsmeet', 'clearer', 'twobags'];
     window.__NEW28 = IDS;
     window.__NEW7 = ['stackup', 'bridge', 'halfcrowd', 'catroad', 'numline', 'twinsock', 'mixcolor'];        /* V1.21.0 的 7 款復活遊戲 */
     window.__NEW23 = ['copycurve', 'isequal', 'orderops', 'remainder', 'hiddendigit', 'timeafter', 'wrongline', 'fillop', 'fastblink', 'sneakmove', 'farpair', 'dicechange', 'whosaid', 'tapback', 'nthshape', 'spingap',

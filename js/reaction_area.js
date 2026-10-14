@@ -9,6 +9,8 @@
    · 拖曳是「慢速微調」：手指越慢，變化量越小（kit.dragDamp）。
    · 成績 ＝ |s² − A| ÷ A × 100（%，越小越好）；第 3、4 位為 0 時偽造成非 0（結算時只產生一次）。
    · 揭曉：方塊移到形狀上疊合，只在形狀內的部分是橘色、只在方塊內的部分是藍色。
+     V1.27（玩家意見）：疊合之後下方出現「面積差」的數字動畫，從 0.0000% 一路增加到 XX.XXXX%（方塊比較大）、
+     或一路減少到 -XX.XXXX%（方塊比較小）；數字停住之後畫面再維持 HOLD_MS（2 秒）才跳出結算彈窗。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -19,10 +21,10 @@
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var EQ_MIN = 110, EQ_MAX = 140;                 /* 目標形狀的等效邊長（面積 ＝ 邊長²）：盡量大 */
-    var SQ_MIN = 40, SQ_MAX = 180;                  /* 方塊邊長可拖動的範圍（px） */
-    var ANCHOR = { x: 160, y: 335 };                /* 方塊左上角（固定不動）：在畫面下半部 */
-    var SHAPE_C = { x: 236, y: 170 };               /* 目標形狀的中心：在畫面上半部、水平置中 */
+    var EQ_MIN = 120, EQ_MAX = 200;                 /* 目標形狀的等效邊長（面積 ＝ 邊長²）：盡量大 */
+    var SQ_MIN = 40, SQ_MAX = 260;                  /* 方塊邊長可拖動的範圍（px） */
+    var ANCHOR = { x: 60, y: 335 };                /* 方塊左上角（固定不動）：在畫面下半部 */
+    var SHAPE_C = { x: 250, y: 185 };               /* 目標形狀的中心：在畫面上半部、水平置中 */
     var HANDLE = 84, TOUCH_R = 62;                  /* 十字箭頭手柄的總寬（px）、可以抓住的半徑 */
     var FAR = [[0.45, 0.7], [1.4, 1.8]];            /* 初始邊長相對答案的倍率範圍（兩段擇一） */
     var KINDS = ['circle', 'triangle', 'star', 'cross', 'ell'];
@@ -30,8 +32,10 @@
     function arrowPoints(size) {
         var a = size / 2, hl = size * 0.19, hw = size * 0.12, sw = size * 0.04, b = a - hl;
         return [[0, -a], [hw, -b], [sw, -b], [sw, -sw], [b, -sw], [b, -hw], [a, 0], [b, hw], [b, sw], [sw, sw], [sw, b], [hw, b],
-            [0, a], [-hw, b], [-sw, b], [-sw, sw], [-b, sw], [-b, hw], [-a, 0], [-b, -hw], [-b, -sw], [-sw, -sw], [-sw, -b], [-hw, -b]];
+        [0, a], [-hw, b], [-sw, b], [-sw, sw], [-b, sw], [-b, hw], [-a, 0], [-b, -hw], [-b, -sw], [-sw, -sw], [-sw, -b], [-hw, -b]];
     }
+    var COUNT_MS = 2200;                            /* 面積差數字從 0 跑到答案花的時間 */
+    var HOLD_MS = 2000;                             /* 數字停住之後，畫面再維持多久才跳出結算彈窗 */
     var STAR_K = 0.4;                               /* 五角星內外半徑比 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
@@ -78,6 +82,10 @@
     }
     /* 誤差（%）：方塊面積與目標面積的差 ÷ 目標面積 */
     function errPct(s, A) { return Math.abs(s * s - A) / A * 100; }
+    /* 有號的面積差（%）：＋＝方塊比較大、－＝方塊比較小 */
+    function signedPct(s, A) { return (s * s - A) / A * 100; }
+    /* 數字動畫的字串：正數不加號（XX.XXXX%），負數加負號（-XX.XXXX%） */
+    function fmtDiff(p) { return (p < 0 ? '-' : '') + Math.abs(p).toFixed(4) + '%'; }
     function rating(e) {
         if (e < 0.5) return '神準！';
         if (e < 2) return '很準！';
@@ -89,7 +97,7 @@
     function mount(root, ctx) {
         kit.single(root, ctx, {
             id: ID, G: G, better: 'min', max: SCORE.max,
-            title: '拖曳方塊右下角的十字箭頭，讓方塊的面積和上方的圖形一樣大',
+            title: '拖曳十字箭頭，讓下上的面積相同',
             numText: function (v) { return v.toFixed(4) + '%'; },
             rating: rating,
             sfx: function (v) { return v < 2 ? 'perfect' : (v < 8 ? 'win' : 'fail'); },
@@ -116,6 +124,8 @@
         var handle = kit.svg('polygon', { points: arrowPoints(HANDLE).map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '), 'class': 'ar-handle' }, svg);
         var legend = h('div', { 'class': 'ar-legend' });
         stage.appendChild(legend);
+        var diffEl = h('div', { 'class': 'ar-diff', text: fmtDiff(0) });   /* 揭曉時的面積差數字動畫 */
+        stage.appendChild(diffEl);
         function paint() {
             rect.setAttribute('width', s); rect.setAttribute('height', s);
             handle.setAttribute('transform', 'translate(' + (ANCHOR.x + s).toFixed(2) + ' ' + (ANCHOR.y + s).toFixed(2) + ')');
@@ -159,13 +169,23 @@
             my.tween(900, function (e) {
                 gSq.setAttribute('transform', 'translate(' + (tx * e).toFixed(2) + ' ' + (ty * e).toFixed(2) + ')');
             }, kit.easeInOutCubic).then(function () {
-                var bigger = s * s > cfg.A;
-                my.after(1500, function () {
-                    api.finish(real, { lines: [
-                        '你的方塊面積是目標的 ' + (s * s / cfg.A * 100).toFixed(4) + '%',
-                        bigger ? '方塊比較大' : (s * s < cfg.A ? '方塊比較小' : '剛好一樣大'),
-                        '只有一次機會，想拚更準就再挑戰一次'
-                    ] });
+                var bigger = s * s > cfg.A, sp = signedPct(s, cfg.A);
+                /* 疊合之後：面積差從 0.0000% 跑到最後的數字（正＝方塊比較大、負＝比較小），停住後再維持 HOLD_MS */
+                diffEl.classList.add('ar-diff--on');
+                diffEl.classList.toggle('ar-diff--neg', sp < 0);
+                return my.tween(COUNT_MS, function (e) { diffEl.textContent = fmtDiff(sp * e); }, kit.easeOutCubic).then(function () {
+                    diffEl.textContent = fmtDiff(sp);
+                    return bigger;
+                });
+            }).then(function (bigger) {
+                my.after(HOLD_MS, function () {
+                    api.finish(real, {
+                        lines: [
+                            '你的方塊面積是目標的 ' + (s * s / cfg.A * 100).toFixed(4) + '%',
+                            bigger ? '方塊比較大' : (s * s < cfg.A ? '方塊比較小' : '剛好一樣大'),
+                            '只有一次機會，想拚更準就再挑戰一次'
+                        ]
+                    });
                 });
             });
         }
@@ -182,10 +202,10 @@
     var G = {
         id: ID,
         name: '面積一樣大',
-        rule: '上方是一個圖形，下方是一個方塊。拖曳方塊右下角的十字箭頭，**讓方塊的面積和上方的圖形一樣大**。手指移動越慢，變化越細。沒有任何數字，**只有一次機會**，按「確定」後會疊在一起告訴你差了幾 %。',
+        rule: '上方是一個圖形，下方是一個方塊。拖曳方塊右下角的十字箭頭，**讓方塊的面積和上方的圖形一樣大**。手指移動越慢，變化越細。沒有任何數字，**只有一次機會**，按「確定」後會疊在一起，並用跳動的數字告訴你差了幾 %。',
         mount: mount,
         score: SCORE,
-        test: { arrowPoints: arrowPoints, HANDLE: HANDLE, ANCHOR: ANCHOR, SHAPE_C: SHAPE_C, polyArea: polyArea, shapeOf: shapeOf, areaOf: areaOf, makeRound: makeRound, errPct: errPct, rating: rating, KINDS: KINDS, EQ_MIN: EQ_MIN, EQ_MAX: EQ_MAX, SQ_MIN: SQ_MIN, SQ_MAX: SQ_MAX }
+        test: { signedPct: signedPct, fmtDiff: fmtDiff, COUNT_MS: COUNT_MS, HOLD_MS: HOLD_MS, arrowPoints: arrowPoints, HANDLE: HANDLE, ANCHOR: ANCHOR, SHAPE_C: SHAPE_C, polyArea: polyArea, shapeOf: shapeOf, areaOf: areaOf, makeRound: makeRound, errPct: errPct, rating: rating, KINDS: KINDS, EQ_MIN: EQ_MIN, EQ_MAX: EQ_MAX, SQ_MIN: SQ_MIN, SQ_MAX: SQ_MAX }
     };
     Reaction.register(G);
 })();

@@ -23,7 +23,7 @@
         ['setclock', 'drag', 1200, 1], ['tearcal', 'tap', 1200, 1], ['pillbox', 'drag', 16000, 1], ['fridge', null, 600], ['scallion', 'tap', 900, 1],
         /* V1.20.0 的 28 款裡有提示的（kit.fingerHint／kit.hintOn） */
         ['area', 'drag', 900], ['blindcircle', 'drag', 900], ['rightangle', 'drag', 900], ['samelen', 'drag', 900], ['stamp', 'drag', 900], ['colorrecall', 'drag', 4500],
-        ['focus', 'drag', 900], ['halfvol', 'drag', 900], ['scratch', 'tap', 900, 1], ['ghostleg', 'drag', 900], ['twobags', 'drag', 900], ['fadee', 'drag', 900],
+        ['halfvol', 'drag', 900], ['scratch', 'tap', 900, 1], ['ghostleg', 'drag', 900], ['twobags', 'drag', 900], ['fadee', 'drag', 900],
         ['basket', 'tap', 900, 1], ['maxexpr', 'tap', 900, 1], ['oddsock', 'tap', 900, 1], ['sum100', 'tap', 900, 1], ['timestable', 'tap', 900, 1],
         /* V1.21.0 的 7 款復活遊戲 */
         ['stackup', 'drag', 900], ['halfcrowd', 'drag', 900], ['catroad', 'drag', 900], ['numline', 'drag', 900], ['twinsock', 'tap', 900, 1], ['mixcolor', 'hold', 900, 1],

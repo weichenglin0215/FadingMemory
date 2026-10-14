@@ -70,14 +70,50 @@ ok(T.canStillSolve([]) === true && T.canStillSolve([10, 40, 50]) === true && T.c
 // 範例牌組也是同樣的格式，洗牌後 15 張一樣
 { const e = T.exampleDeck(rnd); ok(e.cards.slice().sort((x, y) => x - y).join() === T.EXAMPLE_DECK.join() && e.solution.length === 5 && e.traps.length === 9, '範例牌組格式'); }
 
+// ═══ V1.27 關卡制：第 1 關 6 張、每隔三關多 3 張、限時 180 秒起每關 +20 秒 ═══
+ok(T.START_GROUPS === 2 && T.LEVEL_STEP === 3 && T.LIMIT_BASE_S === 180 && T.LIMIT_STEP_S === 20 && T.COLS === 3, '參數：6 張起、每三關多一組、180 秒起 +20、橫向 3 張');
+for (let lv = 1; lv <= T.MAX_LEVEL; lv++) {
+  const sp = T.levelSpec(lv), g = Math.min(T.MAX_GROUPS, 2 + Math.floor((lv - 1) / 3));
+  ok(sp.groups === g && sp.cards === 3 * g, '第 ' + lv + ' 關 ' + sp.cards + ' 張');
+  ok(sp.limitS === 180 + 20 * (lv - 1) && T.limitMs(lv) === sp.limitS * 1000, '第 ' + lv + ' 關限時 ' + sp.limitS + ' 秒');
+  ok(sp.cards % 3 === 0 && sp.minTraps >= 0, '張數是 3 的倍數');
+  if (lv > 1) { const pv = T.levelSpec(lv - 1); ok(sp.cards >= pv.cards, '張數不會減少'); ok(sp.cards - pv.cards === 0 || sp.cards - pv.cards === 3, '每次最多多 3 張'); }
+}
+ok(T.levelSpec(1).cards === 6 && T.levelSpec(3).cards === 6 && T.levelSpec(4).cards === 9 && T.levelSpec(6).cards === 9 && T.levelSpec(7).cards === 12 && T.levelSpec(10).cards === 15 && T.levelSpec(12).cards === 15 && T.levelSpec(13).cards === 18, '1～3 關 6 張、4～6 關 9 張…每隔三關加三張');
+ok(T.levelSpec(25).cards === 30 && T.levelSpec(30).cards === 30, '最多 30 張');
+ok(T.levelSpec(1).limitS === 180 && T.levelSpec(2).limitS === 200 && T.levelSpec(10).limitS === 360, '限時 180、200、…（每關多 20 秒）');
+// 同一張數的三關，陷阱要求依序變多（6 張不可能有陷阱）
+for (let g = 2; g <= T.MAX_GROUPS; g++) { const t = T.TRAPS[g]; ok(t.length === 3 && t[0] <= t[1] && t[1] <= t[2], g + ' 組的陷阱要求遞增 ' + t); if (g > 2) ok(T.TRAPS[g][0] >= T.TRAPS[g - 1][0], '張數更多，陷阱要求不減'); }
+ok(T.TRAPS[2].every(x => x === 0) && T.levelSpec(12).minTraps === T.MIN_TRAPS && T.levelSpec(12).cards === 15, '第 12 關＝範例牌組的難度（15 張、陷阱 9 組）');
+// 6 張牌：數學上不可能有陷阱（任何一組 100 的剩下三張也是 100）→ 一定只有 2 組三張組合
+for (let i = 0; i < 400; i++) { const d = T.deckForLevel(1 + (i % 3), rnd), a = T.analyze(d.cards); ok(d.cards.length === 6 && a.partitions === 1 && a.triples === 2 && a.traps.length === 0 && a.solution.length === 2, '6 張牌只有一種分法、沒有陷阱'); }
+// 每一關的牌組：張數正確、全部不同、範圍合理、唯一分法、陷阱 ≥ 要求、先消陷阱就配不完
+for (let lv = 1; lv <= T.MAX_LEVEL; lv++) for (let i = 0; i < (lv > 24 ? 6 : 25); i++) {
+  const sp = T.levelSpec(lv), d = T.deckForLevel(lv, rnd); ok(!!d, '第 ' + lv + ' 關找得到牌組'); if (!d) continue;
+  const c = d.cards, a = T.analyze(c);
+  ok(c.length === sp.cards && new Set(c).size === c.length, '第 ' + lv + ' 關 ' + sp.cards + ' 張都不同');
+  ok(c.every(v => Number.isInteger(v) && v >= sp.lo && v <= sp.hi), '每張在 ' + sp.lo + '～' + sp.hi);
+  ok(a.partitions === 1 && a.solution.length === sp.groups && a.solution.every(t => t.reduce((x, y) => x + y, 0) === 100), '唯一分法、每組 100');
+  ok(a.traps.length >= sp.minTraps, '第 ' + lv + ' 關陷阱至少 ' + sp.minTraps + ' 組：' + a.traps.length);
+  a.traps.slice(0, 6).forEach(t => ok(!T.canStillSolve(remove(c, t)), '先消陷阱就配不完'));
+  a.solution.forEach(t => ok(T.canStillSolve(remove(c, t)), '先消正解還配得完'));
+}
+// 剩餘時間顯示
+ok(T.fmtLeft(180000) === '3:00' && T.fmtLeft(59001) === '1:00' && T.fmtLeft(59000) === '0:59' && T.fmtLeft(0) === '0:00' && T.fmtLeft(-5) === '0:00' && T.fmtLeft(760000) === '12:40', 'fmtLeft');
+
 // ═══ 版面、參數、接線（原始碼／樣式）═══
-ok(T.COLS * T.ROWS === 15 && T.GROUPS * 3 === 15 && T.TARGET === 100 && T.PENALTY_MS === 3000 && T.LIMIT_S === 180, '版面 5×3＝15 張、目標 100、罰 3 秒、限時 180 秒');
-ok(G.name === '三張成百' && G.score.better === 'min' && G.score.max === 180 && G.score.decimals === 4, '遊戲名稱與成績規格（用時、越小越好、上限 180 秒）');
-ok(T.rating(10) !== T.rating(30) && T.rating(30) !== T.rating(60) && T.rating(60) !== T.rating(120), '評語分級');
-{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_triple100.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction5.css'), 'utf8'), boot = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/boot.js'), 'utf8');
-  ok(/if \(!hasMove\(remainingValues\(\)\)\) my\.after\(500, function \(\) \{ fail\('stuck'\); \}\)/.test(src), '消除之後剩下的牌湊不出任何 100 → 卡住失敗');
-  ok(src.indexOf("fail('time')") > 0 && src.indexOf('LIMIT_S * 1000') > 0, '超過時間限制失敗');
-  ok(!/kit\.result\([^)]*score:/.test(src.slice(src.indexOf('function fail('), src.indexOf('function finish('))), '失敗（卡住／超時）不計成績、不送排行榜');
-  ok(/grid-template-columns: repeat\(5, 1fr\)/.test(css) && /\.t3-card--sel/.test(css) && /\.t3-card--gone/.test(css) && /\.t3-card--bad/.test(css), '樣式：5 欄、選取／消除／錯誤');
-  ok(boot.indexOf("'js/reaction_triple100.js'") > boot.indexOf("'js/reaction_alignchar.js'") && boot.indexOf("'js/reaction_triple100.js'") < boot.indexOf("'js/reaction.js'"), 'boot.js 有載入（在 reaction.js 之前）'); }
+ok(T.GROUPS * 3 === 15 && T.TARGET === 100 && T.PENALTY_MS === 3000, '預設 15 張、目標 100、罰 3 秒');
+ok(G.name === '三張成百' && G.score.better === 'max' && G.score.min === 1 && G.score.max === 30 && G.score.decimals === 0, '遊戲名稱與成績規格（通過關數、越大越好、上限 30）');
+ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(8) && T.rating(8) !== T.rating(15) && T.rating(15) !== T.rating(25), '評語分級');
+{ const path = require('path'), rd = p => require('fs').readFileSync(path.resolve(__dirname, p), 'utf8');
+  const src = rd('../../js/reaction_triple100.js'), css = rd('../../css/reaction5.css'), boot = rd('../../js/boot.js'), kit2 = rd('../../js/reaction_kit2.js'), menu = rd('../../js/menu.js');
+  ok(/if \(!hasMove\(remainingValues\(\)\)\) api\.after\(500, function \(\) \{ fail\('stuck'\); \}\)/.test(src), '消除之後剩下的牌湊不出任何 100 → 卡住結束');
+  ok(src.indexOf("fail('time')") > 0 && src.indexOf('api.timer(spec.limitS * 1000') > 0, '超過時間限制結束');
+  ok(src.indexOf('tm.cut(PENALTY_MS)') > 0 && /cut: function \(d\)/.test(kit2), '選錯一組從剩餘時間扣 3 秒（kit.run 的 timer.cut）');
+  ok(src.indexOf('api.pass(') > 0 && src.indexOf('maxLevel: MAX_LEVEL') > 0, '全部消完過關、關卡制');
+  ok(src.indexOf("addEventListener('click'") > 0, '牌用 click（上下捲動時不誤選）');
+  ok(src.indexOf("migrateBest(ID, function () { return null; }, '.v127')") > 0, '舊版（用時）的最佳紀錄清掉一次');
+  ok(/\.t3-wrap \{[^}]*overflow-y: auto/.test(css) && /grid-template-columns: repeat\(3, 1fr\)/.test(css) && /\.t3-card--sel/.test(css) && /\.t3-card--gone/.test(css) && /\.t3-card--bad/.test(css), '樣式：橫向 3 欄、往下捲動、選取／消除／錯誤');
+  ok(boot.indexOf("'js/reaction_triple100.js'") > boot.indexOf("'js/reaction_alignchar.js'") && boot.indexOf("'js/reaction_triple100.js'") < boot.indexOf("'js/reaction.js'"), 'boot.js 有載入（在 reaction.js 之前）');
+  ok(/id: 'triple100', name: '三張成百'/.test(menu), '選單有這一款'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

@@ -323,8 +323,7 @@ insert into public."MF_games" (game_id, title, better, min_score, max_score) val
     ('blindcircle',  '盲畫一個圓', 'max', 0, 100),
     ('samelen',      '畫一樣長', 'min', 0, 300),
     ('rightangle',   '畫成直角', 'min', 0, 180),
-    ('stamp',        '蓋在框內', 'min', 0, 200),
-    ('focus',        '轉到最清楚', 'min', 0, 100),
+    ('stamp',        '心在正中央', 'min', 0, 200),
     ('scratch',      '刮刮樂推理', 'max', 1, 20),
     ('mathcheck',    '算式對不對', 'max', 1, 60),
     ('fracduel',     '分數大對決', 'max', 1, 60),
@@ -376,7 +375,7 @@ insert into public."MF_games" (game_id, title, better, min_score, max_score) val
     ('racefirst',    '誰先衝線', 'max', 1, 60),
     ('spinpick',     '轉盤停哪格', 'max', 1, 60),
     ('alignchar',    '對準才看到', 'max', 1, 60),
-    ('triple100',    '三張成百', 'min', 0, 180),
+    ('triple100',    '三張成百', 'max', 1, 30),
     -- <<< 自動產生結束
     ('zz_test', '（測試用，可刪）', 'max', 0, 1000)
 on conflict (game_id) do update

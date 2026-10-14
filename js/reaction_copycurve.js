@@ -27,12 +27,12 @@
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 25;                       /* 幾關之後難度到頂 */
-    var REQ = [72, 92];                         /* 要求的相似度（％）：第 1 關 → 到頂 */
-    var TIME_S = [40, 22];                      /* 每關限時（秒）：第 1 關 → 到頂 */
-    var PW = 224, PH = 420;                     /* 每個長方格的大小（邏輯 px） */
+    var REQ = [50, 85];                         /* 要求的相似度（％）：第 1 關 → 到頂 */
+    var TIME_S = [40, 30];                      /* 每關限時（秒）：第 1 關 → 到頂 */
+    var PW = 224, PH = 520;                     /* 每個長方格的大小（邏輯 px） */
     var MG = 36;                                /* 曲線離長方格邊緣至少多遠 */
     var MIN_SEP = 70;                           /* 起點與終點至少相距多少 */
-    var LEN_RANGE = [220, 1800];                /* 曲線全長的合理範圍 */
+    var LEN_RANGE = [550, 1800];                /* 曲線全長的合理範圍 */
     var START_R = 40;                           /* 手指按在端點多近才算「從這個端點開始」 */
     var END_R = 32;                             /* 手指碰到另一個端點多近就算畫完 */
     var MIN_DRAW = 70;                          /* 至少畫了多長才算畫完（避免剛起筆就算） */
@@ -40,8 +40,8 @@
     var PTS = 120;                              /* 比較相似度時，每條曲線取幾個等距的點 */
     var STEP = 3;                               /* 曲線上相鄰兩點的間距（像素） */
     var MAX_LEVEL = 60;
-    /* 各種曲線出現的關卡範圍 [從第幾關起, 到第幾關為止]：S 形太平緩，第 10 關之後就不再出現（不然拿直線隨便畫都過關） */
-    var TYPE_RANGE = { scurve: [1, 9], wave: [3, 999], right: [7, 999], bolt: [10, 999], spiral: [13, 999], clip: [16, 999] };
+    /* 各種曲線出現的關卡範圍 [從第幾關起, 到第幾關為止]：S 形太平緩，第 3 關之後就不再出現（不然拿直線隨便畫都過關） */
+    var TYPE_RANGE = { scurve: [1, 3], wave: [3, 999], right: [6, 999], bolt: [9, 999], spiral: [12, 999], clip: [15, 999] };
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function reqSim(level) { return kit.ramp(level, REQ[0], REQ[1], RAMP_LEVELS); }
@@ -99,7 +99,7 @@
         return out;
     }
     function genScurve(d, rand) {
-        var A = kit.lerp(52, 84, d), H = PH - 2 * MG, sx = MG + 20, ex = PW - MG - 20, sgn = rand() < 0.5 ? 1 : -1;
+        var A = kit.lerp(45, 96, d), H = PH - 2 * MG, sx = MG + 40, ex = PW - MG - 40, sgn = rand() < 0.5 ? 1 : -1;
         var P0 = { x: sx, y: PH - MG }, P3 = { x: ex, y: MG };
         var P1 = { x: P0.x + sgn * A * 1.6, y: P0.y - 0.45 * H }, P2 = { x: P3.x - sgn * A * 1.6, y: P3.y + 0.45 * H }, out = [];
         for (var i = 0; i <= 200; i++) {
@@ -109,7 +109,7 @@
         return out;
     }
     function genWave(d, rand) {
-        var k = Math.round(kit.lerp(2, 6, d)), A = kit.lerp(26, 62, d), H = PH - 2 * MG, out = [], tilt = kit.randFloat(-12, 12, rand) * Math.PI / 180;
+        var k = Math.round(kit.lerp(3, 7, d)), A = kit.lerp(25, 75, d), H = PH - 2 * MG, out = [], tilt = kit.randFloat(-12, 12, rand) * Math.PI / 180;
         for (var i = 0; i <= 300; i++) {
             var s = i / 300, x = A * Math.sin(Math.PI * k * s), y = -H / 2 + s * H;
             out.push({ x: x * Math.cos(tilt) - y * Math.sin(tilt), y: x * Math.sin(tilt) + y * Math.cos(tilt) });

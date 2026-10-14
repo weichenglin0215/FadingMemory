@@ -370,6 +370,28 @@
     opacity: 1;
 }
 
+/* 揭曉時的面積差數字動畫（V1.27）：從 0.0000% 跑到 XX.XXXX%（方塊比較大）或 -XX.XXXX%（比較小） */
+.ar-diff {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100px;
+    text-align: center;
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    font-variant-numeric: tabular-nums;
+    color: var(--c-ink);
+    opacity: 0;
+}
+
+.ar-diff--on {
+    opacity: 1;
+}
+
+.ar-diff--neg {
+    color: var(--c-blue);
+}
+
 /* ═══ 008 容量一半（.hv-）═══ */
 .hv-svg {
     position: absolute;
@@ -412,13 +434,7 @@
     stroke: var(--c-green);
 }
 
-/* 水面（橢圓）與水面下方的差異數字（V1.25）：不足＝藍色、超過 50%＝橘紅色 */
-.hv-surface {
-    fill: var(--c-blue);
-    fill-opacity: 0.25;
-    stroke: var(--c-blue);
-    stroke-width: 3;
-}
+/* 水面下方的差異數字（V1.25）：不足＝藍色、超過 50%＝橘紅色 */
 
 .hv-diff {
     font-size: var(--fs-md);
@@ -498,6 +514,15 @@
     stroke: var(--c-green);
     stroke-width: 4;
     stroke-dasharray: 12 9;
+}
+
+/* 拖曳時的軌跡（V1.27）：1px 黑色虛線，只留手指身後 160px */
+.bc-trail {
+    fill: none;
+    stroke: #000;
+    stroke-width: 1;
+    stroke-dasharray: 5 4;
+    pointer-events: none;
 }
 
 .bc-seg {
@@ -673,7 +698,7 @@
     opacity: 1;
 }
 
-/* ═══ 017 蓋在框內（.st-）═══ */
+/* ═══ 017 心在正中央（.st-，原名蓋在框內）═══ */
 .st-svg {
     position: absolute;
     left: 0;
@@ -701,48 +726,25 @@
     stroke-dasharray: 10 6;
 }
 
-.st-stamp {
-    fill: var(--c-orange);
-    stroke: var(--c-ink);
+/* 愛心印章（V1.27）：只有虛線外框，顏色／粗細／虛線間隔由程式依每一局隨機設定 */
+.st-heart {
+    stroke-linejoin: round;
+}
+
+/* 揭曉：紅框中心（紅色十字）、愛心中心（黑點）、兩點之間的連線 */
+.st-fc {
+    stroke: var(--c-bad);
     stroke-width: 3;
 }
 
-.st-stamp--print {
-    fill: var(--c-orange);
-    fill-opacity: 0.55;
-}
-
-.st-stamp-in {
-    fill: none;
-    stroke: var(--c-on-accent);
-    stroke-width: 3;
-}
-
-.st-text {
-    fill: var(--c-on-accent);
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-black);
-    font-family: var(--font-ui);
-}
-
-.st-stem {
-    stroke: var(--c-ink);
-    stroke-width: 4;
-}
-
-.st-knob {
-    fill: var(--c-blue);
-    stroke: var(--c-ink);
-    stroke-width: 3;
+.st-sc {
+    fill: var(--c-black);
 }
 
 .st-vec {
-    stroke: var(--c-bad-light);
-    stroke-width: 3;
-}
-
-.st-wp {
-    fill: var(--c-bad-light);
+    stroke: var(--c-black);
+    stroke-width: 1.5;
+    stroke-dasharray: 3 3;
 }
 
 .st-msg {
@@ -762,87 +764,6 @@
 }
 
 .st-ok {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: auto;
-}
-
-/* ═══ 018 轉到最清楚（.fo-）═══ */
-.fo-photo {
-    position: absolute;
-    left: 16px;
-    top: 24px;
-    width: 440px;
-    height: 300px;
-    border: var(--bd);
-    border-radius: var(--r-md);
-    overflow: hidden;
-}
-
-.fo-photo svg {
-    display: block;
-}
-
-/* 對焦軌道：沒有刻度，只有一條線 */
-.fo-track {
-    position: absolute;
-    height: 8px;
-    margin-top: 0;
-    border-radius: 4px;
-    background: var(--c-yellow-soft);
-    border: 2px solid var(--bd-c);
-    box-sizing: border-box;
-}
-
-.fo-knob {
-    position: absolute;
-    width: 64px;
-    height: 64px;
-    border-radius: var(--r-pill);
-    background: var(--c-blue);
-    border: 4px solid var(--c-ink);
-    box-sizing: border-box;
-    box-shadow: var(--shadow-card);
-}
-
-.fo-knob--rev {
-    background: var(--c-orange);
-}
-
-/* 揭曉時顯示的真焦點記號（綠色細線＋三角） */
-.fo-mark {
-    position: absolute;
-    width: 6px;
-    height: 44px;
-    margin-left: -3px;
-    border-radius: 3px;
-    background: var(--c-green);
-    opacity: 0;
-}
-
-.fo-mark--on {
-    opacity: 1;
-}
-
-.fo-msg {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 340px;
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    opacity: 0;
-}
-
-.fo-msg--on {
-    opacity: 1;
-}
-
-.fo-ok {
     position: absolute;
     left: 0;
     right: 0;
@@ -2125,8 +2046,8 @@
 }
 
 .wf-lamp {
-    width: 150px;
-    height: 150px;
+    width: 220px;
+    height: 220px;
     border-radius: var(--r-pill);
     background: var(--c-card-alt);
     border: 5px solid var(--bd-c);
@@ -2134,13 +2055,14 @@
 }
 
 .wf-lamp--on {
-    background: var(--c-yellow);
+    /*background: var(--c-yellow);*/
+    background: hsl(0, 100%, 70%);
     border-color: var(--c-ink);
     box-shadow: 0 0 40px var(--c-yellow);
 }
 
 .wf-lamp--b.wf-lamp--on {
-    background: hsl(48, 90%, 58%);
+    background: hsl(0, 100%, 70%);
 }
 
 .wf-lamp--first {
@@ -2152,7 +2074,7 @@
     position: absolute;
     left: 0;
     right: 0;
-    top: 340px;
+    top: 440px;
     text-align: center;
     font-size: var(--fs-md);
     font-weight: var(--fw-bold);
@@ -2246,7 +2168,7 @@
 
 .hm-hand1 {
     stroke: var(--c-blue);
-    stroke-width: 9;
+    stroke-width: 3;
     stroke-linecap: round;
 }
 
@@ -2258,7 +2180,7 @@
 
 .hm-ghost {
     stroke: var(--c-green);
-    stroke-width: 6;
+    stroke-width: 1;
     stroke-linecap: round;
     stroke-dasharray: 10 8;
 }
@@ -2271,7 +2193,7 @@
     position: absolute;
     left: 0;
     right: 0;
-    top: 450px;
+    top: 500px;
     text-align: center;
     font-size: var(--fs-md);
     font-weight: var(--fw-black);
@@ -2303,15 +2225,15 @@
 .cl-glyph {
     position: absolute;
     left: 50%;
-    top: 90px;
-    width: 280px;
-    height: 280px;
-    margin-left: -140px;
+    top: 40px;
+    width: 480px;
+    height: 480px;
+    margin-left: -240px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: var(--font-note);
-    font-size: 240px;
+    font-size: 360px;
     font-weight: var(--fw-bold);
     color: var(--c-ink);
     line-height: 1;
@@ -2321,7 +2243,7 @@
     position: absolute;
     left: 0;
     right: 0;
-    top: 400px;
+    top: 500px;
     text-align: center;
     font-size: var(--fs-lg);
     font-weight: var(--fw-black);

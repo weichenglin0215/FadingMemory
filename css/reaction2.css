@@ -21,7 +21,8 @@
        touch-action:none     告訴手機瀏覽器「這個區域的手指拖曳不要拿去捲動頁面」，拖曳遊戲一定要加
        @keyframes            自訂動畫的每一格畫面，再由 animation: 名稱 時間 套用到元素 */
 /* ═══ 落下棍子（.stk-）═══ */
-/* 落下棍子：一根根從上面落下的棍子，要在棍子到達目標位置的瞬間點擊。 */  /* 標題列：置中、中等字級、粗體 */
+/* 落下棍子：一根根從上面落下的棍子，要在棍子到達目標位置的瞬間點擊。 */
+/* 標題列：置中、中等字級、粗體 */
 .stk-head {
     text-align: center;
     font-size: var(--fs-md);
@@ -936,7 +937,7 @@
 }
 
 /* > 是「子選擇器」：只作用在 .fg-answers 的直接子元素，讓右邊那顆自己吃滿整個高度 */
-.fg-answers > .fg-zone {
+.fg-answers>.fg-zone {
     flex: 1 1 0;
 }
 
@@ -2169,8 +2170,8 @@
 
 /* 老師有說「老師說」時的對話框（橘色） */
 .te-bubble--say {
-    border-color: var(--c-orange);
-    background: var(--c-orange-soft);
+    /*border-color: var(--c-orange);*/
+    /*background: var(--c-orange-soft);*/
 }
 
 /* 做對（綠） */
@@ -2766,14 +2767,14 @@
 /* ═══ 左右不同拍（.py-）音樂節奏：方塊由上往下掉 ═══ */
 /* 最上方的說明文字（兩行高） */
 .py-head {
-    min-height: 2.6em;
+    min-height: 1.0em;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
     font-size: var(--fs-sm);
     font-weight: var(--fw-black);
-    line-height: 1.3;
+    line-height: 1.0;
     color: var(--c-ink);
 }
 
@@ -2833,12 +2834,35 @@
 }
 
 /* 六種顏色：逗號代表「圖例色塊」與「掉落的音符」兩個 class 共用同一個顏色，一行寫一種 */
-.py-dot--red, .py-note--red { background: var(--py-red); }
-.py-dot--orange, .py-note--orange { background: var(--py-orange); }
-.py-dot--yellow, .py-note--yellow { background: var(--py-yellow); }
-.py-dot--green, .py-note--green { background: var(--py-green); }
-.py-dot--blue, .py-note--blue { background: var(--py-blue); }
-.py-dot--purple, .py-note--purple { background: var(--py-purple); }
+.py-dot--red,
+.py-note--red {
+    background: var(--py-red);
+}
+
+.py-dot--orange,
+.py-note--orange {
+    background: var(--py-orange);
+}
+
+.py-dot--yellow,
+.py-note--yellow {
+    background: var(--py-yellow);
+}
+
+.py-dot--green,
+.py-note--green {
+    background: var(--py-green);
+}
+
+.py-dot--blue,
+.py-note--blue {
+    background: var(--py-blue);
+}
+
+.py-dot--purple,
+.py-note--purple {
+    background: var(--py-purple);
+}
 
 /* 兩條軌道的容器：左右並排 */
 .py-stage {
@@ -2856,8 +2880,13 @@
 
 /* 受傷閃紅框動畫：從紅框 → 透明 */
 @keyframes py-hurt {
-    from { box-shadow: inset 0 0 0 6px var(--c-bad); }
-    to { box-shadow: inset 0 0 0 6px transparent; }
+    from {
+        box-shadow: inset 0 0 0 6px var(--c-bad);
+    }
+
+    to {
+        box-shadow: inset 0 0 0 6px transparent;
+    }
 }
 
 /* 一條軌道；relative 讓裡面 absolute 的音符以它為定位基準，overflow:hidden 裁掉超出的音符 */
@@ -2893,8 +2922,13 @@
 
 /* 閃亮動畫：亮度 1.25 倍 → 恢復 */
 @keyframes py-lane-hit {
-    from { filter: brightness(1.25); }
-    to { filter: none; }
+    from {
+        filter: brightness(1.25);
+    }
+
+    to {
+        filter: none;
+    }
 }
 
 /* 紅色基準線：音符到這條線的瞬間就是打擊的準確時間 */
@@ -2922,14 +2956,32 @@
 
 /* 每拍閃線動畫 */
 @keyframes py-beat {
-    from { opacity: 1; height: 24px; margin-top: -12px; }
-    to { opacity: 0.75; height: 16px; margin-top: -8px; }
+    from {
+        opacity: 1;
+        height: 24px;
+        margin-top: -12px;
+    }
+
+    to {
+        opacity: 0.75;
+        height: 16px;
+        margin-top: -8px;
+    }
 }
 
 /* 每小節閃線動畫 */
 @keyframes py-bar {
-    from { opacity: 1; height: 40px; margin-top: -20px; }
-    to { opacity: 0.75; height: 16px; margin-top: -8px; }
+    from {
+        opacity: 1;
+        height: 40px;
+        margin-top: -20px;
+    }
+
+    to {
+        opacity: 0.75;
+        height: 16px;
+        margin-top: -8px;
+    }
 }
 
 /* 掉落的音符（位置由 JS 每個畫面更新 transform） */

@@ -27,7 +27,8 @@
     --fs-lg: 34px;
     --fs-xl: 40px;
     --fs-xxl: 58px;
-
+    --fs-xxxl: 72px;
+    --fs-xxxxl: 96px;
     /* ── 字級（用途）：自動縮字的上限／下限 ──────────── */
     --fs-bar-title: var(--fs-lg);
     --fs-question: var(--fs-xl);

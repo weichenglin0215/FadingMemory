@@ -53,7 +53,7 @@
     var BURST_CAP = [1, 7, 15];               /* 一串最多連續幾次：第 1 關 1 次 → 第 15 關 7 次 */
     var RED_MAX = [5, 44, 15], RED_MIN = [3, 30, 15];       /* 紅燈次數的上限／下限：第 1 關 3～5 次 → 第 15 關 30～44 次 */
     var GREEN_MAX = [8, 40, 15], GREEN_MIN = [4, 26, 15];   /* 綠燈次數的上限／下限 */
-    var PASS_RATE = 0.6;                      /* 過關要點中的綠燈比例（扣掉亂點後） */
+    var PASS_RATE = 0.8;                      /* 過關要點中的綠燈比例（扣掉亂點後） */
     var TRIM_TRIES = 60;                      /* 一關的事件表不符合次數範圍時，最多重排幾次 */
     var RAMP_SEC = 15;                        /* 難度 d ＝ 秒數 ÷ RAMP_SEC：第 15 秒＝舊版第 3 回合的最難程度，之後繼續加難 */
     /* 下面每一項都是 [d=0（剛開始）, d=1（第 15 秒）, 之後往同一個方向繼續變、最多變到這個下限／上限] */
@@ -342,7 +342,7 @@
                 var truth = ev.red.length;
                 meta();
                 var lines = ['第 ' + level + ' 關：綠燈命中 ' + hits + '／' + ev.green.length + '（過關要 ' + need + ' 次）' + (strays ? '，亂點 ' + strays + ' 次（每次扣 ' + STRAY_PENALTY + ' 分）' : ''),
-                    '紅燈實際閃了 ' + truth + ' 次' + (answered === truth ? '，你答對了' : '，你答 ' + answered)];
+                '紅燈實際閃了 ' + truth + ' 次' + (answered === truth ? '，你答對了' : '，你答 ' + answered)];
                 kit.result(root, {
                     score: passedN,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                     num: passedN + ' 關', label: rating(passedN),
@@ -365,7 +365,7 @@
                     show(greenLamp, false);
                     gCnt.textContent = '命中 ' + hits + (strays ? '・亂點 ' + strays : '');
                     Sfx.play('click');
-                /* 否則算亂點，扣分 */
+                    /* 否則算亂點，扣分 */
                 } else {
                     strays++;
                     gCnt.textContent = '命中 ' + hits + (strays ? '・亂點 ' + strays : '');

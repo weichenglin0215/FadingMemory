@@ -24,8 +24,8 @@
     var NUMS = [3, 5];                          /* 算式裡有幾個數字：第 1 關 → 到頂 */
     var BLANKS = [1, 4];                        /* 有幾個符號被藏起來：第 1 關 → 到頂（不會超過「符號數」） */
     var BIG_NUM_LEVELS = 10;                    /* 前幾關（而且空格少時）數字可以到 12，之後一律 1～9（版面放得下） */
-    var TIME_BASE = 5, TIME_PER_BLANK = 3;      /* 限時（秒）＝ (TIME_BASE ＋ TIME_PER_BLANK × 空格數) × 倍率 */
-    var TIME_MUL = [1.2, 0.8];                  /* 倍率：第 1 關 → 到頂 */
+    var TIME_BASE = 20, TIME_PER_BLANK = 3;      /* 限時（秒）＝ (TIME_BASE ＋ TIME_PER_BLANK × 空格數) × 倍率 */
+    var TIME_MUL = [1.0, 3.0];                  /* 倍率：第 1 關 → 到頂 */
     var TARGET_MAX = 200;                       /* 等號右邊最大是多少 */
     var MAX_LEVEL = 60;
     var OPS = ['+', '-', '*', '/'];
@@ -198,10 +198,12 @@
             live.textContent = '正確的算式：' + q.text;
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1100 }); return; }
             kit.flash(stage, false, api.my);
-            api.fail({ delay: 2400, lines: [
-                allChosen() ? '你的填法算出 ' + valueText(evalOps(q.nums, currentOps())) + '，目標是 ' + q.target : (chosen.some(function (c) { return c != null; }) ? '時間到，還有空格沒選！' : '時間到！'),
-                '正確的算式：' + q.text
-            ] });
+            api.fail({
+                delay: 2400, lines: [
+                    allChosen() ? '你的填法算出 ' + valueText(evalOps(q.nums, currentOps())) + '，目標是 ' + q.target : (chosen.some(function (c) { return c != null; }) ? '時間到，還有空格沒選！' : '時間到！'),
+                    '正確的算式：' + q.text
+                ]
+            });
         }
         api.solve = function () { q.blanks.forEach(function (bi, j) { chosen[j] = q.ops[bi]; }); judge(); };
         api.wrong = function () {

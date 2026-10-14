@@ -25,9 +25,9 @@
     var RAMP_LEVELS = 10;                       /* 幾關之後難度到頂（也是最後一關） */
     var N0 = 3;                                 /* 第 1 關的石頭數（每關 +1） */
     var TOL = [0.08, 0.01];                     /* 容許誤差（占總重的比例）：第 1 關 → 到頂 */
-    var D_MIN = 18, D_MAX = 66;                 /* 石頭直徑範圍（px） */
-    var RATIO_MIN = 2.5;                        /* 最大／最小直徑至少幾倍 */
-    var WEIGHT_K = 0.5;                         /* 重量係數：重量 ＝ K × (d÷10)³ 公斤 */
+    var D_MIN = 20, D_MAX = 120;                 /* 石頭直徑範圍（px） */
+    var RATIO_MIN = 6.0;                        /* 最大／最小直徑至少幾倍 */
+    var WEIGHT_K = 0.1;                         /* 重量係數：重量 ＝ K × (d÷10)³ 公斤 */
     var FIT_AREA = 40000;                       /* 所有石頭（含邊距）的面積和上限 */
     var PAD = 6, TRIES = 6000;
     var HEUR_FROM = 5;                          /* 石頭數達到這個值才檢查偷吃步 */
@@ -185,7 +185,8 @@
             locked = true; hideHint(); okBtn.style.display = 'none';
             Sfx.play('click');
             var s = sums(side), diff = Math.abs(s.l - s.r), lim = q.tol * q.total;
-            disps.L.textContent = s.l.toFixed(4) + ' 公斤'; disps.R.textContent = s.r.toFixed(4) + ' 公斤';
+            //我手動刪除了"公斤"字樣，避免介面超過寬度
+            disps.L.textContent = s.l.toFixed(4); disps.R.textContent = s.r.toFixed(4);
             info.textContent = '差 ' + diff.toFixed(4) + ' 公斤（容許 ' + lim.toFixed(4) + ' 公斤，總重的 ' + (q.tol * 100).toFixed(4) + '%）';
             if (diff <= lim) { info.classList.add('tb-info--ok'); api.pass({ delay: 2000 }); return; }
             info.classList.add('tb-info--bad');
@@ -193,14 +194,17 @@
             api.after(1400, function () {
                 for (var i = 0; i < n; i++) place(i, q.best.mask & (1 << i) ? 'L' : 'R');
                 var b = sums(side);
-                disps.L.textContent = b.l.toFixed(4) + ' 公斤'; disps.R.textContent = b.r.toFixed(4) + ' 公斤';
+                //我手動刪除了"公斤"字樣，避免介面超過寬度
+                disps.L.textContent = b.l.toFixed(4); disps.R.textContent = b.r.toFixed(4);
                 info.textContent = '可行的分法：差只有 ' + q.best.diff.toFixed(4) + ' 公斤';
             });
-            api.fail({ delay: 3800, lines: [
-                '兩邊差了 ' + diff.toFixed(4) + ' 公斤，超過容許的 ' + lim.toFixed(4) + ' 公斤',
-                '左 ' + s.l.toFixed(4) + ' 公斤　右 ' + s.r.toFixed(4) + ' 公斤',
-                '重量跟直徑的「三次方」成正比：直徑大 1.26 倍，重量就多一倍'
-            ] });
+            api.fail({
+                delay: 3800, lines: [
+                    '兩邊差了 ' + diff.toFixed(4) + ' 公斤，超過容許的 ' + lim.toFixed(4) + ' 公斤',
+                    '左 ' + s.l.toFixed(4) + ' 公斤　右 ' + s.r.toFixed(4) + ' 公斤',
+                    '重量跟直徑的「三次方」成正比：直徑大 1.26 倍，重量就多一倍'
+                ]
+            });
         }
         kit.onTap(okBtn, confirm);
         api.solve = function () { for (var i = 0; i < n; i++) place(i, q.best.mask & (1 << i) ? 'L' : 'R'); confirm(); };

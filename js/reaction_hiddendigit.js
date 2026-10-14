@@ -19,7 +19,7 @@
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾題之後難度到頂 */
     var MAX_LEVEL = 60;
-    var TIME_MUL = [1.3, 0.8];                  /* 限時倍率：第 1 題 → 到頂 */
+    var TIME_MUL = [2.0, 3.0];                  /* 限時倍率：第 1 題 → 到頂 */
     /* 各題型：from＝第幾題起出現；sec＝基本限時（秒）；a／b＝兩個數字的範圍 */
     var TYPES = {
         add2: { from: 1, sec: 6, op: '+', a: [11, 89], b: [11, 89] },
@@ -27,7 +27,7 @@
         add3: { from: 10, sec: 8, op: '+', a: [101, 899], b: [101, 899] },
         mul1: { from: 6, sec: 9, op: '×', a: [12, 99], b: [3, 9] },
         mul2: { from: 14, sec: 14, op: '×', a: [12, 49], b: [12, 29] },
-        mul31: { from: 22, sec: 12, op: '×', a: [101, 499], b: [3, 9] }
+        mul31: { from: 22, sec: 12, op: '×', a: [101, 199], b: [3, 9] }
     };
     var LAST_W = [3, 1];                        /* 「個位數被遮住」的權重：第 1 題 → 到頂（其他位數權重一律 1） */
 
@@ -121,10 +121,12 @@
             boxes[q.hidden].classList.add(ok ? 'hdg-box--ok' : 'hdg-box--bad');
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 900 }); return; }
             kit.flash(stage, false, api.my);
-            api.fail({ delay: 2200, lines: [
-                (v == null ? '時間到！' : '你選了 ' + v) + '，被遮住的是 ' + q.answer,
-                q.full
-            ] });
+            api.fail({
+                delay: 2200, lines: [
+                    (v == null ? '時間到！' : '你選了 ' + v) + '，被遮住的是 ' + q.answer,
+                    q.full
+                ]
+            });
         }
         api.solve = function () { judge(q.answer); };
         api.wrong = function () { judge((q.answer + 1) % 10); };

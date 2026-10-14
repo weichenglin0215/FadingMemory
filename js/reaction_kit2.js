@@ -261,7 +261,7 @@
        o.resume：false 表示不提供從前 5 關繼續
        api：
          api.level／api.S／api.stage／api.my／api.rand
-         api.timer(ms, onTimeout)／api.stopTimer()：時間條（只能同時有一個）
+         api.timer(ms, onTimeout)／api.stopTimer()：時間條（只能同時有一個）；回傳 { left(), total, cut(d) }（cut＝扣掉 d 毫秒的剩餘時間）
          api.after(ms, fn)：這一關專用的延遲（換關後自動作廢）
          api.pass({gain, delay})：過關；api.fail({lines, delay})：失敗結束；api.lose({lines})：扣一條命（命沒了就失敗）
          api.setInfo(text)：改標題列右邊文字
@@ -327,13 +327,20 @@
                     api.stopTimer();
                     var t0 = performance.now();
                     bar.set(1);
-                    tm = my.after(ms, function () {
-                        if (myTok !== tok || api.over) return;
-                        tm = null; if (tmLoop) { tmLoop.stop(); tmLoop = null; }
-                        bar.set(0); onTimeout();
-                    });
+                    function arm(wait) {
+                        tm = my.after(wait, function () {
+                            if (myTok !== tok || api.over) return;
+                            tm = null; if (tmLoop) { tmLoop.stop(); tmLoop = null; }
+                            bar.set(0); onTimeout();
+                        });
+                    }
+                    arm(ms);
                     tmLoop = my.loop(function () { bar.set(1 - (performance.now() - t0) / ms); });
-                    return { left: function () { return Math.max(0, ms - (performance.now() - t0)); }, total: ms };
+                    /* cut(d)：從剩餘時間扣掉 d 毫秒（選錯的罰時）；時間條也跟著縮短 */
+                    return {
+                        left: function () { return Math.max(0, ms - (performance.now() - t0)); }, total: ms,
+                        cut: function (d) { if (tm == null) return; my.cancel(tm); ms -= d; arm(Math.max(0, ms - (performance.now() - t0))); }
+                    };
                 },
                 /* api.skip(ms)：不算過關也不算失敗，直接進下一關（例如「先記住」的暖身題） */
                 skip: function (ms) {

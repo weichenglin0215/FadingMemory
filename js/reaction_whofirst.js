@@ -23,7 +23,7 @@
     var FRAMES = [18, 2];                       /* 兩盞燈相差的影格數：第 1 關 → 到頂 */
     var WAIT_MS = [1200, 3000];                 /* 開始後隔多久第一盞燈亮 */
     var ANS_MS = 3000;                          /* 兩盞燈都亮之後的作答限時 */
-    var SIZE_JIT = 0.08;                        /* 兩盞燈大小的隨機差 */
+    var SIZE_JIT = 0.1;                        /* 兩盞燈大小的隨機差 */
     var SAME_MAX = 3, FRAME_SAMPLES = 40;
     var frameMs = 1000 / 60;                    /* 1 影格幾毫秒（開始時量測） */
 
@@ -126,10 +126,12 @@
             info.textContent = txt;
             lamps[q.first].classList.add('wf-lamp--first');
             if (side === q.first) { api.pass({ delay: 800 }); return; }
-            api.fail({ delay: 1900, lines: [
-                (side == null ? '時間到！' : '選錯了！') + '先亮的是' + (q.first === 'L' ? '左邊' : '右邊') + '那一盞',
-                txt, '這一關的極限是 ' + q.frames + ' 影格；螢幕更新率越高，能分辨的時間越短'
-            ] });
+            api.fail({
+                delay: 1900, lines: [
+                    (side == null ? '時間到！' : '選錯了！') + '先亮的是' + (q.first === 'L' ? '左邊' : '右邊') + '那一盞',
+                    txt, '這一關的極限是 ' + q.frames + ' 影格；螢幕更新率越高，能分辨的時間越短'
+                ]
+            });
         }
         kit.onTap(bL, function () { judge('L'); });
         kit.onTap(bR, function () { judge('R'); });

@@ -4,6 +4,8 @@
    從起點出發，繞圓心畫一圈回到起點——畫的過程中看不到自己的筆跡。只有一次機會。
    V1.25（玩家意見）：起點的記號由橘色圓點改成「十字型的箭頭」（上下左右四個箭頭，總寬 ARROW 200 px，手指壓在中心，
    箭頭仍超出手指）；畫的過程中不再有藍色圓點；圓的半徑加大（R 180～215 px），起點跟著往外移，圓可以畫得更大。
+   V1.27（玩家意見）：十字箭頭縮小成 75%（200 → 150 px）；手指拖曳時用 1px 黑色虛線顯示軌跡，但軌跡只留手指身後
+   TRAIL_LEN（160 px）的長度，更早畫過的部分會自動消失，玩家看不到完整的筆跡（維持「盲畫」的難度）。
    ───────────────────────────────────────────────────────────────────
    · 目標圓：圓心 C、半徑 R ＝ |起點 − C|（R 每次隨機），起點方位在右下象限 ANG_MIN～ANG_MAX 度。
    · 取樣：每 STEP px 重新取樣（沿弧長等距），算每點到圓心的距離 r，與 R 比較。
@@ -21,7 +23,8 @@
     /* ═══ 可以自己調的參數 ═══ */
     var CENTER = { x: 236, y: 318 };        /* 圓心（舞台座標） */
     var R_MIN = 180, R_MAX = 215;           /* 半徑範圍（px）：盡量大，手機上才好畫 */
-    var ARROW = 200;                        /* 起點十字箭頭的總寬、總高（px） */
+    var ARROW = 150;                        /* 起點十字箭頭的總寬、總高（px）（V1.27：200 → 150，縮小成 75%） */
+    var TRAIL_LEN = 160;                    /* 拖曳時畫出的虛線軌跡長度（px）：只留手指身後這麼長，更早的筆跡自動消失 */
     var ANG_MIN = 20, ANG_MAX = 70;         /* 起點方位（從圓心往右下，度） */
     var START_R = 56;                       /* 手指要在起點多近的地方按下才算（px） */
     var STEP = 4;                           /* 重新取樣的弧長間距（px） */
@@ -42,6 +45,21 @@
         var pts = [[0, -a], [hw, -b], [sw, -b], [sw, -sw], [b, -sw], [b, -hw], [a, 0], [b, hw], [b, sw], [sw, sw], [sw, b], [hw, b],
             [0, a], [-hw, b], [-sw, b], [-sw, sw], [-b, sw], [-b, hw], [-a, 0], [-b, -hw], [-b, -sw], [-sw, -sw], [-sw, -b], [-hw, -b]];
         return pts;
+    }
+    /* 折線最後面 maxLen（px）長的那一段：從最新的點往回數，累積長度超過 maxLen 的那一段線段只留一部分（剛好湊滿 maxLen） */
+    function tailOf(pts, maxLen) {
+        if (!pts.length) return [];
+        var out = [pts[pts.length - 1]], acc = 0;
+        for (var i = pts.length - 2; i >= 0; i--) {
+            var a = pts[i], b = pts[i + 1], dx = a.x - b.x, dy = a.y - b.y, d = Math.sqrt(dx * dx + dy * dy);
+            if (acc + d >= maxLen) {
+                var t = d > 0 ? (maxLen - acc) / d : 0;
+                out.push({ x: b.x + dx * t, y: b.y + dy * t });
+                break;
+            }
+            acc += d; out.push(a);
+        }
+        return out.reverse();
     }
     /* 沿折線每隔 step 重新取樣（弧長等距），回傳點陣列 */
     function resample(pts, step) {
@@ -94,7 +112,7 @@
     function mount(root, ctx) {
         kit.single(root, ctx, {
             id: ID, G: G, better: 'max', max: SCORE.max,
-            title: '從起點出發，繞圓心畫一圈回到起點（看不到筆跡）',
+            title: '從起點出發，繞圓心畫一圈回到起點（筆跡會消失）',
             numText: function (v) { return v.toFixed(4) + '%'; },
             rating: rating,
             sfx: function (v) { return v >= 97 ? 'perfect' : (v >= 90 ? 'win' : 'fail'); },
@@ -114,11 +132,15 @@
         var cx = CENTER.x, cy = CENTER.y;
         kit.svg('line', { x1: cx - 16, x2: cx + 16, y1: cy, y2: cy, 'class': 'bc-cross' }, svg);
         kit.svg('line', { x1: cx, x2: cx, y1: cy - 16, y2: cy + 16, 'class': 'bc-cross' }, svg);
-        /* 起點：十字型的箭頭（200px），中心是真正的起點，再加一個小黑點標出正中心 */
+        /* 起點：十字型的箭頭（150px），中心是真正的起點，再加一個小黑點標出正中心 */
         var dot = kit.svg('polygon', { points: arrowPoints(ARROW).map(function (p) { return (cfg.start.x + p[0]).toFixed(1) + ',' + (cfg.start.y + p[1]).toFixed(1); }).join(' '), 'class': 'bc-start' }, svg);
         kit.svg('circle', { cx: cfg.start.x, cy: cfg.start.y, r: 4, 'class': 'bc-startdot' }, svg);
+        var trail = kit.svg('polyline', { 'class': 'bc-trail', points: '' }, svg);          /* 手指身後 160px 的黑色虛線軌跡 */
         var msg = h('div', { 'class': 'bc-msg' });
         stage.appendChild(msg);
+        function paintTrail() {
+            trail.setAttribute('points', tailOf(pts, TRAIL_LEN).map(function (p) { return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' '));
+        }
 
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從起點出發，沿著圓的切線方向（順時針）重複移動 */
         var tx = -Math.sin(cfg.ang), ty = Math.cos(cfg.ang);
@@ -133,15 +155,16 @@
             if (Math.sqrt(dx * dx + dy * dy) > START_R) { dot.classList.add('bc-start--blink'); my.after(500, function () { dot.classList.remove('bc-start--blink'); }); say('請從起點的圓點開始畫'); return; }
             e.preventDefault();
             try { stage.setPointerCapture(e.pointerId); } catch (err) { }
-            drawing = true; pid = e.pointerId; pts = [p]; hideHint(); say('');
+            drawing = true; pid = e.pointerId; pts = [p]; hideHint(); say(''); paintTrail();
         });
         stage.addEventListener('pointermove', function (e) {
             if (!drawing || e.pointerId !== pid) return;
-            pts.push(loc(e));                                          /* 畫的過程中什麼都不畫（盲畫） */
+            pts.push(loc(e));                                          /* 只畫手指身後 TRAIL_LEN 長的虛線，前面的筆跡消失（盲畫） */
+            paintTrail();
         });
         function end(e) {
             if (!drawing || e.pointerId !== pid) return;
-            drawing = false;
+            drawing = false; trail.setAttribute('points', '');
             var res = analyze(pts, CENTER, cfg.R);
             if (!res.valid) {
                 say(Math.abs(res.turn) < TURN_MIN ? '要繞圓心畫完整一圈，再畫一次' : (res.len < LEN_MIN ? '再畫大一點，再畫一次' : '畫太多圈了，再畫一次'));
@@ -200,10 +223,10 @@
     var G = {
         id: ID,
         name: '盲畫一個圓',
-        rule: '畫面上只有圓心的十字和右下方的起點。手指按住起點，**繞著圓心畫一圈回到起點**。**畫的時候看不到筆跡**！只有一次機會，放開手指後會告訴你圓度，目標是 100.0000%。',
+        rule: '畫面上只有圓心的十字和右下方的起點。手指按住起點，**繞著圓心畫一圈回到起點**。**只看得到身後一小段虛線**，畫過的筆跡會消失！只有一次機會，放開手指後會告訴你圓度，目標是 100.0000%。',
         mount: mount,
         score: SCORE,
-        test: { arrowPoints: arrowPoints, ARROW: ARROW, START_R: START_R, makeRound: makeRound, resample: resample, analyze: analyze, rating: rating, CENTER: CENTER, R_MIN: R_MIN, R_MAX: R_MAX, ANG_MIN: ANG_MIN, ANG_MAX: ANG_MAX, TURN_MIN: TURN_MIN, TURN_MAX: TURN_MAX, STEP: STEP }
+        test: { tailOf: tailOf, TRAIL_LEN: TRAIL_LEN, arrowPoints: arrowPoints, ARROW: ARROW, START_R: START_R, makeRound: makeRound, resample: resample, analyze: analyze, rating: rating, CENTER: CENTER, R_MIN: R_MIN, R_MAX: R_MAX, ANG_MIN: ANG_MIN, ANG_MAX: ANG_MAX, TURN_MIN: TURN_MIN, TURN_MAX: TURN_MAX, STEP: STEP }
     };
     Reaction.register(G);
 })();

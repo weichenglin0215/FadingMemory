@@ -21,7 +21,7 @@
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾題之後難度到頂 */
-    var ANS_S = [12, 7];                        /* 作答限時（秒）：第 1 題 → 到頂 */
+    var ANS_S = [15, 20];                        /* 作答限時（秒）：第 1 題 → 到頂 */
     var N_MAX = [300, 9999];                    /* 被除數最大是多少：第 1 題 → 到頂（最小一律 N_MIN） */
     var N_MIN = 100;
     var MAX_LEVEL = 60;
@@ -29,10 +29,12 @@
     /* 除數清單：從第 from 題起加入 divs 這些除數 */
     var DIV_STEPS = [
         { from: 1, divs: [5, 10] },
-        { from: 3, divs: [6, 9] },
-        { from: 6, divs: [7, 8, 11] },
+        { from: 3, divs: [2, 4] },
+        { from: 5, divs: [3, 6, 9] },
+        { from: 8, divs: [7, 8, 11] },
         { from: 11, divs: [12, 13] },
-        { from: 21, divs: [14, 15, 16, 17, 18, 19] }
+        { from: 16, divs: [14, 15] },
+        { from: 21, divs: [16, 17, 18, 19] }
     ];
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
@@ -123,10 +125,12 @@
             reveal.textContent = q.explain + '，餘數是 ' + q.r;
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1000 }); return; }
             kit.flash(stage, false, api.my);
-            api.fail({ delay: 2300, lines: [
-                (v == null ? '時間到！' : '你選了 ' + v) + '，正確餘數是 ' + q.r,
-                q.explain
-            ] });
+            api.fail({
+                delay: 2300, lines: [
+                    (v == null ? '時間到！' : '你選了 ' + v) + '，正確餘數是 ' + q.r,
+                    q.explain
+                ]
+            });
         }
         api.solve = function () { judge(q.r); };
         api.wrong = function () { judge(q.options[0] === q.r ? q.options[1] : q.options[0]); };

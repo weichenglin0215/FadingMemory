@@ -31,8 +31,8 @@
     top: 40px;
     padding: 0 var(--sp-3);
     text-align: center;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-bold);
     color: var(--c-ink);
     line-height: var(--lh-body);
 }
@@ -120,6 +120,8 @@
 /* ═══ 遮住的數字（.hdg-）═══ */
 .hdg-eq {
     top: 40px;
+    font-size: var(--fs-xxxxl);
+    font-weight: var(--fw-black);
 }
 
 .hdg-ans {
@@ -134,22 +136,22 @@
 }
 
 .hdg-eqsign {
-    font-size: var(--fs-xl);
+    font-size: var(--fs-xxxxl);
     font-weight: var(--fw-black);
     color: var(--c-ink-soft);
     margin-right: var(--sp-2);
 }
 
 .hdg-box {
-    width: 64px;
-    height: 88px;
+    width: 80px;
+    height: 108px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: var(--r-md);
     background: var(--c-card);
     border: var(--bd);
-    font-size: var(--fs-xxl);
+    font-size: var(--fs-xxxxl);
     font-weight: var(--fw-black);
     color: var(--c-ink);
 }
@@ -173,17 +175,17 @@
 }
 
 .hdg-ask {
-    top: 260px;
+    top: 320px;
 }
 
 .hdg-btn {
-    font-size: var(--fs-xl);
+    font-size: var(--fs-xxl);
     font-weight: var(--fw-black);
 }
 
 /* ═══ 幾點幾分後（.taf-）═══ */
 .taf-reveal {
-    top: 270px;
+    top: 360px;
 }
 
 /* ═══ 哪一行算錯（.wln-）═══ */
@@ -225,7 +227,7 @@
     background: var(--c-card-alt);
     border: var(--bd);
     font-family: var(--font-ui);
-    font-size: var(--fs-lg);
+    font-size: var(--fs-xl);
     font-weight: var(--fw-bold);
     color: var(--c-ink);
     text-align: left;
@@ -337,7 +339,7 @@
 
 .fop-num,
 .fop-fixed {
-    font-size: var(--fs-xl);
+    font-size: var(--fs-xxxl);
     font-weight: var(--fw-black);
     color: var(--c-ink);
     font-variant-numeric: tabular-nums;
@@ -350,19 +352,19 @@
 .fop-col {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 15px;
 }
 
 .fop-op {
-    width: 56px;
-    height: 58px;
-    padding: 0;
+    width: 72px;
+    height: 72px;
     border-radius: var(--r-sm);
     background: var(--c-card);
     border: 3px solid var(--c-blue);
     font-family: var(--font-ui);
-    font-size: var(--fs-lg);
+    font-size: var(--fs-xxl);
     font-weight: var(--fw-black);
+    line-height: 1.0;
     color: var(--c-blue);
     cursor: pointer;
 }
@@ -389,11 +391,12 @@
 }
 
 .fop-target {
-    top: 350px;
+    font-size: var(--fs-xxxl);
+    top: 420px;
 }
 
 .fop-live {
-    top: 436px;
+    top: 530px;
 }
 
 .fop-ok--off {
@@ -1372,27 +1375,29 @@
     opacity: 0;
 }
 
-/* ═══ 109 三張成百（.t3-，V1.25 新增）═══
-   跟「兩張成百」（.sm-）同一套版面概念：計時在上、牌在中間、失誤計數在下；這款是 5 欄 × 3 列共 15 張，牌放大一點。 */
-.t3-clock {
+/* ═══ 109 三張成百（.t3-，V1.26 新增；V1.27 改成關卡制）═══
+   版面：牌橫向每排 3 張，往下一排一排增加（牌多的關卡在 .t3-wrap 裡上下捲動）；失誤計數固定在最下面。 */
+.t3-wrap {
     position: absolute;
     left: 0;
     right: 0;
-    top: 6px;
+    top: 0;
+    bottom: 44px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
 }
 
 .t3-grid {
-    position: absolute;
-    left: 18px;
-    top: 90px;
-    width: 436px;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 10px;
+    padding: 12px 18px 16px;
 }
 
 .t3-card {
-    height: 130px;
+    height: 78px;
     border-radius: var(--r-md);
     background: var(--c-card-alt);
     border: var(--bd);
@@ -1429,9 +1434,9 @@
     position: absolute;
     left: 0;
     right: 0;
-    top: 560px;
+    bottom: 6px;
     text-align: center;
-    font-size: var(--fs-md);
+    font-size: var(--fs-sm);
     font-weight: var(--fw-bold);
     color: var(--c-ink-soft);
 }

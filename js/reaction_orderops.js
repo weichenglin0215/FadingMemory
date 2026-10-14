@@ -24,9 +24,9 @@
     var NUM_MAX = [9, 12];                      /* 數字最大是多少：第 1 題 → 到頂（最小一律 1） */
     var DIV_FROM = 4;                           /* 第幾題起出現除法 */
     var PAREN1_FROM = 8, PAREN2_FROM = 20;      /* 第幾題起有 1 組／2 組括號 */
-    var TIME_BASE = 2.2, TIME_PER_NUM = 1.2;    /* 限時（秒）＝ (TIME_BASE ＋ TIME_PER_NUM × (數字個數 − 2)) × 倍率 */
-    var TIME_MUL = [1.3, 0.85];                 /* 倍率：第 1 題 → 到頂（越後面越趕） */
-    var MAX_ANS = 200;                          /* 正確答案最大多少 */
+    var TIME_BASE = 15.0, TIME_PER_NUM = 1.2;    /* 限時（秒）＝ (TIME_BASE ＋ TIME_PER_NUM × (數字個數 − 2)) × 倍率 */
+    var TIME_MUL = [1.0, 3.0];                 /* 倍率：第 1 題 → 到頂（越後面越趕） */
+    var MAX_ANS = 999;                          /* 正確答案最大多少 */
     var MAX_LEVEL = 60;
     var SAME_MAX = 4;                           /* 正確答案放左邊（或右邊）最多連續幾次 */
 
@@ -68,7 +68,7 @@
         function flat(a) {
             a = a.slice();
             if (mode === 'ltr') { while (a.length > 1) apply(a, 1); return a[0]; }
-            for (;;) {
+            for (; ;) {
                 var idx = -1;
                 for (var i = 1; i < a.length; i += 2) if (a[i] === '*' || a[i] === '/') { idx = i; break; }
                 if (idx < 0) break;
@@ -188,7 +188,7 @@
 
         var eq = h('div', { 'class': 'qz-big ord-eq', text: q.text });
         /* 算式越長，字越小（約略估算：每個字寬 0.62 倍字級），保證一行放得下 */
-        var fs = Math.max(30, Math.min(58, Math.floor(430 / (q.text.length * 0.62))));
+        var fs = Math.max(50, Math.min(100, Math.floor(500 / (q.text.length * 0.60))));
         eq.style.fontSize = fs + 'px';
         var ask = h('div', { 'class': 'qz-note ord-ask', text: '正確答案是哪一個？' });
         var reveal = h('div', { 'class': 'qz-note ord-reveal' });
@@ -208,11 +208,13 @@
             reveal.textContent = stepsText(q.steps);
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1000 }); return; }
             kit.flash(stage, false, api.my);
-            api.fail({ delay: 2400, lines: [
-                (v == null ? '時間到！' : '你選了 ' + v) + '，正確答案是 ' + q.truth,
-                '運算順序：' + stepsText(q.steps),
-                (q.decoyKind === 'ltr' ? '由左到右算會得到 ' : '忽略括號會得到 ') + q.decoy + '（錯）'
-            ] });
+            api.fail({
+                delay: 2400, lines: [
+                    (v == null ? '時間到！' : '你選了 ' + v) + '，正確答案是 ' + q.truth,
+                    '運算順序：' + stepsText(q.steps),
+                    (q.decoyKind === 'ltr' ? '由左到右算會得到 ' : '忽略括號會得到 ') + q.decoy + '（錯）'
+                ]
+            });
         }
         api.solve = function () { judge(q.truth); };
         api.wrong = function () { judge(q.decoy); };
