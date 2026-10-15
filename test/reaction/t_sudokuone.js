@@ -6,15 +6,18 @@ const SEED = seedOf(20261027); const rnd = rng(SEED);
 const GEOS = [T.GEO4, T.GEO9];
 
 // ── 階段與難度曲線 ──
-ok(T.FOUR_LEVELS === 6 && T.stageOf(1).g === T.GEO4 && T.stageOf(6).g === T.GEO4 && T.stageOf(7).g === T.GEO9 && T.stageOf(60).g === T.GEO9, '第 1～6 關 4×4、第 7 關起 9×9');
-ok(T.stageOf(7).idx === 1 && T.stageOf(7 + T.RAMP9 - 1).idx === T.RAMP9, '9×9 階段的關卡編號從第 7 關起算 1');
-ok(T.givensFor(1) === 11 && T.givensFor(6) === 5 && T.givensFor(7) === 34 && T.givensFor(7 + T.RAMP9 - 1) === 12 && T.givensFor(60) === 12, '提示數：4×4 11 → 5、9×9 34 → 12');
-ok(T.ansMs(1) === 20000 && T.ansMs(6) === 14000 && T.ansMs(7) === 40000 && T.ansMs(7 + T.RAMP9 - 1) === 24000, '限時：4×4 20 → 14 秒、9×9 40 → 24 秒');
+// 玩家自己調過 FOUR_LEVELS／GIVENS4／GIVENS9／ANS4_S／ANS9_S：測試跟著參數走
+const F = T.FOUR_LEVELS;
+ok(T.stageOf(1).g === T.GEO4 && T.stageOf(F).g === T.GEO4 && T.stageOf(F + 1).g === T.GEO9 && T.stageOf(60).g === T.GEO9, '第 1～' + F + ' 關 4×4、第 ' + (F + 1) + ' 關起 9×9');
+ok(T.stageOf(F + 1).idx === 1 && T.stageOf(F + T.RAMP9).idx === T.RAMP9, '9×9 階段的關卡編號從第 ' + (F + 1) + ' 關起算 1');
+ok(T.givensFor(1) === T.GIVENS4[0] && T.givensFor(F) === T.GIVENS4[1] && T.givensFor(F + 1) === T.GIVENS9[0] && T.givensFor(F + T.RAMP9) === T.GIVENS9[1] && T.givensFor(60) === T.GIVENS9[1], '提示數：4×4 ' + T.GIVENS4 + '、9×9 ' + T.GIVENS9);
+ok(T.ansMs(1) === T.ANS4_S[0] * 1000 && T.ansMs(F) === T.ANS4_S[1] * 1000 && T.ansMs(F + 1) === T.ANS9_S[0] * 1000 && T.ansMs(F + T.RAMP9) === T.ANS9_S[1] * 1000, '限時：4×4 ' + T.ANS4_S + ' 秒、9×9 ' + T.ANS9_S + ' 秒');
 for (let l = 2; l <= 60; l++) {
-  if (l === T.FOUR_LEVELS + 1) continue;       // 換成 9×9 的那一關是新階段，從頭開始
-  ok(T.givensFor(l) <= T.givensFor(l - 1) && T.ansMs(l) <= T.ansMs(l - 1) && T.deepP(l) >= T.deepP(l - 1) - 1e-12, '單調 ' + l);
+  if (l === F + 1) continue;       // 換成 9×9 的那一關是新階段，從頭開始
+  const asc = (l <= F ? T.ANS4_S : T.ANS9_S);
+  ok(T.givensFor(l) <= T.givensFor(l - 1) && (asc[1] >= asc[0] ? T.ansMs(l) >= T.ansMs(l - 1) : T.ansMs(l) <= T.ansMs(l - 1)) && T.deepP(l) >= T.deepP(l - 1) - 1e-12, '單調 ' + l);
 }
-ok(T.givensFor(7) > T.givensFor(1) && T.ansMs(7) > T.ansMs(1), '9×9 比 4×4 格子多、提示多、時間也給得比較長');
+ok(T.givensFor(F + 1) > T.givensFor(1), '9×9 比 4×4 格子多、提示多');
 
 // ── 幾何：4×4 與 9×9 ──
 ok(T.GEO4.N === 4 && T.GEO4.B === 2 && T.GEO4.cells === 16 && T.GEO9.N === 9 && T.GEO9.B === 3 && T.GEO9.cells === 81, '盤面大小');
@@ -66,12 +69,22 @@ for (let i = 0; i < 900; i++) {
 ok(Object.keys(dist[9]).length >= 2, '9×9 推理輪數有變化：' + JSON.stringify(dist[9]));
 // 難度：9×9 後期的題目提示比前期少、需要多輪推理的比例較高
 function avg(lv, f, n) { let s = 0; n = n || 300; for (let i = 0; i < n; i++) s += f(T.makePuzzle(lv, rnd)); return s / n; }
-ok(avg(1, q => q.count) > avg(6, q => q.count) + 3, '4×4：提示數隨關卡減少');
-ok(avg(7, q => q.count) > avg(30, q => q.count) + 15, '9×9：提示數隨關卡減少');
+ok(avg(1, q => q.count) > avg(F, q => q.count) + 3, '4×4：提示數隨關卡減少');
+ok(avg(F + 1, q => q.count) > avg(F + T.RAMP9, q => q.count) + 15, '9×9：提示數隨關卡減少');
 ok(avg(24, q => q.steps >= 2 ? 1 : 0) > avg(7, q => q.steps >= 2 ? 1 : 0) + 0.05, '9×9：需要多輪推理的比例隨關卡上升');
 // 答案各個數字都會出現
 { const s4 = new Set(), s9 = new Set(); for (let i = 0; i < 400; i++) { s4.add(T.makePuzzle(3, rnd).answer); s9.add(T.makePuzzle(12, rnd).answer); } ok(s4.size === 4 && s9.size === 9, '答案分布 4×4：' + s4.size + '、9×9：' + s9.size); }
 // 目標格在盤面各處都會出現
 { const t9 = new Set(); for (let i = 0; i < 600; i++) t9.add(T.makePuzzle(12, rnd).target); ok(t9.size > 60, '9×9 目標格分布 ' + t9.size + ' 種位置'); }
 ok(T.rating(2) !== T.rating(6) && T.rating(6) !== T.rating(12) && T.rating(12) !== T.rating(20) && T.rating(20) !== T.rating(30), '評語分級');
+// V1.29：盤面寬度 ＝ 遊戲畫面寬度的 96%；答錯時停 6 秒才結算
+{ for (const W of [360, 414, 472, 500]) for (const N of [4, 9]) { const m = T.boardMetrics(W, N);
+    ok(Math.abs(m.width / W - 0.96) < 0.005 && m.width === Math.round(W * 0.96), 'W=' + W + ' 盤面寬 ' + m.width + '（96%）');
+    ok(Math.abs(m.cell * N + 4 - m.width) < 1e-9 && Math.abs(m.height - m.width) < 1e-9, N + '×' + N + '：每格 ' + m.cell.toFixed(2) + 'px，盤面是正方形'); }
+  ok(T.BOARD_FRAC === 0.96 && T.REVEAL_FAIL_MS === 6000, '寬度 96%、答錯停 6 秒');
+  const m4 = T.boardMetrics(472, 4), m9 = T.boardMetrics(472, 9); ok(m4.width >= 450 && m9.width >= 450 && m4.cell > 88 && m9.cell > 42, '比原本（4×4 每格 88、9×9 每格 42）大');
+  // 盤面 + 提示字 + 數字鍵放得進畫面高度（舞台高度至少 600 以上）：9×9 盤面 453 + 提示 40 + 數字鍵 2 排（5 欄）62×2+8
+  ok(10 + m9.height + 28 + (62 * 2 + 8) + 8 <= 640, '9×9 放得進 640 高：' + (10 + m9.height + 28 + 132 + 8)); ok(10 + m4.height + 36 + 84 + 12 <= 640, '4×4 放得進 640 高');
+  const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_sudokuone.js'), 'utf8');
+  ok(src.indexOf('delay: REVEAL_FAIL_MS') > 0 && src.indexOf('delay: 2500') < 0, '答錯／逾時：停 REVEAL_FAIL_MS 才結算'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

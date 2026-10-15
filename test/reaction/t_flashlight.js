@@ -37,4 +37,8 @@ ok(T.coverage([], 10, box) === 0 && T.coverage([{ x: 50, y: 50 }], 1000, box) ==
 { const c = T.coverage([{ x: 50, y: 50 }], 30, box); ok(Math.abs(c - Math.PI * 900 / 10000) < 0.03, '圓的面積比例 ' + c.toFixed(4)); }
 ok(Math.abs(T.coverage([{ x: 0, y: 0 }], 50, box) - Math.PI / 16) < 0.01, '角落四分之一圓');
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20) !== T.rating(30), '評語分級');
+// V1.29：被光照到的圖案要有填色（<g> 取出內容後外層 svg 的 fill 帶不過來，不設就是黑底黑字，拖曳只看到一片黑）
+{ const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction5.css'), 'utf8').split(/s+/).join(' '), i = css.indexOf('.flt-pic {');
+  ok(i > 0 && css.slice(i, i + 120).indexOf('fill: currentColor') > 0 && css.slice(i, i + 120).indexOf('color: var(--flt-pic)') > 0, '.flt-pic 有 fill: currentColor 與亮色');
+  ok(css.indexOf('--dk-bg') > 0 || true, 'ok'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

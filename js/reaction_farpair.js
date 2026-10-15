@@ -9,6 +9,8 @@
      所以「最遠」永遠只有一對，而且它比第二遠的長了剛好「倍率」倍。
    · 難度線性（RAMP_LEVELS 關走到頂）：對數 2 → 6 對；最遠與第二遠的比例 1.60 → 1.04（差距從 60％縮到 4％）。
      每對的連線方向隨機（橫、直、斜都有），所以不能靠「橫向看起來比較短」之類的錯覺取巧。
+   · V1.29（玩家意見）：每一對的兩個圓點大小不一樣，一大一小——起點（第一個點 a）維持原本的大小 DOT_R，
+     終點（第二個點 b）縮成 1/3（DOT_R2 ＝ DOT_R ÷ 3）；命中半徑 HIT_R（40）不變，所以小點也一樣好點。
    · 揭曉（動畫）：先從你點的那一對的某個圓點，畫出一條直線到另一個端點，並顯示距離；
      如果你猜錯，再用同樣的動畫畫出「真正最遠的那一對」。
    ═══════════════════════════════════════════════════════════════════ */
@@ -30,13 +32,17 @@
     var OTHER = [0.8, 0.98];                   /* 其他對的距離 ＝ 第二遠 × 這個範圍內的隨機數 */
     var MIN_GAP = 64;                           /* 任兩個圓點圓心至少相距多少 */
     var MARGIN = 30;                            /* 圓點離遊戲區邊緣至少多遠 */
-    var DOT_R = 20;                             /* 圓點畫出來的半徑 */
+    var DOT_R = 20;                             /* 起點（每一對的第一個點）畫出來的半徑 */
+    var DOT_R2 = DOT_R / 3;                     /* 終點（每一對的第二個點）畫出來的半徑：起點的 1/3 */
     var HIT_R = 40;                             /* 命中半徑 */
     var MAX_LEVEL = 60;
-    /* 六種顏色（色相，飽和度與亮度固定）：紅、橘、黃、綠、藍、紫；彼此夠不一樣 */
-    var HUES = [{ n: '紅', h: 4 }, { n: '橘', h: 28 }, { n: '黃', h: 50 }, { n: '綠', h: 135 }, { n: '藍', h: 212 }, { n: '紫', h: 282 }];
+    /* 八種顏色（色相，飽和度與亮度固定）：紅、橘、黃、綠、藍、紫、粉紅、青；彼此夠不一樣。
+       顏色數一定要 ≥ 最多的對數 PAIRS[1]（V1.29 修正：PAIRS 調成 7 對時，原本只有 6 種顏色，最後幾關出題會當機） */
+    var HUES = [{ n: '紅', h: 4 }, { n: '橘', h: 28 }, { n: '黃', h: 50 }, { n: '綠', h: 135 }, { n: '藍', h: 212 }, { n: '紫', h: 282 }, { n: '粉紅', h: 328 }, { n: '青', h: 178 }];
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 一對圓點裡，起點 a 畫大的（DOT_R）、終點 b 畫小的（DOT_R2） */
+    function dotR(end) { return end === 'a' ? DOT_R : DOT_R2; }
     function pairsFor(level) { return kit.clamp(Math.round(kit.ramp(level, PAIRS[0], PAIRS[1], PAIR_LEVELS)), PAIRS[0], PAIRS[1]); }
     function ratioFor(level) { return kit.ramp(level, RATIO[0], RATIO[1], RAMP_LEVELS); }
     function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }
@@ -113,7 +119,7 @@
         q.pairs.forEach(function (p, i) {
             var fill = kit.hsl(p.hue, 78, 52), stroke = kit.hsl(p.hue, 70, 30);
             ['a', 'b'].forEach(function (k) {
-                var c = kit.svg('circle', { cx: p[k].x, cy: p[k].y, r: DOT_R, fill: fill, stroke: stroke, 'stroke-width': 3, 'class': 'fpr-dot' }, gDot);
+                var c = kit.svg('circle', { cx: p[k].x, cy: p[k].y, r: dotR(k), fill: fill, stroke: stroke, 'stroke-width': k === 'a' ? 3 : 2, 'class': 'fpr-dot' }, gDot);
                 dots.push({ el: c, pair: i, end: k });
             });
         });
@@ -178,7 +184,7 @@
         mount: mount,
         score: SCORE,
         test: {
-            pairsFor: pairsFor, ratioFor: ratioFor, ansMs: ansMs, placePair: placePair, makeLevel: makeLevel, rating: rating,
+            dotR: dotR, DOT_R: DOT_R, DOT_R2: DOT_R2, HIT_R: HIT_R, pairsFor: pairsFor, ratioFor: ratioFor, ansMs: ansMs, placePair: placePair, makeLevel: makeLevel, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, PAIR_LEVELS: PAIR_LEVELS, PAIRS: PAIRS, RATIO: RATIO, ANS_S: ANS_S, MIN_GAP: MIN_GAP, MARGIN: MARGIN, D_MIN: D_MIN, MAX_LEVEL: MAX_LEVEL, HUES: HUES
         }
     };

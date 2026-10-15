@@ -12,6 +12,8 @@
    · 難度線性（RAMP_LEVELS 關走到頂）：直條數 5 → 12 條（越細越難拼）；週期 CYCLE 5 → 2.8 秒（越短，對準的瞬間越短）；
      作答限時 14 → 9 秒。
    · 揭曉：所有直條停在對準的位置，整個字完整顯示，標出正確的選項。
+   · V1.29（玩家意見）：答案按鈕的字形改成明體／宋體（.alc-opt 用 --font-note），跟題目字形（目前的黑體）不一樣，故意增加難度；
+     題目字形不動（canvas 畫字用的是頁面的 --font-ui 黑體）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -164,7 +166,7 @@
         score: SCORE,
         test: {
             stripsFor: stripsFor, optionsFor: optionsFor, cycleFor: cycleFor, timeMs: timeMs, offsetAt: offsetAt, misalign: misalign, makeOptions: makeOptions, makeLevel: makeLevel, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, STRIPS: STRIPS, OPTIONS: OPTIONS, CYCLE_S: CYCLE_S, KMAX: KMAX, PIC: PIC, GROUPS: GROUPS, CHARS: CHARS, MAX_LEVEL: MAX_LEVEL
+            RAMP_LEVELS: RAMP_LEVELS, STRIPS: STRIPS, OPTIONS: OPTIONS, CYCLE_S: CYCLE_S, TIME_S: TIME_S, ALIGN_AT: ALIGN_AT, KMAX: KMAX, PIC: PIC, GROUPS: GROUPS, CHARS: CHARS, MAX_LEVEL: MAX_LEVEL
         }
     };
     Reaction.register(G);

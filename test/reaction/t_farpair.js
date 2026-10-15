@@ -4,10 +4,13 @@ let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log('FAIL', m); } }
 const near = (a, b, e) => Math.abs(a - b) < (e || 1e-9);
 const SEED = seedOf(20261021); const rnd = rng(SEED);
 
-ok(T.pairsFor(1) === 2 && T.pairsFor(T.PAIR_LEVELS) === 6 && T.pairsFor(60) === 6, '對數 2 → 6');
-ok(near(T.ratioFor(1), 1.6) && near(T.ratioFor(T.RAMP_LEVELS), 1.04) && near(T.ratioFor(60), 1.04), '比例 1.6 → 1.04');
-for (let l = 2; l <= 60; l++) ok(T.pairsFor(l) >= T.pairsFor(l - 1) && T.ratioFor(l) <= T.ratioFor(l - 1) + 1e-12 && T.ansMs(l) <= T.ansMs(l - 1), '單調 ' + l);
-ok(T.ansMs(1) === 10000 && T.ansMs(T.RAMP_LEVELS) === 7000, '限時 10 → 7 秒');
+// 玩家自己調過 PAIRS／RATIO／ANS_S：測試跟著參數走
+ok(T.pairsFor(1) === T.PAIRS[0] && T.pairsFor(T.PAIR_LEVELS) === T.PAIRS[1] && T.pairsFor(60) === T.PAIRS[1], '對數 ' + T.PAIRS);
+ok(near(T.ratioFor(1), T.RATIO[0]) && near(T.ratioFor(T.RAMP_LEVELS), T.RATIO[1]) && near(T.ratioFor(60), T.RATIO[1]), '比例 ' + T.RATIO);
+for (let l = 2; l <= 60; l++) ok(T.pairsFor(l) >= T.pairsFor(l - 1) && T.ratioFor(l) <= T.ratioFor(l - 1) + 1e-12 && (T.ANS_S[1] >= T.ANS_S[0] ? T.ansMs(l) >= T.ansMs(l - 1) : T.ansMs(l) <= T.ansMs(l - 1)), '單調 ' + l);
+ok(T.ansMs(1) === T.ANS_S[0] * 1000 && T.ansMs(T.RAMP_LEVELS) === T.ANS_S[1] * 1000, '限時 ' + T.ANS_S + ' 秒');
+// V1.29：顏色數一定夠用（對數最多 PAIRS[1] 對，每一對一種顏色），不然最後幾關出題會當機
+ok(T.HUES.length >= T.PAIRS[1] && new Set(T.HUES.map(x => x.n)).size === T.HUES.length && new Set(T.HUES.map(x => x.h)).size === T.HUES.length, '顏色數 ' + T.HUES.length + ' ≥ 最多對數 ' + T.PAIRS[1]);
 const W = 472, H = 630;
 let sumBest = 0;
 for (let i = 0; i < 1500; i++) {
@@ -29,10 +32,15 @@ for (let i = 0; i < 1500; i++) {
 }
 // 最遠那一對的位置分布（洗牌後不是固定在第一個）
 const bestPos = {}; for (let i = 0; i < 1500; i++) { const q = T.makeLevel(40, W, H, rnd); bestPos[q.best] = (bestPos[q.best] || 0) + 1; }
-ok(Object.keys(bestPos).length === 6 && Math.min(...Object.values(bestPos)) > 100, '最遠的位置均勻分布：' + JSON.stringify(bestPos));
+ok(Object.keys(bestPos).length === T.PAIRS[1] && Math.min(...Object.values(bestPos)) > 100, '最遠的位置均勻分布：' + JSON.stringify(bestPos));
 // 方向：橫、直、斜都會出現（避免靠錯覺取巧）
 let horiz = 0, vert = 0, diag = 0;
 for (let i = 0; i < 2000; i++) { const q = T.makeLevel(20, W, H, rnd); const p = q.pairs[q.best]; const a = Math.abs(Math.atan2(p.b.y - p.a.y, p.b.x - p.a.x)) * 180 / Math.PI; if (a < 20 || a > 160) horiz++; else if (a > 70 && a < 110) vert++; else diag++; }
 ok(horiz > 100 && vert > 100 && diag > 600, '方向分布 ' + horiz + '/' + vert + '/' + diag);
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20) !== T.rating(30), '評語分級');
+// V1.29：一對圓點一大一小——起點維持原大小、終點縮成 1/3；命中半徑不變
+ok(T.DOT_R === 20 && Math.abs(T.DOT_R2 - T.DOT_R / 3) < 1e-9 && T.dotR('a') === T.DOT_R && Math.abs(T.dotR('b') - T.DOT_R / 3) < 1e-9, '起點 ' + T.DOT_R + '、終點 ' + T.DOT_R2.toFixed(2) + '（1/3）');
+ok(T.HIT_R === 40, '命中半徑維持 40（小點也好點）');
+{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_farpair.js'), 'utf8');
+  ok(src.indexOf('r: dotR(k)') > 0, '畫圓點時用 dotR(起點／終點)'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

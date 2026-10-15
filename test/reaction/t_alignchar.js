@@ -4,10 +4,11 @@ let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log('FAIL', m); } }
 const near = (a, b, e) => Math.abs(a - b) < (e || 1e-9);
 const SEED = seedOf(20261032); const rnd = rng(SEED);
 
-ok(T.stripsFor(1) === 5 && T.stripsFor(T.RAMP_LEVELS) === 12 && T.stripsFor(60) === 12, '直條 5 → 12');
-ok(T.optionsFor(1) === 4 && T.optionsFor(T.RAMP_LEVELS) === 6, '選項 4 → 6');
-ok(near(T.cycleFor(1), 5) && near(T.cycleFor(T.RAMP_LEVELS), 2.8) && T.timeMs(1) === 14000 && T.timeMs(T.RAMP_LEVELS) === 9000, '週期 5 → 2.8 秒、限時 14 → 9 秒');
-for (let l = 2; l <= 60; l++) ok(T.stripsFor(l) >= T.stripsFor(l - 1) && T.optionsFor(l) >= T.optionsFor(l - 1) && T.cycleFor(l) <= T.cycleFor(l - 1) + 1e-12 && T.timeMs(l) <= T.timeMs(l - 1), '單調 ' + l);
+// 玩家自己調過 STRIPS／OPTIONS／CYCLE_S／TIME_S／ALIGN_AT：測試跟著參數走
+ok(T.stripsFor(1) === T.STRIPS[0] && T.stripsFor(T.RAMP_LEVELS) === T.STRIPS[1] && T.stripsFor(60) === T.STRIPS[1], '直條 ' + T.STRIPS);
+ok(T.optionsFor(1) === T.OPTIONS[0] && T.optionsFor(T.RAMP_LEVELS) === T.OPTIONS[1], '選項 ' + T.OPTIONS);
+ok(near(T.cycleFor(1), T.CYCLE_S[0]) && near(T.cycleFor(T.RAMP_LEVELS), T.CYCLE_S[1]) && T.timeMs(1) === T.TIME_S[0] * 1000 && T.timeMs(T.RAMP_LEVELS) === T.TIME_S[1] * 1000, '週期 ' + T.CYCLE_S + ' 秒、限時 ' + T.TIME_S + ' 秒');
+for (let l = 2; l <= 60; l++) ok(T.stripsFor(l) >= T.stripsFor(l - 1) && T.optionsFor(l) >= T.optionsFor(l - 1) && (T.CYCLE_S[1] <= T.CYCLE_S[0] ? T.cycleFor(l) <= T.cycleFor(l - 1) + 1e-12 : T.cycleFor(l) >= T.cycleFor(l - 1) - 1e-12) && (T.TIME_S[1] <= T.TIME_S[0] ? T.timeMs(l) <= T.timeMs(l - 1) : T.timeMs(l) >= T.timeMs(l - 1)), '單調 ' + l);
 // 群組完整性
 T.GROUPS.forEach((g, i) => ok(g.length >= 4 && new Set(g).size === g.length && g.every(c => [...c].length === 1), '群組 ' + i + ' 合法'));
 ok(T.CHARS.length >= 60, '字數 ' + T.CHARS.length);
@@ -19,7 +20,7 @@ for (let i = 0; i < 2000; i++) {
   ok(q.ks.length === q.n && q.ks.every(k => k !== 0 && Math.abs(k) <= T.KMAX && Number.isInteger(k)), '速度倍數 ' + q.ks);
   ok(q.ks.some(k => k > 0) && q.ks.some(k => k < 0), '往上、往下都有');
   ok(new Set(q.ks.map(Math.abs)).size >= 2, '至少兩種速度');
-  ok(q.tAlign >= q.cycle * 0.6 - 1e-9 && q.tAlign <= q.cycle * 1.0 + 1e-9, '第一次對準時刻');
+  ok(q.tAlign >= q.cycle * T.ALIGN_AT[0] - 1e-9 && q.tAlign <= q.cycle * T.ALIGN_AT[1] + 1e-9, '第一次對準時刻');
   for (let m = 0; m < 4; m++) ok(T.misalign(q.ks, q.tAlign + m * q.cycle, q.tAlign, q.cycle, P) < 1e-6, '對準時刻全部對齊 m=' + m);
   ok(T.misalign(q.ks, q.tAlign + q.cycle / 2, q.tAlign, q.cycle, P) > 20, '週期一半時明顯沒對準：' + T.misalign(q.ks, q.tAlign + q.cycle / 2, q.tAlign, q.cycle, P).toFixed(1));
   ok(q.options.length === T.optionsFor(lv) && new Set(q.options).size === q.options.length && q.options[q.answer] === q.ch, '選項');
@@ -32,4 +33,10 @@ for (let i = 0; i < 2000; i++) {
 // 答案位置、字都會變化
 const pos = new Set(), chs = new Set(); for (let i = 0; i < 400; i++) { const q = T.makeLevel(10, rnd); pos.add(q.answer); chs.add(q.ch); } ok(pos.size >= 5 && chs.size >= 30, '答案位置與字有變化 ' + pos.size + '/' + chs.size);
 ok(T.rating(2) !== T.rating(4) && T.rating(4) !== T.rating(8) && T.rating(8) !== T.rating(14) && T.rating(14) !== T.rating(25), '評語分級');
+// V1.29：答案按鈕字形＝明體／宋體（--font-note），題目字形（canvas 用頁面黑體）不變
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), css = rd('../../css/reaction5.css').split(/s+/).join(' '), theme = rd('../../css/theme.css'), src = rd('../../js/reaction_alignchar.js');
+  const i = css.indexOf('.alc-opt {');
+  ok(i > 0 && css.slice(i, i + 160).indexOf('font-family: var(--font-note)') > 0, '答案按鈕用明體／宋體（--font-note）');
+  ok(/--font-note: "Noto Serif TC"[^;]*(Songti TC|PMingLiU)[^;]*serif;/.test(theme) && /--font-ui: "Noto Sans TC"/.test(theme), '--font-note 是襯線字型、--font-ui 是黑體（兩者不同）');
+  ok(src.indexOf("getComputedStyle(document.body).fontFamily") > 0, '題目的字形維持不變（頁面字型）'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

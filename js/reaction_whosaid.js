@@ -6,6 +6,9 @@
    ───────────────────────────────────────────────────────────────────
    · 難度線性（RAMP_LEVELS 關走到頂）：小人 2 → 5 個；每個小人說的數字 1 → 3 個（所以總共說 2 → 15 句）；
      每一句泡泡出現的時間 0.9 秒 → 0.6 秒；作答限時 ＝ (ANS_BASE ＋ ANS_PER × 要按幾個數字) × 倍率。
+   · V1.29（玩家意見）：不同的小人不會說出同一個數字（assignDigits：把 0～9 這 10 個數字先分給每個小人各一個「專屬的數字池」，
+     每個小人只能從自己的池子裡說；池子夠大時同一個小人說的數字也不重複，池子不夠大（例如 5 個小人各只分到 2 個數字、卻要說 3 句）
+     才讓同一個小人重複說自己的數字）。
    · 說話的順序：每個小人說的次數相同，整個順序隨機打亂（同一個小人可以連著說兩次）。
    · 按數字時每按一個就判定：按錯馬上結束，按對了會填進上方的格子；全部按對就過關。
    · 揭曉：每個小人說過的數字全部列出來。
@@ -37,13 +40,27 @@
     function saysFor(level) { return kit.clamp(Math.round(kit.ramp(level, SAYS[0], SAYS[1], RAMP_LEVELS)), SAYS[0], SAYS[1]); }
     function sayMs(level) { return Math.round(kit.ramp(level, SAY_MS[0], SAY_MS[1], RAMP_LEVELS)); }
     function ansMs(level) { return Math.round((ANS_BASE + ANS_PER * saysFor(level)) * kit.ramp(level, ANS_MUL[0], ANS_MUL[1], RAMP_LEVELS)); }
+    /* 把 0～9 分給 n 個小人，每人說 m 個數字：回傳 digits[i]（第 i 個小人要說的 m 個數字，不同小人之間絕不重複）。
+       作法：打亂 0～9，依序切成 n 個專屬池子（池子大小盡量平均）；每個小人從自己的池子抽 m 個，池子比 m 小就全部用上、不夠的再從自己的池子重複抽。 */
+    function assignDigits(n, m, rand) {
+        rand = rand || Math.random;
+        var all = kit.shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], rand), base = Math.floor(all.length / n), extra = all.length % n, pos = 0, out = [];
+        for (var i = 0; i < n; i++) {
+            var size = base + (i < extra ? 1 : 0), pool = all.slice(pos, pos + size), say;
+            pos += size;
+            if (pool.length >= m) say = kit.shuffle(pool, rand).slice(0, m);
+            else { say = pool.slice(); while (say.length < m) say.push(kit.pick(pool, rand)); say = kit.shuffle(say, rand); }
+            out.push(say);
+        }
+        return kit.shuffle(out, rand);
+    }
     /* 出一關：{ people（顏色清單）, events:[{ who 第幾個小人, digit }]（說話順序）, says（每人幾句）, ask（問的是第幾個小人）, expect（該小人說過的數字，依說話順序） } */
     function makeLevel(level, rand) {
         rand = rand || Math.random;
         var n = peopleFor(level), m = saysFor(level), i, j;
         var people = kit.sample(COLORS, n, rand);
-        var events = [];
-        for (i = 0; i < n; i++) for (j = 0; j < m; j++) events.push({ who: i, digit: kit.randInt(0, 9, rand) });
+        var events = [], digits = assignDigits(n, m, rand);
+        for (i = 0; i < n; i++) for (j = 0; j < m; j++) events.push({ who: i, digit: digits[i][j] });
         events = kit.shuffle(events, rand);
         var ask = kit.randInt(0, n - 1, rand);
         var expect = events.filter(function (e) { return e.who === ask; }).map(function (e) { return e.digit; });
@@ -163,7 +180,7 @@
         mount: mount,
         score: SCORE,
         test: {
-            peopleFor: peopleFor, saysFor: saysFor, sayMs: sayMs, ansMs: ansMs, makeLevel: makeLevel, spoken: spoken, rating: rating,
+            assignDigits: assignDigits, peopleFor: peopleFor, saysFor: saysFor, sayMs: sayMs, ansMs: ansMs, makeLevel: makeLevel, spoken: spoken, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, PEOPLE: PEOPLE, SAYS: SAYS, SAY_MS: SAY_MS, GAP_MS: GAP_MS, MAX_LEVEL: MAX_LEVEL, COLORS: COLORS
         }
     };

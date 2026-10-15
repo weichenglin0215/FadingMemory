@@ -290,15 +290,16 @@
     border-color: var(--c-bad);
 }
 
+/* V1.29（玩家意見）：題目字放大（手機上不容易辨識）：標籤 22→26px、小寫金額 40→50px、大寫金額 34→40px */
 .chq-lab {
-    font-size: var(--fs-xs);
+    font-size: var(--fs-sm);
     font-weight: var(--fw-bold);
     color: var(--c-ink-soft);
     margin-top: var(--sp-2);
 }
 
 .chq-small {
-    font-size: var(--fs-xl);
+    font-size: 50px;
     font-weight: var(--fw-black);
     color: var(--c-ink);
     font-variant-numeric: tabular-nums;
@@ -308,7 +309,7 @@
 
 .chq-big {
     font-family: var(--font-note);
-    font-size: var(--fs-lg);
+    font-size: var(--fs-xl);
     font-weight: var(--fw-black);
     color: var(--c-ink);
     line-height: var(--lh-body);
@@ -323,11 +324,11 @@
 }
 
 .chq-ask {
-    top: 320px;
+    top: 396px;
 }
 
 .chq-reveal {
-    top: 372px;
+    top: 446px;
 }
 
 /* ═══ 挑加減乘除（.fop-）═══ */
@@ -560,6 +561,11 @@
     fill: var(--c-ink);
 }
 
+/* 1 點與 4 點的圓點是紅色（V1.29） */
+.dce-pip--red {
+    fill: hsl(0, 78%, 50%);
+}
+
 .dce-back {
     width: 100%;
     height: 100%;
@@ -582,8 +588,11 @@
     box-shadow: 0 0 0 6px var(--c-orange);
 }
 
-.dce-die--wrong {
-    box-shadow: 0 0 0 6px var(--c-bad);
+/* 點錯（那一顆的點數沒有變）：骰子外框改成紅色虛線（V1.29） */
+.dce-die--wrong .dce-face {
+    stroke: hsl(0, 78%, 50%);
+    stroke-width: 6;
+    stroke-dasharray: 12 8;
 }
 
 .dce-chg {
@@ -931,16 +940,18 @@
     background: var(--c-card);
 }
 
-/* 4×4：每格 88px、數字大；全盤 4×88＋4＝356px */
+/* 4×4（--n4）與 9×9（--n9）：欄數 --sdk-n；每格邊長 --sdk-cell 與數字大小 --sdk-font 由 js 依畫面寬度設定
+   （V1.29：整個盤面的寬度是遊戲畫面的 96%）；下面的數字是沒有 js 時的備用值 */
 .sdk-board--n4 {
     --sdk-n: 4;
-    --sdk-cell: 88px;
+    --sdk-cell: 112px;
+    --sdk-font: 69px;
 }
 
-/* 9×9：每格 42px；全盤 9×42＋4＝382px */
 .sdk-board--n9 {
     --sdk-n: 9;
-    --sdk-cell: 42px;
+    --sdk-cell: 50px;
+    --sdk-font: 36px;
 }
 
 .sdk-cell {
@@ -949,15 +960,10 @@
     justify-content: center;
     border-right: 1px solid var(--bd-c);
     border-bottom: 1px solid var(--bd-c);
-    font-size: var(--fs-lg);
+    font-size: var(--sdk-font, var(--fs-lg));
     font-weight: var(--fw-black);
     color: var(--c-ink);
     box-sizing: border-box;
-}
-
-/* 4×4 的格子大，數字也放大 */
-.sdk-board--n4 .sdk-cell {
-    font-size: 64px;
 }
 
 /* 每個宮的最右一欄、最下一排畫粗線 */
@@ -992,17 +998,9 @@
     color: var(--c-on-accent);
 }
 
-/* 說明文字放在盤面下面：4×4 盤面高 356px、9×9 盤面高 382px */
+/* 說明文字放在盤面下面（位置 top 由 js 依盤面高度設定） */
 .sdk-tip {
-    top: 384px;
-}
-
-.sdk-tip--n4 {
-    top: 376px;
-}
-
-.sdk-tip--n9 {
-    top: 402px;
+    top: 470px;
 }
 
 .sdk-btn {
@@ -1114,8 +1112,11 @@
     fill: var(--dk-bg);
 }
 
+/* 被光照到的圖案：fill 一定要設成 currentColor——圖案是從 picSvg 的 <svg fill="currentColor"> 裡取出內容放進這個 <g>，
+   外面那層 <svg> 的 fill 帶不過來，不設的話圖案預設是黑色、跟全黑的底一樣，拖曳時只看到一片黑（V1.29 玩家意見修正） */
 .flt-pic {
     color: var(--flt-pic);
+    fill: currentColor;
 }
 
 .flt-cover {
@@ -1177,9 +1178,59 @@
     stroke-width: 2;
 }
 
-.rcf-dot--wrong {
-    stroke: var(--c-bad) !important;
-    stroke-width: 7;
+/* 揭曉時圍在小人身上的圈：答對的第一名＝綠色、你選錯的＝紅色（V1.29：圓點改成小人） */
+.rcf-halo {
+    fill: none;
+    stroke: transparent;
+    stroke-width: 6;
+}
+
+.rcf-halo--win {
+    stroke: var(--c-ok);
+}
+
+.rcf-halo--wrong {
+    stroke: var(--c-bad);
+    stroke-dasharray: 10 7;
+}
+
+/* 開跑前畫面中央的「3、2、1」倒數 */
+.rcf-count {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 190px;
+    text-align: center;
+    font-size: 200px;
+    line-height: 1;
+    font-weight: var(--fw-black);
+    color: var(--c-on-accent);
+    -webkit-text-stroke: 10px var(--c-ink);
+    paint-order: stroke fill;
+    text-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+    z-index: 3;
+}
+
+.rcf-count--pop {
+    animation: rcf-pop 0.8s ease-out;
+}
+
+@keyframes rcf-pop {
+    0% {
+        transform: scale(1.6);
+        opacity: 0;
+    }
+
+    25% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(0.9);
+        opacity: 0.85;
+    }
 }
 
 .rcf-time {
@@ -1274,9 +1325,12 @@
     top: 520px;
 }
 
+/* 答案按鈕的字形（V1.29 玩家意見）：改成明體／宋體（--font-note：Noto Serif TC → 宋體 → 新細明體），跟題目的字形（黑體）不一樣，
+   故意增加難度。題目那個被切成直條的字，字形維持不變（黑體）。 */
 .alc-opt {
+    font-family: var(--font-note);
     font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
+    font-weight: 700;
     color: var(--c-ink);
 }
 

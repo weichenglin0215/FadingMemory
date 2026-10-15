@@ -179,6 +179,7 @@
         api.info = q;
         console.log('[支票金額] 第 ' + level + ' 題：' + q.small + ' ／ ' + q.written + '（' + (q.match ? '相符' : '不符，大寫其實是 ' + q.otherAmount) + '），限時 ' + ansMs(level) + ' ms');
 
+        /* V1.29（玩家意見）：題目的字放大（見 css 的 .chq-lab／.chq-small／.chq-big），問句與揭曉文字相應往下移 */
         var card = h('div', { 'class': 'chq-card' }, [
             h('div', { 'class': 'chq-lab', text: '小寫金額' }),
             h('div', { 'class': 'chq-small', text: q.small }),

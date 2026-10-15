@@ -39,6 +39,12 @@ for (let i = 0; i < 6000; i++) {
 const seen = {}; for (let i = 0; i < 3000; i++) { const q = T.makeLevel(10, rnd); q.changed.forEach(c => { seen[q.before[c] + '>' + q.after[c]] = 1; }); }
 ok(Object.keys(seen).length === 10 && seen['1>2'] && seen['6>5'] && !seen['1>0'] && !seen['6>7'], '所有可能的換法：' + Object.keys(seen).sort());
 // 骰子圖：每個點數畫出對的點數
-for (let v = 1; v <= 6; v++) ok((T.dieSvg(v).match(/dce-pip/g) || []).length === v, '骰子 ' + v + ' 點');
+for (let v = 1; v <= 6; v++) ok((T.dieSvg(v).match(/class="dce-pip/g) || []).length === v, '骰子 ' + v + ' 點');
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20) !== T.rating(30), '評語分級');
+// V1.29：1 點與 4 點是紅色圓點、1 點的圓點放大；點錯的骰子外框是紅色虛線
+{ ok(T.isRedFace(1) && T.isRedFace(4) && !T.isRedFace(2) && !T.isRedFace(3) && !T.isRedFace(5) && !T.isRedFace(6), '只有 1 點與 4 點是紅色');
+  ok(T.PIP_R1 > T.PIP_R * 1.5 && T.pipRadius(1) === T.PIP_R1 && [2, 3, 4, 5, 6].every(v => T.pipRadius(v) === T.PIP_R), '1 點的圓點放大');
+  for (let v = 1; v <= 6; v++) { const svg = T.dieSvg(v), pips = svg.match(/<circle/g) || [], red = svg.match(/dce-pip--red/g) || []; ok(pips.length === v, v + ' 點有 ' + v + ' 個圓點'); ok(red.length === (T.isRedFace(v) ? v : 0), v + ' 點紅色圓點數 ' + red.length); ok(v !== 1 || svg.indexOf('r="' + T.PIP_R1 + '"') > 0, '1 點的半徑'); }
+  const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction5.css'), 'utf8').split(/\s+/).join(' ');
+  ok(css.indexOf('.dce-die--wrong .dce-face { stroke: hsl(0, 78%, 50%);') > 0 && css.indexOf('stroke-dasharray: 12 8') > 0, '點錯的骰子：紅色虛線外框'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

@@ -10,6 +10,8 @@
    · 記憶顯示時間 ＝ (SHOW_BASE ＋ SHOW_PER × 骰子數) × 倍率（1.0 → 0.6，MUL_LEVELS 關走到頂）；
      作答限時 ＝ (ANS_BASE ＋ ANS_PER × 骰子數) × 倍率（1.2 → 0.8）。每顆被換過的骰子都要點到，點到沒換過的骰子就失敗。
    · 揭曉：被換過點數的骰子用橘框標出，下方寫出「3 → 4」。
+   · V1.29（玩家意見）：(1) 點到沒有換過的骰子（答錯）時，那一顆的外框改成紅色虛線；
+     (2) 骰子的 1 點與 4 點改成紅色的圓點（像真的骰子），而且 1 點的圓點放大（PIP_R1）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -72,9 +74,12 @@
     /* 骰子的點：1～6 點的位置（用 3×3 格子的代號：a b c／d e f／g h i） */
     var FACES = { 1: 'e', 2: 'ai', 3: 'aei', 4: 'acgi', 5: 'acegi', 6: 'acdfgi' };
     var PIP = { a: [28, 28], b: [50, 28], c: [72, 28], d: [28, 50], e: [50, 50], f: [72, 50], g: [28, 72], h: [50, 72], i: [72, 72] };
+    var PIP_R = 9, PIP_R1 = 17;                   /* 圓點半徑：一般 9，1 點放大成 17（真骰子的一點比較大） */
+    function isRedFace(v) { return v === 1 || v === 4; }    /* 1 點與 4 點的圓點是紅色 */
+    function pipRadius(v) { return v === 1 ? PIP_R1 : PIP_R; }
     function dieSvg(v) {
         var s = '<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="5" y="5" width="90" height="90" rx="18" class="dce-face"/>';
-        FACES[v].split('').forEach(function (c) { s += '<circle cx="' + PIP[c][0] + '" cy="' + PIP[c][1] + '" r="9" class="dce-pip"/>'; });
+        FACES[v].split('').forEach(function (c) { s += '<circle cx="' + PIP[c][0] + '" cy="' + PIP[c][1] + '" r="' + pipRadius(v) + '" class="dce-pip' + (isRedFace(v) ? ' dce-pip--red' : '') + '"/>'; });
         return s + '</svg>';
     }
     function rating(n) {
@@ -178,7 +183,7 @@
         mount: mount,
         score: SCORE,
         test: {
-            diceFor: diceFor, changedFor: changedFor, showMs: showMs, ansMs: ansMs, colsFor: colsFor, layout: layout, makeLevel: makeLevel, dieSvg: dieSvg, rating: rating,
+            diceFor: diceFor, changedFor: changedFor, showMs: showMs, ansMs: ansMs, colsFor: colsFor, layout: layout, makeLevel: makeLevel, dieSvg: dieSvg, isRedFace: isRedFace, pipRadius: pipRadius, PIP_R: PIP_R, PIP_R1: PIP_R1, rating: rating,
             DICE_FIRST: DICE_FIRST, DICE_MAX: DICE_MAX, COVER_MS: COVER_MS, MUL_LEVELS: MUL_LEVELS, MAX_LEVEL: MAX_LEVEL, CHANGED_STEPS: CHANGED_STEPS
         }
     };

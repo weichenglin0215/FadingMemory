@@ -17,6 +17,9 @@
      越少越要多繞幾步推理；作答限時 4×4 20 → 14 秒、9×9 40 → 24 秒。
      盤面上會用淡黃色標出目標那一格所在的橫排、直排和宮，幫你看該看哪裡（不會揭露答案）。
    · 揭曉：整個盤面的解答都填出來（目標那一格用大字標出）。
+   · V1.29（玩家意見）：(1) 盤面（題目格子）盡量加寬：整個盤面的寬度 ＝ 遊戲畫面寬度的 BOARD_FRAC（96%），每格邊長由它算出來
+     （boardMetrics），數字鍵隨著盤面變高而排得更緊湊（9×9 的數字鍵改成 5 欄 2 排）；
+     (2) 答錯／逾時時，最後顯示正確答案要停留 REVEAL_FAIL_MS（6 秒），讓玩家看清楚，才跳出結算彈窗。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -33,6 +36,9 @@
     var GIVENS9 = [64, 12];                     /* 9×9：同上（共 80 格可留）：第 1 個 9×9 關卡 → 第 RAMP9 個 */
     var ANS4_S = [30, 120], ANS9_S = [120, 600];   /* 作答限時（秒）：階段的第 1 關 → 到頂 */
     var MAX_LEVEL = 60;
+    var BOARD_FRAC = 0.96;                      /* 盤面寬度佔遊戲畫面寬度的比例 */
+    var BORDER = 4;                             /* 盤面左、上外框粗細（px，跟 css 的 .sdk-board 一致） */
+    var REVEAL_FAIL_MS = 6000;                  /* 答錯或逾時：顯示正確答案要停多久才跳出結算彈窗 */
     var SLACK = 4;                              /* 提示個數離目標不超過這麼多就收題，否則多試幾次、用提示最少的那次 */
 
     /* ═══ 盤面的幾何（4×4 與 9×9 各做一份）═══
@@ -61,6 +67,11 @@
     var GEO4 = makeGeom(2), GEO9 = makeGeom(3);
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 盤面的尺寸：畫面寬 W、盤面邊長 N（4 或 9）→ { width（含左外框，＝W × BOARD_FRAC 取整）, cell（每格邊長，可以有小數）, height（含上外框；格子是正方形所以＝width） } */
+    function boardMetrics(W, N) {
+        var width = Math.round(W * BOARD_FRAC), cell = (width - BORDER) / N;
+        return { width: width, cell: cell, height: cell * N + BORDER };
+    }
     /* 第 level 關屬於哪個階段：{ g 盤面幾何, idx 這個階段的第幾關（從 1 起算）, len 這個階段走幾關到頂 } */
     function stageOf(level) {
         level = Math.max(1, level);
@@ -182,7 +193,10 @@
         console.log('[數獨猜一格] 第 ' + level + ' 關：' + N + '×' + N + '（' + B + '×' + B + ' 的宮）目標第 ' + (g.rowOf(q.target) + 1) + ' 排第 ' + (g.colOf(q.target) + 1) + ' 格，答案 ' + q.answer + '；提示 ' + q.count + ' 個（想要 ' + givensFor(level) + '），推理 ' + q.steps + ' 輪；限時 ' + ansMs(level) + ' ms');
 
         /* 盤面：N 欄 N 列的格子，每一格的邊長由 css 的 .sdk-board--n4／--n9 決定；每個宮的最右一欄、最下一排畫粗線（sdk-cE／sdk-rE） */
+        var W = stage.clientWidth || 472, bm = boardMetrics(W, N);
         var board = h('div', { 'class': 'sdk-board sdk-board--n' + N });
+        board.style.setProperty('--sdk-cell', bm.cell.toFixed(3) + 'px');                 /* 每格邊長：盤面寬度是畫面寬的 96% */
+        board.style.setProperty('--sdk-font', Math.round(bm.cell * (N === 4 ? 0.62 : 0.72)) + 'px');
         var cells = [];
         for (var i = 0; i < g.cells; i++) {
             var c = h('div', { 'class': 'sdk-cell' });
@@ -195,11 +209,12 @@
             board.appendChild(c); cells.push(c);
         }
         var tip = h('div', { 'class': 'qz-note sdk-tip sdk-tip--n' + N, text: '黃色那一格數字是哪個？' });
+        tip.style.top = Math.round(10 + bm.height + 4) + 'px';
         stage.appendChild(board); stage.appendChild(tip);
         var items = [];
         for (var d = 1; d <= N; d++) (function (d) { items.push({ text: String(d), kind: 'sky', cls: 'sdk-btn', onTap: function () { judge(d); } }); })(d);
         /* 數字鍵：4×4 排成一排 4 顆（每顆大一點）；9×9 排成 3×3 */
-        var grid = kit.btnGrid(stage, items, N === 4 ? { cols: 4, h: 84, gap: 8 } : { cols: 3, h: 54, gap: 8 });
+        var grid = kit.btnGrid(stage, items, N === 4 ? { cols: 4, h: 84, gap: 8 } : { cols: 5, h: 62, gap: 8 });
         api.timer(ansMs(level), function () { judge(null); });
         if (level === 1 && kit.once('sudokuone.hint')) kit.hintOn(stage, grid.btns[q.answer - 1], { mode: 'tap', delay: 700, text: '請點擊數字' });
 
@@ -214,7 +229,7 @@
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1200 }); return; }
             kit.flash(stage, false, api.my);
             api.fail({
-                delay: 2500, lines: [
+                delay: REVEAL_FAIL_MS, lines: [
                     (v == null ? '時間到！' : '你選了 ' + v) + '，黃色那一格是 ' + q.answer,
                     '第 ' + (g.rowOf(q.target) + 1) + ' 排第 ' + (g.colOf(q.target) + 1) + ' 格；整個盤面的解答已填出'
                 ]
@@ -231,7 +246,7 @@
         mount: mount,
         score: SCORE,
         test: {
-            GEO4: GEO4, GEO9: GEO9, makeGeom: makeGeom, stageOf: stageOf, givensFor: givensFor, ansMs: ansMs, deepP: deepP, makeSolution: makeSolution, deduce: deduce, makePuzzle: makePuzzle, rating: rating,
+            boardMetrics: boardMetrics, BOARD_FRAC: BOARD_FRAC, REVEAL_FAIL_MS: REVEAL_FAIL_MS, GEO4: GEO4, GEO9: GEO9, makeGeom: makeGeom, stageOf: stageOf, givensFor: givensFor, ansMs: ansMs, deepP: deepP, makeSolution: makeSolution, deduce: deduce, makePuzzle: makePuzzle, rating: rating,
             FOUR_LEVELS: FOUR_LEVELS, RAMP9: RAMP9, GIVENS4: GIVENS4, GIVENS9: GIVENS9, ANS4_S: ANS4_S, ANS9_S: ANS9_S, MAX_LEVEL: MAX_LEVEL
         }
     };
