@@ -22,9 +22,9 @@
     var DICE_FIRST = 2, DICE_MAX = 16;          /* 第 1 關有幾顆骰子；最多幾顆（之後每關多 1 顆） */
     var CHANGED_STEPS = [[1, 1], [6, 2], [13, 3], [25, 4]];   /* [從第幾關起, 被換掉幾顆] */
     var COVER_MS = 3000;                        /* 蓋住的時間（毫秒，企劃指定 3 秒） */
-    var SHOW_BASE = 2000, SHOW_PER = 300;       /* 記憶顯示時間（毫秒）＝ (SHOW_BASE ＋ SHOW_PER × 骰子數) × 倍率 */
+    var SHOW_BASE = 2000, SHOW_PER = 500;       /* 記憶顯示時間（毫秒）＝ (SHOW_BASE ＋ SHOW_PER × 骰子數) × 倍率 */
     var SHOW_MUL = [1.0, 0.6];                  /* 倍率：第 1 關 → MUL_LEVELS 關 */
-    var ANS_BASE = 4000, ANS_PER = 600;         /* 作答限時（毫秒）＝ (ANS_BASE ＋ ANS_PER × 骰子數) × 倍率 */
+    var ANS_BASE = 4000, ANS_PER = 1000;         /* 作答限時（毫秒）＝ (ANS_BASE ＋ ANS_PER × 骰子數) × 倍率 */
     var ANS_MUL = [1.2, 0.8];
     var MUL_LEVELS = 30;                        /* 倍率幾關之後到頂 */
     var MAX_LEVEL = 60;
@@ -151,10 +151,12 @@
             if (i === 'ok') { kit.flash(stage, true, api.my); api.pass({ delay: 1500 }); return; }
             if (typeof i === 'number') dice[i].classList.add('dce-die--wrong');
             kit.flash(stage, false, api.my);
-            api.fail({ delay: 2600, lines: [
-                (i == null ? '時間到！' : '那一顆的點數沒有變') + '（被換掉的有 ' + q.changed.length + ' 顆）',
-                '被換掉的：' + q.changed.map(function (c) { return '第 ' + (c + 1) + ' 顆 ' + q.before[c] + ' → ' + q.after[c]; }).join('、')
-            ] });
+            api.fail({
+                delay: 2600, lines: [
+                    (i == null ? '時間到！' : '那一顆的點數沒有變') + '（被換掉的有 ' + q.changed.length + ' 顆）',
+                    '被換掉的：' + q.changed.map(function (c) { return '第 ' + (c + 1) + ' 顆 ' + q.before[c] + ' → ' + q.after[c]; }).join('、')
+                ]
+            });
         }
         api.solve = function () {
             /* 驗證用：把被換掉的全部點出來（必須等到進入作答階段） */

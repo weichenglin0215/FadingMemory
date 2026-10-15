@@ -19,6 +19,8 @@
       重量＝面積；上面的重量依接觸寬度分給它底下的各個方塊，作用點取「重心夾到那一段接觸範圍裡」的位置。
    4. 疊上去之後，整座塔從上往下逐塊檢查（因為新方塊可能把下面某一塊壓倒）。
    5. 頂到畫面最上緣（超過 ZONE_H）也算失敗。
+   6. 失敗動畫（V1.28 玩家意見）：失敗的那一塊（連同壓在它上面的）以「下方方塊互相碰撞的角落頂點」（checkTower 的 pivot）當旋轉中心，
+      先慢慢轉開（越轉越快）、轉過 TIP_ANGLE 度之後失去支撐、一邊繼續轉一邊往下掉（tipPose）。
    【難度（隨關卡線性）】前 2 關只有長方形；第 3 關起出現梯形（機率 0 → 30%）；
    第 6 關起出現三角形（5% → 25%）。方塊寬度＝畫面寬的 1/6～1/2，高度固定 BLOCK_H。
    ═══════════════════════════════════════════════════════════════════ */
@@ -42,6 +44,10 @@
     var PREVIEW_H = 84;                 /* 上方預覽區的高度（px） */
     var BAR_H = 56;                     /* 橫桿區高度（px） */
     var FALL_MS = 380;                  /* 方塊落下的時間 */
+    var TIP_MS = 1500;                  /* 失敗動畫（傾倒）的總時間 */
+    var TIP_SPLIT = 0.62;               /* 傾倒動畫前面多少比例是「繞著支點慢慢轉開」，後面是「失去支撐掉下去」 */
+    var TIP_ANGLE = 62;                 /* 繞著支點轉開的角度（度） */
+    var TIP_DROP = 240;                 /* 最後掉下去的距離（px） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 方塊面積（＝重量）：長方形 w×h、梯形 (底＋頂)／2×h、三角形 w×h／2 */
@@ -145,6 +151,14 @@
         var out = [], x;
         for (x = 0; x <= W - block.w; x += step || 2) if (evaluateDrop(tower, block, x, W, ZH).ok) out.push(x);
         return out;
+    }
+    /* 失敗動畫在進度 t（0～1）時的姿勢：先繞著「下方方塊的角落頂點」慢慢轉開（越轉越快，像重心不穩被壓著翻倒），
+       轉過一定角度之後才失去支撐、一邊繼續轉一邊往下掉。回傳 { angle（度，未乘方向）, dy（往下掉多少 px） } */
+    function tipPose(t) {
+        t = Math.max(0, Math.min(1, t));
+        if (t <= TIP_SPLIT) { var u = t / TIP_SPLIT; return { angle: TIP_ANGLE * u * u, dy: 0 }; }
+        var v = (t - TIP_SPLIT) / (1 - TIP_SPLIT);
+        return { angle: TIP_ANGLE + 38 * v * v, dy: TIP_DROP * v * v };
     }
     function rating(n) {
         if (n >= 30) return '重心大師！';
@@ -287,9 +301,11 @@
             var pv = res.fail ? res.fail.pivot : { x: x0 + block.w / 2, y: res.rest };
             var sign = res.fail ? res.fail.dir : (x0 + block.w / 2 < W / 2 ? -1 : 1);
             var px = pv.x, py = sy(pv.y);
-            my_tween(700, function (e) {
-                groups.forEach(function (g) { g.setAttribute('transform', 'rotate(' + (sign * 38 * e).toFixed(2) + ' ' + px + ' ' + py + ') translate(0 ' + (e * 40).toFixed(1) + ')'); });
-            }, kit.easeInQuad).then(function () {
+            /* 繞著支點（下方方塊互相碰撞的那個角落頂點）旋轉；掉下去的距離（dy）是在旋轉之後才加（世界座標往下），所以支點不會跑掉 */
+            my_tween(TIP_MS, function (e) {
+                var ps = tipPose(e);
+                groups.forEach(function (g) { g.setAttribute('transform', 'translate(0 ' + ps.dy.toFixed(1) + ') rotate(' + (sign * ps.angle).toFixed(2) + ' ' + px.toFixed(2) + ' ' + py.toFixed(2) + ')'); });
+            }, kit.linear).then(function () {
                 api.fail({ delay: 500, lines: [FAIL_TEXT[res.reason] || '失敗了', '塔上共 ' + tower.length + ' 塊'] });
             });
         }
@@ -317,7 +333,7 @@
         score: SCORE,
         test: {
             areaOf: areaOf, topAt: topAt, levelSet: levelSet, restLevel: restLevel, contactsAt: contactsAt, checkTower: checkTower,
-            evaluateDrop: evaluateDrop, makeBlock: makeBlock, stableSpots: stableSpots, BLOCK_H: BLOCK_H, EPS: EPS, MIN_CONTACT: MIN_CONTACT,
+            tipPose: tipPose, TIP_MS: TIP_MS, TIP_SPLIT: TIP_SPLIT, TIP_ANGLE: TIP_ANGLE, evaluateDrop: evaluateDrop, makeBlock: makeBlock, stableSpots: stableSpots, BLOCK_H: BLOCK_H, EPS: EPS, MIN_CONTACT: MIN_CONTACT,
             TRAP_TOP: TRAP_TOP, W_MIN_RATIO: W_MIN_RATIO, W_MAX_RATIO: W_MAX_RATIO, TRAP_FROM: TRAP_FROM, TRI_FROM: TRI_FROM,
             getTower: function () { return tower; }, setTower: function (t) { tower = t; }
         }

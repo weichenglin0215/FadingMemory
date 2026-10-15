@@ -164,6 +164,11 @@
     height: var(--btn-h-sm);
 }
 
+/* 「我有話要說」意見彈窗：「取消」「送出」並排（送出在右邊），按鈕高度降成 70%（V1.28 玩家意見） */
+.dlg--feedback .dlg__btns .btn {
+    height: calc(var(--btn-h) * 0.7);
+}
+
 /* 結算彈窗：內容置中（大數字、評語、說明行）；卡片底部的「我有話要說」小一點、放在所有按鈕下面 */
 .dlg--result .dlg__card {
     align-items: center;
@@ -253,7 +258,7 @@
 
 /* 多行輸入（我有話要說）：靠左對齊、字級小一點、可以輸入很多字 */
 .dlg-input--area {
-    height: 230px;
+    height: 460px;
     padding: var(--sp-3) var(--sp-4);
     font-size: var(--fs-sm);
     line-height: var(--lh-body);

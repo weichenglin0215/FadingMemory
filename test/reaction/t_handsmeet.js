@@ -26,4 +26,9 @@ for (let i = 0; i < 8000; i++) {
 // 人類反應偏差 0.1 秒的夾角：相對速度 150 度／秒 → 15 度；先抓節奏預判才拿得到小角度
 { const q = { d0: 100, rel: 150 }; ok(near(T.diffAt(q, 100 / 150 + 0.1), 15, 1e-6), '晚 0.1 秒、相對 150 度／秒 → 15 度'); }
 ok(T.rating(0.2) !== T.rating(1) && T.rating(1) !== T.rating(3) && T.rating(3) !== T.rating(8) && T.rating(8) !== T.rating(30), '評語分級');
+// V1.27：揭曉只顯示角度，不再有秒數說明與綠線
+{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_handsmeet.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction3.css'), 'utf8');
+  const body = src.slice(src.indexOf('function tapAtMs'), src.indexOf('kit.onTap(btn'));
+  ok(body.indexOf('早了') < 0 && body.indexOf('晚了') < 0 && body.indexOf('秒') < 0, '揭曉文字沒有任何秒數相關描述');
+  ok(src.indexOf('hm-ghost') < 0 && css.indexOf('.hm-ghost') < 0, '取消綠線'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

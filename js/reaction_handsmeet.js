@@ -8,7 +8,7 @@
    · 起始：短針在長針前方 d0 度（60～300），第一次重疊時間 ≥ FIRST_MIN 秒（不夠就多加整圈）。
    · 重疊時刻 t_n ＝ (d0 ＋ 360·n) ÷ (W1 − W2)；任何時刻的夾角是純函式，用事件的 timeStamp 判定。
    · 12 秒內沒按：這一回合作廢，自動重新開始（不算一次機會）。
-   · 揭曉：指針定格在按下的瞬間，寫「早了／晚了 X.XXXX 秒」與夾角。
+   · 揭曉：指針定格在按下的瞬間，只寫兩針的夾角（V1.28 玩家意見：不顯示任何跟秒數有關的說明，也取消綠線，把重點集中在角度差異）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -71,8 +71,6 @@
 
         var svg = kit.svg('svg', { 'class': 'hm-svg', viewBox: '0 0 472 560', width: 472, height: 560 }, stage);
         kit.svg('circle', { cx: CX, cy: CY, r: R, 'class': 'hm-dial' }, svg);
-        var ghost = kit.svg('g', { opacity: 0 }, svg);
-        var g1 = kit.svg('line', { x1: CX, y1: CY, x2: CX, y2: CY - LEN1, 'class': 'hm-ghost' }, ghost);
         var h2 = kit.svg('line', { x1: CX, y1: CY, x2: CX, y2: CY - LEN2, 'class': 'hm-hand2' }, svg);
         var h1 = kit.svg('line', { x1: CX, y1: CY, x2: CX, y2: CY - LEN1, 'class': 'hm-hand1' }, svg);
         kit.svg('circle', { cx: CX, cy: CY, r: 9, 'class': 'hm-pin' }, svg);
@@ -106,16 +104,13 @@
             if (locked || !started) return;
             locked = true; if (loop) loop.stop(); btn.disabled = true;
             Sfx.play('click');
-            var sec = ms / 1000, real = diffAt(q, sec), ts = nearestOverlap(q, sec), early = sec < ts;
+            var sec = ms / 1000, real = diffAt(q, sec);
             setHands(sec);
-            g1.setAttribute('transform', 'rotate(' + handAngle(q.th1, q.w1, ts).toFixed(2) + ' ' + CX + ' ' + CY + ')'); ghost.setAttribute('opacity', 1);
-            var off = Math.abs(sec - ts);
-            msg.textContent = '夾角 ' + real.toFixed(4) + ' 度　你' + (early ? '早了 ' : '晚了 ') + off.toFixed(4) + ' 秒';
+            msg.textContent = '兩針夾角 ' + real.toFixed(4) + ' 度';
             my.after(2200, function () {
                 api.finish(real, {
                     lines: [
                         '按下的瞬間，兩針夾角 ' + real.toFixed(4) + ' 度',
-                        '最近的一次重疊在第 ' + ts.toFixed(4) + ' 秒，你' + (early ? '早了 ' : '晚了 ') + off.toFixed(4) + ' 秒',
                         '只有一次機會，想拚更準就再挑戰一次'
                     ]
                 });

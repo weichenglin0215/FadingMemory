@@ -29,4 +29,6 @@ for (let k = 0; k < 3000; k++) {
 ok(minT >= T.TARGET_RANGE[0] && maxT <= T.TARGET_RANGE[1], '目標顏色每個頻道在 ' + T.TARGET_RANGE.join('～') + ' 之間：' + minT + '～' + maxT);
 // 六顆按鈕：三種頻道、增減各一
 ok(T.BUTTONS.length === 6 && ['r', 'g', 'b'].every(ch => T.BUTTONS.filter(b => b.ch === ch && b.dir === 1).length === 1 && T.BUTTONS.filter(b => b.ch === ch && b.dir === -1).length === 1), '紅綠藍各有 ＋ 與 －');
+// V1.27：兩個色塊靠攏後中間不能露出細黑線（右邊色塊往左多蓋 1px）
+{ const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction.css'), 'utf8'), i = css.indexOf('.mc-gap--closed+.mc-block'); ok(i > 0 && css.slice(i, i + 80).indexOf('margin-left: -1px') > 0, '縫關閉後右邊色塊多蓋 1px，不露細黑線'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

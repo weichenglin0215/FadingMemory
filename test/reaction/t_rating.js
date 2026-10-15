@@ -354,6 +354,17 @@ const DAY = 24 * 3600 * 1000;
   ['MF_submit_rating', 'MF_get_ratings', 'MF_get_overtaken'].forEach((n) => ok(fake.indexOf("name === '" + n + "'") >= 0, '假資料庫有模擬 ' + n));
 
   console.log = quietLog;
+  // V1.27：「我有話要說」彈窗的「取消」「送出」左右並排（送出在右邊），按鈕高度 70%
+  {
+    const rd = (p) => fs.readFileSync(path.resolve(__dirname, p), 'utf8');
+    const dlg = rd('../../js/dialog.js'), css = rd('../../css/dialog.css');
+    const i = dlg.indexOf('Dlg.feedback = function'), seg = dlg.slice(i, i + 2600);
+    ok(seg.indexOf('btnRow: true') > 0, '意見彈窗的按鈕改成並排（btnRow）');
+    ok(seg.indexOf("{ text: '取消', kind: 'line' }") > 0 && seg.indexOf("{ text: '送出', kind: 'primary'") > seg.indexOf("{ text: '取消', kind: 'line' }"), '取消在左、送出在右');
+    ok(seg.indexOf('var sendBtn = ctl.buttons[1]') > 0, '送出按鈕是第二顆');
+    const j = css.indexOf('.dlg--feedback .dlg__btns .btn');
+    ok(j > 0 && css.slice(j, j + 120).indexOf('calc(var(--btn-h) * 0.7)') > 0, '意見彈窗的按鈕高度 70%');
+  }
   say(bad ? 'FAILED ' + bad + ' / ' + total : 'ALL PASS (' + total + ' checks)');
   process.exitCode = bad ? 1 : 0;
 })().catch((e) => { console.log = quietLog; say('FAIL 例外', e && e.stack || e); process.exitCode = 1; });

@@ -18,9 +18,9 @@
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 25;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var SPEED = [20, 2];                        /* 漂移速度（像素／秒）：第 1 關 → 到頂 */
-    var TIME_S = 6;                             /* 作答限時（秒，企劃指定 6 秒） */
+    var TIME_S = 15;                             /* 作答限時（秒，企劃指定 6 秒） */
     var N_DOTS = 20;                            /* 圓點個數 */
     var DOT_R = 18;                             /* 圓點畫出來的半徑 */
     var HIT_R = 40;                             /* 命中半徑（比畫出來的大，手指好點） */
@@ -130,10 +130,12 @@
             tip.textContent = '那一顆每秒漂移 ' + q.speed.toFixed(4) + ' 像素，' + (t >= TIME_S ? '6 秒' : t.toFixed(4) + ' 秒') + '內漂移了 ' + moved.toFixed(4) + ' 像素';
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1700 }); return; }
             kit.flash(stage, false, api.my);
-            api.fail({ delay: 2600, lines: [
-                (i < 0 ? '時間到！' : '那一顆是靜止的') + '，在漂移的是第 ' + (q.mover + 1) + ' 顆（已標出）',
-                '它每秒漂移 ' + q.speed.toFixed(4) + ' 像素，' + t.toFixed(4) + ' 秒漂移了 ' + moved.toFixed(4) + ' 像素'
-            ] });
+            api.fail({
+                delay: 2600, lines: [
+                    (i < 0 ? '時間到！' : '那一顆是靜止的') + '，在漂移的是第 ' + (q.mover + 1) + ' 顆（已標出）',
+                    '它每秒漂移 ' + q.speed.toFixed(4) + ' 像素，' + t.toFixed(4) + ' 秒漂移了 ' + moved.toFixed(4) + ' 像素'
+                ]
+            });
         }
         api.solve = function () { judge(q.mover, (performance.now() - t0) / 1000); };
         api.wrong = function () { judge((q.mover + 1) % N_DOTS, (performance.now() - t0) / 1000); };

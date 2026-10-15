@@ -69,4 +69,8 @@ for (let i = 0; i < 4000; i++) {
   if (t != null) ok(/^\d+(\.\d+)?$/.test(t), '格式 ' + s + '→' + t);
 }
 ok(T.rating(2) !== T.rating(6) && T.rating(6) !== T.rating(15) && T.rating(15) !== T.rating(30) && T.rating(30) !== T.rating(45), '評語分級');
+// V1.27：裁判時中間符號換成真正的關係、答對綠色答錯紅色，整道等式不再整個變色
+ok(T.signOf(true) === '＝' && T.signOf(false) === '≠', '符號：相等＝「＝」、不相等＝「≠」');
+{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_isequal.js'), 'utf8');
+  ok(src.indexOf("sign.textContent = signOf(q.isEqual)") > 0 && src.indexOf("sign.classList.add(ok ? 'qz-ok' : 'qz-bad')") > 0 && src.indexOf("eq.classList.add(ok") < 0, '裁判時只有中間符號變色'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

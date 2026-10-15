@@ -26,12 +26,12 @@
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var FOUR_LEVELS = 6;                        /* 前幾關是 4×4（之後是 9×9）。設 0＝全部 9×9；設很大（例如 999）＝全部 4×4 */
+    var FOUR_LEVELS = 10;                        /* 前幾關是 4×4（之後是 9×9）。設 0＝全部 9×9；設很大（例如 999）＝全部 4×4 */
     var RAMP9 = 24;                             /* 9×9 的難度走幾關到頂（第 7 關起算第 1 個 9×9 關卡） */
     var DEEP_P = [0, 0.9];                      /* 出「要先推出別格、再推目標」這種題目的機率：階段的第 1 關 → 到頂 */
-    var GIVENS4 = [11, 5];                      /* 4×4：盤面上留下幾個提示數字（不含目標那格，共 15 格可留）：第 1 關 → 第 FOUR_LEVELS 關；留不下這麼少時，留到不能再拿為止 */
-    var GIVENS9 = [34, 12];                     /* 9×9：同上（共 80 格可留）：第 1 個 9×9 關卡 → 第 RAMP9 個 */
-    var ANS4_S = [20, 14], ANS9_S = [40, 24];   /* 作答限時（秒）：階段的第 1 關 → 到頂 */
+    var GIVENS4 = [12, 6];                      /* 4×4：盤面上留下幾個提示數字（不含目標那格，共 15 格可留）：第 1 關 → 第 FOUR_LEVELS 關；留不下這麼少時，留到不能再拿為止 */
+    var GIVENS9 = [64, 12];                     /* 9×9：同上（共 80 格可留）：第 1 個 9×9 關卡 → 第 RAMP9 個 */
+    var ANS4_S = [30, 120], ANS9_S = [120, 600];   /* 作答限時（秒）：階段的第 1 關 → 到頂 */
     var MAX_LEVEL = 60;
     var SLACK = 4;                              /* 提示個數離目標不超過這麼多就收題，否則多試幾次、用提示最少的那次 */
 
@@ -194,7 +194,7 @@
             else if (i === q.target) c.textContent = '？';
             board.appendChild(c); cells.push(c);
         }
-        var tip = h('div', { 'class': 'qz-note sdk-tip sdk-tip--n' + N, text: '黃色那一格是幾？（每一排、每一欄、每個 ' + B + '×' + B + ' 的宮，1～' + N + ' 各一個）' });
+        var tip = h('div', { 'class': 'qz-note sdk-tip sdk-tip--n' + N, text: '黃色那一格數字是哪個？' });
         stage.appendChild(board); stage.appendChild(tip);
         var items = [];
         for (var d = 1; d <= N; d++) (function (d) { items.push({ text: String(d), kind: 'sky', cls: 'sdk-btn', onTap: function () { judge(d); } }); })(d);
@@ -213,10 +213,12 @@
             cells[q.target].classList.add(ok ? 'sdk-cell--ok' : 'sdk-cell--bad');
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1200 }); return; }
             kit.flash(stage, false, api.my);
-            api.fail({ delay: 2500, lines: [
-                (v == null ? '時間到！' : '你選了 ' + v) + '，黃色那一格是 ' + q.answer,
-                '第 ' + (g.rowOf(q.target) + 1) + ' 排第 ' + (g.colOf(q.target) + 1) + ' 格；整個盤面的解答已填出'
-            ] });
+            api.fail({
+                delay: 2500, lines: [
+                    (v == null ? '時間到！' : '你選了 ' + v) + '，黃色那一格是 ' + q.answer,
+                    '第 ' + (g.rowOf(q.target) + 1) + ' 排第 ' + (g.colOf(q.target) + 1) + ' 格；整個盤面的解答已填出'
+                ]
+            });
         }
         api.solve = function () { judge(q.answer); };
         api.wrong = function () { judge(q.answer % N + 1); };
@@ -225,7 +227,7 @@
     var G = {
         id: ID,
         name: '數獨猜一格',
-        rule: '標準的數獨：**每一橫排、每一直排、每一個宮裡，數字都不重複**。前面的關卡是 4×4（四個 2×2 的宮，數字 1～4），第 7 關起變成更難的 9×9（九個 3×3 的宮，數字 1～9）。盤面上黃色的那一格，**只要猜出它是幾就好**。猜錯或來不及就結束，看你能過幾關。越後面，提示數字越少，要多推理幾步！',
+        rule: '標準的數獨：**每一橫排、每一直排、每一個宮裡，數字都不重複**。前面的關卡是 4×4（四個 2×2 的宮，數字 1～4），第 11 關起變成更難的 9×9（九個 3×3 的宮，數字 1～9）。盤面上黃色的那一格，**只要猜出它是幾就好**。猜錯或來不及就結束，看你能過幾關。越後面，提示數字越少，要多推理幾步！',
         mount: mount,
         score: SCORE,
         test: {

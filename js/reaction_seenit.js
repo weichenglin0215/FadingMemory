@@ -1,176 +1,139 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_seenit.js — 秒反應・這個看過嗎
-   圖案一張一張出現，每張判斷「看過」還是「新的」；新的常常是看過圖案的「近親」（同款、不同顏色或不同記號）。
-   連續題、3 條命（答錯或逾時扣一條），成績＝累計答對題數。
+   一關一個圖案（水果、蔬菜、點心的 emoji＋中文名稱），判斷它是「新的」還是「在前面的關卡出現過了」。
+   每一關陸續出現新圖案，中間夾雜著已經看過的圖案。關卡制：答錯或逾時就結束（沒有「命」），成績＝通過幾關。
    ───────────────────────────────────────────────────────────────────
-   · 圖案庫：BASES 種基本形狀 × 3 種顏色 × 2 種記號（無／中心圓點）＝ 全部不同的圖案；
-     近親＝同一個基本形狀、顏色或記號不同。
-   · 前 STUDY 張一定是新的（暖身，只讓你看，不計分）。之後各一半是「新的」「看過」：
-       看過 ＝ 先前出現過的圖案，距離上次出現 2～12 張，同一圖案最多出現 3 次；
-       新的 ＝ 一半是「近親」（比例 NEAR 30%→80%，隨題號線性），一半是全新的基本形狀。
-   · 每題限時 TIME_S 2.5→1.0 秒（線性，RAMP_LEVELS 題走完）。
-   · 答錯時並排顯示「現在看到的」與「之前看過的」，讓你看出差在哪裡。
+   · V1.28（玩家意見）改版：
+       - 不再先出現幾個圖案讓你記住：第 1 關的圖案出現時，「看過」按鈕先無法使用（只能按「新的」），從第 2 關起才考你有沒有看過；
+       - 圖案改成 59 種食物 emoji（ITEMS）加上中文名稱；
+       - 一次答錯就失敗，刪除三條「命」；
+       - 每一關的限時多 1 秒：第 N 關 ＝ TIME0_S ＋ (N − 1) × TIME_STEP_S 秒（要記的圖案越來越多）。
+   · 每一關：有 P_OLD（50%）的機率是「看過」（從前面關卡出現過的圖案裡隨機挑，同一圖案最多出現 MAX_REPEAT 次），
+     其餘是「新的」（還沒出現過的圖案）；新圖案用完了就一定是「看過」。同一種答案最多連續 SAME_MAX 關。
+   · 答錯時並排顯示「現在這個」與它出現過的那一關。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
 
     var ID = 'seenit';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '答對題數', min: 1, max: 120 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '通過關數', min: 1, max: 120 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var STUDY = 4;                              /* 前幾張只讓你看（一定是新的，不計分） */
-    var STUDY_MS = 1200;                        /* 暖身每張顯示多久 */
-    var RAMP_LEVELS = 60;                       /* 第幾題之後難度到頂 */
-    var MAX_LEVEL = 100;                        /* 最後一題（包含暖身） */
-    var TIME_S = [2.5, 1.0];                    /* 每題限時 */
-    var NEAR = [0.3, 0.8];                      /* 「新的」裡面是近親的比例 */
-    var DIST = [2, 12];                         /* 「看過」的圖案距離上次出現幾張 */
-    var MAX_REPEAT = 3, LIVES = 3;
-    var HUES = [8, 140, 215];                   /* 三種顏色（色相） */
-    var BASES = ['circle', 'square', 'triangle', 'star', 'heart', 'moon', 'drop', 'leaf', 'flower', 'cross', 'hexagon', 'diamond', 'arrow', 'cloud', 'house', 'fish'];
+    var MAX_LEVEL = 60;                         /* 最後一關（全破） */
+    var TIME0_S = 3;                            /* 第 1 關的限時（秒） */
+    var TIME_STEP_S = 1;                        /* 每多一關，限時多幾秒 */
+    var P_OLD = 0.5;                            /* 一關是「看過」的機率 */
+    var MAX_REPEAT = 3;                         /* 同一個圖案最多出現幾次 */
+    var SAME_MAX = 3;                           /* 答案（看過／新的）最多連續幾關一樣 */
+    /* 圖案：[emoji 的 Unicode 碼位, 中文名稱]（用碼位寫，避免檔案編碼讓 emoji 變形） */
+    var ITEMS = [
+        [0x1F95D, '奇異果'], [0x1F965, '椰子'], [0x1F347, '葡萄'], [0x1F348, '哈密瓜'], [0x1F349, '西瓜'], [0x1F34A, '橘子'], [0x1F34B, '檸檬'],
+        [0x1F34C, '香蕉'], [0x1F34D, '鳳梨'], [0x1F96D, '芒果'], [0x1F34E, '蘋果'], [0x1F34F, '青蘋果'], [0x1F350, '梨子'], [0x1F351, '桃子'],
+        [0x1F352, '櫻桃'], [0x1F353, '草莓'], [0x1F345, '番茄'], [0x1F346, '茄子'], [0x1F33D, '玉米'], [0x1F336, '辣椒'], [0x1F344, '香菇'],
+        [0x1F951, '酪梨'], [0x1F952, '小黃瓜'], [0x1F96C, '青菜'], [0x1F966, '花椰菜'], [0x1F954, '馬鈴薯'], [0x1F9C4, '大蒜'], [0x1F9C5, '洋蔥'],
+        [0x1F955, '紅蘿蔔'], [0x1F330, '栗子'], [0x1F355, '披薩'], [0x1F354, '漢堡'], [0x1F35F, '薯條'], [0x1F32D, '熱狗'], [0x1F37F, '爆米花'],
+        [0x1F950, '可頌'], [0x1F968, '蝴蝶脆餅'], [0x1F9C0, '起司'], [0x1F356, '肉塊'], [0x1F357, '雞腿'], [0x1F969, '牛排'], [0x1F358, '米果'],
+        [0x1F359, '飯糰'], [0x1F35C, '拉麵'], [0x1F363, '壽司'], [0x1F364, '炸蝦'], [0x1F963, '麥片'], [0x1F366, '霜淇淋'], [0x1F367, '剉冰'],
+        [0x1F369, '甜甜圈'], [0x1F370, '蛋糕'], [0x1F36C, '糖果'], [0x1F36D, '棒棒糖'], [0x1F361, '丸子'], [0x1F36E, '布丁'], [0x1F377, '紅酒'],
+        [0x1F378, '雞尾酒'], [0x1F379, '熱帶飲料'], [0x1F37A, '啤酒']
+    ];
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    var VARIANTS = HUES.length * 2;
-    function baseOf(id) { return Math.floor(id / VARIANTS); }
-    function colorOf(id) { return Math.floor((id % VARIANTS) / 2); }
-    function markOf(id) { return id % 2; }
-    function itemCount() { return BASES.length * VARIANTS; }
-    function timeMs(trial) { return Math.round(kit.ramp(trial, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
-    function nearP(trial) { return kit.ramp(trial, NEAR[0], NEAR[1], RAMP_LEVELS); }
-    /* 圖案的 SVG 內容（100×100） */
-    function shapeMarkup(base) {
-        switch (base) {
-            case 'circle': return '<circle cx="50" cy="50" r="40"/>';
-            case 'square': return '<rect x="12" y="12" width="76" height="76" rx="6"/>';
-            case 'triangle': return '<polygon points="50,8 93,88 7,88"/>';
-            case 'star': return '<polygon points="50,6 61,38 95,38 67,58 78,92 50,71 22,92 33,58 5,38 39,38"/>';
-            case 'heart': return '<path d="M50 86 C8 56 8 18 32 16 C42 15 48 22 50 29 C52 22 58 15 68 16 C92 18 92 56 50 86 Z"/>';
-            case 'moon': return '<path d="M62 8 A42 42 0 1 0 62 92 A32 32 0 1 1 62 8 Z"/>';
-            case 'drop': return '<path d="M50 6 C50 6 16 46 16 64 C16 82 31 94 50 94 C69 94 84 82 84 64 C84 46 50 6 50 6 Z"/>';
-            case 'leaf': return '<path d="M12 88 C12 40 40 12 90 10 C90 60 62 90 12 88 Z"/>';
-            case 'flower': return '<circle cx="50" cy="24" r="19"/><circle cx="76" cy="43" r="19"/><circle cx="66" cy="73" r="19"/><circle cx="34" cy="73" r="19"/><circle cx="24" cy="43" r="19"/><circle cx="50" cy="50" r="14" class="si-eye"/>';
-            case 'cross': return '<polygon points="36,8 64,8 64,36 92,36 92,64 64,64 64,92 36,92 36,64 8,64 8,36 36,36"/>';
-            case 'hexagon': return '<polygon points="50,6 90,28 90,72 50,94 10,72 10,28"/>';
-            case 'diamond': return '<polygon points="50,6 94,50 50,94 6,50"/>';
-            case 'arrow': return '<polygon points="8,36 56,36 56,14 94,50 56,86 56,64 8,64"/>';
-            case 'cloud': return '<circle cx="32" cy="58" r="22"/><circle cx="56" cy="44" r="26"/><circle cx="76" cy="62" r="18"/><rect x="26" y="60" width="52" height="20"/>';
-            case 'house': return '<polygon points="50,8 94,46 82,46 82,90 18,90 18,46 6,46"/>';
-            default: return '<ellipse cx="44" cy="50" rx="34" ry="24"/><polygon points="72,50 94,26 94,74"/><circle cx="30" cy="44" r="4" class="si-eye"/>';
-        }
-    }
-    function itemSvg(id, size) {
-        var hue = HUES[colorOf(id)], fill = 'hsl(' + hue + ',62%,56%)';
-        var mark = markOf(id) ? '<circle cx="50" cy="50" r="9" fill="#FFFDF3" stroke="#4A3B1E" stroke-width="3"/>' : '';
-        return '<svg viewBox="0 0 100 100" width="' + (size || 220) + '" height="' + (size || 220) + '" xmlns="http://www.w3.org/2000/svg"><g fill="' + fill + '" stroke="#4A3B1E" stroke-width="3.5" stroke-linejoin="round">' + shapeMarkup(BASES[baseOf(id)]) + '</g>' + mark + '</svg>';
-    }
-    /* 這個圖案跟哪個圖案「差在哪」（兩個是近親時用）：回傳說明文字 */
-    function diffText(a, b) {
-        if (baseOf(a) !== baseOf(b)) return '兩個是不同的形狀';
-        var d = [];
-        if (colorOf(a) !== colorOf(b)) d.push('顏色不同');
-        if (markOf(a) !== markOf(b)) d.push('中心的圓點' + (markOf(a) ? '多了' : '少了'));
-        return d.join('、');
-    }
-    /* 下一張：hist 是目前為止出現過的圖案（依序）。回傳 { item, kind: 'study'|'old'|'new', rel（近親：之前看過的那一個，或 null）, seenAt（看過：上次出現的位置，或 −1）} */
-    function nextTrial(hist, rand) {
+    function itemCount() { return ITEMS.length; }
+    function emojiOf(id) { return String.fromCodePoint(ITEMS[id][0]); }
+    function nameOf(id) { return ITEMS[id][1]; }
+    /* 第 level 關的限時（毫秒）：每多一關多 TIME_STEP_S 秒 */
+    function timeMs(level) { return Math.round((TIME0_S + (level - 1) * TIME_STEP_S) * 1000); }
+    /* 下一關：hist 是目前為止每一關出現的圖案（依序）。回傳 { item, kind: 'new'|'old', seenAt（看過：上次出現的關，從 1 起算；新的：0）, level } */
+    function nextTrial(hist, rand, kinds) {
         rand = rand || Math.random;
-        var idx = hist.length, trial = idx - STUDY + 1;
-        var seen = {}; hist.forEach(function (it, i) { seen[it] = { last: i, n: (seen[it] ? seen[it].n : 0) + 1 }; });
-        var seenBases = {}; hist.forEach(function (it) { seenBases[baseOf(it)] = true; });
-        function freshBase() {
-            var pool = []; for (var b = 0; b < BASES.length; b++) if (!seenBases[b]) for (var v = 0; v < VARIANTS; v++) pool.push(b * VARIANTS + v);
-            return pool.length ? kit.pick(pool, rand) : null;
+        var idx = hist.length, seen = {}, i;
+        hist.forEach(function (it, k) { seen[it] = { last: k, n: (seen[it] ? seen[it].n : 0) + 1 }; });
+        var fresh = [], olds = [];
+        for (i = 0; i < ITEMS.length; i++) {
+            if (!seen[i]) fresh.push(i);
+            else if (seen[i].n < MAX_REPEAT) olds.push(i);
         }
-        if (idx < STUDY) { var f = freshBase(); return { item: f, kind: 'study', rel: null, seenAt: -1 }; }
-        if (rand() < 0.5) {
-            var olds = Object.keys(seen).map(Number).filter(function (it) { var d = idx - seen[it].last; return d >= DIST[0] && d <= DIST[1] && seen[it].n < MAX_REPEAT; });
-            if (olds.length) { var o = kit.pick(olds, rand); return { item: o, kind: 'old', rel: null, seenAt: seen[o].last }; }
+        if (!olds.length && !fresh.length) for (i = 0; i < ITEMS.length; i++) olds.push(i);          /* 極端情況：全部都滿 3 次了，放寬 */
+        var kind;
+        if (idx === 0 || !olds.length) kind = 'new';                          /* 第 1 關一定是新的 */
+        else if (!fresh.length) kind = 'old';                                  /* 新圖案用完了 */
+        else {
+            kind = rand() < P_OLD ? 'old' : 'new';
+            var k = (kinds || []).length;
+            if (k >= SAME_MAX) {                                               /* 同一種答案不能連續太多關 */
+                var last = kinds[k - 1], same = true;
+                for (var j = 1; j <= SAME_MAX; j++) if (kinds[k - j] !== last) { same = false; break; }
+                if (same) kind = last === 'old' ? 'new' : 'old';
+            }
         }
-        if (rand() < nearP(trial)) {
-            var cands = [];
-            Object.keys(seen).map(Number).forEach(function (it) {
-                for (var v = 0; v < VARIANTS; v++) { var c = baseOf(it) * VARIANTS + v; if (!seen[c]) cands.push({ item: c, rel: it }); }
-            });
-            if (cands.length) { var cc = kit.pick(cands, rand); return { item: cc.item, kind: 'new', rel: cc.rel, seenAt: -1 }; }
-        }
-        var fb = freshBase();
-        if (fb == null) { var any = []; for (var i = 0; i < itemCount(); i++) if (!seen[i]) any.push(i); fb = any.length ? kit.pick(any, rand) : kit.randInt(0, itemCount() - 1, rand); }
-        return { item: fb, kind: seen[fb] ? 'old' : 'new', rel: null, seenAt: seen[fb] ? seen[fb].last : -1 };
+        if (kind === 'old') { var o = kit.pick(olds, rand); return { item: o, kind: 'old', seenAt: seen[o].last + 1, level: idx + 1 }; }
+        return { item: kit.pick(fresh, rand), kind: 'new', seenAt: 0, level: idx + 1 };
     }
     function rating(n) {
-        if (n >= 60) return '過目不忘！';
-        if (n >= 35) return '高手！';
-        if (n >= 18) return '不錯喔！';
-        if (n >= 8) return '再接再厲！';
-        return '多留意細節，再來一次！';
+        if (n >= 40) return '過目不忘！';
+        if (n >= 25) return '高手！';
+        if (n >= 14) return '不錯喔！';
+        if (n >= 6) return '再接再厲！';
+        return '多留意前面出現過什麼，再來一次！';
     }
 
     function mount(root, ctx) {
-        var hist = [];
+        /* V1.28 起這個看過嗎改版（不再有暖身、沒有命、emoji 圖案、每關限時 +1 秒），舊版的最佳紀錄不能比：第一次進來清掉（只清一次） */
+        Reaction.migrateBest(ID, function () { return null; }, '.v128');
+        var hist = [], kinds = [];
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, lives: LIVES, goodAt: 8, resume: false,
-            head: function (lv, S) { return lv <= STUDY ? '先記住這些圖案' : '第 ' + S.cleared + ' 題答對'; },
-            numText: function (v) { return v + ' 題'; },
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 8, resume: false,
+            numText: function (v) { return v + ' 關'; },
             rating: rating,
-            lines: function (S) { return ['累計答對 ' + S.cleared + ' 題']; },
-            setup: function (api) { if (api.level === 1) hist.length = 0; setup(api, hist); }
+            lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
+            setup: function (api) { if (api.level === 1) { hist.length = 0; kinds.length = 0; } setup(api, hist, kinds); }
         });
     }
 
-    function setup(api, hist) {
+    function setup(api, hist, kinds) {
         var stage = api.stage, level = api.level;
-        var tr = nextTrial(hist, api.rand), trial = level - STUDY;
-        hist.push(tr.item);
+        var tr = nextTrial(hist, api.rand, kinds);
+        hist.push(tr.item); kinds.push(tr.kind);
         api.info = tr;
-        console.log('[這個看過嗎] 第 ' + level + ' 張：圖案 ' + tr.item + '（' + BASES[baseOf(tr.item)] + '，顏色 ' + colorOf(tr.item) + '，記號 ' + markOf(tr.item) + '）→ ' + (tr.kind === 'study' ? '暖身' : (tr.kind === 'old' ? '看過（第 ' + (tr.seenAt + 1) + ' 張）' : '新的' + (tr.rel != null ? '（近親：' + tr.rel + '）' : ''))) + (trial > 0 ? '；限時 ' + timeMs(trial) + ' ms' : ''));
+        console.log('[這個看過嗎] 第 ' + level + ' 關：' + nameOf(tr.item) + '（' + (tr.kind === 'old' ? '看過，上次在第 ' + tr.seenAt + ' 關' : '新的') + '）；限時 ' + timeMs(level) + ' ms');
 
-        var pic = h('div', { 'class': 'si-pic', html: itemSvg(tr.item, 220) });
-        var info = h('div', { 'class': 'si-info' });
-        stage.appendChild(pic); stage.appendChild(info);
-        if (tr.kind === 'study') {
-            info.textContent = '先記住這個圖案（' + level + ' / ' + STUDY + '）';
-            api.skip(STUDY_MS);
-            return;
-        }
+        var pic = h('div', { 'class': 'si-pic', text: emojiOf(tr.item) });
+        var name = h('div', { 'class': 'si-name', text: nameOf(tr.item) });
+        var info = h('div', { 'class': 'si-info', text: level === 1 ? '第一個圖案，一定是新的' : '這個圖案在前面的關卡出現過嗎？' });
+        stage.appendChild(pic); stage.appendChild(name); stage.appendChild(info);
         var bOld = h('button', { 'class': 'btn btn--go', text: '看過' });
         var bNew = h('button', { 'class': 'btn btn--primary', text: '新的' });
+        if (level === 1) bOld.disabled = true;                                 /* 第 1 關還沒有看過的圖案，只能按「新的」 */
         stage.appendChild(h('div', { 'class': 'rx-btnrow' }, [bNew, bOld]));
-        api.timer(timeMs(trial), function () { judge(null); });
+        api.timer(timeMs(level), function () { judge(null); });
+        if (level === 1 && kit.once('seenit.hint')) kit.hintOn(stage, bNew, { mode: 'tap', delay: 500, text: '第一個圖案一定是新的' });
 
         function judge(sayOld) {
             if (api.over) return;
+            if (sayOld === true && level === 1) return;                          /* 第 1 關的「看過」按鈕無法使用 */
+            bOld.disabled = bNew.disabled = true;
             var isOld = tr.kind === 'old';
             if (sayOld === isOld) { pic.classList.add('si-pic--ok'); api.pass({ delay: 300 }); return; }
             pic.classList.add('si-pic--bad');
-            var why = sayOld == null ? '時間到！' : (isOld ? '這個圖案剛才出現過' : '這是新的圖案');
-            var lines = [why];
-            if (!isOld && tr.rel != null) lines.push('之前看過的是它的「近親」：' + diffText(tr.item, tr.rel));
-            var left = api.lose({ lines: lines });
-            /* 並排顯示「現在看到的」與「之前看過的」，停一下再接下一題 */
-            var other = isOld ? tr.item : tr.rel;
-            info.textContent = why + (!isOld && tr.rel != null ? '（' + diffText(tr.item, tr.rel) + '）' : '');
-            if (other != null) {
-                stage.appendChild(h('div', { 'class': 'si-cmp' }, [
-                    h('div', { 'class': 'si-cmp__c' }, [h('div', { 'class': 'si-cmp__t', text: '現在看到的' }), h('div', { html: itemSvg(tr.item, 130) })]),
-                    h('div', { 'class': 'si-cmp__c' }, [h('div', { 'class': 'si-cmp__t', text: '之前看過的' }), h('div', { html: itemSvg(other, 130) })])
-                ]));
-            }
-            if (left > 0) api.skip(1500);
+            var why = sayOld == null ? '時間到！' : (isOld ? '這個圖案之前出現過' : '這是新的圖案');
+            info.textContent = why + (isOld ? '（第 ' + tr.seenAt + ' 關）' : '');
+            api.fail({ delay: 1800, lines: [why + '：' + emojiOf(tr.item) + ' ' + nameOf(tr.item), isOld ? '它上次出現在第 ' + tr.seenAt + ' 關' : '前面的關卡沒有出現過它'] });
         }
         kit.onTap(bOld, function () { judge(true); });
         kit.onTap(bNew, function () { judge(false); });
         api.solve = function () { judge(tr.kind === 'old'); };
-        api.wrong = function () { judge(tr.kind !== 'old'); };
+        api.wrong = function () { judge(level === 1 ? null : tr.kind !== 'old'); };
     }
 
     var G = {
         id: ID,
         name: '這個看過嗎',
-        rule: '圖案一張一張出現。**判斷這個圖案剛才「看過」還是「新的」**。小心：新的圖案常常是看過圖案的近親，只差顏色或中心的圓點。答錯或來不及扣一條命，有三條命，看你能累計答對幾題。**前四張只讓你記住，不算分**。',
+        rule: '每一關出現一個食物圖案和名稱。**判斷它是「新的」，還是前面的關卡「看過」了**。新圖案和看過的圖案會混在一起出現。**第 1 關一定是新的**，只能按「新的」，從第 2 關起才考你看過沒有。**答錯或來不及就結束**，每一關的限時比上一關多 1 秒，看你能撐到第幾關。',
         mount: mount,
         score: SCORE,
-        test: { baseOf: baseOf, colorOf: colorOf, markOf: markOf, itemCount: itemCount, timeMs: timeMs, nearP: nearP, shapeMarkup: shapeMarkup, itemSvg: itemSvg, diffText: diffText, nextTrial: nextTrial, rating: rating, BASES: BASES, STUDY: STUDY, DIST: DIST, MAX_REPEAT: MAX_REPEAT, RAMP_LEVELS: RAMP_LEVELS, MAX_LEVEL: MAX_LEVEL, LIVES: LIVES, VARIANTS: VARIANTS, NEAR: NEAR, TIME_S: TIME_S }
+        test: { itemCount: itemCount, emojiOf: emojiOf, nameOf: nameOf, timeMs: timeMs, nextTrial: nextTrial, rating: rating, ITEMS: ITEMS, MAX_REPEAT: MAX_REPEAT, SAME_MAX: SAME_MAX, MAX_LEVEL: MAX_LEVEL, P_OLD: P_OLD, TIME0_S: TIME0_S, TIME_STEP_S: TIME_STEP_S }
     };
     Reaction.register(G);
 })();

@@ -1,15 +1,20 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_ghostleg.js — 秒反應・鬼腳圖
-   台灣童玩「阿彌陀佛」鬼腳圖：上方 5 個起點、下方 5 個終點，系統指定一個起點（橘色發亮），
-   手指從那裡沿著線往下描，遇到橫線就轉過去，一路描到最下面。關卡制，成績＝通過關數。
+   台灣童玩「阿彌陀佛」鬼腳圖：5 條直線、一堆橫線；上方有一個「起點」、下方有一個「終點」（都是綠底黑字），
+   但照著現有的橫線走，從起點走不到終點。玩家要「畫上一條橫線」，讓起點接到終點。關卡制，成績＝通過關數。
    ───────────────────────────────────────────────────────────────────
+   · V1.28（玩家意見）整個改玩法（以前是手指沿著線描一遍）：
+       - 題目一開始就標出起點與終點（綠底黑字），現有的線走不到終點；
+       - 玩家用手指先按住某一條直線，再往左或往右拖到相鄰的直線，就畫上一條很粗的藍色橫線
+         （從按下的位置畫到隔壁那條直線；只有一次機會；拖到一半放開＝取消，可以重畫）；
+       - 畫好之後開始「評審動畫」：從起點開始畫出一條綠色粗虛線，經過每個轉折點，看看最後能不能抵達終點，抵達就過關；
+       - 操作提示改成鉛筆圖示畫出一條藍色水平橫線（取消手指圖示）。
    · 5 條直線 × ROWS 層；橫線連接相鄰兩條直線，同一層的橫線不可相鄰（不然路徑不明確）；
-     橫線總數 RUNGS 6→30（線性）。
-   · 正確路徑由程式模擬（遇到橫線就轉）；手指離正確路徑超過 TOL px 就算走偏、當關失敗；
-     放開手指＝放棄；描到終點才過關。
-   · 「遮」：橫線很細、顏色接近直線，對比隨關卡降低（RUNG_ALPHA 0.9→0.55）；
-     另有 FAKES 條「假橫線」（只有半段、不連到鄰線）當干擾，數量 0→8。
-   · 起點盡量選「終點和起點不同欄」的（不會直直走到底）。限時 TIME_S 30→18 秒。
+     現有橫線總數 RUNGS 4→24（線性）。玩家畫的橫線會貼齊到最近的一層（snapRow），那一層的那個位置要是空的（canPlace）。
+   · 出題（makeLevel）：先隨機放現有橫線、隨機選起點；照現有橫線走會到 end0；再窮舉「玩家能畫的每一條橫線」會走到哪裡，
+     從「不是 end0 的終點」裡挑一個當目標，而且「畫哪裡才對」的位置數在 1～MAX_SOL 之間（第 1 關可以多一點、越後面越少，
+     只有少數幾種畫法才對）。
+   · 限時 TIME_S 40→25 秒。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -22,20 +27,23 @@
     var RAMP_LEVELS = 15;                       /* 幾關之後難度到頂（也是最後一關） */
     var COLS = 5, ROWS = 16;                    /* 直線數、層數 */
     var X0 = 52, DX = 92, Y_TOP = 76, Y_BOT = 520;   /* 第 1 條直線的 x、直線間距、上下端 y（舞台座標） */
-    var RUNGS = [6, 30];                        /* 橫線數：第 1 關 → 到頂 */
-    var FAKES = [0, 8];                         /* 假橫線數 */
-    var RUNG_ALPHA = [0.9, 0.55];               /* 橫線的不透明度（越低越難看見） */
-    var TIME_S = [30, 18];                      /* 每關限時（秒） */
-    var TOL = 36;                               /* 手指離正確路徑多遠算走偏（px） */
-    var START_R = 50;                           /* 要在起點多近的地方按下 */
+    var RUNGS = [4, 24];                        /* 現有橫線數：第 1 關 → 到頂 */
+    var MAX_SOL = [8, 2];                       /* 「畫哪裡才對」的位置數上限：第 1 關 → 到頂（越後面越少種畫法） */
+    var TIME_S = [40, 25];                      /* 每關限時（秒） */
+    var TOUCH_X = 30;                           /* 手指按在直線的左右多遠以內，算按到那條直線（px） */
+    var DRAG_MIN = 14;                          /* 往左右拖超過多遠，才決定要往哪邊畫（px） */
+    var JOIN_FRAC = 0.8;                        /* 拖到隔壁直線的幾成距離，就算接上了 */
+    var ROUTE_MS = [1500, 3200];                /* 評審動畫（畫出綠色虛線）的時間範圍 */
+    var HOLD_MS = 1500;                         /* 動畫畫完後停多久才進下一關／結算 */
     var LABELS = ['甲', '乙', '丙', '丁', '戊'];
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function colX(c) { return X0 + c * DX; }
     function rowY(r) { return Y_TOP + (r + 0.5) * (Y_BOT - Y_TOP) / ROWS; }
+    /* y 座標最近的一層（0～ROWS−1） */
+    function snapRow(y) { return kit.clamp(Math.round((y - Y_TOP) * ROWS / (Y_BOT - Y_TOP) - 0.5), 0, ROWS - 1); }
     function rungCount(level) { return Math.round(kit.ramp(level, RUNGS[0], RUNGS[1], RAMP_LEVELS)); }
-    function fakeCount(level) { return Math.round(kit.ramp(level, FAKES[0], FAKES[1], RAMP_LEVELS)); }
-    function alphaAt(level) { return kit.ramp(level, RUNG_ALPHA[0], RUNG_ALPHA[1], RAMP_LEVELS); }
+    function maxSolAt(level) { return Math.max(1, Math.round(kit.ramp(level, MAX_SOL[0], MAX_SOL[1], RAMP_LEVELS))); }
     function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
     /* 橫線集合 → 查詢用的表 */
     function rungSet(rungs) { var s = {}; rungs.forEach(function (g) { s[g.row + ',' + g.col] = true; }); return s; }
@@ -49,6 +57,12 @@
         }
         route.push({ x: colX(col), y: Y_BOT });
         return { end: col, route: route };
+    }
+    /* 玩家能不能在第 row 層、第 col 條與第 col+1 條直線之間畫一條橫線：位置要在範圍內，而且同一層跟它重疊或相鄰（左右緊鄰）的位置都沒有橫線 */
+    function canPlace(rungs, row, col) {
+        if (row < 0 || row >= ROWS || col < 0 || col > COLS - 2) return false;
+        var s = rungSet(rungs);
+        return !s[row + ',' + col] && !s[row + ',' + (col - 1)] && !s[row + ',' + (col + 1)];
     }
     /* 產生橫線：n 條，同一層不相鄰，回傳 [{row, col}]（col 是左邊那條直線的欄，0～COLS−2）。
        做法：先把 n 條分配到各層（每層最多 2 條），再在每一層挑不相鄰的位置，所以最多可以放 2×ROWS 條 */
@@ -68,63 +82,69 @@
         });
         return rungs;
     }
-    /* 假橫線：只有半段（從某條直線伸出去 40% 的間距），所在層在那條直線上沒有真橫線 */
-    function makeFakes(n, rungs, rand) {
-        rand = rand || Math.random;
-        var s = rungSet(rungs), out = [], tries = 0;
-        while (out.length < n && tries++ < 3000) {
-            var row = kit.randInt(0, ROWS - 1, rand), col = kit.randInt(0, COLS - 1, rand), dir = rand() < 0.5 ? 1 : -1;
-            if (col + dir < 0 || col + dir > COLS - 1) continue;
-            /* 這一層、這條直線的兩側都沒有真橫線（不然會跟真橫線疊在一起） */
-            if (s[row + ',' + col] || s[row + ',' + (col - 1)]) continue;
-            if (out.some(function (f) { return f.row === row && f.col === col; })) continue;
-            out.push({ row: row, col: col, dir: dir });
+    /* 玩家能畫的每一條橫線（row, col），以及畫上去之後從 start 走到哪一欄 */
+    function placements(rungs, start) {
+        var out = [];
+        for (var r = 0; r < ROWS; r++) for (var c = 0; c <= COLS - 2; c++) {
+            if (!canPlace(rungs, r, c)) continue;
+            out.push({ row: r, col: c, end: follow(rungs.concat([{ row: r, col: c }]), start).end });
         }
         return out;
     }
-    /* 出題：回傳 { rungs, fakes, start, end, route } */
+    /* 出題：回傳 { rungs, start, target（終點欄）, end0（現有橫線走到的欄）, solutions: [{row, col}] }。
+       target ≠ end0（現有的線走不到終點）；畫哪裡才對的位置數在 1～maxSolAt(level) 之間；盡量多試幾次，不行就放寬到任何有解的目標 */
     function makeLevel(level, rand) {
         rand = rand || Math.random;
-        var rungs, cand, all;
-        for (var tries = 0; tries < 60; tries++) {
-            rungs = makeRungs(rungCount(level), rand); cand = []; all = [];
-            for (var s0 = 0; s0 < COLS; s0++) { all.push(s0); if (follow(rungs, s0).end !== s0) cand.push(s0); }
-            if (cand.length) break;                 /* 橫線兩兩抵銷、每個起點都直走到底的盤面不要 */
+        var limit = maxSolAt(level), best = null;
+        for (var tries = 0; tries < 400; tries++) {
+            var rungs = makeRungs(rungCount(level), rand), start = kit.randInt(0, COLS - 1, rand), f = follow(rungs, start);
+            var pl = placements(rungs, start), by = {}, ends = [];
+            pl.forEach(function (p) { if (p.end !== f.end) { (by[p.end] = by[p.end] || []).push({ row: p.row, col: p.col }); } });
+            Object.keys(by).forEach(function (k) { ends.push(Number(k)); });
+            if (!ends.length) continue;
+            var ok = ends.filter(function (e) { return by[e].length <= limit; });
+            var pool = ok.length ? ok : (tries > 300 ? ends : []);
+            if (!pool.length) continue;
+            var target = kit.pick(pool, rand);
+            best = { rungs: rungs, start: start, target: target, end0: f.end, solutions: by[target] };
+            break;
         }
-        var fakes = makeFakes(fakeCount(level), rungs, rand);
-        var start = kit.pick(cand.length ? cand : all, rand), f = follow(rungs, start);
-        return { rungs: rungs, fakes: fakes, start: start, end: f.end, route: f.route };
-    }
-    /* 點到線段的距離，以及該點投影在線段上的位置（0～1） */
-    function segDist(p, a, b) {
-        var dx = b.x - a.x, dy = b.y - a.y, l2 = dx * dx + dy * dy, t = l2 ? ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2 : 0;
-        t = kit.clamp(t, 0, 1);
-        var x = a.x + t * dx, y = a.y + t * dy;
-        return { d: Math.sqrt((p.x - x) * (p.x - x) + (p.y - y) * (p.y - y)), t: t };
-    }
-    /* 手指離折線 route 最近的距離，以及最近點沿折線走了多遠（px） */
-    function nearest(p, route) {
-        var best = { d: 1e9, s: 0 }, acc = 0;
-        for (var i = 1; i < route.length; i++) {
-            var a = route[i - 1], b = route[i], len = Math.sqrt((b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y)), r = segDist(p, a, b);
-            if (r.d < best.d) best = { d: r.d, s: acc + r.t * len };
-            acc += len;
+        if (!best) {                                    /* 保底：很簡單的一題（現有 1 條橫線，把起點接到隔壁） */
+            var r0 = [{ row: 4, col: 2 }], f0 = follow(r0, 0);
+            best = { rungs: r0, start: 0, target: 1, end0: f0.end, solutions: placements(r0, 0).filter(function (p) { return p.end === 1; }).map(function (p) { return { row: p.row, col: p.col }; }) };
         }
         return best;
     }
+    /* 折線從頭走 len 像素的那一段（評審動畫：一路畫出綠色虛線）：回傳點陣列 */
     function routeLength(route) {
         var s = 0; for (var i = 1; i < route.length; i++) s += Math.sqrt(Math.pow(route[i].x - route[i - 1].x, 2) + Math.pow(route[i].y - route[i - 1].y, 2));
         return s;
     }
+    function partialRoute(route, len) {
+        var out = [route[0]], acc = 0;
+        if (len <= 0) return out;
+        for (var i = 1; i < route.length; i++) {
+            var a = route[i - 1], b = route[i], seg = Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2));
+            if (acc + seg <= len) { out.push(b); acc += seg; continue; }
+            var t = seg ? (len - acc) / seg : 0;
+            out.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+            break;
+        }
+        return out;
+    }
+    /* 評審動畫花多久：路線越長越久（每 px 約 2.4 毫秒），夾在 ROUTE_MS 範圍內 */
+    function routeMs(route) { return Math.round(kit.clamp(routeLength(route) * 2.4, ROUTE_MS[0], ROUTE_MS[1])); }
     function rating(n) {
         if (n >= 15) return '鬼腳圖大師！全部通關！';
         if (n >= 10) return '高手！';
         if (n >= 6) return '不錯喔！';
         if (n >= 3) return '再接再厲！';
-        return '看清楚橫線再描，再來一次！';
+        return '想一想橫線要畫在哪裡，再來一次！';
     }
 
     function mount(root, ctx) {
+        /* V1.28 起鬼腳圖整個改玩法（畫一條橫線把起點接到終點；以前是手指沿線描），舊版的最佳紀錄不能比：第一次進來清掉（只清一次） */
+        Reaction.migrateBest(ID, function () { return null; }, '.v128');
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: RAMP_LEVELS, goodAt: 5,
             numText: function (v) { return v + ' 關'; },
@@ -135,99 +155,151 @@
     }
 
     function setup(api) {
-        var stage = api.stage, level = api.level;
-        var q = makeLevel(level, api.rand), alpha = alphaAt(level), total = routeLength(q.route);
+        var stage = api.stage, level = api.level, my = api.my;
+        var q = makeLevel(level, api.rand);
         api.info = q;
-        console.log('[鬼腳圖] 第 ' + level + ' 關：橫線 ' + q.rungs.length + ' 條、假橫線 ' + q.fakes.length + ' 條；起點 ' + LABELS[q.start] + ' → 終點 ' + (q.end + 1) + '；橫線不透明度 ' + alpha.toFixed(2) + '；限時 ' + timeMs(level) + ' ms');
+        console.log('[鬼腳圖] 第 ' + level + ' 關：現有橫線 ' + q.rungs.length + ' 條；起點 ' + LABELS[q.start] + '、終點 ' + (q.target + 1) + '（現有的線走到 ' + (q.end0 + 1) + '）；畫對的位置 ' + q.solutions.length + ' 種：' + q.solutions.map(function (s) { return '第 ' + (s.row + 1) + ' 層第 ' + (s.col + 1) + '～' + (s.col + 2) + ' 欄'; }).join('、') + '；限時 ' + timeMs(level) + ' ms');
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var svg = kit.svg('svg', { 'class': 'gl-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
         var c;
         for (c = 0; c < COLS; c++) kit.svg('line', { x1: colX(c), x2: colX(c), y1: Y_TOP, y2: Y_BOT, 'class': 'gl-col' }, svg);
-        q.rungs.forEach(function (g) { kit.svg('line', { x1: colX(g.col), x2: colX(g.col + 1), y1: rowY(g.row), y2: rowY(g.row), 'class': 'gl-rung', opacity: alpha }, svg); });
-        q.fakes.forEach(function (f) { kit.svg('line', { x1: colX(f.col), x2: colX(f.col) + f.dir * DX * 0.4, y1: rowY(f.row), y2: rowY(f.row), 'class': 'gl-rung', opacity: alpha }, svg); });
-        var gAns = kit.svg('g', {}, svg), trail = kit.svg('polyline', { 'class': 'gl-trail', points: '' }, svg);
+        q.rungs.forEach(function (g) { kit.svg('line', { x1: colX(g.col), x2: colX(g.col + 1), y1: rowY(g.row), y2: rowY(g.row), 'class': 'gl-rung' }, svg); });
+        var gUser = kit.svg('g', {}, svg), gRoute = kit.svg('g', {}, svg), gHint = kit.svg('g', {}, svg);
+        var endBoxes = [];
         for (c = 0; c < COLS; c++) {
-            var top = kit.svg('circle', { cx: colX(c), cy: Y_TOP - 28, r: 22, 'class': 'gl-token' + (c === q.start ? ' gl-token--start' : '') }, svg);
-            var t1 = kit.svg('text', { x: colX(c), y: Y_TOP - 20, 'text-anchor': 'middle', 'class': 'gl-label' + (c === q.start ? ' gl-label--start' : '') }, svg); t1.textContent = LABELS[c];
-            kit.svg('rect', { x: colX(c) - 22, y: Y_BOT + 8, width: 44, height: 44, rx: 8, 'class': 'gl-end' }, svg);
+            kit.svg('circle', { cx: colX(c), cy: Y_TOP - 28, r: 22, 'class': 'gl-token' + (c === q.start ? ' gl-token--go' : '') }, svg);
+            var t1 = kit.svg('text', { x: colX(c), y: Y_TOP - 20, 'text-anchor': 'middle', 'class': 'gl-label' }, svg); t1.textContent = LABELS[c];
+            endBoxes.push(kit.svg('rect', { x: colX(c) - 22, y: Y_BOT + 8, width: 44, height: 44, rx: 8, 'class': 'gl-end' + (c === q.target ? ' gl-end--go' : '') }, svg));
             var t2 = kit.svg('text', { x: colX(c), y: Y_BOT + 40, 'text-anchor': 'middle', 'class': 'gl-label' }, svg); t2.textContent = String(c + 1);
         }
-        var msg = h('div', { 'class': 'gl-msg', text: '從橘色的起點，沿線往下描，遇到橫線就轉過去' });
+        var msg = h('div', { 'class': 'gl-msg', text: '照現有的線走不到終點！按住一條直線、往旁邊拖，畫上一條橫線' });
         stage.appendChild(msg);
-        var hint = null;
-        /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從橘色的起點往「終點」重複移動（第一關的正確答案） */
-        if (level === 1 && kit.once('ghostleg.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: colX(q.start), y: Y_TOP - 28, dx: colX(q.end) - colX(q.start), dy: Y_BOT + 30 - (Y_TOP - 28), delay: 300, text: '請沿著線描到終點' });
 
-        var drawing = false, pid = null, pts = [], progress = 0;
+        /* 操作提示（只在第一次進遊戲時）：鉛筆圖示在「正確位置」畫出一條藍色水平橫線，重複播放（沒有手指圖示）；玩家一按下去就消失 */
+        var hintOn = false, pencil = null;
+        if (level === 1 && kit.once('ghostleg.hint') && q.solutions.length) {
+            var sol = q.solutions[0], hy = rowY(sol.row), hx1 = colX(sol.col), hx2 = colX(sol.col + 1);
+            var hl = kit.svg('line', { x1: hx1, y1: hy, x2: hx1, y2: hy, 'class': 'gl-user gl-user--hint' }, gHint);
+            pencil = h('div', { 'class': 'gl-pencil', text: String.fromCodePoint(0x270F) + String.fromCodePoint(0xFE0F) });
+            stage.appendChild(pencil);
+            hintOn = true;
+            var t0h = performance.now();
+            my.loop(function (now) {
+                if (!hintOn) return false;
+                var p = ((now - t0h) % 2400) / 2400, e = Math.min(1, p / 0.7);
+                var x2 = hx1 + (hx2 - hx1) * e;
+                hl.setAttribute('x2', x2.toFixed(1)); hl.setAttribute('opacity', p > 0.9 ? Math.max(0, (1 - p) / 0.1) : 1);
+                pencil.style.left = (x2 - 6) + 'px'; pencil.style.top = (hy - 34) + 'px';
+            });
+        }
+        function hideHint() { hintOn = false; if (pencil) { if (pencil.parentNode) pencil.parentNode.removeChild(pencil); pencil = null; } while (gHint.firstChild) gHint.removeChild(gHint.firstChild); }
+
+        /* 畫橫線：按住某一條直線 → 往左或往右拖到相鄰的直線 → 畫上一條粗藍線（貼齊最近的一層）；拖到一半放開＝取消 */
+        var drag = null, locked = false, placed = null;
+        function colAt(x, y) {
+            if (y < Y_TOP - 6 || y > Y_BOT + 6) return -1;
+            var best = -1, bd = 1e9;
+            for (var k = 0; k < COLS; k++) { var d = Math.abs(x - colX(k)); if (d < bd) { bd = d; best = k; } }
+            return bd <= TOUCH_X ? best : -1;
+        }
         stage.addEventListener('pointerdown', function (e) {
-            if (api.over || drawing) return;
-            var p = kit.localPt(e, stage);
-            if (Math.sqrt(Math.pow(p.x - colX(q.start), 2) + Math.pow(p.y - (Y_TOP - 10), 2)) > START_R + 18) return;
+            if (api.over || locked || drag) return;
+            var p = kit.localPt(e, stage), col = colAt(p.x, p.y);
+            if (col < 0) return;
             e.preventDefault();
             try { stage.setPointerCapture(e.pointerId); } catch (err) { }
-            drawing = true; pid = e.pointerId; pts = [p]; progress = 0;
-            if (hint) { hint.remove(); hint = null; }
-            paintTrail();
+            hideHint();
+            drag = { id: e.pointerId, col: col, row: snapRow(p.y), x0: p.x, dir: 0, line: null };
         });
         stage.addEventListener('pointermove', function (e) {
-            if (!drawing || e.pointerId !== pid || api.over) return;
-            var p = kit.localPt(e, stage), n = nearest(p, q.route);
-            pts.push(p); paintTrail();
-            if (n.d > TOL) { drawing = false; failAt(p, '手指偏離了路線'); return; }
-            if (n.s > progress) progress = n.s;
-            var endp = q.route[q.route.length - 1];
-            if (progress >= total - 24 && Math.sqrt(Math.pow(p.x - endp.x, 2) + Math.pow(p.y - endp.y, 2)) <= TOL + 10) { drawing = false; win(); }
+            if (!drag || e.pointerId !== drag.id || locked) return;
+            var p = kit.localPt(e, stage), dx = p.x - drag.x0;
+            if (!drag.dir) {
+                if (Math.abs(dx) < DRAG_MIN) return;
+                var dir = dx > 0 ? 1 : -1, nb = drag.col + dir;
+                if (nb < 0 || nb > COLS - 1) return;                       /* 那一邊沒有直線 */
+                drag.dir = dir;
+                var y = rowY(drag.row);
+                drag.line = kit.svg('line', { x1: colX(drag.col), y1: y, x2: colX(drag.col), y2: y, 'class': 'gl-user' }, gUser);
+            }
+            var from = colX(drag.col), to = colX(drag.col + drag.dir), f = kit.clamp((p.x - from) / (to - from), 0, 1);
+            drag.line.setAttribute('x2', (from + (to - from) * f).toFixed(1));
+            if (f >= JOIN_FRAC) { var d0 = drag; drag = null; commit(d0); }
         });
         function up(e) {
-            if (!drawing || e.pointerId !== pid) return;
-            drawing = false;
-            if (!api.over) failAt(pts[pts.length - 1], '中途放開手指了');
+            if (!drag || e.pointerId !== drag.id) return;
+            if (drag.line) gUser.removeChild(drag.line);                   /* 沒拖到隔壁的直線：取消，可以重畫 */
+            drag = null;
         }
         stage.addEventListener('pointerup', up);
         stage.addEventListener('pointercancel', up);
-        function paintTrail() { trail.setAttribute('points', pts.map(function (p) { return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' ')); }
-        function showRoute() {
-            kit.svg('polyline', { points: q.route.map(function (p) { return p.x + ',' + p.y; }).join(' '), 'class': 'gl-route' }, gAns);
-        }
-        function win() {
-            showRoute(); trail.setAttribute('class', 'gl-trail gl-trail--ok');
-            msg.textContent = '描到了！起點 ' + LABELS[q.start] + ' → 終點 ' + (q.end + 1);
-            api.pass({ delay: 900 });
-        }
-        function failAt(p, why) {
-            showRoute(); trail.setAttribute('class', 'gl-trail gl-trail--bad');
-            if (p) kit.svg('circle', { cx: p.x, cy: p.y, r: 16, 'class': 'gl-miss' }, svg);
-            msg.textContent = why + '：正確路線是綠色的線';
-            api.fail({ delay: 2000, lines: [why, '正確的路線從起點 ' + LABELS[q.start] + ' 走到終點 ' + (q.end + 1), '這一關有 ' + q.rungs.length + ' 條橫線' + (q.fakes.length ? '、' + q.fakes.length + ' 條只有半段的假橫線' : '')] });
-        }
-        api.timer(timeMs(level), function () { drawing = false; failAt(pts.length ? pts[pts.length - 1] : null, '時間到了'); });
 
-        /* 驗證用：用真的 PointerEvent 沿著路線（或故意偏離）描一遍 */
+        function flash(text) { msg.textContent = text; }
+        function commit(d) {
+            var col = Math.min(d.col, d.col + d.dir), row = d.row;
+            if (!canPlace(q.rungs, row, col)) {                            /* 那一層那個位置已經有橫線（或緊鄰）：不算，請換個位置 */
+                gUser.removeChild(d.line); Sfx.play('bad');
+                flash('那裡已經有橫線了，換個位置畫');
+                return;
+            }
+            locked = true; placed = { row: row, col: col };
+            var y = rowY(row);
+            d.line.setAttribute('x1', colX(col)); d.line.setAttribute('x2', colX(col + 1)); d.line.setAttribute('y1', y); d.line.setAttribute('y2', y);
+            Sfx.play('click'); api.stopTimer();
+            msg.textContent = '';
+            judge();
+        }
+        /* 評審動畫：從起點開始畫出一條綠色粗虛線，經過每個轉折點，看看最後能不能抵達終點 */
+        function judge() {
+            var f = follow(q.rungs.concat([placed]), q.start), ms = routeMs(f.route), total = routeLength(f.route);
+            var line = kit.svg('polyline', { points: '', 'class': 'gl-route' }, gRoute);
+            my.tween(ms, function (e) {
+                line.setAttribute('points', partialRoute(f.route, total * e).map(function (p) { return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' '));
+            }, kit.linear).then(function () {
+                var win = f.end === q.target;
+                endBoxes[f.end].classList.add(win ? 'gl-end--ok' : 'gl-end--bad');
+                if (win) { Sfx.play('ok'); } else { Sfx.play('bad'); endBoxes[q.target].classList.add('gl-end--want'); }
+                api.after(HOLD_MS, function () {
+                    if (win) api.pass({ delay: 0 });
+                    else api.fail({ delay: 0, lines: ['這條橫線畫在這裡，會走到終點 ' + (f.end + 1) + '，不是綠色的終點 ' + (q.target + 1), '只有一次機會，要想清楚橫線畫在哪一層、哪兩條直線之間'] });
+                });
+            });
+        }
+        api.timer(timeMs(level), function () {
+            hideHint(); locked = true;
+            if (drag && drag.line) gUser.removeChild(drag.line);
+            drag = null;
+            msg.textContent = '';
+            api.fail({ delay: 600, lines: ['時間到了', '這一關有 ' + q.solutions.length + ' 種畫法：' + q.solutions.slice(0, 3).map(function (s) { return '第 ' + (s.row + 1) + ' 層的 ' + LABELS[s.col] + '～' + LABELS[s.col + 1]; }).join('、')] });
+        });
+
+        /* 驗證用：用真的 PointerEvent 畫一條橫線（往右拖到隔壁的直線） */
         function fire(type, x, y) {
             var r = stage.getBoundingClientRect(), sc = r.width / (stage.clientWidth || r.width);
             stage.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 9, clientX: r.left + x * sc, clientY: r.top + y * sc }));
         }
-        function trace(offX) {
-            var rt = q.route, first = rt[0];
-            fire('pointerdown', first.x, Y_TOP - 10);
-            for (var i = 1; i < rt.length; i++) {
-                var a = rt[i - 1], b = rt[i], steps = Math.max(1, Math.ceil(Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2)) / 12));
-                for (var k = 1; k <= steps; k++) fire('pointermove', a.x + (b.x - a.x) * k / steps + (offX || 0), a.y + (b.y - a.y) * k / steps);
-            }
-            fire('pointerup', rt[rt.length - 1].x, rt[rt.length - 1].y);
+        function drawAt(row, col, dir) {
+            var y = rowY(row), a = colX(dir > 0 ? col : col + 1), b = colX(dir > 0 ? col + 1 : col);
+            fire('pointerdown', a, y);
+            for (var k = 1; k <= 10; k++) fire('pointermove', a + (b - a) * k / 10, y);
+            fire('pointerup', b, y);
         }
-        api.solve = function () { trace(0); };
-        api.wrong = function () { trace(90); };
+        api.solve = function () { var s = q.solutions[0]; drawAt(s.row, s.col, 1); };
+        api.wrong = function () {
+            var bad = placements(q.rungs, q.start).filter(function (p) { return p.end !== q.target; })[0];
+            if (bad) drawAt(bad.row, bad.col, 1);
+        };
+        api.draw = drawAt;
     }
 
     var G = {
         id: ID,
         name: '鬼腳圖',
-        rule: '這是台灣童玩「阿彌陀佛」。系統指定上方橘色的起點，**手指從那裡沿著線往下描，遇到橫線就轉過去**，一路描到最下面。**手指偏離路線、中途放開、或時間到就失敗**。小心，有些橫線很淡，還有只畫一半的假橫線！',
+        rule: '這是台灣童玩「阿彌陀佛」。上方有綠色的起點，下方有綠色的終點，但照著現有的橫線走，**從起點到不了終點**。請你**按住一條直線，往左或往右拖到隔壁的直線，畫上一條橫線**，讓起點接到終點。**只有一次機會**，畫好後會從起點開始一路走下去，遇到橫線就轉彎，看能不能走到終點。',
         mount: mount,
         score: SCORE,
-        test: { colX: colX, rowY: rowY, rungCount: rungCount, fakeCount: fakeCount, alphaAt: alphaAt, timeMs: timeMs, follow: follow, makeRungs: makeRungs, makeFakes: makeFakes, makeLevel: makeLevel, segDist: segDist, nearest: nearest, routeLength: routeLength, rating: rating, COLS: COLS, ROWS: ROWS, RAMP_LEVELS: RAMP_LEVELS, TOL: TOL, Y_TOP: Y_TOP, Y_BOT: Y_BOT, RUNGS: RUNGS, FAKES: FAKES, RUNG_ALPHA: RUNG_ALPHA }
+        test: { colX: colX, rowY: rowY, snapRow: snapRow, rungCount: rungCount, maxSolAt: maxSolAt, timeMs: timeMs, follow: follow, canPlace: canPlace, makeRungs: makeRungs, placements: placements, makeLevel: makeLevel, routeLength: routeLength, partialRoute: partialRoute, routeMs: routeMs, rating: rating, COLS: COLS, ROWS: ROWS, RAMP_LEVELS: RAMP_LEVELS, Y_TOP: Y_TOP, Y_BOT: Y_BOT, RUNGS: RUNGS, MAX_SOL: MAX_SOL, TIME_S: TIME_S, HOLD_MS: HOLD_MS, ROUTE_MS: ROUTE_MS }
     };
     Reaction.register(G);
 })();

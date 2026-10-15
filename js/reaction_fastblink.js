@@ -20,9 +20,9 @@
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 25;                       /* 幾關之後難度到頂 */
-    var RATIO = [2.0, 1.05];                    /* 快／慢的頻率比：第 1 關 → 到頂 */
-    var SLOW_HZ = [2.4, 4.2];                   /* 慢的那顆頻率的隨機範圍（赫茲＝每秒閃幾下） */
-    var ANS_S = [8, 5];                         /* 作答限時（秒）：第 1 關 → 到頂 */
+    var RATIO = [3.0, 1.05];                    /* 快／慢的頻率比：第 1 關 → 到頂 */
+    var SLOW_HZ = [0.33, 3.0];                   /* 慢的那顆頻率的隨機範圍（赫茲＝每秒閃幾下） */
+    var ANS_S = [15, 20];                         /* 作答限時（秒）：第 1 關 → 到頂 */
     var MAX_LEVEL = 60;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
@@ -113,10 +113,12 @@
             tip.textContent = '快 ' + q.fast.toFixed(4) + ' Hz　慢 ' + q.slow.toFixed(4) + ' Hz　（快的是慢的 ' + q.ratio.toFixed(4) + ' 倍）';
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1300 }); return; }
             kit.flash(stage, false, api.my);
-            api.fail({ delay: 2400, lines: [
-                (side == null ? '時間到！' : '你選到比較慢的那顆') + '，閃得快的在' + (q.fastSide === 'L' ? '左邊' : '右邊'),
-                '左邊 ' + fL.toFixed(4) + ' Hz　右邊 ' + fR.toFixed(4) + ' Hz'
-            ] });
+            api.fail({
+                delay: 2400, lines: [
+                    (side == null ? '時間到！' : '你選到比較慢的那顆') + '，閃得快的在' + (q.fastSide === 'L' ? '左邊' : '右邊'),
+                    '左邊 ' + fL.toFixed(4) + ' Hz　右邊 ' + fR.toFixed(4) + ' Hz'
+                ]
+            });
         }
         api.solve = function () { judge(q.fastSide); };
         api.wrong = function () { judge(q.fastSide === 'L' ? 'R' : 'L'); };

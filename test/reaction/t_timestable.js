@@ -23,4 +23,10 @@ ok([43, 41].includes(T.tamper(6, 7, 'ones', rnd)) && [52, 32].includes(T.tamper(
 for (let i = 0; i < 50; i++) ok([36, 48, 35, 49].includes(T.tamper(6, 7, 'neighbor', rnd)), 'neighbor 是隔壁格的答案');
 for (let a = 1; a <= 9; a++) for (let b = 1; b <= 9; b++) for (const ty of T.TYPES) for (let k = 0; k < 6; k++) { const v = T.tamper(a, b, ty, rnd); ok(v !== a * b && v >= 1, 'tamper ' + a + '×' + b + ' ' + ty + ' → ' + v); }
 ok(T.rating(5) !== T.rating(14) && T.rating(14) !== T.rating(25) && T.rating(25) !== T.rating(60), '評語分級');
+// V1.27：找齊之後，被改的答案紅底白字閃爍 1.5 秒、再維持 1.5 秒，才結算
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_timestable.js'), css = rd('../../css/reaction3.css').split('\r\n').join(' ').split('\n').join(' ');
+  ok(T.BLINK_MS === 1500 && T.HOLD_MS === 1500, '閃爍 1.5 秒、維持 1.5 秒');
+  ok(/\.tt-cell--wrong \{[^}]*c-bad-light[^}]*c-on-accent/.test(css), '紅底白字');
+  ok(/\.tt-cell--blink \{\s*animation: tt-blink 0\.3s steps\(1, end\) 5;/.test(css), '閃爍 0.3 秒 × 5 次 = 1.5 秒');
+  ok(src.indexOf('my.after(BLINK_MS + HOLD_MS') > src.indexOf("el.classList.add('tt-cell--wrong', 'tt-cell--blink')") && src.indexOf('api.finish(sec') > src.indexOf('my.after(BLINK_MS + HOLD_MS'), '先閃爍、維持，之後才結算'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

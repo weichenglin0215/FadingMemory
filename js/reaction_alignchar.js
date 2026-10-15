@@ -21,14 +21,14 @@
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 20;                       /* 幾關之後難度到頂 */
-    var STRIPS = [5, 12];                       /* 切成幾條直條：第 1 關 → 到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
+    var STRIPS = [5, 20];                       /* 切成幾條直條：第 1 關 → 到頂 */
     var OPTIONS = [4, 6];                       /* 有幾個選項：第 1 關 → 到頂 */
-    var CYCLE_S = [5, 2.8];                     /* 對準的週期（秒）：第 1 關 → 到頂 */
-    var TIME_S = [14, 9];                       /* 作答限時（秒）：第 1 關 → 到頂 */
-    var KMAX = 3;                               /* 直條的速度倍數最大是幾（±1～±KMAX） */
-    var ALIGN_AT = [0.6, 1.0];                  /* 第一次對準的時刻 ＝ 週期 × 這個範圍的隨機數 */
-    var PIC = { w: 280, h: 300 };               /* 圖案方框的大小（邏輯 px），h 同時是直條循環的一圈長度 P */
+    var CYCLE_S = [5, 12];                     /* 對準的週期（秒）：第 1 關 → 到頂 */
+    var TIME_S = [12, 30];                       /* 作答限時（秒）：第 1 關 → 到頂 */
+    var KMAX = 6;                               /* 直條的速度倍數最大是幾（±1～±KMAX） */
+    var ALIGN_AT = [2.0, 4.0];                  /* 第一次對準的時刻 ＝ 週期 × 這個範圍的隨機數 */
+    var PIC = { w: 460, h: 460 };               /* 圖案方框的大小（邏輯 px），h 同時是直條循環的一圈長度 P */
     var MAX_LEVEL = 60;
     /* 「長得像」的字群組：選項優先從同一群挑 */
     var GROUPS = [
@@ -112,7 +112,7 @@
         cv.width = cw * DPR; cv.height = ch * DPR; cv.style.width = cw + 'px'; cv.style.height = ch + 'px';
         cv.style.left = Math.round((W - cw) / 2) + 'px'; cv.style.top = '30px';
         stage.appendChild(cv);
-        var tip = h('div', { 'class': 'qz-note alc-tip', text: '直條都在上下移動，對準的瞬間字會浮現' });
+        var tip = h('div', { 'class': 'qz-note alc-tip', text: '直條上下移動，對準的瞬間字會浮現' });
         stage.appendChild(tip);
         /* 先把整個字畫在看不見的畫布上，之後每一格都從這張「底圖」切直條 */
         var gl = document.createElement('canvas');

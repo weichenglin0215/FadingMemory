@@ -2,6 +2,7 @@
    reaction_basket.js — 秒反應・菜籃總價
    上方是「總價」題目，下方 2×3 六格蔬菜水果各有標價；挑幾樣讓價格加起來剛好等於總價，按「結帳」。
    介面不顯示已選合計（要自己心算）。關卡制，2 條命（結帳錯一次扣一條），成績＝通過關數。
+   V1.28（玩家意見）：蔬果圖案改用 emoji（ITEMS 28 種）、名稱用咖啡色（不重要）；價格數字改成黑色並放大成 150%（要看的重點）。
    ───────────────────────────────────────────────────────────────────
    · 六個價格互不相同的整數；總價 ＝ 挑 k 樣的和，k 由 K[0] 線性增加到 K[1]。
    · 答案唯一：窮舉 2⁶−1 個非空子集合，合計等於總價的必須剛好 1 個；不夠就重抽（TRIES 次，保底用固定題）。
@@ -22,9 +23,14 @@
     var TRAP_MIN = [0, 4];                      /* 「差 1～3 元」的子集合至少幾個 */
     var TIME_S = [40, 20];                      /* 每關限時（秒） */
     var LIVES = 2, TRIES = 3000;
-    /* 蔬果名稱與代表色（hue），標價是遊戲設定，不跟真實市價 */
-    var ITEMS = [['高麗菜', 110], ['番茄', 5], ['洋蔥', 30], ['蘋果', 355], ['香蕉', 50], ['芭樂', 90], ['玉米', 48], ['地瓜', 18], ['葡萄', 285], ['橘子', 32],
-        ['青椒', 130], ['胡蘿蔔', 22], ['白菜', 100], ['香菇', 25], ['小黃瓜', 120], ['草莓', 350], ['茄子', 270], ['檸檬', 56], ['芒果', 40], ['蓮霧', 340]];
+    /* 蔬果：[emoji 的 Unicode 碼位, 名稱]（標價是遊戲設定，不跟真實市價；用碼位寫，避免檔案編碼讓 emoji 變形） */
+    var ITEMS = [
+        [0x1F347, '葡萄'], [0x1F348, '哈密瓜'], [0x1F349, '西瓜'], [0x1F34A, '橘子'], [0x1F34B, '檸檬'], [0x1F34C, '香蕉'], [0x1F34D, '鳳梨'],
+        [0x1F96D, '芒果'], [0x1F34E, '蘋果'], [0x1F34F, '青蘋果'], [0x1F350, '梨子'], [0x1F351, '桃子'], [0x1F352, '櫻桃'], [0x1F353, '草莓'],
+        [0x1F345, '番茄'], [0x1F346, '茄子'], [0x1F33D, '玉米'], [0x1F336, '辣椒'], [0x1F344, '香菇'], [0x1F951, '酪梨'], [0x1F952, '小黃瓜'],
+        [0x1F96C, '青菜'], [0x1F966, '花椰菜'], [0x1F954, '馬鈴薯'], [0x1F9C4, '大蒜'], [0x1F9C5, '洋蔥'], [0x1F955, '紅蘿蔔'], [0x1F330, '栗子']
+    ];
+    function emojiOf(item) { return String.fromCodePoint(item[0]); }
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function kAt(level) { return Math.round(kit.ramp(level, K[0], K[1], RAMP_LEVELS)); }
@@ -41,7 +47,7 @@
         return out;
     }
     function bitCount(m) { var n = 0; while (m) { n += m & 1; m >>= 1; } return n; }
-    /* 出題：回傳 { names, hues, prices, total, mask（答案的子集合）, k, near（差 1～3 元的子集合數）} */
+    /* 出題：回傳 { names, emojis, prices, total, mask（答案的子集合）, k, near（差 1～3 元的子集合數）} */
     function makeLevel(level, rand) {
         rand = rand || Math.random;
         var r = priceRange(level), k = kAt(level), need = trapMinAt(level), pick = kit.shuffle(ITEMS, rand).slice(0, 6);
@@ -54,10 +60,10 @@
             if (eq.length !== 1) continue;
             var near = subs.filter(function (s) { var d = Math.abs(s.sum - total); return d >= 1 && d <= 3; }).length;
             if (near < need) continue;
-            return { names: pick.map(function (x) { return x[0]; }), hues: pick.map(function (x) { return x[1]; }), prices: prices, total: total, mask: mask, k: k, near: near };
+            return { names: pick.map(function (x) { return x[1]; }), emojis: pick.map(emojiOf), prices: prices, total: total, mask: mask, k: k, near: near };
         }
         var fp = [38, 52, 67, 45, 29, 83], fm = 1 | 2 | 8;     /* 保底：38＋52＋45 ＝ 135，唯一 */
-        return { names: pick.map(function (x) { return x[0]; }), hues: pick.map(function (x) { return x[1]; }), prices: fp, total: 135, mask: fm, k: 3, near: 0 };
+        return { names: pick.map(function (x) { return x[1]; }), emojis: pick.map(emojiOf), prices: fp, total: 135, mask: fm, k: 3, near: 0 };
     }
     function maskSum(prices, mask) { var s = 0; for (var i = 0; i < prices.length; i++) if (mask & (1 << i)) s += prices[i]; return s; }
     function maskText(q, mask) {
@@ -93,9 +99,8 @@
         var tip = h('div', { 'class': 'bsk-tip', text: '挑幾樣，讓價格加起來剛好是總價' });
         var tiles = q.prices.map(function (p, i) {
             var el = h('div', { 'class': 'bsk-tile' }, [
-                h('div', { 'class': 'bsk-ico' }), h('div', { 'class': 'bsk-name', text: q.names[i] }), h('div', { 'class': 'bsk-price', text: p + ' 元' })
+                h('div', { 'class': 'bsk-ico', text: q.emojis[i] }), h('div', { 'class': 'bsk-name', text: q.names[i] }), h('div', { 'class': 'bsk-price', text: p + ' 元' })
             ]);
-            el.firstChild.style.background = 'hsl(' + q.hues[i] + ',62%,56%)';
             kit.onTap(el, function () { toggle(i); });
             return el;
         });
@@ -148,7 +153,7 @@
         rule: '上方是這次要買的總價。從下方六樣蔬菜水果挑幾樣，**讓標價加起來剛好等於總價**，按「結帳」。畫面不會幫你加總，**要自己算**。有兩條命，結帳錯一次扣一條。每關有時間限制，越後面要選的樣數越多、差一點點的組合越多。',
         mount: mount,
         score: SCORE,
-        test: { kAt: kAt, trapMinAt: trapMinAt, timeMs: timeMs, priceRange: priceRange, subsets: subsets, bitCount: bitCount, makeLevel: makeLevel, maskSum: maskSum, maskText: maskText, rating: rating, ITEMS: ITEMS, RAMP_LEVELS: RAMP_LEVELS, MAX_LEVEL: MAX_LEVEL, K: K, TRAP_MIN: TRAP_MIN, LIVES: LIVES }
+        test: { kAt: kAt, trapMinAt: trapMinAt, timeMs: timeMs, priceRange: priceRange, subsets: subsets, bitCount: bitCount, makeLevel: makeLevel, maskSum: maskSum, maskText: maskText, rating: rating, ITEMS: ITEMS, emojiOf: emojiOf, RAMP_LEVELS: RAMP_LEVELS, MAX_LEVEL: MAX_LEVEL, K: K, TRAP_MIN: TRAP_MIN, LIVES: LIVES }
     };
     Reaction.register(G);
 })();

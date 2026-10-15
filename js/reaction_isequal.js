@@ -11,6 +11,8 @@
    · 分母隨題號解鎖：{2,4,5,10} → 加 {8,20} → 加 {16,25,40,50} → 加 {80,125}，全部都能寫成有限小數。
    · 寫法隨題號解鎖：分數↔小數 → 加 分數↔百分比 → 再加 小數↔百分比，左右兩邊的位置也會互換。
    · 答錯／逾時：兩邊換成同一種寫法（小數＋百分比）並排給你看。
+   · V1.28（玩家意見）裁判時：左右兩邊的算式與數值保持不變，只有中間的符號換成「真正的關係」（相等＝「＝」、不相等＝「≠」），
+     玩家答對符號就是綠色、答錯（或逾時）就是紅色；整道等式不再整個變色。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -42,6 +44,8 @@
     var SIMILAR = { '0': '8', '1': '7', '2': '7', '3': '8', '4': '9', '5': '6', '6': '5', '7': '1', '8': '3', '9': '4' };
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 裁判時中間的符號：相等＝「＝」、不相等＝「≠」 */
+    function signOf(isEqual) { return isEqual ? '＝' : '≠'; }
     function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }
     function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { var t = a % b; a = b; b = t; } return a; }
     /* 兩個分數 {n,d} 是否相等（交叉相乘，整數運算，沒有誤差） */
@@ -261,7 +265,8 @@
 
         var eq = h('div', { 'class': 'qz-big ieq-eq' });
         eq.appendChild(h('span', { text: q.left.text }));
-        eq.appendChild(h('span', { 'class': 'ieq-sign', text: '＝' }));
+        var sign = h('span', { 'class': 'ieq-sign', text: '＝' });
+        eq.appendChild(sign);
         eq.appendChild(h('span', { text: q.right.text }));
         var ask = h('div', { 'class': 'qz-note ieq-ask', text: '左右兩邊相等嗎？' });
         var reveal = h('div', { 'class': 'qz-note ieq-reveal' });
@@ -277,7 +282,8 @@
         function judge(sayEqual) {
             if (api.over) return;
             var ok = sayEqual === q.isEqual;
-            eq.classList.add(ok ? 'qz-ok' : 'qz-bad');
+            sign.textContent = signOf(q.isEqual);                 /* 裁判：中間符號換成真正的關係（＝ 或 ≠），答對綠色、答錯紅色 */
+            sign.classList.add(ok ? 'qz-ok' : 'qz-bad');
             var lv = bothForms(q.A), rv = bothForms(q.B);
             reveal.innerHTML = '左邊 ' + q.left.text + ' ＝ ' + lv + '<br>右邊 ' + q.right.text + ' ＝ ' + rv;
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 900 }); return; }
@@ -298,7 +304,7 @@
         mount: mount,
         score: SCORE,
         test: {
-            ansMs: ansMs, gcd: gcd, ratEq: ratEq, densFor: densFor, pairsFor: pairsFor, parseDec: parseDec, normDec: normDec, ratToDec: ratToDec, ratToPct: ratToPct, ratToFrac: ratToFrac,
+            signOf: signOf, ansMs: ansMs, gcd: gcd, ratEq: ratEq, densFor: densFor, pairsFor: pairsFor, parseDec: parseDec, normDec: normDec, ratToDec: ratToDec, ratToPct: ratToPct, ratToFrac: ratToFrac,
             parseForm: parseForm, writeForm: writeForm, tweakDigits: tweakDigits, tweakFrac: tweakFrac, nextEqual: nextEqual, makeQuestion: makeQuestion, bothForms: bothForms, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, ANS_S: ANS_S, MAX_LEVEL: MAX_LEVEL, SAME_MAX: SAME_MAX
         }

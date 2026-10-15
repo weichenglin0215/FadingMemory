@@ -33,6 +33,7 @@
     var MG = 36;                                /* 曲線離長方格邊緣至少多遠 */
     var MIN_SEP = 70;                           /* 起點與終點至少相距多少 */
     var LEN_RANGE = [550, 1800];                /* 曲線全長的合理範圍 */
+    var LEN_MIN_TYPE = { scurve: 420 };         /* 個別種類的長度下限（S 形本來就平緩、比較短；第 1～3 關才有，不能因此一直被判不合格） */
     var START_R = 40;                           /* 手指按在端點多近才算「從這個端點開始」 */
     var END_R = 32;                             /* 手指碰到另一個端點多近就算畫完 */
     var MIN_DRAW = 70;                          /* 至少畫了多長才算畫完（避免剛起筆就算） */
@@ -109,7 +110,7 @@
         return out;
     }
     function genWave(d, rand) {
-        var k = Math.round(kit.lerp(3, 7, d)), A = kit.lerp(25, 75, d), H = PH - 2 * MG, out = [], tilt = kit.randFloat(-12, 12, rand) * Math.PI / 180;
+        var k = Math.round(kit.lerp(3, 7, d)), A = kit.lerp(42, 75, d), H = PH - 2 * MG, out = [], tilt = kit.randFloat(-12, 12, rand) * Math.PI / 180;
         for (var i = 0; i <= 300; i++) {
             var s = i / 300, x = A * Math.sin(Math.PI * k * s), y = -H / 2 + s * H;
             out.push({ x: x * Math.cos(tilt) - y * Math.sin(tilt), y: x * Math.sin(tilt) + y * Math.cos(tilt) });
@@ -197,11 +198,19 @@
             if (rand() < 0.5) pts = pts.map(function (p) { return { x: p.x, y: PH - p.y }; });
             if (type !== 'spiral' && rand() < 0.5) pts = pts.slice().reverse();
             var len = polyLen(pts), a = pts[0], b = pts[pts.length - 1];
-            if (len < LEN_RANGE[0] || len > LEN_RANGE[1] || kit.dist(a.x, a.y, b.x, b.y) < MIN_SEP) continue;
+            if (len < (LEN_MIN_TYPE[type] || LEN_RANGE[0]) || len > LEN_RANGE[1] || kit.dist(a.x, a.y, b.x, b.y) < MIN_SEP) continue;
             return { type: type, pts: pts, start: a, end: b, len: len };
         }
-        var fb = fit(genScurve(0, rand));
-        return { type: 'scurve', pts: fb, start: fb[0], end: fb[fb.length - 1], len: polyLen(fb) };
+        /* 保底（極少用到）：只用「這一關」解鎖的種類，用最大難度再試一次（不要退回已經不再出現的 S 形：V1.28 修正） */
+        var fbTypes = types, fbType = fbTypes.indexOf('wave') >= 0 ? 'wave' : fbTypes[0];
+        for (var tr2 = 0; tr2 < 300; tr2++) {
+            var fraw = fbType === 'scurve' ? genScurve(1, rand) : fbType === 'wave' ? genWave(1, rand) : fbType === 'right' ? genRight(1, rand) :
+                fbType === 'bolt' ? genBolt(1, rand) : fbType === 'spiral' ? genSpiral(1, rand) : genClip();
+            var fp = fit(fraw), fl = polyLen(fp);
+            if (fl >= (LEN_MIN_TYPE[fbType] || LEN_RANGE[0]) && fl <= LEN_RANGE[1] && kit.dist(fp[0].x, fp[0].y, fp[fp.length - 1].x, fp[fp.length - 1].y) >= MIN_SEP) return { type: fbType, pts: fp, start: fp[0], end: fp[fp.length - 1], len: fl };
+        }
+        var fb = fit(fbType === 'scurve' ? genScurve(0, rand) : genWave(1, rand));
+        return { type: fbType === 'scurve' ? 'scurve' : 'wave', pts: fb, start: fb[0], end: fb[fb.length - 1], len: polyLen(fb) };
     }
     function rating(n) {
         if (n >= 20) return '神之一筆！';
@@ -214,12 +223,17 @@
 
     var lastType = null;
     function mount(root, ctx) {
+        /* V1.28 起成績＝撐到第幾關（以前是通過幾關，少 1）：舊的最佳紀錄＋1（只轉一次） */
+        Reaction.migrateBest(ID, function (b) { return b + 1; }, '.v128');
         lastType = null;
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5,
-            numText: function (v) { return v + ' 關'; },
+            /* V1.28：結算的數字要跟遊戲左上角的「第 N 關」一致——成績＝撐到第幾關（通過的關數＋1：第 1 關就失敗＝第 1 關，不再是 0） */
+            scoreBase: 1,
+            numText: function (v) { return '第 ' + v + ' 關'; },
+            fmtBest: function (v) { return '第 ' + v + ' 關'; },
             rating: rating,
-            lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
+            lines: function (S) { return ['通過 ' + S.cleared + ' 關，在第 ' + S.level + ' 關結束']; },
             setup: setup
         });
     }
@@ -334,7 +348,7 @@
         test: {
             reqSim: reqSim, timeMs: timeMs, typesFor: typesFor, polyLen: polyLen, resample: resample, densify: densify, distToPoly: distToPoly, chamfer: chamfer, similarity: similarity,
             makeCurve: makeCurve, fit: fit, genClip: genClip, genSpiral: genSpiral, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, REQ: REQ, PW: PW, PH: PH, MG: MG, MIN_SEP: MIN_SEP, LEN_RANGE: LEN_RANGE, D0: D0, TYPE_RANGE: TYPE_RANGE, MAX_LEVEL: MAX_LEVEL
+            RAMP_LEVELS: RAMP_LEVELS, TIME_S: TIME_S, REQ: REQ, PW: PW, PH: PH, MG: MG, MIN_SEP: MIN_SEP, LEN_RANGE: LEN_RANGE, LEN_MIN_TYPE: LEN_MIN_TYPE, D0: D0, TYPE_RANGE: TYPE_RANGE, MAX_LEVEL: MAX_LEVEL
         }
     };
     Reaction.register(G);

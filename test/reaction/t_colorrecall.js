@@ -43,4 +43,14 @@ ok(T.makeRound(rnd, 'sat').dim === 'sat', '指定維度');
 // 最壞的 ΔE 在排行榜範圍內：整個色相／彩度／明度範圍的極端組合
 { let worst = 0; for (let i = 0; i < 4000; i++) { const a = { h: rnd() * 360, s: rnd() * 100, l: T.L_MIN + rnd() * 60 }, b = { h: rnd() * 360, s: rnd() * 100, l: T.L_MIN + rnd() * 60 }; worst = Math.max(worst, T.deltaE(a, b)); } ok(worst <= G.score.max, '最壞 ΔE ' + worst.toFixed(1) + ' ≤ ' + G.score.max); }
 ok(T.rating(0.5) !== T.rating(3) && T.rating(3) !== T.rating(6) && T.rating(6) !== T.rating(12) && T.rating(12) !== T.rating(30), '評語分級');
+// V1.27：揭曉動畫：兩塊靠攏併齊（右塊多蓋 1px）、去掉相鄰的白框線、下方大字從 0.0000% 升到最後的色差，停 1.5 秒才結算
+{ const a = T.joinPos(0), b = T.joinPos(1), W2 = 216;
+  ok(a.l === 10 && a.r === 246 && b.l === 20 && b.r === 235, '靠攏的起點與終點');
+  ok(b.l + W2 - b.r === 1, '併齊：右塊多蓋左塊 1px（不露細縫）');
+  for (let k = 0; k <= 20; k++) { const p = T.joinPos(k / 20); ok(p.l >= 10 && p.l <= 20 && p.r <= 246 && p.r >= 235, '位置在範圍內'); }
+  ok(T.fmtDiffPct(0) === '0.0000%' && T.fmtDiffPct(12.34567) === '12.3457%' && T.fmtDiffPct(3.1) === '3.1000%', '數字格式 XX.XXXX%');
+  ok(T.HOLD_MS === 1500 && T.COUNT_MS >= 1500 && T.JOIN_MS >= 500, '動畫時間');
+  const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_colorrecall.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction3.css'), 'utf8');
+  ok(src.indexOf("left.classList.add('cr-block--join-l'); right.classList.add('cr-block--join-r');") > 0 && /\.cr-block--join-l \{\s*border-right-width: 0;/.test(css) && /\.cr-block--join-r \{\s*border-left-width: 0;/.test(css), '左圖去掉右邊白框、右圖去掉左邊白框');
+  ok(src.indexOf('big.textContent = fmtDiffPct(real * e)') > 0 && src.indexOf('my.after(HOLD_MS') > src.indexOf('big.textContent = fmtDiffPct(real * e)'), '大字從 0 升到色差，停住後才結算'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

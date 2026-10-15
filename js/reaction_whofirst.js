@@ -7,7 +7,10 @@
      遊戲開始時先用 rAF 量 FRAME_SAMPLES 個影格的間隔取中位數當「1 影格＝幾毫秒」（量不到就當 60Hz）；
      顯示的時間差用實際量到的亮燈時刻差（4 位小數的秒）。
    · 兩盞燈都亮了才能按（不然只按已經亮的那盞就一定對）；按鈕在兩燈都亮之後才亮起。
-   · 兩盞燈的位置、大小（±8%）、亮度略有不同，不能靠亮度判斷；先亮的一側隨機，同側最多連續 3 次。
+   · V1.28（玩家意見）：燈的大小每一關慢慢縮小：第 1 關 LAMP[0]（220px）→ 第 RAMP_LEVELS 關 LAMP[1]（10px），線性；
+     兩盞燈永遠貼近左右邊緣（離邊緣 EDGE＝20px），等於把兩盞燈拉開距離增加辨識難度；
+     兩盞燈的大小依然故意有差異（一大一小，差 SIZE_JIT×(0.5～1)，大的一盞在左或右隨機）。
+   · 兩盞燈的位置（靠兩側）、大小略有不同，不能靠亮度判斷；先亮的一側隨機，同側最多連續 3 次。
    · rAF 被暫停（分頁在背景）時有 setTimeout 保底：照設計的時間差亮第二盞燈。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
@@ -23,11 +26,16 @@
     var FRAMES = [18, 2];                       /* 兩盞燈相差的影格數：第 1 關 → 到頂 */
     var WAIT_MS = [1200, 3000];                 /* 開始後隔多久第一盞燈亮 */
     var ANS_MS = 3000;                          /* 兩盞燈都亮之後的作答限時 */
-    var SIZE_JIT = 0.1;                        /* 兩盞燈大小的隨機差 */
+    var LAMP = [220, 10];                       /* 燈的直徑（px）：第 1 關 → 到頂（最小 10px） */
+    var EDGE = 20;                              /* 燈離畫面左右邊緣的距離（px） */
+    var SIZE_JIT = 0.1;                        /* 兩盞燈大小的差：一盞是基準的 (1 − JIT×u)、另一盞是 (1 + JIT×u)，u 在 0.5～1 */
+    var GAP_MIN = 8;                            /* 兩盞燈中間至少留的空隙（px；第 1 關兩盞 220 放不下時會自動縮到放得下） */
     var SAME_MAX = 3, FRAME_SAMPLES = 40;
     var frameMs = 1000 / 60;                    /* 1 影格幾毫秒（開始時量測） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 第 level 關的燈基準直徑（px） */
+    function lampAt(level) { return kit.ramp(level, LAMP[0], LAMP[1], RAMP_LEVELS); }
     function framesAt(level) { return Math.round(kit.ramp(level, FRAMES[0], FRAMES[1], RAMP_LEVELS)); }
     function median(arr) { var a = arr.slice().sort(function (x, y) { return x - y; }); return a.length ? a[Math.floor(a.length / 2)] : 0; }
     /* 由量到的影格間隔（毫秒）算出「1 影格」：離譜的值（< 4 或 > 34）退回 60Hz */
@@ -43,11 +51,17 @@
         }
         return rand() < 0.5 ? 'L' : 'R';
     }
-    function makeLevel(level, rand, hist) {
-        rand = rand || Math.random;
+    /* 出一關：sizeL／sizeR 是左右兩盞燈的直徑（px，一大一小、貼近兩側、放得進畫面寬 W、不小於 LAMP[1]） */
+    function makeLevel(level, rand, hist, W) {
+        rand = rand || Math.random; W = W || 472;
+        var base = lampAt(level), cap = (W - 2 * EDGE - GAP_MIN) / 2;
+        var u = kit.randFloat(0.5, 1, rand), small = base * (1 - SIZE_JIT * u), large = base * (1 + SIZE_JIT * u);
+        large = Math.min(large, cap); small = Math.min(small, large - 1);                /* 放不下時，大的縮到放得下，小的再比它小一點 */
+        small = Math.max(small, LAMP[1]); large = Math.max(large, small + 1);
+        var leftBig = rand() < 0.5;
         return {
             first: nextSide(hist || [], rand), frames: framesAt(level), wait: Math.round(kit.randFloat(WAIT_MS[0], WAIT_MS[1], rand)),
-            sizeL: 1 + kit.randFloat(-SIZE_JIT, SIZE_JIT, rand), sizeR: 1 + kit.randFloat(-SIZE_JIT, SIZE_JIT, rand)
+            sizeL: leftBig ? large : small, sizeR: leftBig ? small : large, base: base
         };
     }
     function rating(n) {
@@ -83,13 +97,16 @@
 
     function setup(api, hist) {
         var stage = api.stage, level = api.level;
-        var q = makeLevel(level, api.rand, hist);
+        var q = makeLevel(level, api.rand, hist, stage.clientWidth || 472);
         hist.push(q.first);
         api.info = q;
         console.log('[誰先亮] 第 ' + level + ' 關：' + (q.first === 'L' ? '左' : '右') + '邊先亮；時間差 ' + q.frames + ' 影格（約 ' + (q.frames * frameMs / 1000).toFixed(4) + ' 秒）；等 ' + q.wait + ' ms');
 
         var lampL = h('div', { 'class': 'wf-lamp wf-lamp--a' }), lampR = h('div', { 'class': 'wf-lamp wf-lamp--b' });
-        lampL.style.transform = 'scale(' + q.sizeL.toFixed(3) + ')'; lampR.style.transform = 'scale(' + q.sizeR.toFixed(3) + ')';
+        [[lampL, q.sizeL], [lampR, q.sizeR]].forEach(function (p) {
+            p[0].style.width = p[1].toFixed(1) + 'px'; p[0].style.height = p[1].toFixed(1) + 'px';
+            p[0].style.borderWidth = Math.max(1, Math.min(5, p[1] / 8)).toFixed(1) + 'px';          /* 燈很小的時候邊框也要細 */
+        });
         var lamps = { L: lampL, R: lampR };
         var tip = h('div', { 'class': 'wf-tip', text: '兩盞燈會先後亮起，哪一盞先亮？' });
         var row = h('div', { 'class': 'wf-row' }, [lampL, lampR]);
@@ -125,6 +142,7 @@
             var txt = '時間差 ' + (delta / 1000).toFixed(4) + ' 秒（' + q.frames + ' 影格）';
             info.textContent = txt;
             lamps[q.first].classList.add('wf-lamp--first');
+            lamps[q.first].style.borderWidth = Math.max(2, Math.min(8, (q.first === 'L' ? q.sizeL : q.sizeR) / 5)).toFixed(1) + 'px';
             if (side === q.first) { api.pass({ delay: 800 }); return; }
             api.fail({
                 delay: 1900, lines: [
@@ -145,7 +163,7 @@
         rule: '左右兩盞燈會先後亮起，兩盞都亮了之後，**點「先亮的那一盞」**。兩盞燈的時間差一關比一關短，最後只差幾個畫面影格。答錯或來不及就結束，看你能過幾關。請讓畫面保持在前景。',
         mount: mount,
         score: SCORE,
-        test: { framesAt: framesAt, median: median, frameFrom: frameFrom, nextSide: nextSide, makeLevel: makeLevel, rating: rating, RAMP_LEVELS: RAMP_LEVELS, MAX_LEVEL: MAX_LEVEL, FRAMES: FRAMES, WAIT_MS: WAIT_MS, SAME_MAX: SAME_MAX, SIZE_JIT: SIZE_JIT }
+        test: { lampAt: lampAt, LAMP: LAMP, EDGE: EDGE, GAP_MIN: GAP_MIN, framesAt: framesAt, median: median, frameFrom: frameFrom, nextSide: nextSide, makeLevel: makeLevel, rating: rating, RAMP_LEVELS: RAMP_LEVELS, MAX_LEVEL: MAX_LEVEL, FRAMES: FRAMES, WAIT_MS: WAIT_MS, SAME_MAX: SAME_MAX, SIZE_JIT: SIZE_JIT, MAX_LEVEL: MAX_LEVEL }
     };
     Reaction.register(G);
 })();

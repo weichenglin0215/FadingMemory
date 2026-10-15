@@ -1219,6 +1219,31 @@
     background: var(--c-bad-soft);
 }
 
+/* 找齊之後的揭曉：被改的答案「紅底白字」，先閃爍 1.5 秒（--blink）再維持 1.5 秒（V1.28） */
+.tt-cell--wrong {
+    background: var(--c-bad-light);
+    border-color: var(--c-bad-light);
+    color: var(--c-on-accent);
+    font-size: 15px;
+    font-weight: var(--fw-black);
+}
+
+.tt-cell--blink {
+    animation: tt-blink 0.3s steps(1, end) 5;
+}
+
+@keyframes tt-blink {
+    0% {
+        background: var(--c-bad-light);
+        color: var(--c-on-accent);
+    }
+
+    50% {
+        background: var(--c-card);
+        color: var(--c-bad-light);
+    }
+}
+
 .tt-info {
     position: absolute;
     left: 0;
@@ -1455,9 +1480,10 @@
     cursor: pointer;
 }
 
+/* 襪子每隻轉成不同角度（0～360 度）：圖要夠小，轉到斜角也不會超出格子被切掉（對角線 ≤ 格子 140px） */
 .os-cell svg {
-    width: 96px;
-    height: 125px;
+    width: 80px;
+    height: 104px;
 }
 
 .os-cell:active {
@@ -1505,9 +1531,16 @@
     stroke-width: 3;
 }
 
-.gl-token--start {
-    fill: var(--c-orange);
+/* 起點（上方的圓）與終點（下方的方塊）：綠底黑字（V1.28 改玩法：題目一開始就標出起點與終點） */
+.gl-token--go {
+    fill: var(--c-green);
     stroke: var(--c-ink);
+}
+
+
+.gl-token--go+.gl-label,
+.gl-end--go+.gl-label {
+    fill: var(--c-black);
 }
 
 .gl-label {
@@ -1517,45 +1550,62 @@
     font-family: var(--font-ui);
 }
 
-.gl-label--start {
-    fill: var(--c-on-accent);
-}
-
 .gl-end {
     fill: var(--c-card-alt);
     stroke: var(--c-ink-soft);
     stroke-width: 3;
 }
 
-.gl-trail {
-    fill: none;
-    stroke: var(--c-blue);
-    stroke-width: 9;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    opacity: 0.6;
+/* 終點（要放在 .gl-end 後面，才蓋得過它的灰底） */
+.gl-end--go {
+    fill: var(--c-green);
+    stroke: var(--c-ink);
 }
 
-.gl-trail--ok {
+/* 評審動畫的結果：走到的終點——對＝加粗的綠框、錯＝紅框（並把正確的終點框起來） */
+.gl-end--ok {
     stroke: var(--c-ok);
+    stroke-width: 7;
 }
 
-.gl-trail--bad {
+.gl-end--bad {
+    fill: var(--c-bad-soft);
     stroke: var(--c-bad);
+    stroke-width: 7;
 }
 
+.gl-end--want {
+    stroke: var(--c-black);
+    stroke-width: 6;
+    stroke-dasharray: 8 5;
+}
+
+/* 玩家畫的橫線：很粗的藍色水平線 */
+.gl-user {
+    stroke: var(--c-blue);
+    stroke-width: 14;
+    stroke-linecap: round;
+}
+
+.gl-user--hint {
+    opacity: 1;
+}
+
+/* 評審動畫：從起點開始畫出的綠色粗虛線 */
 .gl-route {
     fill: none;
     stroke: var(--c-green);
-    stroke-width: 6;
+    stroke-width: 9;
     stroke-linejoin: round;
-    stroke-dasharray: 12 8;
+    stroke-dasharray: 16 10;
 }
 
-.gl-miss {
-    fill: none;
-    stroke: var(--c-bad);
-    stroke-width: 5;
+/* 操作提示：鉛筆圖示（取代手指圖示） */
+.gl-pencil {
+    position: absolute;
+    font-size: 40px;
+    line-height: 1;
+    pointer-events: none;
 }
 
 .gl-msg {
@@ -1582,6 +1632,24 @@
     stroke-width: 7;
     stroke-linecap: round;
     transition: stroke 0.15s ease;
+}
+
+/* 評審動畫（V1.28）：粗綠線＋黑色箭頭＝一筆畫的路線；粗紅色虛線＝必須重複走的線 */
+.eu-route {
+    stroke: var(--c-green);
+    stroke-width: 9;
+    stroke-linecap: round;
+    fill: none;
+}
+
+.eu-route--rep {
+    stroke: var(--c-bad-light);
+    stroke-dasharray: 14 10;
+    stroke-linecap: butt;
+}
+
+.eu-arrow {
+    fill: var(--c-black);
 }
 
 .eu-edge--path {
@@ -1634,6 +1702,15 @@
 
 .cr-block--r {
     left: 246px;
+}
+
+/* 揭曉靠攏時：左圖去掉右邊的白框線、右圖去掉左邊的白框線（V1.28），兩張圖才能緊密連接 */
+.cr-block--join-l {
+    border-right-width: 0;
+}
+
+.cr-block--join-r {
+    border-left-width: 0;
 }
 
 .cr-block--info {
@@ -1724,6 +1801,25 @@
     opacity: 1;
 }
 
+/* 揭曉時的大字：差異 XX.XXXX%（從 0.0000% 往上跳） */
+.cr-big {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 400px;
+    text-align: center;
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    font-variant-numeric: tabular-nums;
+    color: var(--c-on-accent);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+    opacity: 0;
+}
+
+.cr-big--on {
+    opacity: 1;
+}
+
 .cr-ok {
     position: absolute;
     left: 0;
@@ -1779,28 +1875,28 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--sp-2);
+    gap: var(--sp-1);
     cursor: pointer;
 }
 
+/* 蔬果圖案（emoji，V1.28） */
 .bsk-ico {
-    width: 74px;
-    height: 74px;
-    border-radius: var(--r-pill);
-    border: 3px solid var(--c-ink);
-    box-sizing: border-box;
+    font-size: 46px;
+    line-height: 1.1;
 }
 
+/* 蔬果名稱：咖啡色、不是重點 */
 .bsk-name {
     font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
 }
 
+/* 價格：黑色、放大 150%（重點，要看得清楚） */
 .bsk-price {
-    font-size: var(--fs-lg);
+    font-size: calc(var(--fs-lg) * 1.5);
     font-weight: var(--fw-black);
-    color: var(--c-orange);
+    color: var(--c-black);
 }
 
 .bsk-tile--on {
@@ -1870,12 +1966,13 @@
     color: var(--c-ink);
 }
 
+/* 人物放大成 150%（105×240，V1.28） */
 .psb-person {
     position: absolute;
     left: 0;
-    top: 200px;
-    width: 70px;
-    height: 160px;
+    top: 150px;
+    width: 105px;
+    height: 240px;
 }
 
 .psb-opts {
@@ -1933,7 +2030,9 @@
 
 .psb-cell {
     position: relative;
-    width: 84px;
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 84px;
     padding: 6px 4px 28px;
     border-radius: var(--r-md);
     border: 3px solid transparent;
@@ -1977,6 +2076,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 150px;
+    line-height: 1;
 }
 
 .si-pic--ok {
@@ -1989,39 +2090,27 @@
     background: var(--c-bad-soft);
 }
 
-.si-info {
+/* 圖案名稱（V1.28：emoji 下面加中文名稱） */
+.si-name {
     position: absolute;
     left: 0;
     right: 0;
     top: 350px;
     text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
 }
 
-.si-cmp {
+.si-info {
     position: absolute;
     left: 0;
     right: 0;
-    top: 410px;
-    display: flex;
-    justify-content: center;
-    gap: var(--sp-5);
-}
-
-.si-cmp__c {
+    top: 420px;
     text-align: center;
-}
-
-.si-cmp__t {
-    font-size: var(--fs-sm);
+    font-size: var(--fs-md);
     font-weight: var(--fw-bold);
     color: var(--c-ink-soft);
-}
-
-.si-eye {
-    fill: #FFFDF3;
 }
 
 /* ═══ 084 誰先亮（.wf-）═══ */
@@ -2036,16 +2125,20 @@
     color: var(--c-ink-soft);
 }
 
+/* 兩盞燈貼近左右邊緣（離邊緣 20px，js 的 EDGE），大小由 js 依關卡設定（220px → 10px） */
 .wf-row {
     position: absolute;
-    left: 0;
-    right: 0;
+    left: 20px;
+    right: 20px;
     top: 140px;
+    height: 240px;
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .wf-lamp {
+    flex: none;
     width: 220px;
     height: 220px;
     border-radius: var(--r-pill);
@@ -2176,13 +2269,6 @@
     stroke: var(--c-orange);
     stroke-width: 12;
     stroke-linecap: round;
-}
-
-.hm-ghost {
-    stroke: var(--c-green);
-    stroke-width: 1;
-    stroke-linecap: round;
-    stroke-dasharray: 10 8;
 }
 
 .hm-pin {
@@ -2333,13 +2419,17 @@
     gap: 6px;
 }
 
+/* 鑽石（💎，V1.28）：框的大小＝直徑，字級由 js 依直徑設定；不再有灰色圓球的底和邊框 */
 .tb-stone {
     flex: none;
-    border-radius: var(--r-pill);
-    background: radial-gradient(circle at 35% 30%, var(--c-card) 0%, var(--c-ink-soft) 85%);
-    border: 3px solid var(--c-ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
     box-sizing: border-box;
     cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .tb-stone--lift {

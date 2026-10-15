@@ -5,6 +5,8 @@
    ───────────────────────────────────────────────────────────────────
    · 被改的格子：不在第 1 列、第 1 行，也不在對角線（對角線沒有對稱格可以交叉檢查）；
      3 格分在三個不同的列、三個不同的行；每一格的對稱格（b×a）保持正確，也不會被選成被改的格子。
+   · V1.28（玩家意見）揭曉動畫：找齊 3 格之後，3 個被改的答案一起改成「紅底白字」閃爍 BLINK_MS（1.5 秒），
+     閃完維持紅底白字 HOLD_MS（1.5 秒），讓玩家看清楚，才跳出結算彈窗。
    · 改法（每格隨機一種）：個位 ±1（42→43）、十位 ±1（42→52）、取鄰格的答案（6×7 寫成 6×8＝48）、
      兩位數對調（63→36）；改後一定不等於正解、是正數。
    ═══════════════════════════════════════════════════════════════════ */
@@ -19,6 +21,8 @@
     var N = 9;                                  /* 乘法表大小（N×N） */
     var FOUND = 3;                              /* 被改的格子數 */
     var PENALTY_MS = 3000;                      /* 點錯一格罰幾毫秒 */
+    var BLINK_MS = 1500;                        /* 找齊之後，錯誤答案紅底白字閃爍多久 */
+    var HOLD_MS = 1500;                         /* 閃完之後，維持紅底白字多久才出現結算 */
     var CELL = 46;                              /* 每格大小（px） */
     var TYPES = ['ones', 'tens', 'neighbor', 'swap'];
 
@@ -131,7 +135,14 @@
         }
         function finish() {
             var sec = clock.stop() / 1000;
-            my.after(900, function () {
+            /* 揭曉：3 個被改的答案一起變成紅底白字閃爍 BLINK_MS，再維持 HOLD_MS，才結算 */
+            tb.tampered.forEach(function (c) {
+                var el = els[c.a + ',' + c.b];
+                el.classList.remove('tt-cell--found'); el.classList.add('tt-cell--wrong', 'tt-cell--blink');
+            });
+            Sfx.play('bad');
+            my.after(BLINK_MS, function () { tb.tampered.forEach(function (c) { els[c.a + ',' + c.b].classList.remove('tt-cell--blink'); }); });
+            my.after(BLINK_MS + HOLD_MS, function () {
                 api.finish(sec, { lines: tb.tampered.map(function (c) { return c.a + '×' + c.b + ' 被改成 ' + c.shown + '，應該是 ' + c.truth + '（' + TYPE_NAME[c.type] + '）'; }).concat(['點錯 ' + errors + ' 次，罰時 ' + (errors * PENALTY_MS / 1000).toFixed(4) + ' 秒']) });
             });
         }
@@ -150,7 +161,7 @@
         rule: '9×9 乘法表裡**有 3 格的答案被偷偷改過，找出它們**。背過九九乘法表的人很有利，也可以利用對稱（3×7 和 7×3 一樣）來檢查。**點錯一格加 3 秒**，找齊 3 格就結束，用時越短越好。',
         mount: mount,
         score: SCORE,
-        test: { tamper: tamper, makeTable: makeTable, rating: rating, N: N, FOUND: FOUND, PENALTY_MS: PENALTY_MS, TYPES: TYPES }
+        test: { BLINK_MS: BLINK_MS, HOLD_MS: HOLD_MS, tamper: tamper, makeTable: makeTable, rating: rating, N: N, FOUND: FOUND, PENALTY_MS: PENALTY_MS, TYPES: TYPES }
     };
     Reaction.register(G);
 })();

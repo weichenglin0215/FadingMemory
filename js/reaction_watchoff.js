@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_watchoff.js — 秒反應・哪支錶不準
-   三支錶一起走（秒針每秒跳一格），看 15 秒，其中一支走得比較快或比較慢，找出它。
+   三支錶一起走（秒針每秒跳一格），其中一支走得比較快或比較慢，找出它。
    關卡制，答錯或逾時就結束，成績＝通過關數。
    ───────────────────────────────────────────────────────────────────
    · 兩支準的錶每次跳動間隔 1.0000 秒；不準的那支間隔 ＝ 1 ÷ (1 ＋ e)，e 是誤差率（快或慢隨機），
@@ -9,8 +9,9 @@
      要比較的是「跳動的節奏有沒有慢慢滑開」。
    · 秒針位置是時間的純函式：6 度 × floor((t ＋ 相位) ÷ 間隔)，不逐格累加，rAF 暫停也不會錯位。
    · 錶面三種：羅馬數字、無刻度、數字，隨機分配給三支錶。
-   · 觀察 OBS_S 秒（按鈕灰色），之後作答限時 ANS_S 10→5 秒。
-   · 揭曉：每支錶 15 秒內「秒針走了幾秒」：15.0000／15.0000／15.7500，不準的標紅。
+   · V1.28（玩家意見）：取消前面「觀察 15 秒（按鈕灰色）」，併入作答限時：一開始就可以作答，總限時 ANS_S 25→20 秒
+     （＝原本的觀察 15 秒＋作答 10→5 秒）；點了答案之後按鈕立刻停用，要到下一關才恢復。
+   · 揭曉：每支錶 WINDOW_S（15）秒內「秒針走了幾秒」：15.0000／15.0000／15.7500，不準的標紅。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -22,8 +23,8 @@
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 20;                       /* 幾關之後難度到頂（也是最後一關） */
     var ERR = [0.08, 0.005];                    /* 誤差率：第 1 關 → 到頂 */
-    var OBS_S = 15;                             /* 觀察秒數 */
-    var ANS_S = [10, 5];                        /* 作答限時（秒） */
+    var WINDOW_S = 15;                          /* 揭曉時用幾秒的跳動來算「秒針走了幾秒」（不再是觀察時間，只是換算用的視窗） */
+    var ANS_S = [25, 20];                       /* 作答總限時（秒）：從錶開始走就開始算；第 1 關 → 到頂 */
     var STYLES = ['roman', 'none', 'digits'];
     var NAMES = ['A', 'B', 'C'];
     var SIZE = 140;                             /* 錶面直徑（px） */
@@ -79,12 +80,12 @@
 
     function setup(api) {
         var stage = api.stage, level = api.level, W = stage.clientWidth || 472;
-        var q = makeLevel(level, api.rand), t0 = performance.now(), canAnswer = false, done = false;
+        var q = makeLevel(level, api.rand), t0 = performance.now(), canAnswer = true, done = false;
         api.info = q;
         console.log('[哪支錶不準] 第 ' + level + ' 關：不準的是錶 ' + NAMES[q.odd] + '（誤差 ' + (q.e * 100).toFixed(3) + '%，' + (q.e > 0 ? '偏快' : '偏慢') + '）；錶面 ' + q.styles.join('/') + '；作答限時 ' + ansMs(level) + ' ms');
 
         var tip = h('div', { 'class': 'wo-tip', text: '三支錶一起走，其中一支走得比較快或比較慢' });
-        var obs = h('div', { 'class': 'wo-obs', text: '觀察中 0 / ' + OBS_S + ' 秒' });
+        var obs = h('div', { 'class': 'wo-obs', text: '哪一支走得不準？' });
         var info = h('div', { 'class': 'wo-info' });
         stage.appendChild(tip); stage.appendChild(obs);
         var gap = Math.floor((W - 3 * SIZE) / 4);
@@ -100,34 +101,28 @@
         function frame() {
             var sec = (performance.now() - t0) / 1000;
             hands.forEach(function (hd, i) { hd.setAttribute('transform', 'rotate(' + handDeg(q.periods[i], q.phases[i], sec).toFixed(1) + ' 70 70)'); });
-            if (!canAnswer && !done) obs.textContent = '觀察中 ' + Math.min(OBS_S, Math.floor(sec)) + ' / ' + OBS_S + ' 秒';
         }
         frame();
         api.my.loop(function () { if (api.over) return false; frame(); });
         var btns = NAMES.map(function (n, i) {
             var b = h('button', { 'class': 'btn btn--line', text: '選 ' + n });
-            b.disabled = true;
-            kit.onTap(b, function () { if (canAnswer) choose(i); });
+            kit.onTap(b, function () { if (canAnswer && !b.disabled) choose(i); });
             return b;
         });
         stage.appendChild(h('div', { 'class': 'rx-btnrow' }, btns));
-        api.after(OBS_S * 1000, function () {
-            canAnswer = true; obs.textContent = '哪一支走得不準？';
-            btns.forEach(function (b) { b.disabled = false; });
-            api.timer(ansMs(level), function () { choose(-1); });
-            Sfx.play('go');
-        });
+        api.timer(ansMs(level), function () { choose(-1); });                  /* 一開始就能作答；時間到算沒回答 */
 
         function choose(i) {
             if (api.over || done) return;
-            done = true;
-            var sec = Math.max(OBS_S, (performance.now() - t0) / 1000), lines = [];
+            done = true; canAnswer = false;
+            btns.forEach(function (b) { b.disabled = true; });                  /* 點了答案之後按鈕立刻停用，直到下一關才恢復（每一關重建） */
+            var lines = [];
             faces.forEach(function (f, k) {
-                var ds = dialSeconds(q.periods[k], OBS_S);
+                var ds = dialSeconds(q.periods[k], WINDOW_S);
                 f.classList.toggle('wo-face--odd', k === q.odd);
                 if (k === i && k !== q.odd) f.classList.add('wo-face--bad');
                 f.appendChild(h('div', { 'class': 'wo-sec', text: ds.toFixed(4) + ' 秒' }));
-                lines.push('錶 ' + NAMES[k] + '：' + OBS_S + ' 秒內秒針走了 ' + ds.toFixed(4) + ' 秒' + (k === q.odd ? '（' + (q.e > 0 ? '偏快' : '偏慢') + ' ' + Math.abs(q.e * 100).toFixed(4) + '%）' : ''));
+                lines.push('錶 ' + NAMES[k] + '：' + WINDOW_S + ' 秒內秒針走了 ' + ds.toFixed(4) + ' 秒' + (k === q.odd ? '（' + (q.e > 0 ? '偏快' : '偏慢') + ' ' + Math.abs(q.e * 100).toFixed(4) + '%）' : ''));
             });
             info.textContent = '不準的是錶 ' + NAMES[q.odd] + '，' + (q.e > 0 ? '偏快' : '偏慢') + ' ' + Math.abs(q.e * 100).toFixed(4) + '%';
             if (i === q.odd) api.pass({ delay: 1700 });
@@ -140,10 +135,10 @@
     var G = {
         id: ID,
         name: '哪支錶不準',
-        rule: '三支錶一起走，秒針每秒跳一格。看 15 秒，其中一支走得比較快或比較慢，看完後**選出不準的那一支**。三支錶的秒針位置和錶面朝向都不一樣，要看的是**跳動的節奏有沒有慢慢滑開**。答錯或來不及就結束。',
+        rule: '三支錶一起走，秒針每秒跳一格。其中一支走得比較快或比較慢，**選出不準的那一支**。三支錶的秒針位置和錶面朝向都不一樣，要看的是**跳動的節奏有沒有慢慢滑開**。**一開始就可以作答**，點了答案按鈕就不能再按。答錯或來不及就結束。',
         mount: mount,
         score: SCORE,
-        test: { errAt: errAt, ansMs: ansMs, makeLevel: makeLevel, handDeg: handDeg, dialSeconds: dialSeconds, faceSvg: faceSvg, rating: rating, RAMP_LEVELS: RAMP_LEVELS, ERR: ERR, OBS_S: OBS_S, STYLES: STYLES }
+        test: { errAt: errAt, ansMs: ansMs, makeLevel: makeLevel, handDeg: handDeg, dialSeconds: dialSeconds, faceSvg: faceSvg, rating: rating, RAMP_LEVELS: RAMP_LEVELS, ERR: ERR, ANS_S: ANS_S, WINDOW_S: WINDOW_S, STYLES: STYLES }
     };
     Reaction.register(G);
 })();

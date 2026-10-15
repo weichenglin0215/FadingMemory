@@ -20,12 +20,12 @@
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 25;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var SHAPES_N = [2, 6];                      /* 圖形種類：第 1 關 → 到頂 */
-    var SEQ_N = [5, 9];                         /* 閃現幾次：第 1 關 → 到頂 */
-    var SHOW_MS = [800, 450];                   /* 每次閃現多久（毫秒）：第 1 關 → 到頂 */
-    var GAP_MS = 180;                           /* 兩次之間的空檔（毫秒） */
-    var ANS_S = [7, 4.5];                       /* 作答限時（秒）：第 1 關 → 到頂 */
+    var SEQ_N = [3, 9];                         /* 閃現幾次：第 1 關 → 到頂 */
+    var SHOW_MS = [800, 600];                   /* 每次閃現多久（毫秒）：第 1 關 → 到頂 */
+    var GAP_MS = 200;                           /* 兩次之間的空檔（毫秒） */
+    var ANS_S = [7, 10];                       /* 作答限時（秒）：第 1 關 → 到頂 */
     var COLOR_FROM = 8;                         /* 第幾關起圖形有顏色（而且有「同形不同色」） */
     var EXTRA = [1, 2];                         /* 「同形不同色」多幾顆按鈕：COLOR_FROM 關 → 到頂 */
     var MAX_LEVEL = 60;
@@ -40,7 +40,7 @@
     function seqFor(level) { return kit.clamp(Math.round(kit.ramp(level, SEQ_N[0], SEQ_N[1], RAMP_LEVELS)), SEQ_N[0], SEQ_N[1]); }
     function showMs(level) { return Math.round(kit.ramp(level, SHOW_MS[0], SHOW_MS[1], RAMP_LEVELS)); }
     function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }
-    function extraFor(level) { return level < COLOR_FROM ? 0 : kit.clamp(Math.round(kit.ramp(level, EXTRA[0], EXTRA[1], RAMP_LEVELS - COLOR_FROM + 1) ), EXTRA[0], EXTRA[1]); }
+    function extraFor(level) { return level < COLOR_FROM ? 0 : kit.clamp(Math.round(kit.ramp(level, EXTRA[0], EXTRA[1], RAMP_LEVELS - COLOR_FROM + 1)), EXTRA[0], EXTRA[1]); }
     /* 圖形的 SVG（100×100）；fill 是填色 */
     function shapeSvg(shape, fill, stroke) {
         var body;
@@ -155,10 +155,12 @@
             }
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1500 }); return; }
             kit.flash(stage, false, api.my);
-            api.fail({ delay: 2600, lines: [
-                (i == null ? '時間到！' : '選錯了') + '，第 ' + q.ask + ' 個出現的是：' + nm(q.pool[q.ans]),
-                '完整順序：' + q.seq.map(function (pi) { return nm(q.pool[pi]); }).join('、')
-            ] });
+            api.fail({
+                delay: 2600, lines: [
+                    (i == null ? '時間到！' : '選錯了') + '，第 ' + q.ask + ' 個出現的是：' + nm(q.pool[q.ans]),
+                    '完整順序：' + q.seq.map(function (pi) { return nm(q.pool[pi]); }).join('、')
+                ]
+            });
         }
         api.solve = function () { if (phase !== 'ask') return; judge(q.ans); };
         api.wrong = function () { if (phase !== 'ask') return; judge((q.ans + 1) % q.pool.length); };

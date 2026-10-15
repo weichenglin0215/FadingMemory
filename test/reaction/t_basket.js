@@ -10,7 +10,10 @@ ok(T.timeMs(1) === 40000 && T.timeMs(T.RAMP_LEVELS) === 20000, '限時端點');
 for (let l = 2; l <= T.MAX_LEVEL; l++) ok(T.kAt(l) >= T.kAt(l - 1) && T.timeMs(l) <= T.timeMs(l - 1), '單調 ' + l);
 ok(T.LIVES === 2, '2 條命');
 // 名稱表：20 種、不重複、色相合法
-ok(T.ITEMS.length === 20 && new Set(T.ITEMS.map(x => x[0])).size === 20 && T.ITEMS.every(x => x[1] >= 0 && x[1] < 360), '蔬果表');
+ok(T.ITEMS.length === 28 && new Set(T.ITEMS.map(x => x[0])).size === 28 && new Set(T.ITEMS.map(x => x[1])).size === 28 && T.ITEMS.every(x => Number.isInteger(x[0]) && x[0] > 0x1F000 && typeof x[1] === 'string'), '蔬果表：28 種 emoji＋名稱');
+ok(T.ITEMS.map(x => T.emojiOf(x)).join('') === '🍇🍈🍉🍊🍋🍌🍍🥭🍎🍏🍐🍑🍒🍓🍅🍆🌽🌶🍄🥑🥒🥬🥦🥔🧄🧅🥕🌰', '圖示順序與玩家提供的清單一致');
+for (let i = 0; i < 300; i++) { const q = T.makeLevel(1 + (i % 15), rnd); ok(q.emojis.length === 6 && q.names.length === 6 && new Set(q.emojis).size === 6, '每關六樣不同的蔬果 emoji'); }
+{ const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction3.css'), 'utf8'), i = css.indexOf('.bsk-price {'), j = css.indexOf('.bsk-name {'); ok(css.slice(i, i + 200).indexOf('var(--c-black)') > 0 && css.slice(i, i + 200).indexOf('* 1.5') > 0 && css.slice(j, j + 200).indexOf('var(--c-ink-soft)') > 0, '價格黑色 150%、名稱咖啡色'); }
 // bitCount／subsets
 ok(T.bitCount(0b101101) === 4 && T.subsets([1, 2, 4]).length === 7 && T.subsets([1, 2, 4]).map(s => s.sum).sort().join() === '1,2,3,4,5,6,7', 'subsets');
 // 出題：每一關檢查唯一解、樣數、陷阱、價格範圍

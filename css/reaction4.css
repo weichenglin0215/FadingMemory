@@ -193,8 +193,13 @@
     color: var(--c-green);
 }
 
+.hc-count__b {
+    color: var(--c-blue);
+}
+
+/* 多出來的圓形數量：紅色 */
 .hc-count__r {
-    color: var(--c-recall);
+    color: var(--c-bad-light);
 }
 
 .hc-count--ok {
@@ -229,9 +234,15 @@
     stroke: var(--c-green);
 }
 
+.hc-circle--b {
+    fill: var(--c-blue-soft);
+    stroke: var(--c-blue);
+}
+
+/* 兩邊不一樣多時，多出來的圓形：紅色 */
 .hc-circle--r {
     fill: var(--c-bad-light);
-    stroke: var(--c-recall);
+    stroke: var(--c-bad-light);
 }
 
 .hc-line {

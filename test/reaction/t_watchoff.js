@@ -7,7 +7,7 @@ const SEED = seedOf(20261009); const rnd = rng(SEED);
 // 難度曲線：誤差率 8% → 0.5%（線性），作答限時 10 → 5 秒
 ok(near(T.errAt(1), 0.08) && near(T.errAt(T.RAMP_LEVELS), 0.005), '誤差率端點');
 { const d = T.errAt(1) - T.errAt(2); for (let l = 1; l < T.RAMP_LEVELS; l++) ok(near(T.errAt(l) - T.errAt(l + 1), d, 1e-12), '誤差率線性 ' + l); }
-ok(T.ansMs(1) === 10000 && T.ansMs(T.RAMP_LEVELS) === 5000, '作答限時端點');
+ok(T.ansMs(1) === T.ANS_S[0] * 1000 && T.ansMs(T.RAMP_LEVELS) === T.ANS_S[1] * 1000 && T.ANS_S[0] === 25 && T.ANS_S[1] === 20, '作答總限時 25 → 20 秒（＝原本觀察 15 秒＋作答 10 → 5 秒）');
 // 15 秒的累積差：8% → 1.2 秒；0.5% → 0.075 秒（由 dialSeconds 算）
 ok(near(T.dialSeconds(1 / 1.08, 15) - 15, 1.2, 1e-9) && near(T.dialSeconds(1 / 1.005, 15) - 15, 0.075, 1e-9), '15 秒累積差');
 // 秒針：每個 period 跳 6 度，跳完一圈回到 0
@@ -30,4 +30,10 @@ ok(oddCnt.every(c => c > n / 3 * 0.85), '不準的錶 A/B/C 平均 ' + oddCnt.jo
 T.STYLES.forEach(s => ok(/^<svg/.test(T.faceSvg(s)) && T.faceSvg(s).indexOf('wo-hand') > 0, s + ' 錶面 SVG'));
 ok(T.faceSvg('roman').indexOf('XII') > 0 && T.faceSvg('digits').indexOf('>12<') > 0 && T.faceSvg('none').indexOf('<text') < 0, '三種錶面的數字');
 ok(T.rating(2) !== T.rating(6) && T.rating(6) !== T.rating(10) && T.rating(10) !== T.rating(16) && T.rating(16) !== T.rating(20), '評語分級');
+// V1.27：沒有觀察階段，一開始就能作答；點了答案按鈕立刻停用
+{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_watchoff.js'), 'utf8');
+  ok(src.indexOf('OBS_S') < 0 && src.indexOf('觀察中') < 0, '取消觀察秒數與「觀察中」');
+  ok(src.indexOf('canAnswer = true, done = false') > 0 && src.indexOf('b.disabled = true;') > 0 && src.indexOf("var b = h('button', { 'class': 'btn btn--line', text: '選 ' + n });\n            b.disabled = true;") < 0, '按鈕一開始可用');
+  ok(/function choose\(i\) \{[\s\S]*?btns\.forEach\(function \(b\) \{ b\.disabled = true; \}\);/.test(src), '點了答案後按鈕立刻停用');
+  ok(T.WINDOW_S === 15, '揭曉換算視窗 15 秒'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

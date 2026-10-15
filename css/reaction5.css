@@ -87,6 +87,11 @@
     color: var(--c-ink-soft);
 }
 
+/* 裁判時：符號答對＝綠色、答錯＝紅色（V1.28） */
+.ieq-sign.qz-bad {
+    color: var(--c-bad-light) !important;
+}
+
 /* ═══ 先乘除（.ord-）═══ */
 .ord-ask {
     top: 170px;
@@ -1266,7 +1271,7 @@
 }
 
 .alc-tip {
-    top: 346px;
+    top: 520px;
 }
 
 .alc-opt {

@@ -10,6 +10,9 @@
    · 微調：拖曳慢速打折（kit.dragDamp）；橫條兩端的 ◀ ▶ 每按一下調 NUDGE（0.5 單位，按住會連續）。
    · 色差 ΔE：HSL → sRGB → XYZ（D65）→ CIE Lab，取 CIE76（Lab 空間的歐氏距離）。成績＝ΔE（越小越好）。
    · 背景固定中灰（HSL 0,0%,50%），避免對比錯覺干擾兩塊顏色。
+   · 揭曉動畫（V1.28 玩家意見）：按「確定」後，左圖去掉右邊的白框線、右圖去掉左邊的白框線，兩張圖往中間靠攏、緊密併齊
+     （兩塊顏色貼在一起才看得出差異）；同時畫面下方用大字體顯示「差異 XX.XXXX%」，從 0.0000% 一路上升到最後的色差
+     （數字就是 ΔE，跟結算的成績同一個值，緊張地揭曉），停住 HOLD_MS 之後才結算。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -23,6 +26,9 @@
     var L_MIN = 20, L_MAX = 80;                 /* 明度橫條的範圍（%） */
     var TARGET_S = [40, 90], TARGET_L = [35, 65];
     var START_GAP = { hue: [60, 180], sat: [25, 45], light: [20, 30] };   /* 起始值離目標的距離範圍（度／百分點） */
+    var JOIN_MS = 1000;                         /* 兩個色塊靠攏的時間 */
+    var COUNT_MS = 2200;                        /* 差異數字從 0 升到最後數值的時間 */
+    var HOLD_MS = 1500;                         /* 數字停住之後，再維持多久才跳出結算 */
     var NUDGE = 0.5;                            /* ◀ ▶ 每按一下調幾個單位 */
     var TRACK_W = 380, KNOB = 64;
     var DIMS = ['hue', 'sat', 'light'];
@@ -78,6 +84,11 @@
         if (e < 15) return '不錯喔！';
         return '再試一次，會更準！';
     }
+    /* 揭曉：兩個色塊的左邊界在進度 e（0～1）時的位置：左塊 10 → 20、右塊 246 → 235（右塊多蓋 1px，避免兩塊中間露出一條細縫） */
+    var JOIN_FROM = { l: 10, r: 246 }, JOIN_TO = { l: 20, r: 235 };
+    function joinPos(e) { return { l: JOIN_FROM.l + (JOIN_TO.l - JOIN_FROM.l) * e, r: JOIN_FROM.r + (JOIN_TO.r - JOIN_FROM.r) * e }; }
+    /* 差異數字的字串：0.0000% → XX.XXXX% */
+    function fmtDiffPct(v) { return v.toFixed(4) + '%'; }
     function css(c) { return 'hsl(' + c.h.toFixed(2) + ',' + c.s.toFixed(2) + '%,' + c.l.toFixed(2) + '%)'; }
 
     function mount(root, ctx) {
@@ -117,9 +128,10 @@
         var nudges = h('div', { 'class': 'cr-nudges' }, [bL, bR]);
         var okBtn = h('button', { 'class': 'btn btn--go cr-ok', text: '確定' });
         var msg = h('div', { 'class': 'cr-msg' });
+        var big = h('div', { 'class': 'cr-big', text: fmtDiffPct(0) });        /* 揭曉時的大字：差異 XX.XXXX% */
         var ctrl = [track, knob, nudges, okBtn];
         ctrl.forEach(function (e) { e.style.display = 'none'; stage.appendChild(e); });
-        stage.appendChild(msg);
+        stage.appendChild(msg); stage.appendChild(big);
         function mine() { return withDim(cfg.target, cfg.dim, valueAt(cfg.dim, t)); }
         function paint() {
             knob.style.left = (x0 + t * TRACK_W - KNOB / 2) + 'px';
@@ -161,20 +173,27 @@
 
         function submit() {
             if (locked || phase !== 'adjust') return;
-            locked = true; hideHint(); okBtn.style.display = 'none'; nudges.style.display = 'none';
+            locked = true; hideHint(); ctrl.forEach(function (e) { e.style.display = 'none'; });
             Sfx.play('click');
             var m = mine(), real = deltaE(m, cfg.target);
             left.classList.remove('cr-block--info'); left.textContent = ''; left.style.background = css(cfg.target);
             var tv = cfg.target[dimKey(cfg.dim)], mv = valueAt(cfg.dim, t);
-            msg.textContent = '左：剛才的顏色　右：你調的　色差 ' + real.toFixed(4);
-            msg.classList.add('cr-msg--on');
-            my.after(2400, function () {
-                api.finish(real, { lines: [
-                    '這一回合考' + DIM_NAME[cfg.dim] + '：目標 ' + tv.toFixed(4) + DIM_UNIT[cfg.dim] + '，你調到 ' + mv.toFixed(4) + DIM_UNIT[cfg.dim],
-                    '色差 ΔE ＝ ' + real.toFixed(4) + '（Lab 空間的距離，越小越接近）',
-                    '只有一次機會，想拚更準就再挑戰一次（下次可能考別的項目）'
-                ] });
+            /* 揭曉：左圖去掉右邊的白框線、右圖去掉左邊的白框線 → 兩張圖往中間靠攏併齊，同時下方的差異數字從 0 往上跳 */
+            left.classList.add('cr-block--join-l'); right.classList.add('cr-block--join-r');
+            big.classList.add('cr-big--on');
+            my.tween(COUNT_MS, function (e) { big.textContent = fmtDiffPct(real * e); }, kit.easeOutCubic).then(function () {
+                big.textContent = fmtDiffPct(real);
+                my.after(HOLD_MS, function () {
+                    api.finish(real, { lines: [
+                        '這一回合考' + DIM_NAME[cfg.dim] + '：目標 ' + tv.toFixed(4) + DIM_UNIT[cfg.dim] + '，你調到 ' + mv.toFixed(4) + DIM_UNIT[cfg.dim],
+                        '色差 ΔE ＝ ' + real.toFixed(4) + '（Lab 空間的距離，越小越接近）',
+                        '只有一次機會，想拚更準就再挑戰一次（下次可能考別的項目）'
+                    ] });
+                });
             });
+            my.tween(JOIN_MS, function (e) {
+                var p = joinPos(e); left.style.left = p.l.toFixed(2) + 'px'; right.style.left = p.r.toFixed(2) + 'px';
+            }, kit.easeInOutCubic);
         }
 
         G.debug = {
@@ -192,7 +211,7 @@
         rule: '先看左邊的色塊 3 秒，**記住它的顏色**。3 秒後色塊消失，右邊會出現另一塊顏色，拖曳下方橫條，**把它調回剛剛看到的顏色**。每次只考色相、彩度、明度其中一項。只有一次機會，按「確定」後會告訴你色差。',
         mount: mount,
         score: SCORE,
-        test: { hslToRgb: hslToRgb, rgbToLab: rgbToLab, deltaE: deltaE, valueAt: valueAt, tFor: tFor, unitsPerT: unitsPerT, withDim: withDim, makeRound: makeRound, rating: rating, DIMS: DIMS, START_GAP: START_GAP, L_MIN: L_MIN, L_MAX: L_MAX, TARGET_S: TARGET_S, TARGET_L: TARGET_L }
+        test: { joinPos: joinPos, fmtDiffPct: fmtDiffPct, JOIN_FROM: JOIN_FROM, JOIN_TO: JOIN_TO, JOIN_MS: JOIN_MS, COUNT_MS: COUNT_MS, HOLD_MS: HOLD_MS, hslToRgb: hslToRgb, rgbToLab: rgbToLab, deltaE: deltaE, valueAt: valueAt, tFor: tFor, unitsPerT: unitsPerT, withDim: withDim, makeRound: makeRound, rating: rating, DIMS: DIMS, START_GAP: START_GAP, L_MIN: L_MIN, L_MAX: L_MAX, TARGET_S: TARGET_S, TARGET_L: TARGET_L }
     };
     Reaction.register(G);
 })();

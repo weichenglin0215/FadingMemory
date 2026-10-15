@@ -225,23 +225,24 @@
     /* ═══ 四、「我有話要說」意見彈窗 ═══
        玩家寫下意見 → Leaderboard.sendFeedback 送到資料庫的 MF_feedback（每一列都記著是哪一款遊戲）。
        連不上網路時意見先存在這支手機，下次開頁面時補送（見 js/leaderboard.js）。 */
-    var FB_MAX = 300;
+    var FB_MAX = 600;
     Dlg.feedback = function (game) {
         var LB = global.Leaderboard;
         var ta = h('textarea', {
             'class': 'dlg-input dlg-input--area',
-            attrs: { maxlength: String(FB_MAX), rows: '6', placeholder: '想說什麼都可以：哪裡不好玩、哪裡看不懂、想要什麼新遊戲…', 'aria-label': '你的意見' }
+            attrs: { maxlength: String(FB_MAX), rows: '12', placeholder: '想說什麼都可以：哪裡不好玩、哪裡看不懂、想要什麼新遊戲…', 'aria-label': '你的意見' }
         });
         var count = h('div', { 'class': 'dlg__count', text: '0 / ' + FB_MAX });
         var ctl = Dlg.open({
             cls: 'dlg--feedback', title: '我有話要說', sub: game && game.name ? game.name : '',
             children: [ta, count],
+            btnRow: true,          /* V1.27：「取消」「送出」左右並排，送出在右邊；按鈕高度 70%（見 css/dialog.css 的 .dlg--feedback） */
             buttons: [
-                { text: '送出', kind: 'primary', keep: true, sfx: 'ok', onClick: send },
-                { text: '取消', kind: 'line' }
+                { text: '取消', kind: 'line' },
+                { text: '送出', kind: 'primary', keep: true, sfx: 'ok', onClick: send }
             ]
         });
-        var sendBtn = ctl.buttons[0], busy = false;
+        var sendBtn = ctl.buttons[1], busy = false;
         function value() { return (LB && LB.cleanFeedback) ? LB.cleanFeedback(ta.value) : String(ta.value || '').trim(); }
         function sync() {
             count.textContent = Array.from(ta.value).length + ' / ' + FB_MAX;

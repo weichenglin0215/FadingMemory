@@ -22,15 +22,15 @@
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 30;                       /* 幾發之後難度到頂 */
-    var OMEGA_REV = [0.25, 0.75];               /* 圓環轉速（圈／秒）：第 1 發 → 到頂 */
-    var GAP_DEG = [80, 36];                     /* 缺口的寬度（度）：第 1 發 → 到頂 */
+    var RAMP_LEVELS = 40;                       /* 幾發之後難度到頂 */
+    var OMEGA_REV = [0.25, 0.66];               /* 圓環轉速（圈／秒）：第 1 發 → 到頂 */
+    var GAP_DEG = [90, 30];                     /* 缺口的寬度（度）：第 1 發 → 到頂 */
     var FLIGHT_S = 0.6;                         /* 砲彈從砲口飛到環內緣要幾秒（固定，企劃指定 0.6 秒） */
     var RING_R = 178;                           /* 圓環中心線的半徑（邏輯 px） */
     var RING_W = 24;                            /* 圓環的粗細 */
     var BALL_R = 12;                            /* 砲彈半徑 */
     var CENTER_Y = 232;                         /* 圓環中心的 y（離遊戲區上緣） */
-    var MUZZLE_DY = 34;                         /* 砲口比圓環中心低多少（砲台在環內偏下方） */
+    var MUZZLE_DY = 80;                         /* 砲口比圓環中心低多少（砲台在環內偏下方） */
     var MAX_LEVEL = 100;
     var TOP_DEG = -90;                          /* 「正上方」的角度（從正右方順時針量，上方是 −90 度） */
 
@@ -112,8 +112,10 @@
 
         var svg = kit.svg('svg', { 'class': 'spg-svg', viewBox: '0 0 ' + W + ' 640', width: W, height: 640 }, stage);
         var C = 2 * Math.PI * RING_R;
-        var ring = kit.svg('circle', { cx: cx, cy: cy, r: RING_R, 'class': 'spg-ring', 'stroke-width': RING_W,
-            'stroke-dasharray': (C * (1 - gap / 360)).toFixed(2) + ' ' + (C * gap / 360).toFixed(2) }, svg);
+        var ring = kit.svg('circle', {
+            cx: cx, cy: cy, r: RING_R, 'class': 'spg-ring', 'stroke-width': RING_W,
+            'stroke-dasharray': (C * (1 - gap / 360)).toFixed(2) + ' ' + (C * gap / 360).toFixed(2)
+        }, svg);
         /* 正上方的出口記號（一個小三角形） */
         kit.svg('path', { d: 'M' + (cx - 14) + ' ' + (cy - RING_R - RING_W / 2 - 22) + ' L' + (cx + 14) + ' ' + (cy - RING_R - RING_W / 2 - 22) + ' L' + cx + ' ' + (cy - RING_R - RING_W / 2 - 4) + ' Z', 'class': 'spg-mark' }, svg);
         var ball = kit.svg('circle', { cx: cx, cy: geom.y0, r: BALL_R, 'class': 'spg-ball', visibility: 'hidden' }, svg);

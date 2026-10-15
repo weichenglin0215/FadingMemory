@@ -254,6 +254,7 @@
        o.numText(score)：結算大字（例如 '12 關'）；o.fmtBest 省略就用 numText
        o.rating(score, S)：結算評語（字串）
        o.lives：幾條命（預設 1）；o.maxLevel：最後一關（過了就全破）
+       o.scoreBase：成績＝通過的關數＋這個數字（照抄曲線用 1：成績＝撐到第幾關，跟標題列的「第 N 關」一致）
        o.scoreOf(S)：成績不是「過幾關」時的算法（例如累計分數）；有這個就不提供「從前 5 關繼續」
        o.head(level, S)：標題列左邊的文字（預設「第 N 關」）
        o.info(S)：標題列右邊的文字（預設：多條命時顯示命）
@@ -379,7 +380,7 @@
         function finish(x, allClear) {
             if (S.finished) return;
             S.finished = true;
-            var score = o.scoreOf ? o.scoreOf(S) : S.cleared;
+            var score = o.scoreOf ? o.scoreOf(S) : (o.scoreBase ? Math.min(S.cleared + o.scoreBase, o.maxLevel || 1e9) : S.cleared);   /* o.scoreBase：成績＝通過關數＋幾（撐到第幾關＝＋1） */
             var isNew = score > 0 ? Reaction.setBest(o.id, score, gt) : false;
             ctx.setMeta(fmtBest(Reaction.getBest(o.id)));
             var resume = null;

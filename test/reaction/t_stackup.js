@@ -69,4 +69,19 @@ for (let run = 0; run < 60; run++) {
 }
 console.log('隨機疊塔 60 局：共疊 ' + totalPlaced + ' 塊（平均 ' + (totalPlaced / 60).toFixed(1) + '），有 ' + stuck + ' 局最後沒地方放');
 ok(totalPlaced / 60 >= 6, '平均至少疊得上 6 塊（隨機選站得住的位置；遊戲不會一下子就無解）：' + (totalPlaced / 60).toFixed(1));
+// V1.27：傾倒動畫繞著下方方塊的角落頂點旋轉（支點不動），先轉開再掉下去
+{ const p0 = T.tipPose(0), p1 = T.tipPose(T.TIP_SPLIT), p2 = T.tipPose(1);
+  ok(p0.angle === 0 && p0.dy === 0, '起點姿勢不動');
+  ok(Math.abs(p1.angle - T.TIP_ANGLE) < 1e-9 && p1.dy === 0, '繞支點轉到 ' + T.TIP_ANGLE + '° 之前不會往下掉（還卡在角落上）');
+  ok(p2.angle > p1.angle && p2.dy > 100, '之後一邊轉一邊掉下去：' + JSON.stringify(p2));
+  let pa = -1, pd = -1; for (let k = 0; k <= 200; k++) { const p = T.tipPose(k / 200); ok(p.angle >= pa && p.dy >= pd, '角度與下落只增不減'); pa = p.angle; pd = p.dy; }
+  ok(T.tipPose(0.1).angle < T.tipPose(0.5).angle / 2, '一開始轉得慢（卡住的感覺），越轉越快');
+  // pivot 就是支撐範圍邊緣、在下方方塊頂面高度：長方形疊在較窄的長方形上、重心超出右邊緣
+  const base = { kind: 'rect', x0: 100, w: 100, y0: 0, h: 56, sup: [{ i: -1, a: 100, b: 200 }] };
+  const top = { kind: 'rect', x0: 160, w: 100, y0: 56, h: 56, sup: [{ i: 0, a: 160, b: 200 }] };
+  const r = T.checkTower([base, top]); ok(!r.ok && r.reason === 'tip' && r.dir === 1 && r.pivot.x === 200 && r.pivot.y === 56, '傾倒的支點＝下方方塊右上角（200, 56）：' + JSON.stringify(r.pivot));
+  const top2 = { kind: 'rect', x0: 40, w: 100, y0: 56, h: 56, sup: [{ i: 0, a: 100, b: 140 }] };
+  const r2 = T.checkTower([base, top2]); ok(!r2.ok && r2.dir === -1 && r2.pivot.x === 100 && r2.pivot.y === 56, '往左倒：支點＝下方方塊左上角（100, 56）');
+  const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_stackup.js'), 'utf8');
+  ok(src.indexOf("'translate(0 ' + ps.dy.toFixed(1) + ') rotate('") > 0, 'transform 順序：先旋轉、再往下平移（支點不會被帶走）'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + seedOf(20261010) + '）' : 'ALL PASS');

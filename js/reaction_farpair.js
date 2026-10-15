@@ -21,15 +21,15 @@
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 25;                       /* 幾關之後難度到頂（對數用 PAIR_LEVELS） */
-    var PAIR_LEVELS = 15;                       /* 對數幾關之後到頂 */
-    var PAIRS = [2, 6];                         /* 有幾對圓點：第 1 關 → 到頂 */
-    var RATIO = [1.6, 1.04];                    /* 最遠 ÷ 第二遠：第 1 關 → 到頂 */
-    var ANS_S = [10, 7];                        /* 作答限時（秒）：第 1 關 → 到頂 */
-    var D1_MIN = 250, D1_MAX = 380;             /* 最遠那一對的距離範圍（像素） */
+    var PAIR_LEVELS = 16;                       /* 對數幾關之後到頂 */
+    var PAIRS = [2, 7];                         /* 有幾對圓點：第 1 關 → 到頂 */
+    var RATIO = [1.25, 1.05];                    /* 最遠 ÷ 第二遠：第 1 關 → 到頂 */
+    var ANS_S = [15, 60];                        /* 作答限時（秒）：第 1 關 → 到頂 */
+    var D1_MIN = 250, D1_MAX = 420;             /* 最遠那一對的距離範圍（像素） */
     var D_MIN = 90;                             /* 任何一對的最短距離 */
-    var OTHER = [0.35, 0.92];                   /* 其他對的距離 ＝ 第二遠 × 這個範圍內的隨機數 */
+    var OTHER = [0.8, 0.98];                   /* 其他對的距離 ＝ 第二遠 × 這個範圍內的隨機數 */
     var MIN_GAP = 64;                           /* 任兩個圓點圓心至少相距多少 */
-    var MARGIN = 34;                            /* 圓點離遊戲區邊緣至少多遠 */
+    var MARGIN = 30;                            /* 圓點離遊戲區邊緣至少多遠 */
     var DOT_R = 20;                             /* 圓點畫出來的半徑 */
     var HIT_R = 40;                             /* 命中半徑 */
     var MAX_LEVEL = 60;
@@ -160,10 +160,12 @@
             });
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1900 }); return; }
             kit.flash(stage, false, api.my);
-            api.fail({ delay: 3400, lines: [
-                '你選了 ' + q.pairs[pi].color + '（' + q.pairs[pi].d.toFixed(4) + ' 像素）',
-                '最遠的是 ' + q.pairs[q.best].color + '（' + q.pairs[q.best].d.toFixed(4) + ' 像素）'
-            ] });
+            api.fail({
+                delay: 3400, lines: [
+                    '你選了 ' + q.pairs[pi].color + '（' + q.pairs[pi].d.toFixed(4) + ' 像素）',
+                    '最遠的是 ' + q.pairs[q.best].color + '（' + q.pairs[q.best].d.toFixed(4) + ' 像素）'
+                ]
+            });
         }
         api.solve = function () { judge(q.best, 'a'); };
         api.wrong = function () { judge((q.best + 1) % q.pairs.length, 'a'); };
