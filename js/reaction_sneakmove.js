@@ -11,10 +11,14 @@
            有 2 顆以上會動時：一顆移動 MOVE_TIME 秒之後，立刻換下一顆接著動，輪流不停；
        - 限時 TIME_S 是「只有 1 顆會動」的限制秒數；有 k 顆會動就延長成 k 倍（2 顆＝2 倍、3 顆＝3 倍）。
        - 點到任何一顆會動的圓點就算對（點到不動的或時間到就失敗）。
-   · 出題（規範 Q1、Q15：先決定結果、再驗證玩家辦得到）：先決定「哪幾顆會動、各往哪個方向、每秒多快」，
-     再排圓點的位置：圓點之間至少相距 MIN_GAP（圓點很多時自動縮小，最小 MIN_GAP_FLOOR）；
-     每顆會動的圓點，整個限時內會走的路徑都要在畫面裡，而且離其他圓點、離其他會動的圓點的路徑至少 PATH_CLEAR，
+   · 出題（規範 Q1、Q15：先決定結果、再驗證玩家辦得到）：先決定「哪幾顆會動」，再排圓點的位置：圓點之間至少相距 MIN_GAP
+     （圓點很多時自動縮小，最小 MIN_GAP_FLOOR；再不行就繼續縮小，但位置永遠是隨機的）；圓心位置全部用浮點數（可以有小數）。
+     每顆會動的圓點各自挑一個方向（隨機試很多個角度，挑「能直直走最遠」的那個）：路徑不出畫面，而且離其他圓點、離其他會動的圓點的路徑至少 PATH_CLEAR，
      不會撞到或擠到別人（那樣會害人看不出來是誰在動）。
+   · V1.32 修正（玩家回報：兩顆會動時，圓點排成整齊的 5 欄陣列，會動的永遠是左上角兩顆）：以前要求「整個限時內走的路徑」都要完整放得進畫面，
+     速度慢但限時很長（TIME_S＝180 秒、兩顆就是 360 秒）時，路徑長達幾百 px，怎麼排都放不進去，就掉進「保底」——圓點排成固定的格子、
+     會動的永遠是 0 號和 1 號。現在改成：圓點走不完整條路徑時，走到「能直直走的最遠處」就掉頭走回來（來回走，位置是時間的純函式，三角波），
+     所以不管限時多長、速度多慢，路徑都放得進去；保底也不再用格子，而是隨機排列（間距縮小）、隨機挑會動的圓點。
    · 位置是時間的純函式（規範 T3）：第 i 顆會動的圓點在第 t 秒的位置 ＝ 起點 ＋ 方向 × 速度 × 它「已經動了幾秒」（movedTime），畫面只是把它畫出來。
    · 難度線性（RAMP_LEVELS 關走到頂）：漂移速度 SPEED 20 → 2 像素／秒。
    · 揭曉：每一顆會動的圓點的軌跡畫成一條細線，寫出各自「漂移了 X.XXXX 像素」（到你點下去的那一刻為止）。
@@ -28,18 +32,21 @@
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
-    var SPEED = [20, 2];                        /* 漂移速度（像素／秒）：第 1 關 → 到頂 */
-    var TIME_S = 15;                            /* 作答限時（秒）：只有 1 顆會動時的限制秒數；k 顆會動就乘 k */
-    var N_DOTS = [10, 30];                      /* 圓點個數：第 1 關 → 到頂關卡 */
+    var SPEED = [5.0, 2.0];                        /* 漂移速度（像素／秒）：第 1 關 → 到頂 */
+    var TIME_S = 180;                            /* 作答限時（秒）：只有 1 顆會動時的限制秒數；k 顆會動就乘 k */
+    var N_DOTS = [20, 36];                      /* 圓點個數：第 1 關 → 到頂關卡 */
     var MOVE_DOTS = [1, 3];                     /* 會動的圓點個數：第 1 關 → 到頂關卡 */
-    var MOVE_TIME = [3, 1];                     /* 每顆會動的圓點，一次連續移動幾秒：第 1 關 → 到頂關卡 */
-    var PAUSE_S = 1;                            /* 只有 1 顆會動時，移動之後暫停幾秒（2 顆以上時不暫停，立刻換下一顆） */
+    var MOVE_TIME = [0.5, 0.1];                     /* 每顆會動的圓點，一次連續移動幾秒：第 1 關 → 到頂關卡 */
+    var PAUSE_S = 1.0;                            /* 只有 1 顆會動時，移動之後暫停幾秒（2 顆以上時不暫停，立刻換下一顆） */
     var DOT_R = 18;                             /* 圓點畫出來的半徑 */
     var HIT_R = 40;                             /* 命中半徑（比畫出來的大，手指好點） */
     var MIN_GAP = 74;                           /* 任兩顆圓點圓心至少相距多少 */
-    var MIN_GAP_FLOOR = 58;                     /* 圓點太多排不下時，間距最小縮到多少 */
+    var MIN_GAP_FLOOR = 50;                     /* 圓點太多排不下時，間距最小縮到多少 */
     var PATH_CLEAR = 52;                        /* 漂移路徑離其他圓點（與其他會動的圓點的路徑）至少多遠 */
     var MARGIN = 34;                            /* 圓點離遊戲區邊緣至少多遠 */
+    var TRAVEL_MIN = 70;                        /* 每顆會動的圓點，能走的路徑至少要有多長（px）才算合格（總路徑本來就比這短的話，以總路徑為準）：走得太短就看不出在動 */
+    var ANGLES = 90;                            /* 挑方向時，試幾個角度 */
+    var GAP_LAST = 40;                          /* 最後的保底，圓點間距最小縮到多少（圓點半徑 DOT_R ＝ 18，再小就會疊在一起） */
     var MAX_LEVEL = 60;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
@@ -79,10 +86,31 @@
         if (k <= 1) { var cyc = moveTime + PAUSE_S; return (t % cyc) < moveTime ? 0 : -1; }
         return Math.floor((t % (k * moveTime)) / moveTime);
     }
-    /* 第 idx 顆會動的圓點在第 t 秒的位置 */
+    /* 三角波：沿著長度 len 的路徑來回走，走了總距離 d 之後在哪裡（0～len）：走到盡頭就掉頭走回來 */
+    function triangle(d, len) {
+        if (!(len > 0)) return 0;
+        var m = d % (2 * len);
+        return m > len ? 2 * len - m : m;
+    }
+    /* 第 idx 顆會動的圓點在第 t 秒的位置（浮點數）：已經動了 d 像素；路徑長度 m.len（走到盡頭就掉頭走回來） */
     function posAt(q, idx, t) {
-        var m = q.movers[idx], d = q.speed * movedTime(q.movers.length, q.moveTime, idx, t);
-        return { x: m.x0 + m.dx * d, y: m.y0 + m.dy * d };
+        var m = q.movers[idx], d = q.speed * movedTime(q.movers.length, q.moveTime, idx, t), sd = m.len == null ? d : triangle(d, m.len);
+        return { x: m.x0 + m.dx * sd, y: m.y0 + m.dy * sd };
+    }
+    /* 從 (x0,y0) 朝單位方向 (dx,dy) 直直走，最遠能走多遠：不出畫面（離邊緣至少 MARGIN），而且離每個障礙點至少 clear */
+    function freeLen(x0, y0, dx, dy, obstacles, W, H, clear) {
+        var L = 1e9;
+        if (dx > 1e-9) L = Math.min(L, (W - MARGIN - x0) / dx); else if (dx < -1e-9) L = Math.min(L, (MARGIN - x0) / dx);
+        if (dy > 1e-9) L = Math.min(L, (H - MARGIN - y0) / dy); else if (dy < -1e-9) L = Math.min(L, (MARGIN - y0) / dy);
+        for (var i = 0; i < obstacles.length; i++) {
+            var px = obstacles[i].x - x0, py = obstacles[i].y - y0, proj = px * dx + py * dy;
+            if (proj <= 0) continue;
+            var perp2 = px * px + py * py - proj * proj;
+            if (perp2 >= clear * clear) continue;
+            var hit = proj - Math.sqrt(clear * clear - perp2);
+            if (hit < L) L = hit;
+        }
+        return Math.max(0, L);
     }
     /* 在 W×H 裡放 n 顆圓點，彼此至少相距 gap；放不下回傳 null */
     function placeDots(n, W, H, gap, rand) {
@@ -93,42 +121,56 @@
         }
         return dots.length === n ? dots : null;
     }
-    /* 出一關：{ W, H, dots:[{x,y}], movers:[{idx（是第幾顆圓點）, dx, dy（單位方向）, x0, y0}], speed, moveTime, limitS, gap } */
+    /* 幫每顆會動的圓點挑方向與路徑：試 ANGLES 個角度，依「能直直走多遠」由長到短排，挑第一個「路徑夠長、離前面已經決定的會動圓點的路徑夠遠」的；
+       回傳 movers 陣列，找不到回傳 null。need[i]＝這顆在整個限時內總共要走的距離；accept＝路徑至少要有多長才算合格 */
+    function pickMovers(dots, ids, need, W, H, clear, accept, rand) {
+        var movers = [];
+        for (var m = 0; m < ids.length; m++) {
+            var di = ids[m], s0 = dots[di], obstacles = dots.filter(function (d, i) { return i !== di; }), cands = [], base = rand() * Math.PI * 2;
+            for (var a = 0; a < ANGLES; a++) {
+                var ang = base + a * 2 * Math.PI / ANGLES, dx = Math.cos(ang), dy = Math.sin(ang);
+                var L = Math.min(freeLen(s0.x, s0.y, dx, dy, obstacles, W, H, clear), need[m]);
+                cands.push({ dx: dx, dy: dy, len: L });
+            }
+            cands.sort(function (u, v) { return v.len - u.len; });
+            var need0 = Math.min(accept, need[m]), picked = null;
+            for (var c = 0; c < cands.length && !picked; c++) {
+                var cd = cands[c];
+                if (cd.len < need0) break;                                          /* 後面的更短，不用看了 */
+                var sa = { x: s0.x, y: s0.y }, ea = { x: s0.x + cd.dx * cd.len, y: s0.y + cd.dy * cd.len }, okc = true;
+                for (var p = 0; p < movers.length && okc; p++) {
+                    var o = movers[p];
+                    if (segsDist(sa, ea, { x: o.x0, y: o.y0 }, { x: o.x0 + o.dx * o.len, y: o.y0 + o.dy * o.len }) < clear) okc = false;
+                }
+                if (okc) picked = cd;
+            }
+            if (!picked) return null;
+            movers.push({ idx: di, dx: picked.dx, dy: picked.dy, x0: s0.x, y0: s0.y, len: picked.len });
+        }
+        return movers;
+    }
+    /* 出一關：{ W, H, dots:[{x,y}], movers:[{idx（是第幾顆圓點）, dx, dy（單位方向）, x0, y0, len（路徑長度，走到盡頭就掉頭走回來）}], speed, moveTime, limitS, gap }。
+       圓心位置全部是浮點數。先用 MIN_GAP 試，排不下或路徑不合格就把間距一格一格縮小，最後縮到 GAP_LAST，仍然是隨機排列（不會變成整齊的格子）。 */
     function makeLevel(level, W, H, rand) {
         rand = rand || Math.random;
         var speed = speedFor(level), n = dotCountFor(level), k = Math.min(moverCountFor(level), n - 1), mt = moveTimeFor(level), limit = limitFor(k);
-        for (var gap = MIN_GAP; gap >= MIN_GAP_FLOOR - 1e-9; gap -= 4) {
-            for (var tr = 0; tr < 120; tr++) {
+        var need = []; for (var m = 0; m < k; m++) need.push(speed * movedTime(k, mt, m, limit));           /* 整個限時內，每一顆總共會動多遠 */
+        var best = null;
+        for (var gap = MIN_GAP; gap >= GAP_LAST - 1e-9; gap -= 4) {
+            var tries = gap >= MIN_GAP_FLOOR - 1e-9 ? 120 : 200, accept = gap >= MIN_GAP_FLOOR - 1e-9 ? TRAVEL_MIN : TRAVEL_MIN / 2;
+            for (var tr = 0; tr < tries; tr++) {
                 var dots = placeDots(n, W, H, gap, rand);
                 if (!dots) continue;
-                var ids = kit.shuffle(dots.map(function (d, i) { return i; }), rand).slice(0, k), movers = [], good = true;
-                for (var m = 0; m < k && good; m++) {
-                    var di = ids[m], found = false;
-                    var len = speed * movedTime(k, mt, m, limit);                       /* 整個限時內這一顆總共會走多遠 */
-                    for (var a = 0; a < 40 && !found; a++) {
-                        var ang = rand() * Math.PI * 2, dx = Math.cos(ang), dy = Math.sin(ang);
-                        var s = { x: dots[di].x, y: dots[di].y }, e = { x: s.x + dx * len, y: s.y + dy * len };
-                        if (e.x < MARGIN || e.x > W - MARGIN || e.y < MARGIN || e.y > H - MARGIN) continue;
-                        var clear = dots.every(function (d, i) { return i === di || ids.indexOf(i) >= 0 && ids.indexOf(i) < m || segDist(d.x, d.y, s.x, s.y, e.x, e.y) >= PATH_CLEAR; });
-                        if (!clear) continue;
-                        /* 跟前面已經決定好的其他會動圓點的路徑也要夠遠（它們整條路徑 vs 這一條路徑） */
-                        for (var p = 0; p < m && clear; p++) {
-                            var o = movers[p], oe = { x: o.x0 + o.dx * speed * movedTime(k, mt, p, limit), y: o.y0 + o.dy * speed * movedTime(k, mt, p, limit) };
-                            if (segsDist(s, e, { x: o.x0, y: o.y0 }, oe) < PATH_CLEAR) clear = false;
-                        }
-                        if (!clear) continue;
-                        movers.push({ idx: di, dx: dx, dy: dy, x0: s.x, y0: s.y }); found = true;
-                    }
-                    if (!found) good = false;
-                }
-                if (good) return { W: W, H: H, dots: dots, movers: movers, speed: speed, moveTime: mt, limitS: limit, gap: gap };
+                var ids = kit.shuffle(dots.map(function (d, i) { return i; }), rand).slice(0, k);
+                var movers = pickMovers(dots, ids, need, W, H, Math.min(PATH_CLEAR, gap - 4), accept, rand);
+                if (movers) return { W: W, H: H, dots: dots, movers: movers, speed: speed, moveTime: mt, limitS: limit, gap: gap };
+                if (!best) best = { dots: dots, ids: ids, gap: gap };
             }
         }
-        /* 保底：圓點排成格子，會動的那幾顆在最上面一排往下走（路徑短、一定放得下） */
-        var fb = [];
-        for (var i = 0; i < n; i++) fb.push({ x: MARGIN + 30 + (i % 5) * 80, y: MARGIN + 30 + Math.floor(i / 5) * 76 });
-        var fm = []; for (var j = 0; j < k; j++) fm.push({ idx: j, dx: 0, dy: 1, x0: fb[j].x, y0: fb[j].y });
-        return { W: W, H: H, dots: fb, movers: fm, speed: speed, moveTime: mt, limitS: limit, gap: 0 };
+        /* 保底（極少用到）：還是隨機排列，路徑不夠長也接受（至少 1px），絕對不再用固定的格子 */
+        var dots2 = best ? best.dots : placeDots(n, W, H, GAP_LAST - 8, rand) || placeDots(n, W, H, 20, rand), ids2 = best ? best.ids : kit.shuffle(dots2.map(function (d, i) { return i; }), rand).slice(0, k);
+        var mv = pickMovers(dots2, ids2, need, W, H, 8, 1, rand) || pickMovers(dots2, ids2, need, W, H, 0, 0, rand);
+        return { W: W, H: H, dots: dots2, movers: mv, speed: speed, moveTime: mt, limitS: limit, gap: best ? best.gap : 0 };
     }
     function rating(n) {
         if (n >= 25) return '火眼金睛！';
@@ -221,7 +263,7 @@
         mount: mount,
         score: SCORE,
         test: {
-            speedFor: speedFor, dotCountFor: dotCountFor, moverCountFor: moverCountFor, moveTimeFor: moveTimeFor, limitFor: limitFor, segDist: segDist, segsDist: segsDist, movedTime: movedTime, activeAt: activeAt, posAt: posAt, placeDots: placeDots, makeLevel: makeLevel, rating: rating,
+            triangle: triangle, freeLen: freeLen, pickMovers: pickMovers, TRAVEL_MIN: TRAVEL_MIN, GAP_LAST: GAP_LAST, speedFor: speedFor, dotCountFor: dotCountFor, moverCountFor: moverCountFor, moveTimeFor: moveTimeFor, limitFor: limitFor, segDist: segDist, segsDist: segsDist, movedTime: movedTime, activeAt: activeAt, posAt: posAt, placeDots: placeDots, makeLevel: makeLevel, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, SPEED: SPEED, TIME_S: TIME_S, N_DOTS: N_DOTS, MOVE_DOTS: MOVE_DOTS, MOVE_TIME: MOVE_TIME, PAUSE_S: PAUSE_S, MIN_GAP: MIN_GAP, MIN_GAP_FLOOR: MIN_GAP_FLOOR, PATH_CLEAR: PATH_CLEAR, MARGIN: MARGIN, HIT_R: HIT_R, MAX_LEVEL: MAX_LEVEL
         }
     };

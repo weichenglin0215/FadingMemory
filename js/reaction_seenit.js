@@ -8,7 +8,11 @@
        - 圖案改成 59 種食物 emoji（ITEMS）加上中文名稱；
        - 一次答錯就失敗，刪除三條「命」；
        - 每一關的限時多 1 秒：第 N 關 ＝ TIME0_S ＋ (N − 1) × TIME_STEP_S 秒（要記的圖案越來越多）。
-   · 每一關：有 P_OLD（50%）的機率是「看過」（從前面關卡出現過的圖案裡隨機挑，同一圖案最多出現 MAX_REPEAT 次），
+   · V1.31（玩家意見：前面幾關的圖案很容易一再重複，玩家會厭煩）：前 DISTINCT_LEVELS（預設 3）關強制都是「不同的新圖案」，完全不重複
+     （這幾關答案都是「新的」；之後才開始混入「看過」）。想關掉就設成 1（只有第 1 關一定是新的）。
+   · V1.31（玩家意見：連續兩關出現同一個圖案，玩家會以為還在同一關，也太容易）：「看過」的圖案不會是上一關剛出現的那一個
+     （連續兩關絕不會是同一個圖案；「新的」本來就不會跟上一關一樣）。
+   · 每一關：有 P_OLD 的機率是「看過」（從前面關卡出現過的圖案裡隨機挑，同一圖案最多出現 MAX_REPEAT 次），
      其餘是「新的」（還沒出現過的圖案）；新圖案用完了就一定是「看過」。同一種答案最多連續 SAME_MAX 關。
    · 答錯時並排顯示「現在這個」與它出現過的那一關。
    ═══════════════════════════════════════════════════════════════════ */
@@ -20,11 +24,12 @@
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var MAX_LEVEL = 60;                         /* 最後一關（全破） */
-    var TIME0_S = 3;                            /* 第 1 關的限時（秒） */
+    var MAX_LEVEL = 120;                         /* 最後一關（全破） */
+    var DISTINCT_LEVELS = 3;                    /* 前幾關強制出現「不同的圖案」（都是新的、完全不重複）：前面圖案太少，「看過」只會一直抽到同樣那幾個，玩家會厭煩 */
+    var TIME0_S = 5;                            /* 第 1 關的限時（秒） */
     var TIME_STEP_S = 1;                        /* 每多一關，限時多幾秒 */
-    var P_OLD = 0.5;                            /* 一關是「看過」的機率 */
-    var MAX_REPEAT = 3;                         /* 同一個圖案最多出現幾次 */
+    var P_OLD = 0.66;                            /* 一關是「看過」的機率 */
+    var MAX_REPEAT = 5;                         /* 同一個圖案最多出現幾次 */
     var SAME_MAX = 3;                           /* 答案（看過／新的）最多連續幾關一樣 */
     /* 圖案：[emoji 的 Unicode 碼位, 中文名稱]（用碼位寫，避免檔案編碼讓 emoji 變形） */
     var ITEMS = [
@@ -50,24 +55,25 @@
         rand = rand || Math.random;
         var idx = hist.length, seen = {}, i;
         hist.forEach(function (it, k) { seen[it] = { last: k, n: (seen[it] ? seen[it].n : 0) + 1 }; });
-        var fresh = [], olds = [];
+        var fresh = [], olds = [], prev = idx > 0 ? hist[idx - 1] : -1;                /* prev：上一關的圖案，這一關絕不能再出現（連續兩關同一個圖案會讓玩家以為還在同一關） */
         for (i = 0; i < ITEMS.length; i++) {
             if (!seen[i]) fresh.push(i);
-            else if (seen[i].n < MAX_REPEAT) olds.push(i);
+            else if (seen[i].n < MAX_REPEAT && i !== prev) olds.push(i);
         }
-        if (!olds.length && !fresh.length) for (i = 0; i < ITEMS.length; i++) olds.push(i);          /* 極端情況：全部都滿 3 次了，放寬 */
+        if (!olds.length && !fresh.length) for (i = 0; i < ITEMS.length; i++) if (i !== prev) olds.push(i);          /* 極端情況：全部都滿 MAX_REPEAT 次了，放寬（還是不能跟上一關一樣） */
         var kind;
-        if (idx === 0 || !olds.length) kind = 'new';                          /* 第 1 關一定是新的 */
+        if (idx === 0 || !olds.length || (idx < DISTINCT_LEVELS && fresh.length)) kind = 'new';      /* 第 1 關一定是新的；前 DISTINCT_LEVELS 關強制都是新的（圖案不重複） */
         else if (!fresh.length) kind = 'old';                                  /* 新圖案用完了 */
         else {
             kind = rand() < P_OLD ? 'old' : 'new';
-            var k = (kinds || []).length;
+            var tail = (kinds || []).slice(DISTINCT_LEVELS), k = tail.length;      /* 強制都是新的那幾關不算進「連續幾關一樣」（不然第 DISTINCT_LEVELS + 1 關一定是「看過」，太好猜） */
             if (k >= SAME_MAX) {                                               /* 同一種答案不能連續太多關 */
-                var last = kinds[k - 1], same = true;
-                for (var j = 1; j <= SAME_MAX; j++) if (kinds[k - j] !== last) { same = false; break; }
+                var last = tail[k - 1], same = true;
+                for (var j = 1; j <= SAME_MAX; j++) if (tail[k - j] !== last) { same = false; break; }
                 if (same) kind = last === 'old' ? 'new' : 'old';
             }
         }
+        if (kind === 'old' && !olds.length) kind = 'new';                      /* 「看過」的候選只剩上一關那一個：改成新的 */
         if (kind === 'old') { var o = kit.pick(olds, rand); return { item: o, kind: 'old', seenAt: seen[o].last + 1, level: idx + 1 }; }
         return { item: kit.pick(fresh, rand), kind: 'new', seenAt: 0, level: idx + 1 };
     }
@@ -130,10 +136,10 @@
     var G = {
         id: ID,
         name: '這個看過嗎',
-        rule: '每一關出現一個食物圖案和名稱。**判斷它是「新的」，還是前面的關卡「看過」了**。新圖案和看過的圖案會混在一起出現。**第 1 關一定是新的**，只能按「新的」，從第 2 關起才考你看過沒有。**答錯或來不及就結束**，每一關的限時比上一關多 1 秒，看你能撐到第幾關。',
+        rule: '每一關出現一個食物圖案和名稱。**判斷它是「新的」，還是前面的關卡「看過」了**。新圖案和看過的圖案會混在一起出現。**前幾關的圖案一定都是新的**（第 1 關只能按「新的」），之後才考你看過沒有。**答錯或來不及就結束**，每一關的限時比上一關多 1 秒，看你能撐到第幾關。',
         mount: mount,
         score: SCORE,
-        test: { itemCount: itemCount, emojiOf: emojiOf, nameOf: nameOf, timeMs: timeMs, nextTrial: nextTrial, rating: rating, ITEMS: ITEMS, MAX_REPEAT: MAX_REPEAT, SAME_MAX: SAME_MAX, MAX_LEVEL: MAX_LEVEL, P_OLD: P_OLD, TIME0_S: TIME0_S, TIME_STEP_S: TIME_STEP_S }
+        test: { DISTINCT_LEVELS: DISTINCT_LEVELS, itemCount: itemCount, emojiOf: emojiOf, nameOf: nameOf, timeMs: timeMs, nextTrial: nextTrial, rating: rating, ITEMS: ITEMS, MAX_REPEAT: MAX_REPEAT, SAME_MAX: SAME_MAX, MAX_LEVEL: MAX_LEVEL, P_OLD: P_OLD, TIME0_S: TIME0_S, TIME_STEP_S: TIME_STEP_S }
     };
     Reaction.register(G);
 })();

@@ -8,6 +8,11 @@
    · 答案唯一：窮舉 2⁶−1 個非空子集合，合計等於總價的必須剛好 1 個；不夠就重抽（TRIES 次，保底用固定題）。
    · 陷阱：合計與總價只差 1～3 元的子集合至少 TRAP_MIN 個（0→4 線性），所以「差不多」的組合很多。
    · 價格範圍：第 1～5 關 10～60 元、之後 5～99 元；限時 TIME_S 40→20 秒（線性）。
+   · V1.32（玩家意見：只要把按鈕價格的個位數加起來，就能猜出哪幾個是答案）：
+       1. 答案以外的按鈕，個位數有 DIGIT_P 的機率跟「某個正確答案」的個位數一樣（例如答案是 32、14、55，其他按鈕就可能是 52、64、25），
+          這樣光看個位數湊不出答案。但不是每個、也不是每關都這樣（答案以外有 2 個以上時，至少 1 個有、至少 1 個沒有），不然六個按鈕會明顯分成兩組。
+       2. 答案以外的按鈕，標價一定比總價小（例如總價 94、按鈕卻是 96，一眼就知道不是），而且任何一個按鈕加上最便宜的另一個按鈕都不超過總價
+          （否則那個按鈕不可能出現在答案裡，也很容易被刪掉）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -22,6 +27,7 @@
     var K = [2, 5];                             /* 總價由幾樣組成：第 1 關 → 到頂 */
     var TRAP_MIN = [0, 4];                      /* 「差 1～3 元」的子集合至少幾個 */
     var TIME_S = [40, 20];                      /* 每關限時（秒） */
+    var DIGIT_P = 0.6;                          /* 答案以外的按鈕，個位數跟「某個正確答案」一樣的機率（0＝不特別做，1＝全部都做；答案以外有 2 個以上時，每關至少 1 個有做、至少 1 個沒做） */
     var LIVES = 2, TRIES = 3000;
     /* 蔬果：[emoji 的 Unicode 碼位, 名稱]（標價是遊戲設定，不跟真實市價；用碼位寫，避免檔案編碼讓 emoji 變形） */
     var ITEMS = [
@@ -47,23 +53,46 @@
         return out;
     }
     function bitCount(m) { var n = 0; while (m) { n += m & 1; m >>= 1; } return n; }
-    /* 出題：回傳 { names, emojis, prices, total, mask（答案的子集合）, k, near（差 1～3 元的子集合數）} */
+    /* 出題：回傳 { names, emojis, prices, total, mask（答案的子集合）, k, near（差 1～3 元的子集合數）, sameDigit（答案以外的按鈕裡，個位數跟某個正確答案一樣的有幾個）} */
     function makeLevel(level, rand) {
         rand = rand || Math.random;
-        var r = priceRange(level), k = kAt(level), need = trapMinAt(level), pick = kit.shuffle(ITEMS, rand).slice(0, 6);
+        var r = priceRange(level), k = kAt(level), need = trapMinAt(level), pick = kit.shuffle(ITEMS, rand).slice(0, 6), nd = 6 - k;
+        var pool = []; for (var p = r[0]; p <= r[1]; p++) pool.push(p);
         for (var t = 0; t < TRIES; t++) {
-            var pool = []; for (var p = r[0]; p <= r[1]; p++) pool.push(p);
-            var prices = kit.shuffle(pool, rand).slice(0, 6);
-            var idx = kit.shuffle([0, 1, 2, 3, 4, 5], rand).slice(0, k), mask = 0, total = 0;
-            idx.forEach(function (i) { mask |= 1 << i; total += prices[i]; });
+            /* 先決定答案（k 個價格），總價 ＝ 它們的和；再決定其他按鈕：一定比總價小，個位數有機會跟答案的一樣 */
+            var ans = kit.shuffle(pool, rand).slice(0, k), total = 0, taken = {}, digs = [];
+            ans.forEach(function (v) { total += v; taken[v] = true; digs.push(v % 10); });
+            var cands = pool.filter(function (v) { return v < total && !taken[v]; });
+            if (cands.length < nd) continue;
+            var flags = [], i;
+            for (i = 0; i < nd; i++) flags.push(rand() < DIGIT_P);
+            if (nd >= 2) {                                                                  /* 不能全部都做、也不能全部都沒做（六個按鈕會明顯分成兩組，或完全沒有迷惑效果） */
+                var nf = flags.filter(function (x) { return x; }).length;
+                if (nf === nd) flags[Math.floor(rand() * nd)] = false;
+                else if (nf === 0) flags[Math.floor(rand() * nd)] = true;
+            }
+            var decoys = [];
+            for (i = 0; i < nd; i++) {
+                var c = cands.filter(function (v) { return !taken[v] && (!flags[i] || digs.indexOf(v % 10) >= 0); });
+                if (!c.length) c = cands.filter(function (v) { return !taken[v]; });
+                if (!c.length) break;
+                var v = kit.pick(c, rand); decoys.push(v); taken[v] = true;
+            }
+            if (decoys.length < nd) continue;
+            var items = kit.shuffle(ans.map(function (v) { return { p: v, a: true }; }).concat(decoys.map(function (v) { return { p: v, a: false }; })), rand);
+            var prices = items.map(function (x) { return x.p; }), mask = 0;
+            items.forEach(function (x, j) { if (x.a) mask |= 1 << j; });
+            var sorted = prices.slice().sort(function (x, y) { return x - y; }), plausible = true;
+            for (i = 0; i < 6; i++) { var other = prices[i] === sorted[0] ? sorted[1] : sorted[0]; if (prices[i] + other > total) plausible = false; }
+            if (!plausible) continue;                                                      /* 每個按鈕都要有機會出現在答案裡，不能一看就知道是廢的 */
             var subs = subsets(prices), eq = subs.filter(function (s) { return s.sum === total; });
             if (eq.length !== 1) continue;
             var near = subs.filter(function (s) { var d = Math.abs(s.sum - total); return d >= 1 && d <= 3; }).length;
             if (near < need) continue;
-            return { names: pick.map(function (x) { return x[1]; }), emojis: pick.map(emojiOf), prices: prices, total: total, mask: mask, k: k, near: near };
+            return { names: pick.map(function (x) { return x[1]; }), emojis: pick.map(emojiOf), prices: prices, total: total, mask: mask, k: k, near: near, sameDigit: decoys.filter(function (v) { return digs.indexOf(v % 10) >= 0; }).length };
         }
         var fp = [38, 52, 67, 45, 29, 83], fm = 1 | 2 | 8;     /* 保底：38＋52＋45 ＝ 135，唯一 */
-        return { names: pick.map(function (x) { return x[1]; }), emojis: pick.map(emojiOf), prices: fp, total: 135, mask: fm, k: 3, near: 0 };
+        return { names: pick.map(function (x) { return x[1]; }), emojis: pick.map(emojiOf), prices: fp, total: 135, mask: fm, k: 3, near: 0, sameDigit: 0 };
     }
     function maskSum(prices, mask) { var s = 0; for (var i = 0; i < prices.length; i++) if (mask & (1 << i)) s += prices[i]; return s; }
     function maskText(q, mask) {
@@ -93,7 +122,7 @@
         var stage = api.stage, level = api.level;
         var q = makeLevel(level, api.rand), mask = 0;
         api.info = q;
-        console.log('[菜籃總價] 第 ' + level + ' 關：總價 ' + q.total + '；價格 ' + q.prices.join(',') + '；答案 ' + maskText(q, q.mask) + '（' + q.k + ' 樣）；差 1～3 元的組合 ' + q.near + ' 個；限時 ' + timeMs(level) + ' ms');
+        console.log('[菜籃總價] 第 ' + level + ' 關：總價 ' + q.total + '；價格 ' + q.prices.join(',') + '；答案 ' + maskText(q, q.mask) + '（' + q.k + ' 樣）；差 1～3 元的組合 ' + q.near + ' 個；個位數跟答案一樣的其他按鈕 ' + q.sameDigit + ' 個；限時 ' + timeMs(level) + ' ms');
 
         var big = h('div', { 'class': 'bsk-total', text: '總價 ' + q.total + ' 元' });
         var tip = h('div', { 'class': 'bsk-tip', text: '挑幾樣，讓價格加起來剛好是總價' });
@@ -153,7 +182,7 @@
         rule: '上方是這次要買的總價。從下方六樣蔬菜水果挑幾樣，**讓標價加起來剛好等於總價**，按「結帳」。畫面不會幫你加總，**要自己算**。有兩條命，結帳錯一次扣一條。每關有時間限制，越後面要選的樣數越多、差一點點的組合越多。',
         mount: mount,
         score: SCORE,
-        test: { kAt: kAt, trapMinAt: trapMinAt, timeMs: timeMs, priceRange: priceRange, subsets: subsets, bitCount: bitCount, makeLevel: makeLevel, maskSum: maskSum, maskText: maskText, rating: rating, ITEMS: ITEMS, emojiOf: emojiOf, RAMP_LEVELS: RAMP_LEVELS, MAX_LEVEL: MAX_LEVEL, K: K, TRAP_MIN: TRAP_MIN, LIVES: LIVES }
+        test: { kAt: kAt, trapMinAt: trapMinAt, timeMs: timeMs, priceRange: priceRange, subsets: subsets, bitCount: bitCount, makeLevel: makeLevel, maskSum: maskSum, maskText: maskText, rating: rating, ITEMS: ITEMS, emojiOf: emojiOf, RAMP_LEVELS: RAMP_LEVELS, MAX_LEVEL: MAX_LEVEL, DIGIT_P: DIGIT_P, K: K, TRAP_MIN: TRAP_MIN, LIVES: LIVES }
     };
     Reaction.register(G);
 })();

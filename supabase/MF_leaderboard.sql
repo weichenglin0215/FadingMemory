@@ -344,7 +344,7 @@ insert into public."MF_games" (game_id, title, better, min_score, max_score) val
     ('watchoff',     '哪支錶不準', 'max', 1, 30),
     ('handsmeet',    '兩針重疊', 'min', 0, 180),
     ('clearer',      '越看越清楚', 'max', 0.0001, 1000),
-    ('twobags',      '兩袋一樣重', 'max', 1, 20),
+    ('twobags',      '兩袋一樣重', 'max', 1, 30),
     ('stackup',      '重心疊疊樂', 'max', 1, 60),
     ('bridge',       '搭一座橋', 'max', 1, 60),
     ('halfcrowd',    '一半的人', 'max', 1, 40),

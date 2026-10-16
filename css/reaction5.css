@@ -1143,7 +1143,7 @@
     position: absolute;
     left: 0;
     right: 0;
-    top: 336px;
+    top: 500px;
     padding: 0 var(--sp-2);
     text-align: center;
     font-size: var(--fs-sm);
@@ -1238,6 +1238,40 @@
     font-weight: var(--fw-black);
     fill: var(--c-ink);
     font-variant-numeric: tabular-nums;
+}
+
+/* 小人衝過終點線的那一刻，在線上閃一個圈（第一名＝綠色）；名次與到達時間標在跑道上，第一名用綠色 */
+.rcf-fmark {
+    fill: none;
+    stroke: var(--c-yellow);
+    stroke-width: 6;
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+.rcf-fmark--win {
+    stroke: var(--c-ok);
+}
+
+.rcf-fmark--pop {
+    animation: rcf-fpop 0.9s ease-out;
+}
+
+@keyframes rcf-fpop {
+    0% {
+        opacity: 1;
+        transform: scale(0.35);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1.5);
+    }
+}
+
+.rcf-time--win {
+    fill: var(--c-ok);
 }
 
 .rcf-start {

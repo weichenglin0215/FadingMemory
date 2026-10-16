@@ -28,8 +28,8 @@
     var OPTIONS = [4, 6];                       /* 有幾個選項：第 1 關 → 到頂 */
     var CYCLE_S = [5, 12];                     /* 對準的週期（秒）：第 1 關 → 到頂 */
     var TIME_S = [12, 30];                       /* 作答限時（秒）：第 1 關 → 到頂 */
-    var KMAX = 6;                               /* 直條的速度倍數最大是幾（±1～±KMAX） */
-    var ALIGN_AT = [2.0, 4.0];                  /* 第一次對準的時刻 ＝ 週期 × 這個範圍的隨機數 */
+    var KMAX = 8;                               /* 直條的速度倍數最大是幾（±1～±KMAX） */
+    var ALIGN_AT = [3.0, 6.0];                  /* 第一次對準的時刻 ＝ 週期 × 這個範圍的隨機數 */
     var PIC = { w: 460, h: 460 };               /* 圖案方框的大小（邏輯 px），h 同時是直條循環的一圈長度 P */
     var MAX_LEVEL = 60;
     /* 「長得像」的字群組：選項優先從同一群挑 */
@@ -77,7 +77,7 @@
         var n = stripsFor(level), ks = [], i;
         for (var tr = 0; tr < 200; tr++) {
             ks = [];
-            for (i = 0; i < n; i++) ks.push(kit.randInt(1, KMAX, rand) * (rand() < 0.5 ? -1 : 1));
+            for (i = 0; i < n; i++) ks.push(kit.randInt(2, KMAX, rand) * (rand() < 0.5 ? -1 : 1));
             var pos = ks.filter(function (k) { return k > 0; }).length, speeds = {};
             ks.forEach(function (k) { speeds[Math.abs(k)] = 1; });
             if (pos > 0 && pos < n && Object.keys(speeds).length >= 2) break;

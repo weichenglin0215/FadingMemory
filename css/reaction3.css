@@ -2386,42 +2386,109 @@
     gap: 6px;
 }
 
-.tb-scale {
-    background: var(--c-card);
-    border: 3px solid var(--c-ink-soft);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+/* 天秤（V1.32：電子秤改成傳統的水平天秤）：.tb-bal 是整座天秤的容器，不擋住滑鼠／手指（只有鑽石可以按）；
+   顏色用 currentColor：平常是灰褐色，超出容許範圍時整座天秤與數字變紅（.tb-bal--bad），在範圍內數字變綠（.tb-bal--ok） */
+.tb-bal {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    color: var(--c-ink-soft);
 }
 
-.tb-disp {
-    flex: none;
-    height: 52px;
-    margin: 8px;
-    border-radius: var(--r-sm);
-    background: var(--c-ink);
-    color: var(--c-green-light);
-    font-family: var(--font-ui);
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
+.tb-bal--bad {
+    color: var(--c-bad-light);
+}
+
+.tb-post {
+    position: absolute;
+    width: 8px;
+    border-radius: 4px;
+    background: currentColor;
+}
+
+.tb-base {
+    position: absolute;
+    width: 124px;
+    height: 12px;
+    border-radius: 6px;
+    background: currentColor;
+}
+
+.tb-beam {
+    position: absolute;
+    height: 10px;
+    border-radius: 5px;
+    background: currentColor;
+    transform-origin: 50% 50%;
+}
+
+.tb-pivot {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    box-sizing: border-box;
+    border-radius: 50%;
+    background: var(--c-card);
+    border: 4px solid currentColor;
+}
+
+/* 一組吊繩＋秤盤＋重量數字：頂端（吊繩的尖端）對準橫樑的一端，傾斜時整組跟著上下移動 */
+.tb-hang {
+    position: absolute;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    letter-spacing: 1px;
+    flex-direction: column;
+}
+
+.tb-str {
+    display: block;
+    flex: none;
+    overflow: visible;
+}
+
+.tb-str line {
+    stroke: currentColor;
+    stroke-width: 2.5;
+    stroke-linecap: round;
 }
 
 .tb-pan {
-    flex: 1 1 auto;
-    padding: 4px 8px 8px;
+    flex: none;
+    box-sizing: border-box;
+    border: 3px solid currentColor;
+    border-radius: 6px 6px var(--r-md) var(--r-md);
+    background: var(--c-card);
+    padding: 4px;
     display: flex;
     flex-wrap: wrap;
     align-content: flex-start;
-    gap: 6px;
+    gap: 4px;
+}
+
+.tb-num {
+    flex: none;
+    text-align: center;
+    font-family: var(--font-ui);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    letter-spacing: 1px;
+}
+
+.tb-bal--ok .tb-num {
+    color: var(--c-ok);
+}
+
+.tb-bal--bad .tb-num {
+    color: var(--c-bad-light);
 }
 
 /* 鑽石（💎，V1.28）：框的大小＝直徑，字級由 js 依直徑設定；不再有灰色圓球的底和邊框 */
 .tb-stone {
     flex: none;
+    pointer-events: auto;
     display: flex;
     align-items: center;
     justify-content: center;

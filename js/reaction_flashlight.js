@@ -1,13 +1,19 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_flashlight.js — 秒反應・手電筒猜圖（企劃 204）
-   畫面全黑，手指拖到哪裡，手指「上方」就亮起一個圓形的光圈，黑幕底下藏著一個圖案（數字或符號剪影）。
+   畫面全黑，手指拖到哪裡，手指「上方」就亮起一個圓形的光圈，黑幕底下藏著一個圖案（數字、很像的繁體字、零件數不同的圖形）。
    用光圈到處掃，猜出藏的是什麼圖案；下面四個選項隨時可以點，選對才過關。
    關卡制：選錯或來不及就結束，成績＝通過幾關。
    ───────────────────────────────────────────────────────────────────
    · 光圈的中心在手指「上方」OFFSET 像素（光圈不會被手指擋住）；手指放開，光圈就熄掉。
-   · 難度線性（RAMP_LEVELS 關走到頂）：光圈半徑 96 → 30 像素（越小，一次看到的越少）；限時 20 → 12 秒。
-   · 圖案：第 1～5 關是數字 0～9；第 6～10 關是符號剪影（愛心、星星、月亮、房子、樹、魚、貓、花、鑰匙、杯子、太陽、雨傘、汽車、船）；
-     第 11 關起兩種隨機。四個選項裡，數字會挑長得像的（3 配 8、6 配 9…），符號則是隨機挑別的符號。
+   · 難度線性（RAMP_LEVELS 關走到頂）：光圈半徑 RADIUS（越小，一次看到的越少）；限時 TIME_S。
+   · V1.32（玩家意見：太容易，每個圖案差異太大，看到一個角落就能分辨；請改成相似度很高的圖案、加入很像的繁體中文字，越難的關卡圖案越複雜、筆劃越多）：
+     舊的愛心、星星、月亮…這些剪影全部拿掉。圖案改成「一組一組長得很像的」（FAMILIES），四個選項一定來自同一組，只差一點細節：
+       - 數字：長得像的數字（3 配 8、6 配 9…，SIMILAR 表）；
+       - 形近的繁體字：土士工王、日曰目且、大太犬天、末未木本、己已巳巴、情清請晴、待侍持特、辨辦辮辯、鑑鑒鑄鑽、驚警驕驟、龍襲寵聾…；
+       - 程式畫的圖形，差別只在「零件的數量」：正 5～8 邊形、5～8 角星（tier 1），8～11 齒的齒輪、6～9 瓣的花（tier 2），14～17 齒的齒輪、12～15 瓣的花、12～15 角星（tier 3）。
+     每一組有複雜度 tier（0～3）：tier 0 是數字與 2～5 劃的字，tier 1 是 3～6 劃的字與 5～8 個零件的圖形，tier 2 是 7～15 劃的字與 6～11 個零件的圖形，
+     tier 3 是 12～27 劃的字與 12～17 個零件的圖形。第 1 關到 RAMP_LEVELS 關，複雜度由 TIERS[0] 線性走到 TIERS[1]（每關再隨機上下浮動 TIER_JITTER），
+     所以越難的關卡，圖案越複雜、筆劃越多。
    · 揭曉：黑幕變透明，整個圖案露出來，並用淡黃色把你掃過的範圍標出來，寫出「掃過了 X.XXXX％」。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
@@ -19,39 +25,71 @@
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 25;                       /* 幾關之後難度到頂 */
-    var RADIUS = [96, 30];                      /* 光圈半徑（像素）：第 1 關 → 到頂 */
-    var TIME_S = [20, 12];                      /* 作答限時（秒）：第 1 關 → 到頂 */
+    var RADIUS = [36, 6];                      /* 光圈半徑（像素）：第 1 關 → 到頂 */
+    var TIME_S = [10, 20];                      /* 作答限時（秒）：第 1 關 → 到頂 */
     var OFFSET_GAP = 26;                        /* 光圈下緣離手指多遠（光圈中心在手指上方 半徑＋這個數字 處） */
-    var DIGIT_LEVELS = 5, SYMBOL_LEVELS = 10;   /* 第幾關以前只有數字；第幾關以前只有符號（之後兩種都有） */
-    var PIC = { size: 280, top: 44 };           /* 圖案的邊長與離遊戲區上緣的距離 */
+    var TIERS = [0, 3];                         /* 圖案複雜度（0～3 共四級）：第 1 關 → 到頂。0＝數字與筆劃很少的字，3＝筆劃很多的字、零件很多的圖形 */
+    var TIER_JITTER = 0.7;                      /* 每一關的複雜度會隨機上下浮動（±這個數字），不會剛好一關一級；0＝不浮動 */
+    var PIC = { size: 480, top: 44 };           /* 圖案的邊長與離遊戲區上緣的距離 */
     var MAX_LEVEL = 60;
     var DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
     /* 長得像的數字（選項會優先挑這些） */
     var SIMILAR = { '0': ['6', '8', '9'], '1': ['7', '4', '2'], '2': ['7', '3', '5'], '3': ['8', '5', '2'], '4': ['1', '9', '7'], '5': ['6', '3', '8'], '6': ['5', '8', '0', '9'], '7': ['1', '2', '9'], '8': ['3', '6', '0', '9'], '9': ['4', '8', '0', '6'] };
-    var SYMBOLS = ['heart', 'star', 'moon', 'house', 'tree', 'fish', 'cat', 'flower', 'key', 'cup', 'sun', 'umbrella', 'car', 'boat'];
-    var NAMES = { heart: '愛心', star: '星星', moon: '月亮', house: '房子', tree: '樹', fish: '魚', cat: '貓', flower: '花', key: '鑰匙', cup: '杯子', sun: '太陽', umbrella: '雨傘', car: '汽車', boat: '船' };
+    /* 「長得很像」的一組圖案：四個選項一定來自同一組（只差一點細節）。tier＝複雜度（0 最簡單、3 最複雜）。
+       ids 是字的話直接寫字；圖形的 id 是「種類＋零件數」：p＝正 n 邊形、s＝n 角星、g＝n 齒的齒輪、f＝n 瓣的花（picSvg 畫出來）。kind 'digit'＝數字（用 SIMILAR 表挑長得像的） */
+    var FAMILIES = [
+        { tier: 0, kind: 'digit' },
+        { tier: 0, ids: ['土', '士', '工', '王'] }, { tier: 0, ids: ['日', '曰', '目', '且'] }, { tier: 0, ids: ['大', '太', '犬', '天'] },
+        { tier: 0, ids: ['刀', '刃', '力', '九'] }, { tier: 0, ids: ['干', '于', '千', '午'] },
+        { tier: 1, ids: ['末', '未', '木', '本'] }, { tier: 1, ids: ['己', '已', '巳', '巴'] }, { tier: 1, ids: ['田', '由', '甲', '申'] },
+        { tier: 1, ids: ['戈', '戊', '戌', '成'] }, { tier: 1, ids: ['玉', '主', '壬', '五'] },
+        { tier: 1, ids: ['p5', 'p6', 'p7', 'p8'] }, { tier: 1, ids: ['s5', 's6', 's7', 's8'] },
+        { tier: 2, ids: ['情', '清', '請', '晴'] }, { tier: 2, ids: ['待', '侍', '持', '特'] }, { tier: 2, ids: ['抱', '跑', '泡', '炮'] },
+        { tier: 2, ids: ['候', '侯', '猴', '喉'] }, { tier: 2, ids: ['折', '拆', '析', '祈'] }, { tier: 2, ids: ['借', '措', '惜', '昔'] },
+        { tier: 2, ids: ['概', '溉', '慨', '既'] }, { tier: 2, ids: ['輕', '經', '徑', '逕'] },
+        { tier: 2, ids: ['g8', 'g9', 'g10', 'g11'] }, { tier: 2, ids: ['f6', 'f7', 'f8', 'f9'] },
+        { tier: 3, ids: ['辨', '辦', '辮', '辯'] }, { tier: 3, ids: ['鑑', '鑒', '鑄', '鑽'] }, { tier: 3, ids: ['驚', '警', '驕', '驟'] },
+        { tier: 3, ids: ['龍', '襲', '寵', '聾'] }, { tier: 3, ids: ['戀', '孿', '彎', '灣'] }, { tier: 3, ids: ['蠶', '蠢', '蠻', '蠱'] },
+        { tier: 3, ids: ['譽', '舉', '輿', '與'] }, { tier: 3, ids: ['讀', '贖', '犢', '瀆'] }, { tier: 3, ids: ['暑', '署', '薯', '曙'] },
+        { tier: 3, ids: ['驗', '險', '檢', '儉'] },
+        { tier: 3, ids: ['g14', 'g15', 'g16', 'g17'] }, { tier: 3, ids: ['f12', 'f13', 'f14', 'f15'] }, { tier: 3, ids: ['s12', 's13', 's14', 's15'] }
+    ];
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function radiusFor(level) { return kit.ramp(level, RADIUS[0], RADIUS[1], RAMP_LEVELS); }
     function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
     function isDigit(id) { return DIGITS.indexOf(id) >= 0; }
-    /* 這一關可以出哪種圖案 */
-    function poolFor(level, rand) {
-        if (level <= DIGIT_LEVELS) return DIGITS;
-        if (level <= SYMBOL_LEVELS) return SYMBOLS;
-        return (rand || Math.random)() < 0.5 ? DIGITS : SYMBOLS;
+    /* 圖形的 id（p5、s6、g10、f8…）拆成 { kind, n }，不是圖形回傳 null */
+    function shapeOf(id) { var m = /^([psgf])(\d+)$/.exec(id); return m ? { kind: m[1], n: Number(m[2]) } : null; }
+    function isChar(id) { return typeof id === 'string' && id.length === 1 && id.charCodeAt(0) >= 0x4E00 && id.charCodeAt(0) <= 0x9FFF; }
+    /* 這個圖案屬於複雜度第幾級（數字算 0） */
+    function tierOf(id) {
+        if (isDigit(id)) return 0;
+        for (var i = 0; i < FAMILIES.length; i++) if (FAMILIES[i].ids && FAMILIES[i].ids.indexOf(id) >= 0) return FAMILIES[i].tier;
+        return 0;
     }
-    /* 出一關：{ target 藏的圖案, options 四個選項（已洗牌）, answer 答案是第幾個選項 } */
+    /* 第 level 關的複雜度（整數）：從 TIERS[0] 線性走到 TIERS[1]，每關隨機浮動 ±TIER_JITTER，夾在 0～3 */
+    function tierFor(level, rand) {
+        var c = kit.ramp(level, TIERS[0], TIERS[1], RAMP_LEVELS);
+        return kit.clamp(Math.round(c + ((rand || Math.random)() * 2 - 1) * TIER_JITTER), 0, 3);
+    }
+    /* 出一關：{ target 藏的圖案, options 四個選項（已洗牌，都來自同一組很像的圖案）, answer 答案是第幾個選項, tier 這一關的複雜度 } */
     function makeLevel(level, rand) {
         rand = rand || Math.random;
-        var pool = poolFor(level, rand), target = kit.pick(pool, rand), others;
-        if (pool === DIGITS) {
+        var tier = tierFor(level, rand), cands = FAMILIES.filter(function (x) { return x.tier === tier; });
+        if (!cands.length) cands = FAMILIES;
+        var fam = kit.pick(cands, rand), target, others;
+        if (fam.kind === 'digit') {
+            target = kit.pick(DIGITS, rand);
             others = kit.shuffle(SIMILAR[target], rand).slice(0, 3);
             var rest = kit.shuffle(DIGITS.filter(function (d) { return d !== target && others.indexOf(d) < 0; }), rand);
             while (others.length < 3) others.push(rest.shift());
-        } else others = kit.sample(SYMBOLS.filter(function (s) { return s !== target; }), 3, rand);
+        } else {
+            target = kit.pick(fam.ids, rand);
+            others = kit.sample(fam.ids.filter(function (x) { return x !== target; }), 3, rand);
+        }
         var options = kit.shuffle([target].concat(others), rand);
-        return { target: target, options: options, answer: options.indexOf(target) };
+        return { target: target, options: options, answer: options.indexOf(target), tier: tier };
     }
     /* 掃過的範圍：points（光圈中心）、半徑 r，在圖案的方框 box（{x,y,w,h}）裡取 40×40 個取樣點，有幾成被光圈照到？（0～1） */
     function coverage(points, r, box) {
@@ -62,34 +100,38 @@
         }
         return hit / (N * N);
     }
-    /* 圖案的 SVG（畫在 100×100，用 currentColor 上色）；digit 用文字、符號用路徑 */
+    /* 圖案的 SVG（畫在 100×100，用 currentColor 上色）：數字與繁體字用文字（筆劃多的字用細一點的字重，細節才看得清楚）、圖形用多邊形／路徑 */
     function picSvg(id) {
-        var body;
+        var body, sh = shapeOf(id), i, k;
         if (isDigit(id)) body = '<text x="50" y="80" text-anchor="middle" font-size="96" font-weight="900" font-family="var(--font-ui)">' + id + '</text>';
-        else if (id === 'heart') body = '<path d="M50 88 C8 58 4 26 26 18 C39 13 48 21 50 30 C52 21 61 13 74 18 C96 26 92 58 50 88 Z"/>';
-        else if (id === 'star') {
-            var pts = [];
-            for (var i = 0; i < 10; i++) { var r = i % 2 === 0 ? 46 : 19, a = -Math.PI / 2 + i * Math.PI / 5; pts.push((50 + r * Math.cos(a)).toFixed(1) + ',' + (54 + r * Math.sin(a)).toFixed(1)); }
-            body = '<polygon points="' + pts.join(' ') + '"/>';
-        } else if (id === 'moon') body = '<path d="M64 10 A42 42 0 1 0 90 66 A34 34 0 1 1 64 10 Z"/>';
-        else if (id === 'house') body = '<path fill-rule="evenodd" d="M50 10 L94 50 H82 V90 H18 V50 H6 Z M42 90 V62 H58 V90 Z"/>';
-        else if (id === 'tree') body = '<path d="M50 6 L74 40 H62 L84 70 H16 L38 40 H26 Z M44 70 H56 V92 H44 Z"/>';
-        else if (id === 'fish') body = '<path fill-rule="evenodd" d="M8 50 C26 20 62 20 80 50 C62 80 26 80 8 50 Z M82 50 L98 34 V66 Z M30 46 a4 4 0 1 0 0.01 0 Z"/>';
-        else if (id === 'cat') body = '<path fill-rule="evenodd" d="M16 46 L16 10 L40 28 Q50 25 60 28 L84 10 L84 46 Q92 74 50 90 Q8 74 16 46 Z M33 52 a5 7 0 1 0 0.01 0 Z M67 52 a5 7 0 1 0 0.01 0 Z M46 68 H54 L50 74 Z"/>';
-        else if (id === 'flower') {
-            body = '<circle cx="50" cy="20" r="16"/><circle cx="74" cy="38" r="16"/><circle cx="65" cy="64" r="16"/><circle cx="35" cy="64" r="16"/><circle cx="26" cy="38" r="16"/><circle cx="50" cy="44" r="14"/>' +
-                '<path d="M48 60 H52 V94 H48 Z M52 80 Q74 66 86 78 Q70 92 52 86 Z"/>';
-        } else if (id === 'key') body = '<path fill-rule="evenodd" d="M28 14 a22 22 0 1 0 0.01 0 Z M28 28 a8 8 0 1 1 -0.01 0 Z M50 31 H94 V43 H50 Z M78 43 H88 V58 H78 Z M62 43 H70 V54 H62 Z"/>';
-        else if (id === 'cup') body = '<path d="M16 26 H70 V60 Q70 86 43 86 Q16 86 16 60 Z M70 36 H80 Q92 36 92 48 Q92 62 80 62 H70 V54 H78 Q82 54 82 48 Q82 44 78 44 H70 Z M8 90 H78 V95 H8 Z"/>';
-        else if (id === 'sun') {
-            body = '<circle cx="50" cy="50" r="22"/>';
-            for (var k = 0; k < 8; k++) body += '<rect x="46" y="4" width="8" height="18" rx="3" transform="rotate(' + (k * 45) + ' 50 50)"/>';
-        } else if (id === 'umbrella') body = '<path d="M8 52 A42 42 0 0 1 92 52 Q82 44 71 52 Q60 44 50 52 Q40 44 29 52 Q18 44 8 52 Z M47 52 H53 V80 Q53 92 40 92 Q34 92 34 86 H40 Q47 88 47 80 Z"/>';
-        else if (id === 'car') body = '<path fill-rule="evenodd" d="M6 64 V52 Q6 46 12 44 L22 42 L34 26 Q37 22 42 22 H62 Q67 22 70 26 L80 42 L90 46 Q96 48 96 54 V64 Q96 68 92 68 H6 Z M38 30 H50 V42 H30 Z M56 30 H62 L72 42 H56 Z"/><circle cx="28" cy="70" r="12"/><circle cx="76" cy="70" r="12"/>';
-        else body = '<path d="M8 64 H92 L78 88 H22 Z M46 8 V58 H16 Z M54 20 V58 H84 Z"/>';       /* boat */
+        else if (isChar(id)) body = '<text x="50" y="83" text-anchor="middle" font-size="94" font-weight="' + (tierOf(id) >= 2 ? 500 : 700) + '" style="font-family:var(--font-ui)">' + id + '</text>';
+        else if (sh && sh.kind === 'p') {                                           /* 正 n 邊形（一個頂點朝上） */
+            var pp = [];
+            for (i = 0; i < sh.n; i++) { var a1 = -Math.PI / 2 + i * 2 * Math.PI / sh.n; pp.push((50 + 46 * Math.cos(a1)).toFixed(1) + ',' + (52 + 46 * Math.sin(a1)).toFixed(1)); }
+            body = '<polygon points="' + pp.join(' ') + '"/>';
+        } else if (sh && sh.kind === 's') {                                         /* n 角星：外圈 47、內圈依角數調整，角越多內圈越大（尖角才不會擠成一團） */
+            var sp = [], ri = 47 * Math.min(0.8, 0.5 + 0.025 * (sh.n - 5));
+            for (i = 0; i < 2 * sh.n; i++) { var r1 = i % 2 === 0 ? 47 : ri, a2 = -Math.PI / 2 + i * Math.PI / sh.n; sp.push((50 + r1 * Math.cos(a2)).toFixed(1) + ',' + (52 + r1 * Math.sin(a2)).toFixed(1)); }
+            body = '<polygon points="' + sp.join(' ') + '"/>';
+        } else if (sh && sh.kind === 'g') {                                         /* n 齒的齒輪：圓盤（中間挖洞）＋ n 個齒 */
+            var tw = Math.max(5, Math.min(9, 113 / sh.n)).toFixed(1);
+            body = '<path fill-rule="evenodd" d="M20 50 a30 30 0 1 0 60 0 a30 30 0 1 0 -60 0 Z M39 50 a11 11 0 1 1 22 0 a11 11 0 1 1 -22 0 Z"/>';
+            for (k = 0; k < sh.n; k++) body += '<rect x="' + (50 - tw / 2).toFixed(2) + '" y="8" width="' + tw + '" height="18" rx="1.5" transform="rotate(' + (k * 360 / sh.n).toFixed(2) + ' 50 50)"/>';
+        } else if (sh && sh.kind === 'f') {                                         /* n 瓣的花：n 片橢圓花瓣繞著圓心 */
+            var rx = Math.max(4.5, Math.min(13, 2 * Math.PI * 27 / sh.n * 0.46)).toFixed(2);
+            body = '<circle cx="50" cy="50" r="11"/>';
+            for (k = 0; k < sh.n; k++) body += '<ellipse cx="50" cy="26" rx="' + rx + '" ry="19" transform="rotate(' + (k * 360 / sh.n).toFixed(2) + ' 50 50)"/>';
+        } else body = '<text x="50" y="80" text-anchor="middle" font-size="96" font-weight="900" font-family="var(--font-ui)">?</text>';
         return '<svg viewBox="0 0 100 100" aria-hidden="true" fill="currentColor">' + body + '</svg>';
     }
-    function nameOf(id) { return isDigit(id) ? '數字 ' + id : NAMES[id]; }
+    var CN = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
+    function cnNum(n) { return n <= 10 ? CN[n] : (n < 20 ? '十' + CN[n - 10] : String(n)); }
+    function nameOf(id) {
+        if (isDigit(id)) return '數字 ' + id;
+        var sh = shapeOf(id);
+        if (!sh) return id;
+        return sh.kind === 'p' ? '正' + cnNum(sh.n) + '邊形' : sh.kind === 's' ? cnNum(sh.n) + '角星' : sh.kind === 'g' ? cnNum(sh.n) + '個齒的齒輪' : cnNum(sh.n) + '片花瓣的花';
+    }
     function rating(n) {
         if (n >= 25) return '火眼金睛！';
         if (n >= 15) return '推理高手！';
@@ -168,10 +210,12 @@
             tip.textContent = '藏的是「' + nameOf(q.target) + '」，你掃過了 ' + (cov * 100).toFixed(4) + '％ 的範圍';
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1700 }); return; }
             kit.flash(stage, false, api.my);
-            api.fail({ delay: 2700, lines: [
-                (i == null ? '時間到！' : '選錯了') + '，藏的是「' + nameOf(q.target) + '」',
-                '你掃過了圖案範圍的 ' + (cov * 100).toFixed(4) + '％'
-            ] });
+            api.fail({
+                delay: 2700, lines: [
+                    (i == null ? '時間到！' : '選錯了') + '，藏的是「' + nameOf(q.target) + '」',
+                    '你掃過了圖案範圍的 ' + (cov * 100).toFixed(4) + '％'
+                ]
+            });
         }
         api.solve = function () { judge(q.answer); };
         api.wrong = function () { judge((q.answer + 1) % 4); };
@@ -180,12 +224,12 @@
     var G = {
         id: ID,
         name: '手電筒猜圖',
-        rule: '畫面全黑，**手指拖到哪裡，手指上方就會亮起一圈光**，黑幕底下藏著一個圖案。用光圈到處掃，**猜出藏的是什麼**，點下面四個選項之一。選錯或來不及就結束，看你能過幾關。越後面，光圈越小！',
+        rule: '畫面全黑，**手指拖到哪裡，手指上方就會亮起一圈光**，黑幕底下藏著一個圖案。用光圈到處掃，**猜出藏的是什麼**，點下面四個選項之一。四個選項**長得非常像**（相似的數字、形近的繁體字、只差零件數的圖形），只看一個角落分不出來。選錯或來不及就結束，看你能過幾關。越後面，光圈越小、圖案越複雜、筆劃越多！',
         mount: mount,
         score: SCORE,
         test: {
-            radiusFor: radiusFor, timeMs: timeMs, isDigit: isDigit, poolFor: poolFor, makeLevel: makeLevel, coverage: coverage, picSvg: picSvg, nameOf: nameOf, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, RADIUS: RADIUS, DIGITS: DIGITS, SYMBOLS: SYMBOLS, SIMILAR: SIMILAR, DIGIT_LEVELS: DIGIT_LEVELS, SYMBOL_LEVELS: SYMBOL_LEVELS, MAX_LEVEL: MAX_LEVEL
+            radiusFor: radiusFor, timeMs: timeMs, isDigit: isDigit, isChar: isChar, shapeOf: shapeOf, tierOf: tierOf, tierFor: tierFor, makeLevel: makeLevel, coverage: coverage, picSvg: picSvg, nameOf: nameOf, rating: rating,
+            RAMP_LEVELS: RAMP_LEVELS, RADIUS: RADIUS, TIME_S: TIME_S, DIGITS: DIGITS, FAMILIES: FAMILIES, SIMILAR: SIMILAR, TIERS: TIERS, TIER_JITTER: TIER_JITTER, MAX_LEVEL: MAX_LEVEL
         }
     };
     Reaction.register(G);
