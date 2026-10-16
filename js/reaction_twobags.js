@@ -4,7 +4,7 @@
    把鑽石拖到左邊或右邊的電子秤上（放上去之後還可以拖到另一邊、或拖回上方），全部放好後按「確認」，
    兩邊的重量差要在容許範圍內才過關。關卡制：第 1 關 3 顆鑽石，每關多 1 顆（第 10 關 12 顆），不通過就結束。
    ───────────────────────────────────────────────────────────────────
-   · 鑽石是球體、密度相同：重量 ＝ WEIGHT_K × (直徑 ÷ 10)³ 公斤（直徑 D_MIN～D_MAX px，畫面看到的大小就是直徑）。
+   · 鑽石是球體、密度相同：重量 ＝ WEIGHT_K × (直徑 ÷ 10)³ 克拉（直徑 D_MIN～D_MAX px，畫面看到的大小就是直徑）。
      直覺會用「面積」（直徑²）估重量，結果大鑽石被低估——這是這款的陷阱。
    · 電子秤在「確認」之前顯示「--」，秤盤也不會下沉或傾斜（不洩漏重量），確認後才顯示重量（4 位小數）。
    · 通過條件：|左 − 右| ≤ 總重 × TOL，TOL 由 TOL[0]（8%）線性降到 TOL[1]（1%）（第 10 關起 1%）。
@@ -22,15 +22,15 @@
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 10;                       /* 幾關之後難度到頂（也是最後一關） */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂（也是最後一關） */
     var GEM = '💎';                   /* 💎（V1.28 玩家意見：「石頭」改成「鑽石」，圖案改成 💎） */
     var GEM_K = 0.82;                           /* 💎 的字級 ＝ 直徑 × GEM_K（emoji 的圖案比字級略寬，這樣畫面看到的大小約等於直徑） */
     function gemPx(d) { return Math.round(d * GEM_K * 10) / 10; }
     var N0 = 3;                                 /* 第 1 關的鑽石數（每關 +1） */
-    var TOL = [0.08, 0.01];                     /* 容許誤差（占總重的比例）：第 1 關 → 到頂 */
-    var D_MIN = 20, D_MAX = 120;                 /* 鑽石直徑範圍（px） */
-    var RATIO_MIN = 6.0;                        /* 最大／最小直徑至少幾倍 */
-    var WEIGHT_K = 0.1;                         /* 重量係數：重量 ＝ K × (d÷10)³ 公斤 */
+    var TOL = [0.1, 0.01];                     /* 容許誤差（占總重的比例）：第 1 關 → 到頂 */
+    var D_MIN = 20, D_MAX = 100;                 /* 鑽石直徑範圍（px） */
+    var RATIO_MIN = 4.0;                        /* 最大／最小直徑至少幾倍 */
+    var WEIGHT_K = 0.1;                         /* 重量係數：重量 ＝ K × (d÷10)³ 克拉 */
     var FIT_AREA = 40000;                       /* 所有鑽石（含邊距）的面積和上限 */
     var PAD = 6, TRIES = 6000;
     var RELAX = [[1, 1], [0.8, 1.2], [0.6, 1.5], [0, 3]];   /* 逐階段放寬：[直徑比要求 ×, 面積上限 ×] */
@@ -40,7 +40,7 @@
     function weightOf(d) { return WEIGHT_K * Math.pow(d / 10, 3); }
     function diameterOf(w) { return 10 * Math.cbrt(w / WEIGHT_K); }
     function tolAt(level) { return kit.ramp(level, TOL[0], TOL[1], RAMP_LEVELS); }
-    function countAt(level) { return N0 + level - 1; }
+    function countAt(level) { return N0 + Math.floor(level * 0.5); }
     /* 分法：mask 的第 i 位是 1 ＝ 第 i 顆放左邊。回傳左右重量差的絕對值 */
     function diffOf(w, mask) {
         var l = 0, r = 0;
@@ -116,7 +116,7 @@
         var stage = api.stage, level = api.level, W = stage.clientWidth || 472;
         var q = makeLevel(level, api.rand), n = q.n, side = [], els = [], drag = null, hint = null;
         api.info = q;
-        console.log('[兩袋一樣重] 第 ' + level + ' 關：' + n + ' 顆；直徑 ' + q.d.map(function (x) { return x.toFixed(1); }).join(',') + '；重量 ' + q.w.map(function (x) { return x.toFixed(2); }).join(',') + '；總重 ' + q.total.toFixed(2) + '；容許 ' + (q.tol * 100).toFixed(2) + '%（' + (q.tol * q.total).toFixed(3) + ' 公斤）；最佳差 ' + q.best.diff.toFixed(3) + '；面積分法差 ' + diffOf(q.w, areaPartition(q.d)).toFixed(3) + '，交錯分法差 ' + diffOf(q.w, altPartition(q.d)).toFixed(3));
+        console.log('[兩袋一樣重] 第 ' + level + ' 關：' + n + ' 顆；直徑 ' + q.d.map(function (x) { return x.toFixed(1); }).join(',') + '；重量 ' + q.w.map(function (x) { return x.toFixed(2); }).join(',') + '；總重 ' + q.total.toFixed(2) + '；容許 ' + (q.tol * 100).toFixed(2) + '%（' + (q.tol * q.total).toFixed(3) + ' 克拉）；最佳差 ' + q.best.diff.toFixed(3) + '；面積分法差 ' + diffOf(q.w, areaPartition(q.d)).toFixed(3) + '，交錯分法差 ' + diffOf(q.w, altPartition(q.d)).toFixed(3));
 
         var tip = h('div', { 'class': 'tb-tip', text: '把鑽石拖到左右電子秤，讓兩邊一樣重' });
         var tray = h('div', { 'class': 'tb-zone tb-tray' });
@@ -193,23 +193,23 @@
             locked = true; hideHint(); okBtn.style.display = 'none';
             Sfx.play('click');
             var s = sums(side), diff = Math.abs(s.l - s.r), lim = q.tol * q.total;
-            //我手動刪除了"公斤"字樣，避免介面超過寬度
+            //我手動刪除了"克拉"字樣，避免介面超過寬度
             disps.L.textContent = s.l.toFixed(4); disps.R.textContent = s.r.toFixed(4);
-            info.textContent = '差 ' + diff.toFixed(4) + ' 公斤（容許 ' + lim.toFixed(4) + ' 公斤，總重的 ' + (q.tol * 100).toFixed(4) + '%）';
+            info.textContent = '差 ' + diff.toFixed(4) + ' 克拉（容許 ' + lim.toFixed(4) + ' 克拉，總重的 ' + (q.tol * 100).toFixed(4) + '%）';
             if (diff <= lim) { info.classList.add('tb-info--ok'); api.pass({ delay: 2000 }); return; }
             info.classList.add('tb-info--bad');
             /* 答錯：鑽石自動移到一種可行的分法 */
             api.after(1400, function () {
                 for (var i = 0; i < n; i++) place(i, q.best.mask & (1 << i) ? 'L' : 'R');
                 var b = sums(side);
-                //我手動刪除了"公斤"字樣，避免介面超過寬度
+                //我手動刪除了"克拉"字樣，避免介面超過寬度
                 disps.L.textContent = b.l.toFixed(4); disps.R.textContent = b.r.toFixed(4);
-                info.textContent = '可行的分法：差只有 ' + q.best.diff.toFixed(4) + ' 公斤';
+                info.textContent = '可行的分法：差只有 ' + q.best.diff.toFixed(4) + ' 克拉';
             });
             api.fail({
                 delay: 3800, lines: [
-                    '兩邊差了 ' + diff.toFixed(4) + ' 公斤，超過容許的 ' + lim.toFixed(4) + ' 公斤',
-                    '左 ' + s.l.toFixed(4) + ' 公斤　右 ' + s.r.toFixed(4) + ' 公斤',
+                    '兩邊差了 ' + diff.toFixed(4) + ' 克拉，超過容許的 ' + lim.toFixed(4) + ' 克拉',
+                    '左 ' + s.l.toFixed(4) + ' 克拉　右 ' + s.r.toFixed(4) + ' 克拉',
                     '重量跟直徑的「三次方」成正比：直徑大 1.26 倍，重量就多一倍'
                 ]
             });

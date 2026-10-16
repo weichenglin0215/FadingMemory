@@ -230,12 +230,14 @@
 }
 
 .hc-circle--g {
+    stroke-width: 3.0;
     fill: var(--c-green-light);
     stroke: var(--c-green);
 }
 
 .hc-circle--b {
-    fill: var(--c-blue-soft);
+    stroke-width: 3.0;
+    fill: var(--c-blue-light);
     stroke: var(--c-blue);
 }
 

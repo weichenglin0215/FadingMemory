@@ -61,12 +61,13 @@
     --c-black: #000000;
     /* 純黑：玩法說明裡的重點句子（.dlg__em），在次要文字色的段落裡最醒目 */
 
-    --c-yellow: #E0AA25;
-    --c-green: #4C9A5B;
+    --c-yellow: hsl(43, 75%, 51%);
+    --c-green: hsl(132, 34%, 45%);
     --c-green-light: hsl(132, 72%, 80%);
-    --c-blue: #3E86C4;
-    --c-orange: #E8822E;
-    --c-sky: #35BDEB;
+    --c-blue: hsl(208, 53%, 51%);
+    --c-blue-light: hsl(208, 72%, 80%);
+    --c-orange: hsl(27, 80%, 55%);
+    --c-sky: hsl(195, 82%, 56%);
     /* 水藍色：找回小雞頭上閃爍的星星（V1.24） */
     --pb-bd-w: 5px;
     /* 分藥盒：下方藥盒格子的邊線粗細（V1.24，原本跟一般邊框一樣是 2px） */
