@@ -76,7 +76,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok(LB.isBetter(2, 1, 'max') && !LB.isBetter(1, 2, 'max') && !LB.isBetter(1, 1, 'max'), 'isBetter max（同分不算更好）');
 
   // ═══ 3. 全部遊戲：score 設定合法，而且跟資料庫 MF_games 的設定一致 ═══
-  ok(games.length === 108, '秒反應共 108 款遊戲（boot.js 的清單）：' + games.length);
+  ok(games.length === 109, '秒反應共 109 款遊戲（boot.js 的清單）：' + games.length);
   ok(new Set(games.map(g => g.id)).size === games.length, '遊戲 id 不重複');
   ok(new Set(games.map(g => g.name)).size === games.length, '遊戲名稱不重複（排行榜標題靠名稱辨認）');
   const sql = fs.readFileSync(ROOT + 'supabase/MF_leaderboard.sql', 'utf8').replace(/\r\n/g, '\n');

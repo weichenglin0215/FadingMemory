@@ -85,7 +85,7 @@ games.forEach(g => {
   // 遊戲名稱最多 5 個字（選單格子的名稱列只放得下 5 個字）
   ok(Array.from(g.name).length <= 5, tag + ' 名稱不超過 5 個字（' + Array.from(g.name).length + '）');
 });
-ok(ids.size === games.length && games.length === 108, '108 款遊戲 id 不重複（' + games.length + '）');
+ok(ids.size === games.length && games.length === 109, '109 款遊戲 id 不重複（' + games.length + '）');
 
 // ═══ 5. 原始碼：每款的 rule 行都只有一行（沒有被 \n 切斷）、檔案語法正確 ═══
 const names = games.map(g => g.file);

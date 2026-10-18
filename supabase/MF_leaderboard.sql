@@ -335,6 +335,7 @@ insert into public."MF_games" (game_id, title, better, min_score, max_score) val
     ('fadee',        '淡到看不見', 'max', 1, 40),
     ('oddsock',      '落單的襪子', 'max', 1, 40),
     ('ghostleg',     '鬼腳圖', 'max', 1, 30),
+    ('ghostleg2',    '鬼腳圖減一', 'max', 1, 30),
     ('euler',        '能一筆畫嗎', 'max', 1, 60),
     ('colorrecall',  '記色調色', 'min', 0, 260),
     ('basket',       '菜籃總價', 'max', 1, 30),

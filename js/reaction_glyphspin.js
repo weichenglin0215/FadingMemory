@@ -39,21 +39,10 @@
     var STROKE_SPREAD = 3;                      /* 字群的筆劃數跟目標差不超過這個數才會被抽到 */
     var RECENT_KEEP = 8;                        /* 最近用過幾個字群不再抽（候選不夠時才放寬） */
 
-    /* 相似字群（需人工審校）：同一組的字互相是干擾項；s ＝ 大約的筆劃數（只用來排難度，差一兩劃沒關係） */
-    var FAMILIES = [
-        { s: 2, c: ['刀', '刃', '力'] }, { s: 2, c: ['人', '入', '八'] }, { s: 3, c: ['已', '己', '巳'] }, { s: 3, c: ['于', '千', '干'] },
-        { s: 3, c: ['土', '士', '壬'] }, { s: 4, c: ['丰', '午', '牛'] }, { s: 4, c: ['大', '太', '犬'] }, { s: 4, c: ['天', '夫', '夭'] },
-        { s: 4, c: ['白', '日', '曰', '目'] }, { s: 4, c: ['王', '玉', '主'] }, { s: 5, c: ['末', '未', '本'] }, { s: 5, c: ['田', '由', '甲', '申'] },
-        { s: 6, c: ['戌', '戍', '戊', '戎'] }, { s: 8, c: ['俛', '免', '兔'] }, { s: 9, c: ['待', '侍', '持', '特'] }, { s: 10, c: ['液', '夜', '腋'] },
-        { s: 10, c: ['烏', '鳥', '島'] }, { s: 10, c: ['候', '侯', '猴'] }, { s: 10, c: ['恨', '根', '跟', '限'] }, { s: 10, c: ['抱', '泡', '跑', '飽'] },
-        { s: 10, c: ['晚', '挽', '勉'] }, { s: 11, c: ['清', '情', '晴', '睛'] }, { s: 12, c: ['錯', '措', '借', '惜'] }, { s: 12, c: ['暢', '楊', '場', '腸'] },
-        { s: 14, c: ['潮', '朝', '嘲', '廟'] }, { s: 15, c: ['微', '徵', '徽'] }, { s: 16, c: ['龜', '龍'] },
-        { s: 16, c: ['燈', '鄧', '瞪', '蹬'] }, { s: 17, c: ['辨', '辯', '辦', '辮'] }, { s: 18, c: ['驗', '險', '檢', '儉'] }, { s: 18, c: ['護', '獲', '穫'] },
-        { s: 18, c: ['贏', '嬴', '羸'] }, { s: 19, c: ['藍', '籃', '濫', '鑑'] }, { s: 19, c: ['鷹', '應', '膺'] }, { s: 20, c: ['體', '禮', '豐'] },
-        { s: 20, c: ['讓', '壤', '攘'] }, { s: 21, c: ['驚', '警', '鶯'] }, { s: 22, c: ['戀', '變', '孿', '彎'] }, { s: 22, c: ['讀', '續', '贖'] },
-        { s: 22, c: ['爐', '蘆', '驢', '瀘'] }, { s: 22, c: ['觀', '歡', '權', '勸'] }, { s: 22, c: ['籠', '聾', '襲'] }, { s: 23, c: ['鑽', '讚', '贊'] },
-        { s: 24, c: ['鱗', '麟', '驎'] }, { s: 24, c: ['靈', '靂', '霹'] }, { s: 25, c: ['彎', '蠻', '灣'] }, { s: 26, c: ['灩', '艷', '豔'] }
-    ];
+    /* 相似字群：同一組的字互相是干擾項；s ＝ 平均筆劃數（只用來排難度）。
+       V1.33：改用共用資料庫 js/similar_chars.js（SimilarChars），每組取「最像的前 FAMILY_MAX 個字」。 */
+    var FAMILY_MAX = 4;
+    var FAMILIES = SimilarChars.groups({ minSize: 2 }).map(function (g) { return { s: Math.round(g.s), c: g.chars.slice(0, FAMILY_MAX) }; });
     var SYMMETRIC = '大日土士人八天夫王田目';      /* 左右對稱的字：鏡射沒有意義 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
@@ -180,7 +169,7 @@
         rule: '畫面中央有一個大字，它會左右鏡射、**一直旋轉**，剛出現時轉得非常快，之後越轉越慢，但字也會越縮越小。下方有幾個長得很像的字，**點出「這個字原本是哪一個」**。答錯或來不及就結束，看你能過幾關。越後面的字筆劃越多！',
         mount: mount,
         score: SCORE,
-        test: { spinAt: spinAt, speedAt: speedAt, angleAt: angleAt, sizeFrac: sizeFrac, optCount: optCount, ansMs: ansMs, strokeTarget: strokeTarget, makeLevel: makeLevel, rating: rating, FAMILIES: FAMILIES, SYMMETRIC: SYMMETRIC, RAMP_LEVELS: RAMP_LEVELS, MAX_LEVEL: MAX_LEVEL, SPIN: SPIN, SPIN_MIN: SPIN_MIN, SLOW_S: SLOW_S, ANS_S: ANS_S, SIZE_PCT: SIZE_PCT, OPT: OPT, STROKES: STROKES, STROKE_SPREAD: STROKE_SPREAD, RECENT_KEEP: RECENT_KEEP }
+        test: { spinAt: spinAt, speedAt: speedAt, angleAt: angleAt, sizeFrac: sizeFrac, optCount: optCount, ansMs: ansMs, strokeTarget: strokeTarget, makeLevel: makeLevel, rating: rating, FAMILIES: FAMILIES, SYMMETRIC: SYMMETRIC, MIRROR_P: MIRROR_P, FAMILY_MAX: FAMILY_MAX, RAMP_LEVELS: RAMP_LEVELS, MAX_LEVEL: MAX_LEVEL, SPIN: SPIN, SPIN_MIN: SPIN_MIN, SLOW_S: SLOW_S, ANS_S: ANS_S, SIZE_PCT: SIZE_PCT, OPT: OPT, STROKES: STROKES, STROKE_SPREAD: STROKE_SPREAD, RECENT_KEEP: RECENT_KEEP }
     };
     Reaction.register(G);
 })();

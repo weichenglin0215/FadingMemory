@@ -37,23 +37,29 @@
     var SIMILAR = { '0': ['6', '8', '9'], '1': ['7', '4', '2'], '2': ['7', '3', '5'], '3': ['8', '5', '2'], '4': ['1', '9', '7'], '5': ['6', '3', '8'], '6': ['5', '8', '0', '9'], '7': ['1', '2', '9'], '8': ['3', '6', '0', '9'], '9': ['4', '8', '0', '6'] };
     /* 「長得很像」的一組圖案：四個選項一定來自同一組（只差一點細節）。tier＝複雜度（0 最簡單、3 最複雜）。
        ids 是字的話直接寫字；圖形的 id 是「種類＋零件數」：p＝正 n 邊形、s＝n 角星、g＝n 齒的齒輪、f＝n 瓣的花（picSvg 畫出來）。kind 'digit'＝數字（用 SIMILAR 表挑長得像的） */
+    /* V1.33：形近的繁體字改用共用資料庫 js/similar_chars.js（SimilarChars）：至少 4 個字的字群都拿來用，
+       複雜度依「平均筆劃」分級（CHAR_TIER：平均 ≤ 4.5 劃＝0、≤ 7 劃＝1、≤ 15 劃＝2、其餘＝3）；數字與程式畫的圖形照舊寫在這裡。 */
+    var CHAR_TIER = [4.5, 7, 15];
+    function charTier(s) { return s <= CHAR_TIER[0] ? 0 : s <= CHAR_TIER[1] ? 1 : s <= CHAR_TIER[2] ? 2 : 3; }
     var FAMILIES = [
         { tier: 0, kind: 'digit' },
-        { tier: 0, ids: ['土', '士', '工', '王'] }, { tier: 0, ids: ['日', '曰', '目', '且'] }, { tier: 0, ids: ['大', '太', '犬', '天'] },
-        { tier: 0, ids: ['刀', '刃', '力', '九'] }, { tier: 0, ids: ['干', '于', '千', '午'] },
-        { tier: 1, ids: ['末', '未', '木', '本'] }, { tier: 1, ids: ['己', '已', '巳', '巴'] }, { tier: 1, ids: ['田', '由', '甲', '申'] },
-        { tier: 1, ids: ['戈', '戊', '戌', '成'] }, { tier: 1, ids: ['玉', '主', '壬', '五'] },
         { tier: 1, ids: ['p5', 'p6', 'p7', 'p8'] }, { tier: 1, ids: ['s5', 's6', 's7', 's8'] },
-        { tier: 2, ids: ['情', '清', '請', '晴'] }, { tier: 2, ids: ['待', '侍', '持', '特'] }, { tier: 2, ids: ['抱', '跑', '泡', '炮'] },
-        { tier: 2, ids: ['候', '侯', '猴', '喉'] }, { tier: 2, ids: ['折', '拆', '析', '祈'] }, { tier: 2, ids: ['借', '措', '惜', '昔'] },
-        { tier: 2, ids: ['概', '溉', '慨', '既'] }, { tier: 2, ids: ['輕', '經', '徑', '逕'] },
         { tier: 2, ids: ['g8', 'g9', 'g10', 'g11'] }, { tier: 2, ids: ['f6', 'f7', 'f8', 'f9'] },
-        { tier: 3, ids: ['辨', '辦', '辮', '辯'] }, { tier: 3, ids: ['鑑', '鑒', '鑄', '鑽'] }, { tier: 3, ids: ['驚', '警', '驕', '驟'] },
-        { tier: 3, ids: ['龍', '襲', '寵', '聾'] }, { tier: 3, ids: ['戀', '孿', '彎', '灣'] }, { tier: 3, ids: ['蠶', '蠢', '蠻', '蠱'] },
-        { tier: 3, ids: ['譽', '舉', '輿', '與'] }, { tier: 3, ids: ['讀', '贖', '犢', '瀆'] }, { tier: 3, ids: ['暑', '署', '薯', '曙'] },
-        { tier: 3, ids: ['驗', '險', '檢', '儉'] },
         { tier: 3, ids: ['g14', 'g15', 'g16', 'g17'] }, { tier: 3, ids: ['f12', 'f13', 'f14', 'f15'] }, { tier: 3, ids: ['s12', 's13', 's14', 's15'] }
-    ];
+    ].concat(charFamilies());
+    /* 從共用資料庫做出「字的組」：同一個字在資料庫裡可能屬於好幾組，這裡只留第一次出現的那組（每個字只在一組裡），
+       剩下不到 4 個字的組就不用（四個選項一定要來自同一組） */
+    function charFamilies() {
+        var used = {}, out = [];
+        SimilarChars.groups({ minSize: 4 }).forEach(function (g) {
+            var ids = g.chars.filter(function (c) { return !used[c]; });
+            if (ids.length < 4) return;
+            ids.forEach(function (c) { used[c] = 1; });
+            out.push({ tier: charTier(g.s), ids: ids });
+        });
+        return out;
+    }
+    var SHAPE_P = 0.25;                         /* 這一級同時有「字」和「圖形」時，抽到圖形的機率（字的組比較多，不調的話圖形很少出現） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function radiusFor(level) { return kit.ramp(level, RADIUS[0], RADIUS[1], RAMP_LEVELS); }
@@ -78,6 +84,9 @@
         rand = rand || Math.random;
         var tier = tierFor(level, rand), cands = FAMILIES.filter(function (x) { return x.tier === tier; });
         if (!cands.length) cands = FAMILIES;
+        /* 先決定是「圖形」還是「字／數字」，再從那一類挑一組 */
+        var shapeFams = cands.filter(function (x) { return x.ids && shapeOf(x.ids[0]); }), otherFams = cands.filter(function (x) { return !(x.ids && shapeOf(x.ids[0])); });
+        if (shapeFams.length && otherFams.length) cands = rand() < SHAPE_P ? shapeFams : otherFams;
         var fam = kit.pick(cands, rand), target, others;
         if (fam.kind === 'digit') {
             target = kit.pick(DIGITS, rand);

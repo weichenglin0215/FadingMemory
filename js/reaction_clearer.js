@@ -32,10 +32,15 @@
     var BLUR_MAX = 24;                          /* 一開始的模糊半徑（px） */
     var SPIN_MAX = 720;                         /* 一開始的角速度（度／秒） */
     var RUSH_MS = 1000, RUSH_K = 0.5;           /* 第 1 關在這個時間內就按，得分打幾折 */
-    var FAMILIES = [
-        ['待', '侍', '特', '持', '恃'], ['抱', '跑', '泡', '飽', '袍'], ['湖', '胡', '葫', '蝴', '糊'], ['晴', '睛', '請', '情', '清'], ['媽', '螞', '碼', '罵', '馬'],
-        ['提', '揮', '插', '捏', '摸'], ['橋', '矯', '嬌', '驕', '僑'], ['鴨', '鵝', '鴿', '鷗', '鷺'], ['鑲', '鑼', '鑽', '鑰', '鑿'], ['讀', '讚', '護', '譽', '謹']
-    ];
+    /* 題庫：V1.33 起改用共用資料庫 js/similar_chars.js（SimilarChars），不再自己寫一份字表。
+       FAMILY_KEYS＝每一關用哪一組（寫那一組的第一個字），第 N 關用第 N 個；依筆畫由少到多排好（需人工審校）。
+       每組取資料庫裡那一組的前 5 個字（資料庫裡越前面的字彼此越像）。想換題目：改這裡的字，或改資料庫那一組的順序。 */
+    var FAMILY_KEYS = ['待', '抱', '湖', '晴', '媽', '提', '橋', '鴨', '鑲', '讀'];
+    var FAMILIES = FAMILY_KEYS.map(function (key) {
+        var g = SimilarChars.groups({ minSize: 5 }).filter(function (x) { return x.chars[0] === key; })[0];
+        if (!g) throw new Error('越看越清楚：共用資料庫裡找不到「' + key + '」開頭、至少 5 個字的字群');
+        return g.chars.slice(0, 5);
+    });
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function limitS(level) { return kit.ramp(level, TIME_S[0], TIME_S[1], LEVELS); }

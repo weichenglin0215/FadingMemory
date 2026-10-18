@@ -5,15 +5,15 @@ const near = (a, b, e) => Math.abs(a - b) < (e || 1e-9);
 const SEED = seedOf(20261009); const rnd = rng(SEED);
 
 // 難度曲線（線性、端點、到頂後維持）：起始轉速是 V1.24 的 10 倍（40→300 變 400→3000）
-ok(near(T.spinAt(1), 400) && near(T.spinAt(T.RAMP_LEVELS), 3000) && near(T.spinAt(T.MAX_LEVEL), 3000), '起始旋轉速度端點 400→3000');
+ok(near(T.spinAt(1), T.SPIN[0]) && near(T.spinAt(T.RAMP_LEVELS), T.SPIN[1]) && near(T.spinAt(T.MAX_LEVEL), T.SPIN[1]), '起始旋轉速度端點 ' + T.SPIN);
 { const d = T.spinAt(2) - T.spinAt(1); for (let l = 1; l < T.RAMP_LEVELS; l++) ok(near(T.spinAt(l + 1) - T.spinAt(l), d, 1e-9), '起始旋轉速度線性 ' + l); }
 ok(T.ansMs(1) === 10000 && T.ansMs(T.RAMP_LEVELS) === 6000 && T.ansMs(T.MAX_LEVEL) === 6000, '作答限時 10→6 秒');
 ok(T.optCount(1) === 3 && T.optCount(T.RAMP_LEVELS) === 5, '按鈕數端點');
 // 旋轉速度隨時間降低：剛出現＝起始值，SLOW_S 秒之後＝每秒一圈（360），中間單調下降、不低於 360
-ok(T.SPIN_MIN === 360, '最慢每秒一圈');
-for (const v0 of [400, 1200, 3000]) {
-  ok(near(T.speedAt(v0, 0), v0) && near(T.speedAt(v0, T.SLOW_S * 1000), 360) && near(T.speedAt(v0, 60000), 360), '速度端點 v0=' + v0);
-  let prev = Infinity; for (let ms = 0; ms <= 8000; ms += 50) { const v = T.speedAt(v0, ms); ok(v <= prev + 1e-9 && v >= 360 - 1e-9, '速度單調下降 ' + ms); prev = v; }
+ok(T.SPIN_MIN > 0 && T.SPIN_MIN < T.SPIN[0], '最慢的轉速 ' + T.SPIN_MIN + ' 度／秒');
+for (const v0 of [T.SPIN[0], (T.SPIN[0] + T.SPIN[1]) / 2, T.SPIN[1]]) {
+  ok(near(T.speedAt(v0, 0), v0) && near(T.speedAt(v0, T.SLOW_S * 1000), T.SPIN_MIN) && near(T.speedAt(v0, 60000), T.SPIN_MIN), '速度端點 v0=' + v0);
+  let prev = Infinity; for (let ms = 0; ms <= 8000; ms += 50) { const v = T.speedAt(v0, ms); ok(v <= prev + 1e-9 && v >= T.SPIN_MIN - 1e-9, '速度單調下降 ' + ms); prev = v; }
 }
 // 旋轉角度：speedAt 的積分（用數值積分核對）、方向正確、SLOW_S 秒之後等速
 for (const dir of [1, -1]) {
@@ -22,15 +22,15 @@ for (const dir of [1, -1]) {
   ok(near(T.angleAt(q, 9000), 10 + dir * ang, 0.5), '角度＝速度的積分 dir=' + dir + '：' + T.angleAt(q, 9000) + ' vs ' + (10 + dir * ang));
 }
 ok(near(T.angleAt({ start: 7, dir: 1, spin: 3000 }, 0), 7), '角度起點');
-{ const q = { start: 0, dir: 1, spin: 800 }; ok(near(T.angleAt(q, 10000) - T.angleAt(q, 9000), 360, 1e-6), 'SLOW_S 秒之後每秒剛好一圈'); }
+{ const q = { start: 0, dir: 1, spin: 800 }; ok(near(T.angleAt(q, 10000) - T.angleAt(q, 9000), T.SPIN_MIN, 1e-6), 'SLOW_S 秒之後維持最慢轉速'); }
 // 字寬：90% → 作答時間用完 10%，線性
 ok(near(T.sizeFrac(0, 8000), 0.9) && near(T.sizeFrac(8000, 8000), 0.1) && near(T.sizeFrac(4000, 8000), 0.5) && near(T.sizeFrac(99999, 8000), 0.1), '字寬 90% → 10%');
 ok(T.SIZE_PCT[0] === 90 && T.SIZE_PCT[1] === 10, '字寬百分比參數');
 // 筆劃目標：線性、端點
 ok(near(T.strokeTarget(1), 3) && near(T.strokeTarget(T.MAX_LEVEL), 26) && near(T.strokeTarget(99), 26), '目標筆劃端點 3→26');
 // 題庫：每組 2～4 個字、全是單一漢字、沒有數字與英文、不同組沒有重複字、筆劃數 2～28 且涵蓋大量高筆劃
-const all = []; T.FAMILIES.forEach(f => { ok(f.c.length >= 2 && f.c.length <= 4, '每組 2～4 個字'); ok(f.s >= 2 && f.s <= 28, '筆劃數合理 ' + f.s); f.c.forEach(c => { ok(c.length === 1 && /[一-鿿]/.test(c), c + ' 是單一漢字'); all.push(c); }); });
-ok(new Set(all).size === all.length, '不同組沒有重複字');
+const all = []; T.FAMILIES.forEach(f => { ok(f.c.length >= 2 && f.c.length <= T.FAMILY_MAX && new Set(f.c).size === f.c.length, '每組 2～' + T.FAMILY_MAX + ' 個不同的字'); ok(f.s >= 2 && f.s <= 28, '筆劃數合理 ' + f.s); f.c.forEach(c => { ok(c.length === 1 && /[一-鿿]/.test(c), c + ' 是單一漢字'); all.push(c); }); });
+ok(new Set(T.FAMILIES.map(f => f.c.join(''))).size === T.FAMILIES.length, '沒有一模一樣的兩組');
 ok([...T.SYMMETRIC].every(c => all.indexOf(c) >= 0), '對稱字都在題庫裡');
 ok(T.FAMILIES.length >= 45, '字群至少 45 組：' + T.FAMILIES.length);
 ok(T.FAMILIES.filter(f => f.s >= 15).length >= 20, '15 劃以上的字群至少 20 組：' + T.FAMILIES.filter(f => f.s >= 15).length);
@@ -58,7 +58,7 @@ for (let l = 1; l <= T.MAX_LEVEL; l++) { rec = []; for (let i = 0; i < 120; i++)
   ok(inFam === Math.min(q.options.length, fam.length), '同組字優先當干擾項');
   if (q.mirror) mirrors++; sumStroke[l] = (sumStroke[l] || 0) + q.strokes;
 } }
-ok(mirrors > total * 0.3 && mirrors < total * 0.55, '鏡射比例 ' + mirrors / total);
+ok(mirrors > total * (T.MIRROR_P - 0.15) && mirrors < total * T.MIRROR_P + 1, '鏡射比例 ' + mirrors / total + '（MIRROR_P ' + T.MIRROR_P + '，對稱字不鏡射）');
 // 筆劃隨關卡越來越多：後面的關卡平均筆劃遠高於前面
 ok(sumStroke[T.MAX_LEVEL] / 120 > sumStroke[1] / 120 + 15, '第 30 關平均筆劃 ' + (sumStroke[30] / 120).toFixed(1) + ' 遠高於第 1 關 ' + (sumStroke[1] / 120).toFixed(1));
 for (let l = 1; l + 3 <= T.MAX_LEVEL; l += 3) ok(sumStroke[l + 3] >= sumStroke[l] - 120 * 1.5, '筆劃大致隨關卡上升 ' + l);

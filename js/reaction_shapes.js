@@ -51,6 +51,7 @@
        colorable=false（目前只有 emoji）不能套用動態顏色，只能用在形狀考驗。
        ★ 想增加題材：照同樣的格式加進這個陣列就好，不用改其他程式碼。 */
     /* PAIRS：「一對」長得相近的圖案資料表（a、b 兩邊，隨機決定誰當多數、誰當少數）。想增加題材只要在這裡加一筆 */
+    var SIMILAR_MAX_ST = 26;                    /* 共用字庫的形近字，平均筆畫超過這個數就不用（太細，格子裡看不清楚） */
     var PAIRS = [
         { type: 'svg', a: 'circle', b: 'octagon', colorable: true },
         { type: 'svg', a: 'circle', b: 'hexagon', colorable: true },
@@ -68,59 +69,21 @@
         { type: 'text', a: '口', b: '回', colorable: true, st: 4.5 },
         { type: 'text', a: '上', b: '下', colorable: true, st: 3 },
         { type: 'text', a: '木', b: '林', colorable: true, st: 6 },
-        { type: 'text', a: '士', b: '土', colorable: true, st: 3 },
-        { type: 'text', a: '大', b: '犬', colorable: true, st: 3.5 },
-        { type: 'text', a: '未', b: '末', colorable: true, st: 5 },
-        /* 筆畫很多（約 19～25 畫）、長得很像的中文字：st＝這一組兩個字的平均筆畫數，第 10 關之後才慢慢常出現（見 targetCx、pickPair） */
-        { type: 'text', a: '讚', b: '讀', colorable: true, st: 22 },
-        { type: 'text', a: '驚', b: '警', colorable: true, st: 21 },
-        { type: 'text', a: '響', b: '饗', colorable: true, st: 22 },
-        { type: 'text', a: '灣', b: '彎', colorable: true, st: 23.5 },
-        { type: 'text', a: '麟', b: '鱗', colorable: true, st: 23.5 },
-        { type: 'text', a: '讓', b: '壤', colorable: true, st: 20 },
-        { type: 'text', a: '蘿', b: '羅', colorable: true, st: 22 },
-        { type: 'text', a: '躍', b: '耀', colorable: true, st: 20.5 },
-        { type: 'text', a: '贏', b: '羸', colorable: true, st: 19.5 },
-        { type: 'text', a: '鑑', b: '鑒', colorable: true, st: 22.5 },
-        { type: 'text', a: '體', b: '髓', colorable: true, st: 21 },
-        { type: 'text', a: '欖', b: '攬', colorable: true, st: 24.5 },
-        { type: 'text', a: '籬', b: '籮', colorable: true, st: 25 },
-        { type: 'text', a: '鑲', b: '鑰', colorable: true, st: 24.5 },
-        { type: 'text', a: '戀', b: '孿', colorable: true, st: 22.5 },
         { type: 'text', a: '2', b: '3', colorable: true },
         { type: 'text', a: '3', b: '8', colorable: true },
         { type: 'text', a: '6', b: '9', colorable: true },
         { type: 'text', a: '0', b: '8', colorable: true },
-        /* 新增（筆畫少與筆畫中等的字，讓筆畫能一點一點增加；st＝平均筆畫數） */
-        { type: 'text', a: '己', b: '已', colorable: true, st: 3 },
-        { type: 'text', a: '日', b: '曰', colorable: true, st: 4 },
-        { type: 'text', a: '千', b: '干', colorable: true, st: 3 },
-        { type: 'text', a: '午', b: '牛', colorable: true, st: 4 },
-        { type: 'text', a: '刀', b: '力', colorable: true, st: 2 },
-        { type: 'text', a: '王', b: '玉', colorable: true, st: 4.5 },
-        { type: 'text', a: '天', b: '夫', colorable: true, st: 4 },
-        { type: 'text', a: '往', b: '住', colorable: true, st: 7.5 },
-        { type: 'text', a: '待', b: '侍', colorable: true, st: 8.5 },
-        { type: 'text', a: '持', b: '特', colorable: true, st: 9.5 },
-        { type: 'text', a: '候', b: '侯', colorable: true, st: 9.5 },
-        { type: 'text', a: '清', b: '情', colorable: true, st: 11 },
-        { type: 'text', a: '現', b: '視', colorable: true, st: 11 },
-        { type: 'text', a: '問', b: '間', colorable: true, st: 11.5 },
-        { type: 'text', a: '場', b: '揚', colorable: true, st: 12 },
-        { type: 'text', a: '晴', b: '睛', colorable: true, st: 12.5 },
-        { type: 'text', a: '幅', b: '福', colorable: true, st: 12.5 },
-        { type: 'text', a: '微', b: '徵', colorable: true, st: 13.5 },
-        { type: 'text', a: '買', b: '賣', colorable: true, st: 13.5 },
-        { type: 'text', a: '暖', b: '緩', colorable: true, st: 14 },
-        { type: 'text', a: '練', b: '煉', colorable: true, st: 14 },
-        { type: 'text', a: '慶', b: '廣', colorable: true, st: 15 },
-        { type: 'text', a: '憂', b: '優', colorable: true, st: 16 },
         { type: 'emoji', a: '😀', b: '😆', colorable: false },
         { type: 'emoji', a: '⚽', b: '🏐', colorable: false },
         { type: 'emoji', a: '🎲', b: '🀄', colorable: false },
         { type: 'emoji', a: '🔒', b: '🔓', colorable: false },
         { type: 'emoji', a: '⌛', b: '⏳', colorable: false }
-    ];
+    ].concat(
+        /* V1.33：長得很像的中文字改用共用資料庫 js/similar_chars.js（SimilarChars），每一組取最像的前兩個字；
+           st＝兩個字的平均筆畫數（第 10 關之後筆畫多的字才慢慢常出現，見 targetCx、pickPair）。想加字就加在共用資料庫裡。 */
+        SimilarChars.pairs().filter(function (p) { return p.st <= SIMILAR_MAX_ST; })
+            .map(function (p) { return { type: 'text', a: p.a, b: p.b, colorable: true, st: p.st }; })
+    );
     /* COLORABLE：篩出能套用顏色的組合（emoji 自帶顏色，不能套） */
     var COLORABLE = PAIRS.filter(function (p) { return p.colorable; });
     /* ═══ 難度之一：題材的「複雜度」與每一關的「目標複雜度」（細節見檔頭說明）═══ */

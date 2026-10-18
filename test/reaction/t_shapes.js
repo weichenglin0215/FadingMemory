@@ -40,7 +40,8 @@ const share = (arr, f) => arr.filter(f).length / arr.length;
 const meanSt = arr => { const h = arr.filter(p => p.st != null); return h.reduce((s, p) => s + p.st, 0) / h.length; };
 const N = 6000, S = {};
 [1, 5, 10, 11, 12, 15, 20, 25, 30, 40].forEach(l => { S[l] = sample(l, N); });
-ok(share(S[1], p => p.st != null && p.st > 6) === 0 && share(S[10], p => p.st != null && p.st > 6) === 0, '第 1～10 關只抽符號、數字、筆畫少（6 畫以內）的字');
+/* V1.33 共用字庫多了 6.5 畫的「肝汗」：上限改成跟著 CX_LOW＋CX_AHEAD 算（約 6.9 畫） */
+{ const maxSt = 3 + 22 * (T.CX_LOW + T.CX_AHEAD - 0.15) / 0.85; ok(maxSt < 7.5 && share(S[1], p => p.st != null && p.st > maxSt) === 0 && share(S[10], p => p.st != null && p.st > maxSt) === 0, '第 1～10 關只抽符號、數字、筆畫少（' + maxSt.toFixed(1) + ' 畫以內）的字'); }
 // 嚴格：任何一關都不會抽到「比目標複雜度難超過 CX_AHEAD」的題材（不會突然跳出太難的字）
 for (const l of [1, 5, 10, 11, 12, 15, 20, 25, 30]) ok(S[l].every(p => T.complexityOf(p) <= T.targetCx(l) + T.CX_AHEAD + 1e-12), 'level ' + l + ' never picks a pair harder than target + ' + T.CX_AHEAD);
 // 難度是逐步放開的：每過一關，「最難」的字平均筆畫只會一點一點增加

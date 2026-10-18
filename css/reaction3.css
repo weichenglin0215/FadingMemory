@@ -1608,6 +1608,30 @@
     pointer-events: none;
 }
 
+/* ═══ 鬼腳圖減一（.gx-）：棋盤的直線、橫線、起終點用的是鬼腳圖的 .gl- 樣式（js/ghostleg_core.js 的 drawBoard 畫的），這裡只有拿掉橫線用的 ═══ */
+/* 已經拿掉的那一條（點一下就拿掉）：原位留下淡淡的紅色虛線 */
+.gl-rung.gx-gone {
+    stroke: var(--c-bad);
+    stroke-width: 5;
+    stroke-dasharray: 6 8;
+    opacity: 0.55;
+}
+/* 答錯或時間到時，標出答案那一條：粗綠線 */
+.gl-rung.gx-answer {
+    stroke: var(--c-ok);
+    stroke-width: 10;
+    opacity: 1;
+    stroke-dasharray: none;
+}
+/* 評審動畫：從起點開始畫出的綠色粗虛線（跟鬼腳圖的 .gl-route 一樣） */
+.gx-route {
+    fill: none;
+    stroke: var(--c-green);
+    stroke-width: 9;
+    stroke-linejoin: round;
+    stroke-dasharray: 16 10;
+}
+
 .gl-msg {
     position: absolute;
     left: 0;

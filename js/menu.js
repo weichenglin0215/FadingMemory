@@ -125,6 +125,7 @@
         { id: 'fadee', name: '淡到看不見', cat: 'visual', img: 'img/reaction/fadee.png' },
         { id: 'oddsock', name: '落單的襪子', cat: 'visual', img: 'img/reaction/oddsock.png' },
         { id: 'ghostleg', name: '鬼腳圖', cat: 'hand', img: 'img/reaction/ghostleg.png' },
+        { id: 'ghostleg2', name: '鬼腳圖減一', cat: 'logic', img: 'img/reaction/ghostleg2.png' },
         { id: 'euler', name: '能一筆畫嗎', cat: 'logic', img: 'img/reaction/euler.png' },
         { id: 'colorrecall', name: '記色調色', cat: 'memory', img: 'img/reaction/colorrecall.png' },
         { id: 'basket', name: '菜籃總價', cat: 'number', img: 'img/reaction/basket.png' },

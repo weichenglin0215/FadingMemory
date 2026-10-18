@@ -43,7 +43,7 @@ for (let i = 0; i < 6000; i++) {
   ok(q.options[q.answer] === q.target, '答案位置');
   ok(q.options.every(o => T.tierOf(o) === q.tier), '選項同一級：' + q.options + ' tier ' + q.tier);
   if (T.isDigit(q.target)) { kinds.digit++; ok(q.options.every(T.isDigit), '數字選項都是數字'); }
-  else { const fam = T.FAMILIES.find(f => f.ids && f.ids.indexOf(q.target) >= 0); ok(fam && q.options.every(o => fam.ids.indexOf(o) >= 0), '四個選項來自同一組很像的圖案：' + q.options); kinds[T.isChar(q.target) ? 'char' : 'shape']++; }
+  else { const fam = T.FAMILIES.some(f => f.ids && q.options.every(o => f.ids.indexOf(o) >= 0)); ok(fam, '四個選項來自同一組很像的圖案：' + q.options); kinds[T.isChar(q.target) ? 'char' : 'shape']++; }
   ansPos[q.answer] = (ansPos[q.answer] || 0) + 1;
 }
 ok(Object.keys(ansPos).length === 4 && Math.min(...Object.values(ansPos)) > 1100, '答案位置均勻 ' + JSON.stringify(ansPos));

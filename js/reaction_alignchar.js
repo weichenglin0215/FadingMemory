@@ -32,13 +32,11 @@
     var ALIGN_AT = [3.0, 6.0];                  /* 第一次對準的時刻 ＝ 週期 × 這個範圍的隨機數 */
     var PIC = { w: 460, h: 460 };               /* 圖案方框的大小（邏輯 px），h 同時是直條循環的一圈長度 P */
     var MAX_LEVEL = 60;
-    /* 「長得像」的字群組：選項優先從同一群挑 */
-    var GROUPS = [
-        ['日', '目', '自', '白', '百', '旦'], ['未', '末', '朱', '束', '宋'], ['土', '士', '工', '干', '王'], ['天', '夫', '太', '大', '犬', '失'],
-        ['木', '本', '禾', '米', '朱'], ['己', '已', '巳', '包'], ['人', '入', '八', '大'], ['刀', '力', '九', '分'], ['千', '干', '于', '午'], ['午', '牛', '生', '手'],
-        ['玉', '主', '王', '五', '丑'], ['問', '間', '聞', '閃', '開', '關'], ['河', '湖', '洞', '海', '漢', '清'], ['晴', '睛', '請', '情', '清', '精'], ['田', '由', '甲', '申', '電'],
-        ['國', '圍', '園', '圓', '團'], ['買', '賣', '員', '貝', '見'], ['休', '林', '杯', '材', '株'], ['明', '朋', '期', '朝', '胡'], ['鳥', '馬', '烏', '鳴', '島']
-    ];
+    /* 「長得像」的字群組：選項優先從同一群挑。
+       V1.33：改用共用資料庫 js/similar_chars.js（SimilarChars），不再自己寫一份字表。
+       這款的直條要拼得出字，所以只用「平均筆劃 ≤ GROUP_MAX_STROKES、至少 4 個字」的字群（跟以前的字表差不多難）。 */
+    var GROUP_MAX_STROKES = 15;
+    var GROUPS = SimilarChars.groups({ minSize: 4, maxStrokes: GROUP_MAX_STROKES }).map(function (g) { return g.chars; });
     var CHARS = [];
     GROUPS.forEach(function (g) { g.forEach(function (c) { if (CHARS.indexOf(c) < 0) CHARS.push(c); }); });
 
@@ -80,7 +78,9 @@
             for (i = 0; i < n; i++) ks.push(kit.randInt(2, KMAX, rand) * (rand() < 0.5 ? -1 : 1));
             var pos = ks.filter(function (k) { return k > 0; }).length, speeds = {};
             ks.forEach(function (k) { speeds[Math.abs(k)] = 1; });
-            if (pos > 0 && pos < n && Object.keys(speeds).length >= 2) break;
+            /* 所有速度倍數的最大公因數要是 1：都是偶數的話，半個週期就會多對準一次（週期其實只有一半） */
+            var g = ks.reduce(function (x, k) { k = Math.abs(k); while (k) { var t = x % k; x = k; k = t; } return x; }, 0);
+            if (pos > 0 && pos < n && Object.keys(speeds).length >= 2 && g === 1) break;
         }
         var ch = kit.pick(CHARS, rand), options = makeOptions(ch, optionsFor(level), rand), cycle = cycleFor(level);
         return { ch: ch, options: options, answer: options.indexOf(ch), n: n, ks: ks, cycle: cycle, tAlign: cycle * kit.randFloat(ALIGN_AT[0], ALIGN_AT[1], rand) };
