@@ -144,7 +144,12 @@
            把畫面交給選中的那個遊戲模組自己接手畫、自己管理狀態，
            這個檔案從這之後就不再插手這局遊戲怎麼進行。
            有排行榜的遊戲：說明彈窗按「下一步」→ 世界前 30 名彈窗 → 按「開始挑戰」才開始。 */
-        function startGame() { game.mount(screen, { setMeta: setMeta }); }
+        function startGame() {
+            game.mount(screen, { setMeta: setMeta });
+            /* V1.35.0：這款遊戲的 mount 已經跑完（舊單位的最佳紀錄遷移都做完了），本機的最佳紀錄可以信任了：
+               已登入的話，跟帳號同步這一款的個人最佳（見 js/identity.js 的 gameMounted）。 */
+            if (window.Identity && Identity.gameMounted) window.setTimeout(function () { Identity.gameMounted(game.id); }, 0);
+        }
         if (hasBoard) {
             showRule(function () {
                 Leaderboard.showBoard(game, { startText: '開始挑戰', onClose: startGame });

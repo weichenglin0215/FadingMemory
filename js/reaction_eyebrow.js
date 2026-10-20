@@ -22,11 +22,11 @@
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 20;                       /* 幾關之後難度到頂 */
-    var THRESH = [70, 93];                      /* 及格線（相似度 %）：第 1 關 → 到頂（使用者企劃 70% → 93%） */
-    var TILT_DEG = [2, 10];                     /* 臉歪的角度上限（度）：第 1 關 → 到頂（但要到第 TILT_FROM 關才開始歪） */
-    var TILT_FROM = 5;                          /* 第幾關起臉會歪 */
-    var SHIFT_PX = [8, 40];                     /* 臉偏離正中間的最大距離（px）：第 1 關 → 到頂（但要到第 TILT_FROM 關才開始偏） */
+    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
+    var THRESH = [60, 90];                      /* 及格線（相似度 %）：第 1 關 → 到頂（使用者企劃 70% → 93%） */
+    var TILT_DEG = [2, 180];                     /* 臉歪的角度上限（度）：第 1 關 → 到頂（但要到第 TILT_FROM 關才開始歪） */
+    var TILT_FROM = 2;                          /* 第幾關起臉會歪 */
+    var SHIFT_PX = [8, 80];                     /* 臉偏離正中間的最大距離（px）：第 1 關 → 到頂（但要到第 TILT_FROM 關才開始偏） */
     var BROW_LEN = 100;                         /* 眉毛的長度（px，臉座標裡沿著 u 方向的長度） */
     var BROW_GAP = 30;                          /* 眉毛的內端離中軸多遠（px） */
     var BROW_V = -66;                           /* 眉毛大約在臉中心上方多少 px（v 是往下為正，所以是負的） */

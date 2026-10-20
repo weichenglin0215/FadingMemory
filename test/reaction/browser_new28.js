@@ -37,7 +37,7 @@
             W.eval(fake); W.__fake.latency = 5; W.__fake.seed(id, 0);
             W.requestAnimationFrame = function (cb) { return W.setTimeout(function () { cb(W.performance.now()); }, 16); };
             W.cancelAnimationFrame = function (x) { W.clearTimeout(x); };
-            W.Leaderboard.setNick('驗證');
+            W.__fake.loginAs('驗證');
             var real = W.Leaderboard.submit;
             W.Leaderboard.submit = function (ref, v) {
                 rep.reached = true; rep.submitted = { value: v, type: typeof v };

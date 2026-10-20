@@ -9,7 +9,7 @@ const near = (a, b, e) => Math.abs(a - b) <= (e == null ? 1e-9 : e);
 ok(T.digitsFor(1) === T.DIGITS[0] && T.digitsFor(T.RAMP_LEVELS) === T.DIGITS[1] && T.digitsFor(99) === T.DIGITS[1], '號碼長度 ' + T.DIGITS);
 ok(T.viewMs(1) === T.VIEW_S[0] * 1000 && T.viewMs(T.RAMP_LEVELS) === T.VIEW_S[1] * 1000, '看的時間 ' + T.VIEW_S);
 ok(T.repeatsFor(1) === T.REPEATS[0] && T.repeatsFor(T.RAMP_LEVELS) === T.REPEATS[1] && T.mirrorsFor(1) === T.MIRRORS[0] && T.mirrorsFor(T.RAMP_LEVELS) === T.MIRRORS[1], '容易混的數字串組數 ' + T.REPEATS + '／' + T.MIRRORS);
-for (let l = 2; l <= 60; l++) ok(T.digitsFor(l) >= T.digitsFor(l - 1) && T.viewMs(l) <= T.viewMs(l - 1) && T.repeatsFor(l) >= T.repeatsFor(l - 1) && T.mirrorsFor(l) >= T.mirrorsFor(l - 1), '單調 ' + l);
+for (let l = 2; l <= 60; l++) ok(T.digitsFor(l) >= T.digitsFor(l - 1) && (T.VIEW_S[1] >= T.VIEW_S[0] ? T.viewMs(l) >= T.viewMs(l - 1) : T.viewMs(l) <= T.viewMs(l - 1)) && T.repeatsFor(l) >= T.repeatsFor(l - 1) && T.mirrorsFor(l) >= T.mirrorsFor(l - 1), '單調（看的時間 VIEW_S 由使用者調，變長或變短都可以，方向一致就好） ' + l);
 { const d = []; for (let l = 2; l <= T.RAMP_LEVELS; l++) d.push(T.digitsFor(l) - T.digitsFor(l - 1)); ok(Math.max(...d) - Math.min(...d) <= 1, '號碼長度線性：每關 +' + Math.min(...d) + '～' + Math.max(...d)); }
 
 // ── 轉盤幾何 ──
@@ -52,7 +52,7 @@ for (let i = 0; i < 600; i++) {
   const f = T.feasible(q.len, T.repeatsFor(lv), T.mirrorsFor(lv)); ok(T.repeatCount(q.num) >= f.reps, '第 ' + lv + ' 關連續相同 ' + T.repeatCount(q.num) + '／' + f.reps + '：' + q.num);
   ok(T.mirrorCount(q.num) >= f.mirrors, '第 ' + lv + ' 關 abca 型 ' + T.mirrorCount(q.num) + '／' + f.mirrors + '：' + q.num);
   lens[q.len] = (lens[q.len] || 0) + 1; sumRet += q.num.split('').reduce((a, c) => a + T.returnTimeMs(Number(c)), 0);
-  if (lv === 1) ok(q.len === 3 && q.viewMs === 3000, '第 1 關：3 碼、看 3 秒');
+  if (lv === 1) ok(q.len === T.DIGITS[0] && q.viewMs === T.VIEW_S[0] * 1000, '第 1 關：' + T.DIGITS[0] + ' 碼、看 ' + T.VIEW_S[0] + ' 秒（跟著參數）');
 }
 console.log('號碼長度分布 ' + JSON.stringify(lens) + '；平均每組號碼轉盤要轉回來共 ' + (sumRet / total / 1000).toFixed(1) + ' 秒');
 // 程式裡的接線

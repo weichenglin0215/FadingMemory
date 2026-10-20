@@ -376,6 +376,7 @@
         if (!id || !(level > 1)) return false;
         if (level <= kit.levelBest(id)) return false;
         UI.store.set(kit.lvKey(id), Math.floor(level));
+        if (global.Identity && global.Identity.noteBest) global.Identity.noteBest(id);       /* V1.35.0：已登入的話，稍後把新的最佳關卡同步到帳號 */
         return true;
     };
     /* kit.entryLevel(id, legacyAdd)：這次進場該從第幾關開始（最少第 1 關）。

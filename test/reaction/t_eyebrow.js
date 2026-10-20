@@ -6,10 +6,12 @@ const SEED = seedOf(20261220), rnd = rng(SEED);
 const near = (a, b, e) => Math.abs(a - b) <= (e == null ? 1e-9 : e);
 
 // ── 難度 ──
-ok(near(T.threshFor(1), 70) && near(T.threshFor(T.RAMP_LEVELS), 93) && near(T.threshFor(99), 93), '及格線 70% → 93%（使用者企劃）');
+ok(near(T.threshFor(1), T.THRESH[0]) && near(T.threshFor(T.RAMP_LEVELS), T.THRESH[1]) && near(T.threshFor(99), T.THRESH[1]), '及格線 ' + T.THRESH[0] + '% → ' + T.THRESH[1] + '%（參數 THRESH，使用者可調，測試跟著走）');
+// 到頂關卡「標準答案整條往下偏幾 px」就會不及格：及格線越低、要偏越多（每偏 1px 約少 0.8%，再留一倍餘裕）
+const PX_TOP = Math.max(7, Math.round((100 - T.THRESH[1]) * 1.6 + 4));
 for (let n = 2; n <= T.RAMP_LEVELS + 2; n++) ok(T.threshFor(n) >= T.threshFor(n - 1) && T.tiltFor(n) >= T.tiltFor(n - 1) && T.shiftFor(n) >= T.shiftFor(n - 1) && T.typesFor(n).length >= T.typesFor(n - 1).length, '單調 ' + n);
 { const d = []; for (let n = 2; n <= T.RAMP_LEVELS; n++) d.push(T.threshFor(n) - T.threshFor(n - 1)); ok(Math.max(...d) - Math.min(...d) <= 0.0002, '及格線線性增加：每關 +' + Math.min(...d).toFixed(4) + '～+' + Math.max(...d).toFixed(4)); }
-ok(T.tiltFor(1) === 0 && T.tiltFor(T.TILT_FROM - 1) === 0 && T.tiltFor(T.TILT_FROM) > 0 && near(T.tiltFor(T.RAMP_LEVELS), 10) && T.shiftFor(T.TILT_FROM - 1) === 0 && T.shiftFor(T.TILT_FROM) > 0 && near(T.shiftFor(T.RAMP_LEVELS), 40), '第 ' + T.TILT_FROM + ' 關起臉會歪、會偏離正中間，到頂 ±10°／±40px');
+ok(T.tiltFor(1) === 0 && T.tiltFor(T.TILT_FROM - 1) === 0 && T.tiltFor(T.TILT_FROM) > 0 && near(T.tiltFor(T.RAMP_LEVELS), T.TILT_DEG[1]) && T.shiftFor(T.TILT_FROM - 1) === 0 && T.shiftFor(T.TILT_FROM) > 0 && near(T.shiftFor(T.RAMP_LEVELS), T.SHIFT_PX[1]), '第 ' + T.TILT_FROM + ' 關起臉會歪、會偏離正中間，到頂 ±' + T.TILT_DEG[1] + '°／±' + T.SHIFT_PX[1] + 'px（跟著參數）');
 ok(T.typesFor(1).join() === 'moon,flat' && T.typesFor(8).length === 4 && T.typesFor(99).length === 5, '眉毛形狀種類越來越多');
 
 // ── 曲線工具 ──
@@ -69,7 +71,8 @@ for (let lv = 1; lv <= 30; lv++) for (let rep = 0; rep < 60; rep++) {
   // 完美玩家（加 1.2px 抖動）一定及格；偏 0.12 倍眉毛長度的玩家在高關卡不及格
   const good = q.target.map(p => ({ x: p.x + (rnd() - 0.5) * 2.4, y: p.y + (rnd() - 0.5) * 2.4 })); ok(T.similarity(good, q.target, q.L) >= q.thresh, '抖動 ±1.2px 的完美玩家第 ' + lv + ' 關過關（' + T.similarity(good, q.target, q.L).toFixed(2) + '% ≥ ' + q.thresh + '）');
   // 標準答案整條往下偏 7px（眉毛大多是橫的，往下偏就是垂直於曲線的誤差）：70% 關還過、93% 關過不了
-  const sh = q.target.map(p => ({ x: p.x, y: p.y + 7 })); if (lv === 1) ok(T.similarity(sh, q.target, q.L) >= q.thresh, '第 1 關往下偏 7px 還是過關：' + T.similarity(sh, q.target, q.L).toFixed(2) + '%'); if (lv >= T.RAMP_LEVELS) ok(T.similarity(sh, q.target, q.L) < q.thresh, '到頂關卡往下偏 7px 就不及格：' + T.similarity(sh, q.target, q.L).toFixed(2) + '%');
+  const t0 = q.target[0], t1 = q.target[q.target.length - 1], tl = Math.hypot(t1.x - t0.x, t1.y - t0.y) || 1, nx = -(t1.y - t0.y) / tl, ny = (t1.x - t0.x) / tl, dd = lv >= T.RAMP_LEVELS ? PX_TOP : 7;
+  const sh = q.target.map(p => ({ x: p.x + nx * dd, y: p.y + ny * dd }));   /* 垂直於「起點到終點」的方向偏 dd px */ if (lv === 1) ok(T.similarity(sh, q.target, q.L) >= q.thresh, '第 1 關往下偏 7px 還是過關：' + T.similarity(sh, q.target, q.L).toFixed(2) + '%'); if (lv >= T.RAMP_LEVELS) ok(T.similarity(sh, q.target, q.L) < q.thresh, '到頂關卡往下偏 ' + PX_TOP + 'px 就不及格：' + T.similarity(sh, q.target, q.L).toFixed(2) + '%');
 }
 console.log('共 ' + ST.n + ' 關；形狀 ' + JSON.stringify(ST.types) + '；最大歪角 ' + ST.maxTilt.toFixed(1) + '°、最大偏移 ' + ST.maxShift.toFixed(1) + 'px；左眉長度 ' + ST.Lmin.toFixed(0) + '～' + ST.Lmax.toFixed(0) + ' px');
 ok(Object.keys(ST.types).length === 5, '五種形狀都會出現');

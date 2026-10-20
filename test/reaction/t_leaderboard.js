@@ -267,16 +267,21 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
         const r = mk(body.p_game_id); delete r.ok; delete r.saved; delete r.rank; return { ok: true, status: 200, json: () => Promise.resolve(r) };
       }
       if (name === 'MF_submit_score') {
+        if (fetchMode === 'badtoken') return { ok: true, status: 200, json: () => Promise.resolve({ ok: false, error: 'bad_token' }) };
         const r = mk(body.p_game_id, fetchMode !== 'notsaved', fetchMode !== 'notsaved' ? 2 : null);
         return { ok: true, status: 200, json: () => Promise.resolve(r) };
       }
-      if (name === 'MF_rename_player') return { ok: true, status: 200, json: () => Promise.resolve({ ok: true, rows: 1 }) };
       return { ok: false, status: 404, json: () => Promise.resolve({}) };
     });
   };
-  const resetClient = () => { mem.clear(); calls.length = 0; fetchMode = 'ok'; latency = 0; T.state.boards = {}; T.state.inflight = {}; T.state.netDownUntil = 0; T.state.nickPromise = null; T.state.nickSkipped = false; };
-  const ui = { asked: 0, nickAnswer: '小花', celebrated: [], toasts: [], askNickname() { this.asked++; return Promise.resolve(this.nickAnswer); }, celebrate(i) { this.celebrated.push(i); }, toast(t) { this.toasts.push(t); } };
+  const resetClient = () => { mem.clear(); calls.length = 0; fetchMode = 'ok'; latency = 0; T.state.boards = {}; T.state.inflight = {}; T.state.netDownUntil = 0; T.state.gate = null; idn.gateCalls = 0; idn.answer = { kind: 'cancel' }; };
+  const ui = { celebrated: [], toasts: [], celebrate(i) { this.celebrated.push(i); }, toast(t) { this.toasts.push(t); } };
   LB.ui = ui;
+  // 替身的 Identity：記錄「彈窗被問了幾次」、回答由測試決定（answer 可以是結果物件，或是一個函式）
+  const PID = '11111111-1111-4111-8111-111111111111', TOK = 'tok-test-0123456789';
+  const idn = { gateCalls: 0, answer: { kind: 'cancel' }, last: null, gateForScore(g, spec, score) { this.gateCalls++; this.last = { g, spec, score }; const a = typeof this.answer === 'function' ? this.answer() : this.answer; return Promise.resolve(a); } };
+  global.Identity = idn;
+  const logIn = (nick) => LB.setSession({ player_id: PID, token: TOK, nick: nick || '測試員' });
   global.Reaction.resultShowing = () => true;
 
   // 8-1 讀榜單：快取、去重、逾時前的行為
@@ -316,34 +321,107 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   resetClient(); fetchMode = 'http500';
   ok((await LB.load(speed)) === null, 'HTTP 500 → null（不丟例外）');
 
-  // 8-3 送成績
-  const saved = () => JSON.parse(mem.get(T.KEY_PENDING) || '{}');
-  // 沒暱稱、玩家按「先不要」→ 不連網、這一頁不再追問
-  resetClient(); ui.asked = 0; ui.nickAnswer = '';
-  let r = await LB.submit('speed', 0.0345);
-  ok(r.status === 'no-nick' && calls.length === 0 && ui.asked === 1, '沒暱稱＋先不要：不連網');
+  // 8-3 身分：訪客／舊玩家／已登入／憑證失效（Leaderboard 保管「我是誰」的本機資料）
+  const keys = () => [...mem.keys()];
+  resetClient();
+  ok(LB.identityState() === 'guest' && !LB.isLoggedIn() && LB.peekPid() === '' && LB.token() === '', '全新的瀏覽器：訪客');
+  const anon1 = T.anonId();
+  ok(/^[0-9a-f-]{36}$/.test(anon1) && T.anonId() === anon1 && LB.pid() === anon1, '訪客：意見／評價用「匿名代號」（固定、不變），不會產生 fm.lb.pid');
+  ok(!mem.has(T.KEY_PID), '訪客：不會產生 fm.lb.pid（那是帳號用的）');
+  // V1.34 以前「有 player_id 沒暱稱」的瀏覽器：舊代號沿用成匿名代號
+  resetClient(); mem.set(T.KEY_PID, JSON.stringify('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'));
+  ok(T.anonId() === 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' && !mem.has(T.KEY_PID) || JSON.parse(mem.get(T.KEY_PID)) === null, '舊代號（沒暱稱）沿用成匿名代號，過去的評價、意見還連得上');
+  // V1.34 以前有暱稱的舊玩家：legacy，呼叫資料庫時用他的舊代號（資料庫認得，匿名意見／評價照常可以送）
+  resetClient(); mem.set(T.KEY_PID, JSON.stringify('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb')); mem.set(T.KEY_NICK, JSON.stringify('老玩家'));
+  ok(LB.identityState() === 'legacy' && !LB.isLoggedIn() && LB.pid() === 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', '有舊代號＋暱稱、沒有憑證：舊玩家（legacy），用舊代號');
+  // 登入
+  ok(LB.setSession({ player_id: PID, token: TOK, nick: ' 小花 ' }) === true, 'setSession 成功');
+  ok(LB.identityState() === 'in' && LB.isLoggedIn() && LB.peekPid() === PID && LB.token() === TOK && LB.getNick() === '小花' && LB.pid() === PID, '登入：已登入、暱稱清理過、pid 是帳號編號');
+  ok(LB.setSession({ player_id: PID }) === false && LB.setSession(null) === false, 'setSession 缺憑證／null → 不存');
+  // 憑證失效
+  LB.markRelogin();
+  ok(LB.identityState() === 'relogin' && !LB.isLoggedIn() && LB.token() === '' && LB.getNick() === '小花' && LB.peekPid() === PID, '憑證失效：relogin，暱稱與 player_id 留著（登入彈窗要帶入）');
+  ok(LB.pid() !== PID && /^[0-9a-f-]{36}$/.test(LB.pid()), 'relogin：不能拿帳號編號當匿名用（資料庫會拒絕冒用），改用匿名代號');
+  logIn('小花');
+  ok(LB.identityState() === 'in' && !mem.has(T.KEY_RELOGIN) || JSON.parse(mem.get(T.KEY_RELOGIN)) === null, '重新登入成功：旗標清掉');
+  // 登出：清乾淨
+  T.savePending('speed', 0.5, 'min'); mem.set(T.KEY_BOARD + 'speed', JSON.stringify({ at: 1, data: { top: [] } })); T.state.boards.speed = { top: [] };
+  LB.clearIdentity();
+  ok(LB.identityState() === 'guest' && LB.peekPid() === '' && LB.token() === '' && LB.getNick() === '', '登出：回到訪客，pid／憑證／暱稱都清掉');
+  ok(!JSON.parse(mem.get(T.KEY_PENDING) || 'null') && !JSON.parse(mem.get(T.KEY_BOARD + 'speed') || 'null') && !T.state.boards.speed, '登出：待送成績與榜單快取也清掉（下一位玩家不會繼承）');
+
+  // 8-4 送成績
+  const saved = () => JSON.parse(mem.get(T.KEY_PENDING) || '{}') || {};
+  const fullBoard = () => { serverRows.speed = Array.from({ length: 30 }, (_, i) => ({ rank: i + 1, nick: 'p' + i, score: (i + 1) / 100, mine: false })); };
+  const origSpeedRows = serverRows.speed;
+  // 訪客＋進不了榜：什麼都不問、不連網（新玩家玩的時候不會被打斷）
+  resetClient(); fullBoard(); await LB.load(speed); calls.length = 0;
+  let r = await LB.submit('speed', 0.31);
+  ok(r.status === 'not-qualified' && idn.gateCalls === 0 && calls.length === 0, '訪客：比第 30 名差 → 完全不問、不連網');
+  r = await LB.submit('speed', 0.30);
+  ok(r.status === 'not-qualified' && idn.gateCalls === 0 && calls.length === 0, '訪客：與第 30 名同分 → 不問、不連網');
+  // 訪客＋有機會進榜 → 跳「建立暱稱與密碼」；玩家按「先不要」→ 什麼都不留
+  idn.answer = { kind: 'cancel' };
   r = await LB.submit('speed', 0.0345);
-  ok(r.status === 'no-nick' && ui.asked === 1, '按過「先不要」之後這一頁不再追問');
-  // 第一次：問暱稱 → 存起來 → 連網
-  resetClient(); ui.asked = 0; ui.nickAnswer = '  快樂阿嬤 ';
-  await LB.load(speed); calls.length = 0;
+  ok(idn.gateCalls === 1 && idn.last.score === 0.0345 && idn.last.g === speed && r.status === 'skipped', '訪客：成績進前 30 名 → 跳建立帳號，按「先不要」→ skipped');
+  ok(!saved().speed && calls.filter(c => c.name === 'MF_submit_score' || c.name === 'MF_register').length === 0, '先不要：不連網、也不留待送成績');
   r = await LB.submit('speed', 0.0345);
-  ok(ui.asked === 1 && LB.getNick() === '快樂阿嬤', '第一次完成遊戲 → 問暱稱，存成「快樂阿嬤」');
+  ok(idn.gateCalls === 2 && r.status === 'skipped', '先不要之後，下一次又進前 30 名「必須再問一次」（不記住「不要」）');
+  // 訪客建立帳號成功：新玩家的成績跟著建帳號一起寫進去，慶祝；其他待送成績補送
+  idn.answer = { kind: 'registered', data: { ok: true, saved: true, rank: 7, game_id: 'speed', better: 'min', limit: 30, top: [{ rank: 7, nick: '快樂阿嬤', score: 0.0345, mine: true }] } };
+  ui.celebrated.length = 0; calls.length = 0;
+  r = await LB.submit('speed', 0.0345);
+  ok(r.status === 'saved' && r.rank === 7 && ui.celebrated.length === 1 && ui.celebrated[0].rank === 7, '訪客建立帳號成功 → saved、名次 7、慶祝');
+  ok(calls.filter(c => c.name === 'MF_submit_score').length === 0, '建帳號時成績已一起寫入，不會再多送一次');
+  ok(T.state.boards.speed.top[0].mine === true && !saved().speed, '榜單更新成資料庫回傳的、待送佇列沒有殘留');
+  // 訪客＋沒有榜單＋連不上網路：不問帳號（不知道有沒有進榜）
+  resetClient(); fetchMode = 'down'; mem.delete(T.KEY_BOARD + 'speed'); T.state.boards = {};
+  r = await LB.submit('speed', 0.0345);
+  ok(r.status === 'offline' && idn.gateCalls === 0, '訪客：不知道榜單又連不上網路 → offline，不跳彈窗');
+  // 訪客＋榜單還在快取：沒網路也能判斷（快取）→ 進榜才問；問完連不上也不會弄丟（建帳號本身要網路，所以回 offline）
+  resetClient(); idn.answer = { kind: 'offline' };
+  fetchMode = 'ok'; serverRows.speed = origSpeedRows; await LB.load(speed); fetchMode = 'down';
+  r = await LB.submit('speed', 0.0345);
+  ok(idn.gateCalls === 1 && r.status === 'offline', '訪客：用快取榜單判斷進榜 → 跳彈窗；建帳號時連不上 → offline');
+  // 同時只跳一個彈窗：彈窗開著時又結算一局 → 先存待送
+  resetClient(); fetchMode = 'ok'; await LB.load(speed); calls.length = 0;
+  let release; idn.answer = () => new Promise(res => { release = res; });
+  const first = LB.submit('speed', 0.04);
+  await sleep(5);
+  const second = LB.submit('speed', 0.03);
+  const r2 = await second;
+  ok(r2.status === 'pending-login' && saved().speed && saved().speed.score === 0.03, '彈窗開著時又結算一局 → pending-login，成績先存待送：' + JSON.stringify(r2));
+  release({ kind: 'cancel' }); await first;
+  ok(idn.gateCalls === 1, '同一時間只跳一個彈窗');
+
+  // 舊玩家（legacy）：彈窗是非跳不可的；成績先存起來，認領成功後送出
+  resetClient(); mem.set(T.KEY_PID, JSON.stringify('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb')); mem.set(T.KEY_NICK, JSON.stringify('老玩家'));
+  serverRows.speed = origSpeedRows; await LB.load(speed); calls.length = 0;
+  idn.answer = () => { logIn('老玩家'); return { kind: 'logged-in' }; };
+  r = await LB.submit('speed', 0.0345);
+  ok(idn.gateCalls === 1 && r.status === 'saved', '舊玩家：先認領（跳彈窗）再把成績送出去 → saved');
+  const subL = calls.filter(c => c.name === 'MF_submit_score');
+  ok(subL.length >= 1 && subL[0].body.p_token === TOK && subL[0].body.p_player_id === PID, '舊玩家認領後：用憑證送');
+
+  // 已登入：用憑證送，不再傳暱稱
+  resetClient(); logIn('快樂阿嬤');
+  await LB.load(speed); calls.length = 0; ui.celebrated.length = 0;
+  r = await LB.submit('speed', 0.0345);
+  ok(idn.gateCalls === 0, '已登入：不會再跳任何帳號彈窗');
   ok(r.status === 'saved' && r.rank === 2, '有進榜 → saved，名次 2：' + JSON.stringify(r));
   const sub = calls.filter(c => c.name === 'MF_submit_score');
-  ok(sub.length === 1 && sub[0].body.p_game_id === 'speed' && sub[0].body.p_nickname === '快樂阿嬤' && sub[0].body.p_score === 0.0345, '送出的欄位正確：' + JSON.stringify(sub[0] && sub[0].body));
+  ok(sub.length === 1 && sub[0].body.p_game_id === 'speed' && sub[0].body.p_player_id === PID && sub[0].body.p_token === TOK && sub[0].body.p_score === 0.0345, '送出的欄位正確（帶 p_token）：' + JSON.stringify(sub[0] && sub[0].body));
+  ok(!('p_nickname' in sub[0].body), '不再傳 p_nickname（暱稱由資料庫從帳號帶入）');
   ok(sub[0].pendingAtCall.speed && sub[0].pendingAtCall.speed.score === 0.0345, '連網「之前」已先寫入待送佇列（寫在前面）');
   ok(!saved().speed, '收到明確答覆後待送佇列清掉');
   ok(ui.celebrated.length === 1 && ui.celebrated[0].rank === 2 && ui.celebrated[0].score === 0.0345, '進榜 → 呼叫慶祝');
-  ok(calls.filter(c => c.name === 'MF_rename_player').length === 1, '設定暱稱時順便通知資料庫改名');
-  // 再玩一次：暱稱已存在，不再問；榜上只有 2 名（不到 30 名），再差的成績也進得去 → 要連網
-  ui.asked = 0; ui.celebrated.length = 0; calls.length = 0;
+  ok(!saved().speed || !('nick' in saved().speed), '待送佇列不再存暱稱');
+  // 再玩一次：榜上只有 2 名（不到 30 名），再差的成績也進得去 → 要連網
+  ui.celebrated.length = 0; calls.length = 0;
   r = await LB.submit('speed', 0.2);
-  ok(ui.asked === 0, '之後不再問暱稱');
   ok(calls.filter(c => c.name === 'MF_submit_score').length === 1, '榜上不到 30 名：0.2 秒也有機會進榜 → 連網送出');
   // 滿榜（30 名）的情境：比第 30 名差或同分 → 完全不連網
-  resetClient(); ui.nickAnswer = '甲'; LB.setNick('甲'); calls.length = 0;
-  serverRows.speed = Array.from({ length: 30 }, (_, i) => ({ rank: i + 1, nick: 'p' + i, score: (i + 1) / 100, mine: false }));
+  resetClient(); logIn('甲'); fullBoard();
   await LB.load(speed); calls.length = 0;
   r = await LB.submit('speed', 0.31);
   ok(r.status === 'not-qualified' && calls.length === 0, '滿榜且比第 30 名差 → 完全不連網');
@@ -362,8 +440,17 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   r = await LB.submit('speed', 0.001);
   ok(ui.celebrated.length === 0 && ui.toasts.length === 1 && /第 2 名/.test(ui.toasts[0]), '結算卡片已經不在 → 只跳小提示：' + ui.toasts[0]);
   global.Reaction.resultShowing = () => true;
+  // 憑證失效：標記 relogin → 請玩家重新登入 → 登入成功再送一次
+  resetClient(); logIn('乙'); serverRows.speed = origSpeedRows; await LB.load(speed); calls.length = 0;
+  fetchMode = 'badtoken'; idn.answer = () => { fetchMode = 'ok'; logIn('乙'); return { kind: 'logged-in' }; };
+  r = await LB.submit('speed', 0.0345);
+  ok(idn.gateCalls === 1 && r.status === 'saved' && calls.filter(c => c.name === 'MF_submit_score').length === 2, '憑證失效（bad_token）→ 跳登入 → 登入成功後再送一次 → saved：' + JSON.stringify(r));
+  resetClient(); logIn('乙'); await LB.load(speed); calls.length = 0;
+  fetchMode = 'badtoken'; idn.answer = { kind: 'cancel' };
+  r = await LB.submit('speed', 0.0345);
+  ok(r.status === 'skipped' && LB.identityState() === 'relogin' && saved().speed && saved().speed.score === 0.0345, '憑證失效、玩家沒登入 → skipped；狀態是 relogin；成績留在待送佇列：' + JSON.stringify(r));
   // 離線：待送佇列＋提示＋冷卻
-  resetClient(); LB.setNick('乙'); calls.length = 0; fetchMode = 'down'; ui.toasts.length = 0;
+  resetClient(); logIn('乙'); calls.length = 0; fetchMode = 'down'; ui.toasts.length = 0;
   r = await LB.submit('speed', 0.0456);
   ok(r.status === 'offline' && saved().speed && saved().speed.score === 0.0456 && ui.toasts.length === 1, '連不上：成績存進待送佇列並提示');
   const n1 = calls.length;
@@ -371,24 +458,51 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok(calls.length === n1 && saved().speed.score === 0.04, '冷卻期內：不連網，待送佇列只留「較好」的那筆（0.04）');
   r = await LB.submit('speed', 0.0900);
   ok(saved().speed.score === 0.04, '待送佇列不會被較差的成績蓋掉');
-  // 恢復連線後補送
+  // 恢復連線後補送（要已登入）
   fetchMode = 'ok'; T.state.netDownUntil = 0; calls.length = 0;
   await LB.test.flushPending();
-  ok(calls.filter(c => c.name === 'MF_submit_score').length === 1 && calls[0].body.p_score === 0.04, '補送最好的那筆 0.04');
+  ok(calls.filter(c => c.name === 'MF_submit_score').length === 1 && calls[0].body.p_score === 0.04 && calls[0].body.p_token === TOK, '補送最好的那筆 0.04（帶憑證）');
   ok(!saved().speed, '補送成功後佇列清空');
+  // 沒登入就不補送
+  resetClient(); T.savePending('speed', 0.07, 'min'); calls.length = 0;
+  await LB.test.flushPending();
+  ok(calls.length === 0 && saved().speed, '沒登入：不補送，成績留著等登入');
   // 補送時連線又失敗：保留、不清掉
-  resetClient(); fetchMode = 'down'; LB.setNick('丙'); T.savePending('speed', '丙', 0.07, 'min'); T.savePending('spot', '丙', 9, 'max'); calls.length = 0;
+  resetClient(); fetchMode = 'down'; logIn('丙'); T.savePending('speed', 0.07, 'min'); T.savePending('spot', 9, 'max'); calls.length = 0;
   await LB.test.flushPending();
   ok(saved().speed && saved().spot && calls.length === 1, '補送失敗：佇列保留，而且第一筆失敗就停（不連續轟炸）');
+  // 補送時發現憑證失效：標記 relogin、成績留著
+  resetClient(); fetchMode = 'badtoken'; logIn('丙'); T.savePending('speed', 0.07, 'min'); calls.length = 0;
+  await LB.test.flushPending();
+  ok(LB.identityState() === 'relogin' && saved().speed, '補送時憑證失效：標記重新登入，成績留著');
   // 異常輸入
-  resetClient(); LB.setNick('丁'); calls.length = 0;
+  resetClient(); logIn('丁'); calls.length = 0;
   for (const bad of [NaN, Infinity, '12', null, undefined, {}]) { r = await LB.submit('speed', bad); ok(r.status === 'skip', '非數字成績一律略過：' + String(bad)); }
   r = await LB.submit('nope', 1); ok(r.status === 'skip' && calls.length === 0, '不存在的遊戲略過');
   // 資料庫拒絕（例如 MF_games 沒登記）
-  resetClient(); LB.setNick('戊'); global.fetch = () => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ ok: false, error: 'unknown_game' }) });
+  resetClient(); logIn('戊'); global.fetch = () => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ ok: false, error: 'unknown_game' }) });
   r = await LB.submit('speed', 0.01);
   ok(r.status === 'rejected' && r.error === 'unknown_game', '資料庫拒絕 → rejected，不當成離線、不重試');
   ok(!saved().speed, '被拒絕的成績不留在佇列（重送也不會被接受）');
+
+  // 8-5 意見：帶憑證（沒有就匿名）、不傳暱稱；憑證失效 → 標記重新登入、改用匿名再送一次
+  const fbCalls = [];
+  global.fetch = (url, opt) => {
+    const name = url.split('/rpc/')[1], body = JSON.parse(opt.body); fbCalls.push({ name, body });
+    const bad = name === 'MF_submit_feedback' && body.p_token === 'tok-expired';
+    return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(bad ? { ok: false, error: 'bad_token' } : { ok: true, saved: true }) });
+  };
+  resetClient(); LB.sendFeedback('speed', '很好玩！').then(() => { });
+  await sleep(5);
+  ok(fbCalls.length === 1 && fbCalls[0].body.p_token === null && !('p_nickname' in fbCalls[0].body) && fbCalls[0].body.p_player_id === T.anonId(), '訪客送意見：不帶憑證、用匿名代號、沒有 p_nickname：' + JSON.stringify(fbCalls[0].body));
+  fbCalls.length = 0; resetClient(); logIn('小花');
+  let fb = await LB.sendFeedback('speed', '登入後的意見');
+  ok(fbCalls.length === 1 && fbCalls[0].body.p_token === TOK && fbCalls[0].body.p_player_id === PID && fb.status === 'sent', '已登入送意見：帶憑證與帳號編號');
+  fbCalls.length = 0; resetClient(); LB.setSession({ player_id: PID, token: 'tok-expired', nick: '小花' });
+  fb = await LB.sendFeedback('speed', '憑證過期時的意見');
+  ok(fbCalls.length === 2 && fbCalls[0].body.p_token === 'tok-expired' && fbCalls[1].body.p_token === null && fbCalls[1].body.p_player_id !== PID && fb.status === 'sent' && LB.identityState() === 'relogin',
+    '憑證失效：標記重新登入、改用匿名代號再送一次（意見不會因此送不出去）：' + JSON.stringify(fbCalls.map(c => c.body.p_token)));
+  global.fetch = () => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(null) });
 
   // ═══ 9. 用戶端絕不能含 service_role ═══
   const src = fs.readFileSync(ROOT + 'js/leaderboard.js', 'utf8');
@@ -433,7 +547,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     if (name === 'MF_get_top') out = g ? { game_id: g.id, better: g.score.better, limit: 30, top: [] } : null;
     else if (name === 'MF_submit_score') {
       posted.push(b);
-      out = g ? { ok: true, saved: true, rank: 1, game_id: g.id, better: g.score.better, limit: 30, top: [{ rank: 1, nick: b.p_nickname, score: b.p_score, mine: true }] } : { ok: false, error: 'unknown_game' };
+      out = g ? { ok: true, saved: true, rank: 1, game_id: g.id, better: g.score.better, limit: 30, top: [{ rank: 1, nick: '測試員', score: b.p_score, mine: true }] } : { ok: false, error: 'unknown_game' };
     } else out = { ok: true, rows: 0 };
     return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(out) });
   };
@@ -441,7 +555,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   console.log = () => { };                    // 108 款 × 6 次送榜，模組的主控台訊息太多，這一段先靜音（FAIL 仍用 say 印出）
   for (const g of games) {
     const s = g.score;
-    resetClient(); LB.setNick('測試員'); ui.celebrated.length = 0; posted.length = 0;
+    resetClient(); logIn('測試員'); ui.celebrated.length = 0; posted.length = 0;
     for (const bad2 of [s.min - 1, s.max + 1, s.max + 0.5]) {
       const rr = await LB.submit(g.id, bad2);
       ok(rr.status === 'skip', g.id + ' 超出範圍 ' + s.min + '～' + s.max + ' 的成績（' + bad2 + '）要略過：' + rr.status);
@@ -449,10 +563,10 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     ok(posted.length === 0, g.id + ' 範圍外的成績完全不連網');
     // 範圍的兩個端點本身都是有效成績；中間值也是
     for (const v of [s.min, s.max, sample(s)]) {
-      resetClient(); LB.setNick('測試員'); ui.celebrated.length = 0; posted.length = 0;
+      resetClient(); logIn('測試員'); ui.celebrated.length = 0; posted.length = 0;
       const rr = await LB.submit(g.id, v);
       ok(rr.status === 'saved' && rr.rank === 1, g.id + ' 成績 ' + v + ' 應該送出並進榜：' + JSON.stringify(rr));
-      ok(posted.length === 1 && posted[0].p_game_id === g.id && posted[0].p_score === v && posted[0].p_nickname === '測試員', g.id + ' 送出的欄位正確：' + JSON.stringify(posted[0]));
+      ok(posted.length === 1 && posted[0].p_game_id === g.id && posted[0].p_score === v && posted[0].p_token === TOK && posted[0].p_player_id === PID && !('p_nickname' in posted[0]), g.id + ' 送出的欄位正確：' + JSON.stringify(posted[0]));
       ok(ui.celebrated.length === 1 && ui.celebrated[0].game === g && ui.celebrated[0].score === v, g.id + ' 進榜 → 慶祝（帶著這款遊戲與成績）');
       flowChecked++;
     }
@@ -460,7 +574,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   console.log = say;
   say('送榜流程：' + games.length + ' 款遊戲 × 範圍外 3 種、範圍內 3 種成績，共 ' + flowChecked + ' 次送榜皆正確');
   // 不認得的遊戲代號：LB 這邊不會送；資料庫這邊會拒絕（見 sql_test.mjs）
-  resetClient(); LB.setNick('測試員'); posted.length = 0;
+  resetClient(); logIn('測試員'); posted.length = 0;
   ok((await LB.submit('no_such_game', 5)).status === 'skip' && posted.length === 0, '沒登記的遊戲 id → 略過');
 
   console.log(bad ? 'FAILED ' + bad + ' / ' + total : 'ALL PASS ' + total);

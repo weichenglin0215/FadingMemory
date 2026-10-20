@@ -32,7 +32,7 @@
         setup: async function (nick) {
             await fetch('/test/leaderboard/fake_backend.js?x=' + Date.now()).then(function (r) { return r.text(); }).then(function (t) { return (0, eval)(t); });
             chk.fast();
-            if (window.Leaderboard && Leaderboard.setNick) Leaderboard.setNick(nick || '測試員');
+            if (window.__fake) window.__fake.loginAs(nick || '測試員');
             return 'setup done: nick=' + (window.Leaderboard && Leaderboard.getNick());
         },
         fast: function () {

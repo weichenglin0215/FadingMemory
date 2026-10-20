@@ -50,7 +50,7 @@
             W.__fake.seed(id, 0);
             W.requestAnimationFrame = function (cb) { return W.setTimeout(function () { cb(W.performance.now()); }, 16); };
             W.cancelAnimationFrame = function (x) { W.clearTimeout(x); };
-            W.Leaderboard.setNick('煙霧測試');
+            W.__fake.loginAs('煙霧測試');
             // 攔截 Leaderboard.submit，記下收到的原始值
             var realSubmit = W.Leaderboard.submit;
             W.Leaderboard.submit = function (ref, v) {

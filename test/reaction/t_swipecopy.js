@@ -6,7 +6,7 @@ const SEED = seedOf(20261117), rnd = rng(SEED);
 const near = (a, b, e) => Math.abs(a - b) <= (e == null ? 1e-9 : e);
 
 // ── 難度 ──
-ok(T.lenFor(1) === 2 && T.lenFor(5) === 6 && T.lenFor(99) === T.LEN_MAX, '箭頭數＝關卡數＋1（第 1 關 2 個），上限 ' + T.LEN_MAX);
+ok(T.lenFor(1) === Math.min(2, T.LEN_MAX) && T.lenFor(5) === Math.min(6, T.LEN_MAX) && T.lenFor(99) === T.LEN_MAX, '箭頭數＝關卡數＋1，上限 LEN_MAX＝' + T.LEN_MAX + '（使用者調的參數，測試跟著走）');
 ok(T.showMsFor(1) === T.SHOW_MS[0] && T.showMsFor(T.RAMP_LEVELS) === T.SHOW_MS[1] && T.showMsFor(99) === T.SHOW_MS[1], '每個箭頭停留 ' + T.SHOW_MS);
 ok(T.gapMsFor(1) === T.GAP_MS[0] && T.gapMsFor(T.RAMP_LEVELS) === T.GAP_MS[1], '空檔 ' + T.GAP_MS);
 ok(T.dirCountFor(T.DIAG_FROM - 1) === 4 && T.dirCountFor(T.DIAG_FROM) === 8 && T.dirCountFor(40) === 8, '第 ' + T.DIAG_FROM + ' 關起 8 個方向');
@@ -56,7 +56,8 @@ for (let i = 0; i < 1500; i++) {
   q.dirs.forEach(d => { dist[d]++; });
 }
 console.log('方向分布 ' + dist.join(',') + '；有斜箭頭的 8 向關卡 ' + diag);
-ok(dist[0] > 500 && dist[2] > 500 && dist[4] > 500 && dist[6] > 500 && dist[1] > 100 && dist[3] > 100 && dist[5] > 100 && dist[7] > 100, '各方向都有出現');
+const arrows = dist.reduce((a, b) => a + b, 0);       // 箭頭總數（一串的長度由 LEN_MAX 決定，所以門檻用比例）
+ok([0, 2, 4, 6].every(d => dist[d] > arrows * 0.05) && [1, 3, 5, 7].every(d => dist[d] > arrows * 0.015), '各方向都有出現（總共 ' + arrows + ' 個箭頭）');
 ok(diag > 300, '8 向關卡確實出現斜箭頭：' + diag);
 // 程式裡的接線
 { const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_swipecopy.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
