@@ -229,7 +229,8 @@
         /* 替整個畫面加上黑底 class（樣式在 css/reaction.css 的 .shapes-dark-bg） */
         root.classList.add('shapes-dark-bg');
         /* level：目前關卡，放在 mount 裡讓下面的函式共用（閉包） */
-        var level = 1;
+        /* V1.34.0：從「個人最佳關卡 − 4」開始，沒玩過就是第 1 關（kit.entryLevel，見 reaction_kit.js） */
+        var level = Reaction.kit.entryLevel(ID, 0);          /* 這兩款的成績本身就是「撐到第幾關」，所以舊紀錄不用再 ＋1 */
 
         /* round：畫一關 */
         function round() {
@@ -312,13 +313,14 @@
                    留在背景，結算卡片疊一層半透明底蓋上去——跟其他遊戲同一套做法。 */
                 /* 結算彈窗（公版 kit.result）：帶 score 會在彈窗出現之後自動送世界排行榜 */
                 Reaction.kit.result(root, {
-                    num: '第 ' + level + ' 關', label: '答錯了，挑戰結束', isNew: isNew, score: level,
+                    num: '第 ' + level + ' 關', label: '答錯了，挑戰結束', isNew: isNew, score: level, level: level,
                     sfx: level >= 8 ? 'win' : 'fail', onAgain: function () { level = 1; round(); }
                 });
             });
         }
 
         round();
+        Reaction.kit.entryNotice(ID, level);
     }
 
     /* Reaction.register：把這款遊戲登記到遊戲清單（這款直接傳物件，不另外存成變數 G） */

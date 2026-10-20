@@ -1,9 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_racefirst.js — 秒反應・誰先衝線（企劃 206）
-   四個穿著不同顏色衣服的小人排在起跑線上（靜止），畫面中央先出現「3、2、1」倒數，接著一聲令下，每個小人都以「加速度」
+   五個（RUNNERS）穿著不同顏色衣服的小人排在起跑線上（靜止），畫面中央先出現「3、2、1」倒數，接著一聲令下，每個小人都以「加速度」
    向右衝：一開始很慢、越接近右邊越快，約 1 秒內就全部衝過終點線、從右邊跑出畫面。看完之後，點「最先到終點」的那一個。
    越後面，各個小人到終點的時間差越小。關卡制：點錯或來不及就結束，成績＝通過幾關。
    ───────────────────────────────────────────────────────────────────
+   · V1.34（玩家意見：增加一位小人，總共五位）：小人從 4 位增加成 RUNNERS ＝ 5 位（跑道高度依人數縮小，五條跑道放得進畫面；顏色從 6 色挑 5 色）。
    · V1.29（玩家意見：太容易了、也無聊）改版：
        - 一開始先在畫面中央疊上「3、2、1」倒數（COUNT_STEPS × COUNT_MS），再開跑；
        - 原本的彩色圓點改成「穿著不同顏色衣服的小人在跑步」（手腳擺動的跑步動作）；
@@ -18,12 +19,12 @@
    · 運動是時間的純函式（規範 T3）：第 k 個小人在起跑後第 t 秒（從哨音算起）離起跑線的距離
      x(t) ＝ ½ · a · (t − d)²（t ≥ d：從靜止、固定加速度 a 出發；d 是這個小人的起跑延遲；到終點之後不停，一直算下去），
      到達終點的時間 T ＝ d ＋ √(2 · D ÷ a)，D 是起跑線到終點線的距離；跑出畫面右邊的時間 d ＋ √(2 · exitD ÷ a)。畫面只是把這個函式畫出來，跟影格率無關。
-   · 出題（規範 Q1、Q6）：先決定「四個到達時間」——最快的 T1 在 0.60～0.72 秒之間隨機；
+   · 出題（規範 Q1、Q6）：先決定「RUNNERS 個到達時間」——最快的 T1 在 0.60～0.72 秒之間隨機；
      第二名比第一名慢 GAP 秒，之後每一名再多慢 GAP × 0.5～1.2 秒——再替每個小人隨機決定起跑延遲 d（0～DELAY_MAX，
      而且跑的時間 T − d 至少 MIN_RUN 秒），由 a ＝ 2D ÷ (T − d)² 反推每個小人的加速度，
      所以「最先到」永遠只有一個，而且領先的時間差剛好是 GAP。
    · 難度線性（RAMP_LEVELS 關走到頂）：第一名與第二名的時間差 GAP 0.12 秒 → 0.025 秒（最後只差約 1.5 個影格）。
-     四個小人每一關在哪一條跑道、什麼顏色都隨機。
+     所有小人每一關在哪一條跑道、什麼顏色都隨機。
    · 揭曉：不管答對、答錯或逾時，都用 SLOW（0.25）倍速的慢動作重播衝線的那一段，並標出各自的名次與到達的時間（X.XXXX 秒）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
@@ -48,6 +49,8 @@
     var RUNNER_SCALE = 1.2;                     /* 小人畫多大（倍） */
     var STEP_RATE = 5;                          /* 跑步時手腳擺動的頻率（每秒幾個完整的擺動） */
     var MAX_LEVEL = 60;
+    var RUNNERS = 5;                            /* 幾個小人（V1.34：4 → 5；上限 6＝HUES 的顏色數，要更多得先加顏色） */
+    var NUM_CN = ['零', '一', '二', '三', '四', '五', '六', '七', '八'];
     var HUES = [{ n: '紅', h: 4 }, { n: '橘', h: 28 }, { n: '黃', h: 48 }, { n: '綠', h: 135 }, { n: '藍', h: 212 }, { n: '紫', h: 282 }];
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
@@ -74,14 +77,14 @@
         rand = rand || Math.random;
         exitD = exitD || D * 1.25;
         var gap = gapFor(level), t1 = kit.randFloat(T_WIN[0], T_WIN[1], rand);
-        var times = [t1, t1 + gap];
-        times.push(times[1] + gap * kit.randFloat(SPREAD[0], SPREAD[1], rand));
-        times.push(times[2] + gap * kit.randFloat(SPREAD[0], SPREAD[1], rand));
-        var lanes = kit.shuffle([0, 1, 2, 3], rand), T = [0, 0, 0, 0];
+        var times = [t1, t1 + gap], r, lanes = [], T = [];
+        for (r = 2; r < RUNNERS; r++) times.push(times[r - 1] + gap * kit.randFloat(SPREAD[0], SPREAD[1], rand));       /* 第三名以後：每一名再慢 GAP × SPREAD */
+        for (r = 0; r < RUNNERS; r++) { lanes.push(r); T.push(0); }
+        lanes = kit.shuffle(lanes, rand);
         lanes.forEach(function (lane, rank) { T[lane] = times[rank]; });
         var d = T.map(function (t) { return kit.randFloat(0, Math.max(0, Math.min(DELAY_MAX, t - MIN_RUN)), rand); });
         var run = T.map(function (t, k) { return t - d[k]; });
-        var cols = kit.sample(HUES, 4, rand);
+        var cols = kit.sample(HUES, RUNNERS, rand);
         var acc = run.map(function (r) { return accelOf(r, D); });
         return { D: D, exitD: exitD, gap: gap, T: T, exitT: acc.map(function (a, k) { return d[k] + arriveT(a, exitD); }), d: d, run: run, a: acc, win: lanes[0], order: lanes, hues: cols };
     }
@@ -129,10 +132,10 @@
         api.info = q;
         console.log('[誰先衝線] 第 ' + level + ' 關：到達時間 ' + q.hues.map(function (c, i) { return c.n + ' ' + q.T[i].toFixed(4) + '（起跑 ' + q.d[i].toFixed(3) + '）'; }).join('、') + '；最先到的是 ' + q.hues[q.win].n + '，領先第二名 ' + q.gap.toFixed(4) + ' 秒；限時 ' + ansMs(level) + ' ms');
 
-        var top = 70, laneH = 104;
+        var top = 70, laneH = Math.min(104, Math.floor((H - top - 8) / RUNNERS));       /* 跑道高度：最多 104，人數多或畫面矮就縮小，五條都放得下 */
         var svg = kit.svg('svg', { 'class': 'rcf-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
         var runners = [], halos = [], labs = [], fmarks = [];
-        for (var i = 0; i < 4; i++) {
+        for (var i = 0; i < RUNNERS; i++) {
             var cy = top + laneH * i + laneH / 2 - 6;
             kit.svg('rect', { x: 10, y: top + laneH * i + 6, width: W - 20, height: laneH - 12, rx: 14, 'class': 'rcf-lane' }, svg);
             halos.push(kit.svg('circle', { cx: X0, cy: cy, r: 40, 'class': 'rcf-halo' }, svg));
@@ -141,9 +144,9 @@
             runners.push({ run: rn, cy: cy });
             var t = kit.svg('text', { x: X1 - 10, y: cy + 46, 'text-anchor': 'end', 'class': 'rcf-time' }, svg); labs.push(t);
         }
-        kit.svg('line', { x1: X0, y1: top, x2: X0, y2: top + laneH * 4, 'class': 'rcf-start' }, svg);
-        kit.svg('line', { x1: X1, y1: top, x2: X1, y2: top + laneH * 4, 'class': 'rcf-finish' }, svg);       /* 終點線畫在「到達」的位置：小人的腰碰到這條線＝到達 */
-        for (i = 0; i < 4; i++) fmarks.push(kit.svg('circle', { cx: X1, cy: runners[i].cy, r: 34, 'class': 'rcf-fmark' }, svg));       /* 衝過終點線的那一刻，在線上閃一個圈 */
+        kit.svg('line', { x1: X0, y1: top, x2: X0, y2: top + laneH * RUNNERS, 'class': 'rcf-start' }, svg);
+        kit.svg('line', { x1: X1, y1: top, x2: X1, y2: top + laneH * RUNNERS, 'class': 'rcf-finish' }, svg);       /* 終點線畫在「到達」的位置：小人的腰碰到這條線＝到達 */
+        for (i = 0; i < RUNNERS; i++) fmarks.push(kit.svg('circle', { cx: X1, cy: runners[i].cy, r: 34, 'class': 'rcf-fmark' }, svg));       /* 衝過終點線的那一刻，在線上閃一個圈 */
         var tip = h('div', { 'class': 'qz-note rcf-tip', text: '準備…' });
         stage.appendChild(tip);
         var count = h('div', { 'class': 'rcf-count', text: '' });
@@ -151,7 +154,7 @@
         var phase = 'wait', t0 = 0;
         /* 把哨音後第 tt 秒的畫面畫出來（位置＋跑步姿勢；小人的位置是離起跑線的距離，原點在腰） */
         function paint(tt) {
-            for (var k = 0; k < 4; k++) {
+            for (var k = 0; k < RUNNERS; k++) {
                 var x = X0 + runnerX(q, k, tt);
                 runners[k].run.g.setAttribute('transform', 'translate(' + x.toFixed(2) + ' ' + runners[k].cy + ') scale(' + RUNNER_SCALE + ')');
                 runners[k].run.set(poseAt(q, k, tt));
@@ -179,7 +182,7 @@
         })(c);
         api.after(400 + COUNT_STEPS * COUNT_MS, go);
         /* 整條跑道都可以點 */
-        for (i = 0; i < 4; i++) (function (lane) {
+        for (i = 0; i < RUNNERS; i++) (function (lane) {
             var hit = h('div', { 'class': 'rcf-hit' });
             hit.style.left = '0px'; hit.style.width = W + 'px'; hit.style.top = (top + laneH * lane) + 'px'; hit.style.height = laneH + 'px';
             kit.onTap(hit, function () { if (phase === 'ask') judge(lane); });
@@ -187,7 +190,7 @@
         })(i);
 
         function rankText(k) { return '第 ' + (q.order.indexOf(k) + 1) + ' 名　' + q.T[k].toFixed(4) + ' 秒'; }
-        function times() { for (var k = 0; k < 4; k++) { labs[k].textContent = rankText(k); if (k === q.win) labs[k].classList.add('rcf-time--win'); } }
+        function times() { for (var k = 0; k < RUNNERS; k++) { labs[k].textContent = rankText(k); if (k === q.win) labs[k].classList.add('rcf-time--win'); } }
         /* 小人 k 衝過終點線的那一刻：線上閃一個圈、標出名次與到達時間；第一名是綠色，並圍上綠圈 */
         function mark(k) {
             labs[k].textContent = rankText(k);
@@ -197,12 +200,13 @@
         }
         /* 慢動作重播（不管答對答錯）：從第一名到終點前 REPLAY_FROM 秒開始、播到最後一個小人跑出畫面，速度 SLOW 倍；回傳花多久（毫秒） */
         function replay() {
-            var minT = Math.min.apply(null, q.T), maxE = Math.max.apply(null, q.exitT) + 0.03, tStart = Math.max(0, minT - REPLAY_FROM), shown = [false, false, false, false], rt0 = performance.now();
+            var minT = Math.min.apply(null, q.T), maxE = Math.max.apply(null, q.exitT) + 0.03, tStart = Math.max(0, minT - REPLAY_FROM), shown = [], rt0 = performance.now();
+            for (var k0 = 0; k0 < RUNNERS; k0++) shown.push(false);
             paint(tStart);
             api.my.loop(function () {
                 var tt = tStart + (performance.now() - rt0) / 1000 * SLOW;
                 paint(Math.min(tt, maxE));
-                for (var k = 0; k < 4; k++) if (!shown[k] && tt >= q.T[k]) { shown[k] = true; mark(k); }
+                for (var k = 0; k < RUNNERS; k++) if (!shown[k] && tt >= q.T[k]) { shown[k] = true; mark(k); }
                 if (tt >= maxE) { paint(maxE); times(); return false; }
             });
             return Math.round((maxE - tStart) / SLOW * 1000);
@@ -226,18 +230,18 @@
             });
         }
         api.solve = function () { if (phase === 'ask') judge(q.win); };
-        api.wrong = function () { if (phase === 'ask') judge((q.win + 1) % 4); };
+        api.wrong = function () { if (phase === 'ask') judge((q.win + 1) % RUNNERS); };
     }
 
     var G = {
         id: ID,
         name: '誰先衝線',
-        rule: '先倒數 3、2、1，四個穿不同顏色衣服的小人從左邊靜止出發，一起以加速度向右衝：**越接近右邊越快**，約 1 秒內就衝過右邊的終點線、**從右邊跑出畫面**。**每個小人起跑的時間不一樣**，起跑慢的不一定會落後！看完之後，**點「最先到終點」的那一個**。不管點對點錯，都會用慢動作重播衝過終點線的過程。點錯或來不及就結束，看你能過幾關。越後面，它們到終點的時間差越小！',
+        rule: '先倒數 3、2、1，' + NUM_CN[RUNNERS] + '個穿不同顏色衣服的小人從左邊靜止出發，一起以加速度向右衝：**越接近右邊越快**，約 1 秒內就衝過右邊的終點線、**從右邊跑出畫面**。**每個小人起跑的時間不一樣**，起跑慢的不一定會落後！看完之後，**點「最先到終點」的那一個**。不管點對點錯，都會用慢動作重播衝過終點線的過程。點錯或來不及就結束，看你能過幾關。越後面，它們到終點的時間差越小！',
         mount: mount,
         score: SCORE,
         test: {
             gapFor: gapFor, ansMs: ansMs, distAt: distAt, arriveT: arriveT, accelOf: accelOf, runnerX: runnerX, poseAt: poseAt, makeRace: makeRace, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, GAP: GAP, T_WIN: T_WIN, SPREAD: SPREAD, SLOW: SLOW, REPLAY_FROM: REPLAY_FROM, EXIT_PAD: EXIT_PAD, DELAY_MAX: DELAY_MAX, MIN_RUN: MIN_RUN, COUNT_STEPS: COUNT_STEPS, COUNT_MS: COUNT_MS, STEP_RATE: STEP_RATE, MAX_LEVEL: MAX_LEVEL
+            RAMP_LEVELS: RAMP_LEVELS, GAP: GAP, T_WIN: T_WIN, SPREAD: SPREAD, SLOW: SLOW, REPLAY_FROM: REPLAY_FROM, EXIT_PAD: EXIT_PAD, DELAY_MAX: DELAY_MAX, MIN_RUN: MIN_RUN, COUNT_STEPS: COUNT_STEPS, COUNT_MS: COUNT_MS, STEP_RATE: STEP_RATE, MAX_LEVEL: MAX_LEVEL, RUNNERS: RUNNERS, HUES: HUES
         }
     };
     Reaction.register(G);

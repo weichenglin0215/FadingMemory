@@ -12,6 +12,11 @@ for (let l = 1; l <= T.MAX_LEVEL; l++) ok(T.colorCountAt(l) === (l <= 5 ? 3 : (l
 // 難度曲線：條紋／圓點數差、限時（玩家自己調過 TIME_S）
 ok(T.countDelta(1) === T.COUNT_DELTA[0] && T.countDelta(T.RAMP_LEVELS) === T.COUNT_DELTA[1], '數量差端點');
 ok(T.timeMs(1) === T.TIME_S[0] * 1000 && T.timeMs(T.RAMP_LEVELS) === T.TIME_S[1] * 1000, '限時端點 ' + T.TIME_S);
+// V1.34 玩家意見：越後面的關卡要加長秒數（不是縮短）
+ok(T.TIME_S[1] > T.TIME_S[0], '限時越後面越長：' + T.TIME_S[0] + ' → ' + T.TIME_S[1] + ' 秒');
+for (let l = 2; l <= 60; l++) ok(T.timeMs(l) >= T.timeMs(l - 1), '限時只增不減：第 ' + l + ' 關 ' + T.timeMs(l));
+ok(T.timeMs(T.RAMP_LEVELS + 10) === T.TIME_S[1] * 1000, '到頂之後維持 ' + T.TIME_S[1] + ' 秒');
+ok(T.timeMs(12) > T.timeMs(1) && T.timeMs(25) >= T.timeMs(12) + 5000, '第 12 關比第 1 關長、第 25 關再多 5 秒以上');
 // 旋轉角度：九隻都不一樣，彼此至少差 ROT_GAP 度
 for (let i = 0; i < 2000; i++) { const r = T.makeRotations(rnd, 9); ok(r.length === 9 && r.every(a => a >= 0 && a < 360), '角度範圍'); for (let a = 0; a < 9; a++) for (let b = a + 1; b < 9; b++) ok(T.angDiff(r[a], r[b]) >= T.ROT_GAP - 1e-6, '任兩隻至少差 ' + T.ROT_GAP + ' 度：' + T.angDiff(r[a], r[b]).toFixed(1)); }
 // 出題

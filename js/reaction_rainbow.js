@@ -65,9 +65,10 @@
     /* 每成功點擊幾個目標之後暫停並多加一種顏色 */
     var TARGETS_PER_STAGE = 10;     /* 每個階段成功點擊幾個目標色方塊之後，暫停並加一種新顏色 */
     var MAX_TARGETS = 6;            /* 要點的顏色最多加到幾種 */
-    /* 換方塊的間隔從 800ms 開始，每換一個縮短一點，最短 200ms */
-    var START_INTERVAL_MS = 800;   /* 換方塊的間隔起始值（每個方塊一開始停留多久） */
-    var MIN_INTERVAL_MS = 200;      /* 間隔最短縮到多少（再短人就按不到了） */
+    /* 換方塊的間隔（＝點擊的時間限制：下一個方塊出現前要點下去）從 1200ms 開始，每換一個縮短一點，最短 400ms。
+       V1.34 玩家意見：「請延長點擊的時間限制，讓玩家有更長的時間去點擊」——起始從 800 → 1200 ms、最短從 200 → 400 ms（每個方塊的反應時間多了 400 ms／200 ms）。 */
+    var START_INTERVAL_MS = 1200;  /* 換方塊的間隔起始值（每個方塊一開始停留多久，也是點擊的時間限制） */
+    var MIN_INTERVAL_MS = 400;      /* 間隔最短縮到多少（再短人就按不到了） */
     /* 每換一個方塊，間隔縮短幾毫秒（從 START_INTERVAL_MS 縮到 MIN_INTERVAL_MS 大約
        要換 (START − MIN) ÷ 這個數字 個方塊） */
     var INTERVAL_STEP_MS = 5.0;
@@ -101,6 +102,8 @@
     /* ORDER：順時針換方塊的順序（左上→右上→右下→左下） */
     var ORDER = [0, 1, 3, 2];
 
+    /* 已經換過 steps 個方塊之後的間隔（毫秒）：從 START_INTERVAL_MS 每個方塊縮短 INTERVAL_STEP_MS，最短 MIN_INTERVAL_MS */
+    function intervalAt(steps) { return Math.max(MIN_INTERVAL_MS, START_INTERVAL_MS - steps * INTERVAL_STEP_MS); }
     /* 從陣列隨機挑一個 */
     function pickAny(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
     /* 提示文字：「請點擊 🔴紅 … 方塊」 */
@@ -178,7 +181,7 @@
 
 
             /* 目前的間隔（隨換方塊數縮短） */
-            function intervalNow() { return Math.max(MIN_INTERVAL_MS, START_INTERVAL_MS - steps * INTERVAL_STEP_MS); }
+            function intervalNow() { return intervalAt(steps); }
             /* 排下一次換方塊 */
             function schedule(ms) {
                 clearTimeout(timer);
@@ -343,6 +346,8 @@
         rule: '畫面上有 2×2 四個方塊，會照順時針的順序，一個接一個換上七彩顏色（最新的那個有白邊），而且換得越來越快。**一開始只要點「紅色」方塊**：紅色一出現，**就要在下一個方塊出現之前馬上點下去**！來不及，或是點到別的方塊，都算失敗。小心，其他顏色的方塊上面可能**壓著「紅」字來騙你**。每成功點擊幾個之後，遊戲會暫停並增加新的顏色也要點，看你能撐多久！**第一個要點的方塊多給 50% 時間**。',
         mount: mount,
         /* 世界排行榜的成績規格 */
-        score: SCORE
+        score: SCORE,
+        /* test 匯出純函式給 Node 自動測試 */
+        test: { intervalAt: intervalAt, START_INTERVAL_MS: START_INTERVAL_MS, MIN_INTERVAL_MS: MIN_INTERVAL_MS, INTERVAL_STEP_MS: INTERVAL_STEP_MS, FIRST_TARGET_MULT: FIRST_TARGET_MULT }
     });
 })();

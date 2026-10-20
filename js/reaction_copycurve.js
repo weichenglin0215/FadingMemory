@@ -17,6 +17,13 @@
    · 要求的相似度線性：第 1 關 72％ → 第 RAMP_LEVELS 關 92％。相似度用 Leaderboard.fake4 產生「最終的數字」（第 3、4 位不為 0），
      過不過關就用這個數字判斷（規範 B4）。
    · 限時：每關 40 秒 → 22 秒；沒畫完放開手指，筆跡會清掉，可以重畫（在限時內不限次數）。
+   · V1.34（玩家意見三則）：
+       1) 第 3 關突然出現彎了十個彎的複雜曲線、第 4 關又變簡單＝難度忽高忽低：原本每一種曲線各自用自己的難度公式，換一種就換一個複雜度。
+          現在「彎數」只由關卡決定（bendsFor：BENDS[0] → BENDS[1] 線性），每一種曲線（繩子、波浪、直角轉彎、閃電）都照這個彎數出，越後面一定彎得越多；
+       2) 不能只因為手指經過終點（或起點）附近就自動判定畫完（只是路過卻被誤判）：改成「手指離開螢幕」才開始判定——放開的位置要在另一個端點附近（END_R 以內）
+          而且畫夠長（MIN_DRAW）才算畫完並比較相似度；放開在別處就把筆跡清掉、可以重畫；手指快碰到另一個端點時，那個端點會亮綠框提醒「可以放開了」；
+       3) 抄「誰先到？」的曲線畫法（genRope，見檔案中的說明）：多一種「繩子曲線」，轉折點的左右、上下位置都亂得有變化、用 Catmull-Rom 連成平滑曲線，
+          有繩子可選時 ROPE_P（50%）的機率抽到它。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -33,7 +40,7 @@
     var MG = 36;                                /* 曲線離長方格邊緣至少多遠 */
     var MIN_SEP = 70;                           /* 起點與終點至少相距多少 */
     var LEN_RANGE = [550, 1800];                /* 曲線全長的合理範圍 */
-    var LEN_MIN_TYPE = { scurve: 420 };         /* 個別種類的長度下限（S 形本來就平緩、比較短；第 1～3 關才有，不能因此一直被判不合格） */
+    var LEN_MIN_TYPE = { scurve: 420, rope: 420 };         /* 個別種類的長度下限（S 形本來就平緩、比較短；第 1～3 關才有，不能因此一直被判不合格） */
     var START_R = 40;                           /* 手指按在端點多近才算「從這個端點開始」 */
     var END_R = 32;                             /* 手指碰到另一個端點多近就算畫完 */
     var MIN_DRAW = 70;                          /* 至少畫了多長才算畫完（避免剛起筆就算） */
@@ -41,8 +48,14 @@
     var PTS = 120;                              /* 比較相似度時，每條曲線取幾個等距的點 */
     var STEP = 3;                               /* 曲線上相鄰兩點的間距（像素） */
     var MAX_LEVEL = 60;
+    var BENDS = [2, 10];                        /* 彎數（轉折點、半個波、轉角的個數）：第 1 關 → 到頂關卡（RAMP_LEVELS）線性；每一種曲線都照這個數字出，難度才不會忽高忽低（V1.34） */
+    var RIGHT_MAX = 8;                          /* 直角轉彎最多幾段線（彎數很多的後期關卡，放不進長方格就會一直重抽，所以封頂） */
+    var ROPE_P = 0.5;                           /* 有「繩子曲線」可選的關卡，抽到它的機率（其餘種類平分） */
+    var ROPE_YJIT = [0.8, 1.3];                 /* 繩子曲線：轉折點上下打亂的幅度（倍的間距）：第 1 關 → 到頂；越大越會往回走 */
+    var ROPE_SWING = 0.8;                       /* 繩子曲線：相鄰兩個轉折點的左右距離，至少是半幅寬的幾倍 */
+    var ROPE_CLEAR = 24, ROPE_SEP = 70;         /* 繩子曲線不重疊：弧長相隔超過 ROPE_SEP 像素的兩點，距離都要 ≥ ROPE_CLEAR 像素 */
     /* 各種曲線出現的關卡範圍 [從第幾關起, 到第幾關為止]：S 形太平緩，第 3 關之後就不再出現（不然拿直線隨便畫都過關） */
-    var TYPE_RANGE = { scurve: [1, 3], wave: [3, 999], right: [6, 999], bolt: [9, 999], spiral: [12, 999], clip: [15, 999] };
+    var TYPE_RANGE = { scurve: [1, 3], rope: [1, 999], wave: [3, 999], right: [6, 999], bolt: [9, 999], spiral: [12, 999], clip: [15, 999] };
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function reqSim(level) { return kit.ramp(level, REQ[0], REQ[1], RAMP_LEVELS); }
@@ -99,6 +112,97 @@
         for (var i = 0; i <= n; i++) { var a = a0 + (a1 - a0) * i / n; out.push({ x: cx + r * Math.cos(a), y: cy - r * Math.sin(a) }); }
         return out;
     }
+    /* ═══ 繩子曲線（V1.34 玩家意見：抄「誰先到？」的曲線畫法，讓曲線更有變化）═══
+       畫法抄自 js/reaction_curves.js（誰先到？的尋寶繩子）：
+       · 一條曲線有 k 個「轉折點」：轉折點的左右位置差異很大（大多左右交替、偶爾連續同一邊；相鄰兩點的左右距離至少 ROPE_SWING 倍半幅寬、大小不一），
+         上下位置也故意打亂（上下間距 × 打亂幅度），所以路線會忽左忽右、有時還會往回走，不是工整的正弦波；
+       · 轉折點是「一個一個加上去」的，每加一個就檢查整條折線有沒有交叉、有沒有貼太近（至少 ROPE_CLEAR 像素）、有沒有折成太尖的髮夾彎；
+       · 最後用 Catmull-Rom 曲線把「起點、所有轉折點、終點」連成一條平滑的曲線（每約 STEP 像素一點），再檢查真正畫出來的曲線：
+         不跑出太多、「路徑上相隔超過 ROPE_SEP 像素的兩點」距離都要 ≥ ROPE_CLEAR（不會自己貼在自己身上）。
+       · 跟「誰先到？」不同的地方：起點、終點的左右位置也隨機（不一定都在正中間）；轉折點的數量固定＝這一關的彎數 bendsFor(level)。 */
+    var ROPE_FRAC = 0.86;                                             /* 轉折點最多伸到半幅寬的這個比例（曲線過彎時會稍微衝出去，要留空間） */
+    function ptSegDist(p, q, r) { return distToPoly(p, [q, r]); }
+    function segSegDist(a, b, c, e) { return segCross(a, b, c, e) ? 0 : Math.min(ptSegDist(a, c, e), ptSegDist(b, c, e), ptSegDist(c, a, b), ptSegDist(e, a, b)); }
+    /* 折線 P（起點、轉折點…、終點）有沒有「自己交叉／貼太近／折成髮夾彎」：沒有＝true */
+    function polyClear(P, clear) {
+        var need = clear * 1.25, i, j;
+        for (i = 0; i + 1 < P.length; i++) for (j = i + 2; j + 1 < P.length; j++) if (segSegDist(P[i], P[i + 1], P[j], P[j + 1]) < need) return false;
+        for (i = 0; i + 2 < P.length; i++) if (ptSegDist(P[i], P[i + 1], P[i + 2]) < clear || ptSegDist(P[i + 2], P[i], P[i + 1]) < clear) return false;
+        return true;
+    }
+    /* 起點（u0）、轉折點 [{u,v}]、終點（u1）→ 折線的點：u＝左右位置（−1～1，相對半幅寬）、v＝上下位置（0～1） */
+    function ropePoly(u0, u1, turn, halfW, H) {
+        var P = [{ x: u0 * halfW * ROPE_FRAC, y: 0 }];
+        turn.forEach(function (t) { P.push({ x: t.u * halfW * ROPE_FRAC, y: t.v * H }); });
+        P.push({ x: u1 * halfW * ROPE_FRAC, y: H });
+        return P;
+    }
+    /* Catmull-Rom 曲線：把控制點連成平滑曲線，每段依長度取點（約每 STEP 像素一個），並記下累積弧長 s */
+    function catmull(ctrl) {
+        var pts = [], s = 0, n = ctrl.length;
+        function at(i) { return ctrl[Math.max(0, Math.min(n - 1, i))]; }
+        for (var i = 0; i < n - 1; i++) {
+            var p0 = at(i - 1), p1 = at(i), p2 = at(i + 1), p3 = at(i + 2), m = Math.max(2, Math.ceil(kit.dist(p1.x, p1.y, p2.x, p2.y) / STEP));
+            for (var j = (i === 0 ? 0 : 1); j <= m; j++) {
+                var t = j / m, t2 = t * t, t3 = t2 * t;
+                var x = 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
+                var y = 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
+                if (pts.length) { var q = pts[pts.length - 1]; s += kit.dist(x, y, q.x, q.y); }
+                pts.push({ x: x, y: y, s: s });
+            }
+        }
+        return pts;
+    }
+    /* 畫出來的曲線有沒有在範圍內、有沒有自己貼自己（用格子雜湊：只比較相鄰格子裡的點，O(n)）：好＝true */
+    function ropeValid(pts, box) {
+        var cell = ROPE_CLEAR, grid = {}, i;
+        for (i = 0; i < pts.length; i++) {
+            var p = pts[i];
+            if (p.x < box.x0 || p.x > box.x1 || p.y < box.y0 || p.y > box.y1) return false;
+            var key = Math.floor(p.x / cell) + ',' + Math.floor(p.y / cell);
+            (grid[key] = grid[key] || []).push(i);
+        }
+        for (i = 0; i < pts.length; i++) {
+            var a = pts[i], cx = Math.floor(a.x / cell), cy = Math.floor(a.y / cell);
+            for (var dx = -1; dx <= 1; dx++) for (var dy = -1; dy <= 1; dy++) {
+                var arr = grid[(cx + dx) + ',' + (cy + dy)];
+                if (!arr) continue;
+                for (var k = 0; k < arr.length; k++) {
+                    var j = arr[k]; if (j <= i) continue;
+                    if (pts[j].s - a.s <= ROPE_SEP) continue;
+                    var ddx = pts[j].x - a.x, ddy = pts[j].y - a.y;
+                    if (ddx * ddx + ddy * ddy < ROPE_CLEAR * ROPE_CLEAR) return false;
+                }
+            }
+        }
+        return true;
+    }
+    /* 產生一條繩子曲線：bends＝轉折點個數；d＝難度 0～1（上下打亂的幅度隨難度增加）。回傳「還沒放進長方格」的原始座標（中心在原點），做不出來回傳 null */
+    function genRope(bends, rand, d) {
+        var halfW = (PW - 2 * MG) / 2, H = PH - 2 * MG, k = Math.max(1, Math.round(bends)), yjit = kit.lerp(ROPE_YJIT[0], ROPE_YJIT[1], d == null ? 0.5 : d);
+        var box = { x0: -halfW * 1.2, x1: halfW * 1.2, y0: -0.06 * H, y1: 1.06 * H };
+        for (var attempt = 0; attempt < 80; attempt++) {
+            var u0 = kit.randFloat(-0.5, 0.5, rand), u1 = kit.randFloat(-0.5, 0.5, rand);
+            var turn = [], spacing = 1 / (k + 1), prevU = u0, side = rand() < 0.5 ? -1 : 1, fail = false, i, tries;
+            for (i = 1; i <= k && !fail; i++) {
+                var placed = false;
+                for (tries = 0; tries < 40 && !placed; tries++) {
+                    var v = kit.clamp(i * spacing + (rand() * 2 - 1) * yjit * spacing, 0.03, 0.97);
+                    if (rand() < 0.85) side = -side;                              /* 大多左右交替，偶爾連續同一邊 */
+                    var u = side * kit.randFloat(0.4, 1, rand);
+                    if (i > 1 && Math.abs(u - prevU) < ROPE_SWING) continue;
+                    turn.push({ u: u, v: v });
+                    if (polyClear(ropePoly(u0, u1, turn, halfW, H), ROPE_CLEAR)) { placed = true; prevU = u; } else turn.pop();
+                }
+                if (!placed) fail = true;
+            }
+            if (fail) continue;
+            var pts = catmull(ropePoly(u0, u1, turn, halfW, H));
+            if (!ropeValid(pts, box)) continue;
+            return pts.map(function (p) { return { x: p.x, y: p.y - H / 2 }; });
+        }
+        return null;
+    }
     function genScurve(d, rand) {
         var A = kit.lerp(45, 96, d), H = PH - 2 * MG, sx = MG + 40, ex = PW - MG - 40, sgn = rand() < 0.5 ? 1 : -1;
         var P0 = { x: sx, y: PH - MG }, P3 = { x: ex, y: MG };
@@ -109,8 +213,8 @@
         }
         return out;
     }
-    function genWave(d, rand) {
-        var k = Math.round(kit.lerp(3, 7, d)), A = kit.lerp(42, 75, d), H = PH - 2 * MG, out = [], tilt = kit.randFloat(-12, 12, rand) * Math.PI / 180;
+    function genWave(d, rand, b) {
+        var k = b != null ? b : Math.round(kit.lerp(3, 7, d)), A = kit.lerp(42, 75, d), H = PH - 2 * MG, out = [], tilt = kit.randFloat(-12, 12, rand) * Math.PI / 180;
         for (var i = 0; i <= 300; i++) {
             var s = i / 300, x = A * Math.sin(Math.PI * k * s), y = -H / 2 + s * H;
             out.push({ x: x * Math.cos(tilt) - y * Math.sin(tilt), y: x * Math.sin(tilt) + y * Math.cos(tilt) });
@@ -121,8 +225,8 @@
         function o(p, q, r) { return (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x); }
         return o(a, b, c) * o(a, b, e) < 0 && o(c, e, a) * o(c, e, b) < 0;
     }
-    function genRight(d, rand) {
-        var n = Math.round(kit.lerp(3, 8, d));
+    function genRight(d, rand, b) {
+        var n = b != null ? Math.min(b + 1, RIGHT_MAX) : Math.round(kit.lerp(3, 8, d));      /* 直角轉彎的線段數：彎數 + 1，但最多 RIGHT_MAX 段（再多就放不進長方格了） */
         for (var tr = 0; tr < 300; tr++) {
             var pts = [{ x: kit.randFloat(MG, PW - MG, rand), y: kit.randFloat(MG, PH - MG, rand) }], horiz = rand() < 0.5, good = true;
             for (var i = 0; i < n && good; i++) {
@@ -142,8 +246,8 @@
         }
         return [{ x: 40, y: 60 }, { x: 180, y: 60 }, { x: 180, y: 200 }, { x: 60, y: 200 }, { x: 60, y: 340 }];
     }
-    function genBolt(d, rand) {
-        var n = Math.round(kit.lerp(3, 6, d)), H = PH - 2 * MG, ws = [], tot = 0, i;
+    function genBolt(d, rand, b) {
+        var n = b != null ? b + 1 : Math.round(kit.lerp(3, 6, d)), H = PH - 2 * MG, ws = [], tot = 0, i;
         for (i = 0; i < n; i++) { var w = kit.randFloat(0.7, 1.3, rand); ws.push(w); tot += w; }
         var pts = [], y = 0;
         for (i = 0; i <= n; i++) {                                    /* 偶數個點在右邊那一帶、奇數個在左邊那一帶，高度一路往下 */
@@ -181,36 +285,49 @@
         var pts = raw.map(function (p) { return { x: PW / 2 + (p.x - cx) * s, y: PH / 2 + (p.y - cy) * s }; });
         return densify(pts, STEP);
     }
-    /* 出一條曲線：{ type, pts（密集折線，從起點到終點）, start, end, len } */
+    /* 這一關的「彎數」（V1.34 玩家意見：第 3 關突然彎了十個彎、第 4 關又變簡單＝難度忽高忽低）：
+       彎數只由關卡決定（BENDS[0] → BENDS[1] 線性），每一種曲線都照這個數字出（繩子曲線的轉折點數、波浪的半個波數、直角轉彎與閃電的轉角數），
+       所以不管抽到哪一種，越後面的關卡一定彎得越多，不會忽高忽低；螺旋與迴紋針是固定造型，只在後面的關卡偶爾出現。 */
+    function bendsFor(level) { return Math.round(kit.ramp(level, BENDS[0], BENDS[1], RAMP_LEVELS)); }
+    /* 依種類產生一條原始曲線（d＝難度 0～1、b＝彎數） */
+    function genByType(type, d, b, rand) {
+        return type === 'rope' ? genRope(b, rand, d) : type === 'scurve' ? genScurve(d, rand) : type === 'wave' ? genWave(d, rand, b) : type === 'right' ? genRight(d, rand, b) :
+            type === 'bolt' ? genBolt(d, rand, b) : type === 'spiral' ? genSpiral(d, rand) : genClip();
+    }
+    var fbCount = 0;                                                   /* 進了保底的次數（測試用：正常出題幾乎不會進保底） */
+    var HAS_BENDS = { rope: 1, wave: 1, right: 1, bolt: 1 };           /* 彎數由 bendsFor 決定的種類 */
+    /* 出一條曲線：{ type, pts（密集折線，從起點到終點）, start, end, len, bends（彎數；固定造型的種類是 null） }
+       種類：有「繩子曲線」可選時有 ROPE_P 的機率抽它（變化最多），其餘種類平分（新解鎖的那一種多一點）；avoidType（上一關的種類）盡量不連續重複（繩子除外，每一條都不一樣） */
     function makeCurve(level, rand, avoidType) {
         rand = rand || Math.random;
-        var d = kit.ramp(level, 0, 1, RAMP_LEVELS), types = typesFor(level);
-        if (avoidType && types.length > 1) types = types.filter(function (t) { return t !== avoidType; });
+        var d = kit.ramp(level, 0, 1, RAMP_LEVELS), b = bendsFor(level), types = typesFor(level);
+        if (avoidType && avoidType !== 'rope' && types.length > 1) types = types.filter(function (t) { return t !== avoidType; });
+        var others = types.filter(function (t) { return t !== 'rope'; });
         /* 新解鎖的種類出現機率高一點 */
-        var newest = types.slice().sort(function (a, b) { return TYPE_RANGE[b][0] - TYPE_RANGE[a][0]; })[0];
+        var newest = others.slice().sort(function (x, y) { return TYPE_RANGE[y][0] - TYPE_RANGE[x][0]; })[0];
         for (var tr = 0; tr < 100; tr++) {
-            var type = (types.indexOf(newest) >= 0 && rand() < 0.4) ? newest : kit.pick(types, rand);
-            var raw = type === 'scurve' ? genScurve(d, rand) : type === 'wave' ? genWave(d, rand) : type === 'right' ? genRight(d, rand) :
-                type === 'bolt' ? genBolt(d, rand) : type === 'spiral' ? genSpiral(d, rand) : genClip();
+            var type = (types.indexOf('rope') >= 0 && (!others.length || rand() < ROPE_P)) ? 'rope' : ((others.indexOf(newest) >= 0 && rand() < 0.4) ? newest : kit.pick(others, rand));
+            var raw = genByType(type, d, b, rand);
+            if (!raw) continue;
             var pts = fit(raw);
             /* 隨機左右、上下翻轉；除了螺旋（起點一定在外圈），也隨機把起點終點對調 */
             if (rand() < 0.5) pts = pts.map(function (p) { return { x: PW - p.x, y: p.y }; });
             if (rand() < 0.5) pts = pts.map(function (p) { return { x: p.x, y: PH - p.y }; });
             if (type !== 'spiral' && rand() < 0.5) pts = pts.slice().reverse();
-            var len = polyLen(pts), a = pts[0], b = pts[pts.length - 1];
-            if (len < (LEN_MIN_TYPE[type] || LEN_RANGE[0]) || len > LEN_RANGE[1] || kit.dist(a.x, a.y, b.x, b.y) < MIN_SEP) continue;
-            return { type: type, pts: pts, start: a, end: b, len: len };
+            var len = polyLen(pts), a = pts[0], e = pts[pts.length - 1];
+            if (len < (LEN_MIN_TYPE[type] || LEN_RANGE[0]) || len > LEN_RANGE[1] || kit.dist(a.x, a.y, e.x, e.y) < MIN_SEP) continue;
+            return { type: type, pts: pts, start: a, end: e, len: len, bends: HAS_BENDS[type] ? b : null };
         }
-        /* 保底（極少用到）：只用「這一關」解鎖的種類，用最大難度再試一次（不要退回已經不再出現的 S 形：V1.28 修正） */
-        var fbTypes = types, fbType = fbTypes.indexOf('wave') >= 0 ? 'wave' : fbTypes[0];
+        /* 保底（極少用到）：繩子曲線（只要彎數放得進長方格，一定做得出來），不行再用波浪；不要退回已經不再出現的 S 形（V1.28 修正） */
+        fbCount++;
         for (var tr2 = 0; tr2 < 300; tr2++) {
-            var fraw = fbType === 'scurve' ? genScurve(1, rand) : fbType === 'wave' ? genWave(1, rand) : fbType === 'right' ? genRight(1, rand) :
-                fbType === 'bolt' ? genBolt(1, rand) : fbType === 'spiral' ? genSpiral(1, rand) : genClip();
+            var fbType = tr2 < 200 ? 'rope' : 'wave', fraw = genByType(fbType, 1, fbType === 'rope' ? b : Math.min(b, 6), rand);
+            if (!fraw) continue;
             var fp = fit(fraw), fl = polyLen(fp);
-            if (fl >= (LEN_MIN_TYPE[fbType] || LEN_RANGE[0]) && fl <= LEN_RANGE[1] && kit.dist(fp[0].x, fp[0].y, fp[fp.length - 1].x, fp[fp.length - 1].y) >= MIN_SEP) return { type: fbType, pts: fp, start: fp[0], end: fp[fp.length - 1], len: fl };
+            if (fl >= (LEN_MIN_TYPE[fbType] || LEN_RANGE[0]) && fl <= LEN_RANGE[1] && kit.dist(fp[0].x, fp[0].y, fp[fp.length - 1].x, fp[fp.length - 1].y) >= MIN_SEP) return { type: fbType, pts: fp, start: fp[0], end: fp[fp.length - 1], len: fl, bends: fbType === 'rope' ? b : Math.min(b, 6) };
         }
-        var fb = fit(fbType === 'scurve' ? genScurve(0, rand) : genWave(1, rand));
-        return { type: fbType === 'scurve' ? 'scurve' : 'wave', pts: fb, start: fb[0], end: fb[fb.length - 1], len: polyLen(fb) };
+        var fb = fit(genWave(1, rand, 4));
+        return { type: 'wave', pts: fb, start: fb[0], end: fb[fb.length - 1], len: polyLen(fb), bends: 4 };
     }
     function rating(n) {
         if (n >= 20) return '神之一筆！';
@@ -219,7 +336,7 @@
         if (n >= 3) return '再接再厲！';
         return '放慢一點，貼著線畫，再來一次！';
     }
-    var TYPE_NAME = { scurve: 'S 形曲線', wave: '波浪', right: '直角轉彎', bolt: '閃電', spiral: '螺旋', clip: '迴紋針' };
+    var TYPE_NAME = { scurve: 'S 形曲線', rope: '繩子曲線', wave: '波浪', right: '直角轉彎', bolt: '閃電', spiral: '螺旋', clip: '迴紋針' };
 
     var lastType = null;
     function mount(root, ctx) {
@@ -264,13 +381,13 @@
         stage.appendChild(labL); stage.appendChild(labR);
         kit.svg('path', { d: pathD(q.pts), 'class': 'cpc-curve' }, L.svg);
         function markers(svg) {
-            kit.svg('circle', { cx: q.start.x, cy: q.start.y, r: 13, 'class': 'cpc-start' }, svg);
-            kit.svg('circle', { cx: q.end.x, cy: q.end.y, r: 13, 'class': 'cpc-end' }, svg);
+            return { s: kit.svg('circle', { cx: q.start.x, cy: q.start.y, r: 13, 'class': 'cpc-start' }, svg), e: kit.svg('circle', { cx: q.end.x, cy: q.end.y, r: 13, 'class': 'cpc-end' }, svg) };
         }
         markers(L.svg);
         var drawn = kit.svg('path', { d: '', 'class': 'cpc-draw' }, R.svg);
-        markers(R.svg);
-        var msg = h('div', { 'class': 'qz-note cpc-msg', text: '從黃點或水藍點開始，一路畫到另一個端點' });
+        var mk = markers(R.svg);                                      /* 右邊的端點記號：手指靠近另一個端點時亮綠框（提醒可以放開了） */
+        function clearNear() { mk.s.classList.remove('cpc-near'); mk.e.classList.remove('cpc-near'); }
+        var msg = h('div', { 'class': 'qz-note cpc-msg', text: '從黃點或水藍點開始，一路畫到另一個端點，放開手指才判定' });
         msg.style.top = (top + PH + 12) + 'px';
         stage.appendChild(msg);
 
@@ -301,7 +418,7 @@
             e.preventDefault();
             try { R.el.setPointerCapture(e.pointerId); } catch (err) { }
             cur = { anchor: ds <= de ? 'start' : 'end', pts: [ds <= de ? { x: q.start.x, y: q.start.y } : { x: q.end.x, y: q.end.y }], id: e.pointerId };
-            msg.textContent = '一路畫到另一個端點';
+            msg.textContent = '一路畫到另一個端點，放開手指才判定';
             render();
         });
         R.el.addEventListener('pointermove', function (e) {
@@ -313,16 +430,25 @@
                 var last = cur.pts[cur.pts.length - 1];
                 if (kit.dist(p.x, p.y, last.x, last.y) < 1.5) continue;
                 cur.pts.push(p);
-                var other = cur.anchor === 'start' ? q.end : q.start;
-                if (kit.dist(p.x, p.y, other.x, other.y) <= END_R && lenOf(cur.pts) >= MIN_DRAW) {
-                    cur.pts.push({ x: other.x, y: other.y });
-                    finishWith(cur.pts, cur.anchor);
-                    return;
-                }
             }
+            /* V1.34：手指碰到另一個端點附近不會自動判定（可能只是路過），只讓那個端點亮綠框提醒「放開就會判定」 */
+            var lp = cur.pts[cur.pts.length - 1], oth = cur.anchor === 'start' ? q.end : q.start;
+            (cur.anchor === 'start' ? mk.e : mk.s).classList.toggle('cpc-near', kit.dist(lp.x, lp.y, oth.x, oth.y) <= END_R && lenOf(cur.pts) >= MIN_DRAW);
             render();
         });
-        function up(e) { if (cur && e.pointerId === cur.id && !locked) { cur = null; render(); msg.textContent = '還沒畫到另一個端點，可以重畫'; } }
+        /* 手指離開螢幕才判定：放開的位置在另一個端點附近（END_R 以內）、而且畫夠長（MIN_DRAW）→ 畫完了，比較相似度；否則筆跡清掉可以重畫（pointercancel 一律當作沒畫完） */
+        function up(e) {
+            if (!cur || e.pointerId !== cur.id || locked) return;
+            var other = cur.anchor === 'start' ? q.end : q.start, lastP = cur.pts[cur.pts.length - 1], mine = cur;
+            clearNear();
+            if (e.type === 'pointerup' && kit.dist(lastP.x, lastP.y, other.x, other.y) <= END_R && lenOf(mine.pts) >= MIN_DRAW) {
+                mine.pts.push({ x: other.x, y: other.y });
+                finishWith(mine.pts, mine.anchor);
+                return;
+            }
+            cur = null; render();
+            msg.textContent = '放開的地方不在另一個端點上，還沒畫完，可以重畫';
+        }
         R.el.addEventListener('pointerup', up); R.el.addEventListener('pointercancel', up);
         api.timer(timeMs(level), function () {
             if (locked || api.over) return;
@@ -342,13 +468,13 @@
     var G = {
         id: ID,
         name: '照抄曲線',
-        rule: '左邊的長方格有一條綠色曲線，兩端是黃色起點和水藍色終點。請用手指在右邊的長方格，從其中一個端點開始，**照著畫出一樣的曲線**，**一直畫到另一個端點**。兩張圖會疊在一起比較相似度，達到要求才過關。越後面，曲線越彎、形狀越花俏，要求的相似度也越高！',
+        rule: '左邊的長方格有一條綠色曲線，兩端是黃色起點和水藍色終點。請用手指在右邊的長方格，從其中一個端點開始，**照著畫出一樣的曲線**，**一直畫到另一個端點**。兩張圖會疊在一起比較相似度，達到要求才過關。**手指離開螢幕才會判定**（在另一個端點上放開才算畫完）。越後面，曲線越彎、形狀越花俏，要求的相似度也越高！',
         mount: mount,
         score: SCORE,
         test: {
             reqSim: reqSim, timeMs: timeMs, typesFor: typesFor, polyLen: polyLen, resample: resample, densify: densify, distToPoly: distToPoly, chamfer: chamfer, similarity: similarity,
-            makeCurve: makeCurve, fit: fit, genClip: genClip, genSpiral: genSpiral, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, TIME_S: TIME_S, REQ: REQ, PW: PW, PH: PH, MG: MG, MIN_SEP: MIN_SEP, LEN_RANGE: LEN_RANGE, LEN_MIN_TYPE: LEN_MIN_TYPE, D0: D0, TYPE_RANGE: TYPE_RANGE, MAX_LEVEL: MAX_LEVEL
+            makeCurve: makeCurve, fit: fit, genClip: genClip, genSpiral: genSpiral, genRope: genRope, genWave: genWave, genRight: genRight, genBolt: genBolt, bendsFor: bendsFor, fallbackCount: function () { return fbCount; }, RIGHT_MAX: RIGHT_MAX, rating: rating,
+            RAMP_LEVELS: RAMP_LEVELS, BENDS: BENDS, ROPE_P: ROPE_P, END_R: END_R, MIN_DRAW: MIN_DRAW, TIME_S: TIME_S, REQ: REQ, PW: PW, PH: PH, MG: MG, MIN_SEP: MIN_SEP, LEN_RANGE: LEN_RANGE, LEN_MIN_TYPE: LEN_MIN_TYPE, D0: D0, TYPE_RANGE: TYPE_RANGE, MAX_LEVEL: MAX_LEVEL
         }
     };
     Reaction.register(G);

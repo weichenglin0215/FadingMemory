@@ -1,0 +1,8871 @@
+/* ═══════════════════════════════════════════════════════════════════
+   reaction6.css — V1.34 新增的 51 款遊戲的樣式（每款一個專屬的 class 前綴，不跟別款撞名，見 test/reaction/t_cssclass.js）
+   規矩：顏色一律用 theme.css 的 CSS 變數（--c-ok、--c-bad-light、--c-orange…），不直接寫色碼；
+         需要新的顏色就在 theme.css 加變數（命名：--<前綴>-xxx）。
+   前綴對照：鋪地毯 .cpt-｜接電線 .wlk-｜單行道 .owy-｜缺哪一張 .mj3-｜翻最多棋 .rvs-｜堵住五子 .gmk-｜換一張就平 .swe-｜推星期幾 .wkd-｜齒輪對記號 .grm-｜蹺蹺板比重 .sea-｜找正方形 .fsq-｜跳棋跳最遠 .chk-｜圈內圈外 .iof-｜加到五百 .gsp-｜奶茶調色 .mlt-｜轉盤電話 .rtr-｜反著滑 .swc-｜敲幾下 .knk-｜切菜單上的 .msl-｜字的顏色 .ikw-｜記行事曆 .cld-｜照樣調一杯 .lyd-｜看過的字 .skc-｜門縫偷看 .dsl-｜找星座 .stz-｜切字 .scc-｜蝴蝶不對稱 .btf-｜彈幕找字 .dmk-｜心臟病 .csl-｜舉旗子 .flg-｜色票排隊 .hus-｜動態視力 .knt-｜零錢入筒 .cns-｜大合照 .gph-｜釣魚提竿 .fbt-｜全壘打 .hmr-｜大風吹 .wbl-｜吸珍珠 .prl-｜釣魚玩具 .fty-｜數鈔票 .cbl-｜照號切水果 .ocf-｜轉風車 .pwl-｜洗盤子 .dsh-｜挑豆子 .bns-｜一路減七 .mn7-｜迴轉壽司 .ssh-｜找錢 .chg-｜打了幾折 .dsc-｜時間連連看 .tpr-｜畫眉毛 .ebw-｜擀水餃皮 .dgh-
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ═══ 鋪地毯（.cpt-）═══ */
+.cpt-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.cpt-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 10px;
+    text-align: center;
+}
+
+.cpt-board {
+    position: absolute;
+    border: var(--bd-w) solid var(--c-ink-soft);
+    border-radius: var(--r-sm);
+    overflow: hidden;
+    background: var(--c-card-alt);
+}
+
+.cpt-cell {
+    position: absolute;
+    box-sizing: border-box;
+}
+
+.cpt-cell--a {
+    background: var(--c-card);
+}
+
+.cpt-cell--b {
+    background: var(--c-card-alt);
+}
+
+/* 家具（不能走的格子） */
+.cpt-stone {
+    position: absolute;
+    inset: 12%;
+    border-radius: 22%;
+    background: var(--c-ink-soft);
+    border: 3px solid var(--c-ink);
+    opacity: 0.85;
+}
+
+.cpt-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+}
+
+/* 地毯：紅色的粗線，上面再疊一條淺色的虛線當花紋 */
+.cpt-rug {
+    fill: none;
+    stroke: var(--c-bad-light);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.cpt-rug-pat {
+    fill: none;
+    stroke: var(--c-yellow);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 2 10;
+    opacity: 0.9;
+}
+
+/* 地毯捲（捲頭）：黃色圓＋中間的小圓 */
+.cpt-roll {
+    fill: var(--c-yellow);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.cpt-roll-in {
+    fill: var(--c-orange);
+    stroke: var(--c-ink);
+    stroke-width: 2;
+}
+
+/* 鋪滿了：整個房間的格子變淡綠 */
+.cpt-cell--ok {
+    background: var(--c-ok-soft);
+}
+
+/* 失敗：沒鋪到的格子閃紅 */
+.cpt-cell--miss {
+    outline: 4px solid var(--c-bad-light);
+    outline-offset: -4px;
+    animation: cpt-blink 0.5s ease-in-out 4;
+}
+
+@keyframes cpt-blink {
+
+    0%,
+    100% {
+        background: var(--c-bad-soft);
+    }
+
+    50% {
+        background: var(--c-bad-light);
+    }
+}
+
+/* 正確的路：綠色線，從起點慢慢畫出來（pathLength 設成 1，所以 dasharray 1、dashoffset 1 → 0） */
+.cpt-sol {
+    fill: none;
+    stroke: var(--c-ok);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.9;
+}
+
+.cpt-sol--draw {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: cpt-draw 1.6s ease-out forwards;
+}
+
+@keyframes cpt-draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* ═══ 接電線（.wlk-）═══ */
+.wlk-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.wlk-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 10px;
+    text-align: center;
+}
+
+.wlk-board {
+    position: absolute;
+    border: var(--bd-w) solid var(--c-ink-soft);
+    border-radius: var(--r-sm);
+    overflow: hidden;
+    background: var(--c-card);
+    transition: box-shadow 0.4s, background 0.4s;
+}
+
+/* 全部接好：整塊板子的燈一起亮 */
+.wlk-board--lit {
+    background: var(--c-yellow-soft);
+    box-shadow: 0 0 28px var(--c-yellow);
+}
+
+.wlk-cell {
+    position: absolute;
+    box-sizing: border-box;
+    border: 1px solid var(--bd-c);
+}
+
+.wlk-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+}
+
+/* 每一種電線（以及它的插頭、時間到時畫出來的正確接法）用 --wc 當顏色，--wc 由 .wlk-c0～.wlk-c7 設定 */
+.wlk-c0 {
+    --wc: var(--wlk-0);
+}
+
+.wlk-c1 {
+    --wc: var(--wlk-1);
+}
+
+.wlk-c2 {
+    --wc: var(--wlk-2);
+}
+
+.wlk-c3 {
+    --wc: var(--wlk-3);
+}
+
+.wlk-c4 {
+    --wc: var(--wlk-4);
+}
+
+.wlk-c5 {
+    --wc: var(--wlk-5);
+}
+
+.wlk-c6 {
+    --wc: var(--wlk-6);
+}
+
+.wlk-c7 {
+    --wc: var(--wlk-7);
+}
+
+.wlk-wire {
+    fill: none;
+    stroke: var(--wc);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.wlk-plug-body {
+    fill: var(--wc);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.wlk-plug-in {
+    fill: var(--c-card);
+    stroke: var(--c-ink);
+    stroke-width: 2;
+}
+
+/* 接通的那一對：中間的小燈泡亮起來 */
+.wlk-plug--on .wlk-plug-in {
+    fill: var(--c-yellow);
+}
+
+.wlk-plug--on .wlk-plug-body {
+    filter: drop-shadow(0 0 6px var(--wc));
+}
+
+/* 時間到：正確的接法一條一條畫出來（pathLength 設成 1，dasharray 1、dashoffset 1 → 0），玩家自己接的電線變淡，沒接通的閃紅 */
+.wlk-sol {
+    fill: none;
+    stroke: var(--wc);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+}
+
+.wlk-sol--draw .wlk-sol {
+    animation: wlk-draw 1.2s ease-out forwards;
+}
+
+@keyframes wlk-draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+.wlk-board--reveal .wlk-wire {
+    opacity: 0.25;
+}
+
+.wlk-board--reveal .wlk-wire--bad {
+    opacity: 1;
+    animation: wlk-bad 0.5s ease-in-out 4;
+}
+
+@keyframes wlk-bad {
+
+    0%,
+    100% {
+        stroke: var(--wc);
+    }
+
+    50% {
+        stroke: var(--c-bad-light);
+    }
+}
+
+/* ═══ 單行道（.owy-）═══ */
+.owy-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    background: var(--c-card-alt);
+}
+
+.owy-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 10px;
+    text-align: center;
+}
+
+.owy-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+}
+
+/* 道路：白色的粗線；路口：白色的小圓；單行道標誌：藍底白箭頭 */
+.owy-road {
+    stroke: var(--c-card);
+    stroke-linecap: round;
+}
+
+.owy-node {
+    fill: var(--c-card);
+    stroke: var(--c-ink-soft);
+    stroke-width: 2;
+}
+
+.owy-sign-bg {
+    fill: var(--c-blue);
+    stroke: var(--c-card);
+    stroke-width: 2;
+}
+
+.owy-sign-arrow {
+    fill: none;
+    stroke: var(--c-card);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* 計程車（黃色）與醫院（白色的房子、紅十字） */
+.owy-taxi-body {
+    fill: var(--c-yellow);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.owy-taxi-win {
+    fill: var(--c-card);
+    stroke: var(--c-ink);
+    stroke-width: 2;
+}
+
+.owy-hos-body {
+    fill: var(--c-card);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.owy-hos-cross {
+    fill: none;
+    stroke: var(--c-bad-light);
+    stroke-width: 7;
+    stroke-linecap: round;
+}
+
+/* 你拖出來的路線 */
+.owy-route {
+    fill: none;
+    stroke: var(--c-orange);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.9;
+}
+
+/* 逆向：被擋住的那一段閃紅 */
+.owy-road--bad {
+    stroke: var(--c-bad-light);
+    stroke-linecap: round;
+    opacity: 0.85;
+    animation: owy-fade 0.45s ease-out forwards;
+}
+
+@keyframes owy-fade {
+    to {
+        opacity: 0;
+    }
+}
+
+/* 失敗：停下來的地方打紅圈；正確的路線用綠色慢慢畫出來 */
+.owy-bad {
+    fill: none;
+    stroke: var(--c-bad-light);
+    stroke-width: 6;
+}
+
+.owy-sol {
+    fill: none;
+    stroke: var(--c-ok);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+}
+
+.owy-sol--draw .owy-sol {
+    animation: owy-draw 1.6s ease-out forwards;
+}
+
+@keyframes owy-draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* ═══ 缺哪一張（.mj3-）═══ */
+.mj3-stage {
+    background: var(--c-green);
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 規則一直寫在上面（深色桌布上用淺色字） */
+.mj3-rule {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    color: var(--c-card);
+    font-weight: var(--fw-bold);
+}
+
+.mj3-table {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 84px;
+    padding: 0 var(--sp-2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-2);
+}
+
+.mj3-strip {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+}
+
+/* 象牙色的牌：大大的國字數字＋下面一個小阿拉伯數字（點數） */
+.mj3-tile {
+    width: 50px;
+    height: 70px;
+    box-sizing: border-box;
+    border-radius: 8px;
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    box-shadow: 0 3px 0 var(--c-ink-soft);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.mj3-num {
+    font-size: 30px;
+    font-weight: var(--fw-bold);
+    color: var(--c-ink);
+}
+
+.mj3-pip {
+    margin-top: 4px;
+    font-size: 15px;
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 剛補上去的那張 */
+.mj3-tile--added {
+    background: var(--c-yellow-soft);
+    border-color: var(--c-orange);
+}
+
+/* 分好的組：同一組用同一種顏色的外框（三種顏色輪流） */
+.mj3-tile--g0 {
+    border-color: var(--mj3-g0);
+    box-shadow: 0 3px 0 var(--mj3-g0);
+}
+
+.mj3-tile--g1 {
+    border-color: var(--mj3-g1);
+    box-shadow: 0 3px 0 var(--mj3-g1);
+}
+
+.mj3-tile--g2 {
+    border-color: var(--mj3-g2);
+    box-shadow: 0 3px 0 var(--mj3-g2);
+}
+
+/* 湊不起來的牌：紅色 */
+.mj3-tile--left {
+    border-color: var(--c-bad-light);
+    box-shadow: 0 3px 0 var(--c-bad-light);
+    background: var(--c-bad-soft);
+}
+
+.mj3-cap {
+    margin-top: var(--sp-2);
+    color: var(--c-card);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    text-align: center;
+}
+
+.mj3-cap--ok {
+    color: var(--c-green-light);
+}
+
+.mj3-note {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 300px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    color: var(--c-card);
+}
+
+/* 下面九顆牌鍵（一～九） */
+.mj3-keys {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 10px;
+    padding: 0 var(--sp-2);
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 6px;
+}
+
+.mj3-key {
+    height: 96px;
+    border-radius: 10px;
+    border: 3px solid var(--c-ink-soft);
+    background: var(--c-card);
+    box-shadow: 0 4px 0 var(--c-ink-soft);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0;
+    cursor: pointer;
+    color: var(--c-ink);
+    touch-action: manipulation;
+}
+
+.mj3-key-num {
+    font-size: 30px;
+    font-weight: var(--fw-bold);
+    line-height: 1;
+}
+
+.mj3-key-pip {
+    font-size: 16px;
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    line-height: 1;
+}
+
+.mj3-key--ok {
+    border-color: var(--c-ok);
+    box-shadow: 0 4px 0 var(--c-ok);
+    background: var(--c-ok-soft);
+}
+
+.mj3-key--bad {
+    border-color: var(--c-bad-light);
+    box-shadow: 0 4px 0 var(--c-bad-light);
+    background: var(--c-bad-soft);
+}
+
+/* ═══ 翻最多棋（.rvs-）═══ */
+.rvs-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.rvs-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+}
+
+.rvs-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+}
+
+/* 木紋棋盤：底色＋格線（用漸層畫出來，不用圖片） */
+.rvs-board {
+    position: absolute;
+    background: var(--rvs-wood);
+    outline: 4px solid var(--rvs-line);
+    box-shadow: var(--shadow-card);
+}
+
+.rvs-cell {
+    position: absolute;
+    box-sizing: border-box;
+    border: 1px solid var(--rvs-line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rvs-disc {
+    position: absolute;
+    inset: 8%;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px var(--rvs-line);
+}
+
+.rvs-disc--b {
+    background: var(--c-ink);
+}
+
+.rvs-disc--w {
+    background: var(--c-card);
+    border: 2px solid var(--c-ink-soft);
+}
+
+/* 剛下的黑棋、被夾住翻面的白棋 */
+.rvs-disc--new {
+    animation: rvs-drop 0.3s ease-out;
+}
+
+.rvs-disc--flip {
+    animation: rvs-flip 0.5s ease-in-out;
+}
+
+@keyframes rvs-drop {
+    from {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes rvs-flip {
+    0% {
+        transform: rotateY(0deg);
+    }
+
+    50% {
+        transform: rotateY(90deg);
+    }
+
+    100% {
+        transform: rotateY(0deg);
+    }
+}
+
+/* 每個合法位置能翻幾顆：數字浮出來；最多的是綠色 */
+.rvs-count {
+    position: relative;
+    z-index: 2;
+    min-width: 62%;
+    padding: 2px 0;
+    border-radius: var(--r-pill);
+    background: var(--c-orange);
+    color: var(--c-card);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    text-align: center;
+    line-height: 1.1;
+}
+
+.rvs-count--best {
+    background: var(--c-ok);
+}
+
+.rvs-cell--ok {
+    background: var(--c-ok-soft);
+}
+
+.rvs-cell--bad {
+    background: var(--c-bad-soft);
+    outline: 3px solid var(--c-bad-light);
+    outline-offset: -3px;
+}
+
+/* ═══ 堵住五子（.gmk-）═══ */
+.gmk-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.gmk-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+}
+
+.gmk-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+}
+
+/* 米色棋盤（石桌）；格線和棋子都是 SVG 畫的 */
+.gmk-board {
+    position: absolute;
+    background: var(--gmk-board);
+    outline: 4px solid var(--gmk-line);
+    box-shadow: var(--shadow-card);
+}
+
+.gmk-svg {
+    display: block;
+}
+
+.gmk-grid {
+    stroke: var(--gmk-line);
+    stroke-width: 1.2;
+}
+
+.gmk-stone--b {
+    fill: var(--c-ink);
+}
+
+.gmk-stone--w {
+    fill: var(--c-card);
+    stroke: var(--c-ink-soft);
+    stroke-width: 1.5;
+}
+
+/* 剛下的棋：從大變小彈一下（SVG 要指定 transform-box 才會繞著自己的中心縮放） */
+.gmk-stone--new {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: gmk-drop 0.3s ease-out;
+}
+
+@keyframes gmk-drop {
+    from {
+        transform: scale(1.6);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* 唯一的擋法：綠圈；白棋連成五顆：紅線穿過去 */
+.gmk-ring {
+    fill: none;
+    stroke: var(--c-ok);
+    stroke-width: 4;
+}
+
+.gmk-five {
+    stroke: var(--c-bad-light);
+    stroke-linecap: round;
+    opacity: 0.85;
+}
+
+/* ═══ 換一張就平（.swe-）═══ */
+.swe-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.swe-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+}
+
+/* 綠色牌桌：兩排牌放在這一塊底板上 */
+.swe-table {
+    position: absolute;
+    background: var(--swe-felt);
+    border: 3px solid var(--swe-felt-edge);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+}
+
+/* 小朋友（臉＋對話泡泡）：寫著總和 */
+.swe-who {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+}
+
+.swe-face__head {
+    fill: var(--c-card);
+    stroke: var(--c-ink-soft);
+    stroke-width: 2;
+}
+
+.swe-face__eye {
+    fill: var(--c-ink);
+}
+
+.swe-face__mouth {
+    fill: none;
+    stroke: var(--c-ink);
+    stroke-width: 2.4;
+    stroke-linecap: round;
+}
+
+.swe-bub {
+    flex: 1;
+    padding: var(--sp-1) var(--sp-3);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-pill);
+    color: var(--c-ink);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    text-align: center;
+    transition: background 0.3s;
+}
+
+.swe-bub--ok {
+    background: var(--c-ok-light);
+    border-color: var(--c-ok);
+}
+
+.swe-bub--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad-light);
+    color: var(--c-bad);
+}
+
+/* 數字牌：白底大數字；點到的牌抬高並框橘色；換牌用 left／top 的過渡動畫 */
+.swe-card {
+    position: absolute;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    color: var(--c-ink);
+    font-weight: var(--fw-black);
+    line-height: 1;
+    cursor: pointer;
+    transition: left 0.5s ease-in-out, top 0.5s ease-in-out, transform 0.15s, border-color 0.15s;
+}
+
+.swe-card--sel {
+    border-color: var(--c-orange);
+    background: var(--c-card-alt);
+    transform: scale(1.08);
+    z-index: 2;
+}
+
+.swe-card--ans {
+    border-color: var(--c-ok);
+    background: var(--c-ok-light);
+    z-index: 3;
+}
+
+.swe-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+}
+
+/* ═══ 推星期幾（.wkd-）═══ */
+.wkd-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.wkd-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+}
+
+/* 大小月口訣：跨月的題型才有，一直放在畫面上方 */
+.wkd-memo {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 54px;
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--c-card-alt);
+    border: 2px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    color: var(--c-ink);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1.25;
+    text-align: center;
+}
+
+/* 內容區（撕日曆、題目、說明、揭曉的月曆都放在裡面，top 由 JS 依有沒有大小月口訣設定） */
+.wkd-body {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 110px;
+}
+
+/* 老式撕日曆：紅色頁頭＋超大日期＋星期 */
+.wkd-page {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 230px;
+    height: 200px;
+    margin-left: -115px;
+    overflow: hidden;
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
+    transform: rotate(-2deg);
+}
+
+.wkd-page__top {
+    height: 46px;
+    background: var(--c-bad-light);
+    color: var(--c-card);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    line-height: 46px;
+}
+
+.wkd-page__day {
+    height: 100px;
+    color: var(--c-ink);
+    font-size: var(--fs-xxxxl);
+    font-weight: var(--fw-black);
+    line-height: 100px;
+}
+
+.wkd-page__wd {
+    color: var(--c-bad);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+}
+
+.wkd-ask {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 212px;
+    padding: 0 var(--sp-3);
+    color: var(--c-ink);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-bold);
+    line-height: 1.3;
+    text-align: center;
+}
+
+.wkd-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 322px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+}
+
+/* 七顆星期按鈕 */
+.wkd-opt {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.wkd-opt--ok {
+    background: var(--c-ok-light);
+    border-color: var(--c-ok);
+}
+
+.wkd-opt--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad-light);
+    color: var(--c-bad);
+}
+
+/* 揭曉用的月曆：一個月或兩個月並排 */
+.wkd-cal {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    display: flex;
+    justify-content: center;
+    gap: var(--sp-4);
+}
+
+.wkd-cal__title {
+    margin-bottom: var(--sp-1);
+    color: var(--c-ink);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    text-align: center;
+}
+
+.wkd-cal__grid {
+    display: grid;
+}
+
+.wkd-day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--r-sm);
+    color: var(--c-ink);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    transition: background 0.15s;
+}
+
+.wkd-day--head {
+    color: var(--c-ink-soft);
+}
+
+.wkd-day--blank {
+    visibility: hidden;
+}
+
+.wkd-day--from {
+    background: var(--c-blue-light);
+    outline: 3px solid var(--c-blue);
+    outline-offset: -3px;
+}
+
+.wkd-day--walk {
+    background: var(--c-orange-soft);
+}
+
+.wkd-day--to {
+    background: var(--c-ok-light);
+    outline: 3px solid var(--c-ok);
+    outline-offset: -3px;
+}
+
+/* ═══ 齒輪對記號（.grm-）═══ */
+.grm-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.grm-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    touch-action: none;
+}
+
+.grm-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 銅色齒輪：最大的（要轉的那個）顏色亮一點；手指在上面時再亮一點 */
+.grm-body {
+    fill: var(--grm-copper);
+    stroke: var(--grm-copper-dark);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+}
+
+.grm-body--main {
+    fill: var(--grm-copper-light);
+}
+
+.grm-turning .grm-body--main {
+    filter: brightness(1.12);
+}
+
+.grm-ring {
+    fill: none;
+    stroke: var(--grm-copper-dark);
+    stroke-width: 2;
+    opacity: 0.55;
+}
+
+/* 紅針（像錶針）；放手後依對準與否換顏色 */
+.grm-needle {
+    fill: var(--c-bad-light);
+    stroke: var(--c-ink);
+    stroke-width: 1;
+    stroke-linejoin: round;
+}
+
+.grm-needle--ok {
+    fill: var(--c-ok);
+}
+
+.grm-needle--bad {
+    fill: var(--c-bad-light);
+}
+
+.grm-hub {
+    fill: var(--c-card);
+    stroke: var(--c-ink);
+    stroke-width: 2;
+}
+
+/* 齒輪頂端外面固定的小三角形：紅針要指到這裡 */
+.grm-tick {
+    fill: var(--c-ink-soft);
+}
+
+.grm-hint,
+.grm-list {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+.grm-hint {
+    font-weight: var(--fw-bold);
+}
+
+.grm-row {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1.3;
+}
+
+.grm-row--ok {
+    color: var(--c-ok);
+}
+
+.grm-row--bad {
+    color: var(--c-bad);
+}
+
+/* 全部對準：齒輪一起閃光 */
+.grm-flash .grm-body {
+    animation: grm-flash 0.5s ease-in-out 3;
+}
+
+@keyframes grm-flash {
+
+    0%,
+    100% {
+        filter: brightness(1);
+    }
+
+    50% {
+        filter: brightness(1.45);
+    }
+}
+
+/* ═══ 蹺蹺板比重（.sea-）═══ */
+.sea-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 這一關專用的容器（換關時整個丟掉，事件監聽也跟著丟掉） */
+.sea-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    touch-action: none;
+}
+
+.sea-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+.sea-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* 支點（三角形）與木板（會依重量差傾斜，角度由 JS 的彈簧動畫設定） */
+.sea-pivot {
+    position: absolute;
+    width: 80px;
+    height: 72px;
+    background: var(--c-ink-soft);
+    clip-path: polygon(50% 0, 0 100%, 100% 100%);
+}
+
+.sea-board {
+    position: absolute;
+    height: 16px;
+    background: var(--sea-plank);
+    border-radius: var(--r-sm);
+    box-shadow: var(--shadow-card);
+    transform-origin: 50% 50%;
+}
+
+/* 動物：坐在木板上（bottom 讓牠站在板子上面）；被手指拿起來時放大一點 */
+.sea-an {
+    position: absolute;
+    bottom: 12px;
+    width: 60px;
+    height: 60px;
+    cursor: grab;
+    touch-action: none;
+    transition: left 0.28s ease-out;
+}
+
+.sea-an--held {
+    transition: none;
+    cursor: grabbing;
+    transform: scale(1.18);
+}
+
+.sea-an--drop {
+    animation: sea-bounce 0.45s ease-out;
+}
+
+@keyframes sea-bounce {
+    0% {
+        transform: translateY(-26px);
+    }
+
+    55% {
+        transform: translateY(0) scaleY(0.88);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}
+
+/* 失敗揭曉：該搬的動物圍上綠框 */
+.sea-an--move {
+    outline: 4px solid var(--c-ok);
+    outline-offset: 2px;
+    border-radius: 50%;
+}
+
+.sea-face {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.sea-head,
+.sea-ear {
+    fill: var(--sea-fur);
+    stroke: var(--c-ink);
+    stroke-width: 2;
+    stroke-linejoin: round;
+}
+
+.sea-ear--dark {
+    fill: var(--c-ink);
+}
+
+.sea-ear--dark2 {
+    fill: var(--sea-dog-ear);
+}
+
+.sea-patch,
+.sea-eye,
+.sea-nose {
+    fill: var(--c-ink);
+}
+
+.sea-snout {
+    fill: var(--sea-pig-snout);
+    stroke: var(--c-ink);
+    stroke-width: 1.5;
+}
+
+.sea-beak {
+    fill: var(--c-orange);
+    stroke: var(--c-ink);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+}
+
+.sea-whisker,
+.sea-mouth,
+.sea-smile {
+    fill: none;
+    stroke: var(--c-ink);
+    stroke-linecap: round;
+}
+
+.sea-whisker {
+    stroke-width: 1.5;
+}
+
+.sea-mouth {
+    stroke-width: 2;
+    opacity: 0.7;
+}
+
+/* 平衡時動物們都笑了：笑臉平常是藏起來的 */
+.sea-smile {
+    stroke-width: 3;
+    display: none;
+}
+
+.sea-happy .sea-smile {
+    display: inline;
+}
+
+.sea-happy .sea-mouth {
+    display: none;
+}
+
+.sea-an--bear {
+    --sea-fur: var(--sea-bear);
+}
+
+.sea-an--pig {
+    --sea-fur: var(--sea-pig);
+}
+
+.sea-an--dog {
+    --sea-fur: var(--sea-dog);
+}
+
+.sea-an--cat {
+    --sea-fur: var(--sea-cat);
+}
+
+.sea-an--rabbit {
+    --sea-fur: var(--sea-rabbit);
+}
+
+.sea-an--chick {
+    --sea-fur: var(--sea-chick);
+}
+
+.sea-an--panda {
+    --sea-fur: var(--sea-panda);
+}
+
+/* 失敗時標出來的重量 */
+.sea-badge {
+    position: absolute;
+    right: -8px;
+    top: -8px;
+    min-width: 28px;
+    height: 28px;
+    background: var(--c-card);
+    border: 2px solid var(--c-ink);
+    border-radius: var(--r-pill);
+    color: var(--c-ink);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 24px;
+    text-align: center;
+}
+
+/* ═══ 找正方形（.fsq-）═══ */
+.fsq-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.fsq-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 夜空：深藍色底板，星星畫在上面 */
+.fsq-sky {
+    position: absolute;
+    background: var(--fsq-sky);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+.fsq-svg {
+    display: block;
+    touch-action: none;
+}
+
+.fsq-shape {
+    fill: var(--fsq-star);
+    stroke: var(--fsq-star-edge);
+    stroke-width: 1;
+    stroke-linejoin: round;
+}
+
+/* 點到的星星：外面一圈橘色光暈、星星變橘；真正的正方形的星星：綠色光暈 */
+.fsq-halo {
+    fill: none;
+    stroke: var(--c-orange);
+    stroke-width: 3;
+    opacity: 0;
+}
+
+.fsq-star--on .fsq-halo {
+    opacity: 1;
+}
+
+.fsq-star--on .fsq-shape {
+    fill: var(--c-orange);
+}
+
+.fsq-star--true .fsq-halo {
+    stroke: var(--c-ok-light);
+    opacity: 1;
+}
+
+.fsq-star--true .fsq-shape {
+    fill: var(--c-ok-light);
+}
+
+.fsq-hit {
+    fill: transparent;
+}
+
+.fsq-star {
+    cursor: pointer;
+}
+
+/* 連線：答對（金色，像星座）、你選的四邊形（紅色）、真正的正方形（綠色） */
+.fsq-line {
+    stroke-width: 4;
+    stroke-linecap: round;
+    opacity: 0.9;
+}
+
+.fsq-line--ok {
+    stroke: var(--fsq-star);
+}
+
+.fsq-line--bad {
+    stroke: var(--c-bad-light);
+}
+
+.fsq-line--true {
+    stroke: var(--c-ok);
+}
+
+.fsq-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* ═══ 跳棋跳最遠（.chk-）═══ */
+.chk-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.chk-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.chk-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 棋盤：米色底，每一格一個淺色的洞（用漸層畫，格子大小由 JS 設 background-size） */
+.chk-board {
+    position: absolute;
+    background-color: var(--chk-board);
+    background-image: radial-gradient(circle, var(--chk-hole) 0, var(--chk-hole) 20%, transparent 23%);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+}
+
+/* 彈珠：外層負責位置（連跳時直線移動），內層負責外觀與弧線 */
+.chk-pc {
+    position: absolute;
+    border-radius: 50%;
+}
+
+.chk-pc--red {
+    cursor: pointer;
+}
+
+.chk-pc__in {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px var(--chk-shadow);
+}
+
+.chk-pc--red .chk-pc__in {
+    background: radial-gradient(circle at 35% 30%, var(--chk-red-hi), var(--chk-red) 58%, var(--chk-red-lo));
+}
+
+.chk-pc--blue .chk-pc__in {
+    background: radial-gradient(circle at 35% 30%, var(--chk-blue-hi), var(--chk-blue) 58%, var(--chk-blue-lo));
+}
+
+.chk-pc--ok {
+    outline: 4px solid var(--c-ok);
+    outline-offset: 2px;
+}
+
+.chk-pc--bad {
+    outline: 4px solid var(--c-bad-light);
+    outline-offset: 2px;
+}
+
+/* 連跳時彈珠往上弹再落下（弧線） */
+.chk-pc__in--arc {
+    animation-name: chk-arc;
+    animation-timing-function: ease-in-out;
+}
+
+@keyframes chk-arc {
+    0% {
+        transform: translateY(0) scale(1);
+    }
+
+    50% {
+        transform: translateY(-24px) scale(1.25);
+    }
+
+    100% {
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* 揭曉：每顆紅棋旁邊的連跳次數（最多的是綠色） */
+.chk-badge {
+    position: absolute;
+    right: -8px;
+    top: -10px;
+    min-width: 28px;
+    height: 28px;
+    background: var(--c-card);
+    border: 2px solid var(--c-ink);
+    border-radius: var(--r-pill);
+    color: var(--c-ink);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 24px;
+    text-align: center;
+    z-index: 5;
+}
+
+.chk-badge--best {
+    background: var(--c-ok);
+    border-color: var(--c-ok);
+    color: var(--c-card);
+}
+
+.chk-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* ═══ 圈內圈外（.iof-）═══ */
+.iof-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.iof-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.iof-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+.iof-svg {
+    position: absolute;
+    display: block;
+}
+
+/* 紅色粗繩；揭曉時「裡面」整塊塗上淡綠色（本來是透明的） */
+.iof-rope {
+    fill: none;
+    stroke: var(--iof-rope);
+    stroke-width: 5;
+    stroke-linejoin: round;
+}
+
+.iof-fill {
+    fill: var(--c-ok-light);
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+.iof-fill--show {
+    opacity: 0.85;
+}
+
+/* 螞蟻 */
+.iof-ant__body {
+    fill: var(--c-ink);
+}
+
+.iof-ant__leg {
+    stroke: var(--c-ink);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+}
+
+.iof-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.iof-btn {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.iof-btn--ok {
+    background: var(--c-ok-light);
+    border-color: var(--c-ok);
+}
+
+.iof-btn--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad-light);
+    color: var(--c-bad);
+}
+
+/* ═══ 加到五百（.gsp-）═══ */
+.gsp-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.gsp-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.gsp-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 油價與目標金額的告示牌 */
+.gsp-card {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 54px;
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--c-card-alt);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    color: var(--c-ink);
+    text-align: center;
+}
+
+.gsp-card__fuel {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+}
+
+.gsp-card__goal {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-bold);
+}
+
+.gsp-card__tol {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+.gsp-card__goal b {
+    color: var(--c-bad);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+}
+
+/* 加油機的數字面板：黑底黃字 */
+.gsp-panel {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 238px;
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--gsp-panel);
+    border: 4px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+}
+
+.gsp-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    min-height: 84px;
+}
+
+.gsp-label,
+.gsp-unit {
+    color: var(--gsp-digit);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    opacity: 0.8;
+}
+
+.gsp-label {
+    width: 3.2em;
+}
+
+.gsp-digits,
+.gsp-amount {
+    flex: 1;
+    color: var(--gsp-digit);
+    font-family: var(--gsp-font);
+    font-size: var(--fs-xxxl);
+    font-weight: var(--fw-black);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    text-align: right;
+}
+
+/* 放手時鏡頭推近油表的最後一位：整個數字放大一下 */
+.gsp-digits {
+    transform-origin: right center;
+    transition: transform 0.6s ease-out;
+}
+
+.gsp-digits--zoom {
+    transform: scale(1.18);
+}
+
+.gsp-amountwrap {
+    position: relative;
+    flex: 1;
+    min-height: 72px;
+}
+
+.gsp-amount {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    margin-top: -0.5em;
+    font-size: var(--fs-xl);
+}
+
+.gsp-amount--ok {
+    color: var(--c-ok-light);
+}
+
+.gsp-amount--bad {
+    color: var(--c-bad-light);
+}
+
+/* 蓋住金額的「？」貼紙，揭曉時被撕掉（往右上飛走） */
+.gsp-sticker {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--gsp-sticker);
+    border-radius: var(--r-sm);
+    color: var(--c-ink);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    line-height: 72px;
+    text-align: center;
+    transform: rotate(-2deg);
+    transition: transform 0.6s ease-in, opacity 0.6s;
+}
+
+.gsp-sticker--off {
+    transform: translate(80px, -60px) rotate(28deg);
+    opacity: 0;
+}
+
+.gsp-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 468px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* 油槍按鈕：紅色大按鈕，按住時凹下去 */
+.gsp-gun {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 10px;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-4);
+    background: var(--gsp-gun);
+    border-radius: var(--r-lg);
+    box-shadow: 0 8px 0 var(--gsp-gun-dark);
+    color: var(--c-card);
+    cursor: pointer;
+    touch-action: none;
+    transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.gsp-gun--on {
+    transform: translateY(6px);
+    box-shadow: 0 2px 0 var(--gsp-gun-dark);
+}
+
+.gsp-gun__text {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.gsp-gun__body {
+    fill: var(--c-card);
+    stroke: var(--gsp-gun-dark);
+    stroke-width: 3;
+    stroke-linejoin: round;
+}
+
+.gsp-gun__grip,
+.gsp-gun__nozzle {
+    fill: var(--gsp-panel);
+}
+
+.gsp-gun__hose {
+    fill: none;
+    stroke: var(--gsp-panel);
+    stroke-width: 6;
+    stroke-linecap: round;
+}
+
+/* ═══ 奶茶調色（.mlt-）═══ */
+.mlt-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.mlt-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.mlt-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 兩個底板：樣品杯和奶茶杯各放一塊，背景可以是深色木桌或白色托盤（同時對比）；靠攏之後都變中性色 */
+.mlt-panel {
+    position: absolute;
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    transition: left 0.7s ease-in-out, background 0.5s;
+}
+
+.mlt-panel--wood {
+    background: var(--mlt-wood);
+}
+
+.mlt-panel--tray {
+    background: var(--mlt-tray);
+}
+
+.mlt-panel--join {
+    background: var(--mlt-tray);
+}
+
+.mlt-cap {
+    position: absolute;
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    text-align: center;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.mlt-field--join .mlt-cap {
+    opacity: 0;
+}
+
+/* 杯子：玻璃外框＋液體（液體的顏色由 JS 即時設定） */
+.mlt-cup {
+    position: absolute;
+    display: block;
+    overflow: visible;
+}
+
+.mlt-glass {
+    fill: none;
+    stroke: var(--mlt-glass);
+    stroke-width: 4;
+    stroke-linejoin: round;
+}
+
+.mlt-swirl {
+    position: absolute;
+    pointer-events: none;
+}
+
+/* 牛奶壺：平常直立，按住時往杯子傾斜；倒出一條白色細線 */
+.mlt-jug {
+    position: absolute;
+    width: 60px;
+    height: 70px;
+    transform-origin: 80% 90%;
+    transition: transform 0.25s ease-out;
+}
+
+.mlt-jug--pour {
+    transform: rotate(-38deg);
+}
+
+.mlt-jug__body {
+    position: absolute;
+    left: 6px;
+    top: 14px;
+    width: 46px;
+    height: 54px;
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-sm) var(--r-sm) var(--r-md) var(--r-md);
+}
+
+.mlt-jug__lip {
+    position: absolute;
+    left: -2px;
+    top: 10px;
+    width: 18px;
+    height: 12px;
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-right: none;
+    border-radius: var(--r-sm) 0 0 var(--r-sm);
+}
+
+.mlt-stream {
+    position: absolute;
+    width: 6px;
+    background: var(--mlt-milk);
+    border-radius: var(--r-pill);
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.mlt-stream--on {
+    opacity: 0.95;
+}
+
+.mlt-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* 倒牛奶的大按鈕 */
+.mlt-btn {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 10px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-blue);
+    border-radius: var(--r-lg);
+    box-shadow: 0 8px 0 var(--mlt-btn-dark);
+    color: var(--c-card);
+    cursor: pointer;
+    touch-action: none;
+    transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.mlt-btn--on {
+    transform: translateY(6px);
+    box-shadow: 0 2px 0 var(--mlt-btn-dark);
+}
+
+.mlt-btn__text {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+/* ═══ 轉盤電話（.rtr-）═══ */
+.rtr-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.rtr-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.rtr-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 號碼：閃現時是大字，收起來之後變成「＿ ＿ ＿」，撥對的碼一個個補上去 */
+.rtr-num {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 48px;
+    padding: 0 var(--sp-3);
+    color: var(--c-ink);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    letter-spacing: 0.08em;
+    text-align: center;
+    pointer-events: none;
+}
+
+.rtr-num--hidden {
+    color: var(--c-ink-soft);
+}
+
+.rtr-num--ok {
+    color: var(--c-ok);
+}
+
+.rtr-got {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 138px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+.rtr-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 232px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* 撥錯時並排的兩組號碼 */
+.rtr-cmp__label {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+.rtr-cmp {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sp-1);
+}
+
+.rtr-cmp__d {
+    min-width: 1.1em;
+    color: var(--c-ink);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.rtr-cmp__d--ok {
+    color: var(--c-ok);
+}
+
+.rtr-cmp__d--bad {
+    color: var(--c-bad-light);
+    text-decoration: underline;
+}
+
+/* 轉盤電話 */
+.rtr-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    touch-action: none;
+}
+
+.rtr-plate {
+    fill: var(--rtr-plate);
+}
+
+.rtr-digit {
+    fill: var(--c-card);
+    font-weight: var(--fw-black);
+}
+
+.rtr-metal {
+    fill: var(--rtr-metal);
+    stroke: var(--rtr-metal-edge);
+    stroke-width: 2;
+}
+
+.rtr-rim {
+    fill: none;
+    stroke: var(--rtr-metal-edge);
+    stroke-width: 3;
+}
+
+.rtr-hole {
+    fill: transparent;
+    stroke: var(--rtr-metal-edge);
+    stroke-width: 2;
+    cursor: pointer;
+}
+
+.rtr-hole--on {
+    stroke: var(--c-orange);
+    stroke-width: 5;
+}
+
+.rtr-stop {
+    stroke: var(--rtr-stop);
+    stroke-width: 12;
+    stroke-linecap: round;
+}
+
+.rtr-cap {
+    fill: var(--rtr-plate);
+    stroke: var(--rtr-metal-edge);
+    stroke-width: 4;
+}
+
+/* ═══ 反著滑（.swc-）═══ */
+.swc-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.swc-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.swc-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 箭頭出現、也是手指滑動的區域（在這個框裡任何地方滑都可以） */
+.swc-zone {
+    position: absolute;
+    border: 3px dashed var(--c-ink-soft);
+    border-radius: var(--r-lg);
+    background: var(--c-card-alt);
+    touch-action: none;
+    overflow: hidden;
+}
+
+.swc-pop {
+    position: absolute;
+    animation: swc-pop 0.2s ease-out;
+    pointer-events: none;
+}
+
+@keyframes swc-pop {
+    from {
+        transform: scale(0.4);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.swc-flash {
+    position: absolute;
+    width: 72px;
+    height: 72px;
+    opacity: 0.85;
+    animation: swc-fade 0.26s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes swc-fade {
+    from {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+
+    to {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* 交通號誌的箭頭：藍色圓牌、白色粗箭頭 */
+.swc-sign {
+    display: block;
+}
+
+.swc-sign__disc {
+    fill: var(--swc-blue);
+    stroke: var(--c-card);
+    stroke-width: 4;
+}
+
+.swc-sign__arrow {
+    fill: var(--c-card);
+}
+
+/* 你滑的方向（閃一下）、該滑的方向（綠）、滑錯的（紅） */
+.swc-sign--mine .swc-sign__disc {
+    fill: var(--c-orange);
+}
+
+.swc-sign--req .swc-sign__disc {
+    fill: var(--c-ok);
+}
+
+.swc-sign--bad .swc-sign__disc {
+    fill: var(--c-bad-light);
+}
+
+.swc-dots {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sp-2);
+}
+
+.swc-dot {
+    width: 18px;
+    height: 18px;
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: 50%;
+}
+
+.swc-dot--ok {
+    background: var(--c-ok);
+    border-color: var(--c-ok);
+}
+
+.swc-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* 失敗時整串箭頭排成一列（下面是該滑的方向），重播時一格一格亮起 */
+.swc-strip {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+}
+
+.swc-strip__row {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+}
+
+.swc-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 4px;
+    border: 3px solid transparent;
+    border-radius: var(--r-sm);
+    opacity: 0.45;
+    transition: opacity 0.15s;
+}
+
+.swc-cell--lit {
+    opacity: 1;
+}
+
+.swc-cell--bad {
+    border-color: var(--c-bad);
+    background: var(--c-bad-soft);
+}
+
+.swc-cell__no,
+.swc-cell__to {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1.1;
+}
+
+/* ═══ 敲幾下（.knk-）═══ */
+.knk-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.knk-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.knk-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 玩家這一段敲的次數（大字） */
+.knk-count {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 60px;
+    color: var(--c-ink);
+    font-size: var(--fs-xxxl);
+    font-weight: var(--fw-black);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 師父的剪影（深色的頭和袍子）、木槌 */
+.knk-monk {
+    position: absolute;
+    left: 24px;
+    top: 150px;
+    width: 120px;
+    height: 220px;
+}
+
+.knk-monk__head {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto;
+    background: var(--c-ink);
+    border-radius: 50%;
+}
+
+.knk-monk__body {
+    width: 120px;
+    height: 150px;
+    margin-top: -4px;
+    background: var(--c-ink);
+    border-radius: 50% 50% var(--r-md) var(--r-md);
+}
+
+.knk-mallet {
+    position: absolute;
+    left: 112px;
+    top: 250px;
+    width: 120px;
+    height: 20px;
+    transform-origin: 0 50%;
+    transform: rotate(-35deg);
+    transition: transform 0.08s ease-in;
+}
+
+.knk-mallet--hit {
+    animation: knk-swing 0.18s ease-in-out;
+}
+
+@keyframes knk-swing {
+    0% {
+        transform: rotate(-35deg);
+    }
+
+    45% {
+        transform: rotate(18deg);
+    }
+
+    100% {
+        transform: rotate(-35deg);
+    }
+}
+
+.knk-mallet__stick {
+    position: absolute;
+    left: 0;
+    top: 7px;
+    width: 96px;
+    height: 7px;
+    background: var(--knk-wood-dark);
+    border-radius: var(--r-sm);
+}
+
+.knk-mallet__head {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 28px;
+    height: 20px;
+    background: var(--knk-wood-dark);
+    border-radius: var(--r-md);
+}
+
+/* 木魚（要敲的）：放在畫面中下方，被敲到時縮一下 */
+.knk-fishbox {
+    position: absolute;
+    left: 180px;
+    top: 250px;
+    width: 220px;
+    height: 187px;
+    cursor: pointer;
+    touch-action: none;
+}
+
+.knk-fish {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.knk-fish__body {
+    fill: var(--knk-wood);
+    stroke: var(--knk-wood-dark);
+    stroke-width: 5;
+}
+
+.knk-fish__mouth {
+    fill: none;
+    stroke: var(--knk-wood-dark);
+    stroke-width: 7;
+    stroke-linecap: round;
+}
+
+.knk-fish__shine {
+    fill: var(--c-card);
+    opacity: 0.35;
+}
+
+.knk-fish__stand {
+    fill: var(--knk-wood-dark);
+}
+
+/* 銅缽（干擾）：右上方，被敲時閃一下、擴散一圈波紋 */
+.knk-bowlbox {
+    position: absolute;
+    right: 20px;
+    top: 90px;
+    width: 140px;
+    height: 110px;
+    pointer-events: none;
+}
+
+.knk-bowl {
+    display: block;
+    overflow: visible;
+}
+
+.knk-bowl__body {
+    fill: var(--knk-copper);
+    stroke: var(--knk-copper-dark);
+    stroke-width: 4;
+    stroke-linejoin: round;
+}
+
+.knk-bowl__rim {
+    fill: var(--knk-copper-light);
+    stroke: var(--knk-copper-dark);
+    stroke-width: 4;
+}
+
+.knk-bowl__wave {
+    fill: none;
+    stroke: var(--knk-copper-light);
+    stroke-width: 4;
+    opacity: 0;
+}
+
+.knk-hit {
+    animation: knk-pulse 0.2s ease-out;
+}
+
+.knk-bowlbox.knk-hit .knk-bowl__wave {
+    animation: knk-wave 0.7s ease-out;
+    transform-origin: 70px 28px;
+}
+
+@keyframes knk-pulse {
+    0% {
+        transform: scale(0.94);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes knk-wave {
+    0% {
+        opacity: 0.9;
+        transform: scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1.6);
+    }
+}
+
+.knk-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 460px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.knk-done {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    bottom: 10px;
+    height: 100px;
+    font-size: var(--fs-xl);
+}
+
+/* ═══ 切菜單上的（.msl-）═══ */
+.msl-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.msl-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+.msl-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* 水果飛行與手指滑過的範圍：整個畫面 */
+.msl-arena {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    touch-action: none;
+}
+
+.msl-fruit {
+    position: absolute;
+    left: 0;
+    top: 0;
+    will-change: transform;
+    pointer-events: none;
+}
+
+/* 黑板菜單：看的時候在上方，開始之後收起來，失敗時再亮出來 */
+.msl-board {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 56px;
+    padding: var(--sp-2) var(--sp-3) var(--sp-3);
+    background: var(--msl-board);
+    border: 6px solid var(--msl-frame);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    text-align: center;
+    transition: transform 0.45s ease-in, opacity 0.45s;
+    z-index: 2;
+}
+
+.msl-board--gone {
+    transform: translateY(-140%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.msl-board--again {
+    z-index: 4;
+}
+
+.msl-board__title {
+    color: var(--msl-chalk);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+}
+
+.msl-board__items {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sp-2) var(--sp-3);
+}
+
+.msl-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 68px;
+    padding: 2px 4px;
+    border-radius: var(--r-sm);
+}
+
+.msl-item__name {
+    color: var(--msl-chalk);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+}
+
+.msl-item--mark {
+    outline: 4px solid var(--c-ok);
+    background: var(--c-ok-soft);
+}
+
+.msl-counter {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 12px;
+    color: var(--c-ink-soft);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    text-align: center;
+    pointer-events: none;
+}
+
+.msl-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 58px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* 失敗：你切錯（漏掉）的和菜單上的並排 */
+.msl-cmp {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 46%;
+    display: flex;
+    justify-content: center;
+    gap: var(--sp-4);
+    z-index: 4;
+}
+
+.msl-cmp__box {
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--c-card);
+    border: 4px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
+}
+
+.msl-cmp__box--bad {
+    border-color: var(--c-bad-light);
+}
+
+.msl-cmp__box--ok {
+    border-color: var(--c-ok);
+}
+
+.msl-cmp__name {
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+/* 水果的外觀：顏色由 .msl-f--種類 的 --msl-c 決定 */
+.msl-f {
+    display: block;
+    overflow: visible;
+}
+
+.msl-body {
+    fill: var(--msl-c);
+    stroke: var(--c-ink);
+    stroke-width: 2;
+    stroke-linejoin: round;
+}
+
+.msl-leaf {
+    fill: var(--msl-leaf);
+    stroke: var(--c-ink);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+}
+
+.msl-stem {
+    fill: none;
+    stroke: var(--msl-stem);
+    stroke-width: 3.5;
+    stroke-linecap: round;
+}
+
+.msl-dark {
+    fill: var(--msl-stem);
+}
+
+.msl-dot {
+    fill: var(--msl-stem);
+    opacity: 0.4;
+}
+
+.msl-shine {
+    fill: var(--c-card);
+    opacity: 0.45;
+}
+
+.msl-stripe {
+    fill: none;
+    stroke: var(--msl-leaf);
+    stroke-width: 4;
+    stroke-linecap: round;
+    opacity: 0.75;
+}
+
+.msl-f--orange {
+    --msl-c: var(--msl-orange);
+}
+
+.msl-f--tangerine {
+    --msl-c: var(--msl-tangerine);
+}
+
+.msl-f--lemon {
+    --msl-c: var(--msl-lemon);
+}
+
+.msl-f--lime {
+    --msl-c: var(--msl-lime);
+}
+
+.msl-f--apple {
+    --msl-c: var(--msl-apple);
+}
+
+.msl-f--tomato {
+    --msl-c: var(--msl-tomato);
+}
+
+.msl-f--grape {
+    --msl-c: var(--msl-grape);
+}
+
+.msl-f--blueberry {
+    --msl-c: var(--msl-blueberry);
+}
+
+.msl-f--banana {
+    --msl-c: var(--msl-banana);
+}
+
+.msl-f--watermelon {
+    --msl-c: var(--msl-watermelon);
+}
+
+.msl-f--pear {
+    --msl-c: var(--msl-pear);
+}
+
+.msl-f--strawberry {
+    --msl-c: var(--msl-strawberry);
+}
+
+/* 切開：兩半往兩邊飛開、旋轉、掉落；果汁噴出 */
+.msl-half {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+    animation: msl-split 0.6s ease-in forwards;
+}
+
+.msl-half--left {
+    clip-path: inset(0 50% 0 0);
+}
+
+.msl-half--right {
+    clip-path: inset(0 0 0 50%);
+}
+
+@keyframes msl-split {
+    to {
+        translate: calc(var(--dir) * 46px) 110px;
+        rotate: calc(var(--dir) * 50deg);
+        opacity: 0;
+    }
+}
+
+.msl-juice {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    margin: -6px 0 0 -6px;
+    background: var(--msl-c);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: msl-juice 0.5s ease-out forwards;
+}
+
+@keyframes msl-juice {
+    from {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+    }
+
+    to {
+        transform: translate(var(--dx), var(--dy)) scale(0.3);
+        opacity: 0;
+    }
+}
+
+/* ═══ 字的顏色（.ikw-）═══ */
+.ikw-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.ikw-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.ikw-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 宣紙：毛筆字一個一個閃過 */
+.ikw-paper {
+    position: absolute;
+    left: 40px;
+    right: 40px;
+    top: 66px;
+    height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-card-alt);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+}
+
+.ikw-glyph {
+    font-family: var(--font-note);
+    font-size: 190px;
+    font-weight: var(--fw-black);
+    line-height: 1;
+}
+
+.ikw-dots {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 330px;
+    display: flex;
+    justify-content: center;
+    gap: var(--sp-2);
+}
+
+.ikw-dot {
+    width: 18px;
+    height: 18px;
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: 50%;
+}
+
+.ikw-dot--on {
+    background: var(--c-ink-soft);
+}
+
+.ikw-ask {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 120px;
+    padding: 0 var(--sp-3);
+    color: var(--c-ink);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-bold);
+    line-height: 1.3;
+    text-align: center;
+}
+
+.ikw-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 352px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* 六種墨水顏色與對應的顏色按鈕 */
+.ikw-c--red {
+    color: var(--ikw-red);
+}
+
+.ikw-c--yellow {
+    color: var(--ikw-yellow);
+}
+
+.ikw-c--green {
+    color: var(--ikw-green);
+}
+
+.ikw-c--blue {
+    color: var(--ikw-blue);
+}
+
+.ikw-c--purple {
+    color: var(--ikw-purple);
+}
+
+.ikw-c--orange {
+    color: var(--ikw-orange);
+}
+
+.ikw-sw {
+    border-color: var(--c-ink-soft);
+    color: var(--c-card);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.ikw-sw--red {
+    background: var(--ikw-red);
+}
+
+.ikw-sw--yellow {
+    background: var(--ikw-yellow);
+    color: var(--c-ink);
+}
+
+.ikw-sw--green {
+    background: var(--ikw-green);
+}
+
+.ikw-sw--blue {
+    background: var(--ikw-blue);
+}
+
+.ikw-sw--purple {
+    background: var(--ikw-purple);
+}
+
+.ikw-sw--orange {
+    background: var(--ikw-orange);
+}
+
+.ikw-num {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.ikw-ok {
+    outline: 6px solid var(--c-ok);
+    outline-offset: 2px;
+}
+
+.ikw-bad {
+    outline: 6px solid var(--c-bad-light);
+    outline-offset: 2px;
+}
+
+/* 答錯：整串字並排，被問的那個標紅框 */
+.ikw-strip {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 70px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sp-2);
+}
+
+.ikw-cell {
+    width: 70px;
+    padding: 4px 2px;
+    background: var(--c-card-alt);
+    border: 3px solid transparent;
+    border-radius: var(--r-sm);
+    text-align: center;
+}
+
+.ikw-cell--ask {
+    border-color: var(--c-bad);
+    background: var(--c-bad-soft);
+}
+
+.ikw-cell__no,
+.ikw-cell__txt {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1.15;
+}
+
+.ikw-cell__ch {
+    font-family: var(--font-note);
+    font-size: 48px;
+    font-weight: var(--fw-black);
+    line-height: 1.1;
+}
+
+/* ═══ 記行事曆（.cld-）═══ */
+.cld-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.cld-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.cld-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 冰箱上的大月曆 */
+.cld-cal {
+    position: absolute;
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+.cld-title {
+    padding: var(--sp-1) 0;
+    background: var(--cld-head);
+    color: var(--c-card);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    text-align: center;
+}
+
+.cld-week {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: var(--c-card-alt);
+}
+
+.cld-wd {
+    color: var(--c-ink);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1.5;
+    text-align: center;
+}
+
+.cld-wd--we {
+    color: var(--c-bad);
+}
+
+.cld-grid {
+    display: grid;
+}
+
+.cld-cell {
+    position: relative;
+    border: 1px solid var(--cld-line);
+    background: var(--c-card);
+    cursor: pointer;
+}
+
+.cld-cell--we {
+    background: var(--c-card-alt);
+}
+
+.cld-cell--blank {
+    background: transparent;
+    cursor: default;
+}
+
+.cld-no {
+    position: absolute;
+    left: 3px;
+    top: 0;
+    color: var(--c-ink-soft);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1.2;
+}
+
+.cld-cell--ok {
+    outline: 5px solid var(--c-ok);
+    outline-offset: -5px;
+    border-radius: 50%;
+    background: var(--c-ok-soft);
+}
+
+.cld-cell--bad {
+    outline: 5px solid var(--c-bad-light);
+    outline-offset: -5px;
+    border-radius: 50%;
+    background: var(--c-bad-soft);
+}
+
+.cld-sticker {
+    position: absolute;
+    left: 50%;
+    top: 55%;
+    transform: translate(-50%, -50%) rotate(-5deg);
+    transition: opacity 0.35s;
+    pointer-events: none;
+}
+
+.cld-sticker--hide {
+    opacity: 0;
+}
+
+.cld-ask {
+    position: absolute;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-3);
+    color: var(--c-ink);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-bold);
+}
+
+.cld-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* 圖示（手繪貼紙風格）：外框是深色線條、填色用主題色 */
+.cld-icon {
+    display: block;
+    overflow: visible;
+}
+
+.cld-s {
+    stroke: var(--c-ink);
+    stroke-width: 2.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.cld-s--fill {
+    fill: var(--c-card);
+}
+
+.cld-s--fill2 {
+    fill: var(--cld-pink);
+}
+
+.cld-s--line {
+    fill: none;
+}
+
+.cld-s--red {
+    fill: var(--c-bad-light);
+}
+
+.cld-icon--hospital .cld-s--fill {
+    fill: var(--c-blue-light);
+}
+
+.cld-icon--cake .cld-s--fill {
+    fill: var(--cld-cream);
+}
+
+.cld-icon--box .cld-s--fill {
+    fill: var(--cld-cream);
+}
+
+.cld-icon--bill .cld-s--fill {
+    fill: var(--c-green-light);
+}
+
+.cld-icon--scissors .cld-s--fill {
+    fill: var(--c-yellow-soft);
+}
+
+.cld-icon--briefcase .cld-s--fill {
+    fill: var(--c-orange);
+}
+
+.cld-icon--bowl .cld-s--fill {
+    fill: var(--c-blue-light);
+}
+
+.cld-icon--ball .cld-s--fill {
+    fill: var(--c-orange);
+}
+
+.cld-icon--plane .cld-s--fill {
+    fill: var(--c-blue-light);
+}
+
+/* ═══ 照樣調一杯（.lyd-）═══ */
+.lyd-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.lyd-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.lyd-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 兩個杯子：左邊示範杯（看完會收走）、右邊你的杯子 */
+.lyd-box {
+    position: absolute;
+    width: 170px;
+    transition: opacity 0.4s;
+}
+
+.lyd-box--hide {
+    opacity: 0;
+}
+
+.lyd-cap {
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    text-align: center;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 232px;
+}
+
+.lyd-glass {
+    display: block;
+    overflow: visible;
+}
+
+.lyd-glass__bg {
+    fill: var(--lyd-glass);
+    opacity: 0.6;
+}
+
+.lyd-glass__edge {
+    fill: none;
+    stroke: var(--c-ink-soft);
+    stroke-width: 4;
+    stroke-linejoin: round;
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.lyd-glass__foot {
+    fill: var(--c-ink-soft);
+}
+
+.lyd-layer {
+    fill: var(--lyd-c);
+}
+
+.lyd-stop--red {
+    stop-color: var(--lyd-red);
+}
+
+.lyd-stop--yellow {
+    stop-color: var(--lyd-yellow);
+}
+
+.lyd-stop--green {
+    stop-color: var(--lyd-green);
+}
+
+.lyd-stop--blue {
+    stop-color: var(--lyd-blue);
+}
+
+.lyd-stop--purple {
+    stop-color: var(--lyd-purple);
+}
+
+.lyd-c--red {
+    --lyd-c: var(--lyd-red);
+}
+
+.lyd-c--yellow {
+    --lyd-c: var(--lyd-yellow);
+}
+
+.lyd-c--green {
+    --lyd-c: var(--lyd-green);
+}
+
+.lyd-c--blue {
+    --lyd-c: var(--lyd-blue);
+}
+
+.lyd-c--purple {
+    --lyd-c: var(--lyd-purple);
+}
+
+/* 倒下來的細線：從你的杯口上方一直到液面 */
+.lyd-stream {
+    position: absolute;
+    left: 82px;
+    top: -46px;
+    width: 7px;
+    height: 0;
+    background: var(--lyd-c);
+    border-radius: var(--r-pill);
+    opacity: 0;
+    transition: opacity 0.1s;
+}
+
+.lyd-stream--on {
+    height: 150px;
+    opacity: 0.95;
+}
+
+.lyd-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* 五個瓶子：按住倒、放手停；按對時瓶子往右傾 */
+.lyd-bottles {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.lyd-bottle {
+    width: 84px;
+    cursor: pointer;
+    touch-action: none;
+    transform-origin: 50% 100%;
+    transition: transform 0.15s;
+}
+
+.lyd-bottle--pour {
+    transform: rotate(-24deg) translateY(-8px);
+}
+
+.lyd-bottle__neck {
+    width: 24px;
+    height: 30px;
+    margin: 0 auto;
+    background: var(--lyd-c);
+    border-radius: var(--r-sm) var(--r-sm) 0 0;
+    border: 3px solid var(--c-ink-soft);
+    border-bottom: none;
+}
+
+.lyd-bottle__body {
+    height: 110px;
+    background: var(--lyd-c);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    color: var(--c-card);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    line-height: 110px;
+    text-align: center;
+}
+
+.lyd-c--yellow .lyd-bottle__body {
+    color: var(--c-ink);
+}
+
+.lyd-bottle--ok .lyd-bottle__body {
+    outline: 5px solid var(--c-ok);
+}
+
+.lyd-bottle--bad .lyd-bottle__body {
+    outline: 5px solid var(--c-bad-light);
+}
+
+/* ═══ 看過的字（.skc-）═══ */
+.skc-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.skc-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.skc-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 看過的字：書法練習簿，大大的黑色楷書 */
+.skc-show {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 80px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sp-3);
+}
+
+.skc-show__ch {
+    background: var(--skc-paper);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-sm);
+    color: var(--c-ink);
+    font-family: var(--font-note);
+    font-weight: var(--fw-black);
+    text-align: center;
+}
+
+.skc-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 120px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* 字格：每一格像九宮格紙（淡淡的十字虛線），點到變淡黃色 */
+.skc-grid {
+    position: absolute;
+    display: grid;
+    gap: 6px;
+    transition: transform 0.3s;
+    transform-origin: 50% 0;
+}
+
+.skc-grid--small {
+    transform: scale(0.72);
+}
+
+.skc-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--skc-paper);
+    background-image:
+        linear-gradient(var(--skc-guide), var(--skc-guide)),
+        linear-gradient(var(--skc-guide), var(--skc-guide));
+    background-size: 100% 1px, 1px 100%;
+    background-position: center, center;
+    background-repeat: no-repeat;
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-sm);
+    color: var(--c-ink);
+    font-family: var(--font-note);
+    font-weight: var(--fw-black);
+    cursor: pointer;
+}
+
+.skc-cell--on {
+    background-color: var(--skc-pick);
+    border-color: var(--c-orange);
+}
+
+.skc-cell--ok {
+    background-color: var(--c-ok-light);
+    border-color: var(--c-ok);
+}
+
+.skc-cell--miss {
+    border-color: var(--c-bad);
+    border-style: dashed;
+    background-color: var(--c-bad-soft);
+}
+
+.skc-cell--bad {
+    background-color: var(--c-bad-soft);
+    border-color: var(--c-bad-light);
+}
+
+.skc-done {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    bottom: 10px;
+    height: 96px;
+    font-size: var(--fs-xl);
+}
+
+/* 答錯：看過的字和你點的字並排，差異的筆畫塗紅 */
+.skc-cmp {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 330px;
+    display: flex;
+    justify-content: center;
+    gap: var(--sp-3);
+}
+
+.skc-cmp__box {
+    padding: var(--sp-2);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    text-align: center;
+}
+
+.skc-cmp__cv {
+    display: block;
+    width: 120px;
+    height: 120px;
+}
+
+.skc-cmp__t {
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+.skc-cmp__t--miss {
+    color: var(--c-bad);
+}
+
+/* ═══ 門縫偷看（.dsl-）═══ */
+.dsl-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.dsl-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.dsl-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 字盒：底是淡淡的暖色（門縫裡的光），滿版的黑色大字，上面蓋兩片白色方塊 */
+.dsl-box {
+    position: absolute;
+    overflow: hidden;
+    background: var(--dsl-light);
+    border: 4px solid var(--dsl-door);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+}
+
+.dsl-glyph {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    color: var(--c-ink);
+    font-family: var(--font-note);
+    font-weight: var(--fw-black);
+    text-align: center;
+}
+
+/* 兩片白色方塊：JS 每個畫格用 transform 讓它們一起往右移，中間留一條縫 */
+.dsl-cover {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: var(--c-card);
+    will-change: transform;
+}
+
+.dsl-cover--l {
+    border-right: 3px solid var(--dsl-door);
+}
+
+.dsl-cover--r {
+    border-left: 3px solid var(--dsl-door);
+}
+
+/* 揭曉時往兩邊打開 */
+.dsl-cover--open {
+    transition: transform 0.5s ease-in;
+}
+
+.dsl-diff {
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: var(--dsl-light);
+}
+
+.dsl-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.dsl-opt {
+    font-family: var(--font-note);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+}
+
+.dsl-ok {
+    background: var(--c-ok-light);
+    border-color: var(--c-ok);
+}
+
+.dsl-bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad-light);
+    color: var(--c-bad);
+}
+
+/* ═══ 找星座（.stz-）═══ */
+.stz-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.stz-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.stz-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 碎片在這張畫布上飛：深藍色的夜空，碎片是淡色的字塊（畫布本身透明，底色在這裡） */
+.stz-canvas {
+    position: absolute;
+    background: var(--stz-sky);
+    border-radius: var(--r-md);
+    pointer-events: none;
+}
+
+.stz-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.stz-opt {
+    font-family: var(--font-note);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    padding: 0;
+}
+
+.stz-ok {
+    background: var(--c-ok-light);
+    border-color: var(--c-ok);
+}
+
+.stz-bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad-light);
+    color: var(--c-bad);
+}
+
+/* ═══ 切字（.scc-）═══ */
+.scc-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.scc-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+/* 目標字：上方的小牌子，整局都在 */
+.scc-goal {
+    position: absolute;
+    left: 50%;
+    top: 8px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-1) var(--sp-4);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-pill);
+    box-shadow: var(--shadow-card);
+    z-index: 3;
+}
+
+.scc-goal__t {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+}
+
+.scc-goal__ch {
+    color: var(--c-ink);
+    font-family: var(--font-note);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    line-height: 1.1;
+}
+
+.scc-arena {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    touch-action: none;
+}
+
+/* 寫著字的湯圓 */
+.scc-dump {
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: var(--scc-dump);
+    border: 4px solid var(--scc-dump-edge);
+    border-radius: 50%;
+    box-shadow: var(--shadow-card);
+    box-sizing: border-box;
+    text-align: center;
+    will-change: transform;
+    pointer-events: none;
+}
+
+.scc-dump__ch {
+    color: var(--c-ink);
+    font-family: var(--font-note);
+    font-weight: var(--fw-black);
+    line-height: inherit;
+}
+
+/* 切開：兩半往兩邊飛開、旋轉、掉落（字也跟著裂成兩半） */
+.scc-half {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+    animation: scc-split 0.6s ease-in forwards;
+}
+
+.scc-half--left {
+    clip-path: inset(0 50% 0 0);
+}
+
+.scc-half--right {
+    clip-path: inset(0 0 0 50%);
+}
+
+@keyframes scc-split {
+    to {
+        translate: calc(var(--dir) * 46px) 110px;
+        rotate: calc(var(--dir) * 50deg);
+        opacity: 0;
+    }
+}
+
+.scc-counter {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 12px;
+    color: var(--c-ink-soft);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    text-align: center;
+    pointer-events: none;
+}
+
+.scc-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 58px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* 失敗：目標字和你切錯的字並排，差異的筆畫標紅 */
+.scc-cmp {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 24%;
+    display: flex;
+    justify-content: center;
+    gap: var(--sp-4);
+    z-index: 4;
+}
+
+.scc-cmp__box {
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--c-card);
+    border: 4px solid var(--c-ok);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
+}
+
+.scc-cmp__box--bad {
+    border-color: var(--c-bad-light);
+}
+
+.scc-cmp__t {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+.scc-cmp__big {
+    color: var(--c-ink);
+    font-family: var(--font-note);
+    font-size: 130px;
+    font-weight: var(--fw-black);
+    line-height: 1.15;
+}
+
+.scc-cmp__cv {
+    display: block;
+    width: 150px;
+    height: 150px;
+}
+
+/* ═══ 蝴蝶不對稱（.btf-）═══ */
+.btf-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.btf-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.btf-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+.btf-svg {
+    position: absolute;
+    display: block;
+    overflow: visible;
+    touch-action: none;
+}
+
+/* 翅膀：上翅、下翅；右翅膀本身，左翅膀是它翻過來的樣子 */
+.btf-wing {
+    fill: var(--btf-wing);
+    stroke: var(--btf-black);
+    stroke-width: 5;
+    stroke-linejoin: round;
+}
+
+.btf-wing--low {
+    fill: var(--btf-wing-low);
+}
+
+.btf-stripe {
+    stroke: var(--btf-black);
+    stroke-width: 4;
+    stroke-linecap: round;
+}
+
+.btf-spot {
+    stroke: var(--btf-black);
+    stroke-width: 1.5;
+}
+
+.btf-c--orange {
+    fill: var(--btf-orange);
+}
+
+.btf-c--yellow {
+    fill: var(--btf-yellow);
+}
+
+.btf-c--blue {
+    fill: var(--btf-blue);
+}
+
+.btf-c--white {
+    fill: var(--btf-white);
+}
+
+.btf-c--red {
+    fill: var(--btf-red);
+}
+
+.btf-body {
+    fill: var(--btf-black);
+}
+
+.btf-antenna {
+    fill: none;
+    stroke: var(--btf-black);
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+/* 揭曉：左翅膀翻過去半透明地疊在右翅膀上（重影），不一樣的地方閃紅圈 */
+.btf-ghost {
+    opacity: 0.55;
+    animation: btf-ghost-in 0.7s ease-out;
+    pointer-events: none;
+}
+
+@keyframes btf-ghost-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 0.55;
+    }
+}
+
+.btf-ring {
+    fill: none;
+    stroke: var(--c-bad-light);
+    stroke-width: 5;
+    animation: btf-blink 0.6s ease-in-out infinite;
+}
+
+@keyframes btf-blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.25;
+    }
+}
+
+.btf-tap {
+    fill: none;
+    stroke-width: 4;
+}
+
+.btf-tap--ok {
+    stroke: var(--c-ok);
+}
+
+.btf-tap--bad {
+    stroke: var(--c-ink);
+    stroke-dasharray: 5 4;
+}
+
+.btf-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* ═══ 彈幕找字（.dmk-）═══ */
+.dmk-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.dmk-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    background: linear-gradient(var(--dmk-sky-top), var(--dmk-sky-bottom));
+}
+
+/* 目標字小牌子 */
+.dmk-goal {
+    position: absolute;
+    left: 50%;
+    top: 8px;
+    white-space: nowrap;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-1) var(--sp-4);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-pill);
+    box-shadow: var(--shadow-card);
+    z-index: 3;
+    transition: background 0.2s;
+}
+
+.dmk-goal--new {
+    background: var(--c-yellow-soft);
+    border-color: var(--c-orange);
+}
+
+.dmk-goal__t {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+}
+
+.dmk-goal__ch {
+    color: var(--c-ink);
+    font-family: var(--font-note);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    line-height: 1.1;
+}
+
+.dmk-arena {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    touch-action: none;
+}
+
+/* 飄過的字：白色字、黑色描邊（影片彈幕的樣子） */
+.dmk-ch {
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--c-card);
+    font-family: var(--font-note);
+    font-weight: var(--fw-black);
+    text-align: center;
+    text-shadow: -2px -2px 0 var(--c-ink), 2px -2px 0 var(--c-ink), -2px 2px 0 var(--c-ink), 2px 2px 0 var(--c-ink), 0 3px 0 var(--c-ink);
+    will-change: transform;
+    pointer-events: none;
+}
+
+.dmk-ch--pop {
+    animation: dmk-pop 0.26s ease-out forwards;
+}
+
+@keyframes dmk-pop {
+    to {
+        opacity: 0;
+        filter: blur(3px);
+    }
+}
+
+/* 結束時：目標字圈綠色、點錯的圈紅色、其他變暗 */
+.dmk-ch--target {
+    border: 5px solid var(--c-ok);
+    border-radius: 50%;
+    box-sizing: border-box;
+}
+
+.dmk-ch--bad {
+    border: 5px solid var(--c-bad-light);
+    border-radius: 50%;
+    box-sizing: border-box;
+}
+
+.dmk-ch--dim {
+    opacity: 0.55;
+}
+
+.dmk-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 14px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* ═══ 心臟病（.csl-）═══ */
+.csl-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.csl-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.csl-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 前 3 張才顯示的「數到：X」 */
+.csl-count {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 56px;
+    height: 70px;
+    color: var(--c-ink);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    line-height: 70px;
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 綠色牌桌 */
+.csl-table {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    top: 136px;
+    bottom: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--csl-felt);
+    border: 4px solid var(--csl-felt-edge);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+}
+
+.csl-card {
+    position: relative;
+    width: 200px;
+    height: 280px;
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-pop);
+    transition: transform 0.1s;
+}
+
+.csl-card--back {
+    background: var(--csl-back);
+    border-color: var(--c-card);
+}
+
+.csl-card--flip {
+    animation: csl-flip 0.22s ease-out;
+}
+
+@keyframes csl-flip {
+    from {
+        transform: rotateY(90deg) scale(0.9);
+    }
+
+    to {
+        transform: rotateY(0deg) scale(1);
+    }
+}
+
+.csl-card--red {
+    color: var(--c-bad-light);
+}
+
+.csl-card--black {
+    color: var(--c-ink);
+}
+
+.csl-card__r {
+    position: absolute;
+    left: 14px;
+    top: 8px;
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    line-height: 1.1;
+}
+
+.csl-card__r--b {
+    left: auto;
+    right: 14px;
+    top: auto;
+    bottom: 8px;
+    transform: rotate(180deg);
+}
+
+.csl-card__big {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    margin-top: -48px;
+    display: flex;
+    justify-content: center;
+}
+
+.csl-suit {
+    display: block;
+}
+
+.csl-suit path {
+    fill: currentColor;
+}
+
+/* 拍下去：拍對（綠框、牌縮一下）、拍錯（紅框）、漏拍（橘框） */
+.csl-card--ok {
+    border-color: var(--c-ok);
+    box-shadow: 0 0 0 6px var(--c-ok-light);
+    transform: scale(0.94);
+}
+
+.csl-card--bad {
+    border-color: var(--c-bad-light);
+    box-shadow: 0 0 0 6px var(--c-bad-soft);
+}
+
+.csl-card--miss {
+    border-color: var(--c-orange);
+    box-shadow: 0 0 0 6px var(--c-orange-soft);
+}
+
+.csl-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 24px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* ═══ 舉旗子（.flg-）═══ */
+.flg-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.flg-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    touch-action: none;
+}
+
+/* 左右半邊的按壓區：左＝紅旗、右＝白旗；按住時變深 */
+.flg-pad {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 50%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 16px;
+    transition: background 0.1s;
+}
+
+.flg-pad--L {
+    left: 0;
+    background: var(--flg-red-soft);
+    border-right: 2px dashed var(--c-ink-soft);
+}
+
+.flg-pad--R {
+    right: 0;
+    background: var(--flg-white-soft);
+}
+
+.flg-pad--L.flg-pad--down {
+    background: var(--flg-red-down);
+}
+
+.flg-pad--R.flg-pad--down {
+    background: var(--flg-white-down);
+}
+
+.flg-pad__t {
+    color: var(--c-ink);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 口令 */
+.flg-cmd {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 14px;
+    padding: var(--sp-3) var(--sp-2);
+    background: var(--c-card);
+    border: 4px solid var(--c-ink-soft);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+    color: var(--c-ink);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    text-align: center;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.flg-cmd--pop {
+    animation: flg-pop 0.2s ease-out;
+}
+
+@keyframes flg-pop {
+    from {
+        transform: scale(0.88);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+.flg-cmd--bad {
+    border-color: var(--c-bad-light);
+    background: var(--c-bad-soft);
+}
+
+/* 小人與旗子 */
+.flg-svg {
+    position: absolute;
+    display: block;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.flg-head {
+    fill: var(--c-card);
+    stroke: var(--c-ink-soft);
+    stroke-width: 4;
+}
+
+.flg-body {
+    fill: var(--flg-shirt);
+    stroke: var(--c-ink-soft);
+    stroke-width: 4;
+    stroke-linejoin: round;
+}
+
+.flg-arm {
+    transform-origin: 0 0;
+    transition: transform 0.22s ease-out;
+}
+
+.flg-stick {
+    stroke: var(--c-ink);
+    stroke-width: 6;
+    stroke-linecap: round;
+}
+
+.flg-cloth {
+    stroke: var(--c-ink);
+    stroke-width: 3;
+    stroke-linejoin: round;
+}
+
+.flg-cloth--L {
+    fill: var(--flg-red);
+}
+
+.flg-cloth--R {
+    fill: var(--c-card);
+}
+
+.flg-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 84px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* 失敗：該有的旗子和你的旗子並排，不一樣的標紅 */
+.flg-cmp {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 368px;
+    display: flex;
+    justify-content: center;
+    gap: var(--sp-3);
+    z-index: 3;
+}
+
+.flg-cmp__col {
+    flex: 1;
+    padding: var(--sp-2);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
+}
+
+.flg-cmp__t {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+.flg-cmp__flag {
+    color: var(--c-ink);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    line-height: 1.5;
+}
+
+.flg-cmp__flag--bad {
+    color: var(--c-bad);
+    background: var(--c-bad-soft);
+    border-radius: var(--r-sm);
+}
+
+/* ═══ 色票排隊（.hus-）═══ */
+.hus-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 上方提示 */
+.hus-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 色塊：顏色用 JS 直接設（是題目的內容，不是主題色）；揭曉時 .hus-block--join 讓它們往中間集中、圓角變直角 */
+.hus-block {
+    position: absolute;
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: left 0.8s ease-in-out, top 0.8s ease-in-out, border-radius 0.8s ease-in-out;
+}
+
+.hus-block--join {
+    border-radius: 0;
+    cursor: default;
+}
+
+/* 記號：放在色塊正中間；白邊綠色圓圈／白邊紅色 X */
+.hus-mark {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 54px;
+    height: 54px;
+    margin: -27px 0 0 -27px;
+    pointer-events: none;
+    animation: hus-pop 0.25s ease-out;
+}
+
+.hus-mark__svg {
+    display: block;
+    overflow: visible;
+}
+
+.hus-mark__ok {
+    fill: var(--c-ok);
+    stroke: var(--hus-edge);
+    stroke-width: 6;
+}
+
+.hus-mark__xedge {
+    fill: none;
+    stroke: var(--hus-edge);
+    stroke-width: 14;
+    stroke-linecap: round;
+}
+
+.hus-mark__x {
+    fill: none;
+    stroke: var(--hus-x);
+    stroke-width: 7;
+    stroke-linecap: round;
+}
+
+@keyframes hus-pop {
+    from {
+        transform: scale(0.4);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* 下方說明 */
+.hus-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.hus-info--ok {
+    color: var(--c-ok);
+}
+
+.hus-info--bad {
+    color: var(--c-bad);
+}
+
+/* ═══ 動態視力（.knt-）═══ */
+.knt-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 遊戲區：火車從右邊開進來、左邊開出去，超出的部分要藏起來 */
+.knt-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+.knt-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 鐵軌 */
+.knt-rail {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 10px;
+    background: var(--knt-rail);
+    border-radius: var(--r-sm);
+}
+
+/* 整列火車（用 translateX 移動）和每一節車廂 */
+.knt-train {
+    position: absolute;
+    left: 0;
+    will-change: transform;
+}
+
+.knt-car {
+    position: absolute;
+    top: 0;
+}
+
+.knt-svg {
+    display: block;
+    overflow: visible;
+}
+
+.knt-defs {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+}
+
+.knt-roof {
+    fill: var(--knt-roof);
+}
+
+.knt-body {
+    fill: var(--knt-body);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+.knt-band {
+    fill: var(--knt-band);
+}
+
+.knt-glass {
+    fill: var(--knt-glass);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+.knt-frame {
+    fill: var(--knt-frame);
+}
+
+.knt-wheel {
+    fill: var(--knt-wheel);
+}
+
+.knt-link {
+    fill: var(--knt-link);
+}
+
+/* 窗戶裡的東西 */
+.knt-pax--0 {
+    fill: var(--knt-pax0);
+}
+
+.knt-pax--1 {
+    fill: var(--knt-pax1);
+}
+
+.knt-pax--2 {
+    fill: var(--knt-pax2);
+}
+
+.knt-head {
+    fill: var(--knt-head);
+}
+
+.knt-hair {
+    fill: var(--knt-hair);
+}
+
+.knt-bento {
+    fill: var(--knt-bento);
+}
+
+.knt-rice {
+    fill: var(--knt-rice);
+}
+
+.knt-egg {
+    fill: var(--knt-egg);
+}
+
+.knt-veg {
+    fill: var(--knt-veg);
+}
+
+.knt-paper {
+    fill: var(--knt-paper);
+    stroke: var(--c-ink-soft);
+    stroke-width: 2;
+}
+
+.knt-line {
+    fill: var(--knt-line);
+}
+
+.knt-curtain {
+    fill: var(--knt-curtain);
+}
+
+.knt-fold {
+    fill: none;
+    stroke: var(--knt-fold);
+    stroke-width: 3;
+}
+
+/* 黃底黑字的貼紙：貼在窗戶正中央；揭曉時放大 */
+.knt-sticker {
+    position: absolute;
+    padding: 0 var(--sp-2);
+    transform: translate(-50%, -50%);
+    background: var(--knt-sticker);
+    border: 3px solid var(--knt-sticker-edge);
+    border-radius: var(--r-sm);
+    color: var(--knt-digit);
+    font-size: var(--fs-xxxxl);
+    font-weight: var(--fw-black);
+    line-height: 1.2;
+    letter-spacing: 2px;
+    white-space: nowrap;
+    z-index: 2;
+    transition: transform 0.5s ease-out;
+}
+
+.knt-sticker--zoom {
+    transform: translate(-50%, -50%) scale(1.9);
+    box-shadow: var(--shadow-pop);
+    z-index: 5;
+}
+
+.knt-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.knt-info--ok {
+    color: var(--c-ok);
+}
+
+.knt-info--bad {
+    color: var(--c-bad);
+}
+
+/* 4 個號碼選項 */
+.knt-opt {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    letter-spacing: 4px;
+}
+
+.knt-ok {
+    background: var(--c-ok-light);
+    border-color: var(--c-ok);
+}
+
+.knt-bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad-light);
+    color: var(--c-bad);
+}
+
+/* ═══ 零錢入筒（.cns-）═══ */
+.cns-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 遊戲區：整個畫面都可以滑；硬幣在裡面往下掉 */
+.cns-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    touch-action: none;
+}
+
+/* 一枚掉落中的硬幣（用 translate3d 移動） */
+.cns-coinbox {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+    will-change: transform;
+}
+
+.cns-coin {
+    display: block;
+    overflow: visible;
+}
+
+/* 硬幣的畫法：外框、滾邊（虛線）、正面、內圈、花紋／數字；銅色和銀色各一組變數 */
+.cns-rim {
+    stroke-width: 3;
+}
+
+.cns-reed {
+    fill: none;
+    stroke-width: 5;
+    stroke-dasharray: 2.2 2.2;
+}
+
+.cns-face {
+    stroke: none;
+}
+
+.cns-ring {
+    fill: none;
+    stroke-width: 2;
+}
+
+.cns-coin--copper .cns-rim {
+    fill: var(--cns-copper-rim);
+    stroke: var(--cns-copper-line);
+}
+
+.cns-coin--copper .cns-reed {
+    stroke: var(--cns-copper-line);
+}
+
+.cns-coin--copper .cns-face {
+    fill: var(--cns-copper);
+}
+
+.cns-coin--copper .cns-ring {
+    stroke: var(--cns-copper-line);
+}
+
+.cns-coin--silver .cns-rim {
+    fill: var(--cns-silver-rim);
+    stroke: var(--cns-silver-line);
+}
+
+.cns-coin--silver .cns-reed {
+    stroke: var(--cns-silver-line);
+}
+
+.cns-coin--silver .cns-face {
+    fill: var(--cns-silver);
+}
+
+.cns-coin--silver .cns-ring {
+    stroke: var(--cns-silver-line);
+}
+
+.cns-digit {
+    fill: var(--cns-digit);
+    font-family: var(--font-note);
+    font-weight: var(--fw-black);
+    text-anchor: middle;
+    dominant-baseline: central;
+}
+
+.cns-digit--1 {
+    font-size: 54px;
+}
+
+.cns-digit--2 {
+    font-size: 40px;
+}
+
+.cns-pat {
+    fill: var(--cns-pattern);
+}
+
+/* 收集筒 */
+.cns-tube {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    background: var(--c-card);
+    border: 4px solid var(--c-ink-soft);
+    border-top-width: 3px;
+    border-radius: 0 0 var(--r-lg) var(--r-lg);
+    box-shadow: var(--shadow-card);
+    text-align: center;
+    pointer-events: none;
+}
+
+.cns-tube__ico {
+    line-height: 0;
+}
+
+.cns-tube__lab {
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    line-height: 1.25;
+    white-space: nowrap;
+}
+
+.cns-tube__num {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+.cns-tube--hit {
+    animation: cns-hit 0.25s ease-out;
+}
+
+@keyframes cns-hit {
+    0% {
+        transform: translateY(0);
+    }
+
+    35% {
+        transform: translateY(8px);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}
+
+.cns-tube--right {
+    background: var(--c-ok-light);
+    border-color: var(--c-ok);
+}
+
+.cns-tube--wrong {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad-light);
+}
+
+/* 說明文字 */
+.cns-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* 結束時：那一枚硬幣放大、翻到正面（rotateY 90° → 0°） */
+.cns-bigcoin {
+    position: absolute;
+    pointer-events: none;
+    transform: perspective(600px) rotateY(90deg) scale(0.6);
+    transition: transform 0.5s ease-out;
+}
+
+.cns-bigcoin--show {
+    transform: perspective(600px) rotateY(0deg) scale(1);
+}
+
+/* ═══ 大合照（.gph-）═══ */
+.gph-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.gph-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.gph-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 相片區：牆面底色的取景框；.gph-photo--wall 是成功之後「掛上牆」的樣子（木框） */
+.gph-photo {
+    position: absolute;
+    overflow: hidden;
+    background: var(--gph-bg);
+    border: 4px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-sizing: border-box;
+    transition: transform 0.5s ease-out, border-color 0.5s, box-shadow 0.5s;
+}
+
+/* 掛上牆：邊框寬度不變（不然相片區變小、邊邊的人會被切到），改用外圈陰影當木框 */
+.gph-photo--wall {
+    transform: scale(0.94);
+    border-color: var(--gph-frame);
+    box-shadow: 0 0 0 8px var(--gph-frame), var(--shadow-pop);
+}
+
+/* 取景框的四個角 */
+.gph-corner {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    border: 0 solid var(--gph-corner);
+    pointer-events: none;
+    z-index: 3;
+}
+
+.gph-corner--tl {
+    left: 8px;
+    top: 8px;
+    border-left-width: 4px;
+    border-top-width: 4px;
+}
+
+.gph-corner--tr {
+    right: 8px;
+    top: 8px;
+    border-right-width: 4px;
+    border-top-width: 4px;
+}
+
+.gph-corner--bl {
+    left: 8px;
+    bottom: 8px;
+    border-left-width: 4px;
+    border-bottom-width: 4px;
+}
+
+.gph-corner--br {
+    right: 8px;
+    bottom: 8px;
+    border-right-width: 4px;
+    border-bottom-width: 4px;
+}
+
+/* 一個人 */
+.gph-person {
+    position: absolute;
+}
+
+.gph-face {
+    display: block;
+    overflow: visible;
+}
+
+.gph-shirt {
+    stroke: var(--c-ink-soft);
+    stroke-width: 2;
+}
+
+.gph-shirt0 {
+    fill: var(--gph-shirt0);
+}
+
+.gph-shirt1 {
+    fill: var(--gph-shirt1);
+}
+
+.gph-shirt2 {
+    fill: var(--gph-shirt2);
+}
+
+.gph-shirt3 {
+    fill: var(--gph-shirt3);
+}
+
+.gph-shirt4 {
+    fill: var(--gph-shirt4);
+}
+
+.gph-neck,
+.gph-head {
+    stroke: var(--c-ink-soft);
+    stroke-width: 2;
+}
+
+.gph-skin0 {
+    fill: var(--gph-skin0);
+}
+
+.gph-skin1 {
+    fill: var(--gph-skin1);
+}
+
+.gph-skin2 {
+    fill: var(--gph-skin2);
+}
+
+.gph-hair0 {
+    fill: var(--gph-hair0);
+}
+
+.gph-hair1 {
+    fill: var(--gph-hair1);
+}
+
+.gph-hair2 {
+    fill: var(--gph-hair2);
+}
+
+.gph-hair3 {
+    fill: var(--gph-hair3);
+}
+
+/* 眼睛：睜眼＝白眼球＋黑瞳孔；閉眼（或低頭）＝一條往下彎的線 */
+.gph-eye-w {
+    fill: var(--gph-eyewhite);
+    stroke: var(--c-ink-soft);
+    stroke-width: 1.5;
+}
+
+.gph-pupil {
+    fill: var(--gph-pupil);
+}
+
+.gph-lid {
+    display: none;
+    fill: none;
+    stroke: var(--gph-pupil);
+    stroke-width: 3.5;
+    stroke-linecap: round;
+}
+
+.gph-mouth {
+    fill: none;
+    stroke: var(--gph-pupil);
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.gph-person--closed .gph-eye-open,
+.gph-person--phone .gph-eye-open {
+    display: none;
+}
+
+.gph-person--closed .gph-lid,
+.gph-person--phone .gph-lid {
+    display: inline;
+}
+
+.gph-phone {
+    fill: var(--gph-phone);
+    stroke: var(--c-ink-soft);
+    stroke-width: 2;
+}
+
+.gph-phone-screen {
+    fill: var(--gph-phone-screen);
+}
+
+/* 洗照片：閃光、閉眼的人圈紅圈 */
+.gph-flash {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--gph-flash);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.gph-flash--go {
+    animation: gph-flash 0.4s ease-out;
+}
+
+@keyframes gph-flash {
+    0% {
+        opacity: 0.95;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+.gph-ring {
+    position: absolute;
+    border: 5px solid var(--gph-ring);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 4;
+    animation: gph-ring 0.25s ease-out;
+}
+
+@keyframes gph-ring {
+    from {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.gph-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.gph-info--ok {
+    color: var(--c-ok);
+}
+
+.gph-info--bad {
+    color: var(--c-bad);
+}
+
+.gph-shutter {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+/* ═══ 釣魚提竿（.fbt-）═══ */
+.fbt-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.fbt-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    touch-action: none;
+}
+
+.fbt-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+    z-index: 4;
+}
+
+/* 水面以下的水 */
+.fbt-water {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(var(--fbt-water-top), var(--fbt-water-bottom));
+    pointer-events: none;
+}
+
+.fbt-surface {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 6px;
+    margin-top: -3px;
+    background: var(--fbt-surface);
+    pointer-events: none;
+}
+
+/* 浮標的裁切框：只顯示水面以上，沉下去的部分看不見 */
+.fbt-clip {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.fbt-lines {
+    position: absolute;
+    left: 0;
+    top: 0;
+    overflow: visible;
+}
+
+.fbt-rodline {
+    stroke: var(--fbt-line);
+    stroke-width: 2;
+}
+
+/* 浮標：細長的天線（紅白相間）＋紅色的頭＋白色的身體 */
+.fbt-float {
+    position: absolute;
+    will-change: transform;
+}
+
+.fbt-float__ant {
+    position: absolute;
+    left: 16px;
+    top: 0;
+    width: 4px;
+    height: 42px;
+    background: linear-gradient(var(--fbt-float-red) 50%, var(--fbt-float-white) 50%);
+    background-size: 100% 16px;
+    border-radius: 2px;
+}
+
+.fbt-float__top {
+    position: absolute;
+    left: 0;
+    top: 40px;
+    width: 36px;
+    height: 46px;
+    background: var(--fbt-float-red);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: 50% 50% 38% 38%;
+    box-sizing: border-box;
+}
+
+.fbt-float__body {
+    position: absolute;
+    left: 3px;
+    top: 84px;
+    width: 30px;
+    height: 90px;
+    background: var(--fbt-float-white);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: 0 0 50% 50%;
+    box-sizing: border-box;
+}
+
+/* 波紋圈：魚在動的時候冒出來（輕碰和咬鉤都會冒，不是線索） */
+.fbt-ripple {
+    position: absolute;
+    width: 80px;
+    height: 24px;
+    border: 3px solid var(--fbt-ripple);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: fbt-ripple 0.9s ease-out forwards;
+}
+
+@keyframes fbt-ripple {
+    from {
+        transform: scale(0.4);
+        opacity: 1;
+    }
+
+    to {
+        transform: scale(2.2);
+        opacity: 0;
+    }
+}
+
+.fbt-info {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    padding: var(--sp-1) var(--sp-3);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+    z-index: 4;
+}
+
+.fbt-info:empty {
+    display: none;
+}
+
+.fbt-info--ok {
+    color: var(--c-ok);
+}
+
+.fbt-info--bad {
+    color: var(--c-bad);
+}
+
+/* 釣到的魚：從水裡跳出來 */
+.fbt-fish {
+    position: absolute;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(40px) scale(0.6);
+    transition: transform 0.7s cubic-bezier(0.2, 1.3, 0.4, 1), opacity 0.2s;
+    z-index: 3;
+}
+
+.fbt-fish--jump {
+    opacity: 1;
+    transform: translateY(-150px) scale(1) rotate(-12deg);
+}
+
+.fbt-fishsvg {
+    display: block;
+    overflow: visible;
+}
+
+.fbt-body,
+.fbt-tail {
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+.fbt-fc0 {
+    fill: var(--fbt-fish0);
+}
+
+.fbt-fc1 {
+    fill: var(--fbt-fish1);
+}
+
+.fbt-fc2 {
+    fill: var(--fbt-fish2);
+}
+
+.fbt-fc3 {
+    fill: var(--fbt-fish3);
+}
+
+.fbt-fc4 {
+    fill: var(--fbt-fish4);
+}
+
+.fbt-fc5 {
+    fill: var(--fbt-fish5);
+}
+
+.fbt-belly {
+    fill: var(--fbt-belly);
+}
+
+.fbt-stripe {
+    fill: none;
+    stroke: var(--fbt-stripe);
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.fbt-eye {
+    fill: var(--fbt-eye);
+}
+
+/* 揭曉的折線圖：深度（往下＝沉得越深）、咬鉤區（綠色帶）、你提竿的位置 */
+.fbt-chart {
+    position: absolute;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.fbt-chart__svg {
+    display: block;
+    overflow: visible;
+}
+
+.fbt-chart__bg {
+    fill: var(--c-card);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+.fbt-chart__bite {
+    fill: var(--fbt-bite-zone);
+}
+
+.fbt-chart__line90 {
+    stroke: var(--c-ok);
+    stroke-width: 2;
+    stroke-dasharray: 8 6;
+}
+
+.fbt-chart__curve {
+    fill: none;
+    stroke: var(--fbt-curve);
+    stroke-width: 4;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.fbt-chart__you {
+    stroke: var(--fbt-you);
+    stroke-width: 4;
+}
+
+.fbt-chart__cur {
+    stroke: var(--c-ink-soft);
+    stroke-width: 2;
+    stroke-dasharray: 4 4;
+}
+
+.fbt-chart__lab {
+    fill: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    text-anchor: middle;
+    paint-order: stroke;
+    stroke: var(--c-card);
+    stroke-width: 6px;
+    stroke-linejoin: round;
+}
+
+.fbt-chart__lab--bite {
+    fill: var(--c-ok);
+}
+
+.fbt-chart__lab--ln {
+    fill: var(--c-ok);
+    text-anchor: start;
+    font-size: 22px;
+}
+
+.fbt-chart__lab--you {
+    fill: var(--fbt-you);
+}
+
+/* ═══ 全壘打（.hmr-）═══ */
+.hmr-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.hmr-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    touch-action: none;
+}
+
+/* 提示放在卡片底的小框裡（背景是深色的觀眾席，直接寫字看不清楚） */
+.hmr-tip {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 8px;
+    padding: 2px var(--sp-3);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    text-align: center;
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* 球場：上面的觀眾席（兩種顏色的點點）、下面的草地、投手丘 */
+.hmr-crowd {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 36%;
+    background-color: var(--hmr-crowd-bg);
+    background-image: radial-gradient(circle, var(--hmr-crowd-dot1) 22%, transparent 24%), radial-gradient(circle, var(--hmr-crowd-dot2) 22%, transparent 24%);
+    background-size: 22px 22px;
+    background-position: 0 0, 11px 11px;
+    pointer-events: none;
+}
+
+.hmr-grass {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--hmr-grass);
+    pointer-events: none;
+}
+
+.hmr-mound {
+    position: absolute;
+    width: 120px;
+    height: 30px;
+    background: var(--hmr-mound);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* 好球帶：半透明的方框；本壘板在它下面 */
+.hmr-zone {
+    position: absolute;
+    box-sizing: border-box;
+    border: 4px solid var(--hmr-zone-line);
+    background: var(--hmr-zone-fill);
+    border-radius: var(--r-sm);
+    pointer-events: none;
+}
+
+.hmr-plate {
+    position: absolute;
+    width: 72px;
+    height: 44px;
+    background: var(--hmr-plate);
+    clip-path: polygon(0 0, 100% 0, 100% 55%, 50% 100%, 0 55%);
+    pointer-events: none;
+}
+
+/* 投手 */
+.hmr-pitcher {
+    position: absolute;
+    display: block;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.hmr-leg {
+    fill: var(--hmr-leg);
+}
+
+.hmr-body {
+    fill: var(--hmr-body);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+.hmr-head {
+    fill: var(--hmr-skin);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+.hmr-cap {
+    fill: var(--hmr-cap);
+    stroke: var(--c-ink-soft);
+    stroke-width: 2;
+}
+
+.hmr-arm__in {
+    transform-origin: 0 0;
+}
+
+.hmr-armrect {
+    fill: var(--hmr-body);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+.hmr-handball {
+    fill: var(--hmr-ball);
+    stroke: var(--hmr-seam);
+    stroke-width: 2;
+}
+
+/* 球與殘影 */
+.hmr-ball,
+.hmr-trail {
+    position: absolute;
+    box-sizing: border-box;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--hmr-ball), var(--hmr-ball-shade));
+    border: 2px solid var(--hmr-seam);
+    pointer-events: none;
+}
+
+.hmr-ball {
+    z-index: 3;
+}
+
+.hmr-trail {
+    z-index: 2;
+}
+
+.hmr-ball--hr {
+    transition: transform 1.3s ease-out, opacity 1.3s ease-in;
+}
+
+.hmr-ball--go {
+    transform: translate(120px, -520px) scale(0.3);
+    opacity: 0;
+}
+
+/* 球棒：從打者後方看，在畫面下方；揮棒時繞著底部轉 */
+.hmr-bat {
+    position: absolute;
+    width: 36px;
+    height: 140px;
+    transform-origin: 50% 100%;
+    transform: rotate(-38deg);
+    transition: transform 0.14s ease-out;
+    pointer-events: none;
+    z-index: 4;
+}
+
+.hmr-bat--swing {
+    transform: rotate(62deg);
+}
+
+.hmr-bat__in {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--hmr-bat-lite), var(--hmr-bat));
+    border: 3px solid var(--c-ink-soft);
+    border-radius: 18px 18px 8px 8px;
+    box-sizing: border-box;
+    clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%);
+}
+
+/* 說明 */
+.hmr-info {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 14px;
+    padding: var(--sp-1) var(--sp-3);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+    z-index: 6;
+}
+
+.hmr-info:empty {
+    display: none;
+}
+
+.hmr-info--ok {
+    color: var(--c-ok);
+}
+
+.hmr-info--bad {
+    color: var(--c-bad);
+}
+
+/* 全壘打的大字 */
+.hmr-hr {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 34%;
+    text-align: center;
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--hmr-hr);
+    text-shadow: 0 3px 0 var(--c-card), 0 0 14px var(--c-card);
+    opacity: 0;
+    transform: scale(0.4);
+    transition: transform 0.45s cubic-bezier(0.2, 1.5, 0.4, 1), opacity 0.2s;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.hmr-hr--show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* 重播時：球最後的位置（綠圈＝好球、紅圈＝壞球）、你揮棒的時間點 */
+.hmr-final {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    box-sizing: border-box;
+    border: 5px solid var(--hmr-final-ok);
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.hmr-final--ball {
+    border-color: var(--hmr-final-bad);
+}
+
+.hmr-final--show {
+    opacity: 1;
+    animation: hmr-pop 0.3s ease-out;
+}
+
+@keyframes hmr-pop {
+    from {
+        transform: scale(2);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+.hmr-swingmark {
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    box-sizing: border-box;
+    border: 4px dashed var(--hmr-swing);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* ═══ 大風吹（.wbl-）═══ */
+.wbl-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.wbl-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* 口令的對話框 */
+.wbl-bubble {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 8px;
+    min-height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--c-card);
+    border: 4px solid var(--c-ink-soft);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+    color: var(--c-ink);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    line-height: 1.3;
+    text-align: center;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.wbl-bubble--pop {
+    animation: wbl-pop 0.22s ease-out;
+}
+
+@keyframes wbl-pop {
+    from {
+        transform: scale(0.9);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+/* 一圈椅子和小朋友（裝飾） */
+.wbl-ring {
+    position: absolute;
+    transition: transform 0.5s ease-in-out;
+    pointer-events: none;
+}
+
+.wbl-seat {
+    position: absolute;
+    width: 68px;
+    height: 80px;
+    transition: transform 0.5s ease-in-out;
+}
+
+.wbl-chair {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    bottom: 0;
+    height: 26px;
+    background: var(--wbl-chair);
+    border-radius: var(--r-sm);
+}
+
+.wbl-seat .wbl-kid {
+    position: absolute;
+    left: 6px;
+    top: 0;
+}
+
+.wbl-ring--hop .wbl-kid {
+    animation: wbl-hop 0.36s ease-out;
+}
+
+@keyframes wbl-hop {
+    0% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-14px);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}
+
+/* 小朋友 */
+.wbl-kid {
+    display: block;
+    overflow: visible;
+}
+
+.wbl-shirt {
+    stroke: var(--c-ink-soft);
+    stroke-width: 2.5;
+}
+
+.wbl-shirt0 {
+    fill: var(--wbl-shirt0);
+}
+
+.wbl-shirt1 {
+    fill: var(--wbl-shirt1);
+}
+
+.wbl-shirt2 {
+    fill: var(--wbl-shirt2);
+}
+
+.wbl-shirt3 {
+    fill: var(--wbl-shirt3);
+}
+
+.wbl-skin {
+    fill: var(--wbl-skin);
+    stroke: var(--c-ink-soft);
+    stroke-width: 2.5;
+}
+
+.wbl-hair {
+    fill: var(--wbl-hair);
+}
+
+.wbl-eye {
+    fill: var(--wbl-eye);
+}
+
+.wbl-mouth {
+    fill: none;
+    stroke: var(--wbl-eye);
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.wbl-glass {
+    fill: var(--wbl-glass-fill);
+    stroke: var(--wbl-eye);
+    stroke-width: 3;
+}
+
+.wbl-hat {
+    fill: var(--wbl-hat);
+    stroke: var(--c-ink-soft);
+    stroke-width: 2.5;
+}
+
+/* 「你是誰」卡片：開場、特徵改變時蓋在畫面上 */
+.wbl-card {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    top: 128px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--sp-3);
+    background: var(--c-card);
+    border: 4px solid var(--c-ink-soft);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
+    z-index: 5;
+    transition: opacity 0.25s;
+}
+
+.wbl-card--hide {
+    opacity: 0;
+}
+
+.wbl-card__t {
+    color: var(--c-ink);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+}
+
+.wbl-card__av {
+    padding: var(--sp-2) 0;
+    line-height: 0;
+}
+
+.wbl-card__d {
+    color: var(--c-ink);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+}
+
+.wbl-card__s {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+}
+
+.wbl-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 466px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.wbl-info--bad {
+    color: var(--c-bad);
+    top: 436px;
+}
+
+.wbl-btn {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.wbl-btn--off {
+    opacity: 0.45;
+}
+
+/* 結束：左邊是你的特徵、右邊是口令和逐條比對 */
+.wbl-cmp {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 128px;
+    display: flex;
+    gap: var(--sp-2);
+    z-index: 4;
+}
+
+.wbl-cmp__col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--sp-2);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    text-align: center;
+}
+
+.wbl-cmp__t {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+.wbl-cmp__av {
+    line-height: 0;
+    padding: var(--sp-1) 0;
+}
+
+.wbl-cmp__d {
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    white-space: pre-line;
+    line-height: 1.35;
+}
+
+.wbl-cmp__c {
+    color: var(--c-ink);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    line-height: 1.3;
+    padding-bottom: var(--sp-1);
+}
+
+.wbl-cmp__r {
+    width: 100%;
+    margin-top: var(--sp-1);
+    padding: 2px var(--sp-1);
+    border-radius: var(--r-sm);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    line-height: 1.3;
+}
+
+.wbl-cmp__r--y {
+    background: var(--c-ok-soft);
+    color: var(--c-ok);
+}
+
+.wbl-cmp__r--n {
+    background: var(--c-bad-soft);
+    color: var(--c-bad);
+}
+
+.wbl-cmp__v {
+    margin-top: var(--sp-1);
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    line-height: 1.3;
+}
+
+/* ═══ 吸珍珠（.prl-）═══ */
+.prl-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.prl-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+/* 上方的目標：吸 N 顆珍珠 */
+.prl-goal {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 6px;
+    text-align: center;
+    color: var(--c-ink);
+    font-weight: var(--fw-black);
+    pointer-events: none;
+}
+
+.prl-goal__t {
+    font-size: var(--fs-lg);
+}
+
+.prl-goal__n {
+    color: var(--prl-goal);
+    font-size: var(--fs-xxl);
+    line-height: 1;
+}
+
+/* 嘴（吸管的上端）：粉紅色的嘴唇；吸的時候縮起來 */
+.prl-mouth {
+    position: absolute;
+    width: 108px;
+    height: 52px;
+    background: var(--prl-lip);
+    border: 4px solid var(--prl-lip-line);
+    border-radius: 50%;
+    box-sizing: border-box;
+    transition: transform 0.12s;
+    pointer-events: none;
+}
+
+.prl-mouth::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 52px;
+    height: 12px;
+    margin: -6px 0 0 -26px;
+    background: var(--prl-lip-line);
+    border-radius: 50%;
+}
+
+.prl-mouth--suck {
+    transform: scale(0.8, 0.92);
+}
+
+/* 杯子：梯形的透明杯身、裡面的奶茶、杯底的珍珠 */
+.prl-cup {
+    position: absolute;
+    clip-path: polygon(5% 0, 95% 0, 85% 100%, 15% 100%);
+    background: var(--prl-cup);
+    pointer-events: none;
+}
+
+.prl-tea {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 86%;
+    background: linear-gradient(var(--prl-tea-top), var(--prl-tea-bottom));
+}
+
+.prl-deco {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    background: radial-gradient(circle at 35% 30%, var(--prl-pearl-lite), var(--prl-pearl));
+    border-radius: 50%;
+}
+
+/* 吸管：細長的半透明管子（吸的時候顏色變深） */
+.prl-straw {
+    position: absolute;
+    box-sizing: border-box;
+    background: var(--prl-straw);
+    border: 3px solid var(--prl-straw-line);
+    border-radius: 12px;
+    pointer-events: none;
+    transition: background 0.1s;
+}
+
+.prl-straw--suck {
+    background: var(--prl-straw-on);
+}
+
+.prl-pearl {
+    position: absolute;
+    background: radial-gradient(circle at 35% 30%, var(--prl-pearl-lite), var(--prl-pearl));
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.prl-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.prl-info--ok {
+    color: var(--c-ok);
+}
+
+.prl-info--bad {
+    color: var(--c-bad);
+}
+
+/* 揭曉：嘴裡的珍珠排成一排、依序編號 */
+.prl-row {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    padding: var(--sp-2);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    pointer-events: none;
+    z-index: 3;
+}
+
+.prl-rowp {
+    text-align: center;
+    background: radial-gradient(circle at 35% 30%, var(--prl-pearl-lite), var(--prl-pearl));
+    border-radius: 50%;
+    color: var(--prl-num);
+    font-weight: var(--fw-black);
+}
+
+.prl-rowp--n {
+    box-shadow: 0 0 0 4px var(--c-ok);
+}
+
+.prl-rowp--extra {
+    box-shadow: 0 0 0 4px var(--c-bad-light);
+}
+
+.prl-rowp--none {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+/* 按住吸的大按鈕 */
+.prl-hold {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--prl-hold);
+    border: 4px solid var(--prl-hold-line);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+    color: var(--prl-hold-text);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    letter-spacing: 6px;
+    touch-action: none;
+}
+
+.prl-hold--down {
+    background: var(--prl-hold-on);
+    transform: translateY(3px);
+    box-shadow: none;
+}
+
+/* ═══ 釣魚玩具（.fty-）═══ */
+.fty-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.fty-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+/* 上方的目標：釣 ○色 的魚 */
+.fty-goal {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 6px;
+    text-align: center;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.fty-goal__t {
+    color: var(--c-ink);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+}
+
+.fty-goal__c {
+    padding: 0 var(--sp-2);
+    border-radius: var(--r-sm);
+    color: var(--c-card);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    text-shadow: 0 1px 2px var(--fty-text-shadow);
+}
+
+.fty-bg0 {
+    background: var(--fty-c0);
+}
+
+.fty-bg1 {
+    background: var(--fty-c1);
+}
+
+.fty-bg2 {
+    background: var(--fty-c2);
+}
+
+.fty-bg3 {
+    background: var(--fty-c3);
+}
+
+.fty-bg4 {
+    background: var(--fty-c4);
+}
+
+.fty-bg5 {
+    background: var(--fty-c5);
+}
+
+.fty-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+    pointer-events: none;
+}
+
+/* 池塘與魚排成的圈 */
+.fty-pond {
+    fill: var(--fty-water);
+    stroke: var(--fty-pond-line);
+    stroke-width: 8;
+}
+
+.fty-ring {
+    fill: none;
+    stroke: var(--fty-ring);
+    stroke-width: 2;
+    stroke-dasharray: 6 8;
+}
+
+/* 落水點的指示線：魚要在釣竿落水的那一刻游到這裡 */
+.fty-spot {
+    stroke: var(--fty-spot);
+    stroke-width: 3;
+    stroke-dasharray: 8 6;
+}
+
+.fty-rod {
+    stroke: var(--fty-rod);
+    stroke-width: 9;
+    stroke-linecap: round;
+}
+
+.fty-line {
+    stroke: var(--fty-line);
+    stroke-width: 2.5;
+}
+
+.fty-hook {
+    fill: var(--fty-hook);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+/* 魚 */
+.fty-body,
+.fty-tail {
+    stroke: var(--c-ink-soft);
+    stroke-width: 2.5;
+}
+
+.fty-c0 {
+    fill: var(--fty-c0);
+}
+
+.fty-c1 {
+    fill: var(--fty-c1);
+}
+
+.fty-c2 {
+    fill: var(--fty-c2);
+}
+
+.fty-c3 {
+    fill: var(--fty-c3);
+}
+
+.fty-c4 {
+    fill: var(--fty-c4);
+}
+
+.fty-c5 {
+    fill: var(--fty-c5);
+}
+
+.fty-eye {
+    fill: var(--fty-eye);
+}
+
+.fty-hole {
+    fill: var(--fty-hole);
+}
+
+.fty-lip {
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.fty-fish--focus .fty-body {
+    stroke: var(--fty-focus);
+    stroke-width: 5;
+}
+
+.fty-fish--caught .fty-body {
+    stroke: var(--c-ok);
+    stroke-width: 5;
+}
+
+.fty-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.fty-info--ok {
+    color: var(--c-ok);
+}
+
+.fty-info--bad {
+    color: var(--c-bad);
+}
+
+.fty-btn {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.fty-btn--off {
+    opacity: 0.45;
+}
+
+/* ═══ 數鈔票（.cbl-）═══ */
+.cbl-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.cbl-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+/* 上方的目標：數出 N 元 */
+.cbl-goal {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 6px;
+    text-align: center;
+    color: var(--c-ink);
+    font-weight: var(--fw-black);
+    pointer-events: none;
+}
+
+.cbl-goal__t {
+    font-size: var(--fs-lg);
+}
+
+.cbl-goal__n {
+    color: var(--cbl-goal);
+    font-size: var(--fs-xxl);
+    line-height: 1;
+}
+
+.cbl-lab {
+    position: absolute;
+    text-align: center;
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* 桌面：整個區域都可以點（撥一張）；鈔票用 transform 擺在左邊（疊上）或右邊（撥出去） */
+.cbl-table {
+    position: absolute;
+    left: 0;
+    right: 0;
+    touch-action: none;
+}
+
+.cbl-note {
+    position: absolute;
+    left: 0;
+    top: 0;
+    box-sizing: border-box;
+    border: 3px solid var(--cbl-edge);
+    border-radius: var(--r-sm);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+    transition: transform 0.12s ease-out;
+    pointer-events: none;
+}
+
+.cbl-note--under {
+    filter: brightness(0.9);
+}
+
+/* 面額的底色：200 和 100 接近、2000 和 1000 接近（第 10 關起容易看錯） */
+.cbl-d100 {
+    background: var(--cbl-d100);
+}
+
+.cbl-d200 {
+    background: var(--cbl-d200);
+}
+
+.cbl-d500 {
+    background: var(--cbl-d500);
+}
+
+.cbl-d1000 {
+    background: var(--cbl-d1000);
+}
+
+.cbl-d2000 {
+    background: var(--cbl-d2000);
+}
+
+.cbl-note__p {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(135deg, var(--cbl-stripe) 0, var(--cbl-stripe) 6px, transparent 6px, transparent 14px);
+}
+
+.cbl-note__v {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    text-align: center;
+    color: var(--cbl-num);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    text-shadow: 0 0 6px var(--cbl-num-glow), 0 0 2px var(--cbl-num-glow);
+    z-index: 1;
+}
+
+.cbl-note__c {
+    position: absolute;
+    color: var(--cbl-num);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    z-index: 1;
+}
+
+.cbl-note__c--l {
+    left: 8px;
+    top: 2px;
+}
+
+.cbl-note__c--r {
+    right: 8px;
+    bottom: 2px;
+}
+
+.cbl-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.cbl-info--ok {
+    color: var(--c-ok);
+}
+
+.cbl-info--bad {
+    color: var(--c-bad);
+}
+
+.cbl-btn {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.cbl-btn--off {
+    opacity: 0.45;
+}
+
+/* 揭曉：撥出去的鈔票攤開，每張下面寫累加的總和 */
+.cbl-spread {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 8px;
+}
+
+.cbl-spread__none {
+    width: 100%;
+    padding: var(--sp-4) 0;
+    text-align: center;
+    color: var(--c-ink-soft);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+}
+
+.cbl-cell {
+    text-align: center;
+}
+
+.cbl-cell__s {
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    line-height: 1.3;
+}
+
+.cbl-cell__s--ghost {
+    color: var(--c-ink-soft);
+    font-weight: var(--fw-bold);
+}
+
+.cbl-note--mini {
+    box-shadow: none;
+    transition: none;
+}
+
+.cbl-note--mini .cbl-note__c {
+    display: none;
+}
+
+.cbl-note--mini .cbl-note__v {
+    font-size: var(--fs-md);
+}
+
+.cbl-note--ghost {
+    opacity: 0.4;
+    border-style: dashed;
+}
+
+.cbl-note--hit {
+    box-shadow: 0 0 0 4px var(--c-ok);
+}
+
+.cbl-note--extra {
+    box-shadow: 0 0 0 4px var(--c-bad-light);
+}
+
+/* ═══ 照號切水果（.ocf-）═══ */
+.ocf-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 遊戲區：深色木板；水果從下面拋出來、掉回下面，超出的部分藏起來 */
+.ocf-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    background: var(--ocf-board);
+    touch-action: none;
+}
+
+.ocf-tip,
+.ocf-next {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    padding: 2px var(--sp-3);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    text-align: center;
+    pointer-events: none;
+    z-index: 6;
+}
+
+.ocf-tip {
+    top: 8px;
+}
+
+.ocf-next {
+    top: 62px;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+/* 手指劃過的軌跡 */
+.ocf-trail {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.ocf-trail__l {
+    fill: none;
+    stroke: var(--ocf-trail);
+    stroke-width: 7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* 水果：圓球、頂上一片葉子、中間一個白色粗字（有黑邊）加底線 */
+.ocf-fruit {
+    position: absolute;
+    left: 0;
+    top: 0;
+    border-radius: 50%;
+    box-shadow: inset -6px -8px 0 var(--ocf-shade);
+    will-change: transform;
+    pointer-events: none;
+}
+
+.ocf-f0 {
+    background: var(--ocf-f0);
+}
+
+.ocf-f1 {
+    background: var(--ocf-f1);
+}
+
+.ocf-f2 {
+    background: var(--ocf-f2);
+}
+
+.ocf-f3 {
+    background: var(--ocf-f3);
+}
+
+.ocf-f4 {
+    background: var(--ocf-f4);
+}
+
+.ocf-f5 {
+    background: var(--ocf-f5);
+}
+
+.ocf-leaf {
+    position: absolute;
+    left: 50%;
+    top: -10px;
+    width: 18px;
+    height: 12px;
+    margin-left: -3px;
+    background: var(--ocf-leaf);
+    border-radius: 0 100% 0 100%;
+}
+
+.ocf-label {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0 auto;
+    width: max-content;
+    max-width: 100%;
+    color: var(--ocf-num);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    line-height: 1.05;
+    white-space: nowrap;
+    border-bottom: 4px solid var(--ocf-num);
+    text-shadow: -2px -2px 0 var(--ocf-num-edge), 2px -2px 0 var(--ocf-num-edge), -2px 2px 0 var(--ocf-num-edge), 2px 2px 0 var(--ocf-num-edge), 0 3px 0 var(--ocf-num-edge);
+}
+
+.ocf-fruit--expr .ocf-label {
+    font-size: var(--fs-sm);
+}
+
+.ocf-fruit--bad {
+    box-shadow: 0 0 0 6px var(--c-bad-light), inset -6px -8px 0 var(--ocf-shade);
+}
+
+.ocf-fruit--ok {
+    box-shadow: 0 0 0 6px var(--c-ok-light), inset -6px -8px 0 var(--ocf-shade);
+}
+
+/* 切開的兩半：往兩邊飛開、掉下去、淡出 */
+.ocf-half {
+    position: absolute;
+    opacity: 1;
+    transition: transform 0.65s ease-in, opacity 0.65s ease-in;
+    pointer-events: none;
+}
+
+.ocf-half--l {
+    border-radius: 999px 0 0 999px;
+}
+
+.ocf-half--r {
+    border-radius: 0 999px 999px 0;
+}
+
+/* 結束時每顆水果下面的「第幾個要切」 */
+.ocf-badge {
+    position: absolute;
+    min-width: 72px;
+    padding: 0 var(--sp-1);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-sm);
+    text-align: center;
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    line-height: 1.3;
+    pointer-events: none;
+    z-index: 4;
+}
+
+.ocf-badge--ok {
+    border-color: var(--c-ok);
+    color: var(--c-ok);
+}
+
+.ocf-badge--bad {
+    border-color: var(--c-bad-light);
+    color: var(--c-bad);
+}
+
+.ocf-info {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 14px;
+    padding: var(--sp-1) var(--sp-3);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    font-weight: var(--fw-bold);
+    z-index: 6;
+    pointer-events: none;
+}
+
+.ocf-info--ok {
+    color: var(--c-ok);
+}
+
+.ocf-info--bad {
+    color: var(--c-bad);
+}
+
+/* ═══ 轉風車（.pwl-）═══ */
+.pwl-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.pwl-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    touch-action: none;
+}
+
+.pwl-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 速度表：橫條；綠色範圍＝目標、紅色區＝危險、指針＝風車現在的轉速 */
+.pwl-gauge {
+    position: absolute;
+    height: 36px;
+    box-sizing: border-box;
+    background: var(--pwl-gauge);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    pointer-events: none;
+}
+
+.pwl-band {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: var(--pwl-band);
+    transition: background 0.1s;
+}
+
+.pwl-band--on {
+    background: var(--pwl-band-on);
+}
+
+.pwl-danger {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: var(--pwl-danger);
+}
+
+.pwl-needle {
+    position: absolute;
+    top: -9px;
+    width: 8px;
+    height: 48px;
+    margin-left: -4px;
+    background: var(--pwl-needle);
+    border: 2px solid var(--c-card);
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.pwl-needle--ok {
+    background: var(--c-ok);
+}
+
+.pwl-needle--bad {
+    background: var(--c-bad-light);
+}
+
+.pwl-gauge__lab {
+    position: absolute;
+    text-align: center;
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.pwl-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+    pointer-events: none;
+}
+
+.pwl-track {
+    fill: none;
+    stroke: var(--pwl-track);
+    stroke-width: 10;
+    stroke-dasharray: 4 14;
+    stroke-linecap: round;
+}
+
+.pwl-blade {
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+    stroke-linejoin: round;
+}
+
+.pwl-blade0 {
+    fill: var(--pwl-b0);
+}
+
+.pwl-blade1 {
+    fill: var(--pwl-b1);
+}
+
+.pwl-blade2 {
+    fill: var(--pwl-b2);
+}
+
+.pwl-blade3 {
+    fill: var(--pwl-b3);
+}
+
+.pwl-hub {
+    fill: var(--c-card);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+.pwl-pole {
+    fill: var(--pwl-pole);
+}
+
+/* 進度條 */
+.pwl-prog {
+    position: absolute;
+    height: 30px;
+    box-sizing: border-box;
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: 15px;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.pwl-prog__fill {
+    height: 100%;
+    width: 0;
+    background: var(--pwl-prog);
+}
+
+.pwl-prog__fill--on {
+    background: var(--c-ok);
+}
+
+.pwl-prog__lab {
+    position: absolute;
+    text-align: center;
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.pwl-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.pwl-info--ok {
+    color: var(--c-ok);
+}
+
+.pwl-info--bad {
+    color: var(--c-bad);
+}
+
+/* 揭曉：轉速折線圖 */
+.pwl-chart {
+    position: absolute;
+    pointer-events: none;
+}
+
+.pwl-chart svg {
+    display: block;
+}
+
+.pwl-chart__bg {
+    fill: var(--c-card);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+.pwl-chart__band {
+    fill: var(--pwl-band-on);
+}
+
+.pwl-chart__red {
+    stroke: var(--c-bad-light);
+    stroke-width: 2;
+    stroke-dasharray: 8 6;
+}
+
+.pwl-chart__curve {
+    fill: none;
+    stroke: var(--pwl-curve);
+    stroke-width: 3.5;
+    stroke-linejoin: round;
+}
+
+/* ═══ 洗盤子（.dsh-）═══ */
+.dsh-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.dsh-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    touch-action: none;
+}
+
+.dsh-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 盤子放的位置（結束時放大） */
+.dsh-holder {
+    position: absolute;
+    width: 330px;
+    height: 330px;
+    transition: transform 0.4s ease-out;
+    pointer-events: none;
+}
+
+.dsh-holder--big {
+    transform: scale(1.1);
+}
+
+.dsh-svg {
+    display: block;
+    overflow: visible;
+    transition: transform 0.26s ease-in, opacity 0.26s ease-in;
+}
+
+.dsh-svg--in {
+    transform: translateX(-120px);
+    opacity: 0;
+}
+
+.dsh-svg--out {
+    transform: translateX(160px) rotate(12deg);
+    opacity: 0;
+}
+
+.dsh-plate {
+    fill: var(--dsh-plate);
+    stroke: var(--dsh-plate-line);
+    stroke-width: 4;
+}
+
+.dsh-rim {
+    fill: none;
+    stroke: var(--dsh-rim);
+    stroke-width: 3;
+}
+
+/* 花紋：4 種顏色級數，越後面越像污漬的醬油色 */
+.dsh-pat0 {
+    fill: var(--dsh-pat0);
+}
+
+.dsh-pat1 {
+    fill: var(--dsh-pat1);
+}
+
+.dsh-pat2 {
+    fill: var(--dsh-pat2);
+}
+
+.dsh-pat3 {
+    fill: var(--dsh-pat3);
+}
+
+.dsh-pat__stroke {
+    fill: none;
+    stroke-width: 4;
+    stroke-linecap: round;
+}
+
+.dsh-pat0 .dsh-pat__stroke {
+    stroke: var(--dsh-pat0);
+}
+
+.dsh-pat1 .dsh-pat__stroke {
+    stroke: var(--dsh-pat1);
+}
+
+.dsh-pat2 .dsh-pat__stroke {
+    stroke: var(--dsh-pat2);
+}
+
+.dsh-pat3 .dsh-pat__stroke {
+    stroke: var(--dsh-pat3);
+}
+
+/* 污漬：軟軟的、邊緣模糊、形狀不規則（花紋是清楚的） */
+.dsh-spot {
+    fill: var(--dsh-sauce);
+    filter: blur(1.6px);
+}
+
+.dsh-ring {
+    fill: none;
+    stroke: var(--c-bad-light);
+    stroke-width: 5;
+    stroke-dasharray: 10 6;
+}
+
+.dsh-bubble {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    box-sizing: border-box;
+    border: 2px solid var(--dsh-bubble);
+    border-radius: 50%;
+    background: var(--dsh-bubble-fill);
+    pointer-events: none;
+    animation: dsh-pop 0.5s ease-out forwards;
+}
+
+.dsh-bubble--dirt {
+    border-color: var(--dsh-sauce);
+}
+
+@keyframes dsh-pop {
+    from {
+        transform: scale(0.5);
+        opacity: 1;
+    }
+
+    to {
+        transform: scale(1.8) translateY(-14px);
+        opacity: 0;
+    }
+}
+
+.dsh-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    color: var(--c-ok);
+    pointer-events: none;
+}
+
+.dsh-info--end {
+    color: var(--c-bad);
+}
+
+/* ═══ 挑豆子（.bns-）═══ */
+.bns-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.bns-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    touch-action: none;
+}
+
+.bns-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 木盤子 */
+.bns-tip--bad {
+    color: var(--c-bad);
+}
+
+.bns-plate {
+    position: absolute;
+    box-sizing: border-box;
+    background: var(--bns-wood);
+    border: 8px solid var(--bns-wood-edge);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* 豆子都放在這一層裡；層的原點在盤心 */
+.bns-layer {
+    position: absolute;
+    width: 0;
+    height: 0;
+}
+
+/* 只有「豆子本身的形狀」收得到點擊（方形的外框不收），這樣被別顆蓋住的雜物露出來的部分才按得到 */
+.bns-item {
+    position: absolute;
+    cursor: grab;
+    transition: left 0.18s ease-out, top 0.18s ease-out, transform 0.12s;
+    touch-action: none;
+    pointer-events: none;
+}
+
+.bns-item--drag {
+    transition: none;
+    transform: scale(1.5);
+    filter: drop-shadow(0 6px 5px var(--bns-shadow));
+}
+
+.bns-item--gone {
+    display: none;
+}
+
+.bns-bean {
+    display: block;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.bns-bean ellipse,
+.bns-bean polygon {
+    pointer-events: auto;
+}
+
+/* 各種豆子與雜物的顏色 */
+.bns-red { fill: var(--bns-red); }
+.bns-adz { fill: var(--bns-adz); }
+.bns-pinto { fill: var(--bns-pinto); }
+.bns-mung { fill: var(--bns-mung); }
+.bns-black { fill: var(--bns-black); }
+.bns-redstone { fill: var(--bns-redstone); stroke: var(--bns-redstone-edge); stroke-width: 0.8; }
+.bns-stone { fill: var(--bns-stone); stroke: var(--bns-stone-edge); stroke-width: 0.8; }
+.bns-shine { fill: var(--bns-shine); }
+.bns-spot { fill: var(--bns-spot); }
+
+/* 碗 */
+.bns-bowl {
+    position: absolute;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bns-bowl);
+    border: 6px solid var(--bns-bowl-edge);
+    border-radius: 50%;
+    pointer-events: none;
+    transition: transform 0.12s, background 0.12s;
+}
+
+.bns-bowl__t {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    text-align: center;
+}
+
+.bns-bowl--hot {
+    background: var(--bns-bowl-hot);
+    transform: scale(1.06);
+}
+
+.bns-bowl--pop {
+    transform: scale(1.1);
+}
+
+/* 結束：標出剩下的雜物 */
+.bns-ring {
+    position: absolute;
+    box-sizing: border-box;
+    border: 4px dashed var(--c-bad-light);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 10000;
+}
+
+.bns-ring--red {
+    border-style: solid;
+    border-color: var(--c-bad);
+}
+
+.bns-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 6px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    color: var(--c-ok);
+    pointer-events: none;
+}
+
+.bns-info--bad {
+    color: var(--c-bad);
+}
+
+/* 結束：把紅豆和很像的雜物並排放大 */
+.bns-cmp {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 482px;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 6px;
+    padding: var(--sp-1);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    z-index: 10001;
+}
+
+.bns-cmp__c {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+}
+
+.bns-cmp__s {
+    line-height: 0;
+}
+
+.bns-cmp__n {
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    line-height: 1.2;
+}
+
+.bns-cmp__d {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1.25;
+}
+
+.bns-cmp__vs {
+    align-self: center;
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+}
+
+/* ═══ 一路減七（.mn7-）═══ */
+.mn7-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.mn7-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+/* 提示框：開場「請從 1000 開始計數」、規則換的預告 */
+.mn7-banner {
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    top: 14px;
+    padding: var(--sp-3);
+    background: var(--c-card);
+    border: 4px solid var(--c-ink-soft);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-pop);
+    color: var(--c-ink);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    line-height: 1.3;
+    text-align: center;
+    z-index: 3;
+    transition: opacity 0.25s, transform 0.25s;
+}
+
+.mn7-banner--bad {
+    border-color: var(--c-bad-light);
+    color: var(--c-bad);
+    font-size: var(--fs-md);
+}
+
+.mn7-banner--hide {
+    opacity: 0;
+    transform: scale(0.9);
+    pointer-events: none;
+}
+
+/* 大字「−7」「再 −7」：老式計算機的綠色液晶 */
+.mn7-big {
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    top: 150px;
+    height: 190px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--mn7-lcd-bg);
+    border: 6px solid var(--mn7-case);
+    border-radius: var(--r-lg);
+    box-shadow: inset 0 4px 12px var(--mn7-lcd-shadow);
+    color: var(--mn7-lcd);
+    font-size: calc(var(--fs-xxl) * 1.9);
+    font-weight: var(--fw-black);
+    letter-spacing: 4px;
+    text-shadow: 0 0 10px var(--mn7-lcd-glow);
+    transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
+}
+
+/* 縮小消失／放大出現：大字和三個按鈕一起 */
+.mn7-pop--out {
+    transform: scale(0.08);
+    opacity: 0;
+}
+
+.mn7-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 356px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.mn7-info--bad {
+    color: var(--c-bad);
+}
+
+/* 三個連續數字的按鈕（銀色按鍵） */
+.mn7-grid {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 16px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
+}
+
+.mn7-btn {
+    height: 128px;
+    background: linear-gradient(var(--mn7-key-top), var(--mn7-key-bottom));
+    border: 4px solid var(--mn7-key-edge);
+    border-radius: var(--r-lg);
+    color: var(--c-ink);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    font-variant-numeric: tabular-nums;
+}
+
+.mn7-btn--ok {
+    background: var(--c-ok-light);
+    border-color: var(--c-ok);
+}
+
+.mn7-btn--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad-light);
+    color: var(--c-bad);
+}
+
+/* 結束：整串數字 */
+.mn7-chain {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 352px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 2px 6px;
+    padding: var(--sp-2);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    z-index: 2;
+}
+
+.mn7-chain__n {
+    color: var(--c-ink);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    font-variant-numeric: tabular-nums;
+}
+
+.mn7-chain__n--now {
+    color: var(--c-ink);
+    text-decoration: underline;
+}
+
+.mn7-chain__n--ans {
+    padding: 0 var(--sp-1);
+    background: var(--c-ok-soft);
+    border-radius: var(--r-sm);
+    color: var(--c-ok);
+}
+
+.mn7-chain__a {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+}
+
+/* ═══ 迴轉壽司（.ssh-）═══ */
+.ssh-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.ssh-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+/* 價目表：一直貼在上面 */
+.ssh-legend {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 8px;
+    display: flex;
+    justify-content: space-around;
+    padding: var(--sp-1) var(--sp-2);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    pointer-events: none;
+}
+
+.ssh-legend__i {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.ssh-legend__t {
+    color: var(--c-ink);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-black);
+    white-space: nowrap;
+}
+
+.ssh-dot {
+    width: 26px;
+    height: 26px;
+    box-sizing: border-box;
+    background: var(--ssh-plate-in);
+    border: 7px solid var(--ssh-c-white);
+    border-radius: 50%;
+}
+
+.ssh-goal {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 84px;
+    text-align: center;
+    color: var(--c-ink);
+    font-weight: var(--fw-black);
+    pointer-events: none;
+}
+
+.ssh-goal__t {
+    font-size: var(--fs-lg);
+}
+
+.ssh-goal__n {
+    color: var(--ssh-goal);
+    font-size: var(--fs-xxl);
+    line-height: 1;
+}
+
+/* 輸送帶（銀色）：條紋往左跑 */
+.ssh-belt {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 22px;
+    background: repeating-linear-gradient(90deg, var(--ssh-belt-a) 0, var(--ssh-belt-a) 20px, var(--ssh-belt-b) 20px, var(--ssh-belt-b) 40px);
+    border-top: 3px solid var(--ssh-belt-edge);
+    border-bottom: 3px solid var(--ssh-belt-edge);
+    animation: ssh-belt 0.3s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes ssh-belt {
+    to { background-position: -40px 0; }
+}
+
+/* 盤子走的那一條（整條都收得到點擊，用座標找最近的盤子） */
+.ssh-lane {
+    position: absolute;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    touch-action: none;
+}
+
+.ssh-plate {
+    position: absolute;
+    left: 0;
+    top: 0;
+    box-sizing: border-box;
+    background: var(--ssh-plate-in);
+    border: 9px solid var(--ssh-c-white);
+    border-radius: 50%;
+    box-shadow: var(--shadow-card);
+    pointer-events: none;
+    will-change: transform;
+}
+
+.ssh-pwhite { border-color: var(--ssh-c-white); }
+.ssh-pred { border-color: var(--ssh-c-red); }
+.ssh-pgreen { border-color: var(--ssh-c-green); }
+.ssh-pblue { border-color: var(--ssh-c-blue); }
+.ssh-pgold { border-color: var(--ssh-c-gold); }
+
+.ssh-dot.ssh-pwhite { border-color: var(--ssh-c-white); }
+
+/* 壽司：白飯糰上面一片料 */
+.ssh-rice {
+    position: absolute;
+    left: 22%;
+    right: 22%;
+    top: 34%;
+    bottom: 22%;
+    background: var(--ssh-rice);
+    border-radius: 40% 40% 50% 50%;
+}
+
+.ssh-top {
+    position: absolute;
+    left: 16%;
+    right: 16%;
+    top: 22%;
+    height: 34%;
+    border-radius: 50% 50% 40% 40%;
+}
+
+.ssh-top--salmon { background: var(--ssh-salmon); }
+.ssh-top--egg { background: var(--ssh-egg); }
+.ssh-top--shrimp { background: var(--ssh-shrimp); }
+
+.ssh-plate--mini {
+    box-shadow: none;
+}
+
+.ssh-stack {
+    position: absolute;
+    text-align: center;
+    pointer-events: none;
+}
+
+.ssh-stack__t {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+.ssh-stack__top {
+    position: relative;
+    width: 76px;
+    height: 76px;
+    margin: 0 auto;
+}
+
+.ssh-stack__top .ssh-plate {
+    width: 76px;
+    height: 76px;
+}
+
+.ssh-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.ssh-info--ok {
+    color: var(--c-ok);
+}
+
+.ssh-info--bad {
+    color: var(--c-bad);
+}
+
+.ssh-btn {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.ssh-btn--off {
+    opacity: 0.45;
+}
+
+/* 揭曉：拿的盤子攤開，每盤下面寫價錢與累加的總和 */
+.ssh-spread {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+}
+
+.ssh-spread__none {
+    width: 100%;
+    padding: var(--sp-4) 0;
+    text-align: center;
+    color: var(--c-ink-soft);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+}
+
+.ssh-cell {
+    text-align: center;
+}
+
+.ssh-cell__p {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1.2;
+}
+
+.ssh-cell__s {
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    line-height: 1.2;
+}
+
+/* ═══ 找錢（.chg-）═══ */
+.chg-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.chg-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+/* 帳單：客人買了多少、給你多少 */
+.chg-bill {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 8px;
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    text-align: center;
+    pointer-events: none;
+}
+
+.chg-bill__l {
+    color: var(--c-ink);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    line-height: 1.5;
+}
+
+.chg-bill__n {
+    color: var(--chg-price);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.chg-bill__n--paid {
+    color: var(--chg-paid);
+}
+
+/* 收銀機的綠色液晶顯示 */
+.chg-lcd {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 150px;
+    height: 84px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+    padding: 0 var(--sp-3);
+    background: var(--chg-lcd-bg);
+    border: 5px solid var(--chg-case);
+    border-radius: var(--r-md);
+    box-shadow: inset 0 3px 8px var(--chg-lcd-shadow);
+    transition: background 0.15s;
+    pointer-events: none;
+}
+
+.chg-lcd__lab {
+    color: var(--chg-lcd);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+.chg-lcd__num {
+    color: var(--chg-lcd);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 3px;
+}
+
+.chg-lcd__num--empty {
+    opacity: 0.35;
+}
+
+.chg-lcd--ok {
+    background: var(--c-ok-light);
+}
+
+.chg-lcd--bad {
+    background: var(--c-bad-soft);
+}
+
+.chg-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 244px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.chg-info--bad {
+    color: var(--c-bad);
+}
+
+/* 抽屜：答對時「叮」一聲彈出來 */
+.chg-drawer {
+    position: absolute;
+    right: 18px;
+    top: 128px;
+    padding: 0 var(--sp-3);
+    background: var(--chg-drawer);
+    border: 3px solid var(--chg-case);
+    border-radius: var(--r-sm);
+    color: var(--c-card);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.15s, transform 0.15s;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.chg-drawer--open {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.chg-key {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+/* 結束：直式減法，借位的欄位標紅 */
+.chg-vert {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 300px;
+    padding: var(--sp-3);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    text-align: center;
+}
+
+.chg-vert__r {
+    display: flex;
+    justify-content: center;
+    font-family: var(--font-note);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    line-height: 1.35;
+}
+
+.chg-vert__s {
+    width: 44px;
+    text-align: center;
+    color: var(--c-ink-soft);
+}
+
+.chg-vert__c {
+    width: 40px;
+    text-align: center;
+    color: var(--c-ink);
+}
+
+.chg-vert__c--borrow {
+    background: var(--c-bad-soft);
+    color: var(--c-bad);
+    border-radius: var(--r-sm);
+}
+
+.chg-vert__r--res .chg-vert__c {
+    color: var(--c-ok);
+}
+
+.chg-vert__line {
+    height: 4px;
+    margin: 2px 0;
+    background: var(--c-ink);
+    border-radius: 2px;
+}
+
+.chg-vert__t {
+    margin-top: var(--sp-2);
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+.chg-vert__t--you {
+    color: var(--c-bad);
+}
+
+/* ═══ 打了幾折（.dsc-）═══ */
+.dsc-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.dsc-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+/* 百貨公司的吊牌 */
+.dsc-tag {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    top: 14px;
+    padding: var(--sp-3);
+    background: var(--dsc-tag);
+    border: 5px solid var(--dsc-tag-edge);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
+    pointer-events: none;
+}
+
+.dsc-tag::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: -22px;
+    width: 26px;
+    height: 26px;
+    margin-left: -13px;
+    box-sizing: border-box;
+    background: var(--c-paper);
+    border: 5px solid var(--dsc-tag-edge);
+    border-radius: 50%;
+}
+
+.dsc-tag__sale {
+    display: inline-block;
+    padding: 0 var(--sp-3);
+    background: var(--dsc-red);
+    border-radius: var(--r-sm);
+    color: var(--c-card);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    letter-spacing: 6px;
+    transform: rotate(-3deg);
+}
+
+.dsc-tag__orig {
+    margin-top: var(--sp-2);
+    color: var(--c-ink-soft);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+}
+
+.dsc-tag__price {
+    color: var(--dsc-red);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+}
+
+.dsc-tag__n {
+    font-size: calc(var(--fs-xxl) * 1.4);
+    line-height: 1.1;
+}
+
+.dsc-tag__q {
+    margin-top: var(--sp-1);
+    color: var(--c-ink);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+}
+
+.dsc-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 336px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    pointer-events: none;
+}
+
+.dsc-info--ok {
+    color: var(--c-ok);
+}
+
+.dsc-info--bad {
+    color: var(--c-bad);
+}
+
+.dsc-btn {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+}
+
+.dsc-btn--ok {
+    background: var(--c-ok-light);
+    border-color: var(--c-ok);
+}
+
+.dsc-btn--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad-light);
+    color: var(--c-bad);
+}
+
+/* ═══ 時間連連看（.tpr-）═══ */
+.tpr-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.tpr-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+.tpr-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 時鐘排成格子 */
+.tpr-grid {
+    position: absolute;
+    left: 12px;
+    display: grid;
+    justify-content: center;
+}
+
+.tpr-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    background: var(--c-card);
+    border: 4px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    cursor: pointer;
+    transition: transform 0.1s, background 0.15s, opacity 0.3s;
+}
+
+.tpr-card--sel {
+    background: var(--tpr-sel);
+    border-color: var(--tpr-sel-edge);
+    transform: scale(1.06);
+}
+
+.tpr-card--ok {
+    background: var(--c-ok-light);
+    border-color: var(--c-ok);
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+.tpr-card--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad-light);
+}
+
+.tpr-card--right {
+    background: var(--c-ok-light);
+    border-color: var(--c-ok);
+}
+
+/* 指針鐘（車站的大時鐘） */
+.tpr-analog {
+    display: block;
+    pointer-events: none;
+}
+
+.tpr-face {
+    fill: var(--tpr-face);
+    stroke: var(--tpr-rim);
+    stroke-width: 4;
+}
+
+.tpr-tick {
+    stroke: var(--tpr-ink);
+    stroke-width: 1.4;
+}
+
+.tpr-tick--big {
+    stroke-width: 2.6;
+}
+
+.tpr-num {
+    fill: var(--tpr-ink);
+    font-size: 12px;
+    font-weight: var(--fw-bold);
+    text-anchor: middle;
+}
+
+.tpr-hand {
+    stroke: var(--tpr-ink);
+    stroke-linecap: round;
+}
+
+.tpr-hand--h {
+    stroke-width: 5;
+}
+
+.tpr-hand--m {
+    stroke-width: 2.6;
+}
+
+.tpr-hub {
+    fill: var(--tpr-ink);
+}
+
+/* 電子鐘（紅色 LED 看板） */
+.tpr-digital {
+    padding: 2px var(--sp-2);
+    background: var(--tpr-led-bg);
+    border-radius: var(--r-sm);
+    color: var(--tpr-led);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 1px;
+    text-shadow: 0 0 6px var(--tpr-led-glow);
+    pointer-events: none;
+}
+
+.tpr-digital--big {
+    font-size: calc(var(--fs-xxl) * 1.1);
+}
+
+.tpr-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 14px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.tpr-info--ok {
+    color: var(--c-ok);
+}
+
+.tpr-info--bad {
+    color: var(--c-bad);
+}
+
+/* 配錯：兩個時鐘並排放大 */
+.tpr-cmp {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 90px;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: var(--sp-2);
+    padding: var(--sp-3) var(--sp-2);
+    background: var(--c-card);
+    border: 3px solid var(--c-bad-light);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+}
+
+.tpr-cmp__c {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.tpr-cmp__t {
+    color: var(--c-ink);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    padding-top: var(--sp-1);
+}
+
+.tpr-cmp__s {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    line-height: 1.3;
+}
+
+.tpr-cmp__vs {
+    align-self: center;
+    color: var(--c-bad);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+/* ═══ 畫眉毛（.ebw-）═══ */
+.ebw-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.ebw-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    touch-action: none;
+}
+
+.ebw-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.ebw-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+}
+
+/* 素描風的臉 */
+.ebw-head {
+    fill: var(--ebw-skin);
+    stroke: var(--ebw-line);
+    stroke-width: 3;
+}
+
+.ebw-ear {
+    fill: var(--ebw-skin);
+    stroke: var(--ebw-line);
+    stroke-width: 3;
+}
+
+.ebw-eye {
+    fill: var(--ebw-eyewhite);
+    stroke: var(--ebw-line);
+    stroke-width: 3;
+}
+
+.ebw-pupil {
+    fill: var(--ebw-line);
+}
+
+.ebw-nose,
+.ebw-mouth {
+    fill: none;
+    stroke: var(--ebw-line);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* 左邊已經畫好的眉毛、你畫的眉毛（咖啡色眉筆）、翻過去的左眉（淡紅色） */
+.ebw-ref {
+    fill: none;
+    stroke: var(--ebw-brow);
+    stroke-width: 9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.ebw-mine {
+    fill: none;
+    stroke: var(--ebw-brow);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.ebw-ghost {
+    fill: none;
+    stroke: var(--ebw-ghost);
+    stroke-width: 10;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.75;
+}
+
+.ebw-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    pointer-events: none;
+}
+
+.ebw-info--ok {
+    color: var(--c-ok);
+}
+
+.ebw-info--bad {
+    color: var(--c-bad);
+}
+
+/* ═══ 擀水餃皮（.dgh-）═══ */
+.dgh-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 撒了麵粉的桌面 */
+.dgh-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    background-color: var(--dgh-table);
+    background-image: radial-gradient(circle, var(--dgh-flour) 12%, transparent 14%), radial-gradient(circle, var(--dgh-flour) 10%, transparent 12%);
+    background-size: 46px 46px, 31px 31px;
+    background-position: 0 0, 17px 11px;
+    touch-action: none;
+}
+
+.dgh-tip {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 8px;
+    padding: 2px var(--sp-3);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    text-align: center;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.dgh-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+    pointer-events: none;
+}
+
+/* 樣品圓（要擀成這麼大）、「平均大小的圓」（結果時才出現） */
+.dgh-sample {
+    fill: none;
+    stroke: var(--dgh-sample);
+    stroke-width: 4;
+    stroke-dasharray: 12 9;
+}
+
+.dgh-best {
+    fill: none;
+    stroke: var(--dgh-best);
+    stroke-width: 3;
+    stroke-dasharray: 6 6;
+}
+
+.dgh-dough {
+    fill: var(--dgh-dough);
+    stroke: var(--dgh-dough-edge);
+    stroke-width: 4;
+    stroke-linejoin: round;
+}
+
+/* 擀麵棍：跟著手指，方向垂直於擀的方向 */
+.dgh-pin {
+    position: absolute;
+    width: 120px;
+    height: 28px;
+    background: linear-gradient(var(--dgh-pin-lite), var(--dgh-pin));
+    border: 3px solid var(--dgh-pin-edge);
+    border-radius: 14px;
+    box-sizing: border-box;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.dgh-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.dgh-info--ok {
+    color: var(--c-ok);
+}
+
+.dgh-info--bad {
+    color: var(--c-bad);
+}
+
+.dgh-btn {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.dgh-btn--off {
+    opacity: 0.45;
+}

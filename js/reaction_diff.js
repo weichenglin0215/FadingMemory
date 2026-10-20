@@ -8,7 +8,7 @@
      所以不能只盯著其中一格。
    · 差異大小全部隨關卡線性縮小（第 1 關 → 第 LEVEL_RAMP 關）：
         大小：半徑差 SIZE_START(45%) → SIZE_END(5%)
-        顏色：色相差 HUE_START(55°) → HUE_END(4°)
+        顏色：色相差 HUE_START(75°) → HUE_END(18°)（V1.34 玩家意見「顏色差異太小」：原本 40° → 5°，最後幾關的 5° 色相差肉眼幾乎看不出來；放大成 75° → 18°，大小與位置的差異不變）
         位置：位移   POS_START(38px) → POS_END(3px)
    · 不限時間。點到沒有差異的圖形：每一關第一次點錯不算，第 MISTAKES_MAX 次（第二次）點錯就結束。
      畫面上只顯示本關已經花了多久（不影響成績）。成績＝通過幾關。結束時會把沒找到的差異圈出來。
@@ -33,7 +33,7 @@
     var LEVEL_RAMP = 20;
     /* 大小差異比例、色相差異度數、位置位移 px：三種差異各自的起始值與終點值 */
     var SIZE_START = 0.3, SIZE_END = 0.05;
-    var HUE_START = 40, HUE_END = 5;
+    var HUE_START = 75, HUE_END = 18;           /* 色相差異（度）：第 1 關 → 第 LEVEL_RAMP 關（V1.34：原本 40 → 5，太小，放大成 75 → 18；圖形的飽和度與亮度固定，所以差 18° 以上才一眼看得出來） */
     var POS_START = 30, POS_END = 5;
     /* 同一關點錯幾次就結束（第 2 次點錯結束，第一次不扣） */
     var MISTAKES_MAX = 2;                      /* 同一關點到第幾個沒有差異的圖形就結束 */
@@ -289,7 +289,9 @@
             my.after(400, startLevel);
         }
 
-        round(1);
+        /* V1.34.0：從「個人最佳關卡 − 5」開始（沒玩過就是第 1 關），見 kit.enter（reaction_kit.js） */
+
+        kit.enter(ID, round);
     }
 
     /* 遊戲身分證 */
@@ -301,7 +303,7 @@
         /* 世界排行榜的成績規格 */
         score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
-        test: { amounts: amounts, MISTAKES_MAX: MISTAKES_MAX, makeLevel: makeLevel, itemIn: itemIn, polyPoints: polyPoints, N_DIFF: N_DIFF, N_SHAPES: N_SHAPES, KINDS: KINDS, LEVEL_RAMP: LEVEL_RAMP }
+        test: { amounts: amounts, HUE_START: HUE_START, HUE_END: HUE_END, SIZE_START: SIZE_START, SIZE_END: SIZE_END, POS_START: POS_START, POS_END: POS_END, MISTAKES_MAX: MISTAKES_MAX, makeLevel: makeLevel, itemIn: itemIn, polyPoints: polyPoints, N_DIFF: N_DIFF, N_SHAPES: N_SHAPES, KINDS: KINDS, LEVEL_RAMP: LEVEL_RAMP }
     };
     /* 登記到遊戲清單 */
     Reaction.register(G);

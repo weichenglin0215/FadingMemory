@@ -10,7 +10,7 @@
            只有 1 顆會動時：移動 MOVE_TIME 秒之後暫停 PAUSE_S（1）秒，再接著動；
            有 2 顆以上會動時：一顆移動 MOVE_TIME 秒之後，立刻換下一顆接著動，輪流不停；
        - 限時 TIME_S 是「只有 1 顆會動」的限制秒數；有 k 顆會動就延長成 k 倍（2 顆＝2 倍、3 顆＝3 倍）。
-       - 點到任何一顆會動的圓點就算對（點到不動的或時間到就失敗）。
+       - （V1.34 起改了，見下面）要把所有會動的圓點一顆一顆都找出來才過關。
    · 出題（規範 Q1、Q15：先決定結果、再驗證玩家辦得到）：先決定「哪幾顆會動」，再排圓點的位置：圓點之間至少相距 MIN_GAP
      （圓點很多時自動縮小，最小 MIN_GAP_FLOOR；再不行就繼續縮小，但位置永遠是隨機的）；圓心位置全部用浮點數（可以有小數）。
      每顆會動的圓點各自挑一個方向（隨機試很多個角度，挑「能直直走最遠」的那個）：路徑不出畫面，而且離其他圓點、離其他會動的圓點的路徑至少 PATH_CLEAR，
@@ -19,6 +19,10 @@
      速度慢但限時很長（TIME_S＝180 秒、兩顆就是 360 秒）時，路徑長達幾百 px，怎麼排都放不進去，就掉進「保底」——圓點排成固定的格子、
      會動的永遠是 0 號和 1 號。現在改成：圓點走不完整條路徑時，走到「能直直走的最遠處」就掉頭走回來（來回走，位置是時間的純函式，三角波），
      所以不管限時多長、速度多慢，路徑都放得進去；保底也不再用格子，而是隨機排列（間距縮小）、隨機挑會動的圓點。
+   · V1.34（玩家意見）：
+       - 兩顆以上會動時，原本「只點到一顆就算這關完成」沒有挑戰性。改成要「一顆接著一顆」把所有會動的都找出來：點到會動的圓點，那一顆就停下來、
+         加上綠色外框（找到了，再點它不算），其他的繼續輪流動；全部找到才過關；點到不動的圓點、或限時內還沒找齊就失敗；
+       - 顏色：答對（找到會動的）的圓點加「綠色」外框，答錯（點到不動的）的圓點才加「紅色」外框；失敗時沒找到的會動圓點也用綠色外框標出答案。
    · 位置是時間的純函式（規範 T3）：第 i 顆會動的圓點在第 t 秒的位置 ＝ 起點 ＋ 方向 × 速度 × 它「已經動了幾秒」（movedTime），畫面只是把它畫出來。
    · 難度線性（RAMP_LEVELS 關走到頂）：漂移速度 SPEED 20 → 2 像素／秒。
    · 揭曉：每一顆會動的圓點的軌跡畫成一條細線，寫出各自「漂移了 X.XXXX 像素」（到你點下去的那一刻為止）。
@@ -203,63 +207,79 @@
         var circles = q.dots.map(function (d) { return kit.svg('circle', { cx: d.x, cy: d.y, r: DOT_R, 'class': 'snk-dot' }, svg); });
         var tip = h('div', { 'class': 'qz-note snk-tip', text: k > 1 ? '有幾個圓點會輪流慢慢移動，找出其中一個！' : '有一個圓點在慢慢移動，找出它！' });
         stage.appendChild(tip);
-        var t0 = performance.now();
+        var t0 = performance.now(), found = {}, nFound = 0;               /* found[第幾顆會動的] ＝ 找到的那一刻（秒），那一顆就停在那裡 */
         function nowSec() { return (performance.now() - t0) / 1000; }
+        function timeOf(mi, t) { return found[mi] != null ? found[mi] : t; }     /* 這一顆會動的圓點「現在該畫在哪一秒的位置」：找到了就停在找到的那一刻 */
         var loop = api.my.loop(function () {
             if (api.over) return false;
             var t = nowSec();
-            q.movers.forEach(function (m, i) { var p = posAt(q, i, t); circles[m.idx].setAttribute('cx', p.x); circles[m.idx].setAttribute('cy', p.y); });
+            q.movers.forEach(function (m, i) { var p = posAt(q, i, timeOf(i, t)); circles[m.idx].setAttribute('cx', p.x); circles[m.idx].setAttribute('cy', p.y); });
         });
-        api.timer(q.limitS * 1000, function () { judge(-1, q.limitS); });
+        api.timer(q.limitS * 1000, function () { finish('time', -1, q.limitS); });
         if (level === 1 && kit.once('sneakmove.hint')) kit.hintOn(stage, null, { mode: 'tap', x: q.movers[0].x0, y: q.movers[0].y0, delay: 800, text: '請點擊正在移動的圓點' });
-        /* 點擊：找離手指最近的圓點（在 HIT_R 以內才算點到）；點到任何一顆會動的都算對 */
+        /* 點擊：找離手指最近的圓點（在 HIT_R 以內才算點到）；點到會動的就是找到一顆（要全部找齊才過關），點到不動的就失敗 */
         kit.onTap(stage, function (e) {
             if (api.over) return;
             var pt = kit.localPt(e, stage), t = nowSec();
             var best = -1, bd = 1e9;
             q.dots.forEach(function (d, i) {
-                var p = moverOf[i] != null ? posAt(q, moverOf[i], t) : d, dd = kit.dist(pt.x, pt.y, p.x, p.y);
+                var p = moverOf[i] != null ? posAt(q, moverOf[i], timeOf(moverOf[i], t)) : d, dd = kit.dist(pt.x, pt.y, p.x, p.y);
                 if (dd < bd) { bd = dd; best = i; }
             });
-            if (bd <= HIT_R) judge(best, t);
+            if (bd <= HIT_R) tapDot(best, t);
         });
+        /* 點了第 i 顆圓點（t＝現在是第幾秒） */
+        function tapDot(i, t) {
+            if (api.over) return;
+            var mi = moverOf[i];
+            if (mi == null) { finish('wrong', i, t); return; }                   /* 點到不動的：失敗 */
+            if (found[mi] != null) return;                                         /* 這一顆已經找到了，再點不算 */
+            found[mi] = Math.min(t, q.limitS); nFound++;
+            circles[i].classList.add('snk-dot--right');                             /* 找到了：綠色外框，停在原地 */
+            Sfx.play('ok');
+            if (nFound >= k) finish('ok', -1, t);
+            else tip.textContent = '找到了！已找到 ' + nFound + '／' + k + ' 顆，繼續找下一顆（會動的圓點輪流在動）';
+        }
 
-        function judge(i, t) {
+        /* 結束：kind＝'ok'（全部找到）／'wrong'（點到不動的第 i 顆）／'time'（限時到了）。
+           每一顆會動的圓點都標上綠色外框（找到的、沒找到的答案都是綠色），軌跡畫成細線並寫出漂移了多少；點錯的那一顆才加紅色外框。 */
+        function finish(kind, i, t) {
             if (api.over) return;
             loop.stop();
             t = Math.min(t, q.limitS);
             var lines = [];
             q.movers.forEach(function (m, mi) {
-                var p = posAt(q, mi, t), moved = q.speed * movedTime(k, q.moveTime, mi, t);
+                var tt = timeOf(mi, t), p = posAt(q, mi, tt), moved = q.speed * movedTime(k, q.moveTime, mi, tt);
                 circles[m.idx].setAttribute('cx', p.x); circles[m.idx].setAttribute('cy', p.y);
-                circles[m.idx].classList.add('snk-dot--mover');
+                circles[m.idx].classList.add('snk-dot--right');
                 kit.svg('line', { x1: m.x0, y1: m.y0, x2: p.x, y2: p.y, 'class': 'snk-trail' }, gTrail);
                 kit.svg('circle', { cx: m.x0, cy: m.y0, r: 5, 'class': 'snk-start' }, gTrail);
                 lines.push('第 ' + (m.idx + 1) + ' 顆漂移了 ' + moved.toFixed(4) + ' 像素');
             });
-            var ok = moverOf[i] != null;
-            if (i >= 0 && !ok) circles[i].classList.add('snk-dot--wrong');
-            tip.textContent = (k > 1 ? '共 ' + k + ' 顆會動，輪流各動 ' + q.moveTime.toFixed(4) + ' 秒；' : '') + '每秒漂移 ' + q.speed.toFixed(4) + ' 像素，' + t.toFixed(4) + ' 秒內：' + lines.join('、');
-            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1700 }); return; }
+            if (kind === 'wrong') circles[i].classList.add('snk-dot--wrong');
+            /* 提示文字只有 64 像素高：會動的有好幾顆時，各自漂移多少寫在結算頁就好，這裡只留一句 */
+            tip.textContent = k > 1 ? '共 ' + k + ' 顆會動（綠框），每秒漂移 ' + q.speed.toFixed(4) + ' 像素，輪流各動 ' + q.moveTime.toFixed(4) + ' 秒' : '每秒漂移 ' + q.speed.toFixed(4) + ' 像素：' + lines.join('、');
+            if (kind === 'ok') { kit.flash(stage, true, api.my); api.pass({ delay: 1700 }); return; }
             kit.flash(stage, false, api.my);
             api.fail({
                 delay: 2600, lines: [
-                    (i < 0 ? '時間到！' : '那一顆是靜止的') + '，會動的是第 ' + q.movers.map(function (m) { return m.idx + 1; }).join('、') + ' 顆（已標出）',
-                    '它們每秒漂移 ' + q.speed.toFixed(4) + ' 像素，' + t.toFixed(4) + ' 秒內：' + lines.join('、')
+                    (kind === 'time' ? '時間到！' : '那一顆是靜止的') + '，' + (k > 1 ? '你找到了 ' + nFound + '／' + k + ' 顆，' : '') + '會動的是第 ' + q.movers.map(function (m) { return m.idx + 1; }).join('、') + ' 顆（已標出）',
+                    '它們每秒漂移 ' + q.speed.toFixed(4) + ' 像素：' + lines.join('、')
                 ]
             });
         }
-        api.solve = function () { judge(q.movers[0].idx, nowSec()); };
+        /* 驗證用：api.solve 依序點出每一顆會動的；api.wrong 點一顆不動的 */
+        api.solve = function () { q.movers.forEach(function (m) { tapDot(m.idx, nowSec()); }); };
         api.wrong = function () {
             var still = 0; while (moverOf[still] != null) still++;
-            judge(still, nowSec());
+            tapDot(still, nowSec());
         };
     }
 
     var G = {
         id: ID,
         name: '誰在偷偷動',
-        rule: '畫面上有一堆圓點，其中**有幾個會輪流慢慢移動**，其他都不動。一顆動一下就換下一顆，**在限時內點出任何一顆會動的圓點**。越後面，圓點越多、會動的越多、漂移得越慢！會動的圓點越多，限時就越長。點錯或來不及就結束，看你能過幾關。',
+        rule: '畫面上有一堆圓點，其中**有幾個會輪流慢慢移動**，其他都不動。一顆動一下就換下一顆，**在限時內，一顆接著一顆把「所有」會動的圓點都點出來**（點對的會加上綠框、停下來）。越後面，圓點越多、會動的越多、漂移得越慢！會動的圓點越多，限時就越長。點到不動的圓點（紅框）或來不及找齊就結束，看你能過幾關。',
         mount: mount,
         score: SCORE,
         test: {

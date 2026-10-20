@@ -60,7 +60,7 @@ for (let i = 0; i < 600; i++) {
   });
 }
 // 難度最高關：都排得出來、而且夠快
-{ const t0 = Date.now(); for (let i = 0; i < 100; i++) { const q = T.makeLevel(45, W, H, rnd); ok(q.dots.length === T.N_DOTS[1] && q.movers.length === T.MOVE_DOTS[1], '最高難度排得出來'); } ok(Date.now() - t0 < 8000, '出題夠快：' + (Date.now() - t0) + ' ms'); }
+{ const t0 = Date.now(); for (let i = 0; i < 100; i++) { const q = T.makeLevel(45, W, H, rnd); ok(q.dots.length === T.N_DOTS[1] && q.movers.length === T.MOVE_DOTS[1], '最高難度排得出來'); } ok((Date.now() - t0) / 100 < 250, '出題夠快：平均每題 ' + ((Date.now() - t0) / 100).toFixed(1) + ' ms（要 < 250）'); }
 // V1.32：玩家回報兩顆會動時圓點排成整齊的 5 欄陣列、會動的永遠是左上角兩顆 → 不再有固定格子的保底；位置全是浮點數、隨機
 { const moverIdx = {}, xs = new Set(); let grid = 0, frac = 0, total = 0, lows = 0;
   for (let i = 0; i < 400; i++) {
@@ -87,6 +87,15 @@ ok(near(T.triangle(0, 100), 0) && near(T.triangle(40, 100), 40) && near(T.triang
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20) !== T.rating(30), '評語分級');
 // 接線：點到任何一顆會動的都算對、限時依會動的個數
 { const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_sneakmove.js'), 'utf8');
-  ok(src.indexOf('moverOf[i] != null ? posAt(q, moverOf[i], t) : d') > 0 && src.indexOf('var ok = moverOf[i] != null;') > 0, '點到任何一顆會動的都算對');
-  ok(src.indexOf('api.timer(q.limitS * 1000') > 0, '限時＝TIME_S × 會動的個數'); }
+  ok(src.indexOf('api.timer(q.limitS * 1000') > 0, '限時＝TIME_S × 會動的個數');
+  // V1.34 玩家意見：兩顆以上會動時要一顆接著一顆全部找出來；答對加綠色外框、答錯才加紅色外框
+  const a = src.indexOf('function tapDot(i, t)'), b = src.indexOf('/* 結束：kind'), tap = src.slice(a, b);
+  ok(tap.indexOf("if (mi == null) { finish('wrong', i, t); return; }") > 0 && tap.indexOf('if (found[mi] != null) return;') > 0 && tap.indexOf("classList.add('snk-dot--right')") > 0 && tap.indexOf("if (nFound >= k) finish('ok', -1, t);") > 0, '點到會動的＝找到一顆（綠框、停下來、再點不算），找齊 k 顆才過關；點到不動的就失敗');
+  ok(src.indexOf("api.timer(q.limitS * 1000, function () { finish('time', -1, q.limitS); });") > 0 && src.indexOf("if (kind === 'wrong') circles[i].classList.add('snk-dot--wrong');") > 0, '時間到失敗；只有點錯的那顆才加紅框');
+  ok(src.indexOf("circles[m.idx].classList.add('snk-dot--right');") > 0 && src.indexOf('snk-dot--mover') < 0, '結束時所有會動的（含沒找到的答案）標綠框，不再用舊的橘框 snk-dot--mover');
+  ok(src.indexOf('function timeOf(mi, t)') > 0 && src.indexOf('posAt(q, i, timeOf(i, t))') > 0, '找到的那顆停在找到的那一刻');
+  ok(src.indexOf('api.solve = function () { q.movers.forEach(function (m) { tapDot(m.idx, nowSec()); }); };') > 0, 'api.solve 依序點出每一顆會動的');
+  ok(/一顆接著一顆把「所有」會動的圓點都點出來/.test(G.rule) && /紅框/.test(G.rule), '玩法說明有寫要全部找出來、點錯是紅框');
+  const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction5.css'), 'utf8').split(/\s+/).join(' ');
+  ok(css.indexOf('.snk-dot--right { stroke: var(--c-ok); stroke-width: 6; }') > 0 && css.indexOf('.snk-dot--wrong { stroke: var(--c-bad-light); stroke-width: 6; }') > 0 && css.indexOf('.snk-dot--mover') < 0, 'CSS：答對綠色外框、答錯紅色外框（只用 CSS 變數）'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

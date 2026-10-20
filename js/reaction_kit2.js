@@ -259,7 +259,8 @@
        o.head(level, S)：標題列左邊的文字（預設「第 N 關」）
        o.info(S)：標題列右邊的文字（預設：多條命時顯示命）
        o.lines(S)：結算頁的說明行
-       o.resume：false 表示不提供從前 5 關繼續
+       o.resume：false 表示不提供從前 5 關繼續（也不會在下次進場時從「個人最佳關卡 − 5」開始）
+       （V1.34.0）成績＝過關數的闖關遊戲，結算時會記下「到過第幾關」，下次進場從最佳關卡的前 5 關開始，見 kit.entryLevel（reaction_kit.js）
        api：
          api.level／api.S／api.stage／api.my／api.rand
          api.timer(ms, onTimeout)／api.stopTimer()：時間條（只能同時有一個）；回傳 { left(), total, cut(d) }（cut＝扣掉 d 毫秒的剩餘時間）
@@ -383,8 +384,8 @@
             var score = o.scoreOf ? o.scoreOf(S) : (o.scoreBase ? Math.min(S.cleared + o.scoreBase, o.maxLevel || 1e9) : S.cleared);   /* o.scoreBase：成績＝通過關數＋幾（撐到第幾關＝＋1） */
             var isNew = score > 0 ? Reaction.setBest(o.id, score, gt) : false;
             ctx.setMeta(fmtBest(Reaction.getBest(o.id)));
-            var resume = null;
-            if (o.resume !== false && !o.scoreOf && !allClear && S.level > 1) {
+            var resume = null, leveled = o.resume !== false && !o.scoreOf;     /* leveled：成績＝過關數的闖關遊戲（才記關卡、才從最佳關卡 − 5 進場） */
+            if (leveled && !allClear && S.level > 1) {
                 var from = kit.resumeFrom(S.level);
                 resume = { level: from, run: function () { start(from); } };
             }
@@ -397,7 +398,8 @@
                 lines: lines, isNew: isNew, note: o.note,
                 sfx: allClear ? 'perfect' : (score >= (o.goodAt || 5) ? 'win' : 'fail'),
                 onAgain: function () { start(1); },
-                resume: resume
+                resume: resume,
+                level: leveled ? (allClear ? (o.maxLevel || S.level) : S.level) : null     /* V1.34.0：記住到過第幾關（見 kit.noteLevel） */
             });
         }
 
@@ -412,7 +414,11 @@
                 info: function () { return api && api.info; }
             };
         }
-        start(1);
+        /* V1.34.0 進場：闖關遊戲從「個人最佳關卡 − 5」開始（沒玩過就是第 1 關）。
+           o.scoreBase 有值＝成績本身就是「撐到第幾關」，舊紀錄換算關卡不用再 ＋1。 */
+        var from0 = (o.resume !== false && !o.scoreOf) ? kit.entryLevel(o.id, o.scoreBase ? 0 : 1) : 1;
+        start(from0);
+        kit.entryNotice(o.id, from0);
     };
 
     /* ═══════════════════════════════════════════════════════════════

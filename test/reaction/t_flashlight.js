@@ -23,6 +23,15 @@ ok(T.nameOf('p6') === '正六邊形' && T.nameOf('s12') === '十二角星' && T.
 // 圖形的畫法：零件數真的跟 id 一樣多
 ok((T.picSvg('p7').match(/,/g) || []).length === 7 && (T.picSvg('s9').match(/,/g) || []).length === 18, '正 7 邊形有 7 個頂點、9 角星有 18 個點');
 ok((T.picSvg('g12').match(/<rect/g) || []).length === 12 && (T.picSvg('f13').match(/<ellipse/g) || []).length === 13, '12 齒齒輪有 12 個齒、13 瓣的花有 13 片花瓣');
+// V1.34 玩家意見：下方答案的字型改成明體（宋體），故意跟題目（黑體）不一樣；圖形沒有字型，兩種畫法完全相同
+for (const id of [...T.DIGITS, ...allIds]) {
+  const q = T.picSvg(id), a = T.picSvg(id, true);
+  if (T.isDigit(id) || T.isChar(id)) ok(q.includes('var(--font-ui)') && !q.includes('--font-note') && a.includes('var(--font-note)') && !a.includes('--font-ui'), '題目黑體、答案明體：' + id);
+  else ok(q === a, '圖形不受字型影響：' + id);
+}
+{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_flashlight.js'), 'utf8');
+  ok(src.includes('html: picSvg(id, true)') && src.includes("pic.innerHTML = picSvg(q.target)"), '下方選項用明體（picSvg(id, true)）、上方題目維持黑體');
+  const theme = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/theme.css'), 'utf8'); ok(/--font-note:[^;]*Serif TC[^;]*PMingLiU[^;]*serif/.test(theme), '--font-note ＝ 明體字型清單（Noto Serif TC、宋體、新細明體、serif）'); }
 // 相似數字表：對稱性不要求，但每個數字的相似表要有 ≥3 個、不含自己、都是數字
 T.DIGITS.forEach(d => ok(T.SIMILAR[d].length >= 3 && !T.SIMILAR[d].includes(d) && T.SIMILAR[d].every(x => T.DIGITS.includes(x)), '相似表 ' + d));
 ok(T.DIGITS.every(d => T.tierOf(d) === 0) && T.tierOf('土') === 0 && T.tierOf('末') === 1 && T.tierOf('情') === 2 && T.tierOf('鑑') === 3 && T.tierOf('p6') === 1 && T.tierOf('g9') === 2 && T.tierOf('f13') === 3, 'tierOf');

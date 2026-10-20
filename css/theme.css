@@ -73,6 +73,481 @@
     /* 分藥盒：下方藥盒格子的邊線粗細（V1.24，原本跟一般邊框一樣是 2px） */
     --pb-bd-c: var(--c-ink-soft);
     /* 分藥盒：下方藥盒格子的邊線顏色 */
+
+    /* ── V1.34 接電線（.wlk-）：8 種電線顏色；第 6 種（水藍）刻意跟第 2 種（藍）接近、第 7 種（橘）跟第 4 種（黃）接近 ── */
+    --wlk-0: hsl(4, 78%, 52%);
+    --wlk-1: hsl(215, 70%, 48%);
+    --wlk-2: hsl(135, 55%, 40%);
+    --wlk-3: hsl(50, 92%, 50%);
+    --wlk-4: hsl(280, 55%, 52%);
+    --wlk-5: hsl(195, 85%, 58%);
+    --wlk-6: hsl(27, 90%, 55%);
+    --wlk-7: hsl(330, 75%, 65%);
+
+    /* ── V1.34 缺哪一張（.mj3-）：分好的三組牌的外框顏色（綠色桌布上要看得清楚，所以不用綠色）── */
+    --mj3-g0: hsl(50, 92%, 55%);
+    --mj3-g1: hsl(208, 80%, 62%);
+    --mj3-g2: hsl(330, 75%, 70%);
+
+    /* ── V1.34 翻最多棋（.rvs-）：木紋棋盤的底色與格線 ── */
+    --rvs-wood: hsl(32, 52%, 58%);
+    --rvs-line: hsl(28, 45%, 34%);
+
+    /* ── V1.34 堵住五子（.gmk-）：公園石桌上的米色棋盤與格線 ── */
+    --gmk-board: hsl(40, 62%, 80%);
+    --gmk-line: hsl(32, 40%, 38%);
+
+    /* ── V1.34 換一張就平（.swe-）：綠色牌桌 ── */
+    --swe-felt: hsl(140, 38%, 62%);
+    --swe-felt-edge: hsl(140, 30%, 40%);
+
+    /* ── V1.34 齒輪對記號（.grm-）：銅色齒輪 ── */
+    --grm-copper: hsl(28, 58%, 58%);
+    --grm-copper-light: hsl(34, 68%, 70%);
+    --grm-copper-dark: hsl(24, 50%, 32%);
+
+    /* ── V1.34 蹺蹺板比重（.sea-）：木板與七種動物的毛色 ── */
+    --sea-plank: hsl(30, 55%, 58%);
+    --sea-bear: hsl(25, 48%, 52%);
+    --sea-pig: hsl(350, 75%, 84%);
+    --sea-pig-snout: hsl(350, 70%, 74%);
+    --sea-dog: hsl(36, 58%, 70%);
+    --sea-dog-ear: hsl(28, 45%, 48%);
+    --sea-cat: hsl(28, 85%, 64%);
+    --sea-rabbit: hsl(0, 0%, 94%);
+    --sea-chick: hsl(48, 92%, 66%);
+    --sea-panda: hsl(0, 0%, 97%);
+
+    /* ── V1.34 找正方形（.fsq-）：夜空與星星 ── */
+    --fsq-sky: hsl(226, 46%, 24%);
+    --fsq-star: hsl(48, 96%, 70%);
+    --fsq-star-edge: hsl(40, 90%, 52%);
+
+    /* ── V1.34 跳棋跳最遠（.chk-）：棋盤與紅藍彈珠 ── */
+    --chk-board: hsl(40, 62%, 84%);
+    --chk-hole: hsl(32, 38%, 70%);
+    --chk-shadow: hsla(28, 45%, 20%, 0.35);
+    --chk-red-hi: hsl(5, 88%, 78%);
+    --chk-red: hsl(5, 75%, 52%);
+    --chk-red-lo: hsl(5, 70%, 36%);
+    --chk-blue-hi: hsl(210, 85%, 80%);
+    --chk-blue: hsl(210, 65%, 50%);
+    --chk-blue-lo: hsl(210, 60%, 34%);
+
+    /* ── V1.34 圈內圈外（.iof-）：紅色粗繩 ── */
+    --iof-rope: hsl(6, 72%, 52%);
+
+    /* ── V1.34 加到五百（.gsp-）：加油機的黑底黃字面板、紅色油槍 ── */
+    --gsp-panel: hsl(28, 20%, 12%);
+    --gsp-digit: hsl(48, 96%, 60%);
+    --gsp-sticker: hsl(48, 96%, 62%);
+    --gsp-gun: hsl(6, 76%, 52%);
+    --gsp-gun-dark: hsl(6, 70%, 34%);
+    --gsp-font: "Courier New", ui-monospace, monospace;
+
+    /* ── V1.34 奶茶調色（.mlt-）：深色木桌、白色托盤、玻璃杯、牛奶 ── */
+    --mlt-wood: hsl(24, 38%, 28%);
+    --mlt-tray: hsl(40, 30%, 94%);
+    --mlt-glass: hsl(200, 25%, 62%);
+    --mlt-milk: hsl(45, 45%, 97%);
+    --mlt-btn-dark: hsl(208, 53%, 34%);
+
+    /* ── V1.34 轉盤電話（.rtr-）：黑色電話底板、銀色轉盤、擋片 ── */
+    --rtr-plate: hsl(20, 12%, 14%);
+    --rtr-metal: hsl(40, 12%, 78%);
+    --rtr-metal-edge: hsl(30, 10%, 42%);
+    --rtr-stop: hsl(40, 20%, 55%);
+
+    /* ── V1.34 反著滑（.swc-）：交通號誌的藍色圓牌 ── */
+    --swc-blue: hsl(208, 72%, 42%);
+
+    /* ── V1.34 敲幾下（.knk-）：木魚與木槌的木頭色、銅缽的銅色 ── */
+    --knk-wood: hsl(28, 62%, 52%);
+    --knk-wood-dark: hsl(22, 55%, 30%);
+    --knk-copper: hsl(36, 72%, 54%);
+    --knk-copper-light: hsl(44, 85%, 72%);
+    --knk-copper-dark: hsl(28, 62%, 32%);
+
+    /* ── V1.34 切菜單上的（.msl-）：黑板菜單與十二種水果的顏色 ── */
+    --msl-board: hsl(150, 16%, 22%);
+    --msl-frame: hsl(28, 45%, 42%);
+    --msl-chalk: hsl(48, 30%, 94%);
+    --msl-leaf: hsl(125, 48%, 38%);
+    --msl-stem: hsl(25, 50%, 28%);
+    --msl-orange: hsl(30, 96%, 56%);
+    --msl-tangerine: hsl(18, 92%, 54%);
+    --msl-lemon: hsl(52, 96%, 58%);
+    --msl-lime: hsl(98, 66%, 48%);
+    --msl-apple: hsl(354, 78%, 50%);
+    --msl-tomato: hsl(8, 86%, 52%);
+    --msl-grape: hsl(285, 48%, 42%);
+    --msl-blueberry: hsl(228, 56%, 42%);
+    --msl-banana: hsl(50, 94%, 62%);
+    --msl-watermelon: hsl(135, 50%, 34%);
+    --msl-pear: hsl(75, 62%, 58%);
+    --msl-strawberry: hsl(350, 86%, 56%);
+
+    /* ── V1.34 字的顏色（.ikw-）：毛筆字的六種墨水顏色 ── */
+    --ikw-red: hsl(2, 78%, 48%);
+    --ikw-yellow: hsl(46, 96%, 50%);
+    --ikw-green: hsl(135, 52%, 34%);
+    --ikw-blue: hsl(214, 72%, 46%);
+    --ikw-purple: hsl(280, 52%, 42%);
+    --ikw-orange: hsl(26, 94%, 52%);
+
+    /* ── V1.34 記行事曆（.cld-）：月曆標題色、格線、貼紙的奶油色與粉紅 ── */
+    --cld-head: hsl(6, 70%, 52%);
+    --cld-line: hsl(36, 30%, 78%);
+    --cld-pink: hsl(350, 80%, 84%);
+    --cld-cream: hsl(46, 88%, 88%);
+
+    /* ── V1.34 照樣調一杯（.lyd-）：五種飲料顏色、玻璃杯 ── */
+    --lyd-red: hsl(2, 78%, 52%);
+    --lyd-yellow: hsl(46, 96%, 56%);
+    --lyd-green: hsl(135, 52%, 42%);
+    --lyd-blue: hsl(212, 72%, 52%);
+    --lyd-purple: hsl(282, 52%, 48%);
+    --lyd-glass: hsl(200, 40%, 96%);
+
+    /* ── V1.34 看過的字（.skc-）：書法練習簿的字帖紙 ── */
+    --skc-paper: hsl(46, 70%, 95%);
+    --skc-guide: hsla(14, 60%, 55%, 0.35);
+    --skc-pick: hsl(50, 92%, 84%);
+
+    /* ── V1.34 門縫偷看（.dsl-）：老公寓的木門框、門縫裡的光 ── */
+    --dsl-door: hsl(28, 40%, 40%);
+    --dsl-light: hsl(48, 80%, 90%);
+
+    /* ── V1.34 找星座（.stz-）：碎片飛行的底色 ── */
+    --stz-sky: hsl(46, 70%, 92%);
+
+    /* ── V1.34 切字（.scc-）：湯圓的顏色 ── */
+    --scc-dump: hsl(46, 70%, 96%);
+    --scc-dump-edge: hsl(30, 40%, 62%);
+
+    /* ── V1.34 蝴蝶不對稱（.btf-）：鳳蝶、斑蝶的配色 ── */
+    --btf-wing: hsl(36, 90%, 58%);
+    --btf-wing-low: hsl(30, 88%, 54%);
+    --btf-black: hsl(24, 30%, 14%);
+    --btf-orange: hsl(22, 92%, 52%);
+    --btf-yellow: hsl(50, 96%, 62%);
+    --btf-blue: hsl(212, 78%, 52%);
+    --btf-white: hsl(48, 40%, 96%);
+    --btf-red: hsl(2, 78%, 50%);
+
+    /* ── V1.34 彈幕找字（.dmk-）：淡淡的風景背景（不干擾） ── */
+    --dmk-sky-top: hsl(200, 55%, 80%);
+    --dmk-sky-bottom: hsl(110, 38%, 78%);
+
+    /* ── V1.34 心臟病（.csl-）：綠色牌桌、牌背 ── */
+    --csl-felt: hsl(145, 40%, 38%);
+    --csl-felt-edge: hsl(145, 35%, 24%);
+    --csl-back: hsl(212, 60%, 48%);
+
+    /* ── V1.34 舉旗子（.flg-）：紅旗、白旗與左右按壓區 ── */
+    --flg-red: hsl(2, 78%, 50%);
+    --flg-red-soft: hsla(2, 78%, 55%, 0.12);
+    --flg-red-down: hsla(2, 78%, 55%, 0.30);
+    --flg-white-soft: hsla(210, 30%, 60%, 0.10);
+    --flg-white-down: hsla(210, 30%, 60%, 0.28);
+    --flg-shirt: hsl(212, 60%, 62%);
+
+    /* ── V1.34 色票排隊（.hus-）：記號的白邊與紅 X ── */
+    --hus-edge: hsl(0, 0%, 100%);
+    --hus-x: hsl(2, 78%, 50%);
+
+    /* ── V1.34 動態視力（.knt-）：區間車、窗戶裡的東西、號碼貼紙 ── */
+    --knt-body: hsl(48, 30%, 96%);
+    --knt-band: hsl(212, 70%, 45%);
+    --knt-roof: hsl(210, 10%, 42%);
+    --knt-glass: hsl(200, 45%, 80%);
+    --knt-frame: hsl(210, 8%, 30%);
+    --knt-wheel: hsl(210, 8%, 22%);
+    --knt-link: hsl(210, 8%, 35%);
+    --knt-rail: hsl(30, 15%, 42%);
+    --knt-pax0: hsl(8, 55%, 50%);
+    --knt-pax1: hsl(215, 45%, 45%);
+    --knt-pax2: hsl(140, 30%, 38%);
+    --knt-head: hsl(28, 55%, 76%);
+    --knt-hair: hsl(25, 30%, 22%);
+    --knt-bento: hsl(20, 45%, 36%);
+    --knt-rice: hsl(48, 40%, 96%);
+    --knt-egg: hsl(45, 90%, 62%);
+    --knt-veg: hsl(110, 45%, 42%);
+    --knt-paper: hsl(45, 35%, 94%);
+    --knt-line: hsl(40, 10%, 45%);
+    --knt-curtain: hsl(205, 55%, 52%);
+    --knt-fold: hsla(205, 55%, 30%, 0.5);
+    --knt-sticker: hsl(50, 100%, 58%);
+    --knt-sticker-edge: hsl(40, 80%, 38%);
+    --knt-digit: hsl(40, 20%, 12%);
+
+    /* ── V1.34 零錢入筒（.cns-）：銅色、銀色硬幣 ── */
+    --cns-copper: hsl(26, 68%, 56%);
+    --cns-copper-rim: hsl(24, 62%, 46%);
+    --cns-copper-line: hsl(20, 55%, 30%);
+    --cns-silver: hsl(210, 10%, 86%);
+    --cns-silver-rim: hsl(210, 9%, 72%);
+    --cns-silver-line: hsl(210, 10%, 42%);
+    --cns-digit: hsl(24, 40%, 20%);
+    --cns-pattern: hsla(24, 40%, 20%, 0.45);
+
+    /* ── V1.34 大合照（.gph-）：牆面、人臉、手機、洗照片 ── */
+    --gph-bg: hsl(200, 38%, 88%);
+    --gph-frame: hsl(28, 48%, 40%);
+    --gph-corner: hsla(0, 0%, 100%, 0.9);
+    --gph-flash: hsl(0, 0%, 100%);
+    --gph-ring: hsl(2, 78%, 52%);
+    --gph-eyewhite: hsl(0, 0%, 100%);
+    --gph-pupil: hsl(24, 30%, 14%);
+    --gph-skin0: hsl(28, 62%, 80%);
+    --gph-skin1: hsl(26, 48%, 68%);
+    --gph-skin2: hsl(24, 38%, 56%);
+    --gph-hair0: hsl(24, 40%, 16%);
+    --gph-hair1: hsl(28, 50%, 30%);
+    --gph-hair2: hsl(40, 10%, 42%);
+    --gph-hair3: hsl(36, 70%, 48%);
+    --gph-shirt0: hsl(8, 58%, 56%);
+    --gph-shirt1: hsl(212, 52%, 56%);
+    --gph-shirt2: hsl(140, 34%, 46%);
+    --gph-shirt3: hsl(278, 34%, 58%);
+    --gph-shirt4: hsl(44, 80%, 58%);
+    --gph-phone: hsl(215, 14%, 24%);
+    --gph-phone-screen: hsl(198, 80%, 72%);
+
+    /* ── V1.34 釣魚提竿（.fbt-）：水、浮標、魚、折線圖 ── */
+    --fbt-water-top: hsl(200, 55%, 62%);
+    --fbt-water-bottom: hsl(210, 55%, 38%);
+    --fbt-surface: hsla(0, 0%, 100%, 0.55);
+    --fbt-ripple: hsla(0, 0%, 100%, 0.85);
+    --fbt-float-red: hsl(4, 80%, 52%);
+    --fbt-float-white: hsl(40, 40%, 96%);
+    --fbt-line: hsla(30, 20%, 30%, 0.7);
+    --fbt-fish0: hsl(100, 22%, 52%);
+    --fbt-fish1: hsl(72, 34%, 46%);
+    --fbt-fish2: hsl(28, 78%, 56%);
+    --fbt-fish3: hsl(208, 24%, 62%);
+    --fbt-fish4: hsl(42, 70%, 56%);
+    --fbt-fish5: hsl(150, 24%, 44%);
+    --fbt-belly: hsla(40, 60%, 94%, 0.85);
+    --fbt-stripe: hsla(24, 40%, 20%, 0.35);
+    --fbt-eye: hsl(24, 30%, 12%);
+    --fbt-bite-zone: hsla(140, 55%, 45%, 0.28);
+    --fbt-curve: hsl(210, 60%, 42%);
+    --fbt-you: hsl(24, 90%, 48%);
+
+    /* ── V1.34 全壘打（.hmr-）：球場、好球帶、球與球棒 ── */
+    --hmr-crowd-bg: hsl(220, 22%, 34%);
+    --hmr-crowd-dot1: hsl(8, 60%, 62%);
+    --hmr-crowd-dot2: hsl(44, 80%, 66%);
+    --hmr-grass: hsl(112, 40%, 46%);
+    --hmr-mound: hsl(28, 40%, 52%);
+    --hmr-zone-line: hsla(0, 0%, 100%, 0.95);
+    --hmr-zone-fill: hsla(0, 0%, 100%, 0.14);
+    --hmr-plate: hsl(0, 0%, 98%);
+    --hmr-leg: hsl(220, 15%, 40%);
+    --hmr-body: hsl(8, 62%, 52%);
+    --hmr-skin: hsl(28, 60%, 78%);
+    --hmr-cap: hsl(220, 50%, 38%);
+    --hmr-ball: hsl(48, 30%, 98%);
+    --hmr-ball-shade: hsl(40, 12%, 80%);
+    --hmr-seam: hsl(4, 70%, 50%);
+    --hmr-bat: hsl(28, 50%, 42%);
+    --hmr-bat-lite: hsl(34, 60%, 66%);
+    --hmr-hr: hsl(8, 80%, 52%);
+    --hmr-final-ok: hsl(140, 60%, 40%);
+    --hmr-final-bad: hsl(2, 78%, 52%);
+    --hmr-swing: hsl(36, 95%, 52%);
+
+    /* ── V1.34 大風吹（.wbl-）：小朋友的衣服、眼鏡、帽子 ── */
+    --wbl-shirt0: hsl(4, 76%, 54%);
+    --wbl-shirt1: hsl(212, 66%, 54%);
+    --wbl-shirt2: hsl(46, 92%, 58%);
+    --wbl-shirt3: hsl(138, 48%, 44%);
+    --wbl-skin: hsl(28, 62%, 80%);
+    --wbl-hair: hsl(24, 40%, 18%);
+    --wbl-eye: hsl(24, 30%, 14%);
+    --wbl-glass-fill: hsla(200, 60%, 90%, 0.45);
+    --wbl-hat: hsl(28, 85%, 55%);
+    --wbl-chair: hsl(28, 40%, 58%);
+
+    /* ── V1.34 吸珍珠（.prl-）：珍珠奶茶、吸管、嘴唇 ── */
+    --prl-goal: hsl(24, 70%, 44%);
+    --prl-lip: hsl(352, 62%, 74%);
+    --prl-lip-line: hsl(350, 55%, 46%);
+    --prl-cup: hsla(200, 40%, 92%, 0.65);
+    --prl-tea-top: hsl(32, 48%, 66%);
+    --prl-tea-bottom: hsl(26, 44%, 48%);
+    --prl-pearl: hsl(24, 40%, 12%);
+    --prl-pearl-lite: hsl(24, 24%, 34%);
+    --prl-straw: hsla(200, 45%, 92%, 0.85);
+    --prl-straw-line: hsl(205, 40%, 60%);
+    --prl-straw-on: hsla(200, 60%, 82%, 0.95);
+    --prl-num: hsl(40, 90%, 85%);
+    --prl-hold: hsl(34, 90%, 62%);
+    --prl-hold-on: hsl(28, 85%, 52%);
+    --prl-hold-line: hsl(24, 70%, 38%);
+    --prl-hold-text: hsl(40, 60%, 98%);
+
+    /* ── V1.34 釣魚玩具（.fty-）：池塘、釣竿、塑膠魚 ── */
+    --fty-water: hsl(198, 62%, 74%);
+    --fty-pond-line: hsl(202, 50%, 46%);
+    --fty-ring: hsla(210, 50%, 36%, 0.35);
+    --fty-spot: hsl(24, 90%, 50%);
+    --fty-rod: hsl(28, 50%, 36%);
+    --fty-line: hsla(24, 20%, 24%, 0.8);
+    --fty-hook: hsl(0, 0%, 72%);
+    --fty-c0: hsl(2, 78%, 56%);
+    --fty-c1: hsl(28, 92%, 54%);
+    --fty-c2: hsl(50, 92%, 54%);
+    --fty-c3: hsl(138, 50%, 46%);
+    --fty-c4: hsl(212, 70%, 54%);
+    --fty-c5: hsl(278, 46%, 56%);
+    --fty-eye: hsl(24, 30%, 12%);
+    --fty-hole: hsl(350, 40%, 22%);
+    --fty-focus: hsl(24, 95%, 50%);
+    --fty-text-shadow: hsla(24, 40%, 12%, 0.6);
+
+    /* ── V1.34 數鈔票（.cbl-）：各面額的顏色（200 近 100、2000 近 1000） ── */
+    --cbl-goal: hsl(24, 72%, 44%);
+    --cbl-edge: hsl(30, 25%, 38%);
+    --cbl-d100: hsl(2, 56%, 80%);
+    --cbl-d200: hsl(18, 62%, 78%);
+    --cbl-d500: hsl(100, 38%, 74%);
+    --cbl-d1000: hsl(205, 56%, 76%);
+    --cbl-d2000: hsl(222, 52%, 74%);
+    --cbl-stripe: hsla(0, 0%, 100%, 0.28);
+    --cbl-num: hsl(24, 40%, 18%);
+    --cbl-num-glow: hsla(0, 0%, 100%, 0.85);
+
+    /* ── V1.34 照號切水果（.ocf-）：深色木板、水果、白色粗字 ── */
+    --ocf-board: hsl(24, 26%, 22%);
+    --ocf-trail: hsla(0, 0%, 100%, 0.85);
+    --ocf-shade: hsla(24, 40%, 10%, 0.22);
+    --ocf-leaf: hsl(120, 50%, 40%);
+    --ocf-num: hsl(0, 0%, 100%);
+    --ocf-num-edge: hsl(24, 30%, 10%);
+    --ocf-f0: hsl(2, 72%, 52%);
+    --ocf-f1: hsl(28, 92%, 54%);
+    --ocf-f2: hsl(52, 92%, 54%);
+    --ocf-f3: hsl(110, 52%, 44%);
+    --ocf-f4: hsl(188, 56%, 48%);
+    --ocf-f5: hsl(300, 40%, 52%);
+
+    /* ── V1.34 轉風車（.pwl-）：速度表、風車 ── */
+    --pwl-gauge: hsl(40, 40%, 92%);
+    --pwl-band: hsla(140, 55%, 45%, 0.35);
+    --pwl-band-on: hsla(140, 60%, 42%, 0.6);
+    --pwl-danger: hsla(2, 78%, 55%, 0.35);
+    --pwl-needle: hsl(24, 40%, 24%);
+    --pwl-track: hsla(210, 40%, 40%, 0.35);
+    --pwl-b0: hsl(2, 76%, 58%);
+    --pwl-b1: hsl(48, 92%, 58%);
+    --pwl-b2: hsl(208, 66%, 58%);
+    --pwl-b3: hsl(140, 46%, 48%);
+    --pwl-pole: hsl(28, 40%, 52%);
+    --pwl-prog: hsl(40, 80%, 58%);
+    --pwl-curve: hsl(212, 62%, 42%);
+
+    /* ── V1.34 洗盤子（.dsh-）：白瓷盤、青花紋、醬汁污漬、泡泡 ── */
+    --dsh-plate: hsl(45, 40%, 98%);
+    --dsh-plate-line: hsl(210, 14%, 62%);
+    --dsh-rim: hsl(210, 20%, 80%);
+    --dsh-sauce: hsl(24, 62%, 30%);
+    --dsh-pat0: hsl(215, 64%, 46%);
+    --dsh-pat1: hsl(212, 38%, 44%);
+    --dsh-pat2: hsl(24, 30%, 40%);
+    --dsh-pat3: hsl(24, 56%, 32%);
+    --dsh-bubble: hsla(200, 60%, 60%, 0.9);
+    --dsh-bubble-fill: hsla(200, 80%, 92%, 0.6);
+
+    /* ── V1.34 挑豆子（.bns-）：木盤、紅豆與各種雜物 ── */
+    --bns-wood: hsl(32, 48%, 66%);
+    --bns-wood-edge: hsl(28, 44%, 38%);
+    --bns-red: hsl(4, 58%, 34%);
+    --bns-adz: hsl(6, 52%, 36%);
+    --bns-pinto: hsl(354, 40%, 25%);
+    --bns-mung: hsl(100, 42%, 44%);
+    --bns-black: hsl(24, 12%, 14%);
+    --bns-redstone: hsl(8, 46%, 40%);
+    --bns-redstone-edge: hsl(8, 40%, 26%);
+    --bns-stone: hsl(30, 4%, 54%);
+    --bns-stone-edge: hsl(30, 6%, 34%);
+    --bns-shine: hsla(0, 0%, 100%, 0.4);
+    --bns-spot: hsl(40, 50%, 78%);
+    --bns-shadow: hsla(24, 40%, 10%, 0.45);
+    --bns-bowl: hsl(210, 34%, 90%);
+    --bns-bowl-edge: hsl(210, 30%, 56%);
+    --bns-bowl-hot: hsl(140, 44%, 84%);
+
+    /* ── V1.34 一路減七（.mn7-）：老式計算機的綠色液晶與銀色按鍵 ── */
+    --mn7-lcd-bg: hsl(86, 26%, 62%);
+    --mn7-lcd: hsl(130, 40%, 16%);
+    --mn7-lcd-glow: hsla(96, 60%, 80%, 0.5);
+    --mn7-lcd-shadow: hsla(130, 40%, 12%, 0.35);
+    --mn7-case: hsl(210, 8%, 44%);
+    --mn7-key-top: hsl(210, 10%, 94%);
+    --mn7-key-bottom: hsl(210, 10%, 78%);
+    --mn7-key-edge: hsl(210, 10%, 50%);
+
+    /* ── V1.34 迴轉壽司（.ssh-）：彩色盤子、輸送帶、壽司 ── */
+    --ssh-goal: hsl(14, 74%, 46%);
+    --ssh-plate-in: hsl(45, 40%, 98%);
+    --ssh-c-white: hsl(210, 14%, 80%);
+    --ssh-c-red: hsl(2, 74%, 56%);
+    --ssh-c-green: hsl(138, 46%, 48%);
+    --ssh-c-blue: hsl(212, 66%, 56%);
+    --ssh-c-gold: hsl(44, 90%, 54%);
+    --ssh-belt-a: hsl(210, 8%, 76%);
+    --ssh-belt-b: hsl(210, 8%, 68%);
+    --ssh-belt-edge: hsl(210, 8%, 50%);
+    --ssh-rice: hsl(48, 40%, 96%);
+    --ssh-salmon: hsl(14, 88%, 62%);
+    --ssh-egg: hsl(46, 92%, 62%);
+    --ssh-shrimp: hsl(354, 70%, 72%);
+
+    /* ── V1.34 找錢（.chg-）：老式收銀機的綠色液晶、抽屜 ── */
+    --chg-price: hsl(212, 62%, 44%);
+    --chg-paid: hsl(14, 74%, 46%);
+    --chg-lcd-bg: hsl(86, 26%, 62%);
+    --chg-lcd: hsl(130, 40%, 16%);
+    --chg-lcd-shadow: hsla(130, 40%, 12%, 0.35);
+    --chg-case: hsl(210, 8%, 44%);
+    --chg-drawer: hsl(28, 50%, 42%);
+
+    /* ── V1.34 打了幾折（.dsc-）：百貨公司週年慶的吊牌 ── */
+    --dsc-tag: hsl(48, 90%, 92%);
+    --dsc-tag-edge: hsl(8, 70%, 50%);
+    --dsc-red: hsl(4, 80%, 50%);
+
+    /* ── V1.34 時間連連看（.tpr-）：車站的指針鐘與紅色電子看板 ── */
+    --tpr-sel: hsl(48, 92%, 88%);
+    --tpr-sel-edge: hsl(36, 90%, 48%);
+    --tpr-face: hsl(45, 40%, 98%);
+    --tpr-rim: hsl(210, 14%, 52%);
+    --tpr-ink: hsl(24, 30%, 16%);
+    --tpr-led-bg: hsl(0, 0%, 14%);
+    --tpr-led: hsl(6, 90%, 60%);
+    --tpr-led-glow: hsla(6, 90%, 60%, 0.7);
+
+    /* ── V1.34 畫眉毛（.ebw-）：素描風的臉、咖啡色眉筆、淡紅色的鏡射眉 ── */
+    --ebw-skin: hsl(30, 70%, 90%);
+    --ebw-line: hsl(24, 24%, 34%);
+    --ebw-eyewhite: hsl(0, 0%, 100%);
+    --ebw-brow: hsl(24, 50%, 24%);
+    --ebw-ghost: hsl(2, 80%, 66%);
+
+    /* ── V1.34 擀水餃皮（.dgh-）：撒了麵粉的桌面、麵皮、擀麵棍 ── */
+    --dgh-table: hsl(32, 40%, 74%);
+    --dgh-flour: hsla(0, 0%, 100%, 0.35);
+    --dgh-sample: hsl(212, 50%, 42%);
+    --dgh-best: hsl(2, 74%, 56%);
+    --dgh-dough: hsl(48, 60%, 96%);
+    --dgh-dough-edge: hsl(36, 30%, 62%);
+    --dgh-pin: hsl(28, 48%, 44%);
+    --dgh-pin-lite: hsl(34, 56%, 62%);
+    --dgh-pin-edge: hsl(26, 44%, 30%);
+    /* V1.34 新遊戲顏色 end */
     --pr-scale: 1.66;
     /* 價格陷阱：標籤上所有文字放大的倍率（166%）；標籤放不下時 JS 會自動往下調，最小 1.0 倍 */
 

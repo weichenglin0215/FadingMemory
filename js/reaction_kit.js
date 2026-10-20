@@ -280,6 +280,11 @@
             cls: 'dlg--result' + (o.dock ? ' dlg--dock dlg--dock-' + o.dock : '')
         });
         if (!o.dock) fitResult(ctl);
+        /* V1.34.0 記住這一局停在第幾關（只增不減），下次進場從「最佳關卡 − 5」開始（見檔尾的 kit.entryLevel）。
+           o.level：遊戲明確告知的關卡（kit.run 一律會給，全破給最後一關）；
+           沒給的話，用 o.resume 反推——o.resume.level 是「失敗關卡 − 5」（大於 1 才有意義，所以 ＋5 就是失敗那一關）。 */
+        var lvReached = o.level != null ? o.level : (o.resume && o.resume.level > 1 ? o.resume.level + kit.RESUME_BACK : 0);
+        if (lvReached > 1 && Reaction.current) kit.noteLevel(Reaction.current.id, lvReached);
         /* 世界排行榜：一定要等結算卡片「已經在畫面上」才送——排行榜靠畫面上有沒有結算卡片
            （Reaction.resultShowing）判斷玩家是不是還在看結果，太早送的話，進榜的恭喜就只剩小提示。 */
         if (o.score != null && global.Leaderboard && Reaction.current) global.Leaderboard.submit(Reaction.current, o.score);
@@ -350,6 +355,59 @@
        進度只存在各遊戲頁面的記憶體裡，回主選單再進來就是第 1 關。 */
     kit.RESUME_BACK = 5;
     kit.resumeFrom = function (failLevel) { return Math.max(1, failLevel - kit.RESUME_BACK); };
+
+    /* ═══ 記住每一款闖關遊戲「個人最佳到過第幾關」，下次進來直接從「最佳關卡 − 5」開始（V1.34.0）═══
+       為什麼：資深玩家每次都從第 1 關慢慢打上來很浪費時間。
+       例：最佳到過第 30 關，下次進這款遊戲就從第 26 關開始——第 26、27、28、29、30 這 5 關再熱身一遍（使用者指定的例子）。
+       （注意跟「失敗後從前 5 關繼續」不同：那個是失敗關卡 − 5 ＝ 第 25 關；進場這個是 ENTRY_BACK ＝ 4，讓最佳關卡剛好是熱身的第 5 關。）
+       存在哪：瀏覽器的 localStorage（key：fm.reaction.lvbest.<遊戲 id>），只存「最大值」，只增不減；
+       跟 Reaction.setBest 的「最佳成績」是兩份獨立的資料——成績有的遊戲是累計分數、不是關卡數。
+       誰負責寫：kit.result（結算彈窗）一律會呼叫 kit.noteLevel，所以每款遊戲不用自己處理；
+       誰負責讀：闖關遊戲開場時呼叫 kit.entryLevel(遊戲 id)，拿到「該從第幾關開始」。 */
+    kit.ENTRY_BACK = kit.RESUME_BACK - 1;
+    kit.lvKey = function (id) { return 'fm.reaction.lvbest.' + id; };
+    /* 讀這款遊戲「到過的最高關卡」；沒玩過回傳 0 */
+    kit.levelBest = function (id) {
+        var v = UI.store.get(kit.lvKey(id), 0);
+        return typeof v === 'number' && isFinite(v) && v > 0 ? Math.floor(v) : 0;
+    };
+    /* 這一局結束時停在第 level 關：比舊紀錄高才更新（所以從第 26 關開始、只玩到第 28 關，紀錄不會被改小） */
+    kit.noteLevel = function (id, level) {
+        if (!id || !(level > 1)) return false;
+        if (level <= kit.levelBest(id)) return false;
+        UI.store.set(kit.lvKey(id), Math.floor(level));
+        return true;
+    };
+    /* kit.entryLevel(id, legacyAdd)：這次進場該從第幾關開始（最少第 1 關）。
+       舊玩家（這個功能上線前就玩過）沒有 lvbest 紀錄，就用「最佳成績」估一個：
+       legacyAdd 是「最佳成績 ＋ 幾 ＝ 到過的關卡」（成績是過了幾關，所以預設 ＋1；
+       成績本身就是撐到第幾關的遊戲傳 0）。估出來就存起來，以後都走同一條路。
+       ⚠ 只有「成績＝過關數」的闖關遊戲才該呼叫它；累計分數、單回合的遊戲不要用。 */
+    kit.entryLevel = function (id, legacyAdd) {
+        var lv = kit.levelBest(id);
+        if (!lv) {
+            var b = Reaction.getBest(id);
+            if (typeof b === 'number' && isFinite(b) && b > 0) {
+                lv = Math.floor(b) + (legacyAdd == null ? 1 : legacyAdd);
+                kit.noteLevel(id, lv);
+            }
+        }
+        return Math.max(1, lv - kit.ENTRY_BACK);
+    };
+    /* kit.enter(id, startFn, legacyAdd)：舊式闖關遊戲（自己有 round(從第幾關開始) 函式的那些）在 mount 最後一行呼叫它，
+       取代原本的 round(1)——算出進場關卡、開局、再跳「這次從第幾關開始」的小提示。回傳進場關卡。 */
+    kit.enter = function (id, startFn, legacyAdd) {
+        var from = kit.entryLevel(id, legacyAdd);
+        startFn(from);
+        kit.entryNotice(id, from);
+        return from;
+    };
+    /* kit.entryNotice(id, from)：從第 from 關開場（from > 1）時，在畫面下方跳一個小提示告訴玩家「這次是從哪一關開始」。
+       Dlg.toast 是彈窗公版的短暫小提示（見 js/dialog.js）；在 Node 測試環境沒有 Dlg 就什麼都不做。 */
+    kit.entryNotice = function (id, from) {
+        if (!(from > 1) || !global.Dlg || !Dlg.toast) return;
+        Dlg.toast('你最高玩到第 ' + kit.levelBest(id) + ' 關，這次從第 ' + from + ' 關開始');
+    };
 
     /* 匯出 REDUCED，並把 kit 掛到 Reaction 底下 */
     kit.REDUCED = REDUCED;

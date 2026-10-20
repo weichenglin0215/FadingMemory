@@ -44,64 +44,111 @@ console.log('D=162 gap=160 (2px overlap) → left', r5.left); ok(r5.left === 0, 
 { const t0 = process.hrtime.bigint(); sweeps(162, 150, 0); const ms = Number(process.hrtime.bigint() - t0) / 1e6; console.log('3 sweeps D=162 time', ms.toFixed(1), 'ms'); ok(ms < 400, 'perf'); }
 // 6. 筆刷縮小
 ok(T.brushAfter(100) < 100 && T.brushAfter(100) > 0 && T.brushAfter(T.BRUSH_MIN) === T.BRUSH_MIN && T.brushAfter(T.BRUSH_MIN + 0.001) === T.BRUSH_MIN, 'brush shrinks every dip and stops at the minimum');
-// ───────── V1.24：改成「蓋掉塗鴉」（底色上有 10 處以上、互相分開、粗細不一的鮮豔塗鴉） ─────────
+// ───────── V1.34.0：闖關制（第 1 關 1 處大塗鴉 → 第 12 關 12 處）、筆刷參數放寬、每一關沾油漆上限 40 次 ─────────
 const { rng, seedOf } = require('./load.js');
 const SEED = seedOf(20261012), rnd = rng(SEED);
-const cell = T.SQ / T.GRID;
-ok(T.SCRIBBLE_MIN === 10 && T.SCRIBBLE_MAX >= 10 && T.GRID === 4 && T.PEN_SIZES.length === 7 && Math.min(...T.PEN_SIZES) === 6 && Math.max(...T.PEN_SIZES) === 30, '塗鴉的參數：至少 10 處、4×4 小區、筆頭 6～30px');
-ok(T.SHRINK === 0.88 && T.BUDGET_MULT === 1 && T.BRUSH_START === 80 && T.BRUSH_MIN === 3, '玩家調過的筆刷參數沒有被改掉（縮小 0.88、油漆量 1 倍、起始 80、最小 3）');
-const compStats = [], lenStats = [], kindsSeen = {}, sizesSeenAll = new Set();
-for (let g = 0; g < 120; g++) {
-  const scr = T.makeScribbles(rnd);
-  ok(scr.length >= T.SCRIBBLE_MIN && scr.length <= T.SCRIBBLE_MAX, '塗鴉處數 ' + scr.length);
-  const cells = new Set(), widths = new Set();
-  let polyLen = 0;
-  scr.forEach((sc, k) => {
-    kindsSeen[sc.kind] = (kindsSeen[sc.kind] || 0) + 1; widths.add(sc.w); sizesSeenAll.add(sc.w);
-    ok(T.KINDS.indexOf(sc.kind) >= 0 && T.PEN_SIZES.indexOf(sc.w) >= 0 && T.INK_COLORS.indexOf(sc.color) >= 0 && sc.lines.length >= 1, '形狀、粗細、顏色都來自清單');
-    if (k > 0) ok(sc.kind !== scr[k - 1].kind, '連續兩處不是同一種形狀');
-    // 每一處塗鴉整個縮在自己的小區裡，離小區邊緣至少 筆頭半徑 ＋ SCRIBBLE_GAP（所以兩處塗鴉之間至少隔 2×SCRIBBLE_GAP）
-    const p0 = sc.lines[0][0], ci = Math.floor(p0[0] / cell) + T.GRID * Math.floor(p0[1] / cell);
-    ok(!cells.has(ci), '每一處塗鴉在不同的小區'); cells.add(ci);
-    const x0 = (ci % T.GRID) * cell, y0 = Math.floor(ci / T.GRID) * cell, pad = sc.w / 2 + T.SCRIBBLE_GAP - 1e-6;
-    sc.lines.forEach(ln => {
-      ok(ln.length >= 2, 'a line has at least 2 points');
-      for (let i = 0; i < ln.length; i++) {
-        const p = ln[i];
-        ok(p[0] >= x0 + pad && p[0] <= x0 + cell - pad && p[1] >= y0 + pad && p[1] <= y0 + cell - pad, '塗鴉的點縮在自己的小區裡（' + sc.kind + ' w=' + sc.w + '）：' + p.map(v => v.toFixed(1)));
-        if (i) { const d = Math.hypot(p[0] - ln[i - 1][0], p[1] - ln[i - 1][1]); polyLen += d; ok(d <= 3.0001 || sc.kind === 'dot', '點跟點之間 ≤ 3px：' + d.toFixed(2) + ' ' + sc.kind); }
-      }
+ok(T.MAX_LEVEL === 12 && T.SCRIBBLE_MAX === 12 && T.PEN_SIZES.length === 7 && Math.min(...T.PEN_SIZES) === 6 && Math.max(...T.PEN_SIZES) === 30, '關卡與塗鴉參數：12 關、最多 12 處、筆頭 6～30px');
+ok(T.DIP_MAX === 40, '每一關沾油漆上限 40 次（玩家指定）');
+// 玩家意見：筆刷縮小的比例放大一些（舊版 0.88）、最小筆刷放大（舊版 3）
+ok(T.SHRINK === 0.93 && T.SHRINK > 0.88 && T.BRUSH_MIN === 10 && T.BRUSH_MIN > 3 && T.BUDGET_MULT === 1 && T.BRUSH_START === 80, '筆刷參數：縮小 0.93（舊版 0.88）、最小 10（舊版 3）、油漆量 1 倍、起始 80');
+{ let d = T.BRUSH_START, d10 = 0, d20 = 0; for (let i = 1; i <= 40; i++) { d = T.brushAfter(d); if (i === 10) d10 = d; if (i === 20) d20 = d; ok(d >= T.BRUSH_MIN, '筆刷不會小於最小值'); }
+  ok(d10 > 35, '沾 10 次後筆刷還有 ' + d10.toFixed(1) + 'px（舊版 0.88 只剩 22px）'); ok(d20 > 15, '沾 20 次後筆刷還有 ' + d20.toFixed(1) + 'px'); ok(d >= T.BRUSH_MIN && d <= T.BRUSH_MIN * 1.0001, '沾 40 次後縮到最小值 ' + d.toFixed(2) + 'px'); }
+// 處數、小區
+ok(T.scribbleCount(1) === 1 && T.scribbleCount(2) === 2 && T.scribbleCount(12) === 12 && T.scribbleCount(13) === 12 && T.scribbleCount(99) === 12 && T.scribbleCount(0) === 1 && T.scribbleCount() === 12, '第 N 關畫 N 處，最多 12 處');
+ok(T.gridFor(1) === 1 && T.gridFor(2) === 2 && T.gridFor(4) === 2 && T.gridFor(5) === 3 && T.gridFor(9) === 3 && T.gridFor(10) === 4 && T.gridFor(12) === 4, '處數 → 切成幾乘幾個小區');
+
+const compStats = {}, kindsSeen = {}, sizesSeenAll = new Set(), level1Sides = [];
+for (let L = 1; L <= 14; L++) {
+  const K = T.scribbleCount(L), g = T.gridFor(K), cell = T.SQ / g;
+  compStats[L] = [];
+  for (let n = 0; n < 40; n++) {
+    const scr = T.makeScribbles(rnd, L);
+    ok(scr.length === K, '第 ' + L + ' 關塗鴉處數 ' + scr.length + '（要 ' + K + '）');
+    const cells = new Set(), widths = new Set();
+    let areaSum = 0;
+    scr.forEach((sc, k) => {
+      kindsSeen[sc.kind] = (kindsSeen[sc.kind] || 0) + 1; widths.add(sc.w); sizesSeenAll.add(sc.w);
+      ok(T.KINDS.indexOf(sc.kind) >= 0 && T.PEN_SIZES.indexOf(sc.w) >= 0 && T.INK_COLORS.indexOf(sc.color) >= 0 && sc.lines.length >= 1, '形狀、粗細、顏色都來自清單');
+      if (k > 0 && K > 1) ok(sc.kind !== scr[k - 1].kind, '連續兩處不是同一種形狀');
+      ok(sc.kind !== 'dot' || sc.side <= T.DOT_MAX_SIDE, '大圖案（邊長 ' + sc.side.toFixed(0) + '）不抽圓點');
+      areaSum += sc.side * sc.side;
+      // 每處的邊長 ＝ min(想要的邊長 √(SCRIBBLE_AREA ÷ K)，小區扣掉筆頭與空隙後剩下的空間)
+      const room = cell - 2 * (sc.w / 2 + T.SCRIBBLE_GAP), want = Math.sqrt(T.SCRIBBLE_AREA / K);
+      ok(Math.abs(sc.side - Math.min(want, room)) < 1e-6, '第 ' + L + ' 關：邊長 ' + sc.side.toFixed(1) + ' ＝ min(' + want.toFixed(1) + ', ' + room.toFixed(1) + ')');
+      // 每一處塗鴉整個縮在自己的小區裡，離小區邊緣至少 筆頭半徑 ＋ SCRIBBLE_GAP（所以兩處塗鴉之間至少隔 2×SCRIBBLE_GAP）
+      const p0 = sc.lines[0][0], ci = Math.floor(p0[0] / cell) + g * Math.floor(p0[1] / cell);
+      ok(!cells.has(ci), '每一處塗鴉在不同的小區'); cells.add(ci);
+      const x0 = (ci % g) * cell, y0 = Math.floor(ci / g) * cell, pad = sc.w / 2 + T.SCRIBBLE_GAP - 1e-6;
+      sc.lines.forEach(ln => {
+        ok(ln.length >= 2, 'a line has at least 2 points');
+        for (let i = 0; i < ln.length; i++) {
+          const p = ln[i];
+          ok(p[0] >= x0 + pad && p[0] <= x0 + cell - pad && p[1] >= y0 + pad && p[1] <= y0 + cell - pad, '第 ' + L + ' 關：塗鴉的點縮在自己的小區裡（' + sc.kind + ' w=' + sc.w + '）：' + p.map(v => v.toFixed(1)));
+          if (i) { const d = Math.hypot(p[0] - ln[i - 1][0], p[1] - ln[i - 1][1]); ok(d <= 3.0001 || sc.kind === 'dot', '點跟點之間 ≤ 3px：' + d.toFixed(2) + ' ' + sc.kind); }
+        }
+      });
     });
-  });
-  ok(widths.size >= 5, '每一局的筆頭粗細要有很多種（' + widths.size + ' 種）');
-  lenStats.push(polyLen);
-  // 遮罩：塗鴉格子＝0、其他＝1，left＝total＝塗鴉格數；連通區域至少 10 塊
-  const m = T.scribbleMask(scr, T.SQ);
-  ok(m.left === m.total && m.total > 2000 && m.total < T.SQ * T.SQ * 0.35, '遮罩的塗鴉格數合理：' + m.total + '（占方塊 ' + (m.total / T.SQ / T.SQ * 100).toFixed(1) + '%）');
-  let zeros = 0; for (let i = 0; i < m.data.length; i++) { ok(m.data[i] === 0 || m.data[i] === 1, 'mask values'); if (m.data[i] === 0) zeros++; }
-  ok(zeros === m.total, 'left equals the number of 0 cells');
-  const comps = T.holes(m, 200);
-  ok(comps.length >= T.SCRIBBLE_MIN, '至少 10 處不連續的塗鴉（連通區域 ' + comps.length + ' 塊）');
-  ok(comps.reduce((a, c) => a + c.size, 0) === m.total, 'components add up to the total');
-  compStats.push(comps.length);
-  // 用「半徑夠大」的圓沿著每一條塗鴉線蓋過去 → 全部蓋掉（left === 0）；半徑太小（比塗鴉細）就一定蓋不完
-  const full = T.scribbleMask(scr, T.SQ), thin = T.scribbleMask(scr, T.SQ);
-  scr.forEach(sc => sc.lines.forEach(ln => { for (let i = 1; i < ln.length; i++) { T.stampSegment(full, ln[i - 1][0], ln[i - 1][1], ln[i][0], ln[i][1], sc.w / 2 + 3); T.stampSegment(thin, ln[i - 1][0], ln[i - 1][1], ln[i][0], ln[i][1], Math.max(1.2, sc.w / 2 - 2)); } }));
-  ok(full.left === 0, '半徑夠大的筆刷沿著塗鴉走一遍，塗鴉全部蓋掉（left=' + full.left + '）');
-  ok(thin.left > 0, '太細的筆刷蓋不完');
+    // 「面積」：所有塗鴉外框（方形）面積總和不會超過 SCRIBBLE_AREA；小區放得下的話正好等於它（第 1 關那一處被放大到整個面積）
+    ok(areaSum <= T.SCRIBBLE_AREA * 1.0001, '第 ' + L + ' 關：外框面積總和 ' + areaSum.toFixed(0) + ' 不超過 ' + T.SCRIBBLE_AREA);
+    if (K === 1) ok(Math.abs(areaSum - T.SCRIBBLE_AREA) < 1, '第 1 關（整個方塊都是它的小區）：外框面積 ' + areaSum.toFixed(0) + ' ＝ ' + T.SCRIBBLE_AREA);
+    if (K === 1) level1Sides.push(scr[0].side);
+    if (K >= 7) ok(widths.size >= 5, '處數多的關卡，筆頭粗細要有很多種（' + widths.size + ' 種）');
+    // 遮罩：塗鴉格子＝0、其他＝1，left＝total＝塗鴉格數；連通區域至少 K 塊
+    const m = T.scribbleMask(scr, T.SQ);
+    ok(m.left === m.total && m.total > 800 && m.total < T.SQ * T.SQ * 0.4, '第 ' + L + ' 關遮罩的塗鴉格數合理：' + m.total + '（占方塊 ' + (m.total / T.SQ / T.SQ * 100).toFixed(1) + '%）');
+    let zeros = 0; for (let i = 0; i < m.data.length; i++) { ok(m.data[i] === 0 || m.data[i] === 1, 'mask values'); if (m.data[i] === 0) zeros++; }
+    ok(zeros === m.total, 'left equals the number of 0 cells');
+    const comps = T.holes(m, 200);
+    ok(comps.length >= K, '第 ' + L + ' 關至少 ' + K + ' 處不連續的塗鴉（連通區域 ' + comps.length + ' 塊）');
+    ok(comps.reduce((a, c) => a + c.size, 0) === m.total, 'components add up to the total');
+    compStats[L].push(comps.length);
+    // 用「半徑夠大」的圓沿著每一條塗鴉線蓋過去 → 全部蓋掉（left === 0）；半徑太小（比塗鴉細）就一定蓋不完
+    const full = T.scribbleMask(scr, T.SQ), thin = T.scribbleMask(scr, T.SQ);
+    scr.forEach(sc => sc.lines.forEach(ln => { for (let i = 1; i < ln.length; i++) { T.stampSegment(full, ln[i - 1][0], ln[i - 1][1], ln[i][0], ln[i][1], sc.w / 2 + 3); T.stampSegment(thin, ln[i - 1][0], ln[i - 1][1], ln[i][0], ln[i][1], Math.max(1.2, sc.w / 2 - 2)); } }));
+    ok(full.left === 0, '半徑夠大的筆刷沿著塗鴉走一遍，塗鴉全部蓋掉（left=' + full.left + '）');
+    ok(thin.left > 0, '太細的筆刷蓋不完');
+  }
 }
 const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
-console.log('塗鴉連通區域：平均 ' + mean(compStats).toFixed(1) + ' 塊（最少 ' + Math.min(...compStats) + '）；塗鴉線總長平均 ' + mean(lenStats).toFixed(0) + ' px（最長 ' + Math.max(...lenStats).toFixed(0) + '）；形狀分布 ' + JSON.stringify(kindsSeen));
+console.log('第 1 關那一處塗鴉的邊長：平均 ' + mean(level1Sides).toFixed(0) + 'px（最小 ' + Math.min(...level1Sides).toFixed(0) + '）；舊版每處只有約 70px');
+ok(Math.min(...level1Sides) >= 150 && Math.abs(mean(level1Sides) - Math.sqrt(T.SCRIBBLE_AREA)) < 40, '第 1 關的單一圖案比舊版（約 70px）大很多，邊長接近 √' + T.SCRIBBLE_AREA + ' ＝ ' + Math.sqrt(T.SCRIBBLE_AREA).toFixed(0));
 ok(Object.keys(kindsSeen).length === T.KINDS.length, '九種形狀都會出現：' + Object.keys(kindsSeen).length);
 ok(sizesSeenAll.size === 7, '七種筆頭粗細都會出現');
-ok(Math.max(...lenStats) < 4200, '塗鴉線的總長不會長到玩家畫不完（最長 ' + Math.max(...lenStats).toFixed(0) + ' px，每沾一次可畫 ' + T.SQ * T.BUDGET_MULT + ' px）');
-// 蓋塗鴉比原本塗滿方塊省時：原本要塗滿 400×400（至少要掃 SQ×SQ ÷ 筆刷直徑 的長度），現在只要蓋住塗鴉線（總長約 ' + mean(lenStats).toFixed(0) + ' px，不用管其他地方）
-{
-  let D = T.BRUSH_START, dipsOld = 0, area = 0;
-  for (dipsOld = 1; dipsOld <= 60; dipsOld++) { D = T.brushAfter(D); area += D * T.SQ * T.BUDGET_MULT; if (area >= T.SQ * T.SQ) break; }
-  const dipsNew = Math.ceil(mean(lenStats) / (T.SQ * T.BUDGET_MULT));
-  console.log('理論最少沾油漆次數（不重複、路線完美）：舊玩法塗滿方塊 ' + dipsOld + ' 次 → 新玩法蓋塗鴉約 ' + dipsNew + ' 次（光是塗鴉線總長 ÷ ' + T.SQ * T.BUDGET_MULT + '）');
-  ok(dipsNew < dipsOld, '新玩法比舊玩法省時');
+
+// ── 機器人實測：認真的玩家（沿著塗鴉的線一筆一筆畫、手指離開螢幕不耗油漆）每一關要沾幾次油漆 ──
+//    waste：多浪費幾成油漆（0＝完美、0.5＝每段多畫一半、1＝浪費一倍），模擬不太會規劃的玩家
+function bot(scr, waste, rand) {
+  const m = T.scribbleMask(scr, T.SQ);
+  let D = T.BRUSH_START, dips = 0, budget = 0;
+  const dip = () => { dips++; D = T.brushAfter(D); budget = T.SQ * T.BUDGET_MULT; };
+  const order = scr.slice().sort((a, b) => b.w - a.w);                // 先蓋粗的、再蓋細的
+  for (const sc of order) for (const ln of sc.lines) {
+    let i = 0;
+    while (i < ln.length && dips <= 400) {
+      if (budget <= 0) dip();
+      T.stampDisc(m, ln[i][0], ln[i][1], D / 2); budget = Math.max(0, budget - D);       // 起筆的圓點也耗油漆
+      while (++i < ln.length && budget > 0) {
+        const len = Math.hypot(ln[i][0] - ln[i - 1][0], ln[i][1] - ln[i - 1][1]), use = Math.min(budget, len * (1 + waste));
+        T.stampSegment(m, ln[i - 1][0], ln[i - 1][1], ln[i][0], ln[i][1], D / 2);
+        budget -= use;
+      }
+    }
+  }
+  return { dips, left: m.left };
 }
-ok(T.rating(6) !== T.rating(8) && T.rating(8) !== T.rating(11) && T.rating(11) !== T.rating(15) && T.rating(15) !== T.rating(20) && T.rating(7) === T.rating(1), '評語分級');
+for (const waste of [0, 0.5, 1]) {
+  const row = [];
+  for (let L = 1; L <= 12; L++) { const ds = []; for (let n = 0; n < 25; n++) { const r = bot(T.makeScribbles(rnd, L), waste, rnd); ds.push(r.dips); ok(r.left === 0, '機器人把塗鴉蓋完'); } row.push(mean(ds).toFixed(1) + '(' + Math.max(...ds) + ')'); if (waste === 0) ok(Math.max(...ds) <= 25, '第 ' + L + ' 關：完美路線最多只要沾 ' + Math.max(...ds) + ' 次（上限 ' + T.DIP_MAX + '）'); if (waste === 1 && L <= 6) ok(Math.max(...ds) <= T.DIP_MAX, '第 ' + L + ' 關：浪費一倍油漆的玩家前 6 關也不會超過上限（最多 ' + Math.max(...ds) + ' 次）'); }
+  console.log('浪費 ' + waste * 100 + '% 油漆的機器人，第 1～12 關平均沾幾次（最多）：' + row.join('  '));
+}
+{ // 最後一關（12 處）完美路線也要沾得夠多才有挑戰，不是一兩次就好
+  const ds = []; for (let n = 0; n < 30; n++) ds.push(bot(T.makeScribbles(rnd, 12), 0, rnd).dips);
+  ok(mean(ds) >= 6, '第 12 關完美路線平均要沾 ' + mean(ds).toFixed(1) + ' 次（不能太輕鬆）');
+  const d1 = []; for (let n = 0; n < 30; n++) d1.push(bot(T.makeScribbles(rnd, 1), 0, rnd).dips);
+  ok(mean(d1) < mean(ds), '第 1 關比第 12 關省油漆：' + mean(d1).toFixed(1) + ' < ' + mean(ds).toFixed(1));
+}
+// 評語分級、成績規格
+ok(T.rating(0) === T.rating(2) && T.rating(2) !== T.rating(3) && T.rating(3) !== T.rating(6) && T.rating(6) !== T.rating(9) && T.rating(9) !== T.rating(12) && T.rating(12) === T.rating(99), '評語分級（闖過幾關）');
+ok(G.score.better === 'max' && G.score.min === 1 && G.score.max === T.MAX_LEVEL && G.score.decimals === 0 && /關/.test(G.score.format), '成績規格：闖過幾關，越大越好，1～' + T.MAX_LEVEL);
+ok(/40/.test(G.rule) && /第 1 關只有 1 處/.test(G.rule) && /超過就失敗/.test(G.rule), '玩法說明有寫「第 1 關只有 1 處大塗鴉」「每一關最多沾 40 次，超過就失敗」');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

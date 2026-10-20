@@ -176,14 +176,14 @@
         var R = null;
 
         /* round：開一局（從第 1 關開始，猜錯就結束） */
-        function round() {
+        function round(startAt) {
             if (R) R.dispose();
             R = kit.round();
             var my = R;
             root.innerHTML = '';
 
             /* level 目前第幾關；cleared 已經猜中幾關；newRec 有沒有刷新最佳；cur 這一關的資料；picked 玩家猜的收集口 */
-            var level = 0, cleared = 0, newRec = false, state = 'idle', rid = 0, cur = null, picked = null;
+            var level = (startAt || 1) - 1, cleared = level, newRec = false, state = 'idle', rid = 0, cur = null, picked = null;
             var head = h('div', { 'class': 'bo-head' });
             var banner = h('div', { 'class': 'bo-banner' });
             var field = h('div', { 'class': 'bo-field' });
@@ -298,7 +298,7 @@
                 state = 'done';
                 console.log('球會跑去哪：通過 ' + cleared + ' 關' + (all ? '（全部通關）' : '，第 ' + level + ' 關猜錯（簾子基數 ' + cur.base.toFixed(3) + '）'));
                 kit.result(root, {
-                    score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字；0 關不在有效範圍，不會送） */
+                    score: cleared, level: level,        /* 世界排行榜成績（跟 setBest 存的同一個數字；0 關不在有效範圍，不會送）；level：記下到過第幾關 */
                     num: cleared + ' 關', label: rating(cleared),
                     lines: all ? [LAST_LEVEL + ' 關全部猜中！簾子已經高到幾乎看不到任何東西了'] : ['第 ' + level + ' 關猜錯了', '只有猜中那一格才算過關，沒有時間限制'],
                     isNew: newRec && cleared > 0, sfx: cleared >= 7 ? 'win' : 'fail', onAgain: round
@@ -314,11 +314,12 @@
                 /* 直接跳到第 n 關（驗證高關卡的畫面用；前面的關卡視為已通過） */
                 goto: function (n) { level = n - 1; cleared = n - 1; startLevel(); }
             };
-            /* 開場等 400 毫秒再開始第 1 關 */
+            /* 開場等 400 毫秒再開始第 1 關（或進場關卡） */
             my.after(400, startLevel);
         }
 
-        round();
+        /* V1.34.0：從「個人最佳關卡 − 4」開始，沒玩過就是第 1 關（kit.entryLevel，見 reaction_kit.js） */
+        kit.enter(ID, round);
     }
 
     /* 遊戲身分證 */

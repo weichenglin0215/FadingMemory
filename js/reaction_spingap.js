@@ -13,6 +13,13 @@
    · 難度線性（RAMP_LEVELS 發走到頂）：轉速 0.25 → 0.75 圈／秒；缺口 80 度 → 36 度。
      到頂時容許的時間誤差約 ±52 毫秒（有人類能做到的餘裕，規範 Q15）。
    · 揭曉：寫出「缺口與砲彈差 X.XXXX 度（容許 ±Y.YYYY 度）」。
+   · V1.34（玩家意見：每一圈的速度不能相同、也不能每一關線性加快，很容易被玩家抓到節奏）：
+       - omegaDeg(level) 現在只是「基準轉速」（依關卡慢慢加快的趨勢）；每一圈實際的轉速由 nextOmega 決定：
+         比上一圈的轉速隨機變快或變慢 SPEED_STEP（5%～20%）——方向（快／慢）隨機，幅度在 5%～20% 之間隨機，所以每一圈都跟上一圈不一樣、
+         也不是一路加快；
+       - 為了不讓轉速跑太遠（連續變快幾次後面會快到做不到），實際轉速限制在基準轉速的 ±SPEED_BAND（15%）以內：
+         快要碰到上界就只能變慢、碰到下界就只能變快，其他時候快慢各半；整體還是慢慢往上加難。
+       - 轉速要接著上一圈（carry 記著上一圈的轉速），第一圈（或中途從第 N 關開始）在基準的 ±SPEED_BAND 內隨機。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -25,6 +32,8 @@
     var RAMP_LEVELS = 40;                       /* 幾發之後難度到頂 */
     var OMEGA_REV = [0.25, 0.66];               /* 圓環轉速（圈／秒）：第 1 發 → 到頂 */
     var GAP_DEG = [90, 30];                     /* 缺口的寬度（度）：第 1 發 → 到頂 */
+    var SPEED_STEP = [0.05, 0.20];              /* 每一圈比上一圈變快或變慢多少（比例）：每圈在 5%～20% 之間隨機，快或慢也隨機 */
+    var SPEED_BAND = 0.15;                      /* 實際轉速最多離「基準轉速」快或慢多少（比例）：避免連續變快、越跑越遠 */
     var FLIGHT_S = 0.6;                         /* 砲彈從砲口飛到環內緣要幾秒（固定，企劃指定 0.6 秒） */
     var RING_R = 178;                           /* 圓環中心線的半徑（邏輯 px） */
     var RING_W = 24;                            /* 圓環的粗細 */
@@ -37,6 +46,20 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function omegaDeg(level) { return kit.ramp(level, OMEGA_REV[0], OMEGA_REV[1], RAMP_LEVELS) * 360; }       /* 度／秒 */
     function gapFor(level) { return kit.ramp(level, GAP_DEG[0], GAP_DEG[1], RAMP_LEVELS); }
+    /* 這一圈（第 level 發）實際的轉速（度／秒）：prev＝上一圈的轉速（第一圈傳 null）。
+       規則：在基準轉速 omegaDeg(level) 的 ±SPEED_BAND 範圍內，比上一圈快或慢 SPEED_STEP[0]～SPEED_STEP[1]（5%～20%）；
+       往上加快 5% 會超出範圍就只能變慢，往下變慢 5% 會低於範圍就只能變快，兩邊都行就各半機率。 */
+    function nextOmega(prev, level, rand) {
+        rand = rand || Math.random;
+        var base = omegaDeg(level), lo = base * (1 - SPEED_BAND), hi = base * (1 + SPEED_BAND);
+        if (prev == null) return kit.randFloat(lo, hi, rand);
+        var upOk = prev * (1 + SPEED_STEP[0]) <= hi, downOk = prev * (1 - SPEED_STEP[0]) >= lo;
+        var up = upOk && (!downOk || rand() < 0.5);
+        if (!upOk && !downOk) up = prev < lo;                    /* prev 已經在範圍外（基準自己往上走了）：往範圍的方向走 */
+        var rMax = up ? Math.min(SPEED_STEP[1], hi / prev - 1) : Math.min(SPEED_STEP[1], 1 - lo / prev);
+        var r = kit.randFloat(SPEED_STEP[0], Math.max(SPEED_STEP[0], rMax), rand);
+        return up ? prev * (1 + r) : prev * (1 - r);
+    }
     /* 把角度整理到 −180～180 */
     function norm180(a) { a = ((a + 180) % 360 + 360) % 360 - 180; return a === -180 ? 180 : a; }
     /* 缺口中心在第 t 秒的角度 */
@@ -101,14 +124,15 @@
     function setup(api) {
         var stage = api.stage, level = api.level;
         var W = stage.clientWidth || 472, cx = W / 2, cy = CENTER_Y;
-        var om = omegaDeg(level), gap = gapFor(level), geom = ballGeom();
+        /* 這一圈的轉速：接著上一圈（上一發剛結束、carry.level ＝ level − 1）的轉速變快或變慢 5%～20%；第一圈（或中途開始）在基準附近隨機 */
+        var om = nextOmega(carry && carry.level === level - 1 ? carry.om : null, level, api.rand), gap = gapFor(level), geom = ballGeom();
         /* 環的起始角度：接著上一發轉（第 1 發隨機） */
         var now0 = performance.now();
         var phi0 = (level === 1 || !carry) ? kit.randFloat(-180, 180, api.rand) : carry.phi + carry.om * (now0 - carry.t) / 1000;
         var tBase = now0;
         function phiNow(tMs) { return gapAt(phi0, om, (tMs - tBase) / 1000); }
-        api.info = { omega: om, gap: gap, tol: tolDeg(level), tolMs: tolMs(level) };
-        console.log('[穿過旋轉縫] 第 ' + level + ' 發：轉速 ' + om.toFixed(4) + ' 度/秒，缺口 ' + gap.toFixed(4) + ' 度，容許 ±' + tolDeg(level).toFixed(4) + ' 度（±' + tolMs(level).toFixed(1) + ' ms）');
+        api.info = { omega: om, base: omegaDeg(level), gap: gap, tol: tolDeg(level), tolMs: tolDeg(level) / om * 1000 };
+        console.log('[穿過旋轉縫] 第 ' + level + ' 發：轉速 ' + om.toFixed(4) + ' 度/秒（基準 ' + omegaDeg(level).toFixed(4) + '，上一圈 ' + (carry && carry.level === level - 1 ? carry.om.toFixed(4) : '—') + '），缺口 ' + gap.toFixed(4) + ' 度，容許 ±' + tolDeg(level).toFixed(4) + ' 度（±' + (tolDeg(level) / om * 1000).toFixed(1) + ' ms）');
 
         var svg = kit.svg('svg', { 'class': 'spg-svg', viewBox: '0 0 ' + W + ' 640', width: W, height: 640 }, stage);
         var C = 2 * Math.PI * RING_R;
@@ -133,7 +157,7 @@
         var loop = api.my.loop(function () {
             var t = performance.now();
             if (state !== 'blocked') paintRing(t);
-            carry = { phi: phiNow(t), om: om, t: t };
+            carry = { phi: phiNow(t), om: om, t: t, level: level };
             if (state === 'flying' || state === 'passed') {
                 var s = (t - tFire) / 1000, y = geom.y0 - geom.v * s;
                 ball.setAttribute('cy', y.toFixed(2));
@@ -184,12 +208,12 @@
     var G = {
         id: ID,
         name: '穿過旋轉縫',
-        rule: '圓環一直在旋轉，環上有一個缺口。點一下螢幕，環裡的砲台會射出砲彈，飛 0.6 秒後抵達環的上緣，**那一刻缺口要剛好轉到上方**，砲彈才能穿出去。**撞到環就結束**，看你能射出幾顆。越後面，轉得越快、缺口越小！',
+        rule: '圓環一直在旋轉，環上有一個缺口。點一下螢幕，環裡的砲台會射出砲彈，飛 0.6 秒後抵達環的上緣，**那一刻缺口要剛好轉到上方**，砲彈才能穿出去。**撞到環就結束**，看你能射出幾顆。**每一圈的轉速都不一樣**（比上一圈快或慢 5%～20%），別想靠節奏！越後面，整體轉得越快、缺口越小！',
         mount: mount,
         score: SCORE,
         test: {
-            omegaDeg: omegaDeg, gapFor: gapFor, norm180: norm180, gapAt: gapAt, ballHalfDeg: ballHalfDeg, tolDeg: tolDeg, tolMs: tolMs, judgeShot: judgeShot, perfectDelay: perfectDelay, ballGeom: ballGeom, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, OMEGA_REV: OMEGA_REV, GAP_DEG: GAP_DEG, FLIGHT_S: FLIGHT_S, RING_R: RING_R, BALL_R: BALL_R, TOP_DEG: TOP_DEG, MAX_LEVEL: MAX_LEVEL
+            omegaDeg: omegaDeg, nextOmega: nextOmega, gapFor: gapFor, norm180: norm180, gapAt: gapAt, ballHalfDeg: ballHalfDeg, tolDeg: tolDeg, tolMs: tolMs, judgeShot: judgeShot, perfectDelay: perfectDelay, ballGeom: ballGeom, rating: rating,
+            RAMP_LEVELS: RAMP_LEVELS, SPEED_STEP: SPEED_STEP, SPEED_BAND: SPEED_BAND, OMEGA_REV: OMEGA_REV, GAP_DEG: GAP_DEG, FLIGHT_S: FLIGHT_S, RING_R: RING_R, BALL_R: BALL_R, TOP_DEG: TOP_DEG, MAX_LEVEL: MAX_LEVEL
         }
     };
     Reaction.register(G);

@@ -13,6 +13,7 @@ global.UI.icon = () => '';
 require(ROOT + 'js/reaction_core.js');
 require(ROOT + 'js/reaction_kit.js');
 require(ROOT + 'js/reaction_kit3.js');    // 第三批共用小工具（kit.mod／kit.sample…；V1.22.0）
+require(ROOT + 'js/reaction_kit4.js');    // 第四批共用小工具（方格地圖 kit.gridNeighbors／kit.hamPath…；V1.34.0）
 require(ROOT + 'js/similar_chars.js');    // 共用資料庫：長得很像的中文字（V1.33.0；對準才看到、手電筒猜圖、鏡中旋轉字…都用它）
 require(ROOT + 'js/ghostleg_core.js');     // 鬼腳圖的共用出題工具（V1.33.0；鬼腳圖、鬼腳圖減一 都用它）
 require(ROOT + 'js/leaderboard.js');       // 遊戲的結算流程會呼叫 Leaderboard.fake4／fmtNum／submit（測試只呼叫純函式，但要找得到它）
