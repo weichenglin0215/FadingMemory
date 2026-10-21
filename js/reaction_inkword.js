@@ -14,18 +14,18 @@
     'use strict';
 
     var ID = 'inkword';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var LEN = [3, 7];                           /* 閃幾個字：第 1 關 → 到頂 */
     var FLASH_MS = [800, 380];                  /* 每個字停留多久（毫秒）：第 1 關 → 到頂 */
     var GAP_MS = [200, 100];                    /* 字與字之間的空檔（毫秒）：第 1 關 → 到頂 */
     var RESP_S = [10, 5];                       /* 作答的時間（秒）：第 1 關 → 到頂 */
     var WHICH_FROM = 8, WHICH_P = [0.15, 0.4];  /* 第幾關起會問「第幾個字是用 X 色寫的」、機率（第 WHICH_FROM 關 → 到頂） */
     var LEAD_MS = 600;
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var COLORS = [                              /* 六種顏色：id 對應 CSS 的 .ikw-c--id 與 theme 的 --ikw-id */
         { id: 'red', name: '紅' }, { id: 'yellow', name: '黃' }, { id: 'green', name: '綠' }, { id: 'blue', name: '藍' }, { id: 'purple', name: '紫' }, { id: 'orange', name: '橘' }
     ];

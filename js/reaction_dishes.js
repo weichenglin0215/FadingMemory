@@ -34,7 +34,7 @@
     var MIN_GAP = 4;                            /* 兩塊污漬之間至少隔這麼遠（邊與邊，盤子座標） */
     var NEXT_MS = 260;                          /* 洗乾淨之後多久換下一個盤子 */
     var SOLVE_CAP = 6;                          /* 驗證用：api.solve 最多幫忙洗幾個盤子 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function prog(n) { return Math.min(1, Math.max(0, n / RAMP_PLATES)); }

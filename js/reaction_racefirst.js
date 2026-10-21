@@ -31,11 +31,11 @@
     'use strict';
 
     var ID = 'racefirst';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 20;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var GAP = [0.1, 0.015];                    /* 第一名與第二名的到達時間差（秒）：第 1 關 → 到頂 */
     var T_WIN = [0.6, 0.72];                   /* 第一名的到達時間範圍（秒，每關隨機） */
     var SPREAD = [0.2, 0.5];                    /* 其餘名次之間的時間差 ＝ GAP × 這個範圍的隨機數 */
@@ -48,7 +48,7 @@
     var COUNT_STEPS = 3, COUNT_MS = 800;        /* 開跑前的倒數：3、2、1，每個數字停多久（毫秒） */
     var RUNNER_SCALE = 1.2;                     /* 小人畫多大（倍） */
     var STEP_RATE = 5;                          /* 跑步時手腳擺動的頻率（每秒幾個完整的擺動） */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var RUNNERS = 5;                            /* 幾個小人（V1.34：4 → 5；上限 6＝HUES 的顏色數，要更多得先加顏色） */
     var NUM_CN = ['零', '一', '二', '三', '四', '五', '六', '七', '八'];
     var HUES = [{ n: '紅', h: 4 }, { n: '橘', h: 28 }, { n: '黃', h: 48 }, { n: '綠', h: 135 }, { n: '藍', h: 212 }, { n: '紫', h: 282 }];

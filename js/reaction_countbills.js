@@ -16,18 +16,18 @@
     'use strict';
 
     var ID = 'countbills';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 20;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var COUNT = [4, 14];                        /* 要撥幾張才是目標：第 1 關 → 到頂（四捨五入） */
     var TIME_S = [15, 8];                       /* 限時（秒）：第 1 關 → 到頂 */
     var EXTRA = [4, 6];                         /* 目標之後再多放幾張（撥過頭用的，隨機） */
     var DENOMS_BASE = [100, 500, 1000];         /* 一開始的面額 */
     var DENOMS_LATER = [100, 200, 500, 1000, 2000];   /* 第 LATER_FROM 關起的面額（多了 200 和 2000） */
     var LATER_FROM = 10;
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

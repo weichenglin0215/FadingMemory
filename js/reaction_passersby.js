@@ -21,7 +21,7 @@
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 15;                       /* 幾關之後難度到頂（也是最後一關） */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂（也是最後一關） */
     var SPEED = [150, 400];                     /* 走路速度（px／秒） */
     var GAP = [1.4, 0.5];                       /* 平均進場間隔（秒） */
     var ANS_S = [8, 4];                         /* 作答限時（秒） */

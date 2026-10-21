@@ -31,7 +31,7 @@
     var INTERMISSION_MS = 1100;                 /* 換目標字時停多久 */
     var MIN_GROUP = 4;
     var SOLVE_CAP = 12;                         /* 驗證用：api.solve 最多幫你點到幾個（再多就讓目標字飄走，遊戲才會結束） */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function prog(hits) { return Math.min(1, Math.max(0, hits / RAMP_HITS)); }

@@ -29,7 +29,7 @@
     var STAGES = [{ from: 5, add: [2, 3, 4] }, { from: 10, add: [75, 85, 95] }, { from: 20, add: [65, 1] }];   /* 答對幾題之後加入哪些折數 */
     var BASE_BTN = [1, 2, 3, 4, 5, 6, 7, 8, 9]; /* 一直都有的按鈕 */
     var SOLVE_CAP = 10;                         /* 驗證用：api.solve 最多幫忙答對幾題 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function prog(n) { return Math.min(1, Math.max(0, n / RAMP_Q)); }

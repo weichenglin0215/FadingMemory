@@ -15,11 +15,11 @@
     'use strict';
 
     var ID = 'findsquare';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var POINTS = [8, 30];                       /* 星星總數：第 1 關 → 到頂 */
     var DECOYS = [0, 3];                        /* 誘餌（差一點的菱形／長方形）組數：第 1 關 → 到頂 */
     var DECOY_MAX = [0.20, 0.06];               /* 誘餌的誤差（eps）上限：第 1 關 → 到頂（越小越像正方形） */
@@ -30,7 +30,7 @@
     var MARGIN = 24, MIN_DIST = 40;             /* 星星離邊界至少多遠、星星之間至少多遠（虛擬 px，手指才點得準） */
     var SIDE = [100, 190];                      /* 正方形的邊長範圍 */
     var ROT = [15, 75];                         /* 正方形的旋轉角（度）：大多是斜的 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var SQRT2 = Math.SQRT2;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */

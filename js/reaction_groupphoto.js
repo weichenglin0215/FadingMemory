@@ -17,11 +17,11 @@
     'use strict';
 
     var ID = 'groupphoto';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 20;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var PEOPLE = [3, 15];                       /* 人數：第 1 關 → 到頂（四捨五入） */
     var OPEN_WIN = [2.0, 0.6];                  /* 一定存在的「全員睜眼」窗口最短幾秒：第 1 關 → 到頂 */
     var P_OPEN = [0.45, 0.10];                  /* 隨機一個瞬間所有人都睜眼的機率（目標值）：第 1 關 → 到頂 */
@@ -31,7 +31,7 @@
     var GAP_JITTER = [0.7, 1.3];                /* 每次間隔的隨機倍率（再乘上這個人的平均間隔） */
     var WIN_FROM = 2.0;                         /* 保證的窗口最早從第幾秒開始（讓玩家先看一下） */
     var WIN_TAIL = 1.5;                         /* 保證的窗口結束後至少還留幾秒 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var HAIR = ['hair0', 'hair1', 'hair2', 'hair3'];       /* 髮色的 class（顏色在 theme.css） */
     var SKIN = ['skin0', 'skin1', 'skin2'];
     var SHIRT = ['shirt0', 'shirt1', 'shirt2', 'shirt3', 'shirt4'];

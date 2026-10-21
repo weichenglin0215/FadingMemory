@@ -19,11 +19,11 @@
     'use strict';
 
     var ID = 'ordercut';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 20;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var NUM_COUNT = [4, 15], NUM_RAMP = 14;     /* 數字關：水果數 4 → 15，在第 14 關到頂（之後維持 15；第 15 關起改成算式） */
     var EXPR_FROM = 15;                         /* 第幾關起改成算式 */
     var EXPR_COUNT = [5, 15], EXPR_RAMP = 15;   /* 算式關：水果數 5 → 15，從 EXPR_FROM 起算 15 關到頂 */
@@ -38,7 +38,7 @@
     var R_NUM = 36, R_EXPR = 56;                /* 水果半徑（px）：數字關／算式關（算式字比較多，水果比較大） */
     var HIT_PAD = 8;                            /* 手指劃過去離水果邊緣這麼近也算切到（px） */
     var LEAD_S = 0.8;                           /* 開場等多久才拋第一顆（秒） */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var FRUITS = 6;                             /* 水果的顏色種數（CSS 的 ocf-f0～5） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */

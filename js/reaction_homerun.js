@@ -21,11 +21,11 @@
     'use strict';
 
     var ID = 'homerun';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 20;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var FLY_S = [1.7, 0.6];                     /* 速球從出手到好球帶的時間（秒）：第 1 關 → 到頂 */
     var CHANGE_X = 1.5;                         /* 變速球的飛行時間是速球的幾倍 */
     var HIT_WIN = [0.13, 0.05];                 /* 打擊窗口（秒，到達時間的前後各這麼多）：第 1 關 → 到頂 */
@@ -42,7 +42,7 @@
     var SWING_MS = 140;                         /* 揮棒動畫時間 */
     var CURVE_POW = 3;                          /* 曲球偏移的曲線：偏移量 ＝ (F − S) × u^CURVE_POW（越後面才彎得越明顯） */
     var BALL_R = [5, 22];                       /* 球的半徑（px）：遠 → 近 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var ZONE_W = 0.34, ZONE_ASPECT = 1.15;      /* 好球帶的寬占畫面寬度的比例、高÷寬 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */

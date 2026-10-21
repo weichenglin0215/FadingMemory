@@ -23,16 +23,16 @@
     'use strict';
 
     var ID = 'mergechar';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 25;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var NEED = 5;                               /* 要連出幾條綠線才過關（企劃指定 5 條） */
     var COL_STEPS = [[1, 5], [4, 6], [10, 7], [20, 8]];     /* [從第幾關起, 每欄有幾塊偏旁] */
     var LIVES = 3;                              /* 命（連出紅線扣一條） */
     var TIME_S = [45, 26];                      /* 每關限時（秒）：第 1 關 → 到頂 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var TRIES = 400;                            /* 出一關最多試幾次（「一塊一塊挑」的做法幾乎第一次就成功，400 次是保險） */
     /* 字庫：每組三個字「左偏旁、右偏旁、合成的字」，用空白隔開 */
     var COMBO_TEXT = [

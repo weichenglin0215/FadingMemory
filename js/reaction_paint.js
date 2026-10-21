@@ -42,7 +42,7 @@
     /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 paint 那一列要一致
        （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。
        V1.34.0 起成績是「闖過幾關」（越大越好，1～MAX_LEVEL），舊版是「沾油漆次數」（越少越好）——計分方式變了，舊成績要從榜上清掉（見 README V1.34.0）。 */
-    var MAX_LEVEL = 12;            /* 全部幾關（蓋完最後一關＝全破） */
+    var MAX_LEVEL = 90;            /* 全部幾關（蓋完最後一關＝全破） */
     var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: MAX_LEVEL };
     var h = UI.h;
     var kit = Reaction.kit;
@@ -266,7 +266,7 @@
     /* 依闖過的關數給評語（成績＝闖過幾關，越多越好）。全部 MAX_LEVEL 關蓋完＝最高評價 */
     function rating(cleared) {
         if (cleared >= MAX_LEVEL) return '油漆大師！';
-        if (cleared >= 9) return '蓋得真漂亮';
+        if (cleared >= 12) return '蓋得真漂亮';         /* 第 12 關起塗鴉處數就到頂了（SCRIBBLE_MAX），之後比的是耐力 */
         if (cleared >= 6) return '很不錯';
         if (cleared >= 3) return '蓋好了';
         return '再接再厲';

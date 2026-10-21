@@ -4,7 +4,7 @@ let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log('FAIL', m); } }
 const near = (a, b, e) => Math.abs(a - b) < (e || 1e-9);
 
 // 難度曲線（線性）
-ok(near(T.pSay(1), 0.7) && near(T.pSay(T.RAMP_N), 0.5) && near(T.limitFor(1), 2.5) && near(T.limitFor(T.RAMP_N), 0.9) && near(T.limitFor(99), 0.9), 'ramps');
+ok(near(T.pSay(1), T.P_SAY_START) && near(T.pSay(T.RAMP_N), T.P_SAY_END) && near(T.limitFor(1), T.TIME_START) && near(T.limitFor(T.RAMP_N), T.TIME_END) && near(T.limitFor(99), T.TIME_END), 'ramps（跟著檔案裡的參數走）');
 ok(near(T.limitFor(16) - T.limitFor(15), T.limitFor(2) - T.limitFor(1), 1e-9), 'limit is linear');
 // 答案
 const c = (say, dir, opposite) => ({ say, dir, opposite });

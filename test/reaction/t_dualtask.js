@@ -112,8 +112,8 @@ ok(T.rating(1) !== T.rating(3) && T.rating(3) !== T.rating(6) && T.rating(6) !==
   // 第 1 關的燈號間隔比舊版開頭長 150%：同一串綠燈的亮→亮週期 ≥ 亮 1.2 秒 ＋ 熄滅 0.4 × 1.5
   { let minCycle = 1e9; for (let i = 0; i < 300; i++) { const ev = T.makeEvents(rr, 1); for (let j = 1; j < ev.green.length; j++) minCycle = Math.min(minCycle, ev.green[j] - ev.green[j - 1]); } ok(minCycle >= 1.2 + 0.4 * 1.5 - 0.1 || minCycle >= 1.2 + 0.1, '第 1 關兩盞綠燈相隔夠遠（最短 ' + minCycle.toFixed(2) + ' 秒）'); }
   // 過關判定
-  ok(T.passNeedFor(10) === 6 && T.passNeedFor(5) === 3 && T.passNeedFor(31) === 19, '過關要點中 60%：10 次要 6 次、5 次要 3 次');
-  ok(T.levelPassed(6, 0, 10, 7, 7) && !T.levelPassed(5, 0, 10, 7, 7) && !T.levelPassed(10, 0, 10, 8, 7) && !T.levelPassed(8, 3, 10, 7, 7) && T.levelPassed(8, 2, 10, 7, 7), '過關＝紅燈次數答對，而且（命中 − 亂點）夠多');
+  ok(T.passNeedFor(10) === Math.ceil(T.PASS_RATE * 10 - 1e-9) && T.passNeedFor(5) === Math.ceil(T.PASS_RATE * 5 - 1e-9) && T.passNeedFor(31) === Math.ceil(T.PASS_RATE * 31 - 1e-9), '過關要點中 ' + T.PASS_RATE * 100 + '%（使用者調的參數，測試跟著走）：10 次要 ' + T.passNeedFor(10) + ' 次');
+  { const nd = T.passNeedFor(10); ok(T.levelPassed(nd, 0, 10, 7, 7) && !T.levelPassed(nd - 1, 0, 10, 7, 7) && !T.levelPassed(10, 0, 10, 8, 7) && T.levelPassed(nd + 2, 2, 10, 7, 7) && !T.levelPassed(nd + 2, 3, 10, 7, 7), '過關＝紅燈次數答對，而且（命中 − 亂點）夠多'); }
   // 原始碼：關卡制的接線
   const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_dualtask.js'), 'utf8');
   ok(/makeEvents\(Math\.random, level\)/.test(src) && /durationFor\(level\)/.test(src) && /levelPassed\(hits, strays, ev\.green\.length, v, truth\)/.test(src) && /score: passedN/.test(src), '一關一關闖、成績＝通過關數');

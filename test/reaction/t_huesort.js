@@ -84,4 +84,7 @@ function BLOCKS_LAST() { return T.BLOCKS - 1; }
   ok(/\.hus-block--join \{[^}]*border-radius: 0/.test(css) && /\.hus-block \{[^}]*transition:[^;]*left/.test(css), '集中時圓角變直角、位置有過渡動畫');
   ok(boot.indexOf("'js/reaction_huesort.js'") > 0 && /9 塊/.test(G.rule), 'boot.js 有載入、玩法說明提到 9 塊'); }
 ok(T.rating(1) !== T.rating(3) && T.rating(3) !== T.rating(8) && T.rating(8) !== T.rating(15) && T.rating(15) !== T.rating(25), '評語分級');
+// V1.36.0 玩家意見：色塊靠攏之後上下要緊密相連、不留白縫——除了最後一塊，每一塊都壓進下一塊 JOIN_OVERLAP px（下面的塊畫在上面）
+{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_huesort.js'), 'utf8');
+  ok(T.JOIN_OVERLAP >= 2 && src.indexOf('el.style.height = (b.h + (i < els.length - 1 ? JOIN_OVERLAP : 0))') > 0 && src.indexOf('el.style.zIndex = String(i)') > 0, '靠攏後每一塊（最後一塊除外）多壓進下一塊 ' + T.JOIN_OVERLAP + ' px，下面的塊蓋在上面'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

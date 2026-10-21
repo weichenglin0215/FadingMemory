@@ -16,11 +16,11 @@
     'use strict';
 
     var ID = 'stars';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var TILES = [5, 20];                        /* 字切成 N×N 個小方塊：第 1 關 → 到頂 */
     var RETURN_S = [10, 6];                     /* 所有小方塊回到原位要多久（秒）：第 1 關 → 到頂 */
     var LIMIT = 0.8;                            /* 作答的時間限制 ＝ 回位時間 × 這個比例（看到完整的字之前就到時） */
@@ -30,7 +30,7 @@
     var STROKES_LO = [10, 16], STROKES_HI = [16, 24];   /* 字群的平均筆劃範圍：第 1 關 → 到頂 */
     var FIVE_FROM = 12;                         /* 第幾關起有 5 個選項 */
     var MIN_GROUP = 5;                          /* 字群至少幾個字（5 個選項要夠） */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

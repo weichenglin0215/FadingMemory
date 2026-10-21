@@ -20,11 +20,11 @@
     'use strict';
 
     var ID = 'fishtoy';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 20;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var OMEGA = [0.12, 0.34];                   /* 池塘的轉速（圈／秒）：第 1 關 → 到頂 */
     var DUTY = [0.5, 0.22];                     /* 魚嘴張開的時間占一個週期的比例：第 1 關 → 到頂 */
     var TARGETS = [4, 1];                       /* 池塘裡「指定顏色」的魚有幾條：第 1 關 → 到頂（四捨五入） */
@@ -40,7 +40,7 @@
     var ROD_ANGLE = 270;                        /* 釣竿在池塘的正上方（螢幕座標角度） */
     var REPLAY_SPEED = 0.3;                     /* 揭曉重播速度 */
     var REPLAY_PRE = 0.25, REPLAY_POST = 0.35;  /* 重播：落下前幾秒開始、落水後多幾秒 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var COLORS = ['紅', '橙', '黃', '綠', '藍', '紫'];
 
     /* ═══ 純函式（也給 Node 測試用）═══ */

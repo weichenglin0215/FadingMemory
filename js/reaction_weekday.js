@@ -19,18 +19,18 @@
     'use strict';
 
     var ID = 'weekday';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var TIME_S = [12, 6];                       /* 每題限時（秒）：第 1 關 → 到頂 */
     var FROM = { cross: 4, back: 6, year: 10, far: 14 };   /* 各題型從第幾關開始出現 */
     var SAME_UNTIL = 7;                         /* 'same'（同月）題型出到第幾關（之後拿掉） */
     var FAR_MAX = [90, 330];                    /* 'far' 題型相差的最大天數：第 1 關 → 到頂 */
     var FAR_MIN = 45;
     var YEARS = [2025, 2031];                   /* 題目的年份範圍（含 2028 閏年） */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var NAMES = ['日', '一', '二', '三', '四', '五', '六'];         /* 星期的字（日＝0，跟 Date.getUTCDay 一致） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */

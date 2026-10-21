@@ -3,13 +3,22 @@
    俯視的棋盤式街道，每一段路上都畫著單行道的箭頭。計程車在左下角，客人要去右上角的醫院。
    手指從計程車開始，沿著街道拖出路線，**只能順著箭頭的方向走**，逆向的路段拖不過去（會閃紅）。到得了醫院就過關。
    ───────────────────────────────────────────────────────────────────
-   · 難度：路口 3×3 → 7×7（N）、限時 20 → 12 秒（TIME_S）、一定要繞的遠路 0 → 6 格（DETOUR）、「死巷」（走進去就出不來的路口）0 → 4 個（TRAPS），都是線性。
-   · 出題（makeLevel）：先隨機走出一條從計程車到醫院的「自己不交叉的路」（至少要有 manhattan ＋ 繞路格數 那麼長），沿著這條路把每一段設成順著走的方向，
-     其他每一段隨機決定方向；再檢查：
+   · 難度：路口 3×3 → 7×7（N）、限時 20 → 12 秒（TIME_S）、一定要繞的遠路 0 → 6 格（DETOUR）、「死巷」（走進去就出不來的路口）0 → 4 個（TRAPS）、
+     「誘餌」停在離醫院 3 格 → 1 格（CLOSE），都是線性。
+   · 這類「順著箭頭找路」的題目，對人類來說難在哪（V1.36.0 的出題設計依據）：
+       人找路靠的是「朝目的地走」這個直覺——遇到岔路，挑箭頭同意、又讓自己離醫院更近的那條。舊版（先造一條彎路、其餘箭頭亂放）的題目，
+       順著這個直覺走常常就走到了，根本不用重新修正路線。真正會讓人「走了一大段才發現錯了」的，是**誘餌**：
+       一條從頭到尾箭頭都同意、一路朝醫院靠近的「大路」，走到離醫院只剩 1～3 格的地方卻是死巷（所有箭頭都指向你、沒有一條能出去，
+       通往醫院的最後一段箭頭又剛好指著反方向）；真正的路得先捨棄這條大路，在半路轉進一段看起來「離醫院更遠」的小路繞過去。
+       走得越久、越靠近，越捨不得退，退回去浪費的時間就越多——這就是難度的來源。
+   · 出題（makeLevel）：先隨機走出一條從計程車到醫院的「自己不交叉的路」（至少要有 manhattan ＋ 繞路格數 那麼長），沿著這條路把每一段設成順著走的方向（真正的路）；
+     再從起點開始畫一條只往右、往上的**誘餌大路**，終點是一個離醫院只有 CLOSE 格的路口，路上每一段都順著走的方向，終點的其他路口全部指向它（走進去就出不來）；
+     其他每一段箭頭隨機決定方向（稍微偏向逆著朝醫院的方向，免得又冒出一條順著走的捷徑）；再檢查：
        ① 最短的合法路線至少比直線距離多繞 DETOUR 格（所以最直的那條路一定有一段是逆向的）；
        ② 第 2 關起，只往右、往上走的「最直路線」一定走不通（沒有任何一條單調路線）；
-       ③ 「死巷」（從起點走得到、卻走不到醫院的路口）至少有 TRAPS 個：走進去只能往回退。
-     條件做不到就重抽，所以每一題一定有解。
+       ③ 「死巷」（從起點走得到、卻走不到醫院的路口）至少有 TRAPS 個：走進去只能往回退；
+       ④ 第 2 關起，順著箭頭朝醫院靠近的路上，一定有死巷停在離醫院 CLOSE 格以內（decoyClose）：一路順風地走到快到了，才發現走不通。
+     條件做不到就重抽（房間太小放不下誘餌時，逐步放寬 CLOSE），所以每一題一定有解。
    · 操作：手指拖到相鄰的路口＝往前走（要順著箭頭）；拖回上一個路口＝退回一格（這是改規劃，不是開倒車）；不能走回已經走過的路口。
    · 失敗（時間到）：把一條可以到醫院的路線用綠色畫出來，你停下來的地方打紅圈（如果停在死巷裡，就是「卡在這裡」），停格 2.8 秒。
    ═══════════════════════════════════════════════════════════════════ */
@@ -17,17 +26,22 @@
     'use strict';
 
     var ID = 'oneway';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 20;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var N = [3, 7];                             /* 路口的行列數：第 1 關 → 到頂 */
     var TIME_S = [20, 12];                      /* 每關限時（秒）：第 1 關 → 到頂 */
     var DETOUR = [0, 6];                        /* 最短的合法路線，比直線距離（|列差|＋|欄差|）至少多繞幾格：第 1 關 → 到頂（會調成偶數） */
     var TRAPS = [0, 4];                         /* 「死巷」路口（走得到、卻到不了醫院）至少幾個：第 1 關 → 到頂 */
-    var WARMUP = 1;                             /* 前幾關是暖身：不要求「最直的路走不通」 */
-    var MAX_LEVEL = 60;
+    var CLOSE = [3, 1];                         /* 「誘餌」（一路順著箭頭朝醫院靠近的大路）的終點離醫院幾格：第 2 關 → 到頂（1＝停在醫院門口才發現走不通）；做不到時 makeLevel 逐步放寬 */
+    var TILT = 0.4;                             /* 沒被安排的路段，箭頭朝「往右、往上」（朝醫院靠近）的機率：小於 0.5＝稍微偏向逆著走，免得冒出順著走的捷徑 */
+    var TRIES = 4000;                           /* 每種 CLOSE 最多試幾次 */
+    var WASTE_CAP = 100;                        /* 衡量「冤枉路」時每種走法最多算幾步（超過的題目已經夠難，挑選時不分高下；也讓計算不要花太久） */
+    var CANDS = [3, 10];                        /* 候選題數量：第 1 關 → 第 RAMP_LEVELS 關；符合全部條件的題目收集這麼多個，挑「憑直覺走的人最容易走錯」的那題（見 greedyCost） */
+    var WARMUP = 1;                             /* 前幾關是暖身：不要求「最直的路走不通」、也沒有誘餌 */
+    var MAX_LEVEL = 90;
     var neighbors = kit.gridNeighbors, adjacent = kit.gridAdjacent;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
@@ -35,6 +49,7 @@
     function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
     function detourFor(level) { return 2 * Math.round(kit.ramp(level, DETOUR[0], DETOUR[1], RAMP_LEVELS) / 2); }
     function trapsFor(level) { return Math.round(kit.ramp(level, TRAPS[0], TRAPS[1], RAMP_LEVELS)); }
+    function closeFor(level) { return Math.max(1, Math.round(kit.ramp(level, CLOSE[0], CLOSE[1], RAMP_LEVELS))); }
     /* 路口編號 i ＝ 列 × n ＋ 欄；起點在左下角、醫院在右上角 */
     function startOf(n) { return (n - 1) * n; }
     function goalOf(n) { return n - 1; }
@@ -60,18 +75,53 @@
         for (var i = 0; i < d.length; i++) if (d[i] >= 0 && !ok[i]) out.push(i);
         return out;
     }
-    /* 只往右、往上走的「最直路線」能不能走到醫院（有一條就是 true） */
-    function monotoneExists(q) {
-        var n = q.n, reach = new Array(n * n).fill(false);
-        reach[q.start] = true;
+    /* 只往右、往上走（＝一路朝醫院靠近）的箭頭能到哪些路口；回傳 Uint8Array（1＝走得到） */
+    function monotoneReach(q) {
+        var n = q.n, reach = new Uint8Array(n * n);
+        reach[q.start] = 1;
         for (var r = n - 1; r >= 0; r--) for (var c = 0; c < n; c++) {
             var i = r * n + c;
             if (!reach[i]) continue;
-            if (c + 1 < n && canMove(q, i, i + 1)) reach[i + 1] = true;
-            if (r - 1 >= 0 && canMove(q, i, i - n)) reach[i - n] = true;
+            if (c + 1 < n && canMove(q, i, i + 1)) reach[i + 1] = 1;
+            if (r - 1 >= 0 && canMove(q, i, i - n)) reach[i - n] = 1;
         }
-        return reach[q.goal];
+        return reach;
     }
+    /* 只往右、往上走的「最直路線」能不能走到醫院（有一條就是 true） */
+    function monotoneExists(q) { return monotoneReach(q)[q.goal] === 1; }
+    /* 「誘餌」有多誘人：一路順著箭頭朝醫院靠近、卻是死巷（走進去到不了醫院）的路口裡，離醫院最近的是幾格（1＝停在醫院門口；沒有死巷就回傳 Infinity） */
+    function decoyClose(q) {
+        var reach = monotoneReach(q), ok = canReachGoal(q), best = Infinity;
+        for (var i = 0; i < reach.length; i++) if (reach[i] && !ok[i]) best = Math.min(best, manhattan(q.n, i, q.goal));
+        return best;
+    }
+    /* 「憑直覺走的人」要多走幾步冤枉路：每個路口都挑箭頭同意、而且離醫院最近的那條（同樣近時依 tie 決定先後），走進死巷就一步一步退回去換下一條。
+       回傳 { steps: 總共走了幾步（往前、退回都算）, len: 最後成功的路線有幾段, waste: steps − len（冤枉路）, ok: 有沒有走到醫院 }；cap 是步數上限（超過就當作走不到）。
+       用它衡量一題有多難（V1.36.0 實測）：舊做法的題目，這樣走大多一路走到底、不用退回；有誘餌的題目，這樣走會一路走到醫院附近才發現是死巷，冤枉路多出一倍以上。 */
+    function greedyCost(q, tie, cap) {
+        cap = cap || 600; tie = tie || 0;
+        var n = q.n, vis = new Uint8Array(n * n), steps = 0, path = [q.start];
+        vis[q.start] = 1;
+        function dfs(head) {
+            if (head === q.goal) return true;
+            var cand = outgoing(q, head).filter(function (b) { return !vis[b]; });
+            cand.sort(function (a, b) { return manhattan(n, a, q.goal) - manhattan(n, b, q.goal) || (((a + tie * 7) % 5) - ((b + tie * 7) % 5)); });
+            for (var i = 0; i < cand.length; i++) {
+                if (++steps > cap) return false;
+                vis[cand[i]] = 1; path.push(cand[i]);
+                if (dfs(cand[i])) return true;
+                vis[cand[i]] = 0; path.pop(); steps++;                       /* 退回一格也算一步 */
+                if (steps > cap) return false;
+            }
+            return false;
+        }
+        var ok = dfs(q.start);
+        return { steps: steps, len: path.length - 1, waste: steps - (path.length - 1), ok: ok };
+    }
+    /* 三種同分順序的冤枉路平均 */
+    function wasteOf(q) { var t = 0; for (var k = 0; k < 3; k++) t += Math.min(WASTE_CAP, greedyCost(q, k, WASTE_CAP + 60).waste); return t / 3; }
+    function candCount(level) { return level > WARMUP ? Math.round(kit.ramp(level, CANDS[0], CANDS[1], RAMP_LEVELS)) : 1; }
+
     /* 一條最短的合法路線（路口編號陣列，從起點到醫院）；走不到回傳 null */
     function solutionPath(q) {
         var prev = new Array(q.n * q.n).fill(-2), queue = [q.start]; prev[q.start] = -1;
@@ -97,35 +147,76 @@
         }
         return null;
     }
-    /* 出一關：{ n, start, goal, allow（Set：'a,b' ＝ 可以從路口 a 開到相鄰路口 b）, solution（一條最短合法路線）, traps（死巷路口陣列）, level } */
+    /* 誘餌大路：從起點畫一條只往右、往上的路，走到 decoy 這個路口（離醫院 CLOSE 格的死巷）。路上的每一段都順著走的方向，
+       跟「真正的路」route 共用的路段，方向一定要一樣（不一樣就換一條）；回傳路口編號陣列，畫不出來回傳 null */
+    function decoyRoad(n, start, decoy, routeDir, rand) {
+        var path = [start], cur = start, tr = Math.floor(decoy / n), tc = decoy % n;
+        while (cur !== decoy) {
+            var r = Math.floor(cur / n), c = cur % n, cand = [];
+            if (r > tr) cand.push(cur - n);                       /* 往上 */
+            if (c < tc) cand.push(cur + 1);                       /* 往右 */
+            cand = cand.filter(function (b) { var key = Math.min(cur, b) + ',' + Math.max(cur, b); return !routeDir[key] || routeDir[key] === cur + ',' + b; });
+            if (!cand.length) return null;
+            cur = kit.pick(cand, rand); path.push(cur);
+        }
+        return path;
+    }
+    /* 出一關：{ n, start, goal, allow（Set：'a,b' ＝ 可以從路口 a 開到相鄰路口 b）, solution（一條最短合法路線）, traps（死巷路口陣列）, decoy（誘餌大路的終點路口，沒有誘餌＝-1）, level }
+       closeNow：誘餌終點離醫院幾格（0＝不要誘餌）；內部會從 closeFor(level) 開始、做不到就逐步放寬到不要誘餌 */
     function makeLevel(level, rand) {
         rand = rand || Math.random;
         var n = sizeFor(level), start = startOf(n), goal = goalOf(n), need = detourFor(level), minTraps = trapsFor(level), man = manhattan(n, start, goal);
-        for (var tr = 0; tr < 3000; tr++) {
-            var route = randomRoute(n, man + need + (rand() < 0.5 ? 0 : 2), rand);
-            if (!route) continue;
-            var allow = new Set(), onRoute = new Set();
-            for (var t = 0; t + 1 < route.length; t++) { allow.add(route[t] + ',' + route[t + 1]); onRoute.add(Math.min(route[t], route[t + 1]) + ',' + Math.max(route[t], route[t + 1])); }
-            for (var a = 0; a < n * n; a++) neighbors(n, a).forEach(function (b) {
-                if (b < a) return;
-                var key = a + ',' + b;
-                if (onRoute.has(key)) return;
-                if (rand() < 0.5) allow.add(a + ',' + b); else allow.add(b + ',' + a);
-            });
-            var q = { n: n, start: start, goal: goal, allow: allow, level: level };
-            var sol = solutionPath(q);
-            if (!sol || sol.length - 1 < man + need) continue;                                   /* ① 要繞夠遠 */
-            if (level > WARMUP && monotoneExists(q)) continue;                                   /* ② 最直的路走不通 */
-            var traps = trapNodes(q);
-            if (traps.length < minTraps) continue;                                               /* ③ 死巷夠多 */
-            q.solution = sol; q.traps = traps;
-            return q;
+        var want = level > WARMUP ? closeFor(level) : 0, cands = candCount(level);
+        for (var closeNow = want; closeNow <= want + 6; closeNow++) {
+            var useClose = closeNow > Math.min(want + 5, 2 * n - 3) ? 0 : closeNow;               /* 放寬到最後一格就不要誘餌 */
+            var best = null, got = 0;
+            for (var tr = 0; tr < TRIES && got < cands; tr++) {
+                var route = randomRoute(n, man + need + (rand() < 0.5 ? 0 : 2), rand);
+                if (!route) continue;
+                var allow = new Set(), onRoute = {}, routeNodes = new Set(route);
+                for (var t = 0; t + 1 < route.length; t++) { allow.add(route[t] + ',' + route[t + 1]); onRoute[Math.min(route[t], route[t + 1]) + ',' + Math.max(route[t], route[t + 1])] = route[t] + ',' + route[t + 1]; }
+                var fixed = {}, decoy = -1;
+                Object.keys(onRoute).forEach(function (k) { fixed[k] = 1; });
+                if (useClose > 0) {
+                    /* 誘餌終點：離醫院剛好 useClose 格、不在真正的路上的路口 */
+                    var spots = [];
+                    for (var i = 0; i < n * n; i++) if (manhattan(n, i, goal) === useClose && !routeNodes.has(i) && i !== start) spots.push(i);
+                    if (!spots.length) continue;
+                    decoy = kit.pick(spots, rand);
+                    var road = decoyRoad(n, start, decoy, onRoute, rand);
+                    if (!road) continue;
+                    for (var d = 0; d + 1 < road.length; d++) { var dk = Math.min(road[d], road[d + 1]) + ',' + Math.max(road[d], road[d + 1]); if (!fixed[dk]) { allow.add(road[d] + ',' + road[d + 1]); fixed[dk] = 1; } }
+                    /* 終點是死巷：它跟周圍的每一段路都指向它（走進去就出不來；通往醫院的最後一段也是逆向的） */
+                    neighbors(n, decoy).forEach(function (b) { var key = Math.min(decoy, b) + ',' + Math.max(decoy, b); if (!fixed[key]) { allow.add(b + ',' + decoy); fixed[key] = 1; } });
+                }
+                for (var a = 0; a < n * n; a++) neighbors(n, a).forEach(function (b) {
+                    if (b < a) return;
+                    var key = a + ',' + b;
+                    if (fixed[key]) return;
+                    /* 朝醫院靠近的方向（往右、往上）：b 在 a 的右邊 → a→b；b 在 a 的下面（b ＝ a ＋ n）→ b→a */
+                    var toward = b === a + 1 ? a + ',' + b : b + ',' + a, away = b === a + 1 ? b + ',' + a : a + ',' + b;
+                    allow.add(rand() < TILT ? toward : away);
+                });
+                var q = { n: n, start: start, goal: goal, allow: allow, level: level, decoy: decoy };
+                var sol = solutionPath(q);
+                if (!sol || sol.length - 1 < man + need) continue;                                   /* ① 要繞夠遠 */
+                if (level > WARMUP && monotoneExists(q)) continue;                                   /* ② 最直的路走不通 */
+                var traps = trapNodes(q);
+                if (traps.length < minTraps) continue;                                               /* ③ 死巷夠多 */
+                if (useClose > 0 && decoyClose(q) > useClose) continue;                              /* ④ 誘餌真的把人引到離醫院 useClose 格以內才發現走不通 */
+                q.solution = sol; q.traps = traps;
+                got++;
+                q.waste = cands > 1 ? wasteOf(q) : 0;
+                if (!best || q.waste > best.waste) best = q;
+            }
+            if (best) return best;
+            if (useClose === 0) break;
         }
         /* 保底（極少用到）：整條路是順著蛇行的（先往右、再往上…），一定走得通 */
         var allow2 = new Set(), route2 = [], r2, c2;
         for (r2 = n - 1; r2 >= 0; r2--) for (c2 = 0; c2 < n; c2++) route2.push(r2 * n + ((n - 1 - r2) % 2 ? n - 1 - c2 : c2));
         for (var u = 0; u + 1 < route2.length; u++) allow2.add(route2[u] + ',' + route2[u + 1]);
-        var q2 = { n: n, start: start, goal: goal, allow: allow2, level: level }; q2.solution = route2.slice(0, route2.indexOf(goal) + 1); q2.traps = trapNodes(q2);
+        var q2 = { n: n, start: start, goal: goal, allow: allow2, level: level, decoy: -1, waste: 0 }; q2.solution = route2.slice(0, route2.indexOf(goal) + 1); q2.traps = trapNodes(q2);
         return q2;
     }
     /* 目前的路線：path（路口編號，第 0 個是起點，最後一個是計程車的位置）。往 node 拖：回傳 'add'（順著箭頭走一格）／'back'（拖回上一個路口＝退一格）／'blocked'（相鄰但逆向、或是已經走過的路口）／null（不相鄰） */
@@ -270,13 +361,13 @@
     var G = {
         id: ID,
         name: '單行道',
-        rule: '街道上畫滿了單行道的箭頭。**手指從左下角的計程車開始，沿著街道拖出路線，只能順著箭頭的方向走**，逆向的路段拖不過去。**把計程車帶到右上角的醫院**就過關。拖回上一個路口，路線就退回一格。最直的那條路一定有一段是逆向的，還要小心**走進去就出不來的死巷**。來不及就結束，看你能過幾關。越後面，路口越多、繞的路越遠！',
+        rule: '街道上畫滿了單行道的箭頭。**手指從左下角的計程車開始，沿著街道拖出路線，只能順著箭頭的方向走**，逆向的路段拖不過去。**把計程車帶到右上角的醫院**就過關。拖回上一個路口，路線就退回一格。最直的那條路一定有一段是逆向的，還要小心**看起來一路順風、到了醫院門口才發現走不通的死巷**。來不及就結束，看你能過幾關。越後面，路口越多、死巷越會騙人！',
         mount: mount,
         score: SCORE,
         test: {
             sizeFor: sizeFor, timeMs: timeMs, detourFor: detourFor, trapsFor: trapsFor, startOf: startOf, goalOf: goalOf, manhattan: manhattan, canMove: canMove, outgoing: outgoing, distFrom: distFrom, canReachGoal: canReachGoal,
-            trapNodes: trapNodes, monotoneExists: monotoneExists, solutionPath: solutionPath, randomRoute: randomRoute, makeLevel: makeLevel, drag: drag, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, N: N, TIME_S: TIME_S, DETOUR: DETOUR, TRAPS: TRAPS, WARMUP: WARMUP, MAX_LEVEL: MAX_LEVEL
+            trapNodes: trapNodes, monotoneExists: monotoneExists, monotoneReach: monotoneReach, decoyClose: decoyClose, greedyCost: greedyCost, wasteOf: wasteOf, candCount: candCount, decoyRoad: decoyRoad, closeFor: closeFor, solutionPath: solutionPath, randomRoute: randomRoute, makeLevel: makeLevel, drag: drag, rating: rating,
+            RAMP_LEVELS: RAMP_LEVELS, N: N, TIME_S: TIME_S, DETOUR: DETOUR, TRAPS: TRAPS, CLOSE: CLOSE, CANDS: CANDS, WASTE_CAP: WASTE_CAP, TILT: TILT, WARMUP: WARMUP, MAX_LEVEL: MAX_LEVEL
         }
     };
     Reaction.register(G);

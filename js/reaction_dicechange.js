@@ -17,7 +17,7 @@
     'use strict';
 
     var ID = 'dicechange';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
@@ -29,7 +29,7 @@
     var ANS_BASE = 4000, ANS_PER = 1000;         /* 作答限時（毫秒）＝ (ANS_BASE ＋ ANS_PER × 骰子數) × 倍率 */
     var ANS_MUL = [1.2, 0.8];
     var MUL_LEVELS = 30;                        /* 倍率幾關之後到頂 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function diceFor(level) { return Math.min(DICE_MAX, DICE_FIRST + level - 1); }

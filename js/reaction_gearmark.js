@@ -17,11 +17,11 @@
     'use strict';
 
     var ID = 'gearmark';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var GEARS = [2, 5];                         /* 齒輪數：第 1 關 → 到頂 */
     var TOL = [8, 3];                           /* 紅針離正上方的容許誤差（度）：第 1 關 → 到頂 */
     var PERIOD_MAX = [1, 12];                   /* 「全部回到原位」最多要轉幾圈（最小公倍數那一圈）：第 1 關 → 到頂 */
@@ -30,7 +30,7 @@
     var TEETH_MIN = 8, TEETH_GAP = 3;           /* 其他齒輪最少幾齒；相鄰兩個齒輪齒數至少差幾齒（轉速不能太像） */
     var TARGET_TURN = [120, 500];               /* 對準時大齒輪離起點轉了幾度（絕對值範圍） */
     var MIN_TAP_MOVE = 12;                      /* 手指在畫面上至少移動幾 px 才算「畫圈」，放手才判定（避免誤點就失敗） */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

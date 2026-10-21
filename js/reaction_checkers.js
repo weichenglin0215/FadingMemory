@@ -16,11 +16,11 @@
     'use strict';
 
     var ID = 'checkers';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var SIZE = [7, 10];                         /* 棋盤邊長（格）：第 1 關 → 到頂 */
     var REDS = [3, 8];                          /* 紅棋顆數：第 1 關 → 到頂 */
     var BLUES = [6, 24];                        /* 藍棋顆數（至少；連跳路線經過的棋子也算在裡面）：第 1 關 → 到頂 */
@@ -29,7 +29,7 @@
     var MIN_TURNS = [0, 3];                     /* 最長路線至少轉幾個彎：第 1 關 → 到頂 */
     var TIME_S = [15, 6];                       /* 每題限時（秒）：第 1 關 → 到頂 */
     var HOP_MS = 420;                           /* 揭曉時彈珠每跳一次的時間（毫秒） */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var EMPTY = 0, RED = 1, BLUE = 2;
     var DIRS = [[-1, 0], [1, 0], [0, -1], [0, 1]];       /* 上、下、左、右 */
 

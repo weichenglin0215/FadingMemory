@@ -22,11 +22,11 @@
     'use strict';
 
     var ID = 'spinpick';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 20;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var SECTORS = [2, 12];                      /* 圓盤切成幾格：第 1 關 → 到頂 */
     var OMEGA_REV = [1.2, 2.6];                 /* 指針起轉速度（圈／秒）：第 1 關 → 到頂（越後面越快；原本 1.5 → 0.9） */
     var SPIN_S = 5;                             /* 指針從起轉到停住的總秒數 */
@@ -37,7 +37,7 @@
     var MARGIN = 0.2;                           /* 停點離格線至少多遠（格寬的幾分之幾） */
     var DISC_R = 190, NEEDLE_R = 168, DEAD_R = 54;   /* 圓盤半徑、指針長度、中央不能點的半徑 */
     var CENTER_Y = 300;
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function sectorsFor(level) { return kit.clamp(Math.round(kit.ramp(level, SECTORS[0], SECTORS[1], RAMP_LEVELS)), SECTORS[0], SECTORS[1]); }

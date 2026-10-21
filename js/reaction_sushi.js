@@ -16,11 +16,11 @@
     'use strict';
 
     var ID = 'sushi';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 20;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var PLATES = [8, 24];                      /* 一圈有幾個盤子：第 1 關 → 到頂（四捨五入） */
     var PICK = [3, 9];                          /* 要湊的盤子數（解的大小）：第 1 關 → 到頂（四捨五入） */
     var GAP_S = [1.2, 0.7];                     /* 相鄰兩個盤子經過同一點的間隔（秒）：第 1 關 → 到頂 */
@@ -33,7 +33,7 @@
     var LEAD_S = 0.8;                           /* 開場先等多久，第一個盤子才從右邊進來（秒） */
     var END_PAD_S = 0.6;                        /* 最後一個盤子離開畫面之後，多等一下才算「轉完一圈」 */
     var SOLVE_CAP = 99;
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var COLOR_OF = { 30: 'white', 40: 'red', 50: 'green', 60: 'blue', 100: 'gold' };
     var COLOR_NAME = { 30: '白', 40: '紅', 50: '綠', 60: '藍', 100: '金' };
     var SUSHI = ['salmon', 'egg', 'shrimp'];

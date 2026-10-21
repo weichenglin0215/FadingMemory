@@ -7,7 +7,7 @@ const SEED = seedOf(20261029); const rnd = rng(SEED);
 // 難度曲線（玩家會自己調 RADIUS／TIME_S，測試跟著參數走）
 ok(near(T.radiusFor(1), T.RADIUS[0]) && near(T.radiusFor(T.RAMP_LEVELS), T.RADIUS[1]) && near(T.radiusFor(60), T.RADIUS[1]), '光圈 ' + T.RADIUS[0] + ' → ' + T.RADIUS[1]);
 for (let l = 2; l <= 60; l++) ok((T.RADIUS[1] <= T.RADIUS[0] ? T.radiusFor(l) <= T.radiusFor(l - 1) + 1e-12 : T.radiusFor(l) >= T.radiusFor(l - 1) - 1e-12) && (T.TIME_S[1] <= T.TIME_S[0] ? T.timeMs(l) <= T.timeMs(l - 1) : T.timeMs(l) >= T.timeMs(l - 1)), '單調 ' + l);
-ok(near(T.radiusFor(13), (T.RADIUS[0] + T.RADIUS[1]) / 2), '中點（線性）');
+{ const mid = (T.RAMP_LEVELS + 1) / 2; ok(near(T.radiusFor(mid), (T.RADIUS[0] + T.RADIUS[1]) / 2, 1e-6), '中點（線性）：第 ' + mid + ' 關（跟著 RAMP_LEVELS 走）'); }
 ok(T.timeMs(1) === T.TIME_S[0] * 1000 && T.timeMs(T.RAMP_LEVELS) === T.TIME_S[1] * 1000, '限時 ' + T.TIME_S[0] + ' → ' + T.TIME_S[1] + ' 秒');
 
 // V1.32：圖案改成「一組一組長得很像的」：數字、形近的繁體字、零件數不同的圖形

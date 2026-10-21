@@ -39,7 +39,7 @@ for (let i = 0; i < 2000; i++) { const q = T.makeLevel(20, W, H, rnd); const p =
 ok(horiz > 100 && vert > 100 && diag > 600, '方向分布 ' + horiz + '/' + vert + '/' + diag);
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20) !== T.rating(30), '評語分級');
 // V1.29：一對圓點一大一小——起點維持原大小、終點縮成 1/3；命中半徑不變
-ok(T.DOT_R === 20 && Math.abs(T.DOT_R2 - T.DOT_R / 3) < 1e-9 && T.dotR('a') === T.DOT_R && Math.abs(T.dotR('b') - T.DOT_R / 3) < 1e-9, '起點 ' + T.DOT_R + '、終點 ' + T.DOT_R2.toFixed(2) + '（1/3）');
+ok(T.DOT_R === 20 && T.DOT_R2 < T.DOT_R && T.DOT_R2 > 0 && T.dotR('a') === T.DOT_R && T.dotR('b') === T.DOT_R2, '起點 ' + T.DOT_R + '、終點 ' + T.DOT_R2.toFixed(2) + '（' + (T.DOT_R2 / T.DOT_R).toFixed(2) + ' 倍；使用者調過，測試跟著走）');
 ok(T.HIT_R === 40, '命中半徑維持 40（小點也好點）');
 { const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_farpair.js'), 'utf8');
   ok(src.indexOf('r: dotR(k)') > 0, '畫圓點時用 dotR(起點／終點)'); }

@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_gomoku.js — 秒反應・堵住五子（企劃 233）
-   公園石桌上的五子棋盤面：白棋（電腦）下一步就要贏了。你只能下一顆黑棋，**點那唯一能擋住的位置**。
+   公園石桌上的五子棋盤面：白棋（電腦）已經布好陣勢、快要贏了。你只能下一顆黑棋，**點那唯一能化解的位置**。
    答對＝白棋怎麼下都贏不了；答錯＝白棋下在致勝點（可能連下好幾手），五顆連線亮紅。
    ───────────────────────────────────────────────────────────────────
    · 「白棋會贏」的定義（whiteWins）：輪到白棋，只要能靠「連續衝四（下一顆讓某條線變成四，逼黑棋非擋不可）」
@@ -13,27 +13,39 @@
      兩種題型都由 isGood 窮舉驗證：黑棋所有「有意義的下法」（鄰近白棋威脅的空格）裡，**只有一格**能讓白棋贏不了；
      而且「黑棋不下」白棋也贏——所以離得很遠的下法等於沒下，也一樣輸。錯的下法只要在 WIN_DEPTH 步內輸掉；正確答案則用更深的 HOLD_DEPTH 步確認白棋真的贏不了。
    · 為了讓「白棋會贏」的證明站得住腳，盤面上黑棋不能有自己的反擊（任何 5 格視窗裡有 3 顆黑棋、沒有白棋，黑棋就有機會自己連成四，這種盤面不出）。
-   · 難度（線性）：盤面棋子數 6 → 40 顆（STONES）、限時 10 → 4 秒（TIME_S）、「看起來很危險、其實已經被堵住」的假威脅 0 → 3 組（DECOYS）、
+   · 難度（線性）：盤面棋子數 6 → 40 顆（STONES）、限時 12 → 30 秒（TIME_S：威脅藏得越深要想得越久，所以越後面越長）、「看起來很危險、其實已經被堵住」的假威脅 0 → 3 組（DECOYS）、
      第 CORNER_FROM 關起「兩個三顆交叉」的機率 20% → 70%（CORNER_P）；威脅可以朝八個方向任一個，被一堆無關的棋子淹沒（雜訊棋子一顆顆放，每放一顆就驗證答案還是唯一）。
+   · **看不出來的威脅（V1.36.0）**：對人類來說，五子棋防守難在「威脅沒有現成的四，卻能靠連續衝四（衝四逼黑棋擋、再衝四…）最後連成雙四」，
+     唯一的化解點往往不是任何一條線的端點，而是某個破壞整個連環的關鍵格；模板（四顆一排、兩個三顆交叉）做不出這種盤面。
+     所以第 BANK_FROM 關起，題目改從「題庫」（js/gomoku_bank.js，由 test/reaction/gen_gomoku_bank.cjs 用電腦搜尋產生，每題都驗證過只有一個化解點）挑：
+     D1（白棋一手就能下出雙四／活四）、D2（先衝四、黑棋被逼著擋，再雙四）、D3（連衝兩次四才雙四），比例隨關卡從 D1 為主漸漸變成 D2、D3 為主；
+     挑中之後隨機翻轉旋轉、平移到棋盤上，重新驗證，再放雜訊棋子與假威脅。
    · 揭曉：答錯時白棋依序下出致勝的幾手（黑棋被逼著擋的也畫出來），最後把連成的五顆用紅線穿過去，停格 2 秒以上；綠圈標出唯一的擋法。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
 
     var ID = 'gomoku';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var STONES = [6, 40];                       /* 盤面棋子總數：第 1 關 → 到頂 */
-    var TIME_S = [10, 4];                       /* 每題限時（秒）：第 1 關 → 到頂 */
+    var TIME_S = [12, 30];                      /* 每題限時（秒）：第 1 關 → 到頂（威脅藏得越深要想得越久，所以越後面越長） */
     var DECOYS = [0, 3];                        /* 「假威脅」（已經被堵死的四、被堵死的三）組數：第 1 關 → 到頂 */
     var CORNER_FROM = 5, CORNER_P = [0.2, 0.7]; /* 「兩個三顆交叉」題型：第 CORNER_FROM 關起出現，機率從 CORNER_P[0] 線性增加到 CORNER_P[1]（到頂的關卡） */
+    var BANK_FROM = 4;                          /* 第幾關起題目改從題庫（看不出來的威脅）挑；前面幾關只有最單純的「四顆一排」 */
+    var TIER_P0 = [0.5, 0.4, 0.1, 0], TIER_P1 = [0, 0.15, 0.45, 0.4];     /* 題型比例 [模板, D1, D2, D3]：第 BANK_FROM 關 → 第 RAMP_LEVELS 關（線性；加起來都是 1） */
+    var BANK_VERIFY = 6;                        /* 題庫題目放假威脅、雜訊棋子時，最多可以呼叫幾次「重新驗證答案還唯一」（每次 2～30 毫秒；跟別的白棋沾不上邊的雜訊不用驗證） */
+    var BANK_DECOY_VERIFY = 14;                 /* 放假威脅時的驗證次數上限（假威脅一組一組試，不行就拿掉，所以要比雜訊棋子多） */
+    var BANK_MS = 350;                          /* 題庫題目出題最多花幾毫秒（超過就退回模板題，不讓玩家等） */
+    var STONE_SLACK = 2;                        /* 題庫題目本身的棋子數最多可以比這一關的棋子數目標多幾顆（挑題時用） */
+    var BANK_DEPTH = 4;                         /* 題庫題目驗證時白棋最多幾步預備（跟產生題庫時一樣；錯的下法都要在這個範圍內輸掉） */
     var WIN_DEPTH = 2;                          /* 白棋最多幾步預備（衝四）之後要連成五顆才算「會贏」（錯誤的下法都要在這個範圍內輸掉） */
     var HOLD_DEPTH = 4;                         /* 正確答案要通過更嚴的檢查：白棋用到 4 步預備（連續衝四）也贏不了，才敢說「化解了」 */
     var BOARD = 13;                             /* 棋盤邊長（13×13，格子比 15×15 大，手指好點） */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var BLACK = 1, WHITE = -1;
     var LINES = [[0, 1], [1, 0], [1, 1], [1, -1]];                             /* 四條線的方向：橫、直、斜（右下）、斜（左下） */
     var DIR8 = [[0, 1], [1, 0], [1, 1], [1, -1], [0, -1], [-1, 0], [-1, -1], [-1, 1]];
@@ -43,6 +55,35 @@
     function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
     function decoysFor(level) { return Math.round(kit.ramp(level, DECOYS[0], DECOYS[1], RAMP_LEVELS)); }
     function cornerPFor(level) { return level < CORNER_FROM ? 0 : kit.ramp(level, CORNER_P[0], CORNER_P[1], RAMP_LEVELS); }
+    /* 這一關各種題型的比例 [模板, D1, D2, D3]（第 BANK_FROM 關以前全是模板） */
+    function tierWeights(level) {
+        if (level < BANK_FROM || !bankEntries(1).length) return [1, 0, 0, 0];
+        var t = kit.ramp(level, 0, 1, RAMP_LEVELS), out = [], sum = 0, i;
+        for (i = 0; i < 4; i++) { out.push(TIER_P0[i] + (TIER_P1[i] - TIER_P0[i]) * t); sum += out[i]; }
+        return out.map(function (v) { return v / sum; });
+    }
+    /* 題庫裡級別 d（1～3）的題目；沒有載入題庫（window.GOMOKU_BANK）就是空的 */
+    var bankCache = null;
+    function bankEntries(d) {
+        if (!bankCache) {
+            bankCache = { 1: [], 2: [], 3: [] };
+            (window.GOMOKU_BANK || []).forEach(function (e) { if (bankCache[e[0]]) bankCache[e[0]].push(e); });
+        }
+        return bankCache[d] || [];
+    }
+    /* 把題庫的一題放到棋盤上：隨機翻轉旋轉（8 種）、隨機平移到棋盤內；回傳 { white, black, x }，放不下回傳 null */
+    function placeBank(e, n, rand) {
+        var s = kit.randInt(0, 7, rand);
+        function tf(r, c) { if (s & 1) c = -c; if (s & 2) r = -r; if (s & 4) { var t = r; r = c; c = t; } return [r, c]; }
+        function pairs(arr) { var out = []; for (var i = 0; i < arr.length; i += 2) out.push(tf(arr[i], arr[i + 1])); return out; }
+        var w = pairs(e[3]), b = pairs(e[4]), x = tf(e[1], e[2]), all = w.concat(b, [x]);
+        var minR = Math.min.apply(null, all.map(function (p) { return p[0]; })), maxR = Math.max.apply(null, all.map(function (p) { return p[0]; }));
+        var minC = Math.min.apply(null, all.map(function (p) { return p[1]; })), maxC = Math.max.apply(null, all.map(function (p) { return p[1]; }));
+        if (maxR - minR >= n || maxC - minC >= n) return null;
+        var or = kit.randInt(0, n - 1 - (maxR - minR), rand) - minR, oc = kit.randInt(0, n - 1 - (maxC - minC), rand) - minC;
+        function id(p) { return (p[0] + or) * n + p[1] + oc; }
+        return { white: w.map(id), black: b.map(id), x: id(x) };
+    }
     function newBoard(n) { var m = n || BOARD; return new Int8Array(m * m); }
     function inb(n, r, c) { return r >= 0 && r < n && c >= 0 && c < n; }
     /* color 的棋在 idx（空格或已經有 color 的棋都可以）會不會連成五顆以上？會就回傳連成的那一條線的格子（連續、至少 5 個），不會回傳 null */
@@ -203,10 +244,73 @@
         }
         return false;
     }
-    /* 出一關：{ n, board, x（唯一的擋法）, kind（'four'｜'corner'）, stones, decoys, level } */
+    /* 假威脅（已經被堵死的四／三）：一組一組放，放了之後答案還是唯一才保留；budget 是最多能呼叫幾次驗證（good，題庫題目的驗證比較慢，所以有上限） */
+    function addDecoys(b, n, want, good, rand, budget, maxStones) {
+        var decoys = 0, used = 0;
+        for (var g = 0; g < 40 && decoys < want && used < budget; g++) {
+            var dp = placeDecoy(n, kit.randInt(0, n - 1, rand), kit.randInt(0, n - 1, rand), kit.randInt(0, 7, rand), rand() < 0.5 ? 0 : 1);
+            if (!dp) continue;
+            var placed = dp.white.concat(dp.black);
+            if (placed.some(function (k) { return b[k] !== 0; })) continue;
+            if (maxStones != null) { var have = 0; for (var q = 0; q < b.length; q++) if (b[q]) have++; if (have + placed.length > maxStones) continue; }                 /* 題庫題目本身棋子就不少，假威脅不能讓棋子數超過上限 */
+            dp.white.forEach(function (k) { b[k] = WHITE; });
+            dp.black.forEach(function (k) { b[k] = BLACK; });
+            used++;
+            if (good()) decoys++;
+            else placed.forEach(function (k) { b[k] = 0; });
+        }
+        return decoys;
+    }
+    /* 雜訊棋子：一顆一顆隨機放，放了之後答案還是唯一才保留（跟別的白棋沾不上邊的白棋、不在威脅視窗裡的黑棋可以免驗證，最後整盤再驗一次）；回傳盤面上的棋子數 */
+    function addNoise(b, n, target, good, rand, budget) {
+        var count = 0, tries = 0, relevant = null, used = 0;
+        for (var i = 0; i < n * n; i++) if (b[i]) count++;
+        while (count < target && tries++ < 400) {
+            var k = kit.randInt(0, n * n - 1, rand);
+            if (b[k] !== 0) continue;
+            var color = rand() < 0.5 ? WHITE : BLACK, safe;
+            if (color === BLACK) {
+                if (!relevant) relevant = relevantCells(b, n);
+                safe = relevant.indexOf(k) < 0;
+            } else safe = !touchesWhite(b, n, k);
+            if (!safe && used >= budget) continue;
+            b[k] = color;
+            if (!safe) used++;
+            if (safe ? !blackCounter(b, n) : good()) { count++; relevant = null; } else b[k] = 0;
+        }
+        return count;
+    }
+    /* 題庫題目：挑一題、隨機翻轉旋轉平移、重新驗證（平移後碰到棋盤邊緣可能改變局面）、放假威脅與雜訊；做不出來回傳 null */
+    function makeFromBank(level, tier, rand, n, target, want) {
+        var list = bankEntries(tier), t0 = Date.now();
+        if (!list.length) return null;
+        /* 題庫的題目本身就有不少棋子；這一關的棋子數目標比較少時，只挑棋子數不超過「目標＋STONE_SLACK」的題目（全都超過就挑最少的那幾題） */
+        var small = list.filter(function (e) { return (e[3].length + e[4].length) / 2 <= target + STONE_SLACK; });
+        if (!small.length) { var mn = Math.min.apply(null, list.map(function (e) { return (e[3].length + e[4].length) / 2; })); small = list.filter(function (e) { return (e[3].length + e[4].length) / 2 <= mn + 1; }); }
+        list = small;
+        for (var tr = 0; tr < 80 && Date.now() - t0 < BANK_MS; tr++) {
+            var tpl = placeBank(kit.pick(list, rand), n, rand);
+            if (!tpl) continue;
+            var b = newBoard(n);
+            tpl.white.forEach(function (k) { b[k] = WHITE; });
+            tpl.black.forEach(function (k) { b[k] = BLACK; });
+            /* 好題＝唯一擋法成立，而且白棋現在沒有現成的四（雜訊棋子不能湊出一個現成的四，不然就變成「擋四顆的端點」那種簡單題了） */
+            var good = function () { return isGood(b, n, tpl.x, BANK_DEPTH) && !winCells(b, n, WHITE).length; };
+            if (!good()) continue;
+            var decoys = addDecoys(b, n, want, good, rand, BANK_DECOY_VERIFY, target + STONE_SLACK), count = addNoise(b, n, target, good, rand, BANK_VERIFY);
+            if (count < target - 2 || !good()) continue;
+            return { n: n, board: b, x: tpl.x, kind: 'bank', tier: tier, stones: count, decoys: decoys, level: level, depth: BANK_DEPTH };
+        }
+        return null;
+    }
+    /* 出一關：{ n, board, x（唯一的擋法）, kind（'four'｜'corner'｜'bank'）, tier（0 模板、1～3 題庫的級別）, stones, decoys, depth（驗證用的預備步數）, level } */
     function makeLevel(level, rand) {
         rand = rand || Math.random;
         var n = BOARD, target = stonesFor(level), want = decoysFor(level), kind = rand() < cornerPFor(level) ? 'corner' : 'four';
+        /* 先決定題型：模板，或題庫的 D1／D2／D3 */
+        var w = tierWeights(level), r = rand(), tier = 0, acc = 0;
+        for (var ti = 0; ti < 4; ti++) { acc += w[ti]; if (r < acc) { tier = ti; break; } }
+        if (tier > 0) { var bq = makeFromBank(level, tier, rand, n, target, want); if (bq) return bq; }
         for (var tr = 0; tr < 800; tr++) {
             var b = newBoard(n), tpl = null, r0 = kit.randInt(0, n - 1, rand), c0 = kit.randInt(0, n - 1, rand);
             if (kind === 'four') tpl = placeFour(n, r0, c0, kit.randInt(0, 7, rand), rand() < 0.4);
@@ -217,38 +321,13 @@
             /* 好題＝唯一擋法成立；「交叉」題型還要保持純粹：不能因為雜訊棋子湊成現成的致勝點（那就變成普通的四了） */
             var good = function () { return isGood(b, n, tpl.x, WIN_DEPTH) && (kind === 'four' || !winCells(b, n, WHITE).length); };
             if (!good()) continue;
-            /* 假威脅 */
-            var decoys = 0, g, placed;
-            for (g = 0; g < 40 && decoys < want; g++) {
-                var dp = placeDecoy(n, kit.randInt(0, n - 1, rand), kit.randInt(0, n - 1, rand), kit.randInt(0, 7, rand), rand() < 0.5 ? 0 : 1);
-                if (!dp) continue;
-                placed = dp.white.concat(dp.black);
-                if (placed.some(function (k) { return b[k] !== 0; })) continue;
-                dp.white.forEach(function (k) { b[k] = WHITE; });
-                dp.black.forEach(function (k) { b[k] = BLACK; });
-                if (good()) decoys++;
-                else placed.forEach(function (k) { b[k] = 0; });
-            }
-            /* 雜訊棋子：一顆一顆隨機放，放了之後答案還是唯一才保留（跟別的白棋沾不上邊的白棋、不在威脅視窗裡的黑棋可以免驗證，最後整盤再驗一次） */
-            var count = 0, tries = 0, relevant = null;
-            for (var i = 0; i < n * n; i++) if (b[i]) count++;
-            while (count < target && tries++ < 400) {
-                var k = kit.randInt(0, n * n - 1, rand);
-                if (b[k] !== 0) continue;
-                var color = rand() < 0.5 ? WHITE : BLACK, safe;
-                if (color === BLACK) {
-                    if (!relevant) relevant = relevantCells(b, n);
-                    safe = relevant.indexOf(k) < 0;
-                } else safe = !touchesWhite(b, n, k);
-                b[k] = color;
-                if (safe ? !blackCounter(b, n) : good()) { count++; relevant = null; } else b[k] = 0;
-            }
+            var decoys = addDecoys(b, n, want, good, rand, Infinity), count = addNoise(b, n, target, good, rand, Infinity);
             if (count < target - 2 || !good()) continue;
-            return { n: n, board: b, x: tpl.x, kind: kind, stones: count, decoys: decoys, level: level };
+            return { n: n, board: b, x: tpl.x, kind: kind, tier: 0, stones: count, decoys: decoys, depth: WIN_DEPTH, level: level };
         }
         /* 保底（極少用到）：一條被黑棋堵住一端的四 */
         var fb = newBoard(n); [0, 1, 2, 3].forEach(function (k) { fb[6 * n + 3 + k] = WHITE; }); fb[6 * n + 2] = BLACK;
-        return { n: n, board: fb, x: 6 * n + 7, kind: 'four', stones: 5, decoys: 0, level: level };
+        return { n: n, board: fb, x: 6 * n + 7, kind: 'four', tier: 0, stones: 5, decoys: 0, depth: WIN_DEPTH, level: level };
     }
     function rating(n) {
         if (n >= 25) return '五子棋高手！';
@@ -272,10 +351,10 @@
         var stage = api.stage, level = api.level;
         var q = makeLevel(level, api.rand), n = q.n, b = q.board;
         api.info = q;
-        console.log('[堵住五子] 第 ' + level + ' 關（' + (q.kind === 'four' ? '四顆一排' : '兩個三顆交叉') + '）：棋子 ' + q.stones + ' 顆（假威脅 ' + q.decoys + ' 組），答案 (' + Math.floor(q.x / n) + ',' + q.x % n + ')；限時 ' + timeMs(level) + ' ms');
+        console.log('[堵住五子] 第 ' + level + ' 關（' + (q.kind === 'four' ? '四顆一排' : q.kind === 'corner' ? '兩個三顆交叉' : '題庫 D' + q.tier) + '）：棋子 ' + q.stones + ' 顆（假威脅 ' + q.decoys + ' 組），答案 (' + Math.floor(q.x / n) + ',' + q.x % n + ')；限時 ' + timeMs(level) + ' ms');
 
         var W = stage.clientWidth || 472, cell = Math.floor(Math.min((W - 12) / n, 40)), BS = cell * n, bx = Math.round((W - BS) / 2), by = 64;
-        var tip = h('div', { 'class': 'qz-note gmk-tip', text: '白棋下一步就贏！點唯一的擋法' });
+        var tip = h('div', { 'class': 'qz-note gmk-tip', text: q.kind === 'bank' ? '白棋快贏了！點唯一能化解的位置' : '白棋下一步就贏！點唯一的擋法' });
         stage.appendChild(tip);
         var board = h('div', { 'class': 'gmk-board' });
         board.style.cssText = 'left:' + bx + 'px;top:' + by + 'px;width:' + BS + 'px;height:' + BS + 'px;';
@@ -319,7 +398,7 @@
                 return;
             }
             /* 失敗：白棋依序下出致勝的幾手（被逼著擋的黑棋也畫出來），最後用紅線穿過連成的五顆 */
-            var pv = whiteWins(b, n, WIN_DEPTH).pv;
+            var pv = whiteWins(b, n, q.depth || WIN_DEPTH).pv;
             info.textContent = idx >= 0 ? '擋不住！綠圈才是唯一的擋法' : '時間到！綠圈才是唯一的擋法';
             pv.forEach(function (m, j) {
                 api.after(500 + j * 650, function () {
@@ -343,14 +422,14 @@
     var G = {
         id: ID,
         name: '堵住五子',
-        rule: '這是五子棋的盤面，**白棋下一步就要贏了**。你只能下一顆黑棋，**點那個唯一能擋住的位置**。有時是白棋已經四顆連在一起，有時是兩條三顆的線交叉，只有下在交叉點才擋得住。小心**看起來很危險、其實已經被堵住的假威脅**。擋錯或來不及就結束，看你能過幾關。越後面，棋子越多、時間越短！',
+        rule: '這是五子棋的盤面，**白棋快要贏了**。你只能下一顆黑棋，**點那個唯一能化解的位置**。有時是白棋已經四顆連在一起，有時是兩條三顆的線交叉，越後面，白棋沒有現成的四，卻能**連續衝四**逼你一路擋、最後連成雙四，關鍵的那一格常常不在任何一條線的端點。小心**看起來很危險、其實已經被堵住的假威脅**。擋錯或來不及就結束，看你能過幾關。越後面，棋子越多、威脅越隱密！',
         mount: mount,
         score: SCORE,
         test: {
-            stonesFor: stonesFor, timeMs: timeMs, decoysFor: decoysFor, cornerPFor: cornerPFor, newBoard: newBoard, fiveThrough: fiveThrough, winCells: winCells, localWinCells: localWinCells, windowCells: windowCells,
+            stonesFor: stonesFor, timeMs: timeMs, decoysFor: decoysFor, cornerPFor: cornerPFor, tierWeights: tierWeights, bankEntries: bankEntries, placeBank: placeBank, makeFromBank: makeFromBank, newBoard: newBoard, fiveThrough: fiveThrough, winCells: winCells, localWinCells: localWinCells, windowCells: windowCells,
             whiteWins: whiteWins, relevantCells: relevantCells, blackCounter: blackCounter, solutionCells: solutionCells, isGood: isGood, placeFour: placeFour, placeCorner: placeCorner, placeDecoy: placeDecoy, touchesWhite: touchesWhite,
             makeLevel: makeLevel, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, STONES: STONES, TIME_S: TIME_S, DECOYS: DECOYS, CORNER_FROM: CORNER_FROM, CORNER_P: CORNER_P, WIN_DEPTH: WIN_DEPTH, HOLD_DEPTH: HOLD_DEPTH, BOARD: BOARD, MAX_LEVEL: MAX_LEVEL, BLACK: BLACK, WHITE: WHITE
+            RAMP_LEVELS: RAMP_LEVELS, STONES: STONES, TIME_S: TIME_S, DECOYS: DECOYS, CORNER_FROM: CORNER_FROM, CORNER_P: CORNER_P, BANK_FROM: BANK_FROM, TIER_P0: TIER_P0, TIER_P1: TIER_P1, BANK_DEPTH: BANK_DEPTH, STONE_SLACK: STONE_SLACK, BANK_VERIFY: BANK_VERIFY, BANK_DECOY_VERIFY: BANK_DECOY_VERIFY, BANK_MS: BANK_MS, WIN_DEPTH: WIN_DEPTH, HOLD_DEPTH: HOLD_DEPTH, BOARD: BOARD, MAX_LEVEL: MAX_LEVEL, BLACK: BLACK, WHITE: WHITE
         }
     };
     Reaction.register(G);

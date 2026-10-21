@@ -70,8 +70,8 @@ console.log('完美控制器 ' + ST.pass + '／' + ST.n + ' 關都過；過關�
 function human(lv, amp, delay, gain, N) { let pass = 0; for (let i = 0; i < N; i++) { const q = T.makeLevel(lv, rnd); let jit = 1, nextJ = 0; const hist = [];
     const r = T.simulate(q, (t, w, qq) => { hist.push([t, w]); let seen = 0; for (let k = hist.length - 1; k >= 0; k--) if (hist[k][0] <= t - delay) { seen = hist[k][1]; break; }
       if (t >= nextJ) { jit = 1 + (rnd() * 2 - 1) * amp; nextJ = t + 0.15; } return Math.max(0, (qq.center + gain * (qq.center - seen)) * jit); }, 0.01); if (r.result === 'pass') pass++; } return pass / N; }
-{ const a = human(1, 0.5, 0.3, 1.5, 60), b = human(10, 0.5, 0.3, 1.5, 60), c = human(20, 0.5, 0.3, 1.5, 60); console.log('反應慢、手指抖 ±50% 的玩家過關率：第 1 關 ' + (100 * a).toFixed(0) + '%、第 10 關 ' + (100 * b).toFixed(0) + '%、第 20 關 ' + (100 * c).toFixed(0) + '%');
-  ok(a > 0.9 && a >= b - 0.05 && b >= c, '越後面越難（過關率遞減）'); ok(c < 0.6, '第 20 關（範圍只有 ±12%）對粗糙的玩家不是穩過：' + c); }
+{ const a = human(1, 0.5, 0.3, 1.5, 60), b = human(10, 0.5, 0.3, 1.5, 60), c = human(T.RAMP_LEVELS, 0.5, 0.3, 1.5, 60); console.log('反應慢、手指抖 ±50% 的玩家過關率：第 1 關 ' + (100 * a).toFixed(0) + '%、第 10 關 ' + (100 * b).toFixed(0) + '%、第 ' + T.RAMP_LEVELS + ' 關 ' + (100 * c).toFixed(0) + '%');
+  ok(a > 0.9 && a >= b - 0.05 && b >= c, '越後面越難（過關率遞減）'); ok(c < 0.6, '到頂的關卡（範圍只有 ±12%）對粗糙的玩家不是穩過：' + c); }
 // 說明
 { const q = T.makeLevel(5, rnd); ok(/壞掉/.test(T.whyText('break', q)) && /時間到/.test(T.whyText('time', q)) && /穩穩/.test(T.whyText('pass', q)), '說明文字'); }
 

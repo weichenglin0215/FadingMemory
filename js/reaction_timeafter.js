@@ -15,7 +15,7 @@
     'use strict';
 
     var ID = 'timeafter';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
@@ -25,7 +25,7 @@
     var STEP1_FROM = 10;                        /* 第幾題起分鐘數不再限定是 5 的倍數 */
     var BEFORE_FROM = 8;                        /* 第幾題起出現「倒推」題 */
     var BEFORE_P = [0.2, 0.5];                  /* 「倒推」的機率：BEFORE_FROM 題 → 到頂 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var SAME_MAX = 4;                           /* 正確答案放左邊（或右邊）最多連續幾次 */
     var DAY = 1440;
     /* 題目說法（{t} 是時間、{d} 是分鐘數）。短一點，手機上最多三行 */

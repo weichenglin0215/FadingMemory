@@ -15,11 +15,11 @@
     'use strict';
 
     var ID = 'menuslice';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var MENU_N = [2, 6];                        /* 菜單上有幾種水果：第 1 關 → 到頂 */
     var TOTAL = [8, 30];                        /* 這一關拋出的水果總數：第 1 關 → 到頂 */
     var SPAWN_MS = [1100, 450];                 /* 每顆水果拋出的間隔（毫秒）：第 1 關 → 到頂 */
@@ -33,7 +33,7 @@
     var X_RANGE = [0.14, 0.86];                 /* 水果的橫向位置（畫面寬度的倍數） */
     var FRUIT_PX = 66;                          /* 水果的大小（px） */
     var HIT_EXTRA = 8;                          /* 切到的判定半徑比水果多幾 px（比較好切） */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var FRUITS = [
         { id: 'orange', name: '柳丁', pair: 'tangerine' }, { id: 'tangerine', name: '橘子', pair: 'orange' },
         { id: 'lemon', name: '檸檬', pair: 'lime' }, { id: 'lime', name: '萊姆', pair: 'lemon' },

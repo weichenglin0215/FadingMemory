@@ -16,7 +16,7 @@
     'use strict';
 
     var ID = 'kinetic';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
@@ -33,7 +33,7 @@
     var CAR_W_RATIO = 0.49, CAR_ASPECT = 170 / 230;   /* 車廂寬度占畫面寬度的比例、高÷寬 */
     var REVERSE_MS = 1200;                      /* 揭曉時火車倒車回來要多久 */
     var ZOOM_MS = 500;                          /* 號碼貼紙放大的時間 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     /* 長得像的數字（黑體字裡容易看錯的）：一個數字可以被換成它後面列的數字 */
     var SIM = { 0: [8, 6, 9], 1: [7, 4], 2: [7, 3], 3: [8, 5, 2], 4: [9, 1], 5: [6, 3, 8], 6: [8, 5, 0, 9], 7: [1, 2], 8: [3, 6, 9, 0, 5], 9: [8, 4, 0, 6] };
     var LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'K', 'M', 'R', 'S', 'X', 'Z'];     /* 干擾貼紙上的字（不是數字） */

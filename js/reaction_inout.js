@@ -9,24 +9,34 @@
    · 螞蟻放在哪：50% 在裡面（P 的格子）、50% 在外面（W 的格子）。「看起來被包住」的位置才有挑戰：
      外面的格子要離外框夠遠（在 W 裡走到外框要走很多步＝很深的凹口），裡面的格子要離迷宮入口夠遠（深深的死巷）。
      這個「深度下限」隨關卡增加（DEPTH_MIN），找不到夠深的格子就用最深的。
+   · **不規則的隨機曲線（V1.36.0，玩家意見：線條太規則整齊，一秒就看出內外）**：迷宮的骨架還是格子，但畫出來的繩圈不再是橫平豎直的——
+       ① 格線間隔不均勻（gridLines：每一格的寬度在 1 ± VARIANCE 之間隨機，再縮放到總長不變），通道有寬有窄；
+       ② 每個轉角的圓弧大小不一樣（ROUND × 0.5～1.5 倍）；
+       ③ 整條繩圈再經過一個平滑的「扭曲」（warpPoint：用幾個不同頻率的正弦波把每個點推開一點點，推開的幅度 WARP_A，梯度小於 1 所以不會讓線穿過自己）——直線變成蜿蜒的曲線。
+     扭曲是一對一的連續變形，繩圈還是剛好一條不交叉的封閉曲線，螞蟻的位置跟著一起扭曲，裡外不變；出題時用「線段兩兩不相交」與「射線法」驗證，
+     驗證不過就換一組扭曲參數，最後才退回沒有扭曲的版本。螞蟻縮小成原本的一半（ANT_SIZE ＝ 格子的 0.45 倍）。
    · 答案用格子是否屬於 P 決定；測試另外用「點在多邊形內」（射線法）驗證螞蟻的位置跟繩圈的內外一致。
-   · 難度（線性）：迷宮 3×3 → 8×8 個房間（ROOMS）、深度下限 0 → 6 步（DEPTH_MIN）、限時 8 → 3 秒（TIME_S）。錯一次就結束，防亂按。
+   · 難度（線性）：迷宮 3×3 → 10×10 個房間（ROOMS）、深度下限 0 → 8 步（DEPTH_MIN）、格線不均勻程度 0.15 → 0.5（VARIANCE）、扭曲幅度 0.1 → 0.34 格（WARP_A）、限時 8 → 3 秒（TIME_S）。錯一次就結束，防亂按。
    · 揭曉：繩圈裡面整塊塗上淡綠色，螞蟻在不在色塊裡一目了然。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
 
     var ID = 'inout';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
-    var ROOMS = [3, 8];                         /* 迷宮每邊幾個房間：第 1 關 → 到頂（格子是 2m+1 邊） */
-    var DEPTH_MIN = [0, 6];                     /* 螞蟻所在格子的「深度」下限（步數）：第 1 關 → 到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
+    var ROOMS = [3, 10];                        /* 迷宮每邊幾個房間：第 1 關 → 到頂（格子是 2m+1 邊） */
+    var DEPTH_MIN = [0, 8];                     /* 螞蟻所在格子的「深度」下限（步數）：第 1 關 → 到頂 */
     var TIME_S = [8, 3];                        /* 每題限時（秒）：第 1 關 → 到頂 */
-    var ROUND = 0.3;                            /* 繩圈轉角的圓弧大小（佔一格的比例） */
-    var MAX_LEVEL = 60;
+    var ROUND = 0.3;                            /* 繩圈轉角的圓弧大小（佔一格的比例；每個轉角再乘 0.5～1.5 倍隨機） */
+    var VARIANCE = [0.15, 0.5];                 /* 格線間隔的不均勻程度：每一格的寬度在 1 ± 這個值 之間隨機：第 1 關 → 到頂 */
+    var WARP_A = [0.1, 0.34];                   /* 整條繩圈的扭曲幅度（格）：第 1 關 → 到頂（太大會讓窄通道的兩側碰在一起，出題時有驗證） */
+    var ANT_SIZE = 0.45;                        /* 螞蟻的大小（格子的幾倍）：V1.36.0 從 0.9 縮成一半 */
+    var STEP = 0.3;                             /* 把繩圈切成小段（格）再扭曲，直線才會被扭成曲線 */
+    var MAX_LEVEL = 90;
     var DIRS = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
@@ -34,6 +44,8 @@
     function roomsFor(level) { return Math.round(ramp(level, ROOMS)); }
     function depthMinFor(level) { return Math.round(ramp(level, DEPTH_MIN)); }
     function timeMs(level) { return Math.round(ramp(level, TIME_S) * 1000); }
+    function varianceFor(level) { return Math.round(ramp(level, VARIANCE) * 10000) / 10000; }
+    function warpAFor(level) { return Math.round(ramp(level, WARP_A) * 10000) / 10000; }
     /* 用隨機深度優先搜尋造 m×m 的完美迷宮；回傳格子表 P（(2m+1)² 個，1＝房間或通道＝繩圈裡面）和每個房間的「離入口幾步」depth（以房間為單位）*/
     function makeMaze(m, rand) {
         var G = 2 * m + 1, P = new Int8Array(G * G), seen = {}, stack = [], depth = {};
@@ -84,6 +96,63 @@
         });
         return { loops: loops, edges: count, used: used };
     }
+    /* 不均勻的格線座標（長度 G + 1，從 0 到 G）：每一格的寬度在 1 ± v 之間隨機，再縮放到總長剛好 G */
+    function gridLines(G, v, rand) {
+        var w = [], sum = 0, i, out = [0], acc = 0;
+        for (i = 0; i < G; i++) { w.push(1 + v * (rand() * 2 - 1)); sum += w[i]; }
+        for (i = 0; i < G; i++) { acc += w[i] * G / sum; out.push(acc); }
+        out[G] = G;
+        return out;
+    }
+    /* 扭曲的參數：幅度 a（格）、四個隨機頻率與相位。頻率對應 4～8 格的波長，a ≤ 0.34 時扭曲的梯度小於 1（一對一、不會讓線穿過自己） */
+    function warpParams(a, rand) {
+        function k() { return 2 * Math.PI / kit.randFloat(4, 8, rand); }
+        function p() { return kit.randFloat(0, 2 * Math.PI, rand); }
+        return { a: a, k1: k(), k2: k(), k3: k(), k4: k(), p1: p(), p2: p(), p3: p(), p4: p() };
+    }
+    /* 扭曲一個點（單位：格）：x、y 各被兩個不同方向、不同頻率的正弦波推開一點點 */
+    function warpPoint(x, y, w) {
+        return [x + w.a * (Math.sin(w.k1 * y + w.p1) + 0.5 * Math.sin(w.k2 * (x + y) * 0.7 + w.p2)), y + w.a * (Math.sin(w.k3 * x + w.p3) + 0.5 * Math.sin(w.k4 * (x - y) * 0.7 + w.p4))];
+    }
+    /* 兩線段 (a,b) (c,d) 是不是相交（不含端點相接） */
+    function segCross(a, b, c, d) {
+        function o(p, q, r) { return (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]); }
+        var o1 = o(a, b, c), o2 = o(a, b, d), o3 = o(c, d, a), o4 = o(c, d, b);
+        return ((o1 > 0 && o2 < 0) || (o1 < 0 && o2 > 0)) && ((o3 > 0 && o4 < 0) || (o3 < 0 && o4 > 0));
+    }
+    /* 這個封閉折線（點的陣列）有沒有自己穿過自己（相鄰的線段不比） */
+    function selfCrosses(pts) {
+        var n = pts.length, i, j;
+        for (i = 0; i < n; i++) {
+            var a = pts[i], b = pts[(i + 1) % n];
+            for (j = i + 2; j < n; j++) {
+                if (i === 0 && j === n - 1) continue;
+                if (Math.min(a[0], b[0]) > Math.max(pts[j][0], pts[(j + 1) % n][0]) || Math.max(a[0], b[0]) < Math.min(pts[j][0], pts[(j + 1) % n][0])) continue;
+                if (segCross(a, b, pts[j], pts[(j + 1) % n])) return true;
+            }
+        }
+        return false;
+    }
+    /* 把迷宮的邊界（整數頂點的轉角序列）畫成「不規則的曲線」：先對應到不均勻的格線座標，轉角換成隨機大小的圓弧，直線切成小段，最後整條扭曲。
+       回傳封閉折線的點 [[x, y]…]（單位：格；跟螞蟻用同一套座標）。 */
+    function curvePoints(loop, xs, ys, warp, rand) {
+        var n = loop.length, P = loop.map(function (v) { return [xs[v[0]], ys[v[1]]]; }), arcs = [], i, t;
+        for (i = 0; i < n; i++) {
+            var a = P[(i + n - 1) % n], b = P[i], c = P[(i + 1) % n], la = Math.hypot(b[0] - a[0], b[1] - a[1]), lc = Math.hypot(c[0] - b[0], c[1] - b[1]);
+            var r = Math.min(ROUND * kit.randFloat(0.5, 1.5, rand), 0.5 * la, 0.5 * lc);
+            arcs.push({ p1: [b[0] + (a[0] - b[0]) * r / la, b[1] + (a[1] - b[1]) * r / la], b: b, p2: [b[0] + (c[0] - b[0]) * r / lc, b[1] + (c[1] - b[1]) * r / lc] });
+        }
+        var pts = [];
+        for (i = 0; i < n; i++) {
+            var A = arcs[i], B = arcs[(i + 1) % n];
+            for (t = 0; t <= 5; t++) { var u = t / 5; pts.push([(1 - u) * (1 - u) * A.p1[0] + 2 * u * (1 - u) * A.b[0] + u * u * A.p2[0], (1 - u) * (1 - u) * A.p1[1] + 2 * u * (1 - u) * A.b[1] + u * u * A.p2[1]]); }     /* 轉角的圓弧（二次貝茲曲線） */
+            var len = Math.hypot(B.p1[0] - A.p2[0], B.p1[1] - A.p2[1]), m = Math.max(1, Math.ceil(len / STEP));
+            for (t = 1; t < m; t++) pts.push([A.p2[0] + (B.p1[0] - A.p2[0]) * t / m, A.p2[1] + (B.p1[1] - A.p2[1]) * t / m]);                                                                              /* 直線切成小段 */
+        }
+        return warp ? pts.map(function (p) { return warpPoint(p[0], p[1], warp); }) : pts;
+    }
+    /* 封閉折線 → SVG path（單位：每格 cs px） */
+    function polyPath(pts, cs) { return pts.map(function (p, i) { return (i ? 'L' : 'M') + (p[0] * cs).toFixed(2) + ',' + (p[1] * cs).toFixed(2); }).join(' ') + ' Z'; }
     /* 點 (x, y) 在不在多邊形 poly（頂點 [x,y] 的陣列）裡面：射線法 */
     function pointInPoly(x, y, poly) {
         var inside = false;
@@ -122,8 +191,17 @@
         var md = dmin;
         while (md >= 0) { cands = collect(wantInside, md); if (cands.length) break; md--; }       /* 找不到夠深的就放寬，一路放寬到有為止 */
         if (!cands.length) { wantInside = !wantInside; cands = collect(wantInside, 0); }
-        var cell = kit.pick(cands, rand), loops = boundaryLoop(G, P).loops;
-        return { G: G, m: m, P: P, loop: loops[0], ant: { r: Math.floor(cell / G), c: cell % G, cell: cell, inside: !!P[cell] }, depthMin: dmin, depth: P[cell] ? ds.dIn[cell] : ds.dOut[cell], level: level };
+        var cell = kit.pick(cands, rand), loops = boundaryLoop(G, P).loops, loop = loops[0], inside = !!P[cell], rr0 = Math.floor(cell / G), cc0 = cell % G;
+        /* 不規則的曲線：不均勻的格線＋整條扭曲；驗證「不自己交叉」和「螞蟻的內外沒變」，不過就換一組參數，最後退回沒有扭曲的版本 */
+        var curve = null, antXY = null, v = varianceFor(level), a = warpAFor(level), xs = gridLines(G, v, rand), ys = gridLines(G, v, rand);
+        for (var tr = 0; tr < 8; tr++) {
+            var amp = tr < 6 ? a : (tr === 6 ? a / 2 : 0), w = amp > 0 ? warpParams(amp, rand) : null;
+            var pts = curvePoints(loop, xs, ys, w, rand), cx = (xs[cc0] + xs[cc0 + 1]) / 2, cy = (ys[rr0] + ys[rr0 + 1]) / 2, ap = w ? warpPoint(cx, cy, w) : [cx, cy];
+            if (selfCrosses(pts) || pointInPoly(ap[0], ap[1], pts) !== inside) continue;
+            curve = pts; antXY = ap; break;
+        }
+        if (!curve) { curve = curvePoints(loop, gridLines(G, 0, rand), gridLines(G, 0, rand), null, rand); antXY = [cc0 + 0.5, rr0 + 0.5]; }
+        return { G: G, m: m, P: P, loop: loop, curve: curve, antXY: antXY, ant: { r: rr0, c: cc0, cell: cell, inside: inside }, depthMin: dmin, depth: P[cell] ? ds.dIn[cell] : ds.dOut[cell], variance: v, warpA: a, level: level };
     }
     function rating(n) {
         if (n >= 25) return '迷宮高手！';
@@ -170,10 +248,10 @@
         field.appendChild(h('div', { 'class': 'qz-note iof-tip', text: '螞蟻在繩圈的裡面還是外面？' }));
         var svg = kit.svg('svg', { 'class': 'iof-svg', viewBox: '0 0 ' + BS + ' ' + BS, width: BS, height: BS }, field);
         svg.style.cssText = 'left:' + bx + 'px;top:' + by + 'px;';
-        var d = loopPath(q.loop, cs, ROUND);
+        var d = polyPath(q.curve, cs);                                           /* 不規則的曲線（V1.36.0） */
         var fill = kit.svg('path', { 'class': 'iof-fill', d: d }, svg);              /* 揭曉時才顯示的「裡面」淡綠色 */
         kit.svg('path', { 'class': 'iof-rope', d: d }, svg);
-        drawAnt(svg, (q.ant.c + 0.5) * cs, (q.ant.r + 0.5) * cs, cs * 0.9, Math.floor(api.rand() * 360));
+        drawAnt(svg, q.antXY[0] * cs, q.antXY[1] * cs, cs * ANT_SIZE, Math.floor(api.rand() * 360));
         var info = h('div', { 'class': 'qz-note iof-info', text: '' });
         info.style.top = (by + BS + 6) + 'px';
         field.appendChild(info);
@@ -203,12 +281,12 @@
     var G = {
         id: ID,
         name: '圈內圈外',
-        rule: '地上有一條彎來彎去、首尾相連的紅色繩圈（不會自己交叉），上面有一隻螞蟻。**螞蟻在繩圈的裡面還是外面？** 點「裡面」或「外面」。繩圈繞得像迷宮，螞蟻常常卡在一條很深的凹口裡，**看起來被包住，其實在外面**。小技巧：**從螞蟻往旁邊畫一條線出去，數穿過繩子幾次**——奇數次在裡面、偶數次在外面。答錯或來不及就結束，看你能過幾關。越後面，繩圈越長、凹口越深、時間越短！',
+        rule: '地上有一條彎來彎去、首尾相連的紅色繩圈（不會自己交叉），上面有一隻螞蟻。**螞蟻在繩圈的裡面還是外面？** 點「裡面」或「外面」。繩圈是一條彎彎曲曲、粗細不一的不規則曲線，螞蟻又小，常常卡在一條很深的凹口裡，**看起來被包住，其實在外面**。小技巧：**從螞蟻往旁邊畫一條線出去，數穿過繩子幾次**——奇數次在裡面、偶數次在外面。答錯或來不及就結束，看你能過幾關。越後面，繩圈越長、凹口越深、時間越短！',
         mount: mount,
         score: SCORE,
         test: {
-            roomsFor: roomsFor, depthMinFor: depthMinFor, timeMs: timeMs, makeMaze: makeMaze, distances: distances, boundaryLoop: boundaryLoop, pointInPoly: pointInPoly, loopPath: loopPath, makeLevel: makeLevel, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, ROOMS: ROOMS, DEPTH_MIN: DEPTH_MIN, TIME_S: TIME_S, ROUND: ROUND, MAX_LEVEL: MAX_LEVEL
+            roomsFor: roomsFor, depthMinFor: depthMinFor, timeMs: timeMs, varianceFor: varianceFor, warpAFor: warpAFor, gridLines: gridLines, warpParams: warpParams, warpPoint: warpPoint, segCross: segCross, selfCrosses: selfCrosses, curvePoints: curvePoints, polyPath: polyPath, makeMaze: makeMaze, distances: distances, boundaryLoop: boundaryLoop, pointInPoly: pointInPoly, loopPath: loopPath, makeLevel: makeLevel, rating: rating,
+            RAMP_LEVELS: RAMP_LEVELS, ROOMS: ROOMS, DEPTH_MIN: DEPTH_MIN, TIME_S: TIME_S, ROUND: ROUND, VARIANCE: VARIANCE, WARP_A: WARP_A, ANT_SIZE: ANT_SIZE, STEP: STEP, MAX_LEVEL: MAX_LEVEL
         }
     };
     Reaction.register(G);

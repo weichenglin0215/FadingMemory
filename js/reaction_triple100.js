@@ -24,7 +24,7 @@
     'use strict';
 
     var ID = 'triple100';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '通過關數', min: 1, max: 30 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '通過關數', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
@@ -37,7 +37,8 @@
     var PENALTY_MS = 3000;                      /* 選錯一組扣幾毫秒的剩餘時間 */
     var LEVEL_STEP = 3;                         /* 每隔幾關多一組（3 張牌） */
     var START_GROUPS = 2, MAX_GROUPS = 10;      /* 第 1 關 2 組＝6 張牌；最多 10 組＝30 張 */
-    var MAX_LEVEL = 30;
+    var MAX_LEVEL = 90;
+    var LIMIT_LAST_LEVEL = 30;                  /* 限時每關多 LIMIT_STEP_S 秒，加到第 30 關為止（31 關起組數、陷阱都已經到頂，限時也不再增加，不然第 90 關會有 30 多分鐘） */
     var LIMIT_BASE_S = 180, LIMIT_STEP_S = 20;  /* 第 1 關限時 180 秒，每多一關多 20 秒 */
     /* 各組數的「陷阱至少幾組」：同一個張數的三關依序變多（2 組的牌在數學上不會有陷阱） */
     var TRAPS = { 2: [0, 0, 0], 3: [1, 1, 2], 4: [2, 3, 4], 5: [5, 7, 9], 6: [8, 10, 12], 7: [11, 13, 15], 8: [14, 17, 20], 9: [18, 21, 24], 10: [24, 27, 30] };
@@ -53,7 +54,7 @@
         var within = Math.min(2, (level - 1) % LEVEL_STEP);
         if (START_GROUPS + Math.floor((level - 1) / LEVEL_STEP) > MAX_GROUPS) within = 2;          /* 滿 30 張之後，陷阱要求維持最高 */
         var r = rangeFor(groups);
-        return { groups: groups, cards: groups * 3, minTraps: TRAPS[groups][within], lo: r[0], hi: r[1], limitS: LIMIT_BASE_S + LIMIT_STEP_S * (level - 1) };
+        return { groups: groups, cards: groups * 3, minTraps: TRAPS[groups][within], lo: r[0], hi: r[1], limitS: LIMIT_BASE_S + LIMIT_STEP_S * (Math.min(level, LIMIT_LAST_LEVEL) - 1) };
     }
     /* 找出所有加總 ＝ target 的三張組合（回傳牌的索引，i < j < k） */
     function findTriples(cards, target) {

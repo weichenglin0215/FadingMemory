@@ -20,16 +20,16 @@
     'use strict';
 
     var ID = 'fastblink';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 25;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var RATIO = [3.0, 1.05];                    /* 快／慢的頻率比：第 1 關 → 到頂 */
     var RATIO_LOG = true;                       /* true＝對「差距（比值 − 1）」等比例縮小，每一關的難度感都往前一步（V1.34）；false＝比值線性縮小（舊版：前面一大段關卡都一樣簡單） */
     var SLOW_HZ = [0.33, 3.0];                   /* 慢的那顆頻率的隨機範圍（赫茲＝每秒閃幾下） */
     var ANS_S = [15, 20];                         /* 作答限時（秒）：第 1 關 → 到頂 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 第 level 關的快／慢頻率比。RATIO_LOG：差距 d ＝ 比值 − 1 從 RATIO[0] − 1 等比例縮小到 RATIO[1] − 1（d(level) ＝ d0 × (d1 ÷ d0)^t，t 從 0 走到 1）；否則線性 */

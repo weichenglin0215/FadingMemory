@@ -16,7 +16,7 @@
     'use strict';
 
     var ID = 'remainder';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
@@ -24,7 +24,7 @@
     var ANS_S = [15, 20];                        /* 作答限時（秒）：第 1 題 → 到頂 */
     var N_MAX = [300, 9999];                    /* 被除數最大是多少：第 1 題 → 到頂（最小一律 N_MIN） */
     var N_MIN = 100;
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var OPTIONS = 5;                            /* 幾顆答案按鈕 */
     /* 除數清單：從第 from 題起加入 divs 這些除數 */
     var DIV_STEPS = [

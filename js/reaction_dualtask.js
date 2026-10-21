@@ -37,7 +37,7 @@
 
     /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 dualtask 那一列要一致
        （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 30 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -45,7 +45,7 @@
     /* ═══ 可以自己調的參數 ═══ */
     var DURATION_SEC = 30;                    /* 舊版（單回合）一回合幾秒；關卡制用 durationFor(level) */
     /* ── V1.25 關卡制 ── */
-    var MAX_LEVEL = 30;                       /* 最後一關（過了就全破） */
+    var MAX_LEVEL = 90;                       /* 最後一關（過了就全破） */
     var DUR = [12, 40, 15];                   /* 一關的總秒數：第 1 關 → 第 DUR[2] 關（之後維持） */
     var DIFF_BASE = [0, 1.6, 15];             /* 每一關起始的難度值 d：第 1 關 0（≒舊版剛開始）→ 第 15 關 1.6（比舊版第 15 秒更難） */
     var LEVEL_DRIFT = 0.3;                    /* 一關之內，難度值再往上加最多這麼多（從頭到尾） */

@@ -21,12 +21,12 @@
     'use strict';
 
     var ID = 'oddsock';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 40 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 25;                       /* 幾關之後難度到頂 */
-    var MAX_LEVEL = 40;
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
+    var MAX_LEVEL = 90;
     var COUNT_DELTA = [3, 1];                   /* 落單襪子和它最像的那一對，條紋數／圓點數差 */
     var TIME_S = [10, 30];                     /* 每關限時（秒）：第 1 關 → 到頂關卡。V1.34 玩家意見：越後面的關卡秒數要加長（原本 15 → 4 越後面越短，現在 10 → 30 越後面越長） */
     var MAX_COUNT = 8;                          /* 條紋、圓點最多幾個 */

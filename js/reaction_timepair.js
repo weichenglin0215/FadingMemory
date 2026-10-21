@@ -16,18 +16,18 @@
     'use strict';
 
     var ID = 'timepair';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 20;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var PAIRS = [3, 8];                         /* 配對數（時鐘各幾個）：第 1 關 → 到頂（四捨五入） */
     var TRAP_A = [0, 3];                        /* 「指針互換」誘餌的組數（每組 2 對）：第 1 關 → 到頂（無條件捨去） */
     var TRAP_B = [0, 2];                        /* 「24 小時制」誘餌的組數（每組 2 對）：第 1 關 → 到頂（無條件捨去） */
     var SPREAD_H = [6, 2.5];                    /* 其餘時間散布的範圍（小時）：第 1 關 → 到頂（越小越接近） */
     var LIMIT_S = [30, 60];                     /* 限時（秒）：第 1 關 → 到頂 */
     var STEP_MIN = 5;                           /* 分鐘一律是這個數的倍數 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

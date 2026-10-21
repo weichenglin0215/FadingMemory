@@ -18,11 +18,11 @@
     'use strict';
 
     var ID = 'milktea';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var TOL = [8, 1];                           /* 容許的顏色差（ΔE）：第 1 關 → 到頂 */
     var MIX_LAG = [0.3, 0.6];                   /* 攪勻的延遲（秒，一階延遲的時間常數）：第 1 關 → 到頂 */
     var RATE = [0.16, 0.30];                    /* 流量：每秒多加幾成牛奶（f 的增加速度）：第 1 關 → 到頂 */
@@ -33,7 +33,7 @@
     var CREAMER_RATE = 1.5;                     /* 奶精的流量倍率 */
     var TIME_S = 20;                            /* 每關限時（秒）：免得一直不按 */
     var SETTLE_LAGS = 3;                        /* 放手後等幾倍的延遲時間才揭曉（顏色穩定了才比） */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var SWIRL_MAX = 260;                        /* 白色漩渦的粒子池上限 */
     var MILK = [250, 246, 234];                 /* 牛奶的顏色（RGB） */
     var CREAMER = [252, 244, 218];              /* 奶精的顏色（偏黃） */

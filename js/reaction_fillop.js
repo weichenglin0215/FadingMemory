@@ -16,7 +16,7 @@
     'use strict';
 
     var ID = 'fillop';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
@@ -27,7 +27,7 @@
     var TIME_BASE = 20, TIME_PER_BLANK = 3;      /* 限時（秒）＝ (TIME_BASE ＋ TIME_PER_BLANK × 空格數) × 倍率 */
     var TIME_MUL = [1.0, 3.0];                  /* 倍率：第 1 關 → 到頂 */
     var TARGET_MAX = 200;                       /* 等號右邊最大是多少 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var OPS = ['+', '-', '*', '/'];
     var OP_TEXT = { '+': '+', '-': '−', '*': '×', '/': '÷' };
 

@@ -20,11 +20,11 @@
     'use strict';
 
     var ID = 'huesort';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var MOD_DE = [14, 3];                       /* 被改過的那一塊和「該有的顏色」差多少（ΔE）：第 1 關 → 到頂（越小越難） */
     var TIME_S = [25, 14];                      /* 每關限時（秒）：第 1 關 → 到頂 */
     var STEP_DE = 6;                            /* 相鄰兩塊之間「原本漸層」的顏色差（ΔE），每一關都一樣 */
@@ -34,7 +34,9 @@
     var SIDE_GAP = 30;                          /* 左邊塊離左邊界、右邊塊離右邊界的距離（px，使用者規定 30） */
     var V_GAP = 8;                              /* 上下兩塊之間的空隙（px） */
     var GATHER_MS = 800;                        /* 評審動畫：色塊集中到中間要多久（毫秒） */
-    var MAX_LEVEL = 60;
+    var JOIN_OVERLAP = 3;                       /* 集中之後，每一塊（最後一塊除外）的高度多加幾 px、壓進下一塊裡面：舞台會依螢幕大小縮放，相鄰兩塊的邊界落在小數點像素上，
+                                                   邏輯上剛好貼齊也會被反鋸齒漏出一條淺色細縫；多壓進去幾 px（下一塊畫在上面蓋住）就看不到縫了（玩家意見：色塊合併後上下要緊密相連、不要白縫） */
+    var MAX_LEVEL = 90;
     var MODES = ['light', 'chroma', 'hue'];     /* 漸層沿著哪個方向走：明度／彩度／色相 */
     var KIND_NAME = { light: '明度', chroma: '彩度', hue: '色相' };
     var RAD = Math.PI / 180;
@@ -204,6 +206,8 @@
                 var b = L.blocks[i];
                 el.classList.add('hus-block--join');
                 el.style.left = b.joinX + 'px'; el.style.top = b.joinY + 'px';
+                el.style.height = (b.h + (i < els.length - 1 ? JOIN_OVERLAP : 0)) + 'px';             /* 壓進下一塊 JOIN_OVERLAP px：不留縫 */
+                el.style.zIndex = String(i);                                                          /* 下面的塊畫在上面，蓋住上一塊多出來的那幾 px */
             });
             var what = '第 ' + (q.k + 1) + ' 塊的' + KIND_NAME[q.kind] + '被改過了（顏色差 ΔE ' + q.de.toFixed(4) + '）';
             api.after(GATHER_MS + 100, function () {
@@ -228,7 +232,7 @@
         test: {
             modDeFor: modDeFor, timeMs: timeMs, lchToLab: lchToLab, labToRgb: labToRgb, rgbToLab: rgbToLab, labDist: labDist, deltaE: deltaE, inGamut: inGamut, round8: round8, hueDegFor: hueDegFor,
             makeLevel: makeLevel, oddBlock: oddBlock, layout: layout, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, MOD_DE: MOD_DE, TIME_S: TIME_S, STEP_DE: STEP_DE, BLOCKS: BLOCKS, ODD_RANGE: ODD_RANGE, BLOCK_W: BLOCK_W, SIDE_GAP: SIDE_GAP, V_GAP: V_GAP, GATHER_MS: GATHER_MS, MAX_LEVEL: MAX_LEVEL, MODES: MODES
+            RAMP_LEVELS: RAMP_LEVELS, MOD_DE: MOD_DE, TIME_S: TIME_S, STEP_DE: STEP_DE, BLOCKS: BLOCKS, ODD_RANGE: ODD_RANGE, BLOCK_W: BLOCK_W, SIDE_GAP: SIDE_GAP, V_GAP: V_GAP, GATHER_MS: GATHER_MS, JOIN_OVERLAP: JOIN_OVERLAP, MAX_LEVEL: MAX_LEVEL, MODES: MODES
         }
     };
     Reaction.register(G);

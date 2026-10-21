@@ -17,17 +17,17 @@
     'use strict';
 
     var ID = 'reversi';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var STONES = [12, 50];                      /* 盤面上的棋子總數：第 1 關 → 到頂（開局 4 顆，下 N 步會多 N 顆） */
     var TIME_S = [15, 6];                       /* 每題限時（秒）：第 1 關 → 到頂 */
     var GAP_MAX = [9, 1];                       /* 「最多」與「第二多」差距的上限：第 1 關 → 到頂（最後只差剛好 1） */
     var TRICK_P = [0, 0.9];                     /* 要求「最多的那一手藏起來」的機率：第 1 關 → 到頂 */
     var MIN_MOVES = 4;                          /* 黑棋至少有幾個合法下法 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var N = 8, BLACK = 1, WHITE = -1;
     var DIRS = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];     /* 八個方向 [列的變化, 欄的變化]；兩個都不是 0 的就是斜線（isDiagonal） */
 

@@ -16,11 +16,11 @@
     'use strict';
 
     var ID = 'scratch';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 20 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var MAX_LEVEL = 20;                             /* 最後一關 */
+    var MAX_LEVEL = 90;                             /* 最後一關 */
     var COLS = 4, ROWS = 3, CELL = 108, GAP = 10;   /* 牌的排列與大小（px） */
     var TARGET_COUNT = 3;                           /* 要找到幾張一樣的 */
     var MAX_REV = 6;                                /* 最多刮開幾張（超過還沒找到三張一樣的就失敗） */

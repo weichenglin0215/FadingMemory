@@ -48,7 +48,7 @@ console.log('平均差 1～3 元的組合 ' + (nearSum / total).toFixed(2) + ' �
   }
   ok(fb2 === 0, '保底題沒有出現');
   ok(dSame / dTot > 0.45 && dSame / dTot < 0.9, '答案以外的按鈕，個位數跟某個正確答案一樣的比例 ' + (dSame / dTot).toFixed(2) + '（DIGIT_P = ' + T.DIGIT_P + '）');
-  ok(withSame / lvTot > 0.9, '幾乎每關都有至少 1 個這樣的按鈕：' + (withSame / lvTot).toFixed(2));
+  ok(withSame / lvTot > 0.75, '大多數關卡都有至少 1 個這樣的按鈕（RAMP_LEVELS 拉長到 30 關後，前面比較簡單的關卡少一點）：' + (withSame / lvTot).toFixed(2));
   ok(multiLv > 0 && noneSame / multiLv < 0.02, '答案以外有 2 個以上時，每關至少 1 個個位數跟答案一樣：沒有的 ' + noneSame + ' / ' + multiLv);
   ok(allSame / multiLv < 0.4, '不會每關每個按鈕都這樣（不然六個按鈕明顯分兩組）：全部一樣的比例 ' + (allSame / multiLv).toFixed(2));
   console.log('個位數跟答案一樣的其他按鈕：' + (dSame / dTot * 100).toFixed(1) + '%；至少 1 個的關卡 ' + (withSame / lvTot * 100).toFixed(1) + '%；（答案以外 2 個以上的關卡）全部一樣 ' + (allSame / multiLv * 100).toFixed(1) + '%、都不一樣 ' + (noneSame / multiLv * 100).toFixed(1) + '%'); }

@@ -36,7 +36,7 @@
     var CHANGE_MS = 2500;                       /* 特徵改變的時候，新的樣子顯示多久 */
     var NEXT_MS = 380;                          /* 答對之後，下一句口令多久出現 */
     var SOLVE_CAP = 8;                          /* 驗證用：api.solve 最多幫忙答對幾題 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var COLORS = ['紅', '藍', '黃', '綠'];       /* 衣服的顏色（編號對應 CSS 的 wbl-shirt0～3） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */

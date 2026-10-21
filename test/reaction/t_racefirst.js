@@ -9,7 +9,7 @@ const N = T.RUNNERS;
 ok(near(T.gapFor(1), T.GAP[0]) && near(T.gapFor(T.RAMP_LEVELS), T.GAP[1]) && near(T.gapFor(60), T.GAP[1]), '時間差 ' + T.GAP[0] + ' → ' + T.GAP[1] + ' 秒');
 ok(N === 5 && T.HUES.length >= N, 'V1.34 玩家意見：小人增加到 5 位（顏色夠用：' + T.HUES.length + ' 色）');
 for (let l = 2; l <= 60; l++) ok(T.gapFor(l) <= T.gapFor(l - 1) + 1e-12 && T.ansMs(l) <= T.ansMs(l - 1), '單調 ' + l);
-ok(near(T.gapFor(11) - (T.GAP[0] + T.GAP[1]) / 2, 0, 0.004), '中點約等於平均（線性）');
+{ const mid = (T.RAMP_LEVELS + 1) / 2; ok(near(T.gapFor(mid) - (T.GAP[0] + T.GAP[1]) / 2, 0, 0.004), '中點約等於平均（線性）：第 ' + mid + ' 關（跟著 RAMP_LEVELS 走）'); }
 // 運動函式
 ok(T.distAt(1000, 0, 400) === 0 && near(T.distAt(1000, 0.5, 4000), 125) && T.distAt(1000, 5, 400) === 400, 'distAt');
 ok(near(T.arriveT(T.accelOf(0.7, 400), 400), 0.7), 'accelOf／arriveT 互為反函式');

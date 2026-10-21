@@ -21,12 +21,12 @@
     'use strict';
 
     var ID = 'glyphspin';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 40 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 20;                       /* 幾關之後難度到頂 */
-    var MAX_LEVEL = 30;
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
+    var MAX_LEVEL = 90;
     var SPIN = [720, 3000];                     /* 剛出現時的旋轉角速度（度／秒）：第 1 關 → 到頂（V1.24 的 10 倍） */
     var SPIN_MIN = 480;                         /* 最慢的旋轉角速度：每秒一圈 */
     var SLOW_S = 5;                             /* 幾秒之後降到最慢 */

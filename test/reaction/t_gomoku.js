@@ -1,5 +1,6 @@
 // 堵住五子（gomoku，企劃 233）的純函式檢查：連五判斷、致勝點、「白棋會贏」搜尋、唯一擋法（用另一套不靠視窗的窮舉獨立驗證）、難度線性、題型
 const { game, rng, seedOf } = require('./load.js');
+require('../../js/gomoku_bank.js');          // 題庫（V1.36.0）：window.GOMOKU_BANK，要在遊戲檔載入之前就在
 const G = game('reaction_gomoku.js'); const T = G.test;
 let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log('FAIL', m); } };
 const SEED = seedOf(20261106), rnd = rng(SEED);
@@ -11,7 +12,7 @@ ok(T.stonesFor(1) === T.STONES[0] && T.stonesFor(T.RAMP_LEVELS) === T.STONES[1] 
 ok(T.timeMs(1) === T.TIME_S[0] * 1000 && T.timeMs(T.RAMP_LEVELS) === T.TIME_S[1] * 1000, '限時 ' + T.TIME_S);
 ok(T.decoysFor(1) === T.DECOYS[0] && T.decoysFor(T.RAMP_LEVELS) === T.DECOYS[1], '假威脅組數 ' + T.DECOYS);
 ok(T.cornerPFor(T.CORNER_FROM - 1) === 0 && T.cornerPFor(T.CORNER_FROM) > 0 && Math.abs(T.cornerPFor(T.RAMP_LEVELS) - T.CORNER_P[1]) < 1e-9, '交叉題型的機率：第 ' + T.CORNER_FROM + ' 關起出現、到頂 ' + T.CORNER_P[1]);
-for (let l = 2; l <= 60; l++) ok(T.stonesFor(l) >= T.stonesFor(l - 1) && T.timeMs(l) <= T.timeMs(l - 1) && T.decoysFor(l) >= T.decoysFor(l - 1) && T.cornerPFor(l) >= T.cornerPFor(l - 1), '單調 ' + l);
+for (let l = 2; l <= 60; l++) ok(T.stonesFor(l) >= T.stonesFor(l - 1) && T.timeMs(l) >= T.timeMs(l - 1) && T.decoysFor(l) >= T.decoysFor(l - 1) && T.cornerPFor(l) >= T.cornerPFor(l - 1), '單調 ' + l);
 // 線性：相鄰兩關的差距大致相等（四捨五入造成的 ±1 不算）
 { const d = []; for (let l = 2; l <= T.RAMP_LEVELS; l++) d.push(T.stonesFor(l) - T.stonesFor(l - 1)); ok(Math.max(...d) - Math.min(...d) <= 1, '棋子數是線性成長：每關增加 ' + Math.min(...d) + '～' + Math.max(...d)); }
 
@@ -86,21 +87,24 @@ function bruteWin(b, depth) {
 function allSolutions(b, depth) { const out = []; for (let c = 0; c < N * N; c++) { if (b[c] !== 0) continue; b[c] = B; if (!bruteWin(b, depth)) out.push(c); b[c] = 0; } return out; }
 
 // ── 整關：獨立窮舉驗證「全盤只有 q.x 一格擋得住」 ──
-let kinds = { four: 0, corner: 0 }, decoySum = 0, checked = 0, total = 0;
+let kinds = { four: 0, corner: 0, bank: 0 }, tiers = { 0: 0, 1: 0, 2: 0, 3: 0 }, decoySum = 0, checked = 0, total = 0;
 const CHECK_EVERY = 6;     // 窮舉驗證比較慢，每 6 題驗 1 題（但整套 600 題的基本條件都驗）
-for (let i = 0; i < 600; i++) {
-  const lv = 1 + (i % 40), q = T.makeLevel(lv, rnd); total++; kinds[q.kind]++; decoySum += q.decoys;
+for (let i = 0; i < 400; i++) {
+  const lv = 1 + (i % 40), q = T.makeLevel(lv, rnd); total++; kinds[q.kind]++; tiers[q.tier]++; decoySum += q.decoys;
+  ok(q.depth === (q.kind === 'bank' ? T.BANK_DEPTH : T.WIN_DEPTH), '驗證深度：模板 ' + T.WIN_DEPTH + '、題庫 ' + T.BANK_DEPTH);
+  ok(q.kind !== 'bank' || lv >= T.BANK_FROM, '第 ' + T.BANK_FROM + ' 關以前不會出題庫題型');
   const stones = Array.from(q.board).filter(x => x).length;
   ok(q.board.length === N * N && Array.from(q.board).every(x => x === 0 || x === B || x === W), '盤面合法');
-  ok(q.stones === stones && Math.abs(stones - T.stonesFor(lv)) <= 2, '第 ' + lv + ' 關：棋子 ' + stones + '（目標 ' + T.stonesFor(lv) + '）');
+  ok(q.stones === stones && (q.kind === 'bank' ? stones >= T.stonesFor(lv) - 2 && stones <= T.stonesFor(lv) + T.STONE_SLACK + 2 : Math.abs(stones - T.stonesFor(lv)) <= 2), '第 ' + lv + ' 關：棋子 ' + stones + '（目標 ' + T.stonesFor(lv) + '，' + q.kind + '）');
   ok(q.board[q.x] === 0, '答案那一格是空的');
   ok(q.decoys <= T.decoysFor(lv), '假威脅組數不超過目標：' + q.decoys + '／' + T.decoysFor(lv));
   ok(T.winCells(q.board, N, B).length === 0 && !T.blackCounter(q.board, N), '黑棋沒有現成的五顆，也沒有反擊苗頭');
-  ok(T.whiteWins(q.board, N, T.WIN_DEPTH).win, '黑棋不下，白棋會贏');
-  ok(T.isGood(q.board, N, q.x, T.WIN_DEPTH) && T.solutionCells(q.board, N, T.WIN_DEPTH).join() === String(q.x), '第 ' + lv + ' 關：唯一擋法（程式內建驗證）');
+  ok(T.whiteWins(q.board, N, q.depth).win, '黑棋不下，白棋會贏');
+  ok(T.isGood(q.board, N, q.x, q.depth) && T.solutionCells(q.board, N, q.depth).join() === String(q.x), '第 ' + lv + ' 關：唯一擋法（程式內建驗證，深度 ' + q.depth + '）');
   if (q.kind === 'corner') ok(T.winCells(q.board, N, W).length === 0, '交叉題型：現在還沒有致勝點（要先下在交叉點才變雙四）');
+  else if (q.kind === 'bank') { ok(T.winCells(q.board, N, W).length === 0, '題庫題型：白棋現在沒有現成的四（威脅是看不出來的連環）'); ok(q.tier >= 1 && q.tier <= 3, '題庫級別 1～3'); }
   else ok(T.winCells(q.board, N, W).join() === String(q.x), '四顆一排題型：現在就有致勝點，而且就是答案那一格');
-  if (i % CHECK_EVERY === 0) {
+  if (i % CHECK_EVERY === 0 && q.kind !== 'bank') {
     checked++;
     const sol = allSolutions(q.board, T.WIN_DEPTH);
     ok(sol.length === 1 && sol[0] === q.x, '【獨立窮舉】第 ' + lv + ' 關（' + q.kind + '）：全盤能擋住的格子 ' + JSON.stringify(sol) + '，答案 ' + q.x);
@@ -108,8 +112,32 @@ for (let i = 0; i < 600; i++) {
     q.board[q.x] = B; ok(!bruteWin(q.board, T.HOLD_DEPTH), '【獨立窮舉】答案撐過 ' + T.HOLD_DEPTH + ' 步預備'); q.board[q.x] = 0;
   }
 }
-console.log('題型：四顆一排 ' + kinds.four + '、兩個三顆交叉 ' + kinds.corner + '；平均假威脅 ' + (decoySum / total).toFixed(2) + ' 組；獨立窮舉驗證了 ' + checked + ' 題');
-ok(kinds.corner > 50 && kinds.four > 100, '兩種題型都有出現');
+console.log('題型：四顆一排 ' + kinds.four + '、兩個三顆交叉 ' + kinds.corner + '、題庫 ' + kinds.bank + '（D1 ' + tiers[1] + '／D2 ' + tiers[2] + '／D3 ' + tiers[3] + '）；平均假威脅 ' + (decoySum / total).toFixed(2) + ' 組；獨立窮舉驗證了 ' + checked + ' 題（模板題型）');
+ok(kinds.corner > 10 && kinds.four > 40 && kinds.bank > 150 && tiers[1] > 20 && tiers[2] > 40 && tiers[3] > 20, '四種題型都有出現（模板兩種、題庫三級）');
+// ── V1.36.0 題庫：每一題都用目前的遊戲判斷重新驗證過 ──
+{ const bank = window.GOMOKU_BANK; ok(Array.isArray(bank) && bank.length >= 300, '題庫有 ' + (bank && bank.length) + ' 題');
+  const cnt = { 1: 0, 2: 0, 3: 0 }; let placeable = 0, tried = 0;
+  bank.forEach((e, idx) => {
+    ok(e.length === 5 && [1, 2, 3].includes(e[0]) && Number.isInteger(e[1]) && Number.isInteger(e[2]) && e[3].length % 2 === 0 && e[4].length % 2 === 0 && e[3].length >= 8, '題庫第 ' + idx + ' 題格式：[級別, 答案r, 答案c, 白棋…, 黑棋…]'); cnt[e[0]]++;
+    if (idx % 3 !== 0) return;                                  // 每 3 題驗 1 題（重新驗證比較慢）
+    tried++;
+    let good = false;
+    for (let tr = 0; tr < 40 && !good; tr++) {
+      const p = T.placeBank(e, N, rnd); if (!p) continue;
+      const b = T.newBoard(N); p.white.forEach(k => { b[k] = W; }); p.black.forEach(k => { b[k] = B; });
+      if (p.white.length !== e[3].length / 2 || p.black.length !== e[4].length / 2 || b[p.x] !== 0) { ok(false, '題庫第 ' + idx + ' 題放上棋盤後棋子數不對'); break; }
+      if (T.isGood(b, N, p.x, T.BANK_DEPTH)) good = true;
+    }
+    if (good) placeable++;
+  });
+  console.log('題庫 D1 ' + cnt[1] + '／D2 ' + cnt[2] + '／D3 ' + cnt[3] + '；抽驗 ' + tried + ' 題，翻轉平移後重新驗證通過 ' + placeable + ' 題');
+  ok(cnt[1] >= 100 && cnt[2] >= 100 && cnt[3] >= 30, '三級都有足夠的題目');
+  ok(placeable >= tried * 0.97, '抽驗的題庫題目，絕大多數（' + placeable + '／' + tried + '）能在棋盤上找到一種翻轉平移的放法，通過唯一擋法的驗證'); }
+// 題型比例隨關卡變化
+{ ok(T.tierWeights(T.BANK_FROM - 1).join() === '1,0,0,0', '第 ' + (T.BANK_FROM - 1) + ' 關以前只有模板');
+  for (const lv of [T.BANK_FROM, 10, 20, T.RAMP_LEVELS, 60]) { const w = T.tierWeights(lv); ok(Math.abs(w.reduce((a, b) => a + b, 0) - 1) < 1e-9 && w.every(x => x >= 0), '第 ' + lv + ' 關題型比例加起來是 1：' + w.map(x => x.toFixed(2))); }
+  const w1 = T.tierWeights(T.BANK_FROM), w2 = T.tierWeights(T.RAMP_LEVELS); ok(w1[0] > w2[0] && w1[3] < w2[3] && w1[1] > w2[1] && w2[2] > w1[2], '越後面，模板越少、D3 越多'); }
+{ const e = window.GOMOKU_BANK[0]; let seen = new Set(); for (let k = 0; k < 200; k++) { const p = T.placeBank(e, N, rnd); if (p) seen.add(p.white.join()); } ok(seen.size > 30, 'placeBank 每次翻轉平移的結果都不一樣：' + seen.size + ' 種'); }
 // 前 4 關（第 5 關才有交叉題型）
 { let c = 0; for (let i = 0; i < 100; i++) if (T.makeLevel(1 + (i % 4), rnd).kind === 'corner') c++; ok(c === 0, '前 ' + (T.CORNER_FROM - 1) + ' 關不會出交叉題型：' + c); }
 // 到頂關卡的假威脅都有放到

@@ -17,18 +17,18 @@
     'use strict';
 
     var ID = 'swapeven';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var CARDS = [3, 8];                         /* 每排幾張牌：第 1 關 → 到頂 */
     var VMAX = [9, 60];                         /* 牌上的數字範圍 1～VMAX：第 1 關 → 到頂 */
     var TIME_S = [12, 6];                       /* 每題限時（秒）：第 1 關 → 到頂 */
     var HALF_MIN = [3, 2], HALF_MAX = [3, 15];  /* 「差的一半」的下限／上限（第 1 關固定 3，也就是兩排差 6） */
     var FULL_DECOYS = [1, 3];                   /* 誘餌：「差整整 2g（＝兩排的差）」的牌對數至少幾對 */
     var REV_DECOYS = [0, 2];                    /* 誘餌：「反方向差 g」的牌對數至少幾對 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var TRIES = 4000, RELAX_AT = 2000;          /* 出題最多試幾次；試超過 RELAX_AT 次還湊不到誘餌就放寬 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */

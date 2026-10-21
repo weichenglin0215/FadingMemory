@@ -17,11 +17,11 @@
     'use strict';
 
     var ID = 'pinwheel';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var CENTER = [3.0, 6.0];                    /* 綠色範圍的中心轉速（圈／秒）：第 1 關 → 到頂 */
     var HALF_BAND = [0.33, 0.1];               /* 綠色範圍的半寬（占中心轉速的比例）：第 1 關 → 到頂（越小越難） */
     var HOLD_S = [5, 30];                        /* 要在綠色範圍裡撐幾秒（進度滿）：第 1 關 → 到頂 */
@@ -35,7 +35,7 @@
     var R_MIN = 36;                             /* 手指離風車中心至少多遠（px）才算畫圈 */
     var SPEED_MAX_RATIO = 2.2;                  /* 速度表的最大刻度＝中心轉速 × 這個數 */
     var SAMPLE_S = 0.05;                        /* 紀錄轉速折線圖的取樣間隔（秒） */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

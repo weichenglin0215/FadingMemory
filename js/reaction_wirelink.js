@@ -19,16 +19,16 @@
     'use strict';
 
     var ID = 'wirelink';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var SIZE = [4, 8];                          /* 棋盤邊長（格）：第 1 關 → 到頂 */
     var COLORS = [2, 8];                        /* 顏色（電線）種數：第 1 關 → 到頂；最多 8 種（PALETTE 的長度） */
     var TIME_S = [30, 70];                      /* 每關限時（秒）：第 1 關 → 到頂 */
     var MIN_SEG = 3;                            /* 每一條電線（一段路）至少幾格 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     /* 顏色的名稱與出現順序（CSS 變數 --wlk-0～--wlk-7 在 css/theme.css；水藍(5)像藍(1)、橘(6)像黃(3)） */
     var PALETTE = ['紅', '藍', '綠', '黃', '紫', '水藍', '橘', '粉紅'];
     var neighbors = kit.gridNeighbors, adjacent = kit.gridAdjacent;

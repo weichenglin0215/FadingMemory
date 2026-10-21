@@ -5,8 +5,8 @@ let bad = 0; const ok = (c, m) => { if (!c) { bad++; if (bad < 30) console.log('
 const W = 472, SEED = seedOf(20261010), rnd = rng(SEED);
 // 難度曲線：線性、到頂後維持
 const d0 = T.difficulty(0), dm = T.difficulty(T.T_RAMP / 2), d1 = T.difficulty(T.T_RAMP), d2 = T.difficulty(1000);
-ok(Math.abs(d0.speed - 110) < 1e-9 && Math.abs(d1.speed - 340) < 1e-9 && Math.abs(d0.hw - 104) < 1e-9 && Math.abs(d1.hw - 36) < 1e-9, '起點與終點 速度 110→340、半寬 104→36');
-ok(Math.abs(dm.speed - 225) < 1e-6 && Math.abs(dm.hw - 70) < 1e-6 && Math.abs(dm.slope - 0.6) < 1e-6 && Math.abs(dm.seg - 210) < 1e-6, '中點是線性中間值');
+ok(Math.abs(d0.speed - T.SPEED[0]) < 1e-9 && Math.abs(d1.speed - T.SPEED[1]) < 1e-9 && Math.abs(d0.hw - T.HW[0]) < 1e-9 && Math.abs(d1.hw - T.HW[1]) < 1e-9, '起點與終點 速度 ' + T.SPEED + '、半寬 ' + T.HW + '（使用者調的參數，測試跟著走）');
+ok(Math.abs(dm.speed - (T.SPEED[0] + T.SPEED[1]) / 2) < 1e-6 && Math.abs(dm.hw - (T.HW[0] + T.HW[1]) / 2) < 1e-6 && Math.abs(dm.slope - (T.SLOPE[0] + T.SLOPE[1]) / 2) < 1e-6 && Math.abs(dm.seg - (T.SEG[0] + T.SEG[1]) / 2) < 1e-6, '中點是線性中間值');
 ok(d2.speed === d1.speed && d2.hw === d1.hw && d2.slope === d1.slope, '到頂後維持');
 for (let t = 0; t < 89; t += 3) { const a = T.difficulty(t), b = T.difficulty(t + 3); ok(b.speed > a.speed && b.hw < a.hw && b.slope > a.slope && b.seg < a.seg && b.wvar > a.wvar, '越來越難 t=' + t); }
 // 山路生成：一路從 0 秒走到 150 秒，每一點都合理

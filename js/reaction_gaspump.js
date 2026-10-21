@@ -16,11 +16,11 @@
     'use strict';
 
     var ID = 'gaspump';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 25;                       /* 幾關之後難度到頂（企劃寫第 25 關容許誤差 ±0.5 元） */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂（企劃寫第 25 關容許誤差 ±0.5 元） */
     var TOL = [15, 0.5];                        /* 容許誤差（元）：第 1 關 → 到頂 */
     var ACCEL = [0.4, 1.5];                     /* 加速的程度 q = a×T÷r0（0＝等速）：第 1 關 → 到頂 */
     var T_RANGE = [6, 9];                       /* 大約按幾秒到目標（秒） */
@@ -34,7 +34,7 @@
     var OVER = 1.6;                             /* 加到目標的幾倍就自動停手（加滿了） */
     var TIME_S = 30;                            /* 每關限時（秒）：整關的上限，免得一直不按 */
     var FUELS = ['95 無鉛', '92 無鉛', '98 無鉛'];
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function tolFor(level) { return Math.round(kit.ramp(level, TOL[0], TOL[1], RAMP_LEVELS) * 10) / 10; }

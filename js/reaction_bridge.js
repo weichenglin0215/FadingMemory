@@ -35,12 +35,12 @@
     'use strict';
 
     var ID = 'bridge';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var BW = [64, 4];                           /* 下方方塊的寬度（px）：第 1 關 → 到頂（玩家指定：72 → 4） */
     var BH = 64;                                /* 下方方塊的高（px） */
     var OVERLAP = [32, 4];                      /* 方塊往中間移動時，進入橫板左右寬度的多少 px：第 1 關 → 到頂（數字越大越容易，越小越難） */
@@ -158,9 +158,9 @@
             var cfg = { plank: plank, L: { c: cL, A: AL, ph: phL, w: wL }, R: { c: cR, A: AR, ph: phR, w: wR }, omega: omega, ratio: [p, q], fastLeft: fastLeft, tStar: tStar, W: W, T: T, bw: bw, ov: ov, line: lineAt(level) };
             var pos = posAt(cfg, tStar), st = motionStats(cfg, W);
             if (!judge(plank, pos.L, pos.R, END_MARGIN, bw).ok) continue;
-            /* 開局的前 FIRST_MIN_S 秒不能有「同時頂住」（頻率不同時，可能碰巧提早對齊）：有就重排 */
+            /* 開局的前 FIRST_MIN_S 秒不能有「同時頂住」（頻率不同時，可能碰巧提早對齊）：有就重排。每 5 毫秒檢查一次（以前每 20 毫秒，高關卡成功的時機很窄、會被漏掉，約 2% 的題目一開局就能按） */
             var early = false;
-            for (var te = 0; te <= FIRST_MIN_S + 1e-9 && !early; te += 0.02) { var pe = posAt(cfg, te); if (judge(plank, pe.L, pe.R, END_MARGIN, bw).ok) early = true; }
+            for (var te = 0; te <= FIRST_MIN_S + 1e-9 && !early; te += 0.005) { var pe = posAt(cfg, te); if (judge(plank, pe.L, pe.R, END_MARGIN, bw).ok) early = true; }
             if (early) continue;
             last = cfg;
             if (st.minGap >= MIN_GAP - 1e-6) return cfg;

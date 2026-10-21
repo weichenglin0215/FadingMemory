@@ -1,13 +1,15 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_knockcount.js — 秒反應・敲幾下（企劃 313，依使用者的修改：取消飛鳥、改成「銅缽」干擾）
    寺廟的木魚。師父先敲一段（快速的節奏，例如 咚咚 咚咚咚 咚），木魚旁邊沒有數字。師父敲完，**你要快速敲出一樣的次數**（不用一樣的節奏），
-   敲完按「好了」。揭曉：「師父敲了 17 下，你敲了 17 下」。剛好才過關。
+   敲完按「我數好了」（V1.36.0：這顆按鈕要等你敲了第一下木魚才會出現——常有玩家沒敲木魚就按了按鈕而失敗）。揭曉：「師父敲了 17 下，你敲了 17 下」。剛好才過關。
    ───────────────────────────────────────────────────────────────────
    · 節奏（makeLevel）：把總次數 N 隨機分成好幾組（每組 1～5 下）；組內每下間隔 tempo 毫秒、組與組之間停頓 PAUSE 內隨機長短
      （人會數組數、數錯總數）。每下之間的間隔隨關卡越來越快。
    · 干擾（使用者要求把「飛鳥」換成「銅缽」）：師父的另一手會**不定時敲銅缽**（「噹——」，聲音和畫面都跟木魚不同），可能連續多下（一串 1～3 聲）；
      **銅缽的聲音不算**。時間點隨機，會夾在木魚的節奏中間，但離任何一下木魚至少 BOWL_CLEAR 毫秒（不會剛好重疊分不清）。銅缽聲數隨關卡增加。
-   · 玩家這一段：師父敲完才能敲；在木魚上快速點，每點一下算一下，點滿覺得夠了按「好了」。判定：你敲的次數 ＝ 師父敲木魚的次數才過關。
+     V1.36.0：師父會**做出去敲銅缽的動作**來干擾——銅缽聲響之前一瞬間，師父的另一隻手（第二支木槌）從肩膀伸出去敲向銅缽、身體跟著往銅缽那邊傾（BOWL_LEAD_MS），
+     所以光看師父的手就分不清這一下是木魚還是銅缽，要靠聲音和位置分辨。
+   · 玩家這一段：師父敲完才能敲；在木魚上快速點，每點一下算一下，敲了第一下之後才出現「我數好了」，覺得夠了按它。判定：你敲的次數 ＝ 師父敲木魚的次數才過關。
    · 難度（線性）：次數 4 → 30（COUNT）、間隔 520 → 160 毫秒（TEMPO_MS）、銅缽聲數 0 → 6（BOWLS，第 BOWL_FROM 關起才有）、
      組與組的停頓 400～1200 毫秒、玩家作答的時間 = RESP_BASE + 次數 × RESP_PER 秒。
    ═══════════════════════════════════════════════════════════════════ */
@@ -15,11 +17,11 @@
     'use strict';
 
     var ID = 'knockcount';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var COUNT = [4, 30];                        /* 師父敲木魚的總次數：第 1 關 → 到頂 */
     var TEMPO_MS = [520, 160];                  /* 組內每一下的間隔（毫秒）：第 1 關 → 到頂 */
     var BOWLS = [0, 6];                         /* 銅缽的聲數：第 BOWL_FROM 關起才有，第 BOWL_FROM 關 1 聲 → 到頂 */
@@ -28,9 +30,10 @@
     var PAUSE_MS = [400, 1200];                 /* 組與組之間的停頓（毫秒，隨機） */
     var BOWL_CLEAR = 90;                        /* 銅缽聲離任何一下木魚至少多遠（毫秒） */
     var BOWL_GAP = 380;                         /* 一串連續銅缽聲之間的間隔（毫秒） */
+    var BOWL_LEAD_MS = 150;                     /* 師父的手在銅缽「噹」聲響之前多久開始揮出去（毫秒；揮到一半剛好響） */
     var LEAD_MS = 700;                          /* 開始後多久師父才敲第一下 */
     var RESP_BASE = 6, RESP_PER = 0.35;         /* 作答時間（秒）＝ RESP_BASE ＋ 次數 × RESP_PER */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }
@@ -124,33 +127,42 @@
         field.appendChild(monk);
         var mallet = h('div', { 'class': 'knk-mallet' }, [h('div', { 'class': 'knk-mallet__stick' }), h('div', { 'class': 'knk-mallet__head' })]);
         field.appendChild(mallet);
+        var mallet2 = h('div', { 'class': 'knk-mallet knk-mallet2' }, [h('div', { 'class': 'knk-mallet__stick' }), h('div', { 'class': 'knk-mallet__head' })]);          /* 師父另一隻手的木槌：專門用來敲銅缽 */
+        field.appendChild(mallet2);
         var fishBox = h('div', { 'class': 'knk-fishbox' }); fishSvg(fishBox); field.appendChild(fishBox);
         var bowlBox = h('div', { 'class': 'knk-bowlbox' }); bowlSvg(bowlBox); field.appendChild(bowlBox);
         var info = h('div', { 'class': 'qz-note knk-info', text: '' });
         field.appendChild(info);
-        var done = h('div', { 'class': 'btn btn--go knk-done', text: '好了' });
+        var done = h('div', { 'class': 'btn btn--go knk-done', text: '我數好了' });
         done.style.display = 'none'; field.appendChild(done);
 
         var phase = 'watch', taps = 0, over = false;
         function hitFish(cls) { fishBox.classList.remove('knk-hit'); void fishBox.offsetWidth; fishBox.classList.add('knk-hit'); if (cls) { mallet.classList.remove('knk-mallet--hit'); void mallet.offsetWidth; mallet.classList.add('knk-mallet--hit'); } }
         function hitBowl() { bowlBox.classList.remove('knk-hit'); void bowlBox.offsetWidth; bowlBox.classList.add('knk-hit'); }
+        /* 師父去敲銅缽的動作：另一隻手的木槌揮向銅缽、身體往銅缽那邊傾一下（動畫約 0.4 秒，揮到一半剛好響） */
+        function reachBowl() {
+            mallet2.classList.remove('knk-mallet2--hit'); void mallet2.offsetWidth; mallet2.classList.add('knk-mallet2--hit');
+            monk.classList.remove('knk-monk--lean'); void monk.offsetWidth; monk.classList.add('knk-monk--lean');
+        }
         /* 師父表演：依時間表敲木魚（咚）和銅缽（噹） */
         q.events.forEach(function (e) {
             api.after(e.t, function () {
                 if (e.type === 'fish') { hitFish(true); Sfx.play('tick'); } else { hitBowl(); Sfx.play('note'); }
             });
+            if (e.type === 'bowl') api.after(Math.max(0, e.t - BOWL_LEAD_MS), reachBowl);                  /* 銅缽響之前，師父的手先揮出去 */
         });
         api.after(q.endMs + 450, startPlay);
         function startPlay() {
             if (api.over) return;
-            phase = 'play'; tip.textContent = '快速敲出一樣的次數，再按好了';
-            info.textContent = '只算木魚，銅缽的聲音不算'; done.style.display = ''; count.textContent = '0';
+            phase = 'play'; tip.textContent = '快速敲出一樣的次數';                /* 提示只放一行：兩行會蓋到下面的大數字（按鈕怎麼出現，下面的小字說明） */
+            info.textContent = '只算木魚，銅缽的聲音不算；敲了第一下之後才能按「我數好了」'; count.textContent = '0';           /* 「我數好了」要等敲了第一下木魚才出現 */
             api.timer(respMs(N), function () { judge(true); });
             if (level === 1 && kit.once('knockcount.hint')) kit.hintOn(stage, fishBox, { mode: 'tap', delay: 300, text: '快速敲出一樣的次數' });
         }
         kit.onTap(fishBox, function () {
             if (phase !== 'play' || over || api.over) return;
             taps++; count.textContent = String(taps); hitFish(false); Sfx.play('tick');
+            if (taps === 1) done.style.display = '';                         /* 敲了第一下木魚，「我數好了」才出現 */
         });
         kit.onTap(done, function () { if (phase === 'play') judge(false); });
         function judge(timeout) {
@@ -170,12 +182,12 @@
     var G = {
         id: ID,
         name: '敲幾下',
-        rule: '寺廟的木魚。師父先敲一段（快速的節奏，分成好幾組，組與組之間停頓長短不一），**木魚旁邊沒有數字**。師父另一手會不定時敲銅缽（「噹——」，可能連續好幾下），**銅缽的聲音不算**。師父敲完，**你要在木魚上快速敲出一樣的次數**（不用一樣的節奏），敲完按「好了」。**次數剛好**才過關。越後面，次數越多、師父敲得越快、銅缽干擾越多！',
+        rule: '寺廟的木魚。師父先敲一段（快速的節奏，分成好幾組，組與組之間停頓長短不一），**木魚旁邊沒有數字**。師父另一手會不定時敲銅缽（「噹——」，可能連續好幾下），**銅缽的聲音不算**。師父敲完，**你要在木魚上快速敲出一樣的次數**（不用一樣的節奏），敲完按「我數好了」（敲了第一下木魚，按鈕才會出現）。**次數剛好**才過關。師父敲銅缽時手會揮過去、身體會傾過去，別被他的動作騙了。越後面，次數越多、師父敲得越快、銅缽干擾越多！',
         mount: mount,
         score: SCORE,
         test: {
             countFor: countFor, tempoFor: tempoFor, bowlsFor: bowlsFor, respMs: respMs, splitGroups: splitGroups, makeLevel: makeLevel, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, COUNT: COUNT, TEMPO_MS: TEMPO_MS, BOWLS: BOWLS, BOWL_FROM: BOWL_FROM, GROUP_MAX: GROUP_MAX, PAUSE_MS: PAUSE_MS, BOWL_CLEAR: BOWL_CLEAR, BOWL_GAP: BOWL_GAP, LEAD_MS: LEAD_MS, RESP_BASE: RESP_BASE, RESP_PER: RESP_PER, MAX_LEVEL: MAX_LEVEL
+            RAMP_LEVELS: RAMP_LEVELS, COUNT: COUNT, TEMPO_MS: TEMPO_MS, BOWLS: BOWLS, BOWL_FROM: BOWL_FROM, GROUP_MAX: GROUP_MAX, PAUSE_MS: PAUSE_MS, BOWL_CLEAR: BOWL_CLEAR, BOWL_GAP: BOWL_GAP, BOWL_LEAD_MS: BOWL_LEAD_MS, LEAD_MS: LEAD_MS, RESP_BASE: RESP_BASE, RESP_PER: RESP_PER, MAX_LEVEL: MAX_LEVEL
         }
     };
     Reaction.register(G);

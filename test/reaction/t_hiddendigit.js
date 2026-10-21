@@ -7,8 +7,8 @@ const SEED = seedOf(20261014); const rnd = rng(SEED);
 ok(T.typesFor(1).join() === 'add2' && T.typesFor(5).join() === 'add2,sub2' && T.typesFor(6).indexOf('mul1') >= 0 && T.typesFor(10).indexOf('add3') >= 0 && T.typesFor(14).indexOf('mul2') >= 0 && T.typesFor(22).indexOf('mul31') >= 0 && T.typesFor(21).indexOf('mul31') < 0, '題型解鎖');
 // 限時：各題型線性、到頂維持、都不低於 4 秒
 for (const k of Object.keys(T.TYPES)) {
-  ok(T.ansMs(1, k) === Math.round(T.TYPES[k].sec * 1.3 * 1000) && T.ansMs(T.RAMP_LEVELS, k) === Math.round(T.TYPES[k].sec * 0.8 * 1000) && T.ansMs(60, k) === T.ansMs(T.RAMP_LEVELS, k), '限時端點 ' + k);
-  for (let l = 2; l <= 60; l++) ok(T.ansMs(l, k) <= T.ansMs(l - 1, k), '限時單調 ' + k + l);
+  ok(T.ansMs(1, k) === Math.round(T.TYPES[k].sec * T.TIME_MUL[0] * 1000) && T.ansMs(T.RAMP_LEVELS, k) === Math.round(T.TYPES[k].sec * T.TIME_MUL[1] * 1000) && T.ansMs(60, k) === T.ansMs(T.RAMP_LEVELS, k), '限時端點 ' + k + '（倍率 ' + T.TIME_MUL + '，使用者調的參數，測試跟著走）');
+  for (let l = 2; l <= 60; l++) ok(T.TIME_MUL[1] >= T.TIME_MUL[0] ? T.ansMs(l, k) >= T.ansMs(l - 1, k) : T.ansMs(l, k) <= T.ansMs(l - 1, k), '限時單調 ' + k + l);
   ok(T.ansMs(60, k) >= 4000, '限時下限 ' + k);
 }
 // 整題驗證

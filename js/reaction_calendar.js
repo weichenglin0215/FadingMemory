@@ -7,23 +7,32 @@
    · 難度（線性）：圖示 2 → 8 個（ICONS_N）、看的時間 3 → 2 秒（VIEW_S）、問的題數 1 題（第 TWO_FROM 關起 2 題：「先點牙醫、再點繳費」）、
      每題作答 12 → 6 秒（RESP_S）。
    · 答錯時圖示全部回來，你點的那一天打紅圈、正確的那天打綠圈。
+   · V1.36.0 玩家意見（圖示一消失問題就出現，兩者連在一起，太容易）：圖示消失之後，**先在下方的問題列上讓圖示持續出現、交錯在隨機位置、持續閃爍 DISTRACT_S 秒（故意干擾）**，
+     才出現問題。干擾的圖示就是這一關貼在月曆上的那些（每個出現 NOISE_COPIES 次、位置每 MOVE_MS 毫秒重新亂排、各自用不同的速度閃爍），
+     所以腦中剛記住的「哪個圖示在哪一天」會被一堆閃爍的同樣圖案沖淡；問題出現之後才開始算作答時間。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
 
     var ID = 'calendar';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var ICONS_N = [2, 8];                       /* 月曆上貼幾個圖示：第 1 關 → 到頂 */
     var VIEW_S = [3, 2];                        /* 看月曆的時間（秒）：第 1 關 → 到頂 */
     var RESP_S = [12, 6];                       /* 每一題作答的時間（秒）：第 1 關 → 到頂 */
     var TWO_FROM = 6;                           /* 第幾關起問兩題（先點 A、再點 B） */
     var PAIR_P = [0.2, 0.9];                    /* 把「長得像的一對」同時貼上去的機率：第 1 關 → 到頂 */
     var YEARS = [2025, 2031];
-    var MAX_LEVEL = 60;
+    var DISTRACT_S = 2;                         /* 圖示消失之後、問題出現之前，下方問題列上的干擾圖示閃爍幾秒 */
+    var NOISE_COPIES = 2;                       /* 每個圖示在干擾裡出現幾個 */
+    var NOISE_SIZE = 46;                        /* 干擾圖示的大小（px） */
+    var NOISE_H = 96;                           /* 干擾區（問題列）的高度（px） */
+    var MOVE_MS = 380;                          /* 干擾圖示每隔多久重新亂排一次位置（毫秒） */
+    var BLINK_MS = [150, 420];                  /* 每個干擾圖示一明一暗的週期（毫秒，各自隨機） */
+    var MAX_LEVEL = 90;
     var ICONS = [                               /* 圖示：id、名字、長得像的夥伴 */
         { id: 'tooth', name: '牙醫', pair: 'hospital' }, { id: 'hospital', name: '回診', pair: 'tooth' },
         { id: 'cake', name: '生日蛋糕', pair: 'box' }, { id: 'box', name: '喜餅', pair: 'cake' },
@@ -62,6 +71,13 @@
         if (cand.length && rand() < 0.8) asks.push(kit.pick(cand, rand));
         kit.shuffle(chosen.slice(), rand).forEach(function (id) { if (asks.length < want && asks.indexOf(id) < 0) asks.push(id); });
         return { year: year, month: month, first: lay.first, days: lay.days, rows: lay.rows, placements: placements, asks: asks, viewMs: viewMs(level), respMs: respMs(level), level: level };
+    }
+    /* 干擾圖示的位置：count 個，每個的左上角落在 width×height 的方框裡（圖示大小 size，不會超出方框）；回傳 [{ x, y }] */
+    function noiseSpots(count, width, height, size, rand) {
+        rand = rand || Math.random;
+        var out = [];
+        for (var i = 0; i < count; i++) out.push({ x: kit.randInt(0, Math.max(0, width - size), rand), y: kit.randInt(0, Math.max(0, height - size), rand) });
+        return out;
     }
     function dayOf(q, icon) { for (var i = 0; i < q.placements.length; i++) if (q.placements[i].icon === icon) return q.placements[i].day; return -1; }
     function rating(n) {
@@ -142,8 +158,35 @@
         function hide() {
             if (api.over) return;
             stickers.forEach(function (s) { s.classList.add('cld-sticker--hide'); });
-            phase = 'ask'; tip.textContent = '點出日期'; info.textContent = ''; nextAsk();
+            phase = 'distract'; tip.textContent = '圖案收起來了，別被閃爍的圖案干擾'; info.textContent = '';
+            startNoise();
+            api.after(DISTRACT_S * 1000, function () {
+                if (api.over) return;
+                stopNoise(); phase = 'ask'; tip.textContent = '點出日期'; nextAsk();                    /* 干擾結束，問題才出現（作答時間從這時候才開始算） */
+            });
         }
+        /* 干擾：問題列上，這一關的圖示（每個 NOISE_COPIES 個）一直閃爍、每 MOVE_MS 毫秒換一批隨機位置 */
+        var noise = null, noiseEls = [];
+        function startNoise() {
+            noise = h('div', { 'class': 'cld-noise' }); noise.style.top = (calH + 24) + 'px'; noise.style.height = NOISE_H + 'px';
+            field.appendChild(noise);
+            q.placements.forEach(function (p) {
+                for (var c = 0; c < NOISE_COPIES; c++) {
+                    var el = h('div', { 'class': 'cld-noise__i' }); el.appendChild(iconSvg(p.icon, NOISE_SIZE));
+                    el.style.animationDuration = Math.round(kit.randFloat(BLINK_MS[0], BLINK_MS[1], api.rand)) + 'ms';
+                    el.style.animationDelay = '-' + Math.round(kit.randFloat(0, BLINK_MS[1], api.rand)) + 'ms';
+                    noise.appendChild(el); noiseEls.push(el);
+                }
+            });
+            relocate();
+        }
+        function relocate() {
+            if (phase !== 'distract' || !noise) return;
+            var spots = noiseSpots(noiseEls.length, W, NOISE_H, NOISE_SIZE, api.rand);
+            noiseEls.forEach(function (el, i) { el.style.left = spots[i].x + 'px'; el.style.top = spots[i].y + 'px'; });
+            api.after(MOVE_MS, relocate);
+        }
+        function stopNoise() { if (noise && noise.parentNode) noise.parentNode.removeChild(noise); noise = null; noiseEls = []; }
         function nextAsk() {
             var ic = iconOf(q.asks[k]);
             ask.innerHTML = ''; ask.appendChild(iconSvg(ic.id, 56)); ask.appendChild(h('span', { 'class': 'cld-ask__t', text: (q.asks.length > 1 ? (k === 0 ? '先點：' : '再點：') : '') + ic.name + '是哪一天？' }));
@@ -186,12 +229,12 @@
     var G = {
         id: ID,
         name: '記行事曆',
-        rule: '一個月的月曆，上面貼了幾張小貼紙（牙醫、生日蛋糕、回診、繳費單…）。**3 秒後貼紙會消失**，然後問你：「**牙醫是哪一天？**」點月曆上的日期。小心：貼紙有長得像的（牙醫的牙齒和回診的醫院、生日蛋糕和喜餅），後面還會**連問兩題**（先點哪個、再點哪個），每個月的第一天是星期幾也不一樣。可以用「星期幾」「第幾週」幫助記憶。答錯或來不及就結束，看你能過幾關。越後面，貼紙越多、看的時間越短！',
+        rule: '一個月的月曆，上面貼了幾張小貼紙（牙醫、生日蛋糕、回診、繳費單…）。**3 秒後貼紙會消失**，但下方會有一堆**同樣的圖案亂跳、一直閃爍 2 秒**來干擾你，然後才問你：「**牙醫是哪一天？**」點月曆上的日期。小心：貼紙有長得像的（牙醫的牙齒和回診的醫院、生日蛋糕和喜餅），後面還會**連問兩題**（先點哪個、再點哪個），每個月的第一天是星期幾也不一樣。可以用「星期幾」「第幾週」幫助記憶。答錯或來不及就結束，看你能過幾關。越後面，貼紙越多、看的時間越短！',
         mount: mount,
         score: SCORE,
         test: {
-            iconsFor: iconsFor, viewMs: viewMs, respMs: respMs, asksFor: asksFor, pairPFor: pairPFor, iconOf: iconOf, monthLayout: monthLayout, makeLevel: makeLevel, dayOf: dayOf, iconSvg: iconSvg, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, ICONS_N: ICONS_N, VIEW_S: VIEW_S, RESP_S: RESP_S, TWO_FROM: TWO_FROM, PAIR_P: PAIR_P, YEARS: YEARS, ICONS: ICONS, SHAPES: SHAPES, WEEK: WEEK, MAX_LEVEL: MAX_LEVEL
+            iconsFor: iconsFor, viewMs: viewMs, respMs: respMs, asksFor: asksFor, pairPFor: pairPFor, iconOf: iconOf, monthLayout: monthLayout, noiseSpots: noiseSpots, makeLevel: makeLevel, dayOf: dayOf, iconSvg: iconSvg, rating: rating,
+            RAMP_LEVELS: RAMP_LEVELS, ICONS_N: ICONS_N, VIEW_S: VIEW_S, RESP_S: RESP_S, TWO_FROM: TWO_FROM, PAIR_P: PAIR_P, YEARS: YEARS, DISTRACT_S: DISTRACT_S, NOISE_COPIES: NOISE_COPIES, NOISE_SIZE: NOISE_SIZE, NOISE_H: NOISE_H, MOVE_MS: MOVE_MS, BLINK_MS: BLINK_MS, ICONS: ICONS, SHAPES: SHAPES, WEEK: WEEK, MAX_LEVEL: MAX_LEVEL
         }
     };
     Reaction.register(G);

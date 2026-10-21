@@ -54,7 +54,7 @@ console.log('共 ' + ST.n + ' 關；計畫切的時刻離出現／落下最近 '
 ok(ST.minSlack >= 0.15 * 1.8 - 1e-6, '每顆水果在計畫切之前和之後都至少還有 ' + (0.15 * 1.8).toFixed(2) + ' 秒（餘裕）：' + ST.minSlack.toFixed(3));
 ok(ST.mulLevels > 500, '第 20 關起算式常有乘除');
 // 混亂度：拋出順序和號碼順序不同的比例，越後面越高
-{ const r = lv => (ST.outOfOrder[lv] || 0) / ST.ooTot[lv]; console.log('拋出順序顛倒的相鄰對比例：第 1 關 ' + (100 * r(1)).toFixed(1) + '%、第 8 關 ' + (100 * r(8)).toFixed(1) + '%、第 14 關 ' + (100 * r(14)).toFixed(1) + '%、第 20 關 ' + (100 * r(20)).toFixed(1) + '%'); ok(r(1) < 0.08 && r(20) > 0.15 && r(20) > r(8) && r(8) > r(1), '越後面拋得越亂'); }
+{ const r = lv => (ST.outOfOrder[lv] || 0) / ST.ooTot[lv]; console.log('拋出順序顛倒的相鄰對比例：第 1 關 ' + (100 * r(1)).toFixed(1) + '%、第 8 關 ' + (100 * r(8)).toFixed(1) + '%、第 14 關 ' + (100 * r(14)).toFixed(1) + '%、第 20 關 ' + (100 * r(20)).toFixed(1) + '%、第 ' + T.RAMP_LEVELS + ' 關 ' + (100 * r(T.RAMP_LEVELS)).toFixed(1) + '%'); ok(r(1) < 0.08 && r(T.RAMP_LEVELS) > 0.15 && r(T.RAMP_LEVELS) > r(14) && r(14) > r(8) && r(8) >= r(1), '越後面拋得越亂（到頂的第 ' + T.RAMP_LEVELS + ' 關最亂）'); }
 
 // ── 拋物線 ──
 { const geom = { W: 472, H: 640, R: 36 }, f = { t: 1, T: 2, x0: 0.5, vx: 0.05, A: 0.5, a0: 30, w: 100 }, yb = 640 + 36;

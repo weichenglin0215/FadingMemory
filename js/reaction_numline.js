@@ -15,13 +15,13 @@
     'use strict';
 
     var ID = 'numline';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 40 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
     var TOL = [0.10, 0.01];                     /* 容許誤差（數線全長 ＝ 1）：第 1 關 → 到頂 */
     var TOL_RAMP = 15;                          /* 幾關之後容許誤差縮到最小 */
-    var MAX_LEVEL = 40;
+    var MAX_LEVEL = 90;
     var V_MIN = 0.05, V_MAX = 0.95;             /* 數字離 0 與 1 至少多遠 */
     var START = 0.5;                            /* 圓點一開始的位置 */
     var START_GAP = 0.12;                       /* 答案離起點至少多遠 */

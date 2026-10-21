@@ -32,7 +32,7 @@
     var SAME_P = 0.45;                          /* 這句口令跟上一句是同一面旗子的機率 */
     var LEAD_MS = 1500;                         /* 開始後多久出第一句口令 */
     var SOLVE_CAP = 8;                          /* 驗證用：api.solve 最多幫你答對幾句（再多就故意不動，遊戲才會結束） */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var NAMES = { L: '紅旗', R: '白旗' };
 
     /* ═══ 純函式（也給 Node 測試用）═══ */

@@ -7,8 +7,8 @@ const { N_, E_, S_, W_ } = T;
 // 旋轉
 ok(T.rot(N_) === E_ && T.rot(E_) === S_ && T.rot(S_) === W_ && T.rot(W_) === N_ && T.rot(N_ | S_) === (E_ | W_) && T.rotN(N_ | E_, 4) === (N_ | E_) && T.bits(N_ | E_ | W_) === 3, 'rot / bits');
 // 難度曲線（線性）
-ok(T.gridFor(1) === 4 && T.gridFor(30) === 8 && T.bucketsFor(1) === 1 && T.bucketsFor(30) === 10 && near(T.timeFor(1), 45) && near(T.timeFor(30), 150) && T.gridFor(99) === 8 && T.bucketsFor(99) === 10, 'ramps（V1.25：30 關走完，棋盤 4→8、水桶 1→10、限時 45→150）');
-ok(T.LEVEL_RAMP === 30 && near(T.fillFor(1), 0.45) && near(T.fillFor(30), 0.7) && T.minTapsFor(1) === 3 && T.minTapsFor(30) === 14, '水管占比 45%→70%、至少轉的次數 3→14');
+ok(T.gridFor(1) === T.GRID_START && T.gridFor(T.LEVEL_RAMP) === T.GRID_END && T.bucketsFor(1) === T.BUCKETS_START && T.bucketsFor(T.LEVEL_RAMP) === T.BUCKETS_END && near(T.timeFor(1), T.TIME_START) && near(T.timeFor(T.LEVEL_RAMP), T.TIME_END) && T.gridFor(99) === T.GRID_END && T.bucketsFor(99) === T.BUCKETS_END, 'ramps（' + T.LEVEL_RAMP + ' 關走完，棋盤 ' + T.GRID_START + '→' + T.GRID_END + '、水桶 ' + T.BUCKETS_START + '→' + T.BUCKETS_END + '、限時 ' + T.TIME_START + '→' + T.TIME_END + '；使用者調的參數，測試跟著走）');
+ok(T.LEVEL_RAMP === 30 && near(T.fillFor(1), T.FILL[0]) && near(T.fillFor(30), T.FILL[1]) && T.minTapsFor(1) === T.MIN_TAPS[0] && T.minTapsFor(30) === T.MIN_TAPS[1], '水管占比 ' + T.FILL + '、至少轉的次數 ' + T.MIN_TAPS);
 for (let l = 11; l <= 30; l++) ok(T.gridFor(l) > T.gridFor(10) || T.bucketsFor(l) > T.bucketsFor(10) || T.fillFor(l) > T.fillFor(10), '第 10 關之後難度仍在上升：第 ' + l + ' 關');
 let prevG = 0, prevB = 0, mono = true; for (let l = 1; l <= 30; l++) { if (T.gridFor(l) < prevG || T.bucketsFor(l) < prevB) mono = false; prevG = T.gridFor(l); prevB = T.bucketsFor(l); }
 ok(mono, 'grid & buckets never decrease');

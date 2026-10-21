@@ -15,7 +15,7 @@
     'use strict';
 
     var ID = 'orderops';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
@@ -27,7 +27,7 @@
     var TIME_BASE = 15.0, TIME_PER_NUM = 1.2;    /* 限時（秒）＝ (TIME_BASE ＋ TIME_PER_NUM × (數字個數 − 2)) × 倍率 */
     var TIME_MUL = [1.0, 3.0];                 /* 倍率：第 1 題 → 到頂（越後面越趕） */
     var MAX_ANS = 999;                          /* 正確答案最大多少 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var SAME_MAX = 4;                           /* 正確答案放左邊（或右邊）最多連續幾次 */
 
     var OP_TEXT = { '+': '+', '-': '−', '*': '×', '/': '÷', '(': '(', ')': ')' };

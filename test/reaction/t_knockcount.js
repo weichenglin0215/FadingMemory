@@ -55,4 +55,12 @@ ok(durMax < 22000, '師父表演不會太久：' + durMax);
   ok(/\.knk-fish__body \{[^}]*var\(--knk-wood\)/.test(css) && /\.knk-bowl__body \{[^}]*var\(--knk-copper\)/.test(css), '木魚、銅缽用 CSS 變數');
   ok(boot.indexOf("'js/reaction_knockcount.js'") > 0 && /銅缽/.test(G.rule), 'boot.js 有載入、玩法說明提到銅缽'); }
 ok(T.rating(2) !== T.rating(4) && T.rating(4) !== T.rating(7) && T.rating(7) !== T.rating(12) && T.rating(12) !== T.rating(20), '評語分級');
+// V1.36.0 玩家意見：按鈕改名「我數好了」，而且要等敲了第一下木魚才出現；師父敲銅缽時要做出動作（第二支木槌＋身體傾斜）來干擾
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_knockcount.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' ');
+  ok(src.indexOf("text: '我數好了'") > 0 && src.indexOf("text: '好了'") < 0, '按鈕文字是「我數好了」');
+  ok(src.indexOf("done.style.display = 'none'; field.appendChild(done);") > 0 && src.indexOf("if (taps === 1) done.style.display = '';") > 0, '「我數好了」一開始藏起來，敲了第一下木魚才出現');
+  { const a = src.indexOf('function startPlay()'), b = src.indexOf('kit.onTap(fishBox'); ok(a > 0 && b > a && src.slice(a, b).indexOf("done.style.display = ''") < 0, '進入作答階段時不會直接把按鈕顯示出來（沒敲木魚就按不到）'); }
+  ok(T.BOWL_LEAD_MS > 0 && T.BOWL_LEAD_MS < 400 && src.indexOf("if (e.type === 'bowl') api.after(Math.max(0, e.t - BOWL_LEAD_MS), reachBowl)") > 0, '每一聲銅缽響之前 ' + T.BOWL_LEAD_MS + ' 毫秒，師父的手就揮出去');
+  ok(css.indexOf('.knk-mallet2--hit { animation: knk-swing2') >= 0 && css.indexOf('.knk-monk--lean { animation: knk-lean') >= 0, '第二支木槌與身體傾斜的動畫有樣式');
+  ok(/我數好了/.test(G.rule) && /銅缽/.test(G.rule), '玩法說明提到「我數好了」與銅缽'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

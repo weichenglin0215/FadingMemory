@@ -15,12 +15,12 @@
     'use strict';
 
     var ID = 'twinsock';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 40 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 20;                       /* 幾關之後難度到頂 */
-    var MAX_LEVEL = 40;
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
+    var MAX_LEVEL = 90;
     var SIZES = [[2, 3], [2, 4], [3, 4], [3, 5], [4, 5], [4, 6]];     /* 第 1～6 關的格數（寬×高），之後維持最後一個 */
     var HUE_DELTA = [90, 18];                   /* 假襪子跟目標的底色色相差（度） */
     var COUNT_DELTA = [3, 1];                   /* 條紋數／圓點數差 */
@@ -147,7 +147,7 @@
         rule: '左上角有一隻不會動的目標襪子（藍色底）。其他襪子都在慢慢轉動，其中**只有一隻跟目標「完全一樣」**（**底色、腿上的條紋數、腳上的圓點數都相同**），其他的至少有一處不同。找出它並點下去！格子會從 2×3 一路增加到 4×6，轉得也越來越快，時間有限，答錯就結束。',
         mount: mount,
         score: SCORE,
-        test: { sizeAt: sizeAt, hueDelta: hueDelta, countDelta: countDelta, spinAt: spinAt, timeMs: timeMs, variant: variant, makeLevel: makeLevel, same: same, key: key, sockSvg: sockSvg, SIZES: SIZES, MAX_COUNT: MAX_COUNT, SPIN: SPIN }
+        test: { sizeAt: sizeAt, hueDelta: hueDelta, countDelta: countDelta, spinAt: spinAt, timeMs: timeMs, variant: variant, makeLevel: makeLevel, same: same, key: key, sockSvg: sockSvg, SIZES: SIZES, MAX_COUNT: MAX_COUNT, SPIN: SPIN, HUE_DELTA: HUE_DELTA, COUNT_DELTA: COUNT_DELTA, TIME_S: TIME_S, RAMP_LEVELS: RAMP_LEVELS, MAX_LEVEL: MAX_LEVEL }
     };
     Reaction.register(G);
 })();

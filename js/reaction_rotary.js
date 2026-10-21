@@ -17,11 +17,11 @@
     'use strict';
 
     var ID = 'rotary';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var DIGITS = [6, 12];                       /* 號碼長度：第 1 關 → 到頂 */
     var VIEW_S = [4, 24];                        /* 號碼閃現的時間（秒）：第 1 關 → 到頂 */
     var REPEATS = [0, 2];                       /* 號碼裡「連續相同數字」的組數：第 1 關 → 到頂 */
@@ -32,7 +32,7 @@
     var RETURN_DEG_S = 240;                     /* 轉盤自己轉回來的速度（度／秒） */
     var TICK_DEG = 30;                          /* 轉回來時每轉幾度發一聲「嗒」 */
     var HOLE_R = 25;                            /* 手指洞的半徑（px，在標準大小的轉盤上；實際依畫面縮放） */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

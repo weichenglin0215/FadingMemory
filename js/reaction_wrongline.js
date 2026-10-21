@@ -18,7 +18,7 @@
     'use strict';
 
     var ID = 'wrongline';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
@@ -26,7 +26,7 @@
     var LINES = [3, 6];                         /* 計算過程有幾行：第 1 題 → 到頂 */
     var TIME_BASE = 3.0, TIME_PER_LINE = 1.4;   /* 限時（秒）＝ (TIME_BASE ＋ TIME_PER_LINE × 行數) × 倍率 */
     var TIME_MUL = [1.3, 0.85];                 /* 倍率：第 1 題 → 到頂 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var SHOP_P = 0.5;                           /* 出「買東西」題型的機率（其他是連續計算） */
     var ITEMS = [['飲料', '瓶'], ['麵包', '個'], ['便當', '個'], ['水果', '盒'], ['牛奶', '瓶'], ['雞蛋', '盒']];
     var MUL = '×', ADD = '＋', SUB = '−';

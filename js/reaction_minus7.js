@@ -30,7 +30,7 @@
     var NOTICE_MS = 2200;                       /* 規則換的時候預告框顯示多久 */
     var SHRINK_MS = 190, GROW_MS = 240;         /* 縮小消失、放大出現的動畫時間 */
     var SOLVE_CAP = 10;                         /* 驗證用：api.solve 最多幫忙答對幾題 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var MINUS = '−';                            /* 減號（U+2212） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */

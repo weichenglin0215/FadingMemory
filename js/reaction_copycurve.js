@@ -29,11 +29,11 @@
     'use strict';
 
     var ID = 'copycurve';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 25;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var REQ = [50, 85];                         /* 要求的相似度（％）：第 1 關 → 到頂 */
     var TIME_S = [40, 30];                      /* 每關限時（秒）：第 1 關 → 到頂 */
     var PW = 224, PH = 520;                     /* 每個長方格的大小（邏輯 px） */
@@ -47,7 +47,7 @@
     var D0 = 40;                                /* 相似度的換算距離（像素）：平均距離 D0 → 相似度 0％ */
     var PTS = 120;                              /* 比較相似度時，每條曲線取幾個等距的點 */
     var STEP = 3;                               /* 曲線上相鄰兩點的間距（像素） */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var BENDS = [2, 10];                        /* 彎數（轉折點、半個波、轉角的個數）：第 1 關 → 到頂關卡（RAMP_LEVELS）線性；每一種曲線都照這個數字出，難度才不會忽高忽低（V1.34） */
     var RIGHT_MAX = 8;                          /* 直角轉彎最多幾段線（彎數很多的後期關卡，放不進長方格就會一直重抽，所以封頂） */
     var ROPE_P = 0.5;                           /* 有「繩子曲線」可選的關卡，抽到它的機率（其餘種類平分） */

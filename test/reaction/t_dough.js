@@ -51,7 +51,7 @@ for (let lv = 1; lv <= 40; lv++) for (let rep = 0; rep < 40; rep++) {
 }
 console.log('共 ' + ST.n + ' 團；一開始圓度 ' + ST.startRound[0].toFixed(1) + '～' + ST.startRound[1].toFixed(1) + '%；一開始面積占樣品 ' + (100 * ST.startAreaFrac[0]).toFixed(1) + '～' + (100 * ST.startAreaFrac[1]).toFixed(1) + '%');
 // ── 判定 ──
-{ const lv = 10, R = T.SAMPLE_R, mk = (rho, s) => ellipse(R * s * Math.sqrt(rho), R * s / Math.sqrt(rho), 0.3, 96, 5, 5), rm = T.roundMinFor(lv), sm = T.sizeMaxFor(lv);
+{ const lv = T.RAMP_LEVELS, R = T.SAMPLE_R, mk = (rho, s) => ellipse(R * s * Math.sqrt(rho), R * s / Math.sqrt(rho), 0.3, 96, 5, 5), rm = T.roundMinFor(lv), sm = T.sizeMaxFor(lv);
   const good = mk(1.02, 1); ok(T.judge(good, lv).ok && T.judge(good, lv).okRound && T.judge(good, lv).okSize && !T.judge(good, lv).tooBig, '又圓又剛好：過關');
   const oval = mk(1.35, 1); ok(!T.judge(oval, lv).okRound && T.judge(oval, lv).okSize && !T.judge(oval, lv).ok, '橢圓：圓度不夠');
   const small = mk(1.02, 0.8); ok(T.judge(small, lv).okRound && !T.judge(small, lv).okSize && !T.judge(small, lv).tooBig, '太小：大小不對但還能繼續擀');

@@ -18,11 +18,11 @@
     'use strict';
 
     var ID = 'fishbite';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 20;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var WINDOW_S = [0.8, 0.25];                 /* 咬鉤的窗口（浮標沉在 0.9 以下的時間，秒）：第 1 關 → 到頂 */
     var FAKE_HI = [0.45, 0.8];                  /* 輕碰的深度上限（比例）：第 1 關 → 到頂；必須 < BITE_LINE */
     var FAKES = [1, 4];                         /* 輕碰的次數：第 1 關 → 到頂（四捨五入） */
@@ -38,7 +38,7 @@
     var UP_K = 0.8;                             /* 往上的分量要 ≥ 水平分量 × 這個數 */
     var REPLAY_SPEED = 0.5;                     /* 揭曉重播的速度（0.5＝慢動作兩倍） */
     var REPLAY_PRE = 0.6, REPLAY_POST = 0.5;    /* 重播從咬鉤前幾秒開始、窗口結束後多幾秒 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var FISH = ['吳郭魚', '香魚', '鯉魚', '鱸魚', '鯽魚', '草魚'];      /* 每一關釣到的魚（依關卡輪流） */
     var easeOut = kit.easeOutCubic, easeIO = kit.easeInOutCubic;
     /* 浮標往回浮的時候（easeIO 曲線）從 1.0 掉到 BITE_LINE（0.9）要走完回程的多少比例：4u³ ＝ 1 − 0.9 → u ≈ 0.292。

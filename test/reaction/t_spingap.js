@@ -10,7 +10,7 @@ const O0 = T.OMEGA_REV[0] * 360, O1 = T.OMEGA_REV[1] * 360;
 ok(near(T.omegaDeg(1), O0) && near(T.omegaDeg(T.RAMP_LEVELS), O1) && near(T.omegaDeg(100), O1), '基準轉速 ' + T.OMEGA_REV[0] + ' → ' + T.OMEGA_REV[1] + ' 圈/秒');
 ok(near(T.gapFor(1), T.GAP_DEG[0]) && near(T.gapFor(T.RAMP_LEVELS), T.GAP_DEG[1]) && near(T.gapFor(100), T.GAP_DEG[1]), '缺口 ' + T.GAP_DEG[0] + ' → ' + T.GAP_DEG[1] + ' 度');
 for (let l = 2; l <= 100; l++) ok(T.omegaDeg(l) >= T.omegaDeg(l - 1) - 1e-12 && T.gapFor(l) <= T.gapFor(l - 1) + 1e-12, '單調 ' + l);
-ok(near(T.omegaDeg(21) - (O0 + O1) / 2, 0, 7), '基準轉速中點約等於平均（線性）');
+{ const mid = (T.RAMP_LEVELS + 1) / 2; ok(near(T.omegaDeg(mid) - (O0 + O1) / 2, 0, 7), '基準轉速中點約等於平均（線性）：第 ' + mid + ' 關（跟著 RAMP_LEVELS 走）'); }
 // 人類做得到：每一發容許的時間誤差（毫秒）都要 ≥ 40 ms；起點很寬鬆
 for (let l = 1; l <= 100; l++) ok(T.tolMs(l) >= 40, '容許時間誤差 ≥ 40ms：第 ' + l + ' 發 ' + T.tolMs(l).toFixed(1));
 ok(T.tolMs(1) > 300 && T.tolMs(T.RAMP_LEVELS) < 80 && T.tolMs(T.RAMP_LEVELS) > 40, '起點 ±' + T.tolMs(1).toFixed(0) + 'ms，終點 ±' + T.tolMs(T.RAMP_LEVELS).toFixed(0) + 'ms');

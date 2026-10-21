@@ -49,8 +49,8 @@ for (let lv = 1; lv <= 40; lv++) { let sum = 0, cnt = 0;
   ST.openFrac[lv] = sum / cnt; }
 console.log('共 ' + ST.n + ' 關；各關「全員睜眼」佔限時的比例（平均）：' + [1, 5, 10, 15, 20, 30].map(l => l + '→' + ST.openFrac[l].toFixed(2)).join('、'));
 ok(ST.minWin >= -1e-9, '每一關最長的全員睜眼窗口都 ≥ 保證值');
-ok(ST.openFrac[1] > ST.openFrac[10] && ST.openFrac[10] > ST.openFrac[20] - 0.02 && ST.openFrac[1] > 0.45, '越後面全員睜眼的時間越少：' + ST.openFrac[1].toFixed(2) + ' → ' + ST.openFrac[10].toFixed(2) + ' → ' + ST.openFrac[20].toFixed(2));
-ok(ST.openFrac[20] < 0.3 && ST.openFrac[20] >= 0.6 / 10 - 1e-9, '到頂關卡全員睜眼只佔 ' + ST.openFrac[20].toFixed(2));
+ok(ST.openFrac[1] > ST.openFrac[10] && ST.openFrac[10] > ST.openFrac[T.RAMP_LEVELS] - 0.02 && ST.openFrac[1] > 0.45, '越後面全員睜眼的時間越少：' + ST.openFrac[1].toFixed(2) + ' → ' + ST.openFrac[10].toFixed(2) + ' → ' + ST.openFrac[20].toFixed(2));
+ok(ST.openFrac[T.RAMP_LEVELS] < 0.3 && ST.openFrac[T.RAMP_LEVELS] >= 0.6 / 10 - 1e-9, '到頂關卡全員睜眼只佔 ' + ST.openFrac[T.RAMP_LEVELS].toFixed(2));
 // 低頭看手機的人：不管什麼時候都不算閉眼
 { const q = T.makeLevel(20, rnd); for (let t = 0; t < 10; t += 0.05) T.closedAt(q, t).forEach(i => ok(!q.phone.includes(i), '低頭看手機的人不會出現在閉眼名單')); }
 // 同種子同題目

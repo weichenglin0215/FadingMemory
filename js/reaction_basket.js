@@ -18,12 +18,12 @@
     'use strict';
 
     var ID = 'basket';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 30 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 15;                       /* 幾關之後難度到頂 */
-    var MAX_LEVEL = 20;
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
+    var MAX_LEVEL = 90;
     var K = [2, 5];                             /* 總價由幾樣組成：第 1 關 → 到頂 */
     var TRAP_MIN = [0, 4];                      /* 「差 1～3 元」的子集合至少幾個 */
     var TIME_S = [40, 20];                      /* 每關限時（秒） */

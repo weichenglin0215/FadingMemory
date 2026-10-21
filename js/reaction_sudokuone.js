@@ -25,7 +25,7 @@
     'use strict';
 
     var ID = 'sudokuone';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
@@ -35,7 +35,7 @@
     var GIVENS4 = [12, 6];                      /* 4×4：盤面上留下幾個提示數字（不含目標那格，共 15 格可留）：第 1 關 → 第 FOUR_LEVELS 關；留不下這麼少時，留到不能再拿為止 */
     var GIVENS9 = [64, 12];                     /* 9×9：同上（共 80 格可留）：第 1 個 9×9 關卡 → 第 RAMP9 個 */
     var ANS4_S = [30, 120], ANS9_S = [120, 600];   /* 作答限時（秒）：階段的第 1 關 → 到頂 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var BOARD_FRAC = 0.96;                      /* 盤面寬度佔遊戲畫面寬度的比例 */
     var BORDER = 4;                             /* 盤面左、上外框粗細（px，跟 css 的 .sdk-board 一致） */
     var REVEAL_FAIL_MS = 6000;                  /* 答錯或逾時：顯示正確答案要停多久才跳出結算彈窗 */

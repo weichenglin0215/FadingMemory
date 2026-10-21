@@ -25,11 +25,11 @@
     'use strict';
 
     var ID = 'spingap';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 顆', label: '射出砲彈', min: 1, max: 100 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 顆', label: '射出砲彈', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 40;                       /* 幾發之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾發之後難度到頂 */
     var OMEGA_REV = [0.25, 0.66];               /* 圓環轉速（圈／秒）：第 1 發 → 到頂 */
     var GAP_DEG = [90, 30];                     /* 缺口的寬度（度）：第 1 發 → 到頂 */
     var SPEED_STEP = [0.05, 0.20];              /* 每一圈比上一圈變快或變慢多少（比例）：每圈在 5%～20% 之間隨機，快或慢也隨機 */
@@ -40,7 +40,7 @@
     var BALL_R = 12;                            /* 砲彈半徑 */
     var CENTER_Y = 232;                         /* 圓環中心的 y（離遊戲區上緣） */
     var MUZZLE_DY = 80;                         /* 砲口比圓環中心低多少（砲台在環內偏下方） */
-    var MAX_LEVEL = 100;
+    var MAX_LEVEL = 90;
     var TOP_DEG = -90;                          /* 「正上方」的角度（從正右方順時針量，上方是 −90 度） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
@@ -56,9 +56,12 @@
         var upOk = prev * (1 + SPEED_STEP[0]) <= hi, downOk = prev * (1 - SPEED_STEP[0]) >= lo;
         var up = upOk && (!downOk || rand() < 0.5);
         if (!upOk && !downOk) up = prev < lo;                    /* prev 已經在範圍外（基準自己往上走了）：往範圍的方向走 */
-        var rMax = up ? Math.min(SPEED_STEP[1], hi / prev - 1) : Math.min(SPEED_STEP[1], 1 - lo / prev);
-        var r = kit.randFloat(SPEED_STEP[0], Math.max(SPEED_STEP[0], rMax), rand);
-        return up ? prev * (1 + r) : prev * (1 - r);
+        /* 新轉速落在哪個區間：往上＝比上一圈快 5%～20%，往下＝慢 5%～20%；
+           但「一定要在範圍 [lo, hi] 內」比「變化不超過 20%」更重要（換到下一發時基準轉速會往上走，上一圈的轉速可能已經落在新範圍的下面，要補回來） */
+        var from, to;
+        if (up) { from = Math.max(prev * (1 + SPEED_STEP[0]), lo); to = Math.max(from, Math.min(prev * (1 + SPEED_STEP[1]), hi)); }
+        else { to = Math.min(prev * (1 - SPEED_STEP[0]), hi); from = Math.min(to, Math.max(prev * (1 - SPEED_STEP[1]), lo)); }
+        return kit.randFloat(from, to, rand);
     }
     /* 把角度整理到 −180～180 */
     function norm180(a) { a = ((a + 180) % 360 + 360) % 360 - 180; return a === -180 ? 180 : a; }

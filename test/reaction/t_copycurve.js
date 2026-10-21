@@ -8,7 +8,7 @@ const SEED = seedOf(20261033); const rnd = rng(SEED);
 ok(near(T.reqSim(1), T.REQ[0]) && near(T.reqSim(T.RAMP_LEVELS), T.REQ[1]) && near(T.reqSim(60), T.REQ[1]), '要求 ' + T.REQ + '％（頭 → 到頂，之後維持）');
 ok(T.timeMs(1) === T.TIME_S[0] * 1000 && T.timeMs(T.RAMP_LEVELS) === T.TIME_S[1] * 1000, '限時 ' + T.TIME_S + ' 秒');
 for (let l = 2; l <= 60; l++) ok(T.reqSim(l) >= T.reqSim(l - 1) - 1e-12 && T.timeMs(l) <= T.timeMs(l - 1), '單調 ' + l);
-ok(near(T.reqSim(13) - (T.REQ[0] + T.REQ[1]) / 2, 0, 1e-9), '中點（線性）');
+{ const mid = (T.RAMP_LEVELS + 1) / 2; ok(near(T.reqSim(mid) - (T.REQ[0] + T.REQ[1]) / 2, 0, 1e-9), '中點（線性）：第 ' + mid + ' 關（跟著 RAMP_LEVELS 走）'); }
 // 曲線種類隨關卡解鎖
 // 玩家自己調過 TYPE_RANGE：S 形只有第 1～3 關，第 4 關起絕不再出現（V1.27 修掉保底退回 S 形的問題）
 // （V1.34 多了「繩子曲線」rope：從第 1 關起都有）

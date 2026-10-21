@@ -29,7 +29,7 @@
     var EXTRA_FROM = 5;                         /* 答對幾題之後才會有多給零錢的題目 */
     var NOTES = [100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000];     /* 客人拿出來的整數鈔票金額 */
     var SOLVE_CAP = 10;                         /* 驗證用：api.solve 最多幫忙答對幾題 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var MINUS = '−';
 
     /* ═══ 純函式（也給 Node 測試用）═══ */

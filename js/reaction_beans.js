@@ -31,7 +31,7 @@
     var COVER_MAX = 1;                          /* 每顆雜物中心附近最多被幾顆別的豆子蓋到 */
     var NEXT_MS = 300;                          /* 清空一盤之後多久換下一盤 */
     var SOLVE_CAP = 12;                         /* 驗證用：api.solve 最多幫忙挑幾顆 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     /* 豆子的種類：good＝紅豆；easy＝容易分的雜物；look＝很像紅豆的雜物；diff＝跟紅豆差在哪 */
     var EASY = ['stone', 'mung', 'black'], LOOKS = ['redstone', 'pinto', 'adz'];
     var DIFF = {

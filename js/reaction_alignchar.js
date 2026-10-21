@@ -19,7 +19,7 @@
     'use strict';
 
     var ID = 'alignchar';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
@@ -31,7 +31,7 @@
     var KMAX = 8;                               /* 直條的速度倍數最大是幾（±1～±KMAX） */
     var ALIGN_AT = [3.0, 6.0];                  /* 第一次對準的時刻 ＝ 週期 × 這個範圍的隨機數 */
     var PIC = { w: 460, h: 460 };               /* 圖案方框的大小（邏輯 px），h 同時是直條循環的一圈長度 P */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     /* 「長得像」的字群組：選項優先從同一群挑。
        V1.33：改用共用資料庫 js/similar_chars.js（SimilarChars），不再自己寫一份字表。
        這款的直條要拼得出字，所以只用「平均筆劃 ≤ GROUP_MAX_STROKES、至少 4 個字」的字群（跟以前的字表差不多難）。 */

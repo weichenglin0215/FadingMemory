@@ -17,11 +17,11 @@
     'use strict';
 
     var ID = 'pearls';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 20;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var TARGET = [5, 25];                       /* 要吸幾顆：第 1 關 → 到頂（四捨五入） */
     var P_CLUSTER = [0.2, 0.8];                 /* 一串有多顆（≥ 2）的機率：第 1 關 → 到頂 */
     var CLUSTER_MAX = [2, 4];                   /* 一串最多幾顆：第 1 關 → 到頂（四捨五入） */
@@ -34,7 +34,7 @@
     var TRAVEL_S = 0.28;                        /* 一顆珍珠從吸管底衝到最上面要多久（秒，看得到的移動） */
     var PRESS_LIMIT_S = 14;                     /* 限時：多久沒按住就失敗 */
     var END_GRACE = 0.25;                       /* 珍珠全部衝完之後再等多久（還沒放手就自動判定） */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

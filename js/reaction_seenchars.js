@@ -14,18 +14,18 @@
     'use strict';
 
     var ID = 'seenchars';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var K = [2, 6];                             /* 要記幾個字：第 1 關 → 到頂 */
     var GRID = [3, 5];                          /* 字格邊長：第 1 關 → 到頂 */
     var VIEW_S = [3, 2];                        /* 看字的時間（秒）：第 1 關 → 到頂 */
     var STROKES_LO = [3, 8], STROKES_HI = [8, 20];   /* 字群的平均筆劃範圍（下限、上限）：第 1 關 → 到頂 */
     var RESP_S = [20, 12];                      /* 作答時間（秒）：第 1 關 → 到頂 */
     var MIN_GROUP = 4;                          /* 字群至少幾個字（才有足夠的形近字當干擾） */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

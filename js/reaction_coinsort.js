@@ -37,7 +37,7 @@
     var NEXT_MS = 140;                          /* 分對之後，下一枚多久出現 */
     var FLY_MS = 240;                           /* 硬幣滑進筒子的動畫時間 */
     var SOLVE_CAP = 8;                          /* 驗證用：api.solve 最多幫忙分對幾枚（不然會一直玩不完） */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     /* 每種硬幣：幾元、金屬、該往哪滑、說明（結束時顯示） */
     var TYPES = ['c50', 'c5', 'c10'];
     var COIN = {

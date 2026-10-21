@@ -14,11 +14,11 @@
     'use strict';
 
     var ID = 'slicechar';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var TOTAL = [8, 30];                        /* 這一關拋出的字總數：第 1 關 → 到頂 */
     var SPAWN_MS = [1000, 420];                 /* 每一批拋出的間隔（毫秒）：第 1 關 → 到頂 */
     var BATCH = [1, 3];                         /* 一次最多拋幾顆：第 1 關 → 到頂 */
@@ -30,7 +30,7 @@
     var DUMP_PX = 76;                           /* 湯圓的大小（px） */
     var HIT_EXTRA = 8;                          /* 切到的判定半徑比湯圓多幾 px */
     var MIN_GROUP = 4;
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

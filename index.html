@@ -20,11 +20,9 @@
     <meta http-equiv="Cache-Control" content="no-cache">
     <title>記憶模糊 — 記憶力練習</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <!-- 字型：Noto Sans TC／Noto Serif TC 的樣式表改由自己提供（css/fonts.css，由 js/boot.js 載入），字型檔仍來自 fonts.gstatic.com；
+         原因：要在每個 @font-face 加上字型度量覆寫，文字才會在方塊與按鈕裡垂直置中（見 test/reaction/gen_font_css.cjs） -->
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Noto+Serif+TC:wght@700&display=swap"
-        rel="stylesheet">
 
     <!-- 版本檢查＋載入：CSS/JS 由 js/boot.js 依 version.json 的版本號載入（版本一改就自動抓新檔）。
          做法：boot.js 內有一份「這一頁需要哪些 CSS／JS」的清單（依 window.FM_PAGE 決定是

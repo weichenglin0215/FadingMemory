@@ -16,11 +16,11 @@
     'use strict';
 
     var ID = 'layerdrink';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 24;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var LAYERS = [2, 5];                        /* 層數：第 1 關 → 到頂 */
     var VIEW_S = [3, 2];                        /* 看示範杯的時間（秒）：第 1 關 → 到頂 */
     var TOL = [15, 3];                          /* 容許的最大差（佔杯高的 %）：第 1 關 → 到頂 */
@@ -30,7 +30,7 @@
     var GLASS_H = 200;                          /* 杯子的高度（px，畫面上） */
     var DEMO_W = 112, TOP_W = 132;              /* 示範杯的寬度、你的杯子的杯口寬度（px） */
     var BLEND = 0.045;                          /* 層與層之間的漸層帶有多厚（佔杯高的比例） */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var COLORS = [{ id: 'red', name: '紅' }, { id: 'yellow', name: '黃' }, { id: 'green', name: '綠' }, { id: 'blue', name: '藍' }, { id: 'purple', name: '紫' }];
 
     /* ═══ 純函式（也給 Node 測試用）═══ */

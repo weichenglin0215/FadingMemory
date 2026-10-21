@@ -41,14 +41,15 @@
     background: var(--c-card-alt);
 }
 
-/* 家具（不能走的格子） */
+/* 家具（不能走的格子）：一個表情符號放在格子正中央，字級由 JS 依格子大小設定（格子的 62%） */
 .cpt-stone {
     position: absolute;
-    inset: 12%;
-    border-radius: 22%;
-    background: var(--c-ink-soft);
-    border: 3px solid var(--c-ink);
-    opacity: 0.85;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    pointer-events: none;
 }
 
 .cpt-svg {
@@ -511,6 +512,11 @@
     color: var(--c-green-light);
 }
 
+/* 你漏掉的答案：橘色 */
+.mj3-cap--miss {
+    color: var(--c-yellow);
+}
+
 .mj3-note {
     position: absolute;
     left: 0;
@@ -519,6 +525,34 @@
     padding: 0 var(--sp-3);
     text-align: center;
     color: var(--c-card);
+}
+
+/* 「我選好了」：選完全部答案再按；一張都沒選時按不下去 */
+.mj3-go {
+    position: absolute;
+    left: var(--sp-4);
+    right: var(--sp-4);
+    bottom: 118px;
+    height: 64px;
+    border-radius: var(--r-md);
+    border: 3px solid var(--c-ink);
+    background: var(--c-yellow);
+    box-shadow: 0 4px 0 var(--c-ink);
+    color: var(--c-ink);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.mj3-go:disabled {
+    opacity: 0.45;
+    cursor: default;
 }
 
 /* 下面九顆牌鍵（一～九） */
@@ -573,6 +607,19 @@
     border-color: var(--c-bad-light);
     box-shadow: 0 4px 0 var(--c-bad-light);
     background: var(--c-bad-soft);
+}
+
+/* 已選的牌鍵（還沒按「我選好了」）：橘色外框＋淡黃底，再點一次取消 */
+.mj3-key--sel {
+    border-color: var(--c-orange);
+    box-shadow: 0 4px 0 var(--c-orange);
+    background: var(--c-yellow-soft);
+}
+
+/* 揭曉時你漏掉的答案：橘色虛線外框 */
+.mj3-key--miss {
+    border: 3px dashed var(--c-orange);
+    background: var(--c-yellow-soft);
 }
 
 /* ═══ 翻最多棋（.rvs-）═══ */
@@ -1246,15 +1293,86 @@
     transform-origin: 50% 50%;
 }
 
-/* 動物：坐在木板上（bottom 讓牠站在板子上面）；被手指拿起來時放大一點 */
+/* 動物：坐在木板上（bottom 讓牠站在板子上面）；大小由 JS 依重量設定（越重越大）；被手指拿起來時放大一點 */
 .sea-an {
     position: absolute;
     bottom: 12px;
-    width: 60px;
-    height: 60px;
     cursor: grab;
     touch-action: none;
     transition: left 0.28s ease-out;
+}
+
+/* 被固定、不能拖動的動物：虛線圈住，游標不是小手 */
+.sea-an--pin {
+    cursor: default;
+    outline: 3px dashed var(--c-ink-soft);
+    outline-offset: 1px;
+    border-radius: 50%;
+}
+
+.sea-pintag {
+    position: absolute;
+    left: 50%;
+    top: -42px;                 /* 放在重量數字圈的上面：放下面會蓋住木板上離支點幾格的刻度數字 */
+    transform: translateX(-50%);
+    padding: 0 6px;
+    background: var(--c-ink-soft);
+    color: var(--c-card);
+    border-radius: var(--r-sm);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 22px;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* 座位的刻度：木板下面寫著離支點幾格（隨木板一起傾斜） */
+.sea-slot {
+    position: absolute;
+    top: 20px;
+    width: 28px;
+    text-align: center;
+    color: var(--c-ink-soft);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1;
+    pointer-events: none;
+}
+
+.sea-slot::before {
+    content: '';
+    position: absolute;
+    left: 13px;
+    top: -12px;
+    width: 2px;
+    height: 8px;
+    background: var(--c-ink-soft);
+}
+
+/* 拖曳時：放開會坐到的座位（虛線圓圈） */
+.sea-aim {
+    position: absolute;
+    bottom: 12px;
+    border: 3px dashed var(--c-orange);
+    border-radius: 50%;
+    box-sizing: border-box;
+    pointer-events: none;
+}
+
+/* 失敗揭曉：平衡的放法裡，該動物應該坐的座位（綠色虛線圓圈，裡面是重量） */
+.sea-ghost {
+    position: absolute;
+    bottom: 12px;
+    border: 3px dashed var(--c-ok);
+    border-radius: 50%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--c-ok);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-black);
+    pointer-events: none;
 }
 
 .sea-an--held {
@@ -1389,21 +1507,27 @@
     --sea-fur: var(--sea-panda);
 }
 
-/* 失敗時標出來的重量 */
+/* 動物身上的重量數字（一直顯示在頭上） */
 .sea-badge {
     position: absolute;
-    right: -8px;
-    top: -8px;
+    left: 50%;
+    top: -14px;
+    transform: translateX(-50%);
     min-width: 28px;
     height: 28px;
+    padding: 0 4px;
+    box-sizing: border-box;
     background: var(--c-card);
     border: 2px solid var(--c-ink);
     border-radius: var(--r-pill);
     color: var(--c-ink);
     font-size: var(--fs-xs);
     font-weight: var(--fw-bold);
-    line-height: 24px;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    pointer-events: none;
 }
 
 /* ═══ 找正方形（.fsq-）═══ */
@@ -2352,27 +2476,24 @@
     fill: var(--c-bad-light);
 }
 
-.swc-dots {
+/* 九宮格的格線（兩條直線、兩條橫線） */
+.swc-gridline {
     position: absolute;
-    left: 12px;
-    right: 12px;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--sp-2);
+    background: var(--c-ink-soft);
+    opacity: 0.35;
+    pointer-events: none;
 }
 
-.swc-dot {
-    width: 18px;
-    height: 18px;
-    background: var(--c-card);
-    border: 3px solid var(--c-ink-soft);
-    border-radius: 50%;
+.swc-gridline--v {
+    top: 0;
+    bottom: 0;
+    width: 2px;
 }
 
-.swc-dot--ok {
-    background: var(--c-ok);
-    border-color: var(--c-ok);
+.swc-gridline--h {
+    left: 0;
+    right: 0;
+    height: 2px;
 }
 
 .swc-info {
@@ -2475,6 +2596,7 @@
     top: 150px;
     width: 120px;
     height: 220px;
+    transform-origin: 50% 100%;
 }
 
 .knk-monk__head {
@@ -2519,6 +2641,55 @@
 
     100% {
         transform: rotate(-35deg);
+    }
+}
+
+/* 師父另一隻手的木槌：從肩膀伸向右上方的銅缽（比敲木魚的那支長很多）；敲銅缽時揮過去，揮到一半（約 0.18 秒）剛好響 */
+.knk-mallet2 {
+    left: 104px;
+    top: 186px;
+    width: 224px;
+    transform: rotate(-34deg);
+}
+
+.knk-mallet2 .knk-mallet__stick {
+    width: 196px;
+}
+
+.knk-mallet2--hit {
+    animation: knk-swing2 0.4s ease-in-out;
+}
+
+@keyframes knk-swing2 {
+    0% {
+        transform: rotate(-34deg);
+    }
+
+    45% {
+        transform: rotate(-9deg);
+    }
+
+    100% {
+        transform: rotate(-34deg);
+    }
+}
+
+/* 師父的身體往銅缽那邊傾一下 */
+.knk-monk--lean {
+    animation: knk-lean 0.4s ease-in-out;
+}
+
+@keyframes knk-lean {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    45% {
+        transform: rotate(7deg);
+    }
+
+    100% {
+        transform: rotate(0deg);
     }
 }
 
@@ -2663,6 +2834,7 @@
     position: absolute;
     left: 24px;
     right: 24px;
+    width: auto;                /* .btn 預設 width: 100%，加上 left 24px 會讓按鈕右邊多出 24px 被切掉；絕對定位用 left＋right 決定寬度，所以 width 要設 auto */
     bottom: 10px;
     height: 100px;
     font-size: var(--fs-xl);
@@ -3386,6 +3558,33 @@
 
 .cld-icon--plane .cld-s--fill {
     fill: var(--c-blue-light);
+}
+
+/* 圖示消失之後、問題出現之前：問題列上亂跳、閃爍的干擾圖示（V1.36.0） */
+.cld-noise {
+    position: absolute;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.cld-noise__i {
+    position: absolute;
+    animation: cld-blink 0.3s steps(1) infinite;
+}
+
+@keyframes cld-blink {
+
+    0%,
+    49% {
+        opacity: 1;
+    }
+
+    50%,
+    100% {
+        opacity: 0.08;
+    }
 }
 
 /* ═══ 照樣調一杯（.lyd-）═══ */
@@ -8720,6 +8919,24 @@
 }
 
 /* 左邊已經畫好的眉毛、你畫的眉毛（咖啡色眉筆）、翻過去的左眉（淡紅色） */
+/* 揭曉時整張臉轉回正的（轉動時間由 JS 設定）；臉的中軸平常藏著，揭曉時淡淡地出現 */
+.ebw-turn {
+    transition-property: transform;
+    transition-timing-function: ease-in-out;
+}
+
+.ebw-axis {
+    stroke: var(--ebw-line);
+    stroke-width: 2;
+    stroke-dasharray: 8 8;
+    opacity: 0;
+    transition: opacity 0.6s ease-in-out;
+}
+
+.ebw-axis--on {
+    opacity: 0.45;
+}
+
 .ebw-ref {
     fill: none;
     stroke: var(--ebw-brow);

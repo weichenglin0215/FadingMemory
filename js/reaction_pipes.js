@@ -378,7 +378,7 @@
         /* 世界排行榜的成績規格 */
         score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
-        test: { rot: rot, rotN: rotN, bits: bits, gridFor: gridFor, bucketsFor: bucketsFor, timeFor: timeFor, sizeFor: sizeFor, fillFor: fillFor, minTapsFor: minTapsFor, makeTree: makeTree, flow: flow, solved: solved, tapsFor: tapsFor, tapsToSolve: tapsToSolve, makeLevel: makeLevel, rating: rating, N_: N_, E_: E_, S_: S_, W_: W_, LEVEL_RAMP: LEVEL_RAMP, MIN_TAPS: MIN_TAPS, FILL: FILL, GRID_END: GRID_END, BUCKETS_END: BUCKETS_END }
+        test: { rot: rot, rotN: rotN, bits: bits, gridFor: gridFor, bucketsFor: bucketsFor, timeFor: timeFor, sizeFor: sizeFor, fillFor: fillFor, minTapsFor: minTapsFor, makeTree: makeTree, flow: flow, solved: solved, tapsFor: tapsFor, tapsToSolve: tapsToSolve, makeLevel: makeLevel, rating: rating, N_: N_, E_: E_, S_: S_, W_: W_, LEVEL_RAMP: LEVEL_RAMP, MIN_TAPS: MIN_TAPS, FILL: FILL, GRID_START: GRID_START, GRID_END: GRID_END, BUCKETS_START: BUCKETS_START, BUCKETS_END: BUCKETS_END, TIME_START: TIME_START, TIME_END: TIME_END }
     };
     /* 登記到遊戲清單 */
     Reaction.register(G);

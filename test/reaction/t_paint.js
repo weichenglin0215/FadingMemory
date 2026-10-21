@@ -47,7 +47,7 @@ ok(T.brushAfter(100) < 100 && T.brushAfter(100) > 0 && T.brushAfter(T.BRUSH_MIN)
 // ───────── V1.34.0：闖關制（第 1 關 1 處大塗鴉 → 第 12 關 12 處）、筆刷參數放寬、每一關沾油漆上限 40 次 ─────────
 const { rng, seedOf } = require('./load.js');
 const SEED = seedOf(20261012), rnd = rng(SEED);
-ok(T.MAX_LEVEL === 12 && T.SCRIBBLE_MAX === 12 && T.PEN_SIZES.length === 7 && Math.min(...T.PEN_SIZES) === 6 && Math.max(...T.PEN_SIZES) === 30, '關卡與塗鴉參數：12 關、最多 12 處、筆頭 6～30px');
+ok(T.MAX_LEVEL === 90 && T.SCRIBBLE_MAX === 12 && T.PEN_SIZES.length === 7 && Math.min(...T.PEN_SIZES) === 6 && Math.max(...T.PEN_SIZES) === 30, '關卡與塗鴉參數：V1.36 起全部 90 關（MAX_LEVEL 統一）、塗鴉最多 12 處（第 12 關起到頂）、筆頭 6～30px');
 ok(T.DIP_MAX === 40, '每一關沾油漆上限 40 次（玩家指定）');
 // 玩家意見：筆刷縮小的比例放大一些（舊版 0.88）、最小筆刷放大（舊版 3）
 ok(T.SHRINK === 0.93 && T.SHRINK > 0.88 && T.BRUSH_MIN === 10 && T.BRUSH_MIN > 3 && T.BUDGET_MULT === 1 && T.BRUSH_START === 80, '筆刷參數：縮小 0.93（舊版 0.88）、最小 10（舊版 3）、油漆量 1 倍、起始 80');
@@ -148,7 +148,7 @@ for (const waste of [0, 0.5, 1]) {
   ok(mean(d1) < mean(ds), '第 1 關比第 12 關省油漆：' + mean(d1).toFixed(1) + ' < ' + mean(ds).toFixed(1));
 }
 // 評語分級、成績規格
-ok(T.rating(0) === T.rating(2) && T.rating(2) !== T.rating(3) && T.rating(3) !== T.rating(6) && T.rating(6) !== T.rating(9) && T.rating(9) !== T.rating(12) && T.rating(12) === T.rating(99), '評語分級（闖過幾關）');
+ok(T.rating(0) === T.rating(2) && T.rating(2) !== T.rating(3) && T.rating(3) !== T.rating(6) && T.rating(6) === T.rating(9) && T.rating(6) !== T.rating(12) && T.rating(12) !== T.rating(T.MAX_LEVEL) && T.rating(T.MAX_LEVEL) === T.rating(999) && T.rating(T.MAX_LEVEL - 1) === T.rating(12), '評語分級（闖過幾關；第 12 關起塗鴉處數到頂，滿 MAX_LEVEL 關才是最高評價）');
 ok(G.score.better === 'max' && G.score.min === 1 && G.score.max === T.MAX_LEVEL && G.score.decimals === 0 && /關/.test(G.score.format), '成績規格：闖過幾關，越大越好，1～' + T.MAX_LEVEL);
 ok(/40/.test(G.rule) && /第 1 關只有 1 處/.test(G.rule) && /超過就失敗/.test(G.rule), '玩法說明有寫「第 1 關只有 1 處大塗鴉」「每一關最多沾 40 次，超過就失敗」');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');
