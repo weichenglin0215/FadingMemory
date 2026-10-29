@@ -16,7 +16,7 @@
     'use strict';
 
     var ID = 'nthshape';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
@@ -28,7 +28,7 @@
     var ANS_S = [7, 10];                       /* 作答限時（秒）：第 1 關 → 到頂 */
     var COLOR_FROM = 8;                         /* 第幾關起圖形有顏色（而且有「同形不同色」） */
     var EXTRA = [1, 2];                         /* 「同形不同色」多幾顆按鈕：COLOR_FROM 關 → 到頂 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     /* 八種形狀（SVG 畫在 100×100 裡）與六種顏色（色相）*/
     var SHAPES = ['circle', 'square', 'triangle', 'star', 'diamond', 'heart', 'cross', 'hexagon'];
     var HUES = [{ n: '紅', h: 4 }, { n: '橘', h: 28 }, { n: '黃', h: 48 }, { n: '綠', h: 135 }, { n: '藍', h: 212 }, { n: '紫', h: 282 }];
@@ -174,7 +174,7 @@
         score: SCORE,
         test: {
             shapesFor: shapesFor, seqFor: seqFor, showMs: showMs, ansMs: ansMs, extraFor: extraFor, shapeSvg: shapeSvg, makeLevel: makeLevel, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, COLOR_FROM: COLOR_FROM, SHAPES: SHAPES, SHAPE_NAME: SHAPE_NAME, HUES: HUES, MAX_LEVEL: MAX_LEVEL, SHAPES_N: SHAPES_N, SEQ_N: SEQ_N
+            RAMP_LEVELS: RAMP_LEVELS, COLOR_FROM: COLOR_FROM, SHAPES: SHAPES, SHAPE_NAME: SHAPE_NAME, HUES: HUES, MAX_LEVEL: MAX_LEVEL, SHAPES_N: SHAPES_N, SEQ_N: SEQ_N, SHOW_MS: SHOW_MS, ANS_S: ANS_S
         }
     };
     Reaction.register(G);

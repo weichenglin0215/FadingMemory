@@ -1,0 +1,91 @@
+/* ═════════════════════════════════════════════════════════════════
+   identity.css — 「玩家身分」彈窗的樣式（V1.35.0）
+   ─────────────────────────────────────────────────────────────────
+   對應 js/identity_ui.js：「建立暱稱與密碼」「登入」（.dlg--idn）、改暱稱／設新密碼／合併帳號的小表單（.dlg--idn-form）、
+   「我的帳號」面板（.dlg--idn-acct）。彈窗的外框與卡片（位置、暗底、寬度、按鈕尺寸與顏色）、輸入框 .dlg-input
+   都是「彈窗公版」（css/dialog.css）；這裡只寫卡片裡面的排版。顏色、字級、間距一律用 css/theme.css 的變數。
+   ═════════════════════════════════════════════════════════════════ */
+
+/* 卡片裡的區塊間距縮小一點：這個彈窗要放「說明＋兩個輸入列＋提示＋訊息＋三顆按鈕」，500×850 的舞台裡不能出現捲軸 */
+.dlg--idn .dlg__card {
+    gap: var(--sp-2);
+}
+
+/* 暱稱列、密碼列：標籤在左、輸入框在右（比上下排列省高度） */
+.idn-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+}
+
+.idn-label {
+    flex: 0 0 auto;
+    width: 3.2em;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink);
+    text-align: left;
+}
+
+.idn-row .idn-input {
+    flex: 1 1 0;
+    min-width: 0;
+    height: calc(var(--btn-h) * 0.85);
+    font-size: var(--fs-md);
+}
+
+/* 密碼：4 個數字，字距拉開、等寬數字，才看得清楚每一個 */
+.idn-pin {
+    letter-spacing: 0.35em;
+    text-indent: 0.35em;
+    font-variant-numeric: tabular-nums;
+}
+
+.idn-intro {
+    font-size: var(--fs-sm);
+}
+
+/* 小字說明（請記下密碼、不要用銀行密碼…） */
+.idn-note {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-regular);
+    line-height: var(--lh-body);
+    color: var(--c-ink-soft);
+    text-align: left;
+}
+
+/* 訊息列：預留兩行的高度，提示出現或消失時下面的按鈕不會跳動 */
+.idn-msg {
+    min-height: calc(var(--fs-xs) * var(--lh-body) * 2);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-body);
+    color: var(--c-ink-soft);
+    text-align: left;
+}
+
+.idn-msg--warn {
+    color: var(--c-orange);
+}
+
+.idn-msg--err {
+    color: var(--c-bad);
+}
+
+.idn-msg--ok {
+    color: var(--c-ok);
+}
+
+/* 按鈕：藏起來的要真的不佔位置（公版的 .btn 是 flex，會蓋掉 hidden 屬性） */
+.dlg--idn .btn[hidden] {
+    display: none;
+}
+
+/* 「我的帳號」面板：暱稱那一行 */
+.idn-acct__nick {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    text-align: center;
+    word-break: break-all;
+}

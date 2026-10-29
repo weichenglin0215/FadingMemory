@@ -37,7 +37,7 @@
 
     /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 dualtask 那一列要一致
        （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 30 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h;
     var kit = Reaction.kit;
 
@@ -45,7 +45,7 @@
     /* ═══ 可以自己調的參數 ═══ */
     var DURATION_SEC = 30;                    /* 舊版（單回合）一回合幾秒；關卡制用 durationFor(level) */
     /* ── V1.25 關卡制 ── */
-    var MAX_LEVEL = 30;                       /* 最後一關（過了就全破） */
+    var MAX_LEVEL = 90;                       /* 最後一關（過了就全破） */
     var DUR = [12, 40, 15];                   /* 一關的總秒數：第 1 關 → 第 DUR[2] 關（之後維持） */
     var DIFF_BASE = [0, 1.6, 15];             /* 每一關起始的難度值 d：第 1 關 0（≒舊版剛開始）→ 第 15 關 1.6（比舊版第 15 秒更難） */
     var LEVEL_DRIFT = 0.3;                    /* 一關之內，難度值再往上加最多這麼多（從頭到尾） */
@@ -216,7 +216,7 @@
         var R = null;
 
         /* round：開一局（從 startAt 關開始，一關一關闖，失敗就結束） */
-        function round() {
+        function round(startAt) {
             if (R) R.dispose();
             R = kit.round();
             var my = R;
@@ -224,7 +224,7 @@
 
             /* level 目前關卡；passedN 已過幾關；ev 事件表；t0 這一關開始時間；hit 每盞綠燈是否已點；hits 命中數；strays 亂點數；missed 漏掉數；
                token 流水號（換關／重新開始時舊的計時器就失效）；dur 這一關的秒數 */
-            var level = 0, passedN = 0, dur = DURATION_SEC, need = 0, ok = false;
+            var level = (startAt || 1) - 1, passedN = level, dur = DURATION_SEC, need = 0, ok = false;
             var state = 'idle', ev = null, t0 = 0, hit = [], hits = 0, strays = 0, missed = 0, token = 0, answered = null, newRec = false;
             /* 建立畫面元素：標題、時間條、左邊紅燈區（只要數）、右邊綠燈區（點這裡）、回答區 */
             var head = h('div', { 'class': 'du-head', text: ' ' });
@@ -344,7 +344,7 @@
                 var lines = ['第 ' + level + ' 關：綠燈命中 ' + hits + '／' + ev.green.length + '（過關要 ' + need + ' 次）' + (strays ? '，亂點 ' + strays + ' 次（每次扣 ' + STRAY_PENALTY + ' 分）' : ''),
                 '紅燈實際閃了 ' + truth + ' 次' + (answered === truth ? '，你答對了' : '，你答 ' + answered)];
                 kit.result(root, {
-                    score: passedN,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
+                    score: passedN, level: level,        /* 世界排行榜成績（跟 setBest 存的同一個數字）；level：記下到過第幾關 */
                     num: passedN + ' 關', label: rating(passedN),
                     lines: lines,
                     isNew: newRec && passedN > 0, sfx: passedN >= 3 ? 'win' : 'neutral', onAgain: round
@@ -386,7 +386,8 @@
             my.after(500, startLevel);
         }
 
-        round();
+        /* V1.34.0：從「個人最佳關卡 − 4」開始，沒玩過就是第 1 關（kit.entryLevel，見 reaction_kit.js） */
+        kit.enter(ID, round);
     }
 
     /* 遊戲身分證 */

@@ -169,6 +169,10 @@
         },
         set: function (key, value) {
             try { global.localStorage.setItem(key, JSON.stringify(value)); } catch (e) { }
+        },
+        /* 刪掉一個項目（V1.35.0：登出時清掉帳號資料用） */
+        remove: function (key) {
+            try { global.localStorage.removeItem(key); } catch (e) { }
         }
     };
 

@@ -28,11 +28,11 @@
     'use strict';
 
     var ID = 'stackup';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 塊', label: '疊了幾塊', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 塊', label: '疊了幾塊', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var MAX_LEVEL = 60;                 /* 疊滿幾塊算全破 */
+    var MAX_LEVEL = 90;                 /* 疊滿幾塊算全破 */
     var BLOCK_H = 56;                   /* 方塊高度（固定，px） */
     var W_MIN_RATIO = 1 / 6, W_MAX_RATIO = 1 / 2;      /* 方塊寬度佔畫面寬的比例範圍 */
     var TRAP_TOP = 0.5;                 /* 梯形的頂寬是底寬的幾倍 */

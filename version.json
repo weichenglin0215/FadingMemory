@@ -1,1 +1,1 @@
-{"version":"1.34.0","date":"2026-10-29","notes":"新增：可以把記憶模糊加到手機主畫面、沒網路也能玩（Service Worker 離線快取）；分享的連結加上 ?openExternalBrowser=1，LINE 會改用手機瀏覽器開；在 LINE／臉書／Instagram／微信的內建瀏覽器裡會提示改用瀏覽器；QR Code 程式庫改放專案裡（離線也能出 QR Code）；補上分享預覽圖與 App 圖示。遊戲頁左上角的「返回」改成直接回到「選一個想玩的遊戲」列表。"}
+{"version":"1.37.0","date":"2026-10-29","notes":"新增：可以把記憶模糊加到手機主畫面、沒網路也能玩（Service Worker 離線快取）；分享的連結加上 ?openExternalBrowser=1，LINE 會改用手機瀏覽器開；在 LINE／臉書／Instagram／微信的內建瀏覽器裡會提示改用瀏覽器；QR Code 程式庫改放專案裡（離線也能出 QR Code）；補上分享預覽圖與 App 圖示。遊戲頁左上角的「返回」改成直接回到「選一個想玩的遊戲」列表。"}

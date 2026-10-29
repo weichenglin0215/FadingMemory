@@ -21,12 +21,12 @@
     'use strict';
 
     var ID = 'halfcrowd';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 40 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
-    var MAX_LEVEL = 40;
+    var MAX_LEVEL = 90;
     var N_RANGE = [10, 120];                    /* 圓形個數範圍（偶數） */
     var R_RANGE = [11, 16];                     /* 圓形半徑範圍（px） */
     var OVERLAP = 0.5;                          /* 兩個圓最多重疊多少（0.6＝60%） */

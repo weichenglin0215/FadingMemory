@@ -28,6 +28,8 @@ const EXCEPTIONS = [
   ['reaction_pour.js', 'Math.abs(v).toFixed(step', '刻度尺的刻度標籤（隨放大倍率改變小數位數），不是成績'],
   ['reaction_tissue.js', "'%'", '進度條高度（百分比寫進 CSS），不是文字'],
   ['reaction_halfchar.js', 'var lo = ', 'CSS clip-path 的百分比，不是畫面文字'],
+  ['reaction_gaspump.js', 'shown(L).toFixed(2)', '加油機上的公升數是遊戲定義的 0.01 公升刻度（玩家要用這個數字乘油價算金額；金額揭曉時仍是 4 位小數）'],
+  ['reaction_gaspump.js', 'Ls.toFixed(2)', '同上：加油機上的公升數（放手後放大顯示的那個數字）'],
   ['reaction_fracduel.js', 'function fmtNum(x)', '題目分數的分子分母（使用者指定「小數點以下一位數即可」），是題目內容不是成績；揭曉的分數值仍是 4 位小數']
 ];
 

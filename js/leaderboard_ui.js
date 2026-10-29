@@ -4,10 +4,10 @@
    資料與網路的部分在 js/leaderboard.js，這個檔案只負責畫面，載入後把功能掛在
    Leaderboard.ui 底下，核心那邊要彈窗時就呼叫它：
      Leaderboard.showBoard(遊戲, {startText, onClose})  世界前 30 名彈窗（reaction.js 在玩法說明之後呼叫）
-     Leaderboard.ui.askNickname(opts)                    「輸入暱稱」彈窗，回傳 Promise<暱稱或 ''>
      Leaderboard.ui.celebrate(info)                      進榜慶祝：恭喜彈窗＋煙火＋歡呼音樂
      Leaderboard.ui.toast(文字)                          畫面下方短暫的小提示（就是 Dlg.toast）
-   四個彈窗的外框與卡片都是「彈窗公版」（js/dialog.js 的 Dlg.open、css/dialog.css）：
+   （V1.35.0 起「輸入暱稱」改成「建立暱稱與密碼」，畫面在 js/identity_ui.js；這裡榜單最上面的帳號列也是跳去那邊。）
+   彈窗的外框與卡片都是「彈窗公版」（js/dialog.js 的 Dlg.open、css/dialog.css）：
    位置、暗底、寬度、圓角、陰影、按鈕尺寸與顏色跟玩法說明、結算彈窗完全一致；這個檔案只決定卡片裡放什麼。
    榜單內容的樣式在 css/leaderboard.css，顏色／尺寸變數在 css/theme.css 的 :root（「世界排行榜」那一段）。
 
@@ -109,19 +109,31 @@
         var viewport = h('div', { 'class': 'lb-viewport' }, [list, thumb]);
         var scroller = makeScroller(viewport, list, thumb);
 
+        /* 榜單上面那一行帳號列（V1.35.0）：
+             已登入        「暱稱：xxx　[帳號]」→ 開「我的帳號」面板（改暱稱、設新密碼、合併帳號、登出）；
+             訪客          「還沒有帳號（進前 30 名時會請你建立）　[我已有帳號，登入]」；
+             憑證失效      「登入已經失效　[重新登入]」；
+             V1.34 以前的舊玩家 這一行不顯示（進網頁時已經請他建立暱稱與密碼了）。 */
         function paintNick() {
             nickLine.innerHTML = '';
-            var n = LB.getNick();
-            if (!n) { nickLine.hidden = true; return; }
+            var st = LB.identityState(), I = global.Identity;
+            if (!I || !I.ui || st === 'legacy') { nickLine.hidden = true; return; }
             nickLine.hidden = false;
-            nickLine.appendChild(h('span', { 'class': 'lb-nickline__t', text: '暱稱：' + n }));
+            var text, btn, act;
+            if (st === 'in') { text = '暱稱：' + (LB.getNick() || '（未知）'); btn = '帳號'; act = function () { return I.ui.showAccount(); }; }
+            else if (st === 'relogin') { text = '登入已經失效'; btn = '重新登入'; act = function () { return I.askLogin(); }; }
+            else { text = '還沒有帳號'; btn = '我已有帳號，登入'; act = function () { return I.askLogin(); }; }
+            nickLine.appendChild(h('span', { 'class': 'lb-nickline__t', text: text }));
             nickLine.appendChild(h('button', {
-                'class': 'pill pill--blue lb-nickline__btn', text: '修改',
+                'class': 'pill pill--blue lb-nickline__btn', text: btn,
                 on: { click: function () {
                     sfx('click');
-                    askNickname({ title: '修改暱稱', initial: n, okText: '儲存', skipText: '取消' }).then(function (name) {
-                        if (name) LB.setNick(name);
+                    act().then(function () {
+                        if (closed) return;
                         paintNick();
+                        /* 登入、登出、合併帳號之後「哪一列是我」會不一樣：重抓榜單、重畫（不然榜上還留著上一個帳號的「你」） */
+                        lastKey = '';
+                        LB.load(g, { force: true }).then(function (b) { if (!closed) render(b, 'ok'); });
                     });
                 } }
             }));
@@ -184,49 +196,6 @@
         LB.load(g).then(function (b) {
             if (closed) return;
             render(b, 'ok');
-        });
-    }
-
-    /* ═══════════════════════════════════════════════════════════════
-       五、「輸入暱稱」彈窗
-       opts：title／initial（預設文字）／okText／skipText；回傳 Promise<暱稱>，按「先不要」回傳 ''
-       ═══════════════════════════════════════════════════════════════ */
-    function askNickname(opts) {
-        opts = opts || {};
-        return new Promise(function (resolve) {
-            var input = h('input', {
-                'class': 'dlg-input',
-                attrs: {
-                    type: 'text', maxlength: String(LB.CFG.NICK_MAX), autocomplete: 'off', autocapitalize: 'off',
-                    spellcheck: 'false', enterkeyhint: 'done', placeholder: '例如：快樂阿嬤', 'aria-label': '暱稱'
-                }
-            });
-            input.value = opts.initial || '';
-            var done = false;
-            function value() { return LB.cleanNick(input.value); }
-            function finish(v) {
-                if (done) return;
-                done = true;
-                ctl.close();
-                resolve(v);
-            }
-            /* 公版彈窗：標題、說明、輸入框、兩顆按鈕。按鈕都設 keep（不自動關），由 finish 統一關閉 */
-            var ctl = Dlg.open({
-                cls: 'dlg--nick',
-                title: opts.title || '請輸入暱稱',
-                sub: '排行榜上會顯示這個名字（最多 ' + LB.CFG.NICK_MAX + ' 個字）。',
-                children: [input],
-                buttons: [
-                    { text: opts.okText || '確定', kind: 'primary', keep: true, sfx: 'ok', onClick: function () { if (value()) finish(value()); } },
-                    { text: opts.skipText || '先不要', kind: 'line', keep: true, onClick: function () { finish(''); } }
-                ]
-            });
-            var ok = ctl.buttons[0];
-            function sync() { ok.disabled = !value(); }
-            input.addEventListener('input', sync);
-            input.addEventListener('keydown', function (e) { if (e.key === 'Enter' && value()) { sfx('ok'); finish(value()); } });
-            sync();
-            try { input.focus(); } catch (e) { }
         });
     }
 
@@ -367,7 +336,7 @@
     function toast(text) { Dlg.toast(text); }
 
     /* ═══ 對外介面 ═══ */
-    LB.ui = { askNickname: askNickname, celebrate: celebrate, toast: toast, showBoard: showBoard, fireworks: fireworks };
+    LB.ui = { celebrate: celebrate, toast: toast, showBoard: showBoard, fireworks: fireworks };
     LB.showBoard = showBoard;
     LB.test.scroll = { PHYS: PHYS, rubber: rubber, releaseVelocity: releaseVelocity, flingStep: flingStep, noteText: noteText };
 })(window);

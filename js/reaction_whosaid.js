@@ -17,18 +17,18 @@
     'use strict';
 
     var ID = 'whosaid';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 20;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var PEOPLE = [2, 5];                        /* 小人幾個：第 1 關 → 到頂 */
     var SAYS = [1, 3];                          /* 每個小人說幾個數字：第 1 關 → 到頂 */
     var SAY_MS = [900, 600];                    /* 每一句的泡泡出現多久（毫秒）：第 1 關 → 到頂 */
     var GAP_MS = 220;                           /* 兩句之間的空檔（毫秒） */
     var ANS_BASE = 4000, ANS_PER = 1800;        /* 作答限時（毫秒）＝ (ANS_BASE ＋ ANS_PER × 要按幾個數字) × 倍率 */
     var ANS_MUL = [1.2, 0.8];                   /* 倍率：第 1 關 → 到頂 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     /* 小人的顏色（名字、色相、飽和度、亮度）：紅、藍、綠、黃、紫，彼此夠不一樣 */
     var COLORS = [
         { n: '紅', h: 4, s: 76, l: 52 }, { n: '藍', h: 212, s: 72, l: 52 }, { n: '綠', h: 135, s: 55, l: 42 },

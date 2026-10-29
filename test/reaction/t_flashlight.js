@@ -7,7 +7,7 @@ const SEED = seedOf(20261029); const rnd = rng(SEED);
 // 難度曲線（玩家會自己調 RADIUS／TIME_S，測試跟著參數走）
 ok(near(T.radiusFor(1), T.RADIUS[0]) && near(T.radiusFor(T.RAMP_LEVELS), T.RADIUS[1]) && near(T.radiusFor(60), T.RADIUS[1]), '光圈 ' + T.RADIUS[0] + ' → ' + T.RADIUS[1]);
 for (let l = 2; l <= 60; l++) ok((T.RADIUS[1] <= T.RADIUS[0] ? T.radiusFor(l) <= T.radiusFor(l - 1) + 1e-12 : T.radiusFor(l) >= T.radiusFor(l - 1) - 1e-12) && (T.TIME_S[1] <= T.TIME_S[0] ? T.timeMs(l) <= T.timeMs(l - 1) : T.timeMs(l) >= T.timeMs(l - 1)), '單調 ' + l);
-ok(near(T.radiusFor(13), (T.RADIUS[0] + T.RADIUS[1]) / 2), '中點（線性）');
+{ const mid = (T.RAMP_LEVELS + 1) / 2; ok(near(T.radiusFor(mid), (T.RADIUS[0] + T.RADIUS[1]) / 2, 1e-6), '中點（線性）：第 ' + mid + ' 關（跟著 RAMP_LEVELS 走）'); }
 ok(T.timeMs(1) === T.TIME_S[0] * 1000 && T.timeMs(T.RAMP_LEVELS) === T.TIME_S[1] * 1000, '限時 ' + T.TIME_S[0] + ' → ' + T.TIME_S[1] + ' 秒');
 
 // V1.32：圖案改成「一組一組長得很像的」：數字、形近的繁體字、零件數不同的圖形
@@ -23,6 +23,15 @@ ok(T.nameOf('p6') === '正六邊形' && T.nameOf('s12') === '十二角星' && T.
 // 圖形的畫法：零件數真的跟 id 一樣多
 ok((T.picSvg('p7').match(/,/g) || []).length === 7 && (T.picSvg('s9').match(/,/g) || []).length === 18, '正 7 邊形有 7 個頂點、9 角星有 18 個點');
 ok((T.picSvg('g12').match(/<rect/g) || []).length === 12 && (T.picSvg('f13').match(/<ellipse/g) || []).length === 13, '12 齒齒輪有 12 個齒、13 瓣的花有 13 片花瓣');
+// V1.34 玩家意見：下方答案的字型改成明體（宋體），故意跟題目（黑體）不一樣；圖形沒有字型，兩種畫法完全相同
+for (const id of [...T.DIGITS, ...allIds]) {
+  const q = T.picSvg(id), a = T.picSvg(id, true);
+  if (T.isDigit(id) || T.isChar(id)) ok(q.includes('var(--font-ui)') && !q.includes('--font-note') && a.includes('var(--font-note)') && !a.includes('--font-ui'), '題目黑體、答案明體：' + id);
+  else ok(q === a, '圖形不受字型影響：' + id);
+}
+{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_flashlight.js'), 'utf8');
+  ok(src.includes('html: picSvg(id, true)') && src.includes("pic.innerHTML = picSvg(q.target)"), '下方選項用明體（picSvg(id, true)）、上方題目維持黑體');
+  const theme = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/theme.css'), 'utf8'); ok(/--font-note:[^;]*Serif TC[^;]*PMingLiU[^;]*serif/.test(theme), '--font-note ＝ 明體字型清單（Noto Serif TC、宋體、新細明體、serif）'); }
 // 相似數字表：對稱性不要求，但每個數字的相似表要有 ≥3 個、不含自己、都是數字
 T.DIGITS.forEach(d => ok(T.SIMILAR[d].length >= 3 && !T.SIMILAR[d].includes(d) && T.SIMILAR[d].every(x => T.DIGITS.includes(x)), '相似表 ' + d));
 ok(T.DIGITS.every(d => T.tierOf(d) === 0) && T.tierOf('土') === 0 && T.tierOf('末') === 1 && T.tierOf('情') === 2 && T.tierOf('鑑') === 3 && T.tierOf('p6') === 1 && T.tierOf('g9') === 2 && T.tierOf('f13') === 3, 'tierOf');

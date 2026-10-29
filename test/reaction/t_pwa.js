@@ -1,4 +1,4 @@
-// PWA／離線／分享連結（V1.34）的靜態檢查，不需要瀏覽器：
+// PWA／離線／分享連結（V1.37）的靜態檢查，不需要瀏覽器：
 //   1. manifest.webmanifest：欄位齊全、圖示檔存在、實際尺寸跟宣告的一樣（192／512／maskable）
 //   2. 四個頁面（index／quiz／reaction／world）都有 manifest、apple-touch-icon、theme-color；index 有 og 標籤、og:image 是完整網址、尺寸對
 //   3. 沒有「必要的」外部資源：四個頁面的 <script src>／<link href> 只准連 Google Fonts；QR Code 程式庫在 vendor/、share.js 優先用它

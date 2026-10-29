@@ -2,6 +2,10 @@ const { game } = require('./load.js');
 const G = game('reaction_diff.js'); const T = G.test;
 let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log('FAIL', m); } };
 const W = 468, Hh = 330;
+// V1.34 玩家意見「顏色差異太小，請放大顏色的差異；其他差異維持目前參數」：色相差從 40°→5° 放大成 75°→18°，大小（0.3→0.05）與位置（30→5px）沒動
+ok(T.HUE_START >= 70 && T.HUE_END >= 15 && T.HUE_START > 40 && T.HUE_END > 5, '色相差放大：' + T.HUE_START + '° → ' + T.HUE_END + '°（舊 40° → 5°）');
+ok(T.SIZE_START === 0.3 && T.SIZE_END === 0.05 && T.POS_START === 30 && T.POS_END === 5, '其他差異（大小、位置）參數維持不變');
+ok(T.amounts(1).hue === T.HUE_START && Math.abs(T.amounts(T.LEVEL_RAMP).hue - T.HUE_END) < 1e-9, '第 1 關色相差 ' + T.amounts(1).hue + '°、最後一關 ' + T.amounts(T.LEVEL_RAMP).hue + '°');
 // 差異量線性
 const a1 = T.amounts(1), a10 = T.amounts(10.5), a20 = T.amounts(20);
 for (const k of ['size', 'hue', 'pos']) { ok(a1[k] > a20[k] && Math.abs(a10[k] - (a1[k] + a20[k]) / 2) < 1e-6 * Math.max(1, a1[k]) * 10 && Math.abs(T.amounts(40)[k] - a20[k]) < 1e-12, k + ' ramp: shrinks linearly, clamps at LEVEL_RAMP'); }

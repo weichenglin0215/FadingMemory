@@ -19,12 +19,12 @@
     'use strict';
 
     var ID = 'euler';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾題之後難度到頂 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var EDGES = [6, 20];                        /* 邊數：第 1 題 → 到頂 */
     var TIME_S = [15, 8];                       /* 每題限時（秒） */
     var COUNTER = [0.2, 0.6];                   /* 反直覺題目的比例 */

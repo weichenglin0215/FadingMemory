@@ -24,7 +24,7 @@
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 20;                       /* 幾關之後難度到頂（也是最後一關） */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂（也是最後一關） */
     var TIME_S = [40, 20];                      /* 每關限時（秒） */
     var GREEDY_FAIL = [0.4, 0.9];               /* 「直覺做法不是最佳」的題目比例：第 GREEDY_FROM 關 → 到頂 */
     var GREEDY_FROM = 2;                        /* 第幾關起控制直覺做法失敗的比例 */

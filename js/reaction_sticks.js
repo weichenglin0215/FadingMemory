@@ -327,7 +327,8 @@
         }
 
         /* 進場就開第 1 關 */
-        round(1);
+        /* V1.34.0：從「個人最佳關卡 − 5」開始（沒玩過就是第 1 關），見 kit.enter（reaction_kit.js） */
+        kit.enter(ID, round);
     }
 
     /* 遊戲的「身分證」：id 代號、name 顯示名稱、rule 規則說明、mount 進場函式、test 給 Node 測試用的函式 */

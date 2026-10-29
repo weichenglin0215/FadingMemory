@@ -41,7 +41,13 @@
     Reaction.setBest = function (id, val, better) {
         var b = Reaction.getBest(id);
         var isNew = b == null || better(val, b);
-        if (isNew) UI.store.set(Reaction.bestKey(id), val);
+        if (isNew) {
+            UI.store.set(Reaction.bestKey(id), val);
+            /* V1.35.0：做個記號「這個最佳紀錄是現行版本寫的（單位正確）」——只有帶記號的才會同步到帳號（見 js/identity.js），
+               也不會再被下面的 migrateBest 當成舊單位的紀錄去換算。 */
+            UI.store.set(Reaction.bestKey(id) + '.sync', true);
+            if (global.Identity && global.Identity.noteBest) global.Identity.noteBest(id);
+        }
         return isNew;
     };
 
@@ -55,6 +61,9 @@
     Reaction.migrateBest = function (id, convert, tag) {
         var flag = Reaction.bestKey(id) + (tag || '.v2');
         if (UI.store.get(flag, false)) return;
+        /* V1.35.0：最佳紀錄是從帳號同步下來的（或已確認是現行單位，見 setBest 的 .sync 記號）：它本來就是新單位，
+           不能再換算一次（否則會把「同步來的好成績」換成亂七八糟的數字，或被「清掉舊紀錄」的遷移刪掉）。 */
+        if (UI.store.get(Reaction.bestKey(id) + '.sync', false)) { UI.store.set(flag, true); return; }
         var b = Reaction.getBest(id);
         if (b != null) UI.store.set(Reaction.bestKey(id), convert(b));
         UI.store.set(flag, true);

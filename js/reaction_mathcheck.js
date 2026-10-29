@@ -18,13 +18,13 @@
     'use strict';
 
     var ID = 'mathcheck';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 40;                       /* 幾題之後數字範圍到頂（範圍從第 1 題慢慢變大） */
+    var RAMP_LEVELS = 30;                       /* 幾題之後數字範圍到頂（範圍從第 1 題慢慢變大） */
     var ANS_S = 6.0;                            /* 作答總限時（秒）：每一題都一樣，不再縮短（V1.27 玩家意見） */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var SAME_MAX = 4;                           /* 對（或錯）最多連續幾次 */
     var NEG_FROM = 15;                          /* 第幾題起出現負數 */
     var KEEP_UNIT_FROM = 10;                    /* 第幾題起，錯的算式個位數一律跟正解一樣（個位最容易看出來，不能讓玩家只看個位） */

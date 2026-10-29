@@ -70,12 +70,12 @@ ok(T.canStillSolve([]) === true && T.canStillSolve([10, 40, 50]) === true && T.c
 // 範例牌組也是同樣的格式，洗牌後 15 張一樣
 { const e = T.exampleDeck(rnd); ok(e.cards.slice().sort((x, y) => x - y).join() === T.EXAMPLE_DECK.join() && e.solution.length === 5 && e.traps.length === 9, '範例牌組格式'); }
 
-// ═══ V1.27 關卡制：第 1 關 6 張、每隔三關多 3 張、限時 180 秒起每關 +20 秒 ═══
+// ═══ V1.27 關卡制：第 1 關 6 張、每隔三關多 3 張、限時 180 秒起每關 +20 秒（加到第 30 關為止，之後不再增加） ═══
 ok(T.START_GROUPS === 2 && T.LEVEL_STEP === 3 && T.LIMIT_BASE_S === 180 && T.LIMIT_STEP_S === 20 && T.COLS === 3, '參數：6 張起、每三關多一組、180 秒起 +20、橫向 3 張');
 for (let lv = 1; lv <= T.MAX_LEVEL; lv++) {
   const sp = T.levelSpec(lv), g = Math.min(T.MAX_GROUPS, 2 + Math.floor((lv - 1) / 3));
   ok(sp.groups === g && sp.cards === 3 * g, '第 ' + lv + ' 關 ' + sp.cards + ' 張');
-  ok(sp.limitS === 180 + 20 * (lv - 1) && T.limitMs(lv) === sp.limitS * 1000, '第 ' + lv + ' 關限時 ' + sp.limitS + ' 秒');
+  ok(sp.limitS === 180 + 20 * (Math.min(lv, 30) - 1) && T.limitMs(lv) === sp.limitS * 1000, '第 ' + lv + ' 關限時 ' + sp.limitS + ' 秒');
   ok(sp.cards % 3 === 0 && sp.minTraps >= 0, '張數是 3 的倍數');
   if (lv > 1) { const pv = T.levelSpec(lv - 1); ok(sp.cards >= pv.cards, '張數不會減少'); ok(sp.cards - pv.cards === 0 || sp.cards - pv.cards === 3, '每次最多多 3 張'); }
 }
@@ -103,7 +103,7 @@ ok(T.fmtLeft(180000) === '3:00' && T.fmtLeft(59001) === '1:00' && T.fmtLeft(5900
 
 // ═══ 版面、參數、接線（原始碼／樣式）═══
 ok(T.GROUPS * 3 === 15 && T.TARGET === 100 && T.PENALTY_MS === 3000, '預設 15 張、目標 100、罰 3 秒');
-ok(G.name === '三張成百' && G.score.better === 'max' && G.score.min === 1 && G.score.max === 30 && G.score.decimals === 0, '遊戲名稱與成績規格（通過關數、越大越好、上限 30）');
+ok(G.name === '三張成百' && G.score.better === 'max' && G.score.min === 1 && G.score.max === T.MAX_LEVEL && T.MAX_LEVEL === 90 && G.score.decimals === 0, '遊戲名稱與成績規格（通過關數、越大越好、上限 90＝MAX_LEVEL）');
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(8) && T.rating(8) !== T.rating(15) && T.rating(15) !== T.rating(25), '評語分級');
 { const path = require('path'), rd = p => require('fs').readFileSync(path.resolve(__dirname, p), 'utf8');
   const src = rd('../../js/reaction_triple100.js'), css = rd('../../css/reaction5.css'), boot = rd('../../js/boot.js'), kit2 = rd('../../js/reaction_kit2.js'), menu = rd('../../js/menu.js');

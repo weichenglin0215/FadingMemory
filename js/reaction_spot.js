@@ -156,7 +156,8 @@
         root.classList.add('spot-dark-bg');
         logLevelTable();
         /* level：目前關卡 */
-        var level = 1;
+        /* V1.34.0：從「個人最佳關卡 − 4」開始，沒玩過就是第 1 關（kit.entryLevel，見 reaction_kit.js） */
+        var level = Reaction.kit.entryLevel(ID, 0);          /* 這兩款的成績本身就是「撐到第幾關」，所以舊紀錄不用再 ＋1 */
 
         /* round：畫一關 */
         function round() {
@@ -219,13 +220,14 @@
                 /* 結算彈窗（公版 kit.result）：帶 score 會在彈窗「已經在畫面上」之後才自動送世界排行榜
                    （排行榜靠「畫面上有沒有結算卡片」判斷玩家是不是還在看結果，太早送的話恭喜就只剩小提示） */
                 Reaction.kit.result(root, {
-                    num: '第 ' + level + ' 關', label: '答錯了，挑戰結束', isNew: isNew, score: level,
+                    num: '第 ' + level + ' 關', label: '答錯了，挑戰結束', isNew: isNew, score: level, level: level,
                     sfx: level >= 8 ? 'win' : 'fail', onAgain: function () { level = 1; round(); }
                 });
             });
         }
 
         round();
+        Reaction.kit.entryNotice(ID, level);
     }
 
     /* Reaction.register：把這款遊戲登記到遊戲清單 */

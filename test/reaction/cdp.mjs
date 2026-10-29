@@ -63,7 +63,7 @@ export async function openGame(cdp, id, opts) {
     await sleep(100);
   }
   const fake = fs.readFileSync(path.join(root, 'test/leaderboard/fake_backend.js'), 'utf8');
-  await cdp.evalJs('(function(){ try { (0, eval)(' + JSON.stringify(fake) + '); window.__fake.latency = 5; window.__fake.seed(' + JSON.stringify(id) + ', 0); Leaderboard.setNick("測試"); } catch (e) { } })()');
+  await cdp.evalJs('(function(){ try { (0, eval)(' + JSON.stringify(fake) + '); window.__fake.latency = 5; window.__fake.seed(' + JSON.stringify(id) + ', 0); window.__fake.loginAs("測試"); } catch (e) { } })()');
   await cdp.evalJs(`(async function(){
     var btn = function (t) { return [].slice.call(document.querySelectorAll('button')).filter(function (b) { return b.textContent.trim() === t; })[0]; };
     if (btn('下一步')) { btn('下一步').click(); await new Promise(function (r) { setTimeout(r, 300); }); }

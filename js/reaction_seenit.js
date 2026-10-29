@@ -20,11 +20,11 @@
     'use strict';
 
     var ID = 'seenit';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '通過關數', min: 1, max: 120 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '通過關數', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var MAX_LEVEL = 120;                         /* 最後一關（全破） */
+    var MAX_LEVEL = 90;                         /* 最後一關（全破） */
     var DISTINCT_LEVELS = 3;                    /* 前幾關強制出現「不同的圖案」（都是新的、完全不重複）：前面圖案太少，「看過」只會一直抽到同樣那幾個，玩家會厭煩 */
     var TIME0_S = 5;                            /* 第 1 關的限時（秒） */
     var TIME_STEP_S = 1;                        /* 每多一關，限時多幾秒 */

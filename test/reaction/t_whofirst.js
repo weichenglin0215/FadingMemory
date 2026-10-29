@@ -4,7 +4,7 @@ let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log('FAIL', m); } }
 const SEED = seedOf(20261009); const rnd = rng(SEED);
 
 // 影格數：第 1 關 18、到頂 2，線性（每關少約 0.55 影格）、之後維持
-ok(T.framesAt(1) === 18 && T.framesAt(T.RAMP_LEVELS) === 2 && T.framesAt(T.MAX_LEVEL) === 2, '影格數端點');
+ok(T.framesAt(1) === T.FRAMES[0] && T.framesAt(T.RAMP_LEVELS) === T.FRAMES[1] && T.framesAt(T.MAX_LEVEL) === T.FRAMES[1], '影格數端點 ' + T.FRAMES[0] + ' → ' + T.FRAMES[1] + '（使用者調的參數，測試跟著走）');
 for (let l = 2; l <= T.MAX_LEVEL; l++) ok(T.framesAt(l) <= T.framesAt(l - 1) && T.framesAt(l - 1) - T.framesAt(l) <= 1, '單調、每關最多少 1 影格 ' + l);
 ok(T.framesAt(1) - T.framesAt(2) >= 0, '起步');
 // 影格量測：中位數、離譜值退回 60Hz

@@ -1,5 +1,5 @@
 // 主選單的遊戲清單（js/menu.js 的 GAME_CELLS／GAME_TABS，V1.23.0）：
-//   · 109 款（V1.33 加上鬼腳圖減一）、id 不重複、名稱最多 5 個字（格子下方的名稱列只放得下 5 個字）、縮圖檔存在且高 256 像素
+//   · 160 款（V1.33 起 109 款，V1.34 新增 51 款）、id 不重複、名稱最多 5 個字（格子下方的名稱列只放得下 5 個字）、縮圖檔存在且高 256 像素
 //   · 每一款都有分類（七個分類加起來剛好是全部，不重疊、沒有空的分類）、頁籤是「全部、最近＋七個分類」共 9 個、名稱都是 2 個字
 //   · 清單裡的 id 與名稱跟各遊戲檔案 Reaction.register 登記的完全一致（改名忘了改一邊，這裡會失敗）
 //   · 「最近」頁籤：最新的在最前面、去掉不存在與重複的、最多 12 款、沒有紀錄時用「上次玩的」當第一筆
@@ -24,7 +24,7 @@ const CELLS = M.GAME_CELLS, TABS = M.GAME_TABS;
 const len = (s) => Array.from(s).length;
 
 // ═══ 1. 清單本身 ═══
-ok(CELLS.length === 109, '共 109 款（' + CELLS.length + '）');
+ok(CELLS.length === 160, '共 160 款（' + CELLS.length + '）');
 const ids = new Set(CELLS.map(c => c.id));
 ok(ids.size === CELLS.length, 'id 不重複');
 CELLS.forEach(c => {
@@ -69,14 +69,14 @@ ok(catTabs.length === 7, '除了「全部」「最近」，有七種分類');
 const counts = {};
 CELLS.forEach(c => { ok(catTabs.indexOf(c.cat) >= 0, c.id + ' 的分類「' + c.cat + '」是七個分類之一'); counts[c.cat] = (counts[c.cat] || 0) + 1; });
 catTabs.forEach(id => ok((counts[id] || 0) >= 5, id + ' 分類至少有 5 款（' + (counts[id] || 0) + '）'));
-ok(catTabs.reduce((a, id) => a + (counts[id] || 0), 0) === 109, '七個分類加起來剛好 109 款');
+ok(catTabs.reduce((a, id) => a + (counts[id] || 0), 0) === 160, '七個分類加起來剛好 160 款');
 console.log('各分類款數：' + TABS.slice(2).map(t => t.name + ' ' + counts[t.id]).join('、'));
 const tg = (t) => M.tabGames(t).map(c => c.id);
 ok(tg('all').join() === CELLS.map(c => c.id).join(), '「全部」＝清單順序');
 catTabs.forEach(id => ok(tg(id).join() === CELLS.filter(c => c.cat === id).map(c => c.id).join(), id + ' 頁籤的順序同「全部」'));
 const seen = new Set(); let overlap = 0;
 catTabs.forEach(id => tg(id).forEach(x => { if (seen.has(x)) overlap++; seen.add(x); }));
-ok(overlap === 0 && seen.size === 109, '分類之間沒有重複、也沒有漏掉（' + seen.size + '）');
+ok(overlap === 0 && seen.size === 160, '分類之間沒有重複、也沒有漏掉（' + seen.size + '）');
 ok(CELLS.filter(c => c.id === 'speed')[0].cat === 'reaction' && CELLS.filter(c => c.id === 'lights')[0].cat === 'memory' && CELLS.filter(c => c.id === 'remainder')[0].cat === 'number', '幾款代表性遊戲的分類');
 
 // ═══ 4. 「最近」頁籤 ═══

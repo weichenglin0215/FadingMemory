@@ -18,11 +18,11 @@
     'use strict';
 
     var ID = 'farpair';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 25;                       /* 幾關之後難度到頂（對數用 PAIR_LEVELS） */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂（對數用 PAIR_LEVELS） */
     var PAIR_LEVELS = 16;                       /* 對數幾關之後到頂 */
     var PAIRS = [2, 7];                         /* 有幾對圓點：第 1 關 → 到頂 */
     var RATIO = [1.25, 1.05];                    /* 最遠 ÷ 第二遠：第 1 關 → 到頂 */
@@ -35,7 +35,7 @@
     var DOT_R = 20;                             /* 起點（每一對的第一個點）畫出來的半徑 */
     var DOT_R2 = DOT_R / 2;                     /* 終點（每一對的第二個點）畫出來的半徑：起點的 1/3 */
     var HIT_R = 40;                             /* 命中半徑 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     /* 八種顏色（色相，飽和度與亮度固定）：紅、橘、黃、綠、藍、紫、粉紅、青；彼此夠不一樣。
        顏色數一定要 ≥ 最多的對數 PAIRS[1]（V1.29 修正：PAIRS 調成 7 對時，原本只有 6 種顏色，最後幾關出題會當機） */
     var HUES = [{ n: '紅', h: 4 }, { n: '橘', h: 28 }, { n: '黃', h: 50 }, { n: '綠', h: 135 }, { n: '藍', h: 212 }, { n: '紫', h: 282 }, { n: '粉紅', h: 328 }, { n: '青', h: 178 }];

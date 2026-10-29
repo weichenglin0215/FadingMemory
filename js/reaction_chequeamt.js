@@ -16,7 +16,7 @@
     'use strict';
 
     var ID = 'chequeamt';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
@@ -25,7 +25,7 @@
     var ZERO_P = [0.3, 0.7];                    /* 金額中間（不是最前面）至少有一個 0 的機率：第 1 題 → 到頂 */
     var TIME_BASE = 4.5, TIME_PER_DIGIT = 0.8;  /* 限時（秒）＝ (TIME_BASE ＋ TIME_PER_DIGIT × 位數) × 倍率 */
     var TIME_MUL = [1.3, 0.8];                  /* 倍率：第 1 題 → 到頂 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var SAME_MAX = 4;                           /* 「相符」（或「不符」）最多連續幾次 */
     var DIG = ['零', '壹', '貳', '參', '肆', '伍', '陸', '柒', '捌', '玖'];
     var UNIT = ['仟', '佰', '拾', ''];

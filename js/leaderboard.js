@@ -3,11 +3,15 @@
    ───────────────────────────────────────────────────────────────────
    【這個檔案做什麼】
    · 每款遊戲結束時呼叫 Leaderboard.submit(遊戲id, 成績)：
-       1. 玩家還沒有暱稱 → 請 js/leaderboard_ui.js 跳出「輸入暱稱」彈窗（暱稱存在這支瀏覽器）；
-       2. 拿「進場時就抓好的前 30 名」跟這次成績比，看有沒有機會進榜——
-          明顯進不了榜就「完全不連網」（省流量、省資料庫）；
-       3. 有機會才呼叫資料庫函式 MF_submit_score，由資料庫「最後裁定」並回傳最新榜單；
+       1. 拿「進場時就抓好的前 30 名」跟這次成績比，看有沒有機會進榜——
+          明顯進不了榜就「完全不連網」、也不會問玩家任何事（省流量、省資料庫、新玩家沒有負擔）；
+       2. 有機會進榜，但玩家還沒有帳號 → 請 js/identity_ui.js 跳出「建立暱稱與密碼」彈窗
+          （V1.35.0 起：暱稱全站唯一、密碼是 4 位數字，帳號流程在 js/identity.js）；已登入就直接送；
+       3. 呼叫資料庫函式 MF_submit_score（帶「裝置憑證」）或 MF_register（新玩家建帳號＋寫入第一筆成績），
+          由資料庫「最後裁定」並回傳最新榜單；
        4. 真的進榜 → 請 UI 放「恭喜＋煙火＋歡呼音樂」。
+   · V1.35.0 起這個檔案也保管「我是誰」的本機資料（player_id、裝置憑證、暱稱快取：getPid／getToken／getNick／setSession／clearIdentity）；
+     建立帳號、登入、改暱稱、同步個人最佳等流程在 js/identity.js，畫面在 js/identity_ui.js。
    · 進場時 Leaderboard.prefetch(遊戲) 先把該款遊戲的前 30 名抓回來存著，
      玩家看完玩法說明、按下一步時，榜單通常已經在手上，不用等網路。
    · 沒網路、連線逾時都不會影響遊戲：成績先存在這支手機，下次開頁面時補送。
@@ -70,9 +74,12 @@
     };
 
     /* localStorage 的 key（全部用 fm.lb. 開頭，不會跟 fm.reaction.best.* 或 LoveIsABitMessy 的資料混在一起） */
-    var KEY_PID = 'fm.lb.pid';           /* 這支瀏覽器的隨機玩家代號（不是帳號） */
-    var KEY_NICK = 'fm.lb.nick';         /* 暱稱 */
-    var KEY_PENDING = 'fm.lb.pending';   /* 還沒送出的成績：{ 遊戲id: {score, nick, at} } */
+    var KEY_PID = 'fm.lb.pid';           /* 玩家編號 player_id：已登入＝帳號的編號（資料庫發的，永遠不變）；V1.34 以前的舊玩家未認領＝他原本的舊代號 */
+    var KEY_NICK = 'fm.lb.nick';         /* 暱稱（本機快取，顯示用；以資料庫為準） */
+    var KEY_TOKEN = 'fm.lb.token';       /* 裝置憑證：登入成功時資料庫發的，證明「這支瀏覽器是這個 player_id」；只存在這支瀏覽器，絕對不顯示、不傳給別人 */
+    var KEY_ANON = 'fm.lb.anon';         /* 還沒有帳號時，給「意見、評價」用的匿名代號（成績不能匿名，一定要帳號） */
+    var KEY_RELOGIN = 'fm.lb.relogin';   /* 有帳號、但這支瀏覽器的憑證失效了（例如在別台改了密碼）：下次需要時請玩家重新登入 */
+    var KEY_PENDING = 'fm.lb.pending';   /* 還沒送出的成績：{ 遊戲id: {score, at} } */
     var KEY_BOARD = 'fm.lb.board.';      /* 榜單快取：fm.lb.board.<遊戲id> */
     var KEY_FBPEND = 'fm.lb.fbpending';  /* 還沒送出的玩家意見：[ {game, text, at} ]（最多留 5 筆） */
     var KEY_OVERTAKE = 'fm.lb.overtaken'; /* 「阿嬤都比你厲害」的快取：{ at, pid, list: [ {game_id, rank, at}, … ] } */
@@ -195,9 +202,9 @@
 
     /* state：這一頁（reaction.html）執行期間的暫存資料
        boards：各款遊戲目前手上的榜單 { id: board }；inflight：正在抓的請求（避免同一款重複抓）；
-       netDownUntil：連線失敗後，這個時間之前不再嘗試；nickPromise：正在問暱稱的 Promise；
-       nickSkipped：玩家按了「先不要」，這一頁就不再追問。 */
-    var state = { boards: {}, inflight: {}, netDownUntil: 0, nickPromise: null, nickSkipped: false, overtakeP: null };
+       netDownUntil：連線失敗後，這個時間之前不再嘗試；gate：正在跳「建立帳號／登入」彈窗的 Promise（同一時間只跳一個）。
+       （V1.35.0 起沒有「先不要就不再追問」：新玩家每次進前 30 名都會再問一次。） */
+    var state = { boards: {}, inflight: {}, netDownUntil: 0, gate: null, overtakeP: null };
 
     function log() {
         if (global.console && console.log) console.log.apply(console, ['[排行榜]'].concat([].slice.call(arguments)));
@@ -219,14 +226,10 @@
         return !!(g && g.score && g.score.better);
     }
 
-    /* 玩家代號：第一次用到才產生，之後固定存在 localStorage */
-    function getPid() {
-        var pid = store().get(KEY_PID, null);
-        if (!pid || typeof pid !== 'string') {
-            pid = newUuid();
-            store().set(KEY_PID, pid);
-        }
-        return pid;
+    /* 刪掉一個 localStorage 項目（UI.store 沒有 remove 時，寫入 null 也等於「沒有」） */
+    function del(key) {
+        var s = store();
+        if (s.remove) s.remove(key); else s.set(key, null);
     }
 
     function getNick() {
@@ -234,27 +237,111 @@
         return typeof n === 'string' ? cleanNick(n) : '';
     }
 
-    /* 這支瀏覽器的玩家代號（只讀，沒有就回傳 ''，不會像 getPid 那樣順手產生一個新的） */
+    /* 帳號／舊代號的 player_id（只讀，沒有就回傳 ''）。
+       已登入＝帳號的編號；V1.34 以前的舊玩家還沒認領＝他原本的舊代號。 */
     function peekPid() {
         var pid = store().get(KEY_PID, null);
         return (pid && typeof pid === 'string') ? pid : '';
     }
 
-    /* 這支瀏覽器「可能有成績在榜上」嗎：要有玩家代號、也要有暱稱（沒有暱稱的人從來沒送過成績）。
-       主選單用它決定要不要查「阿嬤都比你厲害」：第一次來的玩家完全不連網。 */
-    function hasPlayer() {
-        return !!(peekPid() && getNick());
+    /* 裝置憑證（沒有回傳 ''）：寫成績、改暱稱、改密碼、同步個人最佳都要它 */
+    function getToken() {
+        var t = store().get(KEY_TOKEN, '');
+        return (typeof t === 'string' && t) ? t : '';
     }
 
-    /* 設定暱稱：存到瀏覽器，並（盡力）通知資料庫把這位玩家已上榜的名字一起換掉。
-       換名字失敗也沒關係：下次這位玩家刷新成績時，資料庫會順便用新暱稱更新。 */
-    function setNick(raw) {
+    /* 已登入：有 player_id 也有憑證（憑證有沒有被資料庫撤銷，要等下一次呼叫資料庫才知道） */
+    function isLoggedIn() {
+        return !!(peekPid() && getToken());
+    }
+
+    /* 有帳號、但這支瀏覽器的憑證失效了（資料庫回 bad_token 之後設的旗標） */
+    function needRelogin() {
+        return !getToken() && !!store().get(KEY_RELOGIN, false);
+    }
+
+    /* 這支瀏覽器現在是哪一種身分：
+         'in'      已登入；
+         'relogin' 有帳號、憑證失效，要重新登入；
+         'legacy'  V1.34 以前的舊玩家（有暱稱、還沒設密碼）：進網頁就會被請去「建立暱稱與密碼」；
+         'guest'   訪客（還沒有帳號；進前 30 名時才會請他建立）。 */
+    function identityState() {
+        if (isLoggedIn()) return 'in';
+        if (needRelogin()) return 'relogin';
+        if (peekPid() && getNick()) return 'legacy';
+        return 'guest';
+    }
+
+    /* 匿名代號：還沒有帳號時，意見與評價用（成績不能匿名）。第一次用到才產生，之後固定存在 localStorage。
+       V1.34 以前「有 player_id 但沒有暱稱」的瀏覽器，原本的代號直接沿用成匿名代號（過去的評價、意見還連得上）。 */
+    function anonId() {
+        var a = store().get(KEY_ANON, null);
+        if (a && typeof a === 'string') return a;
+        var old = peekPid();
+        if (old && !getNick() && !getToken()) {
+            a = old;
+            del(KEY_PID);
+        } else {
+            a = newUuid();
+        }
+        store().set(KEY_ANON, a);
+        return a;
+    }
+
+    /* 這一刻呼叫資料庫時要帶的 player_id：
+         已登入 → 帳號的編號；V1.34 以前的舊玩家（還沒認領）→ 他原本的舊代號（資料庫認得，匿名意見／評價照常可以送）；
+         其他（訪客、憑證失效）→ 匿名代號（不能拿帳號的編號當匿名用，資料庫會拒絕冒用）。 */
+    function getPid() {
+        var st = identityState();
+        if (st === 'in' || st === 'legacy') return peekPid();
+        return anonId();
+    }
+
+    /* 登入／建立帳號／認領成功之後，把「我是誰」存起來：player_id、裝置憑證、暱稱 */
+    function setSession(d) {
+        if (!d || !d.player_id || !d.token) return false;
+        store().set(KEY_PID, d.player_id);
+        store().set(KEY_TOKEN, d.token);
+        if (d.nick) store().set(KEY_NICK, cleanNick(d.nick));
+        del(KEY_RELOGIN);
+        return true;
+    }
+
+    /* 資料庫說憑證無效（bad_token）：清掉憑證、記下「需要重新登入」，player_id 與暱稱留著（登入彈窗要帶入暱稱） */
+    function markRelogin() {
+        del(KEY_TOKEN);
+        store().set(KEY_RELOGIN, true);
+    }
+
+    /* 只更新暱稱的本機快取（改暱稱成功、確認憑證時別台改了暱稱） */
+    function cacheNick(raw) {
         var n = cleanNick(raw);
-        if (!n) return '';
-        store().set(KEY_NICK, n);
-        rpc('MF_rename_player', { p_player_id: getPid(), p_nickname: n }, CFG.WRITE_TIMEOUT_MS)
-            .then(function (r) { log('改暱稱', n, r.ok ? '已同步到資料庫' : '（連不上，先只存在本機）'); });
+        if (n) store().set(KEY_NICK, n);
         return n;
+    }
+
+    /* 資料庫沒有這個舊代號的紀錄（早就掉出所有前 30 名）：只把舊代號與舊暱稱丟掉、當新玩家；
+       待送的成績與意見留著（帳號建好之後會補送）。 */
+    function dropLegacy() {
+        del(KEY_PID);
+        del(KEY_NICK);
+    }
+
+    /* 登出：清掉這支瀏覽器上所有跟「我是誰」有關的資料（player_id、憑證、暱稱、待送的成績與意見、榜單與被超越快取），
+       回到「訪客」。個人最佳的清除在 js/identity.js（它知道有哪些 key）。 */
+    function clearIdentity() {
+        [KEY_PID, KEY_TOKEN, KEY_NICK, KEY_RELOGIN, KEY_PENDING, KEY_FBPEND, KEY_OVERTAKE].forEach(del);
+        Object.keys(state.boards).forEach(function (k) { delete state.boards[k]; });
+        ((global.Reaction && global.Reaction.list && global.Reaction.list()) || []).forEach(function (g) { del(KEY_BOARD + g.id); });
+        try {
+            Object.keys(global.localStorage).forEach(function (k) { if (k.indexOf(KEY_BOARD) === 0) global.localStorage.removeItem(k); });
+        } catch (e) { }
+    }
+
+    /* 這支瀏覽器「可能有成績在榜上」嗎：要已登入。
+       主選單用它決定要不要查「阿嬤都比你厲害」：訪客與舊玩家（還沒認領）完全不連網。 */
+    function hasPlayer() {
+        return isLoggedIn();
     }
 
     /* ═══════════════════════════════════════════════════════════════
@@ -370,24 +457,31 @@
        ═══════════════════════════════════════════════════════════════ */
 
     /* 還沒送出去的成績（連不上網路時）：每款遊戲只留最好的一筆 */
-    function savePending(id, nick, score, better) {
+    function savePending(id, score, better) {
         var p = store().get(KEY_PENDING, {}) || {};
         var cur = p[id];
-        if (!cur || isBetter(score, cur.score, better)) p[id] = { score: score, nick: nick, at: Date.now() };
+        if (!cur || isBetter(score, cur.score, better)) p[id] = { score: score, at: Date.now() };
         store().set(KEY_PENDING, p);
     }
 
-    /* 補送之前沒送出去的成績。資料庫有給出明確答覆（不管收不收）就刪掉那一筆；連線失敗就留著，下次再說。 */
+    /* 補送之前沒送出去的成績（要已登入才送）。資料庫有給出明確答覆（不管收不收）就刪掉那一筆；連線失敗就留著，下次再說。
+       憑證失效（bad_token）→ 標記「需要重新登入」、成績留著，等玩家重新登入之後再補送。 */
     function flushPending() {
         var p = store().get(KEY_PENDING, {}) || {};
         var ids = Object.keys(p);
-        if (!ids.length || !getNick()) return Promise.resolve();
+        if (!ids.length || !isLoggedIn()) return Promise.resolve();
         var i = 0;
         function next() {
             if (i >= ids.length) { store().set(KEY_PENDING, p); return Promise.resolve(); }
             var id = ids[i++], it = p[id];
-            return rpc('MF_submit_score', { p_game_id: id, p_player_id: getPid(), p_nickname: getNick() || it.nick, p_score: it.score }, CFG.WRITE_TIMEOUT_MS)
+            return rpc('MF_submit_score', { p_game_id: id, p_player_id: peekPid(), p_token: getToken(), p_score: it.score }, CFG.WRITE_TIMEOUT_MS)
                 .then(function (r) {
+                    if (r.ok && r.data && r.data.error === 'bad_token') {
+                        markRelogin();
+                        store().set(KEY_PENDING, p);
+                        log('補送時發現憑證失效，成績先留著，等重新登入');
+                        return null;
+                    }
                     if (!r.ok && r.error !== 'http_400' && r.error !== 'http_404') {
                         store().set(KEY_PENDING, p);
                         log('補送失敗（', r.error, '），下次再試');
@@ -403,32 +497,110 @@
         return next();
     }
 
-    /* 問暱稱（有就直接回傳；沒有就請 UI 跳彈窗）。回傳 Promise<暱稱或 ''>。
-       · 玩家按「先不要」→ 這一頁不再追問（回傳 ''），下一次開遊戲頁面才會再問。
-       · 延遲 700 毫秒才跳彈窗：讓玩家先看到結算畫面與過關音效，再被打斷。 */
-    function ensureNick() {
-        var n = getNick();
-        if (n) return Promise.resolve(n);
-        if (state.nickSkipped || !Leaderboard.ui || !Leaderboard.ui.askNickname) return Promise.resolve('');
-        if (state.nickPromise) return state.nickPromise;
-        state.nickPromise = global.UI.wait(700).then(function () {
-            return Leaderboard.ui.askNickname();
-        }).then(function (name) {
-            state.nickPromise = null;
-            var c = name ? setNick(name) : '';
-            if (!c) state.nickSkipped = true;
-            return c;
-        });
-        return state.nickPromise;
-    }
-
     /* 現在畫面上有沒有結算卡片（reaction.js 提供）。沒有＝玩家已經開始下一局，不要再彈大視窗打斷他 */
     function resultShowing() {
         return global.Reaction && global.Reaction.resultShowing ? global.Reaction.resultShowing() : true;
     }
 
+    /* 用來判斷「有沒有機會進榜」的榜單：
+         · 已登入 → 手上有的榜單（可能是 null＝不知道，交給資料庫判斷）；
+         · 還沒登入（訪客、舊玩家、憑證失效）→ 一定要「知道榜單」才跳建立帳號的彈窗（免得白白問玩家），
+           手上沒有就先連網抓一次；還是抓不到（沒網路）→ 回傳 null。 */
+    function boardForJudge(g) {
+        var b = cachedBoard(g.id);
+        if (isLoggedIn() || b) return Promise.resolve(b);
+        return load(g);
+    }
+
+    /* 資料庫有給明確答覆（d）之後的共同收尾（用憑證送的、新玩家建帳號時一起送的，都走這裡）：
+       清掉待送佇列裡「不比這筆好」的紀錄、更新榜單、真的進榜就慶祝。回傳 { status }。 */
+    function afterServer(g, spec, id, score, d, ms) {
+        /* 被拒絕的成績重送也一樣會被拒絕，留著只會每次開頁面白白重試 */
+        var pend = (store().get(KEY_PENDING, {}) || {});
+        if (pend[id] && !isBetter(pend[id].score, score, spec.better)) { delete pend[id]; store().set(KEY_PENDING, pend); }
+        if (!d || d.ok === false) {
+            log('資料庫拒絕這筆成績：', d && d.error, '→ 請確認 MF_games 的設定（範圍、遊戲代號）');
+            return { status: 'rejected', error: d && d.error };
+        }
+        putBoard(id, d);
+        log('資料庫回覆：', d.saved ? '已進榜，名次 ' + d.rank : '沒有進榜', '（' + (ms || 0) + ' ms）');
+        if (d.saved) {
+            forgetOvertaken();          /* 名次變了：主選單的「阿嬤都比你厲害」下次要重抓，不能用舊的 */
+            var info = { game: g, spec: spec, score: score, rank: d.rank, board: state.boards[id] };
+            if (Leaderboard.ui) {
+                if (resultShowing() && Leaderboard.ui.celebrate) Leaderboard.ui.celebrate(info);
+                else if (Leaderboard.ui.toast) Leaderboard.ui.toast('上一局進榜了！世界第 ' + d.rank + ' 名');
+            }
+            return { status: 'saved', rank: d.rank };
+        }
+        return { status: 'not-saved' };
+    }
+
+    /* 已登入：用裝置憑證送成績。
+       憑證失效（資料庫回 bad_token，例如在別台改了密碼）→ 請玩家重新登入（Identity.gateForScore 會跳登入彈窗），登入成功再送一次。 */
+    function sendWithToken(g, spec, id, score, retried) {
+        if (Date.now() < state.netDownUntil) {
+            savePending(id, score, spec.better);
+            log('剛剛連線失敗過，成績先存在本機');
+            return Promise.resolve({ status: 'offline' });
+        }
+        /* 先寫進待送佇列再連網（寫在前面）：就算玩家這時按「返回」離開頁面、請求被中斷，
+           下次開頁面也會補送；收到資料庫的明確答覆之後才把它刪掉。重送是安全的。 */
+        savePending(id, score, spec.better);
+        return rpc('MF_submit_score', { p_game_id: id, p_player_id: peekPid(), p_token: getToken(), p_score: score }, CFG.WRITE_TIMEOUT_MS)
+            .then(function (r) {
+                if (!r.ok) {
+                    state.netDownUntil = Date.now() + CFG.OFFLINE_COOLDOWN_MS;
+                    log('送出失敗（', r.error, '），成績先存在本機，下次補送');
+                    if (Leaderboard.ui && Leaderboard.ui.toast) Leaderboard.ui.toast('連不上排行榜，成績先記在這支手機，下次連線時補送');
+                    return { status: 'offline' };
+                }
+                if (r.data && r.data.error === 'bad_token') {
+                    markRelogin();
+                    log('憑證失效，需要重新登入');
+                    if (retried) return { status: 'need-login' };
+                    return gateAndSend(g, spec, id, score, true);
+                }
+                return afterServer(g, spec, id, score, r.data, r.ms);
+            });
+    }
+
+    /* 還沒有可用的帳號（訪客／舊玩家未認領／憑證失效）卻有機會進榜：交給 Identity 跳彈窗，成功之後再把成績送出去。
+       同一時間只跳一個彈窗：彈窗開著時又結算了一局，這一局的成績先存進待送，帳號建好之後補送。
+       V1.35.0：新玩家按「先不要」就什麼都不留；下一次又進前 30 名會再跳（不記住「不要」）。 */
+    function gateAndSend(g, spec, id, score, retried) {
+        var I = global.Identity;
+        if (!I || !I.gateForScore) return Promise.resolve({ status: 'no-account' });
+        if (state.gate) {
+            savePending(id, score, spec.better);
+            return Promise.resolve({ status: 'pending-login' });
+        }
+        /* 舊玩家與憑證失效的玩家，成績先存起來（彈窗是非跳不可、或關掉也還要留著成績）；新玩家的成績直接跟著建帳號一起送 */
+        if (identityState() !== 'guest') savePending(id, score, spec.better);
+        var p = state.gate = I.gateForScore(g, spec, score);
+        return p.then(function (r) { state.gate = null; return r; }, function () { state.gate = null; return { kind: 'cancel' }; })
+            .then(function (r) {
+                if (r && r.kind === 'registered') {
+                    var out = afterServer(g, spec, id, score, r.data, 0);
+                    flushPending();                              /* 順便補送其他款還沒送出的成績 */
+                    return out;
+                }
+                if (r && r.kind === 'logged-in') {
+                    /* 登入（或認領）成功：用新的憑證把這一局送出去（retried＝true：這次再失敗就不再無限重試）；順便補送其他款的待送成績 */
+                    return sendWithToken(g, spec, id, score, true).then(function (out) { flushPending(); return out; });
+                }
+                if (r && r.kind === 'not-qualified') {
+                    if (Leaderboard.ui && Leaderboard.ui.toast) Leaderboard.ui.toast('剛剛有人比你快一步，這次沒有進榜');
+                    return { status: 'not-qualified' };
+                }
+                if (r && r.kind === 'offline') return { status: 'offline' };
+                return { status: 'skipped' };
+            });
+    }
+
     /* 遊戲結束時呼叫。value 是這一局的最終成績（要跟畫面上顯示的是同一個數字）。
-       回傳 Promise，resolve 一個 { status } 物件（status：skip／no-nick／not-qualified／offline／rejected／saved／not-saved），
+       回傳 Promise，resolve 一個 { status } 物件（status：skip／not-qualified／offline／rejected／saved／not-saved／
+       skipped（玩家按了先不要）／need-login／no-account／pending-login），
        遊戲本身不需要等它，也不需要處理它——整個過程失敗最多就是榜上沒有這一筆，不會影響遊戲。 */
     function submit(ref, value) {
         var g = resolveGame(ref);
@@ -437,55 +609,19 @@
         var score = Math.round(value * 10000) / 10000;
         log('結算', g.name, '成績', fmt(spec, score), '（原始數字 ' + score + '）');
         /* 超出這款遊戲 score.min～max 的成績不送（例如 0 關、沒成功的不可能任務）：
-           資料庫也會用同一個範圍擋掉，在這裡先擋可以省一次連線，而且不會問暱稱 */
+           資料庫也會用同一個範圍擋掉，在這裡先擋可以省一次連線，而且不會問玩家任何事 */
         if (typeof spec.min === 'number' && score < spec.min || typeof spec.max === 'number' && score > spec.max) {
             log('成績不在這款遊戲的有效範圍（' + spec.min + '～' + spec.max + '）→ 不送排行榜');
             return Promise.resolve({ status: 'skip' });
         }
-        return ensureNick().then(function (nick) {
-            if (!nick) { log('沒有暱稱，這次不送排行榜'); return { status: 'no-nick' }; }
-            var board = cachedBoard(id);
+        /* 先判斷有沒有機會進榜：沒機會就什麼都不問、完全不連網（新玩家玩的時候不會被打斷） */
+        return boardForJudge(g).then(function (board) {
             var can = qualifies(board, score, spec.better);
-            log('本機判斷', can ? '有機會進榜 → 送出' : '進不了榜 → 不連網', board ? '（手上榜單 ' + board.top.length + ' 名）' : '（手上沒有榜單）');
+            log('本機判斷', can ? '有機會進榜' : '進不了榜 → 不連網', board ? '（手上榜單 ' + board.top.length + ' 名）' : '（手上沒有榜單）');
             if (!can) return { status: 'not-qualified' };
-            if (Date.now() < state.netDownUntil) {
-                savePending(id, nick, score, spec.better);
-                log('剛剛連線失敗過，成績先存在本機');
-                return { status: 'offline' };
-            }
-            /* 先寫進待送佇列再連網（寫在前面）：就算玩家這時按「返回」離開頁面、請求被中斷，
-               下次開頁面也會補送；收到資料庫的明確答覆之後才把它刪掉。重送是安全的。 */
-            savePending(id, nick, score, spec.better);
-            return rpc('MF_submit_score', { p_game_id: id, p_player_id: getPid(), p_nickname: nick, p_score: score }, CFG.WRITE_TIMEOUT_MS)
-                .then(function (r) {
-                    if (!r.ok) {
-                        state.netDownUntil = Date.now() + CFG.OFFLINE_COOLDOWN_MS;
-                        log('送出失敗（', r.error, '），成績先存在本機，下次補送');
-                        if (Leaderboard.ui && Leaderboard.ui.toast) Leaderboard.ui.toast('連不上排行榜，成績先記在這支手機，下次連線時補送');
-                        return { status: 'offline' };
-                    }
-                    /* 收到資料庫的明確答覆（不管收不收這筆）：待送佇列裡「不比這筆好」的紀錄就可以刪了。
-                       被拒絕的成績重送也一樣會被拒絕，留著只會每次開頁面白白重試。 */
-                    var pend = (store().get(KEY_PENDING, {}) || {});
-                    if (pend[id] && !isBetter(pend[id].score, score, spec.better)) { delete pend[id]; store().set(KEY_PENDING, pend); }
-                    var d = r.data;
-                    if (!d || d.ok === false) {
-                        log('資料庫拒絕這筆成績：', d && d.error, '→ 請確認 MF_games 的設定（範圍、遊戲代號）');
-                        return { status: 'rejected', error: d && d.error };
-                    }
-                    putBoard(id, d);
-                    log('資料庫回覆：', d.saved ? '已進榜，名次 ' + d.rank : '沒有進榜', '（' + r.ms + ' ms）');
-                    if (d.saved) {
-                        forgetOvertaken();          /* 名次變了：主選單的「阿嬤都比你厲害」下次要重抓，不能用舊的 */
-                        var info = { game: g, spec: spec, score: score, rank: d.rank, board: state.boards[id] };
-                        if (Leaderboard.ui) {
-                            if (resultShowing() && Leaderboard.ui.celebrate) Leaderboard.ui.celebrate(info);
-                            else if (Leaderboard.ui.toast) Leaderboard.ui.toast('上一局進榜了！世界第 ' + d.rank + ' 名');
-                        }
-                        return { status: 'saved', rank: d.rank };
-                    }
-                    return { status: 'not-saved' };
-                });
+            if (isLoggedIn()) return sendWithToken(g, spec, id, score, false);
+            if (!board) { log('還沒登入、又抓不到榜單 → 這次先不問帳號'); return { status: 'offline' }; }
+            return gateAndSend(g, spec, id, score, false);
         });
     }
 
@@ -496,17 +632,22 @@
        資料庫明確拒絕的（格式不對、遊戲沒登記）就不再重試。
        回傳 Promise<{status}>，status：sent／queued／too-many／rejected／skip
        ═══════════════════════════════════════════════════════════════ */
-    function sendFeedback(ref, raw) {
+    function sendFeedback(ref, raw, retried) {
         var g = resolveGame(ref);
         var id = g ? g.id : (typeof ref === 'string' ? ref : '');
         var text = cleanFeedback(raw);
         if (!id || Array.from(text).length < 2) return Promise.resolve({ status: 'skip' });
         var args = {
             p_game_id: id, p_player_id: getPid(), p_message: text,
-            p_nickname: getNick() || null,
+            p_token: getToken() || null,
             p_version: (global.FM_VERSION && global.FM_VERSION.version) ? String(global.FM_VERSION.version).slice(0, 32) : null
         };
         return rpc('MF_submit_feedback', args, CFG.WRITE_TIMEOUT_MS).then(function (r) {
+            if (r.ok && r.data && r.data.error === 'bad_token' && !retried) {
+                /* 憑證失效：標記需要重新登入，這則意見改用匿名代號再送一次（意見不該因為憑證失效就送不出去） */
+                markRelogin();
+                return sendFeedback(ref, raw, true);
+            }
             if (r.ok && r.data && r.data.ok) { log('意見已送出', id); return { status: 'sent' }; }
             if (r.ok && r.data && r.data.error === 'too_many') return { status: 'too-many' };
             if (r.ok) { log('資料庫拒絕這則意見：', r.data && r.data.error); return { status: 'rejected' }; }
@@ -529,8 +670,9 @@
         function next() {
             if (i >= q.length || stop) { store().set(KEY_FBPEND, keep.concat(q.slice(i))); return Promise.resolve(); }
             var it = q[i++];
-            return rpc('MF_submit_feedback', { p_game_id: it.game, p_player_id: getPid(), p_message: it.text, p_nickname: getNick() || null, p_version: null }, CFG.WRITE_TIMEOUT_MS)
+            return rpc('MF_submit_feedback', { p_game_id: it.game, p_player_id: getPid(), p_message: it.text, p_token: getToken() || null, p_version: null }, CFG.WRITE_TIMEOUT_MS)
                 .then(function (r) {
+                    if (r.ok && r.data && r.data.error === 'bad_token') { markRelogin(); stop = true; keep.push(it); return next(); }
                     if (!r.ok && r.error !== 'http_400') { stop = true; keep.push(it); }
                     return next();
                 });
@@ -544,7 +686,7 @@
          [ { game_id, rank, at }, … ]：這位玩家「被超越」的遊戲（有人在他創下／刷新紀錄「之後」才排到他前面，兩人都在前 30 名）；
          他創紀錄時就已經比他好的人不算（不是第一名不等於被超越）。最近被超越的排最前面，at 是被超越的時間。
        網路效能：
-         · 沒有玩家代號或沒有暱稱（＝從來沒送過成績）→ 直接回傳 []，完全不連網；
+         · 還沒登入（訪客、還沒認領的舊玩家）→ 直接回傳 []，完全不連網；
          · 結果存在 localStorage，CFG.OVERTAKE_TTL_MS（60 秒）之內再問就直接用；
          · 自己的成績進榜（名次變了）會清掉快取（forgetOvertaken），下次回主選單一定重抓；
          · 同時有好幾個地方在問，只會真的連一次。
@@ -566,7 +708,7 @@
     function overtaken(opts) {
         opts = opts || {};
         var pid = peekPid();
-        if (!pid || !getNick()) return Promise.resolve([]);
+        if (!isLoggedIn()) return Promise.resolve([]);
         var c = store().get(KEY_OVERTAKE, null), now = Date.now();
         if (!opts.force && c && c.pid === pid && Array.isArray(c.list) && now - c.at >= 0 && now - c.at < CFG.OVERTAKE_TTL_MS) {
             return Promise.resolve(cleanOvertaken(c.list));
@@ -607,13 +749,24 @@
     Leaderboard.prefetch = prefetch;
     Leaderboard.submit = submit;
     Leaderboard.getNick = getNick;
-    Leaderboard.setNick = setNick;
     Leaderboard.cleanNick = cleanNick;
+    Leaderboard.token = getToken;                /* 裝置憑證（沒有回傳 ''） */
+    Leaderboard.isLoggedIn = isLoggedIn;
+    Leaderboard.peekPid = peekPid;               /* 帳號（或舊代號）的 player_id；沒有回傳 '' */
+    Leaderboard.identityState = identityState;   /* 'in'／'relogin'／'legacy'／'guest' */
+    Leaderboard.setSession = setSession;         /* 登入成功後存下 player_id、憑證、暱稱（js/identity.js 用） */
+    Leaderboard.cacheNick = cacheNick;
+    Leaderboard.dropLegacy = dropLegacy;
+    Leaderboard.markRelogin = markRelogin;
+    Leaderboard.clearIdentity = clearIdentity;
+    Leaderboard.flushPending = flushPending;
+    Leaderboard.forgetOvertaken = forgetOvertaken;
+    Leaderboard.putBoard = putBoard;
     Leaderboard.cleanFeedback = cleanFeedback;
     Leaderboard.sendFeedback = sendFeedback;
     Leaderboard.overtaken = overtaken;
     Leaderboard.hasPlayer = hasPlayer;
-    Leaderboard.pid = getPid;            /* 玩家代號（沒有就產生一個）：五星評價（js/rating.js）用 */
+    Leaderboard.pid = getPid;            /* 這一刻呼叫資料庫要帶的 player_id（已登入＝帳號編號，否則匿名代號）：五星評價（js/rating.js）用 */
     Leaderboard.rpc = rpc;               /* 呼叫資料庫函式（永遠不丟例外）：五星評價（js/rating.js）共用同一組網址與金鑰 */
     Leaderboard.init = init;
     Leaderboard.ui = null;       /* js/leaderboard_ui.js 載入後會把畫面功能掛在這裡 */
@@ -623,7 +776,8 @@
         cleanFeedback: cleanFeedback, flushFeedback: flushFeedback, KEY_FBPEND: KEY_FBPEND,
         cleanOvertaken: cleanOvertaken, KEY_OVERTAKE: KEY_OVERTAKE,
         state: state, rpc: rpc, putBoard: putBoard, savePending: savePending, flushPending: flushPending,
-        KEY_PID: KEY_PID, KEY_NICK: KEY_NICK, KEY_PENDING: KEY_PENDING, KEY_BOARD: KEY_BOARD
+        KEY_PID: KEY_PID, KEY_NICK: KEY_NICK, KEY_PENDING: KEY_PENDING, KEY_BOARD: KEY_BOARD,
+        KEY_TOKEN: KEY_TOKEN, KEY_ANON: KEY_ANON, KEY_RELOGIN: KEY_RELOGIN, identityState: identityState, anonId: anonId, boardForJudge: boardForJudge
     };
 
     global.Leaderboard = Leaderboard;

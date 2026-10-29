@@ -39,10 +39,10 @@ ok(Object.keys(seenAt).some(m => colorsAt(+m).includes('blue') && +m >= T.UNLOCK
 ok(Object.keys(seenAt).some(m => colorsAt(+m).includes('purple') && +m >= T.UNLOCK.purple && byId.purple.beats * T.beatSec(+m) >= T.MIN_INTERVAL_S), 'purple appears while the tempo still allows it');
 ok(Object.keys(seenAt).every(m => !colorsAt(+m).includes('purple') || byId.purple.beats * T.beatSec(+m) >= T.MIN_INTERVAL_S - 1e-9), 'purple never appears when the notes would be closer than MIN_INTERVAL_S');
 // 越後面越密：每小節平均方塊數／秒
-function density(m) { let s = 0, n = 0; for (let k = 0; k < 200; k++) { let prev = null; const ch = T.makeChart(m + 1); const mm = ch[m]; s += (mm.L.times.length + mm.R.times.length) / mm.dur; n++; } return s / n; }
+function density(m) { let s = 0, n = 0; for (let k = 0; k < 1000; k++) { let prev = null; const ch = T.makeChart(m + 1); const mm = ch[m]; s += (mm.L.times.length + mm.R.times.length) / mm.dur; n++; } return s / n; }
 const d3 = density(3), d20 = density(20), d45 = density(45);
 console.log('notes per second (both lanes): m3', d3.toFixed(2), 'm20', d20.toFixed(2), 'm45', d45.toFixed(2));
-ok(d20 > d3 && d45 > d20, 'later measures are denser');
+ok(d20 > d3 && d45 >= d20 - 0.5, 'later measures are denser (saturates at the MAX_TOTAL_RATE cap by measure 20, so m45 only has to stay about as dense as m20; 1000 samples each, tolerance 0.5 ≈ 3.5 standard errors so the random chart does not make it flaky)');
 // 判定視窗：間隔越密越小，上限 HIT_WIN
 ok(near(T.windowFor(10), T.HIT_WIN) && near(T.windowFor(0.2), 0.09) && T.windowFor(0.1) < T.windowFor(0.2), 'window shrinks with the interval');
 // matchTap：找最近、還沒處理、在視窗內的；重複點同一個方塊第二下找不到

@@ -13,12 +13,12 @@
     'use strict';
 
     var ID = 'hiddendigit';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾題之後難度到頂 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var TIME_MUL = [2.0, 3.0];                  /* 限時倍率：第 1 題 → 到頂 */
     /* 各題型：from＝第幾題起出現；sec＝基本限時（秒）；a／b＝兩個數字的範圍 */
     var TYPES = {

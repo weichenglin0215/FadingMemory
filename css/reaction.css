@@ -1746,6 +1746,11 @@
     color: var(--c-ink);
 }
 
+/* 這一關的沾油漆次數快到上限了（剩 DIP_WARN 次以內）：字變成警示色 */
+.pa-info--low {
+    color: var(--c-bad);
+}
+
 /* 場地 */
 .pa-field {
     position: relative;

@@ -22,11 +22,11 @@
     'use strict';
 
     var ID = 'fracduel';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 40;                       /* 幾題之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾題之後難度到頂 */
     var GAP_START = 0.25, GAP_END = 0.01;       /* 兩個分數的相對差距：第 1 題 → 到頂 */
     var TIME_S = [7.5, 3.75];                   /* 每題限時（秒） */
     var DEN = [12, 20];                         /* 第 1～10 題的分母上限：第 1 題 → 到頂 */
@@ -35,7 +35,7 @@
     var KIND_FROM = { rand: 1, samenum: 3, plus1: 5, mult: 9 };   /* 各題型從第幾題起出現 */
     var BIG_FROM = 11, BIG_P = 0.4, CAP2 = 99, CAP3 = 999;        /* 三位數：第幾題起、機率；兩位數與三位數的上限 */
     var DEC_FROM = 21, DEC_P = 0.4;             /* 帶小數點：第幾題起、機率 */
-    var MAX_LEVEL = 60, TRIES = 30000, SAME_SIDE = 3;
+    var MAX_LEVEL = 90, TRIES = 30000, SAME_SIDE = 3;
     var KINDS = ['rand', 'samenum', 'plus1', 'mult'];
     var KIND_HINT = {
         rand: '',

@@ -15,7 +15,7 @@
     'use strict';
 
     var ID = 'tapback';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
@@ -29,7 +29,7 @@
     var MARGIN = 54;                            /* 圓點離遊戲區邊緣至少多遠 */
     var MIN_GAP = 104;                          /* 任兩個圓點圓心至少相距多少 */
     var DOT_R = 38;                             /* 圓圈的半徑（命中範圍也是這個大小） */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function lenFor(level) { return Math.min(LEN[1], LEN[0] + Math.floor((level - 1) / LEN_EVERY)); }

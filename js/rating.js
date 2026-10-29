@@ -143,14 +143,17 @@
        回傳 Promise<{status, avg, cnt}>，status：
          sent     寫進資料庫了；already 今天已經評過這款（這次不算）——這兩種都會記下「今天評過」；
          offline  連不上（或資料庫還沒有這個函式）；rejected 資料庫拒絕（遊戲沒登記、星數不對）。 */
-    function submit(ref, stars) {
+    function submit(ref, stars, retried) {
         var id = ref && typeof ref === 'object' ? ref.id : ref;
         var lb = LB();
         stars = Math.round(Number(stars));
         if (!id || !(stars >= 1 && stars <= MAX)) return Promise.resolve({ status: 'rejected' });
         if (!lb || !lb.rpc || !lb.pid) return Promise.resolve({ status: 'offline' });
-        return lb.rpc('MF_submit_rating', { p_game_id: id, p_player_id: lb.pid(), p_stars: stars }, CFG.TIMEOUT_MS).then(function (r) {
+        /* p_token：已登入就帶裝置憑證（用帳號的編號評價）；沒登入給 null＝匿名評價（沒有帳號的玩家也能評；匿名不能冒用已建立帳號的編號） */
+        return lb.rpc('MF_submit_rating', { p_game_id: id, p_player_id: lb.pid(), p_stars: stars, p_token: (lb.token && lb.token()) || null }, CFG.TIMEOUT_MS).then(function (r) {
             var d = r.data;
+            /* 憑證失效（例如在別台改了密碼）：標記需要重新登入，這次改用匿名代號再評一次（評價不該因為憑證失效就送不出去） */
+            if (r.ok && d && d.error === 'bad_token' && !retried && lb.markRelogin) { lb.markRelogin(); return submit(ref, stars, true); }
             if (r.ok && d && d.ok) {
                 markRated(id);
                 if (d.cnt > 0 && d.avg != null) patchStats(id, d.avg, d.cnt);

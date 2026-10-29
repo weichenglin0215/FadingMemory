@@ -15,11 +15,11 @@
     'use strict';
 
     var ID = 'fadee';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 個', label: '通過個數', min: 1, max: 40 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 個', label: '通過個數', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var MAX_LEVEL = 80;                         /* 共幾個 E（要跟 SCORE.max 一致） */
+    var MAX_LEVEL = 90;                         /* 共幾個 E（要跟 SCORE.max 一致） */
     var FADE_LEVELS = 25;                       /* 第幾個 E 暗到最低；之後維持最低 */
     var FASE_RATE = 0.95;                        /* 每關的亮度遞減百分比 */
     var PCT_MAX = 50, PCT_MIN = 1;             /* E 的白色百分比：第 1 個 → 第 FADE_LEVELS 個 */
@@ -156,7 +156,7 @@
         rule: '黑色背景上有一個白色的 E，開口朝上、下、左、右其中一邊，**手指往開口的方向滑**。E 一個比一個暗，最後幾乎和背景一樣黑。答錯或來不及就結束，看你能看清楚幾個。**請把螢幕亮度調到中等**。遊戲視力，不是真正的視力檢查。',
         mount: mount,
         score: SCORE,
-        test: { pctAt: pctAt, valueOf: valueOf, nextDir: nextDir, inE: inE, dirOf: dirOf, paintE: paintE, rating: rating, DIRS: DIRS, MAX_LEVEL: MAX_LEVEL, FADE_LEVELS: FADE_LEVELS, PCT_MAX: PCT_MAX, PCT_MIN: PCT_MIN, PANEL: PANEL, CELL: CELL, SWIPE_PX: SWIPE_PX }
+        test: { pctAt: pctAt, valueOf: valueOf, nextDir: nextDir, inE: inE, dirOf: dirOf, paintE: paintE, rating: rating, DIRS: DIRS, MAX_LEVEL: MAX_LEVEL, FADE_LEVELS: FADE_LEVELS, PCT_MAX: PCT_MAX, PCT_MIN: PCT_MIN, FASE_RATE: FASE_RATE, PANEL: PANEL, CELL: CELL, SWIPE_PX: SWIPE_PX }
     };
     Reaction.register(G);
 })();

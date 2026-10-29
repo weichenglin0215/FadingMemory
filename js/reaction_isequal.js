@@ -19,13 +19,13 @@
 
     var ID = 'isequal';
     /* 世界排行榜成績規格：連續答對幾題（越多越好）；min 1＝至少答對 1 題才算成績 */
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾題之後難度到頂 */
     var ANS_S = [7.0, 3.5];                     /* 作答限時（秒）：第 1 題 → 到頂 */
-    var MAX_LEVEL = 60;                         /* 最多幾題（答滿就全破） */
+    var MAX_LEVEL = 90;                         /* 最多幾題（答滿就全破） */
     var SAME_MAX = 4;                           /* 「相等」（或「不相等」）最多連續幾次 */
     /* 分母清單：從第 from 題起加入 dens 這些分母（全部都能除得盡，寫成有限小數） */
     var DEN_STEPS = [

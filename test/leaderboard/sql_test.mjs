@@ -1,8 +1,11 @@
-// 驗證 supabase/MF_leaderboard.sql：在 PGlite（真正的 PostgreSQL，跑在 WASM）裡執行整份 SQL，
-// 再用「anon 角色」模擬網頁訪客呼叫三個函式，檢查：
-//   權限、參數檢查、前 30 名保留、同分先到先贏、自己刷新自己的成績、改暱稱、可重複執行，
+// 驗證 supabase/MF_leaderboard.sql 的「成績、意見、評價、被超越」部分：在 PGlite（真正的 PostgreSQL，跑在 WASM）裡執行整份 SQL，
+// 再用「anon 角色」模擬網頁訪客呼叫函式，檢查：
+//   權限、參數檢查、前 30 名保留、同分先到先贏、自己刷新自己的成績、可重複執行，
 //   以及 3000 次隨機送分對照「獨立寫的參考模型」逐次比對整個榜單。
+// V1.35.0 起成績一定要「裝置憑證」：這個檔案用 ensure() 以資料庫管理者身分替每個測試玩家建好玩家列與憑證，
+// 專心測成績規則；玩家身分本身（建立／認領／登入／限速／合併／同步／改名…）在 identity_sql_test.mjs。
 import { PGlite } from '@electric-sql/pglite';
+import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
 import fs from 'fs';
 
 import { fileURLToPath } from 'url';
@@ -16,7 +19,7 @@ const ok = (c, m) => { total++; if (!c) { bad++; console.log('FAIL', m); } };
 const canon = (v) => JSON.stringify(v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x)) ? Object.fromEntries(Object.keys(x).sort().map(kk => [kk, x[kk]])) : x);
 const eq = (a, b, m) => ok(canon(a) === canon(b), m + '  期望 ' + canon(b) + ' 實際 ' + canon(a));
 
-const db = new PGlite();
+const db = new PGlite({ extensions: { pgcrypto } });
 await db.exec('create role anon nologin; create role authenticated nologin;');
 await db.exec(sql);
 await db.exec(sql);        // 第二次執行：必須不報錯（冪等）
@@ -29,7 +32,20 @@ async function asAnon(query, params) {
   catch (e) { return { sqlError: String(e.message || e) }; }
   finally { await db.exec('reset role'); }
 }
-const submit = async (g, p, n, s) => (await asAnon('select public."MF_submit_score"($1,$2::uuid,$3,$4::numeric) as r', [g, p, n, s]))[0].r;
+// 以資料庫管理者身分建立（或更新）測試玩家：玩家列（暱稱經過 MF__clean_nick 清理）＋一把固定的憑證 'tok-<player_id>'
+const acct = new Set();
+async function ensure(pid, nick) {
+  await db.query(`insert into public."MF_players"(player_id, nickname, nick_key, claimed, pin_hash)
+                  values ($1::uuid, nullif(public."MF__clean_nick"($2), ''), $3, true, 'x')
+                  on conflict (player_id) do update
+                    set nickname = coalesce(nullif(public."MF__clean_nick"($2), ''), public."MF_players".nickname)`, [pid, nick ?? '', 'test:' + pid]);
+  await db.query('insert into public."MF_sessions"(token_hash, player_id) values (public."MF__token_hash"($1), $2::uuid) on conflict do nothing', ['tok-' + pid, pid]);
+  acct.add(pid);
+}
+const submit = async (g, p, n, s) => {
+  if (p && n != null) await ensure(p, n);
+  return (await asAnon('select public."MF_submit_score"($1,$2::uuid,$3,$4::numeric) as r', [g, p, p ? 'tok-' + p : null, s]))[0].r;
+};
 const top = async (g, p) => (await asAnon('select public."MF_get_top"($1,$2::uuid) as r', [g, p ?? null]))[0].r;
 const uuid = (i) => '00000000-0000-4000-8000-' + String(i).padStart(12, '0');
 // 保證每次呼叫的 now() 都不同（PGlite 的時鐘只有毫秒精度）
@@ -38,7 +54,8 @@ const sub = async (...a) => { tick(); return submit(...a); };
 
 // ═══ A. 權限：anon 不能直接碰資料表，只能呼叫函式 ═══
 for (const q of ['select * from public."MF_scores"', 'select * from public."MF_games"',
-  `insert into public."MF_scores"(game_id,player_id,nickname,score,rank_key) values ('speed','${uuid(1)}','x',1,1)`,
+  `insert into public."MF_scores"(game_id,player_id,score,rank_key) values ('speed','${uuid(1)}',1,1)`,
+  'select * from public."MF_players"', 'select * from public."MF_sessions"', 'select * from public."MF_player_bests"', 'select * from public."MF_player_merges"', 'select * from public."MF_players_admin"',
   'delete from public."MF_scores"', 'update public."MF_games" set enabled=false']) {
   const r = await asAnon(q);
   ok(r.sqlError && /permission denied/i.test(r.sqlError), 'anon 直接 SQL 應被擋：' + q + ' → ' + JSON.stringify(r).slice(0, 80));
@@ -52,10 +69,12 @@ eq(await top('nope'), null, '不存在的遊戲回傳 null');
 eq(await submit('nope', uuid(1), 'a', 1), { ok: false, error: 'unknown_game' }, 'unknown_game');
 eq(await submit('speed', uuid(1), 'a', -0.5), { ok: false, error: 'out_of_range' }, '低於下限');
 eq(await submit('speed', uuid(1), 'a', 61), { ok: false, error: 'out_of_range' }, '高於上限');
-eq(await submit('speed', uuid(1), '', 1), { ok: false, error: 'bad_args' }, '空暱稱');
-eq(await submit('speed', uuid(1), '  \n\t ', 1), { ok: false, error: 'bad_args' }, '全空白暱稱');
 eq(await submit('speed', null, 'a', 1), { ok: false, error: 'bad_args' }, 'player null');
+eq(await submit('speed', uuid(555), null, 1), { ok: false, error: 'bad_token' }, '還沒有玩家列／憑證 → bad_token（不是 bad_args）');
 eq(await submit('speed', uuid(1), 'a', null), { ok: false, error: 'bad_args' }, 'score null');
+eq((await asAnon('select public."MF_submit_score"($1,$2::uuid,$3,$4::numeric) as r', ['speed', uuid(1), 'wrong-token', 1]))[0].r, { ok: false, error: 'bad_token' }, '憑證不對 → bad_token');
+eq((await asAnon('select public."MF_submit_score"($1,$2::uuid,$3,$4::numeric) as r', ['speed', uuid(1), null, 1]))[0].r, { ok: false, error: 'bad_token' }, '沒帶憑證 → bad_token（成績一定要憑證）');
+eq((await asAnon('select public."MF_submit_score"($1,$2::uuid,$3,$4::numeric) as r', ['speed', uuid(2), 'tok-' + uuid(1), 1]))[0].r, { ok: false, error: 'bad_token' }, '拿別人的憑證冒用 → bad_token');
 eq((await asAnon('select count(*)::int as n from public."MF_scores"')).sqlError ? 'denied' : 'x', 'denied', '（拒絕後仍然擋著）');
 await db.exec('reset role');
 eq((await db.query('select count(*)::int as n from public."MF_scores"')).rows[0].n, 0, '錯誤參數都沒有寫入任何列');
@@ -86,8 +105,7 @@ eq(r.top.find(x => x.mine).score, 0.1235, '分數四捨五入到 4 位小數');
   const inv = (...cs) => String.fromCharCode(...cs);
   r = await sub('speed', uuid(77), 'a' + inv(0x202e) + 'b' + inv(0x200b) + 'c' + inv(0xfeff) + 'd', 0.77);
   eq(r.top.find(x => x.mine).nick, 'a b c d', '暱稱：方向控制字元／零寬字元／BOM 都換成空格');
-  r = await sub('speed', uuid(78), inv(0x200b, 0x200b, 0x202e), 0.78);
-  eq(r, { ok: false, error: 'bad_args' }, '暱稱只有看不見的字元 → 視為空暱稱');
+  eq((await db.query('select public."MF__clean_nick"($1) as c', [inv(0x200b, 0x200b, 0x202e)])).rows[0].c, '', '暱稱只有看不見的字元 → 清理後是空字串');
   await db.exec(`delete from public."MF_scores"`);
 }
 
@@ -99,7 +117,7 @@ ok(r.ok && !r.saved && r.rank === 1 && r.top[0].score === 0.5, '更差的成績�
 r = await sub('speed', uuid(1), 'A', 0.5);
 ok(r.ok && !r.saved, '同分不算進步（saved=false）');
 r = await sub('speed', uuid(1), 'A改', 0.4);
-ok(r.saved && r.top.length === 1 && r.top[0].score === 0.4 && r.top[0].nick === 'A改', '更好的成績更新同一列（不新增），暱稱一起更新');
+ok(r.saved && r.top.length === 1 && r.top[0].score === 0.4 && r.top[0].nick === 'A改', '更好的成績更新同一列（不新增），暱稱用玩家表的最新暱稱');
 r = await sub('speed', uuid(1), '新名字', 0.9);
 ok(!r.saved && r.top[0].nick === '新名字' && r.top[0].score === 0.4, '沒進步但換了暱稱：暱稱更新、分數不變');
 // 越大越好的遊戲方向相反
@@ -132,14 +150,12 @@ eq((await db.query('select count(*)::int as n from public."MF_scores" where game
 // 不同遊戲互不影響
 eq((await top('spot')).top.length, 0, 'spot 榜單不受 speed 影響');
 
-// ═══ F. 改暱稱 ═══
+// ═══ F. 暱稱只存在玩家表：改一次，所有遊戲榜上都變（改名的規則在 identity_sql_test.mjs）═══
 await sub('spot', uuid(28), 'P28', 10);
-r = (await asAnon('select public."MF_rename_player"($1::uuid,$2) as r', [uuid(28), '改名了'])) [0].r;
-eq(r, { ok: true, rows: 2 }, '改暱稱影響這位玩家的所有列（speed、spot 各 1）');
+await db.exec(`update public."MF_players" set nickname = '改名了' where player_id = '${uuid(28)}'`);
 eq((await top('speed', uuid(28))).top.find(x => x.mine).nick, '改名了', 'speed 暱稱已更新');
 eq((await top('spot', uuid(28))).top.find(x => x.mine).nick, '改名了', 'spot 暱稱已更新');
-eq((await asAnon('select public."MF_rename_player"($1::uuid,$2) as r', [uuid(28), ' '])) [0].r, { ok: false, error: 'bad_args' }, '空暱稱改名被拒');
-eq((await asAnon('select public."MF_rename_player"($1::uuid,$2) as r', [uuid(999), 'x'])) [0].r, { ok: true, rows: 0 }, '不存在的玩家改名：rows=0');
+ok((await db.query(`select count(*)::int as n from information_schema.columns where table_schema = 'public' and table_name = 'MF_scores' and column_name = 'nickname'`)).rows[0].n === 0, '成績表已經沒有 nickname 欄（暱稱一律從玩家表帶出）');
 
 // ═══ G. 停用的遊戲 ═══
 await db.exec(`update public."MF_games" set enabled=false where game_id='zz_test'`);
@@ -201,7 +217,12 @@ for (const g of Object.keys(specs)) {
 
 // ═══ I. 玩家意見（MF_submit_feedback，結算彈窗的「我有話要說」）═══
 {
-  const fb = async (g, p, m, nick, ver) => (await asAnon('select public."MF_submit_feedback"($1,$2::uuid,$3,$4,$5) as r', [g, p, m, nick ?? null, ver ?? null]))[0].r;
+  // nick 有給（非空白）→ 先建一個帳號（暱稱＝nick）並帶憑證送；已經是測試帳號的代號也帶憑證；其他一律匿名送
+  const fb = async (g, p, m, nick, ver) => {
+    if (p && nick != null && String(nick).trim() !== '') await ensure(p, nick);
+    const tok = p && acct.has(p) ? 'tok-' + p : null;
+    return (await asAnon('select public."MF_submit_feedback"($1,$2::uuid,$3,$4,$5) as r', [g, p, m, tok, ver ?? null]))[0].r;
+  };
   const rows = async (where = 'true', params = []) => (await db.query('select * from public."MF_feedback" where ' + where + ' order by id', params)).rows;
   // 權限：anon 不能直接讀寫意見表
   for (const q of ['select * from public."MF_feedback"', `insert into public."MF_feedback"(game_id,player_id,message) values ('speed','${uuid(900)}','hello')`, 'delete from public."MF_feedback"']) {
@@ -253,10 +274,10 @@ for (const g of Object.keys(specs)) {
   // 欄位說明（Table Editor 會顯示）
   const cm = (await db.query(`select col_description('public."MF_feedback"'::regclass, (select attnum from pg_attribute where attrelid = 'public."MF_feedback"'::regclass and attname = 'game_title')) as c`)).rows[0].c;
   ok(/遊戲中文名稱/.test(cm || ''), '意見：game_title 欄位有中文說明：' + cm);
-  // 暱稱／版本是選填：亂填也不會讓寫入失敗
-  eq(await fb('speed', uuid(902), '沒有暱稱', '   ', ''), { ok: true, saved: true }, '意見：空白暱稱與版本當作沒有');
+  // 匿名（沒帶憑證）也能送意見，暱稱留空；版本是選填
+  eq(await fb('speed', uuid(902), '沒有暱稱', '   ', ''), { ok: true, saved: true }, '意見：匿名＋空白版本當作沒有');
   const r2 = await rows(`player_id = $1::uuid`, [uuid(902)]);
-  ok(r2[0].nickname === null && r2[0].app_version === null, '意見：空白暱稱與版本存成 null');
+  ok(r2[0].nickname === null && r2[0].app_version === null, '意見：匿名的暱稱與空白版本存成 null');
   // 太長：只留 300 個字
   eq(await fb('speed', uuid(903), '長'.repeat(500)), { ok: true, saved: true }, '意見：超長內容仍可寫入');
   ok((await rows(`player_id = $1::uuid`, [uuid(903)]))[0].message.length === 300, '意見：只留前 300 個字');
@@ -299,6 +320,14 @@ for (const g of Object.keys(specs)) {
   await db.exec(`update public."MF_games" set enabled = false where game_id = 'hangpic'`);
   eq(await fb('hangpic', uuid(908), '停用後不能寫'), { ok: false, error: 'unknown_game' }, '意見：停用的遊戲不能寫意見');
   await db.exec(`update public."MF_games" set enabled = true where game_id = 'hangpic'`);
+  // V1.35.0：沒帶憑證不能冒用已建立帳號的代號；帶了錯的憑證也不行；帶對的憑證暱稱由資料庫帶入（不採信網頁傳的）
+  const raw = async (p, tok) => (await asAnon('select public."MF_submit_feedback"($1,$2::uuid,$3,$4,$5) as r', ['speed', p, '冒用測試的意見', tok, null]))[0].r;
+  eq(await raw(uuid(901), null), { ok: false, error: 'bad_token' }, '意見：沒帶憑證不能冒用已建立帳號的代號');
+  eq(await raw(uuid(901), 'wrong'), { ok: false, error: 'bad_token' }, '意見：憑證不對被拒');
+  eq(await raw(uuid(901), 'tok-' + uuid(902)), { ok: false, error: 'bad_token' }, '意見：別人的憑證被拒');
+  eq(await raw(uuid(901), 'tok-' + uuid(901)), { ok: true, saved: true }, '意見：帶對的憑證可以送');
+  ok((await rows(`message = '冒用測試的意見'`))[0].nickname === '阿嬤', '意見：有憑證時暱稱由資料庫從帳號帶入');
+  eq(await raw(uuid(950), null), { ok: true, saved: true }, '意見：全新的匿名代號（沒有帳號）照樣可以送');
 }
 
 // ═══ J. 五星評價（MF_submit_rating／MF_get_ratings，V1.25.0）═══

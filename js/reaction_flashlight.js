@@ -20,18 +20,18 @@
     'use strict';
 
     var ID = 'flashlight';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 60 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 25;                       /* 幾關之後難度到頂 */
+    var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var RADIUS = [36, 6];                      /* 光圈半徑（像素）：第 1 關 → 到頂 */
     var TIME_S = [10, 20];                      /* 作答限時（秒）：第 1 關 → 到頂 */
     var OFFSET_GAP = 26;                        /* 光圈下緣離手指多遠（光圈中心在手指上方 半徑＋這個數字 處） */
     var TIERS = [0, 3];                         /* 圖案複雜度（0～3 共四級）：第 1 關 → 到頂。0＝數字與筆劃很少的字，3＝筆劃很多的字、零件很多的圖形 */
     var TIER_JITTER = 0.7;                      /* 每一關的複雜度會隨機上下浮動（±這個數字），不會剛好一關一級；0＝不浮動 */
     var PIC = { size: 480, top: 44 };           /* 圖案的邊長與離遊戲區上緣的距離 */
-    var MAX_LEVEL = 60;
+    var MAX_LEVEL = 90;
     var DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
     /* 長得像的數字（選項會優先挑這些） */
     var SIMILAR = { '0': ['6', '8', '9'], '1': ['7', '4', '2'], '2': ['7', '3', '5'], '3': ['8', '5', '2'], '4': ['1', '9', '7'], '5': ['6', '3', '8'], '6': ['5', '8', '0', '9'], '7': ['1', '2', '9'], '8': ['3', '6', '0', '9'], '9': ['4', '8', '0', '6'] };
@@ -109,11 +109,14 @@
         }
         return hit / (N * N);
     }
-    /* 圖案的 SVG（畫在 100×100，用 currentColor 上色）：數字與繁體字用文字（筆劃多的字用細一點的字重，細節才看得清楚）、圖形用多邊形／路徑 */
-    function picSvg(id) {
-        var body, sh = shapeOf(id), i, k;
-        if (isDigit(id)) body = '<text x="50" y="80" text-anchor="middle" font-size="96" font-weight="900" font-family="var(--font-ui)">' + id + '</text>';
-        else if (isChar(id)) body = '<text x="50" y="83" text-anchor="middle" font-size="94" font-weight="' + (tierOf(id) >= 2 ? 500 : 700) + '" style="font-family:var(--font-ui)">' + id + '</text>';
+    /* 圖案的 SVG（畫在 100×100，用 currentColor 上色）：數字與繁體字用文字（筆劃多的字用細一點的字重，細節才看得清楚）、圖形用多邊形／路徑。
+       serif：true＝改用明體（宋體）字型（--font-note：Noto Serif TC → 宋體 → 新細明體 → serif）。
+       V1.34（玩家意見）：上方被光照出來的題目圖案用黑體（--font-ui），下方的答案選項用明體，故意跟題目字型不一樣，
+       玩家不能只靠「筆劃的粗細、字型的樣子」去比對，要靠字的結構。圖形（多邊形、星、齒輪、花）沒有字型，不受影響。 */
+    function picSvg(id, serif) {
+        var body, sh = shapeOf(id), i, k, ff = serif ? 'var(--font-note)' : 'var(--font-ui)';
+        if (isDigit(id)) body = '<text x="50" y="80" text-anchor="middle" font-size="96" font-weight="900" style="font-family:' + ff + '">' + id + '</text>';
+        else if (isChar(id)) body = '<text x="50" y="83" text-anchor="middle" font-size="94" font-weight="' + (tierOf(id) >= 2 ? 500 : 700) + '" style="font-family:' + ff + '">' + id + '</text>';
         else if (sh && sh.kind === 'p') {                                           /* 正 n 邊形（一個頂點朝上） */
             var pp = [];
             for (i = 0; i < sh.n; i++) { var a1 = -Math.PI / 2 + i * 2 * Math.PI / sh.n; pp.push((50 + 46 * Math.cos(a1)).toFixed(1) + ',' + (52 + 46 * Math.sin(a1)).toFixed(1)); }
@@ -130,7 +133,7 @@
             var rx = Math.max(4.5, Math.min(13, 2 * Math.PI * 27 / sh.n * 0.46)).toFixed(2);
             body = '<circle cx="50" cy="50" r="11"/>';
             for (k = 0; k < sh.n; k++) body += '<ellipse cx="50" cy="26" rx="' + rx + '" ry="19" transform="rotate(' + (k * 360 / sh.n).toFixed(2) + ' 50 50)"/>';
-        } else body = '<text x="50" y="80" text-anchor="middle" font-size="96" font-weight="900" font-family="var(--font-ui)">?</text>';
+        } else body = '<text x="50" y="80" text-anchor="middle" font-size="96" font-weight="900" style="font-family:' + ff + '">?</text>';
         return '<svg viewBox="0 0 100 100" aria-hidden="true" fill="currentColor">' + body + '</svg>';
     }
     var CN = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
@@ -182,7 +185,7 @@
         var gScan = kit.svg('g', { 'class': 'flt-scan' }, svg);
         var tip = h('div', { 'class': 'flt-tip', text: '手指在黑幕上拖曳，照出藏著的圖案' });
         stage.appendChild(tip);
-        var items = q.options.map(function (id, i) { return { html: picSvg(id), kind: 'line', cls: 'flt-opt', onTap: function () { judge(i); } }; });
+        var items = q.options.map(function (id, i) { return { html: picSvg(id, true), kind: 'line', cls: 'flt-opt', onTap: function () { judge(i); } }; });
         var grid = kit.btnGrid(stage, items, { h: 96, gap: 8 });
         var centers = [], dragging = null, lastC = null;
         function light(pt) {

@@ -473,13 +473,16 @@
     stroke-width: 3;
 }
 
-.snk-dot--mover {
-    stroke: var(--c-orange);
+/* 答對（找到會動的圓點、或失敗時標出沒找到的答案）：綠色外框 */
+.snk-dot--right {
+    stroke: var(--c-ok);
     stroke-width: 6;
 }
 
+/* 答錯（點到不動的圓點）：紅色外框 */
 .snk-dot--wrong {
-    fill: var(--c-bad);
+    stroke: var(--c-bad-light);
+    stroke-width: 6;
 }
 
 .snk-trail {
@@ -1440,6 +1443,12 @@
     fill: var(--cc-end);
     stroke: var(--c-ink);
     stroke-width: 3;
+}
+
+/* 手指靠近另一個端點（放開就會判定）：端點加粗綠框提醒（V1.34） */
+.cpc-near {
+    stroke: var(--c-ok);
+    stroke-width: 7;
 }
 
 .cpc-msg {

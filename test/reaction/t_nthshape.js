@@ -3,10 +3,10 @@ const G = game('reaction_nthshape.js'); const T = G.test;
 let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log('FAIL', m); } };
 const SEED = seedOf(20261025); const rnd = rng(SEED);
 
-ok(T.shapesFor(1) === 2 && T.shapesFor(T.RAMP_LEVELS) === 6 && T.shapesFor(60) === 6, '種類 2 → 6');
-ok(T.seqFor(1) === 5 && T.seqFor(T.RAMP_LEVELS) === 9 && T.seqFor(60) === 9, '閃現 5 → 9 次');
-ok(T.showMs(1) === 800 && T.showMs(T.RAMP_LEVELS) === 450, '時間 800 → 450');
-for (let l = 2; l <= 60; l++) ok(T.shapesFor(l) >= T.shapesFor(l - 1) && T.seqFor(l) >= T.seqFor(l - 1) && T.showMs(l) <= T.showMs(l - 1) && T.ansMs(l) <= T.ansMs(l - 1), '單調 ' + l);
+ok(T.shapesFor(1) === T.SHAPES_N[0] && T.shapesFor(T.RAMP_LEVELS) === T.SHAPES_N[1] && T.shapesFor(60) === T.SHAPES_N[1], '種類 ' + T.SHAPES_N[0] + ' → ' + T.SHAPES_N[1] + '（使用者調的參數，測試跟著走）');
+ok(T.seqFor(1) === T.SEQ_N[0] && T.seqFor(T.RAMP_LEVELS) === T.SEQ_N[1] && T.seqFor(60) === T.SEQ_N[1], '閃現 ' + T.SEQ_N[0] + ' → ' + T.SEQ_N[1] + ' 次');
+ok(T.showMs(1) === T.SHOW_MS[0] && T.showMs(T.RAMP_LEVELS) === T.SHOW_MS[1], '每次閃現 ' + T.SHOW_MS[0] + ' → ' + T.SHOW_MS[1] + ' 毫秒');
+for (let l = 2; l <= 60; l++) ok(T.shapesFor(l) >= T.shapesFor(l - 1) && T.seqFor(l) >= T.seqFor(l - 1) && (T.SHOW_MS[1] <= T.SHOW_MS[0] ? T.showMs(l) <= T.showMs(l - 1) : T.showMs(l) >= T.showMs(l - 1)) && (T.ANS_S[1] <= T.ANS_S[0] ? T.ansMs(l) <= T.ansMs(l - 1) : T.ansMs(l) >= T.ansMs(l - 1)), '單調 ' + l);
 ok(T.extraFor(1) === 0 && T.extraFor(T.COLOR_FROM - 1) === 0 && T.extraFor(T.COLOR_FROM) === 1 && T.extraFor(60) === 2, '同形不同色顆數');
 for (const s of T.SHAPES) ok(!!T.SHAPE_NAME[s] && /[一-鿿]/.test(T.SHAPE_NAME[s]), '形狀有中文名稱 ' + s);
 for (const s of T.SHAPES) ok(/<svg/.test(T.shapeSvg(s, '#fff', '#000')) && !/NaN/.test(T.shapeSvg(s, '#fff', '#000')), '圖形 ' + s);

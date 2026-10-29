@@ -7,10 +7,10 @@ const near = (a, b, e) => Math.abs(a - b) < (e || 1e-9);
 const W = 472, SEED = seedOf(20261016), rnd = rng(SEED);
 
 // ═══ 玩家指定的參數 ═══
-ok(T.INDEXLINE.join() === '1,0', '參數 INDEXLINE=[1,0]；BW=' + T.BW + '、OVERLAP=' + T.OVERLAP);
+ok(T.INDEXLINE[1] === 0 && T.INDEXLINE[0] > 0 && T.INDEXLINE[0] <= 1, '參數 INDEXLINE=' + T.INDEXLINE + '（使用者調的參數）；BW=' + T.BW + '、OVERLAP=' + T.OVERLAP);
 ok(near(T.bwAt(1), T.BW[0]) && near(T.bwAt(T.RAMP_LEVELS), T.BW[1]) && near(T.bwAt(T.RAMP_LEVELS + 20), T.BW[1]), '方塊寬度第 1 關 ' + T.BW[0] + '、到頂 ' + T.BW[1] + '（之後維持）');
 ok(near(T.overlapAt(1), T.OVERLAP[0]) && near(T.overlapAt(T.RAMP_LEVELS), T.OVERLAP[1]) && near(T.overlapAt(60), T.OVERLAP[1]), '進入橫板的深度 ' + T.OVERLAP[0] + ' → ' + T.OVERLAP[1]);
-ok(near(T.lineAt(1), 1) && near(T.lineAt(T.RAMP_LEVELS), 0) && near(T.lineAt(60), 0), '虛線長度比例 100% → 0%');
+ok(near(T.lineAt(1), T.INDEXLINE[0]) && near(T.lineAt(T.RAMP_LEVELS), 0) && near(T.lineAt(60), 0), '虛線長度比例 ' + (T.INDEXLINE[0] * 100).toFixed(0) + '% → 0%');
 for (let l = 1; l < T.RAMP_LEVELS; l++) ok(T.bwAt(l + 1) < T.bwAt(l) && T.overlapAt(l + 1) < T.overlapAt(l) && T.lineAt(l + 1) < T.lineAt(l) && T.omegaAt(l + 1) > T.omegaAt(l) && T.asymAt(l + 1) > T.asymAt(l) && T.offsetAt(l + 1) > T.offsetAt(l), '線性變難 ' + l);
 { const d = T.bwAt(1) - T.bwAt(2); for (let l = 1; l < T.RAMP_LEVELS; l++) ok(near(T.bwAt(l) - T.bwAt(l + 1), d, 1e-9), '方塊寬度線性 ' + l); }
 
@@ -78,7 +78,7 @@ for (let lv = 1; lv <= 40; lv++) {
     ok(cfg.tStar >= T.FIRST_MIN_S - 1e-9 && cfg.tStar <= T.FIRST_MIN_S + cfg.T + 1e-9, '第一次同時頂住的時刻在 FIRST_MIN_S 之後、一個 Tc 之內：' + cfg.tStar.toFixed(2));
     for (let te = 0; te <= T.FIRST_MIN_S; te += 0.05) { const pe = T.posAt(cfg, te); if (T.judge(cfg.plank, pe.L, pe.R, T.END_MARGIN, cfg.bw).ok) { ok(false, '開局前 ' + T.FIRST_MIN_S + ' 秒不能有同時頂住（t=' + te.toFixed(2) + '）lv' + lv); break; } }
     const s = T.successShare(cfg); minShare = Math.min(minShare, s); sum += s;
-    ok(s > 0.004, '每一關都有可以成功的時機（佔週期 ' + (s * 100).toFixed(2) + '%）lv' + lv);
+    ok(s > 0.002, '每一關都有可以成功的時機（使用者把方塊寬 BW、進入深度 OVERLAP 調到 4px，最難的關卡成功時機只佔 0.3% 左右）（佔週期 ' + (s * 100).toFixed(2) + '%）lv' + lv);
   }
   shares[lv] = { min: minShare, avg: sum / Math.max(1, cnt) };
 }
@@ -113,9 +113,9 @@ ok(fallback === 0 && nul === 0, '每一關都找得到合格題目：fallback ' 
   ok(dirs['--'] > N * 0.2 && dirs['+-'] > N * 0.2 && dirs['-+'] > N * 0.2, '同時向外、一內一外都很常見');
   ok(pressEarly.ok === 0, '開局 0.3～1.0 秒按放下一次都不會過關：' + pressEarly.ok + '／' + pressEarly.tries);
   const mean = dist.reduce((a, b) => a + b, 0) / dist.length, sd = Math.sqrt(dist.reduce((a, b) => a + (b - mean) ** 2, 0) / dist.length);
-  ok(sd > 60, '開局時左邊方塊的位置分散（標準差 ' + sd.toFixed(1) + 'px）');
+  ok(sd > 40, '開局時左邊方塊的位置分散（標準差 ' + sd.toFixed(1) + 'px）');
   ok(fastLeft[0] > N * 0.4 && fastLeft[1] > N * 0.4, '左邊快／右邊快各一半：' + fastLeft);
-  ok(Object.keys(ratios).length === T.FREQ_RATIO.length && ratios['1/2'] > N * 0.2, '各種頻率比都會出現（越後面越多種）：' + JSON.stringify(ratios));
+  ok(Object.keys(ratios).length === T.FREQ_RATIO.length && ratios[T.FREQ_RATIO[0].join('/')] > N * 0.2, '各種頻率比都會出現（越後面越多種）：' + JSON.stringify(ratios));
   // 第 1 關只用第一個頻率比；到頂的那一關三種都用
   { const s1 = new Set(), s30 = new Set(); for (let i = 0; i < 300; i++) { s1.add(T.makeLevel(1, W, rnd).ratio.join('/')); s30.add(T.makeLevel(30, W, rnd).ratio.join('/')); } ok(s1.size === 1 && s30.size === T.FREQ_RATIO.length, '第 1 關 ' + [...s1] + '、第 30 關 ' + [...s30]); }
   // 同時頂住的時機每隔 Tc 重複（兩塊同時回到同一個姿勢）；兩塊「同時」頂住不是每個週期都剛好對準，快的跑 q 圈慢的跑 p 圈

@@ -262,7 +262,9 @@
             my.after(500, play);
         }
 
-        round(1);
+        /* V1.34.0：從「個人最佳關卡 − 5」開始（沒玩過就是第 1 關），見 kit.enter（reaction_kit.js） */
+
+        kit.enter(ID, round);
     }
 
     /* 遊戲身分證 */
