@@ -1,0 +1,452 @@
+/* ═══════════════════════════════════════════════════════════════════
+   sw.js — Service Worker：讓「記憶模糊」可以離線玩
+   ───────────────────────────────────────────────────────────────────
+   【做法：網路優先、離線才用快取】
+   · 有網路：照舊從網路拿最新檔案（所以「改版本號就會拿到新檔案」的老規矩不變），拿到後順手更新手機裡的備份。
+   · 沒網路（或網路太慢，超過 NET_TIMEOUT_MS 毫秒）：用手機裡備份的檔案。
+   為什麼不用「快取優先」：本專案靠 version.json 的版本號控制更新（js/boot.js 在每個檔名後面加 ?v=版本號），
+   快取優先的話，忘了重新產生下面的清單就會永遠卡在舊版，「明明改了程式、畫面卻沒變」會變得更嚴重。
+   網路優先就沒有這個風險；清單只負責「保證一次就把全部檔案存好」。
+
+   【比對快取時一律忽略 ?query】boot.js 載入檔案時會加 ?t=時間戳（boot.js 自己）和 ?v=版本號（其他檔案），
+   網址每次都不一樣，所以快取的 key 一律是「去掉 ? 之後的網址」（keyOf）。reaction.html?game=speed 也是同一份 reaction.html。
+
+   【版本一換就整批更新】version.json 是「網路優先」讀進來的；如果它跟備份的不一樣，代表遊戲更新了，
+   就在背景把整份清單重新抓一次（refreshAll），這樣離線時各頁的檔案不會一部分新、一部分舊。
+
+   【什麼會被攔】只有「同網域、GET、不在 NO_CACHE_DIRS 裡」的請求，加上 Google Fonts（字型盡量存起來，離線時外觀才一致）。
+   Supabase（排行榜）等其他網域的請求完全不碰；admin/、test/ 等開發用的資料夾也不碰。
+
+   【維護】PRECACHE（下面兩行標記之間）是自動產生的：新增／刪除檔案之後執行
+       node test/pwa/gen_sw.cjs --write
+   test/reaction/t_pwa.js 會檢查它有沒有跟專案同步。CACHE 名字只有在「快取策略改了」才需要手動換掉（會清掉舊的）。
+   ═══════════════════════════════════════════════════════════════════ */
+
+'use strict';
+
+var CACHE = 'fm-cache-v1';
+var NET_TIMEOUT_MS = 4000;                 /* 網路超過這麼久沒回應，而且手機裡有備份，就先用備份 */
+var NO_CACHE_DIRS = ['admin/', 'test/', 'note/', 'supabase/', '.claude/'];
+var NO_CACHE_FILES = ['sw.js', 'screen_adaptive.html', 'screen_adaptive.css', 'screen_adaptive.js', 'README.md'];
+var FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
+
+/* PRECACHE-BEGIN（自動產生，請勿手改） */
+var PRECACHE = [
+    'css/dialog.css',
+    'css/leaderboard.css',
+    'css/menu.css',
+    'css/quiz.css',
+    'css/rating.css',
+    'css/reaction.css',
+    'css/reaction2.css',
+    'css/reaction3.css',
+    'css/reaction4.css',
+    'css/reaction5.css',
+    'css/stage.css',
+    'css/theme.css',
+    'css/world.css',
+    'icons/apple-touch-icon.png',
+    'icons/icon-192.png',
+    'icons/icon-512.png',
+    'icons/icon-maskable-512.png',
+    'images/Impossible.png',
+    'img/reaction/alignchar.png',
+    'img/reaction/area.png',
+    'img/reaction/backnum.png',
+    'img/reaction/balloon.png',
+    'img/reaction/basket.png',
+    'img/reaction/blindcircle.png',
+    'img/reaction/bounce.png',
+    'img/reaction/bread.png',
+    'img/reaction/bridge.png',
+    'img/reaction/cake.png',
+    'img/reaction/candy.png',
+    'img/reaction/catroad.png',
+    'img/reaction/chequeamt.png',
+    'img/reaction/chicks.png',
+    'img/reaction/clearer.png',
+    'img/reaction/coins.png',
+    'img/reaction/colorrecall.png',
+    'img/reaction/copycurve.png',
+    'img/reaction/cups.png',
+    'img/reaction/curves.png',
+    'img/reaction/dicechange.png',
+    'img/reaction/diff.png',
+    'img/reaction/drop.png',
+    'img/reaction/dualtask.png',
+    'img/reaction/euler.png',
+    'img/reaction/fadee.png',
+    'img/reaction/farpair.png',
+    'img/reaction/fastblink.png',
+    'img/reaction/fillop.png',
+    'img/reaction/flashlight.png',
+    'img/reaction/followme.png',
+    'img/reaction/fracduel.png',
+    'img/reaction/fridge.png',
+    'img/reaction/ghostleg.png',
+    'img/reaction/ghostleg2.png',
+    'img/reaction/glyphspin.png',
+    'img/reaction/halfchar.png',
+    'img/reaction/halfcrowd.png',
+    'img/reaction/halfvol.png',
+    'img/reaction/handsmeet.png',
+    'img/reaction/hangpic.png',
+    'img/reaction/heartbeat.png',
+    'img/reaction/hiddendigit.png',
+    'img/reaction/illusion.png',
+    'img/reaction/impossible.png',
+    'img/reaction/invoice.png',
+    'img/reaction/isequal.png',
+    'img/reaction/landolt.png',
+    'img/reaction/lights.png',
+    'img/reaction/lightsout.png',
+    'img/reaction/matchcolor.png',
+    'img/reaction/mathcheck.png',
+    'img/reaction/maxexpr.png',
+    'img/reaction/mergechar.png',
+    'img/reaction/mirror.png',
+    'img/reaction/mixcolor.png',
+    'img/reaction/nthshape.png',
+    'img/reaction/numline.png',
+    'img/reaction/oddsock.png',
+    'img/reaction/orderops.png',
+    'img/reaction/paint.png',
+    'img/reaction/passersby.png',
+    'img/reaction/pattern.png',
+    'img/reaction/pendulum.png',
+    'img/reaction/pillbox.png',
+    'img/reaction/pipes.png',
+    'img/reaction/polyrhythm.png',
+    'img/reaction/pour.png',
+    'img/reaction/price.png',
+    'img/reaction/primetrap.png',
+    'img/reaction/racefirst.png',
+    'img/reaction/rainbow.png',
+    'img/reaction/remainder.png',
+    'img/reaction/rightangle.png',
+    'img/reaction/rps.png',
+    'img/reaction/same.png',
+    'img/reaction/samelen.png',
+    'img/reaction/scallion.png',
+    'img/reaction/schulte.png',
+    'img/reaction/scratch.png',
+    'img/reaction/seenit.png',
+    'img/reaction/seq.png',
+    'img/reaction/setclock.png',
+    'img/reaction/seven.png',
+    'img/reaction/shapes.png',
+    'img/reaction/sneakmove.png',
+    'img/reaction/speed.png',
+    'img/reaction/spingap.png',
+    'img/reaction/spinpick.png',
+    'img/reaction/spot.png',
+    'img/reaction/stackup.png',
+    'img/reaction/stamp.png',
+    'img/reaction/sticks.png',
+    'img/reaction/sudokuone.png',
+    'img/reaction/sum100.png',
+    'img/reaction/tapback.png',
+    'img/reaction/teacher.png',
+    'img/reaction/tearcal.png',
+    'img/reaction/timeafter.png',
+    'img/reaction/timestable.png',
+    'img/reaction/tissue.png',
+    'img/reaction/triple100.png',
+    'img/reaction/twinsock.png',
+    'img/reaction/twobags.png',
+    'img/reaction/watchoff.png',
+    'img/reaction/whofirst.png',
+    'img/reaction/whosaid.png',
+    'img/reaction/witness.png',
+    'img/reaction/wrongline.png',
+    'index.html',
+    'js/boot.js',
+    'js/dialog.js',
+    'js/ghostleg_core.js',
+    'js/leaderboard.js',
+    'js/leaderboard_ui.js',
+    'js/menu.js',
+    'js/pwa.js',
+    'js/quiz.js',
+    'js/quiz_dining.js',
+    'js/quiz_gen.js',
+    'js/quiz_happyBirthday.js',
+    'js/quiz_health.js',
+    'js/quiz_pools.js',
+    'js/quiz_travel.js',
+    'js/rating.js',
+    'js/reaction.js',
+    'js/reaction_alignchar.js',
+    'js/reaction_area.js',
+    'js/reaction_backnum.js',
+    'js/reaction_balloon.js',
+    'js/reaction_basket.js',
+    'js/reaction_blindcircle.js',
+    'js/reaction_bounce.js',
+    'js/reaction_bread.js',
+    'js/reaction_bridge.js',
+    'js/reaction_cake.js',
+    'js/reaction_candy.js',
+    'js/reaction_catroad.js',
+    'js/reaction_chequeamt.js',
+    'js/reaction_chicks.js',
+    'js/reaction_clearer.js',
+    'js/reaction_coins.js',
+    'js/reaction_colorrecall.js',
+    'js/reaction_copycurve.js',
+    'js/reaction_core.js',
+    'js/reaction_cups.js',
+    'js/reaction_curves.js',
+    'js/reaction_dicechange.js',
+    'js/reaction_diff.js',
+    'js/reaction_drop.js',
+    'js/reaction_dualtask.js',
+    'js/reaction_euler.js',
+    'js/reaction_fadee.js',
+    'js/reaction_farpair.js',
+    'js/reaction_fastblink.js',
+    'js/reaction_fillop.js',
+    'js/reaction_flashlight.js',
+    'js/reaction_followme.js',
+    'js/reaction_fracduel.js',
+    'js/reaction_fridge.js',
+    'js/reaction_ghostleg.js',
+    'js/reaction_ghostleg2.js',
+    'js/reaction_glyphspin.js',
+    'js/reaction_halfchar.js',
+    'js/reaction_halfcrowd.js',
+    'js/reaction_halfvol.js',
+    'js/reaction_handsmeet.js',
+    'js/reaction_hangpic.js',
+    'js/reaction_heartbeat.js',
+    'js/reaction_hiddendigit.js',
+    'js/reaction_illusion.js',
+    'js/reaction_impossible.js',
+    'js/reaction_invoice.js',
+    'js/reaction_isequal.js',
+    'js/reaction_kit.js',
+    'js/reaction_kit2.js',
+    'js/reaction_kit3.js',
+    'js/reaction_landolt.js',
+    'js/reaction_lights.js',
+    'js/reaction_lightsout.js',
+    'js/reaction_matchcolor.js',
+    'js/reaction_mathcheck.js',
+    'js/reaction_maxexpr.js',
+    'js/reaction_mergechar.js',
+    'js/reaction_mirror.js',
+    'js/reaction_mixcolor.js',
+    'js/reaction_nthshape.js',
+    'js/reaction_numline.js',
+    'js/reaction_oddsock.js',
+    'js/reaction_orderops.js',
+    'js/reaction_paint.js',
+    'js/reaction_passersby.js',
+    'js/reaction_pattern.js',
+    'js/reaction_pendulum.js',
+    'js/reaction_pillbox.js',
+    'js/reaction_pipes.js',
+    'js/reaction_polyrhythm.js',
+    'js/reaction_pour.js',
+    'js/reaction_price.js',
+    'js/reaction_primetrap.js',
+    'js/reaction_racefirst.js',
+    'js/reaction_rainbow.js',
+    'js/reaction_remainder.js',
+    'js/reaction_rightangle.js',
+    'js/reaction_rps.js',
+    'js/reaction_same.js',
+    'js/reaction_samelen.js',
+    'js/reaction_scallion.js',
+    'js/reaction_schulte.js',
+    'js/reaction_scratch.js',
+    'js/reaction_seenit.js',
+    'js/reaction_seq.js',
+    'js/reaction_setclock.js',
+    'js/reaction_seven.js',
+    'js/reaction_shapes.js',
+    'js/reaction_sneakmove.js',
+    'js/reaction_speed.js',
+    'js/reaction_spingap.js',
+    'js/reaction_spinpick.js',
+    'js/reaction_spot.js',
+    'js/reaction_stackup.js',
+    'js/reaction_stamp.js',
+    'js/reaction_sticks.js',
+    'js/reaction_sudokuone.js',
+    'js/reaction_sum100.js',
+    'js/reaction_tapback.js',
+    'js/reaction_teacher.js',
+    'js/reaction_tearcal.js',
+    'js/reaction_timeafter.js',
+    'js/reaction_timestable.js',
+    'js/reaction_tissue.js',
+    'js/reaction_triple100.js',
+    'js/reaction_twinsock.js',
+    'js/reaction_twobags.js',
+    'js/reaction_watchoff.js',
+    'js/reaction_whofirst.js',
+    'js/reaction_whosaid.js',
+    'js/reaction_witness.js',
+    'js/reaction_wrongline.js',
+    'js/scroller.js',
+    'js/sfx.js',
+    'js/share.js',
+    'js/similar_chars.js',
+    'js/stage.js',
+    'js/ui.js',
+    'js/world/config.js',
+    'js/world/core.js',
+    'js/world/hud.js',
+    'js/world/kit.js',
+    'js/world/scenes.js',
+    'js/world/story.js',
+    'manifest.webmanifest',
+    'quiz.html',
+    'reaction.html',
+    'vendor/qrcode.min.js',
+    'vendor/three.min.js',
+    'version.json',
+    'world.html'
+];
+/* PRECACHE-END */
+
+var SCOPE = self.registration.scope;       /* 例如 https://xxx.github.io/FadingMemory/ */
+
+function scoped(rel) { return new URL(rel, SCOPE).href; }
+
+/* 快取的 key：同網域的網址去掉 ?query 與 #hash；資料夾網址（…/FadingMemory/）當成 index.html */
+function keyOf(url) {
+    var u = new URL(url);
+    u.search = '';
+    u.hash = '';
+    if (/\/$/.test(u.pathname)) u.pathname += 'index.html';
+    return u.href;
+}
+
+/* 這個同網域的網址要不要由我們處理（在 scope 底下、不是開發用的資料夾或檔案） */
+function handled(url) {
+    var u = new URL(url);
+    if (u.origin !== self.location.origin) return false;
+    var base = new URL(SCOPE);
+    if (u.pathname.indexOf(base.pathname) !== 0) return false;
+    var rel = u.pathname.slice(base.pathname.length);
+    for (var i = 0; i < NO_CACHE_DIRS.length; i++) if (rel.indexOf(NO_CACHE_DIRS[i]) === 0) return false;
+    return NO_CACHE_FILES.indexOf(rel) < 0;
+}
+
+function lookup(key) {
+    return caches.open(CACHE).then(function (c) { return c.match(key, { ignoreVary: true }); });
+}
+
+/* 存進備份：只存「成功、沒被轉址、同一份內容（ETag 一樣）就不重存」的回應，省掉每次開頁面都重寫一遍幾 MB 的檔案 */
+function store(key, res) {
+    if (!res || !res.ok || res.redirected || res.type === 'opaque') return Promise.resolve();
+    return caches.open(CACHE).then(function (c) {
+        return c.match(key, { ignoreVary: true }).then(function (old) {
+            var tag = res.headers.get('etag');
+            if (old && tag && old.headers.get('etag') === tag) return;
+            return c.put(key, res);
+        });
+    });
+}
+
+/* 把整份清單重新抓一次存起來（安裝時、遊戲更新時）；用 no-cache＝每個檔案都先問伺服器有沒有變（沒變就是很小的 304）。
+   version.json 一定最後才存：它是「備份是不是最新」的記號，只要有任何一個檔案沒抓到，它就維持舊的，
+   下次開頁面發現版本不一樣，就會再整批試一次。 */
+var refreshing = null;
+function refreshAll() {
+    if (refreshing) return refreshing;
+    var one = function (c, rel) {
+        var url = scoped(rel);
+        return fetch(new Request(url, { cache: 'no-cache' })).then(function (res) {
+            if (!res.ok) throw new Error(rel + ' ' + res.status);
+            return c.put(keyOf(url), res);
+        });
+    };
+    refreshing = caches.open(CACHE).then(function (c) {
+        var rest = PRECACHE.filter(function (rel) { return rel !== 'version.json'; });
+        return Promise.all(rest.map(function (rel) { return one(c, rel); })).then(function () { return one(c, 'version.json'); });
+    }).then(function () { refreshing = null; }, function (e) { refreshing = null; throw e; });
+    return refreshing;
+}
+
+/* 讓 Service Worker 活到「存備份」做完。事件已經結束才呼叫 waitUntil 會丟例外（網路很慢、先用了備份，
+   後來網路才回來的情況），那就直接做、不等了（最多是這次沒存到，下次再存）。 */
+function keepAlive(event, p) {
+    p = p.catch(function () { });
+    try { event.waitUntil(p); } catch (e) { }
+}
+
+/* 網路優先：網路先拿；失敗、或超過 NET_TIMEOUT_MS 而手機裡有備份，就用備份。
+   超時時網路請求不會中斷，回來之後照樣更新備份（下次就是新的）。 */
+function networkFirst(event, req, key) {
+    var timer;
+    var net = fetch(req).then(function (res) {
+        clearTimeout(timer);
+        keepAlive(event, afterFetch(key, res.clone()));
+        return res;
+    }, function (e) {
+        clearTimeout(timer);
+        throw e;
+    });
+    var slow = new Promise(function (resolve) {
+        timer = setTimeout(function () { resolve(lookup(key)); }, NET_TIMEOUT_MS);
+    });
+    return Promise.race([
+        net.catch(function () { return lookup(key); }),
+        slow.then(function (hit) { return hit || net; })
+    ]).then(function (res) { return res || Response.error(); });
+}
+
+/* 拿到網路上的新檔案之後：一般檔案存起來；version.json 要先比對，不一樣就整批更新（它自己會在最後一起被存進去） */
+function afterFetch(key, res) {
+    if (!/\/version\.json$/.test(key)) return store(key, res);
+    if (!res.ok) return Promise.resolve();
+    return Promise.all([res.text(), lookup(key).then(function (old) { return old ? old.text() : null; })]).then(function (t) {
+        if (t[1] === t[0]) return;
+        return refreshAll().catch(function () { /* 抓不全就算了，備份裡的 version.json 沒更新，下次開啟會再試 */ });
+    });
+}
+
+/* 字型：Google Fonts 的 CSS 網路優先、字型檔（woff2）快取優先；都用 CORS 模式抓，才存得起來（不存「不透明」回應，它在 Chrome 會佔 7MB 額度） */
+function fonts(event) {
+    var req = event.request;
+    var url = req.url;
+    var isCss = new URL(url).hostname === 'fonts.googleapis.com';
+    var cors = new Request(url, { mode: 'cors', credentials: 'omit' });
+    var get = function () {
+        return fetch(cors).then(function (res) {
+            if (res.ok) {
+                var copy = res.clone();
+                keepAlive(event, caches.open(CACHE).then(function (c) { return c.put(url, copy); }));
+            }
+            return res;
+        });
+    };
+    var cached = function () { return caches.open(CACHE).then(function (c) { return c.match(url); }); };
+    if (isCss) return get().catch(function () { return cached().then(function (hit) { return hit || Response.error(); }); });
+    return cached().then(function (hit) { return hit || get().catch(function () { return Response.error(); }); });
+}
+
+self.addEventListener('install', function (event) {
+    /* 安裝時把整份清單存好；任何一個抓不到就安裝失敗，瀏覽器下次開頁面會再試（不會裝出一個缺檔案的 Service Worker） */
+    event.waitUntil(refreshAll().then(function () { return self.skipWaiting(); }));
+});
+
+self.addEventListener('activate', function (event) {
+    event.waitUntil(
+        caches.keys().then(function (names) {
+            return Promise.all(names.filter(function (n) { return n !== CACHE; }).map(function (n) { return caches.delete(n); }));
+        }).then(function () { return self.clients.claim(); })
+    );
+});
+
+self.addEventListener('fetch', function (event) {
+    var req = event.request;
+    if (req.method !== 'GET') return;
+    var host = new URL(req.url).hostname;
+    if (FONT_HOSTS.indexOf(host) >= 0) { event.respondWith(fonts(event)); return; }
+    if (!handled(req.url)) return;
+    event.respondWith(networkFirst(event, req, keyOf(req.url)));
+});

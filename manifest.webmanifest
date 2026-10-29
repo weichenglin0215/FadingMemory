@@ -1,0 +1,18 @@
+{
+  "id": "./",
+  "name": "記憶模糊",
+  "short_name": "記憶模糊",
+  "description": "讀一次紙條，憑記憶辦妥所有事情。記憶力練習小遊戲。",
+  "lang": "zh-TW",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FBF3D9",
+  "theme_color": "#FBF3D9",
+  "categories": ["games", "education"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

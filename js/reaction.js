@@ -9,7 +9,7 @@
      流程多一步：說明彈窗按「下一步」→ 世界前 30 名彈窗（js/leaderboard_ui.js）→ 按「開始挑戰」才進遊戲；
      榜單在進場那一刻就開始背景下載（Leaderboard.prefetch），看說明的時候就已經抓好了。
      右上角「?」重看說明時多一顆「世界排行榜」按鈕，隨時可以再看榜。
-   · 左上角「返回」永遠回主選單；右上角「?」可以隨時重看規則；「喇叭」開關音效。
+   · 左上角「返回」回到主選單並直接打開「選一個想玩的遊戲」列表（index.html?games=1）；右上角「?」可以隨時重看規則；「喇叭」開關音效。
    · 音效（js/sfx.js）統一在這裡接線：
        - 整個頁面的 pointerdown／pointerup／click／keydown 都呼叫 Sfx.unlock()
          （瀏覽器規定要有使用者手勢才能出聲）。
@@ -101,7 +101,9 @@
         barSound = document.getElementById('bar-sound');
 
         barBack.innerHTML = UI.icon('back') + '<span>返回</span>';
-        barBack.addEventListener('click', function () { Sfx.stopBgm(); location.href = 'index.html'; });
+        /* 「返回」回到主選單，而且直接打開「選一個想玩的遊戲」列表（index.html?games=1，js/menu.js 讀這個參數），
+           玩家通常是想換一款遊戲玩，不用再多按一次「秒反應」 */
+        barBack.addEventListener('click', function () { Sfx.stopBgm(); location.href = 'index.html?games=1'; });
         barHelp.addEventListener('click', function () {
             Sfx.play('click');
             showRule(function () { }, hasBoard ? { okText: '知道了', softSound: true, boardButton: true } : null);

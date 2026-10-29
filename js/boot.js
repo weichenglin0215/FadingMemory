@@ -7,8 +7,9 @@
       版本號沒變，就照常用快取（省流量、開得快）。
    3. boot.js 本身由 HTML 用時間戳載入，所以它永遠是最新的。
    4. 用 file:// 雙擊開啟時讀不到 version.json，就每次都用新的時間戳（本機檔案本來就沒有快取問題）。
+   5. 註冊 sw.js（Service Worker）讓遊戲能離線玩，並把網址上的 ?openExternalBrowser=1 拿掉（見 registerSw／cleanShareParam）。
    ★ 發佈新版本：改 version.json 的 version（並在 README 的「版本更新紀錄」寫一筆）。
-   ★ 新增檔案：加到下面的 PAGES 清單。
+   ★ 新增檔案：加到下面的 PAGES 清單，然後執行 node test/pwa/gen_sw.cjs --write 更新 sw.js 的離線清單。
    ═══════════════════════════════════════════════════════════════════ */
 
 /* 整個檔案包在 (function(global){ ... })(window) 這個「立即執行函式」裡：
@@ -39,7 +40,7 @@
     var PAGES = {
         menu: {
             css: BASE_CSS.concat(['css/dialog.css', 'css/rating.css', 'css/menu.css']),
-            js: BASE_JS.concat(['js/scroller.js', 'js/dialog.js', 'js/leaderboard.js', 'js/rating.js', 'js/menu.js', 'js/share.js'])
+            js: BASE_JS.concat(['js/scroller.js', 'js/dialog.js', 'js/leaderboard.js', 'js/rating.js', 'js/menu.js', 'js/pwa.js', 'js/share.js'])
         },
         reaction: {
             css: BASE_CSS.concat(['css/dialog.css', 'css/reaction.css', 'css/reaction2.css', 'css/reaction3.css', 'css/reaction4.css', 'css/reaction5.css', 'css/leaderboard.css', 'css/rating.css']),
@@ -157,6 +158,35 @@
         document.body ? document.body.appendChild(box) : document.addEventListener('DOMContentLoaded', function () { document.body.appendChild(box); });
     }
 
+    /* 分享出去的連結帶有 ?openExternalBrowser=1（給 LINE 看的：請改用手機瀏覽器開，見 js/share.js）。
+       LINE 轉去瀏覽器之後，這個參數就沒用了，留在網址列只會被存進書籤、加到主畫面時也跟著存進去，
+       所以進站第一件事就是用 replaceState 把它拿掉（不會重新載入頁面，其他參數例如 ?game= 不受影響）。 */
+    function cleanShareParam() {
+        try {
+            var u = new URL(global.location.href);
+            if (!u.searchParams.has('openExternalBrowser')) return;
+            u.searchParams.delete('openExternalBrowser');
+            global.history.replaceState(null, '', u.pathname + u.search + u.hash);
+        } catch (e) { }
+    }
+
+    /* 註冊 Service Worker（sw.js）：之後這個網站的檔案會備份在手機裡，沒網路也能開（做法見 sw.js 的說明）。
+       · 等頁面 load 完才註冊，不跟遊戲檔案搶頻寬；
+       · updateViaCache:'none'＝檢查 sw.js 有沒有更新時，不吃瀏覽器的 HTTP 快取（GitHub Pages 的檔案預設會被快取 10 分鐘）；
+       · file:// 雙擊開啟、不支援的瀏覽器（舊瀏覽器、網址不是 https 也不是 localhost）直接略過，遊戲照常運作；
+       · 註冊結果存在 global.FM_SW（ServiceWorkerRegistration），選單切回來時用它檢查更新（見下面 visibilitychange）。 */
+    function registerSw() {
+        var nav = global.navigator;
+        if (!nav || !('serviceWorker' in nav) || global.location.protocol === 'file:') return;
+        var go = function () {
+            nav.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (reg) { global.FM_SW = reg; }, function () { });
+        };
+        if (document.readyState === 'complete') go(); else global.addEventListener('load', go);
+    }
+
+    cleanShareParam();
+    registerSw();
+
     /* ═══ 主流程：這個檔案真正開始「做事」的地方 ═══
        1. 先讀版本號（或用時間戳記代替）。
        2. 把版本號記到 global.FM_VERSION，讓其他頁面（例如主選單想顯示
@@ -201,6 +231,8 @@
     if (pageName === 'menu') {
         document.addEventListener('visibilitychange', function () {
             if (document.hidden || !global.FM_VERSION) return;
+            /* 順便問一下 sw.js 有沒有新版（瀏覽器自己一天才查一次；清單變了才需要，平常是同一份） */
+            if (global.FM_SW && global.FM_SW.update) global.FM_SW.update().catch(function () { });
             fetchVersion().then(function (info) {
                 if (info && info.version && String(info.version) !== global.FM_VERSION.version) location.reload();
             });

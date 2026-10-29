@@ -98,12 +98,19 @@
 - 版本號在 `version.json`。每次打開頁面，`js/boot.js` 會（不經快取）讀這個檔，並把所有 CSS／JS 加上 `?v=版本號` 載入。
 - **發佈新版本時：把 `version.json` 的 `version` 加一，並在下方「版本更新紀錄」寫一筆。** 玩家下次打開就會自動下載最新檔案；停在主選單的玩家切回頁面時會自動重新整理。
 - 新增 CSS／JS 檔案時，要加到 `js/boot.js` 的 `PAGES` 清單。
+- **離線與「加到主畫面」（V1.34.0 起）**：`sw.js`（Service Worker）把整個遊戲存在手機裡，沒網路也能玩；`manifest.webmanifest`＋`icons/` 讓玩家能加到主畫面、像 App 一樣開。策略是「**網路優先**」：有網路就照舊拿最新檔案（所以上面「改版本號就拿到新檔案」的規矩不變），沒網路（或超過 4 秒沒回應）才用手機裡的備份；快取的 key 一律去掉 `?v=`／`?t=`。`version.json` 的內容一變，Service Worker 就在背景把整份清單重抓一次。
+- **新增／刪除／改名任何 CSS、JS、圖片檔之後，要執行 `node test/pwa/gen_sw.cjs --write`**（更新 `sw.js` 裡自動產生的離線清單 `PRECACHE`；清單來源是 `js/boot.js` 的 `PAGES`＋`img/reaction/*.png`＋少數固定檔案）。忘了的話 `node test/reaction/t_pwa.js` 會失敗；就算漏了，玩家在線上開過一次那一頁，該頁的檔案也會被備份起來。
+- 離線時只有排行榜／評價連不上（程式本來就會用先前存在 localStorage 的榜單、成績排隊等有網路再送）；Google Fonts 字型會在第一次載入時順便存起來，沒存到的字退回系統字型。
+- **分享連結**：`js/share.js` 的 QR Code、複製連結、「分享出去」都帶 `?openExternalBrowser=1`（LINE 看到會改用手機瀏覽器開，不用內建瀏覽器）；`js/boot.js` 進站後把這個參數從網址列拿掉。舊的 QR Code／連結沒有這個參數，所以 `js/pwa.js` 另外偵測 LINE／臉書／Instagram／微信的內建瀏覽器，跳提示請玩家改用瀏覽器開。
+- **網址不要隨便換**：PWA、localStorage、Service Worker 都綁網址的 origin；日後從 `weichenglin0215.github.io` 搬到別的網域，所有人要重新加到主畫面、成績記錄（玩家代號、最佳紀錄）也歸零。
 
 ## 檔案結構
 
 ```
 index.html / quiz.html / world.html / reaction.html   四個頁面（主選單／明明還記得.../出去走走／秒反應）
 version.json                           版本號（自動更新用）
+manifest.webmanifest / icons/          PWA 設定與 App 圖示（192／512／maskable／apple-touch-icon）＋貼連結時的分享預覽圖 og.png（由 test/pwa/make_pwa_icons.mjs 產生）
+sw.js                                  Service Worker：離線也能玩（網路優先、離線才用備份；PRECACHE 清單由 test/pwa/gen_sw.cjs 產生）
 css/theme.css                          ★ 風格變數＋共用元件
 css/stage.css                          舞台規範（2D／3D 圖層、觸控規則、100dvh 高度探針）
 css/menu.css, quiz.css, world.css      各頁面版面
@@ -115,7 +122,8 @@ js/ui.js                               共用小工具（自動縮字、分頁�
 js/waterflow.js                        水流特效（GPU 流體模擬；1.7.0 起停用、保留備用）
 js/menu.js                             主選單（含「明明還記得...」主軸挑選彈窗、「秒反應」全螢幕遊戲挑選彈窗：返回、可捲動的 3 欄格子、直式分類頁籤、最近玩過）
 js/scroller.js                         手指／滑鼠拖曳＋慣性捲動共用元件（遊戲列表與世界排行榜共用，物理純函式有測試）
-js/share.js                            主選單右上角的分享按鈕（QR Code 彈窗，掃碼開啟 GitHub Pages 網址）
+js/share.js                            主選單右上角的分享按鈕（QR Code 彈窗，掃碼開啟 GitHub Pages 網址；連結帶 ?openExternalBrowser=1；QR 程式庫用 vendor/qrcode.min.js；手機上多一顆「加到手機主畫面」）
+js/pwa.js                              主選單的「別讓玩家找不到遊戲」：LINE／臉書等內建瀏覽器的提示、依平台（Android 一鍵安裝／iPhone 教學）的「加到主畫面」說明、第 3 次回到選單才自動提示一次
 js/sfx.js                              共用音效模組（8-bit 風格短音效＋結算背景音樂，Web Audio 合成；靜音狀態記在 localStorage）
 js/reaction_core.js                    「秒反應」共用引擎（小遊戲登記清單、最佳紀錄存取；不含任何遊戲內容）
 js/reaction_kit.js                     「秒反應」共用工具（一局的生命週期 kit.round、線性難度 kit.ramp、SVG、鏡頭推進、結算卡片、按住／放開…）
@@ -184,8 +192,10 @@ js/world/scenes.js                     各個 3D 場景
 js/world/story.js                      「出去走走」流程（紙條、檢查點、勝利）
 test/reaction/                         「秒反應」純函式測試（node test/reaction/run_all.js 一次跑完全部，含 t_leaderboard.js）；瀏覽器端驗證（headless Chrome／Edge，不用裝套件）：run_browser.mjs（G.debug 玩到結算、操作提示檢查）、input_tests.mjs（真的送滑鼠事件操作 23 款）、make_icons.mjs（拍選單縮圖）、**menu_check.mjs**（選單全螢幕版面、頁籤、拖曳慣性、觸控、最近）、**stage_check.mjs**（舞台縮放：各種視窗大小、iPad、模擬壞數字／鍵盤／漏發事件）、**rules_check.mjs**（全部 109 款玩法說明的排版與重點樣式、卡片放得進舞台）
 test/leaderboard/                      世界排行榜資料庫腳本測試（PGlite 在本機跑真的 PostgreSQL，另外 npm install）；gen_games_sql.cjs 從 50 款遊戲檔案產生 MF_games 登記列；瀏覽器驗證小工具：fake_backend.js（假資料庫，全部遊戲通用）、browser_check.js（版面／點擊小工具）、browser_smoke.js（把遊戲放進 iframe 亂點到結算，確認有送榜）
+test/pwa/                              PWA 工具：gen_sw.cjs（產生／檢查 sw.js 的離線清單）、make_pwa_icons.mjs＋icon_art.html（用看不見視窗的 Edge 產生 icons/*.png）；測試是 test/reaction/t_pwa.js（manifest、頁面標籤、分享連結、清單同步、內建瀏覽器偵測、提示時機）與 t_sw.js（Service Worker 行為：離線、逾時、版本更新）
 test/admin/                            玩家意見查閱頁的測試（node test/admin/check_feedback_viewer.mjs：假的 Supabase 伺服器＋看不見視窗的 Chrome，不連真的資料庫）
 vendor/three.min.js                    Three.js r158（MIT 授權）
+vendor/qrcode.min.js                   qrcodejs 1.0.0（MIT 授權，來自 cdnjs，sha512 與 cdnjs 公佈的一致）
 note/FadingMemory企劃書.md              企劃書（給人看）
 note/FadingMemory製作規範.md            製作規範（給 AI／開發者看）
 note/FadingMemory記憶混淆說明.md        記憶為什麼會混淆、出題規則（題目產生器的設計依據）
@@ -197,6 +207,17 @@ screen_adaptive.*                      早期專案的參考檔，遊戲不引�
 
 ## 版本更新紀錄
 
+### V1.34.0（2026-10-29）
+朋友掃 QR Code 或從 LINE 點連結玩過一次，之後找不到連結就再也玩不到；LINE 的內建瀏覽器也不能安裝、成績記錄跟 Safari／Chrome 分開。這一版讓遊戲能「住」在手機上，而且沒網路也能玩。
+
+- **加到主畫面（PWA）**：新增 `manifest.webmanifest`、`icons/`（紙條上「記憶」清楚、「模糊」糊掉的圖示）、四個頁面的 `<head>` 標籤（manifest、apple-touch-icon、theme-color）。Android 用 `beforeinstallprompt` 做一鍵「安裝」；iPhone Safari 只能教玩家「分享 → 加入主畫面」。主選單的分享彈窗多一顆常駐的「加到手機主畫面」（手機、沒安裝、不在內建瀏覽器才有）；玩家**第 3 次回到選單**時自動提示一次，之後 14 天內不再自動跳出（`js/pwa.js`，次數與時間存在 localStorage `fm.pwa.visits`／`fm.pwa.asked`）。已安裝的玩家什麼都不提示，並請求持久儲存。
+- **離線也能玩**：新增 `sw.js`（Service Worker）。「網路優先」：有網路照舊拿最新檔案、順手更新備份；沒網路或超過 4 秒沒回應才用備份，所以「改版本號就拿到新檔案」的規矩不變。快取 key 去掉 `?v=`／`?t=`（`boot.js` 每次的網址都不一樣）；`version.json` 內容一變就整份重抓（最後才存 version.json，抓不全下次再試）。離線清單 `PRECACHE`（276 個檔案，約 5.2 MB）由 `node test/pwa/gen_sw.cjs --write` 從 `boot.js` 的 `PAGES` 自動產生。Google Fonts 的 CSS 與字型檔也盡量存起來（用 CORS 模式，不存「不透明」回應）；Supabase、`admin/`、`test/` 等不攔。
+- **LINE 內建瀏覽器**：分享出去的連結（QR Code、複製連結、「分享出去」）都帶 `?openExternalBrowser=1`，LINE 會改用手機瀏覽器開；畫面上顯示的仍是乾淨網址。`boot.js` 進站後用 `history.replaceState` 把參數拿掉（不會被存進書籤，`?game=` 等其他參數不受影響）。舊的 QR Code／連結沒有這個參數，所以 `pwa.js` 另外偵測 LINE／Facebook／Instagram／微信的內建瀏覽器，跳提示「用瀏覽器開啟比較好」（複製連結＋先在這裡玩，每個工作階段只提醒一次）。
+- **沒有必要的外部資源了**：`qrcodejs`（原本只在點分享時才從 cdnjs 載入）改放 `vendor/qrcode.min.js`（驗證過 sha512 跟 cdnjs 公佈的一致），`share.js` 優先用本機檔、失敗才改試 CDN；CDN 備援只剩 three.js（本機 `vendor/three.min.js` 優先）。四個頁面剩下的外部連線只有 Google Fonts（字型連不上就退回系統字型）。
+- **分享預覽卡**：`index.html` 補上 `description`、`og:*`、`twitter:card`（貼到 LINE／臉書時顯示圖片卡片，不再只有標題加網址）；`icons/og.png` 是 1200×630。
+- **遊戲頁的「返回」回到遊戲列表**：以前左上角「返回」直接回 `index.html`，玩家還要再按一次「秒反應」才能挑別款。現在 `js/reaction.js` 的返回帶 `?games=1` 回主選單，`js/menu.js` 看到就直接打開「選一個想玩的遊戲」列表（上次的頁籤、最近玩的都還在）；列表關掉時用 `replaceState` 拿掉參數，重新整理不會又跳出來。測試：`test/reaction/t_backlist.js`。
+- **測試與工具**：新增 `test/reaction/t_pwa.js`（374 項：manifest、頁面標籤、沒有必要的外部資源、分享連結、清單同步、內建瀏覽器／iOS／Android 偵測、提示時機）、`t_sw.js`（40 項：用假的 caches／fetch 在 Node 裡跑 `sw.js`）、`test/pwa/gen_sw.cjs`、`test/pwa/make_pwa_icons.mjs`。
+- **已知限制**（要用真機驗證）：① LINE 在 iPhone 上用 `openExternalBrowser=1` 會開 Safari 還是「預設瀏覽器（Chrome）」沒有官方說明；② iPhone 上的 Chrome 能不能用 Service Worker（離線）沒有查到定論，所以說明文字對它不保證離線；③ iOS 主畫面 App 的 localStorage 跟 Safari 是分開的，玩家安裝後排行榜的玩家代號、最佳紀錄會歸零（之後可以做「搬家碼」）。
 ### V1.33.1（2026-10-18）
 依你的意見修改「**鬼腳圖減一**」（太簡單：答案永遠是路線正中間那一條；TURNS／HIDE_BEFORE／HIDE_AFTER ≥ 5 就出不了題或只剩兩條橫線；改成點一下就拿掉），並修好「**鬼腳圖**」參數調大時退回「只有 1 條橫線」的問題。成績規格沒變、不用清成績；SQL 跟 V1.33.0 一樣要重新執行（如果還沒執行的話）。
 

@@ -8,7 +8,8 @@
    · V1.25.0：遊戲格子的名稱下面多一排「五星評價」的平均星數（js/rating.js）；打開遊戲彈窗時，如果這位玩家在某些遊戲
      被別人超越（世界前 30 名），會自動跳出「阿嬤都比你厲害」彈窗（彈窗公版 Dlg.open，見下面 checkGrandma）。
    · 選主軸：quiz.html?theme=<id>（js/quiz_gen.js 的 QuizGen.session() 已支援）。
-   · 選遊戲：reaction.html?game=<id>（js/reaction.js 讀這個參數指定要玩哪一個）。 */
+   · 選遊戲：reaction.html?game=<id>（js/reaction.js 讀這個參數指定要玩哪一個）。
+   · 遊戲頁左上角的「返回」會回到 index.html?games=1：進選單就直接打開遊戲列表（玩家通常是想換一款），不用再按「秒反應」。 */
 
 /* 【新手導讀】整個檔案用 (function () { ... })(); 包起來，叫做「立即執行函式」(IIFE)：
    裡面宣告的變數（THEME_CELLS、GAME_CELLS...）只在這個範圍內有效，不會變成全域變數，
@@ -367,13 +368,25 @@
         return (r && r.scale) || 1;
     }
 
+    /* 網址有 ?games=1（遊戲頁左上角的「返回」帶回來的）→ 進選單就直接打開遊戲列表。
+       列表關掉之後把這個參數拿掉：不然在選單上重新整理，列表又會自己跳出來。 */
+    function wantsGameList() { return /[?&]games=1(&|#|$)/.test(location.search); }
+    function dropGamesParam() {
+        try {
+            var u = new URL(location.href);
+            if (!u.searchParams.has('games')) return;
+            u.searchParams.delete('games');
+            history.replaceState(null, '', u.pathname + u.search + u.hash);
+        } catch (e) { }
+    }
+
     /* 建立「選遊戲」全螢幕彈窗：標題列（返回）、可捲動的遊戲格子、分類頁籤。回傳 { show, hide }。 */
     function buildGameDlg() {
         var cellEls = {};            /* 已經做好的格子（id → 按鈕），切換頁籤時重複使用，不用重做 */
         var tabEls = {};             /* 頁籤按鈕（id → 按鈕） */
         var curTab = 'all';
 
-        function hide() { gameDlg.hidden = true; closeGrandma(); }
+        function hide() { gameDlg.hidden = true; closeGrandma(); dropGamesParam(); }
 
         /* 標題列：左上「返回」（樣式跟遊戲畫面的標題列同一套 .bar__back），標題置中 */
         var back = h('button', {
@@ -501,6 +514,11 @@
             if (!gameMenu) gameMenu = buildGameDlg();
             gameMenu.show();
         });
+        /* 從遊戲頁按「返回」回來：直接打開遊戲列表，讓玩家挑下一款 */
+        if (wantsGameList()) {
+            gameMenu = buildGameDlg();
+            gameMenu.show();
+        }
 
         /* 頁面打開一下子之後，先在背景把「平均星數」與「阿嬤都比你厲害」要用的資料抓好（都有快取，沒過期就不連網），
            玩家按「秒反應」的時候通常已經拿到了，不用等。 */

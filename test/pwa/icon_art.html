@@ -1,0 +1,205 @@
+<!doctype html>
+<!-- App 圖示／分享預覽圖的「畫稿」：由 test/pwa/make_pwa_icons.mjs 用看不見視窗的 Edge 開啟、截圖成 PNG（icons/ 底下）。
+     網址參數：kind=any（一般圖示）｜maskable（可被系統裁成圓形／圓角的圖示，內容縮在中間 80% 安全區）｜og（1200×630 分享預覽圖）
+              size=圖示邊長（og 不用）。
+     圖樣：一張斜貼的紙條，上面「記憶」兩個字清楚、「模糊」兩個字糊掉——就是這個遊戲的名字。
+     字型用遊戲本身的 Noto Sans TC（Google Fonts，OFL 授權）；顏色跟 css/theme.css 的宣紙／暖棕／黃綠藍一致。 -->
+<html lang="zh-TW">
+
+<head>
+    <meta charset="utf-8">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --paper: #FBF3D9;
+            --card: #FFFDF3;
+            --ink: #4A3B1E;
+            --ink-soft: #7E6A3C;
+            --bd: #E3D19A;
+            --yellow: hsl(43, 75%, 51%);
+            --blue: hsl(208, 53%, 51%);
+            --green: hsl(132, 34%, 45%);
+        }
+
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+        }
+
+        body {
+            background: var(--paper);
+        }
+
+        /* 一張紙條：寬高、字級都以 --s（圖示邊長的 1/100）為單位，所以不同尺寸的圖示長得一模一樣 */
+        .note {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--card);
+            border: calc(var(--s) * 1.2) solid var(--bd);
+            border-radius: calc(var(--s) * 7);
+            box-shadow: 0 calc(var(--s) * 2) calc(var(--s) * 5) rgba(74, 59, 30, 0.22);
+            transform: rotate(-5deg);
+            box-sizing: border-box;
+        }
+
+        /* 紙條上緣的膠帶 */
+        .note::before {
+            content: "";
+            position: absolute;
+            top: calc(var(--s) * -4.5);
+            left: 50%;
+            width: calc(var(--s) * 22);
+            height: calc(var(--s) * 8);
+            background: var(--yellow);
+            opacity: 0.85;
+            border-radius: calc(var(--s) * 1);
+            transform: translateX(-50%) rotate(3deg);
+        }
+
+        .clear,
+        .blur {
+            font-weight: 900;
+            line-height: 1.05;
+            letter-spacing: calc(var(--s) * 1);
+            white-space: nowrap;
+        }
+
+        .clear {
+            color: var(--ink);
+        }
+
+        /* 「模糊」：用 CSS 模糊濾鏡糊掉，再淡一點 */
+        .blur {
+            color: var(--ink-soft);
+            filter: blur(calc(var(--s) * 1.5));
+            opacity: 0.75;
+        }
+
+        /* 紙條角落的三個小圓點（黃綠藍，跟選單三顆按鈕呼應） */
+        .dots {
+            position: absolute;
+            right: calc(var(--s) * 4);
+            bottom: calc(var(--s) * 4);
+            display: flex;
+            gap: calc(var(--s) * 1.6);
+        }
+
+        .dots i {
+            width: calc(var(--s) * 3.4);
+            height: calc(var(--s) * 3.4);
+            border-radius: 50%;
+        }
+
+        /* 「記憶」兩個字：每個字單獨一個 span，字距才不會被 letter-spacing 帶到尾端而偏心 */
+        .art {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ═══ og：1200×630 的分享預覽圖（LINE／臉書貼連結時顯示的卡片）═══ */
+        .og {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            padding: 0 60px;
+            background:
+                radial-gradient(ellipse 70% 60% at 25% 0%, rgba(224, 170, 37, 0.22), transparent 70%),
+                var(--paper);
+        }
+
+        .og__art {
+            position: relative;
+            flex: 0 0 440px;
+            height: 440px;
+        }
+
+        .og__txt {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .og__title {
+            white-space: nowrap;
+            font-size: 124px;
+            font-weight: 900;
+            letter-spacing: 8px;
+            line-height: 1.05;
+            color: var(--ink);
+        }
+
+        .og__sub {
+            white-space: nowrap;
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--ink-soft);
+            line-height: 1.35;
+        }
+
+        .og__tag {
+            align-self: flex-start;
+            margin-top: 10px;
+            white-space: nowrap;
+            padding: 10px 28px;
+            font-size: 30px;
+            font-weight: 900;
+            color: #fff;
+            background: var(--green);
+            border-radius: 999px;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        (function () {
+            var q = new URLSearchParams(location.search);
+            var kind = q.get('kind') || 'any';
+            var size = Number(q.get('size') || 512);
+
+            /* 畫一張紙條：box＝紙條佔圖示邊長的幾分之幾，font＝字級（單位 s） */
+            function noteHtml(box, font) {
+                var dots = '<span class="dots"><i style="background:var(--yellow)"></i><i style="background:var(--green)"></i><i style="background:var(--blue)"></i></span>';
+                return '<div class="note" style="width:calc(var(--s)*' + box + ');height:calc(var(--s)*' + box + ')">' +
+                    '<div class="clear" style="font-size:calc(var(--s)*' + font + ')">記憶</div>' +
+                    '<div class="blur" style="font-size:calc(var(--s)*' + font + ')">模糊</div>' + dots + '</div>';
+            }
+
+            if (kind === 'og') {
+                document.documentElement.style.setProperty('--s', '4.4px');          // 紙條 440px 寬的畫稿，1 單位＝4.4px
+                document.body.innerHTML = '<div class="og"><div class="og__art"><div class="art">' + noteHtml(72, 24) + '</div></div>' +
+                    '<div class="og__txt"><div class="og__title">記憶模糊</div>' +
+                    '<div class="og__sub">讀一次紙條，憑記憶<br>辦妥所有事情</div>' +
+                    '<div class="og__tag">記憶力練習小遊戲・手機直接玩</div></div></div>';
+            } else {
+                document.documentElement.style.setProperty('--s', (size / 100) + 'px');
+                /* maskable：內容要縮在中間 80% 的圓形安全區裡（系統會把邊緣裁掉），所以紙條比一般圖示小 */
+                var maskable = kind === 'maskable';
+                document.body.innerHTML = '<div class="art">' + noteHtml(maskable ? 50 : 62, maskable ? 18 : 22) + '</div>';
+            }
+
+            /* 字型載好之後才通知截圖程式（make_pwa_icons.mjs 輪詢 window.__ready） */
+            var specs = ['900 40px "Noto Sans TC"', '700 40px "Noto Sans TC"'];
+            Promise.race([
+                Promise.all(specs.map(function (f) { return document.fonts.load(f, '記憶模糊讀一次紙條憑辦妥所有事情練習小遊戲手機直接玩'); })),
+                new Promise(function (r) { setTimeout(r, 8000); })
+            ]).then(function () { return document.fonts.ready; }).then(function () {
+                window.__fontOk = document.fonts.check('900 40px "Noto Sans TC"', '記');
+                window.__ready = true;
+            });
+        })();
+    </script>
+</body>
+
+</html>
