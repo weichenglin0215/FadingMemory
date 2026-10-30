@@ -476,9 +476,6 @@
     --bns-shine: hsla(0, 0%, 100%, 0.4);
     --bns-spot: hsl(40, 50%, 78%);
     --bns-shadow: hsla(24, 40%, 10%, 0.45);
-    --bns-bowl: hsl(210, 34%, 90%);
-    --bns-bowl-edge: hsl(210, 30%, 56%);
-    --bns-bowl-hot: hsl(140, 44%, 84%);
 
     /* ── V1.34 一路減七（.mn7-）：老式計算機的綠色液晶與銀色按鍵 ── */
     --mn7-lcd-bg: hsl(86, 26%, 62%);

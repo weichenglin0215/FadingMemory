@@ -1,0 +1,378 @@
+/* ═══ menu_nav.css — 主選單左上角的漢堡選單（V1.38.0）═══
+   對應 js/menu_nav.js：左上角漢堡按鈕＋往下展開的「設定」「成績」「安裝與離線」（.nav-），
+   「設定」彈窗（.set-：暱稱、修改暱稱、音樂音效喇叭圖示），「成績」彈窗（.sc-：各遊戲的名次列表），
+   「安裝與離線」彈窗（.off-，js/offline_ui.js）；三個彈窗最下面的「關閉」共用 .nav-close（白底藍框藍字、高度 2/3）。
+   彈窗外框與卡片是「彈窗公版」（css/dialog.css）；「成績」列表的標題、前三名金銀銅列、捲動視窗沿用世界排行榜的樣式（css/leaderboard.css 的 .lb-），
+   這裡只補它沒有的：多一欄「玩」按鈕、名稱（靠左）與成績（靠右）左右排的一列。顏色與尺寸一律用 css/theme.css 的變數。 */
+
+/* ═══ 左上角漢堡按鈕（跟右上角的分享按鈕 .share-btn 左右對稱） ═══ */
+.nav-btn {
+    position: absolute;
+    top: var(--sp-4);
+    left: var(--sp-4);
+    z-index: 6;
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--c-card);
+    color: var(--c-blue);
+    border: var(--btn-line-bd);
+    box-shadow: var(--shadow-card);
+    font-size: 30px;
+    cursor: pointer;
+    transition: transform 0.1s ease, filter 0.15s ease;
+}
+
+.nav-btn:active {
+    transform: scale(0.93);
+}
+
+.nav-btn:focus-visible {
+    outline: 4px solid var(--c-blue);
+    outline-offset: 3px;
+}
+
+/* ═══ 往下展開的選單 ═══ */
+.nav-pop {
+    position: absolute;
+    top: calc(var(--sp-4) + 56px + var(--sp-2));
+    left: var(--sp-4);
+    z-index: 7;
+    min-width: 232px;
+    padding: var(--sp-2);
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-pop);
+    animation: nav-pop-in 0.16s ease;
+}
+
+.nav-pop[hidden] {
+    display: none;
+}
+
+@keyframes nav-pop-in {
+    from {
+        transform: translateY(-8px);
+        opacity: 0;
+    }
+
+    to {
+        transform: none;
+        opacity: 1;
+    }
+}
+
+/* 一個選項：整列都能點，高度夠大（長輩手指也點得到） */
+.nav-pop__item {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    width: 100%;
+    height: 72px;
+    padding: 0 var(--sp-4);
+    border: 0;
+    border-radius: var(--r-sm);
+    background: transparent;
+    color: var(--c-ink);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    text-align: left;
+    cursor: pointer;
+}
+
+.nav-pop__item+.nav-pop__item {
+    border-top: 2px solid var(--c-yellow-soft);
+    border-radius: 0 0 var(--r-sm) var(--r-sm);
+}
+
+.nav-pop__item:active {
+    background: var(--c-yellow-soft);
+}
+
+.nav-pop__item:focus-visible {
+    outline: 4px solid var(--c-blue);
+    outline-offset: -4px;
+}
+
+.nav-pop__ico {
+    display: flex;
+    color: var(--c-blue);
+    font-size: 34px;
+}
+
+/* 主選單上的彈窗要蓋住整個畫面：公版彈窗（css/dialog.css）是從標題列下面開始蓋，這一頁沒有標題列，
+   不蓋到最上面的話，左上角的漢堡按鈕與右上角的分享按鈕會露在暗色背景上面，還按得到 */
+.menu~.dlg--stage {
+    top: 0;
+}
+
+/* ═══ 「設定」彈窗 ═══ */
+/* 暱稱那一列：左邊小標、右邊暱稱（太長用「…」收尾） */
+.set-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+    border-radius: var(--r-md);
+    background: var(--c-card-alt);
+    text-align: left;
+}
+
+.set-label {
+    flex: 0 0 auto;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+.set-nick {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+/* 還沒有暱稱（訪客）：淡一點 */
+.set-nick--none {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 暱稱下面的補充說明 */
+.set-hint {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-body);
+    color: var(--c-ink-soft);
+    text-align: left;
+}
+
+.set-hint[hidden] {
+    display: none;
+}
+
+/* 「我已有帳號，登入」「重新登入」 */
+.set-login {
+    align-self: flex-start;
+    height: 44px;
+    cursor: pointer;
+}
+
+.set-login[hidden] {
+    display: none;
+}
+
+/* 音樂音效：一整列是一顆按鈕（role="switch"），左邊文字、右邊喇叭圖示；開＝藍色喇叭有聲波，關＝灰色喇叭打叉（預設開） */
+.set-sound {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    width: 100%;
+    min-height: 72px;
+    padding: 0 var(--sp-4);
+    border: 0;
+    border-radius: var(--r-md);
+    background: var(--c-card-alt);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink);
+    text-align: left;
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.set-sound:focus-visible {
+    outline: 4px solid var(--c-blue);
+    outline-offset: 3px;
+}
+
+.set-sound__ico {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: var(--btn-line-bd);
+    background: var(--c-card);
+    color: var(--c-blue);
+    font-size: 34px;
+    transition: transform 0.1s ease;
+}
+
+.set-sound:active .set-sound__ico {
+    transform: scale(0.92);
+}
+
+.set-sound.is-off .set-sound__ico {
+    border-color: var(--c-ink-soft);
+    color: var(--c-ink-soft);
+}
+
+/* 彈窗最下面的「關閉」：白底藍框藍字（btn--line），高度是一般按鈕的 2/3（V1.38.0） */
+.btn.nav-close {
+    height: calc(var(--btn-h) * 2 / 3);
+}
+
+/* ═══ 「成績」彈窗 ═══ */
+/* 一列：名次 ｜ 遊戲名稱（靠左）…成績（靠右） ｜ 「玩」按鈕（V1.38.0：名稱與成績改成左右排，不再上下兩行） */
+.lb-row.sc-row {
+    grid-template-columns: var(--lb-rank-col) 1fr var(--sc-play-w);
+}
+
+.sc-main {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-2);
+}
+
+.sc-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    line-height: var(--lh-tight);
+}
+
+.sc-score {
+    flex: 0 0 auto;
+    text-align: right;
+    white-space: nowrap;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    font-variant-numeric: tabular-nums;
+    line-height: var(--lh-tight);
+    color: var(--c-blue);
+}
+
+/* 前三名的列是金／銀／銅底色，成績跟著列的字色走 */
+.lb-row--top .sc-score {
+    color: inherit;
+}
+
+/* 還沒進榜（只有個人最佳）：名次欄放一條淡淡的橫線 */
+.sc-row--played .lb-rank {
+    color: var(--c-ink-soft);
+}
+
+/* 「玩」：綠色按鈕，一鍵進那款遊戲 */
+.sc-play {
+    width: var(--sc-play-w);
+    height: 48px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--r-md);
+    background: var(--btn-go-bg);
+    color: var(--btn-go-fg);
+    box-shadow: var(--btn-go-shadow);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+.sc-play:active {
+    transform: scale(0.94);
+}
+
+.sc-play:focus-visible {
+    outline: 4px solid var(--c-blue);
+    outline-offset: 3px;
+}
+
+/* 分隔：上面是進了世界前 30 名的，下面是玩過但還沒進榜的 */
+.sc-sep {
+    margin: var(--sp-3) 0 var(--sp-3);
+    text-align: center;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+:root {
+    --sc-play-w: 40px;
+}
+
+/* ═══ 「安裝與離線」彈窗（V1.38.0，js/offline_ui.js）═══
+   每一列：標題、說明（\n 會換行）、（選用）一顆按鈕；做好了的（✓）標題旁加綠色底。捲動區沿用世界排行榜的 .lb-viewport／.lb-list／.lb-thumb。 */
+.off-row {
+    padding: var(--sp-3) var(--sp-4);
+    border-radius: var(--r-md);
+    background: var(--c-card-alt);
+    text-align: left;
+}
+
+.off-row+.off-row {
+    margin-top: var(--sp-2);
+}
+
+.off-row--ok {
+    background: var(--c-ok-soft);
+}
+
+.off-row__t {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    line-height: var(--lh-tight);
+    color: var(--c-ink);
+}
+
+.off-row__x {
+    margin-top: var(--sp-1);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-body);
+    color: var(--c-ink-soft);
+    white-space: pre-line;
+}
+
+.btn.off-btn {
+    width: 100%;
+    height: 56px;
+    margin-top: var(--sp-2);
+    font-size: var(--fs-sm);
+}
+
+/* 最上面的提示（離線中、讀取中） */
+.off-note {
+    margin-bottom: var(--sp-2);
+    padding: var(--sp-2) var(--sp-3);
+    border-radius: var(--r-md);
+    background: var(--c-yellow-soft);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-body);
+    color: var(--c-ink);
+    text-align: center;
+}
+
+/* 使用者在系統設定「減少動態效果」時，關掉選單展開動畫與縮放過渡 */
+@media (prefers-reduced-motion: reduce) {
+
+    .nav-btn,
+    .nav-pop,
+    .set-sound__ico,
+    .sc-play {
+        animation: none;
+        transition: none;
+    }
+}

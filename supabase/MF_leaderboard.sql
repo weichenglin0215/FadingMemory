@@ -1351,7 +1351,7 @@ insert into public."MF_games" (game_id, title, better, min_score, max_score) val
     ('ordercut',     '照號切水果', 'max', 1, 90),
     ('pinwheel',     '轉風車', 'max', 1, 90),
     ('dishes',       '洗盤子', 'max', 1, 300),
-    ('beans',        '挑豆子', 'max', 1, 300),
+    ('beans',        '挑豆子', 'max', 1, 90),
     ('minus7',       '一路減七', 'max', 1, 300),
     ('sushi',        '迴轉壽司', 'max', 1, 90),
     ('change',       '找錢', 'max', 1, 300),
@@ -1676,6 +1676,36 @@ $$;
 
 revoke all on function public."MF_get_overtaken"(uuid) from public;
 grant execute on function public."MF_get_overtaken"(uuid) to anon, authenticated;
+
+
+-- 列出這位玩家在每一款遊戲的世界名次（V1.38.0，主選單左上角「成績」彈窗用；網頁依名次由前到後排列）。
+-- MF_scores 每款遊戲只留前 N 名，所以「有這一列」就一定在榜上；名次的算法跟 MF_get_top／MF_get_overtaken 完全一樣
+-- （rank_key、達成時間、id 三個一起排序，同分先達成的排前面）。
+-- 回傳 [ { game_id, rank, score }, … ]，依名次、遊戲代號排序；永遠不回傳任何人的 player_id，也只查這位玩家自己的列。
+create or replace function public."MF_get_my_ranks"(p_player_id uuid)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+    select coalesce(jsonb_agg(jsonb_build_object('game_id', x.game_id, 'rank', x.rank, 'score', x.score)
+                              order by x.rank, x.game_id), '[]'::jsonb)
+      from (
+            select m.game_id, m.score, g.top_n,
+                   (select count(*) + 1
+                      from public."MF_scores" o
+                     where o.game_id = m.game_id
+                       and (o.rank_key, o.achieved_at, o.id) < (m.rank_key, m.achieved_at, m.id))::int as rank
+              from public."MF_scores" m
+              join public."MF_games" g on g.game_id = m.game_id and g.enabled
+             where m.player_id = p_player_id
+           ) x
+     where x.rank <= x.top_n;
+$$;
+
+revoke all on function public."MF_get_my_ranks"(uuid) from public;
+grant execute on function public."MF_get_my_ranks"(uuid) to anon, authenticated;
 
 
 -- 讓 Supabase 的 API 層立刻認得新函式（不執行也會在幾秒內自動更新）

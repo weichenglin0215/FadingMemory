@@ -70,7 +70,8 @@
         READ_TIMEOUT_MS: 8000,       /* 讀榜單最多等幾毫秒（逾時就當作連不上） */
         WRITE_TIMEOUT_MS: 10000,     /* 寫成績最多等幾毫秒 */
         OFFLINE_COOLDOWN_MS: 60000,  /* 連線失敗後，這段時間內不再嘗試連線（成績先存著，之後補送） */
-        OVERTAKE_TTL_MS: 60 * 1000   /* 「阿嬤都比你厲害」：被超越的清單多久之內不重抓（主選單每打開一次「秒反應」最多 1 次小查詢） */
+        OVERTAKE_TTL_MS: 60 * 1000,  /* 「阿嬤都比你厲害」：被超越的清單多久之內不重抓（主選單每打開一次「秒反應」最多 1 次小查詢） */
+        MYRANKS_TTL_MS: 30 * 1000    /* 「成績」彈窗：各遊戲名次多久之內不重抓 */
     };
 
     /* localStorage 的 key（全部用 fm.lb. 開頭，不會跟 fm.reaction.best.* 或 LoveIsABitMessy 的資料混在一起） */
@@ -83,6 +84,7 @@
     var KEY_BOARD = 'fm.lb.board.';      /* 榜單快取：fm.lb.board.<遊戲id> */
     var KEY_FBPEND = 'fm.lb.fbpending';  /* 還沒送出的玩家意見：[ {game, text, at} ]（最多留 5 筆） */
     var KEY_OVERTAKE = 'fm.lb.overtaken'; /* 「阿嬤都比你厲害」的快取：{ at, pid, list: [ {game_id, rank, at}, … ] } */
+    var KEY_MYRANKS = 'fm.lb.myranks';   /* 主選單「成績」彈窗的快取：{ at, pid, list: [ {game_id, rank, score}, … ] } */
     var FB_MAX = 300;                    /* 玩家意見最多幾個字（資料庫 MF_feedback 的檢查也是 300） */
 
     var Leaderboard = {};
@@ -204,7 +206,7 @@
        boards：各款遊戲目前手上的榜單 { id: board }；inflight：正在抓的請求（避免同一款重複抓）；
        netDownUntil：連線失敗後，這個時間之前不再嘗試；gate：正在跳「建立帳號／登入」彈窗的 Promise（同一時間只跳一個）。
        （V1.35.0 起沒有「先不要就不再追問」：新玩家每次進前 30 名都會再問一次。） */
-    var state = { boards: {}, inflight: {}, netDownUntil: 0, gate: null, overtakeP: null };
+    var state = { boards: {}, inflight: {}, netDownUntil: 0, gate: null, overtakeP: null, myRanksP: null };
 
     function log() {
         if (global.console && console.log) console.log.apply(console, ['[排行榜]'].concat([].slice.call(arguments)));
@@ -694,6 +696,7 @@
        ═══════════════════════════════════════════════════════════════ */
     function forgetOvertaken() {
         store().set(KEY_OVERTAKE, null);
+        store().set(KEY_MYRANKS, null);        /* 名次變了：「成績」彈窗的名次也一起重抓（同一件事） */
     }
 
     /* 只留格式正確的列（防止資料庫回傳的東西或 localStorage 被改壞時，畫面拿到奇怪的值） */
@@ -728,6 +731,67 @@
             return null;
         });
         return state.overtakeP;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       五之四、「成績」彈窗：這位玩家在每款遊戲的世界名次（主選單左上角漢堡選單，js/menu_nav.js 用）
+       呼叫資料庫函式 MF_get_my_ranks，拿回 [ { game_id, rank, score }, … ]（只有「在前 30 名」的遊戲才會有一列；名次由前到後）。
+       做法跟 overtaken 一樣：還沒登入就不連網；結果存在 localStorage，CFG.MYRANKS_TTL_MS 之內再問就直接用；
+       同時有好幾個地方在問，只會真的連一次。
+       · cachedMyRanks()：同步拿「上次存的」名次（不管有沒有過期，只要是同一位玩家），彈窗一打開先畫它，網路回來再更新；
+       · myRanks()：回傳 Promise（一定 resolve）：清單（可能是空陣列）；連不上或資料庫還沒有這個函式（404）回傳 null。
+       ═══════════════════════════════════════════════════════════════ */
+    /* 只留格式正確的列（防止資料庫回傳的東西或 localStorage 被改壞時，畫面拿到奇怪的值） */
+    function cleanMyRanks(list) {
+        if (!Array.isArray(list)) return [];
+        return list.filter(function (x) {
+            return x && typeof x.game_id === 'string' && /^[a-z0-9_]{1,32}$/.test(x.game_id) &&
+                typeof x.rank === 'number' && x.rank >= 1 && x.rank === Math.floor(x.rank) &&
+                typeof x.score === 'number' && isFinite(x.score);
+        }).map(function (x) { return { game_id: x.game_id, rank: x.rank, score: x.score }; });
+    }
+
+    function cachedMyRanks() {
+        var c = store().get(KEY_MYRANKS, null);
+        return (c && c.pid === peekPid() && isLoggedIn() && Array.isArray(c.list)) ? cleanMyRanks(c.list) : null;
+    }
+
+    function myRanks(opts) {
+        opts = opts || {};
+        var pid = peekPid();
+        if (!isLoggedIn()) return Promise.resolve([]);
+        var c = store().get(KEY_MYRANKS, null), now = Date.now();
+        if (!opts.force && c && c.pid === pid && Array.isArray(c.list) && now - c.at >= 0 && now - c.at < CFG.MYRANKS_TTL_MS) {
+            return Promise.resolve(cleanMyRanks(c.list));
+        }
+        if (state.myRanksP) return state.myRanksP;
+        if (now < state.netDownUntil) return Promise.resolve(null);
+        state.myRanksP = rpc('MF_get_my_ranks', { p_player_id: pid }, CFG.READ_TIMEOUT_MS).then(function (r) {
+            state.myRanksP = null;
+            if (r.ok && Array.isArray(r.data)) {
+                var list = cleanMyRanks(r.data);
+                store().set(KEY_MYRANKS, { at: Date.now(), pid: pid, list: list });
+                log('各遊戲名次', list.length, '款（' + r.ms + ' ms）');
+                return list;
+            }
+            if (r.error === 'http_404') log('資料庫還沒有 MF_get_my_ranks（請重新執行 supabase/MF_leaderboard.sql）');
+            else if (!r.ok) state.netDownUntil = Date.now() + CFG.OFFLINE_COOLDOWN_MS;
+            return null;
+        });
+        return state.myRanksP;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       五之五、還沒上傳的東西（主選單「安裝與離線」的「雲端同步」用，js/offline.js）
+       pendingCount()：{ scores 還沒送出的成績幾筆、feedback 還沒送出的意見幾則、bests 還沒上傳的個人最佳幾款（js/identity.js 記的） }
+       flushAll()：把成績與意見立刻補送一次（Promise，一定 resolve）；個人最佳由呼叫的人再叫 Identity.syncBests
+       ═══════════════════════════════════════════════════════════════ */
+    function pendingCount() {
+        var p = store().get(KEY_PENDING, {}) || {}, f = store().get(KEY_FBPEND, []) || [], b = store().get('fm.lb.bestpending', {}) || {};
+        return { scores: Object.keys(p).length, feedback: Array.isArray(f) ? f.length : 0, bests: Object.keys(b).length };
+    }
+    function flushAll() {
+        return Promise.resolve(flushPending()).then(function () { return flushFeedback(); }).then(function () { }, function () { });
     }
 
     /* 頁面載入時呼叫一次：稍等一下（不跟進場的榜單讀取搶頻寬）再補送沒送出去的成績與意見 */
@@ -765,6 +829,10 @@
     Leaderboard.cleanFeedback = cleanFeedback;
     Leaderboard.sendFeedback = sendFeedback;
     Leaderboard.overtaken = overtaken;
+    Leaderboard.myRanks = myRanks;               /* 這位玩家在每款遊戲的世界名次（主選單「成績」彈窗） */
+    Leaderboard.cachedMyRanks = cachedMyRanks;
+    Leaderboard.pendingCount = pendingCount;     /* 還沒上傳的成績／意見／個人最佳有幾筆（「安裝與離線」的雲端同步） */
+    Leaderboard.flushAll = flushAll;             /* 立刻補送成績與意見 */
     Leaderboard.hasPlayer = hasPlayer;
     Leaderboard.pid = getPid;            /* 這一刻呼叫資料庫要帶的 player_id（已登入＝帳號編號，否則匿名代號）：五星評價（js/rating.js）用 */
     Leaderboard.rpc = rpc;               /* 呼叫資料庫函式（永遠不丟例外）：五星評價（js/rating.js）共用同一組網址與金鑰 */
@@ -774,7 +842,7 @@
     Leaderboard.test = {
         fake4: fake4, fmt: fmt, isBetter: isBetter, qualifies: qualifies, cleanNick: cleanNick, newUuid: newUuid,
         cleanFeedback: cleanFeedback, flushFeedback: flushFeedback, KEY_FBPEND: KEY_FBPEND,
-        cleanOvertaken: cleanOvertaken, KEY_OVERTAKE: KEY_OVERTAKE,
+        cleanOvertaken: cleanOvertaken, KEY_OVERTAKE: KEY_OVERTAKE, cleanMyRanks: cleanMyRanks, KEY_MYRANKS: KEY_MYRANKS,
         state: state, rpc: rpc, putBoard: putBoard, savePending: savePending, flushPending: flushPending,
         KEY_PID: KEY_PID, KEY_NICK: KEY_NICK, KEY_PENDING: KEY_PENDING, KEY_BOARD: KEY_BOARD,
         KEY_TOKEN: KEY_TOKEN, KEY_ANON: KEY_ANON, KEY_RELOGIN: KEY_RELOGIN, identityState: identityState, anonId: anonId, boardForJudge: boardForJudge

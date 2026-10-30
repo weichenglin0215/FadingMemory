@@ -1,4 +1,4 @@
-// 一路減七（minus7，企劃 392 依使用者流程）的純函式檢查：數列（1000 起、−7／−13／＋17、−9 輪流）、三個連續數字的選項、大字（−7／再 −7）、規則換的預告、限時線性、接線
+// 一路減七（minus7，企劃 392 依使用者流程）的純函式檢查：數列（1000 起、−7／−13／＋17、−9 輪流）、九個選項（三組、每組三個連續數字、個位數相同）、大字（−7／再 −7）、規則換的預告、限時線性、接線
 const { game, rng, seedOf } = require('./load.js');
 const G = game('reaction_minus7.js'); const T = G.test;
 let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log('FAIL', m); } };
@@ -15,7 +15,7 @@ ok(T.stepDelta(14) === -7 && T.stepDelta(15) === -13 && T.stepDelta(24) === -13 
 ok(T.valueAfter(27) - T.valueAfter(25) === 8 && T.valueAfter(31) - T.valueAfter(29) === 8, '加 17 減 9 輪流：每兩題淨增 8');
 
 // ── 限時（線性）──
-ok(T.timeMs(0) === 6000 && T.timeMs(T.RAMP_Q) === 2500 && T.timeMs(999) === 2500, '每題限時 6 → 2.5 秒');
+ok(T.timeMs(0) === 18000 && T.timeMs(T.RAMP_Q) === 7500 && T.timeMs(999) === 7500, '每題限時 18 → 7.5 秒（V1.38.0：原本 6 → 2.5 秒的 300%）');
 { const d = []; for (let n = 1; n <= T.RAMP_Q; n++) { ok(T.timeMs(n) <= T.timeMs(n - 1), '單調 ' + n); d.push(T.timeMs(n - 1) - T.timeMs(n)); } ok(Math.max(...d) - Math.min(...d) <= 1, '限時線性縮短：每題 −' + Math.min(...d) + '～−' + Math.max(...d) + ' 毫秒'); }
 
 // ── 大字與預告 ──
@@ -24,16 +24,37 @@ ok(T.bigText(0) === '−7' && T.bigText(1) === '再 −7' && T.bigText(2) === '�
 ok(T.bigText(15) === '−13' && T.bigText(16) === '再 −13' && T.bigText(25) === '＋17' && T.bigText(26) === '−9' && T.bigText(27) === '＋17', '規則剛換、加減輪流時只寫算式');
 ok(T.noticeBefore(14) === null && /−13/.test(T.noticeBefore(15)) && T.noticeBefore(16) === null && /＋17/.test(T.noticeBefore(25)) && /−9/.test(T.noticeBefore(25)) && T.noticeBefore(0) === null, '規則換之前預告（第 15、25 題）');
 
-// ── 三個連續數字的選項 ──
-{ const pos = [0, 0, 0]; for (let i = 0; i < 9000; i++) { const ans = 100 + Math.floor(rnd() * 900), o = T.makeOptions(ans, rnd); ok(o.options.length === 3 && o.options[1] === o.options[0] + 1 && o.options[2] === o.options[1] + 1, '三個連續整數'); ok(o.options[o.idx] === ans && o.options.filter(v => v === ans).length === 1, '正確答案剛好一個、在 idx'); pos[o.idx]++; }
-  ok(pos.every(v => Math.abs(v / 9000 - 1 / 3) < 0.03), '正確答案在第 1、2、3 個的機會平均：' + pos.join('/')); }
+// ── 九個選項：三組、每組三個連續整數、三組個位數相同，位置打散（V1.38.0 玩家意見：只算個位數就能猜出答案）──
+{
+  const N = 9000, pos = new Array(9).fill(0), grp = [0, 0, 0], inGrp = [0, 0, 0], units = new Set();
+  for (let i = 0; i < N; i++) {
+    const ans = 100 + Math.floor(rnd() * 900), o = T.makeOptions(ans, rnd), op = o.options;
+    ok(op.length === 9 && new Set(op).size === 9, '九個互不相同的選項');
+    ok(op[o.idx] === ans && op.filter(v => v === ans).length === 1, '正確答案剛好一個、在 idx');
+    // 依數字排序後切成三組：每組是三個連續整數；三組的個位數順序完全一樣（只差整十）
+    const s = op.slice().sort((x, y) => x - y), g = [s.slice(0, 3), s.slice(3, 6), s.slice(6, 9)];
+    ok(g.every(t => t[1] === t[0] + 1 && t[2] === t[1] + 1), '每組三個連續整數：' + s);
+    ok(g.every(t => t[0] % 10 === g[0][0] % 10) && g[1][0] - g[0][0] === 10 && g[2][0] - g[1][0] === 10, '三組只差整十、個位數一樣：' + s);
+    ok(s[0] > 0, '選項都是正數');
+    g[0].forEach(v => units.add(v % 10));
+    pos[o.idx]++; const gi = g.findIndex(t => t.includes(ans)); grp[gi]++; inGrp[g[gi].indexOf(ans)]++;
+  }
+  ok(pos.every(v => Math.abs(v / N - 1 / 9) < 0.02), '正確答案在九個位置的機會平均：' + pos.join('/'));
+  ok(grp.every(v => Math.abs(v / N - 1 / 3) < 0.03) && inGrp.every(v => Math.abs(v / N - 1 / 3) < 0.03), '正確答案在哪一組、組內第幾個都平均：' + grp.join('/') + '、' + inGrp.join('/'));
+  ok(units.size === 10, '個位數 0～9 都出現過');
+  // 只算個位數解不出來：九個選項裡，個位數跟正確答案一樣的有 3 個（每組一個）
+  for (let i = 0; i < 500; i++) { const ans = 100 + Math.floor(rnd() * 900), o = T.makeOptions(ans, rnd); ok(o.options.filter(v => v % 10 === ans % 10).length === 3, '個位數相同的選項有 3 個（只看個位數猜不出來）'); }
+  // 只算十位數（粗估大小）也解不出來：同一個十位的選項不只一個（組內三個連續數字，除非剛好跨十位）
+  let blind = 0; for (let i = 0; i < 2000; i++) { const ans = 100 + Math.floor(rnd() * 900), o = T.makeOptions(ans, rnd); if (o.options.filter(v => Math.floor(v / 10) === Math.floor(ans / 10)).length >= 2) blind++; }
+  ok(blind > 1500, '同一個十位的選項至少 2 個的題目：' + blind + '／2000');
+}
 
 // ── 一題 ──
 for (let i = 0; i < 300; i++) {
   const q = T.makeQuestion(i, rnd);
   ok(q.i === i && q.from === T.valueAfter(i) && q.delta === T.stepDelta(i) && q.ans === q.from + q.delta && q.options[q.idx] === q.ans && q.big === T.bigText(i) && q.time === T.timeMs(i) && q.notice === T.noticeBefore(i), '第 ' + i + ' 題的各欄位');
   // 常見錯誤（借位算錯、忘了借位）不會剛好是選項裡的另一個數字之外的陷阱——選項只差 1：把「從 from 算錯」的結果列出來，確認錯的答案如果出現在選項裡也只是鄰近的數字
-  ok(Math.max(...q.options) - Math.min(...q.options) === 2, '選項只差 2 以內');
+  ok(q.options.length === 9 && q.options.every(v => v > 0) && Math.max(...q.options) - Math.min(...q.options) <= 24, '九個選項都在答案附近（相差不超過 24）');
 }
 // 公式與說明
 { const q = T.makeQuestion(2, rnd); ok(T.formula(q) === '986 − 7 ＝ 979'.replace('−', '−') || T.formula(q) === '986 − 7 ＝ 979', '算式：' + T.formula(q)); ok(T.whyText(q, 989) === '算錯了！986 − 7 ＝ 979，你選了 989' && T.whyText(q, null) === '時間到！986 − 7 ＝ 979', 'whyText（含使用者企劃的算式說明）');

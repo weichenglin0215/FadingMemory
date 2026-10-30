@@ -4,11 +4,9 @@
    ───────────────────────────────────────────────────────────────────
    · 起點：一開始任兩隻都不重疊（距離 ≥ MIN_START_DIST，比小雞本身 CHICK 還大一點，頭上的星星也不會被壓住）；
      用拒絕取樣擺放，擺不下就把最小距離慢慢縮小（最小不低於 CHICK + 2），再不行才改用六角形格子。
-     移動過程中小雞可以互相穿過、互相遮住。
-   · 路線（makePath）：近似直線的「折線」——從起點出發，一段一段往院子裡隨機挑的遠處走（每段至少 MIN_LEG px），
-     最後走到停止位置；整條路線的長度約 ＝ 速度 × 移動秒數，所以速度越快、走過的範圍越大，不會縮在小角落。
-     位置是時間的純函式 posAt(c, t)（等速沿著折線走，t ≥ T 就停在終點），畫面只是照函式畫。
-   · 停止位置：六角形格子隨機挑 n 格再抖動一點，任兩隻的距離 ≥ MIN_STOP_DIST，才點得到、也不會互相壓住。
+   · 移動（V1.38.0 起會互相碰撞）：每隻小雞往隨機方向以固定速度跑，撞到院子的邊會反彈、撞到別的小雞會彈開
+     （simulate：質量相同的彈性碰撞），所以小雞**不會互相穿過、疊在一起**，比較好追；最後 0.6 秒慢慢煞車、停在原地。
+     整段移動先模擬好（每 1/120 秒一格），位置是時間的純函式 posAt(c, t)（在取樣點之間插值，t ≥ T 就停在最後一點），畫面只是照函式畫。
    · 流程：標記 MARK_S 秒（目標頭上有星星，星星在最上層不會被別的小雞遮住）→ 移動 T 秒 → 停下 →
      **只有星星小雞可以點**（其他小雞沒有點擊功能）：點到一隻星星小雞就亮綠色；點到沒有星星的地方（包含別的小雞、空地）
      就失敗；星星小雞全部點到就過關。
@@ -40,10 +38,13 @@
     var MARK_S = 2.0;
     /* 小雞畫出來的大小（px） */
     var CHICK = 64;                            /* 小雞畫出來的大小 */
-    /* 起點與停止位置的最小間距：保證一開始不重疊、停下來時也點得到 */
-    var MIN_START_DIST = 74, MIN_STOP_DIST = 80;
-    /* 折線每一段至少多長（走法接近直線、活動範圍大） */
-    var MIN_LEG = 90;                          /* 折線每一段至少多長（px）：走法接近直線、範圍大 */
+    /* 起點的最小間距：保證一開始不重疊、頭上的星星也不會被壓住 */
+    var MIN_START_DIST = 74;
+    /* 碰撞（V1.38.0）：兩隻小雞圓心距離小於 HIT_D 就彈開，不會互相穿過；HIT_D ＝ 小雞畫出來的大小，所以任何時候都不會疊在一起 */
+    var HIT_D = CHICK;
+    var SIM_DT = 1 / 120;                      /* 模擬一格幾秒（要夠小，最快的小雞一格只走 3px，不會「穿牆」） */
+    var STOP_EASE_S = 0.6;                     /* 移動的最後幾秒慢慢煞車，停下來不會突然定格 */
+    var SPEED_JITTER = 0.15;                   /* 每隻小雞的速度在 ±15% 之間，不會全部一樣快 */
     var MARGIN = 30;
     var NEXT_MS = 1500;
 
@@ -60,18 +61,13 @@
     function moveFor(level) { return kit.ramp(level, MOVE_START, MOVE_END, LEVEL_RAMP); }
     /* 兩點之間的距離（勾股定理） */
     function dist2(a, b) { return Math.sqrt((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1])); }
-    /* 小雞 c 在時間 t 的位置：等速沿著折線走，用二分搜尋找出目前在折線的哪一段，再用線性插值算出該段內的位置 */
-    /* 小雞 c 在時間 t（秒）的位置：等速沿著折線 c.pts 走，t ≥ c.T 就停在最後一點 */
+    /* 小雞 c 在時間 t（秒）的位置：simulate 算好的取樣點之間做線性插值；t ≥ c.T 就停在最後一點 */
     function posAt(c, t) {
-        /* u 是走完全程的比例（0～1）；s 是已走的距離；cum 是折線每個轉折點的累計距離 */
-        var u = c.T > 0 ? Math.min(1, Math.max(0, t / c.T)) : 1, s = u * c.len, pts = c.pts, cum = c.cum;
-        if (u >= 1) return { x: pts[pts.length - 1][0], y: pts[pts.length - 1][1] };
-        /* 二分搜尋：lo、hi 夾住 s 所在的線段；>> 1 是除以 2 取整數 */
-        var lo = 0, hi = cum.length - 1;
-        while (hi - lo > 1) { var m = (lo + hi) >> 1; if (cum[m] <= s) lo = m; else hi = m; }
-        /* f 是在這一段裡走了幾成，座標 = 起點 + (終點 − 起點) × f */
-        var seg = cum[hi] - cum[lo], f = seg > 0 ? (s - cum[lo]) / seg : 0;
-        return { x: pts[lo][0] + (pts[hi][0] - pts[lo][0]) * f, y: pts[lo][1] + (pts[hi][1] - pts[lo][1]) * f };
+        var xs = c.xs, ys = c.ys, last = xs.length - 1;
+        var f = c.T > 0 ? Math.min(1, Math.max(0, t / c.T)) * last : last, i = Math.floor(f);
+        if (i >= last) return { x: xs[last], y: ys[last] };
+        var u = f - i;
+        return { x: xs[i] + (xs[i + 1] - xs[i]) * u, y: ys[i] + (ys[i + 1] - ys[i]) * u };
     }
     /* 某一時刻所有小雞之間最近的距離（測試和主控台用） */
     function minDist(list, t) {
@@ -119,62 +115,68 @@
         if (slots.length < n) return null;
         return kit.shuffle(slots, rand).slice(0, n);
     }
-    /* 停止位置：六角形格子再加一點抖動，任兩隻距離仍 ≥ MIN_STOP_DIST */
-    /* 停止位置：六角形格子（相鄰距離 MIN_STOP_DIST + 8，抖動 ±2 之後仍 ≥ MIN_STOP_DIST） */
-    function stopSpots(n, FW, FH, rand) {
+    /* 整段移動的物理模擬（V1.38.0）：每隻小雞是一個圓，在院子裡以固定速度往隨機方向跑，
+       撞到院子的邊會反彈、兩隻小雞靠得比 HIT_D 近就彈開（質量相同的彈性碰撞：沿著連線方向的速度互換），所以小雞不會互相穿過、疊在一起；
+       最後 STOP_EASE_S 秒慢慢煞車，T 秒時全部停住（停下來就是各自當時的位置，因為整段都沒有重疊，所以一定點得到）。
+       以 SIM_DT 秒為一格，每格先移動、再重複 4 輪「兩兩彈開＋貼牆」直到幾乎沒有重疊。
+       回傳 [ { xs, ys }, … ]：每隻小雞 N+1 個取樣位置（第 0 個是起點、最後一個是停止位置；N ＝ T／SIM_DT 取整），時間均分在 0～T。 */
+    function simulate(starts, v, T, FW, FH, rand) {
         rand = rand || Math.random;
-        var slots = hexSpots(n, FW, FH, MIN_STOP_DIST + 8, rand);
-        if (!slots) return null;
-        return slots.map(function (p) { return [p[0] + kit.randFloat(-2, 2, rand), p[1] + kit.randFloat(-2, 2, rand)]; });
-    }
-    /* 一隻小雞的折線路線：起點 S → 一連串遠處的轉折點 → 終點 Z，總長約 Ltarget */
-    /* 一隻小雞的折線路線：S → 一連串遠處的轉折點 → Z，總長約 Ltarget（至少 S 到 Z 的直線距離） */
-    function makePath(S, Z, Ltarget, FW, FH, rand) {
-        rand = rand || Math.random;
-        var pts = [S], cur = S, len = 0;
-        /* 最多加 14 個轉折點 */
-        for (var guard = 0; guard < 14; guard++) {
-            /* 剩下的距離直接走到終點就夠長，就不用再加轉折點 */
-            if (len + dist2(cur, Z) >= Ltarget) break;                  /* 剩下的距離直接走到終點就夠長了 */
-            var chosen = null;
-            /* 每次最多嘗試 40 個候選點，挑一個「夠遠、不會讓路線太長」的 */
-            for (var a = 0; a < 40 && !chosen; a++) {
-                var W = [kit.randFloat(MARGIN, FW - MARGIN, rand), kit.randFloat(MARGIN, FH - MARGIN, rand)], seg = dist2(cur, W);
-                if (seg < MIN_LEG || dist2(W, Z) < MIN_LEG * 0.6) continue;
-                if (len + seg + dist2(W, Z) > Ltarget * 1.12) continue;
-                chosen = { p: W, seg: seg };
-            }
-            if (!chosen) break;
-            pts.push(chosen.p); len += chosen.seg; cur = chosen.p;
+        var n = starts.length, N = Math.max(1, Math.round(T / SIM_DT)), dt = T / N;
+        var x0 = MARGIN + 6, x1 = FW - MARGIN - 6, y0 = MARGIN + 24, y1 = FH - MARGIN - 6;     /* 圓心可以到的範圍（同 startSpots） */
+        var px = [], py = [], vx = [], vy = [], out = [], i, j, s, it;
+        for (i = 0; i < n; i++) {
+            var a = rand() * Math.PI * 2, sp = v * kit.randFloat(1 - SPEED_JITTER, 1 + SPEED_JITTER, rand);
+            px.push(starts[i][0]); py.push(starts[i][1]); vx.push(Math.cos(a) * sp); vy.push(Math.sin(a) * sp);
+            out.push({ xs: new Float32Array(N + 1), ys: new Float32Array(N + 1) });
+            out[i].xs[0] = px[i]; out[i].ys[0] = py[i];
         }
-        pts.push(Z);
-        /* cum：累計距離，posAt 要用它快速查位置 */
-        var cum = [0];
-        for (var i = 1; i < pts.length; i++) cum.push(cum[i - 1] + dist2(pts[i - 1], pts[i]));
-        return { pts: pts, cum: cum, len: cum[cum.length - 1] };
+        var D2 = HIT_D * HIT_D;
+        for (s = 1; s <= N; s++) {
+            var t = s * dt, u = (t - (T - STOP_EASE_S)) / STOP_EASE_S;
+            var k = u <= 0 ? 1 : 0.5 * (1 + Math.cos(Math.PI * Math.min(1, u)));              /* 速度倍率：最後 STOP_EASE_S 秒由 1 慢慢變成 0 */
+            for (i = 0; i < n; i++) { px[i] += vx[i] * dt * k; py[i] += vy[i] * dt * k; }
+            for (it = 0; it < 4; it++) {
+                for (i = 0; i < n; i++) for (j = i + 1; j < n; j++) {
+                    var dx = px[j] - px[i], dy = py[j] - py[i], d2 = dx * dx + dy * dy;
+                    if (d2 >= D2) continue;
+                    var d = Math.sqrt(d2);
+                    var nx, ny;
+                    if (d < 1e-6) { nx = 1; ny = 0; d = 0; } else { nx = dx / d; ny = dy / d; }
+                    var push = (HIT_D - d) / 2;                                                /* 各退一半，剛好不重疊 */
+                    px[i] -= nx * push; py[i] -= ny * push; px[j] += nx * push; py[j] += ny * push;
+                    var rv = (vx[j] - vx[i]) * nx + (vy[j] - vy[i]) * ny;                      /* 沿連線方向的相對速度（< 0＝正在互相靠近） */
+                    if (rv < 0) { vx[i] += rv * nx; vy[i] += rv * ny; vx[j] -= rv * nx; vy[j] -= rv * ny; }
+                }
+                for (i = 0; i < n; i++) {
+                    if (px[i] < x0) { px[i] = x0; if (vx[i] < 0) vx[i] = -vx[i]; } else if (px[i] > x1) { px[i] = x1; if (vx[i] > 0) vx[i] = -vx[i]; }
+                    if (py[i] < y0) { py[i] = y0; if (vy[i] < 0) vy[i] = -vy[i]; } else if (py[i] > y1) { py[i] = y1; if (vy[i] > 0) vy[i] = -vy[i]; }
+                }
+            }
+            for (i = 0; i < n; i++) { out[i].xs[s] = px[i]; out[i].ys[s] = py[i]; }
+        }
+        return out;
     }
-    /* 出一關：每隻小雞有起點、折線路線、移動時間；再隨機挑 K 隻當目標 */
-    /* 出一關：回傳 { chicks, targets（目標編號陣列）, tMove（停止時間，秒）, FW, FH } */
+    /* 出一關：回傳 { chicks, targets（目標編號陣列）, tMove（停止時間，秒）, FW, FH }
+       每隻小雞 { x0, y0, xs, ys, len, T }：xs／ys 是整段移動的取樣位置（simulate 算好的），posAt 照時間查表。 */
     function makeLevel(level, FW, FH, rand) {
         rand = rand || Math.random;
         var n = totalFor(level), K = kFor(level), T = moveFor(level), v = speedFor(level);
-        /* 先算好所有起點與停止位置 */
-        var starts = startSpots(n, FW, FH, rand), stops = stopSpots(n, FW, FH, rand);
+        var starts = startSpots(n, FW, FH, rand);
         var chicks;
-        if (starts && stops) {
-            /* 停止位置洗牌後一一配給小雞，這樣誰走到哪是隨機的 */
-            kit.shuffle(stops, rand);
+        if (starts) {
+            var sim = simulate(starts, v, T, FW, FH, rand);
             chicks = starts.map(function (s, k) {
-                var path = makePath(s, stops[k], v * T, FW, FH, rand);
-                return { x0: s[0], y0: s[1], pts: path.pts, cum: path.cum, len: path.len, T: T };
+                var xs = sim[k].xs, ys = sim[k].ys, len = 0;
+                for (var i = 1; i < xs.length; i++) len += Math.sqrt((xs[i] - xs[i - 1]) * (xs[i] - xs[i - 1]) + (ys[i] - ys[i - 1]) * (ys[i] - ys[i - 1]));
+                return { x0: s[0], y0: s[1], xs: xs, ys: ys, len: len, T: T };
             });
         /* 保底：萬一擺不出來，小雞排成格子站著不動 */
         } else {
-            /* 保底：小雞排成格子、站著不動（停止時一定分得開）*/
             var cols = Math.ceil(Math.sqrt(n)); chicks = [];
             for (var k = 0; k < n; k++) {
                 var gx = MARGIN + (k % cols) * (FW - 2 * MARGIN) / Math.max(1, cols - 1), gy = MARGIN + 24 + Math.floor(k / cols) * 90;
-                chicks.push({ x0: gx, y0: gy, pts: [[gx, gy], [gx, gy]], cum: [0, 0], len: 0, T: T });
+                chicks.push({ x0: gx, y0: gy, xs: [gx, gx], ys: [gy, gy], len: 0, T: T });
             }
         }
         return { chicks: chicks, targets: kit.shuffle(chicks.map(function (_, k) { return k; }), rand).slice(0, K), tMove: T, FW: FW, FH: FH };
@@ -359,12 +361,12 @@
     var G = {
         id: ID,
         name: '找回小雞',
-        rule: '**先記住頭上有閃爍藍色星星的小雞**。星星消失後，小雞會到處亂跑，還會互相遮住。等牠們停下來，**直接點剛才有星星的那幾隻**：只有星星小雞點得到，點到別的地方就失敗了！越後面小雞越多、跑得越快！',
+        rule: '**先記住頭上有閃爍藍色星星的小雞**。星星消失後，小雞會到處亂跑，碰到彼此會彈開。等牠們停下來，**直接點剛才有星星的那幾隻**：只有星星小雞點得到，點到別的地方就失敗了！越後面小雞越多、跑得越快！',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
-        test: { stopSpots: stopSpots, startSpots: startSpots, hexSpots: hexSpots, makePath: makePath, judgeTap: judgeTap, kFor: kFor, totalFor: totalFor, speedFor: speedFor, moveFor: moveFor, posAt: posAt, minDist: minDist, makeLevel: makeLevel, MIN_STOP_DIST: MIN_STOP_DIST, MIN_START_DIST: MIN_START_DIST, MIN_LEG: MIN_LEG, CHICK: CHICK, MARGIN: MARGIN, LEVEL_RAMP: LEVEL_RAMP }
+        test: { startSpots: startSpots, hexSpots: hexSpots, simulate: simulate, judgeTap: judgeTap, kFor: kFor, totalFor: totalFor, speedFor: speedFor, moveFor: moveFor, posAt: posAt, minDist: minDist, makeLevel: makeLevel, MIN_START_DIST: MIN_START_DIST, HIT_D: HIT_D, CHICK: CHICK, MARGIN: MARGIN, LEVEL_RAMP: LEVEL_RAMP }
     };
     /* 登記到遊戲清單 */
     Reaction.register(G);

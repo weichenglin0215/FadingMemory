@@ -20,7 +20,8 @@
    · 封偷吃步：第 WARMUP + 1 關起，如果「沿著邊繞圈」「蛇行」這類不用動腦的走法（greedyWalk：直走優先、右轉優先、左轉優先…，四個初始方向）
      或「每步走往出口最少的鄰居」（Warnsdorff 規則，老手最常用的捷徑）任何一種就能鋪滿，這題就不要；前 WARMUP 關是暖身，不檢查。
    · 判定都是純函式：applyMove（往相鄰格鋪，或往回捲）、isStuck（走進死路；只給測試用，遊戲本身不用它判失敗）、isDone（鋪滿）；畫面只是把狀態畫出來。
-   · 失敗時（時間到）：沒鋪到的格子閃紅，再用綠色的線畫出一條正確的路（動畫），停格 2.8 秒讓玩家看清楚。
+   · 失敗時（時間到）：沒鋪到的格子閃紅，再用綠色的線畫出一條正確的路（動畫），畫完之後停格 3 秒讓玩家看清楚，才跳出結算。
+     V1.38.0（玩家意見：看不清楚）：綠線畫得更慢——每格 0.12 秒、至少 2.4 秒（原本不管路多長都是 1.6 秒畫完），畫完停格 SOL_HOLD_MS＝3 秒（原本整段只有 2.8 秒）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -42,6 +43,8 @@
     var CANDS = [2, 8];                         /* 候選題數量：第 1 關（暖身只要 1 題）→ 第 RAMP_LEVELS 關；之後再每 RAMP_LEVELS 關多 1 題，挑最難的那題（見 hardness） */
     var CAND_SAMPLES = 5;                       /* 放每個家具時，抽幾個候選格、挑「離其他家具最遠」的那個（愈大愈分散） */
     var NODE_CAP = 2500;                        /* 衡量難度（humanCost）時最多算幾步（高關卡的題目幾乎都超過，挑選時不分高下） */
+    var SOL_MIN_MS = 2400, SOL_MS_PER_CELL = 120;   /* 失敗時綠線把正確的路畫出來要花多久：每格 120 毫秒、至少 2.4 秒（路越長畫越久，才跟得上） */
+    var SOL_HOLD_MS = 3000;                     /* 綠線畫完之後停格多久，讓玩家看清楚正確的路線，才跳出結算 */
     var BITE_TRIES = 400;                       /* 分散放家具出不了題時，改用「先造一條路再決定家具」最多試幾次 */
     var DIRS = [[-1, 0], [0, 1], [1, 0], [0, -1]];      /* 上、右、下、左（順時針） */
 
@@ -50,6 +53,9 @@
     function stonesFor(level) { return Math.round(kit.ramp(level, STONES[0], STONES[1], RAMP_LEVELS)); }
     /* 限時（毫秒）：free＝要鋪的格數 */
     function timeMs(free) { return Math.round((TIME_BASE + TIME_PER_CELL * free) * 1000); }
+    /* 綠線畫完要多久（毫秒）：len＝正確的路有幾格；結算彈窗要等到畫完再停格 SOL_HOLD_MS 才跳出來 */
+    function solDrawMs(len) { return Math.max(SOL_MIN_MS, Math.max(0, len - 1) * SOL_MS_PER_CELL); }
+    function failDelayMs(len) { return solDrawMs(len) + SOL_HOLD_MS; }
     var neighbors = kit.gridNeighbors, adjacent = kit.gridAdjacent, connected = kit.gridConnected, parityOk = kit.gridParityOk, findPath = kit.hamPath;       /* 方格地圖的共用函式（js/reaction_kit4.js） */
     /* 「不動腦」的走法：從 start、朝 heading0（0 上 1 右 2 下 3 左）出發，每一步依 order（相對方向的優先順序：0 直走、1 右轉、2 迴轉、3 左轉）
        挑第一個可以走的格子，走到沒路為止；回傳鋪到幾格 */
@@ -474,14 +480,15 @@
                 api.pass({ delay: 1500 });
                 return;
             }
-            /* 失敗：沒鋪到的格子閃紅，再用綠線畫出一條正確的路，停格 2.8 秒 */
+            /* 失敗：沒鋪到的格子閃紅，再用綠線慢慢畫出一條正確的路，畫完停格 3 秒才跳出結算 */
             var miss = 0;
             for (var k = 0; k < n * n; k++) if (st.vis[k] === 0) { cells[k].classList.add('cpt-cell--miss'); miss++; }
             solLine.setAttribute('d', pathD(q.solution));
+            solLine.style.animationDuration = solDrawMs(q.solution.length) + 'ms';            /* CSS 預設 1.6 秒，這裡依路的長度放慢 */
             solLine.classList.add('cpt-sol--draw');
             tip.textContent = '時間到！綠線是其中一種鋪法';
             kit.flash(stage, false, api.my);
-            api.fail({ delay: 2800, lines: ['時間到，還有 ' + miss + ' 格沒鋪到', '房間 ' + n + '×' + n + '、家具 ' + q.stones.length + ' 個、要鋪 ' + q.free + ' 格'] });
+            api.fail({ delay: failDelayMs(q.solution.length), lines: ['時間到，還有 ' + miss + ' 格沒鋪到', '房間 ' + n + '×' + n + '、家具 ' + q.stones.length + ' 個、要鋪 ' + q.free + ' 格'] });
         }
         /* 驗證用：api.solve 把地毯先全部捲回起點、再照正確的路一格一格鋪完；
            api.wrong 往最容易走進死路的方向鋪（不動腦的走法）直到被困住，然後直接宣告時間到（走進死路本身不會結束遊戲） */
@@ -511,6 +518,7 @@
         test: {
             sizeFor: sizeFor, stonesFor: stonesFor, timeMs: timeMs, parityOk: parityOk, neighbors: neighbors, adjacent: adjacent, connected: connected, findPath: findPath, greedyWalk: greedyWalk, shortcutWorks: shortcutWorks, warnsdorffWalk: warnsdorffWalk,
             scatterLayout: scatterLayout, forcedOk: forcedOk, freeDeg: freeDeg, hardness: hardness, candCount: candCount, pickIcons: pickIcons, FURNITURE: FURNITURE, CANDS: CANDS, NODE_CAP: NODE_CAP, humanCost: humanCost, GEN_BUDGET_MS: GEN_BUDGET_MS,
+            solDrawMs: solDrawMs, failDelayMs: failDelayMs, SOL_MIN_MS: SOL_MIN_MS, SOL_MS_PER_CELL: SOL_MS_PER_CELL, SOL_HOLD_MS: SOL_HOLD_MS,
             makeLevel: makeLevel, pickLayout: pickLayout, randomHamPath: randomHamPath, GEN_TRIES: GEN_TRIES, newState: newState, applyMove: applyMove, isDone: isDone, isStuck: isStuck, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, N_RANGE: N_RANGE, STONES: STONES, WARMUP: WARMUP, TIME_BASE: TIME_BASE, TIME_PER_CELL: TIME_PER_CELL, MIN_FREE: MIN_FREE, GREEDY_ORDERS: GREEDY_ORDERS, MAX_LEVEL: MAX_LEVEL
         }

@@ -39,8 +39,8 @@
        這幾個來源，第一個成功就用它」的備援清單，不是全部都載入。 */
     var PAGES = {
         menu: {
-            css: BASE_CSS.concat(['css/dialog.css', 'css/identity.css', 'css/rating.css', 'css/menu.css']),
-            js: BASE_JS.concat(['js/scroller.js', 'js/dialog.js', 'js/leaderboard.js', 'js/identity.js', 'js/identity_ui.js', 'js/rating.js', 'js/menu.js', 'js/pwa.js', 'js/share.js'])
+            css: BASE_CSS.concat(['css/dialog.css', 'css/identity.css', 'css/leaderboard.css', 'css/rating.css', 'css/menu.css', 'css/menu_nav.css']),
+            js: BASE_JS.concat(['js/sfx.js', 'js/scroller.js', 'js/dialog.js', 'js/leaderboard.js', 'js/identity.js', 'js/identity_ui.js', 'js/rating.js', 'js/score_specs.js', 'js/menu.js', 'js/menu_nav.js', 'js/pwa.js', 'js/offline.js', 'js/offline_ui.js', 'js/share.js'])
         },
         reaction: {
             css: BASE_CSS.concat(['css/dialog.css', 'css/reaction.css', 'css/reaction2.css', 'css/reaction3.css', 'css/reaction4.css', 'css/reaction5.css', 'css/reaction6.css', 'css/leaderboard.css', 'css/identity.css', 'css/rating.css']),

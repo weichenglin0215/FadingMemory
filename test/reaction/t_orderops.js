@@ -50,9 +50,40 @@ for (let i = 0; i < 8000; i++) {
 ok(stat.div > 1500, '除法有出現：' + stat.div); ok(stat.paren > 1500, '括號有出現：' + stat.paren); ok(stat.ltr > 1000 && stat.noparen > 300, '兩種錯法都有：' + JSON.stringify(stat));
 // 沒有括號的前期題目：不會有括號
 for (let i = 0; i < 400; i++) ok(!T.makeQuestion(1 + (i % 7), rnd).tokens.includes('('), '前 7 題沒有括號');
-// 連續控制
-{ const hist = []; let run = 1, maxRun = 1;
-  for (let i = 0; i < 20000; i++) { const w = T.nextLeft(hist, rnd); if (hist.length && hist[hist.length - 1] === w) run++; else run = 1; maxRun = Math.max(maxRun, run); hist.push(w); }
-  ok(maxRun <= T.SAME_MAX, '連續最多 ' + maxRun); }
+// 答案個數：前面 2 個、第 OPTIONS4_FROM 題起 4 個；四個答案＝正確、正確的近似、錯誤、錯誤的近似（近似的只差個位數、個位數放成另一邊的）
+ok(T.optionCount(1) === 2 && T.optionCount(T.OPTIONS4_FROM - 1) === 2 && T.optionCount(T.OPTIONS4_FROM) === 4 && T.optionCount(60) === 4, '答案個數 2 → 4');
+{
+  let four = 0, swapped = 0, nearSame = 0;
+  for (let i = 0; i < 6000; i++) {
+    const lv = 1 + (i % 60), q = T.makeQuestion(lv, rnd);
+    ok(q.options.length === T.optionCount(lv), '答案個數 ' + lv + '：' + q.options.length);
+    ok(new Set(q.options).size === q.options.length && q.options.every(v => Number.isInteger(v) && v >= 0), '答案互不相同、都是非負整數：' + q.options);
+    ok(q.options.includes(q.truth) && q.options.includes(q.decoy), '答案裡有正確與錯誤');
+    if (q.options.length === 4) {
+      four++;
+      const [t, tn, d, dn] = q.options;
+      ok(t === q.truth && d === q.decoy, '順序 正確、近似、錯誤、近似');
+      ok(Math.floor(tn / 10) === Math.floor(t / 10) && tn % 10 !== t % 10, '正確的近似只差個位數：' + t + ' → ' + tn);
+      ok(Math.floor(dn / 10) === Math.floor(d / 10) && dn % 10 !== d % 10, '錯誤的近似只差個位數：' + d + ' → ' + dn);
+      if (tn % 10 === d % 10 && dn % 10 === t % 10) swapped++;
+      if (t % 10 === d % 10) nearSame++;
+    }
+  }
+  ok(four > 2500, '四個答案的題目有出現：' + four);
+  ok(swapped > (four - 0) * 0.6, '近似答案的個位數多半放成另一邊的個位數：' + swapped + '／' + four + '（正確與錯誤同個位數的 ' + nearSame + ' 題不算）');
+  // nearAnswer：個位數不同、同十位、不撞排除的數、不是 0
+  for (let i = 0; i < 3000; i++) {
+    const v = rnd() < 0.2 ? Math.floor(rnd() * 10) : Math.floor(rnd() * 1999), ex = [v, Math.floor(rnd() * 2000)];
+    const c = T.nearAnswer(v, ex, Math.floor(rnd() * 10), rnd);
+    ok(c != null && c !== v && !ex.includes(c) && c >= 1 && Math.floor(c / 10) === Math.floor(v / 10), 'nearAnswer ' + v + ' → ' + c);
+  }
+  ok(T.nearAnswer(42, [42, 40], 0, () => 0.5) !== 40 && T.nearAnswer(42, [42], 0, () => 0.5) === 40, 'nearAnswer 想要的個位數能用就用、被排除就換一個');
+}
+// 位置：連續控制（同一個位置最多連續 SAME_MAX 次），而且每個位置都會出現
+for (const count of [2, 4]) {
+  const hist = []; let run = 1, maxRun = 1; const seen = new Set();
+  for (let i = 0; i < 20000; i++) { const w = T.nextSlot(hist, count, rnd); ok(Number.isInteger(w) && w >= 0 && w < count, 'slot 範圍'); seen.add(w); if (hist.length && hist[hist.length - 1] === w) run++; else run = 1; maxRun = Math.max(maxRun, run); hist.push(w); }
+  ok(maxRun <= T.SAME_MAX, count + ' 個位置，連續最多 ' + maxRun); ok(seen.size === count, count + ' 個位置都會出現');
+}
 ok(T.rating(2) !== T.rating(6) && T.rating(6) !== T.rating(15) && T.rating(15) !== T.rating(30) && T.rating(30) !== T.rating(45), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

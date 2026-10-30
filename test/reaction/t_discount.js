@@ -13,7 +13,7 @@ ok(T.complementOf(7) === 3 && T.complementOf(3) === 7 && T.complementOf(5) === 5
 { const q = { orig: 800, sale: 560, r: 7, label: '7 折', pct: 70 }; ok(T.formula(q) === '560 ÷ 800 ＝ 0.7 ＝ 7 折', 'formula：' + T.formula(q)); ok(T.whyText(q, 3) === '選錯了！560 ÷ 800 ＝ 0.7 ＝ 7 折，你選了 3 折。3 折是付 30%，7 折才是付 70%', '選互補折數的說明：' + T.whyText(q, 3)); ok(T.whyText(q, 6) === '選錯了！560 ÷ 800 ＝ 0.7 ＝ 7 折，你選了 6 折' && T.whyText(q, null) === '時間到！560 ÷ 800 ＝ 0.7 ＝ 7 折', '其他說明'); }
 
 // ── 難度（線性）──
-ok(T.timeMs(0) === 8000 && T.timeMs(T.RAMP_Q) === 4000 && T.timeMs(999) === 4000, '每題限時 8 → 4 秒（使用者企劃）');
+ok(T.timeMs(0) === 16000 && T.timeMs(T.RAMP_Q) === 8000 && T.timeMs(999) === 8000, '每題限時 16 → 8 秒（V1.38.0 玩家意見：原本 8 → 4 秒的 2 倍）');
 ok(T.maxOrigFor(0) === T.MAX_ORIG[0] && T.maxOrigFor(T.RAMP_Q) === T.MAX_ORIG[1] && near(T.pOddFor(0), 0) && near(T.pOddFor(T.RAMP_Q), 0.8), '原價上限、不整百機率');
 for (let n = 1; n <= T.RAMP_Q + 2; n++) ok(T.timeMs(n) <= T.timeMs(n - 1) && T.maxOrigFor(n) >= T.maxOrigFor(n - 1) && T.pOddFor(n) >= T.pOddFor(n - 1), '單調 ' + n);
 { const d = []; for (let n = 1; n <= T.RAMP_Q; n++) d.push(T.timeMs(n - 1) - T.timeMs(n)); ok(Math.max(...d) - Math.min(...d) <= 1, '限時線性縮短：每題 −' + Math.min(...d) + '～−' + Math.max(...d) + ' 毫秒'); }

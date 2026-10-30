@@ -9,8 +9,14 @@ ok(T.COLORS.map(c => c.id + ':' + c.beats).join() === 'red:4,orange:2,yellow:1,g
 // BPM 越來越快、有上限
 ok(near(T.bpmFor(0), T.BPM_START) && T.bpmFor(5) > T.bpmFor(4) && T.bpmFor(1000) === T.BPM_MAX && near(T.bpmFor(3) - T.bpmFor(2), T.BPM_STEP), 'bpm rises linearly then caps');
 ok(near(T.measureSec(0), 4 * 60 / T.BPM_START) && T.measureSec(10) < T.measureSec(0), 'a measure is 4 beats and gets shorter');
+// V1.38.0（玩家意見：前 6 小節很無聊、第 7～10 小節很好玩、第 11 小節之後難度提升太快）
+ok(T.BPM_START >= 32, '起始速度夠快，前面的小節不用乾等：' + T.BPM_START);
+ok(T.SLOW_FROM === 10 && T.BPM_STEP_LATE < T.BPM_STEP && near(T.bpmFor(T.SLOW_FROM) - T.bpmFor(T.SLOW_FROM - 1), T.BPM_STEP) && near(T.bpmFor(T.SLOW_FROM + 1) - T.bpmFor(T.SLOW_FROM), T.BPM_STEP_LATE), '第 11 小節（m ＝ 10）之後每小節的加速放慢：+' + T.BPM_STEP + ' → +' + T.BPM_STEP_LATE);
+ok(T.bpmFor(40) - T.bpmFor(10) <= 0.5 * 30 + 1e-9 && T.bpmFor(40) <= 60, '第 41 小節的速度只有 ' + T.bpmFor(40).toFixed(1) + ' BPM（原本是 72）');
+ok(T.UNLOCK.blue <= 4 && T.UNLOCK.purple <= 7 && T.UNLOCK.blue < T.UNLOCK.purple, '藍、紫提早出現：第 ' + (T.UNLOCK.blue + 1) + '、' + (T.UNLOCK.purple + 1) + ' 小節起');
+ok(T.EARLY_MIN_NOTES >= 6 && T.EARLY_M >= 6, '前 ' + T.EARLY_M + ' 小節每小節至少 ' + T.EARLY_MIN_NOTES + ' 個方塊');
 // 小節鏈：第 0 小節固定「左黃、右綠」；每小節左右不同、跟自己這邊上一小節不同；小節一個接一個
-let violations = { sameLR: 0, sameAsPrev: 0, locked: 0, tooDense: 0, rate: 0, gap: 0, count: 0, fixedFirst: 0, times: 0 };
+let violations = { sameLR: 0, sameAsPrev: 0, locked: 0, tooDense: 0, rate: 0, gap: 0, count: 0, fixedFirst: 0, times: 0, early: 0 };
 const seenAt = {};
 for (let run = 0; run < 400; run++) {
   const chart = T.makeChart(70);
@@ -19,6 +25,7 @@ for (let run = 0; run < 400; run++) {
   chart.forEach((mm, i) => {
     if (i > 0) { const p = chart[i - 1]; if (!near(mm.start, p.start + p.dur, 1e-9)) violations.gap++; if (mm.L.color === p.L.color || mm.R.color === p.R.color) violations.sameAsPrev++; }
     if (mm.L.color === mm.R.color) violations.sameLR++;
+    if (mm.m < T.EARLY_M && T.notesPer(mm.L.color) + T.notesPer(mm.R.color) < T.EARLY_MIN_NOTES) violations.early++;          // V1.38.0：前面的小節方塊不能太少
     ['L', 'R'].forEach(side => {
       const c = byId[mm[side].color];
       if (mm.m < T.UNLOCK[c.id]) violations.locked++;
@@ -81,10 +88,11 @@ ok(good.died == null || good.measures >= 10, 'a ±45 ms player survives the slow
 ok(spam.died != null && spam.measures <= 3, 'mashing both lanes dies within a few measures (' + spam.measures + ')');
 ok(idle.died != null && idle.measures <= 3, 'not playing dies quickly (' + idle.measures + ')');
 ok(T.rating(1) !== T.rating(8) && T.rating(8) !== T.rating(15) && T.rating(15) !== T.rating(30) && T.rating(30) !== T.rating(50), 'rating tiers');
-// V1.25 玩家意見：1/4 拍延到第 8 小節、節拍距離 200%、音符高度 200%、判定紅線高度 200%、容錯率提高
-ok(T.UNLOCK.blue === 7 && T.UNLOCK.purple > T.UNLOCK.blue && T.UNLOCK.red === 0 && T.UNLOCK.green === 0, '1/4 拍（藍）第 8 小節（索引 7）才出現，1/8 拍（紫）更晚：' + JSON.stringify(T.UNLOCK));
-for (let m = 0; m < 7; m++) ok(!T.allowedColors(m).includes('blue') && !T.allowedColors(m).includes('purple'), '第 ' + (m + 1) + ' 小節沒有 1/4、1/8 拍');
-ok(T.allowedColors(7).includes('blue'), '第 8 小節起可以出現 1/4 拍');
+// V1.25 玩家意見：節拍距離 200%、音符高度 200%、判定紅線高度 200%、容錯率提高（1/4 拍延到第 8 小節那一條，V1.38.0 玩家說前面太無聊，改成提早：藍第 5 小節、紫第 8 小節）
+ok(T.UNLOCK.blue === 4 && T.UNLOCK.purple === 7 && T.UNLOCK.red === 0 && T.UNLOCK.green === 0, '1/4 拍（藍）第 5 小節（索引 4）起出現，1/8 拍（紫）第 8 小節（索引 7）起：' + JSON.stringify(T.UNLOCK));
+for (let m = 0; m < 4; m++) ok(!T.allowedColors(m).includes('blue') && !T.allowedColors(m).includes('purple'), '第 ' + (m + 1) + ' 小節沒有 1/4、1/8 拍');
+for (let m = 4; m < 7; m++) ok(T.allowedColors(m).includes('blue') && !T.allowedColors(m).includes('purple'), '第 ' + (m + 1) + ' 小節有 1/4 拍、還沒有 1/8 拍');
+ok(T.allowedColors(7).includes('purple'), '第 8 小節起可以出現 1/8 拍');
 ok(T.FALL_S <= 1.7 / 2 + 1e-9, '節拍距離 200%：掉落速度加倍（FALL_S ' + T.FALL_S + '）');
 ok(T.NOTE_H === 56 && T.HIT_WIN >= 0.2 - 1e-9, '音符高度 56px（原本 28 的 200%）、判定視窗 ' + T.HIT_WIN + ' 秒（原本 0.14）');
 { const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction2.css'), 'utf8');

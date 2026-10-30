@@ -47,7 +47,7 @@ for (let i = 0; i < 400; i++) {
   ok(T.squareErr(q.sq.map(k => q.pts[k])) < T.EPS_SQ, '真正方形的 eps 夠小');
   ok(q.decoys.length === D, '第 ' + lv + ' 關：誘餌 ' + q.decoys.length + '／' + D);
   q.decoys.forEach(dc => { const e = T.squareErr(dc.idx.map(k => q.pts[k])); ok(near(e, dc.eps, 1e-9) && e >= T.EPS_NONSQ && e <= dmax + 1e-9, '誘餌 eps ' + e.toFixed(4) + ' 在 ' + T.EPS_NONSQ + '～' + dmax.toFixed(3)); decoyTotal++; epsRange = [Math.min(epsRange[0], e), Math.max(epsRange[1], e)]; });
-  ok(q.rot >= T.ROT[0] - 1e-9 && q.rot <= T.ROT[1] + 1e-9 && q.side >= T.SIDE[0] - 1e-9 && q.side <= T.SIDE[1] + 1e-9, '正方形的旋轉 ' + q.rot.toFixed(0) + '°、邊長 ' + q.side.toFixed(0));
+  ok(q.rot >= T.ROT[0] - 1e-9 && q.rot <= T.ROT[1] + 1e-9 && q.side >= T.sideRangeFor(lv)[0] - 1e-9 && q.side <= T.sideRangeFor(lv)[1] + 1e-9 && q.side >= T.SIDE[0] - 1e-9, '正方形的旋轉 ' + q.rot.toFixed(0) + '°、邊長 ' + q.side.toFixed(0));
   rotMin = Math.min(rotMin, q.rot); rotMax = Math.max(rotMax, q.rot);
   if (lv === 1) ok(q.decoys.length === 0 && N === 8, '第 1 關：8 顆星、沒有誘餌');
 }
@@ -66,5 +66,13 @@ for (const lv of [1, 12, 24, 40]) { const t0 = Date.now(); let worst = 0; for (l
   ok(/\.fsq-line--true \{[^}]*var\(--c-ok\)/.test(css) && /\.fsq-line--bad \{[^}]*var\(--c-bad-light\)/.test(css) && /\.fsq-sky \{[^}]*var\(--fsq-sky\)/.test(css), '綠色、紅色、夜空用 CSS 變數');
   ok(boot.indexOf("'js/reaction_findsquare.js'") > 0 && /斜/.test(G.rule), 'boot.js 有載入、玩法說明提到斜的'); }
 ok(/^M/.test(T.starPath(10)) && T.starPath(10).split(' L').length === 10, '星星的 path 有 10 個頂點');
+// V1.38.0 玩家意見：前面的關卡正方形要大（第 7 關在手機上就很難辨識）：邊長隨關卡線性縮小，第 1 關 240～270，到頂回到原本的 100～190
+{ const r1 = T.sideRangeFor(1), rT = T.sideRangeFor(T.RAMP_LEVELS), r7 = T.sideRangeFor(7);
+  ok(r1[0] === 240 && r1[1] === 270 && rT[0] === T.SIDE[0] && rT[1] === T.SIDE[1] && T.sideRangeFor(99)[0] === T.SIDE[0], '邊長範圍：第 1 關 ' + r1 + ' → 到頂 ' + rT);
+  ok(r7[0] >= 200 && r7[1] >= 240, '第 7 關的邊長範圍還是大的：' + r7 + '（原本固定 100～190）');
+  for (let l = 2; l <= 40; l++) { const a = T.sideRangeFor(l - 1), b = T.sideRangeFor(l); ok(b[0] <= a[0] && b[1] <= a[1] && b[0] <= b[1], '邊長越後面越小 ' + l); }
+  // 實際出題：前 7 關的正方形，邊長平均 ≥ 200（星空寬 440，約佔 45% 以上）
+  for (const lv of [1, 4, 7]) { let tot = 0, mn = 1e9, N = 60; for (let i = 0; i < N; i++) { const q = T.makeLevel(lv, rnd); tot += q.side; mn = Math.min(mn, q.side); ok(q.pts.length === T.pointsFor(lv) && q.side <= 280, '大正方形也放得進星空、星星數照舊'); } ok(tot / N >= 200 && mn >= T.sideRangeFor(lv)[0] - 1e-9, '第 ' + lv + ' 關正方形邊長平均 ' + (tot / N).toFixed(0) + '、最小 ' + mn.toFixed(0)); }
+  ok(T.FIELD.w * 0.5 < T.sideRangeFor(1)[1], '第 1 關的正方形有星空寬度的一半以上'); }
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20) !== T.rating(30), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

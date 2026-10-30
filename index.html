@@ -80,6 +80,21 @@
             <button class="share-btn" id="share-btn" type="button" aria-label="分享這個遊戲">
                 <span id="icon-share"></span>
             </button>
+            <!-- 左上角漢堡選單：點了往下展開「設定」「成績」「安裝與離線」三項；邏輯在 js/menu_nav.js，樣式在 css/menu_nav.css -->
+            <button class="nav-btn" id="nav-btn" type="button" aria-label="選單" aria-haspopup="true" aria-expanded="false" aria-controls="nav-pop">
+                <span id="icon-nav"></span>
+            </button>
+            <div class="nav-pop" id="nav-pop" role="menu" hidden>
+                <button class="nav-pop__item" id="nav-settings" type="button" role="menuitem">
+                    <span class="nav-pop__ico" id="icon-nav-settings"></span><span>設定</span>
+                </button>
+                <button class="nav-pop__item" id="nav-scores" type="button" role="menuitem">
+                    <span class="nav-pop__ico" id="icon-nav-scores"></span><span>成績</span>
+                </button>
+                <button class="nav-pop__item" id="nav-offline" type="button" role="menuitem">
+                    <span class="nav-pop__ico" id="icon-nav-offline"></span><span>安裝與離線</span>
+                </button>
+            </div>
             <div class="menu__head">
                 <div class="menu__logo" id="menu-logo"></div>
                 <h1 class="menu__title">記憶模糊</h1>

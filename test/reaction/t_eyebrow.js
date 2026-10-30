@@ -50,12 +50,22 @@ for (let i = 0; i < 25; i++) { const mk = () => { const pts = []; for (let k = 0
 }
 
 // ── 眉毛形狀 ──
+// 規律的形狀與 V1.36.0 的四種奇怪形狀：u 一路往外（不會折回來）；V1.38.0 的三種會打圈的（LOOPY）會折回來，另外檢查
 for (const type of T.TYPES) for (let i = 0; i < 200; i++) {
-  const par = { h: 0.08 + rnd() * 0.14, slope: -0.1 + rnd() * 0.22, peak: 0.4 + rnd() * 0.32, drop: rnd() * 0.6, waves: rnd() < 0.5 ? 1 : 1.5 }, b = T.browShape(type, par, 24);
-  ok(b.length === 24 && b.every(p => Number.isFinite(p.u) && Number.isFinite(p.v)), type + ' 點數');
-  ok(near(b[0].u, -T.BROW_GAP, 0.06) && near(b[23].u, -(T.BROW_GAP + T.BROW_LEN), 0.06) && b.every(p => p.u < 0), type + '：在中軸左邊、從內端往外長 ' + T.BROW_LEN + 'px');
-  ok(b.every(p => p.v > -130 && p.v < 0), type + '：高度在臉的眉毛位置範圍內：' + Math.min(...b.map(p => p.v)) + '～' + Math.max(...b.map(p => p.v)));
-  for (let k = 1; k < 24; k++) ok(b[k].u < b[k - 1].u, type + '：u 一路往外（不會折回來）');
+  const par = { h: 0.1 + rnd() * 0.2, slope: -0.1 + rnd() * 0.22, peak: 0.4 + rnd() * 0.32, drop: rnd() * 0.6, waves: rnd() < 0.5 ? 1 : 1.5 };
+  if (T.WEIRD.includes(type)) Object.assign(par, T.weirdPar(type, rnd));
+  const b = T.browShape(type, par, T.BROW_PTS), loopy = T.LOOPY.includes(type);
+  ok(b.length === T.BROW_PTS && b.every(p => Number.isFinite(p.u) && Number.isFinite(p.v)), type + ' 點數');
+  ok(b.every(p => p.v >= T.BROW_TOP - 0.05 && p.v <= T.BROW_BOTTOM + 0.05), type + '：高度在允許的範圍內：' + Math.min(...b.map(p => p.v)) + '～' + Math.max(...b.map(p => p.v)));
+  ok(b.every(p => p.u < 0 && p.u >= -(T.BROW_GAP + T.BROW_LEN + 20)), type + '：在中軸左邊、不會長太遠');
+  if (!loopy) {
+    ok(near(b[0].u, -T.BROW_GAP, 0.06) && near(b[T.BROW_PTS - 1].u, -(T.BROW_GAP + T.BROW_LEN), 0.06), type + '：從內端往外長 ' + T.BROW_LEN + 'px');
+    for (let k = 1; k < T.BROW_PTS; k++) ok(b[k].u < b[k - 1].u, type + '：u 一路往外（不會折回來）');
+  } else {
+    let back = 0; for (let k = 1; k < T.BROW_PTS; k++) if (b[k].u > b[k - 1].u) back++;
+    ok(back >= 4, type + '：線會折回來（打圈）：折回 ' + back + ' 次');
+    ok(T.pathLength(b.map(q => ({ x: q.u, y: q.v }))) >= T.BROW_LEN * 1.6, type + '：打圈的線比直線長很多');
+  }
 }
 
 // ── 出題：全部關卡掃一遍 ──
@@ -65,8 +75,9 @@ for (let lv = 1; lv <= 30; lv++) for (let rep = 0; rep < 60; rep++) {
   ok(T.typesFor(lv).includes(q.type) || (T.WEIRD.includes(q.type) && lv >= T.WEIRD_FROM), '形狀在這一關可以出現的種類裡'); ST.types[q.type] = (ST.types[q.type] || 0) + 1;
   ok(near(q.thresh, T.threshFor(lv)) && Math.abs(q.thetaDeg) <= T.tiltFor(lv) + 0.01 && (lv < T.TILT_FROM ? q.thetaDeg === 0 : Math.abs(q.thetaDeg) >= T.tiltFor(lv) * 0.5 - 0.01), '歪的角度 ' + q.thetaDeg + '°');
   ok(Math.abs(q.F.x - 236) <= T.shiftFor(lv) + 0.1 && (lv >= T.TILT_FROM || q.F.x === 236), '臉心偏離 ' + (q.F.x - 236).toFixed(1) + 'px'); ST.maxTilt = Math.max(ST.maxTilt, Math.abs(q.thetaDeg)); ST.maxShift = Math.max(ST.maxShift, Math.abs(q.F.x - 236));
-  ok(q.ref.length === 24 && q.target.length === 24 && near(q.L, T.pathLength(q.ref)), '兩條眉毛各 24 點'); ST.Lmin = Math.min(ST.Lmin, q.L); ST.Lmax = Math.max(ST.Lmax, q.L);
-  ok(near(T.pathLength(q.target), q.L, 0.01), '鏡射不改變長度');
+  ok(q.ref.length === T.BROW_PTS && q.target.length === T.BROW_PTS && near(q.L, Math.min(T.pathLength(q.ref), T.L_CAP * T.BROW_LEN)) && near(q.pathLen, T.pathLength(q.ref)), '兩條眉毛各 ' + T.BROW_PTS + ' 點；相似度用的長度 L ＝ 路徑長度、最多 ' + T.L_CAP + ' 倍 BROW_LEN');
+  ok(q.ref.concat(q.target).every(p => p.x >= T.EDGE - 0.6 && p.x <= 472 - T.EDGE + 0.6 && p.y >= 4 && p.y <= 640 - 4), '第 ' + lv + ' 關：整條眉毛（含鏡射的）都在畫面裡'); ST.Lmin = Math.min(ST.Lmin, q.L); ST.Lmax = Math.max(ST.Lmax, q.L);
+  ok(near(T.pathLength(q.target), q.pathLen, 0.01), '鏡射不改變長度');
   ok(T.similarity(q.target, q.target, q.L) === 100, '標準答案對自己 100%');
   // 完美玩家（加 1.2px 抖動）一定及格；偏 0.12 倍眉毛長度的玩家在高關卡不及格
   const good = q.target.map(p => ({ x: p.x + (rnd() - 0.5) * 2.4, y: p.y + (rnd() - 0.5) * 2.4 })); ok(T.similarity(good, q.target, q.L) >= q.thresh, '抖動 ±1.2px 的完美玩家第 ' + lv + ' 關過關（' + T.similarity(good, q.target, q.L).toFixed(2) + '% ≥ ' + q.thresh + '）');
@@ -81,13 +92,13 @@ ok(T.whyText(88.3142, 83) === '相似度 88.3142%（及格線 83.0000%）——�
 
 // ── 程式裡的接線 ──
 { const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_eyebrow.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 4200/.test(src) && /ebw-ghost/.test(src) && /similarity\(stroke, q\.target, q\.L\)/.test(src) && /whyText\(sim, q\.thresh\)/.test(src), '失敗：鏡射的左眉（淡紅色）疊在你畫的上面、寫出相似度、停格夠久');
+  ok(/api\.fail\(\{ delay: 3000/.test(src) && /ebw-ghost/.test(src) && /similarity\(stroke, q\.target, q\.L\)/.test(src) && /whyText\(sim, q\.thresh\)/.test(src), '失敗：鏡射的左眉（紅色）疊在你畫的上面、寫出相似度、停格夠久');
   ok(/pointerdown/.test(src) && /pointermove/.test(src) && /pointerup/.test(src) && /MIN_LEN_FRAC/.test(src) && /畫長一點/.test(src) && /api\.solve = /.test(src) && /api\.wrong = /.test(src), '手指放開才判定；太短不算可以重畫；solve／wrong');
   ok(/\.ebw-ref \{[^}]*var\(--ebw-brow\)/.test(css) && /\.ebw-ghost \{[^}]*var\(--ebw-ghost\)/.test(css) && /\.ebw-head \{[^}]*var\(--ebw-skin\)/.test(css), '眉毛、臉、淡紅色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_eyebrow.js'") > 0 && /鏡射/.test(G.rule) && /相似度/.test(G.rule) && /轉正/.test(G.rule) && /奇怪/.test(G.rule), 'boot.js 有載入、玩法說明提到鏡射、相似度、轉正、奇怪的形狀'); }
 ok(T.rating(1) !== T.rating(3) && T.rating(3) !== T.rating(6) && T.rating(6) !== T.rating(10) && T.rating(10) !== T.rating(16), '評語分級');
 // ── V1.36.0 玩家意見：眉毛形狀太規律 → 奇怪形狀；揭曉時整張臉轉正 ──
-ok(T.WEIRD.length === 4 && T.TYPES.length === T.BASE_TYPES.length + T.WEIRD.length, '四種奇怪形狀 + 五種規律形狀');
+ok(T.WEIRD.length === 7 && T.LOOPY.length === 3 && T.LOOPY.every(t => T.WEIRD.includes(t)) && T.TYPES.length === T.BASE_TYPES.length + T.WEIRD.length, '七種奇怪形狀（含彈簧、迴紋針、漩渦三種打圈的）+ 五種規律形狀');
 ok(T.weirdPFor(T.WEIRD_FROM - 1) === 0 && T.weirdPFor(T.WEIRD_FROM) >= T.WEIRD_P[0] - 1e-9 && near(T.weirdPFor(T.RAMP_LEVELS), T.WEIRD_P[1], 1e-6), '奇怪形狀：第 ' + T.WEIRD_FROM + ' 關起出現，到頂 ' + T.WEIRD_P[1]);
 for (let l = T.WEIRD_FROM + 1; l <= 60; l++) ok(T.weirdPFor(l) >= T.weirdPFor(l - 1), '奇怪形狀的機率單調 ' + l);
 { const dirChanges = b => { let c = 0, prev = 0; for (let k = 1; k < b.length; k++) { const d = Math.sign(b[k].v - b[k - 1].v); if (d && prev && d !== prev) c++; if (d) prev = d; } return c; };
@@ -106,7 +117,7 @@ for (let l = T.WEIRD_FROM + 1; l <= 60; l++) ok(T.weirdPFor(l) >= T.weirdPFor(l 
   const reg = {}; T.BASE_TYPES.forEach(type => { let c = 0; for (let i = 0; i < 200; i++) c += dirChanges(T.browShape(type, { h: 0.08 + rnd() * 0.14, slope: rnd() * 0.1, peak: 0.4 + rnd() * 0.3, drop: rnd() * 0.5, waves: 1 }, 24)); reg[type] = c / 200; });
   ok(reg.moon <= 1.01 && reg.arch <= 1.2, '規律形狀（彎月、拱形）只有一座山：' + JSON.stringify(reg)); }
 // 沒有給 par 的奇怪欄位時也畫得出來（舊程式或測試傳來的 par）
-for (const type of T.WEIRD) { const b = T.browShape(type, { h: 0.15, slope: 0.05, peak: 0.6, drop: 0.3, waves: 1 }, 24); ok(b.length === 24 && b.every(p => Number.isFinite(p.u) && Number.isFinite(p.v)), type + '：沒有專用參數時有預設值'); }
+for (const type of T.WEIRD) { const b = T.browShape(type, { h: 0.15, slope: 0.05, peak: 0.6, drop: 0.3, waves: 1 }, T.BROW_PTS); ok(b.length === T.BROW_PTS && b.every(p => Number.isFinite(p.u) && Number.isFinite(p.v)), type + '：沒有專用參數時有預設值'); }
 ok(near(T.catmull([0, 1, 0, -1, 0], 0), 0, 1e-9) && near(T.catmull([0, 1, 0, -1, 0], 0.25), 1, 1e-9) && near(T.catmull([0, 1, 0, -1, 0], 1), 0, 1e-9) && near(T.piecewise([0, 0.5, 1], [0, 2, 0], 0.25), 1, 1e-9), 'catmull 通過控制點；piecewise 折線插值');
 // 揭曉時整張臉轉正
 { const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_eyebrow.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction6.css'), 'utf8').split(/\s+/).join(' ');
@@ -115,4 +126,29 @@ ok(near(T.catmull([0, 1, 0, -1, 0], 0), 0, 1e-9) && near(T.catmull([0, 1, 0, -1,
   ok(css.indexOf('.ebw-turn { transition-property: transform;') >= 0 && css.indexOf('.ebw-axis--on { opacity: 0.45;') >= 0, '轉正的轉場動畫與中軸有樣式'); }
 // 轉正的數學：turn 轉 −θ（繞臉心），再加上臉本身的 +θ，合起來是 0——臉的中軸變成垂直
 { for (const th of [-170, -45, 0, 12, 90, 179]) { const total = (-th) + th; ok(total === 0, '轉正：歪 ' + th + '° → 揭曉後 0°'); } }
+// ── V1.38.0 玩家意見：眉毛要加大、形狀變化要大（可以超出臉部；彈簧、迴紋針、漩渦…）；評審動畫先轉正、再顯示紅色的正確眉毛 ──
+ok(T.BROW_LEN >= 130 && T.BROW_GAP + T.BROW_LEN > 150 + 10, '眉毛加大（' + T.BROW_LEN + 'px），眉尾超出臉的輪廓（頭的半寬 150）');
+ok(T.BROW_TOP <= -180, '眉毛可以高過頭頂（BROW_TOP ' + T.BROW_TOP + '）');
+{ // 形狀的變化量：每種形狀的上下起伏（最高到最低）至少要有 BROW_LEN 的 15%，而且彈簧、迴紋針、漩渦起碼 12px
+  const span = {}; T.TYPES.forEach(type => { let mn = 1e9, mx = -1e9, tot = 0; for (let i = 0; i < 200; i++) { const par = { h: 0.1 + rnd() * 0.2, slope: rnd() * 0.1, peak: 0.4 + rnd() * 0.3, drop: rnd() * 0.5, waves: 1 }; if (T.WEIRD.includes(type)) Object.assign(par, T.weirdPar(type, rnd)); const b = T.browShape(type, par, T.BROW_PTS), vs = b.map(q => q.v), sp = Math.max(...vs) - Math.min(...vs); tot += sp; mn = Math.min(mn, sp); mx = Math.max(mx, sp); } span[type] = { avg: tot / 200, min: mn, max: mx }; });
+  console.log('各形狀上下起伏（平均 px）：' + T.TYPES.map(k => k + ' ' + span[k].avg.toFixed(0)).join('　'));
+  ok(T.TYPES.filter(k => k !== 'flat').every(k => span[k].avg >= T.BROW_LEN * 0.12), '除了本來就平的一字眉，每種形狀的平均起伏至少 ' + Math.round(T.BROW_LEN * 0.12) + 'px'); }
+// 打圈的形狀：螺旋要真的繞圈（累計轉角），彈簧一圈一圈
+{ const turnsOf = b => { let tot = 0, prev = null; for (let k = 1; k < b.length; k++) { const a = Math.atan2(b[k].v - b[k - 1].v, b[k].u - b[k - 1].u); if (prev != null) { let d = a - prev; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; tot += d; } prev = a; } return Math.abs(tot) / (2 * Math.PI); };
+  const sw = [], cl = [], sp = [];
+  for (let i = 0; i < 100; i++) { const w = T.weirdPar('swirl', rnd), c = T.weirdPar('clip', rnd), g = T.weirdPar('spring', rnd);
+    sw.push(turnsOf(T.browShape('swirl', w, 200))); cl.push(turnsOf(T.browShape('clip', c, 200))); sp.push(turnsOf(T.browShape('spring', g, 200))); }
+  const avg = a => a.reduce((x, y) => x + y, 0) / a.length;
+  ok(Math.min(...sw) >= 1.3 && Math.min(...cl) >= 1.2 && Math.min(...sp) >= 2.5, '漩渦、迴紋針繞了 1 圈以上、彈簧繞了 3 圈左右：' + avg(sw).toFixed(2) + '／' + avg(cl).toFixed(2) + '／' + avg(sp).toFixed(2)); }
+// 臉心的偏移：眉毛越大、能偏的越少，整條眉毛一定留在畫面裡（歪到任何角度都一樣，因為只看離臉心最遠的距離）
+{ ok(T.shiftLimit(100, 472) === 472 / 2 - T.EDGE - 100 && T.shiftLimit(228, 472) < 1, 'shiftLimit');
+  for (let i = 0; i < 400; i++) { const lv = 1 + Math.floor(rnd() * 40), q = T.makeLevel(lv, rnd), r = T.browRadius(q.brow); ok(Math.abs(q.F.x - 236) <= Math.max(0, T.shiftLimit(r, 472)) + 0.1, '偏移不超過 shiftLimit：' + (q.F.x - 236).toFixed(1) + ' ≤ ' + T.shiftLimit(r, 472).toFixed(1)); }
+  // 窄的畫面（W 小）也要放得進去：重抽到放得下的眉毛
+  for (let i = 0; i < 200; i++) { const q = T.makeLevel(30, rnd, 440, 640); ok(q.ref.concat(q.target).every(p => p.x >= T.EDGE - 0.6 && p.x <= 440 - T.EDGE + 0.6), '窄畫面 440 也放得進去'); } }
+// 評審動畫的順序：臉先轉正（TURN_MS）→ 停一下（REVEAL_GAP_MS）→ 紅色的正確眉毛淡入（GHOST_MS）→ 才顯示相似度與結算
+{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_eyebrow.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction6.css'), 'utf8').split(/\s+/).join(' ');
+  const iJudge = src.indexOf('function judge(stroke)'), iTurn = src.indexOf("turn.style.transform = 'rotate('", iJudge), iAfter = src.indexOf('api.after(revealAt', iJudge), iGhost = src.indexOf("ghost.setAttribute('points'", iJudge), iInfo = src.indexOf('info.textContent = why', iJudge), iPass = src.indexOf('api.pass(', iJudge), iFail = src.indexOf('api.fail(', iJudge);
+  ok(iJudge > 0 && iTurn > iJudge && iAfter > iTurn && iGhost > iAfter && iInfo > iGhost && iPass > iInfo && iFail > iInfo, '順序：先轉正（turn.style.transform）→ 等 revealAt → 才畫紅色眉毛（ghost）→ 才寫相似度、過關／失敗');
+  ok(/var turnMs = q\.thetaDeg \? TURN_MS : 0, revealAt = turnMs \+ REVEAL_GAP_MS/.test(src) && T.REVEAL_GAP_MS > 0 && T.TURN_MS > 0, '紅色眉毛在「轉正的時間＋停頓」之後才出現（臉本來就正的就不用等轉）');
+  ok(/\.ebw-ghost \{[^}]*opacity: 0;[^}]*transition: opacity 0\.6s/.test(css) && /\.ebw-ghost--on \{[^}]*opacity: 0\.8/.test(css) && T.GHOST_MS === 600, '紅色眉毛一開始看不見、淡入 0.6 秒（跟 GHOST_MS 一致）'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

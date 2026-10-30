@@ -15,6 +15,11 @@
    · 難度（隨已答對的句數 count 線性增加，到 RAMP_CMDS 句為止）：口令間隔 2200 → 950 毫秒（INTERVAL）、寬限時間是間隔的 62%（GRACE）、
      否定句的機率 12% → 40%（NEG_P）、「兩面旗一起」的機率從第 BOTH_FROM 句起 0 → 30%（BOTH_P）；同一面旗子連續出現的機率偏高（SAME_P）。
    · 結束時把那句口令和你的動作並排：左邊是「該有的旗子」、右邊是「你的旗子」，不一樣的標紅。
+   · V1.38.0（玩家意見）：
+       ① 寬限時間看得見：口令框的下緣有一條藍色橫條，口令一出現就從滿慢慢縮到空（長度＝這句的寬限時間 graceFor），縮完就是寬限結束、旗子要對了；
+       ② 換新口令有明顯的表演：口令框從左右兩邊交替快速滑進來（0.26 秒）＋ 閃一下黃色底 ＋ 「啵」一聲（連續兩句一模一樣的口令也看得出來是新的）；
+       ③ 口令要常常讓手指動：一般口令有 CHANGE_P（90%）會讓旗子換狀態（現在放下就叫你舉、現在舉著就叫你放）；「兩面一起」也一定往會動的方向；
+          「不要」類（不用動的）機率降低（12%→40% 改成 8%→28%）。所以大多數口令都要按住或放開，不會一直發呆。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -27,7 +32,8 @@
     var RAMP_CMDS = 40;                         /* 答對幾句之後難度到頂 */
     var INTERVAL = [2200, 950];                 /* 兩句口令之間的間隔（毫秒）：0 句 → 到頂 */
     var GRACE = 0.62;                           /* 寬限時間 ＝ 間隔 × 這個比例 */
-    var NEG_P = [0.12, 0.4];                    /* 否定句（不要舉／不要放下）的機率：0 句 → 到頂 */
+    var NEG_P = [0.08, 0.28];                   /* 否定句（不要舉／不要放下，旗子不用動）的機率：0 句 → 到頂（原本 12% → 40%，V1.38.0 降低：玩家說大部分口令不用動手指） */
+    var CHANGE_P = 0.9;                         /* 一般口令（舉起來／放下）讓旗子換狀態（要按住或放開）的機率；其餘是「已經是那樣了」的重複口令（V1.38.0） */
     var BOTH_FROM = 10, BOTH_P = [0, 0.3];      /* 第幾句起會出「兩面旗一起」、機率：第 BOTH_FROM 句 → 到頂 */
     var SAME_P = 0.45;                          /* 這句口令跟上一句是同一面旗子的機率 */
     var LEAD_MS = 1500;                         /* 開始後多久出第一句口令 */
@@ -45,13 +51,18 @@
        req 是目前「該有的狀態」{ L, R }；prev 是上一句口令（用來決定要不要連續同一面旗子）。 */
     function nextCommand(req, prev, count, rand) {
         rand = rand || Math.random;
-        if (rand() < bothPFor(count)) { var up = rand() < 0.5; return { text: '兩面旗一起' + (up ? '舉起來' : '放下'), kind: up ? 'raise' : 'lower', flags: ['L', 'R'], to: up }; }
+        if (rand() < bothPFor(count)) {
+            /* 兩面旗一起：往「至少一面會動」的方向（兩面都舉著就放下、都放下就舉起來；一高一低隨機） */
+            var up = req.L === req.R ? !req.L : rand() < 0.5;
+            return { text: '兩面旗一起' + (up ? '舉起來' : '放下'), kind: up ? 'raise' : 'lower', flags: ['L', 'R'], to: up };
+        }
         var f = prev && prev.flags.length === 1 && rand() < SAME_P ? prev.flags[0] : kit.pick(['L', 'R'], rand), nm = NAMES[f];
         if (rand() < negPFor(count)) {
             /* 否定句：旗子現在放下 → 「不要舉」（繼續放著）；現在舉著 → 「不要放下」（繼續舉著） */
             return req[f] ? { text: nm + '不要放下', kind: 'keep', flags: [f], to: null } : { text: nm + (rand() < 0.5 ? '不要舉' : '不舉'), kind: 'keep', flags: [f], to: null };
         }
-        var raise = rand() < 0.5;
+        /* 一般口令：大多數（CHANGE_P）會讓這面旗子換狀態，手指要按住或放開；少數是「已經是那樣了」的重複口令 */
+        var raise = rand() < CHANGE_P ? !req[f] : req[f];
         return { text: nm + (raise ? '舉起來' : '放下'), kind: raise ? 'raise' : 'lower', flags: [f], to: raise };
     }
     /* 套用口令：回傳新的「該有的狀態」 */
@@ -114,7 +125,10 @@
         /* 左右半邊的按壓區（整個畫面分兩半）：左＝紅旗、右＝白旗 */
         var padL = h('div', { 'class': 'flg-pad flg-pad--L' }, [h('div', { 'class': 'flg-pad__t', text: '左手　紅旗' })]), padR = h('div', { 'class': 'flg-pad flg-pad--R' }, [h('div', { 'class': 'flg-pad__t', text: '右手　白旗' })]);
         field.appendChild(padL); field.appendChild(padR);
-        var bubble = h('div', { 'class': 'flg-cmd', text: '準備…' }); field.appendChild(bubble);
+        /* 口令框：上面是口令文字，下緣是藍色的寬限時間橫條（V1.38.0）：口令一出現就從滿縮到空，縮完＝寬限結束 */
+        var bubbleText = h('span', { 'class': 'flg-cmd__t', text: '準備…' });
+        var graceFill = h('div', { 'class': 'flg-grace__fill' });
+        var bubble = h('div', { 'class': 'flg-cmd' }, [bubbleText, h('div', { 'class': 'flg-grace' }, [graceFill])]); field.appendChild(bubble);
         var person = drawPerson(field, W); person.svg.style.cssText = 'left:' + Math.round((W - person.svg.getAttribute('width')) / 2) + 'px;top:150px;';
         var info = h('div', { 'class': 'qz-note flg-info', text: '' }); field.appendChild(info);
         if (kit.once('flags.hint')) kit.hintOn(stage, null, { mode: 'hold', x: W * 0.25, y: H * 0.78, delay: 800, labelAbove: true, text: '按住＝舉旗，放開＝放下' });
@@ -149,7 +163,11 @@
             startState = { L: actual.L, R: actual.R }; req = applyCommand(req, cmd);
             var iv = intervalFor(count), gr = graceFor(count);
             graceEnd = performance.now() + gr;
-            bubble.textContent = cmd.text; bubble.classList.remove('flg-cmd--pop'); void bubble.offsetWidth; bubble.classList.add('flg-cmd--pop'); Sfx.play('click');
+            /* 換新口令的表演（要快）：口令框從左右兩邊交替滑進來＋閃一下黃色底＋「啵」一聲；寬限條重新從滿開始縮 */
+            bubbleText.textContent = cmd.text;
+            bubble.classList.remove('flg-cmd--inL', 'flg-cmd--inR'); void bubble.offsetWidth; bubble.classList.add(cmdNo % 2 ? 'flg-cmd--inL' : 'flg-cmd--inR');
+            graceFill.classList.remove('flg-grace__fill--run'); void graceFill.offsetWidth; graceFill.style.animationDuration = gr + 'ms'; graceFill.style.animationPlayState = 'running'; graceFill.classList.add('flg-grace__fill--run');
+            Sfx.play('pop');
             api.after(gr, function () {                                                               /* ② 寬限結束：兩面旗都要符合 */
                 if (over || myGen !== gen) return;
                 if (!consistent(actual, req)) { finish('mismatch', wrongFlags(actual, req)[0]); return; }
@@ -160,7 +178,7 @@
         api.after(LEAD_MS, issue);
         function finish(kind, f) {
             if (over) return;
-            over = true; gen++; bubble.classList.add('flg-cmd--bad');
+            over = true; gen++; bubble.classList.add('flg-cmd--bad'); graceFill.style.animationPlayState = 'paused';
             var want = describeState(req), mine = describeState(actual);
             var why = kind === 'moved' ? (cmd && cmd.kind === 'keep' && performance.now() < graceEnd ? '口令是「' + cmd.text + '」，卻動了' + NAMES[f] + '！' : NAMES[f] + '動了，跟口令不一致！') : '寬限時間到了，' + NAMES[f] + '的狀態不對！';
             info.textContent = why;
@@ -188,12 +206,12 @@
     var G = {
         id: ID,
         name: '舉旗子',
-        rule: '你兩手各拿一面旗子：**左手紅旗、右手白旗**。口令一句一句出現：「紅旗舉起來」「白旗不要放下」。畫面左半邊（左手拇指）管紅旗、右半邊（右手拇指）管白旗，**按住＝舉起來，放開＝放下**，左右可以同時用。**旗子的狀態要隨時跟口令一致**；口令說「不要」就保持不動（動了就錯）。小心：同一面旗子會連續出現，後面口令越來越快，還會出現「兩面旗一起」。做錯就結束，看你能答對幾句。',
+        rule: '你兩手各拿一面旗子：**左手紅旗、右手白旗**。口令一句一句出現：「紅旗舉起來」「白旗不要放下」。畫面左半邊（左手拇指）管紅旗、右半邊（右手拇指）管白旗，**按住＝舉起來，放開＝放下**，左右可以同時用。口令下面的**藍色橫條是反應時間**，縮完旗子就要對了；**旗子的狀態要隨時跟口令一致**；口令說「不要」就保持不動（動了就錯）。小心：同一面旗子會連續出現，後面口令越來越快，還會出現「兩面旗一起」。做錯就結束，看你能答對幾句。',
         mount: mount,
         score: SCORE,
         test: {
             intervalFor: intervalFor, graceFor: graceFor, negPFor: negPFor, bothPFor: bothPFor, nextCommand: nextCommand, applyCommand: applyCommand, consistent: consistent, wrongFlags: wrongFlags, describeState: describeState, rating: rating,
-            RAMP_CMDS: RAMP_CMDS, INTERVAL: INTERVAL, GRACE: GRACE, NEG_P: NEG_P, BOTH_FROM: BOTH_FROM, BOTH_P: BOTH_P, SAME_P: SAME_P, LEAD_MS: LEAD_MS, SOLVE_CAP: SOLVE_CAP, NAMES: NAMES, MAX_LEVEL: MAX_LEVEL
+            RAMP_CMDS: RAMP_CMDS, INTERVAL: INTERVAL, GRACE: GRACE, NEG_P: NEG_P, CHANGE_P: CHANGE_P, BOTH_FROM: BOTH_FROM, BOTH_P: BOTH_P, SAME_P: SAME_P, LEAD_MS: LEAD_MS, SOLVE_CAP: SOLVE_CAP, NAMES: NAMES, MAX_LEVEL: MAX_LEVEL
         }
     };
     Reaction.register(G);

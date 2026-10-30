@@ -8,6 +8,7 @@
          cfg.skipFlush 成功之後不要馬上補送待送的成績（呼叫的人自己處理）
          kind：'registered'（新玩家建好帳號、成績也寫進去了，data 是資料庫回傳的榜單）／'logged-in'／'cancel'／'not-qualified'
      Identity.ui.showAccount()        「我的帳號」面板：改暱稱、設定新密碼、合併到另一個帳號、登出
+     Identity.ui.renameDialog()       「改暱稱」彈窗（帳號面板與主選單的「設定」共用），回傳 Promise<boolean>（true＝改成功）
    彈窗的外框與卡片是「彈窗公版」（js/dialog.js 的 Dlg.open、css/dialog.css）：位置、暗底、寬度、按鈕尺寸與顏色跟其他彈窗一致，
    公版彈窗本來就不能點背景或按 Esc 關掉，所以「認領舊暱稱」不放任何關閉按鈕就是不可略過；這裡的樣式在 css/identity.css。
    ═══════════════════════════════════════════════════════════════════ */
@@ -304,6 +305,15 @@
         });
     }
 
+    /* 「改暱稱」彈窗（我的帳號面板與主選單的「設定」共用）。回傳 Promise<boolean>：true＝改成功了（新暱稱已存進 Leaderboard，呼叫的人再重畫、提示就好） */
+    function renameDialog() {
+        return formDialog({
+            title: '改暱稱', sub: '一天最多改 ' + ID.CFG.RENAME_PER_DAY + ' 次；player_id 不會變，榜上的成績都會換成新名字。',
+            fields: [{ key: 'nick', label: '暱稱', initial: LB.getNick() }], okText: '儲存',
+            submit: function (v) { return ID.rename(v.nick); }
+        });
+    }
+
     /* ═══════════════════════════════════════════════════════════════
        三、「我的帳號」面板
        ═══════════════════════════════════════════════════════════════ */
@@ -323,11 +333,7 @@
                 ],
                 buttons: [
                     { text: '改暱稱', kind: 'sky', keep: true, onClick: function () {
-                        formDialog({
-                            title: '改暱稱', sub: '一天最多改 ' + ID.CFG.RENAME_PER_DAY + ' 次；player_id 不會變，榜上的成績都會換成新名字。',
-                            fields: [{ key: 'nick', label: '暱稱', initial: LB.getNick() }], okText: '儲存',
-                            submit: function (v) { return ID.rename(v.nick); }
-                        }).then(function (ok) { if (ok) { paint(); toast('暱稱已經改成「' + LB.getNick() + '」'); } });
+                        renameDialog().then(function (ok) { if (ok) { paint(); toast('暱稱已經改成「' + LB.getNick() + '」'); } });
                     } },
                     { text: '設定新密碼', kind: 'sky', keep: true, onClick: function () {
                         formDialog({
@@ -369,5 +375,5 @@
         });
     }
 
-    ID.ui = { accountDialog: accountDialog, showAccount: showAccount, formDialog: formDialog };
+    ID.ui = { accountDialog: accountDialog, showAccount: showAccount, formDialog: formDialog, renameDialog: renameDialog };
 })(window);

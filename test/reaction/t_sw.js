@@ -70,6 +70,14 @@ function loadSw() {
       await Promise.all(ev.waits);
       return { handled: ev.handled, res, text: res && res.type !== 'error' ? await res.clone().text() : null };
     },
+    // 送一則 message 給 Service Worker，等它從 port 回覆（沒回覆等 300 毫秒就回傳 null）
+    message(data, noPort) {
+      return new Promise(resolve => {
+        const waits = [], port = { postMessage: m => resolve(m) };
+        listeners.message({ data, ports: noPort ? [] : [port], waitUntil(p) { waits.push(Promise.resolve(p)); } });
+        setTimeout(() => resolve(null), 300);
+      });
+    },
     async lifecycle(type) {
       const waits = [];
       listeners[type]({ waitUntil(p) { waits.push(Promise.resolve(p)); } });
@@ -213,6 +221,33 @@ function loadSw() {
   r = await sw3.fetchEvent(vjsonUrl + '?t=3', { cache: 'no-store' });
   ok(r.text === 'v2:/FadingMemory/version.json', '整批更新失敗時，頁面仍然拿到新的 version.json');
   ok((await sw3.cached(vjsonUrl)) === 'v1:/FadingMemory/version.json', '整批更新失敗：備份的 version.json 維持舊的（下次開頁面會再試）');
+
+  // ═══ V1.38.0：頁面問狀態／要求更新（主選單的「安裝與離線」彈窗）═══
+  const sw4 = loadSw();
+  const N4 = sw4.ctx.PRECACHE.length;
+  let m = await sw4.message({ type: 'STATUS' });
+  ok(m && m.type === 'STATUS' && m.cache === 'fm-cache-v1' && m.precache === N4 && m.cached === 0, 'STATUS：還沒備份：清單 ' + N4 + ' 個、已備份 0 個');
+  sw4.setFetch(async req => new Response('v1:' + new URL(req.url).pathname, { headers: { etag: '"1"' } }));
+  await sw4.lifecycle('install');
+  m = await sw4.message({ type: 'STATUS' });
+  ok(m.precache === N4 && m.cached === N4, 'STATUS：安裝完成：全部備份了（' + m.cached + '／' + m.precache + '）');
+  sw4.caches.store.get('fm-cache-v1').delete(BASE + 'js/ui.js');
+  sw4.caches.store.get('fm-cache-v1').delete(BASE + 'index.html');
+  m = await sw4.message({ type: 'STATUS' });
+  ok(m.cached === N4 - 2, 'STATUS：少了兩個檔案就回報少兩個（' + m.cached + '／' + m.precache + '）');
+  // REFRESH：全部重新從網路拿一次（補回缺的、換成新的），完成回 ok
+  sw4.setFetch(async req => new Response('v2:' + new URL(req.url).pathname, { headers: { etag: '"2"' } }));
+  sw4.log.length = 0;
+  m = await sw4.message({ type: 'REFRESH' });
+  ok(m && m.type === 'REFRESH' && m.ok === true && sw4.log.length === N4, 'REFRESH：重新拿了全部 ' + sw4.log.length + ' 個檔案，回覆 ok');
+  ok((await sw4.cached(BASE + 'js/ui.js')) === 'v2:/FadingMemory/js/ui.js' && (await sw4.cached(BASE + 'index.html')) === 'v2:/FadingMemory/index.html', 'REFRESH：缺的補回來、舊的換成新的');
+  m = await sw4.message({ type: 'STATUS' });
+  ok(m.cached === N4, 'REFRESH 之後 STATUS：全部備份');
+  sw4.setFetch(async req => { throw new TypeError('offline'); });
+  m = await sw4.message({ type: 'REFRESH' });
+  ok(m && m.type === 'REFRESH' && m.ok === false, 'REFRESH：連不上網路回覆 ok:false（不丟例外）');
+  ok((await sw4.cached(BASE + 'js/ui.js')) === 'v2:/FadingMemory/js/ui.js', 'REFRESH 失敗：原本的備份還在');
+  ok((await sw4.message({ type: 'WHATEVER' })) === null && (await sw4.message({ type: 'STATUS' }, true)) === null && (await sw4.message(null)) === null, '不認得的訊息、沒有 port、沒有內容：不回覆也不當掉');
 
   console.log((bad ? bad + ' FAIL / ' : '') + total + ' checks');
   console.log(bad ? 'SOME FAILED' : 'ALL PASS');

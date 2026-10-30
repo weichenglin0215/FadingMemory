@@ -72,4 +72,21 @@ ok(simulate((cmd, start, rq) => cmd.kind === 'keep' ? { L: !start.L, R: !start.R
   ok(/pointerdown/.test(src) && /pointerup/.test(src) && /pointercancel/.test(src) && /p\.x < W \/ 2/.test(src), '按壓：左右半邊、支援兩指一起（pointerdown／pointerup／pointercancel）');
   ok(/max: 300/.test(src), '成績上限 300'); }
 ok(T.rating(3) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20) !== T.rating(40) && T.rating(40) !== T.rating(60), '評語分級');
+// ── V1.38.0 玩家意見：口令要常常讓手指按住／放開；寬限時間要看得見（藍色橫條）；換新口令的表演要明顯 ──
+{ // 動作率：一句口令讓「該有的旗子狀態」改變（＝玩家要按住或放開）的比例
+  function actionRate(n, N) { let rq = { L: false, R: false }, pv = null, act = 0, up = 0, down = 0; for (let i = 0; i < N; i++) { const c = T.nextCommand(rq, pv, n, rnd), nq = T.applyCommand(rq, c); if (nq.L !== rq.L || nq.R !== rq.R) { act++; if (c.kind === 'raise') up++; else down++; } rq = nq; pv = c; } return { act: act / N, up: up / N, down: down / N }; }
+  const a0 = actionRate(0, 30000), a20 = actionRate(20, 30000), a40 = actionRate(40, 30000), a80 = actionRate(80, 30000);
+  console.log('要動手指的口令比例：第 0 句 ' + (100 * a0.act).toFixed(0) + '%、20 句 ' + (100 * a20.act).toFixed(0) + '%、40 句 ' + (100 * a40.act).toFixed(0) + '%');
+  ok(a0.act >= 0.8 && a20.act >= 0.7 && a40.act >= 0.65 && a80.act >= 0.65, '大部分口令都要按住或放開（原本只有一半）');
+  ok(a0.up >= 0.3 && a0.down >= 0.3 && a40.up >= 0.25 && a40.down >= 0.25, '按住（舉起來）和放開（放下）的口令都常常出現');
+  ok(T.CHANGE_P >= 0.85 && T.NEG_P[0] <= 0.1 && T.NEG_P[1] <= 0.3, '不用動的「不要」類口令機率降低：' + T.NEG_P);
+  // 兩面旗一起：永遠往至少一面會動的方向
+  for (let i = 0; i < 4000; i++) { const rq = { L: rnd() < 0.5, R: rnd() < 0.5 }, c = T.nextCommand(rq, null, 60, rnd); if (c.flags.length === 2) { const nq = T.applyCommand(rq, c); ok(nq.L !== rq.L || nq.R !== rq.R, '兩面旗一起一定有旗子會動：' + JSON.stringify(rq) + ' ' + c.text); } }
+}
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_flags.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' ');
+  ok(/flg-grace__fill/.test(src) && /graceFill\.style\.animationDuration = gr \+ 'ms'/.test(src) && /var iv = intervalFor\(count\), gr = graceFor\(count\)/.test(src), '寬限條的長度＝這一句的寬限時間 graceFor');
+  ok(/\.flg-grace__fill \{[^}]*background: var\(--c-blue\)/.test(css) && /\.flg-grace \{[^}]*bottom: 10px/.test(css) && /@keyframes flg-grace \{ from \{ transform: scaleX\(1\);[^}]*\} to \{ transform: scaleX\(0\);/.test(css), '藍色橫條在口令框下緣，從滿縮到空');
+  ok(/flg-cmd--inL/.test(src) && /flg-cmd--inR/.test(src) && /cmdNo % 2/.test(src) && /Sfx\.play\('pop'\)/.test(src), '換新口令：左右交替滑進來、啵一聲');
+  ok(/\.flg-cmd--inL \{ animation: flg-in-l 0\.26s[^}]*flg-flash 0\.45s/.test(css) && /@keyframes flg-flash \{ from \{ background: var\(--c-yellow\);/.test(css), '換新口令的動畫很快（0.26 秒滑進、0.45 秒閃色）');
+  ok(/藍色橫條/.test(G.rule), '玩法說明提到藍色橫條'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

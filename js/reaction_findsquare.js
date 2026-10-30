@@ -9,6 +9,8 @@
      越後面上限越小＝越像）、最後放雜訊星星；每放一顆就窮舉檢查「含這顆的所有 4 點組合，除了真正方形以外 eps 都要 ≥ EPS_NONSQ（3%）」，
      最後再整盤窮舉一次：**剛好只有一個正方形**。
    · 難度（線性）：星星 8 → 30 顆（POINTS）、誘餌 0 → 3 組（DECOYS）、誘餌的誤差上限 20% → 6%（DECOY_MAX）、限時 20 → 10 秒（TIME_S）。
+   · V1.38.0（玩家意見：第 7 關的正方形在手機上就很難辨識）：正方形的邊長隨關卡縮小——前面的關卡盡量放大（第 1 關邊長 240～270，大約佔星空寬度的六成），
+     越後面越小，到頂（第 30 關）才回到原本的 100～190（SIDE_LO／SIDE_HI 兩端各自線性，sideRangeFor 算每一關的範圍）。
    · 揭曉：答對把正方形連起來（像一個星座）；答錯畫出你點的四邊形，寫出它哪裡不是正方形（例如「最長的邊和最短的邊差 4.2731%」），再畫出真的正方形。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
@@ -28,7 +30,8 @@
     var EPS_NONSQ = 0.03;                       /* 其他任何 4 個點的 eps 都要至少這麼大（才不會有第二個「幾乎是正方形」） */
     var FIELD = { w: 440, h: 500 };             /* 虛擬的星空大小（顯示時等比例縮放） */
     var MARGIN = 24, MIN_DIST = 40;             /* 星星離邊界至少多遠、星星之間至少多遠（虛擬 px，手指才點得準） */
-    var SIDE = [100, 190];                      /* 正方形的邊長範圍 */
+    var SIDE = [100, 190];                      /* 到頂（第 RAMP_LEVELS 關）時正方形的邊長範圍 */
+    var SIDE_LO = [240, 100], SIDE_HI = [270, 190];   /* 邊長的下限、上限：第 1 關 → 到頂（前面的關卡盡量放大；星空 440 寬，轉 45° 的正方形邊長最多約 277 才放得進去） */
     var ROT = [15, 75];                         /* 正方形的旋轉角（度）：大多是斜的 */
     var MAX_LEVEL = 90;
     var SQRT2 = Math.SQRT2;
@@ -39,6 +42,8 @@
     function decoysFor(level) { return Math.round(ramp(level, DECOYS)); }
     function decoyMaxFor(level) { return ramp(level, DECOY_MAX); }
     function timeMs(level) { return Math.round(ramp(level, TIME_S) * 1000); }
+    /* 這一關正方形的邊長範圍 [下限, 上限]（虛擬 px） */
+    function sideRangeFor(level) { return [Math.round(ramp(level, SIDE_LO) * 10) / 10, Math.round(ramp(level, SIDE_HI) * 10) / 10]; }
     function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
     /* 四個點的「正方形誤差」詳情：{ side（邊長不一的程度）, diag（對角線不一的程度）, ratio（對角線÷邊 偏離 √2 的程度）, eps（三者最大）} */
     function quadMetrics(p) {
@@ -103,7 +108,7 @@
         rand = rand || Math.random;
         var N = pointsFor(level), D = decoysFor(level), dmax = decoyMaxFor(level);
         for (var tr = 0; tr < 400; tr++) {
-            var s = kit.randFloat(SIDE[0], SIDE[1], rand), deg = kit.randFloat(ROT[0], ROT[1], rand);
+            var sr = sideRangeFor(level), s = kit.randFloat(sr[0], sr[1], rand), deg = kit.randFloat(ROT[0], ROT[1], rand);
             var ext = s * (Math.abs(Math.cos(deg * Math.PI / 180)) + Math.abs(Math.sin(deg * Math.PI / 180))) / 2;       /* 轉過之後的半寬 */
             var lo = MARGIN + ext, hiX = FIELD.w - MARGIN - ext, hiY = FIELD.h - MARGIN - ext;
             if (hiX <= lo || hiY <= lo) continue;
@@ -248,9 +253,9 @@
         mount: mount,
         score: SCORE,
         test: {
-            pointsFor: pointsFor, decoysFor: decoysFor, decoyMaxFor: decoyMaxFor, timeMs: timeMs, dist: dist, quadMetrics: quadMetrics, squareErr: squareErr, orderQuad: orderQuad, squaresIn: squaresIn, minEpsWith: minEpsWith,
+            pointsFor: pointsFor, decoysFor: decoysFor, decoyMaxFor: decoyMaxFor, timeMs: timeMs, sideRangeFor: sideRangeFor, dist: dist, quadMetrics: quadMetrics, squareErr: squareErr, orderQuad: orderQuad, squaresIn: squaresIn, minEpsWith: minEpsWith,
             describeQuad: describeQuad, inField: inField, squareAt: squareAt, decoyAt: decoyAt, farEnough: farEnough, makeLevel: makeLevel, starPath: starPath, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, POINTS: POINTS, DECOYS: DECOYS, DECOY_MAX: DECOY_MAX, TIME_S: TIME_S, EPS_SQ: EPS_SQ, EPS_NONSQ: EPS_NONSQ, FIELD: FIELD, MARGIN: MARGIN, MIN_DIST: MIN_DIST, SIDE: SIDE, ROT: ROT, MAX_LEVEL: MAX_LEVEL
+            RAMP_LEVELS: RAMP_LEVELS, POINTS: POINTS, DECOYS: DECOYS, DECOY_MAX: DECOY_MAX, TIME_S: TIME_S, EPS_SQ: EPS_SQ, EPS_NONSQ: EPS_NONSQ, FIELD: FIELD, MARGIN: MARGIN, MIN_DIST: MIN_DIST, SIDE: SIDE, SIDE_LO: SIDE_LO, SIDE_HI: SIDE_HI, ROT: ROT, MAX_LEVEL: MAX_LEVEL
         }
     };
     Reaction.register(G);

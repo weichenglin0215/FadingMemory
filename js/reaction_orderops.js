@@ -2,6 +2,8 @@
    reaction_orderops.js — 秒反應・先乘除（企劃 122）
    出一道四則運算（例如 8 − 3 × 2），下面兩顆按鈕是兩個答案（10 和 2），點出正確的那一個。
    錯的那個答案，是「不管先乘除，由左到右一路算下去」（或「忽略括號」）的結果，專門釣粗心的人。
+   V1.38.0：第 OPTIONS4_FROM 題起改成四個答案——原本的兩個答案，各自再加一個「只差個位數」的答案（42 → 45、130 → 137），
+   因為正確答案跟錯誤答案常常差很多，粗略估一下就能分出來；現在兩邊都有一組很接近的，一定要把個位數也算對。
    關卡制：答錯或來不及就結束，成績＝連續答對幾題。
    ───────────────────────────────────────────────────────────────────
    · 難度線性（RAMP_LEVELS 題走到頂）：數字個數 3 → 6 個；數字大小 1～9 → 1～12；
@@ -28,7 +30,8 @@
     var TIME_MUL = [1.0, 3.0];                 /* 倍率：第 1 題 → 到頂（越後面越趕） */
     var MAX_ANS = 999;                          /* 正確答案最大多少 */
     var MAX_LEVEL = 90;
-    var SAME_MAX = 4;                           /* 正確答案放左邊（或右邊）最多連續幾次 */
+    var SAME_MAX = 4;                           /* 正確答案放在同一個位置最多連續幾次 */
+    var OPTIONS4_FROM = 15;                     /* 第幾題起改成四個答案（之前是兩個） */
 
     var OP_TEXT = { '+': '+', '-': '−', '*': '×', '/': '÷', '(': '(', ')': ')' };
     var CIRCLED = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩'];
@@ -41,6 +44,24 @@
         if (p === 2 && nums < 5) p = 1;
         if (p === 1 && nums < 4) p = 0;
         return p;
+    }
+    /* 這一題有幾個答案：前面 2 個，從 OPTIONS4_FROM 題起 4 個 */
+    function optionCount(level) { return level >= OPTIONS4_FROM ? 4 : 2; }
+    /* 「只差個位數」的答案：跟 v 同一個十位（以上都一樣）、個位數不同，不是 0 以下、也不跟 exclude 裡的撞到。
+       prefer 是想要的個位數（例如放進另一邊答案的個位數，讓「只算個位數」也分不出來）；那個個位數不能用就隨機挑一個。
+       回傳 null＝挑不出來（不會發生：最多只有 3 個要避開的數） */
+    function nearAnswer(v, exclude, prefer, rand) {
+        var base = Math.floor(v / 10) * 10, pool = [], d, c;
+        for (d = 0; d < 10; d++) {
+            c = base + d;
+            if (c !== v && c >= 1 && exclude.indexOf(c) < 0) pool.push(c);
+        }
+        if (!pool.length) return null;
+        if (prefer != null && prefer !== v % 10) {
+            c = base + prefer;
+            if (pool.indexOf(c) >= 0) return c;
+        }
+        return kit.pick(pool, rand);
     }
     function ansMs(level) {
         var n = numsFor(level);
@@ -126,7 +147,10 @@
         }
         return { tokens: tokens, spans: spans.length };
     }
-    /* 出一題：{ tokens, text, truth 正確答案, decoy 錯誤答案, decoyKind 'ltr'|'noparen', steps 還原步驟, wrongSteps 錯誤算法的步驟 } */
+    /* 出一題：{ tokens, text, truth 正確答案, decoy 錯誤答案, decoyKind 'ltr'|'noparen', steps 還原步驟, wrongSteps 錯誤算法的步驟,
+                options 全部的答案（optionCount 個、互不相同；四個答案時是 正確、正確的近似、錯誤、錯誤的近似）}
+       近似答案的個位數故意放成「另一邊」的個位數（正確的近似用錯誤答案的個位數、錯誤的近似用正確答案的個位數），
+       這樣只看個位數、或只估大小，都不能單獨判斷答案。 */
     function makeQuestion(level, rand) {
         rand = rand || Math.random;
         for (var tr = 0; tr < 3000; tr++) {
@@ -143,20 +167,36 @@
             });
             if (!decoys.length) continue;
             var d = kit.pick(decoys, rand);
-            return { tokens: tokens, text: toText(tokens), truth: std.value, decoy: d.value, decoyKind: d.kind, steps: std.steps, wrongSteps: d.steps };
+            var out = { tokens: tokens, text: toText(tokens), truth: std.value, decoy: d.value, decoyKind: d.kind, steps: std.steps, wrongSteps: d.steps };
+            out.options = optionsFor(level, out.truth, out.decoy, rand);
+            return out;
         }
         var fb = [8, '-', 3, '*', 2];
-        return { tokens: fb, text: toText(fb), truth: 2, decoy: 10, decoyKind: 'ltr', steps: ['3 × 2 ＝ 6', '8 − 6 ＝ 2'], wrongSteps: ['8 − 3 ＝ 5', '5 × 2 ＝ 10'] };
+        return {
+            tokens: fb, text: toText(fb), truth: 2, decoy: 10, decoyKind: 'ltr', steps: ['3 × 2 ＝ 6', '8 − 6 ＝ 2'], wrongSteps: ['8 − 3 ＝ 5', '5 × 2 ＝ 10'],
+            options: optionsFor(level, 2, 10, rand)
+        };
     }
-    function nextLeft(hist, rand) {
+    /* 這一題的全部答案：兩個時是 [正確, 錯誤]；四個時再各加一個只差個位數的 */
+    function optionsFor(level, truth, decoy, rand) {
+        var opts = [truth, decoy];
+        if (optionCount(level) < 4) return opts;
+        var tn = nearAnswer(truth, [truth, decoy], decoy % 10, rand);
+        var dn = nearAnswer(decoy, [truth, decoy, tn], truth % 10, rand);
+        if (tn == null || dn == null) return opts;
+        return [truth, tn, decoy, dn];
+    }
+    /* 正確答案放在第幾個位置（0～count−1）：隨機，但同一個位置最多連續 SAME_MAX 次（hist 記著前面每題放在哪） */
+    function nextSlot(hist, count, rand) {
         rand = rand || Math.random;
-        var n = hist.length;
+        var n = hist.length, r = Math.floor(rand() * count);
+        if (r >= count) r = count - 1;
         if (n >= SAME_MAX) {
             var last = hist[n - 1], same = true;
             for (var i = 1; i <= SAME_MAX; i++) if (hist[n - i] !== last) { same = false; break; }
-            if (same) return !last;
+            if (same && r === last) r = (r + 1 + Math.floor(rand() * (count - 1))) % count;
         }
-        return rand() < 0.5;
+        return r;
     }
     function rating(n) {
         if (n >= 40) return '運算順序大師！';
@@ -181,10 +221,10 @@
     function setup(api, hist) {
         var stage = api.stage, level = api.level;
         var q = makeQuestion(level, api.rand);
-        var truthLeft = nextLeft(hist, api.rand);
-        hist.push(truthLeft);
+        var count = q.options.length, slot = nextSlot(hist, count, api.rand);
+        hist.push(slot);
         api.info = q;
-        console.log('[先乘除] 第 ' + level + ' 題：' + q.text + ' ＝ ？ 正確 ' + q.truth + '，錯誤 ' + q.decoy + '（' + (q.decoyKind === 'ltr' ? '由左到右' : '忽略括號') + '），限時 ' + ansMs(level) + ' ms');
+        console.log('[先乘除] 第 ' + level + ' 題：' + q.text + ' ＝ ？ 正確 ' + q.truth + '，錯誤 ' + q.decoy + '（' + (q.decoyKind === 'ltr' ? '由左到右' : '忽略括號') + '），答案 ' + q.options.join('／') + '，限時 ' + ansMs(level) + ' ms');
 
         var eq = h('div', { 'class': 'qz-big ord-eq', text: q.text });
         /* 算式越長，字越小（約略估算：每個字寬 0.62 倍字級），保證一行放得下 */
@@ -193,11 +233,13 @@
         var ask = h('div', { 'class': 'qz-note ord-ask', text: '正確答案是哪一個？' });
         var reveal = h('div', { 'class': 'qz-note ord-reveal' });
         stage.appendChild(eq); stage.appendChild(ask); stage.appendChild(reveal);
-        var vals = truthLeft ? [q.truth, q.decoy] : [q.decoy, q.truth];
+        /* 正確答案放在 slot，其餘答案隨機填進剩下的位置 */
+        var others = kit.shuffle(q.options.filter(function (v) { return v !== q.truth; }), api.rand), vals = [];
+        for (var si = 0; si < count; si++) vals.push(si === slot ? q.truth : others.shift());
         var grid = kit.btnGrid(stage, vals.map(function (v) {
             return { text: String(v), kind: 'sky', cls: 'ord-btn', onTap: function () { judge(v); } };
-        }), { h: 120 });
-        var bTruth = grid.btns[truthLeft ? 0 : 1];
+        }), count === 4 ? { cols: 2, h: 100 } : { h: 120 });
+        var bTruth = grid.btns[slot];
         api.timer(ansMs(level), function () { judge(null); });
         if (level === 1 && kit.once('orderops.hint')) kit.hintOn(stage, bTruth, { mode: 'tap', delay: 500, text: '請點擊按鈕' });
 
@@ -223,13 +265,13 @@
     var G = {
         id: ID,
         name: '先乘除',
-        rule: '畫面上有一道四則運算，下面兩個答案只有一個是對的。要記得：**括號先算，再算乘除，最後才算加減**。另一個答案，是**「由左到右一路算下去」的陷阱**。答錯或來不及就結束，看你能連續答對幾題。越後面，算式越長、還會有除法和括號！',
+        rule: '畫面上有一道四則運算，下面的答案只有一個是對的。要記得：**括號先算，再算乘除，最後才算加減**。有一個錯的答案，是**「由左到右一路算下去」的陷阱**。答錯或來不及就結束，看你能連續答對幾題。越後面，算式越長、還會有除法和括號，答案也會變成四個，有的只差個位數，要算準！',
         mount: mount,
         score: SCORE,
         test: {
             numsFor: numsFor, numMaxFor: numMaxFor, parensFor: parensFor, ansMs: ansMs, reduceExpr: reduceExpr, toText: toText, stepsText: stepsText,
-            randomTokens: randomTokens, makeQuestion: makeQuestion, nextLeft: nextLeft, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, NUMS: NUMS, NUM_MAX: NUM_MAX, DIV_FROM: DIV_FROM, PAREN1_FROM: PAREN1_FROM, PAREN2_FROM: PAREN2_FROM, MAX_ANS: MAX_ANS, MAX_LEVEL: MAX_LEVEL, SAME_MAX: SAME_MAX
+            randomTokens: randomTokens, makeQuestion: makeQuestion, nextSlot: nextSlot, nearAnswer: nearAnswer, optionCount: optionCount, rating: rating,
+            RAMP_LEVELS: RAMP_LEVELS, NUMS: NUMS, NUM_MAX: NUM_MAX, DIV_FROM: DIV_FROM, PAREN1_FROM: PAREN1_FROM, PAREN2_FROM: PAREN2_FROM, MAX_ANS: MAX_ANS, MAX_LEVEL: MAX_LEVEL, SAME_MAX: SAME_MAX, OPTIONS4_FROM: OPTIONS4_FROM
         }
     };
     Reaction.register(G);

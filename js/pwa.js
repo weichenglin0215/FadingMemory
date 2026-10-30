@@ -16,6 +16,7 @@
    【對外介面】全域 PWA：
      PWA.canGuide()    現在適合給「加到主畫面」的說明嗎（手機、還沒安裝、不在內建瀏覽器裡）
      PWA.openGuide()   打開對應平台的說明彈窗（Android 有一鍵安裝按鈕）
+     PWA.inAppNotice() 在 LINE 等內建瀏覽器裡，再打開一次「請改用瀏覽器開啟」的說明（js/offline_ui.js 用）
      PWA.state()       目前偵測到的環境（除錯用）
      PWA.test.detect(env)  純函式（不碰 DOM），Node 測試直接驗證（test/reaction/t_pwa.js）
    ═══════════════════════════════════════════════════════════════════ */
@@ -109,8 +110,8 @@
     function rich(t) { return global.Dlg.richText(t); }
 
     /* ═══ 三、LINE 等內建瀏覽器：請玩家改用瀏覽器開 ═══ */
-    function showInAppNotice(name) {
-        if (!global.Dlg || sGet(SS_INAPP)) return;
+    function showInAppNotice(name, force) {
+        if (!global.Dlg || (!force && sGet(SS_INAPP))) return;
         sSet(SS_INAPP, '1');
         dlgOpen({
             title: '用瀏覽器開啟比較好',
@@ -197,6 +198,7 @@
     global.PWA = {
         canGuide: canGuide,
         openGuide: openGuide,
+        inAppNotice: function () { var d = readEnv(); if (d.inApp) showInAppNotice(d.inApp, true); },     /* 「安裝與離線」的「怎麼辦？」：不管這次工作階段提醒過沒有，都再打開 */
         state: function () { var d = readEnv(); d.hasPrompt = !!deferred; d.visits = global.UI.store.get(KEY_VISITS, 0); return d; },
         test: { detect: detect }
     };

@@ -37,6 +37,7 @@ var PRECACHE = [
     'css/identity.css',
     'css/leaderboard.css',
     'css/menu.css',
+    'css/menu_nav.css',
     'css/quiz.css',
     'css/rating.css',
     'css/reaction.css',
@@ -223,6 +224,9 @@ var PRECACHE = [
     'js/leaderboard.js',
     'js/leaderboard_ui.js',
     'js/menu.js',
+    'js/menu_nav.js',
+    'js/offline.js',
+    'js/offline_ui.js',
     'js/pwa.js',
     'js/quiz.js',
     'js/quiz_dining.js',
@@ -398,6 +402,7 @@ var PRECACHE = [
     'js/reaction_wirelink.js',
     'js/reaction_witness.js',
     'js/reaction_wrongline.js',
+    'js/score_specs.js',
     'js/scroller.js',
     'js/sfx.js',
     'js/share.js',
@@ -549,6 +554,26 @@ self.addEventListener('activate', function (event) {
             return Promise.all(names.filter(function (n) { return n !== CACHE; }).map(function (n) { return caches.delete(n); }));
         }).then(function () { return self.clients.claim(); })
     );
+});
+
+/* 頁面（js/offline.js 的「安裝與離線」彈窗）找 Service Worker 講話，透過 MessageChannel 的 port 回覆：
+     STATUS  → { type, cache 快取名字, precache 清單有幾個檔案, cached 備份裡已經有幾個 }
+     REFRESH → 把清單全部重新從網路拿一次（refreshAll），做完回 { type, ok }；頁面收到之後重新載入就是最新版 */
+self.addEventListener('message', function (event) {
+    var d = event.data || {}, port = event.ports && event.ports[0];
+    if (!port || (d.type !== 'STATUS' && d.type !== 'REFRESH')) return;
+    var reply = function (o) { try { port.postMessage(o); } catch (e) { } };
+    if (d.type === 'REFRESH') {
+        keepAlive(event, refreshAll().then(function () { reply({ type: 'REFRESH', ok: true }); }, function () { reply({ type: 'REFRESH', ok: false }); }));
+        return;
+    }
+    keepAlive(event, caches.open(CACHE).then(function (c) {
+        return Promise.all(PRECACHE.map(function (rel) {
+            return c.match(keyOf(scoped(rel)), { ignoreVary: true }).then(function (r) { return r ? 1 : 0; });
+        }));
+    }).then(function (hits) {
+        reply({ type: 'STATUS', cache: CACHE, precache: PRECACHE.length, cached: hits.reduce(function (a, b) { return a + b; }, 0) });
+    }, function () { reply({ type: 'STATUS', error: true }); }));
 });
 
 self.addEventListener('fetch', function (event) {

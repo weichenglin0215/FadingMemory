@@ -26,6 +26,11 @@
        - 節拍之間的距離加大成 200%：方塊掉落速度加倍（FALL_S 1.7 → 0.85 秒從頂端掉到基準線），同樣的間隔在畫面上離得兩倍遠；
        - 按鍵音符（方塊）的高度加高成 200%（NOTE_H 28 → 56 px）；
        - 判定紅線的高度加高成 200%（8 → 16 px），判定視窗也放寬（HIT_WIN 0.14 → 0.2 秒），提高點擊的容錯率。
+   · V1.38.0（玩家意見：第 6 小節之前很無聊、第 7～10 小節很好玩、第 11 小節之後難度提升太快）——把「好玩」的節奏提早、後面的加速放慢：
+       - 起始速度 24 → 34 BPM（前面的小節短了 30%，不用乾等）；前面 SLOW_FROM（10）小節每小節 +0.8 BPM（原本 +1.2）；
+         之後每小節只 +0.5 BPM（BPM_STEP_LATE，原本一路 +1.2），所以第 11 小節以後的難度是慢慢爬、不是衝上去；
+       - 藍（1/4 拍）提早到第 5 小節（UNLOCK.blue ＝ 4，原本 7）、紫（1/8 拍）提早到第 8 小節（UNLOCK.purple ＝ 7，原本 9），好玩的密集節奏更早出現；
+       - 前 EARLY_M（6）小節每小節左右合計至少 EARLY_MIN_NOTES（6）個方塊（nextMeasure）：不會出現「紅＋橙」這種一小節只有 3 個方塊、幾乎沒事做的小節。
    ═══════════════════════════════════════════════════════════════════ */
 
 /* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
@@ -43,7 +48,9 @@
     /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
     /* BPM（每分鐘幾拍）：第 m 小節的速度＝起始 + 每小節增加量 × m，不超過上限 */
-    var BPM_START = 24, BPM_STEP = 1.2, BPM_MAX = 120;        /* 第 m 小節的 BPM ＝ BPM_START + BPM_STEP × m（不超過 BPM_MAX）*/
+    var BPM_START = 34, BPM_STEP = 0.8, BPM_MAX = 120;        /* 第 m 小節（0 起算）的 BPM ＝ BPM_START + BPM_STEP × m（m ≤ SLOW_FROM；不超過 BPM_MAX）；原本 24、+1.2 */
+    var SLOW_FROM = 10, BPM_STEP_LATE = 0.5;                   /* 第 SLOW_FROM 小節（＝第 11 小節）之後，每小節只加 BPM_STEP_LATE（V1.38.0：原本一路 +1.2，第 11 小節後難度提升太快） */
+    var EARLY_M = 6, EARLY_MIN_NOTES = 6;                      /* 前 EARLY_M 小節，左右合計每小節至少 EARLY_MIN_NOTES 個方塊（太少會很無聊） */
     var LEAD_S = 3.0;                                          /* 遊戲開始到第一個小節開始 */
     /* 方塊從畫面頂端掉到紅線要幾秒（固定值，所以 BPM 越快，畫面上的方塊越擠） */
     var FALL_S = 0.85;                                         /* 方塊從頂端掉到基準線要幾秒（V1.24 是 1.7；縮短一半＝同樣的間隔在畫面上距離變 200%） */
@@ -57,7 +64,7 @@
     var HEALTH_MAX = 8, HEAL_EVERY = 12;
     var DENSE_S = 0.2;                                         /* 方塊間隔小於這麼多秒的軌道叫「滾奏」：同一小節同一邊漏掉再多，也只扣 1 顆生命 */
     /* UNLOCK：每個顏色從第幾小節起才會出現（藍色 3、紫色 5，前面太密，讓玩家先熟悉） */
-    var UNLOCK = { red: 0, orange: 0, yellow: 0, green: 0, blue: 7, purple: 9 };       /* 第幾小節起可以出現 */
+    var UNLOCK = { red: 0, orange: 0, yellow: 0, green: 0, blue: 4, purple: 7 };       /* 第幾小節（0 起算）起可以出現（V1.38.0：藍 7 → 4、紫 9 → 7，好玩的密集節奏提早出現） */
     /* 六種顏色的資料：id 代號、name 名稱、beats 到下一個方塊隔幾拍、label 說明文字 */
     var COLORS = [
         { id: 'red', name: '紅', beats: 4, label: '4 拍' },
@@ -76,7 +83,9 @@
     /* 純函式（也給 Node 測試用） */
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 第 m 小節的 BPM */
-    function bpmFor(m) { return Math.min(BPM_MAX, BPM_START + BPM_STEP * m); }
+    function bpmFor(m) { return Math.min(BPM_MAX, BPM_START + BPM_STEP * Math.min(m, SLOW_FROM) + BPM_STEP_LATE * Math.max(0, m - SLOW_FROM)); }
+    /* 這種顏色在一個小節裡有幾個方塊：4 拍 ÷ 間隔拍數 */
+    function notesPer(id) { return Math.round(4 / BY_ID[id].beats); }
     /* 一拍幾秒：60 秒 ÷ BPM */
     function beatSec(m) { return 60 / bpmFor(m); }
     /* 一小節幾秒：4 拍 */
@@ -104,6 +113,7 @@
             for (var tries = 0; tries < 200 && !found; tries++) {
                 L = kit.pick(pool, rand); Rr = kit.pick(pool, rand);
                 if (L === Rr || L === prev.L.color || Rr === prev.R.color) continue;
+                if (m < EARLY_M && notesPer(L) + notesPer(Rr) < EARLY_MIN_NOTES) continue;       /* 前面的小節方塊太少會很無聊 */
                 if (laneRate(L, m) > MAX_LANE_RATE || laneRate(Rr, m) > MAX_LANE_RATE || laneRate(L, m) + laneRate(Rr, m) > MAX_TOTAL_RATE) continue;
                 found = true;
             }
@@ -342,7 +352,7 @@
         /* 世界排行榜的成績規格 */
         score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
-        test: { NOTE_H: NOTE_H, DENSE_S: DENSE_S, bpmFor: bpmFor, beatSec: beatSec, measureSec: measureSec, allowedColors: allowedColors, laneRate: laneRate, nextMeasure: nextMeasure, makeChart: makeChart, windowFor: windowFor, matchTap: matchTap, rating: rating, COLORS: COLORS, UNLOCK: UNLOCK, LEAD_S: LEAD_S, FALL_S: FALL_S, HIT_WIN: HIT_WIN, MIN_INTERVAL_S: MIN_INTERVAL_S, MAX_LANE_RATE: MAX_LANE_RATE, MAX_TOTAL_RATE: MAX_TOTAL_RATE, BPM_START: BPM_START, BPM_MAX: BPM_MAX, BPM_STEP: BPM_STEP, HEALTH_MAX: HEALTH_MAX }
+        test: { NOTE_H: NOTE_H, DENSE_S: DENSE_S, SLOW_FROM: SLOW_FROM, BPM_STEP_LATE: BPM_STEP_LATE, EARLY_M: EARLY_M, EARLY_MIN_NOTES: EARLY_MIN_NOTES, notesPer: notesPer, bpmFor: bpmFor, beatSec: beatSec, measureSec: measureSec, allowedColors: allowedColors, laneRate: laneRate, nextMeasure: nextMeasure, makeChart: makeChart, windowFor: windowFor, matchTap: matchTap, rating: rating, COLORS: COLORS, UNLOCK: UNLOCK, LEAD_S: LEAD_S, FALL_S: FALL_S, HIT_WIN: HIT_WIN, MIN_INTERVAL_S: MIN_INTERVAL_S, MAX_LANE_RATE: MAX_LANE_RATE, MAX_TOTAL_RATE: MAX_TOTAL_RATE, BPM_START: BPM_START, BPM_MAX: BPM_MAX, BPM_STEP: BPM_STEP, HEALTH_MAX: HEALTH_MAX }
     };
     /* 登記到遊戲清單 */
     Reaction.register(G);

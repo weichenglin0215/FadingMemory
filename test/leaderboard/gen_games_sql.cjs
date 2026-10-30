@@ -15,6 +15,8 @@ const path = require('path');
 const { loadAllGames, ROOT } = require('./all_games.cjs');
 
 const SQL_FILE = ROOT + 'supabase/MF_leaderboard.sql';
+// 另外一份產物：js/score_specs.js（每款遊戲的成績顯示格式；主選單「成績」彈窗沒有載入遊戲檔案，要靠它把數字說成「12.3456 秒」「第 21 關」）
+const SPECS_FILE = ROOT + 'js/score_specs.js';
 const BEGIN = '-- >>> 自動產生開始';
 const END = '-- <<< 自動產生結束';
 
@@ -58,7 +60,22 @@ function buildTable(games) {
   return lines.join('\n');
 }
 
-module.exports = { buildRows, buildBlock, buildTable, patch, rowOf, SQL_FILE, BEGIN, END };
+// js/score_specs.js 的全部內容（一款一行；只放顯示成績需要的欄位 format／decimals／group，加上 better 讓畫面知道越大還是越小越好）
+function buildSpecs(games) {
+  const lines = games.filter(g => g.score).map(g => {
+    const s = g.score;
+    const o = { better: s.better, decimals: s.decimals || 0, format: s.format || '{v}' };
+    if (s.group) o.group = true;
+    return '    ' + JSON.stringify(g.id) + ': ' + JSON.stringify(o);
+  });
+  return '/* ═══ score_specs.js — 每款遊戲的成績顯示格式（自動產生，請勿手改）═══\n'
+    + '   來源：各遊戲檔案 Reaction.register 的 score 設定；重新產生：node test/leaderboard/gen_games_sql.cjs --write\n'
+    + '   用途：主選單（index.html）沒有載入遊戲檔案，「成績」彈窗（js/menu_nav.js）用這份表把成績數字說成 \'12.3456 秒\'、\'第 21 關\'\n'
+    + '        （格式化函式是 Leaderboard.fmt，跟遊戲裡、世界排行榜用的同一個）。 */\n'
+    + 'window.FM_SCORE_SPECS = {\n' + lines.join(',\n') + '\n};\n';
+}
+
+module.exports = { buildRows, buildBlock, buildTable, buildSpecs, patch, rowOf, SQL_FILE, SPECS_FILE, BEGIN, END };
 
 if (require.main === module) {
   const games = loadAllGames();
@@ -72,14 +89,20 @@ if (require.main === module) {
     const crlf = raw.includes('\r\n');
     const cur = raw.replace(/\r\n/g, '\n');
     const next = patch(cur, buildBlock(games));
+    // 成績格式表：整份檔案都是產生的，直接比對全文（換行風格先統一成 LF）
+    const specsNext = buildSpecs(games);
+    const specsRaw = fs.existsSync(SPECS_FILE) ? fs.readFileSync(SPECS_FILE, 'utf8') : '';
+    const specsCrlf = specsRaw.includes('\r\n');
+    const specsCur = specsRaw.replace(/\r\n/g, '\n');
     if (arg === '--check') {
-      if (next === cur) console.log('OK：MF_leaderboard.sql 與遊戲檔案同步（' + buildRows(games).length + ' 款）');
+      if (next === cur && specsNext === specsCur) console.log('OK：MF_leaderboard.sql 與 js/score_specs.js 都與遊戲檔案同步（' + buildRows(games).length + ' 款）');
       else { console.log('不同步：請執行 node test/leaderboard/gen_games_sql.cjs --write'); process.exit(1); }
     } else if (arg === '--table') {
       console.log(buildTable(games));
     } else if (arg === '--write') {
       fs.writeFileSync(SQL_FILE, crlf ? next.replace(/\n/g, '\r\n') : next, 'utf8');
-      console.log('已更新 ' + path.relative(ROOT, SQL_FILE) + '：' + buildRows(games).length + ' 款遊戲');
+      fs.writeFileSync(SPECS_FILE, specsCrlf || !specsRaw ? specsNext.replace(/\n/g, '\r\n') : specsNext, 'utf8');
+      console.log('已更新 ' + path.relative(ROOT, SQL_FILE) + '：' + buildRows(games).length + ' 款遊戲；已更新 ' + path.relative(ROOT, SPECS_FILE));
     } else { console.log('不認得的參數：' + arg); process.exit(2); }
   }
 }

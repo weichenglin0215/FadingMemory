@@ -798,7 +798,7 @@
 .gmk-stone--new {
     transform-box: fill-box;
     transform-origin: center;
-    animation: gmk-drop 0.3s ease-out;
+    animation: gmk-drop 0.6s ease-out;          /* V1.38.0：揭曉動畫放慢成 50% 速度（原本 0.3s） */
 }
 
 @keyframes gmk-drop {
@@ -4767,19 +4767,88 @@
     text-align: center;
     pointer-events: none;
     z-index: 2;
+    padding-bottom: calc(var(--sp-3) + 18px);              /* 下緣留位置給寬限時間的藍色橫條 */
 }
 
-.flg-cmd--pop {
-    animation: flg-pop 0.2s ease-out;
+/* 換新口令的表演（V1.38.0，要快：0.26 秒滑進來、0.45 秒閃一下）：左右兩邊交替滑進來，連續兩句一模一樣的口令也看得出是新的 */
+.flg-cmd--inL {
+    animation: flg-in-l 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.15), flg-flash 0.45s ease-out;
 }
 
-@keyframes flg-pop {
+.flg-cmd--inR {
+    animation: flg-in-r 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.15), flg-flash 0.45s ease-out;
+}
+
+@keyframes flg-in-l {
     from {
-        transform: scale(0.88);
+        transform: translateX(-70%) scale(1.1);
+        opacity: 0;
     }
 
     to {
-        transform: scale(1);
+        transform: none;
+        opacity: 1;
+    }
+}
+
+@keyframes flg-in-r {
+    from {
+        transform: translateX(70%) scale(1.1);
+        opacity: 0;
+    }
+
+    to {
+        transform: none;
+        opacity: 1;
+    }
+}
+
+@keyframes flg-flash {
+    from {
+        background: var(--c-yellow);
+        border-color: var(--c-orange);
+    }
+
+    to {
+        background: var(--c-card);
+        border-color: var(--c-ink-soft);
+    }
+}
+
+/* 寬限時間（V1.38.0）：口令框下緣的藍色橫條，口令一出現就從滿縮到空；時間長度由 JS 設在 animation-duration（每句不一樣） */
+.flg-grace {
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 10px;
+    height: 12px;
+    border-radius: var(--r-pill);
+    background: var(--c-blue-soft);
+    overflow: hidden;
+}
+
+.flg-grace__fill {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--c-blue);
+    transform-origin: left center;
+    transform: scaleX(0);
+}
+
+.flg-grace__fill--run {
+    transform: scaleX(1);
+    animation-name: flg-grace;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+}
+
+@keyframes flg-grace {
+    from {
+        transform: scaleX(1);
+    }
+
+    to {
+        transform: scaleX(0);
     }
 }
 
@@ -7734,18 +7803,22 @@
 
 /* ═══ 挑豆子（.bns-）═══ */
 .bns-stage {
+    overflow: visible;                          /* 盤子直徑 480px，比遊戲區（472px）寬一點點，兩邊各多出 4px 不要被切掉 */
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
 }
 
+/* isolation: isolate：把裡面的 z-index（拖曳中的豆子 9999、紅圈 10000、揭曉的比較框 10001）關在這個遊戲區裡，
+   不然它們會比結算彈窗（z-index 25）還高，蓋住結算彈窗、按鈕點不到（V1.38.0 玩家意見） */
 .bns-field {
     position: absolute;
     left: 0;
     top: 0;
     right: 0;
     bottom: 0;
-    overflow: hidden;
+    overflow: visible;
+    isolation: isolate;
     touch-action: none;
 }
 
@@ -7771,6 +7844,12 @@
     border: 8px solid var(--bns-wood-edge);
     border-radius: 50%;
     pointer-events: none;
+    transition: border-color 0.15s;
+}
+
+/* 拖到紅豆：盤緣閃一下紅色（扣時間） */
+.bns-plate--hit {
+    border-color: var(--c-bad-light);
 }
 
 /* 豆子都放在這一層裡；層的原點在盤心 */
@@ -7821,36 +7900,6 @@
 .bns-shine { fill: var(--bns-shine); }
 .bns-spot { fill: var(--bns-spot); }
 
-/* 碗 */
-.bns-bowl {
-    position: absolute;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bns-bowl);
-    border: 6px solid var(--bns-bowl-edge);
-    border-radius: 50%;
-    pointer-events: none;
-    transition: transform 0.12s, background 0.12s;
-}
-
-.bns-bowl__t {
-    color: var(--c-ink-soft);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    text-align: center;
-}
-
-.bns-bowl--hot {
-    background: var(--bns-bowl-hot);
-    transform: scale(1.06);
-}
-
-.bns-bowl--pop {
-    transform: scale(1.1);
-}
-
 /* 結束：標出剩下的雜物 */
 .bns-ring {
     position: absolute;
@@ -7887,7 +7936,6 @@
     position: absolute;
     left: 8px;
     right: 8px;
-    top: 482px;
     display: flex;
     align-items: stretch;
     justify-content: center;
@@ -7983,8 +8031,8 @@
     position: absolute;
     left: 14px;
     right: 14px;
-    top: 150px;
-    height: 190px;
+    top: 132px;
+    height: 148px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -8010,7 +8058,7 @@
     position: absolute;
     left: 0;
     right: 0;
-    top: 356px;
+    top: 284px;
     padding: 0 var(--sp-3);
     text-align: center;
     font-weight: var(--fw-bold);
@@ -8021,7 +8069,7 @@
     color: var(--c-bad);
 }
 
-/* 三個連續數字的按鈕（銀色按鍵） */
+/* 九個數字按鈕（3×3，銀色按鍵）：三個一組、每組三個連續數字，位置打散 */
 .mn7-grid {
     position: absolute;
     left: 12px;
@@ -8034,7 +8082,7 @@
 }
 
 .mn7-btn {
-    height: 128px;
+    height: 108px;
     background: linear-gradient(var(--mn7-key-top), var(--mn7-key-bottom));
     border: 4px solid var(--mn7-key-edge);
     border-radius: var(--r-lg);
@@ -8060,7 +8108,7 @@
     position: absolute;
     left: 12px;
     right: 12px;
-    top: 352px;
+    top: 132px;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -8953,13 +9001,19 @@
     stroke-linejoin: round;
 }
 
+/* 紅色的正確眉毛：臉轉正之後才淡入（V1.38.0；淡入時間 0.6 秒要跟 JS 的 GHOST_MS 一樣） */
 .ebw-ghost {
     fill: none;
     stroke: var(--ebw-ghost);
     stroke-width: 10;
     stroke-linecap: round;
     stroke-linejoin: round;
-    opacity: 0.75;
+    opacity: 0;
+    transition: opacity 0.6s ease-in;
+}
+
+.ebw-ghost--on {
+    opacity: 0.8;
 }
 
 .ebw-info {

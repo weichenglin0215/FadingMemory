@@ -21,6 +21,7 @@
      D1（白棋一手就能下出雙四／活四）、D2（先衝四、黑棋被逼著擋，再雙四）、D3（連衝兩次四才雙四），比例隨關卡從 D1 為主漸漸變成 D2、D3 為主；
      挑中之後隨機翻轉旋轉、平移到棋盤上，重新驗證，再放雜訊棋子與假威脅。
    · 揭曉：答錯時白棋依序下出致勝的幾手（黑棋被逼著擋的也畫出來），最後把連成的五顆用紅線穿過去，停格 2 秒以上；綠圈標出唯一的擋法。
+     V1.38.0（玩家意見：看不清楚）：播放速度放慢成原來的 50%——每一手的間隔 650 → 1300 毫秒、第一手之前 500 → 1000 毫秒、棋子落下的動畫 0.3 → 0.6 秒（css/reaction6.css 的 gmk-drop）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -45,6 +46,10 @@
     var WIN_DEPTH = 2;                          /* 白棋最多幾步預備（衝四）之後要連成五顆才算「會贏」（錯誤的下法都要在這個範圍內輸掉） */
     var HOLD_DEPTH = 4;                         /* 正確答案要通過更嚴的檢查：白棋用到 4 步預備（連續衝四）也贏不了，才敢說「化解了」 */
     var BOARD = 13;                             /* 棋盤邊長（13×13，格子比 15×15 大，手指好點） */
+    /* 揭曉動畫（答錯時白棋依序下出致勝的幾手）的節奏：玩家意見「看不清楚」→ 放慢成原來的 50% 速度（原本是 500／650 毫秒） */
+    var REVEAL_LEAD_MS = 1000;                  /* 第一手之前等多久 */
+    var REVEAL_STEP_MS = 1300;                  /* 每一手之間隔多久 */
+    var REVEAL_HOLD_MS = 2000;                  /* 最後一手（紅線穿過五顆）之後停格多久，才跳出結算 */
     var MAX_LEVEL = 90;
     var BLACK = 1, WHITE = -1;
     var LINES = [[0, 1], [1, 0], [1, 1], [1, -1]];                             /* 四條線的方向：橫、直、斜（右下）、斜（左下） */
@@ -52,6 +57,8 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function stonesFor(level) { return Math.round(kit.ramp(level, STONES[0], STONES[1], RAMP_LEVELS)); }
+    /* 揭曉動畫從開始到結算跳出來，總共幾毫秒（pvLen＝白棋致勝的手數，黑棋被逼著擋的也算在內） */
+    function revealMs(pvLen) { return REVEAL_LEAD_MS + pvLen * REVEAL_STEP_MS + REVEAL_HOLD_MS; }
     function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
     function decoysFor(level) { return Math.round(kit.ramp(level, DECOYS[0], DECOYS[1], RAMP_LEVELS)); }
     function cornerPFor(level) { return level < CORNER_FROM ? 0 : kit.ramp(level, CORNER_P[0], CORNER_P[1], RAMP_LEVELS); }
@@ -401,7 +408,7 @@
             var pv = whiteWins(b, n, q.depth || WIN_DEPTH).pv;
             info.textContent = idx >= 0 ? '擋不住！綠圈才是唯一的擋法' : '時間到！綠圈才是唯一的擋法';
             pv.forEach(function (m, j) {
-                api.after(500 + j * 650, function () {
+                api.after(REVEAL_LEAD_MS + j * REVEAL_STEP_MS, function () {
                     b[m.cell] = m.c; stone(m.cell, m.c, 'gmk-stone--new');
                     if (j === pv.length - 1) {
                         var five = fiveThrough(b, n, m.cell, WHITE);
@@ -410,7 +417,7 @@
                 });
             });
             kit.flash(stage, false, api.my);
-            api.fail({ delay: 500 + pv.length * 650 + 2000, lines: [idx >= 0 ? '你下的位置擋不住，白棋連成五顆了' : '時間到！', '唯一的擋法是第 ' + (Math.floor(q.x / n) + 1) + ' 列第 ' + (q.x % n + 1) + ' 欄（綠圈）'] });
+            api.fail({ delay: revealMs(pv.length), lines: [idx >= 0 ? '你下的位置擋不住，白棋連成五顆了' : '時間到！', '唯一的擋法是第 ' + (Math.floor(q.x / n) + 1) + ' 列第 ' + (q.x % n + 1) + ' 欄（綠圈）'] });
         }
         api.solve = function () { judge(q.x); };
         api.wrong = function () {
@@ -428,7 +435,8 @@
         test: {
             stonesFor: stonesFor, timeMs: timeMs, decoysFor: decoysFor, cornerPFor: cornerPFor, tierWeights: tierWeights, bankEntries: bankEntries, placeBank: placeBank, makeFromBank: makeFromBank, newBoard: newBoard, fiveThrough: fiveThrough, winCells: winCells, localWinCells: localWinCells, windowCells: windowCells,
             whiteWins: whiteWins, relevantCells: relevantCells, blackCounter: blackCounter, solutionCells: solutionCells, isGood: isGood, placeFour: placeFour, placeCorner: placeCorner, placeDecoy: placeDecoy, touchesWhite: touchesWhite,
-            makeLevel: makeLevel, rating: rating,
+            makeLevel: makeLevel, rating: rating, revealMs: revealMs,
+            REVEAL_LEAD_MS: REVEAL_LEAD_MS, REVEAL_STEP_MS: REVEAL_STEP_MS, REVEAL_HOLD_MS: REVEAL_HOLD_MS,
             RAMP_LEVELS: RAMP_LEVELS, STONES: STONES, TIME_S: TIME_S, DECOYS: DECOYS, CORNER_FROM: CORNER_FROM, CORNER_P: CORNER_P, BANK_FROM: BANK_FROM, TIER_P0: TIER_P0, TIER_P1: TIER_P1, BANK_DEPTH: BANK_DEPTH, STONE_SLACK: STONE_SLACK, BANK_VERIFY: BANK_VERIFY, BANK_DECOY_VERIFY: BANK_DECOY_VERIFY, BANK_MS: BANK_MS, WIN_DEPTH: WIN_DEPTH, HOLD_DEPTH: HOLD_DEPTH, BOARD: BOARD, MAX_LEVEL: MAX_LEVEL, BLACK: BLACK, WHITE: WHITE
         }
     };

@@ -75,7 +75,7 @@ ok((howCount.scatter || 0) >= 360 * 0.6, '多數關卡都是真正「分散放�
 // ── 程式裡的接線 ──
 { const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_carpet.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction6.css'), 'utf8').split(/\s+/).join(' ');
   ok(/stageClass: 'cpt-stage'/.test(src) && /\.cpt-stage \{ touch-action: none;/.test(css), '舞台不捲動（touch-action: none）');
-  ok(/api\.fail\(\{ delay: 2800/.test(src), '失敗停格 2 秒以上');
+  ok(/api\.fail\(\{ delay: failDelayMs\(q\.solution\.length\)/.test(src) && T.SOL_HOLD_MS >= 3000, '失敗：綠線畫完再停格 3 秒才跳結算（V1.38.0，見 t_feedback138.js）');
   ok(/往回拖就是把地毯捲回來/.test(G.rule) && !/割草|割/.test(G.rule), '玩法說明講鋪地毯、可以捲回來（不再是割草機）');
   const boot = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/boot.js'), 'utf8'); ok(boot.indexOf("'js/reaction_carpet.js'") > 0 && boot.indexOf("'css/reaction6.css'") > 0, 'boot.js 有載入遊戲檔與 reaction6.css'); }
 // ── V1.34 出題改良：家具多的關卡也出得了題，不會退回空房間保底題；V1.36.0 再加：幾乎都是真正分散放的題目 ──
