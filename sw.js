@@ -227,6 +227,7 @@ var PRECACHE = [
     'js/menu_nav.js',
     'js/offline.js',
     'js/offline_ui.js',
+    'js/plays.js',
     'js/pwa.js',
     'js/quiz.js',
     'js/quiz_dining.js',

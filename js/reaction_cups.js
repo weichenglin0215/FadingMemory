@@ -37,12 +37,12 @@
     /* 交換次數：5 次起，每關 +2，最多 60 */
     var SWAPS_START = 5, SWAPS_STEP = 2, SWAPS_MAX = 60;
     /* 每次交換的時間（秒）：隨關卡線性縮短（越來越快） */
-    var SWAP_SEC_START = 0.5, SWAP_SEC_END = 0.10, SWAP_RAMP_LEVELS = 20;
-    var PAIRS_FROM_LEVEL = 8;   /* 這一關起，杯子 ≥ 4 個時會兩對同時交換 */
-    var REVEAL_MS = 1100;       /* 開場掀開杯子露出球的時間 */
+    var SWAP_SEC_START = 0.6, SWAP_SEC_END = 0.15, RAMP_LEVELS = 30;
+    var PAIRS_FROM_LEVEL = 10;   /* 這一關起，杯子 ≥ 4 個時會兩對同時交換 */
+    var REVEAL_MS = 1500;       /* 開場掀開杯子露出球的時間 */
     var LIFT_PX = 54;           /* 掀開杯子的高度 */
-    var ARC_PX = 34;            /* 交換時弧線的高度 */
-    var GAP_MS = 40;            /* 兩次交換之間的間隔 */
+    var ARC_PX = 50;            /* 交換時弧線的高度 */
+    var GAP_MS = 66;            /* 兩次交換之間的間隔 */
     var FAR_FRAC = 0.3;         /* 交換的兩個位置，在圓環上至少相隔「杯子數 × 這個比例」格（杯子要移動到圓環的另一端；至少 1 格） */
     var STAGGER = 0.3;          /* 同一步裡每個杯子各自晚多少比例的時間才出發（0～這個比例，隨機），杯子們的移動才會錯開 */
     var RING_PAD = 14;          /* 圓環（含杯子）離場地邊緣至少多遠 */
@@ -60,7 +60,7 @@
     /* 這一關要交換幾次 */
     function swapsFor(level) { return Math.min(SWAPS_MAX, SWAPS_START + SWAPS_STEP * (level - 1)); }
     /* 這一關每次交換花幾秒 */
-    function swapSecFor(level) { return kit.ramp(level, SWAP_SEC_START, SWAP_SEC_END, SWAP_RAMP_LEVELS); }
+    function swapSecFor(level) { return kit.ramp(level, SWAP_SEC_START, SWAP_SEC_END, RAMP_LEVELS); }
 
     /* 兩個位置在圓環上的「環上距離」（相隔幾格，走近的那一邊）：0～floor(n/2) */
     function ringDist(n, a, b) { var d = Math.abs(a - b) % n; return Math.min(d, n - d); }

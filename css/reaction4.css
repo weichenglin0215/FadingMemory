@@ -217,16 +217,24 @@
     pointer-events: none;
 }
 
-/* 圓：白底（一開始全部是白色），圓心有黑點 */
+/* 每個人底下的圈：平常看不見（人像 emoji 本身就是圖案），數過之後才亮起綠／藍／紅色（下面三個 --g／--b／--r） */
 .hc-circle {
-    fill: var(--c-on-accent);
-    stroke: var(--c-ink-soft);
-    stroke-width: 1.5;
-    fill-opacity: 0.92;
+    fill: none;
+    stroke: none;
 }
 
+/* 人像 emoji（SVG 文字）：不能選取、不吃點擊 */
+.hc-face {
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 中心點：小黑點加白邊（蓋在 emoji 上面也看得清楚） */
 .hc-dot {
     fill: var(--c-ink);
+    stroke: var(--c-on-accent);
+    stroke-width: 1.2;
 }
 
 .hc-circle--g {

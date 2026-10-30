@@ -31,7 +31,7 @@ if (m) {
   ok(!want('?games=0'), '?games=0 不算');
 }
 ok(/if \(wantsGameList\(\)\) \{\s*gameMenu = buildGameDlg\(\);\s*gameMenu\.show\(\);\s*\}/.test(menu), 'menu.js：進選單時 wantsGameList() 為真就建好並打開遊戲列表');
-ok(/function hide\(\) \{ gameDlg\.hidden = true; closeGrandma\(\); dropGamesParam\(\); \}/.test(menu), 'menu.js：列表關掉時 dropGamesParam()');
+ok(/function hide\(\) \{ gameDlg\.hidden = true; closePopup\(\); dropGamesParam\(\); \}/.test(menu), 'menu.js：列表關掉時 dropGamesParam()');
 ok(/searchParams\.delete\('games'\)/.test(menu) && /replaceState/.test(menu), 'menu.js：dropGamesParam 用 replaceState 拿掉 games 參數');
 
 console.log((bad ? bad + ' FAIL / ' : '') + total + ' checks');

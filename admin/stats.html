@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  內容安全政策（CSP）：網頁只准連到 Supabase（*.supabase.co）和本機（測試用），其他來源（外部的圖片、字型、程式）一律不准載入。
+  如果你的 Supabase 不是 xxx.supabase.co 這種網址（自己架的），要把 connect-src 後面改成你的網址。
+-->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://*.supabase.co http://localhost:* http://127.0.0.1:*; img-src data:; base-uri 'none'; form-action 'none'">
+<link rel="icon" href="data:,">
+<title>後台資料分析（記憶模糊）</title>
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   樣式：這個網頁跟遊戲是分開的，不用遵守遊戲的美術規範（給電腦瀏覽器看資料用，版面比手機寬）。
+   顏色全部集中在最前面的「變數」（--xxx），要換配色只要改這一段；系統設成深色模式時，自動換成 @media 裡那一組深色變數。
+   圖表的顏色（藍＝遊戲次數、橘＝玩家人數）與灰階（格線、座標軸、文字）是依資料視覺化的色彩規則挑的：
+   兩個系列的色差在淺色與深色底都通過檢查，文字一律用文字色（不用系列色），所以只靠顏色以外的東西（標題、圖例的線段、表格檢視）也看得懂。
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+    color-scheme: light dark;
+    --bg: #f9f9f7;          /* 整個頁面的底色 */
+    --card: #fcfcfb;        /* 卡片、圖表的底色 */
+    --text: #0b0b0b;        /* 主要文字 */
+    --text2: #52514e;       /* 次要文字 */
+    --muted: #898781;       /* 座標軸文字、說明小字 */
+    --line: #e1e0d9;        /* 框線、格線 */
+    --axis: #c3c2b7;        /* 座標軸、基準線 */
+    --head: #efeeea;        /* 表格標題列的底色 */
+    --zebra: #f6f6f3;       /* 表格雙數列的底色 */
+    --accent: #2a78d6;      /* 主色（按鈕、選中的頁籤） */
+    --accent-hover: #256abf;
+    --accent-text: #ffffff;
+    --s-plays: #2a78d6;     /* 圖表：遊戲次數（藍） */
+    --s-players: #eb6834;   /* 圖表：玩家人數（橘） */
+    --danger: #b42318;
+    --danger-bg: #fdecea;
+    --warn: #93370d;
+    --warn-bg: #fff4e5;
+    --ok: #067647;
+    --ok-bg: #e8f6ee;
+    --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .10);
+    --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #0d0d0d; --card: #1a1a19; --text: #f0efec; --text2: #c3c2b7; --muted: #898781; --line: #2c2c2a; --axis: #383835;
+        --head: #262624; --zebra: #1f1f1d; --accent: #3987e5; --accent-hover: #5a9df0; --accent-text: #0b1220;
+        --s-plays: #3987e5; --s-players: #d95926;
+        --danger: #ff9d94; --danger-bg: #3a1f1d; --warn: #ffc785; --warn-bg: #3a2c18; --ok: #6ee7a0; --ok-bg: #16301f;
+        --shadow: 0 1px 2px rgba(0, 0, 0, .5);
+    }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+    font-size: 16px; line-height: 1.5;
+}
+.page { max-width: 1600px; margin: 0 auto; padding: 14px 22px 56px; }
+h1 { margin: 0 0 4px; font-size: 24px; }
+.sub { margin: 0 0 16px; color: var(--text2); font-size: 14px; }
+
+.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 12px 18px; margin-bottom: 12px;
+}
+.card h2 { margin: 0 0 10px; font-size: 17px; }
+
+/* 分析參數：一排 */
+.params { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.params label.name { font-weight: 700; }
+.note { color: var(--muted); font-size: 14px; }
+input[type=date], input[type=text], input[type=search] {
+    font: inherit; color: inherit; background: var(--card); border: 1px solid var(--line);
+    border-radius: 7px; padding: 6px 9px;
+}
+input:focus-visible, button:focus-visible, summary:focus-visible, .chartbox:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+label.check { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+input[type=checkbox] { width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer; }
+
+button {
+    font: inherit; cursor: pointer; border-radius: 7px; border: 1px solid var(--line);
+    background: var(--card); color: var(--text); padding: 6px 14px;
+}
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 700; }
+button.primary:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+button.small { padding: 3px 10px; font-size: 14px; }
+
+/* 頁籤 */
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 14px 0 12px; }
+.tab {
+    border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; background: transparent;
+    padding: 8px 20px; font-weight: 700; color: var(--text2); margin-bottom: -1px;
+}
+.tab:hover:not(:disabled) { color: var(--text); border-color: var(--line); }
+.tab[aria-selected="true"] { background: var(--card); color: var(--accent); border-color: var(--line); border-bottom: 1px solid var(--card); }
+
+/* 狀態列 */
+.status { margin: 0 0 10px; padding: 8px 12px; border-radius: 8px; background: var(--head); font-size: 15px; }
+.status--error { background: var(--danger-bg); color: var(--danger); }
+.status--warn { background: var(--warn-bg); color: var(--warn); }
+.status--ok { background: var(--ok-bg); color: var(--ok); }
+/* 重新查詢的時候：保留畫面、調淡（不跳骨架、不閃） */
+.panel.loading .dim { opacity: .5; transition: opacity .15s; }
+
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 6px 0 12px; }
+
+/* 表格 */
+.table-wrap { overflow: auto; max-height: 72vh; border: 1px solid var(--line); border-radius: 8px; }
+table.grid { border-collapse: collapse; width: 100%; font-size: 15px; }
+table.grid th, table.grid td { border-bottom: 1px solid var(--line); padding: 6px 10px; text-align: left; vertical-align: middle; }
+table.grid th { position: sticky; top: 0; z-index: 2; background: var(--head); white-space: nowrap; font-weight: 700; }
+table.grid tbody tr:nth-child(even) { background: var(--zebra); }
+table.grid tbody tr:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+table.grid td.num, table.grid th.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.grid td.dim0 { color: var(--muted); }
+.empty { padding: 36px 12px; text-align: center; color: var(--muted); }
+
+/* 可以按的標題（排序） */
+th .sortbtn {
+    border: none; background: transparent; padding: 0; font: inherit; font-weight: 700; color: inherit; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px;
+}
+th .sortbtn:hover { color: var(--accent); }
+th .sortbtn .arrow { font-size: 11px; color: var(--muted); }
+th[aria-sort="ascending"] .arrow, th[aria-sort="descending"] .arrow { color: var(--accent); }
+th .hint { display: block; font-size: 12px; font-weight: 400; color: var(--muted); }
+
+/* 遊戲分析：次數欄底下的長條（跟最大值比），只是輔助，數字才是重點 */
+td.bar { position: relative; }
+td.bar .fill { position: absolute; left: 0; top: 4px; bottom: 4px; width: calc(var(--w, 0) * 1%); background: color-mix(in srgb, var(--s-plays) 14%, transparent); border-radius: 0 4px 4px 0; }
+td.bar .v { position: relative; }
+.stars { white-space: nowrap; }
+.stars small { color: var(--muted); }
+
+/* 玩家分析：很寬的矩陣，左邊兩欄固定、標題固定 */
+table.matrix { width: auto; }
+table.matrix th, table.matrix td { padding: 4px 6px; text-align: center; font-variant-numeric: tabular-nums; }
+table.matrix th.g { writing-mode: vertical-rl; min-width: 30px; height: 112px; font-size: 14px; padding: 6px 2px; vertical-align: bottom; }
+table.matrix th.g button { writing-mode: vertical-rl; padding: 0; }
+table.matrix .c-nick, table.matrix .c-cnt { position: sticky; z-index: 1; background: var(--card); }
+table.matrix tbody tr:nth-child(even) .c-nick, table.matrix tbody tr:nth-child(even) .c-cnt { background: var(--zebra); }
+table.matrix .c-nick { left: 0; min-width: 150px; max-width: 220px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-right: 1px solid var(--line); }
+table.matrix .c-cnt { left: 150px; min-width: 64px; border-right: 1px solid var(--axis); }
+table.matrix thead .c-nick, table.matrix thead .c-cnt { z-index: 4; background: var(--head); }
+table.matrix td.rk { background: color-mix(in srgb, var(--s-plays) calc(var(--a, 0) * 100%), transparent); font-weight: 700; }
+table.matrix td.rk1 { box-shadow: inset 0 0 0 2px var(--s-players); }
+table.matrix th.sorted { color: var(--accent); }
+
+/* 時間分析 */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.kpi { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 16px; box-shadow: var(--shadow); }
+.kpi .l { color: var(--text2); font-size: 14px; }
+.kpi .v { font-size: 30px; font-weight: 700; line-height: 1.2; }
+.kpi .s { color: var(--muted); font-size: 13px; }
+.charts { position: relative; }
+.chartbox { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px 16px 6px; margin-bottom: 12px; }
+.chartbox h3 { margin: 0 0 2px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+.chartbox h3 .key { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--c); border-radius: 2px; }
+.chartbox svg { display: block; width: 100%; height: auto; overflow: visible; touch-action: pan-y; }
+.chartbox .grid line { stroke: var(--line); stroke-width: 1; }
+.chartbox .base line { stroke: var(--axis); stroke-width: 1; }
+.chartbox text { fill: var(--muted); font-size: 12px; font-family: inherit; }
+.chartbox text.val { fill: var(--text); font-size: 13px; font-weight: 700; }
+.chartbox .line { fill: none; stroke: var(--c); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chartbox .area { fill: var(--c); fill-opacity: .10; stroke: none; }
+.chartbox .dot { fill: var(--c); stroke: var(--card); stroke-width: 2; }
+.chartbox .cross { stroke: var(--axis); stroke-width: 1; }
+#tip {
+    position: absolute; z-index: 5; pointer-events: none; min-width: 150px; padding: 8px 12px; border-radius: 8px;
+    background: var(--card); color: var(--text); border: 1px solid var(--line); box-shadow: 0 6px 18px rgba(0, 0, 0, .18); font-size: 14px;
+}
+#tip .d { color: var(--text2); margin-bottom: 4px; }
+#tip .r { display: flex; align-items: center; gap: 8px; }
+#tip .r .key { width: 14px; height: 0; border-top: 2px solid var(--c); border-radius: 2px; }
+#tip .r b { font-size: 16px; font-variant-numeric: tabular-nums; }
+#tip .r span { color: var(--text2); }
+details.tv { margin-top: 4px; }
+details.tv summary { cursor: pointer; font-weight: 700; padding: 6px 0; }
+
+#toast {
+    position: fixed; right: 22px; bottom: 22px; max-width: 420px; padding: 10px 16px; border-radius: 9px;
+    background: #1f2937; color: #fff; box-shadow: 0 6px 18px rgba(0, 0, 0, .3);
+    opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity .18s, transform .18s;
+}
+#toast.show { opacity: 1; transform: none; }
+details.how ol { margin: 6px 0 0 20px; padding: 0; }
+details.how li { margin: 3px 0; }
+details.how summary { cursor: pointer; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .panel.loading .dim, #toast { transition: none; } }
+</style>
+</head>
+<body>
+<div class="page">
+    <h1>後台資料分析</h1>
+    <p class="sub">記憶模糊・秒反應 的遊玩統計與世界排行榜。給你自己在電腦上用的管理工具，不是遊戲的一部分。資料全是統計與公開的排行榜（不含任何玩家編號），所以不需要金鑰或密碼。</p>
+
+    <!-- ═══ 分析參數（下面所有頁籤共用）═══ -->
+    <form class="card params" id="paramForm" autocomplete="off">
+        <label class="name" for="dFrom">起始日期</label>
+        <input type="date" id="dFrom">
+        <label class="name" for="dTo">結束日期</label>
+        <input type="date" id="dTo">
+        <button type="submit" class="primary" id="btnQuery">查詢</button>
+        <button type="button" class="small" id="btn0">今天</button>
+        <button type="button" class="small" id="btn7">最近 7 天</button>
+        <button type="button" class="small" id="btn30">最近 30 天</button>
+        <button type="button" class="small" id="btn90">最近 90 天</button>
+        <span class="note" id="rangeNote">日期以台灣時間計算（含頭尾）；最長 400 天。</span>
+    </form>
+
+    <div class="tabs" role="tablist" aria-label="資料內容">
+        <button type="button" class="tab" role="tab" id="tab-games" aria-controls="panel-games" aria-selected="true" data-tab="games">遊戲分析</button>
+        <button type="button" class="tab" role="tab" id="tab-players" aria-controls="panel-players" aria-selected="false" data-tab="players" tabindex="-1">玩家分析</button>
+        <button type="button" class="tab" role="tab" id="tab-time" aria-controls="panel-time" aria-selected="false" data-tab="time" tabindex="-1">時間分析</button>
+    </div>
+    <p class="status" id="status" role="status">查詢中…</p>
+
+    <!-- ═══ 一、遊戲分析 ═══ -->
+    <section class="panel" id="panel-games" role="tabpanel" aria-labelledby="tab-games">
+        <div class="toolbar">
+            <label class="check"><input type="checkbox" id="onlyPlayed"> 只顯示期間內有人玩的遊戲</label>
+            <span class="note">點「遊戲類型」「進行遊戲的人數」「遊戲總次數」「星星數量平均值」的標題可以排序，再點一次反過來。</span>
+        </div>
+        <div class="table-wrap dim" id="gamesWrap"><div class="empty">還沒有查詢。</div></div>
+    </section>
+
+    <!-- ═══ 二、玩家分析 ═══ -->
+    <section class="panel" id="panel-players" role="tabpanel" aria-labelledby="tab-players" hidden>
+        <div class="toolbar">
+            <label for="pSearch" class="name">找玩家</label>
+            <input type="search" id="pSearch" placeholder="輸入暱稱的一部分" spellcheck="false">
+            <label class="check"><input type="checkbox" id="pRange"> 名次只算期間內創下的成績</label>
+            <label class="check"><input type="checkbox" id="pEmpty"> 也顯示沒人上榜的遊戲</label>
+            <span class="note">玩家依「上榜款數」多的在前。格子裡是該款遊戲目前的世界名次（越前面顏色越深；第 1 名有橘框）。點遊戲名稱可以依那一款的名次排序。</span>
+        </div>
+        <div class="table-wrap dim" id="playersWrap"><div class="empty">還沒有查詢。</div></div>
+    </section>
+
+    <!-- ═══ 三、時間分析 ═══ -->
+    <section class="panel" id="panel-time" role="tabpanel" aria-labelledby="tab-time" hidden>
+        <div class="dim">
+            <div class="kpis" id="kpis"></div>
+            <div class="charts" id="charts"><div class="empty">還沒有查詢。</div><div id="tip" role="status" hidden></div></div>
+            <details class="tv card" id="tableView" hidden>
+                <summary>表格檢視（每天的數字）</summary>
+                <div class="table-wrap" id="timeTable"></div>
+            </details>
+        </div>
+    </section>
+
+    <details class="card how">
+        <summary>怎麼看這些數字</summary>
+        <ol>
+            <li><b>遊戲總次數</b>＝期間內完成的局數（結算畫面出現一次算一局；多關卡遊戲每一關的小結算不算；只開了遊戲沒玩完不算）。<b>進行遊戲的人數</b>＝期間內至少完成一局的不重複玩家代號；同一個人換瀏覽器、沒登入時清掉瀏覽器資料、從訪客變成登入帳號，都會被算成不同的人。</li>
+            <li>遊玩次數是從 <b>V1.39.0</b> 上線、而且你在 Supabase 重新執行過最新的 <code>supabase/MF_leaderboard.sql</code> 之後才開始累積的；更早的次數沒有紀錄，補不回來。玩家要更新到新版網頁（開一次遊戲）才會開始回報。</li>
+            <li><b>星星數量平均值</b>＝期間內玩家給的五星評價平均（括號是評價次數）；<b>最佳成績、第一名的玩家</b>＝世界排行榜<b>目前</b>的第 1 名，不受期間影響。</li>
+            <li>玩家分析的名次是目前在整張世界榜（每款前 30 名）上的名次；勾「名次只算期間內創下的成績」就只列出成績是在這段期間達成的。</li>
+            <li>時間分析是兩張圖：上面每天完成幾局、下面每天有幾個不重複的玩家（兩個數字大小差很多，所以分成兩張圖、不共用同一條縱軸）。滑鼠移到圖上看某一天的數字；鍵盤可以先 Tab 到圖上，再用左右鍵移動。</li>
+            <li>這個網頁用的是遊戲本來就公開的 anon 金鑰，只能呼叫統計函式（<code>MF_stats_games／MF_stats_daily／MF_stats_players</code>），不能新增、修改或刪除任何東西，也拿不到任何玩家編號。</li>
+        </ol>
+    </details>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   後台資料分析：程式
+   做的事：
+     1. 用 fetch 呼叫 Supabase 的 REST 介面（PostgREST）上的三個統計函式（supabase/MF_leaderboard.sql 第 7B 節）：
+          MF_stats_games(p_from, p_to)   → 遊戲分析：每款遊戲的局數、人數、平均星數、世界第一名
+          MF_stats_players(p_from, p_to) → 玩家分析：每位玩家在哪些遊戲上榜、名次
+          MF_stats_daily(p_from, p_to)   → 時間分析：每天的局數與人數
+        網址長這樣：<網址>/rest/v1/rpc/MF_stats_games，POST 一個 JSON：{ "p_from": "2026-10-01", "p_to": "2026-10-30" }
+     2. 把回來的資料畫成表格與圖（圖是自己畫的 SVG，不載入任何外部程式）。
+   整份程式不用安裝任何東西，雙擊這個 html 檔就能用。
+   為什麼不用密碼：這些函式只回傳統計與公開的排行榜（遊戲裡本來就看得到的名次與暱稱），永遠不回傳任何 player_id；
+   這個網頁沒有任何祕密。
+   安全：表格與圖上的文字一律用 textContent 放進去（不會被當成 HTML 執行），所以暱稱裡就算有 <script> 也只是一般文字。
+   ═══════════════════════════════════════════════════════════════ */
+(function () {
+    'use strict';
+
+    // ───────── 一、設定（要改就改這裡） ─────────
+    var DEFAULT_URL = 'https://tpdznlutkzeficitudac.supabase.co';  // 跟遊戲（js/leaderboard.js）同一個 Supabase 專案；專案網址本來就是公開的
+    // anon（公開）金鑰：跟 js/leaderboard.js 裡的是同一把，任何人看遊戲的網頁原始碼都拿得到，本來就設計成可以公開
+    var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwZHpubHV0a3plZmljaXR1ZGFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMzI2NTMsImV4cCI6MjA5MTgwODY1M30.Cid4HYePpAHA0oYffdm_5ZlthWt_nyAPpFjFcy4hsik';
+    var DEFAULT_DAYS = 30;              // 打開網頁預設查「幾天前」到今天
+    var MAX_DAYS = 400;                 // 資料庫最長只給 400 天（超過會被截短）
+    var TIMEOUT_MS = 25000;             // 每次請求最多等幾毫秒
+    var STORE_KEY = 'mf.stats.v1';      // 存在瀏覽器 localStorage 裡的名稱（只存你的選項，不存任何金鑰）
+    var TOP_N = 30;                     // 世界榜每款保留前幾名（顏色深淺的基準）
+
+    /* >>> 自動產生開始（node test/leaderboard/gen_games_sql.cjs --write 會重寫這兩行標記之間的內容，請不要手改；來源：js/menu.js 的分類與遊戲清單、各遊戲檔案的 score 設定） */
+    var CATS = [{"id":"memory","name":"記憶"},{"id":"visual","name":"視覺"},{"id":"reaction","name":"反應"},{"id":"number","name":"數字"},{"id":"logic","name":"邏輯"},{"id":"hand","name":"手感"},{"id":"guess","name":"目測"}];
+    var ORDER = ["spot","speed","impossible","shapes","matchcolor","coins","lights","tissue","pour","rainbow","pendulum","landolt","drop","cups","pattern","illusion","invoice","diff","bread","candy","curves","rps","balloon","price","heartbeat","sticks","schulte","same","backnum","setclock","tearcal","pillbox","fridge","scallion","hangpic","mirror","witness","halfchar","followme","chicks","bounce","cake","seven","teacher","pipes","lightsout","seq","polyrhythm","area","halfvol","blindcircle","samelen","rightangle","stamp","mathcheck","fracduel","primetrap","sum100","triple100","timestable","maxexpr","glyphspin","fadee","oddsock","twinsock","ghostleg","ghostleg2","euler","colorrecall","mixcolor","basket","passersby","seenit","whofirst","watchoff","handsmeet","clearer","twobags","stackup","bridge","halfcrowd","catroad","numline","copycurve","isequal","orderops","remainder","hiddendigit","timeafter","wrongline","fillop","fastblink","sneakmove","farpair","dicechange","whosaid","tapback","nthshape","spingap","sudokuone","chequeamt","mergechar","flashlight","racefirst","spinpick","alignchar","carpet","wirelink","oneway","mahjong3","reversi","gomoku","swapeven","weekday","gearmark","seesaw","findsquare","checkers","gaspump","milktea","rotary","menuslice","inkword","calendar","layerdrink","seenchars","doorslit","stars","slicechar","ordercut","butterfly","danmaku","cardslap","flags","huesort","kinetic","coinsort","groupphoto","fishbite","windblow","pearls","fishtoy","countbills","pinwheel","dishes","beans","minus7","sushi","change","discount","timepair","eyebrow","dough","dualtask","paint","scratch","inout","swipecopy","knockcount","homerun"];
+    var GAMES = {
+        "spot": {"name":"大家來找碴","cat":"visual","better":"max","decimals":0,"format":"第 {v} 關"},
+        "speed": {"name":"零秒出手","cat":"reaction","better":"min","decimals":4,"format":"{v} 秒"},
+        "impossible": {"name":"不可能任務","cat":"reaction","better":"min","decimals":4,"format":"{v} 公分"},
+        "shapes": {"name":"形形色色","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
+        "matchcolor": {"name":"色不異空","cat":"visual","better":"min","decimals":4,"format":"{v}%"},
+        "coins": {"name":"零錢分類","cat":"number","better":"max","decimals":0,"format":"{v} 關"},
+        "lights": {"name":"點燈記憶","cat":"memory","better":"max","decimals":0,"format":"{v} 盞"},
+        "tissue": {"name":"抽光衛生紙","cat":"hand","better":"min","decimals":4,"format":"{v} 秒"},
+        "pour": {"name":"倒到八分滿","cat":"guess","better":"min","decimals":4,"format":"{v}%"},
+        "rainbow": {"name":"七彩陷阱","cat":"reaction","better":"max","decimals":0,"format":"{v} 個"},
+        "pendulum": {"name":"六點鐘方向","cat":"reaction","better":"min","decimals":4,"format":"{v} 度"},
+        "landolt": {"name":"E視力檢查","cat":"visual","better":"max","decimals":4,"format":"視力 {v}"},
+        "drop": {"name":"神準落下","cat":"reaction","better":"max","decimals":0,"format":"{v} 分"},
+        "cups": {"name":"球在哪杯","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
+        "pattern": {"name":"解鎖圖案","cat":"memory","better":"max","decimals":0,"format":"{v} 點"},
+        "illusion": {"name":"錯覺大師","cat":"visual","better":"max","decimals":0,"format":"{v} 題"},
+        "invoice": {"name":"對發票","cat":"number","better":"max","decimals":0,"format":"{v} 張"},
+        "diff": {"name":"哪裡怪怪的","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
+        "bread": {"name":"秤麵包重量","cat":"guess","better":"max","decimals":0,"format":"{v} 關"},
+        "candy": {"name":"幾顆糖","cat":"guess","better":"max","decimals":0,"format":"{v} 題"},
+        "curves": {"name":"誰先到？","cat":"guess","better":"max","decimals":0,"format":"{v} 關"},
+        "rps": {"name":"猜拳必贏","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"},
+        "balloon": {"name":"吹氣球","cat":"hand","better":"max","decimals":0,"format":"{v}","group":true},
+        "price": {"name":"價格陷阱","cat":"number","better":"max","decimals":0,"format":"{v} 題"},
+        "heartbeat": {"name":"心跳複製","cat":"reaction","better":"max","decimals":0,"format":"{v} 拍"},
+        "sticks": {"name":"落下棍子","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"},
+        "schulte": {"name":"數字方陣","cat":"visual","better":"min","decimals":4,"format":"{v} 秒"},
+        "same": {"name":"相同嗎？","cat":"memory","better":"max","decimals":0,"format":"{v} 題"},
+        "backnum": {"name":"倒背數字","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
+        "setclock": {"name":"撥時鐘","cat":"hand","better":"max","decimals":0,"format":"{v} 關"},
+        "tearcal": {"name":"撕日曆","cat":"number","better":"max","decimals":0,"format":"{v} 關"},
+        "pillbox": {"name":"分藥盒","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
+        "fridge": {"name":"冰箱歸位","cat":"logic","better":"max","decimals":0,"format":"{v} 張"},
+        "scallion": {"name":"切蔥花","cat":"hand","better":"max","decimals":0,"format":"{v} 段"},
+        "hangpic": {"name":"掛畫","cat":"hand","better":"min","decimals":4,"format":"{v} 度"},
+        "mirror": {"name":"左右顛倒","cat":"hand","better":"max","decimals":0,"format":"{v} 關"},
+        "witness": {"name":"目擊證人","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
+        "halfchar": {"name":"半邊字","cat":"visual","better":"max","decimals":0,"format":"{v} 題"},
+        "followme": {"name":"照著走","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
+        "chicks": {"name":"找回小雞","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
+        "bounce": {"name":"球會跑去哪","cat":"guess","better":"max","decimals":0,"format":"{v} 關"},
+        "cake": {"name":"分蛋糕","cat":"guess","better":"max","decimals":0,"format":"{v} 關"},
+        "seven": {"name":"逢七過","cat":"number","better":"max","decimals":0,"format":"{v} 個"},
+        "teacher": {"name":"老師說","cat":"reaction","better":"max","decimals":0,"format":"{v} 題"},
+        "pipes": {"name":"接水管","cat":"logic","better":"max","decimals":0,"format":"{v} 關"},
+        "lightsout": {"name":"關燈","cat":"logic","better":"max","decimals":0,"format":"{v} 關"},
+        "seq": {"name":"猜下一個","cat":"logic","better":"max","decimals":0,"format":"{v} 題"},
+        "polyrhythm": {"name":"左右不同拍","cat":"reaction","better":"max","decimals":0,"format":"{v} 小節"},
+        "area": {"name":"面積一樣大","cat":"guess","better":"min","decimals":4,"format":"{v}%"},
+        "halfvol": {"name":"容量一半","cat":"guess","better":"min","decimals":4,"format":"{v}%"},
+        "blindcircle": {"name":"盲畫一個圓","cat":"hand","better":"max","decimals":4,"format":"{v}%"},
+        "samelen": {"name":"畫一樣長","cat":"hand","better":"min","decimals":4,"format":"{v}%"},
+        "rightangle": {"name":"畫成直角","cat":"hand","better":"min","decimals":4,"format":"{v} 度"},
+        "stamp": {"name":"心在正中央","cat":"hand","better":"min","decimals":4,"format":"{v} 公釐"},
+        "mathcheck": {"name":"算式對不對","cat":"number","better":"max","decimals":0,"format":"{v} 題"},
+        "fracduel": {"name":"分數大對決","cat":"number","better":"max","decimals":0,"format":"{v} 題"},
+        "primetrap": {"name":"質數陷阱","cat":"number","better":"max","decimals":0,"format":"{v} 題"},
+        "sum100": {"name":"兩張成百","cat":"number","better":"min","decimals":4,"format":"{v} 秒"},
+        "triple100": {"name":"三張成百","cat":"number","better":"max","decimals":0,"format":"{v} 關"},
+        "timestable": {"name":"乘法表抓錯","cat":"number","better":"min","decimals":4,"format":"{v} 秒"},
+        "maxexpr": {"name":"拼出最大數","cat":"number","better":"max","decimals":0,"format":"{v} 關"},
+        "glyphspin": {"name":"鏡中旋轉字","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
+        "fadee": {"name":"淡到看不見","cat":"visual","better":"max","decimals":0,"format":"{v} 個"},
+        "oddsock": {"name":"落單的襪子","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
+        "twinsock": {"name":"雙胞胎襪子","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
+        "ghostleg": {"name":"鬼腳圖","cat":"guess","better":"max","decimals":0,"format":"{v} 關"},
+        "ghostleg2": {"name":"鬼腳圖減一","cat":"guess","better":"max","decimals":0,"format":"{v} 關"},
+        "euler": {"name":"能一筆畫嗎","cat":"logic","better":"max","decimals":0,"format":"{v} 題"},
+        "colorrecall": {"name":"記色調色","cat":"visual","better":"min","decimals":4,"format":"ΔE {v}"},
+        "mixcolor": {"name":"混出什麼色","cat":"visual","better":"min","decimals":4,"format":"{v}%"},
+        "basket": {"name":"菜籃總價","cat":"number","better":"max","decimals":0,"format":"{v} 關"},
+        "passersby": {"name":"路人走過","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
+        "seenit": {"name":"這個看過嗎","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
+        "whofirst": {"name":"誰先亮","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
+        "watchoff": {"name":"哪支錶不準","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
+        "handsmeet": {"name":"兩針重疊","cat":"reaction","better":"min","decimals":4,"format":"{v} 度"},
+        "clearer": {"name":"越看越清楚","cat":"visual","better":"max","decimals":4,"format":"{v} 分"},
+        "twobags": {"name":"兩袋一樣重","cat":"guess","better":"max","decimals":0,"format":"{v} 關"},
+        "stackup": {"name":"重心疊疊樂","cat":"hand","better":"max","decimals":0,"format":"{v} 塊"},
+        "bridge": {"name":"搭一座橋","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"},
+        "halfcrowd": {"name":"一半的人","cat":"guess","better":"max","decimals":0,"format":"{v} 關"},
+        "catroad": {"name":"貓咪走山路","cat":"hand","better":"max","decimals":4,"format":"{v} 秒"},
+        "numline": {"name":"數線落點","cat":"number","better":"max","decimals":0,"format":"{v} 關"},
+        "copycurve": {"name":"照抄曲線","cat":"hand","better":"max","decimals":0,"format":"{v} 關"},
+        "isequal": {"name":"等不等於","cat":"number","better":"max","decimals":0,"format":"{v} 題"},
+        "orderops": {"name":"先乘除","cat":"number","better":"max","decimals":0,"format":"{v} 題"},
+        "remainder": {"name":"求餘數","cat":"number","better":"max","decimals":0,"format":"{v} 題"},
+        "hiddendigit": {"name":"遮住的數字","cat":"number","better":"max","decimals":0,"format":"{v} 題"},
+        "timeafter": {"name":"幾點幾分後","cat":"number","better":"max","decimals":0,"format":"{v} 題"},
+        "wrongline": {"name":"哪一行算錯","cat":"number","better":"max","decimals":0,"format":"{v} 題"},
+        "fillop": {"name":"挑加減乘除","cat":"number","better":"max","decimals":0,"format":"{v} 關"},
+        "fastblink": {"name":"誰閃得快","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
+        "sneakmove": {"name":"誰在偷偷動","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
+        "farpair": {"name":"哪對離最遠","cat":"guess","better":"max","decimals":0,"format":"{v} 關"},
+        "dicechange": {"name":"骰子少一點","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
+        "whosaid": {"name":"誰說的","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
+        "tapback": {"name":"倒著點","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
+        "nthshape": {"name":"第幾個出現","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
+        "spingap": {"name":"穿過旋轉縫","cat":"reaction","better":"max","decimals":0,"format":"{v} 顆"},
+        "sudokuone": {"name":"數獨猜一格","cat":"logic","better":"max","decimals":0,"format":"{v} 關"},
+        "chequeamt": {"name":"支票金額","cat":"number","better":"max","decimals":0,"format":"{v} 題"},
+        "mergechar": {"name":"左右合字","cat":"logic","better":"max","decimals":0,"format":"{v} 關"},
+        "flashlight": {"name":"手電筒猜圖","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
+        "racefirst": {"name":"誰先衝線","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
+        "spinpick": {"name":"轉盤停哪格","cat":"guess","better":"max","decimals":0,"format":"{v} 關"},
+        "alignchar": {"name":"對準才看到","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
+        "carpet": {"name":"鋪地毯","cat":"logic","better":"max","decimals":0,"format":"{v} 關"},
+        "wirelink": {"name":"接電線","cat":"logic","better":"max","decimals":0,"format":"{v} 關"},
+        "oneway": {"name":"單行道","cat":"logic","better":"max","decimals":0,"format":"{v} 關"},
+        "mahjong3": {"name":"缺哪一張","cat":"logic","better":"max","decimals":0,"format":"{v} 關"},
+        "reversi": {"name":"翻最多棋","cat":"logic","better":"max","decimals":0,"format":"{v} 關"},
+        "gomoku": {"name":"堵住五子","cat":"logic","better":"max","decimals":0,"format":"{v} 關"},
+        "swapeven": {"name":"換一張就平","cat":"number","better":"max","decimals":0,"format":"{v} 關"},
+        "weekday": {"name":"推星期幾","cat":"number","better":"max","decimals":0,"format":"{v} 關"},
+        "gearmark": {"name":"齒輪對記號","cat":"hand","better":"max","decimals":0,"format":"{v} 關"},
+        "seesaw": {"name":"蹺蹺板比重","cat":"logic","better":"max","decimals":0,"format":"{v} 關"},
+        "findsquare": {"name":"找正方形","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
+        "checkers": {"name":"跳棋跳最遠","cat":"logic","better":"max","decimals":0,"format":"{v} 關"},
+        "gaspump": {"name":"加到五百","cat":"number","better":"max","decimals":0,"format":"{v} 關"},
+        "milktea": {"name":"奶茶調色","cat":"guess","better":"max","decimals":0,"format":"{v} 關"},
+        "rotary": {"name":"轉盤電話","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
+        "menuslice": {"name":"切菜單上的","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"},
+        "inkword": {"name":"字的顏色","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
+        "calendar": {"name":"記行事曆","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
+        "layerdrink": {"name":"照樣調一杯","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
+        "seenchars": {"name":"看過的字","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
+        "doorslit": {"name":"門縫偷看","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
+        "stars": {"name":"找星座","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
+        "slicechar": {"name":"切字","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"},
+        "ordercut": {"name":"照號切水果","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"},
+        "butterfly": {"name":"蝴蝶不對稱","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
+        "danmaku": {"name":"彈幕找字","cat":"visual","better":"max","decimals":0,"format":"{v} 個"},
+        "cardslap": {"name":"心臟病","cat":"reaction","better":"max","decimals":0,"format":"{v} 次"},
+        "flags": {"name":"舉旗子","cat":"reaction","better":"max","decimals":0,"format":"{v} 句"},
+        "huesort": {"name":"色票排隊","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
+        "kinetic": {"name":"動態視力","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
+        "coinsort": {"name":"零錢入筒","cat":"reaction","better":"max","decimals":0,"format":"{v} 枚"},
+        "groupphoto": {"name":"大合照","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"},
+        "fishbite": {"name":"釣魚提竿","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"},
+        "windblow": {"name":"大風吹","cat":"memory","better":"max","decimals":0,"format":"{v} 題"},
+        "pearls": {"name":"吸珍珠","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"},
+        "fishtoy": {"name":"釣魚玩具","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"},
+        "countbills": {"name":"數鈔票","cat":"number","better":"max","decimals":0,"format":"{v} 關"},
+        "pinwheel": {"name":"轉風車","cat":"hand","better":"max","decimals":0,"format":"{v} 關"},
+        "dishes": {"name":"洗盤子","cat":"visual","better":"max","decimals":0,"format":"{v} 個"},
+        "beans": {"name":"挑豆子","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
+        "minus7": {"name":"一路減七","cat":"number","better":"max","decimals":0,"format":"{v} 題"},
+        "sushi": {"name":"迴轉壽司","cat":"number","better":"max","decimals":0,"format":"{v} 關"},
+        "change": {"name":"找錢","cat":"number","better":"max","decimals":0,"format":"{v} 題"},
+        "discount": {"name":"打了幾折","cat":"number","better":"max","decimals":0,"format":"{v} 題"},
+        "timepair": {"name":"時間連連看","cat":"logic","better":"max","decimals":0,"format":"{v} 關"},
+        "eyebrow": {"name":"畫眉毛","cat":"hand","better":"max","decimals":0,"format":"{v} 關"},
+        "dough": {"name":"擀水餃皮","cat":"hand","better":"max","decimals":0,"format":"{v} 關"},
+        "dualtask": {"name":"一心二用","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"},
+        "paint": {"name":"刷油漆","cat":"hand","better":"max","decimals":0,"format":"{v} 關"},
+        "scratch": {"name":"刮刮樂推理","cat":"logic","better":"max","decimals":0,"format":"{v} 關"},
+        "inout": {"name":"圈內圈外","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
+        "swipecopy": {"name":"反著滑","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"},
+        "knockcount": {"name":"敲幾下","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
+        "homerun": {"name":"全壘打","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"}
+    };
+    /* <<< 自動產生結束 */
+
+    // 要連的網址：平常就是上面的 DEFAULT_URL；測試時可以在網頁網址後面加 ?api=http://127.0.0.1:埠號 連到假的伺服器（只接受 https 或本機網址）
+    function cleanUrl(u) {
+        try {
+            var o = new URL(String(u || '').trim());
+            var local = (o.hostname === 'localhost' || o.hostname === '127.0.0.1');
+            if (o.protocol === 'https:' || (o.protocol === 'http:' && local)) return o.origin;
+        } catch (e) { /* 不是網址 */ }
+        return null;
+    }
+    var BASE = cleanUrl(new URLSearchParams(location.search).get('api')) || DEFAULT_URL;
+
+    // ───────── 二、小工具 ─────────
+    function $(id) { return document.getElementById(id); }
+    function pad2(n) { return n < 10 ? '0' + n : String(n); }
+    function mk(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+    var WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+    // 台灣今天的日期 'YYYY-MM-DD'（跟資料庫「一天」的算法一樣；不管這台電腦在哪個時區）
+    function taipeiToday() { return new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10); }
+    function parseDay(s) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) : NaN; }
+    function dayStr(ms) { return new Date(ms).toISOString().slice(0, 10); }
+    function addDays(s, n) { return dayStr(parseDay(s) + n * 86400000); }
+    function daysBetween(a, b) { return Math.round((parseDay(b) - parseDay(a)) / 86400000); }
+    function weekdayOf(s) { return WEEK[new Date(parseDay(s)).getUTCDay()]; }
+    function fmtInt(n) { return Number(n).toLocaleString('en-US'); }
+    // 圖表座標軸的數字：1000 以上用 K、M
+    function fmtCompact(n) {
+        if (n >= 1e6) return (n / 1e6).toFixed(n % 1e6 ? 1 : 0).replace(/\.0$/, '') + 'M';
+        if (n >= 1e3) return (n / 1e3).toFixed(n % 1e3 ? 1 : 0).replace(/\.0$/, '') + 'K';
+        return String(n);
+    }
+    // 依遊戲的成績規格把數字說成「12.3456 秒」「第 21 關」（跟 js/leaderboard.js 的 fmt 同一個做法）
+    function fmtScore(spec, v) {
+        if (v === null || v === undefined || !isFinite(v)) return '—';
+        if (!spec) return String(v);
+        var s = Number(v).toFixed(spec.decimals || 0);
+        if (spec.group) s = s.replace(/^(-?\d+)/, function (m) { return m.replace(/\B(?=(\d{3})+(?!\d))/g, ','); });
+        return String(spec.format || '{v}').replace('{v}', s);
+    }
+    function loadSettings() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; } }
+    function saveSettings(patch) {
+        var s = loadSettings();
+        for (var k in patch) { if (Object.prototype.hasOwnProperty.call(patch, k)) s[k] = patch[k]; }
+        try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) { /* 存不了就算了，不影響使用 */ }
+    }
+    var toastTimer = null;
+    function toast(text) {
+        var t = $('toast'); t.textContent = text; t.classList.add('show');
+        clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2600);
+    }
+    function setStatus(text, kind) { var s = $('status'); s.textContent = text; s.className = 'status' + (kind ? ' status--' + kind : ''); }
+
+    // ───────── 三、目前的狀態 ─────────
+    var els = {
+        form: $('paramForm'), dFrom: $('dFrom'), dTo: $('dTo'), btnQuery: $('btnQuery'),
+        gamesWrap: $('gamesWrap'), onlyPlayed: $('onlyPlayed'),
+        playersWrap: $('playersWrap'), pSearch: $('pSearch'), pRange: $('pRange'), pEmpty: $('pEmpty'),
+        kpis: $('kpis'), charts: $('charts'), tip: $('tip'), tableView: $('tableView'), timeTable: $('timeTable')
+    };
+    var state = {
+        tab: 'games',
+        range: null,           // 目前查詢用的 { from, to }（資料庫實際使用的範圍以回傳為準）
+        cache: {},             // 每個頁籤查回來的資料：key（頁籤｜起｜迄｜選項）→ 回傳內容
+        sort: { key: 'plays', dir: 'desc' },       // 遊戲分析的排序
+        pSortGame: null,       // 玩家分析：依哪一款遊戲的名次排序（null＝依上榜款數）
+        busy: 0,               // 正在查詢中的請求數
+        token: { games: 0, players: 0, time: 0 }   // 每個頁籤各自的請求編號：舊的回應回來時發現編號不一樣就丟掉
+    };
+
+    // ───────── 四、向資料庫要資料 ─────────
+    // 呼叫統計函式；失敗時丟出的錯誤帶著 http（狀態碼）與 body（資料庫回的錯誤內容），給 explainError 翻成中文
+    async function rpc(name, args) {
+        var ctl = new AbortController();
+        var timer = setTimeout(function () { ctl.abort(); }, TIMEOUT_MS);
+        try {
+            var res = await fetch(BASE + '/rest/v1/rpc/' + name, {
+                method: 'POST',
+                headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(args), signal: ctl.signal
+            });
+            var text = await res.text(), data = null;
+            try { data = JSON.parse(text); } catch (e) { /* 不是 JSON */ }
+            if (!res.ok) { var err = new Error('HTTP ' + res.status); err.http = res.status; err.body = data; throw err; }
+            return data;
+        } finally { clearTimeout(timer); }
+    }
+    function explainError(e) {
+        if (e && e.name === 'AbortError') return '等太久沒有回應（超過 ' + (TIMEOUT_MS / 1000) + ' 秒），請檢查網路後再按一次查詢。';
+        if (e && e.http) {
+            var code = e.body && e.body.code;
+            var msg = (e.body && (e.body.message || e.body.msg || e.body.error_description)) || '';
+            // 找不到函式：資料庫還沒執行新版的 SQL（新版才有統計函式）
+            if (e.http === 404 || code === 'PGRST202' || code === '42883' || /could not find the function|does not exist/i.test(msg)) {
+                return '資料庫還沒有統計函式：請到 Supabase 的 SQL Editor 重新執行最新的 supabase/MF_leaderboard.sql（新版多了第 7B 節的 MF_stats_games／MF_stats_daily／MF_stats_players），執行完再按一次查詢。';
+            }
+            if (e.http === 401 || e.http === 403) return '資料庫不接受這把公開金鑰（' + (msg || e.http) + '）：請確認網址是正確的 Supabase 專案。';
+            return '資料庫回報錯誤（' + e.http + '）：' + (msg || '沒有說明');
+        }
+        return '連不上 Supabase：請檢查網路。（' + ((e && e.message) || e) + '）';
+    }
+
+    // 讀畫面上的日期；不合理（空的、格式不對、起點比終點晚）丟出錯誤，訊息會顯示在狀態列
+    function readRange() {
+        var a = els.dFrom.value, b = els.dTo.value;
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(a) || !/^\d{4}-\d{2}-\d{2}$/.test(b)) throw new Error('請選好起始日期與結束日期。');
+        if (parseDay(a) > parseDay(b)) throw new Error('起始日期比結束日期晚，請對調。');
+        return { from: a, to: b };
+    }
+    function setDays(n) {     // 從「n 天前」到今天（n=0 就是今天）；只改欄位，不查詢
+        var t = taipeiToday();
+        els.dFrom.value = addDays(t, -n); els.dTo.value = t;
+    }
+    function rangeText(from, to) { return from + ' ～ ' + to + '（共 ' + (daysBetween(from, to) + 1) + ' 天）'; }
+
+    // 這個頁籤要查哪個函式、帶什麼參數、cache 的 key
+    function plan(tab) {
+        var r = state.range;
+        if (tab === 'games') return { fn: 'MF_stats_games', args: { p_from: r.from, p_to: r.to }, key: 'games|' + r.from + '|' + r.to };
+        if (tab === 'time') return { fn: 'MF_stats_daily', args: { p_from: r.from, p_to: r.to }, key: 'time|' + r.from + '|' + r.to };
+        var ranged = els.pRange.checked;
+        return { fn: 'MF_stats_players', args: ranged ? { p_from: r.from, p_to: r.to } : { p_from: null, p_to: null }, key: 'players|' + (ranged ? r.from + '|' + r.to : 'all') };
+    }
+
+    // 載入某個頁籤：有 cache 就直接畫，沒有（或 force）就向資料庫要。要的時候保留舊畫面、調淡
+    async function load(tab, force) {
+        if (!state.range) return;
+        var p = plan(tab), panel = $('panel-' + tab), my = ++state.token[tab];
+        if (!force && state.cache[p.key]) { render(tab); return; }
+        state.busy++; els.btnQuery.disabled = true; els.btnQuery.textContent = '查詢中…';
+        panel.classList.add('loading');
+        if (tab === state.tab) setStatus('查詢中…');
+        try {
+            var data = await rpc(p.fn, p.args);
+            if (my !== state.token[tab]) return;                 // 在等的時候又按了別的查詢：這個回應過期了
+            state.cache[p.key] = data;
+            render(tab);
+        } catch (e) {
+            if (my !== state.token[tab]) return;
+            if (tab === state.tab) setStatus(explainError(e), 'error');
+            else toast(explainError(e));
+        } finally {
+            panel.classList.remove('loading');
+            if (--state.busy <= 0) { state.busy = 0; els.btnQuery.disabled = false; els.btnQuery.textContent = '查詢'; }
+        }
+    }
+    // 目前頁籤重新查（參數改了、按了查詢）：全部 cache 作廢
+    function runQuery() {
+        try { state.range = readRange(); } catch (e) { setStatus(e.message, 'error'); return; }
+        if (daysBetween(state.range.from, state.range.to) + 1 > MAX_DAYS) {
+            els.dFrom.value = state.range.from = addDays(state.range.to, -(MAX_DAYS - 1));
+            toast('最長只能查 ' + MAX_DAYS + ' 天，起始日期已自動改成 ' + state.range.from + '。');
+        }
+        saveSettings({ from: state.range.from, to: state.range.to });
+        state.cache = {};
+        load(state.tab, true);
+    }
+
+    // ───────── 五、遊戲分析 ─────────
+    // 把資料庫的每款遊戲整理成表格的一列（名稱、分類取自上面自動產生的 GAMES；資料庫有、這份沒有的遊戲就用 game_id 當名稱、分類空白）
+    function gameRows(data) {
+        var catIdx = {};
+        CATS.forEach(function (c, i) { catIdx[c.id] = i; });
+        return ((data && data.games) || []).map(function (g) {
+            var meta = GAMES[g.game_id] || null, ci = meta && catIdx[meta.cat] !== undefined ? catIdx[meta.cat] : 99;
+            return {
+                id: g.game_id, name: meta ? meta.name : (g.title || g.game_id), cat: meta ? meta.cat : '', catIdx: ci,
+                catName: ci < 99 ? CATS[ci].name : '—', order: ORDER.indexOf(g.game_id) < 0 ? 999 : ORDER.indexOf(g.game_id),
+                plays: Number(g.plays) || 0, players: Number(g.players) || 0,
+                stars: g.stars_avg === null || g.stars_avg === undefined ? null : Number(g.stars_avg), starsCnt: Number(g.stars_cnt) || 0,
+                best: g.best_score === null || g.best_score === undefined ? null : Number(g.best_score), bestNick: g.best_nick, spec: meta && meta.format ? meta : null
+            };
+        });
+    }
+    // 排序：key＝'cat'｜'players'｜'plays'｜'stars'；星數沒有資料的永遠排最後；同值時照「遊戲總次數多的在前、再照選單順序」
+    function sortRows(rows, sort) {
+        var sign = sort.dir === 'asc' ? 1 : -1, k = sort.key;
+        return rows.slice().sort(function (a, b) {
+            var x, y;
+            if (k === 'cat') { x = a.catIdx; y = b.catIdx; }
+            else if (k === 'stars') {
+                if (a.stars === null && b.stars === null) return b.plays - a.plays || a.order - b.order;
+                if (a.stars === null) return 1;
+                if (b.stars === null) return -1;
+                x = a.stars; y = b.stars;
+            } else { x = a[k]; y = b[k]; }
+            if (x !== y) return (x - y) * sign;
+            return b.plays - a.plays || a.order - b.order;
+        });
+    }
+    var GAME_COLS = [
+        { key: 'name', label: '遊戲名稱', sortable: false },
+        { key: 'cat', label: '遊戲類型', sortable: true, first: 'asc', hint: '七種' },
+        { key: 'players', label: '進行遊戲的人數', sortable: true, num: true, tip: '期間內至少完成一局的不重複玩家' },
+        { key: 'plays', label: '遊戲總次數', sortable: true, num: true, tip: '期間內完成的局數' },
+        { key: 'stars', label: '星星數量平均值', sortable: true, num: true, tip: '期間內五星評價的平均（括號是評價次數）' },
+        { key: 'best', label: '最佳成績', sortable: false, num: true, tip: '世界排行榜目前的第 1 名（不受期間影響）' },
+        { key: 'bestNick', label: '第一名的玩家', sortable: false }
+    ];
+    function sortHead(th, label, active, dir) {
+        th.setAttribute('aria-sort', active ? (dir === 'asc' ? 'ascending' : 'descending') : 'none');
+        var arrow = mk('span', 'arrow', active ? (dir === 'asc' ? '▲' : '▼') : '↕');
+        arrow.setAttribute('aria-hidden', 'true');
+        return arrow;
+    }
+    function renderGames() {
+        var data = state.cache[plan('games').key];
+        if (!data) return;
+        var all = gameRows(data), shown = els.onlyPlayed.checked ? all.filter(function (r) { return r.plays > 0; }) : all;
+        var rows = sortRows(shown, state.sort);
+        var totalPlays = all.reduce(function (s, r) { return s + r.plays; }, 0), played = all.filter(function (r) { return r.plays > 0; }).length;
+        setStatus(rangeText(data.from, data.to) + '　共 ' + fmtInt(played) + ' 款遊戲有人玩、總次數 ' + fmtInt(totalPlays) + ' 局' + (totalPlays === 0 ? '（這段期間沒有遊玩紀錄：統計要在 V1.39.0 上線並重新執行 SQL 之後才開始累積）' : ''), totalPlays === 0 ? 'warn' : 'ok');
+        if (!rows.length) { els.gamesWrap.replaceChildren(mk('div', 'empty', '沒有資料。')); return; }
+        var maxPlays = Math.max.apply(null, rows.map(function (r) { return r.plays; })) || 1;
+        var table = mk('table', 'grid'), hr = table.createTHead().insertRow();
+        GAME_COLS.forEach(function (c) {
+            var th = mk('th', c.num ? 'num' : '');
+            if (c.tip) th.title = c.tip;
+            if (c.sortable) {
+                var active = state.sort.key === c.key, b = mk('button', 'sortbtn');
+                b.type = 'button'; b.dataset.sort = c.key;
+                b.appendChild(document.createTextNode(c.label));
+                b.appendChild(sortHead(th, c.label, active, state.sort.dir));
+                th.appendChild(b);
+            } else th.textContent = c.label;
+            if (c.hint) th.appendChild(mk('span', 'hint', c.hint));
+            hr.appendChild(th);
+        });
+        var tb = table.createTBody();
+        rows.forEach(function (r) {
+            var tr = tb.insertRow(); tr.dataset.id = r.id;
+            tr.insertCell().textContent = r.name;
+            tr.insertCell().textContent = r.catName;
+            tr.insertCell().textContent = fmtInt(r.players); tr.cells[2].className = 'num' + (r.players ? '' : ' dim0');
+            var tdp = tr.insertCell(); tdp.className = 'num bar' + (r.plays ? '' : ' dim0');
+            var fill = mk('span', 'fill'); fill.style.setProperty('--w', String(r.plays / maxPlays * 100));
+            tdp.appendChild(fill); tdp.appendChild(mk('span', 'v', fmtInt(r.plays)));
+            var tds = tr.insertCell(); tds.className = 'num stars' + (r.stars === null ? ' dim0' : '');
+            if (r.stars === null) tds.textContent = '—';
+            else { tds.appendChild(document.createTextNode('★ ' + r.stars.toFixed(2) + ' ')); tds.appendChild(mk('small', '', '(' + fmtInt(r.starsCnt) + ')')); }
+            var tdb = tr.insertCell(); tdb.className = 'num' + (r.best === null ? ' dim0' : ''); tdb.textContent = fmtScore(r.spec, r.best);
+            var tdn = tr.insertCell(); tdn.textContent = r.best === null ? '—' : (r.bestNick ? r.bestNick : '（未命名）'); if (r.best === null) tdn.className = 'dim0';
+        });
+        els.gamesWrap.replaceChildren(table);
+    }
+    function clickSort(key) {
+        var col = GAME_COLS.filter(function (c) { return c.key === key; })[0];
+        if (!col) return;
+        if (state.sort.key === key) state.sort.dir = state.sort.dir === 'asc' ? 'desc' : 'asc';
+        else state.sort = { key: key, dir: col.first || 'desc' };
+        saveSettings({ sortKey: state.sort.key, sortDir: state.sort.dir });
+        renderGames();
+    }
+
+    // ───────── 六、玩家分析 ─────────
+    // 格子的底色深淺：第 1 名最深、第 TOP_N 名最淺（用 CSS 變數 --a 表示不透明度，CSS 再用 color-mix 混出來）
+    function rankAlpha(r) { return 0.14 + 0.5 * (1 - (Math.min(r, TOP_N) - 1) / (TOP_N - 1)); }
+    // 要顯示哪些遊戲欄：依選單順序；預設只顯示至少有一位玩家上榜的
+    function playerColumns(rows, showEmpty) {
+        var have = {};
+        rows.forEach(function (p) { Object.keys(p.ranks || {}).forEach(function (g) { have[g] = true; }); });
+        var ids = ORDER.slice();
+        Object.keys(have).forEach(function (g) { if (ids.indexOf(g) < 0) ids.push(g); });     // 資料庫有、這份清單沒有的遊戲排最後
+        return ids.filter(function (g) { return showEmpty || have[g]; });
+    }
+    function renderPlayers() {
+        var data = state.cache[plan('players').key];
+        if (!data) return;
+        var q = els.pSearch.value.trim().toLowerCase();
+        var rows = (Array.isArray(data) ? data : []).filter(function (p) { return !q || String(p.nick || '').toLowerCase().indexOf(q) >= 0; });
+        if (state.pSortGame) {
+            var g = state.pSortGame;
+            rows = rows.map(function (p, i) { return { p: p, i: i }; }).sort(function (a, b) {
+                var x = (a.p.ranks || {})[g], y = (b.p.ranks || {})[g];
+                if (x === undefined && y === undefined) return a.i - b.i;
+                if (x === undefined) return 1;
+                if (y === undefined) return -1;
+                return x - y || a.i - b.i;
+            }).map(function (o) { return o.p; });
+        }
+        var cols = playerColumns(Array.isArray(data) ? data : [], els.pEmpty.checked);
+        var total = Array.isArray(data) ? data.length : 0;
+        setStatus((els.pRange.checked && state.range ? '只算 ' + rangeText(state.range.from, state.range.to) + ' 內創下的成績　' : '目前世界榜上全部名次　') +
+            '共 ' + fmtInt(total) + ' 位玩家上榜' + (q ? '，符合「' + els.pSearch.value.trim() + '」的有 ' + fmtInt(rows.length) + ' 位' : '') + '，' + cols.length + ' 款遊戲有名次', total ? 'ok' : 'warn');
+        if (!rows.length) { els.playersWrap.replaceChildren(mk('div', 'empty', total ? '沒有符合的玩家。' : '這個範圍內沒有人上榜。')); return; }
+        var table = mk('table', 'grid matrix'), hr = table.createTHead().insertRow();
+        var h1 = mk('th', 'c-nick', '玩家暱稱'), h2 = mk('th', 'c-cnt', '前 ' + TOP_N + ' 名次數'); h2.title = '這位玩家在幾款遊戲的世界榜上有名次'; h2.style.whiteSpace = 'normal';
+        hr.appendChild(h1); hr.appendChild(h2);
+        cols.forEach(function (id) {
+            var th = mk('th', 'g' + (state.pSortGame === id ? ' sorted' : '')), b = mk('button', 'sortbtn', GAMES[id] ? GAMES[id].name : id);
+            b.type = 'button'; b.dataset.game = id; b.title = (GAMES[id] ? GAMES[id].name : id) + '：依這一款的名次排序';
+            th.setAttribute('aria-sort', state.pSortGame === id ? 'ascending' : 'none');
+            th.appendChild(b); hr.appendChild(th);
+        });
+        var tb = table.createTBody();
+        rows.forEach(function (p) {
+            var tr = tb.insertRow(), nick = tr.insertCell(), cnt = tr.insertCell();
+            nick.className = 'c-nick'; nick.textContent = p.nick ? p.nick : '（未命名）'; nick.title = nick.textContent;
+            cnt.className = 'c-cnt'; cnt.textContent = String(p.cnt);
+            var cells = '';
+            cols.forEach(function (id) {
+                var r = (p.ranks || {})[id];
+                cells += typeof r === 'number' ? '<td class="rk' + (r === 1 ? ' rk1' : '') + '" style="--a:' + rankAlpha(r).toFixed(3) + '">' + (r | 0) + '</td>' : '<td></td>';    // 只放數字，不會有 HTML
+            });
+            tr.insertAdjacentHTML('beforeend', cells);
+        });
+        els.playersWrap.replaceChildren(table);
+    }
+
+    // ───────── 七、時間分析 ─────────
+    // 期間內每一天一個點（沒人玩的日子補 0）
+    function fillDays(from, to, days) {
+        var by = {};
+        (days || []).forEach(function (d) { by[d.day] = d; });
+        var out = [], n = daysBetween(from, to) + 1;
+        for (var i = 0; i < n; i++) {
+            var day = addDays(from, i), d = by[day];
+            out.push({ day: day, plays: d ? Number(d.plays) || 0 : 0, players: d ? Number(d.players) || 0 : 0 });
+        }
+        return out;
+    }
+    // 縱軸的刻度：算出「漂亮的」間距（1、2、5 乘以 10 的次方），回傳 { max, ticks }
+    function niceScale(maxVal, count) {
+        count = count || 4;
+        var m = Math.max(maxVal, 1), raw = m / count, mag = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / mag;
+        var step = (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * mag;
+        if (step < 1) step = 1;
+        var top = Math.ceil(m / step) * step, ticks = [];
+        for (var v = 0; v <= top + 1e-9; v += step) ticks.push(Math.round(v));
+        return { max: top, ticks: ticks };
+    }
+    var NS = 'http://www.w3.org/2000/svg';
+    function sv(tag, attrs, parent) {
+        var e = document.createElementNS(NS, tag);
+        for (var k in attrs) { if (Object.prototype.hasOwnProperty.call(attrs, k)) e.setAttribute(k, attrs[k]); }
+        if (parent) parent.appendChild(e);
+        return e;
+    }
+    var CH = { H: 230, L: 54, R: 64, T: 18, B: 30 };       // 每張圖的高度與四邊留白（左邊放縱軸數字、右邊放終點的數字）
+    var chartState = { days: [], cols: [], idx: -1, W: 0 };
+    // 畫一張折線圖。回傳 { svg, cross, dot, xAt }
+    function drawChart(host, days, key, color, title, unit) {
+        var W = chartState.W, plotW = W - CH.L - CH.R, plotH = CH.H - CH.T - CH.B, n = days.length;
+        var vals = days.map(function (d) { return d[key]; }), maxV = Math.max.apply(null, vals), sc = niceScale(maxV, 4);
+        function xAt(i) { return CH.L + (n <= 1 ? plotW / 2 : plotW * i / (n - 1)); }
+        function yAt(v) { return CH.T + plotH - plotH * v / sc.max; }
+        var box = mk('div', 'chartbox'), h3 = mk('h3'), kk = mk('span', 'key');
+        box.style.setProperty('--c', color); box.tabIndex = 0; box.dataset.key = key;
+        box.setAttribute('role', 'img'); box.setAttribute('aria-label', title + '，共 ' + n + ' 天，最高 ' + maxV + ' ' + unit + '；詳細數字見下方表格檢視');
+        h3.appendChild(kk); h3.appendChild(document.createTextNode(title)); box.appendChild(h3);
+        var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + CH.H, width: W, height: CH.H, 'aria-hidden': 'true' }, box);
+        var gg = sv('g', { 'class': 'grid' }, svg), gb = sv('g', { 'class': 'base' }, svg);
+        sc.ticks.forEach(function (t) {
+            var y = yAt(t), l = sv('line', { x1: CH.L, x2: W - CH.R, y1: y, y2: y }, t === 0 ? gb : gg);
+            var tx = sv('text', { x: CH.L - 8, y: y + 4, 'text-anchor': 'end' }, svg); tx.textContent = fmtCompact(t);
+        });
+        // 橫軸日期：最多約 10 個標籤
+        var every = Math.max(1, Math.ceil(n / 10));
+        for (var i = 0; i < n; i += every) {
+            var d = days[i].day, lab = sv('text', { x: xAt(i), y: CH.H - 8, 'text-anchor': i === 0 ? 'start' : 'middle' }, svg);
+            lab.textContent = (i === 0 ? d.slice(0, 4) + '/' : '') + parseInt(d.slice(5, 7), 10) + '/' + parseInt(d.slice(8, 10), 10);
+        }
+        var pts = days.map(function (d, i) { return xAt(i).toFixed(1) + ',' + yAt(d[key]).toFixed(1); });
+        sv('path', { 'class': 'area', d: 'M' + pts[0] + ' L' + pts.join(' L') + ' L' + xAt(n - 1).toFixed(1) + ',' + yAt(0).toFixed(1) + ' L' + xAt(0).toFixed(1) + ',' + yAt(0).toFixed(1) + ' Z' }, svg);
+        sv('path', { 'class': 'line', d: 'M' + pts.join(' L') }, svg);
+        // 直接標示：終點的數字（右側）、最高點的數字（兩個位置太近就只標終點）
+        var last = vals[n - 1], px = xAt(n - 1), py = yAt(last);
+        sv('circle', { 'class': 'dot', cx: px, cy: py, r: 4 }, svg);
+        var tl = sv('text', { 'class': 'val', x: px + 10, y: py + 4 }, svg); tl.textContent = fmtInt(last);
+        var peak = vals.indexOf(maxV);
+        if (maxV > 0 && Math.abs(xAt(peak) - px) > 70) {
+            sv('circle', { 'class': 'dot', cx: xAt(peak), cy: yAt(maxV), r: 4 }, svg);
+            var tp = sv('text', { 'class': 'val', x: xAt(peak), y: yAt(maxV) - 9, 'text-anchor': 'middle' }, svg); tp.textContent = '最高 ' + fmtInt(maxV);
+        }
+        // 滑鼠移上去時的垂直線與圓點（先藏起來）
+        var cross = sv('line', { 'class': 'cross', x1: 0, x2: 0, y1: CH.T, y2: CH.T + plotH, visibility: 'hidden' }, svg);
+        var dot = sv('circle', { 'class': 'dot', cx: 0, cy: 0, r: 5, visibility: 'hidden' }, svg);
+        host.appendChild(box);
+        return { box: box, cross: cross, dot: dot, xAt: xAt, yAt: yAt, key: key };
+    }
+    function drawCharts(days) {
+        var host = els.charts;
+        chartState.W = Math.max(520, host.clientWidth || 900);
+        var tip = els.tip; tip.hidden = true;
+        host.replaceChildren(tip);
+        chartState.days = days;
+        chartState.cols = [
+            drawChart(host, days, 'plays', 'var(--s-plays)', '每天遊戲總次數', '局'),
+            drawChart(host, days, 'players', 'var(--s-players)', '每天遊戲總人數', '人')
+        ];
+        chartState.idx = -1;
+    }
+    function hoverAt(i, cx, cy) {
+        var days = chartState.days, n = days.length;
+        if (!n) return;
+        i = Math.max(0, Math.min(n - 1, i)); chartState.idx = i;
+        chartState.cols.forEach(function (c) {
+            var x = c.xAt(i);
+            c.cross.setAttribute('x1', x); c.cross.setAttribute('x2', x); c.cross.setAttribute('visibility', 'visible');
+            c.dot.setAttribute('cx', x); c.dot.setAttribute('cy', c.yAt(days[i][c.key])); c.dot.setAttribute('visibility', 'visible');
+        });
+        var d = days[i], tip = els.tip;
+        tip.replaceChildren();
+        tip.appendChild(mk('div', 'd', d.day + '（週' + weekdayOf(d.day) + '）'));
+        [['plays', '局', 'var(--s-plays)'], ['players', '人', 'var(--s-players)']].forEach(function (r) {
+            var row = mk('div', 'r'), key = mk('span', 'key');
+            key.style.setProperty('--c', r[2]);
+            row.appendChild(key); row.appendChild(mk('b', '', fmtInt(d[r[0]]))); row.appendChild(mk('span', '', r[1] + (r[0] === 'plays' ? '（遊戲總次數）' : '（遊戲總人數）')));
+            tip.appendChild(row);
+        });
+        tip.hidden = false;
+        var host = els.charts.getBoundingClientRect(), x = cx != null ? cx - host.left : chartState.cols[0].xAt(i);
+        var left = x + 16; if (left + 190 > host.width) left = x - 16 - 190;
+        tip.style.left = Math.max(4, left) + 'px'; tip.style.top = (cy != null ? cy - host.top : 70) + 'px';
+    }
+    function hoverOff() {
+        chartState.cols.forEach(function (c) { c.cross.setAttribute('visibility', 'hidden'); c.dot.setAttribute('visibility', 'hidden'); });
+        els.tip.hidden = true; chartState.idx = -1;
+    }
+    function indexFromPointer(ev) {
+        var box = chartState.cols[0] && chartState.cols[0].box; if (!box) return -1;
+        var svg = box.querySelector('svg'), r = svg.getBoundingClientRect(), scale = r.width / chartState.W, x = (ev.clientX - r.left) / scale;
+        var n = chartState.days.length, plotW = chartState.W - CH.L - CH.R;
+        return n <= 1 ? 0 : Math.round((x - CH.L) / plotW * (n - 1));
+    }
+    function renderTime() {
+        var data = state.cache[plan('time').key];
+        if (!data) return;
+        var days = fillDays(data.from, data.to, data.days), plays = Number(data.plays) || 0, players = Number(data.players) || 0;
+        var maxPlays = days.reduce(function (m, d) { return d.plays > m.plays ? d : m; }, days[0]), maxPlayers = days.reduce(function (m, d) { return d.players > m.players ? d : m; }, days[0]);
+        setStatus(rangeText(data.from, data.to) + (plays === 0 ? '　這段期間沒有遊玩紀錄（統計要在 V1.39.0 上線並重新執行 SQL 之後才開始累積）' : '　共 ' + fmtInt(plays) + ' 局、' + fmtInt(players) + ' 位不重複玩家'), plays === 0 ? 'warn' : 'ok');
+        var tiles = [
+            ['期間總局數', fmtInt(plays), '局'],
+            ['期間玩家數', fmtInt(players), '不重複的玩家代號'],
+            ['平均每天', (plays / days.length).toFixed(1), '局（共 ' + days.length + ' 天）'],
+            ['單日最多局數', fmtInt(maxPlays.plays), plays ? maxPlays.day + '（週' + weekdayOf(maxPlays.day) + '）' : '—'],
+            ['單日最多人數', fmtInt(maxPlayers.players), plays ? maxPlayers.day + '（週' + weekdayOf(maxPlayers.day) + '）' : '—']
+        ];
+        els.kpis.replaceChildren();
+        tiles.forEach(function (t) { var k = mk('div', 'kpi'); k.appendChild(mk('div', 'l', t[0])); k.appendChild(mk('div', 'v', t[1])); k.appendChild(mk('div', 's', t[2])); els.kpis.appendChild(k); });
+        // 圖：沒有任何紀錄就不畫（一條貼著底部的線沒有意思）
+        if (plays === 0) {
+            els.charts.replaceChildren(mk('div', 'empty', '這段期間沒有遊玩紀錄。'), els.tip);
+            els.tableView.hidden = true; chartState.days = []; chartState.cols = [];
+            return;
+        }
+        drawCharts(days);
+        // 表格檢視：每天的數字（不用滑鼠也看得到每個值）
+        var table = mk('table', 'grid'), hr = table.createTHead().insertRow();
+        ['日期', '遊戲總次數（局）', '遊戲總人數（人）'].forEach(function (t, i) { hr.appendChild(mk('th', i ? 'num' : '', t)); });
+        var tb = table.createTBody();
+        days.slice().reverse().forEach(function (d) {
+            var tr = tb.insertRow(); tr.insertCell().textContent = d.day + '（週' + weekdayOf(d.day) + '）';
+            var a = tr.insertCell(), b = tr.insertCell(); a.className = b.className = 'num'; a.textContent = fmtInt(d.plays); b.textContent = fmtInt(d.players);
+            if (!d.plays) { a.classList.add('dim0'); b.classList.add('dim0'); }
+        });
+        els.timeTable.replaceChildren(table);
+        els.tableView.hidden = false;
+    }
+
+    // ───────── 八、頁籤 ─────────
+    function render(tab) {
+        if (tab !== state.tab) return;              // 不是目前看的頁籤：資料先存著（cache），切過去再畫
+        if (tab === 'games') renderGames(); else if (tab === 'players') renderPlayers(); else renderTime();
+    }
+    function showTab(tab, focus) {
+        if (['games', 'players', 'time'].indexOf(tab) < 0) tab = 'games';
+        state.tab = tab;
+        ['games', 'players', 'time'].forEach(function (t) {
+            var on = t === tab, b = $('tab-' + t);
+            b.setAttribute('aria-selected', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1;
+            $('panel-' + t).hidden = !on;
+            if (on && focus) b.focus();
+        });
+        saveSettings({ tab: tab });
+        try { history.replaceState(null, '', '#' + tab); } catch (e) { /* file:// 有些瀏覽器不給改 */ }
+        if (state.range) load(tab, false);
+    }
+
+    // ───────── 九、綁定事件與開頁面 ─────────
+    els.form.addEventListener('submit', function (e) { e.preventDefault(); runQuery(); });
+    [['btn0', 0], ['btn7', 7], ['btn30', 30], ['btn90', 90]].forEach(function (p) {
+        $(p[0]).addEventListener('click', function () { setDays(p[1]); runQuery(); });
+    });
+    document.querySelector('.tabs').addEventListener('click', function (e) { var b = e.target.closest('.tab'); if (b) showTab(b.dataset.tab); });
+    document.querySelector('.tabs').addEventListener('keydown', function (e) {
+        var order = ['games', 'players', 'time'], i = order.indexOf(state.tab);
+        if (e.key === 'ArrowRight') { e.preventDefault(); showTab(order[(i + 1) % 3], true); }
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); showTab(order[(i + 2) % 3], true); }
+        else if (e.key === 'Home') { e.preventDefault(); showTab('games', true); }
+        else if (e.key === 'End') { e.preventDefault(); showTab('time', true); }
+    });
+    els.gamesWrap.addEventListener('click', function (e) { var b = e.target.closest('button[data-sort]'); if (b) clickSort(b.dataset.sort); });
+    els.onlyPlayed.addEventListener('change', function () { saveSettings({ onlyPlayed: els.onlyPlayed.checked }); renderGames(); });
+    els.playersWrap.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-game]'); if (!b) return;
+        state.pSortGame = state.pSortGame === b.dataset.game ? null : b.dataset.game;
+        renderPlayers();
+    });
+    els.pSearch.addEventListener('input', function () { renderPlayers(); });
+    els.pEmpty.addEventListener('change', function () { saveSettings({ pEmpty: els.pEmpty.checked }); renderPlayers(); });
+    els.pRange.addEventListener('change', function () { saveSettings({ pRange: els.pRange.checked }); load('players', false); });
+    // 圖表：滑鼠移動／離開、鍵盤左右鍵
+    els.charts.addEventListener('pointermove', function (e) {
+        if (!chartState.cols.length || !e.target.closest || !e.target.closest('.chartbox')) return;
+        hoverAt(indexFromPointer(e), e.clientX, e.clientY);
+    });
+    els.charts.addEventListener('pointerleave', hoverOff);
+    els.charts.addEventListener('keydown', function (e) {
+        if (!chartState.days.length) return;
+        var i = chartState.idx < 0 ? chartState.days.length - 1 : chartState.idx;
+        if (e.key === 'ArrowLeft') i--; else if (e.key === 'ArrowRight') i++; else if (e.key === 'Escape') { hoverOff(); return; } else return;
+        e.preventDefault();
+        var b = e.target.closest && e.target.closest('.chartbox'), r = b ? b.getBoundingClientRect() : null;
+        hoverAt(i, null, r ? r.top + 40 : null);
+    });
+    // 視窗寬度改變：圖重畫（用 requestAnimationFrame 合併連續的縮放事件）
+    var resizeRaf = 0;
+    window.addEventListener('resize', function () {
+        if (state.tab !== 'time' || !chartState.days.length) return;
+        cancelAnimationFrame(resizeRaf);
+        resizeRaf = requestAnimationFrame(function () { if (Math.abs(els.charts.clientWidth - chartState.W) > 8) drawCharts(chartState.days); });
+    });
+
+    (function init() {
+        var s = loadSettings();
+        els.onlyPlayed.checked = !!s.onlyPlayed; els.pEmpty.checked = !!s.pEmpty; els.pRange.checked = !!s.pRange;
+        if (s.sortKey && GAME_COLS.some(function (c) { return c.key === s.sortKey && c.sortable; })) state.sort = { key: s.sortKey, dir: s.sortDir === 'asc' ? 'asc' : 'desc' };
+        // 日期：預設 30 天前到今天（不記住上次的日期：每次打開都是最新的）
+        setDays(DEFAULT_DAYS);
+        var hash = (location.hash || '').replace('#', '');
+        var tab = ['games', 'players', 'time'].indexOf(hash) >= 0 ? hash : (['games', 'players', 'time'].indexOf(s.tab) >= 0 ? s.tab : 'games');
+        try { state.range = readRange(); } catch (e) { state.range = null; }
+        showTab(tab, false);
+    })();
+
+    // 給自動測試用的後門（test/admin/check_stats_viewer.mjs）；平常用不到
+    window.__SV = {
+        state: state, chartState: chartState, runQuery: runQuery, gameRows: gameRows, sortRows: sortRows, fillDays: fillDays, niceScale: niceScale, fmtScore: fmtScore,
+        fmtCompact: fmtCompact, playerColumns: playerColumns, rankAlpha: rankAlpha, cleanUrl: cleanUrl, taipeiToday: taipeiToday, addDays: addDays,
+        meta: { CATS: CATS, ORDER: ORDER, GAMES: GAMES }, config: { base: BASE, key: ANON_KEY, defaultDays: DEFAULT_DAYS, maxDays: MAX_DAYS }
+    };
+})();
+</script>
+</body>
+</html>

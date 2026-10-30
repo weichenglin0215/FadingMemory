@@ -88,4 +88,70 @@ console.log('槽位分布 ' + cnt.join('/') + '；最長落下 ' + maxT.toFixed(
 const s2 = T.simulate(224, 0, 1800, 1);
 const p0 = T.pathAt(s2, 0), pEnd = T.pathAt(s2, s2.tCross), pMid = T.pathAt(s2, s2.tCross / 2);
 ok(near(p0.x, 224) && near(p0.y, T.BALL_R + 4) && pEnd.y >= T.DIV_Y - 1e-6 && pMid.y > p0.y && pMid.y < pEnd.y, 'pathAt endpoints');
+// ═══ V1.39.0：珠子「掉完」的時間、揭曉動畫 ═══
+{
+  let n = 0, badLand = 0, badMotion = 0, badTrail = 0, badSee = 0, minMs = 1e9, maxMs = 0, landBeforeCross = 0;
+  for (let L = 1; L <= T.LAST_LEVEL; L += 3) for (let k = 0; k < 60; k++) {
+    const R = T.makeRound(L, rnd), s = R.sim; n++;
+    if (!(s.tLand >= s.tCross - 1e-9 && s.tLand - s.tCross < 0.2)) badLand++;      // 越過分隔線之後 0.2 秒內就會碰到收集口下緣（只剩 34px 不到）
+    if (s.tLand < s.tCross) landBeforeCross++;
+    const a0 = T.motionAt(s, 0), aC = T.motionAt(s, s.tCross), aL = T.motionAt(s, s.tLand), aX = T.motionAt(s, s.tLand + 5);
+    if (!(near(aL.x, s.landX, 1e-6) && near(aL.y, T.REST_Y, 1e-6) && near(aX.x, s.landX, 1e-6) && near(aX.y, T.REST_Y, 1e-6))) badMotion++;   // 落完剛好停在收集口中央、底緣碰到下緣
+    if (!(near(aC.y, s.ys[s.steps], 1e-6) && a0.y < aC.y)) badMotion++;
+    // 掉進收集口的那一小段不會往上跳、x 不會跑出自己那一格
+    for (let q = 0; q <= 10; q++) { const t = s.tCross + (s.tLand - s.tCross) * q / 10, m = T.motionAt(s, t); if (m.y > T.REST_Y + 1e-6 || m.x < s.slot * T.W - 1e-6 || m.x > (s.slot + 1) * T.W + 1e-6) badMotion++; }
+    // 軌跡字串：點數有上限、最後一點是那一刻珠子的位置
+    for (const t of [s.tSee, (s.tSee + s.tLand) / 2, s.tLand]) {
+      const pts = T.trailPoints(s, t).split(' '), last = pts[pts.length - 1].split(',').map(Number), m = T.motionAt(s, t);
+      if (!(pts.length <= 200 && near(last[0], m.x, 0.06) && near(last[1], m.y, 0.06))) badTrail++;
+    }
+    // tSee：玩家看到的最後位置——那一刻珠子整顆都在簾子上緣之上，之後再也沒有整顆露出來過；它在越線之前
+    {
+      const cy = R.curtainY, iSee = Math.min(s.steps, Math.floor(s.tSee / T.DT + 1e-6));
+      let lateVisible = 0; for (let i = iSee + 1; i <= s.steps; i++) if (s.ys[i] + T.BALL_R <= cy + 1e-9) lateVisible++;
+      if (!(s.tSee >= 0 && s.tSee <= s.tCross + 1e-9 && s.ys[iSee] + T.BALL_R <= cy + 1e-9 && lateVisible === 0)) badSee++;
+      // 分段軌跡：從 tSee 畫到 tEnd，第一點是看到的最後位置、最後一點是 tEnd 的位置、點數有上限
+      const tEnd = (s.tSee + s.tLand) / 2, pts2 = T.trailPoints(s, tEnd, s.tSee).split(' '), first = pts2[0].split(',').map(Number), last2 = pts2[pts2.length - 1].split(',').map(Number);
+      const pS = T.pathAt(s, s.tSee), mE = T.motionAt(s, tEnd);
+      if (!(pts2.length >= 2 && pts2.length <= 200 && near(first[0], pS.x, 0.06) && near(first[1], pS.y, 0.06) && near(last2[0], mE.x, 0.06) && near(last2[1], mE.y, 0.06))) badTrail++;
+    }
+    const ms = T.revealMs(s); minMs = Math.min(minMs, ms); maxMs = Math.max(maxMs, ms);
+  }
+  ok(badLand === 0 && landBeforeCross === 0, '落到底的時間 tLand 緊接在越過分隔線之後（' + badLand + '／' + n + ' 不合）');
+  ok(badMotion === 0, 'motionAt：落完停在收集口中央、底緣碰到下緣，中途不亂跳（' + badMotion + '）');
+  ok(badTrail === 0, 'trailPoints：點數有上限、第一點是起點（tSee）、最後一點是那一刻珠子的位置（' + badTrail + '）');
+  ok(badSee === 0, 'tSee：最後一次整顆露在簾子上緣之上的時間，之後不會再整顆露出來（' + badSee + '／' + n + ' 不合）');
+  ok(minMs >= T.REVEAL_MIN_MS && maxMs <= T.REVEAL_MAX_MS && minMs < maxMs, '揭曉動畫長度夾在 ' + T.REVEAL_MIN_MS + '～' + T.REVEAL_MAX_MS + ' 毫秒（實際 ' + minMs + '～' + maxMs + '）');
+  // 慢動作：中間長度的那一段是用 REVEAL_SPEED 倍速播（不被夾住時：長度＝原時間 ÷ 倍速）
+  const mid = 1.0 / T.REVEAL_SPEED * 1000, fake = { tSee: 1, tLand: 2.0 };
+  ok(mid > T.REVEAL_MIN_MS && mid < T.REVEAL_MAX_MS, '測試用的 1 秒落在夾制範圍之內（' + mid.toFixed(0) + ' 毫秒）');
+  ok(T.revealMs(fake) === Math.round(mid), 'revealMs 依 REVEAL_SPEED 放慢（1 秒 → ' + T.revealMs(fake) + ' 毫秒）');
+  ok(T.revealMs({ tSee: 1, tLand: 1.01 }) === T.REVEAL_MIN_MS && T.revealMs({ tSee: 0, tLand: 99 }) === T.REVEAL_MAX_MS, '太短、太長都夾住');
+  ok(T.REVEAL_SPEED <= 0.4 && T.REVEAL_MIN_MS >= 1500 && T.REVEAL_SEEN_MS >= 1000, '揭曉夠長：慢動作 ≤ 0.4 倍、最短 ≥ 1.5 秒、第一段停 ≥ 1 秒');
+  // 簾子越高，看不到的那一段越長（從 tSee 算起），揭曉動畫也越長（同一個起點與初速比較）
+  const lo = T.simulate(224, 20, T.G_FALL, 1), hi = T.simulate(224, 20, T.G_FALL, 20);
+  ok(hi.tLand - hi.tSee > lo.tLand - lo.tSee && T.revealMs(hi) >= T.revealMs(lo), '高關卡看不到的那段更長（' + (lo.tLand - lo.tSee).toFixed(2) + ' → ' + (hi.tLand - hi.tSee).toFixed(2) + ' 秒）');
+  // tSee（底緣碰到簾子）通常早於 tHide（整顆被蓋住）：以前拿 tHide 當分界，會把「半顆被蓋住」也算成看得到
+  { let early = 0, cnt = 0; for (let L = 2; L <= T.LAST_LEVEL; L += 3) for (let k = 0; k < 30; k++) { const s = T.makeRound(L, rnd).sim; cnt++; if (s.tSee <= s.tHide + 1e-9) early++; }
+    ok(early / cnt > 0.9, '絕大多數情況 tSee（底緣碰到簾子）早於 tHide（整顆被蓋住）：' + early + '／' + cnt); }
+  // simulate 的回傳多了這些欄位
+  const sx = T.simulate(224, 0, T.G_FALL, 1); ok(['tLand', 'landX', 'yCross', 'vyEnd', 'g'].every(k => typeof sx[k] === 'number' && isFinite(sx[k])) && near(sx.landX, sx.slot * T.W + T.W / 2), 'simulate 回傳 tLand／landX／yCross／vyEnd／g');
+}
+// ═══ 頁面接線（原始碼檢查）：開局版面一開始就擺好、掉完才能選、揭曉分兩段 ═══
+{
+  const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_bounce.js'), 'utf8');
+  const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction2.css'), 'utf8');
+  // round() 建好版面後、還沒排 startLevel 之前，就已經設了標題、擺好簾子與收集口、先 setArmed(false)
+  const iLayout = src.indexOf('layoutCurtain(hiddenH(level + 1));'), iStart = src.indexOf('my.after(400, startLevel)');
+  ok(iLayout > 0 && iStart > iLayout, '開局版面在 400 毫秒的 startLevel 之前就擺好了');
+  ok(/head\.textContent = '第 ' \+ \(level \+ 1\) \+ ' 關/.test(src), '開局標題一開始就有字（檯子不會往上偏）');
+  ok(/y: curtainY\(level \+ 1\), width: BW, height: hiddenH\(level \+ 1\)/.test(src), '簾子一開始就是這一關的高度');
+  ok(/function choose\(s\) \{\s*if \(state !== 'fall' \|\| !armed\) return;/.test(src), '還沒 armed（珠子沒掉完）時點了沒反應');
+  ok(/if \(t >= cur\.sim\.tLand\) \{ setArmed\(true\); return false; \}/.test(src), '珠子掉到底（tLand）才 setArmed(true)');
+  ok(/classList\.toggle\('bo-slot--wait', !on\)/.test(src) && /\.bo-slot--wait \{[^}]*opacity: 0\.35;[^}]*pointer-events: none;/.test(css), '還沒掉完：收集口按鈕半透明、點不到');
+  ok(/trailPoints\(sim, tS\)/.test(src) && /tS = sim\.tSee/.test(src), '揭曉第一段：只畫到 tSee（珠子最後完整露出）為止的軌跡');
+  ok(/my\.after\(REVEAL_SEEN_MS/.test(src) && /my\.tween\(revealMs\(sim\)/.test(src) && /trailPoints\(sim, ts, tS\)/.test(src) && /\.then\(function \(\) \{ if \(id === rid\) conclude\(s\); \}\)/.test(src), '揭曉第二段：停一下之後，從 tSee 起用慢動作播到落點，播完才 conclude');
+  ok(/bo-seen bo-seen--on/.test(src) && /最後看到/.test(src) && /bo-seen--keep/.test(src) && /\.bo-seen--on \{[^}]*animation: bo-seen-blink/.test(css) && /\.bo-trail--hid \{/.test(css), '標出「最後看到」的位置：閃爍虛線圈＋標籤，第二段起圈留著，隱藏段軌跡換色');
+  ok(!/function reveal\(s\)[\s\S]{0,1800}Sfx\.play\(right/.test(src), '揭曉一開始不會立刻報猜中／猜錯（要等動畫播完）');
+}
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

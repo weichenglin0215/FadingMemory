@@ -71,6 +71,8 @@
                     var el = findResult(n);
                     if (!el || showing) return;
                     showing = el;
+                    /* V1.39.0：完成一局（結算畫面出現；多關卡遊戲每一關的小結算 data-bgm="0" 不算）→ 本機記一筆「玩過」，並排進遊玩次數的回報（js/plays.js） */
+                    if (window.FMPlays && game && !(el.getAttribute && el.getAttribute('data-bgm') === '0')) FMPlays.noteDone(game.id);
                     var kind = el.getAttribute && el.getAttribute('data-sfx');
                     /* 帶 data-sfx 的卡片自己決定輸贏；舊遊戲的結算不知道輸贏，播中性的「完成」音 */
                     Sfx.play(kind === 'win' ? 'win' : kind === 'fail' ? 'fail' : kind === 'perfect' ? 'perfect' : 'done');
@@ -147,6 +149,8 @@
            這個檔案從這之後就不再插手這局遊戲怎麼進行。
            有排行榜的遊戲：說明彈窗按「下一步」→ 世界前 30 名彈窗 → 按「開始挑戰」才開始。 */
         function startGame() {
+            /* V1.39.0：按了「開始挑戰」就算「玩過」（本機記下今天的日期；要玩完一局才算一局，見 watchResults） */
+            if (window.FMPlays) FMPlays.noteStart(game.id);
             game.mount(screen, { setMeta: setMeta });
             /* V1.35.0：這款遊戲的 mount 已經跑完（舊單位的最佳紀錄遷移都做完了），本機的最佳紀錄可以信任了：
                已登入的話，跟帳號同步這一款的個人最佳（見 js/identity.js 的 gameMounted）。 */

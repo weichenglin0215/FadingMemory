@@ -2,22 +2,26 @@
    reaction_paint.js — 秒反應・刷油漆
    方塊的底色上畫著鮮豔的塗鴉。玩家用「底色」的油漆，把所有塗鴉蓋掉，一處都不能漏。
    V1.34.0 起是闖關制（玩家說「太難了」）：第 1 關只有 1 處大塗鴉，每過一關多 1 處，第 12 關有 12 處（舊版的難度）；
-   每一關沾油漆的次數有上限（DIP_MAX ＝ 40 次），超過就失敗；成績＝闖過幾關。
+   每一關沾油漆的次數有上限（V1.40.0 起第 1 關 DIP_START ＝ 20 次，線性增加到第 DIP_RAMP_LEVELS 關的 DIP_END ＝ 40 次），超過就失敗；成績＝闖過幾關。
    ───────────────────────────────────────────────────────────────────
-   · 塗鴉怎麼產生（makeScribbles(rand, level)）：第 level 關有 K ＝ min(level, SCRIBBLE_MAX) 處。把 400×400 的方塊切成
-     g×g 個小區（K=1→1×1、2～4→2×2、5～9→3×3、10 以上→4×4），隨機挑 K 個小區，每個小區放一處塗鴉，
-     塗鴉整個縮在自己的小區裡、離小區邊緣至少「筆頭半徑＋SCRIBBLE_GAP」，所以任兩處塗鴉之間至少隔 2×SCRIBBLE_GAP（12px），
-     一定不連在一起——「K 處不連續的塗鴉」是用做法保證的，測試也用連通區域再數一次。
+   · 塗鴉怎麼產生（makeScribbles(rand, level)）：第 level 關有 K ＝ min(level, SCRIBBLE_MAX) 處。
+     V1.40.0（玩家意見：位置很死板，像九宮格）：不再把方塊切成小區，每一處塗鴉的位置在整個方塊裡**任意擺放，可以互相重疊**
+     （每處抽 PLACE_TRIES 個候選位置，挑離已經放好的最遠的一個，避免全部疊成一團；仍然可能壓到別人）。重疊之後遮罩是聯集，所以「連通區域」數量可能比處數少。
      「面積」：每一關所有塗鴉的外框（方形）面積總和固定是 SCRIBBLE_AREA（＝舊版 10～12 處塗鴉的平均），
      所以第 1 關那一處被放大成邊長約 234px 的大圖案，處數越多每一處越小（K ≥ 10 就跟舊版一樣）。
      每一處的形狀隨機：折線（zigzag）、波浪（wave）、螺旋（spiral）、連環圈（loops）、星星（star）、圓環（ring）、叉叉（cross）、
      密集刷痕（hatch）、圓點（dot，大圖案不抽）；筆頭粗細（直徑）從 6 到 30px，七種粗細洗牌後輪流用；顏色從鮮豔的七色隨機挑。
+   · V1.40.0 新增 emoji 塗鴉（玩家意見：圖案太生硬）：每一處有 EMOJI_P 的機率是一個小孩子會塗鴉的 emoji——汽車、食物、蔬菜、氣球、生日派對道具、
+     日常小圖案（EMOJI_GROUPS，全部是 2017 年以前的 emoji，舊手機也畫得出來）。emoji 是整個填色的圖案，要把整個圖案（包含邊緣）都蓋掉：
+     遮罩是把 emoji 用跟畫面同樣的字級畫在一張看不見的 400×400 畫布上，讀回透明度，不透明度 ≥ EMOJI_ALPHA 的格子（再往外多算 1px，保守）就是要蓋的格子
+     （emojiNeedFromAlpha／rasterEmojiNeed）；所以不管是哪個系統的 emoji 字型，遮罩都跟玩家看到的圖案一致。
+     瀏覽器擋掉讀取畫布（防指紋）、或讀回來的點陣明顯不對時，退回用「方框」當遮罩（比 emoji 大一點，更保守）。同一關的 emoji 不重複。
    · 下方的圓形就是油漆刷（大小＝筆刷粗細），也是「沾油漆」按鈕：
        每沾一次 → 筆刷縮小 7%（直徑 ×SHRINK＝0.93，最小 BRUSH_MIN＝10），油漆量補滿；
        油漆量＝方塊寬度的 BUDGET_MULT（1）倍的筆畫長度，用完就畫不出來，畫面中央出現警語，要再去沾。
        拖曳時，手指移動多遠就用掉多少；點一下的圓點也要用油漆（用掉一個筆刷直徑的長度），不然光用點的、不拖曳，沾一次漆就能全部點完。
        油漆刷沾的是「底色」，塗在塗鴉上就把它蓋住。
-       每一關的沾油漆次數、筆刷大小都從頭算；沾第 41 次（超過 DIP_MAX）就失敗，或者沾滿 40 次、油漆又用完了也失敗。
+       每一關的沾油漆次數、筆刷大小都從頭算；沾第「上限 + 1」次（超過 dipMaxFor(level)）就失敗，或者沾滿上限、油漆又用完了也失敗。
    · 判斷「塗鴉是否全部蓋住」：用一張跟方塊同大的點陣遮罩（每個邏輯 px 一格，Uint8Array）。一開始把「塗鴉會碰到的格子」標成 0（還沒蓋），
        其他格子標成 1（不用蓋）；塗鴉的範圍比畫出來的線多算 0.5px（保守）。玩家每畫一小段就沿著筆畫每隔幾 px 蓋一個圓
        （逐列填、同時數有幾格從 0 變 1），「還沒蓋的格數」減到 0 就是全部蓋住——不需要讀取畫布像素，每一格都精確，
@@ -55,12 +59,13 @@
        V1.34.0 依玩家意見（太難了）：縮小比例從 0.88 放寬成 0.93（每次只縮 7%，不會很快就縮得太小），
        最小直徑從 3 放大成 10（面積約 11 倍；再細的筆刷根本畫不完）。 */
     var BRUSH_START = 80;         /* 第一次沾油漆之前的筆刷直徑 */
-    var SHRINK = 0.93;             /* 每沾一次，直徑 ×0.93 */
+    var SHRINK = 0.90;             /* 每沾一次，直徑 ×0.93 */
     var BRUSH_MIN = 10;            /* 筆刷最小直徑 */
     /* 一次沾油漆可以刷幾倍方塊寬度的長度 */
     var BUDGET_MULT = 1;           /* 一次沾油漆可以刷幾倍方塊寬度的長度 */
-    /* 每一關沾油漆的次數上限：超過（沾第 DIP_MAX + 1 次，或已經沾滿又沒油漆了）就失敗；DIP_WARN：剩幾次以內，上方的字變警示色 */
-    var DIP_MAX = 40, DIP_WARN = 5;
+    /* 每一關沾油漆的次數上限（V1.40.0 改成兩個參數）：第 1 關 DIP_START 次，隨關卡線性增加，到第 DIP_RAMP_LEVELS 關起維持 DIP_END 次（dipMaxFor）；
+       超過（沾第「上限 + 1」次，或已經沾滿又沒油漆了）就失敗；DIP_WARN：剩幾次以內，上方的字變警示色 */
+    var DIP_START = 6, DIP_END = 12, DIP_RAMP_LEVELS = 12, DIP_WARN = 5;
     /* 失敗時，把最大的幾塊沒蓋到的地方標出來給玩家看 */
     var FAIL_MARKS = 4;
     /* 遮罩判定時半徑少算 0.5px（保守：整格幾乎都被蓋到才算塗到） */
@@ -81,7 +86,25 @@
     var SCRIBBLE_AREA = 54600;
     var PEN_SIZES = [6, 10, 14, 18, 22, 26, 30];
     var SCRIBBLE_GAP = 6, DOT_MAX_SIDE = 100;
-    var KINDS = ['zigzag', 'wave', 'spiral', 'loops', 'star', 'ring', 'cross', 'hatch', 'dot'];
+    var KINDS = ['zigzag', 'wave', 'spiral', 'loops', 'star', 'ring', 'cross', 'hatch', 'dot'];       /* 線條塗鴉的九種形狀（emoji 另外算，kind 是 'emoji'） */
+    /* V1.40.0 自由擺放：每處塗鴉抽幾個候選位置，挑離已放好的最遠的（1＝完全隨機；越大越分散，但永遠沒有「不能重疊」的限制） */
+    var PLACE_TRIES = 3;
+    /* V1.40.0 emoji 塗鴉：
+       · EMOJI_P：每一處是 emoji（而不是線條）的機率；
+       · EMOJI_FS：emoji 的字級＝這一處的邊長 × EMOJI_FS；EMOJI_HALF：萬一讀不到畫布時，退而用的方框半邊長＝字級 × EMOJI_HALF（emoji 實際寬度約 1.0～1.2 倍字級，所以 0.62 夠大）；
+       · EMOJI_ALPHA：不透明度（0～255）達到這個值的像素就算 emoji 的一部分、要蓋掉；
+       · EMOJI_GROUPS：小孩子會塗鴉的圖案，依類別（w＝抽到這一類的權重）。全部是 Emoji 5.0（2017 年）以前的，Windows 10、舊 Android 都畫得出來；
+         用字串寫（含 U+FE0F 變體選擇符的 ✈️ 🌶️ ☀️ ❤️ 🕯️ 要保留，才會畫成彩色 emoji）。 */
+    var EMOJI_P = 0.45, EMOJI_FS = 0.85, EMOJI_HALF = 0.62, EMOJI_ALPHA = 24;
+    var EMOJI_FONT = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", sans-serif';
+    var EMOJI_GROUPS = [
+        { id: 'car', name: '汽車', w: 1, list: ['🚗', '🚕', '🚙', '🚌', '🚓', '🚑', '🚒', '🚜', '🚲', '🚂', '✈️', '🚀'] },
+        { id: 'food', name: '食物', w: 1, list: ['🍎', '🍌', '🍓', '🍉', '🍇', '🍊', '🍒', '🍍', '🍕', '🍔', '🍟', '🍦', '🍩', '🍪', '🍭', '🍞'] },
+        { id: 'veg', name: '蔬菜', w: 1, list: ['🥕', '🥦', '🌽', '🍅', '🍆', '🥒', '🥔', '🌶️', '🍄'] },
+        { id: 'balloon', name: '氣球', w: 0.6, list: ['🎈'] },
+        { id: 'party', name: '生日派對', w: 1, list: ['🎂', '🎁', '🎉', '🎊', '🎀', '🍰', '🥂', '🕯️'] },
+        { id: 'fun', name: '小圖案', w: 1, list: ['⭐', '🌈', '☀️', '🌙', '❤️', '🏠', '🌳', '🌸', '🌻', '🐱', '🐶', '🐟', '🦋', '🐢'] }
+    ];
 
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 關'; }
     /* 按鈕文字用中文數字（HINT_COST 改成 2 或 5，文字會跟著變） */
@@ -163,6 +186,8 @@
     }
     /* 沾油漆後筆刷縮小到多少 */
     function brushAfter(d) { return Math.max(BRUSH_MIN, d * SHRINK); }
+    /* 第 level 關沾油漆次數的上限：第 1 關 DIP_START，線性增加，第 DIP_RAMP_LEVELS 關起 DIP_END（四捨五入成整數） */
+    function dipMaxFor(level) { return Math.round(kit.ramp(level, DIP_START, DIP_END, DIP_RAMP_LEVELS)); }
 
     /* ═══ 塗鴉 ═══ */
     /* 一處塗鴉的所有線條：在邊長 s、左上角 (bx, by) 的方框裡，依 kind 畫出幾條折線（每條線是 [[x,y], …]，點跟點之間 ≤ 3px，畫出來才圓滑）。
@@ -221,47 +246,127 @@
     /* 第 level 關要畫幾處塗鴉：第 1 關只有 1 處，每過一關多 1 處，最多 SCRIBBLE_MAX 處（＝舊版的 10～12 處）。
        level 沒給（舊測試、舊呼叫）就當最後一關。 */
     function scribbleCount(level) { return level == null ? SCRIBBLE_MAX : Math.max(1, Math.min(SCRIBBLE_MAX, Math.floor(level))); }
-    /* k 處塗鴉要把方塊切成幾乘幾個小區才放得下（每處各占一個小區，所以互相分開）：
-       1 處＝整個方塊（1×1）、2～4 處＝2×2、5～9 處＝3×3、10 處以上＝4×4（跟舊版一樣） */
-    function gridFor(k) { return k <= 1 ? 1 : (k <= 4 ? 2 : (k <= 9 ? 3 : 4)); }
-    /* 產生第 level 關的塗鴉：回傳 [{ kind, w（筆頭直徑）, color, lines }]。
+    /* 抽一個 emoji：先依權重抽類別，再從類別裡抽一個這一關還沒用過的；回傳 { emoji, group }（全部都用過了就不管重複） */
+    function pickEmoji(rand, used) {
+        var total = 0, i, t;
+        EMOJI_GROUPS.forEach(function (gr) { total += gr.w; });
+        for (t = 0; t < 80; t++) {
+            var x = rand() * total, gr = EMOJI_GROUPS[EMOJI_GROUPS.length - 1];
+            for (i = 0; i < EMOJI_GROUPS.length; i++) { x -= EMOJI_GROUPS[i].w; if (x < 0) { gr = EMOJI_GROUPS[i]; break; } }
+            var e = kit.pick(gr.list, rand);
+            if (!used[e]) { used[e] = true; return { emoji: e, group: gr.id }; }
+        }
+        /* 隨機一直抽到用過的（只剩一兩個沒用的時候才會發生）：把全部 emoji 洗牌，取第一個沒用過的；真的全用過了才不管重複 */
+        var all = []; EMOJI_GROUPS.forEach(function (gr) { gr.list.forEach(function (e) { all.push({ emoji: e, group: gr.id }); }); });
+        all = kit.shuffle(all, rand);
+        for (i = 0; i < all.length; i++) if (!used[all[i].emoji]) { used[all[i].emoji] = true; return all[i]; }
+        return all[0];
+    }
+    /* 產生第 level 關的塗鴉：回傳 [{ kind, w（筆頭直徑；emoji 是 0）, color, lines, side, cx, cy }]（emoji 另有 emoji、group、fs，lines 是空的）。
        做法：
-       1. 處數 K ＝ scribbleCount(level)，方塊切成 gridFor(K)×gridFor(K) 個小區，隨機挑 K 個不同的小區，每區一處塗鴉；
+       1. 處數 K ＝ scribbleCount(level)；
        2. 「面積」：K 處塗鴉的外框（方形）面積總和固定是 SCRIBBLE_AREA（＝舊版 10～12 處塗鴉的外框面積總和），
-          所以每處的邊長 ＝ √(SCRIBBLE_AREA ÷ K)——第 1 關只有一處，就把這一處放大到整個面積；處數越多，每一處越小，
-          到 K ≥ 10 就跟舊版一樣（小區太小時邊長受小區限制，筆頭越粗圖越小，跟舊版一樣）；
-       3. 筆頭粗細從 PEN_SIZES 洗牌後輪流取（處數夠多時七種粗細都會出現）；
-       4. 塗鴉整個縮在自己的小區裡，離小區邊緣至少 筆頭半徑 ＋ SCRIBBLE_GAP，所以任兩處塗鴉互相分開（至少隔 2×SCRIBBLE_GAP px）；
-          圖案在小區裡剩下的空位內隨機擺（位置不固定在左上角）；
-       5. 連續兩處不是同一種形狀；「圓點」沒有大小可言，邊長超過 DOT_MAX_SIDE 的大圖案不抽它。 */
+          所以每處的邊長 ＝ √(SCRIBBLE_AREA ÷ K)——第 1 關只有一處，就把這一處放大到整個面積；處數越多，每一處越小，K ≥ 10 就跟舊版一樣；
+       3. 每一處有 EMOJI_P 的機率是 emoji（同一關不重複），其他是線條塗鴉：筆頭粗細從 PEN_SIZES 洗牌後輪流取（只有線條塗鴉算），連續兩個線條塗鴉不是同一種形狀，
+          「圓點」沒有大小可言，邊長超過 DOT_MAX_SIDE 的大圖案不抽它；
+       4. 位置（V1.40.0）：整個方塊裡任意擺放，可以互相重疊；塗鴉整個在方塊裡，離方塊邊緣至少 筆頭半徑 ＋ SCRIBBLE_GAP（emoji 是半個方框 ＋ SCRIBBLE_GAP）；
+          每處抽 PLACE_TRIES 個候選的中心點，挑離已放好的塗鴉中心最遠的。 */
     function makeScribbles(rand, level) {
         rand = rand || Math.random;
-        var K = scribbleCount(level), g = gridFor(K), cell = SQ / g, cells = [], c;
-        for (c = 0; c < g * g; c++) cells.push(c);
-        var spots = kit.shuffle(cells, rand).slice(0, K);
-        var sizes = kit.shuffle(PEN_SIZES, rand), out = [], lastKind = null, want = Math.sqrt(SCRIBBLE_AREA / K);
-        spots.forEach(function (ci, k) {
-            var w = sizes[k % sizes.length], pad = w / 2 + SCRIBBLE_GAP, room = cell - 2 * pad, side = Math.min(want, room);
-            var bx = (ci % g) * cell + pad + rand() * (room - side), by = Math.floor(ci / g) * cell + pad + rand() * (room - side);
+        var K = scribbleCount(level), want = Math.sqrt(SCRIBBLE_AREA / K);
+        var sizes = kit.shuffle(PEN_SIZES, rand), out = [], lastKind = null, used = {}, pen = 0;
+        /* 在 [lo, hi] 的正方形裡抽 PLACE_TRIES 個中心點，挑離已有塗鴉最遠的 */
+        function place(lo, hi) {
+            var best = null, bestD = -1;
+            for (var t = 0; t < PLACE_TRIES; t++) {
+                var cx = lo + rand() * (hi - lo), cy = lo + rand() * (hi - lo), d = Infinity;
+                out.forEach(function (o) { d = Math.min(d, Math.hypot(cx - o.cx, cy - o.cy)); });
+                if (d > bestD) { bestD = d; best = { cx: cx, cy: cy }; }
+            }
+            return best;
+        }
+        for (var k = 0; k < K; k++) {
+            var side = want;
+            if (rand() < EMOJI_P) {
+                var em = pickEmoji(rand, used), fs = side * EMOJI_FS, half = fs * EMOJI_HALF, pc = place(half + SCRIBBLE_GAP, SQ - half - SCRIBBLE_GAP);
+                out.push({ kind: 'emoji', emoji: em.emoji, group: em.group, w: 0, color: null, lines: [], side: side, fs: fs, cx: pc.cx, cy: pc.cy });
+                continue;
+            }
+            var w = sizes[pen++ % sizes.length], pad = w / 2 + SCRIBBLE_GAP, pl = place(pad + side / 2, SQ - pad - side / 2), bx = pl.cx - side / 2, by = pl.cy - side / 2;
             var kind, tries = 0;
-            do { kind = kit.pick(KINDS, rand); tries++; } while ((kind === lastKind || (kind === 'dot' && side > DOT_MAX_SIDE)) && tries < 60);        /* 連續兩處不要同一種形狀 */
+            do { kind = kit.pick(KINDS, rand); tries++; } while ((kind === lastKind || (kind === 'dot' && side > DOT_MAX_SIDE)) && tries < 60);        /* 連續兩個線條塗鴉不要同一種形狀 */
             lastKind = kind;
-            out.push({ kind: kind, w: w, color: kit.pick(INK_COLORS, rand), lines: scribbleLines(kind, bx, by, side, rand), side: side });
-        });
+            out.push({ kind: kind, w: w, color: kit.pick(INK_COLORS, rand), lines: scribbleLines(kind, bx, by, side, rand), side: side, cx: pl.cx, cy: pl.cy });
+        }
         return out;
     }
+    /* emoji 要蓋的格子：alpha 是 n×n 的透明度（0～255，一格一個，由畫在看不見的畫布上的 emoji 讀回來）；
+       透明度 ≥ EMOJI_ALPHA 的格子，加上它旁邊一圈（8 鄰接，多算 1px，保守），都要蓋。回傳 Uint8Array(n×n)（1＝要蓋） */
+    function emojiNeedFromAlpha(alpha, n) {
+        var hit = new Uint8Array(n * n), need = new Uint8Array(n * n), x, y, i;
+        for (i = 0; i < hit.length; i++) hit[i] = alpha[i] >= EMOJI_ALPHA ? 1 : 0;
+        for (y = 0; y < n; y++) for (x = 0; x < n; x++) {
+            i = y * n + x;
+            if (hit[i]) { need[i] = 1; continue; }
+            var yy0 = y > 0 ? -n : 0, yy1 = y < n - 1 ? n : 0, xx0 = x > 0 ? -1 : 0, xx1 = x < n - 1 ? 1 : 0, near = 0;
+            for (var dy = yy0; dy <= yy1 && !near; dy += n) for (var dx = xx0; dx <= xx1; dx++) if (hit[i + dy + dx]) { near = 1; break; }
+            need[i] = near;
+        }
+        return need;
+    }
+    /* 讀不到 emoji 的點陣時的備案：emoji 的「方框」（中心 ± 半邊長）裡的每一格都要蓋——比 emoji 本身大，所以更保守 */
+    function emojiBoxHalf(sc) { return sc.fs * EMOJI_HALF; }
     /* 塗鴉的遮罩：回傳可以直接拿來玩的遮罩 { n, data, left, total }——塗鴉會碰到的格子是 0（還沒蓋）、其他格子是 1（不用蓋），
-       left＝還沒蓋的格數（一開始＝total＝塗鴉的總格數）。塗鴉的範圍比畫出來的線多算 0.5px（stampSegment 會少算 0.5，所以傳進去半徑 + 1）。 */
-    function scribbleMask(scribbles, n) {
+       left＝還沒蓋的格數（一開始＝total＝塗鴉的總格數）。塗鴉的範圍比畫出來的線多算 0.5px（stampSegment 會少算 0.5，所以傳進去半徑 + 1）。
+       emojiNeed：所有 emoji 要蓋的格子（emojiNeedFromAlpha 的結果，Uint8Array(n×n)）；沒給（Node 測試、讀不到畫布）就退回用方框。 */
+    function scribbleMask(scribbles, n, emojiNeed) {
         n = n || SQ;
-        var m = makeMask(n);
+        var m = makeMask(n), hasEmoji = false;
         scribbles.forEach(function (sc) {
             sc.lines.forEach(function (ln) { for (var i = 1; i < ln.length; i++) stampSegment(m, ln[i - 1][0], ln[i - 1][1], ln[i][0], ln[i][1], sc.w / 2 + 1); });
+            if (sc.kind === 'emoji') hasEmoji = true;
         });
+        if (hasEmoji) {
+            if (emojiNeed && emojiNeed.length === n * n) {
+                for (var q = 0; q < emojiNeed.length; q++) if (emojiNeed[q] && !m.data[q]) { m.data[q] = 1; m.left--; }
+            } else {
+                scribbles.forEach(function (sc) {
+                    if (sc.kind !== 'emoji') return;
+                    var hf = emojiBoxHalf(sc), x0 = Math.max(0, Math.ceil(sc.cx - hf - 0.5)), x1 = Math.min(n - 1, Math.floor(sc.cx + hf - 0.5)), y0 = Math.max(0, Math.ceil(sc.cy - hf - 0.5)), y1 = Math.min(n - 1, Math.floor(sc.cy + hf - 0.5));
+                    for (var yy = y0; yy <= y1; yy++) for (var xx = x0; xx <= x1; xx++) if (!m.data[yy * n + xx]) { m.data[yy * n + xx] = 1; m.left--; }
+                });
+            }
+        }
         var total = n * n - m.left;                    /* m.left＝沒被塗鴉碰到的格數，所以塗鴉的格數＝全部 − m.left */
         for (var k = 0; k < m.data.length; k++) m.data[k] = m.data[k] ? 0 : 1;      /* 反過來：塗鴉＝0（要蓋）、其他＝1（不用蓋） */
         m.left = total; m.total = total;
         return m;
+    }
+    /* 把一處 emoji 畫在畫布 g 上（畫面與遮罩讀點陣都用這一個，所以兩邊的位置、大小一模一樣）；需要 canvas，只有瀏覽器會呼叫 */
+    function drawEmoji(g, sc) {
+        g.font = Math.round(sc.fs) + 'px ' + EMOJI_FONT;
+        g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#000';
+        g.fillText(sc.emoji, sc.cx, sc.cy);
+    }
+    /* 讀出所有 emoji 要蓋的格子：把 emoji 畫在一張看不見的 n×n 畫布上（1 倍，一格一個像素），讀回透明度，交給 emojiNeedFromAlpha。
+       沒有 emoji、拿不到畫布、讀回來的點陣不對（防指紋的瀏覽器會回傳空白、全不透明或雜訊）就回傳 null（遮罩改用方框）。
+       點陣是否合理的檢查：要蓋的格數至少是最大那個 emoji 字級平方的 25%（emoji 約 70%），而且不能超過整張的 90%。 */
+    function rasterEmojiNeed(scribbles, n) {
+        var list = scribbles.filter(function (sc) { return sc.kind === 'emoji'; });
+        if (!list.length) return null;
+        try {
+            var cv2 = document.createElement('canvas');
+            cv2.width = n; cv2.height = n;
+            var g2 = cv2.getContext('2d');
+            if (!g2) return null;
+            list.forEach(function (sc) { drawEmoji(g2, sc); });
+            var px = g2.getImageData(0, 0, n, n).data, alpha = new Uint8Array(n * n), i;
+            for (i = 0; i < alpha.length; i++) alpha[i] = px[i * 4 + 3];
+            var need = emojiNeedFromAlpha(alpha, n), cnt = 0, big = 0;
+            for (i = 0; i < need.length; i++) cnt += need[i];
+            list.forEach(function (sc) { big = Math.max(big, sc.fs * sc.fs); });
+            return cnt >= 0.25 * big && cnt <= 0.9 * n * n ? need : null;
+        } catch (e) { return null; }
     }
     /* 依闖過的關數給評語（成績＝闖過幾關，越多越好）。全部 MAX_LEVEL 關蓋完＝最高評價 */
     function rating(cleared) {
@@ -295,7 +400,9 @@
                 /* color 這關的底色（也是油漆的顏色）；scribbles 這關的塗鴉；mask 遮罩（塗鴉的格子是 0、蓋掉變 1）；D 目前筆刷直徑；dips 這關沾了幾次；budget 剩餘油漆量（可畫多長）；swept 所有筆畫掃過的面積總和 */
                 var color = kit.pick(BASE_COLORS);
                 var scribbles = makeScribbles(Math.random, n);
-                var mask = scribbleMask(scribbles, SQ);
+                var dipMax = dipMaxFor(n);          /* 這一關沾油漆次數的上限（V1.40.0：第 1 關 DIP_START → 第 DIP_RAMP_LEVELS 關 DIP_END） */
+                var emojiNeed = rasterEmojiNeed(scribbles, SQ);          /* emoji 要蓋的格子（讀不到就是 null，scribbleMask 會改用方框） */
+                var mask = scribbleMask(scribbles, SQ, emojiNeed);
                 var D = BRUSH_START;                 /* 目前筆刷直徑 */
                 var dips = 0;
                 var budget = 0, budgetMax = SQ * BUDGET_MULT;     /* 目前剩下的筆畫長度 */
@@ -325,10 +432,11 @@
                 /* 先把底色塗滿整張畫布，再把每一處塗鴉畫上去（用跟遮罩同一份折線） */
                 g.fillStyle = color; g.fillRect(0, 0, SQ, SQ);
                 scribbles.forEach(function (sc) {
+                    if (sc.kind === 'emoji') { drawEmoji(g, sc); return; }
                     g.strokeStyle = sc.color; g.lineWidth = sc.w;
                     sc.lines.forEach(function (ln) { g.beginPath(); g.moveTo(ln[0][0], ln[0][1]); for (var i = 1; i < ln.length; i++) g.lineTo(ln[i][0], ln[i][1]); g.stroke(); });
                 });
-                console.info('[刷油漆] 第 ' + n + ' 關：底色 ' + color + '；塗鴉 ' + scribbles.length + ' 處（' + scribbles.map(function (sc) { return sc.kind + '×' + sc.w + 'px'; }).join('、') + '）；要蓋的格數 ' + mask.total + '（連通區域 ' + holes(mask, 99).length + ' 塊）');
+                console.info('[刷油漆] 第 ' + n + ' 關：底色 ' + color + '；塗鴉 ' + scribbles.length + ' 處（' + scribbles.map(function (sc) { return sc.kind === 'emoji' ? sc.emoji : sc.kind + '×' + sc.w + 'px'; }).join('、') + '）；沾漆上限 ' + dipMax + ' 次；要蓋的格數 ' + mask.total + '（連通區域 ' + holes(mask, 99).length + ' 塊' + (scribbles.some(function (sc) { return sc.kind === 'emoji'; }) ? '；emoji 遮罩：' + (emojiNeed ? '依畫出來的點陣' : '備案（方框）') : '') + '）');
                 sq.style.width = sq.style.height = SQ + 'px';
                 sq.style.background = color;
                 sq.appendChild(cv);
@@ -369,14 +477,14 @@
                     var pct = paintedPct();
                     /* 沒蓋完不顯示 100%：用無條件捨去 */
                     var shown = mask.left === 0 ? '100.0000' : (Math.floor(pct * 10000) / 10000).toFixed(4);
-                    info.textContent = '沾了 ' + dips + '／' + DIP_MAX + ' 次　已蓋 ' + shown + '%';        /* 文字要短（100.0000% 也要一行放得下），才不會折成兩行把方塊擠扁 */
-                    info.classList.toggle('pa-info--low', dips >= DIP_MAX - DIP_WARN);          /* 快到上限了：字變成警示色 */
+                    info.textContent = '沾了 ' + dips + '／' + dipMax + ' 次　已蓋 ' + shown + '%';        /* 文字要短（100.0000% 也要一行放得下），才不會折成兩行把方塊擠扁 */
+                    info.classList.toggle('pa-info--low', dips >= dipMax - DIP_WARN);          /* 快到上限了：字變成警示色 */
                     ctx.setMeta(kit.meta(['第 ' + n + ' 關', fmtBest(Reaction.getBest(ID))]));
                     gfill.style.width = (100 * budget / budgetMax).toFixed(1) + '%';
                     brush.style.width = brush.style.height = D + 'px';
                     brush.style.background = budget > 0 ? color : 'transparent';
                     brush.classList.toggle('pa-brush--empty', budget <= 0);
-                    brushLabel.textContent = budget > 0 ? '油漆剩 ' + Math.round(100 * budget / budgetMax) + '%' : (dips === 0 ? '點圓形沾油漆' : (dips >= DIP_MAX ? '已沾滿 ' + DIP_MAX + ' 次，再沾就失敗' : '油漆用完了，點圓形再沾'));
+                    brushLabel.textContent = budget > 0 ? '油漆剩 ' + Math.round(100 * budget / budgetMax) + '%' : (dips === 0 ? '點圓形沾油漆' : (dips >= dipMax ? '已沾滿 ' + dipMax + ' 次，再沾就失敗' : '油漆用完了，點圓形再沾'));
                     /* 點擊區：筆刷直徑，但至少 HIT_MIN px（圓形在框的正中間） */
                     var S = Math.max(D, HIT_MIN);
                     brushBox.style.width = brushBox.style.height = S + 'px';
@@ -387,12 +495,12 @@
                     pointer.style.height = ph + 'px'; pointer.style.width = (ph / 2) + 'px';
                     pointer.style.left = (S / 2 + 0.12 * D - ph / 4) + 'px';
                     pointer.style.top = (S / 2 + 0.4 * D - ph) + 'px';
-                    pointer.classList.toggle('pa-pointer--on', budget <= 0 && state === 'play' && dips < DIP_MAX);
+                    pointer.classList.toggle('pa-pointer--on', budget <= 0 && state === 'play' && dips < dipMax);
                     /* 提示按鈕：還沒塗任何東西、已經塗滿、標記還在顯示、或加上 HINT_COST 次會超過上限時都不能按（避免白白消耗／直接失敗） */
                     hintBtn.disabled = !(state === 'play' && swept > 0 && mask.left > 0 && !hintShown && hintOk());
                 }
                 /* 提示能不能用：加上 HINT_COST 次之後不能超過上限；而且不能剛好卡在「沾滿了、油漆又沒了」（那樣一按就直接失敗） */
-                function hintOk() { return dips + HINT_COST <= DIP_MAX && (budget > 0 || dips + HINT_COST < DIP_MAX); }
+                function hintOk() { return dips + HINT_COST <= dipMax && (budget > 0 || dips + HINT_COST < dipMax); }
                 /* 顯示警語一陣子後自動消失 */
                 function showWarn(text) {
                     warn.textContent = text;
@@ -401,10 +509,10 @@
                     warnTimer = my.after(1600, function () { warn.classList.remove('pa-warn--on'); });
                 }
 
-                /* ─── 沾油漆：油漆量補滿，筆刷縮小一圈；這一關已經沾滿 DIP_MAX 次還要再沾＝超過上限，失敗 ─── */
+                /* ─── 沾油漆：油漆量補滿，筆刷縮小一圈；這一關已經沾滿 dipMax 次還要再沾＝超過上限，失敗 ─── */
                 function dip() {
                     if (state !== 'play') return;
-                    if (dips >= DIP_MAX) { failLevel(); return; }
+                    if (dips >= dipMax) { failLevel(); return; }
                     dips++; runDips++;
                     D = brushAfter(D);
                     budget = budgetMax;
@@ -429,11 +537,11 @@
                     if (!sqOrigin) sqOrigin = origin();
                     return { x: p.x - sqOrigin.x, y: p.y - sqOrigin.y };
                 }
-                /* 一筆畫完（或油漆用完）後檢查：塗鴉全蓋住＝過關；油漆用完而且已經沾滿 DIP_MAX 次＝沒有油漆也沒有次數了，直接失敗 */
+                /* 一筆畫完（或油漆用完）後檢查：塗鴉全蓋住＝過關；油漆用完而且已經沾滿 dipMax 次＝沒有油漆也沒有次數了，直接失敗 */
                 function check() {
                     if (state !== 'play') return;
                     if (mask.left === 0) complete();
-                    else if (budget <= 0 && dips >= DIP_MAX) failLevel();
+                    else if (budget <= 0 && dips >= dipMax) failLevel();
                 }
                 /* 把一段筆畫畫出來並更新遮罩；油漆量不夠就只畫到用完為止 */
                 function drawTo(x, y) {
@@ -456,7 +564,7 @@
                         budget = 0;
                         last = null;
                         Sfx.play('bad');
-                        if (dips < DIP_MAX) showWarn('油漆用完了！\n點下方圓形再沾一次');
+                        if (dips < dipMax) showWarn('油漆用完了！\n點下方圓形再沾一次');
                     }
                     refresh();
                     check();
@@ -475,7 +583,7 @@
                     swept += Math.PI * D * D / 4;
                     clearMarks();
                     /* 圓點把油漆用光了：跟拖曳用完一樣出現警語，要再去沾 */
-                    if (budget <= 0) { last = null; Sfx.play('bad'); if (dips < DIP_MAX) showWarn('油漆用完了！\n點下方圓形再沾一次'); }
+                    if (budget <= 0) { last = null; Sfx.play('bad'); if (dips < dipMax) showWarn('油漆用完了！\n點下方圓形再沾一次'); }
                     refresh();
                     check();
                 }
@@ -567,10 +675,10 @@
                     warn.textContent = allClear ? '全部蓋完了！' : '第 ' + n + ' 關完成！';
                     warn.classList.add('pa-warn--on', 'pa-warn--ok');
                     Sfx.play('win');
-                    console.log('刷油漆：第 ' + n + ' 關過關，沾油漆 ' + dips + ' 次（上限 ' + DIP_MAX + '）' + (hints ? '，含提示 ' + hints + ' 次' : ''));
+                    console.log('刷油漆：第 ' + n + ' 關過關，沾油漆 ' + dips + ' 次（上限 ' + dipMax + '）' + (hints ? '，含提示 ' + hints + ' 次' : ''));
                     my.after(1100, function () { if (allClear) finish(n, true, 0); else buildLevel(n + 1); });
                 }
-                /* ─── 失敗：這一關沾油漆超過 DIP_MAX 次還沒蓋完。把最大的幾塊沒蓋到的地方標出來給玩家看，一下子再結算 ─── */
+                /* ─── 失敗：這一關沾油漆超過 dipMax 次還沒蓋完。把最大的幾塊沒蓋到的地方標出來給玩家看，一下子再結算 ─── */
                 function failLevel() {
                     if (state !== 'play') return;
                     state = 'fail';
@@ -579,14 +687,14 @@
                     var hs = holes(mask, FAIL_MARKS);
                     hs.forEach(addMark);
                     my.cancel(warnTimer);
-                    warn.textContent = '沾油漆超過 ' + DIP_MAX + ' 次了！';
+                    warn.textContent = '沾油漆超過 ' + dipMax + ' 次了！';
                     warn.classList.add('pa-warn--on');
                     warn.classList.remove('pa-warn--ok');
                     refresh();
                     Sfx.play('bad');
                     var left = holes(mask, 999).length;
-                    console.log('刷油漆：第 ' + n + ' 關失敗，沾油漆超過 ' + DIP_MAX + ' 次，還有 ' + left + ' 塊沒蓋到');
-                    my.after(2000, function () { finish(n, false, left); });
+                    console.log('刷油漆：第 ' + n + ' 關失敗，沾油漆超過 ' + dipMax + ' 次，還有 ' + left + ' 塊沒蓋到');
+                    my.after(2000, function () { finish(n, false, left, dipMax); });
                 }
 
                 refresh();
@@ -621,10 +729,31 @@
                                 }
                             });
                         });
+                        /* emoji 沒有線可以描：照遮罩一列一列掃（只掃還沒蓋到的連續格子），列距＝目前筆刷直徑的一半；
+                           一遍掃完還有沒蓋到的（列與列之間、被別的塗鴉蓋掉一半的地方）就起始列錯開再掃，最多 8 遍 */
+                        for (var pass = 0; pass < 8 && state === 'play' && mask.left > 0; pass++) {
+                            for (var yy = pass * 5; yy < SQ && state === 'play' && guard < 20000; yy += Math.max(3, Math.floor(D / 2))) {
+                                for (var xx = 0; xx < SQ && state === 'play'; xx++) {
+                                    if (mask.data[yy * SQ + xx]) continue;
+                                    var xe = xx; while (xe + 1 < SQ && !mask.data[yy * SQ + xe + 1]) xe++;
+                                    if (budget <= 0) { dip(); if (state !== 'play') break; }
+                                    startAt(xx, yy + 0.5);
+                                    if (last && xe > xx) drawTo(xe + 1, yy + 0.5);
+                                    last = null; guard++; xx = xe;
+                                }
+                            }
+                        }
+                        /* 最後還有零星沒蓋到的（掃描線之間、被別的塗鴉擋住一半的細縫）：一處一處點掉，點的位置就是 holes() 回報的代表點 */
+                        while (state === 'play' && mask.left > 0 && guard++ < 20000) {
+                            var hl = holes(mask, 1)[0];
+                            if (!hl) break;
+                            if (budget <= 0) { dip(); if (state !== 'play') break; }
+                            startAt(hl.px, hl.py); last = null;
+                        }
                         return state;
                     },
                     /* 故意失敗（驗證用）：一直沾油漆，沾到超過上限 */
-                    wrong: function () { var k = 0; while (state === 'play' && k++ < DIP_MAX + 5) dip(); return state; },
+                    wrong: function () { var k = 0; while (state === 'play' && k++ < dipMax + 5) dip(); return state; },
                     holes: function () { return holes(mask, 50); },
                     hint: useHint,
                     hintState: function () { return { hints: hints, hintShown: hintShown, disabled: hintBtn.disabled, marks: marks.children.length, pointerOn: pointer.classList.contains('pa-pointer--on'), pointerH: pointer.style.height }; },
@@ -633,7 +762,7 @@
             }
 
             /* ─── 結算：闖關失敗（沾油漆超過上限）或全部 MAX_LEVEL 關蓋完 ─── */
-            function finish(n, allClear, left) {
+            function finish(n, allClear, left, dipMax) {
                 console.log('刷油漆：結算，闖過 ' + cleared + ' 關' + (allClear ? '（全部通關）' : '，第 ' + n + ' 關失敗'));
                 var back = kit.resumeFrom(n);
                 kit.result(root, {
@@ -641,7 +770,7 @@
                     level: n,              /* 記下到過第幾關，下次進場從最佳關卡 − 4 開始（kit.noteLevel） */
                     num: cleared + ' 關', label: rating(cleared),
                     lines: allClear ? ['全部 ' + MAX_LEVEL + ' 關都蓋完了！', '這一局共沾了 ' + runDips + ' 次油漆']
-                        : ['第 ' + n + ' 關沾油漆超過 ' + DIP_MAX + ' 次，還有 ' + left + ' 塊塗鴉沒蓋到', '這一局共沾了 ' + runDips + ' 次油漆'],
+                        : ['第 ' + n + ' 關沾油漆超過 ' + dipMax + ' 次，還有 ' + left + ' 塊塗鴉沒蓋到', '這一局共沾了 ' + runDips + ' 次油漆'],
                     isNew: newRec && cleared > 0, sfx: allClear ? 'perfect' : (cleared >= 6 ? 'win' : 'fail'),
                     onAgain: function () { round(1); },
                     resume: allClear ? null : { level: back, run: function () { round(back); } }
@@ -659,15 +788,16 @@
     var G = {
         id: ID,
         name: '刷油漆',
-        rule: '方塊的底色上畫著彩色塗鴉。**用底色的油漆把全部塗鴉蓋掉**，一處都不能漏（連最細的線頭都要蓋住），其他地方不用管。**第 1 關只有 1 處大塗鴉**，每過一關多 1 處（最多 ' + SCRIBBLE_MAX + ' 處）。點下方的圓形沾油漆：每沾一次，筆刷縮小 ' + Math.round((1 - SHRINK) * 100) + '%，只能刷方塊寬度 ' + BUDGET_MULT + ' 倍的長度，用完要再沾。**每一關最多沾 ' + DIP_MAX + ' 次**，超過就失敗！找不到漏掉的，可以按最下面的按鈕，消耗 ' + HINT_COST + ' 次沾漆，標出最大的一塊。',
+        rule: '方塊的底色上畫著彩色塗鴉（線條或 emoji，位置隨意、會重疊）。**用底色油漆蓋掉全部塗鴉**。**第 1 關只有 1 處大塗鴉**，每關多 1 處（最多 ' + SCRIBBLE_MAX + ' 處）。點下方圓形沾油漆：每沾一次筆刷縮小 ' + Math.round((1 - SHRINK) * 100) + '%，只能刷方塊寬度 ' + BUDGET_MULT + ' 倍的長度，用完再沾。**每一關最多沾 ' + DIP_START + ' 次，越後面越多，最後 ' + DIP_END + ' 次**，超過就失敗！找不到漏掉的，可按下方按鈕（耗 ' + HINT_COST + ' 次沾漆）標出最大的一塊。',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: {
             makeMask: makeMask, stampDisc: stampDisc, stampSegment: stampSegment, holes: holes, brushAfter: brushAfter, rating: rating, makeScribbles: makeScribbles, scribbleMask: scribbleMask, scribbleLines: scribbleLines,
-            scribbleCount: scribbleCount, gridFor: gridFor,
-            BRUSH_MIN: BRUSH_MIN, SQ: SQ, BRUSH_START: BRUSH_START, BUDGET_MULT: BUDGET_MULT, SHRINK: SHRINK, SCRIBBLE_MAX: SCRIBBLE_MAX, SCRIBBLE_AREA: SCRIBBLE_AREA, DOT_MAX_SIDE: DOT_MAX_SIDE, MAX_LEVEL: MAX_LEVEL, DIP_MAX: DIP_MAX, HINT_COST: HINT_COST,
+            scribbleCount: scribbleCount, dipMaxFor: dipMaxFor, pickEmoji: pickEmoji, emojiNeedFromAlpha: emojiNeedFromAlpha,
+            BRUSH_MIN: BRUSH_MIN, SQ: SQ, BRUSH_START: BRUSH_START, BUDGET_MULT: BUDGET_MULT, SHRINK: SHRINK, SCRIBBLE_MAX: SCRIBBLE_MAX, SCRIBBLE_AREA: SCRIBBLE_AREA, DOT_MAX_SIDE: DOT_MAX_SIDE, MAX_LEVEL: MAX_LEVEL, HINT_COST: HINT_COST,
+            DIP_START: DIP_START, DIP_END: DIP_END, DIP_RAMP_LEVELS: DIP_RAMP_LEVELS, PLACE_TRIES: PLACE_TRIES, EMOJI_P: EMOJI_P, EMOJI_FS: EMOJI_FS, EMOJI_HALF: EMOJI_HALF, EMOJI_ALPHA: EMOJI_ALPHA, EMOJI_GROUPS: EMOJI_GROUPS,
             PEN_SIZES: PEN_SIZES, SCRIBBLE_GAP: SCRIBBLE_GAP, KINDS: KINDS, BASE_COLORS: BASE_COLORS, INK_COLORS: INK_COLORS
         }
     };

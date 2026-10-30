@@ -20,6 +20,18 @@
    · 為了不會卡住：珠子若幾乎沒有往下掉，就給一個朝檯面中央的推力。最左最右的釘子離牆只有 32px，珠子可能
      「靠著牆停在釘子頂端」（夾在牆和釘子之間），要約 100 px/秒以上的水平速度才爬得過釘子頂，所以這種情況
      每 0.25 秒檢查、直接推 130 px/秒（一般卡住還是每 0.5 秒推 70 px/秒；只推 70 的話夾住的珠子永遠推不動）。
+   · V1.39.0（玩家回饋）：
+        - 開局的畫面不再「閃一下」：標題、提示文字、簾子與收集口按鈕在 mount 當下就擺好（以前要等 400 毫秒的 startLevel 才擺，
+          那之前收集口按鈕是壓扁的、疊在檯子最上緣，標題與提示是空的所以檯子整個往上偏）。
+        - 收集口按鈕在珠子「掉完」之前是半透明、點了沒反應（避免誤按）：珠子（被簾子蓋住的那段不看得見，但算得出來）的中心落到
+          REST_Y（底緣碰到收集口下緣）的那一刻 tLand 才恢復正常、可以點。
+        - 點下去之後的揭曉：先只畫玩家原本就看得到的部分，簾子變半透明，再用動畫把「看不到的那一段」播給玩家看，
+          動畫播完才標出實際落點、判定猜中或猜錯。
+   · V1.40.0（玩家回饋：揭曉太短、看不出球最後被看到的位置）：揭曉分成兩段，分界點是「珠子最後一次完整露在簾子上緣之上」
+        的那一刻 tSee（珠子底緣碰到簾子上緣；之前是整顆珠子都進了簾子才算看不到的 tHide，所以畫出來的『看得到』已經包含半顆被蓋住）。
+        ① 第一段：只畫到 tSee 為止的軌跡（藍色實線）、珠子停在那裡，並用閃爍的虛線圈與「最後看到」標出玩家看見的最後位置，停 REVEAL_SEEN_MS；
+        ② 第二段：從那個位置開始用 REVEAL_SPEED 倍的慢動作播到落進收集口（橘色虛線軌跡），總長 REVEAL_MIN_MS～REVEAL_MAX_MS（比以前長很多）；
+        虛線圈一直留到下一關，所以看得出「最後看到的位置」與「最後落點」差多遠。
    · 成績＝通過的關數（越大越好）。
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -66,7 +78,12 @@
     /* 防卡住的推力：NUDGE_V＝一般卡住時的推力（px/秒）；夾在牆和邊上那根釘子之間時，每 WALL_STEPS 步（60 步＝0.25 秒）檢查一次，推 NUDGE_WALL px/秒 */
     var NUDGE_V = 70, NUDGE_WALL = 130, WALL_STEPS = 60;
     var NEXT_OK_MS = 1800;                      /* 猜中之後多久進下一關 */
-    var NEXT_FAIL_MS = 2600;                    /* 猜錯之後多久出結算（讓玩家看清楚珠子怎麼走的）*/
+    var NEXT_FAIL_MS = 2600;                    /* 猜錯之後多久出結算（讓玩家看清楚珠子怎麼走的）；從揭曉動畫播完開始算 */
+    var REST_Y = BH - 26;                       /* 珠子最後停在收集口裡的 y 座標（珠子底緣離檯面下緣 3.6px，等於「碰到下緣」） */
+    /* 揭曉分兩段：① 先停 REVEAL_SEEN_MS 毫秒，標出玩家看到的最後位置；② 從那裡用 REVEAL_SPEED 倍速（0.35＝慢到三分之一）播到落進收集口，
+       總長夾在 REVEAL_MIN_MS～REVEAL_MAX_MS 之間（原時間太短就放慢到最短長度，太長就加快到最長長度） */
+    var REVEAL_SEEN_MS = 1300;
+    var REVEAL_SPEED = 0.35, REVEAL_MIN_MS = 1800, REVEAL_MAX_MS = 6500;
 
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 關'; }
 
@@ -95,10 +112,11 @@
     var PEGS = makePegs();
     /* 物理模擬：從 (x0, 最上方) 開始，用固定時間步長一步一步算珠子的位置，記錄每一步，直到越過分隔線。
        level：第幾關（決定簾子上緣在哪，用來算「整顆珠子被簾子蓋住」的時間；不傳就當第 1 關） */
-    /* 模擬一顆珠子：回傳 { xs, ys（每 DT 一個取樣點）, slot, tCross（越過分隔線的時間，秒）, tHide（整顆珠子被簾子蓋住的時間）, steps } */
+    /* 模擬一顆珠子：回傳 { xs, ys（每 DT 一個取樣點）, slot, tCross（越過分隔線的時間，秒）, tHide（整顆珠子被簾子蓋住的時間）,
+       tSee（珠子最後一次「整顆都在簾子上緣之上」的時間＝玩家看到的最後位置，揭曉的分界點）, steps } */
     function simulate(x0, vx0, g, level) {
         var cy = curtainY(level || 1);
-        var x = x0, y = BALL_R + 4, vx = vx0, vy = 0, xs = [x], ys = [y], t = 0, yMark = y, yMarkW = y, tHide = null, tCross = null, nudged = 0;
+        var x = x0, y = BALL_R + 4, vx = vx0, vy = 0, xs = [x], ys = [y], t = 0, yMark = y, yMarkW = y, tHide = null, tSee = 0, tCross = null, nudged = 0;
         /* vy（垂直速度）每步加 g×DT（重力加速度）；位置每步加 速度×DT */
         var maxSteps = Math.round(MAX_SIM_S / DT);
         for (var step = 0; step < maxSteps; step++) {
@@ -128,6 +146,7 @@
             t += DT;
             xs.push(x); ys.push(y);
             if (tHide == null && y - BALL_R >= cy) tHide = t;
+            if (y + BALL_R <= cy) tSee = t;                 /* 珠子底緣還沒碰到簾子上緣：整顆都看得到（反彈回來又露出來的話，以最後一次為準） */
             if (y >= DIV_Y) { tCross = t; break; }
             /* 防卡住（兩種，都只看位置，所以結果永遠一樣）：
                ① 夾在牆和最左／最右那根釘子之間：珠子貼著牆（x 被牆擋住）、而且每 0.25 秒往下掉不到 3px，
@@ -145,14 +164,46 @@
         }
         if (tCross == null) tCross = t;
         if (tHide == null) tHide = tCross;
+        if (tSee > tCross) tSee = tCross;
         /* 落點收集口＝珠子 x 座標除以收集口寬度取整，並限制在 0～6 之間 */
         var slot = Math.max(0, Math.min(SLOTS - 1, Math.floor(x / W)));
-        return { xs: xs, ys: ys, slot: slot, tCross: tCross, tHide: tHide, steps: xs.length - 1, xEnd: x, nudged: nudged };
+        /* 越過分隔線之後的最後一段：珠子在收集口裡繼續往下掉到 REST_Y（底緣碰到收集口下緣）。
+           速度取最後一步的垂直速度，用等加速度公式解「落到 REST_Y 要多久」：yCross + vy·τ + g·τ²/2 = REST_Y */
+        var n = xs.length - 1, vyEnd = n > 0 ? (ys[n] - ys[n - 1]) / DT : 0, yCross = ys[n], dY = Math.max(0, REST_Y - yCross);
+        var tLand = tCross + (dY > 0 ? (-vyEnd + Math.sqrt(vyEnd * vyEnd + 2 * g * dY)) / g : 0);
+        return {
+            xs: xs, ys: ys, slot: slot, tCross: tCross, tHide: tHide, tSee: tSee, steps: n, xEnd: x, nudged: nudged,
+            tLand: tLand, landX: slot * W + W / 2, yCross: yCross, vyEnd: vyEnd, g: g
+        };
     }
     /* 查表：回傳模擬在時間 t 的位置（在兩個取樣點之間做線性插值），畫面播放用 */
     function pathAt(sim, t) {
         var f = Math.max(0, t) / DT, i = Math.min(sim.steps, Math.floor(f)), j = Math.min(sim.steps, i + 1), u = f - i;
         return { x: sim.xs[i] + (sim.xs[j] - sim.xs[i]) * u, y: sim.ys[i] + (sim.ys[j] - sim.ys[i]) * u };
+    }
+    /* 珠子在時間 t 的位置，包含越過分隔線之後「掉進收集口」的那一小段：
+       t ≤ tCross 查模擬的取樣點；之後 y 用等加速度公式往下掉、x 從越線點平順移到收集口中央，到 tLand 剛好停在 (landX, REST_Y) */
+    function motionAt(sim, t) {
+        if (t <= sim.tCross) return pathAt(sim, t);
+        var tau = Math.min(t, sim.tLand) - sim.tCross, span = sim.tLand - sim.tCross, u = span > 0 ? Math.min(1, tau / span) : 1;
+        var y = u >= 1 ? REST_Y : Math.min(REST_Y, sim.yCross + sim.vyEnd * tau + 0.5 * sim.g * tau * tau);
+        return { x: sim.xEnd + (sim.landX - sim.xEnd) * u, y: y };
+    }
+    /* 軌跡線的點（"x,y x,y …" 字串）：從 tStart（不傳＝出發）畫到時間 tEnd；取樣點太密，每隔幾個取一個（最多約 160 個點），
+       第一點是 tStart 當下的位置、最後一點一定是 tEnd 當下的位置 */
+    function trailPoints(sim, tEnd, tStart) {
+        var t0 = Math.max(0, tStart || 0), tc = Math.min(tEnd, sim.tCross), iEnd = Math.min(sim.steps, Math.floor(tc / DT)), stride = Math.max(1, Math.ceil(sim.steps / 160)), pts = [];
+        var iFrom = 0;
+        if (t0 > 0) { var s0 = pathAt(sim, Math.min(t0, sim.tCross)); pts.push(s0.x.toFixed(1) + ',' + s0.y.toFixed(1)); iFrom = Math.floor(t0 / DT) + 1; }
+        for (var i = iFrom; i <= iEnd; i += stride) pts.push(sim.xs[i].toFixed(1) + ',' + sim.ys[i].toFixed(1));
+        if (tEnd > sim.tCross) { var c = pathAt(sim, sim.tCross); pts.push(c.x.toFixed(1) + ',' + c.y.toFixed(1)); }
+        var e = motionAt(sim, tEnd);
+        pts.push(e.x.toFixed(1) + ',' + e.y.toFixed(1));
+        return pts.join(' ');
+    }
+    /* 第二段（慢動作）的長度（毫秒）：從玩家看到的最後位置（tSee）播到落進收集口（tLand），用 REVEAL_SPEED 倍速，夾在 REVEAL_MIN_MS～REVEAL_MAX_MS */
+    function revealMs(sim) {
+        return Math.round(Math.max(REVEAL_MIN_MS, Math.min(REVEAL_MAX_MS, (sim.tLand - sim.tSee) / REVEAL_SPEED * 1000)));
     }
     /* 出一關：隨機決定起點與初速，預先把整條軌跡模擬完（所以答案在珠子落下前就確定，不受畫面卡頓影響） */
     function makeRound(level, rand) {
@@ -197,11 +248,16 @@
             PEGS.forEach(function (p) { kit.svg('circle', { 'class': 'bo-peg', cx: p.x, cy: p.y, r: PEG_R }, svg); });
             /* 分隔線 */
             for (var k = 1; k < SLOTS; k++) kit.svg('line', { 'class': 'bo-div', x1: k * W, y1: DIV_Y, x2: k * W, y2: BH }, svg);
-            /* 軌跡線（polyline，揭曉時才畫） */
+            /* 軌跡線（polyline，揭曉時才畫）：trail＝玩家看得到的那段（藍色實線）；trailHid＝被簾子蓋住的那段（橘色虛線，慢動作播放時一點一點畫出來） */
             var trail = kit.svg('polyline', { 'class': 'bo-trail', points: '' }, svg);
+            var trailHid = kit.svg('polyline', { 'class': 'bo-trail bo-trail--hid', points: '' }, svg);
+            /* 玩家看到的最後位置：虛線圈（第一段閃爍，之後一直留著）與「最後看到」標籤 */
+            var seen = kit.svg('circle', { 'class': 'bo-seen', cx: -100, cy: -100, r: BALL_R + 6 }, svg);
             var ball = kit.svg('circle', { 'class': 'bo-ball', cx: -100, cy: -100, r: BALL_R }, svg);
+            var seenTxt = kit.svg('text', { 'class': 'bo-seen__t', x: -100, y: -100, 'text-anchor': 'middle' }, svg);
+            seenTxt.textContent = '最後看到';
             /* 簾子（遮住最下面的收集口）：高度每一關不一樣，位置在 layoutCurtain 裡設定 */
-            var curtain = kit.svg('rect', { 'class': 'bo-curtain', x: 0, y: curtainY(1), width: BW, height: hiddenH(1) }, svg);
+            var curtain = kit.svg('rect', { 'class': 'bo-curtain', x: 0, y: curtainY(level + 1), width: BW, height: hiddenH(level + 1) }, svg);
             var slotEls = [], slotBgs = [], slotTxts = [];
             /* 7 個收集口：用立即執行函式 (function (s) {...})(s) 讓每個按鈕記住自己的編號 s（var 沒有區塊範圍，不這樣寫所有按鈕都會共用最後一個 s） */
             for (var s = 0; s < SLOTS; s++) {
@@ -215,6 +271,14 @@
                     slotEls.push(g);
                 })(s);
             }
+            /* armed：珠子掉完了、可以選了（沒掉完以前收集口按鈕是半透明、點了沒反應，見 CSS .bo-slot--wait） */
+            var armed = false;
+            function setArmed(on) {
+                armed = on;
+                slotEls.forEach(function (g) { g.classList.toggle('bo-slot--wait', !on); });
+                banner.textContent = on ? '猜珠子會掉進幾號（不限時間）' : '珠子還在掉，等它掉完再猜…';
+            }
+            function setBall(x, y) { ball.setAttribute('cx', x.toFixed(1)); ball.setAttribute('cy', y.toFixed(1)); }
             /* 依這一關的簾子高度，擺好簾子與 7 個收集口按鈕（按鈕蓋滿簾子的範圍，數字在簾子正中間） */
             function layoutCurtain(hh) {
                 var cy = BH - hh;
@@ -224,6 +288,11 @@
                     slotTxts[i].setAttribute('y', cy + hh / 2 + 6);
                 }
             }
+            /* 開局的畫面一開始就擺好（不等 startLevel 的 400 毫秒）：標題、提示文字、簾子與收集口按鈕的位置都跟第一關一樣，
+               不會先出現「按鈕被壓扁在最上面、標題空白所以檯子整個偏上」再閃一下變正常 */
+            head.textContent = '第 ' + (level + 1) + ' 關　已過 ' + cleared + ' 關';
+            layoutCurtain(hiddenH(level + 1));
+            setArmed(false);
 
             /* 開始一關 */
             function startLevel() {
@@ -233,47 +302,67 @@
                 cur = makeRound(level); picked = null;
                 layoutCurtain(cur.hiddenH);
                 head.textContent = '第 ' + level + ' 關　已過 ' + cleared + ' 關';
-                banner.textContent = '猜珠子會掉進幾號（不限時間）';
+                setArmed(false);
                 curtain.setAttribute('opacity', 1);
                 slotEls.forEach(function (g) { g.classList.remove('bo-slot--pick', 'bo-slot--ok', 'bo-slot--bad'); g.style.display = ''; });
-                trail.setAttribute('points', '');
+                trail.setAttribute('points', ''); trailHid.setAttribute('points', '');
+                seen.setAttribute('class', 'bo-seen'); seen.setAttribute('cx', -100); seenTxt.setAttribute('x', -100);
                 ball.setAttribute('cx', -100);
                 state = 'fall';
                 /* 主控台印出這一關的實際資料（簾子、起點、初速、全程秒數、落在哪個收集口），方便驗證 */
-                try { console.info('[球會跑去哪] 第 ' + level + ' 關：簾子基數 ' + cur.base.toFixed(3) + '（高 ' + cur.hiddenH.toFixed(1) + 'px，上緣 y=' + cur.curtainY.toFixed(1) + '）；起點 x=' + cur.x0.toFixed(1) + '、初速 ' + cur.vx0.toFixed(0) + ' px/秒；全程 ' + cur.sim.tCross.toFixed(2) + ' 秒、被簾子蓋住時 ' + cur.sim.tHide.toFixed(2) + ' 秒；會掉進第 ' + (cur.sim.slot + 1) + ' 個收集口'); } catch (e) { }
+                try { console.info('[球會跑去哪] 第 ' + level + ' 關：簾子基數 ' + cur.base.toFixed(3) + '（高 ' + cur.hiddenH.toFixed(1) + 'px，上緣 y=' + cur.curtainY.toFixed(1) + '）；起點 x=' + cur.x0.toFixed(1) + '、初速 ' + cur.vx0.toFixed(0) + ' px/秒；全程 ' + cur.sim.tCross.toFixed(2) + ' 秒、最後看到在 ' + cur.sim.tSee.toFixed(2) + ' 秒、整顆被簾子蓋住時 ' + cur.sim.tHide.toFixed(2) + ' 秒；會掉進第 ' + (cur.sim.slot + 1) + ' 個收集口'); } catch (e) { }
                 var t0 = performance.now();
                 /* my.loop：每個畫面更新一次，用「現在時間」查表算出珠子位置；珠子掉完（或玩家已經選了）就停 */
                 my.loop(function (now) {
                     if (id !== rid || state !== 'fall') return false;
                     var t = (now - t0) / 1000;
                     var p = pathAt(cur.sim, Math.min(t, cur.sim.tCross));
-                    ball.setAttribute('cx', p.x.toFixed(1)); ball.setAttribute('cy', p.y.toFixed(1));
-                    if (t >= cur.sim.tCross) return false;
+                    setBall(p.x, p.y);
+                    /* 珠子（在簾子後面）掉到底、碰到收集口下緣的那一刻，收集口按鈕才恢復正常、可以點 */
+                    if (t >= cur.sim.tLand) { setArmed(true); return false; }
                 });
             }
 
-            /* 玩家點了第 s 號收集口（沒有時間限制，什麼時候點都可以，包括珠子還在掉的時候） */
+            /* 玩家點了第 s 號收集口（沒有時間限制；但要等珠子掉完才點得下去，掉完之前按鈕是半透明的） */
             function choose(s) {
-                if (state !== 'fall') return;
+                if (state !== 'fall' || !armed) return;
                 picked = s;
                 slotEls[s].classList.add('bo-slot--pick');
                 Sfx.play('click');
                 reveal(s);
             }
 
-            /* 揭曉：簾子變透明、畫出完整軌跡、顯示實際落點；猜中進下一關，猜錯結束 */
+            /* 揭曉：簾子變半透明，分兩段（猜中進下一關，猜錯結束）：
+               ① 先只畫玩家原本就看得到的部分（出發到珠子底緣碰到簾子上緣為止），珠子停在那裡，用閃爍的虛線圈與「最後看到」標出來，停一下；
+               ② 再從那個位置用慢動作播「看不到的那一段」，播完才標出實際落點 */
             function reveal(s) {
                 if (state !== 'fall') return;
                 state = 'reveal';
-                var actual = cur.sim.slot, right = s === actual;
-                /* 簾子拉開，畫出完整軌跡，珠子停在實際的收集口 */
+                var sim = cur.sim, id = rid, tS = sim.tSee, p0 = pathAt(sim, tS);
                 curtain.setAttribute('opacity', 0.12);
                 slotEls.forEach(function (g) { g.style.display = 'none'; });
-                /* 軌跡太密，每隔幾個取樣點取一個，避免畫太多點 */
-                var pts = [], step = Math.max(1, Math.floor(cur.sim.steps / 160));
-                for (var i = 0; i <= cur.sim.steps; i += step) pts.push(cur.sim.xs[i].toFixed(1) + ',' + cur.sim.ys[i].toFixed(1));
-                trail.setAttribute('points', pts.join(' '));
-                ball.setAttribute('cx', (actual * W + W / 2).toFixed(1)); ball.setAttribute('cy', (BH - 26).toFixed(1));
+                banner.textContent = '你最後看到珠子在這裡';       /* 一行放得下（13 個字以內），換行的話檯子會被推下去 */
+                trail.setAttribute('points', trailPoints(sim, tS));
+                trailHid.setAttribute('points', '');
+                setBall(p0.x, p0.y);
+                seen.setAttribute('cx', p0.x.toFixed(1)); seen.setAttribute('cy', p0.y.toFixed(1)); seen.setAttribute('class', 'bo-seen bo-seen--on');
+                seenTxt.setAttribute('x', Math.max(40, Math.min(BW - 40, p0.x)).toFixed(1)); seenTxt.setAttribute('y', (p0.y - BALL_R - 12).toFixed(1));
+                my.after(REVEAL_SEEN_MS, function () {
+                    if (id !== rid) return;
+                    banner.textContent = '慢動作：簾子後面…';
+                    seen.setAttribute('class', 'bo-seen bo-seen--keep');
+                    my.tween(revealMs(sim), function (p) {
+                        var ts = tS + (sim.tLand - tS) * p, q = motionAt(sim, ts);
+                        trailHid.setAttribute('points', trailPoints(sim, ts, tS));
+                        setBall(q.x, q.y);
+                    }, function (p) { return p; }).then(function () { if (id === rid) conclude(s); });
+                });
+            }
+
+            /* 揭曉動畫播完：珠子停在實際的收集口，標出落點、判定猜中或猜錯 */
+            function conclude(s) {
+                var actual = cur.sim.slot, right = s === actual;
+                setBall(actual * W + W / 2, REST_Y);
                 var tag = kit.svg('g', { 'class': 'bo-result' }, svg);
                 kit.svg('rect', { 'class': 'bo-result__bg ' + (right ? 'bo-result__bg--ok' : 'bo-result__bg--bad'), x: actual * W + 2, y: DIV_Y, width: W - 4, height: SLOT_H - 4, rx: 8 }, tag);
                 if (!right) kit.svg('rect', { 'class': 'bo-result__bg bo-result__bg--you', x: s * W + 2, y: DIV_Y, width: W - 4, height: SLOT_H - 4, rx: 8 }, tag);
@@ -307,10 +396,12 @@
 
             /* G.debug：測試用後門 */
             G.debug = {
-                state: function () { return { level: level, state: state, cleared: cleared, slot: cur && cur.sim.slot, cur: cur }; },
-                choose: choose,
-                chooseRight: function () { choose(cur.sim.slot); },
-                chooseWrong: function () { choose((cur.sim.slot + 3) % SLOTS); },
+                state: function () { return { level: level, state: state, cleared: cleared, slot: cur && cur.sim.slot, cur: cur, armed: armed }; },
+                /* 測試用：choose 系列直接略過「珠子掉完才能選」的限制（不用乾等） */
+                choose: function (s) { armed = true; choose(s); },
+                chooseRight: function () { armed = true; choose(cur.sim.slot); },
+                chooseWrong: function () { armed = true; choose((cur.sim.slot + 3) % SLOTS); },
+                armed: function () { return armed; },
                 /* 直接跳到第 n 關（驗證高關卡的畫面用；前面的關卡視為已通過） */
                 goto: function (n) { level = n - 1; cleared = n - 1; startLevel(); }
             };
@@ -326,13 +417,14 @@
     var G = {
         id: ID,
         name: '球會跑去哪',
-        rule: '彈珠從上面掉下來，在釘子之間彈來彈去，最下面一段被簾子蓋住。**猜猜它最後會掉進哪一個收集口**（共 7 個），點下面的號碼。猜中就過關，不限時間，可以慢慢想；但簾子會一關比一關高，**猜錯就結束**，看你能過第幾關！',
+        rule: '彈珠從上面掉下來，在釘子之間彈來彈去，最下面一段被簾子蓋住。**猜猜它最後會掉進哪一個收集口**（共 7 個），等珠子掉完，點下面的號碼。猜中就過關，不限時間，可以慢慢想；但簾子會一關比一關高，**猜錯就結束**，看你能過第幾關！',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
         test: {
             baseAt: baseAt, hiddenH: hiddenH, curtainY: curtainY, PEGS: PEGS, makePegs: makePegs, simulate: simulate, pathAt: pathAt, makeRound: makeRound, rating: rating,
+            motionAt: motionAt, trailPoints: trailPoints, revealMs: revealMs, REST_Y: REST_Y, REVEAL_SPEED: REVEAL_SPEED, REVEAL_MIN_MS: REVEAL_MIN_MS, REVEAL_MAX_MS: REVEAL_MAX_MS, REVEAL_SEEN_MS: REVEAL_SEEN_MS,
             SLOTS: SLOTS, W: W, BW: BW, BH: BH, BALL_R: BALL_R, PEG_R: PEG_R, DIV_Y: DIV_Y, SLOT_H: SLOT_H, LEAD_BALLS: LEAD_BALLS, ROW_GAP: ROW_GAP, ROW0_Y: ROW0_Y, ROWS: ROWS, DT: DT,
             LAST_LEVEL: LAST_LEVEL, CURTAIN_BASE_START: CURTAIN_BASE_START, CURTAIN_BASE_STEP: CURTAIN_BASE_STEP, CURTAIN_BASE_LAST: CURTAIN_BASE_LAST, G_FALL: G_FALL, VX_MAX: VX_MAX, SCORE_MAX: SCORE.max
         }

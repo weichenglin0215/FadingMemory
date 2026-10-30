@@ -1,12 +1,16 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_teacher.js — 秒反應・老師說
    畫面上的老師會下指令，例如「老師說 點左邊」。只有開頭有「老師說」的指令才要照做；
-   沒說「老師說」的指令，什麼都不要點，等時間過去就算答對。後面還會出現「點左邊的相反」＝要點右邊。
+   沒說「老師說」的指令，什麼都不要點，等時間過去就算答對。後面還會出現「點左邊的相反」＝要點右邊，
+   再後面還有「點左邊跟上面」＝同時點兩個方向（V1.39.0，依玩家回饋）。
    ───────────────────────────────────────────────────────────────────
    · 指令 ＝［老師說］＋ 點 ＋ 方向（上、下、左、右）＋［的相反］（V1.25：「點相反的左邊」改成「點左邊的相反」，才符合中文寫法）。
    · 有「老師說」的比例 P_SAY：第 1 → RAMP_N 題 70% → 50%（越後面越常是陷阱）；
      沒說的連續不超過 NO_SAY_RUN_MAX 個；前 2 題至少有 1 題有「老師說」；不會連續出現完全相同的指令。
    · 「相反」指令從第 OPPOSITE_FROM 題開始出現（機率 P_OPPOSITE），有沒有「老師說」都可能。
+   · 「同時點兩個方向」指令（例如「點左邊跟上面」「點上面跟下面」）從第 DOUBLE_FROM 題開始出現（機率 P_DOUBLE_START → P_DOUBLE_END，
+     到第 RAMP_N 題），有沒有「老師說」都可能；它不會同時是「相反」（句子太長、太難讀）。兩個方向要在 DOUBLE_WINDOW_S 秒內都點到（不分先後；
+     手機上兩根手指同時按、電腦上快速連點兩下都行），點了第三個方向、或另一個沒在時間內點到＝失敗；這種題目限時多給 DOUBLE_EXTRA_S 秒。
    · 每題限時 TIME_START → TIME_END 秒（第 1 → RAMP_N 題線性）。
        有「老師說」：限時內點對方向才過；點錯、沒點到 ＝ 失敗。
        沒有「老師說」：限時內不要點，時間到就過；點了 ＝ 失敗。
@@ -30,10 +34,13 @@
     /* 難度隨題號線性變化到第 RAMP_N 題 */
     var RAMP_N = 30;
     /* 「老師說」出現的機率：70% → 50%（越後面越常是陷阱） */
-    var P_SAY_START = 0.75, P_SAY_END = 0.5;
+    var P_SAY_START = 0.8, P_SAY_END = 0.66;
     var TIME_START = 2.5, TIME_END = 0.6;           /* 每題限時（秒）*/
     /* 第 10 題起才出現「相反」指令，出現機率 35% */
-    var OPPOSITE_FROM = 10, P_OPPOSITE = 0.35;
+    var OPPOSITE_FROM = 10, P_OPPOSITE = 0.33;
+    /* 第 15 題起出現「同時點兩個方向」：機率 25% → 45%（到第 RAMP_N 題）；兩個方向要在 0.5 秒內都點到；這種題限時多 0.7 秒（要讀兩個方向、動兩根手指） */
+    var DOUBLE_FROM = 15, P_DOUBLE_START = 0.25, P_DOUBLE_END = 0.45;
+    var DOUBLE_WINDOW_S = 0.5, DOUBLE_EXTRA_S = 0.7;
     /* 沒說「老師說」的題目最多連續幾題 */
     var NO_SAY_RUN_MAX = 3;
     var GAP_S = 0.3;                                /* 答完到下一題之間的空檔（空檔內的點擊不算）*/
@@ -46,10 +53,16 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 第 i 題有「老師說」的機率 */
     function pSay(i) { return kit.ramp(i, P_SAY_START, P_SAY_END, RAMP_N); }
-    /* 第 i 題的限時 */
-    function limitFor(i) { return kit.ramp(i, TIME_START, TIME_END, RAMP_N); }
+    /* 第 i 題是「同時點兩個方向」的機率（沒到 DOUBLE_FROM 題是 0） */
+    function pDouble(i) { return i < DOUBLE_FROM ? 0 : kit.ramp(i, P_DOUBLE_START, P_DOUBLE_END, RAMP_N); }
+    /* 指令是不是「同時點兩個方向」 */
+    function isDouble(cmd) { return !!cmd && !!cmd.dir2; }
+    /* 第 i 題的限時；dbl 為 true（同時點兩個方向）時多給 DOUBLE_EXTRA_S 秒 */
+    function limitFor(i, dbl) { return kit.ramp(i, TIME_START, TIME_END, RAMP_N) + (dbl ? DOUBLE_EXTRA_S : 0); }
+    /* 兩個方向的指令，不分先後算同一個（「左邊跟上面」＝「上面跟左邊」） */
+    function sameDirs(a, b) { return a.dir === b.dir ? (a.dir2 || null) === (b.dir2 || null) : (a.dir === b.dir2 && a.dir2 === b.dir); }
     /* 兩個指令是否完全相同（!! 把 null 轉成 false） */
-    function sameCmd(a, b) { return !!a && !!b && a.say === b.say && a.dir === b.dir && a.opposite === b.opposite; }
+    function sameCmd(a, b) { return !!a && !!b && a.say === b.say && a.opposite === b.opposite && sameDirs(a, b); }
     /* 出第 i 題：先決定有沒有「老師說」、是不是「相反」、哪個方向；不能和上一題完全相同 */
     /* 第 i 題（從 1 算）的指令；history 是之前所有的指令 */
     function makeCommand(i, history, rand) {
@@ -65,23 +78,38 @@
             if (!say && run >= NO_SAY_RUN_MAX) say = true;
             /* 前兩題至少有一題要有說，不然玩家會以為都不用動 */
             if (!say && i === 2 && history.length === 1 && !history[0].say) say = true;
-            var opposite = i >= OPPOSITE_FROM && rand() < P_OPPOSITE;
-            cmd = { say: say, opposite: opposite, dir: kit.pick(DIRS, rand) };
+            /* 先決定是不是「同時點兩個方向」（是的話就不再「相反」）；兩個方向從四個裡面抽兩個不同的 */
+            var dbl = i >= DOUBLE_FROM && rand() < pDouble(i);
+            var opposite = !dbl && i >= OPPOSITE_FROM && rand() < P_OPPOSITE;
+            var dir = kit.pick(DIRS, rand);
+            cmd = { say: say, opposite: opposite, dir: dir };
+            if (dbl) cmd.dir2 = kit.pick(DIRS.filter(function (d) { return d !== dir; }), rand);
             if (!sameCmd(cmd, prev)) break;
         }
         cmd.text = textOf(cmd);
         return cmd;
     }
     /* 指令轉成顯示用文字：前綴（老師說）和動作（點左邊／點左邊的相反） */
-    function textOf(cmd) { return { prefix: cmd.say ? '老師說' : '', action: '點' + DIR_NAME[cmd.dir] + (cmd.opposite ? '的相反' : '') }; }
+    function textOf(cmd) {
+        var act = '點' + DIR_NAME[cmd.dir] + (isDouble(cmd) ? '跟' + DIR_NAME[cmd.dir2] : '') + (cmd.opposite ? '的相反' : '');
+        return { prefix: cmd.say ? '老師說' : '', action: act };
+    }
     /* 正確反應是什麼：要點哪個方向；不用點是 null */
     /* 正確的反應：要點的方向；不用點則是 null */
-    /* 有「老師說」才要點；「相反」的話要點反方向 */
-    function expectedAction(cmd) { return cmd.say ? (cmd.opposite ? OPPOSITE[cmd.dir] : cmd.dir) : null; }
+    /* 有「老師說」才要點；「相反」的話要點反方向；「同時點兩個方向」回傳那兩個方向的陣列（不分先後） */
+    function expectedAction(cmd) {
+        if (!cmd.say) return null;
+        if (isDouble(cmd)) return [cmd.dir, cmd.dir2];
+        return cmd.opposite ? OPPOSITE[cmd.dir] : cmd.dir;
+    }
     /* 失敗時的說明文字 */
     function why(cmd, kind, got) {
         if (kind === 'nosay') return '這句沒有「老師說」，你不能動';
         if (kind === 'late') return '「老師說」的要照做，你來不及了';
+        if (isDouble(cmd)) {
+            var both = '老師說點' + DIR_NAME[cmd.dir] + '跟' + DIR_NAME[cmd.dir2];
+            return kind === 'half' ? both + '，要在 ' + DOUBLE_WINDOW_S + ' 秒內兩個都點到' : both + '，你點了' + DIR_NAME[got];
+        }
         var exp = expectedAction(cmd);
         return cmd.opposite ? '老師說點' + DIR_NAME[cmd.dir] + '的相反，所以要點' + DIR_NAME[exp] : '老師說' + DIR_NAME[exp] + '，你點了' + DIR_NAME[got];
     }
@@ -137,6 +165,8 @@
             var tb = kit.timebar();
             var pad = h('div', { 'class': 'te-pad' });
             var btns = {};
+            /* held：「同時點兩個方向」的題目，已經點到的方向（{ left: true }）；放開手指不算取消，因為兩個方向只要在 DOUBLE_WINDOW_S 秒內都點到過就行 */
+            var held = {};
             /* 建立四個方向鍵（上下左右），用 css grid 排成十字形（樣式在 css/reaction2.css） */
             DIRS.forEach(function (d) {
                 var b = h('button', { 'class': 'btn te-btn te-btn--' + d, text: DIR_NAME[d] });
@@ -145,6 +175,10 @@
             });
             [top, sub, tb.el, pad].forEach(function (x) { root.appendChild(x); });
             ctx.setMeta(Reaction.getBest(ID) != null ? '最佳 ' + Reaction.getBest(ID) : '');
+
+            /* 清掉「已點到」的標記（換題、答對、失敗時） */
+            function clearHeld() { held = {}; DIRS.forEach(function (d) { btns[d].classList.remove('te-btn--held'); }); }
+            function heldCount() { return Object.keys(held).length; }
 
             /* 換老師的表情 */
             function setFace(mood) { face.setAttribute('class', 'te-face te-face--' + mood); face._mouth.setAttribute('d', MOUTH[mood]); }
@@ -157,7 +191,8 @@
                 /* 產生指令並記到 history */
                 cmd = makeCommand(i, history, null);
                 history.push(cmd);
-                var id = ++token, limit = limitFor(i), t0 = performance.now();
+                clearHeld();
+                var id = ++token, limit = limitFor(i, isDouble(cmd)), t0 = performance.now();
                 nowLimit = limit;
                 var tx = textOf(cmd);
                 /* 顯示指令文字 */
@@ -168,7 +203,7 @@
                 state = 'live';
                 tb.set(1);
                 /* 主控台印出這題內容、正確答案與限時，方便驗證 */
-                try { console.info('[老師說] 第 ' + i + ' 題：' + (tx.prefix ? tx.prefix + ' ' : '') + tx.action + '；答案＝' + (expectedAction(cmd) || '不要點') + '；限時 ' + limit.toFixed(3) + ' 秒；P(說)=' + pSay(i).toFixed(2)); } catch (e) { }
+                try { console.info('[老師說] 第 ' + i + ' 題：' + (tx.prefix ? tx.prefix + ' ' : '') + tx.action + '；答案＝' + (([].concat(expectedAction(cmd) || [])).join('＋') || '不要點') + '；限時 ' + limit.toFixed(3) + ' 秒；P(說)=' + pSay(i).toFixed(2)); } catch (e) { }
                 /* my.loop：每個畫面更新一次，更新倒數時間條 */
                 my.loop(function (now) {
                     if (id !== token || state !== 'live') return false;
@@ -181,6 +216,7 @@
             /* 答對一題：連對數 +1，稍後出下一題；silent 為 true 表示是「忍住不點」而過關 */
             function good(silent) {
                 state = 'gap'; token++;
+                clearHeld();
                 streak = i;
                 tb.set(0);
                 setFace('happy');
@@ -195,6 +231,7 @@
             function fail(kind, got) {
                 if (over) return;
                 over = true; state = 'over'; token++;
+                clearHeld();
                 tb.set(0);
                 setFace('tease');
                 bubble.className = 'te-bubble te-bubble--bad';
@@ -216,7 +253,7 @@
             /* 時間到的處理：有說「老師說」卻沒點＝失敗；沒說「老師說」而且沒點＝過關 */
             function timeout() {
                 if (state !== 'live') return;
-                if (cmd.say) fail('late'); else good(true);
+                if (cmd.say) fail(heldCount() ? 'half' : 'late', Object.keys(held)[0]); else good(true);
             }
 
             /* 玩家按了方向 d */
@@ -224,13 +261,26 @@
                 if (state !== 'live') return;
                 /* 沒說「老師說」卻點了＝失敗 */
                 if (!cmd.say) { fail('nosay', d); return; }
-                /* 有說：點對方向過關，點錯失敗 */
-                if (d === expectedAction(cmd)) good(false); else fail('wrong', d);
+                var exp = expectedAction(cmd);
+                if (!Array.isArray(exp)) {
+                    /* 有說：點對方向過關，點錯失敗 */
+                    if (d === exp) good(false); else fail('wrong', d);
+                    return;
+                }
+                /* 同時點兩個方向：點了不在清單裡的方向＝失敗；同一個方向連點不算；兩個都點到就過關；
+                   只點到一個時，另一個要在 DOUBLE_WINDOW_S 秒內點到 */
+                if (exp.indexOf(d) < 0) { fail('wrong', d); return; }
+                if (held[d]) return;
+                held[d] = true;
+                btns[d].classList.add('te-btn--held');
+                if (exp.every(function (x) { return held[x]; })) { good(false); return; }
+                var pid = token;
+                my.after(DOUBLE_WINDOW_S * 1000, function () { if (pid === token && state === 'live') fail('half', d); });
             }
 
             /* G.debug：測試用後門 */
             G.debug = {
-                state: function () { return { i: i, streak: streak, state: state, over: over, cmd: cmd, expected: cmd ? expectedAction(cmd) : null, limit: nowLimit }; },
+                state: function () { return { i: i, streak: streak, state: state, over: over, cmd: cmd, expected: cmd ? expectedAction(cmd) : null, limit: nowLimit, held: Object.keys(held) }; },
                 press: press
             };
             /* 開場等 600 毫秒再出第一題 */
@@ -247,12 +297,16 @@
     var G = {
         id: ID,
         name: '老師說',
-        rule: '老師會下指令。**只有開頭有「老師說」的才要照做**，例如「老師說 點左邊」就點左邊；**沒說「老師說」就什麼都不要點**。後面還會有「點左邊的相反」這種指令，要點反方向。錯一次就結束！',
+        rule: '老師會下指令。**只有開頭有「老師說」的才要照做**，例如「老師說 點左邊」就點左邊；**沒說「老師說」就什麼都不要點**。後面還會有「點左邊的相反」這種指令，要點反方向；高關卡還有「點左邊跟上面」，要**同時點兩個方向**（半秒內都點到）。錯一次就結束！',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
-        test: { pSay: pSay, limitFor: limitFor, makeCommand: makeCommand, expectedAction: expectedAction, textOf: textOf, why: why, rating: rating, sameCmd: sameCmd, NO_SAY_RUN_MAX: NO_SAY_RUN_MAX, OPPOSITE_FROM: OPPOSITE_FROM, RAMP_N: RAMP_N, DIRS: DIRS, P_SAY_START: P_SAY_START, P_SAY_END: P_SAY_END, TIME_START: TIME_START, TIME_END: TIME_END }
+        test: {
+            pSay: pSay, limitFor: limitFor, makeCommand: makeCommand, expectedAction: expectedAction, textOf: textOf, why: why, rating: rating, sameCmd: sameCmd,
+            pDouble: pDouble, isDouble: isDouble, NO_SAY_RUN_MAX: NO_SAY_RUN_MAX, OPPOSITE_FROM: OPPOSITE_FROM, RAMP_N: RAMP_N, DIRS: DIRS, P_SAY_START: P_SAY_START, P_SAY_END: P_SAY_END,
+            TIME_START: TIME_START, TIME_END: TIME_END, DOUBLE_FROM: DOUBLE_FROM, P_DOUBLE_START: P_DOUBLE_START, P_DOUBLE_END: P_DOUBLE_END, DOUBLE_WINDOW_S: DOUBLE_WINDOW_S, DOUBLE_EXTRA_S: DOUBLE_EXTRA_S
+        }
     };
     /* 登記到遊戲清單 */
     Reaction.register(G);

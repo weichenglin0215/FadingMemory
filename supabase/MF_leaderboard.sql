@@ -4,6 +4,7 @@
 -- 用途：記錄「秒反應」每一款遊戲的世界前 30 名成績；玩家身分（V1.35.0 起：暱稱全站唯一＋4 位數密碼，第 1B 節）；
 --       玩家個人最佳（可跨裝置同步，第 1B 節 MF_player_bests）；玩家在結算彈窗寫下的意見（第 5 節，MF_feedback，分遊戲記錄）、
 --       五星評價（第 6 節，MF_ratings／MF_rating_stats）；第 7 節是「阿嬤都比你厲害」用的查詢（這位玩家在哪些遊戲被超越）；
+--       第 7B 節是遊玩統計（V1.39.0，MF_play_days：每天每款遊戲每位玩家完成幾局；MF_stats_* 給 admin/stats.html 看人數、次數、玩家名次）；
 --       第 8 節是給管理者（你）在 SQL Editor 執行的管理函式（重設密碼、合併帳號…）。
 -- 執行方式：Supabase 專案 LoveIsABitMessy-DB → 左側 SQL Editor → New query →
 --           貼上本檔全文 → Run。可以重複執行（全部都是「已存在就略過／覆蓋」的寫法）。
@@ -1706,6 +1707,218 @@ $$;
 
 revoke all on function public."MF_get_my_ranks"(uuid) from public;
 grant execute on function public."MF_get_my_ranks"(uuid) to anon, authenticated;
+
+
+-- ═══ 7B. 遊玩統計（V1.39.0）：每天、每款遊戲、每位玩家完成了幾局（給 admin/stats.html 看）═══
+-- 以前資料庫只記「前 30 名的成績」，不知道一款遊戲被玩了幾次、有幾個人玩。這一節新增：
+--   MF_play_days    每一列＝「某一天（台灣日期）、某款遊戲、某位玩家」完成的局數。同一天同一款同一個人只佔一列（局數往上加），
+--                   所以資料量 ≤ 玩家數 × 每天玩過的遊戲數 × 天數，不是「玩一局存一列」。
+--                   玩家代號用的跟五星評價一樣（已登入＝帳號編號，沒登入＝匿名代號）；表格鎖住，anon 不能直接讀寫，只能走下面的函式。
+--   MF_log_plays    網頁（js/plays.js）每完成一局就排一筆，稍後批次呼叫它寫入；不需要憑證（訪客也能算進統計），
+--                   所以資料庫自己設防：只收最近幾天的日期、遊戲一定要是 MF_games 裡啟用的、單筆次數與每人每天每款的總局數有上限、
+--                   全站每分鐘寫入的列數有上限（超過就回 busy，網頁會稍後再送）。
+--   MF_stats_games／MF_stats_daily／MF_stats_players
+--                   三個「只回傳統計」的讀取函式，給 admin/stats.html（遊戲分析、時間分析、玩家分析）用。
+--                   回傳的只有遊戲名稱、次數、人數、平均星數、前 30 名的暱稱與名次（這些在遊戲裡本來就公開），永遠不回傳任何 player_id；
+--                   日期範圍最長 400 天，所以不會被拿來一次撈光全部資料。
+--   「一局」＝結算畫面出現一次（多關卡遊戲每一關的小結算不算）；「進行遊戲的人數」＝期間內至少完成一局的不重複玩家代號
+--   （同一個人換瀏覽器、或沒登入時清掉瀏覽器資料會算成不同的人；從訪客變成登入帳號也會算兩個）。
+--   統計是從這一版上線之後才開始累積的，更早的遊玩次數沒有紀錄、補不回來。
+-- 管理者查詢（資料表名稱有大寫，一定要加雙引號）：
+--   select day, sum(plays) as 局數, count(distinct player_id) as 人數 from public."MF_play_days" group by day order by day desc limit 30;   -- 最近 30 天
+--   select g.title, sum(d.plays) as 局數, count(distinct d.player_id) as 人數 from public."MF_play_days" d join public."MF_games" g using (game_id)
+--     where d.day >= current_date - 30 group by g.title order by 局數 desc;                                                                     -- 最近 30 天最熱門的遊戲
+--   delete from public."MF_play_days" where game_id = 'zz_test';           -- 清掉測試資料
+create table if not exists public."MF_play_days" (
+    day         date         not null,                     -- 台灣日期
+    game_id     text         not null references public."MF_games" (game_id) on delete cascade on update cascade,
+    player_id   uuid         not null,
+    plays       integer      not null default 1 check (plays >= 1),
+    updated_at  timestamptz  not null default now(),
+    primary key (day, game_id, player_id)
+);
+create index if not exists "MF_play_days_game_idx"    on public."MF_play_days" (game_id, day);
+create index if not exists "MF_play_days_updated_idx" on public."MF_play_days" (updated_at);      -- 「全站每分鐘寫入上限」用
+
+alter table public."MF_play_days" enable row level security;
+revoke all on table public."MF_play_days" from public, anon, authenticated;
+comment on table public."MF_play_days" is '遊玩統計：某一天（台灣日期）、某款遊戲、某位玩家完成了幾局（V1.39.0）；只能走 MF_log_plays 寫入、MF_stats_* 讀取';
+
+-- 寫入：p_items 是 [ { day: 'YYYY-MM-DD'（台灣日期）, game_id, n: 局數 }, … ]（一次最多 50 筆）。
+--   回傳 { ok:true, saved:寫入了幾筆 }（不合格的那幾筆——日期太舊或太未來、沒登記的遊戲、局數不是正整數——直接略過，不影響其他筆）
+--        { ok:false, error:'bad_args' }  參數整個不對（沒給玩家代號、不是陣列、空的、超過 50 筆）
+--        { ok:false, error:'busy' }      全站這一分鐘寫入太多了，請稍後再送
+create or replace function public."MF_log_plays"(p_player_id uuid, p_items jsonb)
+returns jsonb
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+    c_tz        constant text := 'Asia/Taipei';       -- 「一天」用台灣時間算（網頁 js/plays.js 的 taipeiDay 也是 +8 小時，兩邊要一致）
+    c_back      constant int  := 3;                   -- 只收最近幾天（網頁離線很久才送的，超過就不算了）
+    c_item_max  constant int  := 500;                 -- 單筆最多加幾局（超過就當成這個數字）
+    c_day_max   constant int  := 3000;                -- 同一個人、同一天、同一款遊戲最多累積幾局
+    c_site_cap  constant int  := 3000;                -- 全站每分鐘最多寫入幾列（防灌水；正常使用遠低於這個數字）
+    v_today     date := (now() at time zone c_tz)::date;
+    v_item      jsonb;
+    v_day       date;
+    v_n         int;
+    v_game      text;
+    v_saved     int := 0;
+begin
+    if p_player_id is null or p_items is null or jsonb_typeof(p_items) <> 'array'
+       or jsonb_array_length(p_items) = 0 or jsonb_array_length(p_items) > 50 then
+        return jsonb_build_object('ok', false, 'error', 'bad_args');
+    end if;
+    if (select count(*) from public."MF_play_days" where updated_at > now() - interval '1 minute') >= c_site_cap then
+        return jsonb_build_object('ok', false, 'error', 'busy');
+    end if;
+    for v_item in select value from jsonb_array_elements(p_items) loop
+        begin
+            v_day  := (v_item ->> 'day')::date;
+            v_n    := (v_item ->> 'n')::int;
+            v_game := v_item ->> 'game_id';
+        exception when others then
+            continue;                                   -- 這一筆格式不對（日期或數字轉不出來）：略過
+        end;
+        if v_day is null or v_n is null or v_game is null or v_n < 1
+           or v_day < v_today - c_back or v_day > v_today + 1 then
+            continue;
+        end if;
+        if not exists (select 1 from public."MF_games" where game_id = v_game and enabled) then
+            continue;
+        end if;
+        insert into public."MF_play_days" as d (day, game_id, player_id, plays)
+        values (v_day, v_game, p_player_id, least(v_n, c_item_max))
+        on conflict (day, game_id, player_id) do update
+            set plays = least(d.plays + excluded.plays, c_day_max), updated_at = now();
+        v_saved := v_saved + 1;
+    end loop;
+    return jsonb_build_object('ok', true, 'saved', v_saved);
+end;
+$$;
+
+-- 內部：把統計用的日期範圍整理好（沒給＝最近 30 天到今天；起迄顛倒就對調；最長 400 天）。回傳 [起, 迄]
+create or replace function public."MF__stats_range"(p_from date, p_to date)
+returns date[]
+language sql
+stable
+set search_path = ''
+as $$
+    select array[greatest(x.lo, x.hi - 400), x.hi]
+      from (select least(y.f, y.t) as lo, greatest(y.f, y.t) as hi
+              from (select coalesce(p_to, (now() at time zone 'Asia/Taipei')::date) as t,
+                           coalesce(p_from, coalesce(p_to, (now() at time zone 'Asia/Taipei')::date) - 29) as f) y) x;
+$$;
+
+-- 讀取：遊戲分析。回傳 { from, to（實際使用的台灣日期範圍，含頭尾）, games: [ 每一款啟用中的遊戲一列 ] }：
+--   { game_id, title, plays（期間內完成幾局）, players（期間內有幾個不重複玩家）, stars_avg／stars_cnt（期間內的平均星數與評價次數，沒人評價是 null／0）,
+--     best_score／best_nick（世界排行榜目前第 1 名的成績與暱稱，不受日期範圍影響；還沒人上榜是 null）, better（'min'／'max'）}
+--   p_from／p_to＝台灣日期（含頭尾）。起迄顛倒會對調、沒給就是最近 30 天、最長 400 天（所以回傳裡的 from／to 可能跟你傳的不一樣）。
+create or replace function public."MF_stats_games"(p_from date default null, p_to date default null)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+    with r as (select (public."MF__stats_range"(p_from, p_to))[1] as a, (public."MF__stats_range"(p_from, p_to))[2] as b),
+    pd as (
+        select d.game_id, sum(d.plays)::bigint as plays, count(distinct d.player_id)::bigint as players
+          from public."MF_play_days" d, r where d.day between r.a and r.b group by d.game_id
+    ),
+    rt as (
+        select x.game_id, round(avg(x.stars)::numeric, 2) as avg, count(*)::bigint as cnt
+          from public."MF_ratings" x, r where x.rated_on between r.a and r.b group by x.game_id
+    ),
+    top1 as (
+        select distinct on (s.game_id) s.game_id, s.score, p.nickname
+          from public."MF_scores" s left join public."MF_players" p on p.player_id = s.player_id
+         order by s.game_id, s.rank_key, s.achieved_at, s.id
+    )
+    select jsonb_build_object(
+        'from', (select a from r), 'to', (select b from r),
+        'games', coalesce((
+            select jsonb_agg(jsonb_build_object(
+                       'game_id', g.game_id, 'title', g.title, 'better', g.better,
+                       'plays', coalesce(pd.plays, 0), 'players', coalesce(pd.players, 0),
+                       'stars_avg', rt.avg, 'stars_cnt', coalesce(rt.cnt, 0),
+                       'best_score', top1.score, 'best_nick', top1.nickname) order by g.game_id)
+              from public."MF_games" g
+              left join pd   on pd.game_id   = g.game_id
+              left join rt   on rt.game_id   = g.game_id
+              left join top1 on top1.game_id = g.game_id
+             where g.enabled
+        ), '[]'::jsonb));
+$$;
+
+-- 讀取：時間分析。回傳 { from, to（實際使用的台灣日期範圍）, plays（期間總局數）, players（期間內不重複玩家數）, days: [ 期間內「有人玩的每一天」一列 ] }：
+--   { day: 'YYYY-MM-DD', plays（當天全部遊戲加起來完成幾局）, players（當天有幾個不重複玩家）}，日期由舊到新。沒有人玩的日子不會出現（網頁自己補成 0）。
+create or replace function public."MF_stats_daily"(p_from date default null, p_to date default null)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+    with r as (select (public."MF__stats_range"(p_from, p_to))[1] as a, (public."MF__stats_range"(p_from, p_to))[2] as b),
+    t as (
+        select d.day, sum(d.plays)::bigint as plays, count(distinct d.player_id)::bigint as players
+          from public."MF_play_days" d, r where d.day between r.a and r.b group by d.day
+    ),
+    tot as (
+        select coalesce(sum(d.plays), 0)::bigint as plays, count(distinct d.player_id)::bigint as players
+          from public."MF_play_days" d, r where d.day between r.a and r.b
+    )
+    select jsonb_build_object(
+        'from', (select a from r), 'to', (select b from r),
+        'plays', (select plays from tot), 'players', (select players from tot),
+        'days', coalesce((select jsonb_agg(jsonb_build_object('day', t.day, 'plays', t.plays, 'players', t.players) order by t.day) from t), '[]'::jsonb));
+$$;
+
+-- 讀取：玩家分析。每一位「在某款遊戲前 N 名榜上有名次」的玩家一列：{ nick（暱稱，沒有暱稱是空字串）, cnt（上榜幾款）, best（最好的名次）, ranks: { <game_id>: 名次, … } }，
+--   依「上榜款數」多的在前、再依最好名次、暱稱排序；名次的算法跟 MF_get_top 完全一樣（成績、達成時間、id 一起排）。
+--   p_from／p_to 都不給（預設）＝目前榜上全部；有給＝只算「成績是在這段台灣日期內達成」的名次（名次本身仍是目前在整張榜上的名次）。
+--   不回傳 player_id；MF_scores 每款最多只留前 N 名，所以最多 遊戲數 × N 列。
+create or replace function public."MF_stats_players"(p_from date default null, p_to date default null)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+    with ranked as (
+        select s.game_id, s.player_id, s.achieved_at, g.top_n,
+               row_number() over (partition by s.game_id order by s.rank_key, s.achieved_at, s.id) as pos
+          from public."MF_scores" s
+          join public."MF_games" g on g.game_id = s.game_id and g.enabled
+    ),
+    picked as (
+        select * from ranked x
+         where x.pos <= x.top_n
+           and (p_from is null or (x.achieved_at at time zone 'Asia/Taipei')::date >= p_from)
+           and (p_to   is null or (x.achieved_at at time zone 'Asia/Taipei')::date <= p_to)
+    ),
+    per as (
+        select x.player_id, count(*)::int as cnt, min(x.pos)::int as best, jsonb_object_agg(x.game_id, x.pos) as ranks
+          from picked x group by x.player_id
+    )
+    select coalesce(jsonb_agg(jsonb_build_object('nick', coalesce(p.nickname, ''), 'cnt', per.cnt, 'best', per.best, 'ranks', per.ranks)
+                              order by per.cnt desc, per.best, p.nickname, per.player_id), '[]'::jsonb)
+      from per left join public."MF_players" p on p.player_id = per.player_id;
+$$;
+
+revoke all on function public."MF_log_plays"(uuid, jsonb)          from public;
+revoke all on function public."MF__stats_range"(date, date)        from public, anon, authenticated;
+revoke all on function public."MF_stats_games"(date, date)         from public;
+revoke all on function public."MF_stats_daily"(date, date)         from public;
+revoke all on function public."MF_stats_players"(date, date)       from public;
+grant execute on function public."MF_log_plays"(uuid, jsonb)       to anon, authenticated;
+grant execute on function public."MF_stats_games"(date, date)      to anon, authenticated;
+grant execute on function public."MF_stats_daily"(date, date)      to anon, authenticated;
+grant execute on function public."MF_stats_players"(date, date)    to anon, authenticated;
 
 
 -- 讓 Supabase 的 API 層立刻認得新函式（不執行也會在幾秒內自動更新）

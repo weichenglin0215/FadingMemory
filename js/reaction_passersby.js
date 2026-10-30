@@ -12,6 +12,8 @@
      作答限時 ANS 8→4 秒（線性，RAMP_LEVELS 關走完）。
    · 問的部位：只會問「有顏色變化」的衣物（衣服、帽子、褲子、鞋子，依這個順序加入）。
    · 兩個人之間至少隔 MIN_SPACE px，不會重疊。
+   · V1.40.0（玩家回饋）：頭的圓形換成人像 emoji（kit.PERSON_EMOJI，同一關每個人不同的一種，存在 p.face）；emoji 先畫、帽子與衣服畫在它上面
+     （帽子的顏色是要記的重點，不能被 emoji 的頭髮蓋住）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -31,6 +33,7 @@
     var PARTS0 = 2, PARTS_STEP = 2;             /* 第 1 關有顏色變化的衣物件數、每隔幾關多 1 件 */
     var REVEAL_MS = 3000;                       /* 答錯時，揭曉畫面停多久才跳結算（讓玩家看清楚） */
     var NEUTRAL = '#B8B2A3';                    /* 沒有顏色變化的衣物，大家都是這個灰色 */
+    var FACE_SIZE = 26;                         /* 頭（人像 emoji）的字級，單位是 SVG 座標（70×160 的畫布；原本頭是半徑 13 的圓） */
     var COLORS = [
         { name: '紅', hex: '#D9423A' }, { name: '橙', hex: '#F0892B' }, { name: '黃', hex: '#EAC12B' }, { name: '綠', hex: '#4C9A5B' },
         { name: '藍', hex: '#3E86C4' }, { name: '紫', hex: '#8A5CC4' }, { name: '粉紅', hex: '#EE86B4' }
@@ -51,8 +54,9 @@
     function makeLevel(level, rand, W) {
         rand = rand || Math.random; W = W || 472;
         var sp = speedAt(level), gap = gapAt(level), people = [], t = 0, n = peopleAt(level), vary = partsFor(level);
+        var faces = kit.shuffle(kit.PERSON_EMOJI.map(function (e, k) { return k; }), rand);          /* 每個人一種臉（人數 ≤ 26，不重複） */
         for (var i = 0; i < n; i++) {
-            var cols = kit.shuffle([0, 1, 2, 3, 4, 5, 6], rand), p = { hat: -1, shirt: -1, pants: -1, shoes: -1, t: 0 };
+            var cols = kit.shuffle([0, 1, 2, 3, 4, 5, 6], rand), p = { hat: -1, shirt: -1, pants: -1, shoes: -1, t: 0, face: faces[i % faces.length] };
             vary.forEach(function (k, j) { p[k] = cols[j]; });
             if (i > 0) t += Math.max(MIN_SPACE / sp, gap * kit.randFloat(JITTER[0], JITTER[1], rand));
             p.t = t; people.push(p);
@@ -70,13 +74,15 @@
         if (n >= 3) return '再接再厲！';
         return '看仔細一點，再來一次！';
     }
-    /* 一個小人的 SVG（70×160）：帽子、頭、衣服、褲子、鞋子各一種顏色 */
+    /* 一個小人的 SVG（70×160）：人像 emoji 的頭（p.face）、帽子、衣服、褲子、鞋子；帽子、衣服、褲子、鞋子各一種顏色。
+       emoji 最先畫，帽子與衣服蓋在它上面（帽子下緣與衣服上緣會蓋住 emoji 的邊） */
     function personSvg(p, hi) {
         var c = function (k) { return p[k] < 0 ? NEUTRAL : COLORS[p[k]].hex; };
         var ring = function (k) { return hi === k ? ' stroke="#4A3B1E" stroke-width="5" stroke-dasharray="6 4"' : ' stroke="#4A3B1E" stroke-width="2.5"'; };
+        var face = kit.PERSON_EMOJI[(p.face | 0) % kit.PERSON_EMOJI.length];
         return '<svg viewBox="0 0 70 160" width="' + PW + '" height="' + PH + '" xmlns="http://www.w3.org/2000/svg">' +
+            '<text x="35" y="39" font-size="' + FACE_SIZE + '" text-anchor="middle" dominant-baseline="central">' + face + '</text>' +
             '<rect x="16" y="6" width="38" height="16" rx="6" fill="' + c('hat') + '"' + ring('hat') + '/><rect x="10" y="20" width="50" height="6" rx="3" fill="' + c('hat') + '"' + ring('hat') + '/>' +
-            '<circle cx="35" cy="38" r="13" fill="#F2D3B0" stroke="#4A3B1E" stroke-width="2.5"/>' +
             '<rect x="14" y="54" width="42" height="46" rx="10" fill="' + c('shirt') + '"' + ring('shirt') + '/>' +
             '<rect x="16" y="98" width="17" height="42" rx="5" fill="' + c('pants') + '"' + ring('pants') + '/><rect x="37" y="98" width="17" height="42" rx="5" fill="' + c('pants') + '"' + ring('pants') + '/>' +
             '<ellipse cx="24" cy="146" rx="12" ry="7" fill="' + c('shoes') + '"' + ring('shoes') + '/><ellipse cx="46" cy="146" rx="12" ry="7" fill="' + c('shoes') + '"' + ring('shoes') + '/></svg>';
@@ -159,7 +165,7 @@
         rule: '幾個人會從畫面右邊走進來、左邊走出去，**他們身上有幾件衣物的顏色不一樣**，其他衣物都是灰色。他們走完之後，會問你**「第幾個人的哪一件是什麼顏色」**。答錯或來不及就結束，看你能過幾關。越後面人越多、顏色不一樣的衣物越多、走得越快！',
         mount: mount,
         score: SCORE,
-        test: { peopleAt: peopleAt, PEOPLE0: PEOPLE0, PEOPLE_STEP: PEOPLE_STEP, PARTS0: PARTS0, PARTS_STEP: PARTS_STEP, REVEAL_MS: REVEAL_MS, PH: PH, NEUTRAL: NEUTRAL, VARY_ORDER: VARY_ORDER, speedAt: speedAt, gapAt: gapAt, ansMs: ansMs, partsFor: partsFor, makeLevel: makeLevel, xAt: xAt, question: question, personSvg: personSvg, rating: rating, COLORS: COLORS, PARTS: PARTS, PW: PW, MIN_SPACE: MIN_SPACE, RAMP_LEVELS: RAMP_LEVELS, SPEED: SPEED, GAP: GAP, ANS_S: ANS_S, JITTER: JITTER }
+        test: { peopleAt: peopleAt, PEOPLE0: PEOPLE0, PEOPLE_STEP: PEOPLE_STEP, PARTS0: PARTS0, PARTS_STEP: PARTS_STEP, REVEAL_MS: REVEAL_MS, PH: PH, FACE_SIZE: FACE_SIZE, NEUTRAL: NEUTRAL, VARY_ORDER: VARY_ORDER, speedAt: speedAt, gapAt: gapAt, ansMs: ansMs, partsFor: partsFor, makeLevel: makeLevel, xAt: xAt, question: question, personSvg: personSvg, rating: rating, COLORS: COLORS, PARTS: PARTS, PW: PW, MIN_SPACE: MIN_SPACE, RAMP_LEVELS: RAMP_LEVELS, SPEED: SPEED, GAP: GAP, ANS_S: ANS_S, JITTER: JITTER }
     };
     Reaction.register(G);
 })();

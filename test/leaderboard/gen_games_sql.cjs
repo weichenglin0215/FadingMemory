@@ -6,7 +6,9 @@
 // 用法（在專案根目錄）：
 //   node test/leaderboard/gen_games_sql.cjs            只把產生的 values 列印出來給你看
 //   node test/leaderboard/gen_games_sql.cjs --write    直接改寫 supabase/MF_leaderboard.sql 裡
-//                                                     「自動產生開始／結束」兩行標記之間的內容
+//                                                     「自動產生開始／結束」兩行標記之間的內容；
+//                                                     同時重寫 js/score_specs.js 與 admin/stats.html 裡的遊戲資料（V1.39.0：
+//                                                     後台統計頁自己是一個獨立的 html，遊戲名稱、分類、成績格式要靠這裡抄進去）
 //   node test/leaderboard/gen_games_sql.cjs --check    只檢查 SQL 檔跟遊戲檔案是否同步（不同步回傳 1）
 //   node test/leaderboard/gen_games_sql.cjs --table    印出 Markdown 表格（每款遊戲的成績規格），貼進 note/世界排行榜說明.md 用
 // 改完之後，到 Supabase 的 SQL Editor 重新貼上執行整份 supabase/MF_leaderboard.sql（可重複執行）。
@@ -17,6 +19,11 @@ const { loadAllGames, ROOT } = require('./all_games.cjs');
 const SQL_FILE = ROOT + 'supabase/MF_leaderboard.sql';
 // 另外一份產物：js/score_specs.js（每款遊戲的成績顯示格式；主選單「成績」彈窗沒有載入遊戲檔案，要靠它把數字說成「12.3456 秒」「第 21 關」）
 const SPECS_FILE = ROOT + 'js/score_specs.js';
+// 第三份產物：admin/stats.html 裡「自動產生開始／結束」標記之間的遊戲資料（分類、順序、名稱、成績格式）。
+//   後台統計頁（V1.39.0）是獨立的單一 html（雙擊就能開、不載入遊戲的任何 js），所以這些資料用抄的；跟遊戲不同步時 --check 與 t_adminstats.js 會失敗。
+const STATS_FILE = ROOT + 'admin/stats.html';
+const STATS_BEGIN = '/* >>> 自動產生開始';
+const STATS_END = '/* <<< 自動產生結束 */';
 const BEGIN = '-- >>> 自動產生開始';
 const END = '-- <<< 自動產生結束';
 
@@ -75,7 +82,40 @@ function buildSpecs(games) {
     + 'window.FM_SCORE_SPECS = {\n' + lines.join(',\n') + '\n};\n';
 }
 
-module.exports = { buildRows, buildBlock, buildTable, buildSpecs, patch, rowOf, SQL_FILE, SPECS_FILE, BEGIN, END };
+// 載入 js/menu.js 拿到 FMMenu（遊戲清單與分類；menu.js 載入時只會呼叫 UI.h／UI.ready，用假的就行）。要先 loadAllGames()（它會設好 window／UI）
+function loadMenu() {
+  global.UI.ready = global.UI.ready || (() => { });
+  global.UI.art = global.UI.art || (() => '');
+  if (!global.FMMenu) require(ROOT + 'js/menu.js');
+  return global.FMMenu;
+}
+
+// admin/stats.html 的遊戲資料：CATS（七個分類）、ORDER（選單裡的順序）、GAMES（id → 名稱、分類、成績格式）。menu＝FMMenu
+function buildStatsBlock(games, menu) {
+  const byId = {};
+  games.forEach(g => { byId[g.id] = g; });
+  const cats = menu.GAME_TABS.filter(t => t.id !== 'all' && t.id !== 'recent').map(t => ({ id: t.id, name: t.name }));
+  const lines = menu.GAME_CELLS.map(c => {
+    const o = { name: c.name, cat: c.cat };
+    const s = byId[c.id] && byId[c.id].score;
+    if (s) { o.better = s.better; o.decimals = s.decimals || 0; o.format = s.format || '{v}'; if (s.group) o.group = true; }
+    return '        ' + JSON.stringify(c.id) + ': ' + JSON.stringify(o);
+  });
+  return STATS_BEGIN + '（node test/leaderboard/gen_games_sql.cjs --write 會重寫這兩行標記之間的內容，請不要手改；來源：js/menu.js 的分類與遊戲清單、各遊戲檔案的 score 設定） */\n'
+    + '    var CATS = ' + JSON.stringify(cats) + ';\n'
+    + '    var ORDER = ' + JSON.stringify(menu.GAME_CELLS.map(c => c.id)) + ';\n'
+    + '    var GAMES = {\n' + lines.join(',\n') + '\n    };\n'
+    + '    ' + STATS_END;
+}
+
+// 把 html 裡兩個標記之間的內容換成 block；回傳新的內容（找不到標記就丟錯）
+function patchStats(html, block) {
+  const a = html.indexOf('    ' + STATS_BEGIN), b = html.indexOf(STATS_END);
+  if (a < 0 || b < 0 || b < a) throw new Error('admin/stats.html 找不到「' + STATS_BEGIN + '」與「' + STATS_END + '」標記');
+  return html.slice(0, a) + '    ' + block + html.slice(b + STATS_END.length);
+}
+
+module.exports = { buildRows, buildBlock, buildTable, buildSpecs, buildStatsBlock, patchStats, loadMenu, patch, rowOf, SQL_FILE, SPECS_FILE, STATS_FILE, BEGIN, END, STATS_BEGIN, STATS_END };
 
 if (require.main === module) {
   const games = loadAllGames();
@@ -94,15 +134,21 @@ if (require.main === module) {
     const specsRaw = fs.existsSync(SPECS_FILE) ? fs.readFileSync(SPECS_FILE, 'utf8') : '';
     const specsCrlf = specsRaw.includes('\r\n');
     const specsCur = specsRaw.replace(/\r\n/g, '\n');
+    // 後台統計頁的遊戲資料
+    const statsRaw = fs.existsSync(STATS_FILE) ? fs.readFileSync(STATS_FILE, 'utf8') : null;
+    const statsCrlf = !!statsRaw && statsRaw.includes('\r\n');
+    const statsNext = statsRaw == null ? null : patchStats(statsRaw.replace(/\r\n/g, '\n'), buildStatsBlock(games, loadMenu()));
+    const statsCur = statsRaw == null ? null : statsRaw.replace(/\r\n/g, '\n');
     if (arg === '--check') {
-      if (next === cur && specsNext === specsCur) console.log('OK：MF_leaderboard.sql 與 js/score_specs.js 都與遊戲檔案同步（' + buildRows(games).length + ' 款）');
+      if (next === cur && specsNext === specsCur && statsNext === statsCur) console.log('OK：MF_leaderboard.sql、js/score_specs.js、admin/stats.html 都與遊戲檔案同步（' + buildRows(games).length + ' 款）');
       else { console.log('不同步：請執行 node test/leaderboard/gen_games_sql.cjs --write'); process.exit(1); }
     } else if (arg === '--table') {
       console.log(buildTable(games));
     } else if (arg === '--write') {
       fs.writeFileSync(SQL_FILE, crlf ? next.replace(/\n/g, '\r\n') : next, 'utf8');
       fs.writeFileSync(SPECS_FILE, specsCrlf || !specsRaw ? specsNext.replace(/\n/g, '\r\n') : specsNext, 'utf8');
-      console.log('已更新 ' + path.relative(ROOT, SQL_FILE) + '：' + buildRows(games).length + ' 款遊戲；已更新 ' + path.relative(ROOT, SPECS_FILE));
+      if (statsNext != null) fs.writeFileSync(STATS_FILE, statsCrlf ? statsNext.replace(/\n/g, '\r\n') : statsNext, 'utf8');
+      console.log('已更新 ' + path.relative(ROOT, SQL_FILE) + '：' + buildRows(games).length + ' 款遊戲；已更新 ' + path.relative(ROOT, SPECS_FILE) + (statsNext != null ? '、' + path.relative(ROOT, STATS_FILE) : ''));
     } else { console.log('不認得的參數：' + arg); process.exit(2); }
   }
 }

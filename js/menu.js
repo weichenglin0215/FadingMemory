@@ -6,7 +6,9 @@
          邏輯／手感／目測），頁籤文字是直式排列，取代以前的「上一頁／下一頁」。
      彈窗做法跟 js/share.js 的 QR Code 彈窗同一套：裝在 #stage 裡才會跟著整體縮放、第一次打開才建。
    · V1.25.0：遊戲格子的名稱下面多一排「五星評價」的平均星數（js/rating.js）；打開遊戲彈窗時，如果這位玩家在某些遊戲
-     被別人超越（世界前 30 名），會自動跳出「阿嬤都比你厲害」彈窗（彈窗公版 Dlg.open，見下面 checkGrandma）。
+     被別人超越（世界前 30 名），會自動跳出「阿嬤都比你厲害」彈窗（彈窗公版 Dlg.open，見下面 checkPopup）。
+   · V1.39.0：每次都跳「阿嬤都比你厲害」太有壓力又單調，改成三種輪流：阿嬤都比你厲害／來都來了，快開一局（沒玩過、很久沒玩的）／
+     從從容容、游刃有餘（最擅長的）。本機記錄玩過哪些遊戲與日期（js/plays.js）。
    · 選主軸：quiz.html?theme=<id>（js/quiz_gen.js 的 QuizGen.session() 已支援）。
    · 選遊戲：reaction.html?game=<id>（js/reaction.js 讀這個參數指定要玩哪一個）。
    · 遊戲頁左上角的「返回」會回到 index.html?games=1：進選單就直接打開遊戲列表（玩家通常是想換一款），不用再按「秒反應」。 */
@@ -348,19 +350,31 @@
         return cell;
     }
 
-    /* ═══ 「阿嬤都比你厲害」（V1.25.0）═══
-       玩家按「秒反應」打開「選一個想玩的遊戲」時，查這位玩家在世界排行榜上「被超越」的遊戲——有人在他創下（或刷新）紀錄「之後」才排到他前面；
-       他創紀錄時就已經比他好的人不算，所以不是第一名不會跳，只有真的被別人擠下去才跳
-       （Leaderboard.overtaken → 資料庫 MF_get_overtaken；兩個人的成績都在前 30 名），有的話自動跳出這個彈窗：
-       最多 GRANDMA_MAX 款、最近被超越的排前面；每一格跟選單的格子一樣（縮圖、名稱、平均星數），
-       另外加上 💔 和這位玩家目前的名次（大字、粗體、黑字白框），點格子直接進那款遊戲。
-       · 沒有暱稱（＝從來沒送過成績）的玩家完全不連網；查到的結果存 60 秒，頁面一打開就先在背景抓好。
-       · 打開選單之後 GRANDMA_WAIT_MS 內還沒拿到結果（網路很慢）就這次不跳，免得玩家已經在滑選單時突然被打斷。 */
+    /* ═══ 打開「選一個想玩的遊戲」時輪流跳出的推薦彈窗（V1.25.0 起「阿嬤都比你厲害」；V1.39.0 起三種輪流）═══
+       以前每次打開（包括從遊戲「返回」）只要被超越就跳「阿嬤都比你厲害」，玩家覺得壓力大又單調；現在三種輪流：
+         · grandma 「阿嬤都比你厲害」：在世界排行榜被別人超越的遊戲（Leaderboard.overtaken → 資料庫 MF_get_overtaken；
+           有人在他創下（或刷新）紀錄「之後」才排到他前面，兩人都在前 30 名；他創紀錄時就已經比他好的人不算），格子加 💔 與目前名次；
+         · comeon  「來都來了，快開一局」：沒玩過的遊戲、或很久（FMPlays.STALE_DAYS 天）沒玩的遊戲（js/plays.js 的本機紀錄，不連網）；
+         · master  「從從容容、游刃有餘」：最擅長的遊戲（世界名次最前面的，不夠用玩最多局的補；名次來自 MF_get_my_ranks，沒登入就只看局數）。
+       輪流規則：從「上一次跳出的那種」的下一種開始（沒有紀錄就從 comeon 開始，對新玩家比較友善），沒有資料的種類（例如沒被超越、
+       還沒玩過幾局）就跳過換下一種，三種都沒有就不跳。上一次跳出哪一種存在 localStorage（fm.menu.popup）。
+       三種版面完全一樣（3 欄最多 2 排共 6 款；每一格跟選單的格子一樣：縮圖、名稱、平均星數，外加右上角的表情與縮圖下緣的標籤），點格子直接進那款遊戲。
+       · 阿嬤那種需要連網（只有登入的玩家才會連，結果存 60 秒，頁面一打開就先在背景抓好）；打開選單之後 POPUP_WAIT_MS 內還沒決定要跳什麼
+         （網路很慢）就這次不跳，免得玩家已經在滑選單時突然被打斷。 */
     var GRANDMA_MAX = 6;
-    var GRANDMA_WAIT_MS = 4000;
-    var GRANDMA_DELAY_MS = 350;      /* 選單先出現一下下再跳彈窗，玩家才看得出是「選單上又跳出來的通知」 */
-    var grandmaCtl = null;           /* 開著的彈窗（Dlg.open 的控制物件）；null＝沒開 */
-    var grandmaToken = 0;            /* 每次打開／關閉選單都 +1：網路回來時如果號碼不一樣，代表選單已經關掉或重開過，不要再跳 */
+    var POPUP_MAX = 6;
+    var POPUP_WAIT_MS = 4000;
+    var GRANDMA_WAIT_MS = POPUP_WAIT_MS;     /* 舊名稱（V1.25.0），保留給舊的呼叫與測試 */
+    var POPUP_DELAY_MS = 350;        /* 選單先出現一下下再跳彈窗，玩家才看得出是「選單上又跳出來的通知」 */
+    var POPUP_KEY = 'fm.menu.popup'; /* 上一次跳出的是哪一種 */
+    var POPUP_ORDER = ['comeon', 'grandma', 'master'];
+    var POPUP_META = {
+        grandma: { cls: 'dlg--grandma', title: '阿嬤都比你厲害', sub: '有人超越你了，點一款搶回來！' },
+        comeon: { cls: 'dlg--grandma dlg--comeon', title: '來都來了，快開一局', sub: '你還沒玩過或好久沒玩了！' },
+        master: { cls: 'dlg--grandma dlg--master', title: '從從容容、游刃有餘', sub: '這幾款是你的拿手好戲，再來一局！' }
+    };
+    var popupCtl = null;             /* 開著的彈窗（Dlg.open 的控制物件）；null＝沒開 */
+    var popupToken = 0;              /* 每次打開／關閉選單都 +1：網路回來時如果號碼不一樣，代表選單已經關掉或重開過，不要再跳 */
 
     /* 資料庫回傳的清單 → 要顯示的格子：只留選單裡有的遊戲、不重複、名次至少第 2、最多 GRANDMA_MAX 款、順序不變（純函式，t_menu.js 測試） */
     function grandmaItems(list) {
@@ -373,44 +387,125 @@
         return out;
     }
 
-    /* 一格：跟選單的格子同一個做法（gameCell），再疊上 💔（右上角）與「第 N 名」（縮圖下緣，黑字白框） */
-    function grandmaCell(it) {
-        var cell = gameCell(it.cell);
-        cell.setAttribute('aria-label', it.cell.name + '，你目前是世界第 ' + it.rank + ' 名');
+    /* 選單裡所有遊戲的 id（給 js/plays.js 的推薦函式用） */
+    function allIds() { return GAME_CELLS.map(function (c) { return c.id; }); }
+
+    /* 「來都來了」的格子：[{ cell, kind: 'new'｜'stale', days }]（沒玩過的優先、很久沒玩的補，見 FMPlays.suggestFresh）；
+       plays／opts 可以傳進來（測試用），預設讀本機紀錄 */
+    function comeonItems(plays, opts) {
+        if (!window.FMPlays) return [];
+        opts = opts || {};
+        return FMPlays.suggestFresh(allIds(), plays || FMPlays.all(), { n: POPUP_MAX, today: opts.today, rand: opts.rand })
+            .filter(function (x) { return gameById[x.id]; })
+            .map(function (x) { return { cell: gameById[x.id], kind: x.kind, days: x.days }; });
+    }
+
+    /* 「從從容容」的格子：[{ cell, rank（沒有名次是 null）, n }]（見 FMPlays.suggestMaster）；ranks：[{ game_id, rank }] */
+    function masterItems(ranks, plays) {
+        if (!window.FMPlays) return [];
+        return FMPlays.suggestMaster(allIds(), plays || FMPlays.all(), ranks, { n: POPUP_MAX })
+            .filter(function (x) { return gameById[x.id]; })
+            .map(function (x) { return { cell: gameById[x.id], rank: x.rank, n: x.n }; });
+    }
+
+    /* 這次要依序試哪幾種：從「上一次跳出的那種」的下一種開始，繞一圈（沒有紀錄或不認得就從第一種 comeon 開始）。純函式 */
+    function popupOrder(last) {
+        var i = POPUP_ORDER.indexOf(last), out = [];
+        for (var k = 1; k <= POPUP_ORDER.length; k++) out.push(POPUP_ORDER[(i + k) % POPUP_ORDER.length]);
+        return out;
+    }
+
+    /* 縮圖下緣的標籤：名次（第 N 名，大字）或一小段文字（沒玩過／N 天沒玩／玩過 N 局） */
+    function rankBadge(rank) {
+        return h('span', { 'class': 'game-cell__rank', attrs: { 'aria-hidden': 'true' } }, [
+            h('small', { text: '第' }), h('b', { text: String(rank) }), h('small', { text: '名' })
+        ]);
+    }
+    function tagBadge(text) {
+        return h('span', { 'class': 'game-cell__rank game-cell__rank--tag', attrs: { 'aria-hidden': 'true' } }, [h('b', { text: text })]);
+    }
+
+    /* 一格：跟選單的格子同一個做法（gameCell），再疊上右上角的表情與縮圖下緣的標籤。
+       grandma：💔＋第 N 名（黑字白框）；comeon：🆕沒玩過／💤 N 天沒玩；master：👑（第 1 名）／😎＋第 N 名，沒有名次的顯示玩過幾局 */
+    function popupCell(kind, it) {
+        var cell = gameCell(it.cell), emoji, badge, say;
+        if (kind === 'grandma') {
+            emoji = '💔'; badge = rankBadge(it.rank); say = '你目前是世界第 ' + it.rank + ' 名';
+        } else if (kind === 'comeon') {
+            var isNew = it.kind === 'new';
+            emoji = isNew ? '🆕' : '💤';
+            badge = tagBadge(isNew ? '沒玩過' : it.days + '天沒玩'); say = isNew ? '你還沒玩過' : '你已經 ' + it.days + ' 天沒玩了';
+        } else {
+            emoji = it.rank === 1 ? '👑' : '😎';
+            badge = it.rank ? rankBadge(it.rank) : tagBadge('玩過' + it.n + '局'); say = it.rank ? '你是世界第 ' + it.rank + ' 名' : '你玩過 ' + it.n + ' 局';
+        }
+        cell.setAttribute('aria-label', it.cell.name + '，' + say);
         var pic = cell.querySelector('.game-cell__pic');
-        pic.appendChild(h('span', { 'class': 'game-cell__heart', text: '💔', attrs: { 'aria-hidden': 'true' } }));
-        pic.appendChild(h('span', { 'class': 'game-cell__rank', attrs: { 'aria-hidden': 'true' } }, [
-            h('small', { text: '第' }), h('b', { text: String(it.rank) }), h('small', { text: '名' })
-        ]));
+        pic.appendChild(h('span', { 'class': 'game-cell__heart', text: emoji, attrs: { 'aria-hidden': 'true' } }));
+        pic.appendChild(badge);
         return cell;
     }
 
-    function closeGrandma() {
-        grandmaToken++;
-        if (grandmaCtl) grandmaCtl.close();
+    function closePopup() {
+        popupToken++;
+        if (popupCtl) popupCtl.close();
     }
 
-    function showGrandma(items) {
-        grandmaCtl = Dlg.open({
-            cls: 'dlg--grandma', title: '阿嬤都比你厲害', sub: '有人超越你了，點一款搶回來！',
-            children: [h('div', { 'class': 'gm-grid' }, items.map(grandmaCell))],
+    function showPopup(kind, items) {
+        var m = POPUP_META[kind];
+        UI.store.set(POPUP_KEY, kind);
+        popupCtl = Dlg.open({
+            cls: m.cls, title: m.title, sub: m.sub,
+            children: [h('div', { 'class': 'gm-grid' }, items.map(function (it) { return popupCell(kind, it); }))],
             buttons: [{ text: '關閉', kind: 'line', cls: 'btn--sm' }],
-            onClose: function () { grandmaCtl = null; }
+            onClose: function () { popupCtl = null; }
         });
     }
 
-    /* 選單打開時呼叫：查被超越的遊戲，有的話跳出彈窗 */
-    function checkGrandma() {
-        if (!window.Leaderboard || !Leaderboard.overtaken || !window.Dlg) return;
-        closeGrandma();
-        var token = grandmaToken, t0 = Date.now();
-        Leaderboard.overtaken().then(function (list) {
-            var items = grandmaItems(list);
-            if (!items.length || token !== grandmaToken || gameDlg.hidden || Date.now() - t0 > GRANDMA_WAIT_MS) return;
-            UI.wait(GRANDMA_DELAY_MS).then(function () {
-                if (token === grandmaToken && !gameDlg.hidden) showGrandma(items);
-            });
+    /* 等 promise，最多等 ms 毫秒（逾時、失敗都當作「沒有資料」回傳 []） */
+    function within(p, ms) {
+        return new Promise(function (resolve) {
+            var done = false;
+            var t = window.setTimeout(function () { if (!done) { done = true; resolve([]); } }, Math.max(0, ms));
+            p.then(function (v) { if (!done) { done = true; window.clearTimeout(t); resolve(v); } },
+                function () { if (!done) { done = true; window.clearTimeout(t); resolve([]); } });
         });
+    }
+
+    /* 某一種彈窗要放哪些格子（Promise，一定 resolve；空陣列＝這一種這次不跳） */
+    function popupItems(kind, ms) {
+        if (kind === 'grandma') {
+            if (!window.Leaderboard || !Leaderboard.overtaken) return Promise.resolve([]);
+            return within(Leaderboard.overtaken().then(grandmaItems), ms);
+        }
+        if (kind === 'comeon') return Promise.resolve(comeonItems());
+        if (kind === 'master') {
+            var lb = window.Leaderboard;
+            if (!lb || !lb.myRanks) return Promise.resolve(masterItems(null));
+            /* 名次變動很慢：有上次存的就直接用，同時在背景更新（下次用）；沒有存過才等網路 */
+            var cached = lb.cachedMyRanks && lb.cachedMyRanks();
+            if (cached) { lb.myRanks(); return Promise.resolve(masterItems(cached)); }
+            return within(lb.myRanks().then(function (r) { return masterItems(r); }), ms);
+        }
+        return Promise.resolve([]);
+    }
+
+    /* 選單打開時呼叫：依輪流順序找出這次要跳的那一種，有的話跳出彈窗 */
+    function checkPopup() {
+        if (!window.Dlg) return;
+        closePopup();
+        var token = popupToken, t0 = Date.now(), kinds = popupOrder(UI.store.get(POPUP_KEY, null));
+        (function tryAt(i) {
+            if (i >= kinds.length || token !== popupToken || gameDlg.hidden) return;
+            popupItems(kinds[i], POPUP_WAIT_MS - (Date.now() - t0)).then(function (items) {
+                if (token !== popupToken || gameDlg.hidden) return;
+                if (!items.length) { tryAt(i + 1); return; }
+                if (Date.now() - t0 > POPUP_WAIT_MS) return;
+                UI.wait(POPUP_DELAY_MS).then(function () {
+                    if (token === popupToken && !gameDlg.hidden) showPopup(kinds[i], items);
+                });
+            });
+        })(0);
     }
 
     /* 舞台目前的縮放倍率（手機上通常小於 1）：getBoundingClientRect 量到的是「螢幕像素」，要除以它才是舞台裡的像素 */
@@ -437,7 +532,7 @@
         var tabEls = {};             /* 頁籤按鈕（id → 按鈕） */
         var curTab = 'all';
 
-        function hide() { gameDlg.hidden = true; closeGrandma(); dropGamesParam(); }
+        function hide() { gameDlg.hidden = true; closePopup(); dropGamesParam(); }
 
         /* 標題列：左上「返回」（樣式跟遊戲畫面的標題列同一套 .bar__back），標題置中 */
         var back = h('button', {
@@ -529,7 +624,7 @@
                 scroller.scrollTo(0);
                 if (curTab === 'all') scrollToLast();
                 if (window.Rating) Rating.loadStats().then(paintRates);              /* 快取過期才會真的連網 */
-                checkGrandma();
+                checkPopup();
             }
         };
     }
@@ -540,7 +635,8 @@
         GAME_CELLS: GAME_CELLS, GAME_TABS: GAME_TABS, THEME_CELLS: THEME_CELLS, tabGames: tabGames, RECENT_MAX: RECENT_MAX,
         gameById: gameById, recentIds: recentIds, pickGame: pickGame,
         grandmaItems: grandmaItems, GRANDMA_MAX: GRANDMA_MAX,
-        keys: { last: LAST_GAME_KEY, recent: RECENT_KEY, tab: TAB_KEY }
+        comeonItems: comeonItems, masterItems: masterItems, popupOrder: popupOrder, POPUP_ORDER: POPUP_ORDER, POPUP_META: POPUP_META, POPUP_MAX: POPUP_MAX, POPUP_WAIT_MS: POPUP_WAIT_MS,
+        keys: { last: LAST_GAME_KEY, recent: RECENT_KEY, tab: TAB_KEY, popup: POPUP_KEY }
     };
 
     /* UI.ready()：等網頁 DOM 都準備好了才執行裡面的程式（這時才找得到 getElementById 要找的元素）。 */
@@ -557,6 +653,8 @@
 
         themeDlg = document.getElementById('theme-dlg');
         gameDlg = document.getElementById('game-dlg');
+        /* 第一次（還沒有「玩過哪些遊戲」的紀錄）：用本機的最佳紀錄、最近玩過的補一份起始紀錄，推薦彈窗才不會把玩過的當成沒玩過 */
+        if (window.FMPlays) FMPlays.bootstrap(allIds());
 
         /* 替兩個大按鈕綁定點擊：第一次點才建立彈窗，之後只是把 hidden 設成 false 讓它顯示出來。 */
         document.getElementById('mode-test').addEventListener('click', function () {

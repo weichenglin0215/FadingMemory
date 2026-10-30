@@ -632,9 +632,11 @@
     outline-offset: -4px;
 }
 
-/* ═══ 阿嬤都比你厲害（V1.25.0，js/menu.js 的 checkGrandma）═══
+/* ═══ 阿嬤都比你厲害（V1.25.0，js/menu.js 的 checkPopup）═══
    打開「選一個想玩的遊戲」時，如果這位玩家在某些遊戲被別人超越，就跳出這個彈窗（外框與卡片是彈窗公版 .dlg，css/dialog.css）。
-   格子跟選單的遊戲格子完全一樣（.game-cell），只多兩樣東西：右上角的 💔、縮圖下緣的「第 N 名」（大字、粗體、黑字白框）。 */
+   格子跟選單的遊戲格子完全一樣（.game-cell），只多兩樣東西：右上角的 💔、縮圖下緣的「第 N 名」（大字、粗體、黑字白框）。
+   V1.39.0 起同一個版面也給另外兩種推薦彈窗用（輪流跳出）：「來都來了，快開一局」（.dlg--comeon，標題藍色）、
+   「從從容容、游刃有餘」（.dlg--master，標題綠色）；它們的 class 都帶 .dlg--grandma（版面與層級共用），只有標題顏色不同。 */
 .dlg--grandma {
     z-index: 35;
     /* 疊在全螢幕的遊戲選單（.game-dlg，z-index 30）上面 */
@@ -642,6 +644,14 @@
 
 .dlg--grandma .dlg__title {
     color: var(--c-recall);
+}
+
+.dlg--comeon .dlg__title {
+    color: var(--c-blue);
+}
+
+.dlg--master .dlg__title {
+    color: var(--c-ok);
 }
 
 /* 3 欄，最多 2 排（最多 6 款） */
@@ -705,6 +715,15 @@
 
 .game-cell__rank small {
     font-size: var(--fs-sm);
+}
+
+/* 文字標籤（沒玩過／N天沒玩／玩過N局）：比「第 N 名」的大數字小很多，而且不換行，五個字才放得進一格（格子寬約 136px） */
+.game-cell__rank--tag {
+    white-space: nowrap;
+}
+
+.game-cell__rank--tag b {
+    font-size: calc(var(--fs-sm) - 2px);
 }
 
 /* 使用者在系統設定「減少動態效果」時，關掉彈窗動畫與縮放過渡 */

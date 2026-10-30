@@ -1800,6 +1800,46 @@
     opacity: 0.75;
 }
 
+/* 被簾子蓋住的那一段軌跡（揭曉第二段，橘色虛線，跟玩家看得到的藍色實線分開） */
+.bo-trail--hid {
+    stroke: var(--c-orange);
+    stroke-dasharray: 8 6;
+    opacity: 0.95;
+}
+
+/* 玩家看到的最後位置：虛線圈（揭曉第一段閃爍，第二段起一直留著）與「最後看到」標籤 */
+.bo-seen {
+    fill: none;
+    stroke: var(--c-blue);
+    stroke-width: 3;
+    stroke-dasharray: 5 4;
+    opacity: 0;
+}
+
+.bo-seen--on {
+    opacity: 1;
+    animation: bo-seen-blink 0.7s ease-in-out infinite;
+}
+
+.bo-seen--keep {
+    opacity: 0.85;
+}
+
+@keyframes bo-seen-blink {
+    0%, 100% { stroke-opacity: 1; }
+    50% { stroke-opacity: 0.2; }
+}
+
+.bo-seen__t {
+    font-size: 17px;
+    font-weight: var(--fw-black);
+    fill: var(--c-blue);
+    stroke: var(--c-card-alt);
+    stroke-width: 4px;
+    paint-order: stroke;
+    pointer-events: none;
+}
+
 /* 球（橘色） */
 .bo-ball {
     fill: var(--c-orange);
@@ -1816,6 +1856,17 @@
 /* 收集口（可點選） */
 .bo-slot {
     cursor: pointer;
+}
+
+/* 珠子還沒掉完：收集口按鈕半透明、點了沒反應（避免誤按）；掉完就拿掉這個 class，變回正常 */
+.bo-slot--wait {
+    opacity: 0.35;
+    pointer-events: none;
+    cursor: default;
+}
+
+.bo-slot {
+    transition: opacity 0.2s;
 }
 
 /* 收集口底色 */
@@ -2239,8 +2290,9 @@
     touch-action: none;
 }
 
-/* 手指按著時變實心藍色 */
-.te-btn:active {
+/* 手指按著時變實心藍色；te-btn--held＝「同時點兩個方向」那一題已經點到的方向（放開手指也維持，直到這題結束） */
+.te-btn:active,
+.te-btn.te-btn--held {
     background: var(--c-blue);
     color: var(--c-on-accent);
 }
@@ -2612,10 +2664,11 @@
     color: var(--c-ink);
 }
 
-/* 上方那排圖形（最後一格是問號） */
+/* 上方那排圖形（最後一格是問號）。align-items: flex-start：格子不要被拉成跟最高的一格一樣高，才會是正方形（V1.40.0：下方答案框跟它同樣的長寬比） */
 .sq-row {
     flex: none;
     display: flex;
+    align-items: flex-start;
     gap: 4px;
     padding: var(--sp-3) var(--sp-2);
     background: var(--c-card);
@@ -2634,6 +2687,7 @@
 .sq-cell {
     flex: 1 1 0;
     min-width: 0;
+    min-height: 0;
     aspect-ratio: 1 / 1;
     display: flex;
     align-items: center;
@@ -2643,8 +2697,9 @@
     background: var(--c-card-alt);
 }
 
-/* 問號格（虛線框） */
+/* 問號格（虛線框）；line-height: 1 讓它的字不會把格子撐得比寬度高 */
 .sq-cell--q {
+    line-height: 1;
     font-size: var(--fs-xl);
     font-weight: var(--fw-black);
     color: var(--c-recall);
@@ -2695,26 +2750,36 @@
     color: var(--c-ink-soft);
 }
 
-/* 四個選項（2×2 格子） */
+/* 四個選項（2×2 格子）。V1.40.0（玩家回饋：答案框的圖案分不出大小）：每個選項都是「正方形」，跟上方題目格（.sq-cell）同樣的長寬比、
+   同樣的底色（--c-card-alt），圖案也占滿整個框（沒有留白、外框不佔位置），所以「圖案／框」的比例跟題目格一模一樣，只是放大了。
+   選項區是容器（container-type: size）：按鈕邊長＝(選項區寬 − 間距) ÷ 2 與 (選項區高 − 間距) ÷ 2 取小的，兩列正好放得下。
+   選項區四周留 8px，給「對／錯」的粗框（box-shadow 畫在按鈕外面，不佔按鈕內的空間）。 */
 .sq-opts {
     flex: 1 1 0;
     min-height: 0;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    gap: var(--sp-3);
+    grid-template-columns: repeat(2, auto);
+    justify-content: center;
+    align-content: center;
+    gap: 12px;
+    padding: 8px;
+    box-sizing: border-box;
+    container-type: size;
 }
 
-/* 單個選項 */
+/* 單個選項：正方形、淺底色、圖案占滿 */
 .sq-opt {
-    width: 100%;
-    height: 100%;
+    width: 150px;                                         /* 不支援容器單位的舊瀏覽器用這組固定大小 */
+    height: 150px;
+    width: min(calc(50cqw - 6px), calc(50cqh - 6px));     /* 12px 間距的一半；數字要跟上面 .sq-opts 的 gap 一致 */
+    height: min(calc(50cqw - 6px), calc(50cqh - 6px));
     min-height: 0;
-    padding: var(--sp-3);
+    padding: 0;
     box-sizing: border-box;
-    background: var(--c-card);
-    border: 3px solid var(--c-frame);
+    background: var(--c-card-alt);
+    border: none;
     border-radius: var(--r-lg);
+    box-shadow: 0 0 0 3px var(--c-frame);
     touch-action: none;
 }
 
@@ -2730,16 +2795,14 @@
     pointer-events: none;
 }
 
-/* 選對：正確答案的卡片加綠色粗邊框 */
+/* 選對：正確答案的卡片加綠色粗邊框（box-shadow 畫在按鈕外面，圖案跟框的比例不會變） */
 .sq-opt--ok {
-    border: 10px solid var(--c-ok);
-    padding: calc(var(--sp-3) - 7px);
+    box-shadow: 0 0 0 8px var(--c-ok);
 }
 
 /* 選錯：你選的那張加紅色粗邊框 */
 .sq-opt--bad {
-    border: 10px solid var(--c-bad-light);
-    padding: calc(var(--sp-3) - 7px);
+    box-shadow: 0 0 0 8px var(--c-bad-light);
 }
 
 /* 底下的解說：說明這個規律是什麼 */

@@ -1,10 +1,13 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_halfcrowd.js — 秒反應・一半的人（原企劃「009 一半的人」的復活版）
-   畫面上有一堆白色圓形（每個圓中間有一個黑色圓點＝中心點；個數隨關卡慢慢變多，見 N_RANGE），圓形之間最多只能重疊 OVERLAP。
-   一條豎線一開始在畫面中央，拖曳下方的橫桿把它移到「左右兩邊圓形數量一樣多」的位置，
-   按「計算數量」：豎線左邊的圓形會一個一個變成綠色、右邊的一個一個變成藍色（從離線最近的開始，左右同時數），上方同步顯示數量；
-   兩邊一樣多就過關。不一樣多的話，多出來的那一邊，超過另一邊的圓形（例如左 3 右 5：右邊第 4、5 個）改成紅色，再失敗。
-   是否在線的左右，以「圓心」為準。
+   畫面上有一堆「人」（各種人像 emoji，見 kit.PERSON_EMOJI；每個人的中心有一個小黑點＝中心點；個數隨關卡慢慢變多，見 N_RANGE），
+   人與人之間最多只能重疊 OVERLAP（碰撞範圍仍是一個半徑 R_RANGE 的圓）。
+   一條豎線一開始在畫面中央，拖曳下方的橫桿把它移到「左右兩邊人數一樣多」的位置，
+   按「計算數量」：豎線左邊的人會一個一個在底下亮起綠色圈、右邊的一個一個亮起藍色圈（從離線最近的開始，左右同時數），上方同步顯示數量；
+   兩邊一樣多就過關。不一樣多的話，多出來的那一邊，超過另一邊的人（例如左 3 右 5：右邊第 4、5 個）改亮紅色圈，再失敗。
+   是否在線的左右，以「中心點」為準。
+   · V1.40.0（玩家回饋）：圓點圖案換成人像 emoji（每個人隨機一種）。emoji 大小＝圓的直徑 × FACE_SCALE；數過之後的綠／藍／紅色圈畫在 emoji 底下；
+     中心點（SHOW_CENTER）是一顆小黑點（白邊），全部畫在最上層，不會被別人的 emoji 蓋住——判斷左右是看中心點不是臉的邊緣。
    關卡制：成績＝過了幾關。越後面圓形的分布越不平均（越擠在某一側），豎線要移得越遠、容許的位置也越窄。
    ───────────────────────────────────────────────────────────────────
    · V1.28（玩家意見：某一關會突然冒出大量圓形）：以前每一關的個數是在 N_RANGE 之間「完全隨機」抽，所以第 2 關也可能 120 個；
@@ -36,6 +39,8 @@
     var COUNT_STEP_MS = 1500;                   /* 「計算數量」整個動畫的時間 */
     var N_JITTER = 4;                           /* 每一關的圓形個數，在線性基準上下最多抖動幾個（偶數） */
     var TRIES = 60;
+    var FACE_SCALE = 1.0;                       /* 人像 emoji 的字級＝圓直徑（2r）× 這個倍率 */
+    var SHOW_CENTER = true;                     /* 要不要在每個人的中心畫小黑點（判斷左右的依據；設成 false 就只剩 emoji） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function skewAt(level) { return kit.ramp(level, 0, SKEW_MAX, RAMP_LEVELS); }
@@ -117,7 +122,7 @@
         if (n >= 12) return '數得真準！';
         if (n >= 7) return '不錯喔！';
         if (n >= 3) return '再接再厲！';
-        return '圓心不是均勻分布的，線不在正中間，再試一次！';
+        return '人不是均勻分布的，線不在正中間，再試一次！';
     }
 
     function mount(root, ctx) {
@@ -138,7 +143,7 @@
         var AH = H - TOP - BOT;                                   /* 圓形區高度 */
         var q = makeLevel(level, W, AH, api.rand);
         api.info = q;
-        console.log('[一半的人] 第 ' + level + ' 關：' + q.N + ' 個圓、不平均程度 ' + q.skew.toFixed(2) + '；正確範圍 x＝' + q.lo.toFixed(2) + '～' + q.hi.toFixed(2) + '（寬 ' + q.gap.toFixed(2) + 'px，要求至少 ' + q.need.toFixed(1) + 'px）；線從 ' + (W / 2) + ' 開始');
+        console.log('[一半的人] 第 ' + level + ' 關：' + q.N + ' 個人、不平均程度 ' + q.skew.toFixed(2) + '；正確範圍 x＝' + q.lo.toFixed(2) + '～' + q.hi.toFixed(2) + '（寬 ' + q.gap.toFixed(2) + 'px，要求至少 ' + q.need.toFixed(1) + 'px）；線從 ' + (W / 2) + ' 開始');
 
         var info = h('div', { 'class': 'hc-count' }, [
             h('span', { 'class': 'hc-count__g', text: '綠色 0' }), h('span', { 'class': 'hc-count__vs', text: '：' }), h('span', { 'class': 'hc-count__b', text: '0 藍色' })
@@ -146,12 +151,15 @@
         stage.appendChild(info);
         var svg = kit.svg('svg', { 'class': 'hc-svg', viewBox: '0 0 ' + W + ' ' + AH, width: W, height: AH }, stage);
         svg.style.top = TOP + 'px';
+        /* 每個人：底圈（平常看不見，數過之後變綠／藍／紅）＋人像 emoji；中心點全部畫在最上層（見 SHOW_CENTER） */
         var els = q.circles.map(function (c) {
             var g = kit.svg('g', {}, svg);
             var cir = kit.svg('circle', { cx: c.x.toFixed(2), cy: c.y.toFixed(2), r: c.r, 'class': 'hc-circle' }, g);
-            kit.svg('circle', { cx: c.x.toFixed(2), cy: c.y.toFixed(2), r: 2.6, 'class': 'hc-dot' }, g);
+            var face = kit.svg('text', { x: c.x.toFixed(2), y: c.y.toFixed(2), 'class': 'hc-face', 'font-size': (c.r * 2 * FACE_SCALE).toFixed(1), 'text-anchor': 'middle', 'dominant-baseline': 'central' }, g);
+            face.textContent = kit.pick(kit.PERSON_EMOJI, api.rand);
             return cir;
         });
+        if (SHOW_CENTER) q.circles.forEach(function (c) { kit.svg('circle', { cx: c.x.toFixed(2), cy: c.y.toFixed(2), r: 2.4, 'class': 'hc-dot' }, svg); });
         var line = kit.svg('line', { x1: W / 2, x2: W / 2, y1: 0, y2: AH, 'class': 'hc-line' }, svg);
 
         /* 橫桿與微調鈕 */
@@ -239,7 +247,7 @@
                     msg.textContent = '左邊 ' + left.length + ' 個、右邊 ' + right.length + ' 個，不一樣多（多的 ' + plan.extra + ' 個是紅色）'; msg.classList.add('hc-msg--bad');
                     /* 標出正確的位置：綠色虛線 */
                     var ok2 = kit.svg('line', { x1: ((q.lo + q.hi) / 2).toFixed(2), x2: ((q.lo + q.hi) / 2).toFixed(2), y1: 0, y2: AH, 'class': 'hc-line hc-line--ans' }, svg);
-                    api.fail({ delay: 1800, lines: ['這一關有 ' + q.N + ' 個圓', '你的線左邊 ' + left.length + ' 個、右邊 ' + right.length + ' 個', '剛好一半的位置在綠色虛線附近（x ' + q.lo.toFixed(4) + '～' + q.hi.toFixed(4) + '）'] });
+                    api.fail({ delay: 1800, lines: ['這一關有 ' + q.N + ' 個人', '你的線左邊 ' + left.length + ' 個、右邊 ' + right.length + ' 個', '剛好一半的位置在綠色虛線附近（x ' + q.lo.toFixed(4) + '～' + q.hi.toFixed(4) + '）'] });
                 }
             });
         }
@@ -257,10 +265,10 @@
     var G = {
         id: ID,
         name: '一半的人',
-        rule: '畫面上有一堆圓形，越後面越多，每個圓的中間有一個黑點（圓心）。拖曳下方的橫桿，把豎線移到**「左右兩邊圓心數量一樣多」**的位置，旁邊的 ◀ ▶ 可以一次移 1 像素。按「計算數量」後，左邊的圓會一個一個變綠、右邊變藍，**多出來的圓會變紅色**，兩邊一樣多才過關。圓形的分布會越來越不平均，**線不會在正中間喔**！',
+        rule: '畫面上有一堆人，越後面越多，每個人的中間有一個小黑點（中心）。拖曳下方的橫桿，把豎線移到**「左右兩邊的人數一樣多」**的位置（以中心點為準），旁邊的 ◀ ▶ 可以一次移 1 像素。按「計算數量」後，左邊的人會一個一個亮起綠圈、右邊亮起藍圈，**多出來的人會亮起紅圈**，兩邊一樣多才過關。人群的分布會越來越不平均，**線不會在正中間喔**！',
         mount: mount,
         score: SCORE,
-        test: { GAP: GAP, nAt: nAt, countPlan: countPlan, planAt: planAt, N_JITTER: N_JITTER, RAMP_LEVELS: RAMP_LEVELS, skewAt: skewAt, gapAt: gapAt, minDist: minDist, countLeft: countLeft, makeLevel: makeLevel, N_RANGE: N_RANGE, R_RANGE: R_RANGE, EDGE: EDGE, OVERLAP: OVERLAP, SKEW_MAX: SKEW_MAX }
+        test: { FACE_SCALE: FACE_SCALE, SHOW_CENTER: SHOW_CENTER, GAP: GAP, nAt: nAt, countPlan: countPlan, planAt: planAt, N_JITTER: N_JITTER, RAMP_LEVELS: RAMP_LEVELS, skewAt: skewAt, gapAt: gapAt, minDist: minDist, countLeft: countLeft, makeLevel: makeLevel, N_RANGE: N_RANGE, R_RANGE: R_RANGE, EDGE: EDGE, OVERLAP: OVERLAP, SKEW_MAX: SKEW_MAX }
     };
     Reaction.register(G);
 })();

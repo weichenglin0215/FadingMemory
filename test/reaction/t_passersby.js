@@ -52,4 +52,17 @@ ok(T.REVEAL_MS === 3000, '揭曉畫面停 3 秒');
 { const n5 = T.peopleAt(10), w = new Array(n5).fill(0); for (let i = 0; i < 5000; i++) w[T.makeLevel(10, rnd).who - 1]++; ok(w.every(c => c > 5000 / n5 * 0.8 && c < 5000 / n5 * 1.2), '被問的人平均 ' + w.join(',')); }
 ok(/<svg/.test(T.personSvg({ hat: 0, shirt: 1, pants: 2, shoes: 3 })) && T.personSvg({ hat: 0, shirt: 1, pants: 2, shoes: 3 }, 'shirt').indexOf('stroke-dasharray') > 0, 'personSvg 與標示框');
 ok(T.rating(1) !== T.rating(4) && T.rating(4) !== T.rating(7) && T.rating(7) !== T.rating(11) && T.rating(11) !== T.rating(15), '評語分級');
+// ═══ V1.40.0 玩家回饋：頭的圓形圖案改成人像 emoji ═══
+{ const kit = Reaction.kit, E = kit.PERSON_EMOJI;
+  ok(E.length === 26 && E.join('') === '👩👨🧑👧👦🧒👶👵👴🧓👩‍🦰👨‍🦰👩‍🦱👨‍🦱👩‍🦳👨‍🦳👱‍♀️👱‍♂️👸🤴👳‍♀️👳‍♂️👲🧔🤶🎅', '人像 emoji 清單 ＝ 玩家指定的 26 種（kit.PERSON_EMOJI）');
+  for (let l = 1; l <= T.RAMP_LEVELS; l++) for (let i = 0; i < 20; i++) { const q = T.makeLevel(l, rnd, 472), faces = q.people.map(p => p.face);
+    ok(faces.every(f => Number.isInteger(f) && f >= 0 && f < E.length), '每個人有一張臉（索引在清單內）'); ok(new Set(faces).size === faces.length, '同一關每個人的臉不同（第 ' + l + ' 關，' + faces.length + ' 人）'); }
+  const p = { hat: 0, shirt: 1, pants: 2, shoes: 3, face: 10 }, svg = T.personSvg(p), svgHi = T.personSvg(p, 'hat');
+  ok(svg.indexOf('<text') > 0 && svg.indexOf(E[10]) > svg.indexOf('<text') && svg.indexOf('font-size="' + T.FACE_SIZE + '"') > 0 && T.FACE_SIZE >= 22 && T.FACE_SIZE <= 32 && !/<circle/.test(svg), '頭是一個 emoji 文字（' + E[10] + '），不再是圓形');
+  ok(svg.indexOf('<text') < svg.indexOf('<rect'), 'emoji 最先畫，帽子與衣服蓋在上面（帽子的顏色不被 emoji 的頭髮蓋住）');
+  ok(T.personSvg({ hat: 0, shirt: 1, pants: 2, shoes: 3 }).indexOf(E[0]) > 0 && T.personSvg({ hat: 0, shirt: 1, pants: 2, shoes: 3, face: 26 + 3 }).indexOf(E[3]) > 0, '沒有 face 就用第 1 個；索引超過清單會繞回來');
+  ok(svgHi.indexOf('stroke-dasharray') > 0 && svgHi.indexOf(E[10]) > 0, '揭曉時標出被問的那一件，臉還在');
+  const same = T.makeLevel(5, rnd, 472); ok(T.personSvg(same.people[0]) === T.personSvg(same.people[0]) && T.personSvg(same.people[0]).indexOf(E[same.people[0].face]) > 0, '同一個人每次畫出來的臉一樣（走路與揭曉排隊是同一張臉）');
+  // 臉不影響題目：答案只看衣物顏色
+  const q2 = T.makeLevel(10, rnd, 472); ok(q2.answer === q2.people[q2.who - 1][q2.part] && q2.answer >= 0, '答案仍然是被問的那一件衣物的顏色'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

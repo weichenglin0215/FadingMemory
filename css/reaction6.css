@@ -798,7 +798,8 @@
 .gmk-stone--new {
     transform-box: fill-box;
     transform-origin: center;
-    animation: gmk-drop 0.6s ease-out;          /* V1.38.0：揭曉動畫放慢成 50% 速度（原本 0.3s） */
+    animation: gmk-drop 0.6s ease-out;
+    /* V1.38.0：揭曉動畫放慢成 50% 速度（原本 0.3s） */
 }
 
 @keyframes gmk-drop {
@@ -1313,7 +1314,8 @@
 .sea-pintag {
     position: absolute;
     left: 50%;
-    top: -42px;                 /* 放在重量數字圈的上面：放下面會蓋住木板上離支點幾格的刻度數字 */
+    top: -42px;
+    /* 放在重量數字圈的上面：放下面會蓋住木板上離支點幾格的刻度數字 */
     transform: translateX(-50%);
     padding: 0 6px;
     background: var(--c-ink-soft);
@@ -2834,7 +2836,8 @@
     position: absolute;
     left: 24px;
     right: 24px;
-    width: auto;                /* .btn 預設 width: 100%，加上 left 24px 會讓按鈕右邊多出 24px 被切掉；絕對定位用 left＋right 決定寬度，所以 width 要設 auto */
+    width: auto;
+    /* .btn 預設 width: 100%，加上 left 24px 會讓按鈕右邊多出 24px 被切掉；絕對定位用 left＋right 決定寬度，所以 width 要設 auto */
     bottom: 10px;
     height: 100px;
     font-size: var(--fs-xl);
@@ -4767,7 +4770,8 @@
     text-align: center;
     pointer-events: none;
     z-index: 2;
-    padding-bottom: calc(var(--sp-3) + 18px);              /* 下緣留位置給寬限時間的藍色橫條 */
+    padding-bottom: calc(var(--sp-3) + 18px);
+    /* 下緣留位置給寬限時間的藍色橫條 */
 }
 
 /* 換新口令的表演（V1.38.0，要快：0.26 秒滑進來、0.45 秒閃一下）：左右兩邊交替滑進來，連續兩句一模一樣的口令也看得出是新的 */
@@ -7803,7 +7807,8 @@
 
 /* ═══ 挑豆子（.bns-）═══ */
 .bns-stage {
-    overflow: visible;                          /* 盤子直徑 480px，比遊戲區（472px）寬一點點，兩邊各多出 4px 不要被切掉 */
+    overflow: visible;
+    /* 盤子直徑 480px，比遊戲區（472px）寬一點點，兩邊各多出 4px 不要被切掉 */
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
@@ -7890,15 +7895,45 @@
 }
 
 /* 各種豆子與雜物的顏色 */
-.bns-red { fill: var(--bns-red); }
-.bns-adz { fill: var(--bns-adz); }
-.bns-pinto { fill: var(--bns-pinto); }
-.bns-mung { fill: var(--bns-mung); }
-.bns-black { fill: var(--bns-black); }
-.bns-redstone { fill: var(--bns-redstone); stroke: var(--bns-redstone-edge); stroke-width: 0.8; }
-.bns-stone { fill: var(--bns-stone); stroke: var(--bns-stone-edge); stroke-width: 0.8; }
-.bns-shine { fill: var(--bns-shine); }
-.bns-spot { fill: var(--bns-spot); }
+.bns-red {
+    fill: var(--bns-red);
+}
+
+.bns-adz {
+    fill: var(--bns-adz);
+}
+
+.bns-pinto {
+    fill: var(--bns-pinto);
+}
+
+.bns-mung {
+    fill: var(--bns-mung);
+}
+
+.bns-black {
+    fill: var(--bns-black);
+}
+
+.bns-redstone {
+    fill: var(--bns-redstone);
+    stroke: var(--bns-redstone-edge);
+    stroke-width: 0.8;
+}
+
+.bns-stone {
+    fill: var(--bns-stone);
+    stroke: var(--bns-stone-edge);
+    stroke-width: 0.8;
+}
+
+.bns-shine {
+    fill: var(--bns-shine);
+}
+
+.bns-spot {
+    fill: var(--bns-spot);
+}
 
 /* 結束：標出剩下的雜物 */
 .bns-ring {
@@ -8233,7 +8268,9 @@
 }
 
 @keyframes ssh-belt {
-    to { background-position: -40px 0; }
+    to {
+        background-position: -40px 0;
+    }
 }
 
 /* 盤子走的那一條（整條都收得到點擊，用座標找最近的盤子） */
@@ -8258,13 +8295,29 @@
     will-change: transform;
 }
 
-.ssh-pwhite { border-color: var(--ssh-c-white); }
-.ssh-pred { border-color: var(--ssh-c-red); }
-.ssh-pgreen { border-color: var(--ssh-c-green); }
-.ssh-pblue { border-color: var(--ssh-c-blue); }
-.ssh-pgold { border-color: var(--ssh-c-gold); }
+.ssh-pwhite {
+    border-color: var(--ssh-c-white);
+}
 
-.ssh-dot.ssh-pwhite { border-color: var(--ssh-c-white); }
+.ssh-pred {
+    border-color: var(--ssh-c-red);
+}
+
+.ssh-pgreen {
+    border-color: var(--ssh-c-green);
+}
+
+.ssh-pblue {
+    border-color: var(--ssh-c-blue);
+}
+
+.ssh-pgold {
+    border-color: var(--ssh-c-gold);
+}
+
+.ssh-dot.ssh-pwhite {
+    border-color: var(--ssh-c-white);
+}
 
 /* 壽司：白飯糰上面一片料 */
 .ssh-rice {
@@ -8286,9 +8339,17 @@
     border-radius: 50% 50% 40% 40%;
 }
 
-.ssh-top--salmon { background: var(--ssh-salmon); }
-.ssh-top--egg { background: var(--ssh-egg); }
-.ssh-top--shrimp { background: var(--ssh-shrimp); }
+.ssh-top--salmon {
+    background: var(--ssh-salmon);
+}
+
+.ssh-top--egg {
+    background: var(--ssh-egg);
+}
+
+.ssh-top--shrimp {
+    background: var(--ssh-shrimp);
+}
 
 .ssh-plate--mini {
     box-shadow: none;
@@ -8629,6 +8690,9 @@
 
 .dsc-tag__sale {
     display: inline-block;
+    position: absolute;
+    left: 36%;
+    top: -16px;
     padding: 0 var(--sp-3);
     background: var(--dsc-red);
     border-radius: var(--r-sm);
@@ -8642,7 +8706,7 @@
 .dsc-tag__orig {
     margin-top: var(--sp-2);
     color: var(--c-ink-soft);
-    font-size: var(--fs-md);
+    font-size: var(--fs-xxl);
     font-weight: var(--fw-bold);
 }
 
@@ -8668,7 +8732,7 @@
     position: absolute;
     left: 0;
     right: 0;
-    top: 336px;
+    top: 300px;
     padding: 0 var(--sp-3);
     text-align: center;
     font-weight: var(--fw-bold);
@@ -8999,6 +9063,19 @@
     stroke-width: 8;
     stroke-linecap: round;
     stroke-linejoin: round;
+}
+
+/* V1.40.0 鬍子：線條比眉毛粗一點（左邊那撇、你畫的、紅色的正確答案） */
+.ebw-ref--stache {
+    stroke-width: 11;
+}
+
+.ebw-mine--stache {
+    stroke-width: 10;
+}
+
+.ebw-ghost--stache {
+    stroke-width: 12;
 }
 
 /* 紅色的正確眉毛：臉轉正之後才淡入（V1.38.0；淡入時間 0.6 秒要跟 JS 的 GHOST_MS 一樣） */

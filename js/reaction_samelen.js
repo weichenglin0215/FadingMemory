@@ -1,13 +1,16 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_samelen.js — 秒反應・畫一樣長
-   上方是一條垂直的題目線，下方左邊是起點：手指從起點開始往右拖，畫出一條橫線，
-   長度要和上面的垂直線一樣長。放開手指就是答案，只有一次機會。
+   上方是一條斜的題目線，下方左邊是起點：手指從起點開始往右拖，畫出一條橫線，
+   長度要和上面的斜線一樣長。放開手指就是答案，只有一次機會。
    ───────────────────────────────────────────────────────────────────
-   · 這款利用「水平垂直錯覺」：同樣長度的垂直線看起來比水平線長約 10%，所以多數人會畫短。
-   · 垂直線長度 L 隨機（LEN_MIN～LEN_MAX），位置左右隨機（避免用螢幕邊界當尺）。
+   · V1.39.0（玩家回饋）：題目線以前是垂直的、長度 120～380px 差很多（太短的題目一點點誤差就變成很大的百分比）。
+     現在題目線的長度是遊戲區寬度的 70%～90%（LEN_MIN_PCT～LEN_MAX_PCT），而且是斜的：
+     角度（跟橫線的夾角）ANGLE_MIN～ANGLE_MAX 度，往右上或右下隨機，位置也隨機（避免用螢幕邊界當尺）。
+     斜線沒辦法直接跟橫線「對齊著比」，更難目測。
+   · 題目線永遠「左端在左、右端在右」（方向角 a 的 cos 恆正）：揭曉時以左端為軸轉成橫放，左端對齊你的橫線起點。
    · 起點旁有手指圖示從左往右來回移動，提醒玩家怎麼操作（第一次碰到起點後消失）。
    · 成績 ＝ |畫出的長度 − L| ÷ L × 100（%，越小越好）。
-   · 揭曉：垂直線轉成橫放、與你的橫線對齊左端，兩個右端標出差距。
+   · 揭曉：斜線轉成橫放、與你的橫線對齊左端，兩個右端標出差距。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -17,21 +20,33 @@
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var LEN_MIN = 120, LEN_MAX = 380;           /* 題目垂直線的長度範圍（px） */
-    var TOP_Y = 50;                             /* 垂直線上端的 y */
+    var STAGE_W = 472;                          /* 遊戲區寬度（px）；實際以舞台的 clientWidth 為準，這裡是預設值（Node 測試用） */
+    var LEN_MIN_PCT = 0.70, LEN_MAX_PCT = 0.90; /* 題目線的長度＝遊戲區寬度的 70%～90% */
+    var ANGLE_MIN = 15, ANGLE_MAX = 65;         /* 題目線跟橫線的夾角範圍（度）；太小幾乎是橫的、太大幾乎是垂直的（高度不夠放） */
+    var Y_TOP = 40, Y_BOT = 400;                /* 題目線（整條線）可以出現的上下範圍（y）；下面要留給橫線與揭曉時的對照 */
+    var X_PAD = 16;                             /* 題目線離左右邊界至少多遠 */
     var START = { x: 40, y: 540 };              /* 起點（橫線從這裡往右畫） */
-    var MAX_DRAW = 420;                         /* 橫線最長（px） */
+    var MAX_DRAW = 432;                         /* 橫線最長（px）：起點 x 40 ＋ 432 ＝ 舞台右緣 472；比題目線最長的 90% 寬（約 425）多一點 */
     var START_R = 56;                           /* 手指要在起點多近的地方按下才算 */
     var MIN_VALID = 20;                         /* 放開時橫線短於這個長度就當作沒畫（重來，不算一次機會） */
-    var X_MIN = 170, X_MAX = 330;               /* 垂直線的 x 範圍 */
     var CAP = 28, CAP_L = 100;                  /* 線兩端黑色記號的半長（線加粗成 24px，記號要比線寬）；CAP_L 只給測試用的預設線長 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function makeRound(rand) {
+    /* 出一題：W＝遊戲區寬度。回傳 { L 線長, a 方向角（弧度，從 x 軸往下量：正＝往右下、負＝往右上）, x, y 左端的位置 }；
+       右端＝(x + L·cos a, y + L·sin a)。整條線一定落在 X_PAD～W−X_PAD、Y_TOP～Y_BOT 之內。 */
+    function makeRound(rand, W) {
         rand = rand || Math.random;
-        return { L: kit.randFloat(LEN_MIN, LEN_MAX, rand), x: kit.randFloat(X_MIN, X_MAX, rand) };
+        W = W || STAGE_W;
+        var L = kit.randFloat(W * LEN_MIN_PCT, W * LEN_MAX_PCT, rand);
+        /* 垂直方向放不下的陡角度要排除：L·sin(角) ≤ Y_BOT − Y_TOP */
+        var amax = Math.min(ANGLE_MAX, Math.asin(Math.min(1, (Y_BOT - Y_TOP) / L)) * 180 / Math.PI);
+        var deg = kit.randFloat(ANGLE_MIN, Math.max(ANGLE_MIN, amax), rand);
+        var a = (rand() < 0.5 ? -1 : 1) * deg * Math.PI / 180;
+        var span = L * Math.cos(a), rise = Math.abs(L * Math.sin(a));
+        var x = kit.randFloat(X_PAD, Math.max(X_PAD, W - X_PAD - span), rand);
+        var top = kit.randFloat(Y_TOP, Math.max(Y_TOP, Y_BOT - rise), rand);
+        return { L: L, a: a, x: x, y: a >= 0 ? top : top + rise };
     }
-    /* 手指位置 → 橫線長度（夾在 0～MAX_DRAW） */
     /* 線的方向角 a（弧度，從 x 軸往下量；垂直向下是 π/2、橫放向右是 0）時，上端記號與下端記號的兩個端點 [x1,y1,x2,y2]。
        記號永遠垂直於線：線的方向 (cos a, sin a)，垂直方向 (−sin a, cos a)。上端在原點、下端在 L 處。 */
     function capEnds(a, L) {
@@ -42,20 +57,21 @@
             b: [L * dx - CAP * px, L * dy - CAP * py, L * dx + CAP * px, L * dy + CAP * py]
         };
     }
+    /* 手指位置 → 橫線長度（夾在 0～MAX_DRAW） */
     function lenFor(px) { return kit.clamp(px - START.x, 0, MAX_DRAW); }
     function errPct(len, L) { return Math.abs(len - L) / L * 100; }
     function rating(e) {
         if (e < 0.5) return '神準！';
         if (e < 2) return '很準！';
         if (e < 5) return '不錯喔！';
-        if (e < 10) return '垂直線看起來比較長喔，再試一次';
+        if (e < 10) return '斜線不好量吧，再試一次';
         return '再試一次，會更準！';
     }
 
     function mount(root, ctx) {
         kit.single(root, ctx, {
             id: ID, G: G, better: 'min', max: SCORE.max,
-            title: '從起點往右拖，畫出和上面垂直線一樣長的橫線',
+            title: '從起點往右拖，畫出和上面斜線一樣長的橫線',
             numText: function (v) { return v.toFixed(4) + '%'; },
             rating: rating,
             sfx: function (v) { return v < 2 ? 'perfect' : (v < 6 ? 'win' : 'fail'); },
@@ -66,18 +82,19 @@
     function setup(api) {
         var stage = api.stage, my = api.my;
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        var cfg = makeRound(), len = 0, drawing = false, locked = false, hint = null, pid = null;
+        var cfg = makeRound(null, W), len = 0, drawing = false, locked = false, hint = null, pid = null;
         var sy = Math.min(START.y, H - 60);
-        console.log('[畫一樣長] 垂直線長度 ' + cfg.L.toFixed(2) + '，x ' + cfg.x.toFixed(1));
+        console.log('[畫一樣長] 斜線長度 ' + cfg.L.toFixed(2) + '（寬度的 ' + (cfg.L / W * 100).toFixed(1) + '%），角度 ' + (cfg.a * 180 / Math.PI).toFixed(1) + '°，左端 (' + cfg.x.toFixed(1) + ', ' + cfg.y.toFixed(1) + ')');
 
         var svg = kit.svg('svg', { 'class': 'sl-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
         var gGuide = kit.svg('g', {}, svg);
         var ref = kit.svg('g', {}, svg);
-        var refLine = kit.svg('line', { x1: 0, y1: 0, x2: 0, y2: cfg.L, 'class': 'sl-ref' }, ref);
-        /* 兩端的黑色記號（垂直於線）：線轉成橫放時，兩個記號都要跟著轉成垂直（V1.25：以前左邊那個一直是水平的，是錯的） */
-        var capT = kit.svg('line', { x1: -CAP, y1: 0, x2: CAP, y2: 0, 'class': 'sl-cap' }, ref);
-        var capB = kit.svg('line', { x1: -CAP, y1: cfg.L, x2: CAP, y2: cfg.L, 'class': 'sl-cap' }, ref);
-        ref.setAttribute('transform', 'translate(' + cfg.x.toFixed(2) + ' ' + TOP_Y + ')');
+        var refLine = kit.svg('line', { x1: 0, y1: 0, x2: (cfg.L * Math.cos(cfg.a)).toFixed(2), y2: (cfg.L * Math.sin(cfg.a)).toFixed(2), 'class': 'sl-ref' }, ref);
+        /* 兩端的黑色記號（垂直於線）：線轉成橫放時，兩個記號都要跟著轉（V1.25：以前左邊那個一直是水平的，是錯的） */
+        var ends0 = capEnds(cfg.a, cfg.L);
+        var capT = kit.svg('line', { x1: ends0.t[0], y1: ends0.t[1], x2: ends0.t[2], y2: ends0.t[3], 'class': 'sl-cap' }, ref);
+        var capB = kit.svg('line', { x1: ends0.b[0], y1: ends0.b[1], x2: ends0.b[2], y2: ends0.b[3], 'class': 'sl-cap' }, ref);
+        ref.setAttribute('transform', 'translate(' + cfg.x.toFixed(2) + ' ' + cfg.y.toFixed(2) + ')');
         var mine = kit.svg('line', { x1: START.x, y1: sy, x2: START.x, y2: sy, 'class': 'sl-mine' }, svg);
         kit.svg('line', { x1: START.x, y1: sy - CAP, x2: START.x, y2: sy + CAP, 'class': 'sl-cap' }, svg);
         var endCap = kit.svg('line', { x1: START.x, y1: sy - CAP, x2: START.x, y2: sy + CAP, 'class': 'sl-cap', opacity: 0 }, svg);
@@ -121,10 +138,10 @@
             locked = true; hideHint(); dot.setAttribute('opacity', 0);
             Sfx.play('click');
             var real = errPct(len, cfg.L), tgt = sy - 70;
-            /* 揭曉：垂直線以上端為軸轉成橫放，移到你的橫線上方 */
-            var tx0 = cfg.x, ty0 = TOP_Y;
+            /* 揭曉：斜線以左端為軸轉成橫放，移到你的橫線上方 */
+            var tx0 = cfg.x, ty0 = cfg.y;
             my.tween(1000, function (e) {
-                var x = tx0 + (START.x - tx0) * e, y = ty0 + (tgt - ty0) * e, a = Math.PI / 2 * (1 - e);
+                var x = tx0 + (START.x - tx0) * e, y = ty0 + (tgt - ty0) * e, a = cfg.a * (1 - e);
                 refLine.setAttribute('x1', 0); refLine.setAttribute('y1', 0);
                 refLine.setAttribute('x2', cfg.L * Math.cos(a)); refLine.setAttribute('y2', cfg.L * Math.sin(a));
                 var ends = capEnds(a, cfg.L);
@@ -139,8 +156,8 @@
                 say((diff < 0 ? '你畫短了 ' : '你畫長了 ') + Math.abs(diff / cfg.L * 100).toFixed(4) + '%');
                 my.after(1800, function () {
                     api.finish(real, { lines: [
-                        diff < 0 ? '橫線比垂直線短 ' + Math.abs(diff).toFixed(4) + ' 像素' : '橫線比垂直線長 ' + Math.abs(diff).toFixed(4) + ' 像素',
-                        '垂直線看起來比同樣長的橫線更長（水平垂直錯覺）',
+                        diff < 0 ? '橫線比斜線短 ' + Math.abs(diff).toFixed(4) + ' 像素' : '橫線比斜線長 ' + Math.abs(diff).toFixed(4) + ' 像素',
+                        '斜線沒辦法直接跟橫線對齊著比，只能靠目測',
                         '只有一次機會，想拚更準就再挑戰一次'
                     ] });
                 });
@@ -167,10 +184,13 @@
     var G = {
         id: ID,
         name: '畫一樣長',
-        rule: '上方有一條垂直的線。手指從左下角的起點出發，往右拖出一條橫線，**長度要和垂直線一樣長**。放開手指就是答案，只有一次機會。小心：**垂直線看起來會比同樣長的橫線更長**！',
+        rule: '上方有一條**斜放的線**（每次角度、位置都不同）。手指從左下角的起點出發，往右拖出一條橫線，**長度要和斜線一樣長**。放開手指就是答案，只有一次機會。',
         mount: mount,
         score: SCORE,
-        test: { capEnds: capEnds, CAP: CAP, makeRound: makeRound, lenFor: lenFor, errPct: errPct, rating: rating, LEN_MIN: LEN_MIN, LEN_MAX: LEN_MAX, START: START, MAX_DRAW: MAX_DRAW, X_MIN: X_MIN, X_MAX: X_MAX, TOP_Y: TOP_Y }
+        test: {
+            capEnds: capEnds, CAP: CAP, makeRound: makeRound, lenFor: lenFor, errPct: errPct, rating: rating, START: START, MAX_DRAW: MAX_DRAW,
+            STAGE_W: STAGE_W, LEN_MIN_PCT: LEN_MIN_PCT, LEN_MAX_PCT: LEN_MAX_PCT, ANGLE_MIN: ANGLE_MIN, ANGLE_MAX: ANGLE_MAX, Y_TOP: Y_TOP, Y_BOT: Y_BOT, X_PAD: X_PAD
+        }
     };
     Reaction.register(G);
 })();
