@@ -1,0 +1,89 @@
+/* ═══════════════════════════════════════
+   reaction_inout.css — 圈內圈外（js/reaction_inout.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「inout-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 圈內圈外（.inout-）═══ */
+.inout-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.inout-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.inout-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+.inout-svg {
+    position: absolute;
+    display: block;
+}
+
+/* 紅色粗繩；揭曉時「裡面」整塊塗上淡綠色（本來是透明的） */
+.inout-rope {
+    fill: none;
+    stroke: var(--iof-rope);
+    stroke-width: 5;
+    stroke-linejoin: round;
+}
+
+.inout-fill {
+    fill: var(--c-ok-light);
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+.inout-fill--show {
+    opacity: 0.85;
+}
+
+/* 螞蟻 */
+.inout-ant__body {
+    fill: var(--c-ink);
+}
+
+.inout-ant__leg {
+    stroke: var(--c-ink);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+}
+
+.inout-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.inout-btn {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.inout-btn--ok {
+    background: var(--c-ok-light);
+    border-color: var(--c-ok);
+}
+
+.inout-btn--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad-light);
+    color: var(--c-bad);
+}

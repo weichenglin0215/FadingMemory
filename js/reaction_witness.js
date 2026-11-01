@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_witness.js — 秒反應・目擊證人
+   樣式：css/games/reaction_witness.css（這款專屬的 class 一律以「witness-」開頭；共用元件在 css/reaction_common.css）
    警察局裡先看一張嫌疑人的臉幾秒鐘，臉收起來之後，從一排人裡指出剛才那一個。越後面大家越像，
    只差一個特徵。
    ───────────────────────────────────────────────────────────────────
@@ -109,7 +110,7 @@
     var SKIN = 'hsl(28,62%,80%)', HAIR = 'hsl(24,42%,24%)', INK = 'hsl(24,40%,22%)';
     /* f 是 7 個特徵的向量 [臉型, 髮型, 眼睛, 眉毛, 鼻子, 嘴巴, 配件]；依序畫出髮型（後層）→ 臉 → 髮型（前層）→ 眉毛 → 眼睛 → 鼻子 → 嘴 → 配件 */
     function drawFace(f, parent) {
-        var svg = kit.svg('svg', { 'class': 'wt-face', viewBox: '0 -30 200 270' }, parent);
+        var svg = kit.svg('svg', { 'class': 'witness-face', viewBox: '0 -30 200 270' }, parent);
         /* S(標籤, 屬性)：建立一個 SVG 圖形；L(...) 則是再套用「只有線條」的樣式 */
         var S = function (tag, a) { return kit.svg(tag, a, svg); };
         var line = { fill: 'none', stroke: INK, 'stroke-width': 5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' };
@@ -170,9 +171,9 @@
 
             /* level 關卡；cleared 已過幾關；state 目前階段（look 看臉/pick 選臉/reveal 揭曉）；S 這關的嫌疑人資料 */
             var level = startAt || 1, cleared = level - 1, newRec = false, state = 'idle', lvId = 0, S = null;
-            var head = h('div', { 'class': 'wt-head' });
-            var banner = h('div', { 'class': 'wt-banner' });
-            var stage = h('div', { 'class': 'wt-stage' });
+            var head = h('div', { 'class': 'witness-head' });
+            var banner = h('div', { 'class': 'witness-banner' });
+            var stage = h('div', { 'class': 'witness-stage' });
             var tb = kit.timebar();
             /* 把畫面元素放進去 */
             [head, banner, stage, tb.el].forEach(function (n) { root.appendChild(n); });
@@ -189,10 +190,10 @@
                 state = 'look';
                 head.textContent = '第 ' + level + ' 關';
                 banner.textContent = '記住這個嫌疑人的臉！';
-                stage.className = 'wt-stage wt-stage--look';
+                stage.className = 'witness-stage witness-stage--look';
                 stage.innerHTML = '';
                 stage.style.gridTemplateColumns = ''; stage.style.gridTemplateRows = '';
-                var big = h('div', { 'class': 'wt-big' }); stage.appendChild(big);
+                var big = h('div', { 'class': 'witness-big' }); stage.appendChild(big);
                 drawFace(S.target, big);
                 meta();
                 /* 主控台印出這關的目標特徵、干擾臉差異、正解位置（驗證用） */
@@ -208,7 +209,7 @@
             function startPick(id) {
                 state = 'pick';
                 banner.textContent = '剛才那個人是誰？';
-                stage.className = 'wt-stage wt-stage--pick';
+                stage.className = 'witness-stage witness-stage--pick';
                 stage.innerHTML = '';
                 /* 依臉的張數設定網格的欄數與列數（minmax(0, 1fr)：均分、可縮到 0） */
                 var g = gridFor(S.faces.length);
@@ -216,7 +217,7 @@
                 stage.style.gridTemplateRows = 'repeat(' + g.rows + ', minmax(0, 1fr))';
                 Sfx.play('go');
                 S.faces.forEach(function (f, i) {
-                    var cell = h('button', { 'class': 'wt-cell' });
+                    var cell = h('button', { 'class': 'witness-cell' });
                     drawFace(f, cell);
                     /* pointerdown：手指一碰就選擇 */
                     cell.addEventListener('pointerdown', function (e) { e.preventDefault(); pick(i); });
@@ -235,9 +236,9 @@
                 tb.set(0);
                 var cells = stage.children;
                 /* 不管對錯，先把正解標成綠色 */
-                cells[S.answer].classList.add('wt-cell--ok');
+                cells[S.answer].classList.add('witness-cell--ok');
                 var ok = i === S.answer;
-                if (!ok && i >= 0) cells[i].classList.add('wt-cell--bad');
+                if (!ok && i >= 0) cells[i].classList.add('witness-cell--bad');
                 /* 答對：過關 */
                 if (ok) {
                     cleared = level;

@@ -85,11 +85,11 @@ for (let rep = 0; rep < 100; rep++) {
 { const q = T.makeLevel(3, rnd); ok(/太早/.test(T.whyText('early', q)) && /太慢/.test(T.whyText('late', q)) && new RegExp(q.window.toFixed(2)).test(T.whyText('late', q)) && T.whyText('ok', q).includes(q.fish), 'whyText'); }
 
 // ── 程式裡的接線 ──
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_fishbite.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: replayMs\(q\) \+ 1500/.test(src) && /showReplay\(kind, t\)/.test(src) && /chartPoints\(q, 0, total/.test(src) && /fbt-chart__you/.test(src), '失敗：折線圖＋咬鉤區＋你提竿的位置＋慢動作重播、停格夠久');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_fishbite.js'), css = rd('../../css/games/reaction_fishbite.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: replayMs\(q\) \+ 1500/.test(src) && /showReplay\(kind, t\)/.test(src) && /chartPoints\(q, 0, total/.test(src) && /fishbite-chart__you/.test(src), '失敗：折線圖＋咬鉤區＋你提竿的位置＋慢動作重播、停格夠久');
   ok(/judgeSwipe\(q, t\)/.test(src) && /api\.after\(Math\.round\(\(q\.bite\.tEnd \+ LATE_GRACE\)/.test(src) && /isUpSwipe/.test(src), '判定用 judgeSwipe、太慢用計時器、提竿用 isUpSwipe');
   ok(/api\.solve = /.test(src) && /api\.wrong = /.test(src) && /armed/.test(src), 'solve／wrong 自己排時間（只排一次）');
-  ok(/\.fbt-water \{[^}]*var\(--fbt-water-top\)/.test(css) && /\.fbt-float__top \{[^}]*var\(--fbt-float-red\)/.test(css) && /\.fbt-chart__curve \{[^}]*var\(--fbt-curve\)/.test(css) && /\.fbt-fc0 \{[^}]*var\(--fbt-fish0\)/.test(css) && /\.fbt-clip \{[^}]*overflow: hidden/.test(css), '水、浮標、折線圖、魚的顏色用 CSS 變數；浮標有裁切框');
+  ok(/\.fishbite-water \{[^}]*var\(--fbt-water-top\)/.test(css) && /\.fishbite-float__top \{[^}]*var\(--fbt-float-red\)/.test(css) && /\.fishbite-chart__curve \{[^}]*var\(--fbt-curve\)/.test(css) && /\.fishbite-fc0 \{[^}]*var\(--fbt-fish0\)/.test(css) && /\.fishbite-clip \{[^}]*overflow: hidden/.test(css), '水、浮標、折線圖、魚的顏色用 CSS 變數；浮標有裁切框');
   ok(boot.indexOf("'js/reaction_fishbite.js'") > 0 && /往上滑/.test(G.rule) && /輕輕碰/.test(G.rule), 'boot.js 有載入、玩法說明提到輕碰與往上滑'); }
 ok(T.rating(1) !== T.rating(3) && T.rating(3) !== T.rating(6) && T.rating(6) !== T.rating(10) && T.rating(10) !== T.rating(16), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

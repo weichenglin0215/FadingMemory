@@ -1,0 +1,268 @@
+/* ═══════════════════════════════════════
+   reaction_flags.css — 舉旗子（js/reaction_flags.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「flags-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 舉旗子（.flags-）═══ */
+.flags-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.flags-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    touch-action: none;
+}
+
+/* 左右半邊的按壓區：左＝紅旗、右＝白旗；按住時變深 */
+.flags-pad {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 50%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 16px;
+    transition: background 0.1s;
+}
+
+.flags-pad--L {
+    left: 0;
+    background: var(--flg-red-soft);
+    border-right: 2px dashed var(--c-ink-soft);
+}
+
+.flags-pad--R {
+    right: 0;
+    background: var(--flg-white-soft);
+}
+
+.flags-pad--L.flags-pad--down {
+    background: var(--flg-red-down);
+}
+
+.flags-pad--R.flags-pad--down {
+    background: var(--flg-white-down);
+}
+
+.flags-pad__t {
+    color: var(--c-ink);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 口令 */
+.flags-cmd {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 14px;
+    padding: var(--sp-3) var(--sp-2);
+    background: var(--c-card);
+    border: 4px solid var(--c-ink-soft);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+    color: var(--c-ink);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    text-align: center;
+    pointer-events: none;
+    z-index: 2;
+    padding-bottom: calc(var(--sp-3) + 18px);
+    /* 下緣留位置給寬限時間的藍色橫條 */
+}
+
+/* 換新口令的表演（V1.38.0，要快：0.26 秒滑進來、0.45 秒閃一下）：左右兩邊交替滑進來，連續兩句一模一樣的口令也看得出是新的 */
+.flags-cmd--inL {
+    animation: flags-in-l 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.15), flags-flash 0.45s ease-out;
+}
+
+.flags-cmd--inR {
+    animation: flags-in-r 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.15), flags-flash 0.45s ease-out;
+}
+
+@keyframes flags-in-l {
+    from {
+        transform: translateX(-70%) scale(1.1);
+        opacity: 0;
+    }
+
+    to {
+        transform: none;
+        opacity: 1;
+    }
+}
+
+@keyframes flags-in-r {
+    from {
+        transform: translateX(70%) scale(1.1);
+        opacity: 0;
+    }
+
+    to {
+        transform: none;
+        opacity: 1;
+    }
+}
+
+@keyframes flags-flash {
+    from {
+        background: var(--c-yellow);
+        border-color: var(--c-orange);
+    }
+
+    to {
+        background: var(--c-card);
+        border-color: var(--c-ink-soft);
+    }
+}
+
+/* 寬限時間（V1.38.0）：口令框下緣的藍色橫條，口令一出現就從滿縮到空；時間長度由 JS 設在 animation-duration（每句不一樣） */
+.flags-grace {
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 10px;
+    height: 12px;
+    border-radius: var(--r-pill);
+    background: var(--c-blue-soft);
+    overflow: hidden;
+}
+
+.flags-grace__fill {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--c-blue);
+    transform-origin: left center;
+    transform: scaleX(0);
+}
+
+.flags-grace__fill--run {
+    transform: scaleX(1);
+    animation-name: flags-grace;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+}
+
+@keyframes flags-grace {
+    from {
+        transform: scaleX(1);
+    }
+
+    to {
+        transform: scaleX(0);
+    }
+}
+
+.flags-cmd--bad {
+    border-color: var(--c-bad-light);
+    background: var(--c-bad-soft);
+}
+
+/* 小人與旗子 */
+.flags-svg {
+    position: absolute;
+    display: block;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.flags-head {
+    fill: var(--c-card);
+    stroke: var(--c-ink-soft);
+    stroke-width: 4;
+}
+
+.flags-body {
+    fill: var(--flg-shirt);
+    stroke: var(--c-ink-soft);
+    stroke-width: 4;
+    stroke-linejoin: round;
+}
+
+.flags-arm {
+    transform-origin: 0 0;
+    transition: transform 0.22s ease-out;
+}
+
+.flags-stick {
+    stroke: var(--c-ink);
+    stroke-width: 6;
+    stroke-linecap: round;
+}
+
+.flags-cloth {
+    stroke: var(--c-ink);
+    stroke-width: 3;
+    stroke-linejoin: round;
+}
+
+.flags-cloth--L {
+    fill: var(--flg-red);
+}
+
+.flags-cloth--R {
+    fill: var(--c-card);
+}
+
+.flags-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 84px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* 失敗：該有的旗子和你的旗子並排，不一樣的標紅 */
+.flags-cmp {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 368px;
+    display: flex;
+    justify-content: center;
+    gap: var(--sp-3);
+    z-index: 3;
+}
+
+.flags-cmp__col {
+    flex: 1;
+    padding: var(--sp-2);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
+}
+
+.flags-cmp__t {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+.flags-cmp__flag {
+    color: var(--c-ink);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    line-height: 1.5;
+}
+
+.flags-cmp__flag--bad {
+    color: var(--c-bad);
+    background: var(--c-bad-soft);
+    border-radius: var(--r-sm);
+}

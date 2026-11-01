@@ -61,9 +61,9 @@ ok(creamer > 100 && contrast > 800, '奶精、背景對比都有出現');
 { const sw = T.makeSwirl(60, 80); ok(sw.alive() === 0, '一開始沒有粒子'); sw.spawn(60, 20, 50, [250, 246, 234]); ok(sw.alive() === 50, '噴 50 顆'); for (let t = 0; t < 4; t += 1 / 60) sw.step(1 / 60, t); ok(sw.alive() === 0, '4 秒後全部消失（壽命 0.8～2.2 秒）');
   for (let k = 0; k < 20; k++) sw.spawn(60, 20, 100, [250, 246, 234]); ok(sw.alive() <= T.SWIRL_MAX, '粒子池有上限：' + sw.alive() + ' ≤ ' + T.SWIRL_MAX); }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_milktea.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_milktea.js'), css = rd('../../css/games/reaction_milktea.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
   ok(/api\.fail\(\{ delay: 2800/.test(src) && /de\.toFixed\(4\)/.test(src) && /lagStep/.test(src) && /touchInk/.test(src), '失敗：顏色差 4 位小數、停格 2 秒以上；有一階延遲；標明漩渦改寫自 touchInk.js');
-  ok(/\.mlt-panel--wood \{[^}]*var\(--mlt-wood\)/.test(css) && /\.mlt-panel--tray \{[^}]*var\(--mlt-tray\)/.test(css) && /\.mlt-btn \{[^}]*var\(--c-blue\)/.test(css), '木桌、托盤用 CSS 變數');
+  ok(/\.milktea-panel--wood \{[^}]*var\(--mlt-wood\)/.test(css) && /\.milktea-panel--tray \{[^}]*var\(--mlt-tray\)/.test(css) && /\.milktea-btn \{[^}]*var\(--c-blue\)/.test(css), '木桌、托盤用 CSS 變數');
   ok(boot.indexOf("'js/reaction_milktea.js'") > 0 && /攪勻/.test(G.rule), 'boot.js 有載入、玩法說明提到攪勻'); }
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !== T.rating(18) && T.rating(18) !== T.rating(30), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

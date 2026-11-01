@@ -1,0 +1,75 @@
+/* ═══════════════════════════════════════
+   reaction_hangpic.css — 掛畫（js/reaction_hangpic.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「hangpic-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 掛畫：左右按鈕或拖曳，把歪掉的畫框轉成水平。 */
+/* ═══ 掛畫（.hangpic-）═══ */
+.hangpic-head {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+/* 牆面區：花紋背景由 SVG 畫在裡面 */
+.hangpic-field {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    touch-action: none;
+}
+
+/* SVG 鋪滿整個牆面（inset:0 + 寬高 100%） */
+.hangpic-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* 下方控制列：◀ 掛好了 ▶ */
+.hangpic-ctrl {
+    flex: none;
+    display: flex;
+    gap: var(--sp-3);
+}
+
+/* 「掛好了」吃掉中間剩下的寬度 */
+.hangpic-ctrl .hangpic-done {
+    flex: 1 1 auto;
+}
+
+/* 左右微調按鈕，固定寬度 */
+.hangpic-nudge {
+    flex: none;
+    width: 96px;
+}
+
+/* 揭曉後浮在牆面下方的結果橫幅（一開始 opacity:0 看不見） */
+.hangpic-verdict {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 16px;
+    padding: 10px 8px;
+    text-align: center;
+    border-radius: var(--r-md);
+    background: rgba(255, 253, 243, 0.94);
+    border: var(--bd);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* 顯示橫幅（opacity 變 1） */
+.hangpic-verdict--on {
+    opacity: 1;
+}

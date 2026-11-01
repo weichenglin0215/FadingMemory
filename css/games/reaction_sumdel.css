@@ -1,0 +1,121 @@
+/* ═══════════════════════════════════════
+   reaction_sumdel.css — 刪數湊和（js/reaction_sumdel.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「sumdel-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 顏色與尺寸一律用 css/theme.css 的 CSS 變數。方陣邊長 --sumdel-n、每格邊長 --sumdel-cell、目標那一排／欄的寬 --sumdel-head、
+     數字大小 --sumdel-font 由 js 依畫面寬度算好寫在 .sumdel-board 上；下面的值是備用值。
+   ═══════════════════════════════════════ */
+
+.sumdel-wrap {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding-top: 10px;
+    box-sizing: border-box;
+}
+
+.sumdel-board {
+    display: grid;
+    grid-template-columns: var(--sumdel-head, 66px) repeat(var(--sumdel-n, 5), var(--sumdel-cell, 60px));
+    grid-template-rows: var(--sumdel-head, 66px) repeat(var(--sumdel-n, 5), var(--sumdel-cell, 60px));
+    gap: 4px;
+}
+
+.sumdel-corner {
+    visibility: hidden;
+}
+
+/* 每排每列旁邊的目標：上面是目標數字，下面是「再刪多少」 */
+.sumdel-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--r-sm);
+    background: var(--c-orange-soft);
+    color: var(--c-ink);
+    line-height: 1.1;
+}
+
+.sumdel-target {
+    font-size: var(--sumdel-font, var(--fs-lg));
+    font-weight: var(--fw-black);
+}
+
+.sumdel-diff {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+}
+
+.sumdel-diff--ok {
+    color: var(--c-ok);
+    font-weight: var(--fw-black);
+}
+
+.sumdel-diff--over {
+    color: var(--c-bad);
+}
+
+.sumdel-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border: 2px solid var(--c-ink);
+    border-radius: var(--r-sm);
+    background: var(--c-card);
+    color: var(--c-ink);
+    font-size: var(--sumdel-font, var(--fs-lg));
+    font-weight: var(--fw-black);
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 被刪掉的數字：變淡、加刪除線 */
+.sumdel-cell--del {
+    background: var(--c-card-alt);
+    color: var(--bd-c);
+    border-color: var(--bd-c);
+    text-decoration: line-through;
+}
+
+.sumdel-cell--hint {
+    animation: sumdel-hint 0.8s ease-in-out infinite;
+}
+
+.sumdel-cell--ok {
+    border-color: var(--c-ok);
+}
+
+@keyframes sumdel-hint {
+    0%, 100% { background: var(--c-yellow-soft); }
+    50% { background: var(--c-orange-soft); }
+}
+
+.sumdel-tip {
+    min-height: 30px;
+    padding: 0 12px;
+    font-size: var(--fs-sm);
+    line-height: 1.35;
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    text-align: center;
+}
+
+.sumdel-tools {
+    display: flex;
+    gap: 10px;
+    width: 96%;
+}
+
+.sumdel-tool {
+    flex: 1 1 0;
+    height: 64px;
+    padding: 0;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+}

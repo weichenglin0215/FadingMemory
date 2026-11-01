@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_remainder.js — 秒反應・求餘數（企劃 123「整除秒判」的改版）
+   樣式：css/games/reaction_remainder.css（這款專屬的 class 一律以「remainder-」開頭；共用元件在 css/reaction_common.css）
    畫面出現一個除法，例如  4521 ÷ 7，問「餘數是多少？」，下方有五顆數字按鈕，點出正確的餘數。
    五個選項裡，錯的四個都是「合理的餘數」（0 到除數−1 之間），而且大多緊貼著正確答案（差 1、差 2、互補…），
    所以不能用「看起來不可能」來刪去。
@@ -107,12 +108,12 @@
         api.info = q;
         console.log('[求餘數] 第 ' + level + ' 題：' + q.n + ' ÷ ' + q.d + '，餘數 ' + q.r + '（商 ' + q.q + '），選項 ' + q.options.join(',') + '，限時 ' + ansMs(level) + ' ms');
 
-        var eq = h('div', { 'class': 'qz-big rem-eq', text: q.n + ' ÷ ' + q.d });
-        var ask = h('div', { 'class': 'qz-note rem-ask', text: '餘數是多少？' });
-        var reveal = h('div', { 'class': 'qz-note rem-reveal' });
+        var eq = h('div', { 'class': 'qz-big remainder-eq', text: q.n + ' ÷ ' + q.d });
+        var ask = h('div', { 'class': 'qz-note remainder-ask', text: '餘數是多少？' });
+        var reveal = h('div', { 'class': 'qz-note remainder-reveal' });
         stage.appendChild(eq); stage.appendChild(ask); stage.appendChild(reveal);
         var grid = kit.btnGrid(stage, q.options.map(function (v) {
-            return { text: String(v), kind: 'sky', cls: 'rem-btn', onTap: function () { judge(v); } };
+            return { text: String(v), kind: 'sky', cls: 'remainder-btn', onTap: function () { judge(v); } };
         }), { h: 120, gap: 8 });
         var bRight = grid.btns[q.options.indexOf(q.r)];
         api.timer(ansMs(level), function () { judge(null); });

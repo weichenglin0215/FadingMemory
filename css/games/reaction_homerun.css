@@ -1,0 +1,282 @@
+/* ═══════════════════════════════════════
+   reaction_homerun.css — 全壘打（js/reaction_homerun.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「homerun-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 全壘打（.homerun-）═══ */
+.homerun-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.homerun-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    touch-action: none;
+}
+
+/* 提示放在卡片底的小框裡（背景是深色的觀眾席，直接寫字看不清楚） */
+.homerun-tip {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 8px;
+    padding: 2px var(--sp-3);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    text-align: center;
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* 球場：上面的觀眾席（兩種顏色的點點）、下面的草地、投手丘 */
+.homerun-crowd {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 36%;
+    background-color: var(--hmr-crowd-bg);
+    background-image: radial-gradient(circle, var(--hmr-crowd-dot1) 22%, transparent 24%), radial-gradient(circle, var(--hmr-crowd-dot2) 22%, transparent 24%);
+    background-size: 22px 22px;
+    background-position: 0 0, 11px 11px;
+    pointer-events: none;
+}
+
+.homerun-grass {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--hmr-grass);
+    pointer-events: none;
+}
+
+.homerun-mound {
+    position: absolute;
+    width: 120px;
+    height: 30px;
+    background: var(--hmr-mound);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* 好球帶：半透明的方框；本壘板在它下面 */
+.homerun-zone {
+    position: absolute;
+    box-sizing: border-box;
+    border: 4px solid var(--hmr-zone-line);
+    background: var(--hmr-zone-fill);
+    border-radius: var(--r-sm);
+    pointer-events: none;
+}
+
+.homerun-plate {
+    position: absolute;
+    width: 72px;
+    height: 44px;
+    background: var(--hmr-plate);
+    clip-path: polygon(0 0, 100% 0, 100% 55%, 50% 100%, 0 55%);
+    pointer-events: none;
+}
+
+/* 投手 */
+.homerun-pitcher {
+    position: absolute;
+    display: block;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.homerun-leg {
+    fill: var(--hmr-leg);
+}
+
+.homerun-body {
+    fill: var(--hmr-body);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+.homerun-head {
+    fill: var(--hmr-skin);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+.homerun-cap {
+    fill: var(--hmr-cap);
+    stroke: var(--c-ink-soft);
+    stroke-width: 2;
+}
+
+.homerun-arm__in {
+    transform-origin: 0 0;
+}
+
+.homerun-armrect {
+    fill: var(--hmr-body);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+.homerun-handball {
+    fill: var(--hmr-ball);
+    stroke: var(--hmr-seam);
+    stroke-width: 2;
+}
+
+/* 球與殘影 */
+.homerun-ball,
+.homerun-trail {
+    position: absolute;
+    box-sizing: border-box;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--hmr-ball), var(--hmr-ball-shade));
+    border: 2px solid var(--hmr-seam);
+    pointer-events: none;
+}
+
+.homerun-ball {
+    z-index: 3;
+}
+
+.homerun-trail {
+    z-index: 2;
+}
+
+.homerun-ball--hr {
+    transition: transform 1.3s ease-out, opacity 1.3s ease-in;
+}
+
+.homerun-ball--go {
+    transform: translate(120px, -520px) scale(0.3);
+    opacity: 0;
+}
+
+/* 球棒：從打者後方看，在畫面下方；揮棒時繞著底部轉 */
+.homerun-bat {
+    position: absolute;
+    width: 36px;
+    height: 140px;
+    transform-origin: 50% 100%;
+    transform: rotate(-38deg);
+    transition: transform 0.14s ease-out;
+    pointer-events: none;
+    z-index: 4;
+}
+
+.homerun-bat--swing {
+    transform: rotate(62deg);
+}
+
+.homerun-bat__in {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--hmr-bat-lite), var(--hmr-bat));
+    border: 3px solid var(--c-ink-soft);
+    border-radius: 18px 18px 8px 8px;
+    box-sizing: border-box;
+    clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%);
+}
+
+/* 說明 */
+.homerun-info {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 14px;
+    padding: var(--sp-1) var(--sp-3);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+    z-index: 6;
+}
+
+.homerun-info:empty {
+    display: none;
+}
+
+.homerun-info--ok {
+    color: var(--c-ok);
+}
+
+.homerun-info--bad {
+    color: var(--c-bad);
+}
+
+/* 全壘打的大字 */
+.homerun-hr {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 34%;
+    text-align: center;
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--hmr-hr);
+    text-shadow: 0 3px 0 var(--c-card), 0 0 14px var(--c-card);
+    opacity: 0;
+    transform: scale(0.4);
+    transition: transform 0.45s cubic-bezier(0.2, 1.5, 0.4, 1), opacity 0.2s;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.homerun-hr--show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* 重播時：球最後的位置（綠圈＝好球、紅圈＝壞球）、你揮棒的時間點 */
+.homerun-final {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    box-sizing: border-box;
+    border: 5px solid var(--hmr-final-ok);
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.homerun-final--ball {
+    border-color: var(--hmr-final-bad);
+}
+
+.homerun-final--show {
+    opacity: 1;
+    animation: homerun-pop 0.3s ease-out;
+}
+
+@keyframes homerun-pop {
+    from {
+        transform: scale(2);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+.homerun-swingmark {
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    box-sizing: border-box;
+    border: 4px dashed var(--hmr-swing);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 3;
+}

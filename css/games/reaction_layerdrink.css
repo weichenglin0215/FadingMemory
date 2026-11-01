@@ -1,0 +1,203 @@
+/* ═══════════════════════════════════════
+   reaction_layerdrink.css — 照樣調一杯（js/reaction_layerdrink.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「layerdrink-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 照樣調一杯（.layerdrink-）═══ */
+.layerdrink-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.layerdrink-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.layerdrink-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 兩個杯子：左邊示範杯（看完會收走）、右邊你的杯子 */
+.layerdrink-box {
+    position: absolute;
+    width: 170px;
+    transition: opacity 0.4s;
+}
+
+.layerdrink-box--hide {
+    opacity: 0;
+}
+
+.layerdrink-cap {
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    text-align: center;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 232px;
+}
+
+.layerdrink-glass {
+    display: block;
+    overflow: visible;
+}
+
+.layerdrink-glass__bg {
+    fill: var(--lyd-glass);
+    opacity: 0.6;
+}
+
+.layerdrink-glass__edge {
+    fill: none;
+    stroke: var(--c-ink-soft);
+    stroke-width: 4;
+    stroke-linejoin: round;
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.layerdrink-glass__foot {
+    fill: var(--c-ink-soft);
+}
+
+.layerdrink-layer {
+    fill: var(--lyd-c);
+}
+
+.layerdrink-stop--red {
+    stop-color: var(--lyd-red);
+}
+
+.layerdrink-stop--yellow {
+    stop-color: var(--lyd-yellow);
+}
+
+.layerdrink-stop--green {
+    stop-color: var(--lyd-green);
+}
+
+.layerdrink-stop--blue {
+    stop-color: var(--lyd-blue);
+}
+
+.layerdrink-stop--purple {
+    stop-color: var(--lyd-purple);
+}
+
+.layerdrink-c--red {
+    --lyd-c: var(--lyd-red);
+}
+
+.layerdrink-c--yellow {
+    --lyd-c: var(--lyd-yellow);
+}
+
+.layerdrink-c--green {
+    --lyd-c: var(--lyd-green);
+}
+
+.layerdrink-c--blue {
+    --lyd-c: var(--lyd-blue);
+}
+
+.layerdrink-c--purple {
+    --lyd-c: var(--lyd-purple);
+}
+
+/* 倒下來的細線：從你的杯口上方一直到液面 */
+.layerdrink-stream {
+    position: absolute;
+    left: 82px;
+    top: -46px;
+    width: 7px;
+    height: 0;
+    background: var(--lyd-c);
+    border-radius: var(--r-pill);
+    opacity: 0;
+    transition: opacity 0.1s;
+}
+
+.layerdrink-stream--on {
+    height: 150px;
+    opacity: 0.95;
+}
+
+.layerdrink-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* 五個瓶子：按住倒、放手停；按對時瓶子往右傾 */
+.layerdrink-bottles {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.layerdrink-bottle {
+    width: 84px;
+    cursor: pointer;
+    touch-action: none;
+    transform-origin: 50% 100%;
+    transition: transform 0.15s;
+}
+
+.layerdrink-bottle--pour {
+    transform: rotate(-24deg) translateY(-8px);
+}
+
+.layerdrink-bottle__neck {
+    width: 24px;
+    height: 30px;
+    margin: 0 auto;
+    background: var(--lyd-c);
+    border-radius: var(--r-sm) var(--r-sm) 0 0;
+    border: 3px solid var(--c-ink-soft);
+    border-bottom: none;
+}
+
+.layerdrink-bottle__body {
+    height: 110px;
+    background: var(--lyd-c);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    color: var(--c-card);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    line-height: 110px;
+    text-align: center;
+}
+
+.layerdrink-c--yellow .layerdrink-bottle__body {
+    color: var(--c-ink);
+}
+
+.layerdrink-bottle--ok .layerdrink-bottle__body {
+    outline: 5px solid var(--c-ok);
+}
+
+.layerdrink-bottle--bad .layerdrink-bottle__body {
+    outline: 5px solid var(--c-bad-light);
+}

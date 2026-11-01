@@ -70,10 +70,10 @@ for (const [pw, ph] of [[448, 400], [440, 380], [472, 340]]) for (let n = 3; n <
 { const L = T.layout(7, 448, 400); ok(L.cols === 4 && L.rows === 2, '7 人排 4＋3，最後一排置中'); const last = L.faces.slice(4), cx = last.reduce((s, f) => s + f.x + f.w / 2, 0) / last.length; ok(Math.abs(cx - 224) <= 2, '最後一排置中：' + cx.toFixed(1)); }
 
 // ── 程式裡的接線 ──
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_groupphoto.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 3800/.test(src) && /gph-ring/.test(src) && /closedAt\(q, t\)/.test(src) && /gph-photo--wall/.test(src), '失敗：閉眼的人圈紅圈、停格 2 秒以上；成功：照片掛上牆；判定用 closedAt');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_groupphoto.js'), css = rd('../../css/games/reaction_groupphoto.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 3800/.test(src) && /groupphoto-ring/.test(src) && /closedAt\(q, t\)/.test(src) && /groupphoto-photo--wall/.test(src), '失敗：閉眼的人圈紅圈、停格 2 秒以上；成功：照片掛上牆；判定用 closedAt');
   ok(/api\.timer\(timeMs\(\)/.test(src) && /timeout\(\)/.test(src) && /api\.solve = /.test(src) && /api\.wrong = /.test(src), '有限時、時間到失敗、solve／wrong 只在對的瞬間按');
-  ok(/\.gph-person--phone \.gph-lid/.test(css) && /\.gph-ring \{[^}]*var\(--gph-ring\)/.test(css) && /\.gph-photo \{[^}]*var\(--gph-bg\)/.test(css) && /\.gph-shirt0 \{[^}]*var\(--gph-shirt0\)/.test(css), '低頭的人畫閉眼線、紅圈、牆面、衣服顏色用 CSS 變數');
+  ok(/\.groupphoto-person--phone \.groupphoto-lid/.test(css) && /\.groupphoto-ring \{[^}]*var\(--gph-ring\)/.test(css) && /\.groupphoto-photo \{[^}]*var\(--gph-bg\)/.test(css) && /\.groupphoto-shirt0 \{[^}]*var\(--gph-shirt0\)/.test(css), '低頭的人畫閉眼線、紅圈、牆面、衣服顏色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_groupphoto.js'") > 0 && /低頭看手機/.test(G.rule) && /快門/.test(G.rule), 'boot.js 有載入、玩法說明提到低頭看手機和快門'); }
 ok(T.rating(1) !== T.rating(3) && T.rating(3) !== T.rating(6) && T.rating(6) !== T.rating(12) && T.rating(12) !== T.rating(18), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

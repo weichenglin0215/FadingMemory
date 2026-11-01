@@ -1,0 +1,589 @@
+/* ═══════════════════════════════════════
+   reaction_common.css — 「秒反應」所有遊戲共用的樣式
+   · 只放「兩款以上遊戲、或共用程式（reaction_kit*.js、reaction.js）」會用到的 class（例如 .rx-hint 操作提示、.rx-grid 底部按鈕排、.qz- 答題文字、.ld- 排行榜相關）。
+   · 每一款遊戲自己的樣式在 css/games/reaction_<遊戲id>.css，class 名稱以「<遊戲id>-」開頭；新增遊戲時一律另開一個同名的 css，不要加在這裡。
+   · 顏色與尺寸一律用 css/theme.css 的 CSS 變數。載入順序：theme.css → 本檔 → css/games/ 底下各款（見 js/boot.js）。
+   ═══════════════════════════════════════ */
+
+/* ═══ reaction.css — 秒反應（reaction.html）：說明彈窗＋共用結果卡＋七個小遊戲 ═══
+   檔案分段：最上面是遊戲共用的東西（結算彈窗裡的文字 .rx-result；彈窗外框與卡片是公版，見 css/dialog.css）；
+   再來依序是「零秒出手」（.speed-）、「神準落下」（.drop-）、「大家來找碴」（.spot-）、
+   「不可能任務」（.imp-）、「形形色色」（.shapes-）、「色不異空」（.mc-）、
+   「七彩陷阱」（.rb-）各自專屬的樣式，對應的 DOM／邏輯在同名的
+   js/reaction_speed.js／reaction_drop.js／reaction_spot.js／reaction_impossible.js／
+   reaction_shapes.js／reaction_matchcolor.js／reaction_rainbow.js。 */
+/* 【新手導讀】
+   · 這個檔案的規則都長得像 .名稱 { 屬性: 值; }：「.名稱」是 class 選擇器，JS 把同名 class 貼到元素上，下面的樣式就會生效。
+   · 顏色、字級、間距一律用 var(--xxx)，變數定義在 css/theme.css 的 :root 裡（要換風格改那邊就好）。
+   · 名稱裡的「__」代表「某元素裡的零件」（例如 .dlg__card = 彈窗公版裡的卡片），「--」代表「變化版」
+     （例如 .spot-tile--ok = 答對時的樣子）。這是 BEM 命名習慣，看名字就能猜到用途。
+   · :active 是「手指／滑鼠正按著」的狀態，常用來做按下去縮小一點的回饋。
+   · 想知道哪個 class 是哪個遊戲的？看上面檔頭的對照表，前綴相同的就是同一款遊戲。 */
+/* ─── 上方列的「?」規則按鈕 ─── */
+/* 「?」說明按鈕：圓形（border-radius:50%）、固定 48×48，flex:0 0 auto 表示不被擠壓 */
+.bar__help {
+    flex: 0 0 auto;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 50%;
+    border: var(--btn-line-bd);
+    background: var(--btn-line-bg);
+    color: var(--btn-line-fg);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    cursor: pointer;
+}
+
+/* 按下去時縮小到 93%，給手指「有按到」的回饋 */
+.bar__help:active {
+    transform: scale(0.93);
+}
+
+/* ─── 共用：結算彈窗裡的文字 ───
+   結算彈窗（Reaction.kit.result）的外框與卡片是彈窗公版（css/dialog.css）；
+   卡片裡的大數字、評語用下面這組 .rx-result__num／__label。 */
+/* 結算頁的大數字（成績） */
+.rx-result__num {
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-blue);
+}
+
+/* 結算頁的評語 */
+.rx-result__label {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+/* 提示文字的「成功」版本（綠色） */
+.hint--ok {
+    color: var(--c-green);
+    font-weight: var(--fw-black);
+}
+
+/* 結算頁裡的按鈕 */
+.rx-result .btn {
+    width: 260px;
+    margin-top: var(--sp-3);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   以下是第二批新遊戲（js/reaction_kit.js 的共用工具＋各款遊戲專屬樣式）
+   ═══════════════════════════════════════════════════════════════════ */
+/* 標題列右側的喇叭（開關音效）：跟「?」同一個圓鈕樣式，兩顆並排時縮一點間距 */
+/* 音效開關按鈕 */
+.bar__sound {
+    font-size: var(--fs-md);
+}
+
+/* 喇叭圖示大小 */
+.bar__sound .icon {
+    width: 28px;
+    height: 28px;
+}
+
+/* 共用結算卡片裡的小字 */
+/* 結算卡片裡的小字 */
+.rx-result__line {
+    text-align: center;
+}
+
+.rx-result__note {
+    color: var(--c-ink-soft);
+}
+
+/* 標題列中間：遊戲名稱在上、meta（第 N 關・最佳…）在下，兩行疊起來 */
+/* 標題列中間區：遊戲名稱在上、說明（第 N 關…）在下 */
+.bar__mid {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.1;
+}
+
+.bar__mid .bar__title {
+    flex: none;
+    max-width: 100%;
+    font-size: var(--fs-md);
+}
+
+/* 說明文字：單行顯示，太長就用 ... 省略（text-overflow:ellipsis 要搭配 overflow:hidden + nowrap） */
+.bar__mid .bar__meta {
+    flex: none;
+    min-width: 0;
+    max-width: 100%;
+    font-size: var(--fs-xs);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 時間條（底） */
+.ld-time {
+    height: 10px;
+    border-radius: 5px;
+    background: var(--c-yellow-soft);
+    overflow: hidden;
+}
+
+/* 時間條（填滿部分） */
+.ld-time__fill {
+    height: 100%;
+    width: 0;
+    background: var(--c-blue);
+}
+
+/* 這個遊戲專用的 6 種音符顏色，放在 :root 讓所有 .py- 規則都能用 var(--py-red) 之類的寫法 */
+:root {
+    --py-red: #D6453D;
+    --py-orange: #F08A24;
+    --py-yellow: #F2C230;
+    --py-green: #3FA46A;
+    --py-blue: #3E86C4;
+    --py-purple: #8E5BB6;
+}
+
+/* ═══ 共用：標題列（第 N 關 ／ 命） ═══ */
+.rx-head {
+    flex: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.rx-head__info {
+    font-size: var(--fs-sm);
+    color: var(--c-ink-soft);
+}
+
+/* 時間條：沿用 .ld-time，這裡只補上不佔空間時的高度 */
+.rx-timebar {
+    flex: none;
+}
+
+/* 說明列：一兩行小字，放在遊戲區上方 */
+.rx-tip {
+    flex: none;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    line-height: var(--lh-body);
+}
+
+/* 遊戲區：吃掉剩下的高度；子元素用絕對定位排版（座標＝這個區域左上角起算的邏輯 px） */
+.rx-stage {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 遊戲區底部的一排按鈕 */
+.rx-btnrow {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    gap: var(--sp-3);
+}
+
+.rx-btnrow .btn {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+/* 題目大字（置中） */
+.rx-big {
+    text-align: center;
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    font-size: var(--fs-xxl);
+}
+
+/* 對錯回饋：整個遊戲區閃一下顏色框 */
+.rx-flash-ok {
+    box-shadow: inset 0 0 0 6px var(--c-ok);
+}
+
+.rx-flash-bad {
+    box-shadow: inset 0 0 0 6px var(--c-bad);
+}
+
+/* ═══ 共用：操作提示（手指圖示＋一句短文字） ═══
+   · 點擊物件：.rx-hint--tap，手指縮放＋指尖處一圈波紋（手指擺在第一關的正確位置）
+   · 拖曳：.rx-hint--drag，淡淡的箭頭＋手指從起始位置往目標位置重複移動
+   · 四個方向都能拖：.rx-hint--drag4，四支箭頭，手指依序往上、右、下、左各走一趟
+   · 持續按住：.rx-hint--hold，手指按下去不放＋波紋
+   · 短文字：.rx-hint__label（例如「請點擊色塊」「請往左右拖曳」「請持續按住螢幕」）
+   整個提示不攔截任何點擊（pointer-events:none） */
+.rx-hint {
+    position: absolute;
+    width: 0;
+    height: 0;
+    z-index: 15;
+    pointer-events: none;
+}
+
+.rx-hint__finger {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 56px;
+    height: 70px;
+    filter: drop-shadow(0 3px 4px var(--c-yellow-soft));
+}
+
+.rx-hint--tap .rx-hint__finger {
+    transform-origin: 17px 3px;
+    animation: rx-tap 1s ease-in-out infinite;
+}
+
+.rx-hint__ring {
+    position: absolute;
+    left: -24px;
+    top: -24px;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--r-pill);
+    border: 4px solid var(--c-orange);
+    opacity: 0;
+    animation: rx-ring 1s ease-out infinite;
+}
+
+.rx-hint--drag .rx-hint__finger {
+    animation: rx-drag 1.4s ease-in-out infinite;
+}
+
+.rx-hint--drag4 .rx-hint__finger {
+    animation: rx-drag4 6s ease-in-out infinite;
+}
+
+/* 持續按住：手指按下去（縮小一點、往下壓）之後不放，波紋一圈圈往外擴 */
+.rx-hint--hold .rx-hint__finger {
+    transform-origin: 17px 3px;
+    animation: rx-hold 1.8s ease-in-out infinite;
+}
+
+/* 短文字：圓角小標籤，放在手指旁邊（位置由 js/reaction_kit2.js 的 kit.fingerHint 算，不會超出畫面） */
+.rx-hint__label {
+    position: absolute;
+    z-index: 16;
+    padding: var(--sp-1) var(--sp-4);
+    border-radius: var(--r-pill);
+    border: 3px solid var(--c-orange);
+    background: var(--c-card);
+    box-shadow: var(--shadow-card);
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* 箭頭：從起點指向終點；以起點為旋轉中心，寬度＝距離（JS 設定） */
+.rx-hint__arrow {
+    position: absolute;
+    left: 0;
+    top: -3px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--c-orange);
+    opacity: 0.55;
+    transform-origin: 0 50%;
+}
+
+.rx-hint__arrow::after {
+    content: "";
+    position: absolute;
+    right: -4px;
+    top: -9px;
+    border-left: 18px solid var(--c-orange);
+    border-top: 12px solid transparent;
+    border-bottom: 12px solid transparent;
+}
+
+/* ═══ 共用：開始遮罩（準備好了按開始）與碼表 ═══ */
+.rx-cover {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-5);
+    padding: var(--sp-5);
+    background: var(--c-paper);
+}
+
+.rx-cover__text {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink);
+    line-height: var(--lh-body);
+    white-space: pre-line;
+}
+
+.rx-cover .btn {
+    width: 70%;
+}
+
+.rx-clock {
+    flex: none;
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.rx-clock--pen {
+    color: var(--c-bad);
+}
+
+@keyframes rx-tap {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    45% {
+        transform: scale(0.78);
+    }
+}
+
+@keyframes rx-ring {
+    0% {
+        transform: scale(0.4);
+        opacity: 0.9;
+    }
+
+    70%,
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* 四個方向：往上、回中心、往右、回中心、往下、回中心、往左、回中心，每趟約占 1/4 的時間（--l＝箭頭長度） */
+@keyframes rx-drag4 {
+
+    0%,
+    100% {
+        transform: translate(0, 0);
+    }
+
+    12% {
+        transform: translate(0, calc(var(--l) * -1));
+    }
+
+    25% {
+        transform: translate(0, 0);
+    }
+
+    37% {
+        transform: translate(var(--l), 0);
+    }
+
+    50% {
+        transform: translate(0, 0);
+    }
+
+    62% {
+        transform: translate(0, var(--l));
+    }
+
+    75% {
+        transform: translate(0, 0);
+    }
+
+    87% {
+        transform: translate(calc(var(--l) * -1), 0);
+    }
+}
+
+@keyframes rx-hold {
+
+    0%,
+    15% {
+        transform: translateY(0) scale(1);
+    }
+
+    35%,
+    85% {
+        transform: translateY(6px) scale(0.84);
+    }
+
+    100% {
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes rx-drag {
+
+    0%,
+    100% {
+        transform: translate(0, 0);
+    }
+
+    50% {
+        transform: translate(var(--dx), var(--dy));
+    }
+}
+
+/* ═══ 061 鬼腳圖（.gl-）═══ */
+.gl-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.gl-col {
+    stroke: var(--c-ink-soft);
+    stroke-width: 5;
+    stroke-linecap: round;
+}
+
+.gl-rung {
+    stroke: var(--c-ink-soft);
+    stroke-width: 4;
+    stroke-linecap: round;
+}
+
+.gl-token {
+    fill: var(--c-card);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+/* 起點（上方的圓）與終點（下方的方塊）：綠底黑字（V1.28 改玩法：題目一開始就標出起點與終點） */
+.gl-token--go {
+    fill: var(--c-green);
+    stroke: var(--c-ink);
+}
+
+.gl-token--go+.gl-label,
+.gl-end--go+.gl-label {
+    fill: var(--c-black);
+}
+
+.gl-label {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    fill: var(--c-ink);
+    font-family: var(--font-ui);
+}
+
+.gl-end {
+    fill: var(--c-card-alt);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+/* 終點（要放在 .gl-end 後面，才蓋得過它的灰底） */
+.gl-end--go {
+    fill: var(--c-green);
+    stroke: var(--c-ink);
+}
+
+/* 評審動畫的結果：走到的終點——對＝加粗的綠框、錯＝紅框（並把正確的終點框起來） */
+.gl-end--ok {
+    stroke: var(--c-ok);
+    stroke-width: 7;
+}
+
+.gl-end--bad {
+    fill: var(--c-bad-soft);
+    stroke: var(--c-bad);
+    stroke-width: 7;
+}
+
+.gl-end--want {
+    stroke: var(--c-black);
+    stroke-width: 6;
+    stroke-dasharray: 8 5;
+}
+
+.gl-msg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 8px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    line-height: var(--lh-body);
+}
+
+/* ═══ 共用：答題文字 .qz-、底部按鈕排 .rx-grid ═══ */
+.qz-big {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 70px;
+    text-align: center;
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    line-height: var(--lh-tight);
+    font-variant-numeric: tabular-nums;
+}
+
+.qz-note {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-2);
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    line-height: var(--lh-body);
+}
+
+.qz-ok {
+    color: var(--c-ok) !important;
+}
+
+.qz-bad {
+    color: var(--c-bad) !important;
+}
+
+/* 遊戲區底部的按鈕排：用格線（grid）排，欄數由 js 設定；每顆按鈕的高度用 --rx-grid-h */
+.rx-grid {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: grid;
+    gap: var(--sp-3);
+}
+
+.rx-grid .btn {
+    height: var(--rx-grid-h, var(--btn-h-sm));
+    min-width: 0;
+    padding: 0 var(--sp-2);
+}
+
+/* ═══ END（新款 CSS 加在這一行之前）═══ */
+
+/* ═══ END（新款 CSS 加在這一行之前）═══ */

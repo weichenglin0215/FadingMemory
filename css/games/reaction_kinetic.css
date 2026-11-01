@@ -1,0 +1,215 @@
+/* ═══════════════════════════════════════
+   reaction_kinetic.css — 動態視力（js/reaction_kinetic.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「kinetic-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 動態視力（.kinetic-）═══ */
+.kinetic-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 遊戲區：火車從右邊開進來、左邊開出去，超出的部分要藏起來 */
+.kinetic-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+.kinetic-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 鐵軌 */
+.kinetic-rail {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 10px;
+    background: var(--knt-rail);
+    border-radius: var(--r-sm);
+}
+
+/* 整列火車（用 translateX 移動）和每一節車廂 */
+.kinetic-train {
+    position: absolute;
+    left: 0;
+    will-change: transform;
+}
+
+.kinetic-car {
+    position: absolute;
+    top: 0;
+}
+
+.kinetic-svg {
+    display: block;
+    overflow: visible;
+}
+
+.kinetic-defs {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+}
+
+.kinetic-roof {
+    fill: var(--knt-roof);
+}
+
+.kinetic-body {
+    fill: var(--knt-body);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+.kinetic-band {
+    fill: var(--knt-band);
+}
+
+.kinetic-glass {
+    fill: var(--knt-glass);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+.kinetic-frame {
+    fill: var(--knt-frame);
+}
+
+.kinetic-wheel {
+    fill: var(--knt-wheel);
+}
+
+.kinetic-link {
+    fill: var(--knt-link);
+}
+
+/* 窗戶裡的東西 */
+.kinetic-pax--0 {
+    fill: var(--knt-pax0);
+}
+
+.kinetic-pax--1 {
+    fill: var(--knt-pax1);
+}
+
+.kinetic-pax--2 {
+    fill: var(--knt-pax2);
+}
+
+.kinetic-head {
+    fill: var(--knt-head);
+}
+
+.kinetic-hair {
+    fill: var(--knt-hair);
+}
+
+.kinetic-bento {
+    fill: var(--knt-bento);
+}
+
+.kinetic-rice {
+    fill: var(--knt-rice);
+}
+
+.kinetic-egg {
+    fill: var(--knt-egg);
+}
+
+.kinetic-veg {
+    fill: var(--knt-veg);
+}
+
+.kinetic-paper {
+    fill: var(--knt-paper);
+    stroke: var(--c-ink-soft);
+    stroke-width: 2;
+}
+
+.kinetic-line {
+    fill: var(--knt-line);
+}
+
+.kinetic-curtain {
+    fill: var(--knt-curtain);
+}
+
+.kinetic-fold {
+    fill: none;
+    stroke: var(--knt-fold);
+    stroke-width: 3;
+}
+
+/* 黃底黑字的貼紙：貼在窗戶正中央；揭曉時放大 */
+.kinetic-sticker {
+    position: absolute;
+    padding: 0 var(--sp-2);
+    transform: translate(-50%, -50%);
+    background: var(--knt-sticker);
+    border: 3px solid var(--knt-sticker-edge);
+    border-radius: var(--r-sm);
+    color: var(--knt-digit);
+    font-size: var(--fs-xxxxl);
+    font-weight: var(--fw-black);
+    line-height: 1.2;
+    letter-spacing: 2px;
+    white-space: nowrap;
+    z-index: 2;
+    transition: transform 0.5s ease-out;
+}
+
+.kinetic-sticker--zoom {
+    transform: translate(-50%, -50%) scale(1.9);
+    box-shadow: var(--shadow-pop);
+    z-index: 5;
+}
+
+.kinetic-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.kinetic-info--ok {
+    color: var(--c-ok);
+}
+
+.kinetic-info--bad {
+    color: var(--c-bad);
+}
+
+/* 4 個號碼選項 */
+.kinetic-opt {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    letter-spacing: 4px;
+}
+
+.kinetic-ok {
+    background: var(--c-ok-light);
+    border-color: var(--c-ok);
+}
+
+.kinetic-bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad-light);
+    color: var(--c-bad);
+}

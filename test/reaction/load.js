@@ -15,6 +15,8 @@ require(ROOT + 'js/reaction_kit.js');
 require(ROOT + 'js/reaction_kit3.js');    // 第三批共用小工具（kit.mod／kit.sample…；V1.22.0）
 require(ROOT + 'js/reaction_kit4.js');    // 第四批共用小工具（方格地圖 kit.gridNeighbors／kit.hamPath…；V1.34.0）
 require(ROOT + 'js/similar_chars.js');    // 共用資料庫：長得很像的中文字（V1.33.0；對準才看到、手電筒猜圖、鏡中旋轉字…都用它）
+require(ROOT + 'js/sudoku_engine.js');     // 數獨系列的出題與推理引擎（V1.41；數獨4／6／9、夾心數獨共用）
+require(ROOT + 'js/sudoku_lib.js');        // 數獨系列的共用畫面零件（Reaction.sudokuLib）
 require(ROOT + 'js/ghostleg_core.js');     // 鬼腳圖的共用出題工具（V1.33.0；鬼腳圖、鬼腳圖減一 都用它）
 require(ROOT + 'js/leaderboard.js');       // 遊戲的結算流程會呼叫 Leaderboard.fake4／fmtNum／submit（測試只呼叫純函式，但要找得到它）
 exports.game = function (file) {

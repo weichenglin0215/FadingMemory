@@ -1,0 +1,157 @@
+/* ═══════════════════════════════════════
+   reaction_bread.css — 秤麵包重量（js/reaction_bread.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「bread-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 秤麵包重量：切下指定重量的麵包。 */
+/* ═══ 秤麵包重量（.bread-）═══ */
+/* 資訊文字 */
+.bread-info {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--c-ink);
+    min-height: 2.6em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 切對（綠） */
+.bread-info--ok {
+    color: var(--c-ok);
+}
+
+/* 切錯（橘） */
+.bread-info--bad {
+    color: var(--c-bad);
+}
+
+/* 場地 */
+.bread-zone {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    touch-action: none;
+    user-select: none;
+}
+
+/* SVG */
+.bread-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* 麵包 */
+.bread-bread {
+    fill: #E7BC72;
+    stroke: #B5762A;
+    stroke-width: 5px;
+    stroke-linejoin: round;
+}
+
+/* 刀線（虛線） */
+.bread-knife__line {
+    stroke: var(--c-bad);
+    stroke-width: 3px;
+    stroke-dasharray: 8 5;
+}
+
+/* 刀把 */
+.bread-knife__grip {
+    fill: var(--c-bad);
+}
+
+/* 秤的底座 */
+.bread-sbase {
+    fill: #D8D2C0;
+    stroke: var(--c-ink-soft);
+    stroke-width: 4px;
+}
+
+/* 秤的液晶螢幕 */
+.bread-slcd {
+    fill: #263238;
+}
+
+/* 秤上的克數 */
+.bread-sgram {
+    fill: #8FA29A;
+    font-size: 34px;
+    font-weight: 800;
+    font-family: var(--font-ui);
+    font-variant-numeric: tabular-nums;
+}
+
+/* 秤顯示綠字 */
+.bread-sgram--on {
+    fill: #7CFF9B;
+}
+
+/* 判定結果（秤的正下方）：第一行「差距 X.XXXX%」，第二行大大的「過關！／沒過關」。平常透明，秤重時才顯示 */
+.bread-vd {
+    fill: var(--c-ink);
+    font-size: 30px;
+    font-weight: 800;
+    font-family: var(--font-ui);
+    font-variant-numeric: tabular-nums;
+    opacity: 0;
+}
+
+.bread-vd--on {
+    opacity: 1;
+}
+
+.bread-vw {
+    font-size: 44px;
+    font-weight: 900;
+    font-family: var(--font-ui);
+    opacity: 0;
+}
+
+/* 過關（綠） */
+.bread-vw--ok {
+    fill: var(--c-ok);
+    opacity: 1;
+}
+
+/* 沒過關（橘） */
+.bread-vw--bad {
+    fill: var(--c-bad);
+    opacity: 1;
+}
+
+/* 切下來的麵包片 */
+.bread-splat {
+    fill: #B9B29C;
+    stroke: var(--c-ink-soft);
+    stroke-width: 3px;
+}
+
+/* 下方控制列 */
+.bread-ctrl {
+    flex: none;
+    display: flex;
+    gap: var(--sp-3);
+}
+
+/* 左右微調 */
+.bread-ctrl .bread-nudge {
+    flex: 0 0 22%;
+    width: auto;
+    font-size: var(--fs-lg);
+}
+
+/* 「切」按鈕 */
+.bread-ctrl .bread-cut {
+    flex: 1 1 auto;
+    width: auto;
+}

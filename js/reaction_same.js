@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_same.js — 秒反應・相同嗎？（原「跟前面一樣嗎」）
+   樣式：css/games/reaction_same.css（這款專屬的 class 一律以「same-」開頭；共用元件在 css/reaction_common.css）
    畫面分成上下兩格。先在上格亮出一個東西（預設 1 秒），然後上格變成空白（預設 0.5 秒），
    再在下格亮出第二個東西、同時出現最下面兩顆按鈕「不相同」「相同」，判斷兩個是不是一樣。
    答案按鈕永遠只有這兩顆。
@@ -312,13 +313,13 @@
         box.innerHTML = '';
         if (!item) return;
         if (item.kind === 'fruit') {
-            var s = kit.svg('svg', { 'class': 'sm-svg', viewBox: '0 0 200 200' }, box);
+            var s = kit.svg('svg', { 'class': 'same-svg', viewBox: '0 0 200 200' }, box);
             drawFruit(item.fruit, s);
         } else if (item.kind === 'shape') {
-            var s2 = kit.svg('svg', { 'class': 'sm-svg', viewBox: '-100 -100 200 200' }, box);
+            var s2 = kit.svg('svg', { 'class': 'same-svg', viewBox: '-100 -100 200 200' }, box);
             drawShape(item, s2);
         } else {
-            box.appendChild(h('div', { 'class': 'sm-text' + (item.text.length > 4 ? ' sm-text--long' : ''), text: item.text }));
+            box.appendChild(h('div', { 'class': 'same-text' + (item.text.length > 4 ? ' same-text--long' : ''), text: item.text }));
         }
     }
 
@@ -341,14 +342,14 @@
             var flags = sameFlags(), genId = 0;   /* 從中間某題開始（失敗後繼續）時，這一輪 10 題的「相同／不相同」配額也要有 */
 
             /* 建立各個畫面元素：標題、提示、上格、下格、時間條、兩顆按鈕 */
-            var head = h('div', { 'class': 'sm-head' });
-            var prompt = h('div', { 'class': 'sm-prompt' });
-            var boxA = h('div', { 'class': 'sm-box' });
-            var boxB = h('div', { 'class': 'sm-box' });
+            var head = h('div', { 'class': 'same-head' });
+            var prompt = h('div', { 'class': 'same-prompt' });
+            var boxA = h('div', { 'class': 'same-box' });
+            var boxB = h('div', { 'class': 'same-box' });
             var tb = kit.timebar();
-            var bNo = h('button', { 'class': 'btn btn--primary sm-btn', text: '不相同' });
-            var bYes = h('button', { 'class': 'btn btn--go sm-btn', text: '相同' });
-            var btns = h('div', { 'class': 'sm-btns' }, [bNo, bYes]);
+            var bNo = h('button', { 'class': 'btn btn--primary same-btn', text: '不相同' });
+            var bYes = h('button', { 'class': 'btn btn--go same-btn', text: '相同' });
+            var btns = h('div', { 'class': 'same-btns' }, [bNo, bYes]);
             /* 按鈕一開始先隱藏（style.visibility='hidden' 隱藏但仍佔位置，版面不會跳動） */
             btns.style.visibility = 'hidden';
             /* 把所有元素依序放進畫面 */
@@ -373,7 +374,7 @@
                 } catch (e) { }
                 paintHead(); meta();
                 prompt.textContent = cur.prompt;
-                boxA.className = 'sm-box'; boxB.className = 'sm-box';
+                boxA.className = 'same-box'; boxB.className = 'same-box';
                 boxB.innerHTML = ''; boxA.innerHTML = '';
                 btns.style.visibility = 'hidden';
                 tb.set(0);
@@ -414,8 +415,8 @@
                 var ok = isSame === cur.same;
                 /* 揭曉：把上格內容重新顯示，兩格都標上對錯顏色 */
                 renderItem(boxA, cur.A);       /* 揭曉：上格再亮出來，兩格一起看 */
-                boxA.classList.add(ok ? 'sm-box--ok' : 'sm-box--bad');
-                boxB.classList.add(ok ? 'sm-box--ok' : 'sm-box--bad');
+                boxA.classList.add(ok ? 'same-box--ok' : 'same-box--bad');
+                boxB.classList.add(ok ? 'same-box--ok' : 'same-box--bad');
                 if (ok) { right++; Sfx.play('ok'); if (Reaction.setBest(ID, right, function (v, b) { return v > b; })) newRec = true; }
                 else Sfx.play('bad');
                 prompt.textContent = (isSame == null ? '時間到！' : (ok ? '答對了！' : '答錯了…')) + '　正確是「' + (cur.same ? '相同' : '不相同') + '」';

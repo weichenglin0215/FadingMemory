@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_sudokuone.js — 秒反應・數獨猜一格（企劃 181「四格數獨」的改版）
+   樣式：css/games/reaction_sudokuone.css（這款專屬的 class 一律以「sudokuone-」開頭；共用元件在 css/reaction_common.css）
    標準的數獨：每一橫排、每一直排、每一個「宮」裡，1～N 各出現一次。盤面上只有一格被標成黃色，
    只要猜出「那一格」是幾就好，點下面的數字鍵。
    ───────────────────────────────────────────────────────────────────
@@ -37,7 +38,7 @@
     var ANS4_S = [30, 120], ANS9_S = [120, 600];   /* 作答限時（秒）：階段的第 1 關 → 到頂 */
     var MAX_LEVEL = 90;
     var BOARD_FRAC = 0.96;                      /* 盤面寬度佔遊戲畫面寬度的比例 */
-    var BORDER = 4;                             /* 盤面左、上外框粗細（px，跟 css 的 .sdk-board 一致） */
+    var BORDER = 4;                             /* 盤面左、上外框粗細（px，跟 css 的 .sudokuone-board 一致） */
     var REVEAL_FAIL_MS = 6000;                  /* 答錯或逾時：顯示正確答案要停多久才跳出結算彈窗 */
     var SLACK = 4;                              /* 提示個數離目標不超過這麼多就收題，否則多試幾次、用提示最少的那次 */
 
@@ -192,27 +193,27 @@
         api.info = q;
         console.log('[數獨猜一格] 第 ' + level + ' 關：' + N + '×' + N + '（' + B + '×' + B + ' 的宮）目標第 ' + (g.rowOf(q.target) + 1) + ' 排第 ' + (g.colOf(q.target) + 1) + ' 格，答案 ' + q.answer + '；提示 ' + q.count + ' 個（想要 ' + givensFor(level) + '），推理 ' + q.steps + ' 輪；限時 ' + ansMs(level) + ' ms');
 
-        /* 盤面：N 欄 N 列的格子，每一格的邊長由 css 的 .sdk-board--n4／--n9 決定；每個宮的最右一欄、最下一排畫粗線（sdk-cE／sdk-rE） */
+        /* 盤面：N 欄 N 列的格子，每一格的邊長由 css 的 .sudokuone-board--n4／--n9 決定；每個宮的最右一欄、最下一排畫粗線（sudokuone-cE／sudokuone-rE） */
         var W = stage.clientWidth || 472, bm = boardMetrics(W, N);
-        var board = h('div', { 'class': 'sdk-board sdk-board--n' + N });
+        var board = h('div', { 'class': 'sudokuone-board sudokuone-board--n' + N });
         board.style.setProperty('--sdk-cell', bm.cell.toFixed(3) + 'px');                 /* 每格邊長：盤面寬度是畫面寬的 96% */
         board.style.setProperty('--sdk-font', Math.round(bm.cell * (N === 4 ? 0.62 : 0.72)) + 'px');
         var cells = [];
         for (var i = 0; i < g.cells; i++) {
-            var c = h('div', { 'class': 'sdk-cell' });
-            if (g.colOf(i) % B === B - 1) c.className += ' sdk-cE';
-            if (g.rowOf(i) % B === B - 1) c.className += ' sdk-rE';
-            if (i === q.target) c.className += ' sdk-cell--target';
-            else if (g.rowOf(i) === g.rowOf(q.target) || g.colOf(i) === g.colOf(q.target) || g.blockOf(i) === g.blockOf(q.target)) c.className += ' sdk-cell--peer';
-            if (q.givens[i]) { c.textContent = String(q.givens[i]); c.className += ' sdk-cell--given'; }
+            var c = h('div', { 'class': 'sudokuone-cell' });
+            if (g.colOf(i) % B === B - 1) c.className += ' sudokuone-cE';
+            if (g.rowOf(i) % B === B - 1) c.className += ' sudokuone-rE';
+            if (i === q.target) c.className += ' sudokuone-cell--target';
+            else if (g.rowOf(i) === g.rowOf(q.target) || g.colOf(i) === g.colOf(q.target) || g.blockOf(i) === g.blockOf(q.target)) c.className += ' sudokuone-cell--peer';
+            if (q.givens[i]) { c.textContent = String(q.givens[i]); c.className += ' sudokuone-cell--given'; }
             else if (i === q.target) c.textContent = '？';
             board.appendChild(c); cells.push(c);
         }
-        var tip = h('div', { 'class': 'qz-note sdk-tip sdk-tip--n' + N, text: '黃色那一格數字是哪個？' });
+        var tip = h('div', { 'class': 'qz-note sudokuone-tip sudokuone-tip--n' + N, text: '黃色那一格數字是哪個？' });
         tip.style.top = Math.round(10 + bm.height + 4) + 'px';
         stage.appendChild(board); stage.appendChild(tip);
         var items = [];
-        for (var d = 1; d <= N; d++) (function (d) { items.push({ text: String(d), kind: 'sky', cls: 'sdk-btn', onTap: function () { judge(d); } }); })(d);
+        for (var d = 1; d <= N; d++) (function (d) { items.push({ text: String(d), kind: 'sky', cls: 'sudokuone-btn', onTap: function () { judge(d); } }); })(d);
         /* 數字鍵：4×4 排成一排 4 顆（每顆大一點）；9×9 排成 3×3 */
         var grid = kit.btnGrid(stage, items, N === 4 ? { cols: 4, h: 84, gap: 8 } : { cols: 5, h: 62, gap: 8 });
         api.timer(ansMs(level), function () { judge(null); });
@@ -223,9 +224,9 @@
             var ok = v === q.answer;
             /* 揭曉：整個解答都填出來，目標那一格標大字 */
             cells.forEach(function (c, k) {
-                if (!q.givens[k]) { c.textContent = String(q.solution[k]); c.classList.add('sdk-cell--fill'); }
+                if (!q.givens[k]) { c.textContent = String(q.solution[k]); c.classList.add('sudokuone-cell--fill'); }
             });
-            cells[q.target].classList.add(ok ? 'sdk-cell--ok' : 'sdk-cell--bad');
+            cells[q.target].classList.add(ok ? 'sudokuone-cell--ok' : 'sudokuone-cell--bad');
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1200 }); return; }
             kit.flash(stage, false, api.my);
             api.fail({

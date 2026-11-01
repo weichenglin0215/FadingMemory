@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_knockcount.js — 秒反應・敲幾下（企劃 313，依使用者的修改：取消飛鳥、改成「銅缽」干擾）
+   樣式：css/games/reaction_knockcount.css（這款專屬的 class 一律以「knockcount-」開頭；共用元件在 css/reaction_common.css）
    寺廟的木魚。師父先敲一段（快速的節奏，例如 咚咚 咚咚咚 咚），木魚旁邊沒有數字。師父敲完，**你要快速敲出一樣的次數**（不用一樣的節奏），
    敲完按「我數好了」（V1.36.0：這顆按鈕要等你敲了第一下木魚才會出現——常有玩家沒敲木魚就按了按鈕而失敗）。揭曉：「師父敲了 17 下，你敲了 17 下」。剛好才過關。
    ───────────────────────────────────────────────────────────────────
@@ -83,7 +84,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'knk-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'knockcount-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -93,19 +94,19 @@
 
     /* 木魚（SVG）：圓圓的木頭、一條嘴縫；木槌 */
     function fishSvg(parent) {
-        var s = kit.svg('svg', { 'class': 'knk-fish', viewBox: '0 0 200 170', width: 200, height: 170 }, parent);
-        kit.svg('ellipse', { 'class': 'knk-fish__body', cx: 100, cy: 92, rx: 88, ry: 70 }, s);
-        kit.svg('path', { 'class': 'knk-fish__mouth', d: 'M34 98 Q100 130 166 98' }, s);
-        kit.svg('ellipse', { 'class': 'knk-fish__shine', cx: 70, cy: 62, rx: 26, ry: 12 }, s);
-        kit.svg('rect', { 'class': 'knk-fish__stand', x: 50, y: 150, width: 100, height: 14, rx: 7 }, s);
+        var s = kit.svg('svg', { 'class': 'knockcount-fish', viewBox: '0 0 200 170', width: 200, height: 170 }, parent);
+        kit.svg('ellipse', { 'class': 'knockcount-fish__body', cx: 100, cy: 92, rx: 88, ry: 70 }, s);
+        kit.svg('path', { 'class': 'knockcount-fish__mouth', d: 'M34 98 Q100 130 166 98' }, s);
+        kit.svg('ellipse', { 'class': 'knockcount-fish__shine', cx: 70, cy: 62, rx: 26, ry: 12 }, s);
+        kit.svg('rect', { 'class': 'knockcount-fish__stand', x: 50, y: 150, width: 100, height: 14, rx: 7 }, s);
         return s;
     }
     /* 銅缽（SVG）：金色的碗，缽緣有一圈光；敲的時候擴散一圈波紋 */
     function bowlSvg(parent) {
-        var s = kit.svg('svg', { 'class': 'knk-bowl', viewBox: '0 0 140 110', width: 140, height: 110 }, parent);
-        kit.svg('path', { 'class': 'knk-bowl__body', d: 'M10 30 Q70 8 130 30 Q124 92 70 98 Q16 92 10 30 Z' }, s);
-        kit.svg('ellipse', { 'class': 'knk-bowl__rim', cx: 70, cy: 28, rx: 60, ry: 14 }, s);
-        kit.svg('ellipse', { 'class': 'knk-bowl__wave', cx: 70, cy: 28, rx: 60, ry: 14 }, s);
+        var s = kit.svg('svg', { 'class': 'knockcount-bowl', viewBox: '0 0 140 110', width: 140, height: 110 }, parent);
+        kit.svg('path', { 'class': 'knockcount-bowl__body', d: 'M10 30 Q70 8 130 30 Q124 92 70 98 Q16 92 10 30 Z' }, s);
+        kit.svg('ellipse', { 'class': 'knockcount-bowl__rim', cx: 70, cy: 28, rx: 60, ry: 14 }, s);
+        kit.svg('ellipse', { 'class': 'knockcount-bowl__wave', cx: 70, cy: 28, rx: 60, ry: 14 }, s);
         return s;
     }
 
@@ -116,33 +117,33 @@
         console.log('[敲幾下] 第 ' + level + ' 關：師父敲木魚 ' + N + ' 下（分組 ' + q.groups.join('、') + '），銅缽 ' + q.bowls + ' 聲（不算），組內間隔約 ' + q.tempo + ' 毫秒；木魚最後一下 ' + q.fishMs + ' 毫秒、全部 ' + q.endMs + ' 毫秒');
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        var field = h('div', { 'class': 'knk-field' });
+        var field = h('div', { 'class': 'knockcount-field' });
         stage.appendChild(field);
-        var tip = h('div', { 'class': 'qz-note knk-tip', text: '聽師父敲木魚，數有幾下' });
+        var tip = h('div', { 'class': 'qz-note knockcount-tip', text: '聽師父敲木魚，數有幾下' });
         field.appendChild(tip);
-        var count = h('div', { 'class': 'knk-count', text: '' });
+        var count = h('div', { 'class': 'knockcount-count', text: '' });
         field.appendChild(count);
         /* 師父（剪影）、木槌、木魚、銅缽 */
-        var monk = h('div', { 'class': 'knk-monk' }, [h('div', { 'class': 'knk-monk__head' }), h('div', { 'class': 'knk-monk__body' })]);
+        var monk = h('div', { 'class': 'knockcount-monk' }, [h('div', { 'class': 'knockcount-monk__head' }), h('div', { 'class': 'knockcount-monk__body' })]);
         field.appendChild(monk);
-        var mallet = h('div', { 'class': 'knk-mallet' }, [h('div', { 'class': 'knk-mallet__stick' }), h('div', { 'class': 'knk-mallet__head' })]);
+        var mallet = h('div', { 'class': 'knockcount-mallet' }, [h('div', { 'class': 'knockcount-mallet__stick' }), h('div', { 'class': 'knockcount-mallet__head' })]);
         field.appendChild(mallet);
-        var mallet2 = h('div', { 'class': 'knk-mallet knk-mallet2' }, [h('div', { 'class': 'knk-mallet__stick' }), h('div', { 'class': 'knk-mallet__head' })]);          /* 師父另一隻手的木槌：專門用來敲銅缽 */
+        var mallet2 = h('div', { 'class': 'knockcount-mallet knockcount-mallet2' }, [h('div', { 'class': 'knockcount-mallet__stick' }), h('div', { 'class': 'knockcount-mallet__head' })]);          /* 師父另一隻手的木槌：專門用來敲銅缽 */
         field.appendChild(mallet2);
-        var fishBox = h('div', { 'class': 'knk-fishbox' }); fishSvg(fishBox); field.appendChild(fishBox);
-        var bowlBox = h('div', { 'class': 'knk-bowlbox' }); bowlSvg(bowlBox); field.appendChild(bowlBox);
-        var info = h('div', { 'class': 'qz-note knk-info', text: '' });
+        var fishBox = h('div', { 'class': 'knockcount-fishbox' }); fishSvg(fishBox); field.appendChild(fishBox);
+        var bowlBox = h('div', { 'class': 'knockcount-bowlbox' }); bowlSvg(bowlBox); field.appendChild(bowlBox);
+        var info = h('div', { 'class': 'qz-note knockcount-info', text: '' });
         field.appendChild(info);
-        var done = h('div', { 'class': 'btn btn--go knk-done', text: '我數好了' });
+        var done = h('div', { 'class': 'btn btn--go knockcount-done', text: '我數好了' });
         done.style.display = 'none'; field.appendChild(done);
 
         var phase = 'watch', taps = 0, over = false;
-        function hitFish(cls) { fishBox.classList.remove('knk-hit'); void fishBox.offsetWidth; fishBox.classList.add('knk-hit'); if (cls) { mallet.classList.remove('knk-mallet--hit'); void mallet.offsetWidth; mallet.classList.add('knk-mallet--hit'); } }
-        function hitBowl() { bowlBox.classList.remove('knk-hit'); void bowlBox.offsetWidth; bowlBox.classList.add('knk-hit'); }
+        function hitFish(cls) { fishBox.classList.remove('knockcount-hit'); void fishBox.offsetWidth; fishBox.classList.add('knockcount-hit'); if (cls) { mallet.classList.remove('knockcount-mallet--hit'); void mallet.offsetWidth; mallet.classList.add('knockcount-mallet--hit'); } }
+        function hitBowl() { bowlBox.classList.remove('knockcount-hit'); void bowlBox.offsetWidth; bowlBox.classList.add('knockcount-hit'); }
         /* 師父去敲銅缽的動作：另一隻手的木槌揮向銅缽、身體往銅缽那邊傾一下（動畫約 0.4 秒，揮到一半剛好響） */
         function reachBowl() {
-            mallet2.classList.remove('knk-mallet2--hit'); void mallet2.offsetWidth; mallet2.classList.add('knk-mallet2--hit');
-            monk.classList.remove('knk-monk--lean'); void monk.offsetWidth; monk.classList.add('knk-monk--lean');
+            mallet2.classList.remove('knockcount-mallet2--hit'); void mallet2.offsetWidth; mallet2.classList.add('knockcount-mallet2--hit');
+            monk.classList.remove('knockcount-monk--lean'); void monk.offsetWidth; monk.classList.add('knockcount-monk--lean');
         }
         /* 師父表演：依時間表敲木魚（咚）和銅缽（噹） */
         q.events.forEach(function (e) {

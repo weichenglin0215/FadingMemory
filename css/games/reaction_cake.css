@@ -1,0 +1,155 @@
+/* ═══════════════════════════════════════
+   reaction_cake.css — 分蛋糕（js/reaction_cake.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「cake-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 分蛋糕：拖曳藍線切蛋糕，每一塊的面積要幾乎一樣大。 */
+/* ═══ 分蛋糕（.cake-）═══ */
+.cake-head {
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+/* 提示橫幅 */
+.cake-banner {
+    min-height: 1.4em;
+    /* pre-line：文字裡的換行符號會真的換行；結算時的算式（4 位小數）比較長，分成兩行 */
+    white-space: pre-line;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 蛋糕場地 */
+.cake-field {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    touch-action: none;
+}
+
+/* 蛋糕 SVG */
+.cake-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* 蛋糕本體（黃色圓形） */
+.cake-cake {
+    fill: var(--c-yellow-soft);
+    stroke: var(--c-yellow);
+    stroke-width: 5;
+}
+
+/* 蛋糕上的糖霜（虛線圓） */
+.cake-icing {
+    fill: var(--c-card);
+    stroke: var(--c-orange);
+    stroke-width: 3;
+    stroke-dasharray: 3 9;
+    stroke-linecap: round;
+}
+
+/* 輔助刻度小點（隨關卡淡出） */
+.cake-aid {
+    fill: var(--c-ink-soft);
+}
+
+/* 蛋糕中心點 */
+.cake-center {
+    fill: var(--c-ink);
+}
+
+/* 切刀線（藍色） */
+.cake-cutline {
+    stroke: var(--c-blue);
+    stroke-width: 5;
+    stroke-linecap: round;
+}
+
+/* 第一刀固定的線（橘色，不能拖） */
+.cake-cutline--first {
+    stroke: var(--c-orange);
+}
+
+/* 線頭的圓形把手：可以拖曳 */
+.cake-handle {
+    fill: var(--c-card);
+    stroke: var(--c-blue);
+    stroke-width: 5;
+    cursor: grab;
+}
+
+/* 正在被拖曳的把手變實心藍色 */
+.cake-handle--drag {
+    fill: var(--c-blue);
+}
+
+/* 正在被拖曳的切刀線變粗 */
+.cake-cutline--drag {
+    stroke-width: 8;
+}
+
+/* 面積百分比文字（小字） */
+.cake-slice__t--sm {
+    font-size: 20px;
+}
+
+/* 切開後每一塊會慢慢移開（transition 0.5 秒） */
+.cake-slice {
+    transition: transform 0.5s ease-out;
+}
+
+/* 單塊蛋糕的形狀（path） */
+.cake-slice__p {
+    fill: var(--c-yellow-soft);
+    stroke: var(--c-yellow);
+    stroke-width: 3;
+    stroke-linejoin: round;
+}
+
+/* 最大的那塊（橘紅） */
+.cake-slice__p--max {
+    fill: var(--c-bad-soft);
+    stroke: var(--c-bad);
+}
+
+/* 最小的那塊（藍） */
+.cake-slice__p--min {
+    fill: var(--c-blue-soft);
+    stroke: var(--c-blue);
+}
+
+/* 每塊上的面積百分比文字 */
+.cake-slice__t {
+    font-size: 26px;
+    font-weight: var(--fw-black);
+    fill: var(--c-ink);
+    pointer-events: none;
+}
+
+/* 下方的按鈕列 */
+.cake-acts {
+    flex: none;
+    display: flex;
+    gap: var(--sp-2);
+}
+
+/* 「清除」「切下去」兩顆按鈕（逗號 = 同時套用到兩個 class） */
+.cake-clear,
+.cake-cut {
+    flex: 1 1 0;
+    padding: 0;
+    font-size: var(--fs-md);
+}

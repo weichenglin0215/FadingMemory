@@ -1,0 +1,62 @@
+/* ═══════════════════════════════════════
+   reaction_spinpick.css — 轉盤停哪格（js/reaction_spinpick.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「spinpick-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 誰在偷偷動（.snk-）═══ */
+.spinpick-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+}
+
+/* ═══ 轉盤停哪格（.spinpick-）═══ */
+.spinpick-sec {
+    stroke: var(--c-card);
+    stroke-width: 3;
+    stroke-linejoin: round;
+}
+
+.spinpick-sec--right {
+    stroke: var(--c-ink);
+    stroke-width: 8;
+}
+
+.spinpick-sec--wrong {
+    stroke: var(--c-bad);
+    stroke-width: 8;
+}
+
+.spinpick-tip {
+    fill: var(--c-ink);
+}
+
+.spinpick-hub {
+    fill: var(--c-ink);
+    stroke: var(--c-card);
+    stroke-width: 4;
+}
+
+.spinpick-center {
+    position: absolute;
+    width: 180px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border-radius: var(--r-md);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    line-height: var(--lh-tight);
+    pointer-events: none;
+}
+
+.spinpick-tip-text {
+    top: 18px;
+}

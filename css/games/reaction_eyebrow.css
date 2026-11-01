@@ -1,0 +1,154 @@
+/* ═══════════════════════════════════════
+   reaction_eyebrow.css — 畫眉毛（js/reaction_eyebrow.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「eyebrow-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 畫眉毛（.eyebrow-）═══ */
+.eyebrow-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.eyebrow-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    touch-action: none;
+}
+
+.eyebrow-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.eyebrow-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+}
+
+/* 素描風的臉 */
+.eyebrow-head {
+    fill: var(--ebw-skin);
+    stroke: var(--ebw-line);
+    stroke-width: 3;
+}
+
+.eyebrow-ear {
+    fill: var(--ebw-skin);
+    stroke: var(--ebw-line);
+    stroke-width: 3;
+}
+
+.eyebrow-eye {
+    fill: var(--ebw-eyewhite);
+    stroke: var(--ebw-line);
+    stroke-width: 3;
+}
+
+.eyebrow-pupil {
+    fill: var(--ebw-line);
+}
+
+.eyebrow-nose,
+.eyebrow-mouth {
+    fill: none;
+    stroke: var(--ebw-line);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* 左邊已經畫好的眉毛、你畫的眉毛（咖啡色眉筆）、翻過去的左眉（淡紅色） */
+/* 揭曉時整張臉轉回正的（轉動時間由 JS 設定）；臉的中軸平常藏著，揭曉時淡淡地出現 */
+.eyebrow-turn {
+    transition-property: transform;
+    transition-timing-function: ease-in-out;
+}
+
+.eyebrow-axis {
+    stroke: var(--ebw-line);
+    stroke-width: 2;
+    stroke-dasharray: 8 8;
+    opacity: 0;
+    transition: opacity 0.6s ease-in-out;
+}
+
+.eyebrow-axis--on {
+    opacity: 0.45;
+}
+
+.eyebrow-ref {
+    fill: none;
+    stroke: var(--ebw-brow);
+    stroke-width: 9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.eyebrow-mine {
+    fill: none;
+    stroke: var(--ebw-brow);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* V1.40.0 鬍子：線條比眉毛粗一點（左邊那撇、你畫的、紅色的正確答案） */
+.eyebrow-ref--stache {
+    stroke-width: 11;
+}
+
+.eyebrow-mine--stache {
+    stroke-width: 10;
+}
+
+.eyebrow-ghost--stache {
+    stroke-width: 12;
+}
+
+/* 紅色的正確眉毛：臉轉正之後才淡入（V1.38.0；淡入時間 0.6 秒要跟 JS 的 GHOST_MS 一樣） */
+.eyebrow-ghost {
+    fill: none;
+    stroke: var(--ebw-ghost);
+    stroke-width: 10;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0;
+    transition: opacity 0.6s ease-in;
+}
+
+.eyebrow-ghost--on {
+    opacity: 0.8;
+}
+
+.eyebrow-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    pointer-events: none;
+}
+
+.eyebrow-info--ok {
+    color: var(--c-ok);
+}
+
+.eyebrow-info--bad {
+    color: var(--c-bad);
+}

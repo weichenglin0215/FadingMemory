@@ -1,0 +1,149 @@
+/* ═══════════════════════════════════════
+   reaction_dualtask.css — 一心二用（js/reaction_dualtask.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「dualtask-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 一心二用：左手要即時點綠燈，右手同時回答另一個問題，兩件事一起做。 */
+/* ═══ 一心二用（.dualtask-）═══ */
+/* 上方說明文字 */
+.dualtask-head {
+    min-height: 2.8em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    line-height: 1.4;
+    color: var(--c-ink);
+}
+
+/* 左右兩半的容器 */
+.dualtask-stage {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    gap: var(--sp-2);
+}
+
+/* 左半或右半（直向 flex，內容置中） */
+.dualtask-side {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-3);
+    box-sizing: border-box;
+    border-radius: var(--r-lg);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 右側：綠燈區，要用手指點（cursor:pointer）——放在右邊，右手好點，手也不會擋住左邊的紅燈 */
+.dualtask-side--tap {
+    background: var(--c-green-soft);
+    border: 3px solid var(--c-green);
+    cursor: pointer;
+}
+
+/* 左側：不用點、只要用眼睛數的紅燈區（虛線框 dashed） */
+.dualtask-side--count {
+    background: var(--c-bad-soft);
+    border: 3px dashed var(--c-bad);
+}
+
+/* 燈泡（圓形：border-radius 50%）；pointer-events:none 讓點擊直接穿透到外層區塊 */
+.dualtask-lamp {
+    width: 170px;
+    height: 170px;
+    box-sizing: border-box;
+    border-radius: 50%;
+    background: var(--c-card-alt);
+    border: 6px solid var(--c-ink-soft);
+    pointer-events: none;
+}
+
+/* 綠燈亮起：發光（box-shadow 外擴 36px 的光暈）。兩個 class 連在一起寫（.a.b）表示「同時有這兩個 class」才套用 */
+.dualtask-lamp--green.dualtask-lamp--on {
+    background: var(--c-ok-light);
+    border-color: var(--c-ok);
+    box-shadow: 0 0 36px 10px var(--c-ok);
+}
+
+/* 紅燈亮起 */
+.dualtask-lamp--red.dualtask-lamp--on {
+    background: var(--c-bad-light);
+    border-color: var(--c-recall);
+    box-shadow: 0 0 36px 10px var(--c-bad-light);
+}
+
+/* 燈下方的說明文字 */
+.dualtask-cap {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 計數文字（已點幾次） */
+.dualtask-cnt {
+    min-height: 1.4em;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 問答區 */
+.dualtask-ask {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+}
+
+/* 問題文字 */
+.dualtask-ask__q {
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+/* 十個答案按鈕：10 個連續的號碼，上下兩排各 5 個（5 欄、自動排成 2 列） */
+.dualtask-opts {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--sp-2);
+}
+
+/* 單個答案按鈕（兩位數的號碼，字級用 --fs-xl 才放得進 5 欄） */
+.dualtask-opt {
+    padding: 0;
+    height: 84px;
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    background: var(--c-blue-soft);
+    border: 3px solid var(--c-blue);
+    border-radius: var(--r-lg);
+    touch-action: none;
+}
+
+/* 答對（綠） */
+.dualtask-opt--ok {
+    background: var(--c-ok-soft);
+    border-color: var(--c-ok);
+}
+
+/* 答錯（橘） */
+.dualtask-opt--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad);
+}

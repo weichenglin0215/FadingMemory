@@ -1,0 +1,84 @@
+/* ═══════════════════════════════════════
+   reaction_blindcircle.css — 盲畫一個圓（js/reaction_blindcircle.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「blindcircle-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 011 盲畫一個圓（.blindcircle-）═══ */
+.blindcircle-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.blindcircle-cross {
+    stroke: var(--c-ink);
+    stroke-width: 5;
+    stroke-linecap: round;
+}
+
+/* 起點：十字型的箭頭（V1.25 起取代橘色圓點） */
+.blindcircle-start {
+    fill: var(--c-orange);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+    stroke-linejoin: round;
+}
+
+.blindcircle-startdot {
+    fill: var(--c-black);
+}
+
+.blindcircle-start--blink {
+    fill: var(--c-bad-light);
+}
+
+.blindcircle-ref {
+    fill: none;
+    stroke: var(--c-green);
+    stroke-width: 4;
+    stroke-dasharray: 12 9;
+}
+
+/* 拖曳時的軌跡（V1.27）：1px 黑色虛線，只留手指身後 160px */
+.blindcircle-trail {
+    fill: none;
+    stroke: #000;
+    stroke-width: 1;
+    stroke-dasharray: 5 4;
+    pointer-events: none;
+}
+
+.blindcircle-seg {
+    stroke-width: 7;
+    stroke-linecap: round;
+}
+
+.blindcircle-seg--g {
+    stroke: var(--c-green);
+}
+
+.blindcircle-seg--o {
+    stroke: var(--c-orange);
+}
+
+.blindcircle-seg--r {
+    stroke: var(--c-bad-light);
+}
+
+.blindcircle-msg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 16px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink);
+    line-height: var(--lh-body);
+    opacity: 0;
+}
+
+.blindcircle-msg--on {
+    opacity: 1;
+}

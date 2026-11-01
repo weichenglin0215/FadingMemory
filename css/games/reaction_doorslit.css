@@ -1,0 +1,107 @@
+/* ═══════════════════════════════════════
+   reaction_doorslit.css — 門縫偷看（js/reaction_doorslit.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「doorslit-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 門縫偷看（.doorslit-）═══ */
+.doorslit-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.doorslit-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.doorslit-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 字盒：底是淡淡的暖色（門縫裡的光），滿版的黑色大字，上面蓋兩片白色方塊 */
+.doorslit-box {
+    position: absolute;
+    overflow: hidden;
+    background: var(--dsl-light);
+    border: 4px solid var(--dsl-door);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+}
+
+.doorslit-glyph {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    color: var(--c-ink);
+    font-family: var(--font-note);
+    font-weight: var(--fw-black);
+    text-align: center;
+}
+
+/* 兩片白色方塊：JS 每個畫格用 transform 讓它們一起往右移，中間留一條縫 */
+.doorslit-cover {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: var(--c-card);
+    will-change: transform;
+}
+
+.doorslit-cover--l {
+    border-right: 3px solid var(--dsl-door);
+}
+
+.doorslit-cover--r {
+    border-left: 3px solid var(--dsl-door);
+}
+
+/* 揭曉時往兩邊打開 */
+.doorslit-cover--open {
+    transition: transform 0.5s ease-in;
+}
+
+.doorslit-diff {
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: var(--dsl-light);
+}
+
+.doorslit-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.doorslit-opt {
+    font-family: var(--font-note);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+}
+
+.doorslit-ok {
+    background: var(--c-ok-light);
+    border-color: var(--c-ok);
+}
+
+.doorslit-bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad-light);
+    color: var(--c-bad);
+}

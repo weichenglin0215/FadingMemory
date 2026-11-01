@@ -1,0 +1,150 @@
+/* ═══════════════════════════════════════
+   reaction_wirelink.css — 接電線（js/reaction_wirelink.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「wirelink-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 接電線（.wirelink-）═══ */
+.wirelink-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.wirelink-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 10px;
+    text-align: center;
+}
+
+.wirelink-board {
+    position: absolute;
+    border: var(--bd-w) solid var(--c-ink-soft);
+    border-radius: var(--r-sm);
+    overflow: hidden;
+    background: var(--c-card);
+    transition: box-shadow 0.4s, background 0.4s;
+}
+
+/* 全部接好：整塊板子的燈一起亮 */
+.wirelink-board--lit {
+    background: var(--c-yellow-soft);
+    box-shadow: 0 0 28px var(--c-yellow);
+}
+
+.wirelink-cell {
+    position: absolute;
+    box-sizing: border-box;
+    border: 1px solid var(--bd-c);
+}
+
+.wirelink-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+}
+
+/* 每一種電線（以及它的插頭、時間到時畫出來的正確接法）用 --wc 當顏色，--wc 由 .wirelink-c0～.wirelink-c7 設定 */
+.wirelink-c0 {
+    --wc: var(--wlk-0);
+}
+
+.wirelink-c1 {
+    --wc: var(--wlk-1);
+}
+
+.wirelink-c2 {
+    --wc: var(--wlk-2);
+}
+
+.wirelink-c3 {
+    --wc: var(--wlk-3);
+}
+
+.wirelink-c4 {
+    --wc: var(--wlk-4);
+}
+
+.wirelink-c5 {
+    --wc: var(--wlk-5);
+}
+
+.wirelink-c6 {
+    --wc: var(--wlk-6);
+}
+
+.wirelink-c7 {
+    --wc: var(--wlk-7);
+}
+
+.wirelink-wire {
+    fill: none;
+    stroke: var(--wc);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.wirelink-plug-body {
+    fill: var(--wc);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.wirelink-plug-in {
+    fill: var(--c-card);
+    stroke: var(--c-ink);
+    stroke-width: 2;
+}
+
+/* 接通的那一對：中間的小燈泡亮起來 */
+.wirelink-plug--on .wirelink-plug-in {
+    fill: var(--c-yellow);
+}
+
+.wirelink-plug--on .wirelink-plug-body {
+    filter: drop-shadow(0 0 6px var(--wc));
+}
+
+/* 時間到：正確的接法一條一條畫出來（pathLength 設成 1，dasharray 1、dashoffset 1 → 0），玩家自己接的電線變淡，沒接通的閃紅 */
+.wirelink-sol {
+    fill: none;
+    stroke: var(--wc);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+}
+
+.wirelink-sol--draw .wirelink-sol {
+    animation: wirelink-draw 1.2s ease-out forwards;
+}
+
+@keyframes wirelink-draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+.wirelink-board--reveal .wirelink-wire {
+    opacity: 0.25;
+}
+
+.wirelink-board--reveal .wirelink-wire--bad {
+    opacity: 1;
+    animation: wirelink-bad 0.5s ease-in-out 4;
+}
+
+@keyframes wirelink-bad {
+
+    0%,
+    100% {
+        stroke: var(--wc);
+    }
+
+    50% {
+        stroke: var(--c-bad-light);
+    }
+}

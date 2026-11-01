@@ -1,0 +1,226 @@
+/* ═══════════════════════════════════════
+   reaction_fifteen.css — 搶十五（js/reaction_fifteen.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「fifteen-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+.fifteen-wrap {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding-top: 10px;
+    box-sizing: border-box;
+}
+
+.fifteen-goal {
+    text-align: center;
+    padding: 0 10px;
+    color: var(--c-orange);
+    line-height: 1.25;
+}
+
+.fifteen-goal__main {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+}
+
+.fifteen-goal__sub {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 左：你的牌／中：桌上的牌／右：電腦的牌 */
+.fifteen-cols {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    width: 98%;
+}
+
+.fifteen-hand {
+    flex: 0 0 24%;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    justify-content: center;
+    gap: 6px;
+    min-height: 220px;
+    padding: 8px 4px;
+    box-sizing: border-box;
+    border-radius: var(--r-md);
+    border: 2px solid var(--bd-c);
+}
+
+.fifteen-hand--mine {
+    background: var(--c-ok-soft);
+}
+
+.fifteen-hand--cpu {
+    background: var(--c-orange-soft);
+}
+
+.fifteen-hand__title {
+    flex: 0 0 100%;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.fifteen-chip {
+    width: 46px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--r-sm);
+    background: var(--c-card);
+    border: 2px solid var(--c-ink);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.fifteen-chip--mine {
+    border-color: var(--c-ok);
+    color: var(--c-ok);
+}
+
+.fifteen-chip--cpu {
+    border-color: var(--c-orange);
+    color: var(--c-orange);
+}
+
+/* 中間：桌上的牌（結束時換成洛書方陣） */
+.fifteen-mid {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* 桌上的牌：1～9 排成 3×3（11 張的玩法是 4 欄） */
+.fifteen-table {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.fifteen-table--wide {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.fifteen-card {
+    height: 76px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--r-sm);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.fifteen-card--sel {
+    background: var(--c-yellow);
+    transform: translateY(-6px);
+}
+
+.fifteen-card--cpu {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad);
+}
+
+.fifteen-card--taken {
+    opacity: 0.18;
+    pointer-events: none;
+}
+
+.fifteen-turn {
+    min-height: 60px;
+    padding: 0 14px;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink);
+    text-align: center;
+    line-height: 1.4;
+}
+
+/* 結束時的洛書方陣（井字遊戲） */
+.fifteen-reveal {
+    width: 100%;
+    text-align: center;
+}
+
+.fifteen-reveal__line {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    margin-top: 6px;
+}
+
+.fifteen-luoshu {
+    display: inline-grid;
+    grid-template-columns: repeat(3, 56px);
+    grid-auto-rows: 56px;
+    gap: 4px;
+}
+
+.fifteen-luoshu__cell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border: 2px solid var(--bd-c);
+    border-radius: var(--r-sm);
+    background: var(--c-card);
+}
+
+.fifteen-luoshu__cell--win {
+    background: var(--c-yellow-soft);
+    border-color: var(--c-orange);
+}
+
+.fifteen-luoshu__n {
+    position: absolute;
+    left: 5px;
+    top: 2px;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+.fifteen-luoshu__m {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.fifteen-btns {
+    position: absolute;
+    left: 2%;
+    right: 2%;
+    bottom: 0;
+    display: flex;
+}
+
+.fifteen-btn {
+    flex: 1 1 0;
+    height: 72px;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    padding: 0;
+}

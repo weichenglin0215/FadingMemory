@@ -260,6 +260,9 @@
        o.info(S)：標題列右邊的文字（預設：多條命時顯示命）
        o.lines(S)：結算頁的說明行
        o.resume：false 表示不提供從前 5 關繼續（也不會在下次進場時從「個人最佳關卡 − 5」開始）
+       o.leaveSettle：true 表示這是「沒有失敗、玩到不想玩為止」的自由解題遊戲（數獨系列、黑白不連三…）——玩家按左上角「返回」時，
+         不是直接離開，而是先把這一局結算（顯示結算卡片、記最佳、送世界排行榜）；結算卡片出來之後再按「返回」才真的離開。
+         一題都還沒解開就按返回，直接離開（見 Reaction.onLeave，js/reaction.js 的返回鈕會先問它）
        （V1.34.0）成績＝過關數的闖關遊戲，結算時會記下「到過第幾關」，下次進場從最佳關卡的前 5 關開始，見 kit.entryLevel（reaction_kit.js）
        api：
          api.level／api.S／api.stage／api.my／api.rand
@@ -309,7 +312,7 @@
         }
 
         function nextLevel(n) {
-            if (R.dead) return;
+            if (R.dead || S.finished) return;
             tok++;
             S.level = n;
             var my = R, myTok = tok;
@@ -419,6 +422,13 @@
         var from0 = (o.resume !== false && !o.scoreOf) ? kit.entryLevel(o.id, o.scoreBase ? 0 : 1) : 1;
         start(from0);
         kit.entryNotice(o.id, from0);
+        /* 自由解題遊戲：「返回」＝結束這一局（先結算，見檔頭說明）。回傳 true＝已經處理（顯示結算卡片），返回鈕不要離開 */
+        Reaction.onLeave = o.leaveSettle ? function () {
+            if (!S || S.finished || S.cleared < 1) return false;
+            if (api) api.over = true;
+            finish({}, false);
+            return true;
+        } : null;
     };
 
     /* ═══════════════════════════════════════════════════════════════

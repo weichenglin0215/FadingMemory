@@ -80,11 +80,11 @@ for (const n of [0, 10, 25, 40, 80]) {
 { let self = T.makeSelf(rnd), hist = [], n = 0, wrong = 0; for (let i = 0; i < 5000; i++) { const c = T.makeCommand(self, n, hist, rnd); hist.push(c.match); if (hist.length > 6) hist.shift(); if (c.match === true && textEval(c.text, self) !== true) wrong++; n++; if (T.shouldChange(n)) self = T.changeSelf(self, rnd).self; } ok(wrong === 0, '特徵改變之後口令仍然照新特徵判斷'); }
 
 // ── 程式裡的接線 ──
-{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_windblow.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 4200/.test(src) && /wbl-cmp__r/.test(src) && /atomHolds\(a, self\)/.test(src), '失敗：特徵和口令並排、逐條寫出符不符合、停格 2 秒以上');
+{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_windblow.js'), css = rd('../../css/games/reaction_windblow.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 4200/.test(src) && /windblow-cmp__r/.test(src) && /atomHolds\(a, self\)/.test(src), '失敗：特徵和口令並排、逐條寫出符不符合、停格 2 秒以上');
   ok(/api\.timer\(answerMsFor\(count\)/.test(src) && /showCard\(/.test(src) && /INTRO_MS/.test(src) && /shouldChange\(count\)/.test(src), '每題限時、開場／改變時顯示特徵卡、答對後檢查改變');
   ok(/scoreOf/.test(src) && /resume: false/.test(src) && /max: 300/.test(src) && /SOLVE_CAP/.test(src) && /api\.solve = /.test(src) && /api\.wrong = /.test(src), '成績用 scoreOf、不從前幾關繼續、上限 300、solve 有上限');
-  ok(/\.wbl-shirt0 \{[^}]*var\(--wbl-shirt0\)/.test(css) && /\.wbl-hat \{[^}]*var\(--wbl-hat\)/.test(css) && /\.wbl-cmp__r--y \{[^}]*var\(--c-ok\)/.test(css) && /\.wbl-cmp__r--n \{[^}]*var\(--c-bad\)/.test(css), '衣服、帽子、比對的對錯用 CSS 變數');
+  ok(/\.windblow-shirt0 \{[^}]*var\(--wbl-shirt0\)/.test(css) && /\.windblow-hat \{[^}]*var\(--wbl-hat\)/.test(css) && /\.windblow-cmp__r--y \{[^}]*var\(--c-ok\)/.test(css) && /\.windblow-cmp__r--n \{[^}]*var\(--c-bad\)/.test(css), '衣服、帽子、比對的對錯用 CSS 變數');
   ok(boot.indexOf("'js/reaction_windblow.js'") > 0 && /換位子/.test(G.rule) && /否定/.test(G.rule) && /變/.test(G.rule), 'boot.js 有載入、玩法說明提到換位子、否定、特徵會變'); }
 ok(T.rating(2) !== T.rating(8) && T.rating(8) !== T.rating(15) && T.rating(15) !== T.rating(30) && T.rating(30) !== T.rating(50), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

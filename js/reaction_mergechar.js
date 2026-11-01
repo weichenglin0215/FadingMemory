@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_mergechar.js — 秒反應・左右合字（企劃 201）
+   樣式：css/games/reaction_mergechar.css（這款專屬的 class 一律以「mergechar-」開頭；共用元件在 css/reaction_common.css）
    左邊一欄、右邊一欄，各有一些「偏旁」。先點左邊的一塊、再點右邊的一塊，把它們連成一條線：
    能合成一個字（例如 氵＋工＝江）就連出一條「綠線」並合成那個字；不能合成就連出一條「紅線」（扣一條命）。
    連出五條綠線就過關，進下一關。關卡制，有 3 條命，成績＝通過幾關。
@@ -222,13 +223,13 @@
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var n = q.L.length, top = 66, gap = 8, bottom = 16;
         var ph = Math.min(88, Math.floor((H - top - bottom - (n - 1) * gap) / n)), pw = 124;
-        var svg = kit.svg('svg', { 'class': 'mgc-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
+        var svg = kit.svg('svg', { 'class': 'mergechar-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
         var gLines = kit.svg('g', {}, svg);
-        var tip = h('div', { 'class': 'qz-note mgc-tip', text: '先點左邊一塊，再點右邊一塊' });
-        var prog = h('div', { 'class': 'mgc-prog', text: '已連對 0／' + NEED });
+        var tip = h('div', { 'class': 'qz-note mergechar-tip', text: '先點左邊一塊，再點右邊一塊' });
+        var prog = h('div', { 'class': 'mergechar-prog', text: '已連對 0／' + NEED });
         stage.appendChild(tip); stage.appendChild(prog);
         function mk(side, text, i) {
-            var b = h('button', { 'class': 'mgc-piece mgc-piece--' + side, text: text });
+            var b = h('button', { 'class': 'mergechar-piece mergechar-piece--' + side, text: text });
             b.style.width = pw + 'px'; b.style.height = ph + 'px';
             b.style.fontSize = Math.min(58, Math.floor(ph * 0.68)) + 'px'; b.style.lineHeight = '1';         /* 欄越擠、字越小，字才不會超出方塊 */
             b.style.left = (side === 'L' ? 8 : W - pw - 8) + 'px'; b.style.top = (top + i * (ph + gap)) + 'px';
@@ -240,17 +241,17 @@
         function center(side, i) { return { x: side === 'L' ? 8 + pw : W - pw - 8, y: top + i * (ph + gap) + ph / 2 }; }
         var sel = null, done = 0, locked = {}, busy = false, conns = [], usedL = {}, usedR = {};
         function setSel(s) {
-            if (sel) (sel.side === 'L' ? LP : RP)[sel.i].classList.remove('mgc-piece--sel');
+            if (sel) (sel.side === 'L' ? LP : RP)[sel.i].classList.remove('mergechar-piece--sel');
             sel = s;
-            if (sel) (sel.side === 'L' ? LP : RP)[sel.i].classList.add('mgc-piece--sel');
+            if (sel) (sel.side === 'L' ? LP : RP)[sel.i].classList.add('mergechar-piece--sel');
         }
         function line(li, ri, cls) {
             var a = center('L', li), b = center('R', ri);
-            return kit.svg('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, 'class': 'mgc-line ' + cls }, gLines);
+            return kit.svg('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, 'class': 'mergechar-line ' + cls }, gLines);
         }
         function badge(li, ri, ch, cls) {
             var a = center('L', li), b = center('R', ri);
-            var t = h('div', { 'class': 'mgc-badge ' + cls, text: ch });
+            var t = h('div', { 'class': 'mergechar-badge ' + cls, text: ch });
             t.style.left = ((a.x + b.x) / 2 - 36) + 'px'; t.style.top = ((a.y + b.y) / 2 - 36) + 'px';
             stage.appendChild(t);
             return t;
@@ -269,8 +270,8 @@
                 /* V1.34：只要真的能合成字就算對（不管是不是出題設計的那一組），當場不判錯 */
                 locked['L' + li] = locked['R' + ri] = true;
                 usedL[q.L[li]] = true; usedR[q.R[ri]] = true; conns.push({ l: q.L[li], r: q.R[ri], ch: ch });
-                LP[li].classList.add('mgc-piece--done'); RP[ri].classList.add('mgc-piece--done');
-                line(li, ri, 'mgc-line--ok'); badge(li, ri, ch, 'mgc-badge--ok');
+                LP[li].classList.add('mergechar-piece--done'); RP[ri].classList.add('mergechar-piece--done');
+                line(li, ri, 'mergechar-line--ok'); badge(li, ri, ch, 'mergechar-badge--ok');
                 Sfx.play('ok');
                 done++; prog.textContent = '已連對 ' + done + '／' + NEED;
                 if (done >= NEED) { kit.flash(stage, true, api.my); api.pass({ delay: 1100 }); }
@@ -282,12 +283,12 @@
                 }
             } else {
                 busy = true;
-                var ln = line(li, ri, 'mgc-line--bad');
-                LP[li].classList.add('mgc-piece--bad'); RP[ri].classList.add('mgc-piece--bad');
+                var ln = line(li, ri, 'mergechar-line--bad');
+                LP[li].classList.add('mergechar-piece--bad'); RP[ri].classList.add('mergechar-piece--bad');
                 kit.flash(stage, false, api.my);
                 var left = api.lose({ lines: ['「' + q.L[li] + '」和「' + q.R[ri] + '」不能合成字', '要連的是：' + q.pairs.map(function (p) { return p.l + '＋' + p.r + '＝' + p.ch; }).join('　')] });
                 if (left <= 0) { showAll(); return; }
-                api.after(700, function () { ln.remove(); LP[li].classList.remove('mgc-piece--bad'); RP[ri].classList.remove('mgc-piece--bad'); busy = false; });
+                api.after(700, function () { ln.remove(); LP[li].classList.remove('mergechar-piece--bad'); RP[ri].classList.remove('mergechar-piece--bad'); busy = false; });
             }
         }
         /* 揭曉：還沒連的組用灰線連出來並標出合成的字 */
@@ -295,7 +296,7 @@
             q.pairs.forEach(function (p) {
                 var li = q.L.indexOf(p.l), ri = q.R.indexOf(p.r);
                 if (locked['L' + li] || locked['R' + ri]) return;
-                line(li, ri, 'mgc-line--show'); badge(li, ri, p.ch, 'mgc-badge--show');
+                line(li, ri, 'mergechar-line--show'); badge(li, ri, p.ch, 'mergechar-badge--show');
             });
         }
         api.timer(timeMs(level), function () {

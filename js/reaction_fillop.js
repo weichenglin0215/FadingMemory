@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_fillop.js — 秒反應・挑加減乘除（企劃 131「補一對括號」的改版）
+   樣式：css/games/reaction_fillop.css（這款專屬的 class 一律以「fillop-」開頭；共用元件在 css/reaction_common.css）
    一道橫式的算式，其中一個（或好幾個）加減乘除符號不見了，換成直排的四顆按鈕（＋ − × ÷），
    請選出正確的符號，讓等號成立。例如  8 [？] 2 ＋ 2 × 3 ＝ 18  →  選「÷」。
    關卡制：選錯或來不及就結束，成績＝連續過幾關。
@@ -132,17 +133,17 @@
         api.info = q;
         console.log('[挑加減乘除] 第 ' + level + ' 關：' + q.text + '，藏起來的符號位置 ' + q.blanks.join(',') + '，限時 ' + ansMs(level) + ' ms');
 
-        var row = h('div', { 'class': 'fop-row' });
+        var row = h('div', { 'class': 'fillop-row' });
         var chosen = q.blanks.map(function () { return null; });        /* 每個空格目前選了哪個符號（null＝還沒選） */
         var cols = [];                                                  /* 每個空格的四顆按鈕 */
         q.nums.forEach(function (x, i) {
             if (i > 0) {
                 var bi = q.blanks.indexOf(i - 1);
-                if (bi < 0) row.appendChild(h('div', { 'class': 'fop-fixed', text: OP_TEXT[q.ops[i - 1]] }));
+                if (bi < 0) row.appendChild(h('div', { 'class': 'fillop-fixed', text: OP_TEXT[q.ops[i - 1]] }));
                 else {
-                    var col = h('div', { 'class': 'fop-col' });
+                    var col = h('div', { 'class': 'fillop-col' });
                     var bs = OPS.map(function (op) {
-                        var b = h('button', { 'class': 'fop-op', text: OP_TEXT[op] });
+                        var b = h('button', { 'class': 'fillop-op', text: OP_TEXT[op] });
                         kit.onTap(b, function () { choose(bi, op); });
                         col.appendChild(b);
                         return b;
@@ -151,14 +152,14 @@
                     row.appendChild(col);
                 }
             }
-            row.appendChild(h('div', { 'class': 'fop-num', text: String(x) }));
+            row.appendChild(h('div', { 'class': 'fillop-num', text: String(x) }));
         });
-        var eqLine = h('div', { 'class': 'qz-big fop-target', text: '＝ ' + q.target });
-        var live = h('div', { 'class': 'qz-note fop-live', text: q.blanks.length > 1 ? '每個空格選一個符號' : '選出正確的符號' });
+        var eqLine = h('div', { 'class': 'qz-big fillop-target', text: '＝ ' + q.target });
+        var live = h('div', { 'class': 'qz-note fillop-live', text: q.blanks.length > 1 ? '每個空格選一個符號' : '選出正確的符號' });
         stage.appendChild(row); stage.appendChild(eqLine); stage.appendChild(live);
         var okBtn = null;
         if (q.blanks.length > 1) {
-            var grid = kit.btnGrid(stage, [{ text: '確定', kind: 'go', cls: 'fop-ok fop-ok--off', onTap: function () { if (allChosen()) judge(); } }], { h: 84 });
+            var grid = kit.btnGrid(stage, [{ text: '確定', kind: 'go', cls: 'fillop-ok fillop-ok--off', onTap: function () { if (allChosen()) judge(); } }], { h: 84 });
             okBtn = grid.btns[0];
         }
         api.timer(ansMs(level), function () { judge(); });
@@ -177,11 +178,11 @@
             if (api.over) return;
             Sfx.play('click');
             chosen[j] = op;
-            cols[j].forEach(function (b, k) { b.classList.toggle('fop-op--on', OPS[k] === op); });
+            cols[j].forEach(function (b, k) { b.classList.toggle('fillop-op--on', OPS[k] === op); });
             if (q.blanks.length === 1) { judge(); return; }
             if (allChosen()) {
                 live.textContent = '現在算出來是 ' + valueText(evalOps(q.nums, currentOps())) + '（目標 ' + q.target + '）';
-                okBtn.classList.remove('fop-ok--off');
+                okBtn.classList.remove('fillop-ok--off');
             } else live.textContent = '每個空格選一個符號';
         }
         function judge() {
@@ -190,9 +191,9 @@
             /* 揭曉：把正確的符號填回空格 */
             q.blanks.forEach(function (bi, j) {
                 cols[j].forEach(function (b, k) {
-                    b.classList.remove('fop-op--on');
-                    if (OPS[k] === q.ops[bi]) b.classList.add('fop-op--right');
-                    else if (chosen[j] === OPS[k]) b.classList.add('fop-op--wrong');
+                    b.classList.remove('fillop-op--on');
+                    if (OPS[k] === q.ops[bi]) b.classList.add('fillop-op--right');
+                    else if (chosen[j] === OPS[k]) b.classList.add('fillop-op--wrong');
                 });
             });
             live.textContent = '正確的算式：' + q.text;

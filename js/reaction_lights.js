@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_lights.js — 秒反應・點燈記憶
+   樣式：css/games/reaction_lights.css（這款專屬的 class 一律以「lights-」開頭；共用元件在 css/reaction_common.css）
    一塊燈板上有幾盞燈同時短暫亮起，全部熄滅後，把剛才亮過的位置一個一個點回來。
    全對過關、多亮一盞；點錯或超時就結束。成績＝最多一次記住幾盞燈（記憶廣度）。
    ───────────────────────────────────────────────────────────────────
@@ -82,8 +83,8 @@
             var hint = h('div', { 'class': 'hint', text: '準備…記住亮起來的燈' });
             var barWrap = h('div', { 'class': 'ld-time' }, [h('div', { 'class': 'ld-time__fill' })]);
             var fill = barWrap.firstChild;
-            var panel = h('div', { 'class': 'lt-panel' });
-            var grid = h('div', { 'class': 'lt-grid' });
+            var panel = h('div', { 'class': 'lights-panel' });
+            var grid = h('div', { 'class': 'lights-grid' });
             /* 用 CSS Grid 排成 g×g：欄與列都設成 repeat(g, 1fr)（g 個等寬） */
             grid.style.gridTemplateColumns = 'repeat(' + g + ', 1fr)';
             grid.style.gridTemplateRows = 'repeat(' + g + ', 1fr)';
@@ -103,7 +104,7 @@
             for (var i = 0; i < g * g; i++) {
                 /* (function (i) {...})(i)：立即執行函式，讓每顆燈的事件記住自己的編號 i */
                 (function (i) {
-                    var el = h('button', { 'class': 'lt-lamp' });
+                    var el = h('button', { 'class': 'lights-lamp' });
                     el.addEventListener('pointerdown', function (e) { e.preventDefault(); tap(i); });
                     grid.appendChild(el);
                     lamps.push(el);
@@ -116,11 +117,11 @@
                 tapped[i] = true;
                 if (targets.indexOf(i) >= 0) {
                     hits++;
-                    lamps[i].classList.add('lt-lamp--hit');
+                    lamps[i].classList.add('lights-lamp--hit');
                     Sfx.play('ok');
                     if (hits >= n) levelClear();
                 } else {
-                    lamps[i].classList.add('lt-lamp--bad');
+                    lamps[i].classList.add('lights-lamp--bad');
                     fail('點到沒亮過的燈了');
                 }
             }
@@ -157,7 +158,7 @@
                 my.cancel(timer);
                 fill.style.width = '0%';
                 /* 把還沒點到的目標用黃框標出來，讓玩家看到「剛才亮的是這些」 */
-                targets.forEach(function (t) { if (!tapped[t]) lamps[t].classList.add('lt-lamp--reveal'); });
+                targets.forEach(function (t) { if (!tapped[t]) lamps[t].classList.add('lights-lamp--reveal'); });
                 my.after(1100, function () {
                     state = 'done';
                     kit.result(root, {
@@ -178,9 +179,9 @@
                 state = 'show';
                 hint.textContent = '看！';
                 Sfx.play('go');
-                targets.forEach(function (t) { lamps[t].classList.add('lt-lamp--lit'); });
+                targets.forEach(function (t) { lamps[t].classList.add('lights-lamp--lit'); });
                 my.after(showSecFor(n) * 1000, function () {
-                    targets.forEach(function (t) { lamps[t].classList.remove('lt-lamp--lit'); });
+                    targets.forEach(function (t) { lamps[t].classList.remove('lights-lamp--lit'); });
                     hint.textContent = '把剛才亮過的燈點出來（共 ' + n + ' 盞）';
                     my.after(AFTER_LIT_MS, function () {
                         state = 'recall';

@@ -95,7 +95,7 @@ for (let m = 4; m < 7; m++) ok(T.allowedColors(m).includes('blue') && !T.allowed
 ok(T.allowedColors(7).includes('purple'), '第 8 小節起可以出現 1/8 拍');
 ok(T.FALL_S <= 1.7 / 2 + 1e-9, '節拍距離 200%：掉落速度加倍（FALL_S ' + T.FALL_S + '）');
 ok(T.NOTE_H === 56 && T.HIT_WIN >= 0.2 - 1e-9, '音符高度 56px（原本 28 的 200%）、判定視窗 ' + T.HIT_WIN + ' 秒（原本 0.14）');
-{ const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction2.css'), 'utf8');
-  ok(/\.py-line \{[^}]*height: 16px;/.test(css), '判定紅線高度 16px（原本 8px 的 200%）');
-  ok(/\.py-note \{[^}]*height: 56px;/.test(css), '.py-note 高度與 NOTE_H 同步（56px）'); }
+{ const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_polyrhythm.css'), 'utf8');
+  ok(/\.polyrhythm-line \{[^}]*height: 16px;/.test(css), '判定紅線高度 16px（原本 8px 的 200%）');
+  ok(/\.polyrhythm-note \{[^}]*height: 56px;/.test(css), '.polyrhythm-note 高度與 NOTE_H 同步（56px）'); }
 console.log(bad ? 'FAILED ' + bad : 'ALL PASS');

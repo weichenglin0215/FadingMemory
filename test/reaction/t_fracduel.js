@@ -14,7 +14,7 @@ for (let l = 2; l <= 60; l++) ok(T.gapAt(l) <= T.gapAt(l - 1) + 1e-12 && T.timeM
 ok(T.kindsAt(1).join() === 'rand' && T.kindsAt(3).join() === 'rand,samenum' && T.kindsAt(5).join() === 'rand,samenum,plus1' && T.kindsAt(9).length === 4, '題型依題號解鎖');
 // 數字寫法
 ok(T.fmtNum(7) === '7' && T.fmtNum(3.5) === '3.5' && T.fmtFrac({ n: 3.5, d: 7 }) === '3.5/7', '數字寫法：整數／一位小數');
-ok(T.sizeClass({ n: 7, d: 12 }) === 'fd-frac--s2' && T.sizeClass({ n: 637, d: 89 }) === 'fd-frac--s3' && T.sizeClass({ n: 318.5, d: 446 }) === 'fd-frac--s5', '字級等級');
+ok(T.sizeClass({ n: 7, d: 12 }) === 'fracduel-frac--s2' && T.sizeClass({ n: 637, d: 89 }) === 'fracduel-frac--s3' && T.sizeClass({ n: 318.5, d: 446 }) === 'fracduel-frac--s5', '字級等級');
 // 出題：每一種題型逐題檢查
 let inBand = 0, total = 0, decimals = 0, bigs = 0;
 for (let l = 1; l <= 60; l++) for (const kind of T.kindsAt(l)) for (let k = 0; k < 25; k++) {

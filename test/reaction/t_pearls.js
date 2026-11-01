@@ -65,11 +65,11 @@ function randomWin(lv) { let w = 0, M = 3000; for (let i = 0; i < M; i++) { cons
 { const a = randomWin(1), b = randomWin(10), c = randomWin(20); console.log('亂放手的成功率：' + [a, b, c].map(v => (100 * v).toFixed(1) + '%').join(' → ')); ok(a < 0.2 && b < 0.1 && c < 0.07 && a > b && b > c * 0.9, '亂放手很難剛好對'); }
 
 // ── 程式裡的接線 ──
-{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_pearls.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 4000/.test(src) && /showRow\(r\)/.test(src) && /prl-rowp--extra/.test(src) && /prl-rowp--n/.test(src), '失敗：嘴裡的珍珠排成一排編號、第 N 顆標綠、多的標紅、停格 2 秒以上');
+{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_pearls.js'), css = rd('../../css/games/reaction_pearls.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 4000/.test(src) && /showRow\(r\)/.test(src) && /pearls-rowp--extra/.test(src) && /pearls-rowp--n/.test(src), '失敗：嘴裡的珍珠排成一排編號、第 N 顆標綠、多的標紅、停格 2 秒以上');
   ok(/kit\.hold\(holdEl/.test(src) && /judgeRelease\(q, T\)/.test(src) && /api\.my\.onDispose/.test(src) && /api\.timer\(PRESS_LIMIT_S/.test(src), '按住用 kit.hold、放手用 judgeRelease、有限時、收尾 destroy');
   ok(/api\.solve = /.test(src) && /api\.wrong = /.test(src) && /armed/.test(src) && /function begin\(\)/.test(src), 'solve／wrong 只排一次、動畫迴圈在按下去時才開始');
-  ok(/\.prl-pearl \{[^}]*var\(--prl-pearl\)/.test(css) && /\.prl-rowp--n \{[^}]*var\(--c-ok\)/.test(css) && /\.prl-rowp--extra \{[^}]*var\(--c-bad-light\)/.test(css) && /\.prl-hold \{[^}]*var\(--prl-hold\)/.test(css), '珍珠、對錯標記、按鈕用 CSS 變數');
+  ok(/\.pearls-pearl \{[^}]*var\(--prl-pearl\)/.test(css) && /\.pearls-rowp--n \{[^}]*var\(--c-ok\)/.test(css) && /\.pearls-rowp--extra \{[^}]*var\(--c-bad-light\)/.test(css) && /\.pearls-hold \{[^}]*var\(--prl-hold\)/.test(css), '珍珠、對錯標記、按鈕用 CSS 變數');
   ok(boot.indexOf("'js/reaction_pearls.js'") > 0 && /放手就停/.test(G.rule) && /一串/.test(G.rule), 'boot.js 有載入、玩法說明提到放手就停與成串'); }
 ok(T.rating(1) !== T.rating(3) && T.rating(3) !== T.rating(6) && T.rating(6) !== T.rating(10) && T.rating(10) !== T.rating(16), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

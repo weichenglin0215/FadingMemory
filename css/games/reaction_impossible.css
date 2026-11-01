@@ -1,0 +1,134 @@
+/* ═══════════════════════════════════════
+   reaction_impossible.css — 不可能任務（js/reaction_impossible.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「impossible-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 不可能任務 */
+/* ═══ 遊戲四：不可能任務 ═══ */
+/* 白色背景 */
+.impossible-white-bg {
+    background: #FFFFFF;
+}
+
+/* 鏡頭畫面的外框 */
+.impossible-field {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    border-radius: var(--r-lg);
+    border: var(--bd);
+}
+
+/* 整個畫面（阿湯哥的照片＋警戒線，結算時再加上量尺／文字）都畫在這一個
+   SVG 裡：鏡頭推進＝js/reaction_impossible.js 的 tweenViewBox() 補間這個
+   SVG 的 viewBox，從「看得到整個欄位」縮小到「只看得到阿湯哥下緣～警戒線
+   這一小段」。從頭到尾都是同一份 SVG 內容在重新畫，不是切換成另一個畫面、
+   也不是疊別的東西上去遮住——這樣鏡頭推進才會看起來平順、連續。 */
+.impossible-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: 1;
+}
+
+/* 警戒線的長方形 */
+.impossible-bar-rect {
+    fill: var(--flow-ink-1);
+}
+
+/* 提示文字：absolute 加 top:50% + translateY(-50%) 是傳統的「垂直置中」寫法 */
+.impossible-hint {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0 var(--sp-4);
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* 危險時的提示變紅色 */
+.impossible-hint--danger {
+    color: var(--flow-ink-1);
+}
+
+/* 量尺（藍線＋上下箭頭）跟結算文字，字級／線寬都是 js 依推進目標框的高度
+   算出來直接寫在 SVG 屬性上（font-size／stroke-width），這裡只管顏色跟
+   字體——鏡頭還沒推進時這些東西在完整畫面裡小到幾乎看不見，推進的過程
+   會跟著整個畫面一起被放大，不需要另外做淡入。 */
+/* 量尺線（藍） */
+.impossible-measure-line {
+    stroke: var(--c-blue);
+    fill: var(--c-blue);
+}
+
+/* vector-effect: non-scaling-stroke：邊線寬度用「螢幕上的 px」算，不跟著 viewBox
+   的放大倍率變粗——否則鏡頭推得越近（公分數越小），膠囊的邊框就越粗。 */
+/* 量尺數字的膠囊底 */
+.impossible-measure-pill {
+    fill: var(--c-card);
+    stroke: var(--bd-c);
+    stroke-width: 3px;
+    vector-effect: non-scaling-stroke;
+}
+
+/* 量尺數字 */
+.impossible-measure-num {
+    fill: var(--c-blue);
+    font-family: var(--font-ui);
+    font-weight: 900;
+}
+
+/* 標題／新紀錄：paint-order: stroke 讓白色描邊畫在字的「底下」（只露出字外面
+   那一圈），文字壓在量尺線或照片上時有一圈白邊隔開，不會跟背景糊在一起。
+   描邊粗細（stroke-width）由 js 依字級算好寫在 SVG 屬性上。 */
+/* 標題文字（白邊描邊） */
+.impossible-measure-title {
+    font-family: var(--font-ui);
+    font-weight: 900;
+    stroke: #FFFFFF;
+    stroke-linejoin: round;
+    paint-order: stroke;
+}
+
+/* 成功標題（綠） */
+.impossible-measure-title--ok {
+    fill: var(--c-green);
+}
+
+/* 失敗標題（紅） */
+.impossible-measure-title--bad {
+    fill: var(--flow-ink-1);
+}
+
+/* 「警戒線」標籤直接寫在紅色警戒線上：白字＋紅色描邊（描邊畫在字底下），
+   在紅色線條裡描邊跟線條融在一起、只看到白字；字比線還粗而往上超出的部分，
+   紅色描邊讓白字在白色背景上也讀得清楚。 */
+/* 「警戒線」標籤 */
+.impossible-measure-label {
+    fill: #FFFFFF;
+    stroke: var(--flow-ink-1);
+    stroke-linejoin: round;
+    paint-order: stroke;
+    font-family: var(--font-ui);
+    font-weight: 900;
+}
+
+/* 「新紀錄」文字 */
+.impossible-measure-newrec {
+    fill: var(--c-green);
+    stroke: #FFFFFF;
+    stroke-linejoin: round;
+    paint-order: stroke;
+    font-family: var(--font-ui);
+    font-weight: 700;
+}

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_fastblink.js — 秒反應・誰閃得快（企劃 151）
+   樣式：css/games/reaction_fastblink.css（這款專屬的 class 一律以「fastblink-」開頭；共用元件在 css/reaction_common.css）
    左右各一個圓點在閃爍，點「閃得比較快」的那一個。兩個圓點的顏色、位置、閃爍的起點都不一樣，
    一開始快的是慢的 2 倍，越後面兩邊的快慢越接近（最後只差 5％）。
    關卡制：點錯或來不及就結束，成績＝通過幾關。
@@ -87,10 +88,10 @@
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var R = 70;
         function mkDot(side, cx, cy, cls) {
-            var d = h('div', { 'class': 'fbk-dot ' + cls });
+            var d = h('div', { 'class': 'fastblink-dot ' + cls });
             d.style.width = d.style.height = (2 * R) + 'px';
             d.style.left = (cx - R) + 'px'; d.style.top = (cy - R) + 'px';
-            var lab = h('div', { 'class': 'fbk-hz' });
+            var lab = h('div', { 'class': 'fastblink-hz' });
             lab.style.left = (cx - 100) + 'px'; lab.style.top = (cy + R + 14) + 'px';
             stage.appendChild(d); stage.appendChild(lab);
             kit.onTap(d, function () { judge(side); });
@@ -98,17 +99,17 @@
         }
         /* 兩顆圓點的位置也不一樣高（規範：亮度與位置不同），左右各自上下偏一點 */
         var yL = Math.round(H * 0.3) + kit.randInt(-30, 30, api.rand), yR = Math.round(H * 0.3) + kit.randInt(-30, 30, api.rand);
-        var dotL = mkDot('L', Math.round(W * 0.27), yL, q.swap ? 'fbk-dot--b' : 'fbk-dot--a');
-        var dotR = mkDot('R', Math.round(W * 0.73), yR, q.swap ? 'fbk-dot--a' : 'fbk-dot--b');
-        var tip = h('div', { 'class': 'qz-note fbk-tip', text: '點閃得比較快的圓點' });
+        var dotL = mkDot('L', Math.round(W * 0.27), yL, q.swap ? 'fastblink-dot--b' : 'fastblink-dot--a');
+        var dotR = mkDot('R', Math.round(W * 0.73), yR, q.swap ? 'fastblink-dot--a' : 'fastblink-dot--b');
+        var tip = h('div', { 'class': 'qz-note fastblink-tip', text: '點閃得比較快的圓點' });
         stage.appendChild(tip);
         var fL = q.fastSide === 'L' ? q.fast : q.slow, fR = q.fastSide === 'R' ? q.fast : q.slow;
         var t0 = performance.now();
         var loop = api.my.loop(function () {
             if (api.over) return false;
             var t = (performance.now() - t0) / 1000;
-            dotL.el.classList.toggle('fbk-dot--on', isOn(fL, q.phL, t));
-            dotR.el.classList.toggle('fbk-dot--on', isOn(fR, q.phR, t));
+            dotL.el.classList.toggle('fastblink-dot--on', isOn(fL, q.phL, t));
+            dotR.el.classList.toggle('fastblink-dot--on', isOn(fR, q.phR, t));
         });
         api.timer(ansMs(level), function () { judge(null); });
         if (level === 1 && kit.once('fastblink.hint')) kit.hintOn(stage, q.fastSide === 'L' ? dotL.el : dotR.el, { mode: 'tap', delay: 600, text: '請點擊閃得比較快的圓點' });
@@ -117,10 +118,10 @@
             if (api.over) return;
             loop.stop();
             var ok = side === q.fastSide;
-            dotL.el.classList.remove('fbk-dot--on'); dotR.el.classList.remove('fbk-dot--on');
+            dotL.el.classList.remove('fastblink-dot--on'); dotR.el.classList.remove('fastblink-dot--on');
             dotL.lab.textContent = fL.toFixed(4) + ' Hz'; dotR.lab.textContent = fR.toFixed(4) + ' Hz';
-            (q.fastSide === 'L' ? dotL : dotR).el.classList.add('fbk-dot--right');
-            if (side != null && !ok) (side === 'L' ? dotL : dotR).el.classList.add('fbk-dot--wrong');
+            (q.fastSide === 'L' ? dotL : dotR).el.classList.add('fastblink-dot--right');
+            if (side != null && !ok) (side === 'L' ? dotL : dotR).el.classList.add('fastblink-dot--wrong');
             tip.textContent = '快 ' + q.fast.toFixed(4) + ' Hz　慢 ' + q.slow.toFixed(4) + ' Hz　（快的是慢的 ' + q.ratio.toFixed(4) + ' 倍）';
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1300 }); return; }
             kit.flash(stage, false, api.my);

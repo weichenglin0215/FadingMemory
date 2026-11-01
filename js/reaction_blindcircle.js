@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_blindcircle.js — 秒反應・盲畫一個圓
+   樣式：css/games/reaction_blindcircle.css（這款專屬的 class 一律以「blindcircle-」開頭；共用元件在 css/reaction_common.css）
    畫面只有「圓心」與「起點」兩個記號，起點在圓心的右下方（右手畫的圓弧不容易被手遮住）。
    從起點出發，繞圓心畫一圈回到起點——畫的過程中看不到自己的筆跡。只有一次機會。
    V1.25（玩家意見）：起點的記號由橘色圓點改成「十字型的箭頭」（上下左右四個箭頭，總寬 ARROW 200 px，手指壓在中心，
@@ -126,17 +127,17 @@
         var cfg = makeRound(), pts = [], drawing = false, locked = false, hint = null, pid = null;
         console.log('[盲畫一個圓] 半徑 ' + cfg.R.toFixed(2) + '，起點方位 ' + (cfg.ang * 180 / Math.PI).toFixed(1) + '°');
 
-        var svg = kit.svg('svg', { 'class': 'bc-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
+        var svg = kit.svg('svg', { 'class': 'blindcircle-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
         var gRev = kit.svg('g', {}, svg);
         /* 圓心十字與起點 */
         var cx = CENTER.x, cy = CENTER.y;
-        kit.svg('line', { x1: cx - 16, x2: cx + 16, y1: cy, y2: cy, 'class': 'bc-cross' }, svg);
-        kit.svg('line', { x1: cx, x2: cx, y1: cy - 16, y2: cy + 16, 'class': 'bc-cross' }, svg);
+        kit.svg('line', { x1: cx - 16, x2: cx + 16, y1: cy, y2: cy, 'class': 'blindcircle-cross' }, svg);
+        kit.svg('line', { x1: cx, x2: cx, y1: cy - 16, y2: cy + 16, 'class': 'blindcircle-cross' }, svg);
         /* 起點：十字型的箭頭（150px），中心是真正的起點，再加一個小黑點標出正中心 */
-        var dot = kit.svg('polygon', { points: arrowPoints(ARROW).map(function (p) { return (cfg.start.x + p[0]).toFixed(1) + ',' + (cfg.start.y + p[1]).toFixed(1); }).join(' '), 'class': 'bc-start' }, svg);
-        kit.svg('circle', { cx: cfg.start.x, cy: cfg.start.y, r: 4, 'class': 'bc-startdot' }, svg);
-        var trail = kit.svg('polyline', { 'class': 'bc-trail', points: '' }, svg);          /* 手指身後 160px 的黑色虛線軌跡 */
-        var msg = h('div', { 'class': 'bc-msg' });
+        var dot = kit.svg('polygon', { points: arrowPoints(ARROW).map(function (p) { return (cfg.start.x + p[0]).toFixed(1) + ',' + (cfg.start.y + p[1]).toFixed(1); }).join(' '), 'class': 'blindcircle-start' }, svg);
+        kit.svg('circle', { cx: cfg.start.x, cy: cfg.start.y, r: 4, 'class': 'blindcircle-startdot' }, svg);
+        var trail = kit.svg('polyline', { 'class': 'blindcircle-trail', points: '' }, svg);          /* 手指身後 160px 的黑色虛線軌跡 */
+        var msg = h('div', { 'class': 'blindcircle-msg' });
         stage.appendChild(msg);
         function paintTrail() {
             trail.setAttribute('points', tailOf(pts, TRAIL_LEN).map(function (p) { return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' '));
@@ -146,13 +147,13 @@
         var tx = -Math.sin(cfg.ang), ty = Math.cos(cfg.ang);
         if (kit.once('blindcircle.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: cfg.start.x, y: cfg.start.y, dx: tx * 80, dy: ty * 80, delay: 300, text: '請繞著圓心畫一圈' });
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
-        function say(t) { msg.textContent = t; msg.classList.toggle('bc-msg--on', !!t); }
+        function say(t) { msg.textContent = t; msg.classList.toggle('blindcircle-msg--on', !!t); }
 
         function loc(e) { return kit.localPt(e, stage); }
         stage.addEventListener('pointerdown', function (e) {
             if (locked || drawing) return;
             var p = loc(e), dx = p.x - cfg.start.x, dy = p.y - cfg.start.y;
-            if (Math.sqrt(dx * dx + dy * dy) > START_R) { dot.classList.add('bc-start--blink'); my.after(500, function () { dot.classList.remove('bc-start--blink'); }); say('請從起點的圓點開始畫'); return; }
+            if (Math.sqrt(dx * dx + dy * dy) > START_R) { dot.classList.add('blindcircle-start--blink'); my.after(500, function () { dot.classList.remove('blindcircle-start--blink'); }); say('請從起點的圓點開始畫'); return; }
             e.preventDefault();
             try { stage.setPointerCapture(e.pointerId); } catch (err) { }
             drawing = true; pid = e.pointerId; pts = [p]; hideHint(); say(''); paintTrail();
@@ -181,11 +182,11 @@
             locked = true; hideHint();
             Sfx.play('click');
             /* 揭曉：標準圓＋依偏離上色的筆跡 */
-            kit.svg('circle', { cx: cx, cy: cy, r: cfg.R, 'class': 'bc-ref' }, gRev);
+            kit.svg('circle', { cx: cx, cy: cy, r: cfg.R, 'class': 'blindcircle-ref' }, gRev);
             var s = res.samples;
             for (var i = 1; i < s.length; i++) {
                 var d = Math.abs(res.devs[i]);
-                kit.svg('line', { x1: s[i - 1].x, y1: s[i - 1].y, x2: s[i].x, y2: s[i].y, 'class': 'bc-seg ' + (d <= GOOD ? 'bc-seg--g' : (d <= OK ? 'bc-seg--o' : 'bc-seg--r')) }, gRev);
+                kit.svg('line', { x1: s[i - 1].x, y1: s[i - 1].y, x2: s[i].x, y2: s[i].y, 'class': 'blindcircle-seg ' + (d <= GOOD ? 'blindcircle-seg--g' : (d <= OK ? 'blindcircle-seg--o' : 'blindcircle-seg--r')) }, gRev);
             }
             var more = res.meanR - cfg.R;
             say('平均半徑' + (more >= 0 ? '偏大 ' : '偏小 ') + Math.abs(more).toFixed(4) + ' 像素　首尾間距 ' + res.gap.toFixed(4) + ' 像素');

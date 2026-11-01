@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_handsmeet.js — 秒反應・兩針重疊
+   樣式：css/games/reaction_handsmeet.css（這款專屬的 class 一律以「handsmeet-」開頭；共用元件在 css/reaction_common.css）
    一個沒有刻度的圓盤，兩根指針（長針藍、短針橘）以不同速度轉，在它們剛好疊在一起的瞬間按「重疊！」。
    只有一次機會（每回合只能按一次），指針最多轉 MAX_S 秒；成績＝按下瞬間兩針的夾角（度，越小越好）。
    ───────────────────────────────────────────────────────────────────
@@ -69,14 +70,14 @@
         var q = makeRound(), started = false, locked = false, t0 = 0, loop = null;
         console.log('[兩針重疊] 長針 ' + q.w1.toFixed(1) + ' 度/秒、短針 ' + q.w2.toFixed(1) + ' 度/秒；第一次重疊 ' + q.t0.toFixed(3) + ' 秒；之後每 ' + (360 / q.rel).toFixed(3) + ' 秒一次');
 
-        var svg = kit.svg('svg', { 'class': 'hm-svg', viewBox: '0 0 472 560', width: 472, height: 560 }, stage);
-        kit.svg('circle', { cx: CX, cy: CY, r: R, 'class': 'hm-dial' }, svg);
-        var h2 = kit.svg('line', { x1: CX, y1: CY, x2: CX, y2: CY - LEN2, 'class': 'hm-hand2' }, svg);
-        var h1 = kit.svg('line', { x1: CX, y1: CY, x2: CX, y2: CY - LEN1, 'class': 'hm-hand1' }, svg);
-        kit.svg('circle', { cx: CX, cy: CY, r: 9, 'class': 'hm-pin' }, svg);
-        var msg = h('div', { 'class': 'hm-msg', text: '' });
+        var svg = kit.svg('svg', { 'class': 'handsmeet-svg', viewBox: '0 0 472 560', width: 472, height: 560 }, stage);
+        kit.svg('circle', { cx: CX, cy: CY, r: R, 'class': 'handsmeet-dial' }, svg);
+        var h2 = kit.svg('line', { x1: CX, y1: CY, x2: CX, y2: CY - LEN2, 'class': 'handsmeet-hand2' }, svg);
+        var h1 = kit.svg('line', { x1: CX, y1: CY, x2: CX, y2: CY - LEN1, 'class': 'handsmeet-hand1' }, svg);
+        kit.svg('circle', { cx: CX, cy: CY, r: 9, 'class': 'handsmeet-pin' }, svg);
+        var msg = h('div', { 'class': 'handsmeet-msg', text: '' });
         stage.appendChild(msg);
-        var btn = h('button', { 'class': 'btn btn--go hm-btn', text: '重疊！' });
+        var btn = h('button', { 'class': 'btn btn--go handsmeet-btn', text: '重疊！' });
         btn.disabled = true;
         stage.appendChild(btn);
         function setHands(sec) {

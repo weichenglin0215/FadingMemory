@@ -1,0 +1,125 @@
+/* ═══════════════════════════════════════
+   reaction_discount.css — 打了幾折（js/reaction_discount.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「discount-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 打了幾折（.discount-）═══ */
+.discount-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.discount-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+/* 百貨公司的吊牌 */
+.discount-tag {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    top: 14px;
+    padding: var(--sp-3);
+    background: var(--dsc-tag);
+    border: 5px solid var(--dsc-tag-edge);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
+    pointer-events: none;
+}
+
+.discount-tag::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: -22px;
+    width: 26px;
+    height: 26px;
+    margin-left: -13px;
+    box-sizing: border-box;
+    background: var(--c-paper);
+    border: 5px solid var(--dsc-tag-edge);
+    border-radius: 50%;
+}
+
+.discount-tag__sale {
+    display: inline-block;
+    position: absolute;
+    left: 36%;
+    top: -16px;
+    padding: 0 var(--sp-3);
+    background: var(--dsc-red);
+    border-radius: var(--r-sm);
+    color: var(--c-card);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    letter-spacing: 6px;
+    transform: rotate(-3deg);
+}
+
+.discount-tag__orig {
+    margin-top: var(--sp-2);
+    color: var(--c-ink-soft);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-bold);
+}
+
+.discount-tag__price {
+    color: var(--dsc-red);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+}
+
+.discount-tag__n {
+    font-size: calc(var(--fs-xxl) * 1.4);
+    line-height: 1.1;
+}
+
+.discount-tag__q {
+    margin-top: var(--sp-1);
+    color: var(--c-ink);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+}
+
+.discount-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 300px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    pointer-events: none;
+}
+
+.discount-info--ok {
+    color: var(--c-ok);
+}
+
+.discount-info--bad {
+    color: var(--c-bad);
+}
+
+.discount-btn {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+}
+
+.discount-btn--ok {
+    background: var(--c-ok-light);
+    border-color: var(--c-ok);
+}
+
+.discount-btn--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad-light);
+    color: var(--c-bad);
+}

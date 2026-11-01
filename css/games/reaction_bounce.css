@@ -1,0 +1,184 @@
+/* ═══════════════════════════════════════
+   reaction_bounce.css — 球會跑去哪（js/reaction_bounce.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「bounce-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 球會跑去哪：彈珠檯，看球掉下去、被簾子蓋住，要猜球最後落在哪一格。 */
+/* ═══ 球會跑去哪（.bounce-）═══ */
+.bounce-head {
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+/* 提示橫幅 */
+.bounce-banner {
+    min-height: 1.4em;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 遊戲場地 */
+.bounce-field {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    touch-action: none;
+}
+
+/* 彈珠檯 SVG 填滿場地 */
+.bounce-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* 檯面底板 */
+.bounce-board {
+    fill: var(--c-card-alt);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+/* 釘子 */
+.bounce-peg {
+    fill: var(--c-ink-soft);
+}
+
+/* 底部收集口之間的分隔線 */
+.bounce-div {
+    stroke: var(--c-ink-soft);
+    stroke-width: 4;
+}
+
+/* 球的軌跡（揭曉時畫出來；fill:none 只畫線不填色） */
+.bounce-trail {
+    fill: none;
+    stroke: var(--c-blue);
+    stroke-width: 3;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    opacity: 0.75;
+}
+
+/* 被簾子蓋住的那一段軌跡（揭曉第二段，橘色虛線，跟玩家看得到的藍色實線分開） */
+.bounce-trail--hid {
+    stroke: var(--c-orange);
+    stroke-dasharray: 8 6;
+    opacity: 0.95;
+}
+
+/* 玩家看到的最後位置：虛線圈（揭曉第一段閃爍，第二段起一直留著）與「最後看到」標籤 */
+.bounce-seen {
+    fill: none;
+    stroke: var(--c-blue);
+    stroke-width: 3;
+    stroke-dasharray: 5 4;
+    opacity: 0;
+}
+
+.bounce-seen--on {
+    opacity: 1;
+    animation: bounce-seen-blink 0.7s ease-in-out infinite;
+}
+
+.bounce-seen--keep {
+    opacity: 0.85;
+}
+
+@keyframes bounce-seen-blink {
+    0%, 100% { stroke-opacity: 1; }
+    50% { stroke-opacity: 0.2; }
+}
+
+.bounce-seen__t {
+    font-size: 17px;
+    font-weight: var(--fw-black);
+    fill: var(--c-blue);
+    stroke: var(--c-card-alt);
+    stroke-width: 4px;
+    paint-order: stroke;
+    pointer-events: none;
+}
+
+/* 球（橘色） */
+.bounce-ball {
+    fill: var(--c-orange);
+    stroke: var(--c-ink);
+    stroke-width: 2;
+}
+
+/* 簾子：蓋住最下方的收集口＋ 1.5 顆珠子的高度 */
+/* 簾子：蓋住最下方的收集口和上方一小段，讓玩家看不到球落在哪 */
+.bounce-curtain {
+    fill: var(--c-ink);
+}
+
+/* 收集口（可點選） */
+.bounce-slot {
+    cursor: pointer;
+}
+
+/* 珠子還沒掉完：收集口按鈕半透明、點了沒反應（避免誤按）；掉完就拿掉這個 class，變回正常 */
+.bounce-slot--wait {
+    opacity: 0.35;
+    pointer-events: none;
+    cursor: default;
+}
+
+.bounce-slot {
+    transition: opacity 0.2s;
+}
+
+/* 收集口底色 */
+.bounce-slot__bg {
+    fill: var(--c-card);
+    stroke: var(--c-yellow);
+    stroke-width: 3;
+}
+
+/* 收集口上的編號文字 */
+.bounce-slot__t {
+    font-size: 34px;
+    font-weight: var(--fw-black);
+    fill: var(--c-ink);
+    pointer-events: none;
+}
+
+/* 玩家選的收集口（藍色） */
+.bounce-slot--pick .bounce-slot__bg {
+    fill: var(--c-blue-soft);
+    stroke: var(--c-blue);
+}
+
+/* 揭曉用的標示：實際落點 */
+.bounce-result__bg {
+    fill: none;
+    stroke-width: 5;
+}
+
+/* 猜對（綠） */
+.bounce-result__bg--ok {
+    fill: var(--c-ok-soft);
+    stroke: var(--c-ok);
+}
+
+/* 猜錯（橘） */
+.bounce-result__bg--bad {
+    fill: var(--c-bad-soft);
+    stroke: var(--c-bad);
+}
+
+/* 你猜的位置（藍色虛線框） */
+.bounce-result__bg--you {
+    fill: none;
+    stroke: var(--c-blue);
+    stroke-dasharray: 8 6;
+}

@@ -1,0 +1,214 @@
+/* ═══════════════════════════════════════
+   reaction_beans.css — 挑豆子（js/reaction_beans.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「beans-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 挑豆子（.beans-）═══ */
+.beans-stage {
+    overflow: visible;
+    /* 盤子直徑 480px，比遊戲區（472px）寬一點點，兩邊各多出 4px 不要被切掉 */
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* isolation: isolate：把裡面的 z-index（拖曳中的豆子 9999、紅圈 10000、揭曉的比較框 10001）關在這個遊戲區裡，
+   不然它們會比結算彈窗（z-index 25）還高，蓋住結算彈窗、按鈕點不到（V1.38.0 玩家意見） */
+.beans-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: visible;
+    isolation: isolate;
+    touch-action: none;
+}
+
+.beans-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 木盤子 */
+.beans-tip--bad {
+    color: var(--c-bad);
+}
+
+.beans-plate {
+    position: absolute;
+    box-sizing: border-box;
+    background: var(--bns-wood);
+    border: 8px solid var(--bns-wood-edge);
+    border-radius: 50%;
+    pointer-events: none;
+    transition: border-color 0.15s;
+}
+
+/* 拖到紅豆：盤緣閃一下紅色（扣時間） */
+.beans-plate--hit {
+    border-color: var(--c-bad-light);
+}
+
+/* 豆子都放在這一層裡；層的原點在盤心 */
+.beans-layer {
+    position: absolute;
+    width: 0;
+    height: 0;
+}
+
+/* 只有「豆子本身的形狀」收得到點擊（方形的外框不收），這樣被別顆蓋住的雜物露出來的部分才按得到 */
+.beans-item {
+    position: absolute;
+    cursor: grab;
+    transition: left 0.18s ease-out, top 0.18s ease-out, transform 0.12s;
+    touch-action: none;
+    pointer-events: none;
+}
+
+.beans-item--drag {
+    transition: none;
+    transform: scale(1.5);
+    filter: drop-shadow(0 6px 5px var(--bns-shadow));
+}
+
+.beans-item--gone {
+    display: none;
+}
+
+.beans-bean {
+    display: block;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.beans-bean ellipse,
+.beans-bean polygon {
+    pointer-events: auto;
+}
+
+/* 各種豆子與雜物的顏色 */
+.beans-red {
+    fill: var(--bns-red);
+}
+
+.beans-adz {
+    fill: var(--bns-adz);
+}
+
+.beans-pinto {
+    fill: var(--bns-pinto);
+}
+
+.beans-mung {
+    fill: var(--bns-mung);
+}
+
+.beans-black {
+    fill: var(--bns-black);
+}
+
+.beans-redstone {
+    fill: var(--bns-redstone);
+    stroke: var(--bns-redstone-edge);
+    stroke-width: 0.8;
+}
+
+.beans-stone {
+    fill: var(--bns-stone);
+    stroke: var(--bns-stone-edge);
+    stroke-width: 0.8;
+}
+
+.beans-shine {
+    fill: var(--bns-shine);
+}
+
+.beans-spot {
+    fill: var(--bns-spot);
+}
+
+/* 結束：標出剩下的雜物 */
+.beans-ring {
+    position: absolute;
+    box-sizing: border-box;
+    border: 4px dashed var(--c-bad-light);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 10000;
+}
+
+.beans-ring--red {
+    border-style: solid;
+    border-color: var(--c-bad);
+}
+
+.beans-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 6px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    color: var(--c-ok);
+    pointer-events: none;
+}
+
+.beans-info--bad {
+    color: var(--c-bad);
+}
+
+/* 結束：把紅豆和很像的雜物並排放大 */
+.beans-cmp {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 6px;
+    padding: var(--sp-1);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    z-index: 10001;
+}
+
+.beans-cmp__c {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+}
+
+.beans-cmp__s {
+    line-height: 0;
+}
+
+.beans-cmp__n {
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    line-height: 1.2;
+}
+
+.beans-cmp__d {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1.25;
+}
+
+.beans-cmp__vs {
+    align-self: center;
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+}

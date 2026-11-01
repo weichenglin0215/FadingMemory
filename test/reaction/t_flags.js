@@ -65,9 +65,9 @@ ok(simulate((cmd, start, rq) => cmd.kind === 'keep' ? { L: !start.L, R: !start.R
 { let firstWrong = []; for (let t = 0; t < 200; t++) firstWrong.push(simulate((cmd, start, rq) => cmd.kind === 'keep' ? { L: rq.L, R: rq.R } : { L: !rq.L, R: rq.R })); ok(firstWrong.every(x => x >= 0 && x <= 10), '紅旗永遠反著做的玩家一定很快錯'); }
 
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_flags.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 3600/.test(src) && /flg-cmp__flag--bad/.test(src) && /scoreOf/.test(src), '失敗：口令與你的旗子並排、不一樣的標紅、停格 2 秒以上；成績用 scoreOf');
-  ok(/\.flg-cloth--L \{[^}]*var\(--flg-red\)/.test(css) && /\.flg-cmp__flag--bad \{[^}]*var\(--c-bad/.test(css), '紅旗、紅色用 CSS 變數');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_flags.js'), css = rd('../../css/games/reaction_flags.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 3600/.test(src) && /flags-cmp__flag--bad/.test(src) && /scoreOf/.test(src), '失敗：口令與你的旗子並排、不一樣的標紅、停格 2 秒以上；成績用 scoreOf');
+  ok(/\.flags-cloth--L \{[^}]*var\(--flg-red\)/.test(css) && /\.flags-cmp__flag--bad \{[^}]*var\(--c-bad/.test(css), '紅旗、紅色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_flags.js'") > 0 && /左半邊/.test(G.rule), 'boot.js 有載入、玩法說明提到左半邊');
   ok(/pointerdown/.test(src) && /pointerup/.test(src) && /pointercancel/.test(src) && /p\.x < W \/ 2/.test(src), '按壓：左右半邊、支援兩指一起（pointerdown／pointerup／pointercancel）');
   ok(/max: 300/.test(src), '成績上限 300'); }
@@ -83,10 +83,10 @@ ok(T.rating(3) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20)
   // 兩面旗一起：永遠往至少一面會動的方向
   for (let i = 0; i < 4000; i++) { const rq = { L: rnd() < 0.5, R: rnd() < 0.5 }, c = T.nextCommand(rq, null, 60, rnd); if (c.flags.length === 2) { const nq = T.applyCommand(rq, c); ok(nq.L !== rq.L || nq.R !== rq.R, '兩面旗一起一定有旗子會動：' + JSON.stringify(rq) + ' ' + c.text); } }
 }
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_flags.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' ');
-  ok(/flg-grace__fill/.test(src) && /graceFill\.style\.animationDuration = gr \+ 'ms'/.test(src) && /var iv = intervalFor\(count\), gr = graceFor\(count\)/.test(src), '寬限條的長度＝這一句的寬限時間 graceFor');
-  ok(/\.flg-grace__fill \{[^}]*background: var\(--c-blue\)/.test(css) && /\.flg-grace \{[^}]*bottom: 10px/.test(css) && /@keyframes flg-grace \{ from \{ transform: scaleX\(1\);[^}]*\} to \{ transform: scaleX\(0\);/.test(css), '藍色橫條在口令框下緣，從滿縮到空');
-  ok(/flg-cmd--inL/.test(src) && /flg-cmd--inR/.test(src) && /cmdNo % 2/.test(src) && /Sfx\.play\('pop'\)/.test(src), '換新口令：左右交替滑進來、啵一聲');
-  ok(/\.flg-cmd--inL \{ animation: flg-in-l 0\.26s[^}]*flg-flash 0\.45s/.test(css) && /@keyframes flg-flash \{ from \{ background: var\(--c-yellow\);/.test(css), '換新口令的動畫很快（0.26 秒滑進、0.45 秒閃色）');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_flags.js'), css = rd('../../css/games/reaction_flags.css').split(/\s+/).join(' ');
+  ok(/flags-grace__fill/.test(src) && /graceFill\.style\.animationDuration = gr \+ 'ms'/.test(src) && /var iv = intervalFor\(count\), gr = graceFor\(count\)/.test(src), '寬限條的長度＝這一句的寬限時間 graceFor');
+  ok(/\.flags-grace__fill \{[^}]*background: var\(--c-blue\)/.test(css) && /\.flags-grace \{[^}]*bottom: 10px/.test(css) && /@keyframes flags-grace \{ from \{ transform: scaleX\(1\);[^}]*\} to \{ transform: scaleX\(0\);/.test(css), '藍色橫條在口令框下緣，從滿縮到空');
+  ok(/flags-cmd--inL/.test(src) && /flags-cmd--inR/.test(src) && /cmdNo % 2/.test(src) && /Sfx\.play\('pop'\)/.test(src), '換新口令：左右交替滑進來、啵一聲');
+  ok(/\.flags-cmd--inL \{ animation: flags-in-l 0\.26s[^}]*flags-flash 0\.45s/.test(css) && /@keyframes flags-flash \{ from \{ background: var\(--c-yellow\);/.test(css), '換新口令的動畫很快（0.26 秒滑進、0.45 秒閃色）');
   ok(/藍色橫條/.test(G.rule), '玩法說明提到藍色橫條'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

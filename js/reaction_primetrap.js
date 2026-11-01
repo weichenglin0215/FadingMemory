@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_primetrap.js — 秒反應・質數陷阱
+   樣式：css/games/reaction_primetrap.css（這款專屬的 class 一律以「primetrap-」開頭；共用元件在 css/reaction_common.css）
    畫面中央出現一個數字，下方左邊按鈕「合數（非質數）」、右邊按鈕「質數」。
    關卡制，答錯或逾時就結束，成績＝連續答對幾題。
    ───────────────────────────────────────────────────────────────────
@@ -112,12 +113,12 @@
         hist.push(q.prime); setPrev(q.n);
         api.info = q;
         console.log('[質數陷阱] 第 ' + level + ' 題：' + q.n + '（' + (q.prime ? '質數' : (q.trap ? '陷阱合數 ' : '合數 ') + factorText(q.n)) + '），限時 ' + timeMs(level) + ' ms');
-        var num = h('div', { 'class': 'pt-num', text: String(q.n) });
-        var note = h('div', { 'class': 'pt-note' });
-        var why = h('div', { 'class': 'pt-why' });
+        var num = h('div', { 'class': 'primetrap-num', text: String(q.n) });
+        var note = h('div', { 'class': 'primetrap-note' });
+        var why = h('div', { 'class': 'primetrap-why' });
         stage.appendChild(num); stage.appendChild(note); stage.appendChild(why);
-        var bComp = h('button', { 'class': 'btn btn--primary pt-btn', html: '合數<small>（非質數）</small>' });
-        var bPrime = h('button', { 'class': 'btn btn--go pt-btn', text: '質數' });
+        var bComp = h('button', { 'class': 'btn btn--primary primetrap-btn', html: '合數<small>（非質數）</small>' });
+        var bPrime = h('button', { 'class': 'btn btn--go primetrap-btn', text: '質數' });
         stage.appendChild(h('div', { 'class': 'rx-btnrow' }, [bComp, bPrime]));
         api.timer(timeMs(level), function () { judge(null); });
 
@@ -126,11 +127,11 @@
             var text = q.prime ? q.n + ' 是質數' : factorText(q.n);
             note.textContent = text;
             if (sayPrime === q.prime) {
-                num.classList.add('pt-num--ok');
+                num.classList.add('primetrap-num--ok');
                 api.pass({ delay: 600 });
             } else {
-                num.classList.add('pt-num--bad');
-                note.classList.add('pt-note--bad');
+                num.classList.add('primetrap-num--bad');
+                note.classList.add('primetrap-note--bad');
                 why.textContent = (sayPrime == null ? '時間到！' : '答錯了：') + q.n + (q.prime ? ' 是質數' : ' 不是質數') + (q.trap ? '\n它不能被 2、3、5 整除，看起來像質數，其實是合數' : '');
                 api.fail({ delay: FAIL_MS, lines: [
                     (sayPrime == null ? '時間到！' : '答錯了：') + q.n + (q.prime ? ' 是質數' : ' 不是質數'),

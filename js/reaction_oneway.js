@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_oneway.js — 秒反應・單行道（企劃 224）
+   樣式：css/games/reaction_oneway.css（這款專屬的 class 一律以「oneway-」開頭；共用元件在 css/reaction_common.css）
    俯視的棋盤式街道，每一段路上都畫著單行道的箭頭。計程車在左下角，客人要去右上角的醫院。
    手指從計程車開始，沿著街道拖出路線，**只能順著箭頭的方向走**，逆向的路段拖不過去（會閃紅）。到得了醫院就過關。
    ───────────────────────────────────────────────────────────────────
@@ -239,7 +240,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'owy-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'oneway-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -257,32 +258,32 @@
         var sp = Math.floor(Math.min((W - 2 * pad) / (n - 1), (H - topPad - 2 * pad) / (n - 1), 120)), BW = sp * (n - 1), ox = Math.round((W - BW) / 2), oy = topPad + Math.round((H - topPad - BW) / 2) - 8;
         function px(i) { return ox + (i % n) * sp; }
         function py(i) { return oy + Math.floor(i / n) * sp; }
-        var tip = h('div', { 'class': 'qz-note owy-tip', text: '順著箭頭，把計程車帶到醫院' });
+        var tip = h('div', { 'class': 'qz-note oneway-tip', text: '順著箭頭，把計程車帶到醫院' });
         stage.appendChild(tip);
-        var svg = kit.svg('svg', { 'class': 'owy-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
+        var svg = kit.svg('svg', { 'class': 'oneway-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
         var gRoad = kit.svg('g', {}, svg), gSol = kit.svg('g', {}, svg), gRoute = kit.svg('g', {}, svg), gSign = kit.svg('g', {}, svg), gNode = kit.svg('g', {}, svg);
         var rw = Math.max(16, sp * 0.3);
         /* 路：每一段畫一條白色粗線；中間放一個藍色圓形的單行道標誌，箭頭指向可以開的方向 */
         for (var a = 0; a < n * n; a++) neighbors(n, a).forEach(function (b) {
             if (b < a) return;
             var from = canMove(q, a, b) ? a : b, to = from === a ? b : a;
-            var road = kit.svg('line', { x1: px(a), y1: py(a), x2: px(b), y2: py(b), 'class': 'owy-road' }, gRoad);
+            var road = kit.svg('line', { x1: px(a), y1: py(a), x2: px(b), y2: py(b), 'class': 'oneway-road' }, gRoad);
             road.setAttribute('stroke-width', rw.toFixed(1));
             var mx = (px(a) + px(b)) / 2, my = (py(a) + py(b)) / 2, ang = Math.atan2(py(to) - py(from), px(to) - px(from)) * 180 / Math.PI;
-            var g = kit.svg('g', { 'class': 'owy-sign', transform: 'translate(' + mx.toFixed(1) + ' ' + my.toFixed(1) + ') rotate(' + ang.toFixed(1) + ')' }, gSign);
-            kit.svg('circle', { 'class': 'owy-sign-bg', cx: 0, cy: 0, r: rw * 0.46 }, g);
-            kit.svg('path', { 'class': 'owy-sign-arrow', d: 'M' + (-rw * 0.24) + ' 0 H' + (rw * 0.14) + ' M' + (rw * 0.02) + ' ' + (-rw * 0.16) + ' L' + (rw * 0.22) + ' 0 L' + (rw * 0.02) + ' ' + (rw * 0.16) }, g);
+            var g = kit.svg('g', { 'class': 'oneway-sign', transform: 'translate(' + mx.toFixed(1) + ' ' + my.toFixed(1) + ') rotate(' + ang.toFixed(1) + ')' }, gSign);
+            kit.svg('circle', { 'class': 'oneway-sign-bg', cx: 0, cy: 0, r: rw * 0.46 }, g);
+            kit.svg('path', { 'class': 'oneway-sign-arrow', d: 'M' + (-rw * 0.24) + ' 0 H' + (rw * 0.14) + ' M' + (rw * 0.02) + ' ' + (-rw * 0.16) + ' L' + (rw * 0.22) + ' 0 L' + (rw * 0.02) + ' ' + (rw * 0.16) }, g);
         });
-        for (var i = 0; i < n * n; i++) kit.svg('circle', { 'class': 'owy-node', cx: px(i), cy: py(i), r: rw * 0.42 }, gNode);
+        for (var i = 0; i < n * n; i++) kit.svg('circle', { 'class': 'oneway-node', cx: px(i), cy: py(i), r: rw * 0.42 }, gNode);
         /* 醫院：紅十字的小房子（畫在右上角路口的外面）；計程車：黃色的小車，停在路線的最前端 */
-        var hos = kit.svg('g', { 'class': 'owy-hospital', transform: 'translate(' + px(q.goal) + ' ' + py(q.goal) + ')' }, gNode);
-        kit.svg('rect', { 'class': 'owy-hos-body', x: -rw * 0.62, y: -rw * 0.62, width: rw * 1.24, height: rw * 1.24, rx: 5 }, hos);
-        kit.svg('path', { 'class': 'owy-hos-cross', d: 'M' + (-rw * 0.4) + ' 0 H' + (rw * 0.4) + ' M0 ' + (-rw * 0.4) + ' V' + (rw * 0.4) }, hos);
-        var taxi = kit.svg('g', { 'class': 'owy-taxi' }, gNode);
-        kit.svg('rect', { 'class': 'owy-taxi-body', x: -rw * 0.55, y: -rw * 0.34, width: rw * 1.1, height: rw * 0.68, rx: 7 }, taxi);
-        kit.svg('rect', { 'class': 'owy-taxi-win', x: -rw * 0.28, y: -rw * 0.22, width: rw * 0.56, height: rw * 0.3, rx: 3 }, taxi);
-        var bad = kit.svg('circle', { 'class': 'owy-bad', cx: -99, cy: -99, r: rw * 0.9 }, gNode);
-        var routeLine = kit.svg('path', { 'class': 'owy-route', d: '' }, gRoute);
+        var hos = kit.svg('g', { 'class': 'oneway-hospital', transform: 'translate(' + px(q.goal) + ' ' + py(q.goal) + ')' }, gNode);
+        kit.svg('rect', { 'class': 'oneway-hos-body', x: -rw * 0.62, y: -rw * 0.62, width: rw * 1.24, height: rw * 1.24, rx: 5 }, hos);
+        kit.svg('path', { 'class': 'oneway-hos-cross', d: 'M' + (-rw * 0.4) + ' 0 H' + (rw * 0.4) + ' M0 ' + (-rw * 0.4) + ' V' + (rw * 0.4) }, hos);
+        var taxi = kit.svg('g', { 'class': 'oneway-taxi' }, gNode);
+        kit.svg('rect', { 'class': 'oneway-taxi-body', x: -rw * 0.55, y: -rw * 0.34, width: rw * 1.1, height: rw * 0.68, rx: 7 }, taxi);
+        kit.svg('rect', { 'class': 'oneway-taxi-win', x: -rw * 0.28, y: -rw * 0.22, width: rw * 0.56, height: rw * 0.3, rx: 3 }, taxi);
+        var bad = kit.svg('circle', { 'class': 'oneway-bad', cx: -99, cy: -99, r: rw * 0.9 }, gNode);
+        var routeLine = kit.svg('path', { 'class': 'oneway-route', d: '' }, gRoute);
         routeLine.setAttribute('stroke-width', (rw * 0.34).toFixed(1));
         function paint() {
             var head = path[path.length - 1];
@@ -306,7 +307,7 @@
             var now = performance.now();
             if (now - lastBadAt < 350) return;
             lastBadAt = now; Sfx.play('bad');
-            var l = kit.svg('line', { x1: px(a), y1: py(a), x2: px(b), y2: py(b), 'class': 'owy-road--bad' }, gRoute);
+            var l = kit.svg('line', { x1: px(a), y1: py(a), x2: px(b), y2: py(b), 'class': 'oneway-road--bad' }, gRoute);
             l.setAttribute('stroke-width', (rw * 0.7).toFixed(1));
             api.after(450, function () { if (l.parentNode) l.parentNode.removeChild(l); });
         }
@@ -346,9 +347,9 @@
             }
             var head = path[path.length - 1], stuck = outgoing(q, head).every(function (b) { return path.indexOf(b) >= 0; });
             bad.setAttribute('cx', px(head)); bad.setAttribute('cy', py(head));
-            var sol = kit.svg('path', { 'class': 'owy-sol', d: q.solution.map(function (k, j) { return (j ? 'L' : 'M') + px(k) + ' ' + py(k); }).join(' '), pathLength: 1 }, gSol);
+            var sol = kit.svg('path', { 'class': 'oneway-sol', d: q.solution.map(function (k, j) { return (j ? 'L' : 'M') + px(k) + ' ' + py(k); }).join(' '), pathLength: 1 }, gSol);
             sol.setAttribute('stroke-width', (rw * 0.34).toFixed(1));
-            gSol.classList.add('owy-sol--draw');
+            gSol.classList.add('oneway-sol--draw');
             tip.textContent = '時間到！綠線是可以開到醫院的路';
             kit.flash(stage, false, api.my);
             api.fail({ delay: 2800, lines: ['時間到，' + (stuck ? '你卡在死巷裡了（紅圈）' : '你停在紅圈的地方，還沒到醫院'), '最短的合法路線要 ' + (q.solution.length - 1) + ' 段（直線距離只有 ' + manhattan(n, q.start, q.goal) + '）'] });

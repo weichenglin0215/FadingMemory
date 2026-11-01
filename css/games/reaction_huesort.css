@@ -1,0 +1,103 @@
+/* ═══════════════════════════════════════
+   reaction_huesort.css — 色票排隊（js/reaction_huesort.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「huesort-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 色票排隊（.huesort-）═══ */
+.huesort-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 上方提示 */
+.huesort-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 色塊：顏色用 JS 直接設（是題目的內容，不是主題色）；揭曉時 .huesort-block--join 讓它們往中間集中、圓角變直角 */
+.huesort-block {
+    position: absolute;
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: left 0.8s ease-in-out, top 0.8s ease-in-out, border-radius 0.8s ease-in-out;
+}
+
+.huesort-block--join {
+    border-radius: 0;
+    cursor: default;
+}
+
+/* 記號：放在色塊正中間；白邊綠色圓圈／白邊紅色 X */
+.huesort-mark {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 54px;
+    height: 54px;
+    margin: -27px 0 0 -27px;
+    pointer-events: none;
+    animation: huesort-pop 0.25s ease-out;
+}
+
+.huesort-mark__svg {
+    display: block;
+    overflow: visible;
+}
+
+.huesort-mark__ok {
+    fill: var(--c-ok);
+    stroke: var(--hus-edge);
+    stroke-width: 6;
+}
+
+.huesort-mark__xedge {
+    fill: none;
+    stroke: var(--hus-edge);
+    stroke-width: 14;
+    stroke-linecap: round;
+}
+
+.huesort-mark__x {
+    fill: none;
+    stroke: var(--hus-x);
+    stroke-width: 7;
+    stroke-linecap: round;
+}
+
+@keyframes huesort-pop {
+    from {
+        transform: scale(0.4);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* 下方說明 */
+.huesort-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.huesort-info--ok {
+    color: var(--c-ok);
+}
+
+.huesort-info--bad {
+    color: var(--c-bad);
+}

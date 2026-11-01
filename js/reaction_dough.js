@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_dough.js — 秒反應・擀水餃皮（企劃 417）
+   樣式：css/games/reaction_dough.css（這款專屬的 class 一律以「dough-」開頭；共用元件在 css/reaction_common.css）
    包水餃。一小團麵糰。**手指往某個方向拖，擀麵棍就往那個方向擀，麵皮就往那個方向變長**。
    要把麵皮擀成「**圓的**、**和樣品（虛線圓）一樣大**」。做好按「好了」：圓度 91.2318%、大小差 3.1%。
    **圓度和大小差都要達到及格線才過關**（圓度 80% → 95%、大小差 15% → 3%）。
@@ -100,7 +101,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'dgh-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'dough-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -117,17 +118,17 @@
         console.log('[擀水餃皮] 第 ' + level + ' 關：麵糰長短軸比 ' + q.ratio + '、一開始半徑 ' + q.startR.toFixed(1) + '（樣品 ' + q.sampleR + '）；及格線 圓度 ' + q.roundMin + '%、大小差 ≤ ' + q.sizeMax + '%；一開始圓度 ' + roundness(pts).toFixed(2) + '%');
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, cx = Math.round(W / 2), cy = Math.round(H * 0.4);
-        var field = h('div', { 'class': 'dgh-field' });
+        var field = h('div', { 'class': 'dough-field' });
         stage.appendChild(field);
-        var tip = h('div', { 'class': 'qz-note dgh-tip', text: level === 1 ? '手指往哪拖，麵皮就往哪邊變長（要擀成虛線圓那麼大）' : '轉著方向擀成虛線圓的大小，再按「好了」' });
+        var tip = h('div', { 'class': 'qz-note dough-tip', text: level === 1 ? '手指往哪拖，麵皮就往哪邊變長（要擀成虛線圓那麼大）' : '轉著方向擀成虛線圓的大小，再按「好了」' });
         field.appendChild(tip);
-        var svg = kit.svg('svg', { 'class': 'dgh-svg', width: W, height: H, viewBox: '0 0 ' + W + ' ' + H }, field);
-        kit.svg('circle', { 'class': 'dgh-sample', cx: cx, cy: cy, r: q.sampleR }, svg);
-        var cut = kit.svg('circle', { 'class': 'dgh-best', cx: cx, cy: cy, r: 0 }, svg);
-        var skin = kit.svg('path', { 'class': 'dgh-dough', d: pathOf(pts, cx, cy) }, svg);
-        var pin = h('div', { 'class': 'dgh-pin' }); pin.style.display = 'none'; field.appendChild(pin);
-        var info = h('div', { 'class': 'qz-note dgh-info', text: '' }); info.style.top = (cy + q.sampleR + 38) + 'px'; field.appendChild(info);
-        var btn = kit.btnGrid(field, [{ text: '好了！', kind: 'primary', cls: 'dgh-btn', onTap: function () { done(); } }], { cols: 1, h: 92, bottom: 12 });
+        var svg = kit.svg('svg', { 'class': 'dough-svg', width: W, height: H, viewBox: '0 0 ' + W + ' ' + H }, field);
+        kit.svg('circle', { 'class': 'dough-sample', cx: cx, cy: cy, r: q.sampleR }, svg);
+        var cut = kit.svg('circle', { 'class': 'dough-best', cx: cx, cy: cy, r: 0 }, svg);
+        var skin = kit.svg('path', { 'class': 'dough-dough', d: pathOf(pts, cx, cy) }, svg);
+        var pin = h('div', { 'class': 'dough-pin' }); pin.style.display = 'none'; field.appendChild(pin);
+        var info = h('div', { 'class': 'qz-note dough-info', text: '' }); info.style.top = (cy + q.sampleR + 38) + 'px'; field.appendChild(info);
+        var btn = kit.btnGrid(field, [{ text: '好了！', kind: 'primary', cls: 'dough-btn', onTap: function () { done(); } }], { cols: 1, h: 92, bottom: 12 });
         if (level === 1 && kit.once('dough.hint')) kit.hintOn(stage, null, { mode: 'drag', x: cx - 60, y: cy + q.sampleR + 30, dx: 120, dy: 0, delay: 800, text: '往旁邊拖，麵皮就往旁邊變長' });
 
         var phase = 'roll', down = null, last = null, rolls = 0;
@@ -154,11 +155,11 @@
         /* 結果：把麵皮、樣品圓、「最接近的圓」並排；圓度和大小差各自有沒有達到 */
         function finish(overshoot) {
             if (phase !== 'roll' || api.over) return;
-            phase = 'end'; down = null; pin.style.display = 'none'; btn.btns[0].classList.add('dgh-btn--off');
+            phase = 'end'; down = null; pin.style.display = 'none'; btn.btns[0].classList.add('dough-btn--off');
             var j = judge(pts, level, q.sampleR), rr = radii(recenter(pts));
             cut.setAttribute('r', rr.mean.toFixed(1));
             var why = whyText(j, level);
-            info.textContent = why; info.classList.add(j.ok ? 'dgh-info--ok' : 'dgh-info--bad');
+            info.textContent = why; info.classList.add(j.ok ? 'dough-info--ok' : 'dough-info--bad');
             tip.textContent = j.ok ? '擀得又圓又剛好！' : (overshoot ? '麵皮擀太大了' : (j.okRound ? '大小不對' : '麵皮不夠圓（粉色虛線圈是平均大小的圓）'));
             if (j.ok) { kit.flash(stage, true, api.my); Sfx.play('ok'); api.pass({ delay: 2300 }); return; }
             kit.flash(stage, false, api.my);

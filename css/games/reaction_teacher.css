@@ -1,0 +1,175 @@
+/* ═══════════════════════════════════════
+   reaction_teacher.css — 老師說（js/reaction_teacher.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「teacher-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 老師說：老師說「舉手」才做，沒說「老師說」就不能做。 */
+/* ═══ 老師說（.teacher-）═══ */
+/* 上方列：老師頭像 + 對話框 */
+.teacher-top {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+}
+
+/* 老師頭像 */
+.teacher-teacher {
+    flex: none;
+    width: 128px;
+    height: 128px;
+}
+
+/* 老師臉 SVG */
+.teacher-face {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* 臉 */
+.teacher-face__head {
+    fill: var(--c-card-alt);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+/* 頭髮 */
+.teacher-face__hair {
+    fill: var(--c-ink);
+}
+
+/* 眼鏡 */
+.teacher-face__glass {
+    fill: none;
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+/* 眼睛 */
+.teacher-face__eyes {
+    fill: var(--c-ink);
+}
+
+/* 嘴巴 */
+.teacher-face__mouth {
+    fill: none;
+    stroke: var(--c-ink);
+    stroke-width: 3.5;
+    stroke-linecap: round;
+}
+
+/* 對話框 */
+.teacher-bubble {
+    flex: 1 1 0;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: var(--sp-2) var(--sp-3);
+    text-align: center;
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-lg);
+}
+
+/* 老師有說「老師說」時的對話框（橘色） */
+.teacher-bubble--say {
+    /*border-color: var(--c-orange);*/
+    /*background: var(--c-orange-soft);*/
+}
+
+/* 做對（綠） */
+.teacher-bubble--ok {
+    border-color: var(--c-ok);
+    background: var(--c-ok-soft);
+}
+
+/* 做錯（橘） */
+.teacher-bubble--bad {
+    border-color: var(--c-bad);
+    background: var(--c-bad-soft);
+}
+
+/* 對話框第一行（「老師說：」） */
+.teacher-bubble__pre {
+    min-height: 1.3em;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-recall);
+    line-height: 1.3;
+}
+
+/* 對話框動作文字（大字） */
+.teacher-bubble__act {
+    font-size: 48px;
+    line-height: 1.25;
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    white-space: nowrap;
+}
+
+/* 底下的說明文字 */
+.teacher-sub {
+    min-height: 1.4em;
+    text-align: center;
+    white-space: nowrap;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 九宮格方向鍵：3×3 格子，只用上下左右四個位置 */
+.teacher-pad {
+    flex: 1 1 0;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    gap: var(--sp-2);
+}
+
+/* 單個方向鍵 */
+.teacher-btn {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    padding: 0;
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    background: var(--c-blue-soft);
+    border: 3px solid var(--c-blue);
+    border-radius: var(--r-lg);
+    touch-action: none;
+}
+
+/* 手指按著時變實心藍色；teacher-btn--held＝「同時點兩個方向」那一題已經點到的方向（放開手指也維持，直到這題結束） */
+.teacher-btn:active,
+.teacher-btn.teacher-btn--held {
+    background: var(--c-blue);
+    color: var(--c-on-accent);
+}
+
+/* 上：放在第 2 欄第 1 列 */
+.teacher-btn--up {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+/* 左：第 1 欄第 2 列 */
+.teacher-btn--left {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+/* 右：第 3 欄第 2 列 */
+.teacher-btn--right {
+    grid-column: 3;
+    grid-row: 2;
+}
+
+/* 下：第 2 欄第 3 列（和上、左、右組成十字形） */
+.teacher-btn--down {
+    grid-column: 2;
+    grid-row: 3;
+}

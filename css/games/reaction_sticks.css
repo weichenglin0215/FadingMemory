@@ -1,0 +1,75 @@
+/* ═══════════════════════════════════════
+   reaction_sticks.css — 落下棍子（js/reaction_sticks.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「sticks-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 【新手導讀：這個檔案怎麼讀】
+   · 一款遊戲 = 一組 class 名稱，前綴相同（例如落下棍子全部是 sticks-開頭），JS 用 UI.h(..., {class:'sticks-field'}) 把它們貼到元素上。
+   · 看到 .xxx--ok / .xxx--bad 是「修飾 class」：答對／答錯時 JS 才把它加到元素上，換顏色給玩家回饋（綠＝對、橘＝錯）。
+   · 常用屬性速查：
+       display:flex          讓子元素排成一列（或一欄），搭配 justify-content / align-items 控制對齊與置中
+       flex:1 1 auto         這個元素把「剩下的空間」吃滿；flex:none 表示不拉伸、只用自己的大小
+       min-height:0          搭配 flex 使用，允許元素「縮到比內容還小」，否則內容多時會把版面撐破（不能捲動的規則）
+       display:grid          格子排版（rows × columns），repeat(6,1fr) = 6 等分
+       position:absolute     脫離一般排版、用 left/top/inset 精準擺位（父元素要有 position:relative）
+       inset:0               上下左右都貼齊父元素（等於 top/right/bottom/left 都是 0）
+       var(--xxx)            讀取 theme.css :root 裡定義的變數（顏色、字級、間距），這裡不寫死數值
+       touch-action:none     告訴手機瀏覽器「這個區域的手指拖曳不要拿去捲動頁面」，拖曳遊戲一定要加
+       @keyframes            自訂動畫的每一格畫面，再由 animation: 名稱 時間 套用到元素 */
+/* ═══ 落下棍子（.sticks-）═══ */
+/* 落下棍子：一根根從上面落下的棍子，要在棍子到達目標位置的瞬間點擊。 */
+/* 標題列：置中、中等字級、粗體 */
+.sticks-head {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+/* 遊戲場地：棍子落下的區域，overflow:hidden 讓超出場地的部分被裁掉 */
+.sticks-field {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    touch-action: none;
+}
+
+/* 場地最上方的黑色橫桿（棍子從這裡鬆手掉下去） */
+.sticks-rail {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 12px;
+    background: var(--c-ink);
+    z-index: 3;
+}
+
+/* 單根棍子；will-change:transform 提示瀏覽器「這個元素會一直移動」，讓它事先用顯示卡加速，動畫更順 */
+.sticks-stick {
+    position: absolute;
+    top: 0;
+    box-sizing: border-box;
+    background: var(--c-yellow);
+    border: 3px solid var(--c-ink-soft);
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    will-change: transform;
+}
+
+/* 修飾：點準了（綠色） */
+.sticks-stick--ok {
+    background: var(--c-ok);
+    border-color: var(--c-ok);
+}
+
+/* 修飾：點錯了（橘色） */
+.sticks-stick--bad {
+    background: var(--c-bad);
+    border-color: var(--c-bad);
+}

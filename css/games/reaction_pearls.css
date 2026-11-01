@@ -1,0 +1,203 @@
+/* ═══════════════════════════════════════
+   reaction_pearls.css — 吸珍珠（js/reaction_pearls.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「pearls-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 吸珍珠（.pearls-）═══ */
+.pearls-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.pearls-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+/* 上方的目標：吸 N 顆珍珠 */
+.pearls-goal {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 6px;
+    text-align: center;
+    color: var(--c-ink);
+    font-weight: var(--fw-black);
+    pointer-events: none;
+}
+
+.pearls-goal__t {
+    font-size: var(--fs-lg);
+}
+
+.pearls-goal__n {
+    color: var(--prl-goal);
+    font-size: var(--fs-xxl);
+    line-height: 1;
+}
+
+/* 嘴（吸管的上端）：粉紅色的嘴唇；吸的時候縮起來 */
+.pearls-mouth {
+    position: absolute;
+    width: 108px;
+    height: 52px;
+    background: var(--prl-lip);
+    border: 4px solid var(--prl-lip-line);
+    border-radius: 50%;
+    box-sizing: border-box;
+    transition: transform 0.12s;
+    pointer-events: none;
+}
+
+.pearls-mouth::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 52px;
+    height: 12px;
+    margin: -6px 0 0 -26px;
+    background: var(--prl-lip-line);
+    border-radius: 50%;
+}
+
+.pearls-mouth--suck {
+    transform: scale(0.8, 0.92);
+}
+
+/* 杯子：梯形的透明杯身、裡面的奶茶、杯底的珍珠 */
+.pearls-cup {
+    position: absolute;
+    clip-path: polygon(5% 0, 95% 0, 85% 100%, 15% 100%);
+    background: var(--prl-cup);
+    pointer-events: none;
+}
+
+.pearls-tea {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 86%;
+    background: linear-gradient(var(--prl-tea-top), var(--prl-tea-bottom));
+}
+
+.pearls-deco {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    background: radial-gradient(circle at 35% 30%, var(--prl-pearl-lite), var(--prl-pearl));
+    border-radius: 50%;
+}
+
+/* 吸管：細長的半透明管子（吸的時候顏色變深） */
+.pearls-straw {
+    position: absolute;
+    box-sizing: border-box;
+    background: var(--prl-straw);
+    border: 3px solid var(--prl-straw-line);
+    border-radius: 12px;
+    pointer-events: none;
+    transition: background 0.1s;
+}
+
+.pearls-straw--suck {
+    background: var(--prl-straw-on);
+}
+
+.pearls-pearl {
+    position: absolute;
+    background: radial-gradient(circle at 35% 30%, var(--prl-pearl-lite), var(--prl-pearl));
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.pearls-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.pearls-info--ok {
+    color: var(--c-ok);
+}
+
+.pearls-info--bad {
+    color: var(--c-bad);
+}
+
+/* 揭曉：嘴裡的珍珠排成一排、依序編號 */
+.pearls-row {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    padding: var(--sp-2);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    pointer-events: none;
+    z-index: 3;
+}
+
+.pearls-rowp {
+    text-align: center;
+    background: radial-gradient(circle at 35% 30%, var(--prl-pearl-lite), var(--prl-pearl));
+    border-radius: 50%;
+    color: var(--prl-num);
+    font-weight: var(--fw-black);
+}
+
+.pearls-rowp--n {
+    box-shadow: 0 0 0 4px var(--c-ok);
+}
+
+.pearls-rowp--extra {
+    box-shadow: 0 0 0 4px var(--c-bad-light);
+}
+
+.pearls-rowp--none {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+/* 按住吸的大按鈕 */
+.pearls-hold {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--prl-hold);
+    border: 4px solid var(--prl-hold-line);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+    color: var(--prl-hold-text);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    letter-spacing: 6px;
+    touch-action: none;
+}
+
+.pearls-hold--down {
+    background: var(--prl-hold-on);
+    transform: translateY(3px);
+    box-shadow: none;
+}

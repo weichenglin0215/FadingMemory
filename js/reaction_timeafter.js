@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_timeafter.js — 秒反應・幾點幾分後（企劃 129）
+   樣式：css/games/reaction_timeafter.css（這款專屬的 class 一律以「timeafter-」開頭；共用元件在 css/reaction_common.css）
    生活裡的時間算術：「現在是 10:45，過了 135 分鐘是幾點？」下面兩個時間（13:00 與 13:20），點出正確的那一個。
    錯的那個是常見的算錯方式（把 135 分鐘當成 1 小時 35 分、忘了加零頭、差一個小時…）。
    後面的關卡還會「倒推」：「比賽 9:30 開始，路上要 47 分鐘，最晚幾點出門？」。
@@ -134,12 +135,12 @@
         api.info = q;
         console.log('[幾點幾分後] 第 ' + level + ' 題：' + q.text + ' 正確 ' + fmtTime(q.ans) + '，錯誤 ' + fmtTime(q.decoy) + '（' + q.decoyKind + '），限時 ' + ansMs(level) + ' ms');
 
-        var qEl = h('div', { 'class': 'qz-mid taf-q', text: q.text });
-        var reveal = h('div', { 'class': 'qz-note taf-reveal' });
+        var qEl = h('div', { 'class': 'timeafter-mid timeafter-q', text: q.text });
+        var reveal = h('div', { 'class': 'qz-note timeafter-reveal' });
         stage.appendChild(qEl); stage.appendChild(reveal);
         var vals = truthLeft ? [q.ans, q.decoy] : [q.decoy, q.ans];
         var grid = kit.btnGrid(stage, vals.map(function (m) {
-            return { text: fmtTime(m), kind: 'sky', cls: 'taf-btn', onTap: function () { judge(m); } };
+            return { text: fmtTime(m), kind: 'sky', cls: 'timeafter-btn', onTap: function () { judge(m); } };
         }), { h: 120 });
         var bRight = grid.btns[truthLeft ? 0 : 1];
         api.timer(ansMs(level), function () { judge(null); });

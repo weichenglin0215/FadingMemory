@@ -1360,6 +1360,20 @@ insert into public."MF_games" (game_id, title, better, min_score, max_score) val
     ('timepair',     '時間連連看', 'max', 1, 90),
     ('eyebrow',      '畫眉毛', 'max', 1, 90),
     ('dough',        '擀水餃皮', 'max', 1, 90),
+    ('sudoku4',      '數獨4', 'max', 1, 90),
+    ('sudoku6e',     '數獨6入門', 'max', 1, 90),
+    ('sudoku6m',     '數獨6中階', 'max', 1, 90),
+    ('sudoku9e',     '數獨9入門', 'max', 1, 90),
+    ('sudoku9m',     '數獨9中階', 'max', 1, 90),
+    ('sudoku9h',     '數獨9高階', 'max', 1, 90),
+    ('sandwich',     '夾心數獨', 'max', 1, 90),
+    ('takuzu',       '黑白不連三', 'max', 1, 90),
+    ('sumdel',       '刪數湊和', 'max', 1, 90),
+    ('magicsq',      '魔方陣', 'max', 1, 90),
+    ('nim',          '取火柴', 'max', 1, 90),
+    ('fifteen',      '搶十五', 'max', 1, 90),
+    ('tianji',       '田忌賽馬', 'max', 1, 90),
+    ('flipten',      '翻牌湊十', 'max', 1, 90),
     -- <<< 自動產生結束
     ('zz_test', '（測試用，可刪）', 'max', 0, 1000)
 on conflict (game_id) do update

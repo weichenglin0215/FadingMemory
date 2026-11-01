@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_hiddendigit.js — 秒反應・遮住的數字（企劃 126「個位數快算」的改版）
+   樣式：css/games/reaction_hiddendigit.css（這款專屬的 class 一律以「hiddendigit-」開頭；共用元件在 css/reaction_common.css）
    上方是一道計算式（例如 37 × 43），中間的「答案區」顯示答案，但故意遮住其中一個數字（1 ？ 9 1），
    最下面是 0～9 十顆數字按鈕，猜被遮住的是哪一個數字。關卡制：答錯或來不及就結束，成績＝連續答對幾題。
    ───────────────────────────────────────────────────────────────────
@@ -97,18 +98,18 @@
         api.info = q;
         console.log('[遮住的數字] 第 ' + level + ' 題：' + q.full + '，遮住第 ' + (q.hidden + 1) + ' 位（答案 ' + q.answer + '），限時 ' + ansMs(level, q.type) + ' ms');
 
-        var eq = h('div', { 'class': 'qz-big hdg-eq', text: q.text });
-        var ansRow = h('div', { 'class': 'hdg-ans' });
+        var eq = h('div', { 'class': 'qz-big hiddendigit-eq', text: q.text });
+        var ansRow = h('div', { 'class': 'hiddendigit-ans' });
         var boxes = q.digits.map(function (d, i) {
-            var b = h('div', { 'class': 'hdg-box' + (i === q.hidden ? ' hdg-box--hide' : ''), text: i === q.hidden ? '？' : String(d) });
+            var b = h('div', { 'class': 'hiddendigit-box' + (i === q.hidden ? ' hiddendigit-box--hide' : ''), text: i === q.hidden ? '？' : String(d) });
             ansRow.appendChild(b);
             return b;
         });
-        ansRow.insertBefore(h('div', { 'class': 'hdg-eqsign', text: '＝' }), ansRow.firstChild);
-        var ask = h('div', { 'class': 'qz-note hdg-ask', text: '被遮住的是哪一個數字？' });
+        ansRow.insertBefore(h('div', { 'class': 'hiddendigit-eqsign', text: '＝' }), ansRow.firstChild);
+        var ask = h('div', { 'class': 'qz-note hiddendigit-ask', text: '被遮住的是哪一個數字？' });
         stage.appendChild(eq); stage.appendChild(ansRow); stage.appendChild(ask);
         var items = [];
-        for (var d = 0; d <= 9; d++) (function (d) { items.push({ text: String(d), kind: 'sky', cls: 'hdg-btn', onTap: function () { judge(d); } }); })(d);
+        for (var d = 0; d <= 9; d++) (function (d) { items.push({ text: String(d), kind: 'sky', cls: 'hiddendigit-btn', onTap: function () { judge(d); } }); })(d);
         var grid = kit.btnGrid(stage, items, { cols: 5, h: 84, gap: 10 });
         api.timer(ansMs(level, q.type), function () { judge(null); });
         if (level === 1 && kit.once('hiddendigit.hint')) kit.hintOn(stage, grid.btns[q.answer], { mode: 'tap', delay: 500, text: '請點擊數字' });
@@ -117,8 +118,8 @@
             if (api.over) return;
             var ok = v === q.answer;
             boxes[q.hidden].textContent = String(q.answer);
-            boxes[q.hidden].classList.remove('hdg-box--hide');
-            boxes[q.hidden].classList.add(ok ? 'hdg-box--ok' : 'hdg-box--bad');
+            boxes[q.hidden].classList.remove('hiddendigit-box--hide');
+            boxes[q.hidden].classList.add(ok ? 'hiddendigit-box--ok' : 'hiddendigit-box--bad');
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 900 }); return; }
             kit.flash(stage, false, api.my);
             api.fail({

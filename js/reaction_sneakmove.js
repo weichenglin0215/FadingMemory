@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_sneakmove.js — 秒反應・誰在偷偷動（企劃 152）
+   樣式：css/games/reaction_sneakmove.css（這款專屬的 class 一律以「sneakmove-」開頭；共用元件在 css/reaction_common.css）
    畫面上散著一堆圓點，其中有幾個會「偷偷地」極慢移動，其他全部靜止，在限時內把會動的點出來。
    越後面，圓點越多、會動的越多、漂移越慢（每秒 20 像素 → 2 像素）。關卡制：點錯或來不及就結束，成績＝通過幾關。
    ───────────────────────────────────────────────────────────────────
@@ -202,10 +203,10 @@
         api.info = q;
         console.log('[誰在偷偷動] 第 ' + level + ' 關：' + q.dots.length + ' 顆圓點，會動的 ' + k + ' 顆（第 ' + q.movers.map(function (m) { return m.idx + 1; }).join('、') + ' 顆），每顆輪流動 ' + q.moveTime + ' 秒，速度 ' + q.speed.toFixed(4) + ' 像素/秒；限時 ' + q.limitS + ' 秒');
 
-        var svg = kit.svg('svg', { 'class': 'snk-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
+        var svg = kit.svg('svg', { 'class': 'sneakmove-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
         var gTrail = kit.svg('g', {}, svg);
-        var circles = q.dots.map(function (d) { return kit.svg('circle', { cx: d.x, cy: d.y, r: DOT_R, 'class': 'snk-dot' }, svg); });
-        var tip = h('div', { 'class': 'qz-note snk-tip', text: k > 1 ? '有幾個圓點會輪流慢慢移動，找出其中一個！' : '有一個圓點在慢慢移動，找出它！' });
+        var circles = q.dots.map(function (d) { return kit.svg('circle', { cx: d.x, cy: d.y, r: DOT_R, 'class': 'sneakmove-dot' }, svg); });
+        var tip = h('div', { 'class': 'qz-note sneakmove-tip', text: k > 1 ? '有幾個圓點會輪流慢慢移動，找出其中一個！' : '有一個圓點在慢慢移動，找出它！' });
         stage.appendChild(tip);
         var t0 = performance.now(), found = {}, nFound = 0;               /* found[第幾顆會動的] ＝ 找到的那一刻（秒），那一顆就停在那裡 */
         function nowSec() { return (performance.now() - t0) / 1000; }
@@ -235,7 +236,7 @@
             if (mi == null) { finish('wrong', i, t); return; }                   /* 點到不動的：失敗 */
             if (found[mi] != null) return;                                         /* 這一顆已經找到了，再點不算 */
             found[mi] = Math.min(t, q.limitS); nFound++;
-            circles[i].classList.add('snk-dot--right');                             /* 找到了：綠色外框，停在原地 */
+            circles[i].classList.add('sneakmove-dot--right');                             /* 找到了：綠色外框，停在原地 */
             Sfx.play('ok');
             if (nFound >= k) finish('ok', -1, t);
             else tip.textContent = '找到了！已找到 ' + nFound + '／' + k + ' 顆，繼續找下一顆（會動的圓點輪流在動）';
@@ -251,12 +252,12 @@
             q.movers.forEach(function (m, mi) {
                 var tt = timeOf(mi, t), p = posAt(q, mi, tt), moved = q.speed * movedTime(k, q.moveTime, mi, tt);
                 circles[m.idx].setAttribute('cx', p.x); circles[m.idx].setAttribute('cy', p.y);
-                circles[m.idx].classList.add('snk-dot--right');
-                kit.svg('line', { x1: m.x0, y1: m.y0, x2: p.x, y2: p.y, 'class': 'snk-trail' }, gTrail);
-                kit.svg('circle', { cx: m.x0, cy: m.y0, r: 5, 'class': 'snk-start' }, gTrail);
+                circles[m.idx].classList.add('sneakmove-dot--right');
+                kit.svg('line', { x1: m.x0, y1: m.y0, x2: p.x, y2: p.y, 'class': 'sneakmove-trail' }, gTrail);
+                kit.svg('circle', { cx: m.x0, cy: m.y0, r: 5, 'class': 'sneakmove-start' }, gTrail);
                 lines.push('第 ' + (m.idx + 1) + ' 顆漂移了 ' + moved.toFixed(4) + ' 像素');
             });
-            if (kind === 'wrong') circles[i].classList.add('snk-dot--wrong');
+            if (kind === 'wrong') circles[i].classList.add('sneakmove-dot--wrong');
             /* 提示文字只有 64 像素高：會動的有好幾顆時，各自漂移多少寫在結算頁就好，這裡只留一句 */
             tip.textContent = k > 1 ? '共 ' + k + ' 顆會動（綠框），每秒漂移 ' + q.speed.toFixed(4) + ' 像素，輪流各動 ' + q.moveTime.toFixed(4) + ' 秒' : '每秒漂移 ' + q.speed.toFixed(4) + ' 像素：' + lines.join('、');
             if (kind === 'ok') { kit.flash(stage, true, api.my); api.pass({ delay: 1700 }); return; }

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_euler.js — 秒反應・能一筆畫嗎
+   樣式：css/games/reaction_euler.css（這款專屬的 class 一律以「euler-」開頭；共用元件在 css/reaction_common.css）
    畫面是一個由點和線構成的圖形，判斷「能不能不重複走同一條線、筆不離開，把全部線畫完」。
    下方左邊「不能」、右邊「能」。關卡制，答錯或逾時就結束，成績＝連續答對幾題。
    ───────────────────────────────────────────────────────────────────
@@ -215,13 +216,13 @@
         console.log('[能一筆畫嗎] 第 ' + level + ' 題：' + q.edges.length + ' 條邊，奇數點 ' + q.odd.length + ' 個（' + (q.yes ? '能' : '不能') + (q.counter ? '，反直覺題' : '') + '），限時 ' + timeMs(level) + ' ms');
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        var svg = kit.svg('svg', { 'class': 'eu-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
+        var svg = kit.svg('svg', { 'class': 'euler-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
         var gl = kit.svg('g', {}, svg);
         var routeLayer = kit.svg('g', {}, svg);                                 /* 評審動畫的路線畫在線上、點的下面 */
-        var lines = q.edges.map(function (e) { var a = posOf(e[0]), b = posOf(e[1]); return kit.svg('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, 'class': 'eu-edge' }, gl); });
+        var lines = q.edges.map(function (e) { var a = posOf(e[0]), b = posOf(e[1]); return kit.svg('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, 'class': 'euler-edge' }, gl); });
         var deg = degrees(q.edges), dots = {};
-        Object.keys(deg).forEach(function (k) { var p = posOf(Number(k)); dots[k] = kit.svg('circle', { cx: p.x, cy: p.y, r: 11, 'class': 'eu-node' }, svg); });
-        var msg = h('div', { 'class': 'eu-msg', text: '不重複、筆不離開，能把全部的線畫完嗎？' });
+        Object.keys(deg).forEach(function (k) { var p = posOf(Number(k)); dots[k] = kit.svg('circle', { cx: p.x, cy: p.y, r: 11, 'class': 'euler-node' }, svg); });
+        var msg = h('div', { 'class': 'euler-msg', text: '不重複、筆不離開，能把全部的線畫完嗎？' });
         stage.appendChild(msg);
         var bNo = h('button', { 'class': 'btn btn--primary', text: '不能' });
         var bYes = h('button', { 'class': 'btn btn--go', text: '能' });
@@ -236,8 +237,8 @@
             route.steps.forEach(function (s, i) {
                 api.after(each * i, function () {
                     var a = posOf(s.a), b = posOf(s.b);
-                    kit.svg('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, 'class': 'eu-route' + (s.kind === 'repeat' ? ' eu-route--rep' : '') }, layer);
-                    kit.svg('polygon', { points: arrowPoints(a, b), 'class': 'eu-arrow' }, layer);
+                    kit.svg('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, 'class': 'euler-route' + (s.kind === 'repeat' ? ' euler-route--rep' : '') }, layer);
+                    kit.svg('polygon', { points: arrowPoints(a, b), 'class': 'euler-arrow' }, layer);
                     Sfx.play('tick');
                 });
             });

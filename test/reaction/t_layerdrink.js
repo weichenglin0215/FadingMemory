@@ -56,10 +56,10 @@ console.log('每層按住的時間 ' + minHold.toFixed(2) + '～' + maxHold.toFi
 ok(minHold > 0.1 && maxHold < 9, '按住的時間在人按得出來的範圍');
 ok(minWin > 20, '容許誤差換算成時間窗口至少 20 毫秒（最難的情況）：' + minWin.toFixed(0));
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_layerdrink.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_layerdrink.js'), css = rd('../../css/games/reaction_layerdrink.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
   ok(/api\.fail\(\{ delay: 3200/.test(src) && /md\.toFixed\(4\)/.test(src) && /wrongColor/.test(src), '失敗：最大差 4 位小數、按錯顏色馬上結束、停格 2 秒以上');
-  ok(/\.lyd-c--red \{[^}]*var\(--lyd-red\)/.test(css) && /\.lyd-stop--red \{[^}]*var\(--lyd-red\)/.test(css) && /\.lyd-bottle--bad \.lyd-bottle__body \{[^}]*var\(--c-bad/.test(css), '瓶子、液體顏色用 CSS 變數');
+  ok(/\.layerdrink-c--red \{[^}]*var\(--lyd-red\)/.test(css) && /\.layerdrink-stop--red \{[^}]*var\(--lyd-red\)/.test(css) && /\.layerdrink-bottle--bad \.layerdrink-bottle__body \{[^}]*var\(--c-bad/.test(css), '瓶子、液體顏色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_layerdrink.js'") > 0 && /上寬下窄/.test(G.rule), 'boot.js 有載入、玩法說明提到上寬下窄'); }
-{ const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction6.css'), 'utf8'); T.COLORS.forEach(c => ok(css.indexOf('.lyd-c--' + c.id + ' ') >= 0 && css.indexOf('.lyd-stop--' + c.id + ' ') >= 0, 'CSS 有 ' + c.id)); }
+{ const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_layerdrink.css'), 'utf8'); T.COLORS.forEach(c => ok(css.indexOf('.layerdrink-c--' + c.id + ' ') >= 0 && css.indexOf('.layerdrink-stop--' + c.id + ' ') >= 0, 'CSS 有 ' + c.id)); }
 ok(T.rating(2) !== T.rating(4) && T.rating(4) !== T.rating(7) && T.rating(7) !== T.rating(12) && T.rating(12) !== T.rating(20), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

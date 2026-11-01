@@ -1,0 +1,65 @@
+/* ═══════════════════════════════════════
+   reaction_stars.css — 找星座（js/reaction_stars.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「stars-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 找星座（.stars-）═══ */
+.stars-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.stars-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.stars-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 碎片在這張畫布上飛：深藍色的夜空，碎片是淡色的字塊（畫布本身透明，底色在這裡） */
+.stars-canvas {
+    position: absolute;
+    background: var(--stz-sky);
+    border-radius: var(--r-md);
+    pointer-events: none;
+}
+
+.stars-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.stars-opt {
+    font-family: var(--font-note);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    padding: 0;
+}
+
+.stars-ok {
+    background: var(--c-ok-light);
+    border-color: var(--c-ok);
+}
+
+.stars-bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad-light);
+    color: var(--c-bad);
+}

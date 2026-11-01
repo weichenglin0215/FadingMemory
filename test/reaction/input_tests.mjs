@@ -34,57 +34,57 @@ const cleared = () => state().then(s => s.cleared);
 
 const T = {
   async copycurve() {
-    const q = await info(), R = await sel('.cpc-panel--R .cpc-svg'), sc = R.w / 224;
+    const q = await info(), R = await sel('.copycurve-panel--R .copycurve-svg'), sc = R.w / 224;
     const P = q.pts.map(p => [R.x + p.x * sc, R.y + p.y * sc]);
     // ① 畫到一半放開：筆跡清掉、沒過關，可以重畫
     let last = await drag(P.filter((p, i) => i % 5 === 0 && i < P.length / 2)); await release(last); await sleep(150);
-    if ((await J('document.querySelector(".cpc-draw").getAttribute("d")')) !== '') throw new Error('放開手指後筆跡沒清掉');
+    if ((await J('document.querySelector(".copycurve-draw").getAttribute("d")')) !== '') throw new Error('放開手指後筆跡沒清掉');
     if ((await cleared()) !== 0) throw new Error('畫到一半就算過關了');
     // ② 從黃點（起點）一路畫到水藍點（終點）
     last = await drag(P.filter((p, i) => i % 4 === 0).concat([P[P.length - 1]])); await release(last);
     await waitFor(async () => (await cleared()) === 1, 4000, '第 1 關過關（相似度夠高）');
     // ③ 第 2 關：從終點倒著畫回起點
-    await waitFor(async () => (await state()).level === 2 && (await J('!!document.querySelector(".cpc-panel--R")')), 5000, '進第 2 關');
+    await waitFor(async () => (await state()).level === 2 && (await J('!!document.querySelector(".copycurve-panel--R")')), 5000, '進第 2 關');
     await sleep(300);
-    const q2 = await info(), R2 = await sel('.cpc-panel--R .cpc-svg');
+    const q2 = await info(), R2 = await sel('.copycurve-panel--R .copycurve-svg');
     const P2 = q2.pts.map(p => [R2.x + p.x * sc, R2.y + p.y * sc]).reverse();
     last = await drag(P2.filter((p, i) => i % 4 === 0).concat([P2[P2.length - 1]])); await release(last);
     await waitFor(async () => (await cleared()) === 2, 4000, '第 2 關過關（從終點倒著畫）');
   },
   async flashlight() {
-    const S = await sel('.flt-svg'), W = S.w;
+    const S = await sel('.flashlight-svg'), W = S.w;
     await drag([[S.x + 200, S.y + 300], [S.x + 220, S.y + 310]]);
-    if ((await J('document.querySelector(".flt-ring").getAttribute("visibility")')) !== 'visible') throw new Error('拖曳時光圈沒有出現');
-    const cx = Number(await J('document.querySelector(".flt-ring").getAttribute("cx")'));
+    if ((await J('document.querySelector(".flashlight-ring").getAttribute("visibility")')) !== 'visible') throw new Error('拖曳時光圈沒有出現');
+    const cx = Number(await J('document.querySelector(".flashlight-ring").getAttribute("cx")'));
     if (!(cx > 150 && cx < 350)) throw new Error('光圈位置怪怪的 cx=' + cx);
     await release([S.x + 220, S.y + 310]); await sleep(100);
-    if ((await J('document.querySelector(".flt-ring").getAttribute("visibility")')) !== 'hidden') throw new Error('放開手指後光圈沒有熄掉');
+    if ((await J('document.querySelector(".flashlight-ring").getAttribute("visibility")')) !== 'hidden') throw new Error('放開手指後光圈沒有熄掉');
     const q = await info();
     await clickEl('.rx-grid .btn', q.answer);
     await waitFor(async () => (await cleared()) === 1, 3000, '選對圖案過關');
   },
   async spinpick() {
-    await waitFor(() => J('document.querySelector(".spk-center") && document.querySelector(".spk-center").style.visibility !== "hidden"'), 12000, '指針停住、中央出現提示');
-    const q = await info(), S = await sel('.spk-svg'), sc = S.w / 472, W = 472;
+    await waitFor(() => J('document.querySelector(".spinpick-center") && document.querySelector(".spinpick-center").style.visibility !== "hidden"'), 12000, '指針停住、中央出現提示');
+    const q = await info(), S = await sel('.spinpick-svg'), sc = S.w / 472, W = 472;
     const a = (q.s + 0.5) * 360 / q.N * Math.PI / 180, r = 120;
     await click(S.x + (W / 2 + r * Math.sin(a)) * sc, S.y + (300 - r * Math.cos(a)) * sc);
     await waitFor(async () => (await cleared()) === 1, 3000, '點對那一格過關');
   },
   async farpair() {
-    const q = await info(), S = await sel('.fpr-svg'), p = q.pairs[q.best].b, sc = S.w / q.W;
+    const q = await info(), S = await sel('.farpair-svg'), p = q.pairs[q.best].b, sc = S.w / q.W;
     await click(S.x + p.x * sc, S.y + p.y * sc);
     await waitFor(async () => (await cleared()) === 1, 3000, '點對最遠那一對過關');
   },
   async sneakmove() {
     await sleep(900);
     const q = await info();
-    await clickEl('.snk-dot', q.mover);
+    await clickEl('.sneakmove-dot', q.mover);
     await waitFor(async () => (await cleared()) === 1, 3000, '點中漂移的圓點過關');
   },
   async racefirst() {
-    await waitFor(() => J('document.querySelector(".rcf-tip").textContent.indexOf("最先到終點") >= 0'), 15000, '衝完、進入作答');
+    await waitFor(() => J('document.querySelector(".racefirst-tip").textContent.indexOf("最先到終點") >= 0'), 15000, '衝完、進入作答');
     const q = await info();
-    await clickEl('.rcf-hit', q.win);
+    await clickEl('.racefirst-hit', q.win);
     await waitFor(async () => (await cleared()) === 1, 3000, '點對最先到的跑道過關');
   },
   async mergechar() {
@@ -99,7 +99,7 @@ const T = {
   },
   async fillop() {
     const q = await info(), OPS = ['+', '-', '*', '/'];
-    await clickEl('.fop-col .fop-op', OPS.indexOf(q.ops[q.blanks[0]]));
+    await clickEl('.fillop-col .fillop-op', OPS.indexOf(q.ops[q.blanks[0]]));
     await waitFor(async () => (await cleared()) === 1, 3000, '選對符號過關');
   },
   async fillop2() {
@@ -107,7 +107,7 @@ const T = {
     await cdp.evalJs('Reaction.current.debug.goto(12); 1'); await sleep(600);
     const q = await info(), OPS = ['+', '-', '*', '/'];
     if (q.blanks.length < 2) throw new Error('第 12 關應該有 2 個以上的空格：' + q.blanks.length);
-    for (let j = 0; j < q.blanks.length; j++) await clickEl('.fop-col .fop-op', j * 4 + OPS.indexOf(q.ops[q.blanks[j]]));
+    for (let j = 0; j < q.blanks.length; j++) await clickEl('.fillop-col .fillop-op', j * 4 + OPS.indexOf(q.ops[q.blanks[j]]));
     await sleep(100);
     if ((await cleared()) !== 0) throw new Error('還沒按「確定」就判定了');
     await clickEl('.fop-ok');
@@ -116,49 +116,49 @@ const T = {
   async dicechange2() {
     // 第 6 關起被換掉 2 顆：兩顆都要點到才過關
     await cdp.evalJs('Reaction.current.debug.goto(6); 1'); await sleep(600);
-    await waitFor(() => J('document.querySelector(".dce-msg").textContent.indexOf("請點擊點數被更換過") >= 0'), 25000, '進入作答階段');
+    await waitFor(() => J('document.querySelector(".dicechange-msg").textContent.indexOf("請點擊點數被更換過") >= 0'), 25000, '進入作答階段');
     const q = await info();
     if (q.changed.length !== 2) throw new Error('第 6 關應該換掉 2 顆：' + q.changed.length);
-    await clickEl('.dce-die', q.changed[0]); await sleep(150);
+    await clickEl('.dicechange-die', q.changed[0]); await sleep(150);
     if ((await cleared()) !== 0) throw new Error('只點一顆就過關了');
-    await clickEl('.dce-die', q.changed[1]);
+    await clickEl('.dicechange-die', q.changed[1]);
     await waitFor(async () => (await cleared()) === 1, 3000, '兩顆都點到過關');
   },
   async dicechange() {
-    await waitFor(() => J('document.querySelector(".dce-msg").textContent.indexOf("請點擊點數被更換過") >= 0'), 20000, '進入作答階段');
+    await waitFor(() => J('document.querySelector(".dicechange-msg").textContent.indexOf("請點擊點數被更換過") >= 0'), 20000, '進入作答階段');
     const q = await info();
-    for (const c of q.changed) { await clickEl('.dce-die', c); await sleep(80); }
+    for (const c of q.changed) { await clickEl('.dicechange-die', c); await sleep(80); }
     await waitFor(async () => (await cleared()) === 1, 3000, '點出被換過的骰子過關');
   },
   async tapback() {
-    await waitFor(() => J('document.querySelector(".tbk-tip").textContent.indexOf("倒著") >= 0'), 20000, '進入作答階段');
+    await waitFor(() => J('document.querySelector(".tapback-tip").textContent.indexOf("倒著") >= 0'), 20000, '進入作答階段');
     const q = await info();
-    for (const i of q.back) { await clickEl('.tbk-ring', i); await sleep(80); }
+    for (const i of q.back) { await clickEl('.tapback-ring', i); await sleep(80); }
     await waitFor(async () => (await cleared()) === 1, 3000, '倒著點對過關');
   },
   async whosaid() {
-    await phaseReady('.wsd-btn');
+    await phaseReady('.whosaid-btn');
     const q = await info();
-    for (const d of q.expect) { await clickText('.wsd-btn', d); await sleep(80); }
+    for (const d of q.expect) { await clickText('.whosaid-btn', d); await sleep(80); }
     await waitFor(async () => (await cleared()) === 1, 3000, '依序按對數字過關');
   },
-  async nthshape() { await phaseReady('.nth-btn'); const q = await info(); await clickEl('.rx-grid .btn', q.ans); await waitFor(async () => (await cleared()) === 1, 3000, '選對圖形過關'); },
+  async nthshape() { await phaseReady('.nthshape-btn'); const q = await info(); await clickEl('.rx-grid .btn', q.ans); await waitFor(async () => (await cleared()) === 1, 3000, '選對圖形過關'); },
   async alignchar() { const q = await info(); await clickEl('.rx-grid .btn', q.answer); await waitFor(async () => (await cleared()) === 1, 3000, '選對字過關'); },
-  async fastblink() { const q = await info(); await clickEl('.fbk-dot', q.fastSide === 'L' ? 0 : 1); await waitFor(async () => (await cleared()) === 1, 3000, '點閃得快的過關'); },
+  async fastblink() { const q = await info(); await clickEl('.fastblink-dot', q.fastSide === 'L' ? 0 : 1); await waitFor(async () => (await cleared()) === 1, 3000, '點閃得快的過關'); },
   async isequal() { const q = await info(); await clickEl('.rx-grid .btn', q.isEqual ? 1 : 0); await waitFor(async () => (await cleared()) === 1, 3000, '選對相等／不相等過關'); },
   async orderops() { const q = await info(); await clickText('.rx-grid .btn', q.truth); await waitFor(async () => (await cleared()) === 1, 3000, '選對答案過關'); },
   async remainder() { const q = await info(); await clickText('.rx-grid .btn', q.r); await waitFor(async () => (await cleared()) === 1, 3000, '選對餘數過關'); },
   async hiddendigit() { const q = await info(); await clickText('.rx-grid .btn', q.answer); await waitFor(async () => (await cleared()) === 1, 3000, '選對數字過關'); },
   async timeafter() { const q = await info(); const t = await J('Reaction.current.test.fmtTime(' + q.ans + ')'); await clickText('.rx-grid .btn', t); await waitFor(async () => (await cleared()) === 1, 3000, '選對時間過關'); },
-  async wrongline() { const q = await info(); await clickEl('.wln-row', q.wrong); await waitFor(async () => (await cleared()) === 1, 3000, '點對算錯的那一行過關'); },
+  async wrongline() { const q = await info(); await clickEl('.wrongline-row', q.wrong); await waitFor(async () => (await cleared()) === 1, 3000, '點對算錯的那一行過關'); },
   async chequeamt() { const q = await info(); await clickEl('.rx-grid .btn', q.match ? 1 : 0); await waitFor(async () => (await cleared()) === 1, 3000, '選對相符／不符過關'); },
   async sudokuone() { const q = await info(); await clickText('.rx-grid .btn', q.answer); await waitFor(async () => (await cleared()) === 1, 3000, '填對數字過關'); },
   async spingap() {
     // 真的點螢幕發射：砲彈 0.6 秒後抵達，不管穿過還是撞環，都應該有結果（過關或失敗），而且只會發射一顆
-    const S = await sel('.spg-svg'); await click(S.x + 100, S.y + 500);
+    const S = await sel('.spingap-svg'); await click(S.x + 100, S.y + 500);
     await sleep(150); await click(S.x + 100, S.y + 500);          // 飛行中再點一下，不應該多發射
     await waitFor(async () => { const s = await state(); return s.cleared === 1 || s.over; }, 3000, '砲彈抵達、有了結果');
-    const n = await J('document.querySelectorAll(".spg-ball").length');
+    const n = await J('document.querySelectorAll(".spingap-ball").length');
     if (n !== 1) throw new Error('畫面上的砲彈不只一顆：' + n);
   }
 };

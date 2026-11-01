@@ -69,13 +69,13 @@ ok(diag > 300, '8 向關卡確實出現斜箭頭：' + diag);
 ok(byLv[T.SCATTER_FROM].matched / byLv[T.SCATTER_FROM].n > byLv[T.RAMP_LEVELS].matched / byLv[T.RAMP_LEVELS].n + 0.3, '「所指的那一格」的比例越後面越低');
 ok(byLv[T.RAMP_LEVELS].matched / byLv[T.RAMP_LEVELS].n < 0.2, '到頂的關卡幾乎都是任意一格（所指那一格只有約 1/9）：' + (byLv[T.RAMP_LEVELS].matched / byLv[T.RAMP_LEVELS].n * 100).toFixed(1) + '%');
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_swipecopy.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_swipecopy.js'), css = rd('../../css/games/reaction_swipecopy.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
   ok(src.indexOf("phase = 'live'; t0 = performance.now()") > 0 && src.indexOf('if (d >= 0) judge(d, performance.now() - t0)') > 0, '箭頭一出現就開始計時，位移超過 MIN_SWIPE 就立刻判定（不用等手指放開）');
   ok(src.indexOf("api.after(q.respMs, function () { if (phase === 'live') fail(-1, 0); })") > 0 && src.indexOf('api.after(q.showMs, function () { if (popEl') > 0, '箭頭亮 showMs 之後消失，但可以滑到 respMs 為止，超時就失敗');
   ok(src.indexOf("if (phase !== 'live' || done || api.over) { if (phase === 'wait')") > 0, '箭頭出現之前的滑動不算');
   ok(src.indexOf("(rt / 1000).toFixed(4) + ' 秒'") > 0, '過關後顯示反應時間（4 位小數的秒）');
-  ok(src.indexOf('api.fail({ delay: 2600') > 0 && /swc-cell--bad/.test(src) && /opposite/.test(src), '失敗：箭頭、該滑的方向、你滑的方向並排、紅色標記、停格 2 秒以上');
-  ok(css.indexOf('.swc-gridline { position: absolute;') >= 0 && /\.swc-sign__disc \{[^}]*var\(--swc-blue\)/.test(css) && /\.swc-cell--bad \{[^}]*var\(--c-bad/.test(css), '九宮格線、藍色圓牌、紅色用 CSS 變數');
+  ok(src.indexOf('api.fail({ delay: 2600') > 0 && /swipecopy-cell--bad/.test(src) && /opposite/.test(src), '失敗：箭頭、該滑的方向、你滑的方向並排、紅色標記、停格 2 秒以上');
+  ok(css.indexOf('.swipecopy-gridline { position: absolute;') >= 0 && /\.swipecopy-sign__disc \{[^}]*var\(--swc-blue\)/.test(css) && /\.swipecopy-cell--bad \{[^}]*var\(--c-bad/.test(css), '九宮格線、藍色圓牌、紅色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_swipecopy.js'") > 0 && /反方向/.test(G.rule) && /九宮格/.test(G.rule) && /越快/.test(G.rule), 'boot.js 有載入、玩法說明提到九宮格、反方向、越快越好'); }
 ok(T.rating(2) !== T.rating(4) && T.rating(4) !== T.rating(7) && T.rating(7) !== T.rating(12) && T.rating(12) !== T.rating(20), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_pinwheel.js — 秒反應・轉風車（企劃 378「打蛋白」的換主題版）
+   樣式：css/games/reaction_pinwheel.css（這款專屬的 class 一律以「pinwheel-」開頭；共用元件在 css/reaction_common.css）
    使用者很喜歡「在螢幕上持續快速畫圈圈」的玩法，但打蛋白很難明確分出過關，所以換成「轉風車」——**過關條件一眼就看得出來**：
    **手指繞著風車快快畫圈，風車就會跟著轉；要讓風車的轉速停在「綠色範圍」裡，連續撐滿指定的秒數**。
    速度表上有一條綠色的範圍、右邊有紅色的危險區：轉太慢進度會倒退，轉太快（衝進紅色區太久）風車就壞掉了。
@@ -102,7 +103,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'pwl-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'pinwheel-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -118,28 +119,28 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var cx = Math.round(W / 2), cy = Math.round(H * 0.50), RING = Math.min(200, Math.round(W * 0.4));
-        var field = h('div', { 'class': 'pwl-field' });
+        var field = h('div', { 'class': 'pinwheel-field' });
         stage.appendChild(field);
-        var tip = h('div', { 'class': 'qz-note pwl-tip', text: level === 1 ? '繞著風車畫圈，停在綠色範圍！' : '轉速停在綠色範圍，撐滿進度' });
+        var tip = h('div', { 'class': 'qz-note pinwheel-tip', text: level === 1 ? '繞著風車畫圈，停在綠色範圍！' : '轉速停在綠色範圍，撐滿進度' });
         field.appendChild(tip);
         /* 速度表（橫條）：0～maxSpeed；綠色範圍、紅色危險區、目前轉速的指針 */
-        var BW = W - 40, bar = h('div', { 'class': 'pwl-gauge' }); bar.style.cssText = 'left:20px;top:64px;width:' + BW + 'px;'; field.appendChild(bar);
+        var BW = W - 40, bar = h('div', { 'class': 'pinwheel-gauge' }); bar.style.cssText = 'left:20px;top:64px;width:' + BW + 'px;'; field.appendChild(bar);
         function X(v) { return Math.round(BW * Math.min(1, v / q.maxSpeed)); }
-        var band = h('div', { 'class': 'pwl-band' }); band.style.cssText = 'left:' + X(q.lo) + 'px;width:' + (X(q.hi) - X(q.lo)) + 'px;'; bar.appendChild(band);
-        var danger = h('div', { 'class': 'pwl-danger' }); danger.style.cssText = 'left:' + X(q.breakLine) + 'px;right:0;'; bar.appendChild(danger);
-        var needle = h('div', { 'class': 'pwl-needle' }); bar.appendChild(needle);
-        var lab = h('div', { 'class': 'pwl-gauge__lab', text: '綠色＝' + q.lo.toFixed(4) + '～' + q.hi.toFixed(4) + ' 圈／秒' }); lab.style.cssText = 'left:20px;top:100px;right:20px;'; field.appendChild(lab);
+        var band = h('div', { 'class': 'pinwheel-band' }); band.style.cssText = 'left:' + X(q.lo) + 'px;width:' + (X(q.hi) - X(q.lo)) + 'px;'; bar.appendChild(band);
+        var danger = h('div', { 'class': 'pinwheel-danger' }); danger.style.cssText = 'left:' + X(q.breakLine) + 'px;right:0;'; bar.appendChild(danger);
+        var needle = h('div', { 'class': 'pinwheel-needle' }); bar.appendChild(needle);
+        var lab = h('div', { 'class': 'pinwheel-gauge__lab', text: '綠色＝' + q.lo.toFixed(4) + '～' + q.hi.toFixed(4) + ' 圈／秒' }); lab.style.cssText = 'left:20px;top:100px;right:20px;'; field.appendChild(lab);
         /* 軌道圈（提示怎麼畫）、風車 */
-        var svg = kit.svg('svg', { 'class': 'pwl-svg', width: W, height: H, viewBox: '0 0 ' + W + ' ' + H }, field);
-        kit.svg('circle', { 'class': 'pwl-track', cx: cx, cy: cy, r: RING }, svg);
-        var wheel = kit.svg('g', { 'class': 'pwl-wheel', transform: 'translate(' + cx + ',' + cy + ')' }, svg), blades = kit.svg('g', {}, wheel);
-        for (var b = 0; b < 4; b++) { kit.svg('path', { 'class': 'pwl-blade pwl-blade' + b, d: 'M0,0 L-34,-8 Q-30,-62 0,-66 Z', transform: 'rotate(' + (b * 90) + ')' }, blades); }
-        kit.svg('circle', { 'class': 'pwl-hub', cx: 0, cy: 0, r: 9 }, wheel);
-        kit.svg('rect', { 'class': 'pwl-pole', x: cx - 5, y: cy + 8, width: 10, height: 120, rx: 4 }, svg);
+        var svg = kit.svg('svg', { 'class': 'pinwheel-svg', width: W, height: H, viewBox: '0 0 ' + W + ' ' + H }, field);
+        kit.svg('circle', { 'class': 'pinwheel-track', cx: cx, cy: cy, r: RING }, svg);
+        var wheel = kit.svg('g', { 'class': 'pinwheel-wheel', transform: 'translate(' + cx + ',' + cy + ')' }, svg), blades = kit.svg('g', {}, wheel);
+        for (var b = 0; b < 4; b++) { kit.svg('path', { 'class': 'pinwheel-blade pinwheel-blade' + b, d: 'M0,0 L-34,-8 Q-30,-62 0,-66 Z', transform: 'rotate(' + (b * 90) + ')' }, blades); }
+        kit.svg('circle', { 'class': 'pinwheel-hub', cx: 0, cy: 0, r: 9 }, wheel);
+        kit.svg('rect', { 'class': 'pinwheel-pole', x: cx - 5, y: cy + 8, width: 10, height: 120, rx: 4 }, svg);
         /* 進度條 */
-        var prog = h('div', { 'class': 'pwl-prog' }), fill = h('div', { 'class': 'pwl-prog__fill' }); prog.appendChild(fill); prog.style.cssText = 'left:20px;right:20px;top:' + (cy + RING + 18) + 'px;'; field.appendChild(prog);
-        var plab = h('div', { 'class': 'pwl-prog__lab', text: '在綠色範圍撐滿 ' + q.hold.toFixed(4) + ' 秒' }); plab.style.cssText = 'left:20px;right:20px;top:' + (cy + RING + 18 + 38) + 'px;'; field.appendChild(plab);
-        var info = h('div', { 'class': 'qz-note pwl-info', text: '' }); info.style.cssText = 'top:' + (cy + RING + 18 + 76) + 'px;'; field.appendChild(info);
+        var prog = h('div', { 'class': 'pinwheel-prog' }), fill = h('div', { 'class': 'pinwheel-prog__fill' }); prog.appendChild(fill); prog.style.cssText = 'left:20px;right:20px;top:' + (cy + RING + 18) + 'px;'; field.appendChild(prog);
+        var plab = h('div', { 'class': 'pinwheel-prog__lab', text: '在綠色範圍撐滿 ' + q.hold.toFixed(4) + ' 秒' }); plab.style.cssText = 'left:20px;right:20px;top:' + (cy + RING + 18 + 38) + 'px;'; field.appendChild(plab);
+        var info = h('div', { 'class': 'qz-note pinwheel-info', text: '' }); info.style.cssText = 'top:' + (cy + RING + 18 + 76) + 'px;'; field.appendChild(info);
         if (level === 1 && kit.once('pinwheel.hint')) kit.hintOn(stage, null, { mode: 'hold', x: cx + RING * 0.7, y: cy - RING * 0.7, delay: 700, text: '繞著風車快快畫圈' });
 
         var phase = 'play', t0 = performance.now(), w = 0, p = 0, br = 0, ang = 0, samples = [], down = null, lastT = 0, wIn = 0, trace = [], nextSample = 0, override = null;
@@ -151,8 +152,8 @@
             w = stepWheel(w, wIn, dt, gustAt(q.gust, t));
             p = progressStep(p, inBand(q, w), dt, q.hold); br = breakStep(br, w > q.breakLine, dt);
             ang += w * 360 * dt; wheel.setAttribute('transform', 'translate(' + cx + ',' + cy + ') rotate(' + (ang % 360).toFixed(1) + ')');
-            needle.style.left = X(w) + 'px'; needle.classList.toggle('pwl-needle--ok', inBand(q, w)); needle.classList.toggle('pwl-needle--bad', w > q.breakLine);
-            fill.style.width = (100 * p).toFixed(1) + '%'; fill.classList.toggle('pwl-prog__fill--on', inBand(q, w)); band.classList.toggle('pwl-band--on', inBand(q, w));
+            needle.style.left = X(w) + 'px'; needle.classList.toggle('pinwheel-needle--ok', inBand(q, w)); needle.classList.toggle('pinwheel-needle--bad', w > q.breakLine);
+            fill.style.width = (100 * p).toFixed(1) + '%'; fill.classList.toggle('pinwheel-prog__fill--on', inBand(q, w)); band.classList.toggle('pinwheel-band--on', inBand(q, w));
             if (t >= nextSample) { trace.push([t, w]); nextSample += SAMPLE_S; }
             if (p >= 1) finish('pass'); else if (br >= BREAK_S) finish('break'); else if (t >= q.limit) finish('time');
         }
@@ -177,19 +178,19 @@
             phase = 'end'; api.stopTimer();
             var why = whyText(kind, q);
             info.textContent = why;
-            if (kind === 'pass') { info.classList.add('pwl-info--ok'); kit.flash(stage, true, api.my); Sfx.play('ok'); api.pass({ delay: 1800 }); return; }
-            info.classList.add('pwl-info--bad'); kit.flash(stage, false, api.my);
+            if (kind === 'pass') { info.classList.add('pinwheel-info--ok'); kit.flash(stage, true, api.my); Sfx.play('ok'); api.pass({ delay: 1800 }); return; }
+            info.classList.add('pinwheel-info--bad'); kit.flash(stage, false, api.my);
             showChart(kind);
             api.fail({ delay: 4200, lines: [why, '綠色範圍 ' + q.lo.toFixed(4) + '～' + q.hi.toFixed(4) + ' 圈／秒、紅線 ' + q.breakLine.toFixed(4) + '、要撐 ' + q.hold.toFixed(4) + ' 秒', '進度停在 ' + (100 * p).toFixed(4) + '%'] });
         }
         /* 揭曉：轉速隨時間變化的折線圖，疊上綠色範圍和紅線 */
         function showChart(kind) {
-            var CW = W - 24, CH = 110, box = h('div', { 'class': 'pwl-chart' }); box.style.cssText = 'left:12px;top:' + (cy + RING + 18 + 76 + 70) + 'px;width:' + CW + 'px;height:' + (CH + 8) + 'px;';
+            var CW = W - 24, CH = 110, box = h('div', { 'class': 'pinwheel-chart' }); box.style.cssText = 'left:12px;top:' + (cy + RING + 18 + 76 + 70) + 'px;width:' + CW + 'px;height:' + (CH + 8) + 'px;';
             var s = kit.svg('svg', { viewBox: '0 0 ' + CW + ' ' + (CH + 8), width: CW, height: CH + 8 }, box), total = Math.max(trace.length ? trace[trace.length - 1][0] : 1, 1), Y = function (v) { return 4 + CH - CH * Math.min(1, v / q.maxSpeed); }, XX = function (t) { return 4 + (CW - 8) * t / total; };
-            kit.svg('rect', { 'class': 'pwl-chart__bg', x: 0, y: 0, width: CW, height: CH + 8, rx: 10 }, s);
-            kit.svg('rect', { 'class': 'pwl-chart__band', x: 4, y: Y(q.hi), width: CW - 8, height: Math.max(2, Y(q.lo) - Y(q.hi)) }, s);
-            kit.svg('line', { 'class': 'pwl-chart__red', x1: 4, x2: CW - 4, y1: Y(q.breakLine), y2: Y(q.breakLine) }, s);
-            kit.svg('polyline', { 'class': 'pwl-chart__curve', points: trace.map(function (r) { return XX(r[0]).toFixed(1) + ',' + Y(r[1]).toFixed(1); }).join(' ') }, s);
+            kit.svg('rect', { 'class': 'pinwheel-chart__bg', x: 0, y: 0, width: CW, height: CH + 8, rx: 10 }, s);
+            kit.svg('rect', { 'class': 'pinwheel-chart__band', x: 4, y: Y(q.hi), width: CW - 8, height: Math.max(2, Y(q.lo) - Y(q.hi)) }, s);
+            kit.svg('line', { 'class': 'pinwheel-chart__red', x1: 4, x2: CW - 4, y1: Y(q.breakLine), y2: Y(q.breakLine) }, s);
+            kit.svg('polyline', { 'class': 'pinwheel-chart__curve', points: trace.map(function (r) { return XX(r[0]).toFixed(1) + ',' + Y(r[1]).toFixed(1); }).join(' ') }, s);
             field.appendChild(box);
         }
         /* 驗證用：不真的畫圈，直接覆蓋「手指轉速」——solve＝一個簡單的比例控制器，把轉速穩穩拉到範圍中心；wrong＝一直轉太快（衝進紅色區）；可以重複呼叫 */

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_spinpick.js — 秒反應・轉盤停哪格（企劃 218，指針版）
+   樣式：css/games/reaction_spinpick.css（這款專屬的 class 一律以「spinpick-」開頭；共用元件在 css/reaction_common.css）
    圓盤正中央有一根旋轉的指針，底下的圓盤像披薩一樣切成好幾格（每格顏色不同）。指針一開始轉得很快，然後慢慢減速、
    最後停下來。可是指針會在「不固定的時間點」漸漸變成半透明、然後完全看不見（每一關都不一樣，有時候提早很多），
    等到停住，中央會出現「請點擊指針指向哪個方向」——請憑指針減速的節奏，推測它最後停在哪一格，點那一格。
@@ -100,7 +101,7 @@
         console.log('[轉盤停哪格] 第 ' + level + ' 關：' + N + ' 格，停在第 ' + (sp.s + 1) + ' 格（格內 ' + (sp.offset * 100).toFixed(1) + '％）；起轉 ' + sp.omega0.toFixed(2) + ' 度/秒，起始角 ' + sp.theta0.toFixed(2) + ' 度，終點角 ' + sp.thetaF.toFixed(2) + ' 度；離停住 ' + sp.fadeStart.toFixed(2) + ' 秒時開始變透明、' + sp.fadeEnd.toFixed(2) + ' 秒時完全看不見（看不見之後還會掃過 ' + (thetaAt(sp, sp.T) - thetaAt(sp, sp.T - sp.fadeEnd)).toFixed(1) + ' 度）；限時 ' + ansMs(level) + ' ms');
 
         var W = stage.clientWidth || 472, cx = W / 2, cy = CENTER_Y;
-        var svg = kit.svg('svg', { 'class': 'spk-svg', viewBox: '0 0 ' + W + ' 640', width: W, height: 640 }, stage);
+        var svg = kit.svg('svg', { 'class': 'spinpick-svg', viewBox: '0 0 ' + W + ' 640', width: W, height: 640 }, stage);
         /* 圓盤：N 個扇形 */
         function pt(theta, r) { var a = (theta - 90) * Math.PI / 180; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; }
         var secs = [];
@@ -108,15 +109,15 @@
             var a0 = k * w, a1 = (k + 1) * w, p0 = pt(a0, DISC_R), p1 = pt(a1, DISC_R);
             var d = 'M' + cx + ' ' + cy + ' L' + p0[0].toFixed(2) + ' ' + p0[1].toFixed(2) + ' A' + DISC_R + ' ' + DISC_R + ' 0 ' + (w > 180 ? 1 : 0) + ' 1 ' + p1[0].toFixed(2) + ' ' + p1[1].toFixed(2) + ' Z';
             var hue = (212 + k * (360 / N)) % 360;
-            secs.push(kit.svg('path', { d: d, fill: kit.hsl(hue, 70, 72), 'class': 'spk-sec' }, svg));
+            secs.push(kit.svg('path', { d: d, fill: kit.hsl(hue, 70, 72), 'class': 'spinpick-sec' }, svg));
         }
-        var needle = kit.svg('g', { 'class': 'spk-needle' }, svg);
-        kit.svg('polygon', { points: (cx - 11) + ',' + cy + ' ' + (cx + 11) + ',' + cy + ' ' + cx + ',' + (cy - NEEDLE_R), 'class': 'spk-tip' }, needle);
-        kit.svg('circle', { cx: cx, cy: cy, r: 17, 'class': 'spk-hub' }, svg);
-        var center = h('div', { 'class': 'spk-center', html: '請點擊指針<br>指向哪個方向' });
+        var needle = kit.svg('g', { 'class': 'spinpick-needle' }, svg);
+        kit.svg('polygon', { points: (cx - 11) + ',' + cy + ' ' + (cx + 11) + ',' + cy + ' ' + cx + ',' + (cy - NEEDLE_R), 'class': 'spinpick-tip' }, needle);
+        kit.svg('circle', { cx: cx, cy: cy, r: 17, 'class': 'spinpick-hub' }, svg);
+        var center = h('div', { 'class': 'spinpick-center', html: '請點擊指針<br>指向哪個方向' });
         center.style.left = (cx - 90) + 'px'; center.style.top = (cy - 40) + 'px'; center.style.visibility = 'hidden';
         stage.appendChild(center);
-        var tip = h('div', { 'class': 'qz-note spk-tip-text', text: '看指針怎麼轉、怎麼慢下來' });
+        var tip = h('div', { 'class': 'qz-note spinpick-tip-text', text: '看指針怎麼轉、怎麼慢下來' });
         stage.appendChild(tip);
         var phase = 'spin', t0 = performance.now();
         function paint(t) {
@@ -152,8 +153,8 @@
             var ok = k === sp.s;
             paint(sp.T); needle.setAttribute('opacity', 1);
             center.style.visibility = 'hidden';
-            secs[sp.s].classList.add('spk-sec--right');
-            if (k >= 0 && !ok) secs[k].classList.add('spk-sec--wrong');
+            secs[sp.s].classList.add('spinpick-sec--right');
+            if (k >= 0 && !ok) secs[k].classList.add('spinpick-sec--wrong');
             var pos = (sp.offset * 100).toFixed(4);
             tip.textContent = '指針停在第 ' + (sp.s + 1) + ' 格（格內 ' + pos + '％的位置）' + (ok ? '' : '，你選了第 ' + (k + 1) + ' 格');
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1600 }); return; }

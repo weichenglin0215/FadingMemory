@@ -1,0 +1,163 @@
+/* ═══════════════════════════════════════
+   reaction_heartbeat.css — 心跳複製（js/reaction_heartbeat.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「heartbeat-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 心跳複製：跟著節奏點擊（複製電腦的心跳節奏）。 */
+/* ═══ 心跳複製（.heartbeat-）═══ */
+/* 標題 */
+.heartbeat-head {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--c-ink);
+    min-height: 2.6em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 場地 */
+.heartbeat-field {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    touch-action: none;
+    user-select: none;
+}
+
+/* SVG */
+.heartbeat-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* 空位置（虛線圈） */
+.heartbeat-slot {
+    fill: none;
+    stroke: var(--c-ink-soft);
+    stroke-width: 3px;
+    stroke-dasharray: 6 8;
+    opacity: 0.5;
+}
+
+/* 錯誤的位置（粗紅線） */
+.heartbeat-slot--bad {
+    stroke: var(--c-bad);
+    stroke-width: 8px;
+    stroke-dasharray: none;
+    opacity: 1;
+}
+
+/* 心形球的外框 */
+.heartbeat-ball__body {
+    stroke: rgba(0, 0, 0, 0.3);
+    stroke-width: 3px;
+}
+
+/* 左邊的球（藍） */
+.heartbeat-ball--L .heartbeat-ball__body {
+    fill: #4A90D9;
+}
+
+/* 中間的球（橘） */
+.heartbeat-ball--C .heartbeat-ball__body {
+    fill: #F08A24;
+}
+
+/* 右邊的球（綠） */
+.heartbeat-ball--R .heartbeat-ball__body {
+    fill: #3FA46A;
+}
+
+/* 倒數圈 */
+.heartbeat-ring {
+    fill: none;
+    stroke: var(--c-ink);
+    stroke-width: 9px;
+    stroke-linecap: round;
+}
+
+/* 晚了的倒數圈（紅） */
+.heartbeat-ring--late {
+    stroke: #E0342A;
+}
+
+/* 點掉心之後留在原位的倒數圈：綠色，繼續跑完 */
+.heartbeat-ring--done {
+    stroke: var(--c-ok);
+}
+
+/* 空拍的倒數圈：沒有心，用淺灰色 */
+.heartbeat-ring--empty {
+    stroke: var(--c-ink-soft);
+    opacity: 0.55;
+}
+
+/* 點中：放大並淡出（pop 動畫） */
+.heartbeat-ball--hit {
+    transform-origin: center;
+    animation: heartbeat-pop 0.26s ease-out forwards;
+}
+
+/* 漏掉：只淡出 */
+.heartbeat-ball--miss {
+    animation: heartbeat-fade 0.26s ease-out forwards;
+}
+
+/* pop 動畫：1 倍不透明 → 1.5 倍透明 */
+@keyframes heartbeat-pop {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(1.5);
+    }
+}
+
+/* 淡出動畫 */
+@keyframes heartbeat-fade {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+/* 受傷閃紅光（全畫面半透明紅） */
+.heartbeat-hurt {
+    position: absolute;
+    inset: 0;
+    background: rgba(224, 52, 42, 0.35);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* 觸發受傷閃光 */
+.heartbeat-hurt--on {
+    animation: heartbeat-hurt 0.35s ease-out;
+}
+
+/* 閃光動畫 */
+@keyframes heartbeat-hurt {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}

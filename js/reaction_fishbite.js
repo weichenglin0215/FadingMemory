@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_fishbite.js — 秒反應・釣魚提竿（企劃 361）
+   樣式：css/games/reaction_fishbite.css（這款專屬的 class 一律以「fishbite-」開頭；共用元件在 css/reaction_common.css）
    浮標在水面上。魚會來輕輕碰（浮標小小地晃一下），**真的咬鉤時浮標會整個沉下去**——那一刻**往上滑提竿**。
    太早提（只是輕碰、或根本還沒咬）魚就跑了；太晚提（沉下去超過窗口時間才提）魚也跑了。每關釣一條。
    ───────────────────────────────────────────────────────────────────
@@ -116,7 +117,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'fbt-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'fishbite-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關（釣到 ' + S.cleared + ' 條魚）']; },
@@ -126,12 +127,12 @@
 
     /* 魚（SVG）：身體、尾巴、眼睛、花紋；顏色依魚種編號 0～5 用 CSS 變數 */
     function fishSvg(idx, parent) {
-        var svg = kit.svg('svg', { 'class': 'fbt-fishsvg', viewBox: '0 0 120 70', width: 150, height: 88 }, parent);
-        kit.svg('path', { 'class': 'fbt-tail fbt-fc' + idx, d: 'M96,35 L118,12 Q112,35 118,58 Z' }, svg);
-        kit.svg('ellipse', { 'class': 'fbt-body fbt-fc' + idx, cx: 52, cy: 35, rx: 46, ry: 26 }, svg);
-        kit.svg('path', { 'class': 'fbt-belly', d: 'M12,38 Q52,66 92,38 Q52,52 12,38 Z' }, svg);
-        kit.svg('path', { 'class': 'fbt-stripe', d: 'M40,12 Q46,35 40,58 M58,10 Q64,35 58,60' }, svg);
-        kit.svg('circle', { 'class': 'fbt-eye', cx: 20, cy: 29, r: 4 }, svg);
+        var svg = kit.svg('svg', { 'class': 'fishbite-fishsvg', viewBox: '0 0 120 70', width: 150, height: 88 }, parent);
+        kit.svg('path', { 'class': 'fishbite-tail fishbite-fc' + idx, d: 'M96,35 L118,12 Q112,35 118,58 Z' }, svg);
+        kit.svg('ellipse', { 'class': 'fishbite-body fishbite-fc' + idx, cx: 52, cy: 35, rx: 46, ry: 26 }, svg);
+        kit.svg('path', { 'class': 'fishbite-belly', d: 'M12,38 Q52,66 92,38 Q52,52 12,38 Z' }, svg);
+        kit.svg('path', { 'class': 'fishbite-stripe', d: 'M40,12 Q46,35 40,58 M58,10 Q64,35 58,60' }, svg);
+        kit.svg('circle', { 'class': 'fishbite-eye', cx: 20, cy: 29, r: 4 }, svg);
         return svg;
     }
 
@@ -143,20 +144,20 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var waterY = Math.round(H * 0.4), VIS = 84, FW = 36, cx = Math.round(W / 2);
-        var field = h('div', { 'class': 'fbt-field' });
+        var field = h('div', { 'class': 'fishbite-field' });
         stage.appendChild(field);
-        var tip = h('div', { 'class': 'qz-note fbt-tip', text: level === 1 ? '浮標整個沉下去，就往上滑提竿！' : '整個沉下去才提竿（往上滑）' });
+        var tip = h('div', { 'class': 'qz-note fishbite-tip', text: level === 1 ? '浮標整個沉下去，就往上滑提竿！' : '整個沉下去才提竿（往上滑）' });
         field.appendChild(tip);
         /* 水：水面以下的藍色；波紋圈（咬鉤、輕碰時冒一個） */
-        var water = h('div', { 'class': 'fbt-water' }); water.style.top = waterY + 'px'; field.appendChild(water);
-        var surf = h('div', { 'class': 'fbt-surface' }); surf.style.top = waterY + 'px'; field.appendChild(surf);
+        var water = h('div', { 'class': 'fishbite-water' }); water.style.top = waterY + 'px'; field.appendChild(water);
+        var surf = h('div', { 'class': 'fishbite-surface' }); surf.style.top = waterY + 'px'; field.appendChild(surf);
         /* 浮標：放在一個「只顯示水面以上」的裁切框裡，沉下去的部分就看不見 */
-        var clip = h('div', { 'class': 'fbt-clip' }); clip.style.height = waterY + 'px'; field.appendChild(clip);
-        var line = kit.svg('svg', { 'class': 'fbt-lines', width: W, height: waterY }, clip), rod = kit.svg('line', { 'class': 'fbt-rodline', x1: W - 14, y1: -6, x2: cx, y2: waterY - VIS }, line);
-        var fl = h('div', { 'class': 'fbt-float' }); fl.style.cssText = 'left:' + (cx - FW / 2) + 'px;top:0;width:' + FW + 'px;height:' + (VIS + 90) + 'px;';
-        fl.appendChild(h('div', { 'class': 'fbt-float__ant' })); fl.appendChild(h('div', { 'class': 'fbt-float__top' })); fl.appendChild(h('div', { 'class': 'fbt-float__body' }));
+        var clip = h('div', { 'class': 'fishbite-clip' }); clip.style.height = waterY + 'px'; field.appendChild(clip);
+        var line = kit.svg('svg', { 'class': 'fishbite-lines', width: W, height: waterY }, clip), rod = kit.svg('line', { 'class': 'fishbite-rodline', x1: W - 14, y1: -6, x2: cx, y2: waterY - VIS }, line);
+        var fl = h('div', { 'class': 'fishbite-float' }); fl.style.cssText = 'left:' + (cx - FW / 2) + 'px;top:0;width:' + FW + 'px;height:' + (VIS + 90) + 'px;';
+        fl.appendChild(h('div', { 'class': 'fishbite-float__ant' })); fl.appendChild(h('div', { 'class': 'fishbite-float__top' })); fl.appendChild(h('div', { 'class': 'fishbite-float__body' }));
         clip.appendChild(fl);
-        var info = h('div', { 'class': 'qz-note fbt-info', text: '' }); info.style.top = (waterY + 16) + 'px'; field.appendChild(info);
+        var info = h('div', { 'class': 'qz-note fishbite-info', text: '' }); info.style.top = (waterY + 16) + 'px'; field.appendChild(info);
         if (level === 1 && kit.once('fishbite.hint')) kit.hintOn(stage, null, { mode: 'drag', x: W / 2, y: H * 0.86, dx: 0, dy: -130, delay: 1200, text: '浮標整個沉下去，就往上滑' });
 
         var phase = 'wait', t0 = performance.now(), nextRipple = 0, down = null, swipeAt = null, shown = 0;
@@ -168,7 +169,7 @@
             rod.setAttribute('y2', (topY + 4).toFixed(1));
         }
         function ripple(strong) {
-            var r = h('div', { 'class': 'fbt-ripple' + (strong ? ' fbt-ripple--strong' : '') }); r.style.cssText = 'left:' + (cx - 40) + 'px;top:' + (waterY - 12) + 'px;';
+            var r = h('div', { 'class': 'fishbite-ripple' + (strong ? ' fishbite-ripple--strong' : '') }); r.style.cssText = 'left:' + (cx - 40) + 'px;top:' + (waterY - 12) + 'px;';
             field.appendChild(r); api.after(900, function () { if (r.parentNode) r.parentNode.removeChild(r); });
         }
         drawFloat(0, waveAt(q.wave, 0));
@@ -211,35 +212,35 @@
             info.textContent = why;
             if (kind === 'ok') {
                 /* 魚被提出水面：浮標往上跳、魚從水裡飛出來 */
-                info.classList.add('fbt-info--ok'); Sfx.play('ok');
+                info.classList.add('fishbite-info--ok'); Sfx.play('ok');
                 drawFloat(0, 0);
-                var fish = h('div', { 'class': 'fbt-fish' }); fish.style.cssText = 'left:' + (cx - 75) + 'px;top:' + (waterY - 40) + 'px;'; fishSvg((level - 1) % FISH.length, fish); field.appendChild(fish);
-                api.after(30, function () { fish.classList.add('fbt-fish--jump'); });
+                var fish = h('div', { 'class': 'fishbite-fish' }); fish.style.cssText = 'left:' + (cx - 75) + 'px;top:' + (waterY - 40) + 'px;'; fishSvg((level - 1) % FISH.length, fish); field.appendChild(fish);
+                api.after(30, function () { fish.classList.add('fishbite-fish--jump'); });
                 kit.flash(stage, true, api.my);
                 api.pass({ delay: 2300 });
                 return;
             }
-            info.classList.add('fbt-info--bad');
+            info.classList.add('fishbite-info--bad');
             kit.flash(stage, false, api.my);
             showReplay(kind, t);
             api.fail({ delay: replayMs(q) + 1500, lines: [why, '咬鉤在第 ' + q.bite.t.toFixed(4) + ' 秒，窗口 ' + q.window.toFixed(4) + ' 秒（' + q.bite.t90.toFixed(4) + '～' + q.bite.tEnd.toFixed(4) + '）' + (t != null ? '；你在第 ' + t.toFixed(4) + ' 秒提竿' : '；你沒有提竿')] });
         }
         /* 揭曉：折線圖（深度整段時間表）＋咬鉤區＋你提竿的位置＋慢動作重播咬鉤那一段 */
         function showReplay(kind, t) {
-            var CW = W - 24, CH = 150, total = q.bite.tEnd + RECOVER_S + 0.6, box = h('div', { 'class': 'fbt-chart' });
+            var CW = W - 24, CH = 150, total = q.bite.tEnd + RECOVER_S + 0.6, box = h('div', { 'class': 'fishbite-chart' });
             box.style.cssText = 'left:12px;top:' + (waterY + 124) + 'px;width:' + CW + 'px;height:' + (CH + 56) + 'px;';
-            var svg = kit.svg('svg', { 'class': 'fbt-chart__svg', viewBox: '0 0 ' + CW + ' ' + (CH + 56), width: CW, height: CH + 56 }, box), X = function (s) { return (CW - 8) * s / total + 4; }, Y0 = 26;
-            kit.svg('rect', { 'class': 'fbt-chart__bg', x: 0, y: Y0 - 6, width: CW, height: CH + 12, rx: 10 }, svg);
-            kit.svg('rect', { 'class': 'fbt-chart__bite', x: X(q.bite.t90), y: Y0 - 6, width: Math.max(3, X(q.bite.tEnd) - X(q.bite.t90)), height: CH + 12 }, svg);
-            kit.svg('line', { 'class': 'fbt-chart__line90', x1: 4, x2: CW - 4, y1: Y0 + CH * BITE_LINE, y2: Y0 + CH * BITE_LINE }, svg);
-            var pl = kit.svg('polyline', { 'class': 'fbt-chart__curve', points: chartPoints(q, 0, total, CW - 8, CH, 240).split(' ').map(function (pp) { var a = pp.split(','); return (+a[0] + 4).toFixed(1) + ',' + (+a[1] + Y0).toFixed(1); }).join(' ') }, svg);
-            var lb = kit.svg('text', { 'class': 'fbt-chart__lab fbt-chart__lab--bite', x: Math.min(CW - 70, Math.max(70, X(q.bite.t90))), y: 18 }, svg); lb.textContent = '咬鉤';
-            var l9 = kit.svg('text', { 'class': 'fbt-chart__lab fbt-chart__lab--ln', x: 8, y: Y0 + CH * BITE_LINE - 6 }, svg); l9.textContent = '沉到這條線以下才算咬鉤';
+            var svg = kit.svg('svg', { 'class': 'fishbite-chart__svg', viewBox: '0 0 ' + CW + ' ' + (CH + 56), width: CW, height: CH + 56 }, box), X = function (s) { return (CW - 8) * s / total + 4; }, Y0 = 26;
+            kit.svg('rect', { 'class': 'fishbite-chart__bg', x: 0, y: Y0 - 6, width: CW, height: CH + 12, rx: 10 }, svg);
+            kit.svg('rect', { 'class': 'fishbite-chart__bite', x: X(q.bite.t90), y: Y0 - 6, width: Math.max(3, X(q.bite.tEnd) - X(q.bite.t90)), height: CH + 12 }, svg);
+            kit.svg('line', { 'class': 'fishbite-chart__line90', x1: 4, x2: CW - 4, y1: Y0 + CH * BITE_LINE, y2: Y0 + CH * BITE_LINE }, svg);
+            var pl = kit.svg('polyline', { 'class': 'fishbite-chart__curve', points: chartPoints(q, 0, total, CW - 8, CH, 240).split(' ').map(function (pp) { var a = pp.split(','); return (+a[0] + 4).toFixed(1) + ',' + (+a[1] + Y0).toFixed(1); }).join(' ') }, svg);
+            var lb = kit.svg('text', { 'class': 'fishbite-chart__lab fishbite-chart__lab--bite', x: Math.min(CW - 70, Math.max(70, X(q.bite.t90))), y: 18 }, svg); lb.textContent = '咬鉤';
+            var l9 = kit.svg('text', { 'class': 'fishbite-chart__lab fishbite-chart__lab--ln', x: 8, y: Y0 + CH * BITE_LINE - 6 }, svg); l9.textContent = '沉到這條線以下才算咬鉤';
             if (t != null) {
-                var sx = X(Math.min(t, total)); kit.svg('line', { 'class': 'fbt-chart__you', x1: sx, x2: sx, y1: Y0 - 6, y2: Y0 + CH + 6 }, svg);
-                var yl = kit.svg('text', { 'class': 'fbt-chart__lab fbt-chart__lab--you', x: Math.min(CW - 60, Math.max(60, sx)), y: Y0 + CH + 36 }, svg); yl.textContent = '你提竿 ' + t.toFixed(4) + ' 秒';
+                var sx = X(Math.min(t, total)); kit.svg('line', { 'class': 'fishbite-chart__you', x1: sx, x2: sx, y1: Y0 - 6, y2: Y0 + CH + 6 }, svg);
+                var yl = kit.svg('text', { 'class': 'fishbite-chart__lab fishbite-chart__lab--you', x: Math.min(CW - 60, Math.max(60, sx)), y: Y0 + CH + 36 }, svg); yl.textContent = '你提竿 ' + t.toFixed(4) + ' 秒';
             }
-            var cur = kit.svg('line', { 'class': 'fbt-chart__cur', x1: 0, x2: 0, y1: Y0 - 6, y2: Y0 + CH + 6 }, svg);
+            var cur = kit.svg('line', { 'class': 'fishbite-chart__cur', x1: 0, x2: 0, y1: Y0 - 6, y2: Y0 + CH + 6 }, svg);
             field.appendChild(box);
             /* 慢動作重播：浮標跟著游標一起動 */
             var rg = replayRange(q), ms = replayMs(q), r0 = performance.now();

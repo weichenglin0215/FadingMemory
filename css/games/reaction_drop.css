@@ -1,0 +1,99 @@
+/* ═══════════════════════════════════════
+   reaction_drop.css — 神準落下（js/reaction_drop.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「drop-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 遊戲二：神準落下 ═══ */
+/* 場地：relative 是裡面 absolute 元素的定位基準；overflow:hidden 把超出邊界的東西裁掉 */
+.drop-field {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+}
+
+/* 三角形指標：clip-path:polygon(...) 用三個點把方塊「裁」成倒三角形 */
+.drop-tri {
+    position: absolute;
+    z-index: 3;
+    background: var(--c-blue);
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+/* 尺本身是一份向量圖（SVG），位置算相對 .drop-field（position:relative）：
+   三層遞迴九等分一次畫好，格線本來就在那裡，只是太細看不到，鏡頭放大
+   （js/reaction_drop.js 的 zoom()，改的是 viewBox 不是 CSS transform，
+   這樣縮放永遠是重新算向量、不是拉伸點陣圖，才會一直銳利）才看得清楚，
+   像顯微鏡發現本來就存在的精細刻度；分隔線不用 vector-effect:non-scaling-stroke，
+   故意讓它跟著畫面一起放大變粗。三角形（釘子）是獨立的 .drop-tri，
+   不受尺的 viewBox 影響，永遠停在螢幕上同一個位置。 */
+/* 尺的 SVG */
+.drop-strip-svg {
+    position: absolute;
+    display: block;
+}
+
+/* 尺上的色塊 */
+.drop-rect {
+    fill: var(--c-ink);
+}
+
+.drop-rect--mid {
+    fill: var(--flow-ink-1);
+}
+
+/* 色塊上的文字標籤 */
+.drop-label {
+    fill: var(--c-on-accent);
+    font-family: var(--font-ui);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+}
+
+/* 插中紅色才看得清楚：紅色格底下的 9 細格（紅底、中間黃） */
+.drop-subrect {
+    fill: var(--flow-ink-1);
+}
+
+.drop-subrect--mid {
+    fill: var(--c-yellow);
+}
+
+.drop-tick2 {
+    stroke: var(--c-ink);
+}
+
+/* 插中黃色核心才看得清楚：黃色格底下的 9 細格（黃底、中間紫） */
+.drop-subsubrect {
+    fill: var(--c-yellow);
+}
+
+.drop-subsubrect--mid {
+    fill: var(--flow-ink-5);
+}
+
+.drop-tick3 {
+    stroke: var(--c-ink);
+}
+
+/* 置中靠 .drop-field 的 flex（align/justify-content: center），不是 left:50%+
+   transform:translate(-50%,-50%)——那個寫法跟全域 .btn:active{transform:scale(0.97)}
+   搶同一個 transform 屬性，優先度較高的 :active 規則會整個蓋掉置中用的 translate（不是疊加），
+   按下的瞬間按鈕就從畫面中央跳到「左上角頂到中心點」的位置，往右下角偏移了半個按鈕的寬高，
+   導致手指按下時按鈕已經跳出手指範圍，看起來像「按了沒反應」。改用 flex 置中，
+   transform 這個屬性就只剩 :active 的 scale 在用，不會再互搶。 */
+/* 「插」按鈕（置中方式見上方說明） */
+.drop-btn {
+    position: relative;
+    z-index: 5;
+    flex: 0 0 auto;
+    width: 140px;
+    height: 72px;
+}

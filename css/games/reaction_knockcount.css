@@ -1,0 +1,295 @@
+/* ═══════════════════════════════════════
+   reaction_knockcount.css — 敲幾下（js/reaction_knockcount.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「knockcount-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 敲幾下（.knockcount-）═══ */
+.knockcount-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.knockcount-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.knockcount-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 玩家這一段敲的次數（大字） */
+.knockcount-count {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 60px;
+    color: var(--c-ink);
+    font-size: var(--fs-xxxl);
+    font-weight: var(--fw-black);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 師父的剪影（深色的頭和袍子）、木槌 */
+.knockcount-monk {
+    position: absolute;
+    left: 24px;
+    top: 150px;
+    width: 120px;
+    height: 220px;
+    transform-origin: 50% 100%;
+}
+
+.knockcount-monk__head {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto;
+    background: var(--c-ink);
+    border-radius: 50%;
+}
+
+.knockcount-monk__body {
+    width: 120px;
+    height: 150px;
+    margin-top: -4px;
+    background: var(--c-ink);
+    border-radius: 50% 50% var(--r-md) var(--r-md);
+}
+
+.knockcount-mallet {
+    position: absolute;
+    left: 112px;
+    top: 250px;
+    width: 120px;
+    height: 20px;
+    transform-origin: 0 50%;
+    transform: rotate(-35deg);
+    transition: transform 0.08s ease-in;
+}
+
+.knockcount-mallet--hit {
+    animation: knockcount-swing 0.18s ease-in-out;
+}
+
+@keyframes knockcount-swing {
+    0% {
+        transform: rotate(-35deg);
+    }
+
+    45% {
+        transform: rotate(18deg);
+    }
+
+    100% {
+        transform: rotate(-35deg);
+    }
+}
+
+/* 師父另一隻手的木槌：從肩膀伸向右上方的銅缽（比敲木魚的那支長很多）；敲銅缽時揮過去，揮到一半（約 0.18 秒）剛好響 */
+.knockcount-mallet2 {
+    left: 104px;
+    top: 186px;
+    width: 224px;
+    transform: rotate(-34deg);
+}
+
+.knockcount-mallet2 .knockcount-mallet__stick {
+    width: 196px;
+}
+
+.knockcount-mallet2--hit {
+    animation: knockcount-swing2 0.4s ease-in-out;
+}
+
+@keyframes knockcount-swing2 {
+    0% {
+        transform: rotate(-34deg);
+    }
+
+    45% {
+        transform: rotate(-9deg);
+    }
+
+    100% {
+        transform: rotate(-34deg);
+    }
+}
+
+/* 師父的身體往銅缽那邊傾一下 */
+.knockcount-monk--lean {
+    animation: knockcount-lean 0.4s ease-in-out;
+}
+
+@keyframes knockcount-lean {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    45% {
+        transform: rotate(7deg);
+    }
+
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+.knockcount-mallet__stick {
+    position: absolute;
+    left: 0;
+    top: 7px;
+    width: 96px;
+    height: 7px;
+    background: var(--knk-wood-dark);
+    border-radius: var(--r-sm);
+}
+
+.knockcount-mallet__head {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 28px;
+    height: 20px;
+    background: var(--knk-wood-dark);
+    border-radius: var(--r-md);
+}
+
+/* 木魚（要敲的）：放在畫面中下方，被敲到時縮一下 */
+.knockcount-fishbox {
+    position: absolute;
+    left: 180px;
+    top: 250px;
+    width: 220px;
+    height: 187px;
+    cursor: pointer;
+    touch-action: none;
+}
+
+.knockcount-fish {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.knockcount-fish__body {
+    fill: var(--knk-wood);
+    stroke: var(--knk-wood-dark);
+    stroke-width: 5;
+}
+
+.knockcount-fish__mouth {
+    fill: none;
+    stroke: var(--knk-wood-dark);
+    stroke-width: 7;
+    stroke-linecap: round;
+}
+
+.knockcount-fish__shine {
+    fill: var(--c-card);
+    opacity: 0.35;
+}
+
+.knockcount-fish__stand {
+    fill: var(--knk-wood-dark);
+}
+
+/* 銅缽（干擾）：右上方，被敲時閃一下、擴散一圈波紋 */
+.knockcount-bowlbox {
+    position: absolute;
+    right: 20px;
+    top: 90px;
+    width: 140px;
+    height: 110px;
+    pointer-events: none;
+}
+
+.knockcount-bowl {
+    display: block;
+    overflow: visible;
+}
+
+.knockcount-bowl__body {
+    fill: var(--knk-copper);
+    stroke: var(--knk-copper-dark);
+    stroke-width: 4;
+    stroke-linejoin: round;
+}
+
+.knockcount-bowl__rim {
+    fill: var(--knk-copper-light);
+    stroke: var(--knk-copper-dark);
+    stroke-width: 4;
+}
+
+.knockcount-bowl__wave {
+    fill: none;
+    stroke: var(--knk-copper-light);
+    stroke-width: 4;
+    opacity: 0;
+}
+
+.knockcount-hit {
+    animation: knockcount-pulse 0.2s ease-out;
+}
+
+.knockcount-bowlbox.knockcount-hit .knockcount-bowl__wave {
+    animation: knockcount-wave 0.7s ease-out;
+    transform-origin: 70px 28px;
+}
+
+@keyframes knockcount-pulse {
+    0% {
+        transform: scale(0.94);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes knockcount-wave {
+    0% {
+        opacity: 0.9;
+        transform: scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1.6);
+    }
+}
+
+.knockcount-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 460px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.knockcount-done {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    width: auto;
+    /* .btn 預設 width: 100%，加上 left 24px 會讓按鈕右邊多出 24px 被切掉；絕對定位用 left＋right 決定寬度，所以 width 要設 auto */
+    bottom: 10px;
+    height: 100px;
+    font-size: var(--fs-xl);
+}

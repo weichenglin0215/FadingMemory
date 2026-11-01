@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_countbills.js — 秒反應・數鈔票（企劃 375）
+   樣式：css/games/reaction_countbills.css（這款專屬的 class 一律以「countbills-」開頭；共用元件在 css/reaction_common.css）
    銀行櫃台的點鈔。一疊鈔票（面額 100、500、1000 元混在一起，順序打亂）。上方寫「數出 3700 元」。
    **每點一下，最上面那張鈔票就撥到右邊**（撥出去的那一疊只看得到最上面一張，要邊撥邊心算）。
    你覺得撥出去的剛好是目標金額，就按「好了」。**剛好才過關**；撥多了、撥少了、時間到都算失敗。
@@ -69,7 +70,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'cbl-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'countbills-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -77,13 +78,13 @@
         });
     }
 
-    /* 一張鈔票（div）：底色依面額（CSS class cbl-d100…）、中間大大的面額、四個角落小字與花紋 */
+    /* 一張鈔票（div）：底色依面額（CSS class countbills-d100…）、中間大大的面額、四個角落小字與花紋 */
     function noteEl(v, cls) {
-        var el = h('div', { 'class': 'cbl-note cbl-d' + v + (cls ? ' ' + cls : '') });
-        el.appendChild(h('div', { 'class': 'cbl-note__c cbl-note__c--l', text: String(v) }));
-        el.appendChild(h('div', { 'class': 'cbl-note__c cbl-note__c--r', text: String(v) }));
-        el.appendChild(h('div', { 'class': 'cbl-note__v', text: String(v) }));
-        el.appendChild(h('div', { 'class': 'cbl-note__p' }));
+        var el = h('div', { 'class': 'countbills-note countbills-d' + v + (cls ? ' ' + cls : '') });
+        el.appendChild(h('div', { 'class': 'countbills-note__c countbills-note__c--l', text: String(v) }));
+        el.appendChild(h('div', { 'class': 'countbills-note__c countbills-note__c--r', text: String(v) }));
+        el.appendChild(h('div', { 'class': 'countbills-note__v', text: String(v) }));
+        el.appendChild(h('div', { 'class': 'countbills-note__p' }));
         return el;
     }
 
@@ -95,15 +96,15 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var NW = Math.min(210, Math.round((W - 60) / 2)), NH = Math.round(NW * 0.52), top0 = 130;
-        var field = h('div', { 'class': 'cbl-field' });
+        var field = h('div', { 'class': 'countbills-field' });
         stage.appendChild(field);
-        var goal = h('div', { 'class': 'cbl-goal' });
-        goal.appendChild(h('span', { 'class': 'cbl-goal__t', text: '數出 ' })); goal.appendChild(h('span', { 'class': 'cbl-goal__n', text: String(q.target) })); goal.appendChild(h('span', { 'class': 'cbl-goal__t', text: ' 元' }));
+        var goal = h('div', { 'class': 'countbills-goal' });
+        goal.appendChild(h('span', { 'class': 'countbills-goal__t', text: '數出 ' })); goal.appendChild(h('span', { 'class': 'countbills-goal__n', text: String(q.target) })); goal.appendChild(h('span', { 'class': 'countbills-goal__t', text: ' 元' }));
         field.appendChild(goal);
-        var lab1 = h('div', { 'class': 'cbl-lab', text: '點一下撥一張' }), lab2 = h('div', { 'class': 'cbl-lab', text: '撥出去的' });
+        var lab1 = h('div', { 'class': 'countbills-lab', text: '點一下撥一張' }), lab2 = h('div', { 'class': 'countbills-lab', text: '撥出去的' });
         lab1.style.cssText = 'left:20px;top:' + (top0 - 38) + 'px;width:' + NW + 'px;'; lab2.style.cssText = 'right:20px;top:' + (top0 - 38) + 'px;width:' + NW + 'px;'; field.appendChild(lab1); field.appendChild(lab2);
         /* 整疊鈔票（全部先放好，用 class 控制在「疊上」還是「撥出去」） */
-        var table = h('div', { 'class': 'cbl-table' }); table.style.cssText = 'top:' + top0 + 'px;height:' + (NH + 40) + 'px;'; field.appendChild(table);
+        var table = h('div', { 'class': 'countbills-table' }); table.style.cssText = 'top:' + top0 + 'px;height:' + (NH + 40) + 'px;'; field.appendChild(table);
         var els = q.notes.map(function (v, i) { var el = noteEl(v, ''); el.style.cssText = 'width:' + NW + 'px;height:' + NH + 'px;'; table.appendChild(el); return el; });
         var taken = 0, phase = 'play';
         /* 排位置：每張鈔票都用 transform 擺在「疊上（左邊）」或「撥出去（右邊）」；
@@ -115,12 +116,12 @@
                 el.style.display = 'block'; el.style.zIndex = String(10 - depth);
                 var x = out ? W - 20 - NW : 20, rot = out ? [3, -4, 5][depth] : 0, dy = depth * 6;
                 el.style.transform = 'translate(' + x + 'px,' + dy + 'px) rotate(' + rot + 'deg)';
-                el.classList.toggle('cbl-note--out', out); el.classList.toggle('cbl-note--under', !out && depth > 0);
+                el.classList.toggle('countbills-note--out', out); el.classList.toggle('countbills-note--under', !out && depth > 0);
             });
         }
         layout();
-        var info = h('div', { 'class': 'qz-note cbl-info', text: level === 1 ? '算好了就按「好了」，多了少了都不行！' : '邊撥邊心算，剛好就按「好了」' }); info.style.top = (top0 + NH + 56) + 'px'; field.appendChild(info);
-        var btn = kit.btnGrid(field, [{ text: '好了！', kind: 'primary', cls: 'cbl-btn', onTap: function () { done('done'); } }], { cols: 1, h: 96, bottom: 12 });
+        var info = h('div', { 'class': 'qz-note countbills-info', text: level === 1 ? '算好了就按「好了」，多了少了都不行！' : '邊撥邊心算，剛好就按「好了」' }); info.style.top = (top0 + NH + 56) + 'px'; field.appendChild(info);
+        var btn = kit.btnGrid(field, [{ text: '好了！', kind: 'primary', cls: 'countbills-btn', onTap: function () { done('done'); } }], { cols: 1, h: 96, bottom: 12 });
         if (level === 1 && kit.once('countbills.hint')) kit.hintOn(stage, null, { mode: 'tap', x: 20 + NW / 2, y: top0 + NH / 2, delay: 700, text: '點一下，最上面那張就撥出去' });
         /* 撥一張：點「疊上」的區域（整個桌面都可以點，手指比較好點） */
         table.addEventListener('pointerdown', function (e) {
@@ -136,25 +137,25 @@
             if (phase !== 'play' || api.over) return;
             phase = 'end'; api.stopTimer();
             var r = judge(q, taken), why = (kind === 'timeout' ? '時間到！' : '') + whyText(r, q);
-            btn.btns[0].classList.add('cbl-btn--off');
+            btn.btns[0].classList.add('countbills-btn--off');
             table.style.display = 'none'; lab1.style.display = 'none'; lab2.style.display = 'none';
             showSpread(r);
             info.textContent = why; info.style.top = ''; info.style.bottom = '124px';
-            if (r.result === 'ok') { info.classList.add('cbl-info--ok'); kit.flash(stage, true, api.my); Sfx.play('ok'); api.pass({ delay: 2200 }); return; }
-            info.classList.add('cbl-info--bad'); kit.flash(stage, false, api.my);
+            if (r.result === 'ok') { info.classList.add('countbills-info--ok'); kit.flash(stage, true, api.my); Sfx.play('ok'); api.pass({ delay: 2200 }); return; }
+            info.classList.add('countbills-info--bad'); kit.flash(stage, false, api.my);
             api.fail({ delay: 4200, lines: [why, '前 ' + q.n + ' 張是 ' + q.notes.slice(0, q.n).join('＋') + ' ＝ ' + q.target + ' 元', '你撥了 ' + taken + ' 張：' + (taken ? q.notes.slice(0, taken).join('＋') : '（沒撥）') + ' ＝ ' + r.sum + ' 元'] });
         }
         /* 攤開：每張一個小格，下面寫累加的總和；剛好湊到目標的那張標綠、多撥的標紅；撥少了就多顯示下一張（灰色） */
         function showSpread(r) {
-            var box = h('div', { 'class': 'cbl-spread' }); box.style.top = '110px';
+            var box = h('div', { 'class': 'countbills-spread' }); box.style.top = '110px';
             var show = Math.max(taken, 0), cols = 4, cw = Math.floor((W - 24 - (cols - 1) * 8) / cols), nh = Math.round(cw * 0.52), run = 0, count = show + (r.result === 'few' ? 1 : 0);
-            if (!show) box.appendChild(h('div', { 'class': 'cbl-spread__none', text: '一張都沒撥' }));
+            if (!show) box.appendChild(h('div', { 'class': 'countbills-spread__none', text: '一張都沒撥' }));
             for (var i = 0; i < count; i++) {
-                var v = q.notes[i], cell = h('div', { 'class': 'cbl-cell' }), ghost = i >= taken;
+                var v = q.notes[i], cell = h('div', { 'class': 'countbills-cell' }), ghost = i >= taken;
                 if (!ghost) run += v;
-                var m = noteEl(v, 'cbl-note--mini' + (ghost ? ' cbl-note--ghost' : '') + (!ghost && i === q.n - 1 ? ' cbl-note--hit' : '') + (!ghost && i >= q.n ? ' cbl-note--extra' : ''));
+                var m = noteEl(v, 'countbills-note--mini' + (ghost ? ' countbills-note--ghost' : '') + (!ghost && i === q.n - 1 ? ' countbills-note--hit' : '') + (!ghost && i >= q.n ? ' countbills-note--extra' : ''));
                 m.style.cssText = 'position:relative;width:' + cw + 'px;height:' + nh + 'px;'; cell.style.width = cw + 'px';
-                cell.appendChild(m); cell.appendChild(h('div', { 'class': 'cbl-cell__s' + (ghost ? ' cbl-cell__s--ghost' : ''), text: ghost ? '下一張' : String(run) })); box.appendChild(cell);
+                cell.appendChild(m); cell.appendChild(h('div', { 'class': 'countbills-cell__s' + (ghost ? ' countbills-cell__s--ghost' : ''), text: ghost ? '下一張' : String(run) })); box.appendChild(cell);
             }
             field.appendChild(box);
         }

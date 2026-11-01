@@ -27,7 +27,7 @@ for (let l = 1; l <= T.RAMP_LEVELS; l++) for (let i = 0; i < 200; i++) {
   for (let k = 0; k < 3; k++) { let jumps = 0, prev = T.handDeg(q.periods[k], q.phases[k], 0); for (let t = 0.01; t <= 15; t += 0.01) { const d = T.handDeg(q.periods[k], q.phases[k], t); if (d !== prev) { jumps++; prev = d; } } ok(Math.abs(jumps - 15 / q.periods[k]) <= 1.5, '15 秒內跳動次數 ' + jumps + ' ≈ ' + (15 / q.periods[k]).toFixed(2)); }
 }
 ok(oddCnt.every(c => c > n / 3 * 0.85), '不準的錶 A/B/C 平均 ' + oddCnt.join(',')); ok(fast / n > 0.45 && fast / n < 0.55, '偏快偏慢各一半：' + fast / n);
-T.STYLES.forEach(s => ok(/^<svg/.test(T.faceSvg(s)) && T.faceSvg(s).indexOf('wo-hand') > 0, s + ' 錶面 SVG'));
+T.STYLES.forEach(s => ok(/^<svg/.test(T.faceSvg(s)) && T.faceSvg(s).indexOf('watchoff-hand') > 0, s + ' 錶面 SVG'));
 ok(T.faceSvg('roman').indexOf('XII') > 0 && T.faceSvg('digits').indexOf('>12<') > 0 && T.faceSvg('none').indexOf('<text') < 0, '三種錶面的數字');
 ok(T.rating(2) !== T.rating(6) && T.rating(6) !== T.rating(10) && T.rating(10) !== T.rating(16) && T.rating(16) !== T.rating(20), '評語分級');
 // V1.27：沒有觀察階段，一開始就能作答；點了答案按鈕立刻停用

@@ -1,0 +1,119 @@
+/* ═══════════════════════════════════════
+   reaction_mixcolor.css — 混出什麼色（js/reaction_mixcolor.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「mixcolor-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 遊戲六：色不異空 ═══
+   整個遊戲畫面純黑底（色彩判斷的遊戲，背景會透過同時對比影響色塊看起來的顏色，
+   黑色最中性），而且 padding 歸零：左右兩個色塊盡量滿版、直接頂到畫面邊緣。
+   中間那條「黑色長方形」其實就是透出來的黑色背景，不用另外上色；它的寬度
+   （100px，由 js 的 GAP_PX 寫在 flex-basis 上）收到 0 的過程就是兩個色塊互相
+   靠攏、緊貼的動畫，時間由 --mc-close-ms 決定。 */
+/* 色不異空：黑底、不留邊 */
+.screen.mixcolor-bg {
+    background: #000;
+    padding: 0;
+}
+
+/* 兩個色塊所在的橫列 */
+.mixcolor-field {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+}
+
+/* 單個色塊，flex:1 1 0 讓左右平分寬度 */
+.mixcolor-block {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+/* 兩色塊中間的縫，transition 讓它縮到 0 時有動畫（cubic-bezier 是自訂加速曲線） */
+.mixcolor-gap {
+    flex: 0 0 100px;
+    transition: flex-basis var(--mc-close-ms, 500ms) cubic-bezier(0.3, 0, 0.2, 1);
+}
+
+/* 縫關閉：flex-basis 歸零（!important 優先於 JS 寫的行內樣式） */
+.mixcolor-gap--closed {
+    flex-basis: 0 !important;
+}
+
+/* 縫關閉之後，右邊色塊往左多蓋 1px：舞台縮放、寬度不是整數像素時，兩個色塊之間會露出底下黑色背景的一條細黑線（V1.28 玩家意見） */
+.mixcolor-gap--closed+.mixcolor-block {
+    margin-left: -1px;
+}
+
+/* 說明文字（white-space:pre-line = 保留 \n 換行） */
+.mixcolor-hint {
+    color: #FFFFFF;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-body);
+    text-align: center;
+    white-space: pre-line;
+}
+
+/* ═══ 混出什麼色（.mixcolor-，上方的兩個色塊與黑色長方形沿用 css/reaction.css 的 .mc-）═══ */
+.mixcolor-foot {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-3) var(--sp-3);
+}
+
+.mixcolor-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 74px);
+    gap: var(--sp-2);
+}
+
+.mixcolor-btn {
+    border-radius: var(--r-md);
+    border: 3px solid var(--c-on-accent);
+    color: var(--c-on-accent);
+    font-size: 48px;
+    font-weight: var(--fw-black);
+    line-height: 1;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 0.08s ease, filter 0.08s ease;
+}
+
+.mixcolor-btn--on {
+    transform: scale(0.95);
+    filter: brightness(1.25);
+}
+
+/* 「確定」：跟上面的 ＋／－ 按鈕隔開一段距離（原本只隔 8px，手指點下排「－」稍微偏下就按到「確定」，遊戲就結束了） */
+.mixcolor-ok {
+    margin-top: var(--sp-5);
+}
+
+.mixcolor-btn--r-hi {
+    background: var(--cm-r-hi);
+}
+
+.mixcolor-btn--r-lo {
+    background: var(--cm-r-lo);
+}
+
+.mixcolor-btn--g-hi {
+    background: var(--cm-g-hi);
+}
+
+.mixcolor-btn--g-lo {
+    background: var(--cm-g-lo);
+}
+
+.mixcolor-btn--b-hi {
+    background: var(--cm-b-hi);
+}
+
+.mixcolor-btn--b-lo {
+    background: var(--cm-b-lo);
+}

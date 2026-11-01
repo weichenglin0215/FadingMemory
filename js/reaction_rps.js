@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_rps.js — 秒反應・猜拳必贏
+   樣式：css/games/reaction_rps.css（這款專屬的 class 一律以「rps-」開頭；共用元件在 css/reaction_common.css）
    上面倒數 3、2、1、0，數字變成 0 的那一刻開始，你只有 1.0 秒可以按下剪刀／石頭／布；
    電腦在 0 之後出拳。前面的關卡電腦一數到 0 就立刻出拳，你可以看了再出；越後面電腦越晚出，
    留給你「看到電腦的拳」的時間越短，最後幾乎只能盲出。
@@ -76,7 +77,7 @@
     /* 手勢圖示：用簡單的向量圖（SVG）畫，不用 emoji；100×100 座標 */
     /* 手勢圖示（簡單向量圖，不用 emoji）：100×100 */
     function handIcon(kind, color) {
-        var svg = kit.svg('svg', { 'class': 'rp-icon', viewBox: '0 0 100 100' });
+        var svg = kit.svg('svg', { 'class': 'rps-icon', viewBox: '0 0 100 100' });
         var st = { fill: color, stroke: 'rgba(0,0,0,0.45)', 'stroke-width': 3, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' };
         /* 小工具 el(標籤, 屬性)：建立形狀並自動合併共用的填色、外框 */
         function el(tag, attrs, parent) { var a = {}; for (var k in st) a[k] = st[k]; for (var k2 in attrs) a[k2] = attrs[k2]; return kit.svg(tag, a, parent || svg); }
@@ -114,23 +115,23 @@
 
             /* 畫面：電腦（上）／ 中間的數字與倒數橫條 ／ 你（下）／ 三顆按鈕 */
             /* 畫面：電腦（上）／ 中間的數字與倒數橫條 ／ 你（下）／ 三顆按鈕 */
-            var compWho = h('div', { 'class': 'rp-who', text: '電腦' });
-            var compBody = h('div', { 'class': 'rp-body' });
-            var meBody = h('div', { 'class': 'rp-body' });
-            var halfC = h('div', { 'class': 'rp-half rp-half--comp' }, [compWho, compBody]);
-            var halfP = h('div', { 'class': 'rp-half rp-half--me' }, [meBody, h('div', { 'class': 'rp-who', text: '你' })]);
-            var big = h('div', { 'class': 'rp-big', text: '' });
+            var compWho = h('div', { 'class': 'rps-who', text: '電腦' });
+            var compBody = h('div', { 'class': 'rps-body' });
+            var meBody = h('div', { 'class': 'rps-body' });
+            var halfC = h('div', { 'class': 'rps-half rps-half--comp' }, [compWho, compBody]);
+            var halfP = h('div', { 'class': 'rps-half rps-half--me' }, [meBody, h('div', { 'class': 'rps-who', text: '你' })]);
+            var big = h('div', { 'class': 'rps-big', text: '' });
             var bar = h('div', { 'class': 'ld-time' }, [h('div', { 'class': 'ld-time__fill' })]);
             var fill = bar.firstChild;
-            var mid = h('div', { 'class': 'rp-mid' }, [big, bar]);
-            var top = h('div', { 'class': 'rp-top' }, [halfC, mid, halfP]);
-            var btns = h('div', { 'class': 'rp-btns' });
+            var mid = h('div', { 'class': 'rps-mid' }, [big, bar]);
+            var top = h('div', { 'class': 'rps-top' }, [halfC, mid, halfP]);
+            var btns = h('div', { 'class': 'rps-btns' });
             root.appendChild(top);
             root.appendChild(btns);
             var btnEls = {};
             /* 建立三顆出拳按鈕（剪刀、石頭、布），pointerdown 一碰就出拳；kit.evT(e) 取事件發生的精確時間 */
             KINDS.forEach(function (k) {
-                var b = h('button', { 'class': 'rp-btn rp-btn--' + k }, [h('span', { 'class': 'rp-btn__ico' }), h('span', { 'class': 'rp-btn__txt', text: NAMES[k] })]);
+                var b = h('button', { 'class': 'rps-btn rps-btn--' + k }, [h('span', { 'class': 'rps-btn__ico' }), h('span', { 'class': 'rps-btn__txt', text: NAMES[k] })]);
                 b.firstChild.appendChild(handIcon(k, '#FFE9B0'));
                 b.addEventListener('pointerdown', function (e) { e.preventDefault(); press(k, kit.evT(e)); });
                 btns.appendChild(b);
@@ -139,18 +140,18 @@
 
             /* 更新標題列右側的小字 */
             function meta() { ctx.setMeta(kit.meta(['連贏 ' + wins, fmtBest(Reaction.getBest(ID))])); }
-            function placeholder(txt) { return h('div', { 'class': 'rp-none', text: txt }); }
+            function placeholder(txt) { return h('div', { 'class': 'rps-none', text: txt }); }
             function setComp(kind) {
                 compBody.innerHTML = '';
-                if (kind) { compBody.appendChild(handIcon(kind, '#F6A39B')); compBody.appendChild(h('div', { 'class': 'rp-name', text: NAMES[kind] })); }
+                if (kind) { compBody.appendChild(handIcon(kind, '#F6A39B')); compBody.appendChild(h('div', { 'class': 'rps-name', text: NAMES[kind] })); }
                 else compBody.appendChild(placeholder('？'));
             }
             function setMe(kind, missText) {
                 meBody.innerHTML = '';
-                if (kind) { meBody.appendChild(handIcon(kind, '#9CC3F0')); meBody.appendChild(h('div', { 'class': 'rp-name', text: NAMES[kind] })); }
+                if (kind) { meBody.appendChild(handIcon(kind, '#9CC3F0')); meBody.appendChild(h('div', { 'class': 'rps-name', text: NAMES[kind] })); }
                 else meBody.appendChild(placeholder(missText || ''));
             }
-            function setMid(text, cls) { big.textContent = text; big.className = 'rp-big' + (cls ? ' ' + cls : ''); }
+            function setMid(text, cls) { big.textContent = text; big.className = 'rps-big' + (cls ? ' ' + cls : ''); }
 
             /* ─── 一回合：倒數 3、2、1、0 → 1.0 秒出拳時限 ─── */
             function play() {
@@ -163,7 +164,7 @@
                 rounds++;
                 meta();
                 fill.style.width = '100%';
-                [].forEach.call(btns.children, function (b) { b.classList.remove('rp-btn--pick'); });
+                [].forEach.call(btns.children, function (b) { b.classList.remove('rps-btn--pick'); });
                 compWho.textContent = '電腦　第 ' + level + ' 關';
                 setComp(null); setMe(null, '');
                 /* 主控台印出電腦這回合的拳與延遲，方便驗證 */
@@ -198,14 +199,14 @@
                 if (state === 'count') {
                     /* 0 出現之前就按：搶拳犯規 */
                     /* 0 出現之前就按：搶拳犯規 */
-                    if (kind) { state = 'reveal'; fill.style.width = '0%'; btnEls[kind].classList.add('rp-btn--pick'); reveal(kind, 'early'); }
+                    if (kind) { state = 'reveal'; fill.style.width = '0%'; btnEls[kind].classList.add('rps-btn--pick'); reveal(kind, 'early'); }
                     return;
                 }
                 if (state !== 'open') return;
                 state = 'reveal';
                 my.cancel(R.winTimer); my.cancel(R.compTimer); if (R.winLoop) R.winLoop.stop();
                 fill.style.width = '0%';
-                if (kind) btnEls[kind].classList.add('rp-btn--pick');
+                if (kind) btnEls[kind].classList.add('rps-btn--pick');
                 reveal(kind, kind ? null : 'late');
             }
 
@@ -215,7 +216,7 @@
                 setComp(comp);
                 setMe(kind, foul === 'late' ? '來不及' : '');
                 var msg = foul === 'early' ? '搶拳犯規！要等 0' : (foul === 'late' ? '慢出了…' : (res > 0 ? '你贏了！' : (res < 0 ? '你輸了…' : '平手，重來')));
-                setMid(msg, 'rp-big--msg rp-big--' + (res > 0 ? 'win' : (res < 0 ? 'lose' : 'tie')));
+                setMid(msg, 'rps-big--msg rps-big--' + (res > 0 ? 'win' : (res < 0 ? 'lose' : 'tie')));
                 /* 贏 */
                 if (res > 0) {
                     wins++;
@@ -256,7 +257,7 @@
                 setComp: function (k) { comp = k; },
                 beat: function () { return KINDS.find(function (k) { return judge(k, comp) > 0; }); },
                 lose: function () { return KINDS.find(function (k) { return judge(k, comp) < 0; }); },
-                compShown: function () { return compBody.querySelector('.rp-icon') != null; }
+                compShown: function () { return compBody.querySelector('.rps-icon') != null; }
             };
             /* 開場等 500 毫秒再開始 */
             my.after(500, play);

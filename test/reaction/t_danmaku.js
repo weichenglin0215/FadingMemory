@@ -46,9 +46,9 @@ ok(inRange / N0 > 0.9, '字群筆劃落在範圍內：' + (100 * inRange / N0).t
   ok(T.hitItem(items, 400 + 80 * 0.75 + 11, 300) === 2 && T.hitItem(items, 400 + 80 * 0.75 + 20, 300) === -1, '範圍＝字大小的 0.75 倍 + 12：剛好在邊緣內命中、外面不中');
   ok(T.hitItem(items, 250, 200) === -1 && T.hitItem([], 1, 1) === -1, '點到空白處不算'); }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_danmaku.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 3000/.test(src) && /dmk-ch--target/.test(src) && /dmk-ch--bad/.test(src) && /scoreOf/.test(src), '失敗：目標字圈綠、點錯的圈紅、停格 2 秒以上；成績用 scoreOf');
-  ok(/\.dmk-ch--target \{[^}]*var\(--c-ok/.test(css) && /\.dmk-ch--bad \{[^}]*var\(--c-bad/.test(css), '綠色、紅色用 CSS 變數');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_danmaku.js'), css = rd('../../css/games/reaction_danmaku.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 3000/.test(src) && /danmaku-ch--target/.test(src) && /danmaku-ch--bad/.test(src) && /scoreOf/.test(src), '失敗：目標字圈綠、點錯的圈紅、停格 2 秒以上；成績用 scoreOf');
+  ok(/\.danmaku-ch--target \{[^}]*var\(--c-ok/.test(css) && /\.danmaku-ch--bad \{[^}]*var\(--c-bad/.test(css), '綠色、紅色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_danmaku.js'") > 0 && /彈幕/.test(G.rule), 'boot.js 有載入、玩法說明提到彈幕');
   ok(/max: 300/.test(src) && /decimals: 0/.test(src), '成績設定：整數、上限 300'); }
 ok(T.rating(3) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20) !== T.rating(40) && T.rating(40) !== T.rating(70), '評語分級');

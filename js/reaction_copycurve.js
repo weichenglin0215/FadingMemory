@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_copycurve.js — 秒反應・照抄曲線（企劃 115）
+   樣式：css/games/reaction_copycurve.css（這款專屬的 class 一律以「copycurve-」開頭；共用元件在 css/reaction_common.css）
    畫面左邊的長方格裡有一條「綠色的曲線」，兩端分別是「黃色的起點」和「水藍色的終點」；
    右邊的長方格只有同樣位置的起點與終點。用手指從其中一個端點開始，照著左邊的曲線，在右邊畫出一模一樣的曲線（白色），
    一直畫到另一個端點（可以從黃點開始，也可以從水藍點開始）。碰到另一個端點就算畫完：
@@ -369,25 +370,25 @@
         var shift = Math.round((W - PW) / 2);
         stage.style.setProperty('--cpc-shift', shift + 'px');
         function panel(side) {
-            var p = h('div', { 'class': 'cpc-panel cpc-panel--' + side });
+            var p = h('div', { 'class': 'copycurve-panel copycurve-panel--' + side });
             p.style.width = PW + 'px'; p.style.height = PH + 'px'; p.style.top = top + 'px'; p.style.left = (side === 'L' ? 0 : W - PW) + 'px';
-            var svg = kit.svg('svg', { 'class': 'cpc-svg', viewBox: '0 0 ' + PW + ' ' + PH, width: PW, height: PH }, p);
+            var svg = kit.svg('svg', { 'class': 'copycurve-svg', viewBox: '0 0 ' + PW + ' ' + PH, width: PW, height: PH }, p);
             stage.appendChild(p);
             return { el: p, svg: svg };
         }
         var L = panel('L'), R = panel('R');
-        var labL = h('div', { 'class': 'cpc-lab', text: '照這條畫' }), labR = h('div', { 'class': 'cpc-lab', text: '你畫在這裡' });
+        var labL = h('div', { 'class': 'copycurve-lab', text: '照這條畫' }), labR = h('div', { 'class': 'copycurve-lab', text: '你畫在這裡' });
         labL.style.left = '0px'; labL.style.width = PW + 'px'; labR.style.left = (W - PW) + 'px'; labR.style.width = PW + 'px';
         stage.appendChild(labL); stage.appendChild(labR);
-        kit.svg('path', { d: pathD(q.pts), 'class': 'cpc-curve' }, L.svg);
+        kit.svg('path', { d: pathD(q.pts), 'class': 'copycurve-curve' }, L.svg);
         function markers(svg) {
-            return { s: kit.svg('circle', { cx: q.start.x, cy: q.start.y, r: 13, 'class': 'cpc-start' }, svg), e: kit.svg('circle', { cx: q.end.x, cy: q.end.y, r: 13, 'class': 'cpc-end' }, svg) };
+            return { s: kit.svg('circle', { cx: q.start.x, cy: q.start.y, r: 13, 'class': 'copycurve-start' }, svg), e: kit.svg('circle', { cx: q.end.x, cy: q.end.y, r: 13, 'class': 'copycurve-end' }, svg) };
         }
         markers(L.svg);
-        var drawn = kit.svg('path', { d: '', 'class': 'cpc-draw' }, R.svg);
+        var drawn = kit.svg('path', { d: '', 'class': 'copycurve-draw' }, R.svg);
         var mk = markers(R.svg);                                      /* 右邊的端點記號：手指靠近另一個端點時亮綠框（提醒可以放開了） */
-        function clearNear() { mk.s.classList.remove('cpc-near'); mk.e.classList.remove('cpc-near'); }
-        var msg = h('div', { 'class': 'qz-note cpc-msg', text: '從黃點或水藍點開始，一路畫到另一個端點，放開手指才判定' });
+        function clearNear() { mk.s.classList.remove('copycurve-near'); mk.e.classList.remove('copycurve-near'); }
+        var msg = h('div', { 'class': 'qz-note copycurve-msg', text: '從黃點或水藍點開始，一路畫到另一個端點，放開手指才判定' });
         msg.style.top = (top + PH + 12) + 'px';
         stage.appendChild(msg);
 
@@ -402,7 +403,7 @@
             console.log('[照抄曲線] 相似度 ' + sim.toFixed(4) + '％（真實 ' + raw.toFixed(6) + '），要求 ' + need.toFixed(4) + '％ → ' + (ok ? '過關' : '沒過'));
             drawn.setAttribute('d', pathD(pts));
             msg.textContent = '兩張圖疊在一起…';
-            stage.classList.add('cpc-stage--merge');
+            stage.classList.add('copycurve-stage--merge');
             api.after(1100, function () {
                 msg.innerHTML = '相似度 <b class="' + (ok ? 'qz-ok' : 'qz-bad') + '">' + sim.toFixed(4) + '％</b>（要求 ' + need.toFixed(4) + '％）';
                 kit.flash(stage, ok, api.my);
@@ -433,7 +434,7 @@
             }
             /* V1.34：手指碰到另一個端點附近不會自動判定（可能只是路過），只讓那個端點亮綠框提醒「放開就會判定」 */
             var lp = cur.pts[cur.pts.length - 1], oth = cur.anchor === 'start' ? q.end : q.start;
-            (cur.anchor === 'start' ? mk.e : mk.s).classList.toggle('cpc-near', kit.dist(lp.x, lp.y, oth.x, oth.y) <= END_R && lenOf(cur.pts) >= MIN_DRAW);
+            (cur.anchor === 'start' ? mk.e : mk.s).classList.toggle('copycurve-near', kit.dist(lp.x, lp.y, oth.x, oth.y) <= END_R && lenOf(cur.pts) >= MIN_DRAW);
             render();
         });
         /* 手指離開螢幕才判定：放開的位置在另一個端點附近（END_R 以內）、而且畫夠長（MIN_DRAW）→ 畫完了，比較相似度；否則筆跡清掉可以重畫（pointercancel 一律當作沒畫完） */

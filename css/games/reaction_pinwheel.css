@@ -1,0 +1,221 @@
+/* ═══════════════════════════════════════
+   reaction_pinwheel.css — 轉風車（js/reaction_pinwheel.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「pinwheel-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 轉風車（.pinwheel-）═══ */
+.pinwheel-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.pinwheel-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    touch-action: none;
+}
+
+.pinwheel-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 速度表：橫條；綠色範圍＝目標、紅色區＝危險、指針＝風車現在的轉速 */
+.pinwheel-gauge {
+    position: absolute;
+    height: 36px;
+    box-sizing: border-box;
+    background: var(--pwl-gauge);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    pointer-events: none;
+}
+
+.pinwheel-band {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: var(--pwl-band);
+    transition: background 0.1s;
+}
+
+.pinwheel-band--on {
+    background: var(--pwl-band-on);
+}
+
+.pinwheel-danger {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: var(--pwl-danger);
+}
+
+.pinwheel-needle {
+    position: absolute;
+    top: -9px;
+    width: 8px;
+    height: 48px;
+    margin-left: -4px;
+    background: var(--pwl-needle);
+    border: 2px solid var(--c-card);
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.pinwheel-needle--ok {
+    background: var(--c-ok);
+}
+
+.pinwheel-needle--bad {
+    background: var(--c-bad-light);
+}
+
+.pinwheel-gauge__lab {
+    position: absolute;
+    text-align: center;
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.pinwheel-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+    pointer-events: none;
+}
+
+.pinwheel-track {
+    fill: none;
+    stroke: var(--pwl-track);
+    stroke-width: 10;
+    stroke-dasharray: 4 14;
+    stroke-linecap: round;
+}
+
+.pinwheel-blade {
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+    stroke-linejoin: round;
+}
+
+.pinwheel-blade0 {
+    fill: var(--pwl-b0);
+}
+
+.pinwheel-blade1 {
+    fill: var(--pwl-b1);
+}
+
+.pinwheel-blade2 {
+    fill: var(--pwl-b2);
+}
+
+.pinwheel-blade3 {
+    fill: var(--pwl-b3);
+}
+
+.pinwheel-hub {
+    fill: var(--c-card);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+.pinwheel-pole {
+    fill: var(--pwl-pole);
+}
+
+/* 進度條 */
+.pinwheel-prog {
+    position: absolute;
+    height: 30px;
+    box-sizing: border-box;
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: 15px;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.pinwheel-prog__fill {
+    height: 100%;
+    width: 0;
+    background: var(--pwl-prog);
+}
+
+.pinwheel-prog__fill--on {
+    background: var(--c-ok);
+}
+
+.pinwheel-prog__lab {
+    position: absolute;
+    text-align: center;
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.pinwheel-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.pinwheel-info--ok {
+    color: var(--c-ok);
+}
+
+.pinwheel-info--bad {
+    color: var(--c-bad);
+}
+
+/* 揭曉：轉速折線圖 */
+.pinwheel-chart {
+    position: absolute;
+    pointer-events: none;
+}
+
+.pinwheel-chart svg {
+    display: block;
+}
+
+.pinwheel-chart__bg {
+    fill: var(--c-card);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+.pinwheel-chart__band {
+    fill: var(--pwl-band-on);
+}
+
+.pinwheel-chart__red {
+    stroke: var(--c-bad-light);
+    stroke-width: 2;
+    stroke-dasharray: 8 6;
+}
+
+.pinwheel-chart__curve {
+    fill: none;
+    stroke: var(--pwl-curve);
+    stroke-width: 3.5;
+    stroke-linejoin: round;
+}

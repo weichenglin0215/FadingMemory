@@ -1,0 +1,120 @@
+/* ═══════════════════════════════════════
+   reaction_swapeven.css — 換一張就平（js/reaction_swapeven.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「swapeven-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 換一張就平（.swapeven-）═══ */
+.swapeven-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.swapeven-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+}
+
+/* 綠色牌桌：兩排牌放在這一塊底板上 */
+.swapeven-table {
+    position: absolute;
+    background: var(--swe-felt);
+    border: 3px solid var(--swe-felt-edge);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+}
+
+/* 小朋友（臉＋對話泡泡）：寫著總和 */
+.swapeven-who {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+}
+
+.swapeven-face__head {
+    fill: var(--c-card);
+    stroke: var(--c-ink-soft);
+    stroke-width: 2;
+}
+
+.swapeven-face__eye {
+    fill: var(--c-ink);
+}
+
+.swapeven-face__mouth {
+    fill: none;
+    stroke: var(--c-ink);
+    stroke-width: 2.4;
+    stroke-linecap: round;
+}
+
+.swapeven-bub {
+    flex: 1;
+    padding: var(--sp-1) var(--sp-3);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-pill);
+    color: var(--c-ink);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    text-align: center;
+    transition: background 0.3s;
+}
+
+.swapeven-bub--ok {
+    background: var(--c-ok-light);
+    border-color: var(--c-ok);
+}
+
+.swapeven-bub--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad-light);
+    color: var(--c-bad);
+}
+
+/* 數字牌：白底大數字；點到的牌抬高並框橘色；換牌用 left／top 的過渡動畫 */
+.swapeven-card {
+    position: absolute;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    color: var(--c-ink);
+    font-weight: var(--fw-black);
+    line-height: 1;
+    cursor: pointer;
+    transition: left 0.5s ease-in-out, top 0.5s ease-in-out, transform 0.15s, border-color 0.15s;
+}
+
+.swapeven-card--sel {
+    border-color: var(--c-orange);
+    background: var(--c-card-alt);
+    transform: scale(1.08);
+    z-index: 2;
+}
+
+.swapeven-card--ans {
+    border-color: var(--c-ok);
+    background: var(--c-ok-light);
+    z-index: 3;
+}
+
+.swapeven-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+}

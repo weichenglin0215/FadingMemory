@@ -40,10 +40,10 @@ ok(T.ordinal(0) === '第 1 個' && T.ordinal(6) === '第 7 個', 'ordinal');
 // 偷吃步：只記字或只記墨色，猜中的機率
 { let g = 0, n = 2000; for (let i = 0; i < n; i++) { const q = T.makeLevel(24, rnd); if (q.q.type === 'word') { if (q.seq[q.q.idx].c === q.q.answer) g++; } else if (q.q.type === 'ink') { if (q.seq[q.q.idx].w === q.q.answer) g++; } } ok(g === 0, '把墨色當成字（或反過來）一定錯：兩者永遠不同'); }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_inkword.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 3800/.test(src) && /ikw-cell--ask/.test(src), '失敗：整串字並排、被問的標起來、停格 2 秒以上');
-  ok(/\.ikw-c--red \{[^}]*var\(--ikw-red\)/.test(css) && /\.ikw-bad \{[^}]*var\(--c-bad/.test(css), '六種顏色用 CSS 變數');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_inkword.js'), css = rd('../../css/games/reaction_inkword.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 3800/.test(src) && /inkword-cell--ask/.test(src), '失敗：整串字並排、被問的標起來、停格 2 秒以上');
+  ok(/\.inkword-c--red \{[^}]*var\(--ikw-red\)/.test(css) && /\.inkword-bad \{[^}]*var\(--c-bad/.test(css), '六種顏色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_inkword.js'") > 0 && /兩樣都要記/.test(G.rule), 'boot.js 有載入、玩法說明提到兩樣都要記'); }
-{ const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction6.css'), 'utf8'); T.COLORS.forEach(c => { ok(css.indexOf('.ikw-c--' + c.id + ' ') >= 0 && css.indexOf('.ikw-sw--' + c.id + ' ') >= 0, 'CSS 有 ' + c.id + ' 的字色與按鈕色'); }); }
+{ const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_inkword.css'), 'utf8'); T.COLORS.forEach(c => { ok(css.indexOf('.inkword-c--' + c.id + ' ') >= 0 && css.indexOf('.inkword-sw--' + c.id + ' ') >= 0, 'CSS 有 ' + c.id + ' 的字色與按鈕色'); }); }
 ok(T.rating(2) !== T.rating(4) && T.rating(4) !== T.rating(7) && T.rating(7) !== T.rating(12) && T.rating(12) !== T.rating(20), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

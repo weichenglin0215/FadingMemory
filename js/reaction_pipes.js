@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_pipes.js — 秒反應・接水管
+   樣式：css/games/reaction_pipes.css（這款專屬的 class 一律以「pipes-」開頭；共用元件在 css/reaction_common.css）
    點一格水管，它就順時針轉 90 度。把左上角水龍頭流出來的水，接到每一個水桶，而且不能漏水。每關有時間限制。
    ───────────────────────────────────────────────────────────────────
    · 一格水管用 4 個 bit 表示開口：N=1、E=2、S=4、W=8（rot 一次＝順時針 90 度：N→E→S→W→N）。
@@ -219,9 +220,9 @@
             /* level 目前關卡（先減 1，startLevel 會先加 1）；passed 已過幾關；L 這關資料；board 目前每格開口；state 目前階段；token 流水號；times 每關花的秒數 */
             var level = (startAt || 1) - 1, passed = level, L = null, board = null, state = 'idle', token = 0, times = [], t0 = 0, newRec = false;
             /* 建立畫面元素 */
-            var head = h('div', { 'class': 'pp-head', text: ' ' });
-            var banner = h('div', { 'class': 'pp-banner', text: ' ' });
-            var field = h('div', { 'class': 'pp-field' });
+            var head = h('div', { 'class': 'pipes-head', text: ' ' });
+            var banner = h('div', { 'class': 'pipes-banner', text: ' ' });
+            var field = h('div', { 'class': 'pipes-field' });
             var tb = kit.timebar();
             [head, banner, field, tb.el].forEach(function (x) { root.appendChild(x); });
             ctx.setMeta(Reaction.getBest(ID) != null ? '最佳 ' + Reaction.getBest(ID) + ' 關' : '');
@@ -233,27 +234,27 @@
             function build() {
                 field.innerHTML = ''; cellEls = [];
                 var W = L.N * CELL, Ht = L.N * CELL + FAUCET_H;
-                svg = kit.svg('svg', { 'class': 'pp-svg', viewBox: '0 0 ' + W + ' ' + Ht, preserveAspectRatio: 'xMidYMid meet' }, field);
+                svg = kit.svg('svg', { 'class': 'pipes-svg', viewBox: '0 0 ' + W + ' ' + Ht, preserveAspectRatio: 'xMidYMid meet' }, field);
                 /* 水龍頭（在左上角那格的上方）*/
                 var fx = L.faucet * CELL + CELL / 2;              /* 水龍頭在上排第 faucet 欄（每關隨機） */
-                kit.svg('line', { 'class': 'pp-source', x1: fx, y1: FAUCET_H - 18, x2: fx, y2: FAUCET_H }, svg);
-                kit.svg('rect', { 'class': 'pp-faucet', x: fx - 34, y: 6, width: 68, height: 22, rx: 8 }, svg);
-                kit.svg('rect', { 'class': 'pp-faucet', x: fx - 12, y: 24, width: 24, height: FAUCET_H - 40, rx: 4 }, svg);
+                kit.svg('line', { 'class': 'pipes-source', x1: fx, y1: FAUCET_H - 18, x2: fx, y2: FAUCET_H }, svg);
+                kit.svg('rect', { 'class': 'pipes-faucet', x: fx - 34, y: 6, width: 68, height: 22, rx: 8 }, svg);
+                kit.svg('rect', { 'class': 'pipes-faucet', x: fx - 12, y: 24, width: 24, height: FAUCET_H - 40, rx: 4 }, svg);
                 var g = kit.svg('g', { transform: 'translate(0,' + FAUCET_H + ')' }, svg);
                 for (var i = 0; i < L.N * L.N; i++) {
                     /* (function (i) {...})(i)：立即執行函式，讓每個格子的點擊事件記住自己的編號 */
                     (function (i) {
                         var x = (i % L.N) * CELL, y = Math.floor(i / L.N) * CELL;
-                        var cg = kit.svg('g', { 'class': 'pp-cell', transform: 'translate(' + x + ',' + y + ')' }, g);
-                        kit.svg('rect', { 'class': 'pp-tile' + (L.sol[i] ? '' : ' pp-tile--empty'), x: 2, y: 2, width: CELL - 4, height: CELL - 4, rx: 10 }, cg);
+                        var cg = kit.svg('g', { 'class': 'pipes-cell', transform: 'translate(' + x + ',' + y + ')' }, g);
+                        kit.svg('rect', { 'class': 'pipes-tile' + (L.sol[i] ? '' : ' pipes-tile--empty'), x: 2, y: 2, width: CELL - 4, height: CELL - 4, rx: 10 }, cg);
                         var lines = {}, leaks = {}, c = CELL / 2;
                         var ends = { 1: [c, 0], 2: [CELL, c], 4: [c, CELL], 8: [0, c] };
-                        DIRS.forEach(function (d) { lines[d] = kit.svg('line', { 'class': 'pp-pipe', x1: c, y1: c, x2: ends[d][0], y2: ends[d][1] }, cg); });
-                        var hub = kit.svg('circle', { 'class': 'pp-hub', cx: c, cy: c, r: 15 }, cg);
+                        DIRS.forEach(function (d) { lines[d] = kit.svg('line', { 'class': 'pipes-pipe', x1: c, y1: c, x2: ends[d][0], y2: ends[d][1] }, cg); });
+                        var hub = kit.svg('circle', { 'class': 'pipes-hub', cx: c, cy: c, r: 15 }, cg);
                         if (!L.sol[i]) hub.setAttribute('display', 'none');           /* 樹外的空格不畫水管中心 */
                         var bucket = null;
-                        if (L.buckets.indexOf(i) >= 0) bucket = kit.svg('circle', { 'class': 'pp-bucket', cx: c, cy: c, r: 26 }, cg);
-                        DIRS.forEach(function (d) { leaks[d] = kit.svg('circle', { 'class': 'pp-leak', cx: ends[d][0] + (d === 2 ? -6 : d === 8 ? 6 : 0), cy: ends[d][1] + (d === 4 ? -6 : d === 1 ? 6 : 0), r: 8 }, cg); });
+                        if (L.buckets.indexOf(i) >= 0) bucket = kit.svg('circle', { 'class': 'pipes-bucket', cx: c, cy: c, r: 26 }, cg);
+                        DIRS.forEach(function (d) { leaks[d] = kit.svg('circle', { 'class': 'pipes-leak', cx: ends[d][0] + (d === 2 ? -6 : d === 8 ? 6 : 0), cy: ends[d][1] + (d === 4 ? -6 : d === 1 ? 6 : 0), r: 8 }, cg); });
                         /* 點一格就轉一下 */
                         cg.addEventListener('pointerdown', function (e) { e.preventDefault(); turn(i); });
                         cellEls[i] = { g: cg, lines: lines, leaks: leaks, bucket: bucket };
@@ -272,7 +273,7 @@
                         e.lines[d].setAttribute('display', (board[i] & d) ? 'inline' : 'none');
                         e.leaks[d].setAttribute('display', leakSet[i + ':' + d] ? 'inline' : 'none');
                     });
-                    e.g.setAttribute('class', 'pp-cell' + (f.wet[i] ? ' pp-cell--wet' : '') + (board[i] ? ' pp-cell--pipe' : ''));
+                    e.g.setAttribute('class', 'pipes-cell' + (f.wet[i] ? ' pipes-cell--wet' : '') + (board[i] ? ' pipes-cell--pipe' : ''));
                 }
                 var full = L.buckets.filter(function (b) { return f.wet[b]; }).length;
                 banner.textContent = '水桶 ' + full + '／' + L.buckets.length + (f.leaks.length ? '　漏水 ' + f.leaks.length + ' 處' : '');

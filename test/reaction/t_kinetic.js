@@ -85,12 +85,12 @@ ok(Object.keys(ST.byCars).length >= 3 && Object.keys(ST.targetPos).length === T.
 { const t0 = Date.now(); for (let i = 0; i < 3000; i++) T.makeLevel(30, rnd); ok((Date.now() - t0) / 3000 < 1, '出題夠快'); const a = T.makeLevel(12, rng(99)), b = T.makeLevel(12, rng(99)); ok(JSON.stringify(a) === JSON.stringify(b), '同種子同題目'); }
 
 // ── 程式裡的接線 ──
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_kinetic.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: REVERSE_MS \+ ZOOM_MS \+ 2600/.test(src) && T.REVERSE_MS + T.ZOOM_MS + 2600 >= 2000 && /knt-sticker--zoom/.test(src) && /kit\.easeOutCubic/.test(src), '揭曉：火車倒車、貼紙放大、失敗停格 2 秒以上');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_kinetic.js'), css = rd('../../css/games/reaction_kinetic.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: REVERSE_MS \+ ZOOM_MS \+ 2600/.test(src) && T.REVERSE_MS + T.ZOOM_MS + 2600 >= 2000 && /kinetic-sticker--zoom/.test(src) && /kit\.easeOutCubic/.test(src), '揭曉：火車倒車、貼紙放大、失敗停格 2 秒以上');
   ok(src.includes('endX = -(T.total + TAIL_PAD)') && src.includes('passSeconds(W, T.total + TAIL_PAD, v)') && src.includes('i < q.cars - 1'), '火車多走 TAIL_PAD 才算開出畫面、最後一節不畫連結器');
   ok(/phase === 'ask'/.test(src) && /api\.timer\(ANSWER_S/.test(src) && /api\.solve = /.test(src) && /api\.wrong = /.test(src), '火車開走才出現選項、有作答時限、solve／wrong 只在作答階段有效');
-  ok(/\.knt-sticker \{[^}]*var\(--knt-sticker\)/.test(css) && /\.knt-ok \{[^}]*var\(--c-ok/.test(css) && /\.knt-bad \{[^}]*var\(--c-bad-light\)/.test(css) && /\.knt-band \{[^}]*var\(--knt-band\)/.test(css), '貼紙、選項顏色、車身用 CSS 變數');
-  ok(/\.knt-field \{[^}]*overflow: hidden/.test(css) && /\.knt-train \{[^}]*will-change: transform/.test(css), '火車超出畫面的部分藏起來');
+  ok(/\.kinetic-sticker \{[^}]*var\(--knt-sticker\)/.test(css) && /\.kinetic-ok \{[^}]*var\(--c-ok/.test(css) && /\.kinetic-bad \{[^}]*var\(--c-bad-light\)/.test(css) && /\.kinetic-band \{[^}]*var\(--knt-band\)/.test(css), '貼紙、選項顏色、車身用 CSS 變數');
+  ok(/\.kinetic-field \{[^}]*overflow: hidden/.test(css) && /\.kinetic-train \{[^}]*will-change: transform/.test(css), '火車超出畫面的部分藏起來');
   ok(boot.indexOf("'js/reaction_kinetic.js'") > 0 && /0\.5 秒/.test(G.rule), 'boot.js 有載入、玩法說明提到 0.5 秒'); }
 ok(T.rating(1) !== T.rating(4) && T.rating(4) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20) !== T.rating(30), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

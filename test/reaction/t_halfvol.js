@@ -55,8 +55,8 @@ console.log('最小 h* 與一半高度差距比例 ' + minGap.toFixed(3));
   for (const y of [60, 200, 333]) { const exact = (100 * y - 60 * y * y / (2 * H)) / (100 * H - 30 * H) * 100 - 50; ok(Math.abs(T.signedPct(lin, y) - exact) < 0.2, '梯形剪影面積公式解 ' + y + '：' + T.signedPct(lin, y).toFixed(3) + ' vs ' + exact.toFixed(3)); } }
 ok(T.REVEAL_PAUSE_MS === 2000, '動畫結束（水停住、綠線出現）後停 2 秒才結算');
 { const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_halfvol.js'), 'utf8');
-  ok(src.indexOf('refHalfH') < 0 && src.indexOf('hv-ref--h') < 0, '取消灰色的一半高度虛線');
-  ok(src.indexOf('Wl = target * e') > 0 && src.indexOf('hv-diff') > 0 && src.indexOf('signedPct(cfg.cum, Wl)') > 0, '水位從 0 升到藍線，水面下方即時顯示差異');
+  ok(src.indexOf('refHalfH') < 0 && src.indexOf('halfvol-ref--h') < 0, '取消灰色的一半高度虛線');
+  ok(src.indexOf('Wl = target * e') > 0 && src.indexOf('halfvol-diff') > 0 && src.indexOf('signedPct(cfg.cum, Wl)') > 0, '水位從 0 升到藍線，水面下方即時顯示差異');
   ok(src.indexOf("refHalfV.setAttribute('opacity', 1)") > src.indexOf('Wl = target; paint(); showDiff();'), '水面停住之後才出現綠線');
   ok(src.indexOf('my.after(REVEAL_PAUSE_MS') > src.indexOf("refHalfV.setAttribute('opacity', 1)") && src.indexOf('sign: sgn') > 0, '綠線之後才停頓並結算，結算帶正負號');
   const kit2 = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_kit2.js'), 'utf8');

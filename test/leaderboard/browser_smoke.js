@@ -198,7 +198,7 @@
         /* 不可能任務：點一下開始下墜，等照片離警戒線只剩 0.3～14.7px（成功要在 15px 內；每個畫面約移動 13px，視窗寬 14px 保證至少有一個畫面落在裡面）再點第二下。
            注意：摔到警戒線（沒點第二下）不會送榜（距離 0 公分不能算成績），所以這種情況 reached 會是 false，那是正確的 */
         impossible: { ms: 60000, run: async function (W) {
-            var field = W.document.querySelector('.imp-field'), t = function (type) {
+            var field = W.document.querySelector('.impossible-field'), t = function (type) {
                 var b = field.getBoundingClientRect();
                 field.dispatchEvent(new W.PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 1, pointerType: 'touch', isPrimary: true, clientX: b.left + b.width / 2, clientY: b.top + b.height / 2, button: 0, buttons: 1, view: W }));
             };
@@ -206,7 +206,7 @@
             await new Promise(function (res) {
                 var n = 0, iv = W.setInterval(function () {
                     n++;
-                    var img = field.querySelector('image'), bar = field.querySelector('.imp-bar-rect');
+                    var img = field.querySelector('image'), bar = field.querySelector('.impossible-bar-rect');
                     var gap = parseFloat(bar.getAttribute('y')) - (parseFloat(img.getAttribute('y')) + parseFloat(img.getAttribute('height')));
                     if (gap > 0.3 && gap < 14.7) { W.clearInterval(iv); t('pointerdown'); res(); }
                     if (gap <= 0 || n > 20000) { W.clearInterval(iv); res(); }

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_landolt.js — 秒反應・E視力檢查（E 字視力表）
+   樣式：css/games/reaction_landolt.css（這款專屬的 class 一律以「landolt-」開頭；共用元件在 css/reaction_common.css）
    中央一個「E」字，開口（三隻腳）朝哪就往哪滑；每換一次方向，E 就縮小成 90%，
    看你能看清楚多小的 E。只要錯一次（滑錯方向或超時）就結束。
    ───────────────────────────────────────────────────────────────────
@@ -82,8 +83,8 @@
        所以旋轉 dir−90 度。5×5 格：脊柱在最左一格，三隻腳在第 1、3、5 列。 */
     function eSvg(D, dir) {
         var u = D / 5;
-        var svg = kit.svg('svg', { 'class': 'ld-ring', viewBox: (-D / 2) + ' ' + (-D / 2) + ' ' + D + ' ' + D, width: D, height: D });
-        var g = kit.svg('g', { transform: 'rotate(' + (dir - 90) + ')', 'class': 'ld-e' }, svg);
+        var svg = kit.svg('svg', { 'class': 'landolt-ring', viewBox: (-D / 2) + ' ' + (-D / 2) + ' ' + D + ' ' + D, width: D, height: D });
+        var g = kit.svg('g', { transform: 'rotate(' + (dir - 90) + ')', 'class': 'landolt-e' }, svg);
         var x0 = -D / 2, y0 = -D / 2;
         kit.svg('rect', { x: x0, y: y0, width: u, height: D }, g);                       /* 脊柱 */
         [0, 2, 4].forEach(function (row) {
@@ -121,9 +122,9 @@
             var cur = null;          /* 目前的 E：{dir, t0, limitMs, timer} */
             var start = null;        /* 目前這一筆手指的起點 */
 
-            var head = h('div', { 'class': 'ld-head' });
+            var head = h('div', { 'class': 'landolt-head' });
             var hint = h('div', { 'class': 'hint', text: '準備…' });
-            var field = h('div', { 'class': 'ld-field' });
+            var field = h('div', { 'class': 'landolt-field' });
             var barWrap = h('div', { 'class': 'ld-time' }, [h('div', { 'class': 'ld-time__fill' })]);
             var fill = barWrap.firstChild;
             root.appendChild(head);
@@ -174,8 +175,8 @@
                 fill.style.width = '0%';
                 var ok = chosen === cur.dir;
                 if (chosen != null) rts.push(t - cur.t0);
-                var e = field.querySelector('.ld-e');
-                if (e) e.classList.add(ok ? 'ld-e--ok' : 'ld-e--bad');
+                var e = field.querySelector('.landolt-e');
+                if (e) e.classList.add(ok ? 'landolt-e--ok' : 'landolt-e--bad');
                 if (ok) { passed++; Sfx.play('ok'); } else { Sfx.play('bad'); }
 
                 my.after(ok ? GAP_AFTER_MS : 900, function () {

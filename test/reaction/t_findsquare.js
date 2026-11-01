@@ -61,9 +61,9 @@ ok(epsRange[0] >= T.EPS_NONSQ && epsRange[1] <= T.DECOY_MAX[0] + 1e-9, '誘餌 e
 // 效能
 for (const lv of [1, 12, 24, 40]) { const t0 = Date.now(); let worst = 0; for (let i = 0; i < 30; i++) { const t1 = Date.now(); T.makeLevel(lv, rnd); worst = Math.max(worst, Date.now() - t1); } const per = (Date.now() - t0) / 30; console.log('第' + lv + '關 出題平均 ' + per.toFixed(1) + ' 毫秒、最慢 ' + worst); ok(per < 150 && worst < 800, '第 ' + lv + ' 關出題夠快：' + per.toFixed(1) + '／' + worst); }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_findsquare.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 4200/.test(src) && /describeQuad/.test(src) && /fsq-line--true/.test(src), '失敗停格 4 秒以上、說明哪裡不像、再畫真正方形');
-  ok(/\.fsq-line--true \{[^}]*var\(--c-ok\)/.test(css) && /\.fsq-line--bad \{[^}]*var\(--c-bad-light\)/.test(css) && /\.fsq-sky \{[^}]*var\(--fsq-sky\)/.test(css), '綠色、紅色、夜空用 CSS 變數');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_findsquare.js'), css = rd('../../css/games/reaction_findsquare.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 4200/.test(src) && /describeQuad/.test(src) && /findsquare-line--true/.test(src), '失敗停格 4 秒以上、說明哪裡不像、再畫真正方形');
+  ok(/\.findsquare-line--true \{[^}]*var\(--c-ok\)/.test(css) && /\.findsquare-line--bad \{[^}]*var\(--c-bad-light\)/.test(css) && /\.findsquare-sky \{[^}]*var\(--fsq-sky\)/.test(css), '綠色、紅色、夜空用 CSS 變數');
   ok(boot.indexOf("'js/reaction_findsquare.js'") > 0 && /斜/.test(G.rule), 'boot.js 有載入、玩法說明提到斜的'); }
 ok(/^M/.test(T.starPath(10)) && T.starPath(10).split(' L').length === 10, '星星的 path 有 10 個頂點');
 // V1.38.0 玩家意見：前面的關卡正方形要大（第 7 關在手機上就很難辨識）：邊長隨關卡線性縮小，第 1 關 240～270，到頂回到原本的 100～190

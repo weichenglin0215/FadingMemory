@@ -1,0 +1,112 @@
+/* ═══════════════════════════════════════
+   reaction_backnum.css — 倒背數字（js/reaction_backnum.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「backnum-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 倒背數字：先看電腦依序亮起的數字，再「倒過來」點回去。 */
+/* ═══ 倒背數字（.backnum-）═══ */
+.backnum-head {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+}
+
+/* 中間的提示橫幅（「記住！」「輪到你」「答對了」…），三種狀態用不同顏色 */
+.backnum-banner {
+    min-height: 1.5em;
+    text-align: center;
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.backnum-banner--go {
+    color: var(--c-ok);
+}
+
+.backnum-banner--ok {
+    color: var(--c-ok);
+}
+
+.backnum-banner--bad {
+    color: var(--c-bad);
+}
+
+/* 3×3 的數字鍵盤；aspect-ratio:1/1 讓寬高永遠一樣（正方形） */
+.backnum-grid {
+    flex: none;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 12px;
+}
+
+/* 單顆數字鍵 */
+.backnum-cell {
+    min-width: 0;
+    padding: 0;
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    background: var(--c-card);
+    color: var(--c-ink);
+    font-family: var(--font-ui);
+    font-size: 96px;
+    font-weight: var(--fw-black);
+    line-height: 1;
+    box-shadow: var(--shadow-card);
+}
+
+/* 電腦示範時亮起的那一顆（黃色，微微放大 scale(1.05)） */
+.backnum-cell--lit {
+    background: var(--c-yellow);
+    border-color: var(--c-yellow);
+    color: var(--c-on-accent);
+    transform: scale(1.05);
+}
+
+/* 玩家點對（綠） */
+.backnum-cell--ok {
+    background: var(--c-ok);
+    border-color: var(--c-ok);
+    color: var(--c-on-accent);
+}
+
+/* 玩家點錯（橘） */
+.backnum-cell--bad {
+    background: var(--c-bad);
+    border-color: var(--c-bad);
+    color: var(--c-on-accent);
+}
+
+/* 開場說明的全螢幕蓋板：absolute+inset:0 蓋滿整個遊戲畫面，z-index:5 讓它浮在上面 */
+.backnum-splash {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: var(--c-paper);
+}
+
+/* 蓋板上的大字 */
+.backnum-splash__big {
+    font-size: 100px;
+    font-weight: var(--fw-black);
+    line-height: 1.1;
+    color: var(--c-orange);
+}
+
+/* 蓋板上的小字 */
+.backnum-splash__small {
+    margin-top: 24px;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}

@@ -1,0 +1,298 @@
+/* ═══════════════════════════════════════
+   reaction_seesaw.css — 蹺蹺板比重（js/reaction_seesaw.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「seesaw-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 蹺蹺板比重（.seesaw-）═══ */
+.seesaw-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 這一關專用的容器（換關時整個丟掉，事件監聽也跟著丟掉） */
+.seesaw-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    touch-action: none;
+}
+
+.seesaw-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+.seesaw-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* 支點（三角形）與木板（會依重量差傾斜，角度由 JS 的彈簧動畫設定） */
+.seesaw-pivot {
+    position: absolute;
+    width: 80px;
+    height: 72px;
+    background: var(--c-ink-soft);
+    clip-path: polygon(50% 0, 0 100%, 100% 100%);
+}
+
+.seesaw-board {
+    position: absolute;
+    height: 16px;
+    background: var(--sea-plank);
+    border-radius: var(--r-sm);
+    box-shadow: var(--shadow-card);
+    transform-origin: 50% 50%;
+}
+
+/* 動物：坐在木板上（bottom 讓牠站在板子上面）；大小由 JS 依重量設定（越重越大）；被手指拿起來時放大一點 */
+.seesaw-an {
+    position: absolute;
+    bottom: 12px;
+    cursor: grab;
+    touch-action: none;
+    transition: left 0.28s ease-out;
+}
+
+/* 被固定、不能拖動的動物：虛線圈住，游標不是小手 */
+.seesaw-an--pin {
+    cursor: default;
+    outline: 3px dashed var(--c-ink-soft);
+    outline-offset: 1px;
+    border-radius: 50%;
+}
+
+.seesaw-pintag {
+    position: absolute;
+    left: 50%;
+    top: -42px;
+    /* 放在重量數字圈的上面：放下面會蓋住木板上離支點幾格的刻度數字 */
+    transform: translateX(-50%);
+    padding: 0 6px;
+    background: var(--c-ink-soft);
+    color: var(--c-card);
+    border-radius: var(--r-sm);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 22px;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* 座位的刻度：木板下面寫著離支點幾格（隨木板一起傾斜） */
+.seesaw-slot {
+    position: absolute;
+    top: 20px;
+    width: 28px;
+    text-align: center;
+    color: var(--c-ink-soft);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1;
+    pointer-events: none;
+}
+
+.seesaw-slot::before {
+    content: '';
+    position: absolute;
+    left: 13px;
+    top: -12px;
+    width: 2px;
+    height: 8px;
+    background: var(--c-ink-soft);
+}
+
+/* 拖曳時：放開會坐到的座位（虛線圓圈） */
+.seesaw-aim {
+    position: absolute;
+    bottom: 12px;
+    border: 3px dashed var(--c-orange);
+    border-radius: 50%;
+    box-sizing: border-box;
+    pointer-events: none;
+}
+
+/* 失敗揭曉：平衡的放法裡，該動物應該坐的座位（綠色虛線圓圈，裡面是重量） */
+.seesaw-ghost {
+    position: absolute;
+    bottom: 12px;
+    border: 3px dashed var(--c-ok);
+    border-radius: 50%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--c-ok);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-black);
+    pointer-events: none;
+}
+
+.seesaw-an--held {
+    transition: none;
+    cursor: grabbing;
+    transform: scale(1.18);
+}
+
+.seesaw-an--drop {
+    animation: seesaw-bounce 0.45s ease-out;
+}
+
+@keyframes seesaw-bounce {
+    0% {
+        transform: translateY(-26px);
+    }
+
+    55% {
+        transform: translateY(0) scaleY(0.88);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}
+
+/* 失敗揭曉：該搬的動物圍上綠框 */
+.seesaw-an--move {
+    outline: 4px solid var(--c-ok);
+    outline-offset: 2px;
+    border-radius: 50%;
+}
+
+.seesaw-face {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.seesaw-head,
+.seesaw-ear {
+    fill: var(--sea-fur);
+    stroke: var(--c-ink);
+    stroke-width: 2;
+    stroke-linejoin: round;
+}
+
+.seesaw-ear--dark {
+    fill: var(--c-ink);
+}
+
+.seesaw-ear--dark2 {
+    fill: var(--sea-dog-ear);
+}
+
+.seesaw-patch,
+.seesaw-eye,
+.seesaw-nose {
+    fill: var(--c-ink);
+}
+
+.seesaw-snout {
+    fill: var(--sea-pig-snout);
+    stroke: var(--c-ink);
+    stroke-width: 1.5;
+}
+
+.seesaw-beak {
+    fill: var(--c-orange);
+    stroke: var(--c-ink);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+}
+
+.seesaw-whisker,
+.seesaw-mouth,
+.seesaw-smile {
+    fill: none;
+    stroke: var(--c-ink);
+    stroke-linecap: round;
+}
+
+.seesaw-whisker {
+    stroke-width: 1.5;
+}
+
+.seesaw-mouth {
+    stroke-width: 2;
+    opacity: 0.7;
+}
+
+/* 平衡時動物們都笑了：笑臉平常是藏起來的 */
+.seesaw-smile {
+    stroke-width: 3;
+    display: none;
+}
+
+.seesaw-happy .seesaw-smile {
+    display: inline;
+}
+
+.seesaw-happy .seesaw-mouth {
+    display: none;
+}
+
+.seesaw-an--bear {
+    --sea-fur: var(--sea-bear);
+}
+
+.seesaw-an--pig {
+    --sea-fur: var(--sea-pig);
+}
+
+.seesaw-an--dog {
+    --sea-fur: var(--sea-dog);
+}
+
+.seesaw-an--cat {
+    --sea-fur: var(--sea-cat);
+}
+
+.seesaw-an--rabbit {
+    --sea-fur: var(--sea-rabbit);
+}
+
+.seesaw-an--chick {
+    --sea-fur: var(--sea-chick);
+}
+
+.seesaw-an--panda {
+    --sea-fur: var(--sea-panda);
+}
+
+/* 動物身上的重量數字（一直顯示在頭上） */
+.seesaw-badge {
+    position: absolute;
+    left: 50%;
+    top: -14px;
+    transform: translateX(-50%);
+    min-width: 28px;
+    height: 28px;
+    padding: 0 4px;
+    box-sizing: border-box;
+    background: var(--c-card);
+    border: 2px solid var(--c-ink);
+    border-radius: var(--r-pill);
+    color: var(--c-ink);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    pointer-events: none;
+}

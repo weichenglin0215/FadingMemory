@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_swapeven.js — 秒反應・換一張就平（企劃 252）
+   樣式：css/games/reaction_swapeven.css（這款專屬的 class 一律以「swapeven-」開頭；共用元件在 css/reaction_common.css）
    兩個小朋友各拿一排數字牌，頭上的對話泡泡寫著各自的總和（例如 上 43、下 37）。
    **上排點一張、下排點一張，兩張交換**，交換後兩排的總和要一樣。答案唯一。
    ───────────────────────────────────────────────────────────────────
@@ -101,7 +102,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'swe-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'swapeven-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -111,11 +112,11 @@
 
     /* 小朋友的臉：圓臉、兩個眼睛、微笑（SVG） */
     function face(parent) {
-        var s = kit.svg('svg', { 'class': 'swe-face', viewBox: '0 0 40 40', width: 44, height: 44 }, parent);
-        kit.svg('circle', { 'class': 'swe-face__head', cx: 20, cy: 20, r: 17 }, s);
-        kit.svg('circle', { 'class': 'swe-face__eye', cx: 14, cy: 17, r: 2.4 }, s);
-        kit.svg('circle', { 'class': 'swe-face__eye', cx: 26, cy: 17, r: 2.4 }, s);
-        kit.svg('path', { 'class': 'swe-face__mouth', d: 'M12 25 Q20 32 28 25' }, s);
+        var s = kit.svg('svg', { 'class': 'swapeven-face', viewBox: '0 0 40 40', width: 44, height: 44 }, parent);
+        kit.svg('circle', { 'class': 'swapeven-face__head', cx: 20, cy: 20, r: 17 }, s);
+        kit.svg('circle', { 'class': 'swapeven-face__eye', cx: 14, cy: 17, r: 2.4 }, s);
+        kit.svg('circle', { 'class': 'swapeven-face__eye', cx: 26, cy: 17, r: 2.4 }, s);
+        kit.svg('path', { 'class': 'swapeven-face__mouth', d: 'M12 25 Q20 32 28 25' }, s);
         return s;
     }
 
@@ -128,17 +129,17 @@
         var W = stage.clientWidth || 472, gap = 6, cw = Math.min(78, Math.floor((W - 16 - (k - 1) * gap) / k)), ch = Math.round(cw * 1.35);
         var x0 = Math.round((W - (k * cw + (k - 1) * gap)) / 2);
         var yA = 144, yB = yA + ch + 112;
-        var tip = h('div', { 'class': 'qz-note swe-tip', text: '上下各點一張交換，讓兩排總和一樣' });
+        var tip = h('div', { 'class': 'qz-note swapeven-tip', text: '上下各點一張交換，讓兩排總和一樣' });
         stage.appendChild(tip);
-        stage.appendChild(h('div', { 'class': 'swe-table' }));
+        stage.appendChild(h('div', { 'class': 'swapeven-table' }));
         stage.lastChild.style.cssText = 'left:6px;right:6px;top:' + (yA - 16) + 'px;height:' + (yB + ch + 16 - (yA - 16)) + 'px;';
 
         /* 對話泡泡（總和）：小朋友的臉＋泡泡 */
         function bubble(top, who, sum0) {
-            var wrap = h('div', { 'class': 'swe-who' });
+            var wrap = h('div', { 'class': 'swapeven-who' });
             wrap.style.top = top + 'px';
             face(wrap);
-            var b = h('div', { 'class': 'swe-bub', text: who + ' 總和 ' + sum0 });
+            var b = h('div', { 'class': 'swapeven-bub', text: who + ' 總和 ' + sum0 });
             wrap.appendChild(b);
             stage.appendChild(wrap);
             return b;
@@ -149,7 +150,7 @@
         var cards = [[], []], sel = [-1, -1], locked = false;
         [A, B].forEach(function (arr, row) {
             arr.forEach(function (v, idx) {
-                var el = h('div', { 'class': 'swe-card', text: String(v) });
+                var el = h('div', { 'class': 'swapeven-card', text: String(v) });
                 var p = pos(row, idx);
                 el.style.cssText = 'left:' + p.left + 'px;top:' + p.top + 'px;width:' + cw + 'px;height:' + ch + 'px;font-size:' + Math.round(cw * (q.V >= 10 ? 0.46 : 0.58)) + 'px;';
                 stage.appendChild(el);
@@ -157,7 +158,7 @@
                 kit.onTap(el, function () { choose(row, idx); });
             });
         });
-        var info = h('div', { 'class': 'qz-note swe-info', text: '' });
+        var info = h('div', { 'class': 'qz-note swapeven-info', text: '' });
         info.style.top = (yB + ch + 100) + 'px';
         stage.appendChild(info);
         api.timer(timeMs(level), function () { timeout(); });
@@ -165,9 +166,9 @@
 
         function choose(row, idx) {
             if (locked || api.over) return;
-            if (sel[row] === idx) { sel[row] = -1; cards[row][idx].classList.remove('swe-card--sel'); return; }
-            if (sel[row] >= 0) cards[row][sel[row]].classList.remove('swe-card--sel');
-            sel[row] = idx; cards[row][idx].classList.add('swe-card--sel');
+            if (sel[row] === idx) { sel[row] = -1; cards[row][idx].classList.remove('swapeven-card--sel'); return; }
+            if (sel[row] >= 0) cards[row][sel[row]].classList.remove('swapeven-card--sel');
+            sel[row] = idx; cards[row][idx].classList.add('swapeven-card--sel');
             Sfx.play('click');
             if (sel[0] >= 0 && sel[1] >= 0) doSwap(sel[0], sel[1]);
         }
@@ -180,7 +181,7 @@
             var sA2 = q.sA - a + b, sB2 = q.sB - b + a, ok = sA2 === sB2;
             api.after(560, function () {
                 bubA.textContent = '上排 總和 ' + sA2; bubB.textContent = '下排 總和 ' + sB2;
-                bubA.classList.add(ok ? 'swe-bub--ok' : 'swe-bub--bad'); bubB.classList.add(ok ? 'swe-bub--ok' : 'swe-bub--bad');
+                bubA.classList.add(ok ? 'swapeven-bub--ok' : 'swapeven-bub--bad'); bubB.classList.add(ok ? 'swapeven-bub--ok' : 'swapeven-bub--bad');
                 if (ok) {
                     info.textContent = '兩排都是 ' + sA2 + '，一樣了！（換的是差 ' + Math.abs(a - b) + ' 的兩張）';
                     kit.flash(stage, true, api.my);
@@ -202,7 +203,7 @@
         function explainLong() { var d = Math.abs(q.sA - q.sB); return '兩排差 ' + d + '，要換「差的一半」' + (d / 2) + ' 的兩張：' + A[q.ans.i] + ' 和 ' + B[q.ans.j]; }
         /* 標出正確的兩張牌（綠框；牌會跟著動畫換位，所以標在牌上） */
         function reveal() {
-            cards[0][q.ans.i].classList.add('swe-card--ans'); cards[1][q.ans.j].classList.add('swe-card--ans');
+            cards[0][q.ans.i].classList.add('swapeven-card--ans'); cards[1][q.ans.j].classList.add('swapeven-card--ans');
         }
         function timeout() {
             if (locked || api.over) return;

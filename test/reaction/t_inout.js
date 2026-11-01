@@ -72,9 +72,9 @@ ok(deepOk / deepTot > 0.9, '絕大多數題目都達到深度下限：' + (100 *
 // 效能
 for (const lv of [1, 12, 24, 40]) { const t0 = Date.now(); let worst = 0; for (let i = 0; i < 100; i++) { const t1 = Date.now(); T.makeLevel(lv, rnd); worst = Math.max(worst, Date.now() - t1); } const per = (Date.now() - t0) / 100; console.log('第' + lv + '關 出題平均 ' + per.toFixed(2) + ' 毫秒、最慢 ' + worst); ok(per < 80 && worst < 300, '第 ' + lv + ' 關出題夠快：' + per.toFixed(2) + '／' + worst); }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_inout.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 3000/.test(src) && /iof-fill--show/.test(src), '失敗停格 3 秒、裡面塗上淡綠色');
-  ok(/\.iof-fill \{[^}]*var\(--c-ok/.test(css) && /\.iof-rope \{[^}]*var\(--iof-rope\)/.test(css) && /\.iof-btn--ok \{[^}]*var\(--c-ok/.test(css), '綠色、紅色繩子用 CSS 變數');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_inout.js'), css = rd('../../css/games/reaction_inout.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 3000/.test(src) && /inout-fill--show/.test(src), '失敗停格 3 秒、裡面塗上淡綠色');
+  ok(/\.inout-fill \{[^}]*var\(--c-ok/.test(css) && /\.inout-rope \{[^}]*var\(--iof-rope\)/.test(css) && /\.inout-btn--ok \{[^}]*var\(--c-ok/.test(css), '綠色、紅色繩子用 CSS 變數');
   ok(boot.indexOf("'js/reaction_inout.js'") > 0 && /螞蟻/.test(G.rule), 'boot.js 有載入、玩法說明提到螞蟻'); }
 // ── V1.36.0 玩家意見：線條太規則整齊 → 不均勻的格線＋整條扭曲成不規則的曲線；螞蟻縮小成一半 ──
 ok(T.ANT_SIZE <= 0.45 && T.ANT_SIZE > 0.2, '螞蟻大小是格子的 ' + T.ANT_SIZE + ' 倍（原本 0.9 的一半）');

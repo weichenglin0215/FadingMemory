@@ -1,0 +1,81 @@
+/* ═══════════════════════════════════════
+   reaction_flashlight.css — 手電筒猜圖（js/reaction_flashlight.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「flashlight-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 誰在偷偷動（.snk-）═══ */
+.flashlight-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+}
+
+/* ═══ 手電筒猜圖（.flashlight-）═══ */
+.flashlight-stage {
+    background: var(--dk-bg);
+}
+
+.flashlight-bg {
+    fill: var(--dk-bg);
+}
+
+/* 被光照到的圖案：fill 一定要設成 currentColor——圖案是從 picSvg 的 <svg fill="currentColor"> 裡取出內容放進這個 <g>，
+   外面那層 <svg> 的 fill 帶不過來，不設的話圖案預設是黑色、跟全黑的底一樣，拖曳時只看到一片黑（V1.29 玩家意見修正） */
+.flashlight-pic {
+    color: var(--flt-pic);
+    fill: currentColor;
+}
+
+.flashlight-cover {
+    fill: var(--dk-bg);
+}
+
+.flashlight-ring {
+    fill: none;
+    stroke: var(--c-card);
+    stroke-width: 3;
+    opacity: 0.7;
+}
+
+.flashlight-scan circle {
+    fill: var(--c-yellow);
+    opacity: 0.12;
+}
+
+.flashlight-svg {
+    pointer-events: none;
+}
+
+.flashlight-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 500px;
+    padding: 0 var(--sp-2);
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-paper);
+    line-height: var(--lh-body);
+}
+
+.flashlight-opt {
+    color: var(--c-ink);
+}
+
+.flashlight-opt svg {
+    width: 62px;
+    height: 62px;
+}
+
+.flashlight-opt--right {
+    background: var(--c-ok-soft);
+    border-color: var(--c-ok);
+}
+
+.flashlight-opt--wrong {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad);
+}

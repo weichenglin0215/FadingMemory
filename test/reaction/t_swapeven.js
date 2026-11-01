@@ -59,9 +59,9 @@ ok(Object.keys(rowsCount).length >= 20, '答案牌的位置分散：' + Object.k
 // 效能
 for (const lv of [1, 6, 12, 24, 40]) { const t0 = Date.now(); let worst = 0; for (let i = 0; i < 100; i++) { const t1 = Date.now(); T.makeLevel(lv, rnd); worst = Math.max(worst, Date.now() - t1); } const per = (Date.now() - t0) / 100; console.log('第' + lv + '關 出題平均 ' + per.toFixed(2) + ' 毫秒、最慢 ' + worst); ok(per < 20 && worst < 200, '第 ' + lv + ' 關出題夠快：' + per.toFixed(2) + '／' + worst); }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_swapeven.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 3600/.test(src) && /swe-card--ans/.test(src), '失敗停格 3 秒以上、綠框標出正確的牌');
-  ok(/\.swe-card--ans \{[^}]*var\(--c-ok\)/.test(css) && /\.swe-bub--bad \{[^}]*var\(--c-bad/.test(css), '綠框、紅字用 CSS 變數');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_swapeven.js'), css = rd('../../css/games/reaction_swapeven.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 3600/.test(src) && /swapeven-card--ans/.test(src), '失敗停格 3 秒以上、綠框標出正確的牌');
+  ok(/\.swapeven-card--ans \{[^}]*var\(--c-ok\)/.test(css) && /\.swapeven-bub--bad \{[^}]*var\(--c-bad/.test(css), '綠框、紅字用 CSS 變數');
   ok(boot.indexOf("'js/reaction_swapeven.js'") > 0 && /差的一半/.test(G.rule), 'boot.js 有載入、玩法說明提到差的一半'); }
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20) !== T.rating(30), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

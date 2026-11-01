@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_wirelink.js — 秒反應・接電線（企劃 222）
+   樣式：css/games/reaction_wirelink.css（這款專屬的 class 一律以「wirelink-」開頭；共用元件在 css/reaction_common.css）
    方格板上散著幾對同色的插頭（紅對紅、藍對藍…）。手指從一個插頭拖到同色的另一個，拖過的格子變成那條電線；
    **電線不能交叉，最後每一格都要被電線佔滿**才過關。畫錯了可以從插頭重拖（或從電線中間重拖，那一格之後的電線會收回去）。
    接通的那一對插頭會亮起小燈泡，全部接好、板子填滿時整塊板子的燈一起亮。
@@ -112,7 +113,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'wlk-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'wirelink-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -128,30 +129,30 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, topPad = 56;
         var cell = Math.floor(Math.min((W - 20) / n, (H - topPad - 20) / n, 90)), BS = cell * n, bx = Math.round((W - BS) / 2), by = topPad + Math.round((H - topPad - BS) / 2) - 8;
-        var tip = h('div', { 'class': 'qz-note wlk-tip', text: '' });
+        var tip = h('div', { 'class': 'qz-note wirelink-tip', text: '' });
         stage.appendChild(tip);
-        var board = h('div', { 'class': 'wlk-board' });
+        var board = h('div', { 'class': 'wirelink-board' });
         board.style.cssText = 'left:' + bx + 'px;top:' + by + 'px;width:' + BS + 'px;height:' + BS + 'px;';
         stage.appendChild(board);
         var cells = [];
         for (var i = 0; i < n * n; i++) {
-            var r = Math.floor(i / n), c = i % n, el = h('div', { 'class': 'wlk-cell' });
+            var r = Math.floor(i / n), c = i % n, el = h('div', { 'class': 'wirelink-cell' });
             el.style.cssText = 'left:' + c * cell + 'px;top:' + r * cell + 'px;width:' + cell + 'px;height:' + cell + 'px;';
             board.appendChild(el); cells.push(el);
         }
         function cx(i) { return (i % n + 0.5) * cell; }
         function cy(i) { return (Math.floor(i / n) + 0.5) * cell; }
-        var svg = kit.svg('svg', { 'class': 'wlk-svg', viewBox: '0 0 ' + BS + ' ' + BS, width: BS, height: BS }, board);
+        var svg = kit.svg('svg', { 'class': 'wirelink-svg', viewBox: '0 0 ' + BS + ' ' + BS, width: BS, height: BS }, board);
         var gSol = kit.svg('g', {}, svg), wires = {}, plugEls = [];
         q.plugs.forEach(function (p) {
-            var w = kit.svg('path', { 'class': 'wlk-wire wlk-c' + p.c, d: '' }, svg);
+            var w = kit.svg('path', { 'class': 'wirelink-wire wirelink-c' + p.c, d: '' }, svg);
             w.setAttribute('stroke-width', (cell * 0.46).toFixed(1)); wires[p.c] = w;
         });
         q.plugs.forEach(function (p) {
             [p.a, p.b].forEach(function (k) {
-                var g = kit.svg('g', { 'class': 'wlk-plug wlk-c' + p.c }, svg);
-                kit.svg('circle', { 'class': 'wlk-plug-body', cx: cx(k), cy: cy(k), r: cell * 0.34 }, g);
-                kit.svg('circle', { 'class': 'wlk-plug-in', cx: cx(k), cy: cy(k), r: cell * 0.14 }, g);
+                var g = kit.svg('g', { 'class': 'wirelink-plug wirelink-c' + p.c }, svg);
+                kit.svg('circle', { 'class': 'wirelink-plug-body', cx: cx(k), cy: cy(k), r: cell * 0.34 }, g);
+                kit.svg('circle', { 'class': 'wirelink-plug-in', cx: cx(k), cy: cy(k), r: cell * 0.14 }, g);
                 plugEls.push({ g: g, c: p.c });
             });
         });
@@ -161,7 +162,7 @@
                 var path = st.paths[p.c];
                 wires[p.c].setAttribute('d', path.length ? pathD(path) + (path.length === 1 ? ' L' + (cx(path[0]) + 0.01) + ' ' + cy(path[0]) : '') : '');
             });
-            plugEls.forEach(function (pe) { pe.g.classList.toggle('wlk-plug--on', !!st.done[pe.c]); });
+            plugEls.forEach(function (pe) { pe.g.classList.toggle('wirelink-plug--on', !!st.done[pe.c]); });
             tip.textContent = '已接通 ' + linked(st) + '／' + q.k + ' 條　填滿 ' + filled(st) + '／' + n * n + ' 格';
         }
         paint();
@@ -206,7 +207,7 @@
             if (over || api.over) return;
             over = true; pid = null;
             if (kind === 'ok') {
-                board.classList.add('wlk-board--lit');
+                board.classList.add('wirelink-board--lit');
                 tip.textContent = '全部接好了，燈全亮！';
                 kit.flash(stage, true, api.my);
                 api.pass({ delay: 1500 });
@@ -215,13 +216,13 @@
             /* 時間到：沒接通的電線閃紅；正確的接法一條一條畫出來（每條晚 0.25 秒） */
             var miss = 0;
             q.plugs.forEach(function (p, i) {
-                if (!st.done[p.c]) { wires[p.c].classList.add('wlk-wire--bad'); miss++; }
-                var sl = kit.svg('path', { 'class': 'wlk-sol wlk-c' + p.c, d: pathD(q.solution[i]), pathLength: 1 }, gSol);
+                if (!st.done[p.c]) { wires[p.c].classList.add('wirelink-wire--bad'); miss++; }
+                var sl = kit.svg('path', { 'class': 'wirelink-sol wirelink-c' + p.c, d: pathD(q.solution[i]), pathLength: 1 }, gSol);
                 sl.setAttribute('stroke-width', (cell * 0.46).toFixed(1));
                 sl.style.animationDelay = (i * 0.25) + 's';
             });
-            board.classList.add('wlk-board--reveal');
-            gSol.classList.add('wlk-sol--draw');
+            board.classList.add('wirelink-board--reveal');
+            gSol.classList.add('wirelink-sol--draw');
             tip.textContent = '時間到！彩色粗線是其中一種接法';
             kit.flash(stage, false, api.my);
             api.fail({ delay: 3000, lines: ['時間到，還有 ' + miss + ' 條電線沒接通、' + (n * n - filled(st)) + ' 格沒填滿', '板子 ' + n + '×' + n + '、' + q.k + ' 種顏色'] });

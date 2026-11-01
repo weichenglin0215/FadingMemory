@@ -1,0 +1,124 @@
+/* ═══════════════════════════════════════
+   reaction_gearmark.css — 齒輪對記號（js/reaction_gearmark.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「gearmark-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 齒輪對記號（.gearmark-）═══ */
+.gearmark-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.gearmark-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    touch-action: none;
+}
+
+.gearmark-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 銅色齒輪：最大的（要轉的那個）顏色亮一點；手指在上面時再亮一點 */
+.gearmark-body {
+    fill: var(--grm-copper);
+    stroke: var(--grm-copper-dark);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+}
+
+.gearmark-body--main {
+    fill: var(--grm-copper-light);
+}
+
+.gearmark-turning .gearmark-body--main {
+    filter: brightness(1.12);
+}
+
+.gearmark-ring {
+    fill: none;
+    stroke: var(--grm-copper-dark);
+    stroke-width: 2;
+    opacity: 0.55;
+}
+
+/* 紅針（像錶針）；放手後依對準與否換顏色 */
+.gearmark-needle {
+    fill: var(--c-bad-light);
+    stroke: var(--c-ink);
+    stroke-width: 1;
+    stroke-linejoin: round;
+}
+
+.gearmark-needle--ok {
+    fill: var(--c-ok);
+}
+
+.gearmark-needle--bad {
+    fill: var(--c-bad-light);
+}
+
+.gearmark-hub {
+    fill: var(--c-card);
+    stroke: var(--c-ink);
+    stroke-width: 2;
+}
+
+/* 齒輪頂端外面固定的小三角形：紅針要指到這裡 */
+.gearmark-tick {
+    fill: var(--c-ink-soft);
+}
+
+.gearmark-hint,
+.gearmark-list {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+.gearmark-hint {
+    font-weight: var(--fw-bold);
+}
+
+.gearmark-row {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1.3;
+}
+
+.gearmark-row--ok {
+    color: var(--c-ok);
+}
+
+.gearmark-row--bad {
+    color: var(--c-bad);
+}
+
+/* 全部對準：齒輪一起閃光 */
+.gearmark-flash .gearmark-body {
+    animation: gearmark-flash 0.5s ease-in-out 3;
+}
+
+@keyframes gearmark-flash {
+
+    0%,
+    100% {
+        filter: brightness(1);
+    }
+
+    50% {
+        filter: brightness(1.45);
+    }
+}

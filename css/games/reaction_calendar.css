@@ -1,0 +1,238 @@
+/* ═══════════════════════════════════════
+   reaction_calendar.css — 記行事曆（js/reaction_calendar.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「calendar-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 記行事曆（.calendar-）═══ */
+.calendar-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.calendar-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.calendar-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 冰箱上的大月曆 */
+.calendar-cal {
+    position: absolute;
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+.calendar-title {
+    padding: var(--sp-1) 0;
+    background: var(--cld-head);
+    color: var(--c-card);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    text-align: center;
+}
+
+.calendar-week {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: var(--c-card-alt);
+}
+
+.calendar-wd {
+    color: var(--c-ink);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1.5;
+    text-align: center;
+}
+
+.calendar-wd--we {
+    color: var(--c-bad);
+}
+
+.calendar-grid {
+    display: grid;
+}
+
+.calendar-cell {
+    position: relative;
+    border: 1px solid var(--cld-line);
+    background: var(--c-card);
+    cursor: pointer;
+}
+
+.calendar-cell--we {
+    background: var(--c-card-alt);
+}
+
+.calendar-cell--blank {
+    background: transparent;
+    cursor: default;
+}
+
+.calendar-no {
+    position: absolute;
+    left: 3px;
+    top: 0;
+    color: var(--c-ink-soft);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1.2;
+}
+
+.calendar-cell--ok {
+    outline: 5px solid var(--c-ok);
+    outline-offset: -5px;
+    border-radius: 50%;
+    background: var(--c-ok-soft);
+}
+
+.calendar-cell--bad {
+    outline: 5px solid var(--c-bad-light);
+    outline-offset: -5px;
+    border-radius: 50%;
+    background: var(--c-bad-soft);
+}
+
+.calendar-sticker {
+    position: absolute;
+    left: 50%;
+    top: 55%;
+    transform: translate(-50%, -50%) rotate(-5deg);
+    transition: opacity 0.35s;
+    pointer-events: none;
+}
+
+.calendar-sticker--hide {
+    opacity: 0;
+}
+
+.calendar-ask {
+    position: absolute;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-3);
+    color: var(--c-ink);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-bold);
+}
+
+.calendar-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* 圖示（手繪貼紙風格）：外框是深色線條、填色用主題色 */
+.calendar-icon {
+    display: block;
+    overflow: visible;
+}
+
+.calendar-s {
+    stroke: var(--c-ink);
+    stroke-width: 2.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.calendar-s--fill {
+    fill: var(--c-card);
+}
+
+.calendar-s--fill2 {
+    fill: var(--cld-pink);
+}
+
+.calendar-s--line {
+    fill: none;
+}
+
+.calendar-s--red {
+    fill: var(--c-bad-light);
+}
+
+.calendar-icon--hospital .calendar-s--fill {
+    fill: var(--c-blue-light);
+}
+
+.calendar-icon--cake .calendar-s--fill {
+    fill: var(--cld-cream);
+}
+
+.calendar-icon--box .calendar-s--fill {
+    fill: var(--cld-cream);
+}
+
+.calendar-icon--bill .calendar-s--fill {
+    fill: var(--c-green-light);
+}
+
+.calendar-icon--scissors .calendar-s--fill {
+    fill: var(--c-yellow-soft);
+}
+
+.calendar-icon--briefcase .calendar-s--fill {
+    fill: var(--c-orange);
+}
+
+.calendar-icon--bowl .calendar-s--fill {
+    fill: var(--c-blue-light);
+}
+
+.calendar-icon--ball .calendar-s--fill {
+    fill: var(--c-orange);
+}
+
+.calendar-icon--plane .calendar-s--fill {
+    fill: var(--c-blue-light);
+}
+
+/* 圖示消失之後、問題出現之前：問題列上亂跳、閃爍的干擾圖示（V1.36.0） */
+.calendar-noise {
+    position: absolute;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.calendar-noise__i {
+    position: absolute;
+    animation: calendar-blink 0.3s steps(1) infinite;
+}
+
+@keyframes calendar-blink {
+
+    0%,
+    49% {
+        opacity: 1;
+    }
+
+    50%,
+    100% {
+        opacity: 0.08;
+    }
+}

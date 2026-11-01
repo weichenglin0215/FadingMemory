@@ -1,0 +1,110 @@
+/* ═══════════════════════════════════════
+   reaction_coins.css — 零錢分類（js/reaction_coins.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「coins-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 零錢分類：把桌上的零錢分成指定金額。 */
+/* ═══ 零錢分類（.coins-）═══ */
+/* 目標金額（大字） */
+.coins-target {
+    text-align: center;
+    font-size: var(--fs-xl);
+    font-weight: 800;
+    color: var(--c-ink);
+    line-height: 1.1;
+}
+
+/* 目前已選的總額；超過目標變橘、剛好變綠 */
+.coins-sum {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--c-blue);
+    min-height: 1.4em;
+}
+
+/* 超過目標 */
+.coins-sum--over {
+    color: var(--c-bad);
+}
+
+/* 剛好等於目標 */
+.coins-sum--ok {
+    color: var(--c-ok);
+}
+
+/* 桌面：硬幣用 position:absolute 隨機散落在上面，位置由 JS 算 */
+.coins-table {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    touch-action: none;
+}
+
+/* 硬幣共用樣式：圓形、有立體的底部陰影，transition 讓選取時的上浮動畫平滑 */
+.coins-coin {
+    position: absolute;
+    padding: 0;
+    border-radius: 50%;
+    border: 4px solid rgba(0, 0, 0, 0.28);
+    font-size: 24px;
+    font-weight: 800;
+    color: #3A2C14;
+    cursor: pointer;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+/* 50 元硬幣：radial-gradient 是「放射狀漸層」，做出金屬光澤；字也最大 */
+.coins-coin--50 {
+    background: radial-gradient(circle at 35% 30%, #FFF0B0, #F0C23C 60%, #C99A1E);
+    font-size: 34px;
+}
+
+/* 20 元 */
+.coins-coin--20 {
+    background: radial-gradient(circle at 35% 30%, #F8DDB0, #D9A557 60%, #B07A30);
+    font-size: 32px;
+}
+
+/* 10 元 */
+.coins-coin--10 {
+    background: radial-gradient(circle at 35% 30%, #FFFFFF, #D6D6D6 60%, #A8A8A8);
+    font-size: 30px;
+}
+
+/* 5 元 */
+.coins-coin--5 {
+    background: radial-gradient(circle at 35% 30%, #F2F7FF, #BCCBE0 60%, #8EA2BE);
+    font-size: 27px;
+}
+
+/* 1 元 */
+.coins-coin--1 {
+    background: radial-gradient(circle at 35% 30%, #F4CBA6, #C98B5A 60%, #9E6636);
+    font-size: 24px;
+}
+
+/* 被選取的硬幣：往上浮 5px 並放大 1.1 倍 */
+.coins-coin--on {
+    transform: translateY(-5px) scale(1.1);
+    border-color: var(--c-blue);
+    box-shadow: 0 8px 0 rgba(0, 0, 0, 0.2), 0 0 0 5px rgba(107, 140, 196, 0.45);
+}
+
+/* 揭曉：選對的硬幣（綠色光圈） */
+.coins-coin--ok {
+    border-color: var(--c-ok);
+    box-shadow: 0 8px 0 rgba(0, 0, 0, 0.2), 0 0 0 6px rgba(108, 189, 121, 0.6);
+}
+
+/* 揭曉：正確答案的硬幣（黃色光圈） */
+.coins-coin--answer {
+    border-color: #F4C542;
+    box-shadow: 0 0 0 6px rgba(255, 212, 59, 0.75);
+}

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_paint.js — 秒反應・刷油漆
+   樣式：css/games/reaction_paint.css（這款專屬的 class 一律以「paint-」開頭；共用元件在 css/reaction_common.css）
    方塊的底色上畫著鮮豔的塗鴉。玩家用「底色」的油漆，把所有塗鴉蓋掉，一處都不能漏。
    V1.34.0 起是闖關制（玩家說「太難了」）：第 1 關只有 1 處大塗鴉，每過一關多 1 處，第 12 關有 12 處（舊版的難度）；
    每一關沾油漆的次數有上限（V1.40.0 起第 1 關 DIP_START ＝ 20 次，線性增加到第 DIP_RAMP_LEVELS 關的 DIP_END ＝ 40 次），超過就失敗；成績＝闖過幾關。
@@ -416,11 +417,11 @@
                 var hintShown = false;               /* 目前方塊上有沒有正在顯示的未完成區域標記（下一筆開始畫就消失） */
 
                 /* 建立畫面元素：資訊、方塊（canvas 畫布）、警語、油漆量長條、筆刷按鈕 */
-                var info = h('div', { 'class': 'pa-info' });
-                var field = h('div', { 'class': 'pa-field' });
-                var sq = h('div', { 'class': 'pa-square' });
+                var info = h('div', { 'class': 'paint-info' });
+                var field = h('div', { 'class': 'paint-field' });
+                var sq = h('div', { 'class': 'paint-square' });
                 /* canvas：用 JS 在上面畫點陣圖 */
-                var cv = h('canvas', { 'class': 'pa-canvas' });
+                var cv = h('canvas', { 'class': 'paint-canvas' });
                 /* DPR：畫布解析度加倍（2 倍），在高解析度螢幕上筆跡才不會模糊 */
                 var DPR = 2;
                 cv.width = SQ * DPR; cv.height = SQ * DPR;
@@ -440,28 +441,28 @@
                 sq.style.width = sq.style.height = SQ + 'px';
                 sq.style.background = color;
                 sq.appendChild(cv);
-                var marks = h('div', { 'class': 'pa-marks' });
+                var marks = h('div', { 'class': 'paint-marks' });
                 sq.appendChild(marks);
                 field.appendChild(sq);
-                var warn = h('div', { 'class': 'pa-warn' });
+                var warn = h('div', { 'class': 'paint-warn' });
                 field.appendChild(warn);
-                var zone = h('div', { 'class': 'pa-zone' });
-                var gauge = h('div', { 'class': 'pa-gauge' }, [h('div', { 'class': 'pa-gauge__fill' })]);
+                var zone = h('div', { 'class': 'paint-zone' });
+                var gauge = h('div', { 'class': 'paint-gauge' }, [h('div', { 'class': 'paint-gauge__fill' })]);
                 var gfill = gauge.firstChild;
-                var brush = h('button', { 'class': 'pa-brush' });
-                var brushLabel = h('div', { 'class': 'pa-brushlabel' });
+                var brush = h('button', { 'class': 'paint-brush' });
+                var brushLabel = h('div', { 'class': 'paint-brushlabel' });
                 /* 油漆刷提示：用 SVG 畫（木柄、金屬環、刷毛），刷毛的顏色＝這一局的油漆色；平常隱藏，圓形變成虛線時才顯示（見 refresh） */
-                var pointer = h('div', { 'class': 'pa-pointer' });
-                var ps = kit.svg('svg', { 'class': 'pa-pointer__svg', viewBox: '0 0 50 100', preserveAspectRatio: 'xMidYMax meet' }, pointer);
-                kit.svg('rect', { 'class': 'pa-pt-handle', x: 19, y: 2, width: 12, height: 48, rx: 6 }, ps);
-                kit.svg('rect', { 'class': 'pa-pt-ferrule', x: 14, y: 48, width: 22, height: 14, rx: 2 }, ps);
-                var bristle = kit.svg('path', { 'class': 'pa-pt-bristle', d: 'M15 62 H35 C38 74 33 90 25 98 C17 90 12 74 15 62 Z' }, ps);
+                var pointer = h('div', { 'class': 'paint-pointer' });
+                var ps = kit.svg('svg', { 'class': 'paint-pointer__svg', viewBox: '0 0 50 100', preserveAspectRatio: 'xMidYMax meet' }, pointer);
+                kit.svg('rect', { 'class': 'paint-pt-handle', x: 19, y: 2, width: 12, height: 48, rx: 6 }, ps);
+                kit.svg('rect', { 'class': 'paint-pt-ferrule', x: 14, y: 48, width: 22, height: 14, rx: 2 }, ps);
+                var bristle = kit.svg('path', { 'class': 'paint-pt-bristle', d: 'M15 62 H35 C38 74 33 90 25 98 C17 90 12 74 15 62 Z' }, ps);
                 bristle.style.fill = color;
                 /* 畫筆的點擊區（圓形＋油漆刷提示都放在裡面）；放在下方操作區，圓形貼著下緣 */
-                var brushBox = h('div', { 'class': 'pa-brushbox' }, [brush, pointer]);
-                var brushWrap = h('div', { 'class': 'pa-brushwrap' }, [brushBox]);
+                var brushBox = h('div', { 'class': 'paint-brushbox' }, [brush, pointer]);
+                var brushWrap = h('div', { 'class': 'paint-brushwrap' }, [brushBox]);
                 /* 最下面的按鈕：消耗 HINT_COST 次沾漆，標出最大的一塊未完成區域 */
-                var hintBtn = h('button', { 'class': 'btn btn--line pa-hintbtn', text: '消耗' + (NUM_CN[HINT_COST] || HINT_COST) + '次沾漆，顯示未完成區域。' });
+                var hintBtn = h('button', { 'class': 'btn btn--line paint-hintbtn', text: '消耗' + (NUM_CN[HINT_COST] || HINT_COST) + '次沾漆，顯示未完成區域。' });
                 zone.appendChild(gauge);
                 zone.appendChild(brushWrap);
                 zone.appendChild(brushLabel);
@@ -478,12 +479,12 @@
                     /* 沒蓋完不顯示 100%：用無條件捨去 */
                     var shown = mask.left === 0 ? '100.0000' : (Math.floor(pct * 10000) / 10000).toFixed(4);
                     info.textContent = '沾了 ' + dips + '／' + dipMax + ' 次　已蓋 ' + shown + '%';        /* 文字要短（100.0000% 也要一行放得下），才不會折成兩行把方塊擠扁 */
-                    info.classList.toggle('pa-info--low', dips >= dipMax - DIP_WARN);          /* 快到上限了：字變成警示色 */
+                    info.classList.toggle('paint-info--low', dips >= dipMax - DIP_WARN);          /* 快到上限了：字變成警示色 */
                     ctx.setMeta(kit.meta(['第 ' + n + ' 關', fmtBest(Reaction.getBest(ID))]));
                     gfill.style.width = (100 * budget / budgetMax).toFixed(1) + '%';
                     brush.style.width = brush.style.height = D + 'px';
                     brush.style.background = budget > 0 ? color : 'transparent';
-                    brush.classList.toggle('pa-brush--empty', budget <= 0);
+                    brush.classList.toggle('paint-brush--empty', budget <= 0);
                     brushLabel.textContent = budget > 0 ? '油漆剩 ' + Math.round(100 * budget / budgetMax) + '%' : (dips === 0 ? '點圓形沾油漆' : (dips >= dipMax ? '已沾滿 ' + dipMax + ' 次，再沾就失敗' : '油漆用完了，點圓形再沾'));
                     /* 點擊區：筆刷直徑，但至少 HIT_MIN px（圓形在框的正中間） */
                     var S = Math.max(D, HIT_MIN);
@@ -495,7 +496,7 @@
                     pointer.style.height = ph + 'px'; pointer.style.width = (ph / 2) + 'px';
                     pointer.style.left = (S / 2 + 0.12 * D - ph / 4) + 'px';
                     pointer.style.top = (S / 2 + 0.4 * D - ph) + 'px';
-                    pointer.classList.toggle('pa-pointer--on', budget <= 0 && state === 'play' && dips < dipMax);
+                    pointer.classList.toggle('paint-pointer--on', budget <= 0 && state === 'play' && dips < dipMax);
                     /* 提示按鈕：還沒塗任何東西、已經塗滿、標記還在顯示、或加上 HINT_COST 次會超過上限時都不能按（避免白白消耗／直接失敗） */
                     hintBtn.disabled = !(state === 'play' && swept > 0 && mask.left > 0 && !hintShown && hintOk());
                 }
@@ -504,9 +505,9 @@
                 /* 顯示警語一陣子後自動消失 */
                 function showWarn(text) {
                     warn.textContent = text;
-                    warn.classList.add('pa-warn--on');
+                    warn.classList.add('paint-warn--on');
                     my.cancel(warnTimer);
-                    warnTimer = my.after(1600, function () { warn.classList.remove('pa-warn--on'); });
+                    warnTimer = my.after(1600, function () { warn.classList.remove('paint-warn--on'); });
                 }
 
                 /* ─── 沾油漆：油漆量補滿，筆刷縮小一圈；這一關已經沾滿 dipMax 次還要再沾＝超過上限，失敗 ─── */
@@ -517,7 +518,7 @@
                     D = brushAfter(D);
                     budget = budgetMax;
                     Sfx.play('flip');
-                    warn.classList.remove('pa-warn--on');
+                    warn.classList.remove('paint-warn--on');
                     refresh();
                 }
                 brushBox.addEventListener('pointerdown', function (e) { e.preventDefault(); dip(); });
@@ -637,7 +638,7 @@
                 /* 在方塊上標一個紅色脈動圓圈：hl 是 holes() 傳回的區域；紅圈半徑：區域越大圈越大（等面積圓的半徑 + 12px），限制在 HINT_R_MIN～HINT_R_MAX */
                 function addMark(hl) {
                     var r = Math.max(HINT_R_MIN, Math.min(HINT_R_MAX, Math.sqrt(hl.size / Math.PI) + 12));
-                    var m = h('div', { 'class': 'pa-mark' });
+                    var m = h('div', { 'class': 'paint-mark' });
                     m.style.left = hl.px + 'px';
                     m.style.top = hl.py + 'px';
                     m.style.width = m.style.height = (r * 2) + 'px';
@@ -673,7 +674,7 @@
                     ctx.setMeta(kit.meta(['第 ' + n + ' 關', fmtBest(Reaction.getBest(ID))]));
                     var allClear = n >= MAX_LEVEL;
                     warn.textContent = allClear ? '全部蓋完了！' : '第 ' + n + ' 關完成！';
-                    warn.classList.add('pa-warn--on', 'pa-warn--ok');
+                    warn.classList.add('paint-warn--on', 'paint-warn--ok');
                     Sfx.play('win');
                     console.log('刷油漆：第 ' + n + ' 關過關，沾油漆 ' + dips + ' 次（上限 ' + dipMax + '）' + (hints ? '，含提示 ' + hints + ' 次' : ''));
                     my.after(1100, function () { if (allClear) finish(n, true, 0); else buildLevel(n + 1); });
@@ -688,8 +689,8 @@
                     hs.forEach(addMark);
                     my.cancel(warnTimer);
                     warn.textContent = '沾油漆超過 ' + dipMax + ' 次了！';
-                    warn.classList.add('pa-warn--on');
-                    warn.classList.remove('pa-warn--ok');
+                    warn.classList.add('paint-warn--on');
+                    warn.classList.remove('paint-warn--ok');
                     refresh();
                     Sfx.play('bad');
                     var left = holes(mask, 999).length;
@@ -756,7 +757,7 @@
                     wrong: function () { var k = 0; while (state === 'play' && k++ < dipMax + 5) dip(); return state; },
                     holes: function () { return holes(mask, 50); },
                     hint: useHint,
-                    hintState: function () { return { hints: hints, hintShown: hintShown, disabled: hintBtn.disabled, marks: marks.children.length, pointerOn: pointer.classList.contains('pa-pointer--on'), pointerH: pointer.style.height }; },
+                    hintState: function () { return { hints: hints, hintShown: hintShown, disabled: hintBtn.disabled, marks: marks.children.length, pointerOn: pointer.classList.contains('paint-pointer--on'), pointerH: pointer.style.height }; },
                     goto: function (k) { my.cancel(warnTimer); buildLevel(k); }
                 };
             }

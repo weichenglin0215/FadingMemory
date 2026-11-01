@@ -1,0 +1,115 @@
+/* ═══════════════════════════════════════
+   reaction_pipes.css — 接水管（js/reaction_pipes.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「pipes-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 接水管：轉動水管格，讓水從水源一路通到水桶。 */
+/* ═══ 接水管（.pipes-）═══ */
+/* 標題 */
+.pipes-head {
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+/* 提示橫幅 */
+.pipes-banner {
+    min-height: 1.4em;
+    text-align: center;
+    white-space: nowrap;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 水管盤場地 */
+.pipes-field {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    touch-action: none;
+}
+
+/* 水管盤 SVG */
+.pipes-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* 每一格的底板 */
+.pipes-tile {
+    fill: var(--c-card-alt);
+    stroke: var(--c-frame);
+    stroke-width: 2;
+}
+
+/* 空格子（沒有水管） */
+.pipes-tile--empty {
+    fill: var(--c-paper);
+    stroke: none;
+}
+
+/* 有水管的格子可以點（點一下轉 90 度） */
+.pipes-cell--pipe {
+    cursor: pointer;
+}
+
+/* 水管線條（粗 22）；stroke-linecap:butt 表示線頭是平的，相鄰的水管才能接得起來 */
+.pipes-pipe {
+    stroke: var(--c-ink-soft);
+    stroke-width: 22;
+    stroke-linecap: butt;
+}
+
+/* 水管中心的圓點 */
+.pipes-hub {
+    fill: var(--c-ink-soft);
+}
+
+/* 水桶（終點） */
+.pipes-bucket {
+    fill: var(--c-card);
+    stroke: var(--c-ink);
+    stroke-width: 5;
+}
+
+/* 通水之後（.pipes-cell--wet）整條水管、圓點、水桶都變藍色：後代選擇器「A B」= 在 A 裡面的 B */
+.pipes-cell--wet .pipes-pipe {
+    stroke: var(--c-blue);
+}
+
+.pipes-cell--wet .pipes-hub {
+    fill: var(--c-blue);
+}
+
+.pipes-cell--wet .pipes-bucket {
+    fill: var(--c-blue);
+}
+
+/* 漏水的出口標記 */
+.pipes-leak {
+    fill: var(--c-recall);
+    stroke: var(--c-card);
+    stroke-width: 2;
+    pointer-events: none;
+}
+
+/* 水源的水柱 */
+.pipes-source {
+    stroke: var(--c-blue);
+    stroke-width: 22;
+}
+
+/* 水龍頭 */
+.pipes-faucet {
+    fill: var(--c-ink-soft);
+}

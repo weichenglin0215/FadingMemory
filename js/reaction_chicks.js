@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_chicks.js — 秒反應・找回小雞
+   樣式：css/games/reaction_chicks.css（這款專屬的 class 一律以「chicks-」開頭；共用元件在 css/reaction_common.css）
    幾隻小雞頭上有星星（2 秒），星星消失後大家在院子裡亂跑，停下來後，直接點剛才有星星的那幾隻。
    ───────────────────────────────────────────────────────────────────
    · 起點：一開始任兩隻都不重疊（距離 ≥ MIN_START_DIST，比小雞本身 CHICK 還大一點，頭上的星星也不會被壓住）；
@@ -11,7 +12,7 @@
      **只有星星小雞可以點**（其他小雞沒有點擊功能）：點到一隻星星小雞就亮綠色；點到沒有星星的地方（包含別的小雞、空地）
      就失敗；星星小雞全部點到就過關。
    · 難度（第 1 → LEVEL_RAMP 關線性）：目標數 K_START → K_END、小雞總數 TOTAL_START → TOTAL_END、速度、移動秒數。
-   · 小雞頭上的星星是水藍色，出現（記憶階段、揭曉漏掉的星星小雞）的時候會快速閃爍，引起玩家注意（css/reaction2.css 的 .ck-star）。
+   · 小雞頭上的星星是水藍色，出現（記憶階段、揭曉漏掉的星星小雞）的時候會快速閃爍，引起玩家注意（css/games/reaction_chicks.css 的 .chicks-star）。
    · 點錯就結束（沒有「機會」次數），成績＝通過關數（越多越好）；失敗後可從「失敗關卡 − 5」繼續。
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -190,7 +191,7 @@
 
     /* 畫小雞（SVG：身體、眼睛、嘴、冠、腳） */
     function chickSvg() {
-        var svg = kit.svg('svg', { 'class': 'ck-svg', viewBox: '0 0 64 64' });
+        var svg = kit.svg('svg', { 'class': 'chicks-svg', viewBox: '0 0 64 64' });
         kit.svg('ellipse', { cx: 32, cy: 38, rx: 24, ry: 21, fill: 'hsl(48,95%,62%)', stroke: 'hsl(36,70%,34%)', 'stroke-width': 3 }, svg);
         kit.svg('circle', { cx: 24, cy: 32, r: 3.2, fill: 'hsl(24,40%,20%)' }, svg);
         kit.svg('circle', { cx: 40, cy: 32, r: 3.2, fill: 'hsl(24,40%,20%)' }, svg);
@@ -217,9 +218,9 @@
             var level = startAt || 1, cleared = level - 1, newRec = false, state = 'idle', lvId = 0, S = null, els = [], found = [];
             /* 先放不斷行空白佔住一行高，之後再量院子大小才準 */
             /* 先放不斷行空白佔住一行高：startLevel 一開頭就量院子大小，文字晚一點才填的話，量到的會比最後的大 */
-            var head = h('div', { 'class': 'ck-head', text: ' ' });
-            var banner = h('div', { 'class': 'ck-banner', text: ' ' });
-            var field = h('div', { 'class': 'ck-field' });
+            var head = h('div', { 'class': 'chicks-head', text: ' ' });
+            var banner = h('div', { 'class': 'chicks-banner', text: ' ' });
+            var field = h('div', { 'class': 'chicks-field' });
             [head, banner, field].forEach(function (n) { root.appendChild(n); });
 
             function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }
@@ -238,11 +239,11 @@
                 /* 建立每隻小雞的元素：目標小雞頭上顯示星星，並且 z-index 提高到最上層，星星不會被其他小雞遮住 */
                 S.chicks.forEach(function (c, i) {
                     var isT = S.targets.indexOf(i) >= 0;
-                    var el = h('div', { 'class': 'ck-chick' });
+                    var el = h('div', { 'class': 'chicks-chick' });
                     el.setAttribute('data-i', String(i));
                     el.style.width = el.style.height = CHICK + 'px';
                     el.appendChild(chickSvg());
-                    var star = h('div', { 'class': 'ck-star', text: '★' });
+                    var star = h('div', { 'class': 'chicks-star', text: '★' });
                     star.hidden = !isT;
                     el.appendChild(star);
                     if (isT) el.style.zIndex = '20';             /* 星星小雞疊在最上面：星星不會被別的小雞遮住 */
@@ -260,7 +261,7 @@
                 my.after(MARK_S * 1000, function () {
                     if (id !== lvId) return;
                     state = 'move';
-                    els.forEach(function (el) { el.querySelector('.ck-star').hidden = true; });
+                    els.forEach(function (el) { el.querySelector('.chicks-star').hidden = true; });
                     banner.textContent = '小雞亂跑中…盯緊！';
                     var t0 = performance.now();
                     /* my.loop：每個畫面更新一次，把每隻小雞放到目前時間的位置 */
@@ -274,9 +275,9 @@
                         if (id !== lvId || state !== 'move') return;
                         for (var i = 0; i < els.length; i++) place(i, S.tMove);       /* rAF 被暫停時也一定停在正確位置 */
                         state = 'pick';
-                        /* 只有星星小雞可以點（加上 ck-chick--live），其他小雞的 pointer-events 關掉（ck-chick--dead），點下去等於點到空地 */
+                        /* 只有星星小雞可以點（加上 chicks-chick--live），其他小雞的 pointer-events 關掉（chicks-chick--dead），點下去等於點到空地 */
                         /* 只有星星小雞有點擊功能：其他小雞的 pointer-events 關掉，點下去等於點到空地 */
-                        els.forEach(function (el, k) { el.classList.add(S.targets.indexOf(k) >= 0 ? 'ck-chick--live' : 'ck-chick--dead'); });
+                        els.forEach(function (el, k) { el.classList.add(S.targets.indexOf(k) >= 0 ? 'chicks-chick--live' : 'chicks-chick--dead'); });
                         banner.textContent = '點出剛才有星星的 ' + S.targets.length + ' 隻（點錯就失敗）';
                         Sfx.play('pop');
                     });
@@ -288,7 +289,7 @@
             field.addEventListener('pointerdown', function (e) {
                 if (state !== 'pick') return;
                 e.preventDefault();
-                var el = e.target && e.target.closest ? e.target.closest('.ck-chick--live') : null;
+                var el = e.target && e.target.closest ? e.target.closest('.chicks-chick--live') : null;
                 tap(el ? Number(el.getAttribute('data-i')) : null);
             });
             /* 處理一次點擊 */
@@ -298,8 +299,8 @@
                 if (r === 'again') return;
                 if (r === 'miss') { fail(idx); return; }
                 found.push(idx);
-                els[idx].classList.add('ck-chick--ok');
-                els[idx].querySelector('.ck-star').hidden = false;
+                els[idx].classList.add('chicks-chick--ok');
+                els[idx].querySelector('.chicks-star').hidden = false;
                 Sfx.play('click');
                 banner.textContent = '找到 ' + found.length + '／' + S.targets.length;
                 if (found.length === S.targets.length) win();
@@ -321,9 +322,9 @@
                 state = 'reveal';
                 /* 沒找到的星星小雞亮出來（橘色），剛才點到的地方標紅 */
                 S.targets.forEach(function (t) {
-                    if (found.indexOf(t) < 0) { els[t].querySelector('.ck-star').hidden = false; els[t].classList.add('ck-chick--miss'); }
+                    if (found.indexOf(t) < 0) { els[t].querySelector('.chicks-star').hidden = false; els[t].classList.add('chicks-chick--miss'); }
                 });
-                if (idx != null && els[idx]) els[idx].classList.add('ck-chick--wrong');
+                if (idx != null && els[idx]) els[idx].classList.add('chicks-chick--wrong');
                 var missed = S.targets.length - found.length;
                 banner.textContent = '沒點到星星小雞！還有 ' + missed + ' 隻沒找到';
                 Sfx.play('bad'); meta();
@@ -346,7 +347,7 @@
                 tapChick: function (i) { tap(i); },
                 tapEmpty: function () { tap(null); },
                 findAll: function () { S.targets.forEach(function (t) { tap(t); }); },
-                liveCount: function () { return field.querySelectorAll('.ck-chick--live').length; }
+                liveCount: function () { return field.querySelectorAll('.chicks-chick--live').length; }
             };
             /* 開場等 300 毫秒再開始第一關 */
             my.after(300, startLevel);

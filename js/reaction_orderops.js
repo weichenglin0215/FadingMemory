@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_orderops.js — 秒反應・先乘除（企劃 122）
+   樣式：css/games/reaction_orderops.css（這款專屬的 class 一律以「orderops-」開頭；共用元件在 css/reaction_common.css）
    出一道四則運算（例如 8 − 3 × 2），下面兩顆按鈕是兩個答案（10 和 2），點出正確的那一個。
    錯的那個答案，是「不管先乘除，由左到右一路算下去」（或「忽略括號」）的結果，專門釣粗心的人。
    V1.38.0：第 OPTIONS4_FROM 題起改成四個答案——原本的兩個答案，各自再加一個「只差個位數」的答案（42 → 45、130 → 137），
@@ -226,18 +227,18 @@
         api.info = q;
         console.log('[先乘除] 第 ' + level + ' 題：' + q.text + ' ＝ ？ 正確 ' + q.truth + '，錯誤 ' + q.decoy + '（' + (q.decoyKind === 'ltr' ? '由左到右' : '忽略括號') + '），答案 ' + q.options.join('／') + '，限時 ' + ansMs(level) + ' ms');
 
-        var eq = h('div', { 'class': 'qz-big ord-eq', text: q.text });
+        var eq = h('div', { 'class': 'qz-big orderops-eq', text: q.text });
         /* 算式越長，字越小（約略估算：每個字寬 0.62 倍字級），保證一行放得下 */
         var fs = Math.max(50, Math.min(100, Math.floor(500 / (q.text.length * 0.60))));
         eq.style.fontSize = fs + 'px';
-        var ask = h('div', { 'class': 'qz-note ord-ask', text: '正確答案是哪一個？' });
-        var reveal = h('div', { 'class': 'qz-note ord-reveal' });
+        var ask = h('div', { 'class': 'qz-note orderops-ask', text: '正確答案是哪一個？' });
+        var reveal = h('div', { 'class': 'qz-note orderops-reveal' });
         stage.appendChild(eq); stage.appendChild(ask); stage.appendChild(reveal);
         /* 正確答案放在 slot，其餘答案隨機填進剩下的位置 */
         var others = kit.shuffle(q.options.filter(function (v) { return v !== q.truth; }), api.rand), vals = [];
         for (var si = 0; si < count; si++) vals.push(si === slot ? q.truth : others.shift());
         var grid = kit.btnGrid(stage, vals.map(function (v) {
-            return { text: String(v), kind: 'sky', cls: 'ord-btn', onTap: function () { judge(v); } };
+            return { text: String(v), kind: 'sky', cls: 'orderops-btn', onTap: function () { judge(v); } };
         }), count === 4 ? { cols: 2, h: 100 } : { h: 120 });
         var bTruth = grid.btns[slot];
         api.timer(ansMs(level), function () { judge(null); });

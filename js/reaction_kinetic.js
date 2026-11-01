@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_kinetic.js — 秒反應・動態視力（企劃 333）
+   樣式：css/games/reaction_kinetic.css（這款專屬的 class 一律以「kinetic-」開頭；共用元件在 css/reaction_common.css）
    一列台鐵區間車從右往左開過去，**其中一節車廂的窗戶貼著一張黃底黑字的號碼**。火車開走之後，**從下面 4 個選項點出那個號碼**。
    ───────────────────────────────────────────────────────────────────
    · 難度（線性，到 RAMP_LEVELS 關到頂）：
@@ -114,7 +115,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'knt-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'kinetic-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -126,25 +127,25 @@
     function drawWindow(g, kind, rand) {
         var s = function (tag, attrs) { return kit.svg(tag, attrs, g); };
         function person(cx, tone) {
-            s('path', { 'class': 'knt-pax knt-pax--' + tone, d: 'M' + (cx - 30) + ',84 Q' + (cx - 30) + ',54 ' + cx + ',52 Q' + (cx + 30) + ',54 ' + (cx + 30) + ',84 Z' });
-            s('circle', { 'class': 'knt-head', cx: cx, cy: 36, r: 16 });
-            s('path', { 'class': 'knt-hair', d: 'M' + (cx - 16) + ',34 Q' + cx + ',12 ' + (cx + 16) + ',34 Q' + cx + ',26 ' + (cx - 16) + ',34 Z' });
+            s('path', { 'class': 'kinetic-pax kinetic-pax--' + tone, d: 'M' + (cx - 30) + ',84 Q' + (cx - 30) + ',54 ' + cx + ',52 Q' + (cx + 30) + ',54 ' + (cx + 30) + ',84 Z' });
+            s('circle', { 'class': 'kinetic-head', cx: cx, cy: 36, r: 16 });
+            s('path', { 'class': 'kinetic-hair', d: 'M' + (cx - 16) + ',34 Q' + cx + ',12 ' + (cx + 16) + ',34 Q' + cx + ',26 ' + (cx - 16) + ',34 Z' });
         }
         if (kind === 'pax') person(kit.randInt(55, 105, rand), kit.randInt(0, 2, rand));
         else if (kind === 'pax2') { person(42, kit.randInt(0, 2, rand)); person(118, kit.randInt(0, 2, rand)); }
         else if (kind === 'bento') {
-            s('rect', { 'class': 'knt-bento', x: 36, y: 34, width: 88, height: 42, rx: 6 });
-            s('rect', { 'class': 'knt-rice', x: 42, y: 40, width: 38, height: 30, rx: 4 });
-            s('circle', { 'class': 'knt-egg', cx: 98, cy: 50, r: 9 }); s('rect', { 'class': 'knt-veg', x: 88, y: 58, width: 30, height: 10, rx: 4 });
+            s('rect', { 'class': 'kinetic-bento', x: 36, y: 34, width: 88, height: 42, rx: 6 });
+            s('rect', { 'class': 'kinetic-rice', x: 42, y: 40, width: 38, height: 30, rx: 4 });
+            s('circle', { 'class': 'kinetic-egg', cx: 98, cy: 50, r: 9 }); s('rect', { 'class': 'kinetic-veg', x: 88, y: 58, width: 30, height: 10, rx: 4 });
         }
         else if (kind === 'news') {
-            s('rect', { 'class': 'knt-paper', x: 34, y: 6, width: 92, height: 72, rx: 3 });
-            s('rect', { 'class': 'knt-line', x: 42, y: 14, width: 76, height: 8 }); s('rect', { 'class': 'knt-line', x: 42, y: 30, width: 34, height: 4 }); s('rect', { 'class': 'knt-line', x: 82, y: 30, width: 36, height: 4 });
-            s('rect', { 'class': 'knt-line', x: 42, y: 40, width: 34, height: 4 }); s('rect', { 'class': 'knt-line', x: 82, y: 40, width: 36, height: 4 }); s('rect', { 'class': 'knt-line', x: 42, y: 52, width: 76, height: 4 });
+            s('rect', { 'class': 'kinetic-paper', x: 34, y: 6, width: 92, height: 72, rx: 3 });
+            s('rect', { 'class': 'kinetic-line', x: 42, y: 14, width: 76, height: 8 }); s('rect', { 'class': 'kinetic-line', x: 42, y: 30, width: 34, height: 4 }); s('rect', { 'class': 'kinetic-line', x: 82, y: 30, width: 36, height: 4 });
+            s('rect', { 'class': 'kinetic-line', x: 42, y: 40, width: 34, height: 4 }); s('rect', { 'class': 'kinetic-line', x: 82, y: 40, width: 36, height: 4 }); s('rect', { 'class': 'kinetic-line', x: 42, y: 52, width: 76, height: 4 });
         }
         else if (kind === 'curtain') {
-            s('rect', { 'class': 'knt-curtain', x: 0, y: 0, width: 58, height: 80 });
-            s('path', { 'class': 'knt-fold', d: 'M19,0 L19,80 M38,0 L38,80' });
+            s('rect', { 'class': 'kinetic-curtain', x: 0, y: 0, width: 58, height: 80 });
+            s('path', { 'class': 'kinetic-fold', d: 'M19,0 L19,80 M38,0 L38,80' });
         }
     }
 
@@ -156,34 +157,34 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var T = trainSize(W, q.cars), v = speedFor(W, T.cw, q.viewS), endX = -(T.total + TAIL_PAD), passS = passSeconds(W, T.total + TAIL_PAD, v);
-        var field = h('div', { 'class': 'knt-field' });
+        var field = h('div', { 'class': 'kinetic-field' });
         stage.appendChild(field);
-        var tip = h('div', { 'class': 'qz-note knt-tip', text: level === 1 ? '看清楚窗戶上的黃色號碼！' : '看清楚黃色的號碼貼紙' });
+        var tip = h('div', { 'class': 'qz-note kinetic-tip', text: level === 1 ? '看清楚窗戶上的黃色號碼！' : '看清楚黃色的號碼貼紙' });
         field.appendChild(tip);
         var trainTop = 100;
         /* 鐵軌（在車廂底下） */
-        var rail = h('div', { 'class': 'knt-rail' }); rail.style.top = (trainTop + T.ch + 2) + 'px'; field.appendChild(rail);
+        var rail = h('div', { 'class': 'kinetic-rail' }); rail.style.top = (trainTop + T.ch + 2) + 'px'; field.appendChild(rail);
         /* 整列火車：一個很寬的條，每一節車廂排在裡面；整個條用 translateX 移動 */
-        var strip = h('div', { 'class': 'knt-train' });
+        var strip = h('div', { 'class': 'kinetic-train' });
         strip.style.cssText = 'top:' + trainTop + 'px;width:' + T.total + 'px;height:' + T.ch + 'px;transform:translate3d(' + W + 'px,0,0);';
         field.appendChild(strip);
         var stickerEl = null;
         for (var i = 0; i < q.cars; i++) {
-            var car = h('div', { 'class': 'knt-car' });
+            var car = h('div', { 'class': 'kinetic-car' });
             car.style.cssText = 'left:' + carOffset(i, T.cw) + 'px;width:' + T.cw + 'px;height:' + T.ch + 'px;';
-            var svg = kit.svg('svg', { 'class': 'knt-svg', viewBox: '0 0 230 170', width: T.cw, height: T.ch }, car);
-            if (i < q.cars - 1) kit.svg('rect', { 'class': 'knt-link', x: 226, y: 118, width: 18, height: 9, rx: 3 }, svg);          /* 連結器：最後一節後面沒有車廂，不畫 */
-            kit.svg('rect', { 'class': 'knt-roof', x: 6, y: 0, width: 218, height: 14, rx: 7 }, svg);
-            kit.svg('rect', { 'class': 'knt-body', x: 0, y: 8, width: 230, height: 142, rx: 14 }, svg);
-            kit.svg('rect', { 'class': 'knt-band', x: 0, y: 112, width: 230, height: 30 }, svg);
-            kit.svg('rect', { 'class': 'knt-glass', x: 35, y: 26, width: 160, height: 80, rx: 8 }, svg);
-            var wg = kit.svg('g', { transform: 'translate(35,26)', 'clip-path': 'url(#knt-clip)' }, svg);
+            var svg = kit.svg('svg', { 'class': 'kinetic-svg', viewBox: '0 0 230 170', width: T.cw, height: T.ch }, car);
+            if (i < q.cars - 1) kit.svg('rect', { 'class': 'kinetic-link', x: 226, y: 118, width: 18, height: 9, rx: 3 }, svg);          /* 連結器：最後一節後面沒有車廂，不畫 */
+            kit.svg('rect', { 'class': 'kinetic-roof', x: 6, y: 0, width: 218, height: 14, rx: 7 }, svg);
+            kit.svg('rect', { 'class': 'kinetic-body', x: 0, y: 8, width: 230, height: 142, rx: 14 }, svg);
+            kit.svg('rect', { 'class': 'kinetic-band', x: 0, y: 112, width: 230, height: 30 }, svg);
+            kit.svg('rect', { 'class': 'kinetic-glass', x: 35, y: 26, width: 160, height: 80, rx: 8 }, svg);
+            var wg = kit.svg('g', { transform: 'translate(35,26)', 'clip-path': 'url(#kinetic-clip)' }, svg);
             drawWindow(wg, q.windows[i], api.rand);
-            kit.svg('rect', { 'class': 'knt-frame', x: 10, y: 150, width: 210, height: 8, rx: 3 }, svg);
-            kit.svg('circle', { 'class': 'knt-wheel', cx: 52, cy: 162, r: 9 }, svg); kit.svg('circle', { 'class': 'knt-wheel', cx: 178, cy: 162, r: 9 }, svg);
+            kit.svg('rect', { 'class': 'kinetic-frame', x: 10, y: 150, width: 210, height: 8, rx: 3 }, svg);
+            kit.svg('circle', { 'class': 'kinetic-wheel', cx: 52, cy: 162, r: 9 }, svg); kit.svg('circle', { 'class': 'kinetic-wheel', cx: 178, cy: 162, r: 9 }, svg);
             var txt = i === q.target ? q.number : q.stickers[i];
             if (txt != null) {
-                var st = h('div', { 'class': 'knt-sticker' + (i === q.target ? ' knt-sticker--num' : ''), text: txt });
+                var st = h('div', { 'class': 'kinetic-sticker' + (i === q.target ? ' kinetic-sticker--num' : ''), text: txt });
                 st.style.left = '50%'; st.style.top = Math.round(66 / 170 * T.ch) + 'px';
                 car.appendChild(st);
                 if (i === q.target) stickerEl = st;
@@ -191,9 +192,9 @@
             strip.appendChild(car);
         }
         /* 窗戶的裁切範圍（讓窗內的東西不會超出玻璃）：放一個隱藏的 svg 定義 */
-        var defs = kit.svg('svg', { 'class': 'knt-defs', width: 0, height: 0 }, field);
-        var cp = kit.svg('clipPath', { id: 'knt-clip' }, kit.svg('defs', {}, defs)); kit.svg('rect', { x: 0, y: 0, width: 160, height: 80, rx: 8 }, cp);
-        var info = h('div', { 'class': 'qz-note knt-info', text: '' }); info.style.top = (trainTop + T.ch + 34) + 'px'; field.appendChild(info);
+        var defs = kit.svg('svg', { 'class': 'kinetic-defs', width: 0, height: 0 }, field);
+        var cp = kit.svg('clipPath', { id: 'kinetic-clip' }, kit.svg('defs', {}, defs)); kit.svg('rect', { x: 0, y: 0, width: 160, height: 80, rx: 8 }, cp);
+        var info = h('div', { 'class': 'qz-note kinetic-info', text: '' }); info.style.top = (trainTop + T.ch + 34) + 'px'; field.appendChild(info);
 
         var phase = 'run', done = false, grid = null, x0 = W;
         function setX(x) { x0 = x; strip.style.transform = 'translate3d(' + x.toFixed(1) + 'px,0,0)'; }
@@ -211,7 +212,7 @@
         function ask() {
             if (phase !== 'run') return;
             phase = 'ask'; tip.textContent = '剛才窗戶上的號碼是？';
-            grid = kit.btnGrid(field, q.options.map(function (o, k) { return { text: o, kind: 'line', cls: 'knt-opt', onTap: function () { judge(k); } }; }), { cols: 2, h: 92, gap: 10, bottom: 8 });
+            grid = kit.btnGrid(field, q.options.map(function (o, k) { return { text: o, kind: 'line', cls: 'kinetic-opt', onTap: function () { judge(k); } }; }), { cols: 2, h: 92, gap: 10, bottom: 8 });
             if (level === 1 && kit.once('kinetic.hint')) kit.hintOn(stage, grid.btns[q.answerIdx], { mode: 'tap', delay: 900, text: '請點剛才看到的號碼' });
             api.timer(ANSWER_S * 1000, function () { judge(-1); });
         }
@@ -219,15 +220,15 @@
             if (done || api.over || phase !== 'ask') return;
             done = true; phase = 'end'; api.stopTimer();
             var ok = k === q.answerIdx;
-            grid.btns[q.answerIdx].classList.add('knt-ok'); if (k >= 0 && !ok) grid.btns[k].classList.add('knt-bad');
+            grid.btns[q.answerIdx].classList.add('kinetic-ok'); if (k >= 0 && !ok) grid.btns[k].classList.add('kinetic-bad');
             tip.textContent = '火車倒車回來看看';
             /* 揭曉：火車倒車，停在貼號碼的那一節（正中央），號碼貼紙放大 */
             var from = x0, to = revealX(W, T.cw, q.target);
             api.my.tween(REVERSE_MS, function (p) { setX(from + (to - from) * p); }, kit.easeOutCubic).then(function () {
                 if (!stickerEl || !stickerEl.isConnected) return;
-                stickerEl.classList.add('knt-sticker--zoom');
+                stickerEl.classList.add('kinetic-sticker--zoom');
                 info.textContent = ok ? '答對了！號碼是 ' + q.number : (k >= 0 ? '正確是 ' + q.number + '，你選了 ' + q.options[k] : '時間到！號碼是 ' + q.number);
-                info.classList.add(ok ? 'knt-info--ok' : 'knt-info--bad');
+                info.classList.add(ok ? 'kinetic-info--ok' : 'kinetic-info--bad');
             });
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: REVERSE_MS + ZOOM_MS + 1500 }); return; }
             kit.flash(stage, false, api.my);

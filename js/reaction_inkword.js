@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_inkword.js — 秒反應・字的顏色（企劃 315）
+   樣式：css/games/reaction_inkword.css（這款專屬的 class 一律以「inkword-」開頭；共用元件在 css/reaction_common.css）
    一個字一個字閃過：每個字是一種顏色的名字，用**另一種**顏色寫（例如用藍色寫的「紅」）。閃完 3 → 7 個字之後，問一個問題——
    「第 3 個字寫的是什麼？」（要記字）或「第 3 個字是什麼顏色？」（要記墨水的顏色），點下面的顏色按鈕。
    ───────────────────────────────────────────────────────────────────
@@ -26,7 +27,7 @@
     var WHICH_FROM = 8, WHICH_P = [0.15, 0.4];  /* 第幾關起會問「第幾個字是用 X 色寫的」、機率（第 WHICH_FROM 關 → 到頂） */
     var LEAD_MS = 600;
     var MAX_LEVEL = 90;
-    var COLORS = [                              /* 六種顏色：id 對應 CSS 的 .ikw-c--id 與 theme 的 --ikw-id */
+    var COLORS = [                              /* 六種顏色：id 對應 CSS 的 .inkword-c--id 與 theme 的 --ikw-id */
         { id: 'red', name: '紅' }, { id: 'yellow', name: '黃' }, { id: 'green', name: '綠' }, { id: 'blue', name: '藍' }, { id: 'purple', name: '紫' }, { id: 'orange', name: '橘' }
     ];
 
@@ -70,7 +71,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'ikw-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'inkword-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -84,19 +85,19 @@
         api.info = q;
         console.log('[字的顏色] 第 ' + level + ' 關：' + q.seq.map(function (s) { return COLORS[s.w].name + '(' + COLORS[s.c].name + ')'; }).join(' ') + '（字(墨色)）；' + questionText(Q) + ' 答案 ' + (Q.type === 'which' ? '第 ' + (Q.answer + 1) + ' 個' : COLORS[Q.answer].name) + '；每個停 ' + q.flashMs + ' 毫秒');
 
-        var field = h('div', { 'class': 'ikw-field' });
+        var field = h('div', { 'class': 'inkword-field' });
         stage.appendChild(field);
-        var tip = h('div', { 'class': 'qz-note ikw-tip', text: '看每個字寫了什麼、用什麼顏色寫' });
+        var tip = h('div', { 'class': 'qz-note inkword-tip', text: '看每個字寫了什麼、用什麼顏色寫' });
         field.appendChild(tip);
-        var paper = h('div', { 'class': 'ikw-paper' });
-        var glyph = h('div', { 'class': 'ikw-glyph', text: '' });
+        var paper = h('div', { 'class': 'inkword-paper' });
+        var glyph = h('div', { 'class': 'inkword-glyph', text: '' });
         paper.appendChild(glyph); field.appendChild(paper);
-        var dots = h('div', { 'class': 'ikw-dots' });
-        for (var i = 0; i < len; i++) dots.appendChild(h('span', { 'class': 'ikw-dot' }));
+        var dots = h('div', { 'class': 'inkword-dots' });
+        for (var i = 0; i < len; i++) dots.appendChild(h('span', { 'class': 'inkword-dot' }));
         field.appendChild(dots);
-        var ask = h('div', { 'class': 'ikw-ask', text: '' });
+        var ask = h('div', { 'class': 'inkword-ask', text: '' });
         field.appendChild(ask);
-        var info = h('div', { 'class': 'qz-note ikw-info', text: '' });
+        var info = h('div', { 'class': 'qz-note inkword-info', text: '' });
         field.appendChild(info);
         var phase = 'show', done = false, grid = null, k = 0;
 
@@ -104,8 +105,8 @@
         function showNext() {
             if (api.over) return;
             if (k >= len) { glyph.textContent = ''; askNow(); return; }
-            var s = q.seq[k]; glyph.textContent = COLORS[s.w].name; glyph.className = 'ikw-glyph ikw-c--' + COLORS[s.c].id;
-            dots.children[k].classList.add('ikw-dot--on'); Sfx.play('click');
+            var s = q.seq[k]; glyph.textContent = COLORS[s.w].name; glyph.className = 'inkword-glyph inkword-c--' + COLORS[s.c].id;
+            dots.children[k].classList.add('inkword-dot--on'); Sfx.play('click');
             api.after(q.flashMs, function () { glyph.textContent = ''; api.after(q.gapMs, function () { k++; showNext(); }); });
         }
         api.after(LEAD_MS, showNext);
@@ -114,8 +115,8 @@
         function askNow() {
             phase = 'ask'; tip.textContent = '回答問題'; ask.textContent = questionText(Q); dots.style.display = 'none'; paper.style.display = 'none';
             var items;
-            if (Q.type === 'which') items = q.seq.map(function (s, i) { return { text: String(i + 1), kind: 'line', cls: 'ikw-num', onTap: function () { judge(i); } }; });
-            else items = COLORS.map(function (c, i) { return { text: c.name, kind: 'line', cls: 'ikw-sw ikw-sw--' + c.id, onTap: function () { judge(i); } }; });
+            if (Q.type === 'which') items = q.seq.map(function (s, i) { return { text: String(i + 1), kind: 'line', cls: 'inkword-num', onTap: function () { judge(i); } }; });
+            else items = COLORS.map(function (c, i) { return { text: c.name, kind: 'line', cls: 'inkword-sw inkword-sw--' + c.id, onTap: function () { judge(i); } }; });
             var cols = Q.type === 'which' ? Math.min(len, 4) : 3;
             grid = kit.btnGrid(field, items, { cols: cols, h: Q.type === 'which' ? 96 : 100, gap: 10 });
             api.timer(q.respMs, function () { judge(-1); });
@@ -125,19 +126,19 @@
             if (done || api.over || phase !== 'ask') return;
             done = true; phase = 'end';
             var ok = pick === Q.answer;
-            grid.btns[Q.answer].classList.add('ikw-ok');
-            if (pick >= 0 && !ok) grid.btns[pick].classList.add('ikw-bad');
+            grid.btns[Q.answer].classList.add('inkword-ok');
+            if (pick >= 0 && !ok) grid.btns[pick].classList.add('inkword-bad');
             var ansText = Q.type === 'which' ? '第 ' + (Q.answer + 1) + ' 個' : COLORS[Q.answer].name;
             if (ok) { info.textContent = '答對了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1200 }); return; }
             /* 答錯：把整串字並排，被問的標起來 */
             ask.style.display = 'none';
-            var strip = h('div', { 'class': 'ikw-strip' });
+            var strip = h('div', { 'class': 'inkword-strip' });
             q.seq.forEach(function (s, i) {
-                var cell = h('div', { 'class': 'ikw-cell' + (i === Q.idx ? ' ikw-cell--ask' : '') });
-                cell.appendChild(h('div', { 'class': 'ikw-cell__no', text: String(i + 1) }));
-                cell.appendChild(h('div', { 'class': 'ikw-cell__ch ikw-c--' + COLORS[s.c].id, text: COLORS[s.w].name }));
-                cell.appendChild(h('div', { 'class': 'ikw-cell__txt', text: '字 ' + COLORS[s.w].name }));
-                cell.appendChild(h('div', { 'class': 'ikw-cell__txt', text: '墨 ' + COLORS[s.c].name }));
+                var cell = h('div', { 'class': 'inkword-cell' + (i === Q.idx ? ' inkword-cell--ask' : '') });
+                cell.appendChild(h('div', { 'class': 'inkword-cell__no', text: String(i + 1) }));
+                cell.appendChild(h('div', { 'class': 'inkword-cell__ch inkword-c--' + COLORS[s.c].id, text: COLORS[s.w].name }));
+                cell.appendChild(h('div', { 'class': 'inkword-cell__txt', text: '字 ' + COLORS[s.w].name }));
+                cell.appendChild(h('div', { 'class': 'inkword-cell__txt', text: '墨 ' + COLORS[s.c].name }));
                 strip.appendChild(cell);
             });
             field.insertBefore(strip, info);

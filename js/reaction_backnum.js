@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_backnum.js — 秒反應・倒背數字（原「倒背電話」）
+   樣式：css/games/reaction_backnum.css（這款專屬的 class 一律以「backnum-」開頭；共用元件在 css/reaction_common.css）
    3×3 九宮格（數字 1～9）。先看格子依序發亮，再「倒著」把順序按回去：
    例如亮 1、2、3，就要按 3、2、1。看你能過第幾關。
    ───────────────────────────────────────────────────────────────────
@@ -78,16 +79,16 @@
             /* level 關卡；cleared 已過幾關；seq 亮燈順序；want 要按的順序（倒過來）；idx 目前按到第幾個；runId 每次播放 +1，讓舊的排程知道自己過期 */
             var level = startAt || 1, cleared = level - 1, newRec = false, state = 'idle', seq = [], want = [], idx = 0, runId = 0;
             /* 建立畫面元素：標題、橫幅提示、九宮格、開場大字 */
-            var head = h('div', { 'class': 'bn-head' });
-            var banner = h('div', { 'class': 'bn-banner' });
-            var grid = h('div', { 'class': 'bn-grid' });
-            var splash = h('div', { 'class': 'bn-splash' }, [h('div', { 'class': 'bn-splash__big', text: '倒著順序' }), h('div', { 'class': 'bn-splash__big', text: '按數字！' }), h('div', { 'class': 'bn-splash__small', text: '例如亮 1、2、3，就要按 3、2、1' })]);
+            var head = h('div', { 'class': 'backnum-head' });
+            var banner = h('div', { 'class': 'backnum-banner' });
+            var grid = h('div', { 'class': 'backnum-grid' });
+            var splash = h('div', { 'class': 'backnum-splash' }, [h('div', { 'class': 'backnum-splash__big', text: '倒著順序' }), h('div', { 'class': 'backnum-splash__big', text: '按數字！' }), h('div', { 'class': 'backnum-splash__small', text: '例如亮 1、2、3，就要按 3、2、1' })]);
             /* cells：以數字當索引存放九顆按鈕（cells[1]…cells[9]） */
             var cells = [];
             for (var n = 1; n <= 9; n++) {
                 /* 這個 (function (n) {...})(n) 是「立即執行函式」：為每個迴圈各自留住一份 n（舊式 JS 的 var 沒有區塊範圍，沒包起來的話所有按鈕都會共用同一個 n） */
                 (function (n) {
-                    var el = h('button', { 'class': 'bn-cell', text: String(n) });
+                    var el = h('button', { 'class': 'backnum-cell', text: String(n) });
                     /* pointerdown：手指一碰到就算按下，比 click 更即時 */
                     el.addEventListener('pointerdown', function (e) { e.preventDefault(); tap(n); });
                     cells[n] = el;
@@ -105,7 +106,7 @@
                 head.textContent = '第 ' + level + ' 關・' + seqLen(level) + ' 個數字';
             }
             /* 設定橫幅的文字與樣式（cls 是顏色變化版） */
-            function setBanner(text, cls) { banner.textContent = text; banner.className = 'bn-banner' + (cls ? ' bn-banner--' + cls : ''); }
+            function setBanner(text, cls) { banner.textContent = text; banner.className = 'backnum-banner' + (cls ? ' backnum-banner--' + cls : ''); }
 
             /* 讓某格閃一下 class（發亮、答對或答錯的顏色），ms 毫秒後移除 */
             function flash(n, cls, ms) {
@@ -126,7 +127,7 @@
                 var lit = litSec(level) * 1000, gap = GAP_S * 1000, t = 400;
                 /* 用 forEach 為每個數字排一個「幾毫秒後亮起」的計時器：my.after(延遲, 函式) */
                 seq.forEach(function (n) {
-                    my.after(t, function () { if (id === runId) { flash(n, 'bn-cell--lit', lit); Sfx.play('tick'); } });
+                    my.after(t, function () { if (id === runId) { flash(n, 'backnum-cell--lit', lit); Sfx.play('tick'); } });
                     t += lit + gap;
                 });
                 /* 全部亮完後切換到輸入階段 */
@@ -157,7 +158,7 @@
                 if (state !== 'input') return;
                 /* 按對了：要按的順序 want 的第 idx 個 */
                 if (n === want[idx]) {
-                    flash(n, 'bn-cell--ok', 350);
+                    flash(n, 'backnum-cell--ok', 350);
                     Sfx.play('ok');
                     idx++;
                     /* 全部按完＝過關 */
@@ -175,7 +176,7 @@
                 }
                 /* 按錯：一次就結束（沒有機會次數），先讓錯的那格紅一下，再顯示結算 */
                 state = 'wrong';
-                flash(n, 'bn-cell--bad', 700);
+                flash(n, 'backnum-cell--bad', 700);
                 Sfx.play('bad');
                 setBanner('按錯了！', 'bad');
                 my.after(900, function () {

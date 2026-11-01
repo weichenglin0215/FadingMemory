@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_bounce.js — 秒反應・球會跑去哪（彈珠檯）
+   樣式：css/games/reaction_bounce.css（這款專屬的 class 一律以「bounce-」開頭；共用元件在 css/reaction_common.css）
    彈珠從檯子上方掉下來，在交錯排列的釘子間彈來彈去；最下面的收集口（共 7 個）和它上面一段被簾子蓋住。
    猜猜珠子最後會掉進哪一個收集口，點下去：猜中就進下一關，簾子越來越高；猜錯就結束，看你能過第幾關。
    ───────────────────────────────────────────────────────────────────
@@ -235,47 +236,47 @@
 
             /* level 目前第幾關；cleared 已經猜中幾關；newRec 有沒有刷新最佳；cur 這一關的資料；picked 玩家猜的收集口 */
             var level = (startAt || 1) - 1, cleared = level, newRec = false, state = 'idle', rid = 0, cur = null, picked = null;
-            var head = h('div', { 'class': 'bo-head' });
-            var banner = h('div', { 'class': 'bo-banner' });
-            var field = h('div', { 'class': 'bo-field' });
+            var head = h('div', { 'class': 'bounce-head' });
+            var banner = h('div', { 'class': 'bounce-banner' });
+            var field = h('div', { 'class': 'bounce-field' });
             [head, banner, field].forEach(function (n) { root.appendChild(n); });
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
             /* 畫檯面（SVG）：底板、釘子、分隔線、軌跡、珠子、簾子、7 個可點的收集口 */
             /* 檯面（SVG）*/
-            var svg = kit.svg('svg', { 'class': 'bo-svg', viewBox: '0 0 ' + BW + ' ' + BH, preserveAspectRatio: 'xMidYMid meet' }, field);
-            kit.svg('rect', { 'class': 'bo-board', x: 0, y: 0, width: BW, height: BH }, svg);
-            PEGS.forEach(function (p) { kit.svg('circle', { 'class': 'bo-peg', cx: p.x, cy: p.y, r: PEG_R }, svg); });
+            var svg = kit.svg('svg', { 'class': 'bounce-svg', viewBox: '0 0 ' + BW + ' ' + BH, preserveAspectRatio: 'xMidYMid meet' }, field);
+            kit.svg('rect', { 'class': 'bounce-board', x: 0, y: 0, width: BW, height: BH }, svg);
+            PEGS.forEach(function (p) { kit.svg('circle', { 'class': 'bounce-peg', cx: p.x, cy: p.y, r: PEG_R }, svg); });
             /* 分隔線 */
-            for (var k = 1; k < SLOTS; k++) kit.svg('line', { 'class': 'bo-div', x1: k * W, y1: DIV_Y, x2: k * W, y2: BH }, svg);
+            for (var k = 1; k < SLOTS; k++) kit.svg('line', { 'class': 'bounce-div', x1: k * W, y1: DIV_Y, x2: k * W, y2: BH }, svg);
             /* 軌跡線（polyline，揭曉時才畫）：trail＝玩家看得到的那段（藍色實線）；trailHid＝被簾子蓋住的那段（橘色虛線，慢動作播放時一點一點畫出來） */
-            var trail = kit.svg('polyline', { 'class': 'bo-trail', points: '' }, svg);
-            var trailHid = kit.svg('polyline', { 'class': 'bo-trail bo-trail--hid', points: '' }, svg);
+            var trail = kit.svg('polyline', { 'class': 'bounce-trail', points: '' }, svg);
+            var trailHid = kit.svg('polyline', { 'class': 'bounce-trail bounce-trail--hid', points: '' }, svg);
             /* 玩家看到的最後位置：虛線圈（第一段閃爍，之後一直留著）與「最後看到」標籤 */
-            var seen = kit.svg('circle', { 'class': 'bo-seen', cx: -100, cy: -100, r: BALL_R + 6 }, svg);
-            var ball = kit.svg('circle', { 'class': 'bo-ball', cx: -100, cy: -100, r: BALL_R }, svg);
-            var seenTxt = kit.svg('text', { 'class': 'bo-seen__t', x: -100, y: -100, 'text-anchor': 'middle' }, svg);
+            var seen = kit.svg('circle', { 'class': 'bounce-seen', cx: -100, cy: -100, r: BALL_R + 6 }, svg);
+            var ball = kit.svg('circle', { 'class': 'bounce-ball', cx: -100, cy: -100, r: BALL_R }, svg);
+            var seenTxt = kit.svg('text', { 'class': 'bounce-seen__t', x: -100, y: -100, 'text-anchor': 'middle' }, svg);
             seenTxt.textContent = '最後看到';
             /* 簾子（遮住最下面的收集口）：高度每一關不一樣，位置在 layoutCurtain 裡設定 */
-            var curtain = kit.svg('rect', { 'class': 'bo-curtain', x: 0, y: curtainY(level + 1), width: BW, height: hiddenH(level + 1) }, svg);
+            var curtain = kit.svg('rect', { 'class': 'bounce-curtain', x: 0, y: curtainY(level + 1), width: BW, height: hiddenH(level + 1) }, svg);
             var slotEls = [], slotBgs = [], slotTxts = [];
             /* 7 個收集口：用立即執行函式 (function (s) {...})(s) 讓每個按鈕記住自己的編號 s（var 沒有區塊範圍，不這樣寫所有按鈕都會共用最後一個 s） */
             for (var s = 0; s < SLOTS; s++) {
                 (function (s) {
-                    var g = kit.svg('g', { 'class': 'bo-slot' }, svg);
-                    slotBgs.push(kit.svg('rect', { 'class': 'bo-slot__bg', x: s * W + 3, y: 0, width: W - 6, height: 10, rx: 10 }, g));
-                    var t = kit.svg('text', { 'class': 'bo-slot__t', x: s * W + W / 2, y: 0, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, g);
+                    var g = kit.svg('g', { 'class': 'bounce-slot' }, svg);
+                    slotBgs.push(kit.svg('rect', { 'class': 'bounce-slot__bg', x: s * W + 3, y: 0, width: W - 6, height: 10, rx: 10 }, g));
+                    var t = kit.svg('text', { 'class': 'bounce-slot__t', x: s * W + W / 2, y: 0, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, g);
                     t.textContent = String(s + 1);
                     slotTxts.push(t);
                     g.addEventListener('pointerdown', function (e) { e.preventDefault(); choose(s); });
                     slotEls.push(g);
                 })(s);
             }
-            /* armed：珠子掉完了、可以選了（沒掉完以前收集口按鈕是半透明、點了沒反應，見 CSS .bo-slot--wait） */
+            /* armed：珠子掉完了、可以選了（沒掉完以前收集口按鈕是半透明、點了沒反應，見 CSS .bounce-slot--wait） */
             var armed = false;
             function setArmed(on) {
                 armed = on;
-                slotEls.forEach(function (g) { g.classList.toggle('bo-slot--wait', !on); });
+                slotEls.forEach(function (g) { g.classList.toggle('bounce-slot--wait', !on); });
                 banner.textContent = on ? '猜珠子會掉進幾號（不限時間）' : '珠子還在掉，等它掉完再猜…';
             }
             function setBall(x, y) { ball.setAttribute('cx', x.toFixed(1)); ball.setAttribute('cy', y.toFixed(1)); }
@@ -304,9 +305,9 @@
                 head.textContent = '第 ' + level + ' 關　已過 ' + cleared + ' 關';
                 setArmed(false);
                 curtain.setAttribute('opacity', 1);
-                slotEls.forEach(function (g) { g.classList.remove('bo-slot--pick', 'bo-slot--ok', 'bo-slot--bad'); g.style.display = ''; });
+                slotEls.forEach(function (g) { g.classList.remove('bounce-slot--pick', 'bounce-slot--ok', 'bounce-slot--bad'); g.style.display = ''; });
                 trail.setAttribute('points', ''); trailHid.setAttribute('points', '');
-                seen.setAttribute('class', 'bo-seen'); seen.setAttribute('cx', -100); seenTxt.setAttribute('x', -100);
+                seen.setAttribute('class', 'bounce-seen'); seen.setAttribute('cx', -100); seenTxt.setAttribute('x', -100);
                 ball.setAttribute('cx', -100);
                 state = 'fall';
                 /* 主控台印出這一關的實際資料（簾子、起點、初速、全程秒數、落在哪個收集口），方便驗證 */
@@ -327,7 +328,7 @@
             function choose(s) {
                 if (state !== 'fall' || !armed) return;
                 picked = s;
-                slotEls[s].classList.add('bo-slot--pick');
+                slotEls[s].classList.add('bounce-slot--pick');
                 Sfx.play('click');
                 reveal(s);
             }
@@ -345,12 +346,12 @@
                 trail.setAttribute('points', trailPoints(sim, tS));
                 trailHid.setAttribute('points', '');
                 setBall(p0.x, p0.y);
-                seen.setAttribute('cx', p0.x.toFixed(1)); seen.setAttribute('cy', p0.y.toFixed(1)); seen.setAttribute('class', 'bo-seen bo-seen--on');
+                seen.setAttribute('cx', p0.x.toFixed(1)); seen.setAttribute('cy', p0.y.toFixed(1)); seen.setAttribute('class', 'bounce-seen bounce-seen--on');
                 seenTxt.setAttribute('x', Math.max(40, Math.min(BW - 40, p0.x)).toFixed(1)); seenTxt.setAttribute('y', (p0.y - BALL_R - 12).toFixed(1));
                 my.after(REVEAL_SEEN_MS, function () {
                     if (id !== rid) return;
                     banner.textContent = '慢動作：簾子後面…';
-                    seen.setAttribute('class', 'bo-seen bo-seen--keep');
+                    seen.setAttribute('class', 'bounce-seen bounce-seen--keep');
                     my.tween(revealMs(sim), function (p) {
                         var ts = tS + (sim.tLand - tS) * p, q = motionAt(sim, ts);
                         trailHid.setAttribute('points', trailPoints(sim, ts, tS));
@@ -363,9 +364,9 @@
             function conclude(s) {
                 var actual = cur.sim.slot, right = s === actual;
                 setBall(actual * W + W / 2, REST_Y);
-                var tag = kit.svg('g', { 'class': 'bo-result' }, svg);
-                kit.svg('rect', { 'class': 'bo-result__bg ' + (right ? 'bo-result__bg--ok' : 'bo-result__bg--bad'), x: actual * W + 2, y: DIV_Y, width: W - 4, height: SLOT_H - 4, rx: 8 }, tag);
-                if (!right) kit.svg('rect', { 'class': 'bo-result__bg bo-result__bg--you', x: s * W + 2, y: DIV_Y, width: W - 4, height: SLOT_H - 4, rx: 8 }, tag);
+                var tag = kit.svg('g', { 'class': 'bounce-result' }, svg);
+                kit.svg('rect', { 'class': 'bounce-result__bg ' + (right ? 'bounce-result__bg--ok' : 'bounce-result__bg--bad'), x: actual * W + 2, y: DIV_Y, width: W - 4, height: SLOT_H - 4, rx: 8 }, tag);
+                if (!right) kit.svg('rect', { 'class': 'bounce-result__bg bounce-result__bg--you', x: s * W + 2, y: DIV_Y, width: W - 4, height: SLOT_H - 4, rx: 8 }, tag);
                 Sfx.play(right ? 'win' : 'bad');
                 banner.textContent = (right ? '猜中了！' : '猜錯了！') + '　珠子掉進第 ' + (actual + 1) + ' 號';
                 if (right) {

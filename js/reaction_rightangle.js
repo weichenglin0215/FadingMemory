@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_rightangle.js — 秒反應・畫成直角
+   樣式：css/games/reaction_rightangle.css（這款專屬的 class 一律以「rightangle-」開頭；共用元件在 css/reaction_common.css）
    螢幕下方中間是起點，一條題目線段從起點往左上延伸（角度隨機）；手指從起點往右拖，
    畫出一條和題目線段「垂直」的答案線段。放開手指就是答案，只有一次機會。
    ───────────────────────────────────────────────────────────────────
@@ -80,24 +81,24 @@
         var off = s.y - S.y;       /* 舞台比預設矮時整體上移（座標一律用 S，畫的時候加 off） */
         console.log('[畫成直角] 題目線角度 ' + cfg.th.toFixed(2) + '°，標準垂線 ' + cfg.ans.toFixed(2) + '°');
 
-        var svg = kit.svg('svg', { 'class': 'ra-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
+        var svg = kit.svg('svg', { 'class': 'rightangle-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
         var full = { vx: 0, vy: 0, vw: W, vh: H };
         /* 背景斜紋 */
         var gBg = kit.svg('g', { transform: 'rotate(' + (-cfg.stripe).toFixed(2) + ' ' + s.x + ' ' + s.y + ')' }, svg);
-        for (var k = -14; k <= 14; k++) kit.svg('line', { x1: s.x - 700, x2: s.x + 700, y1: s.y + k * 46, y2: s.y + k * 46, 'class': 'ra-stripe' }, gBg);
+        for (var k = -14; k <= 14; k++) kit.svg('line', { x1: s.x - 700, x2: s.x + 700, y1: s.y + k * 46, y2: s.y + k * 46, 'class': 'rightangle-stripe' }, gBg);
         /* 題目線段 */
         var qx = s.x + cfg.len * Math.cos(rad(cfg.th)), qy = s.y - cfg.len * Math.sin(rad(cfg.th));
-        kit.svg('line', { x1: s.x, y1: s.y, x2: qx, y2: qy, 'class': 'ra-q' }, svg);
+        kit.svg('line', { x1: s.x, y1: s.y, x2: qx, y2: qy, 'class': 'rightangle-q' }, svg);
         var gRev = kit.svg('g', {}, svg);
-        var mine = kit.svg('line', { x1: s.x, y1: s.y, x2: s.x, y2: s.y, 'class': 'ra-mine' }, svg);
-        var dot = kit.svg('circle', { cx: s.x, cy: s.y, r: 13, 'class': 'ra-start' }, svg);
-        var msg = h('div', { 'class': 'ra-msg' });
+        var mine = kit.svg('line', { x1: s.x, y1: s.y, x2: s.x, y2: s.y, 'class': 'rightangle-mine' }, svg);
+        var dot = kit.svg('circle', { cx: s.x, cy: s.y, r: 13, 'class': 'rightangle-start' }, svg);
+        var msg = h('div', { 'class': 'rightangle-msg' });
         stage.appendChild(msg);
 
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從起點往「標準垂線的方向」重複移動（第一次的正確答案） */
         if (kit.once('rightangle.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: s.x, y: s.y, dx: 110 * Math.cos(rad(cfg.ans)), dy: -110 * Math.sin(rad(cfg.ans)), delay: 300, text: '請拖曳畫出垂直的線' });
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
-        function say(t) { msg.textContent = t; msg.classList.toggle('ra-msg--on', !!t); }
+        function say(t) { msg.textContent = t; msg.classList.toggle('rightangle-msg--on', !!t); }
         function pos(e) { var p = kit.localPt(e, stage); return { x: p.x, y: p.y - off }; }
 
         stage.addEventListener('pointerdown', function (e) {
@@ -132,15 +133,15 @@
             var ix = s.x + Rz * Math.cos(rad(cfg.ans)), iy = s.y - Rz * Math.sin(rad(cfg.ans));
             var ux = s.x + Rz * Math.cos(rad(thp)), uy = s.y - Rz * Math.sin(rad(thp));
             /* 標準垂線（綠色虛線）、直角記號 */
-            kit.svg('line', { x1: s.x, y1: s.y, x2: ix, y2: iy, 'class': 'ra-ideal' }, gRev);
+            kit.svg('line', { x1: s.x, y1: s.y, x2: ix, y2: iy, 'class': 'rightangle-ideal' }, gRev);
             var a1 = rad(cfg.th), a2 = rad(cfg.ans), m = 34;
             var p1 = { x: s.x + m * Math.cos(a1), y: s.y - m * Math.sin(a1) }, p2 = { x: s.x + m * Math.cos(a2), y: s.y - m * Math.sin(a2) };
-            kit.svg('polyline', { points: [p1.x, p1.y, p1.x + p2.x - s.x, p1.y + p2.y - s.y, p2.x, p2.y].map(function (v) { return v.toFixed(1); }).join(','), 'class': 'ra-sq' }, gRev);
-            mine.setAttribute('class', 'ra-mine ra-mine--rev');
-            kit.svg('circle', { cx: ix, cy: iy, r: 6, 'class': 'ra-endi' }, gRev);
-            kit.svg('circle', { cx: ux, cy: uy, r: 6, 'class': 'ra-endu' }, gRev);
-            kit.svg('circle', { cx: ix, cy: iy, r: 1.2, 'class': 'ra-dot' }, gRev);      /* 圓心的小黑點（放在最上層，兩個圓疊在一起也看得到） */
-            kit.svg('circle', { cx: ux, cy: uy, r: 1.2, 'class': 'ra-dot' }, gRev);
+            kit.svg('polyline', { points: [p1.x, p1.y, p1.x + p2.x - s.x, p1.y + p2.y - s.y, p2.x, p2.y].map(function (v) { return v.toFixed(1); }).join(','), 'class': 'rightangle-sq' }, gRev);
+            mine.setAttribute('class', 'rightangle-mine rightangle-mine--rev');
+            kit.svg('circle', { cx: ix, cy: iy, r: 6, 'class': 'rightangle-endi' }, gRev);
+            kit.svg('circle', { cx: ux, cy: uy, r: 6, 'class': 'rightangle-endu' }, gRev);
+            kit.svg('circle', { cx: ix, cy: iy, r: 1.2, 'class': 'rightangle-dot' }, gRev);      /* 圓心的小黑點（放在最上層，兩個圓疊在一起也看得到） */
+            kit.svg('circle', { cx: ux, cy: uy, r: 1.2, 'class': 'rightangle-dot' }, gRev);
             var side = signedDiff(thp, cfg.ans) > 0 ? '逆時針' : '順時針';
             var z = zoomFor(real, Rz);
             var mid = { x: (ix + ux) / 2, y: (iy + uy) / 2 };

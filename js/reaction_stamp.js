@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_stamp.js — 秒反應・心在正中央（檔名／id 仍是 stamp；V1.27 之前叫「蓋在框內」）
+   樣式：css/games/reaction_stamp.css（這款專屬的 class 一律以「stamp-」開頭；共用元件在 css/reaction_common.css）
    公文紙上有一個紅框，但只露出四個角標；把「愛心印章」拖到框裡，讓愛心的正中心對準紅框的正中心，按「蓋章」，只有一次機會。
    ───────────────────────────────────────────────────────────────────
    · V1.27（玩家意見）：改名「心在正中央」；評分標準改成「印章的中心點」與「紅框中心點」的距離（不再看邊緣貼不貼齊）；
@@ -132,33 +133,33 @@
         var st = { x: s0.x, y: s0.y }, locked = false, hint = null;
         console.log('[心在正中央] 紙張歪 ' + cfg.phi.toFixed(2) + '°，紅框中心 (' + cfg.frame.x.toFixed(1) + ', ' + cfg.frame.y.toFixed(1) + ')，愛心寬 ' + look.w.toFixed(0));
 
-        var svg = kit.svg('svg', { 'class': 'st-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
+        var svg = kit.svg('svg', { 'class': 'stamp-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
         var full = { vx: 0, vy: 0, vw: W, vh: H };
         /* 紙張 */
-        kit.svg('rect', { x: -PAPER.w / 2, y: -PAPER.h / 2, width: PAPER.w, height: PAPER.h, rx: 6, 'class': 'st-paper',
+        kit.svg('rect', { x: -PAPER.w / 2, y: -PAPER.h / 2, width: PAPER.w, height: PAPER.h, rx: 6, 'class': 'stamp-paper',
             transform: 'translate(' + PAPER.x + ' ' + PAPER.y + ') rotate(' + cfg.phi.toFixed(3) + ')' }, svg);
         /* 紅框的四個角標（框外側） */
         var gF = kit.svg('g', { transform: 'translate(' + cfg.frame.x.toFixed(2) + ' ' + cfg.frame.y.toFixed(2) + ') rotate(' + cfg.phi.toFixed(3) + ')' }, svg);
         [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(function (sg) {
             var px = sg[0] * (FW / 2 + MARK_GAP), py = sg[1] * (FH / 2 + MARK_GAP);
-            kit.svg('polyline', { points: [px - sg[0] * MARK_LEG, py, px, py, px, py - sg[1] * MARK_LEG].join(','), 'class': 'st-mark' }, gF);
+            kit.svg('polyline', { points: [px - sg[0] * MARK_LEG, py, px, py, px, py - sg[1] * MARK_LEG].join(','), 'class': 'stamp-mark' }, gF);
         });
-        var frameRect = kit.svg('rect', { x: -FW / 2, y: -FH / 2, width: FW, height: FH, 'class': 'st-frame', opacity: 0 }, gF);
+        var frameRect = kit.svg('rect', { x: -FW / 2, y: -FH / 2, width: FW, height: FH, 'class': 'stamp-frame', opacity: 0 }, gF);
         var gRev = kit.svg('g', {}, svg);
         /* 愛心印章：只有虛線外框（外圈、內圈各自的顏色／粗細／虛線間隔），沒有任何字 */
         var gS = kit.svg('g', {}, svg);
         var outerShape = heartShape(look.w), innerShape = heartShape(look.w * look.k2);
         function heartEl(shape, sty) {
-            return kit.svg('polygon', { points: pts2str(shape.pts), 'class': 'st-heart', fill: 'none', stroke: sty.color, 'stroke-width': sty.width,
+            return kit.svg('polygon', { points: pts2str(shape.pts), 'class': 'stamp-heart', fill: 'none', stroke: sty.color, 'stroke-width': sty.width,
                 'stroke-dasharray': sty.dash + ' ' + sty.gap }, gS);
         }
         var outerEl = heartEl(outerShape, look.outer);
         heartEl(innerShape, look.inner);
         function paint() { gS.setAttribute('transform', 'translate(' + st.x.toFixed(2) + ' ' + st.y.toFixed(2) + ')'); }
         paint();
-        var msg = h('div', { 'class': 'st-msg' });
+        var msg = h('div', { 'class': 'stamp-msg' });
         stage.appendChild(msg);
-        var okBtn = h('button', { 'class': 'btn btn--go st-ok', text: '蓋章' });
+        var okBtn = h('button', { 'class': 'btn btn--go stamp-ok', text: '蓋章' });
         stage.appendChild(okBtn);
 
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從愛心中央往「紅框中央」重複移動（第一次的正確答案） */
@@ -194,12 +195,12 @@
                 frameRect.setAttribute('opacity', 1);
                 /* 紅框中心（紅色十字）、愛心中心（黑點）、兩點之間的連線 */
                 var fc = cfg.frame;
-                kit.svg('line', { x1: fc.x, y1: fc.y, x2: st.x, y2: st.y, 'class': 'st-vec' }, gRev);
-                kit.svg('line', { x1: fc.x - 9, y1: fc.y, x2: fc.x + 9, y2: fc.y, 'class': 'st-fc' }, gRev);
-                kit.svg('line', { x1: fc.x, y1: fc.y - 9, x2: fc.x, y2: fc.y + 9, 'class': 'st-fc' }, gRev);
-                kit.svg('circle', { cx: st.x, cy: st.y, r: 4, 'class': 'st-sc' }, gRev);
+                kit.svg('line', { x1: fc.x, y1: fc.y, x2: st.x, y2: st.y, 'class': 'stamp-vec' }, gRev);
+                kit.svg('line', { x1: fc.x - 9, y1: fc.y, x2: fc.x + 9, y2: fc.y, 'class': 'stamp-fc' }, gRev);
+                kit.svg('line', { x1: fc.x, y1: fc.y - 9, x2: fc.x, y2: fc.y + 9, 'class': 'stamp-fc' }, gRev);
+                kit.svg('circle', { cx: st.x, cy: st.y, r: 4, 'class': 'stamp-sc' }, gRev);
                 msg.textContent = '兩個中心相距 ' + mm.toFixed(4) + ' 公釐';
-                msg.classList.add('st-msg--on');
+                msg.classList.add('stamp-msg--on');
                 var z = zoomFor(res.dist);
                 my.wait(600).then(function () {
                     if (z <= 1) return;

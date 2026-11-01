@@ -45,11 +45,11 @@ ok(ST.usedLater > 6000 * 0.9 * 0.75, '第 10 關起 200／2000 常常出現：' 
   const q2 = { target: 3700, notes: [1000, 1000, 1000, 500, 200, 100], n: 5 }; ok(T.whyText(T.judge(q2, 5), q2) === '剛剛好 3700 元！' && T.whyText(T.judge(q2, 6), q2) === '撥了 3800 元，目標 3700 元——多了 100 元' && T.whyText(T.judge(q2, 3), q2) === '撥了 3000 元，目標 3700 元——少了 700 元', 'whyText（含使用者企劃的「3800 元，多了 100」）'); }
 
 // ── 程式裡的接線 ──
-{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_countbills.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js'), theme = rd('../../css/theme.css');
-  ok(/api\.fail\(\{ delay: 4200/.test(src) && /showSpread\(r\)/.test(src) && /cbl-note--hit/.test(src) && /cbl-note--extra/.test(src) && /cbl-note--ghost/.test(src), '失敗：攤開、累加、剛好那張標綠、多的標紅、少了顯示下一張、停格夠久');
+{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_countbills.js'), css = rd('../../css/games/reaction_countbills.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js'), theme = rd('../../css/theme.css');
+  ok(/api\.fail\(\{ delay: 4200/.test(src) && /showSpread\(r\)/.test(src) && /countbills-note--hit/.test(src) && /countbills-note--extra/.test(src) && /countbills-note--ghost/.test(src), '失敗：攤開、累加、剛好那張標綠、多的標紅、少了顯示下一張、停格夠久');
   ok(/api\.timer\(q\.time/.test(src) && /done\('timeout'\)/.test(src) && /judge\(q, taken\)/.test(src), '限時、時間到判定、用 judge');
   ok(/pointerdown/.test(src) && /api\.solve = /.test(src) && /api\.wrong = /.test(src) && /armed/.test(src), '點一下撥一張；solve／wrong 只排一次');
-  ok(/\.cbl-d100 \{[^}]*var\(--cbl-d100\)/.test(css) && /\.cbl-d2000 \{[^}]*var\(--cbl-d2000\)/.test(css) && /\.cbl-note--hit \{[^}]*var\(--c-ok\)/.test(css) && /\.cbl-note--extra \{[^}]*var\(--c-bad-light\)/.test(css), '面額顏色、對錯標記用 CSS 變數');
+  ok(/\.countbills-d100 \{[^}]*var\(--cbl-d100\)/.test(css) && /\.countbills-d2000 \{[^}]*var\(--cbl-d2000\)/.test(css) && /\.countbills-note--hit \{[^}]*var\(--c-ok\)/.test(css) && /\.countbills-note--extra \{[^}]*var\(--c-bad-light\)/.test(css), '面額顏色、對錯標記用 CSS 變數');
   // 200 和 100、2000 和 1000 的顏色很接近（色相差 ≤ 25°）；其他面額差很多
   const hue = n => +new RegExp('--cbl-d' + n + ': hsl\\((\\d+)').exec(theme)[1];
   ok(Math.abs(hue(200) - hue(100)) <= 25 && Math.abs(hue(2000) - hue(1000)) <= 25 && Math.abs(hue(500) - hue(100)) > 60 && Math.abs(hue(500) - hue(1000)) > 60, '200≈100、2000≈1000 的顏色接近（色相 ' + [100, 200, 500, 1000, 2000].map(hue).join('/') + '）');

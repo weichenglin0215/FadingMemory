@@ -1,0 +1,97 @@
+/* ═══════════════════════════════════════
+   reaction_stackup.css — 重心疊疊樂（js/reaction_stackup.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「stackup-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 重心疊疊樂（.stackup-）═══ */
+.stackup-svg {
+    display: block;
+}
+
+.stackup-block {
+    stroke: var(--c-ink);
+    stroke-width: 3;
+    stroke-linejoin: round;
+}
+
+/* 上方預覽的那一塊：半透明＋虛線框，看得出還沒放下 */
+.stackup-block--prev {
+    opacity: 0.88;
+    stroke-dasharray: 8 5;
+}
+
+.stackup-ceil {
+    stroke: var(--c-bad);
+    stroke-width: 3;
+    stroke-dasharray: 10 8;
+    opacity: 0.55;
+}
+
+.stackup-floor {
+    fill: var(--c-yellow-soft);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+/* 方塊中心往下的導引線（只是讓你看出落下的位置） */
+.stackup-guide {
+    stroke: var(--c-ink-soft);
+    stroke-width: 2;
+    stroke-dasharray: 4 8;
+    opacity: 0.5;
+}
+
+.stackup-bar {
+    position: relative;
+    height: 56px;
+    margin-top: 8px;
+    touch-action: none;
+    cursor: ew-resize;
+}
+
+.stackup-track {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    top: 23px;
+    height: 10px;
+    border-radius: var(--r-pill);
+    background: var(--c-yellow-soft);
+    border: 2px solid var(--c-ink-soft);
+}
+
+.stackup-knob {
+    position: absolute;
+    top: 4px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--c-orange);
+    border: var(--bd);
+    box-shadow: var(--shadow-card);
+}
+
+.stackup-ok {
+    margin-top: 12px;
+}
+
+.stackup-msg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 108px;
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    pointer-events: none;
+}
+
+.stackup-msg--ok {
+    color: var(--c-green);
+}
+
+.stackup-msg--bad {
+    color: var(--c-recall);
+}

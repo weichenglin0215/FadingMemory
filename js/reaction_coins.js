@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_coins.js — 秒反應・零錢分類
+   樣式：css/games/reaction_coins.css（這款專屬的 class 一律以「coins-」開頭；共用元件在 css/reaction_common.css）
    題目是一個數字（例如 271），桌上散著一堆硬幣，點選硬幣讓「已選的總和」剛好等於題目。
    ───────────────────────────────────────────────────────────────────
    【好不好玩，全看硬幣怎麼規劃】這一份是規劃邏輯（程式照這個做）：
@@ -274,9 +275,9 @@
             var level = start || 1, cleared = level - 1, newRec = false;
 
             /* 建立畫面元素：題目、已選總額、桌面、時間條、「全部放回」按鈕 */
-            var target = h('div', { 'class': 'cn-target' });
-            var sumLine = h('div', { 'class': 'cn-sum' });
-            var table = h('div', { 'class': 'cn-table' });
+            var target = h('div', { 'class': 'coins-target' });
+            var sumLine = h('div', { 'class': 'coins-sum' });
+            var table = h('div', { 'class': 'coins-table' });
             var bar = h('div', { 'class': 'ld-time' }, [h('div', { 'class': 'ld-time__fill' })]);
             var fill = bar.firstChild;
             var clearBtn = h('button', { 'class': 'btn btn--line btn--sm', text: '全部放回' });
@@ -295,7 +296,7 @@
             function paintSum() {
                 if (!q) return;
                 var diff = q.N - sum;
-                sumLine.className = 'cn-sum' + (diff < 0 ? ' cn-sum--over' : '');
+                sumLine.className = 'coins-sum' + (diff < 0 ? ' coins-sum--over' : '');
                 sumLine.textContent = '已選 ' + sum + (diff < 0 ? '　超過了 ' + (-diff) : '　還差 ' + diff);
             }
 
@@ -303,7 +304,7 @@
             function toggle(co) {
                 if (state !== 'play') return;
                 co.on = !co.on;
-                co.el.classList.toggle('cn-coin--on', co.on);
+                co.el.classList.toggle('coins-coin--on', co.on);
                 sum += co.on ? co.d : -co.d;
                 Sfx.play('click');
                 paintSum();
@@ -314,7 +315,7 @@
             clearBtn.addEventListener('pointerdown', function (e) {
                 e.preventDefault();
                 if (state !== 'play') return;
-                coins.forEach(function (co) { co.on = false; co.el.classList.remove('cn-coin--on'); });
+                coins.forEach(function (co) { co.on = false; co.el.classList.remove('coins-coin--on'); });
                 sum = 0;
                 paintSum();
             });
@@ -345,7 +346,7 @@
                 coins = []; sum = 0; state = 'play';
                 /* 把每枚硬幣畫成一顆按鈕，放在隨機位置上 */
                 pos.forEach(function (p) {
-                    var el = h('button', { 'class': 'cn-coin cn-coin--' + p.d, text: String(p.d) });
+                    var el = h('button', { 'class': 'coins-coin coins-coin--' + p.d, text: String(p.d) });
                     el.style.width = el.style.height = SIZE[p.d] + 'px';
                     el.style.left = (p.x - SIZE[p.d] / 2) + 'px';
                     el.style.top = (p.y - SIZE[p.d] / 2) + 'px';
@@ -376,8 +377,8 @@
                 fill.style.width = '0%';
                 cleared = level;
                 if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
-                coins.forEach(function (co) { if (co.on) co.el.classList.add('cn-coin--ok'); });
-                sumLine.className = 'cn-sum cn-sum--ok';
+                coins.forEach(function (co) { if (co.on) co.el.classList.add('coins-coin--ok'); });
+                sumLine.className = 'coins-sum coins-sum--ok';
                 sumLine.textContent = '剛好 ' + q.N + '！';
                 Sfx.play('win');
                 level++;
@@ -393,9 +394,9 @@
                 var left = q.c.slice();
                 coins.forEach(function (co) {
                     var i = q.den.indexOf(co.d);
-                    if (left[i] > 0) { left[i]--; co.el.classList.add('cn-coin--answer'); }
+                    if (left[i] > 0) { left[i]--; co.el.classList.add('coins-coin--answer'); }
                 });
-                sumLine.className = 'cn-sum cn-sum--over';
+                sumLine.className = 'coins-sum coins-sum--over';
                 sumLine.textContent = '時間到了';
                 var failLevel = level, back = kit.resumeFrom(failLevel);
                 my.after(1800, function () {

@@ -51,9 +51,9 @@ ok(inRange / total > 0.9, '字群的筆劃落在這一關的範圍內');
 // 效能
 { const t0 = Date.now(); for (let i = 0; i < 2000; i++) T.makeLevel(1 + (i % 40), rnd); ok((Date.now() - t0) / 2000 < 3, '出題夠快'); }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_seenchars.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 4000/.test(src) && /drawDiff/.test(src) && /skc-cell--miss/.test(src), '失敗：並排比對、差異筆畫標紅、漏掉的字標出來、停格 2 秒以上');
-  ok(/\.skc-cell--ok \{[^}]*var\(--c-ok/.test(css) && /\.skc-cell--bad \{[^}]*var\(--c-bad/.test(css) && /\.skc-cell \{[^}]*var\(--skc-paper\)/.test(css), '綠色、紅色、字帖紙用 CSS 變數');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_seenchars.js'), css = rd('../../css/games/reaction_seenchars.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 4000/.test(src) && /drawDiff/.test(src) && /seenchars-cell--miss/.test(src), '失敗：並排比對、差異筆畫標紅、漏掉的字標出來、停格 2 秒以上');
+  ok(/\.seenchars-cell--ok \{[^}]*var\(--c-ok/.test(css) && /\.seenchars-cell--bad \{[^}]*var\(--c-bad/.test(css) && /\.seenchars-cell \{[^}]*var\(--skc-paper\)/.test(css), '綠色、紅色、字帖紙用 CSS 變數');
   ok(boot.indexOf("'js/reaction_seenchars.js'") > 0 && /形近字/.test(G.rule), 'boot.js 有載入、玩法說明提到形近字'); }
 ok(T.rating(2) !== T.rating(4) && T.rating(4) !== T.rating(7) && T.rating(7) !== T.rating(12) && T.rating(12) !== T.rating(20), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

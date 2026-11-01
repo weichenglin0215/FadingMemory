@@ -1,0 +1,89 @@
+/* ═══════════════════════════════════════
+   reaction_gomoku.css — 堵住五子（js/reaction_gomoku.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「gomoku-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 堵住五子（.gomoku-）═══ */
+.gomoku-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.gomoku-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+}
+
+.gomoku-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+}
+
+/* 米色棋盤（石桌）；格線和棋子都是 SVG 畫的 */
+.gomoku-board {
+    position: absolute;
+    background: var(--gmk-board);
+    outline: 4px solid var(--gmk-line);
+    box-shadow: var(--shadow-card);
+}
+
+.gomoku-svg {
+    display: block;
+}
+
+.gomoku-grid {
+    stroke: var(--gmk-line);
+    stroke-width: 1.2;
+}
+
+.gomoku-stone--b {
+    fill: var(--c-ink);
+}
+
+.gomoku-stone--w {
+    fill: var(--c-card);
+    stroke: var(--c-ink-soft);
+    stroke-width: 1.5;
+}
+
+/* 剛下的棋：從大變小彈一下（SVG 要指定 transform-box 才會繞著自己的中心縮放） */
+.gomoku-stone--new {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: gomoku-drop 0.6s ease-out;
+    /* V1.38.0：揭曉動畫放慢成 50% 速度（原本 0.3s） */
+}
+
+@keyframes gomoku-drop {
+    from {
+        transform: scale(1.6);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* 唯一的擋法：綠圈；白棋連成五顆：紅線穿過去 */
+.gomoku-ring {
+    fill: none;
+    stroke: var(--c-ok);
+    stroke-width: 4;
+}
+
+.gomoku-five {
+    stroke: var(--c-bad-light);
+    stroke-linecap: round;
+    opacity: 0.85;
+}

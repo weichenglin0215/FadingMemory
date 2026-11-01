@@ -1,0 +1,150 @@
+/* ═══════════════════════════════════════
+   reaction_butterfly.css — 蝴蝶不對稱（js/reaction_butterfly.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「butterfly-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 蝴蝶不對稱（.butterfly-）═══ */
+.butterfly-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.butterfly-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.butterfly-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+.butterfly-svg {
+    position: absolute;
+    display: block;
+    overflow: visible;
+    touch-action: none;
+}
+
+/* 翅膀：上翅、下翅；右翅膀本身，左翅膀是它翻過來的樣子 */
+.butterfly-wing {
+    fill: var(--btf-wing);
+    stroke: var(--btf-black);
+    stroke-width: 5;
+    stroke-linejoin: round;
+}
+
+.butterfly-wing--low {
+    fill: var(--btf-wing-low);
+}
+
+.butterfly-stripe {
+    stroke: var(--btf-black);
+    stroke-width: 4;
+    stroke-linecap: round;
+}
+
+.butterfly-spot {
+    stroke: var(--btf-black);
+    stroke-width: 1.5;
+}
+
+.butterfly-c--orange {
+    fill: var(--btf-orange);
+}
+
+.butterfly-c--yellow {
+    fill: var(--btf-yellow);
+}
+
+.butterfly-c--blue {
+    fill: var(--btf-blue);
+}
+
+.butterfly-c--white {
+    fill: var(--btf-white);
+}
+
+.butterfly-c--red {
+    fill: var(--btf-red);
+}
+
+.butterfly-body {
+    fill: var(--btf-black);
+}
+
+.butterfly-antenna {
+    fill: none;
+    stroke: var(--btf-black);
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+/* 揭曉：左翅膀翻過去半透明地疊在右翅膀上（重影），不一樣的地方閃紅圈 */
+.butterfly-ghost {
+    opacity: 0.55;
+    animation: butterfly-ghost-in 0.7s ease-out;
+    pointer-events: none;
+}
+
+@keyframes butterfly-ghost-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 0.55;
+    }
+}
+
+.butterfly-ring {
+    fill: none;
+    stroke: var(--c-bad-light);
+    stroke-width: 5;
+    animation: butterfly-blink 0.6s ease-in-out infinite;
+}
+
+@keyframes butterfly-blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.25;
+    }
+}
+
+.butterfly-tap {
+    fill: none;
+    stroke-width: 4;
+}
+
+.butterfly-tap--ok {
+    stroke: var(--c-ok);
+}
+
+.butterfly-tap--bad {
+    stroke: var(--c-ink);
+    stroke-dasharray: 5 4;
+}
+
+.butterfly-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}

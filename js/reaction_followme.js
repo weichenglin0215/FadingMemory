@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_followme.js — 秒反應・照著走
+   樣式：css/games/reaction_followme.css（這款專屬的 class 一律以「followme-」開頭；共用元件在 css/reaction_common.css）
    格子地圖，小人固定從最下面正中間出發。先看小人示範走一遍到終點（地圖上看得到旗子和陷阱），
    然後小人回到起點，**旗子和陷阱全部消失**；你用下方三顆按鈕（左方、前進、右方）自己走：
    不一定要照示範的路線，但**步數要跟示範一樣**（畫面顯示剩餘步數）。步數用完，終點指示牌再出現，
@@ -189,13 +190,13 @@
             /* level 關卡；cleared 已過幾關；state 目前階段（demo 示範中/play 玩家走/end 結束）；L 這關的資料；pos 玩家目前位置；remain 剩餘步數；CELL 一格的大小 */
             var level = startAt || 1, cleared = level - 1, newRec = false, state = 'idle', lvId = 0, L = null, pos = null, remain = 0, CELL = 40;
             /* 建立畫面元素：標題、提示、地圖、三顆方向鈕 */
-            var head = h('div', { 'class': 'fw-head' });
-            var banner = h('div', { 'class': 'fw-banner' });
-            var field = h('div', { 'class': 'fw-field' });
-            var bL = h('button', { 'class': 'btn btn--sky fw-btn', text: '◀ 左方' });
-            var bF = h('button', { 'class': 'btn btn--go fw-btn', text: '▲ 前進' });
-            var bR = h('button', { 'class': 'btn btn--sky fw-btn', text: '右方 ▶' });
-            var btns = h('div', { 'class': 'fw-btns' }, [bL, bF, bR]);
+            var head = h('div', { 'class': 'followme-head' });
+            var banner = h('div', { 'class': 'followme-banner' });
+            var field = h('div', { 'class': 'followme-field' });
+            var bL = h('button', { 'class': 'btn btn--sky followme-btn', text: '◀ 左方' });
+            var bF = h('button', { 'class': 'btn btn--go followme-btn', text: '▲ 前進' });
+            var bR = h('button', { 'class': 'btn btn--sky followme-btn', text: '右方 ▶' });
+            var btns = h('div', { 'class': 'followme-btns' }, [bL, bF, bR]);
             [head, banner, field, btns].forEach(function (n) { root.appendChild(n); });
             var svg = null, man = null, flag = null, trapEls = {};
 
@@ -211,28 +212,28 @@
                 if (svg && svg.parentNode) svg.parentNode.removeChild(svg);
                 CELL = 64;                       /* 地圖用固定的「格子單位」畫，整張 SVG 再用 viewBox 縮放到欄位大小 */
                 var W = CELL * L.cols, H = CELL * L.rows;
-                svg = kit.svg('svg', { 'class': 'fw-svg', viewBox: '0 0 ' + W + ' ' + H, preserveAspectRatio: 'xMidYMid meet' }, field);
+                svg = kit.svg('svg', { 'class': 'followme-svg', viewBox: '0 0 ' + W + ' ' + H, preserveAspectRatio: 'xMidYMid meet' }, field);
                 /* 棋盤格：奇偶格兩種底色交錯 */
                 for (var r = 0; r < L.rows; r++) for (var c = 0; c < L.cols; c++) {
-                    kit.svg('rect', { 'class': 'fw-cell fw-cell--' + ((r + c) % 2), x: c * CELL, y: r * CELL, width: CELL, height: CELL }, svg);
+                    kit.svg('rect', { 'class': 'followme-cell followme-cell--' + ((r + c) % 2), x: c * CELL, y: r * CELL, width: CELL, height: CELL }, svg);
                 }
                 trapEls = {};
                 /* 畫陷阱：圓角方塊 + 三根白色尖刺，存進 trapEls 方便之後一起隱藏／顯示 */
                 L.trapList.forEach(function (t) {
-                    var g = kit.svg('g', { 'class': 'fw-trap', transform: 'translate(' + ((t[1] + 0.5) * CELL) + ' ' + ((t[0] + 0.5) * CELL) + ')' }, svg);
+                    var g = kit.svg('g', { 'class': 'followme-trap', transform: 'translate(' + ((t[1] + 0.5) * CELL) + ' ' + ((t[0] + 0.5) * CELL) + ')' }, svg);
                     kit.svg('rect', { x: -CELL * 0.42, y: -CELL * 0.42, width: CELL * 0.84, height: CELL * 0.84, rx: 6 }, g);
-                    [-1, 0, 1].forEach(function (k) { var x = k * CELL * 0.25; kit.svg('polygon', { 'class': 'fw-trap__spike', points: (x - CELL * 0.11) + ',' + (CELL * 0.22) + ' ' + x + ',' + (-CELL * 0.2) + ' ' + (x + CELL * 0.11) + ',' + (CELL * 0.22) }, g); });
+                    [-1, 0, 1].forEach(function (k) { var x = k * CELL * 0.25; kit.svg('polygon', { 'class': 'followme-trap__spike', points: (x - CELL * 0.11) + ',' + (CELL * 0.22) + ' ' + x + ',' + (-CELL * 0.2) + ' ' + (x + CELL * 0.11) + ',' + (CELL * 0.22) }, g); });
                     trapEls[cellKey(t[0], t[1])] = g;
                 });
                 /* 一開始顯示陷阱（示範階段玩家要看） */
                 showTraps(true);
-                var s = kit.svg('text', { 'class': 'fw-startlbl', x: (L.start.c + 0.5) * CELL, y: (L.start.r + 0.94) * CELL, 'text-anchor': 'middle' }, svg);
+                var s = kit.svg('text', { 'class': 'followme-startlbl', x: (L.start.c + 0.5) * CELL, y: (L.start.r + 0.94) * CELL, 'text-anchor': 'middle' }, svg);
                 s.textContent = '起點';
                 /* 旗子：用 opacity 控制顯示（0＝隱藏） */
-                flag = kit.svg('g', { 'class': 'fw-flag', transform: 'translate(' + ((L.target.c + 0.5) * CELL) + ' ' + ((L.target.r + 0.5) * CELL) + ')', opacity: 0 }, svg);
-                kit.svg('line', { x1: -CELL * 0.18, y1: CELL * 0.42, x2: -CELL * 0.18, y2: -CELL * 0.4, 'class': 'fw-flag__pole' }, flag);
-                kit.svg('polygon', { points: (-CELL * 0.18) + ',' + (-CELL * 0.4) + ' ' + (CELL * 0.4) + ',' + (-CELL * 0.2) + ' ' + (-CELL * 0.18) + ',' + (CELL * 0.02), 'class': 'fw-flag__cloth' }, flag);
-                man = kit.svg('g', { 'class': 'fw-man' }, svg);
+                flag = kit.svg('g', { 'class': 'followme-flag', transform: 'translate(' + ((L.target.c + 0.5) * CELL) + ' ' + ((L.target.r + 0.5) * CELL) + ')', opacity: 0 }, svg);
+                kit.svg('line', { x1: -CELL * 0.18, y1: CELL * 0.42, x2: -CELL * 0.18, y2: -CELL * 0.4, 'class': 'followme-flag__pole' }, flag);
+                kit.svg('polygon', { points: (-CELL * 0.18) + ',' + (-CELL * 0.4) + ' ' + (CELL * 0.4) + ',' + (-CELL * 0.2) + ' ' + (-CELL * 0.18) + ',' + (CELL * 0.02), 'class': 'followme-flag__cloth' }, flag);
+                man = kit.svg('g', { 'class': 'followme-man' }, svg);
                 man.style.transformBox = 'view-box';
                 drawMan(man);
                 setMan(L.start.r, L.start.c, false);
@@ -335,7 +336,7 @@
                     return;
                 }
                 Sfx.play('bad');
-                if (why === 'trap') { var tg = trapEls[cellKey(pos.r, pos.c)]; if (tg) tg.classList.add('fw-trap--hit'); }
+                if (why === 'trap') { var tg = trapEls[cellKey(pos.r, pos.c)]; if (tg) tg.classList.add('followme-trap--hit'); }
                 banner.textContent = why === 'trap' ? '踩到陷阱了！' : '步數用完了，旗子在這裡';
                 my.after(1900, function () {
                     var back = kit.resumeFrom(level);

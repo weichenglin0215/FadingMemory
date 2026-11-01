@@ -1,0 +1,71 @@
+/* ═══════════════════════════════════════
+   reaction_flipten.css — 翻牌湊十（js/reaction_flipten.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「flipten-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 顏色與尺寸一律用 css/theme.css 的 CSS 變數。牌的欄數 --flipten-cols、每張牌的寬 --flipten-w 與高 --flipten-h
+     由 js 依畫面大小算好寫在 .flipten-board 上；下面的值是備用值。
+   ═══════════════════════════════════════ */
+
+.flipten-wrap {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding-top: 10px;
+    box-sizing: border-box;
+}
+
+.flipten-info {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    text-align: center;
+}
+
+.flipten-board {
+    display: grid;
+    grid-template-columns: repeat(var(--flipten-cols, 4), var(--flipten-w, 100px));
+    grid-auto-rows: var(--flipten-h, 100px);
+    gap: 8px;
+}
+
+/* 一張牌：蓋著是深色牌背，翻開是白底大數字，消掉的留空位 */
+.flipten-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border-radius: var(--r-md);
+    background: var(--c-blue);
+    border: 3px solid var(--c-ink);
+    color: var(--c-ink);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.flipten-card--up {
+    background: var(--c-card);
+}
+
+.flipten-card--gone {
+    visibility: hidden;
+}
+
+/* 失敗時，還沒消掉的牌全部翻開給你看 */
+.flipten-card--reveal {
+    background: var(--c-yellow-soft);
+}
+
+.flipten-tip {
+    min-height: 56px;
+    padding: 0 14px;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    text-align: center;
+    line-height: 1.4;
+}

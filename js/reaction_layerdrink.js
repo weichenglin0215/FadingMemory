@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_layerdrink.js — 秒反應・照樣調一杯（企劃 319）
+   樣式：css/games/reaction_layerdrink.css（這款專屬的 class 一律以「layerdrink-」開頭；共用元件在 css/reaction_common.css）
    吧台先展示一杯分層的漸層飲料（底下紅、中間黃、上面藍，各層高度不同），3 秒後收走。**照記憶一層一層調出一樣的**：
    按住紅色瓶子倒紅色、放手；再按住黃色……每層的高度要跟剛才一樣。倒完後兩杯並排：「最大差 6.1238%」。
    ───────────────────────────────────────────────────────────────────
@@ -91,7 +92,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'lyd-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'layerdrink-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -103,15 +104,15 @@
        bounds：每一層「上緣」的高度（0～1，由下往上累計）；cur：{ top, color }＝正在倒的那一層（上緣隨時間變高） */
     var gid = 0;
     function glass(parent, wTop, wBottom) {
-        var W = 170, cx = W / 2, y0 = 12, y1 = y0 + GLASS_H, id = 'lyd-clip-' + (++gid);
-        var svg = kit.svg('svg', { 'class': 'lyd-glass', viewBox: '0 0 ' + W + ' ' + (GLASS_H + 28), width: W, height: GLASS_H + 28 }, parent);
+        var W = 170, cx = W / 2, y0 = 12, y1 = y0 + GLASS_H, id = 'layerdrink-clip-' + (++gid);
+        var svg = kit.svg('svg', { 'class': 'layerdrink-glass', viewBox: '0 0 ' + W + ' ' + (GLASS_H + 28), width: W, height: GLASS_H + 28 }, parent);
         var defs = kit.svg('defs', {}, svg), cp = kit.svg('clipPath', { id: id }, defs);
         var pts = (cx - wTop / 2) + ',' + y0 + ' ' + (cx + wTop / 2) + ',' + y0 + ' ' + (cx + wBottom / 2) + ',' + y1 + ' ' + (cx - wBottom / 2) + ',' + y1;
         kit.svg('polygon', { points: pts }, cp);
-        kit.svg('polygon', { 'class': 'lyd-glass__bg', points: pts }, svg);                          /* 杯子裡淡淡的玻璃色（畫在液體後面，才不會把液體的顏色蓋淡） */
+        kit.svg('polygon', { 'class': 'layerdrink-glass__bg', points: pts }, svg);                          /* 杯子裡淡淡的玻璃色（畫在液體後面，才不會把液體的顏色蓋淡） */
         var liquid = kit.svg('g', { 'clip-path': 'url(#' + id + ')' }, svg);
-        kit.svg('polygon', { 'class': 'lyd-glass__edge', points: pts }, svg);
-        kit.svg('rect', { 'class': 'lyd-glass__foot', x: cx - 30, y: y1 + 3, width: 60, height: 8, rx: 4 }, svg);
+        kit.svg('polygon', { 'class': 'layerdrink-glass__edge', points: pts }, svg);
+        kit.svg('rect', { 'class': 'layerdrink-glass__foot', x: cx - 30, y: y1 + 3, width: 60, height: 8, rx: 4 }, svg);
         function Y(f) { return y1 - GLASS_H * f; }
         return {
             svg: svg,
@@ -121,13 +122,13 @@
                 if (cur) list.push(cur);
                 list.forEach(function (L, i) {
                     var yT = Y(L.top), yB = Y(prev);
-                    var r = kit.svg('rect', { 'class': 'lyd-layer lyd-c--' + COLORS[L.color].id, x: 0, y: yT, width: W, height: Math.max(0, yB - yT) }, liquid);
+                    var r = kit.svg('rect', { 'class': 'layerdrink-layer layerdrink-c--' + COLORS[L.color].id, x: 0, y: yT, width: W, height: Math.max(0, yB - yT) }, liquid);
                     prev = L.top;
                 });
                 /* 層與層之間一小段漸層（下面那層的顏色慢慢變成上面那層的顏色） */
                 for (var i = 0; i < list.length - 1; i++) {
-                    var b = list[i].top, gy = Y(b + BLEND), gh = GLASS_H * 2 * BLEND, gidn = 'lyd-gr-' + (++gid), g = kit.svg('linearGradient', { id: gidn, x1: 0, y1: 0, x2: 0, y2: 1 }, liquid);
-                    kit.svg('stop', { offset: '0%', 'class': 'lyd-stop lyd-stop--' + COLORS[list[i + 1].color].id }, g); kit.svg('stop', { offset: '100%', 'class': 'lyd-stop lyd-stop--' + COLORS[list[i].color].id }, g);
+                    var b = list[i].top, gy = Y(b + BLEND), gh = GLASS_H * 2 * BLEND, gidn = 'layerdrink-gr-' + (++gid), g = kit.svg('linearGradient', { id: gidn, x1: 0, y1: 0, x2: 0, y2: 1 }, liquid);
+                    kit.svg('stop', { offset: '0%', 'class': 'layerdrink-stop layerdrink-stop--' + COLORS[list[i + 1].color].id }, g); kit.svg('stop', { offset: '100%', 'class': 'layerdrink-stop layerdrink-stop--' + COLORS[list[i].color].id }, g);
                     kit.svg('rect', { x: 0, y: gy, width: W, height: gh, fill: 'url(#' + gidn + ')' }, liquid);
                 }
             }
@@ -142,25 +143,25 @@
         console.log('[照樣調一杯] 第 ' + level + ' 關：' + n + ' 層 ' + q.colors.map(function (c, i) { return COLORS[c].name + (q.fracs[i] * 100).toFixed(1) + '%'; }).join('、') + '（下到上）；杯底/杯口 ' + q.ratio + '；倒滿要 ' + q.fillS + ' 秒；容許最大差 ' + q.tol + '%；完美倒法每層按 ' + holds.map(function (t) { return t.toFixed(2); }).join('／') + ' 秒');
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        var field = h('div', { 'class': 'lyd-field' });
+        var field = h('div', { 'class': 'layerdrink-field' });
         stage.appendChild(field);
-        var tip = h('div', { 'class': 'qz-note lyd-tip', text: '記住每一層的顏色和高度' });
+        var tip = h('div', { 'class': 'qz-note layerdrink-tip', text: '記住每一層的顏色和高度' });
         field.appendChild(tip);
         /* 左：示範杯（直筒）；右：你的杯子（上寬下窄） */
-        var demoBox = h('div', { 'class': 'lyd-box' }), myBox = h('div', { 'class': 'lyd-box' });
+        var demoBox = h('div', { 'class': 'layerdrink-box' }), myBox = h('div', { 'class': 'layerdrink-box' });
         demoBox.style.cssText = 'left:' + (W / 2 - 190) + 'px;top:62px;'; myBox.style.cssText = 'left:' + (W / 2 + 20) + 'px;top:62px;';
         field.appendChild(demoBox); field.appendChild(myBox);
-        demoBox.appendChild(h('div', { 'class': 'lyd-cap', text: '示範杯' })); myBox.appendChild(h('div', { 'class': 'lyd-cap', text: '你的杯子' }));
+        demoBox.appendChild(h('div', { 'class': 'layerdrink-cap', text: '示範杯' })); myBox.appendChild(h('div', { 'class': 'layerdrink-cap', text: '你的杯子' }));
         var demo = glass(demoBox, DEMO_W, DEMO_W), mine = glass(myBox, TOP_W, TOP_W * q.ratio);
         var cum = 0, demoBounds = q.fracs.map(function (f) { cum += f; return Math.min(1, cum); });
         demo.setLayers(demoBounds, q.colors);
-        var stream = h('div', { 'class': 'lyd-stream' }); myBox.appendChild(stream);
-        var info = h('div', { 'class': 'qz-note lyd-info', text: '' });
+        var stream = h('div', { 'class': 'layerdrink-stream' }); myBox.appendChild(stream);
+        var info = h('div', { 'class': 'qz-note layerdrink-info', text: '' });
         info.style.top = (62 + GLASS_H + 70) + 'px';
         field.appendChild(info);
         /* 瓶子：五種顏色 */
-        var bottles = h('div', { 'class': 'lyd-bottles' }), bEls = [];
-        COLORS.forEach(function (c, i) { var b = h('div', { 'class': 'lyd-bottle lyd-c--' + c.id }, [h('div', { 'class': 'lyd-bottle__neck' }), h('div', { 'class': 'lyd-bottle__body', text: c.name })]); bottles.appendChild(b); bEls.push(b); });
+        var bottles = h('div', { 'class': 'layerdrink-bottles' }), bEls = [];
+        COLORS.forEach(function (c, i) { var b = h('div', { 'class': 'layerdrink-bottle layerdrink-c--' + c.id }, [h('div', { 'class': 'layerdrink-bottle__neck' }), h('div', { 'class': 'layerdrink-bottle__body', text: c.name })]); bottles.appendChild(b); bEls.push(b); });
         field.appendChild(bottles);
 
         var phase = 'view', step = 0, bounds = [], v = 0, y = 0, pouring = -1, done = false, ctl = [], loop = null;
@@ -168,7 +169,7 @@
         api.timer(q.viewMs, begin);
         function begin() {
             if (api.over) return;
-            phase = 'pour'; demoBox.classList.add('lyd-box--hide'); tip.textContent = '照順序倒：按住瓶子倒、放手停'; info.textContent = '第 1 層：' + COLORS[q.colors[0]].name + '色';
+            phase = 'pour'; demoBox.classList.add('layerdrink-box--hide'); tip.textContent = '照順序倒：按住瓶子倒、放手停'; info.textContent = '第 1 層：' + COLORS[q.colors[0]].name + '色';
             mine.setLayers([], [], null);
             api.timer(20000 + n * 6000, function () { finish(true); });
             if (level === 1 && kit.once('layerdrink.hint')) kit.hintOn(stage, bEls[q.colors[0]], { mode: 'hold', delay: 500, text: '按住倒，到記得的高度放手' });
@@ -179,7 +180,7 @@
                 down: function () {
                     if (phase !== 'pour' || done || api.over || pouring >= 0) return;
                     if (ci !== q.colors[step]) { wrongColor(ci); return; }
-                    pouring = ci; el.classList.add('lyd-bottle--pour'); stream.className = 'lyd-stream lyd-stream--on lyd-c--' + COLORS[ci].id; Sfx.play('click');
+                    pouring = ci; el.classList.add('layerdrink-bottle--pour'); stream.className = 'layerdrink-stream layerdrink-stream--on layerdrink-c--' + COLORS[ci].id; Sfx.play('click');
                     loop = api.my.loop(frame);
                 },
                 up: function () { if (pouring === ci) endLayer(); }
@@ -193,7 +194,7 @@
         }
         function endLayer() {
             if (pouring < 0) return;
-            bEls[pouring].classList.remove('lyd-bottle--pour'); stream.className = 'lyd-stream'; pouring = -1; if (loop) loop.stop();
+            bEls[pouring].classList.remove('layerdrink-bottle--pour'); stream.className = 'layerdrink-stream'; pouring = -1; if (loop) loop.stop();
             bounds.push(y); mine.setLayers(bounds, q.colors, null); step++;
             if (step >= n || y >= 1) { finish(false); return; }
             info.textContent = '第 ' + (step + 1) + ' 層：' + COLORS[q.colors[step]].name + '色';
@@ -202,18 +203,18 @@
             done = true; phase = 'end'; api.stopTimer();
             ctl.forEach(function (c) { c.destroy(); });
             info.textContent = '第 ' + (step + 1) + ' 層要倒「' + COLORS[q.colors[step]].name + '」，你按了「' + COLORS[ci].name + '」';
-            demoBox.classList.remove('lyd-box--hide'); bEls[q.colors[step]].classList.add('lyd-bottle--ok'); bEls[ci].classList.add('lyd-bottle--bad');
+            demoBox.classList.remove('layerdrink-box--hide'); bEls[q.colors[step]].classList.add('layerdrink-bottle--ok'); bEls[ci].classList.add('layerdrink-bottle--bad');
             kit.flash(stage, false, api.my);
             api.fail({ delay: 3200, lines: ['第 ' + (step + 1) + ' 層顏色錯了：要倒「' + COLORS[q.colors[step]].name + '」，你按了「' + COLORS[ci].name + '」', '顏色順序（下到上）：' + q.colors.map(function (c) { return COLORS[c].name; }).join('、')] });
         }
         function finish(timeout) {
             if (done || api.over) return;
             done = true; phase = 'end'; api.stopTimer();
-            if (pouring >= 0) { bEls[pouring].classList.remove('lyd-bottle--pour'); stream.className = 'lyd-stream'; pouring = -1; if (loop) loop.stop(); bounds.push(y); }
+            if (pouring >= 0) { bEls[pouring].classList.remove('layerdrink-bottle--pour'); stream.className = 'layerdrink-stream'; pouring = -1; if (loop) loop.stop(); bounds.push(y); }
             ctl.forEach(function (c) { c.destroy(); });
             /* 沒倒完的層厚度算 0；最後一層以外都有放手的高度 */
             var thick = thicknesses(bounds), md = maxDiff(q.fracs, thick), ok = !timeout && md <= q.tol;
-            mine.setLayers(bounds, q.colors, null); demoBox.classList.remove('lyd-box--hide');
+            mine.setLayers(bounds, q.colors, null); demoBox.classList.remove('layerdrink-box--hide');
             tip.textContent = '兩杯並排比一比';
             info.textContent = '最大差 ' + md.toFixed(4) + '%' + (ok ? '，一樣了！' : '（要在 ' + q.tol + '% 內）');
             kit.flash(stage, ok, api.my);

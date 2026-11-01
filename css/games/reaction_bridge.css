@@ -1,0 +1,78 @@
+/* ═══════════════════════════════════════
+   reaction_bridge.css — 搭一座橋（js/reaction_bridge.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「bridge-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 搭一座橋（.bridge-）═══ */
+.bridge-svg {
+    display: block;
+}
+
+.bridge-ground {
+    fill: var(--c-yellow-soft);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+.bridge-block {
+    fill: var(--c-blue);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.bridge-plank {
+    fill: var(--c-orange);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.bridge-plank--ok {
+    fill: var(--c-green);
+}
+
+/* 橫板兩端往下的導引線：提醒你「方塊要移到這兩條線的下面」 */
+.bridge-guide {
+    stroke: var(--c-ink-soft);
+    stroke-width: 2;
+    stroke-dasharray: 4 8;
+    opacity: 0.55;
+}
+
+.bridge-ok {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.bridge-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 6px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+.bridge-msg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 150px;
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    pointer-events: none;
+}
+
+.bridge-msg--ok {
+    color: var(--c-green);
+}
+
+.bridge-msg--bad {
+    color: var(--c-recall);
+}

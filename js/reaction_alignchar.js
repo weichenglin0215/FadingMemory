@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_alignchar.js — 秒反應・對準才看到（企劃 219「對準才看得到」的改版）
+   樣式：css/games/reaction_alignchar.css（這款專屬的 class 一律以「alignchar-」開頭；共用元件在 css/reaction_common.css）
    一個中文字被切成許多「直條」，每一條都在上下方向循環移動（有的往上、有的往下，快慢各不相同），
    所以大部分時間看起來是一團破碎的線條；只有每隔一段時間，所有直條「剛好對準」的那一瞬間，
    整個字才會完整浮現。看出它是哪個字，點下面的選項。關卡制：選錯或來不及就結束，成績＝通過幾關。
@@ -12,7 +13,7 @@
    · 難度線性（RAMP_LEVELS 關走到頂）：直條數 5 → 12 條（越細越難拼）；週期 CYCLE 5 → 2.8 秒（越短，對準的瞬間越短）；
      作答限時 14 → 9 秒。
    · 揭曉：所有直條停在對準的位置，整個字完整顯示，標出正確的選項。
-   · V1.29（玩家意見）：答案按鈕的字形改成明體／宋體（.alc-opt 用 --font-note），跟題目字形（目前的黑體）不一樣，故意增加難度；
+   · V1.29（玩家意見）：答案按鈕的字形改成明體／宋體（.alignchar-opt 用 --font-note），跟題目字形（目前的黑體）不一樣，故意增加難度；
      題目字形不動（canvas 畫字用的是頁面的 --font-ui 黑體）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
@@ -110,11 +111,11 @@
         console.log('[對準才看到] 第 ' + level + ' 關：字「' + q.ch + '」，' + q.n + ' 條，速度 ' + q.ks.join(',') + '；週期 ' + q.cycle.toFixed(3) + ' 秒，第一次對準 ' + q.tAlign.toFixed(3) + ' 秒；選項 ' + q.options.join('') + '；限時 ' + timeMs(level) + ' ms');
 
         var W = stage.clientWidth || 472, DPR = 2, cw = PIC.w, ch = PIC.h;
-        var cv = h('canvas', { 'class': 'alc-canvas' });
+        var cv = h('canvas', { 'class': 'alignchar-canvas' });
         cv.width = cw * DPR; cv.height = ch * DPR; cv.style.width = cw + 'px'; cv.style.height = ch + 'px';
         cv.style.left = Math.round((W - cw) / 2) + 'px'; cv.style.top = '30px';
         stage.appendChild(cv);
-        var tip = h('div', { 'class': 'qz-note alc-tip', text: '直條上下移動，對準的瞬間字會浮現' });
+        var tip = h('div', { 'class': 'qz-note alignchar-tip', text: '直條上下移動，對準的瞬間字會浮現' });
         stage.appendChild(tip);
         /* 先把整個字畫在看不見的畫布上，之後每一格都從這張「底圖」切直條 */
         var gl = document.createElement('canvas');
@@ -139,7 +140,7 @@
         draw(0, false);
         var loop = api.my.loop(function () { if (api.over) return false; draw((performance.now() - t0) / 1000, false); });
         var cols = q.options.length <= 5 ? q.options.length : 3;
-        var grid = kit.btnGrid(stage, q.options.map(function (c, i) { return { text: c, kind: 'line', cls: 'alc-opt', onTap: function () { judge(i); } }; }), { cols: cols, h: 84, gap: 8 });
+        var grid = kit.btnGrid(stage, q.options.map(function (c, i) { return { text: c, kind: 'line', cls: 'alignchar-opt', onTap: function () { judge(i); } }; }), { cols: cols, h: 84, gap: 8 });
         api.timer(timeMs(level), function () { judge(null); });
         if (level === 1 && kit.once('alignchar.hint')) kit.hintOn(stage, grid.btns[q.answer], { mode: 'tap', delay: 800, text: '請點擊你看到的字' });
 
@@ -147,8 +148,8 @@
             if (api.over) return;
             loop.stop(); draw(0, true);
             var ok = i === q.answer;
-            grid.btns[q.answer].classList.add('alc-opt--right');
-            if (i != null && !ok) grid.btns[i].classList.add('alc-opt--wrong');
+            grid.btns[q.answer].classList.add('alignchar-opt--right');
+            if (i != null && !ok) grid.btns[i].classList.add('alignchar-opt--wrong');
             tip.textContent = '這個字是「' + q.ch + '」';
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1300 }); return; }
             kit.flash(stage, false, api.my);

@@ -22,8 +22,8 @@ ok(Math.abs(T.skewAt(1)) < 1e-9 && Math.abs(T.skewAt(T.RAMP_LEVELS) - T.SKEW_MAX
   const q3 = T.countPlan(6, 6); ok(q3.extra === 0 && q3.side === 0 && q3.pairs === 6, '一樣多：沒有紅色');
   ok(JSON.stringify(T.planAt(p, 0)) === '{"pairs":0,"extra":0}' && JSON.stringify(T.planAt(p, 1)) === '{"pairs":3,"extra":2}', '動畫起點與終點');
   let prevS = { pairs: 0, extra: 0 }; for (let k = 0; k <= 100; k++) { const s2 = T.planAt(p, k / 100); ok(s2.pairs >= prevS.pairs && s2.extra >= prevS.extra && (s2.extra === 0 || s2.pairs === 3), '先數成對、數完才數多出來的，只增不減'); prevS = s2; } }
-{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_halfcrowd.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction4.css'), 'utf8');
-  ok(src.indexOf("'hc-circle--g'") > 0 && src.indexOf("'hc-circle--b'") > 0 && src.indexOf("'hc-circle--r'") > 0 && /\.hc-circle--b \{[^}]*c-blue/.test(css) && /\.hc-circle--r \{[^}]*c-bad-light/.test(css), '左綠、右藍、多出來的紅'); }
+{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_halfcrowd.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_halfcrowd.css'), 'utf8');
+  ok(src.indexOf("'halfcrowd-circle--g'") > 0 && src.indexOf("'halfcrowd-circle--b'") > 0 && src.indexOf("'halfcrowd-circle--r'") > 0 && /\.halfcrowd-circle--b \{[^}]*c-blue/.test(css) && /\.halfcrowd-circle--r \{[^}]*c-bad-light/.test(css), '左綠、右藍、多出來的紅'); }
 ok(Math.abs(T.gapAt(1) - T.GAP[0]) < 1e-9 && Math.abs(T.gapAt(T.RAMP_LEVELS) - T.GAP[1]) < 1e-9, '容許寬度 ' + T.GAP + '（玩家自己調過）');
 ok(Math.abs(T.minDist(15, 15) - (1 - T.OVERLAP) * 30) < 1e-9, '兩個半徑 15 的圓，圓心距離至少 ' + ((1 - T.OVERLAP) * 30) + '（最多重疊 ' + T.OVERLAP * 100 + '%，玩家自己調過）');
 ok(T.countLeft([{ x: 1 }, { x: 5 }, { x: 5 }, { x: 9 }], 5) === 1, '圓心剛好在線上算右邊');
@@ -60,13 +60,13 @@ ok(slow === 0, '出題夠快');
   const USER_LIST = '👩👨🧑👧👦🧒👶👵👴🧓👩‍🦰👨‍🦰👩‍🦱👨‍🦱👩‍🦳👨‍🦳👱‍♀️👱‍♂️👸🤴👳‍♀️👳‍♂️👲🧔🤶🎅';
   ok(kit.PERSON_EMOJI.join('') === USER_LIST && kit.PERSON_EMOJI.length === 26 && new Set(kit.PERSON_EMOJI).size === 26, '人像 emoji 清單 ＝ 玩家指定的 26 種（kit.PERSON_EMOJI），複合 emoji（👩‍🦰、👱‍♀️、👳‍♂️…）各是一個字串');
   ok(kit.PERSON_EMOJI.filter(e => Array.from(e).length > 1).length === 10, '10 個是複合 emoji（髮色、性別變體；字串不能被拆開）');
-  const src = fs.readFileSync(path.resolve(__dirname, '../../js/reaction_halfcrowd.js'), 'utf8'), css = fs.readFileSync(path.resolve(__dirname, '../../css/reaction4.css'), 'utf8').split(/\s+/).join(' ');
-  ok(/kit\.svg\('text', \{[^}]*'class': 'hc-face'[^}]*'font-size': \(c\.r \* 2 \* FACE_SCALE\)\.toFixed\(1\)[^}]*'text-anchor': 'middle'[^}]*'dominant-baseline': 'central'/.test(src) && /face\.textContent = kit\.pick\(kit\.PERSON_EMOJI, api\.rand\)/.test(src), '每個圓的位置畫一個人像 emoji（置中，字級＝直徑 × FACE_SCALE，每個人隨機一種）');
+  const src = fs.readFileSync(path.resolve(__dirname, '../../js/reaction_halfcrowd.js'), 'utf8'), css = fs.readFileSync(path.resolve(__dirname, '../../css/games/reaction_halfcrowd.css'), 'utf8').split(/\s+/).join(' ');
+  ok(/kit\.svg\('text', \{[^}]*'class': 'halfcrowd-face'[^}]*'font-size': \(c\.r \* 2 \* FACE_SCALE\)\.toFixed\(1\)[^}]*'text-anchor': 'middle'[^}]*'dominant-baseline': 'central'/.test(src) && /face\.textContent = kit\.pick\(kit\.PERSON_EMOJI, api\.rand\)/.test(src), '每個圓的位置畫一個人像 emoji（置中，字級＝直徑 × FACE_SCALE，每個人隨機一種）');
   ok(T.FACE_SCALE > 0.8 && T.FACE_SCALE <= 1.3 && T.SHOW_CENTER === true, 'FACE_SCALE ' + T.FACE_SCALE + '；預設畫出中心點（判斷左右看中心點）');
   // 碰撞範圍沒變：仍然是半徑 r 的圓（makeLevel 與重疊限制不動），數量與「剛好一半」的算法不受 emoji 影響
-  ok(src.indexOf("if (SHOW_CENTER) q.circles.forEach(function (c) { kit.svg('circle', { cx: c.x.toFixed(2), cy: c.y.toFixed(2), r: 2.4, 'class': 'hc-dot' }, svg); });") > src.indexOf("var els = q.circles.map"), '中心點全部畫在所有人像的上面（不會被別人的 emoji 蓋住）');
-  ok(/\.hc-circle \{ fill: none; stroke: none; \}/.test(css) && /\.hc-circle--g \{[^}]*fill: var\(--c-green-light\)/.test(css) && /\.hc-circle--b \{[^}]*fill: var\(--c-blue-light\)/.test(css) && /\.hc-circle--r \{[^}]*fill: var\(--c-bad-light\)/.test(css), '底圈平常看不見；數過之後亮起綠／藍／紅色圈，畫在 emoji 底下');
-  ok(/\.hc-dot \{[^}]*stroke: var\(--c-on-accent\)/.test(css) && /\.hc-face \{[^}]*pointer-events: none/.test(css), '中心點有白邊；emoji 不吃點擊');
+  ok(src.indexOf("if (SHOW_CENTER) q.circles.forEach(function (c) { kit.svg('circle', { cx: c.x.toFixed(2), cy: c.y.toFixed(2), r: 2.4, 'class': 'halfcrowd-dot' }, svg); });") > src.indexOf("var els = q.circles.map"), '中心點全部畫在所有人像的上面（不會被別人的 emoji 蓋住）');
+  ok(/\.halfcrowd-circle \{ fill: none; stroke: none; \}/.test(css) && /\.halfcrowd-circle--g \{[^}]*fill: var\(--c-green-light\)/.test(css) && /\.halfcrowd-circle--b \{[^}]*fill: var\(--c-blue-light\)/.test(css) && /\.halfcrowd-circle--r \{[^}]*fill: var\(--c-bad-light\)/.test(css), '底圈平常看不見；數過之後亮起綠／藍／紅色圈，畫在 emoji 底下');
+  ok(/\.halfcrowd-dot \{[^}]*stroke: var\(--c-on-accent\)/.test(css) && /\.halfcrowd-face \{[^}]*pointer-events: none/.test(css), '中心點有白邊；emoji 不吃點擊');
   ok(/人/.test(G.rule) && !/圓/.test(G.rule) && /中心/.test(G.rule), '玩法說明改用「人」「中心」，沒有「圓」');
   ok(!/個圓/.test(src.replace(/\/\*[\s\S]*?\*\//g, '')) && !/圓心不是/.test(src), '畫面上的訊息不再說「圓」（結算：這一關有 N 個人）'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

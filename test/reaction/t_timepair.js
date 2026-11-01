@@ -59,10 +59,10 @@ ok(ST.aTraps > 500 && ST.bTraps > 300, '誘餌確實會出現');
 { const a = { h12: 9, m: 15 }, d = { h24: 15, m: 45 }; ok(T.whyText(a, d) === '配錯了！指針鐘是 9:15，電子鐘 15:45 對應的指針鐘是 3:45', 'whyText：' + T.whyText(a, d)); }
 
 // ── 程式裡的接線 ──
-{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_timepair.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 4200/.test(src) && /tpr-cmp/.test(src) && /tpr-card--right/.test(src) && /whyText\(a, d\)/.test(src), '配錯：兩個時鐘並排放大、寫出各是幾點、正確搭檔標綠、停格夠久');
+{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_timepair.js'), css = rd('../../css/games/reaction_timepair.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 4200/.test(src) && /timepair-cmp/.test(src) && /timepair-card--right/.test(src) && /whyText\(a, d\)/.test(src), '配錯：兩個時鐘並排放大、寫出各是幾點、正確搭檔標綠、停格夠久');
   ok(/isMatch\(a, d\)/.test(src) && /api\.timer\(q\.limit \* 1000/.test(src) && /api\.solve = /.test(src) && /api\.wrong = /.test(src), '配對判定用 isMatch、有限時、solve／wrong');
-  ok(/\.tpr-digital \{[^}]*var\(--tpr-led\)/.test(css) && /\.tpr-face \{[^}]*var\(--tpr-face\)/.test(css) && /\.tpr-card--ok \{[^}]*var\(--c-ok\)/.test(css), '時鐘、LED、配對成功用 CSS 變數');
+  ok(/\.timepair-digital \{[^}]*var\(--tpr-led\)/.test(css) && /\.timepair-face \{[^}]*var\(--tpr-face\)/.test(css) && /\.timepair-card--ok \{[^}]*var\(--c-ok\)/.test(css), '時鐘、LED、配對成功用 CSS 變數');
   ok(boot.indexOf("'js/reaction_timepair.js'") > 0 && /15:15/.test(G.rule) && /時針和分針互換/.test(G.rule), 'boot.js 有載入、玩法說明提到 15:15 與時針分針互換'); }
 ok(T.rating(1) !== T.rating(3) && T.rating(3) !== T.rating(6) && T.rating(6) !== T.rating(10) && T.rating(10) !== T.rating(16), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

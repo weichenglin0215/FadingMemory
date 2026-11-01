@@ -81,9 +81,9 @@ console.log('圈數分布 ' + JSON.stringify(periods) + '；一個週期內的�
 // 效能
 for (const lv of [1, 12, 24, 40]) { const t0 = Date.now(); let worst = 0; for (let i = 0; i < 100; i++) { const t1 = Date.now(); T.makeLevel(lv, rnd); worst = Math.max(worst, Date.now() - t1); } const per = (Date.now() - t0) / 100; console.log('第' + lv + '關 出題平均 ' + per.toFixed(2) + ' 毫秒、最慢 ' + worst); ok(per < 20 && worst < 300, '第 ' + lv + ' 關出題夠快：' + per.toFixed(2) + '／' + worst); }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_gearmark.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_gearmark.js'), css = rd('../../css/games/reaction_gearmark.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
   ok(/api\.fail\(\{ delay: 3200/.test(src) && /deg4\(worst\)/.test(src) && /X\.XXXX|toFixed\(4\)/.test(src), '失敗停格 3 秒以上、顯示 4 位小數的誤差');
-  ok(/\.grm-needle \{[^}]*var\(--c-bad-light\)/.test(css) && /\.grm-row--bad \{[^}]*var\(--c-bad\)/.test(css) && /\.grm-body \{[^}]*var\(--grm-copper\)/.test(css), '紅針、銅色用 CSS 變數');
+  ok(/\.gearmark-needle \{[^}]*var\(--c-bad-light\)/.test(css) && /\.gearmark-row--bad \{[^}]*var\(--c-bad\)/.test(css) && /\.gearmark-body \{[^}]*var\(--grm-copper\)/.test(css), '紅針、銅色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_gearmark.js'") > 0 && /畫圈/.test(G.rule), 'boot.js 有載入、玩法說明提到畫圈'); }
 ok(T.deg4(2.13844) === '2.1384' && T.deg4(0) === '0.0000', 'deg4 四位小數');
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20) !== T.rating(30), '評語分級');

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_whosaid.js — 秒反應・誰說的（企劃 164）
+   樣式：css/games/reaction_whosaid.css（這款專屬的 class 一律以「whosaid-」開頭；共用元件在 css/reaction_common.css）
    幾個不同顏色的小人輪流說話，每說一句，頭上會出現漫畫的對話泡泡，泡泡裡寫著一個數字。
    說完之後問：「紅色的小人說過哪些數字？」下面有 0～9 十顆數字按鈕，依序按出那個顏色的小人說過的數字。
    記的是「來源」（誰說的），不只是數字本身。關卡制：按錯或來不及就結束，成績＝通過幾關。
@@ -106,18 +107,18 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var n = q.people.length, pw = Math.min(100, Math.floor((W - 20) / n)), top = 170;
-        var tip = h('div', { 'class': 'qz-note wsd-tip', text: '請看小人說了什麼數字' });
+        var tip = h('div', { 'class': 'qz-note whosaid-tip', text: '請看小人說了什麼數字' });
         stage.appendChild(tip);
         var persons = q.people.map(function (p, i) {
-            var el = h('div', { 'class': 'wsd-person' });
+            var el = h('div', { 'class': 'whosaid-person' });
             el.style.width = pw + 'px';
             el.style.left = Math.round((W - n * pw) / 2 + i * pw) + 'px'; el.style.top = top + 'px';
-            el.innerHTML = '<div class="wsd-bubble"></div>' + personSvg(p) + '<div class="wsd-name" style="color:' + kit.hsl(p.h, p.s, Math.max(20, p.l - 14)) + '">' + p.n + '</div>';
+            el.innerHTML = '<div class="whosaid-bubble"></div>' + personSvg(p) + '<div class="whosaid-name" style="color:' + kit.hsl(p.h, p.s, Math.max(20, p.l - 14)) + '">' + p.n + '</div>';
             stage.appendChild(el);
             return el;
         });
-        var slots = h('div', { 'class': 'wsd-slots' });
-        var slotEls = q.expect.map(function () { var s = h('div', { 'class': 'wsd-slot', text: '' }); slots.appendChild(s); return s; });
+        var slots = h('div', { 'class': 'whosaid-slots' });
+        var slotEls = q.expect.map(function () { var s = h('div', { 'class': 'whosaid-slot', text: '' }); slots.appendChild(s); return s; });
         slots.style.visibility = 'hidden';
         stage.appendChild(slots);
         var phase = 'say', got = 0, padBtns = null;
@@ -125,26 +126,26 @@
         var t = 500;
         q.events.forEach(function (e) {
             api.after(t, function () {
-                persons.forEach(function (p) { p.classList.remove('wsd-person--say'); });
+                persons.forEach(function (p) { p.classList.remove('whosaid-person--say'); });
                 var el = persons[e.who];
-                el.classList.add('wsd-person--say');
-                el.querySelector('.wsd-bubble').textContent = String(e.digit);
+                el.classList.add('whosaid-person--say');
+                el.querySelector('.whosaid-bubble').textContent = String(e.digit);
                 Sfx.play('tick');
             });
             api.after(t + sayMs(level), function () {
-                persons[e.who].classList.remove('wsd-person--say');
-                persons[e.who].querySelector('.wsd-bubble').textContent = '';
+                persons[e.who].classList.remove('whosaid-person--say');
+                persons[e.who].querySelector('.whosaid-bubble').textContent = '';
             });
             t += sayMs(level) + GAP_MS;
         });
         api.after(t + 150, function () {
             phase = 'ask';
             var c = q.people[q.ask];
-            tip.innerHTML = '請依序按出 <span class="wsd-who" style="background:' + kit.hsl(c.h, c.s, c.l) + '">' + c.n + '色小人</span> 說過的數字';
+            tip.innerHTML = '請依序按出 <span class="whosaid-who" style="background:' + kit.hsl(c.h, c.s, c.l) + '">' + c.n + '色小人</span> 說過的數字';
             slots.style.visibility = '';
-            persons[q.ask].classList.add('wsd-person--ask');
+            persons[q.ask].classList.add('whosaid-person--ask');
             var items = [];
-            for (var d = 0; d <= 9; d++) (function (d) { items.push({ text: String(d), kind: 'sky', cls: 'wsd-btn', onTap: function () { press(d); } }); })(d);
+            for (var d = 0; d <= 9; d++) (function (d) { items.push({ text: String(d), kind: 'sky', cls: 'whosaid-btn', onTap: function () { press(d); } }); })(d);
             padBtns = kit.btnGrid(stage, items, { cols: 5, h: 84, gap: 10 }).btns;
             api.timer(ansMs(level), function () { reveal(null); });
             if (level === 1 && kit.once('whosaid.hint')) kit.hintOn(stage, padBtns[q.expect[0]], { mode: 'tap', delay: 600, text: '請點擊數字' });
@@ -153,15 +154,15 @@
         function press(d) {
             if (api.over || phase !== 'ask') return;
             if (d !== q.expect[got]) { reveal(d); return; }
-            slotEls[got].textContent = String(d); slotEls[got].classList.add('wsd-slot--ok');
+            slotEls[got].textContent = String(d); slotEls[got].classList.add('whosaid-slot--ok');
             got++;
             if (got >= q.expect.length) { phase = 'done'; reveal('ok'); }
         }
         function reveal(d) {
             if (api.over) return;
             phase = 'done';
-            persons.forEach(function (p, i) { p.querySelector('.wsd-bubble').textContent = sp[i].join(' '); p.classList.add('wsd-person--list'); });
-            q.expect.forEach(function (v, k) { if (!slotEls[k].textContent) { slotEls[k].textContent = String(v); slotEls[k].classList.add('wsd-slot--miss'); } });
+            persons.forEach(function (p, i) { p.querySelector('.whosaid-bubble').textContent = sp[i].join(' '); p.classList.add('whosaid-person--list'); });
+            q.expect.forEach(function (v, k) { if (!slotEls[k].textContent) { slotEls[k].textContent = String(v); slotEls[k].classList.add('whosaid-slot--miss'); } });
             if (d === 'ok') { kit.flash(stage, true, api.my); api.pass({ delay: 1400 }); return; }
             kit.flash(stage, false, api.my);
             api.fail({ delay: 2600, lines: [
@@ -169,7 +170,7 @@
                 q.people.map(function (p, i) { return p.n + '：' + sp[i].join(' '); }).join('　')
             ] });
         }
-        api.solve = function () { if (phase !== 'ask') return; q.expect.forEach(function (v, k) { slotEls[k].textContent = String(v); slotEls[k].classList.add('wsd-slot--ok'); }); got = q.expect.length; reveal('ok'); };
+        api.solve = function () { if (phase !== 'ask') return; q.expect.forEach(function (v, k) { slotEls[k].textContent = String(v); slotEls[k].classList.add('whosaid-slot--ok'); }); got = q.expect.length; reveal('ok'); };
         api.wrong = function () { if (phase !== 'ask') return; reveal((q.expect[0] + 1) % 10); };
     }
 

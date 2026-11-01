@@ -1,0 +1,177 @@
+/* ═══════════════════════════════════════
+   reaction_slicechar.css — 切字（js/reaction_slicechar.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「slicechar-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 切字（.slicechar-）═══ */
+.slicechar-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.slicechar-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+/* 目標字：上方的小牌子，整局都在 */
+.slicechar-goal {
+    position: absolute;
+    left: 50%;
+    top: 8px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-1) var(--sp-4);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-pill);
+    box-shadow: var(--shadow-card);
+    z-index: 3;
+}
+
+.slicechar-goal__t {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+}
+
+.slicechar-goal__ch {
+    color: var(--c-ink);
+    font-family: var(--font-note);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    line-height: 1.1;
+}
+
+.slicechar-arena {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    touch-action: none;
+}
+
+/* 寫著字的湯圓 */
+.slicechar-dump {
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: var(--scc-dump);
+    border: 4px solid var(--scc-dump-edge);
+    border-radius: 50%;
+    box-shadow: var(--shadow-card);
+    box-sizing: border-box;
+    text-align: center;
+    will-change: transform;
+    pointer-events: none;
+}
+
+.slicechar-dump__ch {
+    color: var(--c-ink);
+    font-family: var(--font-note);
+    font-weight: var(--fw-black);
+    line-height: inherit;
+}
+
+/* 切開：兩半往兩邊飛開、旋轉、掉落（字也跟著裂成兩半） */
+.slicechar-half {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+    animation: slicechar-split 0.6s ease-in forwards;
+}
+
+.slicechar-half--left {
+    clip-path: inset(0 50% 0 0);
+}
+
+.slicechar-half--right {
+    clip-path: inset(0 0 0 50%);
+}
+
+@keyframes slicechar-split {
+    to {
+        translate: calc(var(--dir) * 46px) 110px;
+        rotate: calc(var(--dir) * 50deg);
+        opacity: 0;
+    }
+}
+
+.slicechar-counter {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 12px;
+    color: var(--c-ink-soft);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    text-align: center;
+    pointer-events: none;
+}
+
+.slicechar-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 58px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* 失敗：目標字和你切錯的字並排，差異的筆畫標紅 */
+.slicechar-cmp {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 24%;
+    display: flex;
+    justify-content: center;
+    gap: var(--sp-4);
+    z-index: 4;
+}
+
+.slicechar-cmp__box {
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--c-card);
+    border: 4px solid var(--c-ok);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
+}
+
+.slicechar-cmp__box--bad {
+    border-color: var(--c-bad-light);
+}
+
+.slicechar-cmp__t {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+.slicechar-cmp__big {
+    color: var(--c-ink);
+    font-family: var(--font-note);
+    font-size: 130px;
+    font-weight: var(--fw-black);
+    line-height: 1.15;
+}
+
+.slicechar-cmp__cv {
+    display: block;
+    width: 150px;
+    height: 150px;
+}

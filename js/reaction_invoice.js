@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_invoice.js — 秒反應・對發票
+   樣式：css/games/reaction_invoice.css（這款專屬的 class 一律以「invoice-」開頭；共用元件在 css/reaction_common.css）
    上面是一張 8 碼發票，下面是這一期的開獎號碼，點出它中了哪一個獎（或沒中獎）。發票一張接一張出，
    **沒有張數上限，對錯一張就結束**，看你能兌對幾張；結算以「答對張數」為主、「中獎總金額」為輔。
    ───────────────────────────────────────────────────────────────────
@@ -288,11 +289,11 @@
             } catch (e) { }
 
             /* 建立畫面元素：資訊、發票卡片、時間條、九顆按鈕 */
-            var info = h('div', { 'class': 'iv-info' });
-            var card = h('div', { 'class': 'iv-card' });
+            var info = h('div', { 'class': 'invoice-info' });
+            var card = h('div', { 'class': 'invoice-card' });
             var bar = h('div', { 'class': 'ld-time' }, [h('div', { 'class': 'ld-time__fill' })]);
             var fill = bar.firstChild;
-            var btns = h('div', { 'class': 'iv-btns' });
+            var btns = h('div', { 'class': 'invoice-btns' });
             root.appendChild(info);
             root.appendChild(card);
             root.appendChild(bar);
@@ -304,9 +305,9 @@
             BTN_ORDER.forEach(function (i) {
                 var b = BTNS[i];
                 var num = i < 6 ? A.F.slice(8 - b.k) : (i === 6 ? A.S1 : (i === 7 ? A.S2 : ''));
-                var el = h('button', { 'class': 'iv-btn' + (i === 8 ? ' iv-btn--none' : '') }, [
-                    h('span', { 'class': 'iv-btn__name' }, [h('b', { text: b.name }), b.sub ? h('i', { text: b.sub }) : null]),
-                    h('span', { 'class': 'iv-btn__num', text: num })
+                var el = h('button', { 'class': 'invoice-btn' + (i === 8 ? ' invoice-btn--none' : '') }, [
+                    h('span', { 'class': 'invoice-btn__name' }, [h('b', { text: b.name }), b.sub ? h('i', { text: b.sub }) : null]),
+                    h('span', { 'class': 'invoice-btn__num', text: num })
                 ]);
                 el.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(i, kit.evT(e)); });
                 btns.appendChild(el);
@@ -324,12 +325,12 @@
                 var it = deck[idx];
                 cur = { it: it, t0: performance.now(), limit: timeFor(idx + 1) * 1000 };
                 state = 'ask';
-                els.forEach(function (el) { el.className = el.className.replace(/ iv-btn--(ok|bad|miss)/g, ''); });
+                els.forEach(function (el) { el.className = el.className.replace(/ invoice-btn--(ok|bad|miss)/g, ''); });
                 paintInfo();
                 card.innerHTML = '';
-                card.appendChild(h('div', { 'class': 'iv-card__head', text: '統一發票' }));
-                var row = h('div', { 'class': 'iv-digits' });
-                it.num.split('').forEach(function (ch) { row.appendChild(h('span', { 'class': 'iv-d', text: ch })); });
+                card.appendChild(h('div', { 'class': 'invoice-card__head', text: '統一發票' }));
+                var row = h('div', { 'class': 'invoice-digits' });
+                it.num.split('').forEach(function (ch) { row.appendChild(h('span', { 'class': 'invoice-d', text: ch })); });
                 card.appendChild(row);
                 meta();
                 fill.style.width = '100%';
@@ -348,12 +349,12 @@
                 var it = cur.it, ok = i === it.btn;
                 byBtn[it.btn].n++;
                 if (ok) { right++; money += BTNS[it.btn].amount; byBtn[it.btn].ok++; rts.push(t - cur.t0); }
-                els[it.btn].classList.add(ok ? 'iv-btn--ok' : 'iv-btn--miss');
-                if (!ok && i >= 0) els[i].classList.add('iv-btn--bad');
+                els[it.btn].classList.add(ok ? 'invoice-btn--ok' : 'invoice-btn--miss');
+                if (!ok && i >= 0) els[i].classList.add('invoice-btn--bad');
                 /* 把相同的末碼標綠，讓玩家看到「到底對上幾碼」 */
-                var digits = card.querySelectorAll('.iv-d');
+                var digits = card.querySelectorAll('.invoice-d');
                 var m = it.btn >= 6 ? (it.btn === 8 ? 0 : 8) : suffixMatch(it.num, A.F);        /* 沒中獎就不標色 */
-                for (var k = 0; k < m; k++) digits[7 - k].classList.add(it.btn >= 6 ? 'iv-d--sp' : 'iv-d--m');
+                for (var k = 0; k < m; k++) digits[7 - k].classList.add(it.btn >= 6 ? 'invoice-d--sp' : 'invoice-d--m');
                 idx++;
                 meta();
                 fill.style.width = '0%';

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_slicechar.js — 秒反應・切字（企劃 341）
+   樣式：css/games/reaction_slicechar.css（這款專屬的 class 一律以「slicechar-」開頭；共用元件在 css/reaction_common.css）
    上方寫著目標字「己」。一個一個「寫著字的湯圓」像水果一樣拋上來，**只切「己」**，其他的字不要切。切錯、或漏掉一個「己」就結束。
    ───────────────────────────────────────────────────────────────────
    · 拋上來的其他字全是共用字庫（SimilarChars）裡目標字的**形近字**（己 → 已、巳、巴…），字在空中旋轉。
@@ -92,7 +93,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'scc-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'slicechar-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -107,20 +108,20 @@
         console.log('[切字] 第 ' + level + ' 關：目標「' + q.target + '」，干擾 ' + q.mates.join('') + '；拋 ' + F + ' 顆（目標 ' + q.tosses.filter(function (t) { return t.onTarget; }).length + ' 顆），一批最多 ' + q.batchMax + ' 顆，間隔約 ' + q.spawnMs + ' 毫秒');
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        var field = h('div', { 'class': 'scc-field' });
+        var field = h('div', { 'class': 'slicechar-field' });
         stage.appendChild(field);
-        var goal = h('div', { 'class': 'scc-goal' }, [h('span', { 'class': 'scc-goal__t', text: '只切：' }), h('span', { 'class': 'scc-goal__ch', text: q.target })]);
+        var goal = h('div', { 'class': 'slicechar-goal' }, [h('span', { 'class': 'slicechar-goal__t', text: '只切：' }), h('span', { 'class': 'slicechar-goal__ch', text: q.target })]);
         field.appendChild(goal);
-        var counter = h('div', { 'class': 'scc-counter', text: '0／' + F }); field.appendChild(counter);
-        var info = h('div', { 'class': 'qz-note scc-info', text: '' }); field.appendChild(info);
-        var arena = h('div', { 'class': 'scc-arena' }); field.appendChild(arena);
+        var counter = h('div', { 'class': 'slicechar-counter', text: '0／' + F }); field.appendChild(counter);
+        var info = h('div', { 'class': 'qz-note slicechar-info', text: '' }); field.appendChild(info);
+        var arena = h('div', { 'class': 'slicechar-arena' }); field.appendChild(arena);
 
         var resolved = 0, flying = [], halted = false, lastP = null, down = false, over = false;
         q.tosses.forEach(function (tz) { api.after(tz.t, function () { launch(tz); }); });
         if (level === 1 && kit.once('slicechar.hint')) api.after(LEAD_MS + 600, function () { if (!over) kit.hintOn(stage, null, { mode: 'drag', x: W * 0.3, y: H * 0.55, dx: W * 0.4, dy: -40, text: '只切目標字' }); });
         function launch(tz) {
             if (halted || api.over) return;
-            var el = h('div', { 'class': 'scc-dump' }, [h('div', { 'class': 'scc-dump__ch', text: tz.ch })]);
+            var el = h('div', { 'class': 'slicechar-dump' }, [h('div', { 'class': 'slicechar-dump__ch', text: tz.ch })]);
             el.style.width = el.style.height = DUMP_PX + 'px'; el.style.lineHeight = DUMP_PX + 'px'; el.firstChild.style.fontSize = Math.round(DUMP_PX * 0.66) + 'px';
             arena.appendChild(el);
             flying.push({ tz: tz, el: el, t: 0, cut: false, lt: landTime(tz) });
@@ -161,7 +162,7 @@
             f.cut = true; flying.splice(idx, 1);
             var el = f.el;
             [['left', -1], ['right', 1]].forEach(function (half) {
-                var c = el.cloneNode(true); c.className = 'scc-half scc-half--' + half[0]; c.style.transform = el.style.transform; c.style.setProperty('--dir', half[1]);
+                var c = el.cloneNode(true); c.className = 'slicechar-half slicechar-half--' + half[0]; c.style.transform = el.style.transform; c.style.setProperty('--dir', half[1]);
                 arena.appendChild(c); api.after(650, function () { c.remove(); });
             });
             el.remove(); Sfx.play('pop');
@@ -171,13 +172,13 @@
         /* 失敗：停住畫面，把目標字和你切錯（漏掉）的字並排，差異的筆畫標紅 */
         function compare(badCh, missedFlag) {
             halted = true; over = true;
-            var box = h('div', { 'class': 'scc-cmp' });
-            var l = h('div', { 'class': 'scc-cmp__box' }, [h('div', { 'class': 'scc-cmp__t', text: '目標字' }), h('div', { 'class': 'scc-cmp__big', text: q.target })]);
+            var box = h('div', { 'class': 'slicechar-cmp' });
+            var l = h('div', { 'class': 'slicechar-cmp__box' }, [h('div', { 'class': 'slicechar-cmp__t', text: '目標字' }), h('div', { 'class': 'slicechar-cmp__big', text: q.target })]);
             box.appendChild(l);
             if (!missedFlag) {
-                var cv = h('canvas', { 'class': 'scc-cmp__cv' }), r = h('div', { 'class': 'scc-cmp__box scc-cmp__box--bad' }, [h('div', { 'class': 'scc-cmp__t', text: '你切了（紅＝差異）' }), cv]);
+                var cv = h('canvas', { 'class': 'slicechar-cmp__cv' }), r = h('div', { 'class': 'slicechar-cmp__box slicechar-cmp__box--bad' }, [h('div', { 'class': 'slicechar-cmp__t', text: '你切了（紅＝差異）' }), cv]);
                 box.appendChild(r); field.appendChild(box); try { drawDiff(cv, q.target, badCh, 150); } catch (err) { }
-            } else { box.appendChild(h('div', { 'class': 'scc-cmp__box scc-cmp__box--bad' }, [h('div', { 'class': 'scc-cmp__t', text: '漏掉了' }), h('div', { 'class': 'scc-cmp__big', text: q.target })])); field.appendChild(box); }
+            } else { box.appendChild(h('div', { 'class': 'slicechar-cmp__box slicechar-cmp__box--bad' }, [h('div', { 'class': 'slicechar-cmp__t', text: '漏掉了' }), h('div', { 'class': 'slicechar-cmp__big', text: q.target })])); field.appendChild(box); }
         }
         function wrong(f) {
             info.textContent = '「' + f.tz.ch + '」不是目標字「' + q.target + '」！';

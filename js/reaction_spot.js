@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_spot.js — 秒反應・大家來找碴
+   樣式：css/games/reaction_spot.css（這款專屬的 class 一律以「spot-」開頭；共用元件在 css/reaction_common.css）
    4×4 共 16 格，15 格同色、1 格的色相／彩度／明度有些微差異，找出那一格。
    答對就進下一關（差異會越來越小）；答錯就結束，分數＝過了幾關。
    ───────────────────────────────────────────────────────────────────
@@ -152,7 +153,7 @@
 
     /* mount：遊戲進場點 */
     function mount(root, ctx) {
-        /* 替整個畫面加上黑底 class（樣式在 css/reaction.css 的 .spot-dark-bg） */
+        /* 替整個畫面加上黑底 class（樣式在 css/games/reaction_spot.css 的 .spot-dark-bg） */
         root.classList.add('spot-dark-bg');
         logLevelTable();
         /* level：目前關卡 */
@@ -177,7 +178,7 @@
                這裡印的才是「現在螢幕上看到的」這一組，可以直接拿數值跟畫面截圖核對。 */
             if (window.console && console.table) console.table([diffRow(level, ch, base, odd)]);
 
-            root.appendChild(h('div', { 'class': 'hint hint--on-dark', text: '找出顏色不一樣的那一格（第 ' + level + ' 關）' }));
+            root.appendChild(h('div', { 'class': 'hint spot--on-dark', text: '找出顏色不一樣的那一格（第 ' + level + ' 關）' }));
             /* 16 格的容器，CSS Grid 排成 4×4 */
             var grid = h('div', { 'class': 'spot-grid' });
             /* (function (i) {...})(i)：立即執行函式，讓每格的點擊事件記住自己的編號 */
@@ -214,7 +215,7 @@
                 /* 不清空畫面：保留剛剛那一格的提示（哪格答錯了、哪格才是真正不一樣的顏色）
                    留在背景，結算卡片疊一層半透明底蓋在上面——跟「神準落下」結算畫面
                    同一套處理方式、同一組 CSS class（drop-result-overlay/-card 定義在
-                   css/reaction.css，是跨遊戲共用的樣式，不是神準落下專屬）。卡片本身
+                   css/games/reaction_spot.css，是跨遊戲共用的樣式，不是神準落下專屬）。卡片本身
                    是亮色（--c-card），所以卡片裡的文字要用一般（亮底深字）樣式，
                    不能用給純黑底用的 --on-dark 版本，不然字會變成白色、看不清楚。 */
                 /* 結算彈窗（公版 kit.result）：帶 score 會在彈窗「已經在畫面上」之後才自動送世界排行榜

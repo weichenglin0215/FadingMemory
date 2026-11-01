@@ -1,0 +1,123 @@
+/* ═══════════════════════════════════════
+   reaction_danmaku.css — 彈幕找字（js/reaction_danmaku.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「danmaku-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 彈幕找字（.danmaku-）═══ */
+.danmaku-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.danmaku-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    background: linear-gradient(var(--dmk-sky-top), var(--dmk-sky-bottom));
+}
+
+/* 目標字小牌子 */
+.danmaku-goal {
+    position: absolute;
+    left: 50%;
+    top: 8px;
+    white-space: nowrap;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-1) var(--sp-4);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-pill);
+    box-shadow: var(--shadow-card);
+    z-index: 3;
+    transition: background 0.2s;
+}
+
+.danmaku-goal--new {
+    background: var(--c-yellow-soft);
+    border-color: var(--c-orange);
+}
+
+.danmaku-goal__t {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+}
+
+.danmaku-goal__ch {
+    color: var(--c-ink);
+    font-family: var(--font-note);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    line-height: 1.1;
+}
+
+.danmaku-arena {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    touch-action: none;
+}
+
+/* 飄過的字：白色字、黑色描邊（影片彈幕的樣子） */
+.danmaku-ch {
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--c-card);
+    font-family: var(--font-note);
+    font-weight: var(--fw-black);
+    text-align: center;
+    text-shadow: -2px -2px 0 var(--c-ink), 2px -2px 0 var(--c-ink), -2px 2px 0 var(--c-ink), 2px 2px 0 var(--c-ink), 0 3px 0 var(--c-ink);
+    will-change: transform;
+    pointer-events: none;
+}
+
+.danmaku-ch--pop {
+    animation: danmaku-pop 0.26s ease-out forwards;
+}
+
+@keyframes danmaku-pop {
+    to {
+        opacity: 0;
+        filter: blur(3px);
+    }
+}
+
+/* 結束時：目標字圈綠色、點錯的圈紅色、其他變暗 */
+.danmaku-ch--target {
+    border: 5px solid var(--c-ok);
+    border-radius: 50%;
+    box-sizing: border-box;
+}
+
+.danmaku-ch--bad {
+    border: 5px solid var(--c-bad-light);
+    border-radius: 50%;
+    box-sizing: border-box;
+}
+
+.danmaku-ch--dim {
+    opacity: 0.55;
+}
+
+.danmaku-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 14px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+    z-index: 3;
+}

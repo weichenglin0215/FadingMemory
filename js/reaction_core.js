@@ -28,6 +28,9 @@
     /* Reaction.current：「目前這一頁正在玩的是哪一款遊戲」（js/reaction.js 在決定要玩哪一款之後設定）。
        kit.result 靠它知道成績要送到哪一款遊戲的世界排行榜；沒設定（例如 Node 測試）就不會送。 */
     Reaction.current = null;
+    /* Reaction.onLeave：玩家按左上角「返回」時，js/reaction.js 會先呼叫它——回傳 true 表示遊戲已經自己處理了（例如自由解題的遊戲
+       先結算並顯示結算卡片），這次不要離開頁面；沒設定、或回傳其他值就直接離開。kit.run 的 o.leaveSettle 會設定它。 */
+    Reaction.onLeave = null;
 
     /* 最佳紀錄用 localStorage 存，key 用 'fm.reaction.best.' + 遊戲 id 區分
        （例如 'fm.reaction.best.drop'），每款遊戲各自獨立不會互相覆蓋。 */

@@ -1,0 +1,119 @@
+/* ═══════════════════════════════════════
+   reaction_fracduel.css — 分數大對決（js/reaction_fracduel.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「fracduel-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 024 分數大對決（.fracduel-）═══ */
+.fracduel-row {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50px;
+    display: flex;
+    gap: var(--sp-4);
+}
+
+.fracduel-card {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 360px;
+    border-radius: var(--r-lg);
+    background: var(--c-card);
+    border: var(--bd);
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-3);
+    cursor: pointer;
+}
+
+.fracduel-card:active {
+    transform: scale(0.98);
+}
+
+.fracduel-card--big {
+    border-color: var(--c-green);
+}
+
+.fracduel-card--ok {
+    background: var(--c-green-soft);
+}
+
+.fracduel-card--bad {
+    background: var(--c-bad-soft);
+}
+
+/* V1.25：數字加大（兩位數 130px），三位數、帶小數點的依字數縮小才放得進卡片（卡片寬約 226px）；分數線跟著撐滿 */
+.fracduel-frac {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 90%;
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    font-size: 130px;
+    line-height: 1.05;
+}
+
+.fracduel-frac--s2 {
+    font-size: 130px;
+}
+
+.fracduel-frac--s3 {
+    font-size: 104px;
+}
+
+.fracduel-frac--s4 {
+    font-size: 84px;
+}
+
+.fracduel-frac--s5 {
+    font-size: 70px;
+}
+
+.fracduel-frac--s6 {
+    font-size: 58px;
+}
+
+.fracduel-bar {
+    align-self: stretch;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--c-ink);
+    margin: 4px 0;
+}
+
+.fracduel-val {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+}
+
+.fracduel-bargraph {
+    width: 80%;
+    height: 14px;
+    border-radius: 7px;
+    background: var(--c-yellow-soft);
+    overflow: hidden;
+}
+
+.fracduel-bargraph__fill {
+    height: 100%;
+    background: var(--c-blue);
+}
+
+.fracduel-info {
+    position: absolute;
+    left: var(--sp-3);
+    right: var(--sp-3);
+    top: 440px;
+    text-align: center;
+    white-space: pre-line;
+    font-size: var(--fs-md);
+    line-height: var(--lh-body);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}

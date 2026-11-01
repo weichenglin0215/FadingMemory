@@ -77,11 +77,11 @@ for (const [W, H] of [[472, 640], [440, 600], [472, 520], [500, 700]]) {
 function BLOCKS_LAST() { return T.BLOCKS - 1; }
 
 // ── 程式裡的接線 ──
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_huesort.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_huesort.js'), css = rd('../../css/games/reaction_huesort.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
   ok(/api\.fail\(\{ delay: GATHER_MS \+ 3700/.test(src) && /api\.pass\(\{ delay: GATHER_MS \+ 1900/.test(src) && T.GATHER_MS + 3700 >= 2000, '失敗停格 2 秒以上、答對也留時間看緊貼的色塊');
-  ok(/mark\(q\.k, true\)/.test(src) && /mark\(j, false\)/.test(src) && /hus-block--join/.test(src), '評審動畫：集中、正確塊畫綠圈、點錯的塊畫紅 X');
-  ok(/\.hus-mark__ok \{[^}]*var\(--hus-edge\)/.test(css) && /\.hus-mark__xedge \{[^}]*var\(--hus-edge\)/.test(css) && /\.hus-mark__x \{[^}]*var\(--hus-x\)/.test(css), '白邊、綠圈、紅 X 用 CSS 變數');
-  ok(/\.hus-block--join \{[^}]*border-radius: 0/.test(css) && /\.hus-block \{[^}]*transition:[^;]*left/.test(css), '集中時圓角變直角、位置有過渡動畫');
+  ok(/mark\(q\.k, true\)/.test(src) && /mark\(j, false\)/.test(src) && /huesort-block--join/.test(src), '評審動畫：集中、正確塊畫綠圈、點錯的塊畫紅 X');
+  ok(/\.huesort-mark__ok \{[^}]*var\(--hus-edge\)/.test(css) && /\.huesort-mark__xedge \{[^}]*var\(--hus-edge\)/.test(css) && /\.huesort-mark__x \{[^}]*var\(--hus-x\)/.test(css), '白邊、綠圈、紅 X 用 CSS 變數');
+  ok(/\.huesort-block--join \{[^}]*border-radius: 0/.test(css) && /\.huesort-block \{[^}]*transition:[^;]*left/.test(css), '集中時圓角變直角、位置有過渡動畫');
   ok(boot.indexOf("'js/reaction_huesort.js'") > 0 && /9 塊/.test(G.rule), 'boot.js 有載入、玩法說明提到 9 塊'); }
 ok(T.rating(1) !== T.rating(3) && T.rating(3) !== T.rating(8) && T.rating(8) !== T.rating(15) && T.rating(15) !== T.rating(25), '評語分級');
 // V1.36.0 玩家意見：色塊靠攏之後上下要緊密相連、不留白縫——除了最後一塊，每一塊都壓進下一塊 JOIN_OVERLAP px（下面的塊畫在上面）

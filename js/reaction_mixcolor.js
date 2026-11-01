@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_mixcolor.js — 秒反應・混出什麼色（原企劃「099 混出什麼色」的復活版）
+   樣式：css/games/reaction_mixcolor.css（這款專屬的 class 一律以「mixcolor-」開頭；共用元件在 css/reaction_common.css）
    介面跟「色不異空」很像：上方左右兩個色塊，中間隔著一條黑色長方形。左邊是目標顏色（不變）；
    右邊是你要調出來的顏色：下方有三對六顆按鈕，分別控制右邊色塊的紅、綠、藍：
        左邊一對：亮紅「＋」（按住增加紅色）、暗紅「－」（按住減少紅色）
@@ -14,7 +15,7 @@
    · 紅綠藍各 0～255，用畫面上實際顯示的（四捨五入後）顏色算差異度，所以可以真的剛好 0.0000％。
    · 計時與判定一律用 performance.now()，不依賴 rAF（rAF 被暫停時有備援計時器）。
    · 防誤觸「確定」：「確定」按下去就結算（單回合、不能反悔），而且它緊貼在下排「－」按鈕的下面，手指點「－」的時候稍微滑到下緣、或放開時
-     碰到它，就會變成「才按一下 ＋／－ 遊戲就結束了」。所以：①「確定」跟按鈕之間隔開一段距離（css/reaction4.css 的 .cm-ok）；
+     碰到它，就會變成「才按一下 ＋／－ 遊戲就結束了」。所以：①「確定」跟按鈕之間隔開一段距離（css/games/reaction_mixcolor.css 的 .mixcolor-ok）；
      ②只要有任何一顆 ＋／－ 還按著、或是剛放開不到 OK_GUARD_MS（0.3 秒），按「確定」都不算。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
@@ -79,12 +80,12 @@
 
     /* 六顆按鈕：頻道、方向、顏色變數（css/theme.css 的 --cm-*） */
     var BUTTONS = [
-        { id: 'r+', ch: 'r', dir: 1, cls: 'cm-btn--r-hi', text: '+' }, { id: 'g+', ch: 'g', dir: 1, cls: 'cm-btn--g-hi', text: '+' }, { id: 'b+', ch: 'b', dir: 1, cls: 'cm-btn--b-hi', text: '+' },
-        { id: 'r-', ch: 'r', dir: -1, cls: 'cm-btn--r-lo', text: '−' }, { id: 'g-', ch: 'g', dir: -1, cls: 'cm-btn--g-lo', text: '−' }, { id: 'b-', ch: 'b', dir: -1, cls: 'cm-btn--b-lo', text: '−' }
+        { id: 'r+', ch: 'r', dir: 1, cls: 'mixcolor-btn--r-hi', text: '+' }, { id: 'g+', ch: 'g', dir: 1, cls: 'mixcolor-btn--g-hi', text: '+' }, { id: 'b+', ch: 'b', dir: 1, cls: 'mixcolor-btn--b-hi', text: '+' },
+        { id: 'r-', ch: 'r', dir: -1, cls: 'mixcolor-btn--r-lo', text: '−' }, { id: 'g-', ch: 'g', dir: -1, cls: 'mixcolor-btn--g-lo', text: '−' }, { id: 'b-', ch: 'b', dir: -1, cls: 'mixcolor-btn--b-lo', text: '−' }
     ];
 
     function mount(root, ctx) {
-        root.classList.add('mc-bg');
+        root.classList.add('mixcolor-bg');
         var R = null;
 
         function round() {
@@ -95,21 +96,21 @@
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
             var rd = newRound();
             var cur = { r: rd.start.r, g: rd.start.g, b: rd.start.b };         /* 浮點數，顯示時四捨五入 */
-            var leftEl = h('div', { 'class': 'mc-block' }), gapEl = h('div', { 'class': 'mc-gap' }), rightEl = h('div', { 'class': 'mc-block' });
+            var leftEl = h('div', { 'class': 'mixcolor-block' }), gapEl = h('div', { 'class': 'mixcolor-gap' }), rightEl = h('div', { 'class': 'mixcolor-block' });
             leftEl.style.background = cssRgb(rd.target);
             gapEl.style.flexBasis = GAP_PX + 'px';
-            root.appendChild(h('div', { 'class': 'mc-field' }, [leftEl, gapEl, rightEl]));
+            root.appendChild(h('div', { 'class': 'mixcolor-field' }, [leftEl, gapEl, rightEl]));
             function paint() { rightEl.style.background = cssRgb(cur); }
             paint();
             console.log('[混出什麼色] 目標 rgb(' + rd.target.r + ',' + rd.target.g + ',' + rd.target.b + ')；起始 rgb(' + rd.start.r + ',' + rd.start.g + ',' + rd.start.b + ')；起始差異 ' + diffPercent(rd.target, rd.start).toFixed(2) + '%');
 
-            var pad = h('div', { 'class': 'cm-pad' }), okBtn = h('button', { 'class': 'btn btn--go cm-ok', text: '確定' });
+            var pad = h('div', { 'class': 'mixcolor-pad' }), okBtn = h('button', { 'class': 'btn btn--go mixcolor-ok', text: '確定' });
             var btnEls = {};
             BUTTONS.forEach(function (b) {
-                var el = h('button', { 'class': 'cm-btn ' + b.cls, text: b.text, attrs: { 'aria-label': ({ r: '紅', g: '綠', b: '藍' })[b.ch] + (b.dir > 0 ? '增加' : '減少') } });
+                var el = h('button', { 'class': 'mixcolor-btn ' + b.cls, text: b.text, attrs: { 'aria-label': ({ r: '紅', g: '綠', b: '藍' })[b.ch] + (b.dir > 0 ? '增加' : '減少') } });
                 btnEls[b.id] = el; pad.appendChild(el);
             });
-            var foot = h('div', { 'class': 'cm-foot' }, [h('div', { 'class': 'mc-hint', text: '按住 ＋ ／ － 調整右邊色塊的顏色，\n調到跟左邊一樣，再按「確定」。' }), pad, okBtn]);
+            var foot = h('div', { 'class': 'mixcolor-foot' }, [h('div', { 'class': 'mixcolor-hint', text: '按住 ＋ ／ － 調整右邊色塊的顏色，\n調到跟左邊一樣，再按「確定」。' }), pad, okBtn]);
             root.appendChild(foot);
 
             /* 按住：held[pointerId] ＝ { b: 按鈕, t0: 開始按的時間 }；每個畫面（或備援計時器）依經過的時間改變頻道 */
@@ -136,9 +137,9 @@
                     held[e.pointerId] = { b: b, t0: performance.now() };
                     lastAdjust = performance.now();
                     cur[b.ch] = Math.min(255, Math.max(0, cur[b.ch] + b.dir));          /* 一按下去先動 1 個單位（點一下也能微調） */
-                    el.classList.add('cm-btn--on'); paint(); Sfx.play('click');
+                    el.classList.add('mixcolor-btn--on'); paint(); Sfx.play('click');
                 });
-                function up(e) { if (held[e.pointerId]) { delete held[e.pointerId]; el.classList.remove('cm-btn--on'); lastAdjust = performance.now(); } }
+                function up(e) { if (held[e.pointerId]) { delete held[e.pointerId]; el.classList.remove('mixcolor-btn--on'); lastAdjust = performance.now(); } }
                 el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('lostpointercapture', up);
             });
             /* 操作提示（只在第一次進遊戲時）：手指按住「差最多的那個頻道要按的那顆按鈕」（第一次的正確方向） */
@@ -160,7 +161,7 @@
                 console.log('混出什麼色：實際差異度 ' + real.toFixed(6) + '% → 成績 ' + fmtPct(diff) + '；你調到 rgb(' + shown.r + ',' + shown.g + ',' + shown.b + ')');
                 var isNew = Reaction.setBest(ID, diff, function (v, b) { return v < b; });
                 ctx.setMeta(fmtBest(Reaction.getBest(ID)));
-                gapEl.classList.add('mc-gap--closed');
+                gapEl.classList.add('mixcolor-gap--closed');
                 Sfx.play('click');
                 foot.style.visibility = 'hidden';
                 my.after(CLOSE_MS + 150, function () {

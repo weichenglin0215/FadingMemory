@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_sum100.js — 秒反應・兩張成百（原名湊百消除，V1.25 改名）
+   樣式：css/games/reaction_sum100.css（這款專屬的 class 一律以「sum100-」開頭；共用元件在 css/reaction_common.css）
    30 張數字牌（5 欄×6 列），點兩張加起來剛好 100 就消除，全部消完為止。計時，點錯一組罰 3 秒；
    總時間（含罰秒）超過 LIMIT_S（180 秒）就算失敗（不計成績、不送排行榜）。
    介面不顯示「已選合計」（不替你記帳）。成績＝用時（含罰秒，越短越好）。
@@ -73,19 +74,19 @@
         var bd = makeBoard(), cards = bd.cards, state = [], sel = -1, remaining = cards.length, errors = 0, started = false, firstBad = null, hint = null;
         console.log('[兩張成百] 牌面 ' + cards.join(',') + '；差一點的組合 ' + bd.near + ' 組');
 
-        var clockWrap = h('div', { 'class': 'sm-clock' });
+        var clockWrap = h('div', { 'class': 'sum100-clock' });
         stage.appendChild(clockWrap);
         var clock = kit.clock(clockWrap, my);
-        var grid = h('div', { 'class': 'sm-grid' });
+        var grid = h('div', { 'class': 'sum100-grid' });
         var els = cards.map(function (n, i) {
-            var el = h('div', { 'class': 'sm-card', text: String(n) });
+            var el = h('div', { 'class': 'sum100-card', text: String(n) });
             state.push('on');
             kit.onTap(el, function () { tap(i); });
             grid.appendChild(el);
             return el;
         });
         stage.appendChild(grid);
-        var info = h('div', { 'class': 'sm-info', text: '失誤 0 次（每次 + 3 秒）' });
+        var info = h('div', { 'class': 'sum100-info', text: '失誤 0 次（每次 + 3 秒）' });
         stage.appendChild(info);
         var over = false;
 
@@ -107,18 +108,18 @@
         function tap(i) {
             if (!started || over || state[i] !== 'on') return;
             hideHint();
-            if (sel === i) { els[i].classList.remove('sm-card--sel'); sel = -1; Sfx.play('click'); return; }
-            if (sel < 0) { sel = i; els[i].classList.add('sm-card--sel'); Sfx.play('click'); return; }
+            if (sel === i) { els[i].classList.remove('sum100-card--sel'); sel = -1; Sfx.play('click'); return; }
+            if (sel < 0) { sel = i; els[i].classList.add('sum100-card--sel'); Sfx.play('click'); return; }
             var j = sel; sel = -1;
             if (cards[i] + cards[j] === 100) {
-                [i, j].forEach(function (k) { state[k] = 'gone'; els[k].classList.remove('sm-card--sel'); els[k].classList.add('sm-card--gone'); });
+                [i, j].forEach(function (k) { state[k] = 'gone'; els[k].classList.remove('sum100-card--sel'); els[k].classList.add('sum100-card--gone'); });
                 remaining -= 2; Sfx.play('ok');
                 if (remaining === 0) finish();
             } else {
                 errors++;
                 if (!firstBad) firstBad = cards[j] + ' ＋ ' + cards[i] + ' ＝ ' + (cards[j] + cards[i]);
-                [i, j].forEach(function (k) { els[k].classList.remove('sm-card--sel'); els[k].classList.add('sm-card--bad'); });
-                my.after(420, function () { [i, j].forEach(function (k) { els[k].classList.remove('sm-card--bad'); }); });
+                [i, j].forEach(function (k) { els[k].classList.remove('sum100-card--sel'); els[k].classList.add('sum100-card--bad'); });
+                my.after(420, function () { [i, j].forEach(function (k) { els[k].classList.remove('sum100-card--bad'); }); });
                 clock.penalty(PENALTY_MS); Sfx.play('bad');
                 info.textContent = '失誤 ' + errors + ' 次（每次 + 3 秒）';
             }

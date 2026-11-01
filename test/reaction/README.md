@@ -24,7 +24,7 @@ node test/reaction/t_coins.js        # 只跑一支
 
 `t_ruletext.js`（V1.23.0）測玩法說明的排版（`Dlg.test.lines／emParts`：一句一行、引號與括號、`\n` 手動換行、`**重點**` 成對／不成對）與全部 108 款的 `rule`（每款有 1～4 個重點、每個至少 4 個字、不超過全文 60%、排版後沒有字被吃掉、遊戲名稱不超過 5 個字、零秒出手剛好是使用者指定的三行）；`t_menu.js` 測 `js/menu.js` 的清單（108 款、名稱 ≤ 5 個字、縮圖檔存在且高 256、七個分類不重疊且加起來是全部、跟各遊戲檔案的 id／名稱一致、「最近」的規則）；`t_scroller.js` 測 `js/scroller.js` 的互動（拖曳門檻、點一下與拖曳的分辨、慣性、橡皮筋、滾輪、鍵盤、舞台縮放換算；用假的 DOM，不需要瀏覽器）。
 
-`t_cssclass.js`（V1.24.0）掃描全部遊戲檔裡寫的 CSS class 名稱，**兩款以上的遊戲用同一個 class 就失敗**——所有遊戲的 CSS 是一次全部載入的，撞名會讓其中一款的版面跑掉（V1.24 實際發生過：`.pb-cell`、`.bk-info`）。已知而且是故意的共用（混出什麼色借用 `mc-`）與已知但先不處理的共用（`cr-`）列在檔案裡的 `ALLOW`，清單裡的項目如果已經沒有被共用也會失敗（提醒你把它拿掉）。
+`t_cssclass.js`（V1.24.0 建立、V1.41.0 重寫）檢查「**一款遊戲一份 CSS**」的規矩：每款 `js/reaction_<id>.js` 都有同名的 `css/games/reaction_<id>.css`（數獨系列共用 `css/sudoku_lib.css`）、css 裡的 class 與 @keyframes 以「<id>-」（遊戲全名）開頭、遊戲 js 不能用別款遊戲的 class（共用元件除外）、共用 `css/reaction_common.css` 不能出現遊戲專屬的 class、`boot.js` 有載入每一份。
 
 `t_triple100.js`（V1.26.0；V1.27.0 改成關卡制）測三張成百：使用者的範例牌組（唯一正解 5 組、陷阱 9 組、共 14 組）、先消陷阱就配不完、產生器 300 副牌都只有唯一分法且陷阱 ≥ 9 組、findTriples／findPartitions 對照暴力；關卡規格（第 1 關 6 張、每三關多 3 張、限時 180 秒起每關 +20 秒）、30 關每一關的牌組（張數、唯一分法、陷阱數量）、6 張牌不可能有陷阱、時間顯示。
 
@@ -50,3 +50,16 @@ node test/reaction/rules_check.mjs                  全部 108 款的玩法說�
 
 `cdp.mjs` 是共用的小工具：啟動看不見視窗的瀏覽器（遠端除錯埠用 0＝自動挑、結束時用 `taskkill /T` 殺整棵行程樹，不會留下孤兒行程）、送 CDP 指令、開啟某款遊戲並略過說明彈窗。
 `browser_new28.js`／`browser_hints.js` 是放在頁面裡跑的檢查程式（也可以手動貼進瀏覽器主控台），`run_browser.mjs` 只是自動把它們載進去跑。
+
+## 深思篇（V1.41.0）與 CSS 重整的驗證工具
+
+`t_sudokulib.js`（數獨引擎與六款變體）、`t_sandwich.js`、`t_takuzu.js`、`t_sumdel.js`、`t_magicsq.js`、`t_nim.js`、`t_fifteen.js`、`t_tianji.js`、`t_flipten.js`：出題器的唯一解／不用猜、必勝（取火柴與搶十五用完整搜尋，並跟 XOR 定理、井字遊戲的和局互相驗證）、田忌賽馬的貪心＝暴力搜尋、翻牌湊十的完美記憶策略＝模擬玩一遍、難度曲線、提示、答案不偏心。
+
+```
+node test/reaction/browser_think.mjs                 深思篇 14 款：用真的滑鼠事件操作（點格、點數字鍵、點火柴、點牌、點馬、翻牌…）＋G.debug 走完解開；失敗型故意走錯會結算；自由解題的款按「返回」會先結算、再按才離開；全程沒有 JS 錯誤
+node test/reaction/browser_think.mjs nim takuzu     指定幾款
+node test/reaction/css_fingerprint.mjs save 檔.json [id…]   樣式指紋：每款遊戲「剛開始的畫面」每個元素的計算後樣式＋位置，壓成指紋存起來（Math.random 固定種子、關掉動畫）
+node test/reaction/css_fingerprint.mjs diff 甲.json 乙.json 比對兩份指紋，列出有差異的遊戲
+```
+
+`css_fingerprint.mjs` 是改 CSS 組織（拆檔、class 改名）時用的：改之前拍一份、改之後拍一份，指紋一樣＝畫面上每個元素的每個樣式都沒變（class 名稱不納入指紋，所以改名不影響）。注意：`getComputedStyle` 裡自訂屬性（`--xxx`）的順序每次不同，指紋會先排序；倒數計時條這類本來就在動的元素每次都不同，要先拍兩次基準、扣掉本來就會變動的元素再比。

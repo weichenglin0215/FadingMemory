@@ -1,0 +1,178 @@
+/* ═══════════════════════════════════════
+   reaction_curves.css — 誰先到？（js/reaction_curves.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「curves-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 誰先到？：哪條彎曲路線上的球先到終點。 */
+/* ═══ 誰先到？（.curves-）═══ 黑底畫面 */
+/* 黑底畫面 */
+.screen.curves-bg {
+    background: #000000;
+    padding: 0;
+    gap: 0;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+}
+
+/* 標題 */
+.curves-head {
+    flex: none;
+    padding: var(--sp-3) var(--sp-3) var(--sp-2);
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: #FFFFFF;
+    min-height: 2.6em;
+}
+
+/* 路線場地 */
+.curves-field {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* SVG */
+.curves-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* 路線（vector-effect:non-scaling-stroke＝線寬、虛線長度以「畫面上的像素」計，不會因為揭曉時鏡頭放大而變粗） */
+.curves-line {
+    fill: none;
+    stroke-width: 7px;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+
+/* 揭曉時：長的那條「球停住之後還沒走完的那一段」，用橘色標出來（畫在原本的線上面） */
+.curves-rest {
+    stroke: var(--c-orange);
+    stroke-linecap: round;
+    stroke-dasharray: none;
+}
+
+/* 揭曉時：長的那條的終點圈閃動（提醒玩家看球離終點還有多遠）；opacity 動畫 0.6 秒一次 */
+.curves-end--gap {
+    animation: curves-end-pulse 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes curves-end-pulse {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0.25;
+    }
+}
+
+/* 白色路線（逗號 = 兩個 class 共用一個樣式） */
+.curves-line--solid,
+.curves-line--white {
+    stroke: #FFFFFF;
+}
+
+/* 紅色路線 */
+.curves-line--red {
+    stroke: #E0342A;
+}
+
+/* 起點 */
+.curves-start {
+    fill: #3FA46A;
+}
+
+/* 終點 */
+.curves-end {
+    fill: #F2C230;
+}
+
+/* 球（描邊同樣不隨鏡頭放大而變粗） */
+.curves-ball {
+    fill: #4AB5FF;
+    stroke: #FFFFFF;
+    stroke-width: 3px;
+    vector-effect: non-scaling-stroke;
+}
+
+/* 大標語（浮在場地上，pointer-events:none 不擋點擊） */
+.curves-banner {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 38%;
+    z-index: 2;
+    text-align: center;
+    font-size: var(--fs-xl);
+    font-weight: 800;
+    color: #FFFFFF;
+    text-shadow: 0 2px 8px #000, 0 0 12px #000;
+    pointer-events: none;
+}
+
+/* 揭曉的時候大標語移到場地最上緣，不要蓋住放大後的球與終點 */
+.curves-field--zoom .curves-banner {
+    top: 6px;
+}
+
+/* 大標語：答對（亮綠） */
+.curves-banner--ok {
+    color: #7CFF9B;
+}
+
+/* 大標語：答錯（亮橘） */
+.curves-banner--bad {
+    color: #FF9C7A;
+}
+
+/* 下方的選擇按鈕列 */
+.curves-btns {
+    flex: none;
+    display: flex;
+    gap: var(--sp-3);
+    padding: var(--sp-3);
+}
+
+/* 單顆選擇按鈕（深色底） */
+.curves-btn {
+    flex: 1 1 0;
+    height: 58px;
+    border: 3px solid #8A8A8A;
+    border-radius: var(--r-md, 12px);
+    background: #1E1E1E;
+    color: #FFFFFF;
+    font-family: var(--font-ui);
+    font-size: 26px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+/* 手指按著時變亮一點 */
+.curves-btn:active {
+    background: #3A3A3A;
+}
+
+/* 選對 */
+.curves-btn--ok {
+    border-color: #7CFF9B;
+    color: #7CFF9B;
+}
+
+/* 選錯 */
+.curves-btn--bad {
+    border-color: #FF9C7A;
+    color: #FF9C7A;
+}
+
+/* [disabled] 是屬性選擇器：按鈕被設成 disabled（不可按）時才套用 */
+.curves-btn[disabled] {
+    opacity: 0.8;
+}

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_eyebrow.js — 秒反應・畫眉毛（企劃 408）
+   樣式：css/games/reaction_eyebrow.css（這款專屬的 class 一律以「eyebrow-」開頭；共用元件在 css/reaction_common.css）
    化妝台的鏡子前。一張臉，**左邊的眉毛已經畫好了**。**手指在右邊畫出另一條眉毛，要跟左邊的「鏡射對稱」**（眉峰的位置、眉尾的方向都要左右反過來）。
    手指放開，就把左邊的眉毛翻過去（鏡射）疊在右邊，算出「相似度 88.3142%」；**相似度要達到及格線（70% → 93%）才過關**。
    ───────────────────────────────────────────────────────────────────
@@ -66,7 +67,7 @@
     var BROW_TOP = -190, BROW_BOTTOM = -46;     /* 眉毛的高度（臉座標 v）夾在這個範圍：可以高過頭頂（頭頂在 v ＝ −180），但不碰眼睛（眼睛最上緣在 v ＝ −35）（原本 −126，V1.38.0 放寬） */
     var TURN_MS = 900;                          /* 揭曉時，整張臉轉回正的要多久（毫秒） */
     var REVEAL_GAP_MS = 350;                    /* 轉正之後停一下，才畫出紅色的正確眉毛（V1.38.0） */
-    var GHOST_MS = 600;                         /* 紅色的正確眉毛淡入要多久（毫秒；css/reaction6.css 的 .ebw-ghost 也是這個值） */
+    var GHOST_MS = 600;                         /* 紅色的正確眉毛淡入要多久（毫秒；css/games/reaction_eyebrow.css 的 .eyebrow-ghost 也是這個值） */
     var EDGE = 8;                               /* 整條眉毛（含鏡射的）離畫面邊緣至少幾 px */
     /* V1.40.0 鬍子：臉座標裡，鬍子在鼻子下面（鼻頭 v≈62）、嘴巴上面（嘴角 v＝100），可以垂到嘴巴下面；頭的半寬在這個高度大約 130（STACHE_GAP + STACHE_LEN 要小於它） */
     var STACHE_FROM = 2;                        /* 第幾關起可能出現鬍子（第 1 關一定是眉毛，先學會玩法） */
@@ -296,7 +297,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'ebw-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'eyebrow-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -311,28 +312,28 @@
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var q = makeLevel(level, api.rand, W, H);
         api.info = q;
-        var noun = q.kind === 'stache' ? '鬍子' : '眉毛', sc = q.kind === 'stache' ? ' ebw-ref--stache' : '';                      /* 鬍子的線條畫粗一點（css 的 --stache 版本） */
+        var noun = q.kind === 'stache' ? '鬍子' : '眉毛', sc = q.kind === 'stache' ? ' eyebrow-ref--stache' : '';                      /* 鬍子的線條畫粗一點（css 的 --stache 版本） */
         console.log('[畫眉毛] 第 ' + level + ' 關：' + q.type + (q.kind === 'stache' ? '鬍（左邊那撇長 ' : '眉（左眉長 ') + q.L.toFixed(0) + ' px）；臉心 (' + q.F.x + ', ' + q.F.y + ')、歪 ' + q.thetaDeg + '°；及格線 ' + q.thresh + '%');
 
-        var field = h('div', { 'class': 'ebw-field' });
+        var field = h('div', { 'class': 'eyebrow-field' });
         stage.appendChild(field);
-        var tip = h('div', { 'class': 'qz-note ebw-tip', text: level === 1 ? '照左邊的眉毛，在右邊畫一條左右對稱的！' : '畫出和左邊對稱的右邊' + noun + '（及格線 ' + q.thresh.toFixed(0) + '%）' });
+        var tip = h('div', { 'class': 'qz-note eyebrow-tip', text: level === 1 ? '照左邊的眉毛，在右邊畫一條左右對稱的！' : '畫出和左邊對稱的右邊' + noun + '（及格線 ' + q.thresh.toFixed(0) + '%）' });
         field.appendChild(tip);
-        var svg = kit.svg('svg', { 'class': 'ebw-svg', width: W, height: H, viewBox: '0 0 ' + W + ' ' + H }, field);
+        var svg = kit.svg('svg', { 'class': 'eyebrow-svg', width: W, height: H, viewBox: '0 0 ' + W + ' ' + H }, field);
         /* 臉：整個臉（頭、鼻、嘴、眼睛）畫在臉座標裡，用 transform 轉歪、移位 */
-        var turn = kit.svg('g', { 'class': 'ebw-turn' }, svg);                     /* 揭曉時整組繞著臉心轉回正的：臉、你畫的線、淡紅色的線都放在裡面 */
+        var turn = kit.svg('g', { 'class': 'eyebrow-turn' }, svg);                     /* 揭曉時整組繞著臉心轉回正的：臉、你畫的線、淡紅色的線都放在裡面 */
         turn.style.transformOrigin = q.F.x + 'px ' + q.F.y + 'px'; turn.style.transitionDuration = TURN_MS + 'ms';
         var face = kit.svg('g', { transform: 'translate(' + q.F.x + ',' + q.F.y + ') rotate(' + q.thetaDeg + ')' }, turn);
-        kit.svg('ellipse', { 'class': 'ebw-head', cx: 0, cy: 8, rx: 150, ry: 188 }, face);
-        kit.svg('ellipse', { 'class': 'ebw-ear', cx: -152, cy: 10, rx: 14, ry: 34 }, face); kit.svg('ellipse', { 'class': 'ebw-ear', cx: 152, cy: 10, rx: 14, ry: 34 }, face);
-        [-1, 1].forEach(function (sg) { kit.svg('ellipse', { 'class': 'ebw-eye', cx: sg * 62, cy: -22, rx: 28, ry: 13 }, face); kit.svg('circle', { 'class': 'ebw-pupil', cx: sg * 62, cy: -22, r: 9 }, face); });
-        kit.svg('path', { 'class': 'ebw-nose', d: 'M0,-10 L-8,52 Q0,62 12,52' }, face);
-        kit.svg('path', { 'class': 'ebw-mouth', d: 'M-44,100 Q0,128 44,100' }, face);
+        kit.svg('ellipse', { 'class': 'eyebrow-head', cx: 0, cy: 8, rx: 150, ry: 188 }, face);
+        kit.svg('ellipse', { 'class': 'eyebrow-ear', cx: -152, cy: 10, rx: 14, ry: 34 }, face); kit.svg('ellipse', { 'class': 'eyebrow-ear', cx: 152, cy: 10, rx: 14, ry: 34 }, face);
+        [-1, 1].forEach(function (sg) { kit.svg('ellipse', { 'class': 'eyebrow-eye', cx: sg * 62, cy: -22, rx: 28, ry: 13 }, face); kit.svg('circle', { 'class': 'eyebrow-pupil', cx: sg * 62, cy: -22, r: 9 }, face); });
+        kit.svg('path', { 'class': 'eyebrow-nose', d: 'M0,-10 L-8,52 Q0,62 12,52' }, face);
+        kit.svg('path', { 'class': 'eyebrow-mouth', d: 'M-44,100 Q0,128 44,100' }, face);
         /* 左邊的眉毛（已經畫好；臉座標，畫在臉的 group 裡所以會跟著臉歪） */
-        kit.svg('polyline', { 'class': 'ebw-ref' + sc, points: q.brow.map(function (p) { return p.u + ',' + p.v; }).join(' ') }, face);
-        var axis = kit.svg('line', { 'class': 'ebw-axis', x1: 0, y1: -190, x2: 0, y2: 205 }, face);                    /* 臉的中軸（揭曉時淡淡地顯示） */
-        var mine = kit.svg('polyline', { 'class': 'ebw-mine' + sc.replace('ref', 'mine'), points: '' }, turn), ghost = kit.svg('polyline', { 'class': 'ebw-ghost' + sc.replace('ref', 'ghost'), points: '' }, turn);
-        var info = h('div', { 'class': 'qz-note ebw-info', text: '' }); info.style.top = Math.round(H * 0.46 + 215) + 'px'; field.appendChild(info);
+        kit.svg('polyline', { 'class': 'eyebrow-ref' + sc, points: q.brow.map(function (p) { return p.u + ',' + p.v; }).join(' ') }, face);
+        var axis = kit.svg('line', { 'class': 'eyebrow-axis', x1: 0, y1: -190, x2: 0, y2: 205 }, face);                    /* 臉的中軸（揭曉時淡淡地顯示） */
+        var mine = kit.svg('polyline', { 'class': 'eyebrow-mine' + sc.replace('ref', 'mine'), points: '' }, turn), ghost = kit.svg('polyline', { 'class': 'eyebrow-ghost' + sc.replace('ref', 'ghost'), points: '' }, turn);
+        var info = h('div', { 'class': 'qz-note eyebrow-info', text: '' }); info.style.top = Math.round(H * 0.46 + 215) + 'px'; field.appendChild(info);
         if (level === 1 && kit.once('eyebrow.hint')) { var s0 = q.target[0], s1 = q.target[q.target.length - 1]; kit.hintOn(stage, null, { mode: 'drag', x: s0.x, y: s0.y, dx: s1.x - s0.x, dy: s1.y - s0.y, delay: 800, text: '在右邊畫出對稱的眉毛' }); }
 
         var phase = 'draw', pts = [], down = null;
@@ -364,12 +365,12 @@
             var turnMs = q.thetaDeg ? TURN_MS : 0, revealAt = turnMs + REVEAL_GAP_MS;
             tip.textContent = q.thetaDeg ? '先把臉轉正…' : '看看對稱的眉毛…';
             if (q.thetaDeg) turn.style.transform = 'rotate(' + (-q.thetaDeg) + 'deg)';
-            axis.classList.add('ebw-axis--on');
+            axis.classList.add('eyebrow-axis--on');
             api.after(revealAt, function () {
-                ghost.setAttribute('points', pts2d(q.target)); ghost.classList.add('ebw-ghost--on');
+                ghost.setAttribute('points', pts2d(q.target)); ghost.classList.add('eyebrow-ghost--on');
                 tip.textContent = ok ? '畫得好！' : '紅色是左邊的' + noun + '翻過去的樣子';
                 api.after(GHOST_MS, function () {
-                    info.textContent = why; info.classList.add(ok ? 'ebw-info--ok' : 'ebw-info--bad');
+                    info.textContent = why; info.classList.add(ok ? 'eyebrow-info--ok' : 'eyebrow-info--bad');
                     if (ok) { kit.flash(stage, true, api.my); Sfx.play('ok'); api.pass({ delay: 1800 }); return; }
                     kit.flash(stage, false, api.my);
                     api.fail({ delay: 3000, lines: [why, '把左邊的' + noun + '左右翻過去（鏡射）就是紅色那條', '臉歪了 ' + q.thetaDeg + '°，對稱軸是臉的中軸（看鼻子），不是畫面的正中間'] });

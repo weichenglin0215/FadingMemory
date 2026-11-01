@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_fishtoy.js — 秒反應・釣魚玩具（企劃 373）
+   樣式：css/games/reaction_fishtoy.css（這款專屬的 class 一律以「fishtoy-」開頭；共用元件在 css/reaction_common.css）
    小時候的釣魚玩具：一個圓形的池塘在轉，塑膠魚的嘴巴一張一合。**看準時機點一下放下釣竿**——釣竿要 0.4 秒才會落到水面，
    落下去的那一刻，**要剛好有「指定顏色」的魚、嘴巴張開著，經過釣竿正下方**，才釣得起來。每關只能放一次釣竿。
    釣空、魚嘴是閉著的、或釣到別種顏色的魚，都算失敗。
@@ -121,7 +122,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'fty-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'fishtoy-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -131,11 +132,11 @@
 
     /* 一條魚（SVG，朝 +x 方向游，身體中心在 (0,0)）：身體、尾巴、眼睛、嘴（兩片嘴唇＋張開的黑洞，用 setMouth 改角度） */
     function drawFish(parent, color) {
-        var g = kit.svg('g', { 'class': 'fty-fish' }, parent);
-        kit.svg('path', { 'class': 'fty-tail fty-c' + color, d: 'M-22,0 L-44,-15 Q-38,0 -44,15 Z' }, g);
-        kit.svg('ellipse', { 'class': 'fty-body fty-c' + color, cx: 0, cy: 0, rx: 27, ry: 16 }, g);
-        kit.svg('circle', { 'class': 'fty-eye', cx: 12, cy: -6, r: 3.2 }, g);
-        var hole = kit.svg('path', { 'class': 'fty-hole', d: '' }, g), up = kit.svg('line', { 'class': 'fty-lip', x1: 25, y1: 0, x2: 25, y2: 0 }, g), lo = kit.svg('line', { 'class': 'fty-lip', x1: 25, y1: 0, x2: 25, y2: 0 }, g);
+        var g = kit.svg('g', { 'class': 'fishtoy-fish' }, parent);
+        kit.svg('path', { 'class': 'fishtoy-tail fishtoy-c' + color, d: 'M-22,0 L-44,-15 Q-38,0 -44,15 Z' }, g);
+        kit.svg('ellipse', { 'class': 'fishtoy-body fishtoy-c' + color, cx: 0, cy: 0, rx: 27, ry: 16 }, g);
+        kit.svg('circle', { 'class': 'fishtoy-eye', cx: 12, cy: -6, r: 3.2 }, g);
+        var hole = kit.svg('path', { 'class': 'fishtoy-hole', d: '' }, g), up = kit.svg('line', { 'class': 'fishtoy-lip', x1: 25, y1: 0, x2: 25, y2: 0 }, g), lo = kit.svg('line', { 'class': 'fishtoy-lip', x1: 25, y1: 0, x2: 25, y2: 0 }, g);
         return { g: g, hole: hole, up: up, lo: lo };
     }
     function setMouth(fs, a) {
@@ -152,24 +153,24 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var cx = Math.round(W / 2), R = Math.min(W / 2 - 12, 176), cy = Math.round(H * 0.5), rf = Math.round(R * 0.66);
-        var field = h('div', { 'class': 'fty-field' });
+        var field = h('div', { 'class': 'fishtoy-field' });
         stage.appendChild(field);
-        var goal = h('div', { 'class': 'fty-goal' });
-        goal.appendChild(h('span', { 'class': 'fty-goal__t', text: '釣 ' })); goal.appendChild(h('span', { 'class': 'fty-goal__c fty-bg' + q.target, text: COLORS[q.target] + '色' })); goal.appendChild(h('span', { 'class': 'fty-goal__t', text: ' 的魚' }));
+        var goal = h('div', { 'class': 'fishtoy-goal' });
+        goal.appendChild(h('span', { 'class': 'fishtoy-goal__t', text: '釣 ' })); goal.appendChild(h('span', { 'class': 'fishtoy-goal__c fishtoy-bg' + q.target, text: COLORS[q.target] + '色' })); goal.appendChild(h('span', { 'class': 'fishtoy-goal__t', text: ' 的魚' }));
         field.appendChild(goal);
-        var svg = kit.svg('svg', { 'class': 'fty-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, field);
-        kit.svg('circle', { 'class': 'fty-pond', cx: cx, cy: cy, r: R }, svg);
-        kit.svg('circle', { 'class': 'fty-ring', cx: cx, cy: cy, r: rf }, svg);
-        var rod = kit.svg('g', { 'class': 'fty-rodg' }, svg);
+        var svg = kit.svg('svg', { 'class': 'fishtoy-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, field);
+        kit.svg('circle', { 'class': 'fishtoy-pond', cx: cx, cy: cy, r: R }, svg);
+        kit.svg('circle', { 'class': 'fishtoy-ring', cx: cx, cy: cy, r: rf }, svg);
+        var rod = kit.svg('g', { 'class': 'fishtoy-rodg' }, svg);
         var tipX = cx + 78, tipY = 52, yHome = cy - rf - 118, yLand = cy - rf;
-        kit.svg('line', { 'class': 'fty-spot', x1: cx, y1: cy - R - 6, x2: cx, y2: cy - rf + 22 }, svg);                 /* 落水點的指示線 */
-        kit.svg('line', { 'class': 'fty-rod', x1: W - 6, y1: 18, x2: tipX, y2: tipY }, rod);
-        var line = kit.svg('line', { 'class': 'fty-line', x1: tipX, y1: tipY, x2: cx, y2: yHome }, rod);
-        var hook = kit.svg('circle', { 'class': 'fty-hook', cx: cx, cy: yHome, r: 9 }, rod);
+        kit.svg('line', { 'class': 'fishtoy-spot', x1: cx, y1: cy - R - 6, x2: cx, y2: cy - rf + 22 }, svg);                 /* 落水點的指示線 */
+        kit.svg('line', { 'class': 'fishtoy-rod', x1: W - 6, y1: 18, x2: tipX, y2: tipY }, rod);
+        var line = kit.svg('line', { 'class': 'fishtoy-line', x1: tipX, y1: tipY, x2: cx, y2: yHome }, rod);
+        var hook = kit.svg('circle', { 'class': 'fishtoy-hook', cx: cx, cy: yHome, r: 9 }, rod);
         /* 魚（在池塘上轉動；每格影格更新位置和嘴巴） */
         var fishG = kit.svg('g', {}, svg), fs = q.fish.map(function (f) { var d = drawFish(fishG, f.color); return d; });
-        var info = h('div', { 'class': 'qz-note fty-info', text: level === 1 ? '釣竿 0.4 秒才落下：算好再點！' : '算好 0.4 秒，魚嘴張開時落水' }); info.style.top = (cy + R + 6) + 'px'; field.appendChild(info);
-        var btn = kit.btnGrid(field, [{ text: '放釣竿', kind: 'primary', cls: 'fty-btn', onTap: function () { drop(); } }], { cols: 1, h: 92, bottom: 12 });
+        var info = h('div', { 'class': 'qz-note fishtoy-info', text: level === 1 ? '釣竿 0.4 秒才落下：算好再點！' : '算好 0.4 秒，魚嘴張開時落水' }); info.style.top = (cy + R + 6) + 'px'; field.appendChild(info);
+        var btn = kit.btnGrid(field, [{ text: '放釣竿', kind: 'primary', cls: 'fishtoy-btn', onTap: function () { drop(); } }], { cols: 1, h: 92, bottom: 12 });
         if (level === 1 && kit.once('fishtoy.hint')) kit.hintOn(stage, btn.btns[0], { mode: 'tap', delay: 900, text: '魚嘴張開、到釣竿下才放' });
 
         var phase = 'play', t0 = performance.now(), tDrop = null, tLand = null;
@@ -189,13 +190,13 @@
             var t = (now - t0) / 1000; paint(t);
             if (tDrop != null) paintHook(Math.min(1, (t - tDrop) / DROP_S));
         });
-        api.timer(TIME_LIMIT * 1000, function () { if (phase === 'play') { phase = 'end'; info.textContent = '時間到！一直沒有放釣竿'; info.classList.add('fty-info--bad'); kit.flash(stage, false, api.my); api.fail({ delay: 2800, lines: ['時間到！一直沒有放釣竿', '要釣的是' + COLORS[q.target] + '色的魚'] }); } });
+        api.timer(TIME_LIMIT * 1000, function () { if (phase === 'play') { phase = 'end'; info.textContent = '時間到！一直沒有放釣竿'; info.classList.add('fishtoy-info--bad'); kit.flash(stage, false, api.my); api.fail({ delay: 2800, lines: ['時間到！一直沒有放釣竿', '要釣的是' + COLORS[q.target] + '色的魚'] }); } });
 
         /* 放釣竿：點下去的時間 ＋ 0.4 秒＝落水的那一刻，那時才判定 */
         function drop() {
             if (phase !== 'play' || api.over) return;
             phase = 'drop'; tDrop = nowS(); tLand = tDrop + DROP_S; api.stopTimer(); Sfx.play('click');
-            btn.btns[0].classList.add('fty-btn--off');
+            btn.btns[0].classList.add('fishtoy-btn--off');
             api.after(Math.round(DROP_S * 1000), function () { land(); });
         }
         function land() {
@@ -204,13 +205,13 @@
             phase = 'end'; paint(tLand); paintHook(1);
             info.textContent = why;
             if (r.result === 'ok') {
-                Sfx.play('ok'); info.classList.add('fty-info--ok');
-                fs[r.fish].g.classList.add('fty-fish--caught');
+                Sfx.play('ok'); info.classList.add('fishtoy-info--ok');
+                fs[r.fish].g.classList.add('fishtoy-fish--caught');
                 kit.flash(stage, true, api.my);
                 api.pass({ delay: 2000 });
                 return;
             }
-            info.classList.add('fty-info--bad'); kit.flash(stage, false, api.my);
+            info.classList.add('fishtoy-info--bad'); kit.flash(stage, false, api.my);
             replay(r);
             api.fail({ delay: replayMs() + 1800, lines: [why, '要釣的是' + COLORS[q.target] + '色的魚（池塘裡 ' + q.fish.filter(function (f) { return f.color === q.target; }).length + ' 條）'] });
         }
@@ -221,7 +222,7 @@
             api.my.loop(function (now) {
                 var pr = Math.min(1, (now - r0) / ms), tv = tv0 + (tv1 - tv0) * pr;
                 paint(tv); paintHook(Math.max(0, Math.min(1, (tv - tDrop) / DROP_S)));
-                if (tv >= tLand && !ring) { ring = true; fs[r.fish].g.classList.add('fty-fish--focus'); }
+                if (tv >= tLand && !ring) { ring = true; fs[r.fish].g.classList.add('fishtoy-fish--focus'); }
                 if (pr >= 1) return false;
             });
         }

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_polyrhythm.js — 秒反應・左右不同拍（音樂節奏遊戲）
+   樣式：css/games/reaction_polyrhythm.css（這款專屬的 class 一律以「polyrhythm-」開頭；共用元件在 css/reaction_common.css）
    左右兩邊各有一條軌道，有顏色的方塊會準時由上往下掉，經過下方的紅色基準線的那一刻，就要點該邊的軌道（左手點左邊、
    右手點右邊）。每一小節有四拍；方塊的顏色代表「到下一個方塊隔幾拍」：
        紅＝4 拍　橙＝2 拍　黃＝1 拍　綠＝1/2 拍　藍＝1/4 拍　紫＝1/8 拍
@@ -54,7 +55,7 @@
     var LEAD_S = 3.0;                                          /* 遊戲開始到第一個小節開始 */
     /* 方塊從畫面頂端掉到紅線要幾秒（固定值，所以 BPM 越快，畫面上的方塊越擠） */
     var FALL_S = 0.85;                                         /* 方塊從頂端掉到基準線要幾秒（V1.24 是 1.7；縮短一半＝同樣的間隔在畫面上距離變 200%） */
-    var NOTE_H = 56;                                           /* 方塊（按鍵音符）的高度（px，V1.24 是 28；css/reaction2.css 的 .py-note 也要同步） */
+    var NOTE_H = 56;                                           /* 方塊（按鍵音符）的高度（px，V1.24 是 28；css/games/reaction_polyrhythm.css 的 .polyrhythm-note 也要同步） */
     /* 判定視窗：方塊到紅線的時間前後 0.14 秒內點下去都算打中 */
     var HIT_WIN = 0.2;                                         /* 判定視窗上限（秒；V1.24 是 0.14，放寬提高容錯率）*/
     var MIN_INTERVAL_S = 0.1;                                  /* 一種顏色在這個 BPM 下，方塊間隔至少幾秒才會出現 */
@@ -171,17 +172,17 @@
             var penalized = {}, hits = 0, misses = 0, extras = 0, doneMeasures = 0, lastBeatIdx = -1, over = false, biasSum = 0, biasN = 0, curM = 0;
 
             /* 建立畫面元素：說明、生命愛心、顏色圖例、左右軌道（各有紅色基準線與「左手／右手」標籤）、訊息 */
-            var head = h('div', { 'class': 'py-head', text: ' ' });
-            var hearts = h('div', { 'class': 'py-hearts' });
-            var legend = h('div', { 'class': 'py-legend' });
-            //COLORS.forEach(function (c) { legend.appendChild(h('span', { 'class': 'py-legend__i' }, [h('i', { 'class': 'py-dot py-dot--' + c.id }), h('b', { text: c.label })])); });
-            var laneL = h('div', { 'class': 'py-lane py-lane--left' }), laneR = h('div', { 'class': 'py-lane py-lane--right' });
-            var lineL = h('div', { 'class': 'py-line' }), lineR = h('div', { 'class': 'py-line' });
+            var head = h('div', { 'class': 'polyrhythm-head', text: ' ' });
+            var hearts = h('div', { 'class': 'polyrhythm-hearts' });
+            var legend = h('div', { 'class': 'polyrhythm-legend' });
+            //COLORS.forEach(function (c) { legend.appendChild(h('span', { 'class': 'polyrhythm-legend__i' }, [h('i', { 'class': 'polyrhythm-dot polyrhythm-dot--' + c.id }), h('b', { text: c.label })])); });
+            var laneL = h('div', { 'class': 'polyrhythm-lane polyrhythm-lane--left' }), laneR = h('div', { 'class': 'polyrhythm-lane polyrhythm-lane--right' });
+            var lineL = h('div', { 'class': 'polyrhythm-line' }), lineR = h('div', { 'class': 'polyrhythm-line' });
             laneL.appendChild(lineL); laneR.appendChild(lineR);
-            var capL = h('div', { 'class': 'py-cap', text: '左手' }), capR = h('div', { 'class': 'py-cap', text: '右手' });
+            var capL = h('div', { 'class': 'polyrhythm-cap', text: '左手' }), capR = h('div', { 'class': 'polyrhythm-cap', text: '右手' });
             laneL.appendChild(capL); laneR.appendChild(capR);
-            var stage = h('div', { 'class': 'py-stage' }, [laneL, laneR]);
-            var msg = h('div', { 'class': 'py-msg', text: '' });
+            var stage = h('div', { 'class': 'polyrhythm-stage' }, [laneL, laneR]);
+            var msg = h('div', { 'class': 'polyrhythm-msg', text: '' });
             [head, hearts, legend, stage, msg].forEach(function (x) { root.appendChild(x); });
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
@@ -190,7 +191,7 @@
             function layout() { LH = laneL.clientHeight; LINE_Y = Math.round(LH * 0.82); SPEED = LINE_Y / FALL_S; lineL.style.top = lineR.style.top = LINE_Y + 'px'; }
             function paintHearts() {
                 hearts.innerHTML = '';
-                for (var i = 0; i < HEALTH_MAX; i++) hearts.appendChild(h('span', { 'class': 'py-heart' + (i < health ? ' py-heart--on' : '') }));
+                for (var i = 0; i < HEALTH_MAX; i++) hearts.appendChild(h('span', { 'class': 'polyrhythm-heart' + (i < health ? ' polyrhythm-heart--on' : '') }));
             }
 
             /* 補出之後的小節：確保畫面上掉得到的方塊都已產生（提前準備到 FALL_S×2 + 4 秒之後） */
@@ -209,7 +210,7 @@
             /* 扣一顆生命：連擊歸零、畫面閃紅框，生命用完就結束 */
             function hurt(why) {
                 health--; streak = 0; paintHearts();
-                bump(stage, 'py-stage--hurt');
+                bump(stage, 'polyrhythm-stage--hurt');
                 Sfx.play('bad');
                 if (health <= 0) endGame(why);
             }
@@ -255,7 +256,7 @@
                         /* 過了紅線又超過判定視窗還沒打中 → 漏掉，扣生命 */
                         if (!n.miss && dt < -n.win) {                    /* 過了基準線 ＋ 視窗還沒打中 → 漏掉 */
                             n.miss = true; misses++;
-                            if (n.el) n.el.classList.add('py-note--miss');
+                            if (n.el) n.el.classList.add('polyrhythm-note--miss');
                             var pk = n.m + side;
                             /* 滾奏（太密的藍、紫色小節）：同一小節同一邊只扣一次，不然一次漏掉就會扣光 */
                             if (!n.dense || !penalized[pk]) { penalized[pk] = true; hurt('漏掉了方塊'); }       /* 滾奏：同一小節同一邊只扣一次 */
@@ -263,7 +264,7 @@
                         }
                         /* 方塊快要進畫面時才建立元素（不用一開始就建立所有方塊） */
                         if (!n.el && dt > -0.5) {
-                            n.el = h('div', { 'class': 'py-note py-note--' + n.color }); n.el.style.height = NOTE_H + 'px'; lane.appendChild(n.el);
+                            n.el = h('div', { 'class': 'polyrhythm-note polyrhythm-note--' + n.color }); n.el.style.height = NOTE_H + 'px'; lane.appendChild(n.el);
                         }
                         if (n.el) {
                             /* 方塊的位置＝紅線位置 − 還剩的時間 × 掉落速度，用 transform 移動 */
@@ -298,7 +299,7 @@
             }
             /* 每一拍紅線閃一下（第 1 拍閃得比較亮） */
             /* 每一拍基準線閃一下（第 1 拍閃得比較亮）*/
-            function beatFlash(bi) { [lineL, lineR].forEach(function (l) { bump(l, bi === 0 ? 'py-line--bar' : 'py-line--beat'); }); }
+            function beatFlash(bi) { [lineL, lineR].forEach(function (l) { bump(l, bi === 0 ? 'polyrhythm-line--bar' : 'polyrhythm-line--beat'); }); }
 
             /* tap：玩家點某一邊——找離現在最近、在視窗內的方塊，找到＝打中，找不到＝多點，扣生命 */
             function tap(side, e) {
@@ -306,11 +307,11 @@
                 if (state !== 'run') return;
                 var now = (performance.now() - t0) / 1000, arr = notes[side], i = matchTap(arr, now);
                 var lane = side === 'L' ? laneL : laneR;
-                bump(lane, 'py-lane--hit');
+                bump(lane, 'polyrhythm-lane--hit');
                 if (i < 0) { extras++; hurt('多點了一下'); return; }
                 var n = arr[i]; n.hit = true; hits++; biasSum += now - n.t; biasN++; streak++;
                 var el = n.el; n.el = null;
-                if (el) { el.classList.add('py-note--hit'); my.after(240, function () { if (el.parentNode) el.parentNode.removeChild(el); }); }
+                if (el) { el.classList.add('polyrhythm-note--hit'); my.after(240, function () { if (el.parentNode) el.parentNode.removeChild(el); }); }
                 Sfx.play(side === 'L' ? 'click' : 'pop');
                 if (streak % HEAL_EVERY === 0 && health < HEALTH_MAX) { health++; paintHearts(); }
             }

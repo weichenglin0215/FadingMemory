@@ -66,8 +66,8 @@ ok(T.coverage([], 10, box) === 0 && T.coverage([{ x: 50, y: 50 }], 1000, box) ==
 ok(Math.abs(T.coverage([{ x: 0, y: 0 }], 50, box) - Math.PI / 16) < 0.01, '角落四分之一圓');
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20) !== T.rating(30), '評語分級');
 // V1.29：被光照到的圖案要有填色（<g> 取出內容後外層 svg 的 fill 帶不過來，不設就是黑底黑字，拖曳只看到一片黑）
-{ const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction5.css'), 'utf8').split(/\s+/).join(' '), i = css.indexOf('.flt-pic {');
-  ok(i > 0 && css.slice(i, i + 120).indexOf('fill: currentColor') > 0 && css.slice(i, i + 120).indexOf('color: var(--flt-pic)') > 0, '.flt-pic 有 fill: currentColor 與亮色'); }
+{ const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_flashlight.css'), 'utf8').split(/\s+/).join(' '), i = css.indexOf('.flashlight-pic {');
+  ok(i > 0 && css.slice(i, i + 120).indexOf('fill: currentColor') > 0 && css.slice(i, i + 120).indexOf('color: var(--flt-pic)') > 0, '.flashlight-pic 有 fill: currentColor 與亮色'); }
 // 規則文字、原始碼：愛心、星星…這些舊的剪影全拿掉
 { const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_flashlight.js'), 'utf8');
   ok(G.rule.indexOf('長得非常像') > 0 && G.rule.indexOf('筆劃') > 0, '規則文字說明圖案很像、越後面筆劃越多');

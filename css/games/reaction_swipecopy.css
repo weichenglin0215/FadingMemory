@@ -1,0 +1,182 @@
+/* ═══════════════════════════════════════
+   reaction_swipecopy.css — 反著滑（js/reaction_swipecopy.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「swipecopy-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 反著滑（.swipecopy-）═══ */
+.swipecopy-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.swipecopy-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.swipecopy-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 箭頭出現、也是手指滑動的區域（在這個框裡任何地方滑都可以） */
+.swipecopy-zone {
+    position: absolute;
+    border: 3px dashed var(--c-ink-soft);
+    border-radius: var(--r-lg);
+    background: var(--c-card-alt);
+    touch-action: none;
+    overflow: hidden;
+}
+
+.swipecopy-pop {
+    position: absolute;
+    animation: swipecopy-pop 0.2s ease-out;
+    pointer-events: none;
+}
+
+@keyframes swipecopy-pop {
+    from {
+        transform: scale(0.4);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.swipecopy-flash {
+    position: absolute;
+    width: 72px;
+    height: 72px;
+    opacity: 0.85;
+    animation: swipecopy-fade 0.26s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes swipecopy-fade {
+    from {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+
+    to {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* 交通號誌的箭頭：藍色圓牌、白色粗箭頭 */
+.swipecopy-sign {
+    display: block;
+}
+
+.swipecopy-sign__disc {
+    fill: var(--swc-blue);
+    stroke: var(--c-card);
+    stroke-width: 4;
+}
+
+.swipecopy-sign__arrow {
+    fill: var(--c-card);
+}
+
+/* 你滑的方向（閃一下）、該滑的方向（綠）、滑錯的（紅） */
+.swipecopy-sign--mine .swipecopy-sign__disc {
+    fill: var(--c-orange);
+}
+
+.swipecopy-sign--req .swipecopy-sign__disc {
+    fill: var(--c-ok);
+}
+
+.swipecopy-sign--bad .swipecopy-sign__disc {
+    fill: var(--c-bad-light);
+}
+
+/* 九宮格的格線（兩條直線、兩條橫線） */
+.swipecopy-gridline {
+    position: absolute;
+    background: var(--c-ink-soft);
+    opacity: 0.35;
+    pointer-events: none;
+}
+
+.swipecopy-gridline--v {
+    top: 0;
+    bottom: 0;
+    width: 2px;
+}
+
+.swipecopy-gridline--h {
+    left: 0;
+    right: 0;
+    height: 2px;
+}
+
+.swipecopy-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* 失敗時整串箭頭排成一列（下面是該滑的方向），重播時一格一格亮起 */
+.swipecopy-strip {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+}
+
+.swipecopy-strip__row {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+}
+
+.swipecopy-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 4px;
+    border: 3px solid transparent;
+    border-radius: var(--r-sm);
+    opacity: 0.45;
+    transition: opacity 0.15s;
+}
+
+.swipecopy-cell--lit {
+    opacity: 1;
+}
+
+.swipecopy-cell--bad {
+    border-color: var(--c-bad);
+    background: var(--c-bad-soft);
+}
+
+.swipecopy-cell__no,
+.swipecopy-cell__to {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1.1;
+}

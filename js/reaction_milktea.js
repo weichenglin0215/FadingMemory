@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_milktea.js — 秒反應・奶茶調色（企劃 274）
+   樣式：css/games/reaction_milktea.css（這款專屬的 class 一律以「milktea-」開頭；共用元件在 css/reaction_common.css）
    手搖飲店。左邊一杯客人點的「理想奶茶」（樣品色），右邊一杯純紅茶。**按住牛奶壺倒牛奶，奶茶的顏色慢慢變淡；放手就停**。
    兩杯顏色一樣就過關。放手後兩杯靠攏並排，下方顯示「顏色差 2.3184%」（ΔE）。
    ───────────────────────────────────────────────────────────────────
@@ -94,7 +95,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'mlt-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'milktea-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -163,12 +164,12 @@
         console.log('[奶茶調色] 第 ' + level + ' 關：' + (q.creamer ? '奶精' : '牛奶') + '，目標牛奶比例 ' + q.fTarget.toFixed(3) + '（流量 ' + q.rate.toFixed(3) + '／秒，約按 ' + q.tStar.toFixed(2) + ' 秒），攪勻延遲 ' + q.tau + ' 秒，容許 ΔE ' + q.tol + (q.contrast ? '；背景：樣品在' + q.bgSample + '、奶茶在' + q.bgTea : ''));
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        var field = h('div', { 'class': 'mlt-field' });
+        var field = h('div', { 'class': 'milktea-field' });
         stage.appendChild(field);
-        field.appendChild(h('div', { 'class': 'qz-note mlt-tip', text: '按住倒牛奶，兩杯一樣顏色就放手' }));
+        field.appendChild(h('div', { 'class': 'qz-note milktea-tip', text: '按住倒牛奶，兩杯一樣顏色就放手' }));
         var pw = Math.floor((W - 120) / 2), ph = 330, py = 56, cw = 124, cwb = 92, chh = 200;
         function panel(x, bg, title) {
-            var p = h('div', { 'class': 'mlt-panel mlt-panel--' + bg }), cap = h('div', { 'class': 'mlt-cap', text: title });
+            var p = h('div', { 'class': 'milktea-panel milktea-panel--' + bg }), cap = h('div', { 'class': 'milktea-cap', text: title });
             p.style.cssText = 'left:' + x + 'px;top:' + py + 'px;width:' + pw + 'px;height:' + ph + 'px;';
             field.appendChild(p); field.appendChild(cap); cap.style.left = x + 'px'; cap.style.width = pw + 'px'; cap.style.top = (py + ph + 6) + 'px';
             return p;
@@ -177,38 +178,38 @@
         var pL = panel(xL, q.bgSample, '客人點的'), pR = panel(xR, q.bgTea, '你的奶茶');
         /* 杯子（SVG）：液面離杯口 24px；樣品杯是滿的、奶茶杯一開始是純紅茶 */
         function cup(parent, color, cx) {
-            var svg = kit.svg('svg', { 'class': 'mlt-cup', viewBox: '0 0 ' + cw + ' ' + chh, width: cw, height: chh }, parent);
+            var svg = kit.svg('svg', { 'class': 'milktea-cup', viewBox: '0 0 ' + cw + ' ' + chh, width: cw, height: chh }, parent);
             svg.style.cssText = 'left:' + (cx - cw / 2) + 'px;top:' + (ph - chh - 22) + 'px;';
             var path = cupPath(cw, cwb, chh, 24);
-            var liquid = kit.svg('path', { 'class': 'mlt-liquid', d: path }, svg); liquid.style.fill = css(color);
-            kit.svg('path', { 'class': 'mlt-glass', d: cupPath(cw, cwb, chh, 0) }, svg);
+            var liquid = kit.svg('path', { 'class': 'milktea-liquid', d: path }, svg); liquid.style.fill = css(color);
+            kit.svg('path', { 'class': 'milktea-glass', d: cupPath(cw, cwb, chh, 0) }, svg);
             return { svg: svg, liquid: liquid };
         }
         var cupL = cup(pL, q.sample, pw / 2), cupR = cup(pR, q.t0, pw / 2);
         /* 漩渦畫布：蓋在奶茶杯上，用杯子的液面形狀剪裁 */
-        var cv = h('canvas', { 'class': 'mlt-swirl' });
+        var cv = h('canvas', { 'class': 'milktea-swirl' });
         cv.width = cw; cv.height = chh; cv.style.cssText = 'left:' + (pw / 2 - cw / 2) + 'px;top:' + (ph - chh - 22) + 'px;width:' + cw + 'px;height:' + chh + 'px;';
         pR.appendChild(cv);
         var cctx = cv.getContext('2d'), swirl = makeSwirl(cw / 2, 80);
         /* 牛奶壺：奶茶杯上方，倒的時候傾斜、噴出一條白色細線到液面 */
-        var jug = h('div', { 'class': 'mlt-jug' });
+        var jug = h('div', { 'class': 'milktea-jug' });
         jug.style.cssText = 'left:' + (pw / 2 - 30) + 'px;top:' + (ph - chh - 22 - 92) + 'px;';
-        jug.appendChild(h('div', { 'class': 'mlt-jug__body' })); jug.appendChild(h('div', { 'class': 'mlt-jug__lip' }));
+        jug.appendChild(h('div', { 'class': 'milktea-jug__body' })); jug.appendChild(h('div', { 'class': 'milktea-jug__lip' }));
         pR.appendChild(jug);
-        var stream = h('div', { 'class': 'mlt-stream' });
+        var stream = h('div', { 'class': 'milktea-stream' });
         stream.style.cssText = 'left:' + (pw / 2 - 3) + 'px;top:' + (ph - chh - 22 - 30) + 'px;height:' + (30 + 24 + 4) + 'px;';
         pR.appendChild(stream);
-        var info = h('div', { 'class': 'qz-note mlt-info', text: '' });
+        var info = h('div', { 'class': 'qz-note milktea-info', text: '' });
         info.style.top = (py + ph + 44) + 'px';
         field.appendChild(info);
-        var btn = h('div', { 'class': 'mlt-btn' }, [h('div', { 'class': 'mlt-btn__text', text: '按住倒牛奶' })]);
+        var btn = h('div', { 'class': 'milktea-btn' }, [h('div', { 'class': 'milktea-btn__text', text: '按住倒牛奶' })]);
         field.appendChild(btn);
 
         var f = 0, shownColor = q.t0.slice(), pouring = false, done = false, loop = null, ctl = null, tHold = 0;
         api.timer(timeMs(), function () { release(); });
         if (level === 1 && kit.once('milktea.hint')) kit.hintOn(stage, btn, { mode: 'hold', delay: 700, text: '按住倒牛奶，一樣顏色就放手' });
         ctl = kit.hold(btn, {
-            down: function () { if (done || api.over) return; pouring = true; btn.classList.add('mlt-btn--on'); jug.classList.add('mlt-jug--pour'); stream.classList.add('mlt-stream--on'); Sfx.play('click'); },
+            down: function () { if (done || api.over) return; pouring = true; btn.classList.add('milktea-btn--on'); jug.classList.add('milktea-jug--pour'); stream.classList.add('milktea-stream--on'); Sfx.play('click'); },
             up: function () { if (pouring) release(); }
         });
         /* 每個畫格：f 增加（按住時）、顏色延遲地跟上、漩渦粒子前進並重畫（放手後漩渦繼續散開，直到粒子消失） */
@@ -229,14 +230,14 @@
         function release() {
             if (done || api.over) return;
             done = true; pouring = false;
-            btn.classList.remove('mlt-btn--on'); jug.classList.remove('mlt-jug--pour'); stream.classList.remove('mlt-stream--on');
+            btn.classList.remove('milktea-btn--on'); jug.classList.remove('milktea-jug--pour'); stream.classList.remove('milktea-stream--on');
             if (ctl) ctl.destroy();
             var finalColor = mixColor(q.t0, q.milk, f), de = deltaE(finalColor, q.sample), ok = de <= q.tol;
             var settleMs = Math.round(q.tau * 1000 * SETTLE_LAGS) + 200;
             info.textContent = '顏色還在攪勻……';
             api.after(settleMs, function () {
                 /* 兩杯靠攏並排，背景一起變成中性色（不再有同時對比的錯覺） */
-                pL.classList.add('mlt-panel--join'); pR.classList.add('mlt-panel--join'); field.classList.add('mlt-field--join');
+                pL.classList.add('milktea-panel--join'); pR.classList.add('milktea-panel--join'); field.classList.add('milktea-field--join');
                 pL.style.left = (W / 2 - pw) + 'px'; pR.style.left = (W / 2) + 'px';                              /* 兩杯（連同背景）往中間靠攏 */
                 api.after(750, function () {
                     var word = f < q.fTarget ? '牛奶倒太少了' : '牛奶倒太多了';

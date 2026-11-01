@@ -83,11 +83,11 @@ ok(near(T.distToSeg(5, 5, 0, 0, 10, 0).d, 5) && near(T.distToSeg(5, 5, 0, 0, 10,
   const q2 = { expr: true }, e2 = { label: '2＋3', value: 5 }, g2 = { label: '12÷4', value: 3 }; ok(/答案 5/.test(T.whyText('wrong', q2, e2, g2)) && /答案 3/.test(T.whyText('wrong', q2, e2, g2)), '算式關說明含答案'); }
 
 // ── 程式裡的接線 ──
-{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_ordercut.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 4000/.test(src) && /ocf-badge/.test(src) && /ocf-fruit--bad/.test(src) && /ocf-fruit--ok/.test(src), '失敗：水果停住、標第幾個要切、切錯的標紅、該切的標綠、停格夠久');
+{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_ordercut.js'), css = rd('../../css/games/reaction_ordercut.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 4000/.test(src) && /ordercut-badge/.test(src) && /ordercut-fruit--bad/.test(src) && /ordercut-fruit--ok/.test(src), '失敗：水果停住、標第幾個要切、切錯的標紅、該切的標綠、停格夠久');
   ok(/sliceSegment\(cand, ax, ay, bx, by, R\)/.test(src) && /judgeCuts\(hits, nextRank, rankOf\)/.test(src) && /fruitPos\(f, t, geom\)/.test(src), '切的判定用 sliceSegment／judgeCuts、位置用 fruitPos');
   ok(/pointerdown/.test(src) && /pointermove/.test(src) && /api\.solve = /.test(src) && /api\.wrong = /.test(src) && /armed/.test(src), '手指劃過；solve／wrong 只排一次');
-  ok(/\.ocf-f0 \{[^}]*var\(--ocf-f0\)/.test(css) && /\.ocf-field \{[^}]*var\(--ocf-board\)/.test(css) && /\.ocf-label \{[^}]*border-bottom: 4px solid var\(--ocf-num\)/.test(css) && /\.ocf-fruit--ok \{[^}]*var\(--c-ok-light\)/.test(css), '水果、木板、數字（有底線）、標記用 CSS 變數');
+  ok(/\.ordercut-f0 \{[^}]*var\(--ocf-f0\)/.test(css) && /\.ordercut-field \{[^}]*var\(--ocf-board\)/.test(css) && /\.ordercut-label \{[^}]*border-bottom: 4px solid var\(--ocf-num\)/.test(css) && /\.ordercut-fruit--ok \{[^}]*var\(--c-ok-light\)/.test(css), '水果、木板、數字（有底線）、標記用 CSS 變數');
   ok(boot.indexOf("'js/reaction_ordercut.js'") > 0 && /6 和 9/.test(G.rule) && /算式/.test(G.rule), 'boot.js 有載入、玩法說明提到 6 和 9、算式'); }
 ok(T.rating(1) !== T.rating(3) && T.rating(3) !== T.rating(8) && T.rating(8) !== T.rating(15) && T.rating(15) !== T.rating(25), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

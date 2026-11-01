@@ -62,11 +62,11 @@ ok(/滑錯了/.test(T.whyText('c50', 'wrong', 'right')) && /50 元/.test(T.whyTe
 ok(/銀色、大/.test(T.whyText('c10', 'wrong', 'down')) && /往右滑/.test(T.whyText('c10', 'wrong', 'down')) && /你滑了下/.test(T.whyText('c10', 'wrong', 'down')), '10 元說明');
 
 // ── 程式裡的接線 ──
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_coinsort.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 3800/.test(src) && /cns-bigcoin--show/.test(src) && /coinSvg\(c\.type, false, BD\)/.test(src), '失敗：硬幣放大、翻到正面（不是背面）、停格 2 秒以上');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_coinsort.js'), css = rd('../../css/games/reaction_coinsort.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 3800/.test(src) && /coinsort-bigcoin--show/.test(src) && /coinSvg\(c\.type, false, BD\)/.test(src), '失敗：硬幣放大、翻到正面（不是背面）、停格 2 秒以上');
   ok(/scoreOf/.test(src) && /resume: false/.test(src) && /max: 300/.test(src) && /SOLVE_CAP/.test(src), '成績用 scoreOf、不從前幾關繼續、成績上限 300、solve 有上限');
   ok(/pointerdown/.test(src) && /pointermove/.test(src) && /pointerup/.test(src) && /pointercancel/.test(src), '滑：pointerdown／move／up／cancel');
-  ok(/\.cns-coin--copper \.cns-face \{[^}]*var\(--cns-copper\)/.test(css) && /\.cns-coin--silver \.cns-face \{[^}]*var\(--cns-silver\)/.test(css) && /\.cns-tube--right \{[^}]*var\(--c-ok/.test(css) && /\.cns-tube--wrong \{[^}]*var\(--c-bad-light\)/.test(css), '銅色、銀色、對錯的筒子用 CSS 變數');
+  ok(/\.coinsort-coin--copper \.coinsort-face \{[^}]*var\(--cns-copper\)/.test(css) && /\.coinsort-coin--silver \.coinsort-face \{[^}]*var\(--cns-silver\)/.test(css) && /\.coinsort-tube--right \{[^}]*var\(--c-ok/.test(css) && /\.coinsort-tube--wrong \{[^}]*var\(--c-bad-light\)/.test(css), '銅色、銀色、對錯的筒子用 CSS 變數');
   ok(boot.indexOf("'js/reaction_coinsort.js'") > 0 && /50 元/.test(G.rule) && /往左滑/.test(G.rule) && /往下滑/.test(G.rule) && /往右滑/.test(G.rule), 'boot.js 有載入、玩法說明寫出三種硬幣的方向'); }
 ok(T.rating(2) !== T.rating(10) && T.rating(10) !== T.rating(25) && T.rating(25) !== T.rating(50) && T.rating(50) !== T.rating(90), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

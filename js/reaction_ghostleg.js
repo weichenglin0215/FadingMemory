@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_ghostleg.js — 秒反應・鬼腳圖
+   樣式：css/games/reaction_ghostleg.css（這款專屬的 class 一律以「ghostleg-」開頭；共用元件在 css/reaction_common.css）
    台灣童玩「阿彌陀佛」鬼腳圖：5 條直線、一堆橫線；上方有一個「起點」、下方有一個「終點」（都是綠底黑字），
    但照著現有的橫線走，從起點走不到終點。玩家要「畫上一條橫線」，讓起點接到終點。關卡制，成績＝通過關數。
    ───────────────────────────────────────────────────────────────────
@@ -286,8 +287,8 @@
         var hintOn = false, pencil = null;
         if (level === 1 && kit.once('ghostleg.hint') && q.solutions.length) {
             var sol = q.solutions[0], hy = rowY(sol.row), hx1 = colX(sol.col), hx2 = colX(sol.col + 1);
-            var hl = kit.svg('line', { x1: hx1, y1: hy, x2: hx1, y2: hy, 'class': 'gl-user gl-user--hint' }, gHint);
-            pencil = h('div', { 'class': 'gl-pencil', text: String.fromCodePoint(0x270F) + String.fromCodePoint(0xFE0F) });
+            var hl = kit.svg('line', { x1: hx1, y1: hy, x2: hx1, y2: hy, 'class': 'ghostleg-user ghostleg-user--hint' }, gHint);
+            pencil = h('div', { 'class': 'ghostleg-pencil', text: String.fromCodePoint(0x270F) + String.fromCodePoint(0xFE0F) });
             stage.appendChild(pencil);
             hintOn = true;
             var t0h = performance.now();
@@ -327,7 +328,7 @@
                 if (nb < 0 || nb > COLS - 1) return;                       /* 那一邊沒有直線 */
                 drag.dir = dir;
                 var y = rowY(drag.row);
-                drag.line = kit.svg('line', { x1: colX(drag.col), y1: y, x2: colX(drag.col), y2: y, 'class': 'gl-user' }, gUser);
+                drag.line = kit.svg('line', { x1: colX(drag.col), y1: y, x2: colX(drag.col), y2: y, 'class': 'ghostleg-user' }, gUser);
             }
             var from = colX(drag.col), to = colX(drag.col + drag.dir), f = kit.clamp((p.x - from) / (to - from), 0, 1);
             drag.line.setAttribute('x2', (from + (to - from) * f).toFixed(1));
@@ -359,7 +360,7 @@
         /* 評審動畫：從起點開始畫出一條綠色粗虛線，經過每個轉折點，看看最後能不能抵達終點 */
         function judge() {
             var f = follow(q.rungs.concat([placed]), q.start), ms = routeMs(f.route), total = routeLength(f.route);
-            var line = kit.svg('polyline', { points: '', 'class': 'gl-route' }, gRoute);
+            var line = kit.svg('polyline', { points: '', 'class': 'ghostleg-route' }, gRoute);
             my.tween(ms, function (e) {
                 line.setAttribute('points', partialRoute(f.route, total * e).map(function (p) { return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' '));
             }, kit.linear).then(function () {

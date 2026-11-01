@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_rotary.js — 秒反應・轉盤電話（企劃 309）
+   樣式：css/games/reaction_rotary.css（這款專屬的 class 一律以「rotary-」開頭；共用元件在 css/reaction_common.css）
    上方閃過一組電話號碼（3 → 2 秒），然後收起來。下面是一台老式轉盤電話：**手指伸進數字的洞，順時針畫圈拉到金屬擋片，放手，轉盤自己轉回來**，
    就撥了一個數字。照順序把號碼撥完。撥錯一碼就結束。
    ───────────────────────────────────────────────────────────────────
@@ -106,7 +107,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'rtr-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'rotary-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -125,34 +126,34 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var R = Math.min(W / 2 - 18, (H - 300) / 2, 190), cx = W / 2, cy = H - R - 18, ring = R * 0.72, holeR = R * 0.135, sc = R / 190;
-        var field = h('div', { 'class': 'rtr-field' });
+        var field = h('div', { 'class': 'rotary-field' });
         stage.appendChild(field);
-        var tip = h('div', { 'class': 'qz-note rtr-tip', text: '記住號碼，等一下照順序撥出來' });
+        var tip = h('div', { 'class': 'qz-note rotary-tip', text: '記住號碼，等一下照順序撥出來' });
         field.appendChild(tip);
-        var numEl = h('div', { 'class': 'rtr-num', text: q.num.split('').join(' ') });
+        var numEl = h('div', { 'class': 'rotary-num', text: q.num.split('').join(' ') });
         field.appendChild(numEl);
-        var gotEl = h('div', { 'class': 'rtr-got', text: '' });
+        var gotEl = h('div', { 'class': 'rotary-got', text: '' });
         field.appendChild(gotEl);
-        var info = h('div', { 'class': 'qz-note rtr-info', text: '' });
+        var info = h('div', { 'class': 'qz-note rotary-info', text: '' });
         field.appendChild(info);
 
         /* 轉盤（SVG）：固定的底板（黑色，上面印著數字）→ 會轉的金屬盤（挖了十個洞）→ 固定的擋片 → 中心蓋子 */
-        var svg = kit.svg('svg', { 'class': 'rtr-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, field);
-        kit.svg('circle', { 'class': 'rtr-plate', cx: cx, cy: cy, r: R }, svg);
+        var svg = kit.svg('svg', { 'class': 'rotary-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, field);
+        kit.svg('circle', { 'class': 'rotary-plate', cx: cx, cy: cy, r: R }, svg);
         for (var d = 0; d <= 9; d++) {
             var pp = polar(cx, cy, ring, holeAngle(d));
-            var t = kit.svg('text', { 'class': 'rtr-digit', x: pp[0], y: pp[1] + R * 0.07, 'text-anchor': 'middle' }, svg); t.textContent = String(d);
+            var t = kit.svg('text', { 'class': 'rotary-digit', x: pp[0], y: pp[1] + R * 0.07, 'text-anchor': 'middle' }, svg); t.textContent = String(d);
             t.style.fontSize = Math.round(R * 0.2) + 'px';
         }
-        var disc = kit.svg('g', { 'class': 'rtr-disc' }, svg);
+        var disc = kit.svg('g', { 'class': 'rotary-disc' }, svg);
         var holes = ''; for (var k = 0; k <= 9; k++) { var hp = polar(cx, cy, ring, holeAngle(k)); holes += 'M' + (hp[0] + holeR).toFixed(2) + ',' + hp[1].toFixed(2) + ' a' + holeR.toFixed(2) + ',' + holeR.toFixed(2) + ' 0 1,0 ' + (-2 * holeR).toFixed(2) + ',0 a' + holeR.toFixed(2) + ',' + holeR.toFixed(2) + ' 0 1,0 ' + (2 * holeR).toFixed(2) + ',0 Z '; }
-        var body = kit.svg('path', { 'class': 'rtr-metal', 'fill-rule': 'evenodd', d: 'M' + (cx + R * 0.98) + ',' + cy + ' a' + R * 0.98 + ',' + R * 0.98 + ' 0 1,0 ' + (-2 * R * 0.98) + ',0 a' + R * 0.98 + ',' + R * 0.98 + ' 0 1,0 ' + (2 * R * 0.98) + ',0 Z ' + holes }, disc);
-        kit.svg('circle', { 'class': 'rtr-rim', cx: cx, cy: cy, r: R * 0.98 }, disc);
+        var body = kit.svg('path', { 'class': 'rotary-metal', 'fill-rule': 'evenodd', d: 'M' + (cx + R * 0.98) + ',' + cy + ' a' + R * 0.98 + ',' + R * 0.98 + ' 0 1,0 ' + (-2 * R * 0.98) + ',0 a' + R * 0.98 + ',' + R * 0.98 + ' 0 1,0 ' + (2 * R * 0.98) + ',0 Z ' + holes }, disc);
+        kit.svg('circle', { 'class': 'rotary-rim', cx: cx, cy: cy, r: R * 0.98 }, disc);
         var sp0 = polar(cx, cy, R * 0.9, STOP_ANGLE), sp1 = polar(cx, cy, R * 1.04, STOP_ANGLE);
-        kit.svg('line', { 'class': 'rtr-stop', x1: sp0[0], y1: sp0[1], x2: sp1[0], y2: sp1[1] }, svg);
-        kit.svg('circle', { 'class': 'rtr-cap', cx: cx, cy: cy, r: R * 0.2 }, svg);
+        kit.svg('line', { 'class': 'rotary-stop', x1: sp0[0], y1: sp0[1], x2: sp1[0], y2: sp1[1] }, svg);
+        kit.svg('circle', { 'class': 'rotary-cap', cx: cx, cy: cy, r: R * 0.2 }, svg);
         var holeEls = [];
-        for (var m = 0; m <= 9; m++) { var hh = polar(cx, cy, ring, holeAngle(m)); holeEls[m] = kit.svg('circle', { 'class': 'rtr-hole', cx: hh[0], cy: hh[1], r: holeR, 'data-d': m }, disc); }
+        for (var m = 0; m <= 9; m++) { var hh = polar(cx, cy, ring, holeAngle(m)); holeEls[m] = kit.svg('circle', { 'class': 'rotary-hole', cx: hh[0], cy: hh[1], r: holeR, 'data-d': m }, disc); }
 
         var rot = 0, grabbed = -1, drag = null, busy = true, step = 0, over = false, done = false, loop = null;
         function paint() { disc.setAttribute('transform', 'rotate(' + rot.toFixed(2) + ' ' + cx + ' ' + cy + ')'); }
@@ -166,7 +167,7 @@
             api.after(q.viewMs + 300, function () { kit.hintOn(stage, null, { mode: 'drag', x: p0[0], y: p0[1], dx: tgt[0] - p0[0], dy: tgt[1] - p0[1], text: '手指伸進洞，順時針拉到底' }); });
         }
         function begin() {
-            numEl.textContent = placeholders(); numEl.classList.add('rtr-num--hidden'); tip.textContent = '照順序撥號（順時針拉到底）';
+            numEl.textContent = placeholders(); numEl.classList.add('rotary-num--hidden'); tip.textContent = '照順序撥號（順時針拉到底）';
             info.textContent = ''; busy = false;
         }
         svg.addEventListener('pointerdown', function (e) {
@@ -176,7 +177,7 @@
             e.preventDefault();
             try { svg.setPointerCapture(e.pointerId); } catch (err) { }
             drag = { id: e.pointerId, d: d2, a: angleOf(p.x, p.y, cx, cy) };
-            holeEls[d2].classList.add('rtr-hole--on');
+            holeEls[d2].classList.add('rotary-hole--on');
         });
         svg.addEventListener('pointermove', function (e) {
             if (!drag || e.pointerId !== drag.id) return;
@@ -186,7 +187,7 @@
         });
         function release(e) {
             if (!drag || e.pointerId !== drag.id) return;
-            var d2 = drag.d; drag = null; holeEls[d2].classList.remove('rtr-hole--on');
+            var d2 = drag.d; drag = null; holeEls[d2].classList.remove('rotary-hole--on');
             if (isDialed(rot, d2)) dial(d2);
             else { busy = true; info.textContent = '要拉到金屬擋片才算！'; springBack(0.25, function () { busy = false; }); }
         }
@@ -210,7 +211,7 @@
             if (!ok) { fail(d2); return; }
             step++; numEl.textContent = placeholders(); gotEl.textContent = '';
             springBack(false, function () {
-                if (step >= len) { done = true; numEl.classList.remove('rtr-num--hidden'); numEl.classList.add('rtr-num--ok'); info.textContent = '撥通了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1400 }); return; }
+                if (step >= len) { done = true; numEl.classList.remove('rotary-num--hidden'); numEl.classList.add('rotary-num--ok'); info.textContent = '撥通了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1400 }); return; }
                 busy = false;
             });
         }
@@ -218,11 +219,11 @@
         function fail(wrong) {
             over = true;
             var right = q.num.split(''), mine = q.num.slice(0, step).split('').concat([String(wrong)]);
-            numEl.classList.remove('rtr-num--hidden');
-            numEl.innerHTML = ''; numEl.appendChild(h('div', { 'class': 'rtr-cmp__label', text: '正確號碼' }));
-            numEl.appendChild(h('div', { 'class': 'rtr-cmp' }, right.map(function (c, i) { return h('span', { 'class': 'rtr-cmp__d' + (i === step ? ' rtr-cmp__d--ok' : ''), text: c }); })));
-            gotEl.innerHTML = ''; gotEl.appendChild(h('div', { 'class': 'rtr-cmp__label', text: '你撥的' }));
-            gotEl.appendChild(h('div', { 'class': 'rtr-cmp' }, mine.map(function (c, i) { return h('span', { 'class': 'rtr-cmp__d' + (i === step ? ' rtr-cmp__d--bad' : ''), text: c }); })));
+            numEl.classList.remove('rotary-num--hidden');
+            numEl.innerHTML = ''; numEl.appendChild(h('div', { 'class': 'rotary-cmp__label', text: '正確號碼' }));
+            numEl.appendChild(h('div', { 'class': 'rotary-cmp' }, right.map(function (c, i) { return h('span', { 'class': 'rotary-cmp__d' + (i === step ? ' rotary-cmp__d--ok' : ''), text: c }); })));
+            gotEl.innerHTML = ''; gotEl.appendChild(h('div', { 'class': 'rotary-cmp__label', text: '你撥的' }));
+            gotEl.appendChild(h('div', { 'class': 'rotary-cmp' }, mine.map(function (c, i) { return h('span', { 'class': 'rotary-cmp__d' + (i === step ? ' rotary-cmp__d--bad' : ''), text: c }); })));
             info.textContent = '第 ' + (step + 1) + ' 碼撥錯了：應該是 ' + q.num[step] + '，你撥了 ' + wrong;
             springBack(true, function () { });
             kit.flash(stage, false, api.my);

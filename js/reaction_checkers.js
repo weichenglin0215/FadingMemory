@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_checkers.js — 秒反應・跳棋跳最遠（企劃 262）
+   樣式：css/games/reaction_checkers.css（這款專屬的 class 一律以「checkers-」開頭；共用元件在 css/reaction_common.css）
    跳棋盤上，你的棋子（紅色彈珠）可以**跳過相鄰的任何一顆棋子、落到後面的空位**，而且可以一直**連跳**。
    **點出哪一顆紅棋能連跳最多次**。點下去，彈珠就沿著路線連跳一遍。
    ───────────────────────────────────────────────────────────────────
@@ -138,7 +139,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'chk-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'checkers-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -153,21 +154,21 @@
         console.log('[跳棋跳最遠] 第 ' + level + ' 關：' + n + '×' + n + '，紅棋 ' + q.reds.length + ' 顆，各能連跳 ' + q.jumps.join('、') + ' 次；最多 ' + q.bestJumps + '（第二多 ' + q.second + '，差 ' + q.gap + '，路線轉 ' + q.turns + ' 個彎）；限時 ' + timeMs(level) + ' ms');
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, cs = Math.floor(Math.min((W - 16) / n, (H - 150) / n, 60)), BS = cs * n, bx = Math.round((W - BS) / 2), by = 62, ps = Math.round(cs * 0.78), off = (cs - ps) / 2;
-        var field = h('div', { 'class': 'chk-field' });
+        var field = h('div', { 'class': 'checkers-field' });
         stage.appendChild(field);
-        field.appendChild(h('div', { 'class': 'qz-note chk-tip', text: '點出能連跳最多次的紅棋' }));
-        var bd = h('div', { 'class': 'chk-board' });
+        field.appendChild(h('div', { 'class': 'qz-note checkers-tip', text: '點出能連跳最多次的紅棋' }));
+        var bd = h('div', { 'class': 'checkers-board' });
         bd.style.cssText = 'left:' + bx + 'px;top:' + by + 'px;width:' + BS + 'px;height:' + BS + 'px;background-size:' + cs + 'px ' + cs + 'px;';
         field.appendChild(bd);
         var pcs = {};                                                       /* 格子編號 → 棋子的元素 */
         function place(el, cell) { el.style.left = (cell % n) * cs + off + 'px'; el.style.top = Math.floor(cell / n) * cs + off + 'px'; }
         for (var cell = 0; cell < n * n; cell++) if (board[cell] !== EMPTY) {
-            var el = h('div', { 'class': 'chk-pc ' + (board[cell] === RED ? 'chk-pc--red' : 'chk-pc--blue') });
+            var el = h('div', { 'class': 'checkers-pc ' + (board[cell] === RED ? 'checkers-pc--red' : 'checkers-pc--blue') });
             el.style.width = el.style.height = ps + 'px';
-            el.appendChild(h('div', { 'class': 'chk-pc__in' }));
+            el.appendChild(h('div', { 'class': 'checkers-pc__in' }));
             place(el, cell); bd.appendChild(el); pcs[cell] = el;
         }
-        var info = h('div', { 'class': 'qz-note chk-info', text: '' });
+        var info = h('div', { 'class': 'qz-note checkers-info', text: '' });
         info.style.top = (by + BS + 10) + 'px';
         field.appendChild(info);
         var done = false;
@@ -178,14 +179,14 @@
         /* 彈珠沿著路線連跳（外層直線移動、內層做弧線）；跳完呼叫 done */
         function hop(ri, onEnd) {
             var el = pcs[q.reds[ri]], path = q.paths[ri], k = 0;
-            el.classList.add('chk-pc--go');
+            el.classList.add('checkers-pc--go');
             el.style.zIndex = '20';
             function next() {
                 if (k >= path.length) { onEnd && onEnd(); return; }
                 var inner = el.firstChild;
                 el.style.transition = 'left ' + HOP_MS + 'ms linear, top ' + HOP_MS + 'ms linear';
                 place(el, path[k]);
-                inner.classList.remove('chk-pc__in--arc'); void inner.offsetWidth; inner.classList.add('chk-pc__in--arc'); inner.style.animationDuration = HOP_MS + 'ms';
+                inner.classList.remove('checkers-pc__in--arc'); void inner.offsetWidth; inner.classList.add('checkers-pc__in--arc'); inner.style.animationDuration = HOP_MS + 'ms';
                 Sfx.play('pop'); k++;
                 api.after(HOP_MS + 40, next);
             }
@@ -197,10 +198,10 @@
             var ok = ri >= 0 && q.jumps[ri] === q.bestJumps;
             /* 每顆紅棋旁邊標出能跳幾次（最多的是綠色） */
             q.reds.forEach(function (cellNo, j) {
-                var b = h('div', { 'class': 'chk-badge' + (q.jumps[j] === q.bestJumps ? ' chk-badge--best' : ''), text: String(q.jumps[j]) });
+                var b = h('div', { 'class': 'checkers-badge' + (q.jumps[j] === q.bestJumps ? ' checkers-badge--best' : ''), text: String(q.jumps[j]) });
                 pcs[cellNo].appendChild(b);
             });
-            if (ri >= 0) pcs[q.reds[ri]].classList.add(ok ? 'chk-pc--ok' : 'chk-pc--bad');
+            if (ri >= 0) pcs[q.reds[ri]].classList.add(ok ? 'checkers-pc--ok' : 'checkers-pc--bad');
             var go = ok ? ri : q.best;
             info.textContent = ok ? '連跳 ' + q.jumps[ri] + ' 次，是最多的！' : (ri >= 0 ? '你選的只能連跳 ' + q.jumps[ri] + ' 次，最多是 ' + q.bestJumps + ' 次' : '時間到！最多能連跳 ' + q.bestJumps + ' 次');
             kit.flash(stage, ok, api.my);

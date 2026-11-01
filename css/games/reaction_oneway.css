@@ -1,0 +1,129 @@
+/* ═══════════════════════════════════════
+   reaction_oneway.css — 單行道（js/reaction_oneway.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「oneway-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 單行道（.oneway-）═══ */
+.oneway-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    background: var(--c-card-alt);
+}
+
+.oneway-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 10px;
+    text-align: center;
+}
+
+.oneway-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+}
+
+/* 道路：白色的粗線；路口：白色的小圓；單行道標誌：藍底白箭頭 */
+.oneway-road {
+    stroke: var(--c-card);
+    stroke-linecap: round;
+}
+
+.oneway-node {
+    fill: var(--c-card);
+    stroke: var(--c-ink-soft);
+    stroke-width: 2;
+}
+
+.oneway-sign-bg {
+    fill: var(--c-blue);
+    stroke: var(--c-card);
+    stroke-width: 2;
+}
+
+.oneway-sign-arrow {
+    fill: none;
+    stroke: var(--c-card);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* 計程車（黃色）與醫院（白色的房子、紅十字） */
+.oneway-taxi-body {
+    fill: var(--c-yellow);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.oneway-taxi-win {
+    fill: var(--c-card);
+    stroke: var(--c-ink);
+    stroke-width: 2;
+}
+
+.oneway-hos-body {
+    fill: var(--c-card);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.oneway-hos-cross {
+    fill: none;
+    stroke: var(--c-bad-light);
+    stroke-width: 7;
+    stroke-linecap: round;
+}
+
+/* 你拖出來的路線 */
+.oneway-route {
+    fill: none;
+    stroke: var(--c-orange);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.9;
+}
+
+/* 逆向：被擋住的那一段閃紅 */
+.oneway-road--bad {
+    stroke: var(--c-bad-light);
+    stroke-linecap: round;
+    opacity: 0.85;
+    animation: oneway-fade 0.45s ease-out forwards;
+}
+
+@keyframes oneway-fade {
+    to {
+        opacity: 0;
+    }
+}
+
+/* 失敗：停下來的地方打紅圈；正確的路線用綠色慢慢畫出來 */
+.oneway-bad {
+    fill: none;
+    stroke: var(--c-bad-light);
+    stroke-width: 6;
+}
+
+.oneway-sol {
+    fill: none;
+    stroke: var(--c-ok);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+}
+
+.oneway-sol--draw .oneway-sol {
+    animation: oneway-draw 1.6s ease-out forwards;
+}
+
+@keyframes oneway-draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}

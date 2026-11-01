@@ -1,0 +1,138 @@
+/* ═══════════════════════════════════════
+   reaction_racefirst.css — 誰先衝線（js/reaction_racefirst.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「racefirst-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 誰在偷偷動（.snk-）═══ */
+.racefirst-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+}
+
+/* ═══ 誰先衝線（.racefirst-）═══ */
+.racefirst-lane {
+    fill: var(--c-card-alt);
+    stroke: var(--bd-c);
+    stroke-width: 2;
+}
+
+/* 揭曉時圍在小人身上的圈：答對的第一名＝綠色、你選錯的＝紅色（V1.29：圓點改成小人） */
+.racefirst-halo {
+    fill: none;
+    stroke: transparent;
+    stroke-width: 6;
+}
+
+.racefirst-halo--win {
+    stroke: var(--c-ok);
+}
+
+.racefirst-halo--wrong {
+    stroke: var(--c-bad);
+    stroke-dasharray: 10 7;
+}
+
+/* 開跑前畫面中央的「3、2、1」倒數 */
+.racefirst-count {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 190px;
+    text-align: center;
+    font-size: 200px;
+    line-height: 1;
+    font-weight: var(--fw-black);
+    color: var(--c-on-accent);
+    -webkit-text-stroke: 10px var(--c-ink);
+    paint-order: stroke fill;
+    text-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+    z-index: 3;
+}
+
+.racefirst-count--pop {
+    animation: racefirst-pop 0.8s ease-out;
+}
+
+@keyframes racefirst-pop {
+    0% {
+        transform: scale(1.6);
+        opacity: 0;
+    }
+
+    25% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(0.9);
+        opacity: 0.85;
+    }
+}
+
+.racefirst-time {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-black);
+    fill: var(--c-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+/* 小人衝過終點線的那一刻，在線上閃一個圈（第一名＝綠色）；名次與到達時間標在跑道上，第一名用綠色 */
+.racefirst-fmark {
+    fill: none;
+    stroke: var(--c-yellow);
+    stroke-width: 6;
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+.racefirst-fmark--win {
+    stroke: var(--c-ok);
+}
+
+.racefirst-fmark--pop {
+    animation: racefirst-fpop 0.9s ease-out;
+}
+
+@keyframes racefirst-fpop {
+    0% {
+        opacity: 1;
+        transform: scale(0.35);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1.5);
+    }
+}
+
+.racefirst-time--win {
+    fill: var(--c-ok);
+}
+
+.racefirst-start {
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+    stroke-dasharray: 8 8;
+}
+
+.racefirst-finish {
+    stroke: var(--c-ink);
+    stroke-width: 10;
+    stroke-dasharray: 14 14;
+}
+
+.racefirst-tip {
+    top: 14px;
+}
+
+.racefirst-hit {
+    position: absolute;
+    cursor: pointer;
+    z-index: 2;
+}

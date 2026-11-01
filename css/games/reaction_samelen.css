@@ -1,0 +1,66 @@
+/* ═══════════════════════════════════════
+   reaction_samelen.css — 畫一樣長（js/reaction_samelen.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「samelen-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 012 畫一樣長（.sl-）═══ */
+.samelen-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+/* 兩條線的粗細是原本的 300%（8 → 24，V1.25 玩家意見） */
+.samelen-ref {
+    stroke: var(--c-orange);
+    stroke-width: 24;
+    stroke-linecap: round;
+}
+
+.samelen-mine {
+    stroke: var(--c-blue);
+    stroke-width: 24;
+    stroke-linecap: round;
+}
+
+.samelen-cap {
+    stroke: var(--c-ink);
+    stroke-width: 4;
+    stroke-linecap: round;
+}
+
+.samelen-start {
+    fill: var(--c-green);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.samelen-guide {
+    stroke-width: 3;
+    stroke-dasharray: 8 7;
+}
+
+.samelen-guide--ref {
+    stroke: var(--c-orange);
+}
+
+.samelen-guide--mine {
+    stroke: var(--c-blue);
+}
+
+.samelen-msg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 6px;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    opacity: 0;
+}
+
+.samelen-msg--on {
+    opacity: 1;
+}

@@ -51,11 +51,11 @@ ok(ST.maxT >= 600 && ST.minT >= 90, '預算隨難度變大（最大 ' + ST.maxT 
 { const q = { target: 280 }; ok(T.whyText({ result: 'ok' }, q) === '剛剛好 280 元！' && T.whyText({ result: 'many', sum: 290, diff: 10 }, q) === '拿了 290 元，預算 280 元——多了 10 元' && T.whyText({ result: 'few', sum: 250, diff: -30 }, q) === '拿了 250 元，預算 280 元——少了 30 元', 'whyText（含使用者企劃的「剛好 280 元」）'); }
 
 // ── 程式裡的接線 ──
-{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_sushi.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 4400/.test(src) && /showSpread\(\)/.test(src) && /一種剛好的拿法/.test(src) && /ssh-cell__s/.test(src), '失敗：攤開累加、寫出一種剛好的拿法、停格夠久');
-  ok(/api\.timer\(q\.lap/.test(src) && /finish\('lap'\)/.test(src) && /judge\(q, taken\)/.test(src) && /ssh-legend/.test(src), '時間條＝一圈；轉完判定；價目表一直在');
+{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_sushi.js'), css = rd('../../css/games/reaction_sushi.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 4400/.test(src) && /showSpread\(\)/.test(src) && /一種剛好的拿法/.test(src) && /sushi-cell__s/.test(src), '失敗：攤開累加、寫出一種剛好的拿法、停格夠久');
+  ok(/api\.timer\(q\.lap/.test(src) && /finish\('lap'\)/.test(src) && /judge\(q, taken\)/.test(src) && /sushi-legend/.test(src), '時間條＝一圈；轉完判定；價目表一直在');
   ok(/pointerdown/.test(src) && /plateX\(i, t, q\.gap, q\.speed, W\)/.test(src) && /api\.solve = /.test(src) && /api\.wrong = /.test(src) && /armed/.test(src), '點盤子用 plateX 找最近的；solve／wrong 只排一次');
-  ok(/\.ssh-pred \{[^}]*var\(--ssh-c-red\)/.test(css) && /\.ssh-pgold \{[^}]*var\(--ssh-c-gold\)/.test(css) && /\.ssh-pgreen \{[^}]*var\(--ssh-c-green\)/.test(css) && /\.ssh-top--salmon \{[^}]*var\(--ssh-salmon\)/.test(css), '盤子顏色、壽司用 CSS 變數');
+  ok(/\.sushi-pred \{[^}]*var\(--ssh-c-red\)/.test(css) && /\.sushi-pgold \{[^}]*var\(--ssh-c-gold\)/.test(css) && /\.sushi-pgreen \{[^}]*var\(--ssh-c-green\)/.test(css) && /\.sushi-top--salmon \{[^}]*var\(--ssh-salmon\)/.test(css), '盤子顏色、壽司用 CSS 變數');
   ok(boot.indexOf("'js/reaction_sushi.js'") > 0 && /預算/.test(G.rule) && /綠盤/.test(G.rule), 'boot.js 有載入、玩法說明提到預算與綠盤'); }
 ok(T.rating(1) !== T.rating(3) && T.rating(3) !== T.rating(6) && T.rating(6) !== T.rating(10) && T.rating(10) !== T.rating(16), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

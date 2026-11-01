@@ -1,0 +1,51 @@
+/* ═══════════════════════════════════════
+   reaction_mathcheck.css — 算式對不對（js/reaction_mathcheck.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「mathcheck-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 021 算式對不對（.mc-）═══ */
+.mathcheck-eq {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 150px;
+    text-align: center;
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    letter-spacing: 2px;
+}
+
+.mathcheck-eq--ok {
+    color: var(--c-ok);
+}
+
+/* 答錯、時間到：紅色（V1.25 玩家意見：不要橘色，要紅色） */
+.mathcheck-eq--bad {
+    color: var(--c-bad-light);
+}
+
+/* 題目算式是錯的：黑色顯示正確算式在題目下面 */
+.mathcheck-fix {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 250px;
+    text-align: center;
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-black);
+}
+
+/* 時間超過沒回答：紅色字 */
+.mathcheck-msg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 330px;
+    text-align: center;
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-bad-light);
+}

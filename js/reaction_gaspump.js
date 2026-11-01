@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_gaspump.js — 秒反應・加到五百（企劃 273）
+   樣式：css/games/reaction_gaspump.css（這款專屬的 class 一律以「gaspump-」開頭；共用元件在 css/reaction_common.css）
    加油站。上方寫「今天 95 無鉛 29.8 元／公升，請加 500 元」。**按住油槍開始加油，畫面只顯示「已加幾公升」（一直跳），金額欄蓋著「？」貼紙**；
    覺得剛好是目標金額就放手。放手後撕掉貼紙：「503.6080 元，多加了 3.6080 元」。誤差在容許範圍內過關。
    ───────────────────────────────────────────────────────────────────
@@ -75,7 +76,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'gsp-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'gaspump-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -85,11 +86,11 @@
 
     /* 油槍圖示（SVG）：紅色槍身＋黑色握把＋油管 */
     function gunSvg(parent) {
-        var s = kit.svg('svg', { 'class': 'gsp-gun__icon', viewBox: '0 0 96 64', width: 96, height: 64 }, parent);
-        kit.svg('path', { 'class': 'gsp-gun__hose', d: 'M4 54 Q30 60 38 40' }, s);
-        kit.svg('path', { 'class': 'gsp-gun__body', d: 'M30 18 L66 18 L66 12 L84 12 L84 24 L70 24 L70 44 Q70 52 62 52 L44 52 Q36 52 36 44 L36 30 Z' }, s);
-        kit.svg('rect', { 'class': 'gsp-gun__grip', x: 40, y: 34, width: 22, height: 8, rx: 4 }, s);
-        kit.svg('rect', { 'class': 'gsp-gun__nozzle', x: 84, y: 15, width: 10, height: 6, rx: 3 }, s);
+        var s = kit.svg('svg', { 'class': 'gaspump-gun__icon', viewBox: '0 0 96 64', width: 96, height: 64 }, parent);
+        kit.svg('path', { 'class': 'gaspump-gun__hose', d: 'M4 54 Q30 60 38 40' }, s);
+        kit.svg('path', { 'class': 'gaspump-gun__body', d: 'M30 18 L66 18 L66 12 L84 12 L84 24 L70 24 L70 44 Q70 52 62 52 L44 52 Q36 52 36 44 L36 30 Z' }, s);
+        kit.svg('rect', { 'class': 'gaspump-gun__grip', x: 40, y: 34, width: 22, height: 8, rx: 4 }, s);
+        kit.svg('rect', { 'class': 'gaspump-gun__nozzle', x: 84, y: 15, width: 10, height: 6, rx: 3 }, s);
         return s;
     }
 
@@ -99,34 +100,34 @@
         api.info = q;
         console.log('[加到五百] 第 ' + level + ' 關：' + q.fuel + ' ' + q.price + ' 元／公升，加 ' + q.target + ' 元（約 ' + q.targetL.toFixed(2) + ' 公升）；流量 ' + q.r0.toFixed(2) + ' → ' + q.rEnd.toFixed(2) + ' 公升／秒（約按 ' + q.T.toFixed(1) + ' 秒）；容許 ±' + q.tol + ' 元');
 
-        var field = h('div', { 'class': 'gsp-field' });
+        var field = h('div', { 'class': 'gaspump-field' });
         stage.appendChild(field);
-        field.appendChild(h('div', { 'class': 'qz-note gsp-tip', text: '按住加油，覺得剛好就放手' }));
-        field.appendChild(h('div', { 'class': 'gsp-card' }, [
-            h('div', { 'class': 'gsp-card__fuel', text: '今天 ' + q.fuel + '　' + q.price + ' 元／公升' }),
-            h('div', { 'class': 'gsp-card__goal' }, [h('span', { text: '請加 ' }), h('b', { text: String(q.target) }), h('span', { text: ' 元' })]),
-            h('div', { 'class': 'gsp-card__tol', text: '誤差要在 ±' + q.tol + ' 元內' })
+        field.appendChild(h('div', { 'class': 'qz-note gaspump-tip', text: '按住加油，覺得剛好就放手' }));
+        field.appendChild(h('div', { 'class': 'gaspump-card' }, [
+            h('div', { 'class': 'gaspump-card__fuel', text: '今天 ' + q.fuel + '　' + q.price + ' 元／公升' }),
+            h('div', { 'class': 'gaspump-card__goal' }, [h('span', { text: '請加 ' }), h('b', { text: String(q.target) }), h('span', { text: ' 元' })]),
+            h('div', { 'class': 'gaspump-card__tol', text: '誤差要在 ±' + q.tol + ' 元內' })
         ]));
         /* 加油機的數字面板：黑底黃字 */
-        var lit = h('div', { 'class': 'gsp-digits', text: '0.00' });
-        var amountBox = h('div', { 'class': 'gsp-amount', text: '' });
-        var sticker = h('div', { 'class': 'gsp-sticker', text: '？' });
-        var panel = h('div', { 'class': 'gsp-panel' }, [
-            h('div', { 'class': 'gsp-row' }, [h('div', { 'class': 'gsp-label', text: '已加' }), lit, h('div', { 'class': 'gsp-unit', text: '公升' })]),
-            h('div', { 'class': 'gsp-row' }, [h('div', { 'class': 'gsp-label', text: '金額' }), h('div', { 'class': 'gsp-amountwrap' }, [amountBox, sticker]), h('div', { 'class': 'gsp-unit', text: '元' })])
+        var lit = h('div', { 'class': 'gaspump-digits', text: '0.00' });
+        var amountBox = h('div', { 'class': 'gaspump-amount', text: '' });
+        var sticker = h('div', { 'class': 'gaspump-sticker', text: '？' });
+        var panel = h('div', { 'class': 'gaspump-panel' }, [
+            h('div', { 'class': 'gaspump-row' }, [h('div', { 'class': 'gaspump-label', text: '已加' }), lit, h('div', { 'class': 'gaspump-unit', text: '公升' })]),
+            h('div', { 'class': 'gaspump-row' }, [h('div', { 'class': 'gaspump-label', text: '金額' }), h('div', { 'class': 'gaspump-amountwrap' }, [amountBox, sticker]), h('div', { 'class': 'gaspump-unit', text: '元' })])
         ]);
         field.appendChild(panel);
-        var info = h('div', { 'class': 'qz-note gsp-info', text: '' });
+        var info = h('div', { 'class': 'qz-note gaspump-info', text: '' });
         field.appendChild(info);
-        var gun = h('div', { 'class': 'gsp-gun' });
-        gunSvg(gun); gun.appendChild(h('div', { 'class': 'gsp-gun__text', text: '按住加油' }));
+        var gun = h('div', { 'class': 'gaspump-gun' });
+        gunSvg(gun); gun.appendChild(h('div', { 'class': 'gaspump-gun__text', text: '按住加油' }));
         field.appendChild(gun);
 
         var L = 0, t = 0, pumping = false, done = false, loop = null, ctl = null;
         api.timer(timeMs(), function () { release(); });
         if (level === 1 && kit.once('gaspump.hint')) kit.hintOn(stage, gun, { mode: 'hold', delay: 700, text: '按住加油，剛好就放手' });
         ctl = kit.hold(gun, {
-            down: function () { if (done || api.over) return; pumping = true; gun.classList.add('gsp-gun--on'); Sfx.play('click'); loop = api.my.loop(frame); },
+            down: function () { if (done || api.over) return; pumping = true; gun.classList.add('gaspump-gun--on'); Sfx.play('click'); loop = api.my.loop(frame); },
             up: function () { if (pumping) release(); }
         });
         function frame(now, dt) {
@@ -139,16 +140,16 @@
         /* 放手：鏡頭推近油表最後一位 → 撕貼紙揭曉金額與誤差 */
         function release() {
             if (done || api.over) return;
-            done = true; pumping = false; gun.classList.remove('gsp-gun--on');
+            done = true; pumping = false; gun.classList.remove('gaspump-gun--on');
             if (loop) loop.stop();
             if (ctl) ctl.destroy();
             var Ls = shown(L), r = settle(Ls, q.price, q.target, q.tol);
-            lit.textContent = Ls.toFixed(2); lit.classList.add('gsp-digits--zoom');
+            lit.textContent = Ls.toFixed(2); lit.classList.add('gaspump-digits--zoom');
             api.after(650, function () {
-                sticker.classList.add('gsp-sticker--off'); amountBox.textContent = fmt4(r.amount);
+                sticker.classList.add('gaspump-sticker--off'); amountBox.textContent = fmt4(r.amount);
                 var word = r.diff >= 0 ? '多加了' : '少加了';
                 info.textContent = word + ' ' + fmt4(Math.abs(r.diff)) + ' 元' + (r.ok ? '，在範圍內！' : '，超出範圍了');
-                amountBox.classList.add(r.ok ? 'gsp-amount--ok' : 'gsp-amount--bad');
+                amountBox.classList.add(r.ok ? 'gaspump-amount--ok' : 'gaspump-amount--bad');
                 kit.flash(stage, r.ok, api.my);
                 if (r.ok) { api.pass({ delay: 1700 }); return; }
                 api.fail({ delay: 2800, lines: [fmt4(r.amount) + ' 元，' + word + ' ' + fmt4(Math.abs(r.diff)) + ' 元', '容許誤差 ±' + q.tol + ' 元（' + q.target + ' 元 ÷ ' + q.price + ' ＝ ' + (q.target / q.price).toFixed(4) + ' 公升）'] });

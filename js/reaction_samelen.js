@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_samelen.js — 秒反應・畫一樣長
+   樣式：css/games/reaction_samelen.css（這款專屬的 class 一律以「samelen-」開頭；共用元件在 css/reaction_common.css）
    上方是一條斜的題目線，下方左邊是起點：手指從起點開始往右拖，畫出一條橫線，
    長度要和上面的斜線一樣長。放開手指就是答案，只有一次機會。
    ───────────────────────────────────────────────────────────────────
@@ -86,26 +87,26 @@
         var sy = Math.min(START.y, H - 60);
         console.log('[畫一樣長] 斜線長度 ' + cfg.L.toFixed(2) + '（寬度的 ' + (cfg.L / W * 100).toFixed(1) + '%），角度 ' + (cfg.a * 180 / Math.PI).toFixed(1) + '°，左端 (' + cfg.x.toFixed(1) + ', ' + cfg.y.toFixed(1) + ')');
 
-        var svg = kit.svg('svg', { 'class': 'sl-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
+        var svg = kit.svg('svg', { 'class': 'samelen-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
         var gGuide = kit.svg('g', {}, svg);
         var ref = kit.svg('g', {}, svg);
-        var refLine = kit.svg('line', { x1: 0, y1: 0, x2: (cfg.L * Math.cos(cfg.a)).toFixed(2), y2: (cfg.L * Math.sin(cfg.a)).toFixed(2), 'class': 'sl-ref' }, ref);
+        var refLine = kit.svg('line', { x1: 0, y1: 0, x2: (cfg.L * Math.cos(cfg.a)).toFixed(2), y2: (cfg.L * Math.sin(cfg.a)).toFixed(2), 'class': 'samelen-ref' }, ref);
         /* 兩端的黑色記號（垂直於線）：線轉成橫放時，兩個記號都要跟著轉（V1.25：以前左邊那個一直是水平的，是錯的） */
         var ends0 = capEnds(cfg.a, cfg.L);
-        var capT = kit.svg('line', { x1: ends0.t[0], y1: ends0.t[1], x2: ends0.t[2], y2: ends0.t[3], 'class': 'sl-cap' }, ref);
-        var capB = kit.svg('line', { x1: ends0.b[0], y1: ends0.b[1], x2: ends0.b[2], y2: ends0.b[3], 'class': 'sl-cap' }, ref);
+        var capT = kit.svg('line', { x1: ends0.t[0], y1: ends0.t[1], x2: ends0.t[2], y2: ends0.t[3], 'class': 'samelen-cap' }, ref);
+        var capB = kit.svg('line', { x1: ends0.b[0], y1: ends0.b[1], x2: ends0.b[2], y2: ends0.b[3], 'class': 'samelen-cap' }, ref);
         ref.setAttribute('transform', 'translate(' + cfg.x.toFixed(2) + ' ' + cfg.y.toFixed(2) + ')');
-        var mine = kit.svg('line', { x1: START.x, y1: sy, x2: START.x, y2: sy, 'class': 'sl-mine' }, svg);
-        kit.svg('line', { x1: START.x, y1: sy - CAP, x2: START.x, y2: sy + CAP, 'class': 'sl-cap' }, svg);
-        var endCap = kit.svg('line', { x1: START.x, y1: sy - CAP, x2: START.x, y2: sy + CAP, 'class': 'sl-cap', opacity: 0 }, svg);
-        var dot = kit.svg('circle', { cx: START.x, cy: sy, r: 12, 'class': 'sl-start' }, svg);
-        var msg = h('div', { 'class': 'sl-msg' });
+        var mine = kit.svg('line', { x1: START.x, y1: sy, x2: START.x, y2: sy, 'class': 'samelen-mine' }, svg);
+        kit.svg('line', { x1: START.x, y1: sy - CAP, x2: START.x, y2: sy + CAP, 'class': 'samelen-cap' }, svg);
+        var endCap = kit.svg('line', { x1: START.x, y1: sy - CAP, x2: START.x, y2: sy + CAP, 'class': 'samelen-cap', opacity: 0 }, svg);
+        var dot = kit.svg('circle', { cx: START.x, cy: sy, r: 12, 'class': 'samelen-start' }, svg);
+        var msg = h('div', { 'class': 'samelen-msg' });
         stage.appendChild(msg);
 
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從起點往右移動「參考線一樣長」的距離（第一次的正確答案） */
         if (kit.once('samelen.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: START.x, y: sy, dx: cfg.L, dy: 0, delay: 300 });
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
-        function say(t) { msg.textContent = t; msg.classList.toggle('sl-msg--on', !!t); }
+        function say(t) { msg.textContent = t; msg.classList.toggle('samelen-msg--on', !!t); }
         function paint() {
             mine.setAttribute('x2', START.x + len);
             endCap.setAttribute('x1', START.x + len); endCap.setAttribute('x2', START.x + len); endCap.setAttribute('opacity', len > 0 ? 1 : 0);
@@ -150,8 +151,8 @@
                 ref.setAttribute('transform', 'translate(' + x.toFixed(2) + ' ' + y.toFixed(2) + ')');
             }, kit.easeInOutCubic).then(function () {
                 /* 兩個右端的對照線 */
-                kit.svg('line', { x1: START.x + cfg.L, x2: START.x + cfg.L, y1: tgt - 20, y2: sy + 20, 'class': 'sl-guide sl-guide--ref' }, gGuide);
-                kit.svg('line', { x1: START.x + len, x2: START.x + len, y1: tgt - 20, y2: sy + 20, 'class': 'sl-guide sl-guide--mine' }, gGuide);
+                kit.svg('line', { x1: START.x + cfg.L, x2: START.x + cfg.L, y1: tgt - 20, y2: sy + 20, 'class': 'samelen-guide samelen-guide--ref' }, gGuide);
+                kit.svg('line', { x1: START.x + len, x2: START.x + len, y1: tgt - 20, y2: sy + 20, 'class': 'samelen-guide samelen-guide--mine' }, gGuide);
                 var diff = len - cfg.L;
                 say((diff < 0 ? '你畫短了 ' : '你畫長了 ') + Math.abs(diff / cfg.L * 100).toFixed(4) + '%');
                 my.after(1800, function () {

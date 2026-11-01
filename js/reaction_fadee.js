@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_fadee.js — 秒反應・淡到看不見
+   樣式：css/games/reaction_fadee.css（這款專屬的 class 一律以「fadee-」開頭；共用元件在 css/reaction_common.css）
    視力表式：一次一個 E（台灣標準 E 字，三隻腳，開口朝上／下／左／右），E 的顏色一個比一個暗，
    最後幾乎和背景黑融在一起。手指往 E 的開口方向滑（超過 SWIPE_PX 就立刻判定）。
    關卡制，答錯或逾時就結束，成績＝通過幾個 E。
@@ -89,7 +90,7 @@
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 個 E']; },
             note: '遊戲視力，不是真正的視力檢查',
-            stageClass: 'fe-stage',
+            stageClass: 'fadee-stage',
             setup: setup
         });
     }
@@ -104,10 +105,10 @@
         console.log('[淡到看不見] 第 ' + level + ' 個：開口朝' + dir + '，白色 ' + pct.toFixed(4) + '%（灰階 ' + value + '）');
 
         var cv = document.createElement('canvas');
-        cv.width = PANEL; cv.height = PANEL; cv.className = 'fe-canvas';
+        cv.width = PANEL; cv.height = PANEL; cv.className = 'fadee-canvas';
         paintE(cv, dir, value);
         stage.appendChild(cv);
-        var note = h('div', { 'class': 'fe-note', text: '往 E 的開口方向滑動' });
+        var note = h('div', { 'class': 'fadee-note', text: '往 E 的開口方向滑動' });
         stage.appendChild(note);
         var hint = null;
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，第一個 E 的開口朝右，手指就往右滑（第一關的正確答案） */
@@ -134,9 +135,9 @@
         function judge(d) {
             if (api.over) return;
             if (hint) { hint.remove(); hint = null; }
-            if (d === dir) { cv.classList.add('fe-canvas--ok'); api.pass({ delay: 320 }); return; }
+            if (d === dir) { cv.classList.add('fadee-canvas--ok'); api.pass({ delay: 320 }); return; }
             paintE(cv, dir, valueOf(BOOST_PCT));
-            cv.classList.add('fe-canvas--bad');
+            cv.classList.add('fadee-canvas--bad');
             note.textContent = '加亮之後：E 的開口朝' + { up: '上', down: '下', left: '左', right: '右' }[dir];
             api.fail({
                 delay: 1700, lines: [

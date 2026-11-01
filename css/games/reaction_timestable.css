@@ -1,0 +1,91 @@
+/* ═══════════════════════════════════════
+   reaction_timestable.css — 乘法表抓錯（js/reaction_timestable.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「timestable-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 023 乘法表抓錯（.timestable-）═══ */
+.timestable-clock {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 4px;
+}
+
+.timestable-table {
+    position: absolute;
+    left: 6px;
+    top: 56px;
+    display: grid;
+    gap: 0;
+}
+
+.timestable-cell {
+    width: 46px;
+    height: 46px;
+    box-sizing: border-box;
+    border: 1px solid var(--bd-c);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink);
+    background: var(--c-card);
+    cursor: pointer;
+}
+
+.timestable-cell--head {
+    background: var(--c-yellow-soft);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+    cursor: default;
+}
+
+.timestable-cell--found {
+    background: var(--c-green-soft);
+    border-color: var(--c-green);
+    font-size: 15px;
+    font-weight: var(--fw-black);
+    color: var(--c-ok);
+}
+
+.timestable-cell--bad {
+    background: var(--c-bad-soft);
+}
+
+/* 找齊之後的揭曉：被改的答案「紅底白字」，先閃爍 1.5 秒（--blink）再維持 1.5 秒（V1.28） */
+.timestable-cell--wrong {
+    background: var(--c-bad-light);
+    border-color: var(--c-bad-light);
+    color: var(--c-on-accent);
+    font-size: 15px;
+    font-weight: var(--fw-black);
+}
+
+.timestable-cell--blink {
+    animation: timestable-blink 0.3s steps(1, end) 5;
+}
+
+@keyframes timestable-blink {
+    0% {
+        background: var(--c-bad-light);
+        color: var(--c-on-accent);
+    }
+
+    50% {
+        background: var(--c-card);
+        color: var(--c-bad-light);
+    }
+}
+
+.timestable-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 530px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}

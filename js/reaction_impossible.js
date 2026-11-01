@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_impossible.js — 秒反應・不可能任務
+   樣式：css/games/reaction_impossible.css（這款專屬的 class 一律以「impossible-」開頭；共用元件在 css/reaction_common.css）
    畫面上緣是阿湯哥、下緣是一條紅色警戒線。點一下畫面讓他開始自由落體下墜，
    算準時機再點一下讓他停住。停下來（或直接摔到警戒線上）先定格一秒，接著
    鏡頭平順地推進，放大「阿湯哥下緣～警戒線上緣」這一小段距離，讓玩家看清楚
@@ -142,7 +143,7 @@
         /* 舊版最佳紀錄存的是 px，現在存公分（4 位小數、第 3／4 位不為 0）：第一次進來換算一次 */
         Reaction.migrateBest(ID, function (px) { return Leaderboard.fake4(cmOf(px)); });
         /* 替整個畫面加上白底 class */
-        root.classList.add('imp-white-bg');
+        root.classList.add('impossible-white-bg');
 
         /* 照片的長寬比只需要量一次（不會因為重玩而改變），先用一個不會進畫面的
            Image() 探測，知道比例之後，SVG 裡的 <image> 才能用「寬 150、高照比例
@@ -166,7 +167,7 @@
             root.innerHTML = '';
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
-            var field = h('div', { 'class': 'imp-field' });
+            var field = h('div', { 'class': 'impossible-field' });
             root.appendChild(field);
 
             /* FW／FH 場地大小；imgH 照片高；maxY 照片最多能掉到哪裡（下緣碰到警戒線） */
@@ -176,7 +177,7 @@
             var barY = FH - BAR_H;
             var maxY = barY - imgH;     /* 圖片 y 最多能到哪裡（下緣剛好碰到警戒線上緣） */
 
-            var svg = svgEl('svg', { 'class': 'imp-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'xMidYMid slice' });
+            var svg = svgEl('svg', { 'class': 'impossible-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'xMidYMid slice' });
             field.appendChild(svg);
 
             /* 摔到警戒線時照片要變紅：用 SVG 濾鏡 feColorMatrix 重新計算每個像素的 RGB，alpha 不變，所以透明的部分仍然透明 */
@@ -187,7 +188,7 @@
                ——整張照片染成鮮紅，同時保留一點深淺，不會變成完全平的紅色剪影。
                color-interpolation-filters="sRGB"：不然瀏覽器預設在線性 RGB 空間算，顏色會偏掉。 */
             var defs = svgEl('defs', {});
-            var hitFilter = svgEl('filter', { id: 'imp-hit-red', 'color-interpolation-filters': 'sRGB' });
+            var hitFilter = svgEl('filter', { id: 'impossible-hit-red', 'color-interpolation-filters': 'sRGB' });
             hitFilter.appendChild(svgEl('feColorMatrix', {
                 type: 'matrix',
                 values: [
@@ -205,10 +206,10 @@
             imgEl.setAttribute('href', IMG_SRC);
             svg.appendChild(imgEl);
 
-            var barEl = svgEl('rect', { 'class': 'imp-bar-rect', x: 0, y: barY, width: FW, height: BAR_H });
+            var barEl = svgEl('rect', { 'class': 'impossible-bar-rect', x: 0, y: barY, width: FW, height: BAR_H });
             svg.appendChild(barEl);
 
-            var hint = h('div', { 'class': 'imp-hint', text: '點擊畫面讓阿湯哥下降' });
+            var hint = h('div', { 'class': 'impossible-hint', text: '點擊畫面讓阿湯哥下降' });
             field.appendChild(hint);
             /* 操作提示（只在第一次進遊戲時）：點畫面任一處 → 手指縮放，放在畫面中下方（不擋住下墜的照片） */
             if (Reaction.kit.once('impossible.hint')) Reaction.kit.hintOn(root, root, { mode: 'tap', fy: 0.72, text: '請點擊畫面' });
@@ -234,7 +235,7 @@
             function startFall() {
                 phase = 'falling';
                 hint.textContent = '點擊畫面讓阿湯哥停止';
-                hint.classList.add('imp-hint--danger');
+                hint.classList.add('impossible-hint--danger');
 
                 /* t0 開始時間 */
                 var t0 = performance.now();
@@ -304,14 +305,14 @@
                 if (box.gapBottom - box.gapTop > 0.5) {
                     var arrowSize = Math.min(box.vh * 0.045, (box.gapBottom - box.gapTop) / 2.2);
                     svg.appendChild(svgEl('line', {
-                        'class': 'imp-measure-line', x1: midX, y1: box.gapTop, x2: midX, y2: box.gapBottom, 'stroke-width': lineW
+                        'class': 'impossible-measure-line', x1: midX, y1: box.gapTop, x2: midX, y2: box.gapBottom, 'stroke-width': lineW
                     }));
                     svg.appendChild(svgEl('polygon', {
-                        'class': 'imp-measure-line',
+                        'class': 'impossible-measure-line',
                         points: (midX - arrowSize) + ',' + (box.gapTop + arrowSize) + ' ' + (midX + arrowSize) + ',' + (box.gapTop + arrowSize) + ' ' + midX + ',' + box.gapTop
                     }));
                     svg.appendChild(svgEl('polygon', {
-                        'class': 'imp-measure-line',
+                        'class': 'impossible-measure-line',
                         points: (midX - arrowSize) + ',' + (box.gapBottom - arrowSize) + ' ' + (midX + arrowSize) + ',' + (box.gapBottom - arrowSize) + ' ' + midX + ',' + box.gapBottom
                     }));
                 }
@@ -334,7 +335,7 @@
                 var numY = stackTop + titleH + pad + pillH / 2;
 
                 var title = svgEl('text', {
-                    'class': 'imp-measure-title ' + (success ? 'imp-measure-title--ok' : 'imp-measure-title--bad'),
+                    'class': 'impossible-measure-title ' + (success ? 'impossible-measure-title--ok' : 'impossible-measure-title--bad'),
                     x: midX, y: titleY, 'font-size': titleSize, 'text-anchor': 'middle', 'stroke-width': titleSize * 0.14
                 });
                 title.textContent = success ? '成功！' : '任務失敗';
@@ -343,10 +344,10 @@
                 /* 數字最長會長到「4200.00 公分」這種寬度，所以 pill 的寬度不是猜的，
                    而是先把字畫上去、量出字實際多寬（getComputedTextLength），再包一圈
                    留白；萬一比整個鏡頭框還寬（鏡頭推得很近時框很窄），就把字級等比縮小。 */
-                var pill = svgEl('rect', { 'class': 'imp-measure-pill', height: pillH, rx: pillH / 2 });
+                var pill = svgEl('rect', { 'class': 'impossible-measure-pill', height: pillH, rx: pillH / 2 });
                 svg.appendChild(pill);
                 var numText = svgEl('text', {
-                    'class': 'imp-measure-num', x: midX, y: numY, 'font-size': numSize, 'text-anchor': 'middle', 'dominant-baseline': 'central'
+                    'class': 'impossible-measure-num', x: midX, y: numY, 'font-size': numSize, 'text-anchor': 'middle', 'dominant-baseline': 'central'
                 });
                 numText.textContent = fmtCm(cm);
                 svg.appendChild(numText);
@@ -360,7 +361,7 @@
 
                 if (isNew) {
                     var newRec = svgEl('text', {
-                        'class': 'imp-measure-newrec', x: midX, y: numY + pillH / 2 + pad + newSize, 'font-size': newSize,
+                        'class': 'impossible-measure-newrec', x: midX, y: numY + pillH / 2 + pad + newSize, 'font-size': newSize,
                         'text-anchor': 'middle', 'stroke-width': newSize * 0.14
                     });
                     newRec.textContent = '新紀錄！';
@@ -377,7 +378,7 @@
                 var labelSize = labelPx / k;
                 var labelBottomPad = Math.max(0, (BAR_H - labelSize) / 2);
                 var label = svgEl('text', {
-                    'class': 'imp-measure-label', x: box.vx + box.vw * 0.03, y: box.vy + box.vh - labelBottomPad - labelSize * 0.2,
+                    'class': 'impossible-measure-label', x: box.vx + box.vw * 0.03, y: box.vy + box.vh - labelBottomPad - labelSize * 0.2,
                     'font-size': labelSize, 'text-anchor': 'start', 'stroke-width': labelSize * 0.16
                 });
                 label.textContent = '警戒線';
@@ -391,7 +392,7 @@
             /* finish：定格一秒 → 鏡頭推進 → 停留兩秒 → 出現「再挑戰一次」；crashed 為 true 表示直接摔到警戒線 */
             function finish(crashed, imgY) {
                 phase = 'done';
-                if (crashed) imgEl.setAttribute('filter', 'url(#imp-hit-red)');   /* 撞到地面：照片變紅 */
+                if (crashed) imgEl.setAttribute('filter', 'url(#impossible-hit-red)');   /* 撞到地面：照片變紅 */
                 var gapPx = Math.max(0, barY - (imgY + imgH));
                 /* 最終成績（公分）：第 3、4 位不為 0，只產生這一次；判定成功、最佳紀錄、鏡頭推進後顯示的數字都用它
                    （真實的距離 gapPx 仍然用來決定鏡頭放大的範圍，畫面上的量尺線是照實際距離畫的） */

@@ -1,0 +1,135 @@
+/* ═══════════════════════════════════════
+   reaction_carpet.css — 鋪地毯（js/reaction_carpet.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「carpet-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 鋪地毯（.carpet-）═══ */
+.carpet-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.carpet-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 10px;
+    text-align: center;
+}
+
+.carpet-board {
+    position: absolute;
+    border: var(--bd-w) solid var(--c-ink-soft);
+    border-radius: var(--r-sm);
+    overflow: hidden;
+    background: var(--c-card-alt);
+}
+
+.carpet-cell {
+    position: absolute;
+    box-sizing: border-box;
+}
+
+.carpet-cell--a {
+    background: var(--c-card);
+}
+
+.carpet-cell--b {
+    background: var(--c-card-alt);
+}
+
+/* 家具（不能走的格子）：一個表情符號放在格子正中央，字級由 JS 依格子大小設定（格子的 62%） */
+.carpet-stone {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.carpet-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+}
+
+/* 地毯：紅色的粗線，上面再疊一條淺色的虛線當花紋 */
+.carpet-rug {
+    fill: none;
+    stroke: var(--c-bad-light);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.carpet-rug-pat {
+    fill: none;
+    stroke: var(--c-yellow);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 2 10;
+    opacity: 0.9;
+}
+
+/* 地毯捲（捲頭）：黃色圓＋中間的小圓 */
+.carpet-roll {
+    fill: var(--c-yellow);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.carpet-roll-in {
+    fill: var(--c-orange);
+    stroke: var(--c-ink);
+    stroke-width: 2;
+}
+
+/* 鋪滿了：整個房間的格子變淡綠 */
+.carpet-cell--ok {
+    background: var(--c-ok-soft);
+}
+
+/* 失敗：沒鋪到的格子閃紅 */
+.carpet-cell--miss {
+    outline: 4px solid var(--c-bad-light);
+    outline-offset: -4px;
+    animation: carpet-blink 0.5s ease-in-out 4;
+}
+
+@keyframes carpet-blink {
+
+    0%,
+    100% {
+        background: var(--c-bad-soft);
+    }
+
+    50% {
+        background: var(--c-bad-light);
+    }
+}
+
+/* 正確的路：綠色線，從起點慢慢畫出來（pathLength 設成 1，所以 dasharray 1、dashoffset 1 → 0） */
+.carpet-sol {
+    fill: none;
+    stroke: var(--c-ok);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.9;
+}
+
+.carpet-sol--draw {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: carpet-draw 1.6s ease-out forwards;
+}
+
+@keyframes carpet-draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}

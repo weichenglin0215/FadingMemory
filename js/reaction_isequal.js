@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_isequal.js — 秒反應・等不等於（企劃 121）
+   樣式：css/games/reaction_isequal.css（這款專屬的 class 一律以「isequal-」開頭；共用元件在 css/reaction_common.css）
    畫面出現一道「兩邊寫法不同」的等式，例如  3/8 ＝ 0.375  或  7/20 ＝ 34%，
    判斷兩邊「相等」還是「不相等」。不相等的那一題永遠差一點點（0.375 寫成 0.357、37.5% 寫成 35.7%…）。
    關卡制：答錯或來不及就結束，成績＝連續答對幾題。
@@ -263,13 +264,13 @@
         api.info = q;
         console.log('[等不等於] 第 ' + level + ' 題：' + q.left.text + ' ＝ ' + q.right.text + '（' + (q.isEqual ? '相等' : '不相等') + '），限時 ' + ansMs(level) + ' ms');
 
-        var eq = h('div', { 'class': 'qz-big ieq-eq' });
+        var eq = h('div', { 'class': 'qz-big isequal-eq' });
         eq.appendChild(h('span', { text: q.left.text }));
-        var sign = h('span', { 'class': 'ieq-sign', text: '＝' });
+        var sign = h('span', { 'class': 'isequal-sign', text: '＝' });
         eq.appendChild(sign);
         eq.appendChild(h('span', { text: q.right.text }));
-        var ask = h('div', { 'class': 'qz-note ieq-ask', text: '左右兩邊相等嗎？' });
-        var reveal = h('div', { 'class': 'qz-note ieq-reveal' });
+        var ask = h('div', { 'class': 'qz-note isequal-ask', text: '左右兩邊相等嗎？' });
+        var reveal = h('div', { 'class': 'qz-note isequal-reveal' });
         stage.appendChild(eq); stage.appendChild(ask); stage.appendChild(reveal);
         var grid = kit.btnGrid(stage, [
             { text: '不相等', kind: 'primary', onTap: function () { judge(false); } },

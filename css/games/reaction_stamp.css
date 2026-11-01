@@ -1,0 +1,78 @@
+/* ═══════════════════════════════════════
+   reaction_stamp.css — 心在正中央（js/reaction_stamp.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「stamp-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 017 心在正中央（.stamp-，原名蓋在框內）═══ */
+.stamp-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.stamp-paper {
+    fill: var(--c-card);
+    stroke: var(--bd-c);
+    stroke-width: 3;
+}
+
+.stamp-mark {
+    fill: none;
+    stroke: var(--c-bad);
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.stamp-frame {
+    fill: none;
+    stroke: var(--c-bad);
+    stroke-width: 3;
+    stroke-dasharray: 10 6;
+}
+
+/* 愛心印章（V1.27）：只有虛線外框，顏色／粗細／虛線間隔由程式依每一局隨機設定 */
+.stamp-heart {
+    stroke-linejoin: round;
+}
+
+/* 揭曉：紅框中心（紅色十字）、愛心中心（黑點）、兩點之間的連線 */
+.stamp-fc {
+    stroke: var(--c-bad);
+    stroke-width: 3;
+}
+
+.stamp-sc {
+    fill: var(--c-black);
+}
+
+.stamp-vec {
+    stroke: var(--c-black);
+    stroke-width: 1.5;
+    stroke-dasharray: 3 3;
+}
+
+.stamp-msg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 4px;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    opacity: 0;
+}
+
+.stamp-msg--on {
+    opacity: 1;
+}
+
+.stamp-ok {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+}

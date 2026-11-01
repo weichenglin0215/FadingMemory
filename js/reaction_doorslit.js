@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_doorslit.js — 秒反應・門縫偷看（企劃 331，依使用者的修改：白色方塊門縫）
+   樣式：css/games/reaction_doorslit.css（這款專屬的 class 一律以「doorslit-」開頭；共用元件在 css/reaction_common.css）
    滿版的黑色大字（題目字），上面蓋著**兩片白色方塊**，兩片之間留一條窄縫，**縫裡只露出黑字的一小條**。
    兩片方塊**等速由左往右**移動，縫就從字的左邊掃到右邊——你只能透過門縫，一條一條看到經過的筆畫。掃過去之後，點出那是哪個字（四個選項）。
    ───────────────────────────────────────────────────────────────────
@@ -73,7 +74,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'dsl-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'doorslit-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -88,20 +89,20 @@
         console.log('[門縫偷看] 第 ' + level + ' 關：答案 ' + q.answer + '，選項 ' + q.options.join('') + '；縫寬 ' + q.gap + ' px、速度 ' + q.speed + ' px/秒；字群平均筆劃範圍 ' + q.strokes.map(function (x) { return x.toFixed(1); }).join('～'));
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, BW = W - 24, BH = Math.min(BW, H - 320);
-        var field = h('div', { 'class': 'dsl-field' });
+        var field = h('div', { 'class': 'doorslit-field' });
         stage.appendChild(field);
-        var tip = h('div', { 'class': 'qz-note dsl-tip', text: '從門縫偷看，是哪個字？' });
+        var tip = h('div', { 'class': 'qz-note doorslit-tip', text: '從門縫偷看，是哪個字？' });
         field.appendChild(tip);
         /* 字盒：大大的黑字，上面蓋兩片白色方塊（左、右）；縫在兩片中間 */
-        var box = h('div', { 'class': 'dsl-box' }); box.style.cssText = 'left:12px;top:56px;width:' + BW + 'px;height:' + BH + 'px;';
-        var glyph = h('div', { 'class': 'dsl-glyph', text: q.answer }); glyph.style.fontSize = Math.round(Math.min(BW, BH) * 0.92) + 'px'; glyph.style.lineHeight = BH + 'px';
-        var coverL = h('div', { 'class': 'dsl-cover dsl-cover--l' }), coverR = h('div', { 'class': 'dsl-cover dsl-cover--r' });
+        var box = h('div', { 'class': 'doorslit-box' }); box.style.cssText = 'left:12px;top:56px;width:' + BW + 'px;height:' + BH + 'px;';
+        var glyph = h('div', { 'class': 'doorslit-glyph', text: q.answer }); glyph.style.fontSize = Math.round(Math.min(BW, BH) * 0.92) + 'px'; glyph.style.lineHeight = BH + 'px';
+        var coverL = h('div', { 'class': 'doorslit-cover doorslit-cover--l' }), coverR = h('div', { 'class': 'doorslit-cover doorslit-cover--r' });
         box.appendChild(glyph); box.appendChild(coverL); box.appendChild(coverR); field.appendChild(box);
         var CW = BW + q.gap + 40;                                                           /* 方塊要夠寬：左方塊的右緣貼著縫、要一路蓋到字的左邊；右方塊的左緣貼著縫、要一路蓋到右邊 */
         coverL.style.width = CW + 'px'; coverR.style.width = CW + 'px';
         function setSlit(x) { coverL.style.transform = 'translateX(' + (x - CW).toFixed(1) + 'px)'; coverR.style.transform = 'translateX(' + (x + q.gap).toFixed(1) + 'px)'; }
         setSlit(-q.gap);                                                                   /* 一開始縫在字的左邊外面：整個字都蓋住 */
-        var info = h('div', { 'class': 'qz-note dsl-info', text: '' }); info.style.top = (56 + BH + 8) + 'px'; field.appendChild(info);
+        var info = h('div', { 'class': 'qz-note doorslit-info', text: '' }); info.style.top = (56 + BH + 8) + 'px'; field.appendChild(info);
         var phase = 'sweep', done = false, grid = null, t0 = null, total = sweepSeconds(BW, q.gap, q.speed);
         api.after(LEAD_MS, function () {
             t0 = performance.now();
@@ -115,20 +116,20 @@
         function ask() {
             if (phase !== 'sweep') return;
             phase = 'ask'; tip.textContent = '剛才那個字是？';
-            grid = kit.btnGrid(field, q.options.map(function (c, i) { return { text: c, kind: 'line', cls: 'dsl-opt', onTap: function () { judge(i); } }; }), { cols: 2, h: 92, gap: 10 });
+            grid = kit.btnGrid(field, q.options.map(function (c, i) { return { text: c, kind: 'line', cls: 'doorslit-opt', onTap: function () { judge(i); } }; }), { cols: 2, h: 92, gap: 10 });
             api.timer(q.respMs, function () { judge(-1); });
         }
         function judge(i) {
             if (done || api.over || phase !== 'ask') return;
             done = true; phase = 'end';
             var ok = i === q.answerIdx;
-            grid.btns[q.answerIdx].classList.add('dsl-ok'); if (i >= 0 && !ok) grid.btns[i].classList.add('dsl-bad');
+            grid.btns[q.answerIdx].classList.add('doorslit-ok'); if (i >= 0 && !ok) grid.btns[i].classList.add('doorslit-bad');
             /* 揭曉：兩片白色方塊往兩邊打開，字整個露出來 */
-            coverL.classList.add('dsl-cover--open'); coverR.classList.add('dsl-cover--open'); coverL.style.transform = 'translateX(-' + (CW + 20) + 'px)'; coverR.style.transform = 'translateX(' + (BW + 20) + 'px)';
+            coverL.classList.add('doorslit-cover--open'); coverR.classList.add('doorslit-cover--open'); coverL.style.transform = 'translateX(-' + (CW + 20) + 'px)'; coverR.style.transform = 'translateX(' + (BW + 20) + 'px)';
             if (ok) { info.textContent = '是「' + q.answer + '」，答對了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1500 }); return; }
             info.textContent = '正確「' + q.answer + '」' + (i >= 0 ? '，你選「' + q.options[i] + '」（紅＝差異）' : '（時間到）');
             if (i >= 0) {
-                var sq = Math.min(BW, BH), cv = h('canvas', { 'class': 'dsl-diff' }); cv.style.cssText = 'left:' + Math.round((BW - sq) / 2) + 'px;top:' + Math.round((BH - sq) / 2) + 'px;width:' + sq + 'px;height:' + sq + 'px;';
+                var sq = Math.min(BW, BH), cv = h('canvas', { 'class': 'doorslit-diff' }); cv.style.cssText = 'left:' + Math.round((BW - sq) / 2) + 'px;top:' + Math.round((BH - sq) / 2) + 'px;width:' + sq + 'px;height:' + sq + 'px;';
                 api.after(450, function () { try { drawDiff(cv, q.answer, q.options[i], 240); box.appendChild(cv); glyph.style.visibility = 'hidden'; } catch (err) { } });
             }
             kit.flash(stage, false, api.my);

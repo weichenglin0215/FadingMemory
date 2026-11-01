@@ -162,5 +162,19 @@ window.FM_SCORE_SPECS = {
     "discount": {"better":"max","decimals":0,"format":"{v} 題"},
     "timepair": {"better":"max","decimals":0,"format":"{v} 關"},
     "eyebrow": {"better":"max","decimals":0,"format":"{v} 關"},
-    "dough": {"better":"max","decimals":0,"format":"{v} 關"}
+    "dough": {"better":"max","decimals":0,"format":"{v} 關"},
+    "sudoku4": {"better":"max","decimals":0,"format":"{v} 題"},
+    "sudoku6e": {"better":"max","decimals":0,"format":"{v} 題"},
+    "sudoku6m": {"better":"max","decimals":0,"format":"{v} 題"},
+    "sudoku9e": {"better":"max","decimals":0,"format":"{v} 題"},
+    "sudoku9m": {"better":"max","decimals":0,"format":"{v} 題"},
+    "sudoku9h": {"better":"max","decimals":0,"format":"{v} 題"},
+    "sandwich": {"better":"max","decimals":0,"format":"{v} 題"},
+    "takuzu": {"better":"max","decimals":0,"format":"{v} 關"},
+    "sumdel": {"better":"max","decimals":0,"format":"{v} 關"},
+    "magicsq": {"better":"max","decimals":0,"format":"{v} 關"},
+    "nim": {"better":"max","decimals":0,"format":"{v} 關"},
+    "fifteen": {"better":"max","decimals":0,"format":"{v} 關"},
+    "tianji": {"better":"max","decimals":0,"format":"{v} 關"},
+    "flipten": {"better":"max","decimals":0,"format":"{v} 關"}
 };

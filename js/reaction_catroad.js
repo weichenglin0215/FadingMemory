@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_catroad.js — 秒反應・貓咪走山路（原企劃「016 電流急急棒」的復活版）
+   樣式：css/games/reaction_catroad.css（這款專屬的 class 一律以「catroad-」開頭；共用元件在 css/reaction_common.css）
    一隻貓咪走在寬窄不一、彎彎曲曲的山路上，兩側是斷崖與岩漿，掉下去就結束。
    貓咪的上下位置固定在畫面下方三分之一，下方的橫桿可以左右拖曳決定貓咪的位置；
    山路會一直往下捲動（看起來就像貓咪一直往前走）。成績＝撐了幾秒（越久越好）。
@@ -102,7 +103,7 @@
             numText: function (v) { return v.toFixed(4) + ' 秒'; },
             rating: rating,
             sfx: function (v) { return v >= 30 ? 'perfect' : (v >= 15 ? 'win' : 'fail'); },
-            stageClass: 'cr-stage',
+            stageClass: 'catroad-stage',
             setup: setup
         });
     }
@@ -118,18 +119,18 @@
         var CH = H - BAR_H - 8;                                        /* 山路畫面高度 */
         var road = newRoad(W, api.rand), YC = Math.round(CH * CAT_Y);   /* 貓咪的畫面 y */
         var dpr = Math.min(2, window.devicePixelRatio || 1);
-        var cv = h('canvas', { 'class': 'cr-canvas' });
+        var cv = h('canvas', { 'class': 'catroad-canvas' });
         cv.width = Math.round(W * dpr); cv.height = Math.round(CH * dpr);
         cv.style.width = W + 'px'; cv.style.height = CH + 'px';
         stage.appendChild(cv);
         var g = cv.getContext('2d');
         g.scale(dpr, dpr);
-        var timeEl = h('div', { 'class': 'cr-time', text: '0.0000 秒' });
+        var timeEl = h('div', { 'class': 'catroad-time', text: '0.0000 秒' });
         stage.appendChild(timeEl);
 
         /* 橫桿 */
-        var bar = h('div', { 'class': 'cr-bar' }), knob = h('div', { 'class': 'cr-knob' });
-        bar.appendChild(h('div', { 'class': 'cr-track' })); bar.appendChild(knob);
+        var bar = h('div', { 'class': 'catroad-bar' }), knob = h('div', { 'class': 'catroad-knob' });
+        bar.appendChild(h('div', { 'class': 'catroad-track' })); bar.appendChild(knob);
         bar.style.top = (CH + 8) + 'px'; bar.style.height = BAR_H + 'px';
         stage.appendChild(bar);
         var KR = 30, catX = W / 2, dragging = null, hint = null;
@@ -204,7 +205,7 @@
             timeEl.textContent = t.toFixed(4) + ' 秒';
             if (fallen(road, s, catX)) {
                 state = 'fall'; tFall = 0; fallX = catX; Sfx.play('bad');
-                timeEl.classList.add('cr-time--dead');
+                timeEl.classList.add('catroad-time--dead');
             }
             draw(now);
         }

@@ -147,9 +147,9 @@ ok(kinds.corner > 10 && kinds.four > 40 && kinds.bank > 150 && tiers[1] > 20 && 
 // 效能
 for (const lv of [1, 6, 12, 24, 40]) { const t0 = Date.now(); let worst = 0; for (let i = 0; i < 30; i++) { const t1 = Date.now(); T.makeLevel(lv, rnd); worst = Math.max(worst, Date.now() - t1); } const per = (Date.now() - t0) / 30; console.log('第' + lv + '關 出題平均 ' + per.toFixed(1) + ' 毫秒、最慢 ' + worst); ok(per < 100 && worst < 600, '第 ' + lv + ' 關出題夠快：' + per.toFixed(1) + '／' + worst); }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_gomoku.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: revealMs\(pv\.length\)/.test(src) && T.REVEAL_HOLD_MS >= 2000 && /gmk-five/.test(src), '失敗：白棋下完致勝手後再停格 2 秒以上、紅線連五（V1.38.0 起節奏放慢成 50%，見 t_feedback138.js）');
-  ok(/\.gmk-five \{[^}]*var\(--c-bad-light\)/.test(css) && /\.gmk-ring \{[^}]*var\(--c-ok\)/.test(css), '紅線、綠圈用 CSS 變數');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_gomoku.js'), css = rd('../../css/games/reaction_gomoku.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: revealMs\(pv\.length\)/.test(src) && T.REVEAL_HOLD_MS >= 2000 && /gomoku-five/.test(src), '失敗：白棋下完致勝手後再停格 2 秒以上、紅線連五（V1.38.0 起節奏放慢成 50%，見 t_feedback138.js）');
+  ok(/\.gomoku-five \{[^}]*var\(--c-bad-light\)/.test(css) && /\.gomoku-ring \{[^}]*var\(--c-ok\)/.test(css), '紅線、綠圈用 CSS 變數');
   ok(boot.indexOf("'js/reaction_gomoku.js'") > 0 && /唯一/.test(G.rule), 'boot.js 有載入、玩法說明寫了唯一的擋法'); }
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20) !== T.rating(30), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

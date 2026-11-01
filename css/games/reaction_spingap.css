@@ -1,0 +1,89 @@
+/* ═══════════════════════════════════════
+   reaction_spingap.css — 穿過旋轉縫（js/reaction_spingap.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「spingap-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 誰在偷偷動（.snk-）═══ */
+.spingap-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+}
+
+/* ═══ 穿過旋轉縫（.spingap-）═══ */
+.spingap-ring {
+    fill: none;
+    stroke: var(--c-yellow);
+    stroke-linecap: butt;
+}
+
+.spingap-mark {
+    fill: var(--c-orange);
+}
+
+.spingap-ball {
+    fill: var(--c-ink);
+    stroke: var(--c-card);
+    stroke-width: 2;
+}
+
+.spingap-ball--boom {
+    fill: var(--c-bad);
+}
+
+.spingap-cannon {
+    position: absolute;
+    width: 120px;
+    height: 150px;
+    pointer-events: none;
+}
+
+.spingap-cannon svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.spingap-barrel {
+    transition: transform 0.12s ease-out;
+}
+
+.spingap-cannon--fire .spingap-barrel {
+    transform: translateY(10px);
+}
+
+.spingap-iron {
+    fill: var(--c-ink);
+}
+
+.spingap-iron-d {
+    fill: var(--c-ink-soft);
+}
+
+.spingap-wood {
+    fill: var(--c-orange);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.spingap-wood-d {
+    fill: var(--c-yellow);
+    stroke: var(--c-ink);
+    stroke-width: 4;
+}
+
+.spingap-spoke {
+    stroke: var(--c-ink);
+    stroke-width: 3;
+    fill: none;
+}
+
+.spingap-tip {
+    bottom: 76px;
+}
+
+.spingap-msg {
+    bottom: 22px;
+}

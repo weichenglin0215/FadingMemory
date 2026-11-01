@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_flashlight.js — 秒反應・手電筒猜圖（企劃 204）
+   樣式：css/games/reaction_flashlight.css（這款專屬的 class 一律以「flashlight-」開頭；共用元件在 css/reaction_common.css）
    畫面全黑，手指拖到哪裡，手指「上方」就亮起一個圓形的光圈，黑幕底下藏著一個圖案（數字、很像的繁體字、零件數不同的圖形）。
    用光圈到處掃，猜出藏的是什麼圖案；下面四個選項隨時可以點，選對才過關。
    關卡制：選錯或來不及就結束，成績＝通過幾關。
@@ -155,7 +156,7 @@
     var maskSeq = 0;
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 6, stageClass: 'flt-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 6, stageClass: 'flashlight-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -172,20 +173,20 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var box = { x: Math.round((W - PIC.size) / 2), y: PIC.top, w: PIC.size, h: PIC.size };
-        var mid = 'flt-m' + (++maskSeq);
-        var svg = kit.svg('svg', { 'class': 'flt-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
-        kit.svg('rect', { x: 0, y: 0, width: W, height: H, 'class': 'flt-bg' }, svg);
-        var pic = kit.svg('g', { transform: 'translate(' + box.x + ',' + box.y + ') scale(' + (PIC.size / 100) + ')', 'class': 'flt-pic' }, svg);
+        var mid = 'flashlight-m' + (++maskSeq);
+        var svg = kit.svg('svg', { 'class': 'flashlight-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
+        kit.svg('rect', { x: 0, y: 0, width: W, height: H, 'class': 'flashlight-bg' }, svg);
+        var pic = kit.svg('g', { transform: 'translate(' + box.x + ',' + box.y + ') scale(' + (PIC.size / 100) + ')', 'class': 'flashlight-pic' }, svg);
         pic.innerHTML = picSvg(q.target).replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
         var defs = kit.svg('defs', {}, svg), mask = kit.svg('mask', { id: mid }, defs);
         kit.svg('rect', { x: 0, y: 0, width: W, height: H, fill: '#fff' }, mask);
         var hole = kit.svg('circle', { cx: -999, cy: -999, r: R, fill: '#000' }, mask);
-        var cover = kit.svg('rect', { x: 0, y: 0, width: W, height: H, 'class': 'flt-cover', mask: 'url(#' + mid + ')' }, svg);
-        var ring = kit.svg('circle', { cx: -999, cy: -999, r: R, 'class': 'flt-ring' }, svg);
-        var gScan = kit.svg('g', { 'class': 'flt-scan' }, svg);
-        var tip = h('div', { 'class': 'flt-tip', text: '手指在黑幕上拖曳，照出藏著的圖案' });
+        var cover = kit.svg('rect', { x: 0, y: 0, width: W, height: H, 'class': 'flashlight-cover', mask: 'url(#' + mid + ')' }, svg);
+        var ring = kit.svg('circle', { cx: -999, cy: -999, r: R, 'class': 'flashlight-ring' }, svg);
+        var gScan = kit.svg('g', { 'class': 'flashlight-scan' }, svg);
+        var tip = h('div', { 'class': 'flashlight-tip', text: '手指在黑幕上拖曳，照出藏著的圖案' });
         stage.appendChild(tip);
-        var items = q.options.map(function (id, i) { return { html: picSvg(id, true), kind: 'line', cls: 'flt-opt', onTap: function () { judge(i); } }; });
+        var items = q.options.map(function (id, i) { return { html: picSvg(id, true), kind: 'line', cls: 'flashlight-opt', onTap: function () { judge(i); } }; });
         var grid = kit.btnGrid(stage, items, { h: 96, gap: 8 });
         var centers = [], dragging = null, lastC = null;
         function light(pt) {
@@ -217,8 +218,8 @@
             cover.setAttribute('opacity', '0.12');
             centers.forEach(function (c) { kit.svg('circle', { cx: c.x, cy: c.y, r: R }, gScan); });
             var cov = coverage(centers, R, box);
-            grid.btns[q.answer].classList.add('flt-opt--right');
-            if (i != null && !ok) grid.btns[i].classList.add('flt-opt--wrong');
+            grid.btns[q.answer].classList.add('flashlight-opt--right');
+            if (i != null && !ok) grid.btns[i].classList.add('flashlight-opt--wrong');
             tip.textContent = '藏的是「' + nameOf(q.target) + '」，你掃過了 ' + (cov * 100).toFixed(4) + '％ 的範圍';
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1700 }); return; }
             kit.flash(stage, false, api.my);

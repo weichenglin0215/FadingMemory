@@ -1,0 +1,92 @@
+/* ═══════════════════════════════════════
+   reaction_halfvol.css — 容量一半（js/reaction_halfvol.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「halfvol-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 008 容量一半（.halfvol-）═══ */
+.halfvol-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.halfvol-vase {
+    fill: var(--c-card);
+}
+
+.halfvol-water {
+    fill: var(--c-blue);
+    fill-opacity: 0.45;
+}
+
+.halfvol-rim {
+    fill: none;
+    stroke: var(--c-ink);
+    stroke-width: 4;
+    stroke-linejoin: round;
+}
+
+.halfvol-line {
+    stroke: var(--c-blue);
+    stroke-width: 5;
+}
+
+.halfvol-knob {
+    fill: var(--c-orange);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.halfvol-ref {
+    stroke-width: 4;
+}
+
+.halfvol-ref--v {
+    stroke: var(--c-green);
+}
+
+/* 水面下方的差異數字（V1.25）：不足＝藍色、超過 50%＝橘紅色 */
+.halfvol-diff {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    fill: var(--c-ink);
+    paint-order: stroke;
+    stroke: var(--c-card);
+    stroke-width: 6;
+    stroke-linejoin: round;
+}
+
+.halfvol-diff--over {
+    fill: var(--c-bad-light);
+}
+
+.halfvol-msg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 4px;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    opacity: 0;
+}
+
+.halfvol-msg--on {
+    opacity: 1;
+}
+
+.halfvol-msg__sub {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+.halfvol-ok {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+}

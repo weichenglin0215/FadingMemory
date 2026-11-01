@@ -1,0 +1,64 @@
+/* ═══════════════════════════════════════
+   reaction_twinsock.css — 雙胞胎襪子（js/reaction_twinsock.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「twinsock-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 雙胞胎襪子（.twinsock-）═══ */
+.twinsock-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 6px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+.twinsock-cell {
+    position: absolute;
+    border-radius: var(--r-md);
+    background: var(--c-card-alt);
+    border: 3px solid var(--c-ink-soft);
+    overflow: hidden;
+}
+
+/* 目標（左上角）：藍色底，跟其他格子一眼就分得出來；不轉動 */
+.twinsock-cell--target {
+    background: var(--c-blue-soft);
+    border-color: var(--c-blue);
+}
+
+.twinsock-cell--ok {
+    border-color: var(--c-green);
+    box-shadow: 0 0 0 5px var(--c-green);
+}
+
+.twinsock-cell--bad {
+    border-color: var(--c-bad-light);
+    box-shadow: 0 0 0 5px var(--c-bad-light);
+}
+
+.twinsock-sock {
+    width: 100%;
+    height: 100%;
+    padding: 8%;
+}
+
+.twinsock-sock svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* 轉動：旋轉一圈的時間由 js 依轉速算好，寫在 animation-duration（方向用 animation-direction） */
+.twinsock-sock--spin {
+    animation: twinsock-spin linear infinite;
+}
+
+@keyframes twinsock-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

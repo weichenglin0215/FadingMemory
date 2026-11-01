@@ -1,0 +1,56 @@
+/* ═══════════════════════════════════════
+   reaction_seenit.css — 這個看過嗎（js/reaction_seenit.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「seenit-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 077 這個看過嗎（.seenit-）═══ */
+.seenit-pic {
+    position: absolute;
+    left: 50%;
+    top: 90px;
+    width: 250px;
+    height: 250px;
+    margin-left: -125px;
+    border-radius: var(--r-lg);
+    background: var(--c-card);
+    border: var(--bd);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 150px;
+    line-height: 1;
+}
+
+.seenit-pic--ok {
+    border-color: var(--c-ok);
+    background: var(--c-green-soft);
+}
+
+.seenit-pic--bad {
+    border-color: var(--c-bad);
+    background: var(--c-bad-soft);
+}
+
+/* 圖案名稱（V1.28：emoji 下面加中文名稱） */
+.seenit-name {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 350px;
+    text-align: center;
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.seenit-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 420px;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}

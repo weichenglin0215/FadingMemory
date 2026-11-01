@@ -1,0 +1,49 @@
+/* ═══════════════════════════════════════
+   reaction_fastblink.css — 誰閃得快（js/reaction_fastblink.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「fastblink-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 誰閃得快（.fastblink-）═══ */
+.fastblink-dot {
+    position: absolute;
+    border-radius: 50%;
+    border: 5px solid var(--c-ink-soft);
+    opacity: 0.55;
+}
+
+.fastblink-dot--a {
+    background: var(--c-yellow);
+}
+
+.fastblink-dot--b {
+    background: var(--c-blue);
+}
+
+.fastblink-dot--on {
+    opacity: 1;
+    box-shadow: 0 0 36px 8px var(--c-yellow-soft);
+}
+
+.fastblink-dot--right {
+    border-color: var(--c-ok);
+    opacity: 1;
+}
+
+.fastblink-dot--wrong {
+    border-color: var(--c-bad);
+}
+
+.fastblink-hz {
+    position: absolute;
+    width: 200px;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.fastblink-tip {
+    bottom: 40px;
+}

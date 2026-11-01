@@ -1,0 +1,154 @@
+/* ═══════════════════════════════════════
+   reaction_nim.css — 取火柴（js/reaction_nim.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「nim-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。每根火柴的寬度由 js 依畫面寬度與最大那一堆的根數算好，寫在每根火柴的 style 上。
+   ═══════════════════════════════════════ */
+
+.nim-wrap {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding-top: 8px;
+    box-sizing: border-box;
+}
+
+.nim-banner {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-orange);
+}
+
+.nim-note {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 火柴桌：每一堆是一橫排 */
+.nim-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 96%;
+    padding: 10px 8px;
+    box-sizing: border-box;
+    border-radius: var(--r-md);
+    background: var(--c-card-alt);
+    border: 2px solid var(--bd-c);
+}
+
+.nim-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    min-height: 74px;
+}
+
+.nim-label {
+    flex: 0 0 34px;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+    text-align: center;
+    align-self: center;
+}
+
+/* 一根火柴：木棒＋紅色火柴頭 */
+.nim-match {
+    position: relative;
+    height: 74px;
+    box-sizing: border-box;
+    border-radius: 6px;
+    background: var(--c-orange-soft);
+    border: 2px solid var(--c-orange);
+    touch-action: manipulation;
+    transition: transform 0.15s, opacity 0.25s;
+}
+
+.nim-head {
+    position: absolute;
+    left: -2px;
+    right: -2px;
+    top: -2px;
+    height: 20px;
+    border-radius: 50% 50% 40% 40%;
+    background: var(--c-bad);
+    border: 2px solid var(--c-bad);
+    box-sizing: border-box;
+}
+
+/* 你選取的（會被拿走的） */
+.nim-match--sel {
+    transform: translateY(-10px);
+    background: var(--c-yellow);
+    border-color: var(--c-ink);
+}
+
+/* 電腦要拿的：閃一下 */
+.nim-match--cpu {
+    transform: translateY(-10px);
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad);
+}
+
+.nim-match--gone {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(14px);
+}
+
+.nim-turn {
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink);
+    text-align: center;
+    line-height: 1.4;
+}
+
+/* 失敗時的二進位說明 */
+.nim-reveal {
+    width: 90%;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    text-align: center;
+}
+
+.nim-reveal__title {
+    color: var(--c-ink);
+    font-weight: var(--fw-black);
+    margin-bottom: 4px;
+}
+
+.nim-reveal__row {
+    font-family: var(--font-ui);
+    letter-spacing: 1px;
+}
+
+.nim-reveal__row--xor {
+    color: var(--c-bad);
+    font-weight: var(--fw-black);
+    margin-top: 4px;
+}
+
+.nim-btns {
+    position: absolute;
+    left: 2%;
+    right: 2%;
+    bottom: 0;
+    display: flex;
+    gap: 10px;
+}
+
+.nim-btn {
+    flex: 1 1 0;
+    height: 72px;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    padding: 0;
+}

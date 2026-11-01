@@ -1,0 +1,83 @@
+/* ═══════════════════════════════════════
+   reaction_rightangle.css — 畫成直角（js/reaction_rightangle.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「rightangle-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 013 畫成直角（.rightangle-）═══ */
+.rightangle-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.rightangle-stripe {
+    stroke: var(--c-yellow);
+    stroke-width: 8;
+    opacity: 0.22;
+}
+
+.rightangle-q {
+    stroke: var(--c-ink);
+    stroke-width: 8;
+    stroke-linecap: round;
+}
+
+.rightangle-mine {
+    stroke: var(--c-orange);
+    stroke-width: 7;
+    stroke-linecap: round;
+}
+
+.rightangle-start {
+    fill: var(--c-green);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.rightangle-ideal {
+    stroke: var(--c-green);
+    stroke-width: 4;
+    stroke-dasharray: 12 9;
+}
+
+.rightangle-sq {
+    fill: none;
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.rightangle-endi {
+    fill: var(--c-green);
+}
+
+.rightangle-endu {
+    fill: var(--c-orange);
+    fill-opacity: 0.5;
+}
+
+/* 揭曉時橘色的線變 50% 透明，才看得到跟綠色標準線交疊的樣子 */
+.rightangle-mine--rev {
+    stroke-opacity: 0.5;
+}
+
+/* 兩個圓心的小黑點 */
+.rightangle-dot {
+    fill: var(--c-black);
+}
+
+.rightangle-msg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 4px;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    opacity: 0;
+}
+
+.rightangle-msg--on {
+    opacity: 1;
+}

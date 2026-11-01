@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_gomoku.js — 秒反應・堵住五子（企劃 233）
+   樣式：css/games/reaction_gomoku.css（這款專屬的 class 一律以「gomoku-」開頭；共用元件在 css/reaction_common.css）
    公園石桌上的五子棋盤面：白棋（電腦）已經布好陣勢、快要贏了。你只能下一顆黑棋，**點那唯一能化解的位置**。
    答對＝白棋怎麼下都贏不了；答錯＝白棋下在致勝點（可能連下好幾手），五顆連線亮紅。
    ───────────────────────────────────────────────────────────────────
@@ -21,7 +22,7 @@
      D1（白棋一手就能下出雙四／活四）、D2（先衝四、黑棋被逼著擋，再雙四）、D3（連衝兩次四才雙四），比例隨關卡從 D1 為主漸漸變成 D2、D3 為主；
      挑中之後隨機翻轉旋轉、平移到棋盤上，重新驗證，再放雜訊棋子與假威脅。
    · 揭曉：答錯時白棋依序下出致勝的幾手（黑棋被逼著擋的也畫出來），最後把連成的五顆用紅線穿過去，停格 2 秒以上；綠圈標出唯一的擋法。
-     V1.38.0（玩家意見：看不清楚）：播放速度放慢成原來的 50%——每一手的間隔 650 → 1300 毫秒、第一手之前 500 → 1000 毫秒、棋子落下的動畫 0.3 → 0.6 秒（css/reaction6.css 的 gmk-drop）。
+     V1.38.0（玩家意見：看不清楚）：播放速度放慢成原來的 50%——每一手的間隔 650 → 1300 毫秒、第一手之前 500 → 1000 毫秒、棋子落下的動畫 0.3 → 0.6 秒（css/games/reaction_gomoku.css 的 gomoku-drop）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -346,7 +347,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'gmk-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'gomoku-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -361,24 +362,24 @@
         console.log('[堵住五子] 第 ' + level + ' 關（' + (q.kind === 'four' ? '四顆一排' : q.kind === 'corner' ? '兩個三顆交叉' : '題庫 D' + q.tier) + '）：棋子 ' + q.stones + ' 顆（假威脅 ' + q.decoys + ' 組），答案 (' + Math.floor(q.x / n) + ',' + q.x % n + ')；限時 ' + timeMs(level) + ' ms');
 
         var W = stage.clientWidth || 472, cell = Math.floor(Math.min((W - 12) / n, 40)), BS = cell * n, bx = Math.round((W - BS) / 2), by = 64;
-        var tip = h('div', { 'class': 'qz-note gmk-tip', text: q.kind === 'bank' ? '白棋快贏了！點唯一能化解的位置' : '白棋下一步就贏！點唯一的擋法' });
+        var tip = h('div', { 'class': 'qz-note gomoku-tip', text: q.kind === 'bank' ? '白棋快贏了！點唯一能化解的位置' : '白棋下一步就贏！點唯一的擋法' });
         stage.appendChild(tip);
-        var board = h('div', { 'class': 'gmk-board' });
+        var board = h('div', { 'class': 'gomoku-board' });
         board.style.cssText = 'left:' + bx + 'px;top:' + by + 'px;width:' + BS + 'px;height:' + BS + 'px;';
         stage.appendChild(board);
-        var svg = kit.svg('svg', { 'class': 'gmk-svg', viewBox: '0 0 ' + BS + ' ' + BS, width: BS, height: BS }, board);
+        var svg = kit.svg('svg', { 'class': 'gomoku-svg', viewBox: '0 0 ' + BS + ' ' + BS, width: BS, height: BS }, board);
         function px(k) { return (k % n + 0.5) * cell; }
         function py(k) { return (Math.floor(k / n) + 0.5) * cell; }
         for (var i = 0; i < n; i++) {
-            kit.svg('line', { 'class': 'gmk-grid', x1: (i + 0.5) * cell, y1: cell / 2, x2: (i + 0.5) * cell, y2: BS - cell / 2 }, svg);
-            kit.svg('line', { 'class': 'gmk-grid', x1: cell / 2, y1: (i + 0.5) * cell, x2: BS - cell / 2, y2: (i + 0.5) * cell }, svg);
+            kit.svg('line', { 'class': 'gomoku-grid', x1: (i + 0.5) * cell, y1: cell / 2, x2: (i + 0.5) * cell, y2: BS - cell / 2 }, svg);
+            kit.svg('line', { 'class': 'gomoku-grid', x1: cell / 2, y1: (i + 0.5) * cell, x2: BS - cell / 2, y2: (i + 0.5) * cell }, svg);
         }
         var gStones = kit.svg('g', {}, svg), gMark = kit.svg('g', {}, svg);
         function stone(k, color, cls) {
-            return kit.svg('circle', { 'class': 'gmk-stone ' + (color === WHITE ? 'gmk-stone--w' : 'gmk-stone--b') + (cls ? ' ' + cls : ''), cx: px(k), cy: py(k), r: cell * 0.43 }, gStones);
+            return kit.svg('circle', { 'class': 'gomoku-stone ' + (color === WHITE ? 'gomoku-stone--w' : 'gomoku-stone--b') + (cls ? ' ' + cls : ''), cx: px(k), cy: py(k), r: cell * 0.43 }, gStones);
         }
         for (var k = 0; k < n * n; k++) if (b[k]) stone(k, b[k]);
-        var info = h('div', { 'class': 'qz-note gmk-info', text: '' });
+        var info = h('div', { 'class': 'qz-note gomoku-info', text: '' });
         info.style.top = (by + BS + 12) + 'px';
         stage.appendChild(info);
         var done = false;
@@ -396,8 +397,8 @@
             if (done || api.over) return;
             done = true;
             var ok = idx === q.x;
-            if (idx >= 0) { b[idx] = BLACK; stone(idx, BLACK, 'gmk-stone--new'); }
-            kit.svg('circle', { 'class': 'gmk-ring', cx: px(q.x), cy: py(q.x), r: cell * 0.55 }, gMark);
+            if (idx >= 0) { b[idx] = BLACK; stone(idx, BLACK, 'gomoku-stone--new'); }
+            kit.svg('circle', { 'class': 'gomoku-ring', cx: px(q.x), cy: py(q.x), r: cell * 0.55 }, gMark);
             if (ok) {
                 info.textContent = '擋住了！白棋的威脅化解了';
                 kit.flash(stage, true, api.my);
@@ -409,10 +410,10 @@
             info.textContent = idx >= 0 ? '擋不住！綠圈才是唯一的擋法' : '時間到！綠圈才是唯一的擋法';
             pv.forEach(function (m, j) {
                 api.after(REVEAL_LEAD_MS + j * REVEAL_STEP_MS, function () {
-                    b[m.cell] = m.c; stone(m.cell, m.c, 'gmk-stone--new');
+                    b[m.cell] = m.c; stone(m.cell, m.c, 'gomoku-stone--new');
                     if (j === pv.length - 1) {
                         var five = fiveThrough(b, n, m.cell, WHITE);
-                        if (five) kit.svg('line', { 'class': 'gmk-five', x1: px(five[0]), y1: py(five[0]), x2: px(five[five.length - 1]), y2: py(five[five.length - 1]), 'stroke-width': (cell * 0.22).toFixed(1) }, gMark);
+                        if (five) kit.svg('line', { 'class': 'gomoku-five', x1: px(five[0]), y1: py(five[0]), x2: px(five[five.length - 1]), y2: py(five[five.length - 1]), 'stroke-width': (cell * 0.22).toFixed(1) }, gMark);
                     }
                 });
             });

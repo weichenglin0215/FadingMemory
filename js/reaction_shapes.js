@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_shapes.js — 秒反應・形形色色
+   樣式：css/games/reaction_shapes.css（這款專屬的 class 一律以「shapes-」開頭；共用元件在 css/reaction_common.css）
    一個格子接一個格子排成一塊黑底棋盤，幾乎所有格子都長得一模一樣，只有
    一格不一樣（形狀不同、顏色不同，或兩者都不同）——找出那一格、點下去。
    答對就進下一關，格子會越來越多、越來越小；答錯就結束，比比看能撐到第幾關。
@@ -226,7 +227,7 @@
 
     /* mount：遊戲進場點 */
     function mount(root, ctx) {
-        /* 替整個畫面加上黑底 class（樣式在 css/reaction.css 的 .shapes-dark-bg） */
+        /* 替整個畫面加上黑底 class（樣式在 css/games/reaction_shapes.css 的 .shapes-dark-bg） */
         root.classList.add('shapes-dark-bg');
         /* level：目前關卡，放在 mount 裡讓下面的函式共用（閉包） */
         /* V1.34.0：從「個人最佳關卡 − 4」開始，沒玩過就是第 1 關（kit.entryLevel，見 reaction_kit.js） */
@@ -245,7 +246,7 @@
             var n = width * height;
             var oddIdx = Math.floor(Math.random() * n);
 
-            root.appendChild(h('div', { 'class': 'hint hint--on-dark', text: hintTextFor(type) + '（第 ' + level + ' 關）' }));
+            root.appendChild(h('div', { 'class': 'hint shapes--on-dark', text: hintTextFor(type) + '（第 ' + level + ' 關）' }));
 
             var wrap = h('div', { 'class': 'shapes-wrap' });
             var board = h('div', { 'class': 'shapes-board' });
@@ -270,7 +271,7 @@
             /* 文字型圖案的字級：0.8 ＝使用者要求「圖案再放大 1.33 倍」套用在原本
                0.6 的字級係數上（0.6 × 1.33 ≈ 0.8），讓文字盡量佈滿整個格子，
                不要留下太多空白；向量圖形那邊同一個 1.33 倍反映在
-               .shapes-glyph-svg 的寬高百分比（css/reaction.css，70% → 93%）。 */
+               .shapes-glyph-svg 的寬高百分比（css/games/reaction_shapes.css，70% → 93%）。 */
             /* 產生多數格與少數格的圖案 */
             var render = buildRender(type, Math.round(cell * 0.8), level);
             /* 主控台印出這一關實際的格數、考驗類型、抽到的圖案與複雜度、彩度與色相差，方便驗證難度 */

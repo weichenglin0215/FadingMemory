@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_groupphoto.js — 秒反應・大合照（企劃 360）
+   樣式：css/games/reaction_groupphoto.css（這款專屬的 class 一律以「groupphoto-」開頭；共用元件在 css/reaction_common.css）
    一群人排排站拍大合照，大家會各自隨機眨眼。**等到「所有人都睜著眼睛」的那一瞬間，按下快門**。
    按下去之後照片洗出來：有人閉眼＝失敗（閉眼的人會被紅圈圈起來）；全員睜眼＝照片掛上牆。限時 10 秒，沒按也算失敗。
    ───────────────────────────────────────────────────────────────────
@@ -107,7 +108,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'gph-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'groupphoto-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -117,21 +118,21 @@
 
     /* 一個人（SVG，viewBox 100×120）：肩膀、頭、頭髮、眼睛（睜眼／閉眼兩套，用 class 切換）、嘴；低頭看手機的人手上有手機 */
     function faceSvg(p, phone) {
-        var svg = kit.svg('svg', { 'class': 'gph-face', viewBox: '0 0 100 120' });
-        kit.svg('path', { 'class': 'gph-shirt gph-' + p.shirt, d: 'M6,120 Q8,86 50,82 Q92,86 94,120 Z' }, svg);
-        kit.svg('rect', { 'class': 'gph-neck gph-' + p.skin, x: 41, y: 70, width: 18, height: 16, rx: 6 }, svg);
-        kit.svg('circle', { 'class': 'gph-head gph-' + p.skin, cx: 50, cy: 46, r: 30 }, svg);
-        kit.svg('path', { 'class': 'gph-hair gph-' + p.hair, d: 'M18,48 Q16,12 50,12 Q84,12 82,48 Q74,30 50,28 Q26,30 18,48 Z' }, svg);
+        var svg = kit.svg('svg', { 'class': 'groupphoto-face', viewBox: '0 0 100 120' });
+        kit.svg('path', { 'class': 'groupphoto-shirt groupphoto-' + p.shirt, d: 'M6,120 Q8,86 50,82 Q92,86 94,120 Z' }, svg);
+        kit.svg('rect', { 'class': 'groupphoto-neck groupphoto-' + p.skin, x: 41, y: 70, width: 18, height: 16, rx: 6 }, svg);
+        kit.svg('circle', { 'class': 'groupphoto-head groupphoto-' + p.skin, cx: 50, cy: 46, r: 30 }, svg);
+        kit.svg('path', { 'class': 'groupphoto-hair groupphoto-' + p.hair, d: 'M18,48 Q16,12 50,12 Q84,12 82,48 Q74,30 50,28 Q26,30 18,48 Z' }, svg);
         [34, 66].forEach(function (ex) {
-            var g = kit.svg('g', { 'class': 'gph-eye' }, svg);
-            kit.svg('ellipse', { 'class': 'gph-eye-open gph-eye-w', cx: ex, cy: 48, rx: 8, ry: 9 }, g);
-            kit.svg('circle', { 'class': 'gph-eye-open gph-pupil', cx: ex, cy: 49, r: 4 }, g);
-            kit.svg('path', { 'class': 'gph-lid', d: 'M' + (ex - 9) + ',48 Q' + ex + ',58 ' + (ex + 9) + ',48' }, g);
+            var g = kit.svg('g', { 'class': 'groupphoto-eye' }, svg);
+            kit.svg('ellipse', { 'class': 'groupphoto-eye-open groupphoto-eye-w', cx: ex, cy: 48, rx: 8, ry: 9 }, g);
+            kit.svg('circle', { 'class': 'groupphoto-eye-open groupphoto-pupil', cx: ex, cy: 49, r: 4 }, g);
+            kit.svg('path', { 'class': 'groupphoto-lid', d: 'M' + (ex - 9) + ',48 Q' + ex + ',58 ' + (ex + 9) + ',48' }, g);
         });
-        kit.svg('path', { 'class': 'gph-mouth', d: 'M38,62 Q50,72 62,62' }, svg);
+        kit.svg('path', { 'class': 'groupphoto-mouth', d: 'M38,62 Q50,72 62,62' }, svg);
         if (phone) {
-            kit.svg('rect', { 'class': 'gph-phone', x: 36, y: 90, width: 28, height: 28, rx: 5 }, svg);
-            kit.svg('rect', { 'class': 'gph-phone-screen', x: 40, y: 94, width: 20, height: 20, rx: 3 }, svg);
+            kit.svg('rect', { 'class': 'groupphoto-phone', x: 36, y: 90, width: 28, height: 28, rx: 5 }, svg);
+            kit.svg('rect', { 'class': 'groupphoto-phone-screen', x: 40, y: 94, width: 20, height: 20, rx: 3 }, svg);
         }
         return svg;
     }
@@ -144,30 +145,30 @@
         console.log('[大合照] 第 ' + level + ' 關：' + q.n + ' 人（低頭看手機 ' + q.phone.length + '）；保證的全員睜眼窗口 ' + q.winAt.toFixed(2) + '～' + (q.winAt + q.win).toFixed(2) + ' 秒（至少 ' + q.win + ' 秒）；全部窗口 ' + wins.filter(function (w) { return w.end - w.start >= 0.2; }).map(function (w) { return w.start.toFixed(1) + '-' + w.end.toFixed(1); }).join('、'));
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        var field = h('div', { 'class': 'gph-field' });
+        var field = h('div', { 'class': 'groupphoto-field' });
         stage.appendChild(field);
-        var tip = h('div', { 'class': 'qz-note gph-tip', text: level === 1 ? '等大家都睜眼的瞬間，按快門！' : '全員睜眼的瞬間按快門' });
+        var tip = h('div', { 'class': 'qz-note groupphoto-tip', text: level === 1 ? '等大家都睜眼的瞬間，按快門！' : '全員睜眼的瞬間按快門' });
         field.appendChild(tip);
         /* 相片區（取景框）：左右各留 12px；高度在「上方提示」和「下方快門鈕」之間 */
-        var pw = W - 24, ph = Math.min(400, H - 56 - 150), photo = h('div', { 'class': 'gph-photo' });
+        var pw = W - 24, ph = Math.min(400, H - 56 - 150), photo = h('div', { 'class': 'groupphoto-photo' });
         photo.style.cssText = 'left:12px;top:52px;width:' + pw + 'px;height:' + ph + 'px;';
         field.appendChild(photo);
         var L = layout(q.n, pw, ph), faces = q.people.map(function (p, i) {
-            var f = L.faces[i], isPhone = q.phone.indexOf(i) >= 0, el = h('div', { 'class': 'gph-person' + (isPhone ? ' gph-person--phone' : '') });
+            var f = L.faces[i], isPhone = q.phone.indexOf(i) >= 0, el = h('div', { 'class': 'groupphoto-person' + (isPhone ? ' groupphoto-person--phone' : '') });
             el.style.cssText = 'left:' + f.x + 'px;top:' + f.y + 'px;width:' + f.w + 'px;height:' + f.h + 'px;';
             var svg = faceSvg(p, isPhone); svg.setAttribute('width', f.w); svg.setAttribute('height', f.h); el.appendChild(svg); photo.appendChild(el);
             return el;
         });
-        ['tl', 'tr', 'bl', 'br'].forEach(function (c) { photo.appendChild(h('div', { 'class': 'gph-corner gph-corner--' + c })); });
-        var flashEl = h('div', { 'class': 'gph-flash' }); photo.appendChild(flashEl);
-        var info = h('div', { 'class': 'qz-note gph-info', text: '' }); info.style.top = (52 + ph + 6) + 'px'; field.appendChild(info);
-        var btn = kit.btnGrid(field, [{ text: '按快門', kind: 'primary', cls: 'gph-shutter', onTap: function () { press(); } }], { cols: 1, h: 96, bottom: 12 });
+        ['tl', 'tr', 'bl', 'br'].forEach(function (c) { photo.appendChild(h('div', { 'class': 'groupphoto-corner groupphoto-corner--' + c })); });
+        var flashEl = h('div', { 'class': 'groupphoto-flash' }); photo.appendChild(flashEl);
+        var info = h('div', { 'class': 'qz-note groupphoto-info', text: '' }); info.style.top = (52 + ph + 6) + 'px'; field.appendChild(info);
+        var btn = kit.btnGrid(field, [{ text: '按快門', kind: 'primary', cls: 'groupphoto-shutter', onTap: function () { press(); } }], { cols: 1, h: 96, bottom: 12 });
         if (level === 1 && kit.once('groupphoto.hint')) kit.hintOn(stage, btn.btns[0], { mode: 'tap', delay: 1400, text: '全員睜眼時按' });
 
         var phase = 'run', shown = {}, t0 = performance.now(), tNow = 0;
         function paint(t) {
             var closed = closedAt(q, t), set = {}; closed.forEach(function (i) { set[i] = 1; });
-            faces.forEach(function (el, i) { var on = !!set[i]; if (on !== !!shown[i]) { el.classList.toggle('gph-person--closed', on); shown[i] = on; } });
+            faces.forEach(function (el, i) { var on = !!set[i]; if (on !== !!shown[i]) { el.classList.toggle('groupphoto-person--closed', on); shown[i] = on; } });
             return closed;
         }
         paint(0);
@@ -182,10 +183,10 @@
             if (phase !== 'run' || api.over) return;
             phase = 'shot'; api.stopTimer();
             var t = (performance.now() - t0) / 1000, closed = paint(t);
-            flashEl.classList.add('gph-flash--go'); Sfx.play('click');
+            flashEl.classList.add('groupphoto-flash--go'); Sfx.play('click');
             if (!closed.length) {
                 tip.textContent = '洗出來了…';
-                api.after(500, function () { photo.classList.add('gph-photo--wall'); info.textContent = '全員睜眼！這張照片掛上牆壁'; info.classList.add('gph-info--ok'); });
+                api.after(500, function () { photo.classList.add('groupphoto-photo--wall'); info.textContent = '全員睜眼！這張照片掛上牆壁'; info.classList.add('groupphoto-info--ok'); });
                 kit.flash(stage, true, api.my);
                 api.pass({ delay: 2300 });
                 return;
@@ -194,18 +195,18 @@
             api.after(500, function () {
                 /* 紅圈：圈住閉眼的人的頭（頭的圓心在臉的 (50, 46)／(100, 120) 處，半徑 30） */
                 closed.forEach(function (i) {
-                    var f = L.faces[i], d = Math.round(f.w * 0.78), ring = h('div', { 'class': 'gph-ring' });
+                    var f = L.faces[i], d = Math.round(f.w * 0.78), ring = h('div', { 'class': 'groupphoto-ring' });
                     ring.style.cssText = 'left:' + Math.round(f.x + f.w / 2 - d / 2) + 'px;top:' + Math.round(f.y + f.h * 46 / 120 - d / 2) + 'px;width:' + d + 'px;height:' + d + 'px;';
                     photo.appendChild(ring);
                 });
-                info.textContent = '有 ' + closed.length + ' 個人閉眼了（紅圈）'; info.classList.add('gph-info--bad');
+                info.textContent = '有 ' + closed.length + ' 個人閉眼了（紅圈）'; info.classList.add('groupphoto-info--bad');
             });
             kit.flash(stage, false, api.my);
             api.fail({ delay: 3800, lines: ['按下快門的時候，有 ' + closed.length + ' 個人閉著眼睛', '（低頭看手機的不算閉眼）'] });
         }
         function timeout() {
             if (phase !== 'run' || api.over) return;
-            phase = 'shot'; info.textContent = '時間到！沒有按快門'; info.classList.add('gph-info--bad');
+            phase = 'shot'; info.textContent = '時間到！沒有按快門'; info.classList.add('groupphoto-info--bad');
             kit.flash(stage, false, api.my);
             api.fail({ delay: 3000, lines: ['時間到！沒有按快門', '全員睜眼的瞬間要把握住'] });
         }

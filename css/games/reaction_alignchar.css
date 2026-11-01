@@ -1,0 +1,38 @@
+/* ═══════════════════════════════════════
+   reaction_alignchar.css — 對準才看到（js/reaction_alignchar.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「alignchar-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 對準才看到（.alignchar-）═══ */
+.alignchar-canvas {
+    position: absolute;
+    border-radius: var(--r-md);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    box-sizing: content-box;
+    margin-left: -3px;
+}
+
+.alignchar-tip {
+    top: 520px;
+}
+
+/* 答案按鈕的字形（V1.29 玩家意見）：改成明體／宋體（--font-note：Noto Serif TC → 宋體 → 新細明體），跟題目的字形（黑體）不一樣，
+   故意增加難度。題目那個被切成直條的字，字形維持不變（黑體）。 */
+.alignchar-opt {
+    font-family: var(--font-note);
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    color: var(--c-ink);
+}
+
+.alignchar-opt--right {
+    background: var(--c-ok-soft);
+    border-color: var(--c-ok);
+}
+
+.alignchar-opt--wrong {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad);
+}

@@ -48,9 +48,9 @@ ok(nearBad / Math.max(1, nearPairs) < 0.1, '同一批的橫向位置拉開');
 ok(inRange / total > 0.9, '字群的筆劃落在這一關的範圍內');
 { let a = 0, b = 0, n = 300; for (let i = 0; i < n; i++) { a += S.strokes(T.makeLevel(1, rnd).target); b += S.strokes(T.makeLevel(24, rnd).target); } ok(b / n > a / n + 5, '越後面目標字筆劃越多：' + (a / n).toFixed(1) + ' → ' + (b / n).toFixed(1)); }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_slicechar.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_slicechar.js'), css = rd('../../css/games/reaction_slicechar.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
   ok(/api\.fail\(\{ delay: 3600/.test(src) && /drawDiff/.test(src) && /compare\(/.test(src), '失敗：目標字與切錯的字並排、差異標紅、停格 2 秒以上');
-  ok(/\.scc-dump \{[^}]*var\(--scc-dump\)/.test(css) && /\.scc-cmp__box--bad \{[^}]*var\(--c-bad/.test(css), '湯圓顏色、紅色用 CSS 變數');
+  ok(/\.slicechar-dump \{[^}]*var\(--scc-dump\)/.test(css) && /\.slicechar-cmp__box--bad \{[^}]*var\(--c-bad/.test(css), '湯圓顏色、紅色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_slicechar.js'") > 0 && /形近字/.test(G.rule), 'boot.js 有載入、玩法說明提到形近字'); }
 ok(T.rating(2) !== T.rating(4) && T.rating(4) !== T.rating(7) && T.rating(7) !== T.rating(12) && T.rating(12) !== T.rating(20), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

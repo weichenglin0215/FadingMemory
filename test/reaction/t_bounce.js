@@ -140,7 +140,7 @@ ok(near(p0.x, 224) && near(p0.y, T.BALL_R + 4) && pEnd.y >= T.DIV_Y - 1e-6 && pM
 // ═══ 頁面接線（原始碼檢查）：開局版面一開始就擺好、掉完才能選、揭曉分兩段 ═══
 {
   const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_bounce.js'), 'utf8');
-  const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction2.css'), 'utf8');
+  const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_bounce.css'), 'utf8');
   // round() 建好版面後、還沒排 startLevel 之前，就已經設了標題、擺好簾子與收集口、先 setArmed(false)
   const iLayout = src.indexOf('layoutCurtain(hiddenH(level + 1));'), iStart = src.indexOf('my.after(400, startLevel)');
   ok(iLayout > 0 && iStart > iLayout, '開局版面在 400 毫秒的 startLevel 之前就擺好了');
@@ -148,10 +148,10 @@ ok(near(p0.x, 224) && near(p0.y, T.BALL_R + 4) && pEnd.y >= T.DIV_Y - 1e-6 && pM
   ok(/y: curtainY\(level \+ 1\), width: BW, height: hiddenH\(level \+ 1\)/.test(src), '簾子一開始就是這一關的高度');
   ok(/function choose\(s\) \{\s*if \(state !== 'fall' \|\| !armed\) return;/.test(src), '還沒 armed（珠子沒掉完）時點了沒反應');
   ok(/if \(t >= cur\.sim\.tLand\) \{ setArmed\(true\); return false; \}/.test(src), '珠子掉到底（tLand）才 setArmed(true)');
-  ok(/classList\.toggle\('bo-slot--wait', !on\)/.test(src) && /\.bo-slot--wait \{[^}]*opacity: 0\.35;[^}]*pointer-events: none;/.test(css), '還沒掉完：收集口按鈕半透明、點不到');
+  ok(/classList\.toggle\('bounce-slot--wait', !on\)/.test(src) && /\.bounce-slot--wait \{[^}]*opacity: 0\.35;[^}]*pointer-events: none;/.test(css), '還沒掉完：收集口按鈕半透明、點不到');
   ok(/trailPoints\(sim, tS\)/.test(src) && /tS = sim\.tSee/.test(src), '揭曉第一段：只畫到 tSee（珠子最後完整露出）為止的軌跡');
   ok(/my\.after\(REVEAL_SEEN_MS/.test(src) && /my\.tween\(revealMs\(sim\)/.test(src) && /trailPoints\(sim, ts, tS\)/.test(src) && /\.then\(function \(\) \{ if \(id === rid\) conclude\(s\); \}\)/.test(src), '揭曉第二段：停一下之後，從 tSee 起用慢動作播到落點，播完才 conclude');
-  ok(/bo-seen bo-seen--on/.test(src) && /最後看到/.test(src) && /bo-seen--keep/.test(src) && /\.bo-seen--on \{[^}]*animation: bo-seen-blink/.test(css) && /\.bo-trail--hid \{/.test(css), '標出「最後看到」的位置：閃爍虛線圈＋標籤，第二段起圈留著，隱藏段軌跡換色');
+  ok(/bounce-seen bounce-seen--on/.test(src) && /最後看到/.test(src) && /bounce-seen--keep/.test(src) && /\.bounce-seen--on \{[^}]*animation: bounce-seen-blink/.test(css) && /\.bounce-trail--hid \{/.test(css), '標出「最後看到」的位置：閃爍虛線圈＋標籤，第二段起圈留著，隱藏段軌跡換色');
   ok(!/function reveal\(s\)[\s\S]{0,1800}Sfx\.play\(right/.test(src), '揭曉一開始不會立刻報猜中／猜錯（要等動畫播完）');
 }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

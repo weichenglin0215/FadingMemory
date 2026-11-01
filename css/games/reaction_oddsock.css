@@ -1,0 +1,59 @@
+/* ═══════════════════════════════════════
+   reaction_oddsock.css — 落單的襪子（js/reaction_oddsock.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「oddsock-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 054 落單的襪子（.oddsock-）═══ */
+.oddsock-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 6px;
+    text-align: center;
+    line-height: var(--lh-body);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+.oddsock-cell {
+    position: absolute;
+    width: 140px;
+    height: 140px;
+    border-radius: var(--r-md);
+    background: var(--c-card);
+    border: var(--bd);
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+/* 襪子每隻轉成不同角度（0～360 度）：圖要夠小，轉到斜角也不會超出格子被切掉（對角線 ≤ 格子 140px） */
+.oddsock-cell svg {
+    width: 80px;
+    height: 104px;
+}
+
+.oddsock-cell:active {
+    transform: scale(0.97);
+}
+
+.oddsock-cell--odd {
+    border-color: var(--c-green);
+    border-width: 5px;
+    background: var(--c-green-soft);
+}
+
+.oddsock-cell--mate {
+    border-color: var(--c-blue);
+    border-style: dashed;
+}
+
+.oddsock-cell--bad {
+    border-color: var(--c-bad);
+    background: var(--c-bad-soft);
+}

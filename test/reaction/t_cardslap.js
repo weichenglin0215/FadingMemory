@@ -45,9 +45,9 @@ for (let k = 1; k <= 200; k++) { const c = T.countFor(k, 1), d = T.countFor(k, -
   for (let i = 0; i < 400; i++) { if (hits === T.REVERSE_AT && st.dir > 0) st = { k: 1, dir: -1, gap: st.gap, prev: st.prev }; const c = T.nextCard(st, hits, rnd); seq.push({ count: c.count, dir: st.dir }); st = { k: st.k + 1, dir: st.dir, gap: c.isMatch ? 0 : st.gap + 1, prev: c.rank }; if (c.isMatch) hits++; }
   const sw = seq.findIndex(x => x.dir < 0); ok(sw > 0 && seq[sw].count === 13 && seq[sw + 1].count === 12 && seq.slice(0, sw).every((x, i) => x.count === (i % 13) + 1), '換成倒著數：從 K 開始（第 ' + sw + ' 張換）'); }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_cardslap.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 3200/.test(src) && /csl-card--bad/.test(src) && /csl-card--miss/.test(src) && /scoreOf/.test(src), '失敗：牌與你該數到的並排、停格 2 秒以上；成績用 scoreOf');
-  ok(/\.csl-card--ok \{[^}]*var\(--c-ok/.test(css) && /\.csl-card--bad \{[^}]*var\(--c-bad/.test(css) && /\.csl-table \{[^}]*var\(--csl-felt\)/.test(css), '綠色、紅色、牌桌用 CSS 變數');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_cardslap.js'), css = rd('../../css/games/reaction_cardslap.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 3200/.test(src) && /cardslap-card--bad/.test(src) && /cardslap-card--miss/.test(src) && /scoreOf/.test(src), '失敗：牌與你該數到的並排、停格 2 秒以上；成績用 scoreOf');
+  ok(/\.cardslap-card--ok \{[^}]*var\(--c-ok/.test(css) && /\.cardslap-card--bad \{[^}]*var\(--c-bad/.test(css) && /\.cardslap-table \{[^}]*var\(--csl-felt\)/.test(css), '綠色、紅色、牌桌用 CSS 變數');
   ok(boot.indexOf("'js/reaction_cardslap.js'") > 0 && /心裡/.test(G.rule), 'boot.js 有載入、玩法說明提到心裡數');
   ok(/max: 300/.test(src), '成績上限 300'); }
 ok(T.rating(3) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20) !== T.rating(40) && T.rating(40) !== T.rating(60), '評語分級');

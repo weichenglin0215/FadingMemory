@@ -1,0 +1,112 @@
+/* ═══════════════════════════════════════
+   reaction_setclock.css — 撥時鐘（js/reaction_setclock.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「setclock-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 撥時鐘：把時鐘的指針撥到題目要求的時間。 */
+/* ═══ 撥時鐘（.sc-）═══ */
+.setclock-head {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 上方的數位時間（例如 2:19），tabular-nums = 等寬數字 */
+.setclock-digital {
+    text-align: center;
+    font-size: 112px;
+    font-weight: var(--fw-black);
+    line-height: 1.05;
+    color: var(--c-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+/* 放時鐘 SVG 的區域 */
+.setclock-dial {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--r-lg);
+}
+
+/* 時鐘本體（SVG）；touch-action:none 才能用手指拖指針而不會捲動頁面 */
+.setclock-svg {
+    height: 100%;
+    width: auto;
+    max-width: 100%;
+    touch-action: none;
+}
+
+/* 錶面（SVG 的上色用 fill=填滿色、stroke=外框線色） */
+.setclock-face {
+    fill: var(--c-card);
+    stroke: var(--c-ink);
+    stroke-width: 6;
+}
+
+/* 撥對時：錶面外框變綠 */
+.setclock-dial--ok .setclock-face {
+    stroke: var(--c-ok);
+    fill: var(--c-ok-soft);
+}
+
+/* 撥錯時：錶面外框變橘 */
+.setclock-dial--bad .setclock-face {
+    stroke: var(--c-bad);
+    fill: var(--c-bad-soft);
+}
+
+/* 一般刻度線 */
+.setclock-tick {
+    stroke: var(--c-ink-soft);
+    stroke-width: 2;
+}
+
+/* 整點的粗刻度（12、3、6、9 …） */
+.setclock-tick--big {
+    stroke: var(--c-ink);
+    stroke-width: 5;
+}
+
+/* 錶面上的數字 1～12 */
+.setclock-num {
+    font-family: var(--font-ui);
+    font-size: 32px;
+    font-weight: 900;
+    fill: var(--c-ink);
+}
+
+/* 時針（粗、圓頭） */
+.setclock-hand-hour {
+    stroke: var(--c-ink);
+    stroke-width: 15;
+    stroke-linecap: round;
+}
+
+/* 分針（藍色、細一點） */
+.setclock-hand-min {
+    stroke: var(--c-blue);
+    stroke-width: 9;
+    stroke-linecap: round;
+}
+
+/* 揭曉時畫出「正確答案」的虛線 (stroke-dasharray = 線段 10 空 8 交錯) */
+.setclock-ghost-line {
+    stroke: var(--c-ok);
+    stroke-dasharray: 10 8;
+    stroke-width: 8;
+}
+
+/* 指針中心的小圓點 */
+.setclock-cap {
+    fill: var(--c-orange);
+}
+
+/* 「好了」按鈕 */
+.setclock-done {
+    flex: none;
+}

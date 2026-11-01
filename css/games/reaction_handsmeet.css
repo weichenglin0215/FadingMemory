@@ -1,0 +1,54 @@
+/* ═══════════════════════════════════════
+   reaction_handsmeet.css — 兩針重疊（js/reaction_handsmeet.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「handsmeet-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 086 兩針重疊（.handsmeet-）═══ */
+.handsmeet-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.handsmeet-dial {
+    fill: var(--c-card);
+    stroke: var(--c-ink);
+    stroke-width: 5;
+}
+
+.handsmeet-hand1 {
+    stroke: var(--c-blue);
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.handsmeet-hand2 {
+    stroke: var(--c-orange);
+    stroke-width: 12;
+    stroke-linecap: round;
+}
+
+.handsmeet-pin {
+    fill: var(--c-ink);
+}
+
+.handsmeet-msg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 500px;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    line-height: var(--lh-body);
+}
+
+.handsmeet-btn {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+}

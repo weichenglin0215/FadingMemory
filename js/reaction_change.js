@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_change.js — 秒反應・找錢（企劃 400）
+   樣式：css/games/reaction_change.css（這款專屬的 class 一律以「change-」開頭；共用元件在 css/reaction_common.css）
    雜貨店的收銀台。客人買了 386 元，給你 1000 元。**用下面的數字鍵輸入要找多少錢**（614）。答錯就結束。
    ───────────────────────────────────────────────────────────────────
    · 一題（makeQuestion）：客人買了 price 元，給你 paid 元，**要找的錢 ＝ paid − price**。
@@ -84,7 +85,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 10, stageClass: 'chg-stage', resume: false,
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 10, stageClass: 'change-stage', resume: false,
             head: function () { return '找錢'; },
             info: function (S) { return '答對 ' + S.score + ' 題'; },
             scoreOf: function (S) { return S.score; },
@@ -103,27 +104,27 @@
         S.score = 0; api.setInfo('答對 0 題');
         console.log('[找錢] 開始：價錢上限 ' + maxPriceFor(0) + ' → ' + maxPriceFor(RAMP_Q) + '；每題限時 ' + timeMs(0) + ' → ' + timeMs(RAMP_Q) + ' 毫秒');
 
-        var field = h('div', { 'class': 'chg-field' });
+        var field = h('div', { 'class': 'change-field' });
         stage.appendChild(field);
-        var bill = h('div', { 'class': 'chg-bill' }); field.appendChild(bill);
-        var lcd = h('div', { 'class': 'chg-lcd' }), lcdLab = h('div', { 'class': 'chg-lcd__lab', text: '要找' }), lcdNum = h('div', { 'class': 'chg-lcd__num', text: '' }); lcd.appendChild(lcdLab); lcd.appendChild(lcdNum); field.appendChild(lcd);
-        var info = h('div', { 'class': 'qz-note chg-info', text: '' }); field.appendChild(info);
-        var drawer = h('div', { 'class': 'chg-drawer', text: '叮！' }); field.appendChild(drawer);
+        var bill = h('div', { 'class': 'change-bill' }); field.appendChild(bill);
+        var lcd = h('div', { 'class': 'change-lcd' }), lcdLab = h('div', { 'class': 'change-lcd__lab', text: '要找' }), lcdNum = h('div', { 'class': 'change-lcd__num', text: '' }); lcd.appendChild(lcdLab); lcd.appendChild(lcdNum); field.appendChild(lcd);
+        var info = h('div', { 'class': 'qz-note change-info', text: '' }); field.appendChild(info);
+        var drawer = h('div', { 'class': 'change-drawer', text: '叮！' }); field.appendChild(drawer);
         var keys = [], items = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '⌫', '0', '✓'].map(function (k) {
-            return { text: k, kind: k === '✓' ? 'go' : (k === '⌫' ? 'sky' : 'line'), cls: 'chg-key', onTap: function () { press(k); } };
+            return { text: k, kind: k === '✓' ? 'go' : (k === '⌫' ? 'sky' : 'line'), cls: 'change-key', onTap: function () { press(k); } };
         });
         var pad = kit.btnGrid(field, items, { cols: 3, h: 84, gap: 8, bottom: 8 });
-        function paintLcd() { lcdNum.textContent = typed === '' ? '0' : typed; lcdNum.classList.toggle('chg-lcd__num--empty', typed === ''); }
+        function paintLcd() { lcdNum.textContent = typed === '' ? '0' : typed; lcdNum.classList.toggle('change-lcd__num--empty', typed === ''); }
         paintLcd();
 
         /* 出一題 */
         function ask() {
             if (api.over) return;
-            q = makeQuestion(count, api.rand); typed = ''; paintLcd(); phase = 'ask'; drawer.classList.remove('chg-drawer--open');
+            q = makeQuestion(count, api.rand); typed = ''; paintLcd(); phase = 'ask'; drawer.classList.remove('change-drawer--open');
             bill.innerHTML = '';
-            bill.appendChild(h('div', { 'class': 'chg-bill__l', text: '客人買了 ' }));
-            bill.lastChild.appendChild(h('span', { 'class': 'chg-bill__n', text: String(q.price) })); bill.lastChild.appendChild(document.createTextNode(' 元'));
-            var l2 = h('div', { 'class': 'chg-bill__l', text: '給你 ' }); l2.appendChild(h('span', { 'class': 'chg-bill__n chg-bill__n--paid', text: String(q.paid) })); l2.appendChild(document.createTextNode(' 元')); bill.appendChild(l2);
+            bill.appendChild(h('div', { 'class': 'change-bill__l', text: '客人買了 ' }));
+            bill.lastChild.appendChild(h('span', { 'class': 'change-bill__n', text: String(q.price) })); bill.lastChild.appendChild(document.createTextNode(' 元'));
+            var l2 = h('div', { 'class': 'change-bill__l', text: '給你 ' }); l2.appendChild(h('span', { 'class': 'change-bill__n change-bill__n--paid', text: String(q.paid) })); l2.appendChild(document.createTextNode(' 元')); bill.appendChild(l2);
             info.textContent = ''; api.stopTimer(); api.timer(timeMs(count), function () { fail(); });
             if (count === 0 && kit.once('change.hint')) kit.hintOn(stage, pad.btns[items.map(function (it) { return it.text; }).indexOf(String(q.change).charAt(0))], { mode: 'tap', delay: 800, text: '輸入要找的錢' });
         }
@@ -142,8 +143,8 @@
             phase = 'judge'; api.stopTimer();
             if (+typed === q.change && typed.charAt(0) !== '0') {
                 count++; S.score = count; api.setInfo('答對 ' + count + ' 題'); Sfx.play('ok');
-                lcd.classList.add('chg-lcd--ok'); drawer.classList.add('chg-drawer--open');
-                api.after(420, function () { lcd.classList.remove('chg-lcd--ok'); ask(); });
+                lcd.classList.add('change-lcd--ok'); drawer.classList.add('change-drawer--open');
+                api.after(420, function () { lcd.classList.remove('change-lcd--ok'); ask(); });
                 return;
             }
             fail(typed);
@@ -153,12 +154,12 @@
             if (api.over || phase === 'end') return;
             phase = 'end'; api.stopTimer();
             var why = whyText(q, t), v = vertical(q.paid, q.price);
-            lcd.classList.add('chg-lcd--bad'); info.textContent = t ? '找錯了！' : '時間到！'; info.classList.add('chg-info--bad');          /* 完整的算式寫在下面的直式減法裡 */
-            var box = h('div', { 'class': 'chg-vert' });
-            function row(chars, cls, sign) { var r = h('div', { 'class': 'chg-vert__r ' + cls }); r.appendChild(h('span', { 'class': 'chg-vert__s', text: sign || '' })); chars.forEach(function (c, i) { r.appendChild(h('span', { 'class': 'chg-vert__c' + (v.borrow[i] && cls !== 'chg-vert__r--res' ? ' chg-vert__c--borrow' : ''), text: c === ' ' ? ' ' : c })); }); return r; }
-            box.appendChild(row(v.top, 'chg-vert__r--top')); box.appendChild(row(v.bot, 'chg-vert__r--bot', MINUS)); box.appendChild(h('div', { 'class': 'chg-vert__line' })); box.appendChild(row(v.res, 'chg-vert__r--res'));
-            box.appendChild(h('div', { 'class': 'chg-vert__t', text: v.borrow.some(Boolean) ? '紅色的欄位要向左邊借位' : '這題不用借位' }));
-            if (t) box.appendChild(h('div', { 'class': 'chg-vert__t chg-vert__t--you', text: '你輸入：' + t + '　正確：' + q.change }));
+            lcd.classList.add('change-lcd--bad'); info.textContent = t ? '找錯了！' : '時間到！'; info.classList.add('change-info--bad');          /* 完整的算式寫在下面的直式減法裡 */
+            var box = h('div', { 'class': 'change-vert' });
+            function row(chars, cls, sign) { var r = h('div', { 'class': 'change-vert__r ' + cls }); r.appendChild(h('span', { 'class': 'change-vert__s', text: sign || '' })); chars.forEach(function (c, i) { r.appendChild(h('span', { 'class': 'change-vert__c' + (v.borrow[i] && cls !== 'change-vert__r--res' ? ' change-vert__c--borrow' : ''), text: c === ' ' ? ' ' : c })); }); return r; }
+            box.appendChild(row(v.top, 'change-vert__r--top')); box.appendChild(row(v.bot, 'change-vert__r--bot', MINUS)); box.appendChild(h('div', { 'class': 'change-vert__line' })); box.appendChild(row(v.res, 'change-vert__r--res'));
+            box.appendChild(h('div', { 'class': 'change-vert__t', text: v.borrow.some(Boolean) ? '紅色的欄位要向左邊借位' : '這題不用借位' }));
+            if (t) box.appendChild(h('div', { 'class': 'change-vert__t change-vert__t--you', text: '你輸入：' + t + '　正確：' + q.change }));
             field.appendChild(box); pad.el.style.display = 'none';                 /* 鍵盤收起來，騰出位置給直式減法 */
             kit.flash(stage, false, api.my);
             api.fail({ delay: 4200, lines: [why, '直式減法：' + q.paid + ' ' + MINUS + ' ' + q.price + ' ＝ ' + q.change + '（借位 ' + q.borrows + ' 次）' + (q.extra ? '；客人多給了 ' + q.extra + ' 元零錢（' + q.base + ' ＋ ' + q.extra + '）' : '')] });

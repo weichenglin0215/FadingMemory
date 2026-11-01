@@ -1,0 +1,67 @@
+/* ═══════════════════════════════════════
+   reaction_chequeamt.css — 支票金額（js/reaction_chequeamt.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「chequeamt-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 支票金額（.chequeamt-）═══ */
+.chequeamt-card {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 24px;
+    padding: var(--sp-4) var(--sp-4) var(--sp-5);
+    border-radius: var(--r-md);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    box-shadow: var(--shadow-card);
+}
+
+.chequeamt-card--ok {
+    border-color: var(--c-ok);
+}
+
+.chequeamt-card--bad {
+    border-color: var(--c-bad);
+}
+
+/* V1.29（玩家意見）：題目字放大（手機上不容易辨識）：標籤 22→26px、小寫金額 40→50px、大寫金額 34→40px */
+.chequeamt-lab {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    margin-top: var(--sp-2);
+}
+
+.chequeamt-small {
+    font-size: 50px;
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    font-variant-numeric: tabular-nums;
+    border-bottom: 2px solid var(--bd-c);
+    padding-bottom: var(--sp-2);
+}
+
+.chequeamt-big {
+    font-family: var(--font-note);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    line-height: var(--lh-body);
+    word-break: break-all;
+}
+
+.chequeamt-diff {
+    color: var(--c-bad);
+    background: var(--c-bad-soft);
+    border-radius: 6px;
+    padding: 0 2px;
+}
+
+.chequeamt-ask {
+    top: 396px;
+}
+
+.chequeamt-reveal {
+    top: 446px;
+}

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_ghostleg2.js — 秒反應・鬼腳圖減一
+   樣式：css/games/reaction_ghostleg2.css（這款專屬的 class 一律以「ghostleg2-」開頭；共用元件在 css/reaction_common.css）
    「鬼腳圖」的反過來版本：上方有起點、下方有終點（都是綠底黑字），照現有的橫線走，從起點走不到終點。
    玩家要「拿掉一條橫線」（點一下那一條橫線），讓起點接到終點。只有一次機會。關卡制，成績＝通過關數。
    畫棋盤、走路線用 js/ghostleg_core.js（跟「鬼腳圖」外觀一樣）；出題方式是這一款自己的（V1.33.1 重寫，見下面）。
@@ -564,7 +565,7 @@
             if (!g) return;
             e.preventDefault();
             locked = true; api.stopTimer();
-            board.rungEls[g.row + ',' + g.col].classList.add('gx-gone');
+            board.rungEls[g.row + ',' + g.col].classList.add('ghostleg2-gone');
             Sfx.play('click');
             msg.textContent = '';
             judge(g);
@@ -572,7 +573,7 @@
         /* 評審動畫：從起點開始畫出一條綠色粗虛線，經過每個轉折點，看看最後能不能抵達終點 */
         function judge(removed) {
             var f = follow(without(q.rungs, removed), q.start), ms = routeMs(f.route), total = C.routeLength(f.route);
-            var line = kit.svg('polyline', { points: '', 'class': 'gx-route' }, gRoute);
+            var line = kit.svg('polyline', { points: '', 'class': 'ghostleg2-route' }, gRoute);
             my.tween(ms, function (e) {
                 line.setAttribute('points', C.partialRoute(f.route, total * e).map(function (p) { return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' '));
             }, kit.linear).then(function () {
@@ -587,7 +588,7 @@
             });
         }
         /* 失敗時把答案那一條標成綠色 */
-        function showAnswer() { q.solutions.forEach(function (g) { var el = board.rungEls[g.row + ',' + g.col]; if (el) el.classList.add('gx-answer'); }); }
+        function showAnswer() { q.solutions.forEach(function (g) { var el = board.rungEls[g.row + ',' + g.col]; if (el) el.classList.add('ghostleg2-answer'); }); }
         api.timer(timeMs(level), function () {
             locked = true;
             msg.textContent = '';

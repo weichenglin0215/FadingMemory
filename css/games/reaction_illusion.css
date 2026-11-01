@@ -1,0 +1,136 @@
+/* ═══════════════════════════════════════
+   reaction_illusion.css — 錯覺大師（js/reaction_illusion.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「illusion-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 錯覺大師：判斷視覺錯覺圖案中，哪條線比較長、哪個圓比較大等等。 */
+/* ═══ 錯覺大師（.illusion-）═══ */
+/* 題目文字 */
+.illusion-q {
+    min-height: 2.4em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: var(--fs-lg, 26px);
+    font-weight: 700;
+    color: var(--c-ink);
+    line-height: 1.3;
+}
+
+/* 場地 */
+.illusion-field {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    touch-action: none;
+}
+
+/* SVG */
+.illusion-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* 一般線條 */
+.illusion-line {
+    stroke: var(--c-ink);
+    stroke-width: 6px;
+    stroke-linecap: round;
+}
+
+/* 粗橫條 */
+.illusion-bar {
+    stroke: var(--c-ink);
+    stroke-width: 12px;
+    stroke-linecap: butt;
+}
+
+/* 軌道線 */
+.illusion-rail {
+    stroke: var(--c-ink-soft);
+    stroke-width: 6px;
+    stroke-linecap: round;
+}
+
+/* 枕木 */
+.illusion-tie {
+    stroke: var(--c-ink-soft);
+    stroke-width: 4px;
+    opacity: 0.6;
+}
+
+/* 中央圓（橘） */
+.illusion-center {
+    fill: var(--c-orange, #E8956B);
+    stroke: none;
+}
+
+/* 周圍的圓（藍） */
+.illusion-surround {
+    fill: var(--c-blue);
+    stroke: none;
+    opacity: 0.85;
+}
+
+/* 輔助虛線 */
+.illusion-guide {
+    stroke: var(--c-bad);
+    stroke-width: 3px;
+    stroke-dasharray: 8 6;
+    fill: none;
+    pointer-events: none;
+}
+
+/* 德爾貝夫的外環 */
+.illusion-ring {
+    fill: none;
+    stroke: var(--c-ink-soft);
+    stroke-width: 5px;
+}
+
+/* 禮帽：帽身與帽簷（深褐色）、帽帶（橘色） */
+.illusion-hat {
+    fill: var(--c-ink);
+    stroke: none;
+}
+
+.illusion-hatband {
+    fill: var(--c-orange);
+    stroke: none;
+}
+
+/* 長方形面積題的長方形（橘色） */
+.illusion-rect {
+    fill: var(--c-orange);
+    stroke: none;
+}
+
+/* 點擊熱區：fill:transparent 看不到但仍可被點到 */
+.illusion-hit {
+    fill: transparent;
+    stroke: none;
+    cursor: pointer;
+}
+
+/* 選對（半透明綠） */
+.illusion-hit--ok {
+    fill: rgba(108, 189, 121, 0.28);
+    stroke: var(--c-ok);
+    stroke-width: 5px;
+}
+
+/* 選錯（半透明橘） */
+.illusion-hit--bad {
+    fill: rgba(232, 149, 107, 0.28);
+    stroke: var(--c-bad);
+    stroke-width: 5px;
+}

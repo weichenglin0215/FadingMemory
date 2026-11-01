@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_seenit.js — 秒反應・這個看過嗎
+   樣式：css/games/reaction_seenit.css（這款專屬的 class 一律以「seenit-」開頭；共用元件在 css/reaction_common.css）
    一關一個圖案（水果、蔬菜、點心的 emoji＋中文名稱），判斷它是「新的」還是「在前面的關卡出現過了」。
    每一關陸續出現新圖案，中間夾雜著已經看過的圖案。關卡制：答錯或逾時就結束（沒有「命」），成績＝通過幾關。
    ───────────────────────────────────────────────────────────────────
@@ -105,9 +106,9 @@
         api.info = tr;
         console.log('[這個看過嗎] 第 ' + level + ' 關：' + nameOf(tr.item) + '（' + (tr.kind === 'old' ? '看過，上次在第 ' + tr.seenAt + ' 關' : '新的') + '）；限時 ' + timeMs(level) + ' ms');
 
-        var pic = h('div', { 'class': 'si-pic', text: emojiOf(tr.item) });
-        var name = h('div', { 'class': 'si-name', text: nameOf(tr.item) });
-        var info = h('div', { 'class': 'si-info', text: level === 1 ? '第一個圖案，一定是新的' : '這個圖案在前面的關卡出現過嗎？' });
+        var pic = h('div', { 'class': 'seenit-pic', text: emojiOf(tr.item) });
+        var name = h('div', { 'class': 'seenit-name', text: nameOf(tr.item) });
+        var info = h('div', { 'class': 'seenit-info', text: level === 1 ? '第一個圖案，一定是新的' : '這個圖案在前面的關卡出現過嗎？' });
         stage.appendChild(pic); stage.appendChild(name); stage.appendChild(info);
         var bOld = h('button', { 'class': 'btn btn--go', text: '看過' });
         var bNew = h('button', { 'class': 'btn btn--primary', text: '新的' });
@@ -121,8 +122,8 @@
             if (sayOld === true && level === 1) return;                          /* 第 1 關的「看過」按鈕無法使用 */
             bOld.disabled = bNew.disabled = true;
             var isOld = tr.kind === 'old';
-            if (sayOld === isOld) { pic.classList.add('si-pic--ok'); api.pass({ delay: 300 }); return; }
-            pic.classList.add('si-pic--bad');
+            if (sayOld === isOld) { pic.classList.add('seenit-pic--ok'); api.pass({ delay: 300 }); return; }
+            pic.classList.add('seenit-pic--bad');
             var why = sayOld == null ? '時間到！' : (isOld ? '這個圖案之前出現過' : '這是新的圖案');
             info.textContent = why + (isOld ? '（第 ' + tr.seenAt + ' 關）' : '');
             api.fail({ delay: 1800, lines: [why + '：' + emojiOf(tr.item) + ' ' + nameOf(tr.item), isOld ? '它上次出現在第 ' + tr.seenAt + ' 關' : '前面的關卡沒有出現過它'] });

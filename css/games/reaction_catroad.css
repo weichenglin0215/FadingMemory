@@ -1,0 +1,90 @@
+/* ═══════════════════════════════════════
+   reaction_catroad.css — 貓咪走山路（js/reaction_catroad.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「catroad-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 071 記色調色（.cr-）═══
+   背景固定中灰（色彩判斷用最中性的底，避免對比錯覺）；這裡的灰是「測量用的刺激條件」，不是介面配色，
+   所以直接寫 hsl(0, 0%, 50%)，不走 theme 變數。 */
+.catroad-stage {
+    background: hsl(0, 0%, 50%);
+    border-radius: var(--r-md);
+}
+
+.catroad-track {
+    position: absolute;
+    height: 10px;
+    border-radius: 5px;
+    background: hsl(0, 0%, 72%);
+    border: 2px solid var(--c-ink);
+    box-sizing: border-box;
+}
+
+.catroad-knob {
+    position: absolute;
+    width: 64px;
+    height: 64px;
+    border-radius: var(--r-pill);
+    background: var(--c-card);
+    border: 4px solid var(--c-ink);
+    box-sizing: border-box;
+    box-shadow: var(--shadow-card);
+}
+
+/* ═══ 貓咪走山路（.cr-）═══ */
+.catroad-canvas {
+    display: block;
+    border-radius: var(--r-md);
+}
+
+.catroad-time {
+    position: absolute;
+    left: 12px;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    border-radius: var(--r-pill);
+    background: var(--c-card);
+    border: var(--bd);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    font-variant-numeric: tabular-nums;
+    color: var(--c-ink);
+}
+
+.catroad-time--dead {
+    color: var(--c-recall);
+}
+
+.catroad-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-radius: var(--r-md);
+    background: var(--c-card-alt);
+    border: 3px solid var(--c-ink-soft);
+    touch-action: none;
+    cursor: ew-resize;
+}
+
+.catroad-track {
+    position: absolute;
+    left: 30px;
+    right: 30px;
+    top: 34px;
+    height: 10px;
+    border-radius: var(--r-pill);
+    background: var(--c-yellow-soft);
+    border: 2px solid var(--c-ink-soft);
+}
+
+.catroad-knob {
+    position: absolute;
+    top: 9px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--c-orange);
+    border: var(--bd);
+    box-shadow: var(--shadow-card);
+}

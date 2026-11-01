@@ -72,10 +72,10 @@ function greedy(lv, step) { const q = T.makeDough(lv, rnd); let pts = q.pts, n =
   ok(/擀太大了/.test(T.whyText({ round: 90, size: 40, ok: false, okRound: true, okSize: false, tooBig: true }, 5)) && /不夠圓/.test(T.whyText({ round: 70, size: 1, ok: false, okRound: false, okSize: true, tooBig: false }, 5)) && /大小不對/.test(T.whyText({ round: 99, size: 30, ok: false, okRound: true, okSize: false, tooBig: false }, 5)) && /過關/.test(T.whyText({ round: 99, size: 1, ok: true, okRound: true, okSize: true, tooBig: false }, 5)), '各種說明'); }
 
 // ── 程式裡的接線 ──
-{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_dough.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 4200/.test(src) && /dgh-best/.test(src) && /whyText\(j, level\)/.test(src) && /judge\(pts, level, q\.sampleR\)\.tooBig/.test(src), '失敗：寫出圓度與大小差、擀太大立刻失敗、停格夠久');
+{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_dough.js'), css = rd('../../css/games/reaction_dough.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 4200/.test(src) && /dough-best/.test(src) && /whyText\(j, level\)/.test(src) && /judge\(pts, level, q\.sampleR\)\.tooBig/.test(src), '失敗：寫出圓度與大小差、擀太大立刻失敗、停格夠久');
   ok(/pts = roll\(pts, phi, s\)/.test(src) && /pointerdown/.test(src) && /pointermove/.test(src) && /MAX_STEP/.test(src) && /api\.solve = /.test(src) && /api\.wrong = /.test(src), '擀＝手指移動的方向和距離套用 roll；solve／wrong');
-  ok(/\.dgh-dough \{[^}]*var\(--dgh-dough\)/.test(css) && /\.dgh-sample \{[^}]*var\(--dgh-sample\)/.test(css) && /\.dgh-pin \{[^}]*var\(--dgh-pin\)/.test(css), '麵皮、樣品圓、擀麵棍用 CSS 變數');
+  ok(/\.dough-dough \{[^}]*var\(--dgh-dough\)/.test(css) && /\.dough-sample \{[^}]*var\(--dgh-sample\)/.test(css) && /\.dough-pin \{[^}]*var\(--dgh-pin\)/.test(css), '麵皮、樣品圓、擀麵棍用 CSS 變數');
   ok(boot.indexOf("'js/reaction_dough.js'") > 0 && /轉著方向擀/.test(G.rule) && /回不去/.test(G.rule), 'boot.js 有載入、玩法說明提到轉著方向擀與回不去'); }
 ok(T.rating(1) !== T.rating(3) && T.rating(3) !== T.rating(6) && T.rating(6) !== T.rating(10) && T.rating(10) !== T.rating(16), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

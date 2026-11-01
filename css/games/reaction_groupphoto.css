@@ -1,0 +1,271 @@
+/* ═══════════════════════════════════════
+   reaction_groupphoto.css — 大合照（js/reaction_groupphoto.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「groupphoto-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 大合照（.groupphoto-）═══ */
+.groupphoto-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.groupphoto-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.groupphoto-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 相片區：牆面底色的取景框；.groupphoto-photo--wall 是成功之後「掛上牆」的樣子（木框） */
+.groupphoto-photo {
+    position: absolute;
+    overflow: hidden;
+    background: var(--gph-bg);
+    border: 4px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-sizing: border-box;
+    transition: transform 0.5s ease-out, border-color 0.5s, box-shadow 0.5s;
+}
+
+/* 掛上牆：邊框寬度不變（不然相片區變小、邊邊的人會被切到），改用外圈陰影當木框 */
+.groupphoto-photo--wall {
+    transform: scale(0.94);
+    border-color: var(--gph-frame);
+    box-shadow: 0 0 0 8px var(--gph-frame), var(--shadow-pop);
+}
+
+/* 取景框的四個角 */
+.groupphoto-corner {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    border: 0 solid var(--gph-corner);
+    pointer-events: none;
+    z-index: 3;
+}
+
+.groupphoto-corner--tl {
+    left: 8px;
+    top: 8px;
+    border-left-width: 4px;
+    border-top-width: 4px;
+}
+
+.groupphoto-corner--tr {
+    right: 8px;
+    top: 8px;
+    border-right-width: 4px;
+    border-top-width: 4px;
+}
+
+.groupphoto-corner--bl {
+    left: 8px;
+    bottom: 8px;
+    border-left-width: 4px;
+    border-bottom-width: 4px;
+}
+
+.groupphoto-corner--br {
+    right: 8px;
+    bottom: 8px;
+    border-right-width: 4px;
+    border-bottom-width: 4px;
+}
+
+/* 一個人 */
+.groupphoto-person {
+    position: absolute;
+}
+
+.groupphoto-face {
+    display: block;
+    overflow: visible;
+}
+
+.groupphoto-shirt {
+    stroke: var(--c-ink-soft);
+    stroke-width: 2;
+}
+
+.groupphoto-shirt0 {
+    fill: var(--gph-shirt0);
+}
+
+.groupphoto-shirt1 {
+    fill: var(--gph-shirt1);
+}
+
+.groupphoto-shirt2 {
+    fill: var(--gph-shirt2);
+}
+
+.groupphoto-shirt3 {
+    fill: var(--gph-shirt3);
+}
+
+.groupphoto-shirt4 {
+    fill: var(--gph-shirt4);
+}
+
+.groupphoto-neck,
+.groupphoto-head {
+    stroke: var(--c-ink-soft);
+    stroke-width: 2;
+}
+
+.groupphoto-skin0 {
+    fill: var(--gph-skin0);
+}
+
+.groupphoto-skin1 {
+    fill: var(--gph-skin1);
+}
+
+.groupphoto-skin2 {
+    fill: var(--gph-skin2);
+}
+
+.groupphoto-hair0 {
+    fill: var(--gph-hair0);
+}
+
+.groupphoto-hair1 {
+    fill: var(--gph-hair1);
+}
+
+.groupphoto-hair2 {
+    fill: var(--gph-hair2);
+}
+
+.groupphoto-hair3 {
+    fill: var(--gph-hair3);
+}
+
+/* 眼睛：睜眼＝白眼球＋黑瞳孔；閉眼（或低頭）＝一條往下彎的線 */
+.groupphoto-eye-w {
+    fill: var(--gph-eyewhite);
+    stroke: var(--c-ink-soft);
+    stroke-width: 1.5;
+}
+
+.groupphoto-pupil {
+    fill: var(--gph-pupil);
+}
+
+.groupphoto-lid {
+    display: none;
+    fill: none;
+    stroke: var(--gph-pupil);
+    stroke-width: 3.5;
+    stroke-linecap: round;
+}
+
+.groupphoto-mouth {
+    fill: none;
+    stroke: var(--gph-pupil);
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.groupphoto-person--closed .groupphoto-eye-open,
+.groupphoto-person--phone .groupphoto-eye-open {
+    display: none;
+}
+
+.groupphoto-person--closed .groupphoto-lid,
+.groupphoto-person--phone .groupphoto-lid {
+    display: inline;
+}
+
+.groupphoto-phone {
+    fill: var(--gph-phone);
+    stroke: var(--c-ink-soft);
+    stroke-width: 2;
+}
+
+.groupphoto-phone-screen {
+    fill: var(--gph-phone-screen);
+}
+
+/* 洗照片：閃光、閉眼的人圈紅圈 */
+.groupphoto-flash {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--gph-flash);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.groupphoto-flash--go {
+    animation: groupphoto-flash 0.4s ease-out;
+}
+
+@keyframes groupphoto-flash {
+    0% {
+        opacity: 0.95;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+.groupphoto-ring {
+    position: absolute;
+    border: 5px solid var(--gph-ring);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 4;
+    animation: groupphoto-ring 0.25s ease-out;
+}
+
+@keyframes groupphoto-ring {
+    from {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.groupphoto-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.groupphoto-info--ok {
+    color: var(--c-ok);
+}
+
+.groupphoto-info--bad {
+    color: var(--c-bad);
+}
+
+.groupphoto-shutter {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}

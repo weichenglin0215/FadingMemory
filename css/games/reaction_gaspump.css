@@ -1,0 +1,225 @@
+/* ═══════════════════════════════════════
+   reaction_gaspump.css — 加到五百（js/reaction_gaspump.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「gaspump-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 加到五百（.gaspump-）═══ */
+.gaspump-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.gaspump-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.gaspump-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 油價與目標金額的告示牌 */
+.gaspump-card {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 54px;
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--c-card-alt);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    color: var(--c-ink);
+    text-align: center;
+}
+
+.gaspump-card__fuel {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+}
+
+.gaspump-card__goal {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-bold);
+}
+
+.gaspump-card__tol {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+.gaspump-card__goal b {
+    color: var(--c-bad);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+}
+
+/* 加油機的數字面板：黑底黃字 */
+.gaspump-panel {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 238px;
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--gsp-panel);
+    border: 4px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+}
+
+.gaspump-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    min-height: 84px;
+}
+
+.gaspump-label,
+.gaspump-unit {
+    color: var(--gsp-digit);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    opacity: 0.8;
+}
+
+.gaspump-label {
+    width: 3.2em;
+}
+
+.gaspump-digits,
+.gaspump-amount {
+    flex: 1;
+    color: var(--gsp-digit);
+    font-family: var(--gsp-font);
+    font-size: var(--fs-xxxl);
+    font-weight: var(--fw-black);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    text-align: right;
+}
+
+/* 放手時鏡頭推近油表的最後一位：整個數字放大一下 */
+.gaspump-digits {
+    transform-origin: right center;
+    transition: transform 0.6s ease-out;
+}
+
+.gaspump-digits--zoom {
+    transform: scale(1.18);
+}
+
+.gaspump-amountwrap {
+    position: relative;
+    flex: 1;
+    min-height: 72px;
+}
+
+.gaspump-amount {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    margin-top: -0.5em;
+    font-size: var(--fs-xl);
+}
+
+.gaspump-amount--ok {
+    color: var(--c-ok-light);
+}
+
+.gaspump-amount--bad {
+    color: var(--c-bad-light);
+}
+
+/* 蓋住金額的「？」貼紙，揭曉時被撕掉（往右上飛走） */
+.gaspump-sticker {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--gsp-sticker);
+    border-radius: var(--r-sm);
+    color: var(--c-ink);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    line-height: 72px;
+    text-align: center;
+    transform: rotate(-2deg);
+    transition: transform 0.6s ease-in, opacity 0.6s;
+}
+
+.gaspump-sticker--off {
+    transform: translate(80px, -60px) rotate(28deg);
+    opacity: 0;
+}
+
+.gaspump-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 468px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* 油槍按鈕：紅色大按鈕，按住時凹下去 */
+.gaspump-gun {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 10px;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-4);
+    background: var(--gsp-gun);
+    border-radius: var(--r-lg);
+    box-shadow: 0 8px 0 var(--gsp-gun-dark);
+    color: var(--c-card);
+    cursor: pointer;
+    touch-action: none;
+    transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.gaspump-gun--on {
+    transform: translateY(6px);
+    box-shadow: 0 2px 0 var(--gsp-gun-dark);
+}
+
+.gaspump-gun__text {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.gaspump-gun__body {
+    fill: var(--c-card);
+    stroke: var(--gsp-gun-dark);
+    stroke-width: 3;
+    stroke-linejoin: round;
+}
+
+.gaspump-gun__grip,
+.gaspump-gun__nozzle {
+    fill: var(--gsp-panel);
+}
+
+.gaspump-gun__hose {
+    fill: none;
+    stroke: var(--gsp-panel);
+    stroke-width: 6;
+    stroke-linecap: round;
+}

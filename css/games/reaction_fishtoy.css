@@ -1,0 +1,198 @@
+/* ═══════════════════════════════════════
+   reaction_fishtoy.css — 釣魚玩具（js/reaction_fishtoy.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「fishtoy-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 釣魚玩具（.fishtoy-）═══ */
+.fishtoy-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.fishtoy-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+/* 上方的目標：釣 ○色 的魚 */
+.fishtoy-goal {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 6px;
+    text-align: center;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.fishtoy-goal__t {
+    color: var(--c-ink);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+}
+
+.fishtoy-goal__c {
+    padding: 0 var(--sp-2);
+    border-radius: var(--r-sm);
+    color: var(--c-card);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    text-shadow: 0 1px 2px var(--fty-text-shadow);
+}
+
+.fishtoy-bg0 {
+    background: var(--fty-c0);
+}
+
+.fishtoy-bg1 {
+    background: var(--fty-c1);
+}
+
+.fishtoy-bg2 {
+    background: var(--fty-c2);
+}
+
+.fishtoy-bg3 {
+    background: var(--fty-c3);
+}
+
+.fishtoy-bg4 {
+    background: var(--fty-c4);
+}
+
+.fishtoy-bg5 {
+    background: var(--fty-c5);
+}
+
+.fishtoy-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+    pointer-events: none;
+}
+
+/* 池塘與魚排成的圈 */
+.fishtoy-pond {
+    fill: var(--fty-water);
+    stroke: var(--fty-pond-line);
+    stroke-width: 8;
+}
+
+.fishtoy-ring {
+    fill: none;
+    stroke: var(--fty-ring);
+    stroke-width: 2;
+    stroke-dasharray: 6 8;
+}
+
+/* 落水點的指示線：魚要在釣竿落水的那一刻游到這裡 */
+.fishtoy-spot {
+    stroke: var(--fty-spot);
+    stroke-width: 3;
+    stroke-dasharray: 8 6;
+}
+
+.fishtoy-rod {
+    stroke: var(--fty-rod);
+    stroke-width: 9;
+    stroke-linecap: round;
+}
+
+.fishtoy-line {
+    stroke: var(--fty-line);
+    stroke-width: 2.5;
+}
+
+.fishtoy-hook {
+    fill: var(--fty-hook);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+/* 魚 */
+.fishtoy-body,
+.fishtoy-tail {
+    stroke: var(--c-ink-soft);
+    stroke-width: 2.5;
+}
+
+.fishtoy-c0 {
+    fill: var(--fty-c0);
+}
+
+.fishtoy-c1 {
+    fill: var(--fty-c1);
+}
+
+.fishtoy-c2 {
+    fill: var(--fty-c2);
+}
+
+.fishtoy-c3 {
+    fill: var(--fty-c3);
+}
+
+.fishtoy-c4 {
+    fill: var(--fty-c4);
+}
+
+.fishtoy-c5 {
+    fill: var(--fty-c5);
+}
+
+.fishtoy-eye {
+    fill: var(--fty-eye);
+}
+
+.fishtoy-hole {
+    fill: var(--fty-hole);
+}
+
+.fishtoy-lip {
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.fishtoy-fish--focus .fishtoy-body {
+    stroke: var(--fty-focus);
+    stroke-width: 5;
+}
+
+.fishtoy-fish--caught .fishtoy-body {
+    stroke: var(--c-ok);
+    stroke-width: 5;
+}
+
+.fishtoy-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.fishtoy-info--ok {
+    color: var(--c-ok);
+}
+
+.fishtoy-info--bad {
+    color: var(--c-bad);
+}
+
+.fishtoy-btn {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.fishtoy-btn--off {
+    opacity: 0.45;
+}

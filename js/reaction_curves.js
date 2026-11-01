@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_curves.js — 秒反應・誰先到？
+   樣式：css/games/reaction_curves.css（這款專屬的 class 一律以「curves-」開頭；共用元件在 css/reaction_common.css）
    黑色畫面，左右各一條從上到下的「尋寶路線」繩子，判斷哪一條比較短。按下按鈕後，兩顆球用
    一樣的速度沿著繩子滑下來，看誰先到。
    ───────────────────────────────────────────────────────────────────
@@ -280,18 +281,18 @@
             Rd = kit.round();
             var my = Rd;
             root.innerHTML = '';
-            /* 替整個畫面加上黑底 class（樣式在 css/reaction.css 的 .cv-bg） */
-            root.classList.add('cv-bg');
-            my.onDispose(function () { root.classList.remove('cv-bg'); });
+            /* 替整個畫面加上黑底 class（樣式在 css/games/reaction_curves.css 的 .curves-bg） */
+            root.classList.add('curves-bg');
+            my.onDispose(function () { root.classList.remove('curves-bg'); });
             var level = start || 1, cleared = level - 1, newRec = false, state = 'idle';
 
             /* 建立畫面元素：標題、場地、橫幅、左右兩顆選擇按鈕 */
-            var head = h('div', { 'class': 'cv-head' });
-            var field = h('div', { 'class': 'cv-field' });
-            var banner = h('div', { 'class': 'cv-banner' });
-            var btns = h('div', { 'class': 'cv-btns' });
-            var bL = h('button', { 'class': 'cv-btn', text: '左邊比較短' });
-            var bR = h('button', { 'class': 'cv-btn', text: '右邊比較短' });
+            var head = h('div', { 'class': 'curves-head' });
+            var field = h('div', { 'class': 'curves-field' });
+            var banner = h('div', { 'class': 'curves-banner' });
+            var btns = h('div', { 'class': 'curves-btns' });
+            var bL = h('button', { 'class': 'curves-btn', text: '左邊比較短' });
+            var bR = h('button', { 'class': 'curves-btn', text: '右邊比較短' });
             btns.appendChild(bL); btns.appendChild(bR);
             field.appendChild(banner);
             root.appendChild(head);
@@ -311,31 +312,31 @@
                 for (var att = 0; att < 40 && !Lv; att++) Lv = makeLevel(level, H, null, W);
                 if (!Lv) throw new Error('curves: cannot build a level');
                 state = 'pick';
-                banner.textContent = ''; banner.className = 'cv-banner';
-                field.classList.remove('cv-field--zoom');
+                banner.textContent = ''; banner.className = 'curves-banner';
+                field.classList.remove('curves-field--zoom');
                 head.textContent = '第 ' + level + ' 關　哪一條比較短？';
                 meta();
                 field.querySelectorAll('svg').forEach(function (s) { s.remove(); });
-                svg = kit.svg('svg', { 'class': 'cv-svg', viewBox: '0 0 ' + W + ' ' + H }, field);
+                svg = kit.svg('svg', { 'class': 'curves-svg', viewBox: '0 0 ' + W + ' ' + H }, field);
                 ptsL = Lv.L.pts; ptsR = Lv.R.pts;
                 var dash = level >= DASH_FROM ? dashFor() : null;
                 [[ptsL, 'L'], [ptsR, 'R']].forEach(function (pr) {
                     var d = pr[0].map(function (p, i) { return (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(' ');
                     if (dash) {
-                        kit.svg('path', { 'class': 'cv-line cv-line--white', d: d }, svg);
-                        kit.svg('path', { 'class': 'cv-line cv-line--red', d: d, 'stroke-dasharray': dash[pr[1]][0] + ' ' + dash[pr[1]][1] }, svg);
+                        kit.svg('path', { 'class': 'curves-line curves-line--white', d: d }, svg);
+                        kit.svg('path', { 'class': 'curves-line curves-line--red', d: d, 'stroke-dasharray': dash[pr[1]][0] + ' ' + dash[pr[1]][1] }, svg);
                     } else {
-                        kit.svg('path', { 'class': 'cv-line cv-line--solid', d: d }, svg);
+                        kit.svg('path', { 'class': 'curves-line curves-line--solid', d: d }, svg);
                     }
                 });
                 ends = [];
                 [ptsL, ptsR].forEach(function (pts) {
-                    kit.svg('circle', { 'class': 'cv-start', cx: pts[0].x, cy: pts[0].y, r: 7 }, svg);
-                    ends.push(kit.svg('circle', { 'class': 'cv-end', cx: pts[pts.length - 1].x, cy: pts[pts.length - 1].y, r: 7 }, svg));
+                    kit.svg('circle', { 'class': 'curves-start', cx: pts[0].x, cy: pts[0].y, r: 7 }, svg);
+                    ends.push(kit.svg('circle', { 'class': 'curves-end', cx: pts[pts.length - 1].x, cy: pts[pts.length - 1].y, r: 7 }, svg));
                 });
-                balls = [kit.svg('circle', { 'class': 'cv-ball', r: 13, cx: ptsL[0].x, cy: ptsL[0].y }, svg), kit.svg('circle', { 'class': 'cv-ball', r: 13, cx: ptsR[0].x, cy: ptsR[0].y }, svg)];
+                balls = [kit.svg('circle', { 'class': 'curves-ball', r: 13, cx: ptsL[0].x, cy: ptsL[0].y }, svg), kit.svg('circle', { 'class': 'curves-ball', r: 13, cx: ptsR[0].x, cy: ptsR[0].y }, svg)];
                 bL.disabled = bR.disabled = false;
-                bL.className = bR.className = 'cv-btn';
+                bL.className = bR.className = 'curves-btn';
                 /* 主控台印出這關的實際長度、轉折點數、答案，方便驗證 */
                 try {
                     console.info('[誰先到？] 第 ' + level + ' 關 長度差 ' + (Lv.d * 100).toFixed(0) + '%：左 ' + Lv.L.len.toFixed(1) + ' px（' + Lv.L.k + ' 個轉折點、伸展 ' + Lv.L.alpha.toFixed(2) + '）／右 ' + Lv.R.len.toFixed(1) + ' px（' + Lv.R.k + ' 個轉折點、伸展 ' + Lv.R.alpha.toFixed(2) + '）→ ' +
@@ -349,7 +350,7 @@
                 state = 'run';
                 bL.disabled = bR.disabled = true;
                 var ok = side === Lv.shortSide;
-                (side === 'L' ? bL : bR).classList.add(ok ? 'cv-btn--ok' : 'cv-btn--bad');
+                (side === 'L' ? bL : bR).classList.add(ok ? 'curves-btn--ok' : 'curves-btn--bad');
                 Sfx.play('whoosh');
                 head.textContent = '兩顆球一樣的速度，看誰先到…';
                 var t0 = performance.now(), arrived = false;
@@ -383,20 +384,20 @@
                 var lenS = Lv.shortSide === 'L' ? Lv.L.len : Lv.R.len;
                 var rest = restPoints(pts, lenS);
                 var d = rest.map(function (p, i) { return (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(' ');
-                var path = kit.svg('path', { 'class': 'cv-line cv-rest', d: d }, svg);
+                var path = kit.svg('path', { 'class': 'curves-line curves-rest', d: d }, svg);
                 svg.insertBefore(path, balls[0]);                         /* 畫在球的下面 */
-                ends[longSide === 'L' ? 0 : 1].classList.add('cv-end--gap');
+                ends[longSide === 'L' ? 0 : 1].classList.add('curves-end--gap');
                 /* 剩下的路還很長（差距大）就不放大；很短才放大 */
                 var cam = needZoom(rest[rest.length - 1].s - rest[0].s) ? zoomCamera(rest, fw, fh) : null;
                 if (!cam) return false;
                 var from = { vx: 0, vy: 0, vw: fw, vh: fh };
-                var markers = svg.querySelectorAll('.cv-start, .cv-end');
+                var markers = svg.querySelectorAll('.curves-start, .curves-end');
                 kit.tweenViewBox(my, svg, from, cam.box, ZOOM_MS, kit.easeInOutCubic, function (b) {
                     var z = fw / b.vw;
                     balls[0].setAttribute('r', (13 / z).toFixed(2)); balls[1].setAttribute('r', (13 / z).toFixed(2));
                     for (var i = 0; i < markers.length; i++) markers[i].setAttribute('r', (7 / z).toFixed(2));
                 });
-                field.classList.add('cv-field--zoom');
+                field.classList.add('curves-field--zoom');
                 return true;
             }
 
@@ -409,7 +410,7 @@
                     cleared = level;
                     if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
                     banner.textContent = (first === 'L' ? '左' : '右') + '邊先到！答對了';
-                    banner.className = 'cv-banner cv-banner--ok';
+                    banner.className = 'curves-banner curves-banner--ok';
                     head.textContent = msg;
                     meta();
                     Sfx.play('win');
@@ -417,7 +418,7 @@
                     my.after(1900 + extra, nextLevel);
                 } else {
                     banner.textContent = (first === 'L' ? '左' : '右') + '邊先到…答錯了';
-                    banner.className = 'cv-banner cv-banner--bad';
+                    banner.className = 'curves-banner curves-banner--bad';
                     head.textContent = msg;
                     Sfx.play('bad');
                     state = 'over';

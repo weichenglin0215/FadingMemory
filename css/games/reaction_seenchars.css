@@ -1,0 +1,160 @@
+/* ═══════════════════════════════════════
+   reaction_seenchars.css — 看過的字（js/reaction_seenchars.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「seenchars-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 看過的字（.seenchars-）═══ */
+.seenchars-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.seenchars-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.seenchars-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 看過的字：書法練習簿，大大的黑色楷書 */
+.seenchars-show {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 80px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sp-3);
+}
+
+.seenchars-show__ch {
+    background: var(--skc-paper);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-sm);
+    color: var(--c-ink);
+    font-family: var(--font-note);
+    font-weight: var(--fw-black);
+    text-align: center;
+}
+
+.seenchars-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 120px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* 字格：每一格像九宮格紙（淡淡的十字虛線），點到變淡黃色 */
+.seenchars-grid {
+    position: absolute;
+    display: grid;
+    gap: 6px;
+    transition: transform 0.3s;
+    transform-origin: 50% 0;
+}
+
+.seenchars-grid--small {
+    transform: scale(0.72);
+}
+
+.seenchars-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--skc-paper);
+    background-image:
+        linear-gradient(var(--skc-guide), var(--skc-guide)),
+        linear-gradient(var(--skc-guide), var(--skc-guide));
+    background-size: 100% 1px, 1px 100%;
+    background-position: center, center;
+    background-repeat: no-repeat;
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-sm);
+    color: var(--c-ink);
+    font-family: var(--font-note);
+    font-weight: var(--fw-black);
+    cursor: pointer;
+}
+
+.seenchars-cell--on {
+    background-color: var(--skc-pick);
+    border-color: var(--c-orange);
+}
+
+.seenchars-cell--ok {
+    background-color: var(--c-ok-light);
+    border-color: var(--c-ok);
+}
+
+.seenchars-cell--miss {
+    border-color: var(--c-bad);
+    border-style: dashed;
+    background-color: var(--c-bad-soft);
+}
+
+.seenchars-cell--bad {
+    background-color: var(--c-bad-soft);
+    border-color: var(--c-bad-light);
+}
+
+.seenchars-done {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    bottom: 10px;
+    height: 96px;
+    font-size: var(--fs-xl);
+}
+
+/* 答錯：看過的字和你點的字並排，差異的筆畫塗紅 */
+.seenchars-cmp {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 330px;
+    display: flex;
+    justify-content: center;
+    gap: var(--sp-3);
+}
+
+.seenchars-cmp__box {
+    padding: var(--sp-2);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    text-align: center;
+}
+
+.seenchars-cmp__cv {
+    display: block;
+    width: 120px;
+    height: 120px;
+}
+
+.seenchars-cmp__t {
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+.seenchars-cmp__t--miss {
+    color: var(--c-bad);
+}

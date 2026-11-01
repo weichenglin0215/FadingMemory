@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_scratch.js — 秒反應・刮刮樂推理（V1.25 改版：關卡制、宮格線索）
+   樣式：css/games/reaction_scratch.css（這款專屬的 class 一律以「scratch-」開頭；共用元件在 css/reaction_common.css）
    上方先把「這一關可能出現的 6 種圖案」完整顯示出來；下方是 12 張牌（4 欄 × 3 列），藏著「三張一模一樣」的圖案
    （其他 5 種圖案一共 9 張，每種最多 2 張，所以只有目標圖案會出現第三張）。
    每張牌的圖案被切成 g × g 宮格（3×3、4×4、5×5、6×6），只露出其中幾格當線索，其餘被刮刮漆蓋住；
@@ -171,32 +172,32 @@
 
         /* 上方：這一關的 6 種圖案（完整） */
         var refSize = 64, refGap = 8, refW = K * refSize + (K - 1) * refGap, rx0 = Math.round((W - refW) / 2);
-        var refRow = h('div', { 'class': 'sc-ref' });
+        var refRow = h('div', { 'class': 'scratch-ref' });
         refRow.style.left = rx0 + 'px'; refRow.style.width = refW + 'px';
         bd.patterns.forEach(function (p) {
-            var cv = document.createElement('canvas'); cv.width = refSize * SCALE; cv.height = refSize * SCALE; cv.className = 'sc-refc';
+            var cv = document.createElement('canvas'); cv.width = refSize * SCALE; cv.height = refSize * SCALE; cv.className = 'scratch-refc';
             drawPattern(cv.getContext('2d'), band, p, refSize * SCALE, inkColor);
-            refRow.appendChild(h('div', { 'class': 'sc-refi' }, [cv]));
+            refRow.appendChild(h('div', { 'class': 'scratch-refi' }, [cv]));
         });
-        stage.appendChild(h('div', { 'class': 'sc-reftitle', text: '這一關的圖案（有 3 張一模一樣的）' }));
+        stage.appendChild(h('div', { 'class': 'scratch-reftitle', text: '這一關的圖案（有 3 張一模一樣的）' }));
         stage.appendChild(refRow);
 
         /* 下方：12 張牌 */
         var bw = COLS * CELL + (COLS - 1) * GAP, bx0 = Math.round((W - bw) / 2);
-        var board = h('div', { 'class': 'sc-board' });
+        var board = h('div', { 'class': 'scratch-board' });
         board.style.left = bx0 + 'px'; board.style.width = bw + 'px'; board.style.height = (ROWS * CELL + (ROWS - 1) * GAP) + 'px';
         stage.appendChild(board);
-        var info = h('div', { 'class': 'sc-info', text: '已刮開 0 / ' + MAX_REV + ' 張（點一張牌就整張刮開）' });
+        var info = h('div', { 'class': 'scratch-info', text: '已刮開 0 / ' + MAX_REV + ' 張（點一張牌就整張刮開）' });
         stage.appendChild(info);
 
         var revealed = [], cards = [], done = false, hint = null, rev = 0;
         bd.cells.forEach(function (p, i) {
             var col = i % COLS, row = Math.floor(i / COLS);
-            var el = h('div', { 'class': 'sc-cell' });
+            var el = h('div', { 'class': 'scratch-cell' });
             el.style.left = (col * (CELL + GAP)) + 'px'; el.style.top = (row * (CELL + GAP)) + 'px';
-            var under = document.createElement('canvas'); under.width = SZ; under.height = SZ; under.className = 'sc-under';
+            var under = document.createElement('canvas'); under.width = SZ; under.height = SZ; under.className = 'scratch-under';
             under.getContext('2d').drawImage(art(p), 0, 0);
-            var cv = document.createElement('canvas'); cv.width = SZ; cv.height = SZ; cv.className = 'sc-coat';
+            var cv = document.createElement('canvas'); cv.width = SZ; cv.height = SZ; cv.className = 'scratch-coat';
             var g = cv.getContext('2d'), grad = g.createLinearGradient(0, 0, SZ, SZ); grad.addColorStop(0, coat); grad.addColorStop(1, coat2);
             g.fillStyle = grad; g.fillRect(0, 0, SZ, SZ);
             var cs2 = SZ / gridN;
@@ -215,7 +216,7 @@
             if (done || api.over || revealed.indexOf(i) >= 0) return;
             hideHint();
             revealed.push(i); rev++;
-            cards[i].el.classList.add('sc-cell--open');
+            cards[i].el.classList.add('scratch-cell--open');
             Sfx.play('pop');
             info.textContent = '已刮開 ' + rev + ' / ' + MAX_REV + ' 張';
             var w = winner(bd.cells, revealed);
@@ -224,9 +225,9 @@
         }
         function showAll(sym) {
             cards.forEach(function (c, i) {
-                c.el.classList.add('sc-cell--open');
-                if (revealed.indexOf(i) < 0) c.el.classList.add('sc-cell--rest');
-                if (sym && bd.cells[i] === sym) c.el.classList.add('sc-cell--hit');
+                c.el.classList.add('scratch-cell--open');
+                if (revealed.indexOf(i) < 0) c.el.classList.add('scratch-cell--rest');
+                if (sym && bd.cells[i] === sym) c.el.classList.add('scratch-cell--hit');
             });
         }
         function win(sym) {

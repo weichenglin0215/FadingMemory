@@ -1,0 +1,223 @@
+/* ═══════════════════════════════════════
+   reaction_mahjong3.css — 缺哪一張（js/reaction_mahjong3.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「mahjong3-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 缺哪一張（.mahjong3-）═══ */
+.mahjong3-stage {
+    background: var(--c-green);
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 規則一直寫在上面（深色桌布上用淺色字） */
+.mahjong3-rule {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    color: var(--c-card);
+    font-weight: var(--fw-bold);
+}
+
+.mahjong3-table {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 84px;
+    padding: 0 var(--sp-2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-2);
+}
+
+.mahjong3-strip {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+}
+
+/* 象牙色的牌：大大的國字數字＋下面一個小阿拉伯數字（點數） */
+.mahjong3-tile {
+    width: 50px;
+    height: 70px;
+    box-sizing: border-box;
+    border-radius: 8px;
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    box-shadow: 0 3px 0 var(--c-ink-soft);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.mahjong3-num {
+    font-size: 30px;
+    font-weight: var(--fw-bold);
+    color: var(--c-ink);
+}
+
+.mahjong3-pip {
+    margin-top: 4px;
+    font-size: 15px;
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 剛補上去的那張 */
+.mahjong3-tile--added {
+    background: var(--c-yellow-soft);
+    border-color: var(--c-orange);
+}
+
+/* 分好的組：同一組用同一種顏色的外框（三種顏色輪流） */
+.mahjong3-tile--g0 {
+    border-color: var(--mj3-g0);
+    box-shadow: 0 3px 0 var(--mj3-g0);
+}
+
+.mahjong3-tile--g1 {
+    border-color: var(--mj3-g1);
+    box-shadow: 0 3px 0 var(--mj3-g1);
+}
+
+.mahjong3-tile--g2 {
+    border-color: var(--mj3-g2);
+    box-shadow: 0 3px 0 var(--mj3-g2);
+}
+
+/* 湊不起來的牌：紅色 */
+.mahjong3-tile--left {
+    border-color: var(--c-bad-light);
+    box-shadow: 0 3px 0 var(--c-bad-light);
+    background: var(--c-bad-soft);
+}
+
+.mahjong3-cap {
+    margin-top: var(--sp-2);
+    color: var(--c-card);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    text-align: center;
+}
+
+.mahjong3-cap--ok {
+    color: var(--c-green-light);
+}
+
+/* 你漏掉的答案：橘色 */
+.mahjong3-cap--miss {
+    color: var(--c-yellow);
+}
+
+.mahjong3-note {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 300px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    color: var(--c-card);
+}
+
+/* 「我選好了」：選完全部答案再按；一張都沒選時按不下去 */
+.mahjong3-go {
+    position: absolute;
+    left: var(--sp-4);
+    right: var(--sp-4);
+    bottom: 118px;
+    height: 64px;
+    border-radius: var(--r-md);
+    border: 3px solid var(--c-ink);
+    background: var(--c-yellow);
+    box-shadow: 0 4px 0 var(--c-ink);
+    color: var(--c-ink);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.mahjong3-go:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+/* 下面九顆牌鍵（一～九） */
+.mahjong3-keys {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 10px;
+    padding: 0 var(--sp-2);
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 6px;
+}
+
+.mahjong3-key {
+    height: 96px;
+    border-radius: 10px;
+    border: 3px solid var(--c-ink-soft);
+    background: var(--c-card);
+    box-shadow: 0 4px 0 var(--c-ink-soft);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0;
+    cursor: pointer;
+    color: var(--c-ink);
+    touch-action: manipulation;
+}
+
+.mahjong3-key-num {
+    font-size: 30px;
+    font-weight: var(--fw-bold);
+    line-height: 1;
+}
+
+.mahjong3-key-pip {
+    font-size: 16px;
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    line-height: 1;
+}
+
+.mahjong3-key--ok {
+    border-color: var(--c-ok);
+    box-shadow: 0 4px 0 var(--c-ok);
+    background: var(--c-ok-soft);
+}
+
+.mahjong3-key--bad {
+    border-color: var(--c-bad-light);
+    box-shadow: 0 4px 0 var(--c-bad-light);
+    background: var(--c-bad-soft);
+}
+
+/* 已選的牌鍵（還沒按「我選好了」）：橘色外框＋淡黃底，再點一次取消 */
+.mahjong3-key--sel {
+    border-color: var(--c-orange);
+    box-shadow: 0 4px 0 var(--c-orange);
+    background: var(--c-yellow-soft);
+}
+
+/* 揭曉時你漏掉的答案：橘色虛線外框 */
+.mahjong3-key--miss {
+    border: 3px dashed var(--c-orange);
+    background: var(--c-yellow-soft);
+}

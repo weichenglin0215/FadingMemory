@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_pillbox.js — 秒反應・分藥盒
+   樣式：css/games/reaction_pillbox.css（這款專屬的 class 一律以「pillbox-」開頭；共用元件在 css/reaction_common.css）
    先看一張「吃藥單」，記住每個時段要放幾顆什麼樣子的藥丸；單子收起來後，上方的格子會出現一堆藥丸
    （裡面混了干擾的藥丸），用手指把正確的藥丸**拖曳**到下方藥盒對應的格子。
    藥丸是虛構的彩色圖案，這是記憶遊戲，不是用藥建議。
@@ -224,7 +225,7 @@
     /* 畫藥丸圖示：用 SVG 向量圖，k 是種類編號，size 是畫出來的邊長（px） */
     /* 藥丸圖示 */
     function pillSvg(k, size) {
-        var s = kit.svg('svg', { 'class': 'pb-pill', viewBox: '0 0 40 40', width: size, height: size });
+        var s = kit.svg('svg', { 'class': 'pillbox-pill', viewBox: '0 0 40 40', width: size, height: size });
         var f = { fill: KIND_COLOR[k], stroke: 'rgba(74,59,30,0.65)', 'stroke-width': 2.5, 'stroke-linejoin': 'round' };
         /* 小工具 m(標籤, 屬性)：建立形狀並合併共用的填色、外框屬性 */
         function m(tag, a) { var o = {}, x; for (x in a) o[x] = a[x]; for (x in f) o[x] = f[x]; kit.svg(tag, o, s); }
@@ -254,14 +255,14 @@
             var Sh = null, prevSh = null, pills = [], sel = 0, nextId = 1;
 
             /* 建立畫面元素：標題、上方面板（先放單子後放藥盤）、藥盒、時間條、按鈕列、拖曳圖層 */
-            var head = h('div', { 'class': 'pb-head' });
-            var sheetEl = h('div', { 'class': 'pb-sheet' });
-            var boxEl = h('div', { 'class': 'pb-box' });
+            var head = h('div', { 'class': 'pillbox-head' });
+            var sheetEl = h('div', { 'class': 'pillbox-sheet' });
+            var boxEl = h('div', { 'class': 'pillbox-box' });
             var tb = kit.timebar();
-            var clear = h('button', { 'class': 'btn btn--line btn--sm pb-clear', text: '清空這格' });
-            var done = h('button', { 'class': 'btn btn--go btn--sm pb-done', text: '好了' });
-            var acts = h('div', { 'class': 'pb-acts' }, [clear, done]);
-            var layer = h('div', { 'class': 'pb-layer' });
+            var clear = h('button', { 'class': 'btn btn--line btn--sm pillbox-clear', text: '清空這格' });
+            var done = h('button', { 'class': 'btn btn--go btn--sm pillbox-done', text: '好了' });
+            var acts = h('div', { 'class': 'pillbox-acts' }, [clear, done]);
+            var layer = h('div', { 'class': 'pillbox-layer' });
             [head, sheetEl, boxEl, tb.el, acts, layer].forEach(function (n) { root.appendChild(n); });
 
             /* 更新標題列右側的小字 */
@@ -278,10 +279,10 @@
             /* 畫「藥單」：每個時段一行（時段名 + 該放的藥丸圖案） */
             function drawSheet() {
                 sheetEl.innerHTML = '';
-                sheetEl.className = 'pb-sheet';
+                sheetEl.className = 'pillbox-sheet';
                 Sh.sheet.forEach(function (row, s) {
-                    var line = h('div', { 'class': 'pb-line' }, [h('span', { 'class': 'pb-line__name', text: SLOT_NAME[s] })]);
-                    var pl = h('span', { 'class': 'pb-line__pills' });
+                    var line = h('div', { 'class': 'pillbox-line' }, [h('span', { 'class': 'pillbox-line__name', text: SLOT_NAME[s] })]);
+                    var pl = h('span', { 'class': 'pillbox-line__pills' });
                     row.forEach(function (c, k) { for (var i = 0; i < c; i++) pl.appendChild(pillSvg(k, 36)); });
                     line.appendChild(pl);
                     sheetEl.appendChild(line);
@@ -292,7 +293,7 @@
             /* 畫藥丸盤與藥盒（拖曳結束、或點一下之後才重畫；拖曳當中不重畫）*/
             /* 建立一顆可操作的藥丸：按下去就開始拖曳 */
             function pillItem(p, size) {
-                var el = h('div', { 'class': 'pb-item', attrs: { 'data-id': String(p.id) } }, [pillSvg(p.kind, size)]);
+                var el = h('div', { 'class': 'pillbox-item', attrs: { 'data-id': String(p.id) } }, [pillSvg(p.kind, size)]);
                 el.addEventListener('pointerdown', function (e) { startDrag(e, p, el, size); });
                 return el;
             }
@@ -303,9 +304,9 @@
             /* 畫藥丸盤 */
             function drawTray() {
                 sheetEl.innerHTML = '';
-                sheetEl.className = 'pb-sheet pb-tray';
-                sheetEl.appendChild(h('div', { 'class': 'pb-tray__cap', text: '藥丸（拖曳到下面的格子）' }));
-                var grid = h('div', { 'class': 'pb-tray__grid' });
+                sheetEl.className = 'pillbox-sheet pillbox-tray';
+                sheetEl.appendChild(h('div', { 'class': 'pillbox-tray__cap', text: '藥丸（拖曳到下面的格子）' }));
+                var grid = h('div', { 'class': 'pillbox-tray__grid' });
                 var inTray = pills.filter(function (p) { return p.where < 0; }), sz = trayPillSize(inTray.length);
                 inTray.forEach(function (p) { grid.appendChild(pillItem(p, sz)); });
                 sheetEl.appendChild(grid);
@@ -314,12 +315,12 @@
             function drawBox() {
                 boxEl.innerHTML = '';
                 Sh.sheet.forEach(function (_, s) {
-                    var cell = h('div', { 'class': 'pb-cell' + (s === sel ? ' pb-cell--sel' : ''), attrs: { 'data-s': String(s) } }, [h('span', { 'class': 'pb-cell__name', text: SLOT_NAME[s] })]);
-                    var wrap = h('span', { 'class': 'pb-cell__pills' });
+                    var cell = h('div', { 'class': 'pillbox-cell' + (s === sel ? ' pillbox-cell--sel' : ''), attrs: { 'data-s': String(s) } }, [h('span', { 'class': 'pillbox-cell__name', text: SLOT_NAME[s] })]);
+                    var wrap = h('span', { 'class': 'pillbox-cell__pills' });
                     var inCell = pills.filter(function (p) { return p.where === s; }), sz = cellPillSize(inCell.length);
                     inCell.forEach(function (p) { wrap.appendChild(pillItem(p, sz)); });
                     cell.appendChild(wrap);
-                    cell.addEventListener('pointerdown', function (e) { if (state === 'fill' && !(e.target.closest && e.target.closest('.pb-item'))) { sel = s; Sfx.play('click'); drawBox(); } });
+                    cell.addEventListener('pointerdown', function (e) { if (state === 'fill' && !(e.target.closest && e.target.closest('.pillbox-item'))) { sel = s; Sfx.play('click'); drawBox(); } });
                     boxEl.appendChild(cell);
                 });
             }
@@ -335,8 +336,8 @@
                 e.preventDefault();
                 /* setPointerCapture：讓手指移出這個元素外仍持續收到 pointermove／pointerup */
                 try { el.setPointerCapture(e.pointerId); } catch (err) { }
-                /* ghost 是跟著手指跑的「分身」，畫在最上層的 .pb-layer 上；kit.localPt 把螢幕座標換算成舞台座標 */
-                var pt = kit.localPt(e, layer), ghost = h('div', { 'class': 'pb-ghost' }, [pillSvg(p.kind, 56)]);
+                /* ghost 是跟著手指跑的「分身」，畫在最上層的 .pillbox-layer 上；kit.localPt 把螢幕座標換算成舞台座標 */
+                var pt = kit.localPt(e, layer), ghost = h('div', { 'class': 'pillbox-ghost' }, [pillSvg(p.kind, 56)]);
                 dragging = { id: e.pointerId, p: p, el: el, x0: e.clientX, y0: e.clientY, ghost: ghost, moved: false };
                 layer.appendChild(ghost);
                 ghost.style.left = (pt.x - 28) + 'px'; ghost.style.top = (pt.y - 28) + 'px';
@@ -348,7 +349,7 @@
                     /* 還沒移動超過 8px 就不當作拖曳 */
                     if (!dragging.moved && dx * dx + dy * dy < DRAG_MOVE_PX * DRAG_MOVE_PX) return;
                     /* 第一次超過門檻：顯示分身、讓原本那顆變淡 */
-                    if (!dragging.moved) { dragging.moved = true; ghost.style.display = ''; el.classList.add('pb-item--lifted'); }
+                    if (!dragging.moved) { dragging.moved = true; ghost.style.display = ''; el.classList.add('pillbox-item--lifted'); }
                     var q = kit.localPt(ev, layer);
                     ghost.style.left = (q.x - 28) + 'px'; ghost.style.top = (q.y - 28) + 'px';
                     /* 標出手指正在哪一格上方（該格亮綠色） */
@@ -374,9 +375,9 @@
             function targetAt(x, y) {
                 var els = document.elementsFromPoint(x, y);
                 for (var i = 0; i < els.length; i++) {
-                    var c = els[i].closest && els[i].closest('.pb-cell');
+                    var c = els[i].closest && els[i].closest('.pillbox-cell');
                     if (c && boxEl.contains(c)) return { s: Number(c.getAttribute('data-s')) };
-                    if (els[i].closest && els[i].closest('.pb-tray')) return { tray: true };
+                    if (els[i].closest && els[i].closest('.pillbox-tray')) return { tray: true };
                 }
                 return null;
             }
@@ -384,9 +385,9 @@
             function markTarget(x, y) {
                 clearMarks();
                 var t = targetAt(x, y);
-                if (t && t.s != null) { var c = boxEl.children[t.s]; if (c) c.classList.add('pb-cell--over'); }
+                if (t && t.s != null) { var c = boxEl.children[t.s]; if (c) c.classList.add('pillbox-cell--over'); }
             }
-            function clearMarks() { [].forEach.call(boxEl.children, function (c) { c.classList.remove('pb-cell--over'); }); }
+            function clearMarks() { [].forEach.call(boxEl.children, function (c) { c.classList.remove('pillbox-cell--over'); }); }
             /* 放下：放進格子（位置=格子編號）或放回藥盤（位置=-1） */
             function dropPill(p, t) {
                 if (t && t.s != null) { p.where = t.s; sel = t.s; Sfx.play('pop'); }
@@ -414,7 +415,7 @@
                 meta();
                 /* 顯示單子，藥盒先變淡、按鈕先隱藏 */
                 drawSheet(); drawBox();
-                acts.style.visibility = 'hidden'; boxEl.classList.add('pb-box--dim');
+                acts.style.visibility = 'hidden'; boxEl.classList.add('pillbox-box--dim');
                 /* 主控台印出這關單子與藥盤的實際內容（除錯用） */
                 try { console.info('[分藥盒] 第 ' + level + ' 關 單子：' + Sh.sheet.map(function (r, s) { return SLOT_NAME[s] + '＝' + rowText(r); }).join('；') + '；藥盤共 ' + pills.length + ' 顆（需要 ' + needTotal(Sh.sheet) + ' 顆，其中干擾 ' + pills.filter(function (p) { return p.kind >= 4; }).length + ' 顆）；看 ' + showSec(level, Sh.sheet).toFixed(1) + ' 秒、填 ' + fillSec(Sh.sheet).toFixed(0) + ' 秒'); } catch (e) { }
                 var t0 = performance.now(), lim = showSec(level, Sh.sheet) * 1000;
@@ -431,13 +432,13 @@
                             for (var k = 0; k < Sh.kinds; k++) {
                                 if (!(Sh.sheet[s][k] > 0)) continue;
                                 var pill = pills.filter(function (p) { return p.kind === k && p.where < 0; })[0];
-                                var itemEl = pill && root.querySelector('.pb-item[data-id="' + pill.id + '"]');
+                                var itemEl = pill && root.querySelector('.pillbox-item[data-id="' + pill.id + '"]');
                                 if (itemEl && boxEl.children[s]) { Reaction.kit.hintOn(root, itemEl, { mode: 'drag', to: boxEl.children[s], text: '請把藥丸拖進藥盒格子' }); return; }
                             }
                         }
                     })();
                     head.textContent = '第 ' + level + ' 關　把正確的藥丸拖曳到格子裡';
-                    acts.style.visibility = 'visible'; boxEl.classList.remove('pb-box--dim');
+                    acts.style.visibility = 'visible'; boxEl.classList.remove('pillbox-box--dim');
                     Sfx.play('go');
                     var f0 = performance.now(), fl = fillSec(Sh.sheet) * 1000;
                     my.loop(function (now) { if (id !== lvId || state !== 'fill') return false; tb.set(1 - (now - f0) / fl); });
@@ -473,7 +474,7 @@
                 head.textContent = timeout ? '時間到了！' : '有 ' + wrong.length + ' 格不一樣';
                 /* 錯的格子標橘 */
                 /* 錯的格子標橘色 */
-                [].forEach.call(boxEl.children, function (c, s) { if (!sameRow(pad(Sh.sheet[s]), box[s])) c.classList.add('pb-cell--bad'); });
+                [].forEach.call(boxEl.children, function (c, s) { if (!sameRow(pad(Sh.sheet[s]), box[s])) c.classList.add('pillbox-cell--bad'); });
                 meta();
                 /* 顯示結算 */
                 my.after(2200, function () {

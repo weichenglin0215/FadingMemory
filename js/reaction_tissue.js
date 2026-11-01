@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_tissue.js — 秒反應・抽光衛生紙（原名「抽光它」）
+   樣式：css/games/reaction_tissue.css（這款專屬的 class 一律以「tissue-」開頭；共用元件在 css/reaction_common.css）
    手指在螢幕上一直往下滑，把一整捲衛生紙拉出來；要抽滿 50 個螢幕高度，比誰最快。
    · 慣性滑落：手指放開時如果還在往下滑，紙會帶著放開前的速度繼續滑一段，再慢慢停下來
      （INERTIA 參數控制，預設 0.8，見下面「可以自己調的參數」）。
@@ -149,8 +150,8 @@
             R = kit.round();
             var my = R;
             root.innerHTML = '';
-            /* 替整個畫面加上暖米色背景 class（樣式在 css/reaction.css 的 .ts-bg） */
-            root.classList.add('ts-bg');
+            /* 替整個畫面加上暖米色背景 class（樣式在 css/games/reaction_tissue.css 的 .tissue-bg） */
+            root.classList.add('tissue-bg');
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
             /* 畫面寬 500，高度用 Stage.H（850） */
@@ -160,30 +161,30 @@
 
             /* 紙：重複鋪的背景圖，高度由 JS 設定 */
             /* 紙 */
-            var paper = h('div', { 'class': 'ts-paper' });
+            var paper = h('div', { 'class': 'tissue-paper' });
             paper.style.width = PAPER_W + 'px';
             paper.style.backgroundImage = paperTile();
             root.appendChild(paper);
 
             /* 紙捲：SVG 圓，半徑隨抽出的長度縮小；三條記號隨轉動 */
             /* 紙捲（SVG，圓心固定，半徑隨抽出的長度縮小） */
-            var svg = kit.svg('svg', { 'class': 'ts-roll', viewBox: '0 0 ' + W + ' 260', preserveAspectRatio: 'xMidYMin meet' });
+            var svg = kit.svg('svg', { 'class': 'tissue-roll', viewBox: '0 0 ' + W + ' 260', preserveAspectRatio: 'xMidYMin meet' });
             var cx = W / 2;
-            var bodyC = kit.svg('circle', { 'class': 'ts-roll__body', cx: cx, cy: ROLL_CY, r: R_FULL }, svg);
+            var bodyC = kit.svg('circle', { 'class': 'tissue-roll__body', cx: cx, cy: ROLL_CY, r: R_FULL }, svg);
             var spin = kit.svg('g', {}, svg);
             [0, 120, 240].forEach(function (a) {
-                kit.svg('path', { 'class': 'ts-roll__mark', 'vector-effect': 'non-scaling-stroke', d: 'M0 -0.5 L0 -0.84', transform: 'rotate(' + a + ')' }, spin);
+                kit.svg('path', { 'class': 'tissue-roll__mark', 'vector-effect': 'non-scaling-stroke', d: 'M0 -0.5 L0 -0.84', transform: 'rotate(' + a + ')' }, spin);
             });
-            var coreC = kit.svg('circle', { 'class': 'ts-roll__core', cx: cx, cy: ROLL_CY, r: R_CORE }, svg);
-            kit.svg('circle', { 'class': 'ts-roll__hole', cx: cx, cy: ROLL_CY, r: R_CORE * 0.55 }, svg);
+            var coreC = kit.svg('circle', { 'class': 'tissue-roll__core', cx: cx, cy: ROLL_CY, r: R_CORE }, svg);
+            kit.svg('circle', { 'class': 'tissue-roll__hole', cx: cx, cy: ROLL_CY, r: R_CORE * 0.55 }, svg);
             root.appendChild(svg);
 
             /* 抬頭顯示：計時、進度、進度條、提示 */
             /* 抬頭顯示 */
-            var timeEl = h('div', { 'class': 'ts-time', text: '0.0000 秒' });
-            var progText = h('div', { 'class': 'ts-prog', text: '0.0000／' + TARGET_SCREENS + ' 屏' });
-            var bar = h('div', { 'class': 'ts-bar' }, [h('div', { 'class': 'ts-bar__fill' })]);
-            var prompt = h('div', { 'class': 'ts-prompt', text: '往下滑開始' });
+            var timeEl = h('div', { 'class': 'tissue-time', text: '0.0000 秒' });
+            var progText = h('div', { 'class': 'tissue-prog', text: '0.0000／' + TARGET_SCREENS + ' 屏' });
+            var bar = h('div', { 'class': 'tissue-bar' }, [h('div', { 'class': 'tissue-bar__fill' })]);
+            var prompt = h('div', { 'class': 'tissue-prompt', text: '往下滑開始' });
             root.appendChild(timeEl);
             root.appendChild(progText);
             root.appendChild(bar);
@@ -270,7 +271,7 @@
                 render();
                 renderTime();
                 activeId = null;
-                paper.classList.add('ts-paper--gone');
+                paper.classList.add('tissue-paper--gone');
                 var isNew = Reaction.setBest(ID, finalSec, function (v, b) { return v < b; });
                 ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
@@ -288,8 +289,8 @@
                 var chunk = [];
                 for (var k = 0; k < splits.length; k++) chunk.push(splits[k] - (k ? splits[k - 1] : 0));
                 var maxChunk = Math.max.apply(null, chunk.concat([1]));
-                var chart = h('div', { 'class': 'ts-chart' }, chunk.map(function (c) {
-                    var b = h('div', { 'class': 'ts-chart__bar' });
+                var chart = h('div', { 'class': 'tissue-chart' }, chunk.map(function (c) {
+                    var b = h('div', { 'class': 'tissue-chart__bar' });
                     b.style.height = Math.max(6, c / maxChunk * 100) + '%';
                     return b;
                 }));
@@ -387,7 +388,7 @@
                 root.removeEventListener('pointerup', onUp);
                 root.removeEventListener('pointercancel', onUp);
                 root.removeEventListener('wheel', onWheel);
-                root.classList.remove('ts-bg');
+                root.classList.remove('tissue-bg');
             });
 
             render();

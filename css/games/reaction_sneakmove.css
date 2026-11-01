@@ -1,0 +1,45 @@
+/* ═══════════════════════════════════════
+   reaction_sneakmove.css — 誰在偷偷動（js/reaction_sneakmove.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「sneakmove-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 誰在偷偷動（.sneakmove-）═══ */
+.sneakmove-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+}
+
+.sneakmove-dot {
+    fill: var(--c-blue);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+/* 答對（找到會動的圓點、或失敗時標出沒找到的答案）：綠色外框 */
+.sneakmove-dot--right {
+    stroke: var(--c-ok);
+    stroke-width: 6;
+}
+
+/* 答錯（點到不動的圓點）：紅色外框 */
+.sneakmove-dot--wrong {
+    stroke: var(--c-bad-light);
+    stroke-width: 6;
+}
+
+.sneakmove-trail {
+    stroke: var(--c-orange);
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.sneakmove-start {
+    fill: var(--c-orange);
+}
+
+.sneakmove-tip {
+    bottom: 4px;
+}

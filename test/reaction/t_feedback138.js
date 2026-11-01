@@ -13,13 +13,13 @@ const ok = (c, m) => { total++; if (!c) { bad++; console.log('FAIL', m); } };
 
 // ── 堵住五子 ──
 {
-  const T = game('reaction_gomoku.js').test, src = rd('js/reaction_gomoku.js'), css = rd('css/reaction6.css').split(/\s+/).join(' ');
+  const T = game('reaction_gomoku.js').test, src = rd('js/reaction_gomoku.js'), css = rd('css/games/reaction_gomoku.css').split(/\s+/).join(' ');
   ok(T.REVEAL_STEP_MS === 1300 && T.REVEAL_LEAD_MS === 1000, '每一手的間隔 1300 毫秒（原本 650）、第一手之前 1000 毫秒（原本 500）：放慢成 50% 速度');
   ok(T.REVEAL_HOLD_MS >= 2000, '最後一手之後停格至少 2 秒：' + T.REVEAL_HOLD_MS);
   ok(T.revealMs(0) === T.REVEAL_LEAD_MS + T.REVEAL_HOLD_MS && T.revealMs(3) === T.REVEAL_LEAD_MS + 3 * T.REVEAL_STEP_MS + T.REVEAL_HOLD_MS, 'revealMs ＝ 第一手之前 ＋ 手數 × 間隔 ＋ 停格');
   ok(T.revealMs(5) - T.revealMs(4) === 1300, '每多一手，結算晚 1300 毫秒');
   ok(/api\.after\(REVEAL_LEAD_MS \+ j \* REVEAL_STEP_MS/.test(src) && /api\.fail\(\{ delay: revealMs\(pv\.length\)/.test(src) && !/500 \+ j \* 650|500 \+ pv\.length \* 650/.test(src), '揭曉動畫與結算都用新的節奏');
-  ok(/\.gmk-stone--new \{[^}]*animation: gmk-drop 0\.6s/.test(css), '棋子落下的動畫 0.3 → 0.6 秒');
+  ok(/\.gomoku-stone--new \{[^}]*animation: gomoku-drop 0\.6s/.test(css), '棋子落下的動畫 0.3 → 0.6 秒');
 }
 
 // ── 鋪地毯 ──

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_colorrecall.js — 秒反應・記色調色
+   樣式：css/games/reaction_colorrecall.css（這款專屬的 class 一律以「colorrecall-」開頭；共用元件在 css/reaction_common.css）
    先看左邊的色塊 3 秒（右上倒數、右下「請記住左邊顏色」），3 秒後左邊色塊消失，
    右邊出現一塊隨機起始色的色塊；拖曳下方橫條，讓右邊色塊變回剛剛看到的顏色。按「確定」，只有一次機會。
    每一回合只考「色相」「彩度」「明度」其中一項（隨機抽），另外兩項跟目標色一樣。
@@ -95,7 +96,7 @@
         kit.single(root, ctx, {
             id: ID, G: G, better: 'min', max: SCORE.max,
             title: '先記住左邊的顏色，再把右邊調成一樣',
-            stageClass: 'cr-stage',
+            stageClass: 'colorrecall-stage',
             numText: function (v) { return 'ΔE ' + v.toFixed(4); },
             rating: rating,
             sfx: function (v) { return v < 4 ? 'perfect' : (v < 10 ? 'win' : 'fail'); },
@@ -109,26 +110,26 @@
         var cfg = makeRound(), t = tFor(cfg.dim, cfg.start), phase = 'memo', locked = false, hint = null;
         console.log('[記色調色] 這回合考' + DIM_NAME[cfg.dim] + '；目標 H' + cfg.target.h.toFixed(2) + ' S' + cfg.target.s.toFixed(2) + ' L' + cfg.target.l.toFixed(2) + '；起始 ' + cfg.start.toFixed(2));
 
-        var left = h('div', { 'class': 'cr-block cr-block--l' });
-        var right = h('div', { 'class': 'cr-block cr-block--r' });
-        var count = h('div', { 'class': 'cr-count', text: String(MEMO_S) });
-        var memo = h('div', { 'class': 'cr-memo', text: '請記住左邊顏色' });
-        var dimTag = h('div', { 'class': 'cr-dim', text: '這次考：' + DIM_NAME[cfg.dim] });
+        var left = h('div', { 'class': 'colorrecall-block colorrecall-block--l' });
+        var right = h('div', { 'class': 'colorrecall-block colorrecall-block--r' });
+        var count = h('div', { 'class': 'colorrecall-count', text: String(MEMO_S) });
+        var memo = h('div', { 'class': 'colorrecall-memo', text: '請記住左邊顏色' });
+        var dimTag = h('div', { 'class': 'colorrecall-dim', text: '這次考：' + DIM_NAME[cfg.dim] });
         left.style.background = css(cfg.target);
-        right.classList.add('cr-block--info');
+        right.classList.add('colorrecall-block--info');
         right.appendChild(count); right.appendChild(memo);
         [left, right, dimTag].forEach(function (e) { stage.appendChild(e); });
 
         /* 調整區（記憶結束後才出現） */
         var trackY = 420, x0 = (W - TRACK_W) / 2;
-        var track = h('div', { 'class': 'cr-track' });
+        var track = h('div', { 'class': 'colorrecall-track' });
         track.style.left = x0 + 'px'; track.style.top = trackY + 'px'; track.style.width = TRACK_W + 'px';
-        var knob = h('div', { 'class': 'cr-knob' }); knob.style.top = (trackY + 4 - KNOB / 2) + 'px';
-        var bL = h('button', { 'class': 'btn btn--line cr-nudge', text: '◀' }), bR = h('button', { 'class': 'btn btn--line cr-nudge', text: '▶' });
-        var nudges = h('div', { 'class': 'cr-nudges' }, [bL, bR]);
-        var okBtn = h('button', { 'class': 'btn btn--go cr-ok', text: '確定' });
-        var msg = h('div', { 'class': 'cr-msg' });
-        var big = h('div', { 'class': 'cr-big', text: fmtDiffPct(0) });        /* 揭曉時的大字：差異 XX.XXXX% */
+        var knob = h('div', { 'class': 'colorrecall-knob' }); knob.style.top = (trackY + 4 - KNOB / 2) + 'px';
+        var bL = h('button', { 'class': 'btn btn--line colorrecall-nudge', text: '◀' }), bR = h('button', { 'class': 'btn btn--line colorrecall-nudge', text: '▶' });
+        var nudges = h('div', { 'class': 'colorrecall-nudges' }, [bL, bR]);
+        var okBtn = h('button', { 'class': 'btn btn--go colorrecall-ok', text: '確定' });
+        var msg = h('div', { 'class': 'colorrecall-msg' });
+        var big = h('div', { 'class': 'colorrecall-big', text: fmtDiffPct(0) });        /* 揭曉時的大字：差異 XX.XXXX% */
         var ctrl = [track, knob, nudges, okBtn];
         ctrl.forEach(function (e) { e.style.display = 'none'; stage.appendChild(e); });
         stage.appendChild(msg); stage.appendChild(big);
@@ -142,8 +143,8 @@
         for (var k = 1; k <= MEMO_S; k++) (function (k) { my.after(k * 1000, function () { if (k < MEMO_S) { count.textContent = String(MEMO_S - k); Sfx.play('tick'); } else toAdjust(); }); })(k);
         function toAdjust() {
             phase = 'adjust';
-            left.style.background = ''; left.classList.add('cr-block--info'); left.textContent = '請調整下方橫條，讓右邊色塊與剛剛相同';
-            right.classList.remove('cr-block--info'); right.innerHTML = '';
+            left.style.background = ''; left.classList.add('colorrecall-block--info'); left.textContent = '請調整下方橫條，讓右邊色塊與剛剛相同';
+            right.classList.remove('colorrecall-block--info'); right.innerHTML = '';
             ctrl.forEach(function (e) { e.style.display = ''; });
             paint();
             /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從圓點現在的位置往「剛剛那個顏色的位置」重複移動（第一次的正確答案） */
@@ -176,11 +177,11 @@
             locked = true; hideHint(); ctrl.forEach(function (e) { e.style.display = 'none'; });
             Sfx.play('click');
             var m = mine(), real = deltaE(m, cfg.target);
-            left.classList.remove('cr-block--info'); left.textContent = ''; left.style.background = css(cfg.target);
+            left.classList.remove('colorrecall-block--info'); left.textContent = ''; left.style.background = css(cfg.target);
             var tv = cfg.target[dimKey(cfg.dim)], mv = valueAt(cfg.dim, t);
             /* 揭曉：左圖去掉右邊的白框線、右圖去掉左邊的白框線 → 兩張圖往中間靠攏併齊，同時下方的差異數字從 0 往上跳 */
-            left.classList.add('cr-block--join-l'); right.classList.add('cr-block--join-r');
-            big.classList.add('cr-big--on');
+            left.classList.add('colorrecall-block--join-l'); right.classList.add('colorrecall-block--join-r');
+            big.classList.add('colorrecall-big--on');
             my.tween(COUNT_MS, function (e) { big.textContent = fmtDiffPct(real * e); }, kit.easeOutCubic).then(function () {
                 big.textContent = fmtDiffPct(real);
                 my.after(HOLD_MS, function () {

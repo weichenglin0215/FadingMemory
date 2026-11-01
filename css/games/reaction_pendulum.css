@@ -1,0 +1,87 @@
+/* ═══════════════════════════════════════
+   reaction_pendulum.css — 六點鐘方向（js/reaction_pendulum.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「pendulum-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 六點鐘方向：看鐘擺擺動，在鐘擺到達 6 點鐘方向的瞬間點擊 */
+/* ═══ 六點鐘方向（.pendulum-）═══ */
+.pendulum-field {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+}
+
+/* 鐘擺的 SVG 畫面，鋪滿場地 */
+.pendulum-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* 弧形刻度線 */
+.pendulum-arc {
+    stroke: var(--c-ink-soft);
+    stroke-width: 1.5px;
+}
+
+/* 刻度線（粗） */
+.pendulum-tick {
+    stroke: var(--c-ink-soft);
+    stroke-width: 1.5px;
+}
+
+/* 細刻度線 */
+.pendulum-tick--fine {
+    stroke: var(--c-ink);
+    stroke-width: 1.5px;
+}
+
+/* 正下方 0 度（6 點鐘）的紅色基準線 */
+.pendulum-zero {
+    stroke: var(--flow-ink-1);
+    stroke-width: 3px;
+}
+
+/* 刻度數字 */
+.pendulum-num {
+    fill: var(--c-ink-soft);
+    font-family: var(--font-ui);
+    font-size: 26px;
+    font-weight: 900;
+}
+
+.pendulum-num--zero {
+    fill: var(--flow-ink-1);
+    font-size: 34px;
+}
+
+/* 擺桿 */
+.pendulum-rod {
+    stroke: var(--c-ink);
+    stroke-width: 5px;
+}
+
+/* 擺錘（藍色圓球） */
+.pendulum-bob {
+    fill: var(--c-blue);
+    stroke: var(--c-ink);
+    stroke-width: 3px;
+}
+
+/* 指針 */
+.pendulum-needle {
+    stroke: var(--c-ink);
+    stroke-width: 3px;
+}
+
+/* 擺動的轉軸（中心圓點） */
+.pendulum-pivot {
+    fill: var(--c-ink);
+}

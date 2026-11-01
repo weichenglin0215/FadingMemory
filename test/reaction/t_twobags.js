@@ -82,6 +82,6 @@ ok(T.settle(0) === 0 && T.settle(1) === 1 && T.settle(-1) === 0 && T.settle(2) =
   ok(T.GEM === '💎' && G.rule.indexOf('石頭') < 0 && src.indexOf('把鑽石拖到左右秤盤') > 0, '文字是「鑽石」，圖案是 💎'); ok(T.gemPx(100) > 70 && T.gemPx(100) < 100 && G.rule.indexOf('鑽石') > 0, '💎 的字級跟著直徑');
   ok(G.rule.indexOf('面積') > 0 && G.rule.indexOf('三次方') < 0 && G.rule.indexOf('電子秤') < 0 && G.rule.indexOf('天秤') > 0, '規則文字：重量跟面積成正比、天秤（不再說三次方、電子秤）');
   ok(src.indexOf('Math.pow(d / 10, 2)') > 0 && src.indexOf('Math.cbrt') < 0 && src.indexOf('Math.pow(d / 10, 3)') < 0, '實作：不再用三次方');
-  ok(src.indexOf("'tb-beam'") > 0 && src.indexOf('tiltTo(tiltOf(s.l, s.r, q.tol))') > 0 && src.indexOf("'tb-bal--bad'") > 0 && src.indexOf('tb-disp') < 0, '實作：水平天秤，確認後依重量傾斜，超出範圍變紅');
+  ok(src.indexOf("'twobags-beam'") > 0 && src.indexOf('tiltTo(tiltOf(s.l, s.r, q.tol))') > 0 && src.indexOf("'twobags-bal--bad'") > 0 && src.indexOf('twobags-disp') < 0, '實作：水平天秤，確認後依重量傾斜，超出範圍變紅');
   ok(src.indexOf('var N0 = [') > 0 && src.indexOf('N0[0], N0[1], RAMP_LEVELS') > 0, '實作：N0 是兩個參數'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

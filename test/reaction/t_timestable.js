@@ -34,11 +34,11 @@ for (let i = 0; i < 50; i++) ok([36, 48, 35, 49].includes(T.tamper(6, 7, 'neighb
 for (let a = 1; a <= 9; a++) for (let b = 1; b <= 9; b++) for (const ty of T.TYPES) for (let k = 0; k < 6; k++) { const v = T.tamper(a, b, ty, rnd); ok(v !== a * b && v >= 1, 'tamper ' + a + '×' + b + ' ' + ty + ' → ' + v); }
 ok(T.rating(20) !== T.rating(40) && T.rating(40) !== T.rating(70) && T.rating(70) !== T.rating(120), '評語分級（找 9 格，用時比以前長）');
 // V1.27：找齊之後，被改的答案紅底白字閃爍 1.5 秒、再維持 1.5 秒，才結算
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_timestable.js'), css = rd('../../css/reaction3.css').split('\r\n').join(' ').split('\n').join(' ');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_timestable.js'), css = rd('../../css/games/reaction_timestable.css').split('\r\n').join(' ').split('\n').join(' ');
   ok(T.BLINK_MS === 1500 && T.HOLD_MS === 1500, '閃爍 1.5 秒、維持 1.5 秒');
-  ok(/\.tt-cell--wrong \{[^}]*c-bad-light[^}]*c-on-accent/.test(css), '紅底白字');
-  ok(/\.tt-cell--blink \{\s*animation: tt-blink 0\.3s steps\(1, end\) 5;/.test(css), '閃爍 0.3 秒 × 5 次 = 1.5 秒');
-  ok(src.indexOf('my.after(BLINK_MS + HOLD_MS') > src.indexOf("el.classList.add('tt-cell--wrong', 'tt-cell--blink')") && src.indexOf('api.finish(sec') > src.indexOf('my.after(BLINK_MS + HOLD_MS'), '先閃爍、維持，之後才結算'); }
+  ok(/\.timestable-cell--wrong \{[^}]*c-bad-light[^}]*c-on-accent/.test(css), '紅底白字');
+  ok(/\.timestable-cell--blink \{\s*animation: timestable-blink 0\.3s steps\(1, end\) 5;/.test(css), '閃爍 0.3 秒 × 5 次 = 1.5 秒');
+  ok(src.indexOf('my.after(BLINK_MS + HOLD_MS') > src.indexOf("el.classList.add('timestable-cell--wrong', 'timestable-cell--blink')") && src.indexOf('api.finish(sec') > src.indexOf('my.after(BLINK_MS + HOLD_MS'), '先閃爍、維持，之後才結算'); }
 // V1.32：第一次進遊戲的公平性、舊紀錄清掉、結算不會列出 9～10 行
 { const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_timestable.js');
   ok(src.indexOf("var first = kit.once('timestable.hint'), total = FOUND + (first ? HINT_EXTRA : 0)") > 0 && src.indexOf('makeTable(null, total)') > 0 && src.indexOf('if (first) hint =') > 0, '第一次進遊戲：多改 HINT_EXTRA 格，系統引導第一格');

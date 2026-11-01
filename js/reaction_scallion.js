@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_scallion.js — 秒反應・切蔥花
+   樣式：css/games/reaction_scallion.css（這款專屬的 class 一律以「scallion-」開頭；共用元件在 css/reaction_common.css）
    蔥條從右邊慢慢往前送，刀子在畫面右邊 1/3 的位置，左邊留出一大片空間讓蔥片噴出去。每點一下就切一刀，20 秒內看你能切成最多段。
    只有一次機會，不管切得均不均勻，只比段數。
    ───────────────────────────────────────────────────────────────────
@@ -104,15 +105,15 @@
             /* speeds 這局每段的速度；cutter 切刀；state 目前狀態（ready 等待開始/run 進行中/done 結束）；t0 開始時間；pile 畫面上的蔥花 */
             var speeds = makeSpeeds(), cutter = makeCutter(speeds), state = 'ready', t0 = 0, pile = [];
             /* 建立畫面元素：標題、計數、時間條、砧板（蔥、刀子、提示） */
-            var head = h('div', { 'class': 'sl-head' });
-            var count = h('div', { 'class': 'sl-count', text: '0' });
-            var unit = h('div', { 'class': 'sl-unit', text: '段' });
-            var top = h('div', { 'class': 'sl-top' }, [count, unit]);
+            var head = h('div', { 'class': 'scallion-head' });
+            var count = h('div', { 'class': 'scallion-count', text: '0' });
+            var unit = h('div', { 'class': 'scallion-unit', text: '段' });
+            var top = h('div', { 'class': 'scallion-top' }, [count, unit]);
             var tb = kit.timebar();
-            var board = h('div', { 'class': 'sl-board' });
-            var bar = h('div', { 'class': 'sl-bar' });
-            var knife = h('div', { 'class': 'sl-knife' }, [h('div', { 'class': 'sl-knife__blade' }), h('div', { 'class': 'sl-knife__grip' })]);
-            var hint = h('div', { 'class': 'sl-hint', text: '點一下開始！之後每點一下切一刀' });
+            var board = h('div', { 'class': 'scallion-board' });
+            var bar = h('div', { 'class': 'scallion-bar' });
+            var knife = h('div', { 'class': 'scallion-knife' }, [h('div', { 'class': 'scallion-knife__blade' }), h('div', { 'class': 'scallion-knife__grip' })]);
+            var hint = h('div', { 'class': 'scallion-hint', text: '點一下開始！之後每點一下切一刀' });
             [bar, knife, hint].forEach(function (x) { board.appendChild(x); });
             [head, top, tb.el, board].forEach(function (x) { root.appendChild(x); });
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
@@ -143,7 +144,7 @@
             /* 蔥片往左邊噴出去：落點散在整個左半邊（離刀子 40～95% 的距離、高度從蔥條下方到場地底部），
                飛行路線是拋物線（先往上跳一下再落下），每一片的轉動角度不大，所以是「噴出去」而不是亂飛 */
             function spawnSlice(len) {
-                var s = h('div', { 'class': 'sl-slice' });
+                var s = h('div', { 'class': 'scallion-slice' });
                 /* 蔥片寬度＝這一刀切下的長度（限制在 6～200px 之間） */
                 var w = Math.max(6, Math.min(len, 200));
                 s.style.width = w + 'px'; s.style.height = BAR_H + 'px';
@@ -190,8 +191,8 @@
                 var len = cutter.tap((tMs - t0) / 1000);
                 if (len == null) return;
                 /* 刀子往下壓一下的動畫（加 class，70 毫秒後移除） */
-                knife.classList.add('sl-knife--down');
-                my.after(70, function () { knife.classList.remove('sl-knife--down'); });
+                knife.classList.add('scallion-knife--down');
+                my.after(70, function () { knife.classList.remove('scallion-knife--down'); });
                 spawnSlice(len);
                 Sfx.play('click');
                 count.textContent = String(cutter.cuts());

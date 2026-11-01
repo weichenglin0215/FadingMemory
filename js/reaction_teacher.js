@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_teacher.js — 秒反應・老師說
+   樣式：css/games/reaction_teacher.css（這款專屬的 class 一律以「teacher-」開頭；共用元件在 css/reaction_common.css）
    畫面上的老師會下指令，例如「老師說 點左邊」。只有開頭有「老師說」的指令才要照做；
    沒說「老師說」的指令，什麼都不要點，等時間過去就算答對。後面還會出現「點左邊的相反」＝要點右邊，
    再後面還有「點左邊跟上面」＝同時點兩個方向（V1.39.0，依玩家回饋）。
@@ -128,17 +129,17 @@
 
     /* 畫老師的臉（SVG：頭、頭髮、眼鏡、眼睛、嘴巴） */
     function faceSvg() {
-        var svg = kit.svg('svg', { 'class': 'te-face', viewBox: '0 0 100 100' });
-        kit.svg('circle', { 'class': 'te-face__head', cx: 50, cy: 52, r: 40 }, svg);
-        kit.svg('path', { 'class': 'te-face__hair', d: 'M12 46 Q14 14 50 12 Q86 14 88 46 Q70 28 50 30 Q30 28 12 46 Z' }, svg);
-        kit.svg('circle', { 'class': 'te-face__glass', cx: 35, cy: 52, r: 11 }, svg);
-        kit.svg('circle', { 'class': 'te-face__glass', cx: 65, cy: 52, r: 11 }, svg);
-        kit.svg('line', { 'class': 'te-face__glass', x1: 46, y1: 52, x2: 54, y2: 52 }, svg);
-        var eyes = kit.svg('g', { 'class': 'te-face__eyes' }, svg);
+        var svg = kit.svg('svg', { 'class': 'teacher-face', viewBox: '0 0 100 100' });
+        kit.svg('circle', { 'class': 'teacher-face__head', cx: 50, cy: 52, r: 40 }, svg);
+        kit.svg('path', { 'class': 'teacher-face__hair', d: 'M12 46 Q14 14 50 12 Q86 14 88 46 Q70 28 50 30 Q30 28 12 46 Z' }, svg);
+        kit.svg('circle', { 'class': 'teacher-face__glass', cx: 35, cy: 52, r: 11 }, svg);
+        kit.svg('circle', { 'class': 'teacher-face__glass', cx: 65, cy: 52, r: 11 }, svg);
+        kit.svg('line', { 'class': 'teacher-face__glass', x1: 46, y1: 52, x2: 54, y2: 52 }, svg);
+        var eyes = kit.svg('g', { 'class': 'teacher-face__eyes' }, svg);
         kit.svg('circle', { cx: 35, cy: 52, r: 3.2 }, eyes);
         kit.svg('circle', { cx: 65, cy: 52, r: 3.2 }, eyes);
         /* 把嘴巴元素存在 svg._mouth，之後換表情時直接用 */
-        svg._mouth = kit.svg('path', { 'class': 'te-face__mouth', d: MOUTH.normal }, svg);
+        svg._mouth = kit.svg('path', { 'class': 'teacher-face__mouth', d: MOUTH.normal }, svg);
         return svg;
     }
 
@@ -157,19 +158,19 @@
             /* i 目前第幾題；streak 連續答對數；history 已出過的指令；cmd 目前指令；state 目前階段；token 每題 +1，讓舊計時器知道自己過期；over 是否已失敗 */
             var i = (startAt || 1) - 1, streak = i, history = [], cmd = null, state = 'idle', token = 0, over = false, nowLimit = 1;
             var face = faceSvg();
-            var pre = h('div', { 'class': 'te-bubble__pre', text: ' ' });
-            var act = h('div', { 'class': 'te-bubble__act', text: ' ' });
-            var bubble = h('div', { 'class': 'te-bubble' }, [pre, act]);
-            var top = h('div', { 'class': 'te-top' }, [h('div', { 'class': 'te-teacher' }, [face]), bubble]);
-            var sub = h('div', { 'class': 'te-sub', text: ' ' });
+            var pre = h('div', { 'class': 'teacher-bubble__pre', text: ' ' });
+            var act = h('div', { 'class': 'teacher-bubble__act', text: ' ' });
+            var bubble = h('div', { 'class': 'teacher-bubble' }, [pre, act]);
+            var top = h('div', { 'class': 'teacher-top' }, [h('div', { 'class': 'teacher-teacher' }, [face]), bubble]);
+            var sub = h('div', { 'class': 'teacher-sub', text: ' ' });
             var tb = kit.timebar();
-            var pad = h('div', { 'class': 'te-pad' });
+            var pad = h('div', { 'class': 'teacher-pad' });
             var btns = {};
             /* held：「同時點兩個方向」的題目，已經點到的方向（{ left: true }）；放開手指不算取消，因為兩個方向只要在 DOUBLE_WINDOW_S 秒內都點到過就行 */
             var held = {};
-            /* 建立四個方向鍵（上下左右），用 css grid 排成十字形（樣式在 css/reaction2.css） */
+            /* 建立四個方向鍵（上下左右），用 css grid 排成十字形（樣式在 css/games/reaction_teacher.css） */
             DIRS.forEach(function (d) {
-                var b = h('button', { 'class': 'btn te-btn te-btn--' + d, text: DIR_NAME[d] });
+                var b = h('button', { 'class': 'btn teacher-btn teacher-btn--' + d, text: DIR_NAME[d] });
                 b.addEventListener('pointerdown', function (e) { e.preventDefault(); press(d); });
                 btns[d] = b; pad.appendChild(b);
             });
@@ -177,11 +178,11 @@
             ctx.setMeta(Reaction.getBest(ID) != null ? '最佳 ' + Reaction.getBest(ID) : '');
 
             /* 清掉「已點到」的標記（換題、答對、失敗時） */
-            function clearHeld() { held = {}; DIRS.forEach(function (d) { btns[d].classList.remove('te-btn--held'); }); }
+            function clearHeld() { held = {}; DIRS.forEach(function (d) { btns[d].classList.remove('teacher-btn--held'); }); }
             function heldCount() { return Object.keys(held).length; }
 
             /* 換老師的表情 */
-            function setFace(mood) { face.setAttribute('class', 'te-face te-face--' + mood); face._mouth.setAttribute('d', MOUTH[mood]); }
+            function setFace(mood) { face.setAttribute('class', 'teacher-face teacher-face--' + mood); face._mouth.setAttribute('d', MOUTH[mood]); }
             setFace('normal');
 
             /* 出下一題指令 */
@@ -197,7 +198,7 @@
                 var tx = textOf(cmd);
                 /* 顯示指令文字 */
                 pre.textContent = tx.prefix || ' '; act.textContent = tx.action;
-                bubble.className = 'te-bubble' + (cmd.say ? ' te-bubble--say' : '');
+                bubble.className = 'teacher-bubble' + (cmd.say ? ' teacher-bubble--say' : '');
                 sub.textContent = '連對 ' + streak + ' 題';
                 setFace(cmd.say ? 'normal' : 'tease');
                 state = 'live';
@@ -220,7 +221,7 @@
                 streak = i;
                 tb.set(0);
                 setFace('happy');
-                bubble.className = 'te-bubble te-bubble--ok';
+                bubble.className = 'teacher-bubble teacher-bubble--ok';
                 Sfx.play(silent ? 'pop' : 'click');
                 var best = Reaction.getBest(ID);
                 ctx.setMeta(kit.meta(['連對 ' + streak, best != null ? '最佳 ' + best : '']));
@@ -234,7 +235,7 @@
                 clearHeld();
                 tb.set(0);
                 setFace('tease');
-                bubble.className = 'te-bubble te-bubble--bad';
+                bubble.className = 'teacher-bubble teacher-bubble--bad';
                 var msg = why(cmd, kind, got);
                 sub.textContent = msg;
                 Sfx.play('bad');
@@ -272,7 +273,7 @@
                 if (exp.indexOf(d) < 0) { fail('wrong', d); return; }
                 if (held[d]) return;
                 held[d] = true;
-                btns[d].classList.add('te-btn--held');
+                btns[d].classList.add('teacher-btn--held');
                 if (exp.every(function (x) { return held[x]; })) { good(false); return; }
                 var pid = token;
                 my.after(DOUBLE_WINDOW_S * 1000, function () { if (pid === token && state === 'live') fail('half', d); });

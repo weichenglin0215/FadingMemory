@@ -83,11 +83,11 @@ function randomWin(lv) { let w = 0, M = 6000; for (let i = 0; i < M; i++) { cons
 ok(T.replayMs() === Math.round((0.25 + 0.4 + 0.35) / 0.3 * 1000), '重播 ' + T.replayMs() + ' 毫秒（0.3 倍慢動作）');
 
 // ── 程式裡的接線 ──
-{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_fishtoy.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: replayMs\(\) \+ 1800/.test(src) && /replay\(r\)/.test(src) && /fty-fish--focus/.test(src), '失敗：慢動作重播、標出下面那條魚、停格夠久');
+{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_fishtoy.js'), css = rd('../../css/games/reaction_fishtoy.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: replayMs\(\) \+ 1800/.test(src) && /replay\(r\)/.test(src) && /fishtoy-fish--focus/.test(src), '失敗：慢動作重播、標出下面那條魚、停格夠久');
   ok(/judgeLanding\(q, tLand\)/.test(src) && /tLand = tDrop \+ DROP_S/.test(src) && /api\.after\(Math\.round\(DROP_S \* 1000\)/.test(src), '落水那一刻（點下去 ＋ 0.4 秒）才判定');
   ok(/api\.timer\(TIME_LIMIT/.test(src) && /api\.solve = /.test(src) && /api\.wrong = /.test(src) && /armed/.test(src), '有限時、solve／wrong 只排一次');
-  ok(/\.fty-c0 \{[^}]*var\(--fty-c0\)/.test(css) && /\.fty-pond \{[^}]*var\(--fty-water\)/.test(css) && /\.fty-fish--caught \.fty-body \{[^}]*var\(--c-ok\)/.test(css), '魚、池塘、釣到的標記用 CSS 變數');
+  ok(/\.fishtoy-c0 \{[^}]*var\(--fty-c0\)/.test(css) && /\.fishtoy-pond \{[^}]*var\(--fty-water\)/.test(css) && /\.fishtoy-fish--caught \.fishtoy-body \{[^}]*var\(--c-ok\)/.test(css), '魚、池塘、釣到的標記用 CSS 變數');
   ok(boot.indexOf("'js/reaction_fishtoy.js'") > 0 && /0\.4 秒/.test(G.rule) && /預判/.test(G.rule), 'boot.js 有載入、玩法說明提到 0.4 秒與預判'); }
 ok(T.rating(1) !== T.rating(3) && T.rating(3) !== T.rating(6) && T.rating(6) !== T.rating(10) && T.rating(10) !== T.rating(16), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

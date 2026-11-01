@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_mahjong3.js — 秒反應・缺哪一張（企劃 231；V1.36.0 改成「聽牌」玩法：答案不只一張，要全部找出來）
+   樣式：css/games/reaction_mahjong3.css（這款專屬的 class 一律以「mahjong3-」開頭；共用元件在 css/reaction_common.css）
    麻將桌上一排同花色的數字牌（1～9，例如 2 3 4 5 6）。下面有九顆牌鍵（答案卡）：
    **補哪些牌，就能把整排剛好分成一組一組的「三張連號」（例如 3 4 5）或「三張一樣」（例如 5 5 5）？**能補成功的牌可能有好幾張
    （例如 2 3 4 5 6，補 1、4、7 都行：1 2 3＋4 5 6、2 3 4＋4 5 6、2 3 4＋5 6 7），**把全部都點起來，再按「我選好了」**；漏一張、多一張都算錯。
@@ -208,7 +209,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'mj3-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'mahjong3-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -218,12 +219,12 @@
 
     /* 一排牌（含分組括號）：tiles＝數字陣列（排序後）、groups＝每組的「牌的位置」陣列、leftIdx＝要標紅的位置、added＝剛補的那張的位置 */
     function strip(parent, tiles, groupIdx, leftIdx, added, cls) {
-        var row = h('div', { 'class': 'mj3-strip ' + (cls || '') }), cells = [];
+        var row = h('div', { 'class': 'mahjong3-strip ' + (cls || '') }), cells = [];
         var inGroup = {};
         groupIdx.forEach(function (g, gi) { g.forEach(function (p) { inGroup[p] = gi; }); });
         tiles.forEach(function (t, i) {
-            var el = h('div', { 'class': 'mj3-tile' + (i === added ? ' mj3-tile--added' : '') + (leftIdx.indexOf(i) >= 0 ? ' mj3-tile--left' : '') + (inGroup[i] != null ? ' mj3-tile--g' + (inGroup[i] % 3) : '') }, [
-                h('div', { 'class': 'mj3-num', text: NUMERALS[t - 1] }), h('div', { 'class': 'mj3-pip', text: String(t) })
+            var el = h('div', { 'class': 'mahjong3-tile' + (i === added ? ' mahjong3-tile--added' : '') + (leftIdx.indexOf(i) >= 0 ? ' mahjong3-tile--left' : '') + (inGroup[i] != null ? ' mahjong3-tile--g' + (inGroup[i] % 3) : '') }, [
+                h('div', { 'class': 'mahjong3-num', text: NUMERALS[t - 1] }), h('div', { 'class': 'mahjong3-pip', text: String(t) })
             ]);
             row.appendChild(el); cells.push(el);
         });
@@ -258,19 +259,19 @@
         api.info = q;
         console.log('[缺哪一張] 第 ' + level + ' 關：手牌 ' + q.hand.join(' ') + '（' + q.hand.length + ' 張' + (q.pair ? '，要一對' : '') + '），答案 ' + W.join('、') + '（' + W.length + ' 張）；誘餌 ' + (q.near.join('、') || '（無）') + '；死牌陷阱 ' + (q.dead.join('、') || '（無）') + '；限時 ' + timeMs(level) + ' ms');
 
-        var rule = h('div', { 'class': 'qz-note mj3-rule', text: q.pair ? '補哪些牌，整排能分成一組一組的三張（連號或三張一樣），剛好再留一對？' : '補哪些牌，整排能剛好分成「三張連號」或「三張一樣」的組？' });
+        var rule = h('div', { 'class': 'qz-note mahjong3-rule', text: q.pair ? '補哪些牌，整排能分成一組一組的三張（連號或三張一樣），剛好再留一對？' : '補哪些牌，整排能剛好分成「三張連號」或「三張一樣」的組？' });
         stage.appendChild(rule);
-        var table = h('div', { 'class': 'mj3-table' });
+        var table = h('div', { 'class': 'mahjong3-table' });
         stage.appendChild(table);
-        strip(table, q.hand, [], [], -1, 'mj3-strip--hand');
-        var note = h('div', { 'class': 'qz-note mj3-note', text: '' });
+        strip(table, q.hand, [], [], -1, 'mahjong3-strip--hand');
+        var note = h('div', { 'class': 'qz-note mahjong3-note', text: '' });
         stage.appendChild(note);
-        var go = h('button', { 'class': 'mj3-go', type: 'button', text: '我選好了' });
+        var go = h('button', { 'class': 'mahjong3-go', type: 'button', text: '我選好了' });
         go.disabled = true;
         stage.appendChild(go);
-        var keys = h('div', { 'class': 'mj3-keys' }), keyEls = [];
+        var keys = h('div', { 'class': 'mahjong3-keys' }), keyEls = [];
         for (var v = 1; v <= 9; v++) (function (v) {
-            var b = h('button', { 'class': 'mj3-key', type: 'button' }, [h('span', { 'class': 'mj3-key-num', text: NUMERALS[v - 1] }), h('span', { 'class': 'mj3-key-pip', text: String(v) })]);
+            var b = h('button', { 'class': 'mahjong3-key', type: 'button' }, [h('span', { 'class': 'mahjong3-key-num', text: NUMERALS[v - 1] }), h('span', { 'class': 'mahjong3-key-pip', text: String(v) })]);
             kit.onTap(b, function () { toggle(v); });
             keys.appendChild(b); keyEls.push(b);
         })(v);
@@ -287,7 +288,7 @@
         function toggle(v) {
             if (api.over) return;
             sel[v] = !sel[v];
-            keyEls[v - 1].classList.toggle('mj3-key--sel', !!sel[v]);
+            keyEls[v - 1].classList.toggle('mahjong3-key--sel', !!sel[v]);
             Sfx.play('tick');
             refresh();
         }
@@ -301,10 +302,10 @@
             var ok = !missed.length && !extra.length;
             keyEls.forEach(function (b, i) {
                 var t = i + 1;
-                b.disabled = true; b.classList.remove('mj3-key--sel');
-                if (isWin[t] && sel[t]) b.classList.add('mj3-key--ok');
-                else if (isWin[t]) b.classList.add('mj3-key--miss');
-                else if (sel[t]) b.classList.add('mj3-key--bad');
+                b.disabled = true; b.classList.remove('mahjong3-key--sel');
+                if (isWin[t] && sel[t]) b.classList.add('mahjong3-key--ok');
+                else if (isWin[t]) b.classList.add('mahjong3-key--miss');
+                else if (sel[t]) b.classList.add('mahjong3-key--bad');
             });
             go.style.display = 'none';
             table.innerHTML = '';
@@ -314,19 +315,19 @@
                 if (extra.length) {
                     var x = extra[0], base = countsOf(q.hand);
                     if (base[x] >= MAX_SAME) {
-                        table.appendChild(h('div', { 'class': 'mj3-cap', text: '你選了「' + NUMERALS[x - 1] + '」：手上已經有 ' + MAX_SAME + ' 張，不能再補第 ' + (MAX_SAME + 1) + ' 張' }));
-                        strip(table, q.hand, [], [], -1, 'mj3-strip--wrong');
+                        table.appendChild(h('div', { 'class': 'mahjong3-cap', text: '你選了「' + NUMERALS[x - 1] + '」：手上已經有 ' + MAX_SAME + ' 張，不能再補第 ' + (MAX_SAME + 1) + ' 張' }));
+                        strip(table, q.hand, [], [], -1, 'mahjong3-strip--wrong');
                     } else {
                         var wrong = bestGroups(q.hand.concat([x]), x), Lw = layout(q.hand, x, wrong.groups), leftIdx = [];
                         for (var p = 0; p < Lw.tiles.length; p++) if (!Lw.usedIdx[p]) leftIdx.push(p);
-                        table.appendChild(h('div', { 'class': 'mj3-cap', text: '你選了「' + NUMERALS[x - 1] + '」：這幾張（紅色）湊不起來' }));
-                        strip(table, Lw.tiles, Lw.groupIdx, leftIdx, Lw.addedIdx, 'mj3-strip--wrong');
+                        table.appendChild(h('div', { 'class': 'mahjong3-cap', text: '你選了「' + NUMERALS[x - 1] + '」：這幾張（紅色）湊不起來' }));
+                        strip(table, Lw.tiles, Lw.groupIdx, leftIdx, Lw.addedIdx, 'mahjong3-strip--wrong');
                     }
-                } else strip(table, q.hand, [], [], -1, 'mj3-strip--hand');
-            } else strip(table, q.hand, [], [], -1, 'mj3-strip--hand');
+                } else strip(table, q.hand, [], [], -1, 'mahjong3-strip--hand');
+            } else strip(table, q.hand, [], [], -1, 'mahjong3-strip--hand');
             /* 每一張答案怎麼湊成組 */
             W.forEach(function (w) {
-                table.appendChild(h('div', { 'class': 'mj3-cap mj3-cap--ok' + (sel[w] ? '' : ' mj3-cap--miss'), text: (sel[w] ? '' : '漏了　') + '補「' + NUMERALS[w - 1] + '」：' + decompText(q.hand, w, q.pair) }));
+                table.appendChild(h('div', { 'class': 'mahjong3-cap mahjong3-cap--ok' + (sel[w] ? '' : ' mahjong3-cap--miss'), text: (sel[w] ? '' : '漏了　') + '補「' + NUMERALS[w - 1] + '」：' + decompText(q.hand, w, q.pair) }));
             });
             note.textContent = '';
             if (ok) {

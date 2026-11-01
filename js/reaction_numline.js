@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_numline.js — 秒反應・數線落點（原企劃「031 數線落點」的復活版）
+   樣式：css/games/reaction_numline.css（這款專屬的 class 一律以「numline-」開頭；共用元件在 css/reaction_common.css）
    出現一個 0～1 之間的數（可能寫成小數 0.37、分數 3/8、或百分比 37%），數線上只標了 0 和 1，
    用手指把圓點拖到你覺得它該在的位置，按「確定」。誤差在容許範圍內才過關，容許範圍一關比一關小。
    關卡制：答錯就結束，成績＝過了幾關。
@@ -70,7 +71,7 @@
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
-            stageClass: 'nl-stage',
+            stageClass: 'numline-stage',
             setup: setup
         });
     }
@@ -83,19 +84,19 @@
         var X0 = LINE_PAD, X1 = W - LINE_PAD, LY = Math.round(H * 0.36), LEN = X1 - X0;
         console.log('[數線落點] 第 ' + level + ' 關：' + q.text + '（＝' + q.v.toFixed(4) + '）；容許 ±' + q.tol.toFixed(4) + '（±' + (q.tol * LEN).toFixed(1) + 'px）');
 
-        var big = h('div', { 'class': 'nl-big', text: q.text });
-        var tip = h('div', { 'class': 'nl-tip', text: '拖到這個數該在的位置，再按「確定」' });
+        var big = h('div', { 'class': 'numline-big', text: q.text });
+        var tip = h('div', { 'class': 'numline-tip', text: '拖到這個數該在的位置，再按「確定」' });
         stage.appendChild(big); stage.appendChild(tip);
-        var svg = kit.svg('svg', { 'class': 'nl-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
-        kit.svg('line', { x1: X0, x2: X1, y1: LY, y2: LY, 'class': 'nl-line' }, svg);
+        var svg = kit.svg('svg', { 'class': 'numline-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
+        kit.svg('line', { x1: X0, x2: X1, y1: LY, y2: LY, 'class': 'numline-line' }, svg);
         [[X0, '0'], [X1, '1']].forEach(function (t) {
-            kit.svg('line', { x1: t[0], x2: t[0], y1: LY - 16, y2: LY + 16, 'class': 'nl-tick' }, svg);
-            var tx = kit.svg('text', { x: t[0], y: LY + 46, 'text-anchor': 'middle', 'class': 'nl-label' }, svg); tx.textContent = t[1];
+            kit.svg('line', { x1: t[0], x2: t[0], y1: LY - 16, y2: LY + 16, 'class': 'numline-tick' }, svg);
+            var tx = kit.svg('text', { x: t[0], y: LY + 46, 'text-anchor': 'middle', 'class': 'numline-label' }, svg); tx.textContent = t[1];
         });
         var gAns = kit.svg('g', {}, svg);
         var pos = START;
-        var stem = kit.svg('line', { x1: 0, x2: 0, y1: LY - 70, y2: LY, 'class': 'nl-stem' }, svg);
-        var dot = kit.svg('circle', { cx: 0, cy: LY - 70, r: 20, 'class': 'nl-dot' }, svg);
+        var stem = kit.svg('line', { x1: 0, x2: 0, y1: LY - 70, y2: LY, 'class': 'numline-stem' }, svg);
+        var dot = kit.svg('circle', { cx: 0, cy: LY - 70, r: 20, 'class': 'numline-dot' }, svg);
         function xOf(v) { return X0 + v * LEN; }
         function paint() {
             var x = xOf(pos);
@@ -103,9 +104,9 @@
         }
         paint();
         /* 拖曳區：數線下方一大塊，手指在這裡橫向移動，圓點跟著走（手指不會擋住圓點） */
-        var pad = h('div', { 'class': 'nl-pad' });
+        var pad = h('div', { 'class': 'numline-pad' });
         pad.style.top = (LY + 100) + 'px'; pad.style.height = (H - LY - 70 - 84 - 12 - 30) + 'px';
-        var okBtn = h('button', { 'class': 'btn btn--go nl-ok', text: '確定' });
+        var okBtn = h('button', { 'class': 'btn btn--go numline-ok', text: '確定' });
         stage.appendChild(pad); stage.appendChild(okBtn);
         var locked = false, hint = null, dragging = null;
         function fromPointer(e) { var p = kit.localPt(e, pad); pos = kit.clamp((p.x - X0) / LEN, 0, 1); paint(); }
@@ -119,13 +120,13 @@
         pad.addEventListener('pointermove', function (e) { if (dragging === e.pointerId && !locked) fromPointer(e); });
         function endDrag(e) { if (dragging === e.pointerId) dragging = null; }
         pad.addEventListener('pointerup', endDrag); pad.addEventListener('pointercancel', endDrag);
-        pad.appendChild(h('div', { 'class': 'nl-pad__text', text: '在這裡左右拖曳' }));
+        pad.appendChild(h('div', { 'class': 'numline-pad__text', text: '在這裡左右拖曳' }));
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從圓點現在的位置往「正確的位置」重複移動（第一關的正確答案）；手指擺在數線下方的拖曳區 */
         if (level === 1 && kit.once('numline.hint')) {
             var y = LY + 70 + 60;
             hint = kit.fingerHint(stage, { mode: 'drag', x: xOf(pos), y: y, dx: xOf(q.v) - xOf(pos), dy: 0, delay: 400, text: '請往左右拖曳圓點' });
         }
-        var msg = h('div', { 'class': 'nl-msg' });
+        var msg = h('div', { 'class': 'numline-msg' });
         stage.appendChild(msg);
 
         function submit() {
@@ -135,11 +136,11 @@
             var r = judge(pos, q.v, q.tol);
             /* 揭曉：綠色刻度標出正確位置，還有容許範圍（淡綠色底） */
             var ax = xOf(q.v);
-            kit.svg('rect', { x: Math.max(X0, xOf(q.v - q.tol)), y: LY - 16, width: Math.min(X1, xOf(q.v + q.tol)) - Math.max(X0, xOf(q.v - q.tol)), height: 32, 'class': 'nl-tol' }, gAns);
-            kit.svg('line', { x1: ax, x2: ax, y1: LY - 34, y2: LY + 34, 'class': 'nl-ans' }, gAns);
-            var tx = kit.svg('text', { x: ax, y: LY + 78, 'text-anchor': 'middle', 'class': 'nl-anslabel' }, gAns); tx.textContent = q.text + '＝' + q.v.toFixed(4);
+            kit.svg('rect', { x: Math.max(X0, xOf(q.v - q.tol)), y: LY - 16, width: Math.min(X1, xOf(q.v + q.tol)) - Math.max(X0, xOf(q.v - q.tol)), height: 32, 'class': 'numline-tol' }, gAns);
+            kit.svg('line', { x1: ax, x2: ax, y1: LY - 34, y2: LY + 34, 'class': 'numline-ans' }, gAns);
+            var tx = kit.svg('text', { x: ax, y: LY + 78, 'text-anchor': 'middle', 'class': 'numline-anslabel' }, gAns); tx.textContent = q.text + '＝' + q.v.toFixed(4);
             msg.textContent = (r.ok ? '落在容許範圍內！' : '超出容許範圍了') + '　差 ' + r.err.toFixed(4) + '（容許 ' + q.tol.toFixed(4) + '）';
-            msg.classList.add(r.ok ? 'nl-msg--ok' : 'nl-msg--bad');
+            msg.classList.add(r.ok ? 'numline-msg--ok' : 'numline-msg--bad');
             if (r.ok) { Sfx.play('ok'); api.pass({ gain: 1, delay: 1500 }); }
             else api.fail({ delay: 2200, lines: ['第 ' + level + ' 關：' + q.text + '＝' + q.v.toFixed(4), '你的圓點在 ' + pos.toFixed(4) + '，差 ' + r.err.toFixed(4) + '（容許 ±' + q.tol.toFixed(4) + '）'] });
         }

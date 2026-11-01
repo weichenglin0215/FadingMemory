@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_mathcheck.js — 秒反應・算式對不對
+   樣式：css/games/reaction_mathcheck.css（這款專屬的 class 一律以「mathcheck-」開頭；共用元件在 css/reaction_common.css）
    畫面上顯示一個算式（17 × 6 ＝ 102），判斷「對」還是「錯」；錯的算式都只差一點點
    （個位差 1、十位個位對調、差 10、差 100）。關卡制，答錯或逾時就結束，成績＝連續答對幾題。
    V1.25：題目會一直顯示（不會消失、也不會變成「？？？」）；答對題目變綠色、答錯變紅色；
@@ -185,11 +186,11 @@
         api.info = q;
         console.log('[算式對不對] 第 ' + level + ' 題：' + q.text + '（' + (q.isCorrect ? '對' : '錯，正解 ' + num(q.truth)) + '），限時 ' + ansMs() + ' ms');
 
-        var eq = h('div', { 'class': 'mc-eq', text: q.text });
+        var eq = h('div', { 'class': 'mathcheck-eq', text: q.text });
         var px = eqFontPx(q.text);
         if (px < EQ_FONT && eq.style) eq.style.fontSize = px + 'px';
-        var fix = h('div', { 'class': 'mc-fix' });          /* 題目是錯的時候，黑色顯示正確算式 */
-        var msg = h('div', { 'class': 'mc-msg' });          /* 時間到：紅字「超出時間未回答」 */
+        var fix = h('div', { 'class': 'mathcheck-fix' });          /* 題目是錯的時候，黑色顯示正確算式 */
+        var msg = h('div', { 'class': 'mathcheck-msg' });          /* 時間到：紅字「超出時間未回答」 */
         stage.appendChild(eq); stage.appendChild(fix); stage.appendChild(msg);
         var bYes = h('button', { 'class': 'btn btn--go', text: '對' });
         var bNo = h('button', { 'class': 'btn btn--primary', text: '錯' });
@@ -201,10 +202,10 @@
             /* 題目一直留在畫面上；算式是錯的就在下面用黑色顯示正確算式（不管玩家答對答錯） */
             if (!q.isCorrect) fix.textContent = '正確：' + q.right;
             if (sayCorrect === q.isCorrect) {
-                eq.classList.add('mc-eq--ok');
+                eq.classList.add('mathcheck-eq--ok');
                 api.pass({ delay: q.isCorrect ? 650 : 1100 });
             } else {
-                eq.classList.add('mc-eq--bad');
+                eq.classList.add('mathcheck-eq--bad');
                 if (sayCorrect == null) msg.textContent = '超出時間未回答';
                 api.fail({ delay: 2000, lines: [
                     (sayCorrect == null ? '時間到！' : (q.isCorrect ? '這個算式是對的' : '這個算式是錯的')) + '：' + q.text,

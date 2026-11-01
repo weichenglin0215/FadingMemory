@@ -1,0 +1,101 @@
+/* ═══════════════════════════════════════
+   reaction_copycurve.css — 照抄曲線（js/reaction_copycurve.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「copycurve-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 照抄曲線（.copycurve-）═══ */
+.copycurve-lab {
+    position: absolute;
+    top: 8px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+    transition: opacity 0.4s;
+}
+
+.copycurve-panel {
+    position: absolute;
+    border-radius: var(--r-md);
+    background: var(--cc-board);
+    border: 3px solid var(--c-ink);
+    box-sizing: border-box;
+    overflow: hidden;
+    transition: transform 0.9s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.9s, border-color 0.9s;
+    touch-action: none;
+}
+
+.copycurve-panel--L {
+    z-index: 1;
+}
+
+.copycurve-panel--R {
+    z-index: 2;
+    cursor: crosshair;
+}
+
+.copycurve-svg {
+    display: block;
+    pointer-events: none;
+}
+
+.copycurve-curve {
+    fill: none;
+    stroke: var(--cc-curve);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.copycurve-draw {
+    fill: none;
+    stroke: var(--cc-draw);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.copycurve-start {
+    fill: var(--cc-start);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.copycurve-end {
+    fill: var(--cc-end);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+/* 手指靠近另一個端點（放開就會判定）：端點加粗綠框提醒（V1.34） */
+.copycurve-near {
+    stroke: var(--c-ok);
+    stroke-width: 7;
+}
+
+.copycurve-msg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink);
+    line-height: var(--lh-body);
+}
+
+/* 畫完之後：左右兩張往中間靠攏，右邊那張變透明（底下的綠色曲線才看得到）*/
+.copycurve-stage--merge .copycurve-panel--L {
+    transform: translateX(var(--cpc-shift));
+}
+
+.copycurve-stage--merge .copycurve-panel--R {
+    transform: translateX(calc(-1 * var(--cpc-shift)));
+    background-color: transparent;
+    border-color: transparent;
+}
+
+.copycurve-stage--merge .copycurve-lab {
+    opacity: 0;
+}

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_fracduel.js — 秒反應・分數大對決
+   樣式：css/games/reaction_fracduel.css（這款專屬的 class 一律以「fracduel-」開頭；共用元件在 css/reaction_common.css）
    兩個分數卡左右並排，點比較大的那一張。關卡制，答錯或逾時就結束，成績＝連續答對幾題。
    作答時不顯示小數、不顯示長條圖；答完才揭曉小數（4 位）與並排長條圖。
    ───────────────────────────────────────────────────────────────────
@@ -145,7 +146,7 @@
     /* 卡片上數字的字級等級（依最長的那個數字的字數）：字越多越小，才放得進卡片 */
     function sizeClass(f) {
         var len = Math.max(fmtNum(f.n).length, fmtNum(f.d).length);
-        return len <= 2 ? 'fd-frac--s2' : (len === 3 ? 'fd-frac--s3' : (len === 4 ? 'fd-frac--s4' : (len === 5 ? 'fd-frac--s5' : 'fd-frac--s6')));
+        return len <= 2 ? 'fracduel-frac--s2' : (len === 3 ? 'fracduel-frac--s3' : (len === 4 ? 'fracduel-frac--s4' : (len === 5 ? 'fracduel-frac--s5' : 'fracduel-frac--s6')));
     }
     function rating(n) {
         if (n >= 40) return '分數大師！';
@@ -168,10 +169,10 @@
     }
 
     function card(f) {
-        return h('div', { 'class': 'fd-frac ' + sizeClass(f) }, [
-            h('div', { 'class': 'fd-n', text: fmtNum(f.n) }),
-            h('div', { 'class': 'fd-bar' }),
-            h('div', { 'class': 'fd-d', text: fmtNum(f.d) })
+        return h('div', { 'class': 'fracduel-frac ' + sizeClass(f) }, [
+            h('div', { 'class': 'fracduel-n', text: fmtNum(f.n) }),
+            h('div', { 'class': 'fracduel-bar' }),
+            h('div', { 'class': 'fracduel-d', text: fmtNum(f.d) })
         ]);
     }
 
@@ -182,18 +183,18 @@
         hist.push(q.bigLeft);
         api.info = q;
         console.log('[分數大對決] 第 ' + level + ' 題（' + q.kind + (q.decimal ? '，帶小數' : '') + '）：' + fmtFrac(q.left) + ' 對 ' + fmtFrac(q.right) + '，較大在' + (q.bigLeft ? '左' : '右') + '，差距 ' + (q.gap * 100).toFixed(2) + '%（目標 ' + (gapAt(level) * 100).toFixed(2) + '%），限時 ' + timeMs(level) + ' ms');
-        var cl = h('div', { 'class': 'fd-card' }, [card(q.left)]);
-        var cr = h('div', { 'class': 'fd-card' }, [card(q.right)]);
-        var row = h('div', { 'class': 'fd-row' }, [cl, cr]);
-        var info = h('div', { 'class': 'fd-info' });
+        var cl = h('div', { 'class': 'fracduel-card' }, [card(q.left)]);
+        var cr = h('div', { 'class': 'fracduel-card' }, [card(q.right)]);
+        var row = h('div', { 'class': 'fracduel-row' }, [cl, cr]);
+        var info = h('div', { 'class': 'fracduel-info' });
         stage.appendChild(row); stage.appendChild(info);
         api.timer(timeMs(level), function () { judge(null); });
 
         function reveal() {
             [[cl, q.left], [cr, q.right]].forEach(function (p) {
                 var v = val(p[1]);
-                p[0].appendChild(h('div', { 'class': 'fd-val', text: v.toFixed(4) }));
-                p[0].appendChild(h('div', { 'class': 'fd-bargraph' }, [h('div', { 'class': 'fd-bargraph__fill', style: { width: Math.round(v / VAL_MAX * 1000) / 10 + '%' } })]));
+                p[0].appendChild(h('div', { 'class': 'fracduel-val', text: v.toFixed(4) }));
+                p[0].appendChild(h('div', { 'class': 'fracduel-bargraph' }, [h('div', { 'class': 'fracduel-bargraph__fill', style: { width: Math.round(v / VAL_MAX * 1000) / 10 + '%' } })]));
             });
             info.textContent = fmtFrac(q.left) + ' ＝ ' + val(q.left).toFixed(4) + '　' + fmtFrac(q.right) + ' ＝ ' + val(q.right).toFixed(4) + (KIND_HINT[q.kind] ? '\n' + KIND_HINT[q.kind] : '');
         }
@@ -201,12 +202,12 @@
             if (api.over) return;
             var bigEl = q.bigLeft ? cl : cr;
             reveal();
-            bigEl.classList.add('fd-card--big');
+            bigEl.classList.add('fracduel-card--big');
             if (pickLeft === q.bigLeft) {
-                (pickLeft ? cl : cr).classList.add('fd-card--ok');
+                (pickLeft ? cl : cr).classList.add('fracduel-card--ok');
                 api.pass({ delay: 900 });
             } else {
-                if (pickLeft != null) (pickLeft ? cl : cr).classList.add('fd-card--bad');
+                if (pickLeft != null) (pickLeft ? cl : cr).classList.add('fracduel-card--bad');
                 api.fail({ delay: 2600, lines: [
                     (pickLeft == null ? '時間到！' : '選錯了：') + fmtFrac(q.left) + ' 對 ' + fmtFrac(q.right),
                     fmtFrac(q.left) + ' ＝ ' + val(q.left).toFixed(4) + '，' + fmtFrac(q.right) + ' ＝ ' + val(q.right).toFixed(4),

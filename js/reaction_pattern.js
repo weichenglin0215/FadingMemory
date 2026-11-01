@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_pattern.js — 秒反應・解鎖圖案
+   樣式：css/games/reaction_pattern.css（這款專屬的 class 一律以「pattern-」開頭；共用元件在 css/reaction_common.css）
    像手機的圖案解鎖：先看一次示範的連線，再用手指在點陣上畫出同樣的圖案。
    圖案一關比一關長，看你最長能記住幾個點。
    ───────────────────────────────────────────────────────────────────
@@ -134,13 +135,13 @@
             var hint = h('div', { 'class': 'hint', text: '看好圖案怎麼連…' });
             var barWrap = h('div', { 'class': 'ld-time' }, [h('div', { 'class': 'ld-time__fill' })]);
             var fill = barWrap.firstChild;
-            var field = h('div', { 'class': 'pt-field' });
+            var field = h('div', { 'class': 'pattern-field' });
             root.appendChild(hint);
             root.appendChild(field);
             root.appendChild(barWrap);
             var FW = field.clientWidth, FH = field.clientHeight;
             /* SVG 畫布 */
-            var svg = kit.svg('svg', { 'class': 'pt-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'none' }, field);
+            var svg = kit.svg('svg', { 'class': 'pattern-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'none' }, field);
 
             /* 算出點之間的間距 S，與每個點的座標（nx、ny：第 i 個點的 x、y） */
             var side = Math.min(FW - 90, FH - 90);
@@ -151,14 +152,14 @@
 
             /* gLines 放畫出來的線；live 是手指正在拖曳的那條線；nodes 是各個點 */
             var gLines = kit.svg('g', {}, svg);
-            var live = kit.svg('line', { 'class': 'pt-live', x1: 0, y1: 0, x2: 0, y2: 0, visibility: 'hidden' }, svg);
+            var live = kit.svg('line', { 'class': 'pattern-live', x1: 0, y1: 0, x2: 0, y2: 0, visibility: 'hidden' }, svg);
             var nodes = [];
             for (var i = 0; i < g * g; i++) {
-                nodes.push(kit.svg('circle', { 'class': 'pt-node', cx: nx(i), cy: ny(i), r: NODE_R }, svg));
+                nodes.push(kit.svg('circle', { 'class': 'pattern-node', cx: nx(i), cy: ny(i), r: NODE_R }, svg));
             }
             /* 畫一段線 */
             function seg(a, b, cls) {
-                return kit.svg('line', { 'class': 'pt-seg ' + (cls || ''), x1: nx(a), y1: ny(a), x2: nx(b), y2: ny(b) }, gLines);
+                return kit.svg('line', { 'class': 'pattern-seg ' + (cls || ''), x1: nx(a), y1: ny(a), x2: nx(b), y2: ny(b) }, gLines);
             }
 
             /* state 目前階段（demo 示範/recall 回想/ok/fail）；path 玩家已畫的點；activeId 正在拖曳的手指 */
@@ -172,7 +173,7 @@
             var stepMs = kit.ramp(level, DEMO_STEP_START, DEMO_STEP_END, LEVEL_MAX);
             /* my.wait 回傳 Promise（等一下）；my.tween 用動畫逐步畫出一段線 */
             var demo = my.wait(PREP_MS).then(function () {
-                nodes[target[0]].classList.add('pt-node--start');
+                nodes[target[0]].classList.add('pattern-node--start');
                 Sfx.play('flip');
                 return my.wait(450);
             });
@@ -181,9 +182,9 @@
                 (function (k) {
                     demo = demo.then(function () {
                         var a = target[k - 1], b = target[k];
-                        var line = seg(a, b, 'pt-seg--demo');
+                        var line = seg(a, b, 'pattern-seg--demo');
                         line.setAttribute('x2', nx(a)); line.setAttribute('y2', ny(a));
-                        nodes[b].classList.add('pt-node--on');
+                        nodes[b].classList.add('pattern-node--on');
                         Sfx.play('tick');
                         return my.tween(stepMs, function (e) {
                             line.setAttribute('x2', nx(a) + (nx(b) - nx(a)) * e);
@@ -195,7 +196,7 @@
             /* 示範結束：清掉線與標記，進入回想階段，開始倒數 */
             demo.then(function () { return my.wait(500); }).then(function () {
                 gLines.innerHTML = '';
-                nodes.forEach(function (n) { n.setAttribute('class', 'pt-node'); });
+                nodes.forEach(function (n) { n.setAttribute('class', 'pattern-node'); });
                 state = 'recall';
                 /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從圖案的「起點」往「第二個點」重複移動（第一關的正確連法） */
                 if (Reaction.kit.once('pattern.hint')) Reaction.kit.hintOn(root, nodes[target[0]], { mode: 'drag', to: nodes[target[1]], text: '請依序拖過每個點' });
@@ -236,9 +237,9 @@
                 for (var i = 0; i < chain.length; i++) {
                     var m = chain[i];
                     if (path.indexOf(m) >= 0) continue;
-                    if (path.length) seg(path[path.length - 1], m, 'pt-seg--mine');
+                    if (path.length) seg(path[path.length - 1], m, 'pattern-seg--mine');
                     path.push(m);
-                    nodes[m].classList.add('pt-node--on');
+                    nodes[m].classList.add('pattern-node--on');
                     Sfx.play('tick');
                     /* 和答案的第 k 個點不一樣 → 立刻失敗，不用畫完 */
                     if (path[path.length - 1] !== target[path.length - 1]) { fail('這個點不對喔'); return; }
@@ -288,7 +289,7 @@
                 if (state === 'recall' && path.length > 0 && path.length < target.length) {
                     path = [];
                     gLines.innerHTML = '';
-                    nodes.forEach(function (n) { n.setAttribute('class', 'pt-node'); });
+                    nodes.forEach(function (n) { n.setAttribute('class', 'pattern-node'); });
                     Sfx.play('bad');
                 }
             }
@@ -309,7 +310,7 @@
             function succeed() {
                 state = 'ok';
                 live.setAttribute('visibility', 'hidden');
-                Array.prototype.forEach.call(gLines.children, function (l) { l.setAttribute('class', 'pt-seg pt-seg--ok'); });
+                Array.prototype.forEach.call(gLines.children, function (l) { l.setAttribute('class', 'pattern-seg pattern-seg--ok'); });
                 Sfx.play('win');
                 fill.style.width = '0%';
                 bestLen = Math.max(bestLen, len);
@@ -333,9 +334,9 @@
                 fill.style.width = '0%';
                 hint.textContent = reason + '，正確的圖案是這樣：';
                 /* 把我畫的線標橘色，再疊上正確答案（綠色虛線） */
-                Array.prototype.forEach.call(gLines.children, function (l) { l.setAttribute('class', 'pt-seg pt-seg--bad'); });
-                for (var k = 1; k < target.length; k++) seg(target[k - 1], target[k], 'pt-seg--answer');
-                nodes[target[0]].classList.add('pt-node--start');
+                Array.prototype.forEach.call(gLines.children, function (l) { l.setAttribute('class', 'pattern-seg pattern-seg--bad'); });
+                for (var k = 1; k < target.length; k++) seg(target[k - 1], target[k], 'pattern-seg--answer');
+                nodes[target[0]].classList.add('pattern-node--start');
                 my.after(RESULT_DELAY_MS, function () {
                     kit.result(root, {
                         score: bestLen,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */

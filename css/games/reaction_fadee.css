@@ -1,0 +1,40 @@
+/* ═══════════════════════════════════════
+   reaction_fadee.css — 淡到看不見（js/reaction_fadee.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「fadee-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 060 淡到看不見（.fadee-）═══
+   V1.25：整個遊戲區是完全的黑色（--dk-bg），沒有灰色方框；E 是白色（越來越暗）；說明文字用淺灰字（黑底上才看得到） */
+.fadee-stage {
+    background: var(--dk-bg);
+}
+
+.fadee-canvas {
+    position: absolute;
+    left: 50%;
+    top: 80px;
+    margin-left: -180px;
+    width: 360px;
+    height: 360px;
+    background: var(--dk-bg);
+}
+
+.fadee-note {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 500px;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--fe-note);
+}
+
+.fadee-canvas--ok~.fadee-note {
+    color: var(--c-ok-light);
+}
+
+.fadee-canvas--bad~.fadee-note {
+    color: var(--c-bad-light);
+}

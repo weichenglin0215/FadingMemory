@@ -63,11 +63,11 @@ for (let i = 0; i < 300; i++) {
 { const c = T.chain(4, 10); ok(c.join() === '1000,993,986,979,972', '整串數字（不夠 10 步就從頭）'); const c2 = T.chain(30, 10); ok(c2.length === 10 && c2[9] === T.valueAfter(30) && c2[0] === T.valueAfter(21), '最後 10 步'); }
 
 // ── 程式裡的接線 ──
-{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_minus7.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/請從 ' \+ START \+ ' 開始計數/.test(src) && /mn7-pop--out/.test(src) && /SHRINK_MS/.test(src) && /GROW_MS/.test(src) && /pop\(false\)/.test(src) && /pop\(true\)/.test(src), '開場提示「請從 1000 開始計數」；答對時大字和按鈕一起縮小再放大');
-  ok(/api\.fail\(\{ delay: 4200/.test(src) && /mn7-chain/.test(src) && /whyText\(q, pk\)/.test(src) && /api\.timer\(q\.time/.test(src), '失敗：整串數字＋算式、停格夠久；每題限時');
+{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_minus7.js'), css = rd('../../css/games/reaction_minus7.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/請從 ' \+ START \+ ' 開始計數/.test(src) && /minus7-pop--out/.test(src) && /SHRINK_MS/.test(src) && /GROW_MS/.test(src) && /pop\(false\)/.test(src) && /pop\(true\)/.test(src), '開場提示「請從 1000 開始計數」；答對時大字和按鈕一起縮小再放大');
+  ok(/api\.fail\(\{ delay: 4200/.test(src) && /minus7-chain/.test(src) && /whyText\(q, pk\)/.test(src) && /api\.timer\(q\.time/.test(src), '失敗：整串數字＋算式、停格夠久；每題限時');
   ok(/scoreOf/.test(src) && /resume: false/.test(src) && /SOLVE_CAP/.test(src) && /api\.solve = /.test(src) && /api\.wrong = /.test(src), '成績用 scoreOf、solve 有上限');
-  ok(/\.mn7-big \{[^}]*var\(--mn7-lcd\)/.test(css) && /\.mn7-btn \{[^}]*var\(--mn7-key-top\)/.test(css) && /\.mn7-pop--out \{[^}]*scale\(0\.08\)/.test(css) && /\.mn7-btn--ok \{[^}]*var\(--c-ok\)/.test(css), '液晶、銀色按鍵、縮放動畫、對錯顏色用 CSS 變數');
+  ok(/\.minus7-big \{[^}]*var\(--mn7-lcd\)/.test(css) && /\.minus7-btn \{[^}]*var\(--mn7-key-top\)/.test(css) && /\.minus7-pop--out \{[^}]*scale\(0\.08\)/.test(css) && /\.minus7-btn--ok \{[^}]*var\(--c-ok\)/.test(css), '液晶、銀色按鍵、縮放動畫、對錯顏色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_minus7.js'") > 0 && /再 −7/.test(G.rule) && /1000/.test(G.rule), 'boot.js 有載入、玩法說明提到 1000 與「再 −7」'); }
 ok(T.rating(1) !== T.rating(6) && T.rating(6) !== T.rating(15) && T.rating(15) !== T.rating(25) && T.rating(25) !== T.rating(35), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

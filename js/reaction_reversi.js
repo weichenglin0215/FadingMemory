@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_reversi.js — 秒反應・翻最多棋（企劃 232）
+   樣式：css/games/reaction_reversi.css（這款專屬的 class 一律以「reversi-」開頭；共用元件在 css/reaction_common.css）
    黑白棋（奧賽羅）的殘局，你是黑棋。點一個空格下黑棋，夾住的白棋全部翻過來。
    **要下在「這一步能翻最多顆」的那一格**（並列最多也算對）。點下去之後，把每一個合法位置能翻幾顆都標出來（最多的是綠色），你下的不是最多就失敗。
    ───────────────────────────────────────────────────────────────────
@@ -116,7 +117,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'rvs-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'reversi-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -131,20 +132,20 @@
         console.log('[翻最多棋] 第 ' + level + ' 關：棋子 ' + q.stones + ' 顆，黑棋有 ' + q.moves.length + ' 個下法，最多翻 ' + q.best + '（在 ' + q.bestIdxs.map(function (i) { return '(' + Math.floor(i / N) + ',' + i % N + ')'; }).join('、') + '），第二多 ' + q.second + '（差 ' + q.gap + '）' + (q.tricky ? '；藏起來' : '') + '；限時 ' + timeMs(level) + ' ms');
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, cell = Math.floor(Math.min((W - 16) / N, 60)), BS = cell * N, bx = Math.round((W - BS) / 2), by = 64;
-        var tip = h('div', { 'class': 'qz-note rvs-tip', text: '你是黑棋：下在能翻最多顆的格子' });
+        var tip = h('div', { 'class': 'qz-note reversi-tip', text: '你是黑棋：下在能翻最多顆的格子' });
         stage.appendChild(tip);
-        var board = h('div', { 'class': 'rvs-board' });
+        var board = h('div', { 'class': 'reversi-board' });
         board.style.cssText = 'left:' + bx + 'px;top:' + by + 'px;width:' + BS + 'px;height:' + BS + 'px;';
         stage.appendChild(board);
         var cells = [], discs = [];
         for (var i = 0; i < N * N; i++) {
-            var el = h('div', { 'class': 'rvs-cell' });
+            var el = h('div', { 'class': 'reversi-cell' });
             el.style.cssText = 'left:' + (i % N) * cell + 'px;top:' + Math.floor(i / N) * cell + 'px;width:' + cell + 'px;height:' + cell + 'px;';
             var disc = null;
-            if (b[i]) { disc = h('div', { 'class': 'rvs-disc ' + (b[i] === BLACK ? 'rvs-disc--b' : 'rvs-disc--w') }); el.appendChild(disc); }
+            if (b[i]) { disc = h('div', { 'class': 'reversi-disc ' + (b[i] === BLACK ? 'reversi-disc--b' : 'reversi-disc--w') }); el.appendChild(disc); }
             board.appendChild(el); cells.push(el); discs.push(disc);
         }
-        var info = h('div', { 'class': 'qz-note rvs-info', text: '' });
+        var info = h('div', { 'class': 'qz-note reversi-info', text: '' });
         info.style.top = (by + BS + 12) + 'px';
         stage.appendChild(info);
         api.timer(timeMs(level), function () { judge(-1); });
@@ -168,15 +169,15 @@
             var ok = k >= 0 && q.bestIdxs.indexOf(k) >= 0;
             /* 把每個合法位置能翻幾顆標出來（最多的是綠色） */
             q.moves.forEach(function (m) {
-                var lab = h('div', { 'class': 'rvs-count' + (q.bestIdxs.indexOf(m.idx) >= 0 ? ' rvs-count--best' : ''), text: String(m.n) });
+                var lab = h('div', { 'class': 'reversi-count' + (q.bestIdxs.indexOf(m.idx) >= 0 ? ' reversi-count--best' : ''), text: String(m.n) });
                 cells[m.idx].appendChild(lab);
             });
             if (k >= 0) {
-                cells[k].classList.add(ok ? 'rvs-cell--ok' : 'rvs-cell--bad');
+                cells[k].classList.add(ok ? 'reversi-cell--ok' : 'reversi-cell--bad');
                 /* 下黑棋、夾住的白棋翻面（翻面動畫） */
-                var disc = h('div', { 'class': 'rvs-disc rvs-disc--b rvs-disc--new' }); cells[k].insertBefore(disc, cells[k].firstChild);
-                moveOf[k].flips.forEach(function (f) { if (discs[f]) { discs[f].classList.add('rvs-disc--flip'); api.after(250, function () { discs[f].classList.remove('rvs-disc--w'); discs[f].classList.add('rvs-disc--b'); }); } });
-            } else q.bestIdxs.forEach(function (i) { cells[i].classList.add('rvs-cell--ok'); });
+                var disc = h('div', { 'class': 'reversi-disc reversi-disc--b reversi-disc--new' }); cells[k].insertBefore(disc, cells[k].firstChild);
+                moveOf[k].flips.forEach(function (f) { if (discs[f]) { discs[f].classList.add('reversi-disc--flip'); api.after(250, function () { discs[f].classList.remove('reversi-disc--w'); discs[f].classList.add('reversi-disc--b'); }); } });
+            } else q.bestIdxs.forEach(function (i) { cells[i].classList.add('reversi-cell--ok'); });
             var chosen = k >= 0 ? moveOf[k].n : 0;
             info.textContent = k >= 0 ? '你下的翻了 ' + chosen + ' 顆；最多是 ' + q.best + ' 顆（第二多 ' + q.second + ' 顆）' : '時間到！最多是 ' + q.best + ' 顆（綠色數字）';
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1800 }); return; }

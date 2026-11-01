@@ -50,7 +50,7 @@ ok(T.rating(0.5) !== T.rating(3) && T.rating(3) !== T.rating(6) && T.rating(6) !
   for (let k = 0; k <= 20; k++) { const p = T.joinPos(k / 20); ok(p.l >= 10 && p.l <= 20 && p.r <= 246 && p.r >= 235, '位置在範圍內'); }
   ok(T.fmtDiffPct(0) === '0.0000%' && T.fmtDiffPct(12.34567) === '12.3457%' && T.fmtDiffPct(3.1) === '3.1000%', '數字格式 XX.XXXX%');
   ok(T.HOLD_MS === 1500 && T.COUNT_MS >= 1500 && T.JOIN_MS >= 500, '動畫時間');
-  const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_colorrecall.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction3.css'), 'utf8');
-  ok(src.indexOf("left.classList.add('cr-block--join-l'); right.classList.add('cr-block--join-r');") > 0 && /\.cr-block--join-l \{\s*border-right-width: 0;/.test(css) && /\.cr-block--join-r \{\s*border-left-width: 0;/.test(css), '左圖去掉右邊白框、右圖去掉左邊白框');
+  const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_colorrecall.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_colorrecall.css'), 'utf8');
+  ok(src.indexOf("left.classList.add('colorrecall-block--join-l'); right.classList.add('colorrecall-block--join-r');") > 0 && /\.colorrecall-block--join-l \{\s*border-right-width: 0;/.test(css) && /\.colorrecall-block--join-r \{\s*border-left-width: 0;/.test(css), '左圖去掉右邊白框、右圖去掉左邊白框');
   ok(src.indexOf('big.textContent = fmtDiffPct(real * e)') > 0 && src.indexOf('my.after(HOLD_MS') > src.indexOf('big.textContent = fmtDiffPct(real * e)'), '大字從 0 升到色差，停住後才結算'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

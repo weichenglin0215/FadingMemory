@@ -1,0 +1,185 @@
+/* ═══════════════════════════════════════
+   reaction_tearcal.css — 撕日曆（js/reaction_tearcal.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「tearcal-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 撕日曆：每撕一張，日期往後一天，撕到題目指定的那一天。 */
+/* ═══ 撕日曆（.tearcal-）═══ */
+.tearcal-head {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 題目橫幅（例如「撕到 4 月 26 日」） */
+.tearcal-prompt {
+    text-align: center;
+    padding: 8px 12px;
+    border-radius: var(--r-lg);
+    background: var(--c-orange-soft);
+    color: var(--c-ink);
+    font-size: 42px;
+    font-weight: var(--fw-black);
+    line-height: 1.2;
+}
+
+/* 日曆頁疊放的區域（所有頁面 absolute 疊在同一個位置） */
+.tearcal-stack {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    touch-action: none;
+}
+
+/* 一張日曆頁；transform-origin:0 0 讓旋轉以左上角為軸心（像被撕走的樣子） */
+.tearcal-page {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-pop);
+    transform-origin: 0 0;
+}
+
+/* 被撕掉的那一張：播放 tearcal-fall 動畫（往下滑落），pointer-events:none 讓它不會擋到下面的點擊。
+   動畫時間 0.6 秒要跟 js/reaction_tearcal.js 的 TEAR_MS 一樣（JS 等動畫播完才把這一張從畫面移除）；
+   transform-origin:50% 0＝以上緣正中間為軸心轉動，像日曆從上面被撕下來之後掉下去 */
+.tearcal-page--torn {
+    z-index: 3;
+    pointer-events: none;
+    transform-origin: 50% 0;
+    animation: tearcal-fall 0.6s ease-in forwards;
+}
+
+/* tearcal-fall 動畫：先微微往上掀一下（像被撕起來），然後越掉越快往下滑落、稍微歪斜，最後漸漸變透明。
+   translateY 的百分比是「這一張自己的高度」：115%＝整張掉到自己下方 */
+@keyframes tearcal-fall {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+
+    15% {
+        transform: translateY(-3%) rotate(-1.5deg);
+        opacity: 1;
+    }
+
+    70% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(115%) rotate(8deg);
+        opacity: 0;
+    }
+}
+
+/* 系統開了「減少動態效果」：不要滑落動畫，被撕掉的那一張直接消失 */
+@media (prefers-reduced-motion: reduce) {
+    .tearcal-page--torn {
+        animation-duration: 0.01s;
+    }
+}
+
+/* 撕對了（綠） */
+.tearcal-page--ok {
+    border-color: var(--c-ok);
+    background: var(--c-ok-soft);
+}
+
+/* 撕錯了（橘） */
+.tearcal-page--bad {
+    border-color: var(--c-bad);
+    background: var(--c-bad-soft);
+}
+
+/* 年月文字 */
+.tearcal-ym {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+}
+
+/* 日期大數字 */
+.tearcal-day {
+    font-size: 190px;
+    font-weight: var(--fw-black);
+    line-height: 1;
+    color: var(--c-ink);
+}
+
+/* 週末（六、日）的日期與星期用紅橘色 */
+.tearcal-day--we,
+.tearcal-wd--we {
+    color: var(--c-bad);
+}
+
+/* 星期幾 */
+.tearcal-wd {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+/* 農曆文字 */
+.tearcal-lunar {
+    min-height: 1.3em;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 節日／節氣的標籤列（flex-wrap 允許標籤太多時自動換行） */
+.tearcal-tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    min-height: 52px;
+    margin-top: 6px;
+}
+
+/* 單個標籤（膠囊形：border-radius 用 --r-pill） */
+.tearcal-tag {
+    padding: 2px 18px;
+    border-radius: var(--r-pill);
+    color: var(--c-on-accent);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+}
+
+/* 國曆節日（橘） */
+.tearcal-tag--solar {
+    background: var(--c-orange);
+}
+
+/* 農曆節日（綠） */
+.tearcal-tag--lunar {
+    background: var(--c-green);
+}
+
+/* 節氣（藍） */
+.tearcal-tag--term {
+    background: var(--c-blue);
+}
+
+/* 底下的操作提示 */
+.tearcal-hint {
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 「就是這天」按鈕 */
+.tearcal-ok {
+    flex: none;
+}

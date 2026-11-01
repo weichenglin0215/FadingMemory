@@ -64,11 +64,11 @@ function timeFor(n) { const p = T.makePlate(n, rnd); let dist = 0, x = 0, y = 0;
 { const p = T.makePlate(15, rnd), before = p.spots.map(s => s.v); let clean = false; for (let i = 0; i < 400; i++) { const a = i / 400 * 6.283 * 3, x = 126 * Math.cos(a), y = 126 * Math.sin(a); if (p.spots.every(s => Math.hypot(x - s.x, y - s.y) > s.r + T.BRUSH_R)) clean = T.scrub(p, x, y, 25) || clean; } ok(p.spots.every((s, i) => s.v === before[i]) && !clean, '在盤緣一直刷（只碰到花紋）污漬不會變'); }
 
 // ── 程式裡的接線 ──
-{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_dishes.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_dishes.js'), css = rd('../../css/games/reaction_dishes.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
   ok(/function washed\(\)/.test(src) && /newPlate\(false\)/.test(src) && /NEXT_MS/.test(src) && !/按鈕/.test(src.split('var G = {')[1].split("rule:")[0]), '洗乾淨會自動換下一個盤子（washed → newPlate），不需要按鈕');
-  ok(/api\.timer\(TIME_S \* 1000/.test(src) && /api\.fail\(\{ delay: 3800/.test(src) && /dsh-ring/.test(src) && /remaining\(plate\)/.test(src), '全部限時 30 秒；時間到：沒洗掉的污漬畫紅圈、停格夠久');
+  ok(/api\.timer\(TIME_S \* 1000/.test(src) && /api\.fail\(\{ delay: 3800/.test(src) && /dishes-ring/.test(src) && /remaining\(plate\)/.test(src), '全部限時 30 秒；時間到：沒洗掉的污漬畫紅圈、停格夠久');
   ok(/scrub\(plate, p\.x, p\.y, len\)/.test(src) && /pointerdown/.test(src) && /pointermove/.test(src) && /scoreOf/.test(src) && /resume: false/.test(src) && /api\.solve = /.test(src) && /api\.wrong = /.test(src), '刷用 scrub；成績用 scoreOf；solve／wrong');
-  ok(/\.dsh-spot \{[^}]*var\(--dsh-sauce\)/.test(css) && /\.dsh-pat3 \{[^}]*var\(--dsh-pat3\)/.test(css) && /\.dsh-plate \{[^}]*var\(--dsh-plate\)/.test(css), '污漬、花紋、盤子用 CSS 變數');
+  ok(/\.dishes-spot \{[^}]*var\(--dsh-sauce\)/.test(css) && /\.dishes-pat3 \{[^}]*var\(--dsh-pat3\)/.test(css) && /\.dishes-plate \{[^}]*var\(--dsh-plate\)/.test(css), '污漬、花紋、盤子用 CSS 變數');
   // 花紋第 3 級的顏色和污漬很接近（色相差 ≤ 8°），第 0 級差很多
   const theme = rd('../../css/theme.css'), hue = n => +new RegExp('--dsh-' + n + ': hsl\\((\\d+)').exec(theme)[1];
   ok(Math.abs(hue('pat3') - hue('sauce')) <= 8 && Math.abs(hue('pat0') - hue('sauce')) > 100, '最後一級花紋的顏色跟污漬接近、第 0 級是藍色（色相 ' + [hue('pat0'), hue('pat1'), hue('pat2'), hue('pat3'), hue('sauce')].join('/') + '）');

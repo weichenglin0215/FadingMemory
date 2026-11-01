@@ -1,0 +1,70 @@
+/* ═══════════════════════════════════════
+   reaction_shapes.css — 形形色色（js/reaction_shapes.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「shapes-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 黑底上的提示文字改亮灰色 */
+.shapes--on-dark {
+    color: hsl(0, 0%, 70%);
+}
+
+/* 形形色色：在一堆圖案中找出不一樣的那個 */
+/* ═══ 遊戲五：形形色色 ═══ */
+.shapes-dark-bg {
+    background: #000;
+}
+
+/* 外層容器，把棋盤置中 */
+.shapes-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 棋盤：display:grid 格子排版，欄數與格子大小由 JS 算出後寫進去 */
+.shapes-board {
+    display: grid;
+    gap: 2px;
+}
+
+/* 一格圖案 */
+.shapes-cell {
+    background: #161616;
+    border: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* 答對 */
+.shapes-cell--ok {
+    outline: 3px dashed var(--c-ok-light);
+    outline-offset: -3px;
+}
+
+/* 答錯 */
+.shapes-cell--bad {
+    outline: 3px dashed var(--c-bad-light);
+    outline-offset: -3px;
+}
+
+/* 93% ＝使用者要求「圖案再放大 1.33 倍」（70% × 1.33 ≈ 93%），盡量佈滿整個
+   格子，不要留下太多空白；文字型圖案的對應放大在 js/reaction_shapes.js
+   （字級係數 0.6 → 0.8）。 */
+/* SVG 圖案：占格子的 93% */
+.shapes-glyph-svg {
+    width: 93%;
+    height: 93%;
+}
+
+/* 文字型圖案 */
+.shapes-glyph-text {
+    font-weight: var(--fw-black);
+    line-height: 1;
+    font-family: var(--font-ui);
+}

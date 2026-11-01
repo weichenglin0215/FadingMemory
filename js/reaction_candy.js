@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_candy.js — 秒反應・幾顆糖
+   樣式：css/games/reaction_candy.css（這款專屬的 class 一律以「candy-」開頭；共用元件在 css/reaction_common.css）
    一堆各種顏色的糖果閃一下就蓋起來，數出「指定顏色」的糖果有幾顆（瞬間數量感）。
    ───────────────────────────────────────────────────────────────────
    · 每一題先告訴你要數哪個顏色（出題時一定挑整堆糖果裡數量最多的顏色），再閃現糖果 showMs 毫秒，蓋住後六選一。
@@ -209,7 +210,7 @@
 
     /* 畫一顆糖果（SVG）：兩端蝴蝶結 + 中間橢圓 + 高光 */
     function drawCandy(parent, x, y, rot, col, cls) {
-        var g = kit.svg('g', { 'class': 'cd-candy' + (cls ? ' ' + cls : ''), transform: 'translate(' + x.toFixed(1) + ' ' + y.toFixed(1) + ') rotate(' + rot.toFixed(0) + ')' }, parent);
+        var g = kit.svg('g', { 'class': 'candy-candy' + (cls ? ' ' + cls : ''), transform: 'translate(' + x.toFixed(1) + ' ' + y.toFixed(1) + ') rotate(' + rot.toFixed(0) + ')' }, parent);
         /* 糖紙兩端的蝴蝶結 */
         kit.svg('polygon', { points: (-R * 0.55) + ',0 ' + (-R * 1.05) + ',' + (-R * 0.5) + ' ' + (-R * 1.05) + ',' + (R * 0.5), fill: col.fill, stroke: col.dark, 'stroke-width': R * 0.09, 'stroke-linejoin': 'round' }, g);
         kit.svg('polygon', { points: (R * 0.55) + ',0 ' + (R * 1.05) + ',' + (-R * 0.5) + ' ' + (R * 1.05) + ',' + (R * 0.5), fill: col.fill, stroke: col.dark, 'stroke-width': R * 0.09, 'stroke-linejoin': 'round' }, g);
@@ -235,13 +236,13 @@
             var Q = null;
 
             /* 建立畫面元素：標題、問題、托盤、蓋子、時間條、選項 */
-            var head = h('div', { 'class': 'cd-head' });
-            var ask = h('div', { 'class': 'cd-ask' });
-            var tray = h('div', { 'class': 'cd-tray' });
-            var cover = h('div', { 'class': 'cd-cover', text: '?' });
+            var head = h('div', { 'class': 'candy-head' });
+            var ask = h('div', { 'class': 'candy-ask' });
+            var tray = h('div', { 'class': 'candy-tray' });
+            var cover = h('div', { 'class': 'candy-cover', text: '?' });
             var bar = h('div', { 'class': 'ld-time' }, [h('div', { 'class': 'ld-time__fill' })]);
             var fill = bar.firstChild;
-            var opts = h('div', { 'class': 'cd-opts' });
+            var opts = h('div', { 'class': 'candy-opts' });
             tray.appendChild(cover);
             root.appendChild(head);
             root.appendChild(ask);
@@ -262,13 +263,13 @@
                 var col = COLORS[Q.target];
                 ask.innerHTML = '';
                 ask.appendChild(h('span', { text: '請數：' }));
-                var chip = h('span', { 'class': 'cd-chip', text: col.name });
+                var chip = h('span', { 'class': 'candy-chip', text: col.name });
                 chip.style.background = col.fill; chip.style.borderColor = col.dark;
                 ask.appendChild(chip);
                 ask.appendChild(h('span', { text: '色糖果有幾顆？' }));
                 opts.innerHTML = '';
                 tray.querySelectorAll('svg').forEach(function (s) { s.remove(); });
-                cover.classList.remove('cd-cover--off');
+                cover.classList.remove('candy-cover--off');
                 cover.textContent = '準備…';
                 fill.style.width = '100%';
                 /* 主控台印出這題的各顏色顆數與答案，方便驗證 */
@@ -283,7 +284,7 @@
             /* 畫出所有糖果（只擺放一次，題目頁和答案頁位置完全相同） */
             function buildSvg(markTarget) {
                 var W = tray.clientWidth, Hh = tray.clientHeight;
-                var svg = kit.svg('svg', { 'class': 'cd-svg', viewBox: '0 0 ' + W + ' ' + Hh }, tray);
+                var svg = kit.svg('svg', { 'class': 'candy-svg', viewBox: '0 0 ' + W + ' ' + Hh }, tray);
                 /* 擺放只做一次（Q.layout）：題目頁與答案頁的位置、角度、疊放順序、顏色完全相同 */
                 if (!Q.layout) {
                     var list = [];
@@ -309,7 +310,7 @@
                 state = 'show';
                 tray.querySelectorAll('svg').forEach(function (s) { s.remove(); });
                 buildSvg(false);
-                cover.classList.add('cd-cover--off');
+                cover.classList.add('candy-cover--off');
                 Sfx.play('go');
                 var t0 = performance.now(), dur = Q.showMs;
                 var lp = my.loop(function (now) {
@@ -320,7 +321,7 @@
                     lp.stop();
                     state = 'ans';
                     tray.querySelectorAll('svg').forEach(function (s) { s.remove(); });
-                    cover.classList.remove('cd-cover--off');
+                    cover.classList.remove('candy-cover--off');
                     cover.textContent = '幾顆？';
                     showOptions();
                 });
@@ -330,7 +331,7 @@
             function showOptions() {
                 opts.innerHTML = '';
                 Q.options.forEach(function (v) {
-                    var b = h('button', { 'class': 'cd-opt', text: String(v) });
+                    var b = h('button', { 'class': 'candy-opt', text: String(v) });
                     b.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(v, b); });
                     opts.appendChild(b);
                 });
@@ -351,13 +352,13 @@
                 fill.style.width = '0%';
                 var ok = v === Q.answer;
                 [].forEach.call(opts.children, function (b) {
-                    if (+b.textContent === Q.answer) b.classList.add('cd-opt--ok');
-                    else if (b === btn) b.classList.add('cd-opt--bad');
+                    if (+b.textContent === Q.answer) b.classList.add('candy-opt--ok');
+                    else if (b === btn) b.classList.add('candy-opt--bad');
                 });
                 /* 揭曉：糖果再亮出來，指定顏色的圈起來 */
                 tray.querySelectorAll('svg').forEach(function (s) { s.remove(); });
                 buildSvg(true);
-                cover.classList.add('cd-cover--off');
+                cover.classList.add('candy-cover--off');
                 ask.textContent = (v == null ? '時間到！' : (ok ? '答對了！' : '答錯了…')) + ' 正確是 ' + Q.answer + ' 顆（共 ' + Q.n + ' 顆）';
                 if (ok) { right++; Sfx.play('ok'); if (Reaction.setBest(ID, right, function (a, b) { return a > b; })) newRec = true; }
                 else Sfx.play('bad');

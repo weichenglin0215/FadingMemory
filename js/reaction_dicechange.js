@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_dicechange.js — 秒反應・骰子少一點（企劃 162）
+   樣式：css/games/reaction_dicechange.css（這款專屬的 class 一律以「dicechange-」開頭；共用元件在 css/reaction_common.css）
    一排骰子先亮出來讓你記住，接著全部蓋住 3 秒，再亮出來時「有幾顆的點數被換掉了（只差 1 點）」，
    把被換過點數的骰子點出來。關卡制：點錯或來不及就結束，成績＝通過幾關。
    ───────────────────────────────────────────────────────────────────
@@ -78,8 +79,8 @@
     function isRedFace(v) { return v === 1 || v === 4; }    /* 1 點與 4 點的圓點是紅色 */
     function pipRadius(v) { return v === 1 ? PIP_R1 : PIP_R; }
     function dieSvg(v) {
-        var s = '<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="5" y="5" width="90" height="90" rx="18" class="dce-face"/>';
-        FACES[v].split('').forEach(function (c) { s += '<circle cx="' + PIP[c][0] + '" cy="' + PIP[c][1] + '" r="' + pipRadius(v) + '" class="dce-pip' + (isRedFace(v) ? ' dce-pip--red' : '') + '"/>'; });
+        var s = '<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="5" y="5" width="90" height="90" rx="18" class="dicechange-face"/>';
+        FACES[v].split('').forEach(function (c) { s += '<circle cx="' + PIP[c][0] + '" cy="' + PIP[c][1] + '" r="' + pipRadius(v) + '" class="dicechange-pip' + (isRedFace(v) ? ' dicechange-pip--red' : '') + '"/>'; });
         return s + '</svg>';
     }
     function rating(n) {
@@ -108,18 +109,18 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, areaH = H - 120;
         var lay = layout(q.n, W, areaH);
-        var msg = h('div', { 'class': 'qz-note dce-msg' });
+        var msg = h('div', { 'class': 'qz-note dicechange-msg' });
         stage.appendChild(msg);
         var dice = q.before.map(function (v, i) {
-            var d = h('div', { 'class': 'dce-die', html: dieSvg(v) });
+            var d = h('div', { 'class': 'dicechange-die', html: dieSvg(v) });
             d.style.left = lay.pos[i].x + 'px'; d.style.top = lay.pos[i].y + 'px';
             d.style.width = d.style.height = lay.cell + 'px';
             stage.appendChild(d);
             return d;
         });
         var phase = 'show', found = 0, picked = {};
-        function setFaces(vals) { dice.forEach(function (d, i) { d.innerHTML = dieSvg(vals[i]); d.classList.remove('dce-die--cover'); }); }
-        function cover() { dice.forEach(function (d) { d.innerHTML = '<div class="dce-back">？</div>'; d.classList.add('dce-die--cover'); }); }
+        function setFaces(vals) { dice.forEach(function (d, i) { d.innerHTML = dieSvg(vals[i]); d.classList.remove('dicechange-die--cover'); }); }
+        function cover() { dice.forEach(function (d) { d.innerHTML = '<div class="dicechange-back">？</div>'; d.classList.add('dicechange-die--cover'); }); }
         msg.textContent = '請記住盤面（約 ' + Math.round(showMs(level) / 1000) + ' 秒）';
         api.after(showMs(level), function () {
             phase = 'cover'; cover();
@@ -136,7 +137,7 @@
                 if (api.over || phase !== 'answer' || picked[i]) return;
                 if (q.changed.indexOf(i) < 0) { reveal(i); return; }
                 picked[i] = true; found++;
-                d.classList.add('dce-die--found');
+                d.classList.add('dicechange-die--found');
                 Sfx.play('ok');
                 msg.textContent = found >= q.changed.length ? '全部找到了！' : '請點擊點數被更換過的骰子（還有 ' + (q.changed.length - found) + ' 顆）';
                 if (found >= q.changed.length) { phase = 'done'; reveal('ok'); }
@@ -148,13 +149,13 @@
             if (api.over) return;
             phase = 'done';
             q.changed.forEach(function (c) {
-                dice[c].classList.add(picked[c] ? 'dce-die--found' : 'dce-die--miss');
-                var lab = h('div', { 'class': 'dce-chg', text: q.before[c] + ' → ' + q.after[c] });
+                dice[c].classList.add(picked[c] ? 'dicechange-die--found' : 'dicechange-die--miss');
+                var lab = h('div', { 'class': 'dicechange-chg', text: q.before[c] + ' → ' + q.after[c] });
                 lab.style.left = lay.pos[c].x + 'px'; lab.style.top = (lay.pos[c].y + lay.cell - 6) + 'px'; lab.style.width = lay.cell + 'px';
                 stage.appendChild(lab);
             });
             if (i === 'ok') { kit.flash(stage, true, api.my); api.pass({ delay: 1500 }); return; }
-            if (typeof i === 'number') dice[i].classList.add('dce-die--wrong');
+            if (typeof i === 'number') dice[i].classList.add('dicechange-die--wrong');
             kit.flash(stage, false, api.my);
             api.fail({
                 delay: 2600, lines: [

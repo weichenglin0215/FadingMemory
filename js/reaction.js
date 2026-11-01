@@ -105,7 +105,11 @@
         barBack.innerHTML = UI.icon('back') + '<span>返回</span>';
         /* 「返回」回到主選單，而且直接打開「選一個想玩的遊戲」列表（index.html?games=1，js/menu.js 讀這個參數），
            玩家通常是想換一款遊戲玩，不用再多按一次「秒反應」 */
-        barBack.addEventListener('click', function () { Sfx.stopBgm(); location.href = 'index.html?games=1'; });
+        barBack.addEventListener('click', function () {
+            /* V1.41：自由解題的遊戲（沒有失敗、玩到不想玩為止）按「返回」是「結束這一局」——先結算，結算卡片出來後再按一次才離開 */
+            if (Reaction.onLeave && Reaction.onLeave() === true) return;
+            Sfx.stopBgm(); location.href = 'index.html?games=1';
+        });
         barHelp.addEventListener('click', function () {
             Sfx.play('click');
             showRule(function () { }, hasBoard ? { okText: '知道了', softSound: true, boardButton: true } : null);

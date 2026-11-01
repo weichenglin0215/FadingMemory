@@ -1,0 +1,91 @@
+/* ═══════════════════════════════════════
+   reaction_seven.css — 逢七過（js/reaction_seven.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「seven-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 逢七過：普通數字點上方數字，遇到 7、7 的倍數或含 7 的數字按下方「跳過」。 */
+/* ═══ 逢七過（.seven-）═══ */
+.seven-head {
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-recall);
+}
+
+/* 下方說明文字 */
+.seven-sub {
+    min-height: 1.4em;
+    text-align: center;
+    white-space: nowrap;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 數字卡片：點它就是「點數字」 */
+.seven-card {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: var(--c-card);
+    border: 4px solid var(--c-blue);
+    border-radius: var(--r-lg);
+    touch-action: none;
+}
+
+/* 點對（綠） */
+.seven-card--ok {
+    background: var(--c-ok-soft);
+    border-color: var(--c-ok);
+}
+
+/* 點錯（橘） */
+.seven-card--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad);
+}
+
+/* 當前數字（超大字） */
+.seven-num {
+    font-size: 200px;
+    line-height: 1;
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+/* 下方的「跳過」按鈕區（固定 180px 高）；user-select:none 避免長按時選取到文字 */
+.seven-pad {
+    flex: 0 0 180px;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-lg);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 跳過按鈕：橘色底 */
+.seven-pad--skip {
+    background: var(--c-orange);
+}
+
+/* 手指按著時變暗一點（brightness 0.93） */
+.seven-pad:active {
+    filter: brightness(0.93);
+}
+
+/* 「跳過」兩個字 */
+.seven-pad__t {
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-on-accent);
+    pointer-events: none;
+}

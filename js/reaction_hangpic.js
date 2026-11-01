@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_hangpic.js — 秒反應・掛畫
+   樣式：css/games/reaction_hangpic.css（這款專屬的 class 一律以「hangpic-」開頭；共用元件在 css/reaction_common.css）
    把相框轉到「剛好是水平的」。牆面沒有任何水平或垂直的線條，只有刻意傾斜的條紋或碎花，
    畫框的顏色又跟牆面很接近，很難靠對比判斷。按「掛好了」之後，鏡頭推進看差了幾度。
    只有一次機會（就像零秒出手）：玩家追求的是「單次」的最小誤差，想再拚就按「再挑戰一次」。
@@ -109,13 +110,13 @@
             /* theta 相框目前的旋轉角度；cfg 這一次的設定；lastErr 這一次的誤差（按下「掛好了」之後才有） */
             var theta = 0, state = 'idle', cfg = null, lastErr = null;
             /* 建立畫面元素：標題、牆面場地、◀ 掛好了 ▶ 按鈕列、結果橫幅 */
-            var head = h('div', { 'class': 'hp-head' });
-            var field = h('div', { 'class': 'hp-field' });
-            var nudgeL = h('button', { 'class': 'btn btn--line hp-nudge', text: '◀' });
-            var doneBtn = h('button', { 'class': 'btn btn--go hp-done', text: '掛好了' });
-            var nudgeR = h('button', { 'class': 'btn btn--line hp-nudge', text: '▶' });
-            var ctrl = h('div', { 'class': 'hp-ctrl' }, [nudgeL, doneBtn, nudgeR]);
-            var verdict = h('div', { 'class': 'hp-verdict' });
+            var head = h('div', { 'class': 'hangpic-head' });
+            var field = h('div', { 'class': 'hangpic-field' });
+            var nudgeL = h('button', { 'class': 'btn btn--line hangpic-nudge', text: '◀' });
+            var doneBtn = h('button', { 'class': 'btn btn--go hangpic-done', text: '掛好了' });
+            var nudgeR = h('button', { 'class': 'btn btn--line hangpic-nudge', text: '▶' });
+            var ctrl = h('div', { 'class': 'hangpic-ctrl' }, [nudgeL, doneBtn, nudgeR]);
+            var verdict = h('div', { 'class': 'hangpic-verdict' });
             [head, field, ctrl].forEach(function (x) { root.appendChild(x); });
             field.appendChild(verdict);
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
@@ -131,7 +132,7 @@
                 if (svg && svg.parentNode) svg.parentNode.removeChild(svg);
                 FW = field.clientWidth; FH = field.clientHeight; CX = FW / 2; CY = FH * 0.46;
                 /* 用 SVG 畫：viewBox 是畫布座標，結算時改 viewBox 就能「鏡頭推進」，而且向量圖放大永遠不糊 */
-                svg = kit.svg('svg', { 'class': 'hp-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'none' });
+                svg = kit.svg('svg', { 'class': 'hangpic-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'none' });
                 field.insertBefore(svg, verdict);
                 full = { vx: 0, vy: 0, vw: FW, vh: FH };
                 var wallL = 84, hue = cfg.hue;
@@ -191,7 +192,7 @@
                 cfg = makeRound();
                 theta = cfg.start;
                 build();
-                verdict.textContent = ''; verdict.classList.remove('hp-verdict--on');
+                verdict.textContent = ''; verdict.classList.remove('hangpic-verdict--on');
                 state = 'play';
                 head.textContent = '只有一次機會　把相框轉成水平';
                 try { console.info('[掛畫] 牆面 ' + cfg.wall + (cfg.wall === 'stripes' ? '（條紋傾斜 ' + cfg.alpha.toFixed(1) + '°）' : '') + '，畫框比牆暗 ' + cfg.contrast.toFixed(1) + '%，起始歪斜 ' + cfg.start.toFixed(2) + '°'); } catch (e) { }
@@ -287,7 +288,7 @@
                 chain.then(function () {
                     var side = norm180(theta) > 0.005 ? '（順時針歪）' : (norm180(theta) < -0.005 ? '（逆時針歪）' : '');
                     verdict.textContent = e < 0.005 ? '差了 ' + e.toFixed(4) + ' 度・分毫不差！' : '差了 ' + e.toFixed(4) + ' 度' + side;
-                    verdict.classList.add('hp-verdict--on');
+                    verdict.classList.add('hangpic-verdict--on');
                     Sfx.play(e < 0.2 ? 'win' : 'click');
                     /* 讓玩家看一下放大後的畫面，再蓋上結算卡片（有「再挑戰一次」） */
                     my.after(NEXT_MS, function () { finish(e, side); });

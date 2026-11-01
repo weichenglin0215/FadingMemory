@@ -1,0 +1,276 @@
+/* ═══════════════════════════════════════
+   reaction_polyrhythm.css — 左右不同拍（js/reaction_polyrhythm.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「polyrhythm-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 左右不同拍：音樂節奏遊戲，左右兩條軌道各自落下方塊，經過紅色基準線時點擊。 */
+/* ═══ 左右不同拍（.polyrhythm-）音樂節奏：方塊由上往下掉 ═══ */
+/* 最上方的說明文字（兩行高） */
+.polyrhythm-head {
+    min-height: 1.0em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    line-height: 1.0;
+    color: var(--c-ink);
+}
+
+/* 生命（愛心）列 */
+.polyrhythm-hearts {
+    flex: none;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    min-height: 26px;
+}
+
+/* 一顆愛心（空心圓，剩下的才填滿） */
+.polyrhythm-heart {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 3px solid var(--c-bad);
+    box-sizing: border-box;
+}
+
+/* 還有的生命：實心 */
+.polyrhythm-heart--on {
+    background: var(--c-bad);
+}
+
+/* 顏色圖例列（紅 4 拍、橙 2 拍…），flex-wrap 讓一行放不下時換行 */
+.polyrhythm-legend {
+    flex: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2px 10px;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 圖例的一項：色塊 + 文字 */
+.polyrhythm-legend__i {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* 圖例文字（b = 粗體標籤） */
+.polyrhythm-legend__i b {
+    font-weight: var(--fw-bold);
+}
+
+/* 圖例的色塊 */
+.polyrhythm-dot {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+}
+
+/* 六種顏色：逗號代表「圖例色塊」與「掉落的音符」兩個 class 共用同一個顏色，一行寫一種 */
+.polyrhythm-dot--red,
+.polyrhythm-note--red {
+    background: var(--py-red);
+}
+
+.polyrhythm-dot--orange,
+.polyrhythm-note--orange {
+    background: var(--py-orange);
+}
+
+.polyrhythm-dot--yellow,
+.polyrhythm-note--yellow {
+    background: var(--py-yellow);
+}
+
+.polyrhythm-dot--green,
+.polyrhythm-note--green {
+    background: var(--py-green);
+}
+
+.polyrhythm-dot--blue,
+.polyrhythm-note--blue {
+    background: var(--py-blue);
+}
+
+.polyrhythm-dot--purple,
+.polyrhythm-note--purple {
+    background: var(--py-purple);
+}
+
+/* 兩條軌道的容器：左右並排 */
+.polyrhythm-stage {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    gap: var(--sp-2);
+    transition: none;
+}
+
+/* 受傷時閃一下紅框 */
+.polyrhythm-stage--hurt {
+    animation: polyrhythm-hurt 0.3s ease-out;
+}
+
+/* 受傷閃紅框動畫：從紅框 → 透明 */
+@keyframes polyrhythm-hurt {
+    from {
+        box-shadow: inset 0 0 0 6px var(--c-bad);
+    }
+
+    to {
+        box-shadow: inset 0 0 0 6px transparent;
+    }
+}
+
+/* 一條軌道；relative 讓裡面 absolute 的音符以它為定位基準，overflow:hidden 裁掉超出的音符 */
+.polyrhythm-lane {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+    border-radius: var(--r-lg);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: pointer;
+}
+
+/* 左軌：藍色系 */
+.polyrhythm-lane--left {
+    background: var(--c-blue-soft);
+    border: 3px solid var(--c-blue);
+}
+
+/* 右軌：橘色系 */
+.polyrhythm-lane--right {
+    background: var(--c-orange-soft);
+    border: 3px solid var(--c-orange);
+}
+
+/* 點擊時該軌道閃亮一下 */
+.polyrhythm-lane--hit {
+    animation: polyrhythm-lane-hit 0.14s ease-out;
+}
+
+/* 閃亮動畫：亮度 1.25 倍 → 恢復 */
+@keyframes polyrhythm-lane-hit {
+    from {
+        filter: brightness(1.25);
+    }
+
+    to {
+        filter: none;
+    }
+}
+
+/* 紅色基準線：音符到這條線的瞬間就是打擊的準確時間 */
+/* 紅色基準線 */
+.polyrhythm-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 16px;
+    margin-top: -8px;
+    background: var(--c-recall);
+    opacity: 0.75;
+    z-index: 3;
+}
+
+/* 每一拍線條稍微變粗閃一下 */
+.polyrhythm-line--beat {
+    animation: polyrhythm-beat 0.2s ease-out;
+}
+
+/* 每小節的第一拍閃得更明顯 */
+.polyrhythm-line--bar {
+    animation: polyrhythm-bar 0.3s ease-out;
+}
+
+/* 每拍閃線動畫 */
+@keyframes polyrhythm-beat {
+    from {
+        opacity: 1;
+        height: 24px;
+        margin-top: -12px;
+    }
+
+    to {
+        opacity: 0.75;
+        height: 16px;
+        margin-top: -8px;
+    }
+}
+
+/* 每小節閃線動畫 */
+@keyframes polyrhythm-bar {
+    from {
+        opacity: 1;
+        height: 40px;
+        margin-top: -20px;
+    }
+
+    to {
+        opacity: 0.75;
+        height: 16px;
+        margin-top: -8px;
+    }
+}
+
+/* 掉落的音符（位置由 JS 每個畫面更新 transform） */
+.polyrhythm-note {
+    position: absolute;
+    left: 10%;
+    right: 10%;
+    top: 0;
+    height: 56px;
+    border-radius: 14px;
+    border: 3px solid rgba(74, 59, 30, 0.55);
+    box-sizing: border-box;
+    will-change: transform;
+    z-index: 2;
+}
+
+/* 打中：淡出並變亮 */
+.polyrhythm-note--hit {
+    opacity: 0;
+    filter: brightness(1.5);
+    transition: opacity 0.2s;
+}
+
+/* 漏掉：變淡 */
+.polyrhythm-note--miss {
+    opacity: 0.25;
+}
+
+/* 軌道底部的小標題（左手／右手） */
+.polyrhythm-cap {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 12px;
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* 下方的訊息文字 */
+.polyrhythm-msg {
+    flex: none;
+    min-height: 1.4em;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}

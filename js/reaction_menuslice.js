@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_menuslice.js — 秒反應・切菜單上的（企劃 314）
+   樣式：css/games/reaction_menuslice.css（這款專屬的 class 一律以「menuslice-」開頭；共用元件在 css/reaction_common.css）
    關卡一開始，黑板上的菜單亮出今天要用的 2 → 6 種水果（3 秒），然後收起來。接著水果一顆一顆拋上來，**只切菜單上有的**，其他的不要切。
    切錯一顆、或漏掉一顆菜單上的，就結束。結束時把菜單再亮出來，你切錯（或漏掉）的那顆和菜單上的那顆並排。
    ───────────────────────────────────────────────────────────────────
@@ -112,7 +113,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'msl-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'menuslice-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -120,7 +121,7 @@
         });
     }
 
-    /* 水果的畫法（SVG path／圖形，viewBox 0 0 64 64）：每種一組圖形，顏色由 CSS 的 .msl-f--id 決定 */
+    /* 水果的畫法（SVG path／圖形，viewBox 0 0 64 64）：每種一組圖形，顏色由 CSS 的 .menuslice-f--id 決定 */
     var SHAPES = {
         orange: [['circle', { cx: 32, cy: 35, r: 24 }, 'body'], ['circle', { cx: 24, cy: 28, r: 1.6 }, 'dot'], ['circle', { cx: 38, cy: 26, r: 1.6 }, 'dot'], ['circle', { cx: 30, cy: 42, r: 1.6 }, 'dot'], ['circle', { cx: 42, cy: 38, r: 1.6 }, 'dot'], ['path', { d: 'M32 12 Q40 4 48 8 Q42 16 32 12 Z' }, 'leaf']],
         tangerine: [['ellipse', { cx: 32, cy: 38, rx: 26, ry: 21 }, 'body'], ['circle', { cx: 32, cy: 19, r: 3.2 }, 'dark'], ['path', { d: 'M32 16 Q36 6 44 8 Q40 14 32 16 Z' }, 'leaf']],
@@ -136,8 +137,8 @@
         strawberry: [['path', { d: 'M32 58 C8 46 6 22 22 18 C28 16 32 20 32 20 C32 20 36 16 42 18 C58 22 56 46 32 58 Z' }, 'body'], ['circle', { cx: 24, cy: 30, r: 1.5 }, 'dot'], ['circle', { cx: 38, cy: 28, r: 1.5 }, 'dot'], ['circle', { cx: 31, cy: 38, r: 1.5 }, 'dot'], ['circle', { cx: 24, cy: 44, r: 1.5 }, 'dot'], ['circle', { cx: 40, cy: 42, r: 1.5 }, 'dot'], ['path', { d: 'M32 18 L24 10 L30 14 L32 6 L34 14 L40 10 Z' }, 'leaf']]
     };
     function fruitSvg(id, size) {
-        var s = kit.svg('svg', { 'class': 'msl-f msl-f--' + id, viewBox: '0 0 64 64', width: size, height: size });
-        (SHAPES[id] || []).forEach(function (sp) { var a = Object.assign({}, sp[1]); a['class'] = 'msl-' + sp[2]; kit.svg(sp[0], a, s); });
+        var s = kit.svg('svg', { 'class': 'menuslice-f menuslice-f--' + id, viewBox: '0 0 64 64', width: size, height: size });
+        (SHAPES[id] || []).forEach(function (sp) { var a = Object.assign({}, sp[1]); a['class'] = 'menuslice-' + sp[2]; kit.svg(sp[0], a, s); });
         return s;
     }
 
@@ -148,25 +149,25 @@
         console.log('[切菜單上的] 第 ' + level + ' 關：菜單 ' + q.menu.map(nameOf).join('、') + '；拋 ' + F + ' 顆（菜單上的 ' + q.tosses.filter(function (t) { return t.onMenu; }).length + ' 顆），間隔約 ' + q.spawnMs + ' 毫秒');
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        var field = h('div', { 'class': 'msl-field' });
+        var field = h('div', { 'class': 'menuslice-field' });
         stage.appendChild(field);
-        var tip = h('div', { 'class': 'qz-note msl-tip', text: '記住菜單，等一下只切菜單上的' });
+        var tip = h('div', { 'class': 'qz-note menuslice-tip', text: '記住菜單，等一下只切菜單上的' });
         field.appendChild(tip);
         /* 黑板菜單 */
-        var board = h('div', { 'class': 'msl-board' }, [h('div', { 'class': 'msl-board__title', text: '今日菜單' })]);
-        var items = h('div', { 'class': 'msl-board__items' });
-        q.menu.forEach(function (id) { var it = h('div', { 'class': 'msl-item' }); it.appendChild(fruitSvg(id, 52)); it.appendChild(h('div', { 'class': 'msl-item__name', text: nameOf(id) })); items.appendChild(it); });
+        var board = h('div', { 'class': 'menuslice-board' }, [h('div', { 'class': 'menuslice-board__title', text: '今日菜單' })]);
+        var items = h('div', { 'class': 'menuslice-board__items' });
+        q.menu.forEach(function (id) { var it = h('div', { 'class': 'menuslice-item' }); it.appendChild(fruitSvg(id, 52)); it.appendChild(h('div', { 'class': 'menuslice-item__name', text: nameOf(id) })); items.appendChild(it); });
         board.appendChild(items); field.appendChild(board);
-        var counter = h('div', { 'class': 'msl-counter', text: '' }); field.appendChild(counter);
-        var info = h('div', { 'class': 'qz-note msl-info', text: '' }); field.appendChild(info);
-        var arena = h('div', { 'class': 'msl-arena' }); field.appendChild(arena);          /* 水果飛的範圍（整個畫面） */
+        var counter = h('div', { 'class': 'menuslice-counter', text: '' }); field.appendChild(counter);
+        var info = h('div', { 'class': 'qz-note menuslice-info', text: '' }); field.appendChild(info);
+        var arena = h('div', { 'class': 'menuslice-arena' }); field.appendChild(arena);          /* 水果飛的範圍（整個畫面） */
 
         var phase = 'view', resolved = 0, flying = [], halted = false, lastP = null, down = false, over = false, t0 = 0;
         info.textContent = '看 ' + VIEW_S + ' 秒';
         api.timer(q.viewMs, begin);
         function begin() {
             if (api.over) return;
-            phase = 'play'; board.classList.add('msl-board--gone'); tip.textContent = '用手指切過水果：只切菜單上的！'; info.textContent = ''; counter.textContent = '0／' + F;
+            phase = 'play'; board.classList.add('menuslice-board--gone'); tip.textContent = '用手指切過水果：只切菜單上的！'; info.textContent = ''; counter.textContent = '0／' + F;
             t0 = performance.now();
             q.tosses.forEach(function (tz) { api.after(tz.t, function () { launch(tz); }); });
         }
@@ -174,7 +175,7 @@
         /* 發射一顆：建立元素，丟進 flying 清單，由迴圈每個畫格更新位置 */
         function launch(tz) {
             if (halted || api.over) return;
-            var el = h('div', { 'class': 'msl-fruit' }); el.style.width = el.style.height = FRUIT_PX + 'px';
+            var el = h('div', { 'class': 'menuslice-fruit' }); el.style.width = el.style.height = FRUIT_PX + 'px';
             var sv = fruitSvg(tz.fruit, FRUIT_PX); el.appendChild(sv); arena.appendChild(el);
             flying.push({ tz: tz, el: el, t: 0, cut: false, done: false, lt: landTime(tz) });
         }
@@ -215,11 +216,11 @@
             f.cut = true; flying.splice(idx, 1);
             var el = f.el, ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
             [['left', -1], ['right', 1]].forEach(function (half) {
-                var c = el.cloneNode(true); c.className = 'msl-half msl-half--' + half[0]; c.style.transform = el.style.transform; c.style.setProperty('--dir', half[1]); c.style.setProperty('--ang', ang + 'deg');
+                var c = el.cloneNode(true); c.className = 'menuslice-half menuslice-half--' + half[0]; c.style.transform = el.style.transform; c.style.setProperty('--dir', half[1]); c.style.setProperty('--ang', ang + 'deg');
                 arena.appendChild(c); api.after(650, function () { c.remove(); });
             });
             el.remove();
-            for (var k = 0; k < 8; k++) { var j = h('div', { 'class': 'msl-juice msl-f--' + f.tz.fruit }); j.style.left = f.px + 'px'; j.style.top = f.py + 'px'; j.style.setProperty('--dx', (Math.cos(k * 0.785 + Math.random()) * (30 + Math.random() * 30)).toFixed(0) + 'px'); j.style.setProperty('--dy', (Math.sin(k * 0.785 + Math.random()) * (30 + Math.random() * 30)).toFixed(0) + 'px'); arena.appendChild(j); api.after(550, function () { j.remove(); }); }
+            for (var k = 0; k < 8; k++) { var j = h('div', { 'class': 'menuslice-juice menuslice-f--' + f.tz.fruit }); j.style.left = f.px + 'px'; j.style.top = f.py + 'px'; j.style.setProperty('--dx', (Math.cos(k * 0.785 + Math.random()) * (30 + Math.random() * 30)).toFixed(0) + 'px'); j.style.setProperty('--dy', (Math.sin(k * 0.785 + Math.random()) * (30 + Math.random() * 30)).toFixed(0) + 'px'); arena.appendChild(j); api.after(550, function () { j.remove(); }); }
             Sfx.play('pop');
             if (!f.tz.onMenu) { wrong(f); return; }
             resolve();
@@ -227,14 +228,14 @@
         /* 失敗：停住畫面，把菜單再亮出來，你切錯（漏掉）的那顆和菜單上的那顆並排 */
         function showMenuAgain(badId, partnerId, missedFlag) {
             halted = true; over = true; phase = 'end';
-            board.classList.remove('msl-board--gone'); board.classList.add('msl-board--again'); tip.textContent = '菜單在這裡';
-            var cmp = h('div', { 'class': 'msl-cmp' });
-            function box(id, label, cls) { var b = h('div', { 'class': 'msl-cmp__box ' + (cls || '') }); b.appendChild(fruitSvg(id, 72)); b.appendChild(h('div', { 'class': 'msl-cmp__name', text: label + nameOf(id) })); return b; }
-            if (missedFlag) cmp.appendChild(box(badId, '漏掉：', 'msl-cmp__box--bad'));
-            else { cmp.appendChild(box(badId, '你切了：', 'msl-cmp__box--bad')); if (partnerId) cmp.appendChild(box(partnerId, '菜單上是：', 'msl-cmp__box--ok')); }
+            board.classList.remove('menuslice-board--gone'); board.classList.add('menuslice-board--again'); tip.textContent = '菜單在這裡';
+            var cmp = h('div', { 'class': 'menuslice-cmp' });
+            function box(id, label, cls) { var b = h('div', { 'class': 'menuslice-cmp__box ' + (cls || '') }); b.appendChild(fruitSvg(id, 72)); b.appendChild(h('div', { 'class': 'menuslice-cmp__name', text: label + nameOf(id) })); return b; }
+            if (missedFlag) cmp.appendChild(box(badId, '漏掉：', 'menuslice-cmp__box--bad'));
+            else { cmp.appendChild(box(badId, '你切了：', 'menuslice-cmp__box--bad')); if (partnerId) cmp.appendChild(box(partnerId, '菜單上是：', 'menuslice-cmp__box--ok')); }
             field.appendChild(cmp);
             /* 菜單上對應的那一項標起來 */
-            [].forEach.call(items.children, function (it, k) { var id = q.menu[k]; if (id === partnerId || (missedFlag && id === badId)) it.classList.add('msl-item--mark'); });
+            [].forEach.call(items.children, function (it, k) { var id = q.menu[k]; if (id === partnerId || (missedFlag && id === badId)) it.classList.add('menuslice-item--mark'); });
         }
         function wrong(f) {
             var id = f.tz.fruit, partner = fruitOf(id).pair && q.menu.indexOf(fruitOf(id).pair) >= 0 ? fruitOf(id).pair : null;

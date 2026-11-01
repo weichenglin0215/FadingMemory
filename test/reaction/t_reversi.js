@@ -53,9 +53,9 @@ ok(trickyReq > 50, '有相當多題要求藏起來：' + trickyReq);
 // 效能
 for (const lv of [1, 12, 24, 40]) { const t0 = Date.now(); for (let i = 0; i < 30; i++) T.makeLevel(lv, rnd); const per = (Date.now() - t0) / 30; console.log('第' + lv + '關 出題平均 ' + per.toFixed(1) + ' 毫秒'); ok(per < 150, '第 ' + lv + ' 關出題夠快：' + per.toFixed(1)); }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_reversi.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 2800/.test(src) && /rvs-count--best/.test(src), '失敗停格 2 秒以上、最多的數字標綠');
-  ok(/\.rvs-count--best \{ background: var\(--c-ok\);/.test(css) && /\.rvs-cell--bad \{[^}]*var\(--c-bad-light\)/.test(css), '綠色、紅色用 CSS 變數');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_reversi.js'), css = rd('../../css/games/reaction_reversi.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 2800/.test(src) && /reversi-count--best/.test(src), '失敗停格 2 秒以上、最多的數字標綠');
+  ok(/\.reversi-count--best \{ background: var\(--c-ok\);/.test(css) && /\.reversi-cell--bad \{[^}]*var\(--c-bad-light\)/.test(css), '綠色、紅色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_reversi.js'") > 0 && /你是黑棋/.test(G.rule), 'boot.js 有載入、玩法說明寫了你是黑棋'); }
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20) !== T.rating(30), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

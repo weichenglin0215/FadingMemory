@@ -1,0 +1,57 @@
+/* ═══════════════════════════════════════
+   reaction_farpair.css — 哪對離最遠（js/reaction_farpair.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「farpair-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 誰在偷偷動（.snk-）═══ */
+.farpair-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+}
+
+.farpair-tip {
+    bottom: 4px;
+}
+
+/* ═══ 哪對離最遠（.farpair-）═══ */
+.farpair-dot {
+    pointer-events: none;
+}
+
+.farpair-line {
+    stroke: var(--c-ink);
+    stroke-width: 5;
+    stroke-linecap: round;
+    fill: none;
+}
+
+.farpair-line--right {
+    stroke: var(--c-ok);
+}
+
+.farpair-line--wrong {
+    stroke: var(--c-bad);
+}
+
+.farpair-dist {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    fill: var(--c-ink);
+    paint-order: stroke;
+    stroke: var(--c-paper);
+    stroke-width: 6px;
+    stroke-linejoin: round;
+}
+
+.farpair-dist.farpair-line--right {
+    fill: var(--c-ok);
+    stroke: var(--c-paper);
+}
+
+.farpair-dist.farpair-line--wrong {
+    fill: var(--c-bad);
+    stroke: var(--c-paper);
+}

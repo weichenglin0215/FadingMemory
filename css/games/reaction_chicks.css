@@ -1,0 +1,147 @@
+/* ═══════════════════════════════════════
+   reaction_chicks.css — 找回小雞（js/reaction_chicks.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「chicks-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 找回小雞：先看哪幾隻小雞有星星，它們混進一群小雞四處亂跑，最後點出星星小雞。 */
+/* ═══ 找回小雞（.chicks-）═══ */
+.chicks-head {
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+/* 提示橫幅（nowrap = 不換行） */
+.chicks-banner {
+    min-height: 1.4em;
+    white-space: nowrap;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 院子：JS 以 clientWidth／clientHeight 算小雞的活動範圍，所以一定要有確定的大小 */
+/* 院子：JS 要靠它的實際寬高來算小雞的活動範圍，所以一定要有確定的大小 */
+.chicks-field {
+    position: relative;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--c-green-soft);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    touch-action: none;
+}
+
+/* 一隻小雞；位置用 JS 的 transform 控制，will-change 提示瀏覽器預先加速 */
+.chicks-chick {
+    position: absolute;
+    left: 0;
+    top: 0;
+    box-sizing: border-box;
+    border-radius: 50%;
+    will-change: transform;
+    cursor: pointer;
+}
+
+/* 小雞 SVG */
+.chicks-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* 小雞頭上的星星：絕對定位在小雞上方，pointer-events:none 不影響點擊。
+   水藍色，並且用 animation 快速閃爍（0.36 秒一次：亮 → 幾乎消失 → 亮，每秒不到 3 次），引起玩家注意 */
+.chicks-star {
+    position: absolute;
+    left: 50%;
+    top: -22px;
+    margin-left: -20px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-lg);
+    line-height: 1;
+    color: var(--c-sky);
+    text-shadow: 0 0 3px var(--c-card), 0 0 3px var(--c-card), 0 0 6px var(--c-sky);
+    pointer-events: none;
+    animation: chicks-star-blink 0.36s linear infinite;
+}
+
+/* 閃爍動畫：前半段亮且稍微放大，後半段幾乎消失；0%～49% 和 50%～100% 各維持固定值，所以是「一亮一滅」的硬切換，不是漸變 */
+@keyframes chicks-star-blink {
+
+    0%,
+    49% {
+        opacity: 1;
+        transform: scale(1.15);
+    }
+
+    50%,
+    100% {
+        opacity: 0.12;
+        transform: scale(0.85);
+    }
+}
+
+/* 已經找到的星星小雞：星星不再閃爍，穩穩亮著（綠色光圈代表找對了） */
+.chicks-chick--ok .chicks-star {
+    animation: none;
+    opacity: 1;
+}
+
+/* 系統開了「減少動態效果」：不要閃爍，星星穩穩亮著 */
+@media (prefers-reduced-motion: reduce) {
+    .chicks-star {
+        animation: none;
+    }
+}
+
+/* 移動結束後：只有星星小雞可以點，其他小雞沒有點擊功能（點下去等於點到空地）*/
+.chicks-chick--dead {
+    pointer-events: none;
+}
+
+/* 移動結束後仍可點的（星星）小雞 */
+.chicks-chick--live {
+    cursor: pointer;
+}
+
+/* 被玩家點選（藍色光圈） */
+.chicks-chick--pick {
+    background: var(--c-blue-soft);
+    box-shadow: 0 0 0 4px var(--c-blue);
+}
+
+/* 找對了（綠色光圈） */
+.chicks-chick--ok {
+    background: var(--c-ok-soft);
+    box-shadow: 0 0 0 4px var(--c-ok);
+}
+
+/* 漏掉的星星小雞（揭曉時橘色光圈） */
+.chicks-chick--miss {
+    background: var(--c-bad-soft);
+    box-shadow: 0 0 0 4px var(--c-bad);
+}
+
+/* 點錯的小雞（揭曉時帶紅褐色光圈、半透明） */
+.chicks-chick--wrong {
+    background: var(--c-bad-soft);
+    box-shadow: 0 0 0 4px var(--c-recall);
+    opacity: 0.7;
+}
+
+/* （保留）確認按鈕 */
+.chicks-ok {
+    flex: none;
+    align-self: center;
+    min-width: 40%;
+    font-size: var(--fs-md);
+}

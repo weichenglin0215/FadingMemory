@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_halfvol.js — 秒反應・容量一半
+   樣式：css/games/reaction_halfvol.css（這款專屬的 class 一律以「halfvol-」開頭；共用元件在 css/reaction_common.css）
    一個花瓶（每次曲線都不一樣），拖曳水位線，讓「線以下」的花瓶剪影面積剛好是整個花瓶的一半——
    不是一半的高度！只有一次機會。
    ───────────────────────────────────────────────────────────────────
@@ -120,7 +121,7 @@
         var base = Math.min(BOTTOM, H - 100);
         function yOf(level) { return base - level; }
 
-        var svg = kit.svg('svg', { 'class': 'hv-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
+        var svg = kit.svg('svg', { 'class': 'halfvol-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
         /* 瓶身輪廓（每 4px 取一點） */
         function side(sign) {
             var pts = [];
@@ -129,17 +130,17 @@
         }
         var left = side(-1), right = side(1);
         var outline = left.concat(right.slice().reverse());
-        kit.svg('polygon', { points: outline.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '), 'class': 'hv-vase' }, svg);
-        var water = kit.svg('polygon', { 'class': 'hv-water' }, svg);
-        kit.svg('polygon', { points: outline.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '), 'class': 'hv-rim' }, svg);
-        var refHalfV = kit.svg('line', { x1: CX - 150, x2: CX + 150, y1: yOf(cfg.hs), y2: yOf(cfg.hs), 'class': 'hv-ref hv-ref--v', opacity: 0 }, svg);
-        var line = kit.svg('line', { x1: CX - 150, x2: CX + 150, 'class': 'hv-line' }, svg);
-        var hl = kit.svg('circle', { cx: CX - 150, r: 20, 'class': 'hv-knob' }, svg);
-        var hr = kit.svg('circle', { cx: CX + 150, r: 20, 'class': 'hv-knob' }, svg);
-        var diffTxt = kit.svg('text', { x: CX, y: 0, 'text-anchor': 'middle', 'class': 'hv-diff', opacity: 0 }, svg);   /* 水面下方：目前水量與 50% 的差異 */
-        var msg = h('div', { 'class': 'hv-msg' });
+        kit.svg('polygon', { points: outline.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '), 'class': 'halfvol-vase' }, svg);
+        var water = kit.svg('polygon', { 'class': 'halfvol-water' }, svg);
+        kit.svg('polygon', { points: outline.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '), 'class': 'halfvol-rim' }, svg);
+        var refHalfV = kit.svg('line', { x1: CX - 150, x2: CX + 150, y1: yOf(cfg.hs), y2: yOf(cfg.hs), 'class': 'halfvol-ref halfvol-ref--v', opacity: 0 }, svg);
+        var line = kit.svg('line', { x1: CX - 150, x2: CX + 150, 'class': 'halfvol-line' }, svg);
+        var hl = kit.svg('circle', { cx: CX - 150, r: 20, 'class': 'halfvol-knob' }, svg);
+        var hr = kit.svg('circle', { cx: CX + 150, r: 20, 'class': 'halfvol-knob' }, svg);
+        var diffTxt = kit.svg('text', { x: CX, y: 0, 'text-anchor': 'middle', 'class': 'halfvol-diff', opacity: 0 }, svg);   /* 水面下方：目前水量與 50% 的差異 */
+        var msg = h('div', { 'class': 'halfvol-msg' });
         stage.appendChild(msg);
-        var okBtn = h('button', { 'class': 'btn btn--go hv-ok', text: '確定' });
+        var okBtn = h('button', { 'class': 'btn btn--go halfvol-ok', text: '確定' });
         stage.appendChild(okBtn);
 
         function waterPoly(level) {
@@ -184,7 +185,7 @@
                 var p = signedPct(cfg.cum, Wl);
                 diffTxt.textContent = fmtSigned(p) + '（與 50% 的差）';
                 diffTxt.setAttribute('y', Math.min(yOf(Wl) + 44, base - 10));
-                diffTxt.setAttribute('class', 'hv-diff' + (p >= 0 ? ' hv-diff--over' : ''));
+                diffTxt.setAttribute('class', 'halfvol-diff' + (p >= 0 ? ' halfvol-diff--over' : ''));
             }
             showDiff();
             my.tween(RISE_MS, function (e) { Wl = target * e; paint(); showDiff(); }, kit.easeInOutCubic).then(function () {
@@ -192,8 +193,8 @@
                 refHalfV.setAttribute('opacity', 1);
                 msg.innerHTML = '';
                 msg.appendChild(h('div', { text: '線以下 ' + below.toFixed(4) + '%　線以上 ' + (100 - below).toFixed(4) + '%' }));
-                msg.appendChild(h('div', { 'class': 'hv-msg__sub', text: '綠線＝真正的一半面積' }));
-                msg.classList.add('hv-msg--on');
+                msg.appendChild(h('div', { 'class': 'halfvol-msg__sub', text: '綠線＝真正的一半面積' }));
+                msg.classList.add('halfvol-msg--on');
                 my.after(REVEAL_PAUSE_MS, function () {
                     api.finish(real, { sign: sgn, lines: [
                         '線以下的面積是 ' + below.toFixed(4) + '%（目標 50.0000%）',

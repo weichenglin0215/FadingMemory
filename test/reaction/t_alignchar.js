@@ -34,8 +34,8 @@ for (let i = 0; i < 2000; i++) {
 const pos = new Set(), chs = new Set(); for (let i = 0; i < 400; i++) { const q = T.makeLevel(10, rnd); pos.add(q.answer); chs.add(q.ch); } ok(pos.size >= 5 && chs.size >= 30, '答案位置與字有變化 ' + pos.size + '/' + chs.size);
 ok(T.rating(2) !== T.rating(4) && T.rating(4) !== T.rating(8) && T.rating(8) !== T.rating(14) && T.rating(14) !== T.rating(25), '評語分級');
 // V1.29：答案按鈕字形＝明體／宋體（--font-note），題目字形（canvas 用頁面黑體）不變
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), css = rd('../../css/reaction5.css').split(/s+/).join(' '), theme = rd('../../css/theme.css'), src = rd('../../js/reaction_alignchar.js');
-  const i = css.indexOf('.alc-opt {');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), css = rd('../../css/games/reaction_alignchar.css').split(/s+/).join(' '), theme = rd('../../css/theme.css'), src = rd('../../js/reaction_alignchar.js');
+  const i = css.indexOf('.alignchar-opt {');
   ok(i > 0 && css.slice(i, i + 160).indexOf('font-family: var(--font-note)') > 0, '答案按鈕用明體／宋體（--font-note）');
   ok(/--font-note: "Noto Serif TC"[^;]*(Songti TC|PMingLiU)[^;]*serif;/.test(theme) && /--font-ui: "Noto Sans TC"/.test(theme), '--font-note 是襯線字型、--font-ui 是黑體（兩者不同）');
   ok(src.indexOf("getComputedStyle(document.body).fontFamily") > 0, '題目的字形維持不變（頁面字型）'); }

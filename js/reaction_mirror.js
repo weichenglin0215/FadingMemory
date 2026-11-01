@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_mirror.js — 秒反應・左右顛倒
+   樣式：css/games/reaction_mirror.css（這款專屬的 class 一律以「mirror-」開頭；共用元件在 css/reaction_common.css）
    手指往右，小球卻往左！在顛倒的世界裡，把小球沿著彎彎曲曲的通道送到終點，不能碰到牆。
    ───────────────────────────────────────────────────────────────────
    · 控制：按下去之後，小球的移動量 ＝ 手指移動量經過「映射」：第 1～FLIP_BOTH_FROM-1 關左右反（x 取負），
@@ -125,9 +126,9 @@
             /* pts 通道中心線的點；ball 球的位置；hw 通道半寬；FW／FH 場地大小 */
             var pts = null, ball = { x: 0, y: 0 }, hw = 60, FW = 0, FH = 0;
             /* 建立畫面元素 */
-            var head = h('div', { 'class': 'mr-head' });
-            var field = h('div', { 'class': 'mr-field' });
-            var hint = h('div', { 'class': 'mr-hint' });
+            var head = h('div', { 'class': 'mirror-head' });
+            var field = h('div', { 'class': 'mirror-field' });
+            var hint = h('div', { 'class': 'mirror-hint' });
             [head, field, hint].forEach(function (n) { root.appendChild(n); });
             var svg = null, ballEl = null, goalEl = null, ghost = null;
 
@@ -138,20 +139,20 @@
             function build() {
                 if (svg && svg.parentNode) svg.parentNode.removeChild(svg);
                 FW = field.clientWidth; FH = field.clientHeight;
-                svg = kit.svg('svg', { 'class': 'mr-svg', viewBox: '0 0 ' + FW + ' ' + FH }, field);
+                svg = kit.svg('svg', { 'class': 'mirror-svg', viewBox: '0 0 ' + FW + ' ' + FH }, field);
                 /* 把折線點轉成 SVG path 字串：M 是移動到、L 是畫線到（M x y L x y L x y…） */
                 var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(' ');
                 /* 先畫較寬的牆壁線，再在上面畫較窄的通道線，兩條線寬的差就是牆的厚度 */
-                kit.svg('path', { 'class': 'mr-wall', d: d, 'stroke-width': hw * 2 + 8 }, svg);
-                kit.svg('path', { 'class': 'mr-lane', d: d, 'stroke-width': hw * 2 - 4 }, svg);
+                kit.svg('path', { 'class': 'mirror-wall', d: d, 'stroke-width': hw * 2 + 8 }, svg);
+                kit.svg('path', { 'class': 'mirror-lane', d: d, 'stroke-width': hw * 2 - 4 }, svg);
                 var s = pts[0], g = pts[pts.length - 1];
-                kit.svg('circle', { 'class': 'mr-start', cx: s.x, cy: s.y, r: BALL_R + 8 }, svg);
-                goalEl = kit.svg('circle', { 'class': 'mr-goal', cx: g.x, cy: g.y, r: GOAL_R }, svg);
-                var flag = kit.svg('text', { 'class': 'mr-goal-t', x: g.x, y: g.y, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, svg);
+                kit.svg('circle', { 'class': 'mirror-start', cx: s.x, cy: s.y, r: BALL_R + 8 }, svg);
+                goalEl = kit.svg('circle', { 'class': 'mirror-goal', cx: g.x, cy: g.y, r: GOAL_R }, svg);
+                var flag = kit.svg('text', { 'class': 'mirror-goal-t', x: g.x, y: g.y, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, svg);
                 flag.textContent = '終點';
                 /* ghost：跟著手指跑的小圓圈（顯示手指在哪，因為球的方向和手指相反） */
-                ghost = kit.svg('circle', { 'class': 'mr-ghost', cx: -100, cy: -100, r: 18 }, svg);
-                ballEl = kit.svg('circle', { 'class': 'mr-ball', r: BALL_R }, svg);
+                ghost = kit.svg('circle', { 'class': 'mirror-ghost', cx: -100, cy: -100, r: 18 }, svg);
+                ballEl = kit.svg('circle', { 'class': 'mirror-ball', r: BALL_R }, svg);
                 setBall(s.x, s.y);
             }
             /* 設定球的位置 */
@@ -178,7 +179,7 @@
             function bump() {
                 state = 'bump';
                 Sfx.play('bad');
-                svg.classList.add('mr-svg--bump');
+                svg.classList.add('mirror-svg--bump');
                 meta();
                 my.after(700, function () {
                     var back = kit.resumeFrom(level);
@@ -195,7 +196,7 @@
                 state = 'clear';
                 cleared = level;
                 if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
-                goalEl.classList.add('mr-goal--ok');
+                goalEl.classList.add('mirror-goal--ok');
                 Sfx.play('win');
                 level++;
                 meta();

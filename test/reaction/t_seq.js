@@ -121,18 +121,18 @@ ok(T.rating(2) !== T.rating(8) && T.rating(8) !== T.rating(15) && T.rating(15) !
   ok(Math.abs(nums / total - T.NUM_P) < 0.05, '第 10 題數字題比例 ' + (nums / total).toFixed(3) + '（目標 ' + T.NUM_P + '）');
   for (let i = 0; i < 300; i++) ok(T.makeQuestion(2, rnd).kind === 'shape' && T.makeQuestion(1, rnd).kind === 'shape', '第 1、2 題一定是圖案題');
   // 原始碼／樣式：沒有機會、揭曉不壓灰（不用 disabled）、粗邊框
-  const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_seq.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction2.css'), 'utf8');
+  const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_seq.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_seq.css'), 'utf8');
   ok(!/LIVES|lives|機會 '/.test(src.replace(/取消「機會」/g, '')), '程式裡沒有機會（LIVES／lives）的參數與顯示');
-  ok(src.indexOf('b.disabled = true') < 0 && src.indexOf('sq-opt--locked') > 0, '揭曉時不再用 disabled（會變灰），改用 sq-opt--locked');
-  ok(/\.sq-opt--ok \{[^}]*box-shadow: 0 0 0 8px var\(--c-ok\)/.test(css) && /\.sq-opt--bad \{[^}]*box-shadow: 0 0 0 8px var\(--c-bad-light\)/.test(css), '正確答案綠色粗框、選錯紅色粗框（V1.40.0 改用 box-shadow 畫在按鈕外面，不佔按鈕內部的空間）');
-  ok(!/\.sq-opt--(ok|bad) \{[^}]*background/.test(css), '正確／錯誤的卡片沒有上色底（不壓一層色）');
-  ok(/\.sq-opt--locked \{[^}]*pointer-events: none/.test(css), '揭曉後不能再點');
+  ok(src.indexOf('b.disabled = true') < 0 && src.indexOf('seq-opt--locked') > 0, '揭曉時不再用 disabled（會變灰），改用 seq-opt--locked');
+  ok(/\.seq-opt--ok \{[^}]*box-shadow: 0 0 0 8px var\(--c-ok\)/.test(css) && /\.seq-opt--bad \{[^}]*box-shadow: 0 0 0 8px var\(--c-bad-light\)/.test(css), '正確答案綠色粗框、選錯紅色粗框（V1.40.0 改用 box-shadow 畫在按鈕外面，不佔按鈕內部的空間）');
+  ok(!/\.seq-opt--(ok|bad) \{[^}]*background/.test(css), '正確／錯誤的卡片沒有上色底（不壓一層色）');
+  ok(/\.seq-opt--locked \{[^}]*pointer-events: none/.test(css), '揭曉後不能再點');
 }
 // ═══ V1.40.0 玩家回饋：下方答案框的圖案很難判斷大小 → 答案框跟上方題目框同樣的長寬比（正方形）、同底色、圖案占滿 ═══
 { const norm = s => s.split(/\s+/).join(' ');
-  const css = norm(require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction2.css'), 'utf8'));
+  const css = norm(require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_seq.css'), 'utf8'));
   const rule = sel => { const m = new RegExp(sel.replace(/[.]/g, '\\.') + ' \\{([^}]*)\\}').exec(css); return m ? m[1] : ''; };
-  const cell = rule('.sq-cell'), opt = rule('.sq-opt'), opts = rule('.sq-opts'), row = rule('.sq-row');
+  const cell = rule('.seq-cell'), opt = rule('.seq-opt'), opts = rule('.seq-opts'), row = rule('.seq-row');
   // 1. 長寬比：題目格用 aspect-ratio 1/1，答案按鈕的寬、高是同一個算式（正方形）
   ok(/aspect-ratio: 1 \/ 1/.test(cell), '題目格是正方形（aspect-ratio 1/1）');
   const ws = [...opt.matchAll(/(?:^|[ ;])width: ([^;]+);/g)].map(m => m[1]), hs = [...opt.matchAll(/(?:^|[ ;])height: ([^;]+);/g)].map(m => m[1]);
@@ -143,11 +143,11 @@ ok(T.rating(2) !== T.rating(8) && T.rating(8) !== T.rating(15) && T.rating(15) !
   ok(/background: var\(--c-card-alt\)/.test(cell) && /background: var\(--c-card-alt\)/.test(opt), '答案按鈕的底色跟題目格一樣（--c-card-alt）');
   // 3. 圖案占滿：按鈕沒有內距、沒有邊框（框用 box-shadow 畫在外面），所以圖案／框的比例跟題目格一樣
   ok(/padding: 0;/.test(opt) && /border: none;/.test(opt) && /box-shadow: 0 0 0 3px var\(--c-frame\)/.test(opt), '答案按鈕：沒有內距、沒有邊框（外框是 box-shadow），圖案占滿整個框');
-  ok(/\.sq-svg \{[^}]*width: 100%;[^}]*height: 100%;/.test(css), '圖案 SVG 占滿所在的框（題目格與答案按鈕共用）');
+  ok(/\.seq-svg \{[^}]*width: 100%;[^}]*height: 100%;/.test(css), '圖案 SVG 占滿所在的框（題目格與答案按鈕共用）');
   // 4. 題目格不被拉高（不然就不是正方形）
-  ok(/align-items: flex-start/.test(row) && /min-height: 0/.test(cell) && /\.sq-cell--q \{[^}]*line-height: 1;/.test(css), '題目列 align-items: flex-start、問號格 line-height: 1：每一格都是正方形');
+  ok(/align-items: flex-start/.test(row) && /min-height: 0/.test(cell) && /\.seq-cell--q \{[^}]*line-height: 1;/.test(css), '題目列 align-items: flex-start、問號格 line-height: 1：每一格都是正方形');
   // 5. 答案按鈕與題目格畫的是同一個 shapeSvg（同樣的 viewBox、同樣的縮放），不是另一套畫法
   const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_seq.js'), 'utf8');
-  ok((src.match(/shapeSvg\(it\)/g) || []).length >= 2 && /h\('button', \{ 'class': 'btn sq-opt' \}, \[shapeSvg\(it\)\]\)/.test(src) && /h\('div', \{ 'class': 'sq-cell' \}, \[shapeSvg\(it\)\]\)/.test(src), '答案按鈕與題目格用同一個 shapeSvg 畫圖案');
+  ok((src.match(/shapeSvg\(it\)/g) || []).length >= 2 && /h\('button', \{ 'class': 'btn seq-opt' \}, \[shapeSvg\(it\)\]\)/.test(src) && /h\('div', \{ 'class': 'seq-cell' \}, \[shapeSvg\(it\)\]\)/.test(src), '答案按鈕與題目格用同一個 shapeSvg 畫圖案');
   ok(src.indexOf("viewBox: '0 0 100 100'") > 0 && /scale\(' \+ scale\.toFixed\(3\)/.test(src), '圖案都畫在 100×100 的 viewBox 裡、依 size 縮放（框多大，圖案就按比例多大）'); }
 console.log(bad ? 'FAILED ' + bad : 'ALL PASS');

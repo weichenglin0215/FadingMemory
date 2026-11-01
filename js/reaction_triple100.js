@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_triple100.js — 秒反應・三張成百（V1.26 新增；V1.27 改成關卡制）
+   樣式：css/games/reaction_triple100.css（這款專屬的 class 一律以「triple100-」開頭；共用元件在 css/reaction_common.css）
    一堆數字牌（橫向每排 3 張，往下一排一排增加），每次選三張，加起來剛好 100 就消除，全部消完就過關。
    選錯一組（不是 100）扣 3 秒；時間到、或是「卡住」（剩下的牌再也湊不出 100）就結束。成績＝通過幾關（越多越好）。
    介面不顯示「已選合計」（不替你記帳）。
@@ -190,10 +191,10 @@
         var cards = deck.cards, state = [], sel = [], remaining = cards.length, errors = 0, hint = null, tm = null;
         console.log('[三張成百] 第 ' + level + ' 關：' + cards.length + ' 張，牌面 ' + cards.join(',') + '；唯一正解 ' + deck.solution.map(function (t) { return t.join('+'); }).join('、') + '；陷阱 ' + deck.traps.length + ' 組；限時 ' + spec.limitS + ' 秒');
 
-        var wrap = h('div', { 'class': 't3-wrap' });
-        var grid = h('div', { 'class': 't3-grid' });
+        var wrap = h('div', { 'class': 'triple100-wrap' });
+        var grid = h('div', { 'class': 'triple100-grid' });
         var els = cards.map(function (n, i) {
-            var el = h('div', { 'class': 't3-card', text: String(n) });
+            var el = h('div', { 'class': 'triple100-card', text: String(n) });
             state.push('on');
             /* 用 click 不用 pointerdown：牌太多要上下捲動時，手指滑過牌不會誤選 */
             el.addEventListener('click', function (e) { if (e && e.preventDefault) e.preventDefault(); tap(i); });
@@ -201,7 +202,7 @@
             return el;
         });
         wrap.appendChild(grid); stage.appendChild(wrap);
-        var info = h('div', { 'class': 't3-info' });
+        var info = h('div', { 'class': 'triple100-info' });
         stage.appendChild(info);
         function infoText() {
             var more = wrap.scrollHeight > wrap.clientHeight + 4 && wrap.scrollTop + wrap.clientHeight < wrap.scrollHeight - 4;
@@ -231,22 +232,22 @@
             if (api.over || state[i] !== 'on') return;
             hideHint();
             var at = sel.indexOf(i);
-            if (at >= 0) { sel.splice(at, 1); els[i].classList.remove('t3-card--sel'); Sfx.play('click'); return; }
-            sel.push(i); els[i].classList.add('t3-card--sel'); Sfx.play('click');
+            if (at >= 0) { sel.splice(at, 1); els[i].classList.remove('triple100-card--sel'); Sfx.play('click'); return; }
+            sel.push(i); els[i].classList.add('triple100-card--sel'); Sfx.play('click');
             if (sel.length < 3) return;
             /* 選滿三張：判定 */
             var picked = sel.slice(); sel = [];
             var sum = picked.reduce(function (s, k) { return s + cards[k]; }, 0);
             if (sum === TARGET) {
-                picked.forEach(function (k) { state[k] = 'gone'; els[k].classList.remove('t3-card--sel'); els[k].classList.add('t3-card--gone'); });
+                picked.forEach(function (k) { state[k] = 'gone'; els[k].classList.remove('triple100-card--sel'); els[k].classList.add('triple100-card--gone'); });
                 remaining -= 3; Sfx.play('ok');
                 if (remaining === 0) { api.pass({ delay: 800 }); return; }
                 /* 剩下的牌湊不出任何一組 100 → 卡住（遊戲不會提早提醒玩家「已經走錯」，要等到真的沒路可走） */
                 if (!hasMove(remainingValues())) api.after(500, function () { fail('stuck'); });
             } else {
                 errors++;
-                picked.forEach(function (k) { els[k].classList.remove('t3-card--sel'); els[k].classList.add('t3-card--bad'); });
-                api.after(420, function () { picked.forEach(function (k) { els[k].classList.remove('t3-card--bad'); }); });
+                picked.forEach(function (k) { els[k].classList.remove('triple100-card--sel'); els[k].classList.add('triple100-card--bad'); });
+                api.after(420, function () { picked.forEach(function (k) { els[k].classList.remove('triple100-card--bad'); }); });
                 Sfx.play('bad'); infoText();
                 tm.cut(PENALTY_MS);
             }

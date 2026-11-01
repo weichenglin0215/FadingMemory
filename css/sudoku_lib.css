@@ -1,0 +1,196 @@
+/* ═══════════════════════════════════════
+   sudoku_lib.css — 數獨系列（數獨4／6／9、夾心數獨）共用的盤面樣式
+   · 對應 js/sudoku_lib.js；class 一律以「sudokulib-」開頭。
+   · 顏色與字級全部用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   · 盤面的欄數 --sudokulib-n、每格邊長 --sudokulib-cell、數字大小 --sudokulib-font、筆記大小 --sudokulib-note、
+     宮的欄數 --sudokulib-notecols（筆記的排法）都由 js 依畫面寬度算好寫在盤面上；下面的值是沒有 js 時的備用值。
+   ═══════════════════════════════════════ */
+
+/* 整個遊戲區：由上往下排「盤面、說明、數字鍵、工具列」，水平置中；數字鍵與工具列的高度 --sudokulib-key-h／--sudokulib-tool-h 由 js 依盤面大小設定 */
+.sudokulib-wrap {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding-top: 6px;
+    box-sizing: border-box;
+}
+
+/* 盤面外框（夾心數獨會多一排／一欄的外圍線索，所以用 grid 排） */
+.sudokulib-frame {
+    display: grid;
+    grid-template-columns: auto;
+}
+
+.sudokulib-board {
+    display: grid;
+    grid-template-columns: repeat(var(--sudokulib-n, 9), var(--sudokulib-cell, 50px));
+    grid-auto-rows: var(--sudokulib-cell, 50px);
+    border-left: 3px solid var(--c-ink);
+    border-top: 3px solid var(--c-ink);
+    background: var(--c-card);
+}
+
+.sudokulib-cell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border-right: 1px solid var(--bd-c);
+    border-bottom: 1px solid var(--bd-c);
+    color: var(--c-ink);
+    font-size: var(--sudokulib-font, var(--fs-lg));
+    font-weight: var(--fw-black);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+/* 每個宮的最右一欄、最下一排畫粗線（盤面最右一欄、最下一排也是宮的邊，所以外框的右邊與下邊也是粗線） */
+.sudokulib-cE {
+    border-right: 3px solid var(--c-ink);
+}
+
+.sudokulib-rE {
+    border-bottom: 3px solid var(--c-ink);
+}
+
+.sudokulib-digit {
+    position: relative;
+    z-index: 1;
+}
+
+.sudokulib-cell--given {
+    color: var(--c-ink);
+    background: var(--c-card-alt);
+}
+
+.sudokulib-cell--mine {
+    color: var(--c-blue);
+}
+
+.sudokulib-cell--peer {
+    background: var(--c-yellow-soft);
+}
+
+.sudokulib-cell--same {
+    background: var(--c-blue-soft);
+}
+
+.sudokulib-cell--sel {
+    background: var(--c-yellow);
+}
+
+.sudokulib-cell--bad {
+    color: var(--c-bad);
+    background: var(--c-bad-soft);
+}
+
+.sudokulib-cell--hint {
+    animation: sudokulib-hint 0.8s ease-in-out infinite;
+}
+
+.sudokulib-cell--ok {
+    background: var(--c-ok-soft);
+    color: var(--c-ok);
+}
+
+@keyframes sudokulib-hint {
+    0%, 100% { background: var(--c-yellow-soft); }
+    50% { background: var(--c-orange-soft); }
+}
+
+/* 筆記：蓋在格子上的小數字，排法跟宮的形狀一樣（4×4＝2 欄、6×6＝3 欄、9×9＝3 欄） */
+.sudokulib-notes {
+    position: absolute;
+    inset: 0;
+    display: none;
+    grid-template-columns: repeat(var(--sudokulib-notecols, 3), 1fr);
+    align-items: center;
+    justify-items: center;
+    padding: 1px;
+    box-sizing: border-box;
+    pointer-events: none;
+}
+
+.sudokulib-note {
+    font-size: var(--sudokulib-note, 12px);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    line-height: 1;
+}
+
+/* 夾心數獨的外圍線索 */
+.sudokulib-corner {
+    width: 1px;
+    height: 1px;
+}
+
+.sudokulib-ring {
+    display: flex;
+}
+
+.sudokulib-ring--left {
+    flex-direction: column;
+}
+
+.sudokulib-ringcell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-black);
+    color: var(--c-orange);
+}
+
+/* 盤面下方的一行說明 */
+.sudokulib-tip {
+    min-height: 30px;
+    line-height: 30px;
+    white-space: nowrap;
+    padding: 0 8px;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    text-align: center;
+}
+
+/* 數字鍵 */
+.sudokulib-pad {
+    display: grid;
+    gap: 8px;
+    width: 96%;
+}
+
+.sudokulib-key {
+    height: var(--sudokulib-key-h, 64px);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    padding: 0;
+}
+
+/* 這個數字已經填滿 N 個了：數字鍵變淡（還是可以按，用來擦掉或筆記） */
+.sudokulib-key--done {
+    opacity: 0.35;
+}
+
+.sudokulib-tools {
+    display: flex;
+    gap: 8px;
+    width: 96%;
+}
+
+.sudokulib-tool {
+    flex: 1 1 0;
+    height: var(--sudokulib-tool-h, 56px);
+    font-size: var(--fs-md);
+    padding: 0;
+}
+
+.sudokulib-tool--on {
+    background: var(--c-yellow);
+}

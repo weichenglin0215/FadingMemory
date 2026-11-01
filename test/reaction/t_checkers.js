@@ -88,9 +88,9 @@ ok(turnMax >= 3, '有路線轉 3 個以上的彎');
 // 效能
 for (const lv of [1, 12, 24, 40]) { const t0 = Date.now(); let worst = 0; for (let i = 0; i < 30; i++) { const t1 = Date.now(); T.makeLevel(lv, rnd); worst = Math.max(worst, Date.now() - t1); } const per = (Date.now() - t0) / 30; console.log('第' + lv + '關 出題平均 ' + per.toFixed(1) + ' 毫秒、最慢 ' + worst); ok(per < 200 && worst < 1500, '第 ' + lv + ' 關出題夠快：' + per.toFixed(1) + '／' + worst); }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_checkers.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: hopMs \+ 1800/.test(src) && /chk-badge--best/.test(src) && /chk-pc__in--arc/.test(src), '失敗：標出連跳次數、最多的彈珠連跳（有弧線）、停格 1.8 秒以上');
-  ok(/\.chk-badge--best \{[^}]*var\(--c-ok\)/.test(css) && /\.chk-pc--red \.chk-pc__in \{[^}]*var\(--chk-red/.test(css), '綠色、紅色彈珠用 CSS 變數');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_checkers.js'), css = rd('../../css/games/reaction_checkers.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: hopMs \+ 1800/.test(src) && /checkers-badge--best/.test(src) && /checkers-pc__in--arc/.test(src), '失敗：標出連跳次數、最多的彈珠連跳（有弧線）、停格 1.8 秒以上');
+  ok(/\.checkers-badge--best \{[^}]*var\(--c-ok\)/.test(css) && /\.checkers-pc--red \.checkers-pc__in \{[^}]*var\(--chk-red/.test(css), '綠色、紅色彈珠用 CSS 變數');
   ok(boot.indexOf("'js/reaction_checkers.js'") > 0 && /連跳/.test(G.rule), 'boot.js 有載入、玩法說明提到連跳'); }
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20) !== T.rating(30), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

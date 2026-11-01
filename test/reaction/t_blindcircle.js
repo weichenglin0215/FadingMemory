@@ -46,7 +46,7 @@ ok(T.ARROW === 150, '十字箭頭總寬 150px（V1.27：縮小成 75%）');
   ok(p.length === 24 && Math.min(...xs) === -75 && Math.max(...xs) === 75 && Math.min(...ys) === -75 && Math.max(...ys) === 75, '箭頭多邊形 24 個頂點、範圍 ±75');
   ok(p.some(q => q[0] === 0 && q[1] === -75) && p.some(q => q[0] === 75 && q[1] === 0) && p.some(q => q[0] === 0 && q[1] === 75) && p.some(q => q[0] === -75 && q[1] === 0), '上下左右四個箭頭尖端'); }
 { const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_blindcircle.js'), 'utf8');
-  ok(src.indexOf('bc-finger') < 0, '取消繪製過程中的藍色圓點'); ok(src.indexOf("'class': 'bc-start'") > 0 && src.indexOf('arrowPoints(ARROW)') > 0, '起點用十字箭頭'); }
+  ok(src.indexOf('blindcircle-finger') < 0, '取消繪製過程中的藍色圓點'); ok(src.indexOf("'class': 'blindcircle-start'") > 0 && src.indexOf('arrowPoints(ARROW)') > 0, '起點用十字箭頭'); }
 // V1.27：拖曳軌跡只留手指身後 160px
 ok(T.TRAIL_LEN === 160, '軌跡長度 160px');
 { const len = (a) => { let s = 0; for (let i = 1; i < a.length; i++) s += Math.hypot(a[i].x - a[i - 1].x, a[i].y - a[i - 1].y); return s; };
@@ -57,7 +57,7 @@ ok(T.TRAIL_LEN === 160, '軌跡長度 160px');
   ok(T.tailOf([], 160).length === 0 && T.tailOf([{ x: 1, y: 2 }], 160).length === 1, '空與單點');
   const C = T.CENTER, R = 190, arc = []; for (let i = 0; i <= 400; i++) { const a = i / 400 * 2 * Math.PI; arc.push({ x: C.x + R * Math.cos(a), y: C.y + R * Math.sin(a) }); }
   for (const k of [50, 150, 300, 400]) { const t = T.tailOf(arc.slice(0, k + 1), 160), L = len(t); ok(L <= 160 + 1e-6 && (L > 159 || len(arc.slice(0, k + 1)) < 160), '圓弧 ' + k + ' 點：尾巴長度 ' + L.toFixed(2)); }
-  const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_blindcircle.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction3.css'), 'utf8');
+  const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_blindcircle.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_blindcircle.css'), 'utf8');
   ok(src.indexOf('tailOf(pts, TRAIL_LEN)') > 0 && /pts\.push\(loc\(e\)\);[^\n]*\n\s*paintTrail\(\)/.test(src), '每次 pointermove 更新軌跡');
-  ok(/\.bc-trail \{[^}]*stroke: #000;[^}]*stroke-width: 1;[^}]*stroke-dasharray/.test(css), '軌跡是 1px 黑色虛線'); }
+  ok(/\.blindcircle-trail \{[^}]*stroke: #000;[^}]*stroke-width: 1;[^}]*stroke-dasharray/.test(css), '軌跡是 1px 黑色虛線'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

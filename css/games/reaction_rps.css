@@ -1,0 +1,208 @@
+/* ═══════════════════════════════════════
+   reaction_rps.css — 猜拳必贏（js/reaction_rps.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「rps-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 猜拳必贏：電腦出拳後，要出能「贏」它的那一個。 */
+/* ═══ 猜拳必贏（.rps-）═══ */
+/* 上半部：電腦／結果顯示區 */
+.rps-top {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+}
+
+/* 中間：倒數的數字（或結果文字）＋ 倒數橫條，夾在電腦與你之間 */
+/* 中間：倒數大字或結果文字，加上倒數橫條 */
+.rps-mid {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px var(--sp-3);
+    background: var(--c-card);
+}
+
+/* 大字（倒數數字） */
+.rps-big {
+    text-align: center;
+    font-size: 96px;
+    font-weight: 800;
+    line-height: 1.05;
+    color: var(--c-ink);
+    min-height: 1.05em;
+}
+
+/* 改顯示訊息時使用較小字 */
+.rps-big--msg {
+    font-size: var(--fs-xl);
+    min-height: 2.4em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 贏了（綠） */
+.rps-big--win {
+    color: var(--c-ok);
+}
+
+/* 輸了（橘） */
+.rps-big--lose {
+    color: var(--c-bad);
+}
+
+/* 平手（灰） */
+.rps-big--tie {
+    color: var(--c-ink-soft);
+}
+
+/* 出拳顯示區 */
+.rps-body {
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+
+/* 左右（上下）兩半各占一半 */
+.rps-half {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+/* 電腦那半（淡紅底） */
+.rps-half--comp {
+    background: #FCE9E6;
+}
+
+/* 玩家那半（淡藍底） */
+.rps-half--me {
+    background: #E8F0FB;
+}
+
+/* 「電腦」「你」標籤 */
+.rps-who {
+    font-size: var(--fs-md);
+    font-weight: 800;
+    color: var(--c-ink-soft);
+}
+
+/* 拳頭圖示（石頭、剪刀、布） */
+.rps-icon {
+    width: 120px;
+    height: 120px;
+    display: block;
+}
+
+/* 出拳名稱 */
+.rps-name {
+    font-size: var(--fs-lg);
+    font-weight: 800;
+    color: var(--c-ink);
+}
+
+/* 還沒出拳時的「…」 */
+.rps-none {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    font-size: var(--fs-xl);
+    font-weight: 800;
+    color: var(--c-ink-soft);
+}
+
+/* 結果橫幅：用 left:50% + translate(-50%,-50%) 置中（這是傳統置中方式，因為這顆橫幅沒有 :active 的 transform，不會互搶） */
+.rps-banner {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    padding: var(--sp-2) var(--sp-4);
+    border: var(--bd);
+    border-radius: 999px;
+    font-size: var(--fs-xl);
+    font-weight: 800;
+    background: rgba(255, 253, 243, 0.96);
+    box-shadow: var(--shadow-pop);
+    white-space: nowrap;
+}
+
+/* 橫幅：贏 */
+.rps-banner--win {
+    color: var(--c-ok);
+    border-color: var(--c-ok);
+}
+
+/* 橫幅：輸 */
+.rps-banner--lose {
+    color: var(--c-bad);
+    border-color: var(--c-bad);
+}
+
+/* 橫幅：平手 */
+.rps-banner--tie {
+    color: var(--c-ink-soft);
+}
+
+/* 下方三顆出拳按鈕，等寬三欄 */
+.rps-btns {
+    flex: none;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-3);
+}
+
+/* 單顆出拳按鈕：底部有陰影像凸起的按鈕 */
+.rps-btn {
+    height: 168px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    background: var(--c-blue);
+    color: #FFFFFF;
+    font-family: var(--font-ui);
+    cursor: pointer;
+    box-shadow: 0 5px 0 rgba(0, 0, 0, 0.18);
+}
+
+/* 按下去時：往下沉 3px、陰影縮小、變亮，模擬「真的按下去」的手感 */
+.rps-btn:active,
+.rps-btn--pick {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.18);
+    filter: brightness(1.1);
+}
+
+/* 按鈕上的圖示 */
+.rps-btn__ico .rps-icon {
+    width: 88px;
+    height: 88px;
+}
+
+/* 按鈕上的文字 */
+.rps-btn__txt {
+    font-size: var(--fs-lg);
+    font-weight: 800;
+}

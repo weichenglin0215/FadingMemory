@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_price.js — 秒反應・價格陷阱
+   樣式：css/games/reaction_price.css（這款專屬的 class 一律以「price-」開頭；共用元件在 css/reaction_common.css）
    上下兩張價格標籤，原價用中文數字寫（例如「三千八百元」），再加上一到三個優惠
    （打八五折、現折三百元、每滿一千減一百、折價券、會員再打八折 …），
    在時間內點出「實際要付的錢比較少」的那一張。
@@ -276,10 +277,10 @@
             var level = start || 1, right = level - 1, newRec = false, state = 'idle', Q = null;
 
             /* 建立畫面元素：標題、時間條、兩張價格標籤 */
-            var head = h('div', { 'class': 'pr-head' });
+            var head = h('div', { 'class': 'price-head' });
             var bar = h('div', { 'class': 'ld-time' }, [h('div', { 'class': 'ld-time__fill' })]);
             var fill = bar.firstChild;
-            var wrap = h('div', { 'class': 'pr-wrap' });
+            var wrap = h('div', { 'class': 'price-wrap' });
             root.appendChild(head);
             root.appendChild(bar);
             root.appendChild(wrap);
@@ -296,7 +297,7 @@
                     return els.every(function (el) {
                         var cs = getComputedStyle(el), r = el.getBoundingClientRect(), s = r.height / (el.offsetHeight || r.height) || 1;
                         var inner = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-                        var kids = [].filter.call(el.children, function (c) { return c.className.indexOf('pr-tag__hole') < 0; });
+                        var kids = [].filter.call(el.children, function (c) { return c.className.indexOf('price-tag__hole') < 0; });
                         var top = Infinity, bottom = -Infinity, wide = false;
                         kids.forEach(function (c) {
                             var cr = c.getBoundingClientRect();
@@ -322,12 +323,12 @@
                 /* 建立兩張標籤（吊牌造型的按鈕）：原價、優惠行、算式（答完才顯示） */
                 tagEls = Q.tags.map(function (tg, i) {
                     var ot = priceText(tg.orig, tg.formal);
-                    var el = h('button', { 'class': 'pr-tag' }, [
-                        h('span', { 'class': 'pr-tag__hole' }),
-                        h('span', { 'class': 'pr-tag__lbl', text: '原價' }),
-                        h('span', { 'class': 'pr-tag__orig', text: ot, attrs: { 'data-n': String(ot.length) } }),
-                        h('span', { 'class': 'pr-tag__disc' }, discLines(tg).map(function (t, k) { return h('span', { 'class': 'pr-tag__line' + (tg.steps[k].k === 'member' ? ' pr-tag__line--member' : ''), text: t }); })),
-                        h('span', { 'class': 'pr-tag__calc', text: calcText(tg) })      /* 算式先排好版（透明），答完才顯示，版面不會跳動 */
+                    var el = h('button', { 'class': 'price-tag' }, [
+                        h('span', { 'class': 'price-tag__hole' }),
+                        h('span', { 'class': 'price-tag__lbl', text: '原價' }),
+                        h('span', { 'class': 'price-tag__orig', text: ot, attrs: { 'data-n': String(ot.length) } }),
+                        h('span', { 'class': 'price-tag__disc' }, discLines(tg).map(function (t, k) { return h('span', { 'class': 'price-tag__line' + (tg.steps[k].k === 'member' ? ' price-tag__line--member' : ''), text: t }); })),
+                        h('span', { 'class': 'price-tag__calc', text: calcText(tg) })      /* 算式先排好版（透明），答完才顯示，版面不會跳動 */
                     ]);
                     el.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(i); });
                     wrap.appendChild(el);
@@ -360,9 +361,9 @@
                 fill.style.width = '0%';
                 var ok = i === Q.lowIdx;
                 tagEls.forEach(function (el, k) {
-                    el.classList.add('pr-tag--rev', k === Q.lowIdx ? 'pr-tag--low' : 'pr-tag--high');       /* pr-tag--rev：顯示算式 */
+                    el.classList.add('price-tag--rev', k === Q.lowIdx ? 'price-tag--low' : 'price-tag--high');       /* price-tag--rev：顯示算式 */
                 });
-                if (i >= 0) tagEls[i].classList.add('pr-tag--pick');
+                if (i >= 0) tagEls[i].classList.add('price-tag--pick');
                 head.textContent = (i < 0 ? '時間到！' : (ok ? '答對了！' : '答錯了…')) + (Q.lowIdx ? '下' : '上') + '面便宜（差 ' + Q.gap + ' 元）';
                 if (ok) {
                     right++;

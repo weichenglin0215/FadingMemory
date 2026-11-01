@@ -1,0 +1,160 @@
+/* ═══════════════════════════════════════
+   reaction_fridge.css — 冰箱歸位（js/reaction_fridge.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「fridge-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 冰箱歸位：食物出現在最上方大格子，要把它分到冷藏室／冷凍庫／櫥櫃三顆按鈕之一。 */
+/* ═══ 冰箱歸位（.fridge-）═══ */
+.fridge-head {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+}
+
+/* 三個「答案區」共用的外觀（冷藏室／冷凍庫／櫥櫃），border 寬度用變數 --bd-c 顏色 */
+.fridge-zone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1 1 0;
+    min-height: 0;
+    padding: 6px;
+    border: 3px solid var(--bd-c);
+    border-radius: var(--r-lg);
+    font-family: var(--font-ui);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    text-align: center;
+    line-height: 1.2;
+    touch-action: none;
+}
+
+/* 答案區裡的說明文字（大字） */
+.fridge-zone__v {
+    font-size: 44px;
+    line-height: 1.15;
+}
+
+/* 較小字級的說明 */
+.fridge-zone__v--sm {
+    font-size: 30px;
+}
+
+/* 冷藏室：綠色系 */
+.fridge-zone--cool {
+    background: var(--c-green-soft);
+    border-color: var(--c-green);
+}
+
+/* 冷凍庫：藍色系 */
+.fridge-zone--freeze {
+    background: var(--c-blue-soft);
+    border-color: var(--c-blue);
+}
+
+/* 櫥櫃（不用冰）：黃色系 */
+.fridge-zone--pantry {
+    background: var(--c-yellow-soft);
+    border-color: var(--c-yellow);
+}
+
+/* 答對：整塊變綠 */
+.fridge-zone--ok {
+    background: var(--c-ok);
+    color: var(--c-on-accent);
+}
+
+/* 答錯：整塊變橘 */
+.fridge-zone--bad {
+    background: var(--c-bad);
+    color: var(--c-on-accent);
+}
+
+/* 下方答案區容器：左邊一欄（上下兩顆）＋右邊一顆高的，固定高度 300px */
+/* 下方三顆答案按鈕：左邊上下兩顆（冷藏室、冷凍庫），右邊一顆高的（櫥櫃） */
+.fridge-answers {
+    flex: none;
+    display: flex;
+    gap: var(--sp-3);
+    height: 300px;
+}
+
+/* 左邊那一欄（直向 flex，裡面上下各一顆答案區） */
+.fridge-col {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+}
+
+/* > 是「子選擇器」：只作用在 .fridge-answers 的直接子元素，讓右邊那顆自己吃滿整個高度 */
+.fridge-answers>.fridge-zone {
+    flex: 1 1 0;
+}
+
+/* 題目區（最上方大格子）：吃掉剩下的所有高度 */
+/* 題目：最上方的大格子 */
+.fridge-arena {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+}
+
+/* 題目卡片：食物圖示＋名稱，垂直排列並置中 */
+.fridge-card {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 18px 8px 22px;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-pop);
+}
+
+/* 答對時卡片變綠 */
+.fridge-card--ok {
+    border-color: var(--c-ok);
+    background: var(--c-ok-soft);
+}
+
+/* 答錯時卡片變橘 */
+.fridge-card--bad {
+    border-color: var(--c-bad);
+    background: var(--c-bad-soft);
+}
+
+/* 食物圖示大小 */
+.fridge-icon {
+    width: 210px;
+    height: 210px;
+}
+
+/* 食物名稱大字 */
+.fridge-name {
+    font-size: 58px;
+    font-weight: var(--fw-black);
+    line-height: 1.15;
+    color: var(--c-ink);
+    text-align: center;
+}
+
+/* 底下的提示說明 */
+.fridge-tip {
+    min-height: 2.6em;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink);
+}

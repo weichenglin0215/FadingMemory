@@ -1,0 +1,78 @@
+/* ═══════════════════════════════════════
+   reaction_dicechange.css — 骰子少一點（js/reaction_dicechange.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「dicechange-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 骰子少一點（.dicechange-）═══ */
+.dicechange-die {
+    position: absolute;
+    border-radius: 18%;
+    touch-action: none;
+    cursor: pointer;
+}
+
+.dicechange-die svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.dicechange-face {
+    fill: var(--c-card);
+    stroke: var(--c-ink);
+    stroke-width: 5;
+}
+
+.dicechange-pip {
+    fill: var(--c-ink);
+}
+
+/* 1 點與 4 點的圓點是紅色（V1.29） */
+.dicechange-pip--red {
+    fill: hsl(0, 78%, 50%);
+}
+
+.dicechange-back {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 18%;
+    background: var(--c-blue);
+    border: 5px solid var(--c-ink);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-on-accent);
+}
+
+.dicechange-die--found {
+    box-shadow: 0 0 0 6px var(--c-ok);
+}
+
+.dicechange-die--miss {
+    box-shadow: 0 0 0 6px var(--c-orange);
+}
+
+/* 點錯（那一顆的點數沒有變）：骰子外框改成紅色虛線（V1.29） */
+.dicechange-die--wrong .dicechange-face {
+    stroke: hsl(0, 78%, 50%);
+    stroke-width: 6;
+    stroke-dasharray: 12 8;
+}
+
+.dicechange-chg {
+    position: absolute;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    color: var(--c-orange);
+    background: var(--c-card);
+    border-radius: var(--r-sm);
+    line-height: 1.2;
+}
+
+.dicechange-msg {
+    bottom: 40px;
+}

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_seq.js — 秒反應・猜下一個
+   樣式：css/games/reaction_seq.css（這款專屬的 class 一律以「seq-」開頭；共用元件在 css/reaction_common.css）
    一排圖案有規律，猜猜「下一個」應該長什麼樣子，從 4 個選項裡點出來。
    ───────────────────────────────────────────────────────────────────
    · 一個圖案有 4 個屬性：形狀、顏色、旋轉角度、大小。每一題挑 nAttr 個屬性「會變」，其他屬性固定不變。
@@ -12,8 +13,8 @@
    · 選項：4 個，3 個干擾項各自「只改正解的一個屬性」；4 個選項的「看起來的樣子」（visualKey，
      旋轉要考慮形狀的對稱，例如圓形轉再多度也一樣）必須兩兩不同。
    · 難度（第 1 → LEVEL_RAMP 題線性）：會變的屬性數 1 → 3、循環長度 K 2 → 3、每題限時 15 → 8 秒。
-   · V1.40.0（玩家回饋：下方答案框的圖案很難判斷是大還是小）：下方四個答案按鈕改成跟上方題目格（.sq-cell）一樣的「正方形、同底色（--c-card-alt）」，
-       圖案占滿整個框、外框（box-shadow）不佔內部空間，所以「圖案／框」的比例跟題目格完全一致，只是整體放大（見 css/reaction2.css 的 .sq-opts／.sq-opt）。
+   · V1.40.0（玩家回饋：下方答案框的圖案很難判斷是大還是小）：下方四個答案按鈕改成跟上方題目格（.seq-cell）一樣的「正方形、同底色（--c-card-alt）」，
+       圖案占滿整個框、外框（box-shadow）不佔內部空間，所以「圖案／框」的比例跟題目格完全一致，只是整體放大（見 css/games/reaction_seq.css 的 .seq-opts／.seq-opt）。
    · V1.25（玩家意見）：
        - 取消「機會」：答錯或超時就結束；成績＝答對題數（越大越好）。
        - 上方題目區最多容納 8 格（7 個題目圖案＋「？」）：顯示的圖案數隨題號 4 → 7 個（shownFor）。
@@ -317,11 +318,11 @@
        每個形狀都放在以 (50,50) 為圓心、半徑 48 以內的範圍，所以怎麼轉都不會超出 100×100 的畫布 */
     /* shapeSvg：依形狀、顏色、旋轉、大小畫出一個圖案（SVG） */
     function shapeSvg(it) {
-        var svg = kit.svg('svg', { 'class': 'sq-svg', viewBox: '0 0 100 100' });
+        var svg = kit.svg('svg', { 'class': 'seq-svg', viewBox: '0 0 100 100' });
         var scale = SCALE_MIN + SCALE_STEP * (it.size - 1);
         /* transform 的順序：先移到圓心、旋轉、縮放，再移回原位，這樣是繞著圖案中心旋轉與縮放 */
         var g = kit.svg('g', { transform: 'translate(50 50) rotate(' + it.rotation + ') scale(' + scale.toFixed(3) + ') translate(-50 -50)' }, svg);
-        var cls = 'sq-shape sq-c' + it.color;
+        var cls = 'seq-shape seq-c' + it.color;
         /* switch：依形狀名稱選擇要畫的圖形（case 是各種情況） */
         switch (it.shape) {
             case 'circle': kit.svg('circle', { 'class': cls, cx: 50, cy: 50, r: 40 }, g); break;
@@ -352,12 +353,12 @@
             /* q 目前第幾題；correctN 答對數；S 這題；state 目前階段；token 流水號 */
             var q = (startAt || 1) - 1, correctN = q, S = null, state = 'idle', token = 0, newRec = false, t0 = 0;
             /* 建立畫面元素：標題、時間條、上方圖案列、問題、四個選項、說明 */
-            var head = h('div', { 'class': 'sq-head', text: ' ' });
+            var head = h('div', { 'class': 'seq-head', text: ' ' });
             var tb = kit.timebar();
-            var row = h('div', { 'class': 'sq-row' });
-            var ask = h('div', { 'class': 'sq-ask', text: '下一個是哪一個？' });
-            var opts = h('div', { 'class': 'sq-opts' });
-            var note = h('div', { 'class': 'sq-note', text: ' ' });
+            var row = h('div', { 'class': 'seq-row' });
+            var ask = h('div', { 'class': 'seq-ask', text: '下一個是哪一個？' });
+            var opts = h('div', { 'class': 'seq-opts' });
+            var note = h('div', { 'class': 'seq-note', text: ' ' });
             [head, tb.el, row, ask, opts, note].forEach(function (x) { root.appendChild(x); });
             function meta() { ctx.setMeta(kit.meta(['答對 ' + correctN])); }
 
@@ -374,12 +375,12 @@
                 row.innerHTML = ''; opts.innerHTML = '';
                 /* 上排顯示前 5 個圖案和一個「？」 */
                 var isNum = S.kind === 'num';
-                S.shown.forEach(function (it) { row.appendChild(isNum ? h('div', { 'class': 'sq-cell sq-cell--num', text: String(it).replace('-', '−') }) : h('div', { 'class': 'sq-cell' }, [shapeSvg(it)])); });
-                row.appendChild(h('div', { 'class': 'sq-cell sq-cell--q', text: '？' }));
+                S.shown.forEach(function (it) { row.appendChild(isNum ? h('div', { 'class': 'seq-cell seq-cell--num', text: String(it).replace('-', '−') }) : h('div', { 'class': 'seq-cell' }, [shapeSvg(it)])); });
+                row.appendChild(h('div', { 'class': 'seq-cell seq-cell--q', text: '？' }));
                 ask.textContent = isNum ? '數字有規律，下一個是多少？' : '下一個是哪一個？';
                 /* 四個選項按鈕 */
                 S.options.forEach(function (it, k) {
-                    var b = isNum ? h('button', { 'class': 'btn sq-opt sq-opt--num', text: String(it).replace('-', '−') }) : h('button', { 'class': 'btn sq-opt' }, [shapeSvg(it)]);
+                    var b = isNum ? h('button', { 'class': 'btn seq-opt seq-opt--num', text: String(it).replace('-', '−') }) : h('button', { 'class': 'btn seq-opt' }, [shapeSvg(it)]);
                     b.addEventListener('pointerdown', function (e) { e.preventDefault(); choose(k); });
                     opts.appendChild(b);
                 });
@@ -405,10 +406,10 @@
                 tb.set(0);
                 var okAns = k === S.correct;
                 /* 把「？」換成正解 */
-                var qcell = row.lastChild; qcell.className = 'sq-cell' + (S.kind === 'num' ? ' sq-cell--num' : ''); qcell.textContent = '';
+                var qcell = row.lastChild; qcell.className = 'seq-cell' + (S.kind === 'num' ? ' seq-cell--num' : ''); qcell.textContent = '';
                 if (S.kind === 'num') qcell.textContent = String(S.answer).replace('-', '−'); else qcell.appendChild(shapeSvg(S.answer));
                 /* 揭曉：不壓灰色（不用 disabled）；正確答案綠色粗邊框、選錯的紅色粗邊框 */
-                [].forEach.call(opts.children, function (b, i) { b.classList.add('sq-opt--locked'); if (i === S.correct) b.classList.add('sq-opt--ok'); else if (i === k) b.classList.add('sq-opt--bad'); });
+                [].forEach.call(opts.children, function (b, i) { b.classList.add('seq-opt--locked'); if (i === S.correct) b.classList.add('seq-opt--ok'); else if (i === k) b.classList.add('seq-opt--bad'); });
                 /* 答對：稍後出下一題 */
                 if (okAns) {
                     correctN++;

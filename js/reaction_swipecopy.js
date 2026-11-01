@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_swipecopy.js — 秒反應・反著滑（企劃 312「照著滑」，依使用者的修改改成「反著滑」；V1.36.0 再改成「一次一個箭頭、箭頭一出現就可以滑」）
+   樣式：css/games/reaction_swipecopy.css（這款專屬的 class 一律以「swipecopy-」開頭；共用元件在 css/reaction_common.css）
    畫面分成九宮格。**每一關只出現一個箭頭**（上、下、左、右，後面還有斜的），出現在九宮格的某一格正中央（位置固定、不會偏移）。
    **箭頭一出現就可以用手指往「箭頭的反方向」滑**（箭頭朝上就要往下滑；在畫面任何地方滑都可以）——不用等箭頭消失。
    箭頭只會亮 SHOW_MS（例如 0.5 秒）就消失，但你可以滑到 RESP_MS（例如 1.0 秒）為止；**越快滑出正確的方向越好**，過關後會告訴你反應時間。滑錯方向或超過時間就結束。
@@ -72,7 +73,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'swc-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'swipecopy-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -82,10 +83,10 @@
 
     /* 交通號誌的箭頭：藍色圓牌上一個白色粗箭頭，朝向 d（0＝上）；回傳元素，size 是圓牌直徑 */
     function sign(parent, d, size, cls) {
-        var s = kit.svg('svg', { 'class': 'swc-sign ' + (cls || ''), viewBox: '-50 -50 100 100', width: size, height: size }, parent);
-        kit.svg('circle', { 'class': 'swc-sign__disc', cx: 0, cy: 0, r: 48 }, s);
+        var s = kit.svg('svg', { 'class': 'swipecopy-sign ' + (cls || ''), viewBox: '-50 -50 100 100', width: size, height: size }, parent);
+        kit.svg('circle', { 'class': 'swipecopy-sign__disc', cx: 0, cy: 0, r: 48 }, s);
         var g = kit.svg('g', { transform: 'rotate(' + d * 45 + ')' }, s);
-        kit.svg('path', { 'class': 'swc-sign__arrow', d: 'M0,-32 L24,-4 L9,-4 L9,30 L-9,30 L-9,-4 L-24,-4 Z' }, g);
+        kit.svg('path', { 'class': 'swipecopy-sign__arrow', d: 'M0,-32 L24,-4 L9,-4 L9,30 L-9,30 L-9,-4 L-24,-4 Z' }, g);
         return s;
     }
 
@@ -96,22 +97,22 @@
         console.log('[反著滑] 第 ' + level + ' 關：箭頭指 ' + NAMES[q.dirs[0]] + '、要滑 ' + NAMES[q.req[0]] + '；出現在第 ' + (q.cell + 1) + ' 格（' + (q.matched ? '它所指的那一格' : '別的格子') + '）；亮 ' + q.showMs + ' 毫秒、可以滑到 ' + q.respMs + ' 毫秒；準備 ' + q.prepMs + ' 毫秒；' + q.nDir + ' 個方向');
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        var field = h('div', { 'class': 'swc-field' });
+        var field = h('div', { 'class': 'swipecopy-field' });
         stage.appendChild(field);
-        var tip = h('div', { 'class': 'qz-note swc-tip', text: '等箭頭出現，立刻往「反方向」滑' });
+        var tip = h('div', { 'class': 'qz-note swipecopy-tip', text: '等箭頭出現，立刻往「反方向」滑' });
         field.appendChild(tip);
-        var areaT = 64, areaH = H - 230, zone = h('div', { 'class': 'swc-zone' });
+        var areaT = 64, areaH = H - 230, zone = h('div', { 'class': 'swipecopy-zone' });
         zone.style.cssText = 'left:12px;right:12px;top:' + areaT + 'px;height:' + areaH + 'px;';
         field.appendChild(zone);
         var zw = (W - 24) - 6, zh = areaH - 6;                                  /* 九宮格的範圍（扣掉虛線框） */
         [1, 2].forEach(function (i) {                                           /* 九宮格的格線：兩條直線、兩條橫線 */
-            var v = h('div', { 'class': 'swc-gridline swc-gridline--v' }); v.style.left = (zw * i / 3) + 'px'; zone.appendChild(v);
-            var hl = h('div', { 'class': 'swc-gridline swc-gridline--h' }); hl.style.top = (zh * i / 3) + 'px'; zone.appendChild(hl);
+            var v = h('div', { 'class': 'swipecopy-gridline swipecopy-gridline--v' }); v.style.left = (zw * i / 3) + 'px'; zone.appendChild(v);
+            var hl = h('div', { 'class': 'swipecopy-gridline swipecopy-gridline--h' }); hl.style.top = (zh * i / 3) + 'px'; zone.appendChild(hl);
         });
-        var info = h('div', { 'class': 'qz-note swc-info', text: '' });
+        var info = h('div', { 'class': 'qz-note swipecopy-info', text: '' });
         info.style.top = (areaT + areaH + 16) + 'px';
         field.appendChild(info);
-        var strip = h('div', { 'class': 'swc-strip' });
+        var strip = h('div', { 'class': 'swipecopy-strip' });
         field.appendChild(strip);
 
         var phase = 'wait', done = false, down = null, cur = null, t0 = 0, popEl = null;
@@ -119,7 +120,7 @@
         function appear() {
             if (api.over || done) return;
             var c = cellCenter(q.cell, zw, zh), SZ = Math.floor(Math.min(c.cw, c.ch) * 0.82);
-            popEl = h('div', { 'class': 'swc-pop' });
+            popEl = h('div', { 'class': 'swipecopy-pop' });
             popEl.style.cssText = 'left:' + (c.x - SZ / 2) + 'px;top:' + (c.y - SZ / 2) + 'px;width:' + SZ + 'px;height:' + SZ + 'px;';
             sign(popEl, q.dirs[0], SZ); zone.appendChild(popEl); Sfx.play('ok');
             phase = 'live'; t0 = performance.now(); tip.textContent = '現在！往「反方向」滑';
@@ -146,7 +147,7 @@
             if (done || api.over || phase !== 'live') return;
             var want = q.req[0];
             /* 在畫面中央閃一下你滑的方向 */
-            var fl = h('div', { 'class': 'swc-flash' }); fl.style.cssText = 'left:' + (zw / 2 - 36) + 'px;top:' + (zh / 2 - 36) + 'px;'; sign(fl, d, 72, 'swc-sign--mine'); zone.appendChild(fl); api.after(260, function () { if (fl.parentNode) fl.parentNode.removeChild(fl); });
+            var fl = h('div', { 'class': 'swipecopy-flash' }); fl.style.cssText = 'left:' + (zw / 2 - 36) + 'px;top:' + (zh / 2 - 36) + 'px;'; sign(fl, d, 72, 'swipecopy-sign--mine'); zone.appendChild(fl); api.after(260, function () { if (fl.parentNode) fl.parentNode.removeChild(fl); });
             if (d !== want) { fail(0, d); return; }
             done = true; phase = 'end'; api.stopTimer();
             info.textContent = '反應 ' + (rt / 1000).toFixed(4) + ' 秒';
@@ -161,12 +162,12 @@
             tip.textContent = timeout ? '來不及了' : '滑錯方向了';
             info.textContent = '箭頭指 ' + NAMES[q.dirs[0]] + '，要往 ' + NAMES[q.req[0]] + ' 滑' + (timeout ? '；你沒有在 ' + (q.respMs / 1000).toFixed(4) + ' 秒內滑出方向' : '；你滑了 ' + NAMES[mine]);
             strip.style.top = '90px';
-            var row = h('div', { 'class': 'swc-strip__row' }), cell = h('div', { 'class': 'swc-cell swc-cell--bad swc-cell--lit' });
-            cell.appendChild(h('div', { 'class': 'swc-cell__no', text: '箭頭' }));
+            var row = h('div', { 'class': 'swipecopy-strip__row' }), cell = h('div', { 'class': 'swipecopy-cell swipecopy-cell--bad swipecopy-cell--lit' });
+            cell.appendChild(h('div', { 'class': 'swipecopy-cell__no', text: '箭頭' }));
             sign(cell, q.dirs[0], 96);
-            cell.appendChild(h('div', { 'class': 'swc-cell__to', text: '要滑' }));
-            sign(cell, q.req[0], 72, 'swc-sign--req');
-            if (!timeout) { cell.appendChild(h('div', { 'class': 'swc-cell__to', text: '你滑了' })); sign(cell, mine, 72, 'swc-sign--bad'); }
+            cell.appendChild(h('div', { 'class': 'swipecopy-cell__to', text: '要滑' }));
+            sign(cell, q.req[0], 72, 'swipecopy-sign--req');
+            if (!timeout) { cell.appendChild(h('div', { 'class': 'swipecopy-cell__to', text: '你滑了' })); sign(cell, mine, 72, 'swipecopy-sign--bad'); }
             row.appendChild(cell); strip.appendChild(row);
             info.style.top = (strip.offsetTop + strip.offsetHeight + 14) + 'px';                /* 說明文字放在「箭頭／要滑／你滑了」那一欄的正下方（欄的高度要等內容放進去才量得到，所以排在這裡） */
             kit.flash(stage, false, api.my);

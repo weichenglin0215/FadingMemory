@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_area.js — 秒反應・面積一樣大
+   樣式：css/games/reaction_area.css（這款專屬的 class 一律以「area-」開頭；共用元件在 css/reaction_common.css）
    上方是一個目標形狀（圓、三角形、五角星、十字、L 形隨機抽一種，盡量畫大，手機上才好觀察），下方是一個方塊；
    拖曳方塊右下角的「十字箭頭」（上下左右四個箭頭）放大縮小，讓方塊的面積跟上方的形狀一樣大。只有一次機會，沒有任何數字。
    V1.25（玩家意見）：題目圖形放上方並加大（等效邊長 110～140）、答案方塊放下方；手柄由橘色圓點改成十字箭頭。
@@ -112,26 +113,26 @@
         var s = cfg.s0, locked = false, hint = null;
         console.log('[面積一樣大] 形狀 ' + cfg.kind + '，目標面積 ' + cfg.A.toFixed(2) + '（等效邊長 ' + cfg.sAns.toFixed(2) + '），方塊起始邊長 ' + cfg.s0.toFixed(2));
 
-        var svg = kit.svg('svg', { 'class': 'ar-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
+        var svg = kit.svg('svg', { 'class': 'area-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
         /* 目標形狀 */
         var gShape = kit.svg('g', { transform: 'translate(' + SHAPE_C.x + ' ' + SHAPE_C.y + ')' }, svg);
         var shapeEl;
-        if (shape.kind === 'circle') shapeEl = kit.svg('circle', { cx: 0, cy: 0, r: shape.r, 'class': 'ar-shape' }, gShape);
-        else shapeEl = kit.svg('polygon', { points: shape.pts.map(function (p) { return p[0].toFixed(2) + ',' + p[1].toFixed(2); }).join(' '), 'class': 'ar-shape' }, gShape);
+        if (shape.kind === 'circle') shapeEl = kit.svg('circle', { cx: 0, cy: 0, r: shape.r, 'class': 'area-shape' }, gShape);
+        else shapeEl = kit.svg('polygon', { points: shape.pts.map(function (p) { return p[0].toFixed(2) + ',' + p[1].toFixed(2); }).join(' '), 'class': 'area-shape' }, gShape);
         /* 方塊（左上角固定）與手柄 */
         var gSq = kit.svg('g', {}, svg);
-        var rect = kit.svg('rect', { x: ANCHOR.x, y: ANCHOR.y, width: s, height: s, 'class': 'ar-sq' }, gSq);
-        var handle = kit.svg('polygon', { points: arrowPoints(HANDLE).map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '), 'class': 'ar-handle' }, svg);
-        var legend = h('div', { 'class': 'ar-legend' });
+        var rect = kit.svg('rect', { x: ANCHOR.x, y: ANCHOR.y, width: s, height: s, 'class': 'area-sq' }, gSq);
+        var handle = kit.svg('polygon', { points: arrowPoints(HANDLE).map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '), 'class': 'area-handle' }, svg);
+        var legend = h('div', { 'class': 'area-legend' });
         stage.appendChild(legend);
-        var diffEl = h('div', { 'class': 'ar-diff', text: fmtDiff(0) });   /* 揭曉時的面積差數字動畫 */
+        var diffEl = h('div', { 'class': 'area-diff', text: fmtDiff(0) });   /* 揭曉時的面積差數字動畫 */
         stage.appendChild(diffEl);
         function paint() {
             rect.setAttribute('width', s); rect.setAttribute('height', s);
             handle.setAttribute('transform', 'translate(' + (ANCHOR.x + s).toFixed(2) + ' ' + (ANCHOR.y + s).toFixed(2) + ')');
         }
         paint();
-        var okBtn = h('button', { 'class': 'btn btn--go ar-ok', text: '確定' });
+        var okBtn = h('button', { 'class': 'btn btn--go area-ok', text: '確定' });
         stage.appendChild(okBtn);
 
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從手柄出發，沿對角線往「面積一樣大的位置」重複移動（第一次的正確答案） */
@@ -163,16 +164,16 @@
             /* 揭曉：方塊移到形狀上（中心對齊），兩個都半透明 */
             var cx0 = ANCHOR.x + s / 2, cy0 = ANCHOR.y + s / 2;
             var tx = SHAPE_C.x - cx0, ty = SHAPE_C.y - cy0;
-            shapeEl.classList.add('ar-shape--rev'); rect.classList.add('ar-sq--rev');
+            shapeEl.classList.add('area-shape--rev'); rect.classList.add('area-sq--rev');
             legend.textContent = '橘色＝只有圖形有　藍色＝只有方塊有';
-            legend.classList.add('ar-legend--on');
+            legend.classList.add('area-legend--on');
             my.tween(900, function (e) {
                 gSq.setAttribute('transform', 'translate(' + (tx * e).toFixed(2) + ' ' + (ty * e).toFixed(2) + ')');
             }, kit.easeInOutCubic).then(function () {
                 var bigger = s * s > cfg.A, sp = signedPct(s, cfg.A);
                 /* 疊合之後：面積差從 0.0000% 跑到最後的數字（正＝方塊比較大、負＝比較小），停住後再維持 HOLD_MS */
-                diffEl.classList.add('ar-diff--on');
-                diffEl.classList.toggle('ar-diff--neg', sp < 0);
+                diffEl.classList.add('area-diff--on');
+                diffEl.classList.toggle('area-diff--neg', sp < 0);
                 return my.tween(COUNT_MS, function (e) { diffEl.textContent = fmtDiff(sp * e); }, kit.easeOutCubic).then(function () {
                     diffEl.textContent = fmtDiff(sp);
                     return bigger;

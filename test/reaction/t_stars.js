@@ -52,9 +52,9 @@ ok(Math.abs(startMean[0] / startMean[2] - 0.5) < 0.03 && Math.abs(startMean[1] /
 // 效能
 { const t0 = Date.now(); for (let i = 0; i < 300; i++) T.makeLevel(1 + (i % 40), rnd); ok((Date.now() - t0) / 300 < 5, '出題夠快'); }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_stars.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_stars.js'), css = rd('../../css/games/reaction_stars.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
   ok(/api\.fail\(\{ delay: 3000/.test(src) && /snapAt/.test(src) && /drawImage/.test(src), '失敗：小方塊飛回原位、標出正確的字、停格 2 秒以上');
-  ok(/\.stz-ok \{[^}]*var\(--c-ok/.test(css) && /\.stz-bad \{[^}]*var\(--c-bad/.test(css), '綠色、紅色用 CSS 變數');
+  ok(/\.stars-ok \{[^}]*var\(--c-ok/.test(css) && /\.stars-bad \{[^}]*var\(--c-bad/.test(css), '綠色、紅色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_stars.js'") > 0 && /80%/.test(G.rule), 'boot.js 有載入、玩法說明提到 80%'); }
 ok(T.rating(2) !== T.rating(4) && T.rating(4) !== T.rating(7) && T.rating(7) !== T.rating(12) && T.rating(12) !== T.rating(20), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

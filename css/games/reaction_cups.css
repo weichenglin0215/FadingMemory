@@ -1,0 +1,56 @@
+/* ═══════════════════════════════════════
+   reaction_cups.css — 球在哪杯（js/reaction_cups.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「cups-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 球在哪杯：看杯子交換位置，猜球在哪一杯下面。 */
+/* ═══ 球在哪杯（.cups-）═══ */
+/* 場地 */
+.cups-field {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    touch-action: none;
+}
+
+/* 杯子 SVG */
+.cups-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* 杯身（紅色） */
+.cups-cup__body {
+    fill: #D9483B;
+    stroke: #8F2A20;
+    stroke-width: 3px;
+    stroke-linejoin: round;
+}
+
+/* 杯口 */
+.cups-cup__rim {
+    fill: #8F2A20;
+}
+
+/* 杯身高光 */
+.cups-cup__shine {
+    stroke: rgba(255, 255, 255, 0.55);
+    stroke-width: 5px;
+    stroke-linecap: round;
+    fill: none;
+}
+
+/* 球 */
+.cups-ball {
+    fill: var(--c-yellow);
+    stroke: #9A6D0B;
+    stroke-width: 3px;
+}

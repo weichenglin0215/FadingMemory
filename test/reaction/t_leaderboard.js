@@ -76,7 +76,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok(LB.isBetter(2, 1, 'max') && !LB.isBetter(1, 2, 'max') && !LB.isBetter(1, 1, 'max'), 'isBetter max（同分不算更好）');
 
   // ═══ 3. 全部遊戲：score 設定合法，而且跟資料庫 MF_games 的設定一致 ═══
-  ok(games.length === 160, '秒反應共 160 款遊戲（boot.js 的清單）：' + games.length);
+  ok(games.length === 174, '秒反應共 174 款遊戲（boot.js 的清單）：' + games.length);
   ok(new Set(games.map(g => g.id)).size === games.length, '遊戲 id 不重複');
   ok(new Set(games.map(g => g.name)).size === games.length, '遊戲名稱不重複（排行榜標題靠名稱辨認）');
   const sql = fs.readFileSync(ROOT + 'supabase/MF_leaderboard.sql', 'utf8').replace(/\r\n/g, '\n');
@@ -146,7 +146,9 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   };
   const wiring = {};
   for (const g of games) {
-    const src = fs.readFileSync(ROOT + 'js/' + g.file, 'utf8');
+    let src = fs.readFileSync(ROOT + 'js/' + g.file, 'utf8');
+    /* 數獨系列（V1.41）的遊戲檔只是薄薄一層設定，結算與 SCORE 都在共用的 js/sudoku_lib.js 的 lib.game 裡，這裡把它的原始碼接上來一起檢查 */
+    if (/Reaction\.sudokuLib\.game\(/.test(src)) src += '\n' + fs.readFileSync(ROOT + 'js/sudoku_lib.js', 'utf8');
     const bodies = []; const reKit = /kit\.result\(\s*root\s*,\s*\{/g; let km;
     while ((km = reKit.exec(src))) bodies.push(braceBody(src, km.index + km[0].length - 1));
     ok(bodies.every(b => b !== null), g.id + ' kit.result 的大括號掃描失敗（測試本身的問題）');

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_watchoff.js — 秒反應・哪支錶不準
+   樣式：css/games/reaction_watchoff.css（這款專屬的 class 一律以「watchoff-」開頭；共用元件在 css/reaction_common.css）
    三支錶一起走（秒針每秒跳一格），其中一支走得比較快或比較慢，找出它。
    關卡制，答錯或逾時就結束，成績＝通過關數。
    ───────────────────────────────────────────────────────────────────
@@ -64,7 +65,7 @@
         var nums = style === 'roman' ? ['XII', 'III', 'VI', 'IX'] : (style === 'digits' ? ['12', '3', '6', '9'] : []);
         var pos = [[70, 36], [104, 76], [70, 116], [36, 76]];
         nums.forEach(function (t, k) { s += '<text x="' + pos[k][0] + '" y="' + pos[k][1] + '" text-anchor="middle" font-size="16" font-weight="900" fill="#4A3B1E" font-family="Noto Serif TC, serif">' + t + '</text>'; });
-        s += '<line x1="70" y1="70" x2="70" y2="12" stroke="#D46F3C" stroke-width="3.5" stroke-linecap="round" class="wo-hand"/><circle cx="70" cy="70" r="5" fill="#4A3B1E"/></svg>';
+        s += '<line x1="70" y1="70" x2="70" y2="12" stroke="#D46F3C" stroke-width="3.5" stroke-linecap="round" class="watchoff-hand"/><circle cx="70" cy="70" r="5" fill="#4A3B1E"/></svg>';
         return s;
     }
 
@@ -84,19 +85,19 @@
         api.info = q;
         console.log('[哪支錶不準] 第 ' + level + ' 關：不準的是錶 ' + NAMES[q.odd] + '（誤差 ' + (q.e * 100).toFixed(3) + '%，' + (q.e > 0 ? '偏快' : '偏慢') + '）；錶面 ' + q.styles.join('/') + '；作答限時 ' + ansMs(level) + ' ms');
 
-        var tip = h('div', { 'class': 'wo-tip', text: '三支錶一起走，其中一支走得比較快或比較慢' });
-        var obs = h('div', { 'class': 'wo-obs', text: '哪一支走得不準？' });
-        var info = h('div', { 'class': 'wo-info' });
+        var tip = h('div', { 'class': 'watchoff-tip', text: '三支錶一起走，其中一支走得比較快或比較慢' });
+        var obs = h('div', { 'class': 'watchoff-obs', text: '哪一支走得不準？' });
+        var info = h('div', { 'class': 'watchoff-info' });
         stage.appendChild(tip); stage.appendChild(obs);
         var gap = Math.floor((W - 3 * SIZE) / 4);
         var faces = q.styles.map(function (st, i) {
-            var el = h('div', { 'class': 'wo-face' }, [h('div', { 'class': 'wo-dial', html: faceSvg(st) }), h('div', { 'class': 'wo-name', text: NAMES[i] })]);
+            var el = h('div', { 'class': 'watchoff-face' }, [h('div', { 'class': 'watchoff-dial', html: faceSvg(st) }), h('div', { 'class': 'watchoff-name', text: NAMES[i] })]);
             el.style.left = (gap + i * (SIZE + gap)) + 'px';
             el.firstChild.style.transform = 'rotate(' + q.rots[i].toFixed(1) + 'deg)';
             stage.appendChild(el);
             return el;
         });
-        var hands = faces.map(function (f) { return f.querySelector('.wo-hand'); });
+        var hands = faces.map(function (f) { return f.querySelector('.watchoff-hand'); });
         stage.appendChild(info);
         function frame() {
             var sec = (performance.now() - t0) / 1000;
@@ -119,9 +120,9 @@
             var lines = [];
             faces.forEach(function (f, k) {
                 var ds = dialSeconds(q.periods[k], WINDOW_S);
-                f.classList.toggle('wo-face--odd', k === q.odd);
-                if (k === i && k !== q.odd) f.classList.add('wo-face--bad');
-                f.appendChild(h('div', { 'class': 'wo-sec', text: ds.toFixed(4) + ' 秒' }));
+                f.classList.toggle('watchoff-face--odd', k === q.odd);
+                if (k === i && k !== q.odd) f.classList.add('watchoff-face--bad');
+                f.appendChild(h('div', { 'class': 'watchoff-sec', text: ds.toFixed(4) + ' 秒' }));
                 lines.push('錶 ' + NAMES[k] + '：' + WINDOW_S + ' 秒內秒針走了 ' + ds.toFixed(4) + ' 秒' + (k === q.odd ? '（' + (q.e > 0 ? '偏快' : '偏慢') + ' ' + Math.abs(q.e * 100).toFixed(4) + '%）' : ''));
             });
             info.textContent = '不準的是錶 ' + NAMES[q.odd] + '，' + (q.e > 0 ? '偏快' : '偏慢') + ' ' + Math.abs(q.e * 100).toFixed(4) + '%';

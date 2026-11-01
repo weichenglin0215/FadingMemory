@@ -1,0 +1,49 @@
+/* ═══════════════════════════════════════
+   reaction_tapback.css — 倒著點（js/reaction_tapback.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「tapback-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 倒著點（.tapback-）═══ */
+.tapback-tip {
+    top: 6px;
+}
+
+.tapback-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 5px dashed var(--c-ink-soft);
+    background: var(--c-card-alt);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.tapback-ring--on {
+    border-style: solid;
+    border-color: var(--c-orange);
+    background: var(--c-yellow);
+    box-shadow: 0 0 30px 6px var(--c-yellow-soft);
+}
+
+.tapback-ring--ok {
+    border-style: solid;
+    border-color: var(--c-ok);
+    background: var(--c-ok-soft);
+}
+
+.tapback-ring--wrong {
+    border-style: solid;
+    border-color: var(--c-bad);
+    background: var(--c-bad-soft);
+}
+
+.tapback-ring--num {
+    border-style: solid;
+    border-color: var(--c-blue);
+}

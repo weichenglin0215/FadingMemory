@@ -1,0 +1,33 @@
+/* ═══════════════════════════════════════
+   reaction_ghostleg.css — 鬼腳圖（js/reaction_ghostleg.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「ghostleg-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 玩家畫的橫線：很粗的藍色水平線 */
+.ghostleg-user {
+    stroke: var(--c-blue);
+    stroke-width: 14;
+    stroke-linecap: round;
+}
+
+.ghostleg-user--hint {
+    opacity: 1;
+}
+
+/* 評審動畫：從起點開始畫出的綠色粗虛線 */
+.ghostleg-route {
+    fill: none;
+    stroke: var(--c-green);
+    stroke-width: 9;
+    stroke-linejoin: round;
+    stroke-dasharray: 16 10;
+}
+
+/* 操作提示：鉛筆圖示（取代手指圖示） */
+.ghostleg-pencil {
+    position: absolute;
+    font-size: 40px;
+    line-height: 1;
+    pointer-events: none;
+}

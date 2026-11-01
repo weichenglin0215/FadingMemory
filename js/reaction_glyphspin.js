@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_glyphspin.js — 秒反應・鏡中旋轉字
+   樣式：css/games/reaction_glyphspin.css（這款專屬的 class 一律以「glyphspin-」開頭；共用元件在 css/reaction_common.css）
    畫面中央出現一個「相似字」（已／己／巳、辨／辯／辦／辮…），字會左右鏡射、一直旋轉，
    下方是幾個正常方向的答案字，點「這個字原本是哪一個」。
    關卡制，答錯或逾時就結束，成績＝通過關數。只用中文字，不用阿拉伯數字或英文。
@@ -125,17 +126,17 @@
         var limit = ansMs(level);
         console.log('[鏡中旋轉字] 第 ' + level + ' 關：' + q.target + '（約 ' + q.strokes + ' 劃，' + (q.mirror ? '鏡射' : '不鏡射') + '，' + (q.dir > 0 ? '順' : '逆') + '時針，起始 ' + q.spin.toFixed(0) + ' 度／秒），選項 ' + q.options.join('') + '，限時 ' + limit + ' ms');
 
-        var glyph = h('div', { 'class': 'gs-glyph', text: q.target });
-        var note = h('div', { 'class': 'gs-note', text: q.mirror ? '字被左右鏡射了，還在轉！' : '字在轉！' });
+        var glyph = h('div', { 'class': 'glyphspin-glyph', text: q.target });
+        var note = h('div', { 'class': 'glyphspin-note', text: q.mirror ? '字被左右鏡射了，還在轉！' : '字在轉！' });
         stage.appendChild(note); stage.appendChild(glyph);
         var btns = q.options.map(function (c) {
-            var b = h('button', { 'class': 'btn btn--line gs-opt', text: c });
+            var b = h('button', { 'class': 'btn btn--line glyphspin-opt', text: c });
             kit.onTap(b, function () { judge(c); });
             return b;
         });
-        stage.appendChild(h('div', { 'class': 'rx-btnrow gs-opts' }, btns));
+        stage.appendChild(h('div', { 'class': 'rx-btnrow glyphspin-opts' }, btns));
         var t0 = performance.now(), running = true;
-        /* 字的方框固定是畫面寬度的 90%（.gs-glyph），縮小靠 scale：最後縮到 10% ÷ 90% */
+        /* 字的方框固定是畫面寬度的 90%（.glyphspin-glyph），縮小靠 scale：最後縮到 10% ÷ 90% */
         function frame() {
             var ms = performance.now() - t0, k = sizeFrac(ms, limit) / (SIZE_PCT[0] / 100);
             glyph.style.transform = 'rotate(' + angleAt(q, ms).toFixed(2) + 'deg) scale(' + (q.mirror ? '-' : '') + k.toFixed(4) + ', ' + k.toFixed(4) + ')';
@@ -149,7 +150,7 @@
             running = false; loop.stop();
             glyph.style.transform = 'none'; glyph.textContent = q.target;
             note.textContent = '答案是「' + q.target + '」';
-            btns.forEach(function (b) { if (b.textContent === q.target) b.classList.add('gs-opt--ok'); else if (b.textContent === c) b.classList.add('gs-opt--bad'); });
+            btns.forEach(function (b) { if (b.textContent === q.target) b.classList.add('glyphspin-opt--ok'); else if (b.textContent === c) b.classList.add('glyphspin-opt--bad'); });
             if (c === q.target) api.pass({ delay: 700 });
             else api.fail({
                 delay: 1900, lines: [

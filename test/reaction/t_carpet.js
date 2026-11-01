@@ -73,11 +73,11 @@ ok((howCount.scatter || 0) >= 360 * 0.6, '多數關卡都是真正「分散放�
 // ── 效能：最高難度的出題夠快 ──
 { const t0 = Date.now(); for (let i = 0; i < 60; i++) T.makeLevel(30 + (i % 20), rnd); const per = (Date.now() - t0) / 60; console.log('最高難度出題平均 ' + per.toFixed(1) + ' 毫秒'); ok(per < T.GEN_BUDGET_MS + 60, '最高難度出題夠快（含一個出題預算）：' + per.toFixed(1) + ' 毫秒'); }
 // ── 程式裡的接線 ──
-{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_carpet.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction6.css'), 'utf8').split(/\s+/).join(' ');
-  ok(/stageClass: 'cpt-stage'/.test(src) && /\.cpt-stage \{ touch-action: none;/.test(css), '舞台不捲動（touch-action: none）');
+{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_carpet.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_carpet.css'), 'utf8').split(/\s+/).join(' ');
+  ok(/stageClass: 'carpet-stage'/.test(src) && /\.carpet-stage \{ touch-action: none;/.test(css), '舞台不捲動（touch-action: none）');
   ok(/api\.fail\(\{ delay: failDelayMs\(q\.solution\.length\)/.test(src) && T.SOL_HOLD_MS >= 3000, '失敗：綠線畫完再停格 3 秒才跳結算（V1.38.0，見 t_feedback138.js）');
   ok(/往回拖就是把地毯捲回來/.test(G.rule) && !/割草|割/.test(G.rule), '玩法說明講鋪地毯、可以捲回來（不再是割草機）');
-  const boot = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/boot.js'), 'utf8'); ok(boot.indexOf("'js/reaction_carpet.js'") > 0 && boot.indexOf("'css/reaction6.css'") > 0, 'boot.js 有載入遊戲檔與 reaction6.css'); }
+  const boot = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/boot.js'), 'utf8'); ok(boot.indexOf("'js/reaction_carpet.js'") > 0 && boot.indexOf("'css/games/reaction_carpet.css'") > 0, 'boot.js 有載入遊戲檔與 reaction6.css'); }
 // ── V1.34 出題改良：家具多的關卡也出得了題，不會退回空房間保底題；V1.36.0 再加：幾乎都是真正分散放的題目 ──
 { let fallback = 0, tot = 0, scatterN = 0, late = 0, lateScatter = 0;
   for (let lv = 1; lv <= 40; lv++) for (let k = 0; k < 6; k++) { const q = T.makeLevel(lv, rnd, 80), n = T.sizeFor(lv), ns = Math.min(T.stonesFor(lv), n * n - T.MIN_FREE); tot++; if (q.stones.length !== ns) fallback++; if (q.how === 'scatter') scatterN++; if (lv >= 18) { late++; if (q.how === 'scatter') lateScatter++; } }

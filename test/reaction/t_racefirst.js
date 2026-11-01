@@ -58,25 +58,25 @@ ok(lateSprint / total > 0.5, '冠軍多半也有起跑延遲（不是只有輸�
     ok(swing > 40, '腿有擺動起來：' + swing.toFixed(1) + '°'); } }
 // V1.32：慢動作重播（每一關、不管對錯）、小人從右邊跑出畫面、終點線畫在到達的位置
 ok(T.SLOW > 0 && T.SLOW < 1 && T.REPLAY_FROM > 0 && T.EXIT_PAD >= 0, '慢動作重播的參數');
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_racefirst.js'), css = rd('../../css/reaction5.css').split(/\s+/).join(' ');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_racefirst.js'), css = rd('../../css/games/reaction_racefirst.css').split(/\s+/).join(' ');
   const j = src.indexOf('function judge(lane)'), jEnd = src.indexOf('api.solve = function');
   const body = src.slice(j, jEnd), iReplay = body.indexOf('var ms = replay();'), iPass = body.indexOf('api.pass({'), iFail = body.indexOf('api.fail({');
   ok(iReplay > 0 && iPass > iReplay && iFail > iReplay, '不管答對答錯，pass／fail 之前都會先慢動作重播');
   ok(body.indexOf('if (!ok) ') < 0 || body.indexOf('if (!ok) ') > iReplay, '重播不是「只有答錯才有」');
-  ok(src.indexOf("x1: X1, y1: top, x2: X1, y2: top + laneH * RUNNERS, 'class': 'rcf-finish'") > 0, '終點線畫在小人到達的位置 X1（腰碰到線＝到達）');
+  ok(src.indexOf("x1: X1, y1: top, x2: X1, y2: top + laneH * RUNNERS, 'class': 'racefirst-finish'") > 0, '終點線畫在小人到達的位置 X1（腰碰到線＝到達）');
   // 五條跑道要放得進畫面：舞台高約 666px，跑道高 laneH ＝ min(104, (H − top − 8) ÷ RUNNERS)，每條至少 80px（小人連頭到腳約 90px，時間標籤在腰下方）
   ok(src.indexOf('laneH = Math.min(104, Math.floor((H - top - 8) / RUNNERS))') > 0 && Math.min(104, Math.floor((666 - 70 - 8) / N)) >= 100, '跑道高度依人數縮小，五條放得進畫面');
   ok(src.indexOf('makeRace(level, D, api.rand, W + EXIT_PAD - X0)') > 0 && src.indexOf('Math.max.apply(null, q.exitT)') > 0, '小人一直跑到畫面右邊外面');
   ok(src.indexOf('paint(maxT + 1)') < 0 && src.indexOf('distAt(q.a[k], Math.max(0, t - q.d[k]), q.D)') < 0, '不再把小人停在終點線上');
-  ok(css.indexOf('.rcf-fmark--pop { animation: rcf-fpop') > 0 && css.indexOf('.rcf-time--win { fill: var(--c-ok);') > 0, '衝線的圈與第一名標示的樣式'); }
+  ok(css.indexOf('.racefirst-fmark--pop { animation: racefirst-fpop') > 0 && css.indexOf('.racefirst-time--win { fill: var(--c-ok);') > 0, '衝線的圈與第一名標示的樣式'); }
 // 重播的時間長度（程式裡的算式）：從第一名到終點前 REPLAY_FROM 秒開始、播到最後一個小人跑出畫面，除以 SLOW
 { let worst = 0, best = 1e9; for (let i = 0; i < 3000; i++) { const r = T.makeRace(1 + (i % 60), D, rnd, 472 + T.EXIT_PAD - 40), minT = Math.min(...r.T), maxE = Math.max(...r.exitT) + 0.03, ms = (maxE - Math.max(0, minT - T.REPLAY_FROM)) / T.SLOW * 1000; worst = Math.max(worst, ms); best = Math.min(best, ms); }
   ok(worst < 6000 && best > 1500, '慢動作重播 ' + best.toFixed(0) + '～' + worst.toFixed(0) + ' 毫秒（不會太長、也夠看清楚）'); console.log('慢動作重播 ' + best.toFixed(0) + '～' + worst.toFixed(0) + ' 毫秒'); }
 // 倒數
 ok(T.COUNT_STEPS === 3 && T.COUNT_MS >= 600, '倒數 3、2、1');
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_racefirst.js'), css = rd('../../css/reaction5.css').split(/\s+/).join(' ');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_racefirst.js'), css = rd('../../css/games/reaction_racefirst.css').split(/\s+/).join(' ');
   ok(src.indexOf('api.after(400 + COUNT_STEPS * COUNT_MS, go);') > 0 && src.indexOf('String(COUNT_STEPS - c)') > 0, '先倒數 3、2、1 再開跑');
-  ok(src.indexOf("makeRunner(svg, q.hues[i].h)") > 0 && src.indexOf("'rcf-dot'") < 0, '圓點改成小人');
-  ok(css.indexOf('.rcf-count { position: absolute;') > 0 && css.indexOf('font-size: 200px') > 0, '畫面中央的大倒數數字'); }
+  ok(src.indexOf("makeRunner(svg, q.hues[i].h)") > 0 && src.indexOf("'racefirst-dot'") < 0, '圓點改成小人');
+  ok(css.indexOf('.racefirst-count { position: absolute;') > 0 && css.indexOf('font-size: 200px') > 0, '畫面中央的大倒數數字'); }
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(8) && T.rating(8) !== T.rating(14) && T.rating(14) !== T.rating(25), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

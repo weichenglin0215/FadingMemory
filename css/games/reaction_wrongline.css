@@ -1,0 +1,81 @@
+/* ═══════════════════════════════════════
+   reaction_wrongline.css — 哪一行算錯（js/reaction_wrongline.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「wrongline-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 哪一行算錯（.wrongline-）═══ */
+.wrongline-col {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.wrongline-ask {
+    position: static;
+}
+
+.wrongline-sub {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.wrongline-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.wrongline-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    padding: 0 var(--sp-4);
+    border-radius: var(--r-md);
+    background: var(--c-card-alt);
+    border: var(--bd);
+    font-family: var(--font-ui);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink);
+    text-align: left;
+    cursor: pointer;
+}
+
+.wrongline-row:active {
+    transform: scale(0.98);
+}
+
+.wrongline-no {
+    flex: none;
+    color: var(--c-ink-soft);
+}
+
+.wrongline-txt {
+    flex: 1 1 auto;
+    line-height: var(--lh-tight);
+    font-variant-numeric: tabular-nums;
+}
+
+.wrongline-fix {
+    font-size: var(--fs-sm);
+    color: var(--c-bad);
+}
+
+.wrongline-row--wrong {
+    background: var(--c-bad-soft);
+    border: 3px solid var(--c-bad);
+}
+
+.wrongline-row--miss {
+    border: 3px solid var(--c-bad-light);
+    opacity: 0.8;
+}

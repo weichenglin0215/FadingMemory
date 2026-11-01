@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_schulte.js — 秒反應・數字方陣（舒爾特方格）
+   樣式：css/games/reaction_schulte.css（這款專屬的 class 一律以「schulte-」開頭；共用元件在 css/reaction_common.css）
    6×6＝36 格，黑底白字，把 1～36 依序一個一個點完，計時，越快越好。只玩一局。
    ───────────────────────────────────────────────────────────────────
    · 數字盡量放大、充滿格子；點對的格子變成「綠底白字」0.6 秒再變回黑底白字（不留記號，要靠記憶看哪個點過了）。
@@ -70,22 +71,22 @@
             R = kit.round();
             var my = R;
             root.innerHTML = '';
-            /* 替整個畫面加上黑底的 class（樣式在 css/reaction2.css 的 .sch-bg） */
-            root.classList.add('sch-bg');
+            /* 替整個畫面加上黑底的 class（樣式在 css/games/reaction_schulte.css 的 .schulte-bg） */
+            root.classList.add('schulte-bg');
             /* 這一局結束（dispose）時，把黑底 class 拿掉，不影響下一款遊戲 */
-            my.onDispose(function () { root.classList.remove('sch-bg'); });
+            my.onDispose(function () { root.classList.remove('schulte-bg'); });
 
             /* makeBoard()：本局的數字排列 */
             var board = makeBoard();
             /* next：下一個該點的數字；t0：第一次點擊的時間（null＝還沒開始）；state：play/fail/done；cells：每個數字對應的按鈕元素 */
             var next = 1, t0 = null, state = 'play', cells = [];
             /* 上方狀態列：左邊「下一個：N」，右邊計時 */
-            var head = h('div', { 'class': 'sch-head' });
-            var info = h('span', { 'class': 'sch-next' });
-            var clock = h('span', { 'class': 'sch-clock', text: '0.0000 秒' });
+            var head = h('div', { 'class': 'schulte-head' });
+            var info = h('span', { 'class': 'schulte-next' });
+            var clock = h('span', { 'class': 'schulte-clock', text: '0.0000 秒' });
             head.appendChild(info); head.appendChild(clock);
             /* 36 格的格子容器 */
-            var grid = h('div', { 'class': 'sch-grid' });
+            var grid = h('div', { 'class': 'schulte-grid' });
             root.appendChild(head);
             root.appendChild(grid);
             /* ctx.setMeta：更新標題列右側的小字 */
@@ -97,7 +98,7 @@
 
             /* 替每個數字各建一顆按鈕，放進格子裡（順序就是洗牌後的排列） */
             board.forEach(function (n) {
-                var el = h('button', { 'class': 'sch-cell', text: String(n) });
+                var el = h('button', { 'class': 'schulte-cell', text: String(n) });
                 /* pointerdown：手指一碰到就算點擊；kit.evT(e) 取事件發生的精確時間 */
                 el.addEventListener('pointerdown', function (e) { e.preventDefault(); tap(n, el, kit.evT(e)); });
                 grid.appendChild(el);
@@ -121,7 +122,7 @@
                 /* 點錯：停止遊戲、錯的格子變紅、等 FAIL_STAY_MS 後顯示結算 */
                 if (n !== next) {
                     state = 'fail';
-                    el.classList.add('sch-cell--bad');
+                    el.classList.add('schulte-cell--bad');
                     Sfx.play('bad');
                     clock.textContent = ((t - t0) / 1000).toFixed(4) + ' 秒';
                     my.after(FAIL_STAY_MS, function () {
@@ -135,8 +136,8 @@
                     return;
                 }
                 /* 點對：該格變綠底白字（0.6 秒後變回黑底，所以要靠記憶記得點過哪些） */
-                el.classList.add('sch-cell--ok');
-                my.after(OK_FLASH_MS, function () { el.classList.remove('sch-cell--ok'); });
+                el.classList.add('schulte-cell--ok');
+                my.after(OK_FLASH_MS, function () { el.classList.remove('schulte-cell--ok'); });
                 Sfx.play('ok');
                 /* 全部點完（點到 36） */
                 if (next >= SIDE * SIDE) {

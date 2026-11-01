@@ -9,7 +9,7 @@ ok(G.name === '心在正中央', '遊戲名稱：' + G.name);
 { const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_stamp.js'), 'utf8');
   const menu = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/menu.js'), 'utf8');
   ok(/id: 'stamp', name: '心在正中央'/.test(menu), '選單名稱同步改成「心在正中央」');
-  ok(src.indexOf("'class': 'st-text'") < 0 && src.indexOf('核准') < 0 && src.indexOf('createTextNode') < 0 && src.indexOf("kit.svg('text'") < 0, '愛心上不寫任何字');
+  ok(src.indexOf("'class': 'stamp-text'") < 0 && src.indexOf('核准') < 0 && src.indexOf('createTextNode') < 0 && src.indexOf("kit.svg('text'") < 0, '愛心上不寫任何字');
   ok(src.indexOf('stroke-dasharray') > 0, '愛心是虛線');
   ok(src.indexOf("migrateBest(ID, function () { return null; }, '.v127')") > 0, '舊的最佳紀錄清掉一次（.v127）'); }
 // 紅框／角標／紙張歪斜仍維持 V1.25 的難度

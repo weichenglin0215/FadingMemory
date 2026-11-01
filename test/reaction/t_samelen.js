@@ -33,6 +33,6 @@ ok(T.MAX_DRAW >= T.STAGE_W * T.LEN_MAX_PCT, '橫線最長要比題目線最長�
   const hz = T.capEnds(0, 200); ok(near(hz.t[0], hz.t[2]) && near(hz.b[0], hz.b[2]) && !near(hz.t[1], hz.t[3]) && !near(hz.b[1], hz.b[3]), '線橫放時：左右兩個記號都是垂直的（左邊的不能是水平）');
   ok(near(hz.b[0], 200) && near(hz.t[0], 0), '橫放時下端記號在 x＝線長、上端記號在 x＝0');
   for (let a = 0; a <= Math.PI / 2; a += 0.1) { const e = T.capEnds(a, 150); const dxl = Math.cos(a), dyl = Math.sin(a); ['t', 'b'].forEach(k => { const c = e[k]; ok(Math.abs((c[2] - c[0]) * dxl + (c[3] - c[1]) * dyl) < 1e-9, '記號永遠垂直於線 a=' + a.toFixed(1)); ok(near(Math.hypot(c[2] - c[0], c[3] - c[1]), 2 * T.CAP), '記號長度固定'); }); } }
-const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction3.css'), 'utf8');
-ok(/\.sl-ref \{[^}]*stroke-width: 24;/.test(css) && /\.sl-mine \{[^}]*stroke-width: 24;/.test(css), '橘色線與藍色線的粗細是原本 8 的 300%（24）');
+const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_samelen.css'), 'utf8');
+ok(/\.samelen-ref \{[^}]*stroke-width: 24;/.test(css) && /\.samelen-mine \{[^}]*stroke-width: 24;/.test(css), '橘色線與藍色線的粗細是原本 8 的 300%（24）');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_tapback.js — 秒反應・倒著點（企劃 168）
+   樣式：css/games/reaction_tapback.css（這款專屬的 class 一律以「tapback-」開頭；共用元件在 css/reaction_common.css）
    畫面上有幾個圓點的位置（淡淡的圓圈），圓點會一個一個依序亮起來（位置隨機），
    亮完之後，要「倒著」把它們依序點回去（最後亮的最先點）。是「倒背數字」的位置版。
    關卡制：點錯或來不及就結束，成績＝通過幾關。
@@ -80,10 +81,10 @@
         api.info = q;
         console.log('[倒著點] 第 ' + level + ' 關：' + q.pts.length + ' 個圓點；亮起順序 ' + q.order.map(function (i) { return i + 1; }).join('→') + '；要點的順序 ' + q.back.map(function (i) { return i + 1; }).join('→') + '；每個亮 ' + flashMs(level) + ' ms，限時 ' + ansMs(level) + ' ms');
 
-        var tip = h('div', { 'class': 'qz-note tbk-tip', text: '請看圓點依序亮起來，記住順序' });
+        var tip = h('div', { 'class': 'qz-note tapback-tip', text: '請看圓點依序亮起來，記住順序' });
         stage.appendChild(tip);
         var rings = q.pts.map(function (p) {
-            var r = h('div', { 'class': 'tbk-ring' });
+            var r = h('div', { 'class': 'tapback-ring' });
             r.style.left = (p.x - DOT_R) + 'px'; r.style.top = (p.y + 54 - DOT_R) + 'px';
             r.style.width = r.style.height = (2 * DOT_R) + 'px';
             stage.appendChild(r);
@@ -92,8 +93,8 @@
         var phase = 'show', next = 0, picks = [];
         var t = 700, fl = flashMs(level), gp = gapMs(level);
         q.order.forEach(function (pi) {
-            api.after(t, function () { rings[pi].classList.add('tbk-ring--on'); Sfx.play('tick'); });
-            api.after(t + fl, function () { rings[pi].classList.remove('tbk-ring--on'); });
+            api.after(t, function () { rings[pi].classList.add('tapback-ring--on'); Sfx.play('tick'); });
+            api.after(t + fl, function () { rings[pi].classList.remove('tapback-ring--on'); });
             t += fl + gp;
         });
         api.after(t + 100, function () {
@@ -108,7 +109,7 @@
                 if (picks.indexOf(i) >= 0) return;
                 if (i !== q.back[next]) { reveal(i); return; }
                 picks.push(i); next++;
-                r.classList.add('tbk-ring--ok'); Sfx.play('ok');
+                r.classList.add('tapback-ring--ok'); Sfx.play('ok');
                 if (next >= q.back.length) { phase = 'done'; reveal('ok'); }
             });
         });
@@ -116,9 +117,9 @@
         function reveal(i) {
             if (api.over) return;
             phase = 'done';
-            q.back.forEach(function (pi, k) { rings[pi].textContent = String(k + 1); rings[pi].classList.add('tbk-ring--num'); });
+            q.back.forEach(function (pi, k) { rings[pi].textContent = String(k + 1); rings[pi].classList.add('tapback-ring--num'); });
             if (i === 'ok') { tip.textContent = '全部點對了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1100 }); return; }
-            if (typeof i === 'number') rings[i].classList.add('tbk-ring--wrong');
+            if (typeof i === 'number') rings[i].classList.add('tapback-ring--wrong');
             tip.textContent = '正確的倒著順序已標上數字（1 最先點）';
             kit.flash(stage, false, api.my);
             api.fail({ delay: 2500, lines: [
@@ -126,7 +127,7 @@
                 '圓圈上的數字就是正確的點擊順序（1 最先點）'
             ] });
         }
-        api.solve = function () { if (phase !== 'tap') return; q.back.forEach(function (pi) { rings[pi].classList.add('tbk-ring--ok'); }); phase = 'done'; reveal('ok'); };
+        api.solve = function () { if (phase !== 'tap') return; q.back.forEach(function (pi) { rings[pi].classList.add('tapback-ring--ok'); }); phase = 'done'; reveal('ok'); };
         api.wrong = function () { if (phase !== 'tap') return; reveal(q.back[1]); };      /* 第一個該點的是 back[0]，點 back[1] 就是錯的 */
     }
 

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_tearcal.js — 秒反應・撕日曆（原「翻月曆」）
+   樣式：css/games/reaction_tearcal.css（這款專屬的 class 一律以「tearcal-」開頭；共用元件在 css/reaction_common.css）
    一天一張的日曆。每撕一張就換成隔天，只能往後撕、不能回頭。上方寫著目標日期（或「中秋節」
    「霜降」這種要自己找的日子），在限時內撕到那一天，按「就是這天」。撕過頭就失敗。
    ───────────────────────────────────────────────────────────────────
@@ -42,7 +43,7 @@
     var TAP_START = 0.60, TAP_END = 0.32;       /* 每撕一張允許的秒數 */
     var SLACK_START = 8, SLACK_END = 4;         /* 額外給的秒數 */
     var NEXT_MS = 1100;
-    var TEAR_MS = 600;                          /* 被撕掉的那一張往下滑落的時間（毫秒）；要跟 css/reaction2.css 的 .tc-page--torn 動畫秒數一樣 */
+    var TEAR_MS = 600;                          /* 被撕掉的那一張往下滑落的時間（毫秒）；要跟 css/games/reaction_tearcal.css 的 .tearcal-page--torn 動畫秒數一樣 */
 
     /* 陣列索引 0～6 對應 JS 的 getDay() 星期日～星期六 */
     var WD_NAME = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
@@ -290,14 +291,14 @@
         el.innerHTML = '';
         /* 週六、週日用不同顏色 */
         var weekend = info.wd === 0 || info.wd === 6;
-        el.appendChild(h('div', { 'class': 'tc-ym', text: info.y + ' 年 ' + info.m + ' 月' }));
-        el.appendChild(h('div', { 'class': 'tc-day' + (weekend ? ' tc-day--we' : ''), text: String(info.d) }));
-        el.appendChild(h('div', { 'class': 'tc-wd' + (weekend ? ' tc-wd--we' : ''), text: info.wdName }));
-        el.appendChild(h('div', { 'class': 'tc-lunar', text: info.lunar ? '農曆 ' + info.lunarText : '' }));
-        var tags = h('div', { 'class': 'tc-tags' });
-        if (info.solarFest) tags.appendChild(h('span', { 'class': 'tc-tag tc-tag--solar', text: info.solarFest }));
-        if (info.lunarFest) tags.appendChild(h('span', { 'class': 'tc-tag tc-tag--lunar', text: info.lunarFest }));
-        if (info.term) tags.appendChild(h('span', { 'class': 'tc-tag tc-tag--term', text: info.term }));
+        el.appendChild(h('div', { 'class': 'tearcal-ym', text: info.y + ' 年 ' + info.m + ' 月' }));
+        el.appendChild(h('div', { 'class': 'tearcal-day' + (weekend ? ' tearcal-day--we' : ''), text: String(info.d) }));
+        el.appendChild(h('div', { 'class': 'tearcal-wd' + (weekend ? ' tearcal-wd--we' : ''), text: info.wdName }));
+        el.appendChild(h('div', { 'class': 'tearcal-lunar', text: info.lunar ? '農曆 ' + info.lunarText : '' }));
+        var tags = h('div', { 'class': 'tearcal-tags' });
+        if (info.solarFest) tags.appendChild(h('span', { 'class': 'tearcal-tag tearcal-tag--solar', text: info.solarFest }));
+        if (info.lunarFest) tags.appendChild(h('span', { 'class': 'tearcal-tag tearcal-tag--lunar', text: info.lunarFest }));
+        if (info.term) tags.appendChild(h('span', { 'class': 'tearcal-tag tearcal-tag--term', text: info.term }));
         el.appendChild(tags);
     }
 
@@ -319,14 +320,14 @@
             var L = null, cur = 0, torn = 0;
 
             /* 建立畫面元素 */
-            var head = h('div', { 'class': 'tc-head' });
-            var prompt = h('div', { 'class': 'tc-prompt' });
+            var head = h('div', { 'class': 'tearcal-head' });
+            var prompt = h('div', { 'class': 'tearcal-prompt' });
             var tb = kit.timebar();
-            var stack = h('div', { 'class': 'tc-stack' });
-            var page = h('div', { 'class': 'tc-page' });
-            var hint = h('div', { 'class': 'tc-hint', text: '點日曆撕下一張（不能回頭）' });
+            var stack = h('div', { 'class': 'tearcal-stack' });
+            var page = h('div', { 'class': 'tearcal-page' });
+            var hint = h('div', { 'class': 'tearcal-hint', text: '點日曆撕下一張（不能回頭）' });
             stack.appendChild(page);
-            var ok = h('button', { 'class': 'btn btn--go tc-ok', text: '就是這天' });
+            var ok = h('button', { 'class': 'btn btn--go tearcal-ok', text: '就是這天' });
             [head, prompt, tb.el, stack, hint, ok].forEach(function (n) { root.appendChild(n); });
 
             function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }
@@ -342,7 +343,7 @@
                 head.textContent = '第 ' + level + ' 關';
                 prompt.textContent = L.prompt;
                 hint.textContent = '點日曆撕下一張（不能回頭），到了按「就是這天」';
-                page.classList.remove('tc-page--ok', 'tc-page--bad');
+                page.classList.remove('tearcal-page--ok', 'tearcal-page--bad');
                 meta();
                 var ti = dayInfo(L.target);
                 /* 主控台印出這關的實際資料（起點、目標、農曆、節日、張數、時限），方便驗證 */
@@ -360,7 +361,7 @@
                 /* 撕下來的這張往下滑落，下面露出隔天 */
                 /* cloneNode(true)：複製目前這頁（含內容），給它「被撕下滑落」的動畫 class，下面的原頁則換成隔天 */
                 var old = page.cloneNode(true);
-                old.className = 'tc-page tc-page--torn';
+                old.className = 'tearcal-page tearcal-page--torn';
                 stack.appendChild(old);
                 /* 動畫播完（TEAR_MS 毫秒，多留 50 毫秒）後把撕下來的那張從畫面移除 */
                 my.after(TEAR_MS + 50, function () { if (old.parentNode) old.parentNode.removeChild(old); });
@@ -385,7 +386,7 @@
                 tb.set(0);
                 cleared = level;
                 if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
-                page.classList.add('tc-page--ok');
+                page.classList.add('tearcal-page--ok');
                 Sfx.play('win');
                 hint.textContent = (timeout ? '時間到，剛好撕對了！' : '對了！') + '撕了 ' + torn + ' 張';
                 level++;
@@ -397,7 +398,7 @@
                 if (state !== 'play') return;
                 state = 'judged';
                 tb.set(0);
-                page.classList.add('tc-page--bad');
+                page.classList.add('tearcal-page--bad');
                 Sfx.play('bad');
                 var ti = dayInfo(L.target);
                 hint.textContent = why + '　目標是 ' + ti.m + ' 月 ' + ti.d + ' 日（' + ti.wdName + '）';

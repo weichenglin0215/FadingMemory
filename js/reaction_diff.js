@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_diff.js — 秒反應・哪裡怪怪的
+   樣式：css/games/reaction_diff.css（這款專屬的 class 一律以「diff-」開頭；共用元件在 css/reaction_common.css）
    畫面分成上下兩格，各有 10 個一樣的幾何圖形，其中 5 個的「大小」或「顏色」或「位置」不一樣。
    上格、下格的圖形都可以點，找齊 5 個就進下一關（全新的 10 個圖形，差異變小）。
    ───────────────────────────────────────────────────────────────────
@@ -152,11 +153,11 @@
 
             /* 先放不斷行空白佔住高度，之後量上下格大小才準 */
             /* 先放不斷行空白佔住高度：startLevel 一開頭就量上下格的大小，文字晚填會讓量到的比最後的大 */
-            var head = h('div', { 'class': 'df-head' }, [h('span', { 'class': 'df-head__main', text: '\u00a0' }), h('span', { 'class': 'df-head__sub', text: '\u00a0' })]);
+            var head = h('div', { 'class': 'diff-head' }, [h('span', { 'class': 'diff-head__main', text: '\u00a0' }), h('span', { 'class': 'diff-head__sub', text: '\u00a0' })]);
             /* 建立畫面元素：標題、上格、下格、「點錯了」提示 */
-            var top = h('div', { 'class': 'df-panel' });
-            var bot = h('div', { 'class': 'df-panel' });
-            var flash = h('div', { 'class': 'df-penalty', text: '點錯了' });
+            var top = h('div', { 'class': 'diff-panel' });
+            var bot = h('div', { 'class': 'diff-panel' });
+            var flash = h('div', { 'class': 'diff-penalty', text: '點錯了' });
             root.appendChild(head);
             root.appendChild(top);
             root.appendChild(bot);
@@ -171,23 +172,23 @@
             function paintHead() {
                 var left = MISTAKES_MAX - 1 - mistakes;
                 head.innerHTML = '';
-                head.appendChild(h('span', { 'class': 'df-head__main', text: '第 ' + levelNo + ' 關　找到 ' + found + ' / ' + N_DIFF }));
-                head.appendChild(h('span', { 'class': 'df-head__sub' + (left <= 0 ? ' df-head__sub--warn' : ''), text: (left > 0 ? '還能點錯 ' + left + ' 次' : '再點錯就結束了') + '　本關 ' + Math.floor((performance.now() - t0) / 1000) + ' 秒' }));
+                head.appendChild(h('span', { 'class': 'diff-head__main', text: '第 ' + levelNo + ' 關　找到 ' + found + ' / ' + N_DIFF }));
+                head.appendChild(h('span', { 'class': 'diff-head__sub' + (left <= 0 ? ' diff-head__sub--warn' : ''), text: (left > 0 ? '還能點錯 ' + left + ' 次' : '再點錯就結束了') + '　本關 ' + Math.floor((performance.now() - t0) / 1000) + ' 秒' }));
             }
 
             /* 畫其中一格（上或下）：每個圖形畫成 SVG 形狀，外加一個看不見但可點的「熱區」圓和標記圈 */
             function drawPanel(el, panel, W, Hh) {
                 el.innerHTML = '';
-                var svg = kit.svg('svg', { 'class': 'df-svg', viewBox: '0 0 ' + W + ' ' + Hh }, el);
+                var svg = kit.svg('svg', { 'class': 'diff-svg', viewBox: '0 0 ' + W + ' ' + Hh }, el);
                 svgs[panel] = svg;
                 L.items.forEach(function (_, i) {
                     var s = itemIn(L, panel, i);
                     var g = kit.svg('g', { transform: 'translate(' + s.x.toFixed(2) + ' ' + s.y.toFixed(2) + ')' }, svg);
                     var fillC = 'hsl(' + s.hue.toFixed(1) + ', 72%, 56%)';
-                    if (s.shape === 'circle') kit.svg('circle', { 'class': 'df-shape', r: s.r.toFixed(2), fill: fillC }, g);
-                    else kit.svg('polygon', { 'class': 'df-shape', fill: fillC, points: polyPoints(s.shape, s.r).map(function (p) { return p[0].toFixed(2) + ',' + p[1].toFixed(2); }).join(' ') }, g);
-                    kit.svg('circle', { 'class': 'df-ring', r: BASE_R + 12, id: '' }, g);
-                    var hit = kit.svg('circle', { 'class': 'df-hit', r: BASE_R + 14 }, g);
+                    if (s.shape === 'circle') kit.svg('circle', { 'class': 'diff-shape', r: s.r.toFixed(2), fill: fillC }, g);
+                    else kit.svg('polygon', { 'class': 'diff-shape', fill: fillC, points: polyPoints(s.shape, s.r).map(function (p) { return p[0].toFixed(2) + ',' + p[1].toFixed(2); }).join(' ') }, g);
+                    kit.svg('circle', { 'class': 'diff-ring', r: BASE_R + 12, id: '' }, g);
+                    var hit = kit.svg('circle', { 'class': 'diff-hit', r: BASE_R + 14 }, g);
                     hit.addEventListener('pointerdown', function (e) { e.preventDefault(); tap(i, panel, g); });
                     g.setAttribute('data-i', i);
                 });
@@ -197,7 +198,7 @@
             function ringBoth(i, cls) {
                 ['top', 'bot'].forEach(function (p) {
                     var g = svgs[p].querySelector('g[data-i="' + i + '"]');
-                    if (g) g.querySelector('.df-ring').classList.add(cls);
+                    if (g) g.querySelector('.diff-ring').classList.add(cls);
                 });
             }
 
@@ -209,7 +210,7 @@
                 drawPanel(top, 'top', top.clientWidth, top.clientHeight);
                 drawPanel(bot, 'bot', bot.clientWidth, bot.clientHeight);
                 /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「第一個不一樣的圖形」上（第一關的正確答案之一） */
-                if (Reaction.kit.once('diff.hint')) Reaction.kit.hintOn(root, svgs.top.querySelector('g[data-i="' + L.diffs[0].i + '"] .df-hit'), { mode: 'tap', text: '請點擊不一樣的圖形' });
+                if (Reaction.kit.once('diff.hint')) Reaction.kit.hintOn(root, svgs.top.querySelector('g[data-i="' + L.diffs[0].i + '"] .diff-hit'), { mode: 'tap', text: '請點擊不一樣的圖形' });
                 paintHead(); meta();
                 /* 主控台印出這一關三種差異量與 5 個差異的位置（驗證用） */
                 try {
@@ -229,17 +230,17 @@
                 var isDiff = L.diffs.some(function (d) { return d.i === i; });
                 if (isDiff) {
                     foundSet[i] = true; found++;
-                    ringBoth(i, 'df-ring--ok');
+                    ringBoth(i, 'diff-ring--ok');
                     Sfx.play('ok');
                     paintHead();
                     if (found >= N_DIFF) levelClear();
                 /* 不是差異：點錯，顯示橘色圈，累計次數，達上限就結束 */
                 } else {
-                    g.querySelector('.df-ring').classList.add('df-ring--bad');
-                    my.after(450, function () { g.querySelector('.df-ring').classList.remove('df-ring--bad'); });
+                    g.querySelector('.diff-ring').classList.add('diff-ring--bad');
+                    my.after(450, function () { g.querySelector('.diff-ring').classList.remove('diff-ring--bad'); });
                     mistakes++;
                     Sfx.play('bad');
-                    flash.classList.remove('df-penalty--on'); void flash.offsetWidth; flash.classList.add('df-penalty--on');
+                    flash.classList.remove('diff-penalty--on'); void flash.offsetWidth; flash.classList.add('diff-penalty--on');
                     paintHead();
                     if (mistakes >= MISTAKES_MAX) gameOver();
                 }
@@ -259,10 +260,10 @@
             function gameOver() {
                 if (state !== 'play') return;
                 state = 'over';
-                L.diffs.forEach(function (d) { if (!foundSet[d.i]) ringBoth(d.i, 'df-ring--miss'); });
+                L.diffs.forEach(function (d) { if (!foundSet[d.i]) ringBoth(d.i, 'diff-ring--miss'); });
                 head.innerHTML = '';
-                head.appendChild(h('span', { 'class': 'df-head__main', text: '第二次點錯了！' }));
-                head.appendChild(h('span', { 'class': 'df-head__sub', text: '黃圈是沒找到的' }));
+                head.appendChild(h('span', { 'class': 'diff-head__main', text: '第二次點錯了！' }));
+                head.appendChild(h('span', { 'class': 'diff-head__sub', text: '黃圈是沒找到的' }));
                 var failLevel = levelNo, back = kit.resumeFrom(failLevel), secs = Math.round((performance.now() - t0) / 1000);
                 my.after(2200, function () {
                     kit.result(root, {

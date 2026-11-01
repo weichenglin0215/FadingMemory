@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_farpair.js — 秒反應・哪對離最遠（企劃 158「哪一對離得遠」）
+   樣式：css/games/reaction_farpair.css（這款專屬的 class 一律以「farpair-」開頭；共用元件在 css/reaction_common.css）
    畫面上有好幾對圓點，每一對是同一個顏色（兩個紅點、兩個綠點、兩個黃點…），
    判斷「哪一對的兩個點相距最遠」，點該對的任何一個圓點。
    關卡制：點錯或來不及就結束，成績＝通過幾關。
@@ -113,17 +114,17 @@
         api.info = q;
         console.log('[哪對離最遠] 第 ' + level + ' 關：' + q.pairs.length + ' 對；各對距離 ' + q.pairs.map(function (p) { return p.color + p.d.toFixed(4); }).join('、') + '；最遠是 ' + q.pairs[q.best].color + '（最遠÷第二遠＝' + q.ratio.toFixed(4) + '）');
 
-        var svg = kit.svg('svg', { 'class': 'fpr-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
+        var svg = kit.svg('svg', { 'class': 'farpair-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
         var gLine = kit.svg('g', {}, svg), gDot = kit.svg('g', {}, svg), gText = kit.svg('g', {}, svg);
         var dots = [];
         q.pairs.forEach(function (p, i) {
             var fill = kit.hsl(p.hue, 78, 52), stroke = kit.hsl(p.hue, 70, 30);
             ['a', 'b'].forEach(function (k) {
-                var c = kit.svg('circle', { cx: p[k].x, cy: p[k].y, r: dotR(k), fill: fill, stroke: stroke, 'stroke-width': k === 'a' ? 3 : 2, 'class': 'fpr-dot' }, gDot);
+                var c = kit.svg('circle', { cx: p[k].x, cy: p[k].y, r: dotR(k), fill: fill, stroke: stroke, 'stroke-width': k === 'a' ? 3 : 2, 'class': 'farpair-dot' }, gDot);
                 dots.push({ el: c, pair: i, end: k });
             });
         });
-        var tip = h('div', { 'class': 'qz-note fpr-tip', text: '哪一對（同顏色）的兩個點離得最遠？' });
+        var tip = h('div', { 'class': 'qz-note farpair-tip', text: '哪一對（同顏色）的兩個點離得最遠？' });
         stage.appendChild(tip);
         api.timer(ansMs(level), function () { judge(-1, null); });
         if (level === 1 && kit.once('farpair.hint')) kit.hintOn(stage, null, { mode: 'tap', x: q.pairs[q.best].a.x, y: q.pairs[q.best].a.y, delay: 600, text: '請點擊距離最遠那一對的圓點' });
@@ -137,12 +138,12 @@
         /* 畫一條從 from 慢慢長到 to 的線，結束時在中間寫距離；回傳 Promise */
         function drawLine(pi, fromKey, cls) {
             var p = q.pairs[pi], from = p[fromKey], to = p[fromKey === 'a' ? 'b' : 'a'];
-            var ln = kit.svg('line', { x1: from.x, y1: from.y, x2: from.x, y2: from.y, 'class': 'fpr-line ' + cls }, gLine);
+            var ln = kit.svg('line', { x1: from.x, y1: from.y, x2: from.x, y2: from.y, 'class': 'farpair-line ' + cls }, gLine);
             return api.my.tween(650, function (e) {
                 ln.setAttribute('x2', from.x + (to.x - from.x) * e); ln.setAttribute('y2', from.y + (to.y - from.y) * e);
             }, kit.easeOutCubic).then(function () {
                 var mx = (from.x + to.x) / 2, my = (from.y + to.y) / 2;
-                var tx = kit.svg('text', { x: mx, y: my - 10, 'text-anchor': 'middle', 'class': 'fpr-dist ' + cls }, gText);
+                var tx = kit.svg('text', { x: mx, y: my - 10, 'text-anchor': 'middle', 'class': 'farpair-dist ' + cls }, gText);
                 tx.textContent = p.color + '：' + p.d.toFixed(4);
             });
         }
@@ -152,16 +153,16 @@
             var ok = pi === q.best;
             if (pi < 0) {                       /* 時間到：直接揭曉最遠的那一對 */
                 tip.textContent = '時間到！最遠的是 ' + q.pairs[q.best].color + ' 那一對';
-                drawLine(q.best, 'a', 'fpr-line--right');
+                drawLine(q.best, 'a', 'farpair-line--right');
                 api.fail({ delay: 3400, lines: ['時間到！', '最遠的是 ' + q.pairs[q.best].color + ' 那一對，距離 ' + q.pairs[q.best].d.toFixed(4) + ' 像素'] });
                 return;
             }
             tip.textContent = ok ? '答對了！' : '再看一次';
-            drawLine(pi, endKey, ok ? 'fpr-line--right' : 'fpr-line--wrong').then(function () {
+            drawLine(pi, endKey, ok ? 'farpair-line--right' : 'farpair-line--wrong').then(function () {
                 if (ok) return;
                 return api.my.wait(500).then(function () {
                     tip.textContent = '真正最遠的是 ' + q.pairs[q.best].color + ' 那一對';
-                    return drawLine(q.best, 'a', 'fpr-line--right');
+                    return drawLine(q.best, 'a', 'farpair-line--right');
                 });
             });
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1900 }); return; }

@@ -106,14 +106,14 @@ ok(T.GROUPS * 3 === 15 && T.TARGET === 100 && T.PENALTY_MS === 3000, '預設 15 
 ok(G.name === '三張成百' && G.score.better === 'max' && G.score.min === 1 && G.score.max === T.MAX_LEVEL && T.MAX_LEVEL === 90 && G.score.decimals === 0, '遊戲名稱與成績規格（通過關數、越大越好、上限 90＝MAX_LEVEL）');
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(8) && T.rating(8) !== T.rating(15) && T.rating(15) !== T.rating(25), '評語分級');
 { const path = require('path'), rd = p => require('fs').readFileSync(path.resolve(__dirname, p), 'utf8');
-  const src = rd('../../js/reaction_triple100.js'), css = rd('../../css/reaction5.css'), boot = rd('../../js/boot.js'), kit2 = rd('../../js/reaction_kit2.js'), menu = rd('../../js/menu.js');
+  const src = rd('../../js/reaction_triple100.js'), css = rd('../../css/games/reaction_triple100.css'), boot = rd('../../js/boot.js'), kit2 = rd('../../js/reaction_kit2.js'), menu = rd('../../js/menu.js');
   ok(/if \(!hasMove\(remainingValues\(\)\)\) api\.after\(500, function \(\) \{ fail\('stuck'\); \}\)/.test(src), '消除之後剩下的牌湊不出任何 100 → 卡住結束');
   ok(src.indexOf("fail('time')") > 0 && src.indexOf('api.timer(spec.limitS * 1000') > 0, '超過時間限制結束');
   ok(src.indexOf('tm.cut(PENALTY_MS)') > 0 && /cut: function \(d\)/.test(kit2), '選錯一組從剩餘時間扣 3 秒（kit.run 的 timer.cut）');
   ok(src.indexOf('api.pass(') > 0 && src.indexOf('maxLevel: MAX_LEVEL') > 0, '全部消完過關、關卡制');
   ok(src.indexOf("addEventListener('click'") > 0, '牌用 click（上下捲動時不誤選）');
   ok(src.indexOf("migrateBest(ID, function () { return null; }, '.v127')") > 0, '舊版（用時）的最佳紀錄清掉一次');
-  ok(/\.t3-wrap \{[^}]*overflow-y: auto/.test(css) && /grid-template-columns: repeat\(3, 1fr\)/.test(css) && /\.t3-card--sel/.test(css) && /\.t3-card--gone/.test(css) && /\.t3-card--bad/.test(css), '樣式：橫向 3 欄、往下捲動、選取／消除／錯誤');
+  ok(/\.triple100-wrap \{[^}]*overflow-y: auto/.test(css) && /grid-template-columns: repeat\(3, 1fr\)/.test(css) && /\.triple100-card--sel/.test(css) && /\.triple100-card--gone/.test(css) && /\.triple100-card--bad/.test(css), '樣式：橫向 3 欄、往下捲動、選取／消除／錯誤');
   ok(boot.indexOf("'js/reaction_triple100.js'") > boot.indexOf("'js/reaction_alignchar.js'") && boot.indexOf("'js/reaction_triple100.js'") < boot.indexOf("'js/reaction.js'"), 'boot.js 有載入（在 reaction.js 之前）');
   ok(/id: 'triple100', name: '三張成百'/.test(menu), '選單有這一款'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

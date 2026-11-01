@@ -1,0 +1,227 @@
+/* ═══════════════════════════════════════
+   reaction_countbills.css — 數鈔票（js/reaction_countbills.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「countbills-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 數鈔票（.countbills-）═══ */
+.countbills-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.countbills-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+/* 上方的目標：數出 N 元 */
+.countbills-goal {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 6px;
+    text-align: center;
+    color: var(--c-ink);
+    font-weight: var(--fw-black);
+    pointer-events: none;
+}
+
+.countbills-goal__t {
+    font-size: var(--fs-lg);
+}
+
+.countbills-goal__n {
+    color: var(--cbl-goal);
+    font-size: var(--fs-xxl);
+    line-height: 1;
+}
+
+.countbills-lab {
+    position: absolute;
+    text-align: center;
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* 桌面：整個區域都可以點（撥一張）；鈔票用 transform 擺在左邊（疊上）或右邊（撥出去） */
+.countbills-table {
+    position: absolute;
+    left: 0;
+    right: 0;
+    touch-action: none;
+}
+
+.countbills-note {
+    position: absolute;
+    left: 0;
+    top: 0;
+    box-sizing: border-box;
+    border: 3px solid var(--cbl-edge);
+    border-radius: var(--r-sm);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+    transition: transform 0.12s ease-out;
+    pointer-events: none;
+}
+
+.countbills-note--under {
+    filter: brightness(0.9);
+}
+
+/* 面額的底色：200 和 100 接近、2000 和 1000 接近（第 10 關起容易看錯） */
+.countbills-d100 {
+    background: var(--cbl-d100);
+}
+
+.countbills-d200 {
+    background: var(--cbl-d200);
+}
+
+.countbills-d500 {
+    background: var(--cbl-d500);
+}
+
+.countbills-d1000 {
+    background: var(--cbl-d1000);
+}
+
+.countbills-d2000 {
+    background: var(--cbl-d2000);
+}
+
+.countbills-note__p {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(135deg, var(--cbl-stripe) 0, var(--cbl-stripe) 6px, transparent 6px, transparent 14px);
+}
+
+.countbills-note__v {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    text-align: center;
+    color: var(--cbl-num);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    text-shadow: 0 0 6px var(--cbl-num-glow), 0 0 2px var(--cbl-num-glow);
+    z-index: 1;
+}
+
+.countbills-note__c {
+    position: absolute;
+    color: var(--cbl-num);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    z-index: 1;
+}
+
+.countbills-note__c--l {
+    left: 8px;
+    top: 2px;
+}
+
+.countbills-note__c--r {
+    right: 8px;
+    bottom: 2px;
+}
+
+.countbills-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.countbills-info--ok {
+    color: var(--c-ok);
+}
+
+.countbills-info--bad {
+    color: var(--c-bad);
+}
+
+.countbills-btn {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.countbills-btn--off {
+    opacity: 0.45;
+}
+
+/* 揭曉：撥出去的鈔票攤開，每張下面寫累加的總和 */
+.countbills-spread {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 8px;
+}
+
+.countbills-spread__none {
+    width: 100%;
+    padding: var(--sp-4) 0;
+    text-align: center;
+    color: var(--c-ink-soft);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+}
+
+.countbills-cell {
+    text-align: center;
+}
+
+.countbills-cell__s {
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    line-height: 1.3;
+}
+
+.countbills-cell__s--ghost {
+    color: var(--c-ink-soft);
+    font-weight: var(--fw-bold);
+}
+
+.countbills-note--mini {
+    box-shadow: none;
+    transition: none;
+}
+
+.countbills-note--mini .countbills-note__c {
+    display: none;
+}
+
+.countbills-note--mini .countbills-note__v {
+    font-size: var(--fs-md);
+}
+
+.countbills-note--ghost {
+    opacity: 0.4;
+    border-style: dashed;
+}
+
+.countbills-note--hit {
+    box-shadow: 0 0 0 4px var(--c-ok);
+}
+
+.countbills-note--extra {
+    box-shadow: 0 0 0 4px var(--c-bad-light);
+}

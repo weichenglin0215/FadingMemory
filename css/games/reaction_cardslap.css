@@ -1,0 +1,162 @@
+/* ═══════════════════════════════════════
+   reaction_cardslap.css — 心臟病（js/reaction_cardslap.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「cardslap-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 心臟病（.cardslap-）═══ */
+.cardslap-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.cardslap-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.cardslap-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 前 3 張才顯示的「數到：X」 */
+.cardslap-count {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 56px;
+    height: 70px;
+    color: var(--c-ink);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    line-height: 70px;
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 綠色牌桌 */
+.cardslap-table {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    top: 136px;
+    bottom: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--csl-felt);
+    border: 4px solid var(--csl-felt-edge);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+}
+
+.cardslap-card {
+    position: relative;
+    width: 200px;
+    height: 280px;
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-pop);
+    transition: transform 0.1s;
+}
+
+.cardslap-card--back {
+    background: var(--csl-back);
+    border-color: var(--c-card);
+}
+
+.cardslap-card--flip {
+    animation: cardslap-flip 0.22s ease-out;
+}
+
+@keyframes cardslap-flip {
+    from {
+        transform: rotateY(90deg) scale(0.9);
+    }
+
+    to {
+        transform: rotateY(0deg) scale(1);
+    }
+}
+
+.cardslap-card--red {
+    color: var(--c-bad-light);
+}
+
+.cardslap-card--black {
+    color: var(--c-ink);
+}
+
+.cardslap-card__r {
+    position: absolute;
+    left: 14px;
+    top: 8px;
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    line-height: 1.1;
+}
+
+.cardslap-card__r--b {
+    left: auto;
+    right: 14px;
+    top: auto;
+    bottom: 8px;
+    transform: rotate(180deg);
+}
+
+.cardslap-card__big {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    margin-top: -48px;
+    display: flex;
+    justify-content: center;
+}
+
+.cardslap-suit {
+    display: block;
+}
+
+.cardslap-suit path {
+    fill: currentColor;
+}
+
+/* 拍下去：拍對（綠框、牌縮一下）、拍錯（紅框）、漏拍（橘框） */
+.cardslap-card--ok {
+    border-color: var(--c-ok);
+    box-shadow: 0 0 0 6px var(--c-ok-light);
+    transform: scale(0.94);
+}
+
+.cardslap-card--bad {
+    border-color: var(--c-bad-light);
+    box-shadow: 0 0 0 6px var(--c-bad-soft);
+}
+
+.cardslap-card--miss {
+    border-color: var(--c-orange);
+    box-shadow: 0 0 0 6px var(--c-orange-soft);
+}
+
+.cardslap-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 24px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}

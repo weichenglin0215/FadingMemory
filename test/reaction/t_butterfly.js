@@ -54,10 +54,10 @@ ok(kinds.size > 600 && kinds.color > 300 && kinds.angle > 200 && sides.L > 800 &
 for (let i = 0; i < 100; i++) { const tl = (rnd() - 0.5) * 20, x = 100 + rnd() * 250, y = 20 + rnd() * 260, a = tl * Math.PI / 180, vx = T.CENTER + (x - T.CENTER) * Math.cos(a) - (y - T.VB.h / 2) * Math.sin(a), vy = T.VB.h / 2 + (x - T.CENTER) * Math.sin(a) + (y - T.VB.h / 2) * Math.cos(a), p = T.untilt(vx, vy, tl); ok(near(p.x, x, 1e-9) && near(p.y, y, 1e-9), 'untilt 還原'); }
 ok(T.describeMod({ kind: 'size', delta: 0.4 }) === '斑點的大小差了 40%' && /顏色/.test(T.describeMod({ kind: 'color', delta: -50 })) && /方向差了 8°/.test(T.describeMod({ kind: 'angle', delta: -8 })), 'describeMod');
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_butterfly.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 3200/.test(src) && /btf-ring/.test(src) && /btf-ghost/.test(src), '失敗：左翅膀翻過去疊上（重影）、不同處紅圈、停格 2 秒以上');
-  ok(/\.btf-ring \{[^}]*var\(--c-bad-light\)/.test(css) && /\.btf-wing \{[^}]*var\(--btf-wing\)/.test(css) && /\.btf-c--orange \{[^}]*var\(--btf-orange\)/.test(css), '紅圈、翅膀、斑點顏色用 CSS 變數');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_butterfly.js'), css = rd('../../css/games/reaction_butterfly.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 3200/.test(src) && /butterfly-ring/.test(src) && /butterfly-ghost/.test(src), '失敗：左翅膀翻過去疊上（重影）、不同處紅圈、停格 2 秒以上');
+  ok(/\.butterfly-ring \{[^}]*var\(--c-bad-light\)/.test(css) && /\.butterfly-wing \{[^}]*var\(--btf-wing\)/.test(css) && /\.butterfly-c--orange \{[^}]*var\(--btf-orange\)/.test(css), '紅圈、翅膀、斑點顏色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_butterfly.js'") > 0 && /翻過來/.test(G.rule), 'boot.js 有載入、玩法說明提到翻過來'); }
-{ const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction6.css'), 'utf8'); T.COLORS.forEach(c => ok(css.indexOf('.btf-c--' + c + ' ') >= 0, 'CSS 有斑點顏色 ' + c)); }
+{ const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_butterfly.css'), 'utf8'); T.COLORS.forEach(c => ok(css.indexOf('.butterfly-c--' + c + ' ') >= 0, 'CSS 有斑點顏色 ' + c)); }
 ok(T.rating(2) !== T.rating(4) && T.rating(4) !== T.rating(7) && T.rating(7) !== T.rating(12) && T.rating(12) !== T.rating(20), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

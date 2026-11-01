@@ -1,0 +1,20 @@
+/* ═══════════════════════════════════════
+   reaction_orderops.css — 先乘除（js/reaction_orderops.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「orderops-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 先乘除（.orderops-）═══ */
+.orderops-ask {
+    top: 170px;
+}
+
+.orderops-reveal {
+    top: 230px;
+}
+
+.orderops-btn {
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    font-variant-numeric: tabular-nums;
+}

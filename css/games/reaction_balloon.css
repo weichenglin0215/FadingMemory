@@ -1,0 +1,60 @@
+/* ═══════════════════════════════════════
+   reaction_balloon.css — 吹氣球（js/reaction_balloon.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「balloon-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 吹氣球：長按吹氣，在氣球快爆之前放手。 */
+/* ═══ 吹氣球（.balloon-）═══ */
+/* 天空背景：linear-gradient 線性漸層（上藍下白） */
+.balloon-field {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    background: linear-gradient(180deg, #DCEBFA 0%, var(--c-card) 100%);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    touch-action: none;
+    user-select: none;
+}
+
+/* SVG */
+.balloon-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* 氣球本體 */
+.balloon-body {
+    stroke: rgba(120, 30, 20, 0.45);
+    stroke-width: 3px;
+}
+
+/* 高光 */
+.balloon-shine {
+    fill: rgba(255, 255, 255, 0.6);
+}
+
+/* 氣球打結處 */
+.balloon-knot {
+    fill: #B93A2E;
+}
+
+/* 氣球繩子 */
+.balloon-string {
+    fill: none;
+    stroke: #6B5B4B;
+    stroke-width: 3px;
+    stroke-linecap: round;
+}
+
+/* 爆炸後的碎片 */
+.balloon-piece {
+    fill: #E8685A;
+    stroke: rgba(120, 30, 20, 0.45);
+    stroke-width: 2px;
+}

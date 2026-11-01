@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_balloon.js — 秒反應・吹氣球
+   樣式：css/games/reaction_balloon.css（這款專屬的 class 一律以「balloon-」開頭；共用元件在 css/reaction_common.css）
    按住畫面充氣，放手就結算氣球的「容量」。氣球撐不住會爆，爆了就是 0 分。每局只有一次機會。
    ───────────────────────────────────────────────────────────────────
    · 沒有任何數字：充氣時畫面上不顯示分數、時間、進度，玩家只能看氣球、聽聲音，自己決定什麼時候放手。
@@ -98,17 +99,17 @@
             ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
 
             var hint = h('div', { 'class': 'hint', text: '按住畫面充氣，覺得夠了就放手（爆了就 0 分）' });
-            var field = h('div', { 'class': 'bl-field' });
+            var field = h('div', { 'class': 'balloon-field' });
             root.appendChild(hint);
             root.appendChild(field);
             /* SVG 畫布與氣球的各個部分（本體、高光、結、繩子） */
-            var svg = kit.svg('svg', { 'class': 'bl-svg', viewBox: '0 0 400 600', preserveAspectRatio: 'xMidYMid meet' }, field);
+            var svg = kit.svg('svg', { 'class': 'balloon-svg', viewBox: '0 0 400 600', preserveAspectRatio: 'xMidYMid meet' }, field);
             var CX = 200, BASE_Y = 330;                        /* 氣球中心 */
             var gBalloon = kit.svg('g', {}, svg);
-            var string = kit.svg('path', { 'class': 'bl-string' }, svg);
-            var body = kit.svg('ellipse', { 'class': 'bl-body' }, gBalloon);
-            var shine = kit.svg('ellipse', { 'class': 'bl-shine' }, gBalloon);
-            var knot = kit.svg('polygon', { 'class': 'bl-knot' }, gBalloon);
+            var string = kit.svg('path', { 'class': 'balloon-string' }, svg);
+            var body = kit.svg('ellipse', { 'class': 'balloon-body' }, gBalloon);
+            var shine = kit.svg('ellipse', { 'class': 'balloon-shine' }, gBalloon);
+            var knot = kit.svg('polygon', { 'class': 'balloon-knot' }, gBalloon);
             var pieces = kit.svg('g', {}, svg);
 
             /* 顏色：亮度越高越淡，cue（0～1）代表進度線索 */
@@ -198,7 +199,7 @@
                 var r = radiusAt(burstT), cy = BASE_Y - r * 1.15 * 0.25;
                 for (var i = 0; i < 14; i++) {
                     var a = (i / 14) * Math.PI * 2 + Math.random() * 0.4, d = r * (0.8 + Math.random() * 1.2);
-                    var p = kit.svg('polygon', { 'class': 'bl-piece', points: '0,-14 12,10 -10,12' }, pieces);
+                    var p = kit.svg('polygon', { 'class': 'balloon-piece', points: '0,-14 12,10 -10,12' }, pieces);
                     p.style.transformOrigin = '0 0';
                     p.setAttribute('transform', 'translate(' + CX + ' ' + cy + ')');
                     p.style.transition = 'transform 0.8s cubic-bezier(.1,.7,.3,1), opacity 0.8s ease';

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_huesort.js — 秒反應・色票排隊（企劃 332，依使用者的修改：找出顏色被動過的那一塊）
+   樣式：css/games/reaction_huesort.css（這款專屬的 class 一律以「huesort-」開頭；共用元件在 css/reaction_common.css）
    畫面上由上到下疊著 **9 塊色塊**，顏色是從上到下的**漸層**，但**其中一塊的顏色被偷偷改過**（改了色相、彩度或明度），
    漸層就在那裡「斷掉」了。把被改過的那一塊點出來。
    ───────────────────────────────────────────────────────────────────
@@ -150,7 +151,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'hus-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'huesort-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -165,14 +166,14 @@
         console.log('[色票排隊] 第 ' + level + ' 關：漸層沿著' + KIND_NAME[q.mode] + '走、第 ' + (q.k + 1) + ' 塊的' + KIND_NAME[q.kind] + '被改了（ΔE ' + q.de + '）；限時 ' + timeMs(level) + ' ms');
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        var tip = h('div', { 'class': 'qz-note hus-tip', text: level === 1 ? '點出跟上下接不起來的那一塊' : '找出顏色被改過的那一塊' });
+        var tip = h('div', { 'class': 'qz-note huesort-tip', text: level === 1 ? '點出跟上下接不起來的那一塊' : '找出顏色被改過的那一塊' });
         stage.appendChild(tip);
-        var info = h('div', { 'class': 'qz-note hus-info', text: '' });
+        var info = h('div', { 'class': 'qz-note huesort-info', text: '' });
         stage.appendChild(info);
         var L = layout(W, H, 52, 78), done = false;
         info.style.top = (L.y0 + L.total + 10) + 'px';
         var els = q.colors.map(function (c, i) {
-            var b = L.blocks[i], el = h('div', { 'class': 'hus-block' });
+            var b = L.blocks[i], el = h('div', { 'class': 'huesort-block' });
             el.style.cssText = 'left:' + b.x + 'px;top:' + b.y + 'px;width:' + b.w + 'px;height:' + b.h + 'px;background:' + css(c) + ';';
             stage.appendChild(el);
             kit.onTap(el, function () { choose(i); });
@@ -186,12 +187,12 @@
 
         /* 在某一塊上畫記號：ok＝白邊綠色圓圈；bad＝白邊紅色 X */
         function mark(i, ok) {
-            var box = h('div', { 'class': 'hus-mark' });
-            var svg = kit.svg('svg', { 'class': 'hus-mark__svg', viewBox: '-30 -30 60 60', width: 54, height: 54 }, box);
-            if (ok) kit.svg('circle', { 'class': 'hus-mark__ok', cx: 0, cy: 0, r: 20 }, svg);
+            var box = h('div', { 'class': 'huesort-mark' });
+            var svg = kit.svg('svg', { 'class': 'huesort-mark__svg', viewBox: '-30 -30 60 60', width: 54, height: 54 }, box);
+            if (ok) kit.svg('circle', { 'class': 'huesort-mark__ok', cx: 0, cy: 0, r: 20 }, svg);
             else {
-                kit.svg('path', { 'class': 'hus-mark__xedge', d: 'M-15,-15 L15,15 M15,-15 L-15,15' }, svg);
-                kit.svg('path', { 'class': 'hus-mark__x', d: 'M-15,-15 L15,15 M15,-15 L-15,15' }, svg);
+                kit.svg('path', { 'class': 'huesort-mark__xedge', d: 'M-15,-15 L15,15 M15,-15 L-15,15' }, svg);
+                kit.svg('path', { 'class': 'huesort-mark__x', d: 'M-15,-15 L15,15 M15,-15 L-15,15' }, svg);
             }
             els[i].appendChild(box);
         }
@@ -204,7 +205,7 @@
             tip.textContent = '靠攏後看哪裡接不起來';
             els.forEach(function (el, i) {
                 var b = L.blocks[i];
-                el.classList.add('hus-block--join');
+                el.classList.add('huesort-block--join');
                 el.style.left = b.joinX + 'px'; el.style.top = b.joinY + 'px';
                 el.style.height = (b.h + (i < els.length - 1 ? JOIN_OVERLAP : 0)) + 'px';             /* 壓進下一塊 JOIN_OVERLAP px：不留縫 */
                 el.style.zIndex = String(i);                                                          /* 下面的塊畫在上面，蓋住上一塊多出來的那幾 px */
@@ -214,7 +215,7 @@
                 mark(q.k, true);
                 if (j >= 0 && !ok) mark(j, false);
                 info.textContent = ok ? '答對了！' + what : (j >= 0 ? '答錯了：你點的是第 ' + (j + 1) + ' 塊，' : '時間到！') + what;
-                info.classList.add(ok ? 'hus-info--ok' : 'hus-info--bad');
+                info.classList.add(ok ? 'huesort-info--ok' : 'huesort-info--bad');
             });
             if (ok) api.pass({ delay: GATHER_MS + 1900 });
             else api.fail({ delay: GATHER_MS + 3700, lines: [(j >= 0 ? '你點的是第 ' + (j + 1) + ' 塊（紅色 X）' : '時間到！'), '綠色圓圈那一塊才是被改過的：' + what] });

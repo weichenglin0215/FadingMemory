@@ -78,5 +78,5 @@ console.log('反直覺題 ' + counter + ' / ' + total + '；能 ' + (yes / total
   const pts2 = T.arrowPoints(B, A).split(' ').map(p => p.split(',').map(Number)); ok(pts2[0][0] < 45, '反方向的箭頭朝 −x');
   ok(T.HOLD_MS === 2000, '動畫之後停 2 秒才結算');
   const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_euler.js'), 'utf8');
-  ok(src.indexOf('奇數點有') < 0 && src.indexOf("dots[k].classList.add('eu-node--odd')") < 0 && src.indexOf('其實不行') < 0, '不再用文字說明奇數點'); }
+  ok(src.indexOf('奇數點有') < 0 && src.indexOf("dots[k].classList.add('euler-node--odd')") < 0 && src.indexOf('其實不行') < 0, '不再用文字說明奇數點'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

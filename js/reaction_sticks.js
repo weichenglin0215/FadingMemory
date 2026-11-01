@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_sticks.js — 秒反應・落下棍子（原「抓住尺子」）
+   樣式：css/games/reaction_sticks.css（這款專屬的 class 一律以「sticks-」開頭；共用元件在 css/reaction_common.css）
    畫面上方掛著六根垂直的棍子，棍子會在不定的時間點鬆手、以地心引力加速度落下；
    要在棍子掉出畫面下緣之前點到它。每一關只能錯失一根，錯失第二根就失敗。
    ───────────────────────────────────────────────────────────────────
@@ -128,12 +129,12 @@
 
             /* level 目前關卡；cleared 已通過的關數；newRec 這次有沒有破紀錄；state 目前狀態（idle/play/clear/over）；levelNo 第幾次 startLevel（防止舊計時器亂入） */
             var level = startAt || 1, cleared = level - 1, newRec = false, state = 'idle', levelNo = 0;
-            /* 建立標題列和場地兩個 HTML 元素；'stk-head' 等 class 的樣式在 css/reaction2.css */
-            var head = h('div', { 'class': 'stk-head' });
-            var field = h('div', { 'class': 'stk-field' });
+            /* 建立標題列和場地兩個 HTML 元素；'sticks-head' 等 class 的樣式在 css/games/reaction_sticks.css */
+            var head = h('div', { 'class': 'sticks-head' });
+            var field = h('div', { 'class': 'sticks-field' });
             root.appendChild(head);
             root.appendChild(field);
-            var rail = h('div', { 'class': 'stk-rail' });
+            var rail = h('div', { 'class': 'sticks-rail' });
             field.appendChild(rail);
 
             /* field.clientWidth／clientHeight：場地實際的寬高（px），要在元素放進頁面「之後」才量得到 */
@@ -168,7 +169,7 @@
                 var gap = FW / N;
                 for (var i = 0; i < N; i++) {
                     /* 建立棍子元素：寬高與 left 用 style 直接設定（單位 px） */
-                    var el = h('div', { 'class': 'stk-stick' });
+                    var el = h('div', { 'class': 'sticks-stick' });
                     el.style.width = STICK_W + 'px';
                     el.style.height = len + 'px';
                     el.style.left = (gap * (i + 0.5) - STICK_W / 2) + 'px';
@@ -233,7 +234,7 @@
                 s.state = 'caught';
                 s.top = topAt(g, (now - s.relT) / 1000);
                 s.el.style.transform = 'translateY(' + s.top.toFixed(1) + 'px)';
-                s.el.classList.add('stk-stick--ok');
+                s.el.classList.add('sticks-stick--ok');
                 Sfx.play('ok');
                 resolve();
             }
@@ -241,7 +242,7 @@
             function lose(s, foul) {
                 if (s.state === 'caught' || s.state === 'missed' || s.state === 'foul') return;
                 s.state = foul ? 'foul' : 'missed';
-                s.el.classList.add('stk-stick--bad');
+                s.el.classList.add('sticks-stick--bad');
                 Sfx.play('bad');
                 misses++;
                 resolve();

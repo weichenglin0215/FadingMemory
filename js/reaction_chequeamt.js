@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_chequeamt.js — 秒反應・支票金額（企劃 198）
+   樣式：css/games/reaction_chequeamt.css（這款專屬的 class 一律以「chequeamt-」開頭；共用元件在 css/reaction_common.css）
    一張支票上，小寫金額（阿拉伯數字，例如 4,308）和大寫金額（肆仟參佰零捌元整）要一模一樣，
    判斷兩者「相符」還是「不符」。不符的地方都很小：少寫一個零、仟與佰互換、兩個數字對調…
    關卡制：答錯或來不及就結束，成績＝連續答對幾題。
@@ -122,7 +123,7 @@
         while (i < a.length && i < b.length && a[i] === b[i]) i++;
         var j = 0;
         while (j < a.length - i && j < b.length - i && a[a.length - 1 - j] === b[b.length - 1 - j]) j++;
-        return b.slice(0, i) + '<b class="chq-diff">' + b.slice(i, b.length - j) + '</b>' + b.slice(b.length - j);
+        return b.slice(0, i) + '<b class="chequeamt-diff">' + b.slice(i, b.length - j) + '</b>' + b.slice(b.length - j);
     }
     function nextMatch(hist, rand) {
         rand = rand || Math.random;
@@ -179,15 +180,15 @@
         api.info = q;
         console.log('[支票金額] 第 ' + level + ' 題：' + q.small + ' ／ ' + q.written + '（' + (q.match ? '相符' : '不符，大寫其實是 ' + q.otherAmount) + '），限時 ' + ansMs(level) + ' ms');
 
-        /* V1.29（玩家意見）：題目的字放大（見 css 的 .chq-lab／.chq-small／.chq-big），問句與揭曉文字相應往下移 */
-        var card = h('div', { 'class': 'chq-card' }, [
-            h('div', { 'class': 'chq-lab', text: '小寫金額' }),
-            h('div', { 'class': 'chq-small', text: q.small }),
-            h('div', { 'class': 'chq-lab', text: '大寫金額' }),
-            h('div', { 'class': 'chq-big', text: q.written })
+        /* V1.29（玩家意見）：題目的字放大（見 css 的 .chequeamt-lab／.chequeamt-small／.chequeamt-big），問句與揭曉文字相應往下移 */
+        var card = h('div', { 'class': 'chequeamt-card' }, [
+            h('div', { 'class': 'chequeamt-lab', text: '小寫金額' }),
+            h('div', { 'class': 'chequeamt-small', text: q.small }),
+            h('div', { 'class': 'chequeamt-lab', text: '大寫金額' }),
+            h('div', { 'class': 'chequeamt-big', text: q.written })
         ]);
-        var ask = h('div', { 'class': 'qz-note chq-ask', text: '大寫和小寫相符嗎？' });
-        var reveal = h('div', { 'class': 'qz-note chq-reveal' });
+        var ask = h('div', { 'class': 'qz-note chequeamt-ask', text: '大寫和小寫相符嗎？' });
+        var reveal = h('div', { 'class': 'qz-note chequeamt-reveal' });
         stage.appendChild(card); stage.appendChild(ask); stage.appendChild(reveal);
         var grid = kit.btnGrid(stage, [
             { text: '不符', kind: 'primary', onTap: function () { judge(false); } },
@@ -199,10 +200,10 @@
         function judge(say) {
             if (api.over) return;
             var ok = say === q.match;
-            var bigEl = card.querySelector('.chq-big');
+            var bigEl = card.querySelector('.chequeamt-big');
             if (!q.match) { reveal.innerHTML = '正確的大寫：' + q.right + '<br>支票上寫的：' + diffMark(q.right, q.written); bigEl.innerHTML = diffMark(q.right, q.written); }
             else reveal.textContent = '大寫「' + q.right + '」＝ ' + q.small.replace('NT$ ', '') + ' 元，完全相符';
-            card.classList.add(ok ? 'chq-card--ok' : 'chq-card--bad');
+            card.classList.add(ok ? 'chequeamt-card--ok' : 'chequeamt-card--bad');
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1300 }); return; }
             kit.flash(stage, false, api.my);
             api.fail({ delay: 2600, lines: [

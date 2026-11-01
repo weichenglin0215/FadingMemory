@@ -1,0 +1,268 @@
+/* ═══════════════════════════════════════
+   reaction_sushi.css — 迴轉壽司（js/reaction_sushi.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「sushi-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 迴轉壽司（.sushi-）═══ */
+.sushi-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.sushi-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+/* 價目表：一直貼在上面 */
+.sushi-legend {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 8px;
+    display: flex;
+    justify-content: space-around;
+    padding: var(--sp-1) var(--sp-2);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    pointer-events: none;
+}
+
+.sushi-legend__i {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.sushi-legend__t {
+    color: var(--c-ink);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-black);
+    white-space: nowrap;
+}
+
+.sushi-dot {
+    width: 26px;
+    height: 26px;
+    box-sizing: border-box;
+    background: var(--ssh-plate-in);
+    border: 7px solid var(--ssh-c-white);
+    border-radius: 50%;
+}
+
+.sushi-goal {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 84px;
+    text-align: center;
+    color: var(--c-ink);
+    font-weight: var(--fw-black);
+    pointer-events: none;
+}
+
+.sushi-goal__t {
+    font-size: var(--fs-lg);
+}
+
+.sushi-goal__n {
+    color: var(--ssh-goal);
+    font-size: var(--fs-xxl);
+    line-height: 1;
+}
+
+/* 輸送帶（銀色）：條紋往左跑 */
+.sushi-belt {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 22px;
+    background: repeating-linear-gradient(90deg, var(--ssh-belt-a) 0, var(--ssh-belt-a) 20px, var(--ssh-belt-b) 20px, var(--ssh-belt-b) 40px);
+    border-top: 3px solid var(--ssh-belt-edge);
+    border-bottom: 3px solid var(--ssh-belt-edge);
+    animation: sushi-belt 0.3s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes sushi-belt {
+    to {
+        background-position: -40px 0;
+    }
+}
+
+/* 盤子走的那一條（整條都收得到點擊，用座標找最近的盤子） */
+.sushi-lane {
+    position: absolute;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    touch-action: none;
+}
+
+.sushi-plate {
+    position: absolute;
+    left: 0;
+    top: 0;
+    box-sizing: border-box;
+    background: var(--ssh-plate-in);
+    border: 9px solid var(--ssh-c-white);
+    border-radius: 50%;
+    box-shadow: var(--shadow-card);
+    pointer-events: none;
+    will-change: transform;
+}
+
+.sushi-pwhite {
+    border-color: var(--ssh-c-white);
+}
+
+.sushi-pred {
+    border-color: var(--ssh-c-red);
+}
+
+.sushi-pgreen {
+    border-color: var(--ssh-c-green);
+}
+
+.sushi-pblue {
+    border-color: var(--ssh-c-blue);
+}
+
+.sushi-pgold {
+    border-color: var(--ssh-c-gold);
+}
+
+.sushi-dot.sushi-pwhite {
+    border-color: var(--ssh-c-white);
+}
+
+/* 壽司：白飯糰上面一片料 */
+.sushi-rice {
+    position: absolute;
+    left: 22%;
+    right: 22%;
+    top: 34%;
+    bottom: 22%;
+    background: var(--ssh-rice);
+    border-radius: 40% 40% 50% 50%;
+}
+
+.sushi-top {
+    position: absolute;
+    left: 16%;
+    right: 16%;
+    top: 22%;
+    height: 34%;
+    border-radius: 50% 50% 40% 40%;
+}
+
+.sushi-top--salmon {
+    background: var(--ssh-salmon);
+}
+
+.sushi-top--egg {
+    background: var(--ssh-egg);
+}
+
+.sushi-top--shrimp {
+    background: var(--ssh-shrimp);
+}
+
+.sushi-plate--mini {
+    box-shadow: none;
+}
+
+.sushi-stack {
+    position: absolute;
+    text-align: center;
+    pointer-events: none;
+}
+
+.sushi-stack__t {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+.sushi-stack__top {
+    position: relative;
+    width: 76px;
+    height: 76px;
+    margin: 0 auto;
+}
+
+.sushi-stack__top .sushi-plate {
+    width: 76px;
+    height: 76px;
+}
+
+.sushi-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.sushi-info--ok {
+    color: var(--c-ok);
+}
+
+.sushi-info--bad {
+    color: var(--c-bad);
+}
+
+.sushi-btn {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.sushi-btn--off {
+    opacity: 0.45;
+}
+
+/* 揭曉：拿的盤子攤開，每盤下面寫價錢與累加的總和 */
+.sushi-spread {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+}
+
+.sushi-spread__none {
+    width: 100%;
+    padding: var(--sp-4) 0;
+    text-align: center;
+    color: var(--c-ink-soft);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+}
+
+.sushi-cell {
+    text-align: center;
+}
+
+.sushi-cell__p {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1.2;
+}
+
+.sushi-cell__s {
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    line-height: 1.2;
+}

@@ -1,0 +1,67 @@
+/* ═══════════════════════════════════════
+   reaction_clearer.css — 越看越清楚（js/reaction_clearer.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「clearer-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 088 越看越清楚（.clearer-）═══ */
+.clearer-note {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    line-height: var(--lh-body);
+}
+
+.clearer-glyph {
+    position: absolute;
+    left: 50%;
+    top: 40px;
+    width: 480px;
+    height: 480px;
+    margin-left: -240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-note);
+    font-size: 360px;
+    font-weight: var(--fw-bold);
+    color: var(--c-ink);
+    line-height: 1;
+}
+
+.clearer-clock {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 500px;
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.clearer-opts {
+    gap: var(--sp-2);
+}
+
+.clearer-opt {
+    font-size: var(--fs-xxl);
+    padding: 0;
+}
+
+.clearer-opt--ok {
+    background: var(--c-green-soft);
+    border-color: var(--c-ok);
+    color: var(--c-ok);
+}
+
+.clearer-opt--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad);
+    color: var(--c-bad);
+}

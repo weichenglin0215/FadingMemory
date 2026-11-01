@@ -1,0 +1,89 @@
+/* ═══════════════════════════════════════
+   reaction_sudokuone.css — 數獨猜一格（js/reaction_sudokuone.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「sudokuone-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 數獨猜一格（.sudokuone-）═══
+   盤面有兩種：4×4（--n4，2×2 的宮）與 9×9（--n9，3×3 的宮）。欄數 --sdk-n 與每格邊長 --sdk-cell 由 --n4／--n9 決定；
+   每個宮的最右一欄（.sudokuone-cE）、最下一排（.sudokuone-rE）畫粗線，隔出每一個宮。 */
+.sudokuone-board {
+    position: absolute;
+    left: 50%;
+    top: 10px;
+    transform: translateX(-50%);
+    display: grid;
+    grid-template-columns: repeat(var(--sdk-n), var(--sdk-cell));
+    grid-auto-rows: var(--sdk-cell);
+    border-left: 4px solid var(--c-ink);
+    border-top: 4px solid var(--c-ink);
+    background: var(--c-card);
+}
+
+/* 4×4（--n4）與 9×9（--n9）：欄數 --sdk-n；每格邊長 --sdk-cell 與數字大小 --sdk-font 由 js 依畫面寬度設定
+   （V1.29：整個盤面的寬度是遊戲畫面的 96%）；下面的數字是沒有 js 時的備用值 */
+.sudokuone-board--n4 {
+    --sdk-n: 4;
+    --sdk-cell: 112px;
+    --sdk-font: 69px;
+}
+
+.sudokuone-board--n9 {
+    --sdk-n: 9;
+    --sdk-cell: 50px;
+    --sdk-font: 36px;
+}
+
+.sudokuone-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid var(--bd-c);
+    border-bottom: 1px solid var(--bd-c);
+    font-size: var(--sdk-font, var(--fs-lg));
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    box-sizing: border-box;
+}
+
+/* 每個宮的最右一欄、最下一排畫粗線 */
+.sudokuone-cE {
+    border-right: 4px solid var(--c-ink);
+}
+
+.sudokuone-rE {
+    border-bottom: 4px solid var(--c-ink);
+}
+
+.sudokuone-cell--peer {
+    background: var(--c-yellow-soft);
+}
+
+.sudokuone-cell--target {
+    background: var(--c-yellow);
+    color: var(--c-ink);
+}
+
+.sudokuone-cell--fill {
+    color: var(--c-blue);
+}
+
+.sudokuone-cell--ok {
+    background: var(--c-ok);
+    color: var(--c-on-accent);
+}
+
+.sudokuone-cell--bad {
+    background: var(--c-bad);
+    color: var(--c-on-accent);
+}
+
+/* 說明文字放在盤面下面（位置 top 由 js 依盤面高度設定） */
+.sudokuone-tip {
+    top: 470px;
+}
+
+.sudokuone-btn {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}

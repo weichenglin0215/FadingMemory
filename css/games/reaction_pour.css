@@ -1,0 +1,193 @@
+/* ═══════════════════════════════════════
+   reaction_pour.css — 倒到八分滿（js/reaction_pour.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「pour-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 倒到八分滿：長按倒水，在水位到達目標線時放開。 */
+/* ═══ 倒到八分滿（.pour-）═══ */
+/* 場地 */
+.pour-field {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    touch-action: none;
+    user-select: none;
+}
+
+/* SVG */
+.pour-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* 水（半透明藍：fill-opacity） */
+.pour-water {
+    fill: var(--c-blue);
+    fill-opacity: 0.55;
+    stroke: none;
+}
+
+/* 水面線；vector-effect:non-scaling-stroke 讓線寬不隨縮放改變 */
+.pour-surface {
+    fill: none;
+    stroke: var(--c-blue);
+    stroke-width: 4px;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+
+/* 玻璃杯外框 */
+.pour-glass {
+    fill: none;
+    stroke: var(--c-ink-soft);
+    stroke-width: 8px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.8;
+}
+
+/* 玻璃杯高光 */
+.pour-glass-shine {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.8);
+    stroke-width: 6px;
+    stroke-linecap: round;
+}
+
+/* 倒下來的水柱 */
+.pour-stream {
+    fill: none;
+    stroke: var(--c-blue);
+    stroke-opacity: 0.75;
+    stroke-linecap: round;
+}
+
+/* 水花 */
+.pour-splash {
+    fill: var(--c-blue);
+    fill-opacity: 0.6;
+}
+
+/* 水壺身 */
+.pour-pitcher__body {
+    fill: var(--c-yellow-soft);
+    stroke: #9A6D0B;
+    stroke-width: 4px;
+    stroke-linejoin: round;
+}
+
+/* 水壺把手 */
+.pour-pitcher__handle {
+    fill: none;
+    stroke: #9A6D0B;
+    stroke-width: 6px;
+    stroke-linecap: round;
+}
+
+/* 水壺高光 */
+.pour-pitcher__shine {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.7);
+    stroke-width: 5px;
+    stroke-linecap: round;
+}
+
+/* 目標線：一開始看不到(opacity:0)，揭曉時淡入 */
+.pour-target {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+/* 顯示目標線 */
+.pour-target--on {
+    opacity: 1;
+}
+
+/* 目標線的虛線 */
+.pour-target__line {
+    stroke: var(--c-ok);
+    stroke-width: 3px;
+    stroke-dasharray: 10 7;
+    vector-effect: non-scaling-stroke;
+}
+
+/* 尺：同樣一開始隱藏 */
+.pour-ruler {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+/* 顯示尺 */
+.pour-ruler--on {
+    opacity: 1;
+}
+
+/* 尺的刻度 */
+.pour-tick {
+    stroke: var(--c-ink);
+    stroke-width: 3px;
+    vector-effect: non-scaling-stroke;
+}
+
+/* 0 刻度（綠色） */
+.pour-tick--zero {
+    stroke: var(--c-ok);
+    stroke-width: 5px;
+}
+
+/* 刻度數字層：animation: ... both 表示動畫開始前與結束後都維持關鍵影格的樣式 */
+.pour-labels {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    animation: pour-fade 0.5s ease both;
+}
+
+/* 淡入動畫 */
+@keyframes pour-fade {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* 刻度數字 */
+.pour-ticklabel {
+    position: absolute;
+    transform: translateY(-50%);
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--c-ink);
+    text-shadow: 0 0 4px var(--c-card), 0 0 4px var(--c-card), 0 0 4px var(--c-card);
+}
+
+/* 0 刻度的數字（綠） */
+.pour-ticklabel--zero {
+    color: var(--c-ok);
+}
+
+/* 放大倍數提示（右上角） */
+.pour-zoomlabel {
+    position: absolute;
+    right: var(--sp-3);
+    top: var(--sp-3);
+    padding: 2px var(--sp-3);
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--c-ink);
+    background: rgba(255, 253, 243, 0.9);
+    border: var(--bd);
+    border-radius: var(--r-md, 12px);
+    pointer-events: none;
+}

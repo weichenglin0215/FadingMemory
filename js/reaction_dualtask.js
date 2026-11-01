@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_dualtask.js — 秒反應・一心二用
+   樣式：css/games/reaction_dualtask.css（這款專屬的 class 一律以「dualtask-」開頭；共用元件在 css/reaction_common.css）
    右邊的圓燈亮綠色就要馬上點；左邊的圓燈會閃紅色，不能點，只要默默數它閃了幾次。
    時間到要從「10 個連續的號碼」裡選出紅燈亮了幾次。
    V1.25（玩家意見）：改成「關卡制」——第 1 關很短（12 秒）、燈號間隔比以前長 150%、紅燈大約 3～5 次，讓玩家先熟悉玩法；
@@ -227,29 +228,29 @@
             var level = (startAt || 1) - 1, passedN = level, dur = DURATION_SEC, need = 0, ok = false;
             var state = 'idle', ev = null, t0 = 0, hit = [], hits = 0, strays = 0, missed = 0, token = 0, answered = null, newRec = false;
             /* 建立畫面元素：標題、時間條、左邊紅燈區（只要數）、右邊綠燈區（點這裡）、回答區 */
-            var head = h('div', { 'class': 'du-head', text: ' ' });
+            var head = h('div', { 'class': 'dualtask-head', text: ' ' });
             var tb = kit.timebar();
-            var greenLamp = h('div', { 'class': 'du-lamp du-lamp--green' });
-            var redLamp = h('div', { 'class': 'du-lamp du-lamp--red' });
-            var gTxt = h('div', { 'class': 'du-cap', text: '綠燈亮就點！' });
-            var gCnt = h('div', { 'class': 'du-cnt', text: ' ' });
-            var rTxt = h('div', { 'class': 'du-cap', text: '紅燈只要數' });
-            var rCnt = h('div', { 'class': 'du-cnt', text: '不要點' });
+            var greenLamp = h('div', { 'class': 'dualtask-lamp dualtask-lamp--green' });
+            var redLamp = h('div', { 'class': 'dualtask-lamp dualtask-lamp--red' });
+            var gTxt = h('div', { 'class': 'dualtask-cap', text: '綠燈亮就點！' });
+            var gCnt = h('div', { 'class': 'dualtask-cnt', text: ' ' });
+            var rTxt = h('div', { 'class': 'dualtask-cap', text: '紅燈只要數' });
+            var rCnt = h('div', { 'class': 'dualtask-cnt', text: '不要點' });
             /* 紅燈在左邊（只用眼睛數），綠燈在右邊（右手好點，手也不會擋住左邊的紅燈） */
-            var count = h('div', { 'class': 'du-side du-side--count' }, [redLamp, rTxt, rCnt]);
-            var tap = h('div', { 'class': 'du-side du-side--tap' }, [greenLamp, gTxt, gCnt]);
-            var stage = h('div', { 'class': 'du-stage' }, [count, tap]);
-            var ask = h('div', { 'class': 'du-ask' });
-            var askQ = h('div', { 'class': 'du-ask__q', text: '紅燈亮了幾次？' });
-            var optsEl = h('div', { 'class': 'du-opts' });
+            var count = h('div', { 'class': 'dualtask-side dualtask-side--count' }, [redLamp, rTxt, rCnt]);
+            var tap = h('div', { 'class': 'dualtask-side dualtask-side--tap' }, [greenLamp, gTxt, gCnt]);
+            var stage = h('div', { 'class': 'dualtask-stage' }, [count, tap]);
+            var ask = h('div', { 'class': 'dualtask-ask' });
+            var askQ = h('div', { 'class': 'dualtask-ask__q', text: '紅燈亮了幾次？' });
+            var optsEl = h('div', { 'class': 'dualtask-opts' });
             ask.appendChild(askQ); ask.appendChild(optsEl);
             [head, tb.el, stage, ask].forEach(function (x) { root.appendChild(x); });
             ask.style.visibility = 'hidden';
             function meta() { var best = Reaction.getBest(ID); ctx.setMeta(kit.meta(['已過 ' + passedN + ' 關', best != null ? '最佳 ' + best : ''])); }
             meta();
 
-            /* 開關燈：加／拿掉 CSS class（亮的樣式在 css/reaction2.css） */
-            function show(lampEl, on) { lampEl.classList[on ? 'add' : 'remove']('du-lamp--on'); }
+            /* 開關燈：加／拿掉 CSS class（亮的樣式在 css/games/reaction_dualtask.css） */
+            function show(lampEl, on) { lampEl.classList[on ? 'add' : 'remove']('dualtask-lamp--on'); }
 
             /* 開始下一關 */
             function startLevel() {
@@ -306,7 +307,7 @@
                 var truth = ev.red.length, opts = makeOptions(truth);
                 optsEl.innerHTML = '';
                 opts.forEach(function (v) {
-                    var b = h('button', { 'class': 'btn du-opt', text: String(v) });
+                    var b = h('button', { 'class': 'btn dualtask-opt', text: String(v) });
                     b.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(v); });
                     optsEl.appendChild(b);
                 });
@@ -324,7 +325,7 @@
                 [].forEach.call(optsEl.children, function (b) {
                     b.disabled = true;
                     var n = Number(b.textContent);
-                    if (n === truth) b.classList.add('du-opt--ok'); else if (n === v) b.classList.add('du-opt--bad');
+                    if (n === truth) b.classList.add('dualtask-opt--ok'); else if (n === v) b.classList.add('dualtask-opt--bad');
                 });
                 if (ok) {
                     passedN = level;

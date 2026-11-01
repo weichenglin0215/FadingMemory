@@ -1,0 +1,205 @@
+/* ═══════════════════════════════════════
+   reaction_change.css — 找錢（js/reaction_change.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「change-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 找錢（.change-）═══ */
+.change-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.change-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+/* 帳單：客人買了多少、給你多少 */
+.change-bill {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 8px;
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    text-align: center;
+    pointer-events: none;
+}
+
+.change-bill__l {
+    color: var(--c-ink);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    line-height: 1.5;
+}
+
+.change-bill__n {
+    color: var(--chg-price);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.change-bill__n--paid {
+    color: var(--chg-paid);
+}
+
+/* 收銀機的綠色液晶顯示 */
+.change-lcd {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 150px;
+    height: 84px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+    padding: 0 var(--sp-3);
+    background: var(--chg-lcd-bg);
+    border: 5px solid var(--chg-case);
+    border-radius: var(--r-md);
+    box-shadow: inset 0 3px 8px var(--chg-lcd-shadow);
+    transition: background 0.15s;
+    pointer-events: none;
+}
+
+.change-lcd__lab {
+    color: var(--chg-lcd);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+.change-lcd__num {
+    color: var(--chg-lcd);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 3px;
+}
+
+.change-lcd__num--empty {
+    opacity: 0.35;
+}
+
+.change-lcd--ok {
+    background: var(--c-ok-light);
+}
+
+.change-lcd--bad {
+    background: var(--c-bad-soft);
+}
+
+.change-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 244px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.change-info--bad {
+    color: var(--c-bad);
+}
+
+/* 抽屜：答對時「叮」一聲彈出來 */
+.change-drawer {
+    position: absolute;
+    right: 18px;
+    top: 128px;
+    padding: 0 var(--sp-3);
+    background: var(--chg-drawer);
+    border: 3px solid var(--chg-case);
+    border-radius: var(--r-sm);
+    color: var(--c-card);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.15s, transform 0.15s;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.change-drawer--open {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.change-key {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+/* 結束：直式減法，借位的欄位標紅 */
+.change-vert {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 300px;
+    padding: var(--sp-3);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    text-align: center;
+}
+
+.change-vert__r {
+    display: flex;
+    justify-content: center;
+    font-family: var(--font-note);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    line-height: 1.35;
+}
+
+.change-vert__s {
+    width: 44px;
+    text-align: center;
+    color: var(--c-ink-soft);
+}
+
+.change-vert__c {
+    width: 40px;
+    text-align: center;
+    color: var(--c-ink);
+}
+
+.change-vert__c--borrow {
+    background: var(--c-bad-soft);
+    color: var(--c-bad);
+    border-radius: var(--r-sm);
+}
+
+.change-vert__r--res .change-vert__c {
+    color: var(--c-ok);
+}
+
+.change-vert__line {
+    height: 4px;
+    margin: 2px 0;
+    background: var(--c-ink);
+    border-radius: 2px;
+}
+
+.change-vert__t {
+    margin-top: var(--sp-2);
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+.change-vert__t--you {
+    color: var(--c-bad);
+}

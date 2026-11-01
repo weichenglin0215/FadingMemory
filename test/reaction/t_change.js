@@ -49,11 +49,11 @@ ok(ST.digits.has(2) && ST.digits.has(3) && ST.digits.has(4) && ST.maxChange > 50
 { const q = { paid: 1000, price: 386, change: 614 }; ok(T.whyText(q, '714') === '找錯了！1000 − 386 ＝ 614，你輸入 714' && T.whyText(q, '') === '時間到！1000 − 386 ＝ 614' && T.whyText(q, null) === '時間到！1000 − 386 ＝ 614', 'whyText（含使用者企劃的 1000−386 例子）'); }
 
 // ── 程式裡的接線 ──
-{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_change.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 4200/.test(src) && /vertical\(q\.paid, q\.price\)/.test(src) && /chg-vert__c--borrow/.test(src) && /pad\.el\.style\.display = 'none'/.test(src), '失敗：直式減法、借位欄位標紅、停格夠久');
+{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_change.js'), css = rd('../../css/games/reaction_change.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 4200/.test(src) && /vertical\(q\.paid, q\.price\)/.test(src) && /change-vert__c--borrow/.test(src) && /pad\.el\.style\.display = 'none'/.test(src), '失敗：直式減法、借位欄位標紅、停格夠久');
   ok(/typed\.length >= q\.digits/.test(src) && /press\('✓'\)|k === '✓'/.test(src) && /k === '⌫'/.test(src) && /api\.timer\(timeMs\(count\)/.test(src), '位數夠了自動判定、有 ⌫ 和 ✓、每題限時');
   ok(/scoreOf/.test(src) && /resume: false/.test(src) && /SOLVE_CAP/.test(src) && /api\.solve = /.test(src) && /api\.wrong = /.test(src), '成績用 scoreOf、solve 有上限');
-  ok(/\.chg-lcd \{[^}]*var\(--chg-lcd-bg\)/.test(css) && /\.chg-vert__c--borrow \{[^}]*var\(--c-bad\)/.test(css) && /\.chg-drawer \{[^}]*var\(--chg-drawer\)/.test(css), '液晶、借位標紅、抽屜用 CSS 變數');
+  ok(/\.change-lcd \{[^}]*var\(--chg-lcd-bg\)/.test(css) && /\.change-vert__c--borrow \{[^}]*var\(--c-bad\)/.test(css) && /\.change-drawer \{[^}]*var\(--chg-drawer\)/.test(css), '液晶、借位標紅、抽屜用 CSS 變數');
   ok(boot.indexOf("'js/reaction_change.js'") > 0 && /借位/.test(G.rule) && /多給零錢/.test(G.rule), 'boot.js 有載入、玩法說明提到借位與多給零錢'); }
 ok(T.rating(1) !== T.rating(5) && T.rating(5) !== T.rating(12) && T.rating(12) !== T.rating(25) && T.rating(25) !== T.rating(35), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

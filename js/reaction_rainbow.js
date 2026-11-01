@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_rainbow.js — 秒反應・七彩陷阱
+   樣式：css/games/reaction_rainbow.css（這款專屬的 class 一律以「rainbow-」開頭；共用元件在 css/reaction_common.css）
    畫面是黑底 2×2 四個緊鄰的正方形，一開始四格全黑。方塊會照順時針的順序
    （左上→右上→右下→左下→左上…）一個接一個換上隨機的七彩顏色，最新換上去的
    那一格有白邊。畫面上緣的提示文字寫著要點哪些顏色——那種顏色的方塊一出現，
@@ -113,8 +114,8 @@
 
     /* mount：遊戲進場點 */
     function mount(root, ctx) {
-        /* 替整個畫面加上黑底 class（樣式在 css/reaction.css 的 .rb-bg） */
-        root.classList.add('rb-bg');
+        /* 替整個畫面加上黑底 class（樣式在 css/games/reaction_rainbow.css 的 .rainbow-bg） */
+        root.classList.add('rainbow-bg');
         /* 規則彈窗元素：「?」重看規則時，換方塊要暫停等它關掉 */
         function ruleOpen() { return Reaction.kit.ruleOpen(); }
 
@@ -153,15 +154,15 @@
             }
             updateMeta();
 
-            var hint = h('div', { 'class': 'rb-top', text: hintTextFor(targets) });
-            var wrap = h('div', { 'class': 'rb-wrap' });
-            var board = h('div', { 'class': 'rb-board' });
+            var hint = h('div', { 'class': 'rainbow-top', text: hintTextFor(targets) });
+            var wrap = h('div', { 'class': 'rainbow-wrap' });
+            var board = h('div', { 'class': 'rainbow-board' });
             wrap.appendChild(board);
             root.appendChild(hint);
             root.appendChild(wrap);
 
             /* 棋盤是正方形：量 wrap 實際可用的寬高，取小的那個（取偶數，兩格剛好平分）
-               當邊長；剩下的空間靠 .rb-wrap 的 flex 置中，留白平均分在兩側／上下。 */
+               當邊長；剩下的空間靠 .rainbow-wrap 的 flex 置中，留白平均分在兩側／上下。 */
             /* 棋盤是正方形：取可用寬高較小者，取偶數讓兩格剛好平分 */
             var side = Math.floor(Math.min(wrap.clientWidth, wrap.clientHeight) / 2) * 2;
             board.style.width = side + 'px';
@@ -172,7 +173,7 @@
             /* 建立 4 個格子，每格綁 pointerdown（一碰就觸發） */
             for (var i = 0; i < 4; i++) {
                 (function (i) {
-                    var el = h('div', { 'class': 'rb-cell' });
+                    var el = h('div', { 'class': 'rainbow-cell' });
                     el.addEventListener('pointerdown', function (e) { e.preventDefault(); tap(i); });
                     board.appendChild(el);
                     cells.push(el);
@@ -200,7 +201,7 @@
                 state = 'play';
                 if (hintObj) { hintObj.remove(); hintObj = null; }
 
-                if (cur >= 0) cells[ORDER[cur]].classList.remove('rb-cell--new');
+                if (cur >= 0) cells[ORDER[cur]].classList.remove('rainbow-cell--new');
                 cur = (cur + 1) % 4;
                 var idx = ORDER[cur], el = cells[idx];
 
@@ -210,19 +211,19 @@
                 var color = isTarget ? pickAny(targets) : pickAny(nonTargets);
                 el.style.background = color.css;
                 el.innerHTML = '';
-                el.classList.remove('rb-cell--hit');
+                el.classList.remove('rainbow-cell--hit');
                 handled[idx] = false;
                 if (isTarget) {
                     pending = { idx: idx };
                     if (hintWanted) hintObj = Reaction.kit.hintOn(root, el, { mode: 'tap', text: '請點擊' + color.name + '色的方塊' });
                 } else if (Math.random() < DECOY_PROB) {
                     var inkPool = targets.map(function (c) { return c.css; }).concat(['#FFFFFF', '#000000']);
-                    var letter = h('span', { 'class': 'rb-letter', text: pickAny(targets).name });
+                    var letter = h('span', { 'class': 'rainbow-letter', text: pickAny(targets).name });
                     letter.style.fontSize = Math.round(cellPx * 0.8) + 'px';
                     letter.style.color = pickAny(inkPool);
                     el.appendChild(letter);
                 }
-                el.classList.add('rb-cell--new');
+                el.classList.add('rainbow-cell--new');
 
                 var ms = intervalNow();
                 /* 節奏剛被打斷之後的第一個目標色方塊：停留時間加長成 1.5 倍（只加長這一個） */
@@ -238,7 +239,7 @@
                 if (ruleOpen()) { timer = setTimeout(function () { countdownAt(el, n, done); }, 150); return; }
                 el.innerHTML = '';
                 if (n <= 0) { done(); return; }
-                var num = h('span', { 'class': 'rb-letter', text: String(n) });
+                var num = h('span', { 'class': 'rainbow-letter', text: String(n) });
                 num.style.fontSize = Math.round(cellPx * 0.8) + 'px';
                 num.style.color = '#FFFFFF';
                 el.appendChild(num);
@@ -252,7 +253,7 @@
                 if (!pending || idx !== pending.idx) { fail('點錯了！那不是要點的方塊', idx, pending ? pending.idx : null); return; }
 
                 /* 成功：方塊維持原本的顏色（不變黑）；外圍變成粗黑框（白框的兩倍粗）當作點對了的回饋，直到下一個方塊出現 */
-                cells[idx].classList.add('rb-cell--hit');
+                cells[idx].classList.add('rainbow-cell--hit');
                 handled[idx] = true;
                 pending = null;
                 hits++;
@@ -283,8 +284,8 @@
                     host: root, cls: 'dlg--result',
                     title: '新規則！',
                     children: [
-                        h('div', { 'class': 'rb-rule-text', text: '除了原本的顏色，現在' + extra.emoji + extra.name + '色的方塊也要點！其他顏色一律不能點，來不及點或點錯，都算失敗。' }),
-                        h('div', { 'class': 'rb-rule-targets', text: targets.map(function (c) { return c.emoji + c.name; }).join('　') })
+                        h('div', { 'class': 'rainbow-rule-text', text: '除了原本的顏色，現在' + extra.emoji + extra.name + '色的方塊也要點！其他顏色一律不能點，來不及點或點錯，都算失敗。' }),
+                        h('div', { 'class': 'rainbow-rule-targets', text: targets.map(function (c) { return c.emoji + c.name; }).join('　') })
                     ],
                     buttons: [{ text: '知道了', kind: 'primary', keep: true, onClick: function () { close(); } }]
                 });
@@ -318,8 +319,8 @@
                 state = 'over';
                 if (window.Sfx) Sfx.play('bad');
                 clearTimeout(timer);
-                if (badIdx != null) cells[badIdx].classList.add('rb-cell--bad');
-                if (missedIdx != null) cells[missedIdx].classList.add('rb-cell--missed');
+                if (badIdx != null) cells[badIdx].classList.add('rainbow-cell--bad');
+                if (missedIdx != null) cells[missedIdx].classList.add('rainbow-cell--missed');
                 var isNew = hits > 0 && Reaction.setBest(ID, hits, function (v, b) { return v > b; });
                 updateMeta();
                 UI.wait(700).then(function () {

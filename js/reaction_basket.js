@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_basket.js — 秒反應・菜籃總價
+   樣式：css/games/reaction_basket.css（這款專屬的 class 一律以「basket-」開頭；共用元件在 css/reaction_common.css）
    上方是「總價」題目，下方 2×3 六格蔬菜水果各有標價；挑幾樣讓價格加起來剛好等於總價，按「結帳」。
    介面不顯示已選合計（要自己心算）。關卡制，2 條命（結帳錯一次扣一條），成績＝通過關數。
    V1.28（玩家意見）：蔬果圖案改用 emoji（ITEMS 28 種）、名稱用咖啡色（不重要）；價格數字改成黑色並放大成 150%（要看的重點）。
@@ -124,17 +125,17 @@
         api.info = q;
         console.log('[菜籃總價] 第 ' + level + ' 關：總價 ' + q.total + '；價格 ' + q.prices.join(',') + '；答案 ' + maskText(q, q.mask) + '（' + q.k + ' 樣）；差 1～3 元的組合 ' + q.near + ' 個；個位數跟答案一樣的其他按鈕 ' + q.sameDigit + ' 個；限時 ' + timeMs(level) + ' ms');
 
-        var big = h('div', { 'class': 'bsk-total', text: '總價 ' + q.total + ' 元' });
-        var tip = h('div', { 'class': 'bsk-tip', text: '挑幾樣，讓價格加起來剛好是總價' });
+        var big = h('div', { 'class': 'basket-total', text: '總價 ' + q.total + ' 元' });
+        var tip = h('div', { 'class': 'basket-tip', text: '挑幾樣，讓價格加起來剛好是總價' });
         var tiles = q.prices.map(function (p, i) {
-            var el = h('div', { 'class': 'bsk-tile' }, [
-                h('div', { 'class': 'bsk-ico', text: q.emojis[i] }), h('div', { 'class': 'bsk-name', text: q.names[i] }), h('div', { 'class': 'bsk-price', text: p + ' 元' })
+            var el = h('div', { 'class': 'basket-tile' }, [
+                h('div', { 'class': 'basket-ico', text: q.emojis[i] }), h('div', { 'class': 'basket-name', text: q.names[i] }), h('div', { 'class': 'basket-price', text: p + ' 元' })
             ]);
             kit.onTap(el, function () { toggle(i); });
             return el;
         });
-        var grid = h('div', { 'class': 'bsk-grid' }, tiles);
-        var info = h('div', { 'class': 'bsk-info' });
+        var grid = h('div', { 'class': 'basket-grid' }, tiles);
+        var info = h('div', { 'class': 'basket-info' });
         var bClear = h('button', { 'class': 'btn btn--line', text: '全部放回' });
         var bPay = h('button', { 'class': 'btn btn--go', text: '結帳' });
         [big, tip, grid, info, h('div', { 'class': 'rx-btnrow' }, [bClear, bPay])].forEach(function (e) { stage.appendChild(e); });
@@ -146,30 +147,30 @@
         }
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
 
-        function paint() { tiles.forEach(function (el, i) { el.classList.toggle('bsk-tile--on', !!(mask & (1 << i))); }); }
+        function paint() { tiles.forEach(function (el, i) { el.classList.toggle('basket-tile--on', !!(mask & (1 << i))); }); }
         function toggle(i) { if (api.over) return; hideHint(); mask ^= 1 << i; Sfx.play('click'); paint(); }
         kit.onTap(bClear, function () { if (api.over) return; mask = 0; Sfx.play('click'); paint(); });
-        function ans() { tiles.forEach(function (el, i) { if (q.mask & (1 << i)) el.classList.add('bsk-tile--ans'); }); }
+        function ans() { tiles.forEach(function (el, i) { if (q.mask & (1 << i)) el.classList.add('basket-tile--ans'); }); }
         function pay() {
             if (api.over) return;
             hideHint();
             var sum = maskSum(q.prices, mask);
             if (mask && sum === q.total) {
-                info.textContent = '剛剛好！' + maskText(q, mask); info.classList.add('bsk-info--ok');
+                info.textContent = '剛剛好！' + maskText(q, mask); info.classList.add('basket-info--ok');
                 api.pass({ delay: 900 });
                 return;
             }
             var lines = ['你選的合計是 ' + sum + ' 元，不是 ' + q.total + ' 元', '正確的組合：' + maskText(q, q.mask), '一共有 ' + q.near + ' 種合計只差 1～3 元的組合，很容易選錯'];
             var left = api.lose({ lines: lines });
             if (left > 0) {
-                info.textContent = '合計 ' + sum + ' 元，不對喔（還有 ' + left + ' 條命）'; info.classList.add('bsk-info--bad');
-                grid.classList.add('bsk-grid--shake'); api.after(450, function () { grid.classList.remove('bsk-grid--shake'); });
+                info.textContent = '合計 ' + sum + ' 元，不對喔（還有 ' + left + ' 條命）'; info.classList.add('basket-info--bad');
+                grid.classList.add('basket-grid--shake'); api.after(450, function () { grid.classList.remove('basket-grid--shake'); });
                 mask = 0; paint();
-            } else { info.textContent = '正確答案：' + maskText(q, q.mask); info.classList.add('bsk-info--bad'); ans(); }
+            } else { info.textContent = '正確答案：' + maskText(q, q.mask); info.classList.add('basket-info--bad'); ans(); }
         }
         kit.onTap(bPay, pay);
         api.timer(timeMs(level), function () {
-            info.textContent = '時間到！正確答案：' + maskText(q, q.mask); info.classList.add('bsk-info--bad'); ans();
+            info.textContent = '時間到！正確答案：' + maskText(q, q.mask); info.classList.add('basket-info--bad'); ans();
             api.fail({ delay: 2000, lines: ['時間到！', '正確的組合：' + maskText(q, q.mask)] });
         });
         api.solve = function () { mask = q.mask; paint(); pay(); };

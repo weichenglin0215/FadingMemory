@@ -1,0 +1,85 @@
+/* ═══════════════════════════════════════
+   reaction_lightsout.css — 關燈（js/reaction_lightsout.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「lightsout-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 關燈：點一格會讓它和上下左右的燈一起切換，目標是把所有燈關掉。 */
+/* ═══ 關燈（.lightsout-）═══ */
+.lightsout-head {
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+/* 提示橫幅 */
+.lightsout-banner {
+    min-height: 1.4em;
+    text-align: center;
+    white-space: nowrap;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 燈盤場地 */
+.lightsout-field {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    touch-action: none;
+}
+
+/* 燈盤 SVG */
+.lightsout-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* 一格燈 */
+.lightsout-cell {
+    cursor: pointer;
+}
+
+/* 燈座底板 */
+.lightsout-tile {
+    fill: var(--c-card-alt);
+    stroke: var(--c-frame);
+    stroke-width: 3;
+}
+
+/* 燈泡（熄滅時是灰褐色） */
+.lightsout-bulb {
+    fill: var(--c-frame);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+}
+
+/* 亮著的燈：底板變淡黃色（.lightsout-cell--on 是修飾 class，JS 在燈亮時加上） */
+.lightsout-cell--on .lightsout-tile {
+    fill: var(--c-yellow-soft);
+    stroke: var(--c-yellow);
+}
+
+/* 亮著的燈泡變黃色 */
+.lightsout-cell--on .lightsout-bulb {
+    fill: var(--c-yellow);
+    stroke: var(--c-orange);
+}
+
+/* 提示：虛線藍框標出建議點的位置 */
+.lightsout-hint {
+    fill: none;
+    stroke: var(--c-blue);
+    stroke-width: 7;
+    stroke-dasharray: 14 9;
+    pointer-events: none;
+}

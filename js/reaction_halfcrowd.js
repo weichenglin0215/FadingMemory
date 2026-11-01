@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_halfcrowd.js — 秒反應・一半的人（原企劃「009 一半的人」的復活版）
+   樣式：css/games/reaction_halfcrowd.css（這款專屬的 class 一律以「halfcrowd-」開頭；共用元件在 css/reaction_common.css）
    畫面上有一堆「人」（各種人像 emoji，見 kit.PERSON_EMOJI；每個人的中心有一個小黑點＝中心點；個數隨關卡慢慢變多，見 N_RANGE），
    人與人之間最多只能重疊 OVERLAP（碰撞範圍仍是一個半徑 R_RANGE 的圓）。
    一條豎線一開始在畫面中央，拖曳下方的橫桿把它移到「左右兩邊人數一樣多」的位置，
@@ -131,7 +132,7 @@
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
-            stageClass: 'hc-stage',
+            stageClass: 'halfcrowd-stage',
             setup: setup
         });
     }
@@ -145,29 +146,29 @@
         api.info = q;
         console.log('[一半的人] 第 ' + level + ' 關：' + q.N + ' 個人、不平均程度 ' + q.skew.toFixed(2) + '；正確範圍 x＝' + q.lo.toFixed(2) + '～' + q.hi.toFixed(2) + '（寬 ' + q.gap.toFixed(2) + 'px，要求至少 ' + q.need.toFixed(1) + 'px）；線從 ' + (W / 2) + ' 開始');
 
-        var info = h('div', { 'class': 'hc-count' }, [
-            h('span', { 'class': 'hc-count__g', text: '綠色 0' }), h('span', { 'class': 'hc-count__vs', text: '：' }), h('span', { 'class': 'hc-count__b', text: '0 藍色' })
+        var info = h('div', { 'class': 'halfcrowd-count' }, [
+            h('span', { 'class': 'halfcrowd-count__g', text: '綠色 0' }), h('span', { 'class': 'halfcrowd-count__vs', text: '：' }), h('span', { 'class': 'halfcrowd-count__b', text: '0 藍色' })
         ]);
         stage.appendChild(info);
-        var svg = kit.svg('svg', { 'class': 'hc-svg', viewBox: '0 0 ' + W + ' ' + AH, width: W, height: AH }, stage);
+        var svg = kit.svg('svg', { 'class': 'halfcrowd-svg', viewBox: '0 0 ' + W + ' ' + AH, width: W, height: AH }, stage);
         svg.style.top = TOP + 'px';
         /* 每個人：底圈（平常看不見，數過之後變綠／藍／紅）＋人像 emoji；中心點全部畫在最上層（見 SHOW_CENTER） */
         var els = q.circles.map(function (c) {
             var g = kit.svg('g', {}, svg);
-            var cir = kit.svg('circle', { cx: c.x.toFixed(2), cy: c.y.toFixed(2), r: c.r, 'class': 'hc-circle' }, g);
-            var face = kit.svg('text', { x: c.x.toFixed(2), y: c.y.toFixed(2), 'class': 'hc-face', 'font-size': (c.r * 2 * FACE_SCALE).toFixed(1), 'text-anchor': 'middle', 'dominant-baseline': 'central' }, g);
+            var cir = kit.svg('circle', { cx: c.x.toFixed(2), cy: c.y.toFixed(2), r: c.r, 'class': 'halfcrowd-circle' }, g);
+            var face = kit.svg('text', { x: c.x.toFixed(2), y: c.y.toFixed(2), 'class': 'halfcrowd-face', 'font-size': (c.r * 2 * FACE_SCALE).toFixed(1), 'text-anchor': 'middle', 'dominant-baseline': 'central' }, g);
             face.textContent = kit.pick(kit.PERSON_EMOJI, api.rand);
             return cir;
         });
-        if (SHOW_CENTER) q.circles.forEach(function (c) { kit.svg('circle', { cx: c.x.toFixed(2), cy: c.y.toFixed(2), r: 2.4, 'class': 'hc-dot' }, svg); });
-        var line = kit.svg('line', { x1: W / 2, x2: W / 2, y1: 0, y2: AH, 'class': 'hc-line' }, svg);
+        if (SHOW_CENTER) q.circles.forEach(function (c) { kit.svg('circle', { cx: c.x.toFixed(2), cy: c.y.toFixed(2), r: 2.4, 'class': 'halfcrowd-dot' }, svg); });
+        var line = kit.svg('line', { x1: W / 2, x2: W / 2, y1: 0, y2: AH, 'class': 'halfcrowd-line' }, svg);
 
         /* 橫桿與微調鈕 */
         var X = W / 2, locked = false, hint = null;
-        var bar = h('div', { 'class': 'hc-bar' }), knob = h('div', { 'class': 'hc-knob' });
-        bar.appendChild(h('div', { 'class': 'hc-track' })); bar.appendChild(knob);
-        var bL = h('button', { 'class': 'btn btn--line hc-nudge hc-nudge--l', text: '◀' }), bR = h('button', { 'class': 'btn btn--line hc-nudge hc-nudge--r', text: '▶' });
-        var okBtn = h('button', { 'class': 'btn btn--go hc-ok', text: '計算數量' });
+        var bar = h('div', { 'class': 'halfcrowd-bar' }), knob = h('div', { 'class': 'halfcrowd-knob' });
+        bar.appendChild(h('div', { 'class': 'halfcrowd-track' })); bar.appendChild(knob);
+        var bL = h('button', { 'class': 'btn btn--line halfcrowd-nudge halfcrowd-nudge--l', text: '◀' }), bR = h('button', { 'class': 'btn btn--line halfcrowd-nudge halfcrowd-nudge--r', text: '▶' });
+        var okBtn = h('button', { 'class': 'btn btn--go halfcrowd-ok', text: '計算數量' });
         [bar, bL, bR, okBtn].forEach(function (e) { stage.appendChild(e); });
         var KR = 22;
         function paint() {
@@ -208,7 +209,7 @@
             var x0 = KR + (W - 2 * KR) * X / W, x1 = KR + (W - 2 * KR) * mid / W;
             hint = kit.fingerHint(stage, { mode: 'drag', x: x0, y: y, dx: x1 - x0, dy: 0, delay: 400, text: '請往左右拖曳，讓兩邊一樣多' });
         }
-        var msg = h('div', { 'class': 'hc-msg' });
+        var msg = h('div', { 'class': 'halfcrowd-msg' });
         stage.appendChild(msg);
 
         /* 計算數量：左邊依序變綠、右邊依序變紅，上方同步顯示數量 */
@@ -222,14 +223,14 @@
             /* 從離豎線最近的開始數：左邊由右往左、右邊由左往右 */
             left.sort(function (a, b) { return b.x - a.x; });
             right.sort(function (a, b) { return a.x - b.x; });
-            var gEl = info.querySelector('.hc-count__g'), bEl = info.querySelector('.hc-count__b'), exEl = h('span', { 'class': 'hc-count__r', text: '' });
+            var gEl = info.querySelector('.halfcrowd-count__g'), bEl = info.querySelector('.halfcrowd-count__b'), exEl = h('span', { 'class': 'halfcrowd-count__r', text: '' });
             var plan = countPlan(left.length, right.length), shownP = 0, shownX = 0;
             if (plan.extra) { if (plan.side < 0) info.insertBefore(exEl, gEl); else info.appendChild(exEl); }
             function show(e) {
                 var st = planAt(plan, e);
-                for (; shownP < st.pairs; shownP++) { els[left[shownP].i].classList.add('hc-circle--g'); els[right[shownP].i].classList.add('hc-circle--b'); }
+                for (; shownP < st.pairs; shownP++) { els[left[shownP].i].classList.add('halfcrowd-circle--g'); els[right[shownP].i].classList.add('halfcrowd-circle--b'); }
                 var big = plan.side < 0 ? left : right;
-                for (; shownX < st.extra; shownX++) els[big[plan.pairs + shownX].i].classList.add('hc-circle--r');
+                for (; shownX < st.extra; shownX++) els[big[plan.pairs + shownX].i].classList.add('halfcrowd-circle--r');
                 var nl = st.pairs + (plan.side < 0 ? st.extra : 0), nr = st.pairs + (plan.side > 0 ? st.extra : 0);
                 gEl.textContent = '綠色 ' + st.pairs; bEl.textContent = st.pairs + ' 藍色';
                 exEl.textContent = st.extra ? (plan.side < 0 ? st.extra + ' 紅色 ＋' : '＋ ' + st.extra + ' 紅色') : '';
@@ -239,14 +240,14 @@
                 show(1);
                 var ok = left.length === right.length;
                 if (ok) {
-                    Sfx.play('ok'); info.classList.add('hc-count--ok');
-                    msg.textContent = '一樣多！左右各 ' + left.length + ' 個'; msg.classList.add('hc-msg--ok');
+                    Sfx.play('ok'); info.classList.add('halfcrowd-count--ok');
+                    msg.textContent = '一樣多！左右各 ' + left.length + ' 個'; msg.classList.add('halfcrowd-msg--ok');
                     api.pass({ gain: 1, delay: 1100 });
                 } else {
-                    Sfx.play('bad'); info.classList.add('hc-count--bad');
-                    msg.textContent = '左邊 ' + left.length + ' 個、右邊 ' + right.length + ' 個，不一樣多（多的 ' + plan.extra + ' 個是紅色）'; msg.classList.add('hc-msg--bad');
+                    Sfx.play('bad'); info.classList.add('halfcrowd-count--bad');
+                    msg.textContent = '左邊 ' + left.length + ' 個、右邊 ' + right.length + ' 個，不一樣多（多的 ' + plan.extra + ' 個是紅色）'; msg.classList.add('halfcrowd-msg--bad');
                     /* 標出正確的位置：綠色虛線 */
-                    var ok2 = kit.svg('line', { x1: ((q.lo + q.hi) / 2).toFixed(2), x2: ((q.lo + q.hi) / 2).toFixed(2), y1: 0, y2: AH, 'class': 'hc-line hc-line--ans' }, svg);
+                    var ok2 = kit.svg('line', { x1: ((q.lo + q.hi) / 2).toFixed(2), x2: ((q.lo + q.hi) / 2).toFixed(2), y1: 0, y2: AH, 'class': 'halfcrowd-line halfcrowd-line--ans' }, svg);
                     api.fail({ delay: 1800, lines: ['這一關有 ' + q.N + ' 個人', '你的線左邊 ' + left.length + ' 個、右邊 ' + right.length + ' 個', '剛好一半的位置在綠色虛線附近（x ' + q.lo.toFixed(4) + '～' + q.hi.toFixed(4) + '）'] });
                 }
             });

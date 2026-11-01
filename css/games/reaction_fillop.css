@@ -1,0 +1,83 @@
+/* ═══════════════════════════════════════
+   reaction_fillop.css — 挑加減乘除（js/reaction_fillop.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「fillop-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 挑加減乘除（.fillop-）═══ */
+.fillop-row {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 66px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+}
+
+.fillop-num,
+.fillop-fixed {
+    font-size: var(--fs-xxxl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.fillop-fixed {
+    color: var(--c-blue);
+}
+
+.fillop-col {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.fillop-op {
+    width: 72px;
+    height: 72px;
+    border-radius: var(--r-sm);
+    background: var(--c-card);
+    border: 3px solid var(--c-blue);
+    font-family: var(--font-ui);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    line-height: 1.0;
+    color: var(--c-blue);
+    cursor: pointer;
+}
+
+.fillop-op:active {
+    transform: scale(0.94);
+}
+
+.fillop-op--on {
+    background: var(--c-blue);
+    color: var(--c-on-accent);
+}
+
+.fillop-op--right {
+    background: var(--c-ok);
+    border-color: var(--c-ok);
+    color: var(--c-on-accent);
+}
+
+.fillop-op--wrong {
+    background: var(--c-bad);
+    border-color: var(--c-bad);
+    color: var(--c-on-accent);
+}
+
+.fillop-target {
+    font-size: var(--fs-xxxl);
+    top: 420px;
+}
+
+.fillop-live {
+    top: 530px;
+}
+
+.fillop-ok--off {
+    opacity: 0.45;
+}

@@ -62,15 +62,15 @@ ok(!T.isOut(0, 0) && !T.isOut(T.PLATE_R, 0) && T.isOut(T.PLATE_R + 1, 0) && T.is
 ok(T.LOOKS.every(t => T.DIFF[t] && T.NAME[t]) && T.EASY.every(t => T.DIFF[t] && T.NAME[t]) && T.NAME.red === '紅豆', '每種雜物都有名稱與差異說明');
 
 // ── 程式裡的接線 ──
-{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_beans.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js'), theme = rd('../../css/theme.css');
+{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_beans.js'), css = rd('../../css/games/reaction_beans.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js'), theme = rd('../../css/theme.css');
   ok(/function throwOut\(/.test(src) && /isOut\(px - pcx, py - pcy\)/.test(src) && /timer\.cut\(PENALTY_S \* 1000\)/.test(src) && /timer = api\.timer\(timeMs\(level\), timeUp\)/.test(src), '拖出盤緣就判定；拖到紅豆用 timer.cut 扣時間；每關各自的限時');
   ok(/api\.pass\(\{ delay: NEXT_MS \}\)/.test(src) && /left === 0/.test(src) && !/scoreOf/.test(src) && !/resume: false/.test(src), '雜物挑光就過關；成績＝通過關數（用 kit.run 的預設，也有從前 5 關繼續）');
-  ok(/api\.fail\(\{ delay: END_MS/.test(src) && /bns-ring/.test(src) && /showCompare\(showTypes\)/.test(src) && /bns-cmp/.test(src), '時間到：剩下的雜物畫紅圈、紅豆和很像的雜物並排放大、停格夠久');
+  ok(/api\.fail\(\{ delay: END_MS/.test(src) && /beans-ring/.test(src) && /showCompare\(showTypes\)/.test(src) && /beans-cmp/.test(src), '時間到：剩下的雜物畫紅圈、紅豆和很像的雜物並排放大、停格夠久');
   ok(/pointerdown/.test(src) && /pointermove/.test(src) && /pointerup/.test(src) && /pointercancel/.test(src) && /api\.solve = /.test(src) && /api\.wrong = /.test(src) && !/bowl|inBowl/.test(src), '拖曳事件、驗證用的 solve／wrong，不再有碗');
   ok(/UI\.store\.set\(Reaction\.bestKey\(ID\), null\)/.test(src) && /\.v138/.test(src), '舊的最佳紀錄（挑出幾顆）第一次進來清掉');
-  ok(/\.bns-field \{[^}]*isolation: isolate/.test(css) && /\.bns-stage \{[^}]*overflow: visible/.test(css), '揭曉畫面的 z-index 關在遊戲區裡（結算彈窗在上面）；盤子比遊戲區寬一點，不被切掉');
-  ok(/\.bns-plate--hit \{[^}]*var\(--c-bad-light\)/.test(css) && !/bns-bowl/.test(css) && !/bns-bowl/.test(theme), '拖到紅豆盤緣閃紅；碗的樣式已拿掉');
-  ok(/fill: var\(--bns-red\)/.test(css) && /\.bns-redstone \{[^}]*var\(--bns-redstone\)/.test(css) && /\.bns-plate \{[^}]*var\(--bns-wood\)/.test(css) && /\.bns-ring \{[^}]*var\(--c-bad-light\)/.test(css), '豆子、木盤、紅圈用 CSS 變數');
+  ok(/\.beans-field \{[^}]*isolation: isolate/.test(css) && /\.beans-stage \{[^}]*overflow: visible/.test(css), '揭曉畫面的 z-index 關在遊戲區裡（結算彈窗在上面）；盤子比遊戲區寬一點，不被切掉');
+  ok(/\.beans-plate--hit \{[^}]*var\(--c-bad-light\)/.test(css) && !/beans-bowl/.test(css) && !/beans-bowl/.test(theme), '拖到紅豆盤緣閃紅；碗的樣式已拿掉');
+  ok(/fill: var\(--bns-red\)/.test(css) && /\.beans-redstone \{[^}]*var\(--bns-redstone\)/.test(css) && /\.beans-plate \{[^}]*var\(--bns-wood\)/.test(css) && /\.beans-ring \{[^}]*var\(--c-bad-light\)/.test(css), '豆子、木盤、紅圈用 CSS 變數');
   // 紅豆和「很像」的雜物，顏色不能完全一樣：紅色小石頭、赤小豆、花豆跟紅豆至少有一項明顯不同（色相相近但明度或形狀不同）
   const hsl = n => { const m = new RegExp('--bns-' + n + ': hsl\\((\\d+), (\\d+)%, (\\d+)%').exec(theme); return [+m[1], +m[2], +m[3]]; };
   const red = hsl('red'), rs = hsl('redstone'), pt = hsl('pinto'), az = hsl('adz'), mg = hsl('mung'), hd = (x, y) => Math.min(Math.abs(x - y), 360 - Math.abs(x - y));

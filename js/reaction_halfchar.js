@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_halfchar.js — 秒反應・半邊字
+   樣式：css/games/reaction_halfchar.css（這款專屬的 class 一律以「halfchar-」開頭；共用元件在 css/reaction_common.css）
    畫面上的字被遮住了一半，從下面四個字裡選出最可能的那一個。
    ───────────────────────────────────────────────────────────────────
    · 題庫 ENTRIES 是**手工審校**的，不做自動產生：每題 { a:答案, side:差異部件在哪一側, d:[3 個干擾字] }。
@@ -241,14 +242,14 @@
             /* q 目前題號；right 答對數；lives 機會；state 目前階段；qid 每題 +1；recent 最近出過的題；E 這題的題庫資料；O 這題的選項 */
             var q = (startAt || 1) - 1, right = q, lives = LIVES, newRec = false, state = 'idle', qid = 0, recent = [], cur = null, E = null, O = null;
             /* 建立畫面元素：標題、提示、大字框、時間條、四個選項、解說 */
-            var head = h('div', { 'class': 'hc-head' });
-            var prompt = h('div', { 'class': 'hc-prompt' });
-            var charBox = h('div', { 'class': 'hc-box' });
-            var big = h('div', { 'class': 'hc-char' });
+            var head = h('div', { 'class': 'halfchar-head' });
+            var prompt = h('div', { 'class': 'halfchar-prompt' });
+            var charBox = h('div', { 'class': 'halfchar-box' });
+            var big = h('div', { 'class': 'halfchar-char' });
             charBox.appendChild(big);
             var tb = kit.timebar();
-            var opts = h('div', { 'class': 'hc-opts' });
-            var tip = h('div', { 'class': 'hc-tip' });
+            var opts = h('div', { 'class': 'halfchar-opts' });
+            var tip = h('div', { 'class': 'halfchar-tip' });
             [head, prompt, charBox, tb.el, opts, tip].forEach(function (n) { root.appendChild(n); });
 
             function meta() { ctx.setMeta(kit.meta(['答對 ' + right, '機會 ' + lives])); }
@@ -272,13 +273,13 @@
                 /* 用 CSS clip-path 把大字遮住一部分（webkitClipPath 是舊版 Safari 的寫法） */
                 big.style.clipPath = clipFor(exposedSide(E), reg);
                 big.style.webkitClipPath = big.style.clipPath;
-                charBox.className = 'hc-box';
+                charBox.className = 'halfchar-box';
                 opts.innerHTML = '';
                 /* 選項的欄數：4 個以內 2 欄（2×2），5～6 個 3 欄（3×2），兩種都是 2 列，所以占的高度一樣 */
                 opts.style.gridTemplateColumns = 'repeat(' + (O.options.length <= 4 ? 2 : 3) + ', 1fr)';
                 /* 建立四顆選項按鈕 */
                 O.options.forEach(function (c, i) {
-                    var b = h('button', { 'class': 'hc-opt', text: c });
+                    var b = h('button', { 'class': 'halfchar-opt', text: c });
                     b.addEventListener('pointerdown', function (e) { e.preventDefault(); judge(i); });
                     opts.appendChild(b);
                 });
@@ -309,8 +310,8 @@
                 big.style.transform = '';
                 var ok = i === O.answer;
                 /* 正確選項標綠，選錯的標橘 */
-                [].forEach.call(opts.children, function (b, k) { if (k === O.answer) b.classList.add('hc-opt--ok'); else if (k === i) b.classList.add('hc-opt--bad'); });
-                charBox.classList.add(ok ? 'hc-box--ok' : 'hc-box--bad');
+                [].forEach.call(opts.children, function (b, k) { if (k === O.answer) b.classList.add('halfchar-opt--ok'); else if (k === i) b.classList.add('halfchar-opt--bad'); });
+                charBox.classList.add(ok ? 'halfchar-box--ok' : 'halfchar-box--bad');
                 /* 解說：「大家都有 X，關鍵是 Y，合起來就是 Z」 */
                 tip.textContent = '大家都有「' + visiblePart(E) + '」，關鍵是「' + hiddenPart(E) + '」，合起來就是「' + E.a + '」';
                 /* 答對 */

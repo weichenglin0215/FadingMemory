@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_discount.js — 秒反應・打了幾折（企劃 403）
+   樣式：css/games/reaction_discount.css（這款專屬的 class 一律以「discount-」開頭；共用元件在 css/reaction_common.css）
    百貨公司週年慶的吊牌：「原價 800 元，**特價 560 元**」。**這是打幾折？**點下面的折數按鈕。答錯就結束，成績＝連續答對幾題。
    ───────────────────────────────────────────────────────────────────
    · 台灣的「折」：**打 7 折＝付原價的 70%**（不是減 30%）。折數 r 換成「付幾 %」：pctOf(r)＝ r < 10 ? r × 10 : r
@@ -73,7 +74,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 10, stageClass: 'dsc-stage', resume: false,
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 10, stageClass: 'discount-stage', resume: false,
             head: function () { return '打了幾折'; },
             info: function (S) { return '答對 ' + S.score + ' 題'; },
             scoreOf: function (S) { return S.score; },
@@ -91,22 +92,22 @@
         S.score = 0; api.setInfo('答對 0 題');
         console.log('[打了幾折] 開始：每題限時 ' + timeMs(0) + ' → ' + timeMs(RAMP_Q) + ' 毫秒；折數池 ' + poolFor(0).join(',') + ' → ' + poolFor(RAMP_Q).join(','));
 
-        var field = h('div', { 'class': 'dsc-field' });
+        var field = h('div', { 'class': 'discount-field' });
         stage.appendChild(field);
-        var tag = h('div', { 'class': 'dsc-tag' }); field.appendChild(tag);
-        var info = h('div', { 'class': 'qz-note dsc-info', text: '' }); field.appendChild(info);
+        var tag = h('div', { 'class': 'discount-tag' }); field.appendChild(tag);
+        var info = h('div', { 'class': 'qz-note discount-info', text: '' }); field.appendChild(info);
 
         function ask() {
             if (api.over) return;
-            q = makeQuestion(count, api.rand); phase = 'ask'; picked = null; info.textContent = ''; info.className = 'qz-note dsc-info';
+            q = makeQuestion(count, api.rand); phase = 'ask'; picked = null; info.textContent = ''; info.className = 'qz-note discount-info';
             tag.innerHTML = '';
-            tag.appendChild(h('div', { 'class': 'dsc-tag__sale', text: '特價' }));
-            tag.appendChild(h('div', { 'class': 'dsc-tag__orig' })); tag.lastChild.appendChild(document.createTextNode('原價 ')); tag.lastChild.appendChild(h('s', { text: q.orig + ' 元' }));
-            var sp = h('div', { 'class': 'dsc-tag__price' }); sp.appendChild(h('span', { 'class': 'dsc-tag__n', text: String(q.sale) })); sp.appendChild(document.createTextNode(' 元')); tag.appendChild(sp);
-            tag.appendChild(h('div', { 'class': 'dsc-tag__q', text: '這是打幾折？' }));
+            tag.appendChild(h('div', { 'class': 'discount-tag__sale', text: '特價' }));
+            tag.appendChild(h('div', { 'class': 'discount-tag__orig' })); tag.lastChild.appendChild(document.createTextNode('原價 ')); tag.lastChild.appendChild(h('s', { text: q.orig + ' 元' }));
+            var sp = h('div', { 'class': 'discount-tag__price' }); sp.appendChild(h('span', { 'class': 'discount-tag__n', text: String(q.sale) })); sp.appendChild(document.createTextNode(' 元')); tag.appendChild(sp);
+            tag.appendChild(h('div', { 'class': 'discount-tag__q', text: '這是打幾折？' }));
             if (grid) grid.el.remove();
             var btns = q.buttons, cols = btns.length > 9 ? 4 : 3;
-            grid = kit.btnGrid(field, btns.map(function (r) { return { text: labelOf(r), kind: 'line', cls: 'dsc-btn', onTap: function () { answer(r); } }; }), { cols: cols, h: btns.length > 9 ? 76 : 96, gap: 8, bottom: 8 });
+            grid = kit.btnGrid(field, btns.map(function (r) { return { text: labelOf(r), kind: 'line', cls: 'discount-btn', onTap: function () { answer(r); } }; }), { cols: cols, h: btns.length > 9 ? 76 : 96, gap: 8, bottom: 8 });
             api.stopTimer(); api.timer(q.time, function () { fail(null); });
             if (count === 0 && kit.once('discount.hint')) kit.hintOn(stage, grid.btns[q.buttons.indexOf(q.r)], { mode: 'tap', delay: 900, text: '7 折＝付 70%' });
         }
@@ -116,19 +117,19 @@
             phase = 'judge'; api.stopTimer(); picked = r;
             var k = q.buttons.indexOf(r);
             if (r === q.r) {
-                grid.btns[k].classList.add('dsc-btn--ok'); count++; S.score = count; api.setInfo('答對 ' + count + ' 題'); Sfx.play('ok');
-                info.textContent = formula(q); info.classList.add('dsc-info--ok');
+                grid.btns[k].classList.add('discount-btn--ok'); count++; S.score = count; api.setInfo('答對 ' + count + ' 題'); Sfx.play('ok');
+                info.textContent = formula(q); info.classList.add('discount-info--ok');
                 api.after(520, ask); return;
             }
-            grid.btns[k].classList.add('dsc-btn--bad'); fail(r);
+            grid.btns[k].classList.add('discount-btn--bad'); fail(r);
         }
         /* 結束：寫出算式；選的是互補的折數就特別說明 */
         function fail(r) {
             if (api.over || phase === 'end') return;
             phase = 'end'; api.stopTimer();
-            var k = q.buttons.indexOf(q.r); grid.btns[k].classList.add('dsc-btn--ok');
+            var k = q.buttons.indexOf(q.r); grid.btns[k].classList.add('discount-btn--ok');
             var why = whyText(q, r);
-            info.textContent = why; info.classList.add('dsc-info--bad');
+            info.textContent = why; info.classList.add('discount-info--bad');
             kit.flash(stage, false, api.my);
             api.fail({ delay: 4200, lines: [why, '特價 ÷ 原價 ＝ 付幾成：' + q.sale + ' ÷ ' + q.orig + ' ＝ ' + (q.sale / q.orig), '打 ' + q.label + '＝付原價的 ' + q.pct + '%（不是減 ' + q.pct + '%）'] });
         }

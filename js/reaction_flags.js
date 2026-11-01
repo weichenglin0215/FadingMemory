@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_flags.js — 秒反應・舉旗子（企劃 358，依使用者的修改：左右半邊按住＝舉起）
+   樣式：css/games/reaction_flags.css（這款專屬的 class 一律以「flags-」開頭；共用元件在 css/reaction_common.css）
    你兩手各拿一面旗子：**左手紅旗、右手白旗**。口令一句一句出現：「紅旗舉起來」「白旗不要放下」「紅旗不舉」……
    **畫面的左半邊用左手拇指按住＝舉紅旗、放開＝放下紅旗；右半邊用右手拇指按住＝舉白旗**（左右拇指可以一起用）。
    旗子的狀態要隨時跟口令一致；口令說「不要」就保持不動（這時動了就錯）。做錯就結束。成績＝答對幾句口令。
@@ -85,7 +86,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 12, stageClass: 'flg-stage', resume: false,
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 12, stageClass: 'flags-stage', resume: false,
             head: function () { return '舉旗子'; },
             info: function (S) { return '答對 ' + S.score + ' 句'; },
             scoreOf: function (S) { return S.score; },
@@ -98,15 +99,15 @@
 
     /* 小人與兩面旗子（SVG）：旗桿從手上伸出去，旗面跟著舉起／放下（用 CSS 的 transform 轉動旗桿） */
     function drawPerson(parent, W) {
-        var svg = kit.svg('svg', { 'class': 'flg-svg', viewBox: '0 0 300 220', width: Math.min(W - 40, 360), height: Math.round(Math.min(W - 40, 360) * 220 / 300) }, parent);
-        kit.svg('circle', { 'class': 'flg-head', cx: 150, cy: 52, r: 30 }, svg);
-        kit.svg('path', { 'class': 'flg-body', d: 'M120 90 L180 90 L192 200 L108 200 Z' }, svg);
+        var svg = kit.svg('svg', { 'class': 'flags-svg', viewBox: '0 0 300 220', width: Math.min(W - 40, 360), height: Math.round(Math.min(W - 40, 360) * 220 / 300) }, parent);
+        kit.svg('circle', { 'class': 'flags-head', cx: 150, cy: 52, r: 30 }, svg);
+        kit.svg('path', { 'class': 'flags-body', d: 'M120 90 L180 90 L192 200 L108 200 Z' }, svg);
         var poles = {};
         ['L', 'R'].forEach(function (f) {
-            var x = f === 'L' ? 112 : 188, g = kit.svg('g', { 'class': 'flg-pole flg-pole--' + f, transform: 'translate(' + x + ',110)' }, svg);
-            var arm = kit.svg('g', { 'class': 'flg-arm' }, g);                       /* 以手為轉軸：放下時往下斜、舉起時往上斜 */
-            kit.svg('line', { 'class': 'flg-stick', x1: 0, y1: 0, x2: 0, y2: -92 }, arm);
-            kit.svg('path', { 'class': 'flg-cloth flg-cloth--' + f, d: f === 'L' ? 'M0,-92 L-62,-84 L-56,-66 L-62,-48 L0,-56 Z' : 'M0,-92 L62,-84 L56,-66 L62,-48 L0,-56 Z' }, arm);
+            var x = f === 'L' ? 112 : 188, g = kit.svg('g', { 'class': 'flags-pole flags-pole--' + f, transform: 'translate(' + x + ',110)' }, svg);
+            var arm = kit.svg('g', { 'class': 'flags-arm' }, g);                       /* 以手為轉軸：放下時往下斜、舉起時往上斜 */
+            kit.svg('line', { 'class': 'flags-stick', x1: 0, y1: 0, x2: 0, y2: -92 }, arm);
+            kit.svg('path', { 'class': 'flags-cloth flags-cloth--' + f, d: f === 'L' ? 'M0,-92 L-62,-84 L-56,-66 L-62,-48 L0,-56 Z' : 'M0,-92 L62,-84 L56,-66 L62,-48 L0,-56 Z' }, arm);
             poles[f] = arm;
         });
         return { svg: svg, poles: poles };
@@ -120,22 +121,22 @@
         S.score = 0; api.setInfo('答對 0 句');
         console.log('[舉旗子] 開始：口令間隔 ' + intervalFor(0) + ' 毫秒');
 
-        var field = h('div', { 'class': 'flg-field' });
+        var field = h('div', { 'class': 'flags-field' });
         stage.appendChild(field);
         /* 左右半邊的按壓區（整個畫面分兩半）：左＝紅旗、右＝白旗 */
-        var padL = h('div', { 'class': 'flg-pad flg-pad--L' }, [h('div', { 'class': 'flg-pad__t', text: '左手　紅旗' })]), padR = h('div', { 'class': 'flg-pad flg-pad--R' }, [h('div', { 'class': 'flg-pad__t', text: '右手　白旗' })]);
+        var padL = h('div', { 'class': 'flags-pad flags-pad--L' }, [h('div', { 'class': 'flags-pad__t', text: '左手　紅旗' })]), padR = h('div', { 'class': 'flags-pad flags-pad--R' }, [h('div', { 'class': 'flags-pad__t', text: '右手　白旗' })]);
         field.appendChild(padL); field.appendChild(padR);
         /* 口令框：上面是口令文字，下緣是藍色的寬限時間橫條（V1.38.0）：口令一出現就從滿縮到空，縮完＝寬限結束 */
-        var bubbleText = h('span', { 'class': 'flg-cmd__t', text: '準備…' });
-        var graceFill = h('div', { 'class': 'flg-grace__fill' });
-        var bubble = h('div', { 'class': 'flg-cmd' }, [bubbleText, h('div', { 'class': 'flg-grace' }, [graceFill])]); field.appendChild(bubble);
+        var bubbleText = h('span', { 'class': 'flags-cmd__t', text: '準備…' });
+        var graceFill = h('div', { 'class': 'flags-grace__fill' });
+        var bubble = h('div', { 'class': 'flags-cmd' }, [bubbleText, h('div', { 'class': 'flags-grace' }, [graceFill])]); field.appendChild(bubble);
         var person = drawPerson(field, W); person.svg.style.cssText = 'left:' + Math.round((W - person.svg.getAttribute('width')) / 2) + 'px;top:150px;';
-        var info = h('div', { 'class': 'qz-note flg-info', text: '' }); field.appendChild(info);
+        var info = h('div', { 'class': 'qz-note flags-info', text: '' }); field.appendChild(info);
         if (kit.once('flags.hint')) kit.hintOn(stage, null, { mode: 'hold', x: W * 0.25, y: H * 0.78, delay: 800, labelAbove: true, text: '按住＝舉旗，放開＝放下' });
 
         function paintFlags() {
             ['L', 'R'].forEach(function (f) { person.poles[f].style.transform = 'rotate(' + (actual[f] ? (f === 'L' ? -28 : 28) : (f === 'L' ? -150 : 150)) + 'deg)'; });
-            padL.classList.toggle('flg-pad--down', actual.L); padR.classList.toggle('flg-pad--down', actual.R);
+            padL.classList.toggle('flags-pad--down', actual.L); padR.classList.toggle('flags-pad--down', actual.R);
         }
         paintFlags();
         /* 按住／放開：記錄每個手指在哪半邊，這半邊還有手指按著就是舉著 */
@@ -165,8 +166,8 @@
             graceEnd = performance.now() + gr;
             /* 換新口令的表演（要快）：口令框從左右兩邊交替滑進來＋閃一下黃色底＋「啵」一聲；寬限條重新從滿開始縮 */
             bubbleText.textContent = cmd.text;
-            bubble.classList.remove('flg-cmd--inL', 'flg-cmd--inR'); void bubble.offsetWidth; bubble.classList.add(cmdNo % 2 ? 'flg-cmd--inL' : 'flg-cmd--inR');
-            graceFill.classList.remove('flg-grace__fill--run'); void graceFill.offsetWidth; graceFill.style.animationDuration = gr + 'ms'; graceFill.style.animationPlayState = 'running'; graceFill.classList.add('flg-grace__fill--run');
+            bubble.classList.remove('flags-cmd--inL', 'flags-cmd--inR'); void bubble.offsetWidth; bubble.classList.add(cmdNo % 2 ? 'flags-cmd--inL' : 'flags-cmd--inR');
+            graceFill.classList.remove('flags-grace__fill--run'); void graceFill.offsetWidth; graceFill.style.animationDuration = gr + 'ms'; graceFill.style.animationPlayState = 'running'; graceFill.classList.add('flags-grace__fill--run');
             Sfx.play('pop');
             api.after(gr, function () {                                                               /* ② 寬限結束：兩面旗都要符合 */
                 if (over || myGen !== gen) return;
@@ -178,7 +179,7 @@
         api.after(LEAD_MS, issue);
         function finish(kind, f) {
             if (over) return;
-            over = true; gen++; bubble.classList.add('flg-cmd--bad'); graceFill.style.animationPlayState = 'paused';
+            over = true; gen++; bubble.classList.add('flags-cmd--bad'); graceFill.style.animationPlayState = 'paused';
             var want = describeState(req), mine = describeState(actual);
             var why = kind === 'moved' ? (cmd && cmd.kind === 'keep' && performance.now() < graceEnd ? '口令是「' + cmd.text + '」，卻動了' + NAMES[f] + '！' : NAMES[f] + '動了，跟口令不一致！') : '寬限時間到了，' + NAMES[f] + '的狀態不對！';
             info.textContent = why;
@@ -187,10 +188,10 @@
             api.fail({ delay: 3600, lines: [why, '口令「' + (cmd ? cmd.text : '') + '」→ 該有：' + want, '你的旗子：' + mine] });
         }
         function showCompare(want, mine, badFlag) {
-            var box = h('div', { 'class': 'flg-cmp' });
+            var box = h('div', { 'class': 'flags-cmp' });
             [['該有的', req, false], ['你的', actual, true]].forEach(function (row) {
-                var col = h('div', { 'class': 'flg-cmp__col' }, [h('div', { 'class': 'flg-cmp__t', text: row[0] })]);
-                ['L', 'R'].forEach(function (f) { var up = row[1][f], bad = row[2] && actual[f] !== req[f]; col.appendChild(h('div', { 'class': 'flg-cmp__flag flg-cmp__flag--' + f + (bad ? ' flg-cmp__flag--bad' : ''), text: NAMES[f] + (up ? '舉著' : '放下') })); });
+                var col = h('div', { 'class': 'flags-cmp__col' }, [h('div', { 'class': 'flags-cmp__t', text: row[0] })]);
+                ['L', 'R'].forEach(function (f) { var up = row[1][f], bad = row[2] && actual[f] !== req[f]; col.appendChild(h('div', { 'class': 'flags-cmp__flag flags-cmp__flag--' + f + (bad ? ' flags-cmp__flag--bad' : ''), text: NAMES[f] + (up ? '舉著' : '放下') })); });
                 box.appendChild(col);
             });
             field.appendChild(box);

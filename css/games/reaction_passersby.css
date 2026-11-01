@@ -1,0 +1,120 @@
+/* ═══════════════════════════════════════
+   reaction_passersby.css — 路人走過（js/reaction_passersby.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「passersby-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 076 路人走過（.passersby-）═══ */
+.passersby-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 12px;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    line-height: var(--lh-body);
+}
+
+.passersby-tip--ask {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+/* 人物放大成 150%（105×240，V1.28） */
+.passersby-person {
+    position: absolute;
+    left: 0;
+    top: 150px;
+    width: 105px;
+    height: 240px;
+}
+
+.passersby-opts {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+}
+
+.passersby-row {
+    display: flex;
+    gap: var(--sp-3);
+}
+
+.passersby-opt {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 96px;
+    flex-direction: column;
+    gap: var(--sp-1);
+    font-size: var(--fs-md);
+}
+
+.passersby-sw {
+    display: block;
+    width: 44px;
+    height: 26px;
+    border-radius: var(--r-sm);
+    border: 3px solid var(--c-ink);
+    box-sizing: border-box;
+}
+
+.passersby-opt--ok {
+    background: var(--c-green-soft);
+    border-color: var(--c-ok);
+}
+
+.passersby-opt--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad);
+}
+
+.passersby-lineup {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 120px;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 6px;
+}
+
+.passersby-cell {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 84px;
+    padding: 6px 4px 28px;
+    border-radius: var(--r-md);
+    border: 3px solid transparent;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.passersby-cell svg {
+    display: block;
+    margin: 0 auto;
+    width: 62px;
+    height: 142px;
+}
+
+.passersby-cell--ask {
+    border-color: var(--c-orange);
+    background: var(--c-orange-soft);
+}
+
+.passersby-no {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 2px;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}

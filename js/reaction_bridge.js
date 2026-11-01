@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_bridge.js — 秒反應・搭一座橋（原企劃「007 搭一座橋」的復活版）
+   樣式：css/games/reaction_bridge.css（這款專屬的 class 一律以「bridge-」開頭；共用元件在 css/reaction_common.css）
    上方有一塊寬度隨機的橫板，下方左右各有一塊高度相同的方塊，各自左右來回移動（不會碰在一起）。看準時機按「放下」，橫板會筆直落下，要讓橫板的兩端都穩穩落在兩塊方塊上；
    只有一邊碰到方塊，橫板就會傾斜滑落＝失敗。
    按下「放下」的那一刻，下面兩塊方塊會「立刻停住」（位置固定），橫板才開始落下（不然太難）。
@@ -192,7 +193,7 @@
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['成功搭起 ' + S.cleared + ' 座橋']; },
-            stageClass: 'br-stage',
+            stageClass: 'bridge-stage',
             setup: setup
         });
     }
@@ -210,20 +211,20 @@
         var BTN_H = 84, SVG_H = H - BTN_H - 16;
         var GROUND = SVG_H - 18, BTOP = GROUND - BH;              /* 地面與方塊頂面的 y（SVG 座標，往下為正） */
         var PLANK_Y0 = 92;                                        /* 橫板一開始的上緣 y（上方留給兩行提示文字） */
-        var svg = kit.svg('svg', { 'class': 'br-svg', viewBox: '0 0 ' + W + ' ' + SVG_H, width: W, height: SVG_H }, stage);
-        kit.svg('rect', { x: 0, y: GROUND, width: W, height: 40, 'class': 'br-ground' }, svg);
-        var bl = kit.svg('rect', { x: 0, y: BTOP, width: BW_L, height: BH, rx: Math.min(6, BW_L / 2), 'class': 'br-block br-block--l' }, svg);
-        var br = kit.svg('rect', { x: 0, y: BTOP, width: BW_L, height: BH, rx: Math.min(6, BW_L / 2), 'class': 'br-block br-block--r' }, svg);
-        var plank = kit.svg('rect', { x: cfg.plank.x0, y: PLANK_Y0, width: cfg.plank.w, height: PLANK_H, rx: 4, 'class': 'br-plank' }, svg);
+        var svg = kit.svg('svg', { 'class': 'bridge-svg', viewBox: '0 0 ' + W + ' ' + SVG_H, width: W, height: SVG_H }, stage);
+        kit.svg('rect', { x: 0, y: GROUND, width: W, height: 40, 'class': 'bridge-ground' }, svg);
+        var bl = kit.svg('rect', { x: 0, y: BTOP, width: BW_L, height: BH, rx: Math.min(6, BW_L / 2), 'class': 'bridge-block bridge-block--l' }, svg);
+        var br = kit.svg('rect', { x: 0, y: BTOP, width: BW_L, height: BH, rx: Math.min(6, BW_L / 2), 'class': 'bridge-block bridge-block--r' }, svg);
+        var plank = kit.svg('rect', { x: cfg.plank.x0, y: PLANK_Y0, width: cfg.plank.w, height: PLANK_H, rx: 4, 'class': 'bridge-plank' }, svg);
         /* 橫板兩端往下的虛線：上緣貼著橫板，下緣隨關卡縮短（第 1 關一路垂到方塊頂面，到頂時長度 0） */
         var guideY1 = PLANK_Y0 + PLANK_H, guideY2 = guideY1 + (BTOP - guideY1) * cfg.line;
-        var guideL = kit.svg('line', { x1: cfg.plank.x0, x2: cfg.plank.x0, y1: guideY1, y2: guideY2, 'class': 'br-guide' }, svg);
-        var guideR = kit.svg('line', { x1: cfg.plank.x0 + cfg.plank.w, x2: cfg.plank.x0 + cfg.plank.w, y1: guideY1, y2: guideY2, 'class': 'br-guide' }, svg);
+        var guideL = kit.svg('line', { x1: cfg.plank.x0, x2: cfg.plank.x0, y1: guideY1, y2: guideY2, 'class': 'bridge-guide' }, svg);
+        var guideR = kit.svg('line', { x1: cfg.plank.x0 + cfg.plank.w, x2: cfg.plank.x0 + cfg.plank.w, y1: guideY1, y2: guideY2, 'class': 'bridge-guide' }, svg);
         if (cfg.line <= 0.001) { guideL.setAttribute('visibility', 'hidden'); guideR.setAttribute('visibility', 'hidden'); }
-        var msg = h('div', { 'class': 'br-msg' });
-        var okBtn = h('button', { 'class': 'btn btn--go br-ok', text: '放下' });
+        var msg = h('div', { 'class': 'bridge-msg' });
+        var okBtn = h('button', { 'class': 'btn btn--go bridge-ok', text: '放下' });
         stage.appendChild(msg); stage.appendChild(okBtn);
-        var tip = h('div', { 'class': 'br-tip', text: '兩塊方塊都頂住橫板（碰到橫板的左右兩端）時，按「放下」' });
+        var tip = h('div', { 'class': 'bridge-tip', text: '兩塊方塊都頂住橫板（碰到橫板的左右兩端）時，按「放下」' });
         stage.appendChild(tip);
 
         var t0 = performance.now(), frozen = null, locked = false;
@@ -250,13 +251,13 @@
             my.tween(FALL_MS, function (e) { plank.setAttribute('y', (PLANK_Y0 + (fallTo - PLANK_Y0) * e).toFixed(2)); }, kit.easeInQuad).then(function () {
                 if (res.ok) {
                     Sfx.play('ok');
-                    msg.textContent = '穩穩的！橋搭好了'; msg.classList.add('br-msg--ok');
-                    plank.classList.add('br-plank--ok');
+                    msg.textContent = '穩穩的！橋搭好了'; msg.classList.add('bridge-msg--ok');
+                    plank.classList.add('bridge-plank--ok');
                     api.pass({ gain: 1, delay: 700 });
                     return;
                 }
                 Sfx.play('bad');
-                msg.textContent = FAIL_TEXT[res.reason]; msg.classList.add('br-msg--bad');
+                msg.textContent = FAIL_TEXT[res.reason]; msg.classList.add('bridge-msg--bad');
                 var sign, px, py;
                 if (res.reason === 'none') {
                     my.tween(500, function (e) { plank.setAttribute('transform', 'rotate(' + (e * 12).toFixed(1) + ' ' + (cfg.plank.x0 + cfg.plank.w / 2) + ' ' + (GROUND) + ')'); }, kit.easeInQuad).then(function () { api.fail({ delay: 500, lines: [FAIL_TEXT.none] }); });

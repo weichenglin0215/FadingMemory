@@ -109,7 +109,7 @@ console.log('彎數：' + [1, 3, 5, 8, 12, 16, 20, 25].map(l => '第' + l + '關
   const c = src.indexOf('function up(e)'), d = src.indexOf("R.el.addEventListener('pointerup', up)"), up = src.slice(c, d);
   ok(up.indexOf("e.type === 'pointerup'") > 0 && up.indexOf('<= END_R') > 0 && up.indexOf('>= MIN_DRAW') > 0 && up.indexOf('finishWith(mine.pts, mine.anchor)') > 0, 'pointerup：放開的位置在另一個端點 END_R 以內、而且畫夠長才判定（pointercancel 一律當沒畫完）');
   ok(up.indexOf('放開的地方不在另一個端點上') > 0 && up.indexOf('cur = null; render();') > 0, '放開在別處＝清掉筆跡、可以重畫');
-  ok(src.indexOf("classList.toggle('cpc-near'") > 0 && /\.cpc-near \{ stroke: var\(--c-ok\)/.test(require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction5.css'), 'utf8').split(/\s+/).join(' ')), '手指靠近另一端點時端點亮綠框（CSS 變數）');
+  ok(src.indexOf("classList.toggle('copycurve-near'") > 0 && /\.copycurve-near \{ stroke: var\(--c-ok\)/.test(require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_copycurve.css'), 'utf8').split(/\s+/).join(' ')), '手指靠近另一端點時端點亮綠框（CSS 變數）');
   ok(/手指離開螢幕才會判定/.test(G.rule), '玩法說明有寫手指離開螢幕才判定'); }
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(8) && T.rating(8) !== T.rating(14) && T.rating(14) !== T.rating(25), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

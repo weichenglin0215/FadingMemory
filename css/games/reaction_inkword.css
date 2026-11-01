@@ -1,0 +1,211 @@
+/* ═══════════════════════════════════════
+   reaction_inkword.css — 字的顏色（js/reaction_inkword.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「inkword-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 字的顏色（.inkword-）═══ */
+.inkword-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.inkword-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.inkword-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 宣紙：毛筆字一個一個閃過 */
+.inkword-paper {
+    position: absolute;
+    left: 40px;
+    right: 40px;
+    top: 66px;
+    height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-card-alt);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+}
+
+.inkword-glyph {
+    font-family: var(--font-note);
+    font-size: 190px;
+    font-weight: var(--fw-black);
+    line-height: 1;
+}
+
+.inkword-dots {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 330px;
+    display: flex;
+    justify-content: center;
+    gap: var(--sp-2);
+}
+
+.inkword-dot {
+    width: 18px;
+    height: 18px;
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: 50%;
+}
+
+.inkword-dot--on {
+    background: var(--c-ink-soft);
+}
+
+.inkword-ask {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 120px;
+    padding: 0 var(--sp-3);
+    color: var(--c-ink);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-bold);
+    line-height: 1.3;
+    text-align: center;
+}
+
+.inkword-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 352px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* 六種墨水顏色與對應的顏色按鈕 */
+.inkword-c--red {
+    color: var(--ikw-red);
+}
+
+.inkword-c--yellow {
+    color: var(--ikw-yellow);
+}
+
+.inkword-c--green {
+    color: var(--ikw-green);
+}
+
+.inkword-c--blue {
+    color: var(--ikw-blue);
+}
+
+.inkword-c--purple {
+    color: var(--ikw-purple);
+}
+
+.inkword-c--orange {
+    color: var(--ikw-orange);
+}
+
+.inkword-sw {
+    border-color: var(--c-ink-soft);
+    color: var(--c-card);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.inkword-sw--red {
+    background: var(--ikw-red);
+}
+
+.inkword-sw--yellow {
+    background: var(--ikw-yellow);
+    color: var(--c-ink);
+}
+
+.inkword-sw--green {
+    background: var(--ikw-green);
+}
+
+.inkword-sw--blue {
+    background: var(--ikw-blue);
+}
+
+.inkword-sw--purple {
+    background: var(--ikw-purple);
+}
+
+.inkword-sw--orange {
+    background: var(--ikw-orange);
+}
+
+.inkword-num {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.inkword-ok {
+    outline: 6px solid var(--c-ok);
+    outline-offset: 2px;
+}
+
+.inkword-bad {
+    outline: 6px solid var(--c-bad-light);
+    outline-offset: 2px;
+}
+
+/* 答錯：整串字並排，被問的那個標紅框 */
+.inkword-strip {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 70px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sp-2);
+}
+
+.inkword-cell {
+    width: 70px;
+    padding: 4px 2px;
+    background: var(--c-card-alt);
+    border: 3px solid transparent;
+    border-radius: var(--r-sm);
+    text-align: center;
+}
+
+.inkword-cell--ask {
+    border-color: var(--c-bad);
+    background: var(--c-bad-soft);
+}
+
+.inkword-cell__no,
+.inkword-cell__txt {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1.15;
+}
+
+.inkword-cell__ch {
+    font-family: var(--font-note);
+    font-size: 48px;
+    font-weight: var(--fw-black);
+    line-height: 1.1;
+}

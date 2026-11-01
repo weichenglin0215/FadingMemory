@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_spingap.js — 秒反應・穿過旋轉縫（企劃 178，砲台版）
+   樣式：css/games/reaction_spingap.css（這款專屬的 class 一律以「spingap-」開頭；共用元件在 css/reaction_common.css）
    畫面中間有一個一直旋轉的圓環，環上有一個缺口；環裡面偏下方有一座傳統砲台，點一下螢幕就發射一顆砲彈，
    砲彈直直往上飛，飛 0.6 秒後抵達圓環的上緣——那一刻缺口要剛好轉到上方，砲彈才能穿出去，
    撞到環就結束。看你能連續射出幾顆砲彈。一顆砲彈穿出環之後，才能再發射下一顆。
@@ -117,11 +118,11 @@
     /* 傳統砲台：粗粗的砲管（砲口向上、砲口有一圈箍）、尾端的圓球、木頭砲架與兩個木輪（輪輻用細線） */
     function cannonSvg() {
         return '<svg viewBox="0 0 120 150" aria-hidden="true">' +
-            '<g class="spg-barrel"><path d="M43 14 H77 L84 94 H36 Z" class="spg-iron"/><rect x="38" y="4" width="44" height="15" rx="6" class="spg-iron-d"/>' +
-            '<circle cx="60" cy="96" r="21" class="spg-iron"/><circle cx="60" cy="120" r="7" class="spg-iron-d"/></g>' +
-            '<path d="M24 102 H96 L102 128 H18 Z" class="spg-wood"/>' +
-            '<g class="spg-wheel"><circle cx="30" cy="126" r="22" class="spg-wood-d"/><circle cx="30" cy="126" r="6" class="spg-iron"/><path d="M30 104 V148 M8 126 H52 M14 110 L46 142 M46 110 L14 142" class="spg-spoke"/></g>' +
-            '<g class="spg-wheel"><circle cx="90" cy="126" r="22" class="spg-wood-d"/><circle cx="90" cy="126" r="6" class="spg-iron"/><path d="M90 104 V148 M68 126 H112 M74 110 L106 142 M106 110 L74 142" class="spg-spoke"/></g></svg>';
+            '<g class="spingap-barrel"><path d="M43 14 H77 L84 94 H36 Z" class="spingap-iron"/><rect x="38" y="4" width="44" height="15" rx="6" class="spingap-iron-d"/>' +
+            '<circle cx="60" cy="96" r="21" class="spingap-iron"/><circle cx="60" cy="120" r="7" class="spingap-iron-d"/></g>' +
+            '<path d="M24 102 H96 L102 128 H18 Z" class="spingap-wood"/>' +
+            '<g class="spingap-wheel"><circle cx="30" cy="126" r="22" class="spingap-wood-d"/><circle cx="30" cy="126" r="6" class="spingap-iron"/><path d="M30 104 V148 M8 126 H52 M14 110 L46 142 M46 110 L14 142" class="spingap-spoke"/></g>' +
+            '<g class="spingap-wheel"><circle cx="90" cy="126" r="22" class="spingap-wood-d"/><circle cx="90" cy="126" r="6" class="spingap-iron"/><path d="M90 104 V148 M68 126 H112 M74 110 L106 142 M106 110 L74 142" class="spingap-spoke"/></g></svg>';
     }
 
     function setup(api) {
@@ -137,21 +138,21 @@
         api.info = { omega: om, base: omegaDeg(level), gap: gap, tol: tolDeg(level), tolMs: tolDeg(level) / om * 1000 };
         console.log('[穿過旋轉縫] 第 ' + level + ' 發：轉速 ' + om.toFixed(4) + ' 度/秒（基準 ' + omegaDeg(level).toFixed(4) + '，上一圈 ' + (carry && carry.level === level - 1 ? carry.om.toFixed(4) : '—') + '），缺口 ' + gap.toFixed(4) + ' 度，容許 ±' + tolDeg(level).toFixed(4) + ' 度（±' + (tolDeg(level) / om * 1000).toFixed(1) + ' ms）');
 
-        var svg = kit.svg('svg', { 'class': 'spg-svg', viewBox: '0 0 ' + W + ' 640', width: W, height: 640 }, stage);
+        var svg = kit.svg('svg', { 'class': 'spingap-svg', viewBox: '0 0 ' + W + ' 640', width: W, height: 640 }, stage);
         var C = 2 * Math.PI * RING_R;
         var ring = kit.svg('circle', {
-            cx: cx, cy: cy, r: RING_R, 'class': 'spg-ring', 'stroke-width': RING_W,
+            cx: cx, cy: cy, r: RING_R, 'class': 'spingap-ring', 'stroke-width': RING_W,
             'stroke-dasharray': (C * (1 - gap / 360)).toFixed(2) + ' ' + (C * gap / 360).toFixed(2)
         }, svg);
         /* 正上方的出口記號（一個小三角形） */
-        kit.svg('path', { d: 'M' + (cx - 14) + ' ' + (cy - RING_R - RING_W / 2 - 22) + ' L' + (cx + 14) + ' ' + (cy - RING_R - RING_W / 2 - 22) + ' L' + cx + ' ' + (cy - RING_R - RING_W / 2 - 4) + ' Z', 'class': 'spg-mark' }, svg);
-        var ball = kit.svg('circle', { cx: cx, cy: geom.y0, r: BALL_R, 'class': 'spg-ball', visibility: 'hidden' }, svg);
-        var cannon = h('div', { 'class': 'spg-cannon', html: cannonSvg() });
+        kit.svg('path', { d: 'M' + (cx - 14) + ' ' + (cy - RING_R - RING_W / 2 - 22) + ' L' + (cx + 14) + ' ' + (cy - RING_R - RING_W / 2 - 22) + ' L' + cx + ' ' + (cy - RING_R - RING_W / 2 - 4) + ' Z', 'class': 'spingap-mark' }, svg);
+        var ball = kit.svg('circle', { cx: cx, cy: geom.y0, r: BALL_R, 'class': 'spingap-ball', visibility: 'hidden' }, svg);
+        var cannon = h('div', { 'class': 'spingap-cannon', html: cannonSvg() });
         cannon.style.left = (cx - 60) + 'px'; cannon.style.top = (geom.y0 - 6) + 'px';
         stage.appendChild(cannon);
-        var tip = h('div', { 'class': 'qz-note spg-tip', text: '點擊畫面發射砲彈：缺口要提前轉到上方！' });
+        var tip = h('div', { 'class': 'qz-note spingap-tip', text: '點擊畫面發射砲彈：缺口要提前轉到上方！' });
         stage.appendChild(tip);
-        var msg = h('div', { 'class': 'qz-note spg-msg', text: '已射出 ' + (level - 1) + ' 顆' });
+        var msg = h('div', { 'class': 'qz-note spingap-msg', text: '已射出 ' + (level - 1) + ' 顆' });
         stage.appendChild(msg);
 
         var state = 'ready', tFire = 0;
@@ -173,7 +174,7 @@
             state = 'flying'; tFire = performance.now();
             Sfx.play('pop');
             ball.setAttribute('visibility', 'visible'); ball.setAttribute('cy', geom.y0);
-            cannon.classList.add('spg-cannon--fire'); api.after(160, function () { cannon.classList.remove('spg-cannon--fire'); });
+            cannon.classList.add('spingap-cannon--fire'); api.after(160, function () { cannon.classList.remove('spingap-cannon--fire'); });
             tip.textContent = '砲彈飛行中…';
             /* 抵達環內緣的那一刻判定 */
             api.after(FLIGHT_S * 1000, function () {
@@ -186,7 +187,7 @@
                     api.after(780, function () { loop.stop(); ball.setAttribute('visibility', 'hidden'); });       /* 換下一發之前，把這一發的動畫迴圈收掉 */
                 } else {
                     state = 'blocked'; ball.setAttribute('cy', geom.yc);
-                    ball.classList.add('spg-ball--boom'); tip.textContent = '撞到環了。' + line; kit.flash(stage, false, api.my);
+                    ball.classList.add('spingap-ball--boom'); tip.textContent = '撞到環了。' + line; kit.flash(stage, false, api.my);
                     api.fail({ delay: 2000, lines: ['第 ' + level + ' 發撞到環了', line] });
                 }
             });

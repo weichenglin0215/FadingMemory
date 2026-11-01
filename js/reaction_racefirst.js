@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_racefirst.js — 秒反應・誰先衝線（企劃 206）
+   樣式：css/games/reaction_racefirst.css（這款專屬的 class 一律以「racefirst-」開頭；共用元件在 css/reaction_common.css）
    五個（RUNNERS）穿著不同顏色衣服的小人排在起跑線上（靜止），畫面中央先出現「3、2、1」倒數，接著一聲令下，每個小人都以「加速度」
    向右衝：一開始很慢、越接近右邊越快，約 1 秒內就全部衝過終點線、從右邊跑出畫面。看完之後，點「最先到終點」的那一個。
    越後面，各個小人到終點的時間差越小。關卡制：點錯或來不及就結束，成績＝通過幾關。
@@ -109,7 +110,7 @@
     /* 小人（面向右邊）：頭、身體（衣服的顏色）、兩隻手、兩隻腳；回傳 { g, set(pose) }，原點在腰的位置 */
     function makeRunner(parent, hue) {
         var shirt = kit.hsl(hue, 78, 52), shirtDk = kit.hsl(hue, 70, 34), pants = '#4A3B1E', skin = '#FFE3B8';
-        var g = kit.svg('g', { 'class': 'rcf-runner' }, parent);
+        var g = kit.svg('g', { 'class': 'racefirst-runner' }, parent);
         var armB = kit.svg('line', { x1: 0, y1: -16, x2: 0, y2: 4, stroke: shirtDk, 'stroke-width': 6, 'stroke-linecap': 'round' }, g);
         var legB = kit.svg('line', { x1: 0, y1: 8, x2: 0, y2: 30, stroke: pants, 'stroke-width': 7, 'stroke-linecap': 'round' }, g);
         kit.svg('line', { x1: 1, y1: -18, x2: 3, y2: 9, stroke: shirt, 'stroke-width': 15, 'stroke-linecap': 'round' }, g);
@@ -133,23 +134,23 @@
         console.log('[誰先衝線] 第 ' + level + ' 關：到達時間 ' + q.hues.map(function (c, i) { return c.n + ' ' + q.T[i].toFixed(4) + '（起跑 ' + q.d[i].toFixed(3) + '）'; }).join('、') + '；最先到的是 ' + q.hues[q.win].n + '，領先第二名 ' + q.gap.toFixed(4) + ' 秒；限時 ' + ansMs(level) + ' ms');
 
         var top = 70, laneH = Math.min(104, Math.floor((H - top - 8) / RUNNERS));       /* 跑道高度：最多 104，人數多或畫面矮就縮小，五條都放得下 */
-        var svg = kit.svg('svg', { 'class': 'rcf-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
+        var svg = kit.svg('svg', { 'class': 'racefirst-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
         var runners = [], halos = [], labs = [], fmarks = [];
         for (var i = 0; i < RUNNERS; i++) {
             var cy = top + laneH * i + laneH / 2 - 6;
-            kit.svg('rect', { x: 10, y: top + laneH * i + 6, width: W - 20, height: laneH - 12, rx: 14, 'class': 'rcf-lane' }, svg);
-            halos.push(kit.svg('circle', { cx: X0, cy: cy, r: 40, 'class': 'rcf-halo' }, svg));
+            kit.svg('rect', { x: 10, y: top + laneH * i + 6, width: W - 20, height: laneH - 12, rx: 14, 'class': 'racefirst-lane' }, svg);
+            halos.push(kit.svg('circle', { cx: X0, cy: cy, r: 40, 'class': 'racefirst-halo' }, svg));
             var rn = makeRunner(svg, q.hues[i].h);
             rn.set(poseAt(q, i, 0)); rn.g.setAttribute('transform', 'translate(' + X0 + ' ' + cy + ') scale(' + RUNNER_SCALE + ')');
             runners.push({ run: rn, cy: cy });
-            var t = kit.svg('text', { x: X1 - 10, y: cy + 46, 'text-anchor': 'end', 'class': 'rcf-time' }, svg); labs.push(t);
+            var t = kit.svg('text', { x: X1 - 10, y: cy + 46, 'text-anchor': 'end', 'class': 'racefirst-time' }, svg); labs.push(t);
         }
-        kit.svg('line', { x1: X0, y1: top, x2: X0, y2: top + laneH * RUNNERS, 'class': 'rcf-start' }, svg);
-        kit.svg('line', { x1: X1, y1: top, x2: X1, y2: top + laneH * RUNNERS, 'class': 'rcf-finish' }, svg);       /* 終點線畫在「到達」的位置：小人的腰碰到這條線＝到達 */
-        for (i = 0; i < RUNNERS; i++) fmarks.push(kit.svg('circle', { cx: X1, cy: runners[i].cy, r: 34, 'class': 'rcf-fmark' }, svg));       /* 衝過終點線的那一刻，在線上閃一個圈 */
-        var tip = h('div', { 'class': 'qz-note rcf-tip', text: '準備…' });
+        kit.svg('line', { x1: X0, y1: top, x2: X0, y2: top + laneH * RUNNERS, 'class': 'racefirst-start' }, svg);
+        kit.svg('line', { x1: X1, y1: top, x2: X1, y2: top + laneH * RUNNERS, 'class': 'racefirst-finish' }, svg);       /* 終點線畫在「到達」的位置：小人的腰碰到這條線＝到達 */
+        for (i = 0; i < RUNNERS; i++) fmarks.push(kit.svg('circle', { cx: X1, cy: runners[i].cy, r: 34, 'class': 'racefirst-fmark' }, svg));       /* 衝過終點線的那一刻，在線上閃一個圈 */
+        var tip = h('div', { 'class': 'qz-note racefirst-tip', text: '準備…' });
         stage.appendChild(tip);
-        var count = h('div', { 'class': 'rcf-count', text: '' });
+        var count = h('div', { 'class': 'racefirst-count', text: '' });
         stage.appendChild(count);
         var phase = 'wait', t0 = 0;
         /* 把哨音後第 tt 秒的畫面畫出來（位置＋跑步姿勢；小人的位置是離起跑線的距離，原點在腰） */
@@ -178,25 +179,25 @@
         }
         /* 開跑前：畫面中央疊上 3、2、1 倒數，再開跑 */
         for (var c = 0; c < COUNT_STEPS; c++) (function (c) {
-            api.after(400 + c * COUNT_MS, function () { count.textContent = String(COUNT_STEPS - c); count.classList.remove('rcf-count--pop'); void count.offsetWidth; count.classList.add('rcf-count--pop'); Sfx.play('tick'); });
+            api.after(400 + c * COUNT_MS, function () { count.textContent = String(COUNT_STEPS - c); count.classList.remove('racefirst-count--pop'); void count.offsetWidth; count.classList.add('racefirst-count--pop'); Sfx.play('tick'); });
         })(c);
         api.after(400 + COUNT_STEPS * COUNT_MS, go);
         /* 整條跑道都可以點 */
         for (i = 0; i < RUNNERS; i++) (function (lane) {
-            var hit = h('div', { 'class': 'rcf-hit' });
+            var hit = h('div', { 'class': 'racefirst-hit' });
             hit.style.left = '0px'; hit.style.width = W + 'px'; hit.style.top = (top + laneH * lane) + 'px'; hit.style.height = laneH + 'px';
             kit.onTap(hit, function () { if (phase === 'ask') judge(lane); });
             stage.appendChild(hit);
         })(i);
 
         function rankText(k) { return '第 ' + (q.order.indexOf(k) + 1) + ' 名　' + q.T[k].toFixed(4) + ' 秒'; }
-        function times() { for (var k = 0; k < RUNNERS; k++) { labs[k].textContent = rankText(k); if (k === q.win) labs[k].classList.add('rcf-time--win'); } }
+        function times() { for (var k = 0; k < RUNNERS; k++) { labs[k].textContent = rankText(k); if (k === q.win) labs[k].classList.add('racefirst-time--win'); } }
         /* 小人 k 衝過終點線的那一刻：線上閃一個圈、標出名次與到達時間；第一名是綠色，並圍上綠圈 */
         function mark(k) {
             labs[k].textContent = rankText(k);
-            fmarks[k].classList.remove('rcf-fmark--pop'); void fmarks[k].getBoundingClientRect(); fmarks[k].classList.add('rcf-fmark--pop');
+            fmarks[k].classList.remove('racefirst-fmark--pop'); void fmarks[k].getBoundingClientRect(); fmarks[k].classList.add('racefirst-fmark--pop');
             Sfx.play('tick');
-            if (k === q.win) { fmarks[k].classList.add('rcf-fmark--win'); halos[k].classList.add('rcf-halo--win'); labs[k].classList.add('rcf-time--win'); }
+            if (k === q.win) { fmarks[k].classList.add('racefirst-fmark--win'); halos[k].classList.add('racefirst-halo--win'); labs[k].classList.add('racefirst-time--win'); }
         }
         /* 慢動作重播（不管答對答錯）：從第一名到終點前 REPLAY_FROM 秒開始、播到最後一個小人跑出畫面，速度 SLOW 倍；回傳花多久（毫秒） */
         function replay() {
@@ -215,7 +216,7 @@
             if (api.over || phase !== 'ask') return;
             phase = 'done';
             var ok = lane === q.win;
-            if (lane >= 0) halos[lane].classList.add(ok ? 'rcf-halo--win' : 'rcf-halo--wrong');
+            if (lane >= 0) halos[lane].classList.add(ok ? 'racefirst-halo--win' : 'racefirst-halo--wrong');
             kit.flash(stage, ok, api.my);
             tip.textContent = '慢動作重播（' + SLOW + ' 倍速）…';                               /* 提示列只有一行的寬度（再長會蓋到第一條跑道） */
             /* 每一關都慢動作重播衝過終點線的過程（不管對錯），播完才換下一關／結算 */

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_cups.js — 秒反應・球在哪杯（原「杯子在哪」，三杯一球）
+   樣式：css/games/reaction_cups.css（這款專屬的 class 一律以「cups-」開頭；共用元件在 css/reaction_common.css）
    球藏在其中一個杯子下面，杯子快速成對交換位置，最後點出球在哪個杯子。
    答對進下一關（杯子變多、換得更多更快），答錯就結束。成績＝通過的關卡數。
    ───────────────────────────────────────────────────────────────────
@@ -181,12 +182,12 @@
             var n = cupsFor(level);
             /* 建立畫面元素：提示、場地 */
             var hint = h('div', { 'class': 'hint', text: '記住球在哪個杯子' });
-            var field = h('div', { 'class': 'cp-field' });
+            var field = h('div', { 'class': 'cups-field' });
             root.appendChild(hint);
             root.appendChild(field);
             var FW = field.clientWidth, FH = field.clientHeight;
             /* SVG 畫布 */
-            var svg = kit.svg('svg', { 'class': 'cp-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'none' }, field);
+            var svg = kit.svg('svg', { 'class': 'cups-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'none' }, field);
 
             /* 圓環版面：n 個位置平均排在一個圓上（像時鐘，第 0 個在 12 點鐘、順時針）；CW 杯子寬、CH 杯子高；P[i] 是第 i 個位置的杯底座標 */
             var layout = ringLayout(n, FW, FH), CW = layout.CW, CH = layout.CH, P = [];
@@ -202,16 +203,16 @@
             for (var c = 0; c < n; c++) {
                 slotOf.push(c);
                 /* 每個杯子是一個 SVG 群組 <g>：包含球（只有一個杯子有）和杯身 */
-                var g = kit.svg('g', { 'class': 'cp-cup' }, svg);
+                var g = kit.svg('g', { 'class': 'cups-cup' }, svg);
                 var ballEl = null;
-                if (c === ballSlot) ballEl = kit.svg('circle', { 'class': 'cp-ball', cx: 0, cy: -CW * 0.2, r: CW * 0.2 }, g);
-                var lift = kit.svg('g', { 'class': 'cp-lift' }, g);
+                if (c === ballSlot) ballEl = kit.svg('circle', { 'class': 'cups-ball', cx: 0, cy: -CW * 0.2, r: CW * 0.2 }, g);
+                var lift = kit.svg('g', { 'class': 'cups-lift' }, g);
                 kit.svg('path', {
-                    'class': 'cp-cup__body',
+                    'class': 'cups-cup__body',
                     d: 'M' + (-CW / 2) + ' 0 L' + (-CW * 0.36) + ' ' + (-CH) + ' Q0 ' + (-CH - CW * 0.12) + ' ' + (CW * 0.36) + ' ' + (-CH) + ' L' + (CW / 2) + ' 0 Z'
                 }, lift);
-                kit.svg('ellipse', { 'class': 'cp-cup__rim', cx: 0, cy: 0, rx: CW / 2, ry: CW * 0.1 }, lift);
-                kit.svg('path', { 'class': 'cp-cup__shine', d: 'M' + (-CW * 0.2) + ' ' + (-CH * 0.25) + ' L' + (-CW * 0.14) + ' ' + (-CH * 0.8) }, lift);
+                kit.svg('ellipse', { 'class': 'cups-cup__rim', cx: 0, cy: 0, rx: CW / 2, ry: CW * 0.1 }, lift);
+                kit.svg('path', { 'class': 'cups-cup__shine', d: 'M' + (-CW * 0.2) + ' ' + (-CH * 0.25) + ' L' + (-CW * 0.14) + ' ' + (-CH * 0.8) }, lift);
                 cups.push({ g: g, lift: lift, ball: ballEl, id: c, y: 0 });
                 place(cups[c], P[c].x, P[c].y, 0);
             }

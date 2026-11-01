@@ -42,7 +42,7 @@ ok(mt === 4000 || (mt > 3600 && mt < 4400), '相符約一半：' + mt);
 function magRate(hard) { let n = 0; for (let i = 0; i < 4000; i++) { const x = T.randomAmount(5, 0.5, rnd), m = T.nearAmount(x, hard, rnd); if (String(m).length !== String(x).length) n++; } return n / 4000; }
 ok(magRate(0) > magRate(1) + 0.25, '位數差一位的錯法隨題號減少：' + magRate(0).toFixed(2) + ' → ' + magRate(1).toFixed(2));
 // diffMark
-ok(T.diffMark('肆仟參佰零捌元整', '肆仟零參拾捌元整') === '肆仟<b class="chq-diff">零參拾</b>捌元整' || T.diffMark('肆仟參佰零捌元整', '肆仟零參拾捌元整').includes('chq-diff'), 'diffMark：' + T.diffMark('肆仟參佰零捌元整', '肆仟零參拾捌元整'));
+ok(T.diffMark('肆仟參佰零捌元整', '肆仟零參拾捌元整') === '肆仟<b class="chequeamt-diff">零參拾</b>捌元整' || T.diffMark('肆仟參佰零捌元整', '肆仟零參拾捌元整').includes('chequeamt-diff'), 'diffMark：' + T.diffMark('肆仟參佰零捌元整', '肆仟零參拾捌元整'));
 { const hist = []; let run = 1, maxRun = 1;
   for (let i = 0; i < 20000; i++) { const w = T.nextMatch(hist, rnd); if (hist.length && hist[hist.length - 1] === w) run++; else run = 1; maxRun = Math.max(maxRun, run); hist.push(w); }
   ok(maxRun <= T.SAME_MAX, '連續最多 ' + maxRun); }

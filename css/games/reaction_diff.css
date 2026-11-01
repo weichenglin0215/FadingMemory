@@ -1,0 +1,124 @@
+/* ═══════════════════════════════════════
+   reaction_diff.css — 哪裡怪怪的（js/reaction_diff.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「diff-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 哪裡怪怪的：兩張圖找出不一樣的地方。 */
+/* ═══ 哪裡怪怪的（.diff-）═══ */
+/* 標題 */
+.diff-head {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--c-ink);
+}
+
+/* 標題主要文字 */
+.diff-head__main {
+    display: block;
+}
+
+/* 標題次要文字 */
+.diff-head__sub {
+    display: block;
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    color: var(--c-ink-soft);
+}
+
+/* 警示色的次要文字 */
+.diff-head__sub--warn {
+    color: var(--c-bad);
+}
+
+/* 圖片面板 */
+.diff-panel {
+    position: relative;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    touch-action: none;
+}
+
+/* SVG */
+.diff-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* 圖案 */
+.diff-shape {
+    stroke: rgba(0, 0, 0, 0.35);
+    stroke-width: 2px;
+    stroke-linejoin: round;
+}
+
+/* 點擊熱區（透明但可點） */
+.diff-hit {
+    fill: transparent;
+    cursor: pointer;
+}
+
+/* 標記圈（預設透明） */
+.diff-ring {
+    fill: none;
+    stroke: transparent;
+    stroke-width: 6px;
+    pointer-events: none;
+}
+
+/* 找對（綠） */
+.diff-ring--ok {
+    stroke: var(--c-ok);
+}
+
+/* 點錯（橘） */
+.diff-ring--bad {
+    stroke: var(--c-bad);
+}
+
+/* 漏找的（黃色虛線） */
+.diff-ring--miss {
+    stroke: #F4C542;
+    stroke-dasharray: 10 6;
+}
+
+/* 「扣分」浮字：一開始透明，加 --on 才播放往上飄的動畫 */
+.diff-penalty {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    text-align: center;
+    font-size: var(--fs-xl);
+    font-weight: 800;
+    color: var(--c-bad);
+    text-shadow: 0 2px 0 #fff, 0 0 8px #fff;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* 播放飄升動畫 */
+.diff-penalty--on {
+    animation: diff-pen 0.9s ease-out;
+}
+
+/* 飄升動畫：從原位不透明 → 往上 40px 並消失 */
+@keyframes diff-pen {
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-40px);
+    }
+}

@@ -1,0 +1,104 @@
+/* ═══════════════════════════════════════
+   reaction_halfchar.css — 半邊字（js/reaction_halfchar.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「halfchar-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 半邊字：字被遮住一半，猜原本是哪個字。 */
+/* ═══ 半邊字（.hc-）═══ */
+.halfchar-head {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+}
+
+/* 題目提示文字 */
+.halfchar-prompt {
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+/* 顯示被遮住的字的大框 */
+.halfchar-box {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+}
+
+/* 答對：框變綠 */
+.halfchar-box--ok {
+    background: var(--c-ok-soft);
+    border-color: var(--c-ok);
+}
+
+/* 答錯：框變橘 */
+.halfchar-box--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad);
+}
+
+/* 被遮住的大字（用宋體風格的 --font-note）。高關卡會用 transform 歪斜，揭曉時轉正（transition 讓轉正有動畫） */
+.halfchar-char {
+    font-family: var(--font-note);
+    font-size: 300px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--c-ink);
+    transition: transform 0.25s ease;
+}
+
+/* 下方的選項：4 個 2×2 格、5～6 個 3×2 格（欄數由 JS 依選項數設定，reaction_halfchar.js 的 next；兩種都是 2 列，高度一樣） */
+.halfchar-opts {
+    flex: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-3);
+}
+
+/* 單個選項按鈕：固定高度、宋體大字 */
+.halfchar-opt {
+    height: 112px;
+    border: var(--bd);
+    border-radius: var(--r-md);
+    background: var(--c-card);
+    color: var(--c-ink);
+    font-family: var(--font-note);
+    font-size: 78px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* 手指按著時變淺藍 */
+.halfchar-opt:active {
+    background: var(--c-blue-soft);
+}
+
+/* 選對（綠） */
+.halfchar-opt--ok {
+    background: var(--c-ok-soft);
+    border-color: var(--c-ok);
+}
+
+/* 選錯（橘） */
+.halfchar-opt--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad);
+}
+
+/* 底下的說明文字（答案揭曉時顯示偏旁解說） */
+.halfchar-tip {
+    min-height: 1.4em;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink);
+}

@@ -1,0 +1,146 @@
+/* ═══════════════════════════════════════
+   reaction_tianji.css — 田忌賽馬（js/reaction_tianji.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「tianji-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。每匹馬的寬度由 js 依馬的數量算好寫在 style 上。
+   ═══════════════════════════════════════ */
+
+.tianji-wrap {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding-top: 10px;
+    box-sizing: border-box;
+}
+
+.tianji-goal {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-orange);
+    text-align: center;
+    padding: 0 10px;
+}
+
+.tianji-label {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    margin-top: 6px;
+}
+
+.tianji-label--best {
+    color: var(--c-ok);
+}
+
+.tianji-row {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+}
+
+/* 兩排馬中間的場次與勝負 */
+.tianji-row--marks {
+    gap: 6px;
+}
+
+.tianji-mark {
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+}
+
+.tianji-mark--win {
+    color: var(--c-ok);
+}
+
+.tianji-mark--lose {
+    color: var(--c-bad);
+}
+
+/* 一匹馬：上面馬的圖示、下面戰力數字 */
+.tianji-horse {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 6px 0;
+    border-radius: var(--r-sm);
+    border: 3px solid var(--c-ink);
+    background: var(--c-card);
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.tianji-horse--them {
+    background: var(--c-orange-soft);
+    border-color: var(--c-orange);
+}
+
+.tianji-horse--mine {
+    background: var(--c-ok-soft);
+    border-color: var(--c-ok);
+}
+
+.tianji-horse--sel {
+    background: var(--c-yellow);
+    border-color: var(--c-ink);
+    transform: translateY(-8px);
+}
+
+.tianji-horse--win {
+    border-color: var(--c-ok);
+    background: var(--c-ok-light);
+}
+
+.tianji-horse--lose {
+    border-color: var(--c-bad);
+    background: var(--c-bad-soft);
+    opacity: 0.8;
+}
+
+.tianji-horse--best {
+    background: var(--c-card);
+}
+
+.tianji-horse__icon {
+    font-size: var(--fs-lg);
+    line-height: 1.1;
+}
+
+.tianji-horse__n {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.tianji-result {
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink);
+    text-align: center;
+    line-height: 1.4;
+}
+
+.tianji-btns {
+    position: absolute;
+    left: 2%;
+    right: 2%;
+    bottom: 0;
+    display: flex;
+}
+
+.tianji-btn {
+    flex: 1 1 0;
+    height: 72px;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    padding: 0;
+}

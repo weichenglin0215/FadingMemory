@@ -1,0 +1,108 @@
+/* ═══════════════════════════════════════
+   reaction_mirror.css — 左右顛倒（js/reaction_mirror.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「mirror-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 左右顛倒：手指往左，球卻往右（鏡像操作）。 */
+/* ═══ 左右顛倒（.mirror-）═══ */
+.mirror-head {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+/* 迷宮場地 */
+.mirror-field {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    touch-action: none;
+}
+
+/* 迷宮 SVG */
+.mirror-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* 牆壁與通道共用：不填色、線頭與轉角都是圓的 */
+.mirror-wall,
+.mirror-lane {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* 牆壁線條 */
+.mirror-wall {
+    stroke: var(--c-ink-soft);
+}
+
+/* 通道線條 */
+.mirror-lane {
+    stroke: var(--c-card-alt);
+}
+
+/* 撞牆時所有牆壁閃橘色 */
+.mirror-svg--bump .mirror-wall {
+    stroke: var(--c-bad);
+}
+
+/* 起點區 */
+.mirror-start {
+    fill: var(--c-green-soft);
+    stroke: var(--c-green);
+    stroke-width: 3;
+}
+
+/* 終點區 */
+.mirror-goal {
+    fill: var(--c-orange-soft);
+    stroke: var(--c-orange);
+    stroke-width: 4;
+}
+
+/* 到達終點：填綠色 */
+.mirror-goal--ok {
+    fill: var(--c-ok);
+}
+
+/* 終點上的文字，pointer-events:none 讓手指點到文字時也能穿透 */
+.mirror-goal-t {
+    font-family: var(--font-ui);
+    font-size: 17px;
+    font-weight: 900;
+    fill: var(--c-ink);
+    pointer-events: none;
+}
+
+/* 示範路徑的殘影（半透明藍線） */
+.mirror-ghost {
+    fill: none;
+    stroke: var(--c-blue);
+    stroke-width: 3;
+    opacity: 0.5;
+}
+
+/* 玩家控制的球 */
+.mirror-ball {
+    fill: var(--c-orange);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+/* 底下的提示文字 */
+.mirror-hint {
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}

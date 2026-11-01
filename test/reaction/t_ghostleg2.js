@@ -156,8 +156,8 @@ console.log('平均候選 ' + (candSum / m0).toFixed(1) + ' 個、差一條的�
   }); }
 
 // ── 接線（原始碼／樣式） ──
-{ const rd = p => fs.readFileSync(path.resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_ghostleg2.js'), css = rd('../../css/reaction3.css').replace(/\r?\n/g, ' ');
-  ok(/\.gl-rung\.gx-gone \{[^}]*c-bad/.test(css) && /\.gl-rung\.gx-answer \{[^}]*c-ok/.test(css) && /\.gx-route \{[^}]*c-green/.test(css) && !/gx-pulled|gx-hold/.test(css), '拿掉橫線的樣式（沒有拖曳用的舊樣式）');
+{ const rd = p => fs.readFileSync(path.resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_ghostleg2.js'), css = rd('../../css/games/reaction_ghostleg2.css').replace(/\r?\n/g, ' ');
+  ok(/\.gl-rung\.ghostleg2-gone \{[^}]*c-bad/.test(css) && /\.gl-rung\.ghostleg2-answer \{[^}]*c-ok/.test(css) && /\.ghostleg2-route \{[^}]*c-green/.test(css) && !/ghostleg2-pulled|ghostleg2-hold/.test(css), '拿掉橫線的樣式（沒有拖曳用的舊樣式）');
   ok(src.indexOf("kit.hintOn(stage, null, { mode: 'tap'") > 0 && src.indexOf('pointermove') < 0 && src.indexOf('PULL_PX') < 0, '點一下就拿掉（沒有拖曳）、第一次進遊戲有手指點擊提示');
   ok(src.indexOf('GhostlegCore(') > 0, '用共用的工具畫棋盤');
   const boot = rd('../../js/boot.js'); ok(boot.indexOf("'js/ghostleg_core.js'") > 0 && boot.indexOf("'js/ghostleg_core.js'") < boot.indexOf("'js/reaction_ghostleg2.js'"), 'boot.js：ghostleg_core.js 先載入');

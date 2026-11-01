@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_coinsort.js — 秒反應・零錢入筒（企劃 359，依使用者的修改）
+   樣式：css/games/reaction_coinsort.css（這款專屬的 class 一律以「coinsort-」開頭；共用元件在 css/reaction_common.css）
    硬幣一枚一枚從上面掉下來，**用手指把它滑進對的收集筒**：
        銅色的大硬幣＝50 元 → 往【左】滑，掉進左下方的筒；
        銅色的小硬幣＝5 元  → 往【下】滑，掉進正下方的筒；
@@ -89,7 +90,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 20, stageClass: 'cns-stage', resume: false,
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 20, stageClass: 'coinsort-stage', resume: false,
             head: function () { return '零錢入筒'; },
             info: function (S) { return '已收 ' + S.score + ' 枚'; },
             scoreOf: function (S) { return S.score; },
@@ -102,16 +103,16 @@
 
     /* 畫一枚硬幣（SVG，viewBox −50～50）：正面顯示幾元，背面畫一個花紋（不仿真實硬幣圖案） */
     function coinSvg(type, back, D) {
-        var c = COIN[type], svg = kit.svg('svg', { 'class': 'cns-coin cns-coin--' + c.metal, viewBox: '-50 -50 100 100', width: D, height: D });
-        kit.svg('circle', { 'class': 'cns-rim', cx: 0, cy: 0, r: 48 }, svg);
-        kit.svg('circle', { 'class': 'cns-reed', cx: 0, cy: 0, r: 46 }, svg);
-        kit.svg('circle', { 'class': 'cns-face', cx: 0, cy: 0, r: 40 }, svg);
-        kit.svg('circle', { 'class': 'cns-ring', cx: 0, cy: 0, r: 40 }, svg);
+        var c = COIN[type], svg = kit.svg('svg', { 'class': 'coinsort-coin coinsort-coin--' + c.metal, viewBox: '-50 -50 100 100', width: D, height: D });
+        kit.svg('circle', { 'class': 'coinsort-rim', cx: 0, cy: 0, r: 48 }, svg);
+        kit.svg('circle', { 'class': 'coinsort-reed', cx: 0, cy: 0, r: 46 }, svg);
+        kit.svg('circle', { 'class': 'coinsort-face', cx: 0, cy: 0, r: 40 }, svg);
+        kit.svg('circle', { 'class': 'coinsort-ring', cx: 0, cy: 0, r: 40 }, svg);
         if (back) {
-            kit.svg('circle', { 'class': 'cns-pat', cx: 0, cy: 0, r: 9 }, svg);
-            for (var i = 0; i < 8; i++) { var a = i * Math.PI / 4; kit.svg('circle', { 'class': 'cns-pat', cx: (25 * Math.cos(a)).toFixed(2), cy: (25 * Math.sin(a)).toFixed(2), r: 5 }, svg); }
+            kit.svg('circle', { 'class': 'coinsort-pat', cx: 0, cy: 0, r: 9 }, svg);
+            for (var i = 0; i < 8; i++) { var a = i * Math.PI / 4; kit.svg('circle', { 'class': 'coinsort-pat', cx: (25 * Math.cos(a)).toFixed(2), cy: (25 * Math.sin(a)).toFixed(2), r: 5 }, svg); }
         } else {
-            var t = kit.svg('text', { 'class': 'cns-digit cns-digit--' + c.value.length, x: 0, y: 3 }, svg); t.textContent = c.value;
+            var t = kit.svg('text', { 'class': 'coinsort-digit coinsort-digit--' + c.value.length, x: 0, y: 3 }, svg); t.textContent = c.value;
         }
         return svg;
     }
@@ -125,29 +126,29 @@
         S.score = 0; api.setInfo('已收 0 枚');
         console.log('[零錢入筒] 開始：掉落時間 ' + fallMsFor(0) + ' → ' + fallMsFor(RAMP_COINS) + ' 毫秒');
 
-        var field = h('div', { 'class': 'cns-field' });
+        var field = h('div', { 'class': 'coinsort-field' });
         stage.appendChild(field);
         /* 三個收集筒：左下 50 元、正下 5 元、右下 10 元；筒口的位置就是硬幣要掉到的線 */
         var TUBE_H = 150, tubeTop = H - TUBE_H - 8, lineY = tubeTop - 6, tubeW = Math.round(W * 0.28), tubes = {}, big = Math.round(W * COIN_D);
         ['left', 'down', 'right'].forEach(function (dir) {
             var type = TYPES.filter(function (t) { return DIR_OF[t] === dir; })[0], c = COIN[type];
-            var el = h('div', { 'class': 'cns-tube' });
+            var el = h('div', { 'class': 'coinsort-tube' });
             el.style.cssText = 'left:' + Math.round(W * TUBE_X[dir] - tubeW / 2) + 'px;top:' + tubeTop + 'px;width:' + tubeW + 'px;height:' + TUBE_H + 'px;';
-            var ico = h('div', { 'class': 'cns-tube__ico' }); ico.appendChild(coinSvg(type, false, Math.round(big * 0.5)));
-            var lab = h('div', { 'class': 'cns-tube__lab', text: DIR_ARROW[dir] + ' ' + c.name });
-            var num = h('div', { 'class': 'cns-tube__num', text: '0 枚' });
+            var ico = h('div', { 'class': 'coinsort-tube__ico' }); ico.appendChild(coinSvg(type, false, Math.round(big * 0.5)));
+            var lab = h('div', { 'class': 'coinsort-tube__lab', text: DIR_ARROW[dir] + ' ' + c.name });
+            var num = h('div', { 'class': 'coinsort-tube__num', text: '0 枚' });
             el.appendChild(ico); el.appendChild(lab); el.appendChild(num); field.appendChild(el);
             tubes[type] = { el: el, num: num, dir: dir, x: Math.round(W * TUBE_X[dir]), ico: ico };
         });
-        var info = h('div', { 'class': 'qz-note cns-info', text: '' }); field.appendChild(info);
-        function tubeCount(type) { counts[type]++; tubes[type].num.textContent = counts[type] + ' 枚'; tubes[type].el.classList.remove('cns-tube--hit'); void tubes[type].el.offsetWidth; tubes[type].el.classList.add('cns-tube--hit'); }
+        var info = h('div', { 'class': 'qz-note coinsort-info', text: '' }); field.appendChild(info);
+        function tubeCount(type) { counts[type]++; tubes[type].num.textContent = counts[type] + ' 枚'; tubes[type].el.classList.remove('coinsort-tube--hit'); void tubes[type].el.offsetWidth; tubes[type].el.classList.add('coinsort-tube--hit'); }
 
         /* ── 出一枚硬幣 ── */
         function spawn() {
             if (over || api.over) return;
             var nc = nextCoin(history, count, api.rand), D = diameterOf(nc.type, count, W), fall = fallMsFor(count);
             history.push(nc.type); if (history.length > 8) history.shift();
-            var x = Math.round(kit.randFloat(W * 0.3, W * 0.7, api.rand)), el = h('div', { 'class': 'cns-coinbox' });
+            var x = Math.round(kit.randFloat(W * 0.3, W * 0.7, api.rand)), el = h('div', { 'class': 'coinsort-coinbox' });
             el.style.cssText = 'width:' + D + 'px;height:' + D + 'px;';
             el.appendChild(coinSvg(nc.type, nc.back, D)); field.appendChild(el);
             coin = { type: nc.type, back: nc.back, D: D, x: x, y: -D, el: el, t0: performance.now(), fall: fall, done: false, no: ++gen };
@@ -212,14 +213,14 @@
             over = true;
             var why = whyText(c.type, kind, dir);
             info.textContent = why;
-            tubes[c.type].el.classList.add('cns-tube--right');
-            if (dir) { var wt = TYPES.filter(function (t) { return DIR_OF[t] === dir; })[0]; if (wt !== c.type) tubes[wt].el.classList.add('cns-tube--wrong'); }
+            tubes[c.type].el.classList.add('coinsort-tube--right');
+            if (dir) { var wt = TYPES.filter(function (t) { return DIR_OF[t] === dir; })[0]; if (wt !== c.type) tubes[wt].el.classList.add('coinsort-tube--wrong'); }
             /* 那一枚硬幣放大、翻到正面 */
             if (kind === 'miss' && c.el.parentNode) c.el.parentNode.removeChild(c.el);
-            var BD = Math.round(W * 0.42), bigEl = h('div', { 'class': 'cns-bigcoin' });
+            var BD = Math.round(W * 0.42), bigEl = h('div', { 'class': 'coinsort-bigcoin' });
             bigEl.style.cssText = 'width:' + BD + 'px;height:' + BD + 'px;left:' + Math.round((W - BD) / 2) + 'px;top:' + Math.round(Math.max(70, (lineY - BD - 90) / 2 + 40)) + 'px;';
             bigEl.appendChild(coinSvg(c.type, false, BD)); field.appendChild(bigEl);
-            api.after(40, function () { bigEl.classList.add('cns-bigcoin--show'); });
+            api.after(40, function () { bigEl.classList.add('coinsort-bigcoin--show'); });
             info.style.top = Math.round(Math.max(70, (lineY - BD - 90) / 2 + 40) + BD + 14) + 'px';
             kit.flash(stage, false, api.my);
             api.fail({ delay: 3800, lines: [why, '銅色大＝50 元（往左）、銅色小＝5 元（往下）、銀色大＝10 元（往右）'] });

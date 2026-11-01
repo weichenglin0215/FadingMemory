@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_seven.js — 秒反應・逢七過
+   樣式：css/games/reaction_seven.css（這款專屬的 class 一律以「seven-」開頭；共用元件在 css/reaction_common.css）
    上面的格子顯示的數字一個一個往上加。不是 7、也不是 7 的倍數、數字裡也沒有 7 的，要點上面的數字格子；
    遇到 7、7 的倍數（14、21、28、35、42、49、56、63…）或是數字裡有 7（17、27、37、47、57、67、70～79、87、97…）的，
    要按下面的「跳過」鈕。錯一次就結束，看你能數到幾。
@@ -79,12 +80,12 @@
             /* n 目前的數字；passed 已通過的最大數字；state 目前階段（live 等待玩家/gap 兩數字之間的空檔/over 結束）；token 每個數字 +1；shownAt／deadline 這個數字出現／截止的時間；rts 每次的反應秒數 */
             var n = (startAt || 1) - 1, passed = n, state = 'idle', token = 0, shownAt = 0, deadline = 0, rts = [], over = false;
             /* 建立畫面元素：標題、說明、數字卡片、時間條、「跳過」按鈕 */
-            var head = h('div', { 'class': 'sv-head', text: '7、7 的倍數、有 7 的要「跳過」' });
-            var sub = h('div', { 'class': 'sv-sub', text: ' ' });
-            var num = h('div', { 'class': 'sv-num', text: '' });
-            var card = h('div', { 'class': 'sv-card' }, [num]);
+            var head = h('div', { 'class': 'seven-head', text: '7、7 的倍數、有 7 的要「跳過」' });
+            var sub = h('div', { 'class': 'seven-sub', text: ' ' });
+            var num = h('div', { 'class': 'seven-num', text: '' });
+            var card = h('div', { 'class': 'seven-card' }, [num]);
             var tb = kit.timebar();
-            var skip = h('div', { 'class': 'sv-pad sv-pad--skip' }, [h('span', { 'class': 'sv-pad__t', text: '跳過' })]);
+            var skip = h('div', { 'class': 'seven-pad seven-pad--skip' }, [h('span', { 'class': 'seven-pad__t', text: '跳過' })]);
             [head, sub, card, tb.el, skip].forEach(function (x) { root.appendChild(x); });
             ctx.setMeta(Reaction.getBest(ID) != null ? '最佳 ' + Reaction.getBest(ID) : '');
 
@@ -95,7 +96,7 @@
                 /* dwell 這個數字的倒數秒數；sk 這個數字要不要跳過 */
                 var id = ++token, dwell = dwellFor(n), sk = isSkip(n);
                 num.textContent = String(n);
-                card.className = 'sv-card';
+                card.className = 'seven-card';
                 sub.textContent = '已過 ' + passed + ' 個';
                 state = 'live';
                 shownAt = performance.now(); deadline = shownAt + dwell * 1000;
@@ -119,7 +120,7 @@
                 passed = n;
                 token++;
                 tb.set(0);
-                card.className = 'sv-card sv-card--ok';
+                card.className = 'seven-card seven-card--ok';
                 Sfx.play(acted === 'skip' ? 'pop' : 'click');
                 var best = Reaction.getBest(ID);
                 ctx.setMeta(kit.meta(['已過 ' + passed, best != null ? '最佳 ' + best : '']));
@@ -131,7 +132,7 @@
                 if (over) return;
                 over = true; state = 'over'; token++;
                 tb.set(0);
-                card.className = 'sv-card sv-card--bad';
+                card.className = 'seven-card seven-card--bad';
                 var msg = why(n, kind);
                 sub.textContent = msg;
                 Sfx.play('bad');

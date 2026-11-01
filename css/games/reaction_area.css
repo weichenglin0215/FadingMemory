@@ -1,0 +1,91 @@
+/* ═══════════════════════════════════════
+   reaction_area.css — 面積一樣大（js/reaction_area.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「area-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 003 面積一樣大（.area-）═══ */
+.area-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+/* 目標形狀：黃色填色；揭曉時變橘色半透明 */
+.area-shape {
+    fill: var(--c-yellow);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+    stroke-linejoin: round;
+}
+
+.area-shape--rev {
+    fill: var(--c-orange);
+    fill-opacity: 0.6;
+}
+
+/* 方塊：綠色填色；揭曉時變藍色半透明 */
+.area-sq {
+    fill: var(--c-green-light);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.area-sq--rev {
+    fill: var(--c-blue);
+    fill-opacity: 0.55;
+}
+
+/* 手柄：十字箭頭（上下左右四個箭頭），指尖好抓 */
+.area-handle {
+    fill: var(--c-orange);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+    stroke-linejoin: round;
+}
+
+.area-ok {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+}
+
+.area-legend {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 6px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    opacity: 0;
+}
+
+.area-legend--on {
+    opacity: 1;
+}
+
+/* 揭曉時的面積差數字動畫（V1.27）：從 0.0000% 跑到 XX.XXXX%（方塊比較大）或 -XX.XXXX%（比較小） */
+.area-diff {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100px;
+    text-align: center;
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    font-variant-numeric: tabular-nums;
+    color: var(--c-ink);
+    opacity: 0;
+}
+
+.area-diff--on {
+    opacity: 1;
+}
+
+.area-diff--neg {
+    color: var(--c-blue);
+}

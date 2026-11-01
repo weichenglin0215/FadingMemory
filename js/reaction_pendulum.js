@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_pendulum.js — 秒反應・六點鐘方向
+   樣式：css/games/reaction_pendulum.css（這款專屬的 class 一律以「pendulum-」開頭；共用元件在 css/reaction_common.css）
    鐘擺從五點鐘的位置出發，順時針往下擺過六點鐘、擺到七點鐘再擺回來（左右各 30 度），
    玩家點一下讓它「停住」，越接近正下方（六點鐘方向）越好。每一局只有一次機會，沒有關卡。
    結算時鏡頭以「針尖」為固定錨點持續推進，看清楚到底差了幾度（目標 0.00 度）。
@@ -119,7 +120,7 @@
             updateMeta();
 
             var hint = h('div', { 'class': 'hint', text: '點一下，讓鐘擺停在六點鐘方向' });
-            var field = h('div', { 'class': 'pend-field' });
+            var field = h('div', { 'class': 'pendulum-field' });
             root.appendChild(hint);
             root.appendChild(field);
             /* 操作提示（只在第一次進遊戲時）：點畫面任一處 → 手指縮放，放在畫面下方（不擋住鐘擺） */
@@ -129,7 +130,7 @@
             var FW = field.clientWidth, FH = field.clientHeight;
             var Px = FW / 2, Py = PIVOT_Y;
             /* SVG 畫布；viewBox 是畫布座標，結算時改 viewBox 就能做「鏡頭推進」 */
-            var svg = kit.svg('svg', { 'class': 'pend-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'none' }, field);
+            var svg = kit.svg('svg', { 'class': 'pendulum-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'none' }, field);
             var full = { vx: 0, vy: 0, vw: FW, vh: FH };
 
             /* 極座標轉換：從支點出發，角度 deg、距離 r 的位置（sin／cos） */
@@ -146,7 +147,7 @@
             var gArc = kit.svg('g', {}, svg);
             var a0 = polar(-ARC_MAX_DEG, LEN), a1 = polar(ARC_MAX_DEG, LEN);
             kit.svg('path', {
-                'class': 'pend-arc', fill: 'none', 'vector-effect': 'non-scaling-stroke',
+                'class': 'pendulum-arc', fill: 'none', 'vector-effect': 'non-scaling-stroke',
                 d: 'M' + a0.x + ' ' + a0.y + ' A' + LEN + ' ' + LEN + ' 0 0 0 ' + a1.x + ' ' + a1.y
             }, gArc);
             /* 畫一條刻度線 */
@@ -155,19 +156,19 @@
                 return kit.svg('line', { 'class': cls, 'vector-effect': 'non-scaling-stroke', x1: q0.x, y1: q0.y, x2: q1.x, y2: q1.y }, g);
             }
             for (var d = -ARC_MAX_DEG; d <= ARC_MAX_DEG; d++) {
-                if (d !== 0) tickLine(gArc, 'pend-tick', d, d % 5 === 0 ? 7 : 4);
+                if (d !== 0) tickLine(gArc, 'pendulum-tick', d, d % 5 === 0 ? 7 : 4);
             }
             /* 時鐘數字：±30° 是 5 點與 7 點，正下方 0° 是 6 點 */
             /* 時鐘數字：±30° 是 5 點與 7 點（5 在右、7 在左），正下方 0° 是 6 點 */
             [[30, '5'], [0, '6'], [-30, '7']].forEach(function (n) {
                 var tp = polar(n[0], LEN + 40);
                 var t = kit.svg('text', {
-                    'class': 'pend-num' + (n[0] === 0 ? ' pend-num--zero' : ''),
+                    'class': 'pendulum-num' + (n[0] === 0 ? ' pendulum-num--zero' : ''),
                     x: tp.x, y: tp.y, 'text-anchor': 'middle', 'dominant-baseline': 'central'
                 }, gArc);
                 t.textContent = n[1];
             });
-            tickLine(gArc, 'pend-zero', 0, 14);
+            tickLine(gArc, 'pendulum-zero', 0, 14);
 
             /* 細刻度層（0.1°、0.01°）：停下來之後才依落點生出來，鏡頭推進時淡入 */
             /* ─── 細刻度層（停下來之後才依落點生出來，鏡頭推進時淡入）─── */
@@ -178,10 +179,10 @@
             /* ─── 鐘擺本體（整組繞支點旋轉）─── */
             var gPend = kit.svg('g', {}, svg);
             var bobCy = Py + LEN - NEEDLE - BOB_R;
-            var rod = kit.svg('line', { 'class': 'pend-rod', 'vector-effect': 'non-scaling-stroke', x1: Px, y1: Py, x2: Px, y2: bobCy - BOB_R }, gPend);
-            var bob = kit.svg('circle', { 'class': 'pend-bob', cx: Px, cy: bobCy, r: BOB_R }, gPend);
-            kit.svg('line', { 'class': 'pend-needle', 'vector-effect': 'non-scaling-stroke', x1: Px, y1: bobCy + BOB_R, x2: Px, y2: Py + LEN }, gPend);
-            var pivot = kit.svg('circle', { 'class': 'pend-pivot', cx: Px, cy: Py, r: 8 }, svg);
+            var rod = kit.svg('line', { 'class': 'pendulum-rod', 'vector-effect': 'non-scaling-stroke', x1: Px, y1: Py, x2: Px, y2: bobCy - BOB_R }, gPend);
+            var bob = kit.svg('circle', { 'class': 'pendulum-bob', cx: Px, cy: bobCy, r: BOB_R }, gPend);
+            kit.svg('line', { 'class': 'pendulum-needle', 'vector-effect': 'non-scaling-stroke', x1: Px, y1: bobCy + BOB_R, x2: Px, y2: Py + LEN }, gPend);
+            var pivot = kit.svg('circle', { 'class': 'pendulum-pivot', cx: Px, cy: Py, r: 8 }, svg);
 
             /* 轉到角度 deg：SVG 的 rotate(角度 圓心x 圓心y) */
             function setAngle(deg) {
@@ -284,7 +285,7 @@
                     for (var k = k0; k <= k1; k++) {
                         var deg = k * step;
                         if (Math.abs(deg - Math.round(deg)) < step * 0.01) continue;   /* 整數度已有上一層刻度 */
-                        tickLine(g, 'pend-tick pend-tick--fine', deg, half);
+                        tickLine(g, 'pendulum-tick pendulum-tick--fine', deg, half);
                     }
                 }
                 if (plan.length >= 2) layer(gFine2, 0.1, 0.4, lo - 0.6, hi + 0.6);

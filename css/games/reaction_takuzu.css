@@ -1,0 +1,195 @@
+/* ═══════════════════════════════════════
+   reaction_takuzu.css — 黑白不連三（js/reaction_takuzu.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「takuzu-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   · 盤面的欄數 --takuzu-n 與每格邊長 --takuzu-cell 由 js 依畫面寬度算好寫在 .takuzu-board 上；下面的值是備用值。
+   ═══════════════════════════════════════ */
+
+/* 整個遊戲區：由上往下排「盤面、說明、顏色鍵、工具列」，水平置中 */
+.takuzu-wrap {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding-top: 10px;
+    box-sizing: border-box;
+}
+
+.takuzu-board {
+    display: grid;
+    grid-template-columns: repeat(var(--takuzu-n, 6), var(--takuzu-cell, 70px));
+    grid-auto-rows: var(--takuzu-cell, 70px);
+    border: 3px solid var(--c-ink);
+    background: var(--c-card);
+}
+
+.takuzu-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border-right: 1px solid var(--bd-c);
+    border-bottom: 1px solid var(--bd-c);
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 題目給的格子：底色深一點，不能改 */
+.takuzu-cell--given {
+    background: var(--c-card-alt);
+}
+
+.takuzu-cell--hint {
+    animation: takuzu-hint 0.8s ease-in-out infinite;
+}
+
+.takuzu-cell--ok {
+    background: var(--c-ok-soft);
+}
+
+@keyframes takuzu-hint {
+    0%, 100% { background: var(--c-yellow-soft); }
+    50% { background: var(--c-orange-soft); }
+}
+
+/* 棋子：黑棋實心，白棋空心（有黑框） */
+.takuzu-disc {
+    width: 74%;
+    height: 74%;
+    border-radius: 50%;
+    box-sizing: border-box;
+}
+
+.takuzu-disc--black {
+    background: var(--c-ink);
+}
+
+.takuzu-disc--white {
+    background: var(--c-card);
+    border: 4px solid var(--c-ink);
+}
+
+.takuzu-tip {
+    min-height: 32px;
+    padding: 0 12px;
+    font-size: var(--fs-note);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    text-align: center;
+}
+
+/* 顏色鍵、工具列 */
+.takuzu-tools {
+    display: flex;
+    gap: 10px;
+    width: 96%;
+}
+
+.takuzu-tool {
+    flex: 1 1 0;
+    height: 64px;
+    padding: 0;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.takuzu-tool--on {
+    background: var(--c-yellow);
+}
+
+.takuzu-swatch {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    box-sizing: border-box;
+}
+
+.takuzu-swatch--black {
+    background: var(--c-ink);
+}
+
+.takuzu-swatch--white {
+    background: var(--c-card);
+    border: 3px solid var(--c-ink);
+}
+
+/* 違規說明彈窗裡的文字與圖 */
+.takuzu-explain {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    line-height: 1.45;
+    color: var(--c-ink);
+    margin-top: 8px;
+}
+
+.takuzu-explain--tip {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-xs);
+}
+
+.takuzu-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.takuzu-svg-cell {
+    fill: var(--c-card);
+    stroke: var(--bd-c);
+    stroke-width: 1;
+}
+
+.takuzu-svg-cell--new {
+    fill: var(--c-yellow-soft);
+    stroke: var(--c-orange);
+    stroke-width: 3;
+}
+
+.takuzu-svg-disc--black {
+    fill: var(--c-ink);
+}
+
+.takuzu-svg-disc--white {
+    fill: var(--c-card);
+    stroke: var(--c-ink);
+    stroke-width: 3;
+}
+
+.takuzu-svg-dot {
+    fill: var(--bd-c);
+}
+
+/* 違規的格子：紅圈 */
+.takuzu-svg-bad {
+    fill: none;
+    stroke: var(--c-bad);
+    stroke-width: 4;
+}
+
+.takuzu-svg-cap {
+    font-size: 17px;
+    font-weight: var(--fw-bold);
+    fill: var(--c-ink-soft);
+}
+
+/* 圖裡的字大小用 svg 自己的座標（圖寬 400 單位，會跟著彈窗等比例縮放） */
+.takuzu-svg-mark {
+    font-size: 22px;
+    font-weight: var(--fw-black);
+}
+
+.takuzu-svg-mark--ok {
+    fill: var(--c-ok);
+}
+
+.takuzu-svg-mark--no {
+    fill: var(--c-bad);
+}

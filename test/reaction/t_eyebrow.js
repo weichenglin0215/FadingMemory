@@ -92,10 +92,10 @@ ok(Object.keys(ST.types).length === T.TYPES.length + T.STACHE_TYPES.length, '全
 ok(T.whyText(88.3142, 83) === '相似度 88.3142%（及格線 83.0000%）——過關！' && T.whyText(75.5, 83.1234) === '相似度 75.5000%，沒達到及格線 83.1234%', 'whyText（含使用者企劃的 88.3142%）');
 
 // ── 程式裡的接線 ──
-{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_eyebrow.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 3000/.test(src) && /ebw-ghost/.test(src) && /similarity\(stroke, q\.target, q\.L\)/.test(src) && /whyText\(sim, q\.thresh\)/.test(src), '失敗：鏡射的左眉（紅色）疊在你畫的上面、寫出相似度、停格夠久');
+{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_eyebrow.js'), css = rd('../../css/games/reaction_eyebrow.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 3000/.test(src) && /eyebrow-ghost/.test(src) && /similarity\(stroke, q\.target, q\.L\)/.test(src) && /whyText\(sim, q\.thresh\)/.test(src), '失敗：鏡射的左眉（紅色）疊在你畫的上面、寫出相似度、停格夠久');
   ok(/pointerdown/.test(src) && /pointermove/.test(src) && /pointerup/.test(src) && /MIN_LEN_FRAC/.test(src) && /畫長一點/.test(src) && /api\.solve = /.test(src) && /api\.wrong = /.test(src), '手指放開才判定；太短不算可以重畫；solve／wrong');
-  ok(/\.ebw-ref \{[^}]*var\(--ebw-brow\)/.test(css) && /\.ebw-ghost \{[^}]*var\(--ebw-ghost\)/.test(css) && /\.ebw-head \{[^}]*var\(--ebw-skin\)/.test(css), '眉毛、臉、淡紅色用 CSS 變數');
+  ok(/\.eyebrow-ref \{[^}]*var\(--ebw-brow\)/.test(css) && /\.eyebrow-ghost \{[^}]*var\(--ebw-ghost\)/.test(css) && /\.eyebrow-head \{[^}]*var\(--ebw-skin\)/.test(css), '眉毛、臉、淡紅色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_eyebrow.js'") > 0 && /鏡射/.test(G.rule) && /相似度/.test(G.rule) && /轉正/.test(G.rule) && /奇怪/.test(G.rule), 'boot.js 有載入、玩法說明提到鏡射、相似度、轉正、奇怪的形狀'); }
 ok(T.rating(1) !== T.rating(3) && T.rating(3) !== T.rating(6) && T.rating(6) !== T.rating(10) && T.rating(10) !== T.rating(16), '評語分級');
 // ── V1.36.0 玩家意見：眉毛形狀太規律 → 奇怪形狀；揭曉時整張臉轉正 ──
@@ -121,10 +121,10 @@ for (let l = T.WEIRD_FROM + 1; l <= 60; l++) ok(T.weirdPFor(l) >= T.weirdPFor(l 
 for (const type of T.WEIRD) { const b = T.browShape(type, { h: 0.15, slope: 0.05, peak: 0.6, drop: 0.3, waves: 1 }, T.BROW_PTS); ok(b.length === T.BROW_PTS && b.every(p => Number.isFinite(p.u) && Number.isFinite(p.v)), type + '：沒有專用參數時有預設值'); }
 ok(near(T.catmull([0, 1, 0, -1, 0], 0), 0, 1e-9) && near(T.catmull([0, 1, 0, -1, 0], 0.25), 1, 1e-9) && near(T.catmull([0, 1, 0, -1, 0], 1), 0, 1e-9) && near(T.piecewise([0, 0.5, 1], [0, 2, 0], 0.25), 1, 1e-9), 'catmull 通過控制點；piecewise 折線插值');
 // 揭曉時整張臉轉正
-{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_eyebrow.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction6.css'), 'utf8').split(/\s+/).join(' ');
-  ok(T.TURN_MS > 0 && src.indexOf("turn.style.transform = 'rotate(' + (-q.thetaDeg) + 'deg)'") > 0 && src.indexOf("axis.classList.add('ebw-axis--on')") > 0, '揭曉時整組（臉、你畫的線、淡紅色的線）繞臉心轉 ' + '−歪的角度（轉正）');
-  ok(src.indexOf("var mine = kit.svg('polyline', { 'class': 'ebw-mine' + sc.replace('ref', 'mine'), points: '' }, turn), ghost = kit.svg('polyline', { 'class': 'ebw-ghost' + sc.replace('ref', 'ghost'), points: '' }, turn)") > 0 && src.indexOf("var face = kit.svg('g', { transform: 'translate(' + q.F.x + ',' + q.F.y + ') rotate(' + q.thetaDeg + ')' }, turn)") > 0, '臉、你畫的線、淡紅色的線在同一個會轉的群組裡');
-  ok(css.indexOf('.ebw-turn { transition-property: transform;') >= 0 && css.indexOf('.ebw-axis--on { opacity: 0.45;') >= 0, '轉正的轉場動畫與中軸有樣式'); }
+{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_eyebrow.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_eyebrow.css'), 'utf8').split(/\s+/).join(' ');
+  ok(T.TURN_MS > 0 && src.indexOf("turn.style.transform = 'rotate(' + (-q.thetaDeg) + 'deg)'") > 0 && src.indexOf("axis.classList.add('eyebrow-axis--on')") > 0, '揭曉時整組（臉、你畫的線、淡紅色的線）繞臉心轉 ' + '−歪的角度（轉正）');
+  ok(src.indexOf("var mine = kit.svg('polyline', { 'class': 'eyebrow-mine' + sc.replace('ref', 'mine'), points: '' }, turn), ghost = kit.svg('polyline', { 'class': 'eyebrow-ghost' + sc.replace('ref', 'ghost'), points: '' }, turn)") > 0 && src.indexOf("var face = kit.svg('g', { transform: 'translate(' + q.F.x + ',' + q.F.y + ') rotate(' + q.thetaDeg + ')' }, turn)") > 0, '臉、你畫的線、淡紅色的線在同一個會轉的群組裡');
+  ok(css.indexOf('.eyebrow-turn { transition-property: transform;') >= 0 && css.indexOf('.eyebrow-axis--on { opacity: 0.45;') >= 0, '轉正的轉場動畫與中軸有樣式'); }
 // 轉正的數學：turn 轉 −θ（繞臉心），再加上臉本身的 +θ，合起來是 0——臉的中軸變成垂直
 { for (const th of [-170, -45, 0, 12, 90, 179]) { const total = (-th) + th; ok(total === 0, '轉正：歪 ' + th + '° → 揭曉後 0°'); } }
 // ── V1.38.0 玩家意見：眉毛要加大、形狀變化要大（可以超出臉部；彈簧、迴紋針、漩渦…）；評審動畫先轉正、再顯示紅色的正確眉毛 ──
@@ -147,11 +147,11 @@ ok(T.BROW_TOP <= -180, '眉毛可以高過頭頂（BROW_TOP ' + T.BROW_TOP + '�
   // 窄的畫面（W 小）也要放得進去：重抽到放得下的眉毛
   for (let i = 0; i < 200; i++) { const q = T.makeLevel(30, rnd, 440, 640); ok(q.ref.concat(q.target).every(p => p.x >= T.EDGE - 0.6 && p.x <= 440 - T.EDGE + 0.6), '窄畫面 440 也放得進去'); } }
 // 評審動畫的順序：臉先轉正（TURN_MS）→ 停一下（REVEAL_GAP_MS）→ 紅色的正確眉毛淡入（GHOST_MS）→ 才顯示相似度與結算
-{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_eyebrow.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction6.css'), 'utf8').split(/\s+/).join(' ');
+{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_eyebrow.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_eyebrow.css'), 'utf8').split(/\s+/).join(' ');
   const iJudge = src.indexOf('function judge(stroke)'), iTurn = src.indexOf("turn.style.transform = 'rotate('", iJudge), iAfter = src.indexOf('api.after(revealAt', iJudge), iGhost = src.indexOf("ghost.setAttribute('points'", iJudge), iInfo = src.indexOf('info.textContent = why', iJudge), iPass = src.indexOf('api.pass(', iJudge), iFail = src.indexOf('api.fail(', iJudge);
   ok(iJudge > 0 && iTurn > iJudge && iAfter > iTurn && iGhost > iAfter && iInfo > iGhost && iPass > iInfo && iFail > iInfo, '順序：先轉正（turn.style.transform）→ 等 revealAt → 才畫紅色眉毛（ghost）→ 才寫相似度、過關／失敗');
   ok(/var turnMs = q\.thetaDeg \? TURN_MS : 0, revealAt = turnMs \+ REVEAL_GAP_MS/.test(src) && T.REVEAL_GAP_MS > 0 && T.TURN_MS > 0, '紅色眉毛在「轉正的時間＋停頓」之後才出現（臉本來就正的就不用等轉）');
-  ok(/\.ebw-ghost \{[^}]*opacity: 0;[^}]*transition: opacity 0\.6s/.test(css) && /\.ebw-ghost--on \{[^}]*opacity: 0\.8/.test(css) && T.GHOST_MS === 600, '紅色眉毛一開始看不見、淡入 0.6 秒（跟 GHOST_MS 一致）'); }
+  ok(/\.eyebrow-ghost \{[^}]*opacity: 0;[^}]*transition: opacity 0\.6s/.test(css) && /\.eyebrow-ghost--on \{[^}]*opacity: 0\.8/.test(css) && T.GHOST_MS === 600, '紅色眉毛一開始看不見、淡入 0.6 秒（跟 GHOST_MS 一致）'); }
 // ═══ V1.40.0 玩家意見：只有畫眉毛很容易單調 → 增加畫鬍子（各種創意鬍子） ═══
 {
   const halfW = v => 150 * Math.sqrt(Math.max(0, 1 - Math.pow((v - 8) / 188, 2)));        // 臉（頭的橢圓 rx 150、ry 188、圓心 (0, 8)）在高度 v 的半寬
@@ -213,9 +213,9 @@ ok(T.BROW_TOP <= -180, '眉毛可以高過頭頂（BROW_TOP ' + T.BROW_TOP + '�
   // 臉的歪角與偏移對鬍子一樣有效；鏡射的兩條對「臉的中軸」對稱
   { for (let i = 0; i < 200; i++) { const q = T.makeLevel(20, rnd); if (q.kind !== 'stache') continue; const th = q.theta, ax = { x: -Math.sin(th), y: Math.cos(th) }; for (let k = 0; k < q.ref.length; k += 9) { const a = q.ref[k], b = q.target[k], mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, d = { x: mid.x - q.F.x, y: mid.y - q.F.y }, cross = d.x * ax.y - d.y * ax.x; ok(Math.abs(cross) < 1e-6, '鬍子的鏡射兩點的中點在臉的中軸上'); } } }
   // 接線（原始碼／樣式）：鬍子的線條畫粗一點、玩法說明提到鬍子
-  const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_eyebrow.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction6.css'), 'utf8').split(/\s+/).join(' ');
-  ok(/\.ebw-ref--stache \{ stroke-width: 1[0-9];/.test(css) && /\.ebw-mine--stache \{ stroke-width: 1[0-9];/.test(css) && /\.ebw-ghost--stache \{ stroke-width: 1[0-9];/.test(css), '鬍子的左邊那撇、你畫的、紅色答案的線條都比眉毛粗（css）');
-  ok(/q\.kind === 'stache' \? ' ebw-ref--stache' : ''/.test(src) && /var noun = q\.kind === 'stache' \? '鬍子' : '眉毛'/.test(src), '畫面依 kind 換用語（noun）與粗線 class');
+  const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_eyebrow.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_eyebrow.css'), 'utf8').split(/\s+/).join(' ');
+  ok(/\.eyebrow-ref--stache \{ stroke-width: 1[0-9];/.test(css) && /\.eyebrow-mine--stache \{ stroke-width: 1[0-9];/.test(css) && /\.eyebrow-ghost--stache \{ stroke-width: 1[0-9];/.test(css), '鬍子的左邊那撇、你畫的、紅色答案的線條都比眉毛粗（css）');
+  ok(/q\.kind === 'stache' \? ' eyebrow-ref--stache' : ''/.test(src) && /var noun = q\.kind === 'stache' \? '鬍子' : '眉毛'/.test(src), '畫面依 kind 換用語（noun）與粗線 class');
   ok(/鬍子/.test(G.rule) && /鏡射/.test(G.rule) && /第 2 關起/.test(G.rule) && T.STACHE_FROM === 2, '玩法說明提到鬍子（第 2 關起）');
 }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

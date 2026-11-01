@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_cake.js — 秒反應・分蛋糕
+   樣式：css/games/reaction_cake.css（這款專屬的 class 一律以「cake-」開頭；共用元件在 css/reaction_common.css）
    圓形蛋糕要平分給幾個人。蛋糕上已經有切線了，用手指「拖曳」每一條切線的位置，讓每一塊都一樣大；
    調好按「切下去」。關卡挑戰：一關比一關分給更多人。
    ───────────────────────────────────────────────────────────────────
@@ -125,25 +126,25 @@
             /* st 這關的起始資料；first 固定的第一刀角度；lines 其他藍線的角度；drag 正被拖曳的是第幾條（−1＝沒有）；lineEls／handleEls 對應的 SVG 元素 */
             var st = null, first = 0, lines = [], drag = -1, lineEls = [], handleEls = [];
             /* 先放不斷行空白佔住一行高，之後量畫面才準 */
-            var head = h('div', { 'class': 'ca-head', text: ' ' });
-            var banner = h('div', { 'class': 'ca-banner', text: ' ' });
-            var field = h('div', { 'class': 'ca-field' });
-            var cutBtn = h('button', { 'class': 'btn btn--go btn--sm ca-cut', text: '切下去' });
-            var acts = h('div', { 'class': 'ca-acts' }, [cutBtn]);
+            var head = h('div', { 'class': 'cake-head', text: ' ' });
+            var banner = h('div', { 'class': 'cake-banner', text: ' ' });
+            var field = h('div', { 'class': 'cake-field' });
+            var cutBtn = h('button', { 'class': 'btn btn--go btn--sm cake-cut', text: '切下去' });
+            var acts = h('div', { 'class': 'cake-acts' }, [cutBtn]);
             [head, banner, field, acts].forEach(function (x) { root.appendChild(x); });
             function meta() { ctx.setMeta(kit.meta(['已過 ' + cleared + ' 關', '機會 ' + lives])); }
             /* SVG 蛋糕畫布：圖層由下到上依序是蛋糕、輔助點、刀線、切開後的扇形 */
-            var svg = kit.svg('svg', { 'class': 'ca-svg', viewBox: '0 0 ' + VB + ' ' + VB }, field);
+            var svg = kit.svg('svg', { 'class': 'cake-svg', viewBox: '0 0 ' + VB + ' ' + VB }, field);
             var gCake = kit.svg('g', {}, svg);
             var gAid = kit.svg('g', {}, svg), gCuts = kit.svg('g', {}, svg), gOut = kit.svg('g', {}, svg);
-            kit.svg('circle', { 'class': 'ca-cake', cx: C, cy: C, r: R_CAKE }, gCake);
-            kit.svg('circle', { 'class': 'ca-icing', cx: C, cy: C, r: R_CAKE - 16 }, gCake);
+            kit.svg('circle', { 'class': 'cake-cake', cx: C, cy: C, r: R_CAKE }, gCake);
+            kit.svg('circle', { 'class': 'cake-icing', cx: C, cy: C, r: R_CAKE - 16 }, gCake);
             /* 12 個輔助小點（每 30 度一個），幫助玩家判斷角度，隨關卡淡出 */
             for (var i = 0; i < 12; i++) {
                 var a = i * 30 * Math.PI / 180;
-                kit.svg('circle', { 'class': 'ca-aid', cx: C + (R_CAKE + 4) * Math.sin(a), cy: C - (R_CAKE + 4) * Math.cos(a), r: 4.5 }, gAid);
+                kit.svg('circle', { 'class': 'cake-aid', cx: C + (R_CAKE + 4) * Math.sin(a), cy: C - (R_CAKE + 4) * Math.cos(a), r: 4.5 }, gAid);
             }
-            kit.svg('circle', { 'class': 'ca-center', cx: C, cy: C, r: 8 }, svg);
+            kit.svg('circle', { 'class': 'cake-center', cx: C, cy: C, r: 8 }, svg);
 
             /* tip(角度, 半徑)：算出圓周上某角度的座標 */
             function tip(a, r) { var t = a * Math.PI / 180; return [C + r * Math.sin(t), C - r * Math.cos(t)]; }
@@ -151,10 +152,10 @@
             function buildLines() {
                 gCuts.innerHTML = ''; lineEls = []; handleEls = [];
                 var p = tip(first, R_CAKE);
-                kit.svg('line', { 'class': 'ca-cutline ca-cutline--first', x1: C, y1: C, x2: p[0], y2: p[1] }, gCuts);
+                kit.svg('line', { 'class': 'cake-cutline cake-cutline--first', x1: C, y1: C, x2: p[0], y2: p[1] }, gCuts);
                 lines.forEach(function () {
-                    lineEls.push(kit.svg('line', { 'class': 'ca-cutline', x1: C, y1: C, x2: C, y2: C }, gCuts));
-                    handleEls.push(kit.svg('circle', { 'class': 'ca-handle', r: 13, cx: C, cy: C }, gCuts));
+                    lineEls.push(kit.svg('line', { 'class': 'cake-cutline', x1: C, y1: C, x2: C, y2: C }, gCuts));
+                    handleEls.push(kit.svg('circle', { 'class': 'cake-handle', r: 13, cx: C, cy: C }, gCuts));
                 });
                 paintLines();
             }
@@ -164,8 +165,8 @@
                     var p = tip(a, R_CAKE), q = tip(a, R_CAKE + 2);
                     lineEls[i].setAttribute('x2', p[0].toFixed(1)); lineEls[i].setAttribute('y2', p[1].toFixed(1));
                     handleEls[i].setAttribute('cx', q[0].toFixed(1)); handleEls[i].setAttribute('cy', q[1].toFixed(1));
-                    lineEls[i].setAttribute('class', 'ca-cutline' + (i === drag ? ' ca-cutline--drag' : ''));
-                    handleEls[i].setAttribute('class', 'ca-handle' + (i === drag ? ' ca-handle--drag' : ''));
+                    lineEls[i].setAttribute('class', 'cake-cutline' + (i === drag ? ' cake-cutline--drag' : ''));
+                    handleEls[i].setAttribute('class', 'cake-handle' + (i === drag ? ' cake-handle--drag' : ''));
                 });
             }
 
@@ -239,14 +240,14 @@
                 gCuts.style.display = 'none'; gCake.style.display = 'none';
                 for (var i = 0; i < n; i++) {
                     var a0 = all[i], a1 = a0 + angs[i], mid = (a0 + angs[i] / 2) * Math.PI / 180;
-                    var g = kit.svg('g', { 'class': 'ca-slice' }, gOut);
+                    var g = kit.svg('g', { 'class': 'cake-slice' }, gOut);
                     /* 最大塊紅色、最小塊藍色，方便玩家看出誰最大誰最小 */
-                    var cls = 'ca-slice__p' + (Math.abs(angs[i] - mx) < 1e-9 ? ' ca-slice__p--max' : (Math.abs(angs[i] - mn) < 1e-9 ? ' ca-slice__p--min' : ''));
+                    var cls = 'cake-slice__p' + (Math.abs(angs[i] - mx) < 1e-9 ? ' cake-slice__p--max' : (Math.abs(angs[i] - mn) < 1e-9 ? ' cake-slice__p--min' : ''));
                     kit.svg('path', { 'class': cls, d: sectorPath(a0, a1, R_CAKE - 2) }, g);
                     /* 標籤放在這一塊的中線上、離圓心 0.6 倍半徑處 */
                     var lr = R_CAKE * 0.6;
                     var tx = C + lr * Math.sin(mid), ty = C - lr * Math.cos(mid);
-                    var t = kit.svg('text', { 'class': 'ca-slice__t' + (n > 8 ? ' ca-slice__t--sm' : ''), x: tx, y: ty, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, g);
+                    var t = kit.svg('text', { 'class': 'cake-slice__t' + (n > 8 ? ' cake-slice__t--sm' : ''), x: tx, y: ty, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, g);
                     t.textContent = (angs[i] / 360 * 100).toFixed(4) + '%';
                     /* 百分比是 4 位小數（例如 8.3333%），比原本長很多：塊數多的時候橫著擺會互相疊在一起。
                        塊數 ≥ 6 就把字沿著「這一塊的中線」轉過去（從圓心往外讀，左半邊轉 180 度讓字保持朝上），
@@ -261,7 +262,7 @@
                     g.style.transform = 'translate(' + (out * Math.sin(mid)).toFixed(1) + 'px,' + (-out * Math.cos(mid)).toFixed(1) + 'px)';
                 }
                 /* 顯示最大、最小與標準 */
-                /* 4 位小數的算式很長，分成兩行（.ca-banner 用 white-space: pre-line 讓字串裡的換行符號真的換行） */
+                /* 4 位小數的算式很長，分成兩行（.cake-banner 用 white-space: pre-line 讓字串裡的換行符號真的換行） */
                 banner.textContent = '最大 ' + (mx / 3.6).toFixed(4) + '％ − 最小 ' + (mn / 3.6).toFixed(4) + '％\n＝ ' + diffPct.toFixed(4) + '％（標準 ≤ ' + tolerancePct(n).toFixed(4) + '％）';
                 /* 過關 */
                 if (ok) {

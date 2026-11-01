@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_nthshape.js — 秒反應・第幾個出現（企劃 169）
+   樣式：css/games/reaction_nthshape.css（這款專屬的 class 一律以「nthshape-」開頭；共用元件在 css/reaction_common.css）
    畫面中央依序閃現幾個圖形（同一個圖形可以重複出現），閃完之後問：「第 3 個出現的是哪一個圖形？」，
    最下面是所有圖形的按鈕，點出答案。記的是「時間順序中的位置」，不是圖形本身。
    越後面，還會出現「同一種形狀、不同顏色」的圖形（紅色星形和藍色星形是不同的答案）。
@@ -115,9 +116,9 @@
         var nm = function (it) { return (level >= COLOR_FROM ? it.cname + '色' : '') + SHAPE_NAME[it.shape]; };
         console.log('[第幾個出現] 第 ' + level + ' 關：' + q.pool.length + ' 種圖形；順序 ' + q.seq.map(function (i) { return nm(q.pool[i]); }).join('、') + '；問第 ' + q.ask + ' 個 → ' + nm(q.pool[q.ans]) + '；每次 ' + showMs(level) + ' ms，限時 ' + ansMs(level) + ' ms');
 
-        var tip = h('div', { 'class': 'qz-note nth-tip', text: '請看圖形依序出現，要記得第幾個' });
-        var show = h('div', { 'class': 'nth-show' });
-        var strip = h('div', { 'class': 'nth-strip' });
+        var tip = h('div', { 'class': 'qz-note nthshape-tip', text: '請看圖形依序出現，要記得第幾個' });
+        var show = h('div', { 'class': 'nthshape-show' });
+        var strip = h('div', { 'class': 'nthshape-strip' });
         stage.appendChild(tip); stage.appendChild(show); stage.appendChild(strip);
         var phase = 'show', btns = null;
         var t = 700, sm = showMs(level);
@@ -129,10 +130,10 @@
         api.after(t + 100, function () {
             phase = 'ask';
             tip.textContent = '第 ' + q.ask + ' 個出現的是哪一個圖形？';
-            tip.classList.add('nth-tip--ask');
+            tip.classList.add('nthshape-tip--ask');
             var cols = q.pool.length <= 4 ? q.pool.length : 4;
             btns = kit.btnGrid(stage, q.pool.map(function (it, i) {
-                return { html: itemSvg(it), kind: 'line', cls: 'nth-btn', onTap: function () { judge(i); } };
+                return { html: itemSvg(it), kind: 'line', cls: 'nthshape-btn', onTap: function () { judge(i); } };
             }), { cols: cols, h: 96, gap: 10 }).btns;
             api.timer(ansMs(level), function () { judge(null); });
             if (level === 1 && kit.once('nthshape.hint')) kit.hintOn(stage, btns[q.ans], { mode: 'tap', delay: 600, text: '請點擊圖形' });
@@ -145,13 +146,13 @@
             /* 揭曉：整個順序排成一列，被問的那一個圈起來 */
             strip.innerHTML = '';
             q.seq.forEach(function (pi, k) {
-                var c = h('div', { 'class': 'nth-cell' + (k + 1 === q.ask ? ' nth-cell--ask' : ''), html: itemSvg(q.pool[pi]) + '<span>' + (k + 1) + '</span>' });
+                var c = h('div', { 'class': 'nthshape-cell' + (k + 1 === q.ask ? ' nthshape-cell--ask' : ''), html: itemSvg(q.pool[pi]) + '<span>' + (k + 1) + '</span>' });
                 strip.appendChild(c);
             });
             show.innerHTML = '';
             if (btns) {
-                btns[q.ans].classList.add('nth-btn--right');
-                if (i != null && !ok) btns[i].classList.add('nth-btn--wrong');
+                btns[q.ans].classList.add('nthshape-btn--right');
+                if (i != null && !ok) btns[i].classList.add('nthshape-btn--wrong');
             }
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1500 }); return; }
             kit.flash(stage, false, api.my);

@@ -1,0 +1,159 @@
+/* ═══════════════════════════════════════
+   reaction_invoice.css — 對發票（js/reaction_invoice.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「invoice-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 對發票：看獎號，判斷手上的發票有沒有中獎。 */
+/* ═══ 對發票（.invoice-）═══ */
+/* 上方資訊文字 */
+.invoice-info {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--c-ink-soft);
+}
+
+/* 發票卡片 */
+.invoice-card {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-3) var(--sp-2);
+    background: #FFFEF6;
+    border: var(--bd);
+    border-radius: var(--r-md, 12px);
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.12);
+}
+
+/* 發票標題 */
+.invoice-card__head {
+    font-size: var(--fs-sm);
+    letter-spacing: 0.5em;
+    color: var(--c-ink-soft);
+}
+
+/* 發票號碼那一排數字 */
+.invoice-digits {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+}
+
+/* 單個數字格 */
+.invoice-d {
+    width: 48px;
+    height: 76px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 64px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--c-ink);
+    background: var(--c-card-alt);
+    border-radius: 6px;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+/* 與中獎號碼相符的數字（綠） */
+.invoice-d--m {
+    background: #CDEBD3;
+    color: #2E7A40;
+}
+
+/* 特別獎的數字（黃） */
+.invoice-d--sp {
+    background: #FFE48A;
+    color: #8A5A00;
+}
+
+/* 底下的獎項按鈕列（直向排列） */
+.invoice-btns {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* 單個獎項按鈕 */
+.invoice-btn {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-2);
+    padding: 0 var(--sp-3);
+    border: var(--bd);
+    border-radius: var(--r-md, 12px);
+    background: var(--c-card);
+    color: var(--c-ink);
+    font-family: var(--font-ui);
+    cursor: pointer;
+    transition: background 0.1s ease;
+}
+
+.invoice-btn:active {
+    background: var(--c-blue-soft);
+}
+
+/* 獎項名稱（上面粗體、下面小字） */
+.invoice-btn__name {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.1;
+    text-align: left;
+}
+
+.invoice-btn__name b {
+    font-size: 24px;
+    font-weight: 800;
+}
+
+.invoice-btn__name i {
+    font-style: normal;
+    font-size: 16px;
+    color: var(--c-ink-soft);
+}
+
+/* 獎號 */
+.invoice-btn__num {
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* 「沒中獎」按鈕 */
+.invoice-btn--none {
+    justify-content: center;
+    color: var(--c-ink-soft);
+    background: var(--c-card-alt);
+}
+
+.invoice-btn--none .invoice-btn__name b {
+    font-size: 26px;
+}
+
+/* 選對（綠） */
+.invoice-btn--ok {
+    background: hsl(132, 43%, 86%);
+    border-color: var(--c-ok);
+}
+
+/* 漏掉的（黃） */
+.invoice-btn--miss {
+    background: hsl(47, 100%, 86%);
+    border-color: #E0A81C;
+}
+
+/* 選錯（橘） */
+.invoice-btn--bad {
+    background: hsl(19, 79%, 87%);
+    border-color: var(--c-bad);
+}

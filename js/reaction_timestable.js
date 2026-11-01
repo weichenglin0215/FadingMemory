@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_timestable.js — 秒反應・乘法表抓錯
+   樣式：css/games/reaction_timestable.css（這款專屬的 class 一律以「timestable-」開頭；共用元件在 css/reaction_common.css）
    9×9 乘法表有 FOUND（9）格的答案被偷偷改過，找出來。計時，點錯一格罰 3 秒（同一格不重複罰）。
    成績＝找齊 FOUND 格的用時（含罰秒，越短越好）。
    ───────────────────────────────────────────────────────────────────
@@ -106,20 +107,20 @@
         var bad = {}; tb.tampered.forEach(function (c) { bad[c.a + ',' + c.b] = c; });
         console.log('[乘法表抓錯] ' + (first ? '第一次進遊戲（系統引導 1 格、玩家找 ' + FOUND + ' 格）' : '') + '被改的 ' + total + ' 格：' + tb.tampered.map(function (c) { return c.a + '×' + c.b + '＝' + c.shown + '（正解 ' + c.truth + '，' + TYPE_NAME[c.type] + '）'; }).join('；'));
 
-        var clockWrap = h('div', { 'class': 'tt-clock' });
+        var clockWrap = h('div', { 'class': 'timestable-clock' });
         stage.appendChild(clockWrap);
         var clock = kit.clock(clockWrap, my);
-        var table = h('div', { 'class': 'tt-table' });
+        var table = h('div', { 'class': 'timestable-table' });
         table.style.gridTemplateColumns = 'repeat(' + (N + 1) + ', ' + CELL + 'px)';
         var els = {};
         for (var r = 0; r <= N; r++) for (var c = 0; c <= N; c++) (function (r, c) {
             var head = r === 0 || c === 0, txt = r === 0 && c === 0 ? '×' : (r === 0 ? String(c) : (c === 0 ? String(r) : String(bad[r + ',' + c] ? bad[r + ',' + c].shown : r * c)));
-            var el = h('div', { 'class': 'tt-cell' + (head ? ' tt-cell--head' : ''), text: txt });
+            var el = h('div', { 'class': 'timestable-cell' + (head ? ' timestable-cell--head' : ''), text: txt });
             if (!head) { els[r + ',' + c] = el; kit.onTap(el, function () { tap(r, c); }); }
             table.appendChild(el);
         })(r, c);
         stage.appendChild(table);
-        var info = h('div', { 'class': 'tt-info', text: '還有 ' + total + ' 格　點錯 0 次（每次 + 3 秒）' });
+        var info = h('div', { 'class': 'timestable-info', text: '還有 ' + total + ' 格　點錯 0 次（每次 + 3 秒）' });
         stage.appendChild(info);
 
         function begin() {
@@ -136,16 +137,16 @@
             hideHint();
             var key = r + ',' + c, el = els[key], cell = bad[key];
             if (cell) {
-                if (el.classList.contains('tt-cell--found')) return;
-                el.classList.add('tt-cell--found'); el.textContent = cell.shown + '→' + cell.truth;
+                if (el.classList.contains('timestable-cell--found')) return;
+                el.classList.add('timestable-cell--found'); el.textContent = cell.shown + '→' + cell.truth;
                 found++; Sfx.play('ok');
                 info.textContent = '還有 ' + (total - found) + ' 格　點錯 ' + errors + ' 次（每次 + 3 秒）';
                 if (found === total) finish();
             } else {
                 if (wrongSet[key]) return;
                 wrongSet[key] = true; errors++;
-                el.classList.add('tt-cell--bad'); clock.penalty(PENALTY_MS); Sfx.play('bad');
-                my.after(500, function () { el.classList.remove('tt-cell--bad'); });
+                el.classList.add('timestable-cell--bad'); clock.penalty(PENALTY_MS); Sfx.play('bad');
+                my.after(500, function () { el.classList.remove('timestable-cell--bad'); });
                 info.textContent = '還有 ' + (total - found) + ' 格　點錯 ' + errors + ' 次（每次 + 3 秒）';
             }
         }
@@ -154,10 +155,10 @@
             /* 揭曉：被改的答案一起變成紅底白字閃爍 BLINK_MS，再維持 HOLD_MS，才結算 */
             tb.tampered.forEach(function (c) {
                 var el = els[c.a + ',' + c.b];
-                el.classList.remove('tt-cell--found'); el.classList.add('tt-cell--wrong', 'tt-cell--blink');
+                el.classList.remove('timestable-cell--found'); el.classList.add('timestable-cell--wrong', 'timestable-cell--blink');
             });
             Sfx.play('bad');
-            my.after(BLINK_MS, function () { tb.tampered.forEach(function (c) { els[c.a + ',' + c.b].classList.remove('tt-cell--blink'); }); });
+            my.after(BLINK_MS, function () { tb.tampered.forEach(function (c) { els[c.a + ',' + c.b].classList.remove('timestable-cell--blink'); }); });
             my.after(BLINK_MS + HOLD_MS, function () {
                 /* 被改的格子很多（9～10 格），結算只列前 3 格當例子（全部都已經用紅底白字標在表上了） */
                 var ex = tb.tampered.slice(0, 3).map(function (c) { return c.a + '×' + c.b + ' 被改成 ' + c.shown + '，應該是 ' + c.truth + '（' + TYPE_NAME[c.type] + '）'; });

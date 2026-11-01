@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_fridge.js — 秒反應・冰箱歸位
+   樣式：css/games/reaction_fridge.css（這款專屬的 class 一律以「fridge-」開頭；共用元件在 css/reaction_common.css）
    買菜回來，一樣一樣東西出現在畫面最上方的大格子裡，下面三顆答案按鈕：左上「冷藏室」、左下「冷凍庫」、
    右邊「櫥櫃（不用冰）」。有些東西很容易放錯（雞蛋要冷藏、洋蔥不用冰…）。
    ───────────────────────────────────────────────────────────────────
@@ -137,17 +138,17 @@
             var n = (startAt || 1) - 1, right = n, newRec = false, state = 'idle', history = [], cur = null, cardId = 0;
 
             /* 建立畫面元素：三個答案區（冷藏室、冷凍庫、櫥櫃）、題目卡片、時間條、提示 */
-            var head = h('div', { 'class': 'fg-head' });
-            var zCool = h('button', { 'class': 'fg-zone fg-zone--cool' }, [h('span', { 'class': 'fg-zone__v', text: ZONES.cool })]);
-            var zFreeze = h('button', { 'class': 'fg-zone fg-zone--freeze' }, [h('span', { 'class': 'fg-zone__v', text: ZONES.freeze })]);
-            var zPantry = h('button', { 'class': 'fg-zone fg-zone--pantry' }, [h('span', { 'class': 'fg-zone__v', text: '櫥櫃' }), h('span', { 'class': 'fg-zone__v fg-zone__v--sm', text: '不用冰' })]);
-            var arena = h('div', { 'class': 'fg-arena' });
-            var card = h('div', { 'class': 'fg-card' });
+            var head = h('div', { 'class': 'fridge-head' });
+            var zCool = h('button', { 'class': 'fridge-zone fridge-zone--cool' }, [h('span', { 'class': 'fridge-zone__v', text: ZONES.cool })]);
+            var zFreeze = h('button', { 'class': 'fridge-zone fridge-zone--freeze' }, [h('span', { 'class': 'fridge-zone__v', text: ZONES.freeze })]);
+            var zPantry = h('button', { 'class': 'fridge-zone fridge-zone--pantry' }, [h('span', { 'class': 'fridge-zone__v', text: '櫥櫃' }), h('span', { 'class': 'fridge-zone__v fridge-zone__v--sm', text: '不用冰' })]);
+            var arena = h('div', { 'class': 'fridge-arena' });
+            var card = h('div', { 'class': 'fridge-card' });
             var tb = kit.timebar();
-            var tip = h('div', { 'class': 'fg-tip' });
+            var tip = h('div', { 'class': 'fridge-tip' });
             arena.appendChild(card);
-            /* 排版：左邊一欄放冷藏室＋冷凍庫（上下），右邊放櫥櫃（版面細節在 css/reaction2.css 的 .fg-answers） */
-            var answers = h('div', { 'class': 'fg-answers' }, [h('div', { 'class': 'fg-col' }, [zCool, zFreeze]), zPantry]);
+            /* 排版：左邊一欄放冷藏室＋冷凍庫（上下），右邊放櫥櫃（版面細節在 css/games/reaction_fridge.css 的 .fridge-answers） */
+            var answers = h('div', { 'class': 'fridge-answers' }, [h('div', { 'class': 'fridge-col' }, [zCool, zFreeze]), zPantry]);
             [head, arena, tb.el, tip, answers].forEach(function (x) { root.appendChild(x); });
             /* zEl：區域代號 → 按鈕元素，方便用代號操作 */
             var zEl = { freeze: zFreeze, cool: zCool, pantry: zPantry };
@@ -167,11 +168,11 @@
                 head.textContent = '第 ' + n + ' 張';
                 tip.textContent = '';
                 card.innerHTML = '';
-                card.className = 'fg-card';
+                card.className = 'fridge-card';
                 /* 畫食物圖示和名稱 */
-                var svg = kit.svg('svg', { 'class': 'fg-icon', viewBox: '0 0 100 100' }, card);
+                var svg = kit.svg('svg', { 'class': 'fridge-icon', viewBox: '0 0 100 100' }, card);
                 drawIcon(cur.icon, cur.hue, svg);
-                card.appendChild(h('div', { 'class': 'fg-name', text: cur.name }));
+                card.appendChild(h('div', { 'class': 'fridge-name', text: cur.name }));
                 state = 'ask';
                 meta();
                 /* 倒數時間條 */
@@ -189,22 +190,22 @@
                 /* 選的區域＝食物該放的區域就是答對 */
                 var ok = zone === cur.zone;
                 /* 先清掉上一張留下的綠／橘標記 */
-                Object.keys(zEl).forEach(function (k) { zEl[k].classList.remove('fg-zone--ok', 'fg-zone--bad'); });
+                Object.keys(zEl).forEach(function (k) { zEl[k].classList.remove('fridge-zone--ok', 'fridge-zone--bad'); });
                 /* 不論對錯，都把正確答案的區域標成綠色 */
-                zEl[cur.zone].classList.add('fg-zone--ok');
+                zEl[cur.zone].classList.add('fridge-zone--ok');
                 /* 答對：加一分、播音效、稍後出下一張 */
                 if (ok) {
                     right++;
-                    card.classList.add('fg-card--ok');
+                    card.classList.add('fridge-card--ok');
                     Sfx.play('ok');
                     if (Reaction.setBest(ID, right, function (v, b) { return v > b; })) newRec = true;
                     meta();
-                    my.after(NEXT_MS, function () { Object.keys(zEl).forEach(function (k) { zEl[k].classList.remove('fg-zone--ok', 'fg-zone--bad'); }); nextCard(); });
+                    my.after(NEXT_MS, function () { Object.keys(zEl).forEach(function (k) { zEl[k].classList.remove('fridge-zone--ok', 'fridge-zone--bad'); }); nextCard(); });
                     return;
                 }
                 /* 答錯或超時：一次就結束。玩家選的區域標橘色，並顯示提示，稍後結算 */
-                if (zone) zEl[zone].classList.add('fg-zone--bad');
-                card.classList.add('fg-card--bad');
+                if (zone) zEl[zone].classList.add('fridge-zone--bad');
+                card.classList.add('fridge-card--bad');
                 Sfx.play('bad');
                 tip.textContent = (zone == null ? '時間到！' : '放錯了…') + cur.name + '要放' + ZONES[cur.zone] + (cur.tip ? '（' + cur.tip + '）' : '');
                 meta();

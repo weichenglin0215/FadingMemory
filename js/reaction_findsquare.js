@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_findsquare.js — 秒反應・找正方形（企劃 260）
+   樣式：css/games/reaction_findsquare.css（這款專屬的 class 一律以「findsquare-」開頭；共用元件在 css/reaction_common.css）
    夜空裡撒著一堆星星。**裡面剛好有四顆星能連成一個正方形**，把這四顆點出來（點滿四顆就判定）。
    ───────────────────────────────────────────────────────────────────
    · 「正方形」的判定（quadMetrics）：四個點兩兩的距離共 6 個，排序之後前 4 個是「邊」、後 2 個是「對角線」。
@@ -154,7 +155,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'fsq-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'findsquare-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -177,22 +178,22 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var sc = Math.min((W - 12) / FIELD.w, (H - 130) / FIELD.h), fw = FIELD.w * sc, fh = FIELD.h * sc, fx = Math.round((W - fw) / 2), fy = 58;
-        var tip = h('div', { 'class': 'qz-note fsq-tip', text: '找出剛好連成正方形的四顆星' });
+        var tip = h('div', { 'class': 'qz-note findsquare-tip', text: '找出剛好連成正方形的四顆星' });
         stage.appendChild(tip);
-        var sky = h('div', { 'class': 'fsq-sky' });
+        var sky = h('div', { 'class': 'findsquare-sky' });
         sky.style.cssText = 'left:' + fx + 'px;top:' + fy + 'px;width:' + fw + 'px;height:' + fh + 'px;';
         stage.appendChild(sky);
-        var svg = kit.svg('svg', { 'class': 'fsq-svg', viewBox: '0 0 ' + FIELD.w + ' ' + FIELD.h, width: fw, height: fh }, sky);
+        var svg = kit.svg('svg', { 'class': 'findsquare-svg', viewBox: '0 0 ' + FIELD.w + ' ' + FIELD.h, width: fw, height: fh }, sky);
         var gLines = kit.svg('g', {}, svg), gStars = kit.svg('g', {}, svg);
         var starEls = pts.map(function (p, i) {
-            var g = kit.svg('g', { 'class': 'fsq-star', transform: 'translate(' + p.x + ',' + p.y + ')' }, gStars);
-            kit.svg('circle', { 'class': 'fsq-halo', cx: 0, cy: 0, r: 19 }, g);
-            kit.svg('path', { 'class': 'fsq-shape', d: starPath(11) }, g);
-            kit.svg('circle', { 'class': 'fsq-hit', cx: 0, cy: 0, r: 24 }, g);          /* 看不見的大圓：手指比較好點 */
+            var g = kit.svg('g', { 'class': 'findsquare-star', transform: 'translate(' + p.x + ',' + p.y + ')' }, gStars);
+            kit.svg('circle', { 'class': 'findsquare-halo', cx: 0, cy: 0, r: 19 }, g);
+            kit.svg('path', { 'class': 'findsquare-shape', d: starPath(11) }, g);
+            kit.svg('circle', { 'class': 'findsquare-hit', cx: 0, cy: 0, r: 24 }, g);          /* 看不見的大圓：手指比較好點 */
             kit.onTap(g, function () { tap(i); });
             return g;
         });
-        var info = h('div', { 'class': 'qz-note fsq-info', text: '已選 0／4' });
+        var info = h('div', { 'class': 'qz-note findsquare-info', text: '已選 0／4' });
         info.style.top = (fy + fh + 8) + 'px';
         stage.appendChild(info);
         var sel = [], done = false;
@@ -204,22 +205,22 @@
         function tap(i) {
             if (done || api.over) return;
             var at = sel.indexOf(i);
-            if (at >= 0) { sel.splice(at, 1); starEls[i].classList.remove('fsq-star--on'); }
-            else { sel.push(i); starEls[i].classList.add('fsq-star--on'); Sfx.play('click'); }
+            if (at >= 0) { sel.splice(at, 1); starEls[i].classList.remove('findsquare-star--on'); }
+            else { sel.push(i); starEls[i].classList.add('findsquare-star--on'); Sfx.play('click'); }
             info.textContent = '已選 ' + sel.length + '／4';
             if (sel.length === 4) judge();
         }
-        /* 把一圈的四顆星連起來（cls：fsq-line--ok｜--bad｜--true） */
+        /* 把一圈的四顆星連起來（cls：findsquare-line--ok｜--bad｜--true） */
         function drawQuad(idx, cls) {
             var o = orderQuad(pts, idx);
-            for (var k = 0; k < 4; k++) { var a = pts[o[k]], b = pts[o[(k + 1) % 4]]; kit.svg('line', { 'class': 'fsq-line ' + cls, x1: a.x, y1: a.y, x2: b.x, y2: b.y }, gLines); }
+            for (var k = 0; k < 4; k++) { var a = pts[o[k]], b = pts[o[(k + 1) % 4]]; kit.svg('line', { 'class': 'findsquare-line ' + cls, x1: a.x, y1: a.y, x2: b.x, y2: b.y }, gLines); }
         }
         function judge() {
             if (done || api.over) return;
             done = true;
             var ok = sel.length === 4 && squareErr(sel.map(function (i) { return pts[i]; })) < EPS_SQ;
             if (ok) {
-                drawQuad(sel, 'fsq-line--ok');
+                drawQuad(sel, 'findsquare-line--ok');
                 info.textContent = '找到了！是一個正方形';
                 kit.flash(stage, true, api.my);
                 api.pass({ delay: 1600 });
@@ -228,12 +229,12 @@
             kit.flash(stage, false, api.my);
             if (sel.length === 4) {
                 var ds = describeQuad(pts, sel);
-                drawQuad(sel, 'fsq-line--bad');
+                drawQuad(sel, 'findsquare-line--bad');
                 info.textContent = '你選的：' + ds.text;
-                api.after(1500, function () { drawQuad(q.sq, 'fsq-line--true'); q.sq.forEach(function (i) { starEls[i].classList.add('fsq-star--true'); }); info.textContent = '綠色的才是真的正方形'; });
+                api.after(1500, function () { drawQuad(q.sq, 'findsquare-line--true'); q.sq.forEach(function (i) { starEls[i].classList.add('findsquare-star--true'); }); info.textContent = '綠色的才是真的正方形'; });
                 api.fail({ delay: 4200, lines: ['你選的四邊形：' + ds.text, '綠色的四顆星才是真的正方形'] });
             } else {
-                drawQuad(q.sq, 'fsq-line--true'); q.sq.forEach(function (i) { starEls[i].classList.add('fsq-star--true'); });
+                drawQuad(q.sq, 'findsquare-line--true'); q.sq.forEach(function (i) { starEls[i].classList.add('findsquare-star--true'); });
                 info.textContent = '時間到！綠色的是正方形';
                 api.fail({ delay: 3000, lines: ['時間到！', '綠色的四顆星才是真的正方形'] });
             }

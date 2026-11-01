@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_twinsock.js — 秒反應・雙胞胎襪子（原企劃「057 找出雙胞胎襪子」的復活版）
+   樣式：css/games/reaction_twinsock.css（這款專屬的 class 一律以「twinsock-」開頭；共用元件在 css/reaction_common.css）
    一格一格的襪子，左上角那隻是「目標」（不會轉動，格子底色跟別人不一樣）；
    其餘的襪子都在慢慢轉動，其中恰好有一隻跟目標「一模一樣」（底色、條紋數、圓點數都相同），點出它。
    關卡制：答錯或逾時就結束，成績＝過了幾關。
@@ -91,7 +92,7 @@
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
-            stageClass: 'tw-stage',
+            stageClass: 'twinsock-stage',
             setup: setup
         });
     }
@@ -103,21 +104,21 @@
         console.log('[雙胞胎襪子] 第 ' + level + ' 關：' + q.cols + '×' + q.rows + '；雙胞胎在第 ' + (q.twin + 1) + ' 格；轉速約 ' + spinAt(level).toFixed(1) + '°／秒；色相差 ' + hueDelta(level).toFixed(1) + '°、數量差 ' + countDelta(level) + '；限時 ' + timeMs(level) + ' ms；' + q.socks.map(key).join(' | '));
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        var tip = h('div', { 'class': 'tw-tip', text: '找出和左上角（藍底）一樣的襪子' });
+        var tip = h('div', { 'class': 'twinsock-tip', text: '找出和左上角（藍底）一樣的襪子' });
         stage.appendChild(tip);
         var TOP = 56, availH = H - TOP;
         var cell = Math.floor(Math.min((W - GAP * (q.cols - 1)) / q.cols, (availH - GAP * (q.rows - 1)) / q.rows));
         var gx = Math.round((W - (q.cols * cell + (q.cols - 1) * GAP)) / 2), gy = TOP + Math.round((availH - (q.rows * cell + (q.rows - 1) * GAP)) / 2);
         var cells = q.socks.map(function (s, i) {
-            var el = h('div', { 'class': 'tw-cell' + (i === 0 ? ' tw-cell--target' : '') });
+            var el = h('div', { 'class': 'twinsock-cell' + (i === 0 ? ' twinsock-cell--target' : '') });
             el.style.width = el.style.height = cell + 'px';
             el.style.left = (gx + (i % q.cols) * (cell + GAP)) + 'px'; el.style.top = (gy + Math.floor(i / q.cols) * (cell + GAP)) + 'px';
-            var inner = h('div', { 'class': 'tw-sock', html: sockSvg(s, level + '_' + i) });
+            var inner = h('div', { 'class': 'twinsock-sock', html: sockSvg(s, level + '_' + i) });
             if (i > 0) {
                 inner.style.animationDuration = s.dur.toFixed(2) + 's';
                 inner.style.animationDelay = s.delay.toFixed(2) + 's';
                 inner.style.animationDirection = s.spin < 0 ? 'reverse' : 'normal';
-                inner.classList.add('tw-sock--spin');
+                inner.classList.add('twinsock-sock--spin');
             }
             el.appendChild(inner);
             if (i > 0) kit.onTap(el, function () { judge(i); });
@@ -131,8 +132,8 @@
             if (done || api.over) return;
             done = true; api.stopTimer();
             var ok = i === q.twin;
-            cells[q.twin].classList.add('tw-cell--ok');
-            if (i >= 0 && !ok) cells[i].classList.add('tw-cell--bad');
+            cells[q.twin].classList.add('twinsock-cell--ok');
+            if (i >= 0 && !ok) cells[i].classList.add('twinsock-cell--bad');
             if (ok) { api.pass({ gain: 1, delay: 700 }); return; }
             api.fail({ delay: 1500, lines: [i < 0 ? '時間到了' : '點到不一樣的襪子了', '只要底色、條紋數、圓點數有一個不同就不是雙胞胎'] });
         }

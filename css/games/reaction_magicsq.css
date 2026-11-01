@@ -1,0 +1,148 @@
+/* ═══════════════════════════════════════
+   reaction_magicsq.css — 魔方陣（js/reaction_magicsq.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「magicsq-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 顏色與尺寸一律用 css/theme.css 的 CSS 變數。方陣邊長 --magicsq-n、每格邊長 --magicsq-cell、右邊與下面那一排「差多少」的寬／高 --magicsq-statw／--magicsq-stath、
+     數字大小 --magicsq-font 由 js 依畫面寬度算好寫在 .magicsq-board 上；下面的值是備用值。
+   ═══════════════════════════════════════ */
+
+.magicsq-wrap {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding-top: 8px;
+    box-sizing: border-box;
+}
+
+.magicsq-board {
+    display: grid;
+    grid-template-columns: repeat(var(--magicsq-n, 4), var(--magicsq-cell, 80px)) var(--magicsq-statw, 80px);
+    grid-template-rows: repeat(var(--magicsq-n, 4), var(--magicsq-cell, 80px)) var(--magicsq-stath, 44px);
+    gap: 4px;
+}
+
+.magicsq-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border: 3px solid var(--c-ink);
+    border-radius: var(--r-sm);
+    background: var(--c-card);
+    color: var(--c-blue);
+    font-size: var(--magicsq-font, var(--fs-xl));
+    font-weight: var(--fw-black);
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 題目給的數字：黑字、底色深一點，不能改 */
+.magicsq-cell--given {
+    background: var(--c-card-alt);
+    color: var(--c-ink);
+}
+
+.magicsq-cell--mine {
+    color: var(--c-blue);
+}
+
+.magicsq-cell--sel {
+    background: var(--c-yellow);
+}
+
+.magicsq-cell--hint {
+    animation: magicsq-hint 0.8s ease-in-out infinite;
+}
+
+.magicsq-cell--ok {
+    background: var(--c-ok-soft);
+    color: var(--c-ok);
+}
+
+@keyframes magicsq-hint {
+    0%, 100% { background: var(--c-yellow-soft); }
+    50% { background: var(--c-orange-soft); }
+}
+
+/* 每一排（右邊）、每一列（下面）的「差多少」 */
+.magicsq-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+.magicsq-status--ok {
+    color: var(--c-ok);
+    font-weight: var(--fw-black);
+}
+
+.magicsq-status--bad {
+    color: var(--c-bad);
+}
+
+/* 對角線的狀況 */
+.magicsq-diag {
+    display: flex;
+    gap: 22px;
+    min-height: 34px;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+.magicsq-diag__item {
+    color: var(--c-ink-soft);
+}
+
+.magicsq-diag__item--ok {
+    color: var(--c-ok);
+}
+
+.magicsq-diag__item--bad {
+    color: var(--c-bad);
+}
+
+.magicsq-tip {
+    min-height: 28px;
+    padding: 0 12px;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    text-align: center;
+}
+
+.magicsq-pad {
+    display: grid;
+    gap: 6px;
+    width: 96%;
+}
+
+.magicsq-key {
+    height: 54px;
+    padding: 0;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+}
+
+.magicsq-key--used {
+    opacity: 0.3;
+}
+
+.magicsq-tools {
+    display: flex;
+    gap: 10px;
+    width: 96%;
+}
+
+.magicsq-tool {
+    flex: 1 1 0;
+    height: 50px;
+    padding: 0;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+}

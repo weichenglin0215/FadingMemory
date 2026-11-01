@@ -48,9 +48,9 @@ ok(pairShown / total > 0.5 && askPair / total > 0.3, '常常出現長得像的�
 // 越後面長得像的一對越常出現
 { let early = 0, late = 0, n = 600; for (let i = 0; i < n; i++) { const a = T.makeLevel(1, rnd).placements.map(p => p.icon), b = T.makeLevel(24, rnd).placements.map(p => p.icon); if ((a.includes('tooth') && a.includes('hospital')) || (a.includes('cake') && a.includes('box'))) early++; if ((b.includes('tooth') && b.includes('hospital')) || (b.includes('cake') && b.includes('box'))) late++; } ok(late > early + n * 0.2, '長得像的一對越後面越常：第 1 關 ' + (100 * early / n).toFixed(0) + '% → 第 24 關 ' + (100 * late / n).toFixed(0) + '%'); }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_calendar.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 3400/.test(src) && /cld-cell--bad/.test(src) && /revealAll/.test(src), '失敗：貼紙全部回來、紅圈綠圈、停格 2 秒以上');
-  ok(/\.cld-cell--ok \{[^}]*var\(--c-ok\)/.test(css) && /\.cld-cell--bad \{[^}]*var\(--c-bad-light\)/.test(css), '綠圈、紅圈用 CSS 變數');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_calendar.js'), css = rd('../../css/games/reaction_calendar.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 3400/.test(src) && /calendar-cell--bad/.test(src) && /revealAll/.test(src), '失敗：貼紙全部回來、紅圈綠圈、停格 2 秒以上');
+  ok(/\.calendar-cell--ok \{[^}]*var\(--c-ok\)/.test(css) && /\.calendar-cell--bad \{[^}]*var\(--c-bad-light\)/.test(css), '綠圈、紅圈用 CSS 變數');
   ok(boot.indexOf("'js/reaction_calendar.js'") > 0 && /月曆/.test(G.rule), 'boot.js 有載入、玩法說明提到月曆'); }
 ok(T.rating(2) !== T.rating(4) && T.rating(4) !== T.rating(7) && T.rating(7) !== T.rating(12) && T.rating(12) !== T.rating(20), '評語分級');
 // V1.36.0 玩家意見：圖示消失之後，先在問題列上讓圖示亂跳、閃爍 2 秒（故意干擾），才出現問題
@@ -60,9 +60,9 @@ ok(T.DISTRACT_S === 2 && T.NOISE_COPIES >= 2 && T.MOVE_MS > 0 && T.BLINK_MS[0] <
   const xs = new Set(), ys = new Set(); for (let k = 0; k < 50; k++) T.noiseSpots(12, W, H, S, rnd).forEach(p => { xs.add(Math.floor(p.x / 40)); ys.add(Math.floor(p.y / 20)); });
   ok(xs.size >= 8 && ys.size >= 3, '位置是隨機散開的（橫向 ' + xs.size + ' 格、縱向 ' + ys.size + ' 格都出現過）');
   ok(JSON.stringify(T.noiseSpots(3, 10, 10, 20, rnd)) === '[{"x":0,"y":0},{"x":0,"y":0},{"x":0,"y":0}]', '問題列比圖示還小時不會出現負數位置'); }
-{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_calendar.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction6.css'), 'utf8').split(/\s+/).join(' ');
+{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_calendar.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_calendar.css'), 'utf8').split(/\s+/).join(' ');
   ok(src.indexOf("phase = 'distract'") > 0 && src.indexOf('api.after(DISTRACT_S * 1000') > 0 && src.indexOf("stopNoise(); phase = 'ask'") > 0, '貼紙收起來之後進入「干擾」階段，DISTRACT_S 秒後才進入「問題」階段');
   { const a = src.indexOf('function hide()'), b = src.indexOf('function startNoise()'); ok(a > 0 && b > a && src.slice(a, b).indexOf('nextAsk()') > src.slice(a, b).indexOf('api.after(DISTRACT_S'), '問題（nextAsk）在干擾結束之後才出現'); }
-  ok(css.indexOf('.cld-noise__i { position: absolute; animation: cld-blink') >= 0 && css.indexOf('@keyframes cld-blink') >= 0, '干擾圖示會閃爍（有樣式）');
+  ok(css.indexOf('.calendar-noise__i { position: absolute; animation: calendar-blink') >= 0 && css.indexOf('@keyframes calendar-blink') >= 0, '干擾圖示會閃爍（有樣式）');
   ok(/閃爍/.test(G.rule), '玩法說明提到閃爍的干擾圖案'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

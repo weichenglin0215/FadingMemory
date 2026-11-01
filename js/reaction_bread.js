@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_bread.js — 秒反應・秤麵包重量
+   樣式：css/games/reaction_bread.css（這款專屬的 class 一律以「bread-」開頭；共用元件在 css/reaction_common.css）
    把一塊麵包垂直切成左右兩半，掉到左右兩個電子秤上，兩邊的重量差距要在標準以內才能過關。
    後面的關卡麵包會變成梯形、不等邊三角形，中間切不一定剛好一半。
    ───────────────────────────────────────────────────────────────────
@@ -143,12 +144,12 @@
             var level = start || 1, cleared = level - 1, newRec = false;
 
             /* 建立畫面元素：資訊、麵包區、控制列（◀ 切下去 ▶） */
-            var info = h('div', { 'class': 'bk-info' });
-            var zone = h('div', { 'class': 'bk-zone' });
-            var ctrl = h('div', { 'class': 'bk-ctrl' });
-            var btnL = h('button', { 'class': 'btn btn--line bk-nudge', text: '◀' });
-            var btnCut = h('button', { 'class': 'btn btn--primary bk-cut', text: '切下去' });
-            var btnR = h('button', { 'class': 'btn btn--line bk-nudge', text: '▶' });
+            var info = h('div', { 'class': 'bread-info' });
+            var zone = h('div', { 'class': 'bread-zone' });
+            var ctrl = h('div', { 'class': 'bread-ctrl' });
+            var btnL = h('button', { 'class': 'btn btn--line bread-nudge', text: '◀' });
+            var btnCut = h('button', { 'class': 'btn btn--primary bread-cut', text: '切下去' });
+            var btnR = h('button', { 'class': 'btn btn--line bread-nudge', text: '▶' });
             ctrl.appendChild(btnL); ctrl.appendChild(btnCut); ctrl.appendChild(btnR);
             root.appendChild(info);
             root.appendChild(zone);
@@ -157,7 +158,7 @@
             /* 整個場景畫在一個 SVG：上面麵包、下面兩個電子秤 */
             /* 整個場景畫在一個 SVG：上面麵包、下面兩個秤 */
             var SW = 468, SH = 560;
-            var svg = kit.svg('svg', { 'class': 'bk-svg', viewBox: '0 0 ' + SW + ' ' + SH, preserveAspectRatio: 'xMidYMid meet' }, zone);
+            var svg = kit.svg('svg', { 'class': 'bread-svg', viewBox: '0 0 ' + SW + ' ' + SH, preserveAspectRatio: 'xMidYMid meet' }, zone);
             /* 麵包左上角在 SVG 裡的位置（水平置中） */
             var OX = (SW - W) / 2;                       /* 麵包左上角在 SVG 的位置 */
             var gBread = kit.svg('g', { transform: 'translate(' + OX + ' ' + BREAD_Y + ')' }, svg);
@@ -166,20 +167,20 @@
             /* 畫兩個電子秤（底座、螢幕、克數文字、秤盤） */
             var scaleEls = SCALE_CX.map(function (cx) {
                 var g = kit.svg('g', {}, svg);
-                kit.svg('rect', { 'class': 'bk-sbase', x: cx - 105, y: PLAT_Y + 14, width: 210, height: 96, rx: 14 }, g);
-                kit.svg('rect', { 'class': 'bk-slcd', x: cx - 80, y: PLAT_Y + 34, width: 160, height: 56, rx: 8 }, g);
-                var txt = kit.svg('text', { 'class': 'bk-sgram', x: cx, y: PLAT_Y + 74, 'text-anchor': 'middle' }, g);
+                kit.svg('rect', { 'class': 'bread-sbase', x: cx - 105, y: PLAT_Y + 14, width: 210, height: 96, rx: 14 }, g);
+                kit.svg('rect', { 'class': 'bread-slcd', x: cx - 80, y: PLAT_Y + 34, width: 160, height: 56, rx: 8 }, g);
+                var txt = kit.svg('text', { 'class': 'bread-sgram', x: cx, y: PLAT_Y + 74, 'text-anchor': 'middle' }, g);
                 txt.textContent = '0.0 g';
-                var plat = kit.svg('rect', { 'class': 'bk-splat', x: cx - PLAT_W / 2, y: PLAT_Y, width: PLAT_W, height: 14, rx: 6 }, g);
+                var plat = kit.svg('rect', { 'class': 'bread-splat', x: cx - PLAT_W / 2, y: PLAT_Y, width: PLAT_W, height: 14, rx: 6 }, g);
                 return { cx: cx, txt: txt, plat: plat };
             });
             /* 判定結果（秤的正下方）：第一行差距百分比、第二行「過關！／沒過關」；平常是空的（透明），秤重時才出現 */
-            var diffTxt = kit.svg('text', { 'class': 'bk-vd', x: SW / 2, y: PLAT_Y + 142, 'text-anchor': 'middle' }, svg);
-            var wordTxt = kit.svg('text', { 'class': 'bk-vw', x: SW / 2, y: PLAT_Y + 186, 'text-anchor': 'middle' }, svg);
+            var diffTxt = kit.svg('text', { 'class': 'bread-vd', x: SW / 2, y: PLAT_Y + 142, 'text-anchor': 'middle' }, svg);
+            var wordTxt = kit.svg('text', { 'class': 'bread-vw', x: SW / 2, y: PLAT_Y + 186, 'text-anchor': 'middle' }, svg);
             /* 清掉上一塊麵包的判定結果 */
             function clearVerdict() {
-                diffTxt.textContent = ''; diffTxt.setAttribute('class', 'bk-vd');
-                wordTxt.textContent = ''; wordTxt.setAttribute('class', 'bk-vw');
+                diffTxt.textContent = ''; diffTxt.setAttribute('class', 'bread-vd');
+                wordTxt.textContent = ''; wordTxt.setAttribute('class', 'bread-vw');
             }
 
             /* B 這關的麵包；grams 總重；knife 刀的 x 位置；state 目前階段（aim 瞄準/cut 切下去/verdict 揭曉） */
@@ -198,12 +199,12 @@
                 clearVerdict();
                 B = makeBread(level);
                 grams = Math.round(kit.randFloat(G_MIN, G_MAX) * 10) / 10;
-                scaleEls.forEach(function (s) { s.txt.textContent = '0.0 g'; s.txt.classList.remove('bk-sgram--on'); s.plat.setAttribute('y', PLAT_Y); });
-                var poly = kit.svg('polygon', { 'class': 'bk-bread', points: B.pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' ') }, gBread);
+                scaleEls.forEach(function (s) { s.txt.textContent = '0.0 g'; s.txt.classList.remove('bread-sgram--on'); s.plat.setAttribute('y', PLAT_Y); });
+                var poly = kit.svg('polygon', { 'class': 'bread-bread', points: B.pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' ') }, gBread);
                 /* 麵包上的紋路，單純裝飾 */
-                gKnife = kit.svg('g', { 'class': 'bk-knife' }, gBread);
-                kit.svg('line', { 'class': 'bk-knife__line', x1: 0, y1: -30, x2: 0, y2: HB + 30 }, gKnife);
-                kit.svg('polygon', { 'class': 'bk-knife__grip', points: '-14,-30 14,-30 0,-8' }, gKnife);
+                gKnife = kit.svg('g', { 'class': 'bread-knife' }, gBread);
+                kit.svg('line', { 'class': 'bread-knife__line', x1: 0, y1: -30, x2: 0, y2: HB + 30 }, gKnife);
+                kit.svg('polygon', { 'class': 'bread-knife__grip', points: '-14,-30 14,-30 0,-8' }, gKnife);
                 var bx = B.pts.map(function (p) { return p[0]; });
                 knife = kit.randFloat(W * 0.2, W * 0.8);
                 moveKnife(knife);
@@ -213,7 +214,7 @@
                 /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從刀子現在的位置往「剛好對半的位置」重複移動（第一關的正確答案） */
                 if (Reaction.kit.once('bread.hint')) {
                     var sr = svg.getBoundingClientRect(), pxPerUnit = Math.min(sr.width / SW, sr.height / SH) / ((root.getBoundingClientRect().width / root.clientWidth) || 1);
-                    Reaction.kit.hintOn(root, gKnife.querySelector('.bk-knife__line'), { mode: 'drag', dx: (balanceX(B.pts) - knife) * pxPerUnit, dy: 0, text: '請往左右拖曳刀子' });
+                    Reaction.kit.hintOn(root, gKnife.querySelector('.bread-knife__line'), { mode: 'drag', dx: (balanceX(B.pts) - knife) * pxPerUnit, dy: 0, text: '請往左右拖曳刀子' });
                 }
                 /* 主控台印出這關的形狀、總重、標準、剛好對半的位置，方便驗證 */
                 try {
@@ -298,7 +299,7 @@
                 var parts = [{ pts: left, side: 0 }, { pts: right, side: 1 }];
                 parts.forEach(function (pt) {
                     var g = kit.svg('g', {}, gBread);
-                    kit.svg('polygon', { 'class': 'bk-bread', points: pt.pts.map(function (p) { return p[0].toFixed(2) + ',' + p[1].toFixed(2); }).join(' ') }, g);
+                    kit.svg('polygon', { 'class': 'bread-bread', points: pt.pts.map(function (p) { return p[0].toFixed(2) + ',' + p[1].toFixed(2); }).join(' ') }, g);
                     var xs = pt.pts.map(function (p) { return p[0]; }), ys = pt.pts.map(function (p) { return p[1]; });
                     var minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs), maxY = Math.max.apply(null, ys);
                     /* 目標：piece 的底邊貼在秤盤上方，水平置中在秤盤上（座標換到 gBread 的座標系） */
@@ -324,10 +325,10 @@
                     return my.tween(600, function (e) {
                         scaleEls.forEach(function (s, i) {
                             s.txt.textContent = (targets[i] * e).toFixed(1) + ' g';
-                            s.txt.classList.add('bk-sgram--on');
+                            s.txt.classList.add('bread-sgram--on');
                         });
                         diffTxt.textContent = '差距 ' + (wc.diff * e).toFixed(4) + '%';
-                        diffTxt.setAttribute('class', 'bk-vd bk-vd--on');
+                        diffTxt.setAttribute('class', 'bread-vd bread-vd--on');
                     }, kit.easeOutCubic);
                 }).then(function () {
                     if (my.dead) return;
@@ -343,23 +344,23 @@
                 var balPct = bal / W * 100, myPct = c / W * 100;
                 /* 秤的正下方：差距百分比（真實值）＋「過關！／沒過關」，跟剛跳完的克數同時看得到 */
                 diffTxt.textContent = '差距 ' + wc.diff.toFixed(4) + '%';
-                diffTxt.setAttribute('class', 'bk-vd bk-vd--on');
+                diffTxt.setAttribute('class', 'bread-vd bread-vd--on');
                 wordTxt.textContent = pass ? '過關！' : '沒過關';
-                wordTxt.setAttribute('class', 'bk-vw ' + (pass ? 'bk-vw--ok' : 'bk-vw--bad'));
+                wordTxt.setAttribute('class', 'bread-vw ' + (pass ? 'bread-vw--ok' : 'bread-vw--bad'));
                 if (pass) {
                     cleared = level;
                     if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
                     ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))]));
                     info.textContent = '差距 ' + wc.diff.toFixed(4) + '%（標準 ' + thr.toFixed(4) + '%）過關！';
-                    info.classList.add('bk-info--ok');
+                    info.classList.add('bread-info--ok');
                     Sfx.play('win');
-                    my.after(G.dev.next || NEXT_MS, function () { info.classList.remove('bk-info--ok'); level++; drawBread(); });
+                    my.after(G.dev.next || NEXT_MS, function () { info.classList.remove('bread-info--ok'); level++; drawBread(); });
                 } else {
                     info.textContent = '差距 ' + wc.diff.toFixed(4) + '%，超過標準 ' + thr.toFixed(4) + '%';
-                    info.classList.add('bk-info--bad');
+                    info.classList.add('bread-info--bad');
                     var back = kit.resumeFrom(level);
                     my.after(1600, function () {
-                        info.classList.remove('bk-info--bad');
+                        info.classList.remove('bread-info--bad');
                         kit.result(root, {
                             score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: cleared + ' 關', label: '差太多了',

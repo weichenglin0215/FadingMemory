@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_seenchars.js — 秒反應・看過的字（企劃 324）
+   樣式：css/games/reaction_seenchars.css（這款專屬的 class 一律以「seenchars-」開頭；共用元件在 css/reaction_common.css）
    畫面閃出 2 → 6 個字（3 → 2 秒），收起來。接著出現一個 3×3 → 5×5 的字格，**點出剛才看過的那幾個字**，點完按「好了」。
    ───────────────────────────────────────────────────────────────────
    · 干擾項全部是「形近字」（共用資料庫 js/similar_chars.js 的 SimilarChars）：看過「侍」，字格裡就有「待、持、特、恃」。
@@ -88,7 +89,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'skc-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'seenchars-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -103,29 +104,29 @@
         console.log('[看過的字] 第 ' + level + ' 關：看過 ' + q.seen.join('') + '（' + q.k + ' 個），字格 ' + G2 + '×' + G2 + '：' + q.grid.join('') + '；字群平均筆劃 ' + q.strokes.map(function (x) { return x.toFixed(1); }).join('～') + '；看 ' + q.viewMs + ' 毫秒');
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        var field = h('div', { 'class': 'skc-field' });
+        var field = h('div', { 'class': 'seenchars-field' });
         stage.appendChild(field);
-        var tip = h('div', { 'class': 'qz-note skc-tip', text: '記住這幾個字' });
+        var tip = h('div', { 'class': 'qz-note seenchars-tip', text: '記住這幾個字' });
         field.appendChild(tip);
         /* 看：把看過的字排成一列（最多兩列），大大的楷書 */
-        var show = h('div', { 'class': 'skc-show' });
+        var show = h('div', { 'class': 'seenchars-show' });
         var per = Math.min(q.k, 3), sz = Math.min(120, Math.floor((W - 40) / per) - 12);
-        q.seen.forEach(function (c) { var b = h('div', { 'class': 'skc-show__ch', text: c }); b.style.cssText = 'width:' + sz + 'px;height:' + sz + 'px;font-size:' + Math.round(sz * 0.78) + 'px;line-height:' + sz + 'px;'; show.appendChild(b); });
+        q.seen.forEach(function (c) { var b = h('div', { 'class': 'seenchars-show__ch', text: c }); b.style.cssText = 'width:' + sz + 'px;height:' + sz + 'px;font-size:' + Math.round(sz * 0.78) + 'px;line-height:' + sz + 'px;'; show.appendChild(b); });
         field.appendChild(show);
-        var info = h('div', { 'class': 'qz-note skc-info', text: '看 ' + Math.round(q.viewMs / 1000) + ' 秒' }); field.appendChild(info);
+        var info = h('div', { 'class': 'qz-note seenchars-info', text: '看 ' + Math.round(q.viewMs / 1000) + ' 秒' }); field.appendChild(info);
         var picked = [], phase = 'view', done = false, gridEl = null, btn = null, cellEls = [];
         api.timer(q.viewMs, ask);
         function ask() {
             if (api.over) return;
             phase = 'pick'; show.style.display = 'none'; tip.textContent = '點出剛才看過的字，點完按「好了」'; info.textContent = '';
             var cs = Math.min(82, Math.floor((W - 32) / G2) - 6), gw = cs * G2 + (G2 - 1) * 6;
-            gridEl = h('div', { 'class': 'skc-grid' }); gridEl.style.cssText = 'left:' + Math.round((W - gw) / 2) + 'px;top:64px;width:' + gw + 'px;grid-template-columns:repeat(' + G2 + ',' + cs + 'px);grid-auto-rows:' + cs + 'px;';
+            gridEl = h('div', { 'class': 'seenchars-grid' }); gridEl.style.cssText = 'left:' + Math.round((W - gw) / 2) + 'px;top:64px;width:' + gw + 'px;grid-template-columns:repeat(' + G2 + ',' + cs + 'px);grid-auto-rows:' + cs + 'px;';
             q.grid.forEach(function (c, i) {
-                var cell = h('div', { 'class': 'skc-cell', text: c }); cell.style.fontSize = Math.round(cs * 0.72) + 'px';
+                var cell = h('div', { 'class': 'seenchars-cell', text: c }); cell.style.fontSize = Math.round(cs * 0.72) + 'px';
                 kit.onTap(cell, function () { toggle(i); }); gridEl.appendChild(cell); cellEls.push(cell);
             });
             field.appendChild(gridEl);
-            btn = h('div', { 'class': 'btn btn--go skc-done', text: '好了' }); field.appendChild(btn);
+            btn = h('div', { 'class': 'btn btn--go seenchars-done', text: '好了' }); field.appendChild(btn);
             kit.onTap(btn, function () { judge(false); });
             api.timer(q.respMs, function () { judge(true); });
             if (level === 1 && kit.once('seenchars.hint')) kit.hintOn(stage, cellEls[q.seenIdx[0]], { mode: 'tap', delay: 1500, text: '點出剛才看過的字' });
@@ -133,18 +134,18 @@
         function toggle(i) {
             if (phase !== 'pick' || done || api.over) return;
             var at = picked.indexOf(i);
-            if (at >= 0) { picked.splice(at, 1); cellEls[i].classList.remove('skc-cell--on'); } else { picked.push(i); cellEls[i].classList.add('skc-cell--on'); Sfx.play('click'); }
+            if (at >= 0) { picked.splice(at, 1); cellEls[i].classList.remove('seenchars-cell--on'); } else { picked.push(i); cellEls[i].classList.add('seenchars-cell--on'); Sfx.play('click'); }
         }
         function judge(timeout) {
             if (phase !== 'pick' || done || api.over) return;
             done = true; phase = 'end'; btn.style.display = 'none';
             var r = judgePick(q, picked);
-            q.seenIdx.forEach(function (i) { cellEls[i].classList.add(picked.indexOf(i) >= 0 ? 'skc-cell--ok' : 'skc-cell--miss'); });
-            r.wrong.forEach(function (i) { cellEls[i].classList.add('skc-cell--bad'); });
+            q.seenIdx.forEach(function (i) { cellEls[i].classList.add(picked.indexOf(i) >= 0 ? 'seenchars-cell--ok' : 'seenchars-cell--miss'); });
+            r.wrong.forEach(function (i) { cellEls[i].classList.add('seenchars-cell--bad'); });
             if (r.ok) { info.textContent = '全部都對了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1400 }); return; }
             tip.textContent = (timeout ? '時間到！' : '') + (r.missed.length ? '漏掉 ' + r.missed.length + ' 個' : '') + (r.missed.length && r.wrong.length ? '、' : '') + (r.wrong.length ? '多點（點錯）' + r.wrong.length + ' 個' : '');
             /* 並排比對：每個漏掉的字，配一個你點錯的字（優先同一組的形近字），把差異的筆畫標紅 */
-            var cmp = h('div', { 'class': 'skc-cmp' }), pairs = [], wrongLeft = r.wrong.slice();
+            var cmp = h('div', { 'class': 'seenchars-cmp' }), pairs = [], wrongLeft = r.wrong.slice();
             r.missed.forEach(function (mi) {
                 var seenCh = q.grid[mi], pick = null, pj = -1;
                 wrongLeft.forEach(function (wi, j) { if (pick == null && q.groups.some(function (g) { return g.indexOf(seenCh) >= 0 && g.indexOf(q.grid[wi]) >= 0; })) { pick = q.grid[wi]; pj = j; } });
@@ -153,12 +154,12 @@
                 pairs.push({ a: seenCh, b: pick });
             });
             pairs.slice(0, 3).forEach(function (p) {
-                var box = h('div', { 'class': 'skc-cmp__box' });
-                box.appendChild(h('div', { 'class': 'skc-cmp__t', text: '看過：' + p.a }));
-                if (p.b) { var cv = h('canvas', { 'class': 'skc-cmp__cv' }); box.appendChild(cv); try { drawDiff(cv, p.a, p.b, 120); } catch (err) { } box.appendChild(h('div', { 'class': 'skc-cmp__t', text: '你點：' + p.b })); } else box.appendChild(h('div', { 'class': 'skc-cmp__t skc-cmp__t--miss', text: '（沒點）' }));
+                var box = h('div', { 'class': 'seenchars-cmp__box' });
+                box.appendChild(h('div', { 'class': 'seenchars-cmp__t', text: '看過：' + p.a }));
+                if (p.b) { var cv = h('canvas', { 'class': 'seenchars-cmp__cv' }); box.appendChild(cv); try { drawDiff(cv, p.a, p.b, 120); } catch (err) { } box.appendChild(h('div', { 'class': 'seenchars-cmp__t', text: '你點：' + p.b })); } else box.appendChild(h('div', { 'class': 'seenchars-cmp__t seenchars-cmp__t--miss', text: '（沒點）' }));
                 cmp.appendChild(box);
             });
-            if (pairs.length) { gridEl.classList.add('skc-grid--small'); field.appendChild(cmp); }
+            if (pairs.length) { gridEl.classList.add('seenchars-grid--small'); field.appendChild(cmp); }
             kit.flash(stage, false, api.my);
             api.fail({ delay: 4000, lines: [timeout ? '時間到！' : '點的字不對', '看過的字：' + q.seen.join('、') + (r.wrong.length ? '；你多點了：' + r.wrong.map(function (i) { return q.grid[i]; }).join('、') : '')] });
         }

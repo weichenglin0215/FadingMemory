@@ -1,0 +1,153 @@
+/* ═══════════════════════════════════════
+   reaction_price.css — 價格陷阱（js/reaction_price.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「price-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 價格陷阱：比較兩張折扣標籤，哪一個比較便宜。 */
+/* ═══ 價格陷阱（.price-）═══ */
+/* 標題（一行：字數要控制在 16 個字內，標籤才有最大的空間放大字） */
+.price-head {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--c-ink);
+    min-height: 1.5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 兩張標籤的容器 */
+.price-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+}
+
+/* 單張價格標籤：像吊牌，粗邊框，作答前黑框。
+   --pr-k：標籤裡所有文字的放大倍率，預設是 theme.css 的 --pr-scale（1.66＝放大成 166%）；
+   放不下的時候 JS（reaction_price.js 的 fitTags）會在這張標籤上把 --pr-k 往下調，所以下面每個字級都是「原本的字級 × --pr-k」 */
+.price-tag {
+    --pr-k: var(--pr-scale);
+    position: relative;
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: var(--sp-2) var(--sp-3);
+    border: 5px solid var(--c-ink);                /* 作答前兩張都是黑框，作答後才分綠（便宜）／紅（貴）*/
+    border-radius: 20px;
+    background: #FFF6D6;
+    color: var(--c-ink);
+    font-family: var(--font-ui);
+    cursor: pointer;
+    box-shadow: 0 5px 0 rgba(120, 30, 20, 0.2);
+}
+
+/* 按下時微微變暗 */
+.price-tag:active {
+    filter: brightness(0.96);
+}
+
+/* 吊牌的洞 */
+.price-tag__hole {
+    position: absolute;
+    left: 18px;
+    top: 18px;
+    width: 22px;
+    height: 22px;
+    border: 4px solid var(--c-ink);
+    border-radius: 50%;
+    background: var(--c-card-alt);
+}
+
+/* 標籤小標 */
+.price-tag__lbl {
+    font-size: calc(var(--fs-sm) * var(--pr-k));
+    font-weight: 700;
+    color: var(--c-ink-soft);
+    line-height: 1.15;
+}
+
+/* 原價（大字）：nowrap 不換行——一行放不下就由 JS 把倍率調小，不要把價錢拆成兩行 */
+.price-tag__orig {
+    font-size: calc(50px * var(--pr-k));
+    font-weight: 800;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+/* 屬性選擇器：data-n 是 JS 記下的位數，位數越多基本字級越小 */
+.price-tag__orig[data-n="9"],
+.price-tag__orig[data-n="10"] {
+    font-size: calc(44px * var(--pr-k));
+}
+
+/* 更多位數：字更小 */
+.price-tag__orig[data-n="11"],
+.price-tag__orig[data-n="12"],
+.price-tag__orig[data-n="13"] {
+    font-size: calc(36px * var(--pr-k));
+}
+
+/* 折扣說明區 */
+.price-tag__disc {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+/* 折扣文字行 */
+.price-tag__line {
+    font-size: calc(32px * var(--pr-k));
+    font-weight: 800;
+    color: var(--c-ink);
+    line-height: 1.15;
+    text-align: center;
+}
+
+/* 兩張都有的「會員再享 N 折」：混淆用，不用算，所以用淡一點的顏色 */
+.price-tag__line--member {
+    font-size: calc(28px * var(--pr-k));
+    color: var(--c-ink-soft);
+}
+
+/* 計算結果提示（算式）：答題前就排好版但是透明（visibility:hidden 不顯示、卻照樣佔位置），
+   答完加上 .price-tag--rev 才顯示，所以揭曉時版面不會跳動 */
+.price-tag__calc {
+    font-size: calc(26px * var(--pr-k));
+    font-weight: 700;
+    color: var(--c-ink-soft);
+    text-align: center;
+    line-height: 1.15;
+    visibility: hidden;
+}
+
+.price-tag--rev .price-tag__calc {
+    visibility: visible;
+}
+
+/* 答案揭曉：便宜的那張（綠） */
+.price-tag--low {
+    border-color: var(--c-ok);
+    background: #E3F5E7;
+}
+
+/* 貴的那張（紅） */
+.price-tag--high {
+    border-color: var(--c-bad-light);
+    background: #FBE3DC;
+}
+
+/* 被點的那張邊框加粗 */
+/* 被點的那張：邊框加粗 */
+.price-tag--pick {
+    border-width: 11px;
+}

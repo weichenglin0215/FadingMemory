@@ -1,0 +1,234 @@
+/* ═══════════════════════════════════════
+   reaction_pillbox.css — 分藥盒（js/reaction_pillbox.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「pillbox-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 分藥盒：看完藥單後，把正確的藥丸拖進下方藥盒的格子。 */
+/* ═══ 分藥盒（.pillbox-）═══ */
+/* 標題 */
+.pillbox-head {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+/* 上方面板：先顯示「藥單」，之後換成「藥丸盤」 */
+.pillbox-sheet {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 230px;
+    padding: 10px 14px;
+    background: var(--c-card-alt);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+}
+
+/* 藥單被蓋起來（等待填藥）時的樣子：內容垂直置中、底色換成宣紙色 */
+.pillbox-sheet--hidden {
+    justify-content: center;
+    background: var(--c-paper);
+}
+
+/* 「藥單已收起來」的提示字 */
+.pillbox-covered {
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+}
+
+/* 藥單的一行（時段名 + 藥丸圖案），align-items:center 讓它們垂直對齊 */
+.pillbox-line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+}
+
+/* 時段名（早／午／晚／睡前）固定 4 個字寬，flex:none 不讓它被擠小 */
+.pillbox-line__name {
+    flex: none;
+    width: 4em;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+/* 這一行的藥丸圖案，flex-wrap 讓太多顆時自動換行 */
+.pillbox-line__pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+/* 下方的藥盒：每一格是一個時段，所有格子排成一列、平分整個寬度。
+   欄數由 JS 依時段數設定（2、3、4 個時段就切成 2、3、4 等分，見 reaction_pillbox.js 的 startLevel）；
+   minmax(0, 1fr)＝均分、而且可以縮到 0，不會被裡面的藥丸撐開 */
+.pillbox-box {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+/* 看藥單的時候藥盒先變淡（opacity 0.35），表示「還不能放」 */
+.pillbox-box--dim {
+    opacity: 0.35;
+}
+
+/* 藥盒裡的一格；overflow:hidden 防止藥丸太多時超出格子外。
+   邊線是粗的深褐色線（--pb-bd-w／--pb-bd-c，theme.css），一眼就看得出每個藥盒的範圍；
+   min-width:0 讓格子能被 grid 的 minmax(0, 1fr) 縮到均分的寬度 */
+.pillbox-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 0;
+    padding: 8px 6px;
+    background: var(--c-card);
+    border: var(--pb-bd-w) solid var(--pb-bd-c);
+    border-radius: var(--r-md);
+    font-family: var(--font-ui);
+    overflow: hidden;
+}
+
+/* 目前選取的格子（藍色外框） */
+.pillbox-cell--sel {
+    border-color: var(--c-blue);
+    background: var(--c-blue-soft);
+}
+
+/* 判定錯誤的格子（橘色） */
+.pillbox-cell--bad {
+    border-color: var(--c-bad);
+    background: var(--c-bad-soft);
+}
+
+/* 格子左上角的時段名 */
+.pillbox-cell__name {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+/* 格子裡的藥丸排列區（會自動換行） */
+.pillbox-cell__pills {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    align-content: flex-start;
+    gap: 2px 2px;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+/* 上方的藥丸盤 */
+/* 藥丸盤：沿用 .pillbox-sheet 的外觀（見上方），只改對齊與底色 */
+.pillbox-tray {
+    justify-content: flex-start;
+    background: var(--c-paper);
+}
+
+/* 藥丸盤上方的小標題 */
+.pillbox-tray__cap {
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 藥丸排列區：置中、自動換行，藥丸再多也不會捲動（太多時 JS 會縮小圖示） */
+.pillbox-tray__grid {
+    flex: 1 1 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    justify-content: center;
+    gap: 6px;
+}
+
+/* 單顆藥丸：touch-action:none 才能用手指拖，cursor:grab 在電腦上顯示「小手」游標 */
+.pillbox-item {
+    display: inline-flex;
+    padding: 2px;
+    border-radius: 12px;
+    touch-action: none;
+    cursor: grab;
+}
+
+/* 正在被拖曳的那一顆在原位變淡（拖曳的是另外跟著手指跑的「分身」） */
+.pillbox-item--lifted {
+    opacity: 0.25;
+}
+
+/* 全畫面透明的「拖曳圖層」：分身畫在這一層，pointer-events:none 讓它不會擋到下面的點擊 */
+.pillbox-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 60;
+}
+
+/* 跟著手指移動的藥丸分身，加投影讓它看起來「浮」起來 */
+.pillbox-ghost {
+    position: absolute;
+    width: 56px;
+    height: 56px;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+}
+
+/* 拖到某一格上面時，該格亮綠色提示「可以放這裡」 */
+.pillbox-cell--over {
+    border-color: var(--c-ok);
+    background: var(--c-ok-soft);
+}
+
+/* （備用）按鍵列 */
+.pillbox-keys {
+    flex: none;
+    display: flex;
+    gap: 8px;
+}
+
+/* （備用）單顆按鍵，:active 是「手指正按著」的狀態 */
+.pillbox-key {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 2px;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-md);
+    font-family: var(--font-ui);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink);
+}
+
+.pillbox-key:active {
+    background: var(--c-yellow-soft);
+}
+
+/* 最底下的操作列：「清空這格」「好了」兩顆按鈕平分寬度 */
+.pillbox-acts {
+    flex: none;
+    display: flex;
+    gap: var(--sp-3);
+}
+
+.pillbox-acts .btn {
+    flex: 1 1 0;
+}

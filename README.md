@@ -82,7 +82,7 @@
 | 世界排行榜：前三名金／銀／銅的顏色、列高 | `css/theme.css` 的 `--lb-*` 變數；慣性捲動的摩擦力、橡皮筋在 `js/scroller.js` 的 `PHYS`，煙火的數量與時間在 `js/leaderboard_ui.js` 的 `FW` |
 | 彈窗（說明／世界前 30 名／暱稱／結算／意見）的尺寸、字級、顏色、按鈕 | `css/theme.css` 的 `--dlg-*` 變數與 `css/dialog.css`；程式在 `js/dialog.js`（`Dlg.open`） |
 
-| 「秒反應」操作提示（手指圖示＋短文字） | `js/reaction_kit2.js` 的 `kit.fingerHint`／`kit.hintOn`（模式 tap／drag／drag4／hold），樣式在 `css/reaction3.css` 的 `.rx-hint` |
+| 「秒反應」操作提示（手指圖示＋短文字） | `js/reaction_kit2.js` 的 `kit.fingerHint`／`kit.hintOn`（模式 tap／drag／drag4／hold），樣式在 `css/reaction_common.css` 的 `.rx-hint` |
 
 | 五星評價（結算彈窗的按鈕、評價彈窗、選單格子的平均星數） | 程式 `js/rating.js`（`Rating.button`／`Rating.open`／`Rating.bar`；快取時間 `CFG.STATS_TTL_MS`、時區 `CFG.TZ_OFFSET_MIN`、星數說明 `LABELS`）、樣式 `css/rating.css`（顏色與大小是 `css/theme.css` 的 `--rate-*`）、資料表 `MF_ratings`／`MF_rating_stats`（`supabase/MF_leaderboard.sql` 第 6 節） |
 | 「阿嬤都比你厲害」彈窗（最多幾格、等網路多久、💔 與名次的樣式） | `js/menu.js` 的 `GRANDMA_MAX`／`GRANDMA_WAIT_MS`／`checkGrandma`、`css/menu.css` 的 `.dlg--grandma`／`.game-cell__rank`（名次字級、黑字白框是 `css/theme.css` 的 `--gm-*`）；資料 `Leaderboard.overtaken`（`js/leaderboard.js`，快取 `CFG.OVERTAKE_TTL_MS`）、資料庫函式 `MF_get_overtaken`（SQL 第 7 節） |
@@ -116,7 +116,9 @@ css/fonts.css                          Noto Sans TC／Noto Serif TC 的樣式表
 css/theme.css                          ★ 風格變數＋共用元件
 css/stage.css                          舞台規範（2D／3D 圖層、觸控規則、100dvh 高度探針）
 css/menu.css, quiz.css, world.css      各頁面版面
-css/reaction.css                       「秒反應」版面（小遊戲各自用 .xx- 開頭的 class；彈窗已移到 dialog.css）
+css/reaction_common.css                「秒反應」所有遊戲共用的樣式（共用元件 .rx-／.qz-／.ld- 等；V1.41.0 起舊的 css/reaction.css～reaction6.css 全部拆掉）
+css/games/reaction_<id>.css          ★ 每一款「秒反應」遊戲自己的樣式，跟 js/reaction_<id>.js 同名；裡面的 class 一律以「<id>-」（遊戲全名）開頭，只給這一款用（V1.41.0；測試 test/reaction/t_cssclass.js 會檢查）
+css/sudoku_lib.css                     數獨系列（數獨4／6／9、夾心數獨）共用的盤面樣式（class 前綴 sudokulib-；js/sudoku_lib.js 的畫面零件用它）
 css/waterflow.css                      水流特效的外框（停用、保留備用）
 js/boot.js                             版本檢查＋載入所有檔案
 js/stage.js                            舞台縮放核心（手機＝電腦畫面；V1.23.0 起多來源量可視高度、定時監看，iPad 不再縮在上半部）
@@ -145,10 +147,6 @@ js/reaction_matchcolor.js              「秒反應」・色不異空
 js/reaction_rainbow.js                 「秒反應」・七彩陷阱
 js/reaction_pendulum.js                「秒反應」・六點鐘方向
 js/reaction_tissue.js                  「秒反應」・抽光衛生紙（原名抽光它，放手後有慣性滑落）
-css/reaction2.css                      「秒反應」1.16 新增 24 款的樣式（class 前綴各自獨立）
-css/reaction3.css                      「秒反應」V1.20 新增 28 款的樣式（class 前綴各自獨立）、共用操作提示（.rx-hint 手指圖示＋短文字）
-css/reaction4.css                      「秒反應」V1.21 新增 7 款復活遊戲的樣式（.su-／.br-／.hc-／.cr-／.nl-／.tw-／.cm-）
-css/reaction5.css                      「秒反應」V1.22 新增 23 款的樣式（.cpc-／.ieq-／.ord-／.rem-／.hdg-／.taf-／.wln-／.chq-／.fop-／.fbk-／.snk-／.fpr-／.dce-／.wsd-／.tbk-／.nth-／.spg-／.sdk-／.mgc-／.flt-／.rcf-／.spk-／.alc-，加上共用的 .qz- 答題文字與 .rx-grid 底部按鈕排）
 js/reaction_kit3.js                     「秒反應」第三批共用小工具（kit.btnGrid 底部按鈕排、kit.mod／kit.sample／kit.dist／kit.hsl／kit.flash）
 js/identity.js                         「玩家身分」流程（V1.35.0）：登入／建立／認領／改暱稱／改密碼／登出、錯誤訊息翻譯、個人最佳跨裝置同步（密碼、裝置憑證、暱稱存在 leaderboard.js）
 js/identity_ui.js                      「玩家身分」的彈窗（建立暱稱與密碼、登入、我的帳號、改暱稱／設新密碼／合併帳號／登出）
@@ -158,7 +156,6 @@ js/ghostleg_core.js                    鬼腳圖的共用工具（GhostlegCore�
 img/reaction/<id>.png                  選單每一格的縮圖（160 張，高 256 像素；make_icons.mjs 產生）
 css/dialog.css                         ★ 彈窗公版樣式（玩法說明、世界前 30 名、暱稱、進榜恭喜、結算、我有話要說共用一個外框與卡片；數值在 theme.css 的「彈窗公版」段）
 js/dialog.js                           ★ 彈窗公版（Dlg.open／Dlg.rule／Dlg.feedback／Dlg.toast）；彈窗蓋在標題列下面，「返回」隨時點得到
-css/reaction6.css                      「秒反應」V1.34 新增 51 款的樣式（每款一個專屬前綴：.cpt-／.wlk-／.owy-／.mj3-／.rvs-／.gmk-／.swe-／.wkd-／.grm-／.sea-／.fsq-／.chk-／.iof-／.gsp-／.mlt-／.rtr-／.swc-／.knk-／.msl-／.ikw-／.cld-／.lyd-／.skc-／.dsl-／.stz-／.scc-／.btf-／.dmk-／.csl-／.flg-／.hus-／.knt-／.cns-／.gph-／.fbt-／.hmr-／.wbl-／.prl-／.fty-／.cbl-／.ocf-／.pwl-／.dsh-／.bns-／.mn7-／.ssh-／.chg-／.dsc-／.tpr-／.ebw-／.dgh-；顏色全在 theme.css 的「V1.34 新遊戲顏色」區）
 js/reaction_kit4.js                     「秒反應」第四批共用小工具（方格地圖 kit.gridNeighbors／gridAdjacent／gridConnected／gridParityOk／hamPath：接電線、單行道等走格子的遊戲共用）
 js/gomoku_bank.js                      堵住五子的題庫（V1.36.0，509 題：白棋沒有現成的四、卻能連續衝四取勝，且只有一格擋得住；自動產生，勿手改，產生器 test/reaction/gen_gomoku_bank.cjs；boot.js 要排在 reaction_gomoku.js 前面）
 js/reaction_<id>.js（V1.34 新增 51 款） carpet 鋪地毯／wirelink 接電線／oneway 單行道／mahjong3 缺哪一張／reversi 翻最多棋／gomoku 堵住五子／swapeven 換一張就平／weekday 推星期幾／gearmark 齒輪對記號／seesaw 蹺蹺板比重／findsquare 找正方形／checkers 跳棋跳最遠／inout 圈內圈外／gaspump 加到五百／milktea 奶茶調色／rotary 轉盤電話／swipecopy 反著滑／knockcount 敲幾下／menuslice 切菜單上的／inkword 字的顏色／calendar 記行事曆／layerdrink 照樣調一杯／seenchars 看過的字／doorslit 門縫偷看／stars 找星座／slicechar 切字／butterfly 蝴蝶不對稱／danmaku 彈幕找字／cardslap 心臟病／flags 舉旗子／huesort 色票排隊／kinetic 動態視力／coinsort 零錢入筒／groupphoto 大合照／fishbite 釣魚提竿／homerun 全壘打／windblow 大風吹／pearls 吸珍珠／fishtoy 釣魚玩具／countbills 數鈔票／ordercut 照號切水果／pinwheel 轉風車／dishes 洗盤子／beans 挑豆子／minus7 一路減七／sushi 迴轉壽司／change 找錢／discount 打了幾折／timepair 時間連連看／eyebrow 畫眉毛／dough 擀水餃皮
@@ -222,6 +219,25 @@ screen_adaptive.*                      早期專案的參考檔，遊戲不引�
 ---
 
 ## 版本更新紀錄
+
+### V1.41.0（2026-11-01）
+新增「**深思篇**」**14 款不限時的邏輯／記憶遊戲**（企劃 `note/新遊戲企劃100款_深思篇.md` 的 421、425、427、428、430、474、475、477、509），並把 **CSS 整理成「一款遊戲一份」**。需要重新執行 `supabase/MF_leaderboard.sql`（新增 14 款遊戲的登記，共 174 款）。
+
+- **數獨系列 6 款**（`js/reaction_sudoku4.js`、`sudoku6e`、`sudoku6m`、`sudoku9e`、`sudoku9m`、`sudoku9h`）：數獨4（4×4）、數獨6入門／中階（6×6，2×3 的宮）、數獨9入門／中階／高階（9×9）。**沒有時間限制，填錯不會結束**（重複的數字標紅、不揭露答案）；有筆記、清除、提示（每題 3 次，只標出現在可以確定的那一格）、重來。難度由技巧決定（`js/sudoku_engine.js` 的推理器：等級 1 唯一候選／唯一位置、等級 2 數對／鎖定、等級 3 隱性數對／三數組／X 翼）：入門只靠等級 1（6×6 給 19 個、9×9 給 38 個）；6×6 中階提示只剩約 10 個；9×9 中階提示 ≤ 30 且一定要用到等級 2；高階提示 22～26 個、一般要用到等級 3。每題都用推理器驗證「不用猜、答案唯一」。共用畫面在 `js/sudoku_lib.js`（`Reaction.sudokuLib`：`game(cfg)` 一整個變體、`mountBoard(...)` 只畫盤面）。
+- **夾心數獨**（`js/reaction_sandwich.js`）：數獨外圍多一圈數字＝那一排／列裡 1 和 N 中間夾著的數字加總；4×4（給 5→2 個數字）→ 6×6（14→6）→ 9×9（30→16）。用回溯法確認「加上夾心數字答案唯一」（夾心數字是必要線索：拿掉它同樣的提示就不唯一）。1 和 N 都放好、夾住的加總不對時，夾在中間的格子標紅。
+- **黑白不連三**（`js/reaction_takuzu.js`、`css/games/reaction_takuzu.css`）：4×4→6×6→8×8；先選「黑／白／清除」再點格子。**放下去違規的那一刻會彈出圖解**（把那一排／列畫出來、違規的格子圈紅，再附「連續三個＝錯、不連三＝對」或「黑白各一半」的範例圖），那一步不算數、馬上可以重放。
+- **刪數湊和**（`js/reaction_sumdel.js`）：方陣 4×4→5×5→7×7、數字範圍 1～9 → 1～30；目標下面的小字「−N」＝還要再少 N、「＋N」＝刪過頭、「✓」＝剛好；每題唯一解（回溯法驗證，實測唯一率 100%）。
+- **魔方陣**（`js/reaction_magicsq.js`）：3×3（前 8 關各一種洛書，不重複）→ 4×4（總和 34；給 8→5 個數字，唯一）；每一排／列旁邊與對角線顯示「差多少」。企劃裡的「魔術三角／星」這版沒做。
+- **取火柴**（`js/reaction_nim.js`）：單堆限拿 3 → 兩堆 → 三堆 → 四堆 → 拿最後一根輸；完整搜尋判斷必勝（不寫死公式，實測跟 XOR 定理一致）；每關開局都是先手必勝，走錯一步就結束並列出二進位與 XOR。
+- **搶十五**（`js/reaction_fifteen.js`）：和井字遊戲是同一個遊戲（結束時畫出洛書方陣）；每關是「預先拿走幾張牌的必勝局面」，必勝步數 1→2→3；後面改成「四張和 20」「牌 1～11 三張和 17」。**實測這個遊戲必勝最長只有 3 步**，所以企劃的「4～5 步」靠改玩法達成。
+- **田忌賽馬**（`js/reaction_tianji.js`）：3→5→7→9 匹；點兩匹互換位置，確定後逐場揭曉；贏的場數要達到最大配對（貪心＝暴力搜尋，已驗證）；第 1 關固定是歷史上那一局（9、6、3 對 8、5、2）。
+- **翻牌湊十**（`js/reaction_flipten.js`）：8→16→24 張；翻牌次數上限＝「完美記憶策略」的次數＋寬限（12→4）。
+- **按「返回」＝結束這一局**（自由解題的 10 款）：`kit.run` 新增 `o.leaveSettle`，`Reaction.onLeave`（`js/reaction_core.js`）由 `js/reaction.js` 的返回鈕先呼叫——這 10 款解開至少一題後按返回，會先顯示結算卡片（記最佳、送世界排行榜、可看排行榜），結算卡片出來之後再按「返回」才離開；一題都還沒解開就直接離開。
+- **CSS 重整（畫面不變）**：舊的 6 份 `css/reaction*.css`（約 424KB，依「哪一版新增」分檔，找不到哪個 js 用哪份）拆成 **每款一份 `css/games/reaction_<id>.css`＋共用的 `css/reaction_common.css`**；**class 前綴一律改成遊戲全名**（原本是 2～3 個字母的縮寫，例如 `alc-opt` → `alignchar-opt`，`cpt-stage` → `carpet-stage`，縮寫容易撞名）；兩款共用同一組 class 的（混出什麼色／記色調色、貓咪走山路／記色調色…）各自複製一份。`js/boot.js` 的 reaction 頁改成逐一載入 160＋14 份 css（`sw.js` 預先快取，離線也一樣）。JS 的檔頭加了「樣式：css/games/reaction_<id>.css」，註解裡的舊路徑一併更新。
+  - **驗證**：拆分前後把 160 款遊戲「剛開始的畫面」每個元素的計算後樣式與位置做成指紋（`test/reaction/css_fingerprint.mjs`）逐款比對——**全部相同**（只有計時條這種本來就在動的元素、以及 SVG 內部編號跟著改名不同）；舊規則 2760 條與新規則逐條對照，沒有缺漏、沒有多出來。
+  - **新規矩**（`t_cssclass.js` 檢查）：每款遊戲都要有同名的 css；css 裡的 class 與 @keyframes 以「<id>-」開頭；遊戲 js 不能用別款的 class；共用 css 不能出現遊戲專屬的 class；數獨系列共用 `css/sudoku_lib.css`（前綴 `sudokulib-`，登記在 t_cssclass.js 的 `FAMILY`）。**新增遊戲一律另開 `css/games/reaction_<id>.css`，不要加在共用 css。**
+- **測試**：`t_sudokulib`（引擎、六款變體、提示、盤面函式）、`t_sandwich`、`t_takuzu`、`t_sumdel`、`t_magicsq`、`t_nim`、`t_fifteen`、`t_tianji`、`t_flipten`；瀏覽器端 `node test/reaction/browser_think.mjs`（14 款：用真的滑鼠事件操作、走完解開、失敗型故意走錯、自由解題按返回會先結算、全程沒有 JS 錯誤）；縮圖 `img/reaction/` 新增 14 張。
+- **放哪裡**：這批先放在 `reaction.html` 的既有分類（邏輯：數獨系列、夾心數獨、黑白不連三、取火柴；數字：刪數湊和、魔方陣、搶十五、田忌賽馬；記憶：翻牌湊十）。企劃 §8 討論的「新開 think.html 入口」沒有做，之後要搬只要改 `js/menu.js` 的 GAME_CELLS。
 
 ### V1.40.0（2026-10-30）
 依玩家回饋再修改 **6 款遊戲**：球會跑去哪、猜下一個、一半的人、路人走過、畫眉毛、刷油漆。**沒有資料庫變更**（不用重新執行 SQL），也沒有新增檔案。

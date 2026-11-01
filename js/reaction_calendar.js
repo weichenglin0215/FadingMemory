@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_calendar.js — 秒反應・記行事曆（企劃 318）
+   樣式：css/games/reaction_calendar.css（這款專屬的 class 一律以「calendar-」開頭；共用元件在 css/reaction_common.css）
    一個月的月曆，上面貼了幾個小圖示（牙醫、生日蛋糕、回診、繳費單…），3 秒後圖示消失。**問：「牙醫是哪一天？」點月曆上的日期**。
    ───────────────────────────────────────────────────────────────────
    · 月曆是真的：用真正的曆法排（monthLayout：這個月第一天是星期幾、有幾天、要幾列），每一關換不同的年月，所以「第一天是星期幾」每次不一樣。
@@ -90,7 +91,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'cld-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'calendar-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -112,8 +113,8 @@
         plane: [['path', { d: 'M6 28 L42 18 L40 24 L26 28 L22 40 L18 38 L20 28 L10 31 Z' }, 'fill']]
     };
     function iconSvg(id, size) {
-        var s = kit.svg('svg', { 'class': 'cld-icon cld-icon--' + id, viewBox: '0 0 48 48', width: size, height: size });
-        (SHAPES[id] || []).forEach(function (sp) { var a = Object.assign({}, sp[1]); a['class'] = 'cld-s cld-s--' + sp[2]; kit.svg(sp[0], a, s); });
+        var s = kit.svg('svg', { 'class': 'calendar-icon calendar-icon--' + id, viewBox: '0 0 48 48', width: size, height: size });
+        (SHAPES[id] || []).forEach(function (sp) { var a = Object.assign({}, sp[1]); a['class'] = 'calendar-s calendar-s--' + sp[2]; kit.svg(sp[0], a, s); });
         return s;
     }
 
@@ -124,32 +125,32 @@
         console.log('[記行事曆] 第 ' + level + ' 關：' + q.year + ' 年 ' + q.month + ' 月（1 號是星期' + WEEK[q.first] + '，' + q.days + ' 天）；圖示 ' + q.placements.map(function (p) { return iconOf(p.icon).name + '＠' + p.day; }).join('、') + '；問 ' + q.asks.map(function (a) { return iconOf(a).name; }).join('→') + '；看 ' + q.viewMs + ' 毫秒');
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        var field = h('div', { 'class': 'cld-field' });
+        var field = h('div', { 'class': 'calendar-field' });
         stage.appendChild(field);
-        var tip = h('div', { 'class': 'qz-note cld-tip', text: '記住貼紙貼在哪一天' });
+        var tip = h('div', { 'class': 'qz-note calendar-tip', text: '記住貼紙貼在哪一天' });
         field.appendChild(tip);
         /* 月曆：標題（年月）、星期列、日期格 */
         var cw = Math.floor((W - 24) / 7), rh = Math.min(cw + 2, Math.floor((H - 330) / q.rows)), CW = cw * 7;
-        var cal = h('div', { 'class': 'cld-cal' });
+        var cal = h('div', { 'class': 'calendar-cal' });
         cal.style.cssText = 'left:' + Math.round((W - CW) / 2) + 'px;top:60px;width:' + CW + 'px;';
-        cal.appendChild(h('div', { 'class': 'cld-title', text: q.year + ' 年 ' + q.month + ' 月' }));
-        var head = h('div', { 'class': 'cld-week' }); WEEK.forEach(function (w, i) { head.appendChild(h('div', { 'class': 'cld-wd' + (i === 0 || i === 6 ? ' cld-wd--we' : ''), text: w })); }); cal.appendChild(head);
-        var grid = h('div', { 'class': 'cld-grid' }); grid.style.gridTemplateColumns = 'repeat(7, ' + cw + 'px)'; grid.style.gridAutoRows = rh + 'px';
+        cal.appendChild(h('div', { 'class': 'calendar-title', text: q.year + ' 年 ' + q.month + ' 月' }));
+        var head = h('div', { 'class': 'calendar-week' }); WEEK.forEach(function (w, i) { head.appendChild(h('div', { 'class': 'calendar-wd' + (i === 0 || i === 6 ? ' calendar-wd--we' : ''), text: w })); }); cal.appendChild(head);
+        var grid = h('div', { 'class': 'calendar-grid' }); grid.style.gridTemplateColumns = 'repeat(7, ' + cw + 'px)'; grid.style.gridAutoRows = rh + 'px';
         var cells = {};
-        for (var b = 0; b < q.first; b++) grid.appendChild(h('div', { 'class': 'cld-cell cld-cell--blank' }));
+        for (var b = 0; b < q.first; b++) grid.appendChild(h('div', { 'class': 'calendar-cell calendar-cell--blank' }));
         for (var d = 1; d <= q.days; d++) {
-            var wd = (q.first + d - 1) % 7, cell = h('div', { 'class': 'cld-cell' + (wd === 0 || wd === 6 ? ' cld-cell--we' : '') });
-            cell.appendChild(h('div', { 'class': 'cld-no', text: String(d) })); grid.appendChild(cell); cells[d] = cell;
+            var wd = (q.first + d - 1) % 7, cell = h('div', { 'class': 'calendar-cell' + (wd === 0 || wd === 6 ? ' calendar-cell--we' : '') });
+            cell.appendChild(h('div', { 'class': 'calendar-no', text: String(d) })); grid.appendChild(cell); cells[d] = cell;
             (function (day) { kit.onTap(cell, function () { tapDay(day); }); })(d);
         }
         cal.appendChild(grid); field.appendChild(cal);
         var calH = 60 + 48 + 40 + q.rows * rh;
-        var ask = h('div', { 'class': 'cld-ask', text: '' }); ask.style.top = (calH + 24) + 'px'; field.appendChild(ask);
-        var info = h('div', { 'class': 'qz-note cld-info', text: '' }); info.style.top = (calH + 84) + 'px'; field.appendChild(info);
+        var ask = h('div', { 'class': 'calendar-ask', text: '' }); ask.style.top = (calH + 24) + 'px'; field.appendChild(ask);
+        var info = h('div', { 'class': 'qz-note calendar-info', text: '' }); info.style.top = (calH + 84) + 'px'; field.appendChild(info);
 
         /* 貼紙：貼在日期格裡（看的時候顯示，之後收起來；答錯時全部回來） */
         var stickers = q.placements.map(function (p) {
-            var s = h('div', { 'class': 'cld-sticker' }); s.style.width = s.style.height = Math.min(cw - 6, rh - 14) + 'px';
+            var s = h('div', { 'class': 'calendar-sticker' }); s.style.width = s.style.height = Math.min(cw - 6, rh - 14) + 'px';
             s.appendChild(iconSvg(p.icon, Math.min(cw - 6, rh - 14))); cells[p.day].appendChild(s); return s;
         });
         var phase = 'view', k = 0, done = false;
@@ -157,7 +158,7 @@
         api.timer(q.viewMs, hide);
         function hide() {
             if (api.over) return;
-            stickers.forEach(function (s) { s.classList.add('cld-sticker--hide'); });
+            stickers.forEach(function (s) { s.classList.add('calendar-sticker--hide'); });
             phase = 'distract'; tip.textContent = '圖案收起來了，別被閃爍的圖案干擾'; info.textContent = '';
             startNoise();
             api.after(DISTRACT_S * 1000, function () {
@@ -168,11 +169,11 @@
         /* 干擾：問題列上，這一關的圖示（每個 NOISE_COPIES 個）一直閃爍、每 MOVE_MS 毫秒換一批隨機位置 */
         var noise = null, noiseEls = [];
         function startNoise() {
-            noise = h('div', { 'class': 'cld-noise' }); noise.style.top = (calH + 24) + 'px'; noise.style.height = NOISE_H + 'px';
+            noise = h('div', { 'class': 'calendar-noise' }); noise.style.top = (calH + 24) + 'px'; noise.style.height = NOISE_H + 'px';
             field.appendChild(noise);
             q.placements.forEach(function (p) {
                 for (var c = 0; c < NOISE_COPIES; c++) {
-                    var el = h('div', { 'class': 'cld-noise__i' }); el.appendChild(iconSvg(p.icon, NOISE_SIZE));
+                    var el = h('div', { 'class': 'calendar-noise__i' }); el.appendChild(iconSvg(p.icon, NOISE_SIZE));
                     el.style.animationDuration = Math.round(kit.randFloat(BLINK_MS[0], BLINK_MS[1], api.rand)) + 'ms';
                     el.style.animationDelay = '-' + Math.round(kit.randFloat(0, BLINK_MS[1], api.rand)) + 'ms';
                     noise.appendChild(el); noiseEls.push(el);
@@ -189,23 +190,23 @@
         function stopNoise() { if (noise && noise.parentNode) noise.parentNode.removeChild(noise); noise = null; noiseEls = []; }
         function nextAsk() {
             var ic = iconOf(q.asks[k]);
-            ask.innerHTML = ''; ask.appendChild(iconSvg(ic.id, 56)); ask.appendChild(h('span', { 'class': 'cld-ask__t', text: (q.asks.length > 1 ? (k === 0 ? '先點：' : '再點：') : '') + ic.name + '是哪一天？' }));
+            ask.innerHTML = ''; ask.appendChild(iconSvg(ic.id, 56)); ask.appendChild(h('span', { 'class': 'calendar-ask__t', text: (q.asks.length > 1 ? (k === 0 ? '先點：' : '再點：') : '') + ic.name + '是哪一天？' }));
             api.timer(q.respMs, function () { timeout(); });
             if (level === 1 && k === 0 && kit.once('calendar.hint')) kit.hintOn(stage, cells[dayOf(q, q.asks[0])], { mode: 'tap', delay: 1500, text: '請點出那一天' });
         }
         function revealAll(pickDay) {
-            stickers.forEach(function (s) { s.classList.remove('cld-sticker--hide'); });
+            stickers.forEach(function (s) { s.classList.remove('calendar-sticker--hide'); });
             var want = dayOf(q, q.asks[k]);
-            cells[want].classList.add('cld-cell--ok');
-            if (pickDay > 0 && pickDay !== want) cells[pickDay].classList.add('cld-cell--bad');
+            cells[want].classList.add('calendar-cell--ok');
+            if (pickDay > 0 && pickDay !== want) cells[pickDay].classList.add('calendar-cell--bad');
         }
         function tapDay(day) {
             if (phase !== 'ask' || done || api.over) return;
             var want = dayOf(q, q.asks[k]);
             if (day === want) {
-                cells[day].classList.add('cld-cell--ok'); Sfx.play('ok'); k++;
-                if (k >= q.asks.length) { done = true; phase = 'end'; stickers.forEach(function (s) { s.classList.remove('cld-sticker--hide'); }); info.textContent = '答對了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1600 }); return; }
-                api.stopTimer(); api.after(400, function () { cells[day].classList.remove('cld-cell--ok'); }); nextAsk(); return;
+                cells[day].classList.add('calendar-cell--ok'); Sfx.play('ok'); k++;
+                if (k >= q.asks.length) { done = true; phase = 'end'; stickers.forEach(function (s) { s.classList.remove('calendar-sticker--hide'); }); info.textContent = '答對了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1600 }); return; }
+                api.stopTimer(); api.after(400, function () { cells[day].classList.remove('calendar-cell--ok'); }); nextAsk(); return;
             }
             done = true; phase = 'end'; api.stopTimer();
             revealAll(day);

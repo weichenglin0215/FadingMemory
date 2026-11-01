@@ -1,0 +1,204 @@
+/* ═══════════════════════════════════════
+   reaction_timepair.css — 時間連連看（js/reaction_timepair.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「timepair-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 時間連連看（.timepair-）═══ */
+.timepair-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.timepair-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+.timepair-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 時鐘排成格子 */
+.timepair-grid {
+    position: absolute;
+    left: 12px;
+    display: grid;
+    justify-content: center;
+}
+
+.timepair-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    background: var(--c-card);
+    border: 4px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    cursor: pointer;
+    transition: transform 0.1s, background 0.15s, opacity 0.3s;
+}
+
+.timepair-card--sel {
+    background: var(--tpr-sel);
+    border-color: var(--tpr-sel-edge);
+    transform: scale(1.06);
+}
+
+.timepair-card--ok {
+    background: var(--c-ok-light);
+    border-color: var(--c-ok);
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+.timepair-card--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad-light);
+}
+
+.timepair-card--right {
+    background: var(--c-ok-light);
+    border-color: var(--c-ok);
+}
+
+/* 指針鐘（車站的大時鐘） */
+.timepair-analog {
+    display: block;
+    pointer-events: none;
+}
+
+.timepair-face {
+    fill: var(--tpr-face);
+    stroke: var(--tpr-rim);
+    stroke-width: 4;
+}
+
+.timepair-tick {
+    stroke: var(--tpr-ink);
+    stroke-width: 1.4;
+}
+
+.timepair-tick--big {
+    stroke-width: 2.6;
+}
+
+.timepair-num {
+    fill: var(--tpr-ink);
+    font-size: 12px;
+    font-weight: var(--fw-bold);
+    text-anchor: middle;
+}
+
+.timepair-hand {
+    stroke: var(--tpr-ink);
+    stroke-linecap: round;
+}
+
+.timepair-hand--h {
+    stroke-width: 5;
+}
+
+.timepair-hand--m {
+    stroke-width: 2.6;
+}
+
+.timepair-hub {
+    fill: var(--tpr-ink);
+}
+
+/* 電子鐘（紅色 LED 看板） */
+.timepair-digital {
+    padding: 2px var(--sp-2);
+    background: var(--tpr-led-bg);
+    border-radius: var(--r-sm);
+    color: var(--tpr-led);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 1px;
+    text-shadow: 0 0 6px var(--tpr-led-glow);
+    pointer-events: none;
+}
+
+.timepair-digital--big {
+    font-size: calc(var(--fs-xxl) * 1.1);
+}
+
+.timepair-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 14px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.timepair-info--ok {
+    color: var(--c-ok);
+}
+
+.timepair-info--bad {
+    color: var(--c-bad);
+}
+
+/* 配錯：兩個時鐘並排放大 */
+.timepair-cmp {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 90px;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: var(--sp-2);
+    padding: var(--sp-3) var(--sp-2);
+    background: var(--c-card);
+    border: 3px solid var(--c-bad-light);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+}
+
+.timepair-cmp__c {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.timepair-cmp__t {
+    color: var(--c-ink);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    padding-top: var(--sp-1);
+}
+
+.timepair-cmp__s {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    line-height: 1.3;
+}
+
+.timepair-cmp__vs {
+    align-self: center;
+    color: var(--c-bad);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}

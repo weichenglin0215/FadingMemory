@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_wrongline.js — 秒反應・哪一行算錯（企劃 130）
+   樣式：css/games/reaction_wrongline.css（這款專屬的 class 一律以「wrongline-」開頭；共用元件在 css/reaction_common.css）
    一份「計算過程」有好幾行（例如  25 × 3 ＝ 75／18 × 2 ＝ 36／75 ＋ 36 ＝ 111），其中「有一行算錯」，
    點出算錯的那一行。不是只看最後答案，而是檢查每一行的過程。
    關卡制：點錯行或來不及就結束，成績＝連續答對幾題。
@@ -150,14 +151,14 @@
         console.log('[哪一行算錯] 第 ' + level + ' 題（' + q.type + '）：' + q.lines.map(function (l, i) { return CIRCLED[i] + ' ' + l.text + (l.ok ? '' : '（錯，應為 ' + l.truth + '）'); }).join('；') + '，限時 ' + ansMs(level) + ' ms');
 
         /* 上面一欄由上往下排：說明文字（買東西才有，可能兩行）→「哪一行算錯了？」→ 每一行的按鈕；排在同一個直欄裡，不會互相蓋住 */
-        var col = h('div', { 'class': 'wln-col' });
-        var ask = h('div', { 'class': 'qz-note wln-ask', text: q.head ? q.head : '連續計算，哪一行算錯了？' });
+        var col = h('div', { 'class': 'wrongline-col' });
+        var ask = h('div', { 'class': 'qz-note wrongline-ask', text: q.head ? q.head : '連續計算，哪一行算錯了？' });
         col.appendChild(ask);
-        if (q.head) col.appendChild(h('div', { 'class': 'wln-sub', text: '哪一行算錯了？' }));
-        var list = h('div', { 'class': 'wln-list' });
+        if (q.head) col.appendChild(h('div', { 'class': 'wrongline-sub', text: '哪一行算錯了？' }));
+        var list = h('div', { 'class': 'wrongline-list' });
         var rowH = q.lines.length >= 5 ? 74 : 84;
         var rows = q.lines.map(function (l, i) {
-            var r = h('button', { 'class': 'wln-row', html: '<span class="wln-no">' + CIRCLED[i] + '</span><span class="wln-txt">' + l.text + '</span>' });
+            var r = h('button', { 'class': 'wrongline-row', html: '<span class="wrongline-no">' + CIRCLED[i] + '</span><span class="wrongline-txt">' + l.text + '</span>' });
             r.style.height = rowH + 'px';
             kit.onTap(r, function () { judge(i); });
             list.appendChild(r);
@@ -172,10 +173,10 @@
             if (api.over) return;
             var ok = i === q.wrong;
             var wl = rows[q.wrong];
-            wl.classList.add('wln-row--wrong');
-            wl.querySelector('.wln-txt').innerHTML = q.lines[q.wrong].text + '<br><span class="wln-fix">應該是 ' + q.lines[q.wrong].right + '</span>';
+            wl.classList.add('wrongline-row--wrong');
+            wl.querySelector('.wrongline-txt').innerHTML = q.lines[q.wrong].text + '<br><span class="wrongline-fix">應該是 ' + q.lines[q.wrong].right + '</span>';
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1200 }); return; }
-            if (i != null) rows[i].classList.add('wln-row--miss');
+            if (i != null) rows[i].classList.add('wrongline-row--miss');
             kit.flash(stage, false, api.my);
             api.fail({ delay: 2500, lines: [
                 (i == null ? '時間到！' : '那一行是對的') + '，算錯的是第 ' + (q.wrong + 1) + ' 行',

@@ -48,10 +48,10 @@ ok(ST.maxOrig >= 5000 && ST.minSale >= 10, '原價越來越大');
 { function oddRate(n) { let k = 0, N = 4000; for (let i = 0; i < N; i++) if (T.makeQuestion(n, rnd).orig % 100 !== 0) k++; return k / N; } const a = oddRate(0), b = oddRate(20), c = oddRate(40); ok(a === 0 && b > 0.4 && b < 0.6 && c > 0.72, '不整百的比例 ' + a + ' → ' + b.toFixed(2) + ' → ' + c.toFixed(2)); }
 
 // ── 程式裡的接線 ──
-{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_discount.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_discount.js'), css = rd('../../css/games/reaction_discount.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
   ok(/api\.fail\(\{ delay: 4200/.test(src) && /formula\(q\)/.test(src) && /whyText\(q, r\)/.test(src) && /complementOf\(q\.r\)/.test(src), '失敗：寫出算式、互補折數特別說明、停格夠久');
   ok(/api\.timer\(q\.time/.test(src) && /scoreOf/.test(src) && /resume: false/.test(src) && /SOLVE_CAP/.test(src) && /api\.solve = /.test(src) && /api\.wrong = /.test(src), '每題限時、成績 scoreOf、solve 有上限');
-  ok(/\.dsc-tag \{[^}]*var\(--dsc-tag\)/.test(css) && /\.dsc-tag__price \{[^}]*var\(--dsc-red\)/.test(css) && /\.dsc-btn--ok \{[^}]*var\(--c-ok\)/.test(css), '吊牌、特價紅字、對錯顏色用 CSS 變數');
+  ok(/\.discount-tag \{[^}]*var\(--dsc-tag\)/.test(css) && /\.discount-tag__price \{[^}]*var\(--dsc-red\)/.test(css) && /\.discount-btn--ok \{[^}]*var\(--c-ok\)/.test(css), '吊牌、特價紅字、對錯顏色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_discount.js'") > 0 && /70%/.test(G.rule) && /3 折/.test(G.rule) && /75 折/.test(G.rule), 'boot.js 有載入、玩法說明提到 7 折＝70%、3 折的混淆、75 折'); }
 ok(T.rating(1) !== T.rating(5) && T.rating(5) !== T.rating(12) && T.rating(12) !== T.rating(25) && T.rating(25) !== T.rating(35), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

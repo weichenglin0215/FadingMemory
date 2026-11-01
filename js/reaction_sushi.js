@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_sushi.js — 秒反應・迴轉壽司（企劃 393）
+   樣式：css/games/reaction_sushi.css（這款專屬的 class 一律以「sushi-」開頭；共用元件在 css/reaction_common.css）
    迴轉壽司的輸送帶。**盤子的顏色代表價格**（白 30、紅 40、藍 60、金 100；第 10 關起加 50 元的綠盤），**價目表一直貼在畫面上**。
    上方寫「**預算剛好 280 元**」。**盤子從輸送帶經過時，點它就拿下來**；拿下來的盤子疊在旁邊（只看得到最上面一個，**總金額不會顯示**）。
    輸送帶轉完一圈（時間條跑完），或你按「夠了」，**拿的盤子要剛好是預算**才過關；多了、少了都失敗。輸送帶不會停，要邊算邊決定。
@@ -89,7 +90,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'ssh-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'sushi-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -99,8 +100,8 @@
 
     /* 一個盤子（div）：圓盤（顏色依價錢）、中間一塊壽司（鮭魚／玉子／蝦），不顯示價錢——價錢要看價目表 */
     function plateEl(p, mini) {
-        var el = h('div', { 'class': 'ssh-plate ssh-p' + COLOR_OF[p.price] + (mini ? ' ssh-plate--mini' : '') });
-        el.appendChild(h('div', { 'class': 'ssh-rice' })); el.appendChild(h('div', { 'class': 'ssh-top ssh-top--' + p.sushi }));
+        var el = h('div', { 'class': 'sushi-plate sushi-p' + COLOR_OF[p.price] + (mini ? ' sushi-plate--mini' : '') });
+        el.appendChild(h('div', { 'class': 'sushi-rice' })); el.appendChild(h('div', { 'class': 'sushi-top sushi-top--' + p.sushi }));
         return el;
     }
 
@@ -111,23 +112,23 @@
         api.info = q;
         console.log('[迴轉壽司] 第 ' + level + ' 關：預算 ' + q.target + ' 元；一圈 ' + q.plates.length + ' 盤（' + q.plates.map(function (p) { return p.price; }).join(',') + '）；剛好的拿法（盤子編號） ' + q.solution.join(',') + '；速度 ' + q.speed + ' px/秒、間隔 ' + q.gap + ' 秒；一圈 ' + q.lap + ' 毫秒；共 ' + countSolutions(q) + ' 種湊法');
 
-        var field = h('div', { 'class': 'ssh-field' });
+        var field = h('div', { 'class': 'sushi-field' });
         stage.appendChild(field);
         /* 價目表：一直貼在畫面上 */
-        var legend = h('div', { 'class': 'ssh-legend' });
-        q.prices.forEach(function (pr) { var it = h('div', { 'class': 'ssh-legend__i' }); it.appendChild(h('div', { 'class': 'ssh-dot ssh-p' + COLOR_OF[pr] })); it.appendChild(h('div', { 'class': 'ssh-legend__t', text: pr + '元' })); legend.appendChild(it); });
+        var legend = h('div', { 'class': 'sushi-legend' });
+        q.prices.forEach(function (pr) { var it = h('div', { 'class': 'sushi-legend__i' }); it.appendChild(h('div', { 'class': 'sushi-dot sushi-p' + COLOR_OF[pr] })); it.appendChild(h('div', { 'class': 'sushi-legend__t', text: pr + '元' })); legend.appendChild(it); });
         field.appendChild(legend);
-        var goal = h('div', { 'class': 'ssh-goal' });
-        goal.appendChild(h('span', { 'class': 'ssh-goal__t', text: '預算剛好 ' })); goal.appendChild(h('span', { 'class': 'ssh-goal__n', text: String(q.target) })); goal.appendChild(h('span', { 'class': 'ssh-goal__t', text: ' 元' }));
+        var goal = h('div', { 'class': 'sushi-goal' });
+        goal.appendChild(h('span', { 'class': 'sushi-goal__t', text: '預算剛好 ' })); goal.appendChild(h('span', { 'class': 'sushi-goal__n', text: String(q.target) })); goal.appendChild(h('span', { 'class': 'sushi-goal__t', text: ' 元' }));
         field.appendChild(goal);
         /* 輸送帶與盤子 */
-        var beltTop = 190, belt = h('div', { 'class': 'ssh-belt' }); belt.style.top = (beltTop + PLATE_D / 2 + 4) + 'px'; field.appendChild(belt);
-        var lane = h('div', { 'class': 'ssh-lane' }); lane.style.cssText = 'top:' + beltTop + 'px;height:' + PLATE_D + 'px;'; field.appendChild(lane);
+        var beltTop = 190, belt = h('div', { 'class': 'sushi-belt' }); belt.style.top = (beltTop + PLATE_D / 2 + 4) + 'px'; field.appendChild(belt);
+        var lane = h('div', { 'class': 'sushi-lane' }); lane.style.cssText = 'top:' + beltTop + 'px;height:' + PLATE_D + 'px;'; field.appendChild(lane);
         var els = q.plates.map(function (p, i) { var el = plateEl(p, false); el.style.cssText = 'width:' + PLATE_D + 'px;height:' + PLATE_D + 'px;display:none;'; el.dataset.i = String(i); lane.appendChild(el); return el; });
-        var taken = [], phase = 'play', stackBox = h('div', { 'class': 'ssh-stack' });
-        stackBox.style.cssText = 'left:24px;top:' + (beltTop + PLATE_D + 40) + 'px;'; stackBox.appendChild(h('div', { 'class': 'ssh-stack__t', text: '拿下來的' })); var stackTop = h('div', { 'class': 'ssh-stack__top' }); stackBox.appendChild(stackTop); field.appendChild(stackBox);
-        var info = h('div', { 'class': 'qz-note ssh-info', text: level === 1 ? '盤子經過時點它拿下來，剛好湊到預算！' : '邊拿邊加，剛好就按「夠了」' }); info.style.top = (beltTop + PLATE_D + 150) + 'px'; field.appendChild(info);
-        var btn = kit.btnGrid(field, [{ text: '夠了！', kind: 'primary', cls: 'ssh-btn', onTap: function () { finish('done'); } }], { cols: 1, h: 92, bottom: 12 });
+        var taken = [], phase = 'play', stackBox = h('div', { 'class': 'sushi-stack' });
+        stackBox.style.cssText = 'left:24px;top:' + (beltTop + PLATE_D + 40) + 'px;'; stackBox.appendChild(h('div', { 'class': 'sushi-stack__t', text: '拿下來的' })); var stackTop = h('div', { 'class': 'sushi-stack__top' }); stackBox.appendChild(stackTop); field.appendChild(stackBox);
+        var info = h('div', { 'class': 'qz-note sushi-info', text: level === 1 ? '盤子經過時點它拿下來，剛好湊到預算！' : '邊拿邊加，剛好就按「夠了」' }); info.style.top = (beltTop + PLATE_D + 150) + 'px'; field.appendChild(info);
+        var btn = kit.btnGrid(field, [{ text: '夠了！', kind: 'primary', cls: 'sushi-btn', onTap: function () { finish('done'); } }], { cols: 1, h: 92, bottom: 12 });
         if (level === 1 && kit.once('sushi.hint')) api.after(Math.round((LEAD_S + 0.8) * 1000), function () { if (phase === 'play') kit.hintOn(stage, null, { mode: 'tap', x: W * 0.62, y: lane.offsetTop + PLATE_D / 2, delay: 200, text: '盤子經過時點它' }); });
 
         var t0 = performance.now();
@@ -161,21 +162,21 @@
             if (phase !== 'play' || api.over) return;
             phase = 'end'; api.stopTimer();
             var r = judge(q, taken), why = whyText(r, q);
-            btn.btns[0].classList.add('ssh-btn--off'); lane.style.display = 'none'; belt.style.display = 'none'; stackBox.style.display = 'none';
+            btn.btns[0].classList.add('sushi-btn--off'); lane.style.display = 'none'; belt.style.display = 'none'; stackBox.style.display = 'none';
             showSpread();
             info.textContent = why; info.style.top = ''; info.style.bottom = '116px';
-            if (r.result === 'ok') { info.classList.add('ssh-info--ok'); kit.flash(stage, true, api.my); Sfx.play('ok'); api.pass({ delay: 2200 }); return; }
-            info.classList.add('ssh-info--bad'); kit.flash(stage, false, api.my);
+            if (r.result === 'ok') { info.classList.add('sushi-info--ok'); kit.flash(stage, true, api.my); Sfx.play('ok'); api.pass({ delay: 2200 }); return; }
+            info.classList.add('sushi-info--bad'); kit.flash(stage, false, api.my);
             var way = q.solution.map(function (k) { return q.plates[k].price; }).join('＋') + ' ＝ ' + q.target;
             api.fail({ delay: 4400, lines: [why, '一種剛好的拿法（第 ' + q.solution.map(function (k) { return k + 1; }).join('、') + ' 個盤子）：' + way, '你拿了 ' + taken.length + ' 盤：' + (taken.length ? taken.slice().sort(function (a, b) { return a - b; }).map(function (k) { return q.plates[k].price; }).join('＋') : '（沒拿）') + ' ＝ ' + r.sum] });
         }
         function showSpread() {
-            var box = h('div', { 'class': 'ssh-spread' }); box.style.top = '170px';
+            var box = h('div', { 'class': 'sushi-spread' }); box.style.top = '170px';
             var list = taken.slice().sort(function (a, b) { return a - b; }), cols = 5, cw = Math.floor((W - 24 - (cols - 1) * 6) / cols), run = 0;
-            if (!list.length) box.appendChild(h('div', { 'class': 'ssh-spread__none', text: '一個盤子都沒拿' }));
+            if (!list.length) box.appendChild(h('div', { 'class': 'sushi-spread__none', text: '一個盤子都沒拿' }));
             list.forEach(function (k) {
-                run += q.plates[k].price; var cell = h('div', { 'class': 'ssh-cell' }), m = plateEl(q.plates[k], true); m.style.cssText = 'position:relative;width:' + cw + 'px;height:' + cw + 'px;';
-                cell.appendChild(m); cell.appendChild(h('div', { 'class': 'ssh-cell__p', text: q.plates[k].price + '元' })); cell.appendChild(h('div', { 'class': 'ssh-cell__s', text: String(run) })); cell.style.width = cw + 'px'; box.appendChild(cell);
+                run += q.plates[k].price; var cell = h('div', { 'class': 'sushi-cell' }), m = plateEl(q.plates[k], true); m.style.cssText = 'position:relative;width:' + cw + 'px;height:' + cw + 'px;';
+                cell.appendChild(m); cell.appendChild(h('div', { 'class': 'sushi-cell__p', text: q.plates[k].price + '元' })); cell.appendChild(h('div', { 'class': 'sushi-cell__s', text: String(run) })); cell.style.width = cw + 'px'; box.appendChild(cell);
             });
             field.appendChild(box);
         }

@@ -1,0 +1,81 @@
+/* ═══════════════════════════════════════
+   reaction_same.css — 相同嗎？（js/reaction_same.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「same-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 相同嗎？：比較兩個東西（圖形或文字）是否完全相同，按「相同」或「不同」。 */
+/* ═══ 相同嗎？（.sm-）═══ */
+.same-head {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+}
+
+/* 提示文字（例如「這次要比什麼」） */
+.same-prompt {
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    min-height: 1.3em;
+}
+
+/* 放圖形／文字的大框，內容置中 */
+.same-box {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+}
+
+/* 答對時框變綠 */
+.same-box--ok {
+    background: var(--c-ok-soft);
+    border-color: var(--c-ok);
+}
+
+/* 答錯時框變橘 */
+.same-box--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad);
+}
+
+/* SVG 圖形：高度 92%，寬度跟著比例自動（width:auto），不會被拉歪 */
+.same-svg {
+    height: 92%;
+    width: auto;
+    max-width: 92%;
+}
+
+/* 文字版題目的大字 */
+.same-text {
+    font-size: 120px;
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    letter-spacing: 2px;
+    white-space: nowrap;
+}
+
+/* 太長的文字改用較小字級，才放得進框裡 */
+.same-text--long {
+    font-size: 84px;
+}
+
+/* 下方「相同／不同」兩顆按鈕的容器 */
+.same-btns {
+    flex: none;
+    display: flex;
+    gap: var(--sp-3);
+}
+
+/* 單顆按鈕：flex:1 1 0 讓兩顆平分寬度 */
+.same-btn {
+    flex: 1 1 0;
+}

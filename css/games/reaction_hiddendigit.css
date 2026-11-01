@@ -1,0 +1,71 @@
+/* ═══════════════════════════════════════
+   reaction_hiddendigit.css — 遮住的數字（js/reaction_hiddendigit.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「hiddendigit-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 遮住的數字（.hiddendigit-）═══ */
+.hiddendigit-eq {
+    top: 40px;
+    font-size: var(--fs-xxxxl);
+    font-weight: var(--fw-black);
+}
+
+.hiddendigit-ans {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 140px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--sp-2);
+}
+
+.hiddendigit-eqsign {
+    font-size: var(--fs-xxxxl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+    margin-right: var(--sp-2);
+}
+
+.hiddendigit-box {
+    width: 80px;
+    height: 108px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--r-md);
+    background: var(--c-card);
+    border: var(--bd);
+    font-size: var(--fs-xxxxl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.hiddendigit-box--hide {
+    background: var(--c-yellow-soft);
+    border: 3px dashed var(--c-yellow);
+    color: var(--c-yellow);
+}
+
+.hiddendigit-box--ok {
+    background: var(--c-ok-soft);
+    border: 3px solid var(--c-ok);
+    color: var(--c-ok);
+}
+
+.hiddendigit-box--bad {
+    background: var(--c-bad-soft);
+    border: 3px solid var(--c-bad);
+    color: var(--c-bad);
+}
+
+.hiddendigit-ask {
+    top: 320px;
+}
+
+.hiddendigit-btn {
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+}

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_matchcolor.js — 秒反應・色不異空
+   樣式：css/games/reaction_matchcolor.css（這款專屬的 class 一律以「matchcolor-」開頭；共用元件在 css/reaction_common.css）
    畫面左右各一個一模一樣大小的長方形色塊，中間隔著一條 100px 寬的黑色長方形，
    盡量填滿遊戲畫面。左邊的色塊顏色固定不變；右邊的色塊顏色會一直在變。
    玩家用肉眼盯著看，覺得左右兩個色塊「顏色完全相同」的那一刻，點擊畫面任何
@@ -160,8 +161,8 @@
     function mount(root, ctx) {
         /* 舊版最佳紀錄只有兩位小數的真實差異度：第一次進來換算成「4 位、第 3／4 位不為 0」 */
         Reaction.migrateBest(ID, function (v) { return Leaderboard.fake4(v); });
-        /* 替整個畫面加上黑底 class（樣式在 css/reaction.css 的 .mc-bg） */
-        root.classList.add('mc-bg');
+        /* 替整個畫面加上黑底 class（樣式在 css/games/reaction_matchcolor.css 的 .matchcolor-bg） */
+        root.classList.add('matchcolor-bg');
 
         /* round：開一局 */
         function round() {
@@ -172,15 +173,15 @@
             var leftRgb = hsvToRgb(rd.left.h, rd.left.s, rd.left.v);
 
             /* 左色塊、中間縫、右色塊 */
-            var leftEl = h('div', { 'class': 'mc-block' });
-            var gapEl = h('div', { 'class': 'mc-gap' });
-            var rightEl = h('div', { 'class': 'mc-block' });
+            var leftEl = h('div', { 'class': 'matchcolor-block' });
+            var gapEl = h('div', { 'class': 'matchcolor-gap' });
+            var rightEl = h('div', { 'class': 'matchcolor-block' });
             leftEl.style.background = cssRgb(leftRgb);
             gapEl.style.flexBasis = GAP_PX + 'px';
-            root.appendChild(h('div', { 'class': 'mc-field' }, [leftEl, gapEl, rightEl]));
+            root.appendChild(h('div', { 'class': 'matchcolor-field' }, [leftEl, gapEl, rightEl]));
 
-            var foot = h('div', { 'class': 'mc-foot' }, [
-                h('div', { 'class': 'mc-hint', text: '當你覺得兩個方塊顏色是完全相同時，\n請點擊畫面確認。' })
+            var foot = h('div', { 'class': 'matchcolor-foot' }, [
+                h('div', { 'class': 'matchcolor-hint', text: '當你覺得兩個方塊顏色是完全相同時，\n請點擊畫面確認。' })
             ]);
             root.appendChild(foot);
             /* 操作提示（只在第一次進遊戲時）：點畫面任一處 → 手指縮放，放在畫面下方（不擋住兩個色塊） */
@@ -227,8 +228,8 @@
                 ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
                 /* 兩個色塊靠攏：黑色縫的寬度用 CSS transition 縮到 0 */
-                /* 兩個色塊靠攏：黑色長方形的寬度用 CSS transition 縮到 0（見 .mc-gap） */
-                gapEl.classList.add('mc-gap--closed');
+                /* 兩個色塊靠攏：黑色長方形的寬度用 CSS transition 縮到 0（見 .matchcolor-gap） */
+                gapEl.classList.add('matchcolor-gap--closed');
 
                 foot.innerHTML = '';
                 if (window.Sfx) Sfx.play('click');

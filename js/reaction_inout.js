@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_inout.js — 秒反應・圈內圈外（企劃 271）
+   樣式：css/games/reaction_inout.css（這款專屬的 class 一律以「inout-」開頭；共用元件在 css/reaction_common.css）
    一條很長、彎來彎去、首尾相連的紅色繩圈（自己不交叉），上面有一隻螞蟻。**螞蟻在繩圈裡面還是外面？** 點「裡面」或「外面」。
    ───────────────────────────────────────────────────────────────────
    · 繩圈怎麼造（makeLevel）：用「完美迷宮」——m×m 個房間、用隨機深度優先搜尋打通牆壁，房間與通道連成一棵樹（沒有環）。
@@ -213,7 +214,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'iof-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'inout-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -223,16 +224,16 @@
 
     /* 螞蟻（SVG）：三節身體、六隻腳、兩根觸角；中心在 (x, y)、大小 s、朝向 deg 度 */
     function drawAnt(parent, x, y, s, deg) {
-        var g = kit.svg('g', { 'class': 'iof-ant', transform: 'translate(' + x + ',' + y + ') rotate(' + deg + ')' }, parent);
+        var g = kit.svg('g', { 'class': 'inout-ant', transform: 'translate(' + x + ',' + y + ') rotate(' + deg + ')' }, parent);
         [-1, 0, 1].forEach(function (k) {
-            kit.svg('line', { 'class': 'iof-ant__leg', x1: k * s * 0.12, y1: 0, x2: k * s * 0.3, y2: -s * 0.4 }, g);
-            kit.svg('line', { 'class': 'iof-ant__leg', x1: k * s * 0.12, y1: 0, x2: k * s * 0.3, y2: s * 0.4 }, g);
+            kit.svg('line', { 'class': 'inout-ant__leg', x1: k * s * 0.12, y1: 0, x2: k * s * 0.3, y2: -s * 0.4 }, g);
+            kit.svg('line', { 'class': 'inout-ant__leg', x1: k * s * 0.12, y1: 0, x2: k * s * 0.3, y2: s * 0.4 }, g);
         });
-        kit.svg('line', { 'class': 'iof-ant__leg', x1: s * 0.42, y1: 0, x2: s * 0.62, y2: -s * 0.2 }, g);
-        kit.svg('line', { 'class': 'iof-ant__leg', x1: s * 0.42, y1: 0, x2: s * 0.62, y2: s * 0.2 }, g);
-        kit.svg('ellipse', { 'class': 'iof-ant__body', cx: -s * 0.3, cy: 0, rx: s * 0.22, ry: s * 0.17 }, g);
-        kit.svg('ellipse', { 'class': 'iof-ant__body', cx: 0, cy: 0, rx: s * 0.14, ry: s * 0.11 }, g);
-        kit.svg('circle', { 'class': 'iof-ant__body', cx: s * 0.28, cy: 0, r: s * 0.13 }, g);
+        kit.svg('line', { 'class': 'inout-ant__leg', x1: s * 0.42, y1: 0, x2: s * 0.62, y2: -s * 0.2 }, g);
+        kit.svg('line', { 'class': 'inout-ant__leg', x1: s * 0.42, y1: 0, x2: s * 0.62, y2: s * 0.2 }, g);
+        kit.svg('ellipse', { 'class': 'inout-ant__body', cx: -s * 0.3, cy: 0, rx: s * 0.22, ry: s * 0.17 }, g);
+        kit.svg('ellipse', { 'class': 'inout-ant__body', cx: 0, cy: 0, rx: s * 0.14, ry: s * 0.11 }, g);
+        kit.svg('circle', { 'class': 'inout-ant__body', cx: s * 0.28, cy: 0, r: s * 0.13 }, g);
         return g;
     }
 
@@ -243,22 +244,22 @@
         console.log('[圈內圈外] 第 ' + level + ' 關：迷宮 ' + q.m + '×' + q.m + '（格子 ' + G + '×' + G + '）；螞蟻在 (' + q.ant.r + ',' + q.ant.c + ') ' + (q.ant.inside ? '裡面' : '外面') + '，深度 ' + q.depth + '（下限 ' + q.depthMin + '）；限時 ' + timeMs(level) + ' ms');
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, cs = Math.floor(Math.min((W - 16) / G, (H - 220) / G)), BS = cs * G, bx = Math.round((W - BS) / 2), by = 62;
-        var field = h('div', { 'class': 'iof-field' });
+        var field = h('div', { 'class': 'inout-field' });
         stage.appendChild(field);
-        field.appendChild(h('div', { 'class': 'qz-note iof-tip', text: '螞蟻在繩圈的裡面還是外面？' }));
-        var svg = kit.svg('svg', { 'class': 'iof-svg', viewBox: '0 0 ' + BS + ' ' + BS, width: BS, height: BS }, field);
+        field.appendChild(h('div', { 'class': 'qz-note inout-tip', text: '螞蟻在繩圈的裡面還是外面？' }));
+        var svg = kit.svg('svg', { 'class': 'inout-svg', viewBox: '0 0 ' + BS + ' ' + BS, width: BS, height: BS }, field);
         svg.style.cssText = 'left:' + bx + 'px;top:' + by + 'px;';
         var d = polyPath(q.curve, cs);                                           /* 不規則的曲線（V1.36.0） */
-        var fill = kit.svg('path', { 'class': 'iof-fill', d: d }, svg);              /* 揭曉時才顯示的「裡面」淡綠色 */
-        kit.svg('path', { 'class': 'iof-rope', d: d }, svg);
+        var fill = kit.svg('path', { 'class': 'inout-fill', d: d }, svg);              /* 揭曉時才顯示的「裡面」淡綠色 */
+        kit.svg('path', { 'class': 'inout-rope', d: d }, svg);
         drawAnt(svg, q.antXY[0] * cs, q.antXY[1] * cs, cs * ANT_SIZE, Math.floor(api.rand() * 360));
-        var info = h('div', { 'class': 'qz-note iof-info', text: '' });
+        var info = h('div', { 'class': 'qz-note inout-info', text: '' });
         info.style.top = (by + BS + 6) + 'px';
         field.appendChild(info);
         var done = false;
         var grid = kit.btnGrid(field, [
-            { text: '裡面', kind: 'line', cls: 'iof-btn', onTap: function () { judge(true); } },
-            { text: '外面', kind: 'line', cls: 'iof-btn', onTap: function () { judge(false); } }
+            { text: '裡面', kind: 'line', cls: 'inout-btn', onTap: function () { judge(true); } },
+            { text: '外面', kind: 'line', cls: 'inout-btn', onTap: function () { judge(false); } }
         ], { cols: 2, h: 100, gap: 12 });
         api.timer(timeMs(level), function () { judge(null); });
         if (level === 1 && kit.once('inout.hint')) kit.hintOn(stage, grid.btns[q.ant.inside ? 0 : 1], { mode: 'tap', delay: 700, text: '請點「裡面」或「外面」' });
@@ -266,9 +267,9 @@
             if (done || api.over) return;
             done = true;
             var ok = inside === q.ant.inside;
-            fill.classList.add('iof-fill--show');
-            grid.btns[q.ant.inside ? 0 : 1].classList.add('iof-btn--ok');
-            if (inside !== null && !ok) grid.btns[inside ? 0 : 1].classList.add('iof-btn--bad');
+            fill.classList.add('inout-fill--show');
+            grid.btns[q.ant.inside ? 0 : 1].classList.add('inout-btn--ok');
+            if (inside !== null && !ok) grid.btns[inside ? 0 : 1].classList.add('inout-btn--bad');
             info.textContent = '螞蟻在繩圈' + (q.ant.inside ? '裡面' : '外面') + (ok ? '，答對了！' : (inside === null ? '（時間到）' : '，答錯了'));
             kit.flash(stage, ok, api.my);
             if (ok) { api.pass({ delay: 1500 }); return; }

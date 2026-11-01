@@ -1,0 +1,126 @@
+/* ═══════════════════════════════════════
+   reaction_reversi.css — 翻最多棋（js/reaction_reversi.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「reversi-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 翻最多棋（.reversi-）═══ */
+.reversi-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.reversi-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+}
+
+.reversi-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+}
+
+/* 木紋棋盤：底色＋格線（用漸層畫出來，不用圖片） */
+.reversi-board {
+    position: absolute;
+    background: var(--rvs-wood);
+    outline: 4px solid var(--rvs-line);
+    box-shadow: var(--shadow-card);
+}
+
+.reversi-cell {
+    position: absolute;
+    box-sizing: border-box;
+    border: 1px solid var(--rvs-line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.reversi-disc {
+    position: absolute;
+    inset: 8%;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px var(--rvs-line);
+}
+
+.reversi-disc--b {
+    background: var(--c-ink);
+}
+
+.reversi-disc--w {
+    background: var(--c-card);
+    border: 2px solid var(--c-ink-soft);
+}
+
+/* 剛下的黑棋、被夾住翻面的白棋 */
+.reversi-disc--new {
+    animation: reversi-drop 0.3s ease-out;
+}
+
+.reversi-disc--flip {
+    animation: reversi-flip 0.5s ease-in-out;
+}
+
+@keyframes reversi-drop {
+    from {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes reversi-flip {
+    0% {
+        transform: rotateY(0deg);
+    }
+
+    50% {
+        transform: rotateY(90deg);
+    }
+
+    100% {
+        transform: rotateY(0deg);
+    }
+}
+
+/* 每個合法位置能翻幾顆：數字浮出來；最多的是綠色 */
+.reversi-count {
+    position: relative;
+    z-index: 2;
+    min-width: 62%;
+    padding: 2px 0;
+    border-radius: var(--r-pill);
+    background: var(--c-orange);
+    color: var(--c-card);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    text-align: center;
+    line-height: 1.1;
+}
+
+.reversi-count--best {
+    background: var(--c-ok);
+}
+
+.reversi-cell--ok {
+    background: var(--c-ok-soft);
+}
+
+.reversi-cell--bad {
+    background: var(--c-bad-soft);
+    outline: 3px solid var(--c-bad-light);
+    outline-offset: -3px;
+}

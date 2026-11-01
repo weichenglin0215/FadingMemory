@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_stackup.js — 秒反應・重心疊疊樂（原企劃「002 重心落點」的復活版）
+   樣式：css/games/reaction_stackup.css（這款專屬的 class 一律以「stackup-」開頭；共用元件在 css/reaction_common.css）
    上方出現一個方塊（長方形、梯形或三角形），下方的橫桿可以左右拖曳決定它落下的位置，
    按「放下」就會筆直掉下去；方塊必須「平穩」地擺在地板或其他方塊上面。
    傾斜（重心超出支撐）、滑掉（落在斜面或尖端）、頂到天花板，都算失敗。
@@ -180,7 +181,7 @@
             rating: rating,
             head: function (level) { return '第 ' + level + ' 塊'; },
             lines: function (S) { return ['成功疊了 ' + S.cleared + ' 塊']; },
-            stageClass: 'su-stage',
+            stageClass: 'stackup-stage',
             setup: setup
         });
     }
@@ -201,9 +202,9 @@
         /* 世界座標（地板往上）→ SVG 座標（上方往下） */
         var SVG_H = PREVIEW_H + ZH;
         function sy(y) { return PREVIEW_H + ZH - y; }
-        var svg = kit.svg('svg', { 'class': 'su-svg', viewBox: '0 0 ' + W + ' ' + SVG_H, width: W, height: SVG_H }, stage);
-        kit.svg('line', { x1: 0, x2: W, y1: sy(ZH), y2: sy(ZH), 'class': 'su-ceil' }, svg);
-        kit.svg('rect', { x: 0, y: sy(0), width: W, height: 400, 'class': 'su-floor' }, svg);
+        var svg = kit.svg('svg', { 'class': 'stackup-svg', viewBox: '0 0 ' + W + ' ' + SVG_H, width: W, height: SVG_H }, stage);
+        kit.svg('line', { x1: 0, x2: W, y1: sy(ZH), y2: sy(ZH), 'class': 'stackup-ceil' }, svg);
+        kit.svg('rect', { x: 0, y: sy(0), width: W, height: 400, 'class': 'stackup-floor' }, svg);
 
         function pts(b, dx) {
             var x = b.x0 + (dx || 0), y0 = b.y0;
@@ -213,7 +214,7 @@
         }
         function pointsStr(b, dx, dy) { return pts(b, dx).map(function (p) { return p[0].toFixed(1) + ',' + (sy(p[1]) + (dy || 0)).toFixed(1); }).join(' '); }
         function drawBlock(b, parent) {
-            return kit.svg('polygon', { points: pointsStr(b), 'class': 'su-block', style: 'fill:hsl(' + b.hue + ',62%,70%)' }, parent);
+            return kit.svg('polygon', { points: pointsStr(b), 'class': 'stackup-block', style: 'fill:hsl(' + b.hue + ',62%,70%)' }, parent);
         }
         /* 已經疊好的塔：每塊一個 <g>（失敗時整組一起轉） */
         var gTower = kit.svg('g', {}, svg), gEls = [];
@@ -222,8 +223,8 @@
         /* 上方預覽：要放的那一塊（底邊在預覽區底部上方一點），用同一個形狀函式畫 */
         var prev = { kind: block.kind, x0: x0, w: block.w, y0: ZH + 14, h: block.h, hue: block.hue };
         var gPrev = kit.svg('g', {}, svg);
-        var polyPrev = kit.svg('polygon', { points: pointsStr(prev), 'class': 'su-block su-block--prev', style: 'fill:hsl(' + block.hue + ',62%,70%)' }, gPrev);
-        var guide = kit.svg('line', { x1: 0, x2: 0, y1: sy(ZH), y2: sy(0), 'class': 'su-guide' }, svg);
+        var polyPrev = kit.svg('polygon', { points: pointsStr(prev), 'class': 'stackup-block stackup-block--prev', style: 'fill:hsl(' + block.hue + ',62%,70%)' }, gPrev);
+        var guide = kit.svg('line', { x1: 0, x2: 0, y1: sy(ZH), y2: sy(0), 'class': 'stackup-guide' }, svg);
         function paintPrev() {
             prev.x0 = x0;
             polyPrev.setAttribute('points', pointsStr(prev));
@@ -232,9 +233,9 @@
         paintPrev();
 
         /* 橫桿：拖曳旋鈕決定方塊的左右位置 */
-        var bar = h('div', { 'class': 'su-bar' }), track = h('div', { 'class': 'su-track' }), knob = h('div', { 'class': 'su-knob' });
+        var bar = h('div', { 'class': 'stackup-bar' }), track = h('div', { 'class': 'stackup-track' }), knob = h('div', { 'class': 'stackup-knob' });
         bar.appendChild(track); bar.appendChild(knob);
-        var okBtn = h('button', { 'class': 'btn btn--go su-ok', text: '放下' });
+        var okBtn = h('button', { 'class': 'btn btn--go stackup-ok', text: '放下' });
         stage.appendChild(bar); stage.appendChild(okBtn);
         var KR = 24;                                   /* 旋鈕半徑 */
         function knobX() { return KR + (W - 2 * KR) * (W - block.w > 0 ? x0 / (W - block.w) : 0.5); }
@@ -261,7 +262,7 @@
         bar.addEventListener('pointercancel', endDrag);
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，沿著橫桿左右移動 */
         if (level === 1 && kit.once('stackup.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: knobX(), y: SVG_H + 8 + BAR_H / 2, dx: 120, dy: 0, delay: 400, text: '請往左右拖曳' });
-        var msg = h('div', { 'class': 'su-msg' });
+        var msg = h('div', { 'class': 'stackup-msg' });
         stage.appendChild(msg);
 
         /* 放下：先算結果，再播落下動畫 */
@@ -281,7 +282,7 @@
                 if (res.ok) {
                     tower = res.tower;
                     Sfx.play('ok');
-                    msg.textContent = '站穩了！'; msg.classList.add('su-msg--ok');
+                    msg.textContent = '站穩了！'; msg.classList.add('stackup-msg--ok');
                     api.pass({ gain: 1, delay: 600 });
                 } else {
                     failAnim(res, fallG);
@@ -292,7 +293,7 @@
         /* 失敗動畫：失敗的那一塊（連同壓在它上面的）繞著支撐邊緣轉開，再掉下去 */
         function failAnim(res, fallG) {
             Sfx.play('bad');
-            msg.textContent = FAIL_TEXT[res.reason] || '失敗了'; msg.classList.add('su-msg--bad');
+            msg.textContent = FAIL_TEXT[res.reason] || '失敗了'; msg.classList.add('stackup-msg--bad');
             var idx = res.fail ? res.fail.idx : res.tower.length - 1;
             var groups = [];
             var set = {}; set[idx] = true;

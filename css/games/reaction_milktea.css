@@ -1,0 +1,172 @@
+/* ═══════════════════════════════════════
+   reaction_milktea.css — 奶茶調色（js/reaction_milktea.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「milktea-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 奶茶調色（.milktea-）═══ */
+.milktea-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.milktea-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.milktea-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 兩個底板：樣品杯和奶茶杯各放一塊，背景可以是深色木桌或白色托盤（同時對比）；靠攏之後都變中性色 */
+.milktea-panel {
+    position: absolute;
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    transition: left 0.7s ease-in-out, background 0.5s;
+}
+
+.milktea-panel--wood {
+    background: var(--mlt-wood);
+}
+
+.milktea-panel--tray {
+    background: var(--mlt-tray);
+}
+
+.milktea-panel--join {
+    background: var(--mlt-tray);
+}
+
+.milktea-cap {
+    position: absolute;
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    text-align: center;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.milktea-field--join .milktea-cap {
+    opacity: 0;
+}
+
+/* 杯子：玻璃外框＋液體（液體的顏色由 JS 即時設定） */
+.milktea-cup {
+    position: absolute;
+    display: block;
+    overflow: visible;
+}
+
+.milktea-glass {
+    fill: none;
+    stroke: var(--mlt-glass);
+    stroke-width: 4;
+    stroke-linejoin: round;
+}
+
+.milktea-swirl {
+    position: absolute;
+    pointer-events: none;
+}
+
+/* 牛奶壺：平常直立，按住時往杯子傾斜；倒出一條白色細線 */
+.milktea-jug {
+    position: absolute;
+    width: 60px;
+    height: 70px;
+    transform-origin: 80% 90%;
+    transition: transform 0.25s ease-out;
+}
+
+.milktea-jug--pour {
+    transform: rotate(-38deg);
+}
+
+.milktea-jug__body {
+    position: absolute;
+    left: 6px;
+    top: 14px;
+    width: 46px;
+    height: 54px;
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-sm) var(--r-sm) var(--r-md) var(--r-md);
+}
+
+.milktea-jug__lip {
+    position: absolute;
+    left: -2px;
+    top: 10px;
+    width: 18px;
+    height: 12px;
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-right: none;
+    border-radius: var(--r-sm) 0 0 var(--r-sm);
+}
+
+.milktea-stream {
+    position: absolute;
+    width: 6px;
+    background: var(--mlt-milk);
+    border-radius: var(--r-pill);
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.milktea-stream--on {
+    opacity: 0.95;
+}
+
+.milktea-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* 倒牛奶的大按鈕 */
+.milktea-btn {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 10px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-blue);
+    border-radius: var(--r-lg);
+    box-shadow: 0 8px 0 var(--mlt-btn-dark);
+    color: var(--c-card);
+    cursor: pointer;
+    touch-action: none;
+    transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.milktea-btn--on {
+    transform: translateY(6px);
+    box-shadow: 0 2px 0 var(--mlt-btn-dark);
+}
+
+.milktea-btn__text {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}

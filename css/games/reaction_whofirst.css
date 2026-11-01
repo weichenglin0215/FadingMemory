@@ -1,0 +1,66 @@
+/* ═══════════════════════════════════════
+   reaction_whofirst.css — 誰先亮（js/reaction_whofirst.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「whofirst-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 084 誰先亮（.whofirst-）═══ */
+.whofirst-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 12px;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 兩盞燈貼近左右邊緣（離邊緣 20px，js 的 EDGE），大小由 js 依關卡設定（220px → 10px） */
+.whofirst-row {
+    position: absolute;
+    left: 20px;
+    right: 20px;
+    top: 140px;
+    height: 240px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.whofirst-lamp {
+    flex: none;
+    width: 220px;
+    height: 220px;
+    border-radius: var(--r-pill);
+    background: var(--c-card-alt);
+    border: 5px solid var(--bd-c);
+    box-sizing: border-box;
+}
+
+.whofirst-lamp--on {
+    /*background: var(--c-yellow);*/
+    background: hsl(0, 100%, 70%);
+    border-color: var(--c-ink);
+    box-shadow: 0 0 40px var(--c-yellow);
+}
+
+.whofirst-lamp--b.whofirst-lamp--on {
+    background: hsl(0, 100%, 70%);
+}
+
+.whofirst-lamp--first {
+    border-color: var(--c-green);
+    border-width: 8px;
+}
+
+.whofirst-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 440px;
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink);
+}

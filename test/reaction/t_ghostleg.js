@@ -250,10 +250,10 @@ if (T.VISIT[1] >= T.COLS) { let all5 = 0, N = 150; for (let i = 0; i < N; i++) {
 
 ok(T.rating(1) !== T.rating(4) && T.rating(4) !== T.rating(7) && T.rating(7) !== T.rating(11) && T.rating(11) !== T.rating(15), '評語分級');
 // 接線（原始碼／樣式）：綠底黑字起終點、玩家按住直線往旁邊拖畫粗藍線、鉛筆提示、沒有手指提示
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_ghostleg.js'), css = rd('../../css/reaction3.css');
-  ok(src.indexOf('fingerHint') < 0 && src.indexOf('0x270F') > 0 && /\.gl-pencil \{/.test(css), '提示改成鉛筆圖示，取消手指圖示');
-  ok(/\.gl-user \{[^}]*c-blue[^}]*stroke-width: 14/.test(css.replace(/\r?\n/g, ' ')) , '玩家畫的橫線：很粗的藍線');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_ghostleg.js'), css = rd('../../css/games/reaction_ghostleg.css') + rd('../../css/reaction_common.css');
+  ok(src.indexOf('fingerHint') < 0 && src.indexOf('0x270F') > 0 && /\.ghostleg-pencil \{/.test(css), '提示改成鉛筆圖示，取消手指圖示');
+  ok(/\.ghostleg-user \{[^}]*c-blue[^}]*stroke-width: 14/.test(css.replace(/\r?\n/g, ' ')) , '玩家畫的橫線：很粗的藍線');
   ok(/\.gl-token--go \{[^}]*c-green/.test(css.replace(/\r?\n/g, ' ')) && /\.gl-token--go\+\.gl-label,\s*\.gl-end--go\+\.gl-label \{\s*fill: var\(--c-black\)/.test(css), '起點終點：綠底黑字');
-  ok(/\.gl-route \{[^}]*c-green[^}]*stroke-dasharray/.test(css.replace(/\r?\n/g, ' ')), '評審動畫：綠色粗虛線');
+  ok(/\.ghostleg-route \{[^}]*c-green[^}]*stroke-dasharray/.test(css.replace(/\r?\n/g, ' ')), '評審動畫：綠色粗虛線');
   ok(src.indexOf('canPlace(q.rungs, row, col)') > 0 && src.indexOf("api.stopTimer()") > 0 && src.indexOf('judge();') > 0, '畫好橫線之後才開始評審動畫'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

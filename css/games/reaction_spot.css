@@ -1,0 +1,55 @@
+/* ═══════════════════════════════════════
+   reaction_spot.css — 大家來找碴（js/reaction_spot.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「spot-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 遊戲三：大家來找碴 ═══ */
+/* 大家來找碴：4×4 的格子，其中一格顏色不同 */
+.spot-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: var(--sp-3);
+}
+
+/* 單個色塊按鈕，transition 讓縮放有 0.1 秒的過渡動畫，不會「啪」一下 */
+.spot-tile {
+    border: none;
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    padding: 0;
+    transition: transform 0.1s ease;
+}
+
+.spot-tile:active {
+    transform: scale(0.96);
+}
+
+/* 答對：用綠色虛線 outline 框住（outline-offset 為負數 = 框畫在格子內側） */
+.spot-tile--ok {
+    outline: 10px dashed var(--c-ok-light);
+    outline-offset: -5px;
+}
+
+/* 答錯：用橘紅色虛線框 */
+.spot-tile--bad {
+    /*outline: 10px dotted var(--c-bad-light);*/
+    outline: 10px dashed var(--c-bad-light);
+    outline-offset: -5px;
+}
+
+/* 遊戲介面底色改純黑：色彩判斷類的遊戲，背景色會透過同時對比影響色塊看起來的樣子，
+   黑色是最中性的底，不偏向任何色相或亮度；只在這個遊戲的 #screen 生效，上方的
+   標題列（.bar）不受影響，答錯的結算畫面文字也要跟著換成亮色才看得清楚。 */
+/* 黑色背景版面 */
+.spot-dark-bg {
+    background: #000;
+}
+
+/* 黑底上的提示文字改亮灰色 */
+.spot--on-dark {
+    color: hsl(0, 0%, 70%);
+}

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_seesaw.js — 秒反應・蹺蹺板比重（企劃 257；V1.36.0 改成「真正的槓桿」：重量 × 離支點的距離）
+   樣式：css/games/reaction_seesaw.css（這款專屬的 class 一律以「seesaw-」開頭；共用元件在 css/reaction_common.css）
    公園的蹺蹺板。**一開始動物們就已經坐在蹺蹺板上**（左右各幾隻，板子是歪的）。玩家要**把動物拖到板子上合適的座位**，
    直到蹺蹺板**平衡**。動物**越大越重**（身上的數字就是重量）；板子上每個座位離支點 1、2、3… 格，**離支點越遠，這隻動物壓得越用力**——
    跟真的蹺蹺板一樣，平衡的條件是「左邊的 重量×格數 加起來 ＝ 右邊的 重量×格數 加起來」（物理上叫「力矩」）。
@@ -44,7 +45,7 @@
     var SETTLE_MS = 350;                        /* 平衡之後要靜止多久才算過關 */
     var SOLVE_CAP = 400;                        /* 數「會平衡的放法」時，數到這麼多就停（超過上限的題目不要，不用數更多） */
     var MAX_LEVEL = 90;
-    var SPECIES = [                             /* 動物（id 對應 CSS 的 .sea-an--id 與 theme 的毛色變數） */
+    var SPECIES = [                             /* 動物（id 對應 CSS 的 .seesaw-an--id 與 theme 的毛色變數） */
         { id: 'bear', name: '熊' }, { id: 'pig', name: '豬' }, { id: 'dog', name: '狗' }, { id: 'cat', name: '貓' },
         { id: 'rabbit', name: '兔' }, { id: 'chick', name: '雞' }, { id: 'panda', name: '貓熊' }
     ];
@@ -157,7 +158,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'sea-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'seesaw-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -165,25 +166,25 @@
         });
     }
 
-    /* 動物的臉（SVG）：毛色由 CSS 的 .sea-an--種類 決定；不同動物的耳朵、鼻子不一樣 */
+    /* 動物的臉（SVG）：毛色由 CSS 的 .seesaw-an--種類 決定；不同動物的耳朵、鼻子不一樣 */
     function animalSvg(id) {
-        var s = kit.svg('svg', { 'class': 'sea-face', viewBox: '0 0 60 60', width: 60, height: 60 });
+        var s = kit.svg('svg', { 'class': 'seesaw-face', viewBox: '0 0 60 60', width: 60, height: 60 });
         function el(tag, attrs, cls) { attrs['class'] = cls; return kit.svg(tag, attrs, s); }
         /* 耳朵（畫在臉後面） */
-        if (id === 'bear' || id === 'panda') { el('circle', { cx: 13, cy: 17, r: 8 }, 'sea-ear' + (id === 'panda' ? ' sea-ear--dark' : '')); el('circle', { cx: 47, cy: 17, r: 8 }, 'sea-ear' + (id === 'panda' ? ' sea-ear--dark' : '')); }
-        if (id === 'pig' || id === 'cat') { el('path', { d: 'M9 24 L13 6 L26 16 Z' }, 'sea-ear'); el('path', { d: 'M51 24 L47 6 L34 16 Z' }, 'sea-ear'); }
-        if (id === 'dog') { el('ellipse', { cx: 11, cy: 30, rx: 7, ry: 14 }, 'sea-ear sea-ear--dark2'); el('ellipse', { cx: 49, cy: 30, rx: 7, ry: 14 }, 'sea-ear sea-ear--dark2'); }
-        if (id === 'rabbit') { el('ellipse', { cx: 21, cy: 11, rx: 6, ry: 15 }, 'sea-ear'); el('ellipse', { cx: 39, cy: 11, rx: 6, ry: 15 }, 'sea-ear'); }
-        if (id === 'chick') { el('path', { d: 'M30 10 Q26 2 22 6 Q27 6 28 12 Z M30 10 Q34 2 38 6 Q33 6 32 12 Z' }, 'sea-ear'); }
-        el('circle', { cx: 30, cy: 35, r: 21 }, 'sea-head');
-        if (id === 'panda') { el('ellipse', { cx: 22, cy: 32, rx: 5, ry: 7 }, 'sea-patch'); el('ellipse', { cx: 38, cy: 32, rx: 5, ry: 7 }, 'sea-patch'); }
-        el('circle', { cx: 22, cy: 32, r: 2.8 }, 'sea-eye'); el('circle', { cx: 38, cy: 32, r: 2.8 }, 'sea-eye');
-        if (id === 'pig') { el('ellipse', { cx: 30, cy: 42, rx: 8, ry: 6 }, 'sea-snout'); el('circle', { cx: 27, cy: 42, r: 1.4 }, 'sea-eye'); el('circle', { cx: 33, cy: 42, r: 1.4 }, 'sea-eye'); }
-        else if (id === 'chick') el('path', { d: 'M25 40 L35 40 L30 47 Z' }, 'sea-beak');
-        else if (id === 'cat') { el('path', { d: 'M26 40 L34 40 L30 44 Z' }, 'sea-nose'); el('path', { d: 'M8 38 L19 40 M8 44 L19 43 M52 38 L41 40 M52 44 L41 43' }, 'sea-whisker'); }
-        else { el('ellipse', { cx: 30, cy: 41, rx: 4, ry: 3 }, 'sea-nose'); }
-        el('path', { d: 'M24 48 Q30 51 36 48' }, 'sea-mouth');                  /* 平常的嘴（一條淡淡的線） */
-        el('path', { d: 'M22 46 Q30 56 38 46' }, 'sea-smile');                  /* 平衡時的笑（平常是藏起來的） */
+        if (id === 'bear' || id === 'panda') { el('circle', { cx: 13, cy: 17, r: 8 }, 'seesaw-ear' + (id === 'panda' ? ' seesaw-ear--dark' : '')); el('circle', { cx: 47, cy: 17, r: 8 }, 'seesaw-ear' + (id === 'panda' ? ' seesaw-ear--dark' : '')); }
+        if (id === 'pig' || id === 'cat') { el('path', { d: 'M9 24 L13 6 L26 16 Z' }, 'seesaw-ear'); el('path', { d: 'M51 24 L47 6 L34 16 Z' }, 'seesaw-ear'); }
+        if (id === 'dog') { el('ellipse', { cx: 11, cy: 30, rx: 7, ry: 14 }, 'seesaw-ear seesaw-ear--dark2'); el('ellipse', { cx: 49, cy: 30, rx: 7, ry: 14 }, 'seesaw-ear seesaw-ear--dark2'); }
+        if (id === 'rabbit') { el('ellipse', { cx: 21, cy: 11, rx: 6, ry: 15 }, 'seesaw-ear'); el('ellipse', { cx: 39, cy: 11, rx: 6, ry: 15 }, 'seesaw-ear'); }
+        if (id === 'chick') { el('path', { d: 'M30 10 Q26 2 22 6 Q27 6 28 12 Z M30 10 Q34 2 38 6 Q33 6 32 12 Z' }, 'seesaw-ear'); }
+        el('circle', { cx: 30, cy: 35, r: 21 }, 'seesaw-head');
+        if (id === 'panda') { el('ellipse', { cx: 22, cy: 32, rx: 5, ry: 7 }, 'seesaw-patch'); el('ellipse', { cx: 38, cy: 32, rx: 5, ry: 7 }, 'seesaw-patch'); }
+        el('circle', { cx: 22, cy: 32, r: 2.8 }, 'seesaw-eye'); el('circle', { cx: 38, cy: 32, r: 2.8 }, 'seesaw-eye');
+        if (id === 'pig') { el('ellipse', { cx: 30, cy: 42, rx: 8, ry: 6 }, 'seesaw-snout'); el('circle', { cx: 27, cy: 42, r: 1.4 }, 'seesaw-eye'); el('circle', { cx: 33, cy: 42, r: 1.4 }, 'seesaw-eye'); }
+        else if (id === 'chick') el('path', { d: 'M25 40 L35 40 L30 47 Z' }, 'seesaw-beak');
+        else if (id === 'cat') { el('path', { d: 'M26 40 L34 40 L30 44 Z' }, 'seesaw-nose'); el('path', { d: 'M8 38 L19 40 M8 44 L19 43 M52 38 L41 40 M52 44 L41 43' }, 'seesaw-whisker'); }
+        else { el('ellipse', { cx: 30, cy: 41, rx: 4, ry: 3 }, 'seesaw-nose'); }
+        el('path', { d: 'M24 48 Q30 51 36 48' }, 'seesaw-mouth');                  /* 平常的嘴（一條淡淡的線） */
+        el('path', { d: 'M22 46 Q30 56 38 46' }, 'seesaw-smile');                  /* 平衡時的笑（平常是藏起來的） */
         return s;
     }
 
@@ -193,38 +194,38 @@
         api.info = q;
         console.log('[蹺蹺板比重] 第 ' + level + ' 關：' + n + ' 隻動物 ' + q.kinds.map(function (k, i) { return SPECIES[k].name + weights[i] + '@' + pos[i] + (q.fixed[i] ? '（固定）' : ''); }).join('、') + '；初始力矩 左 ' + torqueOf(weights, pos).l + '／右 ' + torqueOf(weights, pos).r + '（差 ' + q.net + '）；' + q.sols + ' 種平衡放法，最少換 ' + q.best.moves + ' 隻；限時 ' + timeMs(level) + ' ms');
 
-        var field = h('div', { 'class': 'sea-field' });                  /* 這一關專用的容器：所有東西和事件監聽都放在裡面，換關時整個丟掉 */
+        var field = h('div', { 'class': 'seesaw-field' });                  /* 這一關專用的容器：所有東西和事件監聽都放在裡面，換關時整個丟掉 */
         var W = stage.clientWidth || 472, PL = Math.min(W - 12, 460), PX = W / 2, PY = 380, HALF = PL / 2, DS = (HALF - 20) / S;          /* DS：相鄰座位的間距（px） */
         stage.appendChild(field);
-        field.appendChild(h('div', { 'class': 'qz-note sea-tip', text: '動物越大越重；座位離支點越遠，壓得越用力（重量×格數）' }));
-        var pivot = h('div', { 'class': 'sea-pivot' });
+        field.appendChild(h('div', { 'class': 'qz-note seesaw-tip', text: '動物越大越重；座位離支點越遠，壓得越用力（重量×格數）' }));
+        var pivot = h('div', { 'class': 'seesaw-pivot' });
         pivot.style.cssText = 'left:' + (PX - 40) + 'px;top:' + (PY + 6) + 'px;';
         field.appendChild(pivot);
-        var board = h('div', { 'class': 'sea-board' });
+        var board = h('div', { 'class': 'seesaw-board' });
         board.style.cssText = 'left:' + (PX - HALF) + 'px;top:' + (PY - 8) + 'px;width:' + PL + 'px;';
         field.appendChild(board);
         /* 座位的刻度：每個座位一個小刻痕，下面寫著離支點幾格 */
         for (var sl = -S; sl <= S; sl++) {
             if (!sl) continue;
-            var tick = h('div', { 'class': 'sea-slot', text: String(Math.abs(sl)) });
+            var tick = h('div', { 'class': 'seesaw-slot', text: String(Math.abs(sl)) });
             tick.style.left = (HALF + sl * DS - 14) + 'px';
             board.appendChild(tick);
         }
-        var aim = h('div', { 'class': 'sea-aim' });                       /* 拖曳時，標出「放開會坐到哪個座位」的虛線圓圈 */
+        var aim = h('div', { 'class': 'seesaw-aim' });                       /* 拖曳時，標出「放開會坐到哪個座位」的虛線圓圈 */
         aim.style.display = 'none'; board.appendChild(aim);
-        var info = h('div', { 'class': 'qz-note sea-info', text: '' });
+        var info = h('div', { 'class': 'qz-note seesaw-info', text: '' });
         info.style.top = (PY + 128) + 'px';
         field.appendChild(info);
 
         /* 動物們 */
         var els = [];
         q.kinds.forEach(function (k, i) {
-            var sp = SPECIES[k], el = h('div', { 'class': 'sea-an sea-an--' + sp.id + (q.fixed[i] ? ' sea-an--pin' : '') }), sz = sizeOf(weights[i]);
+            var sp = SPECIES[k], el = h('div', { 'class': 'seesaw-an seesaw-an--' + sp.id + (q.fixed[i] ? ' seesaw-an--pin' : '') }), sz = sizeOf(weights[i]);
             el.style.width = el.style.height = sz + 'px';
             el.setAttribute('data-i', String(i));                                 /* 第幾隻（測試用） */
             el.appendChild(animalSvg(sp.id));
-            el.appendChild(h('div', { 'class': 'sea-badge', text: String(weights[i]) }));
-            if (q.fixed[i]) el.appendChild(h('div', { 'class': 'sea-pintag', text: '固定' }));
+            el.appendChild(h('div', { 'class': 'seesaw-badge', text: String(weights[i]) }));
+            if (q.fixed[i]) el.appendChild(h('div', { 'class': 'seesaw-pintag', text: '固定' }));
             els.push(el);
             if (!q.fixed[i]) kit.onTap(el, function (e) { startDrag(i, e); });
         });
@@ -281,7 +282,7 @@
             try { field.setPointerCapture(e.pointerId); } catch (err) { }
             drag = { i: i, id: e.pointerId };
             lastPos[i] = pos[i]; held = i; pos[i] = 0;                                                    /* 離開板子：不算在任何一邊，板子馬上重新計算、開始傾斜 */
-            var el = els[i]; field.appendChild(el); el.classList.add('sea-an--held'); el.style.zIndex = '90';
+            var el = els[i]; field.appendChild(el); el.classList.add('seesaw-an--held'); el.style.zIndex = '90';
             moveHeld(p);
             seat();
             info.textContent = '';
@@ -303,7 +304,7 @@
         function drop(e) {
             if (!drag || e.pointerId !== drag.id) return;
             var i = drag.i, p = kit.localPt(e, field), el = els[i];
-            drag = null; held = -1; el.classList.remove('sea-an--held'); el.style.top = ''; el.style.bottom = ''; aim.style.display = 'none';
+            drag = null; held = -1; el.classList.remove('seesaw-an--held'); el.style.top = ''; el.style.bottom = ''; aim.style.display = 'none';
             var s = slotAt(p), dest = lastPos[i];                                                       /* 放到板子外面：回到原來的座位 */
             if (s) {
                 var want = freeSlotFor(s, i), who = -1;
@@ -313,7 +314,7 @@
             }
             pos[i] = dest; lastPos[i] = dest;
             seat();
-            if (s) { el.classList.remove('sea-an--drop'); void el.offsetWidth; el.classList.add('sea-an--drop'); }                 /* 坐上去有一點彈跳 */
+            if (s) { el.classList.remove('seesaw-an--drop'); void el.offsetWidth; el.classList.add('seesaw-an--drop'); }                 /* 坐上去有一點彈跳 */
             Sfx.play('pop');
         }
         field.addEventListener('pointerup', drop);
@@ -321,7 +322,7 @@
 
         function win() {
             if (won || api.over) return;
-            won = true; stage.classList.add('sea-happy');
+            won = true; stage.classList.add('seesaw-happy');
             var t = torqueOf(weights, pos);
             info.textContent = '兩邊的力矩都是 ' + t.l + '，平衡了！';
             kit.flash(stage, true, api.my);
@@ -330,15 +331,15 @@
         function timeout() {
             if (won || api.over) return;
             over = true;
-            if (drag) { var i0 = drag.i; drag = null; held = -1; els[i0].classList.remove('sea-an--held'); els[i0].style.top = ''; els[i0].style.bottom = ''; aim.style.display = 'none'; pos[i0] = lastPos[i0] || 1; }
+            if (drag) { var i0 = drag.i; drag = null; held = -1; els[i0].classList.remove('seesaw-an--held'); els[i0].style.top = ''; els[i0].style.bottom = ''; aim.style.display = 'none'; pos[i0] = lastPos[i0] || 1; }
             seat();
             /* 指出一種平衡的放法：從現在的座位找最近的平衡放法，該換座位的動物圍上綠框，目標座位畫虛線圓圈 */
             var fixedPos = q.fixed.map(function (f, i) { return f ? pos[i] : 0; }), sol = solve(weights, fixedPos, pos, S, SOLVE_CAP);
             if (sol.best) {
                 for (var i = 0; i < n; i++) {
                     if (sol.best[i] === pos[i]) continue;
-                    els[i].classList.add('sea-an--move');
-                    var sz = sizeOf(weights[i]), ghost = h('div', { 'class': 'sea-ghost', text: String(weights[i]) });
+                    els[i].classList.add('seesaw-an--move');
+                    var sz = sizeOf(weights[i]), ghost = h('div', { 'class': 'seesaw-ghost', text: String(weights[i]) });
                     ghost.style.width = ghost.style.height = sz + 'px'; ghost.style.left = (HALF + sol.best[i] * DS - sz / 2) + 'px';
                     board.appendChild(ghost);
                 }

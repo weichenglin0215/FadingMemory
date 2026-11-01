@@ -1,0 +1,157 @@
+/* ═══════════════════════════════════════
+   reaction_rotary.css — 轉盤電話（js/reaction_rotary.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「rotary-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 轉盤電話（.rotary-）═══ */
+.rotary-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.rotary-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.rotary-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 號碼：閃現時是大字，收起來之後變成「＿ ＿ ＿」，撥對的碼一個個補上去 */
+.rotary-num {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 48px;
+    padding: 0 var(--sp-3);
+    color: var(--c-ink);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    letter-spacing: 0.08em;
+    text-align: center;
+    pointer-events: none;
+}
+
+.rotary-num--hidden {
+    color: var(--c-ink-soft);
+}
+
+.rotary-num--ok {
+    color: var(--c-ok);
+}
+
+.rotary-got {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 138px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+.rotary-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 232px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+/* 撥錯時並排的兩組號碼 */
+.rotary-cmp__label {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+.rotary-cmp {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sp-1);
+}
+
+.rotary-cmp__d {
+    min-width: 1.1em;
+    color: var(--c-ink);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.rotary-cmp__d--ok {
+    color: var(--c-ok);
+}
+
+.rotary-cmp__d--bad {
+    color: var(--c-bad-light);
+    text-decoration: underline;
+}
+
+/* 轉盤電話 */
+.rotary-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    touch-action: none;
+}
+
+.rotary-plate {
+    fill: var(--rtr-plate);
+}
+
+.rotary-digit {
+    fill: var(--c-card);
+    font-weight: var(--fw-black);
+}
+
+.rotary-metal {
+    fill: var(--rtr-metal);
+    stroke: var(--rtr-metal-edge);
+    stroke-width: 2;
+}
+
+.rotary-rim {
+    fill: none;
+    stroke: var(--rtr-metal-edge);
+    stroke-width: 3;
+}
+
+.rotary-hole {
+    fill: transparent;
+    stroke: var(--rtr-metal-edge);
+    stroke-width: 2;
+    cursor: pointer;
+}
+
+.rotary-hole--on {
+    stroke: var(--c-orange);
+    stroke-width: 5;
+}
+
+.rotary-stop {
+    stroke: var(--rtr-stop);
+    stroke-width: 12;
+    stroke-linecap: round;
+}
+
+.rotary-cap {
+    fill: var(--rtr-plate);
+    stroke: var(--rtr-metal-edge);
+    stroke-width: 4;
+}

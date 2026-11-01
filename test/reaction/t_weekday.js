@@ -64,9 +64,9 @@ ok(wd.every(n => n / total > 0.08 && n / total < 0.22), '答案的星期分佈�
 // 效能
 for (const lv of [1, 10, 24, 40]) { const t0 = Date.now(); for (let i = 0; i < 500; i++) T.makeLevel(lv, rnd); const per = (Date.now() - t0) / 500; ok(per < 5, '第 ' + lv + ' 關出題夠快：' + per.toFixed(3)); }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_weekday.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 700 \+ steps\.ms \+ 2400/.test(src) && /wkd-day--to/.test(src), '失敗：月曆一格一格數完再停格 2 秒以上');
-  ok(/\.wkd-opt--ok \{[^}]*var\(--c-ok/.test(css) && /\.wkd-day--to \{[^}]*var\(--c-ok/.test(css) && /\.wkd-opt--bad \{[^}]*var\(--c-bad/.test(css), '綠色、紅色用 CSS 變數');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_weekday.js'), css = rd('../../css/games/reaction_weekday.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 700 \+ steps\.ms \+ 2400/.test(src) && /weekday-day--to/.test(src), '失敗：月曆一格一格數完再停格 2 秒以上');
+  ok(/\.weekday-opt--ok \{[^}]*var\(--c-ok/.test(css) && /\.weekday-day--to \{[^}]*var\(--c-ok/.test(css) && /\.weekday-opt--bad \{[^}]*var\(--c-bad/.test(css), '綠色、紅色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_weekday.js'") > 0 && /除以 7/.test(G.rule), 'boot.js 有載入、玩法說明提到除以 7'); }
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20) !== T.rating(30), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

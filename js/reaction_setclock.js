@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_setclock.js — 秒反應・撥時鐘
+   樣式：css/games/reaction_setclock.css（這款專屬的 class 一律以「setclock-」開頭；共用元件在 css/reaction_common.css）
    上方是數字時鐘（12 小時制），下方是圓形時鐘。在限時之內轉動「分針」（會像真的鐘一樣帶動時針），
    撥到跟數字時鐘一樣的時間；誤差不能超過一分鐘。關卡制，時間限制越來越短，看你能挑戰幾關。
    ───────────────────────────────────────────────────────────────────
@@ -101,38 +102,38 @@
             var cur = 0, L = null;
 
             /* 建立畫面元素：標題、數位時鐘、鐘面區、時間條、「好了」按鈕 */
-            var head = h('div', { 'class': 'sc-head' });
-            var digital = h('div', { 'class': 'sc-digital' });
-            var dial = h('div', { 'class': 'sc-dial' });
+            var head = h('div', { 'class': 'setclock-head' });
+            var digital = h('div', { 'class': 'setclock-digital' });
+            var dial = h('div', { 'class': 'setclock-dial' });
             var tb = kit.timebar();
-            var done = h('button', { 'class': 'btn btn--go sc-done', text: '好了' });
+            var done = h('button', { 'class': 'btn btn--go setclock-done', text: '好了' });
             [head, digital, dial, tb.el, done].forEach(function (n) { root.appendChild(n); });
 
             /* 鐘面：用 SVG（向量圖）畫，放大縮小都不會糊。kit.svg(標籤, 屬性, 父元素) 建立 SVG 元素 */
             /* ─── 鐘面（SVG）─── */
-            var svg = kit.svg('svg', { 'class': 'sc-svg', viewBox: '0 0 400 400' }, dial);
-            kit.svg('circle', { 'class': 'sc-face', cx: CX, cy: CY, r: RADIUS }, svg);
+            var svg = kit.svg('svg', { 'class': 'setclock-svg', viewBox: '0 0 400 400' }, dial);
+            kit.svg('circle', { 'class': 'setclock-face', cx: CX, cy: CY, r: RADIUS }, svg);
             var gTicks = kit.svg('g', {}, svg), gNums = kit.svg('g', {}, svg);
             /* 畫 60 個刻度：每 5 個是粗刻度（整點）；用 sin／cos 算出刻度在圓周上的位置 */
             for (var i = 0; i < 60; i++) {
                 var big = i % 5 === 0, a = i * 6 * Math.PI / 180;
                 var r1 = RADIUS - (big ? 18 : 9), r2 = RADIUS - 2;
-                kit.svg('line', { 'class': 'sc-tick' + (big ? ' sc-tick--big' : ''), x1: CX + r1 * Math.sin(a), y1: CY - r1 * Math.cos(a), x2: CX + r2 * Math.sin(a), y2: CY - r2 * Math.cos(a) }, gTicks);
+                kit.svg('line', { 'class': 'setclock-tick' + (big ? ' setclock-tick--big' : ''), x1: CX + r1 * Math.sin(a), y1: CY - r1 * Math.cos(a), x2: CX + r2 * Math.sin(a), y2: CY - r2 * Math.cos(a) }, gTicks);
             }
             /* 畫 1～12 的數字；hideNum 的關卡會把 gNums 整組隱藏 */
             for (var n = 1; n <= 12; n++) {
                 var an = n * 30 * Math.PI / 180, rn = RADIUS - 44;
-                var tx = kit.svg('text', { 'class': 'sc-num', x: CX + rn * Math.sin(an), y: CY - rn * Math.cos(an), 'text-anchor': 'middle', 'dominant-baseline': 'central' }, gNums);
+                var tx = kit.svg('text', { 'class': 'setclock-num', x: CX + rn * Math.sin(an), y: CY - rn * Math.cos(an), 'text-anchor': 'middle', 'dominant-baseline': 'central' }, gNums);
                 tx.textContent = String(n);
             }
             /* 「幽靈指針」：答錯時用綠色虛線畫出正確位置，一開始完全透明 */
-            var ghost = kit.svg('g', { 'class': 'sc-ghost', opacity: 0 }, svg);
-            var ghostH = kit.svg('line', { 'class': 'sc-hand-hour sc-ghost-line', x1: CX, y1: CY, x2: CX, y2: CY - 100 }, ghost);
-            var ghostM = kit.svg('line', { 'class': 'sc-hand-min sc-ghost-line', x1: CX, y1: CY, x2: CX, y2: CY - 160 }, ghost);
+            var ghost = kit.svg('g', { 'class': 'setclock-ghost', opacity: 0 }, svg);
+            var ghostH = kit.svg('line', { 'class': 'setclock-hand-hour setclock-ghost-line', x1: CX, y1: CY, x2: CX, y2: CY - 100 }, ghost);
+            var ghostM = kit.svg('line', { 'class': 'setclock-hand-min setclock-ghost-line', x1: CX, y1: CY, x2: CX, y2: CY - 160 }, ghost);
             /* 真正的時針和分針（都先畫成指向 12 點鐘，之後用 transform: rotate 旋轉到正確角度） */
-            var handH = kit.svg('line', { 'class': 'sc-hand-hour', x1: CX, y1: CY, x2: CX, y2: CY - 100 }, svg);
-            var handM = kit.svg('line', { 'class': 'sc-hand-min', x1: CX, y1: CY, x2: CX, y2: CY - 160 }, svg);
-            kit.svg('circle', { 'class': 'sc-cap', cx: CX, cy: CY, r: 12 }, svg);
+            var handH = kit.svg('line', { 'class': 'setclock-hand-hour', x1: CX, y1: CY, x2: CX, y2: CY - 100 }, svg);
+            var handM = kit.svg('line', { 'class': 'setclock-hand-min', x1: CX, y1: CY, x2: CX, y2: CY - 160 }, svg);
+            kit.svg('circle', { 'class': 'setclock-cap', cx: CX, cy: CY, r: 12 }, svg);
 
             /* 依總分鐘數轉動兩根指針：rotate(角度 圓心x 圓心y) */
             function setHands(total) {
@@ -157,7 +158,7 @@
                 gNums.style.display = L.hideNum ? 'none' : '';
                 gTicks.style.display = L.hideTick ? 'none' : '';
                 ghost.setAttribute('opacity', 0);
-                dial.classList.remove('sc-dial--ok', 'sc-dial--bad');
+                dial.classList.remove('setclock-dial--ok', 'setclock-dial--bad');
                 setHands(cur);
                 meta();
                 /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從分針針尖現在的位置往「目標時間的分針針尖位置」重複移動（第一關的正確答案）；
@@ -193,7 +194,7 @@
                 if (ok) {
                     cleared = level;
                     if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
-                    dial.classList.add('sc-dial--ok');
+                    dial.classList.add('setclock-dial--ok');
                     Sfx.play('win');
                     head.textContent = (timeout ? '時間到，剛好撥對了！' : '準確！') + '差 ' + dispDiff.toFixed(4) + ' 分鐘以內';
                     level++;
@@ -201,7 +202,7 @@
                     return;
                 }
                 /* 撥錯：一次就結束 */
-                dial.classList.add('sc-dial--bad');
+                dial.classList.add('setclock-dial--bad');
                 Sfx.play('bad');
                 /* 把正確位置用綠色虛線指針畫出來 */
                 /* 把正確的指針用綠色虛線畫出來，讓玩家看到差多少 */

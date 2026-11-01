@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_passersby.js — 秒反應・路人走過
+   樣式：css/games/reaction_passersby.css（這款專屬的 class 一律以「passersby-」開頭；共用元件在 css/reaction_common.css）
    幾個人不等間距地從畫面「右邊」走進來、從「左邊」走出去；有顏色變化的衣物（帽子、衣服、褲子、鞋子）都是七種顏色
    （紅橙黃綠藍紫粉紅）之一。人都走完之後出現題目：「第 X 個人的〔衣服〕是什麼顏色？」，
    從 7 個色塊（附文字名稱）選一個。關卡制，答錯或逾時就結束，成績＝通過關數。
@@ -104,10 +105,10 @@
         api.info = q;
         console.log('[路人走過] 第 ' + level + ' 關：' + question(q) + ' 答案 ' + COLORS[q.answer].name + '；速度 ' + q.speed.toFixed(1) + ' px/秒；走完 ' + q.duration.toFixed(2) + ' 秒；' + q.people.length + ' 人：' + q.people.map(function (p) { return PARTS.map(function (k) { return p[k] < 0 ? '灰' : COLORS[p[k]].name; }).join('/'); }).join(' | '));
 
-        var tip = h('div', { 'class': 'psb-tip', text: '看清楚每個人的穿著，有幾件衣物顏色不一樣' });
+        var tip = h('div', { 'class': 'passersby-tip', text: '看清楚每個人的穿著，有幾件衣物顏色不一樣' });
         stage.appendChild(tip);
         var els = q.people.map(function (p) {
-            var el = h('div', { 'class': 'psb-person', html: personSvg(p) });
+            var el = h('div', { 'class': 'passersby-person', html: personSvg(p) });
             el.style.transform = 'translateX(' + (W + 10) + 'px)';                 /* 一開始都在畫面右邊外面 */
             stage.appendChild(el);
             return el;
@@ -124,27 +125,27 @@
             if (phase !== 'walk') return;
             phase = 'ask'; loop.stop();
             els.forEach(function (el) { el.style.display = 'none'; });
-            tip.textContent = question(q); tip.classList.add('psb-tip--ask');
+            tip.textContent = question(q); tip.classList.add('passersby-tip--ask');
             btns = COLORS.map(function (c, i) {
-                var b = h('button', { 'class': 'btn btn--line psb-opt' }, [h('span', { 'class': 'psb-sw' }), h('span', { text: c.name })]);
+                var b = h('button', { 'class': 'btn btn--line passersby-opt' }, [h('span', { 'class': 'passersby-sw' }), h('span', { text: c.name })]);
                 b.firstChild.style.background = c.hex;
                 kit.onTap(b, function () { judge(i); });
                 return b;
             });
-            var row1 = h('div', { 'class': 'psb-row' }, btns.slice(0, 4)), row2 = h('div', { 'class': 'psb-row' }, btns.slice(4));
-            stage.appendChild(h('div', { 'class': 'psb-opts' }, [row1, row2]));
+            var row1 = h('div', { 'class': 'passersby-row' }, btns.slice(0, 4)), row2 = h('div', { 'class': 'passersby-row' }, btns.slice(4));
+            stage.appendChild(h('div', { 'class': 'passersby-opts' }, [row1, row2]));
             api.timer(ansMs(level), function () { judge(-1); });
             Sfx.play('go');
         }
         function judge(i) {
             if (api.over || phase !== 'ask') return;
             phase = 'done';
-            btns.forEach(function (b, k) { if (k === q.answer) b.classList.add('psb-opt--ok'); else if (k === i) b.classList.add('psb-opt--bad'); });
+            btns.forEach(function (b, k) { if (k === q.answer) b.classList.add('passersby-opt--ok'); else if (k === i) b.classList.add('passersby-opt--bad'); });
             /* 揭曉：5 個人站成一排，被問的那一件用虛線框起來 */
-            var lineup = h('div', { 'class': 'psb-lineup' });
+            var lineup = h('div', { 'class': 'passersby-lineup' });
             q.people.forEach(function (p, k) {
-                var cell = h('div', { 'class': 'psb-cell' + (k === q.who - 1 ? ' psb-cell--ask' : ''), html: personSvg(p, k === q.who - 1 ? q.part : null) });
-                cell.appendChild(h('div', { 'class': 'psb-no', text: String(k + 1) }));
+                var cell = h('div', { 'class': 'passersby-cell' + (k === q.who - 1 ? ' passersby-cell--ask' : ''), html: personSvg(p, k === q.who - 1 ? q.part : null) });
+                cell.appendChild(h('div', { 'class': 'passersby-no', text: String(k + 1) }));
                 lineup.appendChild(cell);
             });
             stage.appendChild(lineup);

@@ -1,0 +1,108 @@
+/* ═══════════════════════════════════════
+   reaction_mergechar.css — 左右合字（js/reaction_mergechar.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「mergechar-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 誰在偷偷動（.snk-）═══ */
+.mergechar-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+}
+
+/* ═══ 左右合字（.mergechar-）═══ */
+.mergechar-tip {
+    top: 4px;
+}
+
+.mergechar-prog {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 36px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    color: var(--c-ok);
+}
+
+.mergechar-svg {
+    pointer-events: none;
+}
+
+.mergechar-piece {
+    position: absolute;
+    border-radius: var(--r-md);
+    background: var(--c-card-alt);
+    border: 3px solid var(--c-ink-soft);
+    font-family: var(--font-ui);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    padding: 0;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.mergechar-piece:active {
+    transform: scale(0.96);
+}
+
+.mergechar-piece--sel {
+    background: var(--c-yellow);
+    border-color: var(--c-orange);
+}
+
+.mergechar-piece--done {
+    background: var(--c-ok-soft);
+    border-color: var(--c-ok);
+    opacity: 0.75;
+}
+
+.mergechar-piece--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad);
+}
+
+.mergechar-line {
+    stroke-width: 9;
+    stroke-linecap: round;
+    fill: none;
+}
+
+.mergechar-line--ok {
+    stroke: var(--c-ok);
+}
+
+.mergechar-line--bad {
+    stroke: var(--c-bad);
+}
+
+.mergechar-line--show {
+    stroke: var(--c-ink-soft);
+    stroke-dasharray: 4 14;
+}
+
+.mergechar-badge {
+    position: absolute;
+    width: 72px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--c-card);
+    border: 4px solid var(--c-ink-soft);
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    z-index: 3;
+    pointer-events: none;
+}
+
+.mergechar-badge--ok {
+    border-color: var(--c-ok);
+    color: var(--c-ok);
+}

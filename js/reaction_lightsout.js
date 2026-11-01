@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_lightsout.js — 秒反應・關燈
+   樣式：css/games/reaction_lightsout.css（這款專屬的 class 一律以「lightsout-」開頭；共用元件在 css/reaction_common.css）
    點一盞燈，它和上下左右的燈都會「亮變暗、暗變亮」。在時間內把所有燈關掉！步數越少越完美。
    ───────────────────────────────────────────────────────────────────
    · 盤面用整數的 bit 表示（第 i 格 ＝ 第 i 個 bit，亮 ＝ 1），按第 j 格會把 toggle[j] 的那幾格反轉。
@@ -139,9 +140,9 @@
             /* level 目前關卡；passed 已過幾關；perfect 剛好用最少步數的關數；P 這關的題目；board 目前的盤面（整數）；presses 已按幾下；token 流水號；logs 紀錄 */
             var level = (startAt || 1) - 1, passed = level, perfect = 0, P = null, board = 0, presses = 0, state = 'idle', token = 0, t0 = 0, newRec = false, logs = [];
             /* 建立畫面元素 */
-            var head = h('div', { 'class': 'lo-head', text: ' ' });
-            var banner = h('div', { 'class': 'lo-banner', text: ' ' });
-            var field = h('div', { 'class': 'lo-field' });
+            var head = h('div', { 'class': 'lightsout-head', text: ' ' });
+            var banner = h('div', { 'class': 'lightsout-banner', text: ' ' });
+            var field = h('div', { 'class': 'lightsout-field' });
             var tb = kit.timebar();
             [head, banner, field, tb.el].forEach(function (x) { root.appendChild(x); });
 
@@ -154,15 +155,15 @@
             function build() {
                 field.innerHTML = ''; cellEls = []; hintEls = [];
                 var W = P.N * CELL;
-                svg = kit.svg('svg', { 'class': 'lo-svg', viewBox: '0 0 ' + W + ' ' + W, preserveAspectRatio: 'xMidYMid meet' }, field);
+                svg = kit.svg('svg', { 'class': 'lightsout-svg', viewBox: '0 0 ' + W + ' ' + W, preserveAspectRatio: 'xMidYMid meet' }, field);
                 for (var i = 0; i < P.N * P.N; i++) {
                     /* (function (i) {...})(i)：立即執行函式，讓每格的點擊事件記住自己的編號 */
                     (function (i) {
                         var x = (i % P.N) * CELL, y = Math.floor(i / P.N) * CELL;
-                        var g = kit.svg('g', { 'class': 'lo-cell', transform: 'translate(' + x + ',' + y + ')' }, svg);
-                        kit.svg('rect', { 'class': 'lo-tile', x: 5, y: 5, width: CELL - 10, height: CELL - 10, rx: 16 }, g);
-                        kit.svg('circle', { 'class': 'lo-bulb', cx: CELL / 2, cy: CELL / 2, r: CELL * 0.28 }, g);
-                        hintEls[i] = kit.svg('rect', { 'class': 'lo-hint', x: 8, y: 8, width: CELL - 16, height: CELL - 16, rx: 14, display: 'none' }, g);
+                        var g = kit.svg('g', { 'class': 'lightsout-cell', transform: 'translate(' + x + ',' + y + ')' }, svg);
+                        kit.svg('rect', { 'class': 'lightsout-tile', x: 5, y: 5, width: CELL - 10, height: CELL - 10, rx: 16 }, g);
+                        kit.svg('circle', { 'class': 'lightsout-bulb', cx: CELL / 2, cy: CELL / 2, r: CELL * 0.28 }, g);
+                        hintEls[i] = kit.svg('rect', { 'class': 'lightsout-hint', x: 8, y: 8, width: CELL - 16, height: CELL - 16, rx: 14, display: 'none' }, g);
                         g.addEventListener('pointerdown', function (e) { e.preventDefault(); press(i); });
                         cellEls[i] = g;
                     })(i);
@@ -171,7 +172,7 @@
             }
             /* 依目前的盤面更新每格亮不亮；(board >> i) & 1 取出第 i 個 bit */
             function paint() {
-                for (var i = 0; i < P.N * P.N; i++) cellEls[i].setAttribute('class', 'lo-cell' + (((board >> i) & 1) ? ' lo-cell--on' : ''));
+                for (var i = 0; i < P.N * P.N; i++) cellEls[i].setAttribute('class', 'lightsout-cell' + (((board >> i) & 1) ? ' lightsout-cell--on' : ''));
                 banner.textContent = '步數 ' + presses + '　最少 ' + P.min;
             }
 

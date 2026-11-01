@@ -1,0 +1,104 @@
+/* ═══════════════════════════════════════
+   reaction_witness.css — 目擊證人（js/reaction_witness.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「witness-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 目擊證人：先看一張臉，再從多張臉中選出剛剛那一張。 */
+/* ═══ 目擊證人（.witness-）═══ */
+.witness-head {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+}
+
+/* 提示橫幅（「看仔細」「是哪一張」） */
+.witness-banner {
+    min-height: 2.6em;
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    line-height: 1.25;
+}
+
+/* 臉孔區：flex 的 basis 設 0（不是 auto），高度完全由「剩下的空間」決定，不會被裡面的臉撐高而超出畫面下方
+   （以前 basis 是 auto，格子變多、排成 3 列以上時，部分瀏覽器會用臉孔圖的原始高度算出比畫面還高的區域，最後一列就掉到螢幕外） */
+.witness-stage {
+    flex: 1 1 0;
+    min-height: 0;
+}
+
+/* 看臉階段：一張大臉置中 */
+.witness-stage--look {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 大臉的卡片，aspect-ratio 固定寬高比 */
+.witness-big {
+    height: 100%;
+    aspect-ratio: 200 / 270;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-pop);
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+/* 大臉裡的 SVG 臉孔填滿卡片 */
+.witness-big .witness-face {
+    width: 100%;
+    height: 100%;
+}
+
+/* 選臉階段：格子。欄數與列數由 JS 依臉的張數設定（4 張以內 2 欄、5～9 張 3 欄，見 reaction_witness.js 的 gridFor），
+   minmax(0, 1fr)＝每欄、每列均分、而且最小可以縮到 0，不會被裡面的內容撐開 */
+.witness-stage--pick {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+/* 一張候選臉：臉的 SVG 用 absolute 貼在格子裡（不佔版面），格子的大小只由網格決定，臉再縮放去填滿它 */
+.witness-cell {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-md);
+}
+
+.witness-cell .witness-face {
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    width: calc(100% - 8px);
+    height: calc(100% - 8px);
+}
+
+/* 手指按下去時變淺藍色 */
+.witness-cell:active {
+    background: var(--c-blue-soft);
+}
+
+/* 選對（綠色粗框） */
+.witness-cell--ok {
+    border-color: var(--c-ok);
+    background: var(--c-ok-soft);
+    border-width: 5px;
+}
+
+/* 選錯（橘色粗框） */
+.witness-cell--bad {
+    border-color: var(--c-bad);
+    background: var(--c-bad-soft);
+    border-width: 5px;
+}

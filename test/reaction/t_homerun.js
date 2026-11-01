@@ -83,11 +83,11 @@ ok(near(T.easeU(1), 1) && near(T.easeU(0), 0) && T.easeU(0.5) < 0.5 && T.easeU(-
 for (let lv = 1; lv <= 25; lv++) for (let k = 0; k < 20; k++) { const p = T.makePitch(lv, rnd), ms = T.replayMs(p); ok(ms >= T.REPLAY_MIN_MS && ms <= T.REPLAY_MAX_MS && ms === Math.round(Math.max(T.REPLAY_MIN_MS, Math.min(T.REPLAY_MAX_MS, p.tFly / T.REPLAY_SPEED * 1000))), '重播 ' + ms + ' 毫秒'); }
 
 // ── 程式裡的接線 ──
-{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_homerun.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: replayMs\(p\) \+ 1700/.test(src) && /replay\(r, tS\)/.test(src) && /hmr-final--show/.test(src) && /hmr-swingmark/.test(src), '失敗：慢動作重播、標出球最後的位置與你揮棒的時間、停格夠久');
+{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_homerun.js'), css = rd('../../css/games/reaction_homerun.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: replayMs\(p\) \+ 1700/.test(src) && /replay\(r, tS\)/.test(src) && /homerun-final--show/.test(src) && /homerun-swingmark/.test(src), '失敗：慢動作重播、標出球最後的位置與你揮棒的時間、停格夠久');
   ok(/judgeSwing\(p, tS\)/.test(src) && /AFTER_MS/.test(src) && /result: p\.strike \? 'strike' : 'pass'/.test(src), '判定用 judgeSwing；球到了沒揮：好球失敗、壞球過關');
   ok(/pointerdown/.test(src) && /api\.solve = /.test(src) && /api\.wrong = /.test(src) && /armed/.test(src), '點一下揮棒；solve／wrong 只排一次');
-  ok(/\.hmr-zone \{[^}]*var\(--hmr-zone-line\)/.test(css) && /\.hmr-grass \{[^}]*var\(--hmr-grass\)/.test(css) && /\.hmr-final--ball \{[^}]*var\(--hmr-final-bad\)/.test(css) && /\.hmr-bat--swing/.test(css), '好球帶、草地、記號用 CSS 變數');
+  ok(/\.homerun-zone \{[^}]*var\(--hmr-zone-line\)/.test(css) && /\.homerun-grass \{[^}]*var\(--hmr-grass\)/.test(css) && /\.homerun-final--ball \{[^}]*var\(--hmr-final-bad\)/.test(css) && /\.homerun-bat--swing/.test(css), '好球帶、草地、記號用 CSS 變數');
   ok(boot.indexOf("'js/reaction_homerun.js'") > 0 && /變速球/.test(G.rule) && /曲球/.test(G.rule), 'boot.js 有載入、玩法說明提到變速球和曲球'); }
 ok(T.rating(1) !== T.rating(3) && T.rating(3) !== T.rating(6) && T.rating(6) !== T.rating(12) && T.rating(12) !== T.rating(19), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

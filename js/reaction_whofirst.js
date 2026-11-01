@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_whofirst.js — 秒反應・誰先亮
+   樣式：css/games/reaction_whofirst.css（這款專屬的 class 一律以「whofirst-」開頭；共用元件在 css/reaction_common.css）
    左右兩盞燈先後亮起，點先亮的那一盞。時間差一關比一關小，縮到螢幕影格的極限。
    關卡制，答錯或逾時就結束，成績＝通過關數。
    ───────────────────────────────────────────────────────────────────
@@ -102,22 +103,22 @@
         api.info = q;
         console.log('[誰先亮] 第 ' + level + ' 關：' + (q.first === 'L' ? '左' : '右') + '邊先亮；時間差 ' + q.frames + ' 影格（約 ' + (q.frames * frameMs / 1000).toFixed(4) + ' 秒）；等 ' + q.wait + ' ms');
 
-        var lampL = h('div', { 'class': 'wf-lamp wf-lamp--a' }), lampR = h('div', { 'class': 'wf-lamp wf-lamp--b' });
+        var lampL = h('div', { 'class': 'whofirst-lamp whofirst-lamp--a' }), lampR = h('div', { 'class': 'whofirst-lamp whofirst-lamp--b' });
         [[lampL, q.sizeL], [lampR, q.sizeR]].forEach(function (p) {
             p[0].style.width = p[1].toFixed(1) + 'px'; p[0].style.height = p[1].toFixed(1) + 'px';
             p[0].style.borderWidth = Math.max(1, Math.min(5, p[1] / 8)).toFixed(1) + 'px';          /* 燈很小的時候邊框也要細 */
         });
         var lamps = { L: lampL, R: lampR };
-        var tip = h('div', { 'class': 'wf-tip', text: '兩盞燈會先後亮起，哪一盞先亮？' });
-        var row = h('div', { 'class': 'wf-row' }, [lampL, lampR]);
-        var info = h('div', { 'class': 'wf-info', text: '準備…' });
+        var tip = h('div', { 'class': 'whofirst-tip', text: '兩盞燈會先後亮起，哪一盞先亮？' });
+        var row = h('div', { 'class': 'whofirst-row' }, [lampL, lampR]);
+        var info = h('div', { 'class': 'whofirst-info', text: '準備…' });
         var bL = h('button', { 'class': 'btn btn--primary', text: '左邊先亮' }), bR = h('button', { 'class': 'btn btn--go', text: '右邊先亮' });
         bL.disabled = bR.disabled = true;
         stage.appendChild(tip); stage.appendChild(row); stage.appendChild(info);
         stage.appendChild(h('div', { 'class': 'rx-btnrow' }, [bL, bR]));
 
         var second = q.first === 'L' ? 'R' : 'L', lit = 0, tA = 0, tB = 0, ready = false, delta = q.frames * frameMs;
-        function light(side) { lamps[side].classList.add('wf-lamp--on'); lit++; }
+        function light(side) { lamps[side].classList.add('whofirst-lamp--on'); lit++; }
         function arm() {
             if (ready) return; ready = true;
             if (tB && tA) delta = tB - tA;
@@ -141,7 +142,7 @@
             if (!ready) { if (lit < 1) light(q.first); if (lit < 2) light(second); ready = true; }
             var txt = '時間差 ' + (delta / 1000).toFixed(4) + ' 秒（' + q.frames + ' 影格）';
             info.textContent = txt;
-            lamps[q.first].classList.add('wf-lamp--first');
+            lamps[q.first].classList.add('whofirst-lamp--first');
             lamps[q.first].style.borderWidth = Math.max(2, Math.min(8, (q.first === 'L' ? q.sizeL : q.sizeR) / 5)).toFixed(1) + 'px';
             if (side === q.first) { api.pass({ delay: 800 }); return; }
             api.fail({

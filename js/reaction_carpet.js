@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_carpet.js — 秒反應・鋪地毯（企劃 221「割草機」改題材）
+   樣式：css/games/reaction_carpet.css（這款專屬的 class 一律以「carpet-」開頭；共用元件在 css/reaction_common.css）
    一個方格的房間，門口（黃色的地毯捲）在起點格。手指從地毯捲開始往上下左右的相鄰格拖，一路把地毯鋪出去，
    **每一格地板都要剛好鋪到一次**，放著家具（🎃🎄🧳🪑🛋️🛁🛏️🛌🪞）的格子不能走。手指往回拖＝把地毯一格一格捲回來。
    整個房間鋪滿就過關；時間到才失敗。走進死路（捲頭旁邊沒有可以鋪的格子）**不算失敗、也不提醒**，玩家自己往回拖、換一條路。
@@ -381,7 +382,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'cpt-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'carpet-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -397,18 +398,18 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, topPad = 56;
         var cell = Math.floor(Math.min((W - 20) / n, (H - topPad - 20) / n, 96)), BS = cell * n, bx = Math.round((W - BS) / 2), by = topPad + Math.round((H - topPad - BS) / 2) - 8;
-        var tip = h('div', { 'class': 'qz-note cpt-tip', text: '' });
+        var tip = h('div', { 'class': 'qz-note carpet-tip', text: '' });
         stage.appendChild(tip);
-        var board = h('div', { 'class': 'cpt-board' });
+        var board = h('div', { 'class': 'carpet-board' });
         board.style.cssText = 'left:' + bx + 'px;top:' + by + 'px;width:' + BS + 'px;height:' + BS + 'px;';
         stage.appendChild(board);
         var cells = [], iconOf = {};
         q.stones.forEach(function (s, k) { iconOf[s] = q.icons[k]; });
         for (var i = 0; i < n * n; i++) {
-            var r = Math.floor(i / n), c = i % n, el = h('div', { 'class': 'cpt-cell ' + ((r + c) % 2 ? 'cpt-cell--b' : 'cpt-cell--a') });
+            var r = Math.floor(i / n), c = i % n, el = h('div', { 'class': 'carpet-cell ' + ((r + c) % 2 ? 'carpet-cell--b' : 'carpet-cell--a') });
             el.style.cssText = 'left:' + c * cell + 'px;top:' + r * cell + 'px;width:' + cell + 'px;height:' + cell + 'px;';
             if (st.vis[i] === 2) {                                   /* 家具：一個表情符號放在格子正中央（字級是格子的 62%） */
-                var stone = h('div', { 'class': 'cpt-stone', text: iconOf[i] || FURNITURE[0] });
+                var stone = h('div', { 'class': 'carpet-stone', text: iconOf[i] || FURNITURE[0] });
                 stone.style.fontSize = Math.round(cell * 0.62) + 'px';
                 el.appendChild(stone);
             }
@@ -416,12 +417,12 @@
         }
         function cx(i) { return (i % n + 0.5) * cell; }
         function cy(i) { return (Math.floor(i / n) + 0.5) * cell; }
-        var svg = kit.svg('svg', { 'class': 'cpt-svg', viewBox: '0 0 ' + BS + ' ' + BS, width: BS, height: BS }, board);
-        var solLine = kit.svg('path', { 'class': 'cpt-sol', d: '', pathLength: 1 }, svg);
-        var rug = kit.svg('path', { 'class': 'cpt-rug', d: '' }, svg);
-        var rugPat = kit.svg('path', { 'class': 'cpt-rug-pat', d: '' }, svg);
+        var svg = kit.svg('svg', { 'class': 'carpet-svg', viewBox: '0 0 ' + BS + ' ' + BS, width: BS, height: BS }, board);
+        var solLine = kit.svg('path', { 'class': 'carpet-sol', d: '', pathLength: 1 }, svg);
+        var rug = kit.svg('path', { 'class': 'carpet-rug', d: '' }, svg);
+        var rugPat = kit.svg('path', { 'class': 'carpet-rug-pat', d: '' }, svg);
         rug.setAttribute('stroke-width', (cell * 0.64).toFixed(1)); rugPat.setAttribute('stroke-width', (cell * 0.34).toFixed(1));
-        var roll = kit.svg('circle', { 'class': 'cpt-roll', r: cell * 0.33, cx: 0, cy: 0 }, svg), rollIn = kit.svg('circle', { 'class': 'cpt-roll-in', r: cell * 0.14, cx: 0, cy: 0 }, svg);
+        var roll = kit.svg('circle', { 'class': 'carpet-roll', r: cell * 0.33, cx: 0, cy: 0 }, svg), rollIn = kit.svg('circle', { 'class': 'carpet-roll-in', r: cell * 0.14, cx: 0, cy: 0 }, svg);
         function pathD(p) { return p.map(function (k, j) { return (j ? 'L' : 'M') + cx(k).toFixed(1) + ' ' + cy(k).toFixed(1); }).join(' '); }
         function paint() {
             var d = pathD(st.path), head = st.path[st.path.length - 1];
@@ -474,7 +475,7 @@
             if (done || api.over) return;
             done = true; pid = null;
             if (kind === 'ok') {
-                cells.forEach(function (el) { el.classList.add('cpt-cell--ok'); });
+                cells.forEach(function (el) { el.classList.add('carpet-cell--ok'); });
                 tip.textContent = '整個房間都鋪好了！';
                 kit.flash(stage, true, api.my);
                 api.pass({ delay: 1500 });
@@ -482,10 +483,10 @@
             }
             /* 失敗：沒鋪到的格子閃紅，再用綠線慢慢畫出一條正確的路，畫完停格 3 秒才跳出結算 */
             var miss = 0;
-            for (var k = 0; k < n * n; k++) if (st.vis[k] === 0) { cells[k].classList.add('cpt-cell--miss'); miss++; }
+            for (var k = 0; k < n * n; k++) if (st.vis[k] === 0) { cells[k].classList.add('carpet-cell--miss'); miss++; }
             solLine.setAttribute('d', pathD(q.solution));
             solLine.style.animationDuration = solDrawMs(q.solution.length) + 'ms';            /* CSS 預設 1.6 秒，這裡依路的長度放慢 */
-            solLine.classList.add('cpt-sol--draw');
+            solLine.classList.add('carpet-sol--draw');
             tip.textContent = '時間到！綠線是其中一種鋪法';
             kit.flash(stage, false, api.my);
             api.fail({ delay: failDelayMs(q.solution.length), lines: ['時間到，還有 ' + miss + ' 格沒鋪到', '房間 ' + n + '×' + n + '、家具 ' + q.stones.length + ' 個、要鋪 ' + q.free + ' 格'] });

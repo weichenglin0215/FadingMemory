@@ -1,0 +1,120 @@
+/* ═══════════════════════════════════════
+   reaction_candy.css — 幾顆糖（js/reaction_candy.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「candy-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 幾顆糖：看一堆糖果，估計某個顏色有幾顆。 */
+/* ═══ 幾顆糖（.candy-）═══ */
+/* 標題 */
+.candy-head {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--c-ink-soft);
+}
+
+/* 問題列（「紅色有幾顆」） */
+.candy-ask {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-height: 2.4em;
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: 800;
+    color: var(--c-ink);
+    line-height: 1.25;
+}
+
+/* 顏色小膠囊（border-radius:999px = 完全圓角） */
+.candy-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.2em;
+    padding: 0 0.5em;
+    border: 4px solid transparent;
+    border-radius: 999px;
+    color: #FFFFFF;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* 糖果盤 */
+.candy-tray {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+}
+
+/* SVG */
+.candy-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* 蓋住糖果的遮罩（記憶階段結束後蓋住） */
+.candy-cover {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-xl);
+    font-weight: 800;
+    color: var(--c-ink-soft);
+    background: var(--c-card-alt);
+}
+
+/* 遮罩消失 */
+.candy-cover--off {
+    display: none;
+}
+
+/* 六個選項（3 欄×2 列）：答案是連續的一排數字，由小到大排；3 欄的寬度比原本 2 欄窄，所以按鈕上的數字字級照樣放得下（最多 3 位數） */
+.candy-opts {
+    flex: none;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-3);
+    min-height: 140px;
+}
+
+/* 單個選項 */
+.candy-opt {
+    height: 66px;
+    border: var(--bd);
+    border-radius: var(--r-md, 12px);
+    background: var(--c-card);
+    color: var(--c-ink);
+    font-family: var(--font-ui);
+    font-size: 36px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.candy-opt:active {
+    background: var(--c-blue-soft);
+}
+
+/* 選對（綠） */
+.candy-opt--ok {
+    background: #CDEBD3;
+    border-color: var(--c-ok);
+}
+
+/* 選錯（橘） */
+.candy-opt--bad {
+    background: #F8D3C2;
+    border-color: var(--c-bad);
+}

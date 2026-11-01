@@ -219,7 +219,21 @@
         { id: 'inout', name: '圈內圈外', cat: 'visual', img: 'img/reaction/inout.png' },
         { id: 'swipecopy', name: '反著滑', cat: 'reaction', img: 'img/reaction/swipecopy.png' },
         { id: 'knockcount', name: '敲幾下', cat: 'memory', img: 'img/reaction/knockcount.png' },
-        { id: 'homerun', name: '全壘打', cat: 'reaction', img: 'img/reaction/homerun.png' }
+        { id: 'homerun', name: '全壘打', cat: 'reaction', img: 'img/reaction/homerun.png' },
+        { id: 'sudoku4', name: '數獨4', cat: 'logic', img: 'img/reaction/sudoku4.png' },
+        { id: 'sudoku6e', name: '數獨6入門', cat: 'logic', img: 'img/reaction/sudoku6e.png' },
+        { id: 'sudoku6m', name: '數獨6中階', cat: 'logic', img: 'img/reaction/sudoku6m.png' },
+        { id: 'sudoku9e', name: '數獨9入門', cat: 'logic', img: 'img/reaction/sudoku9e.png' },
+        { id: 'sudoku9m', name: '數獨9中階', cat: 'logic', img: 'img/reaction/sudoku9m.png' },
+        { id: 'sudoku9h', name: '數獨9高階', cat: 'logic', img: 'img/reaction/sudoku9h.png' },
+        { id: 'sandwich', name: '夾心數獨', cat: 'logic', img: 'img/reaction/sandwich.png' },
+        { id: 'takuzu', name: '黑白不連三', cat: 'logic', img: 'img/reaction/takuzu.png' },
+        { id: 'sumdel', name: '刪數湊和', cat: 'number', img: 'img/reaction/sumdel.png' },
+        { id: 'magicsq', name: '魔方陣', cat: 'number', img: 'img/reaction/magicsq.png' },
+        { id: 'nim', name: '取火柴', cat: 'logic', img: 'img/reaction/nim.png' },
+        { id: 'fifteen', name: '搶十五', cat: 'number', img: 'img/reaction/fifteen.png' },
+        { id: 'tianji', name: '田忌賽馬', cat: 'number', img: 'img/reaction/tianji.png' },
+        { id: 'flipten', name: '翻牌湊十', cat: 'memory', img: 'img/reaction/flipten.png' }
     ];
     /* 用 id 快速找到那一款（recent 頁籤只存 id，顯示時要靠它換回完整資料） */
     var gameById = {};

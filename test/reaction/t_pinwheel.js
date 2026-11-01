@@ -76,11 +76,11 @@ function human(lv, amp, delay, gain, N) { let pass = 0; for (let i = 0; i < N; i
 { const q = T.makeLevel(5, rnd); ok(/壞掉/.test(T.whyText('break', q)) && /時間到/.test(T.whyText('time', q)) && /穩穩/.test(T.whyText('pass', q)), '說明文字'); }
 
 // ── 程式裡的接線 ──
-{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_pinwheel.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 4200/.test(src) && /showChart\(kind\)/.test(src) && /pwl-chart__curve/.test(src), '失敗：轉速折線圖＋綠色範圍＋紅線、停格夠久');
+{ const rd = pth => require('fs').readFileSync(require('path').resolve(__dirname, pth), 'utf8'), src = rd('../../js/reaction_pinwheel.js'), css = rd('../../css/games/reaction_pinwheel.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 4200/.test(src) && /showChart\(kind\)/.test(src) && /pinwheel-chart__curve/.test(src), '失敗：轉速折線圖＋綠色範圍＋紅線、停格夠久');
   ok(/angularRate\(samples, t\)/.test(src) && /stepWheel\(w, wIn, dt/.test(src) && /progressStep\(p/.test(src) && /breakStep\(br/.test(src) && /gustAt\(q\.gust, t\)/.test(src), '畫面用的就是純函式（angularRate／stepWheel／progressStep／breakStep／gustAt）');
   ok(/pointerdown/.test(src) && /pointermove/.test(src) && /pointerup/.test(src) && /pointercancel/.test(src) && /api\.timer\(/.test(src) && /api\.solve = /.test(src) && /api\.wrong = /.test(src), '畫圈用 pointer 事件；有限時；solve／wrong');
-  ok(/\.pwl-blade0 \{[^}]*var\(--pwl-b0\)/.test(css) && /\.pwl-band \{[^}]*var\(--pwl-band\)/.test(css) && /\.pwl-needle--ok \{[^}]*var\(--c-ok\)/.test(css) && /\.pwl-chart__curve \{[^}]*var\(--pwl-curve\)/.test(css), '風車、速度表、折線用 CSS 變數');
+  ok(/\.pinwheel-blade0 \{[^}]*var\(--pwl-b0\)/.test(css) && /\.pinwheel-band \{[^}]*var\(--pwl-band\)/.test(css) && /\.pinwheel-needle--ok \{[^}]*var\(--c-ok\)/.test(css) && /\.pinwheel-chart__curve \{[^}]*var\(--pwl-curve\)/.test(css), '風車、速度表、折線用 CSS 變數');
   ok(boot.indexOf("'js/reaction_pinwheel.js'") > 0 && /綠色範圍/.test(G.rule) && /陣風/.test(G.rule) && /畫圈/.test(G.rule), 'boot.js 有載入、玩法說明提到畫圈、綠色範圍、陣風'); }
 ok(T.rating(1) !== T.rating(3) && T.rating(3) !== T.rating(6) && T.rating(6) !== T.rating(10) && T.rating(10) !== T.rating(16), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

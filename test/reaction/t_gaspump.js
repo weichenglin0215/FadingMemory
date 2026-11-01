@@ -51,9 +51,9 @@ ok(tg[500] > 0 && tg[300] > 0 && tg[800] > 0 && tg[1000] > 0, '300／500／800�
 // 效能
 { const t0 = Date.now(); for (let i = 0; i < 2000; i++) T.makeLevel(1 + (i % 40), rnd); ok((Date.now() - t0) / 2000 < 1, '出題夠快'); }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_gaspump.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 2800/.test(src) && /gsp-sticker--off/.test(src) && /gsp-digits--zoom/.test(src) && /fmt4\(r\.amount\)/.test(src), '失敗：撕貼紙、放大最後一位、顯示 4 位小數的金額與誤差、停格 2 秒以上');
-  ok(/\.gsp-amount \{[^}]*var\(--gsp-digit\)/.test(css) && /\.gsp-panel \{[^}]*var\(--gsp-panel\)/.test(css) && /\.gsp-amount--bad \{[^}]*var\(--c-bad/.test(css), '黑底黃字、紅色用 CSS 變數');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_gaspump.js'), css = rd('../../css/games/reaction_gaspump.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 2800/.test(src) && /gaspump-sticker--off/.test(src) && /gaspump-digits--zoom/.test(src) && /fmt4\(r\.amount\)/.test(src), '失敗：撕貼紙、放大最後一位、顯示 4 位小數的金額與誤差、停格 2 秒以上');
+  ok(/\.gaspump-amount \{[^}]*var\(--gsp-digit\)/.test(css) && /\.gaspump-panel \{[^}]*var\(--gsp-panel\)/.test(css) && /\.gaspump-amount--bad \{[^}]*var\(--c-bad/.test(css), '黑底黃字、紅色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_gaspump.js'") > 0 && /金額 ÷ 油價/.test(G.rule), 'boot.js 有載入、玩法說明提到金額 ÷ 油價'); }
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !== T.rating(18) && T.rating(18) !== T.rating(30), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

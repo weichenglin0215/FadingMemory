@@ -90,12 +90,12 @@ ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !
   ok(src.indexOf('api.timer(q.limitS * 1000') > 0, '限時＝TIME_S × 會動的個數');
   // V1.34 玩家意見：兩顆以上會動時要一顆接著一顆全部找出來；答對加綠色外框、答錯才加紅色外框
   const a = src.indexOf('function tapDot(i, t)'), b = src.indexOf('/* 結束：kind'), tap = src.slice(a, b);
-  ok(tap.indexOf("if (mi == null) { finish('wrong', i, t); return; }") > 0 && tap.indexOf('if (found[mi] != null) return;') > 0 && tap.indexOf("classList.add('snk-dot--right')") > 0 && tap.indexOf("if (nFound >= k) finish('ok', -1, t);") > 0, '點到會動的＝找到一顆（綠框、停下來、再點不算），找齊 k 顆才過關；點到不動的就失敗');
-  ok(src.indexOf("api.timer(q.limitS * 1000, function () { finish('time', -1, q.limitS); });") > 0 && src.indexOf("if (kind === 'wrong') circles[i].classList.add('snk-dot--wrong');") > 0, '時間到失敗；只有點錯的那顆才加紅框');
-  ok(src.indexOf("circles[m.idx].classList.add('snk-dot--right');") > 0 && src.indexOf('snk-dot--mover') < 0, '結束時所有會動的（含沒找到的答案）標綠框，不再用舊的橘框 snk-dot--mover');
+  ok(tap.indexOf("if (mi == null) { finish('wrong', i, t); return; }") > 0 && tap.indexOf('if (found[mi] != null) return;') > 0 && tap.indexOf("classList.add('sneakmove-dot--right')") > 0 && tap.indexOf("if (nFound >= k) finish('ok', -1, t);") > 0, '點到會動的＝找到一顆（綠框、停下來、再點不算），找齊 k 顆才過關；點到不動的就失敗');
+  ok(src.indexOf("api.timer(q.limitS * 1000, function () { finish('time', -1, q.limitS); });") > 0 && src.indexOf("if (kind === 'wrong') circles[i].classList.add('sneakmove-dot--wrong');") > 0, '時間到失敗；只有點錯的那顆才加紅框');
+  ok(src.indexOf("circles[m.idx].classList.add('sneakmove-dot--right');") > 0 && src.indexOf('sneakmove-dot--mover') < 0, '結束時所有會動的（含沒找到的答案）標綠框，不再用舊的橘框 sneakmove-dot--mover');
   ok(src.indexOf('function timeOf(mi, t)') > 0 && src.indexOf('posAt(q, i, timeOf(i, t))') > 0, '找到的那顆停在找到的那一刻');
   ok(src.indexOf('api.solve = function () { q.movers.forEach(function (m) { tapDot(m.idx, nowSec()); }); };') > 0, 'api.solve 依序點出每一顆會動的');
   ok(/一顆接著一顆把「所有」會動的圓點都點出來/.test(G.rule) && /紅框/.test(G.rule), '玩法說明有寫要全部找出來、點錯是紅框');
-  const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction5.css'), 'utf8').split(/\s+/).join(' ');
-  ok(css.indexOf('.snk-dot--right { stroke: var(--c-ok); stroke-width: 6; }') > 0 && css.indexOf('.snk-dot--wrong { stroke: var(--c-bad-light); stroke-width: 6; }') > 0 && css.indexOf('.snk-dot--mover') < 0, 'CSS：答對綠色外框、答錯紅色外框（只用 CSS 變數）'); }
+  const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_sneakmove.css'), 'utf8').split(/\s+/).join(' ');
+  ok(css.indexOf('.sneakmove-dot--right { stroke: var(--c-ok); stroke-width: 6; }') > 0 && css.indexOf('.sneakmove-dot--wrong { stroke: var(--c-bad-light); stroke-width: 6; }') > 0 && css.indexOf('.sneakmove-dot--mover') < 0, 'CSS：答對綠色外框、答錯紅色外框（只用 CSS 變數）'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

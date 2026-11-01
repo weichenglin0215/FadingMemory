@@ -1,0 +1,91 @@
+/* ═══════════════════════════════════════
+   reaction_pattern.css — 解鎖圖案（js/reaction_pattern.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「pattern-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 解鎖圖案：像手機的九宮格解鎖，記住畫出來的路徑再自己畫一次。 */
+/* ═══ 解鎖圖案（.pt-）═══ */
+/* 場地 */
+.pattern-field {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    touch-action: none;
+}
+
+/* 圖案 SVG */
+.pattern-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* 一個圓點 */
+.pattern-node {
+    fill: var(--c-card-alt);
+    stroke: var(--c-ink-soft);
+    stroke-width: 4px;
+}
+
+/* 經過的點（藍色） */
+.pattern-node--on {
+    fill: var(--c-blue);
+    stroke: var(--c-blue);
+}
+
+/* 起點（黃色） */
+.pattern-node--start {
+    fill: var(--c-yellow);
+    stroke: #9A6D0B;
+}
+
+/* 路徑線段 */
+.pattern-seg {
+    stroke: var(--c-blue);
+    stroke-width: 10px;
+    stroke-linecap: round;
+}
+
+/* 示範的線段 */
+.pattern-seg--demo {
+    stroke: var(--c-blue);
+}
+
+/* 玩家畫的線段 */
+.pattern-seg--mine {
+    stroke: var(--c-blue);
+}
+
+/* 正確（綠） */
+.pattern-seg--ok {
+    stroke: var(--c-ok);
+}
+
+/* 錯誤（半透明橘） */
+.pattern-seg--bad {
+    stroke: var(--c-bad);
+    opacity: 0.55;
+}
+
+/* 揭曉正確答案：虛線點狀（dasharray 2 18 = 短線段加長空白，看起來像點點） */
+.pattern-seg--answer {
+    stroke: var(--c-ok);
+    stroke-dasharray: 2 18;
+    stroke-width: 12px;
+}
+
+/* 手指正在拖曳中、尚未連到點的線 */
+.pattern-live {
+    stroke: var(--c-blue);
+    stroke-width: 6px;
+    stroke-linecap: round;
+    opacity: 0.5;
+    pointer-events: none;
+}

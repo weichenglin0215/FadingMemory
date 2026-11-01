@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_oddsock.js — 秒反應・落單的襪子
+   樣式：css/games/reaction_oddsock.css（這款專屬的 class 一律以「oddsock-」開頭；共用元件在 css/reaction_common.css）
    3×3 九宮格，九隻襪子裡有四對圖案相同、只有一隻沒有伴，點出那隻落單的。
    關卡制，答錯或逾時就結束，成績＝通過關數。
    這是注重直覺反應與點擊速度的遊戲：玩家看到的是明顯的差異，不靠細微的色差。
@@ -123,10 +124,10 @@
         console.log('[落單的襪子] 第 ' + level + ' 關：落單在第 ' + (q.odd + 1) + ' 格（改了' + WHAT_NAME[q.what] + '，差 ' + countDelta(level) + '）；底色 ' + q.colors.map(function (c) { return RAINBOW[c][0]; }).join('、') + '；限時 ' + timeMs(level) + ' ms；九隻 ' + q.socks.map(key).join(' | '));
 
         var W = stage.clientWidth || 472, x0 = Math.round((W - (3 * CELL + 2 * GAP)) / 2), y0 = 6;
-        var tip = h('div', { 'class': 'os-tip', text: '九隻襪子裡有四對相同，找出沒有伴的那一隻' });
+        var tip = h('div', { 'class': 'oddsock-tip', text: '九隻襪子裡有四對相同，找出沒有伴的那一隻' });
         stage.appendChild(tip);
         var cells = q.socks.map(function (s, i) {
-            var el = h('div', { 'class': 'os-cell', html: sockSvg(s, level + '_' + i) });
+            var el = h('div', { 'class': 'oddsock-cell', html: sockSvg(s, level + '_' + i) });
             el.style.left = (x0 + (i % 3) * (CELL + GAP)) + 'px'; el.style.top = (y0 + 66 + Math.floor(i / 3) * (CELL + GAP)) + 'px';
             el.firstChild.style.transform = 'translate(' + s.dx.toFixed(1) + 'px,' + s.dy.toFixed(1) + 'px) rotate(' + s.rot.toFixed(1) + 'deg)';
             kit.onTap(el, function () { judge(i); });
@@ -141,10 +142,10 @@
         function judge(i) {
             if (api.over) return;
             var odd = q.odd;
-            cells[odd].classList.add('os-cell--odd');
-            q.socks.forEach(function (s, k) { if (k !== odd && key(s) === key(q.mate)) cells[k].classList.add('os-cell--mate'); });
+            cells[odd].classList.add('oddsock-cell--odd');
+            q.socks.forEach(function (s, k) { if (k !== odd && key(s) === key(q.mate)) cells[k].classList.add('oddsock-cell--mate'); });
             if (i === odd) { api.pass({ delay: 800 }); return; }
-            if (i >= 0) cells[i].classList.add('os-cell--bad');
+            if (i >= 0) cells[i].classList.add('oddsock-cell--bad');
             api.fail({
                 delay: 2000, lines: [
                     (i < 0 ? '時間到！' : '選錯了！') + '落單的是第 ' + (Math.floor(odd / 3) + 1) + ' 列第 ' + (odd % 3 + 1) + ' 隻',

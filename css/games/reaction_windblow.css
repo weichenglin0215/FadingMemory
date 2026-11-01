@@ -1,0 +1,315 @@
+/* ═══════════════════════════════════════
+   reaction_windblow.css — 大風吹（js/reaction_windblow.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「windblow-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 大風吹（.windblow-）═══ */
+.windblow-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.windblow-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* 口令的對話框 */
+.windblow-bubble {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 8px;
+    min-height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--c-card);
+    border: 4px solid var(--c-ink-soft);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+    color: var(--c-ink);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    line-height: 1.3;
+    text-align: center;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.windblow-bubble--pop {
+    animation: windblow-pop 0.22s ease-out;
+}
+
+@keyframes windblow-pop {
+    from {
+        transform: scale(0.9);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+/* 一圈椅子和小朋友（裝飾） */
+.windblow-ring {
+    position: absolute;
+    transition: transform 0.5s ease-in-out;
+    pointer-events: none;
+}
+
+.windblow-seat {
+    position: absolute;
+    width: 68px;
+    height: 80px;
+    transition: transform 0.5s ease-in-out;
+}
+
+.windblow-chair {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    bottom: 0;
+    height: 26px;
+    background: var(--wbl-chair);
+    border-radius: var(--r-sm);
+}
+
+.windblow-seat .windblow-kid {
+    position: absolute;
+    left: 6px;
+    top: 0;
+}
+
+.windblow-ring--hop .windblow-kid {
+    animation: windblow-hop 0.36s ease-out;
+}
+
+@keyframes windblow-hop {
+    0% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-14px);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}
+
+/* 小朋友 */
+.windblow-kid {
+    display: block;
+    overflow: visible;
+}
+
+.windblow-shirt {
+    stroke: var(--c-ink-soft);
+    stroke-width: 2.5;
+}
+
+.windblow-shirt0 {
+    fill: var(--wbl-shirt0);
+}
+
+.windblow-shirt1 {
+    fill: var(--wbl-shirt1);
+}
+
+.windblow-shirt2 {
+    fill: var(--wbl-shirt2);
+}
+
+.windblow-shirt3 {
+    fill: var(--wbl-shirt3);
+}
+
+.windblow-skin {
+    fill: var(--wbl-skin);
+    stroke: var(--c-ink-soft);
+    stroke-width: 2.5;
+}
+
+.windblow-hair {
+    fill: var(--wbl-hair);
+}
+
+.windblow-eye {
+    fill: var(--wbl-eye);
+}
+
+.windblow-mouth {
+    fill: none;
+    stroke: var(--wbl-eye);
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.windblow-glass {
+    fill: var(--wbl-glass-fill);
+    stroke: var(--wbl-eye);
+    stroke-width: 3;
+}
+
+.windblow-hat {
+    fill: var(--wbl-hat);
+    stroke: var(--c-ink-soft);
+    stroke-width: 2.5;
+}
+
+/* 「你是誰」卡片：開場、特徵改變時蓋在畫面上 */
+.windblow-card {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    top: 128px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--sp-3);
+    background: var(--c-card);
+    border: 4px solid var(--c-ink-soft);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
+    z-index: 5;
+    transition: opacity 0.25s;
+}
+
+.windblow-card--hide {
+    opacity: 0;
+}
+
+.windblow-card__t {
+    color: var(--c-ink);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+}
+
+.windblow-card__av {
+    padding: var(--sp-2) 0;
+    line-height: 0;
+}
+
+.windblow-card__d {
+    color: var(--c-ink);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+}
+
+.windblow-card__s {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+}
+
+.windblow-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 466px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.windblow-info--bad {
+    color: var(--c-bad);
+    top: 436px;
+}
+
+.windblow-btn {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.windblow-btn--off {
+    opacity: 0.45;
+}
+
+/* 結束：左邊是你的特徵、右邊是口令和逐條比對 */
+.windblow-cmp {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 128px;
+    display: flex;
+    gap: var(--sp-2);
+    z-index: 4;
+}
+
+.windblow-cmp__col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--sp-2);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    text-align: center;
+}
+
+.windblow-cmp__t {
+    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+.windblow-cmp__av {
+    line-height: 0;
+    padding: var(--sp-1) 0;
+}
+
+.windblow-cmp__d {
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    white-space: pre-line;
+    line-height: 1.35;
+}
+
+.windblow-cmp__c {
+    color: var(--c-ink);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    line-height: 1.3;
+    padding-bottom: var(--sp-1);
+}
+
+.windblow-cmp__r {
+    width: 100%;
+    margin-top: var(--sp-1);
+    padding: 2px var(--sp-1);
+    border-radius: var(--r-sm);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    line-height: 1.3;
+}
+
+.windblow-cmp__r--y {
+    background: var(--c-ok-soft);
+    color: var(--c-ok);
+}
+
+.windblow-cmp__r--n {
+    background: var(--c-bad-soft);
+    color: var(--c-bad);
+}
+
+.windblow-cmp__v {
+    margin-top: var(--sp-1);
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    line-height: 1.3;
+}

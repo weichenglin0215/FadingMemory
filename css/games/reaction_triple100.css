@@ -1,0 +1,87 @@
+/* ═══════════════════════════════════════
+   reaction_triple100.css — 三張成百（js/reaction_triple100.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「triple100-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 109 三張成百（.triple100-，V1.26 新增；V1.27 改成關卡制）═══
+   版面：牌橫向每排 3 張，往下一排一排增加（牌多的關卡在 .triple100-wrap 裡上下捲動）；失誤計數固定在最下面。 */
+.triple100-wrap {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 44px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+}
+
+.triple100-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 12px 18px 16px;
+}
+
+.triple100-card {
+    height: 78px;
+    border-radius: var(--r-md);
+    background: var(--c-card-alt);
+    border: var(--bd);
+    box-shadow: var(--shadow-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    cursor: pointer;
+    transition: transform 0.12s ease, opacity 0.3s ease, background 0.12s ease;
+}
+
+.triple100-card--sel {
+    background: var(--c-blue-soft);
+    border-color: var(--c-blue);
+    transform: translateY(-6px) scale(1.04);
+}
+
+.triple100-card--gone {
+    opacity: 0;
+    transform: scale(0.6);
+    pointer-events: none;
+}
+
+.triple100-card--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad);
+    animation: triple100-shake 0.4s ease;
+}
+
+.triple100-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 6px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+@keyframes triple100-shake {
+
+    0%,
+    100% {
+        margin-left: 0;
+    }
+
+    25% {
+        margin-left: -8px;
+    }
+
+    75% {
+        margin-left: 8px;
+    }
+}

@@ -56,9 +56,9 @@ for (let i = 0; i < 600; i++) {
 }
 console.log('號碼長度分布 ' + JSON.stringify(lens) + '；平均每組號碼轉盤要轉回來共 ' + (sumRet / total / 1000).toFixed(1) + ' 秒');
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_rotary.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 3600/.test(src) && /rtr-cmp__d--bad/.test(src) && /Sfx\.play\('tick'\)/.test(src), '失敗：正確號碼與你撥的並排、錯的標紅、停格 3 秒以上；轉回來有嗒嗒聲');
-  ok(/\.rtr-cmp__d--bad \{[^}]*var\(--c-bad/.test(css) && /\.rtr-plate \{[^}]*var\(--rtr-plate\)/.test(css) && /\.rtr-metal \{[^}]*var\(--rtr-metal\)/.test(css), '紅色、轉盤顏色用 CSS 變數');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_rotary.js'), css = rd('../../css/games/reaction_rotary.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 3600/.test(src) && /rotary-cmp__d--bad/.test(src) && /Sfx\.play\('tick'\)/.test(src), '失敗：正確號碼與你撥的並排、錯的標紅、停格 3 秒以上；轉回來有嗒嗒聲');
+  ok(/\.rotary-cmp__d--bad \{[^}]*var\(--c-bad/.test(css) && /\.rotary-plate \{[^}]*var\(--rtr-plate\)/.test(css) && /\.rotary-metal \{[^}]*var\(--rtr-metal\)/.test(css), '紅色、轉盤顏色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_rotary.js'") > 0 && /轉盤/.test(G.rule), 'boot.js 有載入、玩法說明提到轉盤'); }
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !== T.rating(18) && T.rating(18) !== T.rating(30), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

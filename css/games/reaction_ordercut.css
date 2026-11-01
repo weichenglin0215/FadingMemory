@@ -1,0 +1,207 @@
+/* ═══════════════════════════════════════
+   reaction_ordercut.css — 照號切水果（js/reaction_ordercut.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「ordercut-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 照號切水果（.ordercut-）═══ */
+.ordercut-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 遊戲區：深色木板；水果從下面拋出來、掉回下面，超出的部分藏起來 */
+.ordercut-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    background: var(--ocf-board);
+    touch-action: none;
+}
+
+.ordercut-tip,
+.ordercut-next {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    padding: 2px var(--sp-3);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    text-align: center;
+    pointer-events: none;
+    z-index: 6;
+}
+
+.ordercut-tip {
+    top: 8px;
+}
+
+.ordercut-next {
+    top: 62px;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+/* 手指劃過的軌跡 */
+.ordercut-trail {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.ordercut-trail__l {
+    fill: none;
+    stroke: var(--ocf-trail);
+    stroke-width: 7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* 水果：圓球、頂上一片葉子、中間一個白色粗字（有黑邊）加底線 */
+.ordercut-fruit {
+    position: absolute;
+    left: 0;
+    top: 0;
+    border-radius: 50%;
+    box-shadow: inset -6px -8px 0 var(--ocf-shade);
+    will-change: transform;
+    pointer-events: none;
+}
+
+.ordercut-f0 {
+    background: var(--ocf-f0);
+}
+
+.ordercut-f1 {
+    background: var(--ocf-f1);
+}
+
+.ordercut-f2 {
+    background: var(--ocf-f2);
+}
+
+.ordercut-f3 {
+    background: var(--ocf-f3);
+}
+
+.ordercut-f4 {
+    background: var(--ocf-f4);
+}
+
+.ordercut-f5 {
+    background: var(--ocf-f5);
+}
+
+.ordercut-leaf {
+    position: absolute;
+    left: 50%;
+    top: -10px;
+    width: 18px;
+    height: 12px;
+    margin-left: -3px;
+    background: var(--ocf-leaf);
+    border-radius: 0 100% 0 100%;
+}
+
+.ordercut-label {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0 auto;
+    width: max-content;
+    max-width: 100%;
+    color: var(--ocf-num);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    line-height: 1.05;
+    white-space: nowrap;
+    border-bottom: 4px solid var(--ocf-num);
+    text-shadow: -2px -2px 0 var(--ocf-num-edge), 2px -2px 0 var(--ocf-num-edge), -2px 2px 0 var(--ocf-num-edge), 2px 2px 0 var(--ocf-num-edge), 0 3px 0 var(--ocf-num-edge);
+}
+
+.ordercut-fruit--expr .ordercut-label {
+    font-size: var(--fs-sm);
+}
+
+.ordercut-fruit--bad {
+    box-shadow: 0 0 0 6px var(--c-bad-light), inset -6px -8px 0 var(--ocf-shade);
+}
+
+.ordercut-fruit--ok {
+    box-shadow: 0 0 0 6px var(--c-ok-light), inset -6px -8px 0 var(--ocf-shade);
+}
+
+/* 切開的兩半：往兩邊飛開、掉下去、淡出 */
+.ordercut-half {
+    position: absolute;
+    opacity: 1;
+    transition: transform 0.65s ease-in, opacity 0.65s ease-in;
+    pointer-events: none;
+}
+
+.ordercut-half--l {
+    border-radius: 999px 0 0 999px;
+}
+
+.ordercut-half--r {
+    border-radius: 0 999px 999px 0;
+}
+
+/* 結束時每顆水果下面的「第幾個要切」 */
+.ordercut-badge {
+    position: absolute;
+    min-width: 72px;
+    padding: 0 var(--sp-1);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-sm);
+    text-align: center;
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    line-height: 1.3;
+    pointer-events: none;
+    z-index: 4;
+}
+
+.ordercut-badge--ok {
+    border-color: var(--c-ok);
+    color: var(--c-ok);
+}
+
+.ordercut-badge--bad {
+    border-color: var(--c-bad-light);
+    color: var(--c-bad);
+}
+
+.ordercut-info {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 14px;
+    padding: var(--sp-1) var(--sp-3);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    font-weight: var(--fw-bold);
+    z-index: 6;
+    pointer-events: none;
+}
+
+.ordercut-info--ok {
+    color: var(--c-ok);
+}
+
+.ordercut-info--bad {
+    color: var(--c-bad);
+}

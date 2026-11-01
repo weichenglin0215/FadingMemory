@@ -75,11 +75,11 @@ function maxAir(q) { let mx = 0; q.tosses.forEach(a => { let c = 0; q.tosses.for
 // 效能
 { const t0 = Date.now(); for (let i = 0; i < 2000; i++) T.makeLevel(1 + (i % 40), rnd); ok((Date.now() - t0) / 2000 < 2, '出題夠快'); }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_menuslice.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 3600/.test(src) && /showMenuAgain/.test(src) && /msl-cmp__box--ok/.test(src), '失敗：菜單再亮出來、錯的與菜單上的並排、停格 2 秒以上');
-  ok(/\.msl-board \{[^}]*var\(--msl-board\)/.test(css) && /\.msl-cmp__box--bad \{[^}]*var\(--c-bad/.test(css) && /\.msl-f--orange \{[^}]*var\(--msl-orange\)/.test(css), '黑板、水果顏色用 CSS 變數');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_menuslice.js'), css = rd('../../css/games/reaction_menuslice.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 3600/.test(src) && /showMenuAgain/.test(src) && /menuslice-cmp__box--ok/.test(src), '失敗：菜單再亮出來、錯的與菜單上的並排、停格 2 秒以上');
+  ok(/\.menuslice-board \{[^}]*var\(--msl-board\)/.test(css) && /\.menuslice-cmp__box--bad \{[^}]*var\(--c-bad/.test(css) && /\.menuslice-f--orange \{[^}]*var\(--msl-orange\)/.test(css), '黑板、水果顏色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_menuslice.js'") > 0 && /長得像/.test(G.rule), 'boot.js 有載入、玩法說明提到長得像'); }
 // 每種水果都有對應的 CSS 顏色
-{ const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/reaction6.css'), 'utf8'); T.FRUITS.forEach(f => ok(css.indexOf('.msl-f--' + f.id + ' ') >= 0, 'CSS 有 .msl-f--' + f.id)); }
+{ const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_menuslice.css'), 'utf8'); T.FRUITS.forEach(f => ok(css.indexOf('.menuslice-f--' + f.id + ' ') >= 0, 'CSS 有 .menuslice-f--' + f.id)); }
 ok(T.rating(2) !== T.rating(4) && T.rating(4) !== T.rating(7) && T.rating(7) !== T.rating(12) && T.rating(12) !== T.rating(20), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

@@ -1,0 +1,124 @@
+/* ═══════════════════════════════════════
+   reaction_basket.css — 菜籃總價（js/reaction_basket.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「basket-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 074 菜籃總價（.basket-）═══ */
+.basket-total {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 6px;
+    text-align: center;
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.basket-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 76px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+.basket-grid {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    top: 130px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-3);
+}
+
+.basket-grid--shake {
+    animation: basket-shake 0.45s ease;
+}
+
+.basket-tile {
+    height: 190px;
+    border-radius: var(--r-md);
+    background: var(--c-card-alt);
+    border: var(--bd);
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-1);
+    cursor: pointer;
+}
+
+/* 蔬果圖案（emoji，V1.28） */
+.basket-ico {
+    font-size: 46px;
+    line-height: 1.1;
+}
+
+/* 蔬果名稱：咖啡色、不是重點 */
+.basket-name {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 價格：黑色、放大 150%（重點，要看得清楚） */
+.basket-price {
+    font-size: calc(var(--fs-lg) * 1.5);
+    font-weight: var(--fw-black);
+    color: var(--c-black);
+}
+
+.basket-tile--on {
+    background: var(--c-blue-soft);
+    border-color: var(--c-blue);
+    transform: translateY(-4px);
+}
+
+.basket-tile--ans {
+    border-color: var(--c-green);
+    border-width: 5px;
+    background: var(--c-green-soft);
+}
+
+.basket-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 530px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    line-height: var(--lh-body);
+}
+
+.basket-info--ok {
+    color: var(--c-ok);
+}
+
+.basket-info--bad {
+    color: var(--c-bad);
+}
+
+@keyframes basket-shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-10px);
+    }
+
+    75% {
+        transform: translateX(10px);
+    }
+}

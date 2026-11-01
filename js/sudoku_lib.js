@@ -1,0 +1,248 @@
+/* ═══════════════════════════════════════════════════════════════════
+   sudoku_lib.js — 數獨系列（數獨4、數獨6入門／中階、數獨9入門／中階／高階）和夾心數獨共用的「畫面」
+   （出題與推理在 js/sudoku_engine.js；這個檔案不是遊戲，是遊戲檔案用的零件，不會自己登記成遊戲）
+   樣式：css/sudoku_lib.css（class 一律以「sudokulib-」開頭）
+   ───────────────────────────────────────────────────────────────────
+   · 玩法（深思篇 421）：每一橫排、每一直排、每個宮裡，1～N 各出現一次。點一格、再點下面的數字。
+     沒有時間限制，也不會因為填錯而結束；全部填對就過關，換下一題。想結束就按左上角「返回」，成績＝解開幾題。
+   · 重複的數字會變紅（跟一般數獨 App 一樣，只提示「重複」，不揭露答案）；填滿而且沒有重複才算解開。
+   · 工具：筆記（在格子角落記候選數字）、清除、提示（每題 HINTS 次，只標出「現在可以確定」的那一格，不說數字、不說理由）、重來。
+   · 提供兩個入口：
+       lib.game(cfg)         一整個數獨變體（出題、畫面、結算都包好）；數獨4／6／9 的遊戲檔案各呼叫一次
+       lib.mountBoard(...)   只畫「盤面＋數字鍵＋工具列」，給夾心數獨這種要自己出題、自己加外圍線索的遊戲用
+   ═══════════════════════════════════════════════════════════════════ */
+(function () {
+    'use strict';
+
+    var h = UI.h, kit = Reaction.kit, SE = window.SudokuEngine;
+    var lib = Reaction.sudokuLib = {};
+
+    /* ═══ 可以自己調的參數 ═══ */
+    var HINTS = 3;                              /* 每一題可以用幾次提示（0＝關掉提示鈕） */
+    var AUTO_CLEAN_NOTES = true;                /* 填入數字時，同排／欄／宮的格子自動拿掉那個數字的筆記 */
+    var SHOW_CONFLICT = true;                   /* 重複的數字標紅 */
+    var BORDER = 3;                             /* 盤面外框粗細（px，跟 css 的 .sudokulib-board 一致） */
+    var PASS_DELAY_MS = 1300;                   /* 解開之後停多久才換下一題 */
+    var MAX_LEVEL = 90;                         /* 解到這題就全破 */
+
+    /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 盤面的尺寸：畫面寬 W、盤面邊長 N、佔寬比例 frac、左右額外留的寬度 ring（夾心數獨的外圍線索）→ 每格邊長 */
+    function boardMetrics(W, N, frac, ring) {
+        var width = Math.round(W * frac) - (ring || 0), cell = Math.floor((width - BORDER) / N);
+        return { cell: cell, width: cell * N + BORDER, height: cell * N + BORDER };
+    }
+    /* 哪些格子的數字和同排／欄／宮的別格重複 → 布林陣列 */
+    function conflictsOf(g, grid) {
+        var bad = new Array(g.cells).fill(false), i, k;
+        for (i = 0; i < g.cells; i++) {
+            if (!grid[i]) continue;
+            for (k = 0; k < g.peers[i].length; k++) if (grid[g.peers[i][k]] === grid[i]) { bad[i] = true; break; }
+        }
+        return bad;
+    }
+    /* 每個數字在盤面上出現幾次（數字鍵變灰用） */
+    function digitCounts(g, grid) { var c = new Array(g.N + 1).fill(0); grid.forEach(function (v) { if (v) c[v]++; }); return c; }
+    /* 解開了嗎：全部填滿、沒有重複、而且跟答案一樣 */
+    function isSolved(g, grid, solution) {
+        for (var i = 0; i < g.cells; i++) if (!grid[i] || grid[i] !== solution[i]) return false;
+        return true;
+    }
+    lib.test = { boardMetrics: boardMetrics, conflictsOf: conflictsOf, digitCounts: digitCounts, isSolved: isSolved, HINTS: HINTS, MAX_LEVEL: MAX_LEVEL };
+
+    /* ═══ 盤面＋數字鍵＋工具列 ═══
+       api：kit.run 給 setup 的 api；g：SE.geom 的幾何；pz：{ givens, solution }；
+       o.frac：盤面佔遊戲畫面寬度的比例；o.maxLevel：提示用的推理等級；o.ring：{ top: [每欄的線索], left: [每排的線索] }（夾心數獨）；
+       o.tip：盤面下方的說明文字；o.extraConflict(grid) → 額外標紅的格子（布林陣列，夾心數獨用）
+       回傳控制器 { grid, paint(), fillSolution(), putWrong() }。解開時會自己呼叫 api.pass。 */
+    lib.mountBoard = function (api, g, pz, o) {
+        o = o || {};
+        var stage = api.stage, N = g.N, my = api.my;
+        var W = stage.clientWidth || 472;
+        var ringW = o.ring ? Math.round(W * 0.095) : 0;
+        var bm = boardMetrics(W, N, o.frac || 0.96, ringW);
+        var grid = pz.givens.slice(), notes = new Array(g.cells).fill(0), sel = -1, noteMode = false, hintsLeft = o.hints != null ? o.hints : HINTS, hintCell = -1, solved = false;
+        var cells = [], cellDigit = [], cellNotes = [];
+
+        var wrap = h('div', { 'class': 'sudokulib-wrap' });
+        wrap.style.setProperty('--sudokulib-key-h', (N >= 9 ? 52 : 64) + 'px');        /* 9×9 的盤面高，數字鍵與工具列矮一點才放得下 */
+        wrap.style.setProperty('--sudokulib-tool-h', (N >= 9 ? 48 : 56) + 'px');
+        var frame = h('div', { 'class': 'sudokulib-frame' });
+        var board = h('div', { 'class': 'sudokulib-board' });
+        board.style.setProperty('--sudokulib-n', N);
+        board.style.setProperty('--sudokulib-cell', bm.cell + 'px');
+        board.style.setProperty('--sudokulib-font', Math.round(bm.cell * (N <= 6 ? 0.62 : 0.68)) + 'px');
+        board.style.setProperty('--sudokulib-note', Math.max(9, Math.round(bm.cell / (g.R + 0.9) * 0.75)) + 'px');
+        board.style.setProperty('--sudokulib-notecols', g.C);
+        for (var i = 0; i < g.cells; i++) {
+            var c = h('div', { 'class': 'sudokulib-cell' });
+            if (g.colOf(i) % g.C === g.C - 1) c.className += ' sudokulib-cE';
+            if (g.rowOf(i) % g.R === g.R - 1) c.className += ' sudokulib-rE';
+            var dg = h('span', { 'class': 'sudokulib-digit' });
+            var nt = h('div', { 'class': 'sudokulib-notes' });
+            for (var d = 1; d <= N; d++) nt.appendChild(h('span', { 'class': 'sudokulib-note', text: String(d) }));
+            c.appendChild(nt); c.appendChild(dg);
+            (function (idx) { kit.onTap(c, function () { select(idx); }); })(i);
+            board.appendChild(c); cells.push(c); cellDigit.push(dg); cellNotes.push(nt);
+        }
+        if (o.ring) {
+            var top = h('div', { 'class': 'sudokulib-ring sudokulib-ring--top' }), left = h('div', { 'class': 'sudokulib-ring sudokulib-ring--left' });
+            top.style.width = bm.cell * N + 'px'; left.style.height = bm.cell * N + 'px';
+            top.style.marginLeft = BORDER + 'px';
+            for (var k = 0; k < N; k++) {
+                top.appendChild(h('div', { 'class': 'sudokulib-ringcell', text: o.ring.top[k] == null ? '' : String(o.ring.top[k]) }));
+                left.appendChild(h('div', { 'class': 'sudokulib-ringcell', text: o.ring.left[k] == null ? '' : String(o.ring.left[k]) }));
+            }
+            [].forEach.call(top.children, function (e) { e.style.width = bm.cell + 'px'; e.style.height = ringW + 'px'; });
+            [].forEach.call(left.children, function (e) { e.style.height = bm.cell + 'px'; e.style.width = ringW + 'px'; });
+            frame.style.gridTemplateColumns = ringW + 'px ' + bm.width + 'px';
+            frame.appendChild(h('div', { 'class': 'sudokulib-corner' }));
+            frame.appendChild(top); frame.appendChild(left); frame.appendChild(board);
+        } else frame.appendChild(board);
+        wrap.appendChild(frame);
+
+        var tipText = o.tip || '先點一格，再點數字';
+        var tip = h('div', { 'class': 'sudokulib-tip', text: tipText });
+        wrap.appendChild(tip);
+
+        /* 數字鍵：N≤6 排成一排（最後一顆是擦掉）；N＝9 排成 5＋5（最後一顆是擦掉） */
+        var pad = h('div', { 'class': 'sudokulib-pad' });
+        var padCols = N <= 6 ? N + 1 : 5;
+        pad.style.gridTemplateColumns = 'repeat(' + padCols + ', minmax(0, 1fr))';
+        var keys = [];
+        for (var dd = 1; dd <= N; dd++) (function (dg) {
+            var b = h('button', { 'class': 'btn btn--sky sudokulib-key', type: 'button', text: String(dg) });
+            kit.onTap(b, function () { enter(dg); });
+            pad.appendChild(b); keys.push(b);
+        })(dd);
+        var eraser = h('button', { 'class': 'btn btn--line sudokulib-key sudokulib-key--erase', type: 'button', html: '⌫' });
+        kit.onTap(eraser, function () { enter(0); });
+        pad.appendChild(eraser);
+        wrap.appendChild(pad);
+
+        /* 工具列：筆記、提示、重來 */
+        var tools = h('div', { 'class': 'sudokulib-tools' });
+        var btnNote = h('button', { 'class': 'btn btn--line sudokulib-tool', type: 'button', text: '筆記：關' });
+        var btnHint = h('button', { 'class': 'btn btn--line sudokulib-tool', type: 'button', text: '提示 ' + hintsLeft });
+        var btnReset = h('button', { 'class': 'btn btn--line sudokulib-tool', type: 'button', text: '重來' });
+        kit.onTap(btnNote, function () { noteMode = !noteMode; btnNote.textContent = '筆記：' + (noteMode ? '開' : '關'); btnNote.classList.toggle('sudokulib-tool--on', noteMode); });
+        kit.onTap(btnHint, function () { useHint(); });
+        kit.onTap(btnReset, function () { reset(); });
+        tools.appendChild(btnNote);
+        if (hintsLeft > 0) tools.appendChild(btnHint);
+        tools.appendChild(btnReset);
+        wrap.appendChild(tools);
+        stage.appendChild(wrap);
+
+        function select(idx) { if (solved) return; sel = idx; paint(); }
+        function enter(d) {
+            if (solved) return;
+            if (sel < 0) { tip.textContent = '先點一格，再點數字'; return; }
+            if (pz.givens[sel]) { tip.textContent = '這格是題目給的'; return; }
+            hintCell = -1;
+            if (d === 0) { grid[sel] = 0; notes[sel] = 0; }
+            else if (noteMode && !grid[sel]) notes[sel] ^= (1 << d);
+            else if (noteMode) { /* 已經填了數字：先不動，要改請先擦掉 */ tip.textContent = '先擦掉數字才能寫筆記'; return; }
+            else if (grid[sel] === d) grid[sel] = 0;
+            else {
+                grid[sel] = d; notes[sel] = 0;
+                if (AUTO_CLEAN_NOTES) g.peers[sel].forEach(function (p) { notes[p] &= ~(1 << d); });
+            }
+            paint();
+            check();
+        }
+        function useHint() {
+            if (solved || hintsLeft <= 0) return;
+            var c = SE.hintCell(g, pz.givens, grid, pz.solution, o.maxLevel || 1);
+            if (c < 0) return;
+            hintsLeft--; btnHint.textContent = '提示 ' + hintsLeft; btnHint.disabled = hintsLeft <= 0;
+            hintCell = c; sel = c;
+            tip.textContent = '閃動的格子可以確定了';
+            paint();
+        }
+        function reset() {
+            if (solved) return;
+            grid = pz.givens.slice(); notes = new Array(g.cells).fill(0); sel = -1; hintCell = -1;
+            tip.textContent = tipText;
+            paint();
+        }
+        function paint() {
+            var bad = SHOW_CONFLICT ? conflictsOf(g, grid) : new Array(g.cells).fill(false);
+            var extra = o.extraConflict ? o.extraConflict(grid) : null;
+            var counts = digitCounts(g, grid);
+            var selDigit = sel >= 0 ? grid[sel] : 0;
+            for (var i = 0; i < g.cells; i++) {
+                var cl = 'sudokulib-cell' + (g.colOf(i) % g.C === g.C - 1 ? ' sudokulib-cE' : '') + (g.rowOf(i) % g.R === g.R - 1 ? ' sudokulib-rE' : '');
+                if (pz.givens[i]) cl += ' sudokulib-cell--given';
+                else if (grid[i]) cl += ' sudokulib-cell--mine';
+                if (sel >= 0 && i !== sel && (g.rowOf(i) === g.rowOf(sel) || g.colOf(i) === g.colOf(sel) || g.boxOf(i) === g.boxOf(sel))) cl += ' sudokulib-cell--peer';
+                if (selDigit && grid[i] === selDigit && i !== sel) cl += ' sudokulib-cell--same';
+                if (i === sel) cl += ' sudokulib-cell--sel';
+                if (bad[i] || (extra && extra[i])) cl += ' sudokulib-cell--bad';
+                if (i === hintCell) cl += ' sudokulib-cell--hint';
+                cells[i].className = cl;
+                cellDigit[i].textContent = grid[i] ? String(grid[i]) : '';
+                cellNotes[i].style.display = !grid[i] && notes[i] ? 'grid' : 'none';
+                if (!grid[i] && notes[i]) for (var d = 1; d <= N; d++) cellNotes[i].children[d - 1].style.visibility = (notes[i] & (1 << d)) ? 'visible' : 'hidden';
+            }
+            keys.forEach(function (b, k) { b.classList.toggle('sudokulib-key--done', counts[k + 1] >= N); });
+        }
+        function check() {
+            if (!isSolved(g, grid, pz.solution)) return;
+            solved = true; sel = -1; hintCell = -1; paint();
+            tip.textContent = '解開了！';
+            cells.forEach(function (c) { c.classList.add('sudokulib-cell--ok'); });
+            kit.flash(stage, true, my);
+            api.pass({ delay: PASS_DELAY_MS });
+        }
+        paint();
+        var ctl = {
+            grid: function () { return grid; },
+            paint: paint,
+            fillSolution: function () { grid = pz.solution.slice(); paint(); check(); },
+            putWrong: function () { for (var i = 0; i < g.cells; i++) if (!pz.givens[i]) { grid[i] = pz.solution[i] % N + 1; break; } paint(); },
+            hintLeft: function () { return hintsLeft; },
+            state: function () { return { sel: sel, hintCell: hintCell, hintsLeft: hintsLeft, solved: solved, noteMode: noteMode }; },
+            select: select, enter: enter, useHint: useHint, reset: reset
+        };
+        return ctl;
+    };
+
+    /* ═══ 一整個數獨變體 ═══
+       cfg：id、name、rule、boxR／boxC（宮的排數／欄數）、spec（SE.make 的出題條件）、frac（盤面佔寬）、ratingAt（評語門檻）*/
+    lib.game = function (cfg) {
+        var g = SE.geom(cfg.boxR, cfg.boxC);
+        var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '解開題數', min: 1, max: MAX_LEVEL };
+        function makePuzzle(rand) { return SE.make(g, cfg.spec, rand || Math.random); }
+        function rating(n) {
+            if (n >= 30) return '數獨大師！';
+            if (n >= 15) return '推理很穩！';
+            if (n >= 6) return '越來越有感覺了！';
+            return '再解幾題，會越來越順！';
+        }
+        function mount(root, ctx) {
+            kit.run(root, ctx, {
+                id: cfg.id, G: G, maxLevel: MAX_LEVEL, goodAt: 5, resume: false, leaveSettle: true,
+                head: function (level) { return '第 ' + level + ' 題'; },
+                info: function (S) { return '已解 ' + S.cleared + ' 題'; },
+                numText: function (v) { return v + ' 題'; },
+                rating: rating,
+                lines: function (S) { return ['解開 ' + S.cleared + ' 題']; },
+                setup: setup
+            });
+        }
+        function setup(api) {
+            var pz = makePuzzle(api.rand);
+            api.info = pz;
+            console.log('[' + cfg.name + '] 第 ' + api.level + ' 題：提示 ' + pz.count + ' 個，最高用到技巧等級 ' + pz.level);
+            var ctl = lib.mountBoard(api, g, pz, { frac: cfg.frac, maxLevel: cfg.spec.maxLevel });
+            api.solve = function () { ctl.fillSolution(); };
+            api.wrong = function () { ctl.putWrong(); };
+            api.ctl = ctl;
+        }
+        var G = {
+            id: cfg.id, name: cfg.name, rule: cfg.rule, mount: mount, score: SCORE,
+            test: { geom: g, spec: cfg.spec, makePuzzle: makePuzzle, rating: rating, MAX_LEVEL: MAX_LEVEL, lib: lib.test, engine: SE }
+        };
+        return G;
+    };
+})();

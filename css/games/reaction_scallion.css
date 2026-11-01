@@ -1,0 +1,115 @@
+/* ═══════════════════════════════════════
+   reaction_scallion.css — 切蔥花（js/reaction_scallion.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「scallion-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 切蔥花：點一下切一刀，20 秒內切越多段越好。 */
+/* ═══ 切蔥花（.sl-）═══ */
+.scallion-head {
+    text-align: center;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 上方的計數區：數字和「段」用 baseline 對齊文字底線 */
+.scallion-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* 大字計數（切了幾段） */
+.scallion-count {
+    font-size: 110px;
+    font-weight: var(--fw-black);
+    line-height: 1;
+    color: var(--c-green);
+    font-variant-numeric: tabular-nums;
+}
+
+/* 單位「段」 */
+.scallion-unit {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+/* 砧板：蔥、刀子、蔥片都畫在這裡；overflow:hidden 讓蔥從畫面外進來時不會露出界外 */
+.scallion-board {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--c-card-alt);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+    touch-action: none;
+}
+
+/* 蔥（綠色長條）；box-shadow inset 在內側畫一條暗色下緣，讓它有立體感 */
+.scallion-bar {
+    position: absolute;
+    background: var(--c-green);
+    border-radius: 22px 0 0 22px;
+    box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.12);
+}
+
+/* 刀子外層：寬度 0，只是一個「定位點」，刀刃和握把相對它擺位；transition 讓下刀動作平滑 */
+.scallion-knife {
+    position: absolute;
+    width: 0;
+    z-index: 4;
+    transition: transform 0.06s ease-out;
+}
+
+/* 下刀：往下移 26px */
+.scallion-knife--down {
+    transform: translateY(26px);
+}
+
+/* 刀刃 */
+.scallion-knife__blade {
+    position: absolute;
+    left: -3px;
+    top: 0;
+    width: 6px;
+    height: 128px;
+    background: var(--c-ink);
+    border-radius: 3px;
+}
+
+/* 刀把（橘色） */
+.scallion-knife__grip {
+    position: absolute;
+    left: -14px;
+    top: -28px;
+    width: 28px;
+    height: 34px;
+    background: var(--c-orange);
+    border-radius: 8px;
+}
+
+/* 飛出去的蔥片，位置與動畫由 JS 的 element.animate() 控制 */
+.scallion-slice {
+    position: absolute;
+    background: var(--c-ok-light);
+    border: 3px solid var(--c-green);
+    border-radius: 10px;
+    box-sizing: border-box;
+    will-change: transform;
+}
+
+/* 底下的操作提示文字 */
+.scallion-hint {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 22px;
+    text-align: center;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+}

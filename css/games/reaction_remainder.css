@@ -1,0 +1,24 @@
+/* ═══════════════════════════════════════
+   reaction_remainder.css — 求餘數（js/reaction_remainder.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「remainder-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+.remainder-btn {
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ═══ 求餘數（.remainder-）═══ */
+.remainder-ask {
+    top: 170px;
+}
+
+.remainder-reveal {
+    top: 230px;
+}
+
+.remainder-btn {
+    font-size: var(--fs-xl);
+}

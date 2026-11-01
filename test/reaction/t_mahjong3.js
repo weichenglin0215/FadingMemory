@@ -103,10 +103,10 @@ ok(avg(byAnswers[1]) === 1 && avg(byAnswers[30]) > avg(byAnswers[6]) && avg(byAn
 // 效能
 { for (const [lv, name] of [[8, '第 8 關'], [30, '第 30 關'], [60, '第 60 關']]) { const t0 = Date.now(); for (let i = 0; i < 40; i++) T.makeLevel(lv, rnd); const per = (Date.now() - t0) / 40; console.log(name + ' 出題平均 ' + per.toFixed(1) + ' 毫秒'); ok(per < 200, name + ' 出題夠快：' + per.toFixed(1)); } }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_mahjong3.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 3200/.test(src) && /mj3-tile--left/.test(src), '失敗停格 2 秒以上、湊不起來的牌標紅');
-  ok(/\.mj3-tile--left \{ border-color: var\(--c-bad-light\);/.test(css) && /\.mj3-tile--g0 \{ border-color: var\(--mj3-g0\);/.test(css), '紅色與分組色用 CSS 變數');
-  ok(/\.mj3-key--sel \{ border-color: var\(--c-orange\);/.test(css) && /\.mj3-key--miss \{ border: 3px dashed var\(--c-orange\);/.test(css) && /\.mj3-go \{/.test(css), '已選、漏掉的牌鍵與「我選好了」都有樣式（顏色用變數）');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_mahjong3.js'), css = rd('../../css/games/reaction_mahjong3.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 3200/.test(src) && /mahjong3-tile--left/.test(src), '失敗停格 2 秒以上、湊不起來的牌標紅');
+  ok(/\.mahjong3-tile--left \{ border-color: var\(--c-bad-light\);/.test(css) && /\.mahjong3-tile--g0 \{ border-color: var\(--mj3-g0\);/.test(css), '紅色與分組色用 CSS 變數');
+  ok(/\.mahjong3-key--sel \{ border-color: var\(--c-orange\);/.test(css) && /\.mahjong3-key--miss \{ border: 3px dashed var\(--c-orange\);/.test(css) && /\.mahjong3-go \{/.test(css), '已選、漏掉的牌鍵與「我選好了」都有樣式（顏色用變數）');
   ok(/我選好了/.test(src) && /go\.disabled = n === 0/.test(src), '「我選好了」一張都沒選時按不下去');
   ok(boot.indexOf("'js/reaction_mahjong3.js'") > 0, 'boot.js 有載入');
   ok(/補哪些牌/.test(G.rule) && /三張連號/.test(G.rule) && /全部點起來/.test(G.rule) && /一對/.test(G.rule) && /最多 4 張/.test(G.rule), '玩法說明寫了規則（全部找出來、一對、4 張上限）'); }

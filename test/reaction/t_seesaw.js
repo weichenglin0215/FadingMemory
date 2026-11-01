@@ -120,9 +120,9 @@ function simulate(a0, tgt, ms) {
 { const r = simulate(-36, 0, 4000); ok(Math.abs(r.a) < 0.01, '彈簧 4 秒後收斂到目標：' + r.a.toFixed(4)); ok(r.maxOver > 0.5 && r.maxOver < 0.25 * 36, '有一點彈跳（過頭 ' + r.maxOver.toFixed(1) + '°，不超過 25%）'); }
 { const r = simulate(0, -12, 3000); ok(Math.abs(r.a + 12) < 0.01, '往另一個目標也收斂'); }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_seesaw.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 3400/.test(src) && /sea-an--move/.test(src) && /sea-ghost/.test(src), '失敗停格 3 秒以上、標出該換座位的動物與目標座位');
-  ok(/\.sea-an--move \{[^}]*var\(--c-ok/.test(css) && /\.sea-board \{[^}]*var\(--sea-plank\)/.test(css) && /\.sea-ghost \{[^}]*var\(--c-ok\)/.test(css) && /\.sea-aim \{[^}]*var\(--c-orange\)/.test(css), '綠框、虛線圓圈、木板用 CSS 變數');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_seesaw.js'), css = rd('../../css/games/reaction_seesaw.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 3400/.test(src) && /seesaw-an--move/.test(src) && /seesaw-ghost/.test(src), '失敗停格 3 秒以上、標出該換座位的動物與目標座位');
+  ok(/\.seesaw-an--move \{[^}]*var\(--c-ok/.test(css) && /\.seesaw-board \{[^}]*var\(--sea-plank\)/.test(css) && /\.seesaw-ghost \{[^}]*var\(--c-ok\)/.test(css) && /\.seesaw-aim \{[^}]*var\(--c-orange\)/.test(css), '綠框、虛線圓圈、木板用 CSS 變數');
   ok(!/stage\.addEventListener/.test(src), '事件監聽放在這一關專用的容器上（不在共用的 stage 上，免得換關後累積）');
   ok(/board\.isConnected/.test(src), '換關後彈簧迴圈會自己停');
   ok(/style\.width = el\.style\.height = sz/.test(src) && /sizeOf\(weights\[i\]\)/.test(src), '動物的大小依重量設定');

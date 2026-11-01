@@ -1,0 +1,76 @@
+/* ═══════════════════════════════════════
+   reaction_schulte.css — 數字方陣（js/reaction_schulte.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「schulte-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 數字方陣：黑底白字的 6×6 方格，依序點 1、2、3…（Schulte 表）。 */
+/* ═══ 數字方陣（.schulte-）黑底白字 ═══ */
+/* .screen.schulte-bg：同時有 screen 和 schulte-bg 兩個 class 的元素才套用（把整個畫面底色改成純黑） */
+.screen.schulte-bg {
+    background: #000;
+    padding: 0;
+    gap: 0;
+}
+
+/* 最上方的狀態列：左邊「下一個數字」、右邊計時，用 space-between 推到兩端 */
+.schulte-head {
+    flex: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    color: #fff;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+}
+
+/* 計時文字：tabular-nums 讓每個數字等寬，數字跳動時文字不會左右抖動 */
+.schulte-clock {
+    font-variant-numeric: tabular-nums;
+}
+
+/* 6×6 的格子容器：grid-template-columns: repeat(6,1fr) 表示 6 欄、每欄等寬 */
+.schulte-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+    gap: 4px;
+    padding: 6px;
+    box-sizing: border-box;
+}
+
+/* 每一格數字按鈕 */
+.schulte-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    padding: 0;
+    border: 2px solid #4a4a4a;
+    border-radius: 8px;
+    background: #000;
+    color: #fff;
+    font-family: var(--font-ui);
+    font-size: 64px;
+    font-weight: var(--fw-black);
+    line-height: 1;
+    touch-action: manipulation;
+}
+
+/* 點對的格子：整格變綠底白字（比原本的「只有字變淺綠」更明顯），OK_FLASH_MS 之後 JS 會拿掉這個 class 變回黑底 */
+.schulte-cell--ok {
+    background: var(--c-ok);
+    border-color: var(--c-ok);
+    color: var(--c-on-accent);
+}
+
+/* 點錯的格子：整格變橘紅 */
+.schulte-cell--bad {
+    background: var(--c-bad-light);
+    border-color: var(--c-bad-light);
+    color: #fff;
+}

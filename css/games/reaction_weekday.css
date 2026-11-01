@@ -1,0 +1,183 @@
+/* ═══════════════════════════════════════
+   reaction_weekday.css — 推星期幾（js/reaction_weekday.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「weekday-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 推星期幾（.weekday-）═══ */
+.weekday-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.weekday-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+}
+
+/* 大小月口訣：跨月的題型才有，一直放在畫面上方 */
+.weekday-memo {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 54px;
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--c-card-alt);
+    border: 2px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    color: var(--c-ink);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1.25;
+    text-align: center;
+}
+
+/* 內容區（撕日曆、題目、說明、揭曉的月曆都放在裡面，top 由 JS 依有沒有大小月口訣設定） */
+.weekday-body {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 110px;
+}
+
+/* 老式撕日曆：紅色頁頭＋超大日期＋星期 */
+.weekday-page {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 230px;
+    height: 200px;
+    margin-left: -115px;
+    overflow: hidden;
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
+    transform: rotate(-2deg);
+}
+
+.weekday-page__top {
+    height: 46px;
+    background: var(--c-bad-light);
+    color: var(--c-card);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    line-height: 46px;
+}
+
+.weekday-page__day {
+    height: 100px;
+    color: var(--c-ink);
+    font-size: var(--fs-xxxxl);
+    font-weight: var(--fw-black);
+    line-height: 100px;
+}
+
+.weekday-page__wd {
+    color: var(--c-bad);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+}
+
+.weekday-ask {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 212px;
+    padding: 0 var(--sp-3);
+    color: var(--c-ink);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-bold);
+    line-height: 1.3;
+    text-align: center;
+}
+
+.weekday-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 322px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+}
+
+/* 七顆星期按鈕 */
+.weekday-opt {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.weekday-opt--ok {
+    background: var(--c-ok-light);
+    border-color: var(--c-ok);
+}
+
+.weekday-opt--bad {
+    background: var(--c-bad-soft);
+    border-color: var(--c-bad-light);
+    color: var(--c-bad);
+}
+
+/* 揭曉用的月曆：一個月或兩個月並排 */
+.weekday-cal {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    display: flex;
+    justify-content: center;
+    gap: var(--sp-4);
+}
+
+.weekday-cal__title {
+    margin-bottom: var(--sp-1);
+    color: var(--c-ink);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    text-align: center;
+}
+
+.weekday-cal__grid {
+    display: grid;
+}
+
+.weekday-day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--r-sm);
+    color: var(--c-ink);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    transition: background 0.15s;
+}
+
+.weekday-day--head {
+    color: var(--c-ink-soft);
+}
+
+.weekday-day--blank {
+    visibility: hidden;
+}
+
+.weekday-day--from {
+    background: var(--c-blue-light);
+    outline: 3px solid var(--c-blue);
+    outline-offset: -3px;
+}
+
+.weekday-day--walk {
+    background: var(--c-orange-soft);
+}
+
+.weekday-day--to {
+    background: var(--c-ok-light);
+    outline: 3px solid var(--c-ok);
+    outline-offset: -3px;
+}

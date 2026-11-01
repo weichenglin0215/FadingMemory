@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_gearmark.js — 秒反應・齒輪對記號（企劃 254）
+   樣式：css/games/reaction_gearmark.css（這款專屬的 class 一律以「gearmark-」開頭；共用元件在 css/reaction_common.css）
    一串咬在一起的齒輪（銅色，像老時鐘的內部），每個齒輪上有一根紅色的針。手指在**最大的那個齒輪**上畫圈轉動它，
    其他齒輪跟著轉（相鄰的反方向、齒數少的轉得快）。**讓所有紅針同時指向正上方**，放手就判定。
    ───────────────────────────────────────────────────────────────────
@@ -132,7 +133,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'grm-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'gearmark-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -158,32 +159,32 @@
         console.log('[齒輪對記號] 第 ' + level + ' 關：' + n + ' 個齒輪，齒數 ' + teeth.join(':') + '，全部回到原位要 ' + q.period + ' 圈；對準位置＝大齒輪轉 ' + q.target.toFixed(1) + '°；容許誤差 ' + q.tol + '°；限時 ' + timeMs(level) + ' ms');
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        stage.appendChild(h('div', { 'class': 'qz-note grm-tip', text: '畫圈轉大齒輪，讓紅針全指向上' }));
+        stage.appendChild(h('div', { 'class': 'qz-note gearmark-tip', text: '畫圈轉大齒輪，讓紅針全指向上' }));
         /* 縮放：讓整串齒輪放進 (W−16)×(H−330) 的範圍，置中 */
         var ext = { x0: 1e9, x1: -1e9, y0: 1e9, y1: -1e9 };
         L.pos.forEach(function (p, i) { var r = teeth[i] + 2; ext.x0 = Math.min(ext.x0, p.x - r); ext.x1 = Math.max(ext.x1, p.x + r); ext.y0 = Math.min(ext.y0, p.y - r - 8); ext.y1 = Math.max(ext.y1, p.y + r); });
         var areaT = 64, areaH = Math.min(H - 250, 420);
         var s = Math.min((W - 16) / (ext.x1 - ext.x0), areaH / (ext.y1 - ext.y0), 3.2);
         var ox = (W - (ext.x1 - ext.x0) * s) / 2 - ext.x0 * s, oy = areaT + (areaH - (ext.y1 - ext.y0) * s) / 2 - ext.y0 * s;
-        var svg = kit.svg('svg', { 'class': 'grm-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
+        var svg = kit.svg('svg', { 'class': 'gearmark-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
         var cx = L.pos.map(function (p) { return ox + p.x * s; }), cy = L.pos.map(function (p) { return oy + p.y * s; });
         var rot = [], gears = [], hands = [];
         teeth.forEach(function (T, i) {
-            var R = T * s, g = kit.svg('g', { 'class': 'grm-gear', transform: 'translate(' + cx[i].toFixed(2) + ',' + cy[i].toFixed(2) + ')' }, svg);
+            var R = T * s, g = kit.svg('g', { 'class': 'gearmark-gear', transform: 'translate(' + cx[i].toFixed(2) + ',' + cy[i].toFixed(2) + ')' }, svg);
             /* 固定的「正上方」記號：齒輪頂端外面一個小三角形 */
-            kit.svg('path', { 'class': 'grm-tick', d: 'M-7,' + (-R - 20) + ' L7,' + (-R - 20) + ' L0,' + (-R - 6) + ' Z' }, g);
+            kit.svg('path', { 'class': 'gearmark-tick', d: 'M-7,' + (-R - 20) + ' L7,' + (-R - 20) + ' L0,' + (-R - 6) + ' Z' }, g);
             var spin = kit.svg('g', {}, g);
-            kit.svg('path', { 'class': 'grm-body' + (i === 0 ? ' grm-body--main' : ''), d: gearPath(T, R, L.bases[i], 1.0 * s, 1.15 * s) }, spin);
-            kit.svg('circle', { 'class': 'grm-ring', cx: 0, cy: 0, r: R * 0.62 }, spin);
+            kit.svg('path', { 'class': 'gearmark-body' + (i === 0 ? ' gearmark-body--main' : ''), d: gearPath(T, R, L.bases[i], 1.0 * s, 1.15 * s) }, spin);
+            kit.svg('circle', { 'class': 'gearmark-ring', cx: 0, cy: 0, r: R * 0.62 }, spin);
             var hand = kit.svg('g', { transform: 'rotate(' + q.marks[i].toFixed(3) + ')' }, spin);          /* 紅針：初始針角 */
-            kit.svg('path', { 'class': 'grm-needle', d: 'M-5,0 L0,' + (-R * 0.9).toFixed(1) + ' L5,0 Z' }, hand);
-            kit.svg('circle', { 'class': 'grm-hub', cx: 0, cy: 0, r: Math.max(6, R * 0.1) }, spin);
+            kit.svg('path', { 'class': 'gearmark-needle', d: 'M-5,0 L0,' + (-R * 0.9).toFixed(1) + ' L5,0 Z' }, hand);
+            kit.svg('circle', { 'class': 'gearmark-hub', cx: 0, cy: 0, r: Math.max(6, R * 0.1) }, spin);
             rot.push(0); gears.push(spin); hands.push(hand);
         });
-        var list = h('div', { 'class': 'grm-list' });
+        var list = h('div', { 'class': 'gearmark-list' });
         list.style.top = (areaT + areaH + 8) + 'px';
         stage.appendChild(list);
-        var tip2 = h('div', { 'class': 'qz-note grm-hint', text: '誤差要在 ' + q.tol + '° 內，放手就判定' });
+        var tip2 = h('div', { 'class': 'qz-note gearmark-hint', text: '誤差要在 ' + q.tol + '° 內，放手就判定' });
         tip2.style.top = (areaT + areaH + 8) + 'px';
         stage.appendChild(tip2);
 
@@ -201,7 +202,7 @@
             e.preventDefault();
             try { svg.setPointerCapture(e.pointerId); } catch (err) { }
             drag = { id: e.pointerId, a: ang(p), x: p.x, y: p.y, moved: 0 };
-            stage.classList.add('grm-turning');
+            stage.classList.add('gearmark-turning');
         });
         svg.addEventListener('pointermove', function (e) {
             if (!drag || e.pointerId !== drag.id || done) return;
@@ -212,7 +213,7 @@
         });
         function release(e) {
             if (!drag || e.pointerId !== drag.id) return;
-            var moved = drag.moved; drag = null; stage.classList.remove('grm-turning');
+            var moved = drag.moved; drag = null; stage.classList.remove('gearmark-turning');
             if (moved >= MIN_TAP_MOVE) judge();
         }
         svg.addEventListener('pointerup', release);
@@ -221,16 +222,16 @@
         /* 判定：每個齒輪的誤差逐一列出；全部在容許範圍內就過關 */
         function judge() {
             if (done || api.over) return;
-            done = true; drag = null; stage.classList.remove('grm-turning');
+            done = true; drag = null; stage.classList.remove('gearmark-turning');
             var errs = errors(q, theta), worst = Math.max.apply(null, errs), ok = worst <= q.tol, worstIdx = errs.indexOf(worst);
             tip2.style.display = 'none';
             errs.forEach(function (er, i) {
                 var good = er <= q.tol;
-                list.appendChild(h('div', { 'class': 'grm-row ' + (good ? 'grm-row--ok' : 'grm-row--bad'), text: '齒輪 ' + (i + 1) + '（' + teeth[i] + ' 齒）：差 ' + deg4(er) + ' 度' }));
-                hands[i].firstChild.setAttribute('class', 'grm-needle ' + (good ? 'grm-needle--ok' : 'grm-needle--bad'));
+                list.appendChild(h('div', { 'class': 'gearmark-row ' + (good ? 'gearmark-row--ok' : 'gearmark-row--bad'), text: '齒輪 ' + (i + 1) + '（' + teeth[i] + ' 齒）：差 ' + deg4(er) + ' 度' }));
+                hands[i].firstChild.setAttribute('class', 'gearmark-needle ' + (good ? 'gearmark-needle--ok' : 'gearmark-needle--bad'));
             });
             if (ok) {
-                stage.classList.add('grm-flash');
+                stage.classList.add('gearmark-flash');
                 kit.flash(stage, true, api.my);
                 api.pass({ delay: 2000 });
                 return;

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_danmaku.js — 秒反應・彈幕找字（企劃 346）
+   樣式：css/games/reaction_danmaku.css（這款專屬的 class 一律以「danmaku-」開頭；共用元件在 css/reaction_common.css）
    很多字從右往左飄過畫面（像影片上的彈幕），速度不一樣、有大有小。上方寫目標字「末」。**看到「末」就點它**，
    點錯（點到「未、木、本」）就結束；讓「末」飄出畫面也結束。成績＝點到幾個（越多越好）。
    ───────────────────────────────────────────────────────────────────
@@ -74,7 +75,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 12, stageClass: 'dmk-stage', resume: false,
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 12, stageClass: 'danmaku-stage', resume: false,
             head: function () { return '彈幕找字'; },
             info: function (S) { return '點到 ' + S.score + ' 個'; },
             scoreOf: function (S) { return S.score; },
@@ -92,12 +93,12 @@
         S.score = 0; api.setInfo('點到 0 個');
         console.log('[彈幕找字] 目標「' + seg.target + '」，干擾 ' + seg.mates.join(''));
 
-        var field = h('div', { 'class': 'dmk-field' });
+        var field = h('div', { 'class': 'danmaku-field' });
         stage.appendChild(field);
-        var goal = h('div', { 'class': 'dmk-goal' }, [h('span', { 'class': 'dmk-goal__t', text: '目標：' }), h('span', { 'class': 'dmk-goal__ch', text: seg.target })]);
+        var goal = h('div', { 'class': 'danmaku-goal' }, [h('span', { 'class': 'danmaku-goal__t', text: '目標：' }), h('span', { 'class': 'danmaku-goal__ch', text: seg.target })]);
         field.appendChild(goal);
-        var info = h('div', { 'class': 'qz-note dmk-info', text: '' }); field.appendChild(info);
-        var arena = h('div', { 'class': 'dmk-arena' }); field.appendChild(arena);
+        var info = h('div', { 'class': 'qz-note danmaku-info', text: '' }); field.appendChild(info);
+        var arena = h('div', { 'class': 'danmaku-arena' }); field.appendChild(arena);
         var carry = 0, last = null;
         if (kit.once('danmaku.hint')) kit.hintOn(stage, null, { mode: 'tap', x: W * 0.5, y: H * 0.5, delay: 1200, text: '看到目標字就點它' });
         api.my.loop(function (now, dt) {
@@ -118,7 +119,7 @@
         function spawn() {
             var data = makeItem(hits, seg, since, api.rand);
             since = data.isTarget ? 0 : since + 1;
-            var el = h('div', { 'class': 'dmk-ch', text: data.ch }); el.style.cssText = 'width:' + data.size + 'px;height:' + data.size + 'px;font-size:' + Math.round(data.size * 0.86) + 'px;line-height:' + data.size + 'px;';
+            var el = h('div', { 'class': 'danmaku-ch', text: data.ch }); el.style.cssText = 'width:' + data.size + 'px;height:' + data.size + 'px;font-size:' + Math.round(data.size * 0.86) + 'px;line-height:' + data.size + 'px;';
             arena.appendChild(el);
             var y = 60 + data.lane * (H - 120 - data.size / 2) + data.size / 2;
             items.push({ el: el, data: data, x: W + data.size, y: y });
@@ -132,7 +133,7 @@
         function take(i) {
             var it = items[i];
             if (!it.data.isTarget) { wrong(it); return; }
-            items.splice(i, 1); it.el.classList.add('dmk-ch--pop'); api.after(260, function () { it.el.remove(); });
+            items.splice(i, 1); it.el.classList.add('danmaku-ch--pop'); api.after(260, function () { it.el.remove(); });
             hits++; S.score = hits; api.setInfo('點到 ' + hits + ' 個'); Sfx.play('pop');
             if (hits % SEGMENT === 0) newTarget();
         }
@@ -140,14 +141,14 @@
         function newTarget() {
             paused = true; items.forEach(function (it) { it.el.remove(); }); items = [];
             seg = pickTarget(hits, api.rand, seg.target); since = 0; carry = 0;
-            info.textContent = '換目標字！新的是「' + seg.target + '」'; goal.querySelector('.dmk-goal__ch').textContent = seg.target; goal.classList.add('dmk-goal--new');
-            api.after(INTERMISSION_MS, function () { paused = false; info.textContent = ''; goal.classList.remove('dmk-goal--new'); });
+            info.textContent = '換目標字！新的是「' + seg.target + '」'; goal.querySelector('.danmaku-goal__ch').textContent = seg.target; goal.classList.add('danmaku-goal--new');
+            api.after(INTERMISSION_MS, function () { paused = false; info.textContent = ''; goal.classList.remove('danmaku-goal--new'); });
         }
         /* 結束：暫停，畫面上所有目標字圈綠色；點錯的字圈紅色 */
         function finish(msg, bad) {
             over = true;
-            items.forEach(function (it) { it.el.classList.add(it.data.isTarget ? 'dmk-ch--target' : 'dmk-ch--dim'); });
-            if (bad) bad.el.classList.add('dmk-ch--bad');
+            items.forEach(function (it) { it.el.classList.add(it.data.isTarget ? 'danmaku-ch--target' : 'danmaku-ch--dim'); });
+            if (bad) bad.el.classList.add('danmaku-ch--bad');
             info.textContent = msg;
             kit.flash(stage, false, api.my);
             api.fail({ delay: 3000, lines: [msg, '目標字是「' + seg.target + '」，形近字：' + seg.group.join('、')] });

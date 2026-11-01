@@ -1,0 +1,63 @@
+/* ═══════════════════════════════════════
+   reaction_euler.css — 能一筆畫嗎（js/reaction_euler.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「euler-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 062 能一筆畫嗎（.euler-）═══ */
+.euler-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.euler-edge {
+    stroke: var(--c-ink);
+    stroke-width: 7;
+    stroke-linecap: round;
+    transition: stroke 0.15s ease;
+}
+
+/* 評審動畫（V1.28）：粗綠線＋黑色箭頭＝一筆畫的路線；粗紅色虛線＝必須重複走的線 */
+.euler-route {
+    stroke: var(--c-green);
+    stroke-width: 9;
+    stroke-linecap: round;
+    fill: none;
+}
+
+.euler-route--rep {
+    stroke: var(--c-bad-light);
+    stroke-dasharray: 14 10;
+    stroke-linecap: butt;
+}
+
+.euler-arrow {
+    fill: var(--c-black);
+}
+
+.euler-edge--path {
+    stroke: var(--c-green);
+}
+
+.euler-node {
+    fill: var(--c-card);
+    stroke: var(--c-ink);
+    stroke-width: 4;
+}
+
+.euler-node--odd {
+    fill: var(--c-bad-light);
+}
+
+.euler-msg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    line-height: var(--lh-body);
+}

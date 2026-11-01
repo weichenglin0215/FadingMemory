@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_ordercut.js — 秒反應・照號切水果（企劃 377）
+   樣式：css/games/reaction_ordercut.css（這款專屬的 class 一律以「ordercut-」開頭；共用元件在 css/reaction_common.css）
    一堆水果拋上來，每顆上面寫一個數字（1、2、3…）。**照號碼順序一顆一顆切**（用手指在畫面上劃過去）：先切 1、再切 2……
    **切錯順序就結束**，水果掉到畫面下面還沒被切到也結束。
    ───────────────────────────────────────────────────────────────────
@@ -39,7 +40,7 @@
     var HIT_PAD = 8;                            /* 手指劃過去離水果邊緣這麼近也算切到（px） */
     var LEAD_S = 0.8;                           /* 開場等多久才拋第一顆（秒） */
     var MAX_LEVEL = 90;
-    var FRUITS = 6;                             /* 水果的顏色種數（CSS 的 ocf-f0～5） */
+    var FRUITS = 6;                             /* 水果的顏色種數（CSS 的 ordercut-f0～5） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair, maxLevel) { return kit.ramp(level, pair[0], pair[1], maxLevel == null ? RAMP_LEVELS : maxLevel); }
@@ -132,7 +133,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'ocf-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'ordercut-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -147,17 +148,17 @@
         console.log('[照號切水果] 第 ' + level + ' 關：' + (q.expr ? '算式' : '數字') + '、' + q.N + ' 顆；飛行 ' + q.flight + ' 秒；計畫切的時間 ' + q.plan.map(function (v) { return v.toFixed(1); }).join('、') + '；混亂度 ' + chaosFor(level));
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, R = radiusFor(level, W), geom = { W: W, H: H, R: R };
-        var field = h('div', { 'class': 'ocf-field' });
+        var field = h('div', { 'class': 'ordercut-field' });
         stage.appendChild(field);
-        var tip = h('div', { 'class': 'qz-note ocf-tip', text: q.expr ? '照答案由小到大，一顆一顆切！' : (level === 1 ? '照號碼 1、2、3… 的順序，用手指劃過去切！' : '照號碼順序切（6 和 9 看底線）') });
+        var tip = h('div', { 'class': 'qz-note ordercut-tip', text: q.expr ? '照答案由小到大，一顆一顆切！' : (level === 1 ? '照號碼 1、2、3… 的順序，用手指劃過去切！' : '照號碼順序切（6 和 9 看底線）') });
         field.appendChild(tip);
-        var next = h('div', { 'class': 'ocf-next', text: '下一個：' + (q.expr ? '最小的' : '1') }); field.appendChild(next);
-        var svg = kit.svg('svg', { 'class': 'ocf-trail', width: W, height: H, viewBox: '0 0 ' + W + ' ' + H }, field), trail = kit.svg('polyline', { 'class': 'ocf-trail__l', points: '' }, svg);
+        var next = h('div', { 'class': 'ordercut-next', text: '下一個：' + (q.expr ? '最小的' : '1') }); field.appendChild(next);
+        var svg = kit.svg('svg', { 'class': 'ordercut-trail', width: W, height: H, viewBox: '0 0 ' + W + ' ' + H }, field), trail = kit.svg('polyline', { 'class': 'ordercut-trail__l', points: '' }, svg);
         var els = q.fruits.map(function (f, i) {
-            var el = h('div', { 'class': 'ocf-fruit ocf-f' + f.color + (q.expr ? ' ocf-fruit--expr' : '') });
+            var el = h('div', { 'class': 'ordercut-fruit ordercut-f' + f.color + (q.expr ? ' ordercut-fruit--expr' : '') });
             el.style.cssText = 'width:' + 2 * R + 'px;height:' + 2 * R + 'px;display:none;';
-            el.appendChild(h('div', { 'class': 'ocf-leaf' }));
-            el.appendChild(h('div', { 'class': 'ocf-label', text: f.label }));
+            el.appendChild(h('div', { 'class': 'ordercut-leaf' }));
+            el.appendChild(h('div', { 'class': 'ordercut-label', text: f.label }));
             field.appendChild(el); return el;
         });
         var state = q.fruits.map(function () { return 'wait'; });       /* 'wait'（還沒拋）｜'fly'（在空中）｜'cut'（已切）｜'gone'（掉出去了） */
@@ -213,7 +214,7 @@
         function cutFruit(i) {
             state[i] = 'cut'; nextRank++; Sfx.play('click');
             var p = posOf[i] || fruitPos(q.fruits[i], nowT(), geom); els[i].style.display = 'none';
-            if (p) [-1, 1].forEach(function (s) { var half = h('div', { 'class': 'ocf-half ocf-f' + q.fruits[i].color + (s < 0 ? ' ocf-half--l' : ' ocf-half--r') }); half.style.cssText = 'width:' + R + 'px;height:' + 2 * R + 'px;left:' + (p.x - (s < 0 ? R : 0)).toFixed(1) + 'px;top:' + (p.y - R).toFixed(1) + 'px;'; field.appendChild(half); api.after(30, function () { half.style.transform = 'translate(' + (s * 40) + 'px,60px) rotate(' + (s * 40) + 'deg)'; half.style.opacity = '0'; }); api.after(700, function () { if (half.parentNode) half.parentNode.removeChild(half); }); });
+            if (p) [-1, 1].forEach(function (s) { var half = h('div', { 'class': 'ordercut-half ordercut-f' + q.fruits[i].color + (s < 0 ? ' ordercut-half--l' : ' ordercut-half--r') }); half.style.cssText = 'width:' + R + 'px;height:' + 2 * R + 'px;left:' + (p.x - (s < 0 ? R : 0)).toFixed(1) + 'px;top:' + (p.y - R).toFixed(1) + 'px;'; field.appendChild(half); api.after(30, function () { half.style.transform = 'translate(' + (s * 40) + 'px,60px) rotate(' + (s * 40) + 'deg)'; half.style.opacity = '0'; }); api.after(700, function () { if (half.parentNode) half.parentNode.removeChild(half); }); });
             next.textContent = nextRank > q.N ? '全部切完！' : '下一個：' + (q.expr ? '第 ' + nextRank + ' 小的' : q.fruits[nextRank - 1].label);
         }
         function win() {
@@ -222,7 +223,7 @@
         }
         function wrongCut(id) { fail('wrong', q.fruits[id], id); }
         function lost(i) { fail('lost', q.fruits[i], i); }
-        function info(text, ok) { var el = h('div', { 'class': 'qz-note ocf-info ' + (ok ? 'ocf-info--ok' : 'ocf-info--bad'), text: text }); field.appendChild(el); }
+        function info(text, ok) { var el = h('div', { 'class': 'qz-note ordercut-info ' + (ok ? 'ordercut-info--ok' : 'ordercut-info--bad'), text: text }); field.appendChild(el); }
         /* 結束：所有水果停在空中，每顆標上「第幾個要切」，切錯的標紅、本來該切的標綠 */
         function fail(kind, got, gotId) {
             if (phase !== 'play' || api.over) return; phase = 'end'; tFreeze = nowT();
@@ -231,8 +232,8 @@
                 if (state[i] === 'cut' || state[i] === 'gone') return;                    /* 已經切掉的、掉出去的不畫 */
                 var p = fruitPos(f, tFreeze, geom); if (!p || !onScreen(p, geom)) return;
                 els[i].style.display = 'block'; els[i].style.transform = 'translate3d(' + (p.x - R).toFixed(1) + 'px,' + (p.y - R).toFixed(1) + 'px,0) rotate(0deg)';
-                var b = h('div', { 'class': 'ocf-badge' + (i === gotId && kind === 'wrong' ? ' ocf-badge--bad' : (f.rank === nextRank ? ' ocf-badge--ok' : '')), text: '第 ' + f.rank + (q.expr ? '＝' + f.value : '') }); b.style.cssText = 'left:' + (p.x - 36).toFixed(1) + 'px;top:' + (p.y + R * 0.4).toFixed(1) + 'px;'; field.appendChild(b);
-                if (i === gotId && kind === 'wrong') els[i].classList.add('ocf-fruit--bad'); else if (f.rank === nextRank) els[i].classList.add('ocf-fruit--ok');
+                var b = h('div', { 'class': 'ordercut-badge' + (i === gotId && kind === 'wrong' ? ' ordercut-badge--bad' : (f.rank === nextRank ? ' ordercut-badge--ok' : '')), text: '第 ' + f.rank + (q.expr ? '＝' + f.value : '') }); b.style.cssText = 'left:' + (p.x - 36).toFixed(1) + 'px;top:' + (p.y + R * 0.4).toFixed(1) + 'px;'; field.appendChild(b);
+                if (i === gotId && kind === 'wrong') els[i].classList.add('ordercut-fruit--bad'); else if (f.rank === nextRank) els[i].classList.add('ordercut-fruit--ok');
             });
             if (kind === 'lost') { els[gotId].style.display = 'none'; }
             info(why, false); kit.flash(stage, false, api.my);

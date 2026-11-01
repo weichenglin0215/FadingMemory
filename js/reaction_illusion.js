@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_illusion.js — 秒反應・錯覺大師
+   樣式：css/games/reaction_illusion.css（這款專屬的 class 一律以「illusion-」開頭；共用元件在 css/reaction_common.css）
    兩個圖形比一比，哪個比較長／大／亮？眼睛會騙人，看你能不能不被騙。
    ───────────────────────────────────────────────────────────────────
    · 十一種經典錯覺（原本 5 種，玩家說題目類型太少，V1.24 再加 6 種），全部用 SVG 依參數畫出（長度、半徑、面積、灰階都是精確的數值，所以
@@ -110,7 +111,7 @@
 
     /* 點擊範圍：透明的矩形，蓋在圖形上讓手指好點 */
     function hitRect(svg, x, y, w, hh) {
-        return kit.svg('rect', { 'class': 'il-hit', x: x, y: y, width: w, height: hh, rx: 18 }, svg);
+        return kit.svg('rect', { 'class': 'illusion-hit', x: x, y: y, width: w, height: hh, rx: 18 }, svg);
     }
 
     /* 繆勒－萊爾：兩條一樣長（或差一點）的線，箭尾向外的看起來比較長 */
@@ -123,11 +124,11 @@
             /* 錯覺幫忙：較長的那條用箭尾（向外，看起來更長）；陷阱：較長的那條用箭頭（向內，看起來更短） */
             var tail = q.help ? isBig : !isBig;
             var x1 = cx - L / 2, x2 = cx + L / 2, y = ys[i];
-            kit.svg('line', { 'class': 'il-line', x1: x1, y1: y, x2: x2, y2: y }, svg);
+            kit.svg('line', { 'class': 'illusion-line', x1: x1, y1: y, x2: x2, y2: y }, svg);
             [[x1, -1], [x2, 1]].forEach(function (e) {
                 var dir = tail ? 1 : -1;     /* tail：翼往外；arrow：翼往內 */
                 [-1, 1].forEach(function (s) {
-                    kit.svg('line', { 'class': 'il-line', x1: e[0], y1: y, x2: e[0] + e[1] * dir * fin, y2: y + s * fin }, svg);
+                    kit.svg('line', { 'class': 'illusion-line', x1: e[0], y1: y, x2: e[0] + e[1] * dir * fin, y2: y + s * fin }, svg);
                 });
             });
             hits.push(hitRect(svg, cx - L / 2 - fin - 10, y - 62, L + fin * 2 + 20, 124));
@@ -136,7 +137,7 @@
             hits: hits,
             guides: function (g) {
                 var small = 1 - q.big, L = q.v[small];
-                [cx - L / 2, cx + L / 2].forEach(function (x) { kit.svg('line', { 'class': 'il-guide', x1: x, y1: ys[0] - 50, x2: x, y2: ys[1] + 50 }, g); });
+                [cx - L / 2, cx + L / 2].forEach(function (x) { kit.svg('line', { 'class': 'illusion-guide', x1: x, y1: ys[0] - 50, x2: x, y2: ys[1] + 50 }, g); });
             }
         };
     };
@@ -152,15 +153,15 @@
             var sr = smallSurround ? 9 : 25, d = r + sr + (smallSurround ? 12 : 9);
             for (var k = 0; k < 6; k++) {
                 var a = k * Math.PI / 3 + (i ? Math.PI / 6 : 0);
-                kit.svg('circle', { 'class': 'il-surround', cx: xs[i] + d * Math.cos(a), cy: cy + d * Math.sin(a), r: sr }, svg);
+                kit.svg('circle', { 'class': 'illusion-surround', cx: xs[i] + d * Math.cos(a), cy: cy + d * Math.sin(a), r: sr }, svg);
             }
-            kit.svg('circle', { 'class': 'il-center', cx: xs[i], cy: cy, r: r }, svg);
-            hits.push(kit.svg('circle', { 'class': 'il-hit', cx: xs[i], cy: cy, r: 105 }, svg));
+            kit.svg('circle', { 'class': 'illusion-center', cx: xs[i], cy: cy, r: r }, svg);
+            hits.push(kit.svg('circle', { 'class': 'illusion-hit', cx: xs[i], cy: cy, r: 105 }, svg));
         }
         return {
             hits: hits,
             guides: function (g) {
-                for (var i = 0; i < 2; i++) kit.svg('circle', { 'class': 'il-guide', cx: xs[i], cy: cy, r: q.v[q.big], fill: 'none' }, g);
+                for (var i = 0; i < 2; i++) kit.svg('circle', { 'class': 'illusion-guide', cx: xs[i], cy: cy, r: q.v[q.big], fill: 'none' }, g);
             }
         };
     };
@@ -171,25 +172,25 @@
         var cx = FW / 2, yTop = FH * 0.1, yBot = FH * 0.92;
         var wTop = 40, wBot = 130;     /* 鐵軌在最上／最下的半寬 */
         [-1, 1].forEach(function (s) {
-            kit.svg('line', { 'class': 'il-rail', x1: cx + s * wBot, y1: yBot, x2: cx + s * wTop, y2: yTop }, svg);
+            kit.svg('line', { 'class': 'illusion-rail', x1: cx + s * wBot, y1: yBot, x2: cx + s * wTop, y2: yTop }, svg);
         });
         /* 枕木增加透視感 */
         for (var k = 0; k < 7; k++) {      /* 枕木，增加透視感 */
             var t = k / 6, y = yBot - (yBot - yTop) * (0.04 + 0.96 * t);
             var w = wBot - (wBot - wTop) * ((yBot - y) / (yBot - yTop));
-            kit.svg('line', { 'class': 'il-tie', x1: cx - w - 14, y1: y, x2: cx + w + 14, y2: y }, svg);
+            kit.svg('line', { 'class': 'illusion-tie', x1: cx - w - 14, y1: y, x2: cx + w + 14, y2: y }, svg);
         }
         var ys = [FH * 0.3, FH * 0.7], hits = [];
         for (var i = 0; i < 2; i++) {
             var L = q.v[i];
-            kit.svg('line', { 'class': 'il-bar', x1: cx - L / 2, y1: ys[i], x2: cx + L / 2, y2: ys[i] }, svg);
+            kit.svg('line', { 'class': 'illusion-bar', x1: cx - L / 2, y1: ys[i], x2: cx + L / 2, y2: ys[i] }, svg);
             hits.push(hitRect(svg, cx - 120, ys[i] - 55, 240, 110));
         }
         return {
             hits: hits,
             guides: function (g) {
                 var L = q.v[1 - q.big];
-                [cx - L / 2, cx + L / 2].forEach(function (x) { kit.svg('line', { 'class': 'il-guide', x1: x, y1: ys[0] - 45, x2: x, y2: ys[1] + 45 }, g); });
+                [cx - L / 2, cx + L / 2].forEach(function (x) { kit.svg('line', { 'class': 'illusion-guide', x1: x, y1: ys[0] - 45, x2: x, y2: ys[1] + 45 }, g); });
             }
         };
     };
@@ -199,8 +200,8 @@
     DRAW.vh = function (svg, FW, FH, q) {
         var cx = FW / 2, baseY = FH * 0.74;
         var V = q.v[0], H = q.v[1];
-        kit.svg('line', { 'class': 'il-bar', x1: cx - H / 2, y1: baseY, x2: cx + H / 2, y2: baseY }, svg);
-        kit.svg('line', { 'class': 'il-bar', x1: cx, y1: baseY, x2: cx, y2: baseY - V }, svg);
+        kit.svg('line', { 'class': 'illusion-bar', x1: cx - H / 2, y1: baseY, x2: cx + H / 2, y2: baseY }, svg);
+        kit.svg('line', { 'class': 'illusion-bar', x1: cx, y1: baseY, x2: cx, y2: baseY - V }, svg);
         var hits = [hitRect(svg, cx - 34, baseY - V - 20, 68, V + 20 - 38), hitRect(svg, cx - H / 2 - 12, baseY - 34, H + 24, 68)];
         return { hits: hits, guides: function () { } };
     };
@@ -227,14 +228,14 @@
             var r = q.v[i], isBig = i === q.big;
             /* 錯覺幫忙：較大的圓配「近」的環（看起來更大）；陷阱：較大的圓配「遠」的環 */
             var near = q.help ? isBig : !isBig, ringR = near ? r + 12 : r + 62;
-            kit.svg('circle', { 'class': 'il-ring', cx: xs[i], cy: cy, r: ringR }, svg);
-            kit.svg('circle', { 'class': 'il-center', cx: xs[i], cy: cy, r: r }, svg);
-            hits.push(kit.svg('circle', { 'class': 'il-hit', cx: xs[i], cy: cy, r: ringR + 10 }, svg));
+            kit.svg('circle', { 'class': 'illusion-ring', cx: xs[i], cy: cy, r: ringR }, svg);
+            kit.svg('circle', { 'class': 'illusion-center', cx: xs[i], cy: cy, r: r }, svg);
+            hits.push(kit.svg('circle', { 'class': 'illusion-hit', cx: xs[i], cy: cy, r: ringR + 10 }, svg));
         }
         return {
             hits: hits,
             guides: function (g) {
-                for (var i = 0; i < 2; i++) kit.svg('circle', { 'class': 'il-guide', cx: xs[i], cy: cy, r: q.v[q.big], fill: 'none' }, g);
+                for (var i = 0; i < 2; i++) kit.svg('circle', { 'class': 'illusion-guide', cx: xs[i], cy: cy, r: q.v[q.big], fill: 'none' }, g);
             }
         };
     };
@@ -246,16 +247,16 @@
             var L = q.v[i], isBig = i === q.big, y = ys[i];
             /* 錯覺幫忙：較長的那條有刻度（看起來更長）；陷阱：較長的那條沒有刻度 */
             var divided = q.help ? isBig : !isBig, x1 = cx - L / 2, x2 = cx + L / 2;
-            kit.svg('line', { 'class': 'il-bar', x1: x1, y1: y, x2: x2, y2: y }, svg);
-            [x1, x2].forEach(function (x) { kit.svg('line', { 'class': 'il-line', x1: x, y1: y - 22, x2: x, y2: y + 22 }, svg); });
-            if (divided) for (var k = 1; k < 8; k++) { var x = x1 + L * k / 8; kit.svg('line', { 'class': 'il-line', x1: x, y1: y - 12, x2: x, y2: y + 12 }, svg); }
+            kit.svg('line', { 'class': 'illusion-bar', x1: x1, y1: y, x2: x2, y2: y }, svg);
+            [x1, x2].forEach(function (x) { kit.svg('line', { 'class': 'illusion-line', x1: x, y1: y - 22, x2: x, y2: y + 22 }, svg); });
+            if (divided) for (var k = 1; k < 8; k++) { var x = x1 + L * k / 8; kit.svg('line', { 'class': 'illusion-line', x1: x, y1: y - 12, x2: x, y2: y + 12 }, svg); }
             hits.push(hitRect(svg, x1 - 24, y - 62, L + 48, 124));
         }
         return {
             hits: hits,
             guides: function (g) {
                 var L = q.v[1 - q.big];
-                [cx - L / 2, cx + L / 2].forEach(function (x) { kit.svg('line', { 'class': 'il-guide', x1: x, y1: ys[0] - 50, x2: x, y2: ys[1] + 50 }, g); });
+                [cx - L / 2, cx + L / 2].forEach(function (x) { kit.svg('line', { 'class': 'illusion-guide', x1: x, y1: ys[0] - 50, x2: x, y2: ys[1] + 50 }, g); });
             }
         };
     };
@@ -268,12 +269,12 @@
         for (var i = 0; i < 2; i++) {
             var r = q.v[i], cxi = half * (i + 0.5);
             kit.svg('circle', { cx: cxi, cy: cy, r: r, fill: i === 0 ? '#FFFFFF' : '#111111' }, svg);
-            hits.push(kit.svg('circle', { 'class': 'il-hit', cx: cxi, cy: cy, r: r + 44 }, svg));
+            hits.push(kit.svg('circle', { 'class': 'illusion-hit', cx: cxi, cy: cy, r: r + 44 }, svg));
         }
         return {
             hits: hits,
             guides: function (g) {
-                for (var i = 0; i < 2; i++) kit.svg('circle', { 'class': 'il-guide', cx: half * (i + 0.5), cy: cy, r: q.v[q.big], fill: 'none' }, g);
+                for (var i = 0; i < 2; i++) kit.svg('circle', { 'class': 'illusion-guide', cx: half * (i + 0.5), cy: cy, r: q.v[q.big], fill: 'none' }, g);
             }
         };
     };
@@ -281,16 +282,16 @@
     /* 禮帽：帽子的高度（帽身，選項 0）與帽簷的寬度（選項 1）。垂直的高度看起來比水平的寬度長 */
     DRAW.hat = function (svg, FW, FH, q) {
         var cx = FW / 2, baseY = FH * 0.74, H = q.v[0], Wb = q.v[1], crownW = Wb * 0.56;
-        kit.svg('rect', { 'class': 'il-hat', x: cx - Wb / 2, y: baseY, width: Wb, height: 24, rx: 9 }, svg);                 /* 帽簷 */
-        kit.svg('rect', { 'class': 'il-hat', x: cx - crownW / 2, y: baseY - H, width: crownW, height: H, rx: 12 }, svg);       /* 帽身（從帽簷上緣往上 H） */
-        kit.svg('rect', { 'class': 'il-hatband', x: cx - crownW / 2, y: baseY - 46, width: crownW, height: 28 }, svg);        /* 帽帶 */
+        kit.svg('rect', { 'class': 'illusion-hat', x: cx - Wb / 2, y: baseY, width: Wb, height: 24, rx: 9 }, svg);                 /* 帽簷 */
+        kit.svg('rect', { 'class': 'illusion-hat', x: cx - crownW / 2, y: baseY - H, width: crownW, height: H, rx: 12 }, svg);       /* 帽身（從帽簷上緣往上 H） */
+        kit.svg('rect', { 'class': 'illusion-hatband', x: cx - crownW / 2, y: baseY - 46, width: crownW, height: 28 }, svg);        /* 帽帶 */
         var hits = [hitRect(svg, cx - crownW / 2 - 12, baseY - H - 12, crownW + 24, H - 6), hitRect(svg, cx - Wb / 2 - 12, baseY - 2, Wb + 24, 64)];
         return {
             hits: hits,
             guides: function (g) {
                 /* 揭曉：把帽身的高度與帽簷的寬度各用一條虛線量出來（高度的線畫在右邊、寬度的線畫在下面），長短一比就知道 */
-                kit.svg('line', { 'class': 'il-guide', x1: cx + Wb / 2 + 26, y1: baseY - H, x2: cx + Wb / 2 + 26, y2: baseY }, g);
-                kit.svg('line', { 'class': 'il-guide', x1: cx - Wb / 2, y1: baseY + 52, x2: cx + Wb / 2, y2: baseY + 52 }, g);
+                kit.svg('line', { 'class': 'illusion-guide', x1: cx + Wb / 2 + 26, y1: baseY - H, x2: cx + Wb / 2 + 26, y2: baseY }, g);
+                kit.svg('line', { 'class': 'illusion-guide', x1: cx - Wb / 2, y1: baseY + 52, x2: cx + Wb / 2, y2: baseY + 52 }, g);
             }
         };
     };
@@ -300,14 +301,14 @@
         var cy = FH * 0.5, tall = Math.sqrt(q.v[0] / 2), wide = Math.sqrt(q.v[1] / 2);
         var r0 = { w: tall, h: tall * 2, cx: FW * 0.26 }, r1 = { w: wide * 2, h: wide, cx: FW * 0.73 }, hits = [];
         [r0, r1].forEach(function (r) {
-            kit.svg('rect', { 'class': 'il-rect', x: r.cx - r.w / 2, y: cy - r.h / 2, width: r.w, height: r.h, rx: 6 }, svg);
+            kit.svg('rect', { 'class': 'illusion-rect', x: r.cx - r.w / 2, y: cy - r.h / 2, width: r.w, height: r.h, rx: 6 }, svg);
             hits.push(hitRect(svg, r.cx - r.w / 2 - 14, cy - r.h / 2 - 14, r.w + 28, r.h + 28));
         });
         return {
             hits: hits,
             guides: function (g) {
                 /* 把直的長方形轉 90 度（寬高對調）疊在橫的長方形的位置，虛線框跟橫的實心框一比，面積誰大誰小就看得出來 */
-                kit.svg('rect', { 'class': 'il-guide', x: r1.cx - r0.h / 2, y: cy - r0.w / 2, width: r0.h, height: r0.w, rx: 6 }, g);
+                kit.svg('rect', { 'class': 'illusion-guide', x: r1.cx - r0.h / 2, y: cy - r0.w / 2, width: r0.h, height: r0.w, rx: 6 }, g);
             }
         };
     };
@@ -322,10 +323,10 @@
             var lg = kit.svg('linearGradient', { id: id, x1: 0, y1: 0, x2: 1, y2: 0 }, defs);
             stops.forEach(function (s) { kit.svg('stop', { offset: s[0], 'stop-color': s[1] }, lg); });
         }
-        grad('il-cs-l', [[0, g255(q.v[0])], [1 - F, g255(q.v[0])], [1, g255(q.v[0] + CUSP)]]);      /* 左邊：越靠近交界越亮 */
-        grad('il-cs-r', [[0, g255(q.v[1] - CUSP)], [F, g255(q.v[1])], [1, g255(q.v[1])]]);          /* 右邊：越靠近交界越暗 */
-        kit.svg('rect', { x: 0, y: 0, width: half, height: FH, fill: 'url(#il-cs-l)' }, svg);
-        kit.svg('rect', { x: half, y: 0, width: half, height: FH, fill: 'url(#il-cs-r)' }, svg);
+        grad('illusion-cs-l', [[0, g255(q.v[0])], [1 - F, g255(q.v[0])], [1, g255(q.v[0] + CUSP)]]);      /* 左邊：越靠近交界越亮 */
+        grad('illusion-cs-r', [[0, g255(q.v[1] - CUSP)], [F, g255(q.v[1])], [1, g255(q.v[1])]]);          /* 右邊：越靠近交界越暗 */
+        kit.svg('rect', { x: 0, y: 0, width: half, height: FH, fill: 'url(#illusion-cs-l)' }, svg);
+        kit.svg('rect', { x: half, y: 0, width: half, height: FH, fill: 'url(#illusion-cs-r)' }, svg);
         var hits = [hitRect(svg, 0, 0, half, FH), hitRect(svg, half, 0, half, FH)];
         return { hits: hits, guides: function () { } };
     };
@@ -361,8 +362,8 @@
             /* 時間條 */
             var bar = h('div', { 'class': 'ld-time' }, [h('div', { 'class': 'ld-time__fill' })]);
             var fill = bar.firstChild;
-            var hint = h('div', { 'class': 'il-q', text: '' });
-            var field = h('div', { 'class': 'il-field' });
+            var hint = h('div', { 'class': 'illusion-q', text: '' });
+            var field = h('div', { 'class': 'illusion-field' });
             root.appendChild(hint);
             root.appendChild(field);
             root.appendChild(bar);
@@ -380,7 +381,7 @@
                 var q = makeQuestion(level, null, lastKind, G.dev.kind);
                 if (G.dev.time) q.time = G.dev.time;
                 lastKind = q.kind;
-                var svg = kit.svg('svg', { 'class': 'il-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'none' }, field);
+                var svg = kit.svg('svg', { 'class': 'illusion-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'none' }, field);
                 var d = DRAW[q.kind](svg, FW, FH, q);
                 var gGuides = kit.svg('g', {}, svg);
                 hint.textContent = QTEXT[q.kind];
@@ -402,8 +403,8 @@
                     fill.style.width = '0%';
                     var ok = idx === q.big;
                     d.hits.forEach(function (el, i) {
-                        if (i === q.big) el.classList.add('il-hit--ok');
-                        else if (i === idx) el.classList.add('il-hit--bad');
+                        if (i === q.big) el.classList.add('illusion-hit--ok');
+                        else if (i === idx) el.classList.add('illusion-hit--bad');
                     });
                     /* 揭曉：畫出對齊的輔助線，讓玩家看見真正的長度／大小 */
                     d.guides(gGuides);

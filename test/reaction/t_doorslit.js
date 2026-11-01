@@ -38,9 +38,9 @@ ok(inRange / total > 0.95, '字群的筆劃落在這一關的範圍內');
 { let a = 0, b = 0; for (let i = 0; i < 300; i++) { a += T.makeLevel(1, rnd).answer.split('').reduce((s, c) => s + S.strokes(c), 0); b += T.makeLevel(24, rnd).answer.split('').reduce((s, c) => s + S.strokes(c), 0); } ok(b / 300 > a / 300 + 4, '越後面字的筆劃越多：' + (a / 300).toFixed(1) + ' → ' + (b / 300).toFixed(1)); }
 { const pos = {}; for (let i = 0; i < 300; i++) { const q = T.makeLevel(10, rnd); pos[q.answerIdx] = (pos[q.answerIdx] || 0) + 1; } ok(Object.keys(pos).length === 4 && Math.min(...Object.values(pos)) > 40, '答案的位置平均分布：' + JSON.stringify(pos)); }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_doorslit.js'), css = rd('../../css/reaction6.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 3400/.test(src) && /drawDiff/.test(src) && /dsl-cover--open/.test(src), '失敗：兩片方塊打開、差異筆畫塗紅、停格 2 秒以上');
-  ok(/\.dsl-cover \{[^}]*var\(--c-card\)/.test(css) && /\.dsl-glyph \{[^}]*var\(--c-ink\)/.test(css) && /\.dsl-bad \{[^}]*var\(--c-bad/.test(css), '白色方塊、黑字、紅色用 CSS 變數');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_doorslit.js'), css = rd('../../css/games/reaction_doorslit.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+  ok(/api\.fail\(\{ delay: 3400/.test(src) && /drawDiff/.test(src) && /doorslit-cover--open/.test(src), '失敗：兩片方塊打開、差異筆畫塗紅、停格 2 秒以上');
+  ok(/\.doorslit-cover \{[^}]*var\(--c-card\)/.test(css) && /\.doorslit-glyph \{[^}]*var\(--c-ink\)/.test(css) && /\.doorslit-bad \{[^}]*var\(--c-bad/.test(css), '白色方塊、黑字、紅色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_doorslit.js'") > 0 && /白色方塊/.test(G.rule), 'boot.js 有載入、玩法說明提到白色方塊'); }
 ok(T.rating(2) !== T.rating(4) && T.rating(4) !== T.rating(7) && T.rating(7) !== T.rating(12) && T.rating(12) !== T.rating(20), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

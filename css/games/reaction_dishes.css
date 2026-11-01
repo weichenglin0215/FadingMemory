@@ -1,0 +1,168 @@
+/* ═══════════════════════════════════════
+   reaction_dishes.css — 洗盤子（js/reaction_dishes.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「dishes-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 洗盤子（.dishes-）═══ */
+.dishes-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.dishes-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    touch-action: none;
+}
+
+.dishes-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 盤子放的位置（結束時放大） */
+.dishes-holder {
+    position: absolute;
+    width: 330px;
+    height: 330px;
+    transition: transform 0.4s ease-out;
+    pointer-events: none;
+}
+
+.dishes-holder--big {
+    transform: scale(1.1);
+}
+
+.dishes-svg {
+    display: block;
+    overflow: visible;
+    transition: transform 0.26s ease-in, opacity 0.26s ease-in;
+}
+
+.dishes-svg--in {
+    transform: translateX(-120px);
+    opacity: 0;
+}
+
+.dishes-svg--out {
+    transform: translateX(160px) rotate(12deg);
+    opacity: 0;
+}
+
+.dishes-plate {
+    fill: var(--dsh-plate);
+    stroke: var(--dsh-plate-line);
+    stroke-width: 4;
+}
+
+.dishes-rim {
+    fill: none;
+    stroke: var(--dsh-rim);
+    stroke-width: 3;
+}
+
+/* 花紋：4 種顏色級數，越後面越像污漬的醬油色 */
+.dishes-pat0 {
+    fill: var(--dsh-pat0);
+}
+
+.dishes-pat1 {
+    fill: var(--dsh-pat1);
+}
+
+.dishes-pat2 {
+    fill: var(--dsh-pat2);
+}
+
+.dishes-pat3 {
+    fill: var(--dsh-pat3);
+}
+
+.dishes-pat__stroke {
+    fill: none;
+    stroke-width: 4;
+    stroke-linecap: round;
+}
+
+.dishes-pat0 .dishes-pat__stroke {
+    stroke: var(--dsh-pat0);
+}
+
+.dishes-pat1 .dishes-pat__stroke {
+    stroke: var(--dsh-pat1);
+}
+
+.dishes-pat2 .dishes-pat__stroke {
+    stroke: var(--dsh-pat2);
+}
+
+.dishes-pat3 .dishes-pat__stroke {
+    stroke: var(--dsh-pat3);
+}
+
+/* 污漬：軟軟的、邊緣模糊、形狀不規則（花紋是清楚的） */
+.dishes-spot {
+    fill: var(--dsh-sauce);
+    filter: blur(1.6px);
+}
+
+.dishes-ring {
+    fill: none;
+    stroke: var(--c-bad-light);
+    stroke-width: 5;
+    stroke-dasharray: 10 6;
+}
+
+.dishes-bubble {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    box-sizing: border-box;
+    border: 2px solid var(--dsh-bubble);
+    border-radius: 50%;
+    background: var(--dsh-bubble-fill);
+    pointer-events: none;
+    animation: dishes-pop 0.5s ease-out forwards;
+}
+
+.dishes-bubble--dirt {
+    border-color: var(--dsh-sauce);
+}
+
+@keyframes dishes-pop {
+    from {
+        transform: scale(0.5);
+        opacity: 1;
+    }
+
+    to {
+        transform: scale(1.8) translateY(-14px);
+        opacity: 0;
+    }
+}
+
+.dishes-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    color: var(--c-ok);
+    pointer-events: none;
+}
+
+.dishes-info--end {
+    color: var(--c-bad);
+}

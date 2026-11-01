@@ -1,0 +1,111 @@
+/* ═══════════════════════════════════════
+   reaction_dough.css — 擀水餃皮（js/reaction_dough.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「dough-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 擀水餃皮（.dough-）═══ */
+.dough-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 撒了麵粉的桌面 */
+.dough-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    background-color: var(--dgh-table);
+    background-image: radial-gradient(circle, var(--dgh-flour) 12%, transparent 14%), radial-gradient(circle, var(--dgh-flour) 10%, transparent 12%);
+    background-size: 46px 46px, 31px 31px;
+    background-position: 0 0, 17px 11px;
+    touch-action: none;
+}
+
+.dough-tip {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 8px;
+    padding: 2px var(--sp-3);
+    background: var(--c-card);
+    border: 3px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    text-align: center;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.dough-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+    pointer-events: none;
+}
+
+/* 樣品圓（要擀成這麼大）、「平均大小的圓」（結果時才出現） */
+.dough-sample {
+    fill: none;
+    stroke: var(--dgh-sample);
+    stroke-width: 4;
+    stroke-dasharray: 12 9;
+}
+
+.dough-best {
+    fill: none;
+    stroke: var(--dgh-best);
+    stroke-width: 3;
+    stroke-dasharray: 6 6;
+}
+
+.dough-dough {
+    fill: var(--dgh-dough);
+    stroke: var(--dgh-dough-edge);
+    stroke-width: 4;
+    stroke-linejoin: round;
+}
+
+/* 擀麵棍：跟著手指，方向垂直於擀的方向 */
+.dough-pin {
+    position: absolute;
+    width: 120px;
+    height: 28px;
+    background: linear-gradient(var(--dgh-pin-lite), var(--dgh-pin));
+    border: 3px solid var(--dgh-pin-edge);
+    border-radius: 14px;
+    box-sizing: border-box;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.dough-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}
+
+.dough-info--ok {
+    color: var(--c-ok);
+}
+
+.dough-info--bad {
+    color: var(--c-bad);
+}
+
+.dough-btn {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.dough-btn--off {
+    opacity: 0.45;
+}

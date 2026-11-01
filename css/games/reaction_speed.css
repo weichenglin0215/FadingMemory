@@ -1,0 +1,52 @@
+/* ═══════════════════════════════════════
+   reaction_speed.css — 零秒出手（js/reaction_speed.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「speed-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 遊戲一：零秒出手 ═══
+   .speed-num 是中間那個大大的倒數數字；數字到了 3 秒內會被 js/reaction_speed.js
+   清空文字內容（不是用 CSS 隱藏），所以這裡的樣式只需要管「數字還顯示的時候」
+   長什麼樣子就好。 */
+/* 零秒出手的外層容器 */
+.speed-wrap {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-3);
+}
+
+/* 倒數大數字，tabular-nums 讓每個數字等寬、跳動時不會抖 */
+.speed-num {
+    font-variant-numeric: tabular-nums;
+    font-size: 88px;
+    font-weight: var(--fw-black);
+    color: var(--c-blue);
+    min-height: 1.1em;
+}
+
+/* 倒數低於 4.0000 秒才浮出來的大提示「請在心中默數至 0」（js/reaction_speed.js 在 tick 裡加上 .is-on）：
+   橘色特粗大字，跟藍色的倒數數字區隔開來；平常 opacity 0，但仍占著位置，浮出來時版面不會跳動 */
+.speed-count {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    line-height: var(--lh-tight);
+    color: var(--c-orange);
+    text-align: center;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.speed-count.is-on {
+    opacity: 1;
+    transform: none;
+}
+
+/* 大按鈕 */
+.speed-btn {
+    height: 140px;
+    font-size: var(--fs-xl);
+}

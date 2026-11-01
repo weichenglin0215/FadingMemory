@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_butterfly.js — 秒反應・蝴蝶不對稱（企劃 344）
+   樣式：css/games/reaction_butterfly.css（這款專屬的 class 一律以「butterfly-」開頭；共用元件在 css/reaction_common.css）
    一隻蝴蝶，左右翅膀應該是鏡射對稱的，但**有一個地方不對稱**（一個斑點的大小、一個斑點的顏色、一條紋路的方向）。點那個地方。
    ───────────────────────────────────────────────────────────────────
    · 蝴蝶怎麼畫：先在右翅膀（以身體中線 x ＝ CENTER 為對稱軸，右邊）隨機放斑點與紋路，左翅膀就是同樣的東西左右翻過來
@@ -108,7 +109,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'btf-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'butterfly-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -119,14 +120,14 @@
     /* 畫一邊翅膀（右邊）：兩片翅膀、斑點、紋路；mods 是要套在這一邊的修改（只有被改的那一邊才有）。回傳畫好的 <g> */
     function drawWing(parent, q, mod) {
         var g = kit.svg('g', {}, parent), el = wingElements(q, mod);
-        kit.svg('path', { 'class': 'btf-wing', d: 'M200,140 C232,18 372,18 388,112 C394,152 300,162 200,150 Z' }, g);
-        kit.svg('path', { 'class': 'btf-wing btf-wing--low', d: 'M200,150 C300,162 348,192 332,244 C320,288 244,282 200,192 Z' }, g);
+        kit.svg('path', { 'class': 'butterfly-wing', d: 'M200,140 C232,18 372,18 388,112 C394,152 300,162 200,150 Z' }, g);
+        kit.svg('path', { 'class': 'butterfly-wing butterfly-wing--low', d: 'M200,150 C300,162 348,192 332,244 C320,288 244,282 200,192 Z' }, g);
         el.stripes.forEach(function (s) {
             var a = s.ang * Math.PI / 180, dx = Math.cos(a) * s.len / 2, dy = Math.sin(a) * s.len / 2;
-            kit.svg('line', { 'class': 'btf-stripe', x1: s.x - dx, y1: s.y - dy, x2: s.x + dx, y2: s.y + dy }, g);
+            kit.svg('line', { 'class': 'butterfly-stripe', x1: s.x - dx, y1: s.y - dy, x2: s.x + dx, y2: s.y + dy }, g);
         });
         el.spots.forEach(function (s) {
-            var c = kit.svg('circle', { 'class': 'btf-spot btf-c--' + COLORS[s.c], cx: s.x, cy: s.y, r: s.r }, g);
+            var c = kit.svg('circle', { 'class': 'butterfly-spot butterfly-c--' + COLORS[s.c], cx: s.x, cy: s.y, r: s.r }, g);
             if (s.hue) c.style.filter = 'hue-rotate(' + s.hue + 'deg) brightness(' + (1 + (s.hue > 0 ? 0.12 : -0.12)) + ')';
         });
         return g;
@@ -139,20 +140,20 @@
         console.log('[蝴蝶不對稱] 第 ' + level + ' 關：斑點 ' + q.spots.length + '、紋路 ' + q.stripes.length + '；差異＝' + describeMod(m) + '（第 ' + m.index + ' 個，改在' + (m.side === 'R' ? '右' : '左') + '邊）；歪斜 ' + q.tilt.toFixed(1) + '°；限時 ' + q.timeMs + ' 毫秒');
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, BW = Math.min(W - 16, 460), BH = Math.round(BW * VB.h / VB.w), scale = BW / VB.w;
-        var field = h('div', { 'class': 'btf-field' });
+        var field = h('div', { 'class': 'butterfly-field' });
         stage.appendChild(field);
-        field.appendChild(h('div', { 'class': 'qz-note btf-tip', text: '左右翅膀哪裡不一樣？點那個地方' }));
-        var svg = kit.svg('svg', { 'class': 'btf-svg', viewBox: '0 0 ' + VB.w + ' ' + VB.h, width: BW, height: BH }, field);
+        field.appendChild(h('div', { 'class': 'qz-note butterfly-tip', text: '左右翅膀哪裡不一樣？點那個地方' }));
+        var svg = kit.svg('svg', { 'class': 'butterfly-svg', viewBox: '0 0 ' + VB.w + ' ' + VB.h, width: BW, height: BH }, field);
         svg.style.cssText = 'left:' + Math.round((W - BW) / 2) + 'px;top:80px;';
         var tilt = kit.svg('g', { transform: 'rotate(' + q.tilt.toFixed(2) + ' ' + CENTER + ' ' + VB.h / 2 + ')' }, svg);
         /* 右翅膀（可能被改）、左翅膀（右翅膀左右翻過來；可能被改）、身體和觸角 */
         drawWing(tilt, q, m.side === 'R' ? m : null);
         var gl = kit.svg('g', { transform: 'translate(' + 2 * CENTER + ',0) scale(-1,1)' }, tilt);
         drawWing(gl, q, m.side === 'L' ? m : null);
-        kit.svg('ellipse', { 'class': 'btf-body', cx: CENTER, cy: 150, rx: 8, ry: 74 }, tilt);
-        kit.svg('path', { 'class': 'btf-antenna', d: 'M196,80 Q184,50 170,40 M204,80 Q216,50 230,40' }, tilt);
+        kit.svg('ellipse', { 'class': 'butterfly-body', cx: CENTER, cy: 150, rx: 8, ry: 74 }, tilt);
+        kit.svg('path', { 'class': 'butterfly-antenna', d: 'M196,80 Q184,50 170,40 M204,80 Q216,50 230,40' }, tilt);
         var overlay = kit.svg('g', {}, tilt);
-        var info = h('div', { 'class': 'qz-note btf-info', text: '' }); info.style.top = (80 + BH + 12) + 'px'; field.appendChild(info);
+        var info = h('div', { 'class': 'qz-note butterfly-info', text: '' }); info.style.top = (80 + BH + 12) + 'px'; field.appendChild(info);
         var done = false;
         api.timer(q.timeMs, function () { judge(null); });
         if (level === 1 && kit.once('butterfly.hint')) { var t = modTarget(q), side = m.side === 'R' ? t.right : t.left; kit.hintOn(stage, null, { mode: 'tap', x: Math.round((W - BW) / 2) + side.x * scale, y: 80 + side.y * scale, delay: 1500, text: '請點不對稱的地方' }); }
@@ -165,9 +166,9 @@
             done = true;
             var ok = pt != null && isHit(q, pt.x, pt.y), t = modTarget(q);
             /* 揭曉：左翅膀翻過去，半透明地疊在右翅膀上（左翅膀本身留在原地），不一樣的地方會出現「重影」，並閃紅圈 */
-            var ghost = drawWing(overlay, q, m.side === 'L' ? m : null); ghost.setAttribute('class', 'btf-ghost');
-            [t.right, t.left].forEach(function (s) { kit.svg('circle', { 'class': 'btf-ring', cx: s.x, cy: s.y, r: s.r + 10 }, overlay); });
-            if (pt) kit.svg('circle', { 'class': 'btf-tap ' + (ok ? 'btf-tap--ok' : 'btf-tap--bad'), cx: untilt(pt.x, pt.y, q.tilt).x, cy: untilt(pt.x, pt.y, q.tilt).y, r: 14 }, overlay);
+            var ghost = drawWing(overlay, q, m.side === 'L' ? m : null); ghost.setAttribute('class', 'butterfly-ghost');
+            [t.right, t.left].forEach(function (s) { kit.svg('circle', { 'class': 'butterfly-ring', cx: s.x, cy: s.y, r: s.r + 10 }, overlay); });
+            if (pt) kit.svg('circle', { 'class': 'butterfly-tap ' + (ok ? 'butterfly-tap--ok' : 'butterfly-tap--bad'), cx: untilt(pt.x, pt.y, q.tilt).x, cy: untilt(pt.x, pt.y, q.tilt).y, r: 14 }, overlay);
             info.textContent = (ok ? '找到了！' : (pt ? '點錯了，' : '時間到！')) + describeMod(m);
             kit.flash(stage, ok, api.my);
             if (ok) { api.pass({ delay: 1800 }); return; }

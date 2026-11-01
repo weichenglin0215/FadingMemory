@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_pearls.js — 秒反應・吸珍珠（企劃 370）
+   樣式：css/games/reaction_pearls.css（這款專屬的 class 一律以「pearls-」開頭；共用元件在 css/reaction_common.css）
    一杯珍珠奶茶。上方寫「吸 N 顆珍珠」。**按住吸管開始吸，珍珠一顆一顆（有時一串好幾顆擠在一起）沿著吸管往上衝，放手就停**。
    **剛好吸到 N 顆（珍珠衝到最上面、進到嘴裡的才算）就過關**；放手時多了或少了都失敗。每關只有「一次按住」，放手就是最後的答案。
    ───────────────────────────────────────────────────────────────────
@@ -98,7 +99,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'prl-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'pearls-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -113,24 +114,24 @@
         console.log('[吸珍珠] 第 ' + level + ' 關：吸 ' + q.n + ' 顆（共 ' + q.total + ' 顆，分成 ' + q.clusters.join('、') + '）；放手窗口 ' + q.winStart.toFixed(3) + '～' + q.winEnd.toFixed(3) + ' 秒（' + (q.winEnd - q.winStart).toFixed(3) + ' 秒）');
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        var field = h('div', { 'class': 'prl-field' });
+        var field = h('div', { 'class': 'pearls-field' });
         stage.appendChild(field);
-        var goal = h('div', { 'class': 'prl-goal' });
-        goal.appendChild(h('span', { 'class': 'prl-goal__t', text: '吸 ' })); goal.appendChild(h('span', { 'class': 'prl-goal__n', text: String(q.n) })); goal.appendChild(h('span', { 'class': 'prl-goal__t', text: ' 顆珍珠' }));
+        var goal = h('div', { 'class': 'pearls-goal' });
+        goal.appendChild(h('span', { 'class': 'pearls-goal__t', text: '吸 ' })); goal.appendChild(h('span', { 'class': 'pearls-goal__n', text: String(q.n) })); goal.appendChild(h('span', { 'class': 'pearls-goal__t', text: ' 顆珍珠' }));
         field.appendChild(goal);
         var cx = Math.round(W / 2), strawTop = 118, cupTop = Math.round(H * 0.5), strawBot = cupTop + 36, L = strawBot - strawTop, SW = 46, PD = 30;
         /* 嘴（吸管上端）：珍珠衝到這裡就進嘴裡 */
-        var mouth = h('div', { 'class': 'prl-mouth' }); mouth.style.cssText = 'left:' + (cx - 54) + 'px;top:' + (strawTop - 56) + 'px;'; field.appendChild(mouth);
+        var mouth = h('div', { 'class': 'pearls-mouth' }); mouth.style.cssText = 'left:' + (cx - 54) + 'px;top:' + (strawTop - 56) + 'px;'; field.appendChild(mouth);
         /* 杯子：透明的杯身、奶茶、杯底一堆珍珠（裝飾） */
-        var cup = h('div', { 'class': 'prl-cup' }); cup.style.cssText = 'left:' + (cx - 118) + 'px;top:' + cupTop + 'px;width:236px;height:' + Math.round(H * 0.24) + 'px;'; field.appendChild(cup);
-        var tea = h('div', { 'class': 'prl-tea' }); cup.appendChild(tea);
-        for (var d = 0; d < 26; d++) { var dp = h('div', { 'class': 'prl-deco' }); dp.style.cssText = 'left:' + Math.round(10 + api.rand() * 196) + 'px;bottom:' + Math.round(4 + api.rand() * 38) + 'px;'; cup.appendChild(dp); }
+        var cup = h('div', { 'class': 'pearls-cup' }); cup.style.cssText = 'left:' + (cx - 118) + 'px;top:' + cupTop + 'px;width:236px;height:' + Math.round(H * 0.24) + 'px;'; field.appendChild(cup);
+        var tea = h('div', { 'class': 'pearls-tea' }); cup.appendChild(tea);
+        for (var d = 0; d < 26; d++) { var dp = h('div', { 'class': 'pearls-deco' }); dp.style.cssText = 'left:' + Math.round(10 + api.rand() * 196) + 'px;bottom:' + Math.round(4 + api.rand() * 38) + 'px;'; cup.appendChild(dp); }
         /* 吸管：從杯子裡一直伸到嘴 */
-        var straw = h('div', { 'class': 'prl-straw' }); straw.style.cssText = 'left:' + (cx - SW / 2) + 'px;top:' + strawTop + 'px;width:' + SW + 'px;height:' + L + 'px;'; field.appendChild(straw);
-        var pearls = q.arrive.map(function (a, i) { var p = h('div', { 'class': 'prl-pearl' }); p.style.cssText = 'left:' + (cx - PD / 2) + 'px;width:' + PD + 'px;height:' + PD + 'px;display:none;'; field.appendChild(p); return p; });
-        var infoTop = cupTop + Math.round(H * 0.24) + 8, info = h('div', { 'class': 'qz-note prl-info', text: level === 1 ? '按住吸，數珍珠，剛好就放手！' : '按住吸、邊吸邊數、剛好就放手' }); info.style.top = infoTop + 'px'; field.appendChild(info);
-        var row = h('div', { 'class': 'prl-row' }); row.style.cssText = 'display:none;top:' + (cupTop + 46) + 'px;'; field.appendChild(row);
-        var holdEl = h('div', { 'class': 'prl-hold', text: '按住 吸' }); field.appendChild(holdEl);
+        var straw = h('div', { 'class': 'pearls-straw' }); straw.style.cssText = 'left:' + (cx - SW / 2) + 'px;top:' + strawTop + 'px;width:' + SW + 'px;height:' + L + 'px;'; field.appendChild(straw);
+        var pearls = q.arrive.map(function (a, i) { var p = h('div', { 'class': 'pearls-pearl' }); p.style.cssText = 'left:' + (cx - PD / 2) + 'px;width:' + PD + 'px;height:' + PD + 'px;display:none;'; field.appendChild(p); return p; });
+        var infoTop = cupTop + Math.round(H * 0.24) + 8, info = h('div', { 'class': 'qz-note pearls-info', text: level === 1 ? '按住吸，數珍珠，剛好就放手！' : '按住吸、邊吸邊數、剛好就放手' }); info.style.top = infoTop + 'px'; field.appendChild(info);
+        var row = h('div', { 'class': 'pearls-row' }); row.style.cssText = 'display:none;top:' + (cupTop + 46) + 'px;'; field.appendChild(row);
+        var holdEl = h('div', { 'class': 'pearls-hold', text: '按住 吸' }); field.appendChild(holdEl);
         if (level === 1 && kit.once('pearls.hint')) kit.hintOn(stage, holdEl, { mode: 'hold', delay: 700, text: '按住吸，剛好就放手' });
 
         var phase = 'wait', tDown = 0, T = 0, ticked = 0, ctl = null, held = false;
@@ -144,7 +145,7 @@
         paint(0);
         /* 開始吸：從按下去的那一刻起算「按住時間」T；每一格影格重畫珍珠、數到新的一顆就「咕嚕」一聲 */
         function begin() {
-            phase = 'suck'; tDown = performance.now(); holdEl.classList.add('prl-hold--down'); mouth.classList.add('prl-mouth--suck'); straw.classList.add('prl-straw--suck'); api.stopTimer();
+            phase = 'suck'; tDown = performance.now(); holdEl.classList.add('pearls-hold--down'); mouth.classList.add('pearls-mouth--suck'); straw.classList.add('pearls-straw--suck'); api.stopTimer();
             api.my.loop(function (now) {
                 if (phase !== 'suck' || !stage.isConnected) return false;
                 T = (now - tDown) / 1000; paint(T);
@@ -160,27 +161,27 @@
             up: function () { if (phase === 'suck') release('up'); }
         });
         api.my.onDispose(function () { ctl.destroy(); });
-        api.timer(PRESS_LIMIT_S * 1000, function () { if (phase === 'wait') { phase = 'end'; info.textContent = '一直沒有吸！時間到了'; info.classList.add('prl-info--bad'); kit.flash(stage, false, api.my); api.fail({ delay: 2800, lines: ['一直沒有按住吸管', '目標是吸 ' + q.n + ' 顆珍珠'] }); } });
+        api.timer(PRESS_LIMIT_S * 1000, function () { if (phase === 'wait') { phase = 'end'; info.textContent = '一直沒有吸！時間到了'; info.classList.add('pearls-info--bad'); kit.flash(stage, false, api.my); api.fail({ delay: 2800, lines: ['一直沒有按住吸管', '目標是吸 ' + q.n + ' 顆珍珠'] }); } });
 
         /* 放手（或珍珠全部衝完）：用「放手那一刻的按住時間」判定 */
         function release(reason) {
             if (phase !== 'suck') return;
             T = (performance.now() - tDown) / 1000; if (reason === 'auto') T = q.arrive[q.total - 1] + END_GRACE;
             phase = 'end'; paint(T);
-            holdEl.classList.remove('prl-hold--down'); mouth.classList.remove('prl-mouth--suck'); straw.classList.remove('prl-straw--suck');
+            holdEl.classList.remove('pearls-hold--down'); mouth.classList.remove('pearls-mouth--suck'); straw.classList.remove('pearls-straw--suck');
             var r = judgeRelease(q, T), why = whyText(r, q);
             info.textContent = why;
             showRow(r);
-            if (r.result === 'ok') { info.classList.add('prl-info--ok'); kit.flash(stage, true, api.my); api.pass({ delay: 2000 }); return; }
-            info.classList.add('prl-info--bad'); kit.flash(stage, false, api.my);
+            if (r.result === 'ok') { info.classList.add('pearls-info--ok'); kit.flash(stage, true, api.my); api.pass({ delay: 2000 }); return; }
+            info.classList.add('pearls-info--bad'); kit.flash(stage, false, api.my);
             api.fail({ delay: 4000, lines: [why, '放手的窗口是按住 ' + q.winStart.toFixed(4) + '～' + q.winEnd.toFixed(4) + ' 秒之間（共 ' + (q.winEnd - q.winStart).toFixed(4) + ' 秒）', '你按住了 ' + T.toFixed(4) + ' 秒'] });
         }
         /* 揭曉：嘴裡的珍珠排成一排、依序編號；第 N 顆標綠色、多出來的標紅色 */
         function showRow(r) {
             row.innerHTML = ''; row.style.display = 'flex';
             var cols = Math.min(r.count, 13), size = Math.max(22, Math.min(40, Math.floor((W - 24) / Math.max(cols, 1)) - 4));
-            for (var i = 0; i < r.count; i++) { var b = h('div', { 'class': 'prl-rowp' + (i < q.n ? (i === q.n - 1 ? ' prl-rowp--n' : '') : ' prl-rowp--extra'), text: String(i + 1) }); b.style.cssText = 'width:' + size + 'px;height:' + size + 'px;line-height:' + size + 'px;font-size:' + Math.round(size * 0.55) + 'px;'; row.appendChild(b); }
-            if (!r.count) row.appendChild(h('div', { 'class': 'prl-rowp--none', text: '嘴裡一顆都沒有' }));
+            for (var i = 0; i < r.count; i++) { var b = h('div', { 'class': 'pearls-rowp' + (i < q.n ? (i === q.n - 1 ? ' pearls-rowp--n' : '') : ' pearls-rowp--extra'), text: String(i + 1) }); b.style.cssText = 'width:' + size + 'px;height:' + size + 'px;line-height:' + size + 'px;font-size:' + Math.round(size * 0.55) + 'px;'; row.appendChild(b); }
+            if (!r.count) row.appendChild(h('div', { 'class': 'pearls-rowp--none', text: '嘴裡一顆都沒有' }));
         }
         /* 驗證用：按住、在窗口中間放手（solve）／在窗口之後放手（wrong）；只排一次 */
         var armed = false;

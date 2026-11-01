@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_twobags.js — 秒反應・兩袋一樣重
+   樣式：css/games/reaction_twobags.css（這款專屬的 class 一律以「twobags-」開頭；共用元件在 css/reaction_common.css）
    上方有一排鑽石（大小不同、材質相同），下方是一座傳統的水平天秤（左右兩個秤盤），最下方是「確認」鈕。
    把鑽石拖到左邊或右邊的秤盤上（放上去之後還可以拖到另一邊、或拖回上方），全部放好後按「確認」，
    兩邊的重量差要在容許範圍內才過關。關卡制：第 1 關 N0[0] 顆鑽石，到極限關卡（RAMP_LEVELS）是 N0[1] 顆（線性增加），不通過就結束。
@@ -151,30 +152,30 @@
         api.info = q;
         console.log('[兩袋一樣重] 第 ' + level + ' 關：' + n + ' 顆；直徑 ' + q.d.map(function (x) { return x.toFixed(1); }).join(',') + '；重量 ' + q.w.map(function (x) { return x.toFixed(2); }).join(',') + '；總重 ' + q.total.toFixed(2) + '；容許 ' + (q.tol * 100).toFixed(2) + '%（' + (q.tol * q.total).toFixed(3) + ' 克拉）；最佳差 ' + q.best.diff.toFixed(3) + '；貪婪法差 ' + diffOf(q.w, greedyPartition(q.w)).toFixed(3) + '，交錯分法差 ' + diffOf(q.w, altPartition(q.d)).toFixed(3));
 
-        var tip = h('div', { 'class': 'tb-tip', text: '把鑽石拖到左右秤盤，讓兩邊一樣重' });
-        var tray = h('div', { 'class': 'tb-zone tb-tray' });
-        var info = h('div', { 'class': 'tb-info' });
-        var okBtn = h('button', { 'class': 'btn btn--go tb-ok', text: '確認' });
+        var tip = h('div', { 'class': 'twobags-tip', text: '把鑽石拖到左右秤盤，讓兩邊一樣重' });
+        var tray = h('div', { 'class': 'twobags-zone twobags-tray' });
+        var info = h('div', { 'class': 'twobags-info' });
+        var okBtn = h('button', { 'class': 'btn btn--go twobags-ok', text: '確認' });
         okBtn.disabled = true;
         var zw = Math.floor((W - 12 - BAL_GAP) / 2), cx = 6 + zw + BAL_GAP / 2, HL = zw / 2 + BAL_GAP / 2, panTop = BEAM_Y + STRING_H;
         tray.style.left = '6px'; tray.style.top = TRAY_TOP + 'px'; tray.style.width = (W - 12) + 'px'; tray.style.height = TRAY_H + 'px';
         info.style.top = (BASE_Y + 26) + 'px';
 
         /* 天秤：柱子、底座、橫樑（繞支點轉）、左右各一組「吊繩＋秤盤＋重量數字」（跟著橫樑兩端上下移動） */
-        var bal = h('div', { 'class': 'tb-bal' });
-        var post = h('div', { 'class': 'tb-post' }), base = h('div', { 'class': 'tb-base' }), beam = h('div', { 'class': 'tb-beam' }), pivot = h('div', { 'class': 'tb-pivot' });
+        var bal = h('div', { 'class': 'twobags-bal' });
+        var post = h('div', { 'class': 'twobags-post' }), base = h('div', { 'class': 'twobags-base' }), beam = h('div', { 'class': 'twobags-beam' }), pivot = h('div', { 'class': 'twobags-pivot' });
         post.style.left = (cx - 4) + 'px'; post.style.top = BEAM_Y + 'px'; post.style.height = (BASE_Y - BEAM_Y) + 'px';
         base.style.left = (cx - 62) + 'px'; base.style.top = BASE_Y + 'px';
         beam.style.left = (cx - HL - 20) + 'px'; beam.style.width = (2 * HL + 40) + 'px'; beam.style.top = (BEAM_Y - 5) + 'px';
         pivot.style.left = (cx - 9) + 'px'; pivot.style.top = (BEAM_Y - 9) + 'px';
         [post, base, beam, pivot].forEach(function (e) { bal.appendChild(e); });
         function hanger(centerX) {
-            var el = h('div', { 'class': 'tb-hang' });
+            var el = h('div', { 'class': 'twobags-hang' });
             el.style.left = (centerX - zw / 2) + 'px'; el.style.top = BEAM_Y + 'px'; el.style.width = zw + 'px';
-            var svg = kit.svg('svg', { 'class': 'tb-str', width: zw, height: STRING_H, viewBox: '0 0 ' + zw + ' ' + STRING_H }, el);
+            var svg = kit.svg('svg', { 'class': 'twobags-str', width: zw, height: STRING_H, viewBox: '0 0 ' + zw + ' ' + STRING_H }, el);
             kit.svg('line', { x1: zw / 2, y1: 0, x2: 5, y2: STRING_H }, svg);
             kit.svg('line', { x1: zw / 2, y1: 0, x2: zw - 5, y2: STRING_H }, svg);
-            var pan = h('div', { 'class': 'tb-pan' }), num = h('div', { 'class': 'tb-num', text: '--' });
+            var pan = h('div', { 'class': 'twobags-pan' }), num = h('div', { 'class': 'twobags-num', text: '--' });
             pan.style.height = PAN_H + 'px'; num.style.height = NUM_H + 'px'; num.style.lineHeight = NUM_H + 'px';
             el.appendChild(pan); el.appendChild(num); bal.appendChild(el);
             return { el: el, pan: pan, num: num };
@@ -199,7 +200,7 @@
 
         for (var i = 0; i < n; i++) (function (i) {
             side.push('T');
-            var el = h('div', { 'class': 'tb-stone', text: GEM });
+            var el = h('div', { 'class': 'twobags-stone', text: GEM });
             el.style.width = q.d[i].toFixed(1) + 'px'; el.style.height = q.d[i].toFixed(1) + 'px'; el.style.fontSize = gemPx(q.d[i]) + 'px';
             el.setAttribute('data-i', i);
             tray.appendChild(el); els.push(el);
@@ -225,15 +226,15 @@
         var locked = false;
         stage.addEventListener('pointerdown', function (e) {
             if (locked || api.over || drag) return;
-            var t = e.target.closest ? e.target.closest('.tb-stone') : null;
+            var t = e.target.closest ? e.target.closest('.twobags-stone') : null;
             if (!t) return;
             e.preventDefault();
             try { stage.setPointerCapture(e.pointerId); } catch (err) { }
             var i = Number(t.getAttribute('data-i')), p = kit.localPt(e, stage);
-            var ghost = h('div', { 'class': 'tb-stone tb-ghost', text: GEM });
+            var ghost = h('div', { 'class': 'twobags-stone twobags-ghost', text: GEM });
             ghost.style.width = q.d[i].toFixed(1) + 'px'; ghost.style.height = q.d[i].toFixed(1) + 'px'; ghost.style.fontSize = gemPx(q.d[i]) + 'px';
             stage.appendChild(ghost);
-            els[i].classList.add('tb-stone--lift');
+            els[i].classList.add('twobags-stone--lift');
             drag = { id: e.pointerId, i: i, ghost: ghost };
             move(p); hideHint(); Sfx.play('click');
         });
@@ -242,7 +243,7 @@
         function drop(e) {
             if (!drag || e.pointerId !== drag.id) return;
             var p = kit.localPt(e, stage), z = zoneAt(p), i = drag.i;
-            stage.removeChild(drag.ghost); els[i].classList.remove('tb-stone--lift');
+            stage.removeChild(drag.ghost); els[i].classList.remove('twobags-stone--lift');
             if (z) place(i, z);
             drag = null;
         }
@@ -261,8 +262,8 @@
             //我手動刪除了"克拉"字樣，避免介面超過寬度
             nums.L.textContent = s.l.toFixed(4); nums.R.textContent = s.r.toFixed(4);
             info.textContent = '差 ' + diff.toFixed(4) + ' 克拉（容許 ' + lim.toFixed(4) + ' 克拉，總重的 ' + (q.tol * 100).toFixed(4) + '%）';
-            bal.classList.add(good ? 'tb-bal--ok' : 'tb-bal--bad');          /* 超出範圍：天秤與數字變紅色 */
-            info.classList.add(good ? 'tb-info--ok' : 'tb-info--bad');
+            bal.classList.add(good ? 'twobags-bal--ok' : 'twobags-bal--bad');          /* 超出範圍：天秤與數字變紅色 */
+            info.classList.add(good ? 'twobags-info--ok' : 'twobags-info--bad');
             tiltTo(tiltOf(s.l, s.r, q.tol));                                   /* 天秤依兩邊的重量傾斜：範圍內微傾、範圍外明顯傾斜 */
             if (good) { api.pass({ delay: 2000 }); return; }
             /* 答錯：鑽石自動移到一種可行的分法，天秤也跟著回到接近水平 */
@@ -272,7 +273,7 @@
                 //我手動刪除了"克拉"字樣，避免介面超過寬度
                 nums.L.textContent = b.l.toFixed(4); nums.R.textContent = b.r.toFixed(4);
                 info.textContent = '可行的分法：差只有 ' + q.best.diff.toFixed(4) + ' 克拉';
-                bal.classList.remove('tb-bal--bad'); bal.classList.add('tb-bal--ok');
+                bal.classList.remove('twobags-bal--bad'); bal.classList.add('twobags-bal--ok');
                 tiltTo(tiltOf(b.l, b.r, q.tol));
             });
             api.fail({

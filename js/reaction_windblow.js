@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_windblow.js — 秒反應・大風吹（企劃 363）
+   樣式：css/games/reaction_windblow.css（這款專屬的 class 一律以「windblow-」開頭；共用元件在 css/reaction_common.css）
    小學團康遊戲「大風吹」。一開始會告訴你「**你是誰**」：穿什麼顏色的衣服、有沒有戴眼鏡、有沒有戴帽子（只顯示 3 秒）。
    然後口令一句一句出現：「大風吹，吹戴眼鏡的人！」——**口令說的是你，就點「換位子」；不是在說你，就點「不動」**。
    答錯、或是超過時間沒回答就結束，成績＝一共答對幾題。
@@ -37,7 +38,7 @@
     var NEXT_MS = 380;                          /* 答對之後，下一句口令多久出現 */
     var SOLVE_CAP = 8;                          /* 驗證用：api.solve 最多幫忙答對幾題 */
     var MAX_LEVEL = 90;
-    var COLORS = ['紅', '藍', '黃', '綠'];       /* 衣服的顏色（編號對應 CSS 的 wbl-shirt0～3） */
+    var COLORS = ['紅', '藍', '黃', '綠'];       /* 衣服的顏色（編號對應 CSS 的 windblow-shirt0～3） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function prog(n) { return Math.min(1, Math.max(0, n / RAMP_CMDS)); }
@@ -104,7 +105,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 12, stageClass: 'wbl-stage', resume: false,
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 12, stageClass: 'windblow-stage', resume: false,
             head: function () { return '大風吹'; },
             info: function (S) { return '答對 ' + S.score + ' 題'; },
             scoreOf: function (S) { return S.score; },
@@ -117,22 +118,22 @@
 
     /* 小朋友（SVG，viewBox 100×120）：衣服顏色、頭、頭髮、眼睛、嘴；戴眼鏡／戴帽子依特徵 */
     function kidSvg(f, size, parent) {
-        var svg = kit.svg('svg', { 'class': 'wbl-kid', viewBox: '0 0 100 120', width: size, height: Math.round(size * 1.2) }, parent);
-        kit.svg('path', { 'class': 'wbl-shirt wbl-shirt' + f.shirt, d: 'M8,120 Q10,84 50,80 Q90,84 92,120 Z' }, svg);
-        kit.svg('rect', { 'class': 'wbl-skin', x: 41, y: 68, width: 18, height: 16, rx: 6 }, svg);
-        kit.svg('circle', { 'class': 'wbl-skin', cx: 50, cy: 46, r: 28 }, svg);
-        kit.svg('path', { 'class': 'wbl-hair', d: 'M20,48 Q18,14 50,14 Q82,14 80,48 Q72,30 50,28 Q28,30 20,48 Z' }, svg);
-        kit.svg('circle', { 'class': 'wbl-eye', cx: 38, cy: 48, r: 4 }, svg);
-        kit.svg('circle', { 'class': 'wbl-eye', cx: 62, cy: 48, r: 4 }, svg);
-        kit.svg('path', { 'class': 'wbl-mouth', d: 'M40,60 Q50,69 60,60' }, svg);
+        var svg = kit.svg('svg', { 'class': 'windblow-kid', viewBox: '0 0 100 120', width: size, height: Math.round(size * 1.2) }, parent);
+        kit.svg('path', { 'class': 'windblow-shirt windblow-shirt' + f.shirt, d: 'M8,120 Q10,84 50,80 Q90,84 92,120 Z' }, svg);
+        kit.svg('rect', { 'class': 'windblow-skin', x: 41, y: 68, width: 18, height: 16, rx: 6 }, svg);
+        kit.svg('circle', { 'class': 'windblow-skin', cx: 50, cy: 46, r: 28 }, svg);
+        kit.svg('path', { 'class': 'windblow-hair', d: 'M20,48 Q18,14 50,14 Q82,14 80,48 Q72,30 50,28 Q28,30 20,48 Z' }, svg);
+        kit.svg('circle', { 'class': 'windblow-eye', cx: 38, cy: 48, r: 4 }, svg);
+        kit.svg('circle', { 'class': 'windblow-eye', cx: 62, cy: 48, r: 4 }, svg);
+        kit.svg('path', { 'class': 'windblow-mouth', d: 'M40,60 Q50,69 60,60' }, svg);
         if (f.glasses) {
-            kit.svg('circle', { 'class': 'wbl-glass', cx: 38, cy: 48, r: 11 }, svg);
-            kit.svg('circle', { 'class': 'wbl-glass', cx: 62, cy: 48, r: 11 }, svg);
-            kit.svg('path', { 'class': 'wbl-glass', d: 'M49,48 L51,48' }, svg);
+            kit.svg('circle', { 'class': 'windblow-glass', cx: 38, cy: 48, r: 11 }, svg);
+            kit.svg('circle', { 'class': 'windblow-glass', cx: 62, cy: 48, r: 11 }, svg);
+            kit.svg('path', { 'class': 'windblow-glass', d: 'M49,48 L51,48' }, svg);
         }
         if (f.hat) {
-            kit.svg('path', { 'class': 'wbl-hat', d: 'M22,30 Q22,2 50,2 Q78,2 78,30 Z' }, svg);
-            kit.svg('rect', { 'class': 'wbl-hat', x: 14, y: 27, width: 72, height: 8, rx: 4 }, svg);
+            kit.svg('path', { 'class': 'windblow-hat', d: 'M22,30 Q22,2 50,2 Q78,2 78,30 Z' }, svg);
+            kit.svg('rect', { 'class': 'windblow-hat', x: 14, y: 27, width: 72, height: 8, rx: 4 }, svg);
         }
         return svg;
     }
@@ -145,43 +146,43 @@
         S.score = 0; api.setInfo('答對 0 題');
         console.log('[大風吹] 開始：你是「' + describeSelf(self) + '」；回答時間 ' + answerMsFor(0) + ' → ' + answerMsFor(RAMP_CMDS) + ' 毫秒');
 
-        var field = h('div', { 'class': 'wbl-field' });
+        var field = h('div', { 'class': 'windblow-field' });
         stage.appendChild(field);
-        var bubble = h('div', { 'class': 'wbl-bubble', text: '記住你是誰！' }); field.appendChild(bubble);
+        var bubble = h('div', { 'class': 'windblow-bubble', text: '記住你是誰！' }); field.appendChild(bubble);
         /* 一圈椅子和小朋友（裝飾）：答「換位子」的時候大家轉一格、答「不動」的時候大家蹦一下 */
-        var ringBox = Math.min(W - 40, 300), ring = h('div', { 'class': 'wbl-ring' });
+        var ringBox = Math.min(W - 40, 300), ring = h('div', { 'class': 'windblow-ring' });
         ring.style.cssText = 'left:' + Math.round((W - ringBox) / 2) + 'px;top:150px;width:' + ringBox + 'px;height:' + ringBox + 'px;';
         field.appendChild(ring);
         var KIDS = 8, kids = [];
         for (var i = 0; i < KIDS; i++) {
-            var a = i / KIDS * Math.PI * 2 - Math.PI / 2, r = ringBox / 2 - 36, kx = ringBox / 2 + r * Math.cos(a), ky = ringBox / 2 + r * Math.sin(a), kd = h('div', { 'class': 'wbl-seat' });
+            var a = i / KIDS * Math.PI * 2 - Math.PI / 2, r = ringBox / 2 - 36, kx = ringBox / 2 + r * Math.cos(a), ky = ringBox / 2 + r * Math.sin(a), kd = h('div', { 'class': 'windblow-seat' });
             kd.style.cssText = 'left:' + Math.round(kx - 34) + 'px;top:' + Math.round(ky - 40) + 'px;';
-            kd.appendChild(h('div', { 'class': 'wbl-chair' })); kidSvg(makeSelf(api.rand), 56, kd); ring.appendChild(kd); kids.push(kd);
+            kd.appendChild(h('div', { 'class': 'windblow-chair' })); kidSvg(makeSelf(api.rand), 56, kd); ring.appendChild(kd); kids.push(kd);
         }
         var rot = 0;
         /* 「你是誰」的卡片（開始時、特徵改變時顯示一下，然後收起來——平常看不到） */
-        var card = h('div', { 'class': 'wbl-card' }); field.appendChild(card);
-        var info = h('div', { 'class': 'qz-note wbl-info', text: '' }); field.appendChild(info);
+        var card = h('div', { 'class': 'windblow-card' }); field.appendChild(card);
+        var info = h('div', { 'class': 'qz-note windblow-info', text: '' }); field.appendChild(info);
         var grid = kit.btnGrid(field, [
-            { text: '換位子', kind: 'primary', cls: 'wbl-btn', onTap: function () { answer(true); } },
-            { text: '不動', kind: 'sky', cls: 'wbl-btn', onTap: function () { answer(false); } }
+            { text: '換位子', kind: 'primary', cls: 'windblow-btn', onTap: function () { answer(true); } },
+            { text: '不動', kind: 'sky', cls: 'windblow-btn', onTap: function () { answer(false); } }
         ], { cols: 2, h: 112, gap: 12, bottom: 12 });
-        function enableBtns(on) { grid.btns.forEach(function (b) { b.classList.toggle('wbl-btn--off', !on); }); }
+        function enableBtns(on) { grid.btns.forEach(function (b) { b.classList.toggle('windblow-btn--off', !on); }); }
         enableBtns(false);
 
         function showCard(title, f, sub, ms, done) {
-            card.innerHTML = ''; card.classList.remove('wbl-card--hide'); card.style.display = 'flex';
-            card.appendChild(h('div', { 'class': 'wbl-card__t', text: title }));
-            var av = h('div', { 'class': 'wbl-card__av' }); kidSvg(f, 128, av); card.appendChild(av);
-            card.appendChild(h('div', { 'class': 'wbl-card__d', text: describeSelf(f) }));
-            if (sub) card.appendChild(h('div', { 'class': 'wbl-card__s', text: sub }));
-            api.after(ms, function () { card.classList.add('wbl-card--hide'); api.after(250, function () { card.style.display = 'none'; if (done) done(); }); });
+            card.innerHTML = ''; card.classList.remove('windblow-card--hide'); card.style.display = 'flex';
+            card.appendChild(h('div', { 'class': 'windblow-card__t', text: title }));
+            var av = h('div', { 'class': 'windblow-card__av' }); kidSvg(f, 128, av); card.appendChild(av);
+            card.appendChild(h('div', { 'class': 'windblow-card__d', text: describeSelf(f) }));
+            if (sub) card.appendChild(h('div', { 'class': 'windblow-card__s', text: sub }));
+            api.after(ms, function () { card.classList.add('windblow-card--hide'); api.after(250, function () { card.style.display = 'none'; if (done) done(); }); });
         }
         function nextCommand() {
             if (over || api.over) return;
             cmd = makeCommand(self, count, history, api.rand); cmdNo++;
             history.push(cmd.match); if (history.length > 6) history.shift();
-            bubble.textContent = cmd.text; bubble.classList.remove('wbl-bubble--pop'); void bubble.offsetWidth; bubble.classList.add('wbl-bubble--pop');
+            bubble.textContent = cmd.text; bubble.classList.remove('windblow-bubble--pop'); void bubble.offsetWidth; bubble.classList.add('windblow-bubble--pop');
             info.textContent = ''; phase = 'ask'; enableBtns(true);
             api.stopTimer(); api.timer(answerMsFor(count), function () { fail('timeout', null); });
             if (cmdNo === 1 && kit.once('windblow.hint')) kit.hintOn(stage, grid.btns[cmd.match ? 0 : 1], { mode: 'tap', delay: 500, text: cmd.match ? '說的是你 → 換位子' : '不是你 → 不動' });
@@ -195,7 +196,7 @@
             if (swap === cmd.match) {
                 count++; S.score = count; api.setInfo('答對 ' + count + ' 題'); Sfx.play('ok');
                 if (swap) { rot += 1; ring.style.transform = 'rotate(' + (rot * 360 / KIDS) + 'deg)'; kids.forEach(function (k) { k.style.transform = 'rotate(' + (-rot * 360 / KIDS) + 'deg)'; }); }
-                else { ring.classList.remove('wbl-ring--hop'); void ring.offsetWidth; ring.classList.add('wbl-ring--hop'); }
+                else { ring.classList.remove('windblow-ring--hop'); void ring.offsetWidth; ring.classList.add('windblow-ring--hop'); }
                 info.textContent = swap ? '換位子！大家跑起來～' : '不動！';
                 if (shouldChange(count)) {
                     var ch = changeSelf(self, api.rand); self = ch.self;
@@ -212,12 +213,12 @@
             over = true; phase = 'end'; api.stopTimer(); enableBtns(false);
             ring.style.display = 'none'; card.style.display = 'none';
             var want = cmd.match ? '換位子' : '不動', why = kind === 'timeout' ? '時間到了！這句口令要按「' + want + '」' : '按錯了！這句口令要按「' + want + '」（你按了「' + (swap ? '換位子' : '不動') + '」）';
-            info.textContent = why; info.classList.add('wbl-info--bad');
-            var box = h('div', { 'class': 'wbl-cmp' }), left = h('div', { 'class': 'wbl-cmp__col' }), right = h('div', { 'class': 'wbl-cmp__col' });
-            left.appendChild(h('div', { 'class': 'wbl-cmp__t', text: '你是' })); var av = h('div', { 'class': 'wbl-cmp__av' }); kidSvg(self, 84, av); left.appendChild(av); left.appendChild(h('div', { 'class': 'wbl-cmp__d', text: describeSelf(self).split('、').join('\n') }));
-            right.appendChild(h('div', { 'class': 'wbl-cmp__t', text: '口令' })); right.appendChild(h('div', { 'class': 'wbl-cmp__c', text: cmd.text.replace('大風吹，', '') }));
-            cmd.conds.forEach(function (a) { var ok = atomHolds(a, self); right.appendChild(h('div', { 'class': 'wbl-cmp__r wbl-cmp__r--' + (ok ? 'y' : 'n'), text: atomText(a) + '：你' + (ok ? '符合' : '不符合') })); });
-            right.appendChild(h('div', { 'class': 'wbl-cmp__v', text: cmd.conds.length > 1 ? (cmd.mode === 'or' ? '（「或」：符合一個就算）' : '（「又」：要全部符合）') + (cmd.match ? '→ 說的是你' : '→ 不是說你') : (cmd.match ? '→ 說的是你' : '→ 不是說你') }));
+            info.textContent = why; info.classList.add('windblow-info--bad');
+            var box = h('div', { 'class': 'windblow-cmp' }), left = h('div', { 'class': 'windblow-cmp__col' }), right = h('div', { 'class': 'windblow-cmp__col' });
+            left.appendChild(h('div', { 'class': 'windblow-cmp__t', text: '你是' })); var av = h('div', { 'class': 'windblow-cmp__av' }); kidSvg(self, 84, av); left.appendChild(av); left.appendChild(h('div', { 'class': 'windblow-cmp__d', text: describeSelf(self).split('、').join('\n') }));
+            right.appendChild(h('div', { 'class': 'windblow-cmp__t', text: '口令' })); right.appendChild(h('div', { 'class': 'windblow-cmp__c', text: cmd.text.replace('大風吹，', '') }));
+            cmd.conds.forEach(function (a) { var ok = atomHolds(a, self); right.appendChild(h('div', { 'class': 'windblow-cmp__r windblow-cmp__r--' + (ok ? 'y' : 'n'), text: atomText(a) + '：你' + (ok ? '符合' : '不符合') })); });
+            right.appendChild(h('div', { 'class': 'windblow-cmp__v', text: cmd.conds.length > 1 ? (cmd.mode === 'or' ? '（「或」：符合一個就算）' : '（「又」：要全部符合）') + (cmd.match ? '→ 說的是你' : '→ 不是說你') : (cmd.match ? '→ 說的是你' : '→ 不是說你') }));
             box.appendChild(left); box.appendChild(right); field.appendChild(box);
             kit.flash(stage, false, api.my);
             api.fail({ delay: 4200, lines: [why, '你是「' + describeSelf(self) + '」', '口令「' + cmd.text + '」→ ' + (cmd.match ? '說的是你' : '不是說你')] });

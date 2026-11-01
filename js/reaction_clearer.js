@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_clearer.js — 秒反應・越看越清楚
+   樣式：css/games/reaction_clearer.css（這款專屬的 class 一律以「clearer-」開頭；共用元件在 css/reaction_common.css）
    每關出現一個漢字：一開始非常模糊、高速旋轉，同時開始計時；隨時間線性變清晰、轉得越來越慢；
    下方 5 個結構相似的字，認出來就按。越早按對，這一關得分越高；按錯或逾時就結束。
    固定 10 關，成績＝累計分數（滿分 1000）。
@@ -87,16 +88,16 @@
         api.info = q;
         console.log('[越看越清楚] 第 ' + level + ' 關：答案「' + q.target + '」，選項 ' + q.options.join('') + '；限時 ' + q.limit.toFixed(2) + ' 秒');
 
-        var glyph = h('div', { 'class': 'cl-glyph', text: q.target });
-        var clock = h('div', { 'class': 'cl-clock', text: '計時 0.0000 秒' });
-        var note = h('div', { 'class': 'cl-note', text: level === 1 ? '字越來越清楚，認出就按，按錯結束' : '越快按，分數越高' });
+        var glyph = h('div', { 'class': 'clearer-glyph', text: q.target });
+        var clock = h('div', { 'class': 'clearer-clock', text: '計時 0.0000 秒' });
+        var note = h('div', { 'class': 'clearer-note', text: level === 1 ? '字越來越清楚，認出就按，按錯結束' : '越快按，分數越高' });
         stage.appendChild(note); stage.appendChild(glyph); stage.appendChild(clock);
         var btns = q.options.map(function (c) {
-            var b = h('button', { 'class': 'btn btn--line cl-opt', text: c });
+            var b = h('button', { 'class': 'btn btn--line clearer-opt', text: c });
             kit.onTap(b, function () { judge(c); });
             return b;
         });
-        stage.appendChild(h('div', { 'class': 'rx-btnrow cl-opts' }, btns));
+        stage.appendChild(h('div', { 'class': 'rx-btnrow clearer-opts' }, btns));
         function frame() {
             var ms = performance.now() - t0;
             glyph.style.filter = 'blur(' + blurAt(level, ms).toFixed(2) + 'px)';
@@ -113,7 +114,7 @@
             loop.stop();
             glyph.style.filter = 'none'; glyph.style.transform = 'none';
             clock.textContent = '按下時間 ' + kit.sec(ms) + ' 秒';
-            btns.forEach(function (b) { if (b.textContent === q.target) b.classList.add('cl-opt--ok'); else if (b.textContent === c) b.classList.add('cl-opt--bad'); });
+            btns.forEach(function (b) { if (b.textContent === q.target) b.classList.add('clearer-opt--ok'); else if (b.textContent === c) b.classList.add('clearer-opt--bad'); });
             if (c === q.target) {
                 var g = gainFor(level, ms), rush = level === 1 && ms < RUSH_MS;
                 note.textContent = '答對！清晰度 ' + clarityPct(level, ms).toFixed(4) + '%，得 ' + g.toFixed(4) + ' 分' + (rush ? '（搶答打折）' : '');

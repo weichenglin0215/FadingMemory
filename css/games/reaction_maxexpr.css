@@ -1,0 +1,115 @@
+/* ═══════════════════════════════════════
+   reaction_maxexpr.css — 拼出最大數（js/reaction_maxexpr.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「maxexpr-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 026 拼出最大數（.maxexpr-）═══ */
+.maxexpr-expr {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+}
+
+.maxexpr-slot {
+    width: 100px;
+    height: 100px;
+    border-radius: var(--r-md);
+    border: 3px dashed var(--c-blue);
+    background: var(--c-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.maxexpr-slot--on {
+    border-style: solid;
+    background: var(--c-blue-soft);
+}
+
+.maxexpr-op {
+    width: 46px;
+    text-align: center;
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-orange);
+}
+
+.maxexpr-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 150px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    line-height: var(--lh-body);
+}
+
+.maxexpr-cards {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    top: 230px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-3);
+}
+
+.maxexpr-card {
+    height: 110px;
+    border-radius: var(--r-md);
+    background: var(--c-card-alt);
+    border: var(--bd);
+    box-shadow: var(--shadow-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    cursor: pointer;
+}
+
+.maxexpr-card:active {
+    transform: scale(0.97);
+}
+
+.maxexpr-card--used {
+    opacity: 0.25;
+    pointer-events: none;
+}
+
+/* 負數牌：紅色字（V1.25） */
+.maxexpr-card--neg {
+    color: var(--c-bad-light);
+}
+
+.maxexpr-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 490px;
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    line-height: var(--lh-body);
+}
+
+.maxexpr-info--ok {
+    color: var(--c-ok);
+}
+
+.maxexpr-info--bad {
+    color: var(--c-bad);
+}

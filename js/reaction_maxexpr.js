@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_maxexpr.js — 秒反應・拼出最大數
+   樣式：css/games/reaction_maxexpr.css（這款專屬的 class 一律以「maxexpr-」開頭；共用元件在 css/reaction_common.css）
    上方是算式「□ op □ op □」（兩個運算符號隨機：＋ － × ÷，乘除先算），下方 6 張數字牌；
    依序點 3 張牌填進三個空格，讓算式的值「最大」，再按「確定」。「重來」把已填的牌放回原位。
    關卡制，答錯或逾時就結束，成績＝通過關數。
@@ -135,16 +136,16 @@
         api.info = q;
         console.log('[拼出最大數] 第 ' + level + ' 關：□ ' + SYM[q.ops[0]] + ' □ ' + SYM[q.ops[1]] + ' □，牌 ' + q.cards.join(',') + '；最大 ' + valText(q.best) + '（' + q.arrs.map(function (a) { return exprText(q.cards[a[0]], q.ops[0], q.cards[a[1]], q.ops[1], q.cards[a[2]]); }).join('；') + '）；直覺做法' + (q.greedyFails ? '失敗' : '可行') + '；限時 ' + timeMs(level) + ' ms');
 
-        var slots = [0, 1, 2].map(function () { return h('div', { 'class': 'mx-slot' }); });
-        var expr = h('div', { 'class': 'mx-expr' }, [slots[0], h('div', { 'class': 'mx-op', text: SYM[q.ops[0]] }), slots[1], h('div', { 'class': 'mx-op', text: SYM[q.ops[1]] }), slots[2]]);
-        var tip = h('div', { 'class': 'mx-tip', text: negCount(level) ? '有負數：負負相乘（除）得正，減負數等於加' : '依序點 3 張牌填入空格，讓算式的值最大（乘除先算）' });
+        var slots = [0, 1, 2].map(function () { return h('div', { 'class': 'maxexpr-slot' }); });
+        var expr = h('div', { 'class': 'maxexpr-expr' }, [slots[0], h('div', { 'class': 'maxexpr-op', text: SYM[q.ops[0]] }), slots[1], h('div', { 'class': 'maxexpr-op', text: SYM[q.ops[1]] }), slots[2]]);
+        var tip = h('div', { 'class': 'maxexpr-tip', text: negCount(level) ? '有負數：負負相乘（除）得正，減負數等於加' : '依序點 3 張牌填入空格，讓算式的值最大（乘除先算）' });
         var cardEls = q.cards.map(function (v, i) {
-            var el = h('div', { 'class': 'mx-card' + (v < 0 ? ' mx-card--neg' : ''), text: cardText(v) });
+            var el = h('div', { 'class': 'maxexpr-card' + (v < 0 ? ' maxexpr-card--neg' : ''), text: cardText(v) });
             kit.onTap(el, function () { pick(i); });
             return el;
         });
-        var grid = h('div', { 'class': 'mx-cards' }, cardEls);
-        var info = h('div', { 'class': 'mx-info' });
+        var grid = h('div', { 'class': 'maxexpr-cards' }, cardEls);
+        var info = h('div', { 'class': 'maxexpr-info' });
         var bReset = h('button', { 'class': 'btn btn--line', text: '重來' });
         var bOk = h('button', { 'class': 'btn btn--go', text: '確定' });
         bOk.disabled = true;
@@ -155,8 +156,8 @@
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
 
         function paint() {
-            slots.forEach(function (s, i) { s.textContent = i < picked.length ? cardText(q.cards[picked[i]]) : ''; s.classList.toggle('mx-slot--on', i < picked.length); });
-            cardEls.forEach(function (el, i) { el.classList.toggle('mx-card--used', !!used[i]); });
+            slots.forEach(function (s, i) { s.textContent = i < picked.length ? cardText(q.cards[picked[i]]) : ''; s.classList.toggle('maxexpr-slot--on', i < picked.length); });
+            cardEls.forEach(function (el, i) { el.classList.toggle('maxexpr-card--used', !!used[i]); });
             bOk.disabled = picked.length < 3;
         }
         function pick(i) {
@@ -174,16 +175,16 @@
             var v = evalExpr(q.cards[picked[0]], q.ops[0], q.cards[picked[1]], q.ops[1], q.cards[picked[2]]);
             var mine = exprText(q.cards[picked[0]], q.ops[0], q.cards[picked[1]], q.ops[1], q.cards[picked[2]]) + ' ＝ ' + valText(v);
             if (cmp(v, q.best) >= 0) {
-                info.textContent = '最大了！' + mine; info.classList.add('mx-info--ok');
+                info.textContent = '最大了！' + mine; info.classList.add('maxexpr-info--ok');
                 api.pass({ delay: 900 });
             } else {
-                info.textContent = '你的：' + mine + '　最大：' + bestText(); info.classList.add('mx-info--bad');
+                info.textContent = '你的：' + mine + '　最大：' + bestText(); info.classList.add('maxexpr-info--bad');
                 api.fail({ delay: 2200, lines: ['你的排法：' + mine, '最大的排法：' + bestText(), '不是把最大的牌放前面就最大——要看符號，還有負數'] });
             }
         }
         kit.onTap(bOk, confirm);
         api.timer(timeMs(level), function () {
-            info.textContent = '時間到！最大的是：' + bestText(); info.classList.add('mx-info--bad');
+            info.textContent = '時間到！最大的是：' + bestText(); info.classList.add('maxexpr-info--bad');
             api.fail({ delay: 2200, lines: ['時間到！', '最大的排法：' + bestText()] });
         });
         api.solve = function () { picked = q.arrs[0].slice(); used = {}; picked.forEach(function (i) { used[i] = true; }); paint(); confirm(); };

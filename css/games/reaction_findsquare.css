@@ -1,0 +1,104 @@
+/* ═══════════════════════════════════════
+   reaction_findsquare.css — 找正方形（js/reaction_findsquare.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「findsquare-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 找正方形（.findsquare-）═══ */
+.findsquare-stage {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.findsquare-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* 夜空：深藍色底板，星星畫在上面 */
+.findsquare-sky {
+    position: absolute;
+    background: var(--fsq-sky);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+.findsquare-svg {
+    display: block;
+    touch-action: none;
+}
+
+.findsquare-shape {
+    fill: var(--fsq-star);
+    stroke: var(--fsq-star-edge);
+    stroke-width: 1;
+    stroke-linejoin: round;
+}
+
+/* 點到的星星：外面一圈橘色光暈、星星變橘；真正的正方形的星星：綠色光暈 */
+.findsquare-halo {
+    fill: none;
+    stroke: var(--c-orange);
+    stroke-width: 3;
+    opacity: 0;
+}
+
+.findsquare-star--on .findsquare-halo {
+    opacity: 1;
+}
+
+.findsquare-star--on .findsquare-shape {
+    fill: var(--c-orange);
+}
+
+.findsquare-star--true .findsquare-halo {
+    stroke: var(--c-ok-light);
+    opacity: 1;
+}
+
+.findsquare-star--true .findsquare-shape {
+    fill: var(--c-ok-light);
+}
+
+.findsquare-hit {
+    fill: transparent;
+}
+
+.findsquare-star {
+    cursor: pointer;
+}
+
+/* 連線：答對（金色，像星座）、你選的四邊形（紅色）、真正的正方形（綠色） */
+.findsquare-line {
+    stroke-width: 4;
+    stroke-linecap: round;
+    opacity: 0.9;
+}
+
+.findsquare-line--ok {
+    stroke: var(--fsq-star);
+}
+
+.findsquare-line--bad {
+    stroke: var(--c-bad-light);
+}
+
+.findsquare-line--true {
+    stroke: var(--c-ok);
+}
+
+.findsquare-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+}

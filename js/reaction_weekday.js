@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_weekday.js — 秒反應・推星期幾（企劃 253）
+   樣式：css/games/reaction_weekday.css（這款專屬的 class 一律以「weekday-」開頭；共用元件在 css/reaction_common.css）
    上方是老式撕日曆：「2026 年 3 月 5 日 星期四」。下面問「2026 年 3 月 27 日是星期幾？」，點七顆星期按鈕。
    ───────────────────────────────────────────────────────────────────
    · 算法：相差 n 天，星期就往後（或往前）移 n 除以 7 的餘數。先算天數、再取餘數——要知道各月有幾天（大小月、2 月 28／29 天）。
@@ -119,7 +120,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'wkd-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'weekday-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -133,31 +134,31 @@
         api.info = q;
         console.log('[推星期幾] 第 ' + level + ' 關（' + q.type + '）：' + dateText(K) + dayName(K.w) + ' → ' + dateText(T) + '？答案 ' + dayName(T.w) + '（相差 ' + q.offset + ' 天）；限時 ' + timeMs(level) + ' ms');
 
-        stage.appendChild(h('div', { 'class': 'qz-note wkd-tip', text: '推推看：下面那天是星期幾？' }));
+        stage.appendChild(h('div', { 'class': 'qz-note weekday-tip', text: '推推看：下面那天是星期幾？' }));
         /* 大小月口訣（要跨月的題型才放） */
         if (q.type !== 'same') {
-            stage.appendChild(h('div', { 'class': 'wkd-memo' }, [
+            stage.appendChild(h('div', { 'class': 'weekday-memo' }, [
                 h('div', { text: '大月 31 天：1 3 5 7 8 10 12' }),
                 h('div', { text: '小月 30 天：4 6 9 11' }),
                 h('div', { text: '2 月：28 天（閏年 29 天）' })
             ]));
         }
         /* 撕日曆：已知的那一天 */
-        var page = h('div', { 'class': 'wkd-page' }, [
-            h('div', { 'class': 'wkd-page__top', text: K.y + ' 年 ' + K.m + ' 月' }),
-            h('div', { 'class': 'wkd-page__day', text: String(K.d) }),
-            h('div', { 'class': 'wkd-page__wd', text: dayName(K.w) })
+        var page = h('div', { 'class': 'weekday-page' }, [
+            h('div', { 'class': 'weekday-page__top', text: K.y + ' 年 ' + K.m + ' 月' }),
+            h('div', { 'class': 'weekday-page__day', text: String(K.d) }),
+            h('div', { 'class': 'weekday-page__wd', text: dayName(K.w) })
         ]);
-        var ask = h('div', { 'class': 'wkd-ask' }, [h('div', { text: dateText(T) }), h('div', { text: '是星期幾？' })]);
+        var ask = h('div', { 'class': 'weekday-ask' }, [h('div', { text: dateText(T) }), h('div', { text: '是星期幾？' })]);
         /* 內容區：有大小月口訣時往下移（口訣佔 3 行），沒有時往上靠 */
-        var body = h('div', { 'class': 'wkd-body' });
+        var body = h('div', { 'class': 'weekday-body' });
         body.style.top = (q.type !== 'same' ? 160 : 70) + 'px';
         stage.appendChild(body);
         body.appendChild(page); body.appendChild(ask);
-        var info = h('div', { 'class': 'qz-note wkd-info', text: '' });
+        var info = h('div', { 'class': 'qz-note weekday-info', text: '' });
         body.appendChild(info);
         var done = false, picked = -1;
-        var grid = kit.btnGrid(stage, NAMES.map(function (n, i) { return { text: n, kind: 'line', cls: 'wkd-opt', onTap: function () { judge(i); } }; }), { cols: 7, h: 100, gap: 6 });
+        var grid = kit.btnGrid(stage, NAMES.map(function (n, i) { return { text: n, kind: 'line', cls: 'weekday-opt', onTap: function () { judge(i); } }; }), { cols: 7, h: 100, gap: 6 });
         var btns = grid.btns;
         api.timer(timeMs(level), function () { judge(-1); });
         if (level === 1 && kit.once('weekday.hint')) kit.hintOn(stage, btns[T.w], { mode: 'tap', delay: 700, text: '先算相差幾天，再除以 7' });
@@ -166,8 +167,8 @@
             if (done || api.over) return;
             done = true; picked = i;
             var ok = i === T.w;
-            btns[T.w].classList.add('wkd-opt--ok');
-            if (i >= 0 && !ok) btns[i].classList.add('wkd-opt--bad');
+            btns[T.w].classList.add('weekday-opt--ok');
+            if (i >= 0 && !ok) btns[i].classList.add('weekday-opt--bad');
             if (ok) {
                 info.textContent = explainText(q);
                 kit.flash(stage, true, api.my);
@@ -184,25 +185,25 @@
         function revealCalendar() {
             if (q.months.length > 2) return { ms: 0 };
             page.style.display = 'none'; ask.style.display = 'none';
-            var cs = q.months.length === 1 ? 40 : 31, cal = h('div', { 'class': 'wkd-cal' }), cells = {};
+            var cs = q.months.length === 1 ? 40 : 31, cal = h('div', { 'class': 'weekday-cal' }), cells = {};
             q.months.forEach(function (mo) {
-                var box = h('div', { 'class': 'wkd-cal__m' });
-                box.appendChild(h('div', { 'class': 'wkd-cal__title', text: mo.y + ' 年 ' + mo.m + ' 月' }));
-                var g = h('div', { 'class': 'wkd-cal__grid' });
+                var box = h('div', { 'class': 'weekday-cal__m' });
+                box.appendChild(h('div', { 'class': 'weekday-cal__title', text: mo.y + ' 年 ' + mo.m + ' 月' }));
+                var g = h('div', { 'class': 'weekday-cal__grid' });
                 g.style.gridTemplateColumns = 'repeat(7, ' + cs + 'px)'; g.style.gridAutoRows = cs + 'px';
-                NAMES.forEach(function (n) { g.appendChild(h('div', { 'class': 'wkd-day wkd-day--head', text: n })); });
-                for (var b = 0; b < dow(mo.y, mo.m, 1); b++) g.appendChild(h('div', { 'class': 'wkd-day wkd-day--blank' }));
-                for (var d = 1; d <= daysIn(mo.y, mo.m); d++) { var c = h('div', { 'class': 'wkd-day', text: String(d) }); cells[mo.y + '-' + mo.m + '-' + d] = c; g.appendChild(c); }
+                NAMES.forEach(function (n) { g.appendChild(h('div', { 'class': 'weekday-day weekday-day--head', text: n })); });
+                for (var b = 0; b < dow(mo.y, mo.m, 1); b++) g.appendChild(h('div', { 'class': 'weekday-day weekday-day--blank' }));
+                for (var d = 1; d <= daysIn(mo.y, mo.m); d++) { var c = h('div', { 'class': 'weekday-day', text: String(d) }); cells[mo.y + '-' + mo.m + '-' + d] = c; g.appendChild(c); }
                 box.appendChild(g); cal.appendChild(box);
             });
             body.appendChild(cal);
             /* 一天一天走：從已知那天走到目標（倒著推就往前走） */
             var n = Math.abs(q.offset), dir = q.offset > 0 ? 1 : -1, stepMs = kit.clamp(Math.round(1500 / Math.max(1, n)), 30, 140);
-            cells[K.y + '-' + K.m + '-' + K.d].classList.add('wkd-day--from');
+            cells[K.y + '-' + K.m + '-' + K.d].classList.add('weekday-day--from');
             for (var s = 1; s <= n; s++) (function (s) {
                 api.after(500 + s * stepMs, function () {
                     var dt = addDays(K, dir * s), el = cells[dt.y + '-' + dt.m + '-' + dt.d];
-                    el.classList.add(s === n ? 'wkd-day--to' : 'wkd-day--walk'); Sfx.play('tick');
+                    el.classList.add(s === n ? 'weekday-day--to' : 'weekday-day--walk'); Sfx.play('tick');
                 });
             })(s);
             return { ms: 500 + n * stepMs };

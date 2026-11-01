@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_heartbeat.js — 秒反應・心跳複製
+   樣式：css/games/reaction_heartbeat.css（這款專屬的 class 一律以「heartbeat-」開頭；共用元件在 css/reaction_common.css）
    畫面中央有左／中／右三個位置，每一拍會冒出幾顆球（只有中、只有左、只有右、中＋左、中＋右、
    三顆全出，或是這拍什麼都沒有），球外面有一圈倒數圈，要在圈跑完之前點到球。
    好玩的地方：先給你一段很有規律的節奏，讓你養成習慣，然後突然打破它。
@@ -178,24 +179,24 @@
             root.addEventListener('pointerdown', function () { hintWanted = false; }, { capture: true, once: true });
 
             /* 建立畫面元素：標題、場地 */
-            var head = h('div', { 'class': 'hb-head' });
-            var field = h('div', { 'class': 'hb-field' });
+            var head = h('div', { 'class': 'heartbeat-head' });
+            var field = h('div', { 'class': 'heartbeat-field' });
             root.appendChild(head);
             root.appendChild(field);
             var W = field.clientWidth, Hh = field.clientHeight;
             /* SVG 畫布：左中右三個位置各畫一個空圓圈（球要出現的位置） */
-            var svg = kit.svg('svg', { 'class': 'hb-svg', viewBox: '0 0 ' + W + ' ' + Hh }, field);
+            var svg = kit.svg('svg', { 'class': 'heartbeat-svg', viewBox: '0 0 ' + W + ' ' + Hh }, field);
             var CY = Hh / 2, RB = 52, RR = 66, CIRC = 2 * Math.PI * RR;
             var xs = [W * 0.2, W * 0.5, W * 0.8];
             var slotG = [];
             for (var i = 0; i < 3; i++) {
                 (function (i) {
                     var g = kit.svg('g', { transform: 'translate(' + xs[i].toFixed(1) + ' ' + CY.toFixed(1) + ')' }, svg);
-                    kit.svg('circle', { 'class': 'hb-slot', r: RB }, g);
+                    kit.svg('circle', { 'class': 'heartbeat-slot', r: RB }, g);
                     slotG.push(g);
                 })(i);
             }
-            var hurt = h('div', { 'class': 'hb-hurt' });
+            var hurt = h('div', { 'class': 'heartbeat-hurt' });
             field.appendChild(hurt);
 
             /* 更新標題列右側的小字 */
@@ -223,10 +224,10 @@
                 clearGhosts();                           /* 上一拍留下的倒數圈，這一拍出現就收掉（它剛好也在這一刻跑完）*/
                 balls.forEach(function (s) {
                     if (alive[s]) expire(s, true);       /* 同位置還有舊球（不應該發生，保險） */
-                    var g = kit.svg('g', { 'class': 'hb-ball hb-ball--' + SLOTS[s] }, slotG[s]);
-                    kit.svg('path', { 'class': 'hb-ball__body', d: HEART_D, transform: 'translate(0 -8) scale(1.3)' }, g);
+                    var g = kit.svg('g', { 'class': 'heartbeat-ball heartbeat-ball--' + SLOTS[s] }, slotG[s]);
+                    kit.svg('path', { 'class': 'heartbeat-ball__body', d: HEART_D, transform: 'translate(0 -8) scale(1.3)' }, g);
                     /* 倒數圈：用 SVG 圓的 stroke-dasharray／stroke-dashoffset 做出「圈慢慢消失」的效果 */
-                    var ring = kit.svg('circle', { 'class': 'hb-ring', r: RR, 'stroke-dasharray': CIRC.toFixed(1), 'stroke-dashoffset': 0, transform: 'rotate(-90)' }, g);
+                    var ring = kit.svg('circle', { 'class': 'heartbeat-ring', r: RR, 'stroke-dasharray': CIRC.toFixed(1), 'stroke-dashoffset': 0, transform: 'rotate(-90)' }, g);
                     var b = { born: now, life: spacing * 1000, beat: idx, el: g, ring: ring, slot: s };
                     alive[s] = b;
                     if (hintWanted && !hintObj) hintObj = Reaction.kit.hintOn(root, g, { mode: 'tap', text: '請點擊出現的愛心' });
@@ -236,8 +237,8 @@
                 /* 空拍：中間畫一個沒有心的空倒數圈，讓節拍看得見，這一拍結束就算撐過 */
                 if (n === 0) {
                     /* 空拍：中間畫一個沒有心的空倒數圈（讓節拍看得見），這一拍結束就算撐過 */
-                    var eg = kit.svg('g', { 'class': 'hb-ball hb-ball--E' }, slotG[1]);
-                    var er = kit.svg('circle', { 'class': 'hb-ring hb-ring--empty', r: RR, 'stroke-dasharray': CIRC.toFixed(1), 'stroke-dashoffset': 0, transform: 'rotate(-90)' }, eg);
+                    var eg = kit.svg('g', { 'class': 'heartbeat-ball heartbeat-ball--E' }, slotG[1]);
+                    var er = kit.svg('circle', { 'class': 'heartbeat-ring heartbeat-ring--empty', r: RR, 'stroke-dasharray': CIRC.toFixed(1), 'stroke-dashoffset': 0, transform: 'rotate(-90)' }, eg);
                     ghost[1] = { born: now, life: spacing * 1000, beat: idx, el: eg, ring: er, slot: 1 };
                     my.after(spacing * 1000, function () { if (state === 'run') beatDone(idx); });
                 }
@@ -280,7 +281,7 @@
                 } else {
                     if (performance.now() - lastPop[s] < GRACE_MS) return;       /* 剛點掉的球，雙擊保護 */
                     mistake('點到沒有球的位置');
-                    flashSlot(s, 'hb-slot--bad');
+                    flashSlot(s, 'heartbeat-slot--bad');
                 }
             }
             function clearGhosts() {
@@ -297,14 +298,14 @@
                 alive[s] = null;
                 if (how === 'hit') {
                     /* 心在原位消失，倒數圈留在原位（變綠色）繼續跑完，下一拍要等圈跑完才出現 */
-                    var heart = b.el.querySelector('.hb-ball__body');
+                    var heart = b.el.querySelector('.heartbeat-ball__body');
                     if (heart && heart.parentNode) heart.parentNode.removeChild(heart);
-                    b.ring.classList.remove('hb-ring--late');
-                    b.ring.classList.add('hb-ring--done');
+                    b.ring.classList.remove('heartbeat-ring--late');
+                    b.ring.classList.add('heartbeat-ring--done');
                     ghost[s] = b;
                     return;
                 }
-                b.el.classList.add('hb-ball--miss');
+                b.el.classList.add('heartbeat-ball--miss');
                 my.after(260, function () { if (b.el.parentNode) b.el.parentNode.removeChild(b.el); });
             }
             /* 球的倒數圈跑完還沒點到：失誤 */
@@ -325,7 +326,7 @@
                 lives--;
                 mlog.push({ beat: beatNo, why: why, alive: alive.map(function (b) { return b ? b.beat : null; }), t: Math.round(performance.now()) });
                 Sfx.play('bad');
-                hurt.classList.remove('hb-hurt--on'); void hurt.offsetWidth; hurt.classList.add('hb-hurt--on');
+                hurt.classList.remove('heartbeat-hurt--on'); void hurt.offsetWidth; hurt.classList.add('heartbeat-hurt--on');
                 meta();
                 paintHead(why);
                 if (lives <= 0) gameOver(why);
@@ -354,7 +355,7 @@
                     if (b) {
                         var f = Math.min(1, (now - b.born) / b.life);
                         b.ring.setAttribute('stroke-dashoffset', (CIRC * f).toFixed(1));
-                        b.ring.classList.toggle('hb-ring--late', f > 0.7);
+                        b.ring.classList.toggle('heartbeat-ring--late', f > 0.7);
                     }
                     var gh = ghost[s];
                     if (gh) gh.ring.setAttribute('stroke-dashoffset', (CIRC * Math.min(1, (now - gh.born) / gh.life)).toFixed(1));

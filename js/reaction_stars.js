@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_stars.js — 秒反應・找星座（企劃 339，依使用者的修改改成「散開的字慢慢拼回來」）
+   樣式：css/games/reaction_stars.css（這款專屬的 class 一律以「stars-」開頭；共用元件在 css/reaction_common.css）
    題目是**筆劃較多的繁體字**，字大約佔畫面的 90%。把字**切成 5×5～20×20 的小方塊**，**隨機散佈**在畫面上；
    每個小方塊會在一段時間（例如 10 秒）內**慢慢回到原來的位置**——**速度不同、開始的時間不同、而且故意延後**。
    你要猜這是哪個字（4～5 個選項）。**時間限制是回位時間的 80%**：等你看到完整的字之前就已經到時。
@@ -77,7 +78,7 @@
 
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'stz-stage',
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'stars-stage',
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
@@ -92,21 +93,21 @@
         console.log('[找星座] 第 ' + level + ' 關：答案 ' + q.answer + '，選項 ' + q.options.join('') + '；' + N + '×' + N + ' 個小方塊，' + q.tret + ' 秒拼完、時限 ' + q.limitMs + ' 毫秒；字群平均筆劃範圍 ' + q.strokes.map(function (x) { return x.toFixed(1); }).join('～'));
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, S = Math.min(Math.round(W * 0.9), H - 210), fx = Math.round((W - S) / 2), fy = 56;
-        var field = h('div', { 'class': 'stz-field' });
+        var field = h('div', { 'class': 'stars-field' });
         stage.appendChild(field);
-        var tip = h('div', { 'class': 'qz-note stz-tip', text: '碎片慢慢拼回來，猜是哪個字' });
+        var tip = h('div', { 'class': 'qz-note stars-tip', text: '碎片慢慢拼回來，猜是哪個字' });
         field.appendChild(tip);
         /* 看不見的畫布：把字畫上去（字大約佔 S 的 90%）；顯示用的畫布：依小方塊目前的位置一塊塊貼上去 */
         var off = document.createElement('canvas'); off.width = off.height = S;
         var ox = off.getContext('2d'), inkColor = getComputedStyle(document.documentElement).getPropertyValue('--c-ink').trim() || '#4A3B1E';
         ox.fillStyle = inkColor; ox.font = '900 ' + Math.round(S * 0.9) + 'px "Noto Serif TC","Songti TC","PMingLiU",serif'; ox.textAlign = 'center'; ox.textBaseline = 'middle'; ox.fillText(q.answer, S / 2, S / 2 + S * 0.04);
-        var cv = h('canvas', { 'class': 'stz-canvas' }); cv.width = W; cv.height = S + 20; cv.style.cssText = 'left:0;top:' + (fy - 10) + 'px;width:' + W + 'px;height:' + (S + 20) + 'px;';
+        var cv = h('canvas', { 'class': 'stars-canvas' }); cv.width = W; cv.height = S + 20; cv.style.cssText = 'left:0;top:' + (fy - 10) + 'px;width:' + W + 'px;height:' + (S + 20) + 'px;';
         field.appendChild(cv);
         var cx = cv.getContext('2d'), tw = S / N;
         /* 每個小方塊：終點是它在字裡的位置（加上字盒的位移），起點是畫布上的隨機位置 */
         var starts = q.tiles.map(function (t) { return { x: t.sx * (W - tw), y: t.sy * (S + 20 - tw) }; });
         var ends = q.tiles.map(function (t, k) { return { x: fx + (k % N) * tw, y: 10 + Math.floor(k / N) * tw }; });
-        var info = h('div', { 'class': 'qz-note stz-info', text: '' }); info.style.top = (fy + S + 6) + 'px'; field.appendChild(info);
+        var info = h('div', { 'class': 'qz-note stars-info', text: '' }); info.style.top = (fy + S + 6) + 'px'; field.appendChild(info);
         var phase = 'play', done = false, t0 = performance.now(), snapAt = null;
         function draw(t, snapP) {
             cx.clearRect(0, 0, cv.width, cv.height);
@@ -116,7 +117,7 @@
             }
         }
         draw(0);
-        var grid = kit.btnGrid(field, q.options.map(function (c, i) { return { text: c, kind: 'line', cls: 'stz-opt', onTap: function () { judge(i); } }; }), { cols: q.options.length, h: 92, gap: 8 });
+        var grid = kit.btnGrid(field, q.options.map(function (c, i) { return { text: c, kind: 'line', cls: 'stars-opt', onTap: function () { judge(i); } }; }), { cols: q.options.length, h: 92, gap: 8 });
         api.timer(q.limitMs, function () { judge(-1); });
         var loop = api.my.loop(function (now) {
             if (!cv.isConnected) return false;
@@ -127,7 +128,7 @@
             if (done || api.over || phase !== 'play') return;
             done = true; phase = 'end';
             var ok = i === q.answerIdx, nowT = (performance.now() - t0) / 1000;
-            grid.btns[q.answerIdx].classList.add('stz-ok'); if (i >= 0 && !ok) grid.btns[i].classList.add('stz-bad');
+            grid.btns[q.answerIdx].classList.add('stars-ok'); if (i >= 0 && !ok) grid.btns[i].classList.add('stars-bad');
             /* 揭曉：所有小方塊在 0.5 秒內飛回原位 */
             snapAt = { t: performance.now(), from: q.tiles.map(function (t, k) { return tilePos(t, starts[k], ends[k], nowT); }) };
             info.textContent = ok ? '是「' + q.answer + '」，答對了！（拼好了 ' + Math.round(100 * arrivedFraction(q.tiles, nowT)) + '%）' : '正確的字是「' + q.answer + '」' + (i >= 0 ? '，你選了「' + q.options[i] + '」' : '（時間到）');

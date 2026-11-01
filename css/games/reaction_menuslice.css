@@ -1,0 +1,313 @@
+/* ═══════════════════════════════════════
+   reaction_menuslice.css — 切菜單上的（js/reaction_menuslice.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「menuslice-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 切菜單上的（.menuslice-）═══ */
+.menuslice-stage {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.menuslice-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+.menuslice-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* 水果飛行與手指滑過的範圍：整個畫面 */
+.menuslice-arena {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    touch-action: none;
+}
+
+.menuslice-fruit {
+    position: absolute;
+    left: 0;
+    top: 0;
+    will-change: transform;
+    pointer-events: none;
+}
+
+/* 黑板菜單：看的時候在上方，開始之後收起來，失敗時再亮出來 */
+.menuslice-board {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 56px;
+    padding: var(--sp-2) var(--sp-3) var(--sp-3);
+    background: var(--msl-board);
+    border: 6px solid var(--msl-frame);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-card);
+    text-align: center;
+    transition: transform 0.45s ease-in, opacity 0.45s;
+    z-index: 2;
+}
+
+.menuslice-board--gone {
+    transform: translateY(-140%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.menuslice-board--again {
+    z-index: 4;
+}
+
+.menuslice-board__title {
+    color: var(--msl-chalk);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+}
+
+.menuslice-board__items {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sp-2) var(--sp-3);
+}
+
+.menuslice-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 68px;
+    padding: 2px 4px;
+    border-radius: var(--r-sm);
+}
+
+.menuslice-item__name {
+    color: var(--msl-chalk);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+}
+
+.menuslice-item--mark {
+    outline: 4px solid var(--c-ok);
+    background: var(--c-ok-soft);
+}
+
+.menuslice-counter {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 12px;
+    color: var(--c-ink-soft);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    text-align: center;
+    pointer-events: none;
+}
+
+.menuslice-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 58px;
+    padding: 0 var(--sp-3);
+    text-align: center;
+    font-weight: var(--fw-bold);
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* 失敗：你切錯（漏掉）的和菜單上的並排 */
+.menuslice-cmp {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 46%;
+    display: flex;
+    justify-content: center;
+    gap: var(--sp-4);
+    z-index: 4;
+}
+
+.menuslice-cmp__box {
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--c-card);
+    border: 4px solid var(--c-ink-soft);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
+}
+
+.menuslice-cmp__box--bad {
+    border-color: var(--c-bad-light);
+}
+
+.menuslice-cmp__box--ok {
+    border-color: var(--c-ok);
+}
+
+.menuslice-cmp__name {
+    color: var(--c-ink);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+}
+
+/* 水果的外觀：顏色由 .menuslice-f--種類 的 --msl-c 決定 */
+.menuslice-f {
+    display: block;
+    overflow: visible;
+}
+
+.menuslice-body {
+    fill: var(--msl-c);
+    stroke: var(--c-ink);
+    stroke-width: 2;
+    stroke-linejoin: round;
+}
+
+.menuslice-leaf {
+    fill: var(--msl-leaf);
+    stroke: var(--c-ink);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+}
+
+.menuslice-stem {
+    fill: none;
+    stroke: var(--msl-stem);
+    stroke-width: 3.5;
+    stroke-linecap: round;
+}
+
+.menuslice-dark {
+    fill: var(--msl-stem);
+}
+
+.menuslice-dot {
+    fill: var(--msl-stem);
+    opacity: 0.4;
+}
+
+.menuslice-shine {
+    fill: var(--c-card);
+    opacity: 0.45;
+}
+
+.menuslice-stripe {
+    fill: none;
+    stroke: var(--msl-leaf);
+    stroke-width: 4;
+    stroke-linecap: round;
+    opacity: 0.75;
+}
+
+.menuslice-f--orange {
+    --msl-c: var(--msl-orange);
+}
+
+.menuslice-f--tangerine {
+    --msl-c: var(--msl-tangerine);
+}
+
+.menuslice-f--lemon {
+    --msl-c: var(--msl-lemon);
+}
+
+.menuslice-f--lime {
+    --msl-c: var(--msl-lime);
+}
+
+.menuslice-f--apple {
+    --msl-c: var(--msl-apple);
+}
+
+.menuslice-f--tomato {
+    --msl-c: var(--msl-tomato);
+}
+
+.menuslice-f--grape {
+    --msl-c: var(--msl-grape);
+}
+
+.menuslice-f--blueberry {
+    --msl-c: var(--msl-blueberry);
+}
+
+.menuslice-f--banana {
+    --msl-c: var(--msl-banana);
+}
+
+.menuslice-f--watermelon {
+    --msl-c: var(--msl-watermelon);
+}
+
+.menuslice-f--pear {
+    --msl-c: var(--msl-pear);
+}
+
+.menuslice-f--strawberry {
+    --msl-c: var(--msl-strawberry);
+}
+
+/* 切開：兩半往兩邊飛開、旋轉、掉落；果汁噴出 */
+.menuslice-half {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+    animation: menuslice-split 0.6s ease-in forwards;
+}
+
+.menuslice-half--left {
+    clip-path: inset(0 50% 0 0);
+}
+
+.menuslice-half--right {
+    clip-path: inset(0 0 0 50%);
+}
+
+@keyframes menuslice-split {
+    to {
+        translate: calc(var(--dir) * 46px) 110px;
+        rotate: calc(var(--dir) * 50deg);
+        opacity: 0;
+    }
+}
+
+.menuslice-juice {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    margin: -6px 0 0 -6px;
+    background: var(--msl-c);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: menuslice-juice 0.5s ease-out forwards;
+}
+
+@keyframes menuslice-juice {
+    from {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+    }
+
+    to {
+        transform: translate(var(--dx), var(--dy)) scale(0.3);
+        opacity: 0;
+    }
+}

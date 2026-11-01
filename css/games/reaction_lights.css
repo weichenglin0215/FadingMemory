@@ -1,0 +1,62 @@
+/* ═══════════════════════════════════════
+   reaction_lights.css — 點燈記憶（js/reaction_lights.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「lights-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* 點燈記憶：記住燈亮的順序，再依序點回去。 */
+/* ═══ 點燈記憶（.lights-）═══ */
+/* 燈盤外框 */
+.lights-panel {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-card);
+    border: var(--bd);
+    border-radius: var(--r-lg);
+}
+
+/* 燈的排列：欄列數由 JS 算好 */
+.lights-grid {
+    display: grid;
+    gap: 10px;
+    padding: 10px;
+}
+
+/* 一顆燈（熄滅狀態）：border-radius:50% 做成圓形，radial-gradient 做出圓球的立體感 */
+.lights-lamp {
+    border: 8px solid var(--bd-c);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, hsl(46, 59%, 50%), hsl(46, 44%, 40%));
+    padding: 0;
+    cursor: pointer;
+    transition: background 0.06s ease, box-shadow 0.06s ease;
+}
+
+/* 亮起：換成亮黃色並加上光暈（box-shadow） */
+.lights-lamp--lit {
+    border-color: #F4C542;
+    background: radial-gradient(circle at 35% 30%, #FFF6BF, #FFD43B 55%, #F2A81D);
+    box-shadow: 0 0 22px 6px rgba(255, 212, 59, 0.75);
+}
+
+/* 點對（綠） */
+.lights-lamp--hit {
+    border-color: var(--c-ok);
+    background: radial-gradient(circle at 35% 30%, #D8F5DF, #6CBD79 60%, #4C9A5B);
+}
+
+/* 點錯（橘） */
+.lights-lamp--bad {
+    border-color: var(--c-bad);
+    background: radial-gradient(circle at 35% 30%, #FFE3D3, #E8956B 60%, #D46F3C);
+}
+
+/* 揭曉時標出該點的燈（虛線邊框） */
+.lights-lamp--reveal {
+    border-color: hsl(122, 80%, 45%);
+    border-style: dashed;
+    box-shadow: 0 0 14px 3px rgba(255, 212, 59, 0.7);
+}
