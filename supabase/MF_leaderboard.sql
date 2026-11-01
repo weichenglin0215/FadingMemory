@@ -1374,6 +1374,14 @@ insert into public."MF_games" (game_id, title, better, min_score, max_score) val
     ('fifteen',      '搶十五', 'max', 1, 90),
     ('tianji',       '田忌賽馬', 'max', 1, 90),
     ('flipten',      '翻牌湊十', 'max', 1, 90),
+    ('timetable',    '時刻表補字', 'max', 1, 90),
+    ('piggybank',    '撲滿有多少', 'max', 1, 90),
+    ('expiry',       '保存期限', 'max', 1, 90),
+    ('fruitstock',   '水果進出貨', 'max', 1, 90),
+    ('boxstack',     '疊箱子', 'max', 1, 90),
+    ('shapegrid',    '形色不相鄰', 'max', 1, 90),
+    ('babyscale',    '抱著量體重', 'max', 1, 90),
+    ('keypad30',     '按鍵搶三十', 'max', 1, 90),
     -- <<< 自動產生結束
     ('zz_test', '（測試用，可刪）', 'max', 0, 1000)
 on conflict (game_id) do update

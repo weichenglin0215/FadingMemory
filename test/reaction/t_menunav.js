@@ -55,7 +55,7 @@ const order = M.GAME_CELLS.map(c => c.id);
 // ═══ 2. 成績格式表 score_specs.js ═══
 {
   const specs = global.FM_SCORE_SPECS, scored = games.filter(g => g.score);
-  ok(specs && Object.keys(specs).length === scored.length && scored.length === 174, '每一款有 score 設定的遊戲都有格式（' + scored.length + ' 款）');
+  ok(specs && Object.keys(specs).length === scored.length && scored.length === 182, '每一款有 score 設定的遊戲都有格式（' + scored.length + ' 款）');
   scored.forEach(g => {
     const s = specs[g.id];
     ok(!!s && s.format === g.score.format && s.decimals === (g.score.decimals || 0) && s.better === g.score.better && !!s.group === !!g.score.group, g.id + '：格式與遊戲檔案一致');

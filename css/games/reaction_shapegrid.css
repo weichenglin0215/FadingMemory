@@ -1,0 +1,154 @@
+/* ═══════════════════════════════════════
+   reaction_shapegrid.css — 形色不相鄰（js/reaction_shapegrid.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「shapegrid-」開頭，只給這一款遊戲用。
+   · 顏色與尺寸一律用 css/theme.css 的 CSS 變數；五種圖形顏色定義在 .shapegrid-wrap 的 --shapegrid-c0～c4（紅、藍、綠、黃、紫，
+     亮度刻意拉開，色弱的人也比較分得出來）。邊長 --shapegrid-n、每格邊長 --shapegrid-cell、清單上每個圖形的大小 --shapegrid-chip 由 js 算好。
+   ═══════════════════════════════════════ */
+
+.shapegrid-wrap {
+    --shapegrid-c0: hsl(2, 78%, 52%);
+    --shapegrid-c1: hsl(214, 78%, 46%);
+    --shapegrid-c2: hsl(130, 55%, 40%);
+    --shapegrid-c3: hsl(45, 95%, 55%);
+    --shapegrid-c4: hsl(282, 50%, 52%);
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding-top: 8px;
+    box-sizing: border-box;
+}
+
+.shapegrid-board {
+    display: grid;
+    grid-template-columns: repeat(var(--shapegrid-n, 3), var(--shapegrid-cell, 100px));
+    grid-auto-rows: var(--shapegrid-cell, 100px);
+    gap: 6px;
+    padding: 6px;
+    border-radius: var(--r-md);
+    background: var(--c-frame);
+}
+
+.shapegrid-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border-radius: var(--r-sm);
+    background: var(--c-card);
+    border: 3px solid var(--bd-c);
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.shapegrid-cell--empty {
+    border: 3px dashed var(--c-ink-soft);
+    background: var(--c-card-alt);
+}
+
+/* 一開始就放好的：灰底粗框（不能動） */
+.shapegrid-cell--given {
+    background: var(--c-paper);
+    border: 4px solid var(--c-ink);
+}
+
+.shapegrid-cell--hinted {
+    border: 4px solid var(--c-yellow);
+}
+
+.shapegrid-cell--bad {
+    background: var(--c-bad-soft);
+    border: 4px solid var(--c-bad);
+}
+
+.shapegrid-cell--flag {
+    animation: shapegrid-flag 0.8s ease-in-out infinite;
+}
+
+.shapegrid-cell--ok {
+    border-color: var(--c-ok);
+}
+
+@keyframes shapegrid-flag {
+    0%, 100% { background: var(--c-yellow-soft); }
+    50% { background: var(--c-bad-soft); }
+}
+
+.shapegrid-svg {
+    width: 78%;
+    height: 78%;
+    display: block;
+    pointer-events: none;
+}
+
+.shapegrid-fill {
+    stroke: var(--c-ink);
+    stroke-width: 4;
+    stroke-linejoin: round;
+}
+
+.shapegrid-fill--0 { fill: var(--shapegrid-c0); }
+.shapegrid-fill--1 { fill: var(--shapegrid-c1); }
+.shapegrid-fill--2 { fill: var(--shapegrid-c2); }
+.shapegrid-fill--3 { fill: var(--shapegrid-c3); }
+.shapegrid-fill--4 { fill: var(--shapegrid-c4); }
+
+.shapegrid-tip {
+    min-height: 32px;
+    padding: 0 12px;
+    font-size: var(--fs-sm);
+    line-height: 1.3;
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    text-align: center;
+}
+
+.shapegrid-tip--bad {
+    color: var(--c-bad);
+    font-weight: var(--fw-black);
+}
+
+/* 下面那一盒還沒擺的圖形 */
+.shapegrid-tray {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    width: 96%;
+    min-height: var(--shapegrid-chip, 60px);
+}
+
+.shapegrid-chip {
+    width: var(--shapegrid-chip, 60px);
+    height: var(--shapegrid-chip, 60px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border-radius: var(--r-sm);
+    background: var(--c-card);
+    border: 2px solid var(--bd-c);
+    touch-action: manipulation;
+}
+
+.shapegrid-chip--sel {
+    border: 5px solid var(--c-blue);
+    background: var(--c-blue-light);
+}
+
+.shapegrid-tools {
+    display: flex;
+    gap: 10px;
+    width: 96%;
+}
+
+.shapegrid-tool {
+    flex: 1 1 0;
+    height: 60px;
+    padding: 0;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+}

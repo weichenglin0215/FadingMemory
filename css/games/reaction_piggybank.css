@@ -1,0 +1,165 @@
+/* ═══════════════════════════════════════
+   reaction_piggybank.css — 撲滿有多少（js/reaction_piggybank.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「piggybank-」開頭，只給這一款遊戲用。
+   · 顏色與尺寸一律用 css/theme.css 的 CSS 變數；三種硬幣的顏色定義在下面的 --piggybank-coin0～2。
+   ═══════════════════════════════════════ */
+
+.piggybank-wrap {
+    --piggybank-coin0: hsl(43, 70%, 62%);
+    --piggybank-coin1: hsl(25, 55%, 60%);
+    --piggybank-coin2: hsl(200, 12%, 72%);
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding-top: 14px;
+    box-sizing: border-box;
+}
+
+.piggybank-pig {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 12px 22px;
+    border-radius: var(--r-lg);
+    background: var(--c-card);
+    border: var(--bd-w) solid var(--bd-c);
+}
+
+.piggybank-pig__icon {
+    font-size: var(--fs-xxxxl);
+    line-height: 1;
+}
+
+.piggybank-pig__info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.piggybank-weight {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.piggybank-count {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-blue);
+}
+
+.piggybank-rule {
+    padding: 6px 16px;
+    border-radius: var(--r-pill);
+    background: var(--c-orange-soft);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.piggybank-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.piggybank-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 硬幣：圓形，上面刻著重量 */
+.piggybank-coin {
+    width: 86px;
+    height: 86px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border: 4px solid var(--c-ink-soft);
+    background: var(--piggybank-coin0);
+    color: var(--c-ink);
+    line-height: 1;
+}
+
+.piggybank-coin--1 { background: var(--piggybank-coin1); }
+.piggybank-coin--2 { background: var(--piggybank-coin2); }
+
+.piggybank-coin__w {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.piggybank-coin__g {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+}
+
+.piggybank-times,
+.piggybank-unit {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+}
+
+.piggybank-step {
+    width: 64px;
+    height: 64px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.piggybank-num {
+    min-width: 72px;
+    text-align: center;
+    font-size: var(--fs-xxl);
+    font-weight: var(--fw-black);
+    color: var(--c-blue);
+    font-variant-numeric: tabular-nums;
+}
+
+.piggybank-num--bad {
+    color: var(--c-bad);
+    font-size: var(--fs-xl);
+}
+
+.piggybank-list--ok .piggybank-num {
+    color: var(--c-ok);
+}
+
+.piggybank-tip {
+    min-height: 34px;
+    padding: 0 12px;
+    font-size: var(--fs-sm);
+    line-height: 1.35;
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    text-align: center;
+}
+
+.piggybank-open {
+    width: 80%;
+    height: 72px;
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+}
+
+.piggybank-answer {
+    padding: 8px 16px;
+    border-radius: var(--r-md);
+    background: var(--c-green-soft);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    text-align: center;
+}

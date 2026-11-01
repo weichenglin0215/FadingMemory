@@ -233,7 +233,15 @@
         { id: 'nim', name: '取火柴', cat: 'logic', img: 'img/reaction/nim.png' },
         { id: 'fifteen', name: '搶十五', cat: 'number', img: 'img/reaction/fifteen.png' },
         { id: 'tianji', name: '田忌賽馬', cat: 'number', img: 'img/reaction/tianji.png' },
-        { id: 'flipten', name: '翻牌湊十', cat: 'memory', img: 'img/reaction/flipten.png' }
+        { id: 'flipten', name: '翻牌湊十', cat: 'memory', img: 'img/reaction/flipten.png' },
+        { id: 'timetable', name: '時刻表補字', cat: 'number', img: 'img/reaction/timetable.png' },
+        { id: 'piggybank', name: '撲滿有多少', cat: 'number', img: 'img/reaction/piggybank.png' },
+        { id: 'expiry', name: '保存期限', cat: 'number', img: 'img/reaction/expiry.png' },
+        { id: 'fruitstock', name: '水果進出貨', cat: 'number', img: 'img/reaction/fruitstock.png' },
+        { id: 'boxstack', name: '疊箱子', cat: 'logic', img: 'img/reaction/boxstack.png' },
+        { id: 'shapegrid', name: '形色不相鄰', cat: 'logic', img: 'img/reaction/shapegrid.png' },
+        { id: 'babyscale', name: '抱著量體重', cat: 'number', img: 'img/reaction/babyscale.png' },
+        { id: 'keypad30', name: '按鍵搶三十', cat: 'number', img: 'img/reaction/keypad30.png' }
     ];
     /* 用 id 快速找到那一款（recent 頁籤只存 id，顯示時要靠它換回完整資料） */
     var gameById = {};

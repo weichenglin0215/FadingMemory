@@ -1,5 +1,5 @@
 // 後台資料分析頁（admin/stats.html，V1.39.0）的靜態檢查（不開瀏覽器；實際操作畫面的測試在 test/admin/check_stats_viewer.mjs，資料庫函式的測試在 test/leaderboard/stats_sql_test.mjs）：
-//   · 頁面裡「自動產生」的遊戲資料（七個分類、174 款的順序／名稱／分類／成績格式）跟 js/menu.js、各遊戲檔案同步（node test/leaderboard/gen_games_sql.cjs --write）
+//   · 頁面裡「自動產生」的遊戲資料（七個分類、182 款的順序／名稱／分類／成績格式）跟 js/menu.js、各遊戲檔案同步（node test/leaderboard/gen_games_sql.cjs --write）
 //   · 頁面呼叫的資料庫函式（MF_stats_games／MF_stats_daily／MF_stats_players）在 SQL 裡真的有，而且開放給 anon、對 public 收回；
 //     遊戲端回報次數用的 MF_log_plays 與資料表 MF_play_days 也都在、表是鎖住的
 //   · 安全：有內容安全政策（只准連 Supabase 與本機）、不載入外部程式或樣式、只用公開的 anon 金鑰、不用 innerHTML 放資料庫來的文字
@@ -24,7 +24,7 @@ ok(gen.patchStats(page, gen.buildStatsBlock(games, menu)) === page, 'admin/stats
   ok(!!m, '找得到 CATS／ORDER／GAMES');
   const CATS = JSON.parse(m[1]), ORDER = JSON.parse(m[2]), GAMES = JSON.parse(m[3]);
   ok(CATS.length === 7 && CATS.map(c => c.name).join() === '記憶,視覺,反應,數字,邏輯,手感,目測', '七種遊戲類型：' + CATS.map(c => c.name));
-  ok(ORDER.length === 174 && new Set(ORDER).size === 174 && Object.keys(GAMES).length === 174, '174 款、順序不重複');
+  ok(ORDER.length === 182 && new Set(ORDER).size === 182 && Object.keys(GAMES).length === 182, '182 款、順序不重複');
   ok(ORDER.join() === menu.GAME_CELLS.map(c => c.id).join(), '順序＝主選單的順序');
   ok(ORDER.every(id => GAMES[id] && CATS.some(c => c.id === GAMES[id].cat)), '每一款都有名稱與屬於七種分類之一');
   const byId = Object.fromEntries(games.map(g => [g.id, g]));

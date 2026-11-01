@@ -1,0 +1,156 @@
+/* ═══════════════════════════════════════
+   reaction_fruitstock.css — 水果進出貨（js/reaction_fruitstock.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「fruitstock-」開頭，只給這一款遊戲用。
+   · 顏色與尺寸一律用 css/theme.css 的 CSS 變數；五種水果的顏色字定義在 .fruitstock-wrap 的 --fruitstock-red 等變數。
+     水果表每一列的高度 --fruitstock-row 由 js 依畫面大小算好。下方的數字鍵盤是共用元件（css/numpad_lib.css）。
+   ═══════════════════════════════════════ */
+
+.fruitstock-wrap {
+    --fruitstock-red: hsl(4, 72%, 48%);
+    --fruitstock-orange: hsl(27, 85%, 48%);
+    --fruitstock-yellow: hsl(46, 90%, 40%);
+    --fruitstock-green: hsl(110, 45%, 38%);
+    --fruitstock-pink: hsl(340, 65%, 58%);
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding-top: 4px;
+    box-sizing: border-box;
+}
+
+/* 上半部：水果資料表（水果｜顏色｜1 公斤｜早上｜收攤），每種水果一列 */
+.fruitstock-table {
+    display: grid;
+    grid-template-columns: 1.55fr 0.9fr 0.95fr 1fr 1fr;
+    grid-auto-rows: var(--fruitstock-row, 52px);
+    grid-template-rows: 24px;
+    gap: 4px 6px;
+    width: 96%;
+    align-items: center;
+}
+
+.fruitstock-th {
+    text-align: center;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);
+}
+
+.fruitstock-fruit {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.fruitstock-icon {
+    font-size: var(--fs-lg);
+    line-height: 1;
+}
+
+.fruitstock-fname {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    white-space: nowrap;
+}
+
+.fruitstock-color { font-weight: var(--fw-black); font-size: var(--fs-xs); }
+.fruitstock-color--red { color: var(--fruitstock-red); }
+.fruitstock-color--orange { color: var(--fruitstock-orange); }
+.fruitstock-color--yellow { color: var(--fruitstock-yellow); }
+.fruitstock-color--green { color: var(--fruitstock-green); }
+.fruitstock-color--pink { color: var(--fruitstock-pink); }
+
+.fruitstock-td {
+    text-align: center;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    white-space: nowrap;
+}
+
+/* 「收攤」的填空格 */
+.fruitstock-input {
+    height: calc(var(--fruitstock-row, 52px) - 6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border-radius: var(--r-sm);
+    border: 2px dashed var(--c-ink-soft);
+    background: var(--c-frame);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-blue);
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.fruitstock-input--filled {
+    background: var(--c-blue-soft);
+}
+
+.fruitstock-input--sel {
+    border: 4px solid var(--c-blue);
+    background: var(--c-card);
+}
+
+.fruitstock-input--ok {
+    border: 3px solid var(--c-ok);
+    color: var(--c-ok);
+}
+
+.fruitstock-input--bad {
+    border: 3px solid var(--c-bad);
+    color: var(--c-bad);
+    font-size: var(--fs-xs);
+}
+
+/* 下半部：一筆一筆的進出貨（超過 5 筆分兩欄） */
+.fruitstock-events {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px 8px;
+    width: 96%;
+    padding: 6px 8px;
+    box-sizing: border-box;
+    border-radius: var(--r-md);
+    background: var(--c-card);
+    border: var(--bd-w) solid var(--bd-c);
+}
+
+.fruitstock-events--two {
+    grid-template-columns: 1fr 1fr;
+}
+
+.fruitstock-ev {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1.25;
+    color: var(--c-ink);
+    white-space: nowrap;
+}
+
+.fruitstock-ev--in { color: var(--c-green); }
+.fruitstock-ev--out { color: var(--c-bad); }
+
+/* 算錯時：進出貨的位置改成列出算式 */
+.fruitstock-work {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-black);
+    line-height: 1.3;
+    color: var(--c-bad);
+}
+
+.fruitstock-ok {
+    width: 96%;
+    max-width: 420px;
+    height: 52px;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+}

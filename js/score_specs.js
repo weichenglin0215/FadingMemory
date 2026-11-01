@@ -176,5 +176,13 @@ window.FM_SCORE_SPECS = {
     "nim": {"better":"max","decimals":0,"format":"{v} 關"},
     "fifteen": {"better":"max","decimals":0,"format":"{v} 關"},
     "tianji": {"better":"max","decimals":0,"format":"{v} 關"},
-    "flipten": {"better":"max","decimals":0,"format":"{v} 關"}
+    "flipten": {"better":"max","decimals":0,"format":"{v} 關"},
+    "timetable": {"better":"max","decimals":0,"format":"{v} 關"},
+    "piggybank": {"better":"max","decimals":0,"format":"{v} 關"},
+    "expiry": {"better":"max","decimals":0,"format":"{v} 關"},
+    "fruitstock": {"better":"max","decimals":0,"format":"{v} 關"},
+    "boxstack": {"better":"max","decimals":0,"format":"{v} 關"},
+    "shapegrid": {"better":"max","decimals":0,"format":"{v} 關"},
+    "babyscale": {"better":"max","decimals":0,"format":"{v} 關"},
+    "keypad30": {"better":"max","decimals":0,"format":"{v} 關"}
 };

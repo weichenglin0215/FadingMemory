@@ -1,0 +1,30 @@
+/* ═══════════════════════════════════════
+   numpad_lib.css — 共用數字鍵盤（js/numpad_lib.js 的 Reaction.numpad）
+   · class 一律以「numpad-」開頭；時刻表補字、水果進出貨、抱著量體重 共用。
+   · 每顆鍵的高度 --numpad-key-h 由 js 寫在 .numpad-wrap 上；下面的值是備用值。
+   ═══════════════════════════════════════ */
+
+.numpad-wrap {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    width: 96%;
+    max-width: 420px;
+}
+
+.numpad-key {
+    height: var(--numpad-key-h, 64px);
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    touch-action: manipulation;
+}
+
+/* 「清除」「⌫」字小一點，跟數字分得出來 */
+.numpad-key--fn {
+    font-size: var(--fs-md);
+    color: var(--c-ink-soft);
+}

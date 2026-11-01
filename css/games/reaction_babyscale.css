@@ -1,0 +1,114 @@
+/* ═══════════════════════════════════════
+   reaction_babyscale.css — 抱著量體重（js/reaction_babyscale.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「babyscale-」開頭，只給這一款遊戲用。
+   · 顏色與尺寸一律用 css/theme.css 的 CSS 變數。下方的數字鍵盤是共用元件（css/numpad_lib.css）。
+   ═══════════════════════════════════════ */
+
+.babyscale-wrap {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding-top: 6px;
+    box-sizing: border-box;
+}
+
+/* 體重計的紀錄（像貼在浴室牆上的便條） */
+.babyscale-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 96%;
+    padding: 8px 12px;
+    box-sizing: border-box;
+    border-radius: var(--r-md);
+    background: var(--c-card);
+    border: var(--bd-w) solid var(--bd-c);
+}
+
+.babyscale-title {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+.babyscale-eq {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    line-height: 1.25;
+    color: var(--c-ink);
+}
+
+.babyscale-eq__no {
+    color: var(--c-blue);
+}
+
+.babyscale-eq__names {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.babyscale-eq__sum {
+    flex: none;
+    white-space: nowrap;
+    color: var(--c-ink);
+}
+
+/* 問題：「小貓 幾公斤？」＋填答案的框 */
+.babyscale-ask {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
+.babyscale-answer {
+    min-width: 110px;
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    box-sizing: border-box;
+    border-radius: var(--r-sm);
+    border: 4px solid var(--c-blue);
+    background: var(--c-card);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    color: var(--c-blue);
+}
+
+.babyscale-answer--ok {
+    border-color: var(--c-ok);
+    color: var(--c-ok);
+}
+
+.babyscale-answer--bad {
+    border-color: var(--c-bad);
+    color: var(--c-bad);
+}
+
+.babyscale-tip {
+    min-height: 28px;
+    padding: 0 12px;
+    font-size: var(--fs-xs);
+    line-height: 1.3;
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    text-align: center;
+}
+
+.babyscale-ok {
+    width: 96%;
+    max-width: 420px;
+    height: 56px;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+}
