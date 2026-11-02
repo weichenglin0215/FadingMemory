@@ -36,7 +36,7 @@
     /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
     /* 顏色種類、領先顆數、閃現時間從第 1 題線性變到第 LEVEL_RAMP 題 */
-    var LEVEL_RAMP = 20;
+    var LEVEL_RAMP = 30;
     /* 糖果總數：第 1 題 6 顆，之後每題多 2 顆（難度曲線比原本平緩），最多 N_END 顆 */
     var N_START = 6, N_STEP = 2, N_END = 70;       /* N_END＝放得下的上限：t_candy.js 會驗證在托盤 W×H 內擺得下 */
     var OPTION_COUNT = 6;                          /* 答案按鈕有幾顆（連續的一排數字） */

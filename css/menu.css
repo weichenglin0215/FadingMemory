@@ -626,6 +626,78 @@
     font-weight: var(--fw-black);
 }
 
+/* 「搜尋」（V1.43.0）：排在頁籤列最右邊（目測 的右邊），寬度跟頁籤一樣；它是動作鈕不是分類，所以淡藍底＋藍字，
+   上面放一個放大鏡，下面是直式的「搜尋」；有搜尋關鍵字的時候（.is-on）填藍色、字變白。class 不是 .game-tab（測試用 .game-tab 數分類頁籤）。 */
+.game-tab-search {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 100px;
+    padding: 6px 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    color: var(--c-blue);
+    border-radius: var(--r-md) var(--r-md) 0 0;
+    background: var(--c-blue-soft);
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.game-tab-search .icon {
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+}
+
+/* nowrap：兩個字一定排成一直行（高度不夠時不准折成兩行），icon 加文字要放進頁籤的 100px 高 */
+.game-tab-search__t {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    white-space: nowrap;
+    letter-spacing: 2px;
+}
+
+.game-tab-search.is-on {
+    background: var(--c-blue);
+    color: var(--c-on-accent);
+}
+
+.game-tab-search:focus-visible {
+    outline: 4px solid var(--c-blue);
+    outline-offset: -4px;
+}
+
+/* ═══ 搜尋彈窗（V1.43.0，js/menu.js 的 openSearch）═══
+   貼在畫面最上面（標題列下面）；背景不壓暗、不擋手指（pointer-events:none，卡片自己才收得到），
+   玩家一邊打字，下面的遊戲格子就一邊只留下符合的。疊在全螢幕遊戲選單（z-index 30）上面。 */
+.dlg--search {
+    z-index: 35;
+    align-items: flex-start;
+    padding: var(--sp-3);
+    background: transparent;
+    pointer-events: none;
+}
+
+/* 從遊戲選單自己的標題列下緣開始（「返回」要一直點得到）；menu_nav.css 的 .menu~.dlg--stage 會把主選單上的彈窗拉到 top:0，所以這裡要更高的權重 */
+.menu~.dlg.dlg--search {
+    top: var(--bar-h);
+}
+
+.dlg--search .dlg__card {
+    pointer-events: auto;
+    gap: var(--sp-2);
+    padding: var(--sp-3);
+}
+
+.search-count {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
 .game-tab:focus-visible,
 .game-cell:focus-visible {
     outline: 4px solid var(--c-blue);

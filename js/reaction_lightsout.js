@@ -29,7 +29,7 @@
 
     /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
-    var LEVEL_RAMP = 15;
+    var LEVEL_RAMP = 30;
     /* 第 1 關起 3×3、第 6 關起 4×4、第 11 關起 5×5 */
     var SIZE_AT = [1, 6, 11];                 /* 第幾關開始變成 3×3、4×4、5×5 */
     /* 打亂次數 k 與每關限時，隨關卡線性變化 */
@@ -235,12 +235,12 @@
                 /* 結算，kit.resumeFrom 可從前 5 關繼續 */
                 my.after(ANSWER_MS, function () {
                     var back = kit.resumeFrom(level);
-                        kit.result(root, {
+                    kit.result(root, {
                         score: passed,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: passed + ' 關', label: rating(passed),
                         lines: ['完美 ' + perfect + ' 關'].concat(logs.slice(-3)),
                         isNew: newRec && passed > 0, sfx: passed >= 5 ? 'win' : 'fail', onAgain: function () { round(1); },
-                            resume: { level: back, run: function () { round(back); } }
+                        resume: { level: back, run: function () { round(back); } }
                     });
                 });
             }

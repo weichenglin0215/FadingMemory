@@ -8,10 +8,39 @@
 /* ═══ 分藥盒（.pillbox-）═══ */
 /* 標題 */
 .pillbox-head {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
     text-align: center;
     font-size: var(--fs-md);
     font-weight: var(--fw-black);
     color: var(--c-ink);
+}
+
+/* 看單子的倒數圓環（V1.43.0）：灰色底圈＋藍色圓環（一圈圈縮短）＋中間黑色的剩餘秒數 */
+.pillbox-ring {
+    flex: none;
+}
+
+.pillbox-ring__track {
+    fill: none;
+    stroke: var(--c-blue-soft);
+    stroke-width: 7;
+}
+
+.pillbox-ring__arc {
+    fill: none;
+    stroke: var(--c-blue);
+    stroke-width: 7;
+    stroke-linecap: round;
+}
+
+.pillbox-ring__n {
+    fill: var(--c-black);
+    font-size: 26px;
+    font-weight: var(--fw-black);
+    font-family: var(--font-ui);
 }
 
 /* 上方面板：先顯示「藥單」，之後換成「藥丸盤」 */
@@ -183,8 +212,8 @@
 /* 跟著手指移動的藥丸分身，加投影讓它看起來「浮」起來 */
 .pillbox-ghost {
     position: absolute;
-    width: 56px;
-    height: 56px;
+    width: 90px;          /* 56px × 160%（js 會依 PILL_SCALE 設定實際大小） */
+    height: 90px;
     filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
 }
 

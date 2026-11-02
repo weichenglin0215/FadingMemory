@@ -19,7 +19,8 @@ ok(T.rungCount(1) === Math.min(T.RUNGS[0], T.rungCap()) && T.rungCount(L) === Ma
 ok(T.turnsAt(1) === T.TURNS[0] && T.turnsAt(L) === T.TURNS[1], '候選（路線上的轉彎）數端點');
 ok(T.hideAt(1).b === T.HIDE_BEFORE[0] && T.hideAt(L).a === T.HIDE_AFTER[1], '藏的轉彎數端點');
 ok(T.nearAt(1) === T.NEAR_MISS[0] && T.nearAt(L) === T.NEAR_MISS[1], '差一條的誘餌數端點');
-ok(T.timeMs(1) === T.TIME_S[0] * 1000 && T.timeMs(L) === T.TIME_S[1] * 1000, '限時端點');
+ok(T.timeMs(1) === T.TIME_S[0] * 1000 && T.timeMs(L) === (T.TIME_S[1] + T.EXTRA_REMOVE_S * 2) * 1000, '限時端點（V1.43.0：要拿的橫線每多一條多給 EXTRA_REMOVE_S 秒）');
+ok(T.needAt(1) === 1 && T.needAt(9) === 1 && T.needAt(10) === 2 && T.needAt(19) === 2 && T.needAt(20) === 3 && T.needAt(30) === 3, '第 10 關起拿 2 條、第 20 關起拿 3 條');
 for (let l = 2; l <= L; l++) ok(T.rungCount(l) >= T.rungCount(l - 1) && T.turnsAt(l) >= T.turnsAt(l - 1) && T.nearAt(l) >= T.nearAt(l - 1), '單調 ' + l);
 
 // ── 純函式 ──
@@ -163,5 +164,48 @@ console.log('平均候選 ' + (candSum / m0).toFixed(1) + ' 個、差一條的�
   const boot = rd('../../js/boot.js'); ok(boot.indexOf("'js/ghostleg_core.js'") > 0 && boot.indexOf("'js/ghostleg_core.js'") < boot.indexOf("'js/reaction_ghostleg2.js'"), 'boot.js：ghostleg_core.js 先載入');
   ok(/\['ghostleg2', 'tap', \d+, 1\]/.test(rd('browser_hints.js')), 'browser_hints：鬼腳圖減一的提示是點擊'); }
 
+// V1.43.0：新出題 makePuzzle——正確路線橫跨全部直線＋碰到兩側邊緣＋回頭；第 10 關起拿 2 條、第 20 關起拿 3 條才走得到終點
+{
+  const hist = { grade: [0, 0, 0], fallback: 0 }; let n = 0, eqTot = 0, slow = 0, fullAll = 0;
+  for (let lv = 1; lv <= T.RAMP_LEVELS; lv++) for (let k = 0; k < 8; k++) {
+    const t0 = Date.now(), q = T.makePuzzle(lv, rnd), need = T.needAt(lv); n++;
+    if (Date.now() - t0 > 2500) slow++;
+    if (!q.route) { hist.fallback++; continue; }                         // 保底（舊的出題）：極少
+    ok(q.need === need && q.solutions.length === need && q.req.length === need, '第 ' + lv + ' 關要拿 ' + need + ' 條');
+    hist.grade[q.stage]++;
+    // 結構：每一條都是圖上的橫線、同一層沒有相鄰、每層最多 2 條
+    const key = g => g.row + ',' + g.col, set = {}; q.rungs.forEach(g => { ok(g.col >= 0 && g.col <= T.COLS - 2 && g.row >= 0 && g.row < T.ROWS, '位置範圍'); ok(!set[key(g)], '不重複'); set[key(g)] = 1; });
+    q.rungs.forEach(g => ok(!set[g.row + ',' + (g.col + 1)], '同一層橫線不相鄰'));
+    q.solutions.forEach(g => ok(set[key(g)], '要拿掉的橫線在圖上'));
+    // 現在走不到終點；拿掉設計的 need 條之後走得到
+    ok(T.C.follow(q.rungs, q.start).end === q.endNow && q.endNow !== q.target, '第 ' + lv + ' 關：現有的橫線走不到終點');
+    ok(T.endAfter(q.rungs, q.start, q.solutions) === q.target, '第 ' + lv + ' 關：拿掉設計的 ' + need + ' 條之後走到終點');
+    // 獨立窮舉：拿少於 need 條（不拿、拿 1 條、拿任意 2 條）都走不到終點
+    if (need >= 2) {
+      let hit = 0;
+      q.rungs.forEach(g => { if (T.C.follow(q.rungs.filter(x => x !== g), q.start).end === q.target) hit++; });
+      ok(hit === 0, '第 ' + lv + ' 關：獨立窮舉：只拿 1 條走不到終點（' + hit + '）');
+      if (need === 3) {
+        let hit2 = 0;
+        for (let i = 0; i < q.rungs.length; i++) for (let j = i + 1; j < q.rungs.length; j++) if (T.C.follow(q.rungs.filter((x, t) => t !== i && t !== j), q.start).end === q.target) hit2++;
+        ok(hit2 === 0, '第 ' + lv + ' 關：獨立窮舉：拿任意 2 條都走不到終點（' + hit2 + '）');
+      }
+    }
+    // 正確路線（拿掉設計的橫線之後走的路）：經過全部直線、碰到最左與最右、回頭至少 REV_MIN 次
+    const vc = T.C.visitedCols(T.withoutAll(q.rungs, q.solutions), q.start);
+    ok(vc.length === T.COLS && vc[0] === 0 && vc[vc.length - 1] === T.COLS - 1, '第 ' + lv + ' 關：正確路線橫跨全部 ' + T.COLS + ' 條直線、碰到兩側邊緣：' + vc.join(''));
+    if (vc.length === T.COLS) fullAll++;
+    ok(q.shape.rev >= T.REV_MIN, '第 ' + lv + ' 關：正確路線至少回頭 ' + T.REV_MIN + ' 次（' + q.shape.rev + '）');
+    // 橫線數、各縫橫線數
+    ok(q.rungs.length >= T.rungCount(lv) - 4 && q.rungs.length <= T.rungCount(lv) + T.BREAK_EXTRA + 6, '第 ' + lv + ' 關橫線數 ' + q.rungs.length);
+    eqTot += T.C.cancelPairs(q.rungs);
+  }
+  ok(hist.fallback <= n * 0.03, '舊出題當保底的比例很低：' + hist.fallback + ' / ' + n);
+  ok(slow === 0, '出題夠快：' + slow);
+  ok(fullAll > 0 && eqTot / n < 5, '平均「＝」的對數不多：' + (eqTot / n).toFixed(2));
+  console.log('V1.43.0 新出題：保底 ' + hist.fallback + ' / ' + n + '；條件級別 0／1／2＝' + hist.grade.join('／') + '；平均「＝」 ' + (eqTot / n).toFixed(2) + ' 對；正確路線橫跨全部直線 ' + fullAll);
+  // 點橫線＝拿掉、再點＝放回去的邏輯：withoutAll 與 minimalRemoval
+  ok(T.withoutAll([{ row: 1, col: 0 }, { row: 2, col: 1 }], [{ row: 1, col: 0 }]).length === 1, 'withoutAll');
+}
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');
 process.exitCode = bad ? 1 : 0;

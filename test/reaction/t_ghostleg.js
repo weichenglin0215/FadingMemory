@@ -11,7 +11,10 @@ ok(T.rungCount(1) === Math.min(T.RUNGS[0], T.rungCap()) && T.rungCount(T.RAMP_LE
 ok(T.visitAt(1) === T.VISIT[0] && T.visitAt(T.RAMP_LEVELS) === T.VISIT[1] && T.turnsAt(1) === T.TURNS[0] && T.turnsAt(T.RAMP_LEVELS) === T.TURNS[1], '正確路線經過的直線數、轉彎數端點');
 for (let l = 2; l <= T.RAMP_LEVELS; l++) ok(T.visitAt(l) >= T.visitAt(l - 1) && T.turnsAt(l) >= T.turnsAt(l - 1), '經過的直線數、轉彎數單調 ' + l);
 ok(T.maxSolAt(1) === T.MAX_SOL[0] && T.maxSolAt(T.RAMP_LEVELS) === T.MAX_SOL[1] && T.maxSolAt(T.RAMP_LEVELS) >= 1, '「畫對的位置數」上限端點');
-ok(T.timeMs(1) === T.TIME_S[0] * 1000 && T.timeMs(T.RAMP_LEVELS) === T.TIME_S[1] * 1000, '限時端點');
+ok(T.timeMs(1) === T.TIME_S[0] * 1000 && T.timeMs(T.RAMP_LEVELS) === (T.TIME_S[1] + T.EXTRA_RUNG_S * 2) * 1000, '限時端點（V1.43.0：要畫的橫線每多一條多給 EXTRA_RUNG_S 秒）');
+for (let l = 2; l <= T.RAMP_LEVELS; l++) ok(T.timeMs(l) >= T.timeMs(l - 1), '越後面限時越長 ' + l);
+ok(T.TIME_S[0] >= 45 && T.TIME_S[1] >= 90, 'V1.43.0：限時延長（45 → 90 秒）');
+ok(T.needAt(1) === 1 && T.needAt(9) === 1 && T.needAt(10) === 2 && T.needAt(19) === 2 && T.needAt(20) === 3 && T.needAt(30) === 3, '第 10 關起畫 2 條、第 20 關起畫 3 條');
 for (let l = 2; l <= T.RAMP_LEVELS; l++) ok(T.rungCount(l) >= T.rungCount(l - 1) && T.maxSolAt(l) <= T.maxSolAt(l - 1), '單調 ' + l);
 // snapRow／canPlace
 for (let r = 0; r < T.ROWS; r++) ok(T.snapRow(T.rowY(r)) === r && T.snapRow(T.rowY(r) + 3) === r && T.snapRow(T.rowY(r) - 3) === r, 'snapRow ' + r);
@@ -255,5 +258,31 @@ ok(T.rating(1) !== T.rating(4) && T.rating(4) !== T.rating(7) && T.rating(7) !==
   ok(/\.ghostleg-user \{[^}]*c-blue[^}]*stroke-width: 14/.test(css.replace(/\r?\n/g, ' ')) , '玩家畫的橫線：很粗的藍線');
   ok(/\.gl-token--go \{[^}]*c-green/.test(css.replace(/\r?\n/g, ' ')) && /\.gl-token--go\+\.gl-label,\s*\.gl-end--go\+\.gl-label \{\s*fill: var\(--c-black\)/.test(css), '起點終點：綠底黑字');
   ok(/\.ghostleg-route \{[^}]*c-green[^}]*stroke-dasharray/.test(css.replace(/\r?\n/g, ' ')), '評審動畫：綠色粗虛線');
-  ok(src.indexOf('canPlace(q.rungs, row, col)') > 0 && src.indexOf("api.stopTimer()") > 0 && src.indexOf('judge();') > 0, '畫好橫線之後才開始評審動畫'); }
+  ok(src.indexOf('canPlace(q.rungs.concat(placed), row, col)') > 0 && src.indexOf("api.stopTimer()") > 0 && src.indexOf('judge();') > 0, '畫好橫線之後才開始評審動畫'); }
+// V1.43.0：第 10 關起畫 2 條、第 20 關起畫 3 條（makePuzzle）：一定要畫滿才走得到終點、設計的答案真的走得到、拿掉的橫線是正確路線上的
+{
+  const seen = { 1: 0, 2: 0, 3: 0 }; let slow = 0;
+  for (let lv = 1; lv <= T.RAMP_LEVELS; lv++) for (let k = 0; k < 6; k++) {
+    const t0 = Date.now(), q = T.makePuzzle(lv, rnd), need = T.needAt(lv); seen[q.need]++;
+    if (Date.now() - t0 > 2500) slow++;
+    ok(q.need === need && q.req.length === need, '第 ' + lv + ' 關要畫 ' + need + ' 條');
+    ok(T.follow(q.rungs, q.start).end === q.end0 && q.end0 !== q.target, '第 ' + lv + ' 關：現有的橫線走不到終點');
+    let cur = q.rungs.slice();
+    q.req.forEach(g => { ok(T.canPlace(cur, g.row, g.col), '第 ' + lv + ' 關：設計的橫線畫得上去'); cur = cur.concat([g]); });
+    ok(T.follow(cur, q.start).end === q.target, '第 ' + lv + ' 關：畫滿設計的 ' + need + ' 條之後走到終點');
+    if (need >= 2) ok(T.minimalNeed(q.rungs, q.start, q.target, need), '第 ' + lv + ' 關：少於 ' + need + ' 條走不到終點');
+    if (need >= 2) { const ps = T.placements(q.rungs, q.start); ok(ps.every(p => p.end !== q.target), '第 ' + lv + ' 關：獨立窮舉：只畫 1 條走不到終點'); }
+    if (need === 3) {
+      let hit = 0;
+      for (let r1 = 0; r1 < T.ROWS; r1++) for (let c1 = 0; c1 <= T.COLS - 2; c1++) {
+        if (!T.canPlace(q.rungs, r1, c1)) continue; const g1 = q.rungs.concat([{ row: r1, col: c1 }]);
+        for (let r2 = 0; r2 < T.ROWS; r2++) for (let c2 = 0; c2 <= T.COLS - 2; c2++) if (T.canPlace(g1, r2, c2) && T.follow(g1.concat([{ row: r2, col: c2 }]), q.start).end === q.target) hit++;
+      }
+      ok(hit === 0, '第 ' + lv + ' 關：獨立窮舉：畫任意 2 條都走不到終點（' + hit + '）');
+    }
+  }
+  ok(seen[1] === 54 && seen[2] === 60 && seen[3] === 66, '各階段的題數：1 條 ' + seen[1] + '、2 條 ' + seen[2] + '、3 條 ' + seen[3]);
+  ok(slow === 0, '出題夠快（每題不到 2.5 秒）：' + slow);
+  ok(T.routeRungs([{ row: 1, col: 1 }, { row: 3, col: 0 }], 2).map(g => g.row + ',' + g.col).join(' ') === '1,1 3,0', 'routeRungs：從丙走過第 1 層乙丙、第 3 層甲乙');
+}
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

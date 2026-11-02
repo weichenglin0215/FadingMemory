@@ -240,8 +240,7 @@
         { id: 'fruitstock', name: '水果進出貨', cat: 'number', img: 'img/reaction/fruitstock.png' },
         { id: 'boxstack', name: '疊箱子', cat: 'logic', img: 'img/reaction/boxstack.png' },
         { id: 'shapegrid', name: '形色不相鄰', cat: 'logic', img: 'img/reaction/shapegrid.png' },
-        { id: 'babyscale', name: '抱著量體重', cat: 'number', img: 'img/reaction/babyscale.png' },
-        { id: 'keypad30', name: '按鍵搶三十', cat: 'number', img: 'img/reaction/keypad30.png' }
+        { id: 'babyscale', name: '抱著量體重', cat: 'number', img: 'img/reaction/babyscale.png' }
     ];
     /* 用 id 快速找到那一款（recent 頁籤只存 id，顯示時要靠它換回完整資料） */
     var gameById = {};
@@ -333,6 +332,27 @@
         if (tab === 'all') return GAME_CELLS.slice();
         if (tab === 'recent') return recentIds().map(function (id) { return gameById[id]; });
         return GAME_CELLS.filter(function (c) { return c.cat === tab; });
+    }
+
+    /* 搜尋遊戲（V1.43.0，頁籤列最右邊的「搜尋」）：關鍵字只要是遊戲名稱的「一部分」就算符合。
+       · 全形半形、大小寫不分（NFKC 正規化再轉小寫）；關鍵字用空白隔開＝每一段都要符合（順序不拘）；
+       · 也比對遊戲 id（打 sudoku 找得到數獨），但名稱優先：名稱符合的排在前面，其餘維持選單順序；
+       · 關鍵字是空的＝不篩選，回傳全部。 */
+    function normSearch(s) {
+        s = String(s == null ? '' : s);
+        if (s.normalize) s = s.normalize('NFKC');
+        return s.toLowerCase();
+    }
+    function searchGames(q) {
+        var words = normSearch(q).split(/\s+/).filter(Boolean);
+        if (!words.length) return GAME_CELLS.slice();
+        var byName = [], byId = [];
+        GAME_CELLS.forEach(function (c) {
+            var name = normSearch(c.name), id = c.id.toLowerCase();
+            if (words.every(function (w) { return name.indexOf(w) >= 0; })) byName.push(c);
+            else if (words.every(function (w) { return name.indexOf(w) >= 0 || id.indexOf(w) >= 0; })) byId.push(c);
+        });
+        return byName.concat(byId);
     }
 
     /* 這個頁籤 id 是不是合法的（存檔裡的值可能是舊版留下的、或被改壞） */
@@ -553,8 +573,10 @@
         var cellEls = {};            /* 已經做好的格子（id → 按鈕），切換頁籤時重複使用，不用重做 */
         var tabEls = {};             /* 頁籤按鈕（id → 按鈕） */
         var curTab = 'all';
+        var query = '';              /* 搜尋關鍵字（V1.43.0）；不是空的＝目前在「搜尋」狀態，格子只留符合的遊戲，分類頁籤都不亮 */
+        var searchCtl = null;        /* 開著的搜尋彈窗；null＝沒開 */
 
-        function hide() { gameDlg.hidden = true; closePopup(); dropGamesParam(); }
+        function hide() { gameDlg.hidden = true; closePopup(); query = ''; closeSearch(); dropGamesParam(); }
 
         /* 標題列：左上「返回」（樣式跟遊戲畫面的標題列同一套 .bar__back），標題置中 */
         var back = h('button', {
@@ -581,14 +603,26 @@
             tabEls[t.id] = b;
             tabs.appendChild(b);
         });
+        /* 「搜尋」：排在 目測 的右邊。它不是分類（沒有放進 GAME_TABS、class 也不是 .game-tab），按下去跳出輸入關鍵字的彈窗；
+           有關鍵字的時候它填藍色。 */
+        var searchBtn = h('button', {
+            'class': 'game-tab-search', type: 'button', attrs: { 'aria-label': '搜尋遊戲', 'aria-pressed': 'false', 'data-tab': 'search' },
+            html: UI.icon('search') + '<span class="game-tab-search__t">搜尋</span>',
+            on: { click: function (e) { e.stopPropagation(); if (searchCtl) closeSearch(); else openSearch(); } }
+        });
+        tabs.appendChild(searchBtn);
 
-        /* render()：依照目前的頁籤，把該顯示的格子放進 grid（清空再放，格子元素本身是重複使用的） */
+        /* render()：依照目前的頁籤（或搜尋關鍵字），把該顯示的格子放進 grid（清空再放，格子元素本身是重複使用的） */
         function render() {
-            var items = tabGames(curTab);
+            var searching = query !== '';
+            var items = searching ? searchGames(query) : tabGames(curTab);
             var last = UI.store.get(LAST_GAME_KEY, null);
             grid.innerHTML = '';
             if (!items.length) {
-                grid.appendChild(h('div', { 'class': 'game-empty' }, [
+                grid.appendChild(h('div', { 'class': 'game-empty' }, searching ? [
+                    h('div', { 'class': 'game-empty__t', text: '找不到「' + query + '」' }),
+                    h('div', { 'class': 'game-empty__s', text: '換個字試試，只打名稱的一部分就可以' })
+                ] : [
                     h('div', { 'class': 'game-empty__t', text: '還沒有玩過的遊戲' }),
                     h('div', { 'class': 'game-empty__s', text: '到「全部」挑一款開始玩吧' })
                 ]));
@@ -604,19 +638,80 @@
                 grid.appendChild(el);
             });
             GAME_TABS.forEach(function (t) {
-                var on = t.id === curTab;
+                var on = !searching && t.id === curTab;
                 tabEls[t.id].classList.toggle('is-on', on);
                 tabEls[t.id].setAttribute('aria-selected', on ? 'true' : 'false');
             });
+            searchBtn.classList.toggle('is-on', searching);
+            searchBtn.setAttribute('aria-pressed', searching ? 'true' : 'false');
             scroller.refresh();
         }
 
-        /* 換頁籤：記住這次選的、重畫、捲回最上面 */
+        /* 換頁籤：記住這次選的、重畫、捲回最上面（搜尋中換頁籤＝離開搜尋，關鍵字清掉） */
         function setTab(id) {
             curTab = id;
+            query = '';
+            closeSearch();
             UI.store.set(TAB_KEY, id);
             render();
             scroller.scrollTo(0);
+        }
+
+        /* ═══ 搜尋彈窗（V1.43.0）═══
+           彈窗貼在畫面最上面（標題列下面）、背景不壓暗也不擋手指：玩家一邊打字，下面的格子就一邊只留下符合的遊戲。
+           彈窗開著的時候把格子往下推一個彈窗的高度（viewport.style.marginTop），符合的遊戲才不會被彈窗蓋住。
+           「完成」（或 Enter）關掉彈窗，篩選留著（頁籤列的「搜尋」填藍色）；「清除」清空關鍵字。
+           注音／拼音輸入還在組字的時候（isComposing）不篩選，等組好字再篩，不然打到一半會看到「找不到」。 */
+        function closeSearch() { if (searchCtl) searchCtl.close(); }
+
+        function openSearch() {
+            if (!window.Dlg || searchCtl) return;
+            var input = h('input', {
+                'class': 'dlg-input search-input',
+                attrs: { type: 'text', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', enterkeyhint: 'search',
+                         placeholder: '輸入遊戲名稱，例如：數獨', 'aria-label': '搜尋遊戲名稱' }
+            });
+            input.value = query;
+            var count = h('div', { 'class': 'search-count' });
+            function paintCount() {
+                count.textContent = query === '' ? '共 ' + GAME_CELLS.length + ' 款，打幾個字就會留下符合的' : '找到 ' + searchGames(query).length + ' 款';
+            }
+            function apply() {
+                var q = input.value.trim();
+                if (q === query) return;
+                query = q;
+                render();
+                paintCount();
+                scroller.scrollTo(0);
+            }
+            input.addEventListener('input', function (e) { if (!e.isComposing) apply(); });
+            input.addEventListener('compositionend', apply);
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation();                 /* Esc 只關搜尋彈窗，不要連整個遊戲選單一起關掉 */
+                    if (!e.isComposing) closeSearch();
+                }
+            });
+            paintCount();
+            var ctl = searchCtl = Dlg.open({
+                cls: 'dlg--search',
+                children: [input, count],
+                btnRow: true,
+                buttons: [
+                    { text: '清除', kind: 'line', cls: 'btn--sm', keep: true, onClick: function () { input.value = ''; apply(); input.focus(); } },
+                    { text: '完成', kind: 'primary', cls: 'btn--sm' }
+                ],
+                onClose: function () {
+                    searchCtl = null;
+                    viewport.style.marginTop = '';
+                    render();
+                }
+            });
+            viewport.style.marginTop = (ctl.card.offsetTop + ctl.card.offsetHeight + 8) + 'px';
+            scroller.refresh();
+            input.focus();
+            if (query) input.select();
         }
 
         /* 「全部」頁籤：把上次玩的那一款捲到畫面中間（它的格子外圍有藍框），不用每次都從最上面一路滑 */
@@ -654,7 +749,7 @@
     /* 給 Node 測試用（test/reaction/t_menu.js）的資料與純函式；另外 js/menu_nav.js（左上角漢堡選單的「成績」彈窗）
        也在瀏覽器裡用 GAME_CELLS／gameById／recentIds／pickGame（點「玩」直接進那款遊戲，跟點選單格子是同一個動作） */
     window.FMMenu = {
-        GAME_CELLS: GAME_CELLS, GAME_TABS: GAME_TABS, THEME_CELLS: THEME_CELLS, tabGames: tabGames, RECENT_MAX: RECENT_MAX,
+        GAME_CELLS: GAME_CELLS, GAME_TABS: GAME_TABS, THEME_CELLS: THEME_CELLS, tabGames: tabGames, searchGames: searchGames, RECENT_MAX: RECENT_MAX,
         gameById: gameById, recentIds: recentIds, pickGame: pickGame,
         grandmaItems: grandmaItems, GRANDMA_MAX: GRANDMA_MAX,
         comeonItems: comeonItems, masterItems: masterItems, popupOrder: popupOrder, POPUP_ORDER: POPUP_ORDER, POPUP_META: POPUP_META, POPUP_MAX: POPUP_MAX, POPUP_WAIT_MS: POPUP_WAIT_MS,

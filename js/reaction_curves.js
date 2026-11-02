@@ -18,6 +18,14 @@
      （視覺陷阱，機率隨關卡線性上升）。
    · 第 DASH_FROM 關起畫成虛線：白色底線上疊紅色虛線，左右兩條的「紅段／白段」長度明顯不同，
      沒辦法靠數虛線段數來比長度。
+   · V1.43.0 玩家意見：
+       ① **曲線儘量靠近左右兩側的邊緣、而且可以往上繞**（以前只是在中間左右扭動，很單調）：轉折點離中線至少 U_MIN（0.5）倍半幅寬
+         （以前 0.4）、短的那條的左右伸展倍率 ALPHA_SHORT（0.9～1.0，以前 0.8～0.98）、轉折點可以伸到半幅寬的 CTRL_FRAC（0.96，以前 0.86）、
+         相鄰兩點的左右距離至少 MIN_SWING（0.9 倍半幅寬）、上下打亂幅度 YJIT（1.0 → 1.5，以前 0.8 → 1.3；超過 1 就會往回走、往上繞）。
+         實測左右伸展約 143px（以前約 115px，半邊最多 190px）。
+       ② **左右兩條虛線的紅白間距要接近**（以前一條 6／6、另一條 34／20，差太多，沒有誤導的作用）：兩條的虛線週期（紅段＋白段）
+         只差在「週期 × 長度」讓兩條的虛線**段數幾乎一樣**——長的那條週期乘上 長度比 × (1＋隨機 −4%～＋6%)，所以靠數紅白段數猜不出誰比較短
+         （段數差距比長度差距小，有時段數還是短的那條比較多），見 dashFor。
    · 球的位置＝沿繩子走過的弧長（兩顆球速度相同），所以短的先到。速度預設 BALL_SPEED px/s，繩子太長時
      加快到「短的那條在 TRAVEL_MAX_S 秒內到」。判定在按按鈕的瞬間就決定了（比較兩條繩子的長度）。
    · 揭曉：短的那顆球一抵達終點，**長的那條繩子上的球立刻停在原地**（弧長相同，所以停的位置就是「還差多少」），
@@ -45,8 +53,8 @@
     /* 轉折點數量隨關卡增加 */
     var K_START = 3, K_END = 7, K_RAMP = 12;              /* 轉折點的數量 */
     /* 轉折點上下打亂的幅度（>1 時路線會往回走） */
-    var YJIT_START = 0.8, YJIT_END = 1.3;               /* 轉折點上下打亂的幅度（倍的間距，> 1 就會往回走）*/
-    var MIN_SWING = 0.8;                                  /* 相鄰兩個轉折點的左右距離，至少是半幅寬的幾倍 */
+    var YJIT_START = 1.0, YJIT_END = 1.5;               /* 轉折點上下打亂的幅度（倍的間距，> 1 就會往回走）*/
+    var MIN_SWING = 0.9;                                  /* 相鄰兩個轉折點的左右距離，至少是半幅寬的幾倍 */
     var TRAP_END = 0.7;                                   /* 「短的那條轉折比較多」的機率（線性上升到這個） */
     /* 第 4 關起畫成虛線（無法靠數段數比長度） */
     var DASH_FROM = 4;                                    /* 第幾關起是虛線 */
@@ -60,10 +68,15 @@
     /* 路徑不重疊：弧長相隔超過 SEP_PX 的兩點，距離要 ≥ CLEAR_PX */
     var CLEAR_PX = 24, SEP_PX = 70;                       /* 路徑不重疊：弧長相隔 > SEP_PX 的兩點距離 ≥ CLEAR_PX */
     var ALPHA_MIN = 0.2;
+    var U_MIN = 0.5;                                      /* 轉折點的左右位置至少離中線半幅寬的幾成（V1.43.0：0.4 → 0.5，靠近兩側邊緣） */
+    var ALPHA_SHORT = [0.9, 1.0];                         /* 短的那條的左右伸展倍率範圍（V1.43.0：0.8～0.98 → 0.9～1.0，幾乎貼到邊） */
+    var DASH_PERIODS = [14, 18, 24];                      /* 虛線的基本週期（紅段＋白段，px）：短的那條用它 */
+    var DASH_JITTER = [-0.04, 0.06];                      /* 長的那條週期 ＝ 基本週期 × 長度比 × (1 ＋ 這個範圍的亂數)：段數只差幾 % */
+    var DASH_RED = 0.55;                                  /* 紅段佔一個週期的比例 */
     /* 揭曉時的鏡頭放大：長繩子「球停住之後還沒走完的那一段」的長度（弧長）不超過 ZOOM_REST_MAX px（差距很小）才放大；
        放大的框是那一段路的外框（加 ZOOM_PAD 的邊），倍率至少 ZOOM_MIN（不到就不動）、最多 ZOOM_MAX 倍，花 ZOOM_MS 毫秒 */
     var ZOOM_REST_MAX = 140, ZOOM_MIN = 1.35, ZOOM_MAX = 4.5, ZOOM_PAD = 44, ZOOM_MS = 900;
-    var CTRL_FRAC = 0.86;                                 /* 轉折點最多伸到半幅寬的這個比例（曲線過彎時會稍微衝出去，要留空間）*/
+    var CTRL_FRAC = 0.96;                                 /* 轉折點最多伸到半幅寬的這個比例（曲線過彎時會稍微衝出去，要留空間）*/
 
     /* 這一關的長度差 */
     function diffFor(level) { return Math.max(DIFF_MIN, DIFF_START - (level - 1) * DIFF_STEP); }
@@ -119,7 +132,7 @@
                 for (var tries = 0; tries < 40 && !placed; tries++) {
                     var v = kit.clamp(i * spacing + (rand() * 2 - 1) * yjit * spacing, 0.03, 0.97);
                     if (rand() < 0.85) side = -side;                           /* 大多左右交替，偶爾連續同一邊 */
-                    var u = side * kit.randFloat(0.4, 1, rand);
+                    var u = side * kit.randFloat(U_MIN, 1, rand);
                     if (i > 1 && Math.abs(u - prevU) < MIN_SWING) continue;
                     pts.push({ u: u, v: v });
                     if (polyOk(pts, 0.75, dims)) { placed = true; prevU = u; } else pts.pop();
@@ -213,7 +226,7 @@
             var kL = Math.max(2, kb + (isTrap ? -kit.randInt(1, 2, rand) : kit.randInt(-1, 1, rand)));
             var shS = makeShape(kS, yj, rand, dims), shL = makeShape(kL, yj, rand, dims);
             if (!shS || !shL) continue;
-            var aS = kit.randFloat(0.8, 0.98, rand);
+            var aS = kit.randFloat(ALPHA_SHORT[0], ALPHA_SHORT[1], rand);
             var ptsS = buildPath(shS, aS, cxS, halfW, y0, y1);
             if (!validRope(ptsS, boxOf(cxS))) continue;
             var lenS = pathLen(ptsS);
@@ -229,12 +242,17 @@
     }
     /* 球的速度（px／秒） */
     function speedFor(shortLen) { return Math.max(BALL_SPEED, shortLen / TRAVEL_MAX_S); }
-    /* 虛線的紅段／白段長度：左右兩條差很多，無法靠數虛線段數來比長度 */
-    /* 虛線的紅段／白段長度：左右兩條差很多 */
-    function dashFor(rand) {
+    /* 虛線的紅段／白段長度（V1.43.0 玩家意見）：左右兩條的週期（紅＋白）要接近，讓玩家沒辦法靠紅白間距或段數猜哪條短。
+       做法：短的那條用基本週期 P（從 DASH_PERIODS 挑）；長的那條週期＝P × 長度比 × (1 ＋ δ)，δ 在 DASH_JITTER 範圍亂數，
+       所以兩條的「段數」（長度 ÷ 週期）幾乎一樣，只差 δ（有時長的那條段數反而比較少）。紅段佔週期的 DASH_RED 比例。
+       lenL、lenR＝左右兩條的長度；沒給長度就當作一樣長（只有紅白間距稍微不同）。回傳 { L:[紅,白], R:[紅,白] } */
+    function dashFor(rand, lenL, lenR) {
         rand = rand || Math.random;
-        var a = kit.pick([[6, 6], [8, 5], [10, 8]], rand), b = kit.pick([[34, 20], [38, 26], [30, 34]], rand);
-        return rand() < 0.5 ? { L: a, R: b } : { L: b, R: a };
+        var P = kit.pick(DASH_PERIODS, rand), lL = lenL || 1, lR = lenR || 1;
+        var shortIsL = lL <= lR, ratio = Math.max(lL, lR) / Math.min(lL, lR);
+        var pS = P, pLong = P * ratio * (1 + kit.randFloat(DASH_JITTER[0], DASH_JITTER[1], rand));
+        function seg(p) { var red = Math.max(2, Math.round(p * DASH_RED * 10) / 10); return [red, Math.max(2, Math.round((p - red) * 10) / 10)]; }
+        return shortIsL ? { L: seg(pS), R: seg(pLong) } : { L: seg(pLong), R: seg(pS) };
     }
     /* 要不要放大鏡頭：剩下那一段路的長度（弧長）夠短（差距很小）才放大；差距大就一眼看得出來，不用放大 */
     function needZoom(restLen) { return restLen <= ZOOM_REST_MAX; }
@@ -319,7 +337,7 @@
                 field.querySelectorAll('svg').forEach(function (s) { s.remove(); });
                 svg = kit.svg('svg', { 'class': 'curves-svg', viewBox: '0 0 ' + W + ' ' + H }, field);
                 ptsL = Lv.L.pts; ptsR = Lv.R.pts;
-                var dash = level >= DASH_FROM ? dashFor() : null;
+                var dash = level >= DASH_FROM ? dashFor(null, Lv.L.len, Lv.R.len) : null;
                 [[ptsL, 'L'], [ptsR, 'R']].forEach(function (pr) {
                     var d = pr[0].map(function (p, i) { return (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(' ');
                     if (dash) {

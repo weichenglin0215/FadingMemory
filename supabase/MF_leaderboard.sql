@@ -1201,7 +1201,7 @@ $$;
 insert into public."MF_games" (game_id, title, better, min_score, max_score) values
     -- >>> 自動產生開始（node test/leaderboard/gen_games_sql.cjs --write 會重寫這兩行標記之間的內容，請不要手改）
     ('speed',        '零秒出手', 'min', 0, 60),
-    ('drop',         '神準落下', 'max', 1, 1000),
+    ('drop',         '神準落下', 'max', 1, 200),
     ('spot',         '大家來找碴', 'max', 1, 200),
     ('impossible',   '不可能任務', 'min', 0, 30),
     ('shapes',       '形形色色', 'max', 1, 200),
@@ -1381,7 +1381,6 @@ insert into public."MF_games" (game_id, title, better, min_score, max_score) val
     ('boxstack',     '疊箱子', 'max', 1, 90),
     ('shapegrid',    '形色不相鄰', 'max', 1, 90),
     ('babyscale',    '抱著量體重', 'max', 1, 90),
-    ('keypad30',     '按鍵搶三十', 'max', 1, 90),
     -- <<< 自動產生結束
     ('zz_test', '（測試用，可刪）', 'max', 0, 1000)
 on conflict (game_id) do update

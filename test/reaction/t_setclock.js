@@ -34,6 +34,7 @@ ok(near(spin(720), 120, 1e-9) && near(spin(-360), -60, 1e-9) && near(spin(90), 1
 /* 常數是使用者可以自己調的（目前的值看檔案最上面），所以這裡只驗證「線性、會變難、之後固定」，不寫死數字 */
 const tl1 = T.timeLimit(1), tlN = T.timeLimit(T.LEVEL_RAMP);
 ok(tl1 > tlN && near(T.timeLimit(10.5), (tl1 + tlN) / 2, 1e-9) && T.timeLimit(99) === tlN && near(T.timeLimit(3) - T.timeLimit(2), T.timeLimit(9) - T.timeLimit(8), 1e-9), 'time limit shrinks linearly then stays');
+ok(T.TIME_START >= 12 && T.TIME_END >= 4, 'V1.43.0：基本限時延長（前面的關卡給最多）：' + T.TIME_START + ' → ' + T.TIME_END);
 ok(T.hourOffsetMax(1) < T.hourOffsetMax(T.LEVEL_RAMP) && T.hourOffsetMax(99) === T.hourOffsetMax(T.LEVEL_RAMP), 'hour offset grows then stays');
 let maxOff = {};
 for (let lv = 1; lv <= 30; lv++) {
@@ -45,7 +46,7 @@ for (let lv = 1; lv <= 30; lv++) {
     ok(!T.isRight(L.start, L.target), 'start not right');
     /* 要轉的距離 ≤ 45 分 + 整點數*60（環狀折算後可能更短，所以只檢查上限）*/
     ok(d <= 45 + 60 * T.hourOffsetMax(lv) + 1e-6 || d >= 720 - (45 + 60 * T.hourOffsetMax(lv)) - 1e-6 || true, 'dummy');
-    ok(L.limit === T.timeLimit(lv), 'limit');
+    ok(near(L.limit, T.timeLimit(lv) + T.TURN_SEC * d / 60, 1e-9) && L.limit >= T.timeLimit(lv), 'limit＝基本限時＋要轉幾圈就多給幾圈的時間');
     ok(L.hideNum === (lv >= 10) && L.hideTick === (lv >= 16), 'hide flags');
     maxOff[lv] = Math.max(maxOff[lv] || 0, d);
   }

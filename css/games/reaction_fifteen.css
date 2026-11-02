@@ -12,6 +12,7 @@
     align-items: center;
     gap: 12px;
     padding-top: 10px;
+    padding-bottom: 80px;
     box-sizing: border-box;
 }
 
@@ -143,19 +144,90 @@
     border-color: var(--c-bad);
 }
 
+/* 被拿走的牌：變淡，並用邊框顏色標出是誰拿的（綠＝你、橘＝電腦），跟左右兩邊的牌同色 */
 .fifteen-card--taken {
-    opacity: 0.18;
+    opacity: 0.5;
     pointer-events: none;
 }
 
+.fifteen-card--mine {
+    background: var(--c-ok-soft);
+    border-color: var(--c-ok);
+    color: var(--c-ok);
+}
+
+.fifteen-card--theirs {
+    background: var(--c-orange-soft);
+    border-color: var(--c-orange);
+    color: var(--c-orange);
+}
+
+/* 湊成的那幾張：不淡掉、黃底 */
+.fifteen-card--win {
+    opacity: 1;
+    background: var(--c-yellow);
+    color: var(--c-ink);
+}
+
+.fifteen-chip--win {
+    background: var(--c-yellow);
+    color: var(--c-ink);
+}
+
+/* 手牌下面的合計 */
+.fifteen-hand__sum {
+    flex: 0 0 100%;
+    text-align: center;
+    margin-top: 2px;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+}
+
 .fifteen-turn {
-    min-height: 60px;
+    min-height: 40px;
     padding: 0 14px;
     font-size: var(--fs-sm);
     font-weight: var(--fw-bold);
     color: var(--c-ink);
     text-align: center;
     line-height: 1.4;
+}
+
+/* 結束時的結果說明字小一點，才放得下「誰贏、湊成哪幾張、關鍵是哪一步」 */
+.fifteen-turn--end {
+    font-size: var(--fs-xs);
+    line-height: 1.35;
+}
+
+/* 結束後的小祕密（洛書＝井字遊戲） */
+.fifteen-secret {
+    padding: 0 14px;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1.35;
+    text-align: center;
+    color: var(--c-ink-soft);
+}
+
+/* 過程記錄：一手一行，最新的一行最黑 */
+.fifteen-log {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 14px;
+    text-align: left;
+}
+
+.fifteen-log__row {
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1.35;
+    color: var(--c-ink-soft);
+}
+
+.fifteen-log__row--new {
+    color: var(--c-ink);
+    font-weight: var(--fw-black);
 }
 
 /* 結束時的洛書方陣（井字遊戲） */

@@ -124,8 +124,21 @@ const T = {
     for (let i = 0; i < 10 && (await state()).cleared < 1; i++) { await api('(a.solve(), 1)'); await sleep(2000); }
     ok((await state()).cleared >= 1, id + '：走好步贏了過關');
     await waitFor(async () => (await state()).level >= 9, 4000, id + ' 換下一關');
-    await api('(a.wrong(), 1)');
-    await waitFor(resultShown, 9000, id + ' 走錯後結算');
+    // V1.43.1：開局各一張牌；走錯之後玩到最後——電腦先湊成＝結算；牌拿完是和局＝不算失敗，同一關重新出題
+    ok(await api('Reaction.current.debug.info().A.toString(2).split("1").length - 1 === 1 && Reaction.current.debug.info().B.toString(2).split("1").length - 1 === 1'), id + '：開局你和電腦各一張牌');
+    const lv = (await state()).level;
+    let ended = false, drawn = 0;
+    for (let i = 0; i < 8 && !ended; i++) {
+      await api('(a.wrong(), 1)');
+      await waitFor(async () => (await resultShown()) || (await J('!!document.querySelector(".rx-passnext")')), 28000, id + ' 走錯後（玩到最後一步）結算或和局');
+      if (await resultShown()) { ended = true; break; }
+      drawn++;
+      const keep = await state();
+      ok(keep.cleared === 1 && !keep.finished, id + '：和局不算失敗、不算過關');
+      await clickEl('.rx-passnext .btn'); await sleep(500);
+      ok((await state()).level === lv && !(await J('!!document.querySelector(".rx-passnext")')), id + '：和局後同一關重新出題');
+    }
+    ok(ended, id + '：走錯會被電腦贏、結算（和局 ' + drawn + ' 次）');
     return true;
   },
   async tianji(id) {

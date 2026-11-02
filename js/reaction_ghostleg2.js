@@ -5,7 +5,19 @@
    玩家要「拿掉一條橫線」（點一下那一條橫線），讓起點接到終點。只有一次機會。關卡制，成績＝通過關數。
    畫棋盤、走路線用 js/ghostleg_core.js（跟「鬼腳圖」外觀一樣）；出題方式是這一款自己的（V1.33.1 重寫，見下面）。
    ───────────────────────────────────────────────────────────────────
-   【拿掉一條，答案在哪裡】
+   【V1.43.0 玩家意見：難度太低】
+   量過舊的出題：拿掉答案之後，「正確路線」（起點 → 拿掉答案後走到終點的整條路）平均只經過 4 條直線（6 條裡），從來沒有碰過兩側邊緣
+   （因為舊設計把路線切成 P、Q、T 三段，T 只能待在舊路線的左邊、Q 待在右邊，結構上走不遠）。玩家的要求與做法：
+     ① **正確路線要橫跨所有直線，而且碰到兩側邊緣之後還要往另一個方向走**：新出題 makePuzzle 反過來——**先設計正確路線 F**（之字形，
+        經過全部 COLS 條直線、碰到最左與最右、至少回頭 REV_MIN 次，makeZigzag），再在 F 走直線的那幾層放「擋路的橫線」（blocker：F 走到那裡會被它拐到旁邊的直線去），
+        最後撒其他橫線（不碰 F 的路，只是混淆）。拿掉全部擋路的橫線，起點就走回 F、走到終點。
+     ② **第 10 關起要拿掉 2 條、第 20 關起要拿掉 3 條才過關**（NEED_FROM）：擋路的橫線放 need 條。出題後驗證（minimalRemoval）：
+        不拿、拿 1 條、（需要拿 3 條時）拿任意 2 條，起點都走不到終點；拿掉設計的那 need 條走得到。拿滿 need 條才開始評審動畫，
+        在已經拿掉的橫線上再點一下＝放回去。擋路的橫線的兩端不碰起點、終點那兩條直線（AVOID_ENDS）。
+     ③ 限時：每多要拿一條，多給 EXTRA_REMOVE_S 秒（3 條 ＋30 秒）。
+   舊的 makeLevel（P、Q、T 三條路的設計）保留給測試與參考，遊戲已經不用它。
+   ───────────────────────────────────────────────────────────────────
+   【拿掉一條，答案在哪裡】（舊設計，只有 V1.33.1 ～ V1.42 用）
    拿掉的話，答案一定是「起點現在這條路線上」的某一個轉彎：拿掉它，路線在那一層就不轉彎、直直走下去。
    換個角度看：每一個轉彎都是「起點的路線」跟「另一條路」交叉的地方；拿掉它，起點就改走那一條路的下半段。
    所以「拿掉 x 會走到終點」＝x 是起點的路線跟「現在會走到終點的那條路」交叉的地方。答案只有一個＝這兩條路只交叉一次。
@@ -66,6 +78,11 @@
     var MIN_GAP_OK = 0.4;                       /* 這麼多比例的題目「允許答案在橫線最少的那一縫」（其他題目一定不在）：量過拿錯的候選約 20% 在最少的那一縫，答案也差不多，就不能拿來猜 */
     var GAP_SPREAD = 3;                         /* 五個縫（相鄰兩條直線之間）的橫線數最多差幾條（差太多，圖看起來一邊空空的） */
     var TIME_S = [30, 60];                      /* 每關限時（秒）：第 1 關 → 到頂 */
+    var NEED_FROM = [10, 20];                   /* V1.43.0：第 10 關起要拿掉 2 條橫線、第 20 關起要拿掉 3 條 */
+    var EXTRA_REMOVE_S = 15;                    /* 要拿掉的橫線每多一條，限時再多幾秒 */
+    var REV_MIN = 2;                            /* V1.43.0：正確路線至少回頭幾次（碰到一邊之後往另一個方向走；REVERSE 比這個大就用 REVERSE，上限 REV_MAX） */
+    var REV_MAX = 3;
+    var FIRST_TRIES = 500;                      /* 出一題最多試幾次（先設計正確路線 F、再放擋路的橫線與其他橫線） */
     var HIT_Y = 16;                             /* 手指點在橫線上下多遠以內，算點到那一條（px） */
     var ROUTE_MS = [1500, 3200];                /* 評審動畫（畫出綠色虛線）的時間範圍 */
     var HOLD_MS = 2000;                         /* 動畫畫完後停多久才進下一關／結算 */
@@ -86,7 +103,9 @@
     function nearAt(level) { return Math.round(at(level, NEAR_MISS)); }
     function stairAt(level) { return Math.round(at(level, STAIR)); }
     function revAt(level) { return Math.round(at(level, REVERSE)); }
-    function timeMs(level) { return Math.round(at(level, TIME_S) * 1000); }
+    /* 這一關要拿掉幾條橫線（1／2／3） */
+    function needAt(level) { return level >= NEED_FROM[1] ? 3 : level >= NEED_FROM[0] ? 2 : 1; }
+    function timeMs(level) { return Math.round((at(level, TIME_S) + EXTRA_REMOVE_S * (needAt(level) - 1)) * 1000); }
     /* 起點的路線依序用到哪幾條橫線（每一個轉彎就是一條橫線） */
     function pathRungs(rungs, start) {
         var s = {}, c = start, out = [];
@@ -511,6 +530,91 @@
         var r0 = [{ row: 3, col: 0 }, { row: 8, col: 1 }];
         return { rungs: r0, start: 0, target: 1, endNow: follow(r0, 0).end, answer: { row: 8, col: 1 }, solutions: [{ row: 8, col: 1 }], candidates: 2, near: 0, leave: false, hide: { before: 1, after: 0 }, shape: { maxRun: 2, rev: 0 }, sweep: false, stage: stages.length };
     }
+    /* ═══ V1.43.0 新出題：先設計正確路線 F，再放擋路的橫線 ═══ */
+    function withoutAll(rungs, list) { return rungs.filter(function (g) { return !list.some(function (x) { return x.row === g.row && x.col === g.col; }); }); }
+    /* 一定要拿掉 need 條才走得到終點嗎：不拿、拿 1 條、（need ≥ 3 時）拿任意 2 條，從 start 都走不到 target */
+    function minimalRemoval(rungs, start, target, need) {
+        if (follow(rungs, start).end === target) return false;
+        var i, j;
+        if (need >= 2) for (i = 0; i < rungs.length; i++) if (follow(without(rungs, rungs[i]), start).end === target) return false;
+        if (need >= 3) for (i = 0; i < rungs.length; i++) for (j = i + 1; j < rungs.length; j++) if (follow(withoutAll(rungs, [rungs[i], rungs[j]]), start).end === target) return false;
+        return true;
+    }
+    /* 拿掉 list 這幾條之後，起點走到哪一欄 */
+    function endAfter(rungs, start, list) { return follow(withoutAll(rungs, list), start).end; }
+    /* 出一題：{ rungs, start, target, endNow, need, req（要拿掉的設計答案，need 條）, answer（req[0]）, solutions（＝req）, route（正確路線的欄）, visited（正確路線經過哪些直線）, shape, candidates, ... }
+       做法：①先走出正確路線 F（makeZigzag：經過全部直線、碰到兩側邊緣、至少回頭 revMin 次）、替 F 的每個轉彎挑一層（randomRows）；
+       ②在 F 走直線的層（不是轉彎的層）放 need 條擋路的橫線：F 走到那裡會被拐去隔壁的直線，兩端不碰起點、終點的直線；
+       ③撒其他橫線湊到 rungCount 條：不碰 F 的路（不能擋也不能被 F 走到），各縫橫線數盡量平均；
+       ④驗證：不拿／少拿走不到終點（minimalRemoval）、拿掉設計的 need 條走得到終點；圖上沒有「＝」（前 70% 的嘗試要求，之後放寬）。 */
+    function makePuzzle(level, rand) {
+        rand = rand || Math.random;
+        var need = needAt(level), n = rungCount(level), stair = stairAt(level), rev = Math.max(REV_MIN, Math.min(REV_MAX, revAt(level)));
+        for (var tr = 0; tr < FIRST_TRIES; tr++) {
+            /* 條件分三級（出題前段最嚴、後段放寬）：第 0 級＝沒有「＝」、擋路橫線不碰起點終點的直線；第 1 級＝「＝」最多 1 對；第 2 級＝都不管 */
+            var grade = tr < FIRST_TRIES * 0.35 ? 0 : (tr < FIRST_TRIES * 0.7 ? 1 : 2), strict = grade < 2, eqMax = grade === 0 ? 0 : 1, avoidEnds = AVOID_ENDS && grade < 2;
+            /* 轉彎越少，走直線的層（可以放擋路橫線的層）越多：要拿的橫線越多，路線越不能太長 */
+            var start = kit.randInt(0, RIGHT, rand), minTurns = (COLS - 1) + rev, maxTurns = Math.min(ROWS - 2 - need, minTurns + Math.max(0, 3 - need));
+            var w = C.makeZigzag(start, COLS, true, minTurns, Math.max(1, stair), rev, maxTurns, rand);
+            if (!w) continue;
+            var m = w.length - 1, target = w[m], rows = C.randomRows(m, -2, rand, w);
+            if (!rows) continue;
+            var F = rows.map(function (r, k) { return { row: r, col: Math.min(w[k], w[k + 1]) }; });
+            var isTurn = {}; rows.forEach(function (r) { isTurn[r] = true; });
+            function fcol(r) { var k = 0; while (k < m && rows[k] < r) k++; return w[k]; }          /* 第 r 層（不是轉彎的層）F 站在哪一條直線 */
+            /* 擋路的橫線的候選位置：F 走直線的層，F 站在 fc，往左或往右拐到隔壁 */
+            var slots = [];
+            for (var r = 0; r < ROWS; r++) {
+                if (isTurn[r]) continue;
+                var fc = fcol(r);
+                [-1, 1].forEach(function (d) {
+                    var nb = fc + d; if (nb < 0 || nb > RIGHT) return;
+                    if (avoidEnds && (fc === start || nb === start || fc === target || nb === target)) return;
+                    var c = Math.min(fc, nb);
+                    if (C.canPlace(F, r, c)) slots.push({ row: r, col: c });
+                });
+            }
+            var rowsOf = {}; slots.forEach(function (s) { rowsOf[s.row] = true; });
+            if (Object.keys(rowsOf).length < need) continue;
+            var picked = [], used = {};
+            kit.shuffle(slots, rand).forEach(function (s) { if (picked.length < need && !used[s.row]) { picked.push(s); used[s.row] = true; } });
+            if (picked.length < need) continue;
+            var rungs = F.concat(picked);
+            if (follow(rungs, start).end === target) continue;                                        /* 擋路的橫線沒有把路線擋掉 */
+            /* 其他橫線：不碰 F 的路（F 走到的直線所在的兩個縫都不放），平均分到各縫 */
+            /* 其他橫線可以放哪裡：不碰 F 的路（F 站在 fcol 的那一層，不能放在 fcol 或 fcol−1 縫，不然會被 F 走到）、也要放得下（同一層不相鄰） */
+            var okFill = function (rr, cc) { return cc >= 0 && cc <= COLS - 2 && (isTurn[rr] || (cc !== fcol(rr) && cc !== fcol(rr) - 1)) && C.canPlace(rungs, rr, cc); };
+            /* 先打斷「＝」（同一縫上下相鄰、兩條中間左右兩旁沒有橫線，走過去又走回來互相抵消；F 回頭的地方、擋路的橫線都會造成）：
+               在兩條中間、旁邊的縫放一條橫線；再撒其他橫線，而且新放的橫線不會造出新的「＝」 */
+            for (var pass = 0; pass < 12; pass++) {
+                var pairs = []; C.cancelPairs(rungs, pairs);
+                if (!pairs.length) break;
+                var pr = pairs[0], cand2 = [];
+                for (var br = pr.r1 + 1; br < pr.r2; br++) [pr.col - 1, pr.col + 1].forEach(function (bc) { if (okFill(br, bc)) cand2.push({ row: br, col: bc }); });
+                if (!cand2.length) break;
+                rungs.push(kit.pick(cand2, rand));
+            }
+            var tries2 = 0;
+            while (rungs.length < n && tries2++ < 600) {
+                var rr = kit.randInt(0, ROWS - 1, rand), cc = kit.randInt(0, COLS - 2, rand);
+                if (!okFill(rr, cc)) continue;
+                var cnt = C.gapCounts(rungs), minC = Math.min.apply(null, cnt);
+                if (cnt[cc] > minC + 1) continue;                                                       /* 各縫橫線數最多差一點 */
+                if (tries2 < 450 && C.makesCancel(rungs, rr, cc)) continue;                           /* 先試著不造出新的「＝」，試很久都放不下才不管 */
+                rungs.push({ row: rr, col: cc });
+            }
+            if (rungs.length < n - 4) continue;
+            if (strict && C.cancelPairs(rungs) > eqMax) continue;
+            if (endAfter(rungs, start, picked) !== target) continue;                                 /* 拿掉擋路的橫線之後走得到終點（F 沒被其他橫線改掉） */
+            if (!minimalRemoval(rungs, start, target, need)) continue;
+            var q = {
+                rungs: rungs, start: start, target: target, endNow: follow(rungs, start).end, need: need, req: picked, answer: picked[0], solutions: picked,
+                route: w, visited: C.visitedCols(withoutAll(rungs, picked), start), shape: routeShape(w), candidates: pathRungs(rungs, start).length, sweep: true, stage: grade
+            };
+            return q;
+        }
+        return makeLevel(level, rand);          /* 保底（實測幾乎不會用到）：舊的出題（一定出得來） */
+    }
     /* 手指點在 (x, y)：點到哪一條橫線（在它兩條直線之間、上下 HIT_Y 以內，最近的那一條）；沒有回傳 null */
     function rungAt(rungs, x, y) {
         var best = null, bd = HIT_Y + 0.001;
@@ -542,13 +646,12 @@
 
     function setup(api) {
         var stage = api.stage, level = api.level, my = api.my;
-        var q = makeLevel(level, api.rand);
+        var q = makePuzzle(level, api.rand), NEED = q.need || 1;
         api.info = q;
-        console.log('[鬼腳圖減一] 第 ' + level + ' 關：橫線 ' + q.rungs.length + ' 條；起點 ' + LABELS[q.start] + '、終點 ' + (q.target + 1) + '（現在走到 ' + (q.endNow + 1) + '）；答案 ' + rungText(q.answer) +
-            '（起點路線上第 ' + (q.hide.before + 1) + ' 個轉彎，共 ' + q.candidates + ' 個）；差一條的誘餌 ' + q.near + ' 個；拿掉之後新路線還轉 ' + q.hide.after + ' 次；拿掉答案' + (q.leave ? '會' : '不會') + '留下「＝」' +
-            '；路線同方向最多連走 ' + q.shape.maxRun + ' 步、回頭 ' + q.shape.rev + ' 次' + (q.sweep ? '、碰到最左與最右' : '') + (q.stage ? '；放寬第 ' + q.stage + ' 級' : '') + '；限時 ' + timeMs(level) + ' ms');
+        console.log('[鬼腳圖減一] 第 ' + level + ' 關：橫線 ' + q.rungs.length + ' 條；起點 ' + LABELS[q.start] + '、終點 ' + (q.target + 1) + '（現在走到 ' + (q.endNow + 1) + '）；要拿掉 ' + NEED + ' 條：' + q.solutions.map(rungText).join('、') +
+            '；正確路線經過 ' + (q.visited ? q.visited.map(function (x) { return LABELS[x]; }).join('') : '?') + '，同方向最多連走 ' + q.shape.maxRun + ' 步、回頭 ' + q.shape.rev + ' 次' + (q.sweep ? '、碰到最左與最右' : '') + (q.stage ? '；放寬第 ' + q.stage + ' 級' : '') + '；限時 ' + timeMs(level) + ' ms');
 
-        var board = C.drawBoard(stage, q, LABELS, '照現有的線走不到終點！點一下要拿掉的那一條橫線');
+        var board = C.drawBoard(stage, q, LABELS, NEED > 1 ? '照現有的線走不到終點！要拿掉 ' + NEED + ' 條橫線：點一下拿掉，再點一下放回去' : '照現有的線走不到終點！點一下要拿掉的那一條橫線');
         var gRoute = board.gRoute, msg = board.msg;
 
         /* 操作提示（只在第一次進遊戲時）：手指點在答案那一條上（共用的手指提示）；玩家一碰畫面就消失 */
@@ -557,22 +660,27 @@
             kit.hintOn(stage, null, { mode: 'tap', x: (colX(a.col) + colX(a.col + 1)) / 2, y: rowY(a.row), delay: 600, text: '點一下橫線，把它拿掉' });
         }
 
-        /* 點一下橫線＝拿掉它（只有一次機會）：原位留下淡淡的紅色虛線，接著跑評審動畫 */
-        var locked = false;
+        /* 點一下橫線＝拿掉它：原位留下淡淡的紅色虛線；在已經拿掉的橫線上再點一下＝放回去（V1.43.0）。拿滿 NEED 條（只有一次機會）才跑評審動畫 */
+        var locked = false, removed = [];
+        function progressText() { return NEED > 1 ? '已拿掉 ' + removed.length + '／' + NEED + ' 條（再點一下拿掉的橫線＝放回去）' : ''; }
         stage.addEventListener('pointerdown', function (e) {
             if (api.over || locked) return;
             var p = kit.localPt(e, stage), g = rungAt(q.rungs, p.x, p.y);
             if (!g) return;
             e.preventDefault();
-            locked = true; api.stopTimer();
-            board.rungEls[g.row + ',' + g.col].classList.add('ghostleg2-gone');
+            var el = board.rungEls[g.row + ',' + g.col], at0 = -1;
+            removed.forEach(function (x, i) { if (x.row === g.row && x.col === g.col) at0 = i; });
             Sfx.play('click');
+            if (at0 >= 0) { removed.splice(at0, 1); el.classList.remove('ghostleg2-gone'); msg.textContent = progressText(); return; }      /* 放回去 */
+            removed.push(g); el.classList.add('ghostleg2-gone');
+            if (removed.length < NEED) { msg.textContent = progressText(); return; }
+            locked = true; api.stopTimer();
             msg.textContent = '';
-            judge(g);
+            judge(removed.slice());
         });
         /* 評審動畫：從起點開始畫出一條綠色粗虛線，經過每個轉折點，看看最後能不能抵達終點 */
-        function judge(removed) {
-            var f = follow(without(q.rungs, removed), q.start), ms = routeMs(f.route), total = C.routeLength(f.route);
+        function judge(gone) {
+            var f = follow(withoutAll(q.rungs, gone), q.start), ms = routeMs(f.route), total = C.routeLength(f.route);
             var line = kit.svg('polyline', { points: '', 'class': 'ghostleg2-route' }, gRoute);
             my.tween(ms, function (e) {
                 line.setAttribute('points', C.partialRoute(f.route, total * e).map(function (p) { return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' '));
@@ -583,7 +691,7 @@
                 if (!win) showAnswer();
                 api.after(HOLD_MS, function () {
                     if (win) api.pass({ delay: 0 });
-                    else api.fail({ delay: 0, lines: ['拿掉這一條，會走到終點 ' + (f.end + 1) + '，不是綠色的終點 ' + (q.target + 1), '答案是' + rungText(q.answer) + '（綠色那一條）'] });
+                    else api.fail({ delay: 0, lines: [NEED > 1 ? '拿掉這 ' + NEED + ' 條，會走到終點 ' + (f.end + 1) + '，不是綠色的終點 ' + (q.target + 1) : '拿掉這一條，會走到終點 ' + (f.end + 1) + '，不是綠色的終點 ' + (q.target + 1), '答案是' + q.solutions.map(rungText).join('、') + '（綠色那' + (NEED > 1 ? '幾' : '一') + '條）'] });
                 });
             });
         }
@@ -593,7 +701,7 @@
             locked = true;
             msg.textContent = '';
             showAnswer();
-            api.fail({ delay: 1200, lines: ['時間到了', '答案是' + rungText(q.answer) + '（綠色那一條）'] });
+            api.fail({ delay: 1200, lines: ['時間到了', '答案是' + q.solutions.map(rungText).join('、') + '（綠色那' + (NEED > 1 ? '幾' : '一') + '條）'] });
         });
 
         /* 驗證用：用真的 PointerEvent 點一條橫線 */
@@ -604,10 +712,15 @@
                 stage.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 9, clientX: r.left + x * sc, clientY: r.top + y * sc }));
             });
         }
-        api.solve = function () { tapAt(q.answer); };
+        api.solve = function () { q.solutions.forEach(tapAt); };
         api.wrong = function () {
-            var bad = pathRungs(q.rungs, q.start).filter(function (g) { return !q.solutions.some(function (s) { return s.row === g.row && s.col === g.col; }); })[0] || q.rungs.filter(function (g) { return !(g.row === q.answer.row && g.col === q.answer.col); })[0];
-            if (bad) tapAt(bad);
+            /* 拿掉 NEED 條「不全是答案」的橫線（而且拿掉之後走不到終點） */
+            var isAns = function (g) { return q.solutions.some(function (s) { return s.row === g.row && s.col === g.col; }); };
+            var pool = pathRungs(q.rungs, q.start).filter(function (g) { return !isAns(g); }).concat(q.rungs.filter(function (g) { return !isAns(g); }));
+            var pick = [];
+            for (var i = 0; i < pool.length && pick.length < NEED; i++) if (!pick.some(function (x) { return x.row === pool[i].row && x.col === pool[i].col; })) pick.push(pool[i]);
+            if (follow(withoutAll(q.rungs, pick), q.start).end === q.target && pick.length) pick[0] = q.rungs.filter(isAns)[0] || pick[0];      /* 剛好湊成答案就換掉一條 */
+            pick.forEach(tapAt);
         };
         api.tap = tapAt;
     }
@@ -615,10 +728,11 @@
     var G = {
         id: ID,
         name: '鬼腳圖減一',
-        rule: '這是「鬼腳圖」的反過來版本。上方有綠色的起點，下方有綠色的終點，照現有的橫線走，**從起點到不了終點**。請你**點一下其中一條橫線，把它拿掉**，讓起點接到終點。**只有一次機會**，拿掉之後會從起點開始一路走下去，遇到橫線就轉彎，看能不能走到終點。',
+        rule: '這是「鬼腳圖」的反過來版本。上方有綠色的起點，下方有綠色的終點，照現有的橫線走，**從起點到不了終點**。請你**點一下其中一條橫線，把它拿掉**，讓起點接到終點。**第 10 關起要拿掉 2 條、第 20 關起要拿掉 3 條才走得到**；拿錯了，在拿掉的橫線上再點一下就放回去。**只有一次機會**，拿滿之後會從起點開始一路走下去，遇到橫線就轉彎，看能不能走到終點。',
         mount: mount,
         score: SCORE,
         test: {
+            makePuzzle: makePuzzle, needAt: needAt, withoutAll: withoutAll, minimalRemoval: minimalRemoval, endAfter: endAfter, NEED_FROM: NEED_FROM, EXTRA_REMOVE_S: EXTRA_REMOVE_S, REV_MIN: REV_MIN, REV_MAX: REV_MAX,
             pathRungs: pathRungs, pathCols: pathCols, without: without, pullOut: pullOut, makeRoute: makeRoute, routeRows: routeRows, colsAlong: colsAlong, routeBreakers: routeBreakers,
             makeQ: makeQ, makeT: makeT, clash: clash, design: design, fillRest: fillRest, finish: finish, mirror: mirror, attempt: attempt, levelBase: levelBase, makeLevel: makeLevel,
             rungAt: rungAt, rungText: rungText, routeMs: routeMs, rating: rating,

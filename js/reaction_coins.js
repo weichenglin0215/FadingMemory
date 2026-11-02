@@ -14,8 +14,11 @@
         · 大量同額（bulk）：桌上有很多枚 1 元（最多 19 枚），要數出剛好拿幾枚；
         · 整堆不能拿（decoy）：答案裡一枚都不用的幣值，桌上卻有（第 5 關起）；
         · 直覺做法失敗（greedyFail）：「由大到小盡量拿」湊不出剛好的金額（第 GREEDY_FROM 關起）。
-   3. 答案不要求唯一：只要選的硬幣加起來剛好等於 N 就過關（多解也行）。為了讓每一題都可以解，出題時一定
-      是從答案 c 反推桌上的硬幣，所以至少有一組解；測試會統計平均有幾組解，供參考。
+   3. （V1.43.0 玩家意見）**限制零錢枚數、答案唯一**：題目改成「8 枚湊出 134」「11 枚湊出 166」——要剛好選 K 枚、總額剛好 N 元才過關。
+      K＝答案 c 的總枚數；出題時用 countSolutionsK 數「剛好 K 枚、總額 N」的拿法有幾種，**只有一種才出**（不唯一就重抽；
+      實測加上枚數限制後約 84～100% 的題目本來就唯一，所以重抽很快）。枚數限制讓「50 元一直拿」「1 元湊零頭」都有代價，
+      不能再用「很多枚小硬幣」湊數。每一題的時間延長成原來的 200%（TIME_START／TIME_END：15→10 秒 改成 30→20 秒）。
+      出題時一定是從答案 c 反推桌上的硬幣，所以一定有解；測試會統計平均有幾組解，供參考。
    4. 關卡一路往上調（全部線性）：
         · V1.21.0 起每一關桌上「五種幣值 {50, 20, 10, 5, 1} 都至少有一枚」（答案用不到的幣值就當干擾）；
         · N 的範圍、每種幣值的「答案枚數」上限、「多給的枚數」上限、桌上硬幣總數上下限隨關卡線性增加
@@ -41,12 +44,12 @@
     /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
     /* 難度升到頂的關卡 */
-    var LEVEL_RAMP = 15;           /* 難度升到頂的關卡 */
-    /* 每題限時從 15 秒線性縮短到 10 秒（V1.21.0：原本 45→30 秒，太容易，縮成三分之一） */
-    var TIME_START = 15, TIME_END = 10;     /* 每題限時（秒） */
+    var LEVEL_RAMP = 30;           /* 難度升到頂的關卡 */
+    /* 每題限時從 30 秒線性縮短到 20 秒（V1.21.0 縮成三分之一變 15→10 秒；V1.43.0 加上「限定枚數、答案唯一」變難，延長成 200%） */
+    var TIME_START = 30, TIME_END = 90;     /* 每題限時（秒）；V1.43.0 起延長成 200%（原本 15 → 10 秒） */
     /* 題目金額範圍、桌上硬幣數、「多給」的枚數，都隨關卡線性增加（V1.21.0 把題目金額調大，第 1 關就是 60～100） */
     var N_LO_START = 60, N_LO_END = 250;    /* 題目金額的下限／上限範圍（隨關卡變大） */
-    var N_HI_START = 100, N_HI_END = 650;
+    var N_HI_START = 100, N_HI_END = 450;
     /* 題目金額至少是桌上硬幣總額的幾成（比例隨關卡線性升高）：避免桌上一大堆硬幣、題目卻很小 */
     var RATIO_START = 0.5, RATIO_END = 0.72;
     var COINS_START = 9, COINS_END = 32;    /* 桌上硬幣總數上限（t_coins.js 驗證擺得下） */
@@ -57,6 +60,7 @@
        要再打開，要同時讓某些面額桌上沒有，才有機會出現這種題目。 */
     var GREEDY_FROM = 1000;
     var NEXT_MS = 1000;            /* 答對後多久進下一題 */
+    var UNIQ_TRIES = 60;           /* 找「限定枚數後答案唯一」的題目，最多重抽幾次 */
     /* 硬幣直徑（邏輯 px）：面額越大硬幣越大 */
     var SIZE = { 50: 74, 20: 68, 10: 62, 5: 56, 1: 48 };       /* 硬幣直徑（邏輯 px） */
 
@@ -102,6 +106,17 @@
             var lo = Math.max(0, Math.ceil((rem - cap) / d));                      /* 最少拿幾枚：不然補不滿 */
             for (var x = hi; x >= lo; x--) rec(i + 1, rem - x * d);
         })(0, N);
+        return cnt;
+    }
+    /* 湊成 N 元、而且剛好 K 枚的拿法有幾種（den 由大到小，a 是各幣值桌上枚數）；數到 limit 就停（V1.43.0：限定枚數） */
+    function countSolutionsK(den, a, N, K, limit) {
+        var cnt = 0, lim = limit || 2;
+        (function rec(i, rem, k) {
+            if (cnt >= lim) return;
+            if (i === den.length) { if (rem === 0 && k === 0) cnt++; return; }
+            var d = den[i];
+            for (var x = Math.min(a[i], Math.floor(rem / d), k); x >= 0; x--) rec(i + 1, rem - x * d, k - x);
+        })(0, N, K);
         return cnt;
     }
     /* 「由大到小盡量拿」的直覺做法（貪心演算法 greedy）：成功回傳各面額枚數，失敗（湊不出剛好）回傳 null */
@@ -177,8 +192,20 @@
     }
 
     /* 規劃一題：決定題目 N、答案 c、桌上硬幣 a（含各種陷阱），並確保合理 */
-    /* 規劃一題：回傳 { den, c, a, N, traps:{over50,bulk,decoy,greedyFails,carry}, coins, tries } */
+    /* 規劃一題：回傳 { den, c, a, N, K（要選幾枚）, traps:{over50,bulk,decoy,greedyFails,carry}, coins, tries }。
+       V1.43.0：先用 planBase 出「題目金額＋答案＋桌上的硬幣」，K＝答案的總枚數，只收「剛好 K 枚、總額 N」只有一種拿法的題目 */
     function plan(level, rand) {
+        rand = rand || Math.random;
+        var p = null;
+        for (var t = 0; t < UNIQ_TRIES; t++) {
+            p = planBase(level, rand);
+            p.K = p.c.reduce(function (s, x) { return s + x; }, 0);
+            if (countSolutionsK(p.den, p.a, p.N, p.K, 2) === 1) { p.uniqueTries = t; return p; }
+        }
+        p.uniqueTries = -1;
+        return p;
+    }
+    function planBase(level, rand) {
         rand = rand || Math.random;
         var den = denomsFor(level), has50 = den.indexOf(50) >= 0;
         var cap = coinCap(level), capMin = coinMin(level), sMax = surpMax(level), nr = nRange(level);
@@ -237,6 +264,7 @@
 
     /* 把硬幣丟在桌上：隨機位置、互不重疊（大的先放）；放不下就整個重排（最多 24 次），真的不行回傳 null */
     /* 把硬幣丟在桌上：隨機位置、互不重疊（大的先放）。放不下就整個重排（最多 24 次），真的不行回傳 null */
+    var EDGE = 10;                                   /* 硬幣離桌面邊緣至少幾 px */
     function scatter(list, W, Hh, rand) {
         rand = rand || Math.random;
         var sorted = list.slice().sort(function (p, q) { return q - p; });
@@ -245,7 +273,7 @@
             for (var k = 0; k < sorted.length && !failed; k++) {
                 var d = sorted[k], r = SIZE[d] / 2, placed = null;
                 for (var t = 0; t < 500 && !placed; t++) {
-                    var x = r + 4 + rand() * (W - 2 * r - 8), y = r + 4 + rand() * (Hh - 2 * r - 8);
+                    var x = r + EDGE + rand() * (W - 2 * r - 2 * EDGE), y = r + EDGE + rand() * (Hh - 2 * r - 2 * EDGE);      /* 離桌邊至少 EDGE：選取的硬幣會上浮 5px 又放大 1.1 倍，不能被桌邊切到 */
                     var ok = true;
                     for (var i = 0; i < out.length; i++) {
                         var dx = out[i].x - x, dy = out[i].y - y, rr = r + SIZE[out[i].d] / 2 + 4;
@@ -288,16 +316,18 @@
             root.appendChild(clearBtn);
 
             /* q 這一題；coins 桌上的硬幣；sum 目前已選的總額；state 目前階段；timer／loop 倒數 */
-            var q = null, coins = [], sum = 0, state = 'idle', timer = null, loop = null;
+            var q = null, coins = [], sum = 0, cnt = 0, state = 'idle', timer = null, loop = null;
 
             function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }
 
-            /* 更新「已選 / 還差」文字，超過就變橘色 */
+            /* 更新「已選幾枚、幾元／還差」文字（V1.43.0：枚數和金額都要剛好），超過就變橘色 */
             function paintSum() {
                 if (!q) return;
-                var diff = q.N - sum;
-                sumLine.className = 'coins-sum' + (diff < 0 ? ' coins-sum--over' : '');
-                sumLine.textContent = '已選 ' + sum + (diff < 0 ? '　超過了 ' + (-diff) : '　還差 ' + diff);
+                var dc = q.K - cnt, ds = q.N - sum, over = dc < 0 || ds < 0, rest;
+                if (!over) rest = '還差 ' + dc + ' 枚、' + ds + ' 元';
+                else rest = [dc < 0 ? '多了 ' + (-dc) + ' 枚' : dc > 0 ? '還差 ' + dc + ' 枚' : '', ds < 0 ? '多了 ' + (-ds) + ' 元' : ds > 0 ? '還差 ' + ds + ' 元' : ''].filter(Boolean).join('、');
+                sumLine.className = 'coins-sum' + (over ? ' coins-sum--over' : '');
+                sumLine.textContent = '已選 ' + cnt + ' 枚、' + sum + ' 元　' + rest;
             }
 
             /* 點一枚硬幣：切換選取，總額剛好等於題目就過關 */
@@ -305,10 +335,10 @@
                 if (state !== 'play') return;
                 co.on = !co.on;
                 co.el.classList.toggle('coins-coin--on', co.on);
-                sum += co.on ? co.d : -co.d;
+                sum += co.on ? co.d : -co.d; cnt += co.on ? 1 : -1;
                 Sfx.play('click');
                 paintSum();
-                if (sum === q.N) solved();
+                if (cnt === q.K && sum === q.N) solved();
             }
 
             /* 全部放回 */
@@ -316,7 +346,7 @@
                 e.preventDefault();
                 if (state !== 'play') return;
                 coins.forEach(function (co) { co.on = false; co.el.classList.remove('coins-coin--on'); });
-                sum = 0;
+                sum = 0; cnt = 0;
                 paintSum();
             });
 
@@ -328,6 +358,7 @@
                 /* 這題的硬幣擺得下才用；擺不下就重新出題 */
                 for (var att = 0; att < 40 && !pos; att++) {          /* 這題的硬幣擺得下才用；擺不下就重新出題 */
                     q = plan(level);
+                    target.textContent = q.K + ' 枚湊出 ' + q.N; cnt = 0; sum = 0; paintSum();     /* 先把上面的字寫好，桌面的高度才是最後的高度，再量來擺硬幣（V1.43.1） */
                     var list0 = [];
                     q.den.forEach(function (d, i) { for (var k = 0; k < q.a[i]; k++) list0.push(d); });
                     pos = scatter(list0, table.clientWidth, table.clientHeight);
@@ -338,12 +369,12 @@
                 try {
                     console.info('[零錢分類] 第 ' + level + ' 關 題目 ' + q.N + '：' + q.den.map(function (d, i) {
                         return d + ' 元 桌上 ' + q.a[i] + ' 枚（答案拿 ' + q.c[i] + '）';
-                    }).join('、') + '；共 ' + q.coins + ' 枚；至少一組解（約 ' + countSolutions(q.den, q.a, q.N, 200) + ' 組）；陷阱：' +
+                    }).join('、') + '；共 ' + q.coins + ' 枚；限定 ' + q.K + ' 枚湊 ' + q.N + '，剛好 ' + countSolutionsK(q.den, q.a, q.N, q.K, 200) + ' 組解（只湊金額約 ' + countSolutions(q.den, q.a, q.N, 200) + ' 組）；陷阱：' +
                         ['over50', 'carry', 'bulk', 'decoy', 'greedyFails'].filter(function (k) { return q.traps[k]; }).join('、'));
                 } catch (e) { }
-                target.textContent = '湊出 ' + q.N;
+                target.textContent = q.K + ' 枚湊出 ' + q.N;
                 table.innerHTML = '';
-                coins = []; sum = 0; state = 'play';
+                coins = []; sum = 0; cnt = 0; state = 'play';
                 /* 把每枚硬幣畫成一顆按鈕，放在隨機位置上 */
                 pos.forEach(function (p) {
                     var el = h('button', { 'class': 'coins-coin coins-coin--' + p.d, text: String(p.d) });
@@ -379,7 +410,7 @@
                 if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
                 coins.forEach(function (co) { if (co.on) co.el.classList.add('coins-coin--ok'); });
                 sumLine.className = 'coins-sum coins-sum--ok';
-                sumLine.textContent = '剛好 ' + q.N + '！';
+                sumLine.textContent = '剛好 ' + q.K + ' 枚、' + q.N + ' 元！';
                 Sfx.play('win');
                 level++;
                 my.after(NEXT_MS, ask);
@@ -404,7 +435,7 @@
                     kit.result(root, {
                         score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: cleared + ' 關', label: '時間到了',
-                        lines: ['第 ' + failLevel + ' 關要湊 ' + q.N, '其中一組答案：' + ans],
+                        lines: ['第 ' + failLevel + ' 關要用 ' + q.K + ' 枚湊 ' + q.N + ' 元', '答案：' + ans],
                         isNew: newRec, sfx: cleared >= 6 ? 'win' : 'fail',
                         onAgain: function () { round(1); },
                         resume: { level: back, run: function () { round(back); } }
@@ -414,7 +445,7 @@
 
             /* G.debug：測試用後門，solve() 會依答案點硬幣 */
             G.debug = {
-                state: function () { return { level: level, state: state, sum: sum, q: q, cleared: cleared }; },
+                state: function () { return { level: level, state: state, sum: sum, cnt: cnt, q: q, cleared: cleared }; },
                 /* 依答案點硬幣 */
                 solve: function () {
                     if (state !== 'play') return state;
@@ -440,12 +471,12 @@
     var G = {
         id: ID,
         name: '零錢分類',
-        rule: '上面是題目數字，桌上散著 50、20、10、5、1 元各種硬幣。點選硬幣，**讓「已選」的總和剛好等於題目**，湊法可能不只一種。小心：50 元拿太多會超過，零頭要用小硬幣細算，**有的硬幣一枚都不該拿**！每題只有短短幾秒，看你能過幾關。',
+        rule: '上面是題目，例如「**8 枚湊出 134**」，桌上散著 50、20、10、5、1 元各種硬幣。點選硬幣，**剛好選 8 枚、而且總和剛好是 134 元**才算過關，答案只有一種。小心：50 元拿太多會超過，枚數也不能多、不能少，**有的硬幣一枚都不該拿**！每題的時間有限，看你能過幾關。',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
-        test: { findSolution: findSolution, planGreedyFail: planGreedyFail, coinMin: coinMin, plan: plan, countSolutions: countSolutions, greedy: greedy, decompose: decompose, denomsFor: denomsFor, minRatio: minRatio, coinCap: coinCap, timeFor: timeFor, nRange: nRange, bulkLow: bulkLow, cntMax: cntMax, scatter: scatter, SIZE: SIZE, LEVEL_RAMP: LEVEL_RAMP, COINS_END: COINS_END }
+        test: { countSolutionsK: countSolutionsK, planBase: planBase, TIME_START: TIME_START, TIME_END: TIME_END, UNIQ_TRIES: UNIQ_TRIES, findSolution: findSolution, planGreedyFail: planGreedyFail, coinMin: coinMin, plan: plan, countSolutions: countSolutions, greedy: greedy, decompose: decompose, denomsFor: denomsFor, minRatio: minRatio, coinCap: coinCap, timeFor: timeFor, nRange: nRange, bulkLow: bulkLow, cntMax: cntMax, scatter: scatter, SIZE: SIZE, LEVEL_RAMP: LEVEL_RAMP, COINS_END: COINS_END }
     };
     /* 登記到遊戲清單 */
     Reaction.register(G);

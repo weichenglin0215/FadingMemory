@@ -18,13 +18,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: var(--fs-xl);
+    font-size: min(var(--fs-xl), calc(var(--numpad-key-h, 64px) - 6px));         /* 鍵很矮的時候（水果進出貨 8 種水果）字級跟著縮 */
     font-weight: var(--fw-black);
     touch-action: manipulation;
 }
 
 /* 「清除」「⌫」字小一點，跟數字分得出來 */
 .numpad-key--fn {
-    font-size: var(--fs-md);
+    font-size: min(var(--fs-md), calc(var(--numpad-key-h, 64px) - 8px));
     color: var(--c-ink-soft);
 }

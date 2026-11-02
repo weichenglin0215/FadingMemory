@@ -41,7 +41,7 @@
     /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
     /* 難度從第 1 題線性變到第 LEVEL_RAMP 題：會變的屬性數、循環長度、限時 */
-    var LEVEL_RAMP = 20;
+    var LEVEL_RAMP = 30;
     var ATTR_START = 1, ATTR_END = 3;
     var K_START = 2, K_END = 3;
     var TIME_START = 15, TIME_END = 8;
@@ -426,12 +426,12 @@
                 /* 結算，kit.resumeFrom 可以從前 5 題繼續 */
                 my.after(WRONG_MS, function () {
                     var back = kit.resumeFrom(q);
-                        kit.result(root, {
+                    kit.result(root, {
                         score: correctN,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: String(correctN), label: rating(correctN),
                         lines: ['第 ' + q + ' 題沒猜中，規律是：'].concat(exp),
                         isNew: newRec && correctN > 0, sfx: correctN >= 6 ? 'win' : 'fail', onAgain: function () { round(1); },
-                            resume: { level: back, run: function () { round(back); } }
+                        resume: { level: back, run: function () { round(back); } }
                     });
                 });
             }

@@ -1,17 +1,18 @@
-// 「原創篇」8 款（時刻表補字、撲滿有多少、保存期限、水果進出貨、疊箱子、形色不相鄰、抱著量體重、按鍵搶三十）的瀏覽器端驗證。
+// 「原創篇」7 款（時刻表補字、撲滿有多少、保存期限、水果進出貨、疊箱子、形色不相鄰、抱著量體重；「按鍵搶三十」V1.43.1 已刪除）的瀏覽器端驗證。
 // 每款：①用真的滑鼠事件操作（點格子、點數字鍵、點 −／＋、點標記鈕、點清單再點格子、點計算機的鍵…，驗證按鈕有接對）；
 //       ②用各遊戲的 G.debug 走完「解開」；③判定型的遊戲故意答錯，確認會結算；自由解題的遊戲按「返回」確認會先結算、再按才離開；
 //       ④全程沒有 JS 錯誤。
 // 前置：本機伺服器已開（例如在專案根目錄執行  python -m http.server 8743）。
 // 用法（在專案根目錄）：  node test/reaction/browser_orig8.mjs                 全部
-//                         node test/reaction/browser_orig8.mjs keypad30 expiry  指定幾款
+//                         node test/reaction/browser_orig8.mjs expiry babyscale  指定幾款
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { connect, openGame, sleep } from './cdp.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../');
-const FREE = ['timetable', 'boxstack', 'shapegrid'];
-const FAIL_TYPE = ['piggybank', 'expiry', 'fruitstock', 'babyscale', 'keypad30'];
+const FREE = ['timetable'];
+const FAIL_TYPE = ['piggybank', 'expiry', 'fruitstock', 'boxstack', 'shapegrid', 'babyscale'];
+const TIMED = ['expiry', 'fruitstock', 'boxstack', 'shapegrid', 'babyscale'];      /* V1.43.1：限時答題，超過時間就失敗 */
 const ALL = FREE.concat(FAIL_TYPE);
 const only = process.argv.slice(2);
 const ids = only.length ? only : ALL;
@@ -64,20 +65,29 @@ const T = {
     await failRound(id, 25);
   },
   async expiry(id) {
-    await clickEl('.expiry-mark', 0);
-    ok((await api('a.state().marks[0]')) === false, id + '：點一下＝沒過期');
-    await clickEl('.expiry-mark', 0);
-    ok((await api('a.state().marks[0]')) === true, id + '：再點一下＝過期');
-    await api('(a.solve(), 1)');
-    await waitFor(async () => (await state()).cleared === 1, 4000, id + ' 全部標對過關');
+    ok((await J('[].map.call(document.querySelectorAll(".expiry-btn"), function (b) { return b.textContent; }).join()')) === '已過期,未過期', id + '：最下面左「已過期」右「未過期」');
+    const exp = await api('a.info.items[0].expired');
+    await clickEl('.expiry-btn', exp ? 0 : 1);
+    await waitFor(async () => (await state()).cleared === 1, 4000, id + ' 按對過關');
+    const due = await J('document.querySelector(".expiry-due__t").textContent');
+    ok(/^到期 /.test(due), id + '：審判後亮出到期日：' + due);
+    const col = await J('getComputedStyle(document.querySelector(".expiry-due__t")).color');
+    ok(exp ? /rgb\(2\d\d, \d{1,2}, \d{1,2}\)/.test(col) : /rgb\(\d+, 1[2-9]\d/.test(col), id + '：到期日顏色（過期紅、沒過期綠）' + col);
+    const sp = await J('(function(){ var s = document.querySelector(".expiry-stamp--on"); if (!s) return null; var a = s.getBoundingClientRect(), b = document.querySelector(".expiry-due__t").getBoundingClientRect(); var t = document.createRange(); t.selectNodeContents(document.querySelector(".expiry-due__t")); var c = t.getBoundingClientRect(); return { overlap: !(a.right <= c.left + 1 || a.left >= c.right - 1 || a.bottom <= c.top || a.top >= c.bottom) }; })()');
+    ok(exp ? (sp && sp.overlap === false) : sp === null, id + '：過期才蓋鋼印、而且不蓋住到期日 ' + JSON.stringify(sp));
+    const fs = await J('parseFloat(document.querySelector(".expiry-today__d").style.fontSize)');
+    const wr = await J('(function(){ var d = document.querySelector(".expiry-today__d").getBoundingClientRect(), s = document.querySelector(".rx-stage").getBoundingClientRect(); return d.width / s.width; })()');
+    ok(wr > 0.88, id + '：今天的日期佔滿寬度（' + wr.toFixed(2) + '）');
     await failRound(id, 30);
   },
   async fruitstock(id) {
-    const ans = await api('a.info.answer');
-    await clickEl('.fruitstock-input', 1);
-    ok((await api('a.state().sel')) === 1, id + '：點收攤的格子有選到');
-    await typeDigits(String(ans[1]));
-    ok((await api('a.state().ans[1]')) === String(ans[1]), id + '：用數字鍵填進 ' + ans[1]);
+    const ans = await api('a.info.answer'), asks = await api('a.info.asks'), a0 = asks[asks.length - 1];
+    ok((await J('document.querySelectorAll(".fruitstock-input").length')) === asks.length, id + '：只有被問到的 ' + asks.length + ' 種水果有收攤的填空格');
+    await clickEl('.fruitstock-input', asks.length - 1);
+    ok((await api('a.state().sel')) === a0, id + '：點收攤的格子有選到');
+    await typeDigits(String(ans[a0]));
+    ok((await api('a.state().ans[' + a0 + ']')) === String(ans[a0]), id + '：用數字鍵填進 ' + ans[a0]);
+    ok(/[^ -]/.test(await J('document.querySelector(".fruitstock-ev").textContent')), id + '：進出貨每一行有 emoji');
     await api('(a.solve(), 1)');
     await waitFor(async () => (await state()).cleared === 1, 4000, id + ' 對帳過關');
     await failRound(id, 30);
@@ -103,8 +113,8 @@ const T = {
     ok(await J('!!document.querySelector(".shapegrid-cell--bad")') && /不能相鄰/.test(await J('document.querySelector(".shapegrid-tip").textContent')), id + '：違規的兩格變紅、寫出原因');
     await clickEl('.shapegrid-tool', 0); await sleep(300);
     ok((await api('a.state().hintsLeft')) === 2, id + '：提示用掉一次');
-    await J('(Reaction.current.debug.goto(21), 1)'); await sleep(1200);
-    ok((await overflow()).length === 0, id + '：第 21 關（5×5）版面放得下 ' + JSON.stringify(await overflow()));
+    await J('(Reaction.current.debug.goto(25), 1)'); await sleep(1200);
+    ok((await overflow()).length === 0, id + '：第 25 關（5×5 含斜角）版面放得下 ' + JSON.stringify(await overflow()));
     await api('(a.solve(), 1)');
     await waitFor(async () => (await state()).cleared >= 1, 4000, id + ' 解開');
   },
@@ -115,22 +125,6 @@ const T = {
     await clickEl('.babyscale-ok', 0);
     await waitFor(async () => (await state()).cleared === 1, 4000, id + ' 按確定過關');
     await failRound(id, 30);
-  },
-  async keypad30(id) {
-    /* 用真的滑鼠一路按必勝鍵，直到過關 */
-    for (let i = 0; i < 12 && (await state()).cleared < 1; i++) {
-      const st = await api('a.state()');
-      if (st.busy || st.over) { await sleep(400); continue; }
-      const pz = await api('a.info');
-      const k = await J('Reaction.current.test.winningKeys(' + st.sum + ',' + st.last + ',' + pz.target + ')[0]');
-      await clickEl('.keypad30-key', [7, 8, 9, 4, 5, 6, 1, 2, 3].indexOf(k));
-      await sleep(1300);
-    }
-    ok((await state()).cleared >= 1, id + '：用滑鼠按必勝鍵過關');
-    await J('(Reaction.current.debug.goto(26), 1)'); await sleep(500);
-    await api('(a.wrong(), 1)'); await sleep(300);
-    ok(await J('document.querySelectorAll(".keypad30-key--good, .keypad30-key--bad").length > 0'), id + '：按錯後鍵上標出必勝／會輸');
-    await waitFor(resultShown, 12000, id + ' 按錯後結算');
   }
 };
 
@@ -148,6 +142,15 @@ const T = {
       try {
         ok((await overflow()).length === 0, id + '：第 1 關版面放得下 ' + JSON.stringify(await overflow()));
         await T[id](id);
+        if (TIMED.includes(id)) {
+          /* 限時：開局時間條在倒數（這一關有限時）；時間到了＝失敗（結算），不是不限時 */
+          await openGame(cdp, id, { root: ROOT }); await sleep(600);
+          ok(await J('(function(){ var b = document.querySelector(".rx-timebar"); return !!b && b.getBoundingClientRect().height > 0; })()'), id + '：有時間條');
+          ok(!(await state()).over && !(await resultShown()), id + '：開局還沒結束');
+          await api('(a.timeout(), 1)');
+          await waitFor(resultShown, 12000, id + ' 時間到了之後結算（失敗）');
+          ok((await state()).cleared === 0, id + '：時間到了＝失敗，沒有過關');
+        }
         if (FREE.includes(id)) {
           const cleared = (await state()).cleared;
           await cdp.evalJs('document.getElementById("bar-back").click()'); await sleep(600);

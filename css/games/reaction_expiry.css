@@ -1,41 +1,51 @@
 /* ═══════════════════════════════════════
    reaction_expiry.css — 保存期限（js/reaction_expiry.js）的專屬樣式
    · 這個檔案裡的 class 名稱一律以「expiry-」開頭，只給這一款遊戲用。
-   · 顏色與尺寸一律用 css/theme.css 的 CSS 變數；每樣食物那一列的高度 --expiry-row 由 js 依食物數量算好。
+   · 顏色與尺寸一律用 css/theme.css 的 CSS 變數；「已過期」的鮮紅是這一款自己的 --expiry-red（theme 的 --c-bad 偏橘，不夠紅）。
+   · V1.43.0：每一關一個問題——上面「今天」大字佔滿寬度、中間食物卡（含審判區）、最下面「已過期」「未過期」兩顆大按鈕。
    ═══════════════════════════════════════ */
 
 .expiry-wrap {
+    --expiry-red: hsl(0, 85%, 48%);
     position: absolute;
     inset: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     padding-top: 6px;
+    padding-bottom: 116px;
     box-sizing: border-box;
 }
 
-/* 今天（像撕日曆的大字） */
+/* 今天：標籤＋大字日期（字級由 js 量好，剛好佔滿整個寬度）；有小時制時下面多一行「現在幾點」 */
 .expiry-today {
+    width: 98%;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 2px 20px;
+    padding: 4px 8px 6px;
     border-radius: var(--r-md);
     background: var(--c-card);
-    border: 3px solid var(--c-bad);
-    line-height: 1.2;
+    border: 3px solid var(--expiry-red);
+    line-height: 1.15;
+}
+
+.expiry-today__lbl {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-black);
+    color: var(--expiry-red);
 }
 
 .expiry-today__d {
-    font-size: var(--fs-md);
     white-space: nowrap;
     font-weight: var(--fw-black);
     color: var(--c-ink);
 }
 
 .expiry-today__h {
-    font-size: var(--fs-md);
+    font-size: var(--fs-lg);
     font-weight: var(--fw-black);
     color: var(--c-blue);
 }
@@ -46,108 +56,231 @@
     color: var(--c-ink-soft);
 }
 
-.expiry-list {
+/* 食物卡：上面圖示＋製造／保存，中間審判區（到期日與鋼印），下面一句說明 */
+.expiry-card {
+    width: 96%;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    width: 96%;
-}
-
-.expiry-row {
-    display: flex;
-    align-items: center;
     gap: 10px;
-    height: var(--expiry-row, 76px);
-    padding: 0 8px;
-    box-sizing: border-box;
+    padding: 12px 14px;
     border-radius: var(--r-md);
     background: var(--c-card);
     border: var(--bd-w) solid var(--bd-c);
 }
 
-.expiry-row--wrong {
-    background: var(--c-bad-soft);
-    border-color: var(--c-bad);
-}
-
-.expiry-list--ok .expiry-row {
+.expiry-card--right {
     border-color: var(--c-ok);
 }
 
-/* 左邊：圖示＋名稱 */
+.expiry-card--wrong {
+    border-color: var(--expiry-red);
+}
+
+.expiry-card__top {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
 .expiry-food {
     flex: none;
-    width: 84px;
+    width: 120px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     line-height: 1.1;
 }
 
 .expiry-icon {
-    font-size: var(--fs-md);
-    line-height: 1;
+    font-size: var(--fs-xxxl);
+    line-height: 1.1;
 }
 
 .expiry-name {
-    font-size: var(--fs-xs);
+    font-size: var(--fs-sm);
     font-weight: var(--fw-black);
     color: var(--c-ink);
     white-space: nowrap;
 }
 
-/* 中間兩行：製造日期（時間）、保存幾天（幾小時）；揭曉時第二行換成到期日 */
 .expiry-info {
     flex: 1 1 auto;
     min-width: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    line-height: 1.25;
+    gap: 4px;
+    line-height: 1.2;
 }
 
 .expiry-label {
-    font-size: var(--fs-xs);
+    font-size: var(--fs-md);
     font-weight: var(--fw-bold);
     color: var(--c-ink);
     white-space: nowrap;
 }
 
+/* 保存幾天：維持藍色（審判時也不變） */
 .expiry-label--keep {
+    font-size: var(--fs-lg);
     color: var(--c-blue);
     font-weight: var(--fw-black);
 }
 
-.expiry-label--due {
-    color: var(--c-bad);
+/* 審判區：到期日（綠＝沒過期、鮮紅＝過期）；過期的右邊蓋「已過期」鋼印（放在到期日旁邊，不蓋住它） */
+.expiry-due {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 92px;
+    padding: 6px 12px;
+    box-sizing: border-box;
+    border-radius: var(--r-md);
+    background: var(--c-paper);
+    border: 3px dashed var(--bd-c);
 }
 
-/* 右邊的標記鈕：？ → 沒過期（綠）→ 過期（紅） */
-.expiry-mark {
-    flex: none;
-    width: 108px;
-    height: calc(var(--expiry-row, 76px) - 10px);
-    padding: 0;
-    font-size: var(--fs-sm);
+.expiry-due__t {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: var(--fs-xl);
     font-weight: var(--fw-black);
+    line-height: 1.2;
+    color: var(--c-ink-soft);
 }
 
-.expiry-mark--good {
-    background: var(--c-green-soft);
-    color: var(--c-ok);
+.expiry-due--judging .expiry-due__t {
+    animation: expiry-judge 0.5s ease-in-out infinite alternate;
+}
+
+.expiry-due--ok {
+    border-style: solid;
     border-color: var(--c-ok);
+    background: var(--c-ok-soft);
 }
 
-.expiry-mark--bad {
-    background: var(--c-bad-soft);
-    color: var(--c-bad);
-    border-color: var(--c-bad);
+.expiry-due--ok .expiry-due__t {
+    color: var(--c-ok);
 }
 
-.expiry-ok {
-    width: 80%;
-    height: 60px;
+.expiry-due--bad {
+    border-style: solid;
+    border-color: var(--expiry-red);
+    background: rgba(224, 30, 30, 0.08);
+}
+
+.expiry-due--bad .expiry-due__t {
+    color: var(--expiry-red);
+}
+
+/* 鋼印：一開始看不見，亮出到期日的同時「啪」地蓋上去（放大 → 縮回，略微傾斜，雙線紅框） */
+.expiry-stamp {
+    flex: none;
+    display: none;
+    padding: 4px 14px;
+    border: 5px double var(--expiry-red);
+    border-radius: 10px;
     font-size: var(--fs-lg);
     font-weight: var(--fw-black);
+    letter-spacing: 4px;
+    color: var(--expiry-red);
+    transform: rotate(-12deg);
+    opacity: 0.92;
+}
+
+.expiry-stamp--on {
+    display: block;
+    animation: expiry-stamp-in 0.4s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+
+@keyframes expiry-stamp-in {
+    from {
+        opacity: 0;
+        transform: rotate(-12deg) scale(2.6);
+    }
+
+    to {
+        opacity: 0.92;
+        transform: rotate(-12deg) scale(1);
+    }
+}
+
+@keyframes expiry-judge {
+    from {
+        opacity: 0.35;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* 一句話說明（亮出到期日之後才出現） */
+.expiry-why {
+    min-height: 62px;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    line-height: 1.4;
+    color: var(--c-ink);
+}
+
+.expiry-ask {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ink);
+    text-align: center;
+}
+
+/* 最下面：左「已過期」右「未過期」兩顆大按鈕 */
+.expiry-btns {
+    position: absolute;
+    left: 2%;
+    right: 2%;
+    bottom: 0;
+    display: flex;
+    gap: 12px;
+}
+
+.expiry-btn {
+    flex: 1 1 0;
+    height: 100px;
+    padding: 0;
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-black);
+    border: var(--bd-w) solid var(--bd-c);
+}
+
+.expiry-btn--bad {
+    background: rgba(224, 30, 30, 0.1);
+    border-color: var(--expiry-red);
+    color: var(--expiry-red);
+}
+
+.expiry-btn--good {
+    background: var(--c-ok-soft);
+    border-color: var(--c-ok);
+    color: var(--c-ok);
+}
+
+.expiry-btn:disabled {
+    opacity: 0.45;
+}
+
+/* 你按的那一顆：不變淡，外面一圈藍框；答錯時換成紅色粗框 */
+.expiry-btn--picked:disabled {
+    opacity: 1;
+    box-shadow: 0 0 0 5px var(--c-blue);
+}
+
+.expiry-btn--wrong:disabled {
+    box-shadow: 0 0 0 5px var(--expiry-red);
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .expiry-due--judging .expiry-due__t,
+    .expiry-stamp--on {
+        animation: none;
+    }
 }

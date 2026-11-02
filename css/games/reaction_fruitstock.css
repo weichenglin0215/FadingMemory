@@ -47,7 +47,7 @@
 }
 
 .fruitstock-icon {
-    font-size: var(--fs-lg);
+    font-size: min(var(--fs-lg), calc(var(--fruitstock-row, 52px) - 2px));
     line-height: 1;
 }
 
@@ -73,6 +73,20 @@
     white-space: nowrap;
 }
 
+/* 被問到的水果（V1.43.0）：整個名稱格黃底；沒被問到的收攤格顯示淡淡的「—」 */
+.fruitstock-fruit--ask {
+    align-self: stretch;
+    padding: 0 6px;
+    border-radius: var(--r-sm);
+    background: var(--c-yellow-soft);
+    border: 2px solid var(--c-yellow);
+}
+
+.fruitstock-skip {
+    color: var(--c-ink-soft);
+    opacity: 0.5;
+}
+
 /* 「收攤」的填空格 */
 .fruitstock-input {
     height: calc(var(--fruitstock-row, 52px) - 6px);
@@ -83,7 +97,7 @@
     border-radius: var(--r-sm);
     border: 2px dashed var(--c-ink-soft);
     background: var(--c-frame);
-    font-size: var(--fs-md);
+    font-size: min(var(--fs-md), calc(var(--fruitstock-row, 52px) - 8px));       /* 一列很矮的時候（水果 8 種）字級跟著縮 */
     font-weight: var(--fw-black);
     color: var(--c-blue);
     touch-action: manipulation;

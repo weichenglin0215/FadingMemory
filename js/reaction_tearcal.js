@@ -38,7 +38,7 @@
     /* ═══ 可以自己調的參數 ═══ */
     /* 日期範圍限制在 2025～2029 年（節氣公式在這個範圍內已驗證） */
     var YEAR_MIN = 2025, YEAR_MAX = 2029;
-    var LEVEL_RAMP = 25;
+    var LEVEL_RAMP = 30;
     var DMAX_START = 6, DMAX_END = 60;          /* 目標最遠離起點幾天（張） */
     var TAP_START = 0.60, TAP_END = 0.32;       /* 每撕一張允許的秒數 */
     var SLACK_START = 8, SLACK_END = 4;         /* 額外給的秒數 */
@@ -244,7 +244,7 @@
             /* 萬一 50 次都失敗，用固定的保底題目 */
             if (target == null) { start = dnum(2026, 3, 3); target = start + 5; }
             var tc = ymd(target); prompt = '撕到 ' + tc.m + ' 月 ' + tc.d + ' 日';
-        /* 跨月日期：起點選在月底前 0～5 天，保證要跨進下個月 */
+            /* 跨月日期：起點選在月底前 0～5 天，保證要跨進下個月 */
         } else if (type === 'dateX') {
             var y2 = kit.randInt(YEAR_MIN, YEAR_MAX, rand), m2 = kit.randInt(1, 12, rand);
             if (y2 === YEAR_MAX && m2 === 12) m2 = 11;
@@ -254,7 +254,7 @@
             var d2 = kit.randInt(minD + 1, Math.max(minD + 1, minD + Math.max(2, D - toEnd - 1)), rand);
             target = start + d2;
             var tc2 = ymd(target); prompt = '撕到 ' + tc2.m + ' 月 ' + tc2.d + ' 日';
-        /* 星期題：「下一個星期X」或「第二個星期X」 */
+            /* 星期題：「下一個星期X」或「第二個星期X」 */
         } else if (type === 'weekday') {
             start = rangeStart(rand);
             var wd = kit.randInt(0, 6, rand), k = level >= 8 && rand() < 0.5 ? 2 : 1;
@@ -263,7 +263,7 @@
             if (first - start < 2) { start -= 1; }                    /* 至少隔一天才撕得到（不然只撕一張太簡單）*/
             target = first + 7 * (k - 1);
             prompt = k === 1 ? '撕到下一個' + WD_NAME[wd] : '撕到第二個' + WD_NAME[wd];
-        /* 節日／節氣題：從索引裡挑一個目標，起點設在往前 d3 天 */
+            /* 節日／節氣題：從索引裡挑一個目標，起點設在往前 d3 天 */
         } else if (type === 'solar' || type === 'lunar' || type === 'term') {
             var list = getIndex()[type], cand = [];
             var d3 = kit.randInt(Math.min(D, Math.max(3, Math.round(D * 0.4))), Math.max(3, D), rand);
@@ -272,7 +272,7 @@
             start = target - d3;
             var inf = dayInfo(target);
             prompt = '撕到「' + (type === 'solar' ? inf.solarFest : type === 'lunar' ? inf.lunarFest : inf.term) + '」';
-        /* termN：第 1～3 個節氣 */
+            /* termN：第 1～3 個節氣 */
         } else {   /* termN：第 k 個節氣 */
             start = rangeStart(rand);
             var kk = kit.randInt(1, 3, rand);

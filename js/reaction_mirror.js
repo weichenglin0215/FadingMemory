@@ -27,7 +27,7 @@
 
     /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
-    var LEVEL_RAMP = 15;
+    var LEVEL_RAMP = 30;
     /* 通道半寬（隨關卡變窄）、彎的數量、手指動 1px 球動幾 px（增益） */
     var HW_START = 64, HW_END = 30;            /* 通道半寬（px） */
     var BENDS_START = 1, BENDS_END = 5;        /* 彎的數量 */

@@ -1,5 +1,5 @@
 // 主選單的遊戲清單（js/menu.js 的 GAME_CELLS／GAME_TABS，V1.23.0）：
-//   · 182 款（V1.33 起 109 款，V1.34 新增 51 款，V1.41 新增深思篇 14 款，V1.42 新增原創篇 8 款）、id 不重複、名稱最多 5 個字（格子下方的名稱列只放得下 5 個字）、縮圖檔存在且高 256 像素
+//   · 181 款（V1.33 起 109 款，V1.34 新增 51 款，V1.41 新增深思篇 14 款，V1.42 新增原創篇 8 款，V1.43.1 刪除「按鍵搶三十」）、id 不重複、名稱最多 5 個字（格子下方的名稱列只放得下 5 個字）、縮圖檔存在且高 256 像素
 //   · 每一款都有分類（七個分類加起來剛好是全部，不重疊、沒有空的分類）、頁籤是「全部、最近＋七個分類」共 9 個、名稱都是 2 個字
 //   · 清單裡的 id 與名稱跟各遊戲檔案 Reaction.register 登記的完全一致（改名忘了改一邊，這裡會失敗）
 //   · 「最近」頁籤：最新的在最前面、去掉不存在與重複的、最多 12 款、沒有紀錄時用「上次玩的」當第一筆
@@ -24,7 +24,7 @@ const CELLS = M.GAME_CELLS, TABS = M.GAME_TABS;
 const len = (s) => Array.from(s).length;
 
 // ═══ 1. 清單本身 ═══
-ok(CELLS.length === 182, '共 182 款（' + CELLS.length + '）');
+ok(CELLS.length === 181, '共 181 款（' + CELLS.length + '）');
 const ids = new Set(CELLS.map(c => c.id));
 ok(ids.size === CELLS.length, 'id 不重複');
 CELLS.forEach(c => {
@@ -69,14 +69,14 @@ ok(catTabs.length === 7, '除了「全部」「最近」，有七種分類');
 const counts = {};
 CELLS.forEach(c => { ok(catTabs.indexOf(c.cat) >= 0, c.id + ' 的分類「' + c.cat + '」是七個分類之一'); counts[c.cat] = (counts[c.cat] || 0) + 1; });
 catTabs.forEach(id => ok((counts[id] || 0) >= 5, id + ' 分類至少有 5 款（' + (counts[id] || 0) + '）'));
-ok(catTabs.reduce((a, id) => a + (counts[id] || 0), 0) === 182, '七個分類加起來剛好 182 款');
+ok(catTabs.reduce((a, id) => a + (counts[id] || 0), 0) === 181, '七個分類加起來剛好 181 款');
 console.log('各分類款數：' + TABS.slice(2).map(t => t.name + ' ' + counts[t.id]).join('、'));
 const tg = (t) => M.tabGames(t).map(c => c.id);
 ok(tg('all').join() === CELLS.map(c => c.id).join(), '「全部」＝清單順序');
 catTabs.forEach(id => ok(tg(id).join() === CELLS.filter(c => c.cat === id).map(c => c.id).join(), id + ' 頁籤的順序同「全部」'));
 const seen = new Set(); let overlap = 0;
 catTabs.forEach(id => tg(id).forEach(x => { if (seen.has(x)) overlap++; seen.add(x); }));
-ok(overlap === 0 && seen.size === 182, '分類之間沒有重複、也沒有漏掉（' + seen.size + '）');
+ok(overlap === 0 && seen.size === 181, '分類之間沒有重複、也沒有漏掉（' + seen.size + '）');
 ok(CELLS.filter(c => c.id === 'speed')[0].cat === 'reaction' && CELLS.filter(c => c.id === 'lights')[0].cat === 'memory' && CELLS.filter(c => c.id === 'remainder')[0].cat === 'number', '幾款代表性遊戲的分類');
 
 // ═══ 4. 「最近」頁籤 ═══
@@ -105,6 +105,24 @@ ok(gi([{ game_id: 'cake', rank: 3 }, { game_id: 'cake', rank: 5 }]) === 'cake:3'
 const many = CELLS.slice(0, 10).map((c, i) => ({ game_id: c.id, rank: i + 2 }));
 ok(M.grandmaItems(many).length === 6 && gi(many) === many.slice(0, 6).map(x => x.game_id + ':' + x.rank).join(','), '超過 6 款只取前 6 款');
 ok(M.grandmaItems([{ game_id: 'spot', rank: 4 }])[0].cell === CELLS.filter(c => c.id === 'spot')[0], '每一格用的是選單同一份遊戲資料（縮圖、名稱）');
+
+// ═══ 6. 搜尋遊戲（V1.43.0：關鍵字是名稱的一部分就算符合）═══
+const sg = (q) => M.searchGames(q).map(c => c.id);
+ok(sg('').length === CELLS.length && sg('   ').length === CELLS.length && sg(null).length === CELLS.length, '關鍵字是空的 → 全部');
+ok(sg('數獨').length >= 6 && M.searchGames('數獨').every(c => c.name.indexOf('數獨') >= 0), '「數獨」→ 名稱都含「數獨」（' + sg('數獨').length + ' 款）');
+ok(sg('鬼腳圖').join() === CELLS.filter(c => c.name.indexOf('鬼腳圖') >= 0).map(c => c.id).join(), '「鬼腳圖」→ 鬼腳圖與鬼腳圖減一');
+ok(sg('零秒').join() === 'speed', '只打一部分「零秒」→ 零秒出手');
+ok(sg('出手').join() === 'speed', '名稱後半段「出手」也找得到');
+ok(sg('零秒出手').join() === 'speed', '打全名也找得到');
+ok(sg('  零秒  ').join() === 'speed', '前後空白略過');
+ok(sg('xyz不存在').length === 0, '找不到 → 空陣列');
+ok(sg('SUDOKU4').join() === 'sudoku4' && sg('Ｓudoku4').join() === 'sudoku4', '英文 id 也找得到，大小寫、全形半形不分，名稱比對沒中時才用 id');
+ok(sg('數獨 入門').length >= 1 && M.searchGames('數獨 入門').every(c => c.name.indexOf('數獨') >= 0 && c.name.indexOf('入門') >= 0), '空白隔開 → 每一段都要符合');
+ok(sg('入門 數獨').join() === sg('數獨 入門').join(), '多段的順序不拘');
+ok(M.searchGames('數').every(c => c.name.indexOf('數') >= 0 || c.id.indexOf('數') >= 0), '單一個字也行');
+CELLS.forEach(c => ok(sg(c.name).indexOf(c.id) >= 0, c.id + '「' + c.name + '」用自己的全名一定搜得到'));
+const nameFirst = M.searchGames('sudoku').map(c => c.id);
+ok(nameFirst.length >= 6, '搜尋 id 片段 sudoku 會找到數獨系列（' + nameFirst.length + ' 款）');
 
 console.log(bad ? 'FAILED ' + bad + ' / ' + total : 'ALL PASS (' + total + ' checks)');
 process.exitCode = bad ? 1 : 0;

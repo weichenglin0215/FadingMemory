@@ -66,7 +66,15 @@ ok([1, 5, 12, 30].every(l => stats[l].width > 100), 'ropes use most of the width
 // 球的位置
 { const L = T.makeLevel(5, H, rnd, W); const pts = L.L.pts; const mid = pts[pts.length >> 1]; const q = T.pointAt(pts, mid.s); ok(Math.abs(q.x - mid.x) < 1e-6 && Math.abs(q.y - mid.y) < 1e-6, 'pointAt'); ok(T.pointAt(pts, -1) === pts[0] && T.pointAt(pts, 1e9) === pts[pts.length - 1], 'pointAt ends'); }
 // 虛線的紅/白段長度，左右明顯不同
-for (let k = 0; k < 200; k++) { const d = T.dashFor(rnd); ok(Math.abs((d.L[0] + d.L[1]) - (d.R[0] + d.R[1])) >= 8 || Math.abs(d.L[0] - d.R[0]) >= 10, 'dash differ'); }
+// V1.43.0：左右兩條虛線的紅白間距要接近、段數（長度 ÷ 週期）幾乎一樣，沒辦法靠數段數猜哪條短
+for (let k = 0; k < 400; k++) {
+  const lenS = 600 + rnd() * 900, ratio = 1 + (0.03 + rnd() * 0.27), shortIsL = rnd() < 0.5, lenL = shortIsL ? lenS : lenS * ratio, lenR = shortIsL ? lenS * ratio : lenS;
+  const d = T.dashFor(rnd, lenL, lenR), pL = d.L[0] + d.L[1], pR = d.R[0] + d.R[1], nL = lenL / pL, nR = lenR / pR;
+  ok(Math.abs(nL / nR - 1) <= 0.075, '兩條的虛線段數只差幾 %：' + (nL / nR).toFixed(3));
+  ok(Math.abs(pL / pR - 1) <= 0.4, '兩條的紅白週期接近：' + (pL / pR).toFixed(3));
+  ok(d.L[0] >= 2 && d.L[1] >= 2 && d.R[0] >= 2 && d.R[1] >= 2, '紅段、白段都看得見');
+}
+{ let longMore = 0, shortMore = 0; for (let k = 0; k < 400; k++) { const d = T.dashFor(rnd, 1000, 1100), nS = 1000 / (d.L[0] + d.L[1]), nLg = 1100 / (d.R[0] + d.R[1]); if (nLg > nS) longMore++; else shortMore++; } ok(longMore > 40 && shortMore > 40, '段數有時長的多、有時短的多（誤導）：' + longMore + '/' + shortMore); }
 // 揭曉的鏡頭：剩下那一段路很短才放大；框跟場地同寬高比、不超出場地、一定框得住那一段路
 {
   const FW = 472, FH = 560;

@@ -6,6 +6,7 @@
      只知道撲滿裡的硬幣總重（簡單的關卡另外告訴你一共幾枚），還有一條規矩：
        「每種都是 1～9 枚」（個位數）或「每種都是偶數枚（2～18 枚）」。
      用每種硬幣旁邊的「−」「＋」調出你推算的枚數，按「打開撲滿」。只有一種答案；**猜錯一次這一局就結束**，會列出正確的算式。
+     答對會跳出「答對了」說明彈窗（顯示算式），按「下一關」才換新題目（V1.43.0 玩家意見：每關畫面差異小，常沒發現換了題目）。
    · 頓悟：個位數的限制讓「總重的個位數」大幅縮小可能（13×□ 的個位數只有 10 種）；偶數枚＝先把總重除以 2；
      有總枚數時就是雞兔同籠（全部當成輕的，多出來的重量÷重量差）。
    · 關卡（使用者要求「簡單關卡可以提供總硬幣數量」）：
@@ -33,7 +34,6 @@
     var EVEN_P = 0.35;                          /* 「偶數枚」出現的機會 */
     var TRIES = 400;                            /* 找不到唯一解的題目時，最多重試幾次 */
     var MAX_LEVEL = 90;
-    var PASS_DELAY_MS = 1600;
     var FAIL_HOLD_MS = 6000;                    /* 猜錯時顯示正確算式的時間 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
@@ -147,7 +147,11 @@
                 tip.textContent = equation(pz.ws, cs);
                 list.classList.add('piggybank-list--ok');
                 kit.flash(stage, true, api.my);
-                api.pass({ delay: PASS_DELAY_MS });
+                /* V1.43.0：每關的題目長得很像，玩家沒發現換了新題目 → 答對先跳說明彈窗，按「下一關」才換 */
+                kit.passNext(api, { children: [
+                    h('div', { 'class': 'piggybank-pass__eq', text: equation(pz.ws, cs) }),
+                    h('div', { 'class': 'piggybank-pass__hint', text: '第 ' + level + ' 關答對了！按「下一關」會換一個新的撲滿。' })
+                ] });
                 return;
             }
             var yw = weightOf(pz.ws, cs), why = yw !== pz.W ? '你的組合重 ' + yw + ' 克，對不上 ' + pz.W + ' 克' : '重量對了，但一共是 ' + countOf(cs) + ' 枚，不是 ' + pz.N + ' 枚';

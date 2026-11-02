@@ -4,7 +4,7 @@
         （格式化函式是 Leaderboard.fmt，跟遊戲裡、世界排行榜用的同一個）。 */
 window.FM_SCORE_SPECS = {
     "speed": {"better":"min","decimals":4,"format":"{v} 秒"},
-    "drop": {"better":"max","decimals":0,"format":"{v} 分"},
+    "drop": {"better":"max","decimals":0,"format":"{v} 關"},
     "spot": {"better":"max","decimals":0,"format":"第 {v} 關"},
     "impossible": {"better":"min","decimals":4,"format":"{v} 公分"},
     "shapes": {"better":"max","decimals":0,"format":"{v} 關"},
@@ -183,6 +183,5 @@ window.FM_SCORE_SPECS = {
     "fruitstock": {"better":"max","decimals":0,"format":"{v} 關"},
     "boxstack": {"better":"max","decimals":0,"format":"{v} 關"},
     "shapegrid": {"better":"max","decimals":0,"format":"{v} 關"},
-    "babyscale": {"better":"max","decimals":0,"format":"{v} 關"},
-    "keypad30": {"better":"max","decimals":0,"format":"{v} 關"}
+    "babyscale": {"better":"max","decimals":0,"format":"{v} 關"}
 };

@@ -10,7 +10,7 @@ ok(T.countSolutions([50, 10, 5, 1], [3, 2, 4, 6], 137, 50) >= 1, 'old unique exa
 // 範圍與曲線
 ok(T.nRange(1)[0] === 60 && T.nRange(1)[1] === 100 && T.nRange(15)[0] === 250 && T.nRange(15)[1] === 650 && T.nRange(40)[1] === 650, 'N range 60..100 → 250..650');
 ok(T.coinCap(1) === 9 && T.coinCap(15) === T.COINS_END && T.coinMin(15) === 20, 'coin counts ramp');
-ok(Math.abs(T.timeFor(1) - 15) < 1e-9 && Math.abs(T.timeFor(15) - 10) < 1e-9, 'time 15 → 10（原本 45 → 30 的三分之一）');
+ok(Math.abs(T.timeFor(1) - 30) < 1e-9 && Math.abs(T.timeFor(15) - 20) < 1e-9 && T.TIME_START === 30 && T.TIME_END === 20, 'time 30 → 20（V1.43.0：延長成 200%，原本 15 → 10）');
 ok(JSON.stringify(T.denomsFor(1)) === '[50,20,10,5,1]' && JSON.stringify(T.denomsFor(15)) === '[50,20,10,5,1]', '每一關都是五種幣值');
 ok(T.minRatio(1) > 0.49 && T.minRatio(15) > 0.71, '題目金額至少是桌上總額的 0.5 → 0.72');
 // 各關規劃
@@ -20,6 +20,10 @@ for (let lv = 1; lv <= 20; lv++) {
   for (let k = 0; k < NQ; k++) {
     const q = T.plan(lv, rnd);
     if (q.tries === -1) { fallbacks++; continue; }
+    // V1.43.0：限定枚數（K＝答案的總枚數）、「剛好 K 枚湊出 N 元」只有一種拿法
+    ok(q.K === q.c.reduce((s, x) => s + x, 0) && q.K >= 2, '限定 K 枚＝答案的總枚數');
+    ok(q.uniqueTries >= 0 && T.countSolutionsK(q.den, q.a, q.N, q.K, 5) === 1, '第 ' + lv + ' 關：剛好 ' + q.K + ' 枚湊出 ' + q.N + ' 只有一種拿法');
+    st.K = (st.K || 0) + q.K;
     ok(q.c.every((x, i) => x <= q.a[i] && x >= 0), 'c<=a');
     ok(q.c.reduce((s, x, i) => s + x * q.den[i], 0) === q.N, 'sum N');
     ok(JSON.stringify(q.den) === JSON.stringify(T.denomsFor(lv)), 'den');
@@ -46,6 +50,13 @@ for (let lv = 1; lv <= 20; lv++) {
   if ([1, 3, 5, 8, 12, 15, 20].includes(lv)) console.log('lv' + lv, 'N', st.N.join('..'), 'avg coins', (st.coins / NQ).toFixed(1) + '/' + T.coinCap(lv), 'over50', st.over, 'bulk', st.bulk, 'decoy', st.decoy, 'greedyFail', st.gf, 'carry', st.carry, 'avg solutions', (st.sol / NQ).toFixed(1), 'multi-solution', st.multi, 'maxTries', st.maxTries);
 }
 console.log('fallbacks', fallbacks, 'ms', Date.now() - t0);
+{ // 數枚數的解：brute force 對照
+  const brute = (den, a, N, K) => { let n = 0; (function rec(i, rem, k) { if (i === den.length) { if (rem === 0 && k === 0) n++; return; } for (let x = 0; x <= a[i]; x++) if (x * den[i] <= rem && x <= k) rec(i + 1, rem - x * den[i], k - x); })(0, N, K); return n; };
+  let same = 0, tot = 0;
+  for (let t = 0; t < 300; t++) { const den = [50, 20, 10, 5, 1], a = den.map(() => Math.floor(rnd() * 6)), N = Math.floor(rnd() * 200), K = 1 + Math.floor(rnd() * 12); tot++; if (T.countSolutionsK(den, a, N, K, 1e9) === brute(den, a, N, K)) same++; }
+  ok(same === tot, 'countSolutionsK 跟暴力窮舉一樣（' + same + '/' + tot + '）');
+  ok(T.countSolutionsK([50, 20, 10, 5, 1], [3, 3, 3, 3, 3], 134, 8, 9) === 0 || T.countSolutionsK([50, 20, 10, 5, 1], [3, 3, 3, 3, 3], 134, 8, 9) >= 0, '範例可以數');
+}
 ok(fallbacks === 0, 'the fallback question is never needed');
 // 「陷阱隨關卡增加」：V1.21.0 起每關五種幣值都有，「直覺做法失敗」已關掉（gf 一律 0）；
 // 「大量 1 元」bulk 隨關卡增加（第 1 關約 17／150 題 → 第 15 關約 60／150 題，標準差約 6，門檻訂在平均下方 4 個標準差以上）。

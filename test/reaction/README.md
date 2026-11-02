@@ -64,11 +64,13 @@ node test/reaction/css_fingerprint.mjs diff 甲.json 乙.json 比對兩份指紋
 
 ## 原創篇（V1.42.0）
 
-`t_timetable.js`、`t_piggybank.js`、`t_expiry.js`、`t_fruitstock.js`、`t_boxstack.js`、`t_shapegrid.js`、`t_babyscale.js`、`t_keypad30.js`：出題器（唯一解、只用長方形法則就填得完、照大小排排不對、算得出來而且每條紀錄都用得到、必勝）、日期換算（大小月、閏年、跨年）、難度曲線、判定。
+`t_timetable.js`、`t_piggybank.js`、`t_expiry.js`、`t_fruitstock.js`、`t_boxstack.js`、`t_shapegrid.js`、`t_babyscale.js`：出題器（唯一解、只用長方形法則就填得完、照大小排排不對、算得出來而且每條紀錄都用得到、必勝）、日期換算（大小月、閏年、跨年）、難度曲線、判定。
 
 ```
 node test/reaction/browser_orig8.mjs                 原創篇 8 款：真的滑鼠操作（點格子、數字鍵、−／＋、標記鈕、清單再點格子、計算機的鍵）、各關卡版面放得下、答錯會結算、自由解題按「返回」先結算、沒有 JS 錯誤
 node test/reaction/shot_level.mjs 輸出資料夾 timetable:30 expiry:30   跳到指定關卡、存整個舞台的截圖（看最難的關卡放不放得下）
+node test/reaction/shot_old.mjs 輸出資料夾 pillbox:14 ghostleg:20          舊式闖關遊戲（沒有 debug.goto 的：分藥盒、撥時鐘、零錢分類、誰先到？、神準落下、鬼腳圖）從指定關卡開局、存截圖
+node test/reaction/shot_state.mjs 輸出.png fifteen "400:Reaction.current.debug.goto(8)" "600:Reaction.current.debug.wrong()"   依序執行幾段 JavaScript 後存截圖（看按完之後的中間狀態）
 ```
 
 `css_fingerprint.mjs` 是改 CSS 組織（拆檔、class 改名）時用的：改之前拍一份、改之後拍一份，指紋一樣＝畫面上每個元素的每個樣式都沒變（class 名稱不納入指紋，所以改名不影響）。注意：`getComputedStyle` 裡自訂屬性（`--xxx`）的順序每次不同，指紋會先排序；倒數計時條這類本來就在動的元素每次都不同，要先拍兩次基準、扣掉本來就會變動的元素再比。

@@ -68,7 +68,12 @@
        5. 修了一個悄悄排除答案位置的問題：答案貼著路線「回頭」時，兩個轉彎中間唯一能放打斷「＝」橫線的那一層，剛好落在答案的留白裡，這種位置永遠放不下橫線
           （randomRows 現在這個間隔空 SOL_GAP＋1 層）。出題也變快了（canPlace、placements 不再每次重建查詢表、逐個走一遍；便宜的檢查放前面；
           先探路再試，做不出來的那一級整級跳過）：電腦每題平均 39.8 → 9.0 ms、最慢 265 → 136 ms。
-   · 限時 TIME_S（第 1 關 → 到頂，秒）。
+   · V1.43.0（玩家意見：太容易）：**第 10 關起要畫 2 條橫線才過得了關、第 20 關起要畫 3 條**（NEED_FROM），只畫比這少的條數一定走不到終點。
+     做法（makePuzzle）：先用原本的出題（makeLevel）做出一張「畫 1 條就過關」的圖，再從「正確路線走過的橫線」裡挑 need−1 條拿掉，
+     跟原本玩家要畫的那一條合起來就是玩家要畫的 need 條（req）。拿掉之後要驗證（minimalNeed）：不畫、畫 1 條、（要畫 3 條時）畫任意 2 條都走不到終點，
+     所以一定要畫滿 need 條。畫滿 need 條、起點才走得到終點就過關，任何一種畫法都算（不一定是設計的那一組）。
+     畫面：玩家畫的橫線可以**在同一個位置再畫一次＝刪掉那一條**；畫滿 need 條才開始評審動畫；畫面下方寫「已畫 N／need 條」。
+   · 限時（V1.43.0 延長）：TIME_S（第 1 關 → 到頂，秒；30→60 改成 45→90），要畫的橫線每多一條再加 EXTRA_RUNG_S 秒（第 10 關起 ＋25、第 20 關起 ＋50），越難的關卡限時越長。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -101,7 +106,9 @@
                                                    0＝不再多放寬（預設，全部 32／44／24%）、1＝37／34／29%、2＝33／33／34%（答案位置更平均，第 23 關起的「後段」多很多），但分別約 23%、27% 的題目會超過「放寬一級」、路線比較像樓梯。
                                                    你的 STAIR、REVERSE 本身影響更大：到頂 STAIR 3→4、REVERSE 5→3 也能讓位置平均（36／34／30%） */
     var SOL_GAP = 2;                            /* 玩家要畫的位置，跟它相接的兩條直線上，上下幾層以內不放其他橫線（2＝上下各空 1 層；1＝不特別空出來） */
-    var TIME_S = [30, 60];                      /* 每關限時（秒） */
+    var TIME_S = [45, 90];                      /* 每關限時（秒）：第 1 關 → 到頂；V1.43.0 起從 30→60 延長成 45→90 */
+    var NEED_FROM = [10, 20];                   /* V1.43.0：第 10 關起要畫 2 條橫線、第 20 關起要畫 3 條 */
+    var EXTRA_RUNG_S = 25;                      /* 要畫的橫線每多一條，限時再多幾秒 */
     var TOUCH_X = 30;                           /* 手指按在直線的左右多遠以內，算按到那條直線（px） */
     var DRAG_MIN = 14;                          /* 往左右拖超過多遠，才決定要往哪邊畫（px） */
     var JOIN_FRAC = 0.8;                        /* 拖到隔壁直線的幾成距離，就算接上了 */
@@ -116,7 +123,9 @@
     function rungCap() { return Math.floor(ROWS * DENSITY_MAX); }
     function rungCount(level) { return Math.min(rungCap(), Math.round(kit.ramp(level, RUNGS[0], RUNGS[1], RAMP_LEVELS))); }
     function maxSolAt(level) { return Math.max(1, Math.round(kit.ramp(level, MAX_SOL[0], MAX_SOL[1], RAMP_LEVELS))); }
-    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
+    /* 這一關要畫幾條橫線（1／2／3） */
+    function needAt(level) { return level >= NEED_FROM[1] ? 3 : level >= NEED_FROM[0] ? 2 : 1; }
+    function timeMs(level) { return Math.round((kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) + EXTRA_RUNG_S * (needAt(level) - 1)) * 1000); }
     function visitAt(level) { return Math.round(kit.ramp(level, VISIT[0], VISIT[1], RAMP_LEVELS)); }
     function turnsAt(level) { return Math.round(kit.ramp(level, TURNS[0], TURNS[1], RAMP_LEVELS)); }
     function hideAt(level) { return { b: Math.round(kit.ramp(level, HIDE_BEFORE[0], HIDE_BEFORE[1], RAMP_LEVELS)), a: Math.round(kit.ramp(level, HIDE_AFTER[0], HIDE_AFTER[1], RAMP_LEVELS)) }; }
@@ -249,6 +258,50 @@
         var r0 = [{ row: 4, col: 2 }], f0 = follow(r0, 0);                          /* 保底：很簡單的一題（現有 1 條橫線，把起點接到隔壁） */
         return { rungs: r0, start: 0, target: 1, end0: f0.end, sol: { row: 4, col: 0 }, sweep: false, hide: { before: 0, after: 0 }, shape: { maxRun: 1, rev: 0 }, turn: 0, turns: 1, solutions: placements(r0, 0).filter(function (p) { return p.end === 1; }).map(function (p) { return { row: p.row, col: p.col }; }) };
     }
+    /* 從 start 走下去，走過哪些橫線（依序，每條 { row, col }） */
+    function routeRungs(rungs, start) {
+        var s = rungSet(rungs), col = start, out = [];
+        for (var r = 0; r < ROWS; r++) {
+            if (s[r + ',' + col]) { out.push({ row: r, col: col }); col++; }
+            else if (s[r + ',' + (col - 1)]) { out.push({ row: r, col: col - 1 }); col--; }
+        }
+        return out;
+    }
+    /* 一定要畫滿 need 條才走得到終點嗎：不畫、畫 1 條、（need＝3 時）畫任意 2 條，從 start 都走不到 target */
+    function minimalNeed(rungs, start, target, need) {
+        if (follow(rungs, start).end === target) return false;
+        var singles = placements(rungs, start);
+        if (singles.some(function (p) { return p.end === target; })) return false;
+        if (need >= 3) {
+            for (var i = 0; i < singles.length; i++) {
+                var r1 = rungs.concat([{ row: singles[i].row, col: singles[i].col }]);
+                if (placements(r1, start).some(function (p) { return p.end === target; })) return false;
+            }
+        }
+        return true;
+    }
+    /* V1.43.0 出題：回傳跟 makeLevel 一樣的欄位，另外多 need（要畫幾條）、req（玩家要畫的設計答案，need 條）；
+       need＝1 就是 makeLevel；need ≥ 2 時，q.solutions＝req，q.rungs 是拿掉「正確路線上的 need−1 條橫線」之後的圖 */
+    function makePuzzle(level, rand) {
+        rand = rand || Math.random;
+        var need = needAt(level), base = null;
+        if (need === 1) { base = makeLevel(level, rand); return Object.assign({}, base, { need: 1, req: [base.sol] }); }
+        for (var t = 0; t < 80; t++) {
+            base = makeLevel(level, rand);
+            if (base.rungs.length < 2) continue;
+            var sameAs = function (a, b) { return a.row === b.row && a.col === b.col; };
+            var cand = routeRungs(base.rungs.concat([base.sol]), base.start).filter(function (g) { return !sameAs(g, base.sol); });
+            if (cand.length < need - 1) continue;
+            for (var k = 0; k < 14; k++) {
+                var pick = kit.shuffle(cand, rand).slice(0, need - 1);
+                var rungs2 = base.rungs.filter(function (g) { return !pick.some(function (p) { return sameAs(p, g); }); });
+                if (!minimalNeed(rungs2, base.start, base.target, need)) continue;
+                var req = [base.sol].concat(pick);
+                return Object.assign({}, base, { rungs: rungs2, end0: follow(rungs2, base.start).end, need: need, req: req, solutions: req });
+            }
+        }
+        return Object.assign({}, base, { need: 1, req: [base.sol] });          /* 保底（實測不會用到）：做不出來就當一般的一條橫線 */
+    }
     /* 評審動畫花多久：路線越長越久（每 px 約 2.4 毫秒），夾在 ROUTE_MS 範圍內 */
     function routeMs(route) { return Math.round(kit.clamp(routeLength(route) * 2.4, ROUTE_MS[0], ROUTE_MS[1])); }
     /* 答案區段的文字：「第 5～7 層的 乙～丙 之間」 */
@@ -275,12 +328,12 @@
 
     function setup(api) {
         var stage = api.stage, level = api.level, my = api.my;
-        var q = makeLevel(level, api.rand);
+        var q = makePuzzle(level, api.rand), NEED = q.need;
         api.info = q;
-        console.log('[鬼腳圖] 第 ' + level + ' 關：現有橫線 ' + q.rungs.length + ' 條；起點 ' + LABELS[q.start] + '、終點 ' + (q.target + 1) + '（現有的線走到 ' + (q.end0 + 1) + '）；答案 ' + answerGroups(q.solutions).length + ' 段：' + answerGroups(q.solutions).map(groupText).join('、') + '；正確路線經過 ' + visitedCols(q.rungs.concat([q.solutions[0]]), q.start).map(function (x) { return LABELS[x]; }).join('') + '；答案是正確路線的第 ' + (q.turn + 1) + '／' + q.turns + ' 個轉彎（前後藏了 ' + q.hide.before + '、' + q.hide.after + ' 個）' + '；路線同方向最多連走 ' + q.shape.maxRun + ' 步、回頭 ' + q.shape.rev + ' 次' + (q.sweep ? '、碰到甲與戊' : '') + '；各縫橫線數 ' + gapCounts(q.rungs).join(',') + '；限時 ' + timeMs(level) + ' ms');
+        console.log('[鬼腳圖] 第 ' + level + ' 關：現有橫線 ' + q.rungs.length + ' 條；起點 ' + LABELS[q.start] + '、終點 ' + (q.target + 1) + '（現有的線走到 ' + (q.end0 + 1) + '）；答案 ' + answerGroups(q.solutions).length + ' 段：' + answerGroups(q.solutions).map(groupText).join('、') + '；正確路線經過 ' + visitedCols(q.rungs.concat([q.solutions[0]]), q.start).map(function (x) { return LABELS[x]; }).join('') + '；答案是正確路線的第 ' + (q.turn + 1) + '／' + q.turns + ' 個轉彎（前後藏了 ' + q.hide.before + '、' + q.hide.after + ' 個）' + '；路線同方向最多連走 ' + q.shape.maxRun + ' 步、回頭 ' + q.shape.rev + ' 次' + (q.sweep ? '、碰到甲與戊' : '') + '；各縫橫線數 ' + gapCounts(q.rungs).join(',') + '；要畫 ' + NEED + ' 條；限時 ' + timeMs(level) + ' ms');
 
         /* 畫出整張圖（js/ghostleg_core.js 的 drawBoard，「鬼腳圖減一」也用同一個，外觀一樣） */
-        var board = C.drawBoard(stage, q, LABELS, '照現有的線走不到終點！按住一條直線、往旁邊拖，畫上一條橫線');
+        var board = C.drawBoard(stage, q, LABELS, NEED > 1 ? '照現有的線走不到終點！要畫上 ' + NEED + ' 條橫線：按住一條直線、往旁邊拖。畫在同一條橫線上再畫一次＝刪掉它' : '照現有的線走不到終點！按住一條直線、往旁邊拖，畫上一條橫線');
         var gUser = board.gUser, gRoute = board.gRoute, gHint = board.gHint, endBoxes = board.endBoxes, msg = board.msg;
 
         /* 操作提示（只在第一次進遊戲時）：鉛筆圖示在「正確位置」畫出一條藍色水平橫線，重複播放（沒有手指圖示）；玩家一按下去就消失 */
@@ -303,7 +356,7 @@
         function hideHint() { hintOn = false; if (pencil) { if (pencil.parentNode) pencil.parentNode.removeChild(pencil); pencil = null; } while (gHint.firstChild) gHint.removeChild(gHint.firstChild); }
 
         /* 畫橫線：按住某一條直線 → 往左或往右拖到相鄰的直線 → 畫上一條粗藍線（貼齊最近的一層）；拖到一半放開＝取消 */
-        var drag = null, locked = false, placed = null;
+        var drag = null, locked = false, placed = [];                  /* placed：玩家畫的橫線 [{ row, col, line（SVG 元素） }]，最多 NEED 條 */
         function colAt(x, y) {
             if (y < Y_TOP - 6 || y > Y_BOT + 6) return -1;
             var best = -1, bd = 1e9;
@@ -343,23 +396,32 @@
         stage.addEventListener('pointercancel', up);
 
         function flash(text) { msg.textContent = text; }
+        function progressText() { return NEED > 1 ? '已畫 ' + placed.length + '／' + NEED + ' 條（畫在同一條橫線上再畫一次＝刪掉它）' : ''; }
         function commit(d) {
             var col = Math.min(d.col, d.col + d.dir), row = d.row;
-            if (!canPlace(q.rungs, row, col)) {                            /* 那一層那個位置已經有橫線（或緊鄰）：不算，請換個位置 */
+            /* V1.43.0：畫在自己已經畫過的橫線上（同一層、同一個位置）＝把那一條刪掉 */
+            for (var i = 0; i < placed.length; i++) if (placed[i].row === row && placed[i].col === col) {
+                gUser.removeChild(d.line); gUser.removeChild(placed[i].line); placed.splice(i, 1);
+                Sfx.play('click'); flash(progressText());
+                return;
+            }
+            if (!canPlace(q.rungs.concat(placed), row, col)) {             /* 那一層那個位置已經有橫線（或緊鄰）：不算，請換個位置 */
                 gUser.removeChild(d.line); Sfx.play('bad');
                 flash('那裡已經有橫線了，換個位置畫');
                 return;
             }
-            locked = true; placed = { row: row, col: col };
             var y = rowY(row);
             d.line.setAttribute('x1', colX(col)); d.line.setAttribute('x2', colX(col + 1)); d.line.setAttribute('y1', y); d.line.setAttribute('y2', y);
-            Sfx.play('click'); api.stopTimer();
+            placed.push({ row: row, col: col, line: d.line });
+            Sfx.play('click');
+            if (placed.length < NEED) { flash(progressText()); return; }       /* 還沒畫滿：繼續畫 */
+            locked = true; api.stopTimer();
             msg.textContent = '';
             judge();
         }
         /* 評審動畫：從起點開始畫出一條綠色粗虛線，經過每個轉折點，看看最後能不能抵達終點 */
         function judge() {
-            var f = follow(q.rungs.concat([placed]), q.start), ms = routeMs(f.route), total = routeLength(f.route);
+            var f = follow(q.rungs.concat(placed.map(function (p) { return { row: p.row, col: p.col }; })), q.start), ms = routeMs(f.route), total = routeLength(f.route);
             var line = kit.svg('polyline', { points: '', 'class': 'ghostleg-route' }, gRoute);
             my.tween(ms, function (e) {
                 line.setAttribute('points', partialRoute(f.route, total * e).map(function (p) { return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' '));
@@ -369,7 +431,7 @@
                 Sfx.play(win ? 'ok' : 'bad');
                 api.after(HOLD_MS, function () {
                     if (win) api.pass({ delay: 0 });
-                    else api.fail({ delay: 0, lines: ['這條橫線畫在這裡，會走到終點 ' + (f.end + 1) + '，不是綠色的終點 ' + (q.target + 1), '只有一次機會，要想清楚橫線畫在哪一層、哪兩條直線之間'] });
+                    else api.fail({ delay: 0, lines: [NEED > 1 ? '這 ' + NEED + ' 條橫線畫在這裡，會走到終點 ' + (f.end + 1) + '，不是綠色的終點 ' + (q.target + 1) : '這條橫線畫在這裡，會走到終點 ' + (f.end + 1) + '，不是綠色的終點 ' + (q.target + 1), '只有一次機會，要想清楚橫線畫在哪一層、哪兩條直線之間'] });
                 });
             });
         }
@@ -392,10 +454,14 @@
             for (var k = 1; k <= 10; k++) fire('pointermove', a + (b - a) * k / 10, y);
             fire('pointerup', b, y);
         }
-        api.solve = function () { var s = q.solutions[0]; drawAt(s.row, s.col, 1); };
+        api.solve = function () { q.req.forEach(function (s) { drawAt(s.row, s.col, 1); }); };
         api.wrong = function () {
-            var bad = placements(q.rungs, q.start).filter(function (p) { return p.end !== q.target; })[0];
-            if (bad) drawAt(bad.row, bad.col, 1);
+            /* 畫滿 NEED 條、而且走不到終點：每一條都挑「畫上去之後終點不對」的位置（畫得滿就好，走不到終點由 minimalNeed 保證不到 NEED 條時成立） */
+            for (var k = 0; k < NEED; k++) {
+                var cur = q.rungs.concat(placed.map(function (p) { return { row: p.row, col: p.col }; }));
+                var bad = placements(cur, q.start).filter(function (p) { return p.end !== q.target; })[0];
+                if (bad) drawAt(bad.row, bad.col, 1);
+            }
         };
         api.draw = drawAt;
     }
@@ -403,10 +469,10 @@
     var G = {
         id: ID,
         name: '鬼腳圖',
-        rule: '這是台灣童玩「阿彌陀佛」。上方有綠色的起點，下方有綠色的終點，但照著現有的橫線走，**從起點到不了終點**。請你**按住一條直線，往左或往右拖到隔壁的直線，畫上一條橫線**，讓起點接到終點。**只有一次機會**，畫好後會從起點開始一路走下去，遇到橫線就轉彎，看能不能走到終點。',
+        rule: '這是台灣童玩「阿彌陀佛」。上方有綠色的起點，下方有綠色的終點，但照著現有的橫線走，**從起點到不了終點**。請你**按住一條直線，往左或往右拖到隔壁的直線，畫上一條橫線**，讓起點接到終點。**第 10 關起要畫 2 條、第 20 關起要畫 3 條才走得到**；畫錯了，在同一條橫線上再畫一次就會刪掉它。**只有一次機會**，畫滿之後會從起點開始一路走下去，遇到橫線就轉彎，看能不能走到終點。',
         mount: mount,
         score: SCORE,
-        test: { colX: colX, rowY: rowY, snapRow: snapRow, rungCount: rungCount, rungCap: rungCap, DENSITY_MAX: DENSITY_MAX, maxSolAt: maxSolAt, timeMs: timeMs, follow: follow, canPlace: canPlace, visitAt: visitAt, turnsAt: turnsAt, visitedCols: visitedCols, gapCounts: gapCounts, makeWalk: makeWalk, makeZigzag: makeZigzag, cancelPairs: cancelPairs, makesCancel: makesCancel, randomRows: randomRows, routeShape: routeShape, stairAt: stairAt, revAt: revAt, fitPlan: fitPlan, groupMaxAt: groupMaxAt, answerGroups: answerGroups, groupText: groupText, hideOf: hideOf, hideAt: hideAt, hardEnough: hardEnough, answerIndex: C.answerIndex, answerOk: C.answerOk, answerThird: C.answerThird, walkPossible: walkPossible, construct: C.construct, spreadRows: spreadRows, crowded: crowded, placements: placements, makeLevel: makeLevel, routeLength: routeLength, partialRoute: partialRoute, routeMs: routeMs, rating: rating, COLS: COLS, ROWS: ROWS, RAMP_LEVELS: RAMP_LEVELS, Y_TOP: Y_TOP, Y_BOT: Y_BOT, RUNGS: RUNGS, MAX_SOL: MAX_SOL, VISIT: VISIT, TURNS: TURNS, SOL_GAP: SOL_GAP, HIDE_BEFORE: HIDE_BEFORE, HIDE_AFTER: HIDE_AFTER, AVOID_ENDS: AVOID_ENDS, SWEEP_FROM: SWEEP_FROM, BREAK_EXTRA: BREAK_EXTRA, STAIR: STAIR, REVERSE: REVERSE, DECOY_NEAR: DECOY_NEAR, GROUP_MAX: GROUP_MAX, POS_EXTRA: POS_EXTRA, TIME_S: TIME_S, HOLD_MS: HOLD_MS, ROUTE_MS: ROUTE_MS }
+        test: { makePuzzle: makePuzzle, needAt: needAt, routeRungs: routeRungs, minimalNeed: minimalNeed, NEED_FROM: NEED_FROM, EXTRA_RUNG_S: EXTRA_RUNG_S, colX: colX, rowY: rowY, snapRow: snapRow, rungCount: rungCount, rungCap: rungCap, DENSITY_MAX: DENSITY_MAX, maxSolAt: maxSolAt, timeMs: timeMs, follow: follow, canPlace: canPlace, visitAt: visitAt, turnsAt: turnsAt, visitedCols: visitedCols, gapCounts: gapCounts, makeWalk: makeWalk, makeZigzag: makeZigzag, cancelPairs: cancelPairs, makesCancel: makesCancel, randomRows: randomRows, routeShape: routeShape, stairAt: stairAt, revAt: revAt, fitPlan: fitPlan, groupMaxAt: groupMaxAt, answerGroups: answerGroups, groupText: groupText, hideOf: hideOf, hideAt: hideAt, hardEnough: hardEnough, answerIndex: C.answerIndex, answerOk: C.answerOk, answerThird: C.answerThird, walkPossible: walkPossible, construct: C.construct, spreadRows: spreadRows, crowded: crowded, placements: placements, makeLevel: makeLevel, routeLength: routeLength, partialRoute: partialRoute, routeMs: routeMs, rating: rating, COLS: COLS, ROWS: ROWS, RAMP_LEVELS: RAMP_LEVELS, Y_TOP: Y_TOP, Y_BOT: Y_BOT, RUNGS: RUNGS, MAX_SOL: MAX_SOL, VISIT: VISIT, TURNS: TURNS, SOL_GAP: SOL_GAP, HIDE_BEFORE: HIDE_BEFORE, HIDE_AFTER: HIDE_AFTER, AVOID_ENDS: AVOID_ENDS, SWEEP_FROM: SWEEP_FROM, BREAK_EXTRA: BREAK_EXTRA, STAIR: STAIR, REVERSE: REVERSE, DECOY_NEAR: DECOY_NEAR, GROUP_MAX: GROUP_MAX, POS_EXTRA: POS_EXTRA, TIME_S: TIME_S, HOLD_MS: HOLD_MS, ROUTE_MS: ROUTE_MS }
     };
     Reaction.register(G);
 })();

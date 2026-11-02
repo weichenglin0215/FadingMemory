@@ -18,7 +18,8 @@
 /* 目前已選的總額；超過目標變橘、剛好變綠 */
 .coins-sum {
     text-align: center;
-    font-size: var(--fs-md);
+    white-space: nowrap;           /* 一定只佔一行：換行會讓桌面變矮，硬幣就跑到桌面外面（V1.43.1） */
+    font-size: 22px;
     font-weight: 700;
     color: var(--c-blue);
     min-height: 1.4em;

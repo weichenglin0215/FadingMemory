@@ -51,6 +51,21 @@
     color: var(--c-blue);
 }
 
+/* 答對彈窗（kit.passNext）：算式大字、下面一行提示 */
+.piggybank-pass__eq {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-black);
+    color: var(--c-ok);
+    line-height: 1.4;
+}
+
+.piggybank-pass__hint {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+    line-height: 1.4;
+}
+
 .piggybank-rule {
     padding: 6px 16px;
     border-radius: var(--r-pill);

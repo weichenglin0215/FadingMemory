@@ -19,15 +19,18 @@
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var STAGES = [{ cards: 8, to: 5 }, { cards: 16, to: 15 }, { cards: 24, to: 9999 }];     /* 牌的張數與這個階段的最後一關 */
-    var COLS = 4;                               /* 每一列幾張 */
-    var SLACK = [12, 4];                        /* 寬限：比完美記憶策略多出幾次：第 1 關 → 第 RAMP_LEVELS 關 */
+    var STAGES = [{ cards: 6, to: 1 }, { cards: 12, to: 3 },
+    { cards: 18, to: 5 }, { cards: 24, to: 8 },
+    { cards: 30, to: 11 }, { cards: 36, to: 15 },
+    { cards: 42, to: 19 }, { cards: 48, to: 9999 }];     /* 牌的張數與這個階段的最後一關 */
+    var COLS = 6;                               /* 每一列幾張 */
+    var SLACK = [2, 12];                        /* 寬限：比完美記憶策略多出幾次：第 1 關 → 第 RAMP_LEVELS 關 */
     var RAMP_LEVELS = 30;
     var SHOW_MS = 1500;                         /* 翻錯時，兩張牌露出多久才蓋回（毫秒；不是作答時限） */
     var MATCH_MS = 650;                         /* 翻對時，兩張牌停多久才消掉 */
     var PASS_DELAY_MS = 1300;
     var FAIL_HOLD_MS = 6000;
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 200;
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function cardsFor(level) {

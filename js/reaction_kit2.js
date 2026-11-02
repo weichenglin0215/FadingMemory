@@ -268,10 +268,28 @@
          api.level／api.S／api.stage／api.my／api.rand
          api.timer(ms, onTimeout)／api.stopTimer()：時間條（只能同時有一個）；回傳 { left(), total, cut(d) }（cut＝扣掉 d 毫秒的剩餘時間）
          api.after(ms, fn)：這一關專用的延遲（換關後自動作廢）
-         api.pass({gain, delay})：過關；api.fail({lines, delay})：失敗結束；api.lose({lines})：扣一條命（命沒了就失敗）
+         api.pass({gain, delay, manual})：過關；manual(go)＝不自動換關，改呼叫 manual 並把「換關」函式 go 交給它，由它決定什麼時候呼叫（V1.43.0，見 kit.passNext）；
+         api.fail({lines, delay})：失敗結束；api.lose({lines})：扣一條命（命沒了就失敗）
+         api.skip(ms)：不算過關也不算失敗，進下一關；api.redo(ms)：不算過關也不算失敗，同一關重新出題（V1.43.1）
          api.setInfo(text)：改標題列右邊文字
          api.solve／api.wrong：遊戲設定，給驗證用（debug.solve() 會呼叫它們）
        ═══════════════════════════════════════════════════════════════ */
+    /* kit.passNext(api, o)：過關後先跳出「答對說明」彈窗，玩家按「下一關」才進下一關（V1.43.0：題目長得很像，玩家沒發現已經換了新題目）。
+       o.title（預設「答對了！」）／o.text／o.children（說明內容）／o.btn（預設「下一關」；最後一關改叫「看結果」）／o.gain／o.log */
+    kit.passNext = function (api, o) {
+        o = o || {};
+        api.pass({
+            gain: o.gain, log: o.log,
+            manual: function (go) {
+                var last = api.S.level >= (api.maxLevel || 1e9);
+                Dlg.open({
+                    host: api.stage, cls: 'rx-passnext', title: o.title || '答對了！', text: o.text, children: o.children,
+                    buttons: [{ text: o.btn || (last ? '看結果' : '下一關'), kind: 'primary', onClick: go }]
+                });
+            }
+        });
+    };
+
     kit.run = function (root, ctx, o) {
         var R = null, S = null, api = null, tok = 0;
         var elLv, elInfo, bar, stage;
@@ -321,7 +339,7 @@
             stage.className = 'rx-stage' + (o.stageClass ? ' ' + o.stageClass : '');
             bar.set(0);
             api = {
-                level: n, S: S, stage: stage, my: my, rand: Math.random, over: false, root: root,
+                level: n, S: S, stage: stage, my: my, rand: Math.random, over: false, root: root, maxLevel: o.maxLevel,
                 after: function (ms, fn) { return my.after(ms, function () { if (myTok === tok) fn(); }); },
                 setInfo: function (t) { elInfo.textContent = t; },
                 stopTimer: function () {
@@ -347,6 +365,11 @@
                         cut: function (d) { if (tm == null) return; my.cancel(tm); ms -= d; arm(Math.max(0, ms - (performance.now() - t0))); }
                     };
                 },
+                /* api.redo(ms)：不算過關也不算失敗，同一關重新出題（例如搶十五打成和局） */
+                redo: function (ms) {
+                    if (api.over) return; api.over = true; api.stopTimer(); bar.set(0);
+                    my.after(ms || 0, function () { nextLevel(n); });
+                },
                 /* api.skip(ms)：不算過關也不算失敗，直接進下一關（例如「先記住」的暖身題） */
                 skip: function (ms) {
                     if (api.over) return; api.over = true; api.stopTimer(); bar.set(0);
@@ -359,7 +382,11 @@
                     if (x.log) S.log.push(x.log);
                     Sfx.play('ok'); paintHead();
                     var wait = x.delay != null ? x.delay : (o.passDelay != null ? o.passDelay : 700);
-                    if (o.maxLevel && n >= o.maxLevel) my.after(wait, function () { finish(x, true); });
+                    var last = o.maxLevel && n >= o.maxLevel;
+                    if (x.manual) {          /* 等玩家按「下一關」才換關（只會換一次） */
+                        var went = false;
+                        x.manual(function () { if (went || my.dead) return; went = true; if (last) finish(x, true); else nextLevel(n + 1); });
+                    } else if (last) my.after(wait, function () { finish(x, true); });
                     else my.after(wait, function () { nextLevel(n + 1); });
                 },
                 fail: function (x) {

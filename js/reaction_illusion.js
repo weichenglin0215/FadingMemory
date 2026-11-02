@@ -41,7 +41,7 @@
     var DELTA_START = 0.15, DELTA_END = 0.02;     /* 真實差距（相對比例）：第 1 關 → LEVEL_RAMP 關 */
     var TRAP_START = 0.2, TRAP_END = 0.8;         /* 錯覺陷阱的比例 */
     var TIME_START = 4.0, TIME_END = 2.5;         /* 每題限時（秒） */
-    var LEVEL_RAMP = 20;
+    var LEVEL_RAMP = 30;
     var REVEAL_MS = 1500;       /* 答完後揭曉真相停多久 */
     /* 五種錯覺的代號 */
     var KINDS = ['muller', 'ebbinghaus', 'ponzo', 'vh', 'contrast', 'delboeuf', 'oppel', 'irradiation', 'hat', 'rectarea', 'cornsweet'];

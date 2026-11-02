@@ -8,9 +8,18 @@
    · 頓悟：兩條紀錄相減，共同的那一個就消掉了（阿公＋寶寶 − 阿公＋貓 ＝ 寶寶 − 貓）；
      三個兩兩一起量（A＋B、B＋C、A＋C），三條加起來是「兩倍的總重」，再減掉一條就得到另一個的兩倍；
      有「全部一起」時，總重減掉其他幾個就好。
-   · 出題：亂數重量 → 從「兩個一起」「三個一起」的紀錄裡隨機加，直到問的那一個「算得出來」（線性代數：它在紀錄的組合裡）→
-     再把多餘的紀錄拿掉（每一條都用得到）；第 12 關起多一條用不到的紀錄混在裡面，第 15 關起至少要用到 3 條紀錄。
-     人和東西 3 → 6 個（線性）；第 1～8 關有「全部一起」，第 6 關起有三個一起量的紀錄。
+   · 出題：亂數重量 → 從「兩個一起」「三個一起」（前面的關卡還有「一個人單獨量」）的紀錄裡隨機加，直到問的那一個「算得出來」
+     （線性代數：它在紀錄的組合裡）→ 再把多餘的紀錄拿掉（每一條都用得到）；第 12 關起多一條用不到的紀錄混在裡面。
+   · 使用者的意見（V1.43.0）：①第 1～7 關太簡單、第 8 關突然變得很難；②「行李箱＋寵物＝48、全部＝99，哥哥幾公斤？」太莫名其妙——
+     題目只用「全部」包含哥哥，玩家根本不知道有幾個角色；這種題目也太簡單，只適合前兩三題。照做：
+       A. **難度分數 D 一關一關線性往上**（取代以前「第 8 關以前有全部一起、第 9 關起沒有」的斷崖）：
+          D＝用到的紀錄的分數加總（單獨 0.5、兩個一起 1、三個一起 1.4、全部一起 0.6）＋要除以 2 以上 1.2＋人和東西每多一個 0.3；
+          第 1 關 D＝1.6 → 第 30 關 D＝8，出題時抽到的 D 要落在「該關目標 ± DIFF_WINDOW」之內，抽不到才用最接近的。
+          所以 3 個人時只有「全部一起＋一條」「單獨＋一條」，4 個人起兩條紀錄相減、3 條加加減減，5～6 個人才要除以 2、用 4～5 條紀錄。
+          「一個人單獨量」的紀錄是前面關卡（SINGLE_TO 以前，機會越來越小）的踏腳石，問的那一個不會有單獨的紀錄。
+       B. **「全部一起」只出現在第 1～3 關**（TOTAL_TO）；而且只要有「全部一起」，問的那一個一定也出現在另一條紀錄裡
+          （沒有就補一條「哥哥＋寵物＝XX 公斤」當提示）。
+       C. **畫面最上面列出這一關出場的人和東西**（有幾個、是誰），玩家一眼就知道「全部」是誰。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -22,14 +31,21 @@
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;
     var ITEMS = [3, 6];                         /* 幾個人和東西：第 1 關 → 到頂 */
-    var TOTAL_TO = 8;                           /* 第幾關以前有「全部一起」的紀錄 */
-    var TRIPLE_FROM = 6;                        /* 第幾關起有「三個一起」的紀錄 */
+    var TOTAL_TO = 3;                           /* 第幾關以前有「全部一起」的紀錄（只適合前兩三題） */
+    var TRIPLE_FROM = 6;                        /* 第幾關起有「三個一起」的紀錄（要 4 個人以上） */
     var DISTRACT_FROM = 12;                     /* 第幾關起多一條用不到的紀錄 */
-    var MIN_USED_FROM = 15;                     /* 第幾關起至少要用到 3 條紀錄 */
+    var SINGLE_TO = 24;                         /* 第幾關以前有「一個人單獨量」的紀錄（踏腳石）；機會從 SINGLE_P[0] 降到 SINGLE_P[1] */
+    var SINGLE_P = [0.9, 0.15];
+    var DIFF = [1.6, 8.0];                      /* 難度分數 D 的目標：第 1 關 → 第 RAMP_LEVELS 關（線性） */
+    var DIFF_WINDOW = 0.8;                      /* 抽到的題目 D 要在「目標 ± 這個數字」之內 */
+    var REC_W = { 1: 0.5, 2: 1, 3: 1.4 };       /* 一條紀錄的分數（幾個一起）；「全部一起」固定 0.6 */
+    var ALL_W = 0.6, DIV_W = 1.2, ITEM_W = 0.3; /* 全部一起、要除以 2 以上、人和東西每多一個（超過 3 個） */
+    var TRIES = 800;
     var MAX_EQS = 6;                            /* 紀錄最多幾條（含用不到的那條；舞台高度只放得下 6 條） */
     var MAX_LEVEL = 90;
     var PASS_DELAY_MS = 1500;
     var FAIL_HOLD_MS = 7000;
+    var TIME_BASE = 25, TIME_EQ = 8, TIME_SCALE = [1, 1.5];     /* 每一關限時（秒）＝（基本 ＋ 每一條紀錄幾秒）× 係數（第 1 關 → 第 RAMP_LEVELS 關，線性）；時間到了＝失敗（V1.43.1） */
     var THINGS = [                              /* 名稱、圖示、重量範圍（公斤） */
         { name: '阿公', icon: '👴', w: [58, 80] }, { name: '阿嬤', icon: '👵', w: [42, 60] },
         { name: '爸爸', icon: '👨', w: [62, 85] }, { name: '媽媽', icon: '👩', w: [46, 64] },
@@ -40,6 +56,7 @@
     var CIRCLED = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩'];
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    function timeFor(level, nEqs) { return (TIME_BASE + TIME_EQ * nEqs) * kit.ramp(level, TIME_SCALE[0], TIME_SCALE[1], RAMP_LEVELS); }
     /* 線性代數的小工具（浮點數＋容許誤差；係數都是 0／1，數字很小，不會有誤差問題） */
     function rank(rows) {
         var m = rows.map(function (r) { return r.slice(); }), rk = 0, cols = m.length ? m[0].length : 0;
@@ -90,43 +107,61 @@
         if (withTriples) for (a = 0; a < n; a++) for (b = a + 1; b < n; b++) for (c = b + 1; c < n; c++) out.push([a, b, c]);
         return out;
     }
-    /* 出一題：{ things, ws, target, eqs:[{ set, sum }], used:[用到的紀錄索引], coef, div } */
+    /* 難度分數 D：用到的紀錄（sets，每條是人和東西的索引陣列）的分數加總＋要除以 2 以上＋人和東西多於 3 個的部分 */
+    function difficultyOf(n, sets, div) {
+        var d = 0;
+        sets.forEach(function (st) { d += st.length === n ? ALL_W : (REC_W[st.length] || REC_W[3]); });
+        return d + (div > 1 ? DIV_W : 0) + ITEM_W * (n - 3);
+    }
+    /* 出一題：{ things, ws, target, eqs:[{ set, sum, used, hint? }], coef, div, D（難度分數）}
+       eqs 裡 used＝false 的是用不到的紀錄（干擾，或有「全部一起」時補上的、含問的那一個的提示紀錄 hint） */
     function makePuzzle(level, rand) {
         rand = rand || Math.random;
-        var n = Math.round(kit.ramp(level, ITEMS[0], ITEMS[1], RAMP_LEVELS)), last = null;
-        var minUsed = level >= MIN_USED_FROM ? 3 : 2;
-        for (var tr = 0; tr < 400; tr++) {
+        var n = Math.round(kit.ramp(level, ITEMS[0], ITEMS[1], RAMP_LEVELS)), best = null, bestGap = 1e9;
+        var goal = kit.ramp(level, DIFF[0], DIFF[1], RAMP_LEVELS), withAll = level <= TOTAL_TO;
+        var pSingle = withAll || level > SINGLE_TO ? 0 : kit.ramp(level, SINGLE_P[0], SINGLE_P[1], SINGLE_TO);
+        function rows(sets) { return sets.map(function (st) { return rowOf(st, n); }); }
+        for (var tr = 0; tr < TRIES; tr++) {
             var things = kit.shuffle(THINGS, rand).slice(0, n);
             var ws = things.map(function (t) { return kit.randInt(t.w[0], t.w[1], rand); });
             var target = kit.randInt(0, n - 1, rand);
-            var cand = kit.shuffle(subsets(n, level >= TRIPLE_FROM && n >= 3), rand);
-            var all = []; for (var i = 0; i < n; i++) all.push(i);
-            var sets = level <= TOTAL_TO ? [all] : [];
-            for (var q = 0; q < cand.length && !determined(sets.map(function (s) { return rowOf(s, n); }), n, target); q++) sets.push(cand[q]);
-            if (!determined(sets.map(function (s) { return rowOf(s, n); }), n, target)) continue;
-            /* 拿掉多餘的紀錄（「全部一起」那條留著不拿，它是前面關卡的特色） */
-            kit.shuffle(sets.slice(), rand).forEach(function (s) {
-                if (s.length === n && level <= TOTAL_TO) return;
-                var rest = sets.filter(function (x) { return x !== s; });
-                if (determined(rest.map(function (x) { return rowOf(x, n); }), n, target)) sets = rest;
+            var pool = subsets(n, level >= TRIPLE_FROM && n >= 4), i;
+            for (i = 0; i < n; i++) if (i !== target && rand() < pSingle) pool.push([i]);       /* 一個人單獨量（問的那一個除外） */
+            var cand = kit.shuffle(pool, rand);
+            var all = []; for (i = 0; i < n; i++) all.push(i);
+            var sets = withAll ? [all] : [];
+            for (var q = 0; q < cand.length && !determined(rows(sets), n, target); q++) sets.push(cand[q]);
+            if (!determined(rows(sets), n, target)) continue;
+            /* 拿掉多餘的紀錄（有「全部一起」時它留著，它是前面關卡的特色） */
+            kit.shuffle(sets.slice(), rand).forEach(function (st) {
+                if (withAll && st === all) return;
+                var rest = sets.filter(function (x) { return x !== st; });
+                if (determined(rows(rest), n, target)) sets = rest;
             });
-            if (sets.length < minUsed) continue;
-            if (level <= TOTAL_TO && determined(sets.filter(function (x) { return x.length !== n; }).map(function (x) { return rowOf(x, n); }), n, target)) continue;   /* 「全部一起」那條也要用得到 */
-            var cb = combo(sets.map(function (s) { return rowOf(s, n); }), n, target);
+            if (withAll && determined(rows(sets.filter(function (x) { return x !== all; })), n, target)) continue;   /* 「全部一起」那條也要用得到 */
+            var cb = combo(rows(sets), n, target);
             if (!cb) continue;
-            var eqs = sets.map(function (s) { return { set: s, sum: sumOf(s, ws), used: true }; });
+            var D = difficultyOf(n, sets, cb.div), gap = Math.abs(D - goal);
+            if (gap >= bestGap && gap > DIFF_WINDOW) continue;
+            var eqs = sets.map(function (st) { return { set: st, sum: sumOf(st, ws), used: true }; });
+            if (withAll && !sets.some(function (st) { return st !== all && st.indexOf(target) >= 0; })) {      /* 只靠「全部」包含問的那一個：補一條含它的提示紀錄 */
+                var hint = cand.filter(function (st) { return st.length === 2 && st.indexOf(target) >= 0 && !sets.some(function (x) { return x.join() === st.join(); }); })[0];
+                if (!hint) continue;
+                eqs.push({ set: hint, sum: sumOf(hint, ws), used: false, hint: true });
+            }
             if (level >= DISTRACT_FROM) {
-                var extra = cand.filter(function (s) { return !sets.some(function (x) { return x.join() === s.join(); }); })[0];
+                var extra = cand.filter(function (st) { return st.length >= 2 && !eqs.some(function (x) { return x.set.join() === st.join(); }); })[0];
                 if (extra) eqs.push({ set: extra, sum: sumOf(extra, ws), used: false });
             }
             if (eqs.length > MAX_EQS) continue;
             var order = kit.shuffle(eqs.map(function (_, k) { return k; }), rand);
             var coef = [];
-            order.forEach(function (k) { coef.push(k < cb.coef.length ? cb.coef[k] : 0); });
-            last = { things: things, ws: ws, target: target, eqs: order.map(function (k) { return eqs[k]; }), coef: coef, div: cb.div };
-            return last;
+            order.forEach(function (k) { coef.push(k < cb.coef.length && eqs[k].used ? cb.coef[sets.indexOf(eqs[k].set)] : 0); });
+            var out = { things: things, ws: ws, target: target, eqs: order.map(function (k) { return eqs[k]; }), coef: coef, div: cb.div, D: D, goal: goal };
+            if (gap <= DIFF_WINDOW) return out;
+            best = out; bestGap = gap;
         }
-        return last;
+        return best;        /* 保底：試了 TRIES 次都沒有落在目標難度的範圍內，就用最接近的那一題 */
     }
     /* 算法的文字：「阿公 ＝（① ＋ ③ − ②）÷ 2 ＝ 70 公斤」 */
     function workText(pz) {
@@ -174,9 +209,13 @@
 
         var wrap = h('div', { 'class': 'babyscale-wrap' });
         var list = h('div', { 'class': 'babyscale-list' });
+        /* 出場的人和東西（V1.43.0：玩家要知道有幾個角色、「全部」是誰） */
+        var cast = h('div', { 'class': 'babyscale-cast' }, [h('span', { 'class': 'babyscale-cast__t', text: '出場 ' + n + ' 個：' })]);
+        pz.things.forEach(function (t) { cast.appendChild(h('span', { 'class': 'babyscale-cast__i', text: t.icon + t.name })); });
+        list.appendChild(cast);
         list.appendChild(h('div', { 'class': 'babyscale-title', text: '一起站上體重計量的紀錄' }));
         pz.eqs.forEach(function (eq, k) {
-            var names = eq.set.length === n ? '全部一起' : eq.set.map(function (i) { return pz.things[i].name; }).join('＋');
+            var names = eq.set.length === n ? '全部一起（' + n + ' 個）' : eq.set.length === 1 ? pz.things[eq.set[0]].name + ' 單獨' : eq.set.map(function (i) { return pz.things[i].name; }).join('＋');
             list.appendChild(h('div', { 'class': 'babyscale-eq' }, [h('span', { 'class': 'babyscale-eq__no', text: CIRCLED[k] }), h('span', { 'class': 'babyscale-eq__names', text: names }), h('span', { 'class': 'babyscale-eq__sum', text: '＝ ' + eq.sum + ' 公斤' })]));
         });
         var ask = h('div', { 'class': 'babyscale-ask' }, [h('span', { text: tg.icon + tg.name + ' 幾公斤？' })]);
@@ -187,7 +226,10 @@
         kit.onTap(btnOk, submit);
         wrap.appendChild(list); wrap.appendChild(ask); wrap.appendChild(tip);
         stage.appendChild(wrap);
-        var pad = Reaction.numpad(wrap, { keyH: 46, onKey: onKey });
+        /* 數字鍵的高度：舞台高度扣掉上面的紀錄、問題、提示、確定鈕之後剩下的（紀錄多、出場的人多時按鍵會矮一點） */
+        var H = stage.clientHeight || 667, used = list.offsetHeight + ask.offsetHeight + 28 + 56 + 8 * 6 + 6;
+        var keyH = Math.max(34, Math.min(46, Math.floor((H - used - 3 * 6) / 4)));
+        var pad = Reaction.numpad(wrap, { keyH: keyH, onKey: onKey });
         wrap.appendChild(btnOk);
 
         function paint() { box.textContent = typed; btnOk.disabled = !typed || over; }
@@ -200,7 +242,7 @@
         }
         function submit() {
             if (over || !typed) return;
-            over = true; pad.setEnabled(false); paint();
+            over = true; api.stopTimer(); pad.setEnabled(false); paint();
             var work = workText(pz);
             tip.textContent = work;
             if (parseInt(typed, 10) === pz.ws[pz.target]) {
@@ -212,21 +254,34 @@
             kit.flash(stage, false, api.my);
             api.fail({ delay: FAIL_HOLD_MS, lines: ['你填 ' + typed + ' 公斤', work] });
         }
+        /* 時間到：顯示正確答案與算法，結算 */
+        function timeUp() {
+            if (over) return;
+            over = true; pad.setEnabled(false); paint();
+            var work = workText(pz);
+            tip.textContent = work;
+            box.classList.add('babyscale-answer--bad');
+            box.textContent = (typed || '？') + '→' + pz.ws[pz.target];
+            kit.flash(stage, false, api.my);
+            api.fail({ delay: FAIL_HOLD_MS, lines: ['時間到了', work] });
+        }
+        api.timeout = timeUp;
         api.solve = function () { typed = String(pz.ws[pz.target]); paint(); submit(); };
         api.wrong = function () { typed = String(pz.ws[pz.target] + 1); paint(); submit(); };
         api.state = function () { return { typed: typed, over: over }; };
+        api.timer(Math.round(timeFor(level, pz.eqs.length) * 1000), timeUp);
         paint();
     }
 
     var G = {
         id: ID,
         name: '抱著量體重',
-        rule: '家裡的人和東西**兩個或三個一起站上體重計**（抱著、提著），紀錄寫成一條一條，例如「阿公＋寶寶＝82 公斤」；前面幾關還有「全部一起」量的重量。**題目問其中一個幾公斤**，用數字鍵填答案、按「確定」。**答錯一次就結束**，會列出算法。小撇步：兩條紀錄相減，一樣的那一個就消掉了。沒有時間限制，慢慢算。',
+        rule: '畫面最上面寫著**這一關出場的人和東西**。他們**兩個或三個一起站上體重計**（抱著、提著），紀錄寫成一條一條，例如「阿公＋寶寶＝82 公斤」；前面幾關有的紀錄是「一個人單獨量」，最前面幾關還有「全部一起」量的重量。**題目問其中一個幾公斤**，用數字鍵填答案、按「確定」。**答錯一次就結束**，會列出算法。小撇步：兩條紀錄相減，一樣的那一個就消掉了。每一關有時間限制（上面的時間條，紀錄越多給的時間越長），時間到了也算失敗。',
         mount: mount,
         score: SCORE,
         test: {
-            rank: rank, determined: determined, combo: combo, subsets: subsets, makePuzzle: makePuzzle, workText: workText, checkCombo: checkCombo, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, ITEMS: ITEMS, MAX_EQS: MAX_EQS, TOTAL_TO: TOTAL_TO, TRIPLE_FROM: TRIPLE_FROM, DISTRACT_FROM: DISTRACT_FROM, MIN_USED_FROM: MIN_USED_FROM, MAX_LEVEL: MAX_LEVEL
+            rank: rank, determined: determined, combo: combo, subsets: subsets, makePuzzle: makePuzzle, difficultyOf: difficultyOf, timeFor: timeFor, TIME_BASE: TIME_BASE, TIME_EQ: TIME_EQ, TIME_SCALE: TIME_SCALE, workText: workText, checkCombo: checkCombo, rating: rating,
+            RAMP_LEVELS: RAMP_LEVELS, ITEMS: ITEMS, MAX_EQS: MAX_EQS, TOTAL_TO: TOTAL_TO, TRIPLE_FROM: TRIPLE_FROM, DISTRACT_FROM: DISTRACT_FROM, SINGLE_TO: SINGLE_TO, DIFF: DIFF, DIFF_WINDOW: DIFF_WINDOW, MAX_LEVEL: MAX_LEVEL
         }
     };
     Reaction.register(G);

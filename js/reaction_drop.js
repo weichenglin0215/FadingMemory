@@ -7,6 +7,13 @@
    讓玩家看清楚釘在幾點幾分的細部位置：插中中間的紅，再放大看紅裡的黃核心，
    再放大看黃裡的紫核心＝最精準。
    ───────────────────────────────────────────────────────────────────
+   · V1.43.0 改成**關卡制**（玩家意見）：成績＝通過幾關（以前是一局一個分數 1～1000 分）。
+     每一關都要把三角形插進**中間的紅色目標區**才過關，插不進就結束；**目標區的寬度是畫面寬度的 1/(9＋關卡)**——
+     第 1 關 1/10、第 2 關 1/11、第 3 關 1/12……（最窄縮到 1/DEN_MAX），越後面目標越窄、越要算準時機。
+     目標區兩邊各有 4 格（寫 4、3、2、1：離目標區幾格遠），每格一樣寬（兩邊平分剩下的寬度）。
+     插中目標區之後鏡頭照樣一層一層放大（紅 → 黃 → 紫），但停留時間縮短（LV_ZOOM_*），不然每一關都要等太久；
+     開場「從紫色倒著退出來」的演出只在一局的第一關播一次。插不進目標區就結算（寫出差幾像素）；失敗後可以從「失敗關卡 − 5」繼續，
+     下次進場從「個人最佳關卡 − 4」開始（kit.enter）。成績規格改成「關卡」，需要重跑 SQL、清掉舊分數（見 note/世界排行榜說明.md）。
    · 尺（9 格＋插中後才看得到的 9×9、9×9×9 細格）整塊用 SVG 畫成向量圖、
      一開始就把三層全部畫好（不是插中才動態生出來）：格線本來就在那裡，
      只是太細看不到，鏡頭放大才看得清楚，像用顯微鏡發現本來就存在的精細刻度。
@@ -65,7 +72,7 @@
 
     /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 drop 那一列要一致
        （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 分', label: '分數', min: 1, max: 1000 };
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 200 };
     /* UI.h：建立 HTML 元素的小工具 */
     var h = UI.h;
     /* SVG 的 XML 命名空間網址：用 createElementNS 建立 SVG 元素時一定要帶 */
@@ -86,8 +93,29 @@
     /* 使用者設定「減少動態效果」時不播放動畫 */
     var REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 
+    /* V1.43.0 關卡制：第 n 關的目標區寬度＝畫面寬度的 1/(TARGET_BASE ＋ n)（第 1 關 1/10、第 2 關 1/11…），分母最大 DEN_MAX */
+    var TARGET_BASE = 9, DEN_MAX = 60;
+    /* 關卡制的鏡頭放大停留時間（比單局時短：每一關都要放大一次，太久會很煩）、過關後多久進下一關 */
+    var LV_ZOOM_STAGE_MS = 650, LV_ZOOM_PAUSE_MS = 400, NEXT_MS = 700;
+    var MAX_LEVEL = 200;
+
     /* 最佳紀錄文字 */
-    function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 分'; }
+    function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 關'; }
+    /* 這一關目標區的寬度占畫面寬度的比例（第 1 關 1/10、第 2 關 1/11…） */
+    function targetFrac(level) { return 1 / Math.min(DEN_MAX, TARGET_BASE + Math.max(1, level)); }
+    /* 尺的版面：中間目標區寬 centerW、兩邊各 4 格平分剩下的寬度 sideW */
+    function stripLayout(stripW, level) {
+        var centerW = stripW * targetFrac(level);
+        return { centerW: centerW, sideW: (stripW - centerW) / 8, centerX: 4 * (stripW - centerW) / 8 };
+    }
+    /* 接觸點 x 落在第幾格（0～8，4＝目標區；-1＝尺外面） */
+    function cellIndex(x, stripW, level) {
+        var L = stripLayout(stripW, level);
+        if (x < 0 || x >= stripW) return -1;
+        if (x < L.centerX) return Math.min(3, Math.floor(x / L.sideW));
+        if (x < L.centerX + L.centerW) return 4;
+        return Math.min(8, 5 + Math.floor((x - L.centerX - L.centerW) / L.sideW));
+    }
 
     /* 建立 SVG 元素的小工具 */
     function svgEl(tag, attrs) {
@@ -150,7 +178,8 @@
     /* 向量尺：三層遞迴九等分，一次畫好。depth1＝9 個 <rect>（中間紅，其餘黑，標數字）；
        depth1 的中間格底下疊 depth2（9 個 <rect>，中間黃，其餘紅，細分隔線）；
        depth2 的中間格底下再疊 depth3（9 個 <rect>，中間紫，其餘黃，更細的分隔線）。 */
-    function buildStrip(stripW, stripH, cellW) {
+    function buildStrip(stripW, stripH, centerW, sideW) {
+        var cellW = centerW;                  /* 中間目標區（紅）的寬度；V1.43.0：兩邊的格子是 sideW，不再跟中間一樣寬 */
         var subW = cellW / 9;
         var subsubW = subW / 9;
         var root = svgEl('svg', {
@@ -160,15 +189,15 @@
         });
 
         for (var i = 0; i < 9; i++) {
-            var x = i * cellW;
-            var mid = i === 4;
+            var mid = i === 4, w = mid ? centerW : sideW;
+            var x = i < 4 ? i * sideW : (i === 4 ? 4 * sideW : 4 * sideW + centerW + (i - 5) * sideW);
             root.appendChild(svgEl('rect', {
-                x: x, y: 0, width: cellW, height: stripH,
+                x: x, y: 0, width: w, height: stripH,
                 'class': 'drop-rect' + (mid ? ' drop-rect--mid' : '')
             }));
             if (!mid) {
                 var t = svgEl('text', {
-                    x: x + cellW / 2, y: stripH / 2,
+                    x: x + w / 2, y: stripH / 2,
                     'text-anchor': 'middle', 'dominant-baseline': 'central',
                     'class': 'drop-label'
                 });
@@ -216,6 +245,14 @@
 
     /* mount：遊戲進場點 */
     function mount(root, ctx) {
+        /* V1.43.0：成績從「分數（1～1000）」變成「通過幾關」，舊的最佳紀錄不能比，第一次進來清掉
+           （不用 Reaction.migrateBest：它看到 .sync 記號就當成新單位、不會清，做法跟挑豆子一樣）。 */
+        var flag143 = Reaction.bestKey(ID) + '.v143';
+        if (!UI.store.get(flag143, false)) {
+            UI.store.set(Reaction.bestKey(ID), null);
+            UI.store.set(Reaction.bestKey(ID) + '.sync', false);
+            UI.store.set(flag143, true);
+        }
         ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
         /* 橫跨每一局的狀態：ALT+A 熱鍵的監聽只註冊一次，所以用 mount 層級的變數讓它讀得到「這一局」的狀態 */
@@ -225,11 +262,18 @@
         var phase = 'intro';      /* intro：開場倒帶演出／idle：尺在閒置反彈／falling：下落＋變焦中／result：結果畫面 */
         var triggerPerfect = null;
 
-        /* round：開一局 */
-        function round() {
+        var Rd = null;            /* 這一局的計時器管家（kit.round），換局時 dispose */
+        /* round：開一關（startLevel：從第幾關開始；skipIntro：不要播開場倒帶演出——只有一局的第一關才播，所以進下一關時傳 true） */
+        var level = 1, cleared = 0, newRec = false;
+        function round(startLevel, skipIntro) {
+            if (startLevel != null) { level = startLevel; cleared = level - 1; newRec = false; }
+            if (Rd) Rd.dispose();
+            Rd = Reaction.kit.round();
+            var my = Rd;
             phase = 'intro';
             root.innerHTML = '';
-            var hint = h('div', { 'class': 'hint', text: '算準時機按「落下」，插中紫色得最高分！' });
+            ctx.setMeta(Reaction.kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))]));
+            var hint = h('div', { 'class': 'hint', text: '第 ' + level + ' 關：把三角形插進中間的紅色目標區（寬度是畫面的 1/' + Math.min(DEN_MAX, TARGET_BASE + level) + '）' });
             root.appendChild(hint);
             var field = h('div', { 'class': 'drop-field' });
             root.appendChild(field);
@@ -237,13 +281,13 @@
             /* FW／FH 場地大小；triW／triH 三角形大小；stripW 尺的寬 */
             var FW = field.clientWidth, FH = field.clientHeight;
             var triW = FW / 10, triH = triW * 2;
-            var stripW = FW, cellW = stripW / 9, subW = cellW / 9; /* 尺滿版顯示 */
+            var stripW = FW, SL = stripLayout(stripW, level), cellW = SL.centerW, subW = cellW / 9; /* 尺滿版顯示；cellW＝中間目標區的寬度（V1.43.0：隨關卡變窄） */
             var stripH = Math.min(76, FH * 0.14);
             var triStartTop = 6;
             var triTargetTop = FH - stripH - triH;
             var maxTriLeft = FW - triW; /* 三角形左右可以彈跳的範圍（尺本身固定不動） */
 
-            var strip = buildStrip(stripW, stripH, cellW);
+            var strip = buildStrip(stripW, stripH, SL.centerW, SL.sideW);
             strip.style.height = stripH + 'px';
             strip.style.top = (FH - stripH) + 'px';
             strip.style.width = stripW + 'px';
@@ -284,7 +328,7 @@
             function playIntro(onDone) {
                 var localCX = stripW / 2;
                 strip.style.left = ((FW - stripW) / 2) + 'px';
-                if (REDUCED) { setViewBox(strip, boxForStage(0, localCX)); onDone(); return; }
+                if (REDUCED || skipIntro) { setViewBox(strip, boxForStage(0, localCX)); onDone(); return; }       /* 只有一局的第一關播開場演出 */
                 setViewBox(strip, boxForStage(2, localCX));
                 UI.wait(ZOOM_PAUSE_MS)
                     .then(function () { return tweenViewBox(strip, boxForStage(2, localCX), boxForStage(1, localCX), ZOOM_STAGE_MS); })
@@ -394,10 +438,10 @@
                    插空；保留這個邊界檢查只是防呆（浮點數誤差等極端狀況），不是常態。 */
                 var localX = finalTriLeft + triW / 2;
                 if (localX < 0 || localX >= stripW) return { miss: true };
-                var idx1 = Math.min(8, Math.floor(localX / cellW));
-                var out = { idx1: idx1 };
+                var idx1 = cellIndex(localX, stripW, level);
+                var out = { idx1: idx1, x: localX };
                 if (idx1 === 4) {
-                    var localX2 = localX - 4 * cellW;
+                    var localX2 = localX - SL.centerX;
                     out.idx2 = Math.min(8, Math.floor(localX2 / subW));
                     if (out.idx2 === 4) {
                         var localX3 = localX2 - 4 * subW, subsubW = subW / 9;
@@ -425,13 +469,13 @@
                     return;
                 }
                 var cur = boxForStage(0, localCX);
-                var chain = UI.wait(ZOOM_PAUSE_MS);
+                var chain = UI.wait(LV_ZOOM_PAUSE_MS);
                 var _loop = function (stage) {
                     chain = chain.then(function () {
                         var target = boxForStage(stage, localCX);
-                        return tweenViewBox(strip, cur, target, ZOOM_STAGE_MS, easeOutCubic).then(function () {
+                        return tweenViewBox(strip, cur, target, LV_ZOOM_STAGE_MS, easeOutCubic).then(function () {
                             cur = target;
-                            return UI.wait(ZOOM_PAUSE_MS);
+                            return UI.wait(LV_ZOOM_PAUSE_MS);
                         });
                     });
                 };
@@ -439,45 +483,44 @@
                 chain.then(function () { finish(outcome); });
             }
 
-            /* 算分數與評語：插中紫色 1000 分，其餘依距離中心遠近給分 */
+            /* 判定：插進中間的目標區（紅色）就過關、進下一關；插不進就結算（V1.43.0 關卡制） */
             function finish(outcome) {
-                var score, label;
-                if (outcome.miss) {
-                    score = 0;
-                    label = '插空了，尺已經不在下面了，再試一次！';
-                } else if (outcome.idx1 !== 4) {
-                    score = LABELS[outcome.idx1] * 10;
-                    label = '落在 ' + LABELS[outcome.idx1] + ' 號格，還沒插到紅色';
-                } else if (outcome.idx2 !== 4) {
-                    var d2 = Math.abs(outcome.idx2 - 4);
-                    score = 100 + (5 - d2) * 10;
-                    label = '插進紅色了！但沒中黃色核心';
-                } else if (outcome.idx3 === 4) {
-                    score = 1000;
-                    label = 'PERFECT！插中紫色了！';
-                } else {
-                    var d3 = Math.abs(outcome.idx3 - 4);
-                    score = 500 + (5 - d3) * 20;
-                    label = '摸到黃色核心了！只差一點點紫色';
+                if (outcome.idx1 === 4) {
+                    cleared = level;
+                    var isNewBest = Reaction.setBest(ID, cleared, function (v, b) { return v > b; });
+                    if (isNewBest) newRec = true;
+                    ctx.setMeta(Reaction.kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))]));
+                    var perfect = outcome.idx2 === 4 && outcome.idx3 === 4;
+                    hint.style.opacity = '1';
+                    hint.textContent = perfect ? '第 ' + level + ' 關過關！正中紫色核心，PERFECT！' : '第 ' + level + ' 關過關！下一關目標區更窄';
+                    if (window.Sfx) Sfx.play(perfect ? 'perfect' : 'win');
+                    phase = 'next';
+                    my.after(NEXT_MS, function () { level++; round(null, true); });
+                    return;
                 }
-
-                var isNew = score > 0 && Reaction.setBest(ID, score, function (v, b) { return v > b; });
-                ctx.setMeta(fmtBest(Reaction.getBest(ID)));
-
-                /* 結算卡片疊在畫面上（不清空畫面） */
-                /* 不清空畫面：三角形釘在方塊上、鏡頭停在最後放大倍率的那一幕留在背景，
-                   結算卡片疊一層半透明底蓋在上面——玩家看得到自己剛剛插中的樣子。 */
+                /* 差幾像素：接觸點離目標區最近的那一邊有多遠 */
+                var label, dist = 0;
+                if (outcome.miss) label = '插空了，尺已經不在下面了';
+                else {
+                    var x = outcome.x, a = SL.centerX, b = SL.centerX + SL.centerW;
+                    dist = x < a ? a - x : x - b;
+                    label = '差了 ' + Math.round(dist) + ' 像素，落在目標區' + (x < a ? '左' : '右') + '邊';
+                }
+                var failLevel = level, back = Reaction.kit.resumeFrom(failLevel);
                 phase = 'result';
-                /* 結算彈窗（公版 kit.result）：帶 score 會在彈窗出現之後自動送世界排行榜（0 分不在有效範圍，會自己略過） */
+                /* 結算彈窗（公版 kit.result）：帶 score 會在彈窗出現之後自動送世界排行榜（成績＝通過幾關） */
                 Reaction.kit.result(root, {
-                    num: score + ' 分', label: label, isNew: isNew, score: score,
-                    sfx: score >= 1000 ? 'perfect' : (score >= 500 ? 'win' : (score >= 100 ? 'neutral' : 'fail')),
-                    onAgain: round
+                    num: cleared + ' 關', label: label, isNew: newRec, score: cleared,
+                    lines: ['第 ' + failLevel + ' 關：目標區寬度是畫面的 1/' + Math.min(DEN_MAX, TARGET_BASE + failLevel)],
+                    sfx: cleared >= 8 ? 'win' : 'fail',
+                    onAgain: function () { round(1); },
+                    resume: { level: back, run: function () { round(back); } }
                 });
             }
 
             /* 開場演出播完：顯示「落下」按鈕，隱藏提示文字（避免玩家拿固定文字當位置參考），開始左右反彈 */
             playIntro(function () {
+                if (my.dead) return;
                 phase = 'idle';
                 dropBtn.style.display = '';
                 /* 隱藏提示文字（不是移除）：避免玩家拿這行固定文字當參考基準，
@@ -486,6 +529,7 @@
                 hint.style.opacity = '0';
                 raf = requestAnimationFrame(idleLoop);
             });
+            my.onDispose(function () { idle = false; cancelAnimationFrame(raf); });
         }
 
         /* ALT+A 熱鍵：整個頁面只註冊一次 */
@@ -494,11 +538,12 @@
         document.addEventListener('keydown', function (e) {
             if (!e.altKey || e.code !== 'KeyA') return;
             e.preventDefault();
-            if (phase === 'result') round();
+            if (phase === 'result') round(1);
             if (phase === 'idle' && triggerPerfect) triggerPerfect();
         });
 
-        round();
+        /* V1.34.0：從「個人最佳關卡 − 4」開始（沒玩過就是第 1 關），見 kit.enter（reaction_kit.js） */
+        Reaction.kit.enter(ID, round);
     }
 
     /* 三角形左右來回彈跳的位置：純函式，閒置反彈與按下後的慣性都用同一個，所以必定一致（用「折返」的數學：位置在 0 到 max 之間來回） */
@@ -519,9 +564,11 @@
     Reaction.register({
         id: ID,
         name: '神準落下',
-        rule: '畫面上方是藍色倒三角形，下方 9 格方塊會左右來回移動、撞到邊緣就反彈。**請預測落下的時機，點擊「落下」**——三角形會像自由落體一樣越落越快，釘在方塊上就不再移動。插中中間的紅色格，畫面會往釘住的那一點持續放大，讓你看清楚插得有多準；再插中紅色裡的黃色核心、再插中黃色裡的紫色核心，**就是最高分**！',
+        rule: '畫面上方是藍色倒三角形，會左右來回移動、撞到邊緣就反彈；下方是一把尺，**中間的紅色目標區**是這一關要插進去的地方。**請預測落下的時機，點擊「落下」**——三角形會像自由落體一樣越落越快，釘在尺上就不再移動。**插進紅色目標區就過關**，畫面會往釘住的那一點放大，讓你看清楚插得有多準（紅色裡還有黃色、紫色的核心）。**第 1 關目標區是畫面寬度的 1/10，第 2 關 1/11，第 3 關 1/12……越後面越窄**，插不進去就結束，看你能過幾關。',
         mount: mount,
         /* 世界排行榜的成績規格 */
-        score: SCORE
+        score: SCORE,
+        /* 給 Node 測試用的純函式（test/reaction/t_drop.js） */
+        test: { targetFrac: targetFrac, stripLayout: stripLayout, cellIndex: cellIndex, bouncePos: bouncePos, TARGET_BASE: TARGET_BASE, DEN_MAX: DEN_MAX, MAX_LEVEL: MAX_LEVEL }
     });
 })();

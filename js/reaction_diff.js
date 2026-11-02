@@ -31,7 +31,7 @@
     /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
     /* 差異量隨關卡線性縮小到第 LEVEL_RAMP 關 */
-    var LEVEL_RAMP = 20;
+    var LEVEL_RAMP = 30;
     /* 大小差異比例、色相差異度數、位置位移 px：三種差異各自的起始值與終點值 */
     var SIZE_START = 0.3, SIZE_END = 0.05;
     var HUE_START = 75, HUE_END = 18;           /* 色相差異（度）：第 1 關 → 第 LEVEL_RAMP 關（V1.34：原本 40 → 5，太小，放大成 75 → 18；圖形的飽和度與亮度固定，所以差 18° 以上才一眼看得出來） */
@@ -234,7 +234,7 @@
                     Sfx.play('ok');
                     paintHead();
                     if (found >= N_DIFF) levelClear();
-                /* 不是差異：點錯，顯示橘色圈，累計次數，達上限就結束 */
+                    /* 不是差異：點錯，顯示橘色圈，累計次數，達上限就結束 */
                 } else {
                     g.querySelector('.diff-ring').classList.add('diff-ring--bad');
                     my.after(450, function () { g.querySelector('.diff-ring').classList.remove('diff-ring--bad'); });
