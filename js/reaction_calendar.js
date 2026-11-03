@@ -13,11 +13,14 @@
      所以腦中剛記住的「哪個圖示在哪一天」會被一堆閃爍的同樣圖案沖淡；問題出現之後才開始算作答時間。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡，裡面的變數都是這個檔案私有的。
+       分三段：① 參數區（難度、秒數在這）；② 純函式（出題、算月曆，單元測試直接測）；③ 畫面（圖示的 SVG 畫法、setup）。
+       遊戲流程分四個階段（phase）：view 看貼紙 → distract 貼紙收起來＋干擾圖案閃爍 → ask 問「某某是哪一天」→ end 結束。 */
     'use strict';
 
-    var ID = 'calendar';
+    var ID = 'calendar';                                /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴（calendar-）都用它 */
     var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -43,20 +46,31 @@
     var WEEK = ['日', '一', '二', '三', '四', '五', '六'];  /* 星期的中文字，從星期日開始排 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 小工具：讓 [第 1 關的值, 到頂的值] 這種成對的設定，依關卡線性變化（kit.ramp 的簡寫） */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }
+    /* 這一關月曆上貼幾個圖示（四捨五入成整數） */
     function iconsFor(level) { return Math.round(ramp(level, ICONS_N)); }
+    /* 這一關看月曆的時間（毫秒）：設定是秒，乘 1000 換成毫秒 */
     function viewMs(level) { return Math.round(ramp(level, VIEW_S) * 1000); }
+    /* 這一關每一題的作答時間（毫秒） */
     function respMs(level) { return Math.round(ramp(level, RESP_S) * 1000); }
+    /* 這一關要問幾題：第 TWO_FROM 關起問兩題（先點 A、再點 B），之前只問一題 */
     function asksFor(level) { return level >= TWO_FROM ? 2 : 1; }
+    /* 這一關同時貼上「長得像的一對」的機率（越後面越高，越容易搞混） */
     function pairPFor(level) { return ramp(level, PAIR_P); }
+    /* 用圖示代號找出圖示的資料（名字、長得像的夥伴）；找不到回傳 null */
     function iconOf(id) { for (var i = 0; i < ICONS.length; i++) if (ICONS[i].id === id) return ICONS[i]; return null; }
     /* 某年某月（month 是 1～12）的月曆：{ first（1 號是星期幾，日＝0）, days, rows（要排幾列）} */
+    /* 算某年某月的月曆形狀：1 號是星期幾（first，日＝0）、這個月幾天（days）、要排幾列（rows）。
+       做法：new Date(Date.UTC(年, 月 − 1, 1)).getUTCDay() 取得 1 號是星期幾；Date.UTC(年, 月, 0) 是「下個月的第 0 天」，也就是這個月的最後一天，取它的日期就是天數。 */
     function monthLayout(year, month) {
         var first = new Date(Date.UTC(year, month - 1, 1)).getUTCDay(), days = new Date(Date.UTC(year, month, 0)).getUTCDate();
         return { first: first, days: days, rows: Math.ceil((first + days) / 7) };
     }
     /* 出一關：{ year, month, first, days, rows, placements（[{ icon, day }]）, asks（要問的圖示 id，依序）, viewMs, respMs, level }
        圖示貼在不同的日子；越後面越常同時貼上「長得像的一對」，而且被問的常常是那一對裡的一個（最容易搞混）。 */
+    /* 出一關：隨機挑年月，挑要貼的圖示（有機率先放一對長得像的）、把它們貼在不同的日子，再決定問哪一個（優先問有「夥伴」一起出現的，最容易搞混）。
+       回傳 { year, month, first, days, rows, placements 每個圖示貼在哪天, asks 要問的圖示（依序）, viewMs, respMs, level }。 */
     function makeLevel(level, rand) {
         rand = rand || Math.random;
         var year = kit.randInt(YEARS[0], YEARS[1], rand), month = kit.randInt(1, 12, rand), lay = monthLayout(year, month), n = iconsFor(level);
@@ -67,20 +81,23 @@
         pool.forEach(function (id) { if (chosen.length < n && chosen.indexOf(id) < 0) chosen.push(id); });
         var days = kit.shuffle(Array.apply(null, { length: lay.days }).map(function (x, i) { return i + 1; }), rand).slice(0, chosen.length);
         var placements = chosen.map(function (id, i) { return { icon: id, day: days[i] }; });
-        var cand = chosen.filter(function (id) { var p = iconOf(id).pair; return p && chosen.indexOf(p) >= 0; });                  /* 有夥伴一起出現的圖示（容易混） */
+        var cand = chosen.filter(function (id) { var p = iconOf(id).pair; return p && chosen.indexOf(p) >= 0; });                  /* 有夥伴一起出現的圖示（容易混） */  /* cand：貼上的圖示裡，「長得像的夥伴也一起出現」的那些（容易混淆，優先拿來問） */
         var asks = [], want = Math.min(asksFor(level), chosen.length);
         if (cand.length && rand() < 0.8) asks.push(kit.pick(cand, rand));
         kit.shuffle(chosen.slice(), rand).forEach(function (id) { if (asks.length < want && asks.indexOf(id) < 0) asks.push(id); });
         return { year: year, month: month, first: lay.first, days: lay.days, rows: lay.rows, placements: placements, asks: asks, viewMs: viewMs(level), respMs: respMs(level), level: level };
     }
     /* 干擾圖示的位置：count 個，每個的左上角落在 width×height 的方框裡（圖示大小 size，不會超出方框）；回傳 [{ x, y }] */
+    /* 算干擾圖示的位置：count 個，每個的左上角隨機落在 width×height 的方框裡（扣掉圖示大小，不會超出方框），回傳 [{ x, y }] */
     function noiseSpots(count, width, height, size, rand) {
         rand = rand || Math.random;
         var out = [];
         for (var i = 0; i < count; i++) out.push({ x: kit.randInt(0, Math.max(0, width - size), rand), y: kit.randInt(0, Math.max(0, height - size), rand) });
         return out;
     }
+    /* 某個圖示貼在這一關的哪一天（找不到回傳 −1） */
     function dayOf(q, icon) { for (var i = 0; i < q.placements.length; i++) if (q.placements[i].icon === icon) return q.placements[i].day; return -1; }
+    /* 結算畫面的評語（依通過關數） */
     function rating(n) {
         if (n >= 15) return '行事曆管家！';
         if (n >= 10) return '記性很好！';
@@ -89,6 +106,7 @@
         return '用星期幾和第幾週來幫助記憶！';
     }
 
+    /* 遊戲進場：交給共用骨架 kit.run 處理闖關流程（第幾關、過關、失敗、結算、最佳紀錄） */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'calendar-stage',
@@ -100,6 +118,7 @@
     }
 
     /* 圖示（手繪貼紙風格，SVG 圖形；viewBox 0 0 48 48） */
+    /* 每個圖示的畫法：一個圖示由幾個圖形組成，格式是 [圖形種類, 屬性, 填色種類]（填色種類 fill／fill2／line／red 對應 CSS 的顏色）。座標在 48×48 的畫布裡，像手繪貼紙 */
     var SHAPES = {
         tooth: [['path', { d: 'M24 12 C16 6 8 10 9 20 C10 28 14 30 14 40 C14 44 18 44 19 38 C20 34 22 32 24 32 C26 32 28 34 29 38 C30 44 34 44 34 40 C34 30 38 28 39 20 C40 10 32 6 24 12 Z' }, 'fill'], ['path', { d: 'M16 16 Q19 13 22 15' }, 'line']],
         hospital: [['rect', { x: 8, y: 8, width: 32, height: 34, rx: 4 }, 'fill'], ['path', { d: 'M21 16 L27 16 L27 21 L32 21 L32 27 L27 27 L27 32 L21 32 L21 27 L16 27 L16 21 L21 21 Z' }, 'red']],
@@ -112,12 +131,14 @@
         ball: [['circle', { cx: 24, cy: 24, r: 17 }, 'fill'], ['path', { d: 'M24 7 Q14 24 24 41 M24 7 Q34 24 24 41 M7 24 L41 24' }, 'line']],
         plane: [['path', { d: 'M6 28 L42 18 L40 24 L26 28 L22 40 L18 38 L20 28 L10 31 Z' }, 'fill']]
     };
+    /* 依 SHAPES 畫出一個圖示（SVG 向量圖，放大縮小不會糊）；size 是顯示大小（px） */
     function iconSvg(id, size) {
         var s = kit.svg('svg', { 'class': 'calendar-icon calendar-icon--' + id, viewBox: '0 0 48 48', width: size, height: size });
         (SHAPES[id] || []).forEach(function (sp) { var a = Object.assign({}, sp[1]); a['class'] = 'calendar-s calendar-s--' + sp[2]; kit.svg(sp[0], a, s); });
         return s;
     }
 
+    /* 每一關開始時呼叫：出題、畫月曆、貼貼紙，開始倒數看的時間。api 是共用骨架給的工具（api.stage 畫面容器、api.timer 倒數、api.after 延遲執行、api.pass／api.fail 過關／失敗…） */
     function setup(api) {
         var stage = api.stage, level = api.level;
         var q = makeLevel(level, api.rand);
@@ -130,7 +151,7 @@
         var tip = h('div', { 'class': 'qz-note calendar-tip', text: '記住貼紙貼在哪一天' });
         field.appendChild(tip);
         /* 月曆：標題（年月）、星期列、日期格 */
-        var cw = Math.floor((W - 24) / 7), rh = Math.min(cw + 2, Math.floor((H - 330) / q.rows)), CW = cw * 7;
+        var cw = Math.floor((W - 24) / 7), rh = Math.min(cw + 2, Math.floor((H - 330) / q.rows)), CW = cw * 7;  /* 算月曆尺寸：每格寬 cw（畫面寬扣邊再除以 7）、每格高 rh（列數多時要矮一點）、整個月曆寬 CW */
         var cal = h('div', { 'class': 'calendar-cal' });
         cal.style.cssText = 'left:' + Math.round((W - CW) / 2) + 'px;top:60px;width:' + CW + 'px;';
         cal.appendChild(h('div', { 'class': 'calendar-title', text: q.year + ' 年 ' + q.month + ' 月' }));
@@ -149,13 +170,15 @@
         var info = h('div', { 'class': 'qz-note calendar-info', text: '' }); info.style.top = (calH + 84) + 'px'; field.appendChild(info);
 
         /* 貼紙：貼在日期格裡（看的時候顯示，之後收起來；答錯時全部回來） */
+        /* 貼紙：每個圖示畫成一張貼在對應日期格裡（先顯示，看完時間到再收起來） */
         var stickers = q.placements.map(function (p) {
             var s = h('div', { 'class': 'calendar-sticker' }); s.style.width = s.style.height = Math.min(cw - 6, rh - 14) + 'px';
             s.appendChild(iconSvg(p.icon, Math.min(cw - 6, rh - 14))); cells[p.day].appendChild(s); return s;
         });
-        var phase = 'view', k = 0, done = false;
+        var phase = 'view', k = 0, done = false;        /* phase：目前階段（view／distract／ask／end）；k：正在問第幾題；done：這一關已經有結果 */
         info.textContent = '看 ' + Math.round(q.viewMs / 1000) + ' 秒';
         api.timer(q.viewMs, hide);
+        /* 看的時間到：貼紙收起來，進入「干擾」階段（下方圖案亂跳閃爍 DISTRACT_S 秒），干擾結束才開始問問題，作答時間這時才開始算 */
         function hide() {
             if (api.over) return;
             stickers.forEach(function (s) { s.classList.add('calendar-sticker--hide'); });
@@ -167,7 +190,8 @@
             });
         }
         /* 干擾：問題列上，這一關的圖示（每個 NOISE_COPIES 個）一直閃爍、每 MOVE_MS 毫秒換一批隨機位置 */
-        var noise = null, noiseEls = [];
+        var noise = null, noiseEls = [];                /* 干擾區：問題列上，這一關的圖示（每個複製 NOISE_COPIES 個）一直閃爍，並每隔 MOVE_MS 毫秒換一批隨機位置，故意讓玩家分心 */
+        /* 建立干擾區：每個干擾圖示隨機一個閃爍週期（CSS 動畫）與起始時間，然後排一次位置 */
         function startNoise() {
             noise = h('div', { 'class': 'calendar-noise' }); noise.style.top = (calH + 24) + 'px'; noise.style.height = NOISE_H + 'px';
             field.appendChild(noise);
@@ -181,25 +205,30 @@
             });
             relocate();
         }
+        /* 重新亂排干擾圖示的位置，並用 api.after 排下一次（只在 distract 階段才繼續排） */
         function relocate() {
             if (phase !== 'distract' || !noise) return;
             var spots = noiseSpots(noiseEls.length, W, NOISE_H, NOISE_SIZE, api.rand);
             noiseEls.forEach(function (el, i) { el.style.left = spots[i].x + 'px'; el.style.top = spots[i].y + 'px'; });
             api.after(MOVE_MS, relocate);
         }
+        /* 拿掉干擾區 */
         function stopNoise() { if (noise && noise.parentNode) noise.parentNode.removeChild(noise); noise = null; noiseEls = []; }
+        /* 出現問題：畫出要找的圖示與「某某是哪一天？」，開始作答倒數（時間到＝timeout）；第一關第一次會有手指提示 */
         function nextAsk() {
             var ic = iconOf(q.asks[k]);
             ask.innerHTML = ''; ask.appendChild(iconSvg(ic.id, 56)); ask.appendChild(h('span', { 'class': 'calendar-ask__t', text: (q.asks.length > 1 ? (k === 0 ? '先點：' : '再點：') : '') + ic.name + '是哪一天？' }));
             api.timer(q.respMs, function () { timeout(); });
             if (level === 1 && k === 0 && kit.once('calendar.hint')) kit.hintOn(stage, cells[dayOf(q, q.asks[0])], { mode: 'tap', delay: 1500, text: '請點出那一天' });
         }
+        /* 答錯／時間到時揭曉：貼紙全部回來，正確的日期畫綠圈、玩家點錯的畫紅圈 */
         function revealAll(pickDay) {
             stickers.forEach(function (s) { s.classList.remove('calendar-sticker--hide'); });
             var want = dayOf(q, q.asks[k]);
             cells[want].classList.add('calendar-cell--ok');
             if (pickDay > 0 && pickDay !== want) cells[pickDay].classList.add('calendar-cell--bad');
         }
+        /* 點日期：點對了就換下一題（全部答對就過關）；點錯就失敗並揭曉 */
         function tapDay(day) {
             if (phase !== 'ask' || done || api.over) return;
             var want = dayOf(q, q.asks[k]);
@@ -215,6 +244,7 @@
             kit.flash(stage, false, api.my);
             api.fail({ delay: 3400, lines: [ic.name + '是 ' + q.month + ' 月 ' + want + ' 號（星期' + WEEK[(q.first + want - 1) % 7] + '）', '你點了 ' + day + ' 號'] });
         }
+        /* 作答時間到：算失敗，揭曉正確的日期 */
         function timeout() {
             if (done || api.over || phase !== 'ask') return;
             done = true; phase = 'end'; revealAll(-1);
@@ -223,10 +253,12 @@
             kit.flash(stage, false, api.my);
             api.fail({ delay: 3200, lines: ['時間到！', ic.name + '是 ' + q.month + ' 月 ' + want + ' 號'] });
         }
+        /* 給測試／debug 用：api.solve 點出正確日期、api.wrong 故意點錯一天 */
         api.solve = function () { if (phase === 'ask' && !done) tapDay(dayOf(q, q.asks[k])); };
         api.wrong = function () { if (phase !== 'ask' || done) return; var want = dayOf(q, q.asks[k]); tapDay(want === q.days ? 1 : want + 1); };
     }
 
+    /* 遊戲登記資料：id、名稱、規則文字（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式 */
     var G = {
         id: ID,
         name: '記行事曆',
@@ -238,5 +270,6 @@
             RAMP_LEVELS: RAMP_LEVELS, ICONS_N: ICONS_N, VIEW_S: VIEW_S, RESP_S: RESP_S, TWO_FROM: TWO_FROM, PAIR_P: PAIR_P, YEARS: YEARS, DISTRACT_S: DISTRACT_S, NOISE_COPIES: NOISE_COPIES, NOISE_SIZE: NOISE_SIZE, NOISE_H: NOISE_H, MOVE_MS: MOVE_MS, BLINK_MS: BLINK_MS, ICONS: ICONS, SHAPES: SHAPES, WEEK: WEEK, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

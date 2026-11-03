@@ -12,11 +12,14 @@
    · 計時從按「開始」才算；點同一張兩次是取消選取。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡，裡面的變數都是這個檔案私有的。
+       這是「單回合計時」型遊戲（不是闖關）：用 kit.single 骨架，成績是「用了幾秒」（越小越好）。
+       分三段：① 參數區；② 純函式（出牌、算「差一點」的組合）；③ 畫面（mount／setup）。 */
     'use strict';
 
-    var ID = 'sum100';
-    var SCORE = { better: 'min', decimals: 4, format: '{v} 秒', label: '用時', min: 0, max: 180 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'sum100';                                  /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴（sum100-）都用它 */
+    var SCORE = { better: 'min', decimals: 4, format: '{v} 秒', label: '用時', min: 0, max: 180 };  /* 成績規格：better:min＝越小越好、decimals:4＝小數 4 位、format 顯示格式、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：共用工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var PAIRS = 15, A_MIN = 11, A_MAX = 49;     /* 15 對（30 張，5×6）、較小的數在 11～49 */
@@ -27,6 +30,7 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 有幾組「差一點」：不是互補、但和是 90 或 110 */
+    /* 數「差一點」的組合有幾組：兩張加起來不是 100、但剛好是 90 或 110（很容易看走眼，算錯的人會點下去） */
     function nearMiss(cards) {
         var n = 0;
         for (var i = 0; i < cards.length; i++) for (var j = i + 1; j < cards.length; j++) {
@@ -36,6 +40,8 @@
         return n;
     }
     /* 出牌：回傳 { cards: [30 個數字（已洗牌）], near } */
+    /* 出牌：從 A_MIN～A_MAX 隨機挑 PAIRS 個數字，每個數字 a 配上它的補數 100−a（共 30 張，一定有解），
+       洗牌後回傳。為了讓題目夠難，最多重抽 TRIES 次，直到「差一點」的組合達到 NEAR_MIN 組（或用目前最多的）。 */
     function makeBoard(rand) {
         rand = rand || Math.random;
         var best = null;
@@ -49,6 +55,7 @@
         }
         return { cards: kit.shuffle(best.cards, rand), near: best.near };
     }
+    /* 結算畫面的評語（依用時秒數，越快越好） */
     function rating(sec) {
         if (sec < 40) return '心算快手！';
         if (sec < 70) return '高手！';
@@ -56,6 +63,7 @@
         return '再來一次，會更快！';
     }
 
+    /* 遊戲進場。V1.25 起牌數改成 30 張，舊版最佳紀錄不能比，所以第一次進來清掉（migrateBest 只清一次）；再交給 kit.single 處理計時、結算、最佳紀錄 */
     function mount(root, ctx) {
         /* V1.25 起兩張成百改成 30 張牌（以前湊百消除是 16 張），舊版的最佳紀錄不能比：第一次進來清掉（只清一次） */
         Reaction.migrateBest(ID, function () { return null; }, '.v125');
@@ -69,14 +77,15 @@
         });
     }
 
+    /* 遊戲開始前呼叫：出牌、畫牌、碼表與「開始」遮罩。api 是共用骨架給的工具（api.stage 畫面容器、api.finish 結算、api.restart 重玩…） */
     function setup(api) {
         var stage = api.stage, my = api.my;
-        var bd = makeBoard(), cards = bd.cards, state = [], sel = -1, remaining = cards.length, errors = 0, started = false, firstBad = null, hint = null;
+        var bd = makeBoard(), cards = bd.cards, state = [], sel = -1, remaining = cards.length, errors = 0, started = false, firstBad = null, hint = null;  /* cards：30 張牌的數字；state：每張牌的狀態（on 還在／gone 已消除）；sel：選中的牌（−1＝沒選）；remaining：還剩幾張； errors：點錯幾組；started：已按「開始」；firstBad：第一個點錯的組合（結算時說明）；hint：操作提示 */
         console.log('[兩張成百] 牌面 ' + cards.join(',') + '；差一點的組合 ' + bd.near + ' 組');
 
         var clockWrap = h('div', { 'class': 'sum100-clock' });
         stage.appendChild(clockWrap);
-        var clock = kit.clock(clockWrap, my);
+        var clock = kit.clock(clockWrap, my);           /* 碼表（顯示「時間 X.XXXX 秒」）：start 開始、stop 停止、penalty 罰秒、ms 目前毫秒 */
         var grid = h('div', { 'class': 'sum100-grid' });
         var els = cards.map(function (n, i) {
             var el = h('div', { 'class': 'sum100-card', text: String(n) });
@@ -90,6 +99,7 @@
         stage.appendChild(info);
         var over = false;
 
+        /* 按「開始」後：碼表開始跑，並每一幀檢查有沒有超過時間限制（含罰秒）；第一次進遊戲會有手指提示，指在第一組加起來是 100 的牌上 */
         function begin() {
             if (started) return;
             started = true; clock.start();
@@ -102,9 +112,11 @@
                 if (pa >= 0) hint = kit.hintOn(stage, els[pa], { mode: 'tap', delay: 300, text: '請點擊兩張加起來是 100 的牌' });
             }
         }
-        var cover = kit.startCover(stage, { text: '30 張牌，點兩張加起來剛好 100 就會消除。\n點錯一組加 3 秒，限時 ' + LIMIT_S + ' 秒，全部消完就結束。', onStart: begin });
+        var cover = kit.startCover(stage, { text: '30 張牌，點兩張加起來剛好 100 就會消除。\n點錯一組加 3 秒，限時 ' + LIMIT_S + ' 秒，全部消完就結束。', onStart: begin });  /* 「準備好了按開始」的遮罩：玩家按下才呼叫 begin（計時從這時才開始） */
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
 
+        /* 點牌：沒開始、已結束、或這張已消除就忽略；點同一張兩次＝取消選取；第一張只是選起來；
+           選第二張時：兩張加起來剛好 100 就都消除（全消完就結束）；否則算失誤，兩張閃紅、罰 PENALTY_MS 毫秒。 */
         function tap(i) {
             if (!started || over || state[i] !== 'on') return;
             hideHint();
@@ -125,6 +137,7 @@
             }
         }
         /* 超過時間限制：失敗（不計成績、不送排行榜），結算說明還剩幾張沒消 */
+        /* 超過時間限制：失敗（不計成績、不送排行榜），結算畫面說明還剩幾張沒消 */
         function timeUp() {
             if (over) return;
             over = true; clock.stop(); Sfx.play('bad');
@@ -137,6 +150,7 @@
                 });
             });
         }
+        /* 全部消完：停碼表，用時（含罰秒）轉成秒當成績；若剛好也超過限制就當失敗 */
         function finish() {
             if (over) return;
             var ms = clock.stop(), sec = ms / 1000;
@@ -151,11 +165,13 @@
             });
         }
 
+        /* 找出所有「加起來是 100」的牌對（測試與 debug 的 solve 用） */
         function pairs() {
             var out = [];
             for (var i = 0; i < cards.length; i++) for (var j = i + 1; j < cards.length; j++) if (cards[i] + cards[j] === 100) out.push([i, j]);
             return out;
         }
+        /* 給測試／debug 用：start 開始、solve 自動消完所有牌、wrong 故意點錯一組再全部消完 */
         G.debug = {
             state: function () { return { cards: cards, remaining: remaining, errors: errors, started: started }; },
             start: function () { cover.remove(); begin(); },
@@ -169,6 +185,7 @@
         };
     }
 
+    /* 遊戲登記資料：id、名稱、規則文字（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式 */
     var G = {
         id: ID,
         name: '兩張成百',
@@ -177,5 +194,6 @@
         score: SCORE,
         test: { nearMiss: nearMiss, makeBoard: makeBoard, rating: rating, PAIRS: PAIRS, A_MIN: A_MIN, A_MAX: A_MAX, NEAR_MIN: NEAR_MIN, PENALTY_MS: PENALTY_MS, LIMIT_S: LIMIT_S }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();
