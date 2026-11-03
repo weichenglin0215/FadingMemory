@@ -6,124 +6,136 @@
 
 /* ═══ 單行道（.oneway-）═══ */
 .oneway-stage {
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
-    background: var(--c-card-alt);
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
 }
 
+/* 「oneway-tip」這個元素的樣式 */
 .oneway-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 10px;
-    text-align: center;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 10px;                                          /* 離上邊 10px */
+    text-align: center;                                 /* 文字置中 */
 }
 
+/* 「oneway-svg」這個元素的樣式 */
 .oneway-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 道路：白色的粗線；路口：白色的小圓；單行道標誌：藍底白箭頭 */
 .oneway-road {
-    stroke: var(--c-card);
-    stroke-linecap: round;
+    stroke: var(--c-card);                              /* SVG 線條顏色：主題變數 --c-card */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「oneway-node」這個元素的樣式 */
 .oneway-node {
-    fill: var(--c-card);
-    stroke: var(--c-ink-soft);
-    stroke-width: 2;
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
 }
 
+/* 「oneway-sign-bg」這個元素的樣式 */
 .oneway-sign-bg {
-    fill: var(--c-blue);
-    stroke: var(--c-card);
-    stroke-width: 2;
+    fill: var(--c-blue);                                /* SVG 圖形的填色：主題變數 --c-blue */
+    stroke: var(--c-card);                              /* SVG 線條顏色：主題變數 --c-card */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
 }
 
+/* 「oneway-sign-arrow」這個元素的樣式 */
 .oneway-sign-arrow {
-    fill: none;
-    stroke: var(--c-card);
-    stroke-width: 3;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-card);                              /* SVG 線條顏色：主題變數 --c-card */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
 /* 計程車（黃色）與醫院（白色的房子、紅十字） */
 .oneway-taxi-body {
-    fill: var(--c-yellow);
-    stroke: var(--c-ink);
-    stroke-width: 3;
+    fill: var(--c-yellow);                              /* SVG 圖形的填色：主題變數 --c-yellow */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「oneway-taxi-win」這個元素的樣式 */
 .oneway-taxi-win {
-    fill: var(--c-card);
-    stroke: var(--c-ink);
-    stroke-width: 2;
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
 }
 
+/* 「oneway-hos-body」這個元素的樣式 */
 .oneway-hos-body {
-    fill: var(--c-card);
-    stroke: var(--c-ink);
-    stroke-width: 3;
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「oneway-hos-cross」這個元素的樣式 */
 .oneway-hos-cross {
-    fill: none;
-    stroke: var(--c-bad-light);
-    stroke-width: 7;
-    stroke-linecap: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-bad-light);                         /* SVG 線條顏色：主題變數 --c-bad-light */
+    stroke-width: 7;                                    /* SVG 線條粗細：7 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
 /* 你拖出來的路線 */
 .oneway-route {
-    fill: none;
-    stroke: var(--c-orange);
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    opacity: 0.9;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-orange);                            /* SVG 線條顏色：主題變數 --c-orange */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+    opacity: 0.9;                                       /* 透明度 0.9（1＝完全不透明、0＝全透明） */
 }
 
 /* 逆向：被擋住的那一段閃紅 */
 .oneway-road--bad {
-    stroke: var(--c-bad-light);
-    stroke-linecap: round;
-    opacity: 0.85;
-    animation: oneway-fade 0.45s ease-out forwards;
+    stroke: var(--c-bad-light);                         /* SVG 線條顏色：主題變數 --c-bad-light */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    opacity: 0.85;                                      /* 透明度 0.85（1＝完全不透明、0＝全透明） */
+    animation: oneway-fade 0.45s ease-out forwards;     /* 播放動畫（名稱、時間、緩動、次數）：oneway-fade 0.45s ease-out forwards */
 }
 
+/* 動畫 oneway-fade：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes oneway-fade {
     to {
-        opacity: 0;
+        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
     }
 }
 
 /* 失敗：停下來的地方打紅圈；正確的路線用綠色慢慢畫出來 */
 .oneway-bad {
-    fill: none;
-    stroke: var(--c-bad-light);
-    stroke-width: 6;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-bad-light);                         /* SVG 線條顏色：主題變數 --c-bad-light */
+    stroke-width: 6;                                    /* SVG 線條粗細：6 */
 }
 
+/* 「oneway-sol」這個元素的樣式 */
 .oneway-sol {
-    fill: none;
-    stroke: var(--c-ok);
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+    stroke-dasharray: 1;                                /* SVG 虛線的「畫／空」長度：1 */
+    stroke-dashoffset: 1;                               /* SVG 虛線的起始位移：1 */
 }
 
+/* 「oneway-sol」這個元素的樣式 */
 .oneway-sol--draw .oneway-sol {
-    animation: oneway-draw 1.6s ease-out forwards;
+    animation: oneway-draw 1.6s ease-out forwards;      /* 播放動畫（名稱、時間、緩動、次數）：oneway-draw 1.6s ease-out forwards */
 }
 
+/* 動畫 oneway-draw：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes oneway-draw {
     to {
-        stroke-dashoffset: 0;
+        stroke-dashoffset: 0;                           /* SVG 虛線的起始位移：0 */
     }
 }

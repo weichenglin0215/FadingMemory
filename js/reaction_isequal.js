@@ -16,12 +16,16 @@
      玩家答對符號就是綠色、答錯（或逾時）就是紅色；整道等式不再整個變色。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'isequal'：選單、成績、存檔都靠它；樣式在 css/games/reaction_isequal.css，裡面的 class 名稱一律以 isequal- 開頭。 */
     'use strict';
 
-    var ID = 'isequal';
+    var ID = 'isequal';                                 /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
     /* 世界排行榜成績規格：連續答對幾題（越多越好）；min 1＝至少答對 1 題才算成績 */
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾題之後難度到頂 */
@@ -172,7 +176,7 @@
     }
     /* 這一題要不要「相等」：一半一半，連續太多次就換邊 */
     function nextEqual(hist, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var n = hist.length;
         if (n >= SAME_MAX) {
             var last = hist[n - 1], same = true;
@@ -236,6 +240,7 @@
         if (dd === 1) return writeForm('dec', { n: n, d: d }) + ' ＝ ' + writeForm('pct', { n: n, d: d });
         return '≈ ' + (n / d).toFixed(4) + ' ＝ ≈ ' + (100 * n / d).toFixed(4) + '%';
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 40) return '等號判官！';
         if (n >= 25) return '眼力數感都很棒！';
@@ -244,6 +249,7 @@
         return '先熟悉一下，再來一次！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         var hist = [];
         kit.run(root, ctx, {
@@ -256,13 +262,15 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api, hist) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var want = nextEqual(hist, api.rand);
         var q = makeQuestion(level, api.rand, want);
         hist.push(want);
-        api.info = q;
-        console.log('[等不等於] 第 ' + level + ' 題：' + q.left.text + ' ＝ ' + q.right.text + '（' + (q.isEqual ? '相等' : '不相等') + '），限時 ' + ansMs(level) + ' ms');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[等不等於] 第 ' + level + ' 題：' + q.left.text + ' ＝ ' + q.right.text + '（' + (q.isEqual ? '相等' : '不相等') + '），限時 ' + ansMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var eq = h('div', { 'class': 'qz-big isequal-eq' });
         eq.appendChild(h('span', { text: q.left.text }));
@@ -277,9 +285,10 @@
             { text: '相等', kind: 'go', onTap: function () { judge(true); } }
         ], { h: 84 });
         var bNo = grid.btns[0], bYes = grid.btns[1];
-        api.timer(ansMs(level), function () { judge(null); });
-        if (level === 1 && kit.once('isequal.hint')) kit.hintOn(stage, q.isEqual ? bYes : bNo, { mode: 'tap', delay: 500, text: '請點擊按鈕' });
+        api.timer(ansMs(level), function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
+        if (level === 1 && kit.once('isequal.hint')) kit.hintOn(stage, q.isEqual ? bYes : bNo, { mode: 'tap', delay: 500, text: '請點擊按鈕' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
+        /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(sayEqual) {
             if (api.over) return;
             var ok = sayEqual === q.isEqual;
@@ -294,21 +303,25 @@
                 '左邊 ' + q.left.text + ' ＝ ' + lv, '右邊 ' + q.right.text + ' ＝ ' + rv
             ] });
         }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.isEqual); };
         api.wrong = function () { judge(!q.isEqual); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '等不等於',
         rule: '畫面上有一道等式，左右兩邊的寫法不一樣（分數、小數、百分比）。**判斷兩邊是「相等」還是「不相等」**；**不相等的題目都只差一點點**。答錯或來不及就結束，看你能連續答對幾題。越後面，限時越短！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             signOf: signOf, ansMs: ansMs, gcd: gcd, ratEq: ratEq, densFor: densFor, pairsFor: pairsFor, parseDec: parseDec, normDec: normDec, ratToDec: ratToDec, ratToPct: ratToPct, ratToFrac: ratToFrac,
             parseForm: parseForm, writeForm: writeForm, tweakDigits: tweakDigits, tweakFrac: tweakFrac, nextEqual: nextEqual, makeQuestion: makeQuestion, bothForms: bothForms, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, ANS_S: ANS_S, MAX_LEVEL: MAX_LEVEL, SAME_MAX: SAME_MAX
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

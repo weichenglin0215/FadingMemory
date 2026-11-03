@@ -6,181 +6,200 @@
 
 /* ═══ 097 兩袋一樣重（.twobags-）═══ */
 .twobags-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 4px;
-    text-align: center;
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    line-height: var(--lh-body);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 4px;                                           /* 離上邊 4px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
 }
 
+/* 「twobags-zone」這個元素的樣式 */
 .twobags-zone {
-    position: absolute;
-    box-sizing: border-box;
-    border-radius: var(--r-md);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
 }
 
+/* 「twobags-tray」這個元素的樣式 */
 .twobags-tray {
-    background: var(--c-card-alt);
-    border: var(--bd);
-    padding: 8px;
-    display: flex;
-    flex-wrap: wrap;
-    align-content: flex-start;
-    gap: 6px;
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    padding: 8px;                                       /* 內縮（padding，內容跟邊框的距離）：四邊都是 8px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-wrap: wrap;                                    /* 放不下就換行 */
+    align-content: flex-start;                          /* 多行排列時，各行在交叉方向的對齊方式：flex-start */
+    gap: 6px;                                           /* 子元素之間的空隙：6px */
 }
 
 /* 天秤（V1.32：電子秤改成傳統的水平天秤）：.twobags-bal 是整座天秤的容器，不擋住滑鼠／手指（只有鑽石可以按）；
    顏色用 currentColor：平常是灰褐色，超出容許範圍時整座天秤與數字變紅（.twobags-bal--bad），在範圍內數字變綠（.twobags-bal--ok） */
 .twobags-bal {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    color: var(--c-ink-soft);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
+/* 「twobags-bal」在「錯誤（失敗）時」的樣子的樣式 */
 .twobags-bal--bad {
-    color: var(--c-bad-light);
+    color: var(--c-bad-light);                          /* 文字顏色：主題變數 --c-bad-light */
 }
 
+/* 「twobags-post」這個元素的樣式 */
 .twobags-post {
-    position: absolute;
-    width: 8px;
-    border-radius: 4px;
-    background: currentColor;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 8px;                                         /* 寬度：8px */
+    border-radius: 4px;                                 /* 圓角：4px */
+    background: currentColor;                           /* 背景：currentColor */
 }
 
+/* 「twobags-base」這個元素的樣式 */
 .twobags-base {
-    position: absolute;
-    width: 124px;
-    height: 12px;
-    border-radius: 6px;
-    background: currentColor;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 124px;                                       /* 寬度：124px */
+    height: 12px;                                       /* 高度：12px */
+    border-radius: 6px;                                 /* 圓角：6px */
+    background: currentColor;                           /* 背景：currentColor */
 }
 
+/* 「twobags-beam」這個元素的樣式 */
 .twobags-beam {
-    position: absolute;
-    height: 10px;
-    border-radius: 5px;
-    background: currentColor;
-    transform-origin: 50% 50%;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    height: 10px;                                       /* 高度：10px */
+    border-radius: 5px;                                 /* 圓角：5px */
+    background: currentColor;                           /* 背景：currentColor */
+    transform-origin: 50% 50%;                          /* 變形的基準點：50% 50% */
 }
 
+/* 「twobags-pivot」這個元素的樣式 */
 .twobags-pivot {
-    position: absolute;
-    width: 18px;
-    height: 18px;
-    box-sizing: border-box;
-    border-radius: 50%;
-    background: var(--c-card);
-    border: 4px solid currentColor;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 18px;                                        /* 寬度：18px */
+    height: 18px;                                       /* 高度：18px */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 4px solid currentColor;                     /* 邊框（粗細、線型、顏色）：4px solid currentColor */
 }
 
 /* 一組吊繩＋秤盤＋重量數字：頂端（吊繩的尖端）對準橫樑的一端，傾斜時整組跟著上下移動 */
 .twobags-hang {
-    position: absolute;
-    display: flex;
-    flex-direction: column;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
 }
 
+/* 「twobags-str」這個元素的樣式 */
 .twobags-str {
-    display: block;
-    flex: none;
-    overflow: visible;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    flex: none;                                         /* 彈性縮放：none */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
 }
 
+/* 「line」標籤的樣式 */
 .twobags-str line {
-    stroke: currentColor;
-    stroke-width: 2.5;
-    stroke-linecap: round;
+    stroke: currentColor;                               /* SVG 線條顏色：currentColor */
+    stroke-width: 2.5;                                  /* SVG 線條粗細：2.5 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「twobags-pan」這個元素的樣式 */
 .twobags-pan {
-    flex: none;
-    box-sizing: border-box;
-    border: 3px solid currentColor;
-    border-radius: 6px 6px var(--r-md) var(--r-md);
-    background: var(--c-card);
-    padding: 4px;
-    display: flex;
-    flex-wrap: wrap;
-    align-content: flex-start;
-    gap: 4px;
+    flex: none;                                         /* 彈性縮放：none */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    border: 3px solid currentColor;                     /* 邊框（粗細、線型、顏色）：3px solid currentColor */
+    border-radius: 6px 6px var(--r-md) var(--r-md);     /* 圓角：6px 6px 主題變數 --r-md 主題變數 --r-md */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    padding: 4px;                                       /* 內縮（padding，內容跟邊框的距離）：四邊都是 4px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-wrap: wrap;                                    /* 放不下就換行 */
+    align-content: flex-start;                          /* 多行排列時，各行在交叉方向的對齊方式：flex-start */
+    gap: 4px;                                           /* 子元素之間的空隙：4px */
 }
 
+/* 「twobags-num」這個元素的樣式 */
 .twobags-num {
-    flex: none;
-    text-align: center;
-    font-family: var(--font-ui);
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    letter-spacing: 1px;
+    flex: none;                                         /* 彈性縮放：none */
+    text-align: center;                                 /* 文字置中 */
+    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    letter-spacing: 1px;                                /* 字與字之間的間距：1px */
 }
 
+/* 「twobags-num」這個元素的樣式 */
 .twobags-bal--ok .twobags-num {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「twobags-num」這個元素的樣式 */
 .twobags-bal--bad .twobags-num {
-    color: var(--c-bad-light);
+    color: var(--c-bad-light);                          /* 文字顏色：主題變數 --c-bad-light */
 }
 
 /* 鑽石（💎，V1.28）：框的大小＝直徑，字級由 js 依直徑設定；不再有灰色圓球的底和邊框 */
 .twobags-stone {
-    flex: none;
-    pointer-events: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-    box-sizing: border-box;
-    cursor: grab;
-    user-select: none;
-    -webkit-user-select: none;
+    flex: none;                                         /* 彈性縮放：none */
+    pointer-events: auto;                               /* 可以接收點擊／觸控 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    cursor: grab;                                       /* 滑鼠游標樣式：grab */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「twobags-stone」的「lift」變化版的樣式 */
 .twobags-stone--lift {
-    opacity: 0.25;
+    opacity: 0.25;                                      /* 透明度 0.25（1＝完全不透明、0＝全透明） */
 }
 
+/* 「twobags-ghost」這個元素的樣式 */
 .twobags-ghost {
-    position: absolute;
-    z-index: 40;
-    pointer-events: none;
-    box-shadow: var(--shadow-pop);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    z-index: 40;                                        /* 疊放順序：數字越大越在上面（40） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    box-shadow: var(--shadow-pop);                      /* 方塊陰影（立體感） */
 }
 
+/* 「twobags-info」這個元素的樣式 */
 .twobags-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 514px;
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    line-height: var(--lh-body);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 514px;                                         /* 離上邊 514px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
 }
 
+/* 「twobags-info」在「正確（成功）時」的樣子的樣式 */
 .twobags-info--ok {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「twobags-info」在「錯誤（失敗）時」的樣子的樣式 */
 .twobags-info--bad {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
+/* 「twobags-ok」這個元素的樣式 */
 .twobags-ok {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: auto;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    width: auto;                                        /* 寬度：auto */
 }

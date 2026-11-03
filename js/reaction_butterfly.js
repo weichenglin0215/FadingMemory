@@ -12,11 +12,15 @@
    · 揭曉：左翅膀翻過去疊到右邊（半透明），不一樣的地方閃紅圈，並寫出差了多少。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'butterfly'：選單、成績、存檔都靠它；樣式在 css/games/reaction_butterfly.css，裡面的 class 名稱一律以 butterfly- 開頭。 */
     'use strict';
 
-    var ID = 'butterfly';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'butterfly';                               /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -48,7 +52,7 @@
     function inLobe(x, y, r) { return LOBES.some(function (l) { var dx = (x - l.cx) / (l.rx - r - 4), dy = (y - l.cy) / (l.ry - r - 4); return dx * dx + dy * dy <= 1; }); }
     /* 出一關：{ spots（右翅膀的斑點 [{ x, y, r, c（顏色編號）}]）, stripes（[{ x, y, len, ang }]）, mod: { kind, index（第幾個，在 spots 或 stripes 裡）, side（'L'｜'R'：改在哪一邊）, delta（改了多少：比例／度）}, tilt（整隻蝴蝶歪幾度）, timeMs, level } */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var n = spotsFor(level), r0 = spotRadius(n), spots = [], stripes = [], guard = 0, i;
         function free(x, y, r) { for (var k = 0; k < spots.length; k++) if (Math.hypot(spots[k].x - x, spots[k].y - y) < spots[k].r + r + 6) return false; for (k = 0; k < stripes.length; k++) if (Math.hypot(stripes[k].x - x, stripes[k].y - y) < stripes[k].len / 2 + r + 4) return false; return true; }
         /* 先放紋路（比較大、數量少），再放斑點（斑點會自己避開紋路）；這樣斑點多到 20 個也放得下 */
@@ -99,6 +103,7 @@
         if (m.kind === 'color') return '斑點的顏色差了（色相轉 ' + Math.abs(m.delta).toFixed(0) + '°）';
         return '紋路的方向差了 ' + Math.abs(m.delta).toFixed(0) + '°';
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 15) return '火眼金睛！';
         if (n >= 10) return '對稱難不倒你！';
@@ -107,6 +112,7 @@
         return '把一邊翅膀在腦中翻過去比一比！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'butterfly-stage',
@@ -133,11 +139,13 @@
         return g;
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand), m = q.mod;
-        api.info = q;
-        console.log('[蝴蝶不對稱] 第 ' + level + ' 關：斑點 ' + q.spots.length + '、紋路 ' + q.stripes.length + '；差異＝' + describeMod(m) + '（第 ' + m.index + ' 個，改在' + (m.side === 'R' ? '右' : '左') + '邊）；歪斜 ' + q.tilt.toFixed(1) + '°；限時 ' + q.timeMs + ' 毫秒');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[蝴蝶不對稱] 第 ' + level + ' 關：斑點 ' + q.spots.length + '、紋路 ' + q.stripes.length + '；差異＝' + describeMod(m) + '（第 ' + m.index + ' 個，改在' + (m.side === 'R' ? '右' : '左') + '邊）；歪斜 ' + q.tilt.toFixed(1) + '°；限時 ' + q.timeMs + ' 毫秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, BW = Math.min(W - 16, 460), BH = Math.round(BW * VB.h / VB.w), scale = BW / VB.w;
         var field = h('div', { 'class': 'butterfly-field' });
@@ -155,12 +163,13 @@
         var overlay = kit.svg('g', {}, tilt);
         var info = h('div', { 'class': 'qz-note butterfly-info', text: '' }); info.style.top = (80 + BH + 12) + 'px'; field.appendChild(info);
         var done = false;
-        api.timer(q.timeMs, function () { judge(null); });
-        if (level === 1 && kit.once('butterfly.hint')) { var t = modTarget(q), side = m.side === 'R' ? t.right : t.left; kit.hintOn(stage, null, { mode: 'tap', x: Math.round((W - BW) / 2) + side.x * scale, y: 80 + side.y * scale, delay: 1500, text: '請點不對稱的地方' }); }
+        api.timer(q.timeMs, function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
+        if (level === 1 && kit.once('butterfly.hint')) { var t = modTarget(q), side = m.side === 'R' ? t.right : t.left; kit.hintOn(stage, null, { mode: 'tap', x: Math.round((W - BW) / 2) + side.x * scale, y: 80 + side.y * scale, delay: 1500, text: '請點不對稱的地方' }); }  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         kit.onTap(svg, function (e) {
             if (done || api.over) return;
             var p = kit.localPt(e, svg); judge({ x: p.x / scale, y: p.y / scale });
         });
+        /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(pt) {
             if (done || api.over) return;
             done = true;
@@ -176,20 +185,24 @@
         }
         /* 驗證用：solve＝點被改的那個東西（歪斜後的位置）、wrong＝點蝴蝶身體上一個不相干的地方 */
         function toView(x, y) { var a = q.tilt * Math.PI / 180, dx = x - CENTER, dy = y - VB.h / 2; return { x: CENTER + dx * Math.cos(a) - dy * Math.sin(a), y: VB.h / 2 + dx * Math.sin(a) + dy * Math.cos(a) }; }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { var t = modTarget(q), s = m.side === 'R' ? t.right : t.left, p = toView(s.x, s.y); judge(p); };
         api.wrong = function () { judge(toView(CENTER, 8)); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '蝴蝶不對稱',
         rule: '一隻蝴蝶，**左右兩邊翅膀應該是鏡射對稱的**，但**有一個地方不對稱**——可能是一個斑點的大小、一個斑點的顏色、或一條紋路的方向。**點那個地方**（點它或它在另一邊的對應位置都算）。要在腦中把一邊翅膀左右翻過來比，比並排找碴難很多。越後面，差異越小、斑點越多，第 10 關起蝴蝶還會**微微歪斜**（對稱軸不是直的）！答錯或來不及就結束，看你能過幾關。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             spotsFor: spotsFor, sizeDiffFor: sizeDiffFor, hueDiffFor: hueDiffFor, angleDiffFor: angleDiffFor, timeMs: timeMs, tiltMaxFor: tiltMaxFor, kindsFor: kindsFor, spotRadius: spotRadius, inLobe: inLobe, makeLevel: makeLevel, wingElements: wingElements, modTarget: modTarget, untilt: untilt, isHit: isHit, describeMod: describeMod, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, SPOTS: SPOTS, SIZE_DIFF: SIZE_DIFF, HUE_DIFF: HUE_DIFF, ANGLE_DIFF: ANGLE_DIFF, TIME_S: TIME_S, COLOR_FROM: COLOR_FROM, ANGLE_FROM: ANGLE_FROM, TILT_FROM: TILT_FROM, TILT_MAX: TILT_MAX, HIT_EXTRA: HIT_EXTRA, VB: VB, CENTER: CENTER, COLORS: COLORS, LOBES: LOBES, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

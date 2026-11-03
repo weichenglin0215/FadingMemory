@@ -6,33 +6,36 @@
 
 /* ═══ 對準才看到（.alignchar-）═══ */
 .alignchar-canvas {
-    position: absolute;
-    border-radius: var(--r-md);
-    background: var(--c-card);
-    border: 3px solid var(--c-ink-soft);
-    box-sizing: content-box;
-    margin-left: -3px;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    box-sizing: content-box;                            /* 寬高只算內容 */
+    margin-left: -3px;                                  /* 左外距：-3px */
 }
 
+/* 「alignchar-tip」這個元素的樣式 */
 .alignchar-tip {
-    top: 520px;
+    top: 520px;                                         /* 離上邊 520px */
 }
 
 /* 答案按鈕的字形（V1.29 玩家意見）：改成明體／宋體（--font-note：Noto Serif TC → 宋體 → 新細明體），跟題目的字形（黑體）不一樣，
    故意增加難度。題目那個被切成直條的字，字形維持不變（黑體）。 */
 .alignchar-opt {
-    font-family: var(--font-note);
-    font-size: var(--fs-xl);
-    font-weight: 700;
-    color: var(--c-ink);
+    font-family: var(--font-note);                      /* 字型：主題變數 --font-note */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: 700;                                   /* 字重（粗細）700（400 一般、700 粗體） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「alignchar-opt」在「正確時」的樣子的樣式 */
 .alignchar-opt--right {
-    background: var(--c-ok-soft);
-    border-color: var(--c-ok);
+    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
 }
 
+/* 「alignchar-opt」在「錯誤時」的樣子的樣式 */
 .alignchar-opt--wrong {
-    background: var(--c-bad-soft);
-    border-color: var(--c-bad);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
 }

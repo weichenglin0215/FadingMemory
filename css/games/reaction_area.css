@@ -6,86 +6,93 @@
 
 /* ═══ 003 面積一樣大（.area-）═══ */
 .area-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
 }
 
 /* 目標形狀：黃色填色；揭曉時變橘色半透明 */
 .area-shape {
-    fill: var(--c-yellow);
-    stroke: var(--c-ink);
-    stroke-width: 3;
-    stroke-linejoin: round;
+    fill: var(--c-yellow);                              /* SVG 圖形的填色：主題變數 --c-yellow */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「area-shape」的「rev」變化版的樣式 */
 .area-shape--rev {
-    fill: var(--c-orange);
+    fill: var(--c-orange);                              /* SVG 圖形的填色：主題變數 --c-orange */
     fill-opacity: 0.6;
 }
 
 /* 方塊：綠色填色；揭曉時變藍色半透明 */
 .area-sq {
-    fill: var(--c-green-light);
-    stroke: var(--c-ink);
-    stroke-width: 3;
+    fill: var(--c-green-light);                         /* SVG 圖形的填色：主題變數 --c-green-light */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「area-sq」的「rev」變化版的樣式 */
 .area-sq--rev {
-    fill: var(--c-blue);
+    fill: var(--c-blue);                                /* SVG 圖形的填色：主題變數 --c-blue */
     fill-opacity: 0.55;
 }
 
 /* 手柄：十字箭頭（上下左右四個箭頭），指尖好抓 */
 .area-handle {
-    fill: var(--c-orange);
-    stroke: var(--c-ink);
-    stroke-width: 3;
-    stroke-linejoin: round;
+    fill: var(--c-orange);                              /* SVG 圖形的填色：主題變數 --c-orange */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「area-ok」這個元素的樣式 */
 .area-ok {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: auto;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    width: auto;                                        /* 寬度：auto */
 }
 
+/* 「area-legend」這個元素的樣式 */
 .area-legend {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 6px;
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    opacity: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 6px;                                           /* 離上邊 6px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
 }
 
+/* 「area-legend」在「開啟（亮起）時」的樣子的樣式 */
 .area-legend--on {
-    opacity: 1;
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }
 
 /* 揭曉時的面積差數字動畫（V1.27）：從 0.0000% 跑到 XX.XXXX%（方塊比較大）或 -XX.XXXX%（比較小） */
 .area-diff {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 100px;
-    text-align: center;
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-black);
-    font-variant-numeric: tabular-nums;
-    color: var(--c-ink);
-    opacity: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 100px;                                      /* 離下邊 100px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
 }
 
+/* 「area-diff」在「開啟（亮起）時」的樣子的樣式 */
 .area-diff--on {
-    opacity: 1;
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }
 
+/* 「area-diff」的「neg」變化版的樣式 */
 .area-diff--neg {
-    color: var(--c-blue);
+    color: var(--c-blue);                               /* 文字顏色：主題變數 --c-blue */
 }

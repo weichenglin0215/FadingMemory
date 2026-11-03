@@ -18,11 +18,15 @@
    · 揭曉：麵皮、樣品圓（虛線）和「最接近的圓」並排，寫出圓度和大小差各自有沒有達到。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'dough'：選單、成績、存檔都靠它；樣式在 css/games/reaction_dough.css，裡面的 class 名稱一律以 dough- 開頭。 */
     'use strict';
 
-    var ID = 'dough';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'dough';                                   /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -69,7 +73,7 @@
     }
     /* 一團麵糰：{ level, pts（K 個頂點，重心在原點）, sampleR, ratio, startR, roundMin, sizeMax, alpha（橢圓的方向）, lump } */
     function makeDough(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var ratio = ratioFor(level), r0 = SAMPLE_R * startFracFor(level), alpha = kit.randFloat(0, Math.PI, rand), lump = lumpFor(level), a = r0 * Math.sqrt(ratio), b = r0 / Math.sqrt(ratio), pts = [], ph = [kit.randFloat(0, 6.28, rand), kit.randFloat(0, 6.28, rand), kit.randFloat(0, 6.28, rand)];
         for (var i = 0; i < K; i++) {
             var t = i / K * 2 * Math.PI, ex = a * Math.cos(t), ey = b * Math.sin(t), f = 1 + lump * (0.5 * Math.cos(3 * t + ph[0]) + 0.3 * Math.cos(4 * t + ph[1]) + 0.2 * Math.cos(5 * t + ph[2]));
@@ -91,6 +95,7 @@
         if (j.tooBig) return '擀太大了，回不去了！' + t;
         return (j.okRound ? '' : '不夠圓！') + (j.okSize ? '' : '大小不對！') + t;
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 15) return '包水餃師傅！';
         if (n >= 9) return '手感很好！';
@@ -99,6 +104,7 @@
         return '轉著方向擀才會圓！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'dough-stage',
@@ -111,11 +117,13 @@
 
     function pathOf(pts, cx, cy) { return 'M' + pts.map(function (p) { return (cx + p.x).toFixed(1) + ',' + (cy + p.y).toFixed(1); }).join(' L') + ' Z'; }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeDough(level, api.rand), pts = q.pts.slice();
-        api.info = q;
-        console.log('[擀水餃皮] 第 ' + level + ' 關：麵糰長短軸比 ' + q.ratio + '、一開始半徑 ' + q.startR.toFixed(1) + '（樣品 ' + q.sampleR + '）；及格線 圓度 ' + q.roundMin + '%、大小差 ≤ ' + q.sizeMax + '%；一開始圓度 ' + roundness(pts).toFixed(2) + '%');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[擀水餃皮] 第 ' + level + ' 關：麵糰長短軸比 ' + q.ratio + '、一開始半徑 ' + q.startR.toFixed(1) + '（樣品 ' + q.sampleR + '）；及格線 圓度 ' + q.roundMin + '%、大小差 ≤ ' + q.sizeMax + '%；一開始圓度 ' + roundness(pts).toFixed(2) + '%');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, cx = Math.round(W / 2), cy = Math.round(H * 0.4);
         var field = h('div', { 'class': 'dough-field' });
@@ -129,9 +137,10 @@
         var pin = h('div', { 'class': 'dough-pin' }); pin.style.display = 'none'; field.appendChild(pin);
         var info = h('div', { 'class': 'qz-note dough-info', text: '' }); info.style.top = (cy + q.sampleR + 38) + 'px'; field.appendChild(info);
         var btn = kit.btnGrid(field, [{ text: '好了！', kind: 'primary', cls: 'dough-btn', onTap: function () { done(); } }], { cols: 1, h: 92, bottom: 12 });
-        if (level === 1 && kit.once('dough.hint')) kit.hintOn(stage, null, { mode: 'drag', x: cx - 60, y: cy + q.sampleR + 30, dx: 120, dy: 0, delay: 800, text: '往旁邊拖，麵皮就往旁邊變長' });
+        if (level === 1 && kit.once('dough.hint')) kit.hintOn(stage, null, { mode: 'drag', x: cx - 60, y: cy + q.sampleR + 30, dx: 120, dy: 0, delay: 800, text: '往旁邊拖，麵皮就往旁邊變長' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
         var phase = 'roll', down = null, last = null, rolls = 0;
+        /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() { skin.setAttribute('d', pathOf(pts, cx, cy)); }
         /* 手指：每個移動事件，算移動的方向和距離，擀一下；太大就立刻失敗 */
         field.addEventListener('pointerdown', function (e) {
@@ -179,16 +188,19 @@
         api.wrong = function () { if (phase === 'roll') done(); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '擀水餃皮',
         rule: '一小團麵糰。**手指往某個方向拖，擀麵棍就往那個方向擀，麵皮就往那個方向變長**。要把麵皮擀成圓的、和樣品（虛線圓）一樣大，做好按「好了」。圓度和大小差都要達到及格線才過關（圓度 80% → 95%、大小差 15% → 3%）。**一直往同一個方向擀會變成橢圓**，要**轉著方向擀**（往麵皮比較短的方向擀）；**擀過頭、變太大了就回不去**。越後面，麵糰一開始越不圓。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             roundMinFor: roundMinFor, sizeMaxFor: sizeMaxFor, ratioFor: ratioFor, startFracFor: startFracFor, lumpFor: lumpFor, area: area, centroid: centroid, recenter: recenter, radii: radii, roundness: roundness, sizeDiff: sizeDiff, roll: roll, makeDough: makeDough, judge: judge, bestDirection: bestDirection, whyText: whyText, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, ROUND_MIN: ROUND_MIN, SIZE_MAX: SIZE_MAX, RATIO0: RATIO0, START_FRAC: START_FRAC, LUMP: LUMP, SAMPLE_R: SAMPLE_R, K: K, ROLL_K: ROLL_K, SPREAD: SPREAD, MAX_STEP: MAX_STEP, SOLVE_STEP: SOLVE_STEP, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

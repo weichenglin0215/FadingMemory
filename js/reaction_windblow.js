@@ -18,11 +18,15 @@
    · 結束時：把你的特徵和那句口令並排，逐條寫出「這個條件你符不符合」，以及這句口令是不是在說你。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'windblow'：選單、成績、存檔都靠它；樣式在 css/games/reaction_windblow.css，裡面的 class 名稱一律以 windblow- 開頭。 */
     'use strict';
 
-    var ID = 'windblow';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '答對', min: 1, max: 300 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'windblow';                                /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '答對', min: 1, max: 300 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_CMDS = 40;                         /* 答對幾題之後難度到頂 */
@@ -76,7 +80,7 @@
     /* 出一句口令：希望「符合你」的比例是 P_MATCH、不要連續超過 MAX_SAME 次同一個答案。
        作法：先決定這一題「要符合還是不符合」（連續太多次就強制換），再一直抽到抽出那種口令（最多 200 次，抽不到就用最後一個）。 */
     function makeCommand(self, n, history, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var want = rand() < P_MATCH, k = history.length;
         if (k >= MAX_SAME) { var last = history[k - 1], same = true; for (var i = 1; i < MAX_SAME; i++) if (history[k - 1 - i] !== last) same = false; if (same) want = !last; }
         var c = null;
@@ -95,6 +99,7 @@
     }
     /* 答對第 n 題之後（n＝已經答對幾題）要不要改特徵：n ≥ 10 且 (n − 10) 是 8 的倍數 */
     function shouldChange(n) { return n >= CHANGE_FROM && (n - CHANGE_FROM) % CHANGE_EVERY === 0; }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 40) return '大風吹冠軍！';
         if (n >= 25) return '記憶力超強！';
@@ -103,6 +108,7 @@
         return '先記住自己的樣子！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 12, stageClass: 'windblow-stage', resume: false,
@@ -138,13 +144,15 @@
         return svg;
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, S = api.S;
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var self = makeSelf(api.rand), count = 0, cmd = null, history = [], phase = 'intro', over = false, cmdNo = 0;
         api.info = { get count() { return count; }, get cmd() { return cmd; }, get self() { return self; }, get phase() { return phase; } };
         S.score = 0; api.setInfo('答對 0 題');
-        console.log('[大風吹] 開始：你是「' + describeSelf(self) + '」；回答時間 ' + answerMsFor(0) + ' → ' + answerMsFor(RAMP_CMDS) + ' 毫秒');
+        console.log('[大風吹] 開始：你是「' + describeSelf(self) + '」；回答時間 ' + answerMsFor(0) + ' → ' + answerMsFor(RAMP_CMDS) + ' 毫秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var field = h('div', { 'class': 'windblow-field' });
         stage.appendChild(field);
@@ -185,7 +193,7 @@
             bubble.textContent = cmd.text; bubble.classList.remove('windblow-bubble--pop'); void bubble.offsetWidth; bubble.classList.add('windblow-bubble--pop');
             info.textContent = ''; phase = 'ask'; enableBtns(true);
             api.stopTimer(); api.timer(answerMsFor(count), function () { fail('timeout', null); });
-            if (cmdNo === 1 && kit.once('windblow.hint')) kit.hintOn(stage, grid.btns[cmd.match ? 0 : 1], { mode: 'tap', delay: 500, text: cmd.match ? '說的是你 → 換位子' : '不是你 → 不動' });
+            if (cmdNo === 1 && kit.once('windblow.hint')) kit.hintOn(stage, grid.btns[cmd.match ? 0 : 1], { mode: 'tap', delay: 500, text: cmd.match ? '說的是你 → 換位子' : '不是你 → 不動' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         }
         /* 開場：先看「你是誰」 */
         api.after(250, function () { showCard('你是這個人，記住！', self, '只看一次喔', INTRO_MS, function () { bubble.textContent = '準備…'; api.after(400, nextCommand); }); });
@@ -228,16 +236,19 @@
         api.wrong = function () { if (phase !== 'ask') return; answer(!cmd.match); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '大風吹',
         rule: '一開始會告訴你你是誰：衣服的顏色、有沒有戴眼鏡、有沒有戴帽子（只看 3 秒）。然後口令一句一句出現，例如「大風吹，吹戴眼鏡的人！」——**口令說的是你，就點「換位子」，不是在說你，就點「不動」**。小心**否定的說法**（沒戴帽子）和**兩個條件**（「又」要全部符合、「或」符合一個就行）。答對 10 題之後，**你的樣子還會變**，要記住新的！錯一題或沒回答就結束，看你能答對幾題。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             answerMsFor: answerMsFor, pTwoFor: pTwoFor, pOrFor: pOrFor, pNegFor: pNegFor, makeSelf: makeSelf, describeSelf: describeSelf, atomText: atomText, atomHolds: atomHolds, matches: matches, commandText: commandText, randomAtom: randomAtom, makeCommand: makeCommand, changeSelf: changeSelf, shouldChange: shouldChange, rating: rating,
             RAMP_CMDS: RAMP_CMDS, ANSWER_S: ANSWER_S, P_TWO: P_TWO, P_OR: P_OR, P_NEG: P_NEG, P_MATCH: P_MATCH, MAX_SAME: MAX_SAME, INTRO_MS: INTRO_MS, CHANGE_FROM: CHANGE_FROM, CHANGE_EVERY: CHANGE_EVERY, CHANGE_MS: CHANGE_MS, SOLVE_CAP: SOLVE_CAP, COLORS: COLORS, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

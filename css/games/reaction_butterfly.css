@@ -6,145 +6,165 @@
 
 /* ═══ 蝴蝶不對稱（.butterfly-）═══ */
 .butterfly-stage {
-    user-select: none;
-    -webkit-user-select: none;
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「butterfly-field」這個元素的樣式 */
 .butterfly-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
 }
 
+/* 「butterfly-tip」這個元素的樣式 */
 .butterfly-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「butterfly-svg」這個元素的樣式 */
 .butterfly-svg {
-    position: absolute;
-    display: block;
-    overflow: visible;
-    touch-action: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    display: block;                                     /* 獨佔一整行的區塊 */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
 /* 翅膀：上翅、下翅；右翅膀本身，左翅膀是它翻過來的樣子 */
 .butterfly-wing {
-    fill: var(--btf-wing);
-    stroke: var(--btf-black);
-    stroke-width: 5;
-    stroke-linejoin: round;
+    fill: var(--btf-wing);                              /* SVG 圖形的填色：主題變數 --btf-wing */
+    stroke: var(--btf-black);                           /* SVG 線條顏色：主題變數 --btf-black */
+    stroke-width: 5;                                    /* SVG 線條粗細：5 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「butterfly-wing」的「low」變化版的樣式 */
 .butterfly-wing--low {
-    fill: var(--btf-wing-low);
+    fill: var(--btf-wing-low);                          /* SVG 圖形的填色：主題變數 --btf-wing-low */
 }
 
+/* 「butterfly-stripe」這個元素的樣式 */
 .butterfly-stripe {
-    stroke: var(--btf-black);
-    stroke-width: 4;
-    stroke-linecap: round;
+    stroke: var(--btf-black);                           /* SVG 線條顏色：主題變數 --btf-black */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「butterfly-spot」這個元素的樣式 */
 .butterfly-spot {
-    stroke: var(--btf-black);
-    stroke-width: 1.5;
+    stroke: var(--btf-black);                           /* SVG 線條顏色：主題變數 --btf-black */
+    stroke-width: 1.5;                                  /* SVG 線條粗細：1.5 */
 }
 
+/* 「butterfly-c」的「orange」變化版的樣式 */
 .butterfly-c--orange {
-    fill: var(--btf-orange);
+    fill: var(--btf-orange);                            /* SVG 圖形的填色：主題變數 --btf-orange */
 }
 
+/* 「butterfly-c」的「yellow」變化版的樣式 */
 .butterfly-c--yellow {
-    fill: var(--btf-yellow);
+    fill: var(--btf-yellow);                            /* SVG 圖形的填色：主題變數 --btf-yellow */
 }
 
+/* 「butterfly-c」的「blue」變化版的樣式 */
 .butterfly-c--blue {
-    fill: var(--btf-blue);
+    fill: var(--btf-blue);                              /* SVG 圖形的填色：主題變數 --btf-blue */
 }
 
+/* 「butterfly-c」的「white」變化版的樣式 */
 .butterfly-c--white {
-    fill: var(--btf-white);
+    fill: var(--btf-white);                             /* SVG 圖形的填色：主題變數 --btf-white */
 }
 
+/* 「butterfly-c」的「red」變化版的樣式 */
 .butterfly-c--red {
-    fill: var(--btf-red);
+    fill: var(--btf-red);                               /* SVG 圖形的填色：主題變數 --btf-red */
 }
 
+/* 「butterfly-body」這個元素的樣式 */
 .butterfly-body {
-    fill: var(--btf-black);
+    fill: var(--btf-black);                             /* SVG 圖形的填色：主題變數 --btf-black */
 }
 
+/* 「butterfly-antenna」這個元素的樣式 */
 .butterfly-antenna {
-    fill: none;
-    stroke: var(--btf-black);
-    stroke-width: 3;
-    stroke-linecap: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--btf-black);                           /* SVG 線條顏色：主題變數 --btf-black */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
 /* 揭曉：左翅膀翻過去半透明地疊在右翅膀上（重影），不一樣的地方閃紅圈 */
 .butterfly-ghost {
-    opacity: 0.55;
-    animation: butterfly-ghost-in 0.7s ease-out;
-    pointer-events: none;
+    opacity: 0.55;                                      /* 透明度 0.55（1＝完全不透明、0＝全透明） */
+    animation: butterfly-ghost-in 0.7s ease-out;        /* 播放動畫（名稱、時間、緩動、次數）：butterfly-ghost-in 0.7s ease-out */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 動畫 butterfly-ghost-in：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes butterfly-ghost-in {
     from {
-        opacity: 0;
+        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
     }
 
     to {
-        opacity: 0.55;
+        opacity: 0.55;                                  /* 透明度 0.55（1＝完全不透明、0＝全透明） */
     }
 }
 
+/* 「butterfly-ring」這個元素的樣式 */
 .butterfly-ring {
-    fill: none;
-    stroke: var(--c-bad-light);
-    stroke-width: 5;
-    animation: butterfly-blink 0.6s ease-in-out infinite;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-bad-light);                         /* SVG 線條顏色：主題變數 --c-bad-light */
+    stroke-width: 5;                                    /* SVG 線條粗細：5 */
+    animation: butterfly-blink 0.6s ease-in-out infinite;  /* 播放動畫（名稱、時間、緩動、次數）：butterfly-blink 0.6s ease-in-out infinite */
 }
 
+/* 動畫 butterfly-blink：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes butterfly-blink {
 
     0%,
     100% {
-        opacity: 1;
+        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
     }
 
     50% {
-        opacity: 0.25;
+        opacity: 0.25;                                  /* 透明度 0.25（1＝完全不透明、0＝全透明） */
     }
 }
 
+/* 「butterfly-tap」這個元素的樣式 */
 .butterfly-tap {
-    fill: none;
-    stroke-width: 4;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
 }
 
+/* 「butterfly-tap」在「正確（成功）時」的樣子的樣式 */
 .butterfly-tap--ok {
-    stroke: var(--c-ok);
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
 }
 
+/* 「butterfly-tap」在「錯誤（失敗）時」的樣子的樣式 */
 .butterfly-tap--bad {
-    stroke: var(--c-ink);
-    stroke-dasharray: 5 4;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-dasharray: 5 4;                              /* SVG 虛線的「畫／空」長度：5 4 */
 }
 
+/* 「butterfly-info」這個元素的樣式 */
 .butterfly-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }

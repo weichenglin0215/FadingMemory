@@ -8,53 +8,53 @@
 /* ═══ 吹氣球（.balloon-）═══ */
 /* 天空背景：linear-gradient 線性漸層（上藍下白） */
 .balloon-field {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    background: linear-gradient(180deg, #DCEBFA 0%, var(--c-card) 100%);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    touch-action: none;
-    user-select: none;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    background: linear-gradient(180deg, #DCEBFA 0%, var(--c-card) 100%);  /* 漸層背景 */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
 }
 
 /* SVG */
 .balloon-svg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
 /* 氣球本體 */
 .balloon-body {
-    stroke: rgba(120, 30, 20, 0.45);
-    stroke-width: 3px;
+    stroke: rgba(120, 30, 20, 0.45);                    /* SVG 線條顏色：rgba(120, 30, 20, 0.45) */
+    stroke-width: 3px;                                  /* SVG 線條粗細：3px */
 }
 
 /* 高光 */
 .balloon-shine {
-    fill: rgba(255, 255, 255, 0.6);
+    fill: rgba(255, 255, 255, 0.6);                     /* SVG 圖形的填色：rgba(255, 255, 255, 0.6) */
 }
 
 /* 氣球打結處 */
 .balloon-knot {
-    fill: #B93A2E;
+    fill: #B93A2E;                                      /* SVG 圖形的填色：#B93A2E */
 }
 
 /* 氣球繩子 */
 .balloon-string {
-    fill: none;
-    stroke: #6B5B4B;
-    stroke-width: 3px;
-    stroke-linecap: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: #6B5B4B;                                    /* SVG 線條顏色：#6B5B4B */
+    stroke-width: 3px;                                  /* SVG 線條粗細：3px */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
 /* 爆炸後的碎片 */
 .balloon-piece {
-    fill: #E8685A;
-    stroke: rgba(120, 30, 20, 0.45);
-    stroke-width: 2px;
+    fill: #E8685A;                                      /* SVG 圖形的填色：#E8685A */
+    stroke: rgba(120, 30, 20, 0.45);                    /* SVG 線條顏色：rgba(120, 30, 20, 0.45) */
+    stroke-width: 2px;                                  /* SVG 線條粗細：2px */
 }

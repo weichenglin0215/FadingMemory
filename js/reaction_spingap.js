@@ -23,11 +23,15 @@
        - 轉速要接著上一圈（carry 記著上一圈的轉速），第一圈（或中途從第 N 關開始）在基準的 ±SPEED_BAND 內隨機。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'spingap'：選單、成績、存檔都靠它；樣式在 css/games/reaction_spingap.css，裡面的 class 名稱一律以 spingap- 開頭。 */
     'use strict';
 
-    var ID = 'spingap';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 顆', label: '射出砲彈', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'spingap';                                 /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 顆', label: '射出砲彈', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾發之後難度到頂 */
@@ -51,7 +55,7 @@
        規則：在基準轉速 omegaDeg(level) 的 ±SPEED_BAND 範圍內，比上一圈快或慢 SPEED_STEP[0]～SPEED_STEP[1]（5%～20%）；
        往上加快 5% 會超出範圍就只能變慢，往下變慢 5% 會低於範圍就只能變快，兩邊都行就各半機率。 */
     function nextOmega(prev, level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var base = omegaDeg(level), lo = base * (1 - SPEED_BAND), hi = base * (1 + SPEED_BAND);
         if (prev == null) return kit.randFloat(lo, hi, rand);
         var upOk = prev * (1 + SPEED_STEP[0]) <= hi, downOk = prev * (1 - SPEED_STEP[0]) >= lo;
@@ -93,6 +97,7 @@
         var y0 = CENTER_Y + MUZZLE_DY, yc = CENTER_Y - RING_R + RING_W / 2 + BALL_R;       /* 出發點、接觸環內緣時砲彈中心的 y */
         return { y0: y0, yc: yc, v: (y0 - yc) / FLIGHT_S };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 30) return '神砲手！';
         if (n >= 18) return '百發百中！';
@@ -125,8 +130,10 @@
             '<g class="spingap-wheel"><circle cx="90" cy="126" r="22" class="spingap-wood-d"/><circle cx="90" cy="126" r="6" class="spingap-iron"/><path d="M90 104 V148 M68 126 H112 M74 110 L106 142 M106 110 L74 142" class="spingap-spoke"/></g></svg>';
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var W = stage.clientWidth || 472, cx = W / 2, cy = CENTER_Y;
         /* 這一圈的轉速：接著上一圈（上一發剛結束、carry.level ＝ level − 1）的轉速變快或變慢 5%～20%；第一圈（或中途開始）在基準附近隨機 */
         var om = nextOmega(carry && carry.level === level - 1 ? carry.om : null, level, api.rand), gap = gapFor(level), geom = ballGeom();
@@ -136,7 +143,7 @@
         var tBase = now0;
         function phiNow(tMs) { return gapAt(phi0, om, (tMs - tBase) / 1000); }
         api.info = { omega: om, base: omegaDeg(level), gap: gap, tol: tolDeg(level), tolMs: tolDeg(level) / om * 1000 };
-        console.log('[穿過旋轉縫] 第 ' + level + ' 發：轉速 ' + om.toFixed(4) + ' 度/秒（基準 ' + omegaDeg(level).toFixed(4) + '，上一圈 ' + (carry && carry.level === level - 1 ? carry.om.toFixed(4) : '—') + '），缺口 ' + gap.toFixed(4) + ' 度，容許 ±' + tolDeg(level).toFixed(4) + ' 度（±' + (tolDeg(level) / om * 1000).toFixed(1) + ' ms）');
+        console.log('[穿過旋轉縫] 第 ' + level + ' 發：轉速 ' + om.toFixed(4) + ' 度/秒（基準 ' + omegaDeg(level).toFixed(4) + '，上一圈 ' + (carry && carry.level === level - 1 ? carry.om.toFixed(4) : '—') + '），缺口 ' + gap.toFixed(4) + ' 度，容許 ±' + tolDeg(level).toFixed(4) + ' 度（±' + (tolDeg(level) / om * 1000).toFixed(1) + ' ms）');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var svg = kit.svg('svg', { 'class': 'spingap-svg', viewBox: '0 0 ' + W + ' 640', width: W, height: 640 }, stage);
         var C = 2 * Math.PI * RING_R;
@@ -193,10 +200,11 @@
             });
         }
         kit.onTap(stage, function () { fire(); });
-        if (level === 1 && kit.once('spingap.hint')) kit.hintOn(stage, cannon, { mode: 'tap', delay: 500, text: '請點擊畫面發射砲彈' });
+        if (level === 1 && kit.once('spingap.hint')) kit.hintOn(stage, cannon, { mode: 'tap', delay: 500, text: '請點擊畫面發射砲彈' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
         /* 驗證用：api.solve 在「剛好」的時間發射、api.wrong 在缺口在下方時發射 */
         var scheduled = false;
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () {
             if (scheduled || state !== 'ready') return; scheduled = true;
             var d = perfectDelay(phiNow(performance.now()), om);
@@ -209,16 +217,19 @@
         };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '穿過旋轉縫',
         rule: '圓環一直在旋轉，環上有一個缺口。點一下螢幕，環裡的砲台會射出砲彈，飛 0.6 秒後抵達環的上緣，**那一刻缺口要剛好轉到上方**，砲彈才能穿出去。**撞到環就結束**，看你能射出幾顆。**每一圈的轉速都不一樣**（比上一圈快或慢 5%～20%），別想靠節奏！越後面，整體轉得越快、缺口越小！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             omegaDeg: omegaDeg, nextOmega: nextOmega, gapFor: gapFor, norm180: norm180, gapAt: gapAt, ballHalfDeg: ballHalfDeg, tolDeg: tolDeg, tolMs: tolMs, judgeShot: judgeShot, perfectDelay: perfectDelay, ballGeom: ballGeom, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, SPEED_STEP: SPEED_STEP, SPEED_BAND: SPEED_BAND, OMEGA_REV: OMEGA_REV, GAP_DEG: GAP_DEG, FLIGHT_S: FLIGHT_S, RING_R: RING_R, BALL_R: BALL_R, TOP_DEG: TOP_DEG, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

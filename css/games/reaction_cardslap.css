@@ -6,157 +6,173 @@
 
 /* ═══ 心臟病（.cardslap-）═══ */
 .cardslap-stage {
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「cardslap-field」這個元素的樣式 */
 .cardslap-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
 }
 
+/* 「cardslap-tip」這個元素的樣式 */
 .cardslap-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 前 3 張才顯示的「數到：X」 */
 .cardslap-count {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 56px;
-    height: 70px;
-    color: var(--c-ink);
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-black);
-    line-height: 70px;
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 56px;                                          /* 離上邊 56px */
+    height: 70px;                                       /* 高度：70px */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 70px;                                  /* 行高：70px（文字每一行佔的高度） */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 綠色牌桌 */
 .cardslap-table {
-    position: absolute;
-    left: 24px;
-    right: 24px;
-    top: 136px;
-    bottom: 120px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--csl-felt);
-    border: 4px solid var(--csl-felt-edge);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-card);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 24px;                                         /* 離左邊 24px */
+    right: 24px;                                        /* 離右邊 24px */
+    top: 136px;                                         /* 離上邊 136px */
+    bottom: 120px;                                      /* 離下邊 120px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    background: var(--csl-felt);                        /* 背景：主題變數 --csl-felt */
+    border: 4px solid var(--csl-felt-edge);             /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --csl-felt-edge */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
 }
 
+/* 「cardslap-card」這個元素的樣式 */
 .cardslap-card {
-    position: relative;
-    width: 200px;
-    height: 280px;
-    background: var(--c-card);
-    border: 3px solid var(--c-ink-soft);
-    border-radius: var(--r-md);
-    box-shadow: var(--shadow-pop);
-    transition: transform 0.1s;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    width: 200px;                                       /* 寬度：200px */
+    height: 280px;                                      /* 高度：280px */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    box-shadow: var(--shadow-pop);                      /* 方塊陰影（立體感） */
+    transition: transform 0.1s;                         /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.1s */
 }
 
+/* 「cardslap-card」的「back」變化版的樣式 */
 .cardslap-card--back {
-    background: var(--csl-back);
-    border-color: var(--c-card);
+    background: var(--csl-back);                        /* 背景：主題變數 --csl-back */
+    border-color: var(--c-card);                        /* 邊框顏色：主題變數 --c-card */
 }
 
+/* 「cardslap-card」的「flip」變化版的樣式 */
 .cardslap-card--flip {
-    animation: cardslap-flip 0.22s ease-out;
+    animation: cardslap-flip 0.22s ease-out;            /* 播放動畫（名稱、時間、緩動、次數）：cardslap-flip 0.22s ease-out */
 }
 
+/* 動畫 cardslap-flip：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes cardslap-flip {
     from {
-        transform: rotateY(90deg) scale(0.9);
+        transform: rotateY(90deg) scale(0.9);           /* 變形：rotateY(90deg) 縮放 0.9 倍 */
     }
 
     to {
-        transform: rotateY(0deg) scale(1);
+        transform: rotateY(0deg) scale(1);              /* 變形：rotateY(0deg) 縮放 1 倍 */
     }
 }
 
+/* 「cardslap-card」的「red」變化版的樣式 */
 .cardslap-card--red {
-    color: var(--c-bad-light);
+    color: var(--c-bad-light);                          /* 文字顏色：主題變數 --c-bad-light */
 }
 
+/* 「cardslap-card」的「black」變化版的樣式 */
 .cardslap-card--black {
-    color: var(--c-ink);
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「cardslap-card」裡面的「r」部分的樣式 */
 .cardslap-card__r {
-    position: absolute;
-    left: 14px;
-    top: 8px;
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-black);
-    line-height: 1.1;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 14px;                                         /* 離左邊 14px */
+    top: 8px;                                           /* 離上邊 8px */
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1.1;                                   /* 行高：1.1（文字每一行佔的高度） */
 }
 
+/* 「cardslap-card__r」的「b」變化版的樣式 */
 .cardslap-card__r--b {
-    left: auto;
-    right: 14px;
-    top: auto;
-    bottom: 8px;
-    transform: rotate(180deg);
+    left: auto;                                         /* 離左邊 auto */
+    right: 14px;                                        /* 離右邊 14px */
+    top: auto;                                          /* 離上邊 auto */
+    bottom: 8px;                                        /* 離下邊 8px */
+    transform: rotate(180deg);                          /* 變形：旋轉 180deg */
 }
 
+/* 「cardslap-card」裡面的「big」部分的樣式 */
 .cardslap-card__big {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 50%;
-    margin-top: -48px;
-    display: flex;
-    justify-content: center;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 50%;                                           /* 離上邊 50% */
+    margin-top: -48px;                                  /* 上外距（跟上面的元素距離）：-48px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
 }
 
+/* 「cardslap-suit」這個元素的樣式 */
 .cardslap-suit {
-    display: block;
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
+/* 「path」標籤的樣式 */
 .cardslap-suit path {
-    fill: currentColor;
+    fill: currentColor;                                 /* SVG 圖形的填色：currentColor */
 }
 
 /* 拍下去：拍對（綠框、牌縮一下）、拍錯（紅框）、漏拍（橘框） */
 .cardslap-card--ok {
-    border-color: var(--c-ok);
-    box-shadow: 0 0 0 6px var(--c-ok-light);
-    transform: scale(0.94);
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
+    box-shadow: 0 0 0 6px var(--c-ok-light);            /* 方塊陰影（立體感） */
+    transform: scale(0.94);                             /* 變形：縮放 0.94 倍 */
 }
 
+/* 「cardslap-card」在「錯誤（失敗）時」的樣子的樣式 */
 .cardslap-card--bad {
-    border-color: var(--c-bad-light);
-    box-shadow: 0 0 0 6px var(--c-bad-soft);
+    border-color: var(--c-bad-light);                   /* 邊框顏色：主題變數 --c-bad-light */
+    box-shadow: 0 0 0 6px var(--c-bad-soft);            /* 方塊陰影（立體感） */
 }
 
+/* 「cardslap-card」的「miss」變化版的樣式 */
 .cardslap-card--miss {
-    border-color: var(--c-orange);
-    box-shadow: 0 0 0 6px var(--c-orange-soft);
+    border-color: var(--c-orange);                      /* 邊框顏色：主題變數 --c-orange */
+    box-shadow: 0 0 0 6px var(--c-orange-soft);         /* 方塊陰影（立體感） */
 }
 
+/* 「cardslap-info」這個元素的樣式 */
 .cardslap-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 24px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 24px;                                       /* 離下邊 24px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }

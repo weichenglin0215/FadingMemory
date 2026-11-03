@@ -6,69 +6,76 @@
 
 /* ═══ 畫眉毛（.eyebrow-）═══ */
 .eyebrow-stage {
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「eyebrow-field」這個元素的樣式 */
 .eyebrow-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
-    touch-action: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
+/* 「eyebrow-tip」這個元素的樣式 */
 .eyebrow-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
-    z-index: 2;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 2;                                         /* 疊放順序：數字越大越在上面（2） */
 }
 
+/* 「eyebrow-svg」這個元素的樣式 */
 .eyebrow-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
-    display: block;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
 /* 素描風的臉 */
 .eyebrow-head {
-    fill: var(--ebw-skin);
-    stroke: var(--ebw-line);
-    stroke-width: 3;
+    fill: var(--ebw-skin);                              /* SVG 圖形的填色：主題變數 --ebw-skin */
+    stroke: var(--ebw-line);                            /* SVG 線條顏色：主題變數 --ebw-line */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「eyebrow-ear」這個元素的樣式 */
 .eyebrow-ear {
-    fill: var(--ebw-skin);
-    stroke: var(--ebw-line);
-    stroke-width: 3;
+    fill: var(--ebw-skin);                              /* SVG 圖形的填色：主題變數 --ebw-skin */
+    stroke: var(--ebw-line);                            /* SVG 線條顏色：主題變數 --ebw-line */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「eyebrow-eye」這個元素的樣式 */
 .eyebrow-eye {
-    fill: var(--ebw-eyewhite);
-    stroke: var(--ebw-line);
-    stroke-width: 3;
+    fill: var(--ebw-eyewhite);                          /* SVG 圖形的填色：主題變數 --ebw-eyewhite */
+    stroke: var(--ebw-line);                            /* SVG 線條顏色：主題變數 --ebw-line */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「eyebrow-pupil」這個元素的樣式 */
 .eyebrow-pupil {
-    fill: var(--ebw-line);
+    fill: var(--ebw-line);                              /* SVG 圖形的填色：主題變數 --ebw-line */
 }
 
+/* 「eyebrow-nose」這個元素；「eyebrow-mouth」這個元素的樣式 */
 .eyebrow-nose,
 .eyebrow-mouth {
-    fill: none;
-    stroke: var(--ebw-line);
-    stroke-width: 3;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--ebw-line);                            /* SVG 線條顏色：主題變數 --ebw-line */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
 /* 左邊已經畫好的眉毛、你畫的眉毛（咖啡色眉筆）、翻過去的左眉（淡紅色） */
@@ -78,77 +85,87 @@
     transition-timing-function: ease-in-out;
 }
 
+/* 「eyebrow-axis」這個元素的樣式 */
 .eyebrow-axis {
-    stroke: var(--ebw-line);
-    stroke-width: 2;
-    stroke-dasharray: 8 8;
-    opacity: 0;
-    transition: opacity 0.6s ease-in-out;
+    stroke: var(--ebw-line);                            /* SVG 線條顏色：主題變數 --ebw-line */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
+    stroke-dasharray: 8 8;                              /* SVG 虛線的「畫／空」長度：8 8 */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    transition: opacity 0.6s ease-in-out;               /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.6s ease-in-out */
 }
 
+/* 「eyebrow-axis」在「開啟（亮起）時」的樣子的樣式 */
 .eyebrow-axis--on {
-    opacity: 0.45;
+    opacity: 0.45;                                      /* 透明度 0.45（1＝完全不透明、0＝全透明） */
 }
 
+/* 「eyebrow-ref」這個元素的樣式 */
 .eyebrow-ref {
-    fill: none;
-    stroke: var(--ebw-brow);
-    stroke-width: 9;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--ebw-brow);                            /* SVG 線條顏色：主題變數 --ebw-brow */
+    stroke-width: 9;                                    /* SVG 線條粗細：9 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「eyebrow-mine」這個元素的樣式 */
 .eyebrow-mine {
-    fill: none;
-    stroke: var(--ebw-brow);
-    stroke-width: 8;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--ebw-brow);                            /* SVG 線條顏色：主題變數 --ebw-brow */
+    stroke-width: 8;                                    /* SVG 線條粗細：8 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
 /* V1.40.0 鬍子：線條比眉毛粗一點（左邊那撇、你畫的、紅色的正確答案） */
 .eyebrow-ref--stache {
-    stroke-width: 11;
+    stroke-width: 11;                                   /* SVG 線條粗細：11 */
 }
 
+/* 「eyebrow-mine」的「stache」變化版的樣式 */
 .eyebrow-mine--stache {
-    stroke-width: 10;
+    stroke-width: 10;                                   /* SVG 線條粗細：10 */
 }
 
+/* 「eyebrow-ghost」的「stache」變化版的樣式 */
 .eyebrow-ghost--stache {
-    stroke-width: 12;
+    stroke-width: 12;                                   /* SVG 線條粗細：12 */
 }
 
 /* 紅色的正確眉毛：臉轉正之後才淡入（V1.38.0；淡入時間 0.6 秒要跟 JS 的 GHOST_MS 一樣） */
 .eyebrow-ghost {
-    fill: none;
-    stroke: var(--ebw-ghost);
-    stroke-width: 10;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    opacity: 0;
-    transition: opacity 0.6s ease-in;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--ebw-ghost);                           /* SVG 線條顏色：主題變數 --ebw-ghost */
+    stroke-width: 10;                                   /* SVG 線條粗細：10 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    transition: opacity 0.6s ease-in;                   /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.6s ease-in */
 }
 
+/* 「eyebrow-ghost」在「開啟（亮起）時」的樣子的樣式 */
 .eyebrow-ghost--on {
-    opacity: 0.8;
+    opacity: 0.8;                                       /* 透明度 0.8（1＝完全不透明、0＝全透明） */
 }
 
+/* 「eyebrow-info」這個元素的樣式 */
 .eyebrow-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「eyebrow-info」在「正確（成功）時」的樣子的樣式 */
 .eyebrow-info--ok {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「eyebrow-info」在「錯誤（失敗）時」的樣子的樣式 */
 .eyebrow-info--bad {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }

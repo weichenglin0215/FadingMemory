@@ -26,11 +26,15 @@
    第 6 關起出現三角形（5% → 25%）。方塊寬度＝畫面寬的 1/6～1/2，高度固定 BLOCK_H。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'stackup'：選單、成績、存檔都靠它；樣式在 css/games/reaction_stackup.css，裡面的 class 名稱一律以 stackup- 開頭。 */
     'use strict';
 
-    var ID = 'stackup';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 塊', label: '疊了幾塊', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'stackup';                                 /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 塊', label: '疊了幾塊', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var MAX_LEVEL = 90;                 /* 疊滿幾塊算全破 */
@@ -141,7 +145,7 @@
     }
     /* 出一塊：形狀（依關卡機率）、寬度（畫面寬的 1/6～1/2）、顏色 */
     function makeBlock(level, W, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var pT = level >= TRAP_FROM ? kit.ramp(level - TRAP_FROM + 1, TRAP_P[0], TRAP_P[1], TRAP_RAMP) : 0;
         var pR = level >= TRI_FROM ? kit.ramp(level - TRI_FROM + 1, TRI_P[0], TRI_P[1], TRI_RAMP) : 0;
         var r = rand(), kind = r < pR ? 'tri' : (r < pR + pT ? 'trap' : 'rect');
@@ -161,6 +165,7 @@
         var v = (t - TIP_SPLIT) / (1 - TIP_SPLIT);
         return { angle: TIP_ANGLE + 38 * v * v, dy: TIP_DROP * v * v };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 30) return '重心大師！';
         if (n >= 18) return '疊得真穩！';
@@ -174,6 +179,7 @@
         ceiling: '塔頂碰到天花板了！'
     };
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 8, resume: false,
@@ -189,15 +195,17 @@
     /* 目前疊好的塔（跨關保留；第 1 關開始時清空） */
     var tower = [];
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         if (level === 1) tower = [];
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var ZH = Math.max(200, H - PREVIEW_H - BAR_H - 84 - 36);        /* 疊塔區高度：扣掉預覽、橫桿、按鈕與間距 */
         var block = makeBlock(level, W, api.rand);
         api.info = { block: block, towerSize: tower.length, W: W, ZH: ZH };
         var x0 = Math.round((W - block.w) / 2);
-        console.log('[重心疊疊樂] 第 ' + level + ' 塊：' + ({ rect: '長方形', trap: '梯形', tri: '三角形' })[block.kind] + '，寬 ' + block.w + 'px；塔上已有 ' + tower.length + ' 塊');
+        console.log('[重心疊疊樂] 第 ' + level + ' 塊：' + ({ rect: '長方形', trap: '梯形', tri: '三角形' })[block.kind] + '，寬 ' + block.w + 'px；塔上已有 ' + tower.length + ' 塊');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         /* 世界座標（地板往上）→ SVG 座標（上方往下） */
         var SVG_H = PREVIEW_H + ZH;
@@ -326,12 +334,14 @@
         };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '重心疊疊樂',
         rule: '上方有一個方塊，拖曳下方的橫桿決定它落下的左右位置，按「放下」就會掉下去。**方塊要平穩地擺在地板或別的方塊上**：**重心超出底下的支撐會傾倒**、落在斜面或尖端會滑掉、疊太高碰到天花板也不行。越後面越常出現梯形和三角形。看你能疊幾塊！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             areaOf: areaOf, topAt: topAt, levelSet: levelSet, restLevel: restLevel, contactsAt: contactsAt, checkTower: checkTower,
             tipPose: tipPose, TIP_MS: TIP_MS, TIP_SPLIT: TIP_SPLIT, TIP_ANGLE: TIP_ANGLE, evaluateDrop: evaluateDrop, makeBlock: makeBlock, stableSpots: stableSpots, BLOCK_H: BLOCK_H, EPS: EPS, MIN_CONTACT: MIN_CONTACT,
@@ -339,5 +349,6 @@
             getTower: function () { return tower; }, setTower: function (t) { tower = t; }
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

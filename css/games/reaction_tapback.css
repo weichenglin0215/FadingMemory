@@ -6,44 +6,49 @@
 
 /* ═══ 倒著點（.tapback-）═══ */
 .tapback-tip {
-    top: 6px;
+    top: 6px;                                           /* 離上邊 6px */
 }
 
+/* 「tapback-ring」這個元素的樣式 */
 .tapback-ring {
-    position: absolute;
-    border-radius: 50%;
-    border: 5px dashed var(--c-ink-soft);
-    background: var(--c-card-alt);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    box-sizing: border-box;
-    cursor: pointer;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    border: 5px dashed var(--c-ink-soft);               /* 邊框（粗細、線型、顏色）：5px dashed 主題變數 --c-ink-soft */
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
 }
 
+/* 「tapback-ring」在「開啟（亮起）時」的樣子的樣式 */
 .tapback-ring--on {
-    border-style: solid;
-    border-color: var(--c-orange);
-    background: var(--c-yellow);
-    box-shadow: 0 0 30px 6px var(--c-yellow-soft);
+    border-style: solid;                                /* 邊框線型：solid */
+    border-color: var(--c-orange);                      /* 邊框顏色：主題變數 --c-orange */
+    background: var(--c-yellow);                        /* 背景：主題變數 --c-yellow */
+    box-shadow: 0 0 30px 6px var(--c-yellow-soft);      /* 方塊陰影（立體感） */
 }
 
+/* 「tapback-ring」在「正確（成功）時」的樣子的樣式 */
 .tapback-ring--ok {
-    border-style: solid;
-    border-color: var(--c-ok);
-    background: var(--c-ok-soft);
+    border-style: solid;                                /* 邊框線型：solid */
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
+    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
 }
 
+/* 「tapback-ring」在「錯誤時」的樣子的樣式 */
 .tapback-ring--wrong {
-    border-style: solid;
-    border-color: var(--c-bad);
-    background: var(--c-bad-soft);
+    border-style: solid;                                /* 邊框線型：solid */
+    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
 }
 
+/* 「tapback-ring」的「num」變化版的樣式 */
 .tapback-ring--num {
-    border-style: solid;
-    border-color: var(--c-blue);
+    border-style: solid;                                /* 邊框線型：solid */
+    border-color: var(--c-blue);                        /* 邊框顏色：主題變數 --c-blue */
 }

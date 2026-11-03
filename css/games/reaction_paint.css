@@ -8,193 +8,194 @@
 /* ═══ 刷油漆（.paint-）═══ */
 /* 上方資訊文字 */
 .paint-info {
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: 700;
-    color: var(--c-ink);
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: 700;                                   /* 字重（粗細）700（400 一般、700 粗體） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
 /* 這一關的沾油漆次數快到上限了（剩 DIP_WARN 次以內）：字變成警示色 */
 .paint-info--low {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
 /* 場地 */
 .paint-field {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--c-card-alt);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    touch-action: none;
-    user-select: none;
-    overflow: hidden;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* 要蓋塗鴉的方塊（底色由 JS 依這一局的顏色設定；這裡的白色只是還沒設定時的預設）；pointer-events:none 讓手指事件穿過它交給外層處理 */
 .paint-square {
-    position: relative;
-    flex: none;
-    background: #FFFFFF;
-    outline: 3px solid var(--c-ink);
-    pointer-events: none;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: none;                                         /* 彈性縮放：none */
+    background: #FFFFFF;                                /* 背景：#FFFFFF */
+    outline: 3px solid var(--c-ink);                    /* 外框線：3px solid 主題變數 --c-ink */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 畫布 (canvas)：用 JS 在上面畫點陣圖 */
 .paint-canvas {
-    display: block;
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
 /* 標記層（出界的地方會標記） */
 .paint-marks {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 單個出界標記：animation ... infinite alternate 讓它一直來回脈動 */
 .paint-mark {
-    position: absolute;
-    width: 34px;
-    height: 34px;
-    margin: -17px 0 0 -17px;
-    border: 4px solid #E0342A;
-    border-radius: 50%;
-    background: rgba(224, 52, 42, 0.18);
-    animation: paint-pulse 0.7s ease-in-out infinite alternate;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 34px;                                        /* 寬度：34px */
+    height: 34px;                                       /* 高度：34px */
+    margin: -17px 0 0 -17px;                            /* 外距（margin，與別的元素的距離）：上 -17px、右 0、下 0、左 -17px */
+    border: 4px solid #E0342A;                          /* 邊框（粗細、線型、顏色）：4px solid #E0342A */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    background: rgba(224, 52, 42, 0.18);                /* 背景：rgba(224, 52, 42, 0.18) */
+    animation: paint-pulse 0.7s ease-in-out infinite alternate;  /* 播放動畫（名稱、時間、緩動、次數）：paint-pulse 0.7s ease-in-out infinite alternate */
 }
 
 /* 脈動動畫：縮小淡出 → 放大完全不透明 */
 @keyframes paint-pulse {
     from {
-        transform: scale(0.7);
-        opacity: 0.6;
+        transform: scale(0.7);                          /* 變形：縮放 0.7 倍 */
+        opacity: 0.6;                                   /* 透明度 0.6（1＝完全不透明、0＝全透明） */
     }
 
     to {
-        transform: scale(1.25);
-        opacity: 1;
+        transform: scale(1.25);                         /* 變形：縮放 1.25 倍 */
+        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
     }
 }
 
 /* 警告層：全蓋住畫面，一開始透明，需要時加 --on */
 .paint-warn {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    white-space: pre-line;
-    font-size: var(--fs-lg);
-    font-weight: 800;
-    line-height: 1.35;
-    color: #FFFFFF;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
-    background: rgba(40, 32, 20, 0.5);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    text-align: center;                                 /* 文字置中 */
+    white-space: pre-line;                              /* 保留換行字元、其餘空白合併 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: 800;                                   /* 字重（粗細）800（400 一般、700 粗體） */
+    line-height: 1.35;                                  /* 行高：1.35（文字每一行佔的高度） */
+    color: #FFFFFF;                                     /* 文字顏色：#FFFFFF */
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);          /* 文字陰影 */
+    background: rgba(40, 32, 20, 0.5);                  /* 背景：rgba(40, 32, 20, 0.5) */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    transition: opacity 0.2s ease;                      /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.2s ease */
 }
 
 /* 顯示警告 */
 .paint-warn--on {
-    opacity: 1;
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }
 
 /* 成功時警告層變綠 */
 .paint-warn--ok {
-    background: rgba(63, 164, 106, 0.55);
+    background: rgba(63, 164, 106, 0.55);               /* 背景：rgba(63, 164, 106, 0.55) */
 }
 
 /* 下方操作區 */
 .paint-zone {
-    flex: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--sp-2);
+    flex: none;                                         /* 彈性縮放：none */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
 }
 
 /* 油漆量的長條（底） */
 .paint-gauge {
-    width: 100%;
-    height: 14px;
-    border-radius: 7px;
-    background: var(--c-yellow-soft);
-    overflow: hidden;
+    width: 100%;                                        /* 寬度：100% */
+    height: 14px;                                       /* 高度：14px */
+    border-radius: 7px;                                 /* 圓角：7px */
+    background: var(--c-yellow-soft);                   /* 背景：主題變數 --c-yellow-soft */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* 油漆量的長條（目前剩餘） */
 .paint-gauge__fill {
-    height: 100%;
-    width: 0;
-    background: var(--c-orange);
-    transition: width 0.08s linear;
+    height: 100%;                                       /* 高度：100% */
+    width: 0;                                           /* 寬度：0 */
+    background: var(--c-orange);                        /* 背景：主題變數 --c-orange */
+    transition: width 0.08s linear;                     /* 狀態改變時的過渡動畫（屬性、時間、緩動）：width 0.08s linear */
 }
 
 /* 畫筆外框：圓形貼著下緣擺（油漆刷提示會往上長出來，上方要留空間）；
    高度 122px ＝ 下方操作區（264px）扣掉油漆量長條、提示文字、最下面的按鈕和間距 */
 .paint-brushwrap {
-    height: 122px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
+    height: 122px;                                      /* 高度：122px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: flex-end;                              /* 子元素靠交叉方向的終點（橫排時靠下） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
 }
 
 /* 畫筆的點擊區：大小由 JS 設定成「筆刷直徑，但至少 56px」（筆刷縮得很小時還是好點到），
    圓形畫筆與油漆刷提示都定位在這個框裡面 */
 .paint-brushbox {
-    position: relative;
-    flex: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: none;                                         /* 彈性縮放：none */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
 }
 
 /* 畫筆（圓形按鈕）：裡面填這一局的底色（淡色），外框固定用深色，才看得出圓形 */
 .paint-brush {
-    flex: none;
-    padding: 0;
-    border: 5px solid var(--c-ink);
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.18);
+    flex: none;                                         /* 彈性縮放：none */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
+    border: 5px solid var(--c-ink);                     /* 邊框（粗細、線型、顏色）：5px solid 主題變數 --c-ink */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.18);            /* 方塊陰影（立體感） */
 }
 
 /* 沒有油漆時虛線外框 */
 .paint-brush--empty {
-    border-style: dashed;
-    box-shadow: none;
+    border-style: dashed;                               /* 邊框線型：dashed */
+    box-shadow: none;                                   /* 沒有陰影 */
 }
 
 /* 油漆刷提示：圓形變成虛線（要去沾油漆）時，在圓形右上方出現一支油漆刷，上下循環移動提醒玩家來點。
    位置、大小（高度＝圓形直徑的 200%）都由 JS 依目前筆刷大小設定；整支刷往右傾一點，筆尖壓在圓形上。
    pointer-events: none：手指點到它等於點到下面的圓形（點擊區是 .paint-brushbox，事件會冒泡上去） */
 .paint-pointer {
-    position: absolute;
-    display: none;
-    transform-origin: 50% 100%;
-    transform: rotate(20deg);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    display: none;                                      /* 不顯示（也不佔位置） */
+    transform-origin: 50% 100%;                         /* 變形的基準點：50% 100% */
+    transform: rotate(20deg);                           /* 變形：旋轉 20deg */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「paint-pointer」在「開啟（亮起）時」的樣子的樣式 */
 .paint-pointer--on {
-    display: block;
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
 /* 油漆刷圖：沿著刷子的軸往筆尖方向「點」下去再彈回來（跟著旋轉後的座標，所以是順著刷子動） */
 .paint-pointer__svg {
-    display: block;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-    animation: paint-tap 0.9s ease-in-out infinite;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
+    animation: paint-tap 0.9s ease-in-out infinite;     /* 播放動畫（名稱、時間、緩動、次數）：paint-tap 0.9s ease-in-out infinite */
 }
 
 /* 往下點、再回到原位（最高的位置就是靜止位置，不會往上超出去） */
@@ -202,55 +203,58 @@
 
     0%,
     100% {
-        transform: translateY(0);
+        transform: translateY(0);                       /* 變形：垂直移動 0 */
     }
 
     50% {
-        transform: translateY(14%);
+        transform: translateY(14%);                     /* 變形：垂直移動 14% */
     }
 }
 
 /* 油漆刷各部分的顏色：木柄、金屬環、刷毛（刷毛顏色是這一局的油漆色，由 JS 設定） */
 .paint-pt-handle {
-    fill: var(--c-yellow);
-    stroke: var(--c-ink);
-    stroke-width: 3;
-    vector-effect: non-scaling-stroke;
+    fill: var(--c-yellow);                              /* SVG 圖形的填色：主題變數 --c-yellow */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    vector-effect: non-scaling-stroke;                  /* SVG 線條粗細不隨縮放改變 */
 }
 
+/* 「paint-pt-ferrule」這個元素的樣式 */
 .paint-pt-ferrule {
-    fill: var(--c-ink-soft);
-    stroke: var(--c-ink);
-    stroke-width: 3;
-    vector-effect: non-scaling-stroke;
+    fill: var(--c-ink-soft);                            /* SVG 圖形的填色：主題變數 --c-ink-soft */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    vector-effect: non-scaling-stroke;                  /* SVG 線條粗細不隨縮放改變 */
 }
 
+/* 「paint-pt-bristle」這個元素的樣式 */
 .paint-pt-bristle {
-    stroke: var(--c-ink);
-    stroke-width: 3;
-    stroke-linejoin: round;
-    vector-effect: non-scaling-stroke;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+    vector-effect: non-scaling-stroke;                  /* SVG 線條粗細不隨縮放改變 */
 }
 
 /* 畫筆上的文字（圓形下方，最下面的按鈕上方） */
 .paint-brushlabel {
-    font-size: var(--fs-md);
-    font-weight: 700;
-    color: var(--c-ink-soft);
-    min-height: 1.4em;
-    text-align: center;
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: 700;                                   /* 字重（粗細）700（400 一般、700 粗體） */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    min-height: 1.4em;                                  /* 最小高度：1.4em */
+    text-align: center;                                 /* 文字置中 */
 }
 
 /* 最下面的「消耗三次沾漆，顯示未完成區域」按鈕：字比一般按鈕小一點才放得進一行（15 個字） */
 .paint-hintbtn {
-    flex: none;
-    height: 60px;
-    font-size: var(--fs-sm);
+    flex: none;                                         /* 彈性縮放：none */
+    height: 60px;                                       /* 高度：60px */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
 }
 
 /* 系統設定「減少動態效果」時，油漆刷不要動 */
 @media (prefers-reduced-motion: reduce) {
+    /* 「paint-pointer」裡面的「svg」部分的樣式 */
     .paint-pointer__svg {
-        animation: none;
+        animation: none;                                /* 播放動畫（名稱、時間、緩動、次數）：none */
     }
 }

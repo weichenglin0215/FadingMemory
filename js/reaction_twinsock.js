@@ -13,11 +13,15 @@
    · 轉動用 CSS 動畫（animation），不靠 JS 每影格更新，所以很順、也不會因為分頁暫停而亂掉。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'twinsock'：選單、成績、存檔都靠它；樣式在 css/games/reaction_twinsock.css，裡面的 class 名稱一律以 twinsock- 開頭。 */
     'use strict';
 
-    var ID = 'twinsock';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'twinsock';                                /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -51,7 +55,7 @@
     }
     /* 出題：回傳 { cols, rows, socks:[{hue,stripes,dots, spin（度／秒，含方向）, delay（秒，負數＝一開始轉到哪）}], twin（雙胞胎的格子編號，1 起）, target } ；socks[0] 是目標 */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var sz = sizeAt(level), n = sz[0] * sz[1];
         var target = { hue: kit.randFloat(0, 360, rand), stripes: kit.randInt(0, MAX_COUNT, rand), dots: kit.randInt(0, MAX_COUNT, rand) };
         var twin = kit.randInt(1, n - 1, rand), socks = [];
@@ -78,6 +82,7 @@
         var outline = '<rect x="30" y="6" width="40" height="84" rx="8" fill="none" stroke="#4A3B1E" stroke-width="3"/><rect x="12" y="70" width="80" height="46" rx="23" fill="none" stroke="#4A3B1E" stroke-width="3"/>';
         return '<svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg"><defs>' + clip + '</defs>' + body + outline + '</svg>';
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 25) return '襪子之神！';
         if (n >= 15) return '高手！';
@@ -86,6 +91,7 @@
         return '先看清楚目標的顏色、條紋、圓點，再來找！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 6,
@@ -97,11 +103,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand);
-        api.info = q;
-        console.log('[雙胞胎襪子] 第 ' + level + ' 關：' + q.cols + '×' + q.rows + '；雙胞胎在第 ' + (q.twin + 1) + ' 格；轉速約 ' + spinAt(level).toFixed(1) + '°／秒；色相差 ' + hueDelta(level).toFixed(1) + '°、數量差 ' + countDelta(level) + '；限時 ' + timeMs(level) + ' ms；' + q.socks.map(key).join(' | '));
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[雙胞胎襪子] 第 ' + level + ' 關：' + q.cols + '×' + q.rows + '；雙胞胎在第 ' + (q.twin + 1) + ' 格；轉速約 ' + spinAt(level).toFixed(1) + '°／秒；色相差 ' + hueDelta(level).toFixed(1) + '°、數量差 ' + countDelta(level) + '；限時 ' + timeMs(level) + ' ms；' + q.socks.map(key).join(' | '));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var tip = h('div', { 'class': 'twinsock-tip', text: '找出和左上角（藍底）一樣的襪子' });
@@ -126,8 +134,9 @@
             return el;
         });
         /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「和目標一模一樣的那一隻」上（第一關的正確答案） */
-        if (level === 1 && kit.once('twinsock.hint')) kit.hintOn(stage, cells[q.twin], { mode: 'tap', delay: 400, text: '請點擊和左上角一樣的襪子' });
+        if (level === 1 && kit.once('twinsock.hint')) kit.hintOn(stage, cells[q.twin], { mode: 'tap', delay: 400, text: '請點擊和左上角一樣的襪子' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         var done = false;
+        /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(i) {
             if (done || api.over) return;
             done = true; api.stopTimer();
@@ -137,11 +146,13 @@
             if (ok) { api.pass({ gain: 1, delay: 700 }); return; }
             api.fail({ delay: 1500, lines: [i < 0 ? '時間到了' : '點到不一樣的襪子了', '只要底色、條紋數、圓點數有一個不同就不是雙胞胎'] });
         }
-        api.timer(timeMs(level), function () { judge(-1); });
+        api.timer(timeMs(level), function () { judge(-1); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.twin); };
         api.wrong = function () { judge(q.twin === 1 ? 2 : 1); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '雙胞胎襪子',
@@ -150,5 +161,6 @@
         score: SCORE,
         test: { sizeAt: sizeAt, hueDelta: hueDelta, countDelta: countDelta, spinAt: spinAt, timeMs: timeMs, variant: variant, makeLevel: makeLevel, same: same, key: key, sockSvg: sockSvg, SIZES: SIZES, MAX_COUNT: MAX_COUNT, SPIN: SPIN, HUE_DELTA: HUE_DELTA, COUNT_DELTA: COUNT_DELTA, TIME_S: TIME_S, RAMP_LEVELS: RAMP_LEVELS, MAX_LEVEL: MAX_LEVEL }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

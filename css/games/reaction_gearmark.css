@@ -6,119 +6,133 @@
 
 /* ═══ 齒輪對記號（.gearmark-）═══ */
 .gearmark-stage {
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「gearmark-svg」這個元素的樣式 */
 .gearmark-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
-    touch-action: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
+/* 「gearmark-tip」這個元素的樣式 */
 .gearmark-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 銅色齒輪：最大的（要轉的那個）顏色亮一點；手指在上面時再亮一點 */
 .gearmark-body {
-    fill: var(--grm-copper);
-    stroke: var(--grm-copper-dark);
-    stroke-width: 1.5;
-    stroke-linejoin: round;
+    fill: var(--grm-copper);                            /* SVG 圖形的填色：主題變數 --grm-copper */
+    stroke: var(--grm-copper-dark);                     /* SVG 線條顏色：主題變數 --grm-copper-dark */
+    stroke-width: 1.5;                                  /* SVG 線條粗細：1.5 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「gearmark-body」的「main」變化版的樣式 */
 .gearmark-body--main {
-    fill: var(--grm-copper-light);
+    fill: var(--grm-copper-light);                      /* SVG 圖形的填色：主題變數 --grm-copper-light */
 }
 
+/* 「gearmark-body」的「main」變化版的樣式 */
 .gearmark-turning .gearmark-body--main {
-    filter: brightness(1.12);
+    filter: brightness(1.12);                           /* 濾鏡效果：brightness(1.12) */
 }
 
+/* 「gearmark-ring」這個元素的樣式 */
 .gearmark-ring {
-    fill: none;
-    stroke: var(--grm-copper-dark);
-    stroke-width: 2;
-    opacity: 0.55;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--grm-copper-dark);                     /* SVG 線條顏色：主題變數 --grm-copper-dark */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
+    opacity: 0.55;                                      /* 透明度 0.55（1＝完全不透明、0＝全透明） */
 }
 
 /* 紅針（像錶針）；放手後依對準與否換顏色 */
 .gearmark-needle {
-    fill: var(--c-bad-light);
-    stroke: var(--c-ink);
-    stroke-width: 1;
-    stroke-linejoin: round;
+    fill: var(--c-bad-light);                           /* SVG 圖形的填色：主題變數 --c-bad-light */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 1;                                    /* SVG 線條粗細：1 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「gearmark-needle」在「正確（成功）時」的樣子的樣式 */
 .gearmark-needle--ok {
-    fill: var(--c-ok);
+    fill: var(--c-ok);                                  /* SVG 圖形的填色：主題變數 --c-ok */
 }
 
+/* 「gearmark-needle」在「錯誤（失敗）時」的樣子的樣式 */
 .gearmark-needle--bad {
-    fill: var(--c-bad-light);
+    fill: var(--c-bad-light);                           /* SVG 圖形的填色：主題變數 --c-bad-light */
 }
 
+/* 「gearmark-hub」這個元素的樣式 */
 .gearmark-hub {
-    fill: var(--c-card);
-    stroke: var(--c-ink);
-    stroke-width: 2;
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
 }
 
 /* 齒輪頂端外面固定的小三角形：紅針要指到這裡 */
 .gearmark-tick {
-    fill: var(--c-ink-soft);
+    fill: var(--c-ink-soft);                            /* SVG 圖形的填色：主題變數 --c-ink-soft */
 }
 
+/* 「gearmark-hint」這個元素；「gearmark-list」這個元素的樣式 */
 .gearmark-hint,
 .gearmark-list {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「gearmark-hint」這個元素的樣式 */
 .gearmark-hint {
-    font-weight: var(--fw-bold);
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
 }
 
+/* 「gearmark-row」這個元素的樣式 */
 .gearmark-row {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    line-height: 1.3;
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: 1.3;                                   /* 行高：1.3（文字每一行佔的高度） */
 }
 
+/* 「gearmark-row」在「正確（成功）時」的樣子的樣式 */
 .gearmark-row--ok {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「gearmark-row」在「錯誤（失敗）時」的樣子的樣式 */
 .gearmark-row--bad {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
 /* 全部對準：齒輪一起閃光 */
 .gearmark-flash .gearmark-body {
-    animation: gearmark-flash 0.5s ease-in-out 3;
+    animation: gearmark-flash 0.5s ease-in-out 3;       /* 播放動畫（名稱、時間、緩動、次數）：gearmark-flash 0.5s ease-in-out 3 */
 }
 
+/* 動畫 gearmark-flash：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes gearmark-flash {
 
     0%,
     100% {
-        filter: brightness(1);
+        filter: brightness(1);                          /* 濾鏡效果：brightness(1) */
     }
 
     50% {
-        filter: brightness(1.45);
+        filter: brightness(1.45);                       /* 濾鏡效果：brightness(1.45) */
     }
 }

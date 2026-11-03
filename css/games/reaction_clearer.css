@@ -6,62 +6,68 @@
 
 /* ═══ 088 越看越清楚（.clearer-）═══ */
 .clearer-note {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    line-height: var(--lh-body);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
 }
 
+/* 「clearer-glyph」這個元素的樣式 */
 .clearer-glyph {
-    position: absolute;
-    left: 50%;
-    top: 40px;
-    width: 480px;
-    height: 480px;
-    margin-left: -240px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-note);
-    font-size: 360px;
-    font-weight: var(--fw-bold);
-    color: var(--c-ink);
-    line-height: 1;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 50%;                                          /* 離左邊 50% */
+    top: 40px;                                          /* 離上邊 40px */
+    width: 480px;                                       /* 寬度：480px */
+    height: 480px;                                      /* 高度：480px */
+    margin-left: -240px;                                /* 左外距：-240px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    font-family: var(--font-note);                      /* 字型：主題變數 --font-note */
+    font-size: 360px;                                   /* 字級：360px */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
 }
 
+/* 「clearer-clock」這個元素的樣式 */
 .clearer-clock {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 500px;
-    text-align: center;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 500px;                                         /* 離上邊 500px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「clearer-opts」這個元素的樣式 */
 .clearer-opts {
-    gap: var(--sp-2);
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
 }
 
+/* 「clearer-opt」這個元素的樣式 */
 .clearer-opt {
-    font-size: var(--fs-xxl);
-    padding: 0;
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
 }
 
+/* 「clearer-opt」在「正確（成功）時」的樣子的樣式 */
 .clearer-opt--ok {
-    background: var(--c-green-soft);
-    border-color: var(--c-ok);
-    color: var(--c-ok);
+    background: var(--c-green-soft);                    /* 背景：主題變數 --c-green-soft */
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「clearer-opt」在「錯誤（失敗）時」的樣子的樣式 */
 .clearer-opt--bad {
-    background: var(--c-bad-soft);
-    border-color: var(--c-bad);
-    color: var(--c-bad);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }

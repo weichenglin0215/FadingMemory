@@ -6,44 +6,51 @@
 
 /* ═══ 誰閃得快（.fastblink-）═══ */
 .fastblink-dot {
-    position: absolute;
-    border-radius: 50%;
-    border: 5px solid var(--c-ink-soft);
-    opacity: 0.55;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    border: 5px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：5px solid 主題變數 --c-ink-soft */
+    opacity: 0.55;                                      /* 透明度 0.55（1＝完全不透明、0＝全透明） */
 }
 
+/* 「fastblink-dot」的「a」變化版的樣式 */
 .fastblink-dot--a {
-    background: var(--c-yellow);
+    background: var(--c-yellow);                        /* 背景：主題變數 --c-yellow */
 }
 
+/* 「fastblink-dot」的「b」變化版的樣式 */
 .fastblink-dot--b {
-    background: var(--c-blue);
+    background: var(--c-blue);                          /* 背景：主題變數 --c-blue */
 }
 
+/* 「fastblink-dot」在「開啟（亮起）時」的樣子的樣式 */
 .fastblink-dot--on {
-    opacity: 1;
-    box-shadow: 0 0 36px 8px var(--c-yellow-soft);
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
+    box-shadow: 0 0 36px 8px var(--c-yellow-soft);      /* 方塊陰影（立體感） */
 }
 
+/* 「fastblink-dot」在「正確時」的樣子的樣式 */
 .fastblink-dot--right {
-    border-color: var(--c-ok);
-    opacity: 1;
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }
 
+/* 「fastblink-dot」在「錯誤時」的樣子的樣式 */
 .fastblink-dot--wrong {
-    border-color: var(--c-bad);
+    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
 }
 
+/* 「fastblink-hz」這個元素的樣式 */
 .fastblink-hz {
-    position: absolute;
-    width: 200px;
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    font-variant-numeric: tabular-nums;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 200px;                                       /* 寬度：200px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
 }
 
+/* 「fastblink-tip」這個元素的樣式 */
 .fastblink-tip {
-    bottom: 40px;
+    bottom: 40px;                                       /* 離下邊 40px */
 }

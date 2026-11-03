@@ -6,218 +6,233 @@
 
 /* ═══ 缺哪一張（.mahjong3-）═══ */
 .mahjong3-stage {
-    background: var(--c-green);
-    user-select: none;
-    -webkit-user-select: none;
+    background: var(--c-green);                         /* 背景：主題變數 --c-green */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
 /* 規則一直寫在上面（深色桌布上用淺色字） */
 .mahjong3-rule {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    color: var(--c-card);
-    font-weight: var(--fw-bold);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    color: var(--c-card);                               /* 文字顏色：主題變數 --c-card */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
 }
 
+/* 「mahjong3-table」這個元素的樣式 */
 .mahjong3-table {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 84px;
-    padding: 0 var(--sp-2);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--sp-2);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 84px;                                          /* 離上邊 84px */
+    padding: 0 var(--sp-2);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-2 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
 }
 
+/* 「mahjong3-strip」這個元素的樣式 */
 .mahjong3-strip {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 6px;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-wrap: wrap;                                    /* 放不下就換行 */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: 6px;                                           /* 子元素之間的空隙：6px */
 }
 
 /* 象牙色的牌：大大的國字數字＋下面一個小阿拉伯數字（點數） */
 .mahjong3-tile {
-    width: 50px;
-    height: 70px;
-    box-sizing: border-box;
-    border-radius: 8px;
-    background: var(--c-card);
-    border: 3px solid var(--c-ink-soft);
-    box-shadow: 0 3px 0 var(--c-ink-soft);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
+    width: 50px;                                        /* 寬度：50px */
+    height: 70px;                                       /* 高度：70px */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    border-radius: 8px;                                 /* 圓角：8px */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    box-shadow: 0 3px 0 var(--c-ink-soft);              /* 方塊陰影（立體感） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
 }
 
+/* 「mahjong3-num」這個元素的樣式 */
 .mahjong3-num {
-    font-size: 30px;
-    font-weight: var(--fw-bold);
-    color: var(--c-ink);
+    font-size: 30px;                                    /* 字級：30px */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「mahjong3-pip」這個元素的樣式 */
 .mahjong3-pip {
-    margin-top: 4px;
-    font-size: 15px;
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    margin-top: 4px;                                    /* 上外距（跟上面的元素距離）：4px */
+    font-size: 15px;                                    /* 字級：15px */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 剛補上去的那張 */
 .mahjong3-tile--added {
-    background: var(--c-yellow-soft);
-    border-color: var(--c-orange);
+    background: var(--c-yellow-soft);                   /* 背景：主題變數 --c-yellow-soft */
+    border-color: var(--c-orange);                      /* 邊框顏色：主題變數 --c-orange */
 }
 
 /* 分好的組：同一組用同一種顏色的外框（三種顏色輪流） */
 .mahjong3-tile--g0 {
-    border-color: var(--mj3-g0);
-    box-shadow: 0 3px 0 var(--mj3-g0);
+    border-color: var(--mj3-g0);                        /* 邊框顏色：主題變數 --mj3-g0 */
+    box-shadow: 0 3px 0 var(--mj3-g0);                  /* 方塊陰影（立體感） */
 }
 
+/* 「mahjong3-tile」的「g1」變化版的樣式 */
 .mahjong3-tile--g1 {
-    border-color: var(--mj3-g1);
-    box-shadow: 0 3px 0 var(--mj3-g1);
+    border-color: var(--mj3-g1);                        /* 邊框顏色：主題變數 --mj3-g1 */
+    box-shadow: 0 3px 0 var(--mj3-g1);                  /* 方塊陰影（立體感） */
 }
 
+/* 「mahjong3-tile」的「g2」變化版的樣式 */
 .mahjong3-tile--g2 {
-    border-color: var(--mj3-g2);
-    box-shadow: 0 3px 0 var(--mj3-g2);
+    border-color: var(--mj3-g2);                        /* 邊框顏色：主題變數 --mj3-g2 */
+    box-shadow: 0 3px 0 var(--mj3-g2);                  /* 方塊陰影（立體感） */
 }
 
 /* 湊不起來的牌：紅色 */
 .mahjong3-tile--left {
-    border-color: var(--c-bad-light);
-    box-shadow: 0 3px 0 var(--c-bad-light);
-    background: var(--c-bad-soft);
+    border-color: var(--c-bad-light);                   /* 邊框顏色：主題變數 --c-bad-light */
+    box-shadow: 0 3px 0 var(--c-bad-light);             /* 方塊陰影（立體感） */
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
 }
 
+/* 「mahjong3-cap」這個元素的樣式 */
 .mahjong3-cap {
-    margin-top: var(--sp-2);
-    color: var(--c-card);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    text-align: center;
+    margin-top: var(--sp-2);                            /* 上外距（跟上面的元素距離）：主題變數 --sp-2 */
+    color: var(--c-card);                               /* 文字顏色：主題變數 --c-card */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    text-align: center;                                 /* 文字置中 */
 }
 
+/* 「mahjong3-cap」在「正確（成功）時」的樣子的樣式 */
 .mahjong3-cap--ok {
-    color: var(--c-green-light);
+    color: var(--c-green-light);                        /* 文字顏色：主題變數 --c-green-light */
 }
 
 /* 你漏掉的答案：橘色 */
 .mahjong3-cap--miss {
-    color: var(--c-yellow);
+    color: var(--c-yellow);                             /* 文字顏色：主題變數 --c-yellow */
 }
 
+/* 「mahjong3-note」這個元素的樣式 */
 .mahjong3-note {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 300px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    color: var(--c-card);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 300px;                                         /* 離上邊 300px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    color: var(--c-card);                               /* 文字顏色：主題變數 --c-card */
 }
 
 /* 「我選好了」：選完全部答案再按；一張都沒選時按不下去 */
 .mahjong3-go {
-    position: absolute;
-    left: var(--sp-4);
-    right: var(--sp-4);
-    bottom: 118px;
-    height: 64px;
-    border-radius: var(--r-md);
-    border: 3px solid var(--c-ink);
-    background: var(--c-yellow);
-    box-shadow: 0 4px 0 var(--c-ink);
-    color: var(--c-ink);
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-    padding: 0;
-    cursor: pointer;
-    touch-action: manipulation;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: var(--sp-4);                                  /* 離左邊 主題變數 --sp-4 */
+    right: var(--sp-4);                                 /* 離右邊 主題變數 --sp-4 */
+    bottom: 118px;                                      /* 離下邊 118px */
+    height: 64px;                                       /* 高度：64px */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    border: 3px solid var(--c-ink);                     /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink */
+    background: var(--c-yellow);                        /* 背景：主題變數 --c-yellow */
+    box-shadow: 0 4px 0 var(--c-ink);                   /* 方塊陰影（立體感） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
+    touch-action: manipulation;                         /* 關掉雙擊放大，點擊反應更快 */
 }
 
+/* 「mahjong3-go」這個元素，停用時的樣式 */
 .mahjong3-go:disabled {
-    opacity: 0.45;
-    cursor: default;
+    opacity: 0.45;                                      /* 透明度 0.45（1＝完全不透明、0＝全透明） */
+    cursor: default;                                    /* 滑鼠游標樣式：default */
 }
 
 /* 下面九顆牌鍵（一～九） */
 .mahjong3-keys {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 10px;
-    padding: 0 var(--sp-2);
-    display: grid;
-    grid-template-columns: repeat(9, 1fr);
-    gap: 6px;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 10px;                                       /* 離下邊 10px */
+    padding: 0 var(--sp-2);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-2 */
+    display: grid;                                      /* 格線排版：子元素排進格子 */
+    grid-template-columns: repeat(9, 1fr);              /* 格線的欄（每欄的寬度）：repeat(9, 1fr) */
+    gap: 6px;                                           /* 子元素之間的空隙：6px */
 }
 
+/* 「mahjong3-key」這個元素的樣式 */
 .mahjong3-key {
-    height: 96px;
-    border-radius: 10px;
-    border: 3px solid var(--c-ink-soft);
-    background: var(--c-card);
-    box-shadow: 0 4px 0 var(--c-ink-soft);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 0;
-    cursor: pointer;
-    color: var(--c-ink);
-    touch-action: manipulation;
+    height: 96px;                                       /* 高度：96px */
+    border-radius: 10px;                                /* 圓角：10px */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    box-shadow: 0 4px 0 var(--c-ink-soft);              /* 方塊陰影（立體感） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: 6px;                                           /* 子元素之間的空隙：6px */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    touch-action: manipulation;                         /* 關掉雙擊放大，點擊反應更快 */
 }
 
+/* 「mahjong3-key-num」這個元素的樣式 */
 .mahjong3-key-num {
-    font-size: 30px;
-    font-weight: var(--fw-bold);
-    line-height: 1;
+    font-size: 30px;                                    /* 字級：30px */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
 }
 
+/* 「mahjong3-key-pip」這個元素的樣式 */
 .mahjong3-key-pip {
-    font-size: 16px;
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    line-height: 1;
+    font-size: 16px;                                    /* 字級：16px */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
 }
 
+/* 「mahjong3-key」在「正確（成功）時」的樣子的樣式 */
 .mahjong3-key--ok {
-    border-color: var(--c-ok);
-    box-shadow: 0 4px 0 var(--c-ok);
-    background: var(--c-ok-soft);
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
+    box-shadow: 0 4px 0 var(--c-ok);                    /* 方塊陰影（立體感） */
+    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
 }
 
+/* 「mahjong3-key」在「錯誤（失敗）時」的樣子的樣式 */
 .mahjong3-key--bad {
-    border-color: var(--c-bad-light);
-    box-shadow: 0 4px 0 var(--c-bad-light);
-    background: var(--c-bad-soft);
+    border-color: var(--c-bad-light);                   /* 邊框顏色：主題變數 --c-bad-light */
+    box-shadow: 0 4px 0 var(--c-bad-light);             /* 方塊陰影（立體感） */
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
 }
 
 /* 已選的牌鍵（還沒按「我選好了」）：橘色外框＋淡黃底，再點一次取消 */
 .mahjong3-key--sel {
-    border-color: var(--c-orange);
-    box-shadow: 0 4px 0 var(--c-orange);
-    background: var(--c-yellow-soft);
+    border-color: var(--c-orange);                      /* 邊框顏色：主題變數 --c-orange */
+    box-shadow: 0 4px 0 var(--c-orange);                /* 方塊陰影（立體感） */
+    background: var(--c-yellow-soft);                   /* 背景：主題變數 --c-yellow-soft */
 }
 
 /* 揭曉時你漏掉的答案：橘色虛線外框 */
 .mahjong3-key--miss {
-    border: 3px dashed var(--c-orange);
-    background: var(--c-yellow-soft);
+    border: 3px dashed var(--c-orange);                 /* 邊框（粗細、線型、顏色）：3px dashed 主題變數 --c-orange */
+    background: var(--c-yellow-soft);                   /* 背景：主題變數 --c-yellow-soft */
 }

@@ -6,92 +6,102 @@
 
 /* ═══ 重心疊疊樂（.stackup-）═══ */
 .stackup-svg {
-    display: block;
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
+/* 「stackup-block」這個元素的樣式 */
 .stackup-block {
-    stroke: var(--c-ink);
-    stroke-width: 3;
-    stroke-linejoin: round;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
 /* 上方預覽的那一塊：半透明＋虛線框，看得出還沒放下 */
 .stackup-block--prev {
-    opacity: 0.88;
-    stroke-dasharray: 8 5;
+    opacity: 0.88;                                      /* 透明度 0.88（1＝完全不透明、0＝全透明） */
+    stroke-dasharray: 8 5;                              /* SVG 虛線的「畫／空」長度：8 5 */
 }
 
+/* 「stackup-ceil」這個元素的樣式 */
 .stackup-ceil {
-    stroke: var(--c-bad);
-    stroke-width: 3;
-    stroke-dasharray: 10 8;
-    opacity: 0.55;
+    stroke: var(--c-bad);                               /* SVG 線條顏色：主題變數 --c-bad */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-dasharray: 10 8;                             /* SVG 虛線的「畫／空」長度：10 8 */
+    opacity: 0.55;                                      /* 透明度 0.55（1＝完全不透明、0＝全透明） */
 }
 
+/* 「stackup-floor」這個元素的樣式 */
 .stackup-floor {
-    fill: var(--c-yellow-soft);
-    stroke: var(--c-ink-soft);
-    stroke-width: 3;
+    fill: var(--c-yellow-soft);                         /* SVG 圖形的填色：主題變數 --c-yellow-soft */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
 /* 方塊中心往下的導引線（只是讓你看出落下的位置） */
 .stackup-guide {
-    stroke: var(--c-ink-soft);
-    stroke-width: 2;
-    stroke-dasharray: 4 8;
-    opacity: 0.5;
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
+    stroke-dasharray: 4 8;                              /* SVG 虛線的「畫／空」長度：4 8 */
+    opacity: 0.5;                                       /* 透明度 0.5（1＝完全不透明、0＝全透明） */
 }
 
+/* 「stackup-bar」這個元素的樣式 */
 .stackup-bar {
-    position: relative;
-    height: 56px;
-    margin-top: 8px;
-    touch-action: none;
-    cursor: ew-resize;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    height: 56px;                                       /* 高度：56px */
+    margin-top: 8px;                                    /* 上外距（跟上面的元素距離）：8px */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    cursor: ew-resize;                                  /* 滑鼠游標樣式：ew-resize */
 }
 
+/* 「stackup-track」這個元素的樣式 */
 .stackup-track {
-    position: absolute;
-    left: 24px;
-    right: 24px;
-    top: 23px;
-    height: 10px;
-    border-radius: var(--r-pill);
-    background: var(--c-yellow-soft);
-    border: 2px solid var(--c-ink-soft);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 24px;                                         /* 離左邊 24px */
+    right: 24px;                                        /* 離右邊 24px */
+    top: 23px;                                          /* 離上邊 23px */
+    height: 10px;                                       /* 高度：10px */
+    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill */
+    background: var(--c-yellow-soft);                   /* 背景：主題變數 --c-yellow-soft */
+    border: 2px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：2px solid 主題變數 --c-ink-soft */
 }
 
+/* 「stackup-knob」這個元素的樣式 */
 .stackup-knob {
-    position: absolute;
-    top: 4px;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: var(--c-orange);
-    border: var(--bd);
-    box-shadow: var(--shadow-card);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    top: 4px;                                           /* 離上邊 4px */
+    width: 48px;                                        /* 寬度：48px */
+    height: 48px;                                       /* 高度：48px */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    background: var(--c-orange);                        /* 背景：主題變數 --c-orange */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
 }
 
+/* 「stackup-ok」這個元素的樣式 */
 .stackup-ok {
-    margin-top: 12px;
+    margin-top: 12px;                                   /* 上外距（跟上面的元素距離）：12px */
 }
 
+/* 「stackup-msg」這個元素的樣式 */
 .stackup-msg {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 108px;
-    text-align: center;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 108px;                                         /* 離上邊 108px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「stackup-msg」在「正確（成功）時」的樣子的樣式 */
 .stackup-msg--ok {
-    color: var(--c-green);
+    color: var(--c-green);                              /* 文字顏色：主題變數 --c-green */
 }
 
+/* 「stackup-msg」在「錯誤（失敗）時」的樣子的樣式 */
 .stackup-msg--bad {
-    color: var(--c-recall);
+    color: var(--c-recall);                             /* 文字顏色：主題變數 --c-recall */
 }

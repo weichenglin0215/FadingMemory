@@ -11,11 +11,15 @@
    · 揭曉：兩片方塊往兩邊打開，字整個露出來；答錯時，你選的字和正確的字比對，只有其中一個有的筆畫塗紅。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'doorslit'：選單、成績、存檔都靠它；樣式在 css/games/reaction_doorslit.css，裡面的 class 名稱一律以 doorslit- 開頭。 */
     'use strict';
 
-    var ID = 'doorslit';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'doorslit';                                /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -42,7 +46,7 @@
     function exposureSeconds(gap, speed) { return gap / speed; }
     /* 出一關：{ answer, options（含答案、順序洗牌）, group（同一群的字）, answerIdx, gap, speed, strokes, respMs, level } */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var rg = strokeRange(level), pool = SimilarChars.groups({ minSize: MIN_GROUP, minStrokes: rg[0], maxStrokes: rg[1] });
         if (!pool.length) pool = SimilarChars.groups({ minSize: MIN_GROUP });
         var g = kit.pick(pool, rand), answer = kit.pick(g.chars, rand);
@@ -64,6 +68,7 @@
         ctx.putImageData(out, 0, 0);
         return { diff: diff };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 15) return '火眼金睛！';
         if (n >= 10) return '縫裡也看得清楚！';
@@ -72,6 +77,7 @@
         return '把一條一條的筆畫在腦中拼起來！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'doorslit-stage',
@@ -82,11 +88,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand);
-        api.info = q;
-        console.log('[門縫偷看] 第 ' + level + ' 關：答案 ' + q.answer + '，選項 ' + q.options.join('') + '；縫寬 ' + q.gap + ' px、速度 ' + q.speed + ' px/秒；字群平均筆劃範圍 ' + q.strokes.map(function (x) { return x.toFixed(1); }).join('～'));
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[門縫偷看] 第 ' + level + ' 關：答案 ' + q.answer + '，選項 ' + q.options.join('') + '；縫寬 ' + q.gap + ' px、速度 ' + q.speed + ' px/秒；字群平均筆劃範圍 ' + q.strokes.map(function (x) { return x.toFixed(1); }).join('～'));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, BW = W - 24, BH = Math.min(BW, H - 320);
         var field = h('div', { 'class': 'doorslit-field' });
@@ -117,8 +125,9 @@
             if (phase !== 'sweep') return;
             phase = 'ask'; tip.textContent = '剛才那個字是？';
             grid = kit.btnGrid(field, q.options.map(function (c, i) { return { text: c, kind: 'line', cls: 'doorslit-opt', onTap: function () { judge(i); } }; }), { cols: 2, h: 92, gap: 10 });
-            api.timer(q.respMs, function () { judge(-1); });
+            api.timer(q.respMs, function () { judge(-1); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         }
+        /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(i) {
             if (done || api.over || phase !== 'ask') return;
             done = true; phase = 'end';
@@ -140,16 +149,19 @@
         api.wrong = function () { if (phase === 'sweep') ask(); if (phase === 'ask') judge((q.answerIdx + 1) % q.options.length); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '門縫偷看',
         rule: '一個滿版的黑色大字，上面蓋著兩片白色方塊，中間只留一條窄窄的縫。兩片方塊一起由左往右移動，縫就從字的左邊掃到右邊——**你只能透過門縫，一條一條看到經過的筆畫**。掃過去之後，**點出那是哪個字**（四個選項，全是長得很像的字，差別常常就在中間一小段）。大腦會自動把一條一條拼起來，試試看！答錯或來不及就結束，看你能過幾關。越後面，字的筆劃越多、縫越窄、掃得越快！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             gapFor: gapFor, speedFor: speedFor, respMs: respMs, strokeRange: strokeRange, slitX: slitX, sweepSeconds: sweepSeconds, exposureSeconds: exposureSeconds, makeLevel: makeLevel, drawDiff: drawDiff, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, GAP: GAP, SPEED: SPEED, STROKES_LO: STROKES_LO, STROKES_HI: STROKES_HI, RESP_S: RESP_S, N_OPT: N_OPT, LEAD_MS: LEAD_MS, MIN_GROUP: MIN_GROUP, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

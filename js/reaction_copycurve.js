@@ -27,11 +27,15 @@
           有繩子可選時 ROPE_P（50%）的機率抽到它。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'copycurve'：選單、成績、存檔都靠它；樣式在 css/games/reaction_copycurve.css，裡面的 class 名稱一律以 copycurve- 開頭。 */
     'use strict';
 
-    var ID = 'copycurve';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'copycurve';                               /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -300,7 +304,7 @@
     /* 出一條曲線：{ type, pts（密集折線，從起點到終點）, start, end, len, bends（彎數；固定造型的種類是 null） }
        種類：有「繩子曲線」可選時有 ROPE_P 的機率抽它（變化最多），其餘種類平分（新解鎖的那一種多一點）；avoidType（上一關的種類）盡量不連續重複（繩子除外，每一條都不一樣） */
     function makeCurve(level, rand, avoidType) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var d = kit.ramp(level, 0, 1, RAMP_LEVELS), b = bendsFor(level), types = typesFor(level);
         if (avoidType && avoidType !== 'rope' && types.length > 1) types = types.filter(function (t) { return t !== avoidType; });
         var others = types.filter(function (t) { return t !== 'rope'; });
@@ -330,6 +334,7 @@
         var fb = fit(genWave(1, rand, 4));
         return { type: 'wave', pts: fb, start: fb[0], end: fb[fb.length - 1], len: polyLen(fb), bends: 4 };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 20) return '神之一筆！';
         if (n >= 12) return '手眼協調超強！';
@@ -340,6 +345,7 @@
     var TYPE_NAME = { scurve: 'S 形曲線', rope: '繩子曲線', wave: '波浪', right: '直角轉彎', bolt: '閃電', spiral: '螺旋', clip: '迴紋針' };
 
     var lastType = null;
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         /* V1.28 起成績＝撐到第幾關（以前是通過幾關，少 1）：舊的最佳紀錄＋1（只轉一次） */
         Reaction.migrateBest(ID, function (b) { return b + 1; }, '.v128');
@@ -358,13 +364,15 @@
 
     function pathD(pts) { return pts.map(function (p, i) { return (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(' '); }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeCurve(level, api.rand, lastType);
         lastType = q.type;
         var need = reqSim(level);
-        api.info = q;
-        console.log('[照抄曲線] 第 ' + level + ' 關：' + TYPE_NAME[q.type] + '，全長 ' + q.len.toFixed(1) + ' 像素；要求相似度 ' + need.toFixed(4) + '％；限時 ' + timeMs(level) + ' ms');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[照抄曲線] 第 ' + level + ' 關：' + TYPE_NAME[q.type] + '，全長 ' + q.len.toFixed(1) + ' 像素；要求相似度 ' + need.toFixed(4) + '％；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, top = 48;
         var shift = Math.round((W - PW) / 2);
@@ -451,13 +459,14 @@
             msg.textContent = '放開的地方不在另一個端點上，還沒畫完，可以重畫';
         }
         R.el.addEventListener('pointerup', up); R.el.addEventListener('pointercancel', up);
-        api.timer(timeMs(level), function () {
+        api.timer(timeMs(level), function () {          /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
             if (locked || api.over) return;
             locked = true; cur = null;
             api.fail({ delay: 1800, lines: ['時間到！還沒畫完', '曲線種類：' + TYPE_NAME[q.type]] });
         });
-        if (level === 1 && kit.once('copycurve.hint')) kit.hintOn(stage, null, { mode: 'drag', x: W - PW + q.start.x, y: top + q.start.y, dx: q.end.x - q.start.x, dy: q.end.y - q.start.y, delay: 600, text: '請照著左邊的線拖曳' });
+        if (level === 1 && kit.once('copycurve.hint')) kit.hintOn(stage, null, { mode: 'drag', x: W - PW + q.start.x, y: top + q.start.y, dx: q.end.x - q.start.x, dy: q.end.y - q.start.y, delay: 600, text: '請照著左邊的線拖曳' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { finishWith(q.pts.map(function (p) { return { x: p.x, y: p.y }; }), 'start'); };
         api.wrong = function () {
             /* 故意亂畫：起點 → 右側中間 → 左下角 → 終點，離目標曲線很遠 */
@@ -466,17 +475,20 @@
         };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '照抄曲線',
         rule: '左邊的長方格有一條綠色曲線，兩端是黃色起點和水藍色終點。請用手指在右邊的長方格，從其中一個端點開始，**照著畫出一樣的曲線**，**一直畫到另一個端點**。兩張圖會疊在一起比較相似度，達到要求才過關。**手指離開螢幕才會判定**（在另一個端點上放開才算畫完）。越後面，曲線越彎、形狀越花俏，要求的相似度也越高！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             reqSim: reqSim, timeMs: timeMs, typesFor: typesFor, polyLen: polyLen, resample: resample, densify: densify, distToPoly: distToPoly, chamfer: chamfer, similarity: similarity,
             makeCurve: makeCurve, fit: fit, genClip: genClip, genSpiral: genSpiral, genRope: genRope, genWave: genWave, genRight: genRight, genBolt: genBolt, bendsFor: bendsFor, fallbackCount: function () { return fbCount; }, RIGHT_MAX: RIGHT_MAX, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, BENDS: BENDS, ROPE_P: ROPE_P, END_R: END_R, MIN_DRAW: MIN_DRAW, TIME_S: TIME_S, REQ: REQ, PW: PW, PH: PH, MG: MG, MIN_SEP: MIN_SEP, LEN_RANGE: LEN_RANGE, LEN_MIN_TYPE: LEN_MIN_TYPE, D0: D0, TYPE_RANGE: TYPE_RANGE, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

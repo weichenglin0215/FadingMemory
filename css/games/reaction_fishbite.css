@@ -6,297 +6,333 @@
 
 /* ═══ 釣魚提竿（.fishbite-）═══ */
 .fishbite-stage {
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「fishbite-field」這個元素的樣式 */
 .fishbite-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
-    touch-action: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
+/* 「fishbite-tip」這個元素的樣式 */
 .fishbite-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
-    z-index: 4;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 4;                                         /* 疊放順序：數字越大越在上面（4） */
 }
 
 /* 水面以下的水 */
 .fishbite-water {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(var(--fbt-water-top), var(--fbt-water-bottom));
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    background: linear-gradient(var(--fbt-water-top), var(--fbt-water-bottom));  /* 漸層背景 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「fishbite-surface」這個元素的樣式 */
 .fishbite-surface {
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 6px;
-    margin-top: -3px;
-    background: var(--fbt-surface);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    height: 6px;                                        /* 高度：6px */
+    margin-top: -3px;                                   /* 上外距（跟上面的元素距離）：-3px */
+    background: var(--fbt-surface);                     /* 背景：主題變數 --fbt-surface */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 浮標的裁切框：只顯示水面以上，沉下去的部分看不見 */
 .fishbite-clip {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    overflow: hidden;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「fishbite-lines」這個元素的樣式 */
 .fishbite-lines {
-    position: absolute;
-    left: 0;
-    top: 0;
-    overflow: visible;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
 }
 
+/* 「fishbite-rodline」這個元素的樣式 */
 .fishbite-rodline {
-    stroke: var(--fbt-line);
-    stroke-width: 2;
+    stroke: var(--fbt-line);                            /* SVG 線條顏色：主題變數 --fbt-line */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
 }
 
 /* 浮標：細長的天線（紅白相間）＋紅色的頭＋白色的身體 */
 .fishbite-float {
-    position: absolute;
-    will-change: transform;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    will-change: transform;                             /* 提示瀏覽器這個屬性會變動，先準備好（讓動畫更順） */
 }
 
+/* 「fishbite-float」裡面的「ant」部分的樣式 */
 .fishbite-float__ant {
-    position: absolute;
-    left: 16px;
-    top: 0;
-    width: 4px;
-    height: 42px;
-    background: linear-gradient(var(--fbt-float-red) 50%, var(--fbt-float-white) 50%);
-    background-size: 100% 16px;
-    border-radius: 2px;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 16px;                                         /* 離左邊 16px */
+    top: 0;                                             /* 離上邊 0 */
+    width: 4px;                                         /* 寬度：4px */
+    height: 42px;                                       /* 高度：42px */
+    background: linear-gradient(var(--fbt-float-red) 50%, var(--fbt-float-white) 50%);  /* 漸層背景 */
+    background-size: 100% 16px;                         /* 背景圖大小：100% 16px */
+    border-radius: 2px;                                 /* 圓角：2px */
 }
 
+/* 「fishbite-float」裡面的「top」部分的樣式 */
 .fishbite-float__top {
-    position: absolute;
-    left: 0;
-    top: 40px;
-    width: 36px;
-    height: 46px;
-    background: var(--fbt-float-red);
-    border: 3px solid var(--c-ink-soft);
-    border-radius: 50% 50% 38% 38%;
-    box-sizing: border-box;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 40px;                                          /* 離上邊 40px */
+    width: 36px;                                        /* 寬度：36px */
+    height: 46px;                                       /* 高度：46px */
+    background: var(--fbt-float-red);                   /* 背景：主題變數 --fbt-float-red */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-radius: 50% 50% 38% 38%;                     /* 圓角：50% 50% 38% 38% */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
 }
 
+/* 「fishbite-float」裡面的「body」部分的樣式 */
 .fishbite-float__body {
-    position: absolute;
-    left: 3px;
-    top: 84px;
-    width: 30px;
-    height: 90px;
-    background: var(--fbt-float-white);
-    border: 3px solid var(--c-ink-soft);
-    border-radius: 0 0 50% 50%;
-    box-sizing: border-box;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 3px;                                          /* 離左邊 3px */
+    top: 84px;                                          /* 離上邊 84px */
+    width: 30px;                                        /* 寬度：30px */
+    height: 90px;                                       /* 高度：90px */
+    background: var(--fbt-float-white);                 /* 背景：主題變數 --fbt-float-white */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-radius: 0 0 50% 50%;                         /* 圓角：0 0 50% 50% */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
 }
 
 /* 波紋圈：魚在動的時候冒出來（輕碰和咬鉤都會冒，不是線索） */
 .fishbite-ripple {
-    position: absolute;
-    width: 80px;
-    height: 24px;
-    border: 3px solid var(--fbt-ripple);
-    border-radius: 50%;
-    pointer-events: none;
-    animation: fishbite-ripple 0.9s ease-out forwards;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 80px;                                        /* 寬度：80px */
+    height: 24px;                                       /* 高度：24px */
+    border: 3px solid var(--fbt-ripple);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --fbt-ripple */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    animation: fishbite-ripple 0.9s ease-out forwards;  /* 播放動畫（名稱、時間、緩動、次數）：fishbite-ripple 0.9s ease-out forwards */
 }
 
+/* 動畫 fishbite-ripple：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes fishbite-ripple {
     from {
-        transform: scale(0.4);
-        opacity: 1;
+        transform: scale(0.4);                          /* 變形：縮放 0.4 倍 */
+        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
     }
 
     to {
-        transform: scale(2.2);
-        opacity: 0;
+        transform: scale(2.2);                          /* 變形：縮放 2.2 倍 */
+        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
     }
 }
 
+/* 「fishbite-info」這個元素的樣式 */
 .fishbite-info {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    padding: var(--sp-1) var(--sp-3);
-    background: var(--c-card);
-    border: 3px solid var(--c-ink-soft);
-    border-radius: var(--r-md);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
-    z-index: 4;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 12px;                                         /* 離左邊 12px */
+    right: 12px;                                        /* 離右邊 12px */
+    padding: var(--sp-1) var(--sp-3);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-1、下 主題變數、左 --sp-3 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 4;                                         /* 疊放順序：數字越大越在上面（4） */
 }
 
+/* 「fishbite-info」這個元素的樣式 */
 .fishbite-info:empty {
-    display: none;
+    display: none;                                      /* 不顯示（也不佔位置） */
 }
 
+/* 「fishbite-info」在「正確（成功）時」的樣子的樣式 */
 .fishbite-info--ok {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「fishbite-info」在「錯誤（失敗）時」的樣子的樣式 */
 .fishbite-info--bad {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
 /* 釣到的魚：從水裡跳出來 */
 .fishbite-fish {
-    position: absolute;
-    pointer-events: none;
-    opacity: 0;
-    transform: translateY(40px) scale(0.6);
-    transition: transform 0.7s cubic-bezier(0.2, 1.3, 0.4, 1), opacity 0.2s;
-    z-index: 3;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    transform: translateY(40px) scale(0.6);             /* 變形：垂直移動 40px 縮放 0.6 倍 */
+    transition: transform 0.7s cubic-bezier(0.2, 1.3, 0.4, 1), opacity 0.2s;  /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.7s cubic-bezier(0.2, 1.3, 0.4, 1), opa */
+    z-index: 3;                                         /* 疊放順序：數字越大越在上面（3） */
 }
 
+/* 「fishbite-fish」的「jump」變化版的樣式 */
 .fishbite-fish--jump {
-    opacity: 1;
-    transform: translateY(-150px) scale(1) rotate(-12deg);
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
+    transform: translateY(-150px) scale(1) rotate(-12deg);  /* 變形：垂直移動 -150px 縮放 1 倍 旋轉 -12deg */
 }
 
+/* 「fishbite-fishsvg」這個元素的樣式 */
 .fishbite-fishsvg {
-    display: block;
-    overflow: visible;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
 }
 
+/* 「fishbite-body」這個元素；「fishbite-tail」這個元素的樣式 */
 .fishbite-body,
 .fishbite-tail {
-    stroke: var(--c-ink-soft);
-    stroke-width: 3;
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「fishbite-fc0」這個元素的樣式 */
 .fishbite-fc0 {
-    fill: var(--fbt-fish0);
+    fill: var(--fbt-fish0);                             /* SVG 圖形的填色：主題變數 --fbt-fish0 */
 }
 
+/* 「fishbite-fc1」這個元素的樣式 */
 .fishbite-fc1 {
-    fill: var(--fbt-fish1);
+    fill: var(--fbt-fish1);                             /* SVG 圖形的填色：主題變數 --fbt-fish1 */
 }
 
+/* 「fishbite-fc2」這個元素的樣式 */
 .fishbite-fc2 {
-    fill: var(--fbt-fish2);
+    fill: var(--fbt-fish2);                             /* SVG 圖形的填色：主題變數 --fbt-fish2 */
 }
 
+/* 「fishbite-fc3」這個元素的樣式 */
 .fishbite-fc3 {
-    fill: var(--fbt-fish3);
+    fill: var(--fbt-fish3);                             /* SVG 圖形的填色：主題變數 --fbt-fish3 */
 }
 
+/* 「fishbite-fc4」這個元素的樣式 */
 .fishbite-fc4 {
-    fill: var(--fbt-fish4);
+    fill: var(--fbt-fish4);                             /* SVG 圖形的填色：主題變數 --fbt-fish4 */
 }
 
+/* 「fishbite-fc5」這個元素的樣式 */
 .fishbite-fc5 {
-    fill: var(--fbt-fish5);
+    fill: var(--fbt-fish5);                             /* SVG 圖形的填色：主題變數 --fbt-fish5 */
 }
 
+/* 「fishbite-belly」這個元素的樣式 */
 .fishbite-belly {
-    fill: var(--fbt-belly);
+    fill: var(--fbt-belly);                             /* SVG 圖形的填色：主題變數 --fbt-belly */
 }
 
+/* 「fishbite-stripe」這個元素的樣式 */
 .fishbite-stripe {
-    fill: none;
-    stroke: var(--fbt-stripe);
-    stroke-width: 3;
-    stroke-linecap: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--fbt-stripe);                          /* SVG 線條顏色：主題變數 --fbt-stripe */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「fishbite-eye」這個元素的樣式 */
 .fishbite-eye {
-    fill: var(--fbt-eye);
+    fill: var(--fbt-eye);                               /* SVG 圖形的填色：主題變數 --fbt-eye */
 }
 
 /* 揭曉的折線圖：深度（往下＝沉得越深）、咬鉤區（綠色帶）、你提竿的位置 */
 .fishbite-chart {
-    position: absolute;
-    pointer-events: none;
-    z-index: 2;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 2;                                         /* 疊放順序：數字越大越在上面（2） */
 }
 
+/* 「fishbite-chart」裡面的「svg」部分的樣式 */
 .fishbite-chart__svg {
-    display: block;
-    overflow: visible;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
 }
 
+/* 「fishbite-chart」裡面的「bg」部分的樣式 */
 .fishbite-chart__bg {
-    fill: var(--c-card);
-    stroke: var(--c-ink-soft);
-    stroke-width: 3;
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「fishbite-chart」裡面的「bite」部分的樣式 */
 .fishbite-chart__bite {
-    fill: var(--fbt-bite-zone);
+    fill: var(--fbt-bite-zone);                         /* SVG 圖形的填色：主題變數 --fbt-bite-zone */
 }
 
+/* 「fishbite-chart」裡面的「line90」部分的樣式 */
 .fishbite-chart__line90 {
-    stroke: var(--c-ok);
-    stroke-width: 2;
-    stroke-dasharray: 8 6;
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
+    stroke-dasharray: 8 6;                              /* SVG 虛線的「畫／空」長度：8 6 */
 }
 
+/* 「fishbite-chart」裡面的「curve」部分的樣式 */
 .fishbite-chart__curve {
-    fill: none;
-    stroke: var(--fbt-curve);
-    stroke-width: 4;
-    stroke-linejoin: round;
-    stroke-linecap: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--fbt-curve);                           /* SVG 線條顏色：主題變數 --fbt-curve */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「fishbite-chart」裡面的「you」部分的樣式 */
 .fishbite-chart__you {
-    stroke: var(--fbt-you);
-    stroke-width: 4;
+    stroke: var(--fbt-you);                             /* SVG 線條顏色：主題變數 --fbt-you */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
 }
 
+/* 「fishbite-chart」裡面的「cur」部分的樣式 */
 .fishbite-chart__cur {
-    stroke: var(--c-ink-soft);
-    stroke-width: 2;
-    stroke-dasharray: 4 4;
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
+    stroke-dasharray: 4 4;                              /* SVG 虛線的「畫／空」長度：4 4 */
 }
 
+/* 「fishbite-chart」裡面的「lab」部分的樣式 */
 .fishbite-chart__lab {
-    fill: var(--c-ink);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
     text-anchor: middle;
-    paint-order: stroke;
-    stroke: var(--c-card);
-    stroke-width: 6px;
-    stroke-linejoin: round;
+    paint-order: stroke;                                /* SVG 繪製順序（例如先畫邊再畫填色）：stroke */
+    stroke: var(--c-card);                              /* SVG 線條顏色：主題變數 --c-card */
+    stroke-width: 6px;                                  /* SVG 線條粗細：6px */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「fishbite-chart__lab」的「bite」變化版的樣式 */
 .fishbite-chart__lab--bite {
-    fill: var(--c-ok);
+    fill: var(--c-ok);                                  /* SVG 圖形的填色：主題變數 --c-ok */
 }
 
+/* 「fishbite-chart__lab」的「ln」變化版的樣式 */
 .fishbite-chart__lab--ln {
-    fill: var(--c-ok);
+    fill: var(--c-ok);                                  /* SVG 圖形的填色：主題變數 --c-ok */
     text-anchor: start;
-    font-size: 22px;
+    font-size: 22px;                                    /* 字級：22px */
 }
 
+/* 「fishbite-chart__lab」的「you」變化版的樣式 */
 .fishbite-chart__lab--you {
-    fill: var(--fbt-you);
+    fill: var(--fbt-you);                               /* SVG 圖形的填色：主題變數 --fbt-you */
 }

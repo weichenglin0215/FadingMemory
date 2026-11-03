@@ -6,54 +6,59 @@
 
 /* ═══ 054 落單的襪子（.oddsock-）═══ */
 .oddsock-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 6px;
-    text-align: center;
-    line-height: var(--lh-body);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 6px;                                           /* 離上邊 6px */
+    text-align: center;                                 /* 文字置中 */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
+/* 「oddsock-cell」這個元素的樣式 */
 .oddsock-cell {
-    position: absolute;
-    width: 140px;
-    height: 140px;
-    border-radius: var(--r-md);
-    background: var(--c-card);
-    border: var(--bd);
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    cursor: pointer;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 140px;                                       /* 寬度：140px */
+    height: 140px;                                      /* 高度：140px */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
 }
 
 /* 襪子每隻轉成不同角度（0～360 度）：圖要夠小，轉到斜角也不會超出格子被切掉（對角線 ≤ 格子 140px） */
 .oddsock-cell svg {
-    width: 80px;
-    height: 104px;
+    width: 80px;                                        /* 寬度：80px */
+    height: 104px;                                      /* 高度：104px */
 }
 
+/* 「oddsock-cell」這個元素，按下去時的樣式 */
 .oddsock-cell:active {
-    transform: scale(0.97);
+    transform: scale(0.97);                             /* 變形：縮放 0.97 倍 */
 }
 
+/* 「oddsock-cell」的「odd」變化版的樣式 */
 .oddsock-cell--odd {
-    border-color: var(--c-green);
-    border-width: 5px;
-    background: var(--c-green-soft);
+    border-color: var(--c-green);                       /* 邊框顏色：主題變數 --c-green */
+    border-width: 5px;                                  /* 邊框粗細：5px */
+    background: var(--c-green-soft);                    /* 背景：主題變數 --c-green-soft */
 }
 
+/* 「oddsock-cell」的「mate」變化版的樣式 */
 .oddsock-cell--mate {
-    border-color: var(--c-blue);
-    border-style: dashed;
+    border-color: var(--c-blue);                        /* 邊框顏色：主題變數 --c-blue */
+    border-style: dashed;                               /* 邊框線型：dashed */
 }
 
+/* 「oddsock-cell」在「錯誤（失敗）時」的樣子的樣式 */
 .oddsock-cell--bad {
-    border-color: var(--c-bad);
-    background: var(--c-bad-soft);
+    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
 }

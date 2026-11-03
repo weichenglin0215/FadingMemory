@@ -14,11 +14,15 @@
    · 揭曉：拿的盤子攤開，一盤一盤累加「3 盤共 130 元…290 元，多了 10 元」；並寫出一種剛好湊得出預算的拿法。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'sushi'：選單、成績、存檔都靠它；樣式在 css/games/reaction_sushi.css，裡面的 class 名稱一律以 sushi- 開頭。 */
     'use strict';
 
-    var ID = 'sushi';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'sushi';                                   /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -80,6 +84,7 @@
         if (r.result === 'few') return '拿了 ' + r.sum + ' 元，預算 ' + q.target + ' 元——少了 ' + (-r.diff) + ' 元';
         return '拿了 ' + r.sum + ' 元，預算 ' + q.target + ' 元——多了 ' + r.diff + ' 元';
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 15) return '迴轉壽司達人！';
         if (n >= 9) return '心算很快！';
@@ -88,6 +93,7 @@
         return '看價目表、邊拿邊加！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'sushi-stage',
@@ -105,12 +111,14 @@
         return el;
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var q = makeLevel(level, api.rand, W);
-        api.info = q;
-        console.log('[迴轉壽司] 第 ' + level + ' 關：預算 ' + q.target + ' 元；一圈 ' + q.plates.length + ' 盤（' + q.plates.map(function (p) { return p.price; }).join(',') + '）；剛好的拿法（盤子編號） ' + q.solution.join(',') + '；速度 ' + q.speed + ' px/秒、間隔 ' + q.gap + ' 秒；一圈 ' + q.lap + ' 毫秒；共 ' + countSolutions(q) + ' 種湊法');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[迴轉壽司] 第 ' + level + ' 關：預算 ' + q.target + ' 元；一圈 ' + q.plates.length + ' 盤（' + q.plates.map(function (p) { return p.price; }).join(',') + '）；剛好的拿法（盤子編號） ' + q.solution.join(',') + '；速度 ' + q.speed + ' px/秒、間隔 ' + q.gap + ' 秒；一圈 ' + q.lap + ' 毫秒；共 ' + countSolutions(q) + ' 種湊法');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var field = h('div', { 'class': 'sushi-field' });
         stage.appendChild(field);
@@ -129,10 +137,11 @@
         stackBox.style.cssText = 'left:24px;top:' + (beltTop + PLATE_D + 40) + 'px;'; stackBox.appendChild(h('div', { 'class': 'sushi-stack__t', text: '拿下來的' })); var stackTop = h('div', { 'class': 'sushi-stack__top' }); stackBox.appendChild(stackTop); field.appendChild(stackBox);
         var info = h('div', { 'class': 'qz-note sushi-info', text: level === 1 ? '盤子經過時點它拿下來，剛好湊到預算！' : '邊拿邊加，剛好就按「夠了」' }); info.style.top = (beltTop + PLATE_D + 150) + 'px'; field.appendChild(info);
         var btn = kit.btnGrid(field, [{ text: '夠了！', kind: 'primary', cls: 'sushi-btn', onTap: function () { finish('done'); } }], { cols: 1, h: 92, bottom: 12 });
-        if (level === 1 && kit.once('sushi.hint')) api.after(Math.round((LEAD_S + 0.8) * 1000), function () { if (phase === 'play') kit.hintOn(stage, null, { mode: 'tap', x: W * 0.62, y: lane.offsetTop + PLATE_D / 2, delay: 200, text: '盤子經過時點它' }); });
+        if (level === 1 && kit.once('sushi.hint')) api.after(Math.round((LEAD_S + 0.8) * 1000), function () { if (phase === 'play') kit.hintOn(stage, null, { mode: 'tap', x: W * 0.62, y: lane.offsetTop + PLATE_D / 2, delay: 200, text: '盤子經過時點它' }); });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
         var t0 = performance.now();
         function nowS() { return (performance.now() - t0) / 1000; }
+        /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint(t) {
             q.plates.forEach(function (p, i) {
                 if (taken.indexOf(i) >= 0) return;
@@ -142,7 +151,7 @@
             });
         }
         api.my.loop(function (now) { if (phase !== 'play' || api.over || !stage.isConnected) return false; paint(nowS()); });
-        api.timer(q.lap, function () { finish('lap'); });
+        api.timer(q.lap, function () { finish('lap'); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
 
         /* 拿盤子：點到盤子（比外框多 HIT_PAD）就拿下來 */
         lane.addEventListener('pointerdown', function (e) {
@@ -182,6 +191,7 @@
         }
         /* 驗證用：在每個「剛好那一組」的盤子剛進到畫面的時間拿下來，全部拿完就按「夠了」（solve，不真的點）；wrong＝拿一個不在解裡的盤子再按夠了；可重複呼叫（只排一次） */
         var armed = false;
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () {
             if (armed || phase !== 'play') return; armed = true;
             q.solution.forEach(function (k, n) { var tk = LEAD_S + k * q.gap + (PLATE_D / 2 + 50) / q.speed;          /* 盤子剛進到畫面（離右邊緣 50px）就拿，驗證才不會等太久 */ api.after(Math.max(0, Math.round((tk - nowS()) * 1000)), function () { take(k); if (n === q.solution.length - 1) api.after(120, function () { finish('done'); }); }); });
@@ -189,16 +199,19 @@
         api.wrong = function () { if (armed || phase !== 'play') return; armed = true; api.after(300, function () { finish('done'); }); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '迴轉壽司',
         rule: '迴轉壽司的輸送帶，**盤子的顏色代表價格**（白 30、紅 40、藍 60、金 100，價目表貼在上面）。上面寫著預算（例如「剛好 280 元」）。**盤子經過時點它就拿下來**，拿下來的疊在旁邊，只看得到最上面一個，總金額不顯示。輸送帶轉完一圈（或你按「夠了」），**拿的盤子要剛好是預算**。輸送帶不會停，要邊算邊決定，拿太晚就湊不到。**第 10 關起多了 50 元的綠盤**。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             platesFor: platesFor, pickFor: pickFor, gapFor: gapFor, speedFor: speedFor, pricesFor: pricesFor, makeLevel: makeLevel, lapMs: lapMs, plateX: plateX, visibleAt: visibleAt, judge: judge, countSolutions: countSolutions, whyText: whyText, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, PLATES: PLATES, PICK: PICK, GAP_S: GAP_S, SPEED: SPEED, PRICE_BASE: PRICE_BASE, PRICE_LATER: PRICE_LATER, LATER_FROM: LATER_FROM, PLATE_D: PLATE_D, HIT_PAD: HIT_PAD, LEAD_S: LEAD_S, MAX_LEVEL: MAX_LEVEL, COLOR_OF: COLOR_OF
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

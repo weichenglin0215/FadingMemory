@@ -6,133 +6,146 @@
 
 /* ═══ 誰在偷偷動（.snk-）═══ */
 .racefirst-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
-    display: block;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
 /* ═══ 誰先衝線（.racefirst-）═══ */
 .racefirst-lane {
-    fill: var(--c-card-alt);
-    stroke: var(--bd-c);
-    stroke-width: 2;
+    fill: var(--c-card-alt);                            /* SVG 圖形的填色：主題變數 --c-card-alt */
+    stroke: var(--bd-c);                                /* SVG 線條顏色：主題變數 --bd-c */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
 }
 
 /* 揭曉時圍在小人身上的圈：答對的第一名＝綠色、你選錯的＝紅色（V1.29：圓點改成小人） */
 .racefirst-halo {
-    fill: none;
-    stroke: transparent;
-    stroke-width: 6;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: transparent;                                /* SVG 線條顏色：transparent */
+    stroke-width: 6;                                    /* SVG 線條粗細：6 */
 }
 
+/* 「racefirst-halo」在「勝利時」的樣子的樣式 */
 .racefirst-halo--win {
-    stroke: var(--c-ok);
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
 }
 
+/* 「racefirst-halo」在「錯誤時」的樣子的樣式 */
 .racefirst-halo--wrong {
-    stroke: var(--c-bad);
-    stroke-dasharray: 10 7;
+    stroke: var(--c-bad);                               /* SVG 線條顏色：主題變數 --c-bad */
+    stroke-dasharray: 10 7;                             /* SVG 虛線的「畫／空」長度：10 7 */
 }
 
 /* 開跑前畫面中央的「3、2、1」倒數 */
 .racefirst-count {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 190px;
-    text-align: center;
-    font-size: 200px;
-    line-height: 1;
-    font-weight: var(--fw-black);
-    color: var(--c-on-accent);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 190px;                                         /* 離上邊 190px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: 200px;                                   /* 字級：200px */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-on-accent);                          /* 文字顏色：主題變數 --c-on-accent */
     -webkit-text-stroke: 10px var(--c-ink);
-    paint-order: stroke fill;
-    text-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
-    pointer-events: none;
-    z-index: 3;
+    paint-order: stroke fill;                           /* SVG 繪製順序（例如先畫邊再畫填色）：stroke fill */
+    text-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);        /* 文字陰影 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 3;                                         /* 疊放順序：數字越大越在上面（3） */
 }
 
+/* 「racefirst-count」的「pop」變化版的樣式 */
 .racefirst-count--pop {
-    animation: racefirst-pop 0.8s ease-out;
+    animation: racefirst-pop 0.8s ease-out;             /* 播放動畫（名稱、時間、緩動、次數）：racefirst-pop 0.8s ease-out */
 }
 
+/* 動畫 racefirst-pop：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes racefirst-pop {
     0% {
-        transform: scale(1.6);
-        opacity: 0;
+        transform: scale(1.6);                          /* 變形：縮放 1.6 倍 */
+        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
     }
 
     25% {
-        transform: scale(1);
-        opacity: 1;
+        transform: scale(1);                            /* 變形：縮放 1 倍 */
+        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
     }
 
     100% {
-        transform: scale(0.9);
-        opacity: 0.85;
+        transform: scale(0.9);                          /* 變形：縮放 0.9 倍 */
+        opacity: 0.85;                                  /* 透明度 0.85（1＝完全不透明、0＝全透明） */
     }
 }
 
+/* 「racefirst-time」這個元素的樣式 */
 .racefirst-time {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-black);
-    fill: var(--c-ink);
-    font-variant-numeric: tabular-nums;
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
 }
 
 /* 小人衝過終點線的那一刻，在線上閃一個圈（第一名＝綠色）；名次與到達時間標在跑道上，第一名用綠色 */
 .racefirst-fmark {
-    fill: none;
-    stroke: var(--c-yellow);
-    stroke-width: 6;
-    opacity: 0;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-yellow);                            /* SVG 線條顏色：主題變數 --c-yellow */
+    stroke-width: 6;                                    /* SVG 線條粗細：6 */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
     transform-box: fill-box;
-    transform-origin: center;
+    transform-origin: center;                           /* 變形的基準點：center */
 }
 
+/* 「racefirst-fmark」在「勝利時」的樣子的樣式 */
 .racefirst-fmark--win {
-    stroke: var(--c-ok);
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
 }
 
+/* 「racefirst-fmark」的「pop」變化版的樣式 */
 .racefirst-fmark--pop {
-    animation: racefirst-fpop 0.9s ease-out;
+    animation: racefirst-fpop 0.9s ease-out;            /* 播放動畫（名稱、時間、緩動、次數）：racefirst-fpop 0.9s ease-out */
 }
 
+/* 動畫 racefirst-fpop：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes racefirst-fpop {
     0% {
-        opacity: 1;
-        transform: scale(0.35);
+        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
+        transform: scale(0.35);                         /* 變形：縮放 0.35 倍 */
     }
 
     100% {
-        opacity: 0;
-        transform: scale(1.5);
+        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
+        transform: scale(1.5);                          /* 變形：縮放 1.5 倍 */
     }
 }
 
+/* 「racefirst-time」在「勝利時」的樣子的樣式 */
 .racefirst-time--win {
-    fill: var(--c-ok);
+    fill: var(--c-ok);                                  /* SVG 圖形的填色：主題變數 --c-ok */
 }
 
+/* 「racefirst-start」這個元素的樣式 */
 .racefirst-start {
-    stroke: var(--c-ink-soft);
-    stroke-width: 3;
-    stroke-dasharray: 8 8;
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-dasharray: 8 8;                              /* SVG 虛線的「畫／空」長度：8 8 */
 }
 
+/* 「racefirst-finish」這個元素的樣式 */
 .racefirst-finish {
-    stroke: var(--c-ink);
-    stroke-width: 10;
-    stroke-dasharray: 14 14;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 10;                                   /* SVG 線條粗細：10 */
+    stroke-dasharray: 14 14;                            /* SVG 虛線的「畫／空」長度：14 14 */
 }
 
+/* 「racefirst-tip」這個元素的樣式 */
 .racefirst-tip {
-    top: 14px;
+    top: 14px;                                          /* 離上邊 14px */
 }
 
+/* 「racefirst-hit」這個元素的樣式 */
 .racefirst-hit {
-    position: absolute;
-    cursor: pointer;
-    z-index: 2;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
+    z-index: 2;                                         /* 疊放順序：數字越大越在上面（2） */
 }

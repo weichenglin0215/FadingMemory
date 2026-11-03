@@ -6,72 +6,80 @@
 
 /* ═══ 085 哪支錶不準（.watchoff-）═══ */
 .watchoff-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    text-align: center;
-    line-height: var(--lh-body);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    text-align: center;                                 /* 文字置中 */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
+/* 「watchoff-obs」這個元素的樣式 */
 .watchoff-obs {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 74px;
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 74px;                                          /* 離上邊 74px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「watchoff-face」這個元素的樣式 */
 .watchoff-face {
-    position: absolute;
-    top: 150px;
-    width: 140px;
-    text-align: center;
-    border-radius: var(--r-md);
-    border: 3px solid transparent;
-    box-sizing: content-box;
-    padding: 4px 0 8px;
-    margin-left: -3px;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    top: 150px;                                         /* 離上邊 150px */
+    width: 140px;                                       /* 寬度：140px */
+    text-align: center;                                 /* 文字置中 */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    border: 3px solid transparent;                      /* 邊框（粗細、線型、顏色）：3px solid transparent */
+    box-sizing: content-box;                            /* 寬高只算內容 */
+    padding: 4px 0 8px;                                 /* 內縮（padding，內容跟邊框的距離）：上 4px、左右 0、下 8px */
+    margin-left: -3px;                                  /* 左外距：-3px */
 }
 
+/* 「svg」標籤的樣式 */
 .watchoff-dial svg {
-    display: block;
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
+/* 「watchoff-name」這個元素的樣式 */
 .watchoff-name {
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「watchoff-sec」這個元素的樣式 */
 .watchoff-sec {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
+/* 「watchoff-face」的「odd」變化版的樣式 */
 .watchoff-face--odd {
-    border-color: var(--c-bad);
-    background: var(--c-bad-soft);
+    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
 }
 
+/* 「watchoff-face」在「錯誤（失敗）時」的樣子的樣式 */
 .watchoff-face--bad {
-    border-color: var(--c-orange);
+    border-color: var(--c-orange);                      /* 邊框顏色：主題變數 --c-orange */
 }
 
+/* 「watchoff-info」這個元素的樣式 */
 .watchoff-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 400px;
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 400px;                                         /* 離上邊 400px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }

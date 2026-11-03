@@ -6,198 +6,215 @@
 
 /* ═══ 吸珍珠（.pearls-）═══ */
 .pearls-stage {
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「pearls-field」這個元素的樣式 */
 .pearls-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* 上方的目標：吸 N 顆珍珠 */
 .pearls-goal {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 6px;
-    text-align: center;
-    color: var(--c-ink);
-    font-weight: var(--fw-black);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 6px;                                           /* 離上邊 6px */
+    text-align: center;                                 /* 文字置中 */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「pearls-goal」裡面的「t」部分的樣式 */
 .pearls-goal__t {
-    font-size: var(--fs-lg);
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
 }
 
+/* 「pearls-goal」裡面的「n」部分的樣式 */
 .pearls-goal__n {
-    color: var(--prl-goal);
-    font-size: var(--fs-xxl);
-    line-height: 1;
+    color: var(--prl-goal);                             /* 文字顏色：主題變數 --prl-goal */
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
 }
 
 /* 嘴（吸管的上端）：粉紅色的嘴唇；吸的時候縮起來 */
 .pearls-mouth {
-    position: absolute;
-    width: 108px;
-    height: 52px;
-    background: var(--prl-lip);
-    border: 4px solid var(--prl-lip-line);
-    border-radius: 50%;
-    box-sizing: border-box;
-    transition: transform 0.12s;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 108px;                                       /* 寬度：108px */
+    height: 52px;                                       /* 高度：52px */
+    background: var(--prl-lip);                         /* 背景：主題變數 --prl-lip */
+    border: 4px solid var(--prl-lip-line);              /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --prl-lip-line */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    transition: transform 0.12s;                        /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.12s */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「pearls-mouth」這個元素，後面插入的裝飾的樣式 */
 .pearls-mouth::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 52px;
-    height: 12px;
-    margin: -6px 0 0 -26px;
-    background: var(--prl-lip-line);
-    border-radius: 50%;
+    content: '';                                        /* 偽元素的內容：'' */
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 50%;                                          /* 離左邊 50% */
+    top: 50%;                                           /* 離上邊 50% */
+    width: 52px;                                        /* 寬度：52px */
+    height: 12px;                                       /* 高度：12px */
+    margin: -6px 0 0 -26px;                             /* 外距（margin，與別的元素的距離）：上 -6px、右 0、下 0、左 -26px */
+    background: var(--prl-lip-line);                    /* 背景：主題變數 --prl-lip-line */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
 }
 
+/* 「pearls-mouth」的「suck」變化版的樣式 */
 .pearls-mouth--suck {
-    transform: scale(0.8, 0.92);
+    transform: scale(0.8, 0.92);                        /* 變形：縮放 0.8, 0.92 倍 */
 }
 
 /* 杯子：梯形的透明杯身、裡面的奶茶、杯底的珍珠 */
 .pearls-cup {
-    position: absolute;
-    clip-path: polygon(5% 0, 95% 0, 85% 100%, 15% 100%);
-    background: var(--prl-cup);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    clip-path: polygon(5% 0, 95% 0, 85% 100%, 15% 100%);  /* 裁成指定形狀：polygon(5% 0, 95% 0, 85% 100%, 15% 100%) */
+    background: var(--prl-cup);                         /* 背景：主題變數 --prl-cup */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「pearls-tea」這個元素的樣式 */
 .pearls-tea {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 86%;
-    background: linear-gradient(var(--prl-tea-top), var(--prl-tea-bottom));
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    height: 86%;                                        /* 高度：86% */
+    background: linear-gradient(var(--prl-tea-top), var(--prl-tea-bottom));  /* 漸層背景 */
 }
 
+/* 「pearls-deco」這個元素的樣式 */
 .pearls-deco {
-    position: absolute;
-    width: 26px;
-    height: 26px;
-    background: radial-gradient(circle at 35% 30%, var(--prl-pearl-lite), var(--prl-pearl));
-    border-radius: 50%;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 26px;                                        /* 寬度：26px */
+    height: 26px;                                       /* 高度：26px */
+    background: radial-gradient(circle at 35% 30%, var(--prl-pearl-lite), var(--prl-pearl));  /* 漸層背景 */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
 }
 
 /* 吸管：細長的半透明管子（吸的時候顏色變深） */
 .pearls-straw {
-    position: absolute;
-    box-sizing: border-box;
-    background: var(--prl-straw);
-    border: 3px solid var(--prl-straw-line);
-    border-radius: 12px;
-    pointer-events: none;
-    transition: background 0.1s;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    background: var(--prl-straw);                       /* 背景：主題變數 --prl-straw */
+    border: 3px solid var(--prl-straw-line);            /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --prl-straw-line */
+    border-radius: 12px;                                /* 圓角：12px */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    transition: background 0.1s;                        /* 狀態改變時的過渡動畫（屬性、時間、緩動）：background 0.1s */
 }
 
+/* 「pearls-straw」的「suck」變化版的樣式 */
 .pearls-straw--suck {
-    background: var(--prl-straw-on);
+    background: var(--prl-straw-on);                    /* 背景：主題變數 --prl-straw-on */
 }
 
+/* 「pearls-pearl」這個元素的樣式 */
 .pearls-pearl {
-    position: absolute;
-    background: radial-gradient(circle at 35% 30%, var(--prl-pearl-lite), var(--prl-pearl));
-    border-radius: 50%;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    background: radial-gradient(circle at 35% 30%, var(--prl-pearl-lite), var(--prl-pearl));  /* 漸層背景 */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「pearls-info」這個元素的樣式 */
 .pearls-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「pearls-info」在「正確（成功）時」的樣子的樣式 */
 .pearls-info--ok {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「pearls-info」在「錯誤（失敗）時」的樣子的樣式 */
 .pearls-info--bad {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
 /* 揭曉：嘴裡的珍珠排成一排、依序編號 */
 .pearls-row {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 4px;
-    padding: var(--sp-2);
-    background: var(--c-card);
-    border: 3px solid var(--c-ink-soft);
-    border-radius: var(--r-md);
-    box-shadow: var(--shadow-card);
-    pointer-events: none;
-    z-index: 3;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 12px;                                         /* 離左邊 12px */
+    right: 12px;                                        /* 離右邊 12px */
+    flex-wrap: wrap;                                    /* 放不下就換行 */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: 4px;                                           /* 子元素之間的空隙：4px */
+    padding: var(--sp-2);                               /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --sp-2 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 3;                                         /* 疊放順序：數字越大越在上面（3） */
 }
 
+/* 「pearls-rowp」這個元素的樣式 */
 .pearls-rowp {
-    text-align: center;
-    background: radial-gradient(circle at 35% 30%, var(--prl-pearl-lite), var(--prl-pearl));
-    border-radius: 50%;
-    color: var(--prl-num);
-    font-weight: var(--fw-black);
+    text-align: center;                                 /* 文字置中 */
+    background: radial-gradient(circle at 35% 30%, var(--prl-pearl-lite), var(--prl-pearl));  /* 漸層背景 */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    color: var(--prl-num);                              /* 文字顏色：主題變數 --prl-num */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
+/* 「pearls-rowp」的「n」變化版的樣式 */
 .pearls-rowp--n {
-    box-shadow: 0 0 0 4px var(--c-ok);
+    box-shadow: 0 0 0 4px var(--c-ok);                  /* 方塊陰影（立體感） */
 }
 
+/* 「pearls-rowp」的「extra」變化版的樣式 */
 .pearls-rowp--extra {
-    box-shadow: 0 0 0 4px var(--c-bad-light);
+    box-shadow: 0 0 0 4px var(--c-bad-light);           /* 方塊陰影（立體感） */
 }
 
+/* 「pearls-rowp」的「none」變化版的樣式 */
 .pearls-rowp--none {
-    color: var(--c-ink-soft);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
 }
 
 /* 按住吸的大按鈕 */
 .pearls-hold {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
-    height: 100px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--prl-hold);
-    border: 4px solid var(--prl-hold-line);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-card);
-    color: var(--prl-hold-text);
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
-    letter-spacing: 6px;
-    touch-action: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 12px;                                         /* 離左邊 12px */
+    right: 12px;                                        /* 離右邊 12px */
+    bottom: 12px;                                       /* 離下邊 12px */
+    height: 100px;                                      /* 高度：100px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    background: var(--prl-hold);                        /* 背景：主題變數 --prl-hold */
+    border: 4px solid var(--prl-hold-line);             /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --prl-hold-line */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
+    color: var(--prl-hold-text);                        /* 文字顏色：主題變數 --prl-hold-text */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    letter-spacing: 6px;                                /* 字與字之間的間距：6px */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
+/* 「pearls-hold」的「down」變化版的樣式 */
 .pearls-hold--down {
-    background: var(--prl-hold-on);
-    transform: translateY(3px);
-    box-shadow: none;
+    background: var(--prl-hold-on);                     /* 背景：主題變數 --prl-hold-on */
+    transform: translateY(3px);                         /* 變形：垂直移動 3px */
+    box-shadow: none;                                   /* 沒有陰影 */
 }

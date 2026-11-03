@@ -21,11 +21,15 @@
    · 揭曉：繩圈裡面整塊塗上淡綠色，螞蟻在不在色塊裡一目了然。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'inout'：選單、成績、存檔都靠它；樣式在 css/games/reaction_inout.css，裡面的 class 名稱一律以 inout- 開頭。 */
     'use strict';
 
-    var ID = 'inout';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'inout';                                   /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -177,7 +181,7 @@
     }
     /* 出一關：{ G, m, P, loop（繩圈的轉角頂點）, ant: { r, c, cell, inside }, depthMin, depth（螞蟻所在格子的深度）, level } */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var m = roomsFor(level), dmin = depthMinFor(level), mz = makeMaze(m, rand), G = mz.G, P = mz.P, ds = distances(G, P, mz.root);
         var wantInside = rand() < 0.5, cands = [], i;
         function collect(inside, minDepth) {
@@ -204,6 +208,7 @@
         if (!curve) { curve = curvePoints(loop, gridLines(G, 0, rand), gridLines(G, 0, rand), null, rand); antXY = [cc0 + 0.5, rr0 + 0.5]; }
         return { G: G, m: m, P: P, loop: loop, curve: curve, antXY: antXY, ant: { r: rr0, c: cc0, cell: cell, inside: inside }, depthMin: dmin, depth: P[cell] ? ds.dIn[cell] : ds.dOut[cell], variance: v, warpA: a, level: level };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 25) return '迷宮高手！';
         if (n >= 15) return '眼力很準！';
@@ -212,6 +217,7 @@
         return '從螞蟻往外畫一條線，數穿過繩子幾次！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'inout-stage',
@@ -237,11 +243,13 @@
         return g;
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand), G = q.G;
-        api.info = q;
-        console.log('[圈內圈外] 第 ' + level + ' 關：迷宮 ' + q.m + '×' + q.m + '（格子 ' + G + '×' + G + '）；螞蟻在 (' + q.ant.r + ',' + q.ant.c + ') ' + (q.ant.inside ? '裡面' : '外面') + '，深度 ' + q.depth + '（下限 ' + q.depthMin + '）；限時 ' + timeMs(level) + ' ms');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[圈內圈外] 第 ' + level + ' 關：迷宮 ' + q.m + '×' + q.m + '（格子 ' + G + '×' + G + '）；螞蟻在 (' + q.ant.r + ',' + q.ant.c + ') ' + (q.ant.inside ? '裡面' : '外面') + '，深度 ' + q.depth + '（下限 ' + q.depthMin + '）；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, cs = Math.floor(Math.min((W - 16) / G, (H - 220) / G)), BS = cs * G, bx = Math.round((W - BS) / 2), by = 62;
         var field = h('div', { 'class': 'inout-field' });
@@ -261,8 +269,9 @@
             { text: '裡面', kind: 'line', cls: 'inout-btn', onTap: function () { judge(true); } },
             { text: '外面', kind: 'line', cls: 'inout-btn', onTap: function () { judge(false); } }
         ], { cols: 2, h: 100, gap: 12 });
-        api.timer(timeMs(level), function () { judge(null); });
-        if (level === 1 && kit.once('inout.hint')) kit.hintOn(stage, grid.btns[q.ant.inside ? 0 : 1], { mode: 'tap', delay: 700, text: '請點「裡面」或「外面」' });
+        api.timer(timeMs(level), function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
+        if (level === 1 && kit.once('inout.hint')) kit.hintOn(stage, grid.btns[q.ant.inside ? 0 : 1], { mode: 'tap', delay: 700, text: '請點「裡面」或「外面」' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
+        /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(inside) {
             if (done || api.over) return;
             done = true;
@@ -275,20 +284,24 @@
             if (ok) { api.pass({ delay: 1500 }); return; }
             api.fail({ delay: 3000, lines: [inside === null ? '時間到！' : '答錯了', '螞蟻在繩圈' + (q.ant.inside ? '裡面' : '外面') + '（綠色的是繩圈裡面）'] });
         }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.ant.inside); };
         api.wrong = function () { judge(!q.ant.inside); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '圈內圈外',
         rule: '地上有一條彎來彎去、首尾相連的紅色繩圈（不會自己交叉），上面有一隻螞蟻。**螞蟻在繩圈的裡面還是外面？** 點「裡面」或「外面」。繩圈是一條彎彎曲曲、粗細不一的不規則曲線，螞蟻又小，常常卡在一條很深的凹口裡，**看起來被包住，其實在外面**。小技巧：**從螞蟻往旁邊畫一條線出去，數穿過繩子幾次**——奇數次在裡面、偶數次在外面。答錯或來不及就結束，看你能過幾關。越後面，繩圈越長、凹口越深、時間越短！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             roomsFor: roomsFor, depthMinFor: depthMinFor, timeMs: timeMs, varianceFor: varianceFor, warpAFor: warpAFor, gridLines: gridLines, warpParams: warpParams, warpPoint: warpPoint, segCross: segCross, selfCrosses: selfCrosses, curvePoints: curvePoints, polyPath: polyPath, makeMaze: makeMaze, distances: distances, boundaryLoop: boundaryLoop, pointInPoly: pointInPoly, loopPath: loopPath, makeLevel: makeLevel, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, ROOMS: ROOMS, DEPTH_MIN: DEPTH_MIN, TIME_S: TIME_S, ROUND: ROUND, VARIANCE: VARIANCE, WARP_A: WARP_A, ANT_SIZE: ANT_SIZE, STEP: STEP, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

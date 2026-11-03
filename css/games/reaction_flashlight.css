@@ -6,76 +6,86 @@
 
 /* ═══ 誰在偷偷動（.snk-）═══ */
 .flashlight-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
-    display: block;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
 /* ═══ 手電筒猜圖（.flashlight-）═══ */
 .flashlight-stage {
-    background: var(--dk-bg);
+    background: var(--dk-bg);                           /* 背景：主題變數 --dk-bg */
 }
 
+/* 「flashlight-bg」這個元素的樣式 */
 .flashlight-bg {
-    fill: var(--dk-bg);
+    fill: var(--dk-bg);                                 /* SVG 圖形的填色：主題變數 --dk-bg */
 }
 
 /* 被光照到的圖案：fill 一定要設成 currentColor——圖案是從 picSvg 的 <svg fill="currentColor"> 裡取出內容放進這個 <g>，
    外面那層 <svg> 的 fill 帶不過來，不設的話圖案預設是黑色、跟全黑的底一樣，拖曳時只看到一片黑（V1.29 玩家意見修正） */
 .flashlight-pic {
-    color: var(--flt-pic);
-    fill: currentColor;
+    color: var(--flt-pic);                              /* 文字顏色：主題變數 --flt-pic */
+    fill: currentColor;                                 /* SVG 圖形的填色：currentColor */
 }
 
+/* 「flashlight-cover」這個元素的樣式 */
 .flashlight-cover {
-    fill: var(--dk-bg);
+    fill: var(--dk-bg);                                 /* SVG 圖形的填色：主題變數 --dk-bg */
 }
 
+/* 「flashlight-ring」這個元素的樣式 */
 .flashlight-ring {
-    fill: none;
-    stroke: var(--c-card);
-    stroke-width: 3;
-    opacity: 0.7;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-card);                              /* SVG 線條顏色：主題變數 --c-card */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    opacity: 0.7;                                       /* 透明度 0.7（1＝完全不透明、0＝全透明） */
 }
 
+/* 「circle」標籤的樣式 */
 .flashlight-scan circle {
-    fill: var(--c-yellow);
-    opacity: 0.12;
+    fill: var(--c-yellow);                              /* SVG 圖形的填色：主題變數 --c-yellow */
+    opacity: 0.12;                                      /* 透明度 0.12（1＝完全不透明、0＝全透明） */
 }
 
+/* 「flashlight-svg」這個元素的樣式 */
 .flashlight-svg {
-    pointer-events: none;
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「flashlight-tip」這個元素的樣式 */
 .flashlight-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 500px;
-    padding: 0 var(--sp-2);
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-paper);
-    line-height: var(--lh-body);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 500px;                                         /* 離上邊 500px */
+    padding: 0 var(--sp-2);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-2 */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-paper);                              /* 文字顏色：主題變數 --c-paper */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
 }
 
+/* 「flashlight-opt」這個元素的樣式 */
 .flashlight-opt {
-    color: var(--c-ink);
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「svg」標籤的樣式 */
 .flashlight-opt svg {
-    width: 62px;
-    height: 62px;
+    width: 62px;                                        /* 寬度：62px */
+    height: 62px;                                       /* 高度：62px */
 }
 
+/* 「flashlight-opt」在「正確時」的樣子的樣式 */
 .flashlight-opt--right {
-    background: var(--c-ok-soft);
-    border-color: var(--c-ok);
+    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
 }
 
+/* 「flashlight-opt」在「錯誤時」的樣子的樣式 */
 .flashlight-opt--wrong {
-    background: var(--c-bad-soft);
-    border-color: var(--c-bad);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
 }

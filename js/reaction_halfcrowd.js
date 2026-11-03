@@ -22,11 +22,15 @@
      所以不會出現「要精準到 0.1 px」的題目。橫桿旁有 ◀ ▶ 可以一次移 1 px 微調。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'halfcrowd'：選單、成績、存檔都靠它；樣式在 css/games/reaction_halfcrowd.css，裡面的 class 名稱一律以 halfcrowd- 開頭。 */
     'use strict';
 
-    var ID = 'halfcrowd';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'halfcrowd';                               /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -48,7 +52,7 @@
     function gapAt(level) { return kit.ramp(level, GAP[0], GAP[1], RAMP_LEVELS); }
     /* 第 level 關的圓形個數（偶數）：N_RANGE[0] → N_RANGE[1] 線性變多，再在基準上下 ±N_JITTER 抖動，夾在 N_RANGE 內 */
     function nAt(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var base = kit.ramp(level, N_RANGE[0], N_RANGE[1], RAMP_LEVELS);
         var n = 2 * Math.round((base + kit.randFloat(-N_JITTER, N_JITTER, rand)) / 2);
         var lo = 2 * Math.ceil(N_RANGE[0] / 2), hi = 2 * Math.floor(N_RANGE[1] / 2);
@@ -69,7 +73,7 @@
     function makeLevel(level, W, H, rand) {
         rand = rand || Math.random;
         var skew = skewAt(level), need = gapAt(level), last = null;
-        for (var tr = 0; tr < TRIES; tr++) {
+        for (var tr = 0; tr < TRIES; tr++) {            /* 用亂數一直重抽，最多 TRIES 次，抽到符合條件的題目就收下 */
             var N = nAt(level, rand);
             /* 擠在哪裡：偏離中央至少 skew×0.28 倍畫面寬，左右隨機；擠成的區域寬度＝畫面寬的 0.3～0.18（越不平均越窄） */
             var side = rand() < 0.5 ? -1 : 1, cc = W / 2 + side * kit.randFloat(0.35, 1, rand) * skew * W * 0.34, sigma = W * kit.lerp(0.14, 0.07, skew / SKEW_MAX);
@@ -118,6 +122,7 @@
         }
         return last;
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 20) return '一眼看穿！';
         if (n >= 12) return '數得真準！';
@@ -126,6 +131,7 @@
         return '人不是均勻分布的，線不在正中間，再試一次！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5,
@@ -137,14 +143,16 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, level = api.level, my = api.my;
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var TOP = 48, BOT = 56 + 84 + 20;                         /* 上方數量列高度、下方橫桿＋按鈕區高度 */
         var AH = H - TOP - BOT;                                   /* 圓形區高度 */
         var q = makeLevel(level, W, AH, api.rand);
-        api.info = q;
-        console.log('[一半的人] 第 ' + level + ' 關：' + q.N + ' 個人、不平均程度 ' + q.skew.toFixed(2) + '；正確範圍 x＝' + q.lo.toFixed(2) + '～' + q.hi.toFixed(2) + '（寬 ' + q.gap.toFixed(2) + 'px，要求至少 ' + q.need.toFixed(1) + 'px）；線從 ' + (W / 2) + ' 開始');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[一半的人] 第 ' + level + ' 關：' + q.N + ' 個人、不平均程度 ' + q.skew.toFixed(2) + '；正確範圍 x＝' + q.lo.toFixed(2) + '～' + q.hi.toFixed(2) + '（寬 ' + q.gap.toFixed(2) + 'px，要求至少 ' + q.need.toFixed(1) + 'px）；線從 ' + (W / 2) + ' 開始');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var info = h('div', { 'class': 'halfcrowd-count' }, [
             h('span', { 'class': 'halfcrowd-count__g', text: '綠色 0' }), h('span', { 'class': 'halfcrowd-count__vs', text: '：' }), h('span', { 'class': 'halfcrowd-count__b', text: '0 藍色' })
@@ -171,6 +179,7 @@
         var okBtn = h('button', { 'class': 'btn btn--go halfcrowd-ok', text: '計算數量' });
         [bar, bL, bR, okBtn].forEach(function (e) { stage.appendChild(e); });
         var KR = 22;
+        /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() {
             line.setAttribute('x1', X.toFixed(2)); line.setAttribute('x2', X.toFixed(2));
             knob.style.left = (KR + (W - 2 * KR) * X / W - KR) + 'px';
@@ -263,6 +272,7 @@
         };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '一半的人',
@@ -271,5 +281,6 @@
         score: SCORE,
         test: { FACE_SCALE: FACE_SCALE, SHOW_CENTER: SHOW_CENTER, GAP: GAP, nAt: nAt, countPlan: countPlan, planAt: planAt, N_JITTER: N_JITTER, RAMP_LEVELS: RAMP_LEVELS, skewAt: skewAt, gapAt: gapAt, minDist: minDist, countLeft: countLeft, makeLevel: makeLevel, N_RANGE: N_RANGE, R_RANGE: R_RANGE, EDGE: EDGE, OVERLAP: OVERLAP, SKEW_MAX: SKEW_MAX }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

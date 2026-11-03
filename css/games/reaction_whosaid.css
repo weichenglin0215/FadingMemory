@@ -6,118 +6,131 @@
 
 /* ═══ 誰說的（.whosaid-）═══ */
 .whosaid-tip {
-    top: 16px;
+    top: 16px;                                          /* 離上邊 16px */
 }
 
+/* 「whosaid-who」這個元素的樣式 */
 .whosaid-who {
-    display: inline-block;
-    padding: 0 var(--sp-3);
-    border-radius: var(--r-sm);
-    color: var(--c-on-accent);
+    display: inline-block;                              /* 像文字一樣排在同一行，但可以設定寬高 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    color: var(--c-on-accent);                          /* 文字顏色：主題變數 --c-on-accent */
 }
 
+/* 「whosaid-person」這個元素的樣式 */
 .whosaid-person {
-    position: absolute;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
 }
 
+/* 「svg」標籤的樣式 */
 .whosaid-person svg {
-    display: block;
-    width: 78%;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    width: 78%;                                         /* 寬度：78% */
 }
 
+/* 「whosaid-name」這個元素的樣式 */
 .whosaid-name {
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
 /* 漫畫對話泡泡：在小人頭上，有字才顯示，下方有一個小尖角 */
 .whosaid-bubble {
-    position: absolute;
-    left: 50%;
-    bottom: 100%;
-    transform: translateX(-50%);
-    min-width: 62px;
-    padding: 0 var(--sp-3);
-    height: 62px;
-    margin-bottom: 8px;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    border-radius: 22px;
-    background: var(--c-card);
-    border: 4px solid var(--c-ink);
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    white-space: nowrap;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 50%;                                          /* 離左邊 50% */
+    bottom: 100%;                                       /* 離下邊 100% */
+    transform: translateX(-50%);                        /* 變形：水平移動 -50% */
+    min-width: 62px;                                    /* 最小寬度：62px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    height: 62px;                                       /* 高度：62px */
+    margin-bottom: 8px;                                 /* 下外距：8px */
+    display: none;                                      /* 不顯示（也不佔位置） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    border-radius: 22px;                                /* 圓角：22px */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 4px solid var(--c-ink);                     /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --c-ink */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    white-space: nowrap;                                /* 文字不換行 */
 }
 
+/* 「whosaid-bubble」這個元素，後面插入的裝飾的樣式 */
 .whosaid-bubble::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    bottom: -16px;
-    margin-left: -9px;
-    border: 9px solid transparent;
-    border-top: 12px solid var(--c-ink);
-    border-bottom: 0;
+    content: '';                                        /* 偽元素的內容：'' */
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 50%;                                          /* 離左邊 50% */
+    bottom: -16px;                                      /* 離下邊 -16px */
+    margin-left: -9px;                                  /* 左外距：-9px */
+    border: 9px solid transparent;                      /* 邊框（粗細、線型、顏色）：9px solid transparent */
+    border-top: 12px solid var(--c-ink);                /* 上邊框：12px solid 主題變數 --c-ink */
+    border-bottom: 0;                                   /* 下邊框：0 */
 }
 
+/* 「whosaid-bubble」這個元素；「whosaid-bubble」這個元素的樣式 */
 .whosaid-person--say .whosaid-bubble,
 .whosaid-person--list .whosaid-bubble {
-    display: flex;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
 }
 
+/* 「whosaid-bubble」這個元素的樣式 */
 .whosaid-person--list .whosaid-bubble {
-    font-size: var(--fs-lg);
-    min-width: 0;
-    height: 52px;
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    min-width: 0;                                       /* 最小寬度：0 */
+    height: 52px;                                       /* 高度：52px */
 }
 
+/* 「svg」標籤的樣式 */
 .whosaid-person--ask svg {
-    filter: drop-shadow(0 0 8px var(--c-yellow));
+    filter: drop-shadow(0 0 8px var(--c-yellow));       /* 濾鏡效果：drop-shadow(0 0 8px var(--c-yellow)) */
 }
 
+/* 「whosaid-slots」這個元素的樣式 */
 .whosaid-slots {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 350px;
-    display: flex;
-    justify-content: center;
-    gap: var(--sp-3);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 350px;                                         /* 離上邊 350px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
 }
 
+/* 「whosaid-slot」這個元素的樣式 */
 .whosaid-slot {
-    width: 64px;
-    height: 78px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--r-md);
-    background: var(--c-card);
-    border: 3px dashed var(--c-ink-soft);
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    width: 64px;                                        /* 寬度：64px */
+    height: 78px;                                       /* 高度：78px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px dashed var(--c-ink-soft);               /* 邊框（粗細、線型、顏色）：3px dashed 主題變數 --c-ink-soft */
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「whosaid-slot」在「正確（成功）時」的樣子的樣式 */
 .whosaid-slot--ok {
-    border: 3px solid var(--c-ok);
-    background: var(--c-ok-soft);
-    color: var(--c-ok);
+    border: 3px solid var(--c-ok);                      /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ok */
+    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「whosaid-slot」的「miss」變化版的樣式 */
 .whosaid-slot--miss {
-    border: 3px solid var(--c-orange);
-    background: var(--c-orange-soft);
-    color: var(--c-orange);
+    border: 3px solid var(--c-orange);                  /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-orange */
+    background: var(--c-orange-soft);                   /* 背景：主題變數 --c-orange-soft */
+    color: var(--c-orange);                             /* 文字顏色：主題變數 --c-orange */
 }
 
+/* 「whosaid-btn」這個元素的樣式 */
 .whosaid-btn {
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }

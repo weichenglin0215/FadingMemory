@@ -6,263 +6,296 @@
 
 /* ═══ 迴轉壽司（.sushi-）═══ */
 .sushi-stage {
-    user-select: none;
-    -webkit-user-select: none;
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「sushi-field」這個元素的樣式 */
 .sushi-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* 價目表：一直貼在上面 */
 .sushi-legend {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    top: 8px;
-    display: flex;
-    justify-content: space-around;
-    padding: var(--sp-1) var(--sp-2);
-    background: var(--c-card);
-    border: 3px solid var(--c-ink-soft);
-    border-radius: var(--r-md);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 12px;                                         /* 離左邊 12px */
+    right: 12px;                                        /* 離右邊 12px */
+    top: 8px;                                           /* 離上邊 8px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    justify-content: space-around;                      /* 每個子元素兩側留一樣的空間 */
+    padding: var(--sp-1) var(--sp-2);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-1、下 主題變數、左 --sp-2 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「sushi-legend」裡面的「i」部分的樣式 */
 .sushi-legend__i {
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: 4px;                                           /* 子元素之間的空隙：4px */
 }
 
+/* 「sushi-legend」裡面的「t」部分的樣式 */
 .sushi-legend__t {
-    color: var(--c-ink);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-black);
-    white-space: nowrap;
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    white-space: nowrap;                                /* 文字不換行 */
 }
 
+/* 「sushi-dot」這個元素的樣式 */
 .sushi-dot {
-    width: 26px;
-    height: 26px;
-    box-sizing: border-box;
-    background: var(--ssh-plate-in);
-    border: 7px solid var(--ssh-c-white);
-    border-radius: 50%;
+    width: 26px;                                        /* 寬度：26px */
+    height: 26px;                                       /* 高度：26px */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    background: var(--ssh-plate-in);                    /* 背景：主題變數 --ssh-plate-in */
+    border: 7px solid var(--ssh-c-white);               /* 邊框（粗細、線型、顏色）：7px solid 主題變數 --ssh-c-white */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
 }
 
+/* 「sushi-goal」這個元素的樣式 */
 .sushi-goal {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 84px;
-    text-align: center;
-    color: var(--c-ink);
-    font-weight: var(--fw-black);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 84px;                                          /* 離上邊 84px */
+    text-align: center;                                 /* 文字置中 */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「sushi-goal」裡面的「t」部分的樣式 */
 .sushi-goal__t {
-    font-size: var(--fs-lg);
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
 }
 
+/* 「sushi-goal」裡面的「n」部分的樣式 */
 .sushi-goal__n {
-    color: var(--ssh-goal);
-    font-size: var(--fs-xxl);
-    line-height: 1;
+    color: var(--ssh-goal);                             /* 文字顏色：主題變數 --ssh-goal */
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
 }
 
 /* 輸送帶（銀色）：條紋往左跑 */
 .sushi-belt {
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 22px;
-    background: repeating-linear-gradient(90deg, var(--ssh-belt-a) 0, var(--ssh-belt-a) 20px, var(--ssh-belt-b) 20px, var(--ssh-belt-b) 40px);
-    border-top: 3px solid var(--ssh-belt-edge);
-    border-bottom: 3px solid var(--ssh-belt-edge);
-    animation: sushi-belt 0.3s linear infinite;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    height: 22px;                                       /* 高度：22px */
+    background: repeating-linear-gradient(90deg, var(--ssh-belt-a) 0, var(--ssh-belt-a) 20px, var(--ssh-belt-b) 20px, var(--ssh-belt-b) 40px);  /* 漸層背景 */
+    border-top: 3px solid var(--ssh-belt-edge);         /* 上邊框：3px solid 主題變數 --ssh-belt-edge */
+    border-bottom: 3px solid var(--ssh-belt-edge);      /* 下邊框：3px solid 主題變數 --ssh-belt-edge */
+    animation: sushi-belt 0.3s linear infinite;         /* 播放動畫（名稱、時間、緩動、次數）：sushi-belt 0.3s linear infinite */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 動畫 sushi-belt：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes sushi-belt {
     to {
-        background-position: -40px 0;
+        background-position: -40px 0;                   /* 背景圖位置：-40px 0 */
     }
 }
 
 /* 盤子走的那一條（整條都收得到點擊，用座標找最近的盤子） */
 .sushi-lane {
-    position: absolute;
-    left: 0;
-    right: 0;
-    overflow: hidden;
-    touch-action: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
+/* 「sushi-plate」這個元素的樣式 */
 .sushi-plate {
-    position: absolute;
-    left: 0;
-    top: 0;
-    box-sizing: border-box;
-    background: var(--ssh-plate-in);
-    border: 9px solid var(--ssh-c-white);
-    border-radius: 50%;
-    box-shadow: var(--shadow-card);
-    pointer-events: none;
-    will-change: transform;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    background: var(--ssh-plate-in);                    /* 背景：主題變數 --ssh-plate-in */
+    border: 9px solid var(--ssh-c-white);               /* 邊框（粗細、線型、顏色）：9px solid 主題變數 --ssh-c-white */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    will-change: transform;                             /* 提示瀏覽器這個屬性會變動，先準備好（讓動畫更順） */
 }
 
+/* 「sushi-pwhite」這個元素的樣式 */
 .sushi-pwhite {
-    border-color: var(--ssh-c-white);
+    border-color: var(--ssh-c-white);                   /* 邊框顏色：主題變數 --ssh-c-white */
 }
 
+/* 「sushi-pred」這個元素的樣式 */
 .sushi-pred {
-    border-color: var(--ssh-c-red);
+    border-color: var(--ssh-c-red);                     /* 邊框顏色：主題變數 --ssh-c-red */
 }
 
+/* 「sushi-pgreen」這個元素的樣式 */
 .sushi-pgreen {
-    border-color: var(--ssh-c-green);
+    border-color: var(--ssh-c-green);                   /* 邊框顏色：主題變數 --ssh-c-green */
 }
 
+/* 「sushi-pblue」這個元素的樣式 */
 .sushi-pblue {
-    border-color: var(--ssh-c-blue);
+    border-color: var(--ssh-c-blue);                    /* 邊框顏色：主題變數 --ssh-c-blue */
 }
 
+/* 「sushi-pgold」這個元素的樣式 */
 .sushi-pgold {
-    border-color: var(--ssh-c-gold);
+    border-color: var(--ssh-c-gold);                    /* 邊框顏色：主題變數 --ssh-c-gold */
 }
 
+/* 「sushi-pwhite」這個元素（同時有 .sushi-dot）的樣式 */
 .sushi-dot.sushi-pwhite {
-    border-color: var(--ssh-c-white);
+    border-color: var(--ssh-c-white);                   /* 邊框顏色：主題變數 --ssh-c-white */
 }
 
 /* 壽司：白飯糰上面一片料 */
 .sushi-rice {
-    position: absolute;
-    left: 22%;
-    right: 22%;
-    top: 34%;
-    bottom: 22%;
-    background: var(--ssh-rice);
-    border-radius: 40% 40% 50% 50%;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 22%;                                          /* 離左邊 22% */
+    right: 22%;                                         /* 離右邊 22% */
+    top: 34%;                                           /* 離上邊 34% */
+    bottom: 22%;                                        /* 離下邊 22% */
+    background: var(--ssh-rice);                        /* 背景：主題變數 --ssh-rice */
+    border-radius: 40% 40% 50% 50%;                     /* 圓角：40% 40% 50% 50% */
 }
 
+/* 「sushi-top」這個元素的樣式 */
 .sushi-top {
-    position: absolute;
-    left: 16%;
-    right: 16%;
-    top: 22%;
-    height: 34%;
-    border-radius: 50% 50% 40% 40%;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 16%;                                          /* 離左邊 16% */
+    right: 16%;                                         /* 離右邊 16% */
+    top: 22%;                                           /* 離上邊 22% */
+    height: 34%;                                        /* 高度：34% */
+    border-radius: 50% 50% 40% 40%;                     /* 圓角：50% 50% 40% 40% */
 }
 
+/* 「sushi-top」的「salmon」變化版的樣式 */
 .sushi-top--salmon {
-    background: var(--ssh-salmon);
+    background: var(--ssh-salmon);                      /* 背景：主題變數 --ssh-salmon */
 }
 
+/* 「sushi-top」的「egg」變化版的樣式 */
 .sushi-top--egg {
-    background: var(--ssh-egg);
+    background: var(--ssh-egg);                         /* 背景：主題變數 --ssh-egg */
 }
 
+/* 「sushi-top」的「shrimp」變化版的樣式 */
 .sushi-top--shrimp {
-    background: var(--ssh-shrimp);
+    background: var(--ssh-shrimp);                      /* 背景：主題變數 --ssh-shrimp */
 }
 
+/* 「sushi-plate」的「mini」變化版的樣式 */
 .sushi-plate--mini {
-    box-shadow: none;
+    box-shadow: none;                                   /* 沒有陰影 */
 }
 
+/* 「sushi-stack」這個元素的樣式 */
 .sushi-stack {
-    position: absolute;
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「sushi-stack」裡面的「t」部分的樣式 */
 .sushi-stack__t {
-    color: var(--c-ink-soft);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
 }
 
+/* 「sushi-stack」裡面的「top」部分的樣式 */
 .sushi-stack__top {
-    position: relative;
-    width: 76px;
-    height: 76px;
-    margin: 0 auto;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    width: 76px;                                        /* 寬度：76px */
+    height: 76px;                                       /* 高度：76px */
+    margin: 0 auto;                                     /* 外距（margin，與別的元素的距離）：上下 0、左右 auto */
 }
 
+/* 「sushi-plate」這個元素的樣式 */
 .sushi-stack__top .sushi-plate {
-    width: 76px;
-    height: 76px;
+    width: 76px;                                        /* 寬度：76px */
+    height: 76px;                                       /* 高度：76px */
 }
 
+/* 「sushi-info」這個元素的樣式 */
 .sushi-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「sushi-info」在「正確（成功）時」的樣子的樣式 */
 .sushi-info--ok {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「sushi-info」在「錯誤（失敗）時」的樣子的樣式 */
 .sushi-info--bad {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
+/* 「sushi-btn」這個元素的樣式 */
 .sushi-btn {
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
+/* 「sushi-btn」在「關閉（熄滅）時」的樣子的樣式 */
 .sushi-btn--off {
-    opacity: 0.45;
+    opacity: 0.45;                                      /* 透明度 0.45（1＝完全不透明、0＝全透明） */
 }
 
 /* 揭曉：拿的盤子攤開，每盤下面寫價錢與累加的總和 */
 .sushi-spread {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 6px;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 12px;                                         /* 離左邊 12px */
+    right: 12px;                                        /* 離右邊 12px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-wrap: wrap;                                    /* 放不下就換行 */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: 6px;                                           /* 子元素之間的空隙：6px */
 }
 
+/* 「sushi-spread」裡面的「none」部分的樣式 */
 .sushi-spread__none {
-    width: 100%;
-    padding: var(--sp-4) 0;
-    text-align: center;
-    color: var(--c-ink-soft);
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
+    width: 100%;                                        /* 寬度：100% */
+    padding: var(--sp-4) 0;                             /* 內縮（padding，內容跟邊框的距離）：上 主題變數、左右 --sp-4、下 0 */
+    text-align: center;                                 /* 文字置中 */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
 }
 
+/* 「sushi-cell」這個元素的樣式 */
 .sushi-cell {
-    text-align: center;
+    text-align: center;                                 /* 文字置中 */
 }
 
+/* 「sushi-cell」裡面的「p」部分的樣式 */
 .sushi-cell__p {
-    color: var(--c-ink-soft);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    line-height: 1.2;
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: 1.2;                                   /* 行高：1.2（文字每一行佔的高度） */
 }
 
+/* 「sushi-cell」裡面的「s」部分的樣式 */
 .sushi-cell__s {
-    color: var(--c-ink);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    line-height: 1.2;
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1.2;                                   /* 行高：1.2（文字每一行佔的高度） */
 }

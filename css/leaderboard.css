@@ -12,478 +12,517 @@
    其他區塊（標題、欄位標題、提示、按鈕）高度固定、不准被壓縮（.dlg__card>* 在 css/dialog.css）——
    不然榜單很長的時候，底下的按鈕會被擠成一條細線。 */
 .dlg__card>.lb-viewport {
-    flex: 1 1 0;
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
 }
 
 /* ═══ 世界前 30 名：標題區 ═══ */
 .lb-head {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-3);
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
 }
 
 /* 左側金色圓形獎盃 */
 .lb-head__icon {
-    flex: 0 0 auto;
-    width: 68px;
-    height: 68px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: var(--lb-gold-bg);
-    color: var(--lb-gold-ink);
-    font-size: 40px;
-    box-shadow: 0 3px 10px var(--lb-gold-glow);
+    flex: 0 0 auto;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    width: 68px;                                        /* 寬度：68px */
+    height: 68px;                                       /* 高度：68px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    background: var(--lb-gold-bg);                      /* 背景：主題變數 --lb-gold-bg */
+    color: var(--lb-gold-ink);                          /* 文字顏色：主題變數 --lb-gold-ink */
+    font-size: 40px;                                    /* 字級：40px */
+    box-shadow: 0 3px 10px var(--lb-gold-glow);         /* 方塊陰影（立體感） */
 }
 
+/* 「lb-head」裡面的「txt」部分的樣式 */
 .lb-head__txt {
-    min-width: 0;
+    min-width: 0;                                       /* 最小寬度：0 */
 }
 
+/* 「lb-title」這個元素的樣式 */
 .lb-title {
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    line-height: var(--lh-tight);
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: var(--lh-tight);                       /* 行高：主題變數 --lh-tight（文字每一行佔的高度） */
 }
 
+/* 「lb-sub」這個元素的樣式 */
 .lb-sub {
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    white-space: nowrap;                                /* 文字不換行 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    text-overflow: ellipsis;                            /* 文字太長時，用「…」顯示 */
 }
 
 /* 「暱稱：xxx　[修改]」那一行 */
 .lb-nickline {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sp-2);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: space-between;                     /* 頭尾貼邊，剩下的空間平均分給中間 */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
+/* 「lb-nickline」裡面的「t」部分的樣式 */
 .lb-nickline__t {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    min-width: 0;                                       /* 最小寬度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    text-overflow: ellipsis;                            /* 文字太長時，用「…」顯示 */
+    white-space: nowrap;                                /* 文字不換行 */
 }
 
+/* 「lb-nickline」裡面的「btn」部分的樣式 */
 .lb-nickline__btn {
-    flex: 0 0 auto;
-    height: 40px;
-    cursor: pointer;
+    flex: 0 0 auto;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    height: 40px;                                       /* 高度：40px */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
 }
 
 /* 欄位標題：名次／暱稱／成績（欄寬跟下面的 .lb-row 一樣） */
 .lb-cols {
-    display: grid;
-    grid-template-columns: var(--lb-rank-col) 1fr auto;
-    gap: var(--sp-2);
-    padding: 0 var(--sp-3);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    display: grid;                                      /* 格線排版：子元素排進格子 */
+    grid-template-columns: var(--lb-rank-col) 1fr auto; /* 格線的欄（每欄的寬度）：var(--lb-rank-col) 1fr auto */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
+/* 「span」標籤，第一個的樣式 */
 .lb-cols span:first-child {
-    text-align: center;
+    text-align: center;                                 /* 文字置中 */
 }
 
+/* 「span」標籤，最後一個的樣式 */
 .lb-cols span:last-child {
-    text-align: right;
+    text-align: right;                                  /* 文字靠右 */
 }
 
 /* ═══ 可拖曳捲動的榜單視窗 ═══
    touch-action: none：告訴瀏覽器「這塊的手指拖曳我自己處理」，不要同時觸發瀏覽器的捲動／縮放
    （慣性捲動是 js/leaderboard_ui.js 的 makeScroller 做的）。 */
 .lb-viewport {
-    position: relative;
-    flex: 1 1 0;
-    min-height: 0;
-    overflow: hidden;
-    touch-action: none;
-    cursor: grab;
-    border-radius: var(--r-md);
-    -webkit-user-select: none;
-    user-select: none;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    cursor: grab;                                       /* 滑鼠游標樣式：grab */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「is-drag」這個元素（同時有 .lb-viewport）的樣式 */
 .lb-viewport.is-drag {
-    cursor: grabbing;
+    cursor: grabbing;                                   /* 滑鼠游標樣式：grabbing */
 }
 
 /* 裡面很長的內容，由 JS 用 transform 上下平移；上方多留一點空間，讓第一名的皇冠不會被切到 */
 .lb-list {
-    will-change: transform;
-    padding: var(--sp-5) 0 var(--sp-4);
+    will-change: transform;                             /* 提示瀏覽器這個屬性會變動，先準備好（讓動畫更順） */
+    padding: var(--sp-5) 0 var(--sp-4);                 /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-5、下 0、左 主題變數 */
 }
 
 /* 右側的小滑桿：平常看不見，捲動時浮現，讓玩家知道這裡可以滑 */
 .lb-thumb {
-    position: absolute;
-    top: 0;
-    right: 3px;
-    width: 8px;
-    border-radius: var(--r-pill);
-    background: var(--c-ink-soft);
-    opacity: 0;
-    transition: opacity 0.25s ease;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    top: 0;                                             /* 離上邊 0 */
+    right: 3px;                                         /* 離右邊 3px */
+    width: 8px;                                         /* 寬度：8px */
+    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill */
+    background: var(--c-ink-soft);                      /* 背景：主題變數 --c-ink-soft */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    transition: opacity 0.25s ease;                     /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.25s ease */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「is-on」這個元素（同時有 .lb-thumb）的樣式 */
 .lb-thumb.is-on {
-    opacity: 0.55;
+    opacity: 0.55;                                      /* 透明度 0.55（1＝完全不透明、0＝全透明） */
 }
 
 /* 榜單底下的提示（進榜門檻、空位、連線狀態） */
 .lb-note {
-    min-height: 30px;
-    text-align: center;
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-body);
-    color: var(--c-ink-soft);
+    min-height: 30px;                                   /* 最小高度：30px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* ═══ 一列：名次 ｜ 暱稱 ｜ 成績 ═══ */
 .lb-row {
-    position: relative;
-    display: grid;
-    grid-template-columns: var(--lb-rank-col) 1fr auto;
-    align-items: center;
-    gap: var(--sp-2);
-    height: var(--lb-row-h);
-    margin-bottom: var(--sp-2);
-    padding: 0 var(--sp-3);
-    border-radius: var(--r-md);
-    background: var(--c-card-alt);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    display: grid;                                      /* 格線排版：子元素排進格子 */
+    grid-template-columns: var(--lb-rank-col) 1fr auto; /* 格線的欄（每欄的寬度）：var(--lb-rank-col) 1fr auto */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
+    height: var(--lb-row-h);                            /* 高度：主題變數 --lb-row-h */
+    margin-bottom: var(--sp-2);                         /* 下外距：主題變數 --sp-2 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
 }
 
 /* 偶數名次換個底色，一列一列比較好對 */
 .lb-row--alt {
-    background: var(--c-paper);
+    background: var(--c-paper);                         /* 背景：主題變數 --c-paper */
 }
 
+/* 「lb-rank」這個元素的樣式 */
 .lb-rank {
-    position: relative;
-    text-align: center;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    text-align: center;                                 /* 文字置中 */
 }
 
+/* 「lb-rank」的「n」變化版的樣式 */
 .lb-rank--n {
-    color: var(--c-ink-soft);
-    font-weight: var(--fw-black);
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
+/* 「lb-nick」這個元素的樣式 */
 .lb-nick {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-2);
-    min-width: 0;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
+    min-width: 0;                                       /* 最小寬度：0 */
 }
 
 /* 暱稱太長就用「…」收尾，不會把版面撐壞（暱稱本身最多 8 個字，正常放得下） */
 .lb-nick__t {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    min-width: 0;                                       /* 最小寬度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    text-overflow: ellipsis;                            /* 文字太長時，用「…」顯示 */
+    white-space: nowrap;                                /* 文字不換行 */
 }
 
 /* 「你」：標出這一列是自己 */
 .lb-you {
-    flex: 0 0 auto;
-    padding: 0 var(--sp-2);
-    height: 32px;
-    line-height: 32px;
-    border-radius: var(--r-pill);
-    background: var(--c-blue);
-    color: var(--c-on-accent);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-black);
+    flex: 0 0 auto;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    padding: 0 var(--sp-2);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-2 */
+    height: 32px;                                       /* 高度：32px */
+    line-height: 32px;                                  /* 行高：32px（文字每一行佔的高度） */
+    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill */
+    background: var(--c-blue);                          /* 背景：主題變數 --c-blue */
+    color: var(--c-on-accent);                          /* 文字顏色：主題變數 --c-on-accent */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
 /* tabular-nums：數字等寬，一整排成績的小數點才會對齊 */
 .lb-score {
-    text-align: right;
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
-    font-weight: var(--fw-black);
-    color: var(--c-blue);
+    text-align: right;                                  /* 文字靠右 */
+    white-space: nowrap;                                /* 文字不換行 */
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-blue);                               /* 文字顏色：主題變數 --c-blue */
 }
 
+/* 「lb-row」在「屬於玩家（你）時」的樣子的樣式 */
 .lb-row--mine {
-    outline: 3px solid var(--c-blue);
-    outline-offset: -3px;
+    outline: 3px solid var(--c-blue);                   /* 外框線：3px solid 主題變數 --c-blue */
+    outline-offset: -3px;                               /* 外框線離元素多遠：-3px */
 }
 
 /* ═══ 前三名：特別凸顯（金／銀／銅底色、金屬徽章、比較高的列，第一名還有皇冠與流光） ═══ */
 .lb-row--top {
-    height: var(--lb-row-h-top);
-    border: 3px solid transparent;
+    height: var(--lb-row-h-top);                        /* 高度：主題變數 --lb-row-h-top */
+    border: 3px solid transparent;                      /* 邊框（粗細、線型、顏色）：3px solid transparent */
 }
 
+/* 「lb-score」這個元素的樣式 */
 .lb-row--top .lb-score {
-    color: inherit;
-    font-size: var(--fs-md);
+    color: inherit;                                     /* 文字顏色：inherit */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
 }
 
+/* 「lb-row」的「r1」變化版的樣式 */
 .lb-row--r1 {
-    background: var(--lb-gold-row);
-    color: var(--lb-gold-ink);
-    border-color: var(--lb-gold-edge);
-    box-shadow: 0 4px 16px var(--lb-gold-glow);
+    background: var(--lb-gold-row);                     /* 背景：主題變數 --lb-gold-row */
+    color: var(--lb-gold-ink);                          /* 文字顏色：主題變數 --lb-gold-ink */
+    border-color: var(--lb-gold-edge);                  /* 邊框顏色：主題變數 --lb-gold-edge */
+    box-shadow: 0 4px 16px var(--lb-gold-glow);         /* 方塊陰影（立體感） */
 }
 
+/* 「lb-row」的「r2」變化版的樣式 */
 .lb-row--r2 {
-    background: var(--lb-silver-row);
-    color: var(--lb-silver-ink);
-    border-color: var(--lb-silver-edge);
-    box-shadow: 0 4px 14px var(--lb-silver-glow);
+    background: var(--lb-silver-row);                   /* 背景：主題變數 --lb-silver-row */
+    color: var(--lb-silver-ink);                        /* 文字顏色：主題變數 --lb-silver-ink */
+    border-color: var(--lb-silver-edge);                /* 邊框顏色：主題變數 --lb-silver-edge */
+    box-shadow: 0 4px 14px var(--lb-silver-glow);       /* 方塊陰影（立體感） */
 }
 
+/* 「lb-row」的「r3」變化版的樣式 */
 .lb-row--r3 {
-    background: var(--lb-bronze-row);
-    color: var(--lb-bronze-ink);
-    border-color: var(--lb-bronze-edge);
-    box-shadow: 0 4px 14px var(--lb-bronze-glow);
+    background: var(--lb-bronze-row);                   /* 背景：主題變數 --lb-bronze-row */
+    color: var(--lb-bronze-ink);                        /* 文字顏色：主題變數 --lb-bronze-ink */
+    border-color: var(--lb-bronze-edge);                /* 邊框顏色：主題變數 --lb-bronze-edge */
+    box-shadow: 0 4px 14px var(--lb-bronze-glow);       /* 方塊陰影（立體感） */
 }
 
 /* 名次徽章：圓形金屬牌，數字在中間 */
 .lb-medal {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    border: 3px solid var(--c-on-accent);
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    box-shadow: 0 2px 8px var(--lb-gold-glow);
+    display: inline-flex;                               /* 像文字一樣排在同一行的彈性盒子 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    width: 56px;                                        /* 寬度：56px */
+    height: 56px;                                       /* 高度：56px */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    border: 3px solid var(--c-on-accent);               /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-on-accent */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    box-shadow: 0 2px 8px var(--lb-gold-glow);          /* 方塊陰影（立體感） */
 }
 
+/* 「lb-medal」這個元素的樣式 */
 .lb-row--r1 .lb-medal {
-    background: var(--lb-gold-bg);
-    color: var(--lb-gold-ink);
+    background: var(--lb-gold-bg);                      /* 背景：主題變數 --lb-gold-bg */
+    color: var(--lb-gold-ink);                          /* 文字顏色：主題變數 --lb-gold-ink */
 }
 
+/* 「lb-medal」這個元素的樣式 */
 .lb-row--r2 .lb-medal {
-    background: var(--lb-silver-bg);
-    color: var(--lb-silver-ink);
-    box-shadow: 0 2px 8px var(--lb-silver-glow);
+    background: var(--lb-silver-bg);                    /* 背景：主題變數 --lb-silver-bg */
+    color: var(--lb-silver-ink);                        /* 文字顏色：主題變數 --lb-silver-ink */
+    box-shadow: 0 2px 8px var(--lb-silver-glow);        /* 方塊陰影（立體感） */
 }
 
+/* 「lb-medal」這個元素的樣式 */
 .lb-row--r3 .lb-medal {
-    background: var(--lb-bronze-bg);
-    color: var(--lb-bronze-ink);
-    box-shadow: 0 2px 8px var(--lb-bronze-glow);
+    background: var(--lb-bronze-bg);                    /* 背景：主題變數 --lb-bronze-bg */
+    color: var(--lb-bronze-ink);                        /* 文字顏色：主題變數 --lb-bronze-ink */
+    box-shadow: 0 2px 8px var(--lb-bronze-glow);        /* 方塊陰影（立體感） */
 }
 
 /* 第一名徽章上方的皇冠 */
 .lb-crown {
-    position: absolute;
-    left: 50%;
-    top: -22px;
-    transform: translateX(-50%);
-    font-size: 30px;
-    line-height: 1;
-    color: var(--lb-gold-edge);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 50%;                                          /* 離左邊 50% */
+    top: -22px;                                         /* 離上邊 -22px */
+    transform: translateX(-50%);                        /* 變形：水平移動 -50% */
+    font-size: 30px;                                    /* 字級：30px */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
+    color: var(--lb-gold-edge);                         /* 文字顏色：主題變數 --lb-gold-edge */
 }
 
 /* 皇冠圖示預設只有線條，這裡填滿成實心 */
 .lb-crown .icon {
-    width: 1em;
-    height: 1em;
-    fill: currentColor;
+    width: 1em;                                         /* 寬度：1em */
+    height: 1em;                                        /* 高度：1em */
+    fill: currentColor;                                 /* SVG 圖形的填色：currentColor */
 }
 
 /* 第一名那一列定時掃過一道流光（clip-path 把光裁在圓角列的範圍內） */
 .lb-row--r1::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    clip-path: inset(0 round var(--r-md));
-    background: linear-gradient(105deg, transparent 38%, var(--lb-shine) 50%, transparent 62%);
-    transform: translateX(-120%);
-    animation: lb-shine 3.4s ease-in-out infinite;
-    pointer-events: none;
+    content: '';                                        /* 偽元素的內容：'' */
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    border-radius: inherit;                             /* 圓角：inherit */
+    clip-path: inset(0 round var(--r-md));              /* 裁成指定形狀：inset(0 round var(--r-md)) */
+    background: linear-gradient(105deg, transparent 38%, var(--lb-shine) 50%, transparent 62%);  /* 漸層背景 */
+    transform: translateX(-120%);                       /* 變形：水平移動 -120% */
+    animation: lb-shine 3.4s ease-in-out infinite;      /* 播放動畫（名稱、時間、緩動、次數）：lb-shine 3.4s ease-in-out infinite */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 動畫 lb-shine：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes lb-shine {
 
     0%,
     55% {
-        transform: translateX(-120%);
+        transform: translateX(-120%);                   /* 變形：水平移動 -120% */
     }
 
     100% {
-        transform: translateX(120%);
+        transform: translateX(120%);                    /* 變形：水平移動 120% */
     }
 }
 
 /* ═══ 載入中／空榜單／連不上 ═══ */
 .lb-msg {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--sp-3);
-    padding: var(--sp-5) var(--sp-4);
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-body);
-    color: var(--c-ink-soft);
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
+    padding: var(--sp-5) var(--sp-4);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-5、下 主題變數、左 --sp-4 */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
+/* 「lb-msg」的「first」變化版的樣式 */
 .lb-msg--first {
-    color: var(--c-ink);
-    font-weight: var(--fw-black);
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
+/* 「lb-msg」裡面的「icon」部分的樣式 */
 .lb-msg__icon {
-    width: 96px;
-    height: 96px;
-    color: var(--lb-gold-edge);
+    width: 96px;                                        /* 寬度：96px */
+    height: 96px;                                       /* 高度：96px */
+    color: var(--lb-gold-edge);                         /* 文字顏色：主題變數 --lb-gold-edge */
 }
 
+/* 「lb-msg」裡面的「sub」部分的樣式 */
 .lb-msg__sub {
-    font-size: var(--fs-sm);
-    color: var(--c-orange);
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    color: var(--c-orange);                             /* 文字顏色：主題變數 --c-orange */
 }
 
+/* 「lb-spin」這個元素的樣式 */
 .lb-spin {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    border: 6px solid var(--c-yellow-soft);
+    width: 56px;                                        /* 寬度：56px */
+    height: 56px;                                       /* 高度：56px */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    border: 6px solid var(--c-yellow-soft);             /* 邊框（粗細、線型、顏色）：6px solid 主題變數 --c-yellow-soft */
     border-top-color: var(--c-orange);
-    animation: lb-spin 0.9s linear infinite;
+    animation: lb-spin 0.9s linear infinite;            /* 播放動畫（名稱、時間、緩動、次數）：lb-spin 0.9s linear infinite */
 }
 
+/* 動畫 lb-spin：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes lb-spin {
     to {
-        transform: rotate(360deg);
+        transform: rotate(360deg);                      /* 變形：旋轉 360deg */
     }
 }
 
 /* ═══ 進榜恭喜彈窗（外框與卡片是公版，這裡只調卡片裡的對齊與間距）═══ */
 .dlg--congrats .dlg__card {
-    align-items: center;
-    gap: var(--sp-2);
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
 }
 
 /* 煙火畫布：鋪滿整個舞台、疊在卡片上方（卡片幾乎佔滿畫面，放在後面會被擋住）、不吃觸控（按鈕照常能按） */
 .lb-fw {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    z-index: 2;                                         /* 疊放順序：數字越大越在上面（2） */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「lb-cg」裡面的「badge」部分的樣式 */
 .lb-cg__badge {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 128px;
-    height: 128px;
-    border-radius: 50%;
-    border: 5px solid var(--c-on-accent);
-    font-size: 68px;
-    font-weight: var(--fw-black);
-    animation: lb-bounce 1.3s ease-in-out infinite;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    width: 128px;                                       /* 寬度：128px */
+    height: 128px;                                      /* 高度：128px */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    border: 5px solid var(--c-on-accent);               /* 邊框（粗細、線型、顏色）：5px solid 主題變數 --c-on-accent */
+    font-size: 68px;                                    /* 字級：68px */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    animation: lb-bounce 1.3s ease-in-out infinite;     /* 播放動畫（名稱、時間、緩動、次數）：lb-bounce 1.3s ease-in-out infinite */
 }
 
+/* 「lb-cg__badge」的「r1」變化版的樣式 */
 .lb-cg__badge--r1 {
-    margin-top: 40px;
-    background: var(--lb-gold-bg);
-    color: var(--lb-gold-ink);
-    box-shadow: 0 6px 20px var(--lb-gold-glow);
+    margin-top: 40px;                                   /* 上外距（跟上面的元素距離）：40px */
+    background: var(--lb-gold-bg);                      /* 背景：主題變數 --lb-gold-bg */
+    color: var(--lb-gold-ink);                          /* 文字顏色：主題變數 --lb-gold-ink */
+    box-shadow: 0 6px 20px var(--lb-gold-glow);         /* 方塊陰影（立體感） */
 }
 
+/* 「lb-cg__badge」的「r2」變化版的樣式 */
 .lb-cg__badge--r2 {
-    background: var(--lb-silver-bg);
-    color: var(--lb-silver-ink);
-    box-shadow: 0 6px 20px var(--lb-silver-glow);
+    background: var(--lb-silver-bg);                    /* 背景：主題變數 --lb-silver-bg */
+    color: var(--lb-silver-ink);                        /* 文字顏色：主題變數 --lb-silver-ink */
+    box-shadow: 0 6px 20px var(--lb-silver-glow);       /* 方塊陰影（立體感） */
 }
 
+/* 「lb-cg__badge」的「r3」變化版的樣式 */
 .lb-cg__badge--r3 {
-    background: var(--lb-bronze-bg);
-    color: var(--lb-bronze-ink);
-    box-shadow: 0 6px 20px var(--lb-bronze-glow);
+    background: var(--lb-bronze-bg);                    /* 背景：主題變數 --lb-bronze-bg */
+    color: var(--lb-bronze-ink);                        /* 文字顏色：主題變數 --lb-bronze-ink */
+    box-shadow: 0 6px 20px var(--lb-bronze-glow);       /* 方塊陰影（立體感） */
 }
 
+/* 「lb-cg__badge」的「n」變化版的樣式 */
 .lb-cg__badge--n {
-    background: var(--btn-sky-bg);
-    color: var(--c-on-accent);
-    box-shadow: var(--btn-sky-shadow);
+    background: var(--btn-sky-bg);                      /* 背景：主題變數 --btn-sky-bg */
+    color: var(--c-on-accent);                          /* 文字顏色：主題變數 --c-on-accent */
+    box-shadow: var(--btn-sky-shadow);                  /* 方塊陰影（立體感） */
 }
 
+/* 「lb-crown」在「大尺寸時」的樣子的樣式 */
 .lb-crown--big {
-    top: -46px;
-    font-size: 56px;
+    top: -46px;                                         /* 離上邊 -46px */
+    font-size: 56px;                                    /* 字級：56px */
 }
 
+/* 動畫 lb-bounce：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes lb-bounce {
 
     0%,
     100% {
-        transform: scale(1);
+        transform: scale(1);                            /* 變形：縮放 1 倍 */
     }
 
     50% {
-        transform: scale(1.08);
+        transform: scale(1.08);                         /* 變形：縮放 1.08 倍 */
     }
 }
 
+/* 「lb-cg」裡面的「title」部分的樣式 */
 .lb-cg__title {
-    margin-top: var(--sp-3);
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
-    color: var(--c-orange);
+    margin-top: var(--sp-3);                            /* 上外距（跟上面的元素距離）：主題變數 --sp-3 */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-orange);                             /* 文字顏色：主題變數 --c-orange */
 }
 
+/* 「lb-cg」裡面的「rank」部分的樣式 */
 .lb-cg__rank {
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-black);
-    line-height: var(--lh-tight);
-    color: var(--c-ink);
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: var(--lh-tight);                       /* 行高：主題變數 --lh-tight（文字每一行佔的高度） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「lb-cg」裡面的「sub」部分的樣式 */
 .lb-cg__sub {
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
+/* 「lb-cg」裡面的「score」部分的樣式 */
 .lb-cg__score {
-    margin: var(--sp-2) 0;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-blue);
-    font-variant-numeric: tabular-nums;
+    margin: var(--sp-2) 0;                              /* 外距（margin，與別的元素的距離）：上 主題變數、左右 --sp-2、下 0 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-blue);                               /* 文字顏色：主題變數 --c-blue */
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
 }
 
 /* 使用者在系統設定了「減少動態效果」：關掉彈出、流光、跳動（載入中的轉圈圈是狀態指示，保留） */
 @media (prefers-reduced-motion: reduce) {
 
+    /* 「lb-cg」裡面的「badge」部分；「lb-row」的「r1」變化版，後面插入的裝飾的樣式 */
     .lb-cg__badge,
     .lb-row--r1::after {
-        animation: none;
+        animation: none;                                /* 播放動畫（名稱、時間、緩動、次數）：none */
     }
 
+    /* 「lb-thumb」這個元素的樣式 */
     .lb-thumb {
-        transition: none;
+        transition: none;                               /* 狀態改變時的過渡動畫（屬性、時間、緩動）：none */
     }
 }

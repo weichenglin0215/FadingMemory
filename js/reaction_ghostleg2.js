@@ -49,11 +49,15 @@
    · 操作：點一下橫線（上下 HIT_Y 以內都算點到）就拿掉它，馬上從起點畫出綠色粗虛線一路走下去，看能不能走到終點。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'ghostleg2'：選單、成績、存檔都靠它；樣式在 css/games/reaction_ghostleg2.css，裡面的 class 名稱一律以 ghostleg2- 開頭。 */
     'use strict';
 
-    var ID = 'ghostleg2';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 30 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'ghostleg2';                               /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 30 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂（也是最後一關） */
@@ -503,7 +507,7 @@
     /* 出題：照這一關的條件試；試不出來就一級一級放寬（最後一級幾乎沒有條件，一定出得來），每一級最多試幾次（stages 的第 2 個數字）。
        超過 GEN_BUDGET_MS 就直接跳到最後一級（保險：正常幾毫秒就出好了）。 */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var base = levelBase(level, rand), visit = base.visit;
         var stages = [
             [base, 30],
@@ -626,6 +630,7 @@
         return best;
     }
     function routeMs(route) { return Math.round(kit.clamp(C.routeLength(route) * 2.4, ROUTE_MS[0], ROUTE_MS[1])); }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 15) return '鬼腳圖大師！一條都不多！';
         if (n >= 10) return '高手！';
@@ -634,6 +639,7 @@
         return '沿著起點的路線，一個轉彎一個轉彎想「這裡不轉會到哪」，再來一次！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: RAMP_LEVELS, goodAt: 5,
@@ -644,11 +650,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, level = api.level, my = api.my;
         var q = makePuzzle(level, api.rand), NEED = q.need || 1;
-        api.info = q;
-        console.log('[鬼腳圖減一] 第 ' + level + ' 關：橫線 ' + q.rungs.length + ' 條；起點 ' + LABELS[q.start] + '、終點 ' + (q.target + 1) + '（現在走到 ' + (q.endNow + 1) + '）；要拿掉 ' + NEED + ' 條：' + q.solutions.map(rungText).join('、') +
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[鬼腳圖減一] 第 ' + level + ' 關：橫線 ' + q.rungs.length + ' 條；起點 ' + LABELS[q.start] + '、終點 ' + (q.target + 1) + '（現在走到 ' + (q.endNow + 1) + '）；要拿掉 ' + NEED + ' 條：' + q.solutions.map(rungText).join('、') +  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
             '；正確路線經過 ' + (q.visited ? q.visited.map(function (x) { return LABELS[x]; }).join('') : '?') + '，同方向最多連走 ' + q.shape.maxRun + ' 步、回頭 ' + q.shape.rev + ' 次' + (q.sweep ? '、碰到最左與最右' : '') + (q.stage ? '；放寬第 ' + q.stage + ' 級' : '') + '；限時 ' + timeMs(level) + ' ms');
 
         var board = C.drawBoard(stage, q, LABELS, NEED > 1 ? '照現有的線走不到終點！要拿掉 ' + NEED + ' 條橫線：點一下拿掉，再點一下放回去' : '照現有的線走不到終點！點一下要拿掉的那一條橫線');
@@ -657,7 +665,7 @@
         /* 操作提示（只在第一次進遊戲時）：手指點在答案那一條上（共用的手指提示）；玩家一碰畫面就消失 */
         if (level === 1 && kit.once('ghostleg2.hint')) {
             var a = q.answer;
-            kit.hintOn(stage, null, { mode: 'tap', x: (colX(a.col) + colX(a.col + 1)) / 2, y: rowY(a.row), delay: 600, text: '點一下橫線，把它拿掉' });
+            kit.hintOn(stage, null, { mode: 'tap', x: (colX(a.col) + colX(a.col + 1)) / 2, y: rowY(a.row), delay: 600, text: '點一下橫線，把它拿掉' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         }
 
         /* 點一下橫線＝拿掉它：原位留下淡淡的紅色虛線；在已經拿掉的橫線上再點一下＝放回去（V1.43.0）。拿滿 NEED 條（只有一次機會）才跑評審動畫 */
@@ -697,7 +705,7 @@
         }
         /* 失敗時把答案那一條標成綠色 */
         function showAnswer() { q.solutions.forEach(function (g) { var el = board.rungEls[g.row + ',' + g.col]; if (el) el.classList.add('ghostleg2-answer'); }); }
-        api.timer(timeMs(level), function () {
+        api.timer(timeMs(level), function () {          /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
             locked = true;
             msg.textContent = '';
             showAnswer();
@@ -712,6 +720,7 @@
                 stage.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 9, clientX: r.left + x * sc, clientY: r.top + y * sc }));
             });
         }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { q.solutions.forEach(tapAt); };
         api.wrong = function () {
             /* 拿掉 NEED 條「不全是答案」的橫線（而且拿掉之後走不到終點） */
@@ -725,12 +734,14 @@
         api.tap = tapAt;
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '鬼腳圖減一',
         rule: '這是「鬼腳圖」的反過來版本。上方有綠色的起點，下方有綠色的終點，照現有的橫線走，**從起點到不了終點**。請你**點一下其中一條橫線，把它拿掉**，讓起點接到終點。**第 10 關起要拿掉 2 條、第 20 關起要拿掉 3 條才走得到**；拿錯了，在拿掉的橫線上再點一下就放回去。**只有一次機會**，拿滿之後會從起點開始一路走下去，遇到橫線就轉彎，看能不能走到終點。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             makePuzzle: makePuzzle, needAt: needAt, withoutAll: withoutAll, minimalRemoval: minimalRemoval, endAfter: endAfter, NEED_FROM: NEED_FROM, EXTRA_REMOVE_S: EXTRA_REMOVE_S, REV_MIN: REV_MIN, REV_MAX: REV_MAX,
             pathRungs: pathRungs, pathCols: pathCols, without: without, pullOut: pullOut, makeRoute: makeRoute, routeRows: routeRows, colsAlong: colsAlong, routeBreakers: routeBreakers,
@@ -742,5 +753,6 @@
             GEN_BUDGET_MS: GEN_BUDGET_MS
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

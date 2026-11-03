@@ -6,202 +6,224 @@
 
 /* ═══ 照號切水果（.ordercut-）═══ */
 .ordercut-stage {
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
 /* 遊戲區：深色木板；水果從下面拋出來、掉回下面，超出的部分藏起來 */
 .ordercut-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
-    background: var(--ocf-board);
-    touch-action: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    background: var(--ocf-board);                       /* 背景：主題變數 --ocf-board */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
+/* 「ordercut-tip」這個元素；「ordercut-next」這個元素的樣式 */
 .ordercut-tip,
 .ordercut-next {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    padding: 2px var(--sp-3);
-    background: var(--c-card);
-    border: 3px solid var(--c-ink-soft);
-    border-radius: var(--r-md);
-    text-align: center;
-    pointer-events: none;
-    z-index: 6;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 12px;                                         /* 離左邊 12px */
+    right: 12px;                                        /* 離右邊 12px */
+    padding: 2px var(--sp-3);                           /* 內縮（padding，內容跟邊框的距離）：上 2px、左右 主題變數、下 --sp-3 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 6;                                         /* 疊放順序：數字越大越在上面（6） */
 }
 
+/* 「ordercut-tip」這個元素的樣式 */
 .ordercut-tip {
-    top: 8px;
+    top: 8px;                                           /* 離上邊 8px */
 }
 
+/* 「ordercut-next」這個元素的樣式 */
 .ordercut-next {
-    top: 62px;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    top: 62px;                                          /* 離上邊 62px */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
 /* 手指劃過的軌跡 */
 .ordercut-trail {
-    position: absolute;
-    left: 0;
-    top: 0;
-    pointer-events: none;
-    z-index: 5;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 5;                                         /* 疊放順序：數字越大越在上面（5） */
 }
 
+/* 「ordercut-trail」裡面的「l」部分的樣式 */
 .ordercut-trail__l {
-    fill: none;
-    stroke: var(--ocf-trail);
-    stroke-width: 7;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--ocf-trail);                           /* SVG 線條顏色：主題變數 --ocf-trail */
+    stroke-width: 7;                                    /* SVG 線條粗細：7 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
 /* 水果：圓球、頂上一片葉子、中間一個白色粗字（有黑邊）加底線 */
 .ordercut-fruit {
-    position: absolute;
-    left: 0;
-    top: 0;
-    border-radius: 50%;
-    box-shadow: inset -6px -8px 0 var(--ocf-shade);
-    will-change: transform;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    box-shadow: inset -6px -8px 0 var(--ocf-shade);     /* 方塊陰影（立體感） */
+    will-change: transform;                             /* 提示瀏覽器這個屬性會變動，先準備好（讓動畫更順） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「ordercut-f0」這個元素的樣式 */
 .ordercut-f0 {
-    background: var(--ocf-f0);
+    background: var(--ocf-f0);                          /* 背景：主題變數 --ocf-f0 */
 }
 
+/* 「ordercut-f1」這個元素的樣式 */
 .ordercut-f1 {
-    background: var(--ocf-f1);
+    background: var(--ocf-f1);                          /* 背景：主題變數 --ocf-f1 */
 }
 
+/* 「ordercut-f2」這個元素的樣式 */
 .ordercut-f2 {
-    background: var(--ocf-f2);
+    background: var(--ocf-f2);                          /* 背景：主題變數 --ocf-f2 */
 }
 
+/* 「ordercut-f3」這個元素的樣式 */
 .ordercut-f3 {
-    background: var(--ocf-f3);
+    background: var(--ocf-f3);                          /* 背景：主題變數 --ocf-f3 */
 }
 
+/* 「ordercut-f4」這個元素的樣式 */
 .ordercut-f4 {
-    background: var(--ocf-f4);
+    background: var(--ocf-f4);                          /* 背景：主題變數 --ocf-f4 */
 }
 
+/* 「ordercut-f5」這個元素的樣式 */
 .ordercut-f5 {
-    background: var(--ocf-f5);
+    background: var(--ocf-f5);                          /* 背景：主題變數 --ocf-f5 */
 }
 
+/* 「ordercut-leaf」這個元素的樣式 */
 .ordercut-leaf {
-    position: absolute;
-    left: 50%;
-    top: -10px;
-    width: 18px;
-    height: 12px;
-    margin-left: -3px;
-    background: var(--ocf-leaf);
-    border-radius: 0 100% 0 100%;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 50%;                                          /* 離左邊 50% */
+    top: -10px;                                         /* 離上邊 -10px */
+    width: 18px;                                        /* 寬度：18px */
+    height: 12px;                                       /* 高度：12px */
+    margin-left: -3px;                                  /* 左外距：-3px */
+    background: var(--ocf-leaf);                        /* 背景：主題變數 --ocf-leaf */
+    border-radius: 0 100% 0 100%;                       /* 圓角：0 100% 0 100% */
 }
 
+/* 「ordercut-label」這個元素的樣式 */
 .ordercut-label {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    margin: 0 auto;
-    width: max-content;
-    max-width: 100%;
-    color: var(--ocf-num);
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    line-height: 1.05;
-    white-space: nowrap;
-    border-bottom: 4px solid var(--ocf-num);
-    text-shadow: -2px -2px 0 var(--ocf-num-edge), 2px -2px 0 var(--ocf-num-edge), -2px 2px 0 var(--ocf-num-edge), 2px 2px 0 var(--ocf-num-edge), 0 3px 0 var(--ocf-num-edge);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 50%;                                           /* 離上邊 50% */
+    transform: translateY(-50%);                        /* 變形：垂直移動 -50% */
+    margin: 0 auto;                                     /* 外距（margin，與別的元素的距離）：上下 0、左右 auto */
+    width: max-content;                                 /* 寬度：max-content */
+    max-width: 100%;                                    /* 最大寬度：100% */
+    color: var(--ocf-num);                              /* 文字顏色：主題變數 --ocf-num */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1.05;                                  /* 行高：1.05（文字每一行佔的高度） */
+    white-space: nowrap;                                /* 文字不換行 */
+    border-bottom: 4px solid var(--ocf-num);            /* 下邊框：4px solid 主題變數 --ocf-num */
+    text-shadow: -2px -2px 0 var(--ocf-num-edge), 2px -2px 0 var(--ocf-num-edge), -2px 2px 0 var(--ocf-num-edge), 2px 2px 0 var(--ocf-num-edge), 0 3px 0 var(--ocf-num-edge);  /* 文字陰影 */
 }
 
+/* 「ordercut-label」這個元素的樣式 */
 .ordercut-fruit--expr .ordercut-label {
-    font-size: var(--fs-sm);
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
 }
 
+/* 「ordercut-fruit」在「錯誤（失敗）時」的樣子的樣式 */
 .ordercut-fruit--bad {
-    box-shadow: 0 0 0 6px var(--c-bad-light), inset -6px -8px 0 var(--ocf-shade);
+    box-shadow: 0 0 0 6px var(--c-bad-light), inset -6px -8px 0 var(--ocf-shade);  /* 方塊陰影（立體感） */
 }
 
+/* 「ordercut-fruit」在「正確（成功）時」的樣子的樣式 */
 .ordercut-fruit--ok {
-    box-shadow: 0 0 0 6px var(--c-ok-light), inset -6px -8px 0 var(--ocf-shade);
+    box-shadow: 0 0 0 6px var(--c-ok-light), inset -6px -8px 0 var(--ocf-shade);  /* 方塊陰影（立體感） */
 }
 
 /* 切開的兩半：往兩邊飛開、掉下去、淡出 */
 .ordercut-half {
-    position: absolute;
-    opacity: 1;
-    transition: transform 0.65s ease-in, opacity 0.65s ease-in;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
+    transition: transform 0.65s ease-in, opacity 0.65s ease-in;  /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.65s ease-in, opacity 0.65s ease-in */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「ordercut-half」的「l」變化版的樣式 */
 .ordercut-half--l {
-    border-radius: 999px 0 0 999px;
+    border-radius: 999px 0 0 999px;                     /* 圓角：999px 0 0 999px */
 }
 
+/* 「ordercut-half」的「r」變化版的樣式 */
 .ordercut-half--r {
-    border-radius: 0 999px 999px 0;
+    border-radius: 0 999px 999px 0;                     /* 圓角：0 999px 999px 0 */
 }
 
 /* 結束時每顆水果下面的「第幾個要切」 */
 .ordercut-badge {
-    position: absolute;
-    min-width: 72px;
-    padding: 0 var(--sp-1);
-    background: var(--c-card);
-    border: 3px solid var(--c-ink-soft);
-    border-radius: var(--r-sm);
-    text-align: center;
-    color: var(--c-ink);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    line-height: 1.3;
-    pointer-events: none;
-    z-index: 4;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    min-width: 72px;                                    /* 最小寬度：72px */
+    padding: 0 var(--sp-1);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-1 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    text-align: center;                                 /* 文字置中 */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1.3;                                   /* 行高：1.3（文字每一行佔的高度） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 4;                                         /* 疊放順序：數字越大越在上面（4） */
 }
 
+/* 「ordercut-badge」在「正確（成功）時」的樣子的樣式 */
 .ordercut-badge--ok {
-    border-color: var(--c-ok);
-    color: var(--c-ok);
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「ordercut-badge」在「錯誤（失敗）時」的樣子的樣式 */
 .ordercut-badge--bad {
-    border-color: var(--c-bad-light);
-    color: var(--c-bad);
+    border-color: var(--c-bad-light);                   /* 邊框顏色：主題變數 --c-bad-light */
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
+/* 「ordercut-info」這個元素的樣式 */
 .ordercut-info {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    bottom: 14px;
-    padding: var(--sp-1) var(--sp-3);
-    background: var(--c-card);
-    border: 3px solid var(--c-ink-soft);
-    border-radius: var(--r-md);
-    font-weight: var(--fw-bold);
-    z-index: 6;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 12px;                                         /* 離左邊 12px */
+    right: 12px;                                        /* 離右邊 12px */
+    bottom: 14px;                                       /* 離下邊 14px */
+    padding: var(--sp-1) var(--sp-3);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-1、下 主題變數、左 --sp-3 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    z-index: 6;                                         /* 疊放順序：數字越大越在上面（6） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「ordercut-info」在「正確（成功）時」的樣子的樣式 */
 .ordercut-info--ok {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「ordercut-info」在「錯誤（失敗）時」的樣子的樣式 */
 .ordercut-info--bad {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }

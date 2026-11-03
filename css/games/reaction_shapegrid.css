@@ -6,88 +6,98 @@
    ═══════════════════════════════════════ */
 
 .shapegrid-wrap {
-    --shapegrid-c0: hsl(2, 78%, 52%);
-    --shapegrid-c1: hsl(214, 78%, 46%);
-    --shapegrid-c2: hsl(130, 55%, 40%);
-    --shapegrid-c3: hsl(45, 95%, 55%);
-    --shapegrid-c4: hsl(282, 50%, 52%);
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    padding-top: 8px;
-    box-sizing: border-box;
+    --shapegrid-c0: hsl(2, 78%, 52%);                   /* 自訂變數 --shapegrid-c0（下面用 var(--shapegrid-c0) 取用；可以由 JS 動態設定） */
+    --shapegrid-c1: hsl(214, 78%, 46%);                 /* 自訂變數 --shapegrid-c1（下面用 var(--shapegrid-c1) 取用；可以由 JS 動態設定） */
+    --shapegrid-c2: hsl(130, 55%, 40%);                 /* 自訂變數 --shapegrid-c2（下面用 var(--shapegrid-c2) 取用；可以由 JS 動態設定） */
+    --shapegrid-c3: hsl(45, 95%, 55%);                  /* 自訂變數 --shapegrid-c3（下面用 var(--shapegrid-c3) 取用；可以由 JS 動態設定） */
+    --shapegrid-c4: hsl(282, 50%, 52%);                 /* 自訂變數 --shapegrid-c4（下面用 var(--shapegrid-c4) 取用；可以由 JS 動態設定） */
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: 10px;                                          /* 子元素之間的空隙：10px */
+    padding-top: 8px;                                   /* 上方內縮：8px */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
 }
 
+/* 「shapegrid-board」這個元素的樣式 */
 .shapegrid-board {
-    display: grid;
-    grid-template-columns: repeat(var(--shapegrid-n, 3), var(--shapegrid-cell, 100px));
-    grid-auto-rows: var(--shapegrid-cell, 100px);
-    gap: 6px;
-    padding: 6px;
-    border-radius: var(--r-md);
-    background: var(--c-frame);
+    display: grid;                                      /* 格線排版：子元素排進格子 */
+    grid-template-columns: repeat(var(--shapegrid-n, 3), var(--shapegrid-cell, 100px));  /* 格線的欄（每欄的寬度）：repeat(var(--shapegrid-n, 3), var(--shapegrid-cell, 100px)) */
+    grid-auto-rows: var(--shapegrid-cell, 100px);       /* 自動新增的列的高度：var(--shapegrid-cell, 100px) */
+    gap: 6px;                                           /* 子元素之間的空隙：6px */
+    padding: 6px;                                       /* 內縮（padding，內容跟邊框的距離）：四邊都是 6px */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: var(--c-frame);                         /* 背景：主題變數 --c-frame */
 }
 
+/* 「shapegrid-cell」這個元素的樣式 */
 .shapegrid-cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    border-radius: var(--r-sm);
-    background: var(--c-card);
-    border: 3px solid var(--bd-c);
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--bd-c);                      /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --bd-c */
+    touch-action: manipulation;                         /* 關掉雙擊放大，點擊反應更快 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「shapegrid-cell」在「空著時」的樣子的樣式 */
 .shapegrid-cell--empty {
-    border: 3px dashed var(--c-ink-soft);
-    background: var(--c-card-alt);
+    border: 3px dashed var(--c-ink-soft);               /* 邊框（粗細、線型、顏色）：3px dashed 主題變數 --c-ink-soft */
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
 }
 
 /* 一開始就放好的：灰底粗框（不能動） */
 .shapegrid-cell--given {
-    background: var(--c-paper);
-    border: 4px solid var(--c-ink);
+    background: var(--c-paper);                         /* 背景：主題變數 --c-paper */
+    border: 4px solid var(--c-ink);                     /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --c-ink */
 }
 
+/* 「shapegrid-cell」的「hinted」變化版的樣式 */
 .shapegrid-cell--hinted {
-    border: 4px solid var(--c-yellow);
+    border: 4px solid var(--c-yellow);                  /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --c-yellow */
 }
 
+/* 「shapegrid-cell」在「錯誤（失敗）時」的樣子的樣式 */
 .shapegrid-cell--bad {
-    background: var(--c-bad-soft);
-    border: 4px solid var(--c-bad);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    border: 4px solid var(--c-bad);                     /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --c-bad */
 }
 
+/* 「shapegrid-cell」在「被標記時」的樣子的樣式 */
 .shapegrid-cell--flag {
-    animation: shapegrid-flag 0.8s ease-in-out infinite;
+    animation: shapegrid-flag 0.8s ease-in-out infinite;  /* 播放動畫（名稱、時間、緩動、次數）：shapegrid-flag 0.8s ease-in-out infinite */
 }
 
+/* 「shapegrid-cell」在「正確（成功）時」的樣子的樣式 */
 .shapegrid-cell--ok {
-    border-color: var(--c-ok);
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
 }
 
+/* 動畫 shapegrid-flag：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes shapegrid-flag {
     0%, 100% { background: var(--c-yellow-soft); }
     50% { background: var(--c-bad-soft); }
 }
 
+/* 「shapegrid-svg」這個元素的樣式 */
 .shapegrid-svg {
-    width: 78%;
-    height: 78%;
-    display: block;
-    pointer-events: none;
+    width: 78%;                                         /* 寬度：78% */
+    height: 78%;                                        /* 高度：78% */
+    display: block;                                     /* 獨佔一整行的區塊 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「shapegrid-fill」這個元素的樣式 */
 .shapegrid-fill {
-    stroke: var(--c-ink);
-    stroke-width: 4;
-    stroke-linejoin: round;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
 .shapegrid-fill--0 { fill: var(--shapegrid-c0); }
@@ -96,59 +106,65 @@
 .shapegrid-fill--3 { fill: var(--shapegrid-c3); }
 .shapegrid-fill--4 { fill: var(--shapegrid-c4); }
 
+/* 「shapegrid-tip」這個元素的樣式 */
 .shapegrid-tip {
-    min-height: 32px;
-    padding: 0 12px;
-    font-size: var(--fs-sm);
-    line-height: 1.3;
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    text-align: center;
+    min-height: 32px;                                   /* 最小高度：32px */
+    padding: 0 12px;                                    /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 12px */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    line-height: 1.3;                                   /* 行高：1.3（文字每一行佔的高度） */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    text-align: center;                                 /* 文字置中 */
 }
 
+/* 「shapegrid-tip」在「錯誤（失敗）時」的樣子的樣式 */
 .shapegrid-tip--bad {
-    color: var(--c-bad);
-    font-weight: var(--fw-black);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
 /* 下面那一盒還沒擺的圖形 */
 .shapegrid-tray {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 6px;
-    width: 96%;
-    min-height: var(--shapegrid-chip, 60px);
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-wrap: wrap;                                    /* 放不下就換行 */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: 6px;                                           /* 子元素之間的空隙：6px */
+    width: 96%;                                         /* 寬度：96% */
+    min-height: var(--shapegrid-chip, 60px);            /* 最小高度：var(--shapegrid-chip, 60px) */
 }
 
+/* 「shapegrid-chip」這個元素的樣式 */
 .shapegrid-chip {
-    width: var(--shapegrid-chip, 60px);
-    height: var(--shapegrid-chip, 60px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    border-radius: var(--r-sm);
-    background: var(--c-card);
-    border: 2px solid var(--bd-c);
-    touch-action: manipulation;
+    width: var(--shapegrid-chip, 60px);                 /* 寬度：var(--shapegrid-chip, 60px) */
+    height: var(--shapegrid-chip, 60px);                /* 高度：var(--shapegrid-chip, 60px) */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 2px solid var(--bd-c);                      /* 邊框（粗細、線型、顏色）：2px solid 主題變數 --bd-c */
+    touch-action: manipulation;                         /* 關掉雙擊放大，點擊反應更快 */
 }
 
+/* 「shapegrid-chip」在「被選中時」的樣子的樣式 */
 .shapegrid-chip--sel {
-    border: 5px solid var(--c-blue);
-    background: var(--c-blue-light);
+    border: 5px solid var(--c-blue);                    /* 邊框（粗細、線型、顏色）：5px solid 主題變數 --c-blue */
+    background: var(--c-blue-light);                    /* 背景：主題變數 --c-blue-light */
 }
 
+/* 「shapegrid-tools」這個元素的樣式 */
 .shapegrid-tools {
-    display: flex;
-    gap: 10px;
-    width: 96%;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    gap: 10px;                                          /* 子元素之間的空隙：10px */
+    width: 96%;                                         /* 寬度：96% */
 }
 
+/* 「shapegrid-tool」這個元素的樣式 */
 .shapegrid-tool {
-    flex: 1 1 0;
-    height: 60px;
-    padding: 0;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    height: 60px;                                       /* 高度：60px */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }

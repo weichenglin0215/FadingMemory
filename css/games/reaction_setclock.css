@@ -7,106 +7,106 @@
 /* 撥時鐘：把時鐘的指針撥到題目要求的時間。 */
 /* ═══ 撥時鐘（.sc-）═══ */
 .setclock-head {
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 上方的數位時間（例如 2:19），tabular-nums = 等寬數字 */
 .setclock-digital {
-    text-align: center;
-    font-size: 112px;
-    font-weight: var(--fw-black);
-    line-height: 1.05;
-    color: var(--c-ink);
-    font-variant-numeric: tabular-nums;
+    text-align: center;                                 /* 文字置中 */
+    font-size: 112px;                                   /* 字級：112px */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1.05;                                  /* 行高：1.05（文字每一行佔的高度） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
 }
 
 /* 放時鐘 SVG 的區域 */
 .setclock-dial {
-    flex: 1 1 auto;
-    min-height: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--r-lg);
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
 }
 
 /* 時鐘本體（SVG）；touch-action:none 才能用手指拖指針而不會捲動頁面 */
 .setclock-svg {
-    height: 100%;
-    width: auto;
-    max-width: 100%;
-    touch-action: none;
+    height: 100%;                                       /* 高度：100% */
+    width: auto;                                        /* 寬度：auto */
+    max-width: 100%;                                    /* 最大寬度：100% */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
 /* 錶面（SVG 的上色用 fill=填滿色、stroke=外框線色） */
 .setclock-face {
-    fill: var(--c-card);
-    stroke: var(--c-ink);
-    stroke-width: 6;
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 6;                                    /* SVG 線條粗細：6 */
 }
 
 /* 撥對時：錶面外框變綠 */
 .setclock-dial--ok .setclock-face {
-    stroke: var(--c-ok);
-    fill: var(--c-ok-soft);
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
+    fill: var(--c-ok-soft);                             /* SVG 圖形的填色：主題變數 --c-ok-soft */
 }
 
 /* 撥錯時：錶面外框變橘 */
 .setclock-dial--bad .setclock-face {
-    stroke: var(--c-bad);
-    fill: var(--c-bad-soft);
+    stroke: var(--c-bad);                               /* SVG 線條顏色：主題變數 --c-bad */
+    fill: var(--c-bad-soft);                            /* SVG 圖形的填色：主題變數 --c-bad-soft */
 }
 
 /* 一般刻度線 */
 .setclock-tick {
-    stroke: var(--c-ink-soft);
-    stroke-width: 2;
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
 }
 
 /* 整點的粗刻度（12、3、6、9 …） */
 .setclock-tick--big {
-    stroke: var(--c-ink);
-    stroke-width: 5;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 5;                                    /* SVG 線條粗細：5 */
 }
 
 /* 錶面上的數字 1～12 */
 .setclock-num {
-    font-family: var(--font-ui);
-    font-size: 32px;
-    font-weight: 900;
-    fill: var(--c-ink);
+    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
+    font-size: 32px;                                    /* 字級：32px */
+    font-weight: 900;                                   /* 字重（粗細）900（400 一般、700 粗體） */
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
 }
 
 /* 時針（粗、圓頭） */
 .setclock-hand-hour {
-    stroke: var(--c-ink);
-    stroke-width: 15;
-    stroke-linecap: round;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 15;                                   /* SVG 線條粗細：15 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
 /* 分針（藍色、細一點） */
 .setclock-hand-min {
-    stroke: var(--c-blue);
-    stroke-width: 9;
-    stroke-linecap: round;
+    stroke: var(--c-blue);                              /* SVG 線條顏色：主題變數 --c-blue */
+    stroke-width: 9;                                    /* SVG 線條粗細：9 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
 /* 揭曉時畫出「正確答案」的虛線 (stroke-dasharray = 線段 10 空 8 交錯) */
 .setclock-ghost-line {
-    stroke: var(--c-ok);
-    stroke-dasharray: 10 8;
-    stroke-width: 8;
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
+    stroke-dasharray: 10 8;                             /* SVG 虛線的「畫／空」長度：10 8 */
+    stroke-width: 8;                                    /* SVG 線條粗細：8 */
 }
 
 /* 指針中心的小圓點 */
 .setclock-cap {
-    fill: var(--c-orange);
+    fill: var(--c-orange);                              /* SVG 圖形的填色：主題變數 --c-orange */
 }
 
 /* 「好了」按鈕 */
 .setclock-done {
-    flex: none;
+    flex: none;                                         /* 彈性縮放：none */
 }

@@ -15,11 +15,15 @@
    · 答錯／逾時：把運算順序標出來給你看（① 先算 3 × 2 ＝ 6　② 再算 8 − 6 ＝ 2）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'orderops'：選單、成績、存檔都靠它；樣式在 css/games/reaction_orderops.css，裡面的 class 名稱一律以 orderops- 開頭。 */
     'use strict';
 
-    var ID = 'orderops';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'orderops';                                /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾題之後難度到頂 */
@@ -153,7 +157,7 @@
        近似答案的個位數故意放成「另一邊」的個位數（正確的近似用錯誤答案的個位數、錯誤的近似用正確答案的個位數），
        這樣只看個位數、或只估大小，都不能單獨判斷答案。 */
     function makeQuestion(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         for (var tr = 0; tr < 3000; tr++) {
             var q = randomTokens(level, rand), tokens = q.tokens;
             var std = reduceExpr(tokens, 'std');
@@ -199,6 +203,7 @@
         }
         return r;
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 40) return '運算順序大師！';
         if (n >= 25) return '眼明手快！';
@@ -207,6 +212,7 @@
         return '先乘除、後加減，再來一次！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         var hist = [];
         kit.run(root, ctx, {
@@ -219,13 +225,15 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api, hist) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeQuestion(level, api.rand);
         var count = q.options.length, slot = nextSlot(hist, count, api.rand);
         hist.push(slot);
-        api.info = q;
-        console.log('[先乘除] 第 ' + level + ' 題：' + q.text + ' ＝ ？ 正確 ' + q.truth + '，錯誤 ' + q.decoy + '（' + (q.decoyKind === 'ltr' ? '由左到右' : '忽略括號') + '），答案 ' + q.options.join('／') + '，限時 ' + ansMs(level) + ' ms');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[先乘除] 第 ' + level + ' 題：' + q.text + ' ＝ ？ 正確 ' + q.truth + '，錯誤 ' + q.decoy + '（' + (q.decoyKind === 'ltr' ? '由左到右' : '忽略括號') + '），答案 ' + q.options.join('／') + '，限時 ' + ansMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var eq = h('div', { 'class': 'qz-big orderops-eq', text: q.text });
         /* 算式越長，字越小（約略估算：每個字寬 0.62 倍字級），保證一行放得下 */
@@ -241,9 +249,10 @@
             return { text: String(v), kind: 'sky', cls: 'orderops-btn', onTap: function () { judge(v); } };
         }), count === 4 ? { cols: 2, h: 100 } : { h: 120 });
         var bTruth = grid.btns[slot];
-        api.timer(ansMs(level), function () { judge(null); });
-        if (level === 1 && kit.once('orderops.hint')) kit.hintOn(stage, bTruth, { mode: 'tap', delay: 500, text: '請點擊按鈕' });
+        api.timer(ansMs(level), function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
+        if (level === 1 && kit.once('orderops.hint')) kit.hintOn(stage, bTruth, { mode: 'tap', delay: 500, text: '請點擊按鈕' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
+        /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(v) {
             if (api.over) return;
             var ok = v === q.truth;
@@ -259,21 +268,25 @@
                 ]
             });
         }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.truth); };
         api.wrong = function () { judge(q.decoy); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '先乘除',
         rule: '畫面上有一道四則運算，下面的答案只有一個是對的。要記得：**括號先算，再算乘除，最後才算加減**。有一個錯的答案，是**「由左到右一路算下去」的陷阱**。答錯或來不及就結束，看你能連續答對幾題。越後面，算式越長、還會有除法和括號，答案也會變成四個，有的只差個位數，要算準！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             numsFor: numsFor, numMaxFor: numMaxFor, parensFor: parensFor, ansMs: ansMs, reduceExpr: reduceExpr, toText: toText, stepsText: stepsText,
             randomTokens: randomTokens, makeQuestion: makeQuestion, nextSlot: nextSlot, nearAnswer: nearAnswer, optionCount: optionCount, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, NUMS: NUMS, NUM_MAX: NUM_MAX, DIV_FROM: DIV_FROM, PAREN1_FROM: PAREN1_FROM, PAREN2_FROM: PAREN2_FROM, MAX_ANS: MAX_ANS, MAX_LEVEL: MAX_LEVEL, SAME_MAX: SAME_MAX, OPTIONS4_FROM: OPTIONS4_FROM
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

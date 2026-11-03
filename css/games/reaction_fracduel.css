@@ -6,114 +6,129 @@
 
 /* ═══ 024 分數大對決（.fracduel-）═══ */
 .fracduel-row {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 50px;
-    display: flex;
-    gap: var(--sp-4);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 50px;                                          /* 離上邊 50px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    gap: var(--sp-4);                                   /* 子元素之間的空隙：主題變數 --sp-4 */
 }
 
+/* 「fracduel-card」這個元素的樣式 */
 .fracduel-card {
-    flex: 1 1 0;
-    min-width: 0;
-    height: 360px;
-    border-radius: var(--r-lg);
-    background: var(--c-card);
-    border: var(--bd);
-    box-shadow: var(--shadow-card);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--sp-3);
-    cursor: pointer;
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-width: 0;                                       /* 最小寬度：0 */
+    height: 360px;                                      /* 高度：360px */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
 }
 
+/* 「fracduel-card」這個元素，按下去時的樣式 */
 .fracduel-card:active {
-    transform: scale(0.98);
+    transform: scale(0.98);                             /* 變形：縮放 0.98 倍 */
 }
 
+/* 「fracduel-card」在「大尺寸時」的樣子的樣式 */
 .fracduel-card--big {
-    border-color: var(--c-green);
+    border-color: var(--c-green);                       /* 邊框顏色：主題變數 --c-green */
 }
 
+/* 「fracduel-card」在「正確（成功）時」的樣子的樣式 */
 .fracduel-card--ok {
-    background: var(--c-green-soft);
+    background: var(--c-green-soft);                    /* 背景：主題變數 --c-green-soft */
 }
 
+/* 「fracduel-card」在「錯誤（失敗）時」的樣子的樣式 */
 .fracduel-card--bad {
-    background: var(--c-bad-soft);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
 }
 
 /* V1.25：數字加大（兩位數 130px），三位數、帶小數點的依字數縮小才放得進卡片（卡片寬約 226px）；分數線跟著撐滿 */
 .fracduel-frac {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 90%;
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    font-size: 130px;
-    line-height: 1.05;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    width: 90%;                                         /* 寬度：90% */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: 130px;                                   /* 字級：130px */
+    line-height: 1.05;                                  /* 行高：1.05（文字每一行佔的高度） */
 }
 
+/* 「fracduel-frac」的「s2」變化版的樣式 */
 .fracduel-frac--s2 {
-    font-size: 130px;
+    font-size: 130px;                                   /* 字級：130px */
 }
 
+/* 「fracduel-frac」的「s3」變化版的樣式 */
 .fracduel-frac--s3 {
-    font-size: 104px;
+    font-size: 104px;                                   /* 字級：104px */
 }
 
+/* 「fracduel-frac」的「s4」變化版的樣式 */
 .fracduel-frac--s4 {
-    font-size: 84px;
+    font-size: 84px;                                    /* 字級：84px */
 }
 
+/* 「fracduel-frac」的「s5」變化版的樣式 */
 .fracduel-frac--s5 {
-    font-size: 70px;
+    font-size: 70px;                                    /* 字級：70px */
 }
 
+/* 「fracduel-frac」的「s6」變化版的樣式 */
 .fracduel-frac--s6 {
-    font-size: 58px;
+    font-size: 58px;                                    /* 字級：58px */
 }
 
+/* 「fracduel-bar」這個元素的樣式 */
 .fracduel-bar {
-    align-self: stretch;
-    height: 8px;
-    border-radius: 4px;
-    background: var(--c-ink);
-    margin: 4px 0;
+    align-self: stretch;                                /* 這個元素自己在交叉方向的對齊方式：stretch */
+    height: 8px;                                        /* 高度：8px */
+    border-radius: 4px;                                 /* 圓角：4px */
+    background: var(--c-ink);                           /* 背景：主題變數 --c-ink */
+    margin: 4px 0;                                      /* 外距（margin，與別的元素的距離）：上下 4px、左右 0 */
 }
 
+/* 「fracduel-val」這個元素的樣式 */
 .fracduel-val {
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink-soft);
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
+/* 「fracduel-bargraph」這個元素的樣式 */
 .fracduel-bargraph {
-    width: 80%;
-    height: 14px;
-    border-radius: 7px;
-    background: var(--c-yellow-soft);
-    overflow: hidden;
+    width: 80%;                                         /* 寬度：80% */
+    height: 14px;                                       /* 高度：14px */
+    border-radius: 7px;                                 /* 圓角：7px */
+    background: var(--c-yellow-soft);                   /* 背景：主題變數 --c-yellow-soft */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
+/* 「fracduel-bargraph」裡面的「fill」部分的樣式 */
 .fracduel-bargraph__fill {
-    height: 100%;
-    background: var(--c-blue);
+    height: 100%;                                       /* 高度：100% */
+    background: var(--c-blue);                          /* 背景：主題變數 --c-blue */
 }
 
+/* 「fracduel-info」這個元素的樣式 */
 .fracduel-info {
-    position: absolute;
-    left: var(--sp-3);
-    right: var(--sp-3);
-    top: 440px;
-    text-align: center;
-    white-space: pre-line;
-    font-size: var(--fs-md);
-    line-height: var(--lh-body);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: var(--sp-3);                                  /* 離左邊 主題變數 --sp-3 */
+    right: var(--sp-3);                                 /* 離右邊 主題變數 --sp-3 */
+    top: 440px;                                         /* 離上邊 440px */
+    text-align: center;                                 /* 文字置中 */
+    white-space: pre-line;                              /* 保留換行字元、其餘空白合併 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }

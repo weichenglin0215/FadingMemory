@@ -12,11 +12,15 @@
      否則翻一張沒翻過的牌（由左上往右下），記得它的互補牌就去翻，不然再翻一張沒翻過的牌。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'flipten'：選單、成績、存檔都靠它；樣式在 css/games/reaction_flipten.css，裡面的 class 名稱一律以 flipten- 開頭。 */
     'use strict';
 
-    var ID = 'flipten';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'flipten';                                 /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var STAGES = [{ cards: 6, to: 1 }, { cards: 12, to: 3 },
@@ -40,7 +44,7 @@
     function slackFor(level) { return Math.round(kit.ramp(level, SLACK[0], SLACK[1], RAMP_LEVELS)); }
     /* 發牌：n 張，一半是「一組一組湊成十」的牌（每組隨機是 1-9、2-8、3-7、4-6、5-5 其中一種），洗牌 */
     function deal(n, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var deck = [];
         for (var i = 0; i < n / 2; i++) { var a = kit.randInt(1, 5, rand); deck.push(a, 10 - a); }
         return kit.shuffle(deck, rand);
@@ -72,10 +76,12 @@
         return flips;
     }
     function limitFor(level, deck) { return perfectFlips(deck) + slackFor(level); }
+    /* 出題函式：依關卡難度與亂數產生這一題的資料（純函式，不碰畫面，單元測試直接測它） */
     function makePuzzle(level, rand) {
         var n = cardsFor(level), deck = deal(n, rand), perfect = perfectFlips(deck);
         return { n: n, deck: deck, perfect: perfect, limit: perfect + slackFor(level), level: level };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 25) return '記憶力驚人！';
         if (n >= 12) return '記得很牢！';
@@ -94,11 +100,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var pz = makePuzzle(level, api.rand), n = pz.n, deck = pz.deck;
-        api.info = pz;
-        console.log('[翻牌湊十] 第 ' + level + ' 關：' + n + ' 張；完美記憶策略 ' + pz.perfect + ' 次，上限 ' + pz.limit + ' 次');
+        api.info = pz;                                  /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[翻牌湊十] 第 ' + level + ' 關：' + n + ' 張；完美記憶策略 ' + pz.perfect + ' 次，上限 ' + pz.limit + ' 次');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
         var rows = n / COLS, W = stage.clientWidth || 472, H = stage.clientHeight || 700;
         var cw = Math.floor(W * 0.96 / COLS) - 8, ch = Math.min(Math.floor(cw * 0.95), Math.floor((H - 200) / rows) - 8);
         var up = [], gone = new Array(n).fill(false), pairsLeft = n / 2, used = 0, busy = false, over = false, first = -1;
@@ -113,12 +121,13 @@
         var cards = [];
         for (var i = 0; i < n; i++) {
             var c = h('div', { 'class': 'flipten-card', text: '' });
-            (function (idx) { kit.onTap(c, function () { flip(idx); }); })(i);
+            (function (idx) { kit.onTap(c, function () { flip(idx); }); })(i);  /* 用立即執行函式存住這一次迴圈的變數（不這樣寫，每個元素點下去都會拿到迴圈結束時的值） */
             board.appendChild(c); cards.push(c);
         }
         wrap.appendChild(info); wrap.appendChild(board); wrap.appendChild(tip);
         stage.appendChild(wrap);
 
+        /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() {
             info.textContent = '還能翻 ' + Math.max(0, pz.limit - used) + ' 次　已消 ' + (n / 2 - pairsLeft) + '/' + n / 2;
             for (var i = 0; i < n; i++) {
@@ -175,16 +184,19 @@
         paint();
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '翻牌湊十',
         rule: '數字牌蓋著排成方陣（數字是 1～9）。**每次翻兩張：加起來是 10 就消掉；不是就蓋回去**。全部消完就過關。**翻牌的次數有上限**，畫面上會寫「還能翻幾次」。翻錯的時候，兩張牌的數字會停 1.5 秒再蓋回——那是給你看的時間，沒有計時，想多久都可以，但要記住它們在哪裡。提示：10 的搭檔是 1-9、2-8、3-7、4-6、5-5；翻到一張牌，就想想它的搭檔在不在你翻過的牌裡。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             STAGES: STAGES, COLS: COLS, SLACK: SLACK, RAMP_LEVELS: RAMP_LEVELS, SHOW_MS: SHOW_MS, cardsFor: cardsFor, slackFor: slackFor, deal: deal,
             perfectFlips: perfectFlips, limitFor: limitFor, makePuzzle: makePuzzle, rating: rating, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

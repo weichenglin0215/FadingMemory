@@ -7,24 +7,24 @@
 /* ═══ 遊戲二：神準落下 ═══ */
 /* 場地：relative 是裡面 absolute 元素的定位基準；overflow:hidden 把超出邊界的東西裁掉 */
 .drop-field {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    overflow: hidden;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* 三角形指標：clip-path:polygon(...) 用三個點把方塊「裁」成倒三角形 */
 .drop-tri {
-    position: absolute;
-    z-index: 3;
-    background: var(--c-blue);
-    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    z-index: 3;                                         /* 疊放順序：數字越大越在上面（3） */
+    background: var(--c-blue);                          /* 背景：主題變數 --c-blue */
+    clip-path: polygon(0 0, 100% 0, 50% 100%);          /* 裁成指定形狀：polygon(0 0, 100% 0, 50% 100%) */
 }
 
 /* 尺本身是一份向量圖（SVG），位置算相對 .drop-field（position:relative）：
@@ -36,51 +36,56 @@
    不受尺的 viewBox 影響，永遠停在螢幕上同一個位置。 */
 /* 尺的 SVG */
 .drop-strip-svg {
-    position: absolute;
-    display: block;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
 /* 尺上的色塊 */
 .drop-rect {
-    fill: var(--c-ink);
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
 }
 
+/* 「drop-rect」的「mid」變化版的樣式 */
 .drop-rect--mid {
-    fill: var(--flow-ink-1);
+    fill: var(--flow-ink-1);                            /* SVG 圖形的填色：主題變數 --flow-ink-1 */
 }
 
 /* 色塊上的文字標籤 */
 .drop-label {
-    fill: var(--c-on-accent);
-    font-family: var(--font-ui);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
+    fill: var(--c-on-accent);                           /* SVG 圖形的填色：主題變數 --c-on-accent */
+    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
 /* 插中紅色才看得清楚：紅色格底下的 9 細格（紅底、中間黃） */
 .drop-subrect {
-    fill: var(--flow-ink-1);
+    fill: var(--flow-ink-1);                            /* SVG 圖形的填色：主題變數 --flow-ink-1 */
 }
 
+/* 「drop-subrect」的「mid」變化版的樣式 */
 .drop-subrect--mid {
-    fill: var(--c-yellow);
+    fill: var(--c-yellow);                              /* SVG 圖形的填色：主題變數 --c-yellow */
 }
 
+/* 「drop-tick2」這個元素的樣式 */
 .drop-tick2 {
-    stroke: var(--c-ink);
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
 }
 
 /* 插中黃色核心才看得清楚：黃色格底下的 9 細格（黃底、中間紫） */
 .drop-subsubrect {
-    fill: var(--c-yellow);
+    fill: var(--c-yellow);                              /* SVG 圖形的填色：主題變數 --c-yellow */
 }
 
+/* 「drop-subsubrect」的「mid」變化版的樣式 */
 .drop-subsubrect--mid {
-    fill: var(--flow-ink-5);
+    fill: var(--flow-ink-5);                            /* SVG 圖形的填色：主題變數 --flow-ink-5 */
 }
 
+/* 「drop-tick3」這個元素的樣式 */
 .drop-tick3 {
-    stroke: var(--c-ink);
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
 }
 
 /* 置中靠 .drop-field 的 flex（align/justify-content: center），不是 left:50%+
@@ -91,9 +96,9 @@
    transform 這個屬性就只剩 :active 的 scale 在用，不會再互搶。 */
 /* 「插」按鈕（置中方式見上方說明） */
 .drop-btn {
-    position: relative;
-    z-index: 5;
-    flex: 0 0 auto;
-    width: 140px;
-    height: 72px;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    z-index: 5;                                         /* 疊放順序：數字越大越在上面（5） */
+    flex: 0 0 auto;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    width: 140px;                                       /* 寬度：140px */
+    height: 72px;                                       /* 高度：72px */
 }

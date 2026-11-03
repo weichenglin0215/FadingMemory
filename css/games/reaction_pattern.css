@@ -8,84 +8,84 @@
 /* ═══ 解鎖圖案（.pt-）═══ */
 /* 場地 */
 .pattern-field {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    touch-action: none;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
 /* 圖案 SVG */
 .pattern-svg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
 /* 一個圓點 */
 .pattern-node {
-    fill: var(--c-card-alt);
-    stroke: var(--c-ink-soft);
-    stroke-width: 4px;
+    fill: var(--c-card-alt);                            /* SVG 圖形的填色：主題變數 --c-card-alt */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 4px;                                  /* SVG 線條粗細：4px */
 }
 
 /* 經過的點（藍色） */
 .pattern-node--on {
-    fill: var(--c-blue);
-    stroke: var(--c-blue);
+    fill: var(--c-blue);                                /* SVG 圖形的填色：主題變數 --c-blue */
+    stroke: var(--c-blue);                              /* SVG 線條顏色：主題變數 --c-blue */
 }
 
 /* 起點（黃色） */
 .pattern-node--start {
-    fill: var(--c-yellow);
-    stroke: #9A6D0B;
+    fill: var(--c-yellow);                              /* SVG 圖形的填色：主題變數 --c-yellow */
+    stroke: #9A6D0B;                                    /* SVG 線條顏色：#9A6D0B */
 }
 
 /* 路徑線段 */
 .pattern-seg {
-    stroke: var(--c-blue);
-    stroke-width: 10px;
-    stroke-linecap: round;
+    stroke: var(--c-blue);                              /* SVG 線條顏色：主題變數 --c-blue */
+    stroke-width: 10px;                                 /* SVG 線條粗細：10px */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
 /* 示範的線段 */
 .pattern-seg--demo {
-    stroke: var(--c-blue);
+    stroke: var(--c-blue);                              /* SVG 線條顏色：主題變數 --c-blue */
 }
 
 /* 玩家畫的線段 */
 .pattern-seg--mine {
-    stroke: var(--c-blue);
+    stroke: var(--c-blue);                              /* SVG 線條顏色：主題變數 --c-blue */
 }
 
 /* 正確（綠） */
 .pattern-seg--ok {
-    stroke: var(--c-ok);
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
 }
 
 /* 錯誤（半透明橘） */
 .pattern-seg--bad {
-    stroke: var(--c-bad);
-    opacity: 0.55;
+    stroke: var(--c-bad);                               /* SVG 線條顏色：主題變數 --c-bad */
+    opacity: 0.55;                                      /* 透明度 0.55（1＝完全不透明、0＝全透明） */
 }
 
 /* 揭曉正確答案：虛線點狀（dasharray 2 18 = 短線段加長空白，看起來像點點） */
 .pattern-seg--answer {
-    stroke: var(--c-ok);
-    stroke-dasharray: 2 18;
-    stroke-width: 12px;
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
+    stroke-dasharray: 2 18;                             /* SVG 虛線的「畫／空」長度：2 18 */
+    stroke-width: 12px;                                 /* SVG 線條粗細：12px */
 }
 
 /* 手指正在拖曳中、尚未連到點的線 */
 .pattern-live {
-    stroke: var(--c-blue);
-    stroke-width: 6px;
-    stroke-linecap: round;
-    opacity: 0.5;
-    pointer-events: none;
+    stroke: var(--c-blue);                              /* SVG 線條顏色：主題變數 --c-blue */
+    stroke-width: 6px;                                  /* SVG 線條粗細：6px */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    opacity: 0.5;                                       /* 透明度 0.5（1＝完全不透明、0＝全透明） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }

@@ -6,58 +6,65 @@
 
 /* ═══ 062 能一筆畫嗎（.euler-）═══ */
 .euler-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
 }
 
+/* 「euler-edge」這個元素的樣式 */
 .euler-edge {
-    stroke: var(--c-ink);
-    stroke-width: 7;
-    stroke-linecap: round;
-    transition: stroke 0.15s ease;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 7;                                    /* SVG 線條粗細：7 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    transition: stroke 0.15s ease;                      /* 狀態改變時的過渡動畫（屬性、時間、緩動）：stroke 0.15s ease */
 }
 
 /* 評審動畫（V1.28）：粗綠線＋黑色箭頭＝一筆畫的路線；粗紅色虛線＝必須重複走的線 */
 .euler-route {
-    stroke: var(--c-green);
-    stroke-width: 9;
-    stroke-linecap: round;
-    fill: none;
+    stroke: var(--c-green);                             /* SVG 線條顏色：主題變數 --c-green */
+    stroke-width: 9;                                    /* SVG 線條粗細：9 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    fill: none;                                         /* SVG 圖形的填色：none */
 }
 
+/* 「euler-route」的「rep」變化版的樣式 */
 .euler-route--rep {
-    stroke: var(--c-bad-light);
-    stroke-dasharray: 14 10;
-    stroke-linecap: butt;
+    stroke: var(--c-bad-light);                         /* SVG 線條顏色：主題變數 --c-bad-light */
+    stroke-dasharray: 14 10;                            /* SVG 虛線的「畫／空」長度：14 10 */
+    stroke-linecap: butt;                               /* SVG 線條端點形狀：butt */
 }
 
+/* 「euler-arrow」這個元素的樣式 */
 .euler-arrow {
-    fill: var(--c-black);
+    fill: var(--c-black);                               /* SVG 圖形的填色：主題變數 --c-black */
 }
 
+/* 「euler-edge」的「path」變化版的樣式 */
 .euler-edge--path {
-    stroke: var(--c-green);
+    stroke: var(--c-green);                             /* SVG 線條顏色：主題變數 --c-green */
 }
 
+/* 「euler-node」這個元素的樣式 */
 .euler-node {
-    fill: var(--c-card);
-    stroke: var(--c-ink);
-    stroke-width: 4;
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
 }
 
+/* 「euler-node」的「odd」變化版的樣式 */
 .euler-node--odd {
-    fill: var(--c-bad-light);
+    fill: var(--c-bad-light);                           /* SVG 圖形的填色：主題變數 --c-bad-light */
 }
 
+/* 「euler-msg」這個元素的樣式 */
 .euler-msg {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 100px;
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    line-height: var(--lh-body);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 100px;                                      /* 離下邊 100px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
 }

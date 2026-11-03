@@ -12,58 +12,58 @@
    靠攏、緊貼的動畫，時間由 --mc-close-ms 決定。 */
 /* 色不異空：黑底、不留邊 */
 .screen.matchcolor-bg {
-    background: #000;
-    padding: 0;
+    background: #000;                                   /* 背景：#000 */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
 }
 
 /* 兩個色塊所在的橫列 */
 .matchcolor-field {
-    flex: 1 1 auto;
-    min-height: 0;
-    display: flex;
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
 }
 
 /* 單個色塊，flex:1 1 0 讓左右平分寬度 */
 .matchcolor-block {
-    flex: 1 1 0;
-    min-width: 0;
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-width: 0;                                       /* 最小寬度：0 */
 }
 
 /* 兩色塊中間的縫，transition 讓它縮到 0 時有動畫（cubic-bezier 是自訂加速曲線） */
 .matchcolor-gap {
-    flex: 0 0 100px;
-    transition: flex-basis var(--mc-close-ms, 500ms) cubic-bezier(0.3, 0, 0.2, 1);
+    flex: 0 0 100px;                                    /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 100px（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    transition: flex-basis var(--mc-close-ms, 500ms) cubic-bezier(0.3, 0, 0.2, 1);  /* 狀態改變時的過渡動畫（屬性、時間、緩動）：flex-basis var(--mc-close-ms, 500ms) cubic-bezier( */
 }
 
 /* 縫關閉：flex-basis 歸零（!important 優先於 JS 寫的行內樣式） */
 .matchcolor-gap--closed {
-    flex-basis: 0 !important;
+    flex-basis: 0 !important;                           /* 基本大小（放大縮小之前）：0（!important＝強制優先） */
 }
 
 /* 縫關閉之後，右邊色塊往左多蓋 1px：舞台縮放、寬度不是整數像素時，兩個色塊之間會露出底下黑色背景的一條細黑線（V1.28 玩家意見） */
 .matchcolor-gap--closed+.matchcolor-block {
-    margin-left: -1px;
+    margin-left: -1px;                                  /* 左外距：-1px */
 }
 
 /* 下方文字區高度固定：玩的時候顯示說明文字、結算時換成大字＋按鈕，兩個階段
    佔的高度一樣，色塊的高度才不會在點擊的瞬間跳動。 */
 /* 下方說明區，固定高度 200px */
 .matchcolor-foot {
-    flex: 0 0 200px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--sp-2);
-    padding: 0 var(--sp-4);
+    flex: 0 0 200px;                                    /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 200px（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
+    padding: 0 var(--sp-4);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-4 */
 }
 
 /* 說明文字（white-space:pre-line = 保留 \n 換行） */
 .matchcolor-hint {
-    color: #FFFFFF;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-body);
-    text-align: center;
-    white-space: pre-line;
+    color: #FFFFFF;                                     /* 文字顏色：#FFFFFF */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    text-align: center;                                 /* 文字置中 */
+    white-space: pre-line;                              /* 保留換行字元、其餘空白合併 */
 }

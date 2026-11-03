@@ -6,120 +6,133 @@
 
 /* ═══ 打了幾折（.discount-）═══ */
 .discount-stage {
-    user-select: none;
-    -webkit-user-select: none;
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「discount-field」這個元素的樣式 */
 .discount-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* 百貨公司的吊牌 */
 .discount-tag {
-    position: absolute;
-    left: 24px;
-    right: 24px;
-    top: 14px;
-    padding: var(--sp-3);
-    background: var(--dsc-tag);
-    border: 5px solid var(--dsc-tag-edge);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-pop);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 24px;                                         /* 離左邊 24px */
+    right: 24px;                                        /* 離右邊 24px */
+    top: 14px;                                          /* 離上邊 14px */
+    padding: var(--sp-3);                               /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --sp-3 */
+    background: var(--dsc-tag);                         /* 背景：主題變數 --dsc-tag */
+    border: 5px solid var(--dsc-tag-edge);              /* 邊框（粗細、線型、顏色）：5px solid 主題變數 --dsc-tag-edge */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    box-shadow: var(--shadow-pop);                      /* 方塊陰影（立體感） */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「discount-tag」這個元素，前面插入的裝飾的樣式 */
 .discount-tag::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: -22px;
-    width: 26px;
-    height: 26px;
-    margin-left: -13px;
-    box-sizing: border-box;
-    background: var(--c-paper);
-    border: 5px solid var(--dsc-tag-edge);
-    border-radius: 50%;
+    content: '';                                        /* 偽元素的內容：'' */
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 50%;                                          /* 離左邊 50% */
+    top: -22px;                                         /* 離上邊 -22px */
+    width: 26px;                                        /* 寬度：26px */
+    height: 26px;                                       /* 高度：26px */
+    margin-left: -13px;                                 /* 左外距：-13px */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    background: var(--c-paper);                         /* 背景：主題變數 --c-paper */
+    border: 5px solid var(--dsc-tag-edge);              /* 邊框（粗細、線型、顏色）：5px solid 主題變數 --dsc-tag-edge */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
 }
 
+/* 「discount-tag」裡面的「sale」部分的樣式 */
 .discount-tag__sale {
-    display: inline-block;
-    position: absolute;
-    left: 36%;
-    top: -16px;
-    padding: 0 var(--sp-3);
-    background: var(--dsc-red);
-    border-radius: var(--r-sm);
-    color: var(--c-card);
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    letter-spacing: 6px;
-    transform: rotate(-3deg);
+    display: inline-block;                              /* 像文字一樣排在同一行，但可以設定寬高 */
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 36%;                                          /* 離左邊 36% */
+    top: -16px;                                         /* 離上邊 -16px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    background: var(--dsc-red);                         /* 背景：主題變數 --dsc-red */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    color: var(--c-card);                               /* 文字顏色：主題變數 --c-card */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    letter-spacing: 6px;                                /* 字與字之間的間距：6px */
+    transform: rotate(-3deg);                           /* 變形：旋轉 -3deg */
 }
 
+/* 「discount-tag」裡面的「orig」部分的樣式 */
 .discount-tag__orig {
-    margin-top: var(--sp-2);
-    color: var(--c-ink-soft);
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-bold);
+    margin-top: var(--sp-2);                            /* 上外距（跟上面的元素距離）：主題變數 --sp-2 */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
 }
 
+/* 「discount-tag」裡面的「price」部分的樣式 */
 .discount-tag__price {
-    color: var(--dsc-red);
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
+    color: var(--dsc-red);                              /* 文字顏色：主題變數 --dsc-red */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
+/* 「discount-tag」裡面的「n」部分的樣式 */
 .discount-tag__n {
-    font-size: calc(var(--fs-xxl) * 1.4);
-    line-height: 1.1;
+    font-size: calc(var(--fs-xxl) * 1.4);               /* 字級：calc(主題變數 --fs-xxl * 1.4) */
+    line-height: 1.1;                                   /* 行高：1.1（文字每一行佔的高度） */
 }
 
+/* 「discount-tag」裡面的「q」部分的樣式 */
 .discount-tag__q {
-    margin-top: var(--sp-1);
-    color: var(--c-ink);
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
+    margin-top: var(--sp-1);                            /* 上外距（跟上面的元素距離）：主題變數 --sp-1 */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
+/* 「discount-info」這個元素的樣式 */
 .discount-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 300px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 300px;                                         /* 離上邊 300px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「discount-info」在「正確（成功）時」的樣子的樣式 */
 .discount-info--ok {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「discount-info」在「錯誤（失敗）時」的樣子的樣式 */
 .discount-info--bad {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
+/* 「discount-btn」這個元素的樣式 */
 .discount-btn {
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
+/* 「discount-btn」在「正確（成功）時」的樣子的樣式 */
 .discount-btn--ok {
-    background: var(--c-ok-light);
-    border-color: var(--c-ok);
+    background: var(--c-ok-light);                      /* 背景：主題變數 --c-ok-light */
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
 }
 
+/* 「discount-btn」在「錯誤（失敗）時」的樣子的樣式 */
 .discount-btn--bad {
-    background: var(--c-bad-soft);
-    border-color: var(--c-bad-light);
-    color: var(--c-bad);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    border-color: var(--c-bad-light);                   /* 邊框顏色：主題變數 --c-bad-light */
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }

@@ -6,73 +6,81 @@
 
 /* ═══ 骰子少一點（.dicechange-）═══ */
 .dicechange-die {
-    position: absolute;
-    border-radius: 18%;
-    touch-action: none;
-    cursor: pointer;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    border-radius: 18%;                                 /* 圓角：18% */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
 }
 
+/* 「svg」標籤的樣式 */
 .dicechange-die svg {
-    display: block;
-    width: 100%;
-    height: 100%;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
 }
 
+/* 「dicechange-face」這個元素的樣式 */
 .dicechange-face {
-    fill: var(--c-card);
-    stroke: var(--c-ink);
-    stroke-width: 5;
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 5;                                    /* SVG 線條粗細：5 */
 }
 
+/* 「dicechange-pip」這個元素的樣式 */
 .dicechange-pip {
-    fill: var(--c-ink);
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
 }
 
 /* 1 點與 4 點的圓點是紅色（V1.29） */
 .dicechange-pip--red {
-    fill: hsl(0, 78%, 50%);
+    fill: hsl(0, 78%, 50%);                             /* SVG 圖形的填色：hsl(0, 78%, 50%) */
 }
 
+/* 「dicechange-back」這個元素的樣式 */
 .dicechange-back {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 18%;
-    background: var(--c-blue);
-    border: 5px solid var(--c-ink);
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-black);
-    color: var(--c-on-accent);
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    border-radius: 18%;                                 /* 圓角：18% */
+    background: var(--c-blue);                          /* 背景：主題變數 --c-blue */
+    border: 5px solid var(--c-ink);                     /* 邊框（粗細、線型、顏色）：5px solid 主題變數 --c-ink */
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-on-accent);                          /* 文字顏色：主題變數 --c-on-accent */
 }
 
+/* 「dicechange-die」的「found」變化版的樣式 */
 .dicechange-die--found {
-    box-shadow: 0 0 0 6px var(--c-ok);
+    box-shadow: 0 0 0 6px var(--c-ok);                  /* 方塊陰影（立體感） */
 }
 
+/* 「dicechange-die」的「miss」變化版的樣式 */
 .dicechange-die--miss {
-    box-shadow: 0 0 0 6px var(--c-orange);
+    box-shadow: 0 0 0 6px var(--c-orange);              /* 方塊陰影（立體感） */
 }
 
 /* 點錯（那一顆的點數沒有變）：骰子外框改成紅色虛線（V1.29） */
 .dicechange-die--wrong .dicechange-face {
-    stroke: hsl(0, 78%, 50%);
-    stroke-width: 6;
-    stroke-dasharray: 12 8;
+    stroke: hsl(0, 78%, 50%);                           /* SVG 線條顏色：hsl(0, 78%, 50%) */
+    stroke-width: 6;                                    /* SVG 線條粗細：6 */
+    stroke-dasharray: 12 8;                             /* SVG 虛線的「畫／空」長度：12 8 */
 }
 
+/* 「dicechange-chg」這個元素的樣式 */
 .dicechange-chg {
-    position: absolute;
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    color: var(--c-orange);
-    background: var(--c-card);
-    border-radius: var(--r-sm);
-    line-height: 1.2;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-orange);                             /* 文字顏色：主題變數 --c-orange */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    line-height: 1.2;                                   /* 行高：1.2（文字每一行佔的高度） */
 }
 
+/* 「dicechange-msg」這個元素的樣式 */
 .dicechange-msg {
-    bottom: 40px;
+    bottom: 40px;                                       /* 離下邊 40px */
 }

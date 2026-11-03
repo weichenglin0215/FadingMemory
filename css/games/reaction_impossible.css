@@ -8,17 +8,17 @@
 /* ═══ 遊戲四：不可能任務 ═══ */
 /* 白色背景 */
 .impossible-white-bg {
-    background: #FFFFFF;
+    background: #FFFFFF;                                /* 背景：#FFFFFF */
 }
 
 /* 鏡頭畫面的外框 */
 .impossible-field {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    border-radius: var(--r-lg);
-    border: var(--bd);
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
 }
 
 /* 整個畫面（阿湯哥的照片＋警戒線，結算時再加上量尺／文字）都畫在這一個
@@ -27,38 +27,38 @@
    這一小段」。從頭到尾都是同一份 SVG 內容在重新畫，不是切換成另一個畫面、
    也不是疊別的東西上去遮住——這樣鏡頭推進才會看起來平順、連續。 */
 .impossible-svg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
-    z-index: 1;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
+    display: block;                                     /* 獨佔一整行的區塊 */
+    z-index: 1;                                         /* 疊放順序：數字越大越在上面（1） */
 }
 
 /* 警戒線的長方形 */
 .impossible-bar-rect {
-    fill: var(--flow-ink-1);
+    fill: var(--flow-ink-1);                            /* SVG 圖形的填色：主題變數 --flow-ink-1 */
 }
 
 /* 提示文字：absolute 加 top:50% + translateY(-50%) 是傳統的「垂直置中」寫法 */
 .impossible-hint {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    padding: 0 var(--sp-4);
-    text-align: center;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    pointer-events: none;
-    z-index: 3;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 50%;                                           /* 離上邊 50% */
+    transform: translateY(-50%);                        /* 變形：垂直移動 -50% */
+    padding: 0 var(--sp-4);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-4 */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 3;                                         /* 疊放順序：數字越大越在上面（3） */
 }
 
 /* 危險時的提示變紅色 */
 .impossible-hint--danger {
-    color: var(--flow-ink-1);
+    color: var(--flow-ink-1);                           /* 文字顏色：主題變數 --flow-ink-1 */
 }
 
 /* 量尺（藍線＋上下箭頭）跟結算文字，字級／線寬都是 js 依推進目標框的高度
@@ -67,25 +67,25 @@
    會跟著整個畫面一起被放大，不需要另外做淡入。 */
 /* 量尺線（藍） */
 .impossible-measure-line {
-    stroke: var(--c-blue);
-    fill: var(--c-blue);
+    stroke: var(--c-blue);                              /* SVG 線條顏色：主題變數 --c-blue */
+    fill: var(--c-blue);                                /* SVG 圖形的填色：主題變數 --c-blue */
 }
 
 /* vector-effect: non-scaling-stroke：邊線寬度用「螢幕上的 px」算，不跟著 viewBox
    的放大倍率變粗——否則鏡頭推得越近（公分數越小），膠囊的邊框就越粗。 */
 /* 量尺數字的膠囊底 */
 .impossible-measure-pill {
-    fill: var(--c-card);
-    stroke: var(--bd-c);
-    stroke-width: 3px;
-    vector-effect: non-scaling-stroke;
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    stroke: var(--bd-c);                                /* SVG 線條顏色：主題變數 --bd-c */
+    stroke-width: 3px;                                  /* SVG 線條粗細：3px */
+    vector-effect: non-scaling-stroke;                  /* SVG 線條粗細不隨縮放改變 */
 }
 
 /* 量尺數字 */
 .impossible-measure-num {
-    fill: var(--c-blue);
-    font-family: var(--font-ui);
-    font-weight: 900;
+    fill: var(--c-blue);                                /* SVG 圖形的填色：主題變數 --c-blue */
+    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
+    font-weight: 900;                                   /* 字重（粗細）900（400 一般、700 粗體） */
 }
 
 /* 標題／新紀錄：paint-order: stroke 讓白色描邊畫在字的「底下」（只露出字外面
@@ -93,21 +93,21 @@
    描邊粗細（stroke-width）由 js 依字級算好寫在 SVG 屬性上。 */
 /* 標題文字（白邊描邊） */
 .impossible-measure-title {
-    font-family: var(--font-ui);
-    font-weight: 900;
-    stroke: #FFFFFF;
-    stroke-linejoin: round;
-    paint-order: stroke;
+    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
+    font-weight: 900;                                   /* 字重（粗細）900（400 一般、700 粗體） */
+    stroke: #FFFFFF;                                    /* SVG 線條顏色：#FFFFFF */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+    paint-order: stroke;                                /* SVG 繪製順序（例如先畫邊再畫填色）：stroke */
 }
 
 /* 成功標題（綠） */
 .impossible-measure-title--ok {
-    fill: var(--c-green);
+    fill: var(--c-green);                               /* SVG 圖形的填色：主題變數 --c-green */
 }
 
 /* 失敗標題（紅） */
 .impossible-measure-title--bad {
-    fill: var(--flow-ink-1);
+    fill: var(--flow-ink-1);                            /* SVG 圖形的填色：主題變數 --flow-ink-1 */
 }
 
 /* 「警戒線」標籤直接寫在紅色警戒線上：白字＋紅色描邊（描邊畫在字底下），
@@ -115,20 +115,20 @@
    紅色描邊讓白字在白色背景上也讀得清楚。 */
 /* 「警戒線」標籤 */
 .impossible-measure-label {
-    fill: #FFFFFF;
-    stroke: var(--flow-ink-1);
-    stroke-linejoin: round;
-    paint-order: stroke;
-    font-family: var(--font-ui);
-    font-weight: 900;
+    fill: #FFFFFF;                                      /* SVG 圖形的填色：#FFFFFF */
+    stroke: var(--flow-ink-1);                          /* SVG 線條顏色：主題變數 --flow-ink-1 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+    paint-order: stroke;                                /* SVG 繪製順序（例如先畫邊再畫填色）：stroke */
+    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
+    font-weight: 900;                                   /* 字重（粗細）900（400 一般、700 粗體） */
 }
 
 /* 「新紀錄」文字 */
 .impossible-measure-newrec {
-    fill: var(--c-green);
-    stroke: #FFFFFF;
-    stroke-linejoin: round;
-    paint-order: stroke;
-    font-family: var(--font-ui);
-    font-weight: 700;
+    fill: var(--c-green);                               /* SVG 圖形的填色：主題變數 --c-green */
+    stroke: #FFFFFF;                                    /* SVG 線條顏色：#FFFFFF */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+    paint-order: stroke;                                /* SVG 繪製順序（例如先畫邊再畫填色）：stroke */
+    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
+    font-weight: 700;                                   /* 字重（粗細）700（400 一般、700 粗體） */
 }

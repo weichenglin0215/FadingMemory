@@ -14,11 +14,15 @@
    · 揭曉：寫出 560 ÷ 800 ＝ 0.7 ＝ 7 折；如果你選的是「互補」的折數（7 折選成 3 折），特別說明「3 折是付 30%，7 折才是付 70%」。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'discount'：選單、成績、存檔都靠它；樣式在 css/games/reaction_discount.css，裡面的 class 名稱一律以 discount- 開頭。 */
     'use strict';
 
-    var ID = 'discount';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 300 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'discount';                                /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 300 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_Q = 40;                            /* 答對幾題之後難度到頂 */
@@ -49,7 +53,7 @@
     function complementOf(r) { return r < 10 ? 10 - r : null; }
     /* 一題：{ n, r（正確折數）, pct, orig, sale, label, buttons, time } */
     function makeQuestion(n, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var pool = poolFor(n), r = kit.pick(pool, rand), pct = pctOf(r), hi = maxOrigFor(n), orig;
         if (rand() < pOddFor(n)) { var lo20 = Math.ceil(MIN_ORIG / 20); orig = 20 * kit.randInt(lo20, Math.floor(hi / 20), rand); if (orig % 100 === 0) orig += 20; }
         else orig = 100 * kit.randInt(Math.ceil(MIN_ORIG / 100), Math.max(2, Math.floor(hi / 100)), rand);
@@ -64,6 +68,7 @@
         if (q.r < 10 && picked === 10 - q.r) t += '。' + labelOf(picked) + '是付 ' + pctOf(picked) + '%，' + q.label + '才是付 ' + q.pct + '%';
         return t;
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 30) return '折扣達人！';
         if (n >= 20) return '買東西最精！';
@@ -72,6 +77,7 @@
         return '7 折是付 70%！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 10, stageClass: 'discount-stage', resume: false,
@@ -85,12 +91,14 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, S = api.S;
         var count = 0, q = null, phase = 'ask', grid = null, picked = null;
         api.info = { get count() { return count; }, get q() { return q; }, get phase() { return phase; } };
         S.score = 0; api.setInfo('答對 0 題');
-        console.log('[打了幾折] 開始：每題限時 ' + timeMs(0) + ' → ' + timeMs(RAMP_Q) + ' 毫秒；折數池 ' + poolFor(0).join(',') + ' → ' + poolFor(RAMP_Q).join(','));
+        console.log('[打了幾折] 開始：每題限時 ' + timeMs(0) + ' → ' + timeMs(RAMP_Q) + ' 毫秒；折數池 ' + poolFor(0).join(',') + ' → ' + poolFor(RAMP_Q).join(','));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var field = h('div', { 'class': 'discount-field' });
         stage.appendChild(field);
@@ -109,7 +117,7 @@
             var btns = q.buttons, cols = btns.length > 9 ? 4 : 3;
             grid = kit.btnGrid(field, btns.map(function (r) { return { text: labelOf(r), kind: 'line', cls: 'discount-btn', onTap: function () { answer(r); } }; }), { cols: cols, h: btns.length > 9 ? 76 : 96, gap: 8, bottom: 8 });
             api.stopTimer(); api.timer(q.time, function () { fail(null); });
-            if (count === 0 && kit.once('discount.hint')) kit.hintOn(stage, grid.btns[q.buttons.indexOf(q.r)], { mode: 'tap', delay: 900, text: '7 折＝付 70%' });
+            if (count === 0 && kit.once('discount.hint')) kit.hintOn(stage, grid.btns[q.buttons.indexOf(q.r)], { mode: 'tap', delay: 900, text: '7 折＝付 70%' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         }
         ask();
         function answer(r) {
@@ -138,16 +146,19 @@
         api.wrong = function () { if (phase !== 'ask') return; var comp = complementOf(q.r), w = (comp != null && q.buttons.indexOf(comp) >= 0) ? comp : q.buttons.filter(function (b) { return b !== q.r; })[0]; answer(w); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '打了幾折',
         rule: '百貨公司吊牌：「原價 800 元，特價 560 元」，**這是打幾折？** 點下面的折數按鈕。**台灣的「7 折」是付原價的 70%**（不是減 30%），所以**7 折和 3 折（付 30%）很容易搞混**——小心！後面會出現 75 折、85 折、95 折、65 折（兩位數的折），原價越來越大、也越來越不整齊。每題限時越來越短（8 → 4 秒）。答錯或超過時間就結束，看你能連續答對幾題。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             timeMs: timeMs, maxOrigFor: maxOrigFor, pOddFor: pOddFor, pctOf: pctOf, labelOf: labelOf, poolFor: poolFor, buttonsFor: buttonsFor, complementOf: complementOf, makeQuestion: makeQuestion, formula: formula, whyText: whyText, rating: rating,
             RAMP_Q: RAMP_Q, TIME_S: TIME_S, MAX_ORIG: MAX_ORIG, P_ODD: P_ODD, MIN_ORIG: MIN_ORIG, POOL0: POOL0, STAGES: STAGES, BASE_BTN: BASE_BTN, SOLVE_CAP: SOLVE_CAP, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

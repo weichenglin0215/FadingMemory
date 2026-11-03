@@ -7,71 +7,71 @@
 /* 找回小雞：先看哪幾隻小雞有星星，它們混進一群小雞四處亂跑，最後點出星星小雞。 */
 /* ═══ 找回小雞（.chicks-）═══ */
 .chicks-head {
-    text-align: center;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
 /* 提示橫幅（nowrap = 不換行） */
 .chicks-banner {
-    min-height: 1.4em;
-    white-space: nowrap;
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    min-height: 1.4em;                                  /* 最小高度：1.4em */
+    white-space: nowrap;                                /* 文字不換行 */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 院子：JS 以 clientWidth／clientHeight 算小雞的活動範圍，所以一定要有確定的大小 */
 /* 院子：JS 要靠它的實際寬高來算小雞的活動範圍，所以一定要有確定的大小 */
 .chicks-field {
-    position: relative;
-    flex: 1 1 0;
-    min-height: 0;
-    overflow: hidden;
-    background: var(--c-green-soft);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    touch-action: none;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    background: var(--c-green-soft);                    /* 背景：主題變數 --c-green-soft */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
 /* 一隻小雞；位置用 JS 的 transform 控制，will-change 提示瀏覽器預先加速 */
 .chicks-chick {
-    position: absolute;
-    left: 0;
-    top: 0;
-    box-sizing: border-box;
-    border-radius: 50%;
-    will-change: transform;
-    cursor: pointer;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    will-change: transform;                             /* 提示瀏覽器這個屬性會變動，先準備好（讓動畫更順） */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
 }
 
 /* 小雞 SVG */
 .chicks-svg {
-    display: block;
-    width: 100%;
-    height: 100%;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
 }
 
 /* 小雞頭上的星星：絕對定位在小雞上方，pointer-events:none 不影響點擊。
    水藍色，並且用 animation 快速閃爍（0.36 秒一次：亮 → 幾乎消失 → 亮，每秒不到 3 次），引起玩家注意 */
 .chicks-star {
-    position: absolute;
-    left: 50%;
-    top: -22px;
-    margin-left: -20px;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--fs-lg);
-    line-height: 1;
-    color: var(--c-sky);
-    text-shadow: 0 0 3px var(--c-card), 0 0 3px var(--c-card), 0 0 6px var(--c-sky);
-    pointer-events: none;
-    animation: chicks-star-blink 0.36s linear infinite;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 50%;                                          /* 離左邊 50% */
+    top: -22px;                                         /* 離上邊 -22px */
+    margin-left: -20px;                                 /* 左外距：-20px */
+    width: 40px;                                        /* 寬度：40px */
+    height: 40px;                                       /* 高度：40px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
+    color: var(--c-sky);                                /* 文字顏色：主題變數 --c-sky */
+    text-shadow: 0 0 3px var(--c-card), 0 0 3px var(--c-card), 0 0 6px var(--c-sky);  /* 文字陰影 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    animation: chicks-star-blink 0.36s linear infinite; /* 播放動畫（名稱、時間、緩動、次數）：chicks-star-blink 0.36s linear infinite */
 }
 
 /* 閃爍動畫：前半段亮且稍微放大，後半段幾乎消失；0%～49% 和 50%～100% 各維持固定值，所以是「一亮一滅」的硬切換，不是漸變 */
@@ -79,69 +79,70 @@
 
     0%,
     49% {
-        opacity: 1;
-        transform: scale(1.15);
+        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
+        transform: scale(1.15);                         /* 變形：縮放 1.15 倍 */
     }
 
     50%,
     100% {
-        opacity: 0.12;
-        transform: scale(0.85);
+        opacity: 0.12;                                  /* 透明度 0.12（1＝完全不透明、0＝全透明） */
+        transform: scale(0.85);                         /* 變形：縮放 0.85 倍 */
     }
 }
 
 /* 已經找到的星星小雞：星星不再閃爍，穩穩亮著（綠色光圈代表找對了） */
 .chicks-chick--ok .chicks-star {
-    animation: none;
-    opacity: 1;
+    animation: none;                                    /* 播放動畫（名稱、時間、緩動、次數）：none */
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }
 
 /* 系統開了「減少動態效果」：不要閃爍，星星穩穩亮著 */
 @media (prefers-reduced-motion: reduce) {
+    /* 「chicks-star」這個元素的樣式 */
     .chicks-star {
-        animation: none;
+        animation: none;                                /* 播放動畫（名稱、時間、緩動、次數）：none */
     }
 }
 
 /* 移動結束後：只有星星小雞可以點，其他小雞沒有點擊功能（點下去等於點到空地）*/
 .chicks-chick--dead {
-    pointer-events: none;
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 移動結束後仍可點的（星星）小雞 */
 .chicks-chick--live {
-    cursor: pointer;
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
 }
 
 /* 被玩家點選（藍色光圈） */
 .chicks-chick--pick {
-    background: var(--c-blue-soft);
-    box-shadow: 0 0 0 4px var(--c-blue);
+    background: var(--c-blue-soft);                     /* 背景：主題變數 --c-blue-soft */
+    box-shadow: 0 0 0 4px var(--c-blue);                /* 方塊陰影（立體感） */
 }
 
 /* 找對了（綠色光圈） */
 .chicks-chick--ok {
-    background: var(--c-ok-soft);
-    box-shadow: 0 0 0 4px var(--c-ok);
+    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
+    box-shadow: 0 0 0 4px var(--c-ok);                  /* 方塊陰影（立體感） */
 }
 
 /* 漏掉的星星小雞（揭曉時橘色光圈） */
 .chicks-chick--miss {
-    background: var(--c-bad-soft);
-    box-shadow: 0 0 0 4px var(--c-bad);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    box-shadow: 0 0 0 4px var(--c-bad);                 /* 方塊陰影（立體感） */
 }
 
 /* 點錯的小雞（揭曉時帶紅褐色光圈、半透明） */
 .chicks-chick--wrong {
-    background: var(--c-bad-soft);
-    box-shadow: 0 0 0 4px var(--c-recall);
-    opacity: 0.7;
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    box-shadow: 0 0 0 4px var(--c-recall);              /* 方塊陰影（立體感） */
+    opacity: 0.7;                                       /* 透明度 0.7（1＝完全不透明、0＝全透明） */
 }
 
 /* （保留）確認按鈕 */
 .chicks-ok {
-    flex: none;
-    align-self: center;
-    min-width: 40%;
-    font-size: var(--fs-md);
+    flex: none;                                         /* 彈性縮放：none */
+    align-self: center;                                 /* 這個元素自己在交叉方向的對齊方式：center */
+    min-width: 40%;                                     /* 最小寬度：40% */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
 }

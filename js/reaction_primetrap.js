@@ -13,11 +13,15 @@
      FAIL_MS（5 秒）才跳出結算彈窗／前 30 名彈窗，讓玩家看清楚錯在哪。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'primetrap'：選單、成績、存檔都靠它；樣式在 css/games/reaction_primetrap.css，裡面的 class 名稱一律以 primetrap- 開頭。 */
     'use strict';
 
-    var ID = 'primetrap';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'primetrap';                               /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾題之後難度到頂 */
@@ -57,7 +61,7 @@
     }
     /* 這一題要不要質數：一半一半，連續太多次就換邊 */
     function nextPrime(hist, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var n = hist.length;
         if (n >= SAME_MAX) {
             var last = hist[n - 1], same = true;
@@ -87,6 +91,7 @@
         }
         return { n: wantPrime ? 53 : 91, prime: wantPrime, trap: !wantPrime };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 40) return '質數雷達！';
         if (n >= 25) return '高手！';
@@ -95,6 +100,7 @@
         return '多看幾次，陷阱就記住了！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         var hist = [], prev = null;
         kit.run(root, ctx, {
@@ -107,12 +113,14 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api, hist, setPrev, prev) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeQuestion(level, api.rand, nextPrime(hist, api.rand), prev);
         hist.push(q.prime); setPrev(q.n);
-        api.info = q;
-        console.log('[質數陷阱] 第 ' + level + ' 題：' + q.n + '（' + (q.prime ? '質數' : (q.trap ? '陷阱合數 ' : '合數 ') + factorText(q.n)) + '），限時 ' + timeMs(level) + ' ms');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[質數陷阱] 第 ' + level + ' 題：' + q.n + '（' + (q.prime ? '質數' : (q.trap ? '陷阱合數 ' : '合數 ') + factorText(q.n)) + '），限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
         var num = h('div', { 'class': 'primetrap-num', text: String(q.n) });
         var note = h('div', { 'class': 'primetrap-note' });
         var why = h('div', { 'class': 'primetrap-why' });
@@ -120,8 +128,9 @@
         var bComp = h('button', { 'class': 'btn btn--primary primetrap-btn', html: '合數<small>（非質數）</small>' });
         var bPrime = h('button', { 'class': 'btn btn--go primetrap-btn', text: '質數' });
         stage.appendChild(h('div', { 'class': 'rx-btnrow' }, [bComp, bPrime]));
-        api.timer(timeMs(level), function () { judge(null); });
+        api.timer(timeMs(level), function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
 
+        /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(sayPrime) {
             if (api.over) return;
             var text = q.prime ? q.n + ' 是質數' : factorText(q.n);
@@ -142,10 +151,12 @@
         }
         kit.onTap(bPrime, function () { judge(true); });
         kit.onTap(bComp, function () { judge(false); });
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.prime); };
         api.wrong = function () { judge(!q.prime); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '質數陷阱',
@@ -154,5 +165,6 @@
         score: SCORE,
         test: { FAIL_MS: FAIL_MS, isPrime: isPrime, spf: spf, factorText: factorText, rangeFor: rangeFor, timeMs: timeMs, trapFrac: trapFrac, poolsFor: poolsFor, nextPrime: nextPrime, makeQuestion: makeQuestion, rating: rating, RAMP_LEVELS: RAMP_LEVELS, TRAP_START: TRAP_START, TRAP_END: TRAP_END, MAX_LEVEL: MAX_LEVEL, SAME_MAX: SAME_MAX }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

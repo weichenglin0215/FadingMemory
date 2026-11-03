@@ -6,163 +6,185 @@
 
 /* ═══ 洗盤子（.dishes-）═══ */
 .dishes-stage {
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「dishes-field」這個元素的樣式 */
 .dishes-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
-    touch-action: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
+/* 「dishes-tip」這個元素的樣式 */
 .dishes-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 盤子放的位置（結束時放大） */
 .dishes-holder {
-    position: absolute;
-    width: 330px;
-    height: 330px;
-    transition: transform 0.4s ease-out;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 330px;                                       /* 寬度：330px */
+    height: 330px;                                      /* 高度：330px */
+    transition: transform 0.4s ease-out;                /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.4s ease-out */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「dishes-holder」在「大尺寸時」的樣子的樣式 */
 .dishes-holder--big {
-    transform: scale(1.1);
+    transform: scale(1.1);                              /* 變形：縮放 1.1 倍 */
 }
 
+/* 「dishes-svg」這個元素的樣式 */
 .dishes-svg {
-    display: block;
-    overflow: visible;
-    transition: transform 0.26s ease-in, opacity 0.26s ease-in;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
+    transition: transform 0.26s ease-in, opacity 0.26s ease-in;  /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.26s ease-in, opacity 0.26s ease-in */
 }
 
+/* 「dishes-svg」的「in」變化版的樣式 */
 .dishes-svg--in {
-    transform: translateX(-120px);
-    opacity: 0;
+    transform: translateX(-120px);                      /* 變形：水平移動 -120px */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
 }
 
+/* 「dishes-svg」的「out」變化版的樣式 */
 .dishes-svg--out {
-    transform: translateX(160px) rotate(12deg);
-    opacity: 0;
+    transform: translateX(160px) rotate(12deg);         /* 變形：水平移動 160px 旋轉 12deg */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
 }
 
+/* 「dishes-plate」這個元素的樣式 */
 .dishes-plate {
-    fill: var(--dsh-plate);
-    stroke: var(--dsh-plate-line);
-    stroke-width: 4;
+    fill: var(--dsh-plate);                             /* SVG 圖形的填色：主題變數 --dsh-plate */
+    stroke: var(--dsh-plate-line);                      /* SVG 線條顏色：主題變數 --dsh-plate-line */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
 }
 
+/* 「dishes-rim」這個元素的樣式 */
 .dishes-rim {
-    fill: none;
-    stroke: var(--dsh-rim);
-    stroke-width: 3;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--dsh-rim);                             /* SVG 線條顏色：主題變數 --dsh-rim */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
 /* 花紋：4 種顏色級數，越後面越像污漬的醬油色 */
 .dishes-pat0 {
-    fill: var(--dsh-pat0);
+    fill: var(--dsh-pat0);                              /* SVG 圖形的填色：主題變數 --dsh-pat0 */
 }
 
+/* 「dishes-pat1」這個元素的樣式 */
 .dishes-pat1 {
-    fill: var(--dsh-pat1);
+    fill: var(--dsh-pat1);                              /* SVG 圖形的填色：主題變數 --dsh-pat1 */
 }
 
+/* 「dishes-pat2」這個元素的樣式 */
 .dishes-pat2 {
-    fill: var(--dsh-pat2);
+    fill: var(--dsh-pat2);                              /* SVG 圖形的填色：主題變數 --dsh-pat2 */
 }
 
+/* 「dishes-pat3」這個元素的樣式 */
 .dishes-pat3 {
-    fill: var(--dsh-pat3);
+    fill: var(--dsh-pat3);                              /* SVG 圖形的填色：主題變數 --dsh-pat3 */
 }
 
+/* 「dishes-pat」裡面的「stroke」部分的樣式 */
 .dishes-pat__stroke {
-    fill: none;
-    stroke-width: 4;
-    stroke-linecap: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「dishes-pat」裡面的「stroke」部分的樣式 */
 .dishes-pat0 .dishes-pat__stroke {
-    stroke: var(--dsh-pat0);
+    stroke: var(--dsh-pat0);                            /* SVG 線條顏色：主題變數 --dsh-pat0 */
 }
 
+/* 「dishes-pat」裡面的「stroke」部分的樣式 */
 .dishes-pat1 .dishes-pat__stroke {
-    stroke: var(--dsh-pat1);
+    stroke: var(--dsh-pat1);                            /* SVG 線條顏色：主題變數 --dsh-pat1 */
 }
 
+/* 「dishes-pat」裡面的「stroke」部分的樣式 */
 .dishes-pat2 .dishes-pat__stroke {
-    stroke: var(--dsh-pat2);
+    stroke: var(--dsh-pat2);                            /* SVG 線條顏色：主題變數 --dsh-pat2 */
 }
 
+/* 「dishes-pat」裡面的「stroke」部分的樣式 */
 .dishes-pat3 .dishes-pat__stroke {
-    stroke: var(--dsh-pat3);
+    stroke: var(--dsh-pat3);                            /* SVG 線條顏色：主題變數 --dsh-pat3 */
 }
 
 /* 污漬：軟軟的、邊緣模糊、形狀不規則（花紋是清楚的） */
 .dishes-spot {
-    fill: var(--dsh-sauce);
-    filter: blur(1.6px);
+    fill: var(--dsh-sauce);                             /* SVG 圖形的填色：主題變數 --dsh-sauce */
+    filter: blur(1.6px);                                /* 濾鏡效果：blur(1.6px) */
 }
 
+/* 「dishes-ring」這個元素的樣式 */
 .dishes-ring {
-    fill: none;
-    stroke: var(--c-bad-light);
-    stroke-width: 5;
-    stroke-dasharray: 10 6;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-bad-light);                         /* SVG 線條顏色：主題變數 --c-bad-light */
+    stroke-width: 5;                                    /* SVG 線條粗細：5 */
+    stroke-dasharray: 10 6;                             /* SVG 虛線的「畫／空」長度：10 6 */
 }
 
+/* 「dishes-bubble」這個元素的樣式 */
 .dishes-bubble {
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    box-sizing: border-box;
-    border: 2px solid var(--dsh-bubble);
-    border-radius: 50%;
-    background: var(--dsh-bubble-fill);
-    pointer-events: none;
-    animation: dishes-pop 0.5s ease-out forwards;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 16px;                                        /* 寬度：16px */
+    height: 16px;                                       /* 高度：16px */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    border: 2px solid var(--dsh-bubble);                /* 邊框（粗細、線型、顏色）：2px solid 主題變數 --dsh-bubble */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    background: var(--dsh-bubble-fill);                 /* 背景：主題變數 --dsh-bubble-fill */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    animation: dishes-pop 0.5s ease-out forwards;       /* 播放動畫（名稱、時間、緩動、次數）：dishes-pop 0.5s ease-out forwards */
 }
 
+/* 「dishes-bubble」的「dirt」變化版的樣式 */
 .dishes-bubble--dirt {
-    border-color: var(--dsh-sauce);
+    border-color: var(--dsh-sauce);                     /* 邊框顏色：主題變數 --dsh-sauce */
 }
 
+/* 動畫 dishes-pop：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes dishes-pop {
     from {
-        transform: scale(0.5);
-        opacity: 1;
+        transform: scale(0.5);                          /* 變形：縮放 0.5 倍 */
+        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
     }
 
     to {
-        transform: scale(1.8) translateY(-14px);
-        opacity: 0;
+        transform: scale(1.8) translateY(-14px);        /* 變形：縮放 1.8 倍 垂直移動 -14px */
+        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
     }
 }
 
+/* 「dishes-info」這個元素的樣式 */
 .dishes-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    color: var(--c-ok);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「dishes-info」在「結束時」的樣子的樣式 */
 .dishes-info--end {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }

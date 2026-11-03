@@ -14,10 +14,14 @@
    · 提示（每題 HINTS 次）：標出一格「跟答案不一樣」的格子（優先選答案最少剩幾種的那一格），不說數字。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'sandwich'：選單、成績、存檔都靠它。 */
     'use strict';
 
-    var ID = 'sandwich';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '解開題數', min: 1, max: 90 };
+    var ID = 'sandwich';                                /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '解開題數', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
     var kit = Reaction.kit, SE = window.SudokuEngine, lib = Reaction.sudokuLib;
 
     /* ═══ 可以自己調的參數 ═══ */
@@ -105,7 +109,7 @@
     }
     /* 出一題：{ n, solution, givens, clues, count（提示數）, want } */
     function makePuzzle(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var s = stageOf(level), g = geoOf(s.st), want = givensFor(level), t0 = Date.now();
         var sol = SE.randomSolution(g, rand), clues = cluesOf(g, sol);
         var givens = sol.slice(), count = g.cells;
@@ -130,6 +134,7 @@
         for (r = 0; r < n; r++) { var ri = [], ci = []; for (q = 0; q < n; q++) { ri.push(r * n + q); ci.push(q * n + r); } mark(ri, clues.rows[r]); mark(ci, clues.cols[r]); }
         return bad;
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 25) return '夾心數獨大師！';
         if (n >= 12) return '推理很穩！';
@@ -149,30 +154,36 @@
             setup: setup
         });
     }
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var s = stageOf(api.level), g = geoOf(s.st), pz = makePuzzle(api.level, api.rand);
-        api.info = pz;
-        console.log('[夾心數獨] 第 ' + api.level + ' 題：' + g.N + '×' + g.N + '，提示 ' + pz.count + ' 個（想要 ' + pz.want + '）；外圍 ' + pz.clues.rows.join(',') + '／' + pz.clues.cols.join(','));
+        api.info = pz;                                  /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[夾心數獨] 第 ' + api.level + ' 題：' + g.N + '×' + g.N + '，提示 ' + pz.count + ' 個（想要 ' + pz.want + '）；外圍 ' + pz.clues.rows.join(',') + '／' + pz.clues.cols.join(','));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
         var ctl = lib.mountBoard(api, g, pz, {
             frac: s.st.frac, maxLevel: 1, ring: { top: pz.clues.cols, left: pz.clues.rows },
             tip: '外圍數字＝1 和 ' + g.N + ' 中間夾的和',
             extraConflict: function (grid) { return badSandwichCells(g, grid, pz.clues); }
         });
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { ctl.fillSolution(); };
         api.wrong = function () { ctl.putWrong(); };
         api.ctl = ctl;
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '夾心數獨',
         rule: '標準數獨：**每一橫排、每一直排、每個宮裡，1～N 各出現一次**。另外盤面外面有一圈數字：**那一排（那一列）裡，「1」和最大數「N」中間夾著的數字，加起來是多少**（1 和 N 誰先誰後都可以，位置不固定；0 表示 1 和 N 緊緊相鄰）。點一格，再點下面的數字；1 和 N 都放好的那一排，夾著的格子加總不對會標紅。沒有時間限制，填錯也不會結束；全部填對就換下一題，想結束就按左上角「返回」，成績是解開幾題。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             STAGES: STAGES, stageOf: stageOf, givensFor: givensFor, sandwichOf: sandwichOf, cluesOf: cluesOf, lineFeasible: lineFeasible, countSolutions: countSolutions,
             makePuzzle: makePuzzle, badSandwichCells: badSandwichCells, rating: rating, HINTS: HINTS, MAX_LEVEL: MAX_LEVEL, geoOf: geoOf
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

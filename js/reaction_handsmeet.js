@@ -12,11 +12,15 @@
    · 揭曉：指針定格在按下的瞬間，只寫兩針的夾角（V1.28 玩家意見：不顯示任何跟秒數有關的說明，也取消綠線，把重點集中在角度差異）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'handsmeet'：選單、成績、存檔都靠它；樣式在 css/games/reaction_handsmeet.css，裡面的 class 名稱一律以 handsmeet- 開頭。 */
     'use strict';
 
-    var ID = 'handsmeet';
-    var SCORE = { better: 'min', decimals: 4, format: '{v} 度', label: '夾角', min: 0, max: 180 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'handsmeet';                               /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'min', decimals: 4, format: '{v} 度', label: '夾角', min: 0, max: 180 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var W1 = [240, 300];                        /* 長針角速度範圍（度／秒） */
@@ -29,7 +33,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 出題：回傳 { w1, w2, th1, th2, d0, rel, t0（第一次重疊的秒數）} */
     function makeRound(rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var w1 = kit.randFloat(W1[0], W1[1], rand), k = kit.randFloat(K[0], K[1], rand), w2 = w1 / k, rel = w1 - w2;
         var th1 = rand() * 360, d0 = kit.randFloat(60, 300, rand);
         while (d0 / rel < FIRST_MIN) d0 += 360;
@@ -46,6 +50,7 @@
         var n = Math.max(0, Math.round((q.rel * t - q.d0) / 360));
         return (q.d0 + 360 * n) / q.rel;
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(e) {
         if (e < 0.5) return '神乎其技！';
         if (e < 2) return '高手！';
@@ -54,6 +59,7 @@
         return '再試一次，先抓節奏再按！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「單回合計時」的流程（開始、計時、結算、最佳紀錄）交給共用骨架 kit.single，我們只提供 setup（怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.single(root, ctx, {
             id: ID, G: G, better: 'min', max: SCORE.max,
@@ -65,10 +71,12 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, my = api.my;
         var q = makeRound(), started = false, locked = false, t0 = 0, loop = null;
-        console.log('[兩針重疊] 長針 ' + q.w1.toFixed(1) + ' 度/秒、短針 ' + q.w2.toFixed(1) + ' 度/秒；第一次重疊 ' + q.t0.toFixed(3) + ' 秒；之後每 ' + (360 / q.rel).toFixed(3) + ' 秒一次');
+        console.log('[兩針重疊] 長針 ' + q.w1.toFixed(1) + ' 度/秒、短針 ' + q.w2.toFixed(1) + ' 度/秒；第一次重疊 ' + q.t0.toFixed(3) + ' 秒；之後每 ' + (360 / q.rel).toFixed(3) + ' 秒一次');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var svg = kit.svg('svg', { 'class': 'handsmeet-svg', viewBox: '0 0 472 560', width: 472, height: 560 }, stage);
         kit.svg('circle', { cx: CX, cy: CY, r: R, 'class': 'handsmeet-dial' }, svg);
@@ -99,7 +107,7 @@
                 my.after(1600, function () { api.restart(); });
             });
         }
-        var cover = kit.startCover(stage, { text: '兩根指針會一直轉。\n在它們剛好疊在一起的瞬間，按「重疊！」。\n只有一次機會。', onStart: begin });
+        var cover = kit.startCover(stage, { text: '兩根指針會一直轉。\n在它們剛好疊在一起的瞬間，按「重疊！」。\n只有一次機會。', onStart: begin });  /* 「準備好了按開始」的遮罩：玩家按下才開始（計時從這時才算） */
 
         function tapAtMs(ms) {
             if (locked || !started) return;
@@ -128,6 +136,7 @@
         };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '兩針重疊',
@@ -136,5 +145,6 @@
         score: SCORE,
         test: { makeRound: makeRound, handAngle: handAngle, diffAt: diffAt, nearestOverlap: nearestOverlap, rating: rating, W1: W1, K: K, FIRST_MIN: FIRST_MIN, MAX_S: MAX_S }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

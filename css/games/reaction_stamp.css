@@ -6,73 +6,81 @@
 
 /* ═══ 017 心在正中央（.stamp-，原名蓋在框內）═══ */
 .stamp-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
 }
 
+/* 「stamp-paper」這個元素的樣式 */
 .stamp-paper {
-    fill: var(--c-card);
-    stroke: var(--bd-c);
-    stroke-width: 3;
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    stroke: var(--bd-c);                                /* SVG 線條顏色：主題變數 --bd-c */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「stamp-mark」這個元素的樣式 */
 .stamp-mark {
-    fill: none;
-    stroke: var(--c-bad);
-    stroke-width: 5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-bad);                               /* SVG 線條顏色：主題變數 --c-bad */
+    stroke-width: 5;                                    /* SVG 線條粗細：5 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「stamp-frame」這個元素的樣式 */
 .stamp-frame {
-    fill: none;
-    stroke: var(--c-bad);
-    stroke-width: 3;
-    stroke-dasharray: 10 6;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-bad);                               /* SVG 線條顏色：主題變數 --c-bad */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-dasharray: 10 6;                             /* SVG 虛線的「畫／空」長度：10 6 */
 }
 
 /* 愛心印章（V1.27）：只有虛線外框，顏色／粗細／虛線間隔由程式依每一局隨機設定 */
 .stamp-heart {
-    stroke-linejoin: round;
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
 /* 揭曉：紅框中心（紅色十字）、愛心中心（黑點）、兩點之間的連線 */
 .stamp-fc {
-    stroke: var(--c-bad);
-    stroke-width: 3;
+    stroke: var(--c-bad);                               /* SVG 線條顏色：主題變數 --c-bad */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「stamp-sc」這個元素的樣式 */
 .stamp-sc {
-    fill: var(--c-black);
+    fill: var(--c-black);                               /* SVG 圖形的填色：主題變數 --c-black */
 }
 
+/* 「stamp-vec」這個元素的樣式 */
 .stamp-vec {
-    stroke: var(--c-black);
-    stroke-width: 1.5;
-    stroke-dasharray: 3 3;
+    stroke: var(--c-black);                             /* SVG 線條顏色：主題變數 --c-black */
+    stroke-width: 1.5;                                  /* SVG 線條粗細：1.5 */
+    stroke-dasharray: 3 3;                              /* SVG 虛線的「畫／空」長度：3 3 */
 }
 
+/* 「stamp-msg」這個元素的樣式 */
 .stamp-msg {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 4px;
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    opacity: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 4px;                                        /* 離下邊 4px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
 }
 
+/* 「stamp-msg」在「開啟（亮起）時」的樣子的樣式 */
 .stamp-msg--on {
-    opacity: 1;
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }
 
+/* 「stamp-ok」這個元素的樣式 */
 .stamp-ok {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: auto;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    width: auto;                                        /* 寬度：auto */
 }

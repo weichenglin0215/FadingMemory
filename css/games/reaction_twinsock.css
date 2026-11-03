@@ -6,59 +6,65 @@
 
 /* ═══ 雙胞胎襪子（.twinsock-）═══ */
 .twinsock-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 6px;
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 6px;                                           /* 離上邊 6px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
+/* 「twinsock-cell」這個元素的樣式 */
 .twinsock-cell {
-    position: absolute;
-    border-radius: var(--r-md);
-    background: var(--c-card-alt);
-    border: 3px solid var(--c-ink-soft);
-    overflow: hidden;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* 目標（左上角）：藍色底，跟其他格子一眼就分得出來；不轉動 */
 .twinsock-cell--target {
-    background: var(--c-blue-soft);
-    border-color: var(--c-blue);
+    background: var(--c-blue-soft);                     /* 背景：主題變數 --c-blue-soft */
+    border-color: var(--c-blue);                        /* 邊框顏色：主題變數 --c-blue */
 }
 
+/* 「twinsock-cell」在「正確（成功）時」的樣子的樣式 */
 .twinsock-cell--ok {
-    border-color: var(--c-green);
-    box-shadow: 0 0 0 5px var(--c-green);
+    border-color: var(--c-green);                       /* 邊框顏色：主題變數 --c-green */
+    box-shadow: 0 0 0 5px var(--c-green);               /* 方塊陰影（立體感） */
 }
 
+/* 「twinsock-cell」在「錯誤（失敗）時」的樣子的樣式 */
 .twinsock-cell--bad {
-    border-color: var(--c-bad-light);
-    box-shadow: 0 0 0 5px var(--c-bad-light);
+    border-color: var(--c-bad-light);                   /* 邊框顏色：主題變數 --c-bad-light */
+    box-shadow: 0 0 0 5px var(--c-bad-light);           /* 方塊陰影（立體感） */
 }
 
+/* 「twinsock-sock」這個元素的樣式 */
 .twinsock-sock {
-    width: 100%;
-    height: 100%;
-    padding: 8%;
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
+    padding: 8%;                                        /* 內縮（padding，內容跟邊框的距離）：四邊都是 8% */
 }
 
+/* 「svg」標籤的樣式 */
 .twinsock-sock svg {
-    display: block;
-    width: 100%;
-    height: 100%;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
 }
 
 /* 轉動：旋轉一圈的時間由 js 依轉速算好，寫在 animation-duration（方向用 animation-direction） */
 .twinsock-sock--spin {
-    animation: twinsock-spin linear infinite;
+    animation: twinsock-spin linear infinite;           /* 播放動畫（名稱、時間、緩動、次數）：twinsock-spin linear infinite */
 }
 
+/* 動畫 twinsock-spin：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes twinsock-spin {
     to {
-        transform: rotate(360deg);
+        transform: rotate(360deg);                      /* 變形：旋轉 360deg */
     }
 }

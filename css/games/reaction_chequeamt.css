@@ -6,62 +6,69 @@
 
 /* ═══ 支票金額（.chequeamt-）═══ */
 .chequeamt-card {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 24px;
-    padding: var(--sp-4) var(--sp-4) var(--sp-5);
-    border-radius: var(--r-md);
-    background: var(--c-card);
-    border: 3px solid var(--c-ink-soft);
-    box-shadow: var(--shadow-card);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 24px;                                          /* 離上邊 24px */
+    padding: var(--sp-4) var(--sp-4) var(--sp-5);       /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-4、下 主題變數、左 --sp-4 */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
 }
 
+/* 「chequeamt-card」在「正確（成功）時」的樣子的樣式 */
 .chequeamt-card--ok {
-    border-color: var(--c-ok);
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
 }
 
+/* 「chequeamt-card」在「錯誤（失敗）時」的樣子的樣式 */
 .chequeamt-card--bad {
-    border-color: var(--c-bad);
+    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
 }
 
 /* V1.29（玩家意見）：題目字放大（手機上不容易辨識）：標籤 22→26px、小寫金額 40→50px、大寫金額 34→40px */
 .chequeamt-lab {
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    margin-top: var(--sp-2);
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    margin-top: var(--sp-2);                            /* 上外距（跟上面的元素距離）：主題變數 --sp-2 */
 }
 
+/* 「chequeamt-small」這個元素的樣式 */
 .chequeamt-small {
-    font-size: 50px;
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    font-variant-numeric: tabular-nums;
-    border-bottom: 2px solid var(--bd-c);
-    padding-bottom: var(--sp-2);
+    font-size: 50px;                                    /* 字級：50px */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
+    border-bottom: 2px solid var(--bd-c);               /* 下邊框：2px solid 主題變數 --bd-c */
+    padding-bottom: var(--sp-2);                        /* 下方內縮：主題變數 --sp-2 */
 }
 
+/* 「chequeamt-big」這個元素的樣式 */
 .chequeamt-big {
-    font-family: var(--font-note);
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    line-height: var(--lh-body);
-    word-break: break-all;
+    font-family: var(--font-note);                      /* 字型：主題變數 --font-note */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    word-break: break-all;                              /* 斷字方式：break-all */
 }
 
+/* 「chequeamt-diff」這個元素的樣式 */
 .chequeamt-diff {
-    color: var(--c-bad);
-    background: var(--c-bad-soft);
-    border-radius: 6px;
-    padding: 0 2px;
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    border-radius: 6px;                                 /* 圓角：6px */
+    padding: 0 2px;                                     /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 2px */
 }
 
+/* 「chequeamt-ask」這個元素的樣式 */
 .chequeamt-ask {
-    top: 396px;
+    top: 396px;                                         /* 離上邊 396px */
 }
 
+/* 「chequeamt-reveal」這個元素的樣式 */
 .chequeamt-reveal {
-    top: 446px;
+    top: 446px;                                         /* 離上邊 446px */
 }

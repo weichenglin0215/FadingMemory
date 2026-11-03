@@ -14,10 +14,14 @@
    · 提示（每題 HINTS 次）：標出「現在可以確定」的一格，不說顏色、不說理由。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'takuzu'：選單、成績、存檔都靠它；樣式在 css/games/reaction_takuzu.css，裡面的 class 名稱一律以 takuzu- 開頭。 */
     'use strict';
 
-    var ID = 'takuzu';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
+    var ID = 'takuzu';                                  /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
     var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
@@ -146,7 +150,7 @@
     /* 出一題：{ n, solution, givens, count, want }。挖空時每挖一格都用 propagate 確認還解得完（＝唯一、免猜） */
     /* 出一題：先造完整盤面，再一格一格挖洞，每挖一格就用 propagate 確認「還解得完」（答案唯一、免猜），挖到提示數接近 want 為止 */
     function makePuzzle(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var st = stageOf(level), n = st.n, want = givensFor(level), best = null;
         for (var tr = 0; tr < 25; tr++) {
             var sol = randomSolution(n, rand), givens = sol.slice(), count = n * n;
@@ -196,10 +200,10 @@
 
     /* 每一關開始時呼叫：出題、建立盤面與按鈕。api 是共用骨架給的工具（api.stage 畫面容器、api.pass 過關、api.my 計時器管理…） */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var pz = makePuzzle(level, api.rand), n = pz.n;
-        api.info = pz;
-        console.log('[黑白不連三] 第 ' + level + ' 關：' + n + '×' + n + '，提示 ' + pz.count + ' 個（想要 ' + pz.want + '）');
+        api.info = pz;                                  /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[黑白不連三] 第 ' + level + ' 關：' + n + '×' + n + '，提示 ' + pz.count + ' 個（想要 ' + pz.want + '）');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
         var W = stage.clientWidth || 472;
         var cell = Math.min(CELL_MAX, Math.floor(W * 0.96 / n));
         var grid = pz.givens.slice(), tool = BLACK, hintsLeft = HINTS, hint = -1, solved = false, popup = null;  /* grid：目前盤面（先抄一份題目）；tool：目前選的畫筆（黑／白／清除）；hintsLeft：剩幾次提示；hint：提示標出的格子；solved：已解開；popup：違規說明彈窗 */
@@ -365,6 +369,7 @@
         rule: '每一格塗黑或白，要符合兩條規則：**①同色不能連續三格（橫的、直的都一樣）；②每一排、每一列，黑和白一樣多。**題目已經給的格子不能改。下面先選「黑」「白」或「清除」，再點格子。沒有時間限制；如果你放的那一步違反規則，會彈出圖解告訴你是哪一條、哪幾格，那一步不會放下去，可以馬上重放。全部填對就換下一題，想結束就按左上角「返回」，成績是解開幾題。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             stageOf: stageOf, givensFor: givensFor, violationAt: violationAt, findViolations: findViolations, isComplete: isComplete,
             propagate: propagate, randomSolution: randomSolution, makePuzzle: makePuzzle, hintCell: hintCell, rating: rating,

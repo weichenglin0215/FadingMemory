@@ -6,167 +6,184 @@
 
 /* ═══ 奶茶調色（.milktea-）═══ */
 .milktea-stage {
-    user-select: none;
-    -webkit-user-select: none;
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「milktea-field」這個元素的樣式 */
 .milktea-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
 }
 
+/* 「milktea-tip」這個元素的樣式 */
 .milktea-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 兩個底板：樣品杯和奶茶杯各放一塊，背景可以是深色木桌或白色托盤（同時對比）；靠攏之後都變中性色 */
 .milktea-panel {
-    position: absolute;
-    border: 3px solid var(--c-ink-soft);
-    border-radius: var(--r-md);
-    box-shadow: var(--shadow-card);
-    overflow: hidden;
-    transition: left 0.7s ease-in-out, background 0.5s;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    transition: left 0.7s ease-in-out, background 0.5s; /* 狀態改變時的過渡動畫（屬性、時間、緩動）：left 0.7s ease-in-out, background 0.5s */
 }
 
+/* 「milktea-panel」的「wood」變化版的樣式 */
 .milktea-panel--wood {
-    background: var(--mlt-wood);
+    background: var(--mlt-wood);                        /* 背景：主題變數 --mlt-wood */
 }
 
+/* 「milktea-panel」的「tray」變化版的樣式 */
 .milktea-panel--tray {
-    background: var(--mlt-tray);
+    background: var(--mlt-tray);                        /* 背景：主題變數 --mlt-tray */
 }
 
+/* 「milktea-panel」的「join」變化版的樣式 */
 .milktea-panel--join {
-    background: var(--mlt-tray);
+    background: var(--mlt-tray);                        /* 背景：主題變數 --mlt-tray */
 }
 
+/* 「milktea-cap」這個元素的樣式 */
 .milktea-cap {
-    position: absolute;
-    color: var(--c-ink);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    text-align: center;
-    pointer-events: none;
-    transition: opacity 0.3s;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    transition: opacity 0.3s;                           /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.3s */
 }
 
+/* 「milktea-cap」這個元素的樣式 */
 .milktea-field--join .milktea-cap {
-    opacity: 0;
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
 }
 
 /* 杯子：玻璃外框＋液體（液體的顏色由 JS 即時設定） */
 .milktea-cup {
-    position: absolute;
-    display: block;
-    overflow: visible;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    display: block;                                     /* 獨佔一整行的區塊 */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
 }
 
+/* 「milktea-glass」這個元素的樣式 */
 .milktea-glass {
-    fill: none;
-    stroke: var(--mlt-glass);
-    stroke-width: 4;
-    stroke-linejoin: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--mlt-glass);                           /* SVG 線條顏色：主題變數 --mlt-glass */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「milktea-swirl」這個元素的樣式 */
 .milktea-swirl {
-    position: absolute;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 牛奶壺：平常直立，按住時往杯子傾斜；倒出一條白色細線 */
 .milktea-jug {
-    position: absolute;
-    width: 60px;
-    height: 70px;
-    transform-origin: 80% 90%;
-    transition: transform 0.25s ease-out;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 60px;                                        /* 寬度：60px */
+    height: 70px;                                       /* 高度：70px */
+    transform-origin: 80% 90%;                          /* 變形的基準點：80% 90% */
+    transition: transform 0.25s ease-out;               /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.25s ease-out */
 }
 
+/* 「milktea-jug」的「pour」變化版的樣式 */
 .milktea-jug--pour {
-    transform: rotate(-38deg);
+    transform: rotate(-38deg);                          /* 變形：旋轉 -38deg */
 }
 
+/* 「milktea-jug」裡面的「body」部分的樣式 */
 .milktea-jug__body {
-    position: absolute;
-    left: 6px;
-    top: 14px;
-    width: 46px;
-    height: 54px;
-    background: var(--c-card);
-    border: 3px solid var(--c-ink-soft);
-    border-radius: var(--r-sm) var(--r-sm) var(--r-md) var(--r-md);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 6px;                                          /* 離左邊 6px */
+    top: 14px;                                          /* 離上邊 14px */
+    width: 46px;                                        /* 寬度：46px */
+    height: 54px;                                       /* 高度：54px */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-sm) var(--r-sm) var(--r-md) var(--r-md);  /* 圓角：主題變數 --r-sm 主題變數 --r-sm 主題變數 --r-md 主題變數 --r-md */
 }
 
+/* 「milktea-jug」裡面的「lip」部分的樣式 */
 .milktea-jug__lip {
-    position: absolute;
-    left: -2px;
-    top: 10px;
-    width: 18px;
-    height: 12px;
-    background: var(--c-card);
-    border: 3px solid var(--c-ink-soft);
-    border-right: none;
-    border-radius: var(--r-sm) 0 0 var(--r-sm);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: -2px;                                         /* 離左邊 -2px */
+    top: 10px;                                          /* 離上邊 10px */
+    width: 18px;                                        /* 寬度：18px */
+    height: 12px;                                       /* 高度：12px */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-right: none;                                 /* 右邊框：沒有 */
+    border-radius: var(--r-sm) 0 0 var(--r-sm);         /* 圓角：主題變數 --r-sm 0 0 主題變數 --r-sm */
 }
 
+/* 「milktea-stream」這個元素的樣式 */
 .milktea-stream {
-    position: absolute;
-    width: 6px;
-    background: var(--mlt-milk);
-    border-radius: var(--r-pill);
-    opacity: 0;
-    transition: opacity 0.15s;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 6px;                                         /* 寬度：6px */
+    background: var(--mlt-milk);                        /* 背景：主題變數 --mlt-milk */
+    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    transition: opacity 0.15s;                          /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.15s */
 }
 
+/* 「milktea-stream」在「開啟（亮起）時」的樣子的樣式 */
 .milktea-stream--on {
-    opacity: 0.95;
+    opacity: 0.95;                                      /* 透明度 0.95（1＝完全不透明、0＝全透明） */
 }
 
+/* 「milktea-info」這個元素的樣式 */
 .milktea-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 倒牛奶的大按鈕 */
 .milktea-btn {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    bottom: 10px;
-    height: 120px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--c-blue);
-    border-radius: var(--r-lg);
-    box-shadow: 0 8px 0 var(--mlt-btn-dark);
-    color: var(--c-card);
-    cursor: pointer;
-    touch-action: none;
-    transition: transform 0.08s, box-shadow 0.08s;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 12px;                                         /* 離左邊 12px */
+    right: 12px;                                        /* 離右邊 12px */
+    bottom: 10px;                                       /* 離下邊 10px */
+    height: 120px;                                      /* 高度：120px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    background: var(--c-blue);                          /* 背景：主題變數 --c-blue */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    box-shadow: 0 8px 0 var(--mlt-btn-dark);            /* 方塊陰影（立體感） */
+    color: var(--c-card);                               /* 文字顏色：主題變數 --c-card */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    transition: transform 0.08s, box-shadow 0.08s;      /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.08s, box-shadow 0.08s */
 }
 
+/* 「milktea-btn」在「開啟（亮起）時」的樣子的樣式 */
 .milktea-btn--on {
-    transform: translateY(6px);
-    box-shadow: 0 2px 0 var(--mlt-btn-dark);
+    transform: translateY(6px);                         /* 變形：垂直移動 6px */
+    box-shadow: 0 2px 0 var(--mlt-btn-dark);            /* 方塊陰影（立體感） */
 }
 
+/* 「milktea-btn」裡面的「text」部分的樣式 */
 .milktea-btn__text {
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }

@@ -6,70 +6,78 @@
 
 /* ═══ 跳棋跳最遠（.checkers-）═══ */
 .checkers-stage {
-    user-select: none;
-    -webkit-user-select: none;
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「checkers-field」這個元素的樣式 */
 .checkers-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
 }
 
+/* 「checkers-tip」這個元素的樣式 */
 .checkers-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 棋盤：米色底，每一格一個淺色的洞（用漸層畫，格子大小由 JS 設 background-size） */
 .checkers-board {
-    position: absolute;
-    background-color: var(--chk-board);
-    background-image: radial-gradient(circle, var(--chk-hole) 0, var(--chk-hole) 20%, transparent 23%);
-    border-radius: var(--r-md);
-    box-shadow: var(--shadow-card);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    background-color: var(--chk-board);                 /* 背景：主題變數 --chk-board */
+    background-image: radial-gradient(circle, var(--chk-hole) 0, var(--chk-hole) 20%, transparent 23%);  /* 背景圖／漸層 */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
 }
 
 /* 彈珠：外層負責位置（連跳時直線移動），內層負責外觀與弧線 */
 .checkers-pc {
-    position: absolute;
-    border-radius: 50%;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
 }
 
+/* 「checkers-pc」的「red」變化版的樣式 */
 .checkers-pc--red {
-    cursor: pointer;
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
 }
 
+/* 「checkers-pc」裡面的「in」部分的樣式 */
 .checkers-pc__in {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    box-shadow: 0 2px 4px var(--chk-shadow);
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    box-shadow: 0 2px 4px var(--chk-shadow);            /* 方塊陰影（立體感） */
 }
 
+/* 「checkers-pc」裡面的「in」部分的樣式 */
 .checkers-pc--red .checkers-pc__in {
-    background: radial-gradient(circle at 35% 30%, var(--chk-red-hi), var(--chk-red) 58%, var(--chk-red-lo));
+    background: radial-gradient(circle at 35% 30%, var(--chk-red-hi), var(--chk-red) 58%, var(--chk-red-lo));  /* 漸層背景 */
 }
 
+/* 「checkers-pc」裡面的「in」部分的樣式 */
 .checkers-pc--blue .checkers-pc__in {
-    background: radial-gradient(circle at 35% 30%, var(--chk-blue-hi), var(--chk-blue) 58%, var(--chk-blue-lo));
+    background: radial-gradient(circle at 35% 30%, var(--chk-blue-hi), var(--chk-blue) 58%, var(--chk-blue-lo));  /* 漸層背景 */
 }
 
+/* 「checkers-pc」在「正確（成功）時」的樣子的樣式 */
 .checkers-pc--ok {
-    outline: 4px solid var(--c-ok);
-    outline-offset: 2px;
+    outline: 4px solid var(--c-ok);                     /* 外框線：4px solid 主題變數 --c-ok */
+    outline-offset: 2px;                                /* 外框線離元素多遠：2px */
 }
 
+/* 「checkers-pc」在「錯誤（失敗）時」的樣子的樣式 */
 .checkers-pc--bad {
-    outline: 4px solid var(--c-bad-light);
-    outline-offset: 2px;
+    outline: 4px solid var(--c-bad-light);              /* 外框線：4px solid 主題變數 --c-bad-light */
+    outline-offset: 2px;                                /* 外框線離元素多遠：2px */
 }
 
 /* 連跳時彈珠往上弹再落下（弧線） */
@@ -78,50 +86,53 @@
     animation-timing-function: ease-in-out;
 }
 
+/* 動畫 checkers-arc：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes checkers-arc {
     0% {
-        transform: translateY(0) scale(1);
+        transform: translateY(0) scale(1);              /* 變形：垂直移動 0 縮放 1 倍 */
     }
 
     50% {
-        transform: translateY(-24px) scale(1.25);
+        transform: translateY(-24px) scale(1.25);       /* 變形：垂直移動 -24px 縮放 1.25 倍 */
     }
 
     100% {
-        transform: translateY(0) scale(1);
+        transform: translateY(0) scale(1);              /* 變形：垂直移動 0 縮放 1 倍 */
     }
 }
 
 /* 揭曉：每顆紅棋旁邊的連跳次數（最多的是綠色） */
 .checkers-badge {
-    position: absolute;
-    right: -8px;
-    top: -10px;
-    min-width: 28px;
-    height: 28px;
-    background: var(--c-card);
-    border: 2px solid var(--c-ink);
-    border-radius: var(--r-pill);
-    color: var(--c-ink);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    line-height: 24px;
-    text-align: center;
-    z-index: 5;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    right: -8px;                                        /* 離右邊 -8px */
+    top: -10px;                                         /* 離上邊 -10px */
+    min-width: 28px;                                    /* 最小寬度：28px */
+    height: 28px;                                       /* 高度：28px */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 2px solid var(--c-ink);                     /* 邊框（粗細、線型、顏色）：2px solid 主題變數 --c-ink */
+    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: 24px;                                  /* 行高：24px（文字每一行佔的高度） */
+    text-align: center;                                 /* 文字置中 */
+    z-index: 5;                                         /* 疊放順序：數字越大越在上面（5） */
 }
 
+/* 「checkers-badge」的「best」變化版的樣式 */
 .checkers-badge--best {
-    background: var(--c-ok);
-    border-color: var(--c-ok);
-    color: var(--c-card);
+    background: var(--c-ok);                            /* 背景：主題變數 --c-ok */
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
+    color: var(--c-card);                               /* 文字顏色：主題變數 --c-card */
 }
 
+/* 「checkers-info」這個元素的樣式 */
 .checkers-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }

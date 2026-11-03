@@ -6,15 +6,17 @@
 
 /* ═══ 先乘除（.orderops-）═══ */
 .orderops-ask {
-    top: 170px;
+    top: 170px;                                         /* 離上邊 170px */
 }
 
+/* 「orderops-reveal」這個元素的樣式 */
 .orderops-reveal {
-    top: 230px;
+    top: 230px;                                         /* 離上邊 230px */
 }
 
+/* 「orderops-btn」這個元素的樣式 */
 .orderops-btn {
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-black);
-    font-variant-numeric: tabular-nums;
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
 }

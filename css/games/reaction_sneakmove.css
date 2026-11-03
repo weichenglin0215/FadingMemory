@@ -6,40 +6,44 @@
 
 /* ═══ 誰在偷偷動（.sneakmove-）═══ */
 .sneakmove-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
-    display: block;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
+/* 「sneakmove-dot」這個元素的樣式 */
 .sneakmove-dot {
-    fill: var(--c-blue);
-    stroke: var(--c-ink-soft);
-    stroke-width: 3;
+    fill: var(--c-blue);                                /* SVG 圖形的填色：主題變數 --c-blue */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
 /* 答對（找到會動的圓點、或失敗時標出沒找到的答案）：綠色外框 */
 .sneakmove-dot--right {
-    stroke: var(--c-ok);
-    stroke-width: 6;
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
+    stroke-width: 6;                                    /* SVG 線條粗細：6 */
 }
 
 /* 答錯（點到不動的圓點）：紅色外框 */
 .sneakmove-dot--wrong {
-    stroke: var(--c-bad-light);
-    stroke-width: 6;
+    stroke: var(--c-bad-light);                         /* SVG 線條顏色：主題變數 --c-bad-light */
+    stroke-width: 6;                                    /* SVG 線條粗細：6 */
 }
 
+/* 「sneakmove-trail」這個元素的樣式 */
 .sneakmove-trail {
-    stroke: var(--c-orange);
-    stroke-width: 3;
-    stroke-linecap: round;
+    stroke: var(--c-orange);                            /* SVG 線條顏色：主題變數 --c-orange */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「sneakmove-start」這個元素的樣式 */
 .sneakmove-start {
-    fill: var(--c-orange);
+    fill: var(--c-orange);                              /* SVG 圖形的填色：主題變數 --c-orange */
 }
 
+/* 「sneakmove-tip」這個元素的樣式 */
 .sneakmove-tip {
-    bottom: 4px;
+    bottom: 4px;                                        /* 離下邊 4px */
 }

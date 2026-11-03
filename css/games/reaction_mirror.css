@@ -7,102 +7,102 @@
 /* 左右顛倒：手指往左，球卻往右（鏡像操作）。 */
 /* ═══ 左右顛倒（.mirror-）═══ */
 .mirror-head {
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
 /* 迷宮場地 */
 .mirror-field {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    touch-action: none;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
 /* 迷宮 SVG */
 .mirror-svg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
 }
 
 /* 牆壁與通道共用：不填色、線頭與轉角都是圓的 */
 .mirror-wall,
 .mirror-lane {
-    fill: none;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
 /* 牆壁線條 */
 .mirror-wall {
-    stroke: var(--c-ink-soft);
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
 }
 
 /* 通道線條 */
 .mirror-lane {
-    stroke: var(--c-card-alt);
+    stroke: var(--c-card-alt);                          /* SVG 線條顏色：主題變數 --c-card-alt */
 }
 
 /* 撞牆時所有牆壁閃橘色 */
 .mirror-svg--bump .mirror-wall {
-    stroke: var(--c-bad);
+    stroke: var(--c-bad);                               /* SVG 線條顏色：主題變數 --c-bad */
 }
 
 /* 起點區 */
 .mirror-start {
-    fill: var(--c-green-soft);
-    stroke: var(--c-green);
-    stroke-width: 3;
+    fill: var(--c-green-soft);                          /* SVG 圖形的填色：主題變數 --c-green-soft */
+    stroke: var(--c-green);                             /* SVG 線條顏色：主題變數 --c-green */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
 /* 終點區 */
 .mirror-goal {
-    fill: var(--c-orange-soft);
-    stroke: var(--c-orange);
-    stroke-width: 4;
+    fill: var(--c-orange-soft);                         /* SVG 圖形的填色：主題變數 --c-orange-soft */
+    stroke: var(--c-orange);                            /* SVG 線條顏色：主題變數 --c-orange */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
 }
 
 /* 到達終點：填綠色 */
 .mirror-goal--ok {
-    fill: var(--c-ok);
+    fill: var(--c-ok);                                  /* SVG 圖形的填色：主題變數 --c-ok */
 }
 
 /* 終點上的文字，pointer-events:none 讓手指點到文字時也能穿透 */
 .mirror-goal-t {
-    font-family: var(--font-ui);
-    font-size: 17px;
-    font-weight: 900;
-    fill: var(--c-ink);
-    pointer-events: none;
+    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
+    font-size: 17px;                                    /* 字級：17px */
+    font-weight: 900;                                   /* 字重（粗細）900（400 一般、700 粗體） */
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 示範路徑的殘影（半透明藍線） */
 .mirror-ghost {
-    fill: none;
-    stroke: var(--c-blue);
-    stroke-width: 3;
-    opacity: 0.5;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-blue);                              /* SVG 線條顏色：主題變數 --c-blue */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    opacity: 0.5;                                       /* 透明度 0.5（1＝完全不透明、0＝全透明） */
 }
 
 /* 玩家控制的球 */
 .mirror-ball {
-    fill: var(--c-orange);
-    stroke: var(--c-ink);
-    stroke-width: 3;
+    fill: var(--c-orange);                              /* SVG 圖形的填色：主題變數 --c-orange */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
 /* 底下的提示文字 */
 .mirror-hint {
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }

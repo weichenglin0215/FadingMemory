@@ -13,12 +13,12 @@
    所以平均 3.5 顆就是前 3 顆全黃、第 4 顆左半邊黃，剩下是淡色的空位。
    遮罩的星星形狀跟 js/rating.js 的 STAR_PATH 一樣（24×24，五個角）。 */
 .rate-bar {
-    --rate-p: 0%;
-    display: block;
-    flex: 0 0 auto;
-    width: var(--rate-bar-w);
-    height: calc(var(--rate-bar-w) / 5);
-    background: linear-gradient(90deg, var(--rate-on) var(--rate-p), var(--rate-off) var(--rate-p));
+    --rate-p: 0%;                                       /* 自訂變數 --rate-p（下面用 var(--rate-p) 取用；可以由 JS 動態設定） */
+    display: block;                                     /* 獨佔一整行的區塊 */
+    flex: 0 0 auto;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    width: var(--rate-bar-w);                           /* 寬度：主題變數 --rate-bar-w */
+    height: calc(var(--rate-bar-w) / 5);                /* 高度：calc(主題變數 --rate-bar-w / 5) */
+    background: linear-gradient(90deg, var(--rate-on) var(--rate-p), var(--rate-off) var(--rate-p));  /* 漸層背景 */
     -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.6L14.7 9.38 22.94 9.55 16.37 14.52 18.76 22.4 12 17.7 5.24 22.4 7.63 14.52 1.06 9.55 9.3 9.38Z'/%3E%3C/svg%3E") left center / 20% 100% repeat-x;
     mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.6L14.7 9.38 22.94 9.55 16.37 14.52 18.76 22.4 12 17.7 5.24 22.4 7.63 14.52 1.06 9.55 9.3 9.38Z'/%3E%3C/svg%3E") left center / 20% 100% repeat-x;
 }
@@ -26,100 +26,108 @@
 /* ─── 評價彈窗 ─── */
 /* 說明文字置中（彈窗公版的內文預設靠左） */
 .dlg--rate .dlg__text {
-    text-align: center;
+    text-align: center;                                 /* 文字置中 */
 }
 
 /* 中間五顆星：平均分配、置中 */
 .rate-pick {
-    display: flex;
-    justify-content: center;
-    gap: var(--sp-2);
-    padding: var(--sp-2) 0 0;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
+    padding: var(--sp-2) 0 0;                           /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-2、下 0、左 0 */
 }
 
 /* 每顆星是一個按鈕：沒有底色與外框，只有星星本身；按下去縮一下 */
 .rate-pick__star {
-    width: var(--rate-pick);
-    height: var(--rate-pick);
-    padding: 0;
-    border: none;
-    border-radius: var(--r-sm);
-    background: transparent;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: transform 0.12s ease;
+    width: var(--rate-pick);                            /* 寬度：主題變數 --rate-pick */
+    height: var(--rate-pick);                           /* 高度：主題變數 --rate-pick */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
+    border: none;                                       /* 沒有邊框 */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    background: transparent;                            /* 透明背景 */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
+    -webkit-tap-highlight-color: transparent;           /* 手機點擊時的高亮顏色：transparent */
+    transition: transform 0.12s ease;                   /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.12s ease */
 }
 
+/* 「rate-pick」裡面的「star」部分，按下去時的樣式 */
 .rate-pick__star:active {
-    transform: scale(0.9);
+    transform: scale(0.9);                              /* 變形：縮放 0.9 倍 */
 }
 
+/* 「rate-pick」裡面的「star」部分的樣式 */
 .rate-pick__star:focus-visible {
-    outline: 4px solid var(--c-blue);
-    outline-offset: 2px;
+    outline: 4px solid var(--c-blue);                   /* 外框線：4px solid 主題變數 --c-blue */
+    outline-offset: 2px;                                /* 外框線離元素多遠：2px */
 }
 
+/* 「rate-pick」裡面的「svg」部分的樣式 */
 .rate-pick__svg {
-    display: block;
-    width: 100%;
-    height: 100%;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
 }
 
 /* 還沒勾：空心、只有外框線 */
 .rate-pick__svg path {
-    fill: transparent;
-    stroke: var(--rate-edge);
-    stroke-width: 1.6;
-    stroke-linejoin: round;
-    transition: fill 0.15s ease, stroke 0.15s ease;
+    fill: transparent;                                  /* SVG 圖形的填色：transparent */
+    stroke: var(--rate-edge);                           /* SVG 線條顏色：主題變數 --rate-edge */
+    stroke-width: 1.6;                                  /* SVG 線條粗細：1.6 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+    transition: fill 0.15s ease, stroke 0.15s ease;     /* 狀態改變時的過渡動畫（屬性、時間、緩動）：fill 0.15s ease, stroke 0.15s ease */
 }
 
 /* 勾了：實心的黃色星星，彈一下 */
 .rate-pick__star.is-on .rate-pick__svg path {
-    fill: var(--rate-on);
-    stroke: var(--c-yellow);
+    fill: var(--rate-on);                               /* SVG 圖形的填色：主題變數 --rate-on */
+    stroke: var(--c-yellow);                            /* SVG 線條顏色：主題變數 --c-yellow */
 }
 
+/* 「is-on」這個元素（同時有 .rate-pick__star）的樣式 */
 .rate-pick__star.is-on {
-    animation: rate-pop 0.25s ease;
+    animation: rate-pop 0.25s ease;                     /* 播放動畫（名稱、時間、緩動、次數）：rate-pop 0.25s ease */
 }
 
+/* 動畫 rate-pop：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes rate-pop {
     50% {
-        transform: scale(1.18);
+        transform: scale(1.18);                         /* 變形：縮放 1.18 倍 */
     }
 }
 
 /* 星星下面那句話：「3 顆星：還可以」／還沒選時的提示 */
 .rate-pick__say {
-    min-height: calc(var(--fs-sm) * var(--lh-body));
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-body);
-    color: var(--c-ink-soft);
+    min-height: calc(var(--fs-sm) * var(--lh-body));    /* 最小高度：calc(主題變數 --fs-sm * 主題變數 --lh-body) */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
+/* 「is-on」這個元素（同時有 .rate-pick__say）的樣式 */
 .rate-pick__say.is-on {
-    color: var(--c-ink);
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
 /* ─── 結算彈窗的「五星評價」按鈕（在「我有話要說」下面；尺寸跟「我有話要說」一樣，見 css/dialog.css 的 .dlg__feedback）─── */
 .dlg__rate {
-    margin-top: 0;
+    margin-top: 0;                                      /* 上外距（跟上面的元素距離）：0 */
 }
 
 /* 按鈕上的星星圖示塗成黃色實心，一眼看得出是「評星星」 */
 .dlg__rate .icon {
-    fill: var(--rate-on);
-    stroke: var(--c-yellow);
+    fill: var(--rate-on);                               /* SVG 圖形的填色：主題變數 --rate-on */
+    stroke: var(--c-yellow);                            /* SVG 線條顏色：主題變數 --c-yellow */
 }
 
+/* 條件式樣式：使用者在系統設定裡選了「減少動態效果」時，才套用下面這組規則 */
 @media (prefers-reduced-motion: reduce) {
 
+    /* 「rate-pick」裡面的「star」部分；「is-on」這個元素（同時有 .rate-pick__star）；「path」標籤的樣式 */
     .rate-pick__star,
     .rate-pick__star.is-on,
     .rate-pick__svg path {
-        animation: none;
-        transition: none;
+        animation: none;                                /* 播放動畫（名稱、時間、緩動、次數）：none */
+        transition: none;                               /* 狀態改變時的過渡動畫（屬性、時間、緩動）：none */
     }
 }

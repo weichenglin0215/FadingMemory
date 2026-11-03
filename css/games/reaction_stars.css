@@ -6,60 +6,66 @@
 
 /* ═══ 找星座（.stars-）═══ */
 .stars-stage {
-    user-select: none;
-    -webkit-user-select: none;
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「stars-field」這個元素的樣式 */
 .stars-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
 }
 
+/* 「stars-tip」這個元素的樣式 */
 .stars-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 碎片在這張畫布上飛：深藍色的夜空，碎片是淡色的字塊（畫布本身透明，底色在這裡） */
 .stars-canvas {
-    position: absolute;
-    background: var(--stz-sky);
-    border-radius: var(--r-md);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    background: var(--stz-sky);                         /* 背景：主題變數 --stz-sky */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「stars-info」這個元素的樣式 */
 .stars-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「stars-opt」這個元素的樣式 */
 .stars-opt {
-    font-family: var(--font-note);
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-black);
-    padding: 0;
+    font-family: var(--font-note);                      /* 字型：主題變數 --font-note */
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
 }
 
+/* 「stars-ok」這個元素的樣式 */
 .stars-ok {
-    background: var(--c-ok-light);
-    border-color: var(--c-ok);
+    background: var(--c-ok-light);                      /* 背景：主題變數 --c-ok-light */
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
 }
 
+/* 「stars-bad」這個元素的樣式 */
 .stars-bad {
-    background: var(--c-bad-soft);
-    border-color: var(--c-bad-light);
-    color: var(--c-bad);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    border-color: var(--c-bad-light);                   /* 邊框顏色：主題變數 --c-bad-light */
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }

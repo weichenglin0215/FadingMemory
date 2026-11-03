@@ -8,129 +8,130 @@
 /* ═══ 錯覺大師（.illusion-）═══ */
 /* 題目文字 */
 .illusion-q {
-    min-height: 2.4em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    font-size: var(--fs-lg, 26px);
-    font-weight: 700;
-    color: var(--c-ink);
-    line-height: 1.3;
+    min-height: 2.4em;                                  /* 最小高度：2.4em */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-lg, 26px);                      /* 字級：var(--fs-lg, 26px) */
+    font-weight: 700;                                   /* 字重（粗細）700（400 一般、700 粗體） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    line-height: 1.3;                                   /* 行高：1.3（文字每一行佔的高度） */
 }
 
 /* 場地 */
 .illusion-field {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    touch-action: none;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
 /* SVG */
 .illusion-svg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
 /* 一般線條 */
 .illusion-line {
-    stroke: var(--c-ink);
-    stroke-width: 6px;
-    stroke-linecap: round;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 6px;                                  /* SVG 線條粗細：6px */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
 /* 粗橫條 */
 .illusion-bar {
-    stroke: var(--c-ink);
-    stroke-width: 12px;
-    stroke-linecap: butt;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 12px;                                 /* SVG 線條粗細：12px */
+    stroke-linecap: butt;                               /* SVG 線條端點形狀：butt */
 }
 
 /* 軌道線 */
 .illusion-rail {
-    stroke: var(--c-ink-soft);
-    stroke-width: 6px;
-    stroke-linecap: round;
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 6px;                                  /* SVG 線條粗細：6px */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
 /* 枕木 */
 .illusion-tie {
-    stroke: var(--c-ink-soft);
-    stroke-width: 4px;
-    opacity: 0.6;
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 4px;                                  /* SVG 線條粗細：4px */
+    opacity: 0.6;                                       /* 透明度 0.6（1＝完全不透明、0＝全透明） */
 }
 
 /* 中央圓（橘） */
 .illusion-center {
-    fill: var(--c-orange, #E8956B);
-    stroke: none;
+    fill: var(--c-orange, #E8956B);                     /* SVG 圖形的填色：var(--c-orange, #E8956B) */
+    stroke: none;                                       /* SVG 線條顏色：none */
 }
 
 /* 周圍的圓（藍） */
 .illusion-surround {
-    fill: var(--c-blue);
-    stroke: none;
-    opacity: 0.85;
+    fill: var(--c-blue);                                /* SVG 圖形的填色：主題變數 --c-blue */
+    stroke: none;                                       /* SVG 線條顏色：none */
+    opacity: 0.85;                                      /* 透明度 0.85（1＝完全不透明、0＝全透明） */
 }
 
 /* 輔助虛線 */
 .illusion-guide {
-    stroke: var(--c-bad);
-    stroke-width: 3px;
-    stroke-dasharray: 8 6;
-    fill: none;
-    pointer-events: none;
+    stroke: var(--c-bad);                               /* SVG 線條顏色：主題變數 --c-bad */
+    stroke-width: 3px;                                  /* SVG 線條粗細：3px */
+    stroke-dasharray: 8 6;                              /* SVG 虛線的「畫／空」長度：8 6 */
+    fill: none;                                         /* SVG 圖形的填色：none */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 德爾貝夫的外環 */
 .illusion-ring {
-    fill: none;
-    stroke: var(--c-ink-soft);
-    stroke-width: 5px;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 5px;                                  /* SVG 線條粗細：5px */
 }
 
 /* 禮帽：帽身與帽簷（深褐色）、帽帶（橘色） */
 .illusion-hat {
-    fill: var(--c-ink);
-    stroke: none;
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
+    stroke: none;                                       /* SVG 線條顏色：none */
 }
 
+/* 「illusion-hatband」這個元素的樣式 */
 .illusion-hatband {
-    fill: var(--c-orange);
-    stroke: none;
+    fill: var(--c-orange);                              /* SVG 圖形的填色：主題變數 --c-orange */
+    stroke: none;                                       /* SVG 線條顏色：none */
 }
 
 /* 長方形面積題的長方形（橘色） */
 .illusion-rect {
-    fill: var(--c-orange);
-    stroke: none;
+    fill: var(--c-orange);                              /* SVG 圖形的填色：主題變數 --c-orange */
+    stroke: none;                                       /* SVG 線條顏色：none */
 }
 
 /* 點擊熱區：fill:transparent 看不到但仍可被點到 */
 .illusion-hit {
-    fill: transparent;
-    stroke: none;
-    cursor: pointer;
+    fill: transparent;                                  /* SVG 圖形的填色：transparent */
+    stroke: none;                                       /* SVG 線條顏色：none */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
 }
 
 /* 選對（半透明綠） */
 .illusion-hit--ok {
-    fill: rgba(108, 189, 121, 0.28);
-    stroke: var(--c-ok);
-    stroke-width: 5px;
+    fill: rgba(108, 189, 121, 0.28);                    /* SVG 圖形的填色：rgba(108, 189, 121, 0.28) */
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
+    stroke-width: 5px;                                  /* SVG 線條粗細：5px */
 }
 
 /* 選錯（半透明橘） */
 .illusion-hit--bad {
-    fill: rgba(232, 149, 107, 0.28);
-    stroke: var(--c-bad);
-    stroke-width: 5px;
+    fill: rgba(232, 149, 107, 0.28);                    /* SVG 圖形的填色：rgba(232, 149, 107, 0.28) */
+    stroke: var(--c-bad);                               /* SVG 線條顏色：主題變數 --c-bad */
+    stroke-width: 5px;                                  /* SVG 線條粗細：5px */
 }

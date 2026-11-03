@@ -8,146 +8,147 @@
 /* ═══ 價格陷阱（.price-）═══ */
 /* 標題（一行：字數要控制在 16 個字內，標籤才有最大的空間放大字） */
 .price-head {
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: 700;
-    color: var(--c-ink);
-    min-height: 1.5em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: 700;                                   /* 字重（粗細）700（400 一般、700 粗體） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    min-height: 1.5em;                                  /* 最小高度：1.5em */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
 }
 
 /* 兩張標籤的容器 */
 .price-wrap {
-    flex: 1 1 auto;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-3);
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
 }
 
 /* 單張價格標籤：像吊牌，粗邊框，作答前黑框。
    --pr-k：標籤裡所有文字的放大倍率，預設是 theme.css 的 --pr-scale（1.66＝放大成 166%）；
    放不下的時候 JS（reaction_price.js 的 fitTags）會在這張標籤上把 --pr-k 往下調，所以下面每個字級都是「原本的字級 × --pr-k」 */
 .price-tag {
-    --pr-k: var(--pr-scale);
-    position: relative;
-    flex: 1 1 0;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    padding: var(--sp-2) var(--sp-3);
+    --pr-k: var(--pr-scale);                            /* 自訂變數 --pr-k（下面用 var(--pr-k) 取用；可以由 JS 動態設定） */
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: 2px;                                           /* 子元素之間的空隙：2px */
+    padding: var(--sp-2) var(--sp-3);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-2、下 主題變數、左 --sp-3 */
     border: 5px solid var(--c-ink);                /* 作答前兩張都是黑框，作答後才分綠（便宜）／紅（貴）*/
-    border-radius: 20px;
-    background: #FFF6D6;
-    color: var(--c-ink);
-    font-family: var(--font-ui);
-    cursor: pointer;
-    box-shadow: 0 5px 0 rgba(120, 30, 20, 0.2);
+    border-radius: 20px;                                /* 圓角：20px */
+    background: #FFF6D6;                                /* 背景：#FFF6D6 */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
+    box-shadow: 0 5px 0 rgba(120, 30, 20, 0.2);         /* 方塊陰影（立體感） */
 }
 
 /* 按下時微微變暗 */
 .price-tag:active {
-    filter: brightness(0.96);
+    filter: brightness(0.96);                           /* 濾鏡效果：brightness(0.96) */
 }
 
 /* 吊牌的洞 */
 .price-tag__hole {
-    position: absolute;
-    left: 18px;
-    top: 18px;
-    width: 22px;
-    height: 22px;
-    border: 4px solid var(--c-ink);
-    border-radius: 50%;
-    background: var(--c-card-alt);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 18px;                                         /* 離左邊 18px */
+    top: 18px;                                          /* 離上邊 18px */
+    width: 22px;                                        /* 寬度：22px */
+    height: 22px;                                       /* 高度：22px */
+    border: 4px solid var(--c-ink);                     /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --c-ink */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
 }
 
 /* 標籤小標 */
 .price-tag__lbl {
-    font-size: calc(var(--fs-sm) * var(--pr-k));
-    font-weight: 700;
-    color: var(--c-ink-soft);
-    line-height: 1.15;
+    font-size: calc(var(--fs-sm) * var(--pr-k));        /* 字級：calc(主題變數 --fs-sm * 主題變數 --pr-k) */
+    font-weight: 700;                                   /* 字重（粗細）700（400 一般、700 粗體） */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    line-height: 1.15;                                  /* 行高：1.15（文字每一行佔的高度） */
 }
 
 /* 原價（大字）：nowrap 不換行——一行放不下就由 JS 把倍率調小，不要把價錢拆成兩行 */
 .price-tag__orig {
-    font-size: calc(50px * var(--pr-k));
-    font-weight: 800;
-    line-height: 1.1;
-    white-space: nowrap;
+    font-size: calc(50px * var(--pr-k));                /* 字級：calc(50px * 主題變數 --pr-k) */
+    font-weight: 800;                                   /* 字重（粗細）800（400 一般、700 粗體） */
+    line-height: 1.1;                                   /* 行高：1.1（文字每一行佔的高度） */
+    white-space: nowrap;                                /* 文字不換行 */
 }
 
 /* 屬性選擇器：data-n 是 JS 記下的位數，位數越多基本字級越小 */
 .price-tag__orig[data-n="9"],
 .price-tag__orig[data-n="10"] {
-    font-size: calc(44px * var(--pr-k));
+    font-size: calc(44px * var(--pr-k));                /* 字級：calc(44px * 主題變數 --pr-k) */
 }
 
 /* 更多位數：字更小 */
 .price-tag__orig[data-n="11"],
 .price-tag__orig[data-n="12"],
 .price-tag__orig[data-n="13"] {
-    font-size: calc(36px * var(--pr-k));
+    font-size: calc(36px * var(--pr-k));                /* 字級：calc(36px * 主題變數 --pr-k) */
 }
 
 /* 折扣說明區 */
 .price-tag__disc {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: 2px;                                           /* 子元素之間的空隙：2px */
 }
 
 /* 折扣文字行 */
 .price-tag__line {
-    font-size: calc(32px * var(--pr-k));
-    font-weight: 800;
-    color: var(--c-ink);
-    line-height: 1.15;
-    text-align: center;
+    font-size: calc(32px * var(--pr-k));                /* 字級：calc(32px * 主題變數 --pr-k) */
+    font-weight: 800;                                   /* 字重（粗細）800（400 一般、700 粗體） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    line-height: 1.15;                                  /* 行高：1.15（文字每一行佔的高度） */
+    text-align: center;                                 /* 文字置中 */
 }
 
 /* 兩張都有的「會員再享 N 折」：混淆用，不用算，所以用淡一點的顏色 */
 .price-tag__line--member {
-    font-size: calc(28px * var(--pr-k));
-    color: var(--c-ink-soft);
+    font-size: calc(28px * var(--pr-k));                /* 字級：calc(28px * 主題變數 --pr-k) */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 計算結果提示（算式）：答題前就排好版但是透明（visibility:hidden 不顯示、卻照樣佔位置），
    答完加上 .price-tag--rev 才顯示，所以揭曉時版面不會跳動 */
 .price-tag__calc {
-    font-size: calc(26px * var(--pr-k));
-    font-weight: 700;
-    color: var(--c-ink-soft);
-    text-align: center;
-    line-height: 1.15;
-    visibility: hidden;
+    font-size: calc(26px * var(--pr-k));                /* 字級：calc(26px * 主題變數 --pr-k) */
+    font-weight: 700;                                   /* 字重（粗細）700（400 一般、700 粗體） */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    text-align: center;                                 /* 文字置中 */
+    line-height: 1.15;                                  /* 行高：1.15（文字每一行佔的高度） */
+    visibility: hidden;                                 /* 看不見（但還佔著位置） */
 }
 
+/* 「price-tag」裡面的「calc」部分的樣式 */
 .price-tag--rev .price-tag__calc {
-    visibility: visible;
+    visibility: visible;                                /* 看得見 */
 }
 
 /* 答案揭曉：便宜的那張（綠） */
 .price-tag--low {
-    border-color: var(--c-ok);
-    background: #E3F5E7;
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
+    background: #E3F5E7;                                /* 背景：#E3F5E7 */
 }
 
 /* 貴的那張（紅） */
 .price-tag--high {
-    border-color: var(--c-bad-light);
-    background: #FBE3DC;
+    border-color: var(--c-bad-light);                   /* 邊框顏色：主題變數 --c-bad-light */
+    background: #FBE3DC;                                /* 背景：#FBE3DC */
 }
 
 /* 被點的那張邊框加粗 */
 /* 被點的那張：邊框加粗 */
 .price-tag--pick {
-    border-width: 11px;
+    border-width: 11px;                                 /* 邊框粗細：11px */
 }

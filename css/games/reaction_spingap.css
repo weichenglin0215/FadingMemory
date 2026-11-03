@@ -6,84 +6,98 @@
 
 /* ═══ 誰在偷偷動（.snk-）═══ */
 .spingap-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
-    display: block;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
 /* ═══ 穿過旋轉縫（.spingap-）═══ */
 .spingap-ring {
-    fill: none;
-    stroke: var(--c-yellow);
-    stroke-linecap: butt;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-yellow);                            /* SVG 線條顏色：主題變數 --c-yellow */
+    stroke-linecap: butt;                               /* SVG 線條端點形狀：butt */
 }
 
+/* 「spingap-mark」這個元素的樣式 */
 .spingap-mark {
-    fill: var(--c-orange);
+    fill: var(--c-orange);                              /* SVG 圖形的填色：主題變數 --c-orange */
 }
 
+/* 「spingap-ball」這個元素的樣式 */
 .spingap-ball {
-    fill: var(--c-ink);
-    stroke: var(--c-card);
-    stroke-width: 2;
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
+    stroke: var(--c-card);                              /* SVG 線條顏色：主題變數 --c-card */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
 }
 
+/* 「spingap-ball」的「boom」變化版的樣式 */
 .spingap-ball--boom {
-    fill: var(--c-bad);
+    fill: var(--c-bad);                                 /* SVG 圖形的填色：主題變數 --c-bad */
 }
 
+/* 「spingap-cannon」這個元素的樣式 */
 .spingap-cannon {
-    position: absolute;
-    width: 120px;
-    height: 150px;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 120px;                                       /* 寬度：120px */
+    height: 150px;                                      /* 高度：150px */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「svg」標籤的樣式 */
 .spingap-cannon svg {
-    display: block;
-    width: 100%;
-    height: 100%;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
 }
 
+/* 「spingap-barrel」這個元素的樣式 */
 .spingap-barrel {
-    transition: transform 0.12s ease-out;
+    transition: transform 0.12s ease-out;               /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.12s ease-out */
 }
 
+/* 「spingap-barrel」這個元素的樣式 */
 .spingap-cannon--fire .spingap-barrel {
-    transform: translateY(10px);
+    transform: translateY(10px);                        /* 變形：垂直移動 10px */
 }
 
+/* 「spingap-iron」這個元素的樣式 */
 .spingap-iron {
-    fill: var(--c-ink);
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
 }
 
+/* 「spingap-iron-d」這個元素的樣式 */
 .spingap-iron-d {
-    fill: var(--c-ink-soft);
+    fill: var(--c-ink-soft);                            /* SVG 圖形的填色：主題變數 --c-ink-soft */
 }
 
+/* 「spingap-wood」這個元素的樣式 */
 .spingap-wood {
-    fill: var(--c-orange);
-    stroke: var(--c-ink);
-    stroke-width: 3;
+    fill: var(--c-orange);                              /* SVG 圖形的填色：主題變數 --c-orange */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「spingap-wood-d」這個元素的樣式 */
 .spingap-wood-d {
-    fill: var(--c-yellow);
-    stroke: var(--c-ink);
-    stroke-width: 4;
+    fill: var(--c-yellow);                              /* SVG 圖形的填色：主題變數 --c-yellow */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
 }
 
+/* 「spingap-spoke」這個元素的樣式 */
 .spingap-spoke {
-    stroke: var(--c-ink);
-    stroke-width: 3;
-    fill: none;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    fill: none;                                         /* SVG 圖形的填色：none */
 }
 
+/* 「spingap-tip」這個元素的樣式 */
 .spingap-tip {
-    bottom: 76px;
+    bottom: 76px;                                       /* 離下邊 76px */
 }
 
+/* 「spingap-msg」這個元素的樣式 */
 .spingap-msg {
-    bottom: 22px;
+    bottom: 22px;                                       /* 離下邊 22px */
 }

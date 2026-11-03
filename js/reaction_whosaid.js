@@ -15,11 +15,15 @@
    · 揭曉：每個小人說過的數字全部列出來。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'whosaid'：選單、成績、存檔都靠它；樣式在 css/games/reaction_whosaid.css，裡面的 class 名稱一律以 whosaid- 開頭。 */
     'use strict';
 
-    var ID = 'whosaid';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'whosaid';                                 /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -44,7 +48,7 @@
     /* 把 0～9 分給 n 個小人，每人說 m 個數字：回傳 digits[i]（第 i 個小人要說的 m 個數字，不同小人之間絕不重複）。
        作法：打亂 0～9，依序切成 n 個專屬池子（池子大小盡量平均）；每個小人從自己的池子抽 m 個，池子比 m 小就全部用上、不夠的再從自己的池子重複抽。 */
     function assignDigits(n, m, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var all = kit.shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], rand), base = Math.floor(all.length / n), extra = all.length % n, pos = 0, out = [];
         for (var i = 0; i < n; i++) {
             var size = base + (i < extra ? 1 : 0), pool = all.slice(pos, pos + size), say;
@@ -71,6 +75,7 @@
     function spoken(q) {
         return q.people.map(function (p, i) { return q.events.filter(function (e) { return e.who === i; }).map(function (e) { return e.digit; }); });
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 25) return '耳聰目明！';
         if (n >= 15) return '記憶力很強！';
@@ -79,6 +84,7 @@
         return '看清楚誰說了什麼，再來一次！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 6,
@@ -98,12 +104,14 @@
             '<path d="M14 106 L18 58 Q40 46 62 58 L66 106 Z" fill="' + fill + '" stroke="' + edge + '" stroke-width="3" stroke-linejoin="round"/></svg>';
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand);
-        api.info = q;
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         var sp = spoken(q);
-        console.log('[誰說的] 第 ' + level + ' 關：' + q.people.length + ' 個小人、每人 ' + q.says + ' 句；順序 ' + q.events.map(function (e) { return q.people[e.who].n + e.digit; }).join(' ') + '；問 ' + q.people[q.ask].n + '，答案 ' + q.expect.join('') + '；每句 ' + sayMs(level) + ' ms，限時 ' + ansMs(level) + ' ms');
+        console.log('[誰說的] 第 ' + level + ' 關：' + q.people.length + ' 個小人、每人 ' + q.says + ' 句；順序 ' + q.events.map(function (e) { return q.people[e.who].n + e.digit; }).join(' ') + '；問 ' + q.people[q.ask].n + '，答案 ' + q.expect.join('') + '；每句 ' + sayMs(level) + ' ms，限時 ' + ansMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var n = q.people.length, pw = Math.min(100, Math.floor((W - 20) / n)), top = 170;
@@ -147,8 +155,8 @@
             var items = [];
             for (var d = 0; d <= 9; d++) (function (d) { items.push({ text: String(d), kind: 'sky', cls: 'whosaid-btn', onTap: function () { press(d); } }); })(d);
             padBtns = kit.btnGrid(stage, items, { cols: 5, h: 84, gap: 10 }).btns;
-            api.timer(ansMs(level), function () { reveal(null); });
-            if (level === 1 && kit.once('whosaid.hint')) kit.hintOn(stage, padBtns[q.expect[0]], { mode: 'tap', delay: 600, text: '請點擊數字' });
+            api.timer(ansMs(level), function () { reveal(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
+            if (level === 1 && kit.once('whosaid.hint')) kit.hintOn(stage, padBtns[q.expect[0]], { mode: 'tap', delay: 600, text: '請點擊數字' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         });
 
         function press(d) {
@@ -170,20 +178,24 @@
                 q.people.map(function (p, i) { return p.n + '：' + sp[i].join(' '); }).join('　')
             ] });
         }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { if (phase !== 'ask') return; q.expect.forEach(function (v, k) { slotEls[k].textContent = String(v); slotEls[k].classList.add('whosaid-slot--ok'); }); got = q.expect.length; reveal('ok'); };
         api.wrong = function () { if (phase !== 'ask') return; reveal((q.expect[0] + 1) % 10); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '誰說的',
         rule: '幾個不同顏色的小人輪流說話，頭上的泡泡會出現一個數字。說完後會問**某個顏色的小人說過哪些數字**，請用下面的數字按鈕**依序按出來**。按錯或來不及就結束，看你能過幾關。越後面，小人越多、說的數字也越多！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             assignDigits: assignDigits, peopleFor: peopleFor, saysFor: saysFor, sayMs: sayMs, ansMs: ansMs, makeLevel: makeLevel, spoken: spoken, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, PEOPLE: PEOPLE, SAYS: SAYS, SAY_MS: SAY_MS, GAP_MS: GAP_MS, MAX_LEVEL: MAX_LEVEL, COLORS: COLORS
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

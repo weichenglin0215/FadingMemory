@@ -3,25 +3,26 @@
    不另外鋪底：畫布上是紙條的複本＋墨色，直接蓋在原本的紙條位置上 */
 
 .wflow {
-    position: absolute;
-    inset: 0;
-    z-index: 60;
-    overflow: hidden;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    z-index: 60;                                        /* 疊放順序：數字越大越在上面（60） */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
     pointer-events: auto;       /* 特效進行中擋住所有點擊 */
-    touch-action: none;
-    transition: opacity 0.8s ease, filter 0.8s ease;
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    transition: opacity 0.8s ease, filter 0.8s ease;    /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.8s ease, filter 0.8s ease */
 }
 
+/* 「wflow」裡面的「water」部分的樣式 */
 .wflow__water {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 500px;
-    height: 850px;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    width: 500px;                                       /* 寬度：500px */
+    height: 850px;                                      /* 高度：850px */
 }
 
 /* 結束：整個畫面模糊、淡出，露出題目 */
 .wflow.is-leaving {
-    opacity: 0;
-    filter: blur(16px);
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    filter: blur(16px);                                 /* 濾鏡效果：blur(16px) */
 }

@@ -6,308 +6,348 @@
 
 /* ═══ 切菜單上的（.menuslice-）═══ */
 .menuslice-stage {
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「menuslice-field」這個元素的樣式 */
 .menuslice-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
+/* 「menuslice-tip」這個元素的樣式 */
 .menuslice-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
-    z-index: 3;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 3;                                         /* 疊放順序：數字越大越在上面（3） */
 }
 
 /* 水果飛行與手指滑過的範圍：整個畫面 */
 .menuslice-arena {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    touch-action: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
+/* 「menuslice-fruit」這個元素的樣式 */
 .menuslice-fruit {
-    position: absolute;
-    left: 0;
-    top: 0;
-    will-change: transform;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    will-change: transform;                             /* 提示瀏覽器這個屬性會變動，先準備好（讓動畫更順） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 黑板菜單：看的時候在上方，開始之後收起來，失敗時再亮出來 */
 .menuslice-board {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    top: 56px;
-    padding: var(--sp-2) var(--sp-3) var(--sp-3);
-    background: var(--msl-board);
-    border: 6px solid var(--msl-frame);
-    border-radius: var(--r-md);
-    box-shadow: var(--shadow-card);
-    text-align: center;
-    transition: transform 0.45s ease-in, opacity 0.45s;
-    z-index: 2;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 12px;                                         /* 離左邊 12px */
+    right: 12px;                                        /* 離右邊 12px */
+    top: 56px;                                          /* 離上邊 56px */
+    padding: var(--sp-2) var(--sp-3) var(--sp-3);       /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-2、下 主題變數、左 --sp-3 */
+    background: var(--msl-board);                       /* 背景：主題變數 --msl-board */
+    border: 6px solid var(--msl-frame);                 /* 邊框（粗細、線型、顏色）：6px solid 主題變數 --msl-frame */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
+    text-align: center;                                 /* 文字置中 */
+    transition: transform 0.45s ease-in, opacity 0.45s; /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.45s ease-in, opacity 0.45s */
+    z-index: 2;                                         /* 疊放順序：數字越大越在上面（2） */
 }
 
+/* 「menuslice-board」在「消失（被拿走）時」的樣子的樣式 */
 .menuslice-board--gone {
-    transform: translateY(-140%);
-    opacity: 0;
-    pointer-events: none;
+    transform: translateY(-140%);                       /* 變形：垂直移動 -140% */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「menuslice-board」的「again」變化版的樣式 */
 .menuslice-board--again {
-    z-index: 4;
+    z-index: 4;                                         /* 疊放順序：數字越大越在上面（4） */
 }
 
+/* 「menuslice-board」裡面的「title」部分的樣式 */
 .menuslice-board__title {
-    color: var(--msl-chalk);
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
+    color: var(--msl-chalk);                            /* 文字顏色：主題變數 --msl-chalk */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
 }
 
+/* 「menuslice-board」裡面的「items」部分的樣式 */
 .menuslice-board__items {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--sp-2) var(--sp-3);
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-wrap: wrap;                                    /* 放不下就換行 */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: var(--sp-2) var(--sp-3);                       /* 子元素之間的空隙：主題變數 --sp-2 主題變數 --sp-3 */
 }
 
+/* 「menuslice-item」這個元素的樣式 */
 .menuslice-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 68px;
-    padding: 2px 4px;
-    border-radius: var(--r-sm);
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    min-width: 68px;                                    /* 最小寬度：68px */
+    padding: 2px 4px;                                   /* 內縮（padding，內容跟邊框的距離）：上下 2px、左右 4px */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
 }
 
+/* 「menuslice-item」裡面的「name」部分的樣式 */
 .menuslice-item__name {
-    color: var(--msl-chalk);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
+    color: var(--msl-chalk);                            /* 文字顏色：主題變數 --msl-chalk */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
 }
 
+/* 「menuslice-item」的「mark」變化版的樣式 */
 .menuslice-item--mark {
-    outline: 4px solid var(--c-ok);
-    background: var(--c-ok-soft);
+    outline: 4px solid var(--c-ok);                     /* 外框線：4px solid 主題變數 --c-ok */
+    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
 }
 
+/* 「menuslice-counter」這個元素的樣式 */
 .menuslice-counter {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 12px;
-    color: var(--c-ink-soft);
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-bold);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 12px;                                       /* 離下邊 12px */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「menuslice-info」這個元素的樣式 */
 .menuslice-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 58px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
-    z-index: 3;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 58px;                                       /* 離下邊 58px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 3;                                         /* 疊放順序：數字越大越在上面（3） */
 }
 
 /* 失敗：你切錯（漏掉）的和菜單上的並排 */
 .menuslice-cmp {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 46%;
-    display: flex;
-    justify-content: center;
-    gap: var(--sp-4);
-    z-index: 4;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 46%;                                           /* 離上邊 46% */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: var(--sp-4);                                   /* 子元素之間的空隙：主題變數 --sp-4 */
+    z-index: 4;                                         /* 疊放順序：數字越大越在上面（4） */
 }
 
+/* 「menuslice-cmp」裡面的「box」部分的樣式 */
 .menuslice-cmp__box {
-    padding: var(--sp-2) var(--sp-3);
-    background: var(--c-card);
-    border: 4px solid var(--c-ink-soft);
-    border-radius: var(--r-md);
-    box-shadow: var(--shadow-pop);
-    text-align: center;
+    padding: var(--sp-2) var(--sp-3);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-2、下 主題變數、左 --sp-3 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 4px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    box-shadow: var(--shadow-pop);                      /* 方塊陰影（立體感） */
+    text-align: center;                                 /* 文字置中 */
 }
 
+/* 「menuslice-cmp__box」在「錯誤（失敗）時」的樣子的樣式 */
 .menuslice-cmp__box--bad {
-    border-color: var(--c-bad-light);
+    border-color: var(--c-bad-light);                   /* 邊框顏色：主題變數 --c-bad-light */
 }
 
+/* 「menuslice-cmp__box」在「正確（成功）時」的樣子的樣式 */
 .menuslice-cmp__box--ok {
-    border-color: var(--c-ok);
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
 }
 
+/* 「menuslice-cmp」裡面的「name」部分的樣式 */
 .menuslice-cmp__name {
-    color: var(--c-ink);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
 }
 
 /* 水果的外觀：顏色由 .menuslice-f--種類 的 --msl-c 決定 */
 .menuslice-f {
-    display: block;
-    overflow: visible;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
 }
 
+/* 「menuslice-body」這個元素的樣式 */
 .menuslice-body {
-    fill: var(--msl-c);
-    stroke: var(--c-ink);
-    stroke-width: 2;
-    stroke-linejoin: round;
+    fill: var(--msl-c);                                 /* SVG 圖形的填色：主題變數 --msl-c */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「menuslice-leaf」這個元素的樣式 */
 .menuslice-leaf {
-    fill: var(--msl-leaf);
-    stroke: var(--c-ink);
-    stroke-width: 1.5;
-    stroke-linejoin: round;
+    fill: var(--msl-leaf);                              /* SVG 圖形的填色：主題變數 --msl-leaf */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 1.5;                                  /* SVG 線條粗細：1.5 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「menuslice-stem」這個元素的樣式 */
 .menuslice-stem {
-    fill: none;
-    stroke: var(--msl-stem);
-    stroke-width: 3.5;
-    stroke-linecap: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--msl-stem);                            /* SVG 線條顏色：主題變數 --msl-stem */
+    stroke-width: 3.5;                                  /* SVG 線條粗細：3.5 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「menuslice-dark」這個元素的樣式 */
 .menuslice-dark {
-    fill: var(--msl-stem);
+    fill: var(--msl-stem);                              /* SVG 圖形的填色：主題變數 --msl-stem */
 }
 
+/* 「menuslice-dot」這個元素的樣式 */
 .menuslice-dot {
-    fill: var(--msl-stem);
-    opacity: 0.4;
+    fill: var(--msl-stem);                              /* SVG 圖形的填色：主題變數 --msl-stem */
+    opacity: 0.4;                                       /* 透明度 0.4（1＝完全不透明、0＝全透明） */
 }
 
+/* 「menuslice-shine」這個元素的樣式 */
 .menuslice-shine {
-    fill: var(--c-card);
-    opacity: 0.45;
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    opacity: 0.45;                                      /* 透明度 0.45（1＝完全不透明、0＝全透明） */
 }
 
+/* 「menuslice-stripe」這個元素的樣式 */
 .menuslice-stripe {
-    fill: none;
-    stroke: var(--msl-leaf);
-    stroke-width: 4;
-    stroke-linecap: round;
-    opacity: 0.75;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--msl-leaf);                            /* SVG 線條顏色：主題變數 --msl-leaf */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    opacity: 0.75;                                      /* 透明度 0.75（1＝完全不透明、0＝全透明） */
 }
 
+/* 「menuslice-f」的「orange」變化版的樣式 */
 .menuslice-f--orange {
-    --msl-c: var(--msl-orange);
+    --msl-c: var(--msl-orange);                         /* 自訂變數 --msl-c（下面用 var(--msl-c) 取用；可以由 JS 動態設定） */
 }
 
+/* 「menuslice-f」的「tangerine」變化版的樣式 */
 .menuslice-f--tangerine {
-    --msl-c: var(--msl-tangerine);
+    --msl-c: var(--msl-tangerine);                      /* 自訂變數 --msl-c（下面用 var(--msl-c) 取用；可以由 JS 動態設定） */
 }
 
+/* 「menuslice-f」的「lemon」變化版的樣式 */
 .menuslice-f--lemon {
-    --msl-c: var(--msl-lemon);
+    --msl-c: var(--msl-lemon);                          /* 自訂變數 --msl-c（下面用 var(--msl-c) 取用；可以由 JS 動態設定） */
 }
 
+/* 「menuslice-f」的「lime」變化版的樣式 */
 .menuslice-f--lime {
-    --msl-c: var(--msl-lime);
+    --msl-c: var(--msl-lime);                           /* 自訂變數 --msl-c（下面用 var(--msl-c) 取用；可以由 JS 動態設定） */
 }
 
+/* 「menuslice-f」的「apple」變化版的樣式 */
 .menuslice-f--apple {
-    --msl-c: var(--msl-apple);
+    --msl-c: var(--msl-apple);                          /* 自訂變數 --msl-c（下面用 var(--msl-c) 取用；可以由 JS 動態設定） */
 }
 
+/* 「menuslice-f」的「tomato」變化版的樣式 */
 .menuslice-f--tomato {
-    --msl-c: var(--msl-tomato);
+    --msl-c: var(--msl-tomato);                         /* 自訂變數 --msl-c（下面用 var(--msl-c) 取用；可以由 JS 動態設定） */
 }
 
+/* 「menuslice-f」的「grape」變化版的樣式 */
 .menuslice-f--grape {
-    --msl-c: var(--msl-grape);
+    --msl-c: var(--msl-grape);                          /* 自訂變數 --msl-c（下面用 var(--msl-c) 取用；可以由 JS 動態設定） */
 }
 
+/* 「menuslice-f」的「blueberry」變化版的樣式 */
 .menuslice-f--blueberry {
-    --msl-c: var(--msl-blueberry);
+    --msl-c: var(--msl-blueberry);                      /* 自訂變數 --msl-c（下面用 var(--msl-c) 取用；可以由 JS 動態設定） */
 }
 
+/* 「menuslice-f」的「banana」變化版的樣式 */
 .menuslice-f--banana {
-    --msl-c: var(--msl-banana);
+    --msl-c: var(--msl-banana);                         /* 自訂變數 --msl-c（下面用 var(--msl-c) 取用；可以由 JS 動態設定） */
 }
 
+/* 「menuslice-f」的「watermelon」變化版的樣式 */
 .menuslice-f--watermelon {
-    --msl-c: var(--msl-watermelon);
+    --msl-c: var(--msl-watermelon);                     /* 自訂變數 --msl-c（下面用 var(--msl-c) 取用；可以由 JS 動態設定） */
 }
 
+/* 「menuslice-f」的「pear」變化版的樣式 */
 .menuslice-f--pear {
-    --msl-c: var(--msl-pear);
+    --msl-c: var(--msl-pear);                           /* 自訂變數 --msl-c（下面用 var(--msl-c) 取用；可以由 JS 動態設定） */
 }
 
+/* 「menuslice-f」的「strawberry」變化版的樣式 */
 .menuslice-f--strawberry {
-    --msl-c: var(--msl-strawberry);
+    --msl-c: var(--msl-strawberry);                     /* 自訂變數 --msl-c（下面用 var(--msl-c) 取用；可以由 JS 動態設定） */
 }
 
 /* 切開：兩半往兩邊飛開、旋轉、掉落；果汁噴出 */
 .menuslice-half {
-    position: absolute;
-    left: 0;
-    top: 0;
-    pointer-events: none;
-    animation: menuslice-split 0.6s ease-in forwards;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    animation: menuslice-split 0.6s ease-in forwards;   /* 播放動畫（名稱、時間、緩動、次數）：menuslice-split 0.6s ease-in forwards */
 }
 
+/* 「menuslice-half」的「left」變化版的樣式 */
 .menuslice-half--left {
-    clip-path: inset(0 50% 0 0);
+    clip-path: inset(0 50% 0 0);                        /* 裁成指定形狀：inset(0 50% 0 0) */
 }
 
+/* 「menuslice-half」在「正確時」的樣子的樣式 */
 .menuslice-half--right {
-    clip-path: inset(0 0 0 50%);
+    clip-path: inset(0 0 0 50%);                        /* 裁成指定形狀：inset(0 0 0 50%) */
 }
 
+/* 動畫 menuslice-split：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes menuslice-split {
     to {
         translate: calc(var(--dir) * 46px) 110px;
         rotate: calc(var(--dir) * 50deg);
-        opacity: 0;
+        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
     }
 }
 
+/* 「menuslice-juice」這個元素的樣式 */
 .menuslice-juice {
-    position: absolute;
-    width: 12px;
-    height: 12px;
-    margin: -6px 0 0 -6px;
-    background: var(--msl-c);
-    border-radius: 50%;
-    pointer-events: none;
-    animation: menuslice-juice 0.5s ease-out forwards;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 12px;                                        /* 寬度：12px */
+    height: 12px;                                       /* 高度：12px */
+    margin: -6px 0 0 -6px;                              /* 外距（margin，與別的元素的距離）：上 -6px、右 0、下 0、左 -6px */
+    background: var(--msl-c);                           /* 背景：主題變數 --msl-c */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    animation: menuslice-juice 0.5s ease-out forwards;  /* 播放動畫（名稱、時間、緩動、次數）：menuslice-juice 0.5s ease-out forwards */
 }
 
+/* 動畫 menuslice-juice：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes menuslice-juice {
     from {
-        transform: translate(0, 0) scale(1);
-        opacity: 1;
+        transform: translate(0, 0) scale(1);            /* 變形：移動 0, 0 縮放 1 倍 */
+        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
     }
 
     to {
-        transform: translate(var(--dx), var(--dy)) scale(0.3);
-        opacity: 0;
+        transform: translate(var(--dx), var(--dy)) scale(0.3);  /* 變形：移動 var(--dx, var(--dy)) 縮放 0.3 倍 */
+        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
     }
 }

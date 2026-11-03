@@ -33,11 +33,15 @@
        虛線的上緣一直貼著橫板，只有下緣慢慢縮短。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'bridge'：選單、成績、存檔都靠它；樣式在 css/games/reaction_bridge.css，裡面的 class 名稱一律以 bridge- 開頭。 */
     'use strict';
 
-    var ID = 'bridge';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'bridge';                                  /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -136,7 +140,7 @@
         var pwMax = Math.max(MIN_GAP + 2 * (END_MARGIN + 1), W - 2 * EDGE_X);       /* 橫板最寬只能到這麼寬（要完整留在畫面內） */
         var Amp = ampAt(level);
         var ratios = opts.ratios || FREQ_RATIO.slice(0, Math.min(FREQ_RATIO.length, 1 + Math.floor((level - 1) * (FREQ_RATIO.length - 1) / Math.max(1, RAMP_LEVELS - 1) + 1e-9)));
-        for (var tr = 0; tr < TRIES; tr++) {
+        for (var tr = 0; tr < TRIES; tr++) {            /* 用亂數一直重抽，最多 TRIES 次，抽到符合條件的題目就收下 */
             /* 頻率：快的那一塊是 omega，慢的是 omega × p／q；哪一邊快是隨機的。Tc ＝ 兩塊同時回到同一個姿勢的時間（快的跑 q 圈、慢的跑 p 圈） */
             var rt = kit.pick(ratios, rand), p = rt[0], q = rt[1], fastLeft = rand() < 0.5;
             var wF = omega, wS = omega * p / q, wL = fastLeft ? wF : wS, wR = fastLeft ? wS : wF;
@@ -174,6 +178,7 @@
         for (var i = 0; i < n; i++) { var p = posAt(cfg, T * i / n); if (judge(cfg.plank, p.L, p.R, END_MARGIN, cfg.bw).ok) k++; }
         return k / n;
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 20) return '搭橋大師！';
         if (n >= 12) return '眼明手快！';
@@ -187,6 +192,7 @@
         tip: '兩塊方塊都擠在橫板的同一邊，橫板的重心沒有被撐住，翻倒了！'
     };
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 6,
@@ -198,13 +204,15 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, level = api.level, my = api.my;
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var cfg = makeLevel(level, W, api.rand) || makeLevel(1, W, api.rand);       /* 萬一出不了題（不應該發生）：退回第 1 關，不要讓畫面一片空白 */
-        api.info = cfg;
+        api.info = cfg;                                 /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         var ST = motionStats(cfg, W);
-        console.log('[搭一座橋] 第 ' + level + ' 關：橫板 x ' + cfg.plank.x0 + '～' + (cfg.plank.x0 + cfg.plank.w) + '（寬 ' + cfg.plank.w + '）；快的 ω ' + cfg.omega.toFixed(2) + '、慢的是它的 ' + cfg.ratio.join('/') + '（' + (cfg.fastLeft ? '左快右慢' : '右快左慢') + '），成功時機每 ' + cfg.T.toFixed(2) + ' 秒重複；左 ' + Math.round(cfg.L.c) + '±' + Math.round(cfg.L.A) + '、右 ' +
+        console.log('[搭一座橋] 第 ' + level + ' 關：橫板 x ' + cfg.plank.x0 + '～' + (cfg.plank.x0 + cfg.plank.w) + '（寬 ' + cfg.plank.w + '）；快的 ω ' + cfg.omega.toFixed(2) + '、慢的是它的 ' + cfg.ratio.join('/') + '（' + (cfg.fastLeft ? '左快右慢' : '右快左慢') + '），成功時機每 ' + cfg.T.toFixed(2) + ' 秒重複；左 ' + Math.round(cfg.L.c) + '±' + Math.round(cfg.L.A) + '、右 ' +  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
             Math.round(cfg.R.c) + '±' + Math.round(cfg.R.A) + '；最近間距 ' + ST.minGap.toFixed(1) + 'px；成功時機約佔 ' + (successShare(cfg) * 100).toFixed(1) + '% 的時間（第 ' + cfg.tStar.toFixed(2) + ' 秒一定成功）');
 
         var BW_L = cfg.bw;                                        /* 這一關方塊的寬度（V1.30：隨關卡 48 → 4） */
@@ -228,6 +236,7 @@
         stage.appendChild(tip);
 
         var t0 = performance.now(), frozen = null, locked = false;
+        /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint(t) {
             var p = posAt(cfg, t);
             bl.setAttribute('x', (p.L - BW_L / 2).toFixed(2)); br.setAttribute('x', (p.R - BW_L / 2).toFixed(2));
@@ -283,17 +292,20 @@
         };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '搭一座橋',
         rule: '上方有一塊橫板，下方有兩塊方塊各自左右來回移動，**兩塊的速度不一樣**，一開始的位置和方向也是隨機的。**看準時機按「放下」**：兩塊方塊會立刻停住，橫板落下，**兩塊方塊都要頂住橫板**（整塊鑽到橫板下面也可以）；只頂住一邊，橫板就會傾斜滑落。每過一關，方塊越來越窄、動得越來越快、碰到橫板的部分越來越少，橫板兩端的虛線也越來越短。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             FREQ_RATIO: FREQ_RATIO, FIRST_MIN_S: FIRST_MIN_S, ampAt: ampAt, AMP: AMP, bwAt: bwAt, overlapAt: overlapAt, lineAt: lineAt, OVERLAP: OVERLAP, INDEXLINE: INDEXLINE, RAMP_LEVELS: RAMP_LEVELS, AMIN_EXTRA: AMIN_EXTRA,
             omegaAt: omegaAt, asymAt: asymAt, offsetAt: offsetAt, overlap: overlap, posAt: posAt, judge: judge, motionStats: motionStats,
             makeLevel: makeLevel, successShare: successShare, BW: BW, BH: BH, END_MARGIN: END_MARGIN, EDGE_X: EDGE_X, MIN_GAP: MIN_GAP, PLANK_W: PLANK_W, MARGIN: MARGIN
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

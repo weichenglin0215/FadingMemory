@@ -13,11 +13,15 @@
    · 難度（線性）：菜單 2 → 6 種（MENU_N）、水果總數 8 → 30 顆（TOTAL）、拋出間隔 1100 → 450 毫秒（SPAWN_MS）；看菜單的時間 3 秒（VIEW_S）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'menuslice'：選單、成績、存檔都靠它；樣式在 css/games/reaction_menuslice.css，裡面的 class 名稱一律以 menuslice- 開頭。 */
     'use strict';
 
-    var ID = 'menuslice';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'menuslice';                               /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -53,7 +57,7 @@
     function nameOf(id) { var f = fruitOf(id); return f ? f.name : id; }
     /* 菜單：m 種水果；先每組長得像的各挑一個（最多 4 種），不夠再加單獨的 */
     function menuFor(m, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var menu = [];
         kit.shuffle(PAIRS.slice(), rand).forEach(function (p) { if (menu.length < m) menu.push(kit.pick(p, rand)); });
         kit.shuffle(SINGLES.slice(), rand).forEach(function (s) { if (menu.length < m) menu.push(s); });
@@ -103,6 +107,7 @@
         });
         return { menu: menu, pools: pools, total: F, tosses: tosses, spawnMs: spawn, viewMs: VIEW_S * 1000, level: level };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 15) return '水果忍者！';
         if (n >= 10) return '記性和手速都很棒！';
@@ -111,6 +116,7 @@
         return '先記住菜單，只切菜單上的！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'menuslice-stage',
@@ -142,11 +148,13 @@
         return s;
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand), F = q.total;
-        api.info = q;
-        console.log('[切菜單上的] 第 ' + level + ' 關：菜單 ' + q.menu.map(nameOf).join('、') + '；拋 ' + F + ' 顆（菜單上的 ' + q.tosses.filter(function (t) { return t.onMenu; }).length + ' 顆），間隔約 ' + q.spawnMs + ' 毫秒');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[切菜單上的] 第 ' + level + ' 關：菜單 ' + q.menu.map(nameOf).join('、') + '；拋 ' + F + ' 顆（菜單上的 ' + q.tosses.filter(function (t) { return t.onMenu; }).length + ' 顆），間隔約 ' + q.spawnMs + ' 毫秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var field = h('div', { 'class': 'menuslice-field' });
@@ -164,14 +172,14 @@
 
         var phase = 'view', resolved = 0, flying = [], halted = false, lastP = null, down = false, over = false, t0 = 0;
         info.textContent = '看 ' + VIEW_S + ' 秒';
-        api.timer(q.viewMs, begin);
+        api.timer(q.viewMs, begin);                     /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         function begin() {
             if (api.over) return;
             phase = 'play'; board.classList.add('menuslice-board--gone'); tip.textContent = '用手指切過水果：只切菜單上的！'; info.textContent = ''; counter.textContent = '0／' + F;
             t0 = performance.now();
             q.tosses.forEach(function (tz) { api.after(tz.t, function () { launch(tz); }); });
         }
-        if (level === 1 && kit.once('menuslice.hint')) api.after(q.viewMs + LEAD_MS + 600, function () { if (!over) kit.hintOn(stage, null, { mode: 'drag', x: W * 0.3, y: H * 0.55, dx: W * 0.4, dy: -40, text: '用手指切過水果' }); });
+        if (level === 1 && kit.once('menuslice.hint')) api.after(q.viewMs + LEAD_MS + 600, function () { if (!over) kit.hintOn(stage, null, { mode: 'drag', x: W * 0.3, y: H * 0.55, dx: W * 0.4, dy: -40, text: '用手指切過水果' }); });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         /* 發射一顆：建立元素，丟進 flying 清單，由迴圈每個畫格更新位置 */
         function launch(tz) {
             if (halted || api.over) return;
@@ -262,16 +270,19 @@
         };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '切菜單上的',
         rule: '關卡一開始，黑板菜單會亮出今天要用的幾種水果（3 秒），然後收起來。接著水果一顆一顆拋上來，**用手指切過去，只切菜單上有的**，其他的不要切。**切錯一顆**、或**漏掉一顆菜單上的**，就結束。小心：菜單外的水果故意挑長得像的（柳丁和橘子、檸檬和萊姆、蘋果和番茄、葡萄和藍莓）。越後面，菜單種類越多、水果拋得越密！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             menuCountFor: menuCountFor, totalFor: totalFor, spawnMsFor: spawnMsFor, fruitOf: fruitOf, nameOf: nameOf, menuFor: menuFor, decoyPools: decoyPools, flightPos: flightPos, landTime: landTime, segHitsCircle: segHitsCircle, makeLevel: makeLevel, fruitSvg: fruitSvg, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, MENU_N: MENU_N, TOTAL: TOTAL, SPAWN_MS: SPAWN_MS, VIEW_S: VIEW_S, MENU_FRAC: MENU_FRAC, PARTNER_FRAC: PARTNER_FRAC, LEAD_MS: LEAD_MS, BOTTOM: BOTTOM, EXIT: EXIT, APEX: APEX, T_APEX: T_APEX, X_RANGE: X_RANGE, FRUIT_PX: FRUIT_PX, FRUITS: FRUITS, PAIRS: PAIRS, SINGLES: SINGLES, SHAPES: SHAPES, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

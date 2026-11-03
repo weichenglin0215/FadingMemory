@@ -6,52 +6,59 @@
 
 /* ═══ 誰在偷偷動（.snk-）═══ */
 .farpair-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
-    display: block;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
+/* 「farpair-tip」這個元素的樣式 */
 .farpair-tip {
-    bottom: 4px;
+    bottom: 4px;                                        /* 離下邊 4px */
 }
 
 /* ═══ 哪對離最遠（.farpair-）═══ */
 .farpair-dot {
-    pointer-events: none;
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「farpair-line」這個元素的樣式 */
 .farpair-line {
-    stroke: var(--c-ink);
-    stroke-width: 5;
-    stroke-linecap: round;
-    fill: none;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 5;                                    /* SVG 線條粗細：5 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    fill: none;                                         /* SVG 圖形的填色：none */
 }
 
+/* 「farpair-line」在「正確時」的樣子的樣式 */
 .farpair-line--right {
-    stroke: var(--c-ok);
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
 }
 
+/* 「farpair-line」在「錯誤時」的樣子的樣式 */
 .farpair-line--wrong {
-    stroke: var(--c-bad);
+    stroke: var(--c-bad);                               /* SVG 線條顏色：主題變數 --c-bad */
 }
 
+/* 「farpair-dist」這個元素的樣式 */
 .farpair-dist {
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    fill: var(--c-ink);
-    paint-order: stroke;
-    stroke: var(--c-paper);
-    stroke-width: 6px;
-    stroke-linejoin: round;
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
+    paint-order: stroke;                                /* SVG 繪製順序（例如先畫邊再畫填色）：stroke */
+    stroke: var(--c-paper);                             /* SVG 線條顏色：主題變數 --c-paper */
+    stroke-width: 6px;                                  /* SVG 線條粗細：6px */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「farpair-line」在「正確時」的樣子（同時有 .farpair-dist）的樣式 */
 .farpair-dist.farpair-line--right {
-    fill: var(--c-ok);
-    stroke: var(--c-paper);
+    fill: var(--c-ok);                                  /* SVG 圖形的填色：主題變數 --c-ok */
+    stroke: var(--c-paper);                             /* SVG 線條顏色：主題變數 --c-paper */
 }
 
+/* 「farpair-line」在「錯誤時」的樣子（同時有 .farpair-dist）的樣式 */
 .farpair-dist.farpair-line--wrong {
-    fill: var(--c-bad);
-    stroke: var(--c-paper);
+    fill: var(--c-bad);                                 /* SVG 圖形的填色：主題變數 --c-bad */
+    stroke: var(--c-paper);                             /* SVG 線條顏色：主題變數 --c-paper */
 }

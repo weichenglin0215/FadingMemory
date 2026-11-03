@@ -23,11 +23,15 @@
      (2) 答錯／逾時時，最後顯示正確答案要停留 REVEAL_FAIL_MS（6 秒），讓玩家看清楚，才跳出結算彈窗。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'sudokuone'：選單、成績、存檔都靠它；樣式在 css/games/reaction_sudokuone.css，裡面的 class 名稱一律以 sudokuone- 開頭。 */
     'use strict';
 
-    var ID = 'sudokuone';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'sudokuone';                               /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var FOUR_LEVELS = 10;                        /* 前幾關是 4×4（之後是 9×9）。設 0＝全部 9×9；設很大（例如 999）＝全部 4×4 */
@@ -89,7 +93,7 @@
        再隨機洗牌——數字 1～N 重新對應、「宮列」（每 B 排一組）彼此交換、同一個宮列裡的排互相交換、「宮行」與欄同理——
        這些洗牌都不會破壞規則，所以每一個結果都是合法的完整盤面。 */
     function makeSolution(g, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var B = g.B, N = g.N, digits = kit.shuffle(Array.apply(null, Array(N)).map(function (_, i) { return i + 1; }), rand);
         /* 洗牌後的排／欄順序：先洗「組」的順序，組裡面再各自洗 */
         function order() {
@@ -169,6 +173,7 @@
         var fbSol = makeSolution(g, rand), fbT = 0, fbG = fbSol.slice(); fbG[fbT] = 0;
         return { g: g, N: g.N, solution: fbSol, target: fbT, givens: fbG, steps: deduce(g, fbG, fbT).steps, answer: fbSol[fbT], count: g.cells - 1 };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 25) return '數獨高手！';
         if (n >= 15) return '推理很敏捷！';
@@ -177,6 +182,7 @@
         return '先看同一排、同一欄、同一宮缺哪個數字，再來一次！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 6,
@@ -187,11 +193,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makePuzzle(level, api.rand), g = q.g, N = g.N, B = g.B;
-        api.info = q;
-        console.log('[數獨猜一格] 第 ' + level + ' 關：' + N + '×' + N + '（' + B + '×' + B + ' 的宮）目標第 ' + (g.rowOf(q.target) + 1) + ' 排第 ' + (g.colOf(q.target) + 1) + ' 格，答案 ' + q.answer + '；提示 ' + q.count + ' 個（想要 ' + givensFor(level) + '），推理 ' + q.steps + ' 輪；限時 ' + ansMs(level) + ' ms');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[數獨猜一格] 第 ' + level + ' 關：' + N + '×' + N + '（' + B + '×' + B + ' 的宮）目標第 ' + (g.rowOf(q.target) + 1) + ' 排第 ' + (g.colOf(q.target) + 1) + ' 格，答案 ' + q.answer + '；提示 ' + q.count + ' 個（想要 ' + givensFor(level) + '），推理 ' + q.steps + ' 輪；限時 ' + ansMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         /* 盤面：N 欄 N 列的格子，每一格的邊長由 css 的 .sudokuone-board--n4／--n9 決定；每個宮的最右一欄、最下一排畫粗線（sudokuone-cE／sudokuone-rE） */
         var W = stage.clientWidth || 472, bm = boardMetrics(W, N);
@@ -216,9 +224,10 @@
         for (var d = 1; d <= N; d++) (function (d) { items.push({ text: String(d), kind: 'sky', cls: 'sudokuone-btn', onTap: function () { judge(d); } }); })(d);
         /* 數字鍵：4×4 排成一排 4 顆（每顆大一點）；9×9 排成 3×3 */
         var grid = kit.btnGrid(stage, items, N === 4 ? { cols: 4, h: 84, gap: 8 } : { cols: 5, h: 62, gap: 8 });
-        api.timer(ansMs(level), function () { judge(null); });
-        if (level === 1 && kit.once('sudokuone.hint')) kit.hintOn(stage, grid.btns[q.answer - 1], { mode: 'tap', delay: 700, text: '請點擊數字' });
+        api.timer(ansMs(level), function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
+        if (level === 1 && kit.once('sudokuone.hint')) kit.hintOn(stage, grid.btns[q.answer - 1], { mode: 'tap', delay: 700, text: '請點擊數字' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
+        /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(v) {
             if (api.over) return;
             var ok = v === q.answer;
@@ -236,20 +245,24 @@
                 ]
             });
         }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.answer); };
         api.wrong = function () { judge(q.answer % N + 1); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '數獨猜一格',
         rule: '標準的數獨：**每一橫排、每一直排、每一個宮裡，數字都不重複**。前面的關卡是 4×4（四個 2×2 的宮，數字 1～4），第 11 關起變成更難的 9×9（九個 3×3 的宮，數字 1～9）。盤面上黃色的那一格，**只要猜出它是幾就好**。猜錯或來不及就結束，看你能過幾關。越後面，提示數字越少，要多推理幾步！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             boardMetrics: boardMetrics, BOARD_FRAC: BOARD_FRAC, REVEAL_FAIL_MS: REVEAL_FAIL_MS, GEO4: GEO4, GEO9: GEO9, makeGeom: makeGeom, stageOf: stageOf, givensFor: givensFor, ansMs: ansMs, deepP: deepP, makeSolution: makeSolution, deduce: deduce, makePuzzle: makePuzzle, rating: rating,
             FOUR_LEVELS: FOUR_LEVELS, RAMP9: RAMP9, GIVENS4: GIVENS4, GIVENS9: GIVENS9, ANS4_S: ANS4_S, ANS9_S: ANS9_S, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

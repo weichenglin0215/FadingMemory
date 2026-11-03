@@ -6,57 +6,63 @@
 
 /* ═══ 誰在偷偷動（.snk-）═══ */
 .spinpick-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
-    display: block;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
 /* ═══ 轉盤停哪格（.spinpick-）═══ */
 .spinpick-sec {
-    stroke: var(--c-card);
-    stroke-width: 3;
-    stroke-linejoin: round;
+    stroke: var(--c-card);                              /* SVG 線條顏色：主題變數 --c-card */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「spinpick-sec」在「正確時」的樣子的樣式 */
 .spinpick-sec--right {
-    stroke: var(--c-ink);
-    stroke-width: 8;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 8;                                    /* SVG 線條粗細：8 */
 }
 
+/* 「spinpick-sec」在「錯誤時」的樣子的樣式 */
 .spinpick-sec--wrong {
-    stroke: var(--c-bad);
-    stroke-width: 8;
+    stroke: var(--c-bad);                               /* SVG 線條顏色：主題變數 --c-bad */
+    stroke-width: 8;                                    /* SVG 線條粗細：8 */
 }
 
+/* 「spinpick-tip」這個元素的樣式 */
 .spinpick-tip {
-    fill: var(--c-ink);
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
 }
 
+/* 「spinpick-hub」這個元素的樣式 */
 .spinpick-hub {
-    fill: var(--c-ink);
-    stroke: var(--c-card);
-    stroke-width: 4;
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
+    stroke: var(--c-card);                              /* SVG 線條顏色：主題變數 --c-card */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
 }
 
+/* 「spinpick-center」這個元素的樣式 */
 .spinpick-center {
-    position: absolute;
-    width: 180px;
-    height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    border-radius: var(--r-md);
-    background: var(--c-card);
-    border: 3px solid var(--c-ink);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    line-height: var(--lh-tight);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 180px;                                       /* 寬度：180px */
+    height: 80px;                                       /* 高度：80px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    text-align: center;                                 /* 文字置中 */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink);                     /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    line-height: var(--lh-tight);                       /* 行高：主題變數 --lh-tight（文字每一行佔的高度） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「spinpick-tip-text」這個元素的樣式 */
 .spinpick-tip-text {
-    top: 18px;
+    top: 18px;                                          /* 離上邊 18px */
 }

@@ -21,55 +21,55 @@
 /* 落下棍子：一根根從上面落下的棍子，要在棍子到達目標位置的瞬間點擊。 */
 /* 標題列：置中、中等字級、粗體 */
 .sticks-head {
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
 /* 遊戲場地：棍子落下的區域，overflow:hidden 讓超出場地的部分被裁掉 */
 .sticks-field {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    touch-action: none;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
 /* 場地最上方的黑色橫桿（棍子從這裡鬆手掉下去） */
 .sticks-rail {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    height: 12px;
-    background: var(--c-ink);
-    z-index: 3;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    height: 12px;                                       /* 高度：12px */
+    background: var(--c-ink);                           /* 背景：主題變數 --c-ink */
+    z-index: 3;                                         /* 疊放順序：數字越大越在上面（3） */
 }
 
 /* 單根棍子；will-change:transform 提示瀏覽器「這個元素會一直移動」，讓它事先用顯示卡加速，動畫更順 */
 .sticks-stick {
-    position: absolute;
-    top: 0;
-    box-sizing: border-box;
-    background: var(--c-yellow);
-    border: 3px solid var(--c-ink-soft);
-    border-top: none;
-    border-radius: 0 0 12px 12px;
-    will-change: transform;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    top: 0;                                             /* 離上邊 0 */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    background: var(--c-yellow);                        /* 背景：主題變數 --c-yellow */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-top: none;                                   /* 上邊框：沒有 */
+    border-radius: 0 0 12px 12px;                       /* 圓角：0 0 12px 12px */
+    will-change: transform;                             /* 提示瀏覽器這個屬性會變動，先準備好（讓動畫更順） */
 }
 
 /* 修飾：點準了（綠色） */
 .sticks-stick--ok {
-    background: var(--c-ok);
-    border-color: var(--c-ok);
+    background: var(--c-ok);                            /* 背景：主題變數 --c-ok */
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
 }
 
 /* 修飾：點錯了（橘色） */
 .sticks-stick--bad {
-    background: var(--c-bad);
-    border-color: var(--c-bad);
+    background: var(--c-bad);                           /* 背景：主題變數 --c-bad */
+    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
 }

@@ -17,11 +17,15 @@
    · 答錯時畫出月曆（相差的月份在兩個以內才畫），從已知那天一格一格數到目標，再寫出「天數 ＝ 幾週又幾天」的算式。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'weekday'：選單、成績、存檔都靠它；樣式在 css/games/reaction_weekday.css，裡面的 class 名稱一律以 weekday- 開頭。 */
     'use strict';
 
-    var ID = 'weekday';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'weekday';                                 /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -88,7 +92,7 @@
     }
     /* 出一關：{ known, target（都含 w＝星期）, offset（目標 − 已知 的天數，可負）, type, months（兩個日期之間的月份）, level } */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var type = kit.pick(typesFor(level), rand), year = kit.randInt(YEARS[0], YEARS[1] - 1, rand), pair, known, target;
         if (type === 'far') {
             var span = kit.randInt(FAR_MIN, Math.max(FAR_MIN, farMax(level)), rand), back = rand() < 0.5;
@@ -110,6 +114,7 @@
         return '相差 ' + n + ' 天＝' + (w ? w + ' 週又 ' : '') + r + ' 天，' + dayName(q.known.w) + dir + '數 ' + r + ' 天＝' + dayName(q.target.w);
     }
     function dateText(dt) { return dt.y + ' 年 ' + dt.m + ' 月 ' + dt.d + ' 日'; }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 25) return '活月曆！';
         if (n >= 15) return '日子算得很準！';
@@ -118,6 +123,7 @@
         return '先算相差幾天，再除以 7 看餘數！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'weekday-stage',
@@ -128,11 +134,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand), K = q.known, T = q.target;
-        api.info = q;
-        console.log('[推星期幾] 第 ' + level + ' 關（' + q.type + '）：' + dateText(K) + dayName(K.w) + ' → ' + dateText(T) + '？答案 ' + dayName(T.w) + '（相差 ' + q.offset + ' 天）；限時 ' + timeMs(level) + ' ms');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[推星期幾] 第 ' + level + ' 關（' + q.type + '）：' + dateText(K) + dayName(K.w) + ' → ' + dateText(T) + '？答案 ' + dayName(T.w) + '（相差 ' + q.offset + ' 天）；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         stage.appendChild(h('div', { 'class': 'qz-note weekday-tip', text: '推推看：下面那天是星期幾？' }));
         /* 大小月口訣（要跨月的題型才放） */
@@ -160,9 +168,10 @@
         var done = false, picked = -1;
         var grid = kit.btnGrid(stage, NAMES.map(function (n, i) { return { text: n, kind: 'line', cls: 'weekday-opt', onTap: function () { judge(i); } }; }), { cols: 7, h: 100, gap: 6 });
         var btns = grid.btns;
-        api.timer(timeMs(level), function () { judge(-1); });
-        if (level === 1 && kit.once('weekday.hint')) kit.hintOn(stage, btns[T.w], { mode: 'tap', delay: 700, text: '先算相差幾天，再除以 7' });
+        api.timer(timeMs(level), function () { judge(-1); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
+        if (level === 1 && kit.once('weekday.hint')) kit.hintOn(stage, btns[T.w], { mode: 'tap', delay: 700, text: '先算相差幾天，再除以 7' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
+        /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(i) {
             if (done || api.over) return;
             done = true; picked = i;
@@ -208,21 +217,25 @@
             })(s);
             return { ms: 500 + n * stepMs };
         }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(T.w); };
         api.wrong = function () { judge((T.w + 1) % 7); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '推星期幾',
         rule: '上面是撕日曆，寫著某一天是星期幾。下面問另一天是星期幾，**點七顆星期按鈕**。**先算兩天相差幾天，再除以 7 看餘數**，星期就往後（或往前）推那麼多天。要小心每個月的天數（大月 31、小月 30、2 月 28 或 29），後面的關卡會**跨月、往回推、跨年**。選錯或來不及就結束，看你能過幾關。越後面，時間越短！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             timeMs: timeMs, farMax: farMax, dayName: dayName, daysIn: daysIn, dow: dow, addDays: addDays, diffDays: diffDays, mod7: mod7, typesFor: typesFor, monthsBetween: monthsBetween,
             forwardPair: forwardPair, makeLevel: makeLevel, explainText: explainText, dateText: dateText, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, TIME_S: TIME_S, FROM: FROM, SAME_UNTIL: SAME_UNTIL, FAR_MAX: FAR_MAX, FAR_MIN: FAR_MIN, YEARS: YEARS, MAX_LEVEL: MAX_LEVEL, NAMES: NAMES
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

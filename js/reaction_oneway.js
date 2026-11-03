@@ -24,11 +24,15 @@
    · 失敗（時間到）：把一條可以到醫院的路線用綠色畫出來，你停下來的地方打紅圈（如果停在死巷裡，就是「卡在這裡」），停格 2.8 秒。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'oneway'：選單、成績、存檔都靠它；樣式在 css/games/reaction_oneway.css，裡面的 class 名稱一律以 oneway- 開頭。 */
     'use strict';
 
-    var ID = 'oneway';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'oneway';                                  /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -165,7 +169,7 @@
     /* 出一關：{ n, start, goal, allow（Set：'a,b' ＝ 可以從路口 a 開到相鄰路口 b）, solution（一條最短合法路線）, traps（死巷路口陣列）, decoy（誘餌大路的終點路口，沒有誘餌＝-1）, level }
        closeNow：誘餌終點離醫院幾格（0＝不要誘餌）；內部會從 closeFor(level) 開始、做不到就逐步放寬到不要誘餌 */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var n = sizeFor(level), start = startOf(n), goal = goalOf(n), need = detourFor(level), minTraps = trapsFor(level), man = manhattan(n, start, goal);
         var want = level > WARMUP ? closeFor(level) : 0, cands = candCount(level);
         for (var closeNow = want; closeNow <= want + 6; closeNow++) {
@@ -230,6 +234,7 @@
         path.push(node);
         return 'add';
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 20) return '老司機！';
         if (n >= 12) return '認路高手！';
@@ -238,6 +243,7 @@
         return '先看哪裡有死巷，再來一次！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'oneway-stage',
@@ -248,11 +254,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand), n = q.n, path = [q.start], over = false;
-        api.info = q;
-        console.log('[單行道] 第 ' + level + ' 關：' + n + '×' + n + ' 個路口，最短路線 ' + (q.solution.length - 1) + ' 段（直線距離 ' + manhattan(n, q.start, q.goal) + '），死巷 ' + q.traps.length + ' 個；限時 ' + timeMs(level) + ' ms');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[單行道] 第 ' + level + ' 關：' + n + '×' + n + ' 個路口，最短路線 ' + (q.solution.length - 1) + ' 段（直線距離 ' + manhattan(n, q.start, q.goal) + '），死巷 ' + q.traps.length + ' 個；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, topPad = 56, pad = 44;
         var sp = Math.floor(Math.min((W - 2 * pad) / (n - 1), (H - topPad - 2 * pad) / (n - 1), 120)), BW = sp * (n - 1), ox = Math.round((W - BW) / 2), oy = topPad + Math.round((H - topPad - BW) / 2) - 8;
@@ -285,16 +293,17 @@
         var bad = kit.svg('circle', { 'class': 'oneway-bad', cx: -99, cy: -99, r: rw * 0.9 }, gNode);
         var routeLine = kit.svg('path', { 'class': 'oneway-route', d: '' }, gRoute);
         routeLine.setAttribute('stroke-width', (rw * 0.34).toFixed(1));
+        /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() {
             var head = path[path.length - 1];
             routeLine.setAttribute('d', path.map(function (k, j) { return (j ? 'L' : 'M') + px(k) + ' ' + py(k); }).join(' '));
             taxi.setAttribute('transform', 'translate(' + px(head) + ' ' + py(head) + ')');
         }
         paint();
-        api.timer(timeMs(level), function () { finish('time'); });
+        api.timer(timeMs(level), function () { finish('time'); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         if (level === 1 && kit.once('oneway.hint')) {
             var s1 = q.solution[0], s2 = q.solution[1];
-            kit.hintOn(stage, null, { mode: 'drag', x: px(s1), y: py(s1), dx: px(s2) - px(s1), dy: py(s2) - py(s1), delay: 500, text: '順著箭頭拖到醫院' });
+            kit.hintOn(stage, null, { mode: 'drag', x: px(s1), y: py(s1), dx: px(s2) - px(s1), dy: py(s2) - py(s1), delay: 500, text: '順著箭頭拖到醫院' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         }
 
         var pid = null, lastPt = null, lastBadAt = 0;
@@ -359,17 +368,20 @@
         api.wrong = function () { finish('time'); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '單行道',
         rule: '街道上畫滿了單行道的箭頭。**手指從左下角的計程車開始，沿著街道拖出路線，只能順著箭頭的方向走**，逆向的路段拖不過去。**把計程車帶到右上角的醫院**就過關。拖回上一個路口，路線就退回一格。最直的那條路一定有一段是逆向的，還要小心**看起來一路順風、到了醫院門口才發現走不通的死巷**。來不及就結束，看你能過幾關。越後面，路口越多、死巷越會騙人！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             sizeFor: sizeFor, timeMs: timeMs, detourFor: detourFor, trapsFor: trapsFor, startOf: startOf, goalOf: goalOf, manhattan: manhattan, canMove: canMove, outgoing: outgoing, distFrom: distFrom, canReachGoal: canReachGoal,
             trapNodes: trapNodes, monotoneExists: monotoneExists, monotoneReach: monotoneReach, decoyClose: decoyClose, greedyCost: greedyCost, wasteOf: wasteOf, candCount: candCount, decoyRoad: decoyRoad, closeFor: closeFor, solutionPath: solutionPath, randomRoute: randomRoute, makeLevel: makeLevel, drag: drag, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, N: N, TIME_S: TIME_S, DETOUR: DETOUR, TRAPS: TRAPS, CLOSE: CLOSE, CANDS: CANDS, WASTE_CAP: WASTE_CAP, TILT: TILT, WARMUP: WARMUP, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

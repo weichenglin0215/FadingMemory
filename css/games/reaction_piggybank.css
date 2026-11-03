@@ -5,176 +5,195 @@
    ═══════════════════════════════════════ */
 
 .piggybank-wrap {
-    --piggybank-coin0: hsl(43, 70%, 62%);
-    --piggybank-coin1: hsl(25, 55%, 60%);
-    --piggybank-coin2: hsl(200, 12%, 72%);
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    padding-top: 14px;
-    box-sizing: border-box;
+    --piggybank-coin0: hsl(43, 70%, 62%);               /* 自訂變數 --piggybank-coin0（下面用 var(--piggybank-coin0) 取用；可以由 JS 動態設定） */
+    --piggybank-coin1: hsl(25, 55%, 60%);               /* 自訂變數 --piggybank-coin1（下面用 var(--piggybank-coin1) 取用；可以由 JS 動態設定） */
+    --piggybank-coin2: hsl(200, 12%, 72%);              /* 自訂變數 --piggybank-coin2（下面用 var(--piggybank-coin2) 取用；可以由 JS 動態設定） */
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: 16px;                                          /* 子元素之間的空隙：16px */
+    padding-top: 14px;                                  /* 上方內縮：14px */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
 }
 
+/* 「piggybank-pig」這個元素的樣式 */
 .piggybank-pig {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    padding: 12px 22px;
-    border-radius: var(--r-lg);
-    background: var(--c-card);
-    border: var(--bd-w) solid var(--bd-c);
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: 18px;                                          /* 子元素之間的空隙：18px */
+    padding: 12px 22px;                                 /* 內縮（padding，內容跟邊框的距離）：上下 12px、左右 22px */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd-w) solid var(--bd-c);              /* 邊框（粗細、線型、顏色）：主題變數 --bd-w solid 主題變數 --bd-c */
 }
 
+/* 「piggybank-pig」裡面的「icon」部分的樣式 */
 .piggybank-pig__icon {
-    font-size: var(--fs-xxxxl);
-    line-height: 1;
+    font-size: var(--fs-xxxxl);                         /* 字級：主題變數 --fs-xxxxl */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
 }
 
+/* 「piggybank-pig」裡面的「info」部分的樣式 */
 .piggybank-pig__info {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    gap: 4px;                                           /* 子元素之間的空隙：4px */
 }
 
+/* 「piggybank-weight」這個元素的樣式 */
 .piggybank-weight {
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「piggybank-count」這個元素的樣式 */
 .piggybank-count {
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-blue);
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-blue);                               /* 文字顏色：主題變數 --c-blue */
 }
 
 /* 答對彈窗（kit.passNext）：算式大字、下面一行提示 */
 .piggybank-pass__eq {
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ok);
-    line-height: 1.4;
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
+    line-height: 1.4;                                   /* 行高：1.4（文字每一行佔的高度） */
 }
 
+/* 「piggybank-pass」裡面的「hint」部分的樣式 */
 .piggybank-pass__hint {
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    line-height: 1.4;
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    line-height: 1.4;                                   /* 行高：1.4（文字每一行佔的高度） */
 }
 
+/* 「piggybank-rule」這個元素的樣式 */
 .piggybank-rule {
-    padding: 6px 16px;
-    border-radius: var(--r-pill);
-    background: var(--c-orange-soft);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    padding: 6px 16px;                                  /* 內縮（padding，內容跟邊框的距離）：上下 6px、左右 16px */
+    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill */
+    background: var(--c-orange-soft);                   /* 背景：主題變數 --c-orange-soft */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「piggybank-list」這個元素的樣式 */
 .piggybank-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    gap: 12px;                                          /* 子元素之間的空隙：12px */
 }
 
+/* 「piggybank-row」這個元素的樣式 */
 .piggybank-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: 10px;                                          /* 子元素之間的空隙：10px */
 }
 
 /* 硬幣：圓形，上面刻著重量 */
 .piggybank-coin {
-    width: 86px;
-    height: 86px;
-    border-radius: 50%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    border: 4px solid var(--c-ink-soft);
-    background: var(--piggybank-coin0);
-    color: var(--c-ink);
-    line-height: 1;
+    width: 86px;                                        /* 寬度：86px */
+    height: 86px;                                       /* 高度：86px */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    border: 4px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --c-ink-soft */
+    background: var(--piggybank-coin0);                 /* 背景：主題變數 --piggybank-coin0 */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
 }
 
 .piggybank-coin--1 { background: var(--piggybank-coin1); }
 .piggybank-coin--2 { background: var(--piggybank-coin2); }
 
+/* 「piggybank-coin」裡面的「w」部分的樣式 */
 .piggybank-coin__w {
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
+/* 「piggybank-coin」裡面的「g」部分的樣式 */
 .piggybank-coin__g {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
 }
 
+/* 「piggybank-times」這個元素；「piggybank-unit」這個元素的樣式 */
 .piggybank-times,
 .piggybank-unit {
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink-soft);
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
+/* 「piggybank-step」這個元素的樣式 */
 .piggybank-step {
-    width: 64px;
-    height: 64px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
+    width: 64px;                                        /* 寬度：64px */
+    height: 64px;                                       /* 高度：64px */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
+/* 「piggybank-num」這個元素的樣式 */
 .piggybank-num {
-    min-width: 72px;
-    text-align: center;
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-black);
-    color: var(--c-blue);
-    font-variant-numeric: tabular-nums;
+    min-width: 72px;                                    /* 最小寬度：72px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-blue);                               /* 文字顏色：主題變數 --c-blue */
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
 }
 
+/* 「piggybank-num」在「錯誤（失敗）時」的樣子的樣式 */
 .piggybank-num--bad {
-    color: var(--c-bad);
-    font-size: var(--fs-xl);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
 }
 
+/* 「piggybank-num」這個元素的樣式 */
 .piggybank-list--ok .piggybank-num {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「piggybank-tip」這個元素的樣式 */
 .piggybank-tip {
-    min-height: 34px;
-    padding: 0 12px;
-    font-size: var(--fs-sm);
-    line-height: 1.35;
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    text-align: center;
+    min-height: 34px;                                   /* 最小高度：34px */
+    padding: 0 12px;                                    /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 12px */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    line-height: 1.35;                                  /* 行高：1.35（文字每一行佔的高度） */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    text-align: center;                                 /* 文字置中 */
 }
 
+/* 「piggybank-open」這個元素的樣式 */
 .piggybank-open {
-    width: 80%;
-    height: 72px;
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
+    width: 80%;                                         /* 寬度：80% */
+    height: 72px;                                       /* 高度：72px */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
+/* 「piggybank-answer」這個元素的樣式 */
 .piggybank-answer {
-    padding: 8px 16px;
-    border-radius: var(--r-md);
-    background: var(--c-green-soft);
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    text-align: center;
+    padding: 8px 16px;                                  /* 內縮（padding，內容跟邊框的距離）：上下 8px、左右 16px */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: var(--c-green-soft);                    /* 背景：主題變數 --c-green-soft */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    text-align: center;                                 /* 文字置中 */
 }

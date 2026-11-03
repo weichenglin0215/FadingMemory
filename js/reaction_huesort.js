@@ -18,11 +18,15 @@
    · 難度（線性）：被改的幅度 ΔE 14 → 3（MOD_DE）、限時 25 → 14 秒（TIME_S）；漸層的步距固定（STEP_DE），色相每關隨機。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'huesort'：選單、成績、存檔都靠它；樣式在 css/games/reaction_huesort.css，裡面的 class 名稱一律以 huesort- 開頭。 */
     'use strict';
 
-    var ID = 'huesort';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'huesort';                                 /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -81,7 +85,7 @@
          level, mode（漸層方向）, kind（被改的方向）, k（被改的那一塊，從 0 算起）, de（設計的 ΔE）,
          expected（9 塊「原本漸層」的顏色，[r,g,b] 整數）, colors（實際顯示的 9 塊顏色；只有第 k 塊跟 expected 不同）} */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var de = modDeFor(level);
         for (var tr = 0; tr < 400; tr++) {
             var mode = kit.pick(MODES, rand), sgn = rand() < 0.5 ? -1 : 1, h0 = kit.randFloat(0, 360, rand), L0, C0;
@@ -141,6 +145,7 @@
         }
         return { blocks: blocks, bw: bw, bh: bh, y0: y0, total: total, stackTop: stackTop, stackH: BLOCKS * bh };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 20) return '色彩大師！';
         if (n >= 12) return '眼力很準！';
@@ -149,6 +154,7 @@
         return '看哪一塊跟上下接不起來！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'huesort-stage',
@@ -159,11 +165,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand);
-        api.info = q;
-        console.log('[色票排隊] 第 ' + level + ' 關：漸層沿著' + KIND_NAME[q.mode] + '走、第 ' + (q.k + 1) + ' 塊的' + KIND_NAME[q.kind] + '被改了（ΔE ' + q.de + '）；限時 ' + timeMs(level) + ' ms');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[色票排隊] 第 ' + level + ' 關：漸層沿著' + KIND_NAME[q.mode] + '走、第 ' + (q.k + 1) + ' 塊的' + KIND_NAME[q.kind] + '被改了（ΔE ' + q.de + '）；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var tip = h('div', { 'class': 'qz-note huesort-tip', text: level === 1 ? '點出跟上下接不起來的那一塊' : '找出顏色被改過的那一塊' });
@@ -179,7 +187,7 @@
             kit.onTap(el, function () { choose(i); });
             return el;
         });
-        api.timer(timeMs(level), function () { choose(-1); });
+        api.timer(timeMs(level), function () { choose(-1); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         if (level === 1 && kit.once('huesort.hint')) {
             var hb = L.blocks[q.k];
             kit.hintOn(stage, null, { mode: 'tap', x: hb.x + hb.w / 2, y: hb.y + hb.h / 2, delay: 700, text: '點這一塊' });                /* 文字框只放 4 個字（長的文字框會蓋住要比對的色塊），完整說明在上方提示列 */
@@ -220,21 +228,25 @@
             if (ok) api.pass({ delay: GATHER_MS + 1900 });
             else api.fail({ delay: GATHER_MS + 3700, lines: [(j >= 0 ? '你點的是第 ' + (j + 1) + ' 塊（紅色 X）' : '時間到！'), '綠色圓圈那一塊才是被改過的：' + what] });
         }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { choose(q.k); };
         api.wrong = function () { choose(q.k + 1); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '色票排隊',
         rule: '畫面由上到下疊著 9 塊色塊，顏色是漸層，但**有一塊的顏色被偷偷改過**（色相、彩度或明度）。把**被改過的那一塊**點出來！色塊一左一右錯開擺放，上下不貼在一起，只能靠眼力比。揭曉時色塊會**往中間靠攏、上下緊貼**，顏色接不起來的地方一眼就看得出來。點錯或時間到就結束，看你能過幾關。越後面，改得越少、時間越短！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             modDeFor: modDeFor, timeMs: timeMs, lchToLab: lchToLab, labToRgb: labToRgb, rgbToLab: rgbToLab, labDist: labDist, deltaE: deltaE, inGamut: inGamut, round8: round8, hueDegFor: hueDegFor,
             makeLevel: makeLevel, oddBlock: oddBlock, layout: layout, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, MOD_DE: MOD_DE, TIME_S: TIME_S, STEP_DE: STEP_DE, BLOCKS: BLOCKS, ODD_RANGE: ODD_RANGE, BLOCK_W: BLOCK_W, SIDE_GAP: SIDE_GAP, V_GAP: V_GAP, GATHER_MS: GATHER_MS, JOIN_OVERLAP: JOIN_OVERLAP, MAX_LEVEL: MAX_LEVEL, MODES: MODES
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

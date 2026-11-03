@@ -8,84 +8,90 @@
 
 /* 卡片裡的區塊間距縮小一點：這個彈窗要放「說明＋兩個輸入列＋提示＋訊息＋三顆按鈕」，500×850 的舞台裡不能出現捲軸 */
 .dlg--idn .dlg__card {
-    gap: var(--sp-2);
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
 }
 
 /* 暱稱列、密碼列：標籤在左、輸入框在右（比上下排列省高度） */
 .idn-row {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-3);
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
 }
 
+/* 「idn-label」這個元素的樣式 */
 .idn-label {
-    flex: 0 0 auto;
-    width: 3.2em;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink);
-    text-align: left;
+    flex: 0 0 auto;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    width: 3.2em;                                       /* 寬度：3.2em */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    text-align: left;                                   /* 文字靠左 */
 }
 
+/* 「idn-input」這個元素的樣式 */
 .idn-row .idn-input {
-    flex: 1 1 0;
-    min-width: 0;
-    height: calc(var(--btn-h) * 0.85);
-    font-size: var(--fs-md);
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-width: 0;                                       /* 最小寬度：0 */
+    height: calc(var(--btn-h) * 0.85);                  /* 高度：calc(主題變數 --btn-h * 0.85) */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
 }
 
 /* 密碼：4 個數字，字距拉開、等寬數字，才看得清楚每一個 */
 .idn-pin {
-    letter-spacing: 0.35em;
+    letter-spacing: 0.35em;                             /* 字與字之間的間距：0.35em */
     text-indent: 0.35em;
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
 }
 
+/* 「idn-intro」這個元素的樣式 */
 .idn-intro {
-    font-size: var(--fs-sm);
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
 }
 
 /* 小字說明（請記下密碼、不要用銀行密碼…） */
 .idn-note {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-regular);
-    line-height: var(--lh-body);
-    color: var(--c-ink-soft);
-    text-align: left;
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-regular);                     /* 字重（粗細）：主題變數 --fw-regular */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    text-align: left;                                   /* 文字靠左 */
 }
 
 /* 訊息列：預留兩行的高度，提示出現或消失時下面的按鈕不會跳動 */
 .idn-msg {
-    min-height: calc(var(--fs-xs) * var(--lh-body) * 2);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-body);
-    color: var(--c-ink-soft);
-    text-align: left;
+    min-height: calc(var(--fs-xs) * var(--lh-body) * 2);  /* 最小高度：calc(主題變數 --fs-xs * 主題變數 --lh-body * 2) */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    text-align: left;                                   /* 文字靠左 */
 }
 
+/* 「idn-msg」在「警告時」的樣子的樣式 */
 .idn-msg--warn {
-    color: var(--c-orange);
+    color: var(--c-orange);                             /* 文字顏色：主題變數 --c-orange */
 }
 
+/* 「idn-msg」在「錯誤時」的樣子的樣式 */
 .idn-msg--err {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
+/* 「idn-msg」在「正確（成功）時」的樣子的樣式 */
 .idn-msg--ok {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
 /* 按鈕：藏起來的要真的不佔位置（公版的 .btn 是 flex，會蓋掉 hidden 屬性） */
 .dlg--idn .btn[hidden] {
-    display: none;
+    display: none;                                      /* 不顯示（也不佔位置） */
 }
 
 /* 「我的帳號」面板：暱稱那一行 */
 .idn-acct__nick {
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    text-align: center;
-    word-break: break-all;
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    text-align: center;                                 /* 文字置中 */
+    word-break: break-all;                              /* 斷字方式：break-all */
 }

@@ -6,145 +6,165 @@
 
 /* ═══ 接電線（.wirelink-）═══ */
 .wirelink-stage {
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「wirelink-tip」這個元素的樣式 */
 .wirelink-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 10px;
-    text-align: center;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 10px;                                          /* 離上邊 10px */
+    text-align: center;                                 /* 文字置中 */
 }
 
+/* 「wirelink-board」這個元素的樣式 */
 .wirelink-board {
-    position: absolute;
-    border: var(--bd-w) solid var(--c-ink-soft);
-    border-radius: var(--r-sm);
-    overflow: hidden;
-    background: var(--c-card);
-    transition: box-shadow 0.4s, background 0.4s;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    border: var(--bd-w) solid var(--c-ink-soft);        /* 邊框（粗細、線型、顏色）：主題變數 --bd-w solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    transition: box-shadow 0.4s, background 0.4s;       /* 狀態改變時的過渡動畫（屬性、時間、緩動）：box-shadow 0.4s, background 0.4s */
 }
 
 /* 全部接好：整塊板子的燈一起亮 */
 .wirelink-board--lit {
-    background: var(--c-yellow-soft);
-    box-shadow: 0 0 28px var(--c-yellow);
+    background: var(--c-yellow-soft);                   /* 背景：主題變數 --c-yellow-soft */
+    box-shadow: 0 0 28px var(--c-yellow);               /* 方塊陰影（立體感） */
 }
 
+/* 「wirelink-cell」這個元素的樣式 */
 .wirelink-cell {
-    position: absolute;
-    box-sizing: border-box;
-    border: 1px solid var(--bd-c);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    border: 1px solid var(--bd-c);                      /* 邊框（粗細、線型、顏色）：1px solid 主題變數 --bd-c */
 }
 
+/* 「wirelink-svg」這個元素的樣式 */
 .wirelink-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 每一種電線（以及它的插頭、時間到時畫出來的正確接法）用 --wc 當顏色，--wc 由 .wirelink-c0～.wirelink-c7 設定 */
 .wirelink-c0 {
-    --wc: var(--wlk-0);
+    --wc: var(--wlk-0);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
 }
 
+/* 「wirelink-c1」這個元素的樣式 */
 .wirelink-c1 {
-    --wc: var(--wlk-1);
+    --wc: var(--wlk-1);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
 }
 
+/* 「wirelink-c2」這個元素的樣式 */
 .wirelink-c2 {
-    --wc: var(--wlk-2);
+    --wc: var(--wlk-2);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
 }
 
+/* 「wirelink-c3」這個元素的樣式 */
 .wirelink-c3 {
-    --wc: var(--wlk-3);
+    --wc: var(--wlk-3);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
 }
 
+/* 「wirelink-c4」這個元素的樣式 */
 .wirelink-c4 {
-    --wc: var(--wlk-4);
+    --wc: var(--wlk-4);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
 }
 
+/* 「wirelink-c5」這個元素的樣式 */
 .wirelink-c5 {
-    --wc: var(--wlk-5);
+    --wc: var(--wlk-5);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
 }
 
+/* 「wirelink-c6」這個元素的樣式 */
 .wirelink-c6 {
-    --wc: var(--wlk-6);
+    --wc: var(--wlk-6);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
 }
 
+/* 「wirelink-c7」這個元素的樣式 */
 .wirelink-c7 {
-    --wc: var(--wlk-7);
+    --wc: var(--wlk-7);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
 }
 
+/* 「wirelink-wire」這個元素的樣式 */
 .wirelink-wire {
-    fill: none;
-    stroke: var(--wc);
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--wc);                                  /* SVG 線條顏色：主題變數 --wc */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「wirelink-plug-body」這個元素的樣式 */
 .wirelink-plug-body {
-    fill: var(--wc);
-    stroke: var(--c-ink);
-    stroke-width: 3;
+    fill: var(--wc);                                    /* SVG 圖形的填色：主題變數 --wc */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「wirelink-plug-in」這個元素的樣式 */
 .wirelink-plug-in {
-    fill: var(--c-card);
-    stroke: var(--c-ink);
-    stroke-width: 2;
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
 }
 
 /* 接通的那一對：中間的小燈泡亮起來 */
 .wirelink-plug--on .wirelink-plug-in {
-    fill: var(--c-yellow);
+    fill: var(--c-yellow);                              /* SVG 圖形的填色：主題變數 --c-yellow */
 }
 
+/* 「wirelink-plug-body」這個元素的樣式 */
 .wirelink-plug--on .wirelink-plug-body {
-    filter: drop-shadow(0 0 6px var(--wc));
+    filter: drop-shadow(0 0 6px var(--wc));             /* 濾鏡效果：drop-shadow(0 0 6px var(--wc)) */
 }
 
 /* 時間到：正確的接法一條一條畫出來（pathLength 設成 1，dasharray 1、dashoffset 1 → 0），玩家自己接的電線變淡，沒接通的閃紅 */
 .wirelink-sol {
-    fill: none;
-    stroke: var(--wc);
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--wc);                                  /* SVG 線條顏色：主題變數 --wc */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+    stroke-dasharray: 1;                                /* SVG 虛線的「畫／空」長度：1 */
+    stroke-dashoffset: 1;                               /* SVG 虛線的起始位移：1 */
 }
 
+/* 「wirelink-sol」這個元素的樣式 */
 .wirelink-sol--draw .wirelink-sol {
-    animation: wirelink-draw 1.2s ease-out forwards;
+    animation: wirelink-draw 1.2s ease-out forwards;    /* 播放動畫（名稱、時間、緩動、次數）：wirelink-draw 1.2s ease-out forwards */
 }
 
+/* 動畫 wirelink-draw：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes wirelink-draw {
     to {
-        stroke-dashoffset: 0;
+        stroke-dashoffset: 0;                           /* SVG 虛線的起始位移：0 */
     }
 }
 
+/* 「wirelink-wire」這個元素的樣式 */
 .wirelink-board--reveal .wirelink-wire {
-    opacity: 0.25;
+    opacity: 0.25;                                      /* 透明度 0.25（1＝完全不透明、0＝全透明） */
 }
 
+/* 「wirelink-wire」在「錯誤（失敗）時」的樣子的樣式 */
 .wirelink-board--reveal .wirelink-wire--bad {
-    opacity: 1;
-    animation: wirelink-bad 0.5s ease-in-out 4;
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
+    animation: wirelink-bad 0.5s ease-in-out 4;         /* 播放動畫（名稱、時間、緩動、次數）：wirelink-bad 0.5s ease-in-out 4 */
 }
 
+/* 動畫 wirelink-bad：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes wirelink-bad {
 
     0%,
     100% {
-        stroke: var(--wc);
+        stroke: var(--wc);                              /* SVG 線條顏色：主題變數 --wc */
     }
 
     50% {
-        stroke: var(--c-bad-light);
+        stroke: var(--c-bad-light);                     /* SVG 線條顏色：主題變數 --c-bad-light */
     }
 }

@@ -8,49 +8,49 @@
 /* ═══ 球在哪杯（.cups-）═══ */
 /* 場地 */
 .cups-field {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    touch-action: none;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
 /* 杯子 SVG */
 .cups-svg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
 /* 杯身（紅色） */
 .cups-cup__body {
-    fill: #D9483B;
-    stroke: #8F2A20;
-    stroke-width: 3px;
-    stroke-linejoin: round;
+    fill: #D9483B;                                      /* SVG 圖形的填色：#D9483B */
+    stroke: #8F2A20;                                    /* SVG 線條顏色：#8F2A20 */
+    stroke-width: 3px;                                  /* SVG 線條粗細：3px */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
 /* 杯口 */
 .cups-cup__rim {
-    fill: #8F2A20;
+    fill: #8F2A20;                                      /* SVG 圖形的填色：#8F2A20 */
 }
 
 /* 杯身高光 */
 .cups-cup__shine {
-    stroke: rgba(255, 255, 255, 0.55);
-    stroke-width: 5px;
-    stroke-linecap: round;
-    fill: none;
+    stroke: rgba(255, 255, 255, 0.55);                  /* SVG 線條顏色：rgba(255, 255, 255, 0.55) */
+    stroke-width: 5px;                                  /* SVG 線條粗細：5px */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    fill: none;                                         /* SVG 圖形的填色：none */
 }
 
 /* 球 */
 .cups-ball {
-    fill: var(--c-yellow);
-    stroke: #9A6D0B;
-    stroke-width: 3px;
+    fill: var(--c-yellow);                              /* SVG 圖形的填色：主題變數 --c-yellow */
+    stroke: #9A6D0B;                                    /* SVG 線條顏色：#9A6D0B */
+    stroke-width: 3px;                                  /* SVG 線條粗細：3px */
 }

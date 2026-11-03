@@ -6,19 +6,21 @@
 
 /* ═══ 等不等於（.isequal-）═══ */
 .isequal-ask {
-    top: 190px;
+    top: 190px;                                         /* 離上邊 190px */
 }
 
+/* 「isequal-reveal」這個元素的樣式 */
 .isequal-reveal {
-    top: 250px;
+    top: 250px;                                         /* 離上邊 250px */
 }
 
+/* 「isequal-sign」這個元素的樣式 */
 .isequal-sign {
-    margin: 0 var(--sp-3);
-    color: var(--c-ink-soft);
+    margin: 0 var(--sp-3);                              /* 外距（margin，與別的元素的距離）：上 0、左右 主題變數、下 --sp-3 */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 裁判時：符號答對＝綠色、答錯＝紅色（V1.28） */
 .isequal-sign.qz-bad {
-    color: var(--c-bad-light) !important;
+    color: var(--c-bad-light) !important;               /* 文字顏色：主題變數 --c-bad-light（!important＝強制優先） */
 }

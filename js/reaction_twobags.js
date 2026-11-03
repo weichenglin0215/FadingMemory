@@ -19,11 +19,15 @@
    · 答錯時，鑽石會自動移到一種可行的分法讓你看（天秤也跟著回到接近水平），並說明「重量跟面積成正比」。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'twobags'：選單、成績、存檔都靠它；樣式在 css/games/reaction_twobags.css，裡面的 class 名稱一律以 twobags- 開頭。 */
     'use strict';
 
-    var ID = 'twobags';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 30 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'twobags';                                 /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 30 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂（也是最後一關） */
@@ -76,7 +80,7 @@
     function fitArea(d) { return d.reduce(function (s, x) { return s + (x + PAD) * (x + PAD); }, 0); }
     /* 出題：回傳 { d, w, total, tol, best: {mask, diff}, n }；level 決定鑽石數與容許誤差 */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var n = countAt(level), tol = tolAt(level), wMin = weightOf(D_MIN), wMax = weightOf(D_MAX), last = null;
         /* 最大／最小直徑比：RATIO_MIN 不能設成等於（或超過）D_MAX／D_MIN——那樣只有「剛好一顆最大、一顆最小」才合格，幾乎永遠出不了題（V1.28 修正：最多要求到 90%） */
         var ratioMax = Math.min(RATIO_MIN, D_MAX / D_MIN * 0.9);
@@ -121,6 +125,7 @@
         var a = deg * Math.PI / 180, dx = HL * (1 - Math.cos(a)), dy = HL * Math.sin(a);
         return { l: { dx: dx, dy: -dy }, r: { dx: -dx, dy: dy } };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 10) return '分鑽石大師！全部通關！';
         if (n >= 7) return '高手！';
@@ -129,6 +134,7 @@
         return '重量跟面積成正比，再試一次！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: RAMP_LEVELS, goodAt: 4,
@@ -149,8 +155,8 @@
     function setup(api) {
         var stage = api.stage, level = api.level, W = stage.clientWidth || 472;
         var q = makeLevel(level, api.rand), n = q.n, side = [], els = [], drag = null, hint = null, curTilt = 0;
-        api.info = q;
-        console.log('[兩袋一樣重] 第 ' + level + ' 關：' + n + ' 顆；直徑 ' + q.d.map(function (x) { return x.toFixed(1); }).join(',') + '；重量 ' + q.w.map(function (x) { return x.toFixed(2); }).join(',') + '；總重 ' + q.total.toFixed(2) + '；容許 ' + (q.tol * 100).toFixed(2) + '%（' + (q.tol * q.total).toFixed(3) + ' 克拉）；最佳差 ' + q.best.diff.toFixed(3) + '；貪婪法差 ' + diffOf(q.w, greedyPartition(q.w)).toFixed(3) + '，交錯分法差 ' + diffOf(q.w, altPartition(q.d)).toFixed(3));
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[兩袋一樣重] 第 ' + level + ' 關：' + n + ' 顆；直徑 ' + q.d.map(function (x) { return x.toFixed(1); }).join(',') + '；重量 ' + q.w.map(function (x) { return x.toFixed(2); }).join(',') + '；總重 ' + q.total.toFixed(2) + '；容許 ' + (q.tol * 100).toFixed(2) + '%（' + (q.tol * q.total).toFixed(3) + ' 克拉）；最佳差 ' + q.best.diff.toFixed(3) + '；貪婪法差 ' + diffOf(q.w, greedyPartition(q.w)).toFixed(3) + '，交錯分法差 ' + diffOf(q.w, altPartition(q.d)).toFixed(3));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var tip = h('div', { 'class': 'twobags-tip', text: '把鑽石拖到左右秤盤，讓兩邊一樣重' });
         var tray = h('div', { 'class': 'twobags-zone twobags-tray' });
@@ -285,12 +291,14 @@
             });
         }
         kit.onTap(okBtn, confirm);
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { for (var i = 0; i < n; i++) place(i, q.best.mask & (1 << i) ? 'L' : 'R'); confirm(); };
         api.wrong = function () { for (var i = 0; i < n; i++) place(i, 'L'); confirm(); };
         api.place = place;
         api.tilt = function () { return curTilt; };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '兩袋一樣重',
@@ -299,5 +307,6 @@
         score: SCORE,
         test: { WEIGHT_K: WEIGHT_K, RELAX: RELAX, GEM: GEM, gemPx: gemPx, weightOf: weightOf, diameterOf: diameterOf, tolAt: tolAt, countAt: countAt, diffOf: diffOf, bestPartition: bestPartition, greedyPartition: greedyPartition, altPartition: altPartition, tiltOf: tiltOf, settle: settle, hangShift: hangShift, TILT_PASS: TILT_PASS, TILT_FAIL: TILT_FAIL, TILT_FAIL_SPAN: TILT_FAIL_SPAN, TILT_MS: TILT_MS, fitArea: fitArea, makeLevel: makeLevel, rating: rating, RAMP_LEVELS: RAMP_LEVELS, N0: N0, TOL: TOL, D_MIN: D_MIN, D_MAX: D_MAX, RATIO_MIN: RATIO_MIN, FIT_AREA: FIT_AREA, HEUR_FROM: HEUR_FROM }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

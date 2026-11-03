@@ -6,84 +6,92 @@
 
 /* ═══ 堵住五子（.gomoku-）═══ */
 .gomoku-stage {
-    user-select: none;
-    -webkit-user-select: none;
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「gomoku-tip」這個元素的樣式 */
 .gomoku-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
 }
 
+/* 「gomoku-info」這個元素的樣式 */
 .gomoku-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
 }
 
 /* 米色棋盤（石桌）；格線和棋子都是 SVG 畫的 */
 .gomoku-board {
-    position: absolute;
-    background: var(--gmk-board);
-    outline: 4px solid var(--gmk-line);
-    box-shadow: var(--shadow-card);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    background: var(--gmk-board);                       /* 背景：主題變數 --gmk-board */
+    outline: 4px solid var(--gmk-line);                 /* 外框線：4px solid 主題變數 --gmk-line */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
 }
 
+/* 「gomoku-svg」這個元素的樣式 */
 .gomoku-svg {
-    display: block;
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
+/* 「gomoku-grid」這個元素的樣式 */
 .gomoku-grid {
-    stroke: var(--gmk-line);
-    stroke-width: 1.2;
+    stroke: var(--gmk-line);                            /* SVG 線條顏色：主題變數 --gmk-line */
+    stroke-width: 1.2;                                  /* SVG 線條粗細：1.2 */
 }
 
+/* 「gomoku-stone」的「b」變化版的樣式 */
 .gomoku-stone--b {
-    fill: var(--c-ink);
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
 }
 
+/* 「gomoku-stone」的「w」變化版的樣式 */
 .gomoku-stone--w {
-    fill: var(--c-card);
-    stroke: var(--c-ink-soft);
-    stroke-width: 1.5;
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 1.5;                                  /* SVG 線條粗細：1.5 */
 }
 
 /* 剛下的棋：從大變小彈一下（SVG 要指定 transform-box 才會繞著自己的中心縮放） */
 .gomoku-stone--new {
     transform-box: fill-box;
-    transform-origin: center;
-    animation: gomoku-drop 0.6s ease-out;
+    transform-origin: center;                           /* 變形的基準點：center */
+    animation: gomoku-drop 0.6s ease-out;               /* 播放動畫（名稱、時間、緩動、次數）：gomoku-drop 0.6s ease-out */
     /* V1.38.0：揭曉動畫放慢成 50% 速度（原本 0.3s） */
 }
 
+/* 動畫 gomoku-drop：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes gomoku-drop {
     from {
-        transform: scale(1.6);
-        opacity: 0;
+        transform: scale(1.6);                          /* 變形：縮放 1.6 倍 */
+        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
     }
 
     to {
-        transform: scale(1);
-        opacity: 1;
+        transform: scale(1);                            /* 變形：縮放 1 倍 */
+        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
     }
 }
 
 /* 唯一的擋法：綠圈；白棋連成五顆：紅線穿過去 */
 .gomoku-ring {
-    fill: none;
-    stroke: var(--c-ok);
-    stroke-width: 4;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
 }
 
+/* 「gomoku-five」這個元素的樣式 */
 .gomoku-five {
-    stroke: var(--c-bad-light);
-    stroke-linecap: round;
-    opacity: 0.85;
+    stroke: var(--c-bad-light);                         /* SVG 線條顏色：主題變數 --c-bad-light */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    opacity: 0.85;                                      /* 透明度 0.85（1＝完全不透明、0＝全透明） */
 }

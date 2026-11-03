@@ -19,11 +19,15 @@
      ②只要有任何一顆 ＋／－ 還按著、或是剛放開不到 OK_GUARD_MS（0.3 秒），按「確定」都不算。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'mixcolor'：選單、成績、存檔都靠它；樣式在 css/games/reaction_mixcolor.css，裡面的 class 名稱一律以 mixcolor- 開頭。 */
     'use strict';
 
-    var ID = 'mixcolor';
-    var SCORE = { better: 'min', decimals: 4, format: '{v}%', label: '差異度', min: 0, max: 300 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'mixcolor';                                /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'min', decimals: 4, format: '{v}%', label: '差異度', min: 0, max: 300 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var GAP_PX = 100;                           /* 兩個色塊中間黑色長方形的寬度（跟色不異空一樣） */
@@ -60,7 +64,7 @@
     function stepChannel(v, dir, holdSec, dtMs) { return Math.min(255, Math.max(0, v + dir * rateAt(holdSec) * dtMs / 1000)); }
     /* 出一局：目標色、右邊色塊的起始色（離目標至少 START_MIN，三個頻道各偏一點） */
     function newRound(rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var T = TARGET_RANGE, target = { r: Math.round(kit.randFloat(T[0], T[1], rand)), g: Math.round(kit.randFloat(T[0], T[1], rand)), b: Math.round(kit.randFloat(T[0], T[1], rand)) };
         for (var i = 0; i < 400; i++) {
             var s = { r: Math.round(kit.randFloat(0, 255, rand)), g: Math.round(kit.randFloat(0, 255, rand)), b: Math.round(kit.randFloat(0, 255, rand)) };
@@ -68,6 +72,7 @@
         }
         return { target: target, start: { r: target.r > 128 ? 0 : 255, g: target.g > 128 ? 0 : 255, b: target.b > 128 ? 0 : 255 } };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(e) {
         if (e < 0.5) return '神乎其技！';
         if (e < 2) return '高手！';
@@ -84,6 +89,7 @@
         { id: 'r-', ch: 'r', dir: -1, cls: 'mixcolor-btn--r-lo', text: '−' }, { id: 'g-', ch: 'g', dir: -1, cls: 'mixcolor-btn--g-lo', text: '−' }, { id: 'b-', ch: 'b', dir: -1, cls: 'mixcolor-btn--b-lo', text: '−' }
     ];
 
+    /* mount：選單按下這款遊戲時會呼叫它，負責把遊戲畫面建立在 root（遊戲區）裡；ctx 是選單給的工具（例如 ctx.setMeta 設定標題列右邊的文字）。 */
     function mount(root, ctx) {
         root.classList.add('mixcolor-bg');
         var R = null;
@@ -100,6 +106,7 @@
             leftEl.style.background = cssRgb(rd.target);
             gapEl.style.flexBasis = GAP_PX + 'px';
             root.appendChild(h('div', { 'class': 'mixcolor-field' }, [leftEl, gapEl, rightEl]));
+            /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
             function paint() { rightEl.style.background = cssRgb(cur); }
             paint();
             console.log('[混出什麼色] 目標 rgb(' + rd.target.r + ',' + rd.target.g + ',' + rd.target.b + ')；起始 rgb(' + rd.start.r + ',' + rd.start.g + ',' + rd.start.b + ')；起始差異 ' + diffPercent(rd.target, rd.start).toFixed(2) + '%');
@@ -146,7 +153,7 @@
             if (kit.once('mixcolor.hint')) {
                 var best = null, bd = -1;
                 ['r', 'g', 'b'].forEach(function (ch) { var d = Math.abs(rd.target[ch] - rd.start[ch]); if (d > bd) { bd = d; best = ch + (rd.target[ch] > rd.start[ch] ? '+' : '-'); } });
-                hint = kit.hintOn(root, btnEls[best], { mode: 'hold', delay: 500, text: '請按住按鈕調整顏色' });
+                hint = kit.hintOn(root, btnEls[best], { mode: 'hold', delay: 500, text: '請按住按鈕調整顏色' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
             }
 
             /* 確定：右邊色塊定住，兩個色塊靠攏，顯示差異度 */
@@ -188,6 +195,7 @@
         round();
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '混出什麼色',
@@ -196,5 +204,6 @@
         score: SCORE,
         test: { OK_GUARD_MS: OK_GUARD_MS, rateAt: rateAt, stepChannel: stepChannel, newRound: newRound, diffPercent: diffPercent, roundRgb: roundRgb, RATE: RATE, RAMP_S: RAMP_S, START_MIN: START_MIN, TARGET_RANGE: TARGET_RANGE, BUTTONS: BUTTONS }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

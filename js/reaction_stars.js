@@ -14,11 +14,15 @@
    · 揭曉：所有小方塊飛回原位，字整個露出來；答錯時標出正確的字。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'stars'：選單、成績、存檔都靠它；樣式在 css/games/reaction_stars.css，裡面的 class 名稱一律以 stars- 開頭。 */
     'use strict';
 
-    var ID = 'stars';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'stars';                                   /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -50,7 +54,7 @@
     function arrivedFraction(tiles, t) { var n = 0; tiles.forEach(function (x) { if (t >= x.d + x.m - 1e-9) n++; }); return n / tiles.length; }
     /* 出一關：{ answer, options, group, N, tret（秒）, tiles（[{ sx, sy（起點，佔畫面寬高的比例）, d, m }]，由左到右由上到下，第 k 個是字裡第 (k%N, ⌊k/N⌋) 格）, limitMs, level } */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var rg = strokeRange(level), no = optsFor(level), N = tilesFor(level), T = returnS(level);
         var pool = SimilarChars.groups({ minSize: MIN_GROUP, minStrokes: rg[0], maxStrokes: rg[1] });
         if (!pool.length) pool = SimilarChars.groups({ minSize: MIN_GROUP });
@@ -68,6 +72,7 @@
         order.slice(lastN, lateN).forEach(function (i) { var x = tiles[i], a = kit.randFloat(LIMIT + 0.03, 1, rand) * T; if (a < x.m) a = x.m; x.d = a - x.m; });   /* 時限之後才到 */
         return { answer: answer, options: options, answerIdx: options.indexOf(answer), group: g.chars, N: N, tret: T, tiles: tiles, limitMs: limitMs(level), strokes: rg, level: level };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 15) return '火眼金睛！';
         if (n >= 10) return '一眼就看出來了！';
@@ -76,6 +81,7 @@
         return '不用等拼完，先看出一部分就猜！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'stars-stage',
@@ -86,11 +92,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand), N = q.N;
-        api.info = q;
-        console.log('[找星座] 第 ' + level + ' 關：答案 ' + q.answer + '，選項 ' + q.options.join('') + '；' + N + '×' + N + ' 個小方塊，' + q.tret + ' 秒拼完、時限 ' + q.limitMs + ' 毫秒；字群平均筆劃範圍 ' + q.strokes.map(function (x) { return x.toFixed(1); }).join('～'));
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[找星座] 第 ' + level + ' 關：答案 ' + q.answer + '，選項 ' + q.options.join('') + '；' + N + '×' + N + ' 個小方塊，' + q.tret + ' 秒拼完、時限 ' + q.limitMs + ' 毫秒；字群平均筆劃範圍 ' + q.strokes.map(function (x) { return x.toFixed(1); }).join('～'));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, S = Math.min(Math.round(W * 0.9), H - 210), fx = Math.round((W - S) / 2), fy = 56;
         var field = h('div', { 'class': 'stars-field' });
@@ -118,12 +126,13 @@
         }
         draw(0);
         var grid = kit.btnGrid(field, q.options.map(function (c, i) { return { text: c, kind: 'line', cls: 'stars-opt', onTap: function () { judge(i); } }; }), { cols: q.options.length, h: 92, gap: 8 });
-        api.timer(q.limitMs, function () { judge(-1); });
+        api.timer(q.limitMs, function () { judge(-1); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         var loop = api.my.loop(function (now) {
             if (!cv.isConnected) return false;
             if (phase === 'play') draw((now - t0) / 1000);
             else if (snapAt) { var p = Math.min(1, (now - snapAt.t) / 500); draw(0, { from: snapAt.from, k: kit.easeOutCubic(p) }); if (p >= 1) return false; }
         });
+        /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(i) {
             if (done || api.over || phase !== 'play') return;
             done = true; phase = 'end';
@@ -136,20 +145,24 @@
             if (ok) { api.pass({ delay: 1500 }); return; }
             api.fail({ delay: 3000, lines: ['正確的字是「' + q.answer + '」' + (i >= 0 ? '，你選了「' + q.options[i] + '」' : '（時間到）'), '選項：' + q.options.join('、')] });
         }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.answerIdx); };
         api.wrong = function () { judge((q.answerIdx + 1) % q.options.length); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '找星座',
         rule: '題目是一個筆劃很多的字，大大的佔滿畫面。這個字被切成很多小方塊，散落在畫面各處，然後**一塊一塊慢慢飛回原來的位置**——每一塊的速度不同、開始的時間也不同。你要猜**這是哪個字**。**時間限制只有拼回來時間的 80%**，所以等不到完整的字，要靠先拼好的那些碎片猜！答錯或來不及就結束，看你能過幾關。越後面，碎片越多越小、拼得越快！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             tilesFor: tilesFor, returnS: returnS, limitMs: limitMs, optsFor: optsFor, strokeRange: strokeRange, easeInOut: easeInOut, tilePos: tilePos, arrivedFraction: arrivedFraction, makeLevel: makeLevel, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, TILES: TILES, RETURN_S: RETURN_S, LIMIT: LIMIT, ARRIVE_MIN: ARRIVE_MIN, MOVE: MOVE, STRAGGLE: STRAGGLE, STROKES_LO: STROKES_LO, STROKES_HI: STROKES_HI, FIVE_FROM: FIVE_FROM, MIN_GROUP: MIN_GROUP, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

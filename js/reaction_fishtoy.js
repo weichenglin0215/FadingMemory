@@ -18,11 +18,15 @@
    · 揭曉：慢動作（0.3 倍）重播釣竿落下的那一段，停在落水那一刻，寫出「魚嘴只張開了 X.X°（要 Y.Y°）」、「釣竿下面沒有魚」或「釣到的是 X 色」。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'fishtoy'：選單、成績、存檔都靠它；樣式在 css/games/reaction_fishtoy.css，裡面的 class 名稱一律以 fishtoy- 開頭。 */
     'use strict';
 
-    var ID = 'fishtoy';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'fishtoy';                                 /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -74,7 +78,7 @@
     }
     /* 出一關：{ level, omega, duty, tol, N, target（指定顏色編號）, fish（[{ color, ang0, P, phi }]）, guaranteed（{ fish, t }：保證能釣到的那一刻）} */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var N = FISH_N, omega = omegaFor(level), duty = dutyFor(level), tol = tolFor(level), nt = Math.min(targetsFor(level), N - 1);
         var target = kit.randInt(0, COLORS.length - 1, rand), others = [], c;
         for (c = 0; c < COLORS.length; c++) if (c !== target) others.push(c);
@@ -112,6 +116,7 @@
         return '釣錯顏色！釣到' + COLORS[q.fish[r.fish].color] + '色，要釣' + COLORS[q.target] + '色';
     }
     function replayMs() { return Math.round((REPLAY_PRE + DROP_S + REPLAY_POST) / REPLAY_SPEED * 1000); }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 15) return '釣魚王！';
         if (n >= 9) return '看得很準！';
@@ -120,6 +125,7 @@
         return '算好 0.4 秒再放釣竿！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'fishtoy-stage',
@@ -145,11 +151,13 @@
         fs.hole.setAttribute('d', a < 2 ? '' : 'M25,0 L' + ux.toFixed(2) + ',' + uy.toFixed(2) + ' L' + lx.toFixed(2) + ',' + ly.toFixed(2) + ' Z');
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand);
-        api.info = q;
-        console.log('[釣魚玩具] 第 ' + level + ' 關：釣' + COLORS[q.target] + '色的魚（池塘裡 ' + q.fish.filter(function (f) { return f.color === q.target; }).length + ' 條）；轉速 ' + q.omega + ' 圈/秒、嘴巴張開比例 ' + q.duty + '、判定 ±' + q.tol + '°；保證的機會：第 ' + q.guaranteed.t.toFixed(2) + ' 秒（落水時間），窗口 ' + catchWindow(q).toFixed(3) + ' 秒');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[釣魚玩具] 第 ' + level + ' 關：釣' + COLORS[q.target] + '色的魚（池塘裡 ' + q.fish.filter(function (f) { return f.color === q.target; }).length + ' 條）；轉速 ' + q.omega + ' 圈/秒、嘴巴張開比例 ' + q.duty + '、判定 ±' + q.tol + '°；保證的機會：第 ' + q.guaranteed.t.toFixed(2) + ' 秒（落水時間），窗口 ' + catchWindow(q).toFixed(3) + ' 秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var cx = Math.round(W / 2), R = Math.min(W / 2 - 12, 176), cy = Math.round(H * 0.5), rf = Math.round(R * 0.66);
@@ -171,7 +179,7 @@
         var fishG = kit.svg('g', {}, svg), fs = q.fish.map(function (f) { var d = drawFish(fishG, f.color); return d; });
         var info = h('div', { 'class': 'qz-note fishtoy-info', text: level === 1 ? '釣竿 0.4 秒才落下：算好再點！' : '算好 0.4 秒，魚嘴張開時落水' }); info.style.top = (cy + R + 6) + 'px'; field.appendChild(info);
         var btn = kit.btnGrid(field, [{ text: '放釣竿', kind: 'primary', cls: 'fishtoy-btn', onTap: function () { drop(); } }], { cols: 1, h: 92, bottom: 12 });
-        if (level === 1 && kit.once('fishtoy.hint')) kit.hintOn(stage, btn.btns[0], { mode: 'tap', delay: 900, text: '魚嘴張開、到釣竿下才放' });
+        if (level === 1 && kit.once('fishtoy.hint')) kit.hintOn(stage, btn.btns[0], { mode: 'tap', delay: 900, text: '魚嘴張開、到釣竿下才放' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
         var phase = 'play', t0 = performance.now(), tDrop = null, tLand = null;
         function nowS() { return (performance.now() - t0) / 1000; }
@@ -190,7 +198,7 @@
             var t = (now - t0) / 1000; paint(t);
             if (tDrop != null) paintHook(Math.min(1, (t - tDrop) / DROP_S));
         });
-        api.timer(TIME_LIMIT * 1000, function () { if (phase === 'play') { phase = 'end'; info.textContent = '時間到！一直沒有放釣竿'; info.classList.add('fishtoy-info--bad'); kit.flash(stage, false, api.my); api.fail({ delay: 2800, lines: ['時間到！一直沒有放釣竿', '要釣的是' + COLORS[q.target] + '色的魚'] }); } });
+        api.timer(TIME_LIMIT * 1000, function () { if (phase === 'play') { phase = 'end'; info.textContent = '時間到！一直沒有放釣竿'; info.classList.add('fishtoy-info--bad'); kit.flash(stage, false, api.my); api.fail({ delay: 2800, lines: ['時間到！一直沒有放釣竿', '要釣的是' + COLORS[q.target] + '色的魚'] }); } });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
 
         /* 放釣竿：點下去的時間 ＋ 0.4 秒＝落水的那一刻，那時才判定 */
         function drop() {
@@ -228,6 +236,7 @@
         }
         /* 驗證用：在「保證的機會」落水的時間放釣竿（solve）／找一個會失敗的時間放（wrong）；只排一次 */
         var armed = false;
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { if (armed || phase !== 'play') return; armed = true; api.after(Math.max(0, Math.round((q.guaranteed.t - DROP_S - nowS()) * 1000)), drop); };
         api.wrong = function () {
             if (armed || phase !== 'play') return; armed = true;
@@ -236,16 +245,19 @@
         };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '釣魚玩具',
         rule: '池塘在轉，塑膠魚的嘴巴一張一合。**看準時機點一下放釣竿**——釣竿要 **0.4 秒**才會落到水面，所以要預判：落水的那一刻，**要剛好有指定顏色的魚、嘴巴張開著，經過釣竿正下方（畫面上方的指示線）**，才釣得起來。每關只能放一次釣竿；釣空、魚嘴閉著、或釣到別的顏色都算失敗。越後面，池塘轉得越快、魚嘴張開的時間越短、指定顏色的魚越少。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             omegaFor: omegaFor, dutyFor: dutyFor, targetsFor: targetsFor, tolFor: tolFor, wrap180: wrap180, smooth01: smooth01, angleAt: angleAt, offsetAt: offsetAt, mouthAt: mouthAt, judgeLanding: judgeLanding, makeLevel: makeLevel, catchWindow: catchWindow, whyText: whyText, replayMs: replayMs, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, OMEGA: OMEGA, DUTY: DUTY, TARGETS: TARGETS, TOL: TOL, FISH_N: FISH_N, PERIOD: PERIOD, RAMP_FRAC: RAMP_FRAC, CATCH_FRAC: CATCH_FRAC, MAX_OPEN: MAX_OPEN, DROP_S: DROP_S, TIME_LIMIT: TIME_LIMIT, T_MIN: T_MIN, T_MAX_FRAC: T_MAX_FRAC, ROD_ANGLE: ROD_ANGLE, REPLAY_SPEED: REPLAY_SPEED, COLORS: COLORS, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

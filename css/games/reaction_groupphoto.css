@@ -6,266 +6,302 @@
 
 /* ═══ 大合照（.groupphoto-）═══ */
 .groupphoto-stage {
-    user-select: none;
-    -webkit-user-select: none;
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「groupphoto-field」這個元素的樣式 */
 .groupphoto-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
 }
 
+/* 「groupphoto-tip」這個元素的樣式 */
 .groupphoto-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 相片區：牆面底色的取景框；.groupphoto-photo--wall 是成功之後「掛上牆」的樣子（木框） */
 .groupphoto-photo {
-    position: absolute;
-    overflow: hidden;
-    background: var(--gph-bg);
-    border: 4px solid var(--c-ink-soft);
-    border-radius: var(--r-md);
-    box-sizing: border-box;
-    transition: transform 0.5s ease-out, border-color 0.5s, box-shadow 0.5s;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    background: var(--gph-bg);                          /* 背景：主題變數 --gph-bg */
+    border: 4px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    transition: transform 0.5s ease-out, border-color 0.5s, box-shadow 0.5s;  /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.5s ease-out, border-color 0.5s, box-sh */
 }
 
 /* 掛上牆：邊框寬度不變（不然相片區變小、邊邊的人會被切到），改用外圈陰影當木框 */
 .groupphoto-photo--wall {
-    transform: scale(0.94);
-    border-color: var(--gph-frame);
-    box-shadow: 0 0 0 8px var(--gph-frame), var(--shadow-pop);
+    transform: scale(0.94);                             /* 變形：縮放 0.94 倍 */
+    border-color: var(--gph-frame);                     /* 邊框顏色：主題變數 --gph-frame */
+    box-shadow: 0 0 0 8px var(--gph-frame), var(--shadow-pop);  /* 方塊陰影（立體感） */
 }
 
 /* 取景框的四個角 */
 .groupphoto-corner {
-    position: absolute;
-    width: 26px;
-    height: 26px;
-    border: 0 solid var(--gph-corner);
-    pointer-events: none;
-    z-index: 3;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 26px;                                        /* 寬度：26px */
+    height: 26px;                                       /* 高度：26px */
+    border: 0 solid var(--gph-corner);                  /* 邊框（粗細、線型、顏色）：0 solid 主題變數 --gph-corner */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 3;                                         /* 疊放順序：數字越大越在上面（3） */
 }
 
+/* 「groupphoto-corner」的「tl」變化版的樣式 */
 .groupphoto-corner--tl {
-    left: 8px;
-    top: 8px;
+    left: 8px;                                          /* 離左邊 8px */
+    top: 8px;                                           /* 離上邊 8px */
     border-left-width: 4px;
     border-top-width: 4px;
 }
 
+/* 「groupphoto-corner」的「tr」變化版的樣式 */
 .groupphoto-corner--tr {
-    right: 8px;
-    top: 8px;
+    right: 8px;                                         /* 離右邊 8px */
+    top: 8px;                                           /* 離上邊 8px */
     border-right-width: 4px;
     border-top-width: 4px;
 }
 
+/* 「groupphoto-corner」的「bl」變化版的樣式 */
 .groupphoto-corner--bl {
-    left: 8px;
-    bottom: 8px;
+    left: 8px;                                          /* 離左邊 8px */
+    bottom: 8px;                                        /* 離下邊 8px */
     border-left-width: 4px;
     border-bottom-width: 4px;
 }
 
+/* 「groupphoto-corner」的「br」變化版的樣式 */
 .groupphoto-corner--br {
-    right: 8px;
-    bottom: 8px;
+    right: 8px;                                         /* 離右邊 8px */
+    bottom: 8px;                                        /* 離下邊 8px */
     border-right-width: 4px;
     border-bottom-width: 4px;
 }
 
 /* 一個人 */
 .groupphoto-person {
-    position: absolute;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
 }
 
+/* 「groupphoto-face」這個元素的樣式 */
 .groupphoto-face {
-    display: block;
-    overflow: visible;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
 }
 
+/* 「groupphoto-shirt」這個元素的樣式 */
 .groupphoto-shirt {
-    stroke: var(--c-ink-soft);
-    stroke-width: 2;
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
 }
 
+/* 「groupphoto-shirt0」這個元素的樣式 */
 .groupphoto-shirt0 {
-    fill: var(--gph-shirt0);
+    fill: var(--gph-shirt0);                            /* SVG 圖形的填色：主題變數 --gph-shirt0 */
 }
 
+/* 「groupphoto-shirt1」這個元素的樣式 */
 .groupphoto-shirt1 {
-    fill: var(--gph-shirt1);
+    fill: var(--gph-shirt1);                            /* SVG 圖形的填色：主題變數 --gph-shirt1 */
 }
 
+/* 「groupphoto-shirt2」這個元素的樣式 */
 .groupphoto-shirt2 {
-    fill: var(--gph-shirt2);
+    fill: var(--gph-shirt2);                            /* SVG 圖形的填色：主題變數 --gph-shirt2 */
 }
 
+/* 「groupphoto-shirt3」這個元素的樣式 */
 .groupphoto-shirt3 {
-    fill: var(--gph-shirt3);
+    fill: var(--gph-shirt3);                            /* SVG 圖形的填色：主題變數 --gph-shirt3 */
 }
 
+/* 「groupphoto-shirt4」這個元素的樣式 */
 .groupphoto-shirt4 {
-    fill: var(--gph-shirt4);
+    fill: var(--gph-shirt4);                            /* SVG 圖形的填色：主題變數 --gph-shirt4 */
 }
 
+/* 「groupphoto-neck」這個元素；「groupphoto-head」這個元素的樣式 */
 .groupphoto-neck,
 .groupphoto-head {
-    stroke: var(--c-ink-soft);
-    stroke-width: 2;
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
 }
 
+/* 「groupphoto-skin0」這個元素的樣式 */
 .groupphoto-skin0 {
-    fill: var(--gph-skin0);
+    fill: var(--gph-skin0);                             /* SVG 圖形的填色：主題變數 --gph-skin0 */
 }
 
+/* 「groupphoto-skin1」這個元素的樣式 */
 .groupphoto-skin1 {
-    fill: var(--gph-skin1);
+    fill: var(--gph-skin1);                             /* SVG 圖形的填色：主題變數 --gph-skin1 */
 }
 
+/* 「groupphoto-skin2」這個元素的樣式 */
 .groupphoto-skin2 {
-    fill: var(--gph-skin2);
+    fill: var(--gph-skin2);                             /* SVG 圖形的填色：主題變數 --gph-skin2 */
 }
 
+/* 「groupphoto-hair0」這個元素的樣式 */
 .groupphoto-hair0 {
-    fill: var(--gph-hair0);
+    fill: var(--gph-hair0);                             /* SVG 圖形的填色：主題變數 --gph-hair0 */
 }
 
+/* 「groupphoto-hair1」這個元素的樣式 */
 .groupphoto-hair1 {
-    fill: var(--gph-hair1);
+    fill: var(--gph-hair1);                             /* SVG 圖形的填色：主題變數 --gph-hair1 */
 }
 
+/* 「groupphoto-hair2」這個元素的樣式 */
 .groupphoto-hair2 {
-    fill: var(--gph-hair2);
+    fill: var(--gph-hair2);                             /* SVG 圖形的填色：主題變數 --gph-hair2 */
 }
 
+/* 「groupphoto-hair3」這個元素的樣式 */
 .groupphoto-hair3 {
-    fill: var(--gph-hair3);
+    fill: var(--gph-hair3);                             /* SVG 圖形的填色：主題變數 --gph-hair3 */
 }
 
 /* 眼睛：睜眼＝白眼球＋黑瞳孔；閉眼（或低頭）＝一條往下彎的線 */
 .groupphoto-eye-w {
-    fill: var(--gph-eyewhite);
-    stroke: var(--c-ink-soft);
-    stroke-width: 1.5;
+    fill: var(--gph-eyewhite);                          /* SVG 圖形的填色：主題變數 --gph-eyewhite */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 1.5;                                  /* SVG 線條粗細：1.5 */
 }
 
+/* 「groupphoto-pupil」這個元素的樣式 */
 .groupphoto-pupil {
-    fill: var(--gph-pupil);
+    fill: var(--gph-pupil);                             /* SVG 圖形的填色：主題變數 --gph-pupil */
 }
 
+/* 「groupphoto-lid」這個元素的樣式 */
 .groupphoto-lid {
-    display: none;
-    fill: none;
-    stroke: var(--gph-pupil);
-    stroke-width: 3.5;
-    stroke-linecap: round;
+    display: none;                                      /* 不顯示（也不佔位置） */
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--gph-pupil);                           /* SVG 線條顏色：主題變數 --gph-pupil */
+    stroke-width: 3.5;                                  /* SVG 線條粗細：3.5 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「groupphoto-mouth」這個元素的樣式 */
 .groupphoto-mouth {
-    fill: none;
-    stroke: var(--gph-pupil);
-    stroke-width: 3;
-    stroke-linecap: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--gph-pupil);                           /* SVG 線條顏色：主題變數 --gph-pupil */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「groupphoto-eye-open」這個元素；「groupphoto-eye-open」這個元素的樣式 */
 .groupphoto-person--closed .groupphoto-eye-open,
 .groupphoto-person--phone .groupphoto-eye-open {
-    display: none;
+    display: none;                                      /* 不顯示（也不佔位置） */
 }
 
+/* 「groupphoto-lid」這個元素；「groupphoto-lid」這個元素的樣式 */
 .groupphoto-person--closed .groupphoto-lid,
 .groupphoto-person--phone .groupphoto-lid {
-    display: inline;
+    display: inline;                                    /* 行內元素（像文字） */
 }
 
+/* 「groupphoto-phone」這個元素的樣式 */
 .groupphoto-phone {
-    fill: var(--gph-phone);
-    stroke: var(--c-ink-soft);
-    stroke-width: 2;
+    fill: var(--gph-phone);                             /* SVG 圖形的填色：主題變數 --gph-phone */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
 }
 
+/* 「groupphoto-phone-screen」這個元素的樣式 */
 .groupphoto-phone-screen {
-    fill: var(--gph-phone-screen);
+    fill: var(--gph-phone-screen);                      /* SVG 圖形的填色：主題變數 --gph-phone-screen */
 }
 
 /* 洗照片：閃光、閉眼的人圈紅圈 */
 .groupphoto-flash {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--gph-flash);
-    opacity: 0;
-    pointer-events: none;
-    z-index: 5;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    background: var(--gph-flash);                       /* 背景：主題變數 --gph-flash */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 5;                                         /* 疊放順序：數字越大越在上面（5） */
 }
 
+/* 「groupphoto-flash」的「go」變化版的樣式 */
 .groupphoto-flash--go {
-    animation: groupphoto-flash 0.4s ease-out;
+    animation: groupphoto-flash 0.4s ease-out;          /* 播放動畫（名稱、時間、緩動、次數）：groupphoto-flash 0.4s ease-out */
 }
 
+/* 動畫 groupphoto-flash：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes groupphoto-flash {
     0% {
-        opacity: 0.95;
+        opacity: 0.95;                                  /* 透明度 0.95（1＝完全不透明、0＝全透明） */
     }
 
     100% {
-        opacity: 0;
+        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
     }
 }
 
+/* 「groupphoto-ring」這個元素的樣式 */
 .groupphoto-ring {
-    position: absolute;
-    border: 5px solid var(--gph-ring);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 4;
-    animation: groupphoto-ring 0.25s ease-out;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    border: 5px solid var(--gph-ring);                  /* 邊框（粗細、線型、顏色）：5px solid 主題變數 --gph-ring */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 4;                                         /* 疊放順序：數字越大越在上面（4） */
+    animation: groupphoto-ring 0.25s ease-out;          /* 播放動畫（名稱、時間、緩動、次數）：groupphoto-ring 0.25s ease-out */
 }
 
+/* 動畫 groupphoto-ring：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes groupphoto-ring {
     from {
-        transform: scale(1.5);
-        opacity: 0;
+        transform: scale(1.5);                          /* 變形：縮放 1.5 倍 */
+        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
     }
 
     to {
-        transform: scale(1);
-        opacity: 1;
+        transform: scale(1);                            /* 變形：縮放 1 倍 */
+        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
     }
 }
 
+/* 「groupphoto-info」這個元素的樣式 */
 .groupphoto-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「groupphoto-info」在「正確（成功）時」的樣子的樣式 */
 .groupphoto-info--ok {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「groupphoto-info」在「錯誤（失敗）時」的樣子的樣式 */
 .groupphoto-info--bad {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
+/* 「groupphoto-shutter」這個元素的樣式 */
 .groupphoto-shutter {
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }

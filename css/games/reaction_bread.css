@@ -8,150 +8,152 @@
 /* ═══ 秤麵包重量（.bread-）═══ */
 /* 資訊文字 */
 .bread-info {
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: 700;
-    color: var(--c-ink);
-    min-height: 2.6em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: 700;                                   /* 字重（粗細）700（400 一般、700 粗體） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    min-height: 2.6em;                                  /* 最小高度：2.6em */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
 }
 
 /* 切對（綠） */
 .bread-info--ok {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
 /* 切錯（橘） */
 .bread-info--bad {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
 /* 場地 */
 .bread-zone {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    touch-action: none;
-    user-select: none;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
 }
 
 /* SVG */
 .bread-svg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
 /* 麵包 */
 .bread-bread {
-    fill: #E7BC72;
-    stroke: #B5762A;
-    stroke-width: 5px;
-    stroke-linejoin: round;
+    fill: #E7BC72;                                      /* SVG 圖形的填色：#E7BC72 */
+    stroke: #B5762A;                                    /* SVG 線條顏色：#B5762A */
+    stroke-width: 5px;                                  /* SVG 線條粗細：5px */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
 /* 刀線（虛線） */
 .bread-knife__line {
-    stroke: var(--c-bad);
-    stroke-width: 3px;
-    stroke-dasharray: 8 5;
+    stroke: var(--c-bad);                               /* SVG 線條顏色：主題變數 --c-bad */
+    stroke-width: 3px;                                  /* SVG 線條粗細：3px */
+    stroke-dasharray: 8 5;                              /* SVG 虛線的「畫／空」長度：8 5 */
 }
 
 /* 刀把 */
 .bread-knife__grip {
-    fill: var(--c-bad);
+    fill: var(--c-bad);                                 /* SVG 圖形的填色：主題變數 --c-bad */
 }
 
 /* 秤的底座 */
 .bread-sbase {
-    fill: #D8D2C0;
-    stroke: var(--c-ink-soft);
-    stroke-width: 4px;
+    fill: #D8D2C0;                                      /* SVG 圖形的填色：#D8D2C0 */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 4px;                                  /* SVG 線條粗細：4px */
 }
 
 /* 秤的液晶螢幕 */
 .bread-slcd {
-    fill: #263238;
+    fill: #263238;                                      /* SVG 圖形的填色：#263238 */
 }
 
 /* 秤上的克數 */
 .bread-sgram {
-    fill: #8FA29A;
-    font-size: 34px;
-    font-weight: 800;
-    font-family: var(--font-ui);
-    font-variant-numeric: tabular-nums;
+    fill: #8FA29A;                                      /* SVG 圖形的填色：#8FA29A */
+    font-size: 34px;                                    /* 字級：34px */
+    font-weight: 800;                                   /* 字重（粗細）800（400 一般、700 粗體） */
+    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
 }
 
 /* 秤顯示綠字 */
 .bread-sgram--on {
-    fill: #7CFF9B;
+    fill: #7CFF9B;                                      /* SVG 圖形的填色：#7CFF9B */
 }
 
 /* 判定結果（秤的正下方）：第一行「差距 X.XXXX%」，第二行大大的「過關！／沒過關」。平常透明，秤重時才顯示 */
 .bread-vd {
-    fill: var(--c-ink);
-    font-size: 30px;
-    font-weight: 800;
-    font-family: var(--font-ui);
-    font-variant-numeric: tabular-nums;
-    opacity: 0;
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
+    font-size: 30px;                                    /* 字級：30px */
+    font-weight: 800;                                   /* 字重（粗細）800（400 一般、700 粗體） */
+    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
 }
 
+/* 「bread-vd」在「開啟（亮起）時」的樣子的樣式 */
 .bread-vd--on {
-    opacity: 1;
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }
 
+/* 「bread-vw」這個元素的樣式 */
 .bread-vw {
-    font-size: 44px;
-    font-weight: 900;
-    font-family: var(--font-ui);
-    opacity: 0;
+    font-size: 44px;                                    /* 字級：44px */
+    font-weight: 900;                                   /* 字重（粗細）900（400 一般、700 粗體） */
+    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
 }
 
 /* 過關（綠） */
 .bread-vw--ok {
-    fill: var(--c-ok);
-    opacity: 1;
+    fill: var(--c-ok);                                  /* SVG 圖形的填色：主題變數 --c-ok */
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }
 
 /* 沒過關（橘） */
 .bread-vw--bad {
-    fill: var(--c-bad);
-    opacity: 1;
+    fill: var(--c-bad);                                 /* SVG 圖形的填色：主題變數 --c-bad */
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }
 
 /* 切下來的麵包片 */
 .bread-splat {
-    fill: #B9B29C;
-    stroke: var(--c-ink-soft);
-    stroke-width: 3px;
+    fill: #B9B29C;                                      /* SVG 圖形的填色：#B9B29C */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 3px;                                  /* SVG 線條粗細：3px */
 }
 
 /* 下方控制列 */
 .bread-ctrl {
-    flex: none;
-    display: flex;
-    gap: var(--sp-3);
+    flex: none;                                         /* 彈性縮放：none */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
 }
 
 /* 左右微調 */
 .bread-ctrl .bread-nudge {
-    flex: 0 0 22%;
-    width: auto;
-    font-size: var(--fs-lg);
+    flex: 0 0 22%;                                      /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 22%（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    width: auto;                                        /* 寬度：auto */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
 }
 
 /* 「切」按鈕 */
 .bread-ctrl .bread-cut {
-    flex: 1 1 auto;
-    width: auto;
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    width: auto;                                        /* 寬度：auto */
 }

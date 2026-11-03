@@ -6,198 +6,226 @@
 
 /* ═══ 照樣調一杯（.layerdrink-）═══ */
 .layerdrink-stage {
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「layerdrink-field」這個元素的樣式 */
 .layerdrink-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
 }
 
+/* 「layerdrink-tip」這個元素的樣式 */
 .layerdrink-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 兩個杯子：左邊示範杯（看完會收走）、右邊你的杯子 */
 .layerdrink-box {
-    position: absolute;
-    width: 170px;
-    transition: opacity 0.4s;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 170px;                                       /* 寬度：170px */
+    transition: opacity 0.4s;                           /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.4s */
 }
 
+/* 「layerdrink-box」在「隱藏時」的樣子的樣式 */
 .layerdrink-box--hide {
-    opacity: 0;
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
 }
 
+/* 「layerdrink-cap」這個元素的樣式 */
 .layerdrink-cap {
-    color: var(--c-ink);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    text-align: center;
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 232px;
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    text-align: center;                                 /* 文字置中 */
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 232px;                                         /* 離上邊 232px */
 }
 
+/* 「layerdrink-glass」這個元素的樣式 */
 .layerdrink-glass {
-    display: block;
-    overflow: visible;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
 }
 
+/* 「layerdrink-glass」裡面的「bg」部分的樣式 */
 .layerdrink-glass__bg {
-    fill: var(--lyd-glass);
-    opacity: 0.6;
+    fill: var(--lyd-glass);                             /* SVG 圖形的填色：主題變數 --lyd-glass */
+    opacity: 0.6;                                       /* 透明度 0.6（1＝完全不透明、0＝全透明） */
 }
 
+/* 「layerdrink-glass」裡面的「edge」部分的樣式 */
 .layerdrink-glass__edge {
-    fill: none;
-    stroke: var(--c-ink-soft);
-    stroke-width: 4;
-    stroke-linejoin: round;
-    opacity: 0.55;
-    pointer-events: none;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+    opacity: 0.55;                                      /* 透明度 0.55（1＝完全不透明、0＝全透明） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「layerdrink-glass」裡面的「foot」部分的樣式 */
 .layerdrink-glass__foot {
-    fill: var(--c-ink-soft);
+    fill: var(--c-ink-soft);                            /* SVG 圖形的填色：主題變數 --c-ink-soft */
 }
 
+/* 「layerdrink-layer」這個元素的樣式 */
 .layerdrink-layer {
-    fill: var(--lyd-c);
+    fill: var(--lyd-c);                                 /* SVG 圖形的填色：主題變數 --lyd-c */
 }
 
+/* 「layerdrink-stop」的「red」變化版的樣式 */
 .layerdrink-stop--red {
     stop-color: var(--lyd-red);
 }
 
+/* 「layerdrink-stop」的「yellow」變化版的樣式 */
 .layerdrink-stop--yellow {
     stop-color: var(--lyd-yellow);
 }
 
+/* 「layerdrink-stop」的「green」變化版的樣式 */
 .layerdrink-stop--green {
     stop-color: var(--lyd-green);
 }
 
+/* 「layerdrink-stop」的「blue」變化版的樣式 */
 .layerdrink-stop--blue {
     stop-color: var(--lyd-blue);
 }
 
+/* 「layerdrink-stop」的「purple」變化版的樣式 */
 .layerdrink-stop--purple {
     stop-color: var(--lyd-purple);
 }
 
+/* 「layerdrink-c」的「red」變化版的樣式 */
 .layerdrink-c--red {
-    --lyd-c: var(--lyd-red);
+    --lyd-c: var(--lyd-red);                            /* 自訂變數 --lyd-c（下面用 var(--lyd-c) 取用；可以由 JS 動態設定） */
 }
 
+/* 「layerdrink-c」的「yellow」變化版的樣式 */
 .layerdrink-c--yellow {
-    --lyd-c: var(--lyd-yellow);
+    --lyd-c: var(--lyd-yellow);                         /* 自訂變數 --lyd-c（下面用 var(--lyd-c) 取用；可以由 JS 動態設定） */
 }
 
+/* 「layerdrink-c」的「green」變化版的樣式 */
 .layerdrink-c--green {
-    --lyd-c: var(--lyd-green);
+    --lyd-c: var(--lyd-green);                          /* 自訂變數 --lyd-c（下面用 var(--lyd-c) 取用；可以由 JS 動態設定） */
 }
 
+/* 「layerdrink-c」的「blue」變化版的樣式 */
 .layerdrink-c--blue {
-    --lyd-c: var(--lyd-blue);
+    --lyd-c: var(--lyd-blue);                           /* 自訂變數 --lyd-c（下面用 var(--lyd-c) 取用；可以由 JS 動態設定） */
 }
 
+/* 「layerdrink-c」的「purple」變化版的樣式 */
 .layerdrink-c--purple {
-    --lyd-c: var(--lyd-purple);
+    --lyd-c: var(--lyd-purple);                         /* 自訂變數 --lyd-c（下面用 var(--lyd-c) 取用；可以由 JS 動態設定） */
 }
 
 /* 倒下來的細線：從你的杯口上方一直到液面 */
 .layerdrink-stream {
-    position: absolute;
-    left: 82px;
-    top: -46px;
-    width: 7px;
-    height: 0;
-    background: var(--lyd-c);
-    border-radius: var(--r-pill);
-    opacity: 0;
-    transition: opacity 0.1s;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 82px;                                         /* 離左邊 82px */
+    top: -46px;                                         /* 離上邊 -46px */
+    width: 7px;                                         /* 寬度：7px */
+    height: 0;                                          /* 高度：0 */
+    background: var(--lyd-c);                           /* 背景：主題變數 --lyd-c */
+    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    transition: opacity 0.1s;                           /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.1s */
 }
 
+/* 「layerdrink-stream」在「開啟（亮起）時」的樣子的樣式 */
 .layerdrink-stream--on {
-    height: 150px;
-    opacity: 0.95;
+    height: 150px;                                      /* 高度：150px */
+    opacity: 0.95;                                      /* 透明度 0.95（1＝完全不透明、0＝全透明） */
 }
 
+/* 「layerdrink-info」這個元素的樣式 */
 .layerdrink-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 五個瓶子：按住倒、放手停；按對時瓶子往右傾 */
 .layerdrink-bottles {
-    position: absolute;
-    left: 8px;
-    right: 8px;
-    bottom: 10px;
-    display: flex;
-    justify-content: space-between;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 8px;                                          /* 離左邊 8px */
+    right: 8px;                                         /* 離右邊 8px */
+    bottom: 10px;                                       /* 離下邊 10px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    justify-content: space-between;                     /* 頭尾貼邊，剩下的空間平均分給中間 */
 }
 
+/* 「layerdrink-bottle」這個元素的樣式 */
 .layerdrink-bottle {
-    width: 84px;
-    cursor: pointer;
-    touch-action: none;
-    transform-origin: 50% 100%;
-    transition: transform 0.15s;
+    width: 84px;                                        /* 寬度：84px */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    transform-origin: 50% 100%;                         /* 變形的基準點：50% 100% */
+    transition: transform 0.15s;                        /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.15s */
 }
 
+/* 「layerdrink-bottle」的「pour」變化版的樣式 */
 .layerdrink-bottle--pour {
-    transform: rotate(-24deg) translateY(-8px);
+    transform: rotate(-24deg) translateY(-8px);         /* 變形：旋轉 -24deg 垂直移動 -8px */
 }
 
+/* 「layerdrink-bottle」裡面的「neck」部分的樣式 */
 .layerdrink-bottle__neck {
-    width: 24px;
-    height: 30px;
-    margin: 0 auto;
-    background: var(--lyd-c);
-    border-radius: var(--r-sm) var(--r-sm) 0 0;
-    border: 3px solid var(--c-ink-soft);
-    border-bottom: none;
+    width: 24px;                                        /* 寬度：24px */
+    height: 30px;                                       /* 高度：30px */
+    margin: 0 auto;                                     /* 外距（margin，與別的元素的距離）：上下 0、左右 auto */
+    background: var(--lyd-c);                           /* 背景：主題變數 --lyd-c */
+    border-radius: var(--r-sm) var(--r-sm) 0 0;         /* 圓角：主題變數 --r-sm 主題變數 --r-sm 0 0 */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-bottom: none;                                /* 下邊框：沒有 */
 }
 
+/* 「layerdrink-bottle」裡面的「body」部分的樣式 */
 .layerdrink-bottle__body {
-    height: 110px;
-    background: var(--lyd-c);
-    border: 3px solid var(--c-ink-soft);
-    border-radius: var(--r-md);
-    color: var(--c-card);
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
-    line-height: 110px;
-    text-align: center;
+    height: 110px;                                      /* 高度：110px */
+    background: var(--lyd-c);                           /* 背景：主題變數 --lyd-c */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    color: var(--c-card);                               /* 文字顏色：主題變數 --c-card */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 110px;                                 /* 行高：110px（文字每一行佔的高度） */
+    text-align: center;                                 /* 文字置中 */
 }
 
+/* 「layerdrink-bottle」裡面的「body」部分的樣式 */
 .layerdrink-c--yellow .layerdrink-bottle__body {
-    color: var(--c-ink);
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「layerdrink-bottle」裡面的「body」部分的樣式 */
 .layerdrink-bottle--ok .layerdrink-bottle__body {
-    outline: 5px solid var(--c-ok);
+    outline: 5px solid var(--c-ok);                     /* 外框線：5px solid 主題變數 --c-ok */
 }
 
+/* 「layerdrink-bottle」裡面的「body」部分的樣式 */
 .layerdrink-bottle--bad .layerdrink-bottle__body {
-    outline: 5px solid var(--c-bad-light);
+    outline: 5px solid var(--c-bad-light);              /* 外框線：5px solid 主題變數 --c-bad-light */
 }

@@ -19,11 +19,15 @@
    · 揭曉：失敗時用慢動作重播球路（0.35 倍），畫出球最後的位置和好球帶，並寫出早了／晚了幾秒或「這是壞球」。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'homerun'：選單、成績、存檔都靠它；樣式在 css/games/reaction_homerun.css，裡面的 class 名稱一律以 homerun- 開頭。 */
     'use strict';
 
-    var ID = 'homerun';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'homerun';                                 /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -63,7 +67,7 @@
     /* 出一球：{ level, type（'fast'｜'change'｜'curve'）, strike（最後是不是好球）, F（最後位置）, S（曲球一開始飛向的點；其他球等於 F）,
                  tFly（出手到好球帶的秒數）, win（打擊窗口 ±秒）, dist（壞球離邊緣多遠；好球為 0）} */
     function makePitch(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var isBall = rand() < pBallFor(level), type = 'fast', F, S, dist = 0;
         if (isBall) {
             dist = Math.round((ballDistFor(level) + kit.randFloat(0, BALL_DIST_MAX, rand)) * 1000) / 1000;
@@ -110,6 +114,7 @@
     }
     /* 重播要花多久（毫秒）：飛行時間 ÷ 重播速度，夾在 REPLAY_MIN_MS～REPLAY_MAX_MS */
     function replayMs(p) { return Math.round(Math.max(REPLAY_MIN_MS, Math.min(REPLAY_MAX_MS, p.tFly / REPLAY_SPEED * 1000))); }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 18) return '強打者！';
         if (n >= 10) return '好眼力！';
@@ -118,6 +123,7 @@
         return '好球才揮、壞球不揮！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'homerun-stage',
@@ -144,11 +150,13 @@
         return { svg: svg, arm: inner, ball: ball };
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var p = makePitch(level, api.rand);
-        api.info = p;
-        console.log('[全壘打] 第 ' + level + ' 關：' + (p.strike ? '好球' : '壞球（離邊緣 ' + p.dist.toFixed(2) + '）') + '、' + { fast: '速球', change: '變速球', curve: '曲球' }[p.type] + '；飛行 ' + p.tFly + ' 秒、窗口 ±' + p.win + ' 秒；落點 (' + p.F.x + ', ' + p.F.y + ')' + (p.type === 'curve' ? '，一開始飛向 (' + p.S.x + ', ' + p.S.y + ')' : ''));
+        api.info = p;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[全壘打] 第 ' + level + ' 關：' + (p.strike ? '好球' : '壞球（離邊緣 ' + p.dist.toFixed(2) + '）') + '、' + { fast: '速球', change: '變速球', curve: '曲球' }[p.type] + '；飛行 ' + p.tFly + ' 秒、窗口 ±' + p.win + ' 秒；落點 (' + p.F.x + ', ' + p.F.y + ')' + (p.type === 'curve' ? '，一開始飛向 (' + p.S.x + ', ' + p.S.y + ')' : ''));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var zw = Math.round(W * ZONE_W), zh = Math.round(zw * ZONE_ASPECT), geom = { V: { x: W / 2, y: Math.round(H * 0.2) + 36 }, C: { x: W / 2, y: Math.round(H * 0.6) }, hw: zw / 2, hh: zh / 2 };
@@ -169,7 +177,7 @@
         /* 球棒（從打者後方看：在畫面下方，揮棒時繞著底部轉） */
         var bat = h('div', { 'class': 'homerun-bat' }); bat.style.cssText = 'left:' + Math.round(W * 0.5 - 18) + 'px;top:' + Math.round(H - 150) + 'px;'; bat.appendChild(h('div', { 'class': 'homerun-bat__in' })); field.appendChild(bat);
         var info = h('div', { 'class': 'qz-note homerun-info', text: '' }); field.appendChild(info);
-        if (level === 1 && kit.once('homerun.hint')) kit.hintOn(stage, null, { mode: 'tap', x: geom.C.x, y: geom.C.y + geom.hh + 70, delay: 700, text: '球到框框裡，點一下' });
+        if (level === 1 && kit.once('homerun.hint')) kit.hintOn(stage, null, { mode: 'tap', x: geom.C.x, y: geom.C.y + geom.hh + 70, delay: 700, text: '球到框框裡，點一下' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
         var phase = 'windup', t0 = performance.now(), tRel = t0 + WINDUP_MS, swingT = null, hist = [];
         function setBall(el, b, a) { el.style.cssText = 'display:block;left:' + (b.x - b.r).toFixed(1) + 'px;top:' + (b.y - b.r).toFixed(1) + 'px;width:' + (2 * b.r).toFixed(1) + 'px;height:' + (2 * b.r).toFixed(1) + 'px;' + (a != null ? 'opacity:' + a + ';' : ''); }
@@ -246,20 +254,24 @@
         }
         /* 驗證用：好球 → 在球到達的瞬間揮；壞球 → 不揮（讓球飛過去就過關）；可以重複呼叫（只排一次） */
         var armed = false;
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { if (armed || api.over || (phase !== 'windup' && phase !== 'fly')) return; armed = true; if (p.strike) api.after(Math.max(0, Math.round(WINDUP_MS + p.tFly * 1000 - (performance.now() - t0))), swing); };
         api.wrong = function () { if (armed || api.over || (phase !== 'windup' && phase !== 'fly')) return; armed = true; api.after(Math.max(0, Math.round(WINDUP_MS + (p.strike ? p.tFly * 1000 - Math.max(250, p.win * 3000 + 120) : p.tFly * 1000) - (performance.now() - t0))), swing); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '全壘打',
         rule: '投手投球，**球進到好球帶（畫面中央的方框）的那一瞬間，點一下畫面揮棒**。**壞球（偏出好球帶）不要揮**，好球沒揮也算失敗。小心：**變速球出手的動作一模一樣，但是飛得比較慢**，要多等一下；曲球一開始像好球，最後才彎出好球帶。越後面，球越快、打擊的時間窗越窄、壞球越貼近好球帶。失敗時會用慢動作重播球路，寫出早了或晚了幾秒。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             flyFor: flyFor, winFor: winFor, pBallFor: pBallFor, ballDistFor: ballDistFor, pChangeFor: pChangeFor, pCurveFor: pCurveFor, inZone: inZone, outsidePoint: outsidePoint, makePitch: makePitch, targetAt: targetAt, easeU: easeU, ballAt: ballAt, judgeSwing: judgeSwing, whyText: whyText, replayMs: replayMs, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, FLY_S: FLY_S, CHANGE_X: CHANGE_X, HIT_WIN: HIT_WIN, P_BALL: P_BALL, BALL_DIST: BALL_DIST, BALL_DIST_MAX: BALL_DIST_MAX, P_CHANGE: P_CHANGE, P_CURVE: P_CURVE, STRIKE_EDGE: STRIKE_EDGE, WINDUP_MS: WINDUP_MS, AFTER_MS: AFTER_MS, REPLAY_SPEED: REPLAY_SPEED, REPLAY_MIN_MS: REPLAY_MIN_MS, REPLAY_MAX_MS: REPLAY_MAX_MS, CURVE_POW: CURVE_POW, BALL_R: BALL_R, ZONE_W: ZONE_W, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

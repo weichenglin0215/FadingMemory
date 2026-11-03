@@ -13,11 +13,15 @@
    · 答錯／逾時：算法拆開給你看（10:45 先加 2 小時 ＝ 12:45，再加 15 分鐘 ＝ 13:00）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'timeafter'：選單、成績、存檔都靠它；樣式在 css/games/reaction_timeafter.css，裡面的 class 名稱一律以 timeafter- 開頭。 */
     'use strict';
 
-    var ID = 'timeafter';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'timeafter';                               /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾題之後難度到頂 */
@@ -74,7 +78,7 @@
     }
     /* 出一題：{ kind, start, delta, ans, decoy, decoyKind, text, explain } */
     function makeQuestion(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var step = level >= STEP1_FROM ? 1 : 5;
         for (var tr = 0; tr < 500; tr++) {
             var kind = rand() < beforeP(level) ? 'before' : 'after';
@@ -107,6 +111,7 @@
         }
         return rand() < 0.5;
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 40) return '時間管理大師！';
         if (n >= 25) return '算時間很快！';
@@ -115,6 +120,7 @@
         return '六十進位要小心，再來一次！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         var hist = [];
         kit.run(root, ctx, {
@@ -127,13 +133,15 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api, hist) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeQuestion(level, api.rand);
         var truthLeft = nextLeft(hist, api.rand);
         hist.push(truthLeft);
-        api.info = q;
-        console.log('[幾點幾分後] 第 ' + level + ' 題：' + q.text + ' 正確 ' + fmtTime(q.ans) + '，錯誤 ' + fmtTime(q.decoy) + '（' + q.decoyKind + '），限時 ' + ansMs(level) + ' ms');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[幾點幾分後] 第 ' + level + ' 題：' + q.text + ' 正確 ' + fmtTime(q.ans) + '，錯誤 ' + fmtTime(q.decoy) + '（' + q.decoyKind + '），限時 ' + ansMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var qEl = h('div', { 'class': 'timeafter-mid timeafter-q', text: q.text });
         var reveal = h('div', { 'class': 'qz-note timeafter-reveal' });
@@ -143,9 +151,10 @@
             return { text: fmtTime(m), kind: 'sky', cls: 'timeafter-btn', onTap: function () { judge(m); } };
         }), { h: 120 });
         var bRight = grid.btns[truthLeft ? 0 : 1];
-        api.timer(ansMs(level), function () { judge(null); });
-        if (level === 1 && kit.once('timeafter.hint')) kit.hintOn(stage, bRight, { mode: 'tap', delay: 500, text: '請點擊時間' });
+        api.timer(ansMs(level), function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
+        if (level === 1 && kit.once('timeafter.hint')) kit.hintOn(stage, bRight, { mode: 'tap', delay: 500, text: '請點擊時間' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
+        /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(m) {
             if (api.over) return;
             var ok = m === q.ans;
@@ -158,20 +167,24 @@
                 q.explain
             ] });
         }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.ans); };
         api.wrong = function () { judge(q.decoy); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '幾點幾分後',
         rule: '生活裡的時間算術，例如「現在是 10:45，過了 135 分鐘是幾點？」\n下面有兩個時間，**點出正確的那一個**；錯的那個是常見的算錯方式。後面還會**「倒推」出門時間**。答錯或來不及就結束，看你能連續答對幾題。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             ansMs: ansMs, fmtTime: fmtTime, beforeP: beforeP, explain: explain, decoyCandidates: decoyCandidates, makeQuestion: makeQuestion, nextLeft: nextLeft, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, ANS_S: ANS_S, D_MIN: D_MIN, D_MAX: D_MAX, STEP1_FROM: STEP1_FROM, BEFORE_FROM: BEFORE_FROM, BEFORE_P: BEFORE_P, MAX_LEVEL: MAX_LEVEL, SAME_MAX: SAME_MAX
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

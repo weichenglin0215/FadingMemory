@@ -6,277 +6,302 @@
 
 /* ═══ 全壘打（.homerun-）═══ */
 .homerun-stage {
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「homerun-field」這個元素的樣式 */
 .homerun-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
-    touch-action: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
 /* 提示放在卡片底的小框裡（背景是深色的觀眾席，直接寫字看不清楚） */
 .homerun-tip {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    top: 8px;
-    padding: 2px var(--sp-3);
-    background: var(--c-card);
-    border: 3px solid var(--c-ink-soft);
-    border-radius: var(--r-md);
-    text-align: center;
-    pointer-events: none;
-    z-index: 5;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 12px;                                         /* 離左邊 12px */
+    right: 12px;                                        /* 離右邊 12px */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 2px var(--sp-3);                           /* 內縮（padding，內容跟邊框的距離）：上 2px、左右 主題變數、下 --sp-3 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 5;                                         /* 疊放順序：數字越大越在上面（5） */
 }
 
 /* 球場：上面的觀眾席（兩種顏色的點點）、下面的草地、投手丘 */
 .homerun-crowd {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    height: 36%;
-    background-color: var(--hmr-crowd-bg);
-    background-image: radial-gradient(circle, var(--hmr-crowd-dot1) 22%, transparent 24%), radial-gradient(circle, var(--hmr-crowd-dot2) 22%, transparent 24%);
-    background-size: 22px 22px;
-    background-position: 0 0, 11px 11px;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    height: 36%;                                        /* 高度：36% */
+    background-color: var(--hmr-crowd-bg);              /* 背景：主題變數 --hmr-crowd-bg */
+    background-image: radial-gradient(circle, var(--hmr-crowd-dot1) 22%, transparent 24%), radial-gradient(circle, var(--hmr-crowd-dot2) 22%, transparent 24%);  /* 背景圖／漸層 */
+    background-size: 22px 22px;                         /* 背景圖大小：22px 22px */
+    background-position: 0 0, 11px 11px;                /* 背景圖位置：0 0, 11px 11px */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「homerun-grass」這個元素的樣式 */
 .homerun-grass {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--hmr-grass);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    background: var(--hmr-grass);                       /* 背景：主題變數 --hmr-grass */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「homerun-mound」這個元素的樣式 */
 .homerun-mound {
-    position: absolute;
-    width: 120px;
-    height: 30px;
-    background: var(--hmr-mound);
-    border-radius: 50%;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 120px;                                       /* 寬度：120px */
+    height: 30px;                                       /* 高度：30px */
+    background: var(--hmr-mound);                       /* 背景：主題變數 --hmr-mound */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 好球帶：半透明的方框；本壘板在它下面 */
 .homerun-zone {
-    position: absolute;
-    box-sizing: border-box;
-    border: 4px solid var(--hmr-zone-line);
-    background: var(--hmr-zone-fill);
-    border-radius: var(--r-sm);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    border: 4px solid var(--hmr-zone-line);             /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --hmr-zone-line */
+    background: var(--hmr-zone-fill);                   /* 背景：主題變數 --hmr-zone-fill */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「homerun-plate」這個元素的樣式 */
 .homerun-plate {
-    position: absolute;
-    width: 72px;
-    height: 44px;
-    background: var(--hmr-plate);
-    clip-path: polygon(0 0, 100% 0, 100% 55%, 50% 100%, 0 55%);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 72px;                                        /* 寬度：72px */
+    height: 44px;                                       /* 高度：44px */
+    background: var(--hmr-plate);                       /* 背景：主題變數 --hmr-plate */
+    clip-path: polygon(0 0, 100% 0, 100% 55%, 50% 100%, 0 55%);  /* 裁成指定形狀：polygon(0 0, 100% 0, 100% 55%, 50% 100%, */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 投手 */
 .homerun-pitcher {
-    position: absolute;
-    display: block;
-    overflow: visible;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    display: block;                                     /* 獨佔一整行的區塊 */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「homerun-leg」這個元素的樣式 */
 .homerun-leg {
-    fill: var(--hmr-leg);
+    fill: var(--hmr-leg);                               /* SVG 圖形的填色：主題變數 --hmr-leg */
 }
 
+/* 「homerun-body」這個元素的樣式 */
 .homerun-body {
-    fill: var(--hmr-body);
-    stroke: var(--c-ink-soft);
-    stroke-width: 3;
+    fill: var(--hmr-body);                              /* SVG 圖形的填色：主題變數 --hmr-body */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「homerun-head」這個元素的樣式 */
 .homerun-head {
-    fill: var(--hmr-skin);
-    stroke: var(--c-ink-soft);
-    stroke-width: 3;
+    fill: var(--hmr-skin);                              /* SVG 圖形的填色：主題變數 --hmr-skin */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「homerun-cap」這個元素的樣式 */
 .homerun-cap {
-    fill: var(--hmr-cap);
-    stroke: var(--c-ink-soft);
-    stroke-width: 2;
+    fill: var(--hmr-cap);                               /* SVG 圖形的填色：主題變數 --hmr-cap */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
 }
 
+/* 「homerun-arm」裡面的「in」部分的樣式 */
 .homerun-arm__in {
-    transform-origin: 0 0;
+    transform-origin: 0 0;                              /* 變形的基準點：0 0 */
 }
 
+/* 「homerun-armrect」這個元素的樣式 */
 .homerun-armrect {
-    fill: var(--hmr-body);
-    stroke: var(--c-ink-soft);
-    stroke-width: 3;
+    fill: var(--hmr-body);                              /* SVG 圖形的填色：主題變數 --hmr-body */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「homerun-handball」這個元素的樣式 */
 .homerun-handball {
-    fill: var(--hmr-ball);
-    stroke: var(--hmr-seam);
-    stroke-width: 2;
+    fill: var(--hmr-ball);                              /* SVG 圖形的填色：主題變數 --hmr-ball */
+    stroke: var(--hmr-seam);                            /* SVG 線條顏色：主題變數 --hmr-seam */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
 }
 
 /* 球與殘影 */
 .homerun-ball,
 .homerun-trail {
-    position: absolute;
-    box-sizing: border-box;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, var(--hmr-ball), var(--hmr-ball-shade));
-    border: 2px solid var(--hmr-seam);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    background: radial-gradient(circle at 35% 30%, var(--hmr-ball), var(--hmr-ball-shade));  /* 漸層背景 */
+    border: 2px solid var(--hmr-seam);                  /* 邊框（粗細、線型、顏色）：2px solid 主題變數 --hmr-seam */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「homerun-ball」這個元素的樣式 */
 .homerun-ball {
-    z-index: 3;
+    z-index: 3;                                         /* 疊放順序：數字越大越在上面（3） */
 }
 
+/* 「homerun-trail」這個元素的樣式 */
 .homerun-trail {
-    z-index: 2;
+    z-index: 2;                                         /* 疊放順序：數字越大越在上面（2） */
 }
 
+/* 「homerun-ball」的「hr」變化版的樣式 */
 .homerun-ball--hr {
-    transition: transform 1.3s ease-out, opacity 1.3s ease-in;
+    transition: transform 1.3s ease-out, opacity 1.3s ease-in;  /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 1.3s ease-out, opacity 1.3s ease-in */
 }
 
+/* 「homerun-ball」的「go」變化版的樣式 */
 .homerun-ball--go {
-    transform: translate(120px, -520px) scale(0.3);
-    opacity: 0;
+    transform: translate(120px, -520px) scale(0.3);     /* 變形：移動 120px, -520px 縮放 0.3 倍 */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
 }
 
 /* 球棒：從打者後方看，在畫面下方；揮棒時繞著底部轉 */
 .homerun-bat {
-    position: absolute;
-    width: 36px;
-    height: 140px;
-    transform-origin: 50% 100%;
-    transform: rotate(-38deg);
-    transition: transform 0.14s ease-out;
-    pointer-events: none;
-    z-index: 4;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 36px;                                        /* 寬度：36px */
+    height: 140px;                                      /* 高度：140px */
+    transform-origin: 50% 100%;                         /* 變形的基準點：50% 100% */
+    transform: rotate(-38deg);                          /* 變形：旋轉 -38deg */
+    transition: transform 0.14s ease-out;               /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.14s ease-out */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 4;                                         /* 疊放順序：數字越大越在上面（4） */
 }
 
+/* 「homerun-bat」的「swing」變化版的樣式 */
 .homerun-bat--swing {
-    transform: rotate(62deg);
+    transform: rotate(62deg);                           /* 變形：旋轉 62deg */
 }
 
+/* 「homerun-bat」裡面的「in」部分的樣式 */
 .homerun-bat__in {
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, var(--hmr-bat-lite), var(--hmr-bat));
-    border: 3px solid var(--c-ink-soft);
-    border-radius: 18px 18px 8px 8px;
-    box-sizing: border-box;
-    clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%);
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
+    background: linear-gradient(90deg, var(--hmr-bat-lite), var(--hmr-bat));  /* 漸層背景 */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-radius: 18px 18px 8px 8px;                   /* 圓角：18px 18px 8px 8px */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%);  /* 裁成指定形狀：polygon(0 0, 100% 0, 80% 100%, 20% 100%) */
 }
 
 /* 說明 */
 .homerun-info {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    bottom: 14px;
-    padding: var(--sp-1) var(--sp-3);
-    background: var(--c-card);
-    border: 3px solid var(--c-ink-soft);
-    border-radius: var(--r-md);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
-    z-index: 6;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 12px;                                         /* 離左邊 12px */
+    right: 12px;                                        /* 離右邊 12px */
+    bottom: 14px;                                       /* 離下邊 14px */
+    padding: var(--sp-1) var(--sp-3);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-1、下 主題變數、左 --sp-3 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 6;                                         /* 疊放順序：數字越大越在上面（6） */
 }
 
+/* 「homerun-info」這個元素的樣式 */
 .homerun-info:empty {
-    display: none;
+    display: none;                                      /* 不顯示（也不佔位置） */
 }
 
+/* 「homerun-info」在「正確（成功）時」的樣子的樣式 */
 .homerun-info--ok {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「homerun-info」在「錯誤（失敗）時」的樣子的樣式 */
 .homerun-info--bad {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
 /* 全壘打的大字 */
 .homerun-hr {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 34%;
-    text-align: center;
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-black);
-    color: var(--hmr-hr);
-    text-shadow: 0 3px 0 var(--c-card), 0 0 14px var(--c-card);
-    opacity: 0;
-    transform: scale(0.4);
-    transition: transform 0.45s cubic-bezier(0.2, 1.5, 0.4, 1), opacity 0.2s;
-    pointer-events: none;
-    z-index: 5;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 34%;                                           /* 離上邊 34% */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--hmr-hr);                               /* 文字顏色：主題變數 --hmr-hr */
+    text-shadow: 0 3px 0 var(--c-card), 0 0 14px var(--c-card);  /* 文字陰影 */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    transform: scale(0.4);                              /* 變形：縮放 0.4 倍 */
+    transition: transform 0.45s cubic-bezier(0.2, 1.5, 0.4, 1), opacity 0.2s;  /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.45s cubic-bezier(0.2, 1.5, 0.4, 1), op */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 5;                                         /* 疊放順序：數字越大越在上面（5） */
 }
 
+/* 「homerun-hr」在「顯示時」的樣子的樣式 */
 .homerun-hr--show {
-    opacity: 1;
-    transform: scale(1);
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
+    transform: scale(1);                                /* 變形：縮放 1 倍 */
 }
 
 /* 重播時：球最後的位置（綠圈＝好球、紅圈＝壞球）、你揮棒的時間點 */
 .homerun-final {
-    position: absolute;
-    width: 60px;
-    height: 60px;
-    box-sizing: border-box;
-    border: 5px solid var(--hmr-final-ok);
-    border-radius: 50%;
-    opacity: 0;
-    pointer-events: none;
-    z-index: 1;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 60px;                                        /* 寬度：60px */
+    height: 60px;                                       /* 高度：60px */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    border: 5px solid var(--hmr-final-ok);              /* 邊框（粗細、線型、顏色）：5px solid 主題變數 --hmr-final-ok */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 1;                                         /* 疊放順序：數字越大越在上面（1） */
 }
 
+/* 「homerun-final」的「ball」變化版的樣式 */
 .homerun-final--ball {
-    border-color: var(--hmr-final-bad);
+    border-color: var(--hmr-final-bad);                 /* 邊框顏色：主題變數 --hmr-final-bad */
 }
 
+/* 「homerun-final」在「顯示時」的樣子的樣式 */
 .homerun-final--show {
-    opacity: 1;
-    animation: homerun-pop 0.3s ease-out;
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
+    animation: homerun-pop 0.3s ease-out;               /* 播放動畫（名稱、時間、緩動、次數）：homerun-pop 0.3s ease-out */
 }
 
+/* 動畫 homerun-pop：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes homerun-pop {
     from {
-        transform: scale(2);
+        transform: scale(2);                            /* 變形：縮放 2 倍 */
     }
 
     to {
-        transform: scale(1);
+        transform: scale(1);                            /* 變形：縮放 1 倍 */
     }
 }
 
+/* 「homerun-swingmark」這個元素的樣式 */
 .homerun-swingmark {
-    position: absolute;
-    width: 44px;
-    height: 44px;
-    box-sizing: border-box;
-    border: 4px dashed var(--hmr-swing);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 3;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 44px;                                        /* 寬度：44px */
+    height: 44px;                                       /* 高度：44px */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    border: 4px dashed var(--hmr-swing);                /* 邊框（粗細、線型、顏色）：4px dashed 主題變數 --hmr-swing */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 3;                                         /* 疊放順序：數字越大越在上面（3） */
 }

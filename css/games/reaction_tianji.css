@@ -5,142 +5,160 @@
    ═══════════════════════════════════════ */
 
 .tianji-wrap {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding-top: 10px;
-    box-sizing: border-box;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: 8px;                                           /* 子元素之間的空隙：8px */
+    padding-top: 10px;                                  /* 上方內縮：10px */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
 }
 
+/* 「tianji-goal」這個元素的樣式 */
 .tianji-goal {
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-orange);
-    text-align: center;
-    padding: 0 10px;
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-orange);                             /* 文字顏色：主題變數 --c-orange */
+    text-align: center;                                 /* 文字置中 */
+    padding: 0 10px;                                    /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 10px */
 }
 
+/* 「tianji-label」這個元素的樣式 */
 .tianji-label {
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    margin-top: 6px;
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    margin-top: 6px;                                    /* 上外距（跟上面的元素距離）：6px */
 }
 
+/* 「tianji-label」的「best」變化版的樣式 */
 .tianji-label--best {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「tianji-row」這個元素的樣式 */
 .tianji-row {
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-    width: 100%;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: 6px;                                           /* 子元素之間的空隙：6px */
+    width: 100%;                                        /* 寬度：100% */
 }
 
 /* 兩排馬中間的場次與勝負 */
 .tianji-row--marks {
-    gap: 6px;
+    gap: 6px;                                           /* 子元素之間的空隙：6px */
 }
 
+/* 「tianji-mark」這個元素的樣式 */
 .tianji-mark {
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    color: var(--c-ink-soft);
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
+/* 「tianji-mark」在「勝利時」的樣子的樣式 */
 .tianji-mark--win {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「tianji-mark」在「輸的時候」的樣子的樣式 */
 .tianji-mark--lose {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
 /* 一匹馬：上面馬的圖示、下面戰力數字 */
 .tianji-horse {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    padding: 6px 0;
-    border-radius: var(--r-sm);
-    border: 3px solid var(--c-ink);
-    background: var(--c-card);
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    padding: 6px 0;                                     /* 內縮（padding，內容跟邊框的距離）：上下 6px、左右 0 */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    border: 3px solid var(--c-ink);                     /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    touch-action: manipulation;                         /* 關掉雙擊放大，點擊反應更快 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「tianji-horse」在「屬於對方時」的樣子的樣式 */
 .tianji-horse--them {
-    background: var(--c-orange-soft);
-    border-color: var(--c-orange);
+    background: var(--c-orange-soft);                   /* 背景：主題變數 --c-orange-soft */
+    border-color: var(--c-orange);                      /* 邊框顏色：主題變數 --c-orange */
 }
 
+/* 「tianji-horse」在「屬於玩家（你）時」的樣子的樣式 */
 .tianji-horse--mine {
-    background: var(--c-ok-soft);
-    border-color: var(--c-ok);
+    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
 }
 
+/* 「tianji-horse」在「被選中時」的樣子的樣式 */
 .tianji-horse--sel {
-    background: var(--c-yellow);
-    border-color: var(--c-ink);
-    transform: translateY(-8px);
+    background: var(--c-yellow);                        /* 背景：主題變數 --c-yellow */
+    border-color: var(--c-ink);                         /* 邊框顏色：主題變數 --c-ink */
+    transform: translateY(-8px);                        /* 變形：垂直移動 -8px */
 }
 
+/* 「tianji-horse」在「勝利時」的樣子的樣式 */
 .tianji-horse--win {
-    border-color: var(--c-ok);
-    background: var(--c-ok-light);
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
+    background: var(--c-ok-light);                      /* 背景：主題變數 --c-ok-light */
 }
 
+/* 「tianji-horse」在「輸的時候」的樣子的樣式 */
 .tianji-horse--lose {
-    border-color: var(--c-bad);
-    background: var(--c-bad-soft);
-    opacity: 0.8;
+    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    opacity: 0.8;                                       /* 透明度 0.8（1＝完全不透明、0＝全透明） */
 }
 
+/* 「tianji-horse」的「best」變化版的樣式 */
 .tianji-horse--best {
-    background: var(--c-card);
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
 }
 
+/* 「tianji-horse」裡面的「icon」部分的樣式 */
 .tianji-horse__icon {
-    font-size: var(--fs-lg);
-    line-height: 1.1;
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    line-height: 1.1;                                   /* 行高：1.1（文字每一行佔的高度） */
 }
 
+/* 「tianji-horse」裡面的「n」部分的樣式 */
 .tianji-horse__n {
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「tianji-result」這個元素的樣式 */
 .tianji-result {
-    min-height: 40px;
-    padding: 0 14px;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink);
-    text-align: center;
-    line-height: 1.4;
+    min-height: 40px;                                   /* 最小高度：40px */
+    padding: 0 14px;                                    /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 14px */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    text-align: center;                                 /* 文字置中 */
+    line-height: 1.4;                                   /* 行高：1.4（文字每一行佔的高度） */
 }
 
+/* 「tianji-btns」這個元素的樣式 */
 .tianji-btns {
-    position: absolute;
-    left: 2%;
-    right: 2%;
-    bottom: 0;
-    display: flex;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 2%;                                           /* 離左邊 2% */
+    right: 2%;                                          /* 離右邊 2% */
+    bottom: 0;                                          /* 離下邊 0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
 }
 
+/* 「tianji-btn」這個元素的樣式 */
 .tianji-btn {
-    flex: 1 1 0;
-    height: 72px;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    padding: 0;
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    height: 72px;                                       /* 高度：72px */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
 }

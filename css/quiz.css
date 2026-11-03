@@ -15,117 +15,118 @@
    每張卡片 flex:1 1 0 平分整個高度，所以不管有幾張都剛好塞滿、不用捲動。 */
 /* ─── 關卡列表：8 張卡片平均分配整個高度 ─── */
 .lv-list {
-    flex: 1 1 auto;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-2);
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
 }
 
 /* 單張關卡卡片：內容（編號、名稱、成績）水平排列，align-items:center 讓它們垂直置中 */
 .lv {
-    flex: 1 1 0;
-    min-height: 0;
-    display: flex;
-    align-items: center;
-    gap: var(--sp-3);
-    padding: 0 var(--sp-3);
-    background: var(--c-card-alt);
-    border: var(--bd);
-    border-radius: var(--r-md);
-    text-align: left;
-    transition: transform 0.1s ease;
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    text-align: left;                                   /* 文字靠左 */
+    transition: transform 0.1s ease;                    /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.1s ease */
 }
 
+/* 「lv」這個元素，按下去時的樣式 */
 .lv:active {
-    transform: scale(0.98);
+    transform: scale(0.98);                             /* 變形：縮放 0.98 倍 */
 }
 
 /* 左邊的圓形編號（border-radius:50% 做成圓形） */
 .lv__num {
-    flex: 0 0 58px;
-    height: 58px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--c-orange);
-    color: var(--c-on-accent);
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
+    flex: 0 0 58px;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 58px（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    height: 58px;                                       /* 高度：58px */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    background: var(--c-orange);                        /* 背景：主題變數 --c-orange */
+    color: var(--c-on-accent);                          /* 文字顏色：主題變數 --c-on-accent */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
 /* 中間的文字區：關卡名稱在上、說明標籤在下 */
 .lv__main {
-    flex: 1 1 auto;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-width: 0;                                       /* 最小寬度：0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
 }
 
 /* 關卡名稱 */
 .lv__name {
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    line-height: 1.15;
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1.15;                                  /* 行高：1.15（文字每一行佔的高度） */
 }
 
 /* 說明標籤：單行顯示，太長用 ... 省略（nowrap + overflow:hidden + ellipsis 三個要一起用） */
 .lv__tag {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    line-height: 1.25;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    line-height: 1.25;                                  /* 行高：1.25（文字每一行佔的高度） */
+    white-space: nowrap;                                /* 文字不換行 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    text-overflow: ellipsis;                            /* 文字太長時，用「…」顯示 */
 }
 
 /* 右邊的成績區（答對題數、最佳紀錄），靠右對齊 */
 .lv__side {
-    flex: 0 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    line-height: 1.2;
+    flex: 0 0 auto;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: flex-end;                              /* 子元素靠交叉方向的終點（橫排時靠下） */
+    line-height: 1.2;                                   /* 行高：1.2（文字每一行佔的高度） */
 }
 
 /* 答對題數（藍色） */
 .lv__count {
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    color: var(--c-blue);
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-blue);                               /* 文字顏色：主題變數 --c-blue */
 }
 
 /* 最佳紀錄（綠色） */
 .lv__best {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    color: var(--c-green);
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-green);                              /* 文字顏色：主題變數 --c-green */
 }
 
 /* ─── 紙條 ─── */
 /* 紙條頂端的標題列：標題在左，頁碼在右 */
 .note-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: space-between;                     /* 頭尾貼邊，剩下的空間平均分給中間 */
 }
 
 /* 紙條本文：吃掉剩下空間、超出的部分裁掉（超長文字由 JS 的 UI.paginate 分頁處理） */
 .note--page {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* ─── 題目 ─── */
 /* 答題畫面頂端：題號在左，標籤（例如「回想題」）在右 */
 .q-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sp-2);
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: space-between;                     /* 頭尾貼邊，剩下的空間平均分給中間 */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
 }
 
 /* 跨關回想題：標籤閃爍，提醒玩家這是回想題（顏色是 .pill--recall，定義在
@@ -137,57 +138,60 @@
    瀏覽器仍會照百分比數值本身去決定播放順序（0%→50%→65%→100%），不是照
    寫在檔案裡的先後順序，這是刻意的寫法，不是筆誤。 */
 .pill--blink {
-    animation: pill-blink 1.5s ease-in-out infinite;
+    animation: pill-blink 1.5s ease-in-out infinite;    /* 播放動畫（名稱、時間、緩動、次數）：pill-blink 1.5s ease-in-out infinite */
 }
 
+/* 動畫 pill-blink：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes pill-blink {
 
     0%,
     100% {
-        opacity: 1;
+        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
     }
 
     65% {
-        opacity: 1;
+        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
     }
 
     50% {
-        opacity: 0.4;
+        opacity: 0.4;                                   /* 透明度 0.4（1＝完全不透明、0＝全透明） */
     }
 }
 
+/* 條件式樣式：使用者在系統設定裡選了「減少動態效果」時，才套用下面這組規則 */
 @media (prefers-reduced-motion: reduce) {
+    /* 「pill」的「blink」變化版的樣式 */
     .pill--blink {
-        animation: none;
+        animation: none;                                /* 播放動畫（名稱、時間、緩動、次數）：none */
     }
 }
 
 /* 題目文字區：吃掉剩下空間，內容垂直水平置中 */
 .q-text {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 var(--sp-2);
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    padding: 0 var(--sp-2);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-2 */
 }
 
 /* 題目文字本身，字級用 --fs-question，JS 的 UI.fit 會依字數自動縮小 */
 .q-text__inner {
-    width: 100%;
-    font-size: var(--fs-question);
-    font-weight: var(--fw-black);
-    line-height: 1.3;
-    text-align: center;
+    width: 100%;                                        /* 寬度：100% */
+    font-size: var(--fs-question);                      /* 字級：主題變數 --fs-question */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1.3;                                   /* 行高：1.3（文字每一行佔的高度） */
+    text-align: center;                                 /* 文字置中 */
 }
 
 /* 下方的四個選項：垂直排列，高度固定不拉伸（flex:0 0 auto） */
 .q-opts {
-    flex: 0 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-3);
+    flex: 0 0 auto;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
 }
 
 /* ─── 答錯的回饋：題目區改成「正確答案＋為什麼」，選項變矮，下方多一顆「下一題」───
@@ -199,55 +203,55 @@
    底下所有用到 var(--opt-h) 的地方（包含 .opt）都會自動變矮，不用另外
    寫一條 `.is-feedback .opt { height: 76px }` 去覆寫。 */
 .screen.is-feedback {
-    --opt-h: 76px;
+    --opt-h: 76px;                                      /* 自訂變數 --opt-h（下面用 var(--opt-h) 取用；可以由 JS 動態設定） */
 }
 
 /* 答錯回饋的外層：題目、正確答案、原因由上往下排列 */
 .fb {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 0.35em;
-    text-align: center;
-    line-height: 1.3;
+    width: 100%;                                        /* 寬度：100% */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    gap: 0.35em;                                        /* 子元素之間的空隙：0.35em */
+    text-align: center;                                 /* 文字置中 */
+    line-height: 1.3;                                   /* 行高：1.3（文字每一行佔的高度） */
 }
 
 /* 被問的問題（縮小一點，灰色） */
 .fb__q {
-    font-size: 0.8em;
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    font-size: 0.8em;                                   /* 字級：0.8em */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 正確答案（綠色，前面有打勾圖示） */
 .fb__ans {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.3em;
-    font-size: 1.15em;
-    font-weight: var(--fw-black);
-    color: var(--c-ok);
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: 0.3em;                                         /* 子元素之間的空隙：0.3em */
+    font-size: 1.15em;                                  /* 字級：1.15em */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
 /* 圖示不被壓縮 */
 .fb__ans .icon {
-    flex: 0 0 auto;
+    flex: 0 0 auto;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
 }
 
 /* 為什麼會選錯的原因（橘色） */
 .fb__why {
-    font-weight: var(--fw-bold);
-    color: var(--c-bad);
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
 /* ─── 結果 ─── */
 /* 結果頁頂部：圓環在左、評語在右 */
 .res-top {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-4);
-    padding: var(--sp-2) var(--sp-3);
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-4);                                   /* 子元素之間的空隙：主題變數 --sp-4 */
+    padding: var(--sp-2) var(--sp-3);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-2、下 主題變數、左 --sp-3 */
 }
 
 /* ─── 結果 ───
@@ -257,161 +261,166 @@
    外觀）。rotate(-90deg)：SVG 圓弧預設從 3 點鐘方向開始畫，轉 -90 度後改成
    從 12 點鐘方向（正上方）開始畫，看起來才像「時鐘指針式」的進度圓環。 */
 .ring {
-    position: relative;
-    flex: 0 0 176px;
-    height: 176px;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 0 0 176px;                                    /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 176px（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    height: 176px;                                      /* 高度：176px */
 }
 
+/* 「svg」標籤的樣式 */
 .ring svg {
-    width: 100%;
-    height: 100%;
-    transform: rotate(-90deg);
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
+    transform: rotate(-90deg);                          /* 變形：旋轉 -90deg */
 }
 
+/* 「ring」裡面的「num」部分的樣式 */
 .ring__num {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    line-height: 1.1;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    line-height: 1.1;                                   /* 行高：1.1（文字每一行佔的高度） */
 }
 
+/* 「ring」裡面的「pct」部分的樣式 */
 .ring__pct {
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
+/* 「ring」裡面的「frac」部分的樣式 */
 .ring__frac {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 評語區 */
 .res-msg {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-2);
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
 }
 
 /* 評語大標題 */
 .res-msg__title {
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
-    line-height: var(--lh-tight);
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: var(--lh-tight);                       /* 行高：主題變數 --lh-tight（文字每一行佔的高度） */
 }
 
 /* 星星（1～3 顆）；fill:currentColor 讓 SVG 星星填滿目前文字顏色 */
 .res-msg__stars {
-    display: flex;
-    gap: var(--sp-1);
-    font-size: 44px;
-    color: var(--c-yellow);
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    gap: var(--sp-1);                                   /* 子元素之間的空隙：主題變數 --sp-1 */
+    font-size: 44px;                                    /* 字級：44px */
+    color: var(--c-yellow);                             /* 文字顏色：主題變數 --c-yellow */
 }
 
+/* 「icon」這個元素的樣式 */
 .res-msg__stars .icon {
-    fill: currentColor;
+    fill: currentColor;                                 /* SVG 圖形的填色：currentColor */
 }
 
 /* 沒得到的星星用灰色 */
 .res-msg__stars .off {
-    color: var(--bd-c);
+    color: var(--bd-c);                                 /* 文字顏色：主題變數 --bd-c */
 }
 
 /* 混淆類型分析：最容易被騙的 2～3 種（九種混淆類型見 README／
    note/FadingMemory記憶混淆說明.md，這裡只管排版，判斷邏輯在 js/quiz.js） */
 /* 「混淆分析」面板：外框 */
 .conf {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-2);
-    padding: var(--sp-3);
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-md);
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
+    padding: var(--sp-3);                               /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --sp-3 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
 }
 
 /* 面板標題列：標題在左，「看更多」在右 */
 .conf__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sp-2);
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: space-between;                     /* 頭尾貼邊，剩下的空間平均分給中間 */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
 }
 
 /* 面板標題 */
 .conf__title {
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    line-height: var(--lh-tight);
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: var(--lh-tight);                       /* 行高：主題變數 --lh-tight（文字每一行佔的高度） */
 }
 
 /* 「看更多」按鈕（膠囊形：border-radius 用 --r-pill） */
 .conf__more {
-    flex: 0 0 auto;
-    min-height: 52px;
-    padding: 0 var(--sp-3);
-    border: var(--bd-w) solid var(--c-blue);
-    border-radius: var(--r-pill);
-    background: var(--c-blue-soft);
-    color: var(--c-blue);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-black);
+    flex: 0 0 auto;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 52px;                                   /* 最小高度：52px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    border: var(--bd-w) solid var(--c-blue);            /* 邊框（粗細、線型、顏色）：主題變數 --bd-w solid 主題變數 --c-blue */
+    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill */
+    background: var(--c-blue-soft);                     /* 背景：主題變數 --c-blue-soft */
+    color: var(--c-blue);                               /* 文字顏色：主題變數 --c-blue */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
 /* 單一混淆類型的列：左側粗橘色邊條 + 淡橘底 */
 .conf__row {
-    padding: var(--sp-2) var(--sp-3);
-    border-left: 8px solid var(--c-orange);
-    border-radius: var(--r-sm);
-    background: var(--c-orange-soft);
+    padding: var(--sp-2) var(--sp-3);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-2、下 主題變數、左 --sp-3 */
+    border-left: 8px solid var(--c-orange);             /* 左邊框：8px solid 主題變數 --c-orange */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    background: var(--c-orange-soft);                   /* 背景：主題變數 --c-orange-soft */
 }
 
 /* 類型名稱與次數同一行，baseline 對齊文字基線 */
 .conf__line {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--sp-2);
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: baseline;                              /* 子元素的文字基準線對齊 */
+    justify-content: space-between;                     /* 頭尾貼邊，剩下的空間平均分給中間 */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
 }
 
 /* 類型名稱 */
 .conf__name {
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-orange);
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-orange);                             /* 文字顏色：主題變數 --c-orange */
 }
 
 /* 次數分數（例如 2/5） */
 .conf__frac {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    white-space: nowrap;
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    white-space: nowrap;                                /* 文字不換行 */
 }
 
 /* 類型說明 */
 .conf__desc {
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-tight);
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: var(--lh-tight);                       /* 行高：主題變數 --lh-tight（文字每一行佔的高度） */
 }
 
 /* 都沒有混淆時顯示的鼓勵訊息 */
 .conf__none {
-    flex: 1 1 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-green);
-    text-align: center;
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-green);                              /* 文字顏色：主題變數 --c-green */
+    text-align: center;                                 /* 文字置中 */
 }
 
 /* ─── 錯題回顧 ───
@@ -420,120 +429,121 @@
    原因（.rev__why，跟答題當下的回饋文字共用同一套理由文字）。 */
 /* 錯題回顧外層 */
 .rev {
-    flex: 1 1 auto;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-3);
-    padding: var(--sp-4);
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
+    padding: var(--sp-4);                               /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --sp-4 */
 }
 
 /* 題目區 */
 .rev__q {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
 }
 
 /* 題目文字 */
 .rev__q-inner {
-    width: 100%;
-    font-size: var(--fs-question);
-    font-weight: var(--fw-black);
-    line-height: 1.3;
-    text-align: center;
+    width: 100%;                                        /* 寬度：100% */
+    font-size: var(--fs-question);                      /* 字級：主題變數 --fs-question */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1.3;                                   /* 行高：1.3（文字每一行佔的高度） */
+    text-align: center;                                 /* 文字置中 */
 }
 
 /* 一行「你選的」或「正確的」 */
 .rev__line {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-3);
-    min-height: 80px;
-    padding: var(--sp-2) var(--sp-4);
-    border-radius: var(--r-md);
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-tight);
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
+    min-height: 80px;                                   /* 最小高度：80px */
+    padding: var(--sp-2) var(--sp-4);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-2、下 主題變數、左 --sp-4 */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: var(--lh-tight);                       /* 行高：主題變數 --lh-tight（文字每一行佔的高度） */
 }
 
 /* 圖示大小 */
 .rev__line .icon {
-    font-size: 40px;
+    font-size: 40px;                                    /* 字級：40px */
 }
 
 /* 你選的（紅色） */
 .rev__line--bad {
-    background: var(--c-bad-soft);
-    color: var(--c-bad);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
 /* 正確答案（綠色） */
 .rev__line--ok {
-    background: var(--c-ok-soft);
-    color: var(--c-ok);
+    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
 /* 小標籤（「你選了」「答案」） */
 .rev__label {
-    flex: 0 0 auto;
-    font-size: var(--fs-sm);
-    color: var(--c-ink-soft);
+    flex: 0 0 auto;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 答案文字 */
 .rev__value {
-    flex: 1 1 auto;
-    min-width: 0;
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-width: 0;                                       /* 最小寬度：0 */
 }
 
 /* 標籤列 */
 .rev__tags {
-    display: flex;
-    gap: var(--sp-2);
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
 }
 
 /* 為什麼選錯的說明 */
 .rev__why {
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-tight);
-    color: var(--c-bad);
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: var(--lh-tight);                       /* 行高：主題變數 --lh-tight（文字每一行佔的高度） */
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
 /* ─── 確認視窗 ─── */
 /* 確認視窗：蓋住整個畫面的半透明背景 */
 .confirm {
-    position: absolute;
-    inset: 0;
-    z-index: 20;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--sp-5);
-    background: rgba(74, 59, 30, 0.35);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    z-index: 20;                                        /* 疊放順序：數字越大越在上面（20） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    padding: var(--sp-5);                               /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --sp-5 */
+    background: rgba(74, 59, 30, 0.35);                 /* 背景：rgba(74, 59, 30, 0.35) */
 }
 
 /* 確認視窗卡片（white-space:pre-line 讓文字裡的 \n 變成真正換行） */
 .confirm__card {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-4);
-    padding: var(--sp-5) var(--sp-4) var(--sp-4);
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-pop);
-    text-align: center;
+    width: 100%;                                        /* 寬度：100% */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    gap: var(--sp-4);                                   /* 子元素之間的空隙：主題變數 --sp-4 */
+    padding: var(--sp-5) var(--sp-4) var(--sp-4);       /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-5、下 主題變數、左 --sp-4 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    box-shadow: var(--shadow-pop);                      /* 方塊陰影（立體感） */
+    text-align: center;                                 /* 文字置中 */
 }
 
+/* 「confirm」裡面的「text」部分的樣式 */
 .confirm__text {
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    line-height: var(--lh-body);
-    white-space: pre-line;
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    white-space: pre-line;                              /* 保留換行字元、其餘空白合併 */
 }

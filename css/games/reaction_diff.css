@@ -8,117 +8,117 @@
 /* ═══ 哪裡怪怪的（.diff-）═══ */
 /* 標題 */
 .diff-head {
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: 700;
-    color: var(--c-ink);
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: 700;                                   /* 字重（粗細）700（400 一般、700 粗體） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
 /* 標題主要文字 */
 .diff-head__main {
-    display: block;
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
 /* 標題次要文字 */
 .diff-head__sub {
-    display: block;
-    font-size: var(--fs-sm);
-    font-weight: 700;
-    color: var(--c-ink-soft);
+    display: block;                                     /* 獨佔一整行的區塊 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: 700;                                   /* 字重（粗細）700（400 一般、700 粗體） */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 警示色的次要文字 */
 .diff-head__sub--warn {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
 /* 圖片面板 */
 .diff-panel {
-    position: relative;
-    flex: 1 1 0;
-    min-height: 0;
-    overflow: hidden;
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    touch-action: none;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
 /* SVG */
 .diff-svg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
 /* 圖案 */
 .diff-shape {
-    stroke: rgba(0, 0, 0, 0.35);
-    stroke-width: 2px;
-    stroke-linejoin: round;
+    stroke: rgba(0, 0, 0, 0.35);                        /* SVG 線條顏色：rgba(0, 0, 0, 0.35) */
+    stroke-width: 2px;                                  /* SVG 線條粗細：2px */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
 /* 點擊熱區（透明但可點） */
 .diff-hit {
-    fill: transparent;
-    cursor: pointer;
+    fill: transparent;                                  /* SVG 圖形的填色：transparent */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
 }
 
 /* 標記圈（預設透明） */
 .diff-ring {
-    fill: none;
-    stroke: transparent;
-    stroke-width: 6px;
-    pointer-events: none;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: transparent;                                /* SVG 線條顏色：transparent */
+    stroke-width: 6px;                                  /* SVG 線條粗細：6px */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 找對（綠） */
 .diff-ring--ok {
-    stroke: var(--c-ok);
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
 }
 
 /* 點錯（橘） */
 .diff-ring--bad {
-    stroke: var(--c-bad);
+    stroke: var(--c-bad);                               /* SVG 線條顏色：主題變數 --c-bad */
 }
 
 /* 漏找的（黃色虛線） */
 .diff-ring--miss {
-    stroke: #F4C542;
-    stroke-dasharray: 10 6;
+    stroke: #F4C542;                                    /* SVG 線條顏色：#F4C542 */
+    stroke-dasharray: 10 6;                             /* SVG 虛線的「畫／空」長度：10 6 */
 }
 
 /* 「扣分」浮字：一開始透明，加 --on 才播放往上飄的動畫 */
 .diff-penalty {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 50%;
-    text-align: center;
-    font-size: var(--fs-xl);
-    font-weight: 800;
-    color: var(--c-bad);
-    text-shadow: 0 2px 0 #fff, 0 0 8px #fff;
-    opacity: 0;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 50%;                                           /* 離上邊 50% */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: 800;                                   /* 字重（粗細）800（400 一般、700 粗體） */
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
+    text-shadow: 0 2px 0 #fff, 0 0 8px #fff;            /* 文字陰影 */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 播放飄升動畫 */
 .diff-penalty--on {
-    animation: diff-pen 0.9s ease-out;
+    animation: diff-pen 0.9s ease-out;                  /* 播放動畫（名稱、時間、緩動、次數）：diff-pen 0.9s ease-out */
 }
 
 /* 飄升動畫：從原位不透明 → 往上 40px 並消失 */
 @keyframes diff-pen {
     0% {
-        opacity: 1;
-        transform: translateY(0);
+        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
+        transform: translateY(0);                       /* 變形：垂直移動 0 */
     }
 
     100% {
-        opacity: 0;
-        transform: translateY(-40px);
+        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
+        transform: translateY(-40px);                   /* 變形：垂直移動 -40px */
     }
 }

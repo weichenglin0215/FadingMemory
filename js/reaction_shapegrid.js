@@ -24,11 +24,15 @@
    · 求解器（solve／countSolutions）：每次挑「合法圖形最少的空格」先填（最少候選優先），卡住就退；數解最多數到 2 種、最多搜尋 NODE_LIMIT 步。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'shapegrid'：選單、成績、存檔都靠它；樣式在 css/games/reaction_shapegrid.css，裡面的 class 名稱一律以 shapegrid- 開頭。 */
     'use strict';
 
-    var ID = 'shapegrid';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'shapegrid';                               /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var STAGES = [                              /* to＝這個階段的最後一關；n＝邊長；diag＝連斜角也不能相鄰；extra＝比「剛好唯一」的最少個數多放幾個暖身的圖形：階段第一關 → 第 10 關（之後維持） */
@@ -49,6 +53,7 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function timeFor(level, empties) { return TIME_BASE + empties * kit.ramp(level, TIME_CELL[0], TIME_CELL[1], 30); }
+    /* 這一關屬於哪個難度階段：依關卡編號找出對應的設定（參數區的階段表） */
     function stageOf(level) {
         level = Math.max(1, level);
         var from = 1;
@@ -142,7 +147,7 @@
        做法：先隨機找一種合格擺法當答案 → 照亂數順序一個一個固定，直到整盤只剩這一種擺法 → 再把多餘的拿掉（最少個數）→
        最後依關卡多放 extra 個暖身的圖形（階段第一關最多，越後面越少）。 */
     function makePuzzle(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var s = stageOf(level), n = s.st.n, diag = !!s.st.diag, N = n * n, sol = null, k, tr;
         var empty = []; for (k = 0; k < N; k++) empty.push(-1);
         for (tr = 0; tr < 20 && !sol; tr++) sol = solve(empty, n, rand, NODE_LIMIT, diag).sol;
@@ -163,6 +168,7 @@
     }
     /* 違規說明的文字 */
     function whyText(v, g, n) { return (v.why === 'shape' ? '兩個都是' + SHAPES[shapeOf(g[v.a], n)] : '兩個都是' + COLORS[colorOf(g[v.a], n)]) + (v.diag ? '，斜角也不能相鄰' : '，不能相鄰'); }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 25) return '排列大師！';
         if (n >= 12) return '形狀顏色都顧到了！';
@@ -204,12 +210,14 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var pz = makePuzzle(level, api.rand), n = pz.n, N = n * n, diag = pz.diag;
         var tipDefault = diag ? '形狀一樣、顏色一樣的，上下左右、斜角都不能相鄰' : '形狀一樣、顏色一樣的，都不能相鄰';
-        api.info = pz;
-        console.log('[形色不相鄰] 第 ' + level + ' 關：' + n + '×' + n + (diag ? '（含斜角）' : '') + '，先放好 ' + pz.given.filter(function (v) { return v >= 0; }).length + ' 個');
+        api.info = pz;                                  /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[形色不相鄰] 第 ' + level + ' 關：' + n + '×' + n + (diag ? '（含斜角）' : '') + '，先放好 ' + pz.given.filter(function (v) { return v >= 0; }).length + ' 個');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
         var W = stage.clientWidth || 472, H = stage.clientHeight || 700;
         var chip = n >= 5 ? 52 : 60, perRow = Math.floor((W * 0.96 + 6) / (chip + 6)), trayRows = Math.ceil(N / perRow);
         var cell = Math.min(116, Math.floor((W * 0.92 - (n - 1) * 6) / n), Math.floor((H - trayRows * (chip + 6) - 150 - (n - 1) * 6) / n));
@@ -222,7 +230,7 @@
         var cells = [];
         for (var k = 0; k < N; k++) {
             var cl = h('div', { 'class': 'shapegrid-cell' });
-            (function (kk) { kit.onTap(cl, function () { tapCell(kk); }); })(k);
+            (function (kk) { kit.onTap(cl, function () { tapCell(kk); }); })(k);  /* 用立即執行函式存住這一次迴圈的變數（不這樣寫，每個元素點下去都會拿到迴圈結束時的值） */
             board.appendChild(cl); cells.push(cl);
         }
         var tip = h('div', { 'class': 'shapegrid-tip', text: tipDefault });
@@ -238,6 +246,7 @@
         wrap.appendChild(board); wrap.appendChild(tip); wrap.appendChild(tray); wrap.appendChild(tools);
         stage.appendChild(wrap);
 
+        /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() {
             var vs = violations(g, n, diag), bad = {};
             vs.forEach(function (v) { bad[v.a] = true; bad[v.b] = true; });
@@ -274,6 +283,7 @@
             paint();
             if (g.every(function (p) { return p >= 0; }) && !violations(g, n, diag).length) win();
         }
+        /* 提示：標出一個線索，並扣掉一次提示次數（次數上限在參數區的 HINTS） */
         function useHint() {
             if (solved || dead || hintsLeft <= 0) return;
             var r = solve(g, n, null, NODE_LIMIT, diag), k;
@@ -295,6 +305,7 @@
             flagged = k; paint();
             tip.textContent = '照現在這樣擺不完了，閃動的這一格先拿起來';
         }
+        /* 重來：把這一題恢復成剛開始的樣子 */
         function reset() {
             if (solved || dead) return;
             g = pz.given.map(function (p, q) { return hinted[q] ? g[q] : p; });
@@ -311,6 +322,7 @@
             kit.flash(stage, false, api.my);
             api.fail({ delay: FAIL_HOLD_MS, lines: ['時間到了'] });
         }
+        /* 過關：鎖住畫面、顯示成功效果，並呼叫 api.pass 進下一關（或結算） */
         function win() {
             api.stopTimer();
             solved = true; pick = -1; paint();
@@ -318,6 +330,7 @@
             kit.flash(stage, true, api.my);
             api.pass({ delay: PASS_DELAY_MS });
         }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { g = pz.sol.slice(); paint(); win(); };
         api.wrong = function () {           /* 驗證用：放一個跟鄰居衝突的 */
             for (var k = 0; k < N; k++) if (pz.given[k] < 0) {
@@ -329,20 +342,23 @@
         };
         api.state = function () { return { g: g.slice(), pick: pick, solved: solved, hintsLeft: hintsLeft, dead: dead }; };
         api.timeout = timeUp;
-        api.timer(Math.round(timeFor(level, pz.given.filter(function (v) { return v < 0; }).length) * 1000), timeUp);
+        api.timer(Math.round(timeFor(level, pz.given.filter(function (v) { return v < 0; }).length) * 1000), timeUp);  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         paint();
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '形色不相鄰',
         rule: '九宮格（之後是 16 格、25 格）。下面有一盒圖形，**每種形狀配每種顏色剛好一個**。把全部的圖形擺進格子：**形狀一樣或顏色一樣的兩個，不可以左右相鄰，也不可以上下相鄰**，後面的關卡**連斜角也不能相鄰**，隨手亂擺會卡死，要推理。**每一題的答案只有一種**，先放好的圖形（粗黑框）不能動。點下面的圖形，再點格子放進去；點自己放的圖形可以拿回來，違規的兩格會變紅。每一關有時間限制（上面的時間條，空格越多給的時間越長），時間到了也算失敗；全部擺完而且沒有違規就過關，成績是解開幾題。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             stageOf: stageOf, timeFor: timeFor, TIME_BASE: TIME_BASE, TIME_CELL: TIME_CELL, shapeOf: shapeOf, colorOf: colorOf, canTouch: canTouch, neighbors: neighbors, violations: violations, solve: solve, search: search, countSolutions: countSolutions, isUnique: isUnique,
             makePuzzle: makePuzzle, whyText: whyText, rating: rating, STAGES: STAGES, HINTS: HINTS, NODE_LIMIT: NODE_LIMIT, MAX_LEVEL: MAX_LEVEL, SHAPES: SHAPES, COLORS: COLORS
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

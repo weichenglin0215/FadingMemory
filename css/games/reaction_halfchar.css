@@ -7,98 +7,98 @@
 /* 半邊字：字被遮住一半，猜原本是哪個字。 */
 /* ═══ 半邊字（.hc-）═══ */
 .halfchar-head {
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink-soft);
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 題目提示文字 */
 .halfchar-prompt {
-    text-align: center;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
 /* 顯示被遮住的字的大框 */
 .halfchar-box {
-    flex: 1 1 0;
-    min-height: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    overflow: hidden;
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* 答對：框變綠 */
 .halfchar-box--ok {
-    background: var(--c-ok-soft);
-    border-color: var(--c-ok);
+    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
 }
 
 /* 答錯：框變橘 */
 .halfchar-box--bad {
-    background: var(--c-bad-soft);
-    border-color: var(--c-bad);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
 }
 
 /* 被遮住的大字（用宋體風格的 --font-note）。高關卡會用 transform 歪斜，揭曉時轉正（transition 讓轉正有動畫） */
 .halfchar-char {
-    font-family: var(--font-note);
-    font-size: 300px;
-    font-weight: 700;
-    line-height: 1;
-    color: var(--c-ink);
-    transition: transform 0.25s ease;
+    font-family: var(--font-note);                      /* 字型：主題變數 --font-note */
+    font-size: 300px;                                   /* 字級：300px */
+    font-weight: 700;                                   /* 字重（粗細）700（400 一般、700 粗體） */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    transition: transform 0.25s ease;                   /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.25s ease */
 }
 
 /* 下方的選項：4 個 2×2 格、5～6 個 3×2 格（欄數由 JS 依選項數設定，reaction_halfchar.js 的 next；兩種都是 2 列，高度一樣） */
 .halfchar-opts {
-    flex: none;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--sp-3);
+    flex: none;                                         /* 彈性縮放：none */
+    display: grid;                                      /* 格線排版：子元素排進格子 */
+    grid-template-columns: 1fr 1fr;                     /* 格線的欄（每欄的寬度）：1fr 1fr */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
 }
 
 /* 單個選項按鈕：固定高度、宋體大字 */
 .halfchar-opt {
-    height: 112px;
-    border: var(--bd);
-    border-radius: var(--r-md);
-    background: var(--c-card);
-    color: var(--c-ink);
-    font-family: var(--font-note);
-    font-size: 78px;
-    font-weight: 700;
-    line-height: 1;
+    height: 112px;                                      /* 高度：112px */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-family: var(--font-note);                      /* 字型：主題變數 --font-note */
+    font-size: 78px;                                    /* 字級：78px */
+    font-weight: 700;                                   /* 字重（粗細）700（400 一般、700 粗體） */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
 }
 
 /* 手指按著時變淺藍 */
 .halfchar-opt:active {
-    background: var(--c-blue-soft);
+    background: var(--c-blue-soft);                     /* 背景：主題變數 --c-blue-soft */
 }
 
 /* 選對（綠） */
 .halfchar-opt--ok {
-    background: var(--c-ok-soft);
-    border-color: var(--c-ok);
+    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
 }
 
 /* 選錯（橘） */
 .halfchar-opt--bad {
-    background: var(--c-bad-soft);
-    border-color: var(--c-bad);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
 }
 
 /* 底下的說明文字（答案揭曉時顯示偏旁解說） */
 .halfchar-tip {
-    min-height: 1.4em;
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink);
+    min-height: 1.4em;                                  /* 最小高度：1.4em */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }

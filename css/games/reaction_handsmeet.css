@@ -6,49 +6,55 @@
 
 /* ═══ 086 兩針重疊（.handsmeet-）═══ */
 .handsmeet-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
 }
 
+/* 「handsmeet-dial」這個元素的樣式 */
 .handsmeet-dial {
-    fill: var(--c-card);
-    stroke: var(--c-ink);
-    stroke-width: 5;
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 5;                                    /* SVG 線條粗細：5 */
 }
 
+/* 「handsmeet-hand1」這個元素的樣式 */
 .handsmeet-hand1 {
-    stroke: var(--c-blue);
-    stroke-width: 3;
-    stroke-linecap: round;
+    stroke: var(--c-blue);                              /* SVG 線條顏色：主題變數 --c-blue */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「handsmeet-hand2」這個元素的樣式 */
 .handsmeet-hand2 {
-    stroke: var(--c-orange);
-    stroke-width: 12;
-    stroke-linecap: round;
+    stroke: var(--c-orange);                            /* SVG 線條顏色：主題變數 --c-orange */
+    stroke-width: 12;                                   /* SVG 線條粗細：12 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「handsmeet-pin」這個元素的樣式 */
 .handsmeet-pin {
-    fill: var(--c-ink);
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
 }
 
+/* 「handsmeet-msg」這個元素的樣式 */
 .handsmeet-msg {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 500px;
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    line-height: var(--lh-body);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 500px;                                         /* 離上邊 500px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
 }
 
+/* 「handsmeet-btn」這個元素的樣式 */
 .handsmeet-btn {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: auto;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    width: auto;                                        /* 寬度：auto */
 }

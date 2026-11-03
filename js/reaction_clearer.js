@@ -21,11 +21,15 @@
    · 題庫 FAMILIES 依筆畫由少到多排好，第 N 關用第 N 組（需人工審校）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'clearer'：選單、成績、存檔都靠它；樣式在 css/games/reaction_clearer.css，裡面的 class 名稱一律以 clearer- 開頭。 */
     'use strict';
 
-    var ID = 'clearer';
-    var SCORE = { better: 'max', decimals: 4, format: '{v} 分', label: '累計分數', min: 0.0001, max: 1000 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'clearer';                                 /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 4, format: '{v} 分', label: '累計分數', min: 0.0001, max: 1000 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var LEVELS = 10;                            /* 固定幾關 */
@@ -56,11 +60,13 @@
         return g;
     }
     function clarityPct(level, ms) { return kit.clamp(ms / (limitS(level) * 1000), 0, 1) * 100; }
+    /* 出題函式：依關卡難度與亂數產生這一關的資料（純函式，不碰畫面，單元測試直接測它） */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var fam = FAMILIES[(level - 1) % FAMILIES.length], target = kit.pick(fam, rand);
         return { target: target, options: kit.shuffle(fam, rand), dir: rand() < 0.5 ? 1 : -1, start: rand() * 360, limit: limitS(level) };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(v) {
         if (v >= 700) return '火眼金睛！';
         if (v >= 450) return '高手！';
@@ -69,6 +75,7 @@
         return '多等一下再按，會更穩！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: LEVELS, goodAt: 3,
@@ -82,11 +89,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand), t0 = performance.now();
-        api.info = q;
-        console.log('[越看越清楚] 第 ' + level + ' 關：答案「' + q.target + '」，選項 ' + q.options.join('') + '；限時 ' + q.limit.toFixed(2) + ' 秒');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[越看越清楚] 第 ' + level + ' 關：答案「' + q.target + '」，選項 ' + q.options.join('') + '；限時 ' + q.limit.toFixed(2) + ' 秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var glyph = h('div', { 'class': 'clearer-glyph', text: q.target });
         var clock = h('div', { 'class': 'clearer-clock', text: '計時 0.0000 秒' });
@@ -106,8 +115,9 @@
         }
         frame();
         var loop = api.my.loop(function () { if (api.over) return false; frame(); });
-        api.timer(Math.round(q.limit * 1000), function () { judge(null, q.limit * 1000); });
+        api.timer(Math.round(q.limit * 1000), function () { judge(null, q.limit * 1000); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
 
+        /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(c, forceMs) {
             if (api.over) return;
             var ms = forceMs != null ? forceMs : performance.now() - t0;
@@ -124,10 +134,12 @@
                 api.fail({ delay: 1900, lines: [(c == null ? '時間到！' : '按錯了：你選「' + c + '」') + '，答案是「' + q.target + '」', '按下時清晰度只有 ' + clarityPct(level, ms).toFixed(4) + '%'] });
             }
         }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.target); };
         api.wrong = function () { judge(q.options.filter(function (x) { return x !== q.target; })[0]); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '越看越清楚',
@@ -136,5 +148,6 @@
         score: SCORE,
         test: { limitS: limitS, blurAt: blurAt, spinAt: spinAt, angleAt: angleAt, gainFor: gainFor, clarityPct: clarityPct, makeLevel: makeLevel, rating: rating, FAMILIES: FAMILIES, LEVELS: LEVELS, TIME_S: TIME_S, BLUR_MAX: BLUR_MAX, SPIN_MAX: SPIN_MAX, RUSH_MS: RUSH_MS, RUSH_K: RUSH_K }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

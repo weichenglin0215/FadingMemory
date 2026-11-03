@@ -8,104 +8,104 @@
 /* ═══ 零錢分類（.coins-）═══ */
 /* 目標金額（大字） */
 .coins-target {
-    text-align: center;
-    font-size: var(--fs-xl);
-    font-weight: 800;
-    color: var(--c-ink);
-    line-height: 1.1;
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: 800;                                   /* 字重（粗細）800（400 一般、700 粗體） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    line-height: 1.1;                                   /* 行高：1.1（文字每一行佔的高度） */
 }
 
 /* 目前已選的總額；超過目標變橘、剛好變綠 */
 .coins-sum {
-    text-align: center;
+    text-align: center;                                 /* 文字置中 */
     white-space: nowrap;           /* 一定只佔一行：換行會讓桌面變矮，硬幣就跑到桌面外面（V1.43.1） */
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--c-blue);
-    min-height: 1.4em;
+    font-size: 22px;                                    /* 字級：22px */
+    font-weight: 700;                                   /* 字重（粗細）700（400 一般、700 粗體） */
+    color: var(--c-blue);                               /* 文字顏色：主題變數 --c-blue */
+    min-height: 1.4em;                                  /* 最小高度：1.4em */
 }
 
 /* 超過目標 */
 .coins-sum--over {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
 /* 剛好等於目標 */
 .coins-sum--ok {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
 /* 桌面：硬幣用 position:absolute 隨機散落在上面，位置由 JS 算 */
 .coins-table {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    touch-action: none;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
 /* 硬幣共用樣式：圓形、有立體的底部陰影，transition 讓選取時的上浮動畫平滑 */
 .coins-coin {
-    position: absolute;
-    padding: 0;
-    border-radius: 50%;
-    border: 4px solid rgba(0, 0, 0, 0.28);
-    font-size: 24px;
-    font-weight: 800;
-    color: #3A2C14;
-    cursor: pointer;
-    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
-    transition: transform 0.08s ease, box-shadow 0.08s ease;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    border: 4px solid rgba(0, 0, 0, 0.28);              /* 邊框（粗細、線型、顏色）：4px solid rgba(0, 0, 0, 0.28) */
+    font-size: 24px;                                    /* 字級：24px */
+    font-weight: 800;                                   /* 字重（粗細）800（400 一般、700 粗體） */
+    color: #3A2C14;                                     /* 文字顏色：#3A2C14 */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);            /* 方塊陰影（立體感） */
+    transition: transform 0.08s ease, box-shadow 0.08s ease;  /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.08s ease, box-shadow 0.08s ease */
 }
 
 /* 50 元硬幣：radial-gradient 是「放射狀漸層」，做出金屬光澤；字也最大 */
 .coins-coin--50 {
-    background: radial-gradient(circle at 35% 30%, #FFF0B0, #F0C23C 60%, #C99A1E);
-    font-size: 34px;
+    background: radial-gradient(circle at 35% 30%, #FFF0B0, #F0C23C 60%, #C99A1E);  /* 漸層背景 */
+    font-size: 34px;                                    /* 字級：34px */
 }
 
 /* 20 元 */
 .coins-coin--20 {
-    background: radial-gradient(circle at 35% 30%, #F8DDB0, #D9A557 60%, #B07A30);
-    font-size: 32px;
+    background: radial-gradient(circle at 35% 30%, #F8DDB0, #D9A557 60%, #B07A30);  /* 漸層背景 */
+    font-size: 32px;                                    /* 字級：32px */
 }
 
 /* 10 元 */
 .coins-coin--10 {
-    background: radial-gradient(circle at 35% 30%, #FFFFFF, #D6D6D6 60%, #A8A8A8);
-    font-size: 30px;
+    background: radial-gradient(circle at 35% 30%, #FFFFFF, #D6D6D6 60%, #A8A8A8);  /* 漸層背景 */
+    font-size: 30px;                                    /* 字級：30px */
 }
 
 /* 5 元 */
 .coins-coin--5 {
-    background: radial-gradient(circle at 35% 30%, #F2F7FF, #BCCBE0 60%, #8EA2BE);
-    font-size: 27px;
+    background: radial-gradient(circle at 35% 30%, #F2F7FF, #BCCBE0 60%, #8EA2BE);  /* 漸層背景 */
+    font-size: 27px;                                    /* 字級：27px */
 }
 
 /* 1 元 */
 .coins-coin--1 {
-    background: radial-gradient(circle at 35% 30%, #F4CBA6, #C98B5A 60%, #9E6636);
-    font-size: 24px;
+    background: radial-gradient(circle at 35% 30%, #F4CBA6, #C98B5A 60%, #9E6636);  /* 漸層背景 */
+    font-size: 24px;                                    /* 字級：24px */
 }
 
 /* 被選取的硬幣：往上浮 5px 並放大 1.1 倍 */
 .coins-coin--on {
-    transform: translateY(-5px) scale(1.1);
-    border-color: var(--c-blue);
-    box-shadow: 0 8px 0 rgba(0, 0, 0, 0.2), 0 0 0 5px rgba(107, 140, 196, 0.45);
+    transform: translateY(-5px) scale(1.1);             /* 變形：垂直移動 -5px 縮放 1.1 倍 */
+    border-color: var(--c-blue);                        /* 邊框顏色：主題變數 --c-blue */
+    box-shadow: 0 8px 0 rgba(0, 0, 0, 0.2), 0 0 0 5px rgba(107, 140, 196, 0.45);  /* 方塊陰影（立體感） */
 }
 
 /* 揭曉：選對的硬幣（綠色光圈） */
 .coins-coin--ok {
-    border-color: var(--c-ok);
-    box-shadow: 0 8px 0 rgba(0, 0, 0, 0.2), 0 0 0 6px rgba(108, 189, 121, 0.6);
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
+    box-shadow: 0 8px 0 rgba(0, 0, 0, 0.2), 0 0 0 6px rgba(108, 189, 121, 0.6);  /* 方塊陰影（立體感） */
 }
 
 /* 揭曉：正確答案的硬幣（黃色光圈） */
 .coins-coin--answer {
-    border-color: #F4C542;
-    box-shadow: 0 0 0 6px rgba(255, 212, 59, 0.75);
+    border-color: #F4C542;                              /* 邊框顏色：#F4C542 */
+    box-shadow: 0 0 0 6px rgba(255, 212, 59, 0.75);     /* 方塊陰影（立體感） */
 }

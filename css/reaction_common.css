@@ -22,22 +22,22 @@
 /* ─── 上方列的「?」規則按鈕 ─── */
 /* 「?」說明按鈕：圓形（border-radius:50%）、固定 48×48，flex:0 0 auto 表示不被擠壓 */
 .bar__help {
-    flex: 0 0 auto;
-    width: 48px;
-    height: 48px;
-    padding: 0;
-    border-radius: 50%;
-    border: var(--btn-line-bd);
-    background: var(--btn-line-bg);
-    color: var(--btn-line-fg);
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    cursor: pointer;
+    flex: 0 0 auto;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    width: 48px;                                        /* 寬度：48px */
+    height: 48px;                                       /* 高度：48px */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    border: var(--btn-line-bd);                         /* 邊框（粗細、線型、顏色）：主題變數 --btn-line-bd */
+    background: var(--btn-line-bg);                     /* 背景：主題變數 --btn-line-bg */
+    color: var(--btn-line-fg);                          /* 文字顏色：主題變數 --btn-line-fg */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
 }
 
 /* 按下去時縮小到 93%，給手指「有按到」的回饋 */
 .bar__help:active {
-    transform: scale(0.93);
+    transform: scale(0.93);                             /* 變形：縮放 0.93 倍 */
 }
 
 /* ─── 共用：結算彈窗裡的文字 ───
@@ -45,28 +45,28 @@
    卡片裡的大數字、評語用下面這組 .rx-result__num／__label。 */
 /* 結算頁的大數字（成績） */
 .rx-result__num {
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-black);
-    color: var(--c-blue);
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-blue);                               /* 文字顏色：主題變數 --c-blue */
 }
 
 /* 結算頁的評語 */
 .rx-result__label {
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
 /* 提示文字的「成功」版本（綠色） */
 .hint--ok {
-    color: var(--c-green);
-    font-weight: var(--fw-black);
+    color: var(--c-green);                              /* 文字顏色：主題變數 --c-green */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
 /* 結算頁裡的按鈕 */
 .rx-result .btn {
-    width: 260px;
-    margin-top: var(--sp-3);
+    width: 260px;                                       /* 寬度：260px */
+    margin-top: var(--sp-3);                            /* 上外距（跟上面的元素距離）：主題變數 --sp-3 */
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -75,152 +75,157 @@
 /* 標題列右側的喇叭（開關音效）：跟「?」同一個圓鈕樣式，兩顆並排時縮一點間距 */
 /* 音效開關按鈕 */
 .bar__sound {
-    font-size: var(--fs-md);
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
 }
 
 /* 喇叭圖示大小 */
 .bar__sound .icon {
-    width: 28px;
-    height: 28px;
+    width: 28px;                                        /* 寬度：28px */
+    height: 28px;                                       /* 高度：28px */
 }
 
 /* 共用結算卡片裡的小字 */
 /* 結算卡片裡的小字 */
 .rx-result__line {
-    text-align: center;
+    text-align: center;                                 /* 文字置中 */
 }
 
+/* 「rx-result」裡面的「note」部分的樣式 */
 .rx-result__note {
-    color: var(--c-ink-soft);
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 標題列中間：遊戲名稱在上、meta（第 N 關・最佳…）在下，兩行疊起來 */
 /* 標題列中間區：遊戲名稱在上、說明（第 N 關…）在下 */
 .bar__mid {
-    flex: 1 1 auto;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    line-height: 1.1;
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-width: 0;                                       /* 最小寬度：0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    line-height: 1.1;                                   /* 行高：1.1（文字每一行佔的高度） */
 }
 
+/* 「bar」裡面的「title」部分的樣式 */
 .bar__mid .bar__title {
-    flex: none;
-    max-width: 100%;
-    font-size: var(--fs-md);
+    flex: none;                                         /* 彈性縮放：none */
+    max-width: 100%;                                    /* 最大寬度：100% */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
 }
 
 /* 說明文字：單行顯示，太長就用 ... 省略（text-overflow:ellipsis 要搭配 overflow:hidden + nowrap） */
 .bar__mid .bar__meta {
-    flex: none;
-    min-width: 0;
-    max-width: 100%;
-    font-size: var(--fs-xs);
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    flex: none;                                         /* 彈性縮放：none */
+    min-width: 0;                                       /* 最小寬度：0 */
+    max-width: 100%;                                    /* 最大寬度：100% */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    text-align: center;                                 /* 文字置中 */
+    white-space: nowrap;                                /* 文字不換行 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    text-overflow: ellipsis;                            /* 文字太長時，用「…」顯示 */
 }
 
 /* 時間條（底） */
 .ld-time {
-    height: 10px;
-    border-radius: 5px;
-    background: var(--c-yellow-soft);
-    overflow: hidden;
+    height: 10px;                                       /* 高度：10px */
+    border-radius: 5px;                                 /* 圓角：5px */
+    background: var(--c-yellow-soft);                   /* 背景：主題變數 --c-yellow-soft */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* 時間條（填滿部分） */
 .ld-time__fill {
-    height: 100%;
-    width: 0;
-    background: var(--c-blue);
+    height: 100%;                                       /* 高度：100% */
+    width: 0;                                           /* 寬度：0 */
+    background: var(--c-blue);                          /* 背景：主題變數 --c-blue */
 }
 
 /* 這個遊戲專用的 6 種音符顏色，放在 :root 讓所有 .py- 規則都能用 var(--py-red) 之類的寫法 */
 :root {
-    --py-red: #D6453D;
-    --py-orange: #F08A24;
-    --py-yellow: #F2C230;
-    --py-green: #3FA46A;
-    --py-blue: #3E86C4;
-    --py-purple: #8E5BB6;
+    --py-red: #D6453D;                                  /* 自訂變數 --py-red（下面用 var(--py-red) 取用；可以由 JS 動態設定） */
+    --py-orange: #F08A24;                               /* 自訂變數 --py-orange（下面用 var(--py-orange) 取用；可以由 JS 動態設定） */
+    --py-yellow: #F2C230;                               /* 自訂變數 --py-yellow（下面用 var(--py-yellow) 取用；可以由 JS 動態設定） */
+    --py-green: #3FA46A;                                /* 自訂變數 --py-green（下面用 var(--py-green) 取用；可以由 JS 動態設定） */
+    --py-blue: #3E86C4;                                 /* 自訂變數 --py-blue（下面用 var(--py-blue) 取用；可以由 JS 動態設定） */
+    --py-purple: #8E5BB6;                               /* 自訂變數 --py-purple（下面用 var(--py-purple) 取用；可以由 JS 動態設定） */
 }
 
 /* ═══ 共用：標題列（第 N 關 ／ 命） ═══ */
 .rx-head {
-    flex: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    flex: none;                                         /* 彈性縮放：none */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    justify-content: space-between;                     /* 頭尾貼邊，剩下的空間平均分給中間 */
+    align-items: baseline;                              /* 子元素的文字基準線對齊 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「rx-head」裡面的「info」部分的樣式 */
 .rx-head__info {
-    font-size: var(--fs-sm);
-    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 時間條：沿用 .ld-time，這裡只補上不佔空間時的高度 */
 .rx-timebar {
-    flex: none;
+    flex: none;                                         /* 彈性縮放：none */
 }
 
 /* 說明列：一兩行小字，放在遊戲區上方 */
 .rx-tip {
-    flex: none;
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    line-height: var(--lh-body);
+    flex: none;                                         /* 彈性縮放：none */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
 }
 
 /* 遊戲區：吃掉剩下的高度；子元素用絕對定位排版（座標＝這個區域左上角起算的邏輯 px） */
 .rx-stage {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
 /* 遊戲區底部的一排按鈕 */
 .rx-btnrow {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    gap: var(--sp-3);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
 }
 
+/* 「btn」這個元素的樣式 */
 .rx-btnrow .btn {
-    flex: 1 1 0;
-    min-width: 0;
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-width: 0;                                       /* 最小寬度：0 */
 }
 
 /* 題目大字（置中） */
 .rx-big {
-    text-align: center;
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    font-size: var(--fs-xxl);
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
 }
 
 /* 對錯回饋：整個遊戲區閃一下顏色框 */
 .rx-flash-ok {
-    box-shadow: inset 0 0 0 6px var(--c-ok);
+    box-shadow: inset 0 0 0 6px var(--c-ok);            /* 方塊陰影（立體感） */
 }
 
+/* 「rx-flash-bad」這個元素的樣式 */
 .rx-flash-bad {
-    box-shadow: inset 0 0 0 6px var(--c-bad);
+    box-shadow: inset 0 0 0 6px var(--c-bad);           /* 方塊陰影（立體感） */
 }
 
 /* ═══ 共用：操作提示（手指圖示＋一句短文字） ═══
@@ -231,155 +236,167 @@
    · 短文字：.rx-hint__label（例如「請點擊色塊」「請往左右拖曳」「請持續按住螢幕」）
    整個提示不攔截任何點擊（pointer-events:none） */
 .rx-hint {
-    position: absolute;
-    width: 0;
-    height: 0;
-    z-index: 15;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 0;                                           /* 寬度：0 */
+    height: 0;                                          /* 高度：0 */
+    z-index: 15;                                        /* 疊放順序：數字越大越在上面（15） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「rx-hint」裡面的「finger」部分的樣式 */
 .rx-hint__finger {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 56px;
-    height: 70px;
-    filter: drop-shadow(0 3px 4px var(--c-yellow-soft));
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    width: 56px;                                        /* 寬度：56px */
+    height: 70px;                                       /* 高度：70px */
+    filter: drop-shadow(0 3px 4px var(--c-yellow-soft));  /* 濾鏡效果：drop-shadow(0 3px 4px var(--c-yellow-sof */
 }
 
+/* 「rx-hint」裡面的「finger」部分的樣式 */
 .rx-hint--tap .rx-hint__finger {
-    transform-origin: 17px 3px;
-    animation: rx-tap 1s ease-in-out infinite;
+    transform-origin: 17px 3px;                         /* 變形的基準點：17px 3px */
+    animation: rx-tap 1s ease-in-out infinite;          /* 播放動畫（名稱、時間、緩動、次數）：rx-tap 1s ease-in-out infinite */
 }
 
+/* 「rx-hint」裡面的「ring」部分的樣式 */
 .rx-hint__ring {
-    position: absolute;
-    left: -24px;
-    top: -24px;
-    width: 48px;
-    height: 48px;
-    border-radius: var(--r-pill);
-    border: 4px solid var(--c-orange);
-    opacity: 0;
-    animation: rx-ring 1s ease-out infinite;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: -24px;                                        /* 離左邊 -24px */
+    top: -24px;                                         /* 離上邊 -24px */
+    width: 48px;                                        /* 寬度：48px */
+    height: 48px;                                       /* 高度：48px */
+    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill */
+    border: 4px solid var(--c-orange);                  /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --c-orange */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    animation: rx-ring 1s ease-out infinite;            /* 播放動畫（名稱、時間、緩動、次數）：rx-ring 1s ease-out infinite */
 }
 
+/* 「rx-hint」裡面的「finger」部分的樣式 */
 .rx-hint--drag .rx-hint__finger {
-    animation: rx-drag 1.4s ease-in-out infinite;
+    animation: rx-drag 1.4s ease-in-out infinite;       /* 播放動畫（名稱、時間、緩動、次數）：rx-drag 1.4s ease-in-out infinite */
 }
 
+/* 「rx-hint」裡面的「finger」部分的樣式 */
 .rx-hint--drag4 .rx-hint__finger {
-    animation: rx-drag4 6s ease-in-out infinite;
+    animation: rx-drag4 6s ease-in-out infinite;        /* 播放動畫（名稱、時間、緩動、次數）：rx-drag4 6s ease-in-out infinite */
 }
 
 /* 持續按住：手指按下去（縮小一點、往下壓）之後不放，波紋一圈圈往外擴 */
 .rx-hint--hold .rx-hint__finger {
-    transform-origin: 17px 3px;
-    animation: rx-hold 1.8s ease-in-out infinite;
+    transform-origin: 17px 3px;                         /* 變形的基準點：17px 3px */
+    animation: rx-hold 1.8s ease-in-out infinite;       /* 播放動畫（名稱、時間、緩動、次數）：rx-hold 1.8s ease-in-out infinite */
 }
 
 /* 短文字：圓角小標籤，放在手指旁邊（位置由 js/reaction_kit2.js 的 kit.fingerHint 算，不會超出畫面） */
 .rx-hint__label {
-    position: absolute;
-    z-index: 16;
-    padding: var(--sp-1) var(--sp-4);
-    border-radius: var(--r-pill);
-    border: 3px solid var(--c-orange);
-    background: var(--c-card);
-    box-shadow: var(--shadow-card);
-    color: var(--c-ink);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    white-space: nowrap;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    z-index: 16;                                        /* 疊放順序：數字越大越在上面（16） */
+    padding: var(--sp-1) var(--sp-4);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-1、下 主題變數、左 --sp-4 */
+    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill */
+    border: 3px solid var(--c-orange);                  /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-orange */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    white-space: nowrap;                                /* 文字不換行 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 箭頭：從起點指向終點；以起點為旋轉中心，寬度＝距離（JS 設定） */
 .rx-hint__arrow {
-    position: absolute;
-    left: 0;
-    top: -3px;
-    height: 6px;
-    border-radius: 3px;
-    background: var(--c-orange);
-    opacity: 0.55;
-    transform-origin: 0 50%;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: -3px;                                          /* 離上邊 -3px */
+    height: 6px;                                        /* 高度：6px */
+    border-radius: 3px;                                 /* 圓角：3px */
+    background: var(--c-orange);                        /* 背景：主題變數 --c-orange */
+    opacity: 0.55;                                      /* 透明度 0.55（1＝完全不透明、0＝全透明） */
+    transform-origin: 0 50%;                            /* 變形的基準點：0 50% */
 }
 
+/* 「rx-hint」裡面的「arrow」部分，後面插入的裝飾的樣式 */
 .rx-hint__arrow::after {
-    content: "";
-    position: absolute;
-    right: -4px;
-    top: -9px;
-    border-left: 18px solid var(--c-orange);
-    border-top: 12px solid transparent;
-    border-bottom: 12px solid transparent;
+    content: "";                                        /* 偽元素的內容："" */
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    right: -4px;                                        /* 離右邊 -4px */
+    top: -9px;                                          /* 離上邊 -9px */
+    border-left: 18px solid var(--c-orange);            /* 左邊框：18px solid 主題變數 --c-orange */
+    border-top: 12px solid transparent;                 /* 上邊框：12px solid transparent */
+    border-bottom: 12px solid transparent;              /* 下邊框：12px solid transparent */
 }
 
 /* ═══ 共用：開始遮罩（準備好了按開始）與碼表 ═══ */
 .rx-cover {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 20;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--sp-5);
-    padding: var(--sp-5);
-    background: var(--c-paper);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    z-index: 20;                                        /* 疊放順序：數字越大越在上面（20） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: var(--sp-5);                                   /* 子元素之間的空隙：主題變數 --sp-5 */
+    padding: var(--sp-5);                               /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --sp-5 */
+    background: var(--c-paper);                         /* 背景：主題變數 --c-paper */
 }
 
+/* 「rx-cover」裡面的「text」部分的樣式 */
 .rx-cover__text {
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink);
-    line-height: var(--lh-body);
-    white-space: pre-line;
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    white-space: pre-line;                              /* 保留換行字元、其餘空白合併 */
 }
 
+/* 「btn」這個元素的樣式 */
 .rx-cover .btn {
-    width: 70%;
+    width: 70%;                                         /* 寬度：70% */
 }
 
+/* 「rx-clock」這個元素的樣式 */
 .rx-clock {
-    flex: none;
-    text-align: center;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    flex: none;                                         /* 彈性縮放：none */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「rx-clock」的「pen」變化版的樣式 */
 .rx-clock--pen {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
+/* 動畫 rx-tap：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes rx-tap {
 
     0%,
     100% {
-        transform: scale(1);
+        transform: scale(1);                            /* 變形：縮放 1 倍 */
     }
 
     45% {
-        transform: scale(0.78);
+        transform: scale(0.78);                         /* 變形：縮放 0.78 倍 */
     }
 }
 
+/* 動畫 rx-ring：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes rx-ring {
     0% {
-        transform: scale(0.4);
-        opacity: 0.9;
+        transform: scale(0.4);                          /* 變形：縮放 0.4 倍 */
+        opacity: 0.9;                                   /* 透明度 0.9（1＝完全不透明、0＝全透明） */
     }
 
     70%,
     100% {
-        transform: scale(1.5);
-        opacity: 0;
+        transform: scale(1.5);                          /* 變形：縮放 1.5 倍 */
+        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
     }
 }
 
@@ -388,200 +405,215 @@
 
     0%,
     100% {
-        transform: translate(0, 0);
+        transform: translate(0, 0);                     /* 變形：移動 0, 0 */
     }
 
     12% {
-        transform: translate(0, calc(var(--l) * -1));
+        transform: translate(0, calc(var(--l) * -1));   /* 變形：移動 0, calc(var(--l * -1)) */
     }
 
     25% {
-        transform: translate(0, 0);
+        transform: translate(0, 0);                     /* 變形：移動 0, 0 */
     }
 
     37% {
-        transform: translate(var(--l), 0);
+        transform: translate(var(--l), 0);              /* 變形：移動 var(--l, 0) */
     }
 
     50% {
-        transform: translate(0, 0);
+        transform: translate(0, 0);                     /* 變形：移動 0, 0 */
     }
 
     62% {
-        transform: translate(0, var(--l));
+        transform: translate(0, var(--l));              /* 變形：移動 0, var(--l) */
     }
 
     75% {
-        transform: translate(0, 0);
+        transform: translate(0, 0);                     /* 變形：移動 0, 0 */
     }
 
     87% {
-        transform: translate(calc(var(--l) * -1), 0);
+        transform: translate(calc(var(--l) * -1), 0);   /* 變形：移動 calc(var(--l * -1), 0) */
     }
 }
 
+/* 動畫 rx-hold：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes rx-hold {
 
     0%,
     15% {
-        transform: translateY(0) scale(1);
+        transform: translateY(0) scale(1);              /* 變形：垂直移動 0 縮放 1 倍 */
     }
 
     35%,
     85% {
-        transform: translateY(6px) scale(0.84);
+        transform: translateY(6px) scale(0.84);         /* 變形：垂直移動 6px 縮放 0.84 倍 */
     }
 
     100% {
-        transform: translateY(0) scale(1);
+        transform: translateY(0) scale(1);              /* 變形：垂直移動 0 縮放 1 倍 */
     }
 }
 
+/* 動畫 rx-drag：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes rx-drag {
 
     0%,
     100% {
-        transform: translate(0, 0);
+        transform: translate(0, 0);                     /* 變形：移動 0, 0 */
     }
 
     50% {
-        transform: translate(var(--dx), var(--dy));
+        transform: translate(var(--dx), var(--dy));     /* 變形：移動 var(--dx, var(--dy)) */
     }
 }
 
 /* ═══ 061 鬼腳圖（.gl-）═══ */
 .gl-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
 }
 
+/* 「gl-col」這個元素的樣式 */
 .gl-col {
-    stroke: var(--c-ink-soft);
-    stroke-width: 5;
-    stroke-linecap: round;
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 5;                                    /* SVG 線條粗細：5 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「gl-rung」這個元素的樣式 */
 .gl-rung {
-    stroke: var(--c-ink-soft);
-    stroke-width: 4;
-    stroke-linecap: round;
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「gl-token」這個元素的樣式 */
 .gl-token {
-    fill: var(--c-card);
-    stroke: var(--c-ink-soft);
-    stroke-width: 3;
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
 /* 起點（上方的圓）與終點（下方的方塊）：綠底黑字（V1.28 改玩法：題目一開始就標出起點與終點） */
 .gl-token--go {
-    fill: var(--c-green);
-    stroke: var(--c-ink);
+    fill: var(--c-green);                               /* SVG 圖形的填色：主題變數 --c-green */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
 }
 
+/* 「gl-label」這個元素；「gl-label」這個元素的樣式 */
 .gl-token--go+.gl-label,
 .gl-end--go+.gl-label {
-    fill: var(--c-black);
+    fill: var(--c-black);                               /* SVG 圖形的填色：主題變數 --c-black */
 }
 
+/* 「gl-label」這個元素的樣式 */
 .gl-label {
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    fill: var(--c-ink);
-    font-family: var(--font-ui);
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
+    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
 }
 
+/* 「gl-end」這個元素的樣式 */
 .gl-end {
-    fill: var(--c-card-alt);
-    stroke: var(--c-ink-soft);
-    stroke-width: 3;
+    fill: var(--c-card-alt);                            /* SVG 圖形的填色：主題變數 --c-card-alt */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
 /* 終點（要放在 .gl-end 後面，才蓋得過它的灰底） */
 .gl-end--go {
-    fill: var(--c-green);
-    stroke: var(--c-ink);
+    fill: var(--c-green);                               /* SVG 圖形的填色：主題變數 --c-green */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
 }
 
 /* 評審動畫的結果：走到的終點——對＝加粗的綠框、錯＝紅框（並把正確的終點框起來） */
 .gl-end--ok {
-    stroke: var(--c-ok);
-    stroke-width: 7;
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
+    stroke-width: 7;                                    /* SVG 線條粗細：7 */
 }
 
+/* 「gl-end」在「錯誤（失敗）時」的樣子的樣式 */
 .gl-end--bad {
-    fill: var(--c-bad-soft);
-    stroke: var(--c-bad);
-    stroke-width: 7;
+    fill: var(--c-bad-soft);                            /* SVG 圖形的填色：主題變數 --c-bad-soft */
+    stroke: var(--c-bad);                               /* SVG 線條顏色：主題變數 --c-bad */
+    stroke-width: 7;                                    /* SVG 線條粗細：7 */
 }
 
+/* 「gl-end」的「want」變化版的樣式 */
 .gl-end--want {
-    stroke: var(--c-black);
-    stroke-width: 6;
-    stroke-dasharray: 8 5;
+    stroke: var(--c-black);                             /* SVG 線條顏色：主題變數 --c-black */
+    stroke-width: 6;                                    /* SVG 線條粗細：6 */
+    stroke-dasharray: 8 5;                              /* SVG 虛線的「畫／空」長度：8 5 */
 }
 
+/* 「gl-msg」這個元素的樣式 */
 .gl-msg {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 8px;
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    line-height: var(--lh-body);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 8px;                                        /* 離下邊 8px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
 }
 
 /* ═══ 共用：答題文字 .qz-、底部按鈕排 .rx-grid ═══ */
 .qz-big {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 70px;
-    text-align: center;
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    line-height: var(--lh-tight);
-    font-variant-numeric: tabular-nums;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 70px;                                          /* 離上邊 70px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    line-height: var(--lh-tight);                       /* 行高：主題變數 --lh-tight（文字每一行佔的高度） */
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
 }
 
+/* 「qz-note」這個元素的樣式 */
 .qz-note {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-2);
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    line-height: var(--lh-body);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-2);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-2 */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
 }
 
+/* 「qz-ok」這個元素的樣式 */
 .qz-ok {
-    color: var(--c-ok) !important;
+    color: var(--c-ok) !important;                      /* 文字顏色：主題變數 --c-ok（!important＝強制優先） */
 }
 
+/* 「qz-bad」這個元素的樣式 */
 .qz-bad {
-    color: var(--c-bad) !important;
+    color: var(--c-bad) !important;                     /* 文字顏色：主題變數 --c-bad（!important＝強制優先） */
 }
 
 /* 遊戲區底部的按鈕排：用格線（grid）排，欄數由 js 設定；每顆按鈕的高度用 --rx-grid-h */
 .rx-grid {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: grid;
-    gap: var(--sp-3);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    display: grid;                                      /* 格線排版：子元素排進格子 */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
 }
 
+/* 「btn」這個元素的樣式 */
 .rx-grid .btn {
-    height: var(--rx-grid-h, var(--btn-h-sm));
-    min-width: 0;
-    padding: 0 var(--sp-2);
+    height: var(--rx-grid-h, var(--btn-h-sm));          /* 高度：var(--rx-grid-h, 主題變數 --btn-h-sm) */
+    min-width: 0;                                       /* 最小寬度：0 */
+    padding: 0 var(--sp-2);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-2 */
 }
 
 /* ═══ END（新款 CSS 加在這一行之前）═══ */

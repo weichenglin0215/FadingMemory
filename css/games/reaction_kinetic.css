@@ -6,210 +6,239 @@
 
 /* ═══ 動態視力（.kinetic-）═══ */
 .kinetic-stage {
-    user-select: none;
-    -webkit-user-select: none;
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
 /* 遊戲區：火車從右邊開進來、左邊開出去，超出的部分要藏起來 */
 .kinetic-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
+/* 「kinetic-tip」這個元素的樣式 */
 .kinetic-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 鐵軌 */
 .kinetic-rail {
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 10px;
-    background: var(--knt-rail);
-    border-radius: var(--r-sm);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    height: 10px;                                       /* 高度：10px */
+    background: var(--knt-rail);                        /* 背景：主題變數 --knt-rail */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
 }
 
 /* 整列火車（用 translateX 移動）和每一節車廂 */
 .kinetic-train {
-    position: absolute;
-    left: 0;
-    will-change: transform;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    will-change: transform;                             /* 提示瀏覽器這個屬性會變動，先準備好（讓動畫更順） */
 }
 
+/* 「kinetic-car」這個元素的樣式 */
 .kinetic-car {
-    position: absolute;
-    top: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    top: 0;                                             /* 離上邊 0 */
 }
 
+/* 「kinetic-svg」這個元素的樣式 */
 .kinetic-svg {
-    display: block;
-    overflow: visible;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
 }
 
+/* 「kinetic-defs」這個元素的樣式 */
 .kinetic-defs {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 0;
-    height: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    width: 0;                                           /* 寬度：0 */
+    height: 0;                                          /* 高度：0 */
 }
 
+/* 「kinetic-roof」這個元素的樣式 */
 .kinetic-roof {
-    fill: var(--knt-roof);
+    fill: var(--knt-roof);                              /* SVG 圖形的填色：主題變數 --knt-roof */
 }
 
+/* 「kinetic-body」這個元素的樣式 */
 .kinetic-body {
-    fill: var(--knt-body);
-    stroke: var(--c-ink-soft);
-    stroke-width: 3;
+    fill: var(--knt-body);                              /* SVG 圖形的填色：主題變數 --knt-body */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「kinetic-band」這個元素的樣式 */
 .kinetic-band {
-    fill: var(--knt-band);
+    fill: var(--knt-band);                              /* SVG 圖形的填色：主題變數 --knt-band */
 }
 
+/* 「kinetic-glass」這個元素的樣式 */
 .kinetic-glass {
-    fill: var(--knt-glass);
-    stroke: var(--c-ink-soft);
-    stroke-width: 3;
+    fill: var(--knt-glass);                             /* SVG 圖形的填色：主題變數 --knt-glass */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「kinetic-frame」這個元素的樣式 */
 .kinetic-frame {
-    fill: var(--knt-frame);
+    fill: var(--knt-frame);                             /* SVG 圖形的填色：主題變數 --knt-frame */
 }
 
+/* 「kinetic-wheel」這個元素的樣式 */
 .kinetic-wheel {
-    fill: var(--knt-wheel);
+    fill: var(--knt-wheel);                             /* SVG 圖形的填色：主題變數 --knt-wheel */
 }
 
+/* 「kinetic-link」這個元素的樣式 */
 .kinetic-link {
-    fill: var(--knt-link);
+    fill: var(--knt-link);                              /* SVG 圖形的填色：主題變數 --knt-link */
 }
 
 /* 窗戶裡的東西 */
 .kinetic-pax--0 {
-    fill: var(--knt-pax0);
+    fill: var(--knt-pax0);                              /* SVG 圖形的填色：主題變數 --knt-pax0 */
 }
 
+/* 「kinetic-pax」的「1」變化版的樣式 */
 .kinetic-pax--1 {
-    fill: var(--knt-pax1);
+    fill: var(--knt-pax1);                              /* SVG 圖形的填色：主題變數 --knt-pax1 */
 }
 
+/* 「kinetic-pax」的「2」變化版的樣式 */
 .kinetic-pax--2 {
-    fill: var(--knt-pax2);
+    fill: var(--knt-pax2);                              /* SVG 圖形的填色：主題變數 --knt-pax2 */
 }
 
+/* 「kinetic-head」這個元素的樣式 */
 .kinetic-head {
-    fill: var(--knt-head);
+    fill: var(--knt-head);                              /* SVG 圖形的填色：主題變數 --knt-head */
 }
 
+/* 「kinetic-hair」這個元素的樣式 */
 .kinetic-hair {
-    fill: var(--knt-hair);
+    fill: var(--knt-hair);                              /* SVG 圖形的填色：主題變數 --knt-hair */
 }
 
+/* 「kinetic-bento」這個元素的樣式 */
 .kinetic-bento {
-    fill: var(--knt-bento);
+    fill: var(--knt-bento);                             /* SVG 圖形的填色：主題變數 --knt-bento */
 }
 
+/* 「kinetic-rice」這個元素的樣式 */
 .kinetic-rice {
-    fill: var(--knt-rice);
+    fill: var(--knt-rice);                              /* SVG 圖形的填色：主題變數 --knt-rice */
 }
 
+/* 「kinetic-egg」這個元素的樣式 */
 .kinetic-egg {
-    fill: var(--knt-egg);
+    fill: var(--knt-egg);                               /* SVG 圖形的填色：主題變數 --knt-egg */
 }
 
+/* 「kinetic-veg」這個元素的樣式 */
 .kinetic-veg {
-    fill: var(--knt-veg);
+    fill: var(--knt-veg);                               /* SVG 圖形的填色：主題變數 --knt-veg */
 }
 
+/* 「kinetic-paper」這個元素的樣式 */
 .kinetic-paper {
-    fill: var(--knt-paper);
-    stroke: var(--c-ink-soft);
-    stroke-width: 2;
+    fill: var(--knt-paper);                             /* SVG 圖形的填色：主題變數 --knt-paper */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
 }
 
+/* 「kinetic-line」這個元素的樣式 */
 .kinetic-line {
-    fill: var(--knt-line);
+    fill: var(--knt-line);                              /* SVG 圖形的填色：主題變數 --knt-line */
 }
 
+/* 「kinetic-curtain」這個元素的樣式 */
 .kinetic-curtain {
-    fill: var(--knt-curtain);
+    fill: var(--knt-curtain);                           /* SVG 圖形的填色：主題變數 --knt-curtain */
 }
 
+/* 「kinetic-fold」這個元素的樣式 */
 .kinetic-fold {
-    fill: none;
-    stroke: var(--knt-fold);
-    stroke-width: 3;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--knt-fold);                            /* SVG 線條顏色：主題變數 --knt-fold */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
 /* 黃底黑字的貼紙：貼在窗戶正中央；揭曉時放大 */
 .kinetic-sticker {
-    position: absolute;
-    padding: 0 var(--sp-2);
-    transform: translate(-50%, -50%);
-    background: var(--knt-sticker);
-    border: 3px solid var(--knt-sticker-edge);
-    border-radius: var(--r-sm);
-    color: var(--knt-digit);
-    font-size: var(--fs-xxxxl);
-    font-weight: var(--fw-black);
-    line-height: 1.2;
-    letter-spacing: 2px;
-    white-space: nowrap;
-    z-index: 2;
-    transition: transform 0.5s ease-out;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    padding: 0 var(--sp-2);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-2 */
+    transform: translate(-50%, -50%);                   /* 變形：移動 -50%, -50% */
+    background: var(--knt-sticker);                     /* 背景：主題變數 --knt-sticker */
+    border: 3px solid var(--knt-sticker-edge);          /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --knt-sticker-edge */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    color: var(--knt-digit);                            /* 文字顏色：主題變數 --knt-digit */
+    font-size: var(--fs-xxxxl);                         /* 字級：主題變數 --fs-xxxxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1.2;                                   /* 行高：1.2（文字每一行佔的高度） */
+    letter-spacing: 2px;                                /* 字與字之間的間距：2px */
+    white-space: nowrap;                                /* 文字不換行 */
+    z-index: 2;                                         /* 疊放順序：數字越大越在上面（2） */
+    transition: transform 0.5s ease-out;                /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.5s ease-out */
 }
 
+/* 「kinetic-sticker」的「zoom」變化版的樣式 */
 .kinetic-sticker--zoom {
-    transform: translate(-50%, -50%) scale(1.9);
-    box-shadow: var(--shadow-pop);
-    z-index: 5;
+    transform: translate(-50%, -50%) scale(1.9);        /* 變形：移動 -50%, -50% 縮放 1.9 倍 */
+    box-shadow: var(--shadow-pop);                      /* 方塊陰影（立體感） */
+    z-index: 5;                                         /* 疊放順序：數字越大越在上面（5） */
 }
 
+/* 「kinetic-info」這個元素的樣式 */
 .kinetic-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「kinetic-info」在「正確（成功）時」的樣子的樣式 */
 .kinetic-info--ok {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「kinetic-info」在「錯誤（失敗）時」的樣子的樣式 */
 .kinetic-info--bad {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
 /* 4 個號碼選項 */
 .kinetic-opt {
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
-    letter-spacing: 4px;
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    letter-spacing: 4px;                                /* 字與字之間的間距：4px */
 }
 
+/* 「kinetic-ok」這個元素的樣式 */
 .kinetic-ok {
-    background: var(--c-ok-light);
-    border-color: var(--c-ok);
+    background: var(--c-ok-light);                      /* 背景：主題變數 --c-ok-light */
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
 }
 
+/* 「kinetic-bad」這個元素的樣式 */
 .kinetic-bad {
-    background: var(--c-bad-soft);
-    border-color: var(--c-bad-light);
-    color: var(--c-bad);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    border-color: var(--c-bad-light);                   /* 邊框顏色：主題變數 --c-bad-light */
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }

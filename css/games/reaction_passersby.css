@@ -6,115 +6,127 @@
 
 /* ═══ 076 路人走過（.passersby-）═══ */
 .passersby-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 12px;
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    line-height: var(--lh-body);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 12px;                                          /* 離上邊 12px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
 }
 
+/* 「passersby-tip」的「ask」變化版的樣式 */
 .passersby-tip--ask {
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
 /* 人物放大成 150%（105×240，V1.28） */
 .passersby-person {
-    position: absolute;
-    left: 0;
-    top: 150px;
-    width: 105px;
-    height: 240px;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 150px;                                         /* 離上邊 150px */
+    width: 105px;                                       /* 寬度：105px */
+    height: 240px;                                      /* 高度：240px */
 }
 
+/* 「passersby-opts」這個元素的樣式 */
 .passersby-opts {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-3);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
 }
 
+/* 「passersby-row」這個元素的樣式 */
 .passersby-row {
-    display: flex;
-    gap: var(--sp-3);
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
 }
 
+/* 「passersby-opt」這個元素的樣式 */
 .passersby-opt {
-    flex: 1 1 0;
-    min-width: 0;
-    height: 96px;
-    flex-direction: column;
-    gap: var(--sp-1);
-    font-size: var(--fs-md);
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-width: 0;                                       /* 最小寬度：0 */
+    height: 96px;                                       /* 高度：96px */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    gap: var(--sp-1);                                   /* 子元素之間的空隙：主題變數 --sp-1 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
 }
 
+/* 「passersby-sw」這個元素的樣式 */
 .passersby-sw {
-    display: block;
-    width: 44px;
-    height: 26px;
-    border-radius: var(--r-sm);
-    border: 3px solid var(--c-ink);
-    box-sizing: border-box;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    width: 44px;                                        /* 寬度：44px */
+    height: 26px;                                       /* 高度：26px */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    border: 3px solid var(--c-ink);                     /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
 }
 
+/* 「passersby-opt」在「正確（成功）時」的樣子的樣式 */
 .passersby-opt--ok {
-    background: var(--c-green-soft);
-    border-color: var(--c-ok);
+    background: var(--c-green-soft);                    /* 背景：主題變數 --c-green-soft */
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
 }
 
+/* 「passersby-opt」在「錯誤（失敗）時」的樣子的樣式 */
 .passersby-opt--bad {
-    background: var(--c-bad-soft);
-    border-color: var(--c-bad);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
 }
 
+/* 「passersby-lineup」這個元素的樣式 */
 .passersby-lineup {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 120px;
-    display: flex;
-    justify-content: space-between;
-    padding: 0 6px;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 120px;                                         /* 離上邊 120px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    justify-content: space-between;                     /* 頭尾貼邊，剩下的空間平均分給中間 */
+    padding: 0 6px;                                     /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 6px */
 }
 
+/* 「passersby-cell」這個元素的樣式 */
 .passersby-cell {
-    position: relative;
-    flex: 1 1 0;
-    min-width: 0;
-    max-width: 84px;
-    padding: 6px 4px 28px;
-    border-radius: var(--r-md);
-    border: 3px solid transparent;
-    box-sizing: border-box;
-    text-align: center;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-width: 0;                                       /* 最小寬度：0 */
+    max-width: 84px;                                    /* 最大寬度：84px */
+    padding: 6px 4px 28px;                              /* 內縮（padding，內容跟邊框的距離）：上 6px、左右 4px、下 28px */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    border: 3px solid transparent;                      /* 邊框（粗細、線型、顏色）：3px solid transparent */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    text-align: center;                                 /* 文字置中 */
 }
 
+/* 「svg」標籤的樣式 */
 .passersby-cell svg {
-    display: block;
-    margin: 0 auto;
-    width: 62px;
-    height: 142px;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    margin: 0 auto;                                     /* 外距（margin，與別的元素的距離）：上下 0、左右 auto */
+    width: 62px;                                        /* 寬度：62px */
+    height: 142px;                                      /* 高度：142px */
 }
 
+/* 「passersby-cell」的「ask」變化版的樣式 */
 .passersby-cell--ask {
-    border-color: var(--c-orange);
-    background: var(--c-orange-soft);
+    border-color: var(--c-orange);                      /* 邊框顏色：主題變數 --c-orange */
+    background: var(--c-orange-soft);                   /* 背景：主題變數 --c-orange-soft */
 }
 
+/* 「passersby-no」這個元素的樣式 */
 .passersby-no {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 2px;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 2px;                                        /* 離下邊 2px */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }

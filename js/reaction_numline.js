@@ -13,11 +13,15 @@
    · 揭曉：正確位置畫一根綠色刻度並標出數字，你的圓點與它的距離用 4 位小數寫出來。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'numline'：選單、成績、存檔都靠它；樣式在 css/games/reaction_numline.css，裡面的 class 名稱一律以 numline- 開頭。 */
     'use strict';
 
-    var ID = 'numline';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'numline';                                 /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var TOL = [0.10, 0.01];                     /* 容許誤差（數線全長 ＝ 1）：第 1 關 → 到頂 */
@@ -34,7 +38,7 @@
     function gcd(a, b) { return b ? gcd(b, a % b) : a; }
     /* 這一關的題目：{ form, v（0～1 的真值）, text（畫面上的寫法）, tol } */
     function makeQuestion(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var form = kit.pick(FORMS, rand), tol = tolAt(level), fine = kit.ramp(level, 0, 1, 10);   /* fine：0＝整齊的數、1＝零碎的數 */
         for (var tr = 0; tr < 200; tr++) {
             var v, text;
@@ -57,6 +61,7 @@
     }
     /* 判定：誤差在容許範圍內（含邊界）就過 */
     function judge(pos, v, tol) { var err = Math.abs(pos - v); return { ok: err <= tol + 1e-12, err: err }; }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 25) return '數感大師！';
         if (n >= 15) return '數感很好！';
@@ -65,6 +70,7 @@
         return '多想想它大概是幾分之幾，再試一次！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 6,
@@ -76,13 +82,15 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeQuestion(level, api.rand);
-        api.info = q;
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var X0 = LINE_PAD, X1 = W - LINE_PAD, LY = Math.round(H * 0.36), LEN = X1 - X0;
-        console.log('[數線落點] 第 ' + level + ' 關：' + q.text + '（＝' + q.v.toFixed(4) + '）；容許 ±' + q.tol.toFixed(4) + '（±' + (q.tol * LEN).toFixed(1) + 'px）');
+        console.log('[數線落點] 第 ' + level + ' 關：' + q.text + '（＝' + q.v.toFixed(4) + '）；容許 ±' + q.tol.toFixed(4) + '（±' + (q.tol * LEN).toFixed(1) + 'px）');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var big = h('div', { 'class': 'numline-big', text: q.text });
         var tip = h('div', { 'class': 'numline-tip', text: '拖到這個數該在的位置，再按「確定」' });
@@ -98,6 +106,7 @@
         var stem = kit.svg('line', { x1: 0, x2: 0, y1: LY - 70, y2: LY, 'class': 'numline-stem' }, svg);
         var dot = kit.svg('circle', { cx: 0, cy: LY - 70, r: 20, 'class': 'numline-dot' }, svg);
         function xOf(v) { return X0 + v * LEN; }
+        /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() {
             var x = xOf(pos);
             stem.setAttribute('x1', x); stem.setAttribute('x2', x); dot.setAttribute('cx', x);
@@ -146,10 +155,12 @@
         }
         kit.onTap(okBtn, submit);
 
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { pos = q.v; paint(); submit(); };
         api.wrong = function () { pos = kit.clamp(q.v + (q.v > 0.5 ? -1 : 1) * Math.max(0.2, q.tol * 3), 0, 1); paint(); submit(); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '數線落點',
@@ -158,5 +169,6 @@
         score: SCORE,
         test: { tolAt: tolAt, makeQuestion: makeQuestion, judge: judge, gcd: gcd, TOL: TOL, TOL_RAMP: TOL_RAMP, V_MIN: V_MIN, V_MAX: V_MAX, START: START, START_GAP: START_GAP }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

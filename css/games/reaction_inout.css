@@ -6,84 +6,94 @@
 
 /* ═══ 圈內圈外（.inout-）═══ */
 .inout-stage {
-    user-select: none;
-    -webkit-user-select: none;
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「inout-field」這個元素的樣式 */
 .inout-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
 }
 
+/* 「inout-tip」這個元素的樣式 */
 .inout-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「inout-svg」這個元素的樣式 */
 .inout-svg {
-    position: absolute;
-    display: block;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
 /* 紅色粗繩；揭曉時「裡面」整塊塗上淡綠色（本來是透明的） */
 .inout-rope {
-    fill: none;
-    stroke: var(--iof-rope);
-    stroke-width: 5;
-    stroke-linejoin: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--iof-rope);                            /* SVG 線條顏色：主題變數 --iof-rope */
+    stroke-width: 5;                                    /* SVG 線條粗細：5 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「inout-fill」這個元素的樣式 */
 .inout-fill {
-    fill: var(--c-ok-light);
-    opacity: 0;
-    transition: opacity 0.5s;
+    fill: var(--c-ok-light);                            /* SVG 圖形的填色：主題變數 --c-ok-light */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    transition: opacity 0.5s;                           /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.5s */
 }
 
+/* 「inout-fill」在「顯示時」的樣子的樣式 */
 .inout-fill--show {
-    opacity: 0.85;
+    opacity: 0.85;                                      /* 透明度 0.85（1＝完全不透明、0＝全透明） */
 }
 
 /* 螞蟻 */
 .inout-ant__body {
-    fill: var(--c-ink);
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
 }
 
+/* 「inout-ant」裡面的「leg」部分的樣式 */
 .inout-ant__leg {
-    stroke: var(--c-ink);
-    stroke-width: 1.6;
-    stroke-linecap: round;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 1.6;                                  /* SVG 線條粗細：1.6 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「inout-info」這個元素的樣式 */
 .inout-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「inout-btn」這個元素的樣式 */
 .inout-btn {
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
+/* 「inout-btn」在「正確（成功）時」的樣子的樣式 */
 .inout-btn--ok {
-    background: var(--c-ok-light);
-    border-color: var(--c-ok);
+    background: var(--c-ok-light);                      /* 背景：主題變數 --c-ok-light */
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
 }
 
+/* 「inout-btn」在「錯誤（失敗）時」的樣子的樣式 */
 .inout-btn--bad {
-    background: var(--c-bad-soft);
-    border-color: var(--c-bad-light);
-    color: var(--c-bad);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    border-color: var(--c-bad-light);                   /* 邊框顏色：主題變數 --c-bad-light */
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }

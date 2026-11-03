@@ -6,170 +6,189 @@
 
 /* ═══ 一半的人（.hc-）═══ */
 .halfcrowd-count {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--sp-3);
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    font-variant-numeric: tabular-nums;
-    color: var(--c-ink);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    height: 48px;                                       /* 高度：48px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「halfcrowd-count」裡面的「g」部分的樣式 */
 .halfcrowd-count__g {
-    color: var(--c-green);
+    color: var(--c-green);                              /* 文字顏色：主題變數 --c-green */
 }
 
+/* 「halfcrowd-count」裡面的「b」部分的樣式 */
 .halfcrowd-count__b {
-    color: var(--c-blue);
+    color: var(--c-blue);                               /* 文字顏色：主題變數 --c-blue */
 }
 
 /* 多出來的圓形數量：紅色 */
 .halfcrowd-count__r {
-    color: var(--c-bad-light);
+    color: var(--c-bad-light);                          /* 文字顏色：主題變數 --c-bad-light */
 }
 
+/* 「halfcrowd-count」在「正確（成功）時」的樣子的樣式 */
 .halfcrowd-count--ok {
-    color: var(--c-green);
+    color: var(--c-green);                              /* 文字顏色：主題變數 --c-green */
 }
 
+/* 「halfcrowd-count」裡面的「vs」部分的樣式 */
 .halfcrowd-count--bad .halfcrowd-count__vs {
-    color: var(--c-recall);
+    color: var(--c-recall);                             /* 文字顏色：主題變數 --c-recall */
 }
 
+/* 「halfcrowd-svg」這個元素的樣式 */
 .halfcrowd-svg {
-    position: absolute;
-    left: 0;
-    display: block;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    display: block;                                     /* 獨佔一整行的區塊 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 每個人底下的圈：平常看不見（人像 emoji 本身就是圖案），數過之後才亮起綠／藍／紅色（下面三個 --g／--b／--r） */
 .halfcrowd-circle {
-    fill: none;
-    stroke: none;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: none;                                       /* SVG 線條顏色：none */
 }
 
 /* 人像 emoji（SVG 文字）：不能選取、不吃點擊 */
 .halfcrowd-face {
-    pointer-events: none;
-    user-select: none;
-    -webkit-user-select: none;
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
 /* 中心點：小黑點加白邊（蓋在 emoji 上面也看得清楚） */
 .halfcrowd-dot {
-    fill: var(--c-ink);
-    stroke: var(--c-on-accent);
-    stroke-width: 1.2;
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
+    stroke: var(--c-on-accent);                         /* SVG 線條顏色：主題變數 --c-on-accent */
+    stroke-width: 1.2;                                  /* SVG 線條粗細：1.2 */
 }
 
+/* 「halfcrowd-circle」的「g」變化版的樣式 */
 .halfcrowd-circle--g {
-    stroke-width: 3.0;
-    fill: var(--c-green-light);
-    stroke: var(--c-green);
+    stroke-width: 3.0;                                  /* SVG 線條粗細：3.0 */
+    fill: var(--c-green-light);                         /* SVG 圖形的填色：主題變數 --c-green-light */
+    stroke: var(--c-green);                             /* SVG 線條顏色：主題變數 --c-green */
 }
 
+/* 「halfcrowd-circle」的「b」變化版的樣式 */
 .halfcrowd-circle--b {
-    stroke-width: 3.0;
-    fill: var(--c-blue-light);
-    stroke: var(--c-blue);
+    stroke-width: 3.0;                                  /* SVG 線條粗細：3.0 */
+    fill: var(--c-blue-light);                          /* SVG 圖形的填色：主題變數 --c-blue-light */
+    stroke: var(--c-blue);                              /* SVG 線條顏色：主題變數 --c-blue */
 }
 
 /* 兩邊不一樣多時，多出來的圓形：紅色 */
 .halfcrowd-circle--r {
-    fill: var(--c-bad-light);
-    stroke: var(--c-bad-light);
+    fill: var(--c-bad-light);                           /* SVG 圖形的填色：主題變數 --c-bad-light */
+    stroke: var(--c-bad-light);                         /* SVG 線條顏色：主題變數 --c-bad-light */
 }
 
+/* 「halfcrowd-line」這個元素的樣式 */
 .halfcrowd-line {
-    stroke: var(--c-ink);
-    stroke-width: 3;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「halfcrowd-line」的「ans」變化版的樣式 */
 .halfcrowd-line--ans {
-    stroke: var(--c-green);
-    stroke-dasharray: 8 6;
+    stroke: var(--c-green);                             /* SVG 線條顏色：主題變數 --c-green */
+    stroke-dasharray: 8 6;                              /* SVG 虛線的「畫／空」長度：8 6 */
 }
 
+/* 「halfcrowd-bar」這個元素的樣式 */
 .halfcrowd-bar {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 96px;
-    height: 56px;
-    touch-action: none;
-    cursor: ew-resize;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 96px;                                       /* 離下邊 96px */
+    height: 56px;                                       /* 高度：56px */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    cursor: ew-resize;                                  /* 滑鼠游標樣式：ew-resize */
 }
 
+/* 「halfcrowd-track」這個元素的樣式 */
 .halfcrowd-track {
-    position: absolute;
-    left: 22px;
-    right: 22px;
-    top: 23px;
-    height: 10px;
-    border-radius: var(--r-pill);
-    background: var(--c-yellow-soft);
-    border: 2px solid var(--c-ink-soft);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 22px;                                         /* 離左邊 22px */
+    right: 22px;                                        /* 離右邊 22px */
+    top: 23px;                                          /* 離上邊 23px */
+    height: 10px;                                       /* 高度：10px */
+    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill */
+    background: var(--c-yellow-soft);                   /* 背景：主題變數 --c-yellow-soft */
+    border: 2px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：2px solid 主題變數 --c-ink-soft */
 }
 
+/* 「halfcrowd-knob」這個元素的樣式 */
 .halfcrowd-knob {
-    position: absolute;
-    top: 6px;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: var(--c-orange);
-    border: var(--bd);
-    box-shadow: var(--shadow-card);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    top: 6px;                                           /* 離上邊 6px */
+    width: 44px;                                        /* 寬度：44px */
+    height: 44px;                                       /* 高度：44px */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    background: var(--c-orange);                        /* 背景：主題變數 --c-orange */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
 }
 
+/* 「halfcrowd-nudge」這個元素的樣式 */
 .halfcrowd-nudge {
-    position: absolute;
-    bottom: 0;
-    width: 70px;
-    height: 84px;
-    padding: 0;
-    font-size: var(--fs-lg);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    bottom: 0;                                          /* 離下邊 0 */
+    width: 70px;                                        /* 寬度：70px */
+    height: 84px;                                       /* 高度：84px */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
 }
 
+/* 「halfcrowd-nudge」的「l」變化版的樣式 */
 .halfcrowd-nudge--l {
-    left: 0;
+    left: 0;                                            /* 離左邊 0 */
 }
 
+/* 「halfcrowd-nudge」的「r」變化版的樣式 */
 .halfcrowd-nudge--r {
-    right: 0;
+    right: 0;                                           /* 離右邊 0 */
 }
 
+/* 「halfcrowd-ok」這個元素的樣式 */
 .halfcrowd-ok {
-    position: absolute;
-    left: 78px;
-    right: 78px;
-    bottom: 0;
-    width: auto;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 78px;                                         /* 離左邊 78px */
+    right: 78px;                                        /* 離右邊 78px */
+    bottom: 0;                                          /* 離下邊 0 */
+    width: auto;                                        /* 寬度：auto */
 }
 
+/* 「halfcrowd-msg」這個元素的樣式 */
 .halfcrowd-msg {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 48px;
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 48px;                                          /* 離上邊 48px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「halfcrowd-msg」在「正確（成功）時」的樣子的樣式 */
 .halfcrowd-msg--ok {
-    color: var(--c-green);
+    color: var(--c-green);                              /* 文字顏色：主題變數 --c-green */
 }
 
+/* 「halfcrowd-msg」在「錯誤（失敗）時」的樣子的樣式 */
 .halfcrowd-msg--bad {
-    color: var(--c-recall);
+    color: var(--c-recall);                             /* 文字顏色：主題變數 --c-recall */
 }

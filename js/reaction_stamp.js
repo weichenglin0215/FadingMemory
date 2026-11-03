@@ -14,11 +14,15 @@
    · 揭曉：印痕與紅框疊合，畫出紅框中心（紅色十字）、愛心中心（黑點）和兩點之間的連線，鏡頭放大到那條線。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'stamp'：選單、成績、存檔都靠它；樣式在 css/games/reaction_stamp.css，裡面的 class 名稱一律以 stamp- 開頭。 */
     'use strict';
 
-    var ID = 'stamp';
-    var SCORE = { better: 'min', decimals: 4, format: '{v} 公釐', label: '中心偏差', min: 0, max: 200 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'stamp';                                   /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'min', decimals: 4, format: '{v} 公釐', label: '中心偏差', min: 0, max: 200 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var FW = 330, FH = 210;                     /* 紅框的寬、高（px） */
@@ -74,7 +78,7 @@
         return { dist: Math.sqrt(wx * wx + wy * wy), dx: dx, dy: dy };
     }
     function makeRound(rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var phi = kit.randFloat(-PAPER_TILT, PAPER_TILT, rand);
         if (Math.abs(phi) < PAPER_TILT_MIN) phi = phi < 0 ? -PAPER_TILT_MIN : PAPER_TILT_MIN;   /* 不要太接近 0：不然不用轉就對了 */
         var ox = kit.randFloat(-FRAME_OFF.x, FRAME_OFF.x, rand), oy = kit.randFloat(-FRAME_OFF.y, FRAME_OFF.y, rand);
@@ -103,6 +107,7 @@
         return { x: W / 2, y: Math.min(H - STAMP_BOTTOM - look.h / 2, 540) };
     }
     function zoomFor(distPx) { return distPx >= ZOOM_DIST_MAX ? 1 : kit.clamp(ZOOM_REF / Math.max(distPx * 2, 0.5), 2, ZOOM_MAX); }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(mm) {
         if (mm < 0.3) return '神乎其技！';
         if (mm < 1) return '高手！';
@@ -112,6 +117,7 @@
     }
     function pts2str(pts) { return pts.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '); }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「單回合計時」的流程（開始、計時、結算、最佳紀錄）交給共用骨架 kit.single，我們只提供 setup（怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         /* 舊版的成績不能比：V1.25 改橢圓印章、四條邊的偏差；V1.27 再改成愛心印章、中心的距離。第一次進來各清一次 */
         Reaction.migrateBest(ID, function () { return null; }, '.v125');
@@ -126,12 +132,14 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, my = api.my;
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var cfg = makeRound(), look = makeStamp(), s0 = startOf(look, W, H);
         var st = { x: s0.x, y: s0.y }, locked = false, hint = null;
-        console.log('[心在正中央] 紙張歪 ' + cfg.phi.toFixed(2) + '°，紅框中心 (' + cfg.frame.x.toFixed(1) + ', ' + cfg.frame.y.toFixed(1) + ')，愛心寬 ' + look.w.toFixed(0));
+        console.log('[心在正中央] 紙張歪 ' + cfg.phi.toFixed(2) + '°，紅框中心 (' + cfg.frame.x.toFixed(1) + ', ' + cfg.frame.y.toFixed(1) + ')，愛心寬 ' + look.w.toFixed(0));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var svg = kit.svg('svg', { 'class': 'stamp-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
         var full = { vx: 0, vy: 0, vw: W, vh: H };
@@ -155,6 +163,7 @@
         }
         var outerEl = heartEl(outerShape, look.outer);
         heartEl(innerShape, look.inner);
+        /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() { gS.setAttribute('transform', 'translate(' + st.x.toFixed(2) + ' ' + st.y.toFixed(2) + ')'); }
         paint();
         var msg = h('div', { 'class': 'stamp-msg' });
@@ -229,6 +238,7 @@
         };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '心在正中央',
@@ -237,5 +247,6 @@
         score: SCORE,
         test: { corners: corners, centerErr: centerErr, heartShape: heartShape, makeStamp: makeStamp, startOf: startOf, toMm: toMm, makeRound: makeRound, insideStamp: insideStamp, zoomFor: zoomFor, rating: rating, FW: FW, FH: FH, PAPER: PAPER, PAPER_TILT: PAPER_TILT, PAPER_TILT_MIN: PAPER_TILT_MIN, MARK_LEG: MARK_LEG, FRAME_OFF: FRAME_OFF, HEART_W: HEART_W, INNER_K: INNER_K, GRAB: GRAB, COLORS: COLORS, WIDTHS: WIDTHS, DASHES: DASHES, GAPS: GAPS, HEART_N: HEART_N, STAMP_BOTTOM: STAMP_BOTTOM, PX_MM: PX_MM }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

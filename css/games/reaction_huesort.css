@@ -6,98 +6,106 @@
 
 /* ═══ 色票排隊（.huesort-）═══ */
 .huesort-stage {
-    user-select: none;
-    -webkit-user-select: none;
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
 /* 上方提示 */
 .huesort-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 色塊：顏色用 JS 直接設（是題目的內容，不是主題色）；揭曉時 .huesort-block--join 讓它們往中間集中、圓角變直角 */
 .huesort-block {
-    position: absolute;
-    border-radius: var(--r-md);
-    cursor: pointer;
-    transition: left 0.8s ease-in-out, top 0.8s ease-in-out, border-radius 0.8s ease-in-out;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
+    transition: left 0.8s ease-in-out, top 0.8s ease-in-out, border-radius 0.8s ease-in-out;  /* 狀態改變時的過渡動畫（屬性、時間、緩動）：left 0.8s ease-in-out, top 0.8s ease-in-out, borde */
 }
 
+/* 「huesort-block」的「join」變化版的樣式 */
 .huesort-block--join {
-    border-radius: 0;
-    cursor: default;
+    border-radius: 0;                                   /* 圓角：0 */
+    cursor: default;                                    /* 滑鼠游標樣式：default */
 }
 
 /* 記號：放在色塊正中間；白邊綠色圓圈／白邊紅色 X */
 .huesort-mark {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 54px;
-    height: 54px;
-    margin: -27px 0 0 -27px;
-    pointer-events: none;
-    animation: huesort-pop 0.25s ease-out;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 50%;                                          /* 離左邊 50% */
+    top: 50%;                                           /* 離上邊 50% */
+    width: 54px;                                        /* 寬度：54px */
+    height: 54px;                                       /* 高度：54px */
+    margin: -27px 0 0 -27px;                            /* 外距（margin，與別的元素的距離）：上 -27px、右 0、下 0、左 -27px */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    animation: huesort-pop 0.25s ease-out;              /* 播放動畫（名稱、時間、緩動、次數）：huesort-pop 0.25s ease-out */
 }
 
+/* 「huesort-mark」裡面的「svg」部分的樣式 */
 .huesort-mark__svg {
-    display: block;
-    overflow: visible;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
 }
 
+/* 「huesort-mark」裡面的「ok」部分的樣式 */
 .huesort-mark__ok {
-    fill: var(--c-ok);
-    stroke: var(--hus-edge);
-    stroke-width: 6;
+    fill: var(--c-ok);                                  /* SVG 圖形的填色：主題變數 --c-ok */
+    stroke: var(--hus-edge);                            /* SVG 線條顏色：主題變數 --hus-edge */
+    stroke-width: 6;                                    /* SVG 線條粗細：6 */
 }
 
+/* 「huesort-mark」裡面的「xedge」部分的樣式 */
 .huesort-mark__xedge {
-    fill: none;
-    stroke: var(--hus-edge);
-    stroke-width: 14;
-    stroke-linecap: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--hus-edge);                            /* SVG 線條顏色：主題變數 --hus-edge */
+    stroke-width: 14;                                   /* SVG 線條粗細：14 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「huesort-mark」裡面的「x」部分的樣式 */
 .huesort-mark__x {
-    fill: none;
-    stroke: var(--hus-x);
-    stroke-width: 7;
-    stroke-linecap: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--hus-x);                               /* SVG 線條顏色：主題變數 --hus-x */
+    stroke-width: 7;                                    /* SVG 線條粗細：7 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 動畫 huesort-pop：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes huesort-pop {
     from {
-        transform: scale(0.4);
-        opacity: 0;
+        transform: scale(0.4);                          /* 變形：縮放 0.4 倍 */
+        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
     }
 
     to {
-        transform: scale(1);
-        opacity: 1;
+        transform: scale(1);                            /* 變形：縮放 1 倍 */
+        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
     }
 }
 
 /* 下方說明 */
 .huesort-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「huesort-info」在「正確（成功）時」的樣子的樣式 */
 .huesort-info--ok {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「huesort-info」在「錯誤（失敗）時」的樣子的樣式 */
 .huesort-info--bad {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }

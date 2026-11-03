@@ -17,11 +17,15 @@
    · 揭曉：所有水果停在空中，每顆標上「第幾個要切」，切錯的那顆標紅、本來該切的那顆標綠（算式的也標出答案）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'ordercut'：選單、成績、存檔都靠它；樣式在 css/games/reaction_ordercut.css，裡面的 class 名稱一律以 ordercut- 開頭。 */
     'use strict';
 
-    var ID = 'ordercut';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'ordercut';                                /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -72,7 +76,7 @@
          level, expr（是不是算式關）, N, flight（飛行時間）, plan（計畫切的時間 c₁…c_N，秒）,
          fruits（依「要切的順序」排好；每顆 { rank（1～N，要切的順序）, label（寫在水果上的字）, value（數字或算式的答案）, color, x0（0～1，占畫面寬）, vx（占畫面寬／秒）, A（拋物線高度，占畫面高）, t（拋出時間）, T（飛行時間）, u（計畫切的時刻在飛行的位置）, a0（起始角度）, w（旋轉速度，度／秒）}）} */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var expr = isExpr(level), N = countFor(level), T = flightFor(level), gap = gapFor(level), chaos = chaosFor(level), om = omegaFor(level), labels, values;
         if (expr) { var ops = level >= MULDIV_FROM ? ['+', '-', '*', '/'] : ['+', '-'], es = makeExprs(N, ops, rand); labels = es.map(function (e) { return e.text; }); values = es.map(function (e) { return e.value; }); }
         else { values = []; for (var i = 1; i <= N; i++) values.push(i); labels = values.map(String); }
@@ -123,6 +127,7 @@
         if (kind === 'wrong') return '切錯順序了！先要切「' + expected.label + '」' + (q.expr ? '（答案 ' + expected.value + '）' : '') + '，你切了「' + got.label + '」' + (q.expr ? '（答案 ' + got.value + '）' : '');
         return '「' + expected.label + '」' + (q.expr ? '（答案 ' + expected.value + '）' : '') + '掉下去了，還沒被切到';
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 20) return '切水果大師！';
         if (n >= 12) return '眼明手快！';
@@ -131,6 +136,7 @@
         return '照號碼順序一顆一顆切！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'ordercut-stage',
@@ -141,11 +147,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand);
-        api.info = q;
-        console.log('[照號切水果] 第 ' + level + ' 關：' + (q.expr ? '算式' : '數字') + '、' + q.N + ' 顆；飛行 ' + q.flight + ' 秒；計畫切的時間 ' + q.plan.map(function (v) { return v.toFixed(1); }).join('、') + '；混亂度 ' + chaosFor(level));
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[照號切水果] 第 ' + level + ' 關：' + (q.expr ? '算式' : '數字') + '、' + q.N + ' 顆；飛行 ' + q.flight + ' 秒；計畫切的時間 ' + q.plan.map(function (v) { return v.toFixed(1); }).join('、') + '；混亂度 ' + chaosFor(level));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, R = radiusFor(level, W), geom = { W: W, H: H, R: R };
         var field = h('div', { 'class': 'ordercut-field' });
@@ -166,6 +174,7 @@
         function nowT() { return (performance.now() - t0) / 1000; }
         function rankOf(id) { return q.fruits[id].rank; }
         function expectedFruit() { return q.fruits[nextRank - 1]; }
+        /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint(t) {
             q.fruits.forEach(function (f, i) {
                 if (state[i] === 'cut' || state[i] === 'gone') return;
@@ -186,7 +195,7 @@
         (function guard() { api.after(300, function () { if (phase !== 'play' || api.over) return; var t = nowT(); for (var i = 0; i < q.fruits.length; i++) if (state[i] !== 'cut' && state[i] !== 'gone' && t > q.fruits[i].t + q.fruits[i].T + 0.05) { state[i] = 'gone'; lost(i); return; } guard(); }); })();
         if (level === 1 && kit.once('ordercut.hint')) api.after(Math.round((LEAD_S + q.plan[0] - 0.9) * 1000), function () {
             if (phase !== 'play') return; var f = q.fruits[0], p = fruitPos(f, q.plan[0] - 0.4, geom) || { x: W / 2, y: H / 2 };
-            kit.hintOn(stage, null, { mode: 'drag', x: Math.max(40, p.x - 90), y: p.y, dx: 180, dy: 0, delay: 100, text: '劃過 1 號水果' });
+            kit.hintOn(stage, null, { mode: 'drag', x: Math.max(40, p.x - 90), y: p.y, dx: 180, dy: 0, delay: 100, text: '劃過 1 號水果' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         });
 
         /* 手指劃過畫面：每一小段線檢查切到哪些水果 */
@@ -217,6 +226,7 @@
             if (p) [-1, 1].forEach(function (s) { var half = h('div', { 'class': 'ordercut-half ordercut-f' + q.fruits[i].color + (s < 0 ? ' ordercut-half--l' : ' ordercut-half--r') }); half.style.cssText = 'width:' + R + 'px;height:' + 2 * R + 'px;left:' + (p.x - (s < 0 ? R : 0)).toFixed(1) + 'px;top:' + (p.y - R).toFixed(1) + 'px;'; field.appendChild(half); api.after(30, function () { half.style.transform = 'translate(' + (s * 40) + 'px,60px) rotate(' + (s * 40) + 'deg)'; half.style.opacity = '0'; }); api.after(700, function () { if (half.parentNode) half.parentNode.removeChild(half); }); });
             next.textContent = nextRank > q.N ? '全部切完！' : '下一個：' + (q.expr ? '第 ' + nextRank + ' 小的' : q.fruits[nextRank - 1].label);
         }
+        /* 過關：鎖住畫面、顯示成功效果，並呼叫 api.pass 進下一關（或結算） */
         function win() {
             if (phase !== 'play' || api.over) return; phase = 'end'; info('全部照順序切完了！', true);
             kit.flash(stage, true, api.my); Sfx.play('ok'); api.pass({ delay: 1500 });
@@ -241,6 +251,7 @@
         }
         /* 驗證用：在計畫的時間依序切（solve，直接呼叫切水果）；故意先切第 2 號（wrong）；只排一次 */
         var armed = false;
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () {
             if (armed || phase !== 'play') return; armed = true;
             q.fruits.forEach(function (f, k) { api.after(Math.max(0, Math.round((q.plan[k] - nowT()) * 1000)), function () { if (phase !== 'play') return; var i = f.rank - 1; if (state[i] !== 'fly') { paint(nowT()); } if (nextRank === f.rank && state[i] === 'fly') { cutFruit(i); if (nextRank > q.N) win(); } }); });
@@ -251,16 +262,19 @@
         };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '照號切水果',
         rule: '水果一顆一顆拋上來，每顆上面寫一個數字。**照號碼 1、2、3… 的順序**，用手指在畫面上劃過去切它。**切錯順序就結束**，水果掉到畫面下面還沒切到也結束。水果會在空中旋轉，**6 和 9 看底線**（底線在下面才是正的）。**第 15 關起**，水果上面改成算式（像「2＋3」「12÷4」），要照答案由小到大的順序切！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             isExpr: isExpr, countFor: countFor, flightFor: flightFor, gapFor: gapFor, chaosFor: chaosFor, omegaFor: omegaFor, radiusFor: radiusFor, makeExpr: makeExpr, makeExprs: makeExprs, makeLevel: makeLevel, fruitPos: fruitPos, onScreen: onScreen, distToSeg: distToSeg, sliceSegment: sliceSegment, judgeCuts: judgeCuts, whyText: whyText, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, NUM_COUNT: NUM_COUNT, NUM_RAMP: NUM_RAMP, EXPR_FROM: EXPR_FROM, EXPR_COUNT: EXPR_COUNT, EXPR_RAMP: EXPR_RAMP, MULDIV_FROM: MULDIV_FROM, FLIGHT_S: FLIGHT_S, GAP_CUT: GAP_CUT, CHAOS: CHAOS, OMEGA_DEG: OMEGA_DEG, U_MIN: U_MIN, U_MAX: U_MAX, U_SPREAD: U_SPREAD, APEX: APEX, VX: VX, R_NUM: R_NUM, R_EXPR: R_EXPR, HIT_PAD: HIT_PAD, LEAD_S: LEAD_S, MAX_LEVEL: MAX_LEVEL, FRUITS: FRUITS
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

@@ -6,61 +6,69 @@
 
 /* ═══ 012 畫一樣長（.sl-）═══ */
 .samelen-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
 }
 
 /* 兩條線的粗細是原本的 300%（8 → 24，V1.25 玩家意見） */
 .samelen-ref {
-    stroke: var(--c-orange);
-    stroke-width: 24;
-    stroke-linecap: round;
+    stroke: var(--c-orange);                            /* SVG 線條顏色：主題變數 --c-orange */
+    stroke-width: 24;                                   /* SVG 線條粗細：24 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「samelen-mine」這個元素的樣式 */
 .samelen-mine {
-    stroke: var(--c-blue);
-    stroke-width: 24;
-    stroke-linecap: round;
+    stroke: var(--c-blue);                              /* SVG 線條顏色：主題變數 --c-blue */
+    stroke-width: 24;                                   /* SVG 線條粗細：24 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「samelen-cap」這個元素的樣式 */
 .samelen-cap {
-    stroke: var(--c-ink);
-    stroke-width: 4;
-    stroke-linecap: round;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「samelen-start」這個元素的樣式 */
 .samelen-start {
-    fill: var(--c-green);
-    stroke: var(--c-ink);
-    stroke-width: 3;
+    fill: var(--c-green);                               /* SVG 圖形的填色：主題變數 --c-green */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「samelen-guide」這個元素的樣式 */
 .samelen-guide {
-    stroke-width: 3;
-    stroke-dasharray: 8 7;
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-dasharray: 8 7;                              /* SVG 虛線的「畫／空」長度：8 7 */
 }
 
+/* 「samelen-guide」的「ref」變化版的樣式 */
 .samelen-guide--ref {
-    stroke: var(--c-orange);
+    stroke: var(--c-orange);                            /* SVG 線條顏色：主題變數 --c-orange */
 }
 
+/* 「samelen-guide」在「屬於玩家（你）時」的樣子的樣式 */
 .samelen-guide--mine {
-    stroke: var(--c-blue);
+    stroke: var(--c-blue);                              /* SVG 線條顏色：主題變數 --c-blue */
 }
 
+/* 「samelen-msg」這個元素的樣式 */
 .samelen-msg {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 6px;
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    opacity: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 6px;                                        /* 離下邊 6px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
 }
 
+/* 「samelen-msg」在「開啟（亮起）時」的樣子的樣式 */
 .samelen-msg--on {
-    opacity: 1;
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }

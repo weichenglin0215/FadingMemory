@@ -7,75 +7,75 @@
 /* 相同嗎？：比較兩個東西（圖形或文字）是否完全相同，按「相同」或「不同」。 */
 /* ═══ 相同嗎？（.sm-）═══ */
 .same-head {
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink-soft);
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 提示文字（例如「這次要比什麼」） */
 .same-prompt {
-    text-align: center;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    min-height: 1.3em;
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    min-height: 1.3em;                                  /* 最小高度：1.3em */
 }
 
 /* 放圖形／文字的大框，內容置中 */
 .same-box {
-    flex: 1 1 0;
-    min-height: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    overflow: hidden;
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* 答對時框變綠 */
 .same-box--ok {
-    background: var(--c-ok-soft);
-    border-color: var(--c-ok);
+    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
 }
 
 /* 答錯時框變橘 */
 .same-box--bad {
-    background: var(--c-bad-soft);
-    border-color: var(--c-bad);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
 }
 
 /* SVG 圖形：高度 92%，寬度跟著比例自動（width:auto），不會被拉歪 */
 .same-svg {
-    height: 92%;
-    width: auto;
-    max-width: 92%;
+    height: 92%;                                        /* 高度：92% */
+    width: auto;                                        /* 寬度：auto */
+    max-width: 92%;                                     /* 最大寬度：92% */
 }
 
 /* 文字版題目的大字 */
 .same-text {
-    font-size: 120px;
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    letter-spacing: 2px;
-    white-space: nowrap;
+    font-size: 120px;                                   /* 字級：120px */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    letter-spacing: 2px;                                /* 字與字之間的間距：2px */
+    white-space: nowrap;                                /* 文字不換行 */
 }
 
 /* 太長的文字改用較小字級，才放得進框裡 */
 .same-text--long {
-    font-size: 84px;
+    font-size: 84px;                                    /* 字級：84px */
 }
 
 /* 下方「相同／不同」兩顆按鈕的容器 */
 .same-btns {
-    flex: none;
-    display: flex;
-    gap: var(--sp-3);
+    flex: none;                                         /* 彈性縮放：none */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
 }
 
 /* 單顆按鈕：flex:1 1 0 讓兩顆平分寬度 */
 .same-btn {
-    flex: 1 1 0;
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
 }

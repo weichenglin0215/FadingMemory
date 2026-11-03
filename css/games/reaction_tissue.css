@@ -10,144 +10,144 @@
    不建立大量 DOM。 */
 /* 抽光它：整個畫面就是操作區（見上方說明） */
 .screen.tissue-bg {
-    background: var(--c-paper);
-    padding: 0;
-    overflow: hidden;
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+    background: var(--c-paper);                         /* 背景：主題變數 --c-paper */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
 /* 衛生紙：用 background-repeat 重複貼同一張圖，不用建立一堆 DOM 元素，效能比較好 */
 .tissue-paper {
-    position: absolute;
-    left: calc(50% - 150px);
-    bottom: 0;
-    z-index: 1;
-    background-repeat: repeat-y;
-    background-size: 300px 170px;
-    box-shadow: 0 0 14px rgba(74, 59, 30, 0.2);
-    transition: transform 0.6s ease, opacity 0.6s ease;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: calc(50% - 150px);                            /* 離左邊 calc(50% - 150px) */
+    bottom: 0;                                          /* 離下邊 0 */
+    z-index: 1;                                         /* 疊放順序：數字越大越在上面（1） */
+    background-repeat: repeat-y;                        /* 背景圖是否重複：repeat-y */
+    background-size: 300px 170px;                       /* 背景圖大小：300px 170px */
+    box-shadow: 0 0 14px rgba(74, 59, 30, 0.2);         /* 方塊陰影（立體感） */
+    transition: transform 0.6s ease, opacity 0.6s ease; /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.6s ease, opacity 0.6s ease */
 }
 
 /* 抽完後淡出並往下掉 */
 .tissue-paper--gone {
-    opacity: 0;
-    transform: translateY(80px);
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    transform: translateY(80px);                        /* 變形：垂直移動 80px */
 }
 
 /* 衛生紙捲（SVG） */
 .tissue-roll {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 260px;
-    z-index: 2;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    width: 100%;                                        /* 寬度：100% */
+    height: 260px;                                      /* 高度：260px */
+    z-index: 2;                                         /* 疊放順序：數字越大越在上面（2） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 紙捲本體 */
 .tissue-roll__body {
-    fill: #FFFEF8;
-    stroke: #D8C99A;
-    stroke-width: 3px;
+    fill: #FFFEF8;                                      /* SVG 圖形的填色：#FFFEF8 */
+    stroke: #D8C99A;                                    /* SVG 線條顏色：#D8C99A */
+    stroke-width: 3px;                                  /* SVG 線條粗細：3px */
 }
 
 /* 紙捲上的紋路 */
 .tissue-roll__mark {
-    stroke: #E0D4AE;
-    stroke-width: 3px;
-    fill: none;
-    stroke-linecap: round;
+    stroke: #E0D4AE;                                    /* SVG 線條顏色：#E0D4AE */
+    stroke-width: 3px;                                  /* SVG 線條粗細：3px */
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
 /* 紙捲中心的紙筒 */
 .tissue-roll__core {
-    fill: #C9A56B;
-    stroke: #A8803F;
-    stroke-width: 3px;
+    fill: #C9A56B;                                      /* SVG 圖形的填色：#C9A56B */
+    stroke: #A8803F;                                    /* SVG 線條顏色：#A8803F */
+    stroke-width: 3px;                                  /* SVG 線條粗細：3px */
 }
 
 /* 紙筒的孔 */
 .tissue-roll__hole {
-    fill: var(--c-paper);
+    fill: var(--c-paper);                               /* SVG 圖形的填色：主題變數 --c-paper */
 }
 
 /* 計時文字 */
 .tissue-time {
-    position: absolute;
-    top: var(--sp-3);
-    right: var(--sp-4);
-    z-index: 3;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    font-variant-numeric: tabular-nums;
-    color: var(--c-blue);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    top: var(--sp-3);                                   /* 離上邊 主題變數 --sp-3 */
+    right: var(--sp-4);                                 /* 離右邊 主題變數 --sp-4 */
+    z-index: 3;                                         /* 疊放順序：數字越大越在上面（3） */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
+    color: var(--c-blue);                               /* 文字顏色：主題變數 --c-blue */
 }
 
 /* 進度文字 */
 .tissue-prog {
-    position: absolute;
-    top: 56px;
-    right: var(--sp-4);
-    z-index: 3;
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    font-variant-numeric: tabular-nums;
-    color: var(--c-ink-soft);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    top: 56px;                                          /* 離上邊 56px */
+    right: var(--sp-4);                                 /* 離右邊 主題變數 --sp-4 */
+    z-index: 3;                                         /* 疊放順序：數字越大越在上面（3） */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 左邊的進度條底 */
 .tissue-bar {
-    position: absolute;
-    left: var(--sp-2);
-    top: var(--sp-3);
-    bottom: var(--sp-3);
-    width: 10px;
-    z-index: 3;
-    border-radius: 5px;
-    background: var(--c-yellow-soft);
-    overflow: hidden;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: var(--sp-2);                                  /* 離左邊 主題變數 --sp-2 */
+    top: var(--sp-3);                                   /* 離上邊 主題變數 --sp-3 */
+    bottom: var(--sp-3);                                /* 離下邊 主題變數 --sp-3 */
+    width: 10px;                                        /* 寬度：10px */
+    z-index: 3;                                         /* 疊放順序：數字越大越在上面（3） */
+    border-radius: 5px;                                 /* 圓角：5px */
+    background: var(--c-yellow-soft);                   /* 背景：主題變數 --c-yellow-soft */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* 進度條填滿部分，高度由 JS 設定 */
 .tissue-bar__fill {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 0;
-    background: var(--c-green);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    top: 0;                                             /* 離上邊 0 */
+    left: 0;                                            /* 離左邊 0 */
+    width: 100%;                                        /* 寬度：100% */
+    height: 0;                                          /* 高度：0 */
+    background: var(--c-green);                         /* 背景：主題變數 --c-green */
 }
 
 /* 中央提示文字 */
 .tissue-prompt {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 46%;
-    z-index: 3;
-    text-align: center;
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    pointer-events: none;
-    text-shadow: 0 0 10px var(--c-paper), 0 0 10px var(--c-paper);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 46%;                                           /* 離上邊 46% */
+    z-index: 3;                                         /* 疊放順序：數字越大越在上面（3） */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    text-shadow: 0 0 10px var(--c-paper), 0 0 10px var(--c-paper);  /* 文字陰影 */
 }
 
 /* 結算長條圖：align-items:flex-end 讓每根長條底部對齊 */
 .tissue-chart {
-    display: flex;
-    align-items: flex-end;
-    gap: 6px;
-    width: 100%;
-    height: 70px;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: flex-end;                              /* 子元素靠交叉方向的終點（橫排時靠下） */
+    gap: 6px;                                           /* 子元素之間的空隙：6px */
+    width: 100%;                                        /* 寬度：100% */
+    height: 70px;                                       /* 高度：70px */
 }
 
 /* 單根長條 */
 .tissue-chart__bar {
-    flex: 1;
-    background: var(--c-orange);
-    border-radius: 4px 4px 0 0;
+    flex: 1;                                            /* 有剩餘空間就平分長大（flex: 1） */
+    background: var(--c-orange);                        /* 背景：主題變數 --c-orange */
+    border-radius: 4px 4px 0 0;                         /* 圓角：4px 4px 0 0 */
 }

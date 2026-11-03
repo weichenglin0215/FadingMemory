@@ -6,106 +6,115 @@
 
 /* ═══ 擀水餃皮（.dough-）═══ */
 .dough-stage {
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
 /* 撒了麵粉的桌面 */
 .dough-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
-    background-color: var(--dgh-table);
-    background-image: radial-gradient(circle, var(--dgh-flour) 12%, transparent 14%), radial-gradient(circle, var(--dgh-flour) 10%, transparent 12%);
-    background-size: 46px 46px, 31px 31px;
-    background-position: 0 0, 17px 11px;
-    touch-action: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    background-color: var(--dgh-table);                 /* 背景：主題變數 --dgh-table */
+    background-image: radial-gradient(circle, var(--dgh-flour) 12%, transparent 14%), radial-gradient(circle, var(--dgh-flour) 10%, transparent 12%);  /* 背景圖／漸層 */
+    background-size: 46px 46px, 31px 31px;              /* 背景圖大小：46px 46px, 31px 31px */
+    background-position: 0 0, 17px 11px;                /* 背景圖位置：0 0, 17px 11px */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
+/* 「dough-tip」這個元素的樣式 */
 .dough-tip {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    top: 8px;
-    padding: 2px var(--sp-3);
-    background: var(--c-card);
-    border: 3px solid var(--c-ink-soft);
-    border-radius: var(--r-md);
-    text-align: center;
-    pointer-events: none;
-    z-index: 3;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 12px;                                         /* 離左邊 12px */
+    right: 12px;                                        /* 離右邊 12px */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 2px var(--sp-3);                           /* 內縮（padding，內容跟邊框的距離）：上 2px、左右 主題變數、下 --sp-3 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 3;                                         /* 疊放順序：數字越大越在上面（3） */
 }
 
+/* 「dough-svg」這個元素的樣式 */
 .dough-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
-    display: block;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    display: block;                                     /* 獨佔一整行的區塊 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 樣品圓（要擀成這麼大）、「平均大小的圓」（結果時才出現） */
 .dough-sample {
-    fill: none;
-    stroke: var(--dgh-sample);
-    stroke-width: 4;
-    stroke-dasharray: 12 9;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--dgh-sample);                          /* SVG 線條顏色：主題變數 --dgh-sample */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
+    stroke-dasharray: 12 9;                             /* SVG 虛線的「畫／空」長度：12 9 */
 }
 
+/* 「dough-best」這個元素的樣式 */
 .dough-best {
-    fill: none;
-    stroke: var(--dgh-best);
-    stroke-width: 3;
-    stroke-dasharray: 6 6;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--dgh-best);                            /* SVG 線條顏色：主題變數 --dgh-best */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-dasharray: 6 6;                              /* SVG 虛線的「畫／空」長度：6 6 */
 }
 
+/* 「dough-dough」這個元素的樣式 */
 .dough-dough {
-    fill: var(--dgh-dough);
-    stroke: var(--dgh-dough-edge);
-    stroke-width: 4;
-    stroke-linejoin: round;
+    fill: var(--dgh-dough);                             /* SVG 圖形的填色：主題變數 --dgh-dough */
+    stroke: var(--dgh-dough-edge);                      /* SVG 線條顏色：主題變數 --dgh-dough-edge */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
 /* 擀麵棍：跟著手指，方向垂直於擀的方向 */
 .dough-pin {
-    position: absolute;
-    width: 120px;
-    height: 28px;
-    background: linear-gradient(var(--dgh-pin-lite), var(--dgh-pin));
-    border: 3px solid var(--dgh-pin-edge);
-    border-radius: 14px;
-    box-sizing: border-box;
-    pointer-events: none;
-    z-index: 2;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 120px;                                       /* 寬度：120px */
+    height: 28px;                                       /* 高度：28px */
+    background: linear-gradient(var(--dgh-pin-lite), var(--dgh-pin));  /* 漸層背景 */
+    border: 3px solid var(--dgh-pin-edge);              /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --dgh-pin-edge */
+    border-radius: 14px;                                /* 圓角：14px */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 2;                                         /* 疊放順序：數字越大越在上面（2） */
 }
 
+/* 「dough-info」這個元素的樣式 */
 .dough-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「dough-info」在「正確（成功）時」的樣子的樣式 */
 .dough-info--ok {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「dough-info」在「錯誤（失敗）時」的樣子的樣式 */
 .dough-info--bad {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
+/* 「dough-btn」這個元素的樣式 */
 .dough-btn {
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
+/* 「dough-btn」在「關閉（熄滅）時」的樣子的樣式 */
 .dough-btn--off {
-    opacity: 0.45;
+    opacity: 0.45;                                      /* 透明度 0.45（1＝完全不透明、0＝全透明） */
 }

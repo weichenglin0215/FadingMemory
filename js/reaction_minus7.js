@@ -15,11 +15,15 @@
    · 揭曉：把整串數字列出來（最後 10 步），錯的那一步寫出算式（例如「986 − 7 ＝ 979，你選了 989」）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'minus7'：選單、成績、存檔都靠它；樣式在 css/games/reaction_minus7.css，裡面的 class 名稱一律以 minus7- 開頭。 */
     'use strict';
 
-    var ID = 'minus7';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 300 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'minus7';                                  /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 300 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var START = 1000;                           /* 從幾開始數（使用者規定 1000） */
@@ -55,7 +59,7 @@
        ans 在第 g 組（0、1、2）、組內第 pos 個（0、1、2）；三組的起點是 ans − pos ＋ 10 × (k − g)（k＝0、1、2），
        所以三組各差 10（例如 975／985／995 開頭），正確答案可能在最大、中間或最小的那一組。九個數字隨機打散，回傳 { options（9 個，打散後的順序）, idx（正確答案是第幾個）} */
     function makeOptions(ans, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var pos = kit.randInt(0, 2, rand), g = kit.randInt(0, 2, rand), start = ans - pos, nums = [];
         for (var k = 0; k < 3; k++) for (var j = 0; j < 3; j++) nums.push(start + 10 * (k - g) + j);
         var options = kit.shuffle(nums, rand);
@@ -71,6 +75,7 @@
     function whyText(q, picked) { return picked == null ? '時間到！' + formula(q) : '算錯了！' + formula(q) + '，你選了 ' + picked; }
     /* 整串數字（最後 count 步）：['1000', '993', ...] */
     function chain(upTo, count) { var out = [], from = Math.max(0, upTo - count + 1); for (var k = from; k <= upTo; k++) out.push(valueAfter(k)); return out; }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 30) return '心算天才！';
         if (n >= 20) return '腦袋很靈光！';
@@ -79,6 +84,7 @@
         return '記住剛剛的答案、一直算下去！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 10, stageClass: 'minus7-stage', resume: false,
@@ -92,12 +98,14 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, S = api.S;
         var count = 0, q = null, phase = 'intro', picked = null;
         api.info = { get count() { return count; }, get q() { return q; }, get phase() { return phase; } };
         S.score = 0; api.setInfo('答對 0 題');
-        console.log('[一路減七] 開始：從 ' + START + ' 開始；每題限時 ' + timeMs(0) + ' → ' + timeMs(RAMP_Q) + ' 毫秒');
+        console.log('[一路減七] 開始：從 ' + START + ' 開始；每題限時 ' + timeMs(0) + ' → ' + timeMs(RAMP_Q) + ' 毫秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var field = h('div', { 'class': 'minus7-field' });
         stage.appendChild(field);
@@ -122,7 +130,7 @@
                 api.after(GROW_MS, function () {
                     if (api.over || phase !== 'wait') return;
                     phase = 'ask'; api.stopTimer(); api.timer(q.time, function () { fail(null); });
-                    if (count === 0 && kit.once('minus7.hint')) kit.hintOn(stage, btns[q.idx], { mode: 'tap', delay: 700, text: START + ' 減 7 是多少？' });
+                    if (count === 0 && kit.once('minus7.hint')) kit.hintOn(stage, btns[q.idx], { mode: 'tap', delay: 700, text: START + ' 減 7 是多少？' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
                 });
             };
             if (q.notice) {
@@ -159,16 +167,19 @@
         api.wrong = function () { if (phase !== 'ask') return; answer((q.idx + 1) % 9); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '一路減七',
         rule: '一開始提示「**請從 1000 開始計數**」。然後出現大大的「−7」，下面有九個數字按鈕，三個一組、每組的個位數都一樣——選出**目前的數字減 7** 的答案。答對了，就再 −7。**目前的數字不會顯示**，要自己記住答案一路算下去。每題限時越來越短；**第 15 題起改成 −13**，第 25 題起「＋17、−9」輪流。答錯或超過時間就結束，看你能連續答對幾題。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             timeMs: timeMs, stepDelta: stepDelta, valueAfter: valueAfter, deltaText: deltaText, bigText: bigText, noticeBefore: noticeBefore, makeOptions: makeOptions, makeQuestion: makeQuestion, formula: formula, whyText: whyText, chain: chain, rating: rating,
             START: START, RAMP_Q: RAMP_Q, TIME_S: TIME_S, DEC: DEC, RULE2_FROM: RULE2_FROM, DEC2: DEC2, RULE3_FROM: RULE3_FROM, ADD3: ADD3, SUB3: SUB3, INTRO_MS: INTRO_MS, NOTICE_MS: NOTICE_MS, SOLVE_CAP: SOLVE_CAP, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

@@ -6,130 +6,141 @@
 
 /* ═══ 鋪地毯（.carpet-）═══ */
 .carpet-stage {
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「carpet-tip」這個元素的樣式 */
 .carpet-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 10px;
-    text-align: center;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 10px;                                          /* 離上邊 10px */
+    text-align: center;                                 /* 文字置中 */
 }
 
+/* 「carpet-board」這個元素的樣式 */
 .carpet-board {
-    position: absolute;
-    border: var(--bd-w) solid var(--c-ink-soft);
-    border-radius: var(--r-sm);
-    overflow: hidden;
-    background: var(--c-card-alt);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    border: var(--bd-w) solid var(--c-ink-soft);        /* 邊框（粗細、線型、顏色）：主題變數 --bd-w solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
 }
 
+/* 「carpet-cell」這個元素的樣式 */
 .carpet-cell {
-    position: absolute;
-    box-sizing: border-box;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
 }
 
+/* 「carpet-cell」的「a」變化版的樣式 */
 .carpet-cell--a {
-    background: var(--c-card);
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
 }
 
+/* 「carpet-cell」的「b」變化版的樣式 */
 .carpet-cell--b {
-    background: var(--c-card-alt);
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
 }
 
 /* 家具（不能走的格子）：一個表情符號放在格子正中央，字級由 JS 依格子大小設定（格子的 62%） */
 .carpet-stone {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「carpet-svg」這個元素的樣式 */
 .carpet-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 地毯：紅色的粗線，上面再疊一條淺色的虛線當花紋 */
 .carpet-rug {
-    fill: none;
-    stroke: var(--c-bad-light);
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-bad-light);                         /* SVG 線條顏色：主題變數 --c-bad-light */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「carpet-rug-pat」這個元素的樣式 */
 .carpet-rug-pat {
-    fill: none;
-    stroke: var(--c-yellow);
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-dasharray: 2 10;
-    opacity: 0.9;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-yellow);                            /* SVG 線條顏色：主題變數 --c-yellow */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+    stroke-dasharray: 2 10;                             /* SVG 虛線的「畫／空」長度：2 10 */
+    opacity: 0.9;                                       /* 透明度 0.9（1＝完全不透明、0＝全透明） */
 }
 
 /* 地毯捲（捲頭）：黃色圓＋中間的小圓 */
 .carpet-roll {
-    fill: var(--c-yellow);
-    stroke: var(--c-ink);
-    stroke-width: 3;
+    fill: var(--c-yellow);                              /* SVG 圖形的填色：主題變數 --c-yellow */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「carpet-roll-in」這個元素的樣式 */
 .carpet-roll-in {
-    fill: var(--c-orange);
-    stroke: var(--c-ink);
-    stroke-width: 2;
+    fill: var(--c-orange);                              /* SVG 圖形的填色：主題變數 --c-orange */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
 }
 
 /* 鋪滿了：整個房間的格子變淡綠 */
 .carpet-cell--ok {
-    background: var(--c-ok-soft);
+    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
 }
 
 /* 失敗：沒鋪到的格子閃紅 */
 .carpet-cell--miss {
-    outline: 4px solid var(--c-bad-light);
-    outline-offset: -4px;
-    animation: carpet-blink 0.5s ease-in-out 4;
+    outline: 4px solid var(--c-bad-light);              /* 外框線：4px solid 主題變數 --c-bad-light */
+    outline-offset: -4px;                               /* 外框線離元素多遠：-4px */
+    animation: carpet-blink 0.5s ease-in-out 4;         /* 播放動畫（名稱、時間、緩動、次數）：carpet-blink 0.5s ease-in-out 4 */
 }
 
+/* 動畫 carpet-blink：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes carpet-blink {
 
     0%,
     100% {
-        background: var(--c-bad-soft);
+        background: var(--c-bad-soft);                  /* 背景：主題變數 --c-bad-soft */
     }
 
     50% {
-        background: var(--c-bad-light);
+        background: var(--c-bad-light);                 /* 背景：主題變數 --c-bad-light */
     }
 }
 
 /* 正確的路：綠色線，從起點慢慢畫出來（pathLength 設成 1，所以 dasharray 1、dashoffset 1 → 0） */
 .carpet-sol {
-    fill: none;
-    stroke: var(--c-ok);
-    stroke-width: 8;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    opacity: 0.9;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
+    stroke-width: 8;                                    /* SVG 線條粗細：8 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+    opacity: 0.9;                                       /* 透明度 0.9（1＝完全不透明、0＝全透明） */
 }
 
+/* 「carpet-sol」的「draw」變化版的樣式 */
 .carpet-sol--draw {
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-    animation: carpet-draw 1.6s ease-out forwards;
+    stroke-dasharray: 1;                                /* SVG 虛線的「畫／空」長度：1 */
+    stroke-dashoffset: 1;                               /* SVG 虛線的起始位移：1 */
+    animation: carpet-draw 1.6s ease-out forwards;      /* 播放動畫（名稱、時間、緩動、次數）：carpet-draw 1.6s ease-out forwards */
 }
 
+/* 動畫 carpet-draw：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes carpet-draw {
     to {
-        stroke-dashoffset: 0;
+        stroke-dashoffset: 0;                           /* SVG 虛線的起始位移：0 */
     }
 }

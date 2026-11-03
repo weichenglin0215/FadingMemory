@@ -15,11 +15,15 @@
    · 揭曉：交換動畫照做，泡泡裡的總和換成交換後的數字；答錯時再用綠框標出正確的兩張，並說明「差的一半」。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'swapeven'：選單、成績、存檔都靠它；樣式在 css/games/reaction_swapeven.css，裡面的 class 名稱一律以 swapeven- 開頭。 */
     'use strict';
 
-    var ID = 'swapeven';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'swapeven';                                /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -68,9 +72,9 @@
     }
     /* 出一關：{ A, B（兩排的數字）, sA, sB, half（差的一半，有正負：A 答案牌 − B 答案牌）, ans: { i, j }, full, rev（誘餌對數）, k, V, level } */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var k = cardsFor(level), V = vmaxFor(level), hr = halfRange(level);
-        for (var tr = 0; tr < TRIES; tr++) {
+        for (var tr = 0; tr < TRIES; tr++) {            /* 用亂數一直重抽，最多 TRIES 次，抽到符合條件的題目就收下 */
             var hh = Math.min(kit.randInt(hr[0], hr[1], rand), V - 1), g = (rand() < 0.5 ? 1 : -1) * hh;
             var bLo = Math.max(1, 1 - g), bHi = Math.min(V, V - g);
             if (bLo > bHi) continue;
@@ -92,6 +96,7 @@
         var fa = [9, 3, 5], fb = [6, 1, 4];
         return { A: fa, B: fb, sA: 17, sB: 11, half: 3, ans: answers(fa, fb)[0], full: countDiff(fa, fb, 6), rev: countDiff(fa, fb, -3), k: 3, V: 9, level: level };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 25) return '心算高手！';
         if (n >= 15) return '算得很準！';
@@ -100,6 +105,7 @@
         return '記得：要換的是「差的一半」！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'swapeven-stage',
@@ -120,11 +126,13 @@
         return s;
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand), k = q.k, A = q.A, B = q.B;
-        api.info = q;
-        console.log('[換一張就平] 第 ' + level + ' 關：每排 ' + k + ' 張（1～' + q.V + '）上 ' + A.join(',') + '＝' + q.sA + '、下 ' + B.join(',') + '＝' + q.sB + '；答案 上' + A[q.ans.i] + '↔下' + B[q.ans.j] + '（差的一半 ' + q.half + '）；誘餌 差' + (2 * Math.abs(q.half)) + ' ' + q.full + ' 對、反向 ' + q.rev + ' 對；限時 ' + timeMs(level) + ' ms');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[換一張就平] 第 ' + level + ' 關：每排 ' + k + ' 張（1～' + q.V + '）上 ' + A.join(',') + '＝' + q.sA + '、下 ' + B.join(',') + '＝' + q.sB + '；答案 上' + A[q.ans.i] + '↔下' + B[q.ans.j] + '（差的一半 ' + q.half + '）；誘餌 差' + (2 * Math.abs(q.half)) + ' ' + q.full + ' 對、反向 ' + q.rev + ' 對；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, gap = 6, cw = Math.min(78, Math.floor((W - 16 - (k - 1) * gap) / k)), ch = Math.round(cw * 1.35);
         var x0 = Math.round((W - (k * cw + (k - 1) * gap)) / 2);
@@ -161,8 +169,8 @@
         var info = h('div', { 'class': 'qz-note swapeven-info', text: '' });
         info.style.top = (yB + ch + 100) + 'px';
         stage.appendChild(info);
-        api.timer(timeMs(level), function () { timeout(); });
-        if (level === 1 && kit.once('swapeven.hint')) kit.hintOn(stage, cards[0][q.ans.i], { mode: 'tap', delay: 700, text: '兩排差 ' + Math.abs(q.sA - q.sB) + '：換差 ' + Math.abs(q.half) + ' 的兩張' });
+        api.timer(timeMs(level), function () { timeout(); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
+        if (level === 1 && kit.once('swapeven.hint')) kit.hintOn(stage, cards[0][q.ans.i], { mode: 'tap', delay: 700, text: '兩排差 ' + Math.abs(q.sA - q.sB) + '：換差 ' + Math.abs(q.half) + ' 的兩張' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
         function choose(row, idx) {
             if (locked || api.over) return;
@@ -205,6 +213,7 @@
         function reveal() {
             cards[0][q.ans.i].classList.add('swapeven-card--ans'); cards[1][q.ans.j].classList.add('swapeven-card--ans');
         }
+        /* 時間到：算失敗（api.fail），通常會把正確答案亮出來 */
         function timeout() {
             if (locked || api.over) return;
             locked = true; reveal();
@@ -212,23 +221,27 @@
             kit.flash(stage, false, api.my);
             api.fail({ delay: 2800, lines: ['時間到！', explainLong()] });
         }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { choose(0, q.ans.i); choose(1, q.ans.j); };
         api.wrong = function () {
             for (var i = 0; i < k; i++) for (var j = 0; j < k; j++) if (gapAfter(A, B, i, j) !== 0) { choose(0, i); choose(1, j); return; }
         };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '換一張就平',
         rule: '上下兩排數字牌，頭上的泡泡寫著各自的總和。**上排點一張、下排點一張，兩張交換**，要讓**交換後兩排的總和一樣**。答案只有一組。小心：兩排差多少，不是找差多少的牌，要找的是「**差的一半**」！選錯或來不及就結束，看你能過幾關。越後面，牌越多、數字越大、時間越短。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             cardsFor: cardsFor, vmaxFor: vmaxFor, timeMs: timeMs, halfRange: halfRange, fullDecoysFor: fullDecoysFor, revDecoysFor: revDecoysFor,
             sum: sum, gapAfter: gapAfter, answers: answers, countDiff: countDiff, composition: composition, makeLevel: makeLevel, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, CARDS: CARDS, VMAX: VMAX, TIME_S: TIME_S, HALF_MIN: HALF_MIN, HALF_MAX: HALF_MAX, FULL_DECOYS: FULL_DECOYS, REV_DECOYS: REV_DECOYS, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

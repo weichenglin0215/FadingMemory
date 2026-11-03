@@ -7,81 +7,82 @@
 /* 六點鐘方向：看鐘擺擺動，在鐘擺到達 6 點鐘方向的瞬間點擊 */
 /* ═══ 六點鐘方向（.pendulum-）═══ */
 .pendulum-field {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-lg);
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
 }
 
 /* 鐘擺的 SVG 畫面，鋪滿場地 */
 .pendulum-svg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
 /* 弧形刻度線 */
 .pendulum-arc {
-    stroke: var(--c-ink-soft);
-    stroke-width: 1.5px;
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 1.5px;                                /* SVG 線條粗細：1.5px */
 }
 
 /* 刻度線（粗） */
 .pendulum-tick {
-    stroke: var(--c-ink-soft);
-    stroke-width: 1.5px;
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 1.5px;                                /* SVG 線條粗細：1.5px */
 }
 
 /* 細刻度線 */
 .pendulum-tick--fine {
-    stroke: var(--c-ink);
-    stroke-width: 1.5px;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 1.5px;                                /* SVG 線條粗細：1.5px */
 }
 
 /* 正下方 0 度（6 點鐘）的紅色基準線 */
 .pendulum-zero {
-    stroke: var(--flow-ink-1);
-    stroke-width: 3px;
+    stroke: var(--flow-ink-1);                          /* SVG 線條顏色：主題變數 --flow-ink-1 */
+    stroke-width: 3px;                                  /* SVG 線條粗細：3px */
 }
 
 /* 刻度數字 */
 .pendulum-num {
-    fill: var(--c-ink-soft);
-    font-family: var(--font-ui);
-    font-size: 26px;
-    font-weight: 900;
+    fill: var(--c-ink-soft);                            /* SVG 圖形的填色：主題變數 --c-ink-soft */
+    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
+    font-size: 26px;                                    /* 字級：26px */
+    font-weight: 900;                                   /* 字重（粗細）900（400 一般、700 粗體） */
 }
 
+/* 「pendulum-num」的「zero」變化版的樣式 */
 .pendulum-num--zero {
-    fill: var(--flow-ink-1);
-    font-size: 34px;
+    fill: var(--flow-ink-1);                            /* SVG 圖形的填色：主題變數 --flow-ink-1 */
+    font-size: 34px;                                    /* 字級：34px */
 }
 
 /* 擺桿 */
 .pendulum-rod {
-    stroke: var(--c-ink);
-    stroke-width: 5px;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 5px;                                  /* SVG 線條粗細：5px */
 }
 
 /* 擺錘（藍色圓球） */
 .pendulum-bob {
-    fill: var(--c-blue);
-    stroke: var(--c-ink);
-    stroke-width: 3px;
+    fill: var(--c-blue);                                /* SVG 圖形的填色：主題變數 --c-blue */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3px;                                  /* SVG 線條粗細：3px */
 }
 
 /* 指針 */
 .pendulum-needle {
-    stroke: var(--c-ink);
-    stroke-width: 3px;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3px;                                  /* SVG 線條粗細：3px */
 }
 
 /* 擺動的轉軸（中心圓點） */
 .pendulum-pivot {
-    fill: var(--c-ink);
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
 }

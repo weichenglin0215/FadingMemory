@@ -16,11 +16,15 @@
    測試（t_catroad.js）有一個「完美機器人」：用有限的橫向速度跟著中心線走，證明最難的設定下仍然走得過去。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'catroad'：選單、成績、存檔都靠它；樣式在 css/games/reaction_catroad.css，裡面的 class 名稱一律以 catroad- 開頭。 */
     'use strict';
 
-    var ID = 'catroad';
-    var SCORE = { better: 'max', decimals: 4, format: '{v} 秒', label: '撐過時間', min: 1, max: 600 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'catroad';                                 /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 4, format: '{v} 秒', label: '撐過時間', min: 1, max: 600 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var T_RAMP = 90;                    /* 難度升到頂要幾秒 */
@@ -88,6 +92,7 @@
     }
     /* 貓咪在橫向位置 x 掉下去了嗎（中心離中心線超過半寬） */
     function fallen(road, s, x) { var r = roadAt(road, s); return Math.abs(x - r.c) > r.hw; }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(sec) {
         if (sec >= 90) return '山路之王！';
         if (sec >= 60) return '貓咪大師！';
@@ -96,6 +101,7 @@
         return '再試一次，路會越來越窄！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「單回合計時」的流程（開始、計時、結算、最佳紀錄）交給共用骨架 kit.single，我們只提供 setup（怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.single(root, ctx, {
             id: ID, G: G, better: 'max', max: SCORE.max,
@@ -113,6 +119,8 @@
         return (v && v.trim()) || fallback;
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, my = api.my;
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
@@ -209,6 +217,7 @@
             }
             draw(now);
         }
+        /* 這一局結束：算出成績並進入結算畫面 */
         function finish() {
             api.finish(t, { lines: ['路寬走到 ' + (difficulty(t).hw * 2).toFixed(0) + ' px、速度 ' + difficulty(t).speed.toFixed(0) + ' px／秒', '掉進岩漿前一共走了 ' + Math.round(s) + ' px'] });
         }
@@ -227,7 +236,7 @@
         bar.addEventListener('pointerup', endDrag); bar.addEventListener('pointercancel', endDrag);
 
         /* 開始：蓋一層「出發」遮罩（kit.startCover），按下才開始跑 */
-        var cover = kit.startCover(stage, {
+        var cover = kit.startCover(stage, {             /* 「準備好了按開始」的遮罩：玩家按下才開始（計時從這時才算） */
             text: '拖曳下方橫桿，讓貓咪一直走在山路上。\n山路會越來越窄、越來越彎、越來越快，\n掉進岩漿就結束，看你能撐幾秒！', btn: '出發',
             onStart: function () {
                 state = 'run'; last = null; t = 0; s = 0;
@@ -259,16 +268,19 @@
         };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '貓咪走山路',
         rule: '貓咪走在彎曲的山路上，兩側是斷崖和岩漿。**拖曳下方的橫桿讓貓咪左右移動**，一直留在路上，**掉進岩漿就結束**。山路會越來越窄、越來越彎、越來越快，成績是你撐了幾秒（秒數越多越好）。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             prog: prog, difficulty: difficulty, newRoad: newRoad, extendRoad: extendRoad, roadAt: roadAt, fallen: fallen,
             T_RAMP: T_RAMP, SPEED: SPEED, HW: HW, SLOPE: SLOPE, SEG: SEG, WVAR: WVAR, STEP: STEP, EDGE_PAD: EDGE_PAD, GRACE_S: GRACE_S
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

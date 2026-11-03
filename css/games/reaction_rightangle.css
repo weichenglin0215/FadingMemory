@@ -6,53 +6,61 @@
 
 /* ═══ 013 畫成直角（.rightangle-）═══ */
 .rightangle-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
 }
 
+/* 「rightangle-stripe」這個元素的樣式 */
 .rightangle-stripe {
-    stroke: var(--c-yellow);
-    stroke-width: 8;
-    opacity: 0.22;
+    stroke: var(--c-yellow);                            /* SVG 線條顏色：主題變數 --c-yellow */
+    stroke-width: 8;                                    /* SVG 線條粗細：8 */
+    opacity: 0.22;                                      /* 透明度 0.22（1＝完全不透明、0＝全透明） */
 }
 
+/* 「rightangle-q」這個元素的樣式 */
 .rightangle-q {
-    stroke: var(--c-ink);
-    stroke-width: 8;
-    stroke-linecap: round;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 8;                                    /* SVG 線條粗細：8 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「rightangle-mine」這個元素的樣式 */
 .rightangle-mine {
-    stroke: var(--c-orange);
-    stroke-width: 7;
-    stroke-linecap: round;
+    stroke: var(--c-orange);                            /* SVG 線條顏色：主題變數 --c-orange */
+    stroke-width: 7;                                    /* SVG 線條粗細：7 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「rightangle-start」這個元素的樣式 */
 .rightangle-start {
-    fill: var(--c-green);
-    stroke: var(--c-ink);
-    stroke-width: 3;
+    fill: var(--c-green);                               /* SVG 圖形的填色：主題變數 --c-green */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「rightangle-ideal」這個元素的樣式 */
 .rightangle-ideal {
-    stroke: var(--c-green);
-    stroke-width: 4;
-    stroke-dasharray: 12 9;
+    stroke: var(--c-green);                             /* SVG 線條顏色：主題變數 --c-green */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
+    stroke-dasharray: 12 9;                             /* SVG 虛線的「畫／空」長度：12 9 */
 }
 
+/* 「rightangle-sq」這個元素的樣式 */
 .rightangle-sq {
-    fill: none;
-    stroke: var(--c-ink);
-    stroke-width: 3;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「rightangle-endi」這個元素的樣式 */
 .rightangle-endi {
-    fill: var(--c-green);
+    fill: var(--c-green);                               /* SVG 圖形的填色：主題變數 --c-green */
 }
 
+/* 「rightangle-endu」這個元素的樣式 */
 .rightangle-endu {
-    fill: var(--c-orange);
+    fill: var(--c-orange);                              /* SVG 圖形的填色：主題變數 --c-orange */
     fill-opacity: 0.5;
 }
 
@@ -63,21 +71,23 @@
 
 /* 兩個圓心的小黑點 */
 .rightangle-dot {
-    fill: var(--c-black);
+    fill: var(--c-black);                               /* SVG 圖形的填色：主題變數 --c-black */
 }
 
+/* 「rightangle-msg」這個元素的樣式 */
 .rightangle-msg {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 4px;
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    opacity: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 4px;                                        /* 離下邊 4px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
 }
 
+/* 「rightangle-msg」在「開啟（亮起）時」的樣子的樣式 */
 .rightangle-msg--on {
-    opacity: 1;
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }

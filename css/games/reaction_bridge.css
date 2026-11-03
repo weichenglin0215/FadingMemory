@@ -6,73 +6,82 @@
 
 /* ═══ 搭一座橋（.bridge-）═══ */
 .bridge-svg {
-    display: block;
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
+/* 「bridge-ground」這個元素的樣式 */
 .bridge-ground {
-    fill: var(--c-yellow-soft);
-    stroke: var(--c-ink-soft);
-    stroke-width: 3;
+    fill: var(--c-yellow-soft);                         /* SVG 圖形的填色：主題變數 --c-yellow-soft */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「bridge-block」這個元素的樣式 */
 .bridge-block {
-    fill: var(--c-blue);
-    stroke: var(--c-ink);
-    stroke-width: 3;
+    fill: var(--c-blue);                                /* SVG 圖形的填色：主題變數 --c-blue */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「bridge-plank」這個元素的樣式 */
 .bridge-plank {
-    fill: var(--c-orange);
-    stroke: var(--c-ink);
-    stroke-width: 3;
+    fill: var(--c-orange);                              /* SVG 圖形的填色：主題變數 --c-orange */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「bridge-plank」在「正確（成功）時」的樣子的樣式 */
 .bridge-plank--ok {
-    fill: var(--c-green);
+    fill: var(--c-green);                               /* SVG 圖形的填色：主題變數 --c-green */
 }
 
 /* 橫板兩端往下的導引線：提醒你「方塊要移到這兩條線的下面」 */
 .bridge-guide {
-    stroke: var(--c-ink-soft);
-    stroke-width: 2;
-    stroke-dasharray: 4 8;
-    opacity: 0.55;
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
+    stroke-dasharray: 4 8;                              /* SVG 虛線的「畫／空」長度：4 8 */
+    opacity: 0.55;                                      /* 透明度 0.55（1＝完全不透明、0＝全透明） */
 }
 
+/* 「bridge-ok」這個元素的樣式 */
 .bridge-ok {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
 }
 
+/* 「bridge-tip」這個元素的樣式 */
 .bridge-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 6px;
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 6px;                                           /* 離上邊 6px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
+/* 「bridge-msg」這個元素的樣式 */
 .bridge-msg {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 150px;
-    text-align: center;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 150px;                                         /* 離上邊 150px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「bridge-msg」在「正確（成功）時」的樣子的樣式 */
 .bridge-msg--ok {
-    color: var(--c-green);
+    color: var(--c-green);                              /* 文字顏色：主題變數 --c-green */
 }
 
+/* 「bridge-msg」在「錯誤（失敗）時」的樣子的樣式 */
 .bridge-msg--bad {
-    color: var(--c-recall);
+    color: var(--c-recall);                             /* 文字顏色：主題變數 --c-recall */
 }

@@ -14,11 +14,15 @@
    · 揭曉：撥出去的鈔票全部攤開，一張一張累加：「3800 元，多了 100」；撥到第 n 張（剛好那張）標綠色、多撥的標紅色；撥少了就顯示下一張是什麼。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'countbills'：選單、成績、存檔都靠它；樣式在 css/games/reaction_countbills.css，裡面的 class 名稱一律以 countbills- 開頭。 */
     'use strict';
 
-    var ID = 'countbills';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'countbills';                              /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -39,7 +43,7 @@
     function sumFirst(notes, k) { var s = 0; for (var i = 0; i < k && i < notes.length; i++) s += notes[i]; return s; }
     /* 出一關：{ level, notes（整疊鈔票從上到下的面額）, n（撥幾張剛好）, target（目標金額）, extra, time（限時毫秒）, denoms（這一關的面額表）} */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var n = countFor(level), denoms = denomsFor(level), extra = kit.randInt(EXTRA[0], EXTRA[1], rand), notes = [], i;
         for (var tr = 0; tr < 100; tr++) {
             notes = []; for (i = 0; i < n; i++) notes.push(kit.pick(denoms, rand));
@@ -60,6 +64,7 @@
         if (r.result === 'few') return '撥了 ' + r.sum + ' 元，目標 ' + q.target + ' 元——少了 ' + (-r.diff) + ' 元';
         return '撥了 ' + r.sum + ' 元，目標 ' + q.target + ' 元——多了 ' + r.diff + ' 元';
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 15) return '點鈔達人！';
         if (n >= 9) return '心算很快！';
@@ -68,6 +73,7 @@
         return '邊撥邊加！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'countbills-stage',
@@ -88,11 +94,13 @@
         return el;
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand);
-        api.info = q;
-        console.log('[數鈔票] 第 ' + level + ' 關：目標 ' + q.target + ' 元＝前 ' + q.n + ' 張（' + q.notes.slice(0, q.n).join('+') + '）；整疊 ' + q.notes.length + ' 張；限時 ' + q.time + ' 毫秒');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[數鈔票] 第 ' + level + ' 關：目標 ' + q.target + ' 元＝前 ' + q.n + ' 張（' + q.notes.slice(0, q.n).join('+') + '）；整疊 ' + q.notes.length + ' 張；限時 ' + q.time + ' 毫秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var NW = Math.min(210, Math.round((W - 60) / 2)), NH = Math.round(NW * 0.52), top0 = 130;
@@ -122,7 +130,7 @@
         layout();
         var info = h('div', { 'class': 'qz-note countbills-info', text: level === 1 ? '算好了就按「好了」，多了少了都不行！' : '邊撥邊心算，剛好就按「好了」' }); info.style.top = (top0 + NH + 56) + 'px'; field.appendChild(info);
         var btn = kit.btnGrid(field, [{ text: '好了！', kind: 'primary', cls: 'countbills-btn', onTap: function () { done('done'); } }], { cols: 1, h: 96, bottom: 12 });
-        if (level === 1 && kit.once('countbills.hint')) kit.hintOn(stage, null, { mode: 'tap', x: 20 + NW / 2, y: top0 + NH / 2, delay: 700, text: '點一下，最上面那張就撥出去' });
+        if (level === 1 && kit.once('countbills.hint')) kit.hintOn(stage, null, { mode: 'tap', x: 20 + NW / 2, y: top0 + NH / 2, delay: 700, text: '點一下，最上面那張就撥出去' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         /* 撥一張：點「疊上」的區域（整個桌面都可以點，手指比較好點） */
         table.addEventListener('pointerdown', function (e) {
             if (phase !== 'play' || api.over) return;
@@ -130,7 +138,7 @@
             if (taken >= q.notes.length) return;
             taken++; layout(); Sfx.play('tick');
         });
-        api.timer(q.time, function () { done('timeout'); });
+        api.timer(q.time, function () { done('timeout'); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
 
         /* 按「好了」（或時間到）：把撥出去的鈔票攤開，一張一張累加 */
         function done(kind) {
@@ -162,20 +170,24 @@
         /* 驗證用：撥 n 張再按好了（solve）／少撥一張再按好了（wrong）；只排一次 */
         var armed = false;
         function run(cnt) { armed = true; for (var i = 0; i < cnt; i++) (function (k) { api.after(60 + k * 90, function () { if (phase === 'play') { taken++; layout(); } }); })(i); api.after(60 + cnt * 90 + 80, function () { done('done'); }); }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { if (!armed && phase === 'play') run(q.n); };
         api.wrong = function () { if (!armed && phase === 'play') run(q.n - 1); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '數鈔票',
         rule: '一疊鈔票，面額 100、500、1000 元混在一起，順序打亂。上面寫著**目標金額**（例如「數出 3700 元」）。**每點一下，最上面那張鈔票就撥到右邊**，要邊撥邊心算。你覺得撥出去的剛好是目標金額，就**按「好了」**。多了、少了、時間到都失敗；撥過頭不能回頭。**第 10 關起加入 200 元和 2000 元**，顏色很接近，小心加錯！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             countFor: countFor, timeMs: timeMs, denomsFor: denomsFor, sumFirst: sumFirst, makeLevel: makeLevel, judge: judge, whyText: whyText, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, COUNT: COUNT, TIME_S: TIME_S, EXTRA: EXTRA, DENOMS_BASE: DENOMS_BASE, DENOMS_LATER: DENOMS_LATER, LATER_FROM: LATER_FROM, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

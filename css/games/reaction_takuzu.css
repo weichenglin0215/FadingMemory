@@ -7,49 +7,54 @@
 
 /* 整個遊戲區：由上往下排「盤面、說明、顏色鍵、工具列」，水平置中 */
 .takuzu-wrap {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    padding-top: 10px;
-    box-sizing: border-box;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: 12px;                                          /* 子元素之間的空隙：12px */
+    padding-top: 10px;                                  /* 上方內縮：10px */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
 }
 
+/* 「takuzu-board」這個元素的樣式 */
 .takuzu-board {
-    display: grid;
-    grid-template-columns: repeat(var(--takuzu-n, 6), var(--takuzu-cell, 70px));
-    grid-auto-rows: var(--takuzu-cell, 70px);
-    border: 3px solid var(--c-ink);
-    background: var(--c-card);
+    display: grid;                                      /* 格線排版：子元素排進格子 */
+    grid-template-columns: repeat(var(--takuzu-n, 6), var(--takuzu-cell, 70px));  /* 格線的欄（每欄的寬度）：repeat(var(--takuzu-n, 6), var(--takuzu-cell, 70px)) */
+    grid-auto-rows: var(--takuzu-cell, 70px);           /* 自動新增的列的高度：var(--takuzu-cell, 70px) */
+    border: 3px solid var(--c-ink);                     /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
 }
 
+/* 「takuzu-cell」這個元素的樣式 */
 .takuzu-cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    border-right: 1px solid var(--bd-c);
-    border-bottom: 1px solid var(--bd-c);
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    border-right: 1px solid var(--bd-c);                /* 右邊框：1px solid 主題變數 --bd-c */
+    border-bottom: 1px solid var(--bd-c);               /* 下邊框：1px solid 主題變數 --bd-c */
+    touch-action: manipulation;                         /* 關掉雙擊放大，點擊反應更快 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
 /* 題目給的格子：底色深一點，不能改 */
 .takuzu-cell--given {
-    background: var(--c-card-alt);
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
 }
 
+/* 「takuzu-cell」在「被提示標出來時」的樣子的樣式 */
 .takuzu-cell--hint {
-    animation: takuzu-hint 0.8s ease-in-out infinite;
+    animation: takuzu-hint 0.8s ease-in-out infinite;   /* 播放動畫（名稱、時間、緩動、次數）：takuzu-hint 0.8s ease-in-out infinite */
 }
 
+/* 「takuzu-cell」在「正確（成功）時」的樣子的樣式 */
 .takuzu-cell--ok {
-    background: var(--c-ok-soft);
+    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
 }
 
+/* 動畫 takuzu-hint：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes takuzu-hint {
     0%, 100% { background: var(--c-yellow-soft); }
     50% { background: var(--c-orange-soft); }
@@ -57,139 +62,157 @@
 
 /* 棋子：黑棋實心，白棋空心（有黑框） */
 .takuzu-disc {
-    width: 74%;
-    height: 74%;
-    border-radius: 50%;
-    box-sizing: border-box;
+    width: 74%;                                         /* 寬度：74% */
+    height: 74%;                                        /* 高度：74% */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
 }
 
+/* 「takuzu-disc」的「black」變化版的樣式 */
 .takuzu-disc--black {
-    background: var(--c-ink);
+    background: var(--c-ink);                           /* 背景：主題變數 --c-ink */
 }
 
+/* 「takuzu-disc」的「white」變化版的樣式 */
 .takuzu-disc--white {
-    background: var(--c-card);
-    border: 4px solid var(--c-ink);
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 4px solid var(--c-ink);                     /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --c-ink */
 }
 
+/* 「takuzu-tip」這個元素的樣式 */
 .takuzu-tip {
-    min-height: 32px;
-    padding: 0 12px;
-    font-size: var(--fs-note);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    text-align: center;
+    min-height: 32px;                                   /* 最小高度：32px */
+    padding: 0 12px;                                    /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 12px */
+    font-size: var(--fs-note);                          /* 字級：主題變數 --fs-note */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    text-align: center;                                 /* 文字置中 */
 }
 
 /* 顏色鍵、工具列 */
 .takuzu-tools {
-    display: flex;
-    gap: 10px;
-    width: 96%;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    gap: 10px;                                          /* 子元素之間的空隙：10px */
+    width: 96%;                                         /* 寬度：96% */
 }
 
+/* 「takuzu-tool」這個元素的樣式 */
 .takuzu-tool {
-    flex: 1 1 0;
-    height: 64px;
-    padding: 0;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    height: 64px;                                       /* 高度：64px */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: 10px;                                          /* 子元素之間的空隙：10px */
 }
 
+/* 「takuzu-tool」在「開啟（亮起）時」的樣子的樣式 */
 .takuzu-tool--on {
-    background: var(--c-yellow);
+    background: var(--c-yellow);                        /* 背景：主題變數 --c-yellow */
 }
 
+/* 「takuzu-swatch」這個元素的樣式 */
 .takuzu-swatch {
-    display: inline-block;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    box-sizing: border-box;
+    display: inline-block;                              /* 像文字一樣排在同一行，但可以設定寬高 */
+    width: 30px;                                        /* 寬度：30px */
+    height: 30px;                                       /* 高度：30px */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
 }
 
+/* 「takuzu-swatch」的「black」變化版的樣式 */
 .takuzu-swatch--black {
-    background: var(--c-ink);
+    background: var(--c-ink);                           /* 背景：主題變數 --c-ink */
 }
 
+/* 「takuzu-swatch」的「white」變化版的樣式 */
 .takuzu-swatch--white {
-    background: var(--c-card);
-    border: 3px solid var(--c-ink);
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink);                     /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink */
 }
 
 /* 違規說明彈窗裡的文字與圖 */
 .takuzu-explain {
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    line-height: 1.45;
-    color: var(--c-ink);
-    margin-top: 8px;
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: 1.45;                                  /* 行高：1.45（文字每一行佔的高度） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    margin-top: 8px;                                    /* 上外距（跟上面的元素距離）：8px */
 }
 
+/* 「takuzu-explain」的「tip」變化版的樣式 */
 .takuzu-explain--tip {
-    color: var(--c-ink-soft);
-    font-size: var(--fs-xs);
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
 }
 
+/* 「takuzu-svg」這個元素的樣式 */
 .takuzu-svg {
-    display: block;
-    width: 100%;
-    height: auto;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    width: 100%;                                        /* 寬度：100% */
+    height: auto;                                       /* 高度：auto */
 }
 
+/* 「takuzu-svg-cell」這個元素的樣式 */
 .takuzu-svg-cell {
-    fill: var(--c-card);
-    stroke: var(--bd-c);
-    stroke-width: 1;
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    stroke: var(--bd-c);                                /* SVG 線條顏色：主題變數 --bd-c */
+    stroke-width: 1;                                    /* SVG 線條粗細：1 */
 }
 
+/* 「takuzu-svg-cell」在「最新的一筆」的樣子的樣式 */
 .takuzu-svg-cell--new {
-    fill: var(--c-yellow-soft);
-    stroke: var(--c-orange);
-    stroke-width: 3;
+    fill: var(--c-yellow-soft);                         /* SVG 圖形的填色：主題變數 --c-yellow-soft */
+    stroke: var(--c-orange);                            /* SVG 線條顏色：主題變數 --c-orange */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「takuzu-svg-disc」的「black」變化版的樣式 */
 .takuzu-svg-disc--black {
-    fill: var(--c-ink);
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
 }
 
+/* 「takuzu-svg-disc」的「white」變化版的樣式 */
 .takuzu-svg-disc--white {
-    fill: var(--c-card);
-    stroke: var(--c-ink);
-    stroke-width: 3;
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「takuzu-svg-dot」這個元素的樣式 */
 .takuzu-svg-dot {
-    fill: var(--bd-c);
+    fill: var(--bd-c);                                  /* SVG 圖形的填色：主題變數 --bd-c */
 }
 
 /* 違規的格子：紅圈 */
 .takuzu-svg-bad {
-    fill: none;
-    stroke: var(--c-bad);
-    stroke-width: 4;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-bad);                               /* SVG 線條顏色：主題變數 --c-bad */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
 }
 
+/* 「takuzu-svg-cap」這個元素的樣式 */
 .takuzu-svg-cap {
-    font-size: 17px;
-    font-weight: var(--fw-bold);
-    fill: var(--c-ink-soft);
+    font-size: 17px;                                    /* 字級：17px */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    fill: var(--c-ink-soft);                            /* SVG 圖形的填色：主題變數 --c-ink-soft */
 }
 
 /* 圖裡的字大小用 svg 自己的座標（圖寬 400 單位，會跟著彈窗等比例縮放） */
 .takuzu-svg-mark {
-    font-size: 22px;
-    font-weight: var(--fw-black);
+    font-size: 22px;                                    /* 字級：22px */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
+/* 「takuzu-svg-mark」在「正確（成功）時」的樣子的樣式 */
 .takuzu-svg-mark--ok {
-    fill: var(--c-ok);
+    fill: var(--c-ok);                                  /* SVG 圖形的填色：主題變數 --c-ok */
 }
 
+/* 「takuzu-svg-mark」的「no」變化版的樣式 */
 .takuzu-svg-mark--no {
-    fill: var(--c-bad);
+    fill: var(--c-bad);                                 /* SVG 圖形的填色：主題變數 --c-bad */
 }

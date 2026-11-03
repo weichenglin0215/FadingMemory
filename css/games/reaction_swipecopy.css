@@ -6,177 +6,195 @@
 
 /* ═══ 反著滑（.swipecopy-）═══ */
 .swipecopy-stage {
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「swipecopy-field」這個元素的樣式 */
 .swipecopy-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
 }
 
+/* 「swipecopy-tip」這個元素的樣式 */
 .swipecopy-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 箭頭出現、也是手指滑動的區域（在這個框裡任何地方滑都可以） */
 .swipecopy-zone {
-    position: absolute;
-    border: 3px dashed var(--c-ink-soft);
-    border-radius: var(--r-lg);
-    background: var(--c-card-alt);
-    touch-action: none;
-    overflow: hidden;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    border: 3px dashed var(--c-ink-soft);               /* 邊框（粗細、線型、顏色）：3px dashed 主題變數 --c-ink-soft */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
+/* 「swipecopy-pop」這個元素的樣式 */
 .swipecopy-pop {
-    position: absolute;
-    animation: swipecopy-pop 0.2s ease-out;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    animation: swipecopy-pop 0.2s ease-out;             /* 播放動畫（名稱、時間、緩動、次數）：swipecopy-pop 0.2s ease-out */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 動畫 swipecopy-pop：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes swipecopy-pop {
     from {
-        transform: scale(0.4);
-        opacity: 0;
+        transform: scale(0.4);                          /* 變形：縮放 0.4 倍 */
+        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
     }
 
     to {
-        transform: scale(1);
-        opacity: 1;
+        transform: scale(1);                            /* 變形：縮放 1 倍 */
+        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
     }
 }
 
+/* 「swipecopy-flash」這個元素的樣式 */
 .swipecopy-flash {
-    position: absolute;
-    width: 72px;
-    height: 72px;
-    opacity: 0.85;
-    animation: swipecopy-fade 0.26s ease-out forwards;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 72px;                                        /* 寬度：72px */
+    height: 72px;                                       /* 高度：72px */
+    opacity: 0.85;                                      /* 透明度 0.85（1＝完全不透明、0＝全透明） */
+    animation: swipecopy-fade 0.26s ease-out forwards;  /* 播放動畫（名稱、時間、緩動、次數）：swipecopy-fade 0.26s ease-out forwards */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 動畫 swipecopy-fade：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes swipecopy-fade {
     from {
-        transform: scale(1);
-        opacity: 0.9;
+        transform: scale(1);                            /* 變形：縮放 1 倍 */
+        opacity: 0.9;                                   /* 透明度 0.9（1＝完全不透明、0＝全透明） */
     }
 
     to {
-        transform: scale(1.5);
-        opacity: 0;
+        transform: scale(1.5);                          /* 變形：縮放 1.5 倍 */
+        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
     }
 }
 
 /* 交通號誌的箭頭：藍色圓牌、白色粗箭頭 */
 .swipecopy-sign {
-    display: block;
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
+/* 「swipecopy-sign」裡面的「disc」部分的樣式 */
 .swipecopy-sign__disc {
-    fill: var(--swc-blue);
-    stroke: var(--c-card);
-    stroke-width: 4;
+    fill: var(--swc-blue);                              /* SVG 圖形的填色：主題變數 --swc-blue */
+    stroke: var(--c-card);                              /* SVG 線條顏色：主題變數 --c-card */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
 }
 
+/* 「swipecopy-sign」裡面的「arrow」部分的樣式 */
 .swipecopy-sign__arrow {
-    fill: var(--c-card);
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
 }
 
 /* 你滑的方向（閃一下）、該滑的方向（綠）、滑錯的（紅） */
 .swipecopy-sign--mine .swipecopy-sign__disc {
-    fill: var(--c-orange);
+    fill: var(--c-orange);                              /* SVG 圖形的填色：主題變數 --c-orange */
 }
 
+/* 「swipecopy-sign」裡面的「disc」部分的樣式 */
 .swipecopy-sign--req .swipecopy-sign__disc {
-    fill: var(--c-ok);
+    fill: var(--c-ok);                                  /* SVG 圖形的填色：主題變數 --c-ok */
 }
 
+/* 「swipecopy-sign」裡面的「disc」部分的樣式 */
 .swipecopy-sign--bad .swipecopy-sign__disc {
-    fill: var(--c-bad-light);
+    fill: var(--c-bad-light);                           /* SVG 圖形的填色：主題變數 --c-bad-light */
 }
 
 /* 九宮格的格線（兩條直線、兩條橫線） */
 .swipecopy-gridline {
-    position: absolute;
-    background: var(--c-ink-soft);
-    opacity: 0.35;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    background: var(--c-ink-soft);                      /* 背景：主題變數 --c-ink-soft */
+    opacity: 0.35;                                      /* 透明度 0.35（1＝完全不透明、0＝全透明） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「swipecopy-gridline」的「v」變化版的樣式 */
 .swipecopy-gridline--v {
-    top: 0;
-    bottom: 0;
-    width: 2px;
+    top: 0;                                             /* 離上邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    width: 2px;                                         /* 寬度：2px */
 }
 
+/* 「swipecopy-gridline」的「h」變化版的樣式 */
 .swipecopy-gridline--h {
-    left: 0;
-    right: 0;
-    height: 2px;
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    height: 2px;                                        /* 高度：2px */
 }
 
+/* 「swipecopy-info」這個元素的樣式 */
 .swipecopy-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 失敗時整串箭頭排成一列（下面是該滑的方向），重播時一格一格亮起 */
 .swipecopy-strip {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-3);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 12px;                                         /* 離左邊 12px */
+    right: 12px;                                        /* 離右邊 12px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
 }
 
+/* 「swipecopy-strip」裡面的「row」部分的樣式 */
 .swipecopy-strip__row {
-    display: flex;
-    justify-content: center;
-    gap: 6px;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: 6px;                                           /* 子元素之間的空隙：6px */
 }
 
+/* 「swipecopy-cell」這個元素的樣式 */
 .swipecopy-cell {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    padding: 4px;
-    border: 3px solid transparent;
-    border-radius: var(--r-sm);
-    opacity: 0.45;
-    transition: opacity 0.15s;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: 2px;                                           /* 子元素之間的空隙：2px */
+    padding: 4px;                                       /* 內縮（padding，內容跟邊框的距離）：四邊都是 4px */
+    border: 3px solid transparent;                      /* 邊框（粗細、線型、顏色）：3px solid transparent */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    opacity: 0.45;                                      /* 透明度 0.45（1＝完全不透明、0＝全透明） */
+    transition: opacity 0.15s;                          /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.15s */
 }
 
+/* 「swipecopy-cell」的「lit」變化版的樣式 */
 .swipecopy-cell--lit {
-    opacity: 1;
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }
 
+/* 「swipecopy-cell」在「錯誤（失敗）時」的樣子的樣式 */
 .swipecopy-cell--bad {
-    border-color: var(--c-bad);
-    background: var(--c-bad-soft);
+    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
 }
 
+/* 「swipecopy-cell」裡面的「no」部分；「swipecopy-cell」裡面的「to」部分的樣式 */
 .swipecopy-cell__no,
 .swipecopy-cell__to {
-    color: var(--c-ink-soft);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    line-height: 1.1;
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: 1.1;                                   /* 行高：1.1（文字每一行佔的高度） */
 }

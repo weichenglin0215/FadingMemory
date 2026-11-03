@@ -12,108 +12,117 @@
    靠攏、緊貼的動畫，時間由 --mc-close-ms 決定。 */
 /* 色不異空：黑底、不留邊 */
 .screen.mixcolor-bg {
-    background: #000;
-    padding: 0;
+    background: #000;                                   /* 背景：#000 */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
 }
 
 /* 兩個色塊所在的橫列 */
 .mixcolor-field {
-    flex: 1 1 auto;
-    min-height: 0;
-    display: flex;
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
 }
 
 /* 單個色塊，flex:1 1 0 讓左右平分寬度 */
 .mixcolor-block {
-    flex: 1 1 0;
-    min-width: 0;
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-width: 0;                                       /* 最小寬度：0 */
 }
 
 /* 兩色塊中間的縫，transition 讓它縮到 0 時有動畫（cubic-bezier 是自訂加速曲線） */
 .mixcolor-gap {
-    flex: 0 0 100px;
-    transition: flex-basis var(--mc-close-ms, 500ms) cubic-bezier(0.3, 0, 0.2, 1);
+    flex: 0 0 100px;                                    /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 100px（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    transition: flex-basis var(--mc-close-ms, 500ms) cubic-bezier(0.3, 0, 0.2, 1);  /* 狀態改變時的過渡動畫（屬性、時間、緩動）：flex-basis var(--mc-close-ms, 500ms) cubic-bezier( */
 }
 
 /* 縫關閉：flex-basis 歸零（!important 優先於 JS 寫的行內樣式） */
 .mixcolor-gap--closed {
-    flex-basis: 0 !important;
+    flex-basis: 0 !important;                           /* 基本大小（放大縮小之前）：0（!important＝強制優先） */
 }
 
 /* 縫關閉之後，右邊色塊往左多蓋 1px：舞台縮放、寬度不是整數像素時，兩個色塊之間會露出底下黑色背景的一條細黑線（V1.28 玩家意見） */
 .mixcolor-gap--closed+.mixcolor-block {
-    margin-left: -1px;
+    margin-left: -1px;                                  /* 左外距：-1px */
 }
 
 /* 說明文字（white-space:pre-line = 保留 \n 換行） */
 .mixcolor-hint {
-    color: #FFFFFF;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-body);
-    text-align: center;
-    white-space: pre-line;
+    color: #FFFFFF;                                     /* 文字顏色：#FFFFFF */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    text-align: center;                                 /* 文字置中 */
+    white-space: pre-line;                              /* 保留換行字元、其餘空白合併 */
 }
 
 /* ═══ 混出什麼色（.mixcolor-，上方的兩個色塊與黑色長方形沿用 css/reaction.css 的 .mc-）═══ */
 .mixcolor-foot {
-    flex: 0 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-2);
-    padding: var(--sp-2) var(--sp-3) var(--sp-3);
+    flex: 0 0 auto;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
+    padding: var(--sp-2) var(--sp-3) var(--sp-3);       /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-2、下 主題變數、左 --sp-3 */
 }
 
+/* 「mixcolor-pad」這個元素的樣式 */
 .mixcolor-pad {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(2, 74px);
-    gap: var(--sp-2);
+    display: grid;                                      /* 格線排版：子元素排進格子 */
+    grid-template-columns: repeat(3, 1fr);              /* 格線的欄（每欄的寬度）：repeat(3, 1fr) */
+    grid-template-rows: repeat(2, 74px);                /* 格線的列（每列的高度）：repeat(2, 74px) */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
 }
 
+/* 「mixcolor-btn」這個元素的樣式 */
 .mixcolor-btn {
-    border-radius: var(--r-md);
-    border: 3px solid var(--c-on-accent);
-    color: var(--c-on-accent);
-    font-size: 48px;
-    font-weight: var(--fw-black);
-    line-height: 1;
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
-    transition: transform 0.08s ease, filter 0.08s ease;
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    border: 3px solid var(--c-on-accent);               /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-on-accent */
+    color: var(--c-on-accent);                          /* 文字顏色：主題變數 --c-on-accent */
+    font-size: 48px;                                    /* 字級：48px */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
+    transition: transform 0.08s ease, filter 0.08s ease;  /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.08s ease, filter 0.08s ease */
 }
 
+/* 「mixcolor-btn」在「開啟（亮起）時」的樣子的樣式 */
 .mixcolor-btn--on {
-    transform: scale(0.95);
-    filter: brightness(1.25);
+    transform: scale(0.95);                             /* 變形：縮放 0.95 倍 */
+    filter: brightness(1.25);                           /* 濾鏡效果：brightness(1.25) */
 }
 
 /* 「確定」：跟上面的 ＋／－ 按鈕隔開一段距離（原本只隔 8px，手指點下排「－」稍微偏下就按到「確定」，遊戲就結束了） */
 .mixcolor-ok {
-    margin-top: var(--sp-5);
+    margin-top: var(--sp-5);                            /* 上外距（跟上面的元素距離）：主題變數 --sp-5 */
 }
 
+/* 「mixcolor-btn」的「r-hi」變化版的樣式 */
 .mixcolor-btn--r-hi {
-    background: var(--cm-r-hi);
+    background: var(--cm-r-hi);                         /* 背景：主題變數 --cm-r-hi */
 }
 
+/* 「mixcolor-btn」的「r-lo」變化版的樣式 */
 .mixcolor-btn--r-lo {
-    background: var(--cm-r-lo);
+    background: var(--cm-r-lo);                         /* 背景：主題變數 --cm-r-lo */
 }
 
+/* 「mixcolor-btn」的「g-hi」變化版的樣式 */
 .mixcolor-btn--g-hi {
-    background: var(--cm-g-hi);
+    background: var(--cm-g-hi);                         /* 背景：主題變數 --cm-g-hi */
 }
 
+/* 「mixcolor-btn」的「g-lo」變化版的樣式 */
 .mixcolor-btn--g-lo {
-    background: var(--cm-g-lo);
+    background: var(--cm-g-lo);                         /* 背景：主題變數 --cm-g-lo */
 }
 
+/* 「mixcolor-btn」的「b-hi」變化版的樣式 */
 .mixcolor-btn--b-hi {
-    background: var(--cm-b-hi);
+    background: var(--cm-b-hi);                         /* 背景：主題變數 --cm-b-hi */
 }
 
+/* 「mixcolor-btn」的「b-lo」變化版的樣式 */
 .mixcolor-btn--b-lo {
-    background: var(--cm-b-lo);
+    background: var(--cm-b-lo);                         /* 背景：主題變數 --cm-b-lo */
 }

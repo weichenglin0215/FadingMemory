@@ -15,11 +15,15 @@
      (2) 骰子的 1 點與 4 點改成紅色的圓點（像真的骰子），而且 1 點的圓點放大（PIP_R1）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'dicechange'：選單、成績、存檔都靠它；樣式在 css/games/reaction_dicechange.css，裡面的 class 名稱一律以 dicechange- 開頭。 */
     'use strict';
 
-    var ID = 'dicechange';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'dicechange';                              /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var DICE_FIRST = 2, DICE_MAX = 16;          /* 第 1 關有幾顆骰子；最多幾顆（之後每關多 1 顆） */
@@ -57,7 +61,7 @@
     }
     /* 出一關：{ n, before（原本的點數）, after（最後亮出來的點數）, changed（被換掉的是第幾顆，由小到大） } */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var n = diceFor(level), k = changedFor(level), i;
         var before = [];
         for (i = 0; i < n; i++) before.push(kit.randInt(1, 6, rand));
@@ -83,6 +87,7 @@
         FACES[v].split('').forEach(function (c) { s += '<circle cx="' + PIP[c][0] + '" cy="' + PIP[c][1] + '" r="' + pipRadius(v) + '" class="dicechange-pip' + (isRedFace(v) ? ' dicechange-pip--red' : '') + '"/>'; });
         return s + '</svg>';
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 25) return '記憶力驚人！';
         if (n >= 15) return '過目不忘！';
@@ -91,6 +96,7 @@
         return '記住每顆骰子的點數，再來一次！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 6,
@@ -101,11 +107,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand);
-        api.info = q;
-        console.log('[骰子少一點] 第 ' + level + ' 關：' + q.n + ' 顆骰子 ' + q.before.join('') + ' → ' + q.after.join('') + '，被換掉的是第 ' + q.changed.map(function (c) { return c + 1; }).join('、') + ' 顆；記憶 ' + showMs(level) + ' ms，蓋住 ' + COVER_MS + ' ms，作答 ' + ansMs(level) + ' ms');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[骰子少一點] 第 ' + level + ' 關：' + q.n + ' 顆骰子 ' + q.before.join('') + ' → ' + q.after.join('') + '，被換掉的是第 ' + q.changed.map(function (c) { return c + 1; }).join('、') + ' 顆；記憶 ' + showMs(level) + ' ms，蓋住 ' + COVER_MS + ' ms，作答 ' + ansMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, areaH = H - 120;
         var lay = layout(q.n, W, areaH);
@@ -128,8 +136,8 @@
             api.after(COVER_MS, function () {
                 phase = 'answer'; setFaces(q.after);
                 msg.textContent = '請點擊點數被更換過的骰子（還有 ' + (q.changed.length - found) + ' 顆）';
-                api.timer(ansMs(level), function () { reveal(null); });
-                if (level === 1 && kit.once('dicechange.hint')) kit.hintOn(stage, dice[q.changed[0]], { mode: 'tap', delay: 700, text: '請點擊點數不一樣的骰子' });
+                api.timer(ansMs(level), function () { reveal(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
+                if (level === 1 && kit.once('dicechange.hint')) kit.hintOn(stage, dice[q.changed[0]], { mode: 'tap', delay: 700, text: '請點擊點數不一樣的骰子' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
             });
         });
         dice.forEach(function (d, i) {
@@ -164,6 +172,7 @@
                 ]
             });
         }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () {
             /* 驗證用：把被換掉的全部點出來（必須等到進入作答階段） */
             if (phase !== 'answer') return;
@@ -177,16 +186,19 @@
         };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '骰子少一點',
         rule: '**先記住盤面上的骰子**，接著全部蓋住 3 秒，再亮出來時**有幾顆骰子的點數被換掉了（只差 1 點），把它們點出來**。一開始 2 顆骰子，之後每關多一顆，被換掉的也會越來越多。點錯或來不及就結束，看你能過幾關。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             diceFor: diceFor, changedFor: changedFor, showMs: showMs, ansMs: ansMs, colsFor: colsFor, layout: layout, makeLevel: makeLevel, dieSvg: dieSvg, isRedFace: isRedFace, pipRadius: pipRadius, PIP_R: PIP_R, PIP_R1: PIP_R1, rating: rating,
             DICE_FIRST: DICE_FIRST, DICE_MAX: DICE_MAX, COVER_MS: COVER_MS, MUL_LEVELS: MUL_LEVELS, MAX_LEVEL: MAX_LEVEL, CHANGED_STEPS: CHANGED_STEPS
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

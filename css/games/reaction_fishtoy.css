@@ -6,193 +6,223 @@
 
 /* ═══ 釣魚玩具（.fishtoy-）═══ */
 .fishtoy-stage {
-    user-select: none;
-    -webkit-user-select: none;
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「fishtoy-field」這個元素的樣式 */
 .fishtoy-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* 上方的目標：釣 ○色 的魚 */
 .fishtoy-goal {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 6px;
-    text-align: center;
-    pointer-events: none;
-    z-index: 2;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 6px;                                           /* 離上邊 6px */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 2;                                         /* 疊放順序：數字越大越在上面（2） */
 }
 
+/* 「fishtoy-goal」裡面的「t」部分的樣式 */
 .fishtoy-goal__t {
-    color: var(--c-ink);
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
+/* 「fishtoy-goal」裡面的「c」部分的樣式 */
 .fishtoy-goal__c {
-    padding: 0 var(--sp-2);
-    border-radius: var(--r-sm);
-    color: var(--c-card);
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
-    text-shadow: 0 1px 2px var(--fty-text-shadow);
+    padding: 0 var(--sp-2);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-2 */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    color: var(--c-card);                               /* 文字顏色：主題變數 --c-card */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    text-shadow: 0 1px 2px var(--fty-text-shadow);      /* 文字陰影 */
 }
 
+/* 「fishtoy-bg0」這個元素的樣式 */
 .fishtoy-bg0 {
-    background: var(--fty-c0);
+    background: var(--fty-c0);                          /* 背景：主題變數 --fty-c0 */
 }
 
+/* 「fishtoy-bg1」這個元素的樣式 */
 .fishtoy-bg1 {
-    background: var(--fty-c1);
+    background: var(--fty-c1);                          /* 背景：主題變數 --fty-c1 */
 }
 
+/* 「fishtoy-bg2」這個元素的樣式 */
 .fishtoy-bg2 {
-    background: var(--fty-c2);
+    background: var(--fty-c2);                          /* 背景：主題變數 --fty-c2 */
 }
 
+/* 「fishtoy-bg3」這個元素的樣式 */
 .fishtoy-bg3 {
-    background: var(--fty-c3);
+    background: var(--fty-c3);                          /* 背景：主題變數 --fty-c3 */
 }
 
+/* 「fishtoy-bg4」這個元素的樣式 */
 .fishtoy-bg4 {
-    background: var(--fty-c4);
+    background: var(--fty-c4);                          /* 背景：主題變數 --fty-c4 */
 }
 
+/* 「fishtoy-bg5」這個元素的樣式 */
 .fishtoy-bg5 {
-    background: var(--fty-c5);
+    background: var(--fty-c5);                          /* 背景：主題變數 --fty-c5 */
 }
 
+/* 「fishtoy-svg」這個元素的樣式 */
 .fishtoy-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
-    display: block;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    display: block;                                     /* 獨佔一整行的區塊 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 池塘與魚排成的圈 */
 .fishtoy-pond {
-    fill: var(--fty-water);
-    stroke: var(--fty-pond-line);
-    stroke-width: 8;
+    fill: var(--fty-water);                             /* SVG 圖形的填色：主題變數 --fty-water */
+    stroke: var(--fty-pond-line);                       /* SVG 線條顏色：主題變數 --fty-pond-line */
+    stroke-width: 8;                                    /* SVG 線條粗細：8 */
 }
 
+/* 「fishtoy-ring」這個元素的樣式 */
 .fishtoy-ring {
-    fill: none;
-    stroke: var(--fty-ring);
-    stroke-width: 2;
-    stroke-dasharray: 6 8;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--fty-ring);                            /* SVG 線條顏色：主題變數 --fty-ring */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
+    stroke-dasharray: 6 8;                              /* SVG 虛線的「畫／空」長度：6 8 */
 }
 
 /* 落水點的指示線：魚要在釣竿落水的那一刻游到這裡 */
 .fishtoy-spot {
-    stroke: var(--fty-spot);
-    stroke-width: 3;
-    stroke-dasharray: 8 6;
+    stroke: var(--fty-spot);                            /* SVG 線條顏色：主題變數 --fty-spot */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-dasharray: 8 6;                              /* SVG 虛線的「畫／空」長度：8 6 */
 }
 
+/* 「fishtoy-rod」這個元素的樣式 */
 .fishtoy-rod {
-    stroke: var(--fty-rod);
-    stroke-width: 9;
-    stroke-linecap: round;
+    stroke: var(--fty-rod);                             /* SVG 線條顏色：主題變數 --fty-rod */
+    stroke-width: 9;                                    /* SVG 線條粗細：9 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「fishtoy-line」這個元素的樣式 */
 .fishtoy-line {
-    stroke: var(--fty-line);
-    stroke-width: 2.5;
+    stroke: var(--fty-line);                            /* SVG 線條顏色：主題變數 --fty-line */
+    stroke-width: 2.5;                                  /* SVG 線條粗細：2.5 */
 }
 
+/* 「fishtoy-hook」這個元素的樣式 */
 .fishtoy-hook {
-    fill: var(--fty-hook);
-    stroke: var(--c-ink-soft);
-    stroke-width: 3;
+    fill: var(--fty-hook);                              /* SVG 圖形的填色：主題變數 --fty-hook */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
 /* 魚 */
 .fishtoy-body,
 .fishtoy-tail {
-    stroke: var(--c-ink-soft);
-    stroke-width: 2.5;
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 2.5;                                  /* SVG 線條粗細：2.5 */
 }
 
+/* 「fishtoy-c0」這個元素的樣式 */
 .fishtoy-c0 {
-    fill: var(--fty-c0);
+    fill: var(--fty-c0);                                /* SVG 圖形的填色：主題變數 --fty-c0 */
 }
 
+/* 「fishtoy-c1」這個元素的樣式 */
 .fishtoy-c1 {
-    fill: var(--fty-c1);
+    fill: var(--fty-c1);                                /* SVG 圖形的填色：主題變數 --fty-c1 */
 }
 
+/* 「fishtoy-c2」這個元素的樣式 */
 .fishtoy-c2 {
-    fill: var(--fty-c2);
+    fill: var(--fty-c2);                                /* SVG 圖形的填色：主題變數 --fty-c2 */
 }
 
+/* 「fishtoy-c3」這個元素的樣式 */
 .fishtoy-c3 {
-    fill: var(--fty-c3);
+    fill: var(--fty-c3);                                /* SVG 圖形的填色：主題變數 --fty-c3 */
 }
 
+/* 「fishtoy-c4」這個元素的樣式 */
 .fishtoy-c4 {
-    fill: var(--fty-c4);
+    fill: var(--fty-c4);                                /* SVG 圖形的填色：主題變數 --fty-c4 */
 }
 
+/* 「fishtoy-c5」這個元素的樣式 */
 .fishtoy-c5 {
-    fill: var(--fty-c5);
+    fill: var(--fty-c5);                                /* SVG 圖形的填色：主題變數 --fty-c5 */
 }
 
+/* 「fishtoy-eye」這個元素的樣式 */
 .fishtoy-eye {
-    fill: var(--fty-eye);
+    fill: var(--fty-eye);                               /* SVG 圖形的填色：主題變數 --fty-eye */
 }
 
+/* 「fishtoy-hole」這個元素的樣式 */
 .fishtoy-hole {
-    fill: var(--fty-hole);
+    fill: var(--fty-hole);                              /* SVG 圖形的填色：主題變數 --fty-hole */
 }
 
+/* 「fishtoy-lip」這個元素的樣式 */
 .fishtoy-lip {
-    stroke: var(--c-ink-soft);
-    stroke-width: 3;
-    stroke-linecap: round;
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「fishtoy-body」這個元素的樣式 */
 .fishtoy-fish--focus .fishtoy-body {
-    stroke: var(--fty-focus);
-    stroke-width: 5;
+    stroke: var(--fty-focus);                           /* SVG 線條顏色：主題變數 --fty-focus */
+    stroke-width: 5;                                    /* SVG 線條粗細：5 */
 }
 
+/* 「fishtoy-body」這個元素的樣式 */
 .fishtoy-fish--caught .fishtoy-body {
-    stroke: var(--c-ok);
-    stroke-width: 5;
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
+    stroke-width: 5;                                    /* SVG 線條粗細：5 */
 }
 
+/* 「fishtoy-info」這個元素的樣式 */
 .fishtoy-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「fishtoy-info」在「正確（成功）時」的樣子的樣式 */
 .fishtoy-info--ok {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「fishtoy-info」在「錯誤（失敗）時」的樣子的樣式 */
 .fishtoy-info--bad {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
+/* 「fishtoy-btn」這個元素的樣式 */
 .fishtoy-btn {
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
+/* 「fishtoy-btn」在「關閉（熄滅）時」的樣子的樣式 */
 .fishtoy-btn--off {
-    opacity: 0.45;
+    opacity: 0.45;                                      /* 透明度 0.45（1＝完全不透明、0＝全透明） */
 }

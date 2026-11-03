@@ -25,15 +25,17 @@
     line-height: 1.25;           /* 行高是字級的 1.25 倍 */
 }
 
+/* 「fifteen-goal」裡面的「main」部分的樣式 */
 .fifteen-goal__main {
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
+/* 「fifteen-goal」裡面的「sub」部分的樣式 */
 .fifteen-goal__sub {
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 左：你的牌／中：桌上的牌／右：電腦的牌，三欄排成一橫列 */
@@ -48,254 +50,278 @@
 /* 兩邊「你的牌／電腦的牌」的框 */
 .fifteen-hand {
     flex: 0 0 24%;               /* 彈性盒子的縮放設定：不放大(0)、不縮小(0)、基本寬度 24%＝固定佔 24% 寬 */
-    display: flex;
-    flex-wrap: wrap;
-    align-content: flex-start;
-    justify-content: center;
-    gap: 6px;
-    min-height: 220px;
-    padding: 8px 4px;
-    box-sizing: border-box;
-    border-radius: var(--r-md);
-    border: 2px solid var(--bd-c);
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-wrap: wrap;                                    /* 放不下就換行 */
+    align-content: flex-start;                          /* 多行排列時，各行在交叉方向的對齊方式：flex-start */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: 6px;                                           /* 子元素之間的空隙：6px */
+    min-height: 220px;                                  /* 最小高度：220px */
+    padding: 8px 4px;                                   /* 內縮（padding，內容跟邊框的距離）：上下 8px、左右 4px */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    border: 2px solid var(--bd-c);                      /* 邊框（粗細、線型、顏色）：2px solid 主題變數 --bd-c */
 }
 
+/* 「fifteen-hand」在「屬於玩家（你）時」的樣子的樣式 */
 .fifteen-hand--mine {
-    background: var(--c-ok-soft);
+    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
 }
 
+/* 「fifteen-hand」在「屬於電腦時」的樣子的樣式 */
 .fifteen-hand--cpu {
-    background: var(--c-orange-soft);
+    background: var(--c-orange-soft);                   /* 背景：主題變數 --c-orange-soft */
 }
 
+/* 「fifteen-hand」裡面的「title」部分的樣式 */
 .fifteen-hand__title {
-    flex: 0 0 100%;
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    flex: 0 0 100%;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 100%（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「fifteen-chip」這個元素的樣式 */
 .fifteen-chip {
-    width: 46px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--r-sm);
-    background: var(--c-card);
-    border: 2px solid var(--c-ink);
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    width: 46px;                                        /* 寬度：46px */
+    height: 56px;                                       /* 高度：56px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 2px solid var(--c-ink);                     /* 邊框（粗細、線型、顏色）：2px solid 主題變數 --c-ink */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「fifteen-chip」在「屬於玩家（你）時」的樣子的樣式 */
 .fifteen-chip--mine {
-    border-color: var(--c-ok);
-    color: var(--c-ok);
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「fifteen-chip」在「屬於電腦時」的樣子的樣式 */
 .fifteen-chip--cpu {
-    border-color: var(--c-orange);
-    color: var(--c-orange);
+    border-color: var(--c-orange);                      /* 邊框顏色：主題變數 --c-orange */
+    color: var(--c-orange);                             /* 文字顏色：主題變數 --c-orange */
 }
 
 /* 中間：桌上的牌（結束時換成洛書方陣） */
 .fifteen-mid {
-    flex: 1 1 auto;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-width: 0;                                       /* 最小寬度：0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
 }
 
 /* 桌上的牌：1～9 排成 3×3（11 張的玩法是 4 欄） */
 .fifteen-table {
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    width: 100%;                                        /* 寬度：100% */
+    display: grid;                                      /* 格線排版：子元素排進格子 */
+    grid-template-columns: repeat(3, 1fr);              /* 格線的欄（每欄的寬度）：repeat(3, 1fr) */
+    gap: 8px;                                           /* 子元素之間的空隙：8px */
 }
 
+/* 「fifteen-table」在「加寬時」的樣子的樣式 */
 .fifteen-table--wide {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, 1fr);              /* 格線的欄（每欄的寬度）：repeat(4, 1fr) */
 }
 
+/* 「fifteen-card」這個元素的樣式 */
 .fifteen-card {
-    height: 76px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--r-sm);
-    background: var(--c-card);
-    border: 3px solid var(--c-ink);
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
+    height: 76px;                                       /* 高度：76px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink);                     /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    touch-action: manipulation;                         /* 關掉雙擊放大，點擊反應更快 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「fifteen-card」在「被選中時」的樣子的樣式 */
 .fifteen-card--sel {
-    background: var(--c-yellow);
-    transform: translateY(-6px);
+    background: var(--c-yellow);                        /* 背景：主題變數 --c-yellow */
+    transform: translateY(-6px);                        /* 變形：垂直移動 -6px */
 }
 
+/* 「fifteen-card」在「屬於電腦時」的樣子的樣式 */
 .fifteen-card--cpu {
-    background: var(--c-bad-soft);
-    border-color: var(--c-bad);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
 }
 
 /* 被拿走的牌：變淡，並用邊框顏色標出是誰拿的（綠＝你、橘＝電腦），跟左右兩邊的牌同色 */
 .fifteen-card--taken {
-    opacity: 0.5;
-    pointer-events: none;
+    opacity: 0.5;                                       /* 透明度 0.5（1＝完全不透明、0＝全透明） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「fifteen-card」在「屬於玩家（你）時」的樣子的樣式 */
 .fifteen-card--mine {
-    background: var(--c-ok-soft);
-    border-color: var(--c-ok);
-    color: var(--c-ok);
+    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「fifteen-card」在「屬於對方時」的樣子的樣式 */
 .fifteen-card--theirs {
-    background: var(--c-orange-soft);
-    border-color: var(--c-orange);
-    color: var(--c-orange);
+    background: var(--c-orange-soft);                   /* 背景：主題變數 --c-orange-soft */
+    border-color: var(--c-orange);                      /* 邊框顏色：主題變數 --c-orange */
+    color: var(--c-orange);                             /* 文字顏色：主題變數 --c-orange */
 }
 
 /* 湊成的那幾張：不淡掉、黃底 */
 .fifteen-card--win {
-    opacity: 1;
-    background: var(--c-yellow);
-    color: var(--c-ink);
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
+    background: var(--c-yellow);                        /* 背景：主題變數 --c-yellow */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「fifteen-chip」在「勝利時」的樣子的樣式 */
 .fifteen-chip--win {
-    background: var(--c-yellow);
-    color: var(--c-ink);
+    background: var(--c-yellow);                        /* 背景：主題變數 --c-yellow */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
 /* 手牌下面的合計 */
 .fifteen-hand__sum {
-    flex: 0 0 100%;
-    text-align: center;
-    margin-top: 2px;
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    flex: 0 0 100%;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 100%（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    text-align: center;                                 /* 文字置中 */
+    margin-top: 2px;                                    /* 上外距（跟上面的元素距離）：2px */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「fifteen-turn」這個元素的樣式 */
 .fifteen-turn {
-    min-height: 40px;
-    padding: 0 14px;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink);
-    text-align: center;
-    line-height: 1.4;
+    min-height: 40px;                                   /* 最小高度：40px */
+    padding: 0 14px;                                    /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 14px */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    text-align: center;                                 /* 文字置中 */
+    line-height: 1.4;                                   /* 行高：1.4（文字每一行佔的高度） */
 }
 
 /* 結束時的結果說明字小一點，才放得下「誰贏、湊成哪幾張、關鍵是哪一步」 */
 .fifteen-turn--end {
-    font-size: var(--fs-xs);
-    line-height: 1.35;
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    line-height: 1.35;                                  /* 行高：1.35（文字每一行佔的高度） */
 }
 
 /* 結束後的小祕密（洛書＝井字遊戲） */
 .fifteen-secret {
-    padding: 0 14px;
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    line-height: 1.35;
-    text-align: center;
-    color: var(--c-ink-soft);
+    padding: 0 14px;                                    /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 14px */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: 1.35;                                  /* 行高：1.35（文字每一行佔的高度） */
+    text-align: center;                                 /* 文字置中 */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 過程記錄：一手一行，最新的一行最黑 */
 .fifteen-log {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 0 14px;
-    text-align: left;
+    width: 100%;                                        /* 寬度：100% */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    padding: 0 14px;                                    /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 14px */
+    text-align: left;                                   /* 文字靠左 */
 }
 
+/* 「fifteen-log」裡面的「row」部分的樣式 */
 .fifteen-log__row {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    line-height: 1.35;
-    color: var(--c-ink-soft);
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: 1.35;                                  /* 行高：1.35（文字每一行佔的高度） */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
+/* 「fifteen-log__row」在「最新的一筆」的樣子的樣式 */
 .fifteen-log__row--new {
-    color: var(--c-ink);
-    font-weight: var(--fw-black);
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
 /* 結束時的洛書方陣（井字遊戲） */
 .fifteen-reveal {
-    width: 100%;
-    text-align: center;
+    width: 100%;                                        /* 寬度：100% */
+    text-align: center;                                 /* 文字置中 */
 }
 
+/* 「fifteen-reveal」裡面的「line」部分的樣式 */
 .fifteen-reveal__line {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
-    margin-top: 6px;
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    margin-top: 6px;                                    /* 上外距（跟上面的元素距離）：6px */
 }
 
+/* 「fifteen-luoshu」這個元素的樣式 */
 .fifteen-luoshu {
     display: inline-grid;
-    grid-template-columns: repeat(3, 56px);
-    grid-auto-rows: 56px;
-    gap: 4px;
+    grid-template-columns: repeat(3, 56px);             /* 格線的欄（每欄的寬度）：repeat(3, 56px) */
+    grid-auto-rows: 56px;                               /* 自動新增的列的高度：56px */
+    gap: 4px;                                           /* 子元素之間的空隙：4px */
 }
 
+/* 「fifteen-luoshu」裡面的「cell」部分的樣式 */
 .fifteen-luoshu__cell {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    border: 2px solid var(--bd-c);
-    border-radius: var(--r-sm);
-    background: var(--c-card);
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    border: 2px solid var(--bd-c);                      /* 邊框（粗細、線型、顏色）：2px solid 主題變數 --bd-c */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
 }
 
+/* 「fifteen-luoshu__cell」在「勝利時」的樣子的樣式 */
 .fifteen-luoshu__cell--win {
-    background: var(--c-yellow-soft);
-    border-color: var(--c-orange);
+    background: var(--c-yellow-soft);                   /* 背景：主題變數 --c-yellow-soft */
+    border-color: var(--c-orange);                      /* 邊框顏色：主題變數 --c-orange */
 }
 
+/* 「fifteen-luoshu」裡面的「n」部分的樣式 */
 .fifteen-luoshu__n {
-    position: absolute;
-    left: 5px;
-    top: 2px;
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 5px;                                          /* 離左邊 5px */
+    top: 2px;                                           /* 離上邊 2px */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
+/* 「fifteen-luoshu」裡面的「m」部分的樣式 */
 .fifteen-luoshu__m {
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「fifteen-btns」這個元素的樣式 */
 .fifteen-btns {
-    position: absolute;
-    left: 2%;
-    right: 2%;
-    bottom: 0;
-    display: flex;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 2%;                                           /* 離左邊 2% */
+    right: 2%;                                          /* 離右邊 2% */
+    bottom: 0;                                          /* 離下邊 0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
 }
 
+/* 「fifteen-btn」這個元素的樣式 */
 .fifteen-btn {
-    flex: 1 1 0;
-    height: 72px;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    padding: 0;
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    height: 72px;                                       /* 高度：72px */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
 }

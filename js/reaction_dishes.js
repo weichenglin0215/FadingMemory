@@ -13,11 +13,15 @@
    · 揭曉（時間到）：目前的盤子放大，沒洗掉的污漬用紅圈圈起來，寫出「洗了 N 個盤子」。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'dishes'：選單、成績、存檔都靠它；樣式在 css/games/reaction_dishes.css，裡面的 class 名稱一律以 dishes- 開頭。 */
     'use strict';
 
-    var ID = 'dishes';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 個', label: '洗了', min: 1, max: 300 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'dishes';                                  /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 個', label: '洗了', min: 1, max: 300 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_PLATES = 24;                       /* 洗了幾個盤子之後難度到頂 */
@@ -49,7 +53,7 @@
     /* 做一個盤子：{ n, vis, sim, spots（[{ x, y, r, need, v, blob }]，座標以盤心為原點）, pats（[{ kind, x, y, rot, size }]）}
        污漬在離盤心 INNER_R 之內、彼此不重疊（至少隔 MIN_GAP）；花紋沿著盤緣排成一圈（第一圈）、多的排在第二圈，另外盤心有一朵大的 */
     function makePlate(n, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var k = spotsFor(n), r = spotRFor(n), spots = [];
         /* 放污漬：「最佳候選」法——每塊污漬抽 40 個候選位置，挑「離已經放好的污漬最遠」的那個（污漬就會分散開）；
            放不下（盤子太擠）就把所有污漬縮小 6%（最多縮到 55%）重放，保證塊數一定夠 */
@@ -85,6 +89,7 @@
     function remaining(plate) { return plate.spots.filter(function (s) { return s.v > CLEAN_EPS; }); }
     /* 刷乾淨一個盤子至少要移動多遠（px）：每塊污漬的 need 總和（刷子可以同時刷到相鄰的污漬，所以實際可能更少） */
     function totalNeed(plate) { return plate.spots.reduce(function (s, p) { return s + p.need; }, 0); }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 20) return '洗碗達人！';
         if (n >= 12) return '手腳俐落！';
@@ -93,6 +98,7 @@
         return '只刷污漬，不刷花紋！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 8, stageClass: 'dishes-stage', resume: false,
@@ -128,13 +134,15 @@
         return { svg: svg, g: g, spots: spotG };
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, S = api.S;
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var count = 0, plate = null, view = null, phase = 'play', last = null, bubbles = 0;
         api.info = { get count() { return count; }, get plate() { return plate; }, get phase() { return phase; } };
         S.score = 0; api.setInfo('洗了 0 個');
-        console.log('[洗盤子] 開始：限時 ' + TIME_S + ' 秒；第 0 個盤子 ' + spotsFor(0) + ' 塊污漬 → 到頂 ' + spotsFor(RAMP_PLATES) + ' 塊');
+        console.log('[洗盤子] 開始：限時 ' + TIME_S + ' 秒；第 0 個盤子 ' + spotsFor(0) + ' 塊污漬 → 到頂 ' + spotsFor(RAMP_PLATES) + ' 塊');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var field = h('div', { 'class': 'dishes-field' });
         stage.appendChild(field);
@@ -149,7 +157,7 @@
             plate = makePlate(count, api.rand); holder.innerHTML = ''; view = drawPlate(holder, plate);
             view.svg.classList.add('dishes-svg--in'); api.after(20, function () { view.svg.classList.remove('dishes-svg--in'); });
             console.log('[洗盤子] 第 ' + (count + 1) + ' 個：污漬 ' + plate.spots.length + ' 塊（半徑約 ' + spotRFor(count) + '、要刷 ' + needFor(count) + ' px）、花紋 ' + plate.pats.length + '、花紋顏色級數 ' + plate.sim + '、濃度 ' + plate.vis);
-            if (first && kit.once('dishes.hint')) { var sp = plate.spots[0]; kit.hintOn(stage, null, { mode: 'drag', x: holder.offsetLeft + (150 + sp.x - 40) * SC, y: holder.offsetTop + (150 + sp.y) * SC, dx: 80 * SC, dy: 0, delay: 700, text: '在污漬上來回刷' }); }
+            if (first && kit.once('dishes.hint')) { var sp = plate.spots[0]; kit.hintOn(stage, null, { mode: 'drag', x: holder.offsetLeft + (150 + sp.x - 40) * SC, y: holder.offsetTop + (150 + sp.y) * SC, dx: 80 * SC, dy: 0, delay: 700, text: '在污漬上來回刷' }); }  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         }
         newPlate(true);
         function paintSpots() { plate.spots.forEach(function (s, i) { view.spots[i].setAttribute('opacity', (plate.vis * s.v).toFixed(3)); }); }
@@ -184,7 +192,8 @@
             api.after(NEXT_MS, function () { if (api.over) return; info.textContent = ''; newPlate(false); phase = 'play'; });
         }
         /* 全部的限時：時間到就結束，把目前盤子沒洗掉的污漬圈起來 */
-        api.timer(TIME_S * 1000, function () { timeUp(); });
+        api.timer(TIME_S * 1000, function () { timeUp(); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
+        /* 時間到：算失敗（api.fail），通常會把正確答案亮出來 */
         function timeUp() {
             if (phase === 'end' || api.over) return;
             var rem = phase === 'play' ? remaining(plate) : [];
@@ -200,16 +209,19 @@
         api.wrong = function () { timeUp(); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '洗盤子',
         rule: '盤子一個一個送過來，上面有咖啡色的醬汁污漬。**手指在污漬上來回刷（畫圈）**，污漬就慢慢淡掉；**整個盤子的污漬都洗掉，會自動換下一個盤子**。盤子上還有洗不掉的青花紋——污漬是軟軟的、形狀不規則的一塊一塊，花紋是清楚的規則圖案、沿著盤緣排整齊，**刷花紋只是浪費時間**。限時 30 秒，看你能洗幾個盤子。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             spotsFor: spotsFor, spotRFor: spotRFor, needFor: needFor, visFor: visFor, patsFor: patsFor, simFor: simFor, makePlate: makePlate, scrub: scrub, isClean: isClean, remaining: remaining, totalNeed: totalNeed, rating: rating,
             RAMP_PLATES: RAMP_PLATES, SPOTS: SPOTS, SPOT_R: SPOT_R, NEED: NEED, VIS: VIS, PATS: PATS, SIM_MAX: SIM_MAX, TIME_S: TIME_S, BRUSH_R: BRUSH_R, CLEAN_EPS: CLEAN_EPS, PLATE_R: PLATE_R, EDGE_PAD: EDGE_PAD, MIN_GAP: MIN_GAP, SOLVE_CAP: SOLVE_CAP, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

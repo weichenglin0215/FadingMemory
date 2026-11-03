@@ -27,9 +27,9 @@
 *,
 *::before,
 *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    margin: 0;                                          /* 外距（margin，與別的元素的距離）：四邊都是 0 */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
 }
 
 /* iOS 橫向時會自動放大文字；Android 部分瀏覽器有文字自動放大 */
@@ -41,57 +41,60 @@ html {
 /* 只允許捲動，不允許縮放（含點兩下放大）。寫在 * 上，
    內層捲動區也會繼承到，避免在捲動區裡點兩下仍能放大。 */
 * {
-    touch-action: pan-x pan-y;
+    touch-action: pan-x pan-y;                          /* 觸控手勢處理：pan-x pan-y */
 }
 
+/* 「html」標籤；「body」標籤的樣式 */
 html,
 body {
-    width: 100%;
-    height: 100%;
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
     /* V1.23.0：高度至少是「動態視窗高度」100dvh（網址列收合時會跟著變）。body 因為 overflow:hidden 會把舞台裁在自己的範圍裡，
        iPad 上有時 height:100% 算出來只有螢幕的一半，舞台就被裁成上半部、重新載入也一樣；
        有了 min-height:100dvh 就不會比真正的可視高度矮。不支援 dvh 的舊瀏覽器會忽略這一行。 */
-    min-height: 100dvh;
-    overflow: hidden;
+    min-height: 100dvh;                                 /* 最小高度：100dvh */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
     overscroll-behavior: none;
-    background: var(--c-frame);
+    background: var(--c-frame);                         /* 背景：主題變數 --c-frame */
 }
 
 /* body 必須是定位基準：縮放套上之前，未縮放的 500×850 舞台
    不會把頁面撐得比手機螢幕寬（iOS 會因此放寬禁止縮放）。 */
 body {
-    position: relative;
-    -webkit-tap-highlight-color: transparent;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    -webkit-tap-highlight-color: transparent;           /* 手機點擊時的高亮顏色：transparent */
     -webkit-font-smoothing: antialiased;
 }
 
+/* 「button」標籤的樣式 */
 button {
     font: inherit;
-    color: inherit;
-    background: none;
-    border: none;
-    cursor: pointer;
+    color: inherit;                                     /* 文字顏色：inherit */
+    background: none;                                   /* 透明背景 */
+    border: none;                                       /* 沒有邊框 */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
     -webkit-appearance: none;
     appearance: none;
 }
 
+/* [hidden]的樣式 */
 [hidden] {
-    display: none !important;
+    display: none !important;                           /* 不顯示（也不佔位置）（!important＝強制優先） */
 }
 
 /* ─── 2D 介面層 ─── */
 #stage {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 500px;
-    height: 850px;
-    transform-origin: 0 0;
-    overflow: hidden;
-    z-index: 2;
-    background: var(--c-paper);
-    -webkit-user-select: none;
-    user-select: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    width: 500px;                                       /* 寬度：500px */
+    height: 850px;                                      /* 高度：850px */
+    transform-origin: 0 0;                              /* 變形的基準點：0 0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    z-index: 2;                                         /* 疊放順序：數字越大越在上面（2） */
+    background: var(--c-paper);                         /* 背景：主題變數 --c-paper */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
     -webkit-touch-callout: none;
 }
 
@@ -102,80 +105,82 @@ button {
    （搖桿、按鈕等真正需要互動的 UI）才會重新接收事件，其餘疊在 3D 上面的
    裝飾性 2D 介面元素都讓觸控穿透過去。 */
 #stage.stage--overlay {
-    background: transparent;
-    pointer-events: none;
+    background: transparent;                            /* 透明背景 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「hit」這個元素的樣式 */
 #stage.stage--overlay .hit {
-    pointer-events: auto;
+    pointer-events: auto;                               /* 可以接收點擊／觸控 */
 }
 
 /* ─── 3D 畫布層 ─── */
 #world {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 500px;
-    height: 850px;
-    z-index: 1;
-    overflow: hidden;
-    background: var(--c-paper);
-    touch-action: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    width: 500px;                                       /* 寬度：500px */
+    height: 850px;                                      /* 高度：850px */
+    z-index: 1;                                         /* 疊放順序：數字越大越在上面（1） */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    background: var(--c-paper);                         /* 背景：主題變數 --c-paper */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
+/* 「canvas」標籤的樣式 */
 #world canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-    outline: none;
-    touch-action: none;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
+    outline: none;                                      /* 不畫焦點外框 */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
 /* 讀取 safe-area（瀏海、Home 條）用的探針 */
 .sa-probe {
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 0;
-    height: 0;
-    visibility: hidden;
-    pointer-events: none;
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-right: env(safe-area-inset-right, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    padding-left: env(safe-area-inset-left, 0px);
+    position: fixed;                                    /* 固定在視窗上，不隨捲動移動 */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    width: 0;                                           /* 寬度：0 */
+    height: 0;                                          /* 高度：0 */
+    visibility: hidden;                                 /* 看不見（但還佔著位置） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    padding-top: env(safe-area-inset-top, 0px);         /* 上方內縮：env(safe-area-inset-top, 0px) */
+    padding-right: env(safe-area-inset-right, 0px);     /* 右方內縮：env(safe-area-inset-right, 0px) */
+    padding-bottom: env(safe-area-inset-bottom, 0px);   /* 下方內縮：env(safe-area-inset-bottom, 0px) */
+    padding-left: env(safe-area-inset-left, 0px);       /* 左方內縮：env(safe-area-inset-left, 0px) */
 }
 
 /* 量「目前可視高度」用的探針（js/stage.js 的 readViewport）：高度 100dvh，用 CSS 單位直接量，
    不經過 JS 的 innerHeight／visualViewport（那兩個在 iPad 上偶爾會回報過小的值）。
    瀏覽器不支援 dvh 時這個高度無效（是 0），程式會忽略它。 */
 .vh-probe {
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 0;
-    height: 100dvh;
-    visibility: hidden;
-    pointer-events: none;
+    position: fixed;                                    /* 固定在視窗上，不隨捲動移動 */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    width: 0;                                           /* 寬度：0 */
+    height: 100dvh;                                     /* 高度：100dvh */
+    visibility: hidden;                                 /* 看不見（但還佔著位置） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 縮放算好之前先藏起來，避免閃一下未縮放的舞台 */
 html:not(.stage-ready) #stage,
 html:not(.stage-ready) #world {
-    visibility: hidden;
+    visibility: hidden;                                 /* 看不見（但還佔著位置） */
 }
 
 /* 網址加 ?debug 會顯示縮放資訊 */
 .stage-debug {
-    position: fixed;
-    right: 4px;
-    top: 4px;
-    z-index: 99;
-    padding: 4px 6px;
-    border-radius: 4px;
-    background: rgba(0, 0, 0, 0.6);
-    color: #fff;
+    position: fixed;                                    /* 固定在視窗上，不隨捲動移動 */
+    right: 4px;                                         /* 離右邊 4px */
+    top: 4px;                                           /* 離上邊 4px */
+    z-index: 99;                                        /* 疊放順序：數字越大越在上面（99） */
+    padding: 4px 6px;                                   /* 內縮（padding，內容跟邊框的距離）：上下 4px、左右 6px */
+    border-radius: 4px;                                 /* 圓角：4px */
+    background: rgba(0, 0, 0, 0.6);                     /* 背景：rgba(0, 0, 0, 0.6) */
+    color: #fff;                                        /* 文字顏色：#fff */
     font: 12px/1.35 monospace;
-    white-space: pre;
-    pointer-events: none;
+    white-space: pre;                                   /* 空白與換行的處理：pre */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }

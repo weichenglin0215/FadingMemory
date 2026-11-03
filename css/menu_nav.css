@@ -7,372 +7,400 @@
 
 /* ═══ 左上角漢堡按鈕（跟右上角的分享按鈕 .share-btn 左右對稱） ═══ */
 .nav-btn {
-    position: absolute;
-    top: var(--sp-4);
-    left: var(--sp-4);
-    z-index: 6;
-    width: 56px;
-    height: 56px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: var(--c-card);
-    color: var(--c-blue);
-    border: var(--btn-line-bd);
-    box-shadow: var(--shadow-card);
-    font-size: 30px;
-    cursor: pointer;
-    transition: transform 0.1s ease, filter 0.15s ease;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    top: var(--sp-4);                                   /* 離上邊 主題變數 --sp-4 */
+    left: var(--sp-4);                                  /* 離左邊 主題變數 --sp-4 */
+    z-index: 6;                                         /* 疊放順序：數字越大越在上面（6） */
+    width: 56px;                                        /* 寬度：56px */
+    height: 56px;                                       /* 高度：56px */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    color: var(--c-blue);                               /* 文字顏色：主題變數 --c-blue */
+    border: var(--btn-line-bd);                         /* 邊框（粗細、線型、顏色）：主題變數 --btn-line-bd */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
+    font-size: 30px;                                    /* 字級：30px */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
+    transition: transform 0.1s ease, filter 0.15s ease; /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.1s ease, filter 0.15s ease */
 }
 
+/* 「nav-btn」這個元素，按下去時的樣式 */
 .nav-btn:active {
-    transform: scale(0.93);
+    transform: scale(0.93);                             /* 變形：縮放 0.93 倍 */
 }
 
+/* 「nav-btn」這個元素的樣式 */
 .nav-btn:focus-visible {
-    outline: 4px solid var(--c-blue);
-    outline-offset: 3px;
+    outline: 4px solid var(--c-blue);                   /* 外框線：4px solid 主題變數 --c-blue */
+    outline-offset: 3px;                                /* 外框線離元素多遠：3px */
 }
 
 /* ═══ 往下展開的選單 ═══ */
 .nav-pop {
-    position: absolute;
-    top: calc(var(--sp-4) + 56px + var(--sp-2));
-    left: var(--sp-4);
-    z-index: 7;
-    min-width: 232px;
-    padding: var(--sp-2);
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-md);
-    box-shadow: var(--shadow-pop);
-    animation: nav-pop-in 0.16s ease;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    top: calc(var(--sp-4) + 56px + var(--sp-2));        /* 離上邊 calc(主題變數 --sp-4 + 56px + 主題變數 --sp-2) */
+    left: var(--sp-4);                                  /* 離左邊 主題變數 --sp-4 */
+    z-index: 7;                                         /* 疊放順序：數字越大越在上面（7） */
+    min-width: 232px;                                   /* 最小寬度：232px */
+    padding: var(--sp-2);                               /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --sp-2 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    box-shadow: var(--shadow-pop);                      /* 方塊陰影（立體感） */
+    animation: nav-pop-in 0.16s ease;                   /* 播放動畫（名稱、時間、緩動、次數）：nav-pop-in 0.16s ease */
 }
 
+/* 「nav-pop」這個元素的樣式 */
 .nav-pop[hidden] {
-    display: none;
+    display: none;                                      /* 不顯示（也不佔位置） */
 }
 
+/* 動畫 nav-pop-in：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes nav-pop-in {
     from {
-        transform: translateY(-8px);
-        opacity: 0;
+        transform: translateY(-8px);                    /* 變形：垂直移動 -8px */
+        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
     }
 
     to {
-        transform: none;
-        opacity: 1;
+        transform: none;                                /* 變形：none */
+        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
     }
 }
 
 /* 一個選項：整列都能點，高度夠大（長輩手指也點得到） */
 .nav-pop__item {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-3);
-    width: 100%;
-    height: 72px;
-    padding: 0 var(--sp-4);
-    border: 0;
-    border-radius: var(--r-sm);
-    background: transparent;
-    color: var(--c-ink);
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
-    text-align: left;
-    cursor: pointer;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
+    width: 100%;                                        /* 寬度：100% */
+    height: 72px;                                       /* 高度：72px */
+    padding: 0 var(--sp-4);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-4 */
+    border: 0;                                          /* 沒有邊框 */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    background: transparent;                            /* 透明背景 */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    text-align: left;                                   /* 文字靠左 */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
 }
 
+/* 「nav-pop」裡面的「item」部分的樣式 */
 .nav-pop__item+.nav-pop__item {
-    border-top: 2px solid var(--c-yellow-soft);
-    border-radius: 0 0 var(--r-sm) var(--r-sm);
+    border-top: 2px solid var(--c-yellow-soft);         /* 上邊框：2px solid 主題變數 --c-yellow-soft */
+    border-radius: 0 0 var(--r-sm) var(--r-sm);         /* 圓角：0 0 主題變數 --r-sm 主題變數 --r-sm */
 }
 
+/* 「nav-pop」裡面的「item」部分，按下去時的樣式 */
 .nav-pop__item:active {
-    background: var(--c-yellow-soft);
+    background: var(--c-yellow-soft);                   /* 背景：主題變數 --c-yellow-soft */
 }
 
+/* 「nav-pop」裡面的「item」部分的樣式 */
 .nav-pop__item:focus-visible {
-    outline: 4px solid var(--c-blue);
-    outline-offset: -4px;
+    outline: 4px solid var(--c-blue);                   /* 外框線：4px solid 主題變數 --c-blue */
+    outline-offset: -4px;                               /* 外框線離元素多遠：-4px */
 }
 
+/* 「nav-pop」裡面的「ico」部分的樣式 */
 .nav-pop__ico {
-    display: flex;
-    color: var(--c-blue);
-    font-size: 34px;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    color: var(--c-blue);                               /* 文字顏色：主題變數 --c-blue */
+    font-size: 34px;                                    /* 字級：34px */
 }
 
 /* 主選單上的彈窗要蓋住整個畫面：公版彈窗（css/dialog.css）是從標題列下面開始蓋，這一頁沒有標題列，
    不蓋到最上面的話，左上角的漢堡按鈕與右上角的分享按鈕會露在暗色背景上面，還按得到 */
 .menu~.dlg--stage {
-    top: 0;
+    top: 0;                                             /* 離上邊 0 */
 }
 
 /* ═══ 「設定」彈窗 ═══ */
 /* 暱稱那一列：左邊小標、右邊暱稱（太長用「…」收尾） */
 .set-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sp-3);
-    padding: var(--sp-3) var(--sp-4);
-    border-radius: var(--r-md);
-    background: var(--c-card-alt);
-    text-align: left;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: space-between;                     /* 頭尾貼邊，剩下的空間平均分給中間 */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
+    padding: var(--sp-3) var(--sp-4);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-3、下 主題變數、左 --sp-4 */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
+    text-align: left;                                   /* 文字靠左 */
 }
 
+/* 「set-label」這個元素的樣式 */
 .set-label {
-    flex: 0 0 auto;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    flex: 0 0 auto;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
+/* 「set-nick」這個元素的樣式 */
 .set-nick {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    min-width: 0;                                       /* 最小寬度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    text-overflow: ellipsis;                            /* 文字太長時，用「…」顯示 */
+    white-space: nowrap;                                /* 文字不換行 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
 /* 還沒有暱稱（訪客）：淡一點 */
 .set-nick--none {
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 暱稱下面的補充說明 */
 .set-hint {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-body);
-    color: var(--c-ink-soft);
-    text-align: left;
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    text-align: left;                                   /* 文字靠左 */
 }
 
+/* 「set-hint」這個元素的樣式 */
 .set-hint[hidden] {
-    display: none;
+    display: none;                                      /* 不顯示（也不佔位置） */
 }
 
 /* 「我已有帳號，登入」「重新登入」 */
 .set-login {
-    align-self: flex-start;
-    height: 44px;
-    cursor: pointer;
+    align-self: flex-start;                             /* 這個元素自己在交叉方向的對齊方式：flex-start */
+    height: 44px;                                       /* 高度：44px */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
 }
 
+/* 「set-login」這個元素的樣式 */
 .set-login[hidden] {
-    display: none;
+    display: none;                                      /* 不顯示（也不佔位置） */
 }
 
 /* 音樂音效：一整列是一顆按鈕（role="switch"），左邊文字、右邊喇叭圖示；開＝藍色喇叭有聲波，關＝灰色喇叭打叉（預設開） */
 .set-sound {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sp-3);
-    width: 100%;
-    min-height: 72px;
-    padding: 0 var(--sp-4);
-    border: 0;
-    border-radius: var(--r-md);
-    background: var(--c-card-alt);
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink);
-    text-align: left;
-    cursor: pointer;
-    -webkit-user-select: none;
-    user-select: none;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: space-between;                     /* 頭尾貼邊，剩下的空間平均分給中間 */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
+    width: 100%;                                        /* 寬度：100% */
+    min-height: 72px;                                   /* 最小高度：72px */
+    padding: 0 var(--sp-4);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-4 */
+    border: 0;                                          /* 沒有邊框 */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    text-align: left;                                   /* 文字靠左 */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「set-sound」這個元素的樣式 */
 .set-sound:focus-visible {
-    outline: 4px solid var(--c-blue);
-    outline-offset: 3px;
+    outline: 4px solid var(--c-blue);                   /* 外框線：4px solid 主題變數 --c-blue */
+    outline-offset: 3px;                                /* 外框線離元素多遠：3px */
 }
 
+/* 「set-sound」裡面的「ico」部分的樣式 */
 .set-sound__ico {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    border: var(--btn-line-bd);
-    background: var(--c-card);
-    color: var(--c-blue);
-    font-size: 34px;
-    transition: transform 0.1s ease;
+    flex: 0 0 auto;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    width: 56px;                                        /* 寬度：56px */
+    height: 56px;                                       /* 高度：56px */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    border: var(--btn-line-bd);                         /* 邊框（粗細、線型、顏色）：主題變數 --btn-line-bd */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    color: var(--c-blue);                               /* 文字顏色：主題變數 --c-blue */
+    font-size: 34px;                                    /* 字級：34px */
+    transition: transform 0.1s ease;                    /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.1s ease */
 }
 
+/* 「set-sound」裡面的「ico」部分的樣式 */
 .set-sound:active .set-sound__ico {
-    transform: scale(0.92);
+    transform: scale(0.92);                             /* 變形：縮放 0.92 倍 */
 }
 
+/* 「set-sound」裡面的「ico」部分的樣式 */
 .set-sound.is-off .set-sound__ico {
-    border-color: var(--c-ink-soft);
-    color: var(--c-ink-soft);
+    border-color: var(--c-ink-soft);                    /* 邊框顏色：主題變數 --c-ink-soft */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 彈窗最下面的「關閉」：白底藍框藍字（btn--line），高度是一般按鈕的 2/3（V1.38.0） */
 .btn.nav-close {
-    height: calc(var(--btn-h) * 2 / 3);
+    height: calc(var(--btn-h) * 2 / 3);                 /* 高度：calc(主題變數 --btn-h * 2 / 3) */
 }
 
 /* ═══ 「成績」彈窗 ═══ */
 /* 一列：名次 ｜ 遊戲名稱（靠左）…成績（靠右） ｜ 「玩」按鈕（V1.38.0：名稱與成績改成左右排，不再上下兩行） */
 .lb-row.sc-row {
-    grid-template-columns: var(--lb-rank-col) 1fr var(--sc-play-w);
+    grid-template-columns: var(--lb-rank-col) 1fr var(--sc-play-w);  /* 格線的欄（每欄的寬度）：var(--lb-rank-col) 1fr var(--sc-play-w) */
 }
 
+/* 「sc-main」這個元素的樣式 */
 .sc-main {
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sp-2);
+    min-width: 0;                                       /* 最小寬度：0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: space-between;                     /* 頭尾貼邊，剩下的空間平均分給中間 */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
 }
 
+/* 「sc-name」這個元素的樣式 */
 .sc-name {
-    flex: 1 1 auto;
-    min-width: 0;
-    text-align: left;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    line-height: var(--lh-tight);
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-width: 0;                                       /* 最小寬度：0 */
+    text-align: left;                                   /* 文字靠左 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    text-overflow: ellipsis;                            /* 文字太長時，用「…」顯示 */
+    white-space: nowrap;                                /* 文字不換行 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: var(--lh-tight);                       /* 行高：主題變數 --lh-tight（文字每一行佔的高度） */
 }
 
+/* 「sc-score」這個元素的樣式 */
 .sc-score {
-    flex: 0 0 auto;
-    text-align: right;
-    white-space: nowrap;
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    font-variant-numeric: tabular-nums;
-    line-height: var(--lh-tight);
-    color: var(--c-blue);
+    flex: 0 0 auto;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    text-align: right;                                  /* 文字靠右 */
+    white-space: nowrap;                                /* 文字不換行 */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
+    line-height: var(--lh-tight);                       /* 行高：主題變數 --lh-tight（文字每一行佔的高度） */
+    color: var(--c-blue);                               /* 文字顏色：主題變數 --c-blue */
 }
 
 /* 前三名的列是金／銀／銅底色，成績跟著列的字色走 */
 .lb-row--top .sc-score {
-    color: inherit;
+    color: inherit;                                     /* 文字顏色：inherit */
 }
 
 /* 還沒進榜（只有個人最佳）：名次欄放一條淡淡的橫線 */
 .sc-row--played .lb-rank {
-    color: var(--c-ink-soft);
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 「玩」：綠色按鈕，一鍵進那款遊戲 */
 .sc-play {
-    width: var(--sc-play-w);
-    height: 48px;
-    padding: 0;
-    border: 0;
-    border-radius: var(--r-md);
-    background: var(--btn-go-bg);
-    color: var(--btn-go-fg);
-    box-shadow: var(--btn-go-shadow);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    cursor: pointer;
-    transition: transform 0.1s ease;
+    width: var(--sc-play-w);                            /* 寬度：主題變數 --sc-play-w */
+    height: 48px;                                       /* 高度：48px */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
+    border: 0;                                          /* 沒有邊框 */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: var(--btn-go-bg);                       /* 背景：主題變數 --btn-go-bg */
+    color: var(--btn-go-fg);                            /* 文字顏色：主題變數 --btn-go-fg */
+    box-shadow: var(--btn-go-shadow);                   /* 方塊陰影（立體感） */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
+    transition: transform 0.1s ease;                    /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.1s ease */
 }
 
+/* 「sc-play」這個元素，按下去時的樣式 */
 .sc-play:active {
-    transform: scale(0.94);
+    transform: scale(0.94);                             /* 變形：縮放 0.94 倍 */
 }
 
+/* 「sc-play」這個元素的樣式 */
 .sc-play:focus-visible {
-    outline: 4px solid var(--c-blue);
-    outline-offset: 3px;
+    outline: 4px solid var(--c-blue);                   /* 外框線：4px solid 主題變數 --c-blue */
+    outline-offset: 3px;                                /* 外框線離元素多遠：3px */
 }
 
 /* 分隔：上面是進了世界前 30 名的，下面是玩過但還沒進榜的 */
 .sc-sep {
-    margin: var(--sp-3) 0 var(--sp-3);
-    text-align: center;
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    margin: var(--sp-3) 0 var(--sp-3);                  /* 外距（margin，與別的元素的距離）：上 主題變數、右 --sp-3、下 0、左 主題變數 */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
+/* :root的樣式 */
 :root {
-    --sc-play-w: 40px;
+    --sc-play-w: 40px;                                  /* 自訂變數 --sc-play-w（下面用 var(--sc-play-w) 取用；可以由 JS 動態設定） */
 }
 
 /* ═══ 「安裝與離線」彈窗（V1.38.0，js/offline_ui.js）═══
    每一列：標題、說明（\n 會換行）、（選用）一顆按鈕；做好了的（✓）標題旁加綠色底。捲動區沿用世界排行榜的 .lb-viewport／.lb-list／.lb-thumb。 */
 .off-row {
-    padding: var(--sp-3) var(--sp-4);
-    border-radius: var(--r-md);
-    background: var(--c-card-alt);
-    text-align: left;
+    padding: var(--sp-3) var(--sp-4);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-3、下 主題變數、左 --sp-4 */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
+    text-align: left;                                   /* 文字靠左 */
 }
 
+/* 「off-row」這個元素的樣式 */
 .off-row+.off-row {
-    margin-top: var(--sp-2);
+    margin-top: var(--sp-2);                            /* 上外距（跟上面的元素距離）：主題變數 --sp-2 */
 }
 
+/* 「off-row」在「正確（成功）時」的樣子的樣式 */
 .off-row--ok {
-    background: var(--c-ok-soft);
+    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
 }
 
+/* 「off-row」裡面的「t」部分的樣式 */
 .off-row__t {
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    line-height: var(--lh-tight);
-    color: var(--c-ink);
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: var(--lh-tight);                       /* 行高：主題變數 --lh-tight（文字每一行佔的高度） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「off-row」裡面的「x」部分的樣式 */
 .off-row__x {
-    margin-top: var(--sp-1);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-body);
-    color: var(--c-ink-soft);
-    white-space: pre-line;
+    margin-top: var(--sp-1);                            /* 上外距（跟上面的元素距離）：主題變數 --sp-1 */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    white-space: pre-line;                              /* 保留換行字元、其餘空白合併 */
 }
 
+/* 「off-btn」這個元素（同時有 .btn）的樣式 */
 .btn.off-btn {
-    width: 100%;
-    height: 56px;
-    margin-top: var(--sp-2);
-    font-size: var(--fs-sm);
+    width: 100%;                                        /* 寬度：100% */
+    height: 56px;                                       /* 高度：56px */
+    margin-top: var(--sp-2);                            /* 上外距（跟上面的元素距離）：主題變數 --sp-2 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
 }
 
 /* 最上面的提示（離線中、讀取中） */
 .off-note {
-    margin-bottom: var(--sp-2);
-    padding: var(--sp-2) var(--sp-3);
-    border-radius: var(--r-md);
-    background: var(--c-yellow-soft);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-body);
-    color: var(--c-ink);
-    text-align: center;
+    margin-bottom: var(--sp-2);                         /* 下外距：主題變數 --sp-2 */
+    padding: var(--sp-2) var(--sp-3);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-2、下 主題變數、左 --sp-3 */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: var(--c-yellow-soft);                   /* 背景：主題變數 --c-yellow-soft */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    text-align: center;                                 /* 文字置中 */
 }
 
 /* 使用者在系統設定「減少動態效果」時，關掉選單展開動畫與縮放過渡 */
 @media (prefers-reduced-motion: reduce) {
 
+    /* 「nav-btn」這個元素；「nav-pop」這個元素；「set-sound」裡面的「ico」部分；「sc-play」這個元素的樣式 */
     .nav-btn,
     .nav-pop,
     .set-sound__ico,
     .sc-play {
-        animation: none;
-        transition: none;
+        animation: none;                                /* 播放動畫（名稱、時間、緩動、次數）：none */
+        transition: none;                               /* 狀態改變時的過渡動畫（屬性、時間、緩動）：none */
     }
 }

@@ -19,11 +19,15 @@
    · 結束時：那一枚硬幣放大、翻到正面（顯示它是幾元），並寫出它該往哪滑。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'coinsort'：選單、成績、存檔都靠它；樣式在 css/games/reaction_coinsort.css，裡面的 class 名稱一律以 coinsort- 開頭。 */
     'use strict';
 
-    var ID = 'coinsort';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 枚', label: '分對', min: 1, max: 300 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'coinsort';                                /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 枚', label: '分對', min: 1, max: 300 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_COINS = 40;                        /* 分對幾枚之後難度到頂 */
@@ -67,7 +71,7 @@
     }
     /* 下一枚硬幣：{ type, back }。三種各 1/3，但最多連續 MAX_SAME 枚同一種；back 依 backPFor(n) */
     function nextCoin(history, n, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var pool = TYPES.slice(), k = history.length;
         if (k >= MAX_SAME) { var last = history[k - 1], same = true; for (var i = 1; i < MAX_SAME; i++) if (history[k - 1 - i] !== last) same = false; if (same) pool = pool.filter(function (t) { return t !== last; }); }
         return { type: kit.pick(pool, rand), back: rand() < backPFor(n) };
@@ -80,6 +84,7 @@
         if (kind === 'miss') return '來不及了！這枚是 ' + c.name + '（' + c.look + '），要往' + want + '滑';
         return '滑錯了！這枚是 ' + c.name + '（' + c.look + '），要往' + want + '滑，你滑了' + DIR_NAME[dir];
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 80) return '零錢達人！';
         if (n >= 40) return '眼明手快！';
@@ -88,6 +93,7 @@
         return '先看顏色、再看大小！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 20, stageClass: 'coinsort-stage', resume: false,
@@ -117,6 +123,8 @@
         return svg;
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, S = api.S;
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
@@ -124,7 +132,7 @@
         var counts = { c50: 0, c5: 0, c10: 0 };
         api.info = { get count() { return count; }, get coin() { return coin; }, get over() { return over; } };
         S.score = 0; api.setInfo('已收 0 枚');
-        console.log('[零錢入筒] 開始：掉落時間 ' + fallMsFor(0) + ' → ' + fallMsFor(RAMP_COINS) + ' 毫秒');
+        console.log('[零錢入筒] 開始：掉落時間 ' + fallMsFor(0) + ' → ' + fallMsFor(RAMP_COINS) + ' 毫秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var field = h('div', { 'class': 'coinsort-field' });
         stage.appendChild(field);
@@ -158,7 +166,7 @@
                 api.after(900, function () {
                     if (coin !== mine || mine.done || over) return;
                     var tt = tubes[mine.type], p = Math.min(1, (performance.now() - mine.t0) / mine.fall), cy = -mine.D + lineY * p + mine.D / 2;          /* 硬幣現在的中心 y */
-                    kit.hintOn(stage, null, { mode: 'drag', x: mine.x, y: cy, dx: tt.x - mine.x, dy: tubeTop + 30 - cy, text: '照筒子上的箭頭滑' });
+                    kit.hintOn(stage, null, { mode: 'drag', x: mine.x, y: cy, dx: tt.x - mine.x, dy: tubeTop + 30 - cy, text: '照筒子上的箭頭滑' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
                 });
             }
         }
@@ -208,6 +216,7 @@
             } else finish('wrong', c, dir);
         }
         function miss() { if (over || api.over || !coin || coin.done) return; coin.done = true; finish('miss', coin, null); }
+        /* 這一局結束：算出成績並進入結算畫面 */
         function finish(kind, c, dir) {
             if (over) return;
             over = true;
@@ -231,16 +240,19 @@
         api.wrong = function () { if (over || !coin || coin.done) return; swipe(DIR_OF[coin.type] === 'left' ? 'right' : 'left'); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '零錢入筒',
         rule: '硬幣一枚一枚掉下來，要在它掉到筒子口之前**用手指滑進對的筒**：**銅色的大硬幣（50 元）往左滑、銅色的小硬幣（5 元）往下滑、銀色的大硬幣（10 元）往右滑**，筒子上有箭頭提醒。滑錯方向、或來不及滑就結束，看你能分對幾枚。越後面，硬幣掉得越快、越常**背面朝上**（看不到數字，只能看顏色和大小），小硬幣也越來越接近大硬幣的大小！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             prog: prog, fallMsFor: fallMsFor, backPFor: backPFor, ratio5For: ratio5For, diameterOf: diameterOf, classifySwipe: classifySwipe, nextCoin: nextCoin, isRight: isRight, whyText: whyText, rating: rating,
             RAMP_COINS: RAMP_COINS, FALL_S: FALL_S, BACK_P: BACK_P, RATIO5: RATIO5, SWIPE_MIN: SWIPE_MIN, HORIZ_K: HORIZ_K, COIN_D: COIN_D, MAX_SAME: MAX_SAME, SOLVE_CAP: SOLVE_CAP, TYPES: TYPES, COIN: COIN, DIR_OF: DIR_OF, TUBE_X: TUBE_X
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

@@ -15,11 +15,15 @@
    · 揭曉：標準圓（綠色虛線）＋你的筆跡（依偏離量上色：±2% 綠、±5% 橘、更大紅）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'blindcircle'：選單、成績、存檔都靠它；樣式在 css/games/reaction_blindcircle.css，裡面的 class 名稱一律以 blindcircle- 開頭。 */
     'use strict';
 
-    var ID = 'blindcircle';
-    var SCORE = { better: 'max', decimals: 4, format: '{v}%', label: '圓度', min: 0, max: 100 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'blindcircle';                             /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 4, format: '{v}%', label: '圓度', min: 0, max: 100 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var CENTER = { x: 236, y: 318 };        /* 圓心（舞台座標） */
@@ -35,7 +39,7 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function makeRound(rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var R = kit.randFloat(R_MIN, R_MAX, rand), ang = kit.randFloat(ANG_MIN, ANG_MAX, rand) * Math.PI / 180;
         return { R: R, ang: ang, start: { x: CENTER.x + R * Math.cos(ang), y: CENTER.y + R * Math.sin(ang) } };
     }
@@ -102,6 +106,7 @@
             roundness: Math.max(0, 100 - rms / R * 100)
         };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(v) {
         if (v >= 99) return '神乎其技！';
         if (v >= 97) return '高手！';
@@ -110,6 +115,7 @@
         return '再試一次，會更圓！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「單回合計時」的流程（開始、計時、結算、最佳紀錄）交給共用骨架 kit.single，我們只提供 setup（怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.single(root, ctx, {
             id: ID, G: G, better: 'max', max: SCORE.max,
@@ -121,11 +127,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, my = api.my;
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var cfg = makeRound(), pts = [], drawing = false, locked = false, hint = null, pid = null;
-        console.log('[盲畫一個圓] 半徑 ' + cfg.R.toFixed(2) + '，起點方位 ' + (cfg.ang * 180 / Math.PI).toFixed(1) + '°');
+        console.log('[盲畫一個圓] 半徑 ' + cfg.R.toFixed(2) + '，起點方位 ' + (cfg.ang * 180 / Math.PI).toFixed(1) + '°');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var svg = kit.svg('svg', { 'class': 'blindcircle-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
         var gRev = kit.svg('g', {}, svg);
@@ -221,6 +229,7 @@
         };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '盲畫一個圓',
@@ -229,5 +238,6 @@
         score: SCORE,
         test: { tailOf: tailOf, TRAIL_LEN: TRAIL_LEN, arrowPoints: arrowPoints, ARROW: ARROW, START_R: START_R, makeRound: makeRound, resample: resample, analyze: analyze, rating: rating, CENTER: CENTER, R_MIN: R_MIN, R_MAX: R_MAX, ANG_MIN: ANG_MIN, ANG_MAX: ANG_MAX, TURN_MIN: TURN_MIN, TURN_MAX: TURN_MAX, STEP: STEP }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

@@ -6,61 +6,66 @@
 
 /* ═══ 084 誰先亮（.whofirst-）═══ */
 .whofirst-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 12px;
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 12px;                                          /* 離上邊 12px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 兩盞燈貼近左右邊緣（離邊緣 20px，js 的 EDGE），大小由 js 依關卡設定（220px → 10px） */
 .whofirst-row {
-    position: absolute;
-    left: 20px;
-    right: 20px;
-    top: 140px;
-    height: 240px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 20px;                                         /* 離左邊 20px */
+    right: 20px;                                        /* 離右邊 20px */
+    top: 140px;                                         /* 離上邊 140px */
+    height: 240px;                                      /* 高度：240px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    justify-content: space-between;                     /* 頭尾貼邊，剩下的空間平均分給中間 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
 }
 
+/* 「whofirst-lamp」這個元素的樣式 */
 .whofirst-lamp {
-    flex: none;
-    width: 220px;
-    height: 220px;
-    border-radius: var(--r-pill);
-    background: var(--c-card-alt);
-    border: 5px solid var(--bd-c);
-    box-sizing: border-box;
+    flex: none;                                         /* 彈性縮放：none */
+    width: 220px;                                       /* 寬度：220px */
+    height: 220px;                                      /* 高度：220px */
+    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill */
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
+    border: 5px solid var(--bd-c);                      /* 邊框（粗細、線型、顏色）：5px solid 主題變數 --bd-c */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
 }
 
+/* 「whofirst-lamp」在「開啟（亮起）時」的樣子的樣式 */
 .whofirst-lamp--on {
     /*background: var(--c-yellow);*/
-    background: hsl(0, 100%, 70%);
-    border-color: var(--c-ink);
-    box-shadow: 0 0 40px var(--c-yellow);
+    background: hsl(0, 100%, 70%);                      /* 背景：hsl(0, 100%, 70%) */
+    border-color: var(--c-ink);                         /* 邊框顏色：主題變數 --c-ink */
+    box-shadow: 0 0 40px var(--c-yellow);               /* 方塊陰影（立體感） */
 }
 
+/* 「whofirst-lamp」在「開啟（亮起）時」的樣子（同時有 .whofirst-lamp--b）的樣式 */
 .whofirst-lamp--b.whofirst-lamp--on {
-    background: hsl(0, 100%, 70%);
+    background: hsl(0, 100%, 70%);                      /* 背景：hsl(0, 100%, 70%) */
 }
 
+/* 「whofirst-lamp」的「first」變化版的樣式 */
 .whofirst-lamp--first {
-    border-color: var(--c-green);
-    border-width: 8px;
+    border-color: var(--c-green);                       /* 邊框顏色：主題變數 --c-green */
+    border-width: 8px;                                  /* 邊框粗細：8px */
 }
 
+/* 「whofirst-info」這個元素的樣式 */
 .whofirst-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 440px;
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 440px;                                         /* 離上邊 440px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }

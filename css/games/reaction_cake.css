@@ -7,149 +7,149 @@
 /* 分蛋糕：拖曳藍線切蛋糕，每一塊的面積要幾乎一樣大。 */
 /* ═══ 分蛋糕（.cake-）═══ */
 .cake-head {
-    text-align: center;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
 /* 提示橫幅 */
 .cake-banner {
-    min-height: 1.4em;
+    min-height: 1.4em;                                  /* 最小高度：1.4em */
     /* pre-line：文字裡的換行符號會真的換行；結算時的算式（4 位小數）比較長，分成兩行 */
-    white-space: pre-line;
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    white-space: pre-line;                              /* 保留換行字元、其餘空白合併 */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 蛋糕場地 */
 .cake-field {
-    flex: 1 1 0;
-    min-height: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    overflow: hidden;
-    touch-action: none;
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
 /* 蛋糕 SVG */
 .cake-svg {
-    display: block;
-    width: 100%;
-    height: 100%;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
 }
 
 /* 蛋糕本體（黃色圓形） */
 .cake-cake {
-    fill: var(--c-yellow-soft);
-    stroke: var(--c-yellow);
-    stroke-width: 5;
+    fill: var(--c-yellow-soft);                         /* SVG 圖形的填色：主題變數 --c-yellow-soft */
+    stroke: var(--c-yellow);                            /* SVG 線條顏色：主題變數 --c-yellow */
+    stroke-width: 5;                                    /* SVG 線條粗細：5 */
 }
 
 /* 蛋糕上的糖霜（虛線圓） */
 .cake-icing {
-    fill: var(--c-card);
-    stroke: var(--c-orange);
-    stroke-width: 3;
-    stroke-dasharray: 3 9;
-    stroke-linecap: round;
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    stroke: var(--c-orange);                            /* SVG 線條顏色：主題變數 --c-orange */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-dasharray: 3 9;                              /* SVG 虛線的「畫／空」長度：3 9 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
 /* 輔助刻度小點（隨關卡淡出） */
 .cake-aid {
-    fill: var(--c-ink-soft);
+    fill: var(--c-ink-soft);                            /* SVG 圖形的填色：主題變數 --c-ink-soft */
 }
 
 /* 蛋糕中心點 */
 .cake-center {
-    fill: var(--c-ink);
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
 }
 
 /* 切刀線（藍色） */
 .cake-cutline {
-    stroke: var(--c-blue);
-    stroke-width: 5;
-    stroke-linecap: round;
+    stroke: var(--c-blue);                              /* SVG 線條顏色：主題變數 --c-blue */
+    stroke-width: 5;                                    /* SVG 線條粗細：5 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
 /* 第一刀固定的線（橘色，不能拖） */
 .cake-cutline--first {
-    stroke: var(--c-orange);
+    stroke: var(--c-orange);                            /* SVG 線條顏色：主題變數 --c-orange */
 }
 
 /* 線頭的圓形把手：可以拖曳 */
 .cake-handle {
-    fill: var(--c-card);
-    stroke: var(--c-blue);
-    stroke-width: 5;
-    cursor: grab;
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    stroke: var(--c-blue);                              /* SVG 線條顏色：主題變數 --c-blue */
+    stroke-width: 5;                                    /* SVG 線條粗細：5 */
+    cursor: grab;                                       /* 滑鼠游標樣式：grab */
 }
 
 /* 正在被拖曳的把手變實心藍色 */
 .cake-handle--drag {
-    fill: var(--c-blue);
+    fill: var(--c-blue);                                /* SVG 圖形的填色：主題變數 --c-blue */
 }
 
 /* 正在被拖曳的切刀線變粗 */
 .cake-cutline--drag {
-    stroke-width: 8;
+    stroke-width: 8;                                    /* SVG 線條粗細：8 */
 }
 
 /* 面積百分比文字（小字） */
 .cake-slice__t--sm {
-    font-size: 20px;
+    font-size: 20px;                                    /* 字級：20px */
 }
 
 /* 切開後每一塊會慢慢移開（transition 0.5 秒） */
 .cake-slice {
-    transition: transform 0.5s ease-out;
+    transition: transform 0.5s ease-out;                /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.5s ease-out */
 }
 
 /* 單塊蛋糕的形狀（path） */
 .cake-slice__p {
-    fill: var(--c-yellow-soft);
-    stroke: var(--c-yellow);
-    stroke-width: 3;
-    stroke-linejoin: round;
+    fill: var(--c-yellow-soft);                         /* SVG 圖形的填色：主題變數 --c-yellow-soft */
+    stroke: var(--c-yellow);                            /* SVG 線條顏色：主題變數 --c-yellow */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
 /* 最大的那塊（橘紅） */
 .cake-slice__p--max {
-    fill: var(--c-bad-soft);
-    stroke: var(--c-bad);
+    fill: var(--c-bad-soft);                            /* SVG 圖形的填色：主題變數 --c-bad-soft */
+    stroke: var(--c-bad);                               /* SVG 線條顏色：主題變數 --c-bad */
 }
 
 /* 最小的那塊（藍） */
 .cake-slice__p--min {
-    fill: var(--c-blue-soft);
-    stroke: var(--c-blue);
+    fill: var(--c-blue-soft);                           /* SVG 圖形的填色：主題變數 --c-blue-soft */
+    stroke: var(--c-blue);                              /* SVG 線條顏色：主題變數 --c-blue */
 }
 
 /* 每塊上的面積百分比文字 */
 .cake-slice__t {
-    font-size: 26px;
-    font-weight: var(--fw-black);
-    fill: var(--c-ink);
-    pointer-events: none;
+    font-size: 26px;                                    /* 字級：26px */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 下方的按鈕列 */
 .cake-acts {
-    flex: none;
-    display: flex;
-    gap: var(--sp-2);
+    flex: none;                                         /* 彈性縮放：none */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
 }
 
 /* 「清除」「切下去」兩顆按鈕（逗號 = 同時套用到兩個 class） */
 .cake-clear,
 .cake-cut {
-    flex: 1 1 0;
-    padding: 0;
-    font-size: var(--fs-md);
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
 }

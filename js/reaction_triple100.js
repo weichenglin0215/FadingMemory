@@ -22,11 +22,15 @@
      每次進頁面第一次遇到「15 張牌、陷阱要求 9 組」的那一關（第 12 關）時使用，之後都用產生器隨機出新牌。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'triple100'：選單、成績、存檔都靠它；樣式在 css/games/reaction_triple100.css，裡面的 class 名稱一律以 triple100- 開頭。 */
     'use strict';
 
-    var ID = 'triple100';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '通過關數', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'triple100';                               /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '通過關數', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var TARGET = 100;                           /* 每組三張要湊成的數字 */
@@ -123,7 +127,7 @@
     /* 產生牌組（參考使用者提供的產生器）：groups × 3 張都不同、只有唯一一種完整分法、陷阱組合 ≥ minTraps。
        回傳 { cards（已洗牌）, solution, traps, tries }；minTraps 預設 MIN_TRAPS；spec（選填）{ groups, lo, hi } 預設 5 組、5～60 */
     function generateDeck(rand, minTraps, maxTries, spec) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         minTraps = minTraps == null ? MIN_TRAPS : minTraps;
         maxTries = maxTries || MAX_TRIES;
         spec = spec || {};
@@ -161,6 +165,7 @@
         var s = Math.max(0, Math.ceil(ms / 1000)), m = Math.floor(s / 60), r = s % 60;
         return m + ':' + (r < 10 ? '0' : '') + r;
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 21) return '三張成百大師！';
         if (n >= 13) return '心算高手！';
@@ -169,6 +174,7 @@
         return '先熟悉一下，再來一次！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         /* V1.27 起三張成百改成關卡制（成績＝通過幾關、越大越好；V1.26 是用時、越小越好），舊版的最佳紀錄不能比：第一次進來清掉（只清一次） */
         Reaction.migrateBest(ID, function () { return null; }, '.v127');
@@ -189,7 +195,7 @@
         if (level === EXAMPLE_LEVEL && !exampleUsed) { exampleUsed = true; deck = exampleDeck(api.rand); }
         else deck = deckForLevel(level, api.rand) || exampleDeck(api.rand);
         var cards = deck.cards, state = [], sel = [], remaining = cards.length, errors = 0, hint = null, tm = null;
-        console.log('[三張成百] 第 ' + level + ' 關：' + cards.length + ' 張，牌面 ' + cards.join(',') + '；唯一正解 ' + deck.solution.map(function (t) { return t.join('+'); }).join('、') + '；陷阱 ' + deck.traps.length + ' 組；限時 ' + spec.limitS + ' 秒');
+        console.log('[三張成百] 第 ' + level + ' 關：' + cards.length + ' 張，牌面 ' + cards.join(',') + '；唯一正解 ' + deck.solution.map(function (t) { return t.join('+'); }).join('、') + '；陷阱 ' + deck.traps.length + ' 組；限時 ' + spec.limitS + ' 秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var wrap = h('div', { 'class': 'triple100-wrap' });
         var grid = h('div', { 'class': 'triple100-grid' });
@@ -222,7 +228,7 @@
         /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「唯一正解第一組」的第一張牌上 */
         if (level === 1 && kit.once('triple100.hint')) {
             var first = deck.solution[0], idx = cards.indexOf(first[0]);
-            if (idx >= 0) hint = kit.hintOn(stage, els[idx], { mode: 'tap', delay: 300, text: '請點三張加起來是 100 的牌' });
+            if (idx >= 0) hint = kit.hintOn(stage, els[idx], { mode: 'tap', delay: 300, text: '請點三張加起來是 100 的牌' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         }
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
         function remainingValues() { var out = []; for (var i = 0; i < cards.length; i++) if (state[i] === 'on') out.push(cards[i]); return out; }
@@ -268,6 +274,7 @@
         }
 
         function groupsIdx() { return deck.solution.map(function (t) { return t.map(function (v) { return cards.indexOf(v); }); }); }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { groupsIdx().forEach(function (g) { g.forEach(tap); }); };
         /* 先選一組陷阱（和是 100 但不在正解裡），再照剩下的選到卡住；6 張牌沒有陷阱，就故意選一組不是 100 的 */
         api.wrong = function () {
@@ -285,12 +292,14 @@
         api.info = { cards: cards, solution: deck.solution, traps: deck.traps, spec: spec, state: function () { return { remaining: remaining, errors: errors }; } };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '三張成百',
         rule: '數字牌橫向每排 3 張，**每次選三張，加起來剛好是 100 就會消除**，全部消完就過關。第 1 關只有 6 張牌，之後**每三關多 3 張牌**，限時從 180 秒起、每關多 20 秒。畫面不會幫你加總，要自己算！小心：**有些三張湊起來也是 100，卻是陷阱**，消掉之後剩下的牌就再也湊不齊了，整副牌只有一種完整的分法。選錯一組扣 3 秒，**卡住或時間到就結束**，看你能過幾關。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             findTriples: findTriples, findPartitions: findPartitions, hasMove: hasMove, canStillSolve: canStillSolve, analyze: analyze, generateDeck: generateDeck, exampleDeck: exampleDeck, randomCandidate: randomCandidate, rating: rating,
             levelSpec: levelSpec, deckForLevel: deckForLevel, limitMs: limitMs, fmtLeft: fmtLeft, rangeFor: rangeFor,
@@ -298,5 +307,6 @@
             LEVEL_STEP: LEVEL_STEP, START_GROUPS: START_GROUPS, MAX_GROUPS: MAX_GROUPS, LIMIT_BASE_S: LIMIT_BASE_S, LIMIT_STEP_S: LIMIT_STEP_S, TRAPS: TRAPS, EXAMPLE_DECK: EXAMPLE_DECK, EXAMPLE_LEVEL: EXAMPLE_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

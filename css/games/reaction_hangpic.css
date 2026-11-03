@@ -7,69 +7,69 @@
 /* 掛畫：左右按鈕或拖曳，把歪掉的畫框轉成水平。 */
 /* ═══ 掛畫（.hangpic-）═══ */
 .hangpic-head {
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
 /* 牆面區：花紋背景由 SVG 畫在裡面 */
 .hangpic-field {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    touch-action: none;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
 /* SVG 鋪滿整個牆面（inset:0 + 寬高 100%） */
 .hangpic-svg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
 /* 下方控制列：◀ 掛好了 ▶ */
 .hangpic-ctrl {
-    flex: none;
-    display: flex;
-    gap: var(--sp-3);
+    flex: none;                                         /* 彈性縮放：none */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
 }
 
 /* 「掛好了」吃掉中間剩下的寬度 */
 .hangpic-ctrl .hangpic-done {
-    flex: 1 1 auto;
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
 }
 
 /* 左右微調按鈕，固定寬度 */
 .hangpic-nudge {
-    flex: none;
-    width: 96px;
+    flex: none;                                         /* 彈性縮放：none */
+    width: 96px;                                        /* 寬度：96px */
 }
 
 /* 揭曉後浮在牆面下方的結果橫幅（一開始 opacity:0 看不見） */
 .hangpic-verdict {
-    position: absolute;
-    left: 10px;
-    right: 10px;
-    bottom: 16px;
-    padding: 10px 8px;
-    text-align: center;
-    border-radius: var(--r-md);
-    background: rgba(255, 253, 243, 0.94);
-    border: var(--bd);
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    opacity: 0;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 10px;                                         /* 離左邊 10px */
+    right: 10px;                                        /* 離右邊 10px */
+    bottom: 16px;                                       /* 離下邊 16px */
+    padding: 10px 8px;                                  /* 內縮（padding，內容跟邊框的距離）：上下 10px、左右 8px */
+    text-align: center;                                 /* 文字置中 */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: rgba(255, 253, 243, 0.94);              /* 背景：rgba(255, 253, 243, 0.94) */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 顯示橫幅（opacity 變 1） */
 .hangpic-verdict--on {
-    opacity: 1;
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }

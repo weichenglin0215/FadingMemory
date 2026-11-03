@@ -6,76 +6,86 @@
 
 /* ═══ 哪一行算錯（.wrongline-）═══ */
 .wrongline-col {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    gap: 10px;                                          /* 子元素之間的空隙：10px */
 }
 
+/* 「wrongline-ask」這個元素的樣式 */
 .wrongline-ask {
-    position: static;
+    position: static;                                   /* 一般排版（預設） */
 }
 
+/* 「wrongline-sub」這個元素的樣式 */
 .wrongline-sub {
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「wrongline-list」這個元素的樣式 */
 .wrongline-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 4px;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    gap: 10px;                                          /* 子元素之間的空隙：10px */
+    margin-top: 4px;                                    /* 上外距（跟上面的元素距離）：4px */
 }
 
+/* 「wrongline-row」這個元素的樣式 */
 .wrongline-row {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: var(--sp-3);
-    padding: 0 var(--sp-4);
-    border-radius: var(--r-md);
-    background: var(--c-card-alt);
-    border: var(--bd);
-    font-family: var(--font-ui);
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink);
-    text-align: left;
-    cursor: pointer;
+    width: 100%;                                        /* 寬度：100% */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
+    padding: 0 var(--sp-4);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-4 */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    text-align: left;                                   /* 文字靠左 */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
 }
 
+/* 「wrongline-row」這個元素，按下去時的樣式 */
 .wrongline-row:active {
-    transform: scale(0.98);
+    transform: scale(0.98);                             /* 變形：縮放 0.98 倍 */
 }
 
+/* 「wrongline-no」這個元素的樣式 */
 .wrongline-no {
-    flex: none;
-    color: var(--c-ink-soft);
+    flex: none;                                         /* 彈性縮放：none */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
+/* 「wrongline-txt」這個元素的樣式 */
 .wrongline-txt {
-    flex: 1 1 auto;
-    line-height: var(--lh-tight);
-    font-variant-numeric: tabular-nums;
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    line-height: var(--lh-tight);                       /* 行高：主題變數 --lh-tight（文字每一行佔的高度） */
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
 }
 
+/* 「wrongline-fix」這個元素的樣式 */
 .wrongline-fix {
-    font-size: var(--fs-sm);
-    color: var(--c-bad);
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
+/* 「wrongline-row」在「錯誤時」的樣子的樣式 */
 .wrongline-row--wrong {
-    background: var(--c-bad-soft);
-    border: 3px solid var(--c-bad);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    border: 3px solid var(--c-bad);                     /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-bad */
 }
 
+/* 「wrongline-row」的「miss」變化版的樣式 */
 .wrongline-row--miss {
-    border: 3px solid var(--c-bad-light);
-    opacity: 0.8;
+    border: 3px solid var(--c-bad-light);               /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-bad-light */
+    opacity: 0.8;                                       /* 透明度 0.8（1＝完全不透明、0＝全透明） */
 }

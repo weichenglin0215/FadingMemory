@@ -16,11 +16,15 @@
      （數字就是 ΔE，跟結算的成績同一個值，緊張地揭曉），停住 HOLD_MS 之後才結算。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'colorrecall'：選單、成績、存檔都靠它；樣式在 css/games/reaction_colorrecall.css，裡面的 class 名稱一律以 colorrecall- 開頭。 */
     'use strict';
 
-    var ID = 'colorrecall';
-    var SCORE = { better: 'min', decimals: 4, format: 'ΔE {v}', label: '色差', min: 0, max: 260 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'colorrecall';                             /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'min', decimals: 4, format: 'ΔE {v}', label: '色差', min: 0, max: 260 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var MEMO_S = 3;                             /* 記憶秒數 */
@@ -66,7 +70,7 @@
     /* 把目標色的某一個維度換成 v */
     function withDim(c, dim, v) { var o = { h: c.h, s: c.s, l: c.l }; o[dimKey(dim)] = v; return o; }
     function makeRound(rand, forceDim) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var target = { h: kit.randFloat(0, 360, rand), s: kit.randFloat(TARGET_S[0], TARGET_S[1], rand), l: kit.randFloat(TARGET_L[0], TARGET_L[1], rand) };
         var dim = forceDim || kit.pick(DIMS, rand), tv = target[dimKey(dim)], gap = START_GAP[dim], g = kit.randFloat(gap[0], gap[1], rand), sign = rand() < 0.5 ? 1 : -1, v;
         if (dim === 'hue') v = ((tv + sign * g) % 360 + 360) % 360;
@@ -78,6 +82,7 @@
         }
         return { target: target, dim: dim, start: v };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(e) {
         if (e < 1.5) return '神乎其技！';
         if (e < 4) return '高手！';
@@ -92,6 +97,7 @@
     function fmtDiffPct(v) { return v.toFixed(4) + '%'; }
     function css(c) { return 'hsl(' + c.h.toFixed(2) + ',' + c.s.toFixed(2) + '%,' + c.l.toFixed(2) + '%)'; }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「單回合計時」的流程（開始、計時、結算、最佳紀錄）交給共用骨架 kit.single，我們只提供 setup（怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.single(root, ctx, {
             id: ID, G: G, better: 'min', max: SCORE.max,
@@ -104,11 +110,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, my = api.my;
         var W = stage.clientWidth || 472;
         var cfg = makeRound(), t = tFor(cfg.dim, cfg.start), phase = 'memo', locked = false, hint = null;
-        console.log('[記色調色] 這回合考' + DIM_NAME[cfg.dim] + '；目標 H' + cfg.target.h.toFixed(2) + ' S' + cfg.target.s.toFixed(2) + ' L' + cfg.target.l.toFixed(2) + '；起始 ' + cfg.start.toFixed(2));
+        console.log('[記色調色] 這回合考' + DIM_NAME[cfg.dim] + '；目標 H' + cfg.target.h.toFixed(2) + ' S' + cfg.target.s.toFixed(2) + ' L' + cfg.target.l.toFixed(2) + '；起始 ' + cfg.start.toFixed(2));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var left = h('div', { 'class': 'colorrecall-block colorrecall-block--l' });
         var right = h('div', { 'class': 'colorrecall-block colorrecall-block--r' });
@@ -134,6 +142,7 @@
         ctrl.forEach(function (e) { e.style.display = 'none'; stage.appendChild(e); });
         stage.appendChild(msg); stage.appendChild(big);
         function mine() { return withDim(cfg.target, cfg.dim, valueAt(cfg.dim, t)); }
+        /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() {
             knob.style.left = (x0 + t * TRACK_W - KNOB / 2) + 'px';
             if (phase === 'adjust') right.style.background = css(mine());
@@ -206,6 +215,7 @@
         };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '記色調色',
@@ -214,5 +224,6 @@
         score: SCORE,
         test: { joinPos: joinPos, fmtDiffPct: fmtDiffPct, JOIN_FROM: JOIN_FROM, JOIN_TO: JOIN_TO, JOIN_MS: JOIN_MS, COUNT_MS: COUNT_MS, HOLD_MS: HOLD_MS, hslToRgb: hslToRgb, rgbToLab: rgbToLab, deltaE: deltaE, valueAt: valueAt, tFor: tFor, unitsPerT: unitsPerT, withDim: withDim, makeRound: makeRound, rating: rating, DIMS: DIMS, START_GAP: START_GAP, L_MIN: L_MIN, L_MAX: L_MAX, TARGET_S: TARGET_S, TARGET_L: TARGET_L }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

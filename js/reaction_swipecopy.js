@@ -15,11 +15,15 @@
    · 滑錯或超時：把箭頭、該滑的方向、你滑的方向並排畫出來。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'swipecopy'：選單、成績、存檔都靠它；樣式在 css/games/reaction_swipecopy.css，裡面的 class 名稱一律以 swipecopy- 開頭。 */
     'use strict';
 
-    var ID = 'swipecopy';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'swipecopy';                               /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後速度到頂 */
@@ -59,10 +63,11 @@
     /* 出一關：{ dirs（長度 1：箭頭指的方向）, req（長度 1：要滑的方向＝反方向）, cell（出現在九宮格的哪一格）, matched（是不是它所指的那一格）, showMs, respMs, prepMs, nDir, level }
        （dirs／req 用陣列只是為了跟失敗畫面共用同一套顯示程式） */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var n = dirCountFor(level), pool = n === 4 ? [0, 2, 4, 6] : [0, 1, 2, 3, 4, 5, 6, 7], d = kit.pick(pool, rand), scatter = rand() < scatterPFor(level), cell = cellFor(d, scatter, rand);
         return { dirs: [d], req: [opposite(d)], cell: cell, matched: cell === CELL_OF_DIR[d], showMs: showMsFor(level), respMs: respMsFor(level), prepMs: Math.round(kit.randFloat(PREP_MS[0], PREP_MS[1], rand)), nDir: n, level: level };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 15) return '反應與眼力都超強！';
         if (n >= 10) return '反著滑也難不倒你！';
@@ -71,6 +76,7 @@
         return '箭頭指哪邊，就往相反的方向滑！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'swipecopy-stage',
@@ -90,11 +96,13 @@
         return s;
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand);
-        api.info = q;
-        console.log('[反著滑] 第 ' + level + ' 關：箭頭指 ' + NAMES[q.dirs[0]] + '、要滑 ' + NAMES[q.req[0]] + '；出現在第 ' + (q.cell + 1) + ' 格（' + (q.matched ? '它所指的那一格' : '別的格子') + '）；亮 ' + q.showMs + ' 毫秒、可以滑到 ' + q.respMs + ' 毫秒；準備 ' + q.prepMs + ' 毫秒；' + q.nDir + ' 個方向');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[反著滑] 第 ' + level + ' 關：箭頭指 ' + NAMES[q.dirs[0]] + '、要滑 ' + NAMES[q.req[0]] + '；出現在第 ' + (q.cell + 1) + ' 格（' + (q.matched ? '它所指的那一格' : '別的格子') + '）；亮 ' + q.showMs + ' 毫秒、可以滑到 ' + q.respMs + ' 毫秒；準備 ' + q.prepMs + ' 毫秒；' + q.nDir + ' 個方向');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var field = h('div', { 'class': 'swipecopy-field' });
@@ -129,7 +137,7 @@
             api.after(q.respMs, function () { if (phase === 'live') fail(-1, 0); });                /* 超過時間還沒滑出方向 */
         }
         api.after(q.prepMs, appear);
-        if (level === 1 && kit.once('swipecopy.hint')) api.after(q.prepMs + 500, function () { if (phase === 'live') kit.hintOn(stage, null, { mode: 'drag', x: W / 2, y: areaT + areaH / 2 - 40, dx: 0, dy: 90, text: '箭頭朝上就往下滑' }); });
+        if (level === 1 && kit.once('swipecopy.hint')) api.after(q.prepMs + 500, function () { if (phase === 'live') kit.hintOn(stage, null, { mode: 'drag', x: W / 2, y: areaT + areaH / 2 - 40, dx: 0, dy: 90, text: '箭頭朝上就往下滑' }); });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
         /* 滑：按下之後，位移一超過 MIN_SWIPE 就判定（不用等手指放開）；箭頭出現之前的動作不算 */
         zone.addEventListener('pointerdown', function (e) { if (done || api.over || down) return; e.preventDefault(); try { zone.setPointerCapture(e.pointerId); } catch (err) { } var p = kit.localPt(e, zone); cur = p; down = { id: e.pointerId, x: p.x, y: p.y }; });
@@ -143,6 +151,7 @@
         function up(e) { if (down && e.pointerId === down.id) down = null; }
         zone.addEventListener('pointerup', up);
         zone.addEventListener('pointercancel', up);
+        /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(d, rt) {
             if (done || api.over || phase !== 'live') return;
             var want = q.req[0];
@@ -178,16 +187,19 @@
         api.wrong = function () { if (phase === 'live' && !done) judge(q.dirs[0], 1); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '反著滑',
         rule: '畫面分成九宮格，**每一關只會出現一個箭頭**（上、下、左、右）。**箭頭一出現就要用手指往「反方向」滑**——箭頭朝上就往下滑，朝左就往右滑（在畫面任何地方滑都可以，不用等箭頭消失）。箭頭只亮一下就消失，但你可以一直滑到時間到為止，**越快滑出正確的方向越好**。小心：箭頭出現的格子常常在「它所指的那一邊」，**會帶著你滑錯**；越後面，它會出現在任何一格。滑錯或來不及就結束，看你能過幾關。越後面，箭頭亮得越短、時間越緊，第 15 關起還會有斜的箭頭（8 個方向）！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             showMsFor: showMsFor, respMsFor: respMsFor, dirCountFor: dirCountFor, scatterPFor: scatterPFor, opposite: opposite, vec: vec, swipeDir: swipeDir, cellFor: cellFor, cellCenter: cellCenter, makeLevel: makeLevel, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, SHOW_MS: SHOW_MS, RESP_MS: RESP_MS, PREP_MS: PREP_MS, DIAG_FROM: DIAG_FROM, SCATTER_FROM: SCATTER_FROM, SCATTER_P: SCATTER_P, CELL_OF_DIR: CELL_OF_DIR, MIN_SWIPE: MIN_SWIPE, REPLAY_MS: REPLAY_MS, NAMES: NAMES, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

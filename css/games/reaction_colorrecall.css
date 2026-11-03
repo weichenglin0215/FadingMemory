@@ -8,26 +8,29 @@
    背景固定中灰（色彩判斷用最中性的底，避免對比錯覺）；這裡的灰是「測量用的刺激條件」，不是介面配色，
    所以直接寫 hsl(0, 0%, 50%)，不走 theme 變數。 */
 .colorrecall-stage {
-    background: hsl(0, 0%, 50%);
-    border-radius: var(--r-md);
+    background: hsl(0, 0%, 50%);                        /* 背景：hsl(0, 0%, 50%) */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
 }
 
+/* 「colorrecall-block」這個元素的樣式 */
 .colorrecall-block {
-    position: absolute;
-    top: 44px;
-    width: 216px;
-    height: 300px;
-    border-radius: var(--r-md);
-    border: 3px solid var(--c-card);
-    box-sizing: border-box;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    top: 44px;                                          /* 離上邊 44px */
+    width: 216px;                                       /* 寬度：216px */
+    height: 300px;                                      /* 高度：300px */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    border: 3px solid var(--c-card);                    /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-card */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
 }
 
+/* 「colorrecall-block」的「l」變化版的樣式 */
 .colorrecall-block--l {
-    left: 10px;
+    left: 10px;                                         /* 離左邊 10px */
 }
 
+/* 「colorrecall-block」的「r」變化版的樣式 */
 .colorrecall-block--r {
-    left: 246px;
+    left: 246px;                                        /* 離左邊 246px */
 }
 
 /* 揭曉靠攏時：左圖去掉右邊的白框線、右圖去掉左邊的白框線（V1.28），兩張圖才能緊密連接 */
@@ -35,143 +38,158 @@
     border-right-width: 0;
 }
 
+/* 「colorrecall-block」的「join-r」變化版的樣式 */
 .colorrecall-block--join-r {
     border-left-width: 0;
 }
 
+/* 「colorrecall-block」的「info」變化版的樣式 */
 .colorrecall-block--info {
-    background: hsl(0, 0%, 38%);
-    color: var(--c-on-accent);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: var(--sp-3);
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-body);
+    background: hsl(0, 0%, 38%);                        /* 背景：hsl(0, 0%, 38%) */
+    color: var(--c-on-accent);                          /* 文字顏色：主題變數 --c-on-accent */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    text-align: center;                                 /* 文字置中 */
+    padding: var(--sp-3);                               /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --sp-3 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
 }
 
+/* 「colorrecall-count」這個元素的樣式 */
 .colorrecall-count {
-    font-size: 110px;
-    font-weight: var(--fw-black);
-    line-height: 1;
+    font-size: 110px;                                   /* 字級：110px */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
 }
 
+/* 「colorrecall-memo」這個元素的樣式 */
 .colorrecall-memo {
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
-    margin-top: var(--sp-3);
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    margin-top: var(--sp-3);                            /* 上外距（跟上面的元素距離）：主題變數 --sp-3 */
 }
 
+/* 「colorrecall-dim」這個元素的樣式 */
 .colorrecall-dim {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 6px;
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-on-accent);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 6px;                                           /* 離上邊 6px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-on-accent);                          /* 文字顏色：主題變數 --c-on-accent */
 }
 
+/* 「colorrecall-track」這個元素的樣式 */
 .colorrecall-track {
-    position: absolute;
-    height: 10px;
-    border-radius: 5px;
-    background: hsl(0, 0%, 72%);
-    border: 2px solid var(--c-ink);
-    box-sizing: border-box;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    height: 10px;                                       /* 高度：10px */
+    border-radius: 5px;                                 /* 圓角：5px */
+    background: hsl(0, 0%, 72%);                        /* 背景：hsl(0, 0%, 72%) */
+    border: 2px solid var(--c-ink);                     /* 邊框（粗細、線型、顏色）：2px solid 主題變數 --c-ink */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
 }
 
+/* 「colorrecall-knob」這個元素的樣式 */
 .colorrecall-knob {
-    position: absolute;
-    width: 64px;
-    height: 64px;
-    border-radius: var(--r-pill);
-    background: var(--c-card);
-    border: 4px solid var(--c-ink);
-    box-sizing: border-box;
-    box-shadow: var(--shadow-card);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 64px;                                        /* 寬度：64px */
+    height: 64px;                                       /* 高度：64px */
+    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 4px solid var(--c-ink);                     /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --c-ink */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
 }
 
+/* 「colorrecall-nudges」這個元素的樣式 */
 .colorrecall-nudges {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 480px;
-    display: flex;
-    justify-content: space-between;
-    padding: 0 40px;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 480px;                                         /* 離上邊 480px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    justify-content: space-between;                     /* 頭尾貼邊，剩下的空間平均分給中間 */
+    padding: 0 40px;                                    /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 40px */
 }
 
+/* 「colorrecall-nudge」這個元素的樣式 */
 .colorrecall-nudge {
-    width: 110px;
-    height: var(--btn-h-sm);
+    width: 110px;                                       /* 寬度：110px */
+    height: var(--btn-h-sm);                            /* 高度：主題變數 --btn-h-sm */
 }
 
+/* 「colorrecall-msg」這個元素的樣式 */
 .colorrecall-msg {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 356px;
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    color: var(--c-on-accent);
-    opacity: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 356px;                                         /* 離上邊 356px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-on-accent);                          /* 文字顏色：主題變數 --c-on-accent */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
 }
 
+/* 「colorrecall-msg」在「開啟（亮起）時」的樣子的樣式 */
 .colorrecall-msg--on {
-    opacity: 1;
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }
 
 /* 揭曉時的大字：差異 XX.XXXX%（從 0.0000% 往上跳） */
 .colorrecall-big {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 400px;
-    text-align: center;
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-black);
-    font-variant-numeric: tabular-nums;
-    color: var(--c-on-accent);
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
-    opacity: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 400px;                                         /* 離上邊 400px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
+    color: var(--c-on-accent);                          /* 文字顏色：主題變數 --c-on-accent */
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);         /* 文字陰影 */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
 }
 
+/* 「colorrecall-big」在「開啟（亮起）時」的樣子的樣式 */
 .colorrecall-big--on {
-    opacity: 1;
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }
 
+/* 「colorrecall-ok」這個元素的樣式 */
 .colorrecall-ok {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: auto;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    width: auto;                                        /* 寬度：auto */
 }
 
+/* 「colorrecall-track」這個元素的樣式 */
 .colorrecall-track {
-    position: absolute;
-    left: 30px;
-    right: 30px;
-    top: 34px;
-    height: 10px;
-    border-radius: var(--r-pill);
-    background: var(--c-yellow-soft);
-    border: 2px solid var(--c-ink-soft);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 30px;                                         /* 離左邊 30px */
+    right: 30px;                                        /* 離右邊 30px */
+    top: 34px;                                          /* 離上邊 34px */
+    height: 10px;                                       /* 高度：10px */
+    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill */
+    background: var(--c-yellow-soft);                   /* 背景：主題變數 --c-yellow-soft */
+    border: 2px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：2px solid 主題變數 --c-ink-soft */
 }
 
+/* 「colorrecall-knob」這個元素的樣式 */
 .colorrecall-knob {
-    position: absolute;
-    top: 9px;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: var(--c-orange);
-    border: var(--bd);
-    box-shadow: var(--shadow-card);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    top: 9px;                                           /* 離上邊 9px */
+    width: 60px;                                        /* 寬度：60px */
+    height: 60px;                                       /* 高度：60px */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    background: var(--c-orange);                        /* 背景：主題變數 --c-orange */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
 }

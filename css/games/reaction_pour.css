@@ -8,186 +8,186 @@
 /* ═══ 倒到八分滿（.pour-）═══ */
 /* 場地 */
 .pour-field {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    touch-action: none;
-    user-select: none;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
 }
 
 /* SVG */
 .pour-svg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
 /* 水（半透明藍：fill-opacity） */
 .pour-water {
-    fill: var(--c-blue);
+    fill: var(--c-blue);                                /* SVG 圖形的填色：主題變數 --c-blue */
     fill-opacity: 0.55;
-    stroke: none;
+    stroke: none;                                       /* SVG 線條顏色：none */
 }
 
 /* 水面線；vector-effect:non-scaling-stroke 讓線寬不隨縮放改變 */
 .pour-surface {
-    fill: none;
-    stroke: var(--c-blue);
-    stroke-width: 4px;
-    stroke-linejoin: round;
-    vector-effect: non-scaling-stroke;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-blue);                              /* SVG 線條顏色：主題變數 --c-blue */
+    stroke-width: 4px;                                  /* SVG 線條粗細：4px */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+    vector-effect: non-scaling-stroke;                  /* SVG 線條粗細不隨縮放改變 */
 }
 
 /* 玻璃杯外框 */
 .pour-glass {
-    fill: none;
-    stroke: var(--c-ink-soft);
-    stroke-width: 8px;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    opacity: 0.8;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 8px;                                  /* SVG 線條粗細：8px */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+    opacity: 0.8;                                       /* 透明度 0.8（1＝完全不透明、0＝全透明） */
 }
 
 /* 玻璃杯高光 */
 .pour-glass-shine {
-    fill: none;
-    stroke: rgba(255, 255, 255, 0.8);
-    stroke-width: 6px;
-    stroke-linecap: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: rgba(255, 255, 255, 0.8);                   /* SVG 線條顏色：rgba(255, 255, 255, 0.8) */
+    stroke-width: 6px;                                  /* SVG 線條粗細：6px */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
 /* 倒下來的水柱 */
 .pour-stream {
-    fill: none;
-    stroke: var(--c-blue);
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-blue);                              /* SVG 線條顏色：主題變數 --c-blue */
     stroke-opacity: 0.75;
-    stroke-linecap: round;
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
 /* 水花 */
 .pour-splash {
-    fill: var(--c-blue);
+    fill: var(--c-blue);                                /* SVG 圖形的填色：主題變數 --c-blue */
     fill-opacity: 0.6;
 }
 
 /* 水壺身 */
 .pour-pitcher__body {
-    fill: var(--c-yellow-soft);
-    stroke: #9A6D0B;
-    stroke-width: 4px;
-    stroke-linejoin: round;
+    fill: var(--c-yellow-soft);                         /* SVG 圖形的填色：主題變數 --c-yellow-soft */
+    stroke: #9A6D0B;                                    /* SVG 線條顏色：#9A6D0B */
+    stroke-width: 4px;                                  /* SVG 線條粗細：4px */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
 /* 水壺把手 */
 .pour-pitcher__handle {
-    fill: none;
-    stroke: #9A6D0B;
-    stroke-width: 6px;
-    stroke-linecap: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: #9A6D0B;                                    /* SVG 線條顏色：#9A6D0B */
+    stroke-width: 6px;                                  /* SVG 線條粗細：6px */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
 /* 水壺高光 */
 .pour-pitcher__shine {
-    fill: none;
-    stroke: rgba(255, 255, 255, 0.7);
-    stroke-width: 5px;
-    stroke-linecap: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: rgba(255, 255, 255, 0.7);                   /* SVG 線條顏色：rgba(255, 255, 255, 0.7) */
+    stroke-width: 5px;                                  /* SVG 線條粗細：5px */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
 /* 目標線：一開始看不到(opacity:0)，揭曉時淡入 */
 .pour-target {
-    opacity: 0;
-    transition: opacity 0.4s ease;
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    transition: opacity 0.4s ease;                      /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.4s ease */
 }
 
 /* 顯示目標線 */
 .pour-target--on {
-    opacity: 1;
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }
 
 /* 目標線的虛線 */
 .pour-target__line {
-    stroke: var(--c-ok);
-    stroke-width: 3px;
-    stroke-dasharray: 10 7;
-    vector-effect: non-scaling-stroke;
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
+    stroke-width: 3px;                                  /* SVG 線條粗細：3px */
+    stroke-dasharray: 10 7;                             /* SVG 虛線的「畫／空」長度：10 7 */
+    vector-effect: non-scaling-stroke;                  /* SVG 線條粗細不隨縮放改變 */
 }
 
 /* 尺：同樣一開始隱藏 */
 .pour-ruler {
-    opacity: 0;
-    transition: opacity 0.5s ease;
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    transition: opacity 0.5s ease;                      /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.5s ease */
 }
 
 /* 顯示尺 */
 .pour-ruler--on {
-    opacity: 1;
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }
 
 /* 尺的刻度 */
 .pour-tick {
-    stroke: var(--c-ink);
-    stroke-width: 3px;
-    vector-effect: non-scaling-stroke;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3px;                                  /* SVG 線條粗細：3px */
+    vector-effect: non-scaling-stroke;                  /* SVG 線條粗細不隨縮放改變 */
 }
 
 /* 0 刻度（綠色） */
 .pour-tick--zero {
-    stroke: var(--c-ok);
-    stroke-width: 5px;
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
+    stroke-width: 5px;                                  /* SVG 線條粗細：5px */
 }
 
 /* 刻度數字層：animation: ... both 表示動畫開始前與結束後都維持關鍵影格的樣式 */
 .pour-labels {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    animation: pour-fade 0.5s ease both;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    animation: pour-fade 0.5s ease both;                /* 播放動畫（名稱、時間、緩動、次數）：pour-fade 0.5s ease both */
 }
 
 /* 淡入動畫 */
 @keyframes pour-fade {
     from {
-        opacity: 0;
+        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
     }
 
     to {
-        opacity: 1;
+        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
     }
 }
 
 /* 刻度數字 */
 .pour-ticklabel {
-    position: absolute;
-    transform: translateY(-50%);
-    font-size: var(--fs-md);
-    font-weight: 700;
-    color: var(--c-ink);
-    text-shadow: 0 0 4px var(--c-card), 0 0 4px var(--c-card), 0 0 4px var(--c-card);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    transform: translateY(-50%);                        /* 變形：垂直移動 -50% */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: 700;                                   /* 字重（粗細）700（400 一般、700 粗體） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    text-shadow: 0 0 4px var(--c-card), 0 0 4px var(--c-card), 0 0 4px var(--c-card);  /* 文字陰影 */
 }
 
 /* 0 刻度的數字（綠） */
 .pour-ticklabel--zero {
-    color: var(--c-ok);
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
 /* 放大倍數提示（右上角） */
 .pour-zoomlabel {
-    position: absolute;
-    right: var(--sp-3);
-    top: var(--sp-3);
-    padding: 2px var(--sp-3);
-    font-size: var(--fs-md);
-    font-weight: 700;
-    color: var(--c-ink);
-    background: rgba(255, 253, 243, 0.9);
-    border: var(--bd);
-    border-radius: var(--r-md, 12px);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    right: var(--sp-3);                                 /* 離右邊 主題變數 --sp-3 */
+    top: var(--sp-3);                                   /* 離上邊 主題變數 --sp-3 */
+    padding: 2px var(--sp-3);                           /* 內縮（padding，內容跟邊框的距離）：上 2px、左右 主題變數、下 --sp-3 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: 700;                                   /* 字重（粗細）700（400 一般、700 粗體） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    background: rgba(255, 253, 243, 0.9);               /* 背景：rgba(255, 253, 243, 0.9) */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-md, 12px);                   /* 圓角：var(--r-md, 12px) */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }

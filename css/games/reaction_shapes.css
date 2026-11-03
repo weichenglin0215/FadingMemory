@@ -6,51 +6,51 @@
 
 /* 黑底上的提示文字改亮灰色 */
 .shapes--on-dark {
-    color: hsl(0, 0%, 70%);
+    color: hsl(0, 0%, 70%);                             /* 文字顏色：hsl(0, 0%, 70%) */
 }
 
 /* 形形色色：在一堆圖案中找出不一樣的那個 */
 /* ═══ 遊戲五：形形色色 ═══ */
 .shapes-dark-bg {
-    background: #000;
+    background: #000;                                   /* 背景：#000 */
 }
 
 /* 外層容器，把棋盤置中 */
 .shapes-wrap {
-    flex: 1 1 auto;
-    min-height: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
 }
 
 /* 棋盤：display:grid 格子排版，欄數與格子大小由 JS 算出後寫進去 */
 .shapes-board {
-    display: grid;
-    gap: 2px;
+    display: grid;                                      /* 格線排版：子元素排進格子 */
+    gap: 2px;                                           /* 子元素之間的空隙：2px */
 }
 
 /* 一格圖案 */
 .shapes-cell {
-    background: #161616;
-    border: none;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
+    background: #161616;                                /* 背景：#161616 */
+    border: none;                                       /* 沒有邊框 */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* 答對 */
 .shapes-cell--ok {
-    outline: 3px dashed var(--c-ok-light);
-    outline-offset: -3px;
+    outline: 3px dashed var(--c-ok-light);              /* 外框線：3px dashed 主題變數 --c-ok-light */
+    outline-offset: -3px;                               /* 外框線離元素多遠：-3px */
 }
 
 /* 答錯 */
 .shapes-cell--bad {
-    outline: 3px dashed var(--c-bad-light);
-    outline-offset: -3px;
+    outline: 3px dashed var(--c-bad-light);             /* 外框線：3px dashed 主題變數 --c-bad-light */
+    outline-offset: -3px;                               /* 外框線離元素多遠：-3px */
 }
 
 /* 93% ＝使用者要求「圖案再放大 1.33 倍」（70% × 1.33 ≈ 93%），盡量佈滿整個
@@ -58,13 +58,13 @@
    （字級係數 0.6 → 0.8）。 */
 /* SVG 圖案：占格子的 93% */
 .shapes-glyph-svg {
-    width: 93%;
-    height: 93%;
+    width: 93%;                                         /* 寬度：93% */
+    height: 93%;                                        /* 高度：93% */
 }
 
 /* 文字型圖案 */
 .shapes-glyph-text {
-    font-weight: var(--fw-black);
-    line-height: 1;
-    font-family: var(--font-ui);
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
+    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
 }

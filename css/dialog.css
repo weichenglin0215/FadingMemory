@@ -13,13 +13,13 @@
      一直點得到——玩法說明還沒按「開始挑戰」就想離開，也不用先開始遊戲才能按返回；
    · 放在遊戲畫面（#screen）裡時（.dlg--in，結算彈窗用）：蓋滿遊戲畫面，標題列本來就不在裡面。 */
 .dlg {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--dlg-pad);
-    background: var(--dlg-overlay);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    padding: var(--dlg-pad);                            /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --dlg-pad */
+    background: var(--dlg-overlay);                     /* 背景：主題變數 --dlg-overlay */
 }
 
 /* z-index（全部在 #stage 這一個疊放層裡比大小）：操作提示（手指＋短文字）15～16 ＜ 開始遮罩 20
@@ -27,151 +27,163 @@
    ＜ 其他舞台彈窗 30（世界前 30 名、暱稱、恭喜、我有話要說：從玩法說明或結算裡打開，要疊在它們上面）＜ 小提示 40。
    這樣從「?」玩法說明裡打開排行榜，排行榜會疊在玩法說明上面，關掉之後回到玩法說明。 */
 .dlg--stage {
-    top: var(--bar-h);
-    z-index: 30;
+    top: var(--bar-h);                                  /* 離上邊 主題變數 --bar-h */
+    z-index: 30;                                        /* 疊放順序：數字越大越在上面（30） */
 }
 
+/* 「dlg」的「low」變化版的樣式 */
 .dlg--low {
-    z-index: 28;
+    z-index: 28;                                        /* 疊放順序：數字越大越在上面（28） */
 }
 
+/* 「dlg」的「in」變化版的樣式 */
 .dlg--in {
-    z-index: 25;
+    z-index: 25;                                        /* 疊放順序：數字越大越在上面（25） */
 }
 
 /* 彈窗裡的卡片：直向排列，所有彈窗共用 */
 .dlg__card {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    max-width: var(--dlg-w);
-    display: flex;
-    flex-direction: column;
-    gap: var(--dlg-gap);
-    padding: var(--dlg-card-pad);
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-pop);
-    text-align: center;
-    animation: dlg-pop 0.22s ease;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    z-index: 1;                                         /* 疊放順序：數字越大越在上面（1） */
+    width: 100%;                                        /* 寬度：100% */
+    max-width: var(--dlg-w);                            /* 最大寬度：主題變數 --dlg-w */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    gap: var(--dlg-gap);                                /* 子元素之間的空隙：主題變數 --dlg-gap */
+    padding: var(--dlg-card-pad);                       /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --dlg-card-pad */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    box-shadow: var(--shadow-pop);                      /* 方塊陰影（立體感） */
+    text-align: center;                                 /* 文字置中 */
+    animation: dlg-pop 0.22s ease;                      /* 播放動畫（名稱、時間、緩動、次數）：dlg-pop 0.22s ease */
 }
 
 /* 卡片裡的區塊高度固定、不准被壓縮（內容多的時候不要把按鈕擠成一條線）；
    需要吃掉剩餘高度的區塊（例如排行榜的榜單視窗）自己另外設 flex。 */
 .dlg__card>* {
-    flex: 0 0 auto;
+    flex: 0 0 auto;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
 }
 
 /* 卡片拉到整個高度（世界前 30 名用） */
 .dlg--tall .dlg__card {
-    height: 100%;
+    height: 100%;                                       /* 高度：100% */
 }
 
+/* 動畫 dlg-pop：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes dlg-pop {
     from {
-        transform: translateY(18px) scale(0.97);
-        opacity: 0;
+        transform: translateY(18px) scale(0.97);        /* 變形：垂直移動 18px 縮放 0.97 倍 */
+        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
     }
 
     to {
-        transform: none;
-        opacity: 1;
+        transform: none;                                /* 變形：none */
+        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
     }
 }
 
 /* 標題、副標題、內文 */
 .dlg__title {
-    font-size: var(--dlg-title-fs);
-    font-weight: var(--fw-black);
-    line-height: var(--lh-tight);
-    color: var(--c-ink);
+    font-size: var(--dlg-title-fs);                     /* 字級：主題變數 --dlg-title-fs */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: var(--lh-tight);                       /* 行高：主題變數 --lh-tight（文字每一行佔的高度） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「dlg」裡面的「sub」部分的樣式 */
 .dlg__sub {
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 內文靠左對齊（其餘文字都是置中） */
 .dlg__text {
-    font-size: var(--dlg-text-fs);
+    font-size: var(--dlg-text-fs);                      /* 字級：主題變數 --dlg-text-fs */
     /*font-weight: var(--fw-bold);*/
-    font-weight: var(--fw-regular);
-    line-height: var(--lh-body);
-    color: var(--c-ink-soft);
-    text-align: left;
+    font-weight: var(--fw-regular);                     /* 字重（粗細）：主題變數 --fw-regular */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    text-align: left;                                   /* 文字靠左 */
 }
 
 /* 玩法說明的內文（js/dialog.js 的 Dlg.richText）：一句一個 .dlg__line（一行一段，句與句之間留一點空隙，
    同一句太長折行時行距仍是 --lh-body）；重點句子 .dlg__em 用粗體＋黑色，其他字維持上面 .dlg__text 的一般粗細與次要文字色 */
 .dlg__line+.dlg__line {
-    margin-top: var(--sp-2);
+    margin-top: var(--sp-2);                            /* 上外距（跟上面的元素距離）：主題變數 --sp-2 */
 }
 
+/* 「dlg」裡面的「em」部分的樣式 */
 .dlg__em {
-    font-weight: var(--fw-bold);
-    color: var(--c-black);
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-black);                              /* 文字顏色：主題變數 --c-black */
 }
 
 /* 按鈕區：直向排列、每顆都撐滿寬度、高度用 --btn-h（theme.css）。
    --row：兩顆並排（例如「看排行榜」「太棒了」）。 */
 .dlg__btns {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-3);
-    width: 100%;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
+    width: 100%;                                        /* 寬度：100% */
 }
 
+/* 「dlg__btns」的「row」變化版的樣式 */
 .dlg__btns--row {
-    flex-direction: row;
+    flex-direction: row;                                /* 子元素由左往右排 */
 }
 
+/* 「btn」這個元素的樣式 */
 .dlg__btns--row>.btn {
-    flex: 1 1 0;
-    min-width: 0;
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-width: 0;                                       /* 最小寬度：0 */
 }
 
 /* 貼邊版（結算畫面後面有「放大揭曉」要讓玩家看的遊戲用：六點鐘方向、倒到八分滿、不可能任務、色不異空）：
    背後不壓暗、彈窗本身以外的地方可以穿透，卡片貼在上緣或下緣，緊湊一點，揭曉的畫面才不會被蓋住。
    卡片的寬度、圓角、陰影、字體、按鈕顏色仍然是公版。 */
 .dlg--dock {
-    background: transparent;
-    pointer-events: none;
-    padding: var(--sp-3);
+    background: transparent;                            /* 透明背景 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    padding: var(--sp-3);                               /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --sp-3 */
 }
 
+/* 「dlg」裡面的「card」部分的樣式 */
 .dlg--dock .dlg__card {
-    pointer-events: auto;
-    gap: var(--sp-2);
-    padding: var(--sp-4) var(--sp-4) var(--sp-3);
+    pointer-events: auto;                               /* 可以接收點擊／觸控 */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
+    padding: var(--sp-4) var(--sp-4) var(--sp-3);       /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-4、下 主題變數、左 --sp-4 */
 }
 
+/* 「dlg」的「dock-top」變化版的樣式 */
 .dlg--dock-top {
-    align-items: flex-start;
+    align-items: flex-start;                            /* 子元素靠交叉方向的起點（橫排時靠上） */
 }
 
+/* 「dlg」的「dock-bottom」變化版的樣式 */
 .dlg--dock-bottom {
-    align-items: flex-end;
+    align-items: flex-end;                              /* 子元素靠交叉方向的終點（橫排時靠下） */
 }
 
+/* 「rx-result」裡面的「num」部分的樣式 */
 .dlg--dock .rx-result__num {
-    font-size: var(--fs-xl);
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
 }
 
+/* 「btn」這個元素的樣式 */
 .dlg--dock .dlg__btns .btn {
-    height: var(--btn-h-sm);
+    height: var(--btn-h-sm);                            /* 高度：主題變數 --btn-h-sm */
 }
 
 /* 「我有話要說」意見彈窗：「取消」「送出」並排（送出在右邊），按鈕高度降成 70%（V1.28 玩家意見） */
 .dlg--feedback .dlg__btns .btn {
-    height: calc(var(--btn-h) * 0.7);
+    height: calc(var(--btn-h) * 0.7);                   /* 高度：calc(主題變數 --btn-h * 0.7) */
 }
 
 /* 結算彈窗：內容置中（大數字、評語、說明行）；卡片底部的「我有話要說」小一點、放在所有按鈕下面 */
 .dlg--result .dlg__card {
-    align-items: center;
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
 }
 
 /* 結算卡片萬一比遊戲畫面還高（說明行很多＋闖關的兩顆按鈕＋我有話要說＋五星評價，V1.25.0）：外框可以上下捲動，
@@ -179,133 +191,143 @@
    卡片從頂端開始排、可以往下捲，不會被切掉上半部（只用 align-items:center 的話，超出的上半部捲不到）。
    貼邊版（--dock）本來就貼在上緣或下緣，不套用。 */
 .dlg--result:not(.dlg--dock) {
-    overflow-y: auto;
+    overflow-y: auto;                                   /* 直向超出時的處理：auto */
 }
 
+/* 「dlg」裡面的「card」部分的樣式 */
 .dlg--result:not(.dlg--dock) .dlg__card {
-    margin: auto 0;
+    margin: auto 0;                                     /* 外距（margin，與別的元素的距離）：上下 auto、左右 0 */
 }
 
 /* 結算彈窗最下面一排：「我有話要說」「五星評價」左右並排（各占一半寬，字小一號、圖示縮小，才不會折行；
    五星評價今天已經評過就不顯示，「我有話要說」獨佔整排）。js/reaction_kit.js 的 kit.result 放的。
    .dlg--snug：卡片放不下時外框與卡片的留白、區塊間距縮小（js/reaction_kit.js 的 fitResult，跟貼邊版同一組數值）。 */
 .dlg__minor {
-    display: flex;
-    gap: var(--sp-3);
-    width: 100%;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
+    width: 100%;                                        /* 寬度：100% */
 }
 
+/* 「btn」這個元素的樣式 */
 .dlg__minor>.btn {
-    flex: 1 1 0;
-    min-width: 0;
-    margin-top: 0;
-    font-size: var(--fs-sm);
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-width: 0;                                       /* 最小寬度：0 */
+    margin-top: 0;                                      /* 上外距（跟上面的元素距離）：0 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
 }
 
+/* 「icon」這個元素的樣式 */
 .dlg__minor .icon {
-    width: 22px;
-    height: 22px;
+    width: 22px;                                        /* 寬度：22px */
+    height: 22px;                                       /* 高度：22px */
 }
 
+/* 「dlg」的「snug」變化版的樣式 */
 .dlg--snug {
-    padding: var(--sp-2);
+    padding: var(--sp-2);                               /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --sp-2 */
 }
 
+/* 「dlg」裡面的「card」部分的樣式 */
 .dlg--snug .dlg__card {
-    gap: var(--sp-2);
-    padding: var(--sp-4) var(--sp-4) var(--sp-3);
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
+    padding: var(--sp-4) var(--sp-4) var(--sp-3);       /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-4、下 主題變數、左 --sp-4 */
 }
 
+/* 「dlg」裡面的「feedback」部分的樣式 */
 .dlg__feedback {
-    width: 100%;
-    margin-top: var(--sp-1);
-    white-space: nowrap;
+    width: 100%;                                        /* 寬度：100% */
+    margin-top: var(--sp-1);                            /* 上外距（跟上面的元素距離）：主題變數 --sp-1 */
+    white-space: nowrap;                                /* 文字不換行 */
 }
 
 /* 貼邊版：兩顆按鈕並排，每顆只有半個寬度，「我有話要說」字級小一點、圖示縮小，才不會折行 */
 .dlg--dock .dlg__feedback {
-    font-size: var(--fs-sm);
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
 }
 
+/* 「icon」這個元素的樣式 */
 .dlg--dock .dlg__feedback .icon {
-    width: 22px;
-    height: 22px;
+    width: 22px;                                        /* 寬度：22px */
+    height: 22px;                                       /* 高度：22px */
 }
 
 /* ═══ 輸入框（暱稱、意見共用）═══
    user-select: text：舞台整體禁止選取文字（stage.css），輸入框要例外，不然手機上打不了字 */
 .dlg-input {
-    width: 100%;
-    height: var(--btn-h);
-    padding: 0 var(--sp-4);
-    border: var(--bd);
-    border-radius: var(--r-md);
-    background: var(--c-paper);
-    color: var(--c-ink);
-    font-family: var(--font-ui);
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-regular);
-    text-align: center;
-    outline: none;
-    -webkit-user-select: text;
-    user-select: text;
+    width: 100%;                                        /* 寬度：100% */
+    height: var(--btn-h);                               /* 高度：主題變數 --btn-h */
+    padding: 0 var(--sp-4);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-4 */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: var(--c-paper);                         /* 背景：主題變數 --c-paper */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-regular);                     /* 字重（粗細）：主題變數 --fw-regular */
+    text-align: center;                                 /* 文字置中 */
+    outline: none;                                      /* 不畫焦點外框 */
+    -webkit-user-select: text;                          /* 文字選取方式：text */
+    user-select: text;                                  /* 文字選取方式：text */
 }
 
+/* 「dlg-input」這個元素，取得焦點（被點選輸入）時的樣式 */
 .dlg-input:focus {
-    border-color: var(--c-blue);
-    box-shadow: 0 0 0 4px var(--c-blue-soft);
+    border-color: var(--c-blue);                        /* 邊框顏色：主題變數 --c-blue */
+    box-shadow: 0 0 0 4px var(--c-blue-soft);           /* 方塊陰影（立體感） */
 }
 
 /* 多行輸入（我有話要說）：靠左對齊、字級小一點、可以輸入很多字 */
 .dlg-input--area {
-    height: 460px;
-    padding: var(--sp-3) var(--sp-4);
-    font-size: var(--fs-sm);
-    line-height: var(--lh-body);
-    text-align: left;
-    resize: none;
+    height: 460px;                                      /* 高度：460px */
+    padding: var(--sp-3) var(--sp-4);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-3、下 主題變數、左 --sp-4 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    text-align: left;                                   /* 文字靠左 */
+    resize: none;                                       /* 可否拖曳調整大小：none */
 }
 
 /* 輸入字數計數 */
 .dlg__count {
-    margin-top: calc(var(--sp-2) * -1);
-    text-align: right;
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    margin-top: calc(var(--sp-2) * -1);                 /* 上外距（跟上面的元素距離）：calc(主題變數 --sp-2 * -1) */
+    text-align: right;                                  /* 文字靠右 */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* ═══ 小提示（畫面下方浮出一行字，幾秒後淡出）═══ */
 .dlg-toast {
-    position: absolute;
-    left: var(--sp-5);
-    right: var(--sp-5);
-    bottom: var(--sp-5);
-    z-index: 40;
-    padding: var(--sp-3) var(--sp-4);
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-md);
-    box-shadow: var(--shadow-pop);
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-body);
-    color: var(--c-ink);
-    pointer-events: none;
-    animation: dlg-pop 0.25s ease;
-    transition: opacity 0.4s ease;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: var(--sp-5);                                  /* 離左邊 主題變數 --sp-5 */
+    right: var(--sp-5);                                 /* 離右邊 主題變數 --sp-5 */
+    bottom: var(--sp-5);                                /* 離下邊 主題變數 --sp-5 */
+    z-index: 40;                                        /* 疊放順序：數字越大越在上面（40） */
+    padding: var(--sp-3) var(--sp-4);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-3、下 主題變數、左 --sp-4 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    box-shadow: var(--shadow-pop);                      /* 方塊陰影（立體感） */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    animation: dlg-pop 0.25s ease;                      /* 播放動畫（名稱、時間、緩動、次數）：dlg-pop 0.25s ease */
+    transition: opacity 0.4s ease;                      /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.4s ease */
 }
 
+/* 「is-out」這個元素（同時有 .dlg-toast）的樣式 */
 .dlg-toast.is-out {
-    opacity: 0;
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
 }
 
 /* 使用者在系統設定了「減少動態效果」：關掉彈出動畫 */
 @media (prefers-reduced-motion: reduce) {
 
+    /* 「dlg」裡面的「card」部分；「dlg-toast」這個元素的樣式 */
     .dlg__card,
     .dlg-toast {
-        animation: none;
+        animation: none;                                /* 播放動畫（名稱、時間、緩動、次數）：none */
     }
 }

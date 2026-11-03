@@ -15,11 +15,15 @@
    · rAF 被暫停（分頁在背景）時有 setTimeout 保底：照設計的時間差亮第二盞燈。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'whofirst'：選單、成績、存檔都靠它；樣式在 css/games/reaction_whofirst.css，裡面的 class 名稱一律以 whofirst- 開頭。 */
     'use strict';
 
-    var ID = 'whofirst';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'whofirst';                                /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -43,7 +47,7 @@
     function frameFrom(samples) { var m = median(samples); return m >= 4 && m <= 34 ? m : 1000 / 60; }
     /* 先亮的一側：同側最多連續 SAME_MAX 次 */
     function nextSide(hist, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var n = hist.length;
         if (n >= SAME_MAX) {
             var last = hist[n - 1], same = true;
@@ -65,6 +69,7 @@
             sizeL: leftBig ? large : small, sizeR: leftBig ? small : large, base: base
         };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 25) return '時間感知大師！';
         if (n >= 15) return '高手！';
@@ -84,6 +89,7 @@
         window.requestAnimationFrame(tick);
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         measureFrame();
         var hist = [];
@@ -96,12 +102,14 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api, hist) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand, hist, stage.clientWidth || 472);
         hist.push(q.first);
-        api.info = q;
-        console.log('[誰先亮] 第 ' + level + ' 關：' + (q.first === 'L' ? '左' : '右') + '邊先亮；時間差 ' + q.frames + ' 影格（約 ' + (q.frames * frameMs / 1000).toFixed(4) + ' 秒）；等 ' + q.wait + ' ms');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[誰先亮] 第 ' + level + ' 關：' + (q.first === 'L' ? '左' : '右') + '邊先亮；時間差 ' + q.frames + ' 影格（約 ' + (q.frames * frameMs / 1000).toFixed(4) + ' 秒）；等 ' + q.wait + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var lampL = h('div', { 'class': 'whofirst-lamp whofirst-lamp--a' }), lampR = h('div', { 'class': 'whofirst-lamp whofirst-lamp--b' });
         [[lampL, q.sizeL], [lampR, q.sizeR]].forEach(function (p) {
@@ -123,7 +131,7 @@
             if (ready) return; ready = true;
             if (tB && tA) delta = tB - tA;
             bL.disabled = bR.disabled = false; info.textContent = '哪一盞先亮？';
-            api.timer(ANS_MS, function () { judge(null); });
+            api.timer(ANS_MS, function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         }
         function begin() {
             var k = 0, loop = api.my.loop(function (now) {
@@ -137,6 +145,7 @@
         }
         api.after(q.wait, begin);
 
+        /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(side) {
             if (api.over) return;
             if (!ready) { if (lit < 1) light(q.first); if (lit < 2) light(second); ready = true; }
@@ -154,10 +163,12 @@
         }
         kit.onTap(bL, function () { judge('L'); });
         kit.onTap(bR, function () { judge('R'); });
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.first); };
         api.wrong = function () { judge(second); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '誰先亮',
@@ -166,5 +177,6 @@
         score: SCORE,
         test: { lampAt: lampAt, LAMP: LAMP, EDGE: EDGE, GAP_MIN: GAP_MIN, framesAt: framesAt, median: median, frameFrom: frameFrom, nextSide: nextSide, makeLevel: makeLevel, rating: rating, RAMP_LEVELS: RAMP_LEVELS, MAX_LEVEL: MAX_LEVEL, FRAMES: FRAMES, WAIT_MS: WAIT_MS, SAME_MAX: SAME_MAX, SIZE_JIT: SIZE_JIT, MAX_LEVEL: MAX_LEVEL }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

@@ -32,11 +32,15 @@
      眉毛與鬍子的差別只在「幾何」（geo：長度、內端離中軸多遠、高度範圍、基準高度）與形狀函式，其餘（makeLevel 的重抽、shiftLimit、similarity）共用。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'eyebrow'：選單、成績、存檔都靠它；樣式在 css/games/reaction_eyebrow.css，裡面的 class 名稱一律以 eyebrow- 開頭。 */
     'use strict';
 
-    var ID = 'eyebrow';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'eyebrow';                                 /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -257,6 +261,7 @@
     function browRadius(brow) { var m = 0; brow.forEach(function (p) { m = Math.max(m, Math.hypot(p.u, p.v)); }); return m; }
     /* 這個半徑的眉毛，臉心最多可以左右偏多少（整條眉毛含鏡射的都留在畫面裡）；放不下回傳 −1 */
     function shiftLimit(radius, W) { return W / 2 - EDGE - radius; }
+    /* 出題函式：依關卡難度與亂數產生這一關的資料（純函式，不碰畫面，單元測試直接測它） */
     function makeLevel(level, rand, W, H) {
         rand = rand || Math.random; W = W || 472; H = H || 640;
         var type, par, weird, brow, tries = 0;
@@ -287,6 +292,7 @@
     }
     function fmt4(v) { return v.toFixed(4); }
     function whyText(sim, thresh) { return sim >= thresh ? '相似度 ' + fmt4(sim) + '%（及格線 ' + fmt4(thresh) + '%）——過關！' : '相似度 ' + fmt4(sim) + '%，沒達到及格線 ' + fmt4(thresh) + '%'; }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 15) return '化妝大師！';
         if (n >= 9) return '手很穩！';
@@ -295,6 +301,7 @@
         return '眉峰、眉尾都要反過來！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'eyebrow-stage',
@@ -307,13 +314,15 @@
 
     function pts2d(p) { return p.map(function (q) { return q.x.toFixed(1) + ',' + q.y.toFixed(1); }).join(' '); }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var q = makeLevel(level, api.rand, W, H);
-        api.info = q;
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         var noun = q.kind === 'stache' ? '鬍子' : '眉毛', sc = q.kind === 'stache' ? ' eyebrow-ref--stache' : '';                      /* 鬍子的線條畫粗一點（css 的 --stache 版本） */
-        console.log('[畫眉毛] 第 ' + level + ' 關：' + q.type + (q.kind === 'stache' ? '鬍（左邊那撇長 ' : '眉（左眉長 ') + q.L.toFixed(0) + ' px）；臉心 (' + q.F.x + ', ' + q.F.y + ')、歪 ' + q.thetaDeg + '°；及格線 ' + q.thresh + '%');
+        console.log('[畫眉毛] 第 ' + level + ' 關：' + q.type + (q.kind === 'stache' ? '鬍（左邊那撇長 ' : '眉（左眉長 ') + q.L.toFixed(0) + ' px）；臉心 (' + q.F.x + ', ' + q.F.y + ')、歪 ' + q.thetaDeg + '°；及格線 ' + q.thresh + '%');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var field = h('div', { 'class': 'eyebrow-field' });
         stage.appendChild(field);
@@ -334,7 +343,7 @@
         var axis = kit.svg('line', { 'class': 'eyebrow-axis', x1: 0, y1: -190, x2: 0, y2: 205 }, face);                    /* 臉的中軸（揭曉時淡淡地顯示） */
         var mine = kit.svg('polyline', { 'class': 'eyebrow-mine' + sc.replace('ref', 'mine'), points: '' }, turn), ghost = kit.svg('polyline', { 'class': 'eyebrow-ghost' + sc.replace('ref', 'ghost'), points: '' }, turn);
         var info = h('div', { 'class': 'qz-note eyebrow-info', text: '' }); info.style.top = Math.round(H * 0.46 + 215) + 'px'; field.appendChild(info);
-        if (level === 1 && kit.once('eyebrow.hint')) { var s0 = q.target[0], s1 = q.target[q.target.length - 1]; kit.hintOn(stage, null, { mode: 'drag', x: s0.x, y: s0.y, dx: s1.x - s0.x, dy: s1.y - s0.y, delay: 800, text: '在右邊畫出對稱的眉毛' }); }
+        if (level === 1 && kit.once('eyebrow.hint')) { var s0 = q.target[0], s1 = q.target[q.target.length - 1]; kit.hintOn(stage, null, { mode: 'drag', x: s0.x, y: s0.y, dx: s1.x - s0.x, dy: s1.y - s0.y, delay: 800, text: '在右邊畫出對稱的眉毛' }); }  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
         var phase = 'draw', pts = [], down = null;
         field.addEventListener('pointerdown', function (e) {
@@ -382,17 +391,20 @@
         api.wrong = function () { if (phase !== 'draw') return; var st = []; for (var i = 0; i < 20; i++) st.push({ x: q.F.x + 30 + i * 6, y: q.F.y + 120 }); judge(st); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '畫眉毛',
         rule: '一張臉，**左邊的眉毛（或鬍子）已經畫好了**。**在右邊畫出另一條，要和左邊的「鏡射對稱」**——眉峰、眉尾都要左右反過來。放手後，左邊的會翻過去疊在右邊，算出相似度，**要達到及格線才過關**。臉有時會歪、不在正中間，**對稱軸是臉的中軸**（看鼻子和嘴巴）。放手後臉先轉正，再出現紅色的正確線條。越後面形狀越奇怪，第 2 關起還有創意鬍子！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             stachePFor: stachePFor, stachePar: stachePar, stacheShape: stacheShape, STACHE_FROM: STACHE_FROM, STACHE_P: STACHE_P, STACHE_LEN: STACHE_LEN, STACHE_GAP: STACHE_GAP, STACHE_V: STACHE_V, STACHE_TOP: STACHE_TOP, STACHE_BOTTOM: STACHE_BOTTOM, STACHE_BASE: STACHE_BASE, STACHE_WEIRD: STACHE_WEIRD, STACHE_TYPES: STACHE_TYPES,
             threshFor: threshFor, tiltFor: tiltFor, shiftFor: shiftFor, typesFor: typesFor, weirdPFor: weirdPFor, weirdPar: weirdPar, catmull: catmull, piecewise: piecewise, loopShape: loopShape, browRadius: browRadius, shiftLimit: shiftLimit, pathLength: pathLength, resample: resample, distToPath: distToPath, chamfer: chamfer, similarity: similarity, toScreen: toScreen, mirrorLocal: mirrorLocal, browShape: browShape, makeLevel: makeLevel, whyText: whyText, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, THRESH: THRESH, TILT_DEG: TILT_DEG, TILT_FROM: TILT_FROM, SHIFT_PX: SHIFT_PX, BROW_LEN: BROW_LEN, BROW_PTS: BROW_PTS, L_CAP: L_CAP, LOOPY: LOOPY, EDGE: EDGE, REVEAL_GAP_MS: REVEAL_GAP_MS, GHOST_MS: GHOST_MS, BROW_GAP: BROW_GAP, BROW_V: BROW_V, SIM_K: SIM_K, N_RES: N_RES, MIN_PTS: MIN_PTS, MIN_LEN_FRAC: MIN_LEN_FRAC, SOLVE_JITTER: SOLVE_JITTER, TYPES: TYPES, BASE_TYPES: BASE_TYPES, WEIRD: WEIRD, WEIRD_FROM: WEIRD_FROM, WEIRD_P: WEIRD_P, BROW_TOP: BROW_TOP, BROW_BOTTOM: BROW_BOTTOM, TURN_MS: TURN_MS, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

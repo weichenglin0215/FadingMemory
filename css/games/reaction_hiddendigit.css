@@ -6,66 +6,74 @@
 
 /* ═══ 遮住的數字（.hiddendigit-）═══ */
 .hiddendigit-eq {
-    top: 40px;
-    font-size: var(--fs-xxxxl);
-    font-weight: var(--fw-black);
+    top: 40px;                                          /* 離上邊 40px */
+    font-size: var(--fs-xxxxl);                         /* 字級：主題變數 --fs-xxxxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
+/* 「hiddendigit-ans」這個元素的樣式 */
 .hiddendigit-ans {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 140px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: var(--sp-2);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 140px;                                         /* 離上邊 140px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
 }
 
+/* 「hiddendigit-eqsign」這個元素的樣式 */
 .hiddendigit-eqsign {
-    font-size: var(--fs-xxxxl);
-    font-weight: var(--fw-black);
-    color: var(--c-ink-soft);
-    margin-right: var(--sp-2);
+    font-size: var(--fs-xxxxl);                         /* 字級：主題變數 --fs-xxxxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    margin-right: var(--sp-2);                          /* 右外距：主題變數 --sp-2 */
 }
 
+/* 「hiddendigit-box」這個元素的樣式 */
 .hiddendigit-box {
-    width: 80px;
-    height: 108px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--r-md);
-    background: var(--c-card);
-    border: var(--bd);
-    font-size: var(--fs-xxxxl);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    width: 80px;                                        /* 寬度：80px */
+    height: 108px;                                      /* 高度：108px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    font-size: var(--fs-xxxxl);                         /* 字級：主題變數 --fs-xxxxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「hiddendigit-box」在「隱藏時」的樣子的樣式 */
 .hiddendigit-box--hide {
-    background: var(--c-yellow-soft);
-    border: 3px dashed var(--c-yellow);
-    color: var(--c-yellow);
+    background: var(--c-yellow-soft);                   /* 背景：主題變數 --c-yellow-soft */
+    border: 3px dashed var(--c-yellow);                 /* 邊框（粗細、線型、顏色）：3px dashed 主題變數 --c-yellow */
+    color: var(--c-yellow);                             /* 文字顏色：主題變數 --c-yellow */
 }
 
+/* 「hiddendigit-box」在「正確（成功）時」的樣子的樣式 */
 .hiddendigit-box--ok {
-    background: var(--c-ok-soft);
-    border: 3px solid var(--c-ok);
-    color: var(--c-ok);
+    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
+    border: 3px solid var(--c-ok);                      /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ok */
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「hiddendigit-box」在「錯誤（失敗）時」的樣子的樣式 */
 .hiddendigit-box--bad {
-    background: var(--c-bad-soft);
-    border: 3px solid var(--c-bad);
-    color: var(--c-bad);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    border: 3px solid var(--c-bad);                     /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-bad */
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
+/* 「hiddendigit-ask」這個元素的樣式 */
 .hiddendigit-ask {
-    top: 320px;
+    top: 320px;                                         /* 離上邊 320px */
 }
 
+/* 「hiddendigit-btn」這個元素的樣式 */
 .hiddendigit-btn {
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-black);
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }

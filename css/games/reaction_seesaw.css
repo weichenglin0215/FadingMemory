@@ -6,293 +6,320 @@
 
 /* ═══ 蹺蹺板比重（.seesaw-）═══ */
 .seesaw-stage {
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
 /* 這一關專用的容器（換關時整個丟掉，事件監聽也跟著丟掉） */
 .seesaw-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    touch-action: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
+/* 「seesaw-tip」這個元素的樣式 */
 .seesaw-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「seesaw-info」這個元素的樣式 */
 .seesaw-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 支點（三角形）與木板（會依重量差傾斜，角度由 JS 的彈簧動畫設定） */
 .seesaw-pivot {
-    position: absolute;
-    width: 80px;
-    height: 72px;
-    background: var(--c-ink-soft);
-    clip-path: polygon(50% 0, 0 100%, 100% 100%);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 80px;                                        /* 寬度：80px */
+    height: 72px;                                       /* 高度：72px */
+    background: var(--c-ink-soft);                      /* 背景：主題變數 --c-ink-soft */
+    clip-path: polygon(50% 0, 0 100%, 100% 100%);       /* 裁成指定形狀：polygon(50% 0, 0 100%, 100% 100%) */
 }
 
+/* 「seesaw-board」這個元素的樣式 */
 .seesaw-board {
-    position: absolute;
-    height: 16px;
-    background: var(--sea-plank);
-    border-radius: var(--r-sm);
-    box-shadow: var(--shadow-card);
-    transform-origin: 50% 50%;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    height: 16px;                                       /* 高度：16px */
+    background: var(--sea-plank);                       /* 背景：主題變數 --sea-plank */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
+    transform-origin: 50% 50%;                          /* 變形的基準點：50% 50% */
 }
 
 /* 動物：坐在木板上（bottom 讓牠站在板子上面）；大小由 JS 依重量設定（越重越大）；被手指拿起來時放大一點 */
 .seesaw-an {
-    position: absolute;
-    bottom: 12px;
-    cursor: grab;
-    touch-action: none;
-    transition: left 0.28s ease-out;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    bottom: 12px;                                       /* 離下邊 12px */
+    cursor: grab;                                       /* 滑鼠游標樣式：grab */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    transition: left 0.28s ease-out;                    /* 狀態改變時的過渡動畫（屬性、時間、緩動）：left 0.28s ease-out */
 }
 
 /* 被固定、不能拖動的動物：虛線圈住，游標不是小手 */
 .seesaw-an--pin {
-    cursor: default;
-    outline: 3px dashed var(--c-ink-soft);
-    outline-offset: 1px;
-    border-radius: 50%;
+    cursor: default;                                    /* 滑鼠游標樣式：default */
+    outline: 3px dashed var(--c-ink-soft);              /* 外框線：3px dashed 主題變數 --c-ink-soft */
+    outline-offset: 1px;                                /* 外框線離元素多遠：1px */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
 }
 
+/* 「seesaw-pintag」這個元素的樣式 */
 .seesaw-pintag {
-    position: absolute;
-    left: 50%;
-    top: -42px;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 50%;                                          /* 離左邊 50% */
+    top: -42px;                                         /* 離上邊 -42px */
     /* 放在重量數字圈的上面：放下面會蓋住木板上離支點幾格的刻度數字 */
-    transform: translateX(-50%);
-    padding: 0 6px;
-    background: var(--c-ink-soft);
-    color: var(--c-card);
-    border-radius: var(--r-sm);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    line-height: 22px;
-    white-space: nowrap;
-    pointer-events: none;
+    transform: translateX(-50%);                        /* 變形：水平移動 -50% */
+    padding: 0 6px;                                     /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 6px */
+    background: var(--c-ink-soft);                      /* 背景：主題變數 --c-ink-soft */
+    color: var(--c-card);                               /* 文字顏色：主題變數 --c-card */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: 22px;                                  /* 行高：22px（文字每一行佔的高度） */
+    white-space: nowrap;                                /* 文字不換行 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 座位的刻度：木板下面寫著離支點幾格（隨木板一起傾斜） */
 .seesaw-slot {
-    position: absolute;
-    top: 20px;
-    width: 28px;
-    text-align: center;
-    color: var(--c-ink-soft);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    line-height: 1;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    top: 20px;                                          /* 離上邊 20px */
+    width: 28px;                                        /* 寬度：28px */
+    text-align: center;                                 /* 文字置中 */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「seesaw-slot」這個元素，前面插入的裝飾的樣式 */
 .seesaw-slot::before {
-    content: '';
-    position: absolute;
-    left: 13px;
-    top: -12px;
-    width: 2px;
-    height: 8px;
-    background: var(--c-ink-soft);
+    content: '';                                        /* 偽元素的內容：'' */
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 13px;                                         /* 離左邊 13px */
+    top: -12px;                                         /* 離上邊 -12px */
+    width: 2px;                                         /* 寬度：2px */
+    height: 8px;                                        /* 高度：8px */
+    background: var(--c-ink-soft);                      /* 背景：主題變數 --c-ink-soft */
 }
 
 /* 拖曳時：放開會坐到的座位（虛線圓圈） */
 .seesaw-aim {
-    position: absolute;
-    bottom: 12px;
-    border: 3px dashed var(--c-orange);
-    border-radius: 50%;
-    box-sizing: border-box;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    bottom: 12px;                                       /* 離下邊 12px */
+    border: 3px dashed var(--c-orange);                 /* 邊框（粗細、線型、顏色）：3px dashed 主題變數 --c-orange */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 失敗揭曉：平衡的放法裡，該動物應該坐的座位（綠色虛線圓圈，裡面是重量） */
 .seesaw-ghost {
-    position: absolute;
-    bottom: 12px;
-    border: 3px dashed var(--c-ok);
-    border-radius: 50%;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--c-ok);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-black);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    bottom: 12px;                                       /* 離下邊 12px */
+    border: 3px dashed var(--c-ok);                     /* 邊框（粗細、線型、顏色）：3px dashed 主題變數 --c-ok */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「seesaw-an」的「held」變化版的樣式 */
 .seesaw-an--held {
-    transition: none;
-    cursor: grabbing;
-    transform: scale(1.18);
+    transition: none;                                   /* 狀態改變時的過渡動畫（屬性、時間、緩動）：none */
+    cursor: grabbing;                                   /* 滑鼠游標樣式：grabbing */
+    transform: scale(1.18);                             /* 變形：縮放 1.18 倍 */
 }
 
+/* 「seesaw-an」的「drop」變化版的樣式 */
 .seesaw-an--drop {
-    animation: seesaw-bounce 0.45s ease-out;
+    animation: seesaw-bounce 0.45s ease-out;            /* 播放動畫（名稱、時間、緩動、次數）：seesaw-bounce 0.45s ease-out */
 }
 
+/* 動畫 seesaw-bounce：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes seesaw-bounce {
     0% {
-        transform: translateY(-26px);
+        transform: translateY(-26px);                   /* 變形：垂直移動 -26px */
     }
 
     55% {
-        transform: translateY(0) scaleY(0.88);
+        transform: translateY(0) scaleY(0.88);          /* 變形：垂直移動 0 scaleY(0.88) */
     }
 
     100% {
-        transform: translateY(0);
+        transform: translateY(0);                       /* 變形：垂直移動 0 */
     }
 }
 
 /* 失敗揭曉：該搬的動物圍上綠框 */
 .seesaw-an--move {
-    outline: 4px solid var(--c-ok);
-    outline-offset: 2px;
-    border-radius: 50%;
+    outline: 4px solid var(--c-ok);                     /* 外框線：4px solid 主題變數 --c-ok */
+    outline-offset: 2px;                                /* 外框線離元素多遠：2px */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
 }
 
+/* 「seesaw-face」這個元素的樣式 */
 .seesaw-face {
-    display: block;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
 }
 
+/* 「seesaw-head」這個元素；「seesaw-ear」這個元素的樣式 */
 .seesaw-head,
 .seesaw-ear {
-    fill: var(--sea-fur);
-    stroke: var(--c-ink);
-    stroke-width: 2;
-    stroke-linejoin: round;
+    fill: var(--sea-fur);                               /* SVG 圖形的填色：主題變數 --sea-fur */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「seesaw-ear」的「dark」變化版的樣式 */
 .seesaw-ear--dark {
-    fill: var(--c-ink);
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
 }
 
+/* 「seesaw-ear」的「dark2」變化版的樣式 */
 .seesaw-ear--dark2 {
-    fill: var(--sea-dog-ear);
+    fill: var(--sea-dog-ear);                           /* SVG 圖形的填色：主題變數 --sea-dog-ear */
 }
 
+/* 「seesaw-patch」這個元素；「seesaw-eye」這個元素；「seesaw-nose」這個元素的樣式 */
 .seesaw-patch,
 .seesaw-eye,
 .seesaw-nose {
-    fill: var(--c-ink);
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
 }
 
+/* 「seesaw-snout」這個元素的樣式 */
 .seesaw-snout {
-    fill: var(--sea-pig-snout);
-    stroke: var(--c-ink);
-    stroke-width: 1.5;
+    fill: var(--sea-pig-snout);                         /* SVG 圖形的填色：主題變數 --sea-pig-snout */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 1.5;                                  /* SVG 線條粗細：1.5 */
 }
 
+/* 「seesaw-beak」這個元素的樣式 */
 .seesaw-beak {
-    fill: var(--c-orange);
-    stroke: var(--c-ink);
-    stroke-width: 1.5;
-    stroke-linejoin: round;
+    fill: var(--c-orange);                              /* SVG 圖形的填色：主題變數 --c-orange */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 1.5;                                  /* SVG 線條粗細：1.5 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「seesaw-whisker」這個元素；「seesaw-mouth」這個元素；「seesaw-smile」這個元素的樣式 */
 .seesaw-whisker,
 .seesaw-mouth,
 .seesaw-smile {
-    fill: none;
-    stroke: var(--c-ink);
-    stroke-linecap: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「seesaw-whisker」這個元素的樣式 */
 .seesaw-whisker {
-    stroke-width: 1.5;
+    stroke-width: 1.5;                                  /* SVG 線條粗細：1.5 */
 }
 
+/* 「seesaw-mouth」這個元素的樣式 */
 .seesaw-mouth {
-    stroke-width: 2;
-    opacity: 0.7;
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
+    opacity: 0.7;                                       /* 透明度 0.7（1＝完全不透明、0＝全透明） */
 }
 
 /* 平衡時動物們都笑了：笑臉平常是藏起來的 */
 .seesaw-smile {
-    stroke-width: 3;
-    display: none;
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    display: none;                                      /* 不顯示（也不佔位置） */
 }
 
+/* 「seesaw-smile」這個元素的樣式 */
 .seesaw-happy .seesaw-smile {
-    display: inline;
+    display: inline;                                    /* 行內元素（像文字） */
 }
 
+/* 「seesaw-mouth」這個元素的樣式 */
 .seesaw-happy .seesaw-mouth {
-    display: none;
+    display: none;                                      /* 不顯示（也不佔位置） */
 }
 
+/* 「seesaw-an」的「bear」變化版的樣式 */
 .seesaw-an--bear {
-    --sea-fur: var(--sea-bear);
+    --sea-fur: var(--sea-bear);                         /* 自訂變數 --sea-fur（下面用 var(--sea-fur) 取用；可以由 JS 動態設定） */
 }
 
+/* 「seesaw-an」的「pig」變化版的樣式 */
 .seesaw-an--pig {
-    --sea-fur: var(--sea-pig);
+    --sea-fur: var(--sea-pig);                          /* 自訂變數 --sea-fur（下面用 var(--sea-fur) 取用；可以由 JS 動態設定） */
 }
 
+/* 「seesaw-an」的「dog」變化版的樣式 */
 .seesaw-an--dog {
-    --sea-fur: var(--sea-dog);
+    --sea-fur: var(--sea-dog);                          /* 自訂變數 --sea-fur（下面用 var(--sea-fur) 取用；可以由 JS 動態設定） */
 }
 
+/* 「seesaw-an」的「cat」變化版的樣式 */
 .seesaw-an--cat {
-    --sea-fur: var(--sea-cat);
+    --sea-fur: var(--sea-cat);                          /* 自訂變數 --sea-fur（下面用 var(--sea-fur) 取用；可以由 JS 動態設定） */
 }
 
+/* 「seesaw-an」的「rabbit」變化版的樣式 */
 .seesaw-an--rabbit {
-    --sea-fur: var(--sea-rabbit);
+    --sea-fur: var(--sea-rabbit);                       /* 自訂變數 --sea-fur（下面用 var(--sea-fur) 取用；可以由 JS 動態設定） */
 }
 
+/* 「seesaw-an」的「chick」變化版的樣式 */
 .seesaw-an--chick {
-    --sea-fur: var(--sea-chick);
+    --sea-fur: var(--sea-chick);                        /* 自訂變數 --sea-fur（下面用 var(--sea-fur) 取用；可以由 JS 動態設定） */
 }
 
+/* 「seesaw-an」的「panda」變化版的樣式 */
 .seesaw-an--panda {
-    --sea-fur: var(--sea-panda);
+    --sea-fur: var(--sea-panda);                        /* 自訂變數 --sea-fur（下面用 var(--sea-fur) 取用；可以由 JS 動態設定） */
 }
 
 /* 動物身上的重量數字（一直顯示在頭上） */
 .seesaw-badge {
-    position: absolute;
-    left: 50%;
-    top: -14px;
-    transform: translateX(-50%);
-    min-width: 28px;
-    height: 28px;
-    padding: 0 4px;
-    box-sizing: border-box;
-    background: var(--c-card);
-    border: 2px solid var(--c-ink);
-    border-radius: var(--r-pill);
-    color: var(--c-ink);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 50%;                                          /* 離左邊 50% */
+    top: -14px;                                         /* 離上邊 -14px */
+    transform: translateX(-50%);                        /* 變形：水平移動 -50% */
+    min-width: 28px;                                    /* 最小寬度：28px */
+    height: 28px;                                       /* 高度：28px */
+    padding: 0 4px;                                     /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 4px */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 2px solid var(--c-ink);                     /* 邊框（粗細、線型、顏色）：2px solid 主題變數 --c-ink */
+    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }

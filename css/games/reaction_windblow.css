@@ -6,310 +6,347 @@
 
 /* ═══ 大風吹（.windblow-）═══ */
 .windblow-stage {
-    user-select: none;
-    -webkit-user-select: none;
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「windblow-field」這個元素的樣式 */
 .windblow-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
 }
 
 /* 口令的對話框 */
 .windblow-bubble {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    top: 8px;
-    min-height: 96px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    padding: var(--sp-2) var(--sp-3);
-    background: var(--c-card);
-    border: 4px solid var(--c-ink-soft);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-card);
-    color: var(--c-ink);
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    line-height: 1.3;
-    text-align: center;
-    pointer-events: none;
-    z-index: 2;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 12px;                                         /* 離左邊 12px */
+    right: 12px;                                        /* 離右邊 12px */
+    top: 8px;                                           /* 離上邊 8px */
+    min-height: 96px;                                   /* 最小高度：96px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    padding: var(--sp-2) var(--sp-3);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-2、下 主題變數、左 --sp-3 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 4px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1.3;                                   /* 行高：1.3（文字每一行佔的高度） */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 2;                                         /* 疊放順序：數字越大越在上面（2） */
 }
 
+/* 「windblow-bubble」的「pop」變化版的樣式 */
 .windblow-bubble--pop {
-    animation: windblow-pop 0.22s ease-out;
+    animation: windblow-pop 0.22s ease-out;             /* 播放動畫（名稱、時間、緩動、次數）：windblow-pop 0.22s ease-out */
 }
 
+/* 動畫 windblow-pop：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes windblow-pop {
     from {
-        transform: scale(0.9);
+        transform: scale(0.9);                          /* 變形：縮放 0.9 倍 */
     }
 
     to {
-        transform: scale(1);
+        transform: scale(1);                            /* 變形：縮放 1 倍 */
     }
 }
 
 /* 一圈椅子和小朋友（裝飾） */
 .windblow-ring {
-    position: absolute;
-    transition: transform 0.5s ease-in-out;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    transition: transform 0.5s ease-in-out;             /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.5s ease-in-out */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「windblow-seat」這個元素的樣式 */
 .windblow-seat {
-    position: absolute;
-    width: 68px;
-    height: 80px;
-    transition: transform 0.5s ease-in-out;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 68px;                                        /* 寬度：68px */
+    height: 80px;                                       /* 高度：80px */
+    transition: transform 0.5s ease-in-out;             /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.5s ease-in-out */
 }
 
+/* 「windblow-chair」這個元素的樣式 */
 .windblow-chair {
-    position: absolute;
-    left: 6px;
-    right: 6px;
-    bottom: 0;
-    height: 26px;
-    background: var(--wbl-chair);
-    border-radius: var(--r-sm);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 6px;                                          /* 離左邊 6px */
+    right: 6px;                                         /* 離右邊 6px */
+    bottom: 0;                                          /* 離下邊 0 */
+    height: 26px;                                       /* 高度：26px */
+    background: var(--wbl-chair);                       /* 背景：主題變數 --wbl-chair */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
 }
 
+/* 「windblow-kid」這個元素的樣式 */
 .windblow-seat .windblow-kid {
-    position: absolute;
-    left: 6px;
-    top: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 6px;                                          /* 離左邊 6px */
+    top: 0;                                             /* 離上邊 0 */
 }
 
+/* 「windblow-kid」這個元素的樣式 */
 .windblow-ring--hop .windblow-kid {
-    animation: windblow-hop 0.36s ease-out;
+    animation: windblow-hop 0.36s ease-out;             /* 播放動畫（名稱、時間、緩動、次數）：windblow-hop 0.36s ease-out */
 }
 
+/* 動畫 windblow-hop：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes windblow-hop {
     0% {
-        transform: translateY(0);
+        transform: translateY(0);                       /* 變形：垂直移動 0 */
     }
 
     40% {
-        transform: translateY(-14px);
+        transform: translateY(-14px);                   /* 變形：垂直移動 -14px */
     }
 
     100% {
-        transform: translateY(0);
+        transform: translateY(0);                       /* 變形：垂直移動 0 */
     }
 }
 
 /* 小朋友 */
 .windblow-kid {
-    display: block;
-    overflow: visible;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
 }
 
+/* 「windblow-shirt」這個元素的樣式 */
 .windblow-shirt {
-    stroke: var(--c-ink-soft);
-    stroke-width: 2.5;
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 2.5;                                  /* SVG 線條粗細：2.5 */
 }
 
+/* 「windblow-shirt0」這個元素的樣式 */
 .windblow-shirt0 {
-    fill: var(--wbl-shirt0);
+    fill: var(--wbl-shirt0);                            /* SVG 圖形的填色：主題變數 --wbl-shirt0 */
 }
 
+/* 「windblow-shirt1」這個元素的樣式 */
 .windblow-shirt1 {
-    fill: var(--wbl-shirt1);
+    fill: var(--wbl-shirt1);                            /* SVG 圖形的填色：主題變數 --wbl-shirt1 */
 }
 
+/* 「windblow-shirt2」這個元素的樣式 */
 .windblow-shirt2 {
-    fill: var(--wbl-shirt2);
+    fill: var(--wbl-shirt2);                            /* SVG 圖形的填色：主題變數 --wbl-shirt2 */
 }
 
+/* 「windblow-shirt3」這個元素的樣式 */
 .windblow-shirt3 {
-    fill: var(--wbl-shirt3);
+    fill: var(--wbl-shirt3);                            /* SVG 圖形的填色：主題變數 --wbl-shirt3 */
 }
 
+/* 「windblow-skin」這個元素的樣式 */
 .windblow-skin {
-    fill: var(--wbl-skin);
-    stroke: var(--c-ink-soft);
-    stroke-width: 2.5;
+    fill: var(--wbl-skin);                              /* SVG 圖形的填色：主題變數 --wbl-skin */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 2.5;                                  /* SVG 線條粗細：2.5 */
 }
 
+/* 「windblow-hair」這個元素的樣式 */
 .windblow-hair {
-    fill: var(--wbl-hair);
+    fill: var(--wbl-hair);                              /* SVG 圖形的填色：主題變數 --wbl-hair */
 }
 
+/* 「windblow-eye」這個元素的樣式 */
 .windblow-eye {
-    fill: var(--wbl-eye);
+    fill: var(--wbl-eye);                               /* SVG 圖形的填色：主題變數 --wbl-eye */
 }
 
+/* 「windblow-mouth」這個元素的樣式 */
 .windblow-mouth {
-    fill: none;
-    stroke: var(--wbl-eye);
-    stroke-width: 3;
-    stroke-linecap: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--wbl-eye);                             /* SVG 線條顏色：主題變數 --wbl-eye */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「windblow-glass」這個元素的樣式 */
 .windblow-glass {
-    fill: var(--wbl-glass-fill);
-    stroke: var(--wbl-eye);
-    stroke-width: 3;
+    fill: var(--wbl-glass-fill);                        /* SVG 圖形的填色：主題變數 --wbl-glass-fill */
+    stroke: var(--wbl-eye);                             /* SVG 線條顏色：主題變數 --wbl-eye */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「windblow-hat」這個元素的樣式 */
 .windblow-hat {
-    fill: var(--wbl-hat);
-    stroke: var(--c-ink-soft);
-    stroke-width: 2.5;
+    fill: var(--wbl-hat);                               /* SVG 圖形的填色：主題變數 --wbl-hat */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 2.5;                                  /* SVG 線條粗細：2.5 */
 }
 
 /* 「你是誰」卡片：開場、特徵改變時蓋在畫面上 */
 .windblow-card {
-    position: absolute;
-    left: 24px;
-    right: 24px;
-    top: 128px;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    padding: var(--sp-3);
-    background: var(--c-card);
-    border: 4px solid var(--c-ink-soft);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-pop);
-    text-align: center;
-    z-index: 5;
-    transition: opacity 0.25s;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 24px;                                         /* 離左邊 24px */
+    right: 24px;                                        /* 離右邊 24px */
+    top: 128px;                                         /* 離上邊 128px */
+    display: none;                                      /* 不顯示（也不佔位置） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    padding: var(--sp-3);                               /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --sp-3 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 4px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    box-shadow: var(--shadow-pop);                      /* 方塊陰影（立體感） */
+    text-align: center;                                 /* 文字置中 */
+    z-index: 5;                                         /* 疊放順序：數字越大越在上面（5） */
+    transition: opacity 0.25s;                          /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.25s */
 }
 
+/* 「windblow-card」在「隱藏時」的樣子的樣式 */
 .windblow-card--hide {
-    opacity: 0;
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
 }
 
+/* 「windblow-card」裡面的「t」部分的樣式 */
 .windblow-card__t {
-    color: var(--c-ink);
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
+/* 「windblow-card」裡面的「av」部分的樣式 */
 .windblow-card__av {
-    padding: var(--sp-2) 0;
-    line-height: 0;
+    padding: var(--sp-2) 0;                             /* 內縮（padding，內容跟邊框的距離）：上 主題變數、左右 --sp-2、下 0 */
+    line-height: 0;                                     /* 行高：0（文字每一行佔的高度） */
 }
 
+/* 「windblow-card」裡面的「d」部分的樣式 */
 .windblow-card__d {
-    color: var(--c-ink);
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
 }
 
+/* 「windblow-card」裡面的「s」部分的樣式 */
 .windblow-card__s {
-    color: var(--c-ink-soft);
-    font-size: var(--fs-sm);
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
 }
 
+/* 「windblow-info」這個元素的樣式 */
 .windblow-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 466px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 466px;                                         /* 離上邊 466px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「windblow-info」在「錯誤（失敗）時」的樣子的樣式 */
 .windblow-info--bad {
-    color: var(--c-bad);
-    top: 436px;
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
+    top: 436px;                                         /* 離上邊 436px */
 }
 
+/* 「windblow-btn」這個元素的樣式 */
 .windblow-btn {
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
+/* 「windblow-btn」在「關閉（熄滅）時」的樣子的樣式 */
 .windblow-btn--off {
-    opacity: 0.45;
+    opacity: 0.45;                                      /* 透明度 0.45（1＝完全不透明、0＝全透明） */
 }
 
 /* 結束：左邊是你的特徵、右邊是口令和逐條比對 */
 .windblow-cmp {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    top: 128px;
-    display: flex;
-    gap: var(--sp-2);
-    z-index: 4;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 12px;                                         /* 離左邊 12px */
+    right: 12px;                                        /* 離右邊 12px */
+    top: 128px;                                         /* 離上邊 128px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
+    z-index: 4;                                         /* 疊放順序：數字越大越在上面（4） */
 }
 
+/* 「windblow-cmp」裡面的「col」部分的樣式 */
 .windblow-cmp__col {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: var(--sp-2);
-    background: var(--c-card);
-    border: 3px solid var(--c-ink-soft);
-    border-radius: var(--r-md);
-    box-shadow: var(--shadow-card);
-    text-align: center;
+    flex: 1;                                            /* 有剩餘空間就平分長大（flex: 1） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    padding: var(--sp-2);                               /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --sp-2 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
+    text-align: center;                                 /* 文字置中 */
 }
 
+/* 「windblow-cmp」裡面的「t」部分的樣式 */
 .windblow-cmp__t {
-    color: var(--c-ink-soft);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
 }
 
+/* 「windblow-cmp」裡面的「av」部分的樣式 */
 .windblow-cmp__av {
-    line-height: 0;
-    padding: var(--sp-1) 0;
+    line-height: 0;                                     /* 行高：0（文字每一行佔的高度） */
+    padding: var(--sp-1) 0;                             /* 內縮（padding，內容跟邊框的距離）：上 主題變數、左右 --sp-1、下 0 */
 }
 
+/* 「windblow-cmp」裡面的「d」部分的樣式 */
 .windblow-cmp__d {
-    color: var(--c-ink);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    white-space: pre-line;
-    line-height: 1.35;
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    white-space: pre-line;                              /* 保留換行字元、其餘空白合併 */
+    line-height: 1.35;                                  /* 行高：1.35（文字每一行佔的高度） */
 }
 
+/* 「windblow-cmp」裡面的「c」部分的樣式 */
 .windblow-cmp__c {
-    color: var(--c-ink);
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    line-height: 1.3;
-    padding-bottom: var(--sp-1);
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1.3;                                   /* 行高：1.3（文字每一行佔的高度） */
+    padding-bottom: var(--sp-1);                        /* 下方內縮：主題變數 --sp-1 */
 }
 
+/* 「windblow-cmp」裡面的「r」部分的樣式 */
 .windblow-cmp__r {
-    width: 100%;
-    margin-top: var(--sp-1);
-    padding: 2px var(--sp-1);
-    border-radius: var(--r-sm);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    line-height: 1.3;
+    width: 100%;                                        /* 寬度：100% */
+    margin-top: var(--sp-1);                            /* 上外距（跟上面的元素距離）：主題變數 --sp-1 */
+    padding: 2px var(--sp-1);                           /* 內縮（padding，內容跟邊框的距離）：上 2px、左右 主題變數、下 --sp-1 */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: 1.3;                                   /* 行高：1.3（文字每一行佔的高度） */
 }
 
+/* 「windblow-cmp__r」的「y」變化版的樣式 */
 .windblow-cmp__r--y {
-    background: var(--c-ok-soft);
-    color: var(--c-ok);
+    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「windblow-cmp__r」的「n」變化版的樣式 */
 .windblow-cmp__r--n {
-    background: var(--c-bad-soft);
-    color: var(--c-bad);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
+/* 「windblow-cmp」裡面的「v」部分的樣式 */
 .windblow-cmp__v {
-    margin-top: var(--sp-1);
-    color: var(--c-ink);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    line-height: 1.3;
+    margin-top: var(--sp-1);                            /* 上外距（跟上面的元素距離）：主題變數 --sp-1 */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: 1.3;                                   /* 行高：1.3（文字每一行佔的高度） */
 }

@@ -12,11 +12,15 @@
      第 10 關起有「半公斤」（HALF_FROM）（只出現在每公斤顆數是偶數的水果）。賣出的數量不會超過當時攤上有的。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'fruitstock'：選單、成績、存檔都靠它；樣式在 css/games/reaction_fruitstock.css，裡面的 class 名稱一律以 fruitstock- 開頭。 */
     'use strict';
 
-    var ID = 'fruitstock';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'fruitstock';                              /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                           /* 難度升到頂的關卡：第 1 關線性變難，到第 30 關最難，之後維持不變 */
@@ -74,7 +78,7 @@
     }
     /* 出一題：{ fruits, start[], events[], answer[], asks[]（要回答的水果索引，由小到大） } */
     function makePuzzle(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var sz = sizeFor(level), pKg = chanceOf(level, KG_FROM, KG_P), pColor = chanceOf(level, COLOR_FROM, COLOR_P);
         var fruits = kit.shuffle(FRUITS, rand).slice(0, sz.kinds);
         var start = fruits.map(function () { return kit.randInt(START[0], START[1], rand); });
@@ -117,6 +121,7 @@
         pz.events.forEach(function (ev) { if (ev.f === f) s += (ev.dir > 0 ? ' ＋ ' : ' − ') + piecesOf(ev, pz.fruits); });
         return s + ' ＝ ' + pz.answer[f] + ' 顆';
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 25) return '水果攤老闆！';
         if (n >= 12) return '帳算得很清楚！';
@@ -135,11 +140,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var pz = makePuzzle(level, api.rand), K = pz.fruits.length;
-        api.info = pz;
-        console.log('[水果進出貨] 第 ' + level + ' 關：' + K + ' 種、' + pz.events.length + ' 筆');
+        api.info = pz;                                  /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[水果進出貨] 第 ' + level + ' 關：' + K + ' 種、' + pz.events.length + ' 筆');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
         /* 版面：舞台高 667px 要放下「水果表（標題＋K 列）＋進出貨（超過 5 筆分兩欄）＋4 排數字鍵＋對帳鈕」，剩下的高度平均分給水果表的每一列 */
         var H = stage.clientHeight || 667, keyH = 42;
         var evRows = pz.events.length > 5 ? Math.ceil(pz.events.length / 2) : pz.events.length;
@@ -180,9 +187,10 @@
         kit.onTap(btnOk, submit);
         wrap.appendChild(table); wrap.appendChild(evBox);
         stage.appendChild(wrap);
-        var pad = Reaction.numpad(wrap, { keyH: keyH, onKey: onKey });
+        var pad = Reaction.numpad(wrap, { keyH: keyH, onKey: onKey });  /* 共用數字鍵盤（7 8 9／4 5 6／1 2 3／清除 0 ⌫），按鍵會呼叫 onKey */
         wrap.appendChild(btnOk);
 
+        /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() {
             inputs.forEach(function (el, i) {
                 if (!asked[i]) return;
@@ -226,24 +234,28 @@
             kit.flash(stage, false, api.my);
             api.fail({ delay: FAIL_HOLD_MS, lines: head.concat(lines) });
         }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { pz.asks.forEach(function (i) { ans[i] = String(pz.answer[i]); }); paint(); submit(); };
         api.wrong = function () { pz.asks.forEach(function (i) { ans[i] = String(pz.answer[i]); }); ans[pz.asks[0]] = String(pz.answer[pz.asks[0]] + 1); paint(); submit(); };
         api.state = function () { return { ans: ans.slice(), sel: sel, over: over }; };
         api.timeout = timeUp;
-        api.timer(Math.round(timeFor(level, pz.events.length, pz.asks.length) * 1000), timeUp);
+        api.timer(Math.round(timeFor(level, pz.events.length, pz.asks.length) * 1000), timeUp);  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         paint();
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '水果進出貨',
         rule: '水果攤上面寫著每種水果的**顏色、1 公斤有幾顆、早上有幾顆**；下面是今天一筆一筆的**進貨和賣出**，水果名稱前面有水果的圖案，有的只寫顏色（「紅色的」），有的寫顆數，有的寫公斤。**只要算出被問到的那幾種（黃底的那幾列）收攤時各剩幾顆**，前面的關卡只問 1 種，越後面問越多：點「收攤剩」的格子用數字鍵填，全部填好按「對帳」。**算錯一種就結束**，會列出算式。每一關有時間限制（上面的時間條，進出貨越多給的時間越長），時間到了也算失敗。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             sizeFor: sizeFor, timeFor: timeFor, TIME_BASE: TIME_BASE, TIME_EVENT: TIME_EVENT, TIME_ASK: TIME_ASK, chanceOf: chanceOf, eventText: eventText, piecesOf: piecesOf, finalCounts: finalCounts, makePuzzle: makePuzzle, workOf: workOf, pickAsks: pickAsks, rating: rating, ASKS: ASKS,
             FRUITS: FRUITS, RAMP_LEVELS: RAMP_LEVELS, KINDS: KINDS, EVENTS: EVENTS, KG_FROM: KG_FROM, COLOR_FROM: COLOR_FROM, HALF_FROM: HALF_FROM, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

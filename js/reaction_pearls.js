@@ -15,11 +15,15 @@
    · 揭曉：吸管裡還沒到嘴裡的珍珠停在原地；嘴裡的珍珠排成一排、依序編號，寫出「吸了 11 顆」，第 N 顆標綠色、多出來的標紅色。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'pearls'：選單、成績、存檔都靠它；樣式在 css/games/reaction_pearls.css，裡面的 class 名稱一律以 pearls- 開頭。 */
     'use strict';
 
-    var ID = 'pearls';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'pearls';                                  /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -58,7 +62,7 @@
          level, n（目標顆數）, total（珍珠總數）, clusters（每串幾顆，前 n 顆剛好湊滿）, arrive（每顆衝到最上面的時間，秒，遞增）,
          winStart／winEnd（放手剛好吸到 n 顆的窗口 [arrive[n−1], arrive[n]) ）, minWin } */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var n = targetFor(level), pc = pClusterFor(level), cm = clusterMaxFor(level), gs = gapSingleFor(level), gi = gapInFor(level), mw = minWinFor(level);
         var extra = kit.randInt(EXTRA[0], EXTRA[1], rand);
         var c1 = splitClusters(n, pc, cm, rand), c2 = splitClusters(extra, pc, cm, rand), clusters = c1.concat(c2), arrive = [], t = kit.randFloat(FIRST_AT[0], FIRST_AT[1], rand), idx = 0, total = n + extra;
@@ -89,6 +93,7 @@
         if (r.result === 'few') return '吸了 ' + r.count + ' 顆，要 ' + q.n + ' 顆——少了 ' + (-r.diff) + ' 顆';
         return '吸了 ' + r.count + ' 顆，要 ' + q.n + ' 顆——多了 ' + r.diff + ' 顆';
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 15) return '珍珠達人！';
         if (n >= 9) return '數得很準！';
@@ -97,6 +102,7 @@
         return '邊吸邊數！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'pearls-stage',
@@ -107,11 +113,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand);
-        api.info = q;
-        console.log('[吸珍珠] 第 ' + level + ' 關：吸 ' + q.n + ' 顆（共 ' + q.total + ' 顆，分成 ' + q.clusters.join('、') + '）；放手窗口 ' + q.winStart.toFixed(3) + '～' + q.winEnd.toFixed(3) + ' 秒（' + (q.winEnd - q.winStart).toFixed(3) + ' 秒）');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[吸珍珠] 第 ' + level + ' 關：吸 ' + q.n + ' 顆（共 ' + q.total + ' 顆，分成 ' + q.clusters.join('、') + '）；放手窗口 ' + q.winStart.toFixed(3) + '～' + q.winEnd.toFixed(3) + ' 秒（' + (q.winEnd - q.winStart).toFixed(3) + ' 秒）');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var field = h('div', { 'class': 'pearls-field' });
@@ -132,7 +140,7 @@
         var infoTop = cupTop + Math.round(H * 0.24) + 8, info = h('div', { 'class': 'qz-note pearls-info', text: level === 1 ? '按住吸，數珍珠，剛好就放手！' : '按住吸、邊吸邊數、剛好就放手' }); info.style.top = infoTop + 'px'; field.appendChild(info);
         var row = h('div', { 'class': 'pearls-row' }); row.style.cssText = 'display:none;top:' + (cupTop + 46) + 'px;'; field.appendChild(row);
         var holdEl = h('div', { 'class': 'pearls-hold', text: '按住 吸' }); field.appendChild(holdEl);
-        if (level === 1 && kit.once('pearls.hint')) kit.hintOn(stage, holdEl, { mode: 'hold', delay: 700, text: '按住吸，剛好就放手' });
+        if (level === 1 && kit.once('pearls.hint')) kit.hintOn(stage, holdEl, { mode: 'hold', delay: 700, text: '按住吸，剛好就放手' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
         var phase = 'wait', tDown = 0, T = 0, ticked = 0, ctl = null, held = false;
         /* 畫：每顆珍珠的位置（吸管裡的才顯示；已經到嘴裡的和還在杯子裡的不顯示） */
@@ -161,7 +169,7 @@
             up: function () { if (phase === 'suck') release('up'); }
         });
         api.my.onDispose(function () { ctl.destroy(); });
-        api.timer(PRESS_LIMIT_S * 1000, function () { if (phase === 'wait') { phase = 'end'; info.textContent = '一直沒有吸！時間到了'; info.classList.add('pearls-info--bad'); kit.flash(stage, false, api.my); api.fail({ delay: 2800, lines: ['一直沒有按住吸管', '目標是吸 ' + q.n + ' 顆珍珠'] }); } });
+        api.timer(PRESS_LIMIT_S * 1000, function () { if (phase === 'wait') { phase = 'end'; info.textContent = '一直沒有吸！時間到了'; info.classList.add('pearls-info--bad'); kit.flash(stage, false, api.my); api.fail({ delay: 2800, lines: ['一直沒有按住吸管', '目標是吸 ' + q.n + ' 顆珍珠'] }); } });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
 
         /* 放手（或珍珠全部衝完）：用「放手那一刻的按住時間」判定 */
         function release(reason) {
@@ -185,21 +193,25 @@
         }
         /* 驗證用：按住、在窗口中間放手（solve）／在窗口之後放手（wrong）；只排一次 */
         var armed = false;
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { if (armed || phase !== 'wait') return; armed = true; ctl && holdSim((q.winStart + q.winEnd) / 2); };
         api.wrong = function () { if (armed || phase !== 'wait') return; armed = true; ctl && holdSim(q.winEnd + 0.03); };
         function holdSim(Tstar) { begin(); api.after(Math.round(Tstar * 1000), function () { release('up'); }); }
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '吸珍珠',
         rule: '一杯珍珠奶茶，上面寫著要吸 N 顆珍珠。**按住吸管開始吸**，珍珠一顆一顆（有時一串好幾顆擠在一起）沿著吸管往上衝，**放手就停**。**剛好吸到 N 顆（衝到最上面、進到嘴裡的才算）就過關**，多了少了都失敗；每關只有一次按住，放手就是答案。越後面，要吸的顆數越多（5 → 25）、珍珠成串的越多、衝得越快、放手的空檔越短！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             targetFor: targetFor, pClusterFor: pClusterFor, clusterMaxFor: clusterMaxFor, gapSingleFor: gapSingleFor, gapInFor: gapInFor, minWinFor: minWinFor, splitClusters: splitClusters, makeLevel: makeLevel, countAt: countAt, pearlPos: pearlPos, judgeRelease: judgeRelease, whyText: whyText, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, TARGET: TARGET, P_CLUSTER: P_CLUSTER, CLUSTER_MAX: CLUSTER_MAX, GAP_SINGLE: GAP_SINGLE, GAP_IN: GAP_IN, MIN_WIN: MIN_WIN, EXTRA: EXTRA, FIRST_AT: FIRST_AT, GAP_JITTER: GAP_JITTER, TRAVEL_S: TRAVEL_S, PRESS_LIMIT_S: PRESS_LIMIT_S, END_GRACE: END_GRACE, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

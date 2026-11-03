@@ -14,11 +14,15 @@
    · 揭曉：寫出直式減法，**借位的欄位標紅**；寫出你輸入的和正確的。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'change'：選單、成績、存檔都靠它；樣式在 css/games/reaction_change.css，裡面的 class 名稱一律以 change- 開頭。 */
     'use strict';
 
-    var ID = 'change';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 300 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'change';                                  /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '連續答對', min: 1, max: 300 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_Q = 40;                            /* 答對幾題之後難度到頂 */
@@ -58,7 +62,7 @@
     }
     /* 一題：{ n, price, base（整數鈔票金額）, extra（多給的零錢）, paid（客人給的總額）, change（要找的錢）, digits（答案的位數）, borrows（借位次數） } */
     function makeQuestion(n, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var hi = maxPriceFor(n), lo = minPriceFor(n), need = borrowMinFor(n), best = null;
         for (var tr = 0; tr < 400; tr++) {
             var price = kit.randInt(lo, hi, rand), cands = NOTES.filter(function (v) { return v >= price + 10; }).slice(0, n < 20 ? 2 : 3);
@@ -75,6 +79,7 @@
         if (typed == null || typed === '') return '時間到！' + q.paid + ' ' + MINUS + ' ' + q.price + ' ＝ ' + q.change;
         return '找錯了！' + q.paid + ' ' + MINUS + ' ' + q.price + ' ＝ ' + q.change + '，你輸入 ' + typed;
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 30) return '收銀台高手！';
         if (n >= 20) return '心算很快！';
@@ -83,6 +88,7 @@
         return '小心借位！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 10, stageClass: 'change-stage', resume: false,
@@ -96,13 +102,15 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, S = api.S;
         var W = stage.clientWidth || 472;
         var count = 0, q = null, typed = '', phase = 'ask';
         api.info = { get count() { return count; }, get q() { return q; }, get typed() { return typed; }, get phase() { return phase; } };
         S.score = 0; api.setInfo('答對 0 題');
-        console.log('[找錢] 開始：價錢上限 ' + maxPriceFor(0) + ' → ' + maxPriceFor(RAMP_Q) + '；每題限時 ' + timeMs(0) + ' → ' + timeMs(RAMP_Q) + ' 毫秒');
+        console.log('[找錢] 開始：價錢上限 ' + maxPriceFor(0) + ' → ' + maxPriceFor(RAMP_Q) + '；每題限時 ' + timeMs(0) + ' → ' + timeMs(RAMP_Q) + ' 毫秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var field = h('div', { 'class': 'change-field' });
         stage.appendChild(field);
@@ -126,7 +134,7 @@
             bill.lastChild.appendChild(h('span', { 'class': 'change-bill__n', text: String(q.price) })); bill.lastChild.appendChild(document.createTextNode(' 元'));
             var l2 = h('div', { 'class': 'change-bill__l', text: '給你 ' }); l2.appendChild(h('span', { 'class': 'change-bill__n change-bill__n--paid', text: String(q.paid) })); l2.appendChild(document.createTextNode(' 元')); bill.appendChild(l2);
             info.textContent = ''; api.stopTimer(); api.timer(timeMs(count), function () { fail(); });
-            if (count === 0 && kit.once('change.hint')) kit.hintOn(stage, pad.btns[items.map(function (it) { return it.text; }).indexOf(String(q.change).charAt(0))], { mode: 'tap', delay: 800, text: '輸入要找的錢' });
+            if (count === 0 && kit.once('change.hint')) kit.hintOn(stage, pad.btns[items.map(function (it) { return it.text; }).indexOf(String(q.change).charAt(0))], { mode: 'tap', delay: 800, text: '輸入要找的錢' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         }
         ask();
         /* 按鍵：數字＝加一位（位數滿了自動判定）；⌫＝刪掉最後一位；✓＝送出 */
@@ -138,6 +146,7 @@
             typed += k; paintLcd();
             if (typed.length >= q.digits) judge();
         }
+        /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge() {
             if (phase !== 'ask') return;
             phase = 'judge'; api.stopTimer();
@@ -169,16 +178,19 @@
         api.wrong = function () { if (phase !== 'ask') return; var w = String(q.change + 1).split(''); w.forEach(function (d) { press(d); }); if (phase === 'ask') press('✓'); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '找錢',
         rule: '收銀台前，客人買了 386 元，給你 1000 元，**用數字鍵輸入要找多少錢**（614）。輸入的位數夠了就自動判定，也可以按 ⌫ 刪掉、按 ✓ 提早送出。**借位最容易錯**（1000 − 386 常常算成 714 或 624）。有時客人會**多給零錢**（給你 1011 元，要找 625）。越後面金額越大、每題限時越短（8 → 4 秒）。找錯或超過時間就結束，看你能連續答對幾題。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             maxPriceFor: maxPriceFor, minPriceFor: minPriceFor, timeMs: timeMs, borrowMinFor: borrowMinFor, pExtraFor: pExtraFor, borrowCols: borrowCols, countBorrows: countBorrows, vertical: vertical, makeQuestion: makeQuestion, whyText: whyText, rating: rating,
             RAMP_Q: RAMP_Q, MAX_PRICE: MAX_PRICE, TIME_S: TIME_S, BORROW_MIN: BORROW_MIN, P_EXTRA: P_EXTRA, EXTRA_FROM: EXTRA_FROM, NOTES: NOTES, SOLVE_CAP: SOLVE_CAP, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

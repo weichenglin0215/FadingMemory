@@ -76,11 +76,15 @@
    · 限時（V1.43.0 延長）：TIME_S（第 1 關 → 到頂，秒；30→60 改成 45→90），要畫的橫線每多一條再加 EXTRA_RUNG_S 秒（第 10 關起 ＋25、第 20 關起 ＋50），越難的關卡限時越長。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'ghostleg'：選單、成績、存檔都靠它；樣式在 css/games/reaction_ghostleg.css，裡面的 class 名稱一律以 ghostleg- 開頭。 */
     'use strict';
 
-    var ID = 'ghostleg';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 30 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'ghostleg';                                /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 30 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂（也是最後一關） */
@@ -208,7 +212,7 @@
        這樣還是做不出來（有些起點在你的參數下合規的路線只有寥寥幾條，答案位置被路線形狀限制住），才不管位置，再從最嚴格的那一級重來一次。
        都不行才換別的起點，最後是最寬鬆的一級。 */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var limit = maxSolAt(level), want = rungCount(level), v0 = visitAt(level), sweep = level >= SWEEP_FROM, t0 = Date.now();
         var sh = { stair: stairAt(level), rev: revAt(level) }, fit = fitPlan(level, sh.rev), hide = fit.hide;
         sh.turns = fit.turns;
@@ -306,6 +310,7 @@
     function routeMs(route) { return Math.round(kit.clamp(routeLength(route) * 2.4, ROUTE_MS[0], ROUTE_MS[1])); }
     /* 答案區段的文字：「第 5～7 層的 乙～丙 之間」 */
     function groupText(g) { return '第 ' + (g.from + 1) + (g.to > g.from ? '～' + (g.to + 1) : '') + ' 層的 ' + LABELS[g.col] + '～' + LABELS[g.col + 1] + ' 之間'; }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 15) return '鬼腳圖大師！全部通關！';
         if (n >= 10) return '高手！';
@@ -314,6 +319,7 @@
         return '想一想橫線要畫在哪裡，再來一次！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         /* V1.28 起鬼腳圖整個改玩法（畫一條橫線把起點接到終點；以前是手指沿線描），舊版的最佳紀錄不能比：第一次進來清掉（只清一次） */
         Reaction.migrateBest(ID, function () { return null; }, '.v128');
@@ -326,11 +332,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, level = api.level, my = api.my;
         var q = makePuzzle(level, api.rand), NEED = q.need;
-        api.info = q;
-        console.log('[鬼腳圖] 第 ' + level + ' 關：現有橫線 ' + q.rungs.length + ' 條；起點 ' + LABELS[q.start] + '、終點 ' + (q.target + 1) + '（現有的線走到 ' + (q.end0 + 1) + '）；答案 ' + answerGroups(q.solutions).length + ' 段：' + answerGroups(q.solutions).map(groupText).join('、') + '；正確路線經過 ' + visitedCols(q.rungs.concat([q.solutions[0]]), q.start).map(function (x) { return LABELS[x]; }).join('') + '；答案是正確路線的第 ' + (q.turn + 1) + '／' + q.turns + ' 個轉彎（前後藏了 ' + q.hide.before + '、' + q.hide.after + ' 個）' + '；路線同方向最多連走 ' + q.shape.maxRun + ' 步、回頭 ' + q.shape.rev + ' 次' + (q.sweep ? '、碰到甲與戊' : '') + '；各縫橫線數 ' + gapCounts(q.rungs).join(',') + '；要畫 ' + NEED + ' 條；限時 ' + timeMs(level) + ' ms');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[鬼腳圖] 第 ' + level + ' 關：現有橫線 ' + q.rungs.length + ' 條；起點 ' + LABELS[q.start] + '、終點 ' + (q.target + 1) + '（現有的線走到 ' + (q.end0 + 1) + '）；答案 ' + answerGroups(q.solutions).length + ' 段：' + answerGroups(q.solutions).map(groupText).join('、') + '；正確路線經過 ' + visitedCols(q.rungs.concat([q.solutions[0]]), q.start).map(function (x) { return LABELS[x]; }).join('') + '；答案是正確路線的第 ' + (q.turn + 1) + '／' + q.turns + ' 個轉彎（前後藏了 ' + q.hide.before + '、' + q.hide.after + ' 個）' + '；路線同方向最多連走 ' + q.shape.maxRun + ' 步、回頭 ' + q.shape.rev + ' 次' + (q.sweep ? '、碰到甲與戊' : '') + '；各縫橫線數 ' + gapCounts(q.rungs).join(',') + '；要畫 ' + NEED + ' 條；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         /* 畫出整張圖（js/ghostleg_core.js 的 drawBoard，「鬼腳圖減一」也用同一個，外觀一樣） */
         var board = C.drawBoard(stage, q, LABELS, NEED > 1 ? '照現有的線走不到終點！要畫上 ' + NEED + ' 條橫線：按住一條直線、往旁邊拖。畫在同一條橫線上再畫一次＝刪掉它' : '照現有的線走不到終點！按住一條直線、往旁邊拖，畫上一條橫線');
@@ -435,7 +443,7 @@
                 });
             });
         }
-        api.timer(timeMs(level), function () {
+        api.timer(timeMs(level), function () {          /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
             hideHint(); locked = true;
             if (drag && drag.line) gUser.removeChild(drag.line);
             drag = null;
@@ -454,6 +462,7 @@
             for (var k = 1; k <= 10; k++) fire('pointermove', a + (b - a) * k / 10, y);
             fire('pointerup', b, y);
         }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { q.req.forEach(function (s) { drawAt(s.row, s.col, 1); }); };
         api.wrong = function () {
             /* 畫滿 NEED 條、而且走不到終點：每一條都挑「畫上去之後終點不對」的位置（畫得滿就好，走不到終點由 minimalNeed 保證不到 NEED 條時成立） */
@@ -466,6 +475,7 @@
         api.draw = drawAt;
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '鬼腳圖',
@@ -474,5 +484,6 @@
         score: SCORE,
         test: { makePuzzle: makePuzzle, needAt: needAt, routeRungs: routeRungs, minimalNeed: minimalNeed, NEED_FROM: NEED_FROM, EXTRA_RUNG_S: EXTRA_RUNG_S, colX: colX, rowY: rowY, snapRow: snapRow, rungCount: rungCount, rungCap: rungCap, DENSITY_MAX: DENSITY_MAX, maxSolAt: maxSolAt, timeMs: timeMs, follow: follow, canPlace: canPlace, visitAt: visitAt, turnsAt: turnsAt, visitedCols: visitedCols, gapCounts: gapCounts, makeWalk: makeWalk, makeZigzag: makeZigzag, cancelPairs: cancelPairs, makesCancel: makesCancel, randomRows: randomRows, routeShape: routeShape, stairAt: stairAt, revAt: revAt, fitPlan: fitPlan, groupMaxAt: groupMaxAt, answerGroups: answerGroups, groupText: groupText, hideOf: hideOf, hideAt: hideAt, hardEnough: hardEnough, answerIndex: C.answerIndex, answerOk: C.answerOk, answerThird: C.answerThird, walkPossible: walkPossible, construct: C.construct, spreadRows: spreadRows, crowded: crowded, placements: placements, makeLevel: makeLevel, routeLength: routeLength, partialRoute: partialRoute, routeMs: routeMs, rating: rating, COLS: COLS, ROWS: ROWS, RAMP_LEVELS: RAMP_LEVELS, Y_TOP: Y_TOP, Y_BOT: Y_BOT, RUNGS: RUNGS, MAX_SOL: MAX_SOL, VISIT: VISIT, TURNS: TURNS, SOL_GAP: SOL_GAP, HIDE_BEFORE: HIDE_BEFORE, HIDE_AFTER: HIDE_AFTER, AVOID_ENDS: AVOID_ENDS, SWEEP_FROM: SWEEP_FROM, BREAK_EXTRA: BREAK_EXTRA, STAIR: STAIR, REVERSE: REVERSE, DECOY_NEAR: DECOY_NEAR, GROUP_MAX: GROUP_MAX, POS_EXTRA: POS_EXTRA, TIME_S: TIME_S, HOLD_MS: HOLD_MS, ROUTE_MS: ROUTE_MS }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

@@ -12,11 +12,15 @@
    · 結束時：把你切錯（或漏掉）的字和目標字並排，**差異的筆畫標紅**（兩個字用畫布畫出來比對像素）；切開時湯圓裂成兩半、字也裂成兩半。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'slicechar'：選單、成績、存檔都靠它；樣式在 css/games/reaction_slicechar.css，裡面的 class 名稱一律以 slicechar- 開頭。 */
     'use strict';
 
-    var ID = 'slicechar';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'slicechar';                               /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -47,7 +51,7 @@
     }
     /* 出一關：{ target, mates（干擾字候選）, group, total, tosses（[{ t, ch, onTarget, x0, vx, ya, ta, spin }]）, spawnMs, strokes, level } */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var rg = strokeRange(level), pool = SimilarChars.groups({ minSize: MIN_GROUP, minStrokes: rg[0], maxStrokes: rg[1] });
         if (!pool.length) pool = SimilarChars.groups({ minSize: MIN_GROUP });
         var g = kit.pick(pool, rand), target = kit.pick(g.chars, rand), mates = g.chars.filter(function (c) { return c !== target; });
@@ -83,6 +87,7 @@
         ctx.putImageData(out, 0, 0);
         return { diff: diff };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 15) return '切字高手！';
         if (n >= 10) return '眼明手快！';
@@ -91,6 +96,7 @@
         return '只切一模一樣的那個字！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'slicechar-stage',
@@ -101,11 +107,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand), F = q.total;
-        api.info = q;
-        console.log('[切字] 第 ' + level + ' 關：目標「' + q.target + '」，干擾 ' + q.mates.join('') + '；拋 ' + F + ' 顆（目標 ' + q.tosses.filter(function (t) { return t.onTarget; }).length + ' 顆），一批最多 ' + q.batchMax + ' 顆，間隔約 ' + q.spawnMs + ' 毫秒');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[切字] 第 ' + level + ' 關：目標「' + q.target + '」，干擾 ' + q.mates.join('') + '；拋 ' + F + ' 顆（目標 ' + q.tosses.filter(function (t) { return t.onTarget; }).length + ' 顆），一批最多 ' + q.batchMax + ' 顆，間隔約 ' + q.spawnMs + ' 毫秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var field = h('div', { 'class': 'slicechar-field' });
@@ -118,7 +126,7 @@
 
         var resolved = 0, flying = [], halted = false, lastP = null, down = false, over = false;
         q.tosses.forEach(function (tz) { api.after(tz.t, function () { launch(tz); }); });
-        if (level === 1 && kit.once('slicechar.hint')) api.after(LEAD_MS + 600, function () { if (!over) kit.hintOn(stage, null, { mode: 'drag', x: W * 0.3, y: H * 0.55, dx: W * 0.4, dy: -40, text: '只切目標字' }); });
+        if (level === 1 && kit.once('slicechar.hint')) api.after(LEAD_MS + 600, function () { if (!over) kit.hintOn(stage, null, { mode: 'drag', x: W * 0.3, y: H * 0.55, dx: W * 0.4, dy: -40, text: '只切目標字' }); });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         function launch(tz) {
             if (halted || api.over) return;
             var el = h('div', { 'class': 'slicechar-dump' }, [h('div', { 'class': 'slicechar-dump__ch', text: tz.ch })]);
@@ -201,16 +209,19 @@
         };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '切字',
         rule: '上方寫著目標字。一個一個寫著字的湯圓像水果一樣拋上來，**用手指切過去，只切目標字**，其他的字不要切。**切錯一顆**、或**漏掉一顆目標字**，就結束。小心：拋上來的其他字全是目標字的形近字（像「己」配「已、巳、巴」），字在空中還會旋轉。結束時會把你切錯的字和目標字並排，**不一樣的筆畫標紅**。越後面，一次拋上來的字越多、筆劃越多、拋得越快！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             totalFor: totalFor, spawnMsFor: spawnMsFor, batchMaxFor: batchMaxFor, strokeRange: strokeRange, flightPos: flightPos, landTime: landTime, segHitsCircle: segHitsCircle, makeLevel: makeLevel, drawDiff: drawDiff, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, TOTAL: TOTAL, SPAWN_MS: SPAWN_MS, BATCH: BATCH, TARGET_FRAC: TARGET_FRAC, STROKES_LO: STROKES_LO, STROKES_HI: STROKES_HI, LEAD_MS: LEAD_MS, BOTTOM: BOTTOM, EXIT: EXIT, APEX: APEX, T_APEX: T_APEX, X_RANGE: X_RANGE, DUMP_PX: DUMP_PX, MIN_GROUP: MIN_GROUP, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

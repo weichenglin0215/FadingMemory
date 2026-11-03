@@ -6,172 +6,187 @@
 
 /* ═══ 切字（.slicechar-）═══ */
 .slicechar-stage {
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「slicechar-field」這個元素的樣式 */
 .slicechar-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* 目標字：上方的小牌子，整局都在 */
 .slicechar-goal {
-    position: absolute;
-    left: 50%;
-    top: 8px;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: var(--sp-2);
-    padding: var(--sp-1) var(--sp-4);
-    background: var(--c-card);
-    border: 3px solid var(--c-ink-soft);
-    border-radius: var(--r-pill);
-    box-shadow: var(--shadow-card);
-    z-index: 3;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 50%;                                          /* 離左邊 50% */
+    top: 8px;                                           /* 離上邊 8px */
+    transform: translateX(-50%);                        /* 變形：水平移動 -50% */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
+    padding: var(--sp-1) var(--sp-4);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-1、下 主題變數、左 --sp-4 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
+    z-index: 3;                                         /* 疊放順序：數字越大越在上面（3） */
 }
 
+/* 「slicechar-goal」裡面的「t」部分的樣式 */
 .slicechar-goal__t {
-    color: var(--c-ink-soft);
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
 }
 
+/* 「slicechar-goal」裡面的「ch」部分的樣式 */
 .slicechar-goal__ch {
-    color: var(--c-ink);
-    font-family: var(--font-note);
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-black);
-    line-height: 1.1;
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-family: var(--font-note);                      /* 字型：主題變數 --font-note */
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1.1;                                   /* 行高：1.1（文字每一行佔的高度） */
 }
 
+/* 「slicechar-arena」這個元素的樣式 */
 .slicechar-arena {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    touch-action: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
 /* 寫著字的湯圓 */
 .slicechar-dump {
-    position: absolute;
-    left: 0;
-    top: 0;
-    background: var(--scc-dump);
-    border: 4px solid var(--scc-dump-edge);
-    border-radius: 50%;
-    box-shadow: var(--shadow-card);
-    box-sizing: border-box;
-    text-align: center;
-    will-change: transform;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    background: var(--scc-dump);                        /* 背景：主題變數 --scc-dump */
+    border: 4px solid var(--scc-dump-edge);             /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --scc-dump-edge */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    text-align: center;                                 /* 文字置中 */
+    will-change: transform;                             /* 提示瀏覽器這個屬性會變動，先準備好（讓動畫更順） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「slicechar-dump」裡面的「ch」部分的樣式 */
 .slicechar-dump__ch {
-    color: var(--c-ink);
-    font-family: var(--font-note);
-    font-weight: var(--fw-black);
-    line-height: inherit;
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-family: var(--font-note);                      /* 字型：主題變數 --font-note */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: inherit;                               /* 行高：inherit（文字每一行佔的高度） */
 }
 
 /* 切開：兩半往兩邊飛開、旋轉、掉落（字也跟著裂成兩半） */
 .slicechar-half {
-    position: absolute;
-    left: 0;
-    top: 0;
-    pointer-events: none;
-    animation: slicechar-split 0.6s ease-in forwards;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    animation: slicechar-split 0.6s ease-in forwards;   /* 播放動畫（名稱、時間、緩動、次數）：slicechar-split 0.6s ease-in forwards */
 }
 
+/* 「slicechar-half」的「left」變化版的樣式 */
 .slicechar-half--left {
-    clip-path: inset(0 50% 0 0);
+    clip-path: inset(0 50% 0 0);                        /* 裁成指定形狀：inset(0 50% 0 0) */
 }
 
+/* 「slicechar-half」在「正確時」的樣子的樣式 */
 .slicechar-half--right {
-    clip-path: inset(0 0 0 50%);
+    clip-path: inset(0 0 0 50%);                        /* 裁成指定形狀：inset(0 0 0 50%) */
 }
 
+/* 動畫 slicechar-split：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes slicechar-split {
     to {
         translate: calc(var(--dir) * 46px) 110px;
         rotate: calc(var(--dir) * 50deg);
-        opacity: 0;
+        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
     }
 }
 
+/* 「slicechar-counter」這個元素的樣式 */
 .slicechar-counter {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 12px;
-    color: var(--c-ink-soft);
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-bold);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 12px;                                       /* 離下邊 12px */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「slicechar-info」這個元素的樣式 */
 .slicechar-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 58px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
-    z-index: 3;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 58px;                                       /* 離下邊 58px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 3;                                         /* 疊放順序：數字越大越在上面（3） */
 }
 
 /* 失敗：目標字和你切錯的字並排，差異的筆畫標紅 */
 .slicechar-cmp {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 24%;
-    display: flex;
-    justify-content: center;
-    gap: var(--sp-4);
-    z-index: 4;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 24%;                                           /* 離上邊 24% */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: var(--sp-4);                                   /* 子元素之間的空隙：主題變數 --sp-4 */
+    z-index: 4;                                         /* 疊放順序：數字越大越在上面（4） */
 }
 
+/* 「slicechar-cmp」裡面的「box」部分的樣式 */
 .slicechar-cmp__box {
-    padding: var(--sp-2) var(--sp-3);
-    background: var(--c-card);
-    border: 4px solid var(--c-ok);
-    border-radius: var(--r-md);
-    box-shadow: var(--shadow-pop);
-    text-align: center;
+    padding: var(--sp-2) var(--sp-3);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-2、下 主題變數、左 --sp-3 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 4px solid var(--c-ok);                      /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --c-ok */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    box-shadow: var(--shadow-pop);                      /* 方塊陰影（立體感） */
+    text-align: center;                                 /* 文字置中 */
 }
 
+/* 「slicechar-cmp__box」在「錯誤（失敗）時」的樣子的樣式 */
 .slicechar-cmp__box--bad {
-    border-color: var(--c-bad-light);
+    border-color: var(--c-bad-light);                   /* 邊框顏色：主題變數 --c-bad-light */
 }
 
+/* 「slicechar-cmp」裡面的「t」部分的樣式 */
 .slicechar-cmp__t {
-    color: var(--c-ink-soft);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
 }
 
+/* 「slicechar-cmp」裡面的「big」部分的樣式 */
 .slicechar-cmp__big {
-    color: var(--c-ink);
-    font-family: var(--font-note);
-    font-size: 130px;
-    font-weight: var(--fw-black);
-    line-height: 1.15;
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-family: var(--font-note);                      /* 字型：主題變數 --font-note */
+    font-size: 130px;                                   /* 字級：130px */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1.15;                                  /* 行高：1.15（文字每一行佔的高度） */
 }
 
+/* 「slicechar-cmp」裡面的「cv」部分的樣式 */
 .slicechar-cmp__cv {
-    display: block;
-    width: 150px;
-    height: 150px;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    width: 150px;                                       /* 寬度：150px */
+    height: 150px;                                      /* 高度：150px */
 }

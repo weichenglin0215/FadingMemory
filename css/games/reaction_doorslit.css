@@ -6,102 +6,112 @@
 
 /* ═══ 門縫偷看（.doorslit-）═══ */
 .doorslit-stage {
-    user-select: none;
-    -webkit-user-select: none;
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「doorslit-field」這個元素的樣式 */
 .doorslit-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
 }
 
+/* 「doorslit-tip」這個元素的樣式 */
 .doorslit-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 字盒：底是淡淡的暖色（門縫裡的光），滿版的黑色大字，上面蓋兩片白色方塊 */
 .doorslit-box {
-    position: absolute;
-    overflow: hidden;
-    background: var(--dsl-light);
-    border: 4px solid var(--dsl-door);
-    border-radius: var(--r-md);
-    box-shadow: var(--shadow-card);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    background: var(--dsl-light);                       /* 背景：主題變數 --dsl-light */
+    border: 4px solid var(--dsl-door);                  /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --dsl-door */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
 }
 
+/* 「doorslit-glyph」這個元素的樣式 */
 .doorslit-glyph {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    color: var(--c-ink);
-    font-family: var(--font-note);
-    font-weight: var(--fw-black);
-    text-align: center;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    width: 100%;                                        /* 寬度：100% */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-family: var(--font-note);                      /* 字型：主題變數 --font-note */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    text-align: center;                                 /* 文字置中 */
 }
 
 /* 兩片白色方塊：JS 每個畫格用 transform 讓它們一起往右移，中間留一條縫 */
 .doorslit-cover {
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    background: var(--c-card);
-    will-change: transform;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    height: 100%;                                       /* 高度：100% */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    will-change: transform;                             /* 提示瀏覽器這個屬性會變動，先準備好（讓動畫更順） */
 }
 
+/* 「doorslit-cover」的「l」變化版的樣式 */
 .doorslit-cover--l {
-    border-right: 3px solid var(--dsl-door);
+    border-right: 3px solid var(--dsl-door);            /* 右邊框：3px solid 主題變數 --dsl-door */
 }
 
+/* 「doorslit-cover」的「r」變化版的樣式 */
 .doorslit-cover--r {
-    border-left: 3px solid var(--dsl-door);
+    border-left: 3px solid var(--dsl-door);             /* 左邊框：3px solid 主題變數 --dsl-door */
 }
 
 /* 揭曉時往兩邊打開 */
 .doorslit-cover--open {
-    transition: transform 0.5s ease-in;
+    transition: transform 0.5s ease-in;                 /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.5s ease-in */
 }
 
+/* 「doorslit-diff」這個元素的樣式 */
 .doorslit-diff {
-    position: absolute;
-    left: 0;
-    top: 0;
-    background: var(--dsl-light);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    background: var(--dsl-light);                       /* 背景：主題變數 --dsl-light */
 }
 
+/* 「doorslit-info」這個元素的樣式 */
 .doorslit-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「doorslit-opt」這個元素的樣式 */
 .doorslit-opt {
-    font-family: var(--font-note);
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-black);
+    font-family: var(--font-note);                      /* 字型：主題變數 --font-note */
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
+/* 「doorslit-ok」這個元素的樣式 */
 .doorslit-ok {
-    background: var(--c-ok-light);
-    border-color: var(--c-ok);
+    background: var(--c-ok-light);                      /* 背景：主題變數 --c-ok-light */
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
 }
 
+/* 「doorslit-bad」這個元素的樣式 */
 .doorslit-bad {
-    background: var(--c-bad-soft);
-    border-color: var(--c-bad-light);
-    color: var(--c-bad);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    border-color: var(--c-bad-light);                   /* 邊框顏色：主題變數 --c-bad-light */
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }

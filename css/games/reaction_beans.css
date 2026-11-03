@@ -6,209 +6,231 @@
 
 /* ═══ 挑豆子（.beans-）═══ */
 .beans-stage {
-    overflow: visible;
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
     /* 盤子直徑 480px，比遊戲區（472px）寬一點點，兩邊各多出 4px 不要被切掉 */
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
 /* isolation: isolate：把裡面的 z-index（拖曳中的豆子 9999、紅圈 10000、揭曉的比較框 10001）關在這個遊戲區裡，
    不然它們會比結算彈窗（z-index 25）還高，蓋住結算彈窗、按鈕點不到（V1.38.0 玩家意見） */
 .beans-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    overflow: visible;
-    isolation: isolate;
-    touch-action: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
+    isolation: isolate;                                 /* 建立獨立的疊放環境 */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
+/* 「beans-tip」這個元素的樣式 */
 .beans-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 木盤子 */
 .beans-tip--bad {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
+/* 「beans-plate」這個元素的樣式 */
 .beans-plate {
-    position: absolute;
-    box-sizing: border-box;
-    background: var(--bns-wood);
-    border: 8px solid var(--bns-wood-edge);
-    border-radius: 50%;
-    pointer-events: none;
-    transition: border-color 0.15s;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    background: var(--bns-wood);                        /* 背景：主題變數 --bns-wood */
+    border: 8px solid var(--bns-wood-edge);             /* 邊框（粗細、線型、顏色）：8px solid 主題變數 --bns-wood-edge */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    transition: border-color 0.15s;                     /* 狀態改變時的過渡動畫（屬性、時間、緩動）：border-color 0.15s */
 }
 
 /* 拖到紅豆：盤緣閃一下紅色（扣時間） */
 .beans-plate--hit {
-    border-color: var(--c-bad-light);
+    border-color: var(--c-bad-light);                   /* 邊框顏色：主題變數 --c-bad-light */
 }
 
 /* 豆子都放在這一層裡；層的原點在盤心 */
 .beans-layer {
-    position: absolute;
-    width: 0;
-    height: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 0;                                           /* 寬度：0 */
+    height: 0;                                          /* 高度：0 */
 }
 
 /* 只有「豆子本身的形狀」收得到點擊（方形的外框不收），這樣被別顆蓋住的雜物露出來的部分才按得到 */
 .beans-item {
-    position: absolute;
-    cursor: grab;
-    transition: left 0.18s ease-out, top 0.18s ease-out, transform 0.12s;
-    touch-action: none;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    cursor: grab;                                       /* 滑鼠游標樣式：grab */
+    transition: left 0.18s ease-out, top 0.18s ease-out, transform 0.12s;  /* 狀態改變時的過渡動畫（屬性、時間、緩動）：left 0.18s ease-out, top 0.18s ease-out, transform */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「beans-item」的「drag」變化版的樣式 */
 .beans-item--drag {
-    transition: none;
-    transform: scale(1.5);
-    filter: drop-shadow(0 6px 5px var(--bns-shadow));
+    transition: none;                                   /* 狀態改變時的過渡動畫（屬性、時間、緩動）：none */
+    transform: scale(1.5);                              /* 變形：縮放 1.5 倍 */
+    filter: drop-shadow(0 6px 5px var(--bns-shadow));   /* 濾鏡效果：drop-shadow(0 6px 5px var(--bns-shadow)) */
 }
 
+/* 「beans-item」在「消失（被拿走）時」的樣子的樣式 */
 .beans-item--gone {
-    display: none;
+    display: none;                                      /* 不顯示（也不佔位置） */
 }
 
+/* 「beans-bean」這個元素的樣式 */
 .beans-bean {
-    display: block;
-    overflow: visible;
-    pointer-events: none;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「ellipse」標籤；「polygon」標籤的樣式 */
 .beans-bean ellipse,
 .beans-bean polygon {
-    pointer-events: auto;
+    pointer-events: auto;                               /* 可以接收點擊／觸控 */
 }
 
 /* 各種豆子與雜物的顏色 */
 .beans-red {
-    fill: var(--bns-red);
+    fill: var(--bns-red);                               /* SVG 圖形的填色：主題變數 --bns-red */
 }
 
+/* 「beans-adz」這個元素的樣式 */
 .beans-adz {
-    fill: var(--bns-adz);
+    fill: var(--bns-adz);                               /* SVG 圖形的填色：主題變數 --bns-adz */
 }
 
+/* 「beans-pinto」這個元素的樣式 */
 .beans-pinto {
-    fill: var(--bns-pinto);
+    fill: var(--bns-pinto);                             /* SVG 圖形的填色：主題變數 --bns-pinto */
 }
 
+/* 「beans-mung」這個元素的樣式 */
 .beans-mung {
-    fill: var(--bns-mung);
+    fill: var(--bns-mung);                              /* SVG 圖形的填色：主題變數 --bns-mung */
 }
 
+/* 「beans-black」這個元素的樣式 */
 .beans-black {
-    fill: var(--bns-black);
+    fill: var(--bns-black);                             /* SVG 圖形的填色：主題變數 --bns-black */
 }
 
+/* 「beans-redstone」這個元素的樣式 */
 .beans-redstone {
-    fill: var(--bns-redstone);
-    stroke: var(--bns-redstone-edge);
-    stroke-width: 0.8;
+    fill: var(--bns-redstone);                          /* SVG 圖形的填色：主題變數 --bns-redstone */
+    stroke: var(--bns-redstone-edge);                   /* SVG 線條顏色：主題變數 --bns-redstone-edge */
+    stroke-width: 0.8;                                  /* SVG 線條粗細：0.8 */
 }
 
+/* 「beans-stone」這個元素的樣式 */
 .beans-stone {
-    fill: var(--bns-stone);
-    stroke: var(--bns-stone-edge);
-    stroke-width: 0.8;
+    fill: var(--bns-stone);                             /* SVG 圖形的填色：主題變數 --bns-stone */
+    stroke: var(--bns-stone-edge);                      /* SVG 線條顏色：主題變數 --bns-stone-edge */
+    stroke-width: 0.8;                                  /* SVG 線條粗細：0.8 */
 }
 
+/* 「beans-shine」這個元素的樣式 */
 .beans-shine {
-    fill: var(--bns-shine);
+    fill: var(--bns-shine);                             /* SVG 圖形的填色：主題變數 --bns-shine */
 }
 
+/* 「beans-spot」這個元素的樣式 */
 .beans-spot {
-    fill: var(--bns-spot);
+    fill: var(--bns-spot);                              /* SVG 圖形的填色：主題變數 --bns-spot */
 }
 
 /* 結束：標出剩下的雜物 */
 .beans-ring {
-    position: absolute;
-    box-sizing: border-box;
-    border: 4px dashed var(--c-bad-light);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 10000;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    border: 4px dashed var(--c-bad-light);              /* 邊框（粗細、線型、顏色）：4px dashed 主題變數 --c-bad-light */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 10000;                                     /* 疊放順序：數字越大越在上面（10000） */
 }
 
+/* 「beans-ring」的「red」變化版的樣式 */
 .beans-ring--red {
-    border-style: solid;
-    border-color: var(--c-bad);
+    border-style: solid;                                /* 邊框線型：solid */
+    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
 }
 
+/* 「beans-info」這個元素的樣式 */
 .beans-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 6px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    color: var(--c-ok);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 6px;                                        /* 離下邊 6px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「beans-info」在「錯誤（失敗）時」的樣子的樣式 */
 .beans-info--bad {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
 /* 結束：把紅豆和很像的雜物並排放大 */
 .beans-cmp {
-    position: absolute;
-    left: 8px;
-    right: 8px;
-    display: flex;
-    align-items: stretch;
-    justify-content: center;
-    gap: 6px;
-    padding: var(--sp-1);
-    background: var(--c-card);
-    border: 3px solid var(--c-ink-soft);
-    border-radius: var(--r-md);
-    box-shadow: var(--shadow-card);
-    z-index: 10001;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 8px;                                          /* 離左邊 8px */
+    right: 8px;                                         /* 離右邊 8px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: stretch;                               /* 子元素拉長到跟一樣高（寬） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: 6px;                                           /* 子元素之間的空隙：6px */
+    padding: var(--sp-1);                               /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --sp-1 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
+    z-index: 10001;                                     /* 疊放順序：數字越大越在上面（10001） */
 }
 
+/* 「beans-cmp」裡面的「c」部分的樣式 */
 .beans-cmp__c {
-    flex: 1;
-    min-width: 0;
-    text-align: center;
+    flex: 1;                                            /* 有剩餘空間就平分長大（flex: 1） */
+    min-width: 0;                                       /* 最小寬度：0 */
+    text-align: center;                                 /* 文字置中 */
 }
 
+/* 「beans-cmp」裡面的「s」部分的樣式 */
 .beans-cmp__s {
-    line-height: 0;
+    line-height: 0;                                     /* 行高：0（文字每一行佔的高度） */
 }
 
+/* 「beans-cmp」裡面的「n」部分的樣式 */
 .beans-cmp__n {
-    color: var(--c-ink);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    line-height: 1.2;
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1.2;                                   /* 行高：1.2（文字每一行佔的高度） */
 }
 
+/* 「beans-cmp」裡面的「d」部分的樣式 */
 .beans-cmp__d {
-    color: var(--c-ink-soft);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    line-height: 1.25;
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: 1.25;                                  /* 行高：1.25（文字每一行佔的高度） */
 }
 
+/* 「beans-cmp」裡面的「vs」部分的樣式 */
 .beans-cmp__vs {
-    align-self: center;
-    color: var(--c-ink-soft);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
+    align-self: center;                                 /* 這個元素自己在交叉方向的對齊方式：center */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }

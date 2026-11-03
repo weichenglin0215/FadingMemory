@@ -30,11 +30,15 @@
    · 提示（每題 HINTS 次）：有放錯的箱子就標出它；都沒放錯就替你放好一箱（標成黃色）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'boxstack'：選單、成績、存檔都靠它；樣式在 css/games/reaction_boxstack.css，裡面的 class 名稱一律以 boxstack- 開頭。 */
     'use strict';
 
-    var ID = 'boxstack';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'boxstack';                                /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var STAGES = [                              /* to＝這個階段的最後一關；r×c＝架子幾層幾格；mode＝重量的種類（seq／gap／dup／mix） */
@@ -66,6 +70,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function emptyFor(level) { return Math.max(1, Math.round(kit.ramp(level, EMPTY[0], EMPTY[1], RAMP_LEVELS))); }
     function timeFor(level, empties) { return TIME_BASE + empties * kit.ramp(level, TIME_CELL[0], TIME_CELL[1], 30); }
+    /* 這一關屬於哪個難度階段：依關卡編號找出對應的設定（參數區的階段表） */
     function stageOf(level) {
         level = Math.max(1, level);
         var from = 1;
@@ -78,7 +83,7 @@
     function seqVals(N) { var a = []; for (var i = 1; i <= N; i++) a.push(i); return a; }
     /* 這個關卡的重量（由輕到重，長度 N）：seq＝1～N；gap＝從 [lo, lo＋span] 取 N 個不重複；dup／mix＝取 K 種、其中有的重複 */
     function makeValues(mode, N, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var m = MODES[mode] || MODES.seq;
         if (mode === 'seq' || !m.span) return seqVals(N);
         var lo = kit.randInt(VAL_LO[0], VAL_LO[1], rand), size = Math.max(N, Math.round(N * m.span));
@@ -201,7 +206,7 @@
         var s = stageOf(level), st = s.st, r = st.r, c = st.c, N = r * c, best = null, bestScore = -1e9;
         var want = emptyFor(level);
         var frac = kit.ramp(level, DIFF_FRAC[0], DIFF_FRAC[1], RAMP_LEVELS);
-        for (var tr = 0; tr < TRIES; tr++) {
+        for (var tr = 0; tr < TRIES; tr++) {            /* 用亂數一直重抽，最多 TRIES 次，抽到符合條件的題目就收下 */
             var rk = randomStack(r, c, rand), vals = makeValues(st.mode, N, rand), sol = rk.map(function (x) { return vals[x - 1]; });
             var sp = surprise(r, c, rk), key = sp.map(function (x, q) { return q === 0 || q === N - 1 ? -99 : -x + rand() * 1.5; }), cells = seqVals(N).map(function (x) { return x - 1; });
             var order = cells.slice().sort(function (a, b) { return key[b] - key[a]; });   /* 最合直覺的格子優先固定、最出乎直覺的留給玩家（加一點亂數，每次不完全一樣） */
@@ -224,6 +229,7 @@
         }
         return best;        /* 保底：試了 TRIES 次都達不到空格數與比例，就用空格數最接近、比例最好的那一題 */
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 25) return '倉庫主任！';
         if (n >= 12) return '夾擠推理很穩！';
@@ -244,11 +250,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var pz = makePuzzle(level, api.rand), r = pz.r, c = pz.c, N = r * c, weak = isWeak(pz.mode), groups = groupsOf(pz.vals);
-        api.info = pz;
-        console.log('[疊箱子] 第 ' + level + ' 關：' + r + '×' + c + '（' + pz.mode + '），固定 ' + pz.given.filter(Boolean).length + ' 箱；重量 ' + pz.vals.join(','));
+        api.info = pz;                                  /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[疊箱子] 第 ' + level + ' 關：' + r + '×' + c + '（' + pz.mode + '），固定 ' + pz.given.filter(Boolean).length + ' 箱；重量 ' + pz.vals.join(','));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
         var W = stage.clientWidth || 472;
         var cell = Math.min(CELL_MAX, Math.floor((W * 0.86 - c * 6) / c));
         var g = pz.given.slice(), hinted = {}, pick = 0, hintsLeft = HINTS, solved = false, flagged = -1, dead = false;
@@ -261,7 +269,7 @@
         var cells = [];
         for (var k = 0; k < N; k++) {
             var cl = h('div', { 'class': 'boxstack-cell' });
-            (function (kk) { kit.onTap(cl, function () { tapCell(kk); }); })(k);
+            (function (kk) { kit.onTap(cl, function () { tapCell(kk); }); })(k);  /* 用立即執行函式存住這一次迴圈的變數（不這樣寫，每個元素點下去都會拿到迴圈結束時的值） */
             shelf.appendChild(cl); cells.push(cl);
         }
         shelfBox.appendChild(h('div', { 'class': 'boxstack-arrow boxstack-arrow--right', text: weak ? '越右邊越重（可一樣重）→' : '越右邊越重 →' }));
@@ -281,6 +289,7 @@
         stage.appendChild(wrap);
 
         function placedCount() { var s = {}; g.forEach(function (v) { if (v) s[v] = (s[v] || 0) + 1; }); return s; }
+        /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() {
             var bad = {}, vs = violations(r, c, g);
             vs.forEach(function (p) { bad[p[0]] = true; bad[p[1]] = true; });
@@ -321,6 +330,7 @@
             paint();
             if (g.every(Boolean) && !violations(r, c, g).length) win();
         }
+        /* 提示：標出一個線索，並扣掉一次提示次數（次數上限在參數區的 HINTS） */
         function useHint() {
             if (solved || dead || hintsLeft <= 0) return;
             var wrong = -1, empty = -1, k;
@@ -342,6 +352,7 @@
             paint();
             if (g.every(Boolean) && !violations(r, c, g).length) win();
         }
+        /* 重來：把這一題恢復成剛開始的樣子 */
         function reset() { if (solved || dead) return; g = pz.given.slice(); Object.keys(hinted).forEach(function (k) { g[k] = pz.sol[k]; }); pick = 0; flagged = -1; paint(); }
         /* 時間到：把正確答案放上去（黃色），結算 */
         function timeUp() {
@@ -353,6 +364,7 @@
             kit.flash(stage, false, api.my);
             api.fail({ delay: FAIL_HOLD_MS, lines: ['時間到了'] });
         }
+        /* 過關：鎖住畫面、顯示成功效果，並呼叫 api.pass 進下一關（或結算） */
         function win() {
             api.stopTimer();
             solved = true; pick = 0; paint();
@@ -360,6 +372,7 @@
             kit.flash(stage, true, api.my);
             api.pass({ delay: PASS_DELAY_MS });
         }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { g = pz.sol.slice(); paint(); win(); };
         api.wrong = function () {           /* 驗證用：放一箱違反規矩的 */
             for (var k = 0; k < N; k++) if (!pz.given[k]) { g[k] = pz.vals[N - 1] + 1; break; }
@@ -367,21 +380,24 @@
         };
         api.state = function () { return { g: g.slice(), pick: pick, solved: solved, hintsLeft: hintsLeft, dead: dead }; };
         api.timeout = timeUp;
-        api.timer(Math.round(timeFor(level, pz.given.filter(function (v) { return !v; }).length) * 1000), timeUp);
+        api.timer(Math.round(timeFor(level, pz.given.filter(function (v) { return !v; }).length) * 1000), timeUp);  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         paint();
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '疊箱子',
         rule: '倉庫的架子每格放一箱，規矩是**越下面越重、越右邊越重**：每一箱都要比它上面那箱重、也比它左邊那箱重（後面的關卡**一樣重也可以**）。**深色的箱子已經貼好重量、固定在那裡**（左上角一定最輕、右下角一定最重，已經先放好了），其他的重量在下面的清單上。**重量不一定是 1、2、3…，有的關卡中間會跳號、甚至有一樣重的箱子**，先想想每一箱的「第幾輕」。點清單上的重量、再點空格放進去；點自己放的箱子可以拿回來。答案只有一種，照大小隨便排是排不對的。每一關有時間限制（上面的時間條，空格越多給的時間越長），時間到了也算失敗；全部放對就過關，成績是解開幾題。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             stageOf: stageOf, emptyFor: emptyFor, EMPTY: EMPTY, timeFor: timeFor, TIME_BASE: TIME_BASE, TIME_CELL: TIME_CELL, isWeak: isWeak, makeValues: makeValues, groupsOf: groupsOf, randomStack: randomStack, countFill: countFill, countFillV: countFillV,
             naiveFill: naiveFill, naiveWorks: naiveWorks, naiveDiff: naiveDiff, surprise: surprise, violations: violations,
             makePuzzle: makePuzzle, rating: rating, STAGES: STAGES, MODES: MODES, DIFF_FRAC: DIFF_FRAC, HINTS: HINTS, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

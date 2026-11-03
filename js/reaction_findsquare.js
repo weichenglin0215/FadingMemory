@@ -15,11 +15,15 @@
    · 揭曉：答對把正方形連起來（像一個星座）；答錯畫出你點的四邊形，寫出它哪裡不是正方形（例如「最長的邊和最短的邊差 4.2731%」），再畫出真的正方形。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'findsquare'：選單、成績、存檔都靠它；樣式在 css/games/reaction_findsquare.css，裡面的 class 名稱一律以 findsquare- 開頭。 */
     'use strict';
 
-    var ID = 'findsquare';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'findsquare';                              /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -106,7 +110,7 @@
     function farEnough(pts, p) { for (var i = 0; i < pts.length; i++) if (dist(pts[i], p) < MIN_DIST) return false; return true; }
     /* 出一關：{ pts（星星座標）, sq（真正方形的四個編號：0～3）, decoys（[{ idx, eps }]）, level, field } */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var N = pointsFor(level), D = decoysFor(level), dmax = decoyMaxFor(level);
         for (var tr = 0; tr < 400; tr++) {
             var sr = sideRangeFor(level), s = kit.randFloat(sr[0], sr[1], rand), deg = kit.randFloat(ROT[0], ROT[1], rand);
@@ -145,6 +149,7 @@
         var fb = squareAt(220, 250, 140, 30); fb.push({ x: 60, y: 60 }, { x: 380, y: 90 }, { x: 60, y: 440 }, { x: 390, y: 450 });
         return { pts: fb, sq: [0, 1, 2, 3], decoys: [], level: level, field: FIELD, rot: 30, side: 140 };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 25) return '星座大師！';
         if (n >= 15) return '眼力很準！';
@@ -153,6 +158,7 @@
         return '先找斜斜的、四邊一樣長的！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'findsquare-stage',
@@ -170,11 +176,13 @@
         return 'M' + p.join(' L') + ' Z';
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand), pts = q.pts;
-        api.info = q;
-        console.log('[找正方形] 第 ' + level + ' 關：星星 ' + pts.length + ' 顆（誘餌 ' + q.decoys.length + ' 組' + (q.decoys.length ? '，誤差 ' + q.decoys.map(function (d) { return (d.eps * 100).toFixed(1) + '%'; }).join('、') : '') + '）；正方形 ' + q.sq.join(',') + '（邊 ' + q.side.toFixed(0) + '、轉 ' + q.rot.toFixed(0) + '°）；限時 ' + timeMs(level) + ' ms');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[找正方形] 第 ' + level + ' 關：星星 ' + pts.length + ' 顆（誘餌 ' + q.decoys.length + ' 組' + (q.decoys.length ? '，誤差 ' + q.decoys.map(function (d) { return (d.eps * 100).toFixed(1) + '%'; }).join('、') : '') + '）；正方形 ' + q.sq.join(',') + '（邊 ' + q.side.toFixed(0) + '、轉 ' + q.rot.toFixed(0) + '°）；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var sc = Math.min((W - 12) / FIELD.w, (H - 130) / FIELD.h), fw = FIELD.w * sc, fh = FIELD.h * sc, fx = Math.round((W - fw) / 2), fy = 58;
@@ -197,10 +205,10 @@
         info.style.top = (fy + fh + 8) + 'px';
         stage.appendChild(info);
         var sel = [], done = false;
-        api.timer(timeMs(level), function () { judge(); });
+        api.timer(timeMs(level), function () { judge(); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         if (level === 1 && kit.once('findsquare.hint')) {
             var hp = pts[q.sq[0]];
-            kit.hintOn(stage, null, { mode: 'tap', x: fx + hp.x * sc, y: fy + hp.y * sc, delay: 700, text: '請點出組成正方形的四顆星' });
+            kit.hintOn(stage, null, { mode: 'tap', x: fx + hp.x * sc, y: fy + hp.y * sc, delay: 700, text: '請點出組成正方形的四顆星' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         }
         function tap(i) {
             if (done || api.over) return;
@@ -215,6 +223,7 @@
             var o = orderQuad(pts, idx);
             for (var k = 0; k < 4; k++) { var a = pts[o[k]], b = pts[o[(k + 1) % 4]]; kit.svg('line', { 'class': 'findsquare-line ' + cls, x1: a.x, y1: a.y, x2: b.x, y2: b.y }, gLines); }
         }
+        /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge() {
             if (done || api.over) return;
             done = true;
@@ -239,6 +248,7 @@
                 api.fail({ delay: 3000, lines: ['時間到！', '綠色的四顆星才是真的正方形'] });
             }
         }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { q.sq.forEach(function (i) { tap(i); }); };
         api.wrong = function () {
             if (q.decoys.length) { q.decoys[0].idx.forEach(function (i) { tap(i); }); return; }               /* 有誘餌就點誘餌（最像的錯誤） */
@@ -247,17 +257,20 @@
         };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '找正方形',
         rule: '夜空裡撒著一堆星星，**剛好有四顆星能連成一個正方形**。把這四顆星點出來，點滿四顆就判定。正方形**大多是斜的**，旁邊還有**差一點點的菱形、長方形**（四邊一樣長但角不是直角，或角是直角但邊不一樣長）。點錯就結束，看你能過幾關。越後面，星星越多、假的越像、時間越短！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             pointsFor: pointsFor, decoysFor: decoysFor, decoyMaxFor: decoyMaxFor, timeMs: timeMs, sideRangeFor: sideRangeFor, dist: dist, quadMetrics: quadMetrics, squareErr: squareErr, orderQuad: orderQuad, squaresIn: squaresIn, minEpsWith: minEpsWith,
             describeQuad: describeQuad, inField: inField, squareAt: squareAt, decoyAt: decoyAt, farEnough: farEnough, makeLevel: makeLevel, starPath: starPath, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, POINTS: POINTS, DECOYS: DECOYS, DECOY_MAX: DECOY_MAX, TIME_S: TIME_S, EPS_SQ: EPS_SQ, EPS_NONSQ: EPS_NONSQ, FIELD: FIELD, MARGIN: MARGIN, MIN_DIST: MIN_DIST, SIDE: SIDE, SIDE_LO: SIDE_LO, SIDE_HI: SIDE_HI, ROT: ROT, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

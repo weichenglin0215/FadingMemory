@@ -6,76 +6,86 @@
 
 /* ═══ 第幾個出現（.nthshape-）═══ */
 .nthshape-tip {
-    top: 14px;
+    top: 14px;                                          /* 離上邊 14px */
 }
 
+/* 「nthshape-tip」的「ask」變化版的樣式 */
 .nthshape-tip--ask {
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「nthshape-show」這個元素的樣式 */
 .nthshape-show {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 84px;
-    height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 84px;                                          /* 離上邊 84px */
+    height: 200px;                                      /* 高度：200px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
 }
 
+/* 「svg」標籤的樣式 */
 .nthshape-show svg {
-    width: 190px;
-    height: 190px;
+    width: 190px;                                       /* 寬度：190px */
+    height: 190px;                                      /* 高度：190px */
 }
 
+/* 「nthshape-strip」這個元素的樣式 */
 .nthshape-strip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 300px;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 6px;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 300px;                                         /* 離上邊 300px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-wrap: wrap;                                    /* 放不下就換行 */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: 6px;                                           /* 子元素之間的空隙：6px */
 }
 
+/* 「nthshape-cell」這個元素的樣式 */
 .nthshape-cell {
-    width: 46px;
-    text-align: center;
-    padding: 4px 0;
-    border-radius: var(--r-sm);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-black);
-    color: var(--c-ink-soft);
+    width: 46px;                                        /* 寬度：46px */
+    text-align: center;                                 /* 文字置中 */
+    padding: 4px 0;                                     /* 內縮（padding，內容跟邊框的距離）：上下 4px、左右 0 */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
+/* 「svg」標籤的樣式 */
 .nthshape-cell svg {
-    display: block;
-    width: 38px;
-    height: 38px;
-    margin: 0 auto;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    width: 38px;                                        /* 寬度：38px */
+    height: 38px;                                       /* 高度：38px */
+    margin: 0 auto;                                     /* 外距（margin，與別的元素的距離）：上下 0、左右 auto */
 }
 
+/* 「nthshape-cell」的「ask」變化版的樣式 */
 .nthshape-cell--ask {
-    background: var(--c-orange-soft);
-    box-shadow: 0 0 0 3px var(--c-orange);
-    color: var(--c-orange);
+    background: var(--c-orange-soft);                   /* 背景：主題變數 --c-orange-soft */
+    box-shadow: 0 0 0 3px var(--c-orange);              /* 方塊陰影（立體感） */
+    color: var(--c-orange);                             /* 文字顏色：主題變數 --c-orange */
 }
 
+/* 「svg」標籤的樣式 */
 .nthshape-btn svg {
-    width: 62px;
-    height: 62px;
+    width: 62px;                                        /* 寬度：62px */
+    height: 62px;                                       /* 高度：62px */
 }
 
+/* 「nthshape-btn」在「正確時」的樣子的樣式 */
 .nthshape-btn--right {
-    background: var(--c-ok-soft);
-    border-color: var(--c-ok);
+    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
 }
 
+/* 「nthshape-btn」在「錯誤時」的樣子的樣式 */
 .nthshape-btn--wrong {
-    background: var(--c-bad-soft);
-    border-color: var(--c-bad);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
 }

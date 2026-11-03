@@ -17,11 +17,15 @@
      4 種硬幣的唯一題有 95% 含 1 或 9 枚（答案太好猜），所以最多只做到 3 種。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'piggybank'：選單、成績、存檔都靠它；樣式在 css/games/reaction_piggybank.css，裡面的 class 名稱一律以 piggybank- 開頭。 */
     'use strict';
 
-    var ID = 'piggybank';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'piggybank';                               /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var STAGES = [                              /* to＝這個階段的最後一關；k＝幾種硬幣；giveN＝給不給總枚數；primes＝重量從哪些質數挑 */
@@ -60,10 +64,10 @@
     }
     /* 出一題：{ ws（由輕到重）, cs（答案）, W, N（不給就是 null）, mode } */
     function makePuzzle(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var st = stageOf(level), last = null;
         var mode = level >= EVEN_FROM && rand() < EVEN_P ? 'even' : 'digit', r = rangeOf(mode);
-        for (var tr = 0; tr < TRIES; tr++) {
+        for (var tr = 0; tr < TRIES; tr++) {            /* 用亂數一直重抽，最多 TRIES 次，抽到符合條件的題目就收下 */
             var ws = kit.shuffle(st.primes, rand).slice(0, st.k).sort(function (a, b) { return a - b; });
             var cs = ws.map(function () { return r.lo + r.step * kit.randInt(0, (r.hi - r.lo) / r.step, rand); });
             var W = weightOf(ws, cs), N = st.giveN ? countOf(cs) : null;
@@ -80,6 +84,7 @@
     }
     /* 算式：「13×4 ＋ 17×6 ＝ 154 克」 */
     function equation(ws, cs) { return ws.map(function (w, i) { return w + '×' + cs[i]; }).join(' ＋ ') + ' ＝ ' + weightOf(ws, cs) + ' 克'; }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 25) return '撲滿透視眼！';
         if (n >= 12) return '尾數推得很準！';
@@ -98,11 +103,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var pz = makePuzzle(level, api.rand), k = pz.ws.length, r = rangeOf(pz.mode);
-        api.info = pz;
-        console.log('[撲滿有多少] 第 ' + level + ' 關：' + pz.ws.join('、') + ' 克，' + (pz.mode === 'even' ? '偶數枚' : '1～9 枚') + (pz.N != null ? '，共 ' + pz.N + ' 枚' : ''));
+        api.info = pz;                                  /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[撲滿有多少] 第 ' + level + ' 關：' + pz.ws.join('、') + ' 克，' + (pz.mode === 'even' ? '偶數枚' : '1～9 枚') + (pz.N != null ? '，共 ' + pz.N + ' 枚' : ''));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
         var cs = pz.ws.map(function () { return r.lo; }), over = false;
 
         var wrap = h('div', { 'class': 'piggybank-wrap' });
@@ -132,6 +139,7 @@
         wrap.appendChild(pig); wrap.appendChild(ruleBox); wrap.appendChild(list); wrap.appendChild(tip); wrap.appendChild(btnOpen);
         stage.appendChild(wrap);
 
+        /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() { nums.forEach(function (el, i) { el.textContent = String(cs[i]); }); }
         function bump(i, d) {
             if (over) return;
@@ -161,22 +169,26 @@
             kit.flash(stage, false, api.my);
             api.fail({ delay: FAIL_HOLD_MS, lines: [why].concat(lines) });
         }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { cs = pz.cs.slice(); paint(); openIt(); };
         api.wrong = function () { cs = pz.cs.slice(); cs[0] = cs[0] + r.step <= r.hi ? cs[0] + r.step : cs[0] - r.step; paint(); openIt(); };
         api.state = function () { return { cs: cs.slice(), over: over }; };
         paint();
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '撲滿有多少',
         rule: '小豬撲滿打不開，裡面有幾種遊戲硬幣，**每種硬幣的重量都是質數**（寫在硬幣上）。你只知道**撲滿裡硬幣的總重**（前面幾關還會告訴你一共幾枚），以及一條規矩：**每種都是 1～9 枚，或每種都是偶數枚**。用「−」「＋」調出每種硬幣有幾枚，按「打開撲滿」。答案只有一種；**猜錯一次就結束**，會列出正確的算式。沒有時間限制，慢慢算。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             stageOf: stageOf, rangeOf: rangeOf, weightOf: weightOf, countOf: countOf, countSolutions: countSolutions, makePuzzle: makePuzzle,
             isRight: isRight, equation: equation, rating: rating, STAGES: STAGES, EVEN_FROM: EVEN_FROM, EVEN_P: EVEN_P, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

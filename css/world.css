@@ -8,88 +8,88 @@
 /* HUD 的最外層：absolute + inset:0 蓋滿整個舞台（#stage），裡面的元件再各自用 absolute 擺到上下左右。
    （HUD = Head-Up Display，遊戲畫面上的操作介面，像是搖桿、按鈕、時間顯示。） */
 #hud {
-    position: absolute;
-    inset: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
 }
 
 /* ─── 上方：選單鈕、地點＋時間、隨身物品 ─── */
 /* 最上方的橫條：左邊選單鈕、中間地點與時間、右邊物品欄，用 flex 排成一列 */
 .hud-top {
-    position: absolute;
-    left: var(--hud-edge);
-    right: var(--hud-edge);
-    top: var(--hud-edge);
-    height: var(--hud-chip-h);
-    display: flex;
-    align-items: center;
-    gap: var(--sp-2);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: var(--hud-edge);                              /* 離左邊 主題變數 --hud-edge */
+    right: var(--hud-edge);                             /* 離右邊 主題變數 --hud-edge */
+    top: var(--hud-edge);                               /* 離上邊 主題變數 --hud-edge */
+    height: var(--hud-chip-h);                          /* 高度：主題變數 --hud-chip-h */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
 }
 
 /* 選單按鈕（方形圓角） */
 .hud-menu {
-    flex: 0 0 var(--hud-chip-h);
-    height: var(--hud-chip-h);
-    border-radius: var(--r-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 253, 243, 0.92);
-    border: var(--bd);
-    color: var(--c-ink);
-    font-size: 38px;
-    box-shadow: var(--shadow-card);
+    flex: 0 0 var(--hud-chip-h);                        /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 主題變數 --hud-chip-h（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    height: var(--hud-chip-h);                          /* 高度：主題變數 --hud-chip-h */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    background: rgba(255, 253, 243, 0.92);              /* 背景：rgba(255, 253, 243, 0.92) */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: 38px;                                    /* 字級：38px */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
 }
 
 /* 中間的「地點＋時間」膠囊；flex:1 1 auto 吃掉剩餘寬度，min-width:0 讓文字太長時可以縮 */
 .hud-chip {
-    flex: 1 1 auto;
-    min-width: 0;
-    height: var(--hud-chip-h);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--sp-2);
-    padding: 0 var(--sp-3);
-    border-radius: var(--r-pill);
-    background: rgba(255, 253, 243, 0.92);
-    border: var(--bd);
-    box-shadow: var(--shadow-card);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    white-space: nowrap;
-    overflow: hidden;
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-width: 0;                                       /* 最小寬度：0 */
+    height: var(--hud-chip-h);                          /* 高度：主題變數 --hud-chip-h */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill */
+    background: rgba(255, 253, 243, 0.92);              /* 背景：rgba(255, 253, 243, 0.92) */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    white-space: nowrap;                                /* 文字不換行 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* 時間文字：tabular-nums 讓數字等寬，不會因為數字不同寬度而左右抖動 */
 .hud-chip__time {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-1);
-    color: var(--c-blue);
-    font-variant-numeric: tabular-nums;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-1);                                   /* 子元素之間的空隙：主題變數 --sp-1 */
+    color: var(--c-blue);                               /* 文字顏色：主題變數 --c-blue */
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
 }
 
 /* 物品欄：拿到的道具一顆顆排在這裡 */
 .hud-inv {
-    flex: 0 0 auto;
-    display: flex;
-    gap: var(--sp-1);
+    flex: 0 0 auto;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    gap: var(--sp-1);                                   /* 子元素之間的空隙：主題變數 --sp-1 */
 }
 
 /* 單個道具圖示：圓形；animation: pop-in 讓它拿到時「彈」出來 */
 .hud-inv__item {
-    width: var(--hud-chip-h);
-    height: var(--hud-chip-h);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--c-card);
-    border: var(--bd-w) solid var(--c-green);
-    color: var(--c-green);
-    font-size: 34px;
-    box-shadow: var(--shadow-card);
-    animation: pop-in 0.4s ease;
+    width: var(--hud-chip-h);                           /* 寬度：主題變數 --hud-chip-h */
+    height: var(--hud-chip-h);                          /* 高度：主題變數 --hud-chip-h */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd-w) solid var(--c-green);           /* 邊框（粗細、線型、顏色）：主題變數 --bd-w solid 主題變數 --c-green */
+    color: var(--c-green);                              /* 文字顏色：主題變數 --c-green */
+    font-size: 34px;                                    /* 字級：34px */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
+    animation: pop-in 0.4s ease;                        /* 播放動畫（名稱、時間、緩動、次數）：pop-in 0.4s ease */
 }
 
 /* pop-in 動畫：0% 縮到 0.2 倍 → 70% 放大過頭到 1.15 倍 → 100% 回到正常大小，產生彈跳感 */
@@ -102,58 +102,58 @@
 /* ─── 提示訊息／廣播 ─── */
 /* 提示訊息（短暫浮出又消失）；pointer-events:none 讓它不擋住底下的點擊 */
 .hud-toast {
-    position: absolute;
-    left: var(--hud-edge);
-    right: var(--hud-edge);
-    top: calc(var(--hud-edge) + var(--hud-chip-h) + var(--sp-3));
-    display: flex;
-    justify-content: center;
-    pointer-events: none;
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: var(--hud-edge);                              /* 離左邊 主題變數 --hud-edge */
+    right: var(--hud-edge);                             /* 離右邊 主題變數 --hud-edge */
+    top: calc(var(--hud-edge) + var(--hud-chip-h) + var(--sp-3));  /* 離上邊 calc(主題變數 --hud-edge + 主題變數 --hud-chip-h + 主題變數 --sp-3) */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    transition: opacity 0.3s ease, transform 0.3s ease; /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.3s ease, transform 0.3s ease */
 }
 
 /* 隱藏狀態：變透明並往上移 10px */
 .hud-toast.is-hidden {
-    opacity: 0;
-    transform: translateY(-10px);
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    transform: translateY(-10px);                       /* 變形：垂直移動 -10px */
 }
 
 /* 提示訊息的深色小框 */
 .hud-toast__box {
-    max-width: 100%;
-    padding: var(--sp-3) var(--sp-4);
-    border-radius: var(--r-md);
-    background: rgba(74, 59, 30, 0.86);
-    color: #FFF8E6;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-body);
-    text-align: center;
+    max-width: 100%;                                    /* 最大寬度：100% */
+    padding: var(--sp-3) var(--sp-4);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-3、下 主題變數、左 --sp-4 */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: rgba(74, 59, 30, 0.86);                 /* 背景：rgba(74, 59, 30, 0.86) */
+    color: #FFF8E6;                                     /* 文字顏色：#FFF8E6 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    text-align: center;                                 /* 文字置中 */
 }
 
 /* 任務橫幅（比提示訊息大，帶圖示） */
 .hud-banner {
-    position: absolute;
-    left: var(--hud-edge);
-    right: var(--hud-edge);
-    top: calc(var(--hud-edge) + var(--hud-chip-h) + var(--sp-3));
-    display: flex;
-    align-items: center;
-    gap: var(--sp-3);
-    min-height: 92px;
-    padding: var(--sp-2) var(--sp-4);
-    border-radius: var(--r-lg);
-    background: var(--btn-sky-bg);
-    color: var(--c-on-accent);
-    box-shadow: var(--shadow-pop);
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    line-height: var(--lh-tight);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: var(--hud-edge);                              /* 離左邊 主題變數 --hud-edge */
+    right: var(--hud-edge);                             /* 離右邊 主題變數 --hud-edge */
+    top: calc(var(--hud-edge) + var(--hud-chip-h) + var(--sp-3));  /* 離上邊 calc(主題變數 --hud-edge + 主題變數 --hud-chip-h + 主題變數 --sp-3) */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
+    min-height: 92px;                                   /* 最小高度：92px */
+    padding: var(--sp-2) var(--sp-4);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-2、下 主題變數、左 --sp-4 */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    background: var(--btn-sky-bg);                      /* 背景：主題變數 --btn-sky-bg */
+    color: var(--c-on-accent);                          /* 文字顏色：主題變數 --c-on-accent */
+    box-shadow: var(--shadow-pop);                      /* 方塊陰影（立體感） */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: var(--lh-tight);                       /* 行高：主題變數 --lh-tight（文字每一行佔的高度） */
 }
 
 /* 橫幅裡的圖示 */
 .hud-banner .icon {
-    font-size: 52px;
+    font-size: 52px;                                    /* 字級：52px */
 }
 
 /* ─── 虛擬搖桿（左下）───
@@ -162,56 +162,56 @@
    touch-action: none：這個元件要自己完全接管觸控拖曳行為（搖桿方向），
    不能讓瀏覽器把拖曳手勢誤判成頁面捲動或縮放。 */
 .joy {
-    position: absolute;
-    left: var(--hud-edge);
-    bottom: var(--hud-edge);
-    width: var(--joy-size);
-    height: var(--joy-size);
-    border-radius: 50%;
-    touch-action: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: var(--hud-edge);                              /* 離左邊 主題變數 --hud-edge */
+    bottom: var(--hud-edge);                            /* 離下邊 主題變數 --hud-edge */
+    width: var(--joy-size);                             /* 寬度：主題變數 --joy-size */
+    height: var(--joy-size);                            /* 高度：主題變數 --joy-size */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
 /* 搖桿底座（固定不動的外圈） */
 .joy__base {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    background: rgba(255, 253, 243, 0.55);
-    border: 3px solid rgba(255, 255, 255, 0.95);
-    box-shadow: 0 6px 20px rgba(74, 59, 30, 0.2), inset 0 0 24px rgba(62, 134, 196, 0.18);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    background: rgba(255, 253, 243, 0.55);              /* 背景：rgba(255, 253, 243, 0.55) */
+    border: 3px solid rgba(255, 255, 255, 0.95);        /* 邊框（粗細、線型、顏色）：3px solid rgba(255, 255, 255, 0.95) */
+    box-shadow: 0 6px 20px rgba(74, 59, 30, 0.2), inset 0 0 24px rgba(62, 134, 196, 0.18);  /* 方塊陰影（立體感） */
 }
 
 /* 底座上的上下左右箭頭 */
 .joy__arrows {
-    position: absolute;
-    inset: 0;
-    color: rgba(74, 59, 30, 0.5);
-    font-size: 40px;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    color: rgba(74, 59, 30, 0.5);                       /* 文字顏色：rgba(74, 59, 30, 0.5) */
+    font-size: 40px;                                    /* 字級：40px */
 }
 
 /* 每個箭頭圖示用 absolute 擺在各自方向 */
 .joy__arrows .icon {
-    position: absolute;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
 }
 
 /* 搖桿圓鈕：margin 設成負的一半大小，是把圓心擺到正中間的技巧（不用 transform，因為 JS 要用 transform 移動它） */
 .joy__knob {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: var(--joy-knob);
-    height: var(--joy-knob);
-    margin: calc(var(--joy-knob) / -2) 0 0 calc(var(--joy-knob) / -2);
-    border-radius: 50%;
-    background: var(--btn-sky-bg);
-    border: 4px solid #fff;
-    box-shadow: var(--btn-sky-shadow);
-    will-change: transform;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 50%;                                          /* 離左邊 50% */
+    top: 50%;                                           /* 離上邊 50% */
+    width: var(--joy-knob);                             /* 寬度：主題變數 --joy-knob */
+    height: var(--joy-knob);                            /* 高度：主題變數 --joy-knob */
+    margin: calc(var(--joy-knob) / -2) 0 0 calc(var(--joy-knob) / -2);  /* 外距（margin，與別的元素的距離）：上 calc(主題變數、右 --joy-knob、下 /、左 -2) */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    background: var(--btn-sky-bg);                      /* 背景：主題變數 --btn-sky-bg */
+    border: 4px solid #fff;                             /* 邊框（粗細、線型、顏色）：4px solid #fff */
+    box-shadow: var(--btn-sky-shadow);                  /* 方塊陰影（立體感） */
+    will-change: transform;                             /* 提示瀏覽器這個屬性會變動，先準備好（讓動畫更順） */
 }
 
 /* 手指按著搖桿時底座變得比較不透明 */
 .joy.is-active .joy__base {
-    background: rgba(255, 253, 243, 0.75);
+    background: rgba(255, 253, 243, 0.75);              /* 背景：rgba(255, 253, 243, 0.75) */
 }
 
 /* ─── 互動鍵（右下）───
@@ -219,38 +219,38 @@
    在輕輕脈動，吸引玩家注意「這裡可以互動」，不用額外寫文字說明。 */
 /* 互動鍵：在右下角 */
 .act {
-    position: absolute;
-    right: var(--hud-edge);
-    bottom: calc(var(--hud-edge) + 24px);
-    width: var(--act-size);
-    height: var(--act-size);
-    border-radius: 50%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    background: var(--btn-primary-bg);
-    color: var(--btn-primary-fg);
-    border: 4px solid #fff;
-    box-shadow: var(--btn-primary-shadow);
-    animation: act-breathe 1.6s ease-in-out infinite;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    right: var(--hud-edge);                             /* 離右邊 主題變數 --hud-edge */
+    bottom: calc(var(--hud-edge) + 24px);               /* 離下邊 calc(主題變數 --hud-edge + 24px) */
+    width: var(--act-size);                             /* 寬度：主題變數 --act-size */
+    height: var(--act-size);                            /* 高度：主題變數 --act-size */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: 2px;                                           /* 子元素之間的空隙：2px */
+    background: var(--btn-primary-bg);                  /* 背景：主題變數 --btn-primary-bg */
+    color: var(--btn-primary-fg);                       /* 文字顏色：主題變數 --btn-primary-fg */
+    border: 4px solid #fff;                             /* 邊框（粗細、線型、顏色）：4px solid #fff */
+    box-shadow: var(--btn-primary-shadow);              /* 方塊陰影（立體感） */
+    animation: act-breathe 1.6s ease-in-out infinite;   /* 播放動畫（名稱、時間、緩動、次數）：act-breathe 1.6s ease-in-out infinite */
 }
 
 /* 互動鍵上的圖示 */
 .act .icon {
-    font-size: 50px;
+    font-size: 50px;                                    /* 字級：50px */
 }
 
 /* 互動鍵的文字（例如「開門」） */
 .act__label {
-    max-width: 124px;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    line-height: 1.1;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
+    max-width: 124px;                                   /* 最大寬度：124px */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1.1;                                   /* 行高：1.1（文字每一行佔的高度） */
+    text-align: center;                                 /* 文字置中 */
+    white-space: nowrap;                                /* 文字不換行 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* 呼吸動畫：每 1.6 秒放大 5% 再回來 */
@@ -265,34 +265,34 @@
    （欄數依選項內容而定，由 JS 動態決定要加哪一個 class）。 */
 /* 對話框：absolute 蓋滿畫面，align-items:flex-end 讓卡片貼在畫面下方 */
 .dlg {
-    position: absolute;
-    inset: 0;
-    z-index: 20;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    padding: var(--sp-3);
-    background: rgba(74, 59, 30, 0.28);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    z-index: 20;                                        /* 疊放順序：數字越大越在上面（20） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: flex-end;                              /* 子元素靠交叉方向的終點（橫排時靠下） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    padding: var(--sp-3);                               /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --sp-3 */
+    background: rgba(74, 59, 30, 0.28);                 /* 背景：rgba(74, 59, 30, 0.28) */
 }
 
 /* 置中版本 */
 .dlg--center {
-    align-items: center;
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
 }
 
 /* 對話框的卡片 */
 .dlg__card {
-    width: 100%;
-    max-height: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-3);
-    padding: var(--sp-4);
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-pop);
-    animation: dlg-in 0.22s ease;
+    width: 100%;                                        /* 寬度：100% */
+    max-height: 100%;                                   /* 最大高度：100% */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
+    padding: var(--sp-4);                               /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --sp-4 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    box-shadow: var(--shadow-pop);                      /* 方塊陰影（立體感） */
+    animation: dlg-in 0.22s ease;                       /* 播放動畫（名稱、時間、緩動、次數）：dlg-in 0.22s ease */
 }
 
 /* 進場動畫：從下方 24px 滑上來並淡入 */
@@ -303,90 +303,92 @@
 
 /* 卡片上方：人物圖 + 標題 */
 .dlg__head {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-3);
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
 }
 
 /* 人物插圖 */
 .dlg__art {
-    flex: 0 0 96px;
-    height: 96px;
+    flex: 0 0 96px;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 96px（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    height: 96px;                                       /* 高度：96px */
 }
 
 /* 插圖 SVG 填滿 */
 .dlg__art svg {
-    width: 100%;
-    height: 100%;
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
 }
 
 /* 標題 */
 .dlg__title {
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
-    line-height: var(--lh-tight);
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: var(--lh-tight);                       /* 行高：主題變數 --lh-tight（文字每一行佔的高度） */
 }
 
 /* 對話內文（pre-line 讓 \n 換行） */
 .dlg__text {
-    font-size: var(--fs-dialog);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-body);
-    white-space: pre-line;
+    font-size: var(--fs-dialog);                        /* 字級：主題變數 --fs-dialog */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    white-space: pre-line;                              /* 保留換行字元、其餘空白合併 */
 }
 
 /* 選項按鈕區（grid） */
 .dlg__choices {
-    display: grid;
-    gap: var(--sp-3);
+    display: grid;                                      /* 格線排版：子元素排進格子 */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
 }
 
 /* 兩個選項：2 欄 */
 .dlg__choices--2 {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr;                     /* 格線的欄（每欄的寬度）：1fr 1fr */
 }
 
 /* 三個選項：3 欄 */
 .dlg__choices--3 {
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;                 /* 格線的欄（每欄的寬度）：1fr 1fr 1fr */
 }
 
 /* min-width:0 讓按鈕在格子裡可以縮小，不撐破版面 */
 .dlg__choices .btn {
-    min-width: 0;
+    min-width: 0;                                       /* 最小寬度：0 */
 }
 
 /* 特大按鈕 */
 .btn--big {
-    height: 104px;
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
+    height: 104px;                                      /* 高度：104px */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
 /* 紙條對話框：卡片佔滿高度 */
 /* 紙條（全螢幕） */
 .dlg--note .dlg__card {
-    height: 100%;
+    height: 100%;                                       /* 高度：100% */
 }
 
 /* 紙條本身吃掉剩餘高度 */
 .dlg--note .note {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* 文字顏色小工具 class（綠／橘／藍），JS 想讓一段文字變色就加上它 */
 .tone-ok {
-    color: var(--c-green);
+    color: var(--c-green);                              /* 文字顏色：主題變數 --c-green */
 }
 
+/* 「tone-bad」這個元素的樣式 */
 .tone-bad {
-    color: var(--c-bad);
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
 }
 
+/* 「tone-blue」這個元素的樣式 */
 .tone-blue {
-    color: var(--c-blue);
+    color: var(--c-blue);                               /* 文字顏色：主題變數 --c-blue */
 }
 
 /* ─── 轉場淡出淡入 ───
@@ -396,55 +398,55 @@
    移除的開關。 */
 /* 轉場的色塊：平常 opacity:0 看不見也點不到，加了 is-on 才淡入蓋住畫面 */
 .fade {
-    position: absolute;
-    inset: 0;
-    z-index: 30;
-    background: var(--c-paper);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.35s ease;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    z-index: 30;                                        /* 疊放順序：數字越大越在上面（30） */
+    background: var(--c-paper);                         /* 背景：主題變數 --c-paper */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    transition: opacity 0.35s ease;                     /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.35s ease */
 }
 
 /* 轉場開啟時：完全不透明，並且擋住點擊 */
 .fade.is-on {
-    opacity: 1;
-    pointer-events: auto;
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
+    pointer-events: auto;                               /* 可以接收點擊／觸控 */
 }
 
 /* 轉場時畫面中央的文字 */
 .fade__text {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 46%;
-    text-align: center;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink-soft);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 46%;                                           /* 離上邊 46% */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* ─── 載入／錯誤 ─── */
 /* 載入／錯誤畫面 */
 .hud-loading {
-    position: absolute;
-    inset: 0;
-    z-index: 40;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--sp-4);
-    padding: var(--sp-5);
-    background: var(--c-paper);
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
-    white-space: pre-line;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    z-index: 40;                                        /* 疊放順序：數字越大越在上面（40） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: var(--sp-4);                                   /* 子元素之間的空隙：主題變數 --sp-4 */
+    padding: var(--sp-5);                               /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --sp-5 */
+    background: var(--c-paper);                         /* 背景：主題變數 --c-paper */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    white-space: pre-line;                              /* 保留換行字元、其餘空白合併 */
 }
 
 /* 載入畫面的插圖，套用呼吸動畫 */
 .hud-loading__art {
-    width: 180px;
-    height: 180px;
-    animation: act-breathe 1.4s ease-in-out infinite;
+    width: 180px;                                       /* 寬度：180px */
+    height: 180px;                                      /* 高度：180px */
+    animation: act-breathe 1.4s ease-in-out infinite;   /* 播放動畫（名稱、時間、緩動、次數）：act-breathe 1.4s ease-in-out infinite */
 }

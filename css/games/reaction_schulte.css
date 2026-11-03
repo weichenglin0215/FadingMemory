@@ -8,69 +8,69 @@
 /* ═══ 數字方陣（.schulte-）黑底白字 ═══ */
 /* .screen.schulte-bg：同時有 screen 和 schulte-bg 兩個 class 的元素才套用（把整個畫面底色改成純黑） */
 .screen.schulte-bg {
-    background: #000;
-    padding: 0;
-    gap: 0;
+    background: #000;                                   /* 背景：#000 */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
+    gap: 0;                                             /* 子元素之間的空隙：0 */
 }
 
 /* 最上方的狀態列：左邊「下一個數字」、右邊計時，用 space-between 推到兩端 */
 .schulte-head {
-    flex: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 20px;
-    color: #fff;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
+    flex: none;                                         /* 彈性縮放：none */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    justify-content: space-between;                     /* 頭尾貼邊，剩下的空間平均分給中間 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    padding: 12px 20px;                                 /* 內縮（padding，內容跟邊框的距離）：上下 12px、左右 20px */
+    color: #fff;                                        /* 文字顏色：#fff */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
 }
 
 /* 計時文字：tabular-nums 讓每個數字等寬，數字跳動時文字不會左右抖動 */
 .schulte-clock {
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
 }
 
 /* 6×6 的格子容器：grid-template-columns: repeat(6,1fr) 表示 6 欄、每欄等寬 */
 .schulte-grid {
-    flex: 1 1 auto;
-    min-height: 0;
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    grid-template-rows: repeat(6, 1fr);
-    gap: 4px;
-    padding: 6px;
-    box-sizing: border-box;
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    width: 100%;                                        /* 寬度：100% */
+    display: grid;                                      /* 格線排版：子元素排進格子 */
+    grid-template-columns: repeat(6, 1fr);              /* 格線的欄（每欄的寬度）：repeat(6, 1fr) */
+    grid-template-rows: repeat(6, 1fr);                 /* 格線的列（每列的高度）：repeat(6, 1fr) */
+    gap: 4px;                                           /* 子元素之間的空隙：4px */
+    padding: 6px;                                       /* 內縮（padding，內容跟邊框的距離）：四邊都是 6px */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
 }
 
 /* 每一格數字按鈕 */
 .schulte-cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 0;
-    padding: 0;
-    border: 2px solid #4a4a4a;
-    border-radius: 8px;
-    background: #000;
-    color: #fff;
-    font-family: var(--font-ui);
-    font-size: 64px;
-    font-weight: var(--fw-black);
-    line-height: 1;
-    touch-action: manipulation;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    min-width: 0;                                       /* 最小寬度：0 */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
+    border: 2px solid #4a4a4a;                          /* 邊框（粗細、線型、顏色）：2px solid #4a4a4a */
+    border-radius: 8px;                                 /* 圓角：8px */
+    background: #000;                                   /* 背景：#000 */
+    color: #fff;                                        /* 文字顏色：#fff */
+    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
+    font-size: 64px;                                    /* 字級：64px */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
+    touch-action: manipulation;                         /* 關掉雙擊放大，點擊反應更快 */
 }
 
 /* 點對的格子：整格變綠底白字（比原本的「只有字變淺綠」更明顯），OK_FLASH_MS 之後 JS 會拿掉這個 class 變回黑底 */
 .schulte-cell--ok {
-    background: var(--c-ok);
-    border-color: var(--c-ok);
-    color: var(--c-on-accent);
+    background: var(--c-ok);                            /* 背景：主題變數 --c-ok */
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
+    color: var(--c-on-accent);                          /* 文字顏色：主題變數 --c-on-accent */
 }
 
 /* 點錯的格子：整格變橘紅 */
 .schulte-cell--bad {
-    background: var(--c-bad-light);
-    border-color: var(--c-bad-light);
-    color: #fff;
+    background: var(--c-bad-light);                     /* 背景：主題變數 --c-bad-light */
+    border-color: var(--c-bad-light);                   /* 邊框顏色：主題變數 --c-bad-light */
+    color: #fff;                                        /* 文字顏色：#fff */
 }

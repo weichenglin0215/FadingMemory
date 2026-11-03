@@ -14,11 +14,15 @@
    · 結束時畫面暫停，畫面上所有目標字圈綠色，點錯的字圈紅色。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'danmaku'：選單、成績、存檔都靠它；樣式在 css/games/reaction_danmaku.css，裡面的 class 名稱一律以 danmaku- 開頭。 */
     'use strict';
 
-    var ID = 'danmaku';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 個', label: '點到幾個', min: 1, max: 300 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'danmaku';                                 /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 個', label: '點到幾個', min: 1, max: 300 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_HITS = 40;                         /* 點到幾個之後難度到頂 */
@@ -46,7 +50,7 @@
     function nextIsTarget(sinceTarget, rand) { return sinceTarget >= MAX_GAP || (rand || Math.random)() < TARGET_P; }
     /* 這一段（每 SEGMENT 個換一次）的目標字與干擾字：{ target, mates, group, strokes } */
     function pickTarget(hits, rand, avoid) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var rg = strokeRange(hits), pool = SimilarChars.groups({ minSize: MIN_GROUP, minStrokes: rg[0], maxStrokes: rg[1] });
         if (!pool.length) pool = SimilarChars.groups({ minSize: MIN_GROUP });
         var g = kit.pick(pool, rand), target = kit.pick(g.chars, rand);
@@ -65,6 +69,7 @@
         items.forEach(function (it, i) { var d = Math.hypot(it.x - x, it.y - y); if (d <= it.size * 0.75 + (extra == null ? 12 : extra) && d < bd) { bd = d; best = i; } });
         return best;
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 60) return '彈幕之王！';
         if (n >= 35) return '眼睛像雷達！';
@@ -73,6 +78,7 @@
         return '先看清楚目標字長什麼樣子！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 12, stageClass: 'danmaku-stage', resume: false,
@@ -86,12 +92,14 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, S = api.S;
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, hits = 0, seg = pickTarget(0, api.rand), since = 0, items = [], over = false, paused = false;
         api.info = { get hits() { return hits; }, get target() { return seg.target; } };
         S.score = 0; api.setInfo('點到 0 個');
-        console.log('[彈幕找字] 目標「' + seg.target + '」，干擾 ' + seg.mates.join(''));
+        console.log('[彈幕找字] 目標「' + seg.target + '」，干擾 ' + seg.mates.join(''));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var field = h('div', { 'class': 'danmaku-field' });
         stage.appendChild(field);
@@ -100,7 +108,7 @@
         var info = h('div', { 'class': 'qz-note danmaku-info', text: '' }); field.appendChild(info);
         var arena = h('div', { 'class': 'danmaku-arena' }); field.appendChild(arena);
         var carry = 0, last = null;
-        if (kit.once('danmaku.hint')) kit.hintOn(stage, null, { mode: 'tap', x: W * 0.5, y: H * 0.5, delay: 1200, text: '看到目標字就點它' });
+        if (kit.once('danmaku.hint')) kit.hintOn(stage, null, { mode: 'tap', x: W * 0.5, y: H * 0.5, delay: 1200, text: '看到目標字就點它' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         api.my.loop(function (now, dt) {
             if (!arena.isConnected) return false;
             if (over || paused) return;
@@ -167,16 +175,19 @@
         };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '彈幕找字',
         rule: '很多字從右往左飄過畫面（像影片的彈幕），速度不一樣、有大有小，有的還會重疊。上方寫著目標字，**看到目標字就點它**。點錯（點到長得像的形近字）就結束，**讓目標字飄出畫面**也結束。成績是**一共點到幾個**，越多越好。每點到幾個會換一個目標字，字越來越複雜。越後面，字出現得越快、飄得越快、目標字越小！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             rateFor: rateFor, speedFor: speedFor, targetPx: targetPx, strokeRange: strokeRange, segmentOf: segmentOf, nextIsTarget: nextIsTarget, pickTarget: pickTarget, makeItem: makeItem, hitItem: hitItem, rating: rating,
             RAMP_HITS: RAMP_HITS, RATE: RATE, SPEED: SPEED, TARGET_PX: TARGET_PX, DECOY_PX: DECOY_PX, TARGET_P: TARGET_P, MAX_GAP: MAX_GAP, SEGMENT: SEGMENT, STROKES_LO: STROKES_LO, STROKES_HI: STROKES_HI, MIN_GROUP: MIN_GROUP, SOLVE_CAP: SOLVE_CAP, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

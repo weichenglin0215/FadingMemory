@@ -6,87 +6,99 @@
 
 /* ═══ 008 容量一半（.halfvol-）═══ */
 .halfvol-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
 }
 
+/* 「halfvol-vase」這個元素的樣式 */
 .halfvol-vase {
-    fill: var(--c-card);
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
 }
 
+/* 「halfvol-water」這個元素的樣式 */
 .halfvol-water {
-    fill: var(--c-blue);
+    fill: var(--c-blue);                                /* SVG 圖形的填色：主題變數 --c-blue */
     fill-opacity: 0.45;
 }
 
+/* 「halfvol-rim」這個元素的樣式 */
 .halfvol-rim {
-    fill: none;
-    stroke: var(--c-ink);
-    stroke-width: 4;
-    stroke-linejoin: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「halfvol-line」這個元素的樣式 */
 .halfvol-line {
-    stroke: var(--c-blue);
-    stroke-width: 5;
+    stroke: var(--c-blue);                              /* SVG 線條顏色：主題變數 --c-blue */
+    stroke-width: 5;                                    /* SVG 線條粗細：5 */
 }
 
+/* 「halfvol-knob」這個元素的樣式 */
 .halfvol-knob {
-    fill: var(--c-orange);
-    stroke: var(--c-ink);
-    stroke-width: 3;
+    fill: var(--c-orange);                              /* SVG 圖形的填色：主題變數 --c-orange */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「halfvol-ref」這個元素的樣式 */
 .halfvol-ref {
-    stroke-width: 4;
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
 }
 
+/* 「halfvol-ref」的「v」變化版的樣式 */
 .halfvol-ref--v {
-    stroke: var(--c-green);
+    stroke: var(--c-green);                             /* SVG 線條顏色：主題變數 --c-green */
 }
 
 /* 水面下方的差異數字（V1.25）：不足＝藍色、超過 50%＝橘紅色 */
 .halfvol-diff {
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    fill: var(--c-ink);
-    paint-order: stroke;
-    stroke: var(--c-card);
-    stroke-width: 6;
-    stroke-linejoin: round;
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
+    paint-order: stroke;                                /* SVG 繪製順序（例如先畫邊再畫填色）：stroke */
+    stroke: var(--c-card);                              /* SVG 線條顏色：主題變數 --c-card */
+    stroke-width: 6;                                    /* SVG 線條粗細：6 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「halfvol-diff」在「超過時」的樣子的樣式 */
 .halfvol-diff--over {
-    fill: var(--c-bad-light);
+    fill: var(--c-bad-light);                           /* SVG 圖形的填色：主題變數 --c-bad-light */
 }
 
+/* 「halfvol-msg」這個元素的樣式 */
 .halfvol-msg {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 4px;
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    opacity: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 4px;                                           /* 離上邊 4px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
 }
 
+/* 「halfvol-msg」在「開啟（亮起）時」的樣子的樣式 */
 .halfvol-msg--on {
-    opacity: 1;
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }
 
+/* 「halfvol-msg」裡面的「sub」部分的樣式 */
 .halfvol-msg__sub {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
+/* 「halfvol-ok」這個元素的樣式 */
 .halfvol-ok {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: auto;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    width: auto;                                        /* 寬度：auto */
 }

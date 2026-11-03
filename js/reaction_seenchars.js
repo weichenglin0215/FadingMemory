@@ -12,11 +12,15 @@
      （用畫布把兩個字畫出來、比對每個像素：只有其中一個字有筆畫的地方塗紅）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'seenchars'：選單、成績、存檔都靠它；樣式在 css/games/reaction_seenchars.css，裡面的 class 名稱一律以 seenchars- 開頭。 */
     'use strict';
 
-    var ID = 'seenchars';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'seenchars';                               /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -37,7 +41,7 @@
     function strokeRange(level) { return [ramp(level, STROKES_LO), ramp(level, STROKES_HI)]; }
     /* 出一關：{ k, G, seen（看過的字）, grid（G×G 個字，由左到右由上到下）, seenIdx（看過的字在格子裡的位置）, groups（用到的字群，每個是一串字）, strokes（範圍）, viewMs, respMs, level } */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var k = kFor(level), G = gridFor(level), cells = G * G, rng = strokeRange(level);
         /* 挑 k 個「字完全不重疊」的字群（有的字同時出現在兩個字群裡，兩組都選會讓字格裡出現同一個字兩次）；範圍內不夠就放寬到全部字群 */
         function pickGroups(pool) {
@@ -79,6 +83,7 @@
         ctx.putImageData(out, 0, 0);
         return { onlyA: onlyA, onlyB: onlyB, both: both };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 15) return '過目不忘！';
         if (n >= 10) return '字都看得很仔細！';
@@ -87,6 +92,7 @@
         return '長得像的字，要看清楚每一筆！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'seenchars-stage',
@@ -97,11 +103,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand), G2 = q.G;
-        api.info = q;
-        console.log('[看過的字] 第 ' + level + ' 關：看過 ' + q.seen.join('') + '（' + q.k + ' 個），字格 ' + G2 + '×' + G2 + '：' + q.grid.join('') + '；字群平均筆劃 ' + q.strokes.map(function (x) { return x.toFixed(1); }).join('～') + '；看 ' + q.viewMs + ' 毫秒');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[看過的字] 第 ' + level + ' 關：看過 ' + q.seen.join('') + '（' + q.k + ' 個），字格 ' + G2 + '×' + G2 + '：' + q.grid.join('') + '；字群平均筆劃 ' + q.strokes.map(function (x) { return x.toFixed(1); }).join('～') + '；看 ' + q.viewMs + ' 毫秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var field = h('div', { 'class': 'seenchars-field' });
@@ -115,7 +123,7 @@
         field.appendChild(show);
         var info = h('div', { 'class': 'qz-note seenchars-info', text: '看 ' + Math.round(q.viewMs / 1000) + ' 秒' }); field.appendChild(info);
         var picked = [], phase = 'view', done = false, gridEl = null, btn = null, cellEls = [];
-        api.timer(q.viewMs, ask);
+        api.timer(q.viewMs, ask);                       /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         function ask() {
             if (api.over) return;
             phase = 'pick'; show.style.display = 'none'; tip.textContent = '點出剛才看過的字，點完按「好了」'; info.textContent = '';
@@ -129,13 +137,14 @@
             btn = h('div', { 'class': 'btn btn--go seenchars-done', text: '好了' }); field.appendChild(btn);
             kit.onTap(btn, function () { judge(false); });
             api.timer(q.respMs, function () { judge(true); });
-            if (level === 1 && kit.once('seenchars.hint')) kit.hintOn(stage, cellEls[q.seenIdx[0]], { mode: 'tap', delay: 1500, text: '點出剛才看過的字' });
+            if (level === 1 && kit.once('seenchars.hint')) kit.hintOn(stage, cellEls[q.seenIdx[0]], { mode: 'tap', delay: 1500, text: '點出剛才看過的字' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         }
         function toggle(i) {
             if (phase !== 'pick' || done || api.over) return;
             var at = picked.indexOf(i);
             if (at >= 0) { picked.splice(at, 1); cellEls[i].classList.remove('seenchars-cell--on'); } else { picked.push(i); cellEls[i].classList.add('seenchars-cell--on'); Sfx.play('click'); }
         }
+        /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(timeout) {
             if (phase !== 'pick' || done || api.over) return;
             done = true; phase = 'end'; btn.style.display = 'none';
@@ -163,20 +172,24 @@
             kit.flash(stage, false, api.my);
             api.fail({ delay: 4000, lines: [timeout ? '時間到！' : '點的字不對', '看過的字：' + q.seen.join('、') + (r.wrong.length ? '；你多點了：' + r.wrong.map(function (i) { return q.grid[i]; }).join('、') : '')] });
         }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { if (phase !== 'pick' || done) return; picked = q.seenIdx.slice(); judge(false); };
         api.wrong = function () { if (phase !== 'pick' || done) return; var other = q.grid.map(function (c, i) { return i; }).filter(function (i) { return q.seenIdx.indexOf(i) < 0; })[0]; picked = q.seenIdx.slice(1).concat([other]); judge(false); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '看過的字',
         rule: '畫面會閃出幾個字，幾秒後收起來。接著出現一個字格，**點出剛才看過的那幾個字**，點完按「好了」。小心：字格裡其他的字全都是長得很像的形近字（看過「侍」，字格裡就有「待、持、特、恃」），要看清楚每一筆。**少點、多點、點錯都算錯**。答錯時會把看過的字和你點的字並排，**不一樣的筆畫用紅色標出來**。越後面，字越多、筆劃越多、看的時間越短！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             kFor: kFor, gridFor: gridFor, viewMs: viewMs, respMs: respMs, strokeRange: strokeRange, makeLevel: makeLevel, judgePick: judgePick, drawDiff: drawDiff, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, K: K, GRID: GRID, VIEW_S: VIEW_S, STROKES_LO: STROKES_LO, STROKES_HI: STROKES_HI, RESP_S: RESP_S, MIN_GROUP: MIN_GROUP, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

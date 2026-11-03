@@ -8,269 +8,274 @@
 /* ═══ 左右不同拍（.polyrhythm-）音樂節奏：方塊由上往下掉 ═══ */
 /* 最上方的說明文字（兩行高） */
 .polyrhythm-head {
-    min-height: 1.0em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    line-height: 1.0;
-    color: var(--c-ink);
+    min-height: 1.0em;                                  /* 最小高度：1.0em */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1.0;                                   /* 行高：1.0（文字每一行佔的高度） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
 /* 生命（愛心）列 */
 .polyrhythm-hearts {
-    flex: none;
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    min-height: 26px;
+    flex: none;                                         /* 彈性縮放：none */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: 8px;                                           /* 子元素之間的空隙：8px */
+    min-height: 26px;                                   /* 最小高度：26px */
 }
 
 /* 一顆愛心（空心圓，剩下的才填滿） */
 .polyrhythm-heart {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    border: 3px solid var(--c-bad);
-    box-sizing: border-box;
+    width: 24px;                                        /* 寬度：24px */
+    height: 24px;                                       /* 高度：24px */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    border: 3px solid var(--c-bad);                     /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-bad */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
 }
 
 /* 還有的生命：實心 */
 .polyrhythm-heart--on {
-    background: var(--c-bad);
+    background: var(--c-bad);                           /* 背景：主題變數 --c-bad */
 }
 
 /* 顏色圖例列（紅 4 拍、橙 2 拍…），flex-wrap 讓一行放不下時換行 */
 .polyrhythm-legend {
-    flex: none;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 2px 10px;
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    flex: none;                                         /* 彈性縮放：none */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-wrap: wrap;                                    /* 放不下就換行 */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: 2px 10px;                                      /* 子元素之間的空隙：2px 10px */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 圖例的一項：色塊 + 文字 */
 .polyrhythm-legend__i {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+    display: inline-flex;                               /* 像文字一樣排在同一行的彈性盒子 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: 4px;                                           /* 子元素之間的空隙：4px */
 }
 
 /* 圖例文字（b = 粗體標籤） */
 .polyrhythm-legend__i b {
-    font-weight: var(--fw-bold);
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
 }
 
 /* 圖例的色塊 */
 .polyrhythm-dot {
-    display: inline-block;
-    width: 18px;
-    height: 18px;
-    border-radius: 5px;
+    display: inline-block;                              /* 像文字一樣排在同一行，但可以設定寬高 */
+    width: 18px;                                        /* 寬度：18px */
+    height: 18px;                                       /* 高度：18px */
+    border-radius: 5px;                                 /* 圓角：5px */
 }
 
 /* 六種顏色：逗號代表「圖例色塊」與「掉落的音符」兩個 class 共用同一個顏色，一行寫一種 */
 .polyrhythm-dot--red,
 .polyrhythm-note--red {
-    background: var(--py-red);
+    background: var(--py-red);                          /* 背景：主題變數 --py-red */
 }
 
+/* 「polyrhythm-dot」的「orange」變化版；「polyrhythm-note」的「orange」變化版的樣式 */
 .polyrhythm-dot--orange,
 .polyrhythm-note--orange {
-    background: var(--py-orange);
+    background: var(--py-orange);                       /* 背景：主題變數 --py-orange */
 }
 
+/* 「polyrhythm-dot」的「yellow」變化版；「polyrhythm-note」的「yellow」變化版的樣式 */
 .polyrhythm-dot--yellow,
 .polyrhythm-note--yellow {
-    background: var(--py-yellow);
+    background: var(--py-yellow);                       /* 背景：主題變數 --py-yellow */
 }
 
+/* 「polyrhythm-dot」的「green」變化版；「polyrhythm-note」的「green」變化版的樣式 */
 .polyrhythm-dot--green,
 .polyrhythm-note--green {
-    background: var(--py-green);
+    background: var(--py-green);                        /* 背景：主題變數 --py-green */
 }
 
+/* 「polyrhythm-dot」的「blue」變化版；「polyrhythm-note」的「blue」變化版的樣式 */
 .polyrhythm-dot--blue,
 .polyrhythm-note--blue {
-    background: var(--py-blue);
+    background: var(--py-blue);                         /* 背景：主題變數 --py-blue */
 }
 
+/* 「polyrhythm-dot」的「purple」變化版；「polyrhythm-note」的「purple」變化版的樣式 */
 .polyrhythm-dot--purple,
 .polyrhythm-note--purple {
-    background: var(--py-purple);
+    background: var(--py-purple);                       /* 背景：主題變數 --py-purple */
 }
 
 /* 兩條軌道的容器：左右並排 */
 .polyrhythm-stage {
-    flex: 1 1 0;
-    min-height: 0;
-    display: flex;
-    gap: var(--sp-2);
-    transition: none;
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
+    transition: none;                                   /* 狀態改變時的過渡動畫（屬性、時間、緩動）：none */
 }
 
 /* 受傷時閃一下紅框 */
 .polyrhythm-stage--hurt {
-    animation: polyrhythm-hurt 0.3s ease-out;
+    animation: polyrhythm-hurt 0.3s ease-out;           /* 播放動畫（名稱、時間、緩動、次數）：polyrhythm-hurt 0.3s ease-out */
 }
 
 /* 受傷閃紅框動畫：從紅框 → 透明 */
 @keyframes polyrhythm-hurt {
     from {
-        box-shadow: inset 0 0 0 6px var(--c-bad);
+        box-shadow: inset 0 0 0 6px var(--c-bad);       /* 方塊陰影（立體感） */
     }
 
     to {
-        box-shadow: inset 0 0 0 6px transparent;
+        box-shadow: inset 0 0 0 6px transparent;        /* 方塊陰影（立體感） */
     }
 }
 
 /* 一條軌道；relative 讓裡面 absolute 的音符以它為定位基準，overflow:hidden 裁掉超出的音符 */
 .polyrhythm-lane {
-    position: relative;
-    flex: 1 1 0;
-    min-width: 0;
-    overflow: hidden;
-    box-sizing: border-box;
-    border-radius: var(--r-lg);
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
-    cursor: pointer;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-width: 0;                                       /* 最小寬度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
 }
 
 /* 左軌：藍色系 */
 .polyrhythm-lane--left {
-    background: var(--c-blue-soft);
-    border: 3px solid var(--c-blue);
+    background: var(--c-blue-soft);                     /* 背景：主題變數 --c-blue-soft */
+    border: 3px solid var(--c-blue);                    /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-blue */
 }
 
 /* 右軌：橘色系 */
 .polyrhythm-lane--right {
-    background: var(--c-orange-soft);
-    border: 3px solid var(--c-orange);
+    background: var(--c-orange-soft);                   /* 背景：主題變數 --c-orange-soft */
+    border: 3px solid var(--c-orange);                  /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-orange */
 }
 
 /* 點擊時該軌道閃亮一下 */
 .polyrhythm-lane--hit {
-    animation: polyrhythm-lane-hit 0.14s ease-out;
+    animation: polyrhythm-lane-hit 0.14s ease-out;      /* 播放動畫（名稱、時間、緩動、次數）：polyrhythm-lane-hit 0.14s ease-out */
 }
 
 /* 閃亮動畫：亮度 1.25 倍 → 恢復 */
 @keyframes polyrhythm-lane-hit {
     from {
-        filter: brightness(1.25);
+        filter: brightness(1.25);                       /* 濾鏡效果：brightness(1.25) */
     }
 
     to {
-        filter: none;
+        filter: none;                                   /* 濾鏡效果：none */
     }
 }
 
 /* 紅色基準線：音符到這條線的瞬間就是打擊的準確時間 */
 /* 紅色基準線 */
 .polyrhythm-line {
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 16px;
-    margin-top: -8px;
-    background: var(--c-recall);
-    opacity: 0.75;
-    z-index: 3;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    height: 16px;                                       /* 高度：16px */
+    margin-top: -8px;                                   /* 上外距（跟上面的元素距離）：-8px */
+    background: var(--c-recall);                        /* 背景：主題變數 --c-recall */
+    opacity: 0.75;                                      /* 透明度 0.75（1＝完全不透明、0＝全透明） */
+    z-index: 3;                                         /* 疊放順序：數字越大越在上面（3） */
 }
 
 /* 每一拍線條稍微變粗閃一下 */
 .polyrhythm-line--beat {
-    animation: polyrhythm-beat 0.2s ease-out;
+    animation: polyrhythm-beat 0.2s ease-out;           /* 播放動畫（名稱、時間、緩動、次數）：polyrhythm-beat 0.2s ease-out */
 }
 
 /* 每小節的第一拍閃得更明顯 */
 .polyrhythm-line--bar {
-    animation: polyrhythm-bar 0.3s ease-out;
+    animation: polyrhythm-bar 0.3s ease-out;            /* 播放動畫（名稱、時間、緩動、次數）：polyrhythm-bar 0.3s ease-out */
 }
 
 /* 每拍閃線動畫 */
 @keyframes polyrhythm-beat {
     from {
-        opacity: 1;
-        height: 24px;
-        margin-top: -12px;
+        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
+        height: 24px;                                   /* 高度：24px */
+        margin-top: -12px;                              /* 上外距（跟上面的元素距離）：-12px */
     }
 
     to {
-        opacity: 0.75;
-        height: 16px;
-        margin-top: -8px;
+        opacity: 0.75;                                  /* 透明度 0.75（1＝完全不透明、0＝全透明） */
+        height: 16px;                                   /* 高度：16px */
+        margin-top: -8px;                               /* 上外距（跟上面的元素距離）：-8px */
     }
 }
 
 /* 每小節閃線動畫 */
 @keyframes polyrhythm-bar {
     from {
-        opacity: 1;
-        height: 40px;
-        margin-top: -20px;
+        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
+        height: 40px;                                   /* 高度：40px */
+        margin-top: -20px;                              /* 上外距（跟上面的元素距離）：-20px */
     }
 
     to {
-        opacity: 0.75;
-        height: 16px;
-        margin-top: -8px;
+        opacity: 0.75;                                  /* 透明度 0.75（1＝完全不透明、0＝全透明） */
+        height: 16px;                                   /* 高度：16px */
+        margin-top: -8px;                               /* 上外距（跟上面的元素距離）：-8px */
     }
 }
 
 /* 掉落的音符（位置由 JS 每個畫面更新 transform） */
 .polyrhythm-note {
-    position: absolute;
-    left: 10%;
-    right: 10%;
-    top: 0;
-    height: 56px;
-    border-radius: 14px;
-    border: 3px solid rgba(74, 59, 30, 0.55);
-    box-sizing: border-box;
-    will-change: transform;
-    z-index: 2;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 10%;                                          /* 離左邊 10% */
+    right: 10%;                                         /* 離右邊 10% */
+    top: 0;                                             /* 離上邊 0 */
+    height: 56px;                                       /* 高度：56px */
+    border-radius: 14px;                                /* 圓角：14px */
+    border: 3px solid rgba(74, 59, 30, 0.55);           /* 邊框（粗細、線型、顏色）：3px solid rgba(74, 59, 30, 0.55) */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    will-change: transform;                             /* 提示瀏覽器這個屬性會變動，先準備好（讓動畫更順） */
+    z-index: 2;                                         /* 疊放順序：數字越大越在上面（2） */
 }
 
 /* 打中：淡出並變亮 */
 .polyrhythm-note--hit {
-    opacity: 0;
-    filter: brightness(1.5);
-    transition: opacity 0.2s;
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    filter: brightness(1.5);                            /* 濾鏡效果：brightness(1.5) */
+    transition: opacity 0.2s;                           /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.2s */
 }
 
 /* 漏掉：變淡 */
 .polyrhythm-note--miss {
-    opacity: 0.25;
+    opacity: 0.25;                                      /* 透明度 0.25（1＝完全不透明、0＝全透明） */
 }
 
 /* 軌道底部的小標題（左手／右手） */
 .polyrhythm-cap {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 12px;
-    text-align: center;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    opacity: 0.6;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 12px;                                       /* 離下邊 12px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    opacity: 0.6;                                       /* 透明度 0.6（1＝完全不透明、0＝全透明） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 下方的訊息文字 */
 .polyrhythm-msg {
-    flex: none;
-    min-height: 1.4em;
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    flex: none;                                         /* 彈性縮放：none */
+    min-height: 1.4em;                                  /* 最小高度：1.4em */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }

@@ -6,290 +6,318 @@
 
 /* ═══ 敲幾下（.knockcount-）═══ */
 .knockcount-stage {
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「knockcount-field」這個元素的樣式 */
 .knockcount-field {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
 }
 
+/* 「knockcount-tip」這個元素的樣式 */
 .knockcount-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 玩家這一段敲的次數（大字） */
 .knockcount-count {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 60px;
-    color: var(--c-ink);
-    font-size: var(--fs-xxxl);
-    font-weight: var(--fw-black);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 60px;                                          /* 離上邊 60px */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-xxxl);                          /* 字級：主題變數 --fs-xxxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 師父的剪影（深色的頭和袍子）、木槌 */
 .knockcount-monk {
-    position: absolute;
-    left: 24px;
-    top: 150px;
-    width: 120px;
-    height: 220px;
-    transform-origin: 50% 100%;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 24px;                                         /* 離左邊 24px */
+    top: 150px;                                         /* 離上邊 150px */
+    width: 120px;                                       /* 寬度：120px */
+    height: 220px;                                      /* 高度：220px */
+    transform-origin: 50% 100%;                         /* 變形的基準點：50% 100% */
 }
 
+/* 「knockcount-monk」裡面的「head」部分的樣式 */
 .knockcount-monk__head {
-    width: 60px;
-    height: 60px;
-    margin: 0 auto;
-    background: var(--c-ink);
-    border-radius: 50%;
+    width: 60px;                                        /* 寬度：60px */
+    height: 60px;                                       /* 高度：60px */
+    margin: 0 auto;                                     /* 外距（margin，與別的元素的距離）：上下 0、左右 auto */
+    background: var(--c-ink);                           /* 背景：主題變數 --c-ink */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
 }
 
+/* 「knockcount-monk」裡面的「body」部分的樣式 */
 .knockcount-monk__body {
-    width: 120px;
-    height: 150px;
-    margin-top: -4px;
-    background: var(--c-ink);
-    border-radius: 50% 50% var(--r-md) var(--r-md);
+    width: 120px;                                       /* 寬度：120px */
+    height: 150px;                                      /* 高度：150px */
+    margin-top: -4px;                                   /* 上外距（跟上面的元素距離）：-4px */
+    background: var(--c-ink);                           /* 背景：主題變數 --c-ink */
+    border-radius: 50% 50% var(--r-md) var(--r-md);     /* 圓角：50% 50% 主題變數 --r-md 主題變數 --r-md */
 }
 
+/* 「knockcount-mallet」這個元素的樣式 */
 .knockcount-mallet {
-    position: absolute;
-    left: 112px;
-    top: 250px;
-    width: 120px;
-    height: 20px;
-    transform-origin: 0 50%;
-    transform: rotate(-35deg);
-    transition: transform 0.08s ease-in;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 112px;                                        /* 離左邊 112px */
+    top: 250px;                                         /* 離上邊 250px */
+    width: 120px;                                       /* 寬度：120px */
+    height: 20px;                                       /* 高度：20px */
+    transform-origin: 0 50%;                            /* 變形的基準點：0 50% */
+    transform: rotate(-35deg);                          /* 變形：旋轉 -35deg */
+    transition: transform 0.08s ease-in;                /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.08s ease-in */
 }
 
+/* 「knockcount-mallet」的「hit」變化版的樣式 */
 .knockcount-mallet--hit {
-    animation: knockcount-swing 0.18s ease-in-out;
+    animation: knockcount-swing 0.18s ease-in-out;      /* 播放動畫（名稱、時間、緩動、次數）：knockcount-swing 0.18s ease-in-out */
 }
 
+/* 動畫 knockcount-swing：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes knockcount-swing {
     0% {
-        transform: rotate(-35deg);
+        transform: rotate(-35deg);                      /* 變形：旋轉 -35deg */
     }
 
     45% {
-        transform: rotate(18deg);
+        transform: rotate(18deg);                       /* 變形：旋轉 18deg */
     }
 
     100% {
-        transform: rotate(-35deg);
+        transform: rotate(-35deg);                      /* 變形：旋轉 -35deg */
     }
 }
 
 /* 師父另一隻手的木槌：從肩膀伸向右上方的銅缽（比敲木魚的那支長很多）；敲銅缽時揮過去，揮到一半（約 0.18 秒）剛好響 */
 .knockcount-mallet2 {
-    left: 104px;
-    top: 186px;
-    width: 224px;
-    transform: rotate(-34deg);
+    left: 104px;                                        /* 離左邊 104px */
+    top: 186px;                                         /* 離上邊 186px */
+    width: 224px;                                       /* 寬度：224px */
+    transform: rotate(-34deg);                          /* 變形：旋轉 -34deg */
 }
 
+/* 「knockcount-mallet」裡面的「stick」部分的樣式 */
 .knockcount-mallet2 .knockcount-mallet__stick {
-    width: 196px;
+    width: 196px;                                       /* 寬度：196px */
 }
 
+/* 「knockcount-mallet2」的「hit」變化版的樣式 */
 .knockcount-mallet2--hit {
-    animation: knockcount-swing2 0.4s ease-in-out;
+    animation: knockcount-swing2 0.4s ease-in-out;      /* 播放動畫（名稱、時間、緩動、次數）：knockcount-swing2 0.4s ease-in-out */
 }
 
+/* 動畫 knockcount-swing2：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes knockcount-swing2 {
     0% {
-        transform: rotate(-34deg);
+        transform: rotate(-34deg);                      /* 變形：旋轉 -34deg */
     }
 
     45% {
-        transform: rotate(-9deg);
+        transform: rotate(-9deg);                       /* 變形：旋轉 -9deg */
     }
 
     100% {
-        transform: rotate(-34deg);
+        transform: rotate(-34deg);                      /* 變形：旋轉 -34deg */
     }
 }
 
 /* 師父的身體往銅缽那邊傾一下 */
 .knockcount-monk--lean {
-    animation: knockcount-lean 0.4s ease-in-out;
+    animation: knockcount-lean 0.4s ease-in-out;        /* 播放動畫（名稱、時間、緩動、次數）：knockcount-lean 0.4s ease-in-out */
 }
 
+/* 動畫 knockcount-lean：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes knockcount-lean {
     0% {
-        transform: rotate(0deg);
+        transform: rotate(0deg);                        /* 變形：旋轉 0deg */
     }
 
     45% {
-        transform: rotate(7deg);
+        transform: rotate(7deg);                        /* 變形：旋轉 7deg */
     }
 
     100% {
-        transform: rotate(0deg);
+        transform: rotate(0deg);                        /* 變形：旋轉 0deg */
     }
 }
 
+/* 「knockcount-mallet」裡面的「stick」部分的樣式 */
 .knockcount-mallet__stick {
-    position: absolute;
-    left: 0;
-    top: 7px;
-    width: 96px;
-    height: 7px;
-    background: var(--knk-wood-dark);
-    border-radius: var(--r-sm);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 7px;                                           /* 離上邊 7px */
+    width: 96px;                                        /* 寬度：96px */
+    height: 7px;                                        /* 高度：7px */
+    background: var(--knk-wood-dark);                   /* 背景：主題變數 --knk-wood-dark */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
 }
 
+/* 「knockcount-mallet」裡面的「head」部分的樣式 */
 .knockcount-mallet__head {
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: 28px;
-    height: 20px;
-    background: var(--knk-wood-dark);
-    border-radius: var(--r-md);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    right: 0;                                           /* 離右邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    width: 28px;                                        /* 寬度：28px */
+    height: 20px;                                       /* 高度：20px */
+    background: var(--knk-wood-dark);                   /* 背景：主題變數 --knk-wood-dark */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
 }
 
 /* 木魚（要敲的）：放在畫面中下方，被敲到時縮一下 */
 .knockcount-fishbox {
-    position: absolute;
-    left: 180px;
-    top: 250px;
-    width: 220px;
-    height: 187px;
-    cursor: pointer;
-    touch-action: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 180px;                                        /* 離左邊 180px */
+    top: 250px;                                         /* 離上邊 250px */
+    width: 220px;                                       /* 寬度：220px */
+    height: 187px;                                      /* 高度：187px */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
+/* 「knockcount-fish」這個元素的樣式 */
 .knockcount-fish {
-    display: block;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
 }
 
+/* 「knockcount-fish」裡面的「body」部分的樣式 */
 .knockcount-fish__body {
-    fill: var(--knk-wood);
-    stroke: var(--knk-wood-dark);
-    stroke-width: 5;
+    fill: var(--knk-wood);                              /* SVG 圖形的填色：主題變數 --knk-wood */
+    stroke: var(--knk-wood-dark);                       /* SVG 線條顏色：主題變數 --knk-wood-dark */
+    stroke-width: 5;                                    /* SVG 線條粗細：5 */
 }
 
+/* 「knockcount-fish」裡面的「mouth」部分的樣式 */
 .knockcount-fish__mouth {
-    fill: none;
-    stroke: var(--knk-wood-dark);
-    stroke-width: 7;
-    stroke-linecap: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--knk-wood-dark);                       /* SVG 線條顏色：主題變數 --knk-wood-dark */
+    stroke-width: 7;                                    /* SVG 線條粗細：7 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「knockcount-fish」裡面的「shine」部分的樣式 */
 .knockcount-fish__shine {
-    fill: var(--c-card);
-    opacity: 0.35;
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    opacity: 0.35;                                      /* 透明度 0.35（1＝完全不透明、0＝全透明） */
 }
 
+/* 「knockcount-fish」裡面的「stand」部分的樣式 */
 .knockcount-fish__stand {
-    fill: var(--knk-wood-dark);
+    fill: var(--knk-wood-dark);                         /* SVG 圖形的填色：主題變數 --knk-wood-dark */
 }
 
 /* 銅缽（干擾）：右上方，被敲時閃一下、擴散一圈波紋 */
 .knockcount-bowlbox {
-    position: absolute;
-    right: 20px;
-    top: 90px;
-    width: 140px;
-    height: 110px;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    right: 20px;                                        /* 離右邊 20px */
+    top: 90px;                                          /* 離上邊 90px */
+    width: 140px;                                       /* 寬度：140px */
+    height: 110px;                                      /* 高度：110px */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「knockcount-bowl」這個元素的樣式 */
 .knockcount-bowl {
-    display: block;
-    overflow: visible;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
 }
 
+/* 「knockcount-bowl」裡面的「body」部分的樣式 */
 .knockcount-bowl__body {
-    fill: var(--knk-copper);
-    stroke: var(--knk-copper-dark);
-    stroke-width: 4;
-    stroke-linejoin: round;
+    fill: var(--knk-copper);                            /* SVG 圖形的填色：主題變數 --knk-copper */
+    stroke: var(--knk-copper-dark);                     /* SVG 線條顏色：主題變數 --knk-copper-dark */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「knockcount-bowl」裡面的「rim」部分的樣式 */
 .knockcount-bowl__rim {
-    fill: var(--knk-copper-light);
-    stroke: var(--knk-copper-dark);
-    stroke-width: 4;
+    fill: var(--knk-copper-light);                      /* SVG 圖形的填色：主題變數 --knk-copper-light */
+    stroke: var(--knk-copper-dark);                     /* SVG 線條顏色：主題變數 --knk-copper-dark */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
 }
 
+/* 「knockcount-bowl」裡面的「wave」部分的樣式 */
 .knockcount-bowl__wave {
-    fill: none;
-    stroke: var(--knk-copper-light);
-    stroke-width: 4;
-    opacity: 0;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--knk-copper-light);                    /* SVG 線條顏色：主題變數 --knk-copper-light */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
 }
 
+/* 「knockcount-hit」這個元素的樣式 */
 .knockcount-hit {
-    animation: knockcount-pulse 0.2s ease-out;
+    animation: knockcount-pulse 0.2s ease-out;          /* 播放動畫（名稱、時間、緩動、次數）：knockcount-pulse 0.2s ease-out */
 }
 
+/* 「knockcount-bowl」裡面的「wave」部分的樣式 */
 .knockcount-bowlbox.knockcount-hit .knockcount-bowl__wave {
-    animation: knockcount-wave 0.7s ease-out;
-    transform-origin: 70px 28px;
+    animation: knockcount-wave 0.7s ease-out;           /* 播放動畫（名稱、時間、緩動、次數）：knockcount-wave 0.7s ease-out */
+    transform-origin: 70px 28px;                        /* 變形的基準點：70px 28px */
 }
 
+/* 動畫 knockcount-pulse：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes knockcount-pulse {
     0% {
-        transform: scale(0.94);
+        transform: scale(0.94);                         /* 變形：縮放 0.94 倍 */
     }
 
     100% {
-        transform: scale(1);
+        transform: scale(1);                            /* 變形：縮放 1 倍 */
     }
 }
 
+/* 動畫 knockcount-wave：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes knockcount-wave {
     0% {
-        opacity: 0.9;
-        transform: scale(1);
+        opacity: 0.9;                                   /* 透明度 0.9（1＝完全不透明、0＝全透明） */
+        transform: scale(1);                            /* 變形：縮放 1 倍 */
     }
 
     100% {
-        opacity: 0;
-        transform: scale(1.6);
+        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
+        transform: scale(1.6);                          /* 變形：縮放 1.6 倍 */
     }
 }
 
+/* 「knockcount-info」這個元素的樣式 */
 .knockcount-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 460px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 460px;                                         /* 離上邊 460px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「knockcount-done」這個元素的樣式 */
 .knockcount-done {
-    position: absolute;
-    left: 24px;
-    right: 24px;
-    width: auto;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 24px;                                         /* 離左邊 24px */
+    right: 24px;                                        /* 離右邊 24px */
+    width: auto;                                        /* 寬度：auto */
     /* .btn 預設 width: 100%，加上 left 24px 會讓按鈕右邊多出 24px 被切掉；絕對定位用 left＋right 決定寬度，所以 width 要設 auto */
-    bottom: 10px;
-    height: 100px;
-    font-size: var(--fs-xl);
+    bottom: 10px;                                       /* 離下邊 10px */
+    height: 100px;                                      /* 高度：100px */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
 }

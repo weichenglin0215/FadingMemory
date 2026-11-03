@@ -6,79 +6,89 @@
 
 /* ═══ 011 盲畫一個圓（.blindcircle-）═══ */
 .blindcircle-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
 }
 
+/* 「blindcircle-cross」這個元素的樣式 */
 .blindcircle-cross {
-    stroke: var(--c-ink);
-    stroke-width: 5;
-    stroke-linecap: round;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 5;                                    /* SVG 線條粗細：5 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
 /* 起點：十字型的箭頭（V1.25 起取代橘色圓點） */
 .blindcircle-start {
-    fill: var(--c-orange);
-    stroke: var(--c-ink);
-    stroke-width: 3;
-    stroke-linejoin: round;
+    fill: var(--c-orange);                              /* SVG 圖形的填色：主題變數 --c-orange */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「blindcircle-startdot」這個元素的樣式 */
 .blindcircle-startdot {
-    fill: var(--c-black);
+    fill: var(--c-black);                               /* SVG 圖形的填色：主題變數 --c-black */
 }
 
+/* 「blindcircle-start」的「blink」變化版的樣式 */
 .blindcircle-start--blink {
-    fill: var(--c-bad-light);
+    fill: var(--c-bad-light);                           /* SVG 圖形的填色：主題變數 --c-bad-light */
 }
 
+/* 「blindcircle-ref」這個元素的樣式 */
 .blindcircle-ref {
-    fill: none;
-    stroke: var(--c-green);
-    stroke-width: 4;
-    stroke-dasharray: 12 9;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-green);                             /* SVG 線條顏色：主題變數 --c-green */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
+    stroke-dasharray: 12 9;                             /* SVG 虛線的「畫／空」長度：12 9 */
 }
 
 /* 拖曳時的軌跡（V1.27）：1px 黑色虛線，只留手指身後 160px */
 .blindcircle-trail {
-    fill: none;
-    stroke: #000;
-    stroke-width: 1;
-    stroke-dasharray: 5 4;
-    pointer-events: none;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: #000;                                       /* SVG 線條顏色：#000 */
+    stroke-width: 1;                                    /* SVG 線條粗細：1 */
+    stroke-dasharray: 5 4;                              /* SVG 虛線的「畫／空」長度：5 4 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「blindcircle-seg」這個元素的樣式 */
 .blindcircle-seg {
-    stroke-width: 7;
-    stroke-linecap: round;
+    stroke-width: 7;                                    /* SVG 線條粗細：7 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「blindcircle-seg」的「g」變化版的樣式 */
 .blindcircle-seg--g {
-    stroke: var(--c-green);
+    stroke: var(--c-green);                             /* SVG 線條顏色：主題變數 --c-green */
 }
 
+/* 「blindcircle-seg」的「o」變化版的樣式 */
 .blindcircle-seg--o {
-    stroke: var(--c-orange);
+    stroke: var(--c-orange);                            /* SVG 線條顏色：主題變數 --c-orange */
 }
 
+/* 「blindcircle-seg」的「r」變化版的樣式 */
 .blindcircle-seg--r {
-    stroke: var(--c-bad-light);
+    stroke: var(--c-bad-light);                         /* SVG 線條顏色：主題變數 --c-bad-light */
 }
 
+/* 「blindcircle-msg」這個元素的樣式 */
 .blindcircle-msg {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 16px;
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink);
-    line-height: var(--lh-body);
-    opacity: 0;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 16px;                                       /* 離下邊 16px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
 }
 
+/* 「blindcircle-msg」在「開啟（亮起）時」的樣子的樣式 */
 .blindcircle-msg--on {
-    opacity: 1;
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }

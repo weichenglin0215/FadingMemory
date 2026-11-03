@@ -25,11 +25,15 @@
    · 揭曉：每個答案卡上色（選對＝綠、漏掉＝橘虛線、選錯＝紅）；上方列出每一張答案怎麼湊成組；選錯的牌會畫出「湊不起來的牌」（標紅），停格 2.8 秒。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'mahjong3'：選單、成績、存檔都靠它；樣式在 css/games/reaction_mahjong3.css，裡面的 class 名稱一律以 mahjong3- 開頭。 */
     'use strict';
 
-    var ID = 'mahjong3';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'mahjong3';                                /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -163,7 +167,7 @@
     /* 出一關：{ hand（排序後的手牌）, winners（全部答案，由小到大）, near（誘餌牌）, dead（死牌陷阱）, pair（要不要多一對）, ways（這些答案總共有幾種分法）, tiles, target（這一關的答案張數目標）, level }
        forcePair（選填，測試用）：true／false 強制有沒有一對 */
     function makeLevel(level, rand, forcePair) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var pair = forcePair == null ? rand() < pairProb(level) : !!forcePair;
         var m = tilesFor(level, pair), g = pair ? (m - 1) / 3 : (m + 1) / 3, need = decoysFor(level), target = answersFor(level, pair), best = null, got = 0;
         var wantDead = rand() < deadProb(level);                                        /* 這一題要不要做「死牌陷阱」（做不出來時，後半段的嘗試會改成不要） */
@@ -199,6 +203,7 @@
         var fb = [1, 1, 1, 2, 3];
         return { hand: fb, winners: winners(fb, false), near: nearMisses(fb, false), dead: deadTraps(fb, false), pair: false, ways: 2, tiles: 5, target: 2, level: level, score: 0 };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 25) return '麻將神手！';
         if (n >= 15) return '牌感很好！';
@@ -207,6 +212,7 @@
         return '先把能湊的組挑出來，再看缺哪幾張，再來一次！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'mahjong3-stage',
@@ -252,12 +258,14 @@
         return r.groups.map(groupText).join('　') + (pair ? '　對 ' + NUMERALS[r.pair - 1] + NUMERALS[r.pair - 1] : '');
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand), W = q.winners, isWin = {}, sel = {};
         W.forEach(function (w) { isWin[w] = true; });
-        api.info = q;
-        console.log('[缺哪一張] 第 ' + level + ' 關：手牌 ' + q.hand.join(' ') + '（' + q.hand.length + ' 張' + (q.pair ? '，要一對' : '') + '），答案 ' + W.join('、') + '（' + W.length + ' 張）；誘餌 ' + (q.near.join('、') || '（無）') + '；死牌陷阱 ' + (q.dead.join('、') || '（無）') + '；限時 ' + timeMs(level) + ' ms');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[缺哪一張] 第 ' + level + ' 關：手牌 ' + q.hand.join(' ') + '（' + q.hand.length + ' 張' + (q.pair ? '，要一對' : '') + '），答案 ' + W.join('、') + '（' + W.length + ' 張）；誘餌 ' + (q.near.join('、') || '（無）') + '；死牌陷阱 ' + (q.dead.join('、') || '（無）') + '；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var rule = h('div', { 'class': 'qz-note mahjong3-rule', text: q.pair ? '補哪些牌，整排能分成一組一組的三張（連號或三張一樣），剛好再留一對？' : '補哪些牌，整排能剛好分成「三張連號」或「三張一樣」的組？' });
         stage.appendChild(rule);
@@ -292,8 +300,8 @@
             Sfx.play('tick');
             refresh();
         }
-        api.timer(timeMs(level), function () { judge(); });
-        if (level === 1 && kit.once('mahjong3.hint')) kit.hintOn(stage, keyEls[W[0] - 1], { mode: 'tap', delay: 700, text: '點補上去能湊成組的牌，再按「我選好了」' });
+        api.timer(timeMs(level), function () { judge(); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
+        if (level === 1 && kit.once('mahjong3.hint')) kit.hintOn(stage, keyEls[W[0] - 1], { mode: 'tap', delay: 700, text: '點補上去能湊成組的牌，再按「我選好了」' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
         /* 揭曉：全部選對（剛好等於全部答案）才過關；時間到就拿目前選的來算 */
         function judge() {
@@ -345,17 +353,20 @@
         api.wrong = function () { sel = {}; for (var t = 1; t <= 9; t++) if (!isWin[t]) { sel[t] = true; break; } judge(); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '缺哪一張',
         rule: '麻將桌上有一排同花色的數字牌（一～九）。**補哪些牌，就能把整排剛好分成「三張連號」或「三張一樣」的組？**例如 2 3 4 是連號、5 5 5 是三張一樣。**能補成功的牌可能不只一張，要全部點起來**，再按「我選好了」。有的題目整排還要多留**一對（兩張一樣）**。一種牌最多 4 張，手上已經有 4 張就不能再補。漏一張、多一張都算錯，來不及也結束，看你能過幾關。越後面，牌越多、答案越多、越多牌「補了只能湊一部分」來騙你！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             pairProb: pairProb, tilesFor: tilesFor, timeMs: timeMs, decoysFor: decoysFor, answersFor: answersFor, countsOf: countsOf, canGroup: canGroup, groupsOf: groupsOf, countWays: countWays, bestGroups: bestGroups,
             winners: winners, deadTraps: deadTraps, deadProb: deadProb, nearMisses: nearMisses, randomComplete: randomComplete, makeLevel: makeLevel, layout: layout, decompText: decompText, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, TILES: TILES, TIME_S: TIME_S, ANSWERS: ANSWERS, DECOYS: DECOYS, PAIR_FROM: PAIR_FROM, PAIR_P: PAIR_P, DEAD_FROM: DEAD_FROM, DEAD_P: DEAD_P, SHOW_COUNT_UNTIL: SHOW_COUNT_UNTIL, MAX_SAME: MAX_SAME, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

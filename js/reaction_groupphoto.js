@@ -15,11 +15,15 @@
      隨機一個瞬間全員睜眼的機率 0.45 → 0.10、低頭看手機的人 0 → 3 個。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'groupphoto'：選單、成績、存檔都靠它；樣式在 css/games/reaction_groupphoto.css，裡面的 class 名稱一律以 groupphoto- 開頭。 */
     'use strict';
 
-    var ID = 'groupphoto';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'groupphoto';                              /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -61,7 +65,7 @@
          level, n, phone（低頭看手機的人編號）, people（每人 { d, gapMean, blinks, hair, skin, shirt }）,
          win（保證的窗口長度）, winAt（保證的窗口從第幾秒開始）, timeS, pOpen } */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var n = peopleFor(level), np = Math.min(phoneFor(level), n - 1), pOpen = pOpenFor(level), win = winFor(level), T = TIME_S;
         var order = kit.shuffle(Array.apply(null, Array(n)).map(function (x, i) { return i; }), rand), phone = order.slice(0, np).sort(function (a, b) { return a - b; });
         var c = closedFraction(n - np, pOpen), winAt = kit.randFloat(WIN_FROM, Math.max(WIN_FROM, T - win - WIN_TAIL), rand), people = [];
@@ -98,6 +102,7 @@
         }
         return { cols: cols, rows: rows, faces: pos, fw: fw, fh: fh };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 16) return '最佳攝影師！';
         if (n >= 10) return '快門神手！';
@@ -106,6 +111,7 @@
         return '要等大家都睜眼！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'groupphoto-stage',
@@ -137,12 +143,14 @@
         return svg;
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand);
-        api.info = q;
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         var wins = openWindows(q);
-        console.log('[大合照] 第 ' + level + ' 關：' + q.n + ' 人（低頭看手機 ' + q.phone.length + '）；保證的全員睜眼窗口 ' + q.winAt.toFixed(2) + '～' + (q.winAt + q.win).toFixed(2) + ' 秒（至少 ' + q.win + ' 秒）；全部窗口 ' + wins.filter(function (w) { return w.end - w.start >= 0.2; }).map(function (w) { return w.start.toFixed(1) + '-' + w.end.toFixed(1); }).join('、'));
+        console.log('[大合照] 第 ' + level + ' 關：' + q.n + ' 人（低頭看手機 ' + q.phone.length + '）；保證的全員睜眼窗口 ' + q.winAt.toFixed(2) + '～' + (q.winAt + q.win).toFixed(2) + ' 秒（至少 ' + q.win + ' 秒）；全部窗口 ' + wins.filter(function (w) { return w.end - w.start >= 0.2; }).map(function (w) { return w.start.toFixed(1) + '-' + w.end.toFixed(1); }).join('、'));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var field = h('div', { 'class': 'groupphoto-field' });
@@ -163,9 +171,10 @@
         var flashEl = h('div', { 'class': 'groupphoto-flash' }); photo.appendChild(flashEl);
         var info = h('div', { 'class': 'qz-note groupphoto-info', text: '' }); info.style.top = (52 + ph + 6) + 'px'; field.appendChild(info);
         var btn = kit.btnGrid(field, [{ text: '按快門', kind: 'primary', cls: 'groupphoto-shutter', onTap: function () { press(); } }], { cols: 1, h: 96, bottom: 12 });
-        if (level === 1 && kit.once('groupphoto.hint')) kit.hintOn(stage, btn.btns[0], { mode: 'tap', delay: 1400, text: '全員睜眼時按' });
+        if (level === 1 && kit.once('groupphoto.hint')) kit.hintOn(stage, btn.btns[0], { mode: 'tap', delay: 1400, text: '全員睜眼時按' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
         var phase = 'run', shown = {}, t0 = performance.now(), tNow = 0;
+        /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint(t) {
             var closed = closedAt(q, t), set = {}; closed.forEach(function (i) { set[i] = 1; });
             faces.forEach(function (el, i) { var on = !!set[i]; if (on !== !!shown[i]) { el.classList.toggle('groupphoto-person--closed', on); shown[i] = on; } });
@@ -176,7 +185,7 @@
             if (phase !== 'run' || !stage.isConnected) return false;
             tNow = (now - t0) / 1000; paint(tNow);
         });
-        api.timer(timeMs(), function () { timeout(); });
+        api.timer(timeMs(), function () { timeout(); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
 
         /* 按快門：拿「按下去的那一瞬間畫面上的狀態」來判定 */
         function press() {
@@ -204,6 +213,7 @@
             kit.flash(stage, false, api.my);
             api.fail({ delay: 3800, lines: ['按下快門的時候，有 ' + closed.length + ' 個人閉著眼睛', '（低頭看手機的不算閉眼）'] });
         }
+        /* 時間到：算失敗（api.fail），通常會把正確答案亮出來 */
         function timeout() {
             if (phase !== 'run' || api.over) return;
             phase = 'shot'; info.textContent = '時間到！沒有按快門'; info.classList.add('groupphoto-info--bad');
@@ -215,16 +225,19 @@
         api.wrong = function () { if (phase === 'run' && closedAt(q, (performance.now() - t0) / 1000).length) press(); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '大合照',
         rule: '一群人排排站拍大合照，大家會各自隨機眨眼。**等到所有人都睜著眼睛的那一瞬間**，按下快門！照片洗出來，只要有人閉眼就失敗（閉眼的人會被紅圈圈起來）。注意：**低頭看手機的人**眼睛看起來像閉著，但**不算閉眼**。限時 10 秒，沒按也算失敗。越後面，人越多、全員睜眼的時間越短！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             peopleFor: peopleFor, winFor: winFor, pOpenFor: pOpenFor, phoneFor: phoneFor, timeMs: timeMs, closedFraction: closedFraction, makeBlinks: makeBlinks, clearWindow: clearWindow, makeLevel: makeLevel, closedAt: closedAt, openWindows: openWindows, layout: layout, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, PEOPLE: PEOPLE, OPEN_WIN: OPEN_WIN, P_OPEN: P_OPEN, PHONE: PHONE, TIME_S: TIME_S, BLINK_D: BLINK_D, WIN_FROM: WIN_FROM, WIN_TAIL: WIN_TAIL, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

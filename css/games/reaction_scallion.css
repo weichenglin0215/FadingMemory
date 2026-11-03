@@ -7,109 +7,109 @@
 /* 切蔥花：點一下切一刀，20 秒內切越多段越好。 */
 /* ═══ 切蔥花（.sl-）═══ */
 .scallion-head {
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 上方的計數區：數字和「段」用 baseline 對齊文字底線 */
 .scallion-top {
-    display: flex;
-    align-items: baseline;
-    justify-content: center;
-    gap: 10px;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: baseline;                              /* 子元素的文字基準線對齊 */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    gap: 10px;                                          /* 子元素之間的空隙：10px */
 }
 
 /* 大字計數（切了幾段） */
 .scallion-count {
-    font-size: 110px;
-    font-weight: var(--fw-black);
-    line-height: 1;
-    color: var(--c-green);
-    font-variant-numeric: tabular-nums;
+    font-size: 110px;                                   /* 字級：110px */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
+    color: var(--c-green);                              /* 文字顏色：主題變數 --c-green */
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
 }
 
 /* 單位「段」 */
 .scallion-unit {
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
 /* 砧板：蔥、刀子、蔥片都畫在這裡；overflow:hidden 讓蔥從畫面外進來時不會露出界外 */
 .scallion-board {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    background: var(--c-card-alt);
-    border: var(--bd);
-    border-radius: var(--r-lg);
-    touch-action: none;
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
 /* 蔥（綠色長條）；box-shadow inset 在內側畫一條暗色下緣，讓它有立體感 */
 .scallion-bar {
-    position: absolute;
-    background: var(--c-green);
-    border-radius: 22px 0 0 22px;
-    box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.12);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    background: var(--c-green);                         /* 背景：主題變數 --c-green */
+    border-radius: 22px 0 0 22px;                       /* 圓角：22px 0 0 22px */
+    box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.12);     /* 方塊陰影（立體感） */
 }
 
 /* 刀子外層：寬度 0，只是一個「定位點」，刀刃和握把相對它擺位；transition 讓下刀動作平滑 */
 .scallion-knife {
-    position: absolute;
-    width: 0;
-    z-index: 4;
-    transition: transform 0.06s ease-out;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 0;                                           /* 寬度：0 */
+    z-index: 4;                                         /* 疊放順序：數字越大越在上面（4） */
+    transition: transform 0.06s ease-out;               /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.06s ease-out */
 }
 
 /* 下刀：往下移 26px */
 .scallion-knife--down {
-    transform: translateY(26px);
+    transform: translateY(26px);                        /* 變形：垂直移動 26px */
 }
 
 /* 刀刃 */
 .scallion-knife__blade {
-    position: absolute;
-    left: -3px;
-    top: 0;
-    width: 6px;
-    height: 128px;
-    background: var(--c-ink);
-    border-radius: 3px;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: -3px;                                         /* 離左邊 -3px */
+    top: 0;                                             /* 離上邊 0 */
+    width: 6px;                                         /* 寬度：6px */
+    height: 128px;                                      /* 高度：128px */
+    background: var(--c-ink);                           /* 背景：主題變數 --c-ink */
+    border-radius: 3px;                                 /* 圓角：3px */
 }
 
 /* 刀把（橘色） */
 .scallion-knife__grip {
-    position: absolute;
-    left: -14px;
-    top: -28px;
-    width: 28px;
-    height: 34px;
-    background: var(--c-orange);
-    border-radius: 8px;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: -14px;                                        /* 離左邊 -14px */
+    top: -28px;                                         /* 離上邊 -28px */
+    width: 28px;                                        /* 寬度：28px */
+    height: 34px;                                       /* 高度：34px */
+    background: var(--c-orange);                        /* 背景：主題變數 --c-orange */
+    border-radius: 8px;                                 /* 圓角：8px */
 }
 
 /* 飛出去的蔥片，位置與動畫由 JS 的 element.animate() 控制 */
 .scallion-slice {
-    position: absolute;
-    background: var(--c-ok-light);
-    border: 3px solid var(--c-green);
-    border-radius: 10px;
-    box-sizing: border-box;
-    will-change: transform;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    background: var(--c-ok-light);                      /* 背景：主題變數 --c-ok-light */
+    border: 3px solid var(--c-green);                   /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-green */
+    border-radius: 10px;                                /* 圓角：10px */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    will-change: transform;                             /* 提示瀏覽器這個屬性會變動，先準備好（讓動畫更順） */
 }
 
 /* 底下的操作提示文字 */
 .scallion-hint {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 22px;
-    text-align: center;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink-soft);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 22px;                                       /* 離下邊 22px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }

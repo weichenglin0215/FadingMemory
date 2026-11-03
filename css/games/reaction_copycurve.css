@@ -6,96 +6,107 @@
 
 /* ═══ 照抄曲線（.copycurve-）═══ */
 .copycurve-lab {
-    position: absolute;
-    top: 8px;
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    color: var(--c-ink-soft);
-    transition: opacity 0.4s;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    top: 8px;                                           /* 離上邊 8px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    transition: opacity 0.4s;                           /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.4s */
 }
 
+/* 「copycurve-panel」這個元素的樣式 */
 .copycurve-panel {
-    position: absolute;
-    border-radius: var(--r-md);
-    background: var(--cc-board);
-    border: 3px solid var(--c-ink);
-    box-sizing: border-box;
-    overflow: hidden;
-    transition: transform 0.9s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.9s, border-color 0.9s;
-    touch-action: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: var(--cc-board);                        /* 背景：主題變數 --cc-board */
+    border: 3px solid var(--c-ink);                     /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    transition: transform 0.9s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.9s, border-color 0.9s;  /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.9s cubic-bezier(0.4, 0, 0.2, 1), backg */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
+/* 「copycurve-panel」的「L」變化版的樣式 */
 .copycurve-panel--L {
-    z-index: 1;
+    z-index: 1;                                         /* 疊放順序：數字越大越在上面（1） */
 }
 
+/* 「copycurve-panel」的「R」變化版的樣式 */
 .copycurve-panel--R {
-    z-index: 2;
-    cursor: crosshair;
+    z-index: 2;                                         /* 疊放順序：數字越大越在上面（2） */
+    cursor: crosshair;                                  /* 滑鼠游標樣式：crosshair */
 }
 
+/* 「copycurve-svg」這個元素的樣式 */
 .copycurve-svg {
-    display: block;
-    pointer-events: none;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「copycurve-curve」這個元素的樣式 */
 .copycurve-curve {
-    fill: none;
-    stroke: var(--cc-curve);
-    stroke-width: 8;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--cc-curve);                            /* SVG 線條顏色：主題變數 --cc-curve */
+    stroke-width: 8;                                    /* SVG 線條粗細：8 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「copycurve-draw」這個元素的樣式 */
 .copycurve-draw {
-    fill: none;
-    stroke: var(--cc-draw);
-    stroke-width: 6;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--cc-draw);                             /* SVG 線條顏色：主題變數 --cc-draw */
+    stroke-width: 6;                                    /* SVG 線條粗細：6 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
+/* 「copycurve-start」這個元素的樣式 */
 .copycurve-start {
-    fill: var(--cc-start);
-    stroke: var(--c-ink);
-    stroke-width: 3;
+    fill: var(--cc-start);                              /* SVG 圖形的填色：主題變數 --cc-start */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
+/* 「copycurve-end」這個元素的樣式 */
 .copycurve-end {
-    fill: var(--cc-end);
-    stroke: var(--c-ink);
-    stroke-width: 3;
+    fill: var(--cc-end);                                /* SVG 圖形的填色：主題變數 --cc-end */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
 }
 
 /* 手指靠近另一個端點（放開就會判定）：端點加粗綠框提醒（V1.34） */
 .copycurve-near {
-    stroke: var(--c-ok);
-    stroke-width: 7;
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
+    stroke-width: 7;                                    /* SVG 線條粗細：7 */
 }
 
+/* 「copycurve-msg」這個元素的樣式 */
 .copycurve-msg {
-    position: absolute;
-    left: 0;
-    right: 0;
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink);
-    line-height: var(--lh-body);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
 }
 
 /* 畫完之後：左右兩張往中間靠攏，右邊那張變透明（底下的綠色曲線才看得到）*/
 .copycurve-stage--merge .copycurve-panel--L {
-    transform: translateX(var(--cpc-shift));
+    transform: translateX(var(--cpc-shift));            /* 變形：水平移動 var(--cpc-shift) */
 }
 
+/* 「copycurve-panel」的「R」變化版的樣式 */
 .copycurve-stage--merge .copycurve-panel--R {
-    transform: translateX(calc(-1 * var(--cpc-shift)));
-    background-color: transparent;
-    border-color: transparent;
+    transform: translateX(calc(-1 * var(--cpc-shift))); /* 變形：水平移動 calc(-1 * var(--cpc-shift)) */
+    background-color: transparent;                      /* 透明背景 */
+    border-color: transparent;                          /* 邊框顏色：transparent */
 }
 
+/* 「copycurve-lab」這個元素的樣式 */
 .copycurve-stage--merge .copycurve-lab {
-    opacity: 0;
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
 }

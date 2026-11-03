@@ -6,28 +6,29 @@
 
 /* 玩家畫的橫線：很粗的藍色水平線 */
 .ghostleg-user {
-    stroke: var(--c-blue);
-    stroke-width: 14;
-    stroke-linecap: round;
+    stroke: var(--c-blue);                              /* SVG 線條顏色：主題變數 --c-blue */
+    stroke-width: 14;                                   /* SVG 線條粗細：14 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
+/* 「ghostleg-user」在「被提示標出來時」的樣子的樣式 */
 .ghostleg-user--hint {
-    opacity: 1;
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }
 
 /* 評審動畫：從起點開始畫出的綠色粗虛線 */
 .ghostleg-route {
-    fill: none;
-    stroke: var(--c-green);
-    stroke-width: 9;
-    stroke-linejoin: round;
-    stroke-dasharray: 16 10;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-green);                             /* SVG 線條顏色：主題變數 --c-green */
+    stroke-width: 9;                                    /* SVG 線條粗細：9 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+    stroke-dasharray: 16 10;                            /* SVG 虛線的「畫／空」長度：16 10 */
 }
 
 /* 操作提示：鉛筆圖示（取代手指圖示） */
 .ghostleg-pencil {
-    position: absolute;
-    font-size: 40px;
-    line-height: 1;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    font-size: 40px;                                    /* 字級：40px */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }

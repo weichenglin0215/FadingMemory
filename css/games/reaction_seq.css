@@ -7,96 +7,100 @@
 /* 猜下一個：看一排有規律的圖形，從四個選項中選出下一個。 */
 /* ═══ 猜下一個（.seq-）═══ */
 .seq-head {
-    text-align: center;
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
 /* 上方那排圖形（最後一格是問號）。align-items: flex-start：格子不要被拉成跟最高的一格一樣高，才會是正方形（V1.40.0：下方答案框跟它同樣的長寬比） */
 .seq-row {
-    flex: none;
-    display: flex;
-    align-items: flex-start;
-    gap: 4px;
-    padding: var(--sp-3) var(--sp-2);
-    background: var(--c-card);
-    border: var(--bd);
-    border-radius: var(--r-lg);
+    flex: none;                                         /* 彈性縮放：none */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: flex-start;                            /* 子元素靠交叉方向的起點（橫排時靠上） */
+    gap: 4px;                                           /* 子元素之間的空隙：4px */
+    padding: var(--sp-3) var(--sp-2);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-3、下 主題變數、左 --sp-2 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
 }
 
 /* 數字題的一格：數字字級小一點，8 格排得下 */
 .seq-cell--num {
-    font-size: var(--fs-md);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
 /* 一格圖形（aspect-ratio 讓它保持正方形） */
 .seq-cell {
-    flex: 1 1 0;
-    min-width: 0;
-    min-height: 0;
-    aspect-ratio: 1 / 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    border-radius: var(--r-sm);
-    background: var(--c-card-alt);
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-width: 0;                                       /* 最小寬度：0 */
+    min-height: 0;                                      /* 最小高度：0 */
+    aspect-ratio: 1 / 1;                                /* 寬高比：1 / 1 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
 }
 
 /* 問號格（虛線框）；line-height: 1 讓它的字不會把格子撐得比寬度高 */
 .seq-cell--q {
-    line-height: 1;
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
-    color: var(--c-recall);
-    background: var(--c-recall-soft);
-    border: 3px dashed var(--c-recall);
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-recall);                             /* 文字顏色：主題變數 --c-recall */
+    background: var(--c-recall-soft);                   /* 背景：主題變數 --c-recall-soft */
+    border: 3px dashed var(--c-recall);                 /* 邊框（粗細、線型、顏色）：3px dashed 主題變數 --c-recall */
 }
 
 /* 圖形 SVG */
 .seq-svg {
-    display: block;
-    width: 100%;
-    height: 100%;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
 }
 
 /* 圖形外框 */
 .seq-shape {
-    stroke: var(--c-ink);
-    stroke-width: 4;
-    stroke-linejoin: round;
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
 /* 五種顏色的填色（c0～c4）：JS 用 'seq-c' + 顏色編號 組出 class 名稱 */
 .seq-c0 {
-    fill: var(--c-blue);
+    fill: var(--c-blue);                                /* SVG 圖形的填色：主題變數 --c-blue */
 }
 
+/* 「seq-c1」這個元素的樣式 */
 .seq-c1 {
-    fill: var(--c-orange);
+    fill: var(--c-orange);                              /* SVG 圖形的填色：主題變數 --c-orange */
 }
 
+/* 「seq-c2」這個元素的樣式 */
 .seq-c2 {
-    fill: var(--c-green);
+    fill: var(--c-green);                               /* SVG 圖形的填色：主題變數 --c-green */
 }
 
+/* 「seq-c3」這個元素的樣式 */
 .seq-c3 {
-    fill: var(--c-yellow);
+    fill: var(--c-yellow);                              /* SVG 圖形的填色：主題變數 --c-yellow */
 }
 
+/* 「seq-c4」這個元素的樣式 */
 .seq-c4 {
-    fill: var(--c-recall);
+    fill: var(--c-recall);                              /* SVG 圖形的填色：主題變數 --c-recall */
 }
 
 /* 問題文字 */
 .seq-ask {
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
 /* 四個選項（2×2 格子）。V1.40.0（玩家回饋：答案框的圖案分不出大小）：每個選項都是「正方形」，跟上方題目格（.seq-cell）同樣的長寬比、
@@ -104,63 +108,63 @@
    選項區是容器（container-type: size）：按鈕邊長＝(選項區寬 − 間距) ÷ 2 與 (選項區高 − 間距) ÷ 2 取小的，兩列正好放得下。
    選項區四周留 8px，給「對／錯」的粗框（box-shadow 畫在按鈕外面，不佔按鈕內的空間）。 */
 .seq-opts {
-    flex: 1 1 0;
-    min-height: 0;
-    display: grid;
-    grid-template-columns: repeat(2, auto);
-    justify-content: center;
-    align-content: center;
-    gap: 12px;
-    padding: 8px;
-    box-sizing: border-box;
+    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-height: 0;                                      /* 最小高度：0 */
+    display: grid;                                      /* 格線排版：子元素排進格子 */
+    grid-template-columns: repeat(2, auto);             /* 格線的欄（每欄的寬度）：repeat(2, auto) */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    align-content: center;                              /* 多行排列時，各行在交叉方向的對齊方式：center */
+    gap: 12px;                                          /* 子元素之間的空隙：12px */
+    padding: 8px;                                       /* 內縮（padding，內容跟邊框的距離）：四邊都是 8px */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
     container-type: size;
 }
 
 /* 單個選項：正方形、淺底色、圖案占滿 */
 .seq-opt {
     width: 150px;                                         /* 不支援容器單位的舊瀏覽器用這組固定大小 */
-    height: 150px;
+    height: 150px;                                      /* 高度：150px */
     width: min(calc(50cqw - 6px), calc(50cqh - 6px));     /* 12px 間距的一半；數字要跟上面 .seq-opts 的 gap 一致 */
-    height: min(calc(50cqw - 6px), calc(50cqh - 6px));
-    min-height: 0;
-    padding: 0;
-    box-sizing: border-box;
-    background: var(--c-card-alt);
-    border: none;
-    border-radius: var(--r-lg);
-    box-shadow: 0 0 0 3px var(--c-frame);
-    touch-action: none;
+    height: min(calc(50cqw - 6px), calc(50cqh - 6px));  /* 高度：min(calc(50cqw - 6px), calc(50cqh - 6px)) */
+    min-height: 0;                                      /* 最小高度：0 */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
+    border: none;                                       /* 沒有邊框 */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    box-shadow: 0 0 0 3px var(--c-frame);               /* 方塊陰影（立體感） */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
 /* 數字題的選項：大字 */
 .seq-opt--num {
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
 /* 揭曉後：不能再點，但不壓灰色（V1.25 玩家意見：以前用 disabled，會整張變灰很難辨識） */
 .seq-opt--locked {
-    pointer-events: none;
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 選對：正確答案的卡片加綠色粗邊框（box-shadow 畫在按鈕外面，圖案跟框的比例不會變） */
 .seq-opt--ok {
-    box-shadow: 0 0 0 8px var(--c-ok);
+    box-shadow: 0 0 0 8px var(--c-ok);                  /* 方塊陰影（立體感） */
 }
 
 /* 選錯：你選的那張加紅色粗邊框 */
 .seq-opt--bad {
-    box-shadow: 0 0 0 8px var(--c-bad-light);
+    box-shadow: 0 0 0 8px var(--c-bad-light);           /* 方塊陰影（立體感） */
 }
 
 /* 底下的解說：說明這個規律是什麼 */
 .seq-note {
-    flex: none;
-    min-height: 2.8em;
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-bold);
-    line-height: 1.4;
-    color: var(--c-ink);
+    flex: none;                                         /* 彈性縮放：none */
+    min-height: 2.8em;                                  /* 最小高度：2.8em */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: 1.4;                                   /* 行高：1.4（文字每一行佔的高度） */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }

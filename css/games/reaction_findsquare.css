@@ -6,99 +6,112 @@
 
 /* ═══ 找正方形（.findsquare-）═══ */
 .findsquare-stage {
-    user-select: none;
-    -webkit-user-select: none;
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 「findsquare-tip」這個元素的樣式 */
 .findsquare-tip {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 8px;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 8px;                                           /* 離上邊 8px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 夜空：深藍色底板，星星畫在上面 */
 .findsquare-sky {
-    position: absolute;
-    background: var(--fsq-sky);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-card);
-    overflow: hidden;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    background: var(--fsq-sky);                         /* 背景：主題變數 --fsq-sky */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
 }
 
+/* 「findsquare-svg」這個元素的樣式 */
 .findsquare-svg {
-    display: block;
-    touch-action: none;
+    display: block;                                     /* 獨佔一整行的區塊 */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
+/* 「findsquare-shape」這個元素的樣式 */
 .findsquare-shape {
-    fill: var(--fsq-star);
-    stroke: var(--fsq-star-edge);
-    stroke-width: 1;
-    stroke-linejoin: round;
+    fill: var(--fsq-star);                              /* SVG 圖形的填色：主題變數 --fsq-star */
+    stroke: var(--fsq-star-edge);                       /* SVG 線條顏色：主題變數 --fsq-star-edge */
+    stroke-width: 1;                                    /* SVG 線條粗細：1 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
 }
 
 /* 點到的星星：外面一圈橘色光暈、星星變橘；真正的正方形的星星：綠色光暈 */
 .findsquare-halo {
-    fill: none;
-    stroke: var(--c-orange);
-    stroke-width: 3;
-    opacity: 0;
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--c-orange);                            /* SVG 線條顏色：主題變數 --c-orange */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
 }
 
+/* 「findsquare-halo」這個元素的樣式 */
 .findsquare-star--on .findsquare-halo {
-    opacity: 1;
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }
 
+/* 「findsquare-shape」這個元素的樣式 */
 .findsquare-star--on .findsquare-shape {
-    fill: var(--c-orange);
+    fill: var(--c-orange);                              /* SVG 圖形的填色：主題變數 --c-orange */
 }
 
+/* 「findsquare-halo」這個元素的樣式 */
 .findsquare-star--true .findsquare-halo {
-    stroke: var(--c-ok-light);
-    opacity: 1;
+    stroke: var(--c-ok-light);                          /* SVG 線條顏色：主題變數 --c-ok-light */
+    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
 }
 
+/* 「findsquare-shape」這個元素的樣式 */
 .findsquare-star--true .findsquare-shape {
-    fill: var(--c-ok-light);
+    fill: var(--c-ok-light);                            /* SVG 圖形的填色：主題變數 --c-ok-light */
 }
 
+/* 「findsquare-hit」這個元素的樣式 */
 .findsquare-hit {
-    fill: transparent;
+    fill: transparent;                                  /* SVG 圖形的填色：transparent */
 }
 
+/* 「findsquare-star」這個元素的樣式 */
 .findsquare-star {
-    cursor: pointer;
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
 }
 
 /* 連線：答對（金色，像星座）、你選的四邊形（紅色）、真正的正方形（綠色） */
 .findsquare-line {
-    stroke-width: 4;
-    stroke-linecap: round;
-    opacity: 0.9;
+    stroke-width: 4;                                    /* SVG 線條粗細：4 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    opacity: 0.9;                                       /* 透明度 0.9（1＝完全不透明、0＝全透明） */
 }
 
+/* 「findsquare-line」在「正確（成功）時」的樣子的樣式 */
 .findsquare-line--ok {
-    stroke: var(--fsq-star);
+    stroke: var(--fsq-star);                            /* SVG 線條顏色：主題變數 --fsq-star */
 }
 
+/* 「findsquare-line」在「錯誤（失敗）時」的樣子的樣式 */
 .findsquare-line--bad {
-    stroke: var(--c-bad-light);
+    stroke: var(--c-bad-light);                         /* SVG 線條顏色：主題變數 --c-bad-light */
 }
 
+/* 「findsquare-line」的「true」變化版的樣式 */
 .findsquare-line--true {
-    stroke: var(--c-ok);
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
 }
 
+/* 「findsquare-info」這個元素的樣式 */
 .findsquare-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    padding: 0 var(--sp-3);
-    text-align: center;
-    font-weight: var(--fw-bold);
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }

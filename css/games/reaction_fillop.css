@@ -6,78 +6,89 @@
 
 /* ═══ 挑加減乘除（.fillop-）═══ */
 .fillop-row {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 66px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 6px;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 66px;                                          /* 離上邊 66px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: 6px;                                           /* 子元素之間的空隙：6px */
 }
 
+/* 「fillop-num」這個元素；「fillop-fixed」這個元素的樣式 */
 .fillop-num,
 .fillop-fixed {
-    font-size: var(--fs-xxxl);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    font-variant-numeric: tabular-nums;
+    font-size: var(--fs-xxxl);                          /* 字級：主題變數 --fs-xxxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
 }
 
+/* 「fillop-fixed」這個元素的樣式 */
 .fillop-fixed {
-    color: var(--c-blue);
+    color: var(--c-blue);                               /* 文字顏色：主題變數 --c-blue */
 }
 
+/* 「fillop-col」這個元素的樣式 */
 .fillop-col {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    gap: 15px;                                          /* 子元素之間的空隙：15px */
 }
 
+/* 「fillop-op」這個元素的樣式 */
 .fillop-op {
-    width: 72px;
-    height: 72px;
-    border-radius: var(--r-sm);
-    background: var(--c-card);
-    border: 3px solid var(--c-blue);
-    font-family: var(--font-ui);
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-black);
-    line-height: 1.0;
-    color: var(--c-blue);
-    cursor: pointer;
+    width: 72px;                                        /* 寬度：72px */
+    height: 72px;                                       /* 高度：72px */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-blue);                    /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-blue */
+    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1.0;                                   /* 行高：1.0（文字每一行佔的高度） */
+    color: var(--c-blue);                               /* 文字顏色：主題變數 --c-blue */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
 }
 
+/* 「fillop-op」這個元素，按下去時的樣式 */
 .fillop-op:active {
-    transform: scale(0.94);
+    transform: scale(0.94);                             /* 變形：縮放 0.94 倍 */
 }
 
+/* 「fillop-op」在「開啟（亮起）時」的樣子的樣式 */
 .fillop-op--on {
-    background: var(--c-blue);
-    color: var(--c-on-accent);
+    background: var(--c-blue);                          /* 背景：主題變數 --c-blue */
+    color: var(--c-on-accent);                          /* 文字顏色：主題變數 --c-on-accent */
 }
 
+/* 「fillop-op」在「正確時」的樣子的樣式 */
 .fillop-op--right {
-    background: var(--c-ok);
-    border-color: var(--c-ok);
-    color: var(--c-on-accent);
+    background: var(--c-ok);                            /* 背景：主題變數 --c-ok */
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
+    color: var(--c-on-accent);                          /* 文字顏色：主題變數 --c-on-accent */
 }
 
+/* 「fillop-op」在「錯誤時」的樣子的樣式 */
 .fillop-op--wrong {
-    background: var(--c-bad);
-    border-color: var(--c-bad);
-    color: var(--c-on-accent);
+    background: var(--c-bad);                           /* 背景：主題變數 --c-bad */
+    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
+    color: var(--c-on-accent);                          /* 文字顏色：主題變數 --c-on-accent */
 }
 
+/* 「fillop-target」這個元素的樣式 */
 .fillop-target {
-    font-size: var(--fs-xxxl);
-    top: 420px;
+    font-size: var(--fs-xxxl);                          /* 字級：主題變數 --fs-xxxl */
+    top: 420px;                                         /* 離上邊 420px */
 }
 
+/* 「fillop-live」這個元素的樣式 */
 .fillop-live {
-    top: 530px;
+    top: 530px;                                         /* 離上邊 530px */
 }
 
+/* 「fillop-ok」在「關閉（熄滅）時」的樣子的樣式 */
 .fillop-ok--off {
-    opacity: 0.45;
+    opacity: 0.45;                                      /* 透明度 0.45（1＝完全不透明、0＝全透明） */
 }

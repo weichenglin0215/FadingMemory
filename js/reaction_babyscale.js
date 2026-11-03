@@ -22,11 +22,15 @@
        C. **畫面最上面列出這一關出場的人和東西**（有幾個、是誰），玩家一眼就知道「全部」是誰。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'babyscale'：選單、成績、存檔都靠它；樣式在 css/games/reaction_babyscale.css，裡面的 class 名稱一律以 babyscale- 開頭。 */
     'use strict';
 
-    var ID = 'babyscale';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'babyscale';                               /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                           /* 難度升到頂的關卡：第 1 關線性變難，到第 30 關最難，之後維持不變 */
@@ -116,12 +120,12 @@
     /* 出一題：{ things, ws, target, eqs:[{ set, sum, used, hint? }], coef, div, D（難度分數）}
        eqs 裡 used＝false 的是用不到的紀錄（干擾，或有「全部一起」時補上的、含問的那一個的提示紀錄 hint） */
     function makePuzzle(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var n = Math.round(kit.ramp(level, ITEMS[0], ITEMS[1], RAMP_LEVELS)), best = null, bestGap = 1e9;
         var goal = kit.ramp(level, DIFF[0], DIFF[1], RAMP_LEVELS), withAll = level <= TOTAL_TO;
         var pSingle = withAll || level > SINGLE_TO ? 0 : kit.ramp(level, SINGLE_P[0], SINGLE_P[1], SINGLE_TO);
         function rows(sets) { return sets.map(function (st) { return rowOf(st, n); }); }
-        for (var tr = 0; tr < TRIES; tr++) {
+        for (var tr = 0; tr < TRIES; tr++) {            /* 用亂數一直重抽，最多 TRIES 次，抽到符合條件的題目就收下 */
             var things = kit.shuffle(THINGS, rand).slice(0, n);
             var ws = things.map(function (t) { return kit.randInt(t.w[0], t.w[1], rand); });
             var target = kit.randInt(0, n - 1, rand);
@@ -182,6 +186,7 @@
         pz.coef.forEach(function (c, k) { s += c * pz.eqs[k].sum; });
         return s === pz.ws[pz.target] * pz.div;
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 25) return '家庭體重計專家！';
         if (n >= 12) return '加加減減很靈活！';
@@ -200,11 +205,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var pz = makePuzzle(level, api.rand), n = pz.ws.length, tg = pz.things[pz.target];
-        api.info = pz;
-        console.log('[抱著量體重] 第 ' + level + ' 關：' + n + ' 個、' + pz.eqs.length + ' 條紀錄，問' + tg.name);
+        api.info = pz;                                  /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[抱著量體重] 第 ' + level + ' 關：' + n + ' 個、' + pz.eqs.length + ' 條紀錄，問' + tg.name);  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
         var typed = '', over = false;
 
         var wrap = h('div', { 'class': 'babyscale-wrap' });
@@ -229,9 +236,10 @@
         /* 數字鍵的高度：舞台高度扣掉上面的紀錄、問題、提示、確定鈕之後剩下的（紀錄多、出場的人多時按鍵會矮一點） */
         var H = stage.clientHeight || 667, used = list.offsetHeight + ask.offsetHeight + 28 + 56 + 8 * 6 + 6;
         var keyH = Math.max(34, Math.min(46, Math.floor((H - used - 3 * 6) / 4)));
-        var pad = Reaction.numpad(wrap, { keyH: keyH, onKey: onKey });
+        var pad = Reaction.numpad(wrap, { keyH: keyH, onKey: onKey });  /* 共用數字鍵盤（7 8 9／4 5 6／1 2 3／清除 0 ⌫），按鍵會呼叫 onKey */
         wrap.appendChild(btnOk);
 
+        /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() { box.textContent = typed; btnOk.disabled = !typed || over; }
         function onKey(k) {
             if (over) return;
@@ -266,23 +274,27 @@
             api.fail({ delay: FAIL_HOLD_MS, lines: ['時間到了', work] });
         }
         api.timeout = timeUp;
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { typed = String(pz.ws[pz.target]); paint(); submit(); };
         api.wrong = function () { typed = String(pz.ws[pz.target] + 1); paint(); submit(); };
         api.state = function () { return { typed: typed, over: over }; };
-        api.timer(Math.round(timeFor(level, pz.eqs.length) * 1000), timeUp);
+        api.timer(Math.round(timeFor(level, pz.eqs.length) * 1000), timeUp);  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         paint();
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '抱著量體重',
         rule: '畫面最上面寫著**這一關出場的人和東西**。他們**兩個或三個一起站上體重計**（抱著、提著），紀錄寫成一條一條，例如「阿公＋寶寶＝82 公斤」；前面幾關有的紀錄是「一個人單獨量」，最前面幾關還有「全部一起」量的重量。**題目問其中一個幾公斤**，用數字鍵填答案、按「確定」。**答錯一次就結束**，會列出算法。小撇步：兩條紀錄相減，一樣的那一個就消掉了。每一關有時間限制（上面的時間條，紀錄越多給的時間越長），時間到了也算失敗。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             rank: rank, determined: determined, combo: combo, subsets: subsets, makePuzzle: makePuzzle, difficultyOf: difficultyOf, timeFor: timeFor, TIME_BASE: TIME_BASE, TIME_EQ: TIME_EQ, TIME_SCALE: TIME_SCALE, workText: workText, checkCombo: checkCombo, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, ITEMS: ITEMS, MAX_EQS: MAX_EQS, TOTAL_TO: TOTAL_TO, TRIPLE_FROM: TRIPLE_FROM, DISTRACT_FROM: DISTRACT_FROM, SINGLE_TO: SINGLE_TO, DIFF: DIFF, DIFF_WINDOW: DIFF_WINDOW, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

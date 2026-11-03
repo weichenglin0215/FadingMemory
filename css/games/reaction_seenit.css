@@ -6,51 +6,54 @@
 
 /* ═══ 077 這個看過嗎（.seenit-）═══ */
 .seenit-pic {
-    position: absolute;
-    left: 50%;
-    top: 90px;
-    width: 250px;
-    height: 250px;
-    margin-left: -125px;
-    border-radius: var(--r-lg);
-    background: var(--c-card);
-    border: var(--bd);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 150px;
-    line-height: 1;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 50%;                                          /* 離左邊 50% */
+    top: 90px;                                          /* 離上邊 90px */
+    width: 250px;                                       /* 寬度：250px */
+    height: 250px;                                      /* 高度：250px */
+    margin-left: -125px;                                /* 左外距：-125px */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    font-size: 150px;                                   /* 字級：150px */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
 }
 
+/* 「seenit-pic」在「正確（成功）時」的樣子的樣式 */
 .seenit-pic--ok {
-    border-color: var(--c-ok);
-    background: var(--c-green-soft);
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
+    background: var(--c-green-soft);                    /* 背景：主題變數 --c-green-soft */
 }
 
+/* 「seenit-pic」在「錯誤（失敗）時」的樣子的樣式 */
 .seenit-pic--bad {
-    border-color: var(--c-bad);
-    background: var(--c-bad-soft);
+    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
 }
 
 /* 圖案名稱（V1.28：emoji 下面加中文名稱） */
 .seenit-name {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 350px;
-    text-align: center;
-    font-size: var(--fs-xl);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 350px;                                         /* 離上邊 350px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 「seenit-info」這個元素的樣式 */
 .seenit-info {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 420px;
-    text-align: center;
-    font-size: var(--fs-md);
-    font-weight: var(--fw-bold);
-    color: var(--c-ink-soft);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 420px;                                         /* 離上邊 420px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }

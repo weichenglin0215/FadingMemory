@@ -18,11 +18,15 @@
    · 成績意義改過（挑出幾顆 → 通過幾關）：玩家瀏覽器裡舊的最佳紀錄第一次進來會清掉；伺服器上的舊成績要清掉（見 README V1.38.0）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'beans'：選單、成績、存檔都靠它；樣式在 css/games/reaction_beans.css，裡面的 class 名稱一律以 beans- 開頭。 */
     'use strict';
 
-    var ID = 'beans';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'beans';                                   /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -73,7 +77,7 @@
     }
     /* 豆子的位置：n 顆、互不重疊（中心距離 ≥ 2 × 半徑 ＋ GAP；擺不下就只要不重疊 ≥ 2 × 半徑；再不行改用六角形格子）。回傳 [[x, y], …]（盤心為原點） */
     function placeBeans(n, size, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var r = beanRadius(size), R = centerRadius(size), pts = [];
         var gaps = [2 * r + GAP, 2 * r];
         for (var i = 0; i < n; i++) {
@@ -117,6 +121,7 @@
         }
         return m;
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 40) return '挑豆子達人！';
         if (n >= 25) return '眼力超強！';
@@ -125,6 +130,7 @@
         return '只挑不是紅豆的！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         /* V1.38.0：成績從「挑出幾顆」變成「通過幾關」，舊的最佳紀錄不能比，第一次進來清掉。
            不用 Reaction.migrateBest：它看到 .sync 記號（現行版本寫的最佳紀錄都有）就當成新單位、不會清。 */
@@ -159,13 +165,15 @@
         return svg;
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var W = stage.clientWidth || 472;
         var plate = makePlate(level, api.rand), removed = {}, els = {}, phase = 'play', drag = null, left = plate.junk, penalties = 0, timer = null;
         api.info = { get plate() { return plate; }, get removed() { return removed; }, get phase() { return phase; }, get left() { return left; }, get penalties() { return penalties; } };
         api.setInfo('還剩 ' + left + ' 顆');
-        console.log('[挑豆子] 第 ' + level + ' 關：' + plate.total + ' 顆，雜物 ' + plate.junk + '（像紅豆的 ' + plate.items.filter(function (it) { return LOOKS.indexOf(it.type) >= 0; }).length + '），限時 ' + (timeMs(level) / 1000) + ' 秒，拖到紅豆扣 ' + PENALTY_S + ' 秒');
+        console.log('[挑豆子] 第 ' + level + ' 關：' + plate.total + ' 顆，雜物 ' + plate.junk + '（像紅豆的 ' + plate.items.filter(function (it) { return LOOKS.indexOf(it.type) >= 0; }).length + '），限時 ' + (timeMs(level) / 1000) + ' 秒，拖到紅豆扣 ' + PENALTY_S + ' 秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var field = h('div', { 'class': 'beans-field' });
         stage.appendChild(field);
@@ -186,7 +194,7 @@
             var j = plate.items.filter(function (it) { return !it.good; })[0];
             if (j) {
                 var d = Math.hypot(j.x, j.y) || 1, ux = j.x / d, uy = j.y / d || -1;
-                kit.hintOn(stage, null, { mode: 'drag', x: pcx + j.x, y: pcy + j.y, dx: ux * (PLATE_R + 30) - j.x, dy: uy * (PLATE_R + 30) - j.y, delay: 600, text: '把雜物往盤子外面拖' });
+                kit.hintOn(stage, null, { mode: 'drag', x: pcx + j.x, y: pcy + j.y, dx: ux * (PLATE_R + 30) - j.x, dy: uy * (PLATE_R + 30) - j.y, delay: 600, text: '把雜物往盤子外面拖' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
             }
         }
 
@@ -266,12 +274,14 @@
         api.wrong = function () { if (phase !== 'play') return; var r = plate.items.filter(function (it) { return it.good; })[0]; if (r) penalize(r); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '挑豆子',
         rule: '阿嬤的紅豆裡混著別的東西。**用手指把不是紅豆的雜物（小石頭、綠豆、黑豆……）往盤子外面拖出去**，不用拖到哪裡，拖出盤緣就行。**拖到紅豆會扣時間**。紅豆是光滑的暗紅色橢圓；越後面，混進來的東西**越來越像紅豆**——紅色的小石頭、暗紅色有斑點的花豆、比較小又細長的赤小豆。每一關都有時間限制，**時間內把雜物挑光才能過關**，看你能過幾關。',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             totalFor: totalFor, junkFor: junkFor, lookFor: lookFor, sizeFor: sizeFor, timeMs: timeMs, beanRadius: beanRadius, centerRadius: centerRadius, hexSlots: hexSlots,
             placeBeans: placeBeans, makePlate: makePlate, isOut: isOut, junkLeft: junkLeft, minClearance: minClearance, rating: rating,
@@ -279,5 +289,6 @@
             SOLVE_CAP: SOLVE_CAP, EASY: EASY, LOOKS: LOOKS, DIFF: DIFF, NAME: NAME, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

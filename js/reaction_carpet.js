@@ -25,11 +25,15 @@
      V1.38.0（玩家意見：看不清楚）：綠線畫得更慢——每格 0.12 秒、至少 2.4 秒（原本不管路多長都是 1.6 秒畫完），畫完停格 SOL_HOLD_MS＝3 秒（原本整段只有 2.8 秒）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'carpet'：選單、成績、存檔都靠它；樣式在 css/games/reaction_carpet.css，裡面的 class 名稱一律以 carpet- 開頭。 */
     'use strict';
 
-    var ID = 'carpet';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'carpet';                                  /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
@@ -372,6 +376,7 @@
         var head = s.path[s.path.length - 1];
         return neighbors(s.n, head).every(function (j) { return s.vis[j]; });
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 25) return '地毯大師！';
         if (n >= 15) return '腦袋很會繞！';
@@ -380,6 +385,7 @@
         return '先看哪一格最容易變成孤島，再來一次！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'carpet-stage',
@@ -390,11 +396,13 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand), n = q.n, st = newState(q), done = false;
-        api.info = q;
-        console.log('[鋪地毯] 第 ' + level + ' 關：' + n + '×' + n + '，家具 ' + q.stones.length + ' 個，要鋪 ' + q.free + ' 格，起點第 ' + (q.start + 1) + ' 格；限時 ' + timeMs(q.free) + ' ms；出題方式 ' + q.how + '，難度 ' + Math.round(q.hard));
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[鋪地毯] 第 ' + level + ' 關：' + n + '×' + n + '，家具 ' + q.stones.length + ' 個，要鋪 ' + q.free + ' 格，起點第 ' + (q.start + 1) + ' 格；限時 ' + timeMs(q.free) + ' ms；出題方式 ' + q.how + '，難度 ' + Math.round(q.hard));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, topPad = 56;
         var cell = Math.floor(Math.min((W - 20) / n, (H - topPad - 20) / n, 96)), BS = cell * n, bx = Math.round((W - BS) / 2), by = topPad + Math.round((H - topPad - BS) / 2) - 8;
@@ -424,6 +432,7 @@
         rug.setAttribute('stroke-width', (cell * 0.64).toFixed(1)); rugPat.setAttribute('stroke-width', (cell * 0.34).toFixed(1));
         var roll = kit.svg('circle', { 'class': 'carpet-roll', r: cell * 0.33, cx: 0, cy: 0 }, svg), rollIn = kit.svg('circle', { 'class': 'carpet-roll-in', r: cell * 0.14, cx: 0, cy: 0 }, svg);
         function pathD(p) { return p.map(function (k, j) { return (j ? 'L' : 'M') + cx(k).toFixed(1) + ' ' + cy(k).toFixed(1); }).join(' '); }
+        /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() {
             var d = pathD(st.path), head = st.path[st.path.length - 1];
             if (st.path.length === 1) d += ' L' + (cx(head) + 0.01) + ' ' + cy(head);              /* 只有一格時畫一個圓點 */
@@ -432,10 +441,10 @@
             tip.textContent = '已鋪 ' + st.path.length + '／' + st.free + ' 格　往回拖＝把地毯捲回來';
         }
         paint();
-        api.timer(timeMs(q.free), function () { finish('time'); });
+        api.timer(timeMs(q.free), function () { finish('time'); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         if (level === 1 && kit.once('carpet.hint')) {
             var nb = neighbors(n, q.start).filter(function (j) { return !st.vis[j]; })[0];
-            kit.hintOn(stage, null, { mode: 'drag', x: bx + cx(q.start), y: by + cy(q.start), dx: cx(nb) - cx(q.start), dy: cy(nb) - cy(q.start), delay: 500, text: '從地毯捲往旁邊拖，每格都要鋪' });
+            kit.hintOn(stage, null, { mode: 'drag', x: bx + cx(q.start), y: by + cy(q.start), dx: cx(nb) - cx(q.start), dy: cy(nb) - cy(q.start), delay: 500, text: '從地毯捲往旁邊拖，每格都要鋪' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         }
 
         /* 手指：從捲頭按下才開始鋪；移動時把手指經過的每一格依序處理（手指一次跨好幾格，也不會漏格） */
@@ -510,12 +519,14 @@
         };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '鋪地毯',
         rule: '房間裡要鋪地毯。**手指從黃色的地毯捲開始，往上下左右的相鄰格拖，一路把地毯鋪出去**。**每一格地板都要剛好鋪到一次**，放著家具的格子不能走。**往回拖就是把地毯捲回來**，走進死路不會結束，自己捲回去換條路。整個房間鋪滿就過關；來不及就結束，看你能過幾關。越後面，房間越大、家具越多、散得越開！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             sizeFor: sizeFor, stonesFor: stonesFor, timeMs: timeMs, parityOk: parityOk, neighbors: neighbors, adjacent: adjacent, connected: connected, findPath: findPath, greedyWalk: greedyWalk, shortcutWorks: shortcutWorks, warnsdorffWalk: warnsdorffWalk,
             scatterLayout: scatterLayout, forcedOk: forcedOk, freeDeg: freeDeg, hardness: hardness, candCount: candCount, pickIcons: pickIcons, FURNITURE: FURNITURE, CANDS: CANDS, NODE_CAP: NODE_CAP, humanCost: humanCost, GEN_BUDGET_MS: GEN_BUDGET_MS,
@@ -524,5 +535,6 @@
             RAMP_LEVELS: RAMP_LEVELS, N_RANGE: N_RANGE, STONES: STONES, WARMUP: WARMUP, TIME_BASE: TIME_BASE, TIME_PER_CELL: TIME_PER_CELL, MIN_FREE: MIN_FREE, GREEDY_ORDERS: GREEDY_ORDERS, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();

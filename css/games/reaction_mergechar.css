@@ -6,103 +6,116 @@
 
 /* ═══ 誰在偷偷動（.snk-）═══ */
 .mergechar-svg {
-    position: absolute;
-    left: 0;
-    top: 0;
-    display: block;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    display: block;                                     /* 獨佔一整行的區塊 */
 }
 
 /* ═══ 左右合字（.mergechar-）═══ */
 .mergechar-tip {
-    top: 4px;
+    top: 4px;                                           /* 離上邊 4px */
 }
 
+/* 「mergechar-prog」這個元素的樣式 */
 .mergechar-prog {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 36px;
-    text-align: center;
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-black);
-    color: var(--c-ok);
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 36px;                                          /* 離上邊 36px */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }
 
+/* 「mergechar-svg」這個元素的樣式 */
 .mergechar-svg {
-    pointer-events: none;
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「mergechar-piece」這個元素的樣式 */
 .mergechar-piece {
-    position: absolute;
-    border-radius: var(--r-md);
-    background: var(--c-card-alt);
-    border: 3px solid var(--c-ink-soft);
-    font-family: var(--font-ui);
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    padding: 0;
-    cursor: pointer;
-    z-index: 2;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
+    z-index: 2;                                         /* 疊放順序：數字越大越在上面（2） */
 }
 
+/* 「mergechar-piece」這個元素，按下去時的樣式 */
 .mergechar-piece:active {
-    transform: scale(0.96);
+    transform: scale(0.96);                             /* 變形：縮放 0.96 倍 */
 }
 
+/* 「mergechar-piece」在「被選中時」的樣子的樣式 */
 .mergechar-piece--sel {
-    background: var(--c-yellow);
-    border-color: var(--c-orange);
+    background: var(--c-yellow);                        /* 背景：主題變數 --c-yellow */
+    border-color: var(--c-orange);                      /* 邊框顏色：主題變數 --c-orange */
 }
 
+/* 「mergechar-piece」在「完成時」的樣子的樣式 */
 .mergechar-piece--done {
-    background: var(--c-ok-soft);
-    border-color: var(--c-ok);
-    opacity: 0.75;
+    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
+    opacity: 0.75;                                      /* 透明度 0.75（1＝完全不透明、0＝全透明） */
 }
 
+/* 「mergechar-piece」在「錯誤（失敗）時」的樣子的樣式 */
 .mergechar-piece--bad {
-    background: var(--c-bad-soft);
-    border-color: var(--c-bad);
+    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
 }
 
+/* 「mergechar-line」這個元素的樣式 */
 .mergechar-line {
-    stroke-width: 9;
-    stroke-linecap: round;
-    fill: none;
+    stroke-width: 9;                                    /* SVG 線條粗細：9 */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    fill: none;                                         /* SVG 圖形的填色：none */
 }
 
+/* 「mergechar-line」在「正確（成功）時」的樣子的樣式 */
 .mergechar-line--ok {
-    stroke: var(--c-ok);
+    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
 }
 
+/* 「mergechar-line」在「錯誤（失敗）時」的樣子的樣式 */
 .mergechar-line--bad {
-    stroke: var(--c-bad);
+    stroke: var(--c-bad);                               /* SVG 線條顏色：主題變數 --c-bad */
 }
 
+/* 「mergechar-line」在「顯示時」的樣子的樣式 */
 .mergechar-line--show {
-    stroke: var(--c-ink-soft);
-    stroke-dasharray: 4 14;
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-dasharray: 4 14;                             /* SVG 虛線的「畫／空」長度：4 14 */
 }
 
+/* 「mergechar-badge」這個元素的樣式 */
 .mergechar-badge {
-    position: absolute;
-    width: 72px;
-    height: 72px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: var(--c-card);
-    border: 4px solid var(--c-ink-soft);
-    font-size: var(--fs-xxl);
-    font-weight: var(--fw-black);
-    color: var(--c-ink);
-    z-index: 3;
-    pointer-events: none;
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    width: 72px;                                        /* 寬度：72px */
+    height: 72px;                                       /* 高度：72px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    border: 4px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --c-ink-soft */
+    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    z-index: 3;                                         /* 疊放順序：數字越大越在上面（3） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
+/* 「mergechar-badge」在「正確（成功）時」的樣子的樣式 */
 .mergechar-badge--ok {
-    border-color: var(--c-ok);
-    color: var(--c-ok);
+    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
+    color: var(--c-ok);                                 /* 文字顏色：主題變數 --c-ok */
 }

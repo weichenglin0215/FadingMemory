@@ -14,11 +14,15 @@
    · 放手時油表的最後一位被「推近」（放大）；撕貼紙揭曉金額與誤差（X.XXXX 元）。加滿（超過目標 60%）就自動停手。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
+       檔案由上往下大致分成：① 參數區（標題寫著可以自己調整的參數：難度、秒數、文字大多在這）；② 純函式（只做計算、不碰畫面：出題、判斷對錯，單元測試直接測它們）；③ 畫面（mount 是進場、setup 是每一關開始時呼叫，負責把畫面建出來並處理點擊）。
+       最後的 Reaction.register(G) 把這款遊戲「登記」給選單（沒有這行，選單就看不到它）。'use strict' 是嚴格模式：打錯變數名稱會直接報錯，而不是默默建立新變數。
+       這款遊戲的代號是 'gaspump'：選單、成績、存檔都靠它；樣式在 css/games/reaction_gaspump.css，裡面的 class 名稱一律以 gaspump- 開頭。 */
     'use strict';
 
-    var ID = 'gaspump';
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var ID = 'gaspump';                                 /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂（企劃寫第 25 關容許誤差 ±0.5 元） */
@@ -56,7 +60,7 @@
     function fmt4(x) { return x.toFixed(4); }
     /* 出一關：{ fuel, price, target, targetL, r0, a, T, q, tol, maxL, level } */
     function makeLevel(level, rand) {
-        rand = rand || Math.random;
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var price = level <= EASY_LEVELS ? kit.pick(PRICES_EASY, rand) : round1(kit.randFloat(PRICE_RANGE[0], PRICE_RANGE[1], rand));
         var target = level < TARGET_FROM ? 500 : kit.pick(TARGETS, rand);
         var targetL = target / price, q = accelFor(level) * kit.randFloat(0.85, 1.15, rand), T = kit.randFloat(T_RANGE[0], T_RANGE[1], rand);
@@ -66,6 +70,7 @@
         var a = q * r0 / T;
         return { fuel: kit.pick(FUELS, rand), price: price, target: target, targetL: targetL, r0: r0, a: a, T: T, q: q, rEnd: r0 + a * T, tol: tolFor(level), maxL: targetL * OVER, level: level };
     }
+    /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 20) return '加油站大師！';
         if (n >= 12) return '手感很準！';
@@ -74,6 +79,7 @@
         return '先算要加幾公升，再看著數字放手！';
     }
 
+    /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, stageClass: 'gaspump-stage',
@@ -94,11 +100,13 @@
         return s;
     }
 
+    /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;
+        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand);
-        api.info = q;
-        console.log('[加到五百] 第 ' + level + ' 關：' + q.fuel + ' ' + q.price + ' 元／公升，加 ' + q.target + ' 元（約 ' + q.targetL.toFixed(2) + ' 公升）；流量 ' + q.r0.toFixed(2) + ' → ' + q.rEnd.toFixed(2) + ' 公升／秒（約按 ' + q.T.toFixed(1) + ' 秒）；容許 ±' + q.tol + ' 元');
+        api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
+        console.log('[加到五百] 第 ' + level + ' 關：' + q.fuel + ' ' + q.price + ' 元／公升，加 ' + q.target + ' 元（約 ' + q.targetL.toFixed(2) + ' 公升）；流量 ' + q.r0.toFixed(2) + ' → ' + q.rEnd.toFixed(2) + ' 公升／秒（約按 ' + q.T.toFixed(1) + ' 秒）；容許 ±' + q.tol + ' 元');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var field = h('div', { 'class': 'gaspump-field' });
         stage.appendChild(field);
@@ -124,8 +132,8 @@
         field.appendChild(gun);
 
         var L = 0, t = 0, pumping = false, done = false, loop = null, ctl = null;
-        api.timer(timeMs(), function () { release(); });
-        if (level === 1 && kit.once('gaspump.hint')) kit.hintOn(stage, gun, { mode: 'hold', delay: 700, text: '按住加油，剛好就放手' });
+        api.timer(timeMs(), function () { release(); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
+        if (level === 1 && kit.once('gaspump.hint')) kit.hintOn(stage, gun, { mode: 'hold', delay: 700, text: '按住加油，剛好就放手' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         ctl = kit.hold(gun, {
             down: function () { if (done || api.over) return; pumping = true; gun.classList.add('gaspump-gun--on'); Sfx.play('click'); loop = api.my.loop(frame); },
             up: function () { if (pumping) release(); }
@@ -155,20 +163,24 @@
                 api.fail({ delay: 2800, lines: [fmt4(r.amount) + ' 元，' + word + ' ' + fmt4(Math.abs(r.diff)) + ' 元', '容許誤差 ±' + q.tol + ' 元（' + q.target + ' 元 ÷ ' + q.price + ' ＝ ' + (q.target / q.price).toFixed(4) + ' 公升）'] });
             });
         }
+        /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { t = timeFor(q.targetL, q.r0, q.a); L = litersAt(t, q.r0, q.a); lit.textContent = shown(L).toFixed(2); release(); };
         api.wrong = function () { t = timeFor(q.targetL * 0.7, q.r0, q.a); L = litersAt(t, q.r0, q.a); lit.textContent = shown(L).toFixed(2); release(); };
     }
 
+    /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '加到五百',
         rule: '加油站的油槍。上面寫著油價和要加多少元。**按住油槍開始加油**，畫面上只顯示「已加幾公升」（一直在跳），金額被蓋住了。要自己心算：**金額 ÷ 油價 ＝ 要加幾公升**。**你覺得剛好就放手**，放手後撕掉貼紙揭曉金額，**誤差在容許範圍內才過關**。小心：出油會越來越快（剛按下慢、後面快），而且每一關快慢都不一樣，快到的時候一不小心就超過了！越後面，容許的誤差越小！',
         mount: mount,
         score: SCORE,
+        /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             tolFor: tolFor, accelFor: accelFor, timeMs: timeMs, litersAt: litersAt, timeFor: timeFor, shown: shown, settle: settle, fmt4: fmt4, makeLevel: makeLevel, rating: rating,
             RAMP_LEVELS: RAMP_LEVELS, TOL: TOL, ACCEL: ACCEL, T_RANGE: T_RANGE, RATE_MAX: RATE_MAX, T_MAX: T_MAX, PRICES_EASY: PRICES_EASY, EASY_LEVELS: EASY_LEVELS, PRICE_RANGE: PRICE_RANGE, TARGETS: TARGETS, TARGET_FROM: TARGET_FROM, OVER: OVER, TIME_S: TIME_S, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();
