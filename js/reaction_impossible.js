@@ -100,7 +100,7 @@
     }
     /* 設定 SVG 的 viewBox（x y 寬 高）：改 viewBox 就是「鏡頭」移動與放大 */
     function setViewBox(svg, box) {
-        svg.setAttribute('viewBox', box.vx + ' ' + box.vy + ' ' + box.vw + ' ' + box.vh);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+        svg.setAttribute('viewBox', box.vx + ' ' + box.vy + ' ' + box.vw + ' ' + box.vh);
     }
 
     /* 把 SVG 的 viewBox 從 from 補間到 to：跟 js/reaction_drop.js 的 tweenViewBox
@@ -133,7 +133,7 @@
                 });
                 if (p < 1) requestAnimationFrame(frame); else finishOnce();  /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
             }
-            requestAnimationFrame(frame);               /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
+            requestAnimationFrame(frame);
             setTimeout(finishOnce, duration + 400);     /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
         });
     }
@@ -178,7 +178,7 @@
             var maxY = barY - imgH;     /* 圖片 y 最多能到哪裡（下緣剛好碰到警戒線上緣） */
 
             var svg = svgEl('svg', { 'class': 'impossible-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'xMidYMid slice' });
-            field.appendChild(svg);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            field.appendChild(svg);
 
             /* 摔到警戒線時照片要變紅：用 SVG 濾鏡 feColorMatrix 重新計算每個像素的 RGB，alpha 不變，所以透明的部分仍然透明 */
             /* 摔到警戒線時照片要變紅：用 SVG 濾鏡 feColorMatrix 重新計算每個像素的 RGB，
@@ -235,10 +235,10 @@
             function startFall() {
                 phase = 'falling';
                 hint.textContent = '點擊畫面讓阿湯哥停止';        /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-                hint.classList.add('impossible-hint--danger');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                hint.classList.add('impossible-hint--danger');
 
                 /* t0 開始時間 */
-                var t0 = performance.now();             /* performance.now()：高精度的時間（毫秒），計時用 */
+                var t0 = performance.now();
                 var landed = false;
                 /* frame：每個畫面更新一次；自由落體位置 y = ½ × a × t² */
                 function frame(now) {
@@ -338,7 +338,7 @@
                     'class': 'impossible-measure-title ' + (success ? 'impossible-measure-title--ok' : 'impossible-measure-title--bad'),
                     x: midX, y: titleY, 'font-size': titleSize, 'text-anchor': 'middle', 'stroke-width': titleSize * 0.14
                 });
-                title.textContent = success ? '成功！' : '任務失敗';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                title.textContent = success ? '成功！' : '任務失敗';
                 svg.appendChild(title);
 
                 /* 數字最長會長到「4200.00 公分」這種寬度，所以 pill 的寬度不是猜的，
@@ -401,7 +401,7 @@
                 console.log('不可能任務：實際 ' + rawCm.toFixed(6) + ' 公分（' + gapPx.toFixed(4) + ' px）→ 成績 ' + cm.toFixed(4) + ' 公分');
                 var success = !crashed && cm < SUCCESS_CM;
 
-                var isNew = success && Reaction.setBest(ID, cm, function (v, b) { return v < b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                var isNew = success && Reaction.setBest(ID, cm, function (v, b) { return v < b; });
                 ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
                 /* 定格一秒（參考使用者給的示意圖：剛停下來那一刻，提示文字都還在、

@@ -117,7 +117,7 @@
         paintE(cv, dir, value);
         stage.appendChild(cv);                          /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var note = h('div', { 'class': 'fadee-note', text: '往 E 的開口方向滑動' });
-        stage.appendChild(note);                        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(note);
         var hint = null;
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，第一個 E 的開口朝右，手指就往右滑（第一關的正確答案） */
         if (level === 1 && kit.once('fadee.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: 236 - 50, y: 370, dx: 110, dy: 0, delay: 300 });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
@@ -130,7 +130,7 @@
             start = kit.localPt(e, stage); pid = e.pointerId;
             if (hint) { hint.remove(); hint = null; }
         });
-        stage.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        stage.addEventListener('pointermove', function (e) {
             if (!start || judged || e.pointerId !== pid || api.over) return;
             var p = kit.localPt(e, stage), dx = p.x - start.x, dy = p.y - start.y;
             if (Math.sqrt(dx * dx + dy * dy) >= SWIPE_PX) { judged = true; judge(dirOf(dx, dy)); }  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
@@ -158,7 +158,7 @@
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(dir); };
-        api.wrong = function () { judge(DIRS.filter(function (x) { return x !== dir; })[0]); };  /* filter：留下符合條件的元素，回傳新陣列 */
+        api.wrong = function () { judge(DIRS.filter(function (x) { return x !== dir; })[0]); };
     }
 
     /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */

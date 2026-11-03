@@ -49,12 +49,12 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function speedAt(level) { return kit.ramp(level, SPEED[0], SPEED[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
-    function gapAt(level) { return kit.ramp(level, GAP[0], GAP[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function gapAt(level) { return kit.ramp(level, GAP[0], GAP[1], RAMP_LEVELS); }
     function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
     /* 第 level 關有幾個人：第 1 關 2 人，每隔 3 關多 1 人 */
     function peopleAt(level) { return Math.min(PEOPLE_MAX, PEOPLE0 + Math.floor((level - 1) / PEOPLE_STEP)); }  /* Math.floor：無條件捨去成整數 */
     /* 第 level 關有顏色變化（也是會被問到）的衣物：第 1 關 2 件，每隔 2 關多 1 件，最多 4 件 */
-    function partsFor(level) { return VARY_ORDER.slice(0, Math.min(PARTS.length, PARTS0 + Math.floor((level - 1) / PARTS_STEP))); }  /* Math.floor：無條件捨去成整數 */
+    function partsFor(level) { return VARY_ORDER.slice(0, Math.min(PARTS.length, PARTS0 + Math.floor((level - 1) / PARTS_STEP))); }
     /* 出題：回傳 { people: [{hat, shirt, pants, shoes（顏色索引；沒有顏色變化的衣物是 −1＝灰色）, t（進場時間，秒）}], who（1～人數）, part, answer（顏色索引）, duration（全部走完的秒數）, W } */
     function makeLevel(level, rand, W) {
         rand = rand || Math.random; W = W || 472;
@@ -118,13 +118,13 @@
         var els = q.people.map(function (p) {           /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var el = h('div', { 'class': 'passersby-person', html: personSvg(p) });
             el.style.transform = 'translateX(' + (W + 10) + 'px)';                 /* 一開始都在畫面右邊外面 */
-            stage.appendChild(el);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            stage.appendChild(el);
             return el;
         });
         var loop = api.my.loop(function () {            /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
             if (phase !== 'walk' || api.over) return false;
-            var sec = (performance.now() - t0) / 1000;  /* performance.now()：高精度的時間（毫秒），計時用 */
-            els.forEach(function (el, i) { el.style.transform = 'translateX(' + xAt(q, i, sec).toFixed(1) + 'px)'; });  /* forEach：對陣列的每個元素各做一次 */
+            var sec = (performance.now() - t0) / 1000;
+            els.forEach(function (el, i) { el.style.transform = 'translateX(' + xAt(q, i, sec).toFixed(1) + 'px)'; });
         });
         api.after(Math.round(q.duration * 1000) + 120, ask);  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
 
@@ -134,7 +134,7 @@
             phase = 'ask'; loop.stop();
             els.forEach(function (el) { el.style.display = 'none'; });
             tip.textContent = question(q); tip.classList.add('passersby-tip--ask');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-            btns = COLORS.map(function (c, i) {         /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            btns = COLORS.map(function (c, i) {
                 var b = h('button', { 'class': 'btn btn--line passersby-opt' }, [h('span', { 'class': 'passersby-sw' }), h('span', { text: c.name })]);
                 b.firstChild.style.background = c.hex;
                 kit.onTap(b, function () { judge(i); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
@@ -149,7 +149,7 @@
         function judge(i) {
             if (api.over || phase !== 'ask') return;
             phase = 'done';
-            btns.forEach(function (b, k) { if (k === q.answer) b.classList.add('passersby-opt--ok'); else if (k === i) b.classList.add('passersby-opt--bad'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            btns.forEach(function (b, k) { if (k === q.answer) b.classList.add('passersby-opt--ok'); else if (k === i) b.classList.add('passersby-opt--bad'); });
             /* 揭曉：5 個人站成一排，被問的那一件用虛線框起來 */
             var lineup = h('div', { 'class': 'passersby-lineup' });
             q.people.forEach(function (p, k) {

@@ -83,7 +83,7 @@
     function pickToday(level, rand) {
         var y = kit.pick([2026, 2027], rand), m = kit.randInt(1, 12, rand), d;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         if (level <= SAME_MONTH_TO) d = kit.randInt(16, 26, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
-        else d = rand() < 0.75 ? kit.randInt(1, 4, rand) : kit.randInt(8, 26, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+        else d = rand() < 0.75 ? kit.randInt(1, 4, rand) : kit.randInt(8, 26, rand);
         if (level >= MARCH_FROM && rand() < 0.5) { m = 3; d = kit.randInt(1, 3, rand); }
         if (level >= NEWYEAR_FROM && rand() < 0.25) { m = 1; d = kit.randInt(1, 4, rand); }
         if (level >= LEAP_FROM && m === 3 && rand() < 0.5) y = 2028;
@@ -93,7 +93,7 @@
        items 的長度是 ITEMS 算出來的（現在都是 1）。只有一樣時，過期／沒過期各一半機會；兩樣以上不要全部都過期或全部都沒過期 */
     function makePuzzle(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var count = Math.round(kit.ramp(level, ITEMS[0], ITEMS[1], RAMP_LEVELS));  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+        var count = Math.round(kit.ramp(level, ITEMS[0], ITEMS[1], RAMP_LEVELS));
         var shelfMax = kit.ramp(level, SHELF_MAX[0], SHELF_MAX[1], RAMP_LEVELS);
         var wantExpired = rand() < 0.5;                 /* 答案先抽好（只有一樣時用），再湊日期；不能每次重試都重抽，不然會偏向「沒過期」 */
         for (var tr = 0; tr < 3000; tr++) {
@@ -102,14 +102,14 @@
             for (var i = 0; i < count && okAll; i++) {
                 var useHour = level >= HOURS_FROM && rand() < HOURS_P;
                 var cand = pool.filter(function (f) { return !used[f[0]] && (!useHour || f[2]); });  /* filter：留下符合條件的元素，回傳新陣列 */
-                if (!cand.length) { useHour = false; cand = pool.filter(function (f) { return !used[f[0]]; }); }  /* filter：留下符合條件的元素，回傳新陣列 */
+                if (!cand.length) { useHour = false; cand = pool.filter(function (f) { return !used[f[0]]; }); }
                 var f = cand[0], it = null;
                 used[f[0]] = true;
                 for (var k = 0; k < 60 && !it; k++) {
                     if (useHour) {
-                        var H = kit.pick(SHELF_HOURS, rand), dh = kit.randInt(1, 20, rand) * (rand() < 0.5 ? -1 : 1);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+                        var H = kit.pick(SHELF_HOURS, rand), dh = kit.randInt(1, 20, rand) * (rand() < 0.5 ? -1 : 1);
                         var due = now.day * 24 + now.hour + dh, start = due - H;
-                        it = { name: f[0], icon: f[1], kind: 'hour', mfg: Math.floor(start / 24), mfgHour: ((start % 24) + 24) % 24, n: H };  /* Math.floor：無條件捨去成整數 */
+                        it = { name: f[0], icon: f[1], kind: 'hour', mfg: Math.floor(start / 24), mfgHour: ((start % 24) + 24) % 24, n: H };
                     } else {
                         var days = SHELF_DAYS.filter(function (x) { return x <= shelfMax; }), n = kit.pick(days, rand);
                         var dd = kit.randInt(-NEAR_DAYS, NEAR_DAYS, rand), mfg = now.day + dd - n, a = ymd(mfg), b = ymd(mfg + n);
@@ -202,10 +202,10 @@
         var bExp = h('button', { 'class': 'btn expiry-btn expiry-btn--bad', type: 'button', text: '已過期' });
         var bFresh = h('button', { 'class': 'btn expiry-btn expiry-btn--good', type: 'button', text: '未過期' });
         kit.onTap(bExp, function () { choose(true); }); /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
-        kit.onTap(bFresh, function () { choose(false); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        kit.onTap(bFresh, function () { choose(false); });
         var btns = h('div', { 'class': 'expiry-btns' }, [bExp, bFresh]);
         wrap.appendChild(today); wrap.appendChild(note); wrap.appendChild(card); wrap.appendChild(ask); wrap.appendChild(btns);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-        stage.appendChild(wrap);                        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(wrap);
 
         /* 把「今天」的日期字級調到剛好佔滿寬度（量 40px 時的寬度，等比例放大／縮小；字型載入完成後再量一次） */
         function fitToday() {
@@ -229,9 +229,9 @@
         }
         function reveal() {
             var right = answer === it.expired;
-            due.classList.remove('expiry-due--judging');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            due.classList.remove('expiry-due--judging');
             due.classList.add(it.expired ? 'expiry-due--bad' : 'expiry-due--ok');
-            dueTxt.textContent = dueText(it);           /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            dueTxt.textContent = dueText(it);
             if (it.expired) stamp.classList.add('expiry-stamp--on');
             why.textContent = explain(it, pz.now);
             card.classList.add(right ? 'expiry-card--right' : 'expiry-card--wrong');
@@ -241,7 +241,7 @@
                 (answer ? bExp : bFresh).classList.add('expiry-btn--wrong');
                 ask.textContent = '你按了「' + (answer ? '已過期' : '未過期') + '」，答錯了';
             }
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({ delay: FAIL_HOLD_MS, lines: [it.name + '：' + dueText(it) + '，' + (it.expired ? '已經過期' : '還沒過期'), explain(it, pz.now)] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 時間到：不算答案，直接亮出到期日與算式，結算 */

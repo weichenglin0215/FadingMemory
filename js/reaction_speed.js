@@ -65,7 +65,7 @@
             var hint = h('div', { 'class': 'hint', text: '默數到 0，算準時間按下面的按鈕' });
             var btn = h('button', { 'class': 'btn btn--primary speed-btn', text: '按這裡！' });
             root.appendChild(h('div', { 'class': 'speed-wrap' }, [num, count, hint]));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-            root.appendChild(btn);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(btn);
             ctx.setMeta(fmtBest(Reaction.getBest(ID))); /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
             /* t0：這局開始的時間；clicked：玩家按了沒 */
@@ -89,7 +89,7 @@
                 /* requestAnimationFrame(tick)：請瀏覽器在下一個畫面更新時再呼叫 tick，形成持續更新的迴圈 */
                 if (!clicked) raf = requestAnimationFrame(tick);  /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
             }
-            raf = requestAnimationFrame(tick);          /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
+            raf = requestAnimationFrame(tick);
 
             /* 用 pointerdown（手指一碰到螢幕就觸發），不是 click——這是一個計時遊戲，
                click 在觸控裝置上要等手指離開螢幕（touchend）才觸發，等於多算了「手指按著
@@ -104,7 +104,7 @@
                 cancelAnimationFrame(raf);
                 /* 算出差了幾毫秒：現在時間 − 開始時間 − 總長度（正＝慢了，負＝快了）。
                    不再四捨五入成整數毫秒——保留到 0.1 毫秒，成績才有 4 位小數（秒）可以用 */
-                finish(performance.now() - t0 - TOTAL); /* performance.now()：高精度的時間（毫秒），計時用 */
+                finish(performance.now() - t0 - TOTAL);
             });
         }
 
@@ -120,7 +120,7 @@
                v < b（新差值比舊紀錄小才算更好）——跟「神準落下」的分數（越大越好）
                方向相反，這就是 reaction_core.js 的 setBest 要求呼叫端自己傳比較
                函式、而不是寫死「數字越大越好」的原因。 */
-            var isNew = Reaction.setBest(ID, score, function (v, b) { return v < b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+            var isNew = Reaction.setBest(ID, score, function (v, b) { return v < b; });
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
             /* 結算彈窗（公版 kit.result）：帶 score 會在彈窗出現之後自動送世界排行榜（非同步，進榜了會自己跳出恭喜）。

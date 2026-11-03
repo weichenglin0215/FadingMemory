@@ -42,7 +42,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function digitsFor(level) { return Math.round(ramp(level, DIGITS)); }  /* Math.round：四捨五入成整數 */
-    function viewMs(level) { return Math.round(ramp(level, VIEW_S) * 1000); }  /* Math.round：四捨五入成整數 */
+    function viewMs(level) { return Math.round(ramp(level, VIEW_S) * 1000); }
     function repeatsFor(level) { return Math.round(ramp(level, REPEATS)); }
     function mirrorsFor(level) { return Math.round(ramp(level, MIRRORS)); }
     function wrap180(a) { var x = ((a + 180) % 360 + 360) % 360 - 180; return x === -180 ? 180 : x; }
@@ -87,7 +87,7 @@
         segs.forEach(function (n) {                     /* forEach：對陣列的每個元素各做一次 */
             if (n === 4) {
                 var a = kit.randInt(0, 9, rand), b, c;  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
-                do { b = kit.randInt(0, 9, rand); } while (b === a);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+                do { b = kit.randInt(0, 9, rand); } while (b === a);
                 do { c = kit.randInt(0, 9, rand); } while (c === a || c === b);
                 d.push(a, b, c, a);
             } else if (n === 2) { var x = kit.randInt(0, 9, rand); d.push(x, x); }
@@ -137,7 +137,7 @@
         var field = h('div', { 'class': 'rotary-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note rotary-tip', text: '記住號碼，等一下照順序撥出來' });
-        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(tip);
         var numEl = h('div', { 'class': 'rotary-num', text: q.num.split('').join(' ') });
         field.appendChild(numEl);
         var gotEl = h('div', { 'class': 'rotary-got', text: '' });
@@ -147,7 +147,7 @@
 
         /* 轉盤（SVG）：固定的底板（黑色，上面印著數字）→ 會轉的金屬盤（挖了十個洞）→ 固定的擋片 → 中心蓋子 */
         var svg = kit.svg('svg', { 'class': 'rotary-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        kit.svg('circle', { 'class': 'rotary-plate', cx: cx, cy: cy, r: R }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('circle', { 'class': 'rotary-plate', cx: cx, cy: cy, r: R }, svg);
         for (var d = 0; d <= 9; d++) {
             var pp = polar(cx, cy, ring, holeAngle(d));
             var t = kit.svg('text', { 'class': 'rotary-digit', x: pp[0], y: pp[1] + R * 0.07, 'text-anchor': 'middle' }, svg); t.textContent = String(d);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
@@ -169,7 +169,7 @@
         paint();
         function placeholders() { return q.num.split('').map(function (c, i) { return i < step ? c : '＿'; }).join(' '); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         /* 看號碼 */
-        info.textContent = '看 ' + (q.viewMs / 1000).toFixed(0) + ' 秒';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+        info.textContent = '看 ' + (q.viewMs / 1000).toFixed(0) + ' 秒';
         api.timer(q.viewMs, begin);                     /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         if (level === 1 && kit.once('rotary.hint')) {   /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
             var p0 = polar(cx, cy, ring, holeAngle(Number(q.num[0]))), tgt = polar(cx, cy, ring, STOP_ANGLE);
@@ -186,9 +186,9 @@
             e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             try { svg.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             drag = { id: e.pointerId, d: d2, a: angleOf(p.x, p.y, cx, cy) };
-            holeEls[d2].classList.add('rotary-hole--on');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            holeEls[d2].classList.add('rotary-hole--on');
         });
-        svg.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        svg.addEventListener('pointermove', function (e) {
             if (!drag || e.pointerId !== drag.id) return;
             var p = kit.localPt(e, svg), a = angleOf(p.x, p.y, cx, cy);
             rot = kit.clamp(rot + wrap180(a - drag.a), 0, rotationFor(drag.d)); drag.a = a;     /* 只能順時針，轉到擋片就卡住 */
@@ -230,12 +230,12 @@
             var right = q.num.split(''), mine = q.num.slice(0, step).split('').concat([String(wrong)]);
             numEl.classList.remove('rotary-num--hidden');
             numEl.innerHTML = ''; numEl.appendChild(h('div', { 'class': 'rotary-cmp__label', text: '正確號碼' }));  /* innerHTML = ''：把元素裡面的東西全部清掉 */
-            numEl.appendChild(h('div', { 'class': 'rotary-cmp' }, right.map(function (c, i) { return h('span', { 'class': 'rotary-cmp__d' + (i === step ? ' rotary-cmp__d--ok' : ''), text: c }); })));  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
-            gotEl.innerHTML = ''; gotEl.appendChild(h('div', { 'class': 'rotary-cmp__label', text: '你撥的' }));  /* innerHTML = ''：把元素裡面的東西全部清掉 */
+            numEl.appendChild(h('div', { 'class': 'rotary-cmp' }, right.map(function (c, i) { return h('span', { 'class': 'rotary-cmp__d' + (i === step ? ' rotary-cmp__d--ok' : ''), text: c }); })));
+            gotEl.innerHTML = ''; gotEl.appendChild(h('div', { 'class': 'rotary-cmp__label', text: '你撥的' }));
             gotEl.appendChild(h('div', { 'class': 'rotary-cmp' }, mine.map(function (c, i) { return h('span', { 'class': 'rotary-cmp__d' + (i === step ? ' rotary-cmp__d--bad' : ''), text: c }); })));
             info.textContent = '第 ' + (step + 1) + ' 碼撥錯了：應該是 ' + q.num[step] + '，你撥了 ' + wrong;
             springBack(true, function () { });
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({ delay: 3600, lines: ['第 ' + (step + 1) + ' 碼撥錯了：應該是 ' + q.num[step] + '，你撥了 ' + wrong, '號碼是 ' + q.num] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         var solving = false;                                                       /* 驗證用的 solve 可能被重複呼叫：只跑一次 */

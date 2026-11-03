@@ -104,7 +104,7 @@
         }
         /* 最多換 50 個起點重試 */
         for (var tries = 0; tries < 50; tries++) {
-            var s = Math.floor(rand() * g * g), seen0 = {};  /* Math.floor：無條件捨去成整數 */
+            var s = Math.floor(rand() * g * g), seen0 = {};
             seen0[s] = true;
             var r = dfs([s], seen0);
             if (r) return r;
@@ -137,7 +137,7 @@
             var fill = barWrap.firstChild;
             var field = h('div', { 'class': 'pattern-field' });
             root.appendChild(hint);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-            root.appendChild(field);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(field);
             root.appendChild(barWrap);
             var FW = field.clientWidth, FH = field.clientHeight;
             /* SVG 畫布 */
@@ -151,7 +151,7 @@
             function ny(i) { return cy + (Math.floor(i / g) - (g - 1) / 2) * S; }
 
             /* gLines 放畫出來的線；live 是手指正在拖曳的那條線；nodes 是各個點 */
-            var gLines = kit.svg('g', {}, svg);         /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+            var gLines = kit.svg('g', {}, svg);
             var live = kit.svg('line', { 'class': 'pattern-live', x1: 0, y1: 0, x2: 0, y2: 0, visibility: 'hidden' }, svg);
             var nodes = [];
             for (var i = 0; i < g * g; i++) {
@@ -184,10 +184,10 @@
                         var a = target[k - 1], b = target[k];
                         var line = seg(a, b, 'pattern-seg--demo');
                         line.setAttribute('x2', nx(a)); line.setAttribute('y2', ny(a));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
-                        nodes[b].classList.add('pattern-node--on');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                        Sfx.play('tick');               /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                        nodes[b].classList.add('pattern-node--on');
+                        Sfx.play('tick');
                         return my.tween(stepMs, function (e) {  /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
-                            line.setAttribute('x2', nx(a) + (nx(b) - nx(a)) * e);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                            line.setAttribute('x2', nx(a) + (nx(b) - nx(a)) * e);
                             line.setAttribute('y2', ny(a) + (ny(b) - ny(a)) * e);
                         }, kit.linear);
                     });
@@ -195,7 +195,7 @@
             }
             /* 示範結束：清掉線與標記，進入回想階段，開始倒數 */
             demo.then(function () { return my.wait(500); }).then(function () {
-                gLines.innerHTML = '';                  /* innerHTML = ''：把元素裡面的東西全部清掉 */
+                gLines.innerHTML = '';
                 nodes.forEach(function (n) { n.setAttribute('class', 'pattern-node'); });  /* forEach：對陣列的每個元素各做一次 */
                 state = 'recall';
                 /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從圖案的「起點」往「第二個點」重複移動（第一關的正確連法） */
@@ -236,7 +236,7 @@
                 chain.push(n);
                 for (var i = 0; i < chain.length; i++) {
                     var m = chain[i];
-                    if (path.indexOf(m) >= 0) continue; /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+                    if (path.indexOf(m) >= 0) continue;
                     if (path.length) seg(path[path.length - 1], m, 'pattern-seg--mine');
                     path.push(m);
                     nodes[m].classList.add('pattern-node--on');
@@ -289,13 +289,13 @@
                 if (state === 'recall' && path.length > 0 && path.length < target.length) {
                     path = [];
                     gLines.innerHTML = '';
-                    nodes.forEach(function (n) { n.setAttribute('class', 'pattern-node'); });  /* forEach：對陣列的每個元素各做一次 */
+                    nodes.forEach(function (n) { n.setAttribute('class', 'pattern-node'); });
                     Sfx.play('bad');
                 }
             }
             /* 綁定手指事件 */
             field.addEventListener('pointerdown', onDown);  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
-            field.addEventListener('pointermove', onMove);  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+            field.addEventListener('pointermove', onMove);
             field.addEventListener('pointerup', onUp);
             field.addEventListener('pointercancel', onUp);
             /* 這一局結束時把事件監聽拿掉（避免累積） */
@@ -314,9 +314,9 @@
                 Sfx.play('win');
                 fill.style.width = '0%';
                 bestLen = Math.max(bestLen, len);
-                if (Reaction.setBest(ID, bestLen, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                if (Reaction.setBest(ID, bestLen, function (v, b) { return v > b; })) newRec = true;
                 ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))]));
-                hint.textContent = '答對了！';              /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                hint.textContent = '答對了！';
                 if (level >= LEVEL_MAX) {
                     my.after(900, function () {
                         kit.result(root, { score: bestLen, num: '最長 ' + bestLen + ' 點', label: '全部記住了，太厲害了！', sfx: 'perfect', isNew: newRec, onAgain: restart });  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
@@ -338,7 +338,7 @@
                 for (var k = 1; k < target.length; k++) seg(target[k - 1], target[k], 'pattern-seg--answer');
                 nodes[target[0]].classList.add('pattern-node--start');
                 my.after(RESULT_DELAY_MS, function () {
-                    kit.result(root, {                  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
+                    kit.result(root, {
                         score: bestLen,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: bestLen ? '最長 ' + bestLen + ' 點' : '再試一次',
                         label: reason,
@@ -350,8 +350,8 @@
 
             /* G.debug：測試用後門 */
             G.debug = {
-                state: function () { return { level: level, g: g, len: len, state: state, path: path.slice(), target: target.slice() }; },  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
-                nodePos: function (i) { var r = field.getBoundingClientRect(); return { x: r.left + nx(i) * r.width / FW, y: r.top + ny(i) * r.height / FH }; },  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
+                state: function () { return { level: level, g: g, len: len, state: state, path: path.slice(), target: target.slice() }; },
+                nodePos: function (i) { var r = field.getBoundingClientRect(); return { x: r.left + nx(i) * r.width / FW, y: r.top + ny(i) * r.height / FH }; },
                 field: field
             };
         }

@@ -158,13 +158,13 @@
             var wrap = h('div', { 'class': 'rainbow-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
             var board = h('div', { 'class': 'rainbow-board' });  /* board：盤面（所有格子都放在裡面） */
             wrap.appendChild(board);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-            root.appendChild(hint);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(hint);
             root.appendChild(wrap);
 
             /* 棋盤是正方形：量 wrap 實際可用的寬高，取小的那個（取偶數，兩格剛好平分）
                當邊長；剩下的空間靠 .rainbow-wrap 的 flex 置中，留白平均分在兩側／上下。 */
             /* 棋盤是正方形：取可用寬高較小者，取偶數讓兩格剛好平分 */
-            var side = Math.floor(Math.min(wrap.clientWidth, wrap.clientHeight) / 2) * 2;  /* Math.floor：無條件捨去成整數 */
+            var side = Math.floor(Math.min(wrap.clientWidth, wrap.clientHeight) / 2) * 2;
             board.style.width = side + 'px';
             board.style.height = side + 'px';
             var cellPx = side / 2;
@@ -201,7 +201,7 @@
                 state = 'play';
                 if (hintObj) { hintObj.remove(); hintObj = null; }
 
-                if (cur >= 0) cells[ORDER[cur]].classList.remove('rainbow-cell--new');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                if (cur >= 0) cells[ORDER[cur]].classList.remove('rainbow-cell--new');
                 cur = (cur + 1) % 4;
                 var idx = ORDER[cur], el = cells[idx];
 
@@ -210,14 +210,14 @@
                 var nonTargets = COLORS.filter(function (c) { return targets.indexOf(c) < 0; });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                 var color = isTarget ? pickAny(targets) : pickAny(nonTargets);
                 el.style.background = color.css;
-                el.innerHTML = '';                      /* innerHTML = ''：把元素裡面的東西全部清掉 */
+                el.innerHTML = '';
                 el.classList.remove('rainbow-cell--hit');
                 handled[idx] = false;
                 if (isTarget) {
                     pending = { idx: idx };
                     if (hintWanted) hintObj = Reaction.kit.hintOn(root, el, { mode: 'tap', text: '請點擊' + color.name + '色的方塊' });
                 } else if (Math.random() < DECOY_PROB) {
-                    var inkPool = targets.map(function (c) { return c.css; }).concat(['#FFFFFF', '#000000']);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+                    var inkPool = targets.map(function (c) { return c.css; }).concat(['#FFFFFF', '#000000']);
                     var letter = h('span', { 'class': 'rainbow-letter', text: pickAny(targets).name });
                     letter.style.fontSize = Math.round(cellPx * 0.8) + 'px';  /* Math.round：四捨五入成整數 */
                     letter.style.color = pickAny(inkPool);
@@ -236,11 +236,11 @@
                開局（等第一個方塊）與換階段（新規則彈窗關掉之後）共用；「?」規則視窗開著的時候先停在原地等它關掉。 */
             function countdownAt(el, n, done) {
                 if (myGen !== gen || (state !== 'play' && state !== 'ready')) return;
-                if (ruleOpen()) { timer = setTimeout(function () { countdownAt(el, n, done); }, 150); return; }  /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
+                if (ruleOpen()) { timer = setTimeout(function () { countdownAt(el, n, done); }, 150); return; }
                 el.innerHTML = '';
                 if (n <= 0) { done(); return; }
                 var num = h('span', { 'class': 'rainbow-letter', text: String(n) });
-                num.style.fontSize = Math.round(cellPx * 0.8) + 'px';  /* Math.round：四捨五入成整數 */
+                num.style.fontSize = Math.round(cellPx * 0.8) + 'px';
                 num.style.color = '#FFFFFF';
                 el.appendChild(num);
                 timer = setTimeout(function () { countdownAt(el, n - 1, done); }, COUNTDOWN_STEP_MS);
@@ -268,7 +268,7 @@
             function newStage() {
                 state = 'paused';
                 clearTimeout(timer);
-                var extra = pickAny(EXTRA_POOL.filter(function (c) { return targets.indexOf(c) < 0; }));  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+                var extra = pickAny(EXTRA_POOL.filter(function (c) { return targets.indexOf(c) < 0; }));
                 targets.push(extra);
 
                 /* 下一個要出現方塊的那一格先清成黑底，預告位置 */
@@ -321,7 +321,7 @@
                 clearTimeout(timer);
                 if (badIdx != null) cells[badIdx].classList.add('rainbow-cell--bad');
                 if (missedIdx != null) cells[missedIdx].classList.add('rainbow-cell--missed');
-                var isNew = hits > 0 && Reaction.setBest(ID, hits, function (v, b) { return v > b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                var isNew = hits > 0 && Reaction.setBest(ID, hits, function (v, b) { return v > b; });
                 updateMeta();
                 UI.wait(700).then(function () {
                     if (myGen !== gen) return;

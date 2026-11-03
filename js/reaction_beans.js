@@ -58,7 +58,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(pair, level) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function totalFor(level) { return Math.round(ramp(TOTAL, level)); }  /* Math.round：四捨五入成整數 */
-    function junkFor(level) { return Math.max(1, Math.round(ramp(JUNK, level))); }  /* Math.round：四捨五入成整數 */
+    function junkFor(level) { return Math.max(1, Math.round(ramp(JUNK, level))); }
     function lookFor(level) { return Math.round(ramp(LOOK, level) * 1000) / 1000; }
     function sizeFor(level) { return Math.round(ramp(SIZE, level) * 10) / 10; }
     function timeMs(level) { return Math.round(ramp(TIME_S, level) * 1000); }
@@ -71,7 +71,7 @@
         var rowH = sp * Math.sqrt(3) / 2, out = [], rows = Math.floor(R / rowH);  /* Math.floor：無條件捨去成整數 */
         for (var r = -rows; r <= rows; r++) {
             var y = r * rowH, off = (Math.abs(r) % 2) ? sp / 2 : 0;  /* Math.abs：取絕對值（去掉負號） */
-            for (var x = -Math.floor(R / sp) * sp - off; x <= R; x += sp) if (Math.hypot(x, y) <= R) out.push([x, y]);  /* Math.floor：無條件捨去成整數 */
+            for (var x = -Math.floor(R / sp) * sp - off; x <= R; x += sp) if (Math.hypot(x, y) <= R) out.push([x, y]);
         }
         return out;
     }
@@ -101,7 +101,7 @@
         var total = totalFor(level), k = junkFor(level), size = sizeFor(level), nLook = Math.round(k * lookFor(level)), types = [], i;
         for (i = 0; i < total - k; i++) types.push('red');
         for (i = 0; i < nLook; i++) types.push(kit.pick(LOOKS, rand));  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
-        for (i = 0; i < k - nLook; i++) types.push(kit.pick(EASY, rand));  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        for (i = 0; i < k - nLook; i++) types.push(kit.pick(EASY, rand));
         types = kit.shuffle(types, rand);               /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         var pts = placeBeans(total, size, rand);
         var items = types.map(function (t, id) {        /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
@@ -136,7 +136,7 @@
            不用 Reaction.migrateBest：它看到 .sync 記號（現行版本寫的最佳紀錄都有）就當成新單位、不會清。 */
         var flag = Reaction.bestKey(ID) + '.v138';
         if (!UI.store.get(flag, false)) {               /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
-            UI.store.set(Reaction.bestKey(ID), null);   /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
+            UI.store.set(Reaction.bestKey(ID), null);
             UI.store.set(Reaction.bestKey(ID) + '.sync', false);
             UI.store.set(flag, true);
         }
@@ -152,11 +152,11 @@
     /* 一顆豆子的 SVG（viewBox −12～12）：依種類畫形狀；rot＝旋轉角度 */
     function beanSvg(type, size, rot, parent, seed) {
         var s = Math.round(size * 1.5), svg = kit.svg('svg', { 'class': 'beans-bean beans-t-' + type, viewBox: '-12 -12 24 24', width: s, height: s }, parent);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        var g = kit.svg('g', { transform: 'rotate(' + rot + ')' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var g = kit.svg('g', { transform: 'rotate(' + rot + ')' }, svg);
         function ell(rx, ry, cls) { return kit.svg('ellipse', { 'class': cls, cx: 0, cy: 0, rx: rx, ry: ry }, g); }
         function poly(r0, r1, cls) { var pts = [], nv = 7, sd = seed || 1; for (var i = 0; i < nv; i++) { var a = i / nv * 6.283, rr = r0 + (r1 - r0) * (((Math.sin(sd * 12.9898 + i * 78.233) * 43758.5453) % 1 + 1) % 1); pts.push((rr * Math.cos(a)).toFixed(2) + ',' + (rr * Math.sin(a)).toFixed(2)); } return kit.svg('polygon', { 'class': cls, points: pts.join(' ') }, g); }
         if (type === 'red') { ell(10, 7, 'beans-red'); ell(3.4, 1.7, 'beans-shine').setAttribute('transform', 'translate(-3,-2.5)'); }  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
-        else if (type === 'adz') { ell(8.2, 5.4, 'beans-adz'); ell(2.8, 1.4, 'beans-shine').setAttribute('transform', 'translate(-2.5,-2)'); }  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+        else if (type === 'adz') { ell(8.2, 5.4, 'beans-adz'); ell(2.8, 1.4, 'beans-shine').setAttribute('transform', 'translate(-2.5,-2)'); }
         else if (type === 'pinto') { ell(10, 7, 'beans-pinto'); [[-4, -1.5], [2, 2], [5, -2.5]].forEach(function (d) { kit.svg('circle', { 'class': 'beans-spot', cx: d[0], cy: d[1], r: 1.3 }, g); }); }  /* forEach：對陣列的每個元素各做一次 */
         else if (type === 'mung') { ell(7.4, 6.4, 'beans-mung'); ell(2.6, 1.4, 'beans-shine').setAttribute('transform', 'translate(-2.5,-2.2)'); }
         else if (type === 'black') { ell(8.4, 6.4, 'beans-black'); ell(2.6, 1.3, 'beans-shine').setAttribute('transform', 'translate(-2.5,-2.2)'); }
@@ -178,20 +178,20 @@
         var field = h('div', { 'class': 'beans-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note beans-tip', text: '雜物拖出盤子，拖到紅豆會扣時間' });
-        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(tip);
         var pcx = Math.round(W / 2), pcy = 50 + PLATE_R;
         var plateEl = h('div', { 'class': 'beans-plate' }); plateEl.style.cssText = 'left:' + (pcx - PLATE_R) + 'px;top:' + (pcy - PLATE_R) + 'px;width:' + PLATE_D + 'px;height:' + PLATE_D + 'px;'; field.appendChild(plateEl);
         var layer = h('div', { 'class': 'beans-layer' }); layer.style.cssText = 'left:' + pcx + 'px;top:' + pcy + 'px;'; field.appendChild(layer);
         var info = h('div', { 'class': 'qz-note beans-info', text: '' }); field.appendChild(info);
         var sz = Math.round(plate.size * 1.5);
 
-        plate.items.forEach(function (it, i) {          /* forEach：對陣列的每個元素各做一次 */
+        plate.items.forEach(function (it, i) {
             var el = h('div', { 'class': 'beans-item' });
             el.style.cssText = 'left:' + (it.x - sz / 2) + 'px;top:' + (it.y - sz / 2) + 'px;width:' + sz + 'px;height:' + sz + 'px;z-index:' + (i + 1) + ';';
             el.dataset.id = String(it.id); beanSvg(it.type, plate.size, it.rot, el, it.id + 1); layer.appendChild(el); els[it.id] = el;
         });
         if (level === 1 && kit.once('beans.hint3')) {   /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
-            var j = plate.items.filter(function (it) { return !it.good; })[0];  /* filter：留下符合條件的元素，回傳新陣列 */
+            var j = plate.items.filter(function (it) { return !it.good; })[0];
             if (j) {
                 var d = Math.hypot(j.x, j.y) || 1, ux = j.x / d, uy = j.y / d || -1;
                 kit.hintOn(stage, null, { mode: 'drag', x: pcx + j.x, y: pcy + j.y, dx: ux * (PLATE_R + 30) - j.x, dy: uy * (PLATE_R + 30) - j.y, delay: 600, text: '把雜物往盤子外面拖' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
@@ -211,10 +211,10 @@
             drag.el.style.left = (px - pcx - sz / 2) + 'px'; drag.el.style.top = (py - pcy - sz / 2) + 'px';
             if (isOut(px - pcx, py - pcy)) throwOut(drag);
         }
-        field.addEventListener('pointermove', function (e) { if (drag && e.pointerId === drag.pid) moveTo(e); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        field.addEventListener('pointermove', function (e) { if (drag && e.pointerId === drag.pid) moveTo(e); });
         function release(e, cancel) {
             if (!drag || e.pointerId !== drag.pid) return;
-            var d = drag; drag = null; d.el.classList.remove('beans-item--drag'); back(d.it);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            var d = drag; drag = null; d.el.classList.remove('beans-item--drag'); back(d.it);
         }
         field.addEventListener('pointerup', function (e) { release(e, false); });
         field.addEventListener('pointercancel', function (e) { release(e, true); });
@@ -238,9 +238,9 @@
         function penalize(it) {
             back(it);
             if (phase !== 'play') return;
-            penalties++; Sfx.play('bad');               /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+            penalties++; Sfx.play('bad');
             if (timer) timer.cut(PENALTY_S * 1000);
-            info.textContent = '拖到紅豆了！扣 ' + PENALTY_S + ' 秒'; info.classList.add('beans-info--bad');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            info.textContent = '拖到紅豆了！扣 ' + PENALTY_S + ' 秒'; info.classList.add('beans-info--bad');
             plateEl.classList.add('beans-plate--hit');
             api.after(900, function () { plateEl.classList.remove('beans-plate--hit'); if (phase === 'play') { info.textContent = ''; info.classList.remove('beans-info--bad'); } });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
         }

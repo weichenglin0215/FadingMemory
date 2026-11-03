@@ -86,7 +86,7 @@
     };
     /* K.basic：不受光影響的材質（顏色固定，適合招牌、天空） */
     K.basic = function (color, opt) {
-        var key = 'B' + color + (opt ? JSON.stringify(opt) : '');  /* JSON.stringify／parse：物件和文字互轉（存進 localStorage 或傳給伺服器時用） */
+        var key = 'B' + color + (opt ? JSON.stringify(opt) : '');
         if (!matCache[key]) {
             var p = { color: color };
             for (var k in opt) p[k] = opt[k];
@@ -194,7 +194,7 @@
             g.textBaseline = 'middle';
             var lh = size * gap;
             var y0 = H / 2 - lh * (lines.length - 1) / 2 + size * 0.04;
-            lines.forEach(function (l, i) { g.fillText(l, W / 2, y0 + i * lh); });  /* forEach：對陣列的每個元素各做一次 */
+            lines.forEach(function (l, i) { g.fillText(l, W / 2, y0 + i * lh); });
         }, text);
     };
 
@@ -205,7 +205,7 @@
         var sh = o.sh || 0.6;
         var ratio = sw / sh;
         var W = ratio >= 1 ? 512 : Math.max(64, Math.round(512 * ratio));  /* Math.round：四捨五入成整數 */
-        var H = ratio >= 1 ? Math.max(64, Math.round(512 / ratio)) : 512;  /* Math.round：四捨五入成整數 */
+        var H = ratio >= 1 ? Math.max(64, Math.round(512 / ratio)) : 512;
         /* 同一場景裡，同樣的字＋同樣配色＋同樣比例的招牌共用一張貼圖 */
         var key = [text, W, H, o.bg, o.fg, o.border, o.bw].join('|');
         var mat = signCache[key];
@@ -705,7 +705,7 @@
         K.box(g, -0.75, 0, 0, 0.08, 0.42, 0.45, C.dark);
         K.box(g, 0.75, 0, 0, 0.08, 0.42, 0.45, C.dark);
         ctx.add(g);
-        var c = Math.abs(Math.sin(ry || 0)) > 0.7;      /* Math.abs：取絕對值（去掉負號） */
+        var c = Math.abs(Math.sin(ry || 0)) > 0.7;
         ctx.blockRect(x, z, c ? 0.6 : 1.9, c ? 1.9 : 0.6);
         return g;
     };
@@ -766,7 +766,7 @@
     /* 斑馬線的條紋位置（交給 K.stripes 一次畫完） */
     /* K.crosswalkStripes：斑馬線的條紋 */
     K.crosswalkStripes = function (list, x, z0, z1, alongZ) {
-        var n = Math.floor(Math.abs(z1 - z0) / 1.0);    /* Math.floor：無條件捨去成整數 */
+        var n = Math.floor(Math.abs(z1 - z0) / 1.0);
         for (var i = 0; i < n; i++) {
             var t = z0 + (i + 0.5) * (z1 - z0) / n;
             if (alongZ) list.push([t, x, 0.5, 3]);

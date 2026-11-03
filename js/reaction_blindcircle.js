@@ -38,6 +38,7 @@
     var GOOD = 0.02, OK = 0.05;             /* 揭曉上色門檻（相對半徑） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 出一回合：隨機決定圓的半徑 R 與起點方位 ang（從圓心往右下的角度），算出起點座標（圓心 ＋ R×(cos, sin)，三角函數把「角度」換成「x、y 座標」） */
     function makeRound(rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var R = kit.randFloat(R_MIN, R_MAX, rand), ang = kit.randFloat(ANG_MIN, ANG_MAX, rand) * Math.PI / 180;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
@@ -45,6 +46,7 @@
     }
     /* 十字型箭頭（上下左右四個箭頭）的多邊形頂點，中心在 (0,0)，總寬 size：
        每個箭頭的頭長 ＝ 0.19 × size、頭半寬 ＝ 0.12 × size，桿半寬 ＝ 0.04 × size */
+    /* 算「十字型箭頭」多邊形的頂點座標（中心在 0,0，總寬 size）：上下左右四個箭頭，頭長、頭寬、桿寬都是 size 的固定比例，畫成 SVG 的 polygon（多邊形） */
     function arrowPoints(size) {
         var a = size / 2, hl = size * 0.19, hw = size * 0.12, sw = size * 0.04, b = a - hl;
         var pts = [[0, -a], [hw, -b], [sw, -b], [sw, -sw], [b, -sw], [b, -hw], [a, 0], [b, hw], [b, sw], [sw, sw], [sw, b], [hw, b],
@@ -52,6 +54,7 @@
         return pts;
     }
     /* 折線最後面 maxLen（px）長的那一段：從最新的點往回數，累積長度超過 maxLen 的那一段線段只留一部分（剛好湊滿 maxLen） */
+    /* 取折線「最後面」maxLen 長的那一段（只畫手指身後一小段，更早的筆跡消失）：從最新的點往回數，累積長度超過 maxLen 的那一段線只留一部分 */
     function tailOf(pts, maxLen) {
         if (!pts.length) return [];
         var out = [pts[pts.length - 1]], acc = 0;
@@ -67,10 +70,11 @@
         return out.reverse();
     }
     /* 沿折線每隔 step 重新取樣（弧長等距），回傳點陣列 */
+    /* 重新取樣：沿著折線每隔 step 的弧長取一個點，讓點的間距均勻（手指快慢不同時，原本的點疏密不一） */
     function resample(pts, step) {
         var out = [pts[0]], acc = 0, prev = pts[0];
         for (var i = 1; i < pts.length; i++) {
-            var p = pts[i], dx = p.x - prev.x, dy = p.y - prev.y, d = Math.sqrt(dx * dx + dy * dy);  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
+            var p = pts[i], dx = p.x - prev.x, dy = p.y - prev.y, d = Math.sqrt(dx * dx + dy * dy);
             while (acc + d >= step && d > 0) {
                 var t = (step - acc) / d;
                 prev = { x: prev.x + dx * t, y: prev.y + dy * t };
@@ -81,12 +85,15 @@
         }
         return out;
     }
+    /* 算折線的總長度（相鄰兩點距離相加，距離用勾股定理） */
     function lengthOf(pts) {
         var s = 0;
         for (var i = 1; i < pts.length; i++) { var dx = pts[i].x - pts[i - 1].x, dy = pts[i].y - pts[i - 1].y; s += Math.sqrt(dx * dx + dy * dy); }
         return s;
     }
     /* 分析筆跡：turn 繞圓心轉過的總角度（度，有號）、rms 相對半徑的均方根偏離、meanR 平均半徑、gap 首尾間距 */
+    /* 分析筆跡：繞圓心 C 轉過的總角度（用 Math.atan2 算每個點的方位角，相鄰兩點的角度差累加）、每個點離圓心的距離與標準半徑 R 的差（devs）、
+       均方根偏離（rms，越小越圓）、平均半徑、首尾間距。valid 代表有效（繞了 300～450 度、而且夠長）；roundness（圓度）＝ 100 − rms／R×100。 */
     function analyze(pts, C, R) {
         var rs = resample(pts, STEP);
         if (rs.length < 3) return { valid: false, turn: 0, len: lengthOf(pts) };
@@ -132,11 +139,11 @@
     function setup(api) {
         var stage = api.stage, my = api.my;
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        var cfg = makeRound(), pts = [], drawing = false, locked = false, hint = null, pid = null;
+        var cfg = makeRound(), pts = [], drawing = false, locked = false, hint = null, pid = null;  /* cfg：這一回合的圓（半徑、起點）；pts：手指畫過的點；drawing：正在畫；locked：已經交卷；hint：操作提示；pid：目前這根手指的編號（多指時只認第一根） */
         console.log('[盲畫一個圓] 半徑 ' + cfg.R.toFixed(2) + '，起點方位 ' + (cfg.ang * 180 / Math.PI).toFixed(1) + '°');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        var svg = kit.svg('svg', { 'class': 'blindcircle-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        var gRev = kit.svg('g', {}, svg);               /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var svg = kit.svg('svg', { 'class': 'blindcircle-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */  /* 畫布：整個畫面是一張 SVG（向量圖），用 viewBox 對應舞台的邏輯座標；gRev 是揭曉時放標準圓與上色筆跡的群組 */
+        var gRev = kit.svg('g', {}, svg);
         /* 圓心十字與起點 */
         var cx = CENTER.x, cy = CENTER.y;
         kit.svg('line', { x1: cx - 16, x2: cx + 16, y1: cy, y2: cy, 'class': 'blindcircle-cross' }, svg);
@@ -147,6 +154,7 @@
         var trail = kit.svg('polyline', { 'class': 'blindcircle-trail', points: '' }, svg);          /* 手指身後 160px 的黑色虛線軌跡 */
         var msg = h('div', { 'class': 'blindcircle-msg' });
         stage.appendChild(msg);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        /* 更新手指身後的虛線：只取最後 TRAIL_LEN 長的一段，轉成 SVG polyline 的 points 屬性（"x,y x,y …"） */
         function paintTrail() {
             trail.setAttribute('points', tailOf(pts, TRAIL_LEN).map(function (p) { return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' '));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         }
@@ -154,29 +162,33 @@
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從起點出發，沿著圓的切線方向（順時針）重複移動 */
         var tx = -Math.sin(cfg.ang), ty = Math.cos(cfg.ang);
         if (kit.once('blindcircle.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: cfg.start.x, y: cfg.start.y, dx: tx * 80, dy: ty * 80, delay: 300, text: '請繞著圓心畫一圈' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
+        /* 拿掉操作提示 */
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
+        /* 在畫面上顯示一段提示文字（空字串就隱藏） */
         function say(t) { msg.textContent = t; msg.classList.toggle('blindcircle-msg--on', !!t); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
 
+        /* 把事件的螢幕座標換成舞台裡的座標（舞台會跟著視窗縮放，不能直接用螢幕座標） */
         function loc(e) { return kit.localPt(e, stage); }
         stage.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (locked || drawing) return;
             var p = loc(e), dx = p.x - cfg.start.x, dy = p.y - cfg.start.y;
-            if (Math.sqrt(dx * dx + dy * dy) > START_R) { dot.classList.add('blindcircle-start--blink'); my.after(500, function () { dot.classList.remove('blindcircle-start--blink'); }); say('請從起點的圓點開始畫'); return; }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            if (Math.sqrt(dx * dx + dy * dy) > START_R) { dot.classList.add('blindcircle-start--blink'); my.after(500, function () { dot.classList.remove('blindcircle-start--blink'); }); say('請從起點的圓點開始畫'); return; }
             e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             try { stage.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             drawing = true; pid = e.pointerId; pts = [p]; hideHint(); say(''); paintTrail();
         });
-        stage.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        stage.addEventListener('pointermove', function (e) {
             if (!drawing || e.pointerId !== pid) return;
             pts.push(loc(e));                                          /* 只畫手指身後 TRAIL_LEN 長的虛線，前面的筆跡消失（盲畫） */
             paintTrail();
         });
+        /* 手指放開：先 analyze 分析筆跡；筆跡無效（沒繞完整一圈、太短、太多圈）就提示重畫，有效就交卷（submit） */
         function end(e) {
             if (!drawing || e.pointerId !== pid) return;
-            drawing = false; trail.setAttribute('points', '');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+            drawing = false; trail.setAttribute('points', '');
             var res = analyze(pts, CENTER, cfg.R);
             if (!res.valid) {
-                say(Math.abs(res.turn) < TURN_MIN ? '要繞圓心畫完整一圈，再畫一次' : (res.len < LEN_MIN ? '再畫大一點，再畫一次' : '畫太多圈了，再畫一次'));  /* Math.abs：取絕對值（去掉負號） */
+                say(Math.abs(res.turn) < TURN_MIN ? '要繞圓心畫完整一圈，再畫一次' : (res.len < LEN_MIN ? '再畫大一點，再畫一次' : '畫太多圈了，再畫一次'));
                 pts = []; Sfx.play('bad');              /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 return;
             }
@@ -185,10 +197,11 @@
         stage.addEventListener('pointerup', end);
         stage.addEventListener('pointercancel', end);
 
+        /* 交卷與揭曉：畫出標準圓，並把筆跡每一小段依偏離程度上色（綠＝很準、橘＝還好、紅＝偏很多），顯示平均半徑偏差與首尾缺口，最後呼叫 api.finish 結算（成績＝圓度 %） */
         function submit(res) {
             if (locked) return;
             locked = true; hideHint();
-            Sfx.play('click');                          /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+            Sfx.play('click');
             /* 揭曉：標準圓＋依偏離上色的筆跡 */
             kit.svg('circle', { cx: cx, cy: cy, r: cfg.R, 'class': 'blindcircle-ref' }, gRev);
             var s = res.samples;
@@ -208,10 +221,12 @@
         }
 
         /* 驗證用：用真的 PointerEvent 畫一圈（noise＝半徑的隨機抖動比例；scale＝整圈半徑倍率） */
+        /* 測試用：用程式送出一個真的 PointerEvent（指標事件）給舞台，模擬手指按下／移動／放開 */
         function fire(type, x, y) {
             var r = stage.getBoundingClientRect(), sc = r.width / (stage.clientWidth || r.width);  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
             stage.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 9, clientX: r.left + x * sc, clientY: r.top + y * sc }));
         }
+        /* 測試用：模擬手指畫一圈（noise 半徑隨機抖動的比例、scale 半徑倍率、turns 繞幾圈） */
         function drawCircle(noise, scale, turns) {
             var R = cfg.R * (scale || 1), n = 90, t = turns || 1;
             fire('pointerdown', cfg.start.x, cfg.start.y);

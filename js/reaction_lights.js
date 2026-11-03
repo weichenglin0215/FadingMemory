@@ -89,7 +89,7 @@
             grid.style.gridTemplateColumns = 'repeat(' + g + ', 1fr)';
             grid.style.gridTemplateRows = 'repeat(' + g + ', 1fr)';
             panel.appendChild(grid);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-            root.appendChild(hint);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(hint);
             root.appendChild(panel);
             root.appendChild(barWrap);
 
@@ -121,7 +121,7 @@
                     Sfx.play('ok');                     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                     if (hits >= n) levelClear();
                 } else {
-                    lamps[i].classList.add('lights-lamp--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                    lamps[i].classList.add('lights-lamp--bad');
                     fail('點到沒亮過的燈了');
                 }
             }
@@ -131,10 +131,10 @@
                 state = 'clear';
                 my.cancel(timer);
                 cleared = Math.max(cleared, n);
-                if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
                 ctx.setMeta(kit.meta(['亮 ' + n + ' 盞', fmtBest(Reaction.getBest(ID))]));
                 fill.style.width = '0%';
-                Sfx.play('win');                        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                Sfx.play('win');
                 if (n >= N_MAX) { my.after(CLEAR_MS, finishAll); return; }
                 hint.textContent = g !== gridFor(n + 1) ? '全對！燈板要變大了…' : '全對！再多一盞…';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 my.after(CLEAR_MS, function () { round(n + 1); });
@@ -161,7 +161,7 @@
                 targets.forEach(function (t) { if (!tapped[t]) lamps[t].classList.add('lights-lamp--reveal'); });  /* forEach：對陣列的每個元素各做一次 */
                 my.after(1100, function () {
                     state = 'done';
-                    kit.result(root, {                  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
+                    kit.result(root, {
                         score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: '記住 ' + cleared + ' 盞', label: reason,
                         lines: ['這一關要記 ' + n + ' 盞，你點對了 ' + hits + ' 盞'],
@@ -177,9 +177,9 @@
             /* 流程：準備 → 亮 → 熄 → 回想（限時） */
             my.after(PREP_MS, function () {
                 state = 'show';
-                hint.textContent = '看！';                /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                hint.textContent = '看！';
                 Sfx.play('go');
-                targets.forEach(function (t) { lamps[t].classList.add('lights-lamp--lit'); });  /* forEach：對陣列的每個元素各做一次 */
+                targets.forEach(function (t) { lamps[t].classList.add('lights-lamp--lit'); });
                 my.after(showSecFor(n) * 1000, function () {
                     targets.forEach(function (t) { lamps[t].classList.remove('lights-lamp--lit'); });
                     hint.textContent = '把剛才亮過的燈點出來（共 ' + n + ' 盞）';

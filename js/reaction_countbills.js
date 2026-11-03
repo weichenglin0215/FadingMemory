@@ -37,7 +37,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function countFor(level) { return Math.round(ramp(level, COUNT)); }  /* Math.round：四捨五入成整數 */
-    function timeMs(level) { return Math.round(ramp(level, TIME_S) * 1000); }  /* Math.round：四捨五入成整數 */
+    function timeMs(level) { return Math.round(ramp(level, TIME_S) * 1000); }
     function denomsFor(level) { return level >= LATER_FROM ? DENOMS_LATER : DENOMS_BASE; }
     /* 撥出去前 k 張的總和 */
     function sumFirst(notes, k) { var s = 0; for (var i = 0; i < k && i < notes.length; i++) s += notes[i]; return s; }
@@ -51,7 +51,7 @@
         }
         if (new Set(notes).size < 2) notes[n - 1] = denoms[0] === notes[0] ? denoms[1] : denoms[0];
         var target = sumFirst(notes, n);
-        for (i = 0; i < extra; i++) notes.push(kit.pick(denoms, rand));  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        for (i = 0; i < extra; i++) notes.push(kit.pick(denoms, rand));
         return { level: level, notes: notes, n: n, target: target, extra: extra, time: timeMs(level), denoms: denoms };
     }
     /* 撥了 taken 張的判定：{ sum, result: 'ok'｜'few'｜'many', diff（sum − target）} */
@@ -88,7 +88,7 @@
     function noteEl(v, cls) {
         var el = h('div', { 'class': 'countbills-note countbills-d' + v + (cls ? ' ' + cls : '') });
         el.appendChild(h('div', { 'class': 'countbills-note__c countbills-note__c--l', text: String(v) }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-        el.appendChild(h('div', { 'class': 'countbills-note__c countbills-note__c--r', text: String(v) }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        el.appendChild(h('div', { 'class': 'countbills-note__c countbills-note__c--r', text: String(v) }));
         el.appendChild(h('div', { 'class': 'countbills-note__v', text: String(v) }));
         el.appendChild(h('div', { 'class': 'countbills-note__p' }));
         return el;
@@ -145,12 +145,12 @@
             if (phase !== 'play' || api.over) return;
             phase = 'end'; api.stopTimer();
             var r = judge(q, taken), why = (kind === 'timeout' ? '時間到！' : '') + whyText(r, q);
-            btn.btns[0].classList.add('countbills-btn--off');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            btn.btns[0].classList.add('countbills-btn--off');
             table.style.display = 'none'; lab1.style.display = 'none'; lab2.style.display = 'none';
             showSpread(r);
             info.textContent = why; info.style.top = ''; info.style.bottom = '124px';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             if (r.result === 'ok') { info.classList.add('countbills-info--ok'); kit.flash(stage, true, api.my); Sfx.play('ok'); api.pass({ delay: 2200 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
-            info.classList.add('countbills-info--bad'); kit.flash(stage, false, api.my);  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            info.classList.add('countbills-info--bad'); kit.flash(stage, false, api.my);
             api.fail({ delay: 4200, lines: [why, '前 ' + q.n + ' 張是 ' + q.notes.slice(0, q.n).join('＋') + ' ＝ ' + q.target + ' 元', '你撥了 ' + taken + ' 張：' + (taken ? q.notes.slice(0, taken).join('＋') : '（沒撥）') + ' ＝ ' + r.sum + ' 元'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 攤開：每張一個小格，下面寫累加的總和；剛好湊到目標的那張標綠、多撥的標紅；撥少了就多顯示下一張（灰色） */

@@ -68,7 +68,7 @@
         if (s.sum > clue) return false;
         if (s.empty === 0) return s.sum === clue;
         /* 還有 s.empty 個空格要填 2～n−1 的數字（不能跟這條線上已有的重複）：最小與最大可能的加總 */
-        var free = []; for (var d = 2; d <= n - 1; d++) if (vals.indexOf(d) < 0) free.push(d);  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+        var free = []; for (var d = 2; d <= n - 1; d++) if (vals.indexOf(d) < 0) free.push(d);
         if (free.length < s.empty) return false;
         var mn = 0, mx = 0; for (var k = 0; k < s.empty; k++) { mn += free[k]; mx += free[free.length - 1 - k]; }
         return s.sum + mn <= clue && clue <= s.sum + mx;
@@ -96,7 +96,7 @@
             if (best < 0) { count++; return; }
             for (var v = 1; v <= n; v++) {
                 if (!(cd[best] & (1 << v))) continue;
-                var g2 = gr.slice(), c2 = cd.slice(), bad = false;  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+                var g2 = gr.slice(), c2 = cd.slice(), bad = false;
                 g2[best] = v; c2[best] = 1 << v;
                 for (var y = 0; y < g.peers[best].length; y++) { var pp = g.peers[best][y]; if (!g2[pp]) { c2[pp] &= ~(1 << v); if (!c2[pp]) { bad = true; break; } } }
                 if (bad || !lineOk(g2, g.rowOf(best), g.colOf(best))) continue;
@@ -115,7 +115,7 @@
         var givens = sol.slice(), count = g.cells;
         var order = kit.shuffle(Array.apply(null, Array(g.cells)).map(function (_, i) { return i; }), rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         for (var k = 0; k < order.length && count > want; k++) {
-            if (Date.now() - t0 > DIG_MS) break;        /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
+            if (Date.now() - t0 > DIG_MS) break;
             var c = order[k], save = givens[c];
             givens[c] = 0;
             if (countSolutions(g, givens, clues, 2, 20000) === 1) count--; else givens[c] = save;

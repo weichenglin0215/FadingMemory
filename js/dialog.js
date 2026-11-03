@@ -58,12 +58,12 @@
             }
         };
         if (o.title) card.appendChild(h('div', { 'class': 'dlg__title', text: o.title }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-        if (o.sub) card.appendChild(h('div', { 'class': 'dlg__sub', text: o.sub }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        if (o.sub) card.appendChild(h('div', { 'class': 'dlg__sub', text: o.sub }));
         if (o.text) card.appendChild(h('div', { 'class': 'dlg__text', text: o.text }));
         (o.children || []).forEach(function (c) { if (c) card.appendChild(c); });  /* forEach：對陣列的每個元素各做一次 */
         if (o.buttons && o.buttons.length) {
             var wrap = h('div', { 'class': 'dlg__btns' + (o.btnRow ? ' dlg__btns--row' : '') });
-            o.buttons.forEach(function (b) {            /* forEach：對陣列的每個元素各做一次 */
+            o.buttons.forEach(function (b) {
                 var el = h('button', {
                     'class': 'btn btn--' + (b.kind || 'primary') + (b.cls ? ' ' + b.cls : ''),
                     text: b.html != null ? null : b.text,
@@ -145,7 +145,7 @@
             cur.push({ c: ch, em: chars[i - 1].em });
             if (SENT_END.indexOf(ch) >= 0) {            /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                 /* 吃掉緊跟著的句尾標點與右引號／右括號；最後一個字是句尾標點才換行（「…？」下面」這種不換） */
-                while (i < chars.length && (SENT_END.indexOf(chars[i].c) >= 0 || CLOSERS.indexOf(chars[i].c) >= 0)) { cur.push(chars[i]); i++; }  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+                while (i < chars.length && (SENT_END.indexOf(chars[i].c) >= 0 || CLOSERS.indexOf(chars[i].c) >= 0)) { cur.push(chars[i]); i++; }
                 if (SENT_END.indexOf(cur[cur.length - 1].c) >= 0) flush();
             }
         }
@@ -252,7 +252,7 @@
             var text = value();
             if (busy || Array.from(text).length < 2) return;
             busy = true;
-            sendBtn.textContent = '送出中…';               /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            sendBtn.textContent = '送出中…';
             sync();
             var p = (LB && LB.sendFeedback) ? LB.sendFeedback(game, text) : Promise.resolve({ status: 'offline' });
             p.then(function (r) {

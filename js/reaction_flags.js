@@ -49,7 +49,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function prog(n) { return Math.min(1, Math.max(0, n / RAMP_CMDS)); }
     function intervalFor(n) { return Math.round(INTERVAL[0] + (INTERVAL[1] - INTERVAL[0]) * prog(n)); }  /* Math.round：四捨五入成整數 */
-    function graceFor(n) { return Math.round(intervalFor(n) * GRACE); }  /* Math.round：四捨五入成整數 */
+    function graceFor(n) { return Math.round(intervalFor(n) * GRACE); }
     function negPFor(n) { return NEG_P[0] + (NEG_P[1] - NEG_P[0]) * prog(n); }
     function bothPFor(n) { return n < BOTH_FROM ? 0 : BOTH_P[0] + (BOTH_P[1] - BOTH_P[0]) * Math.min(1, (n - BOTH_FROM) / (RAMP_CMDS - BOTH_FROM)); }
     /* 一句口令：{ text, kind（'raise'｜'lower'｜'keep'）, flags（被點名的旗子 ['L']｜['R']｜['L','R']）, to（舉起來／放下之後的狀態 true｜false；keep 時為 null）}
@@ -106,10 +106,10 @@
     /* 小人與兩面旗子（SVG）：旗桿從手上伸出去，旗面跟著舉起／放下（用 CSS 的 transform 轉動旗桿） */
     function drawPerson(parent, W) {
         var svg = kit.svg('svg', { 'class': 'flags-svg', viewBox: '0 0 300 220', width: Math.min(W - 40, 360), height: Math.round(Math.min(W - 40, 360) * 220 / 300) }, parent);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        kit.svg('circle', { 'class': 'flags-head', cx: 150, cy: 52, r: 30 }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('circle', { 'class': 'flags-head', cx: 150, cy: 52, r: 30 }, svg);
         kit.svg('path', { 'class': 'flags-body', d: 'M120 90 L180 90 L192 200 L108 200 Z' }, svg);
         var poles = {};
-        ['L', 'R'].forEach(function (f) {               /* forEach：對陣列的每個元素各做一次 */
+        ['L', 'R'].forEach(function (f) {
             var x = f === 'L' ? 112 : 188, g = kit.svg('g', { 'class': 'flags-pole flags-pole--' + f, transform: 'translate(' + x + ',110)' }, svg);
             var arm = kit.svg('g', { 'class': 'flags-arm' }, g);                       /* 以手為轉軸：放下時往下斜、舉起時往上斜 */
             kit.svg('line', { 'class': 'flags-stick', x1: 0, y1: 0, x2: 0, y2: -92 }, arm);
@@ -133,7 +133,7 @@
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         /* 左右半邊的按壓區（整個畫面分兩半）：左＝紅旗、右＝白旗 */
         var padL = h('div', { 'class': 'flags-pad flags-pad--L' }, [h('div', { 'class': 'flags-pad__t', text: '左手　紅旗' })]), padR = h('div', { 'class': 'flags-pad flags-pad--R' }, [h('div', { 'class': 'flags-pad__t', text: '右手　白旗' })]);
-        field.appendChild(padL); field.appendChild(padR);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(padL); field.appendChild(padR);
         /* 口令框：上面是口令文字，下緣是藍色的寬限時間橫條（V1.38.0）：口令一出現就從滿縮到空，縮完＝寬限結束 */
         var bubbleText = h('span', { 'class': 'flags-cmd__t', text: '準備…' });
         var graceFill = h('div', { 'class': 'flags-grace__fill' });
@@ -157,7 +157,7 @@
             ptrs[e.pointerId] = side; held[side]++; setActual(side, true);
         });
         function release(e) { var side = ptrs[e.pointerId]; if (!side) return; delete ptrs[e.pointerId]; held[side] = Math.max(0, held[side] - 1); if (!held[side]) setActual(side, false); }
-        field.addEventListener('pointerup', release); field.addEventListener('pointercancel', release);  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        field.addEventListener('pointerup', release); field.addEventListener('pointercancel', release);
 
         /* 判定：①寬限時間內只管「不要」類口令被點名的旗子有沒有動 ③寬限結束後任何旗子動到不等於 required 就錯 */
         function onChange(f) {
@@ -174,24 +174,24 @@
             graceEnd = performance.now() + gr;          /* performance.now()：高精度的時間（毫秒），計時用 */
             /* 換新口令的表演（要快）：口令框從左右兩邊交替滑進來＋閃一下黃色底＋「啵」一聲；寬限條重新從滿開始縮 */
             bubbleText.textContent = cmd.text;          /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-            bubble.classList.remove('flags-cmd--inL', 'flags-cmd--inR'); void bubble.offsetWidth; bubble.classList.add(cmdNo % 2 ? 'flags-cmd--inL' : 'flags-cmd--inR');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            bubble.classList.remove('flags-cmd--inL', 'flags-cmd--inR'); void bubble.offsetWidth; bubble.classList.add(cmdNo % 2 ? 'flags-cmd--inL' : 'flags-cmd--inR');
             graceFill.classList.remove('flags-grace__fill--run'); void graceFill.offsetWidth; graceFill.style.animationDuration = gr + 'ms'; graceFill.style.animationPlayState = 'running'; graceFill.classList.add('flags-grace__fill--run');
             Sfx.play('pop');                            /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             api.after(gr, function () {                                                               /* ② 寬限結束：兩面旗都要符合 */
                 if (over || myGen !== gen) return;
                 if (!consistent(actual, req)) { finish('mismatch', wrongFlags(actual, req)[0]); return; }
-                count++; S.score = count; api.setInfo('答對 ' + count + ' 句'); Sfx.play('ok');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                count++; S.score = count; api.setInfo('答對 ' + count + ' 句'); Sfx.play('ok');
             });
             api.after(iv, issue);                       /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
         }
-        api.after(LEAD_MS, issue);                      /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+        api.after(LEAD_MS, issue);
         /* 這一局結束：算出成績並進入結算畫面 */
         function finish(kind, f) {
             if (over) return;
             over = true; gen++; bubble.classList.add('flags-cmd--bad'); graceFill.style.animationPlayState = 'paused';
             var want = describeState(req), mine = describeState(actual);
-            var why = kind === 'moved' ? (cmd && cmd.kind === 'keep' && performance.now() < graceEnd ? '口令是「' + cmd.text + '」，卻動了' + NAMES[f] + '！' : NAMES[f] + '動了，跟口令不一致！') : '寬限時間到了，' + NAMES[f] + '的狀態不對！';  /* performance.now()：高精度的時間（毫秒），計時用 */
-            info.textContent = why;                     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            var why = kind === 'moved' ? (cmd && cmd.kind === 'keep' && performance.now() < graceEnd ? '口令是「' + cmd.text + '」，卻動了' + NAMES[f] + '！' : NAMES[f] + '動了，跟口令不一致！') : '寬限時間到了，' + NAMES[f] + '的狀態不對！';
+            info.textContent = why;
             showCompare(want, mine, f);
             kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
             api.fail({ delay: 3600, lines: [why, '口令「' + (cmd ? cmd.text : '') + '」→ 該有：' + want, '你的旗子：' + mine] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */

@@ -77,7 +77,7 @@
     function pool(beatNo) {
         var p = [{ c: 'C', w: 1 }, { c: 'L', w: 1 }, { c: 'R', w: 1 }];
         if (beatNo >= DOUBLE_FROM) {
-            var d = kit.ramp(beatNo, 0.2, 0.9, RAMP_BEATS);  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+            var d = kit.ramp(beatNo, 0.2, 0.9, RAMP_BEATS);
             p.push({ c: 'CL', w: d }, { c: 'CR', w: d });
         }
         if (beatNo >= TRIPLE_FROM) p.push({ c: 'LCR', w: kit.ramp(beatNo, 0.1, 0.5, RAMP_BEATS) });
@@ -115,7 +115,7 @@
             var near = Object.keys(COMBOS).filter(function (c) {  /* filter：留下符合條件的元素，回傳新陣列 */
                 if (c === expected || p.every(function (x) { return x.c !== c; })) return false;  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
                 var a = COMBOS[c], b = COMBOS[expected];
-                var inter = a.filter(function (x) { return b.indexOf(x) >= 0; }).length;  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+                var inter = a.filter(function (x) { return b.indexOf(x) >= 0; }).length;
                 return inter > 0 && Math.abs(a.length - b.length) === 1;  /* Math.abs：取絕對值（去掉負號） */
             });
             if (near.length) return near[Math.floor(rand() * near.length)];  /* Math.floor：無條件捨去成整數 */
@@ -182,7 +182,7 @@
             var head = h('div', { 'class': 'heartbeat-head' });
             var field = h('div', { 'class': 'heartbeat-field' });
             root.appendChild(head);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-            root.appendChild(field);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(field);
             var W = field.clientWidth, Hh = field.clientHeight;
             /* SVG 畫布：左中右三個位置各畫一個空圓圈（球要出現的位置） */
             var svg = kit.svg('svg', { 'class': 'heartbeat-svg', viewBox: '0 0 ' + W + ' ' + Hh }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
@@ -191,7 +191,7 @@
             var slotG = [];
             for (var i = 0; i < 3; i++) {
                 (function (i) {
-                    var g = kit.svg('g', { transform: 'translate(' + xs[i].toFixed(1) + ' ' + CY.toFixed(1) + ')' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+                    var g = kit.svg('g', { transform: 'translate(' + xs[i].toFixed(1) + ' ' + CY.toFixed(1) + ')' }, svg);
                     kit.svg('circle', { 'class': 'heartbeat-slot', r: RB }, g);
                     slotG.push(g);
                 })(i);
@@ -222,7 +222,7 @@
                 var now = performance.now();            /* performance.now()：高精度的時間（毫秒），計時用 */
                 /* 上一拍留下的倒數圈，在這一拍出現時一起收掉 */
                 clearGhosts();                           /* 上一拍留下的倒數圈，這一拍出現就收掉（它剛好也在這一刻跑完）*/
-                balls.forEach(function (s) {            /* forEach：對陣列的每個元素各做一次 */
+                balls.forEach(function (s) {
                     if (alive[s]) expire(s, true);       /* 同位置還有舊球（不應該發生，保險） */
                     var g = kit.svg('g', { 'class': 'heartbeat-ball heartbeat-ball--' + SLOTS[s] }, slotG[s]);
                     kit.svg('path', { 'class': 'heartbeat-ball__body', d: HEART_D, transform: 'translate(0 -8) scale(1.3)' }, g);
@@ -245,7 +245,7 @@
                 paintHead(plan.combo === 'none' ? '這拍沒有球' : '');
                 /* 排程下一拍：絕對時間 nextAt 累加（不是現在+間隔），所以不會累積誤差 */
                 nextAt += spacing * 1000;
-                timerId = my.after(Math.max(0, nextAt - performance.now()), nextBeat);  /* performance.now()：高精度的時間（毫秒），計時用 */
+                timerId = my.after(Math.max(0, nextAt - performance.now()), nextBeat);
             }
             function nextBeat() {
                 if (state !== 'run') return;
@@ -253,7 +253,7 @@
             }
             function beatDone(idx) {
                 cleared++;
-                if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
                 meta(); paintHead();
             }
 
@@ -264,7 +264,7 @@
                 var p = field.getBoundingClientRect(), x = (e.clientX - p.left) / p.width;  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
                 return x < 1 / 3 ? 0 : (x < 2 / 3 ? 1 : 2);
             }
-            field.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+            field.addEventListener('pointerdown', function (e) {
                 if (state !== 'run') return;
                 e.preventDefault();                     /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                 tap(slotOf(e), kit.evT(e));
@@ -275,7 +275,7 @@
                 var b = alive[s];
                 if (b) {
                     kill(s, 'hit');
-                    Sfx.play('note' + SLOTS[s]);        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                    Sfx.play('note' + SLOTS[s]);
                     lastPop[s] = performance.now();
                     if (--pending[b.beat] === 0) beatDone(b.beat);
                 } else {
@@ -301,7 +301,7 @@
                     var heart = b.el.querySelector('.heartbeat-ball__body');  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
                     if (heart && heart.parentNode) heart.parentNode.removeChild(heart);
                     b.ring.classList.remove('heartbeat-ring--late');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                    b.ring.classList.add('heartbeat-ring--done');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                    b.ring.classList.add('heartbeat-ring--done');
                     ghost[s] = b;
                     return;
                 }
@@ -358,13 +358,13 @@
                         b.ring.classList.toggle('heartbeat-ring--late', f > 0.7);
                     }
                     var gh = ghost[s];
-                    if (gh) gh.ring.setAttribute('stroke-dashoffset', (CIRC * Math.min(1, (now - gh.born) / gh.life)).toFixed(1));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                    if (gh) gh.ring.setAttribute('stroke-dashoffset', (CIRC * Math.min(1, (now - gh.born) / gh.life)).toFixed(1));
                 }
             });
 
             /* 開始：先等 1.2 秒讓玩家就位，再來第一拍 */
             /* ─── 開始：先等一下，讓玩家就位，再來第一拍 ─── */
-            head.textContent = '準備…看球出現在哪就點哪';          /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            head.textContent = '準備…看球出現在哪就點哪';
             my.after(1200, function () {
                 state = 'run';
                 nextAt = performance.now();
@@ -373,9 +373,9 @@
 
             /* G.debug：測試用後門，autoplay 可以自動全部點對 */
             G.debug = {
-                state: function () { return { state: state, beatNo: beatNo, cleared: cleared, lives: lives, alive: alive.map(function (b) { return b ? b.beat : null; }), ghost: ghost.map(function (b) { return b ? b.beat : null; }), pending: pending }; },  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+                state: function () { return { state: state, beatNo: beatNo, cleared: cleared, lives: lives, alive: alive.map(function (b) { return b ? b.beat : null; }), ghost: ghost.map(function (b) { return b ? b.beat : null; }), pending: pending }; },
                 tap: function (s) { tap(s, performance.now()); },
-                aliveSlots: function () { return alive.map(function (b, i) { return b ? i : -1; }).filter(function (x) { return x >= 0; }); },  /* filter：留下符合條件的元素，回傳新陣列 */
+                aliveSlots: function () { return alive.map(function (b, i) { return b ? i : -1; }).filter(function (x) { return x >= 0; }); },
                 /* 自動全部點對（用在測試）：每 40ms 檢查有球就點 */
                 autoplay: function (on) {
                     if (R.auto) { clearInterval(R.auto); R.auto = null; }

@@ -38,28 +38,40 @@
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 小工具：讓 [第 1 關的值, 到頂的值] 這種成對的設定，依關卡線性變化 */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    /* 這一關總共拋出幾顆字（湯圓） */
     function totalFor(level) { return Math.round(ramp(level, TOTAL)); }  /* Math.round：四捨五入成整數 */
-    function spawnMsFor(level) { return Math.round(ramp(level, SPAWN_MS)); }  /* Math.round：四捨五入成整數 */
+    /* 這一關每一批拋出的間隔（毫秒），越後面越短（拋得越密） */
+    function spawnMsFor(level) { return Math.round(ramp(level, SPAWN_MS)); }
+    /* 這一關一批最多拋幾顆（至少 1 顆） */
     function batchMaxFor(level) { return Math.max(1, Math.round(ramp(level, BATCH))); }
+    /* 這一關選字群的「平均筆劃」範圍：越後面，字的筆劃越多（越難分辨） */
     function strokeRange(level) { return [ramp(level, STROKES_LO), ramp(level, STROKES_HI)]; }
+    /* 算一顆字在飛行了 t 秒時的位置（拋物線運動，座標都是占畫面寬／高的比例 0～1）。
+       用高中物理：先由「最高點高度 ya、到最高點的時間 ta」算出重力加速度 g 與初速 vy0，再用 y = 起點 + 初速×t + g×t²/2；水平方向是等速 vx。 */
     function flightPos(tz, t) { var g = 2 * (BOTTOM - tz.ya) / (tz.ta * tz.ta), vy0 = -g * tz.ta; return { x: tz.x0 + tz.vx * t, y: BOTTOM + vy0 * t + g * t * t / 2 }; }
+    /* 算一顆字「掉到畫面下方、算落地」的時間：解一元二次方程式 y(t) = EXIT（用公式解 (−b ± √(b²−4ac)) / 2a） */
     function landTime(tz) { var g = 2 * (BOTTOM - tz.ya) / (tz.ta * tz.ta), vy0 = -g * tz.ta, c = BOTTOM - EXIT; return (-vy0 + Math.sqrt(vy0 * vy0 - 2 * g * c)) / g; }  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
+    /* 手指劃過的線段（a 點到 b 點）有沒有碰到圓（圓心 c、半徑 r）？先找線段上離圓心最近的點（t 是它在線段上的位置，限制在 0～1），
+       再看那一點到圓心的距離是否 ≤ r。Math.hypot 是「勾股定理」算距離。 */
     function segHitsCircle(ax, ay, bx, by, cx, cy, r) {
         var dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy, t = l2 < 1e-12 ? 0 : kit.clamp(((cx - ax) * dx + (cy - ay) * dy) / l2, 0, 1);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
         return Math.hypot(ax + t * dx - cx, ay + t * dy - cy) <= r;
     }
     /* 出一關：{ target, mates（干擾字候選）, group, total, tosses（[{ t, ch, onTarget, x0, vx, ya, ta, spin }]）, spawnMs, strokes, level } */
+    /* 出一關：挑一個「長得像的字」字群，選其中一個當目標字、其餘當干擾字；依關卡決定要拋幾顆（其中 TARGET_FRAC 比例是目標字），
+       洗牌後一批一批排好「什麼時候、從哪裡、拋什麼字」。回傳 { target, mates, group, total, tosses 每一次拋出的資料, spawnMs, batchMax, strokes, level }。 */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var rg = strokeRange(level), pool = SimilarChars.groups({ minSize: MIN_GROUP, minStrokes: rg[0], maxStrokes: rg[1] });
         if (!pool.length) pool = SimilarChars.groups({ minSize: MIN_GROUP });
         var g = kit.pick(pool, rand), target = kit.pick(g.chars, rand), mates = g.chars.filter(function (c) { return c !== target; });  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
-        var F = totalFor(level), nT = Math.max(3, Math.round(F * TARGET_FRAC)), list = [], i;
+        var F = totalFor(level), nT = Math.max(3, Math.round(F * TARGET_FRAC)), list = [], i;  /* F：總共拋幾顆；nT：其中目標字有幾顆（至少 3 顆）；list：依序要拋的字（先放目標字、再放干擾字，下面洗牌） */
         for (i = 0; i < nT; i++) list.push({ ch: target, onTarget: true });
         for (i = nT; i < F; i++) list.push({ ch: mates[(i - nT) % mates.length], onTarget: false });
         list = kit.shuffle(list, rand);                 /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
-        var spawn = spawnMsFor(level), bmax = batchMaxFor(level), t = LEAD_MS, tosses = [], idx = 0;
+        var spawn = spawnMsFor(level), bmax = batchMaxFor(level), t = LEAD_MS, tosses = [], idx = 0;  /* spawn：批與批的間隔；bmax：一批最多幾顆；t：目前排到第幾毫秒；tosses：排好的拋出清單；idx：排到 list 的第幾個字 */
         while (idx < list.length) {
             var b = Math.min(list.length - idx, kit.randInt(1, bmax, rand)), xs = [];  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             for (i = 0; i < b; i++) {
@@ -67,16 +79,19 @@
                 while (xs.some(function (x) { return Math.abs(x - x0) < 0.2; }) && guard++ < 30) x0 = kit.randFloat(X_RANGE[0], X_RANGE[1], rand);  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
                 xs.push(x0);
                 var it = list[idx++];
-                tosses.push({ t: Math.round(t + i * 140), ch: it.ch, onTarget: it.onTarget, x0: x0, vx: (0.5 - x0) * kit.randFloat(0.05, 0.3, rand), ya: kit.randFloat(APEX[0], APEX[1], rand), ta: kit.randFloat(T_APEX[0], T_APEX[1], rand), spin: kit.randFloat(-220, 220, rand) });  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+                tosses.push({ t: Math.round(t + i * 140), ch: it.ch, onTarget: it.onTarget, x0: x0, vx: (0.5 - x0) * kit.randFloat(0.05, 0.3, rand), ya: kit.randFloat(APEX[0], APEX[1], rand), ta: kit.randFloat(T_APEX[0], T_APEX[1], rand), spin: kit.randFloat(-220, 220, rand) });
             }
             t += spawn * b * kit.randFloat(0.85, 1.15, rand);                       /* 一次拋越多顆，下一批隔越久（整體密度才不會爆掉） */
         }
         return { target: target, mates: mates, group: g.chars, total: F, tosses: tosses, spawnMs: spawn, batchMax: bmax, strokes: rg, level: level };
     }
     /* 兩個字的筆畫差異（像素比對）畫在 canvas 上：兩個字都有的筆畫是墨色、只有一個有的塗紅 */
+    /* 把兩個字的筆畫差異畫在 canvas（畫布）上：把兩個字各畫成一張黑白遮罩（mask，用 getImageData 讀出每個像素），
+       兩個字都有墨的像素畫成墨色、只有一個字有的像素畫紅色，紅色越多代表差異越大。 */
     function drawDiff(canvas, a, b, size) {
         var ctx = canvas.getContext('2d'); if (!ctx) return null;
         canvas.width = canvas.height = size;
+        /* mask(字)：把一個字畫在看不見的小畫布上，讀出每個像素的資料（data 陣列：每個像素 4 個數字 R、G、B、透明度） */
         function mask(ch) { var c = document.createElement('canvas'); c.width = c.height = size; var x = c.getContext('2d'); x.fillStyle = '#000'; x.font = '900 ' + Math.round(size * 0.82) + 'px "Noto Serif TC","Songti TC","PMingLiU",serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(ch, size / 2, size / 2 + size * 0.04); return x.getImageData(0, 0, size, size).data; }
         var da = mask(a), db = mask(b), out = ctx.createImageData(size, size), o = out.data, diff = 0;
         for (var i = 0; i < size * size; i++) {
@@ -116,17 +131,18 @@
         console.log('[切字] 第 ' + level + ' 關：目標「' + q.target + '」，干擾 ' + q.mates.join('') + '；拋 ' + F + ' 顆（目標 ' + q.tosses.filter(function (t) { return t.onTarget; }).length + ' 顆），一批最多 ' + q.batchMax + ' 顆，間隔約 ' + q.spawnMs + ' 毫秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        var field = h('div', { 'class': 'slicechar-field' });
+        var field = h('div', { 'class': 'slicechar-field' });  /* 畫面元素：field 整個遊戲區、goal 上方的「只切：某字」、counter 已處理幾顆／總數、info 提示文字、arena 字飛來飛去的範圍 */
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var goal = h('div', { 'class': 'slicechar-goal' }, [h('span', { 'class': 'slicechar-goal__t', text: '只切：' }), h('span', { 'class': 'slicechar-goal__ch', text: q.target })]);
-        field.appendChild(goal);                        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(goal);
         var counter = h('div', { 'class': 'slicechar-counter', text: '0／' + F }); field.appendChild(counter);
         var info = h('div', { 'class': 'qz-note slicechar-info', text: '' }); field.appendChild(info);
         var arena = h('div', { 'class': 'slicechar-arena' }); field.appendChild(arena);
 
-        var resolved = 0, flying = [], halted = false, lastP = null, down = false, over = false;
+        var resolved = 0, flying = [], halted = false, lastP = null, down = false, over = false;  /* resolved：已經處理完（切掉或落地）幾顆；flying：目前在空中的字；halted：畫面已停住（失敗時）；lastP：手指上一個位置；down：手指是否按著；over：這一關結束 */
         q.tosses.forEach(function (tz) { api.after(tz.t, function () { launch(tz); }); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
         if (level === 1 && kit.once('slicechar.hint')) api.after(LEAD_MS + 600, function () { if (!over) kit.hintOn(stage, null, { mode: 'drag', x: W * 0.3, y: H * 0.55, dx: W * 0.4, dy: -40, text: '只切目標字' }); });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
+        /* 把一顆字拋出去：建立它的畫面元素（湯圓）放進 arena，並登記到 flying 清單（之後每一幀更新位置） */
         function launch(tz) {
             if (halted || api.over) return;
             var el = h('div', { 'class': 'slicechar-dump' }, [h('div', { 'class': 'slicechar-dump__ch', text: tz.ch })]);
@@ -151,14 +167,17 @@
                 }
             }
         });
+        /* 處理完一顆（切掉了目標字，或干擾字安全落地）：計數加一，全部處理完就過關 */
         function resolve() {
             resolved++; counter.textContent = resolved + '／' + F;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             if (resolved >= F && !over) { over = true; info.textContent = '全部處理完了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1100 }); }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
         }
         arena.addEventListener('pointerdown', function (e) { if (over) return; e.preventDefault(); try { arena.setPointerCapture(e.pointerId); } catch (err) { } var p = kit.localPt(e, arena); lastP = p; down = true; sliceSeg(p, p); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
         arena.addEventListener('pointermove', function (e) { if (!down || over) return; var p = kit.localPt(e, arena); sliceSeg(lastP, p); lastP = p; });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        /* 手指放開（或被系統取消）：結束這一次劃動 */
         function endDrag() { down = false; lastP = null; }
-        arena.addEventListener('pointerup', endDrag); arena.addEventListener('pointercancel', endDrag);  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        arena.addEventListener('pointerup', endDrag); arena.addEventListener('pointercancel', endDrag);
+        /* 手指從 a 移到 b 這一小段：檢查有沒有切到空中的任何一顆字（用 segHitsCircle 判斷，判定半徑比湯圓多 HIT_EXTRA px，比較好切） */
         function sliceSeg(a, b) {
             for (var i = flying.length - 1; i >= 0 && !over; i--) {
                 var f = flying[i]; if (f.cut || f.px == null) continue;
@@ -166,18 +185,20 @@
             }
         }
         /* 切開：湯圓裂成兩半、字也裂成兩半；切到干擾字 → 結束 */
+        /* 切開一顆字：湯圓裂成左右兩半飛出去（複製元素、套用 CSS 動畫）；切到干擾字就失敗，切到目標字算處理完一顆 */
         function cut(f, idx, a, b) {
             f.cut = true; flying.splice(idx, 1);
             var el = f.el;
             [['left', -1], ['right', 1]].forEach(function (half) {  /* forEach：對陣列的每個元素各做一次 */
                 var c = el.cloneNode(true); c.className = 'slicechar-half slicechar-half--' + half[0]; c.style.transform = el.style.transform; c.style.setProperty('--dir', half[1]);  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
-                arena.appendChild(c); api.after(650, function () { c.remove(); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+                arena.appendChild(c); api.after(650, function () { c.remove(); });
             });
             el.remove(); Sfx.play('pop');               /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             if (!f.tz.onTarget) { wrong(f); return; }
             resolve();
         }
         /* 失敗：停住畫面，把目標字和你切錯（漏掉）的字並排，差異的筆畫標紅 */
+        /* 失敗時的對照畫面：把目標字與你切錯（或漏掉）的字並排，用 drawDiff 把不一樣的筆畫標紅 */
         function compare(badCh, missedFlag) {
             halted = true; over = true;
             var box = h('div', { 'class': 'slicechar-cmp' });
@@ -188,15 +209,17 @@
                 box.appendChild(r); field.appendChild(box); try { drawDiff(cv, q.target, badCh, 150); } catch (err) { }
             } else { box.appendChild(h('div', { 'class': 'slicechar-cmp__box slicechar-cmp__box--bad' }, [h('div', { 'class': 'slicechar-cmp__t', text: '漏掉了' }), h('div', { 'class': 'slicechar-cmp__big', text: q.target })])); field.appendChild(box); }
         }
+        /* 切錯了：顯示原因、畫對照圖、閃紅光並結束 */
         function wrong(f) {
-            info.textContent = '「' + f.tz.ch + '」不是目標字「' + q.target + '」！';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-            compare(f.tz.ch, false); kit.flash(stage, false, api.my);  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            info.textContent = '「' + f.tz.ch + '」不是目標字「' + q.target + '」！';
+            compare(f.tz.ch, false); kit.flash(stage, false, api.my);
             api.fail({ delay: 3600, lines: ['你切了「' + f.tz.ch + '」，目標字是「' + q.target + '」', '形近字：' + q.group.join('、')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
+        /* 漏掉目標字（目標字落地了）：顯示原因、畫對照圖、閃紅光並結束 */
         function missed(f) {
             info.textContent = '漏掉了一個「' + q.target + '」！';
             compare(null, true); kit.flash(stage, false, api.my);
-            api.fail({ delay: 3400, lines: ['漏掉了一個目標字「' + q.target + '」', '形近字：' + q.group.join('、')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
+            api.fail({ delay: 3400, lines: ['漏掉了一個目標字「' + q.target + '」', '形近字：' + q.group.join('、')] });
         }
         /* 驗證用（會被重複呼叫，要冪等）：solve＝切掉所有在空中的目標字、wrong＝切第一個在空中的干擾字 */
         api.solve = function () {

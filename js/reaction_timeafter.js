@@ -52,10 +52,10 @@
         var hh = Math.floor(m / 60), mm = m % 60;       /* Math.floor：無條件捨去成整數 */
         return (hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm;
     }
-    function beforeP(level) { return level < BEFORE_FROM ? 0 : kit.ramp(level, BEFORE_P[0], BEFORE_P[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function beforeP(level) { return level < BEFORE_FROM ? 0 : kit.ramp(level, BEFORE_P[0], BEFORE_P[1], RAMP_LEVELS); }
     /* 把「過了多久」拆成小時＋零頭，產生揭曉文字 */
     function explain(kind, start, delta, ans) {
-        var H = Math.floor(delta / 60), R = delta % 60, sgn = kind === 'after' ? 1 : -1, verb = kind === 'after' ? '加' : '減';  /* Math.floor：無條件捨去成整數 */
+        var H = Math.floor(delta / 60), R = delta % 60, sgn = kind === 'after' ? 1 : -1, verb = kind === 'after' ? '加' : '減';
         var parts = [], cur = start;
         if (H > 0) { cur += sgn * H * 60; parts.push('先' + verb + ' ' + H + ' 小時 ＝ ' + fmtTime(cur)); }
         if (R > 0) { cur += sgn * R; parts.push((H > 0 ? '再' : '') + verb + ' ' + R + ' 分鐘 ＝ ' + fmtTime(cur)); }
@@ -86,7 +86,7 @@
             dLo = Math.ceil(dLo / step) * step; dHi = Math.floor(dHi / step) * step;     /* 前期範圍的頭尾也要是 5 的倍數 */
             var delta = Math.round(kit.randInt(dLo, dHi, rand) / step) * step;  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             var start = kit.randInt(6 * 60, 20 * 60, rand);              /* 起始時間 06:00～20:00 */
-            if (step === 5) start = Math.round(start / 5) * 5;  /* Math.round：四捨五入成整數 */
+            if (step === 5) start = Math.round(start / 5) * 5;
             var ans = kind === 'after' ? start + delta : start - delta;
             if (ans < 0 || ans >= DAY) continue;
             var c = decoyCandidates(kind, start, delta, ans, level);
@@ -161,7 +161,7 @@
             qEl.classList.add(ok ? 'qz-ok' : 'qz-bad'); /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             reveal.textContent = q.explain;             /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1100 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({ delay: 2400, lines: [            /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 (m == null ? '時間到！' : '你選了 ' + fmtTime(m)) + '，正確是 ' + fmtTime(q.ans),
                 q.explain

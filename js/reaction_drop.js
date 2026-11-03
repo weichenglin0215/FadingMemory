@@ -114,7 +114,7 @@
         if (x < 0 || x >= stripW) return -1;
         if (x < L.centerX) return Math.min(3, Math.floor(x / L.sideW));  /* Math.floor：無條件捨去成整數 */
         if (x < L.centerX + L.centerW) return 4;
-        return Math.min(8, 5 + Math.floor((x - L.centerX - L.centerW) / L.sideW));  /* Math.floor：無條件捨去成整數 */
+        return Math.min(8, 5 + Math.floor((x - L.centerX - L.centerW) / L.sideW));
     }
 
     /* 建立 SVG 元素的小工具 */
@@ -130,7 +130,7 @@
 
     /* 設定 SVG 的 viewBox：改 viewBox 就是移動／放大「鏡頭」，而且是向量重畫，永遠銳利 */
     function setViewBox(svg, box) {
-        svg.setAttribute('viewBox', box.vx + ' ' + box.vy + ' ' + box.vw + ' ' + box.vh);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+        svg.setAttribute('viewBox', box.vx + ' ' + box.vy + ' ' + box.vw + ' ' + box.vh);
     }
 
     /* 把 SVG 的 viewBox 從 from 緩動到 to：不是改 CSS transform，是每一影格
@@ -169,7 +169,7 @@
                 if (p < 1) requestAnimationFrame(frame);  /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
                 else finishOnce();
             }
-            requestAnimationFrame(frame);               /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
+            requestAnimationFrame(frame);
             setTimeout(finishOnce, duration + 400);     /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
         });
     }
@@ -202,7 +202,7 @@
                     'class': 'drop-label'
                 });
                 t.textContent = String(LABELS[i]);      /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-                root.appendChild(t);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+                root.appendChild(t);
             } else {
                 buildSub(root, x, stripH, subW, subsubW);
             }
@@ -249,7 +249,7 @@
            （不用 Reaction.migrateBest：它看到 .sync 記號就當成新單位、不會清，做法跟挑豆子一樣）。 */
         var flag143 = Reaction.bestKey(ID) + '.v143';
         if (!UI.store.get(flag143, false)) {            /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
-            UI.store.set(Reaction.bestKey(ID), null);   /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
+            UI.store.set(Reaction.bestKey(ID), null);
             UI.store.set(Reaction.bestKey(ID) + '.sync', false);
             UI.store.set(flag143, true);
         }
@@ -272,7 +272,7 @@
             var my = Rd;
             phase = 'intro';
             root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
-            ctx.setMeta(Reaction.kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))]));  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+            ctx.setMeta(Reaction.kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))]));
             var hint = h('div', { 'class': 'hint', text: '第 ' + level + ' 關：把三角形插進中間的紅色目標區（寬度是畫面的 1/' + Math.min(DEN_MAX, TARGET_BASE + level) + '）' });
             root.appendChild(hint);
             var field = h('div', { 'class': 'drop-field' });
@@ -416,7 +416,7 @@
                     onLand(outcome, finalLeft);
                 }
 
-                var t0 = performance.now();             /* performance.now()：高精度的時間（毫秒），計時用 */
+                var t0 = performance.now();
                 function frame(now) {
                     if (landed) return;
                     var el = Math.min(FALL_MS, now - t0);
@@ -429,7 +429,7 @@
                     else land();
                 }
                 requestAnimationFrame(frame);
-                setTimeout(land, FALL_MS + 400);        /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
+                setTimeout(land, FALL_MS + 400);
             }
 
             /* 判定落點：算出接觸點落在第幾格（idx1），中間格再往下算第幾子格（idx2）、第幾孫格（idx3） */
@@ -492,8 +492,8 @@
                     ctx.setMeta(Reaction.kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))]));
                     var perfect = outcome.idx2 === 4 && outcome.idx3 === 4;
                     hint.style.opacity = '1';
-                    hint.textContent = perfect ? '第 ' + level + ' 關過關！正中紫色核心，PERFECT！' : '第 ' + level + ' 關過關！下一關目標區更窄';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-                    if (window.Sfx) Sfx.play(perfect ? 'perfect' : 'win');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                    hint.textContent = perfect ? '第 ' + level + ' 關過關！正中紫色核心，PERFECT！' : '第 ' + level + ' 關過關！下一關目標區更窄';
+                    if (window.Sfx) Sfx.play(perfect ? 'perfect' : 'win');
                     phase = 'next';
                     my.after(NEXT_MS, function () { level++; round(null, true); });
                     return;
@@ -537,7 +537,7 @@
            結果畫面時先重開一局，再觸發；開場演出／下落／變焦中按了不理會，避免狀態衝突。 */
         document.addEventListener('keydown', function (e) {
             if (!e.altKey || e.code !== 'KeyA') return;
-            e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            e.preventDefault();
             if (phase === 'result') round(1);
             if (phase === 'idle' && triggerPerfect) triggerPerfect();
         });

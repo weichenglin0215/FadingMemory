@@ -104,7 +104,7 @@
     /* 筆畫 → 平滑折線（Catmull-Rom），並算出累積長度 */
     function buildPath(n) {
         var strokes = STROKES[n].map(function (raw) {   /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
-            var P = raw.map(function (q) { return { x: BOX.x + q[0] * BOX.w, y: BOX.y + q[1] * BOX.h }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            var P = raw.map(function (q) { return { x: BOX.x + q[0] * BOX.w, y: BOX.y + q[1] * BOX.h }; });
             var pts = [];
             if (P.length === 2) {
                 for (var s = 0; s <= 12; s++) pts.push({ x: P[0].x + (P[1].x - P[0].x) * s / 12, y: P[0].y + (P[1].y - P[0].y) * s / 12 });
@@ -177,7 +177,7 @@
 
         /* 卡片 */
         var cs = getComputedStyle(note);
-        var nb = note.getBoundingClientRect();          /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
+        var nb = note.getBoundingClientRect();
         var x = X(nb.left);
         var y = Y(nb.top);
         var w = nb.width / ss * k;
@@ -485,7 +485,7 @@
         gl.enableVertexAttribArray(0);
         gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
-        function res(r) { return { w: r, h: Math.round(r * canvas.height / canvas.width) }; }  /* Math.round：四捨五入成整數 */
+        function res(r) { return { w: r, h: Math.round(r * canvas.height / canvas.width) }; }
         var sim = res(SIM_RES);
         var inkR = res(DYE_RES);
         var velocity = doubleFbo(sim.w, sim.h);
@@ -643,7 +643,7 @@
         };
 
         this.destroy = function () {
-            Object.keys(P).forEach(function (key) { gl.deleteProgram(P[key].program); });  /* forEach：對陣列的每個元素各做一次 */
+            Object.keys(P).forEach(function (key) { gl.deleteProgram(P[key].program); });
             textures.forEach(function (t) { gl.deleteTexture(t); });
             fbos.forEach(function (f) { gl.deleteFramebuffer(f); });
             gl.deleteBuffer(quad);
@@ -707,12 +707,12 @@
     /* ─── 備案：數字直接疊在紙條上淡入、模糊淡出（一樣的節奏）─── */
     function simplePlay(o, root, leave) {
         [5, 4, 3, 2, 1].forEach(function (n, i) {
-            setTimeout(function () {                    /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
+            setTimeout(function () {
                 var d = document.createElement('div');
                 d.textContent = n;                      /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 d.style.cssText = 'position:absolute;left:0;right:0;top:170px;text-align:center;line-height:1;' +
                     'font:900 460px "Noto Sans TC",sans-serif;color:' + cssRgb(inkOf(n)) + ';opacity:0.85;';
-                root.appendChild(d);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+                root.appendChild(d);
                 if (o.onTick) try { o.onTick(n); } catch (e) { }
                 if (d.animate) {
                     d.animate([
@@ -824,7 +824,7 @@
                 }
                 requestAnimationFrame(frame);           /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
             }
-            requestAnimationFrame(frame);               /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
+            requestAnimationFrame(frame);
         };
         /* 驗證用：固定步長推進 sec 秒並畫出來 */
         ctl.step = function (sec) {

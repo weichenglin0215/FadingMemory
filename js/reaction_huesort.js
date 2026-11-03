@@ -49,7 +49,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function modDeFor(level) { return Math.round(ramp(level, MOD_DE) * 100) / 100; }  /* Math.round：四捨五入成整數 */
-    function timeMs(level) { return Math.round(ramp(level, TIME_S) * 1000); }  /* Math.round：四捨五入成整數 */
+    function timeMs(level) { return Math.round(ramp(level, TIME_S) * 1000); }
 
     /* LCh（明度 0～100、彩度、色相角度）→ Lab */
     function lchToLab(L, C, hDeg) { return [L, C * Math.cos(hDeg * RAD), C * Math.sin(hDeg * RAD)]; }
@@ -90,7 +90,7 @@
         for (var tr = 0; tr < 400; tr++) {
             var mode = kit.pick(MODES, rand), sgn = rand() < 0.5 ? -1 : 1, h0 = kit.randFloat(0, 360, rand), L0, C0;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             if (mode === 'light') { L0 = kit.randFloat(48, 58, rand); C0 = kit.randFloat(28, 44, rand); }  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
-            else if (mode === 'chroma') { L0 = kit.randFloat(52, 66, rand); C0 = kit.randFloat(38, 50, rand); }  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+            else if (mode === 'chroma') { L0 = kit.randFloat(52, 66, rand); C0 = kit.randFloat(38, 50, rand); }
             else { L0 = kit.randFloat(52, 66, rand); C0 = kit.randFloat(34, 48, rand); }
             var stepDeg = hueDegFor(STEP_DE, C0), base = [];
             for (var i = 0; i < BLOCKS; i++) {
@@ -104,7 +104,7 @@
             if (kind === 'light') md.L += s * de;
             else if (kind === 'chroma') md.C += s * de;
             else md.h += s * hueDegFor(de, md.C);
-            var exp = base.map(function (b) { return labToRgb(lchToLab(b.L, b.C, b.h)); }), mod = labToRgb(lchToLab(md.L, md.C, md.h));  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            var exp = base.map(function (b) { return labToRgb(lchToLab(b.L, b.C, b.h)); }), mod = labToRgb(lchToLab(md.L, md.C, md.h));
             if (!exp.every(inGamut) || !inGamut(mod)) continue;                  /* 有顏色螢幕顯示不出來：重抽 */
             var expected = exp.map(round8), colors = expected.map(function (c) { return c.slice(); });  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
             colors[k] = round8(mod);
@@ -113,7 +113,7 @@
         /* 保底（幾乎用不到）：中等灰藍色、明度漸層、第 5 塊（編號 4）改色相 */
         var fb = [], fbDe = de;
         for (var j = 0; j < BLOCKS; j++) fb.push(round8(labToRgb(lchToLab(50 + (j - 4) * STEP_DE, 30, 250))));
-        var fc = fb.map(function (c) { return c.slice(); });  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        var fc = fb.map(function (c) { return c.slice(); });
         fc[4] = round8(labToRgb(lchToLab(50, 30, 250 + hueDegFor(fbDe, 30))));
         return { level: level, mode: 'light', kind: 'hue', k: 4, de: fbDe, expected: fb, colors: fc };
     }
@@ -137,7 +137,7 @@
     function layout(W, H, top, bottom) {
         var bw = Math.round(W * BLOCK_W), region = H - top - bottom;
         var bh = Math.max(30, Math.floor((region - (BLOCKS - 1) * V_GAP) / BLOCKS));  /* Math.floor：無條件捨去成整數 */
-        var total = BLOCKS * bh + (BLOCKS - 1) * V_GAP, y0 = top + Math.max(0, Math.floor((region - total) / 2));  /* Math.floor：無條件捨去成整數 */
+        var total = BLOCKS * bh + (BLOCKS - 1) * V_GAP, y0 = top + Math.max(0, Math.floor((region - total) / 2));
         var stackTop = y0 + Math.floor((total - BLOCKS * bh) / 2), cx = Math.round((W - bw) / 2), blocks = [];
         for (var i = 0; i < BLOCKS; i++) {
             var left = i % 2 === 0;                                              /* 第 1、3、5…塊（編號 0、2、4…）靠左 */
@@ -177,7 +177,7 @@
         var tip = h('div', { 'class': 'qz-note huesort-tip', text: level === 1 ? '點出跟上下接不起來的那一塊' : '找出顏色被改過的那一塊' });
         stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var info = h('div', { 'class': 'qz-note huesort-info', text: '' });
-        stage.appendChild(info);                        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(info);
         var L = layout(W, H, 52, 78), done = false;
         info.style.top = (L.y0 + L.total + 10) + 'px';
         var els = q.colors.map(function (c, i) {
@@ -197,7 +197,7 @@
         function mark(i, ok) {
             var box = h('div', { 'class': 'huesort-mark' });
             var svg = kit.svg('svg', { 'class': 'huesort-mark__svg', viewBox: '-30 -30 60 60', width: 54, height: 54 }, box);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-            if (ok) kit.svg('circle', { 'class': 'huesort-mark__ok', cx: 0, cy: 0, r: 20 }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+            if (ok) kit.svg('circle', { 'class': 'huesort-mark__ok', cx: 0, cy: 0, r: 20 }, svg);
             else {
                 kit.svg('path', { 'class': 'huesort-mark__xedge', d: 'M-15,-15 L15,15 M15,-15 L-15,15' }, svg);
                 kit.svg('path', { 'class': 'huesort-mark__x', d: 'M-15,-15 L15,15 M15,-15 L-15,15' }, svg);
@@ -222,8 +222,8 @@
             api.after(GATHER_MS + 100, function () {    /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                 mark(q.k, true);
                 if (j >= 0 && !ok) mark(j, false);
-                info.textContent = ok ? '答對了！' + what : (j >= 0 ? '答錯了：你點的是第 ' + (j + 1) + ' 塊，' : '時間到！') + what;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-                info.classList.add(ok ? 'huesort-info--ok' : 'huesort-info--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                info.textContent = ok ? '答對了！' + what : (j >= 0 ? '答錯了：你點的是第 ' + (j + 1) + ' 塊，' : '時間到！') + what;
+                info.classList.add(ok ? 'huesort-info--ok' : 'huesort-info--bad');
             });
             if (ok) api.pass({ delay: GATHER_MS + 1900 });  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
             else api.fail({ delay: GATHER_MS + 3700, lines: [(j >= 0 ? '你點的是第 ' + (j + 1) + ' 塊（紅色 X）' : '時間到！'), '綠色圓圈那一塊才是被改過的：' + what] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */

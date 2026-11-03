@@ -98,7 +98,7 @@
 
     /* ═══ 關卡制（V1.25） ═══ */
     function lvParam(arr, level) { return kit.ramp(level, arr[0], arr[1], arr[2]); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
-    function durationFor(level) { return Math.round(lvParam(DUR, level)); }  /* Math.round：四捨五入成整數 */
+    function durationFor(level) { return Math.round(lvParam(DUR, level)); }
     function baseDiff(level) { return lvParam(DIFF_BASE, level); }
     function ivMult(level) { return lvParam(IV, level); }
     function burstCapFor(level) { return Math.max(1, Math.round(lvParam(BURST_CAP, level))); }
@@ -120,7 +120,7 @@
             var best = null;
             for (var att = 0; att < TRIM_TRIES; att++) {
                 var e = buildEvents(rand, level);
-                var rc = Math.max(redMinFor(level), redMaxFor(level) - Math.floor(rand() * 2)), gc = Math.max(greenMinFor(level), greenMaxFor(level) - Math.floor(rand() * 3));  /* Math.floor：無條件捨去成整數 */
+                var rc = Math.max(redMinFor(level), redMaxFor(level) - Math.floor(rand() * 2)), gc = Math.max(greenMinFor(level), greenMaxFor(level) - Math.floor(rand() * 3));
                 trimTo(e.red, rc, rand); trimTo(e.green, gc, rand, e.greenLit);          /* 太多就隨機拿掉幾個（拿掉不會違反間隔規則） */
                 best = e;
                 if (e.red.length >= redMinFor(level) && e.green.length >= greenMinFor(level)) return e;
@@ -173,7 +173,7 @@
         /* 綠燈的開始時間與亮燈長度要一起排序 */
         var order = green.map(function (_, i) { return i; }).sort(function (a, b) { return green[a] - green[b]; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         return {
-            green: order.map(function (i) { return green[i]; }),  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            green: order.map(function (i) { return green[i]; }),
             greenLit: order.map(function (i) { return greenLit[i]; }),
             red: red.slice().sort(function (a, b) { return a - b; })  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         };
@@ -244,7 +244,7 @@
             var askQ = h('div', { 'class': 'dualtask-ask__q', text: '紅燈亮了幾次？' });
             var optsEl = h('div', { 'class': 'dualtask-opts' });
             ask.appendChild(askQ); ask.appendChild(optsEl);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-            [head, tb.el, stage, ask].forEach(function (x) { root.appendChild(x); });  /* forEach：對陣列的每個元素各做一次 */
+            [head, tb.el, stage, ask].forEach(function (x) { root.appendChild(x); });
             ask.style.visibility = 'hidden';
             function meta() { var best = Reaction.getBest(ID); ctx.setMeta(kit.meta(['已過 ' + passedN + ' 關', best != null ? '最佳 ' + best : ''])); }  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             meta();
@@ -263,10 +263,10 @@
                 need = passNeedFor(ev.green.length);
                 hits = 0; strays = 0; missed = 0; answered = null; ok = false;
                 state = 'ready';
-                ask.style.visibility = 'hidden'; optsEl.innerHTML = '';  /* innerHTML = ''：把元素裡面的東西全部清掉 */
+                ask.style.visibility = 'hidden'; optsEl.innerHTML = '';
                 show(greenLamp, false); show(redLamp, false);
                 head.textContent = '第 ' + level + ' 關　準備…';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-                gCnt.textContent = '命中 0'; tb.set(1);   /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                gCnt.textContent = '命中 0'; tb.set(1);
                 try { console.info('[一心二用] 第 ' + level + ' 關：' + dur + ' 秒、綠燈 ' + ev.green.length + ' 次（要點中 ' + need + ' 次）、紅燈 ' + ev.red.length + ' 次（紅燈時間：' + ev.red.map(function (t) { return t.toFixed(1); }).join(' ') + '）'); } catch (e) { }
                 /* READY_MS 準備時間後正式開始，記下開始時間 t0 */
                 my.after(READY_MS, function () {
@@ -275,7 +275,7 @@
                     t0 = performance.now();             /* performance.now()：高精度的時間（毫秒），計時用 */
                     /* 照表排程：開燈／關燈都是 setTimeout，位置用 t0 絕對時間換算，所以不會累積誤差 */
                     ev.green.forEach(function (t, k) {
-                        my.after(Math.max(0, t * 1000 - (performance.now() - t0)), function () { if (id === token && !hit[k]) show(greenLamp, true); });  /* performance.now()：高精度的時間（毫秒），計時用 */
+                        my.after(Math.max(0, t * 1000 - (performance.now() - t0)), function () { if (id === token && !hit[k]) show(greenLamp, true); });
                         my.after(Math.max(0, (t + ev.greenLit[k]) * 1000 - (performance.now() - t0)), function () {
                             if (id !== token) return;
                             show(greenLamp, false);
@@ -291,7 +291,7 @@
                         if (id !== token || state !== 'play') return false;
                         var el = (now - t0) / 1000;
                         tb.set(1 - el / dur);
-                        head.textContent = '第 ' + level + ' 關　剩 ' + Math.max(0, Math.ceil(dur - el)) + ' 秒';  /* Math.ceil：無條件進位成整數 */
+                        head.textContent = '第 ' + level + ' 關　剩 ' + Math.max(0, Math.ceil(dur - el)) + ' 秒';
                     });
                     /* 時間到 → 進入回答階段 */
                     my.after(dur * 1000, function () { if (id === token) askCount(); });
@@ -309,7 +309,7 @@
                 opts.forEach(function (v) {
                     var b = h('button', { 'class': 'btn dualtask-opt', text: String(v) });
                     b.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(v); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
-                    optsEl.appendChild(b);              /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+                    optsEl.appendChild(b);
                 });
                 ask.style.visibility = '';
                 Sfx.play('pop');                        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
@@ -329,11 +329,11 @@
                 });
                 if (ok) {
                     passedN = level;
-                    if (Reaction.setBest(ID, passedN, function (a, b) { return a > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                    if (Reaction.setBest(ID, passedN, function (a, b) { return a > b; })) newRec = true;
                 }
                 meta();
                 head.textContent = '綠燈命中 ' + hits + '／' + ev.green.length + '（要 ' + need + '）' + (strays ? '　亂點 ' + strays : '') + (ok ? '　過關！' : '　沒過關');
-                Sfx.play(ok ? 'win' : 'bad');           /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                Sfx.play(ok ? 'win' : 'bad');
                 my.after(REVIEW_MS, function () { if (ok && level < MAX_LEVEL) startLevel(); else finish(); });
             }
 
@@ -354,7 +354,7 @@
 
             /* 右半邊（綠燈區）才是點擊區；左邊紅燈區不能點 */
             function tapGreen(e) {
-                if (e) e.preventDefault();              /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+                if (e) e.preventDefault();
                 if (state !== 'play') return;
                 /* el：現在是這一關開始後第幾秒 */
                 var el = (performance.now() - t0) / 1000;
@@ -377,7 +377,7 @@
 
             /* G.debug：測試用後門 */
             G.debug = {
-                state: function () { return { state: state, level: level, passed: passedN, hits: hits, strays: strays, missed: missed, need: need, greens: ev && ev.green.slice(), greenLit: ev && ev.greenLit.slice(), reds: ev && ev.red.slice(), t0: t0, dur: dur, answered: answered }; },  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+                state: function () { return { state: state, level: level, passed: passedN, hits: hits, strays: strays, missed: missed, need: need, greens: ev && ev.green.slice(), greenLit: ev && ev.greenLit.slice(), reds: ev && ev.red.slice(), t0: t0, dur: dur, answered: answered }; },
                 tapGreen: function () { tapGreen(); },
                 answer: answer,
                 answerRight: function () { answer(ev.red.length); },

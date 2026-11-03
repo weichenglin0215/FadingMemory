@@ -59,7 +59,7 @@
     function prog(n) { return Math.min(1, Math.max(0, n / RAMP_COINS)); }
     function lerp(pair, n) { return pair[0] + (pair[1] - pair[0]) * prog(n); }
     function fallMsFor(n) { return Math.round(lerp(FALL_S, n) * 1000); }  /* Math.round：四捨五入成整數 */
-    function backPFor(n) { return Math.round(lerp(BACK_P, n) * 1000) / 1000; }  /* Math.round：四捨五入成整數 */
+    function backPFor(n) { return Math.round(lerp(BACK_P, n) * 1000) / 1000; }
     function ratio5For(n) { return Math.round(lerp(RATIO5, n) * 1000) / 1000; }
     /* 硬幣直徑（px）：W＝畫面寬 */
     function diameterOf(type, n, W) { var big = Math.round(W * COIN_D); return COIN[type].big ? big : Math.round(big * ratio5For(n)); }
@@ -110,7 +110,7 @@
     /* 畫一枚硬幣（SVG，viewBox −50～50）：正面顯示幾元，背面畫一個花紋（不仿真實硬幣圖案） */
     function coinSvg(type, back, D) {
         var c = COIN[type], svg = kit.svg('svg', { 'class': 'coinsort-coin coinsort-coin--' + c.metal, viewBox: '-50 -50 100 100', width: D, height: D });  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        kit.svg('circle', { 'class': 'coinsort-rim', cx: 0, cy: 0, r: 48 }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('circle', { 'class': 'coinsort-rim', cx: 0, cy: 0, r: 48 }, svg);
         kit.svg('circle', { 'class': 'coinsort-reed', cx: 0, cy: 0, r: 46 }, svg);
         kit.svg('circle', { 'class': 'coinsort-face', cx: 0, cy: 0, r: 40 }, svg);
         kit.svg('circle', { 'class': 'coinsort-ring', cx: 0, cy: 0, r: 40 }, svg);
@@ -139,10 +139,10 @@
         /* 三個收集筒：左下 50 元、正下 5 元、右下 10 元；筒口的位置就是硬幣要掉到的線 */
         var TUBE_H = 150, tubeTop = H - TUBE_H - 8, lineY = tubeTop - 6, tubeW = Math.round(W * 0.28), tubes = {}, big = Math.round(W * COIN_D);
         ['left', 'down', 'right'].forEach(function (dir) {  /* forEach：對陣列的每個元素各做一次 */
-            var type = TYPES.filter(function (t) { return DIR_OF[t] === dir; })[0], c = COIN[type];  /* filter：留下符合條件的元素，回傳新陣列 */
+            var type = TYPES.filter(function (t) { return DIR_OF[t] === dir; })[0], c = COIN[type];
             var el = h('div', { 'class': 'coinsort-tube' });
             el.style.cssText = 'left:' + Math.round(W * TUBE_X[dir] - tubeW / 2) + 'px;top:' + tubeTop + 'px;width:' + tubeW + 'px;height:' + TUBE_H + 'px;';
-            var ico = h('div', { 'class': 'coinsort-tube__ico' }); ico.appendChild(coinSvg(type, false, Math.round(big * 0.5)));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            var ico = h('div', { 'class': 'coinsort-tube__ico' }); ico.appendChild(coinSvg(type, false, Math.round(big * 0.5)));
             var lab = h('div', { 'class': 'coinsort-tube__lab', text: DIR_ARROW[dir] + ' ' + c.name });
             var num = h('div', { 'class': 'coinsort-tube__num', text: '0 枚' });
             el.appendChild(ico); el.appendChild(lab); el.appendChild(num); field.appendChild(el);
@@ -180,7 +180,7 @@
             coin.y = -coin.D + lineY * p; place(coin, coin.x, coin.y);                 /* 頂端的 y：從 −D（剛好在畫面上方）走到 lineY − D（硬幣底部碰到筒子口） */
         });
         /* 保底：rAF 被暫停（背景分頁）時，用計時器檢查是不是掉到底了 */
-        (function guard() { api.after(250, function () { if (over || api.over) return; if (coin && !coin.done && performance.now() - coin.t0 >= coin.fall + 150) miss(); guard(); }); })();  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+        (function guard() { api.after(250, function () { if (over || api.over) return; if (coin && !coin.done && performance.now() - coin.t0 >= coin.fall + 150) miss(); guard(); }); })();
         api.after(LEAD_MS, spawn);
 
         /* ── 滑 ── */
@@ -196,7 +196,7 @@
             if (d == null || d === 'up') return;
             down.fired = true; swipe(d);
         }
-        field.addEventListener('pointermove', track);   /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        field.addEventListener('pointermove', track);
         field.addEventListener('pointerup', function (e) { track(e); if (down && e.pointerId === down.id) down = null; });
         field.addEventListener('pointercancel', function (e) { if (down && e.pointerId === down.id) down = null; });
 
@@ -221,8 +221,8 @@
             if (over) return;
             over = true;
             var why = whyText(c.type, kind, dir);
-            info.textContent = why;                     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-            tubes[c.type].el.classList.add('coinsort-tube--right');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            info.textContent = why;
+            tubes[c.type].el.classList.add('coinsort-tube--right');
             if (dir) { var wt = TYPES.filter(function (t) { return DIR_OF[t] === dir; })[0]; if (wt !== c.type) tubes[wt].el.classList.add('coinsort-tube--wrong'); }
             /* 那一枚硬幣放大、翻到正面 */
             if (kind === 'miss' && c.el.parentNode) c.el.parentNode.removeChild(c.el);

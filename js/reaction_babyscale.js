@@ -69,7 +69,7 @@
             for (var i = rk; i < m.length; i++) if (Math.abs(m[i][c]) > 1e-9) { p = i; break; }  /* Math.abs：取絕對值（去掉負號） */
             if (p < 0) continue;
             var t = m[p]; m[p] = m[rk]; m[rk] = t;
-            for (i = 0; i < m.length; i++) if (i !== rk && Math.abs(m[i][c]) > 1e-9) {  /* Math.abs：取絕對值（去掉負號） */
+            for (i = 0; i < m.length; i++) if (i !== rk && Math.abs(m[i][c]) > 1e-9) {
                 var f = m[i][c] / m[rk][c];
                 for (var j = c; j < cols; j++) m[i][j] -= f * m[rk][j];
             }
@@ -114,7 +114,7 @@
     /* 難度分數 D：用到的紀錄（sets，每條是人和東西的索引陣列）的分數加總＋要除以 2 以上＋人和東西多於 3 個的部分 */
     function difficultyOf(n, sets, div) {
         var d = 0;
-        sets.forEach(function (st) { d += st.length === n ? ALL_W : (REC_W[st.length] || REC_W[3]); });  /* forEach：對陣列的每個元素各做一次 */
+        sets.forEach(function (st) { d += st.length === n ? ALL_W : (REC_W[st.length] || REC_W[3]); });
         return d + (div > 1 ? DIV_W : 0) + ITEM_W * (n - 3);
     }
     /* 出一題：{ things, ws, target, eqs:[{ set, sum, used, hint? }], coef, div, D（難度分數）}
@@ -122,22 +122,22 @@
     function makePuzzle(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var n = Math.round(kit.ramp(level, ITEMS[0], ITEMS[1], RAMP_LEVELS)), best = null, bestGap = 1e9;  /* Math.round：四捨五入成整數 */
-        var goal = kit.ramp(level, DIFF[0], DIFF[1], RAMP_LEVELS), withAll = level <= TOTAL_TO;  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+        var goal = kit.ramp(level, DIFF[0], DIFF[1], RAMP_LEVELS), withAll = level <= TOTAL_TO;
         var pSingle = withAll || level > SINGLE_TO ? 0 : kit.ramp(level, SINGLE_P[0], SINGLE_P[1], SINGLE_TO);
-        function rows(sets) { return sets.map(function (st) { return rowOf(st, n); }); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        function rows(sets) { return sets.map(function (st) { return rowOf(st, n); }); }
         for (var tr = 0; tr < TRIES; tr++) {            /* 用亂數一直重抽，最多 TRIES 次，抽到符合條件的題目就收下 */
             var things = kit.shuffle(THINGS, rand).slice(0, n);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
             var ws = things.map(function (t) { return kit.randInt(t.w[0], t.w[1], rand); });  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
-            var target = kit.randInt(0, n - 1, rand);   /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+            var target = kit.randInt(0, n - 1, rand);
             var pool = subsets(n, level >= TRIPLE_FROM && n >= 4), i;
             for (i = 0; i < n; i++) if (i !== target && rand() < pSingle) pool.push([i]);       /* 一個人單獨量（問的那一個除外） */
-            var cand = kit.shuffle(pool, rand);         /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+            var cand = kit.shuffle(pool, rand);
             var all = []; for (i = 0; i < n; i++) all.push(i);
             var sets = withAll ? [all] : [];
             for (var q = 0; q < cand.length && !determined(rows(sets), n, target); q++) sets.push(cand[q]);
             if (!determined(rows(sets), n, target)) continue;
             /* 拿掉多餘的紀錄（有「全部一起」時它留著，它是前面關卡的特色） */
-            kit.shuffle(sets.slice(), rand).forEach(function (st) {  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+            kit.shuffle(sets.slice(), rand).forEach(function (st) {
                 if (withAll && st === all) return;
                 var rest = sets.filter(function (x) { return x !== st; });  /* filter：留下符合條件的元素，回傳新陣列 */
                 if (determined(rows(rest), n, target)) sets = rest;
@@ -154,13 +154,13 @@
                 eqs.push({ set: hint, sum: sumOf(hint, ws), used: false, hint: true });
             }
             if (level >= DISTRACT_FROM) {
-                var extra = cand.filter(function (st) { return st.length >= 2 && !eqs.some(function (x) { return x.set.join() === st.join(); }); })[0];  /* filter：留下符合條件的元素，回傳新陣列 */
+                var extra = cand.filter(function (st) { return st.length >= 2 && !eqs.some(function (x) { return x.set.join() === st.join(); }); })[0];
                 if (extra) eqs.push({ set: extra, sum: sumOf(extra, ws), used: false });
             }
             if (eqs.length > MAX_EQS) continue;
             var order = kit.shuffle(eqs.map(function (_, k) { return k; }), rand);
             var coef = [];
-            order.forEach(function (k) { coef.push(k < cb.coef.length && eqs[k].used ? cb.coef[sets.indexOf(eqs[k].set)] : 0); });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+            order.forEach(function (k) { coef.push(k < cb.coef.length && eqs[k].used ? cb.coef[sets.indexOf(eqs[k].set)] : 0); });
             var out = { things: things, ws: ws, target: target, eqs: order.map(function (k) { return eqs[k]; }), coef: coef, div: cb.div, D: D, goal: goal };
             if (gap <= DIFF_WINDOW) return out;
             best = out; bestGap = gap;
@@ -219,7 +219,7 @@
         /* 出場的人和東西（V1.43.0：玩家要知道有幾個角色、「全部」是誰） */
         var cast = h('div', { 'class': 'babyscale-cast' }, [h('span', { 'class': 'babyscale-cast__t', text: '出場 ' + n + ' 個：' })]);
         pz.things.forEach(function (t) { cast.appendChild(h('span', { 'class': 'babyscale-cast__i', text: t.icon + t.name })); });  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-        list.appendChild(cast);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        list.appendChild(cast);
         list.appendChild(h('div', { 'class': 'babyscale-title', text: '一起站上體重計量的紀錄' }));
         pz.eqs.forEach(function (eq, k) {
             var names = eq.set.length === n ? '全部一起（' + n + ' 個）' : eq.set.length === 1 ? pz.things[eq.set[0]].name + ' 單獨' : eq.set.map(function (i) { return pz.things[i].name; }).join('＋');
@@ -252,14 +252,14 @@
             if (over || !typed) return;
             over = true; api.stopTimer(); pad.setEnabled(false); paint();
             var work = workText(pz);
-            tip.textContent = work;                     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            tip.textContent = work;
             if (parseInt(typed, 10) === pz.ws[pz.target]) {
                 box.classList.add('babyscale-answer--ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 kit.flash(stage, true, api.my); api.pass({ delay: PASS_DELAY_MS }); return;  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
             }
-            box.classList.add('babyscale-answer--bad'); /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            box.classList.add('babyscale-answer--bad');
             box.textContent = typed + '→' + pz.ws[pz.target];
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({ delay: FAIL_HOLD_MS, lines: ['你填 ' + typed + ' 公斤', work] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 時間到：顯示正確答案與算法，結算 */
@@ -271,7 +271,7 @@
             box.classList.add('babyscale-answer--bad');
             box.textContent = (typed || '？') + '→' + pz.ws[pz.target];
             kit.flash(stage, false, api.my);
-            api.fail({ delay: FAIL_HOLD_MS, lines: ['時間到了', work] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
+            api.fail({ delay: FAIL_HOLD_MS, lines: ['時間到了', work] });
         }
         api.timeout = timeUp;
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */

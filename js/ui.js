@@ -68,7 +68,7 @@
             if (c == null) return;
             el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         });
-        if (tag === 'button' && !el.hasAttribute('type')) el.setAttribute('type', 'button');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+        if (tag === 'button' && !el.hasAttribute('type')) el.setAttribute('type', 'button');
         return el;
     };
 
@@ -139,7 +139,7 @@
     };
 
     UI.renderParas = function (box, list) {
-        box.innerHTML = list.map(function (p) { return '<p>' + UI.esc(p) + '</p>'; }).join('');  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        box.innerHTML = list.map(function (p) { return '<p>' + UI.esc(p) + '</p>'; }).join('');
     };
 
     /* 等 Google Fonts 真的載好再畫畫面：網路字型（繁中標題用的 Noto Serif/Sans TC）
@@ -168,7 +168,7 @@
             } catch (e) { return fallback; }
         },
         set: function (key, value) {
-            try { global.localStorage.setItem(key, JSON.stringify(value)); } catch (e) { }  /* JSON.stringify／parse：物件和文字互轉（存進 localStorage 或傳給伺服器時用） */
+            try { global.localStorage.setItem(key, JSON.stringify(value)); } catch (e) { }
         },
         /* 刪掉一個項目（V1.35.0：登出時清掉帳號資料用） */
         remove: function (key) {

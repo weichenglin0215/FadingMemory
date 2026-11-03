@@ -181,7 +181,7 @@
         if (!sGet(SS_COUNTED)) {
             sSet(SS_COUNTED, '1');
             visits += 1;
-            global.UI.store.set(KEY_VISITS, visits);    /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
+            global.UI.store.set(KEY_VISITS, visits);
         }
         if (visits < PROMPT_VISITS) return;
         var asked = global.UI.store.get(KEY_ASKED, 0) || 0;
@@ -190,7 +190,7 @@
             if (!canGuide()) return;
             /* 已經有別的彈窗開著（玩家正在選遊戲、看分享…）就不打擾，下次再說 */
             if (document.querySelector('.dlg, .share-dlg:not([hidden]), .theme-dlg:not([hidden]), .game-dlg:not([hidden])')) return;  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
-            global.UI.store.set(KEY_ASKED, Date.now()); /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
+            global.UI.store.set(KEY_ASKED, Date.now());
             openGuide();
         });
     }

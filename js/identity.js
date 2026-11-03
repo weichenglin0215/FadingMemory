@@ -135,7 +135,7 @@
         if (!it || typeof it.g !== 'string' || !ID_RE.test(it.g)) return null;
         var out = { g: it.g, b: it.b === 'min' ? 'min' : 'max' };
         if (typeof it.s === 'number' && isFinite(it.s)) out.s = it.s;
-        if (typeof it.lv === 'number' && isFinite(it.lv) && it.lv >= 1 && it.lv === Math.floor(it.lv)) out.lv = it.lv;  /* Math.floor：無條件捨去成整數 */
+        if (typeof it.lv === 'number' && isFinite(it.lv) && it.lv >= 1 && it.lv === Math.floor(it.lv)) out.lv = it.lv;
         return (out.s == null && out.lv == null) ? null : out;
     }
 
@@ -255,7 +255,7 @@
     /* 要上傳的項目：最佳關卡（V1.34 起才有，一定是現行單位）一律上傳；最佳成績只傳「確認是現行單位」的。 */
     function collect(ids) {
         var items = [];
-        (ids || localGameIds()).forEach(function (id) { /* forEach：對陣列的每個元素各做一次 */
+        (ids || localGameIds()).forEach(function (id) {
             if (!ID_RE.test(id)) return;
             var it = { g: id }, s = localBest(id), lv = localLv(id);
             if (s != null && trusted(id)) it.s = s;
@@ -298,7 +298,7 @@
                 return r;
             }
             var n = applyServer(r.data.items);
-            if (opts.all) store().set(KEY_SYNCAT, Date.now());  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
+            if (opts.all) store().set(KEY_SYNCAT, Date.now());
             /* 這次上傳過的項目，從「待上傳」名單拿掉 */
             var pend = store().get(KEY_BESTPEND, {}) || {};
             items.forEach(function (it) { delete pend[it.g]; });
@@ -337,7 +337,7 @@
     function clearLocalBests() {
         try {
             Object.keys(global.localStorage).forEach(function (k) {
-                if (k.indexOf(PREFIX_BEST) === 0) {     /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+                if (k.indexOf(PREFIX_BEST) === 0) {
                     var rest = k.slice(PREFIX_BEST.length);
                     if (ID_RE.test(rest) || (/\.sync$/.test(rest) && ID_RE.test(rest.slice(0, -5)))) global.localStorage.removeItem(k);
                 } else if (k.indexOf(PREFIX_LV) === 0 && ID_RE.test(k.slice(PREFIX_LV.length))) {

@@ -116,7 +116,7 @@
             try {
                 var vs = synth.getVoices();
                 voice = vs.filter(function (x) { return /zh[-_]TW/i.test(x.lang); })[0] ||  /* filter：留下符合條件的元素，回傳新陣列 */
-                    vs.filter(function (x) { return /^(zh|cmn)/i.test(x.lang); })[0] || null;  /* filter：留下符合條件的元素，回傳新陣列 */
+                    vs.filter(function (x) { return /^(zh|cmn)/i.test(x.lang); })[0] || null;
             } catch (e) { voice = null; }
         }
         if (synth) {
@@ -156,7 +156,7 @@
                 if (p) out.push(p);
             });
             var merged = [];
-            out.forEach(function (p) {                  /* forEach：對陣列的每個元素各做一次 */
+            out.forEach(function (p) {
                 var n = merged.length;
                 if (n && merged[n - 1].length + p.length <= 24) merged[n - 1] += p;
                 else merged.push(p);
@@ -175,7 +175,7 @@
         /* next：從佇列取下一句來念；念完（onend）自動念下一句 */
         function next() {
             if (cur || paused || !synth || !st.voice) return;
-            var now = performance.now();                /* performance.now()：高精度的時間（毫秒），計時用 */
+            var now = performance.now();
             /* cancel() 之後馬上 speak()，有些瀏覽器會把新的一句吃掉：稍等一下 */
             if (now - hushAt < 80) { setTimeout(next, 90); return; }  /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
             while (queue.length && queue[0].until && queue[0].until < now) queue.shift();
@@ -238,7 +238,7 @@
     /* ─── 時鐘：真實 1 秒 = 遊戲 10 秒 ─── */
     function clockText() {
         var m = Math.floor(st.clock / 60);              /* Math.floor：無條件捨去成整數 */
-        var hh = Math.floor(m / 60) % 24;               /* Math.floor：無條件捨去成整數 */
+        var hh = Math.floor(m / 60) % 24;
         var mm = m % 60;
         return (hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm;
     }
@@ -313,7 +313,7 @@
         /* 從暫停選單按「重來這一段」：舊場景的劇情已隨換場景作廢，這時才解除暫停 */
         if (FM.core.paused) setPaused(false);
         HUD.setPlace(FM.core.ctx.place);
-        if (opts.checkpoint !== false) st.cp = { id: id, params: params || {}, inv: st.inv.slice() };  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        if (opts.checkpoint !== false) st.cp = { id: id, params: params || {}, inv: st.inv.slice() };
         await UI.wait(opts.text ? 450 : 150);
         await HUD.fade(false);
         FM.core.busy = false;
@@ -398,7 +398,7 @@
         var secs = playSeconds();
         var mm = Math.floor(secs / 60);
         var ss = secs % 60;
-        var best = UI.store.get('fm.world.best', null); /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
+        var best = UI.store.get('fm.world.best', null);
         var isBest = best == null || secs < best;
         if (isBest) UI.store.set('fm.world.best', secs);
         await FM.core.wait(2600);
@@ -464,7 +464,7 @@
         place: function (t) { HUD.setPlace(t); },
         freeze: freeze,
         give: function (k) { if (st.inv.indexOf(k) < 0) setInv(st.inv.concat([k])); },  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
-        has: function (k) { return st.inv.indexOf(k) >= 0; },  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+        has: function (k) { return st.inv.indexOf(k) >= 0; },
         go: go,
         fail: fail,
         win: win,
@@ -510,7 +510,7 @@
             return !!b;
         },
         dialog: function () {
-            var d = document.querySelector('.dlg');     /* querySelector：用 CSS 選擇器在網頁裡找元素 */
+            var d = document.querySelector('.dlg');
             return d ? d.textContent : null;
         }
     };

@@ -148,7 +148,7 @@
     function termOf(n) {
         if (!termMap) {
             termMap = {};
-            for (var y = YEAR_MIN - 1; y <= YEAR_MAX; y++) termsOfYear(y).forEach(function (o) { termMap[o.n] = o.name; });  /* forEach：對陣列的每個元素各做一次 */
+            for (var y = YEAR_MIN - 1; y <= YEAR_MAX; y++) termsOfYear(y).forEach(function (o) { termMap[o.n] = o.name; });
         }
         return termMap[n] || null;
     }
@@ -207,7 +207,7 @@
     /* 這一關目標最遠離起點幾天（張），隨關卡線性變大 */
     function dMax(level) { return Math.round(kit.ramp(level, DMAX_START, DMAX_END, LEVEL_RAMP)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 每撕一張日曆允許的秒數（越來越短） */
-    function tapSec(level) { return kit.ramp(level, TAP_START, TAP_END, LEVEL_RAMP); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function tapSec(level) { return kit.ramp(level, TAP_START, TAP_END, LEVEL_RAMP); }
     /* 額外多給的秒數 */
     function slack(level) { return kit.ramp(level, SLACK_START, SLACK_END, LEVEL_RAMP); }
     /* 這關的總時限＝張數×每張秒數＋額外秒數，保證人一定撕得完 */
@@ -237,7 +237,7 @@
         if (type === 'date') {
             /* 最多嘗試 50 次找出合理的組合，避免無窮迴圈 */
             for (var tries = 0; tries < 50; tries++) {
-                var y = kit.randInt(YEAR_MIN, YEAR_MAX, rand), m = kit.randInt(1, 12, rand), dim = daysIn(y, m);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+                var y = kit.randInt(YEAR_MIN, YEAR_MAX, rand), m = kit.randInt(1, 12, rand), dim = daysIn(y, m);
                 var s = kit.randInt(1, dim - 2, rand), dd = kit.randInt(2, Math.max(2, Math.min(D, dim - s)), rand);
                 if (s + dd <= dim) { start = dnum(y, m, s); target = start + dd; break; }
             }
@@ -266,9 +266,9 @@
             /* 節日／節氣題：從索引裡挑一個目標，起點設在往前 d3 天 */
         } else if (type === 'solar' || type === 'lunar' || type === 'term') {
             var list = getIndex()[type], cand = [];
-            var d3 = kit.randInt(Math.min(D, Math.max(3, Math.round(D * 0.4))), Math.max(3, D), rand);  /* Math.round：四捨五入成整數 */
+            var d3 = kit.randInt(Math.min(D, Math.max(3, Math.round(D * 0.4))), Math.max(3, D), rand);
             for (var i = 0; i < list.length; i++) if (list[i] - d3 >= N_MIN && list[i] <= N_MAX) cand.push(list[i]);
-            target = kit.pick(cand, rand);              /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+            target = kit.pick(cand, rand);
             start = target - d3;
             var inf = dayInfo(target);
             prompt = '撕到「' + (type === 'solar' ? inf.solarFest : type === 'lunar' ? inf.lunarFest : inf.term) + '」';
@@ -292,7 +292,7 @@
         /* 週六、週日用不同顏色 */
         var weekend = info.wd === 0 || info.wd === 6;
         el.appendChild(h('div', { 'class': 'tearcal-ym', text: info.y + ' 年 ' + info.m + ' 月' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-        el.appendChild(h('div', { 'class': 'tearcal-day' + (weekend ? ' tearcal-day--we' : ''), text: String(info.d) }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        el.appendChild(h('div', { 'class': 'tearcal-day' + (weekend ? ' tearcal-day--we' : ''), text: String(info.d) }));
         el.appendChild(h('div', { 'class': 'tearcal-wd' + (weekend ? ' tearcal-wd--we' : ''), text: info.wdName }));
         el.appendChild(h('div', { 'class': 'tearcal-lunar', text: info.lunar ? '農曆 ' + info.lunarText : '' }));
         var tags = h('div', { 'class': 'tearcal-tags' });
@@ -312,7 +312,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
+            root.innerHTML = '';
 
             /* level 關卡；cleared 已過幾關；state 目前狀態；lvId 關卡流水號 */
             var level = startAt || 1, cleared = level - 1, newRec = false, state = 'idle', lvId = 0;
@@ -341,7 +341,7 @@
                 cur = L.start; torn = 0; state = 'play';
                 renderPage(page, dayInfo(cur));
                 head.textContent = '第 ' + level + ' 關'; /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-                prompt.textContent = L.prompt;          /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                prompt.textContent = L.prompt;
                 hint.textContent = '點日曆撕下一張（不能回頭），到了按「就是這天」';
                 page.classList.remove('tearcal-page--ok', 'tearcal-page--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 meta();
@@ -385,9 +385,9 @@
                 state = 'judged';
                 tb.set(0);
                 cleared = level;
-                if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
-                page.classList.add('tearcal-page--ok'); /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                Sfx.play('win');                        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
+                page.classList.add('tearcal-page--ok');
+                Sfx.play('win');
                 hint.textContent = (timeout ? '時間到，剛好撕對了！' : '對了！') + '撕了 ' + torn + ' 張';
                 level++;
                 my.after(NEXT_MS, startLevel);

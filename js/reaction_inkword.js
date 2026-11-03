@@ -38,10 +38,10 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function lenFor(level) { return Math.round(ramp(level, LEN)); }  /* Math.round：四捨五入成整數 */
-    function flashMsFor(level) { return Math.round(ramp(level, FLASH_MS)); }  /* Math.round：四捨五入成整數 */
+    function flashMsFor(level) { return Math.round(ramp(level, FLASH_MS)); }
     function gapMsFor(level) { return Math.round(ramp(level, GAP_MS)); }
     function respMs(level) { return Math.round(ramp(level, RESP_S) * 1000); }
-    function whichPFor(level) { return level < WHICH_FROM ? 0 : kit.ramp(level, WHICH_P[0], WHICH_P[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function whichPFor(level) { return level < WHICH_FROM ? 0 : kit.ramp(level, WHICH_P[0], WHICH_P[1], RAMP_LEVELS); }
     /* 出一關：{ seq（[{ w（字＝哪個顏色的名字）, c（墨水顏色）}]，w ≠ c）, q: { type: 'word'｜'ink'｜'which', idx（被問第幾個字，0 起算；which 題是答案的位置）, color（which 題問哪個顏色）, answer（顏色編號；which 題是位置）}, len, flashMs, gapMs, respMs, level } */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
@@ -56,7 +56,7 @@
             var uniq = []; seq.forEach(function (s, k) { if (seq.filter(function (t) { return t.c === s.c; }).length === 1) uniq.push(k); });  /* filter：留下符合條件的元素，回傳新陣列 */
             if (uniq.length) { var at = kit.pick(uniq, rand); q = { type: 'which', idx: at, color: seq[at].c, answer: at }; }  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         }
-        if (!q) { var idx = kit.randInt(0, len - 1, rand), type = rand() < 0.5 ? 'word' : 'ink'; q = { type: type, idx: idx, answer: type === 'word' ? seq[idx].w : seq[idx].c }; }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+        if (!q) { var idx = kit.randInt(0, len - 1, rand), type = rand() < 0.5 ? 'word' : 'ink'; q = { type: type, idx: idx, answer: type === 'word' ? seq[idx].w : seq[idx].c }; }
         return { seq: seq, q: q, len: len, flashMs: flashMsFor(level), gapMs: gapMsFor(level), respMs: respMs(level), level: level };
     }
     function ordinal(i) { return '第 ' + (i + 1) + ' 個'; }
@@ -96,7 +96,7 @@
         var field = h('div', { 'class': 'inkword-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note inkword-tip', text: '看每個字寫了什麼、用什麼顏色寫' });
-        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(tip);
         var paper = h('div', { 'class': 'inkword-paper' });
         var glyph = h('div', { 'class': 'inkword-glyph', text: '' });
         paper.appendChild(glyph); field.appendChild(paper);
@@ -113,18 +113,18 @@
         function showNext() {
             if (api.over) return;
             if (k >= len) { glyph.textContent = ''; askNow(); return; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-            var s = q.seq[k]; glyph.textContent = COLORS[s.w].name; glyph.className = 'inkword-glyph inkword-c--' + COLORS[s.c].id;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            var s = q.seq[k]; glyph.textContent = COLORS[s.w].name; glyph.className = 'inkword-glyph inkword-c--' + COLORS[s.c].id;
             dots.children[k].classList.add('inkword-dot--on'); Sfx.play('click');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             api.after(q.flashMs, function () { glyph.textContent = ''; api.after(q.gapMs, function () { k++; showNext(); }); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
         }
-        api.after(LEAD_MS, showNext);                   /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+        api.after(LEAD_MS, showNext);
 
         /* 問問題：6 個顏色按鈕（寫的字／墨水顏色），或數字按鈕（第幾個字） */
         function askNow() {
             phase = 'ask'; tip.textContent = '回答問題'; ask.textContent = questionText(Q); dots.style.display = 'none'; paper.style.display = 'none';
             var items;
             if (Q.type === 'which') items = q.seq.map(function (s, i) { return { text: String(i + 1), kind: 'line', cls: 'inkword-num', onTap: function () { judge(i); } }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
-            else items = COLORS.map(function (c, i) { return { text: c.name, kind: 'line', cls: 'inkword-sw inkword-sw--' + c.id, onTap: function () { judge(i); } }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            else items = COLORS.map(function (c, i) { return { text: c.name, kind: 'line', cls: 'inkword-sw inkword-sw--' + c.id, onTap: function () { judge(i); } }; });
             var cols = Q.type === 'which' ? Math.min(len, 4) : 3;
             grid = kit.btnGrid(field, items, { cols: cols, h: Q.type === 'which' ? 96 : 100, gap: 10 });  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
             api.timer(q.respMs, function () { judge(-1); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
@@ -136,7 +136,7 @@
             done = true; phase = 'end';
             var ok = pick === Q.answer;
             grid.btns[Q.answer].classList.add('inkword-ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-            if (pick >= 0 && !ok) grid.btns[pick].classList.add('inkword-bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            if (pick >= 0 && !ok) grid.btns[pick].classList.add('inkword-bad');
             var ansText = Q.type === 'which' ? '第 ' + (Q.answer + 1) + ' 個' : COLORS[Q.answer].name;
             if (ok) { info.textContent = '答對了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1200 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
             /* 答錯：把整串字並排，被問的標起來 */
@@ -152,7 +152,7 @@
             });
             field.insertBefore(strip, info);
             info.textContent = questionText(Q) + ' 答案是「' + ansText + '」' + (pick >= 0 ? '，你選了「' + (Q.type === 'which' ? '第 ' + (pick + 1) + ' 個' : COLORS[pick].name) + '」' : '（時間到）');
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({ delay: 3800, lines: [questionText(Q) + ' 答案是「' + ansText + '」', pick >= 0 ? '你選了「' + (Q.type === 'which' ? '第 ' + (pick + 1) + ' 個' : COLORS[pick].name) + '」' : '時間到！'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */

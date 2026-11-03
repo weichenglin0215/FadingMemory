@@ -63,8 +63,8 @@
     }
     /* 高度 y（可以有小數）以下的面積：在累積陣列上線性內插 */
     function volumeAt(cum, y) {
-        y = kit.clamp(y, 0, VASE_H);                    /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
-        var i = Math.min(VASE_H - 1, Math.floor(y)), t = y - i;  /* Math.floor：無條件捨去成整數 */
+        y = kit.clamp(y, 0, VASE_H);
+        var i = Math.min(VASE_H - 1, Math.floor(y)), t = y - i;
         return cum[i] + (cum[i + 1] - cum[i]) * t;
     }
     /* 一半面積的高度 h*：二分搜尋 */
@@ -78,7 +78,7 @@
     /* 有號的差異（%）：＋＝線以下的面積超過一半、－＝不足。空瓶是 −50、滿瓶是 ＋50 */
     function signedPct(cum, y) { return (volumeAt(cum, y) - cum[VASE_H] / 2) / cum[VASE_H] * 100; }
     /* 帶正負號的百分比字串：＋3.1234% ／ −0.5000%（0 算＋） */
-    function fmtSigned(p) { return (p >= 0 ? '+' : '−') + Math.abs(p).toFixed(4) + '%'; }  /* Math.abs：取絕對值（去掉負號） */
+    function fmtSigned(p) { return (p >= 0 ? '+' : '−') + Math.abs(p).toFixed(4) + '%'; }
     /* 出題：隨機控制點半徑；h* 要離一半高度夠遠；起始水位離答案與一半高度都夠遠 */
     function makeRound(rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
@@ -89,7 +89,7 @@
             if (Math.abs(hs - VASE_H / 2) < MIN_GAP * VASE_H) continue;
             var start = null;
             for (var k = 0; k < 40 && start == null; k++) {
-                var c = kit.randFloat(0.08, 0.92, rand) * VASE_H;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+                var c = kit.randFloat(0.08, 0.92, rand) * VASE_H;
                 if (Math.abs(c - hs) >= START_GAP * VASE_H && Math.abs(c - VASE_H / 2) >= 0.1 * VASE_H) start = c;
             }
             if (start == null) continue;
@@ -139,8 +139,8 @@
         var left = side(-1), right = side(1);
         var outline = left.concat(right.slice().reverse());  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         kit.svg('polygon', { points: outline.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '), 'class': 'halfvol-vase' }, svg);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
-        var water = kit.svg('polygon', { 'class': 'halfvol-water' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        kit.svg('polygon', { points: outline.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '), 'class': 'halfvol-rim' }, svg);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        var water = kit.svg('polygon', { 'class': 'halfvol-water' }, svg);
+        kit.svg('polygon', { points: outline.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '), 'class': 'halfvol-rim' }, svg);
         var refHalfV = kit.svg('line', { x1: CX - 150, x2: CX + 150, y1: yOf(cfg.hs), y2: yOf(cfg.hs), 'class': 'halfvol-ref halfvol-ref--v', opacity: 0 }, svg);
         var line = kit.svg('line', { x1: CX - 150, x2: CX + 150, 'class': 'halfvol-line' }, svg);
         var hl = kit.svg('circle', { cx: CX - 150, r: 20, 'class': 'halfvol-knob' }, svg);
@@ -149,7 +149,7 @@
         var msg = h('div', { 'class': 'halfvol-msg' });
         stage.appendChild(msg);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var okBtn = h('button', { 'class': 'btn btn--go halfvol-ok', text: '確定' });
-        stage.appendChild(okBtn);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(okBtn);
 
         function waterPoly(level) {
             var pts = [];
@@ -162,7 +162,7 @@
         /* L ＝ 藍線（玩家拖的）的位置；Wl ＝ 水位（平常等於 L，揭曉時從 0 升到 L，藍線不動） */
         function paint() {
             water.setAttribute('points', waterPoly(Wl));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
-            line.setAttribute('y1', yOf(L)); line.setAttribute('y2', yOf(L));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+            line.setAttribute('y1', yOf(L)); line.setAttribute('y2', yOf(L));
             hl.setAttribute('cy', yOf(L)); hr.setAttribute('cy', yOf(L));
         }
         paint();

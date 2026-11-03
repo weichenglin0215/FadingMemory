@@ -83,7 +83,7 @@
     /* 這一關的轉折點基本數量 */
     function kBase(level) { return Math.round(kit.ramp(level, K_START, K_END, K_RAMP)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 這一關的上下打亂幅度 */
-    function yjitFor(level) { return kit.ramp(level, YJIT_START, YJIT_END, K_RAMP); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function yjitFor(level) { return kit.ramp(level, YJIT_START, YJIT_END, K_RAMP); }
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 關'; }
 
     /* 純函式（也給 Node 測試用） */
@@ -148,7 +148,7 @@
     /* 取樣：shape（上面的轉折點）＋ α（左右伸展倍率）→ 折線點 [{x,y,s}]，s＝累積弧長 */
     function buildPath(shape, alpha, cx, halfW, y0, y1) {
         var ctrl = [{ x: cx, y: y0 }];
-        shape.forEach(function (p) { ctrl.push({ x: cx + p.u * alpha * halfW * CTRL_FRAC, y: y0 + p.v * (y1 - y0) }); });  /* forEach：對陣列的每個元素各做一次 */
+        shape.forEach(function (p) { ctrl.push({ x: cx + p.u * alpha * halfW * CTRL_FRAC, y: y0 + p.v * (y1 - y0) }); });
         ctrl.push({ x: cx, y: y1 });
         var pts = [], s = 0, n = ctrl.length;
         function at(i) { return ctrl[Math.max(0, Math.min(n - 1, i))]; }
@@ -164,7 +164,7 @@
                 /* Catmull-Rom 曲線公式：用四個相鄰控制點算出段內位置 */
                 var x = 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
                 var y = 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
-                if (pts.length) { var q = pts[pts.length - 1]; s += Math.sqrt((x - q.x) * (x - q.x) + (y - q.y) * (y - q.y)); }  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
+                if (pts.length) { var q = pts[pts.length - 1]; s += Math.sqrt((x - q.x) * (x - q.x) + (y - q.y) * (y - q.y)); }
                 pts.push({ x: x, y: y, s: s });
             }
         }
@@ -193,7 +193,7 @@
             (grid[key] = grid[key] || []).push(i);
         }
         for (i = 0; i < pts.length; i++) {
-            var q = pts[i], cx = Math.floor(q.x / cell), cy = Math.floor(q.y / cell);  /* Math.floor：無條件捨去成整數 */
+            var q = pts[i], cx = Math.floor(q.x / cell), cy = Math.floor(q.y / cell);
             for (var dx = -1; dx <= 1; dx++) for (var dy = -1; dy <= 1; dy++) {
                 var arr = grid[(cx + dx) + ',' + (cy + dy)];
                 if (!arr) continue;
@@ -223,10 +223,10 @@
             /* isTrap：視覺陷阱——故意讓「較短的那條」轉折比較多 */
             var isTrap = rand() < trap;
             var kS = Math.max(2, kb + (isTrap ? kit.randInt(1, 2, rand) : kit.randInt(-1, 1, rand)));  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
-            var kL = Math.max(2, kb + (isTrap ? -kit.randInt(1, 2, rand) : kit.randInt(-1, 1, rand)));  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+            var kL = Math.max(2, kb + (isTrap ? -kit.randInt(1, 2, rand) : kit.randInt(-1, 1, rand)));
             var shS = makeShape(kS, yj, rand, dims), shL = makeShape(kL, yj, rand, dims);
             if (!shS || !shL) continue;
-            var aS = kit.randFloat(ALPHA_SHORT[0], ALPHA_SHORT[1], rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+            var aS = kit.randFloat(ALPHA_SHORT[0], ALPHA_SHORT[1], rand);
             var ptsS = buildPath(shS, aS, cxS, halfW, y0, y1);
             if (!validRope(ptsS, boxOf(cxS))) continue;
             var lenS = pathLen(ptsS);
@@ -266,7 +266,7 @@
         var z = Math.min(ZOOM_MAX, W / bw, H / bh);
         if (z < ZOOM_MIN) return null;
         var vw = W / z, vh = H / z, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
-        var vx = kit.clamp(cx - vw / 2, 0, W - vw), vy = kit.clamp(cy - vh / 2, 0, H - vh);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
+        var vx = kit.clamp(cx - vw / 2, 0, W - vw), vy = kit.clamp(cy - vh / 2, 0, H - vh);
         return { zoom: z, box: { vx: vx, vy: vy, vw: vw, vh: vh } };
     }
     /* 長繩子「還沒走完的那一段」：從弧長 s0（球停住的位置）到終點的所有點（第一個點是球停的位置） */
@@ -301,7 +301,7 @@
             root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             /* 替整個畫面加上黑底 class（樣式在 css/games/reaction_curves.css 的 .curves-bg） */
             root.classList.add('curves-bg');            /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-            my.onDispose(function () { root.classList.remove('curves-bg'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            my.onDispose(function () { root.classList.remove('curves-bg'); });
             var level = start || 1, cleared = level - 1, newRec = false, state = 'idle';
 
             /* 建立畫面元素：標題、場地、橫幅、左右兩顆選擇按鈕 */
@@ -312,7 +312,7 @@
             var bL = h('button', { 'class': 'curves-btn', text: '左邊比較短' });
             var bR = h('button', { 'class': 'curves-btn', text: '右邊比較短' });
             btns.appendChild(bL); btns.appendChild(bR); /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-            field.appendChild(banner);                  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            field.appendChild(banner);
             root.appendChild(head);
             root.appendChild(field);
             root.appendChild(btns);
@@ -332,7 +332,7 @@
                 state = 'pick';
                 banner.textContent = ''; banner.className = 'curves-banner';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 field.classList.remove('curves-field--zoom');
-                head.textContent = '第 ' + level + ' 關　哪一條比較短？';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                head.textContent = '第 ' + level + ' 關　哪一條比較短？';
                 meta();
                 field.querySelectorAll('svg').forEach(function (s) { s.remove(); });  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
                 svg = kit.svg('svg', { 'class': 'curves-svg', viewBox: '0 0 ' + W + ' ' + H }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
@@ -341,7 +341,7 @@
                 [[ptsL, 'L'], [ptsR, 'R']].forEach(function (pr) {
                     var d = pr[0].map(function (p, i) { return (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(' ');  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                     if (dash) {
-                        kit.svg('path', { 'class': 'curves-line curves-line--white', d: d }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+                        kit.svg('path', { 'class': 'curves-line curves-line--white', d: d }, svg);
                         kit.svg('path', { 'class': 'curves-line curves-line--red', d: d, 'stroke-dasharray': dash[pr[1]][0] + ' ' + dash[pr[1]][1] }, svg);
                     } else {
                         kit.svg('path', { 'class': 'curves-line curves-line--solid', d: d }, svg);
@@ -378,11 +378,11 @@
                     var s = Math.min((now - t0) / 1000 * Lv.speed, lenS);
                     var pl = pointAt(ptsL, s), pr = pointAt(ptsR, s);
                     balls[0].setAttribute('cx', pl.x.toFixed(1)); balls[0].setAttribute('cy', pl.y.toFixed(1));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
-                    balls[1].setAttribute('cx', pr.x.toFixed(1)); balls[1].setAttribute('cy', pr.y.toFixed(1));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                    balls[1].setAttribute('cx', pr.x.toFixed(1)); balls[1].setAttribute('cy', pr.y.toFixed(1));
                     if (s >= lenS) {
                         if (!arrived) {
                             arrived = true;     /* 短的那顆球到的瞬間就公布結果；長的那顆停在原地，不再往前 */
-                            Sfx.play('tick');           /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                            Sfx.play('tick');
                             verdict(ok, Lv.shortSide);
                         }
                         return false;
@@ -401,7 +401,7 @@
                 var longSide = Lv.shortSide === 'L' ? 'R' : 'L', pts = longSide === 'L' ? ptsL : ptsR;
                 var lenS = Lv.shortSide === 'L' ? Lv.L.len : Lv.R.len;
                 var rest = restPoints(pts, lenS);
-                var d = rest.map(function (p, i) { return (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(' ');  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+                var d = rest.map(function (p, i) { return (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(' ');
                 var path = kit.svg('path', { 'class': 'curves-line curves-rest', d: d }, svg);
                 svg.insertBefore(path, balls[0]);                         /* 畫在球的下面 */
                 ends[longSide === 'L' ? 0 : 1].classList.add('curves-end--gap');
@@ -409,7 +409,7 @@
                 var cam = needZoom(rest[rest.length - 1].s - rest[0].s) ? zoomCamera(rest, fw, fh) : null;
                 if (!cam) return false;
                 var from = { vx: 0, vy: 0, vw: fw, vh: fh };
-                var markers = svg.querySelectorAll('.curves-start, .curves-end');  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
+                var markers = svg.querySelectorAll('.curves-start, .curves-end');
                 kit.tweenViewBox(my, svg, from, cam.box, ZOOM_MS, kit.easeInOutCubic, function (b) {
                     var z = fw / b.vw;
                     balls[0].setAttribute('r', (13 / z).toFixed(2)); balls[1].setAttribute('r', (13 / z).toFixed(2));
@@ -426,7 +426,7 @@
                 var extra = zoomed ? ZOOM_MS : 0;           /* 有放大的話，停留時間加上放大的時間 */
                 if (ok) {
                     cleared = level;
-                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
                     banner.textContent = (first === 'L' ? '左' : '右') + '邊先到！答對了';
                     banner.className = 'curves-banner curves-banner--ok';
                     head.textContent = msg;

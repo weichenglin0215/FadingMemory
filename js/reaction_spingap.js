@@ -66,7 +66,7 @@
         var from, to;
         if (up) { from = Math.max(prev * (1 + SPEED_STEP[0]), lo); to = Math.max(from, Math.min(prev * (1 + SPEED_STEP[1]), hi)); }
         else { to = Math.min(prev * (1 - SPEED_STEP[0]), hi); from = Math.min(to, Math.max(prev * (1 - SPEED_STEP[1]), lo)); }
-        return kit.randFloat(from, to, rand);           /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+        return kit.randFloat(from, to, rand);
     }
     /* 把角度整理到 −180～180 */
     function norm180(a) { a = ((a + 180) % 360 + 360) % 360 - 180; return a === -180 ? 180 : a; }
@@ -147,7 +147,7 @@
 
         var svg = kit.svg('svg', { 'class': 'spingap-svg', viewBox: '0 0 ' + W + ' 640', width: W, height: 640 }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var C = 2 * Math.PI * RING_R;
-        var ring = kit.svg('circle', {                  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var ring = kit.svg('circle', {
             cx: cx, cy: cy, r: RING_R, 'class': 'spingap-ring', 'stroke-width': RING_W,
             'stroke-dasharray': (C * (1 - gap / 360)).toFixed(2) + ' ' + (C * gap / 360).toFixed(2)
         }, svg);
@@ -158,20 +158,20 @@
         cannon.style.left = (cx - 60) + 'px'; cannon.style.top = (geom.y0 - 6) + 'px';
         stage.appendChild(cannon);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note spingap-tip', text: '點擊畫面發射砲彈：缺口要提前轉到上方！' });
-        stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(tip);
         var msg = h('div', { 'class': 'qz-note spingap-msg', text: '已射出 ' + (level - 1) + ' 顆' });
         stage.appendChild(msg);
 
         var state = 'ready', tFire = 0;
         function paintRing(tMs) { ring.setAttribute('transform', 'rotate(' + (phiNow(tMs) + gap / 2).toFixed(3) + ' ' + cx + ' ' + cy + ')'); }  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
-        paintRing(performance.now());                   /* performance.now()：高精度的時間（毫秒），計時用 */
+        paintRing(performance.now());
         var loop = api.my.loop(function () {            /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
             var t = performance.now();
             if (state !== 'blocked') paintRing(t);
             carry = { phi: phiNow(t), om: om, t: t, level: level };
             if (state === 'flying' || state === 'passed') {
                 var s = (t - tFire) / 1000, y = geom.y0 - geom.v * s;
-                ball.setAttribute('cy', y.toFixed(2));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                ball.setAttribute('cy', y.toFixed(2));
                 if (y < -30) ball.setAttribute('visibility', 'hidden');
             }
             if (api.over && state !== 'passed') return false;           /* 失敗結束後停止；過關後讓砲彈繼續飛出去，由下面的 api.after 收掉 */
@@ -184,10 +184,10 @@
             cannon.classList.add('spingap-cannon--fire'); api.after(160, function () { cannon.classList.remove('spingap-cannon--fire'); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
             tip.textContent = '砲彈飛行中…';                 /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             /* 抵達環內緣的那一刻判定 */
-            api.after(FLIGHT_S * 1000, function () {    /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+            api.after(FLIGHT_S * 1000, function () {
                 var phi = phiNow(tFire + FLIGHT_S * 1000), r = judgeShot(level, phi);
                 console.log('[穿過旋轉縫] 抵達：缺口中心 ' + norm180(phi).toFixed(4) + ' 度，差 ' + r.diff.toFixed(4) + ' 度，容許 ±' + r.tol.toFixed(4) + ' 度 → ' + (r.pass ? '穿出' : '撞環'));
-                var line = '缺口與砲彈差 ' + Math.abs(r.diff).toFixed(4) + ' 度（容許 ±' + r.tol.toFixed(4) + ' 度）';  /* Math.abs：取絕對值（去掉負號） */
+                var line = '缺口與砲彈差 ' + Math.abs(r.diff).toFixed(4) + ' 度（容許 ±' + r.tol.toFixed(4) + ' 度）';
                 if (r.pass) {
                     state = 'passed'; tip.textContent = '穿出去了！' + line; kit.flash(stage, true, api.my);  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
                     api.pass({ delay: 800 });           /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */

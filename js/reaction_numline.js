@@ -46,7 +46,7 @@
                 var k = fine < 0.5 ? kit.randInt(1, 19, rand) * 5 : kit.randInt(5, 95, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
                 v = k / 100; text = v.toFixed(2);
             } else if (form === 'percent') {
-                var p = fine < 0.5 ? kit.randInt(1, 19, rand) * 5 : kit.randInt(5, 95, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+                var p = fine < 0.5 ? kit.randInt(1, 19, rand) * 5 : kit.randInt(5, 95, rand);
                 v = p / 100; text = p + '%';
             } else {
                 var dens = fine < 0.5 ? [2, 3, 4, 5, 6, 8, 10] : [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16];
@@ -60,7 +60,7 @@
         return { form: 'decimal', v: 0.75, text: '0.75', tol: tol };
     }
     /* 判定：誤差在容許範圍內（含邊界）就過 */
-    function judge(pos, v, tol) { var err = Math.abs(pos - v); return { ok: err <= tol + 1e-12, err: err }; }  /* Math.abs：取絕對值（去掉負號） */
+    function judge(pos, v, tol) { var err = Math.abs(pos - v); return { ok: err <= tol + 1e-12, err: err }; }
     /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 25) return '數感大師！';
@@ -96,7 +96,7 @@
         var tip = h('div', { 'class': 'numline-tip', text: '拖到這個數該在的位置，再按「確定」' });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
         stage.appendChild(big); stage.appendChild(tip); /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var svg = kit.svg('svg', { 'class': 'numline-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        kit.svg('line', { x1: X0, x2: X1, y1: LY, y2: LY, 'class': 'numline-line' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('line', { x1: X0, x2: X1, y1: LY, y2: LY, 'class': 'numline-line' }, svg);
         [[X0, '0'], [X1, '1']].forEach(function (t) {   /* forEach：對陣列的每個元素各做一次 */
             kit.svg('line', { x1: t[0], x2: t[0], y1: LY - 16, y2: LY + 16, 'class': 'numline-tick' }, svg);
             var tx = kit.svg('text', { x: t[0], y: LY + 46, 'text-anchor': 'middle', 'class': 'numline-label' }, svg); tx.textContent = t[1];  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
@@ -116,7 +116,7 @@
         var pad = h('div', { 'class': 'numline-pad' });
         pad.style.top = (LY + 100) + 'px'; pad.style.height = (H - LY - 70 - 84 - 12 - 30) + 'px';
         var okBtn = h('button', { 'class': 'btn btn--go numline-ok', text: '確定' });
-        stage.appendChild(pad); stage.appendChild(okBtn);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(pad); stage.appendChild(okBtn);
         var locked = false, hint = null, dragging = null;
         function fromPointer(e) { var p = kit.localPt(e, pad); pos = kit.clamp((p.x - X0) / LEN, 0, 1); paint(); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
         pad.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
@@ -126,7 +126,7 @@
             dragging = e.pointerId; if (hint) { hint.remove(); hint = null; }
             fromPointer(e);
         });
-        pad.addEventListener('pointermove', function (e) { if (dragging === e.pointerId && !locked) fromPointer(e); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        pad.addEventListener('pointermove', function (e) { if (dragging === e.pointerId && !locked) fromPointer(e); });
         function endDrag(e) { if (dragging === e.pointerId) dragging = null; }
         pad.addEventListener('pointerup', endDrag); pad.addEventListener('pointercancel', endDrag);
         pad.appendChild(h('div', { 'class': 'numline-pad__text', text: '在這裡左右拖曳' }));
@@ -147,7 +147,7 @@
             var ax = xOf(q.v);
             kit.svg('rect', { x: Math.max(X0, xOf(q.v - q.tol)), y: LY - 16, width: Math.min(X1, xOf(q.v + q.tol)) - Math.max(X0, xOf(q.v - q.tol)), height: 32, 'class': 'numline-tol' }, gAns);
             kit.svg('line', { x1: ax, x2: ax, y1: LY - 34, y2: LY + 34, 'class': 'numline-ans' }, gAns);
-            var tx = kit.svg('text', { x: ax, y: LY + 78, 'text-anchor': 'middle', 'class': 'numline-anslabel' }, gAns); tx.textContent = q.text + '＝' + q.v.toFixed(4);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            var tx = kit.svg('text', { x: ax, y: LY + 78, 'text-anchor': 'middle', 'class': 'numline-anslabel' }, gAns); tx.textContent = q.text + '＝' + q.v.toFixed(4);
             msg.textContent = (r.ok ? '落在容許範圍內！' : '超出容許範圍了') + '　差 ' + r.err.toFixed(4) + '（容許 ' + q.tol.toFixed(4) + '）';
             msg.classList.add(r.ok ? 'numline-msg--ok' : 'numline-msg--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             if (r.ok) { Sfx.play('ok'); api.pass({ gain: 1, delay: 1500 }); }  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
@@ -157,7 +157,7 @@
 
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { pos = q.v; paint(); submit(); };
-        api.wrong = function () { pos = kit.clamp(q.v + (q.v > 0.5 ? -1 : 1) * Math.max(0.2, q.tol * 3), 0, 1); paint(); submit(); };  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
+        api.wrong = function () { pos = kit.clamp(q.v + (q.v > 0.5 ? -1 : 1) * Math.max(0.2, q.tol * 3), 0, 1); paint(); submit(); };
     }
 
     /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */

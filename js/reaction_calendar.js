@@ -51,7 +51,7 @@
     /* 這一關月曆上貼幾個圖示（四捨五入成整數） */
     function iconsFor(level) { return Math.round(ramp(level, ICONS_N)); }  /* Math.round：四捨五入成整數 */
     /* 這一關看月曆的時間（毫秒）：設定是秒，乘 1000 換成毫秒 */
-    function viewMs(level) { return Math.round(ramp(level, VIEW_S) * 1000); }  /* Math.round：四捨五入成整數 */
+    function viewMs(level) { return Math.round(ramp(level, VIEW_S) * 1000); }
     /* 這一關每一題的作答時間（毫秒） */
     function respMs(level) { return Math.round(ramp(level, RESP_S) * 1000); }
     /* 這一關要問幾題：第 TWO_FROM 關起問兩題（先點 A、再點 B），之前只問一題 */
@@ -83,7 +83,7 @@
         var placements = chosen.map(function (id, i) { return { icon: id, day: days[i] }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         var cand = chosen.filter(function (id) { var p = iconOf(id).pair; return p && chosen.indexOf(p) >= 0; });                  /* 有夥伴一起出現的圖示（容易混） */  /* cand：貼上的圖示裡，「長得像的夥伴也一起出現」的那些（容易混淆，優先拿來問） */
         var asks = [], want = Math.min(asksFor(level), chosen.length);
-        if (cand.length && rand() < 0.8) asks.push(kit.pick(cand, rand));  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        if (cand.length && rand() < 0.8) asks.push(kit.pick(cand, rand));
         kit.shuffle(chosen.slice(), rand).forEach(function (id) { if (asks.length < want && asks.indexOf(id) < 0) asks.push(id); });  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         return { year: year, month: month, first: lay.first, days: lay.days, rows: lay.rows, placements: placements, asks: asks, viewMs: viewMs(level), respMs: respMs(level), level: level };
     }
@@ -92,7 +92,7 @@
     function noiseSpots(count, width, height, size, rand) {
         rand = rand || Math.random;
         var out = [];
-        for (var i = 0; i < count; i++) out.push({ x: kit.randInt(0, Math.max(0, width - size), rand), y: kit.randInt(0, Math.max(0, height - size), rand) });  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+        for (var i = 0; i < count; i++) out.push({ x: kit.randInt(0, Math.max(0, width - size), rand), y: kit.randInt(0, Math.max(0, height - size), rand) });
         return out;
     }
     /* 某個圖示貼在這一關的哪一天（找不到回傳 −1） */
@@ -143,19 +143,19 @@
         var stage = api.stage, level = api.level;
         var q = makeLevel(level, api.rand);
         api.info = q;
-        console.log('[記行事曆] 第 ' + level + ' 關：' + q.year + ' 年 ' + q.month + ' 月（1 號是星期' + WEEK[q.first] + '，' + q.days + ' 天）；圖示 ' + q.placements.map(function (p) { return iconOf(p.icon).name + '＠' + p.day; }).join('、') + '；問 ' + q.asks.map(function (a) { return iconOf(a).name; }).join('→') + '；看 ' + q.viewMs + ' 毫秒');  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        console.log('[記行事曆] 第 ' + level + ' 關：' + q.year + ' 年 ' + q.month + ' 月（1 號是星期' + WEEK[q.first] + '，' + q.days + ' 天）；圖示 ' + q.placements.map(function (p) { return iconOf(p.icon).name + '＠' + p.day; }).join('、') + '；問 ' + q.asks.map(function (a) { return iconOf(a).name; }).join('→') + '；看 ' + q.viewMs + ' 毫秒');
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var field = h('div', { 'class': 'calendar-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note calendar-tip', text: '記住貼紙貼在哪一天' });
-        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(tip);
         /* 月曆：標題（年月）、星期列、日期格 */
         var cw = Math.floor((W - 24) / 7), rh = Math.min(cw + 2, Math.floor((H - 330) / q.rows)), CW = cw * 7;  /* 算月曆尺寸：每格寬 cw（畫面寬扣邊再除以 7）、每格高 rh（列數多時要矮一點）、整個月曆寬 CW */
         var cal = h('div', { 'class': 'calendar-cal' });
         cal.style.cssText = 'left:' + Math.round((W - CW) / 2) + 'px;top:60px;width:' + CW + 'px;';
         cal.appendChild(h('div', { 'class': 'calendar-title', text: q.year + ' 年 ' + q.month + ' 月' }));
-        var head = h('div', { 'class': 'calendar-week' }); WEEK.forEach(function (w, i) { head.appendChild(h('div', { 'class': 'calendar-wd' + (i === 0 || i === 6 ? ' calendar-wd--we' : ''), text: w })); }); cal.appendChild(head);  /* forEach：對陣列的每個元素各做一次 */
+        var head = h('div', { 'class': 'calendar-week' }); WEEK.forEach(function (w, i) { head.appendChild(h('div', { 'class': 'calendar-wd' + (i === 0 || i === 6 ? ' calendar-wd--we' : ''), text: w })); }); cal.appendChild(head);
         var grid = h('div', { 'class': 'calendar-grid' }); grid.style.gridTemplateColumns = 'repeat(7, ' + cw + 'px)'; grid.style.gridAutoRows = rh + 'px';
         var cells = {};
         for (var b = 0; b < q.first; b++) grid.appendChild(h('div', { 'class': 'calendar-cell calendar-cell--blank' }));
@@ -182,7 +182,7 @@
         function hide() {
             if (api.over) return;
             stickers.forEach(function (s) { s.classList.add('calendar-sticker--hide'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-            phase = 'distract'; tip.textContent = '圖案收起來了，別被閃爍的圖案干擾'; info.textContent = '';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            phase = 'distract'; tip.textContent = '圖案收起來了，別被閃爍的圖案干擾'; info.textContent = '';
             startNoise();
             api.after(DISTRACT_S * 1000, function () {  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                 if (api.over) return;
@@ -199,7 +199,7 @@
                 for (var c = 0; c < NOISE_COPIES; c++) {
                     var el = h('div', { 'class': 'calendar-noise__i' }); el.appendChild(iconSvg(p.icon, NOISE_SIZE));
                     el.style.animationDuration = Math.round(kit.randFloat(BLINK_MS[0], BLINK_MS[1], api.rand)) + 'ms';  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
-                    el.style.animationDelay = '-' + Math.round(kit.randFloat(0, BLINK_MS[1], api.rand)) + 'ms';  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+                    el.style.animationDelay = '-' + Math.round(kit.randFloat(0, BLINK_MS[1], api.rand)) + 'ms';
                     noise.appendChild(el); noiseEls.push(el);
                 }
             });
@@ -210,7 +210,7 @@
             if (phase !== 'distract' || !noise) return;
             var spots = noiseSpots(noiseEls.length, W, NOISE_H, NOISE_SIZE, api.rand);
             noiseEls.forEach(function (el, i) { el.style.left = spots[i].x + 'px'; el.style.top = spots[i].y + 'px'; });
-            api.after(MOVE_MS, relocate);               /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+            api.after(MOVE_MS, relocate);
         }
         /* 拿掉干擾區 */
         function stopNoise() { if (noise && noise.parentNode) noise.parentNode.removeChild(noise); noise = null; noiseEls = []; }
@@ -223,7 +223,7 @@
         }
         /* 答錯／時間到時揭曉：貼紙全部回來，正確的日期畫綠圈、玩家點錯的畫紅圈 */
         function revealAll(pickDay) {
-            stickers.forEach(function (s) { s.classList.remove('calendar-sticker--hide'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            stickers.forEach(function (s) { s.classList.remove('calendar-sticker--hide'); });
             var want = dayOf(q, q.asks[k]);
             cells[want].classList.add('calendar-cell--ok');
             if (pickDay > 0 && pickDay !== want) cells[pickDay].classList.add('calendar-cell--bad');
@@ -241,7 +241,7 @@
             revealAll(day);
             var ic = iconOf(q.asks[k]);
             info.textContent = ic.name + '是 ' + want + ' 號（綠圈），你點了 ' + day + ' 號（紅圈）';
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({ delay: 3400, lines: [ic.name + '是 ' + q.month + ' 月 ' + want + ' 號（星期' + WEEK[(q.first + want - 1) % 7] + '）', '你點了 ' + day + ' 號'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 作答時間到：算失敗，揭曉正確的日期 */
@@ -251,7 +251,7 @@
             var ic = iconOf(q.asks[k]), want = dayOf(q, q.asks[k]);
             info.textContent = '時間到！' + ic.name + '是 ' + want + ' 號';
             kit.flash(stage, false, api.my);
-            api.fail({ delay: 3200, lines: ['時間到！', ic.name + '是 ' + q.month + ' 月 ' + want + ' 號'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
+            api.fail({ delay: 3200, lines: ['時間到！', ic.name + '是 ' + q.month + ' 月 ' + want + ' 號'] });
         }
         /* 給測試／debug 用：api.solve 點出正確日期、api.wrong 故意點錯一天 */
         api.solve = function () { if (phase === 'ask' && !done) tapDay(dayOf(q, q.asks[k])); };

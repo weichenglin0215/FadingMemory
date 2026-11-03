@@ -53,7 +53,7 @@
             if (!best || near > best.near) best = { cards: cards, near: near };
             if (near >= NEAR_MIN) break;
         }
-        return { cards: kit.shuffle(best.cards, rand), near: best.near };  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+        return { cards: kit.shuffle(best.cards, rand), near: best.near };
     }
     /* 結算畫面的評語（依用時秒數，越快越好） */
     function rating(sec) {
@@ -91,7 +91,7 @@
             var el = h('div', { 'class': 'sum100-card', text: String(n) });
             state.push('on');
             kit.onTap(el, function () { tap(i); });     /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
-            grid.appendChild(el);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            grid.appendChild(el);
             return el;
         });
         stage.appendChild(grid);
@@ -124,13 +124,13 @@
             if (sel < 0) { sel = i; els[i].classList.add('sum100-card--sel'); Sfx.play('click'); return; }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             var j = sel; sel = -1;
             if (cards[i] + cards[j] === 100) {
-                [i, j].forEach(function (k) { state[k] = 'gone'; els[k].classList.remove('sum100-card--sel'); els[k].classList.add('sum100-card--gone'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                remaining -= 2; Sfx.play('ok');         /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                [i, j].forEach(function (k) { state[k] = 'gone'; els[k].classList.remove('sum100-card--sel'); els[k].classList.add('sum100-card--gone'); });
+                remaining -= 2; Sfx.play('ok');
                 if (remaining === 0) finish();
             } else {
                 errors++;
                 if (!firstBad) firstBad = cards[j] + ' ＋ ' + cards[i] + ' ＝ ' + (cards[j] + cards[i]);
-                [i, j].forEach(function (k) { els[k].classList.remove('sum100-card--sel'); els[k].classList.add('sum100-card--bad'); });  /* forEach：對陣列的每個元素各做一次 */
+                [i, j].forEach(function (k) { els[k].classList.remove('sum100-card--sel'); els[k].classList.add('sum100-card--bad'); });
                 my.after(420, function () { [i, j].forEach(function (k) { els[k].classList.remove('sum100-card--bad'); }); });
                 clock.penalty(PENALTY_MS); Sfx.play('bad');
                 info.textContent = '失誤 ' + errors + ' 次（每次 + 3 秒）';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
@@ -141,7 +141,7 @@
         function timeUp() {
             if (over) return;
             over = true; clock.stop(); Sfx.play('bad');
-            info.textContent = '時間到！超過 ' + LIMIT_S + ' 秒';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            info.textContent = '時間到！超過 ' + LIMIT_S + ' 秒';
             my.after(900, function () {
                 kit.result(api.root, {                  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                     num: '時間到', label: '超過 ' + LIMIT_S + ' 秒，挑戰失敗',

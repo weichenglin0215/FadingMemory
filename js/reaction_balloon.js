@@ -63,7 +63,7 @@
     /* 一局的氣球：灌氣速度 speed、總容量 capBurst（±CAP_TOL）、爆破要按住的真實秒數 burstT */
     function makeBurst(rand) {
         var speed = kit.randFloat(SPEED_MIN, SPEED_MAX, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
-        var delta = kit.randFloat(-CAP_TOL, CAP_TOL, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+        var delta = kit.randFloat(-CAP_TOL, CAP_TOL, rand);
         /* 解一元二次方程式 n(n+1)/2 = 總容量，得到爆破的幀數 nB（公式解 n = (−1+√(1+8×容量))/2） */
         var n0 = TAU_BURST * FPS, nB = (-1 + Math.sqrt(1 + 8 * capOfFrames(n0) * (1 + delta))) / 2;     /* 解 n(n+1)/2 = 總容量 */
         var tauB = nB / FPS;
@@ -101,11 +101,11 @@
             var hint = h('div', { 'class': 'hint', text: '按住畫面充氣，覺得夠了就放手（爆了就 0 分）' });
             var field = h('div', { 'class': 'balloon-field' });
             root.appendChild(hint);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-            root.appendChild(field);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(field);
             /* SVG 畫布與氣球的各個部分（本體、高光、結、繩子） */
             var svg = kit.svg('svg', { 'class': 'balloon-svg', viewBox: '0 0 400 600', preserveAspectRatio: 'xMidYMid meet' }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             var CX = 200, BASE_Y = 330;                        /* 氣球中心 */
-            var gBalloon = kit.svg('g', {}, svg);       /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+            var gBalloon = kit.svg('g', {}, svg);
             var string = kit.svg('path', { 'class': 'balloon-string' }, svg);
             var body = kit.svg('ellipse', { 'class': 'balloon-body' }, gBalloon);
             var shine = kit.svg('ellipse', { 'class': 'balloon-shine' }, gBalloon);
@@ -121,7 +121,7 @@
                 var rx = r * js, ry = r * 1.15 * js;
                 var cy = BASE_Y - ry * 0.25;
                 body.setAttribute('cx', CX + jx); body.setAttribute('cy', cy + jy);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
-                body.setAttribute('rx', rx.toFixed(2)); body.setAttribute('ry', ry.toFixed(2));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                body.setAttribute('rx', rx.toFixed(2)); body.setAttribute('ry', ry.toFixed(2));
                 body.setAttribute('fill', color(52 + 22 * cue));
                 shine.setAttribute('cx', CX + jx - rx * 0.38); shine.setAttribute('cy', cy + jy - ry * 0.42);
                 shine.setAttribute('rx', (rx * 0.2).toFixed(2)); shine.setAttribute('ry', (ry * 0.12).toFixed(2));
@@ -158,7 +158,7 @@
                     R.burstTimer = my.after(burstT * 1000, function () { if (state === 'blow') finish(burstT, true); });
                     /* rAF 被暫停時也要有東西在動：每 50ms 補畫一次 */
                     /* rAF 被暫停時也要有東西在動：每 50ms 補畫一次 */
-                    (function again() { my.after(50, function () { if (state === 'blow') { frame(performance.now()); again(); } }); })();  /* performance.now()：高精度的時間（毫秒），計時用 */
+                    (function again() { my.after(50, function () { if (state === 'blow') { frame(performance.now()); again(); } }); })();
                 },
                 up: function (e, reason) {
                     if (state !== 'blow') return;
@@ -185,8 +185,8 @@
                 } else {
                     /* 沒爆：容量＝放手那一刻對應的容量 */
                     var cap = capacityAt(tHeld * speed);
-                    drawBalloon(radiusAt(tHeld), 0, 0, 1, kit.clamp(tHeld / burstT, 0, 1));  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
-                    hint.textContent = '放手了！看看容量…';     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                    drawBalloon(radiusAt(tHeld), 0, 0, 1, kit.clamp(tHeld / burstT, 0, 1));
+                    hint.textContent = '放手了！看看容量…';
                     my.after(500, function () { showResult(cap, false); });
                 }
                 G.debug.last = { held: tHeld, burst: burstNow, burstT: burstT, speed: speed, cap: burstNow ? 0 : capacityAt(tHeld * speed) };
@@ -210,7 +210,7 @@
             /* 顯示結果卡片，並把數字從 0 數上來 */
             function showResult(cap, burst) {
                 var maxCap = BB.capBurst;
-                var isNew = !burst && Reaction.setBest(ID, cap, function (v, b) { return v > b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                var isNew = !burst && Reaction.setBest(ID, cap, function (v, b) { return v > b; });
                 ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
                 var frac = burst ? 0 : cap / maxCap;
                 /* 結算畫面上的成績類數字（撐了幾秒、氣球的爆破時間、拿到極限的幾 %）：4 位小數、第 3／4 位不為 0，各產生一次。
@@ -251,7 +251,7 @@
                 hold: function (sec) {
                     if (state !== 'ready') return state;
                     state = 'blow'; tDown = performance.now(); hint.textContent = '';
-                    my.loop(frame);                     /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
+                    my.loop(frame);
                     R.burstTimer = my.after(burstT * 1000, function () { if (state === 'blow') finish(burstT, true); });
                     my.after(sec * 1000, function () { if (state === 'blow') finish((performance.now() - tDown) / 1000, false); });
                     return 'blow';

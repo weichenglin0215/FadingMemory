@@ -75,7 +75,7 @@
             var cur = kit.randInt(20, 99, rand), steps = [], good = true;  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             for (var i = 0; i < n && good; i++) {
                 var op = kit.pick([ADD, ADD, SUB, SUB, MUL], rand), y, r;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
-                if (op === ADD) { y = kit.randInt(11, 99, rand); r = cur + y; }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+                if (op === ADD) { y = kit.randInt(11, 99, rand); r = cur + y; }
                 else if (op === SUB) { if (cur < 14) { good = false; break; } y = kit.randInt(11, Math.max(11, cur - 3), rand); r = cur - y; }
                 else { y = kit.randInt(2, 9, rand); r = cur * y; }
                 if (r < 10 || r > 999) { good = false; break; }
@@ -100,7 +100,7 @@
         var total = steps.length ? null : 0;
         for (i = 0; i < k; i++) head.push(items[i][0] + ' ' + prices[i] + ' 元 × ' + counts[i] + ' ' + items[i][1]);
         if (n === 4 || n === 6) {
-            var sum = prices.reduce(function (a, p, j) { return a + p * counts[j]; }, 0);  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
+            var sum = prices.reduce(function (a, p, j) { return a + p * counts[j]; }, 0);
             var pay = Math.ceil((sum + 1) / 100) * 100; /* Math.ceil：無條件進位成整數 */
             steps.push({ op: SUB, x: pay, y: { ref: last } });
             head.push('付 ' + pay + ' 元');
@@ -110,7 +110,7 @@
     /* 出一題：{ type, head 說明文字（run 沒有）, lines 每一行, wrong 算錯的是第幾行（從 0 起算） } */
     function makeQuestion(level, rand) {
         rand = rand || Math.random;
-        var n = linesFor(level), hard = kit.ramp(level, 0, 1, RAMP_LEVELS);  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+        var n = linesFor(level), hard = kit.ramp(level, 0, 1, RAMP_LEVELS);
         for (var tr = 0; tr < 200; tr++) {
             var type = rand() < SHOP_P ? 'shop' : 'run', steps, head = '';
             if (type === 'shop') { var sp = shopSteps(n, rand); steps = sp.steps; head = sp.head; }
@@ -122,7 +122,7 @@
             var wv = wrongOf(base[wrong].truth, hard, rand);
             if (wv === base[wrong].truth) continue;
             var lines = evalSteps(steps, wrong, wv);
-            if (lines.some(function (l, i) { return l.shown <= 0 || l.shown > 9999 || (i !== wrong && !l.ok); })) continue;  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
+            if (lines.some(function (l, i) { return l.shown <= 0 || l.shown > 9999 || (i !== wrong && !l.ok); })) continue;
             return { type: type, head: head, lines: lines, wrong: wrong };
         }
         var fb = evalSteps([{ op: MUL, x: 25, y: 3 }, { op: MUL, x: 18, y: 2 }, { op: ADD, x: { ref: 0 }, y: { ref: 1 } }], 1, 38);
@@ -162,7 +162,7 @@
         var col = h('div', { 'class': 'wrongline-col' });
         var ask = h('div', { 'class': 'qz-note wrongline-ask', text: q.head ? q.head : '連續計算，哪一行算錯了？' });
         col.appendChild(ask);                           /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-        if (q.head) col.appendChild(h('div', { 'class': 'wrongline-sub', text: '哪一行算錯了？' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        if (q.head) col.appendChild(h('div', { 'class': 'wrongline-sub', text: '哪一行算錯了？' }));
         var list = h('div', { 'class': 'wrongline-list' });
         var rowH = q.lines.length >= 5 ? 74 : 84;
         var rows = q.lines.map(function (l, i) {        /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
@@ -185,8 +185,8 @@
             wl.classList.add('wrongline-row--wrong');   /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             wl.querySelector('.wrongline-txt').innerHTML = q.lines[q.wrong].text + '<br><span class="wrongline-fix">應該是 ' + q.lines[q.wrong].right + '</span>';  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1200 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
-            if (i != null) rows[i].classList.add('wrongline-row--miss');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            if (i != null) rows[i].classList.add('wrongline-row--miss');
+            kit.flash(stage, false, api.my);
             api.fail({ delay: 2500, lines: [            /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 (i == null ? '時間到！' : '那一行是對的') + '，算錯的是第 ' + (q.wrong + 1) + ' 行',
                 q.lines[q.wrong].text + ' → 應該是 ' + q.lines[q.wrong].right

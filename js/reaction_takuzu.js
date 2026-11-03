@@ -116,7 +116,7 @@
             for (k = 0; k + 2 < n; k++) if (a[k] && a[k] === a[k + 2] && !g[idxs[k + 1]]) setc(idxs[k + 1], 3 - a[k]);
             var cnt = [0, 0, 0];
             idxs.forEach(function (i) { cnt[g[i]]++; });  /* forEach：對陣列的每個元素各做一次 */
-            [BLACK, WHITE].forEach(function (col) {     /* forEach：對陣列的每個元素各做一次 */
+            [BLACK, WHITE].forEach(function (col) {
                 if (cnt[col] > half) dead = true;
                 if (cnt[col] === half) idxs.forEach(function (i) { if (!g[i]) setc(i, 3 - col); });
             });
@@ -132,7 +132,7 @@
     /* 造一個合法的完整盤面：一格一格隨機放顏色，違規就換另一色，兩色都不行就退回上一格重來（這種「試、錯、退」叫回溯） */
     function randomSolution(n, rand) {
         var g = new Array(n * n).fill(0), i = 0, tried = new Array(n * n).fill(0), guard = 0;  /* new Array(n).fill(v)：建立長度 n、每一格都是 v 的陣列 */
-        var first = new Array(n * n).fill(0);           /* new Array(n).fill(v)：建立長度 n、每一格都是 v 的陣列 */
+        var first = new Array(n * n).fill(0);
         while (i < n * n && guard++ < 100000) {
             if (i < 0) return randomSolution(n, rand);
             if (!first[i]) first[i] = rand() < 0.5 ? BLACK : WHITE;
@@ -153,7 +153,7 @@
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var st = stageOf(level), n = st.n, want = givensFor(level), best = null;
         for (var tr = 0; tr < 25; tr++) {
-            var sol = randomSolution(n, rand), givens = sol.slice(), count = n * n;  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+            var sol = randomSolution(n, rand), givens = sol.slice(), count = n * n;
             var order = kit.shuffle(Array.apply(null, Array(n * n)).map(function (_, i) { return i; }), rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
             for (var k = 0; k < order.length && count > want; k++) {
                 var c = order[k], save = givens[c];
@@ -205,13 +205,13 @@
         api.info = pz;                                  /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[黑白不連三] 第 ' + level + ' 關：' + n + '×' + n + '，提示 ' + pz.count + ' 個（想要 ' + pz.want + '）');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
         var W = stage.clientWidth || 472;
-        var cell = Math.min(CELL_MAX, Math.floor(W * 0.96 / n));  /* Math.floor：無條件捨去成整數 */
+        var cell = Math.min(CELL_MAX, Math.floor(W * 0.96 / n));
         var grid = pz.givens.slice(), tool = BLACK, hintsLeft = HINTS, hint = -1, solved = false, popup = null;  /* grid：目前盤面（先抄一份題目）；tool：目前選的畫筆（黑／白／清除）；hintsLeft：剩幾次提示；hint：提示標出的格子；solved：已解開；popup：違規說明彈窗 */
 
         var wrap = h('div', { 'class': 'takuzu-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
         var board = h('div', { 'class': 'takuzu-board' });  /* board：盤面（所有格子都放在裡面） */
         board.style.setProperty('--takuzu-n', n);       /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
-        board.style.setProperty('--takuzu-cell', cell + 'px');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
+        board.style.setProperty('--takuzu-cell', cell + 'px');
         var cells = [], discs = [];
         for (var i = 0; i < n * n; i++) {
             var d = h('span', { 'class': 'takuzu-disc' });
@@ -225,9 +225,9 @@
         var btnW = h('button', { 'class': 'btn btn--line takuzu-tool takuzu-tool--white', type: 'button', html: '<i class="takuzu-swatch takuzu-swatch--white"></i>白' });
         var btnE = h('button', { 'class': 'btn btn--line takuzu-tool', type: 'button', text: '清除' });
         kit.onTap(btnB, function () { setTool(BLACK); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
-        kit.onTap(btnW, function () { setTool(WHITE); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        kit.onTap(btnW, function () { setTool(WHITE); });
         kit.onTap(btnE, function () { setTool(0); });
-        [btnB, btnW, btnE].forEach(function (b) { palette.appendChild(b); });  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        [btnB, btnW, btnE].forEach(function (b) { palette.appendChild(b); });
         var acts = h('div', { 'class': 'takuzu-tools' });
         var btnHint = h('button', { 'class': 'btn btn--line takuzu-tool', type: 'button', text: '提示 ' + hintsLeft });  /* 「提示」按鈕（文字會顯示還剩幾次提示） */
         var btnReset = h('button', { 'class': 'btn btn--line takuzu-tool', type: 'button', text: '重來' });  /* 「重來」按鈕 */
@@ -243,7 +243,7 @@
         function setTool(t) {
             tool = t;
             btnB.classList.toggle('takuzu-tool--on', t === BLACK);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-            btnW.classList.toggle('takuzu-tool--on', t === WHITE);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            btnW.classList.toggle('takuzu-tool--on', t === WHITE);
             btnE.classList.toggle('takuzu-tool--on', t === 0);
         }
         /* 重畫：每一格依狀態（題目／提示／解開）設 class，並依盤面顏色畫黑白圓點 */
@@ -264,7 +264,7 @@
             var v = violationAt(grid, n, i, tool);
             if (v) { explain(i, v); return; }
             grid[i] = tool;
-            tip.textContent = '選顏色，再點格子';               /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            tip.textContent = '選顏色，再點格子';
             paint();
             if (isComplete(grid, n)) win();
         }
@@ -336,7 +336,7 @@
         var svg = kit.svg('svg', { viewBox: '0 0 ' + W + ' 196', 'class': 'takuzu-svg', width: '100%' });  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         /* 畫一顆圓點：有顏色就畫黑／白圓，沒顏色畫小灰點；red 為 true 時外面再畫一圈紅圈（標出違規） */
         function disc(x, y, s, val, red) {
-            if (val) kit.svg('circle', { cx: x + s / 2, cy: y + s / 2, r: s * 0.36, 'class': 'takuzu-svg-disc takuzu-svg-disc--' + (val === BLACK ? 'black' : 'white') }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+            if (val) kit.svg('circle', { cx: x + s / 2, cy: y + s / 2, r: s * 0.36, 'class': 'takuzu-svg-disc takuzu-svg-disc--' + (val === BLACK ? 'black' : 'white') }, svg);
             else kit.svg('circle', { cx: x + s / 2, cy: y + s / 2, r: s * 0.12, 'class': 'takuzu-svg-dot' }, svg);
             if (red) kit.svg('circle', { cx: x + s / 2, cy: y + s / 2, r: s * 0.46, 'class': 'takuzu-svg-bad' }, svg);
         }

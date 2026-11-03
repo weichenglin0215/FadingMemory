@@ -38,8 +38,8 @@
     function sizeAt(level) { return SIZES[Math.min(SIZES.length, level) - 1]; }
     function hueDelta(level) { return kit.ramp(level, HUE_DELTA[0], HUE_DELTA[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function countDelta(level) { return Math.round(kit.ramp(level, COUNT_DELTA[0], COUNT_DELTA[1], RAMP_LEVELS)); }  /* Math.round：四捨五入成整數 */
-    function spinAt(level) { return kit.ramp(level, SPIN[0], SPIN[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
-    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
+    function spinAt(level) { return kit.ramp(level, SPIN[0], SPIN[1], RAMP_LEVELS); }
+    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
     function key(p) { return Math.round(p.hue) + '/' + p.stripes + '/' + p.dots; }
     function same(a, b) { return Math.round(a.hue) === Math.round(b.hue) && a.stripes === b.stripes && a.dots === b.dots; }
     /* 一隻「只改一個參數」的假襪子：改色相／條紋數／圓點數三擇一，改的量由關卡決定，而且一定跟目標不一樣 */
@@ -58,10 +58,10 @@
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var sz = sizeAt(level), n = sz[0] * sz[1];
         var target = { hue: kit.randFloat(0, 360, rand), stripes: kit.randInt(0, MAX_COUNT, rand), dots: kit.randInt(0, MAX_COUNT, rand) };  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
-        var twin = kit.randInt(1, n - 1, rand), socks = [];  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+        var twin = kit.randInt(1, n - 1, rand), socks = [];
         for (var i = 0; i < n; i++) {
             var p = i === 0 || i === twin ? { hue: target.hue, stripes: target.stripes, dots: target.dots } : variant(target, level, rand);
-            var sp = spinAt(level) * kit.randFloat(0.75, 1.25, rand), dur = 360 / sp;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+            var sp = spinAt(level) * kit.randFloat(0.75, 1.25, rand), dur = 360 / sp;
             p.spin = i === 0 ? 0 : (rand() < 0.5 ? 1 : -1) * sp;
             p.dur = i === 0 ? 0 : dur;
             p.delay = i === 0 ? 0 : -kit.randFloat(0, dur, rand);
@@ -120,7 +120,7 @@
         var cells = q.socks.map(function (s, i) {       /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var el = h('div', { 'class': 'twinsock-cell' + (i === 0 ? ' twinsock-cell--target' : '') });
             el.style.width = el.style.height = cell + 'px';
-            el.style.left = (gx + (i % q.cols) * (cell + GAP)) + 'px'; el.style.top = (gy + Math.floor(i / q.cols) * (cell + GAP)) + 'px';  /* Math.floor：無條件捨去成整數 */
+            el.style.left = (gx + (i % q.cols) * (cell + GAP)) + 'px'; el.style.top = (gy + Math.floor(i / q.cols) * (cell + GAP)) + 'px';
             var inner = h('div', { 'class': 'twinsock-sock', html: sockSvg(s, level + '_' + i) });
             if (i > 0) {
                 inner.style.animationDuration = s.dur.toFixed(2) + 's';
@@ -128,7 +128,7 @@
                 inner.style.animationDirection = s.spin < 0 ? 'reverse' : 'normal';
                 inner.classList.add('twinsock-sock--spin');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             }
-            el.appendChild(inner);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            el.appendChild(inner);
             if (i > 0) kit.onTap(el, function () { judge(i); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             stage.appendChild(el);
             return el;
@@ -141,7 +141,7 @@
             if (done || api.over) return;
             done = true; api.stopTimer();
             var ok = i === q.twin;
-            cells[q.twin].classList.add('twinsock-cell--ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            cells[q.twin].classList.add('twinsock-cell--ok');
             if (i >= 0 && !ok) cells[i].classList.add('twinsock-cell--bad');
             if (ok) { api.pass({ gain: 1, delay: 700 }); return; }  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
             api.fail({ delay: 1500, lines: [i < 0 ? '時間到了' : '點到不一樣的襪子了', '只要底色、條紋數、圓點數有一個不同就不是雙胞胎'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */

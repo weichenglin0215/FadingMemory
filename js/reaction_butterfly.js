@@ -41,7 +41,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function spotsFor(level) { return Math.round(ramp(level, SPOTS)); }  /* Math.round：四捨五入成整數 */
-    function sizeDiffFor(level) { return Math.round(ramp(level, SIZE_DIFF) * 1000) / 1000; }  /* Math.round：四捨五入成整數 */
+    function sizeDiffFor(level) { return Math.round(ramp(level, SIZE_DIFF) * 1000) / 1000; }
     function hueDiffFor(level) { return Math.round(ramp(level, HUE_DIFF) * 10) / 10; }
     function angleDiffFor(level) { return Math.round(ramp(level, ANGLE_DIFF) * 10) / 10; }
     function timeMs(level) { return Math.round(ramp(level, TIME_S) * 1000); }
@@ -59,7 +59,7 @@
         var ns = Math.max(2, Math.round(n / 4)); guard = 0;
         while (stripes.length < ns && guard++ < 4000) {
             var len = kit.randFloat(22, 32, rand), sx = kit.randFloat(CENTER + 24, 392, rand), sy = kit.randFloat(24, 270, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
-            if (inLobe(sx, sy, len / 2) && free(sx, sy, len / 2)) stripes.push({ x: sx, y: sy, len: len, ang: kit.randFloat(0, 180, rand) });  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+            if (inLobe(sx, sy, len / 2) && free(sx, sy, len / 2)) stripes.push({ x: sx, y: sy, len: len, ang: kit.randFloat(0, 180, rand) });
         }
         guard = 0;
         while (spots.length < n && guard++ < 8000) {
@@ -67,7 +67,7 @@
             if (inLobe(x, y, r * 1.1) && free(x, y, r)) spots.push({ x: x, y: y, r: r, c: kit.randInt(0, COLORS.length - 1, rand) });  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         }
         var kinds = kindsFor(level), kind = kit.pick(kinds, rand), mod;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
-        if (kind === 'size') mod = { kind: 'size', index: kit.randInt(0, spots.length - 1, rand), delta: sizeDiffFor(level) * (rand() < 0.5 ? 1 : -1) };  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+        if (kind === 'size') mod = { kind: 'size', index: kit.randInt(0, spots.length - 1, rand), delta: sizeDiffFor(level) * (rand() < 0.5 ? 1 : -1) };
         else if (kind === 'color') mod = { kind: 'color', index: kit.randInt(0, spots.length - 1, rand), delta: hueDiffFor(level) * (rand() < 0.5 ? 1 : -1) };
         else mod = { kind: 'angle', index: kit.randInt(0, stripes.length - 1, rand), delta: angleDiffFor(level) * (rand() < 0.5 ? 1 : -1) };
         mod.side = rand() < 0.5 ? 'L' : 'R';
@@ -79,7 +79,7 @@
     function wingElements(q, mod) {
         return {
             spots: q.spots.map(function (s, i) { var hit = mod && mod.index === i; return { x: s.x, y: s.y, r: hit && mod.kind === 'size' ? s.r * (1 + mod.delta) : s.r, c: s.c, hue: hit && mod.kind === 'color' ? mod.delta : 0 }; }),  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
-            stripes: q.stripes.map(function (s, i) { var hit = mod && mod.kind === 'angle' && mod.index === i; return { x: s.x, y: s.y, len: s.len, ang: s.ang + (hit ? mod.delta : 0) }; })  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            stripes: q.stripes.map(function (s, i) { var hit = mod && mod.kind === 'angle' && mod.index === i; return { x: s.x, y: s.y, len: s.len, ang: s.ang + (hit ? mod.delta : 0) }; })
         };
     }
     /* 被改的東西的位置（兩邊各一：R 在右、L 是它的鏡像）；回傳 { right: { x, y, r }, left: { x, y, r }, modSide } */
@@ -99,7 +99,7 @@
     }
     /* 差異的文字說明 */
     function describeMod(m) {
-        if (m.kind === 'size') return '斑點的大小差了 ' + (Math.abs(m.delta) * 100).toFixed(0) + '%';  /* Math.abs：取絕對值（去掉負號） */
+        if (m.kind === 'size') return '斑點的大小差了 ' + (Math.abs(m.delta) * 100).toFixed(0) + '%';
         if (m.kind === 'color') return '斑點的顏色差了（色相轉 ' + Math.abs(m.delta).toFixed(0) + '°）';
         return '紋路的方向差了 ' + Math.abs(m.delta).toFixed(0) + '°';
     }
@@ -126,13 +126,13 @@
     /* 畫一邊翅膀（右邊）：兩片翅膀、斑點、紋路；mods 是要套在這一邊的修改（只有被改的那一邊才有）。回傳畫好的 <g> */
     function drawWing(parent, q, mod) {
         var g = kit.svg('g', {}, parent), el = wingElements(q, mod);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        kit.svg('path', { 'class': 'butterfly-wing', d: 'M200,140 C232,18 372,18 388,112 C394,152 300,162 200,150 Z' }, g);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('path', { 'class': 'butterfly-wing', d: 'M200,140 C232,18 372,18 388,112 C394,152 300,162 200,150 Z' }, g);
         kit.svg('path', { 'class': 'butterfly-wing butterfly-wing--low', d: 'M200,150 C300,162 348,192 332,244 C320,288 244,282 200,192 Z' }, g);
         el.stripes.forEach(function (s) {               /* forEach：對陣列的每個元素各做一次 */
             var a = s.ang * Math.PI / 180, dx = Math.cos(a) * s.len / 2, dy = Math.sin(a) * s.len / 2;
             kit.svg('line', { 'class': 'butterfly-stripe', x1: s.x - dx, y1: s.y - dy, x2: s.x + dx, y2: s.y + dy }, g);
         });
-        el.spots.forEach(function (s) {                 /* forEach：對陣列的每個元素各做一次 */
+        el.spots.forEach(function (s) {
             var c = kit.svg('circle', { 'class': 'butterfly-spot butterfly-c--' + COLORS[s.c], cx: s.x, cy: s.y, r: s.r }, g);
             if (s.hue) c.style.filter = 'hue-rotate(' + s.hue + 'deg) brightness(' + (1 + (s.hue > 0 ? 0.12 : -0.12)) + ')';
         });
@@ -150,7 +150,7 @@
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, BW = Math.min(W - 16, 460), BH = Math.round(BW * VB.h / VB.w), scale = BW / VB.w;
         var field = h('div', { 'class': 'butterfly-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-        field.appendChild(h('div', { 'class': 'qz-note butterfly-tip', text: '左右翅膀哪裡不一樣？點那個地方' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(h('div', { 'class': 'qz-note butterfly-tip', text: '左右翅膀哪裡不一樣？點那個地方' }));
         var svg = kit.svg('svg', { 'class': 'butterfly-svg', viewBox: '0 0 ' + VB.w + ' ' + VB.h, width: BW, height: BH }, field);
         svg.style.cssText = 'left:' + Math.round((W - BW) / 2) + 'px;top:80px;';
         var tilt = kit.svg('g', { transform: 'rotate(' + q.tilt.toFixed(2) + ' ' + CENTER + ' ' + VB.h / 2 + ')' }, svg);

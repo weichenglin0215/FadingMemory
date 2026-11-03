@@ -48,7 +48,7 @@
     }
     /* 台灣日期 'YYYY-MM-DD'（跟資料庫一樣用台灣時間算一天；js/rating.js 也是 +8 小時） */
     function taipeiDay(now) {
-        return new Date((now == null ? Date.now() : now) + TAIPEI_MS).toISOString().slice(0, 10);  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
+        return new Date((now == null ? Date.now() : now) + TAIPEI_MS).toISOString().slice(0, 10);
     }
     /* 兩個 'YYYY-MM-DD' 相差幾天（b − a）；格式不對回傳 NaN */
     function daysBetween(a, b) {
@@ -95,7 +95,7 @@
         if (sget(KEY_BOOT, false)) return false;
         sset(KEY_BOOT, true);
         var m = all(), day = localDay(now), recent = sget('fm.menu.recent', null), last = sget('fm.menu.lastGame', null), changed = false;
-        (ids || []).forEach(function (id) {             /* forEach：對陣列的每個元素各做一次 */
+        (ids || []).forEach(function (id) {
             if (m[id]) return;
             var played = sget('fm.reaction.best.' + id, null) != null || (Array.isArray(recent) && recent.indexOf(id) >= 0) || last === id;  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             if (played) { m[id] = { n: 1, first: day, last: day, boot: true }; changed = true; }
@@ -109,7 +109,7 @@
     function shuffle(list, rand) {
         var a = list.slice();                           /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         for (var i = a.length - 1; i > 0; i--) {
-            var j = Math.floor(rand() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t;  /* Math.floor：無條件捨去成整數 */
+            var j = Math.floor(rand() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t;
         }
         return a;
     }
@@ -144,14 +144,14 @@
         (ids || []).forEach(function (id) { inIds[id] = true; });
         var lastOf = function (id) { return (plays && plays[id] && plays[id].last) || ''; };
         (Array.isArray(ranks) ? ranks : []).filter(function (r) { return r && inIds[r.game_id] && r.rank >= 1; })  /* filter：留下符合條件的元素，回傳新陣列 */
-            .sort(function (a, b) { return a.rank - b.rank || (lastOf(b.game_id) > lastOf(a.game_id) ? 1 : lastOf(b.game_id) < lastOf(a.game_id) ? -1 : 0) || (a.game_id < b.game_id ? -1 : 1); })  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
+            .sort(function (a, b) { return a.rank - b.rank || (lastOf(b.game_id) > lastOf(a.game_id) ? 1 : lastOf(b.game_id) < lastOf(a.game_id) ? -1 : 0) || (a.game_id < b.game_id ? -1 : 1); })
             .forEach(function (r) {
                 if (out.length >= n || seen[r.game_id]) return;
                 seen[r.game_id] = true;
                 out.push({ id: r.game_id, rank: r.rank, n: (plays && plays[r.game_id] && plays[r.game_id].n) || 0 });
             });
         if (out.length < n) {
-            Object.keys(plays || {}).filter(function (id) { return inIds[id] && !seen[id] && plays[id].n >= minPlays; })  /* filter：留下符合條件的元素，回傳新陣列 */
+            Object.keys(plays || {}).filter(function (id) { return inIds[id] && !seen[id] && plays[id].n >= minPlays; })
                 .sort(function (a, b) { return plays[b].n - plays[a].n || (plays[b].last > plays[a].last ? 1 : plays[b].last < plays[a].last ? -1 : 0) || (a < b ? -1 : 1); })
                 .slice(0, n - out.length)
                 .forEach(function (id) { out.push({ id: id, rank: null, n: plays[id].n }); });

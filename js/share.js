@@ -73,14 +73,14 @@
     function copyLink() {
         var orig = copyBtn.textContent;
         function done() {
-            copyBtn.textContent = '已經複製';               /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            copyBtn.textContent = '已經複製';
             UI.wait(2200).then(function () { copyBtn.textContent = orig; });
         }
         function fallback() {
             var ta = document.createElement('textarea');
             ta.value = SHARE_LINK;
             ta.style.cssText = 'position:fixed;left:-9999px';
-            document.body.appendChild(ta);              /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            document.body.appendChild(ta);
             ta.select();
             try { document.execCommand('copy'); } catch (e) { }
             document.body.removeChild(ta);

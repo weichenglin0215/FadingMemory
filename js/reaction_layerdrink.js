@@ -41,7 +41,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function layersFor(level) { return Math.round(ramp(level, LAYERS)); }  /* Math.round：四捨五入成整數 */
-    function viewMs(level) { return Math.round(ramp(level, VIEW_S) * 1000); }  /* Math.round：四捨五入成整數 */
+    function viewMs(level) { return Math.round(ramp(level, VIEW_S) * 1000); }
     function tolFor(level) { return Math.round(ramp(level, TOL) * 10) / 10; }
     function ratioFor(level) { return Math.round(ramp(level, RATIO) * 1000) / 1000; }
     function fillS(level) { return Math.round(ramp(level, FILL_S) * 10) / 10; }
@@ -69,7 +69,7 @@
         for (var tr = 0; tr < 200; tr++) {
             var rest = 1 - n * MIN_FRAC, w = [], s = 0, i;
             for (i = 0; i < n; i++) { var x = -Math.log(1 - rand() * 0.999) + 0.25; w.push(x); s += x; }
-            var f = w.map(function (x) { return MIN_FRAC + rest * x / s; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            var f = w.map(function (x) { return MIN_FRAC + rest * x / s; });
             if (n < 2 || Math.max.apply(null, f) - Math.min.apply(null, f) > 0.08) return f;                 /* 不要每層一樣厚（那就不用記了） */
         }
         return Array.apply(null, { length: n }).map(function (x, i) { return 1 / n; });  /* Array.apply(null, Array(n)).map(...)：建立「0 到 n−1 的編號陣列」的常見寫法 */
@@ -112,7 +112,7 @@
     function glass(parent, wTop, wBottom) {
         var W = 170, cx = W / 2, y0 = 12, y1 = y0 + GLASS_H, id = 'layerdrink-clip-' + (++gid);
         var svg = kit.svg('svg', { 'class': 'layerdrink-glass', viewBox: '0 0 ' + W + ' ' + (GLASS_H + 28), width: W, height: GLASS_H + 28 }, parent);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        var defs = kit.svg('defs', {}, svg), cp = kit.svg('clipPath', { id: id }, defs);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var defs = kit.svg('defs', {}, svg), cp = kit.svg('clipPath', { id: id }, defs);
         var pts = (cx - wTop / 2) + ',' + y0 + ' ' + (cx + wTop / 2) + ',' + y0 + ' ' + (cx + wBottom / 2) + ',' + y1 + ' ' + (cx - wBottom / 2) + ',' + y1;
         kit.svg('polygon', { points: pts }, cp);
         kit.svg('polygon', { 'class': 'layerdrink-glass__bg', points: pts }, svg);                          /* 杯子裡淡淡的玻璃色（畫在液體後面，才不會把液體的顏色蓋淡） */
@@ -126,7 +126,7 @@
                 liquid.innerHTML = '';                  /* innerHTML = ''：把元素裡面的東西全部清掉 */
                 var prev = 0, list = bounds.map(function (b, i) { return { top: b, color: colors[i] }; });
                 if (cur) list.push(cur);
-                list.forEach(function (L, i) {          /* forEach：對陣列的每個元素各做一次 */
+                list.forEach(function (L, i) {
                     var yT = Y(L.top), yB = Y(prev);
                     var r = kit.svg('rect', { 'class': 'layerdrink-layer layerdrink-c--' + COLORS[L.color].id, x: 0, y: yT, width: W, height: Math.max(0, yB - yT) }, liquid);
                     prev = L.top;
@@ -154,7 +154,7 @@
         var field = h('div', { 'class': 'layerdrink-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note layerdrink-tip', text: '記住每一層的顏色和高度' });
-        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(tip);
         /* 左：示範杯（直筒）；右：你的杯子（上寬下窄） */
         var demoBox = h('div', { 'class': 'layerdrink-box' }), myBox = h('div', { 'class': 'layerdrink-box' });
         demoBox.style.cssText = 'left:' + (W / 2 - 190) + 'px;top:62px;'; myBox.style.cssText = 'left:' + (W / 2 + 20) + 'px;top:62px;';
@@ -202,10 +202,10 @@
         }
         function endLayer() {
             if (pouring < 0) return;
-            bEls[pouring].classList.remove('layerdrink-bottle--pour'); stream.className = 'layerdrink-stream'; pouring = -1; if (loop) loop.stop();  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            bEls[pouring].classList.remove('layerdrink-bottle--pour'); stream.className = 'layerdrink-stream'; pouring = -1; if (loop) loop.stop();
             bounds.push(y); mine.setLayers(bounds, q.colors, null); step++;
             if (step >= n || y >= 1) { finish(false); return; }
-            info.textContent = '第 ' + (step + 1) + ' 層：' + COLORS[q.colors[step]].name + '色';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            info.textContent = '第 ' + (step + 1) + ' 層：' + COLORS[q.colors[step]].name + '色';
         }
         function wrongColor(ci) {
             done = true; phase = 'end'; api.stopTimer();
@@ -226,10 +226,10 @@
             mine.setLayers(bounds, q.colors, null); demoBox.classList.remove('layerdrink-box--hide');
             tip.textContent = '兩杯並排比一比';
             info.textContent = '最大差 ' + md.toFixed(4) + '%' + (ok ? '，一樣了！' : '（要在 ' + q.tol + '% 內）');
-            kit.flash(stage, ok, api.my);               /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, ok, api.my);
             if (ok) { api.pass({ delay: 2000 }); return; }  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
-            var worst = 0; q.fracs.forEach(function (f, i) { if (Math.abs(f - (thick[i] || 0)) > Math.abs(q.fracs[worst] - (thick[worst] || 0))) worst = i; });  /* Math.abs：取絕對值（去掉負號） */
-            api.fail({ delay: 3200, lines: ['最大差 ' + md.toFixed(4) + '%（要在 ' + q.tol + '% 內）', '差最多的是第 ' + (worst + 1) + ' 層（' + COLORS[q.colors[worst]].name + '）：示範 ' + (q.fracs[worst] * 100).toFixed(4) + '%、你倒了 ' + ((thick[worst] || 0) * 100).toFixed(4) + '%'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
+            var worst = 0; q.fracs.forEach(function (f, i) { if (Math.abs(f - (thick[i] || 0)) > Math.abs(q.fracs[worst] - (thick[worst] || 0))) worst = i; });
+            api.fail({ delay: 3200, lines: ['最大差 ' + md.toFixed(4) + '%（要在 ' + q.tol + '% 內）', '差最多的是第 ' + (worst + 1) + ' 層（' + COLORS[q.colors[worst]].name + '）：示範 ' + (q.fracs[worst] * 100).toFixed(4) + '%、你倒了 ' + ((thick[worst] || 0) * 100).toFixed(4) + '%'] });
         }
         /* 驗證用：solve＝依完美倒法算出每層的累計高度，直接放進去結算；wrong＝第一層倒到一半就結束 */
         api.solve = function () {

@@ -83,7 +83,7 @@
     };
     /* 用 rand（0～1 的函式，預設 Math.random）做的小工具：randInt 整數、randFloat 小數、pick 從陣列挑一個、shuffle 洗牌（Fisher–Yates 演算法） */
     /* 用 rand（0~1 的函式，預設 Math.random）做的小工具 */
-    kit.randInt = function (a, b, rand) { return a + Math.floor((rand || Math.random)() * (b - a + 1)); };  /* Math.floor：無條件捨去成整數 */
+    kit.randInt = function (a, b, rand) { return a + Math.floor((rand || Math.random)() * (b - a + 1)); };
     kit.randFloat = function (a, b, rand) { return a + (b - a) * (rand || Math.random)(); };
     kit.pick = function (arr, rand) { return arr[Math.floor((rand || Math.random)() * arr.length)]; };
     kit.shuffle = function (arr, rand) {
@@ -155,7 +155,7 @@
                 if (fn(now, dt) === false) { handle.stopped = true; delete r.rafs[my]; return; }
                 r.rafs[my] = global.requestAnimationFrame(frame);  /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
             }
-            r.rafs[my] = global.requestAnimationFrame(frame);  /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
+            r.rafs[my] = global.requestAnimationFrame(frame);
             handle.stop = function () {
                 handle.stopped = true;
                 if (r.rafs[my] != null) { global.cancelAnimationFrame(r.rafs[my]); delete r.rafs[my]; }
@@ -177,7 +177,7 @@
                     onFrame(1);
                     resolve();
                 }
-                var t0 = performance.now();             /* performance.now()：高精度的時間（毫秒），計時用 */
+                var t0 = performance.now();
                 var loop = r.loop(function (now) {
                     var p = Math.min(1, (now - t0) / duration);
                     onFrame(ease(p));
@@ -196,7 +196,7 @@
             r.dead = true;
             r.timers.forEach(function (id) { global.clearTimeout(id); });  /* forEach：對陣列的每個元素各做一次 */
             for (var k in r.rafs) global.cancelAnimationFrame(r.rafs[k]);
-            r.hooks.forEach(function (fn) { try { fn(); } catch (e) { } });  /* forEach：對陣列的每個元素各做一次 */
+            r.hooks.forEach(function (fn) { try { fn(); } catch (e) { } });
         };
         return r;
     };
@@ -204,7 +204,7 @@
     /* SVG 鏡頭推進：改 viewBox 就是移動／放大「鏡頭」，向量圖永遠銳利 */
     /* ─── SVG 鏡頭推進 ─── */
     kit.setViewBox = function (svg, b) {
-        svg.setAttribute('viewBox', b.vx + ' ' + b.vy + ' ' + b.vw + ' ' + b.vh);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+        svg.setAttribute('viewBox', b.vx + ' ' + b.vy + ' ' + b.vw + ' ' + b.vh);
     };
     /* 把 viewBox 從 from 補間到 to（r 是 kit.round()）；onFrame(box, p) 讓呼叫端
        跟著放大倍率調整其他東西（例如越放大越顯示更細的刻度） */
@@ -313,7 +313,7 @@
             try { el.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             o.down(e);
         });
-        el.addEventListener('pointerup', function (e) { up(e, 'up'); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        el.addEventListener('pointerup', function (e) { up(e, 'up'); });
         el.addEventListener('pointercancel', function (e) { up(e, 'cancel'); });
         function onHidden() { if (document.hidden) up(null, 'hidden'); }
         function onBlur() { up(null, 'hidden'); }
@@ -347,7 +347,7 @@
     kit.timebar = function (parent) {
         var fill = h('div', { 'class': 'ld-time__fill' });
         var bar = h('div', { 'class': 'ld-time' }, [fill]);
-        if (parent) parent.appendChild(bar);            /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        if (parent) parent.appendChild(bar);
         return { el: bar, set: function (f) { fill.style.width = (100 * kit.clamp(f, 0, 1)).toFixed(1) + '%'; } };  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
     };
     /* 線性插值：t 從 0 到 1，結果從 a 走到 b */
@@ -378,7 +378,7 @@
     kit.noteLevel = function (id, level) {
         if (!id || !(level > 1)) return false;
         if (level <= kit.levelBest(id)) return false;
-        UI.store.set(kit.lvKey(id), Math.floor(level)); /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
+        UI.store.set(kit.lvKey(id), Math.floor(level));
         if (global.Identity && global.Identity.noteBest) global.Identity.noteBest(id);       /* V1.35.0：已登入的話，稍後把新的最佳關卡同步到帳號 */
         return true;
     };

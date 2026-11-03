@@ -170,14 +170,14 @@
             /* 紙捲（SVG，圓心固定，半徑隨抽出的長度縮小） */
             var svg = kit.svg('svg', { 'class': 'tissue-roll', viewBox: '0 0 ' + W + ' 260', preserveAspectRatio: 'xMidYMin meet' });  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             var cx = W / 2;
-            var bodyC = kit.svg('circle', { 'class': 'tissue-roll__body', cx: cx, cy: ROLL_CY, r: R_FULL }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+            var bodyC = kit.svg('circle', { 'class': 'tissue-roll__body', cx: cx, cy: ROLL_CY, r: R_FULL }, svg);
             var spin = kit.svg('g', {}, svg);
             [0, 120, 240].forEach(function (a) {        /* forEach：對陣列的每個元素各做一次 */
                 kit.svg('path', { 'class': 'tissue-roll__mark', 'vector-effect': 'non-scaling-stroke', d: 'M0 -0.5 L0 -0.84', transform: 'rotate(' + a + ')' }, spin);
             });
             var coreC = kit.svg('circle', { 'class': 'tissue-roll__core', cx: cx, cy: ROLL_CY, r: R_CORE }, svg);
             kit.svg('circle', { 'class': 'tissue-roll__hole', cx: cx, cy: ROLL_CY, r: R_CORE * 0.55 }, svg);
-            root.appendChild(svg);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(svg);
 
             /* 抬頭顯示：計時、進度、進度條、提示 */
             /* 抬頭顯示 */
@@ -213,7 +213,7 @@
                 bodyC.setAttribute('r', rr.toFixed(2)); /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
                 var deg = (pulled / Math.max(rr, 18)) * 180 / Math.PI;
                 /* spin 裡的記號是用單位圓（半徑 1，圓心在原點）畫的：先縮放到目前半徑、轉動、再平移到紙捲圓心 */
-                spin.setAttribute('transform', 'translate(' + cx + ' ' + ROLL_CY + ') rotate(' + deg.toFixed(1) + ') scale(' + rr.toFixed(2) + ')');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                spin.setAttribute('transform', 'translate(' + cx + ' ' + ROLL_CY + ') rotate(' + deg.toFixed(1) + ') scale(' + rr.toFixed(2) + ')');
                 var top = ROLL_CY + rr;
                 paper.style.top = top.toFixed(1) + 'px';
                 paper.style.backgroundPositionY = (pulled % SHEET_H).toFixed(1) + 'px';
@@ -223,7 +223,7 @@
             /* 更新計時顯示 */
             function renderTime() {
                 if (tStart == null) return;
-                if (finalSec != null) { timeEl.textContent = finalSec.toFixed(4) + ' 秒'; return; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                if (finalSec != null) { timeEl.textContent = finalSec.toFixed(4) + ' 秒'; return; }
                 var t = (tEnd == null ? performance.now() : tEnd) - tStart;  /* performance.now()：高精度的時間（毫秒），計時用 */
                 timeEl.textContent = kit.sec(t) + ' 秒';
             }
@@ -271,8 +271,8 @@
                 render();
                 renderTime();
                 activeId = null;
-                paper.classList.add('tissue-paper--gone');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                var isNew = Reaction.setBest(ID, finalSec, function (v, b) { return v < b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                paper.classList.add('tissue-paper--gone');
+                var isNew = Reaction.setBest(ID, finalSec, function (v, b) { return v < b; });
                 ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
                 /* 統計：平均速度、最快 1 秒、滑動次數、每 10 屏用時。
@@ -295,7 +295,7 @@
                     return b;
                 }));
                 best1 = Leaderboard.fake4(best1);
-                Sfx.play('perfect');                    /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                Sfx.play('perfect');
                 my.after(900, function () {
                     kit.result(root, {                  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                         score: finalSec,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
@@ -321,7 +321,7 @@
             function stopGlide() { if (glideLoop) { glideLoop.stop(); glideLoop = null; } }
             function startGlide(v0) {
                 stopGlide();
-                var v = v0, last = performance.now();   /* performance.now()：高精度的時間（毫秒），計時用 */
+                var v = v0, last = performance.now();
                 glideLoop = my.loop(function (now) {    /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                     if (phase === 'done') return false;
                     var dt = Math.max(1, now - last);
@@ -369,13 +369,13 @@
             /* 滑鼠滾輪也可以抽 */
             function onWheel(e) {
                 if (phase === 'done') return;
-                e.preventDefault();                     /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+                e.preventDefault();
                 var dy = Math.min(WHEEL_CAP, Math.max(0, e.deltaY));
                 if (dy > 0) { puller.start(0); puller.feed(0); addSample(dy, kit.evT(e)); puller.end(); }
             }
             /* 綁定手指與滾輪事件；{ passive: false } 讓 preventDefault 生效 */
             root.addEventListener('pointerdown', onDown);  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
-            root.addEventListener('pointermove', onMove);  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+            root.addEventListener('pointermove', onMove);
             root.addEventListener('pointerup', onUp);
             root.addEventListener('pointercancel', onUp);
             /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從紙捲下緣（紙的起點）往下滑 */
@@ -395,7 +395,7 @@
             /* 計時顯示每個畫面更新（只是畫面；成績一律用事件時間） */
             /* 計時顯示（畫面用；成績一律用事件時間，不受這裡影響） */
             var drawn = -1;
-            my.loop(function () {                       /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
+            my.loop(function () {
                 if (pulled !== drawn) { drawn = pulled; render(); }
                 renderTime();
             });

@@ -84,7 +84,7 @@
             return false;
         }
         s.v *= Math.exp(-dt / PHYS.tau);
-        if (Math.abs(s.v) < PHYS.stopV) { s.v = 0; return true; }  /* Math.abs：取絕對值（去掉負號） */
+        if (Math.abs(s.v) < PHYS.stopV) { s.v = 0; return true; }
         return false;
     }
 
@@ -126,7 +126,7 @@
             if (!thumb || max <= 0) return;
             thumb.classList.add('is-on');               /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             global.clearTimeout(thumbTimer);
-            thumbTimer = global.setTimeout(function () { thumb.classList.remove('is-on'); }, 900);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            thumbTimer = global.setTimeout(function () { thumb.classList.remove('is-on'); }, 900);
         }
         function stop() {
             if (raf) { global.cancelAnimationFrame(raf); raf = 0; }
@@ -142,7 +142,7 @@
                 var done = flingStep(s, dt, max);
                 paint();
                 showThumb();
-                raf = done ? 0 : global.requestAnimationFrame(frame);  /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
+                raf = done ? 0 : global.requestAnimationFrame(frame);
             });
         }
 
@@ -151,7 +151,7 @@
             drag.on = true;
             drag.y0 = e.clientY / stageScale();            /* 以「開始拖曳的這一刻」為基準，所以門檻內的小抖動不會讓內容跳一下 */
             drag.pos0 = s.y;
-            drag.samples = [{ t: global.performance.now(), y: drag.y0 }];  /* performance.now()：高精度的時間（毫秒），計時用 */
+            drag.samples = [{ t: global.performance.now(), y: drag.y0 }];
             try { viewport.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             viewport.classList.add('is-drag');
             swallowClick = true;
@@ -168,7 +168,7 @@
             drag = { id: e.pointerId, on: false, x0: e.clientX / stageScale(), sy0: e.clientY / stageScale() };
             if (threshold <= 0) startDrag(e);
         });
-        viewport.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        viewport.addEventListener('pointermove', function (e) {
             if (!drag || e.pointerId !== drag.id) return;
             if (!drag.on) {
                 /* 還沒超過門檻：什麼都不做（手指沒真的拖，就是在「點」） */
@@ -210,7 +210,7 @@
         viewport.addEventListener('wheel', function (e) {
             measure();
             if (max <= 0) return;
-            e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            e.preventDefault();
             var d = e.deltaMode === 1 ? e.deltaY * 40 : (e.deltaMode === 2 ? e.deltaY * viewport.clientHeight : e.deltaY);
             stop();
             s.y = Math.min(max, Math.max(0, s.y + d / stageScale()));

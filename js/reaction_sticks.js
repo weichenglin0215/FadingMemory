@@ -86,7 +86,7 @@
         var t = kit.randFloat(FIRST_MIN, FIRST_MAX, rand), out = [];  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         /* forEach 依序處理每一根；k > 0 表示不是第一根，就把時間往後加一個間隔 */
         order.forEach(function (i, k) {                 /* forEach：對陣列的每個元素各做一次 */
-            if (k > 0) t += kit.randFloat(GAP_MIN, GAP_MAX, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+            if (k > 0) t += kit.randFloat(GAP_MIN, GAP_MAX, rand);
             out.push({ i: i, t: t });
         });
         return out;
@@ -133,7 +133,7 @@
             var head = h('div', { 'class': 'sticks-head' });
             var field = h('div', { 'class': 'sticks-field' });
             root.appendChild(head);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-            root.appendChild(field);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(field);
             var rail = h('div', { 'class': 'sticks-rail' });
             field.appendChild(rail);
 
@@ -163,7 +163,7 @@
                 g = gravity(level);
                 misses = 0; resolved = 0; state = 'play';
                 /* 把上一關殘留的棍子元素從畫面移除 */
-                sticks.forEach(function (s) { if (s.el.parentNode) s.el.parentNode.removeChild(s.el); });  /* forEach：對陣列的每個元素各做一次 */
+                sticks.forEach(function (s) { if (s.el.parentNode) s.el.parentNode.removeChild(s.el); });
                 sticks = [];
                 /* 把場地寬度平均分成 N 欄，每根棍子放在欄的中央 */
                 var gap = FW / N;
@@ -235,14 +235,14 @@
                 s.top = topAt(g, (now - s.relT) / 1000);
                 s.el.style.transform = 'translateY(' + s.top.toFixed(1) + 'px)';
                 s.el.classList.add('sticks-stick--ok'); /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                Sfx.play('ok');                         /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                Sfx.play('ok');
                 resolve();
             }
             /* 錯失一根（foul＝true 代表是搶按）：變橘紅，錯失數 +1 */
             function lose(s, foul) {
                 if (s.state === 'caught' || s.state === 'missed' || s.state === 'foul') return;
                 s.state = foul ? 'foul' : 'missed';
-                s.el.classList.add('sticks-stick--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                s.el.classList.add('sticks-stick--bad');
                 Sfx.play('bad');
                 misses++;
                 resolve();
@@ -255,7 +255,7 @@
                 if (ok) {
                     /* Reaction.setBest：存最佳紀錄，第三個參數是「新值是否比舊值好」的比較函式；回傳是否破紀錄 */
                     cleared = level;
-                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
                     meta();
                     Sfx.play('win');
                     head.textContent = '第 ' + level + ' 關過關！';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
@@ -272,7 +272,7 @@
                             score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: cleared + ' 關',
                             label: cleared >= 8 ? '眼明手快！' : (cleared >= 4 ? '反應不錯！' : '再試一次，會更快！'),
-                            lines: ['第 ' + level + ' 關錯失了 ' + misses + ' 根棍子', '那一關棍長 ' + Math.round(len) + ' px'],  /* Math.round：四捨五入成整數 */
+                            lines: ['第 ' + level + ' 關錯失了 ' + misses + ' 根棍子', '那一關棍長 ' + Math.round(len) + ' px'],
                             isNew: newRec, sfx: cleared >= 6 ? 'win' : 'fail', onAgain: function () { round(1); },
                             resume: { level: back, run: function () { round(back); } }
                         });
@@ -306,12 +306,12 @@
 
             /* G.debug：除錯／測試用後門，下面的函式讓自動測試可以「假裝玩家」操作 */
             G.debug = {
-                state: function () { return { level: level, state: state, misses: misses, resolved: resolved, cleared: cleared, len: len, g: g, FH: FH, sticks: sticks.map(function (s) { return s.state; }) }; },  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+                state: function () { return { level: level, state: state, misses: misses, resolved: resolved, cleared: cleared, len: len, g: g, FH: FH, sticks: sticks.map(function (s) { return s.state; }) }; },
                 /* 模擬在第 i 根掉下去 sec 秒後點它（還沒鬆手就用 sec＝null 當搶按） */
                 tapStick: function (i, secAfterRelease) {
                     var s = sticks[i];
                     if (!s) return 'no';
-                    var t = s.relT == null ? performance.now() : s.relT + secAfterRelease * 1000;  /* performance.now()：高精度的時間（毫秒），計時用 */
+                    var t = s.relT == null ? performance.now() : s.relT + secAfterRelease * 1000;
                     var top = s.relT == null ? 0 : topAt(g, secAfterRelease);
                     return handleTap(s.cx, top + s.len / 2, t);
                 },

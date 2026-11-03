@@ -209,7 +209,7 @@
         if ('serviceWorker' in global.navigator) {
             p = global.navigator.serviceWorker.getRegistrations().then(function (regs) {
                 return Promise.all(regs.map(function (r) { return r.unregister(); }));  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
-            }).catch(function () { });                  /* catch：Promise（承諾）失敗時才執行的函式，這裡用來吞掉錯誤，避免整個程式中斷 */
+            }).catch(function () { });
         }
         return p.then(function () {
             if (!global.caches) return;

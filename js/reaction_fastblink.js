@@ -40,7 +40,7 @@
     /* 第 level 關的快／慢頻率比。RATIO_LOG：差距 d ＝ 比值 − 1 從 RATIO[0] − 1 等比例縮小到 RATIO[1] − 1（d(level) ＝ d0 × (d1 ÷ d0)^t，t 從 0 走到 1）；否則線性 */
     function ratioFor(level) {
         if (!RATIO_LOG) return kit.ramp(level, RATIO[0], RATIO[1], RAMP_LEVELS);  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
-        var d0 = RATIO[0] - 1, d1 = RATIO[1] - 1, t = kit.ramp(level, 0, 1, RAMP_LEVELS);  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+        var d0 = RATIO[0] - 1, d1 = RATIO[1] - 1, t = kit.ramp(level, 0, 1, RAMP_LEVELS);
         return 1 + d0 * Math.pow(d1 / d0, t);
     }
     function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
@@ -55,7 +55,7 @@
         var ratio = ratioFor(level);
         var slow = kit.randFloat(SLOW_HZ[0], SLOW_HZ[1], rand), fast = slow * ratio;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         /* 慢的頻率取到小數 1 位、快的取到小數 3 位（揭曉時寫成 4.0000 Hz 這種好讀的數字；快的多留一位，慢的頻率只有 0.3 Hz 左右時，比值才不會被四捨五入吃掉 1～2％ ） */
-        slow = Math.round(slow * 10) / 10; fast = Math.round(slow * ratio * 1000) / 1000;  /* Math.round：四捨五入成整數 */
+        slow = Math.round(slow * 10) / 10; fast = Math.round(slow * ratio * 1000) / 1000;
         return { slow: slow, fast: fast, ratio: fast / slow, fastSide: rand() < 0.5 ? 'L' : 'R', phL: rand(), phR: rand(), swap: rand() < 0.5 };
     }
     /* 數一數：在 [0, T] 秒內，頻率 f 的圓點「亮起來」幾次（驗證用） */
@@ -110,14 +110,14 @@
         var dotL = mkDot('L', Math.round(W * 0.27), yL, q.swap ? 'fastblink-dot--b' : 'fastblink-dot--a');
         var dotR = mkDot('R', Math.round(W * 0.73), yR, q.swap ? 'fastblink-dot--a' : 'fastblink-dot--b');
         var tip = h('div', { 'class': 'qz-note fastblink-tip', text: '點閃得比較快的圓點' });
-        stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(tip);
         var fL = q.fastSide === 'L' ? q.fast : q.slow, fR = q.fastSide === 'R' ? q.fast : q.slow;
         var t0 = performance.now();                     /* performance.now()：高精度的時間（毫秒），計時用 */
         var loop = api.my.loop(function () {            /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
             if (api.over) return false;
-            var t = (performance.now() - t0) / 1000;    /* performance.now()：高精度的時間（毫秒），計時用 */
+            var t = (performance.now() - t0) / 1000;
             dotL.el.classList.toggle('fastblink-dot--on', isOn(fL, q.phL, t));  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-            dotR.el.classList.toggle('fastblink-dot--on', isOn(fR, q.phR, t));  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            dotR.el.classList.toggle('fastblink-dot--on', isOn(fR, q.phR, t));
         });
         api.timer(ansMs(level), function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         if (level === 1 && kit.once('fastblink.hint')) kit.hintOn(stage, q.fastSide === 'L' ? dotL.el : dotR.el, { mode: 'tap', delay: 600, text: '請點擊閃得比較快的圓點' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
@@ -131,9 +131,9 @@
             dotL.lab.textContent = fL.toFixed(4) + ' Hz'; dotR.lab.textContent = fR.toFixed(4) + ' Hz';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             (q.fastSide === 'L' ? dotL : dotR).el.classList.add('fastblink-dot--right');
             if (side != null && !ok) (side === 'L' ? dotL : dotR).el.classList.add('fastblink-dot--wrong');
-            tip.textContent = '快 ' + q.fast.toFixed(4) + ' Hz　慢 ' + q.slow.toFixed(4) + ' Hz　（快的是慢的 ' + q.ratio.toFixed(4) + ' 倍）';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            tip.textContent = '快 ' + q.fast.toFixed(4) + ' Hz　慢 ' + q.slow.toFixed(4) + ' Hz　（快的是慢的 ' + q.ratio.toFixed(4) + ' 倍）';
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1300 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: 2400, lines: [
                     (side == null ? '時間到！' : '你選到比較慢的那顆') + '，閃得快的在' + (q.fastSide === 'L' ? '左邊' : '右邊'),

@@ -62,7 +62,7 @@
     /* 這一關的陷阱數 */
     function trapsWanted(level) { return Math.round(kit.ramp(level, TRAPS_START, TRAPS_END, LEVEL_RAMP)); }  /* Math.round：四捨五入成整數 */
     /* 這一關地圖有幾列 */
-    function rowsFor(level) { return Math.round(kit.ramp(level, ROWS_START, ROWS_END, LEVEL_RAMP)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function rowsFor(level) { return Math.round(kit.ramp(level, ROWS_START, ROWS_END, LEVEL_RAMP)); }
     /* 這一關地圖有幾欄 */
     function colsFor(level) { return level >= WIDE_FROM ? COLS_WIDE : COLS_NARROW; }
     /* 把格子 (r,c) 轉成字串 "r,c"，當作物件的鍵（方便查某格有沒有陷阱） */
@@ -130,7 +130,7 @@
                 cs.sort(function (x, y) { return Math.abs(x - prevCol) - Math.abs(y - prevCol) || x - y; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
                 cs = cs.slice(0, remaining);
             }
-            cs.forEach(function (cc) { traps[cellKey(r, cc)] = true; list.push([r, cc]); });  /* forEach：對陣列的每個元素各做一次 */
+            cs.forEach(function (cc) { traps[cellKey(r, cc)] = true; list.push([r, cc]); });
             remaining -= cs.length;
             wallRows.push(r); gaps.push(gap); lastWallRow = r;
             prevCol = gap; side = -side;
@@ -157,7 +157,7 @@
                 if (d === best.d) cand.push({ r: rr, c: cc });
             }
             if (cand.length) {
-                var target = kit.pick(cand, rand);      /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+                var target = kit.pick(cand, rand);
                 return { rows: rows, cols: cols, start: start, target: target, traps: T.traps, trapList: T.trapList, steps: best.d, path: randomShortestPath(dist, start, target, T.traps, rand), wallRows: T.wallRows, gaps: T.gaps, dist: dist };
             }
         }
@@ -172,7 +172,7 @@
     /* 圖示 */
     function drawMan(g) {
         kit.svg('circle', { cx: 0, cy: -16, r: 11, fill: 'hsl(28,62%,80%)', stroke: 'hsl(24,40%,22%)', 'stroke-width': 3 }, g);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        kit.svg('rect', { x: -12, y: -5, width: 24, height: 26, rx: 8, fill: 'hsl(210,62%,52%)', stroke: 'hsl(24,40%,22%)', 'stroke-width': 3 }, g);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('rect', { x: -12, y: -5, width: 24, height: 26, rx: 8, fill: 'hsl(210,62%,52%)', stroke: 'hsl(24,40%,22%)', 'stroke-width': 3 }, g);
     }
 
     /* mount：遊戲進場點 */
@@ -245,7 +245,7 @@
             function setButtons(on) { [bL, bF, bR].forEach(function (b) { b.disabled = !on; }); }
             /* 更新標題文字 */
             function paintHead() {
-                head.textContent = state === 'play' ? '剩餘步數 ' + remain + ' ／ ' + L.steps : '第 ' + level + ' 關　要走 ' + L.steps + ' 步';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                head.textContent = state === 'play' ? '剩餘步數 ' + remain + ' ／ ' + L.steps : '第 ' + level + ' 關　要走 ' + L.steps + ' 步';
             }
 
             /* 開始一關 */
@@ -262,7 +262,7 @@
                 /* 主控台印出這關的實際資料（地圖大小、陷阱數、步數、終點、示範路線） */
                 try { console.info('[照著走] 第 ' + level + ' 關：' + L.rows + '×' + L.cols + '、陷阱 ' + L.trapList.length + ' 個、要走 ' + L.steps + ' 步；終點 (列' + L.target.r + ',欄' + L.target.c + ')；示範 ' + L.path.map(function (m) { return MOVE_NAME[m]; }).join('→')); } catch (e) { }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                 /* 示範階段顯示旗子 */
-                flag.setAttribute('opacity', 1);        /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                flag.setAttribute('opacity', 1);
                 /* 依序排每一步的動畫：每隔 DEMO_STEP_MS 毫秒小人走一格 */
                 var t = DEMO_LEAD_MS, r = L.start.r, c = L.start.c;
                 L.path.forEach(function (m) {
@@ -283,7 +283,7 @@
                     if (id !== lvId) return;
                     state = 'play'; setButtons(true); paintHead();
                     banner.textContent = '換你走！旗子和陷阱都藏起來了，只能走 ' + L.steps + ' 步';
-                    Sfx.play('go');                     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                    Sfx.play('go');
                 });
             }
 
@@ -352,7 +352,7 @@
             /* 三顆方向鈕：pointerdown 一碰就觸發 */
             bL.addEventListener('pointerdown', function (e) { e.preventDefault(); press('L'); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             bF.addEventListener('pointerdown', function (e) { e.preventDefault(); press('F'); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
-            bR.addEventListener('pointerdown', function (e) { e.preventDefault(); press('R'); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            bR.addEventListener('pointerdown', function (e) { e.preventDefault(); press('R'); });
 
             /* G.debug：測試用後門，play() 可以依示範路線一次按完 */
             G.debug = {

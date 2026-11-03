@@ -97,7 +97,7 @@
             }
             /* 把元素依序放進畫面 */
             [head, banner, grid].forEach(function (x) { root.appendChild(x); });  /* forEach：對陣列的每個元素各做一次 */
-            root.appendChild(splash);                   /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(splash);
 
             /* 更新標題列右側的小字 */
             function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
@@ -106,13 +106,13 @@
                 head.textContent = '第 ' + level + ' 關・' + seqLen(level) + ' 個數字';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             }
             /* 設定橫幅的文字與樣式（cls 是顏色變化版） */
-            function setBanner(text, cls) { banner.textContent = text; banner.className = 'backnum-banner' + (cls ? ' backnum-banner--' + cls : ''); }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            function setBanner(text, cls) { banner.textContent = text; banner.className = 'backnum-banner' + (cls ? ' backnum-banner--' + cls : ''); }
 
             /* 讓某格閃一下 class（發亮、答對或答錯的顏色），ms 毫秒後移除 */
             function flash(n, cls, ms) {
                 var el = cells[n];
                 el.classList.add(cls);                  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                my.after(ms, function () { el.classList.remove(cls); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                my.after(ms, function () { el.classList.remove(cls); });
             }
 
             /* 播放亮燈順序：每格依序亮起，最後進入「輸入階段」 */
@@ -126,7 +126,7 @@
                 /* lit 每格亮的毫秒數、gap 格子間的空檔、t 目前的時間軸（從 400ms 開始） */
                 var lit = litSec(level) * 1000, gap = GAP_S * 1000, t = 400;
                 /* 用 forEach 為每個數字排一個「幾毫秒後亮起」的計時器：my.after(延遲, 函式) */
-                seq.forEach(function (n) {              /* forEach：對陣列的每個元素各做一次 */
+                seq.forEach(function (n) {
                     my.after(t, function () { if (id === runId) { flash(n, 'backnum-cell--lit', lit); Sfx.play('tick'); } });  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                     t += lit + gap;
                 });
@@ -137,7 +137,7 @@
                     /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「要先按的那一格」上＝剛才亮的順序裡最後亮的那一格（要倒著按） */
                     if (Reaction.kit.once('backnum.hint')) Reaction.kit.hintOn(root, cells[seq[seq.length - 1]], { mode: 'tap', text: '請倒著點擊，先點這一格' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
                     setBanner('換你了：倒著按！', 'go');
-                    Sfx.play('go');                     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                    Sfx.play('go');
                 });
             }
 
@@ -165,7 +165,7 @@
                     if (idx >= want.length) {
                         state = 'clear';
                         cleared = level;
-                        if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                        if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
                         meta();
                         setBanner('過關！', 'ok');
                         Sfx.play('win');
@@ -194,7 +194,7 @@
 
             /* G.debug：測試用後門 */
             G.debug = {
-                state: function () { return { level: level, state: state, seq: seq.slice(), want: want.slice(), idx: idx, cleared: cleared }; },  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+                state: function () { return { level: level, state: state, seq: seq.slice(), want: want.slice(), idx: idx, cleared: cleared }; },
                 tapNext: function () { if (state === 'input') tap(want[idx]); return state; },
                 tapWrong: function () { if (state === 'input') tap(want[idx] === 9 ? 1 : want[idx] + 1); return state; }
             };

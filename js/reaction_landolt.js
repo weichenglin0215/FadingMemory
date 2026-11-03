@@ -84,7 +84,7 @@
     function eSvg(D, dir) {
         var u = D / 5;
         var svg = kit.svg('svg', { 'class': 'landolt-ring', viewBox: (-D / 2) + ' ' + (-D / 2) + ' ' + D + ' ' + D, width: D, height: D });  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        var g = kit.svg('g', { transform: 'rotate(' + (dir - 90) + ')', 'class': 'landolt-e' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var g = kit.svg('g', { transform: 'rotate(' + (dir - 90) + ')', 'class': 'landolt-e' }, svg);
         var x0 = -D / 2, y0 = -D / 2;
         kit.svg('rect', { x: x0, y: y0, width: u, height: D }, g);                       /* 脊柱 */
         [0, 2, 4].forEach(function (row) {              /* forEach：對陣列的每個元素各做一次 */
@@ -128,7 +128,7 @@
             var barWrap = h('div', { 'class': 'ld-time' }, [h('div', { 'class': 'ld-time__fill' })]);
             var fill = barWrap.firstChild;
             root.appendChild(head);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-            root.appendChild(field);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(field);
             root.appendChild(barWrap);
             root.appendChild(hint);
 
@@ -150,7 +150,7 @@
                 /* 主控台印出這個 E 的方向、外徑、視力、時限，方便驗證 */
                 console.info('[E視力檢查] 第 ' + n + ' 個 E：開口朝' + ({ 0: '上', 90: '右', 180: '下', 270: '左' })[dir] +
                     '，外徑 ' + sizeAt(n).toFixed(1) + 'px（視力 ' + fmtV(acuityAt(n)) + '），時限 ' + timeAt(n).toFixed(2) + ' 秒');
-                field.innerHTML = '';                   /* innerHTML = ''：把元素裡面的東西全部清掉 */
+                field.innerHTML = '';
                 field.appendChild(eSvg(sizeAt(n), dir));
                 var limit = timeAt(n) * 1000;
                 cur = { dir: dir, t0: performance.now(), limitMs: limit };  /* performance.now()：高精度的時間（毫秒），計時用 */
@@ -162,7 +162,7 @@
                     if (cur == null || state !== 'ask') return false;
                     fill.style.width = (100 * Math.max(0, 1 - (now - cur.t0) / cur.limitMs)).toFixed(1) + '%';
                 });
-                cur.timer = my.after(limit, function () { if (state === 'ask') judge(null, performance.now()); });  /* performance.now()：高精度的時間（毫秒），計時用 */
+                cur.timer = my.after(limit, function () { if (state === 'ask') judge(null, performance.now()); });
             }
 
             /* 判定：chosen 是玩家滑的方向（null＝超時）。錯一次就結束 */
@@ -190,7 +190,7 @@
             function finish(allClear, reason) {
                 state = 'done';
                 var v = passed > 0 ? acuityShown(passed) : 0;
-                var isNew = v > 0 && Reaction.setBest(ID, v, function (a, b) { return a > b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                var isNew = v > 0 && Reaction.setBest(ID, v, function (a, b) { return a > b; });
                 ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
                 var avg = rts.length ? rts.reduce(function (a, b) { return a + b; }, 0) / rts.length : 0;  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
                 var avgSec = Leaderboard.fake4(avg / 1000);      /* 平均反應（秒）：結算時產生一次，第 3、4 位不為 0 */
@@ -227,7 +227,7 @@
             }
             /* 綁定手指事件 */
             root.addEventListener('pointerdown', onDown);  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
-            root.addEventListener('pointermove', onMove);  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+            root.addEventListener('pointermove', onMove);
             /* 操作提示（只在第一次進遊戲時）：上下左右四個方向的箭頭，手指依序往四個方向滑（只是示範怎麼滑，不代表答案） */
             if (Reaction.kit.once('landolt.hint')) Reaction.kit.hintOn(root, field, { mode: 'drag4', len: 80, text: '請往上下左右拖曳' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
             /* 這一局結束時把事件監聽拿掉 */
@@ -238,8 +238,8 @@
 
             /* 開場停一下讓玩家就位 */
             /* 開場停一下讓玩家就位 */
-            head.textContent = '準備…';                   /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-            my.after(700, function () { hint.textContent = '往 E 的開口（三隻腳）方向滑一下'; Sfx.play('go'); nextE(); });  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+            head.textContent = '準備…';
+            my.after(700, function () { hint.textContent = '往 E 的開口（三隻腳）方向滑一下'; Sfx.play('go'); nextE(); });
 
             /* G.debug：測試用後門 */
             G.debug = {

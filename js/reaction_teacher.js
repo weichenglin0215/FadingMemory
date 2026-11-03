@@ -55,7 +55,7 @@
     /* 第 i 題有「老師說」的機率 */
     function pSay(i) { return kit.ramp(i, P_SAY_START, P_SAY_END, RAMP_N); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 第 i 題是「同時點兩個方向」的機率（沒到 DOUBLE_FROM 題是 0） */
-    function pDouble(i) { return i < DOUBLE_FROM ? 0 : kit.ramp(i, P_DOUBLE_START, P_DOUBLE_END, RAMP_N); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function pDouble(i) { return i < DOUBLE_FROM ? 0 : kit.ramp(i, P_DOUBLE_START, P_DOUBLE_END, RAMP_N); }
     /* 指令是不是「同時點兩個方向」 */
     function isDouble(cmd) { return !!cmd && !!cmd.dir2; }
     /* 第 i 題的限時；dbl 為 true（同時點兩個方向）時多給 DOUBLE_EXTRA_S 秒 */
@@ -130,7 +130,7 @@
     /* 畫老師的臉（SVG：頭、頭髮、眼鏡、眼睛、嘴巴） */
     function faceSvg() {
         var svg = kit.svg('svg', { 'class': 'teacher-face', viewBox: '0 0 100 100' });  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        kit.svg('circle', { 'class': 'teacher-face__head', cx: 50, cy: 52, r: 40 }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('circle', { 'class': 'teacher-face__head', cx: 50, cy: 52, r: 40 }, svg);
         kit.svg('path', { 'class': 'teacher-face__hair', d: 'M12 46 Q14 14 50 12 Q86 14 88 46 Q70 28 50 30 Q30 28 12 46 Z' }, svg);
         kit.svg('circle', { 'class': 'teacher-face__glass', cx: 35, cy: 52, r: 11 }, svg);
         kit.svg('circle', { 'class': 'teacher-face__glass', cx: 65, cy: 52, r: 11 }, svg);
@@ -174,7 +174,7 @@
                 b.addEventListener('pointerdown', function (e) { e.preventDefault(); press(d); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                 btns[d] = b; pad.appendChild(b);        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             });
-            [top, sub, tb.el, pad].forEach(function (x) { root.appendChild(x); });  /* forEach：對陣列的每個元素各做一次 */
+            [top, sub, tb.el, pad].forEach(function (x) { root.appendChild(x); });
             ctx.setMeta(Reaction.getBest(ID) != null ? '最佳 ' + Reaction.getBest(ID) : '');  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
             /* 清掉「已點到」的標記（換題、答對、失敗時） */
@@ -199,7 +199,7 @@
                 /* 顯示指令文字 */
                 pre.textContent = tx.prefix || ' '; act.textContent = tx.action;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 bubble.className = 'teacher-bubble' + (cmd.say ? ' teacher-bubble--say' : '');
-                sub.textContent = '連對 ' + streak + ' 題';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                sub.textContent = '連對 ' + streak + ' 題';
                 setFace(cmd.say ? 'normal' : 'tease');
                 state = 'live';
                 tb.set(1);
@@ -223,7 +223,7 @@
                 setFace('happy');
                 bubble.className = 'teacher-bubble teacher-bubble--ok';
                 Sfx.play(silent ? 'pop' : 'click');     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
-                var best = Reaction.getBest(ID);        /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                var best = Reaction.getBest(ID);
                 ctx.setMeta(kit.meta(['連對 ' + streak, best != null ? '最佳 ' + best : '']));
                 my.after(GAP_S * 1000, nextCommand);
             }
@@ -238,7 +238,7 @@
                 bubble.className = 'teacher-bubble teacher-bubble--bad';
                 var msg = why(cmd, kind, got);
                 sub.textContent = msg;
-                Sfx.play('bad');                        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                Sfx.play('bad');
                 var isNew = Reaction.setBest(ID, streak, function (v, b) { return v > b; });
                 my.after(FAIL_SHOW_MS, function () {
                     var back = kit.resumeFrom(i);
@@ -273,7 +273,7 @@
                 if (exp.indexOf(d) < 0) { fail('wrong', d); return; }  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                 if (held[d]) return;
                 held[d] = true;
-                btns[d].classList.add('teacher-btn--held');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                btns[d].classList.add('teacher-btn--held');
                 if (exp.every(function (x) { return held[x]; })) { good(false); return; }  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
                 var pid = token;
                 my.after(DOUBLE_WINDOW_S * 1000, function () { if (pid === token && state === 'live') fail('half', d); });

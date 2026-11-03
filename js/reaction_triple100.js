@@ -81,7 +81,7 @@
             if (results.length >= limit) return;
             var first = used.indexOf(false);            /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             if (first === -1) { results.push(cur.slice()); return; }  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
-            byCard[first].forEach(function (t) {        /* forEach：對陣列的每個元素各做一次 */
+            byCard[first].forEach(function (t) {
                 if (results.length >= limit || t.some(function (c) { return used[c]; })) return;  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
                 t.forEach(function (c) { used[c] = true; });
                 cur.push(t);
@@ -148,7 +148,7 @@
     /* 範例牌組也做成同樣的格式（洗牌後） */
     function exampleDeck(rand) {
         var an = analyze(EXAMPLE_DECK);
-        return { cards: kit.shuffle(EXAMPLE_DECK.slice(), rand), solution: an.solution, traps: an.traps, tries: 0 };  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+        return { cards: kit.shuffle(EXAMPLE_DECK.slice(), rand), solution: an.solution, traps: an.traps, tries: 0 };
     }
     /* 這一關的牌組：照規格產生；萬一找不到（機率極低）就把陷阱要求降一級再找 */
     function deckForLevel(level, rand) {
@@ -199,7 +199,7 @@
 
         var wrap = h('div', { 'class': 'triple100-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
         var grid = h('div', { 'class': 'triple100-grid' });
-        var els = cards.map(function (n, i) {           /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        var els = cards.map(function (n, i) {
             var el = h('div', { 'class': 'triple100-card', text: String(n) });
             state.push('on');
             /* 用 click 不用 pointerdown：牌太多要上下捲動時，手指滑過牌不會誤選 */
@@ -207,7 +207,7 @@
             grid.appendChild(el);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             return el;
         });
-        wrap.appendChild(grid); stage.appendChild(wrap);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        wrap.appendChild(grid); stage.appendChild(wrap);
         var info = h('div', { 'class': 'triple100-info' });
         stage.appendChild(info);
         function infoText() {
@@ -222,12 +222,12 @@
         var lastShown = -1;
         my.loop(function () {                           /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
             if (api.over) return false;
-            var s = Math.ceil(tm.left() / 1000);        /* Math.ceil：無條件進位成整數 */
+            var s = Math.ceil(tm.left() / 1000);
             if (s !== lastShown) { lastShown = s; api.setInfo('剩 ' + fmtLeft(tm.left())); }
         });
         /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「唯一正解第一組」的第一張牌上 */
         if (level === 1 && kit.once('triple100.hint')) {  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
-            var first = deck.solution[0], idx = cards.indexOf(first[0]);  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+            var first = deck.solution[0], idx = cards.indexOf(first[0]);
             if (idx >= 0) hint = kit.hintOn(stage, els[idx], { mode: 'tap', delay: 300, text: '請點三張加起來是 100 的牌' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         }
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
@@ -242,18 +242,18 @@
             sel.push(i); els[i].classList.add('triple100-card--sel'); Sfx.play('click');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             if (sel.length < 3) return;
             /* 選滿三張：判定 */
-            var picked = sel.slice(); sel = [];         /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+            var picked = sel.slice(); sel = [];
             var sum = picked.reduce(function (s, k) { return s + cards[k]; }, 0);  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
             if (sum === TARGET) {
-                picked.forEach(function (k) { state[k] = 'gone'; els[k].classList.remove('triple100-card--sel'); els[k].classList.add('triple100-card--gone'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                remaining -= 3; Sfx.play('ok');         /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                picked.forEach(function (k) { state[k] = 'gone'; els[k].classList.remove('triple100-card--sel'); els[k].classList.add('triple100-card--gone'); });
+                remaining -= 3; Sfx.play('ok');
                 if (remaining === 0) { api.pass({ delay: 800 }); return; }  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
                 /* 剩下的牌湊不出任何一組 100 → 卡住（遊戲不會提早提醒玩家「已經走錯」，要等到真的沒路可走） */
                 if (!hasMove(remainingValues())) api.after(500, function () { fail('stuck'); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
             } else {
                 errors++;
                 picked.forEach(function (k) { els[k].classList.remove('triple100-card--sel'); els[k].classList.add('triple100-card--bad'); });
-                api.after(420, function () { picked.forEach(function (k) { els[k].classList.remove('triple100-card--bad'); }); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+                api.after(420, function () { picked.forEach(function (k) { els[k].classList.remove('triple100-card--bad'); }); });
                 Sfx.play('bad'); infoText();
                 tm.cut(PENALTY_MS);
             }
@@ -262,7 +262,7 @@
         function fail(why) {
             if (api.over) return;
             hideHint();
-            info.textContent = why === 'stuck' ? '卡住了！剩下的牌湊不出 100' : '時間到！';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            info.textContent = why === 'stuck' ? '卡住了！剩下的牌湊不出 100' : '時間到！';
             api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: 1200,
                 lines: [
@@ -284,7 +284,7 @@
             var rest = remainingValues();
             findTriples(rest, TARGET).forEach(function (t) {
                 var vals = t.map(function (k) { return rest[k]; });
-                if (api.over || vals.some(function (v) { return state[cards.indexOf(v)] !== 'on'; })) return;  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
+                if (api.over || vals.some(function (v) { return state[cards.indexOf(v)] !== 'on'; })) return;
                 vals.forEach(function (v) { tap(cards.indexOf(v)); });
             });
         };

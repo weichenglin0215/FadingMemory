@@ -52,7 +52,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function gapAt(level) { return kit.ramp(level, GAP_START, GAP_END, RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
-    function denMax(level) { return Math.round(kit.ramp(level, DEN[0], DEN[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function denMax(level) { return Math.round(kit.ramp(level, DEN[0], DEN[1], RAMP_LEVELS)); }
     function val(f) { return f.n / f.d; }
     function gcd(a, b) { return b ? gcd(b, a % b) : a; }
     function reduced(f) { return gcd(f.n, f.d) === 1; }
@@ -71,12 +71,12 @@
     var CAND = {
         rand: function (cap, rand) { return [pickFrac(cap, rand), pickFrac(cap, rand)]; },
         samenum: function (cap, rand) {
-            var d1 = kit.randInt(2, cap, rand), d2 = kit.randInt(2, cap, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+            var d1 = kit.randInt(2, cap, rand), d2 = kit.randInt(2, cap, rand);
             var n = kit.randInt(2, Math.max(2, Math.floor(VAL_CAP * Math.min(d1, d2))), rand);  /* Math.floor：無條件捨去成整數 */
             return [{ n: n, d: d1 }, { n: n, d: d2 }];
         },
         plus1: function (cap, rand) {
-            var d = kit.randInt(3, Math.max(3, cap - 1), rand), n = kit.randInt(2, Math.max(2, Math.min(Math.floor(VAL_CAP * d), cap - 1)), rand);  /* Math.floor：無條件捨去成整數 */
+            var d = kit.randInt(3, Math.max(3, cap - 1), rand), n = kit.randInt(2, Math.max(2, Math.min(Math.floor(VAL_CAP * d), cap - 1)), rand);
             var s = rand() < 0.5 ? 1 : -1;
             return [{ n: n, d: d }, { n: n + s, d: d + s }];
         },
@@ -123,11 +123,11 @@
     function makeQuestion(level, rand, bigLeft, kind) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var g = gapAt(level), cap = capFor(level, rand);
-        if (!kind) kind = kit.pick(kindsAt(level), rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        if (!kind) kind = kit.pick(kindsAt(level), rand);
         var q = search(kind, g, cap, level, rand, bigLeft) || (kind !== 'rand' && search('rand', g, cap, level, rand, bigLeft));
         if (!q) {
             var fb = bigLeft === false ? { left: { n: 3, d: 7 }, right: { n: 5, d: 11 } } : { left: { n: 5, d: 11 }, right: { n: 3, d: 7 } };
-            q = { left: fb.left, right: fb.right, bigLeft: bigLeft !== false, gap: Math.abs(val(fb.left) - val(fb.right)) / Math.max(val(fb.left), val(fb.right)), kind: 'rand' };  /* Math.abs：取絕對值（去掉負號） */
+            q = { left: fb.left, right: fb.right, bigLeft: bigLeft !== false, gap: Math.abs(val(fb.left) - val(fb.right)) / Math.max(val(fb.left), val(fb.right)), kind: 'rand' };
         }
         q.decimal = false;
         if (level >= DEC_FROM && rand() < DEC_P) decimalize(q, rand);
@@ -145,7 +145,7 @@
         return rand() < 0.5;
     }
     /* 數字的寫法：整數直接寫，帶小數的寫一位 */
-    function fmtNum(x) { return Math.round(x) === x ? String(x) : x.toFixed(1); }  /* Math.round：四捨五入成整數 */
+    function fmtNum(x) { return Math.round(x) === x ? String(x) : x.toFixed(1); }
     function fmtFrac(f) { return fmtNum(f.n) + '/' + fmtNum(f.d); }
     /* 卡片上數字的字級等級（依最長的那個數字的字數）：字越多越小，才放得進卡片 */
     function sizeClass(f) {
@@ -201,7 +201,7 @@
         function reveal() {
             [[cl, q.left], [cr, q.right]].forEach(function (p) {  /* forEach：對陣列的每個元素各做一次 */
                 var v = val(p[1]);
-                p[0].appendChild(h('div', { 'class': 'fracduel-val', text: v.toFixed(4) }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+                p[0].appendChild(h('div', { 'class': 'fracduel-val', text: v.toFixed(4) }));
                 p[0].appendChild(h('div', { 'class': 'fracduel-bargraph' }, [h('div', { 'class': 'fracduel-bargraph__fill', style: { width: Math.round(v / VAL_MAX * 1000) / 10 + '%' } })]));
             });
             info.textContent = fmtFrac(q.left) + ' ＝ ' + val(q.left).toFixed(4) + '　' + fmtFrac(q.right) + ' ＝ ' + val(q.right).toFixed(4) + (KIND_HINT[q.kind] ? '\n' + KIND_HINT[q.kind] : '');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
@@ -213,7 +213,7 @@
             reveal();
             bigEl.classList.add('fracduel-card--big');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             if (pickLeft === q.bigLeft) {
-                (pickLeft ? cl : cr).classList.add('fracduel-card--ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                (pickLeft ? cl : cr).classList.add('fracduel-card--ok');
                 api.pass({ delay: 900 });               /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
             } else {
                 if (pickLeft != null) (pickLeft ? cl : cr).classList.add('fracduel-card--bad');
@@ -222,11 +222,11 @@
                     fmtFrac(q.left) + ' ＝ ' + val(q.left).toFixed(4) + '，' + fmtFrac(q.right) + ' ＝ ' + val(q.right).toFixed(4),
                     '兩個分數只差 ' + (q.gap * 100).toFixed(4) + '%',
                     KIND_HINT[q.kind]
-                ].filter(function (x) { return x; }) });  /* filter：留下符合條件的元素，回傳新陣列 */
+                ].filter(function (x) { return x; }) });
             }
         }
         kit.onTap(cl, function () { judge(true); });    /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
-        kit.onTap(cr, function () { judge(false); });   /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        kit.onTap(cr, function () { judge(false); });
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.bigLeft); };
         api.wrong = function () { judge(!q.bigLeft); };

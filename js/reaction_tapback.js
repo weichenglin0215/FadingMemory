@@ -40,7 +40,7 @@
     function lenFor(level) { return Math.min(LEN[1], LEN[0] + Math.floor((level - 1) / LEN_EVERY)); }  /* Math.floor：無條件捨去成整數 */
     function flashMs(level) { return Math.round(kit.ramp(level, FLASH_MS[0], FLASH_MS[1], SPEED_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function gapMs(level) { return Math.round(kit.ramp(level, GAP_MS[0], GAP_MS[1], SPEED_LEVELS)); }  /* Math.round：四捨五入成整數 */
-    function ansMs(level) { return Math.round((ANS_BASE + ANS_PER * lenFor(level)) * kit.ramp(level, ANS_MUL[0], ANS_MUL[1], SPEED_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function ansMs(level) { return Math.round((ANS_BASE + ANS_PER * lenFor(level)) * kit.ramp(level, ANS_MUL[0], ANS_MUL[1], SPEED_LEVELS)); }
     /* 出一關：{ pts:[{x,y}]（每個位置）, order（亮起的順序，pts 的索引）, back（要點的順序＝order 倒過來） } */
     function makeLevel(level, W, H, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
@@ -56,9 +56,9 @@
             var order = kit.shuffle(idx, rand);         /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
             return { pts: pts, order: order, back: order.slice().reverse() };  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         }
-        var fb = []; for (var k = 0; k < n; k++) fb.push({ x: MARGIN + 30 + (k % 3) * 130, y: MARGIN + 30 + Math.floor(k / 3) * 130 });  /* Math.floor：無條件捨去成整數 */
+        var fb = []; for (var k = 0; k < n; k++) fb.push({ x: MARGIN + 30 + (k % 3) * 130, y: MARGIN + 30 + Math.floor(k / 3) * 130 });
         var o = fb.map(function (p, j) { return j; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
-        return { pts: fb, order: o, back: o.slice().reverse() };  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        return { pts: fb, order: o, back: o.slice().reverse() };
     }
     /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
@@ -91,11 +91,11 @@
 
         var tip = h('div', { 'class': 'qz-note tapback-tip', text: '請看圓點依序亮起來，記住順序' });
         stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-        var rings = q.pts.map(function (p) {            /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        var rings = q.pts.map(function (p) {
             var r = h('div', { 'class': 'tapback-ring' });
             r.style.left = (p.x - DOT_R) + 'px'; r.style.top = (p.y + 54 - DOT_R) + 'px';
             r.style.width = r.style.height = (2 * DOT_R) + 'px';
-            stage.appendChild(r);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            stage.appendChild(r);
             return r;
         });
         var phase = 'show', next = 0, picks = [];
@@ -105,13 +105,13 @@
             api.after(t + fl, function () { rings[pi].classList.remove('tapback-ring--on'); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
             t += fl + gp;
         });
-        api.after(t + 100, function () {                /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+        api.after(t + 100, function () {
             phase = 'tap';
             tip.textContent = '現在請「倒著」點回去：最後亮的最先點';     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             api.timer(ansMs(level), function () { reveal(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
             if (level === 1 && kit.once('tapback.hint')) kit.hintOn(stage, rings[q.back[0]], { mode: 'tap', delay: 500, text: '請點擊最後亮起的圓點' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         });
-        rings.forEach(function (r, i) {                 /* forEach：對陣列的每個元素各做一次 */
+        rings.forEach(function (r, i) {
             kit.onTap(r, function () {                  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
                 if (api.over || phase !== 'tap') return;
                 if (picks.indexOf(i) >= 0) return;      /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
@@ -125,11 +125,11 @@
         function reveal(i) {
             if (api.over) return;
             phase = 'done';
-            q.back.forEach(function (pi, k) { rings[pi].textContent = String(k + 1); rings[pi].classList.add('tapback-ring--num'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            q.back.forEach(function (pi, k) { rings[pi].textContent = String(k + 1); rings[pi].classList.add('tapback-ring--num'); });
             if (i === 'ok') { tip.textContent = '全部點對了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1100 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
             if (typeof i === 'number') rings[i].classList.add('tapback-ring--wrong');
-            tip.textContent = '正確的倒著順序已標上數字（1 最先點）';    /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            tip.textContent = '正確的倒著順序已標上數字（1 最先點）';
+            kit.flash(stage, false, api.my);
             api.fail({ delay: 2500, lines: [            /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 (i == null ? '時間到！' : '點錯了') + '，要「倒著」點回去：最後亮的最先點',
                 '圓圈上的數字就是正確的點擊順序（1 最先點）'

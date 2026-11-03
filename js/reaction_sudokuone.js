@@ -56,7 +56,7 @@
         for (i = 1; i <= N; i++) g.ALL |= (1 << i);
         g.rowOf = function (c) { return Math.floor(c / N); };  /* Math.floor：無條件捨去成整數 */
         g.colOf = function (c) { return c % N; };
-        g.blockOf = function (c) { return Math.floor(g.rowOf(c) / B) * B + Math.floor(g.colOf(c) / B); };  /* Math.floor：無條件捨去成整數 */
+        g.blockOf = function (c) { return Math.floor(g.rowOf(c) / B) * B + Math.floor(g.colOf(c) / B); };
         var rows = [], cols = [], blocks = [];
         for (i = 0; i < N; i++) { rows.push([]); cols.push([]); blocks.push([]); }
         for (i = 0; i < N * N; i++) { rows[g.rowOf(i)].push(i); cols[g.colOf(i)].push(i); blocks[g.blockOf(i)].push(i); }
@@ -84,7 +84,7 @@
         return { g: GEO9, idx: level - FOUR_LEVELS, len: RAMP9 };
     }
     function givensFor(level) { var s = stageOf(level), r = s.g === GEO4 ? GIVENS4 : GIVENS9; return Math.round(kit.ramp(s.idx, r[0], r[1], s.len)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
-    function ansMs(level) { var s = stageOf(level), r = s.g === GEO4 ? ANS4_S : ANS9_S; return Math.round(kit.ramp(s.idx, r[0], r[1], s.len) * 1000); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function ansMs(level) { var s = stageOf(level), r = s.g === GEO4 ? ANS4_S : ANS9_S; return Math.round(kit.ramp(s.idx, r[0], r[1], s.len) * 1000); }
     function deepP(level) { var s = stageOf(level); return kit.ramp(s.idx, DEEP_P[0], DEEP_P[1], s.len); }
     function bitCount(m) { var c = 0; while (m) { c += m & 1; m >>= 1; } return c; }
     function onlyDigit(m) { for (var d = 1; d <= 9; d++) if (m === (1 << d)) return d; return 0; }
@@ -126,7 +126,7 @@
             for (i = 0; i < g.cells; i++) {
                 if (!gr[i] && bitCount(cand[i]) === 1) { place(i, onlyDigit(cand[i])); changed = true; }
             }
-            g.UNITS.forEach(function (u) {              /* forEach：對陣列的每個元素各做一次 */
+            g.UNITS.forEach(function (u) {
                 for (d = 1; d <= N; d++) {
                     if (u.some(function (c) { return gr[c] === d; })) continue;  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
                     var spots = u.filter(function (c) { return !gr[c] && (cand[c] & (1 << d)); });  /* filter：留下符合條件的元素，回傳新陣列 */
@@ -146,11 +146,11 @@
         var g = stageOf(level).g, want = givensFor(level), best = null;
         for (var tr = 0; tr < 40; tr++) {
             var sol = makeSolution(g, rand), target = kit.randInt(0, g.cells - 1, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
-            var givens = sol.slice(); givens[target] = 0;  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+            var givens = sol.slice(); givens[target] = 0;
             var others = [];
             for (var i = 0; i < g.cells; i++) if (i !== target) others.push(i);
             var count = others.length;
-            var order = kit.shuffle(others, rand);      /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+            var order = kit.shuffle(others, rand);
             /* 「繞一圈」的題目：先拿「跟目標同橫排、同直排、同宮」的提示，留下不相干的格子，推理就得先靠它們推出別格，再推目標 */
             if (tr < 10 && rand() < deepP(level)) {
                 var near = order.filter(function (c) { return g.PEERS[target].indexOf(c) >= 0; }), far = order.filter(function (c) { return g.PEERS[target].indexOf(c) < 0; });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
@@ -214,12 +214,12 @@
             if (i === q.target) c.className += ' sudokuone-cell--target';
             else if (g.rowOf(i) === g.rowOf(q.target) || g.colOf(i) === g.colOf(q.target) || g.blockOf(i) === g.blockOf(q.target)) c.className += ' sudokuone-cell--peer';
             if (q.givens[i]) { c.textContent = String(q.givens[i]); c.className += ' sudokuone-cell--given'; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-            else if (i === q.target) c.textContent = '？';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            else if (i === q.target) c.textContent = '？';
             board.appendChild(c); cells.push(c);        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         }
         var tip = h('div', { 'class': 'qz-note sudokuone-tip sudokuone-tip--n' + N, text: '黃色那一格數字是哪個？' });
-        tip.style.top = Math.round(10 + bm.height + 4) + 'px';  /* Math.round：四捨五入成整數 */
-        stage.appendChild(board); stage.appendChild(tip);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        tip.style.top = Math.round(10 + bm.height + 4) + 'px';
+        stage.appendChild(board); stage.appendChild(tip);
         var items = [];
         for (var d = 1; d <= N; d++) (function (d) { items.push({ text: String(d), kind: 'sky', cls: 'sudokuone-btn', onTap: function () { judge(d); } }); })(d);
         /* 數字鍵：4×4 排成一排 4 顆（每顆大一點）；9×9 排成 3×3 */
@@ -235,9 +235,9 @@
             cells.forEach(function (c, k) {
                 if (!q.givens[k]) { c.textContent = String(q.solution[k]); c.classList.add('sudokuone-cell--fill'); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             });
-            cells[q.target].classList.add(ok ? 'sudokuone-cell--ok' : 'sudokuone-cell--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            cells[q.target].classList.add(ok ? 'sudokuone-cell--ok' : 'sudokuone-cell--bad');
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1200 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: REVEAL_FAIL_MS, lines: [
                     (v == null ? '時間到！' : '你選了 ' + v) + '，黃色那一格是 ' + q.answer,

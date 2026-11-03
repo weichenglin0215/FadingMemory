@@ -44,7 +44,7 @@
         var order = {};
         (o.order || []).forEach(function (id, i) { order[id] = i; });  /* forEach：對陣列的每個元素各做一次 */
         var seen = {}, ranked = [];
-        (o.ranks || []).forEach(function (x) {          /* forEach：對陣列的每個元素各做一次 */
+        (o.ranks || []).forEach(function (x) {
             if (!x || order[x.game_id] == null || seen[x.game_id]) return;
             if (typeof x.rank !== 'number' || !(x.rank >= 1) || x.rank !== Math.floor(x.rank) || typeof x.score !== 'number' || !isFinite(x.score)) return;  /* Math.floor：無條件捨去成整數 */
             seen[x.game_id] = true;
@@ -60,7 +60,7 @@
             if (order[id] == null || seen[id] || typeof v !== 'number' || !isFinite(v)) return;
             played.push({ id: id, score: v });
         });
-        played.sort(function (a, b) {                   /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
+        played.sort(function (a, b) {
             var ra = recent[a.id] != null ? recent[a.id] : 1e6, rb = recent[b.id] != null ? recent[b.id] : 1e6;
             return (ra - rb) || (order[a.id] - order[b.id]);
         });
@@ -104,7 +104,7 @@
                 soundIco.innerHTML = global.UI.icon(on ? 'volume' : 'mute');
                 soundRow.classList.toggle('is-off', !on);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 soundRow.setAttribute('aria-checked', on ? 'true' : 'false');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
-                soundRow.setAttribute('aria-label', '音樂音效：' + (on ? '開' : '關'));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                soundRow.setAttribute('aria-label', '音樂音效：' + (on ? '開' : '關'));
             };
             soundRow.addEventListener('click', function () {
                 global.Sfx.setMuted(!global.Sfx.isMuted());
@@ -118,12 +118,12 @@
         function paint() {
             var st = LB.identityState(), nick = LB.getNick();
             nickEl.textContent = nick || '（還沒有暱稱）';     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-            nickEl.classList.toggle('set-nick--none', !nick);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            nickEl.classList.toggle('set-nick--none', !nick);
             var text = '', login = '';
             if (st === 'guest') { text = '成績進入世界前 30 名時，就能取暱稱。'; login = '我已有帳號，登入'; }
             else if (st === 'relogin') { text = '登入已經失效，請重新登入後再修改暱稱。'; login = '重新登入'; }
             else if (st === 'legacy') { text = '你的暱稱還沒有設密碼，按「修改暱稱」會先請你建立密碼。'; }
-            hint.textContent = text;                    /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            hint.textContent = text;
             hint.hidden = !text;
             loginBtn.textContent = login;
             loginBtn.hidden = !login;
@@ -199,7 +199,7 @@
                     h('div', { 'class': 'lb-msg__sub', text: '到「秒反應」玩一款吧！' })
                 ]));
             } else {
-                rows.ranked.forEach(function (r) { list.appendChild(rowEl(r)); });  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+                rows.ranked.forEach(function (r) { list.appendChild(rowEl(r)); });
                 if (rows.played.length) {
                     list.appendChild(h('div', { 'class': 'sc-sep', text: rows.ranked.length ? '還沒進世界前 ' + limit + ' 名' : '你玩過的遊戲' }));
                     rows.played.forEach(function (r) { list.appendChild(rowEl({ id: r.id, rank: null, score: r.score })); });

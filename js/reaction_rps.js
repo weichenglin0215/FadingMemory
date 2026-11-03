@@ -80,13 +80,13 @@
         var svg = kit.svg('svg', { 'class': 'rps-icon', viewBox: '0 0 100 100' });  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var st = { fill: color, stroke: 'rgba(0,0,0,0.45)', 'stroke-width': 3, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' };
         /* 小工具 el(標籤, 屬性)：建立形狀並自動合併共用的填色、外框 */
-        function el(tag, attrs, parent) { var a = {}; for (var k in st) a[k] = st[k]; for (var k2 in attrs) a[k2] = attrs[k2]; return kit.svg(tag, a, parent || svg); }  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        function el(tag, attrs, parent) { var a = {}; for (var k in st) a[k] = st[k]; for (var k2 in attrs) a[k2] = attrs[k2]; return kit.svg(tag, a, parent || svg); }
         if (kind === 'rock') {
             el('rect', { x: 20, y: 28, width: 60, height: 52, rx: 20 });
             [37, 50, 63].forEach(function (x) { kit.svg('line', { x1: x, y1: 30, x2: x, y2: 46, stroke: 'rgba(0,0,0,0.35)', 'stroke-width': 3, 'stroke-linecap': 'round' }, svg); });  /* forEach：對陣列的每個元素各做一次 */
             el('ellipse', { cx: 36, cy: 70, rx: 18, ry: 10, transform: 'rotate(-15 36 70)' });
         } else if (kind === 'paper') {
-            [[24, 22], [37, 12], [50, 8], [63, 14]].forEach(function (p) { el('rect', { x: p[0], y: p[1], width: 12, height: 46, rx: 6 }); });  /* forEach：對陣列的每個元素各做一次 */
+            [[24, 22], [37, 12], [50, 8], [63, 14]].forEach(function (p) { el('rect', { x: p[0], y: p[1], width: 12, height: 46, rx: 6 }); });
             el('rect', { x: 22, y: 44, width: 56, height: 40, rx: 16 });
             el('rect', { x: 6, y: 50, width: 12, height: 32, rx: 6, transform: 'rotate(-35 12 66)' });
         } else {
@@ -127,7 +127,7 @@
             var top = h('div', { 'class': 'rps-top' }, [halfC, mid, halfP]);
             var btns = h('div', { 'class': 'rps-btns' });
             root.appendChild(top);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-            root.appendChild(btns);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(btns);
             var btnEls = {};
             /* 建立三顆出拳按鈕（剪刀、石頭、布），pointerdown 一碰就出拳；kit.evT(e) 取事件發生的精確時間 */
             KINDS.forEach(function (k) {
@@ -142,7 +142,7 @@
             function meta() { ctx.setMeta(kit.meta(['連贏 ' + wins, fmtBest(Reaction.getBest(ID))])); }  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             function placeholder(txt) { return h('div', { 'class': 'rps-none', text: txt }); }
             function setComp(kind) {
-                compBody.innerHTML = '';                /* innerHTML = ''：把元素裡面的東西全部清掉 */
+                compBody.innerHTML = '';
                 if (kind) { compBody.appendChild(handIcon(kind, '#F6A39B')); compBody.appendChild(h('div', { 'class': 'rps-name', text: NAMES[kind] })); }
                 else compBody.appendChild(placeholder('？'));
             }
@@ -165,13 +165,13 @@
                 meta();
                 fill.style.width = '100%';
                 [].forEach.call(btns.children, function (b) { b.classList.remove('rps-btn--pick'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                compWho.textContent = '電腦　第 ' + level + ' 關';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                compWho.textContent = '電腦　第 ' + level + ' 關';
                 setComp(null); setMe(null, '');
                 /* 主控台印出電腦這回合的拳與延遲，方便驗證 */
                 try { console.info('[猜拳必贏] 第 ' + level + ' 關（第 ' + rounds + ' 回合）電腦已決定出：' + NAMES[comp] + '；0 之後電腦延遲 ' + delay.toFixed(3) + ' 秒才出（你看得到的緩衝 ' + bufferFor(level).toFixed(3) + ' 秒）'); } catch (e) { }
                 setMid('3'); Sfx.play('tick');          /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 /* 用 my.after 依序排：0.75 秒顯示 2、1.5 秒顯示 1、2.25 秒開放出拳 */
-                my.after(COUNT_MS, function () { setMid('2'); Sfx.play('tick'); });  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                my.after(COUNT_MS, function () { setMid('2'); Sfx.play('tick'); });
                 my.after(COUNT_MS * 2, function () { setMid('1'); Sfx.play('tick'); });
                 my.after(COUNT_MS * 3, function () { openWindow(delay); });
             }
@@ -191,7 +191,7 @@
                 if (delay <= 0.0005) { setComp(comp); Sfx.play('pop'); }
                 else R.compTimer = my.after(delay * 1000, function () { if (state === 'open') { setComp(comp); Sfx.play('pop'); } });
                 /* 1.0 秒到了玩家還沒出拳 → 慢出，輸 */
-                R.winTimer = my.after(WINDOW_MS, function () { if (state === 'open') { lp.stop(); press(null, performance.now()); } });  /* performance.now()：高精度的時間（毫秒），計時用 */
+                R.winTimer = my.after(WINDOW_MS, function () { if (state === 'open') { lp.stop(); press(null, performance.now()); } });
             }
 
             /* 玩家按了某個拳（kind 為 null 代表超時沒按） */
@@ -199,7 +199,7 @@
                 if (state === 'count') {
                     /* 0 出現之前就按：搶拳犯規 */
                     /* 0 出現之前就按：搶拳犯規 */
-                    if (kind) { state = 'reveal'; fill.style.width = '0%'; btnEls[kind].classList.add('rps-btn--pick'); reveal(kind, 'early'); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                    if (kind) { state = 'reveal'; fill.style.width = '0%'; btnEls[kind].classList.add('rps-btn--pick'); reveal(kind, 'early'); }
                     return;
                 }
                 if (state !== 'open') return;
@@ -220,7 +220,7 @@
                 /* 贏 */
                 if (res > 0) {
                     wins++;
-                    if (Reaction.setBest(ID, wins, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                    if (Reaction.setBest(ID, wins, function (v, b) { return v > b; })) newRec = true;
                     meta();
                     Sfx.play('win');
                     my.after(G.dev.reveal || REVEAL_MS, play);

@@ -109,7 +109,7 @@
         return (sa / ra.length + sb / rb.length) / 2;
     }
     /* 相似度（％，0～100）：100 × (1 − 平均距離 ÷ D0) */
-    function similarity(target, drawn) { return 100 * kit.clamp(1 - chamfer(target, drawn) / D0, 0, 1); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
+    function similarity(target, drawn) { return 100 * kit.clamp(1 - chamfer(target, drawn) / D0, 0, 1); }
 
     /* ── 曲線產生器：每個回傳「還沒放進長方格」的折線（原始座標），由 fit() 縮放、置中 ── */
     function arcPts(cx, cy, r, a0, a1, n) {                           /* 圓弧：角度用「數學角度」（逆時針為正），畫面 y 向下所以 y 取負 */
@@ -147,7 +147,7 @@
         var pts = [], s = 0, n = ctrl.length;
         function at(i) { return ctrl[Math.max(0, Math.min(n - 1, i))]; }
         for (var i = 0; i < n - 1; i++) {
-            var p0 = at(i - 1), p1 = at(i), p2 = at(i + 1), p3 = at(i + 2), m = Math.max(2, Math.ceil(kit.dist(p1.x, p1.y, p2.x, p2.y) / STEP));  /* Math.ceil：無條件進位成整數 */
+            var p0 = at(i - 1), p1 = at(i), p2 = at(i + 1), p3 = at(i + 2), m = Math.max(2, Math.ceil(kit.dist(p1.x, p1.y, p2.x, p2.y) / STEP));
             for (var j = (i === 0 ? 0 : 1); j <= m; j++) {
                 var t = j / m, t2 = t * t, t3 = t2 * t;
                 var x = 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
@@ -168,7 +168,7 @@
             (grid[key] = grid[key] || []).push(i);
         }
         for (i = 0; i < pts.length; i++) {
-            var a = pts[i], cx = Math.floor(a.x / cell), cy = Math.floor(a.y / cell);  /* Math.floor：無條件捨去成整數 */
+            var a = pts[i], cx = Math.floor(a.x / cell), cy = Math.floor(a.y / cell);
             for (var dx = -1; dx <= 1; dx++) for (var dy = -1; dy <= 1; dy++) {
                 var arr = grid[(cx + dx) + ',' + (cy + dy)];
                 if (!arr) continue;
@@ -184,7 +184,7 @@
     }
     /* 產生一條繩子曲線：bends＝轉折點個數；d＝難度 0～1（上下打亂的幅度隨難度增加）。回傳「還沒放進長方格」的原始座標（中心在原點），做不出來回傳 null */
     function genRope(bends, rand, d) {
-        var halfW = (PW - 2 * MG) / 2, H = PH - 2 * MG, k = Math.max(1, Math.round(bends)), yjit = kit.lerp(ROPE_YJIT[0], ROPE_YJIT[1], d == null ? 0.5 : d);  /* Math.round：四捨五入成整數 */
+        var halfW = (PW - 2 * MG) / 2, H = PH - 2 * MG, k = Math.max(1, Math.round(bends)), yjit = kit.lerp(ROPE_YJIT[0], ROPE_YJIT[1], d == null ? 0.5 : d);
         var box = { x0: -halfW * 1.2, x1: halfW * 1.2, y0: -0.06 * H, y1: 1.06 * H };
         for (var attempt = 0; attempt < 80; attempt++) {
             var u0 = kit.randFloat(-0.5, 0.5, rand), u1 = kit.randFloat(-0.5, 0.5, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
@@ -194,7 +194,7 @@
                 for (tries = 0; tries < 40 && !placed; tries++) {
                     var v = kit.clamp(i * spacing + (rand() * 2 - 1) * yjit * spacing, 0.03, 0.97);
                     if (rand() < 0.85) side = -side;                              /* 大多左右交替，偶爾連續同一邊 */
-                    var u = side * kit.randFloat(0.4, 1, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+                    var u = side * kit.randFloat(0.4, 1, rand);
                     if (i > 1 && Math.abs(u - prevU) < ROPE_SWING) continue;  /* Math.abs：取絕對值（去掉負號） */
                     turn.push({ u: u, v: v });
                     if (polyClear(ropePoly(u0, u1, turn, halfW, H), ROPE_CLEAR)) { placed = true; prevU = u; } else turn.pop();
@@ -271,7 +271,7 @@
     }
     function genClip() {
         var seg = [];
-        function add(a) { a.forEach(function (p) { seg.push(p); }); }  /* forEach：對陣列的每個元素各做一次 */
+        function add(a) { a.forEach(function (p) { seg.push(p); }); }
         add([{ x: 16, y: 60 }, { x: 16, y: -100 }]);
         add(arcPts(0, -100, 16, 0, Math.PI, 20));
         add([{ x: -16, y: -100 }, { x: -16, y: 110 }]);
@@ -287,13 +287,13 @@
         raw.forEach(function (p) { minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x); minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y); });
         var bw = Math.max(1, maxX - minX), bh = Math.max(1, maxY - minY);
         var s = Math.min(1, (PW - 2 * MG) / bw, (PH - 2 * MG) / bh), cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
-        var pts = raw.map(function (p) { return { x: PW / 2 + (p.x - cx) * s, y: PH / 2 + (p.y - cy) * s }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        var pts = raw.map(function (p) { return { x: PW / 2 + (p.x - cx) * s, y: PH / 2 + (p.y - cy) * s }; });
         return densify(pts, STEP);
     }
     /* 這一關的「彎數」（V1.34 玩家意見：第 3 關突然彎了十個彎、第 4 關又變簡單＝難度忽高忽低）：
        彎數只由關卡決定（BENDS[0] → BENDS[1] 線性），每一種曲線都照這個數字出（繩子曲線的轉折點數、波浪的半個波數、直角轉彎與閃電的轉角數），
        所以不管抽到哪一種，越後面的關卡一定彎得越多，不會忽高忽低；螺旋與迴紋針是固定造型，只在後面的關卡偶爾出現。 */
-    function bendsFor(level) { return Math.round(kit.ramp(level, BENDS[0], BENDS[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function bendsFor(level) { return Math.round(kit.ramp(level, BENDS[0], BENDS[1], RAMP_LEVELS)); }
     /* 依種類產生一條原始曲線（d＝難度 0～1、b＝彎數） */
     function genByType(type, d, b, rand) {
         return type === 'rope' ? genRope(b, rand, d) : type === 'scurve' ? genScurve(d, rand) : type === 'wave' ? genWave(d, rand, b) : type === 'right' ? genRight(d, rand, b) :
@@ -306,7 +306,7 @@
     function makeCurve(level, rand, avoidType) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var d = kit.ramp(level, 0, 1, RAMP_LEVELS), b = bendsFor(level), types = typesFor(level);
-        if (avoidType && avoidType !== 'rope' && types.length > 1) types = types.filter(function (t) { return t !== avoidType; });  /* filter：留下符合條件的元素，回傳新陣列 */
+        if (avoidType && avoidType !== 'rope' && types.length > 1) types = types.filter(function (t) { return t !== avoidType; });
         var others = types.filter(function (t) { return t !== 'rope'; });
         /* 新解鎖的種類出現機率高一點 */
         var newest = others.slice().sort(function (x, y) { return TYPE_RANGE[y][0] - TYPE_RANGE[x][0]; })[0];  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
@@ -318,7 +318,7 @@
             /* 隨機左右、上下翻轉；除了螺旋（起點一定在外圈），也隨機把起點終點對調 */
             if (rand() < 0.5) pts = pts.map(function (p) { return { x: PW - p.x, y: p.y }; });
             if (rand() < 0.5) pts = pts.map(function (p) { return { x: p.x, y: PH - p.y }; });
-            if (type !== 'spiral' && rand() < 0.5) pts = pts.slice().reverse();  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+            if (type !== 'spiral' && rand() < 0.5) pts = pts.slice().reverse();
             var len = polyLen(pts), a = pts[0], e = pts[pts.length - 1];
             if (len < (LEN_MIN_TYPE[type] || LEN_RANGE[0]) || len > LEN_RANGE[1] || kit.dist(a.x, a.y, e.x, e.y) < MIN_SEP) continue;
             return { type: type, pts: pts, start: a, end: e, len: len, bends: HAS_BENDS[type] ? b : null };
@@ -387,8 +387,8 @@
         var L = panel('L'), R = panel('R');
         var labL = h('div', { 'class': 'copycurve-lab', text: '照這條畫' }), labR = h('div', { 'class': 'copycurve-lab', text: '你畫在這裡' });
         labL.style.left = '0px'; labL.style.width = PW + 'px'; labR.style.left = (W - PW) + 'px'; labR.style.width = PW + 'px';
-        stage.appendChild(labL); stage.appendChild(labR);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-        kit.svg('path', { d: pathD(q.pts), 'class': 'copycurve-curve' }, L.svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        stage.appendChild(labL); stage.appendChild(labR);
+        kit.svg('path', { d: pathD(q.pts), 'class': 'copycurve-curve' }, L.svg);
         function markers(svg) {
             return { s: kit.svg('circle', { cx: q.start.x, cy: q.start.y, r: 13, 'class': 'copycurve-start' }, svg), e: kit.svg('circle', { cx: q.end.x, cy: q.end.y, r: 13, 'class': 'copycurve-end' }, svg) };
         }
@@ -409,9 +409,9 @@
             var path = anchor === 'end' ? pts.slice().reverse() : pts;
             var raw = similarity(q.pts, path), sim = Leaderboard.fake4(raw), ok = sim >= need;
             console.log('[照抄曲線] 相似度 ' + sim.toFixed(4) + '％（真實 ' + raw.toFixed(6) + '），要求 ' + need.toFixed(4) + '％ → ' + (ok ? '過關' : '沒過'));
-            drawn.setAttribute('d', pathD(pts));        /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+            drawn.setAttribute('d', pathD(pts));
             msg.textContent = '兩張圖疊在一起…';               /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-            stage.classList.add('copycurve-stage--merge');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            stage.classList.add('copycurve-stage--merge');
             api.after(1100, function () {               /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                 msg.innerHTML = '相似度 <b class="' + (ok ? 'qz-ok' : 'qz-bad') + '">' + sim.toFixed(4) + '％</b>（要求 ' + need.toFixed(4) + '％）';
                 kit.flash(stage, ok, api.my);           /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
@@ -423,14 +423,14 @@
         R.el.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (locked || api.over || cur) return;
             var p = kit.localPt(e, R.svg), ds = kit.dist(p.x, p.y, q.start.x, q.start.y), de = kit.dist(p.x, p.y, q.end.x, q.end.y);
-            if (Math.min(ds, de) > START_R) { msg.textContent = '請先按在黃點或水藍點上，再開始畫'; return; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            if (Math.min(ds, de) > START_R) { msg.textContent = '請先按在黃點或水藍點上，再開始畫'; return; }
             e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             try { R.el.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             cur = { anchor: ds <= de ? 'start' : 'end', pts: [ds <= de ? { x: q.start.x, y: q.start.y } : { x: q.end.x, y: q.end.y }], id: e.pointerId };
             msg.textContent = '一路畫到另一個端點，放開手指才判定';
             render();
         });
-        R.el.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        R.el.addEventListener('pointermove', function (e) {
             if (!cur || e.pointerId !== cur.id || locked) return;
             var evs = (e.getCoalescedEvents && e.getCoalescedEvents().length) ? e.getCoalescedEvents() : [e];
             for (var i = 0; i < evs.length; i++) {
@@ -462,7 +462,7 @@
         api.timer(timeMs(level), function () {          /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
             if (locked || api.over) return;
             locked = true; cur = null;
-            api.fail({ delay: 1800, lines: ['時間到！還沒畫完', '曲線種類：' + TYPE_NAME[q.type]] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
+            api.fail({ delay: 1800, lines: ['時間到！還沒畫完', '曲線種類：' + TYPE_NAME[q.type]] });
         });
         if (level === 1 && kit.once('copycurve.hint')) kit.hintOn(stage, null, { mode: 'drag', x: W - PW + q.start.x, y: top + q.start.y, dx: q.end.x - q.start.x, dy: q.end.y - q.start.y, delay: 600, text: '請照著左邊的線拖曳' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 

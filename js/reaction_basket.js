@@ -46,7 +46,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function kAt(level) { return Math.round(kit.ramp(level, K[0], K[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function trapMinAt(level) { return Math.round(kit.ramp(level, TRAP_MIN[0], TRAP_MIN[1], RAMP_LEVELS)); }  /* Math.round：四捨五入成整數 */
-    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
     function priceRange(level) { return level <= 5 ? [10, 60] : [5, 99]; }
     /* 所有非空子集合的合計：回傳 [{mask, sum}] */
     function subsets(prices) {
@@ -65,16 +65,16 @@
         var pool = []; for (var p = r[0]; p <= r[1]; p++) pool.push(p);
         for (var t = 0; t < TRIES; t++) {
             /* 先決定答案（k 個價格），總價 ＝ 它們的和；再決定其他按鈕：一定比總價小，個位數有機會跟答案的一樣 */
-            var ans = kit.shuffle(pool, rand).slice(0, k), total = 0, taken = {}, digs = [];  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+            var ans = kit.shuffle(pool, rand).slice(0, k), total = 0, taken = {}, digs = [];
             ans.forEach(function (v) { total += v; taken[v] = true; digs.push(v % 10); });  /* forEach：對陣列的每個元素各做一次 */
             var cands = pool.filter(function (v) { return v < total && !taken[v]; });  /* filter：留下符合條件的元素，回傳新陣列 */
             if (cands.length < nd) continue;
             var flags = [], i;
             for (i = 0; i < nd; i++) flags.push(rand() < DIGIT_P);
             if (nd >= 2) {                                                                  /* 不能全部都做、也不能全部都沒做（六個按鈕會明顯分成兩組，或完全沒有迷惑效果） */
-                var nf = flags.filter(function (x) { return x; }).length;  /* filter：留下符合條件的元素，回傳新陣列 */
+                var nf = flags.filter(function (x) { return x; }).length;
                 if (nf === nd) flags[Math.floor(rand() * nd)] = false;  /* Math.floor：無條件捨去成整數 */
-                else if (nf === 0) flags[Math.floor(rand() * nd)] = true;  /* Math.floor：無條件捨去成整數 */
+                else if (nf === 0) flags[Math.floor(rand() * nd)] = true;
             }
             var decoys = [];
             for (i = 0; i < nd; i++) {
@@ -85,8 +85,8 @@
             }
             if (decoys.length < nd) continue;
             var items = kit.shuffle(ans.map(function (v) { return { p: v, a: true }; }).concat(decoys.map(function (v) { return { p: v, a: false }; })), rand);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
-            var prices = items.map(function (x) { return x.p; }), mask = 0;  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
-            items.forEach(function (x, j) { if (x.a) mask |= 1 << j; });  /* forEach：對陣列的每個元素各做一次 */
+            var prices = items.map(function (x) { return x.p; }), mask = 0;
+            items.forEach(function (x, j) { if (x.a) mask |= 1 << j; });
             var sorted = prices.slice().sort(function (x, y) { return x - y; }), plausible = true;  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
             for (i = 0; i < 6; i++) { var other = prices[i] === sorted[0] ? sorted[1] : sorted[0]; if (prices[i] + other > total) plausible = false; }
             if (!plausible) continue;                                                      /* 每個按鈕都要有機會出現在答案裡，不能一看就知道是廢的 */
@@ -94,7 +94,7 @@
             if (eq.length !== 1) continue;
             var near = subs.filter(function (s) { var d = Math.abs(s.sum - total); return d >= 1 && d <= 3; }).length;  /* Math.abs：取絕對值（去掉負號） */
             if (near < need) continue;
-            return { names: pick.map(function (x) { return x[1]; }), emojis: pick.map(emojiOf), prices: prices, total: total, mask: mask, k: k, near: near, sameDigit: decoys.filter(function (v) { return digs.indexOf(v % 10) >= 0; }).length };  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+            return { names: pick.map(function (x) { return x[1]; }), emojis: pick.map(emojiOf), prices: prices, total: total, mask: mask, k: k, near: near, sameDigit: decoys.filter(function (v) { return digs.indexOf(v % 10) >= 0; }).length };
         }
         var fp = [38, 52, 67, 45, 29, 83], fm = 1 | 2 | 8;     /* 保底：38＋52＋45 ＝ 135，唯一 */
         return { names: pick.map(function (x) { return x[1]; }), emojis: pick.map(emojiOf), prices: fp, total: 135, mask: fm, k: 3, near: 0, sameDigit: 0 };
@@ -158,8 +158,8 @@
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() { tiles.forEach(function (el, i) { el.classList.toggle('basket-tile--on', !!(mask & (1 << i))); }); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         function toggle(i) { if (api.over) return; hideHint(); mask ^= 1 << i; Sfx.play('click'); paint(); }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
-        kit.onTap(bClear, function () { if (api.over) return; mask = 0; Sfx.play('click'); paint(); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
-        function ans() { tiles.forEach(function (el, i) { if (q.mask & (1 << i)) el.classList.add('basket-tile--ans'); }); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+        kit.onTap(bClear, function () { if (api.over) return; mask = 0; Sfx.play('click'); paint(); });
+        function ans() { tiles.forEach(function (el, i) { if (q.mask & (1 << i)) el.classList.add('basket-tile--ans'); }); }
         function pay() {
             if (api.over) return;
             hideHint();
@@ -172,7 +172,7 @@
             var lines = ['你選的合計是 ' + sum + ' 元，不是 ' + q.total + ' 元', '正確的組合：' + maskText(q, q.mask), '一共有 ' + q.near + ' 種合計只差 1～3 元的組合，很容易選錯'];
             var left = api.lose({ lines: lines });
             if (left > 0) {
-                info.textContent = '合計 ' + sum + ' 元，不對喔（還有 ' + left + ' 條命）'; info.classList.add('basket-info--bad');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                info.textContent = '合計 ' + sum + ' 元，不對喔（還有 ' + left + ' 條命）'; info.classList.add('basket-info--bad');
                 grid.classList.add('basket-grid--shake'); api.after(450, function () { grid.classList.remove('basket-grid--shake'); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                 mask = 0; paint();
             } else { info.textContent = '正確答案：' + maskText(q, q.mask); info.classList.add('basket-info--bad'); ans(); }

@@ -181,14 +181,14 @@
     /* SimilarChars.chars：把符合條件的字群攤平成一串字（同一組的字排在一起、不重複） */
     function chars(opt) {
         var out = [];
-        groups(opt).forEach(function (g) { g.chars.forEach(function (c) { if (out.indexOf(c) < 0) out.push(c); }); });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+        groups(opt).forEach(function (g) { g.chars.forEach(function (c) { if (out.indexOf(c) < 0) out.push(c); }); });
         return out;
     }
     /* 跟 ch 同一組的其他字（可能來自好幾組；越前面的組、越前面的字排越前面） */
     /* SimilarChars.near：找跟字 ch 同組的其他字（一個字可能在好幾組，越前面的組、越前面的字排越前面） */
     function near(ch) {
         var out = [];
-        GROUPS.forEach(function (g) {                   /* forEach：對陣列的每個元素各做一次 */
+        GROUPS.forEach(function (g) {
             if (g.chars.indexOf(ch) < 0) return;
             g.chars.forEach(function (c) { if (c !== ch && out.indexOf(c) < 0) out.push(c); });
         });
@@ -199,7 +199,7 @@
     /* 每一組最像的前兩個字 */
     /* SimilarChars.pairs：每一組最像的前兩個字，回傳 [{ a, b, st：兩字平均筆劃 }] */
     function pairs(opt) {
-        return groups(opt).map(function (g) { return { a: g.chars[0], b: g.chars[1], st: (STROKES[g.chars[0]] + STROKES[g.chars[1]]) / 2 }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        return groups(opt).map(function (g) { return { a: g.chars[0], b: g.chars[1], st: (STROKES[g.chars[0]] + STROKES[g.chars[1]]) / 2 }; });
     }
 
     /* 把查詢函式交出去：遊戲檔案用 SimilarChars.xxx() 呼叫；RAW 也一併交出，單元測試要檢查資料用 */

@@ -40,7 +40,7 @@
     function prog(n) { return Math.min(1, Math.max(0, n / RAMP_Q)); }
     function lerp(pair, n) { return pair[0] + (pair[1] - pair[0]) * prog(n); }
     function timeMs(n) { return Math.round(lerp(TIME_S, n) * 1000); }  /* Math.round：四捨五入成整數 */
-    function maxOrigFor(n) { return Math.round(lerp(MAX_ORIG, n)); }  /* Math.round：四捨五入成整數 */
+    function maxOrigFor(n) { return Math.round(lerp(MAX_ORIG, n)); }
     function pOddFor(n) { return Math.round(lerp(P_ODD, n) * 1000) / 1000; }
     /* 折數 r ＝ 付幾 %：1～9 折＝10%～90%；兩位數的折（75、85、95、65）就是那個 % */
     function pctOf(r) { return r < 10 ? r * 10 : r; }
@@ -102,7 +102,7 @@
 
         var field = h('div', { 'class': 'discount-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-        var tag = h('div', { 'class': 'discount-tag' }); field.appendChild(tag);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var tag = h('div', { 'class': 'discount-tag' }); field.appendChild(tag);
         var info = h('div', { 'class': 'qz-note discount-info', text: '' }); field.appendChild(info);
 
         function ask() {
@@ -129,21 +129,21 @@
                 info.textContent = formula(q); info.classList.add('discount-info--ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 api.after(520, ask); return;            /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
             }
-            grid.btns[k].classList.add('discount-btn--bad'); fail(r);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            grid.btns[k].classList.add('discount-btn--bad'); fail(r);
         }
         /* 結束：寫出算式；選的是互補的折數就特別說明 */
         function fail(r) {
             if (api.over || phase === 'end') return;
             phase = 'end'; api.stopTimer();
-            var k = q.buttons.indexOf(q.r); grid.btns[k].classList.add('discount-btn--ok');  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+            var k = q.buttons.indexOf(q.r); grid.btns[k].classList.add('discount-btn--ok');
             var why = whyText(q, r);
-            info.textContent = why; info.classList.add('discount-info--bad');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            info.textContent = why; info.classList.add('discount-info--bad');
             kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
             api.fail({ delay: 4200, lines: [why, '特價 ÷ 原價 ＝ 付幾成：' + q.sale + ' ÷ ' + q.orig + ' ＝ ' + (q.sale / q.orig), '打 ' + q.label + '＝付原價的 ' + q.pct + '%（不是減 ' + q.pct + '%）'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：點正確的按鈕（最多 SOLVE_CAP 題）／點一個錯的；可重複呼叫 */
         api.solve = function () { if (phase !== 'ask' || count >= SOLVE_CAP) return; answer(q.r); };
-        api.wrong = function () { if (phase !== 'ask') return; var comp = complementOf(q.r), w = (comp != null && q.buttons.indexOf(comp) >= 0) ? comp : q.buttons.filter(function (b) { return b !== q.r; })[0]; answer(w); };  /* filter：留下符合條件的元素，回傳新陣列 */
+        api.wrong = function () { if (phase !== 'ask') return; var comp = complementOf(q.r), w = (comp != null && q.buttons.indexOf(comp) >= 0) ? comp : q.buttons.filter(function (b) { return b !== q.r; })[0]; answer(w); };
     }
 
     /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */

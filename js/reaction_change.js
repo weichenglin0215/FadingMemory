@@ -41,7 +41,7 @@
     function prog(n) { return Math.min(1, Math.max(0, n / RAMP_Q)); }
     function lerp(pair, n) { return pair[0] + (pair[1] - pair[0]) * prog(n); }
     function maxPriceFor(n) { return Math.round(lerp(MAX_PRICE, n)); }  /* Math.round：四捨五入成整數 */
-    function minPriceFor(n) { return Math.max(15, Math.round(maxPriceFor(n) * MIN_FRAC)); }  /* Math.round：四捨五入成整數 */
+    function minPriceFor(n) { return Math.max(15, Math.round(maxPriceFor(n) * MIN_FRAC)); }
     function timeMs(n) { return Math.round(lerp(TIME_S, n) * 1000); }
     function borrowMinFor(n) { return Math.round(lerp(BORROW_MIN, n)); }
     function pExtraFor(n) { return n >= EXTRA_FROM ? Math.round(lerp(P_EXTRA, n) * 1000) / 1000 : 0; }
@@ -68,7 +68,7 @@
             var price = kit.randInt(lo, hi, rand), cands = NOTES.filter(function (v) { return v >= price + 10; }).slice(0, n < 20 ? 2 : 3);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             if (!cands.length) continue;
             var base = kit.pick(cands, rand), extra = 0;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
-            if (rand() < pExtraFor(n)) { extra = kit.randInt(1, 49, rand); while ((base + extra - price) % 5 !== 0) extra++; }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+            if (rand() < pExtraFor(n)) { extra = kit.randInt(1, 49, rand); while ((base + extra - price) % 5 !== 0) extra++; }
             var paid = base + extra, change = paid - price, br = countBorrows(paid, price);
             best = { n: n, price: price, base: base, extra: extra, paid: paid, change: change, digits: String(change).length, borrows: br };
             if (br >= need) return best;
@@ -114,7 +114,7 @@
 
         var field = h('div', { 'class': 'change-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-        var bill = h('div', { 'class': 'change-bill' }); field.appendChild(bill);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var bill = h('div', { 'class': 'change-bill' }); field.appendChild(bill);
         var lcd = h('div', { 'class': 'change-lcd' }), lcdLab = h('div', { 'class': 'change-lcd__lab', text: '要找' }), lcdNum = h('div', { 'class': 'change-lcd__num', text: '' }); lcd.appendChild(lcdLab); lcd.appendChild(lcdNum); field.appendChild(lcd);
         var info = h('div', { 'class': 'qz-note change-info', text: '' }); field.appendChild(info);
         var drawer = h('div', { 'class': 'change-drawer', text: '叮！' }); field.appendChild(drawer);
@@ -128,7 +128,7 @@
         /* 出一題 */
         function ask() {
             if (api.over) return;
-            q = makeQuestion(count, api.rand); typed = ''; paintLcd(); phase = 'ask'; drawer.classList.remove('change-drawer--open');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            q = makeQuestion(count, api.rand); typed = ''; paintLcd(); phase = 'ask'; drawer.classList.remove('change-drawer--open');
             bill.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             bill.appendChild(h('div', { 'class': 'change-bill__l', text: '客人買了 ' }));
             bill.lastChild.appendChild(h('span', { 'class': 'change-bill__n', text: String(q.price) })); bill.lastChild.appendChild(document.createTextNode(' 元'));
@@ -174,7 +174,7 @@
             api.fail({ delay: 4200, lines: [why, '直式減法：' + q.paid + ' ' + MINUS + ' ' + q.price + ' ＝ ' + q.change + '（借位 ' + q.borrows + ' 次）' + (q.extra ? '；客人多給了 ' + q.extra + ' 元零錢（' + q.base + ' ＋ ' + q.extra + '）' : '')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：把正確答案一個數字一個數字按進去（最多 SOLVE_CAP 題）／按一個錯的；可重複呼叫 */
-        api.solve = function () { if (phase !== 'ask' || count >= SOLVE_CAP) return; String(q.change).split('').forEach(function (d) { press(d); }); };  /* forEach：對陣列的每個元素各做一次 */
+        api.solve = function () { if (phase !== 'ask' || count >= SOLVE_CAP) return; String(q.change).split('').forEach(function (d) { press(d); }); };
         api.wrong = function () { if (phase !== 'ask') return; var w = String(q.change + 1).split(''); w.forEach(function (d) { press(d); }); if (phase === 'ask') press('✓'); };
     }
 

@@ -56,9 +56,9 @@
     function pairProb(level) { return level < PAIR_FROM ? 0 : kit.ramp(level, PAIR_P[0], PAIR_P[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 這一關手上幾張牌：線性算出 5～14，再取最接近的合法張數（沒有一對：3 的倍數減 1＝5、8、11、14；有一對：3 的倍數加 1＝4、7、10、13） */
     function tilesFor(level, pair) {
-        var t = kit.ramp(level, TILES[0], TILES[1], RAMP_LEVELS);  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+        var t = kit.ramp(level, TILES[0], TILES[1], RAMP_LEVELS);
         if (pair) { var k2 = Math.round((t - 1) / 3); return Math.max(4, Math.min(13, k2 * 3 + 1)); }  /* Math.round：四捨五入成整數 */
-        var k = Math.round((t - 2) / 3);                /* Math.round：四捨五入成整數 */
+        var k = Math.round((t - 2) / 3);
         return Math.max(5, Math.min(14, k * 3 + 2));
     }
     function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
@@ -129,7 +129,7 @@
     /* 「死牌陷阱」：手上已經有 MAX_SAME 張、如果可以補第 5 張就湊得起來的牌（規則上不能補，很多人會忘記數張數） */
     function deadTraps(hand, needPair) {
         var out = [], base = countsOf(hand);
-        for (var x = 1; x <= 9; x++) { if (base[x] < MAX_SAME) continue; var c = base.slice(); c[x]++; if (canGroup(c, needPair)) out.push(x); }  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        for (var x = 1; x <= 9; x++) { if (base[x] < MAX_SAME) continue; var c = base.slice(); c[x]++; if (canGroup(c, needPair)) out.push(x); }
         return out;
     }
     /* 誘餌牌：補了它之後，能分出「比整排少一組」的分組、而且它自己有參加，但湊不齊整排（它不是答案，也不是死牌） */
@@ -137,7 +137,7 @@
         var full = needPair ? (hand.length - 1) / 3 : (hand.length + 1) / 3, out = [], base = countsOf(hand);
         win = win || winners(hand, needPair);
         for (var y = 1; y <= 9; y++) {
-            if (win.indexOf(y) >= 0 || base[y] >= MAX_SAME) continue;  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+            if (win.indexOf(y) >= 0 || base[y] >= MAX_SAME) continue;
             var r = bestGroups(hand.concat([y]), y);
             if (r.n >= full - 1) out.push(y);
         }
@@ -151,7 +151,7 @@
             var c = countsOf([]), ok = true, lo = kit.randInt(1, 9 - window + 1, rand), hi = lo + window - 1;  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             for (var k = 0; k < g && ok; k++) {
                 if (rand() < pSeq) {
-                    var s = kit.randInt(lo, Math.min(hi, 7), rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+                    var s = kit.randInt(lo, Math.min(hi, 7), rand);
                     if (s > 7 || c[s] >= cap || c[s + 1] >= cap || c[s + 2] >= cap) ok = false; else { c[s]++; c[s + 1]++; c[s + 2]++; }
                 } else {
                     var v = kit.randInt(lo, hi, rand);
@@ -184,7 +184,7 @@
                 x = kit.pick(fives, rand);              /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             } else {
                 if (c.some(function (n) { return n > MAX_SAME; })) continue;  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
-                x = kit.pick(all, rand);                /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+                x = kit.pick(all, rand);
             }
             var hand = all.slice(); hand.splice(hand.indexOf(x), 1);
             var win = winners(hand, pair);
@@ -193,7 +193,7 @@
             if (near.length < need) continue;                                          /* 誘餌夠多 */
             var dead = deadTraps(hand, pair), ways = 0, hc = countsOf(hand);
             if (dead5 && dead.indexOf(x) < 0) continue;                                 /* 要的就是「補第 5 張才湊得起來」的陷阱 */
-            win.forEach(function (w) { var cc = hc.slice(); cc[w]++; ways += countWays(cc, pair); });  /* forEach：對陣列的每個元素各做一次 */
+            win.forEach(function (w) { var cc = hc.slice(); cc[w]++; ways += countWays(cc, pair); });
             got++;
             var score = ways + 3 * near.length + 4 * dead.length;
             if (!best || score > best.score) best = { hand: hand, winners: win, near: near, dead: dead, pair: pair, ways: ways, tiles: m, target: tgt, level: level, score: score };
@@ -234,7 +234,7 @@
             ]);
             row.appendChild(el); cells.push(el);        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         });
-        parent.appendChild(row);                        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        parent.appendChild(row);
         return row;
     }
     /* 把「手牌＋補的一張」排序之後，找出每個分組、補的那張各在第幾個位置（同樣的牌，補的那張排在同數字的最後面） */
@@ -249,7 +249,7 @@
         return { tiles: tiles, addedIdx: addedIdx, groupIdx: gIdx, usedIdx: used };
     }
     function numeralsOf(list) { return list.map(function (t) { return NUMERALS[t - 1]; }).join('、'); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
-    function groupText(g) { return g.map(function (t) { return NUMERALS[t - 1]; }).join(''); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+    function groupText(g) { return g.map(function (t) { return NUMERALS[t - 1]; }).join(''); }
     /* 補了 x 之後怎麼湊成組的文字：「一二三　四五六」（有一對時最後加「　對 七七」） */
     function decompText(hand, x, pair) {
         var c = countsOf(hand); c[x]++;
@@ -284,13 +284,13 @@
             keys.appendChild(b); keyEls.push(b);
         })(v);
         stage.appendChild(keys);
-        kit.onTap(go, function () { judge(); });        /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        kit.onTap(go, function () { judge(); });
         function chosen() { var out = []; for (var t = 1; t <= 9; t++) if (sel[t]) out.push(t); return out; }
         function refresh() {
             var n = chosen().length;
             go.disabled = n === 0;
             go.textContent = n ? '我選好了（選了 ' + n + ' 張）' : '我選好了';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-            note.textContent = level <= SHOW_COUNT_UNTIL ? '答案共 ' + W.length + ' 張' : '答案可能不只一張，要全部找出來';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            note.textContent = level <= SHOW_COUNT_UNTIL ? '答案共 ' + W.length + ' 張' : '答案可能不只一張，要全部找出來';
         }
         refresh();
         function toggle(v) {
@@ -310,7 +310,7 @@
             var ok = !missed.length && !extra.length;
             keyEls.forEach(function (b, i) {
                 var t = i + 1;
-                b.disabled = true; b.classList.remove('mahjong3-key--sel');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                b.disabled = true; b.classList.remove('mahjong3-key--sel');
                 if (isWin[t] && sel[t]) b.classList.add('mahjong3-key--ok');
                 else if (isWin[t]) b.classList.add('mahjong3-key--miss');
                 else if (sel[t]) b.classList.add('mahjong3-key--bad');
@@ -345,7 +345,7 @@
             }
             lines.push((picks.length ? '你選了 ' + picks.length + ' 張' : '時間到，你還沒選') + (missed.length ? '，漏了「' + numeralsOf(missed) + '」' : '') + (extra.length ? '，多選了「' + numeralsOf(extra) + '」' : ''));
             lines.push('正確答案共 ' + W.length + ' 張：' + numeralsOf(W));
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({ delay: 3200, lines: lines });    /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：api.solve 把全部答案點起來再按「我選好了」；api.wrong 只選一張不是答案的牌（九張全是答案就什麼都不選） */

@@ -150,10 +150,10 @@
                 s.style.width = w + 'px'; s.style.height = BAR_H + 'px';
                 /* 一開始蔥片就在刀口左邊、蔥條的位置 */
                 s.style.left = (KNIFE_X - w) + 'px'; s.style.top = barY + 'px';
-                board.appendChild(s);                   /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+                board.appendChild(s);
                 /* reach：刀子左邊可以飛多遠；dx 是水平飛行距離（reach 的 40%～95%） */
                 var reach = KNIFE_X - 36 - w;
-                var dx = -(kit.randFloat(0.4, 0.95) * reach);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+                var dx = -(kit.randFloat(0.4, 0.95) * reach);
                 /* landY 落地的高度（蔥條下方到砧板底部之間隨機） */
                 var landY = kit.randFloat(barY + BAR_H + 24, FH - BAR_H - 14);
                 /* dy 垂直位移；arc 往上跳的高度；rot 轉動角度 */
@@ -192,10 +192,10 @@
                 if (len == null) return;
                 /* 刀子往下壓一下的動畫（加 class，70 毫秒後移除） */
                 knife.classList.add('scallion-knife--down');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                my.after(70, function () { knife.classList.remove('scallion-knife--down'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                my.after(70, function () { knife.classList.remove('scallion-knife--down'); });
                 spawnSlice(len);
-                Sfx.play('click');                      /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
-                count.textContent = String(cutter.cuts());  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                Sfx.play('click');
+                count.textContent = String(cutter.cuts());
                 placeBar(0);
             }
 
@@ -205,7 +205,7 @@
                 state = 'done';
                 tb.set(0);
                 var n = cutter.cuts();
-                var isNew = Reaction.setBest(ID, n, function (v, b) { return v > b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                var isNew = Reaction.setBest(ID, n, function (v, b) { return v > b; });
                 ctx.setMeta(fmtBest(Reaction.getBest(ID)));
                 Sfx.play('done');
                 /* 等 500 毫秒再顯示結算，讓玩家看到最後一刀 */
@@ -230,7 +230,7 @@
                 /* 從現在起每隔 gapMs 毫秒模擬點一下，共 n 下（用真正的時間戳）*/
                 mash: function (n, gapMs) {
                     if (state === 'ready') cut(performance.now());  /* performance.now()：高精度的時間（毫秒），計時用 */
-                    var base = state === 'run' ? t0 : performance.now();  /* performance.now()：高精度的時間（毫秒），計時用 */
+                    var base = state === 'run' ? t0 : performance.now();
                     for (var i = 1; i <= n; i++) cut(base + i * gapMs);
                     return cutter.cuts();
                 },

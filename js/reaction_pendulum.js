@@ -122,7 +122,7 @@
             var hint = h('div', { 'class': 'hint', text: '點一下，讓鐘擺停在六點鐘方向' });
             var field = h('div', { 'class': 'pendulum-field' });
             root.appendChild(hint);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-            root.appendChild(field);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(field);
             /* 操作提示（只在第一次進遊戲時）：點畫面任一處 → 手指縮放，放在畫面下方（不擋住鐘擺） */
             if (Reaction.kit.once('pendulum.hint')) Reaction.kit.hintOn(root, field, { mode: 'tap', fy: 0.9, text: '請點擊畫面' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
 
@@ -144,7 +144,7 @@
                刻度「以針尖所在的半徑為中心」上下對稱畫（不是畫在弧外面一段距離）：
                鏡頭放大 800 倍時，哪怕只差 0.1 個世界座標單位也會變成 80 px，
                刻度離針尖太遠就會直接掉出畫面，看不到。 */
-            var gArc = kit.svg('g', {}, svg);           /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+            var gArc = kit.svg('g', {}, svg);
             var a0 = polar(-ARC_MAX_DEG, LEN), a1 = polar(ARC_MAX_DEG, LEN);
             kit.svg('path', {
                 'class': 'pendulum-arc', fill: 'none', 'vector-effect': 'non-scaling-stroke',
@@ -202,7 +202,7 @@
                 if (state !== 'swing' || my.dead) return;
                 if (e.target && e.target.closest && e.target.closest('button')) return;
                 /* 開頭 400ms 內點了不算（避免上一局手指殘留） */
-                if (performance.now() - t0 < ARM_MS) return;  /* performance.now()：高精度的時間（毫秒），計時用 */
+                if (performance.now() - t0 < ARM_MS) return;
                 e.preventDefault();                     /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                 /* 用事件時間 kit.evT(e) 算停止角度 */
                 stopAt(kit.evT(e) - t0 - LATENCY_COMP_MS);
@@ -241,9 +241,9 @@
                 /* my.wait 回傳 Promise；用 .then 把每一段放大串起來，一段完成才播下一段 */
                 var chain = my.wait(FREEZE_MS);
                 var cur = full;
-                plan.forEach(function (z) {             /* forEach：對陣列的每個元素各做一次 */
+                plan.forEach(function (z) {
                     chain = chain.then(function () {
-                        Sfx.play('zoom');               /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                        Sfx.play('zoom');
                         var to = boxFor(tip, z);
                         /* kit.tweenViewBox：動畫修改 SVG 的 viewBox */
                         return kit.tweenViewBox(my, svg, cur, to, ZOOM_MS, kit.easeInOutCubic, onZoomFrame).then(function () {
@@ -272,7 +272,7 @@
                 var far = z > 20 ? 'none' : '';
                 bob.style.display = far; rod.style.display = far; pivot.style.display = far;
                 gFine2.setAttribute('opacity', kit.clamp((z - 6) / 30, 0, 1).toFixed(3));  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
-                gFine3.setAttribute('opacity', kit.clamp((z - 60) / 300, 0, 1).toFixed(3));  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
+                gFine3.setAttribute('opacity', kit.clamp((z - 60) / 300, 0, 1).toFixed(3));
             }
 
             /* 細刻度：只畫會被看到的那一小段 */
@@ -296,11 +296,11 @@
             /* ─── 結算（只有一次機會：永遠是「再挑戰一次」）─── */
             function verdict(theta, realErr) {
                 state = 'verdict';
-                var side = Math.abs(theta) < 0.005 ? '' : (theta < 0 ? '偏左' : '偏右');  /* Math.abs：取絕對值（去掉負號） */
+                var side = Math.abs(theta) < 0.005 ? '' : (theta < 0 ? '偏左' : '偏右');
                 /* 最終成績：第 3、4 位不為 0，只產生這一次（之後的評語、最佳紀錄、畫面文字都用它） */
                 var err = Leaderboard.fake4(realErr);
                 console.log('六點鐘方向：實際差 ' + realErr.toFixed(6) + ' 度 → 成績 ' + fmtDeg(err) + ' 度');
-                var isNewErr = Reaction.setBest(ID, err, function (v, b) { return v < b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                var isNewErr = Reaction.setBest(ID, err, function (v, b) { return v < b; });
                 updateMeta();
 
                 var sfx = err < 0.05 ? 'perfect' : (err < 1 ? 'win' : 'fail');

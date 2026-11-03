@@ -141,7 +141,7 @@
         var rest2 = G.shuffle(c2.items.filter(function (x) { return x !== i2; }));  /* filter：留下符合條件的元素，回傳新陣列 */
         var lure = rest2[0];
         var sib2 = rest2[1];
-        var sib1 = G.any(c1.items.filter(function (x) { return x !== i1; }));  /* filter：留下符合條件的元素，回傳新陣列 */
+        var sib1 = G.any(c1.items.filter(function (x) { return x !== i1; }));
         var bus = G.num(12, 98, null, twoDiff);
         var house = rev2(bus);
         var stop = G.pick(P.stops);
@@ -237,13 +237,13 @@
         var qs = [];
         exec.forEach(function (e, i) {                  /* forEach：對陣列的每個元素各做一次 */
             var lures = [];
-            if (narr[i] !== e) lures.push(L(narr[i].k, '順序顛倒', '紙條上先講到「' + narr[i].k + '」，但它是' + ord[exec.indexOf(narr[i])] + '。'));  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
-            exec.forEach(function (o, j) { if (j !== i) lures.push(L(o.k, '順序顛倒', '「' + o.k + '」是' + ord[j] + '。')); });  /* forEach：對陣列的每個元素各做一次 */
+            if (narr[i] !== e) lures.push(L(narr[i].k, '順序顛倒', '紙條上先講到「' + narr[i].k + '」，但它是' + ord[exec.indexOf(narr[i])] + '。'));
+            exec.forEach(function (o, j) { if (j !== i) lures.push(L(o.k, '順序顛倒', '「' + o.k + '」是' + ord[j] + '。')); });
             lures.push(L(noiseLabel, '似曾相識', noiseWhy));
             qs.push(G.q(ord[i] + '要做什麼？', '順序', e.k, lures));
         });
         qs.push(G.q('哪一件事要搭公車？', '配對', BE.k,
-            exec.filter(function (e) { return e !== BE; }).map(function (e) { return L(e.k, '張冠李戴', '搭公車是為了去' + BE.place + '。'); })  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            exec.filter(function (e) { return e !== BE; }).map(function (e) { return L(e.k, '張冠李戴', '搭公車是為了去' + BE.place + '。'); })
                 .concat([L(noiseLabel, '似曾相識', noiseWhy)])));
         qs.push(G.q('要搭幾號公車？', '數字', bus, G.near(bus, String, { lo: 10, hi: 99 })));
         exec.forEach(function (e, i) {

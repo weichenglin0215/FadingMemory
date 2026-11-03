@@ -111,7 +111,7 @@
             Sfx.stopBgm(); location.href = 'index.html?games=1';
         });
         barHelp.addEventListener('click', function () {
-            Sfx.play('click');                          /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+            Sfx.play('click');
             showRule(function () { }, hasBoard ? { okText: '知道了', softSound: true, boardButton: true } : null);
         });
         if (barSound) {
@@ -124,7 +124,7 @@
             });
         }
 
-        ['pointerdown', 'pointerup', 'click', 'keydown', 'touchend'].forEach(function (ev) {  /* forEach：對陣列的每個元素各做一次 */
+        ['pointerdown', 'pointerup', 'click', 'keydown', 'touchend'].forEach(function (ev) {
             document.addEventListener(ev, Sfx.unlock, true);
         });
         watchResults();
@@ -137,7 +137,7 @@
         var m = /[?&]game=([a-z0-9]+)/.exec(location.search);
         var want = m && list.filter(function (g) { return g.id === m[1]; })[0];  /* filter：留下符合條件的元素，回傳新陣列 */
         game = want || list[Math.floor(Math.random() * list.length)];  /* Math.floor：無條件捨去成整數 */
-        barTitle.textContent = game.name;               /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+        barTitle.textContent = game.name;
         /* 告訴共用工具「現在玩的是哪一款」：kit.result 帶 score 時，會用它把成績送到這一款的世界排行榜 */
         Reaction.current = game;
 
@@ -158,7 +158,7 @@
             game.mount(screen, { setMeta: setMeta });
             /* V1.35.0：這款遊戲的 mount 已經跑完（舊單位的最佳紀錄遷移都做完了），本機的最佳紀錄可以信任了：
                已登入的話，跟帳號同步這一款的個人最佳（見 js/identity.js 的 gameMounted）。 */
-            if (window.Identity && Identity.gameMounted) window.setTimeout(function () { Identity.gameMounted(game.id); }, 0);  /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
+            if (window.Identity && Identity.gameMounted) window.setTimeout(function () { Identity.gameMounted(game.id); }, 0);
         }
         if (hasBoard) {
             showRule(function () {

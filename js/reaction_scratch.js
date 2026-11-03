@@ -63,7 +63,7 @@
     function gridFor(level) { return level <= 3 ? 3 : (level <= 7 ? 4 : (level <= 12 ? 5 : 6)); }
     function shownFrac(level) { return kit.ramp(level, SHOWN[0], SHOWN[1], MAX_LEVEL); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function shownCount(level) { var g = gridFor(level); return Math.max(2, Math.round(shownFrac(level) * g * g)); }  /* Math.round：四捨五入成整數 */
-    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], MAX_LEVEL) * 1000); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], MAX_LEVEL) * 1000); }
     /* 這一關用哪 K 種圖案（依題材；中文字依關卡往後面（筆劃多的）挑） */
     function pickPatterns(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
@@ -72,7 +72,7 @@
         else if (band === 'fruit') pool = FRUITS;
         else if (band === 'digit') pool = DIGITS;
         else {
-            var span = 10, start = Math.round((CHARS.length - span) * Math.min(1, (level - 1) / (MAX_LEVEL - 1)));  /* Math.round：四捨五入成整數 */
+            var span = 10, start = Math.round((CHARS.length - span) * Math.min(1, (level - 1) / (MAX_LEVEL - 1)));
             pool = CHARS.slice(start, start + span);
         }
         return kit.shuffle(pool.slice(), rand).slice(0, K);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
@@ -84,7 +84,7 @@
         var patterns = pickPatterns(level, rand), target = patterns[0], others = patterns.slice(1);
         var single = kit.randInt(0, others.length - 1, rand), cells = [target, target, target];  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         others.forEach(function (s, i) { cells.push(s); if (i !== single) cells.push(s); });  /* forEach：對陣列的每個元素各做一次 */
-        cells = kit.shuffle(cells, rand);               /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+        cells = kit.shuffle(cells, rand);
         var g = gridFor(level), k = Math.min(g * g, shownCount(level));
         var shown = cells.map(function (p) {            /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var ink = inkOf ? inkOf(p, g) : null, all = [], i;
@@ -93,12 +93,12 @@
             var rest = kit.shuffle(all.filter(function (x) { return first.indexOf(x) < 0; }), rand);  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             return first.concat(rest).slice(0, k).sort(function (a, b) { return a - b; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
         });
-        return { band: bandFor(level), grid: g, patterns: kit.shuffle(patterns.slice(), rand), target: target, cells: cells, shown: shown };  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        return { band: bandFor(level), grid: g, patterns: kit.shuffle(patterns.slice(), rand), target: target, cells: cells, shown: shown };
     }
     /* 目前翻開的牌中，有沒有任何圖案達到 TARGET_COUNT 張 */
     function winner(cells, revealed) {
         var cnt = {};
-        revealed.forEach(function (i) { cnt[cells[i]] = (cnt[cells[i]] || 0) + 1; });  /* forEach：對陣列的每個元素各做一次 */
+        revealed.forEach(function (i) { cnt[cells[i]] = (cnt[cells[i]] || 0) + 1; });
         for (var k in cnt) if (cnt[k] >= TARGET_COUNT) return k;
         return null;
     }
@@ -134,7 +134,7 @@
         var size = cv.width, d = cv.getContext('2d').getImageData(0, 0, size, size).data, out = [], cs = size / gridN;
         for (var r = 0; r < gridN; r++) for (var c = 0; c < gridN; c++) {
             var n = 0, tot = 0;
-            for (var y = Math.floor(r * cs); y < Math.floor((r + 1) * cs); y += 2) for (var x = Math.floor(c * cs); x < Math.floor((c + 1) * cs); x += 2) { tot++; if (d[(y * size + x) * 4 + 3] > 100) n++; }  /* Math.floor：無條件捨去成整數 */
+            for (var y = Math.floor(r * cs); y < Math.floor((r + 1) * cs); y += 2) for (var x = Math.floor(c * cs); x < Math.floor((c + 1) * cs); x += 2) { tot++; if (d[(y * size + x) * 4 + 3] > 100) n++; }
             if (tot && n / tot >= 0.15) out.push(r * gridN + c);
         }
         return out;
@@ -187,7 +187,7 @@
             drawPattern(cv.getContext('2d'), band, p, refSize * SCALE, inkColor);
             refRow.appendChild(h('div', { 'class': 'scratch-refi' }, [cv]));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         });
-        stage.appendChild(h('div', { 'class': 'scratch-reftitle', text: '這一關的圖案（有 3 張一模一樣的）' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(h('div', { 'class': 'scratch-reftitle', text: '這一關的圖案（有 3 張一模一樣的）' }));
         stage.appendChild(refRow);
 
         /* 下方：12 張牌 */
@@ -221,7 +221,7 @@
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
 
         function openCard(i) {
-            if (done || api.over || revealed.indexOf(i) >= 0) return;  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+            if (done || api.over || revealed.indexOf(i) >= 0) return;
             hideHint();
             revealed.push(i); rev++;
             cards[i].el.classList.add('scratch-cell--open');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
@@ -233,7 +233,7 @@
         }
         function showAll(sym) {
             cards.forEach(function (c, i) {
-                c.el.classList.add('scratch-cell--open');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                c.el.classList.add('scratch-cell--open');
                 if (revealed.indexOf(i) < 0) c.el.classList.add('scratch-cell--rest');
                 if (sym && bd.cells[i] === sym) c.el.classList.add('scratch-cell--hit');
             });
@@ -245,7 +245,7 @@
         }
         function lose(why) {
             if (done) return;
-            done = true; showAll(bd.target); info.textContent = why;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            done = true; showAll(bd.target); info.textContent = why;
             api.fail({ delay: 2600, lines: [why, '三張一樣的是「' + bd.target + '」', '比對露出的宮格：同一個圖案露出的格子，位置會跟完整圖案的筆畫對得起來'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         api.timer(timeMs(level), function () { lose('時間到！'); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */

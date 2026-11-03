@@ -71,7 +71,7 @@
         return { i: i, from: from, delta: d, ans: ans, options: op.options, idx: op.idx, big: bigText(i), notice: noticeBefore(i), time: timeMs(i) };
     }
     /* 失敗時的說明：選了 picked（null＝沒選）；算式寫出「986 − 7 ＝ 979」 */
-    function formula(q) { return q.from + ' ' + (q.delta < 0 ? MINUS : '＋') + ' ' + Math.abs(q.delta) + ' ＝ ' + q.ans; }  /* Math.abs：取絕對值（去掉負號） */
+    function formula(q) { return q.from + ' ' + (q.delta < 0 ? MINUS : '＋') + ' ' + Math.abs(q.delta) + ' ＝ ' + q.ans; }
     function whyText(q, picked) { return picked == null ? '時間到！' + formula(q) : '算錯了！' + formula(q) + '，你選了 ' + picked; }
     /* 整串數字（最後 count 步）：['1000', '993', ...] */
     function chain(upTo, count) { var out = [], from = Math.max(0, upTo - count + 1); for (var k = from; k <= upTo; k++) out.push(valueAfter(k)); return out; }
@@ -109,7 +109,7 @@
 
         var field = h('div', { 'class': 'minus7-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-        var banner = h('div', { 'class': 'minus7-banner', text: '請從 ' + START + ' 開始計數' }); field.appendChild(banner);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var banner = h('div', { 'class': 'minus7-banner', text: '請從 ' + START + ' 開始計數' }); field.appendChild(banner);
         var big = h('div', { 'class': 'minus7-big minus7-pop--out', text: '' }); field.appendChild(big);
         var info = h('div', { 'class': 'qz-note minus7-info', text: '' }); field.appendChild(info);
         var grid = h('div', { 'class': 'minus7-grid minus7-pop--out' }); field.appendChild(grid);
@@ -127,7 +127,7 @@
                 if (api.over) return;
                 big.textContent = q.big; q.options.forEach(function (v, k) { btns[k].textContent = String(v); btns[k].classList.remove('minus7-btn--ok', 'minus7-btn--bad'); });  /* forEach：對陣列的每個元素各做一次 */
                 pop(true); phase = 'wait';
-                api.after(GROW_MS, function () {        /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+                api.after(GROW_MS, function () {
                     if (api.over || phase !== 'wait') return;
                     phase = 'ask'; api.stopTimer(); api.timer(q.time, function () { fail(null); });
                     if (count === 0 && kit.once('minus7.hint')) kit.hintOn(stage, btns[q.idx], { mode: 'tap', delay: 700, text: START + ' 減 7 是多少？' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
@@ -135,7 +135,7 @@
             };
             if (q.notice) {
                 banner.textContent = q.notice; banner.classList.remove('minus7-banner--hide'); phase = 'notice';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-                api.after(NOTICE_MS, function () { banner.classList.add('minus7-banner--hide'); api.after(260, go); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                api.after(NOTICE_MS, function () { banner.classList.add('minus7-banner--hide'); api.after(260, go); });
             } else go();
         }
         function answer(k) {
@@ -156,7 +156,7 @@
             var why = whyText(q, pk);
             banner.textContent = why; banner.classList.remove('minus7-banner--hide'); banner.classList.add('minus7-banner--bad');          /* 結果寫在最上面的提示框（下面要留給整串數字） */
             var box = h('div', { 'class': 'minus7-chain' }), nums = chain(count, 10);
-            nums.forEach(function (v, k) { var last = k === nums.length - 1; box.appendChild(h('span', { 'class': 'minus7-chain__n' + (last ? ' minus7-chain__n--now' : ''), text: String(v) })); if (!last) box.appendChild(h('span', { 'class': 'minus7-chain__a', text: '→' })); });  /* forEach：對陣列的每個元素各做一次 */
+            nums.forEach(function (v, k) { var last = k === nums.length - 1; box.appendChild(h('span', { 'class': 'minus7-chain__n' + (last ? ' minus7-chain__n--now' : ''), text: String(v) })); if (!last) box.appendChild(h('span', { 'class': 'minus7-chain__a', text: '→' })); });
             box.appendChild(h('span', { 'class': 'minus7-chain__a', text: '→' })); box.appendChild(h('span', { 'class': 'minus7-chain__n minus7-chain__n--ans', text: q.ans + '？' }));
             field.appendChild(box);
             kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */

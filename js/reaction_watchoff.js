@@ -97,23 +97,23 @@
         var obs = h('div', { 'class': 'watchoff-obs', text: '哪一支走得不準？' });
         var info = h('div', { 'class': 'watchoff-info' });
         stage.appendChild(tip); stage.appendChild(obs); /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-        var gap = Math.floor((W - 3 * SIZE) / 4);       /* Math.floor：無條件捨去成整數 */
+        var gap = Math.floor((W - 3 * SIZE) / 4);
         var faces = q.styles.map(function (st, i) {     /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var el = h('div', { 'class': 'watchoff-face' }, [h('div', { 'class': 'watchoff-dial', html: faceSvg(st) }), h('div', { 'class': 'watchoff-name', text: NAMES[i] })]);
             el.style.left = (gap + i * (SIZE + gap)) + 'px';
             el.firstChild.style.transform = 'rotate(' + q.rots[i].toFixed(1) + 'deg)';
-            stage.appendChild(el);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            stage.appendChild(el);
             return el;
         });
         var hands = faces.map(function (f) { return f.querySelector('.watchoff-hand'); });  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
         stage.appendChild(info);
         function frame() {
-            var sec = (performance.now() - t0) / 1000;  /* performance.now()：高精度的時間（毫秒），計時用 */
+            var sec = (performance.now() - t0) / 1000;
             hands.forEach(function (hd, i) { hd.setAttribute('transform', 'rotate(' + handDeg(q.periods[i], q.phases[i], sec).toFixed(1) + ' 70 70)'); });  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         }
         frame();
         api.my.loop(function () { if (api.over) return false; frame(); });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
-        var btns = NAMES.map(function (n, i) {          /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        var btns = NAMES.map(function (n, i) {
             var b = h('button', { 'class': 'btn btn--line', text: '選 ' + n });
             kit.onTap(b, function () { if (canAnswer && !b.disabled) choose(i); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             return b;
@@ -126,10 +126,10 @@
             done = true; canAnswer = false;
             btns.forEach(function (b) { b.disabled = true; });                  /* 點了答案之後按鈕立刻停用，直到下一關才恢復（每一關重建） */
             var lines = [];
-            faces.forEach(function (f, k) {             /* forEach：對陣列的每個元素各做一次 */
+            faces.forEach(function (f, k) {
                 var ds = dialSeconds(q.periods[k], WINDOW_S);
                 f.classList.toggle('watchoff-face--odd', k === q.odd);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                if (k === i && k !== q.odd) f.classList.add('watchoff-face--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                if (k === i && k !== q.odd) f.classList.add('watchoff-face--bad');
                 f.appendChild(h('div', { 'class': 'watchoff-sec', text: ds.toFixed(4) + ' 秒' }));
                 lines.push('錶 ' + NAMES[k] + '：' + WINDOW_S + ' 秒內秒針走了 ' + ds.toFixed(4) + ' 秒' + (k === q.odd ? '（' + (q.e > 0 ? '偏快' : '偏慢') + ' ' + Math.abs(q.e * 100).toFixed(4) + '%）' : ''));  /* Math.abs：取絕對值（去掉負號） */
             });

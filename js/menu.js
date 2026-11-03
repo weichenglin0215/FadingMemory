@@ -306,7 +306,7 @@
 
     /* 最近玩過的 id 清單：去掉已經不存在的遊戲、重複的；從來沒存過「最近」但有「上次玩的」就用它當第一筆 */
     function recentIds() {
-        var raw = UI.store.get(RECENT_KEY, null);       /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
+        var raw = UI.store.get(RECENT_KEY, null);
         var out = [];
         if (Array.isArray(raw)) {
             raw.forEach(function (id) { if (gameById[id] && out.indexOf(id) < 0) out.push(id); });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
@@ -330,8 +330,8 @@
        全部＝每一款；最近＝recentIds() 的順序；其他＝cat 相同的那幾款（順序同「全部」）。 */
     function tabGames(tab) {
         if (tab === 'all') return GAME_CELLS.slice();   /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
-        if (tab === 'recent') return recentIds().map(function (id) { return gameById[id]; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
-        return GAME_CELLS.filter(function (c) { return c.cat === tab; });  /* filter：留下符合條件的元素，回傳新陣列 */
+        if (tab === 'recent') return recentIds().map(function (id) { return gameById[id]; });
+        return GAME_CELLS.filter(function (c) { return c.cat === tab; });
     }
 
     /* 搜尋遊戲（V1.43.0，頁籤列最右邊的「搜尋」）：關鍵字只要是遊戲名稱的「一部分」就算符合。
@@ -345,12 +345,12 @@
     }
     function searchGames(q) {
         var words = normSearch(q).split(/\s+/).filter(Boolean);
-        if (!words.length) return GAME_CELLS.slice();   /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        if (!words.length) return GAME_CELLS.slice();
         var byName = [], byId = [];
-        GAME_CELLS.forEach(function (c) {               /* forEach：對陣列的每個元素各做一次 */
+        GAME_CELLS.forEach(function (c) {
             var name = normSearch(c.name), id = c.id.toLowerCase();
             if (words.every(function (w) { return name.indexOf(w) >= 0; })) byName.push(c);  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
-            else if (words.every(function (w) { return name.indexOf(w) >= 0 || id.indexOf(w) >= 0; })) byId.push(c);  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+            else if (words.every(function (w) { return name.indexOf(w) >= 0 || id.indexOf(w) >= 0; })) byId.push(c);
         });
         return byName.concat(byId);
     }
@@ -483,7 +483,7 @@
         }
         cell.setAttribute('aria-label', it.cell.name + '，' + say);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         var pic = cell.querySelector('.game-cell__pic');  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
-        pic.appendChild(h('span', { 'class': 'game-cell__heart', text: emoji, attrs: { 'aria-hidden': 'true' } }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        pic.appendChild(h('span', { 'class': 'game-cell__heart', text: emoji, attrs: { 'aria-hidden': 'true' } }));
         pic.appendChild(badge);
         return cell;
     }
@@ -539,7 +539,7 @@
         var token = popupToken, t0 = Date.now(), kinds = popupOrder(UI.store.get(POPUP_KEY, null));  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
         (function tryAt(i) {
             if (i >= kinds.length || token !== popupToken || gameDlg.hidden) return;
-            popupItems(kinds[i], POPUP_WAIT_MS - (Date.now() - t0)).then(function (items) {  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
+            popupItems(kinds[i], POPUP_WAIT_MS - (Date.now() - t0)).then(function (items) {
                 if (token !== popupToken || gameDlg.hidden) return;
                 if (!items.length) { tryAt(i + 1); return; }
                 if (Date.now() - t0 > POPUP_WAIT_MS) return;
@@ -631,7 +631,7 @@
                 var el = cellEls[c.id];
                 if (!el) {
                     el = cellEls[c.id] = gameCell(c);
-                    var bar = el.querySelector('.rate-bar');  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
+                    var bar = el.querySelector('.rate-bar');
                     if (bar) rateEls[c.id] = bar;
                 }
                 el.classList.toggle('game-cell--last', c.id === last);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
@@ -639,8 +639,8 @@
             });
             GAME_TABS.forEach(function (t) {
                 var on = !searching && t.id === curTab;
-                tabEls[t.id].classList.toggle('is-on', on);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                tabEls[t.id].setAttribute('aria-selected', on ? 'true' : 'false');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                tabEls[t.id].classList.toggle('is-on', on);
+                tabEls[t.id].setAttribute('aria-selected', on ? 'true' : 'false');
             });
             searchBtn.classList.toggle('is-on', searching);
             searchBtn.setAttribute('aria-pressed', searching ? 'true' : 'false');
@@ -800,7 +800,7 @@
         var el = document.getElementById('menu-version');
         if (v && el) {
             var shown = /^local-/.test(v.version) ? '本機版' : '版本 ' + v.version;
-            el.textContent = v.updated ? '已更新到最新 ' + shown : shown;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            el.textContent = v.updated ? '已更新到最新 ' + shown : shown;
         }
     });
 })();

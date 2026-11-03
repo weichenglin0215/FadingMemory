@@ -106,7 +106,7 @@
         var rest2 = G.shuffle(c2.items.filter(function (x) { return x !== i2; }));  /* filter：留下符合條件的元素，回傳新陣列 */
         var lure = rest2[0];
         var sib2 = rest2[1];
-        var sib1 = G.any(c1.items.filter(function (x) { return x !== i1; }));  /* filter：留下符合條件的元素，回傳新陣列 */
+        var sib1 = G.any(c1.items.filter(function (x) { return x !== i1; }));
         var bus = G.num(12, 98, null, twoDiff);
         var house = rev2(bus);
         var stop = G.pick(P.stops);
@@ -204,7 +204,7 @@
         exec.forEach(function (e, i) {                  /* forEach：對陣列的每個元素各做一次 */
             var lures = [];
             if (narr[i] !== e) lures.push(L(narr[i].k, '順序顛倒', '紙條上先講到「' + narr[i].k + '」，但它是' + ord[exec.indexOf(narr[i])] + '。'));  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
-            exec.forEach(function (o, j) { if (j !== i) lures.push(L(o.k, '順序顛倒', '「' + o.k + '」是' + ord[j] + '。')); });  /* forEach：對陣列的每個元素各做一次 */
+            exec.forEach(function (o, j) { if (j !== i) lures.push(L(o.k, '順序顛倒', '「' + o.k + '」是' + ord[j] + '。')); });
             lures.push(L(noiseLabel, '似曾相識', noiseWhy));
             qs.push(G.q(ord[i] + '要做什麼？', '順序', e.k, lures));
         });
@@ -247,7 +247,7 @@
         var x;
         var y;
         do { x = G.int(0, 2); y = G.int(0, 2); } while (si[x] === y);
-        var objs = G.shuffle([0, 1, 2].map(function (i) { return { n: things[i], c: cols[i], s: shs[si[i]] }; })  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        var objs = G.shuffle([0, 1, 2].map(function (i) { return { n: things[i], c: cols[i], s: shs[si[i]] }; })
             .concat([{ n: things[3], c: cols[x], s: shs[y] }]));
         var sn = G.pick(P.diningOddDishes, 2);
         var fc = [G.any(sn[0].odd)];
@@ -255,7 +255,7 @@
         fc.push(G.any(odd2.length ? odd2 : sn[1].odd));
         var fn0 = G.num(1, 4, null, null, 'fn1');
         var fn = [fn0, G.num(1, 4, [fn0], null, 'fn2')];
-        var lc = G.any(P.colors.filter(function (c) { return cols.indexOf(c) < 0 && fc.indexOf(c) < 0; }));  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+        var lc = G.any(P.colors.filter(function (c) { return cols.indexOf(c) < 0 && fc.indexOf(c) < 0; }));
         var v = {
             who: who, nb: nb, g: g, r: r, street: street, shop: shop, lc: lc,
             sk1: sn[0].n, sk2: sn[1].n, fc1: fc[0], fc2: fc[1], fn1: cnCount(fn[0]), fn2: cnCount(fn[1]), su1: sn[0].u, su2: sn[1].u,

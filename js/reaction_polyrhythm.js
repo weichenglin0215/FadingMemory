@@ -124,7 +124,7 @@
         /* times(顏色)：這種顏色在這小節的方塊時刻——每隔「拍數×一拍秒數」掉一個，共 4 ÷ 拍數 個 */
         function times(id) {
             var a = BY_ID[id].beats * bs, out = [];
-            for (var k = 0; k < Math.round(4 / BY_ID[id].beats); k++) out.push(start + k * a);  /* Math.round：四捨五入成整數 */
+            for (var k = 0; k < Math.round(4 / BY_ID[id].beats); k++) out.push(start + k * a);
             return out;
         }
         return { m: m, start: start, bpm: bpmFor(m), bs: bs, dur: dur, L: { color: L, times: times(L), interval: BY_ID[L].beats * bs }, R: { color: Rr, times: times(Rr), interval: BY_ID[Rr].beats * bs } };
@@ -180,17 +180,17 @@
             var lineL = h('div', { 'class': 'polyrhythm-line' }), lineR = h('div', { 'class': 'polyrhythm-line' });
             laneL.appendChild(lineL); laneR.appendChild(lineR);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             var capL = h('div', { 'class': 'polyrhythm-cap', text: '左手' }), capR = h('div', { 'class': 'polyrhythm-cap', text: '右手' });
-            laneL.appendChild(capL); laneR.appendChild(capR);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            laneL.appendChild(capL); laneR.appendChild(capR);
             var stage = h('div', { 'class': 'polyrhythm-stage' }, [laneL, laneR]);
             var msg = h('div', { 'class': 'polyrhythm-msg', text: '' });
-            [head, hearts, legend, stage, msg].forEach(function (x) { root.appendChild(x); });  /* forEach：對陣列的每個元素各做一次 */
+            [head, hearts, legend, stage, msg].forEach(function (x) { root.appendChild(x); });
             ctx.setMeta(fmtBest(Reaction.getBest(ID))); /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
             /* layout：量軌道高度，算出基準線位置 LINE_Y 與掉落速度 SPEED（高度 ÷ 掉落秒數） */
             var LH = 0, LINE_Y = 0, SPEED = 0;
             function layout() { LH = laneL.clientHeight; LINE_Y = Math.round(LH * 0.82); SPEED = LINE_Y / FALL_S; lineL.style.top = lineR.style.top = LINE_Y + 'px'; }
             function paintHearts() {
-                hearts.innerHTML = '';                  /* innerHTML = ''：把元素裡面的東西全部清掉 */
+                hearts.innerHTML = '';
                 for (var i = 0; i < HEALTH_MAX; i++) hearts.appendChild(h('span', { 'class': 'polyrhythm-heart' + (i < health ? ' polyrhythm-heart--on' : '') }));
             }
 
@@ -219,13 +219,13 @@
                 if (over) return;
                 over = true; state = 'over';
                 var secs = Math.max(0, (performance.now() - t0) / 1000 - LEAD_S);  /* performance.now()：高精度的時間（毫秒），計時用 */
-                var n = doneMeasures, isNew = Reaction.setBest(ID, n, function (v, b) { return v > b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                var n = doneMeasures, isNew = Reaction.setBest(ID, n, function (v, b) { return v > b; });
                 ctx.setMeta(fmtBest(Reaction.getBest(ID)));
                 msg.textContent = '生命用完了！';             /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 var acc = hits + misses + extras > 0 ? hits / (hits + misses + extras) * 100 : 0;
                 var bias = biasN ? biasSum / biasN : 0;
                 /* 結算畫面上的秒數類數字：4 位小數、第 3／4 位不為 0，各產生一次 */
-                var secsShown = Leaderboard.fake4(secs), biasShown = Leaderboard.fake4(Math.abs(bias));  /* Math.abs：取絕對值（去掉負號） */
+                var secsShown = Leaderboard.fake4(secs), biasShown = Leaderboard.fake4(Math.abs(bias));
                 console.log('左右不同拍：撐了 ' + secs.toFixed(6) + ' 秒、平均偏差 ' + bias.toFixed(6) + ' 秒 → 顯示 ' + secsShown.toFixed(4) + ' 秒、' + biasShown.toFixed(4) + ' 秒');
                 my.after(1100, function () {
                     kit.result(root, {                  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
@@ -242,7 +242,7 @@
             function tick() {
                 if (state !== 'run') return;
                 /* now：遊戲開始後經過幾秒 */
-                var now = (performance.now() - t0) / 1000;  /* performance.now()：高精度的時間（毫秒），計時用 */
+                var now = (performance.now() - t0) / 1000;
                 ensure(now);
                 ['L', 'R'].forEach(function (side) {
                     var lane = side === 'L' ? laneL : laneR, arr = notes[side];
@@ -256,7 +256,7 @@
                         /* 過了紅線又超過判定視窗還沒打中 → 漏掉，扣生命 */
                         if (!n.miss && dt < -n.win) {                    /* 過了基準線 ＋ 視窗還沒打中 → 漏掉 */
                             n.miss = true; misses++;
-                            if (n.el) n.el.classList.add('polyrhythm-note--miss');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                            if (n.el) n.el.classList.add('polyrhythm-note--miss');
                             var pk = n.m + side;
                             /* 滾奏（太密的藍、紫色小節）：同一小節同一邊只扣一次，不然一次漏掉就會扣光 */
                             if (!n.dense || !penalized[pk]) { penalized[pk] = true; hurt('漏掉了方塊'); }       /* 滾奏：同一小節同一邊只扣一次 */
@@ -284,7 +284,7 @@
                     if (now >= mm.start && now < mm.start + mm.dur) {
                         curM = mm.m;
                         var bi = Math.floor((now - mm.start) / mm.bs);  /* Math.floor：無條件捨去成整數 */
-                        if (mm.m * 4 + bi !== lastBeatIdx) { lastBeatIdx = mm.m * 4 + bi; Sfx.play('tick'); beatFlash(bi); }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                        if (mm.m * 4 + bi !== lastBeatIdx) { lastBeatIdx = mm.m * 4 + bi; Sfx.play('tick'); beatFlash(bi); }
                     }
                     if (now >= mm.start + mm.dur && mm.m + 1 > doneMeasures) {
                         doneMeasures = mm.m + 1;
@@ -294,7 +294,7 @@
                 }
                 var cm = null; for (var z = 0; z < measures.length; z++) if (now >= measures[z].start && now < measures[z].start + measures[z].dur) cm = measures[z];
                 //if (cm) head.textContent = '第 ' + (cm.m + 1) + ' 小節　' + Math.round(cm.bpm) + ' BPM　左 ' + BY_ID[cm.L.color].name + '（' + BY_ID[cm.L.color].label + '）／右 ' + BY_ID[cm.R.color].name + '（' + BY_ID[cm.R.color].label + '）';
-                if (cm) head.textContent = '第 ' + (cm.m + 1) + ' 小節　' + Math.round(cm.bpm) + ' BPM　左 ';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                if (cm) head.textContent = '第 ' + (cm.m + 1) + ' 小節　' + Math.round(cm.bpm) + ' BPM　左 ';
                 else if (now < LEAD_S) head.textContent = '準備…' + Math.ceil(LEAD_S - now) + '　方塊碰到紅線的那一刻點該邊';  /* Math.ceil：無條件進位成整數 */
             }
             /* 每一拍紅線閃一下（第 1 拍閃得比較亮） */
@@ -317,7 +317,7 @@
             }
             /* 左右軌道：pointerdown 一碰就判定 */
             laneL.addEventListener('pointerdown', function (e) { tap('L', e); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
-            laneR.addEventListener('pointerdown', function (e) { tap('R', e); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+            laneR.addEventListener('pointerdown', function (e) { tap('R', e); });
 
             /* 開始遊戲：量版面、記下開始時間，啟動每影格更新（rAF）與每 33 毫秒的後備更新（分頁在背景時 rAF 會被暫停，沒有後備就會卡死） */
             function start() {
@@ -334,7 +334,7 @@
             G.debug = {
                 state: function () { return { state: state, health: health, hits: hits, misses: misses, extras: extras, doneMeasures: doneMeasures, curM: curM, now: state === 'run' ? (performance.now() - t0) / 1000 : null, measures: measures.map(function (m) { return { m: m.m, start: m.start, L: m.L.color, R: m.R.color, bpm: m.bpm }; }), upcoming: { L: notes.L.filter(function (n) { return !n.hit && !n.miss; }).slice(0, 3).map(function (n) { return n.t; }), R: notes.R.filter(function (n) { return !n.hit && !n.miss; }).slice(0, 3).map(function (n) { return n.t; }) } }; },  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                 tapL: function () { tap('L'); }, tapR: function () { tap('R'); },
-                nextNotes: function (side) { return notes[side].filter(function (n) { return !n.hit && !n.miss; }).map(function (n) { return n.t; }); },  /* filter：留下符合條件的元素，回傳新陣列 */
+                nextNotes: function (side) { return notes[side].filter(function (n) { return !n.hit && !n.miss; }).map(function (n) { return n.t; }); },
                 clock: function () { return t0; }
             };
             /* 開場等 500 毫秒再開始 */

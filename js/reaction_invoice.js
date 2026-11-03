@@ -104,7 +104,7 @@
     /* 把一個數字換成「不同的」數字（do...while：一直重抽到不同為止） */
     function otherDigit(ch, rand) {
         var d;
-        do { d = String(kit.randInt(0, 9, rand)); } while (d === ch);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+        do { d = String(kit.randInt(0, 9, rand)); } while (d === ch);
         return d;
     }
     /* 把字串 s 的第 i 個字元換成 c */
@@ -186,7 +186,7 @@
             var p3 = kit.randInt(5, 7, rand);
             out = frontTweak(setCh(F, p3, neighborDigit(F[p3], rand)), 0.5, rand);
         } else if (kind === 'trans') {
-            var at = kit.pick([[6, 7], [5, 6], [4, 5]], rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+            var at = kit.pick([[6, 7], [5, 6], [4, 5]], rand);
             out = frontTweak(swapCh(F, at[0], at[1]), 0.7, rand);
         } else if (kind === 'shift') {
             out = frontTweak(rand() < 0.5 ? F.slice(1) + F[0] : F[7] + F.slice(0, 7), 0.7, rand);
@@ -233,7 +233,7 @@
             }
         });
         /* 沒中獎的干擾 */
-        Object.keys(DECOY_COUNTS).forEach(function (kind) {  /* forEach：對陣列的每個元素各做一次 */
+        Object.keys(DECOY_COUNTS).forEach(function (kind) {
             var need = DECOY_COUNTS[kind];
             for (var n = 0, guard = 0; n < need && guard < 5000; guard++) {
                 var num = mkDecoy(A, kind, rand);
@@ -295,7 +295,7 @@
             var fill = bar.firstChild;
             var btns = h('div', { 'class': 'invoice-btns' });
             root.appendChild(info);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-            root.appendChild(card);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(card);
             root.appendChild(bar);
             root.appendChild(btns);
 
@@ -327,7 +327,7 @@
                 state = 'ask';
                 els.forEach(function (el) { el.className = el.className.replace(/ invoice-btn--(ok|bad|miss)/g, ''); });
                 paintInfo();
-                card.innerHTML = '';                    /* innerHTML = ''：把元素裡面的東西全部清掉 */
+                card.innerHTML = '';
                 card.appendChild(h('div', { 'class': 'invoice-card__head', text: '統一發票' }));
                 var row = h('div', { 'class': 'invoice-digits' });
                 it.num.split('').forEach(function (ch) { row.appendChild(h('span', { 'class': 'invoice-d', text: ch })); });
@@ -338,7 +338,7 @@
                     if (state !== 'ask') return false;
                     fill.style.width = (100 * Math.max(0, 1 - (now - cur.t0) / cur.limit)).toFixed(1) + '%';
                 });
-                cur.timer = my.after(cur.limit, function () { if (state === 'ask') answer(-1, performance.now()); });  /* performance.now()：高精度的時間（毫秒），計時用 */
+                cur.timer = my.after(cur.limit, function () { if (state === 'ask') answer(-1, performance.now()); });
             }
 
             /* 作答：標示對錯，把相同的末碼標綠，讓玩家看到「到底對上幾碼」；答對換下一張、答錯（或超時）就結束 */
@@ -350,7 +350,7 @@
                 byBtn[it.btn].n++;
                 if (ok) { right++; money += BTNS[it.btn].amount; byBtn[it.btn].ok++; rts.push(t - cur.t0); }
                 els[it.btn].classList.add(ok ? 'invoice-btn--ok' : 'invoice-btn--miss');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                if (!ok && i >= 0) els[i].classList.add('invoice-btn--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                if (!ok && i >= 0) els[i].classList.add('invoice-btn--bad');
                 /* 把相同的末碼標綠，讓玩家看到「到底對上幾碼」 */
                 var digits = card.querySelectorAll('.invoice-d');  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
                 var m = it.btn >= 6 ? (it.btn === 8 ? 0 : 8) : suffixMatch(it.num, A.F);        /* 沒中獎就不標色 */
@@ -360,12 +360,12 @@
                 fill.style.width = '0%';
                 if (ok) {
                     Sfx.play('ok');                     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
-                    info.textContent = '第 ' + idx + ' 張　獎金 ' + fmtMoney(money);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                    info.textContent = '第 ' + idx + ' 張　獎金 ' + fmtMoney(money);
                     my.after(NEXT_OK_MS, next);
                     return;
                 }
                 /* 答錯或超時：一次就結束，停一下讓玩家看到正確答案，再結算 */
-                Sfx.play('bad');                        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                Sfx.play('bad');
                 info.textContent = (i < 0 ? '時間到！' : '答錯了…') + '這張是「' + BTNS[it.btn].name + '」';
                 my.after(NEXT_BAD_MS, function () { finish(it, i); });
             }
@@ -373,7 +373,7 @@
             /* 結算：主要看答對幾張，另外算中獎總金額、有獎與沒中獎各對幾張、平均反應；failIt 是答錯（或超時）的那一張，picked 是玩家點的按鈕（−1＝超時） */
             function finish(failIt, picked) {
                 state = 'done';
-                var isNew = right > 0 && Reaction.setBest(ID, right, function (v, b) { return v > b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                var isNew = right > 0 && Reaction.setBest(ID, right, function (v, b) { return v > b; });
                 ctx.setMeta(kit.meta(['答對 ' + right, fmtBest(Reaction.getBest(ID))]));
                 var avg = rts.length ? rts.reduce(function (a, b) { return a + b; }, 0) / rts.length : 0;  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
                 var lines = [];

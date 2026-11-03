@@ -55,7 +55,7 @@
        紙條頁、答題頁、結果頁的行為都不一樣（見下面各個 show*() 函式開頭）。 */
     function setBar(title, meta, progress, back) {
         barTitle.textContent = title;                   /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-        barMeta.textContent = meta || '';               /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+        barMeta.textContent = meta || '';
         barProgress.style.width = progress == null ? '0' : (progress * 100) + '%';
         backAction = back;
         barBack.innerHTML = UI.icon('back') + '<span>返回</span>';
@@ -76,7 +76,7 @@
     /* 確認彈窗：回傳 Promise，玩家按「是」resolve(true)、按「否」resolve(false)，呼叫端用 .then 接結果 */
     function askConfirm(text, yesLabel, noLabel) {
         return new Promise(function (resolve) {
-            confirmEl.innerHTML = '';                   /* innerHTML = ''：把元素裡面的東西全部清掉 */
+            confirmEl.innerHTML = '';
             var card = h('div', { 'class': 'confirm__card' }, [
                 h('div', { 'class': 'confirm__text', text: text }),
                 h('div', { 'class': 'row' }, [
@@ -102,7 +102,7 @@
         /* forEach 處理每一關；UI.store.get 讀這一關的最佳答對率 */
         LEVELS.forEach(function (lv, idx) {             /* forEach：對陣列的每個元素各做一次 */
             var best = UI.store.get(bestKey(lv.id), null);  /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
-            list.appendChild(h('button', { 'class': 'lv', on: { click: function () { startLevel(idx); } } }, [  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            list.appendChild(h('button', { 'class': 'lv', on: { click: function () { startLevel(idx); } } }, [
                 h('span', { 'class': 'lv__num', text: String(lv.id) }),
                 h('span', { 'class': 'lv__main' }, [
                     h('span', { 'class': 'lv__name', text: lv.name }),
@@ -215,7 +215,7 @@
         var opts = h('div', { 'class': 'q-opts' });
         var letters = ['A', 'B', 'C', 'D'];
         var pairs = [];
-        q.o.forEach(function (label, i) {               /* forEach：對陣列的每個元素各做一次 */
+        q.o.forEach(function (label, i) {
             var t = h('span', { 'class': 'opt__text', text: label });
             var b = h('button', { 'class': 'opt' }, [h('span', { 'class': 'opt__badge', text: letters[i] }), t]);
             pairs.push([t, b]);
@@ -258,7 +258,7 @@
         });
         Array.prototype.forEach.call(ui.opts.children, function (b, idx) {
             b.disabled = true;
-            if (idx === q.c) b.classList.add('is-ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            if (idx === q.c) b.classList.add('is-ok');
             else if (idx === i) b.classList.add('is-bad');
         });
         if (ok) {
@@ -319,9 +319,9 @@
     function showResult() {
         var lv = LEVELS[S.lv];
         var total = S.answers.length;
-        var okCount = S.answers.filter(function (a) { return a.ok; }).length;  /* filter：留下符合條件的元素，回傳新陣列 */
+        var okCount = S.answers.filter(function (a) { return a.ok; }).length;
         var pct = Math.round(okCount / total * 100);    /* Math.round：四捨五入成整數 */
-        var best = UI.store.get(bestKey(lv.id), null);  /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
+        var best = UI.store.get(bestKey(lv.id), null);
         if (best == null || pct > best) UI.store.set(bestKey(lv.id), pct);
         S.wrong = S.answers.filter(function (a) { return !a.ok; });
 
@@ -441,7 +441,7 @@
         sess.levels.forEach(function (lv) {
             console.group('第 ' + lv.id + ' 關・' + lv.name + '（' + lv.tag + '・' + lv.date + '・共 ' + lv.qs.length + ' 題）');
             console.log('紙條：\n' + lv.note.join('\n'));
-            console.table(lv.qs.map(function (q, i) {   /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            console.table(lv.qs.map(function (q, i) {
                 return {
                     題號: i + 1,
                     題目: q.q,
@@ -502,6 +502,6 @@
         /* 給驗證用：網址加 ?level=3 直接進某關 */
         /* 給驗證用：?level=3 直接進某關；?seed=數字 重現某一局 */
         var m = /[?&]level=(\d+)/.exec(location.search);
-        if (m) setTimeout(function () { startLevel(Math.max(0, Math.min(LEVELS.length - 1, +m[1] - 1))); }, 1600);  /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
+        if (m) setTimeout(function () { startLevel(Math.max(0, Math.min(LEVELS.length - 1, +m[1] - 1))); }, 1600);
     });
 })();

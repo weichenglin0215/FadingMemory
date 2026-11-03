@@ -222,7 +222,7 @@
        document.hidden 時直接跳過 update（分頁不可見時不用算遊戲邏輯），但
        requestAnimationFrame(frame) 這行要留在最前面，分頁切回來才能繼續跑。 */
     function frame(now) {
-        requestAnimationFrame(frame);                   /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
+        requestAnimationFrame(frame);
         var dt = last ? Math.min(0.05, (now - last) / 1000) : 0.016;
         last = now;
         if (document.hidden) return;
@@ -268,7 +268,7 @@
         return new Promise(function (resolve) {
             var t = 0;
             function step(dt) {
-                if (ctx !== owner) { hooks.splice(hooks.indexOf(step), 1); return; }  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+                if (ctx !== owner) { hooks.splice(hooks.indexOf(step), 1); return; }
                 t = duration > 0 ? Math.min(1, t + dt / duration) : 1;
                 fn(t);
                 if (t >= 1) {
@@ -339,7 +339,7 @@
         var active = ctx.mode !== 'none' && !Core.frozen && !Core.busy;
         var inp = active ? HUD.input() : { x: 0, y: 0 };
         var ix = Math.abs(inp.x) < 0.14 ? 0 : inp.x;    /* Math.abs：取絕對值（去掉負號） */
-        var iy = Math.abs(inp.y) < 0.14 ? 0 : inp.y;    /* Math.abs：取絕對值（去掉負號） */
+        var iy = Math.abs(inp.y) < 0.14 ? 0 : inp.y;
         var cfg = CFG[P.mode] || CFG.walk;
 
         /* 轉彎：yaw（朝向角）依左右輸入增減 */
@@ -415,7 +415,7 @@
             /* 面向判斷：角色正前方與「角色→物件」的夾角 */
             var ox = it.fx - P.pos.x;
             var oz = it.fz - P.pos.z;
-            var od = Math.sqrt(ox * ox + oz * oz);      /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
+            var od = Math.sqrt(ox * ox + oz * oz);
             /* 面向判斷：玩家正前方與「玩家→物件」的夾角（用內積 dot product 比較 cos 值） */
             it.facing = od < 0.7 || (ox * fwdX + oz * fwdZ) / od >= cosFace;
             if (it.markerObj) {
@@ -448,7 +448,7 @@
     function bindTap(canvas) {
         var start = null;
         canvas.addEventListener('pointerdown', function (e) {  /* pointerdown／pointermove／pointerup：指標事件，手指與滑鼠通用（按下、移動、放開） */
-            start = { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId };  /* performance.now()：高精度的時間（毫秒），計時用 */
+            start = { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId };
         });
         canvas.addEventListener('pointerup', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (!start || e.pointerId !== start.id) return;
@@ -474,7 +474,7 @@
         ndc.set(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1);
         raycaster.setFromCamera(ndc, camera);
         var targets = [];
-        ctx.items.forEach(function (it) {               /* forEach：對陣列的每個元素各做一次 */
+        ctx.items.forEach(function (it) {
             if (it.enabled && !it.enabled()) return;
             (it.hit || []).forEach(function (o) { targets.push(o); });
             if (it.markerObj && it.markerObj.visible) targets.push(it.markerObj);
@@ -738,7 +738,7 @@
             x: +P.pos.x.toFixed(2), z: +P.pos.z.toFixed(2), yaw: +P.yaw.toFixed(2),
             mode: P.mode, near: Core.near && Core.near.label,
             frozen: Core.frozen, busy: Core.busy, paused: Core.paused, modal: HUD.isModal(),
-            fps: Math.round(perf.fps), quality: quality,  /* Math.round：四捨五入成整數 */
+            fps: Math.round(perf.fps), quality: quality,
             calls: renderer.info.render.calls, tris: renderer.info.render.triangles,
             geos: renderer.info.memory.geometries, texs: renderer.info.memory.textures
         };

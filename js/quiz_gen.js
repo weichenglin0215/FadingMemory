@@ -82,7 +82,7 @@
     function cnCount(n) { return n === 2 ? '兩' : cnNum(n); }   /* 數量：兩個、三本 */
 
     /* 兩位數：兩個數字不同、不含 0（才能對調出另一個號碼） */
-    function twoDiff(n) { return n % 10 !== 0 && Math.floor(n / 10) !== n % 10; }  /* Math.floor：無條件捨去成整數 */
+    function twoDiff(n) { return n % 10 !== 0 && Math.floor(n / 10) !== n % 10; }
     function threeDiff(n) {
         var s = String(n);
         return s.indexOf('0') < 0 && s[0] !== s[1] && s[1] !== s[2] && s[0] !== s[2];  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
@@ -189,14 +189,14 @@
         this.r = mulberry32(seed >>> 0);
         this.avoid = {};
         var self = this;
-        (avoid || []).forEach(function (k) { self.avoid[k] = 1; });  /* forEach：對陣列的每個元素各做一次 */
+        (avoid || []).forEach(function (k) { self.avoid[k] = 1; });
         this.used = [];
     }
     Gen.prototype.int = function (a, b) { return a + Math.floor(this.r() * (b - a + 1)); };
     Gen.prototype.coin = function () { return this.r() < 0.5; };
     Gen.prototype.any = function (arr) { return arr[Math.floor(this.r() * arr.length)]; };
     Gen.prototype.shuffle = function (arr) {
-        var a = arr.slice();                            /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        var a = arr.slice();
         for (var i = a.length - 1; i > 0; i--) {
             var j = Math.floor(this.r() * (i + 1));
             var t = a[i]; a[i] = a[j]; a[j] = t;
@@ -218,7 +218,7 @@
         var ex = {};
         (exclude || []).forEach(function (v) { ex[keyOf(v)] = 1; });
         var pool = arr.filter(function (v) { return !ex[keyOf(v)]; });  /* filter：留下符合條件的元素，回傳新陣列 */
-        var fresh = this.shuffle(pool.filter(function (v) { return !self.avoid[keyOf(v)]; }));  /* filter：留下符合條件的元素，回傳新陣列 */
+        var fresh = this.shuffle(pool.filter(function (v) { return !self.avoid[keyOf(v)]; }));
         var stale = this.shuffle(pool.filter(function (v) { return self.avoid[keyOf(v)]; }));
         var out = fresh.concat(stale).slice(0, n == null ? 1 : n);
         if (out.length < (n == null ? 1 : n)) throw new Error('題庫不夠抽');
@@ -230,7 +230,7 @@
     Gen.prototype.num = function (a, b, exclude, filter, key) {
         var arr = [];
         for (var i = a; i <= b; i++) {
-            if (exclude && exclude.indexOf(i) >= 0) continue;  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+            if (exclude && exclude.indexOf(i) >= 0) continue;
             if (filter && !filter(i)) continue;
             arr.push(i);
         }
@@ -264,7 +264,7 @@
     /* 從題庫池拿幾個「不是答案」的值當誘答 */
     Gen.prototype.others = function (pool, not, kind, n) {
         var ex = [].concat(not);
-        return this.sample(pool.filter(function (v) { return ex.indexOf(v) < 0; }), n || 3).map(function (v) { return L(v, kind || '差一點點'); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        return this.sample(pool.filter(function (v) { return ex.indexOf(v) < 0; }), n || 3).map(function (v) { return L(v, kind || '差一點點'); });
     };
 
     /* 一題：答案＋誘答（依序列出，越前面越優先；三個誘答盡量來自不同的混淆類型）。
@@ -573,7 +573,7 @@
         var want = tm ? tm[1] : null;
         var make = null;
         if (m) { if (!s || s.seed !== (+m[1] >>> 0) || (want && s.theme !== want)) make = +m[1]; }
-        else if (!s || UI.store.get(FRESH, false) || (want && s.theme !== want)) make = newSeed();  /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
+        else if (!s || UI.store.get(FRESH, false) || (want && s.theme !== want)) make = newSeed();
         if (make != null) {
             s = QuizGen.create(make, s, want);
             UI.store.set(KEY, s);

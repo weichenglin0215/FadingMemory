@@ -104,7 +104,7 @@
         var field = h('div', { 'class': 'danmaku-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var goal = h('div', { 'class': 'danmaku-goal' }, [h('span', { 'class': 'danmaku-goal__t', text: '目標：' }), h('span', { 'class': 'danmaku-goal__ch', text: seg.target })]);
-        field.appendChild(goal);                        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(goal);
         var info = h('div', { 'class': 'qz-note danmaku-info', text: '' }); field.appendChild(info);
         var arena = h('div', { 'class': 'danmaku-arena' }); field.appendChild(arena);
         var carry = 0, last = null;
@@ -147,7 +147,7 @@
         }
         /* 每 SEGMENT 個換目標字：清掉畫面、停一下、告訴你新的目標字（筆劃越來越多） */
         function newTarget() {
-            paused = true; items.forEach(function (it) { it.el.remove(); }); items = [];  /* forEach：對陣列的每個元素各做一次 */
+            paused = true; items.forEach(function (it) { it.el.remove(); }); items = [];
             seg = pickTarget(hits, api.rand, seg.target); since = 0; carry = 0;
             info.textContent = '換目標字！新的是「' + seg.target + '」'; goal.querySelector('.danmaku-goal__ch').textContent = seg.target; goal.classList.add('danmaku-goal--new');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             api.after(INTERMISSION_MS, function () { paused = false; info.textContent = ''; goal.classList.remove('danmaku-goal--new'); });  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
@@ -155,9 +155,9 @@
         /* 結束：暫停，畫面上所有目標字圈綠色；點錯的字圈紅色 */
         function finish(msg, bad) {
             over = true;
-            items.forEach(function (it) { it.el.classList.add(it.data.isTarget ? 'danmaku-ch--target' : 'danmaku-ch--dim'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            items.forEach(function (it) { it.el.classList.add(it.data.isTarget ? 'danmaku-ch--target' : 'danmaku-ch--dim'); });
             if (bad) bad.el.classList.add('danmaku-ch--bad');
-            info.textContent = msg;                     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            info.textContent = msg;
             kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
             api.fail({ delay: 3000, lines: [msg, '目標字是「' + seg.target + '」，形近字：' + seg.group.join('、')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }

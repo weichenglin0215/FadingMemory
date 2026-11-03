@@ -56,7 +56,7 @@
             if (cands.length && rand() < confuseP(hits)) rank = kit.pick(cands, rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             else { do { rank = kit.randInt(1, 13, rand); } while (rank === count); }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         }
-        return { rank: rank, suit: kit.pick(SUITS, rand), count: count, isMatch: rank === count };  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        return { rank: rank, suit: kit.pick(SUITS, rand), count: count, isMatch: rank === count };
     }
     /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
@@ -90,7 +90,7 @@
     };
     function suitSvg(suit, size) {
         var s = kit.svg('svg', { 'class': 'cardslap-suit cardslap-suit--' + suit, viewBox: '0 0 24 24', width: size, height: size });  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        kit.svg('path', { d: SUIT_PATH[suit] }, s);     /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('path', { d: SUIT_PATH[suit] }, s);
         return s;
     }
 
@@ -105,7 +105,7 @@
 
         var field = h('div', { 'class': 'cardslap-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-        field.appendChild(h('div', { 'class': 'qz-note cardslap-tip', text: '牌＝你數到的數字就拍（點畫面）' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(h('div', { 'class': 'qz-note cardslap-tip', text: '牌＝你數到的數字就拍（點畫面）' }));
         var countBox = h('div', { 'class': 'cardslap-count', text: '' }); field.appendChild(countBox);
         var table = h('div', { 'class': 'cardslap-table' }); field.appendChild(table);
         var cardEl = h('div', { 'class': 'cardslap-card cardslap-card--back' }); table.appendChild(cardEl);
@@ -132,7 +132,7 @@
             el.appendChild(h('div', { 'class': 'cardslap-card__r cardslap-card__r--b', text: rankName(c.rank) }));
             table.replaceChild(el, cardEl); cardEl = el; el.classList.add('cardslap-card--flip'); Sfx.play('flip');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
         }
-        api.after(LEAD_MS, flip);                       /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+        api.after(LEAD_MS, flip);
         /* 拍：點畫面任何地方。這張是要拍的 → 加一分；不是 → 結束 */
         kit.onTap(field, function () {                  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             if (over || api.over || !cur) return;
@@ -143,9 +143,9 @@
         /* 這一局結束：算出成績並進入結算畫面 */
         function finish(kind) {
             if (over) return;
-            over = true; cardEl.classList.add(kind === 'wrong' ? 'cardslap-card--bad' : 'cardslap-card--miss');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            over = true; cardEl.classList.add(kind === 'wrong' ? 'cardslap-card--bad' : 'cardslap-card--miss');
             var msg = kind === 'wrong' ? '這張是「' + rankName(cur.rank) + '」，你該數到「' + rankName(cur.count) + '」，不用拍！' : '這張「' + rankName(cur.rank) + '」剛好是你該數到的，卻沒拍！';
-            info.textContent = msg; countBox.textContent = '你該數到：' + rankName(cur.count);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            info.textContent = msg; countBox.textContent = '你該數到：' + rankName(cur.count);
             kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
             api.fail({ delay: 3200, lines: [msg, '一共拍對 ' + hits + ' 次'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }

@@ -115,7 +115,7 @@
         var d4 = n % 10;                       /* 小數第 4 位 */
         var d3 = Math.floor(n / 10) % 10;      /* 小數第 3 位 */
         if (d4 === 0) n += 1 + Math.floor(rand() * 9);  /* Math.floor：無條件捨去成整數 */
-        if (d3 === 0) n += 10 * (1 + Math.floor(rand() * 9));  /* Math.floor：無條件捨去成整數 */
+        if (d3 === 0) n += 10 * (1 + Math.floor(rand() * 9));
         return sign * n / 10000;
     }
 
@@ -334,7 +334,7 @@
     function clearIdentity() {
         [KEY_PID, KEY_TOKEN, KEY_NICK, KEY_RELOGIN, KEY_PENDING, KEY_FBPEND, KEY_OVERTAKE].forEach(del);
         Object.keys(state.boards).forEach(function (k) { delete state.boards[k]; });  /* forEach：對陣列的每個元素各做一次 */
-        ((global.Reaction && global.Reaction.list && global.Reaction.list()) || []).forEach(function (g) { del(KEY_BOARD + g.id); });  /* forEach：對陣列的每個元素各做一次 */
+        ((global.Reaction && global.Reaction.list && global.Reaction.list()) || []).forEach(function (g) { del(KEY_BOARD + g.id); });
         try {
             Object.keys(global.localStorage).forEach(function (k) { if (k.indexOf(KEY_BOARD) === 0) global.localStorage.removeItem(k); });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         } catch (e) { }
@@ -374,7 +374,7 @@
             return { ok: false, error: (e && e.name === 'AbortError') ? 'timeout' : 'network' };
         }).then(function (r) {
             if (timer) global.clearTimeout(timer);
-            r.ms = Date.now() - t0;                     /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
+            r.ms = Date.now() - t0;
             return r;
         });
     }
@@ -608,7 +608,7 @@
         var g = resolveGame(ref);
         if (!supports(g) || typeof value !== 'number' || !isFinite(value)) return Promise.resolve({ status: 'skip' });
         var spec = g.score, id = g.id;
-        var score = Math.round(value * 10000) / 10000;  /* Math.round：四捨五入成整數 */
+        var score = Math.round(value * 10000) / 10000;
         log('結算', g.name, '成績', fmt(spec, score), '（原始數字 ' + score + '）');
         /* 超出這款遊戲 score.min～max 的成績不送（例如 0 關、沒成功的不可能任務）：
            資料庫也會用同一個範圍擋掉，在這裡先擋可以省一次連線，而且不會問玩家任何事 */
@@ -702,10 +702,10 @@
     /* 只留格式正確的列（防止資料庫回傳的東西或 localStorage 被改壞時，畫面拿到奇怪的值） */
     function cleanOvertaken(list) {
         if (!Array.isArray(list)) return [];
-        return list.filter(function (x) {               /* filter：留下符合條件的元素，回傳新陣列 */
+        return list.filter(function (x) {
             return x && typeof x.game_id === 'string' && /^[a-z0-9_]{1,32}$/.test(x.game_id) &&
                 typeof x.rank === 'number' && x.rank >= 2 && x.rank === Math.floor(x.rank);
-        }).map(function (x) { return { game_id: x.game_id, rank: x.rank, at: x.at || null }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        }).map(function (x) { return { game_id: x.game_id, rank: x.rank, at: x.at || null }; });
     }
 
     function overtaken(opts) {

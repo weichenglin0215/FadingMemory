@@ -45,7 +45,7 @@
     function prog(n) { return Math.min(1, Math.max(0, n / RAMP_PLATES)); }
     function lerp(pair, n) { return pair[0] + (pair[1] - pair[0]) * prog(n); }
     function spotsFor(n) { return Math.round(lerp(SPOTS, n)); }  /* Math.round：四捨五入成整數 */
-    function spotRFor(n) { return Math.round(lerp(SPOT_R, n) * 10) / 10; }  /* Math.round：四捨五入成整數 */
+    function spotRFor(n) { return Math.round(lerp(SPOT_R, n) * 10) / 10; }
     function needFor(n) { return Math.round(lerp(NEED, n)); }
     function visFor(n) { return Math.round(lerp(VIS, n) * 1000) / 1000; }
     function patsFor(n) { return Math.round(lerp(PATS, n)); }
@@ -67,7 +67,7 @@
                     if (gap >= MIN_GAP + 0.3 && gap > bestGap) { bestGap = gap; best = { x: x, y: y, rr: rr }; }
                 }
                 if (!best) break;
-                var blob = []; for (var bb = 0; bb < 3; bb++) { var ba = rand() * 6.283, bd = best.rr * 0.4 * rand(); blob.push([Math.round(bd * Math.cos(ba) * 10) / 10, Math.round(bd * Math.sin(ba) * 10) / 10, Math.round(best.rr * kit.randFloat(0.55, 0.85, rand) * 10) / 10]); }  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+                var blob = []; for (var bb = 0; bb < 3; bb++) { var ba = rand() * 6.283, bd = best.rr * 0.4 * rand(); blob.push([Math.round(bd * Math.cos(ba) * 10) / 10, Math.round(bd * Math.sin(ba) * 10) / 10, Math.round(best.rr * kit.randFloat(0.55, 0.85, rand) * 10) / 10]); }
                 spots.push({ x: Math.round(best.x * 10) / 10, y: Math.round(best.y * 10) / 10, r: Math.round(best.rr * 10) / 10, need: Math.round(needFor(n) * kit.randFloat(0.85, 1.15, rand)), v: 1, blob: blob });
             }
         }
@@ -115,10 +115,10 @@
     /* 畫一個盤子（SVG，viewBox 300×300，盤心在 150,150）：盤子本體、花紋、污漬；回傳每塊污漬的 SVG 群組 */
     function drawPlate(parent, plate) {
         var svg = kit.svg('svg', { 'class': 'dishes-svg', viewBox: '0 0 300 300', width: 330, height: 330 }, parent);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        var g = kit.svg('g', { transform: 'translate(150,150)' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var g = kit.svg('g', { transform: 'translate(150,150)' }, svg);
         kit.svg('circle', { 'class': 'dishes-plate', cx: 0, cy: 0, r: PLATE_R }, g);
         kit.svg('circle', { 'class': 'dishes-rim', cx: 0, cy: 0, r: PLATE_R - 18 }, g);
-        plate.pats.forEach(function (p) {               /* forEach：對陣列的每個元素各做一次 */
+        plate.pats.forEach(function (p) {
             var pg = kit.svg('g', { 'class': 'dishes-pat dishes-pat' + plate.sim, transform: 'translate(' + p.x + ',' + p.y + ') rotate(' + p.rot + ')' }, g);
             if (p.kind === 'petal') kit.svg('ellipse', { cx: 0, cy: 0, rx: p.size * 0.55, ry: p.size }, pg);
             else if (p.kind === 'dot') kit.svg('circle', { cx: 0, cy: 0, r: p.size * 0.6 }, pg);
@@ -147,7 +147,7 @@
         var field = h('div', { 'class': 'dishes-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note dishes-tip', text: '用手指在污漬上來回刷，花紋刷不掉' });
-        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(tip);
         var holder = h('div', { 'class': 'dishes-holder' }); holder.style.cssText = 'left:' + Math.round((W - 330) / 2) + 'px;top:90px;'; field.appendChild(holder);
         var info = h('div', { 'class': 'qz-note dishes-info', text: '' }); info.style.top = '440px'; field.appendChild(info);
         /* 盤子座標 ↔ 螢幕座標：盤子的 SVG 330px 對應 300 個單位 */
@@ -168,7 +168,7 @@
             e.preventDefault(); try { field.setPointerCapture(e.pointerId); } catch (err) { }  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             down = { id: e.pointerId }; last = toPlate(e);
         });
-        field.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        field.addEventListener('pointermove', function (e) {
             if (!down || e.pointerId !== down.id || phase !== 'play') return;
             var p = toPlate(e), len = Math.hypot(p.x - last.x, p.y - last.y); last = p;
             if (len <= 0 || Math.hypot(p.x, p.y) > PLATE_R + 20) return;
@@ -181,9 +181,9 @@
         field.addEventListener('pointerup', up); field.addEventListener('pointercancel', up);
         /* 泡泡（裝飾）：刷的地方冒幾個泡泡 */
         function bubble(e, onDirt) {
-            var r = field.getBoundingClientRect(), b = h('div', { 'class': 'dishes-bubble' + (onDirt ? ' dishes-bubble--dirt' : '') }); bubbles++;  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
+            var r = field.getBoundingClientRect(), b = h('div', { 'class': 'dishes-bubble' + (onDirt ? ' dishes-bubble--dirt' : '') }); bubbles++;
             b.style.cssText = 'left:' + (e.clientX - r.left - 8 + (Math.random() - 0.5) * 24).toFixed(0) + 'px;top:' + (e.clientY - r.top - 8 + (Math.random() - 0.5) * 24).toFixed(0) + 'px;';
-            field.appendChild(b); api.after(520, function () { bubbles--; if (b.parentNode) b.parentNode.removeChild(b); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+            field.appendChild(b); api.after(520, function () { bubbles--; if (b.parentNode) b.parentNode.removeChild(b); });
         }
         /* 洗乾淨了：自動換下一個盤子 */
         function washed() {

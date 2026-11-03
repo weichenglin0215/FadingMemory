@@ -54,7 +54,7 @@
     function amounts(level) {
         return {
             size: kit.ramp(level, SIZE_START, SIZE_END, LEVEL_RAMP),  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
-            hue: kit.ramp(level, HUE_START, HUE_END, LEVEL_RAMP),  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+            hue: kit.ramp(level, HUE_START, HUE_END, LEVEL_RAMP),
             pos: kit.ramp(level, POS_START, POS_END, LEVEL_RAMP)
         };
     }
@@ -83,12 +83,12 @@
         });
         /* 挑 5 個要動手腳的圖形，差異種類三種都至少出現一次，其餘隨機；每個差異改在上格或下格也是隨機的 */
         /* 挑 5 個動手腳；差異種類：三種都至少一次，其餘隨機 */
-        var idx = kit.shuffle(items.map(function (_, i) { return i; }), rand).slice(0, N_DIFF);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+        var idx = kit.shuffle(items.map(function (_, i) { return i; }), rand).slice(0, N_DIFF);
         /* kinds 先放三種，再補到 5 個，最後洗牌 */
         var kinds = KINDS.slice();                      /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
-        while (kinds.length < N_DIFF) kinds.push(kit.pick(KINDS, rand));  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        while (kinds.length < N_DIFF) kinds.push(kit.pick(KINDS, rand));
         kinds = kit.shuffle(kinds, rand);
-        var diffs = idx.map(function (i, k) {           /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        var diffs = idx.map(function (i, k) {
             var kind = kinds[k], d = { i: i, kind: kind, panel: rand() < 0.5 ? 'top' : 'bot', amount: amt[kind], dh: 0, ds: 1, dx: 0, dy: 0 };
             if (kind === 'size') d.ds = 1 + (rand() < 0.5 ? -1 : 1) * amt.size;
             if (kind === 'hue') d.dh = (rand() < 0.5 ? -1 : 1) * amt.hue;
@@ -159,7 +159,7 @@
             var bot = h('div', { 'class': 'diff-panel' });
             var flash = h('div', { 'class': 'diff-penalty', text: '點錯了' });
             root.appendChild(head);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-            root.appendChild(top);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(top);
             root.appendChild(bot);
             root.appendChild(flash);
 
@@ -171,7 +171,7 @@
             /* 更新標題文字（找到幾個、還能點錯幾次、花了幾秒） */
             function paintHead() {
                 var left = MISTAKES_MAX - 1 - mistakes;
-                head.innerHTML = '';                    /* innerHTML = ''：把元素裡面的東西全部清掉 */
+                head.innerHTML = '';
                 head.appendChild(h('span', { 'class': 'diff-head__main', text: '第 ' + levelNo + ' 關　找到 ' + found + ' / ' + N_DIFF }));
                 head.appendChild(h('span', { 'class': 'diff-head__sub' + (left <= 0 ? ' diff-head__sub--warn' : ''), text: (left > 0 ? '還能點錯 ' + left + ' 次' : '再點錯就結束了') + '　本關 ' + Math.floor((performance.now() - t0) / 1000) + ' 秒' }));  /* performance.now()：高精度的時間（毫秒），計時用 */
             }
@@ -181,9 +181,9 @@
                 el.innerHTML = '';
                 var svg = kit.svg('svg', { 'class': 'diff-svg', viewBox: '0 0 ' + W + ' ' + Hh }, el);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
                 svgs[panel] = svg;
-                L.items.forEach(function (_, i) {       /* forEach：對陣列的每個元素各做一次 */
+                L.items.forEach(function (_, i) {
                     var s = itemIn(L, panel, i);
-                    var g = kit.svg('g', { transform: 'translate(' + s.x.toFixed(2) + ' ' + s.y.toFixed(2) + ')' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+                    var g = kit.svg('g', { transform: 'translate(' + s.x.toFixed(2) + ' ' + s.y.toFixed(2) + ')' }, svg);
                     var fillC = 'hsl(' + s.hue.toFixed(1) + ', 72%, 56%)';
                     if (s.shape === 'circle') kit.svg('circle', { 'class': 'diff-shape', r: s.r.toFixed(2), fill: fillC }, g);
                     else kit.svg('polygon', { 'class': 'diff-shape', fill: fillC, points: polyPoints(s.shape, s.r).map(function (p) { return p[0].toFixed(2) + ',' + p[1].toFixed(2); }).join(' ') }, g);
@@ -206,7 +206,7 @@
             function startLevel() {
                 if (my.dead) return;
                 L = makeLevel(levelNo, top.clientWidth, top.clientHeight);
-                found = 0; foundSet = {}; mistakes = 0; state = 'play'; t0 = performance.now();  /* performance.now()：高精度的時間（毫秒），計時用 */
+                found = 0; foundSet = {}; mistakes = 0; state = 'play'; t0 = performance.now();
                 drawPanel(top, 'top', top.clientWidth, top.clientHeight);
                 drawPanel(bot, 'bot', bot.clientWidth, bot.clientHeight);
                 /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「第一個不一樣的圖形」上（第一關的正確答案之一） */
@@ -236,10 +236,10 @@
                     if (found >= N_DIFF) levelClear();
                     /* 不是差異：點錯，顯示橘色圈，累計次數，達上限就結束 */
                 } else {
-                    g.querySelector('.diff-ring').classList.add('diff-ring--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                    my.after(450, function () { g.querySelector('.diff-ring').classList.remove('diff-ring--bad'); });  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
+                    g.querySelector('.diff-ring').classList.add('diff-ring--bad');
+                    my.after(450, function () { g.querySelector('.diff-ring').classList.remove('diff-ring--bad'); });
                     mistakes++;
-                    Sfx.play('bad');                    /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                    Sfx.play('bad');
                     flash.classList.remove('diff-penalty--on'); void flash.offsetWidth; flash.classList.add('diff-penalty--on');
                     paintHead();
                     if (mistakes >= MISTAKES_MAX) gameOver();
@@ -250,7 +250,7 @@
             function levelClear() {
                 state = 'clear';
                 cleared = levelNo;
-                if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
                 Sfx.play('win');
                 levelNo++;
                 my.after(NEXT_MS, startLevel);

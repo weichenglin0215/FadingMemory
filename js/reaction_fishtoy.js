@@ -51,7 +51,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function omegaFor(level) { return Math.round(ramp(level, OMEGA) * 10000) / 10000; }  /* Math.round：四捨五入成整數 */
-    function dutyFor(level) { return Math.round(ramp(level, DUTY) * 1000) / 1000; }  /* Math.round：四捨五入成整數 */
+    function dutyFor(level) { return Math.round(ramp(level, DUTY) * 1000) / 1000; }
     function targetsFor(level) { return Math.round(ramp(level, TARGETS)); }
     function tolFor(level) { return Math.round(ramp(level, TOL) * 100) / 100; }
     function wrap180(d) { d = ((d + 180) % 360 + 360) % 360 - 180; return d; }
@@ -68,7 +68,7 @@
     /* 落水的那一刻 t，釣到了什麼：{ result: 'empty'｜'closed'｜'wrong'｜'ok', fish（釣到／最近的那條的編號，empty 時是最近的）, off（偏離角）, alpha, need（需要的角度）, gap（還差幾度）} */
     function judgeLanding(q, t) {
         var best = -1, bo = 1e9, i;
-        for (i = 0; i < q.fish.length; i++) { var o = Math.abs(offsetAt(q, q.fish[i], t)); if (o < bo) { bo = o; best = i; } }  /* Math.abs：取絕對值（去掉負號） */
+        for (i = 0; i < q.fish.length; i++) { var o = Math.abs(offsetAt(q, q.fish[i], t)); if (o < bo) { bo = o; best = i; } }
         var need = CATCH_FRAC * MAX_OPEN;
         if (bo > q.tol) return { result: 'empty', fish: best, off: bo, alpha: mouthAt(q, q.fish[best], t), need: need, gap: bo - q.tol };
         var a = mouthAt(q, q.fish[best], t);
@@ -86,13 +86,13 @@
         while (colors.length < N) colors.push(kit.pick(others, rand));  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         colors = kit.shuffle(colors, rand);             /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         var off = kit.randFloat(0, 360 / N, rand), fish = colors.map(function (col, k) {  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
-            return { color: col, ang0: Math.round((off + k * 360 / N) * 100) / 100, P: Math.round(kit.randFloat(PERIOD[0], PERIOD[1], rand) * 1000) / 1000, phi: 0 };  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+            return { color: col, ang0: Math.round((off + k * 360 / N) * 100) / 100, P: Math.round(kit.randFloat(PERIOD[0], PERIOD[1], rand) * 1000) / 1000, phi: 0 };
         });
         fish.forEach(function (f) { f.phi = Math.round(kit.randFloat(0, f.P, rand) * 1000) / 1000; });  /* forEach：對陣列的每個元素各做一次 */
         var q = { level: level, omega: omega, duty: duty, tol: tol, N: N, target: target, fish: fish, guaranteed: null };
         /* 保證有解：挑一條指定顏色的魚、它某一次經過釣竿正下方的時間 t*，把相位調成「那一刻嘴巴正中央最張開」 */
-        var cand = []; fish.forEach(function (f, k) { if (f.color === target) cand.push(k); });  /* forEach：對陣列的每個元素各做一次 */
-        var gi = kit.pick(cand, rand), g = fish[gi], per = 1 / omega, t0 = ((ROD_ANGLE - g.ang0) / (360 * omega)), tmax = TIME_LIMIT * T_MAX_FRAC;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        var cand = []; fish.forEach(function (f, k) { if (f.color === target) cand.push(k); });
+        var gi = kit.pick(cand, rand), g = fish[gi], per = 1 / omega, t0 = ((ROD_ANGLE - g.ang0) / (360 * omega)), tmax = TIME_LIMIT * T_MAX_FRAC;
         t0 = ((t0 % per) + per) % per;                                                     /* 第一次經過釣竿的時間（0～一圈的時間） */
         var passes = []; for (var tp = t0; tp <= tmax; tp += per) if (tp >= T_MIN) passes.push(tp);
         if (!passes.length) passes.push(t0 + per * Math.ceil((T_MIN - t0) / per));  /* Math.ceil：無條件進位成整數 */
@@ -139,7 +139,7 @@
     /* 一條魚（SVG，朝 +x 方向游，身體中心在 (0,0)）：身體、尾巴、眼睛、嘴（兩片嘴唇＋張開的黑洞，用 setMouth 改角度） */
     function drawFish(parent, color) {
         var g = kit.svg('g', { 'class': 'fishtoy-fish' }, parent);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        kit.svg('path', { 'class': 'fishtoy-tail fishtoy-c' + color, d: 'M-22,0 L-44,-15 Q-38,0 -44,15 Z' }, g);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('path', { 'class': 'fishtoy-tail fishtoy-c' + color, d: 'M-22,0 L-44,-15 Q-38,0 -44,15 Z' }, g);
         kit.svg('ellipse', { 'class': 'fishtoy-body fishtoy-c' + color, cx: 0, cy: 0, rx: 27, ry: 16 }, g);
         kit.svg('circle', { 'class': 'fishtoy-eye', cx: 12, cy: -6, r: 3.2 }, g);
         var hole = kit.svg('path', { 'class': 'fishtoy-hole', d: '' }, g), up = kit.svg('line', { 'class': 'fishtoy-lip', x1: 25, y1: 0, x2: 25, y2: 0 }, g), lo = kit.svg('line', { 'class': 'fishtoy-lip', x1: 25, y1: 0, x2: 25, y2: 0 }, g);
@@ -148,7 +148,7 @@
     function setMouth(fs, a) {
         var r = a * Math.PI / 360, L = 13, ux = 25 + L * Math.cos(r), uy = -L * Math.sin(r), lx = ux, ly = L * Math.sin(r);
         fs.up.setAttribute('x2', ux.toFixed(2)); fs.up.setAttribute('y2', uy.toFixed(2)); fs.lo.setAttribute('x2', lx.toFixed(2)); fs.lo.setAttribute('y2', ly.toFixed(2));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
-        fs.hole.setAttribute('d', a < 2 ? '' : 'M25,0 L' + ux.toFixed(2) + ',' + uy.toFixed(2) + ' L' + lx.toFixed(2) + ',' + ly.toFixed(2) + ' Z');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+        fs.hole.setAttribute('d', a < 2 ? '' : 'M25,0 L' + ux.toFixed(2) + ',' + uy.toFixed(2) + ' L' + lx.toFixed(2) + ',' + ly.toFixed(2) + ' Z');
     }
 
     /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
@@ -164,7 +164,7 @@
         var field = h('div', { 'class': 'fishtoy-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var goal = h('div', { 'class': 'fishtoy-goal' });
-        goal.appendChild(h('span', { 'class': 'fishtoy-goal__t', text: '釣 ' })); goal.appendChild(h('span', { 'class': 'fishtoy-goal__c fishtoy-bg' + q.target, text: COLORS[q.target] + '色' })); goal.appendChild(h('span', { 'class': 'fishtoy-goal__t', text: ' 的魚' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        goal.appendChild(h('span', { 'class': 'fishtoy-goal__t', text: '釣 ' })); goal.appendChild(h('span', { 'class': 'fishtoy-goal__c fishtoy-bg' + q.target, text: COLORS[q.target] + '色' })); goal.appendChild(h('span', { 'class': 'fishtoy-goal__t', text: ' 的魚' }));
         field.appendChild(goal);
         var svg = kit.svg('svg', { 'class': 'fishtoy-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, field);
         kit.svg('circle', { 'class': 'fishtoy-pond', cx: cx, cy: cy, r: R }, svg);
@@ -182,7 +182,7 @@
         if (level === 1 && kit.once('fishtoy.hint')) kit.hintOn(stage, btn.btns[0], { mode: 'tap', delay: 900, text: '魚嘴張開、到釣竿下才放' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
         var phase = 'play', t0 = performance.now(), tDrop = null, tLand = null;  /* performance.now()：高精度的時間（毫秒），計時用 */
-        function nowS() { return (performance.now() - t0) / 1000; }  /* performance.now()：高精度的時間（毫秒），計時用 */
+        function nowS() { return (performance.now() - t0) / 1000; }
         q.nowS = nowS;                                                       /* 給驗證腳本用：目前的關卡時間（秒） */
         /* 畫：在時間 t 的池塘（魚的位置、嘴巴）；釣竿落下的進度 p（0～1） */
         function paint(t) {
@@ -213,13 +213,13 @@
             phase = 'end'; paint(tLand); paintHook(1);
             info.textContent = why;                     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             if (r.result === 'ok') {
-                Sfx.play('ok'); info.classList.add('fishtoy-info--ok');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
-                fs[r.fish].g.classList.add('fishtoy-fish--caught');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                Sfx.play('ok'); info.classList.add('fishtoy-info--ok');
+                fs[r.fish].g.classList.add('fishtoy-fish--caught');
                 kit.flash(stage, true, api.my);         /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
                 api.pass({ delay: 2000 });              /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
                 return;
             }
-            info.classList.add('fishtoy-info--bad'); kit.flash(stage, false, api.my);  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            info.classList.add('fishtoy-info--bad'); kit.flash(stage, false, api.my);
             replay(r);
             api.fail({ delay: replayMs() + 1800, lines: [why, '要釣的是' + COLORS[q.target] + '色的魚（池塘裡 ' + q.fish.filter(function (f) { return f.color === q.target; }).length + ' 條）'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
@@ -227,7 +227,7 @@
         function replay(r) {
             phase = 'replay';
             var r0 = performance.now(), ms = replayMs(), tv0 = tDrop - REPLAY_PRE, tv1 = tLand + REPLAY_POST, ring = null;
-            api.my.loop(function (now) {                /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
+            api.my.loop(function (now) {
                 var pr = Math.min(1, (now - r0) / ms), tv = tv0 + (tv1 - tv0) * pr;
                 paint(tv); paintHook(Math.max(0, Math.min(1, (tv - tDrop) / DROP_S)));
                 if (tv >= tLand && !ring) { ring = true; fs[r.fish].g.classList.add('fishtoy-fish--focus'); }
@@ -237,7 +237,7 @@
         /* 驗證用：在「保證的機會」落水的時間放釣竿（solve）／找一個會失敗的時間放（wrong）；只排一次 */
         var armed = false;
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
-        api.solve = function () { if (armed || phase !== 'play') return; armed = true; api.after(Math.max(0, Math.round((q.guaranteed.t - DROP_S - nowS()) * 1000)), drop); };  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+        api.solve = function () { if (armed || phase !== 'play') return; armed = true; api.after(Math.max(0, Math.round((q.guaranteed.t - DROP_S - nowS()) * 1000)), drop); };
         api.wrong = function () {
             if (armed || phase !== 'play') return; armed = true;
             var t = nowS() + 0.05; while (judgeLanding(q, t + DROP_S).result === 'ok' && t < TIME_LIMIT) t += 0.02;

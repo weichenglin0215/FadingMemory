@@ -64,13 +64,13 @@
         if (!pool.length) return null;
         if (prefer != null && prefer !== v % 10) {
             c = base + prefer;
-            if (pool.indexOf(c) >= 0) return c;         /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+            if (pool.indexOf(c) >= 0) return c;
         }
         return kit.pick(pool, rand);                    /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
     }
     function ansMs(level) {
         var n = numsFor(level);
-        return Math.round((TIME_BASE + TIME_PER_NUM * (n - 2)) * kit.ramp(level, TIME_MUL[0], TIME_MUL[1], RAMP_LEVELS) * 1000);  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+        return Math.round((TIME_BASE + TIME_PER_NUM * (n - 2)) * kit.ramp(level, TIME_MUL[0], TIME_MUL[1], RAMP_LEVELS) * 1000);
     }
     /* 算式還原器：tokens 是 [數字, '+'|'-'|'*'|'/', 數字, …, '(' , ')' …] 的陣列。
        mode：'std'＝照數學規則（括號先算、再乘除、最後加減）；'ltr'＝不管先乘除、由左到右一路算（括號還是先算）；
@@ -86,13 +86,13 @@
             if (op === '+') r = x + y;
             else if (op === '-') r = x - y;
             else if (op === '*') r = x * y;
-            else { if (y === 0) { bad = true; r = 0; } else { r = x / y; if (r !== Math.floor(r)) frac = true; } }  /* Math.floor：無條件捨去成整數 */
+            else { if (y === 0) { bad = true; r = 0; } else { r = x / y; if (r !== Math.floor(r)) frac = true; } }
             if (r < 0) neg = true;
-            steps.push(x + ' ' + OP_TEXT[op] + ' ' + y + ' ＝ ' + (r === Math.floor(r) ? r : Math.round(r * 10000) / 10000));  /* Math.round：四捨五入成整數 */
+            steps.push(x + ' ' + OP_TEXT[op] + ' ' + y + ' ＝ ' + (r === Math.floor(r) ? r : Math.round(r * 10000) / 10000));
             a.splice(i - 1, 3, r);
         }
         function flat(a) {
-            a = a.slice();                              /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+            a = a.slice();
             if (mode === 'ltr') { while (a.length > 1) apply(a, 1); return a[0]; }
             for (; ;) {
                 var idx = -1;
@@ -122,7 +122,7 @@
         return out;
     }
     /* 步驟文字 → 「① 3 × 2 ＝ 6　② 8 − 6 ＝ 2」 */
-    function stepsText(steps) { return steps.map(function (s, i) { return CIRCLED[i] + ' ' + s; }).join('　'); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+    function stepsText(steps) { return steps.map(function (s, i) { return CIRCLED[i] + ' ' + s; }).join('　'); }
     /* 隨機排一個算式；回傳 tokens 與括號的位置記錄 */
     function randomTokens(level, rand) {
         var n = numsFor(level), mx = numMaxFor(level);
@@ -131,10 +131,10 @@
         var pool = ['+', '-', '*'];
         if (level >= DIV_FROM) pool.push('/');
         var ops = [];
-        for (i = 0; i < n - 1; i++) ops.push(kit.pick(pool, rand));  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        for (i = 0; i < n - 1; i++) ops.push(kit.pick(pool, rand));
         /* 至少要有一個乘除、一個加減，不然「先乘除」就沒有意義 */
-        var mdCount = ops.filter(function (o) { return o === '*' || o === '/'; }).length;  /* filter：留下符合條件的元素，回傳新陣列 */
-        if (mdCount === 0) ops[kit.randInt(0, n - 2, rand)] = level >= DIV_FROM && rand() < 0.4 ? '/' : '*';  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+        var mdCount = ops.filter(function (o) { return o === '*' || o === '/'; }).length;
+        if (mdCount === 0) ops[kit.randInt(0, n - 2, rand)] = level >= DIV_FROM && rand() < 0.4 ? '/' : '*';
         else if (mdCount === ops.length) ops[kit.randInt(0, n - 2, rand)] = rand() < 0.5 ? '+' : '-';
         /* 括號：隨機挑不重疊的 2～3 個數字包起來（至少 2 個數字、至少 1 個運算符號） */
         var parens = parensFor(level, n), spans = [], t;
@@ -145,7 +145,7 @@
         }
         var tokens = [];
         for (i = 0; i < n; i++) {
-            spans.forEach(function (s) { if (s[0] === i) tokens.push('('); });  /* forEach：對陣列的每個元素各做一次 */
+            spans.forEach(function (s) { if (s[0] === i) tokens.push('('); });
             tokens.push(nums[i]);
             spans.forEach(function (s) { if (s[1] === i) tokens.push(')'); });
             if (i < n - 1) tokens.push(ops[i]);
@@ -259,7 +259,7 @@
             eq.classList.add(ok ? 'qz-ok' : 'qz-bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             reveal.textContent = stepsText(q.steps);    /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1000 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: 2400, lines: [
                     (v == null ? '時間到！' : '你選了 ' + v) + '，正確答案是 ' + q.truth,

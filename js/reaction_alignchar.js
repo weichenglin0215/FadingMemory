@@ -48,7 +48,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function stripsFor(level) { return kit.clamp(Math.round(kit.ramp(level, STRIPS[0], STRIPS[1], RAMP_LEVELS)), STRIPS[0], STRIPS[1]); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function optionsFor(level) { return kit.clamp(Math.round(kit.ramp(level, OPTIONS[0], OPTIONS[1], RAMP_LEVELS)), OPTIONS[0], OPTIONS[1]); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
-    function cycleFor(level) { return kit.ramp(level, CYCLE_S[0], CYCLE_S[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function cycleFor(level) { return kit.ramp(level, CYCLE_S[0], CYCLE_S[1], RAMP_LEVELS); }
     function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
     /* 第 t 秒，速度倍數 k 的直條往下偏移多少（0～P） */
     function offsetAt(k, t, tAlign, cycle, P) {
@@ -66,10 +66,10 @@
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var groups = GROUPS.filter(function (g) { return g.indexOf(target) >= 0; });  /* filter：留下符合條件的元素，回傳新陣列 */
         var near = [];
-        groups.forEach(function (g) { g.forEach(function (c) { if (c !== target && near.indexOf(c) < 0) near.push(c); }); });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+        groups.forEach(function (g) { g.forEach(function (c) { if (c !== target && near.indexOf(c) < 0) near.push(c); }); });
         var opts = kit.shuffle(near, rand).slice(0, count - 1);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         if (opts.length < count - 1) {
-            var rest = kit.shuffle(CHARS.filter(function (c) { return c !== target && opts.indexOf(c) < 0; }), rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+            var rest = kit.shuffle(CHARS.filter(function (c) { return c !== target && opts.indexOf(c) < 0; }), rand);
             while (opts.length < count - 1) opts.push(rest.shift());
         }
         return kit.shuffle([target].concat(opts), rand);
@@ -81,7 +81,7 @@
         for (var tr = 0; tr < 200; tr++) {
             ks = [];
             for (i = 0; i < n; i++) ks.push(kit.randInt(2, KMAX, rand) * (rand() < 0.5 ? -1 : 1));  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
-            var pos = ks.filter(function (k) { return k > 0; }).length, speeds = {};  /* filter：留下符合條件的元素，回傳新陣列 */
+            var pos = ks.filter(function (k) { return k > 0; }).length, speeds = {};
             ks.forEach(function (k) { speeds[Math.abs(k)] = 1; });  /* Math.abs：取絕對值（去掉負號） */
             /* 所有速度倍數的最大公因數要是 1：都是偶數的話，半個週期就會多對準一次（週期其實只有一半） */
             var g = ks.reduce(function (x, k) { k = Math.abs(k); while (k) { var t = x % k; x = k; k = t; } return x; }, 0);  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
@@ -121,10 +121,10 @@
         var W = stage.clientWidth || 472, DPR = 2, cw = PIC.w, ch = PIC.h;
         var cv = h('canvas', { 'class': 'alignchar-canvas' });
         cv.width = cw * DPR; cv.height = ch * DPR; cv.style.width = cw + 'px'; cv.style.height = ch + 'px';
-        cv.style.left = Math.round((W - cw) / 2) + 'px'; cv.style.top = '30px';  /* Math.round：四捨五入成整數 */
+        cv.style.left = Math.round((W - cw) / 2) + 'px'; cv.style.top = '30px';
         stage.appendChild(cv);                          /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note alignchar-tip', text: '直條上下移動，對準的瞬間字會浮現' });
-        stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(tip);
         /* 先把整個字畫在看不見的畫布上，之後每一格都從這張「底圖」切直條 */
         var gl = document.createElement('canvas');
         gl.width = cw * DPR; gl.height = ch * DPR;
@@ -158,10 +158,10 @@
             loop.stop(); draw(0, true);
             var ok = i === q.answer;
             grid.btns[q.answer].classList.add('alignchar-opt--right');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-            if (i != null && !ok) grid.btns[i].classList.add('alignchar-opt--wrong');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            if (i != null && !ok) grid.btns[i].classList.add('alignchar-opt--wrong');
             tip.textContent = '這個字是「' + q.ch + '」';     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1300 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({ delay: 2300, lines: [(i == null ? '時間到！' : '選錯了') + '，答案是「' + q.ch + '」', '直條每 ' + q.cycle.toFixed(4) + ' 秒對準一次'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */

@@ -58,8 +58,8 @@
     /* 「強對強」的排法（照排名一對一配對）：這是玩家最直覺、但通常不是最好的排法，出題時用來確認「直覺排法不是最佳」 */
     function rankMatch(mine, theirs) {
         var n = theirs.length, tIdx = theirs.map(function (_, i) { return i; }).sort(function (a, b) { return theirs[b] - theirs[a]; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
-        var mSorted = mine.slice().sort(function (a, b) { return b - a; }), order = new Array(n);  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
-        tIdx.forEach(function (ti, k) { order[ti] = mSorted[k]; });  /* forEach：對陣列的每個元素各做一次 */
+        var mSorted = mine.slice().sort(function (a, b) { return b - a; }), order = new Array(n);
+        tIdx.forEach(function (ti, k) { order[ti] = mSorted[k]; });
         return order;
     }
     /* 隨機挑 n 個不重複、彼此至少差 gap 的戰力（由小到大） */
@@ -68,7 +68,7 @@
         for (var tr = 0; tr < 200; tr++) {
             var s = {}, arr = [];
             while (arr.length < n) { var v = kit.randInt(1, STRENGTH_MAX, rand); if (!s[v]) { s[v] = 1; arr.push(v); } }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
-            arr.sort(function (a, b) { return a - b; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
+            arr.sort(function (a, b) { return a - b; });
             var ok = true; for (var i = 1; i < n; i++) if (arr[i] - arr[i - 1] < gap) ok = false;
             if (ok) return arr;
         }
@@ -88,7 +88,7 @@
         }
         var gap = gapFor(level), fallback = null;
         for (var tr = 0; tr < TRIES; tr++) {
-            var t = kit.shuffle(pickStrengths(n, gap, rand), rand), m = pickStrengths(n, gap, rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+            var t = kit.shuffle(pickStrengths(n, gap, rand), rand), m = pickStrengths(n, gap, rand);
             var b = bestArrangement(m, t), naive = winsOf(rankMatch(m, t), t), same = winsOf(kit.shuffle(m, rand), t);
             var pz = { n: n, theirs: t, mine: kit.shuffle(m, rand), best: b.wins, bestOrder: b.order, level: level };
             if (b.wins >= 1 && b.wins < n && b.wins > naive) return pz;
@@ -138,7 +138,7 @@
         var btnGo = h('button', { 'class': 'btn btn--primary tianji-btn', type: 'button', text: '確定出陣' });
         kit.onTap(btnGo, confirm);                      /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
         btns.appendChild(btnGo);                        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-        wrap.appendChild(goal); wrap.appendChild(lblT); wrap.appendChild(rowT); wrap.appendChild(marks); wrap.appendChild(lblM); wrap.appendChild(rowM); wrap.appendChild(result); wrap.appendChild(btns);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        wrap.appendChild(goal); wrap.appendChild(lblT); wrap.appendChild(rowT); wrap.appendChild(marks); wrap.appendChild(lblM); wrap.appendChild(rowM); wrap.appendChild(result); wrap.appendChild(btns);
         stage.appendChild(wrap);                        /* 把整個遊戲區放進舞台（放進去，畫面上才看得到） */
 
         /* 建立一匹馬的畫面元素（🐎 加戰力數字），cls 是額外的 CSS class（你的／對方的／選中的…） */
@@ -148,14 +148,14 @@
             return c;
         }
         var theirEls = pz.theirs.map(function (v) { var e = horse(v, 'tianji-horse--them'); rowT.appendChild(e); return e; });  /* 對方的馬只要畫一次（順序固定）；你的馬每次互換都要重畫，所以放在 paint 裡 */
-        var markEls = pz.theirs.map(function (_, i) { var e = h('div', { 'class': 'tianji-mark', text: String(i + 1) }); e.style.width = cw + 'px'; marks.appendChild(e); return e; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        var markEls = pz.theirs.map(function (_, i) { var e = h('div', { 'class': 'tianji-mark', text: String(i + 1) }); e.style.width = cw + 'px'; marks.appendChild(e); return e; });
         var mineEls = [];
         /* 重畫你的那一排馬（依目前順序 arr），每匹馬點下去呼叫 choose */
         function paint() {
             rowM.innerHTML = ''; mineEls = [];          /* innerHTML = ''：把元素裡面的東西全部清掉 */
             arr.forEach(function (v, i) {
                 var e = horse(v, 'tianji-horse--mine' + (i === sel ? ' tianji-horse--sel' : ''));
-                kit.onTap(e, function () { choose(i); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+                kit.onTap(e, function () { choose(i); });
                 rowM.appendChild(e); mineEls.push(e);
             });
             btnGo.disabled = busy || over;
@@ -180,8 +180,8 @@
                 var i = k++, win = arr[i] > pz.theirs[i];
                 if (win) wins++;
                 theirEls[i].classList.add(win ? 'tianji-horse--lose' : 'tianji-horse--win');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                mineEls[i].classList.add(win ? 'tianji-horse--win' : 'tianji-horse--lose');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                markEls[i].textContent = win ? '勝' : '敗';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                mineEls[i].classList.add(win ? 'tianji-horse--win' : 'tianji-horse--lose');
+                markEls[i].textContent = win ? '勝' : '敗';
                 markEls[i].classList.add(win ? 'tianji-mark--win' : 'tianji-mark--lose');
                 Sfx.play(win ? 'ok' : 'bad');           /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 result.textContent = '目前贏 ' + wins + ' 場';
@@ -199,7 +199,7 @@
             var row = h('div', { 'class': 'tianji-row' });
             pz.bestOrder.forEach(function (v, i) { var e = horse(v, 'tianji-horse--best' + (v > pz.theirs[i] ? ' tianji-horse--win' : '')); row.appendChild(e); });
             wrap.insertBefore(lbl, result); wrap.insertBefore(row, result);
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({ delay: FAIL_HOLD_MS, lines: [text] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 給測試／debug 用：api.solve 排成最佳排法並出陣、api.wrong 故意排成不是最佳的、api.state 回報目前狀態 */

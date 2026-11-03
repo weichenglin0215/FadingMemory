@@ -52,7 +52,7 @@
     function weightOf(d) { return WEIGHT_K * Math.pow(d / 10, 2); }
     function diameterOf(w) { return 10 * Math.sqrt(w / WEIGHT_K); }  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
     function tolAt(level) { return kit.ramp(level, TOL[0], TOL[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
-    function countAt(level) { return Math.round(kit.ramp(level, N0[0], N0[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function countAt(level) { return Math.round(kit.ramp(level, N0[0], N0[1], RAMP_LEVELS)); }
     /* 分法：mask 的第 i 位是 1 ＝ 第 i 顆放左邊。回傳左右重量差的絕對值 */
     function diffOf(w, mask) {
         var l = 0, r = 0;
@@ -74,7 +74,7 @@
     /* 「由大到小交錯放」的分法 */
     function altPartition(d) {
         var idx = d.map(function (x, i) { return i; }).sort(function (a, b) { return d[b] - d[a]; }), m = 0;  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
-        idx.forEach(function (i, k) { if (k % 2 === 0) m |= 1 << i; });  /* forEach：對陣列的每個元素各做一次 */
+        idx.forEach(function (i, k) { if (k % 2 === 0) m |= 1 << i; });
         return m;
     }
     function fitArea(d) { return d.reduce(function (s, x) { return s + (x + PAD) * (x + PAD); }, 0); }  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
@@ -92,14 +92,14 @@
             for (i = 0; i < n - 1; i++) w.push(Math.exp(kit.randFloat(Math.log(wMin), Math.log(wMax), rand)));  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             var maskL = 0, sl = 0, sr = 0;
             for (i = 0; i < n - 1; i++) { if (rand() < 0.5) { maskL |= 1 << i; sl += w[i]; } else sr += w[i]; }
-            var gap = Math.abs(sl - sr), tot0 = sl + sr + gap;  /* Math.abs：取絕對值（去掉負號） */
+            var gap = Math.abs(sl - sr), tot0 = sl + sr + gap;
             var noise = (rand() - 0.5) * tol * tot0 * 0.6, wl = gap + noise;
             if (wl < wMin || wl > wMax) continue;
             w.push(wl);
             var d = w.map(diameterOf);
             if (Math.max.apply(null, d) / Math.min.apply(null, d) < ratioReq) continue;
             if (fitArea(d) > fitMax) continue;
-            var total = w.reduce(function (a, b) { return a + b; }, 0), best = bestPartition(w);  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
+            var total = w.reduce(function (a, b) { return a + b; }, 0), best = bestPartition(w);
             last = { d: d, w: w, total: total, tol: tol, best: best, n: n };
             if (best.diff > tol * total) continue;                                  /* 1. 一定要有解 */
             if (n >= HEUR_FROM) {
@@ -163,7 +163,7 @@
         var info = h('div', { 'class': 'twobags-info' });
         var okBtn = h('button', { 'class': 'btn btn--go twobags-ok', text: '確認' });
         okBtn.disabled = true;
-        var zw = Math.floor((W - 12 - BAL_GAP) / 2), cx = 6 + zw + BAL_GAP / 2, HL = zw / 2 + BAL_GAP / 2, panTop = BEAM_Y + STRING_H;  /* Math.floor：無條件捨去成整數 */
+        var zw = Math.floor((W - 12 - BAL_GAP) / 2), cx = 6 + zw + BAL_GAP / 2, HL = zw / 2 + BAL_GAP / 2, panTop = BEAM_Y + STRING_H;
         tray.style.left = '6px'; tray.style.top = TRAY_TOP + 'px'; tray.style.width = (W - 12) + 'px'; tray.style.height = TRAY_H + 'px';
         info.style.top = (BASE_Y + 26) + 'px';
 
@@ -179,11 +179,11 @@
             var el = h('div', { 'class': 'twobags-hang' });
             el.style.left = (centerX - zw / 2) + 'px'; el.style.top = BEAM_Y + 'px'; el.style.width = zw + 'px';
             var svg = kit.svg('svg', { 'class': 'twobags-str', width: zw, height: STRING_H, viewBox: '0 0 ' + zw + ' ' + STRING_H }, el);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-            kit.svg('line', { x1: zw / 2, y1: 0, x2: 5, y2: STRING_H }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+            kit.svg('line', { x1: zw / 2, y1: 0, x2: 5, y2: STRING_H }, svg);
             kit.svg('line', { x1: zw / 2, y1: 0, x2: zw - 5, y2: STRING_H }, svg);
             var pan = h('div', { 'class': 'twobags-pan' }), num = h('div', { 'class': 'twobags-num', text: '--' });
             pan.style.height = PAN_H + 'px'; num.style.height = NUM_H + 'px'; num.style.lineHeight = NUM_H + 'px';
-            el.appendChild(pan); el.appendChild(num); bal.appendChild(el);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            el.appendChild(pan); el.appendChild(num); bal.appendChild(el);
             return { el: el, pan: pan, num: num };
         }
         var hl = hanger(cx - HL), hr = hanger(cx + HL);
@@ -245,11 +245,11 @@
             move(p); hideHint(); Sfx.play('click');     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
         });
         function move(p) { drag.ghost.style.left = (p.x - q.d[drag.i] / 2) + 'px'; drag.ghost.style.top = (p.y - q.d[drag.i] / 2) + 'px'; }
-        stage.addEventListener('pointermove', function (e) { if (drag && e.pointerId === drag.id) move(kit.localPt(e, stage)); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        stage.addEventListener('pointermove', function (e) { if (drag && e.pointerId === drag.id) move(kit.localPt(e, stage)); });
         function drop(e) {
             if (!drag || e.pointerId !== drag.id) return;
             var p = kit.localPt(e, stage), z = zoneAt(p), i = drag.i;
-            stage.removeChild(drag.ghost); els[i].classList.remove('twobags-stone--lift');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            stage.removeChild(drag.ghost); els[i].classList.remove('twobags-stone--lift');
             if (z) place(i, z);
             drag = null;
         }
@@ -261,13 +261,13 @@
             return { l: l, r: r };
         }
         function confirm() {
-            if (api.over || locked || side.some(function (s) { return s === 'T'; })) return;  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
+            if (api.over || locked || side.some(function (s) { return s === 'T'; })) return;
             locked = true; hideHint(); okBtn.style.display = 'none';
-            Sfx.play('click');                          /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+            Sfx.play('click');
             var s = sums(side), diff = Math.abs(s.l - s.r), lim = q.tol * q.total, good = diff <= lim;
             //我手動刪除了"克拉"字樣，避免介面超過寬度
             nums.L.textContent = s.l.toFixed(4); nums.R.textContent = s.r.toFixed(4);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-            info.textContent = '差 ' + diff.toFixed(4) + ' 克拉（容許 ' + lim.toFixed(4) + ' 克拉，總重的 ' + (q.tol * 100).toFixed(4) + '%）';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            info.textContent = '差 ' + diff.toFixed(4) + ' 克拉（容許 ' + lim.toFixed(4) + ' 克拉，總重的 ' + (q.tol * 100).toFixed(4) + '%）';
             bal.classList.add(good ? 'twobags-bal--ok' : 'twobags-bal--bad');          /* 超出範圍：天秤與數字變紅色 */
             info.classList.add(good ? 'twobags-info--ok' : 'twobags-info--bad');
             tiltTo(tiltOf(s.l, s.r, q.tol));                                   /* 天秤依兩邊的重量傾斜：範圍內微傾、範圍外明顯傾斜 */

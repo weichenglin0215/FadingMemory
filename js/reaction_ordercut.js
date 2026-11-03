@@ -50,7 +50,7 @@
     function ramp(level, pair, maxLevel) { return kit.ramp(level, pair[0], pair[1], maxLevel == null ? RAMP_LEVELS : maxLevel); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function isExpr(level) { return level >= EXPR_FROM; }
     function countFor(level) { return isExpr(level) ? Math.round(ramp(level - EXPR_FROM + 1, EXPR_COUNT, EXPR_RAMP)) : Math.round(ramp(level, NUM_COUNT, NUM_RAMP)); }  /* Math.round：四捨五入成整數 */
-    function flightFor(level) { return Math.round(ramp(level, FLIGHT_S) * 1000) / 1000; }  /* Math.round：四捨五入成整數 */
+    function flightFor(level) { return Math.round(ramp(level, FLIGHT_S) * 1000) / 1000; }
     function gapFor(level) { return Math.round(ramp(level, GAP_CUT) * 1000) / 1000; }
     function chaosFor(level) { return Math.round(ramp(level, CHAOS) * 1000) / 1000; }
     function omegaFor(level) { return Math.round(ramp(level, OMEGA_DEG)); }
@@ -60,7 +60,7 @@
         for (var tr = 0; tr < 200; tr++) {
             var op = kit.pick(ops, rand), a, b, v;      /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             if (op === '+') { a = kit.randInt(1, 60, rand); b = kit.randInt(1, 60, rand); v = a + b; return v <= 99 ? { text: a + '＋' + b, value: v } : makeExpr(ops, rand); }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
-            if (op === '-') { a = kit.randInt(5, 99, rand); b = kit.randInt(1, a - 1, rand); return { text: a + '－' + b, value: a - b }; }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+            if (op === '-') { a = kit.randInt(5, 99, rand); b = kit.randInt(1, a - 1, rand); return { text: a + '－' + b, value: a - b }; }
             if (op === '*') { a = kit.randInt(2, 12, rand); b = kit.randInt(2, 12, rand); v = a * b; if (v <= 99) return { text: a + '×' + b, value: v }; continue; }
             b = kit.randInt(2, 12, rand); v = kit.randInt(1, Math.floor(99 / b), rand); return { text: (v * b) + '÷' + b, value: v };  /* Math.floor：無條件捨去成整數 */
         }
@@ -87,7 +87,7 @@
             if (k > 0) c += gap * kit.randFloat(0.85, 1.2, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             plan.push(Math.round(c * 1000) / 1000);
             var j = idx[k], u = kit.clamp(0.5 + (rand() * 2 - 1) * U_SPREAD * chaos, U_MIN, U_MAX);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
-            var sg = rand() < 0.5 ? -1 : 1, x0 = kit.randFloat(0.18, 0.82, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+            var sg = rand() < 0.5 ? -1 : 1, x0 = kit.randFloat(0.18, 0.82, rand);
             fruits.push({ rank: k + 1, label: labels[j], value: values[j], color: kit.randInt(0, FRUITS - 1, rand), x0: Math.round(x0 * 1000) / 1000, vx: Math.round(sg * kit.randFloat(0.02, VX / 472, rand) * 1000) / 1000,
                 A: Math.round(kit.randFloat(APEX[0], APEX[1], rand) * 1000) / 1000, t: Math.round((plan[k] - u * T) * 1000) / 1000, T: T, u: Math.round(u * 1000) / 1000, a0: Math.round(kit.randFloat(0, 360, rand)), w: Math.round((rand() < 0.5 ? -1 : 1) * kit.randFloat(om * 0.6, om, rand)) });
         }
@@ -114,8 +114,8 @@
     function sliceSegment(cand, ax, ay, bx, by, R) {
         var hits = [];
         cand.forEach(function (c) { var r = distToSeg(c.x, c.y, ax, ay, bx, by); if (r.d <= R + HIT_PAD) hits.push({ id: c.id, s: r.s, d: r.d }); });  /* forEach：對陣列的每個元素各做一次 */
-        hits.sort(function (p, q) { return p.s - q.s || p.d - q.d; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
-        return hits.map(function (x) { return x.id; }); /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        hits.sort(function (p, q) { return p.s - q.s || p.d - q.d; });
+        return hits.map(function (x) { return x.id; });
     }
     /* 切到 hitIds（依順序）而「下一號」是 next：回傳 { ok（有沒有照順序）, cut（切成功的顆數）, wrong（切錯的那一顆，沒有就 null）} */
     function judgeCuts(hitIds, next, rankOf) {
@@ -159,7 +159,7 @@
         var field = h('div', { 'class': 'ordercut-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note ordercut-tip', text: q.expr ? '照答案由小到大，一顆一顆切！' : (level === 1 ? '照號碼 1、2、3… 的順序，用手指劃過去切！' : '照號碼順序切（6 和 9 看底線）') });
-        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(tip);
         var next = h('div', { 'class': 'ordercut-next', text: '下一個：' + (q.expr ? '最小的' : '1') }); field.appendChild(next);
         var svg = kit.svg('svg', { 'class': 'ordercut-trail', width: W, height: H, viewBox: '0 0 ' + W + ' ' + H }, field), trail = kit.svg('polyline', { 'class': 'ordercut-trail__l', points: '' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var els = q.fruits.map(function (f, i) {
@@ -171,12 +171,12 @@
         });
         var state = q.fruits.map(function () { return 'wait'; });       /* 'wait'（還沒拋）｜'fly'（在空中）｜'cut'（已切）｜'gone'（掉出去了） */
         var nextRank = 1, phase = 'play', t0 = performance.now() + LEAD_S * 1000, pts = [], down = null, tFreeze = 0, posOf = [];  /* performance.now()：高精度的時間（毫秒），計時用 */
-        function nowT() { return (performance.now() - t0) / 1000; }  /* performance.now()：高精度的時間（毫秒），計時用 */
+        function nowT() { return (performance.now() - t0) / 1000; }
         function rankOf(id) { return q.fruits[id].rank; }
         function expectedFruit() { return q.fruits[nextRank - 1]; }
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint(t) {
-            q.fruits.forEach(function (f, i) {          /* forEach：對陣列的每個元素各做一次 */
+            q.fruits.forEach(function (f, i) {
                 if (state[i] === 'cut' || state[i] === 'gone') return;
                 var p = fruitPos(f, t, geom); posOf[i] = p;
                 if (!p) { els[i].style.display = 'none'; return; }
@@ -204,11 +204,11 @@
             e.preventDefault(); try { field.setPointerCapture(e.pointerId); } catch (err) { }  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             var p = kit.localPt(e, field); down = { id: e.pointerId, x: p.x, y: p.y }; pts = [[p.x, p.y]]; drawTrail();
         });
-        field.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        field.addEventListener('pointermove', function (e) {
             if (!down || e.pointerId !== down.id || phase !== 'play') return;
             var p = kit.localPt(e, field); slice(down.x, down.y, p.x, p.y); down.x = p.x; down.y = p.y; pts.push([p.x, p.y]); if (pts.length > 10) pts.shift(); drawTrail();
         });
-        function up(e) { if (down && e.pointerId === down.id) { down = null; api.after(160, function () { pts = []; drawTrail(); }); } }  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+        function up(e) { if (down && e.pointerId === down.id) { down = null; api.after(160, function () { pts = []; drawTrail(); }); } }
         field.addEventListener('pointerup', up); field.addEventListener('pointercancel', up);
         function drawTrail() { trail.setAttribute('points', pts.map(function (p) { return p[0].toFixed(0) + ',' + p[1].toFixed(0); }).join(' ')); }  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         function slice(ax, ay, bx, by) {
@@ -246,7 +246,7 @@
                 if (i === gotId && kind === 'wrong') els[i].classList.add('ordercut-fruit--bad'); else if (f.rank === nextRank) els[i].classList.add('ordercut-fruit--ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             });
             if (kind === 'lost') { els[gotId].style.display = 'none'; }
-            info(why, false); kit.flash(stage, false, api.my);  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            info(why, false); kit.flash(stage, false, api.my);
             api.fail({ delay: 4000, lines: [why, '已經照順序切了 ' + (nextRank - 1) + ' 顆（一共 ' + q.N + ' 顆）', q.expr ? '答案由小到大：' + q.fruits.map(function (f) { return f.value; }).join('、') : '順序：1 到 ' + q.N] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：在計畫的時間依序切（solve，直接呼叫切水果）；故意先切第 2 號（wrong）；只排一次 */

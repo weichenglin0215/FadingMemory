@@ -41,7 +41,7 @@
             grid.appendChild(b);                        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             return b;
         });
-        parent.appendChild(grid);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        parent.appendChild(grid);
         return { el: grid, btns: btns };
     };
 
@@ -57,7 +57,7 @@
     kit.flash = function (el, ok, my) {
         var cls = ok ? 'rx-flash-ok' : 'rx-flash-bad';
         el.classList.add(cls);                          /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-        var off = function () { el.classList.remove(cls); };  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+        var off = function () { el.classList.remove(cls); };
         if (my) my.after(500, off); else setTimeout(off, 500);  /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
     };
 })(window);

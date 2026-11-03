@@ -71,7 +71,7 @@
             picked.push(all[idx]);
             all.splice(idx, 1);
         }
-        return picked.concat([r]).sort(function (a, b) { return a - b; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
+        return picked.concat([r]).sort(function (a, b) { return a - b; });
     }
     /* 出一題：{ d 除數, q 商, r 餘數, n 被除數, options 五個選項（由小到大）, explain 揭曉文字 } */
     function makeQuestion(level, rand) {
@@ -134,7 +134,7 @@
             eq.classList.add(ok ? 'qz-ok' : 'qz-bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             reveal.textContent = q.explain + '，餘數是 ' + q.r;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1000 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: 2300, lines: [
                     (v == null ? '時間到！' : '你選了 ' + v) + '，正確餘數是 ' + q.r,

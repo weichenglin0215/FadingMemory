@@ -83,7 +83,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function threshFor(level) { return Math.round(ramp(level, THRESH) * 10000) / 10000; }  /* Math.round：四捨五入成整數 */
-    function tiltFor(level) { return level < TILT_FROM ? 0 : Math.round(ramp(level, TILT_DEG) * 100) / 100; }  /* Math.round：四捨五入成整數 */
+    function tiltFor(level) { return level < TILT_FROM ? 0 : Math.round(ramp(level, TILT_DEG) * 100) / 100; }
     function shiftFor(level) { return level < TILT_FROM ? 0 : Math.round(ramp(level, SHIFT_PX) * 10) / 10; }
     function typesFor(level) { return BASE_TYPES.slice(0, Math.min(BASE_TYPES.length, 2 + Math.floor(level / 4))); }  /* Math.floor：無條件捨去成整數 */
     function weirdPFor(level) { return level < WEIRD_FROM ? 0 : Math.round(ramp(level, WEIRD_P) * 10000) / 10000; }
@@ -98,19 +98,19 @@
         if (type === 'odd') { var cp = []; for (i = 0; i < 5; i++) cp.push(Math.round(kit.randFloat(-0.42, 0.3, rand) * 1000) / 1000); return { cp: cp }; }  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         if (type === 'zigzag') {
             var m = kit.randInt(3, 5, rand), zt = [0], zv = [kit.randFloat(-0.05, 0.12, rand)];  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
-            for (k = 1; k < m; k++) { zt.push(k / m + kit.randFloat(-0.06, 0.06, rand)); zv.push((k % 2 ? -1 : 1) * kit.randFloat(0.12, 0.34, rand) - 0.04); }  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+            for (k = 1; k < m; k++) { zt.push(k / m + kit.randFloat(-0.06, 0.06, rand)); zv.push((k % 2 ? -1 : 1) * kit.randFloat(0.12, 0.34, rand) - 0.04); }
             zt.push(1); zv.push(kit.randFloat(-0.2, 0.2, rand));
             return { zt: zt.map(function (x) { return Math.round(x * 1000) / 1000; }), zv: zv.map(function (x) { return Math.round(x * 1000) / 1000; }) };  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         }
         if (type === 'hook') return { hs: kit.randFloat(0.5, 0.75, rand), hk: (rand() < 0.65 ? 1 : -1) * kit.randFloat(0.24, 0.46, rand), hh: kit.randFloat(0.12, 0.28, rand) };
-        if (type === 'spring') return { loops: kit.randInt(3, 4, rand), r: kit.randFloat(0.085, 0.12, rand), vc: kit.randFloat(-108, -88, rand) };  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+        if (type === 'spring') return { loops: kit.randInt(3, 4, rand), r: kit.randFloat(0.085, 0.12, rand), vc: kit.randFloat(-108, -88, rand) };
         if (type === 'clip') return { turns: kit.randFloat(1.4, 1.9, rand), ay: kit.randFloat(0.13, 0.18, rand), phi0: kit.randFloat(0, 2 * Math.PI, rand), vc: kit.randFloat(-112, -92, rand) };
         if (type === 'swirl') return { sr: kit.randFloat(0.19, 0.25, rand), turns: kit.randFloat(1.6, 2.2, rand), dir: rand() < 0.5 ? 1 : -1, vc: kit.randFloat(-112, -92, rand) };
         return { c1: kit.randFloat(0.18, 0.34, rand), c2: kit.randFloat(0.66, 0.82, rand), w: kit.randFloat(0.1, 0.16, rand), h1: kit.randFloat(0.12, 0.34, rand), h2: kit.randFloat(0.12, 0.34, rand) };
     }
     /* Catmull-Rom 平滑曲線：通過控制點陣列 p（等間隔），t 在 0～1，回傳那一點的值 */
     function catmull(p, t) {
-        var f = Math.min(p.length - 1 - 1e-9, Math.max(0, t * (p.length - 1))), i = Math.floor(f), s = f - i;  /* Math.floor：無條件捨去成整數 */
+        var f = Math.min(p.length - 1 - 1e-9, Math.max(0, t * (p.length - 1))), i = Math.floor(f), s = f - i;
         var p0 = p[Math.max(0, i - 1)], p1 = p[i], p2 = p[i + 1], p3 = p[Math.min(p.length - 1, i + 2)];
         return 0.5 * ((2 * p1) + (-p0 + p2) * s + (2 * p0 - 5 * p1 + 4 * p2 - p3) * s * s + (-p0 + 3 * p1 - 3 * p2 + p3) * s * s * s);
     }
@@ -159,7 +159,7 @@
     /* 臉座標 (u, v) → 畫面座標：臉心 F、歪了 theta 弧度 */
     function toScreen(pt, F, theta) { var c = Math.cos(theta), s = Math.sin(theta); return { x: F.x + pt.u * c - pt.v * s, y: F.y + pt.u * s + pt.v * c }; }
     /* 左邊眉毛（臉座標，u < 0）的鏡射（臉座標）：u 變 −u */
-    function mirrorLocal(p) { return p.map(function (q) { return { u: -q.u, v: q.v }; }); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+    function mirrorLocal(p) { return p.map(function (q) { return { u: -q.u, v: q.v }; }); }
     /* 會打圈的眉毛（臉座標，一筆畫的曲線，n 個點）：線會折回來，所以 u 不是一路往外。
          彈簧 spring：prolate trochoid（x ＝ t·L − A·sin θ、y ＝ −A·cos θ，A·2π·圈數 > L 時就會打圈），像一圈一圈的線圈；
          迴紋針 clip：扁長（超橢圓、指數 3）的螺旋往裡繞 turns 圈、半徑縮到一半，像迴紋針的線；
@@ -212,7 +212,7 @@
     }
     /* 鬍子要用的隨機參數（makeLevel 挑好、存在 par 裡，stacheShape 才是純函式）：回傳要併進 par 的欄位 */
     function stachePar(type, rand) {
-        if (LOOPY.indexOf(type) >= 0) {                 /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+        if (LOOPY.indexOf(type) >= 0) {
             var lp = weirdPar(type, rand); lp.vc = kit.randFloat(STACHE_V - 6, STACHE_V + 10, rand);
             if (type === 'swirl') { lp.sr = kit.randFloat(0.27, 0.34, rand); lp.turns = kit.randFloat(1.8, 2.4, rand); }       /* 螺旋大一點，不然一條直線就過關了 */
             return lp;
@@ -232,7 +232,7 @@
        最後一點的 u ＝ −(STACHE_GAP + STACHE_LEN)（長八字鬍例外：它往下垂，外端只到 reach + 0.12 倍長度，才不會垂到臉頰外面）；高度夾在 STACHE_TOP～STACHE_BOTTOM */
     function stacheShape(type, par, n) {
         if (LOOPY.indexOf(type) >= 0) return loopShape(type, par, n, STACHE_GEO);
-        var out = [], L = STACHE_LEN, G = STACHE_GAP, V0 = STACHE_V, i, t, u, v, tri = function (x) { return Math.abs((((x % 1) + 1) % 1) * 2 - 1) * 2 - 1; };  /* Math.abs：取絕對值（去掉負號） */
+        var out = [], L = STACHE_LEN, G = STACHE_GAP, V0 = STACHE_V, i, t, u, v, tri = function (x) { return Math.abs((((x % 1) + 1) % 1) * 2 - 1) * 2 - 1; };
         for (i = 0; i < n; i++) {
             t = i / (n - 1); u = -(G + L * t);
             if (type === 'pencil') v = V0 + (par.sl || 0) * L * t + (par.bend || 0) * L * Math.sin(Math.PI * t);                                                    /* 鉛筆鬍：細細一條，微彎 */
@@ -270,9 +270,9 @@
         /* 重抽到「整條線放得進畫面」為止（太大、形狀奇怪的時候偶爾放不下）；實在抽不到（不會發生）就用最小的彎月眉（鬍子用鉛筆鬍） */
         do {
             weird = rand() < weirdPFor(level);
-            type = kind === 'stache' ? kit.pick(weird ? STACHE_WEIRD : STACHE_BASE, rand) : (weird ? kit.pick(WEIRD, rand) : kit.pick(typesFor(level), rand));  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+            type = kind === 'stache' ? kit.pick(weird ? STACHE_WEIRD : STACHE_BASE, rand) : (weird ? kit.pick(WEIRD, rand) : kit.pick(typesFor(level), rand));
             par = { h: kit.randFloat(0.1, 0.3, rand), slope: kit.randFloat(-0.1, 0.12, rand), peak: kit.randFloat(0.4, 0.72, rand), drop: kit.randFloat(0, 0.6, rand), waves: rand() < 0.5 ? 1 : 1.5 };
-            if (kind === 'stache') { var sp = stachePar(type, rand); Object.keys(sp).forEach(function (key) { par[key] = sp[key]; }); brow = stacheShape(type, par, BROW_PTS); continue; }  /* forEach：對陣列的每個元素各做一次 */
+            if (kind === 'stache') { var sp = stachePar(type, rand); Object.keys(sp).forEach(function (key) { par[key] = sp[key]; }); brow = stacheShape(type, par, BROW_PTS); continue; }
             if (type === 'flat') par.slope = kit.randFloat(-0.06, 0.08, rand);
             if (type === 'raise') par.h = kit.randFloat(0.12, 0.3, rand);
             if (weird) { var wp = weirdPar(type, rand); Object.keys(wp).forEach(function (key) { par[key] = wp[key]; }); }
@@ -327,12 +327,12 @@
         var field = h('div', { 'class': 'eyebrow-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note eyebrow-tip', text: level === 1 ? '照左邊的眉毛，在右邊畫一條左右對稱的！' : '畫出和左邊對稱的右邊' + noun + '（及格線 ' + q.thresh.toFixed(0) + '%）' });
-        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(tip);
         var svg = kit.svg('svg', { 'class': 'eyebrow-svg', width: W, height: H, viewBox: '0 0 ' + W + ' ' + H }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         /* 臉：整個臉（頭、鼻、嘴、眼睛）畫在臉座標裡，用 transform 轉歪、移位 */
         var turn = kit.svg('g', { 'class': 'eyebrow-turn' }, svg);                     /* 揭曉時整組繞著臉心轉回正的：臉、你畫的線、淡紅色的線都放在裡面 */
         turn.style.transformOrigin = q.F.x + 'px ' + q.F.y + 'px'; turn.style.transitionDuration = TURN_MS + 'ms';
-        var face = kit.svg('g', { transform: 'translate(' + q.F.x + ',' + q.F.y + ') rotate(' + q.thetaDeg + ')' }, turn);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var face = kit.svg('g', { transform: 'translate(' + q.F.x + ',' + q.F.y + ') rotate(' + q.thetaDeg + ')' }, turn);
         kit.svg('ellipse', { 'class': 'eyebrow-head', cx: 0, cy: 8, rx: 150, ry: 188 }, face);
         kit.svg('ellipse', { 'class': 'eyebrow-ear', cx: -152, cy: 10, rx: 14, ry: 34 }, face); kit.svg('ellipse', { 'class': 'eyebrow-ear', cx: 152, cy: 10, rx: 14, ry: 34 }, face);
         [-1, 1].forEach(function (sg) { kit.svg('ellipse', { 'class': 'eyebrow-eye', cx: sg * 62, cy: -22, rx: 28, ry: 13 }, face); kit.svg('circle', { 'class': 'eyebrow-pupil', cx: sg * 62, cy: -22, r: 9 }, face); });
@@ -351,10 +351,10 @@
             e.preventDefault(); try { field.setPointerCapture(e.pointerId); } catch (err) { }  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             down = { id: e.pointerId }; var p = kit.localPt(e, field); pts = [{ x: p.x, y: p.y }]; mine.setAttribute('points', pts2d(pts));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         });
-        field.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        field.addEventListener('pointermove', function (e) {
             if (!down || e.pointerId !== down.id || phase !== 'draw') return;
             var p = kit.localPt(e, field), last = pts[pts.length - 1]; if (Math.hypot(p.x - last.x, p.y - last.y) < 2) return;
-            pts.push({ x: p.x, y: p.y }); mine.setAttribute('points', pts2d(pts));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+            pts.push({ x: p.x, y: p.y }); mine.setAttribute('points', pts2d(pts));
         });
         function up(e) {
             if (!down || e.pointerId !== down.id) return;
@@ -376,12 +376,12 @@
             if (q.thetaDeg) turn.style.transform = 'rotate(' + (-q.thetaDeg) + 'deg)';
             axis.classList.add('eyebrow-axis--on');     /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             api.after(revealAt, function () {           /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
-                ghost.setAttribute('points', pts2d(q.target)); ghost.classList.add('eyebrow-ghost--on');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                tip.textContent = ok ? '畫得好！' : '紅色是左邊的' + noun + '翻過去的樣子';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-                api.after(GHOST_MS, function () {       /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+                ghost.setAttribute('points', pts2d(q.target)); ghost.classList.add('eyebrow-ghost--on');
+                tip.textContent = ok ? '畫得好！' : '紅色是左邊的' + noun + '翻過去的樣子';
+                api.after(GHOST_MS, function () {
                     info.textContent = why; info.classList.add(ok ? 'eyebrow-info--ok' : 'eyebrow-info--bad');
                     if (ok) { kit.flash(stage, true, api.my); Sfx.play('ok'); api.pass({ delay: 1800 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
-                    kit.flash(stage, false, api.my);    /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+                    kit.flash(stage, false, api.my);
                     api.fail({ delay: 3000, lines: [why, '把左邊的' + noun + '左右翻過去（鏡射）就是紅色那條', '臉歪了 ' + q.thetaDeg + '°，對稱軸是臉的中軸（看鼻子），不是畫面的正中間'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 });
             });

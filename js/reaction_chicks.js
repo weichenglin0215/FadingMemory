@@ -57,7 +57,7 @@
     /* 這一關的小雞總數 */
     function totalFor(level) { return Math.round(kit.ramp(level, TOTAL_START, TOTAL_END, LEVEL_RAMP)); }  /* Math.round：四捨五入成整數 */
     /* 小雞速度 */
-    function speedFor(level) { return kit.ramp(level, SPEED_START, SPEED_END, LEVEL_RAMP); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function speedFor(level) { return kit.ramp(level, SPEED_START, SPEED_END, LEVEL_RAMP); }
     /* 移動時間 */
     function moveFor(level) { return kit.ramp(level, MOVE_START, MOVE_END, LEVEL_RAMP); }
     /* 兩點之間的距離（勾股定理） */
@@ -74,7 +74,7 @@
     function minDist(list, t) {
         var m = Infinity, ps = list.map(function (c) { return posAt(c, t); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         for (var i = 0; i < ps.length; i++) for (var j = i + 1; j < ps.length; j++) {
-            var dx = ps[i].x - ps[j].x, dy = ps[i].y - ps[j].y; m = Math.min(m, Math.sqrt(dx * dx + dy * dy));  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
+            var dx = ps[i].x - ps[j].x, dy = ps[i].y - ps[j].y; m = Math.min(m, Math.sqrt(dx * dx + dy * dy));
         }
         return m;
     }
@@ -123,11 +123,11 @@
        回傳 [ { xs, ys }, … ]：每隻小雞 N+1 個取樣位置（第 0 個是起點、最後一個是停止位置；N ＝ T／SIM_DT 取整），時間均分在 0～T。 */
     function simulate(starts, v, T, FW, FH, rand) {
         rand = rand || Math.random;
-        var n = starts.length, N = Math.max(1, Math.round(T / SIM_DT)), dt = T / N;  /* Math.round：四捨五入成整數 */
+        var n = starts.length, N = Math.max(1, Math.round(T / SIM_DT)), dt = T / N;
         var x0 = MARGIN + 6, x1 = FW - MARGIN - 6, y0 = MARGIN + 24, y1 = FH - MARGIN - 6;     /* 圓心可以到的範圍（同 startSpots） */
         var px = [], py = [], vx = [], vy = [], out = [], i, j, s, it;
         for (i = 0; i < n; i++) {
-            var a = rand() * Math.PI * 2, sp = v * kit.randFloat(1 - SPEED_JITTER, 1 + SPEED_JITTER, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+            var a = rand() * Math.PI * 2, sp = v * kit.randFloat(1 - SPEED_JITTER, 1 + SPEED_JITTER, rand);
             px.push(starts[i][0]); py.push(starts[i][1]); vx.push(Math.cos(a) * sp); vy.push(Math.sin(a) * sp);
             out.push({ xs: new Float32Array(N + 1), ys: new Float32Array(N + 1) });
             out[i].xs[0] = px[i]; out[i].ys[0] = py[i];
@@ -167,7 +167,7 @@
         var chicks;
         if (starts) {
             var sim = simulate(starts, v, T, FW, FH, rand);
-            chicks = starts.map(function (s, k) {       /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            chicks = starts.map(function (s, k) {
                 var xs = sim[k].xs, ys = sim[k].ys, len = 0;
                 for (var i = 1; i < xs.length; i++) len += Math.sqrt((xs[i] - xs[i - 1]) * (xs[i] - xs[i - 1]) + (ys[i] - ys[i - 1]) * (ys[i] - ys[i - 1]));
                 return { x0: s[0], y0: s[1], xs: xs, ys: ys, len: len, T: T };
@@ -176,23 +176,23 @@
         } else {
             var cols = Math.ceil(Math.sqrt(n)); chicks = [];  /* Math.ceil：無條件進位成整數 */
             for (var k = 0; k < n; k++) {
-                var gx = MARGIN + (k % cols) * (FW - 2 * MARGIN) / Math.max(1, cols - 1), gy = MARGIN + 24 + Math.floor(k / cols) * 90;  /* Math.floor：無條件捨去成整數 */
+                var gx = MARGIN + (k % cols) * (FW - 2 * MARGIN) / Math.max(1, cols - 1), gy = MARGIN + 24 + Math.floor(k / cols) * 90;
                 chicks.push({ x0: gx, y0: gy, xs: [gx, gx], ys: [gy, gy], len: 0, T: T });
             }
         }
-        return { chicks: chicks, targets: kit.shuffle(chicks.map(function (_, k) { return k; }), rand).slice(0, K), tMove: T, FW: FW, FH: FH };  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+        return { chicks: chicks, targets: kit.shuffle(chicks.map(function (_, k) { return k; }), rand).slice(0, K), tMove: T, FW: FW, FH: FH };
     }
     /* 判定一次點擊：'miss'（沒點到星星小雞）、'again'（重複點同一隻）、'hit'（找到） */
     /* 判定：點到的是不是還沒點過的星星小雞 */
     function judgeTap(targets, found, idx) {
         if (idx == null || targets.indexOf(idx) < 0) return 'miss';  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
-        return found.indexOf(idx) >= 0 ? 'again' : 'hit';  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+        return found.indexOf(idx) >= 0 ? 'again' : 'hit';
     }
 
     /* 畫小雞（SVG：身體、眼睛、嘴、冠、腳） */
     function chickSvg() {
         var svg = kit.svg('svg', { 'class': 'chicks-svg', viewBox: '0 0 64 64' });  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        kit.svg('ellipse', { cx: 32, cy: 38, rx: 24, ry: 21, fill: 'hsl(48,95%,62%)', stroke: 'hsl(36,70%,34%)', 'stroke-width': 3 }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('ellipse', { cx: 32, cy: 38, rx: 24, ry: 21, fill: 'hsl(48,95%,62%)', stroke: 'hsl(36,70%,34%)', 'stroke-width': 3 }, svg);
         kit.svg('circle', { cx: 24, cy: 32, r: 3.2, fill: 'hsl(24,40%,20%)' }, svg);
         kit.svg('circle', { cx: 40, cy: 32, r: 3.2, fill: 'hsl(24,40%,20%)' }, svg);
         kit.svg('polygon', { points: '28,38 36,38 32,45', fill: 'hsl(24,95%,55%)', stroke: 'hsl(24,60%,30%)', 'stroke-width': 1.5, 'stroke-linejoin': 'round' }, svg);
@@ -234,10 +234,10 @@
             function startLevel() {
                 if (my.dead) return;
                 var id = ++lvId;
-                field.innerHTML = ''; els = []; found = [];  /* innerHTML = ''：把元素裡面的東西全部清掉 */
+                field.innerHTML = ''; els = []; found = [];
                 S = makeLevel(level, field.clientWidth, field.clientHeight);
                 /* 建立每隻小雞的元素：目標小雞頭上顯示星星，並且 z-index 提高到最上層，星星不會被其他小雞遮住 */
-                S.chicks.forEach(function (c, i) {      /* forEach：對陣列的每個元素各做一次 */
+                S.chicks.forEach(function (c, i) {
                     var isT = S.targets.indexOf(i) >= 0;
                     var el = h('div', { 'class': 'chicks-chick' });
                     el.setAttribute('data-i', String(i));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
@@ -245,7 +245,7 @@
                     el.appendChild(chickSvg());         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
                     var star = h('div', { 'class': 'chicks-star', text: '★' });
                     star.hidden = !isT;
-                    el.appendChild(star);               /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+                    el.appendChild(star);
                     if (isT) el.style.zIndex = '20';             /* 星星小雞疊在最上面：星星不會被別的小雞遮住 */
                     field.appendChild(el); els.push(el);
                     place(i, 0);
@@ -253,7 +253,7 @@
                 /* 標記階段：顯示 MARK_S 秒，讓玩家記住哪幾隻有星星 */
                 state = 'mark';
                 head.textContent = '第 ' + level + ' 關　找出 ' + S.targets.length + ' 隻';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-                banner.textContent = '記住頭上有星星的小雞！';     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                banner.textContent = '記住頭上有星星的小雞！';
                 meta();
                 try { console.info('[找回小雞] 第 ' + level + ' 關：共 ' + S.chicks.length + ' 隻、目標 ' + S.targets.length + ' 隻（編號 ' + S.targets.map(function (k) { return k + 1; }).join('、') + '）、速度 ' + speedFor(level).toFixed(0) + ' px/秒、移動 ' + S.tMove.toFixed(2) + ' 秒，折線平均 ' + (S.chicks.reduce(function (a, c) { return a + c.len; }, 0) / S.chicks.length).toFixed(0) + ' px，停止時最近距離 ' + minDist(S.chicks, S.tMove).toFixed(1) + ' px'); } catch (e) { }  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
                 Sfx.play('go');                         /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
@@ -279,7 +279,7 @@
                         /* 只有星星小雞有點擊功能：其他小雞的 pointer-events 關掉，點下去等於點到空地 */
                         els.forEach(function (el, k) { el.classList.add(S.targets.indexOf(k) >= 0 ? 'chicks-chick--live' : 'chicks-chick--dead'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                         banner.textContent = '點出剛才有星星的 ' + S.targets.length + ' 隻（點錯就失敗）';
-                        Sfx.play('pop');                /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                        Sfx.play('pop');
                     });
                 });
             }
@@ -299,8 +299,8 @@
                 if (r === 'again') return;
                 if (r === 'miss') { fail(idx); return; }
                 found.push(idx);
-                els[idx].classList.add('chicks-chick--ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                els[idx].querySelector('.chicks-star').hidden = false;  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
+                els[idx].classList.add('chicks-chick--ok');
+                els[idx].querySelector('.chicks-star').hidden = false;
                 Sfx.play('click');
                 banner.textContent = '找到 ' + found.length + '／' + S.targets.length;
                 if (found.length === S.targets.length) win();
@@ -310,7 +310,7 @@
             function win() {
                 state = 'reveal';
                 cleared = level;
-                if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
                 banner.textContent = '全部找回來了！';
                 Sfx.play('win');
                 level++; meta();

@@ -43,8 +43,8 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function countFor(level) { return Math.round(ramp(level, COUNT)); }  /* Math.round：四捨五入成整數 */
-    function tempoFor(level) { return Math.round(ramp(level, TEMPO_MS)); }  /* Math.round：四捨五入成整數 */
-    function bowlsFor(level) { return level < BOWL_FROM ? 0 : Math.max(1, Math.round(kit.ramp(level, 1, BOWLS[1], RAMP_LEVELS))); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function tempoFor(level) { return Math.round(ramp(level, TEMPO_MS)); }
+    function bowlsFor(level) { return level < BOWL_FROM ? 0 : Math.max(1, Math.round(kit.ramp(level, 1, BOWLS[1], RAMP_LEVELS))); }
     function respMs(count) { return Math.round((RESP_BASE + count * RESP_PER) * 1000); }
     /* 把 total 分成好幾組（每組 1～GROUP_MAX 下）；至少兩組（total ≥ 2 時），不是每組一樣大 */
     function splitGroups(total, rand) {
@@ -62,7 +62,7 @@
         rand = rand || Math.random;
         var count = countFor(level), tempo = tempoFor(level), groups = splitGroups(count, rand), events = [], t = LEAD_MS;
         groups.forEach(function (g, gi) {               /* forEach：對陣列的每個元素各做一次 */
-            if (gi > 0) t += kit.randInt(PAUSE_MS[0], PAUSE_MS[1], rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+            if (gi > 0) t += kit.randInt(PAUSE_MS[0], PAUSE_MS[1], rand);
             for (var k = 0; k < g; k++) { events.push({ t: Math.round(t), type: 'fish' }); t += tempo * kit.randFloat(0.9, 1.1, rand); }  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         });
         var fishMs = events[events.length - 1].t, fish = events.map(function (e) { return e.t; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
@@ -70,9 +70,9 @@
         var want = bowlsFor(level), bowlTimes = [], guard = 0;
         function clear(x) { for (var i = 0; i < fish.length; i++) if (Math.abs(fish[i] - x) < BOWL_CLEAR) return false; for (var j = 0; j < bowlTimes.length; j++) if (Math.abs(bowlTimes[j] - x) < BOWL_CLEAR) return false; return true; }  /* Math.abs：取絕對值（去掉負號） */
         while (bowlTimes.length < want && guard++ < 400) {
-            var run = Math.min(want - bowlTimes.length, kit.randInt(1, 3, rand)), t0 = kit.randFloat(LEAD_MS * 0.5, fishMs + 400, rand), part = [], okRun = true;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+            var run = Math.min(want - bowlTimes.length, kit.randInt(1, 3, rand)), t0 = kit.randFloat(LEAD_MS * 0.5, fishMs + 400, rand), part = [], okRun = true;
             for (var r = 0; r < run; r++) { var tt = Math.round(t0 + r * BOWL_GAP); if (!clear(tt) || part.indexOf(tt) >= 0) { okRun = false; break; } part.push(tt); }  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
-            if (okRun) { part.forEach(function (x) { bowlTimes.push(x); }); }  /* forEach：對陣列的每個元素各做一次 */
+            if (okRun) { part.forEach(function (x) { bowlTimes.push(x); }); }
         }
         bowlTimes.forEach(function (x) { events.push({ t: x, type: 'bowl' }); });
         events.sort(function (a, b) { return a.t - b.t; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
@@ -101,7 +101,7 @@
     /* 木魚（SVG）：圓圓的木頭、一條嘴縫；木槌 */
     function fishSvg(parent) {
         var s = kit.svg('svg', { 'class': 'knockcount-fish', viewBox: '0 0 200 170', width: 200, height: 170 }, parent);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        kit.svg('ellipse', { 'class': 'knockcount-fish__body', cx: 100, cy: 92, rx: 88, ry: 70 }, s);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('ellipse', { 'class': 'knockcount-fish__body', cx: 100, cy: 92, rx: 88, ry: 70 }, s);
         kit.svg('path', { 'class': 'knockcount-fish__mouth', d: 'M34 98 Q100 130 166 98' }, s);
         kit.svg('ellipse', { 'class': 'knockcount-fish__shine', cx: 70, cy: 62, rx: 26, ry: 12 }, s);
         kit.svg('rect', { 'class': 'knockcount-fish__stand', x: 50, y: 150, width: 100, height: 14, rx: 7 }, s);
@@ -128,7 +128,7 @@
         var field = h('div', { 'class': 'knockcount-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note knockcount-tip', text: '聽師父敲木魚，數有幾下' });
-        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(tip);
         var count = h('div', { 'class': 'knockcount-count', text: '' });
         field.appendChild(count);
         /* 師父（剪影）、木槌、木魚、銅缽 */
@@ -147,7 +147,7 @@
 
         var phase = 'watch', taps = 0, over = false;
         function hitFish(cls) { fishBox.classList.remove('knockcount-hit'); void fishBox.offsetWidth; fishBox.classList.add('knockcount-hit'); if (cls) { mallet.classList.remove('knockcount-mallet--hit'); void mallet.offsetWidth; mallet.classList.add('knockcount-mallet--hit'); } }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-        function hitBowl() { bowlBox.classList.remove('knockcount-hit'); void bowlBox.offsetWidth; bowlBox.classList.add('knockcount-hit'); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+        function hitBowl() { bowlBox.classList.remove('knockcount-hit'); void bowlBox.offsetWidth; bowlBox.classList.add('knockcount-hit'); }
         /* 師父去敲銅缽的動作：另一隻手的木槌揮向銅缽、身體往銅缽那邊傾一下（動畫約 0.4 秒，揮到一半剛好響） */
         function reachBowl() {
             mallet2.classList.remove('knockcount-mallet2--hit'); void mallet2.offsetWidth; mallet2.classList.add('knockcount-mallet2--hit');
@@ -160,7 +160,7 @@
             });
             if (e.type === 'bowl') api.after(Math.max(0, e.t - BOWL_LEAD_MS), reachBowl);                  /* 銅缽響之前，師父的手先揮出去 */
         });
-        api.after(q.endMs + 450, startPlay);            /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+        api.after(q.endMs + 450, startPlay);
         function startPlay() {
             if (api.over) return;
             phase = 'play'; tip.textContent = '快速敲出一樣的次數';                /* 提示只放一行：兩行會蓋到下面的大數字（按鈕怎麼出現，下面的小字說明） */
@@ -173,13 +173,13 @@
             taps++; count.textContent = String(taps); hitFish(false); Sfx.play('tick');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             if (taps === 1) done.style.display = '';                         /* 敲了第一下木魚，「我數好了」才出現 */
         });
-        kit.onTap(done, function () { if (phase === 'play') judge(false); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        kit.onTap(done, function () { if (phase === 'play') judge(false); });
         /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(timeout) {
             if (over || api.over || phase !== 'play') return;
             over = true; phase = 'end'; done.style.display = 'none';
             var ok = taps === N, groups = q.groups.join(' ＋ ');
-            count.textContent = String(taps);           /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            count.textContent = String(taps);
             info.textContent = '師父敲了 ' + N + ' 下，你敲了 ' + taps + ' 下' + (ok ? '，剛好！' : (taps < N ? '，少了 ' + (N - taps) + ' 下' : '，多了 ' + (taps - N) + ' 下')) + (q.bowls ? '（銅缽 ' + q.bowls + ' 聲不算）' : '');
             kit.flash(stage, ok, api.my);               /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
             if (ok) { api.pass({ delay: 1600 }); return; }  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */

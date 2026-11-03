@@ -59,7 +59,7 @@
     /* 出題：回傳 { socks: [9 個 {ci（彩虹色索引）, stripes, dots, rot, dx, dy}]（已洗牌）, odd: 落單那隻的索引, mate: 它最像的那一對的圖案, what: 改了哪個參數, colors: 這一關用到的底色索引 } */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var nColor = colorCountAt(level), colors = kit.shuffle([0, 1, 2, 3, 4, 5, 6], rand).slice(0, nColor);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+        var nColor = colorCountAt(level), colors = kit.shuffle([0, 1, 2, 3, 4, 5, 6], rand).slice(0, nColor);
         for (var tries = 0; tries < 200; tries++) {
             /* 四組花紋互不相同；底色：先每種底色至少用一次，其餘隨機 */
             var pats = [], used = {}, k, p;
@@ -70,8 +70,8 @@
             }
             var cols = colors.slice(); while (cols.length < 4) cols.push(kit.pick(colors, rand));  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             cols = kit.shuffle(cols, rand).slice(0, 4);
-            pats.forEach(function (pp, i) { pp.ci = cols[i]; });  /* forEach：對陣列的每個元素各做一次 */
-            var j = kit.randInt(0, 3, rand), base = pats[j], what = kit.pick(['stripes', 'dots'], rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+            pats.forEach(function (pp, i) { pp.ci = cols[i]; });
+            var j = kit.randInt(0, 3, rand), base = pats[j], what = kit.pick(['stripes', 'dots'], rand);
             var oddP = { ci: base.ci, stripes: base.stripes, dots: base.dots }, sign = rand() < 0.5 ? 1 : -1, d = countDelta(level), cur = base[what], v = cur + sign * d;
             if (v < 0 || v > MAX_COUNT) v = cur - sign * d;
             oddP[what] = v;
@@ -131,15 +131,15 @@
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[落單的襪子] 第 ' + level + ' 關：落單在第 ' + (q.odd + 1) + ' 格（改了' + WHAT_NAME[q.what] + '，差 ' + countDelta(level) + '）；底色 ' + q.colors.map(function (c) { return RAINBOW[c][0]; }).join('、') + '；限時 ' + timeMs(level) + ' ms；九隻 ' + q.socks.map(key).join(' | '));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        var W = stage.clientWidth || 472, x0 = Math.round((W - (3 * CELL + 2 * GAP)) / 2), y0 = 6;  /* Math.round：四捨五入成整數 */
+        var W = stage.clientWidth || 472, x0 = Math.round((W - (3 * CELL + 2 * GAP)) / 2), y0 = 6;
         var tip = h('div', { 'class': 'oddsock-tip', text: '九隻襪子裡有四對相同，找出沒有伴的那一隻' });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
         stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-        var cells = q.socks.map(function (s, i) {       /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        var cells = q.socks.map(function (s, i) {
             var el = h('div', { 'class': 'oddsock-cell', html: sockSvg(s, level + '_' + i) });
             el.style.left = (x0 + (i % 3) * (CELL + GAP)) + 'px'; el.style.top = (y0 + 66 + Math.floor(i / 3) * (CELL + GAP)) + 'px';  /* Math.floor：無條件捨去成整數 */
             el.firstChild.style.transform = 'translate(' + s.dx.toFixed(1) + 'px,' + s.dy.toFixed(1) + 'px) rotate(' + s.rot.toFixed(1) + 'deg)';
             kit.onTap(el, function () { judge(i); });   /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
-            stage.appendChild(el);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            stage.appendChild(el);
             return el;
         });
         var hint = null;
@@ -152,12 +152,12 @@
             if (api.over) return;
             var odd = q.odd;
             cells[odd].classList.add('oddsock-cell--odd');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-            q.socks.forEach(function (s, k) { if (k !== odd && key(s) === key(q.mate)) cells[k].classList.add('oddsock-cell--mate'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            q.socks.forEach(function (s, k) { if (k !== odd && key(s) === key(q.mate)) cells[k].classList.add('oddsock-cell--mate'); });
             if (i === odd) { api.pass({ delay: 800 }); return; }  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
             if (i >= 0) cells[i].classList.add('oddsock-cell--bad');
             api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: 2000, lines: [
-                    (i < 0 ? '時間到！' : '選錯了！') + '落單的是第 ' + (Math.floor(odd / 3) + 1) + ' 列第 ' + (odd % 3 + 1) + ' 隻',  /* Math.floor：無條件捨去成整數 */
+                    (i < 0 ? '時間到！' : '選錯了！') + '落單的是第 ' + (Math.floor(odd / 3) + 1) + ' 列第 ' + (odd % 3 + 1) + ' 隻',
                     '它和最像的那一對只差' + WHAT_NAME[q.what] + '：差 ' + countDelta(level) + ' 個'
                 ]
             });

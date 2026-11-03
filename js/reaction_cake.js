@@ -135,7 +135,7 @@
             function meta() { ctx.setMeta(kit.meta(['已過 ' + cleared + ' 關', '機會 ' + lives])); }
             /* SVG 蛋糕畫布：圖層由下到上依序是蛋糕、輔助點、刀線、切開後的扇形 */
             var svg = kit.svg('svg', { 'class': 'cake-svg', viewBox: '0 0 ' + VB + ' ' + VB }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-            var gCake = kit.svg('g', {}, svg);          /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+            var gCake = kit.svg('g', {}, svg);
             var gAid = kit.svg('g', {}, svg), gCuts = kit.svg('g', {}, svg), gOut = kit.svg('g', {}, svg);
             kit.svg('circle', { 'class': 'cake-cake', cx: C, cy: C, r: R_CAKE }, gCake);
             kit.svg('circle', { 'class': 'cake-icing', cx: C, cy: C, r: R_CAKE - 16 }, gCake);
@@ -150,10 +150,10 @@
             function tip(a, r) { var t = a * Math.PI / 180; return [C + r * Math.sin(t), C - r * Math.cos(t)]; }
             /* 畫出所有藍線與線頭的圓形把手 */
             function buildLines() {
-                gCuts.innerHTML = ''; lineEls = []; handleEls = [];  /* innerHTML = ''：把元素裡面的東西全部清掉 */
+                gCuts.innerHTML = ''; lineEls = []; handleEls = [];
                 var p = tip(first, R_CAKE);
                 kit.svg('line', { 'class': 'cake-cutline cake-cutline--first', x1: C, y1: C, x2: p[0], y2: p[1] }, gCuts);
-                lines.forEach(function () {             /* forEach：對陣列的每個元素各做一次 */
+                lines.forEach(function () {
                     lineEls.push(kit.svg('line', { 'class': 'cake-cutline', x1: C, y1: C, x2: C, y2: C }, gCuts));
                     handleEls.push(kit.svg('circle', { 'class': 'cake-handle', r: 13, cx: C, cy: C }, gCuts));
                 });
@@ -164,7 +164,7 @@
                 lines.forEach(function (a, i) {
                     var p = tip(a, R_CAKE), q = tip(a, R_CAKE + 2);
                     lineEls[i].setAttribute('x2', p[0].toFixed(1)); lineEls[i].setAttribute('y2', p[1].toFixed(1));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
-                    handleEls[i].setAttribute('cx', q[0].toFixed(1)); handleEls[i].setAttribute('cy', q[1].toFixed(1));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                    handleEls[i].setAttribute('cx', q[0].toFixed(1)); handleEls[i].setAttribute('cy', q[1].toFixed(1));
                     lineEls[i].setAttribute('class', 'cake-cutline' + (i === drag ? ' cake-cutline--drag' : ''));
                     handleEls[i].setAttribute('class', 'cake-handle' + (i === drag ? ' cake-handle--drag' : ''));
                 });
@@ -180,7 +180,7 @@
                 gAid.setAttribute('opacity', aidOpacity(level).toFixed(2));
                 head.textContent = '第 ' + level + ' 關　分給 ' + st.n + ' 個人';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 /* 主控台印出這關的人數、第一刀角度、過關標準與起始差距，方便驗證 */
-                banner.textContent = '拖曳藍線，差 ≤ ' + tolerancePct(st.n).toFixed(4) + '% 就過關';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                banner.textContent = '拖曳藍線，差 ≤ ' + tolerancePct(st.n).toFixed(4) + '% 就過關';
                 acts.style.visibility = 'visible'; cutBtn.disabled = false;
                 buildLines(); meta();
                 try { console.info('[分蛋糕] 第 ' + level + ' 關：' + st.n + ' 個人、第一刀 ' + first.toFixed(1) + '°；標準 ' + (PASS_RATIO * 100).toFixed(0) + '%＝每塊差距最多 ' + tolerancePct(st.n).toFixed(2) + '% 的蛋糕（' + (360 * PASS_RATIO / st.n).toFixed(2) + '°）；起始差距 ' + (spreadRatio(sliceAngles([first].concat(lines))) * 100).toFixed(0) + '% 平均塊；輔助刻度透明度 ' + aidOpacity(level).toFixed(2)); } catch (e) { }
@@ -213,7 +213,7 @@
                 lines[k] = a; paintLines(); Sfx.play('click');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             });
             /* 手指移動：把被抓住的那條線角度設成手指角度 */
-            field.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+            field.addEventListener('pointermove', function (e) {
                 if (state !== 'play' || drag < 0 || e.pointerId !== dragPid) return;
                 var a = angleFromEvent(e); if (a == null) return;
                 lines[drag] = a; paintLines();
@@ -223,7 +223,7 @@
             field.addEventListener('pointerup', endDrag);
             field.addEventListener('pointercancel', endDrag);
             /* 「切下去」按鈕 */
-            cutBtn.addEventListener('pointerdown', function (e) { e.preventDefault(); submit(); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            cutBtn.addEventListener('pointerdown', function (e) { e.preventDefault(); submit(); });
 
             /* 送出：算出每塊的圓心角、最大最小差距，判斷過不過關，並把蛋糕切塊散開、標上百分比 */
             function submit() {
@@ -231,12 +231,12 @@
                 state = 'reveal'; drag = -1; dragPid = null;
                 acts.style.visibility = 'hidden';
                 /* all：所有刀線（含第一刀）排序後的角度 */
-                var all = [first].concat(lines).map(norm360).sort(function (a, b) { return a - b; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
+                var all = [first].concat(lines).map(norm360).sort(function (a, b) { return a - b; });
                 var angs = sliceAngles(all), n = angs.length, ok = passes(angs);
                 var mx = Math.max.apply(null, angs), mn = Math.min.apply(null, angs);
                 var diffPct = (mx - mn) / 360 * 100;
                 /* 播放音效，並隱藏原本的蛋糕與刀線，改畫切開後的扇形 */
-                Sfx.play('pop');                        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                Sfx.play('pop');
                 gCuts.style.display = 'none'; gCake.style.display = 'none';
                 for (var i = 0; i < n; i++) {
                     var a0 = all[i], a1 = a0 + angs[i], mid = (a0 + angs[i] / 2) * Math.PI / 180;
@@ -294,7 +294,7 @@
 
             /* G.debug：測試用後門，perfect() 可以把藍線放到平均分好的位置 */
             G.debug = {
-                state: function () { return { level: level, state: state, lives: lives, cleared: cleared, n: st && st.n, first: first, lines: lines.slice(), spread: spreadRatio(sliceAngles([first].concat(lines))) }; },  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+                state: function () { return { level: level, state: state, lives: lives, cleared: cleared, n: st && st.n, first: first, lines: lines.slice(), spread: spreadRatio(sliceAngles([first].concat(lines))) }; },
                 /* 把藍線放到「平均分好」的位置（可加上 jitter 度的誤差）*/
                 perfect: function (jitter) { var n = st.n; for (var i = 1; i < n; i++) lines[i - 1] = norm360(first + i * 360 / n + (jitter || 0) * (i % 2 ? 1 : -1)); paintLines(); return lines.slice(); },
                 submit: submit,

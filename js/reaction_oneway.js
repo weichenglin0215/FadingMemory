@@ -52,8 +52,8 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function sizeFor(level) { return Math.round(kit.ramp(level, N[0], N[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
-    function detourFor(level) { return 2 * Math.round(kit.ramp(level, DETOUR[0], DETOUR[1], RAMP_LEVELS) / 2); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
-    function trapsFor(level) { return Math.round(kit.ramp(level, TRAPS[0], TRAPS[1], RAMP_LEVELS)); }  /* Math.round：四捨五入成整數 */
+    function detourFor(level) { return 2 * Math.round(kit.ramp(level, DETOUR[0], DETOUR[1], RAMP_LEVELS) / 2); }
+    function trapsFor(level) { return Math.round(kit.ramp(level, TRAPS[0], TRAPS[1], RAMP_LEVELS)); }
     function closeFor(level) { return Math.max(1, Math.round(kit.ramp(level, CLOSE[0], CLOSE[1], RAMP_LEVELS))); }
     /* 路口編號 i ＝ 列 × n ＋ 欄；起點在左下角、醫院在右上角 */
     function startOf(n) { return (n - 1) * n; }
@@ -70,8 +70,8 @@
     }
     /* 哪些路口走得到醫院（反向 BFS） */
     function canReachGoal(q) {
-        var ok = new Array(q.n * q.n).fill(false), queue = [q.goal]; ok[q.goal] = true;  /* new Array(n).fill(v)：建立長度 n、每一格都是 v 的陣列 */
-        for (var i = 0; i < queue.length; i++) { var b = queue[i]; neighbors(q.n, b).forEach(function (a) { if (!ok[a] && canMove(q, a, b)) { ok[a] = true; queue.push(a); } }); }  /* forEach：對陣列的每個元素各做一次 */
+        var ok = new Array(q.n * q.n).fill(false), queue = [q.goal]; ok[q.goal] = true;
+        for (var i = 0; i < queue.length; i++) { var b = queue[i]; neighbors(q.n, b).forEach(function (a) { if (!ok[a] && canMove(q, a, b)) { ok[a] = true; queue.push(a); } }); }
         return ok;
     }
     /* 死巷：從起點走得到、卻到不了醫院的路口 */
@@ -109,7 +109,7 @@
         vis[q.start] = 1;
         function dfs(head) {
             if (head === q.goal) return true;
-            var cand = outgoing(q, head).filter(function (b) { return !vis[b]; });  /* filter：留下符合條件的元素，回傳新陣列 */
+            var cand = outgoing(q, head).filter(function (b) { return !vis[b]; });
             cand.sort(function (a, b) { return manhattan(n, a, q.goal) - manhattan(n, b, q.goal) || (((a + tie * 7) % 5) - ((b + tie * 7) % 5)); });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
             for (var i = 0; i < cand.length; i++) {
                 if (++steps > cap) return false;
@@ -146,7 +146,7 @@
             var cand = neighbors(n, cur).filter(function (b) { return !vis[b] && (b !== goal || path.length >= minLen); });
             if (!cand.length) return null;
             /* 比較偏好朝醫院的方向走，但也常常岔出去（繞遠路） */
-            cand.sort(function (a, b) { return manhattan(n, a, goal) - manhattan(n, b, goal); });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
+            cand.sort(function (a, b) { return manhattan(n, a, goal) - manhattan(n, b, goal); });
             var pick = rand() < 0.55 ? cand[0] : kit.pick(cand, rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             vis[pick] = 1; path.push(pick);
         }
@@ -155,14 +155,14 @@
     /* 誘餌大路：從起點畫一條只往右、往上的路，走到 decoy 這個路口（離醫院 CLOSE 格的死巷）。路上的每一段都順著走的方向，
        跟「真正的路」route 共用的路段，方向一定要一樣（不一樣就換一條）；回傳路口編號陣列，畫不出來回傳 null */
     function decoyRoad(n, start, decoy, routeDir, rand) {
-        var path = [start], cur = start, tr = Math.floor(decoy / n), tc = decoy % n;  /* Math.floor：無條件捨去成整數 */
+        var path = [start], cur = start, tr = Math.floor(decoy / n), tc = decoy % n;
         while (cur !== decoy) {
             var r = Math.floor(cur / n), c = cur % n, cand = [];
             if (r > tr) cand.push(cur - n);                       /* 往上 */
             if (c < tc) cand.push(cur + 1);                       /* 往右 */
             cand = cand.filter(function (b) { var key = Math.min(cur, b) + ',' + Math.max(cur, b); return !routeDir[key] || routeDir[key] === cur + ',' + b; });
             if (!cand.length) return null;
-            cur = kit.pick(cand, rand); path.push(cur); /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+            cur = kit.pick(cand, rand); path.push(cur);
         }
         return path;
     }
@@ -229,7 +229,7 @@
         var head = path[path.length - 1];
         if (path.length >= 2 && node === path[path.length - 2]) { path.pop(); return 'back'; }
         if (!adjacent(q.n, head, node)) return null;
-        if (path.indexOf(node) >= 0) return 'blocked';  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+        if (path.indexOf(node) >= 0) return 'blocked';
         if (!canMove(q, head, node)) return 'blocked';
         path.push(node);
         return 'add';
@@ -269,7 +269,7 @@
         var tip = h('div', { 'class': 'qz-note oneway-tip', text: '順著箭頭，把計程車帶到醫院' });
         stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var svg = kit.svg('svg', { 'class': 'oneway-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        var gRoad = kit.svg('g', {}, svg), gSol = kit.svg('g', {}, svg), gRoute = kit.svg('g', {}, svg), gSign = kit.svg('g', {}, svg), gNode = kit.svg('g', {}, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var gRoad = kit.svg('g', {}, svg), gSol = kit.svg('g', {}, svg), gRoute = kit.svg('g', {}, svg), gSign = kit.svg('g', {}, svg), gNode = kit.svg('g', {}, svg);
         var rw = Math.max(16, sp * 0.3);
         /* 路：每一段畫一條白色粗線；中間放一個藍色圓形的單行道標誌，箭頭指向可以開的方向 */
         for (var a = 0; a < n * n; a++) neighbors(n, a).forEach(function (b) {
@@ -292,7 +292,7 @@
         kit.svg('rect', { 'class': 'oneway-taxi-win', x: -rw * 0.28, y: -rw * 0.22, width: rw * 0.56, height: rw * 0.3, rx: 3 }, taxi);
         var bad = kit.svg('circle', { 'class': 'oneway-bad', cx: -99, cy: -99, r: rw * 0.9 }, gNode);
         var routeLine = kit.svg('path', { 'class': 'oneway-route', d: '' }, gRoute);
-        routeLine.setAttribute('stroke-width', (rw * 0.34).toFixed(1));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+        routeLine.setAttribute('stroke-width', (rw * 0.34).toFixed(1));
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() {
             var head = path[path.length - 1];
@@ -328,7 +328,7 @@
                 if (k < 0) continue;
                 var head = path[path.length - 1];
                 var act = drag(q, path, k);
-                if (act === 'add' || act === 'back') { Sfx.play(act === 'add' ? 'tick' : 'flip'); paint(); if (path[path.length - 1] === q.goal) finish('ok'); }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                if (act === 'add' || act === 'back') { Sfx.play(act === 'add' ? 'tick' : 'flip'); paint(); if (path[path.length - 1] === q.goal) finish('ok'); }
                 else if (act === 'blocked') flashBad(head, k);
             }
             lastPt = p;
@@ -340,7 +340,7 @@
             e.preventDefault(); pid = e.pointerId; lastPt = p;  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             try { stage.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
         });
-        stage.addEventListener('pointermove', function (e) { if (pid === e.pointerId) feed(kit.localPt(e, stage)); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        stage.addEventListener('pointermove', function (e) { if (pid === e.pointerId) feed(kit.localPt(e, stage)); });
         function up(e) { if (pid === e.pointerId) { pid = null; lastPt = null; } }
         stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
 
@@ -356,11 +356,11 @@
             }
             var head = path[path.length - 1], stuck = outgoing(q, head).every(function (b) { return path.indexOf(b) >= 0; });  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
             bad.setAttribute('cx', px(head)); bad.setAttribute('cy', py(head));
-            var sol = kit.svg('path', { 'class': 'oneway-sol', d: q.solution.map(function (k, j) { return (j ? 'L' : 'M') + px(k) + ' ' + py(k); }).join(' '), pathLength: 1 }, gSol);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            var sol = kit.svg('path', { 'class': 'oneway-sol', d: q.solution.map(function (k, j) { return (j ? 'L' : 'M') + px(k) + ' ' + py(k); }).join(' '), pathLength: 1 }, gSol);
             sol.setAttribute('stroke-width', (rw * 0.34).toFixed(1));
             gSol.classList.add('oneway-sol--draw');     /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-            tip.textContent = '時間到！綠線是可以開到醫院的路';        /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            tip.textContent = '時間到！綠線是可以開到醫院的路';
+            kit.flash(stage, false, api.my);
             api.fail({ delay: 2800, lines: ['時間到，' + (stuck ? '你卡在死巷裡了（紅圈）' : '你停在紅圈的地方，還沒到醫院'), '最短的合法路線要 ' + (q.solution.length - 1) + ' 段（直線距離只有 ' + manhattan(n, q.start, q.goal) + '）'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：api.solve 照最短合法路線一格一格開到醫院；api.wrong 直接當作時間到 */

@@ -65,7 +65,7 @@
     /* 上格顯示秒數（隨題號線性變短） */
     function showSec(q) { return kit.ramp(q, SHOW_START, SHOW_END, RAMP_Q); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 空白秒數（隨題號線性變長，考記憶） */
-    function blankSec(q) { return kit.ramp(q, BLANK_START, BLANK_END, RAMP_Q); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function blankSec(q) { return kit.ramp(q, BLANK_START, BLANK_END, RAMP_Q); }
     /* 作答時限（隨題號線性變短） */
     function askSec(q) { return kit.ramp(q, ASK_START, ASK_END, RAMP_Q); }
     /* 「不相同」題使用相似選項的機率（越後面越高） */
@@ -98,7 +98,7 @@
     /* 出水果題：same 為 true 兩邊相同；否則 B 換成別種（越後面越有機會是長得像的） */
     function makeFruit(q, same, rand) {
         /* a：上格的水果；b 先設成跟 a 一樣 */
-        var a = kit.pick(FRUITS, rand), b = a;          /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        var a = kit.pick(FRUITS, rand), b = a;
         if (!same) {
             /* 找出 a 所屬的相似群組 */
             var grp = FRUIT_GROUPS.filter(function (g) { return g.indexOf(a) >= 0; })[0];  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
@@ -162,7 +162,7 @@
             /* split('') 把數字字串拆成一個一個字元的陣列 */
             var arr = s.split('');
             if (rand() < 0.5) {
-                var i = kit.randInt(0, arr.length - 2, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+                var i = kit.randInt(0, arr.length - 2, rand);
                 var t = arr[i]; arr[i] = arr[i + 1]; arr[i + 1] = t;
             } else {
                 var j = kit.randInt(0, arr.length - 1, rand);
@@ -260,7 +260,7 @@
             S('path', { d: 'M100 40 C 104 24, 124 18, 136 26 C 128 40, 112 46, 100 40 Z', fill: 'hsl(120,45%,40%)' });
             [[70, 96], [118, 90], [92, 132], [132, 128], [66, 138]].forEach(function (p) { S('circle', { cx: p[0], cy: p[1], r: 3, fill: 'hsl(24,80%,40%)' }); });  /* forEach：對陣列的每個元素各做一次 */
         } else if (kind === 'grape') {
-            [[78, 82], [122, 82], [58, 118], [100, 118], [142, 118], [78, 154], [122, 154], [100, 186]].forEach(function (p) {  /* forEach：對陣列的每個元素各做一次 */
+            [[78, 82], [122, 82], [58, 118], [100, 118], [142, 118], [78, 154], [122, 154], [100, 186]].forEach(function (p) {
                 S('circle', { cx: p[0], cy: p[1] - 10, r: 24, fill: 'hsl(282,48%,46%)', stroke: 'hsl(282,45%,28%)', 'stroke-width': 3 });
                 S('circle', { cx: p[0] - 7, cy: p[1] - 18, r: 5, fill: 'rgba(255,255,255,0.45)' });
             });
@@ -293,10 +293,10 @@
     /* 畫一個圖形（圓、方、三角、六邊形、菱形、星星）；顏色用 hsl(色相, 飽和度, 亮度) */
     function drawShape(item, svg) {
         var R = 92 * item.scale;
-        var fill = 'hsl(' + Math.round(item.hue) + ',72%,56%)', stroke = 'hsl(' + Math.round(item.hue) + ',60%,30%)';  /* Math.round：四捨五入成整數 */
+        var fill = 'hsl(' + Math.round(item.hue) + ',72%,56%)', stroke = 'hsl(' + Math.round(item.hue) + ',60%,30%)';
         var common = { fill: fill, stroke: stroke, 'stroke-width': 4, 'stroke-linejoin': 'round' };
         var attrs;
-        if (item.shape === 'circle') { attrs = { cx: 0, cy: 0, r: R }; return kit.svg('circle', mix(attrs, common), svg); }  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        if (item.shape === 'circle') { attrs = { cx: 0, cy: 0, r: R }; return kit.svg('circle', mix(attrs, common), svg); }
         if (item.shape === 'square') { attrs = { x: -R * 0.9, y: -R * 0.9, width: R * 1.8, height: R * 1.8 }; return kit.svg('rect', mix(attrs, common), svg); }
         if (item.shape === 'triangle') { attrs = { points: polyPts(3, R * 1.1, -Math.PI / 2) }; return kit.svg('polygon', mix(attrs, common), svg); }
         if (item.shape === 'hexagon') { attrs = { points: polyPts(6, R, 0) }; return kit.svg('polygon', mix(attrs, common), svg); }
@@ -334,7 +334,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
+            root.innerHTML = '';
 
             /* q 目前題號（從 0 起算，next() 會先 +1）；right 答對數；state 目前階段（showA/blank/ask/reveal）；cur 目前這題 */
             var q = (startAt || 1) - 1, right = q, newRec = false, state = 'idle', cur = null;
@@ -353,7 +353,7 @@
             /* 按鈕一開始先隱藏（style.visibility='hidden' 隱藏但仍佔位置，版面不會跳動） */
             btns.style.visibility = 'hidden';
             /* 把所有元素依序放進畫面 */
-            [head, prompt, boxA, boxB, tb.el, btns].forEach(function (n) { root.appendChild(n); });  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            [head, prompt, boxA, boxB, tb.el, btns].forEach(function (n) { root.appendChild(n); });
 
             function meta() { ctx.setMeta(kit.meta(['答對 ' + right, fmtBest(Reaction.getBest(ID))])); }  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             function paintHead() { head.textContent = '第 ' + q + ' 題'; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
@@ -373,7 +373,7 @@
                         '；上格 ' + showSec(q).toFixed(2) + ' 秒、空白 ' + blankSec(q).toFixed(2) + ' 秒、作答 ' + askSec(q).toFixed(2) + ' 秒');
                 } catch (e) { }
                 paintHead(); meta();
-                prompt.textContent = cur.prompt;        /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                prompt.textContent = cur.prompt;
                 boxA.className = 'same-box'; boxB.className = 'same-box';
                 boxB.innerHTML = ''; boxA.innerHTML = '';
                 btns.style.visibility = 'hidden';
@@ -416,8 +416,8 @@
                 /* 揭曉：把上格內容重新顯示，兩格都標上對錯顏色 */
                 renderItem(boxA, cur.A);       /* 揭曉：上格再亮出來，兩格一起看 */
                 boxA.classList.add(ok ? 'same-box--ok' : 'same-box--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                boxB.classList.add(ok ? 'same-box--ok' : 'same-box--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                if (ok) { right++; Sfx.play('ok'); if (Reaction.setBest(ID, right, function (v, b) { return v > b; })) newRec = true; }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                boxB.classList.add(ok ? 'same-box--ok' : 'same-box--bad');
+                if (ok) { right++; Sfx.play('ok'); if (Reaction.setBest(ID, right, function (v, b) { return v > b; })) newRec = true; }
                 else Sfx.play('bad');
                 prompt.textContent = (isSame == null ? '時間到！' : (ok ? '答對了！' : '答錯了…')) + '　正確是「' + (cur.same ? '相同' : '不相同') + '」';
                 meta();

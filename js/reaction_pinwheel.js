@@ -45,7 +45,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function centerFor(level) { return Math.round(ramp(level, CENTER) * 1000) / 1000; }  /* Math.round：四捨五入成整數 */
-    function halfBandFor(level) { return Math.round(ramp(level, HALF_BAND) * 1000) / 1000; }  /* Math.round：四捨五入成整數 */
+    function halfBandFor(level) { return Math.round(ramp(level, HALF_BAND) * 1000) / 1000; }
     function holdFor(level) { return Math.round(ramp(level, HOLD_S) * 1000) / 1000; }
     function gustFor(level) { return Math.round(ramp(level, GUST) * 1000) / 1000; }
     function limitFor(level) { return Math.round(ramp(level, LIMIT_S) * 1000) / 1000; }
@@ -130,7 +130,7 @@
         var field = h('div', { 'class': 'pinwheel-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note pinwheel-tip', text: level === 1 ? '繞著風車畫圈，停在綠色範圍！' : '轉速停在綠色範圍，撐滿進度' });
-        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(tip);
         /* 速度表（橫條）：0～maxSpeed；綠色範圍、紅色危險區、目前轉速的指針 */
         var BW = W - 40, bar = h('div', { 'class': 'pinwheel-gauge' }); bar.style.cssText = 'left:20px;top:64px;width:' + BW + 'px;'; field.appendChild(bar);
         function X(v) { return Math.round(BW * Math.min(1, v / q.maxSpeed)); }
@@ -140,7 +140,7 @@
         var lab = h('div', { 'class': 'pinwheel-gauge__lab', text: '綠色＝' + q.lo.toFixed(4) + '～' + q.hi.toFixed(4) + ' 圈／秒' }); lab.style.cssText = 'left:20px;top:100px;right:20px;'; field.appendChild(lab);
         /* 軌道圈（提示怎麼畫）、風車 */
         var svg = kit.svg('svg', { 'class': 'pinwheel-svg', width: W, height: H, viewBox: '0 0 ' + W + ' ' + H }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        kit.svg('circle', { 'class': 'pinwheel-track', cx: cx, cy: cy, r: RING }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('circle', { 'class': 'pinwheel-track', cx: cx, cy: cy, r: RING }, svg);
         var wheel = kit.svg('g', { 'class': 'pinwheel-wheel', transform: 'translate(' + cx + ',' + cy + ')' }, svg), blades = kit.svg('g', {}, wheel);
         for (var b = 0; b < 4; b++) { kit.svg('path', { 'class': 'pinwheel-blade pinwheel-blade' + b, d: 'M0,0 L-34,-8 Q-30,-62 0,-66 Z', transform: 'rotate(' + (b * 90) + ')' }, blades); }
         kit.svg('circle', { 'class': 'pinwheel-hub', cx: 0, cy: 0, r: 9 }, wheel);
@@ -152,7 +152,7 @@
         if (level === 1 && kit.once('pinwheel.hint')) kit.hintOn(stage, null, { mode: 'hold', x: cx + RING * 0.7, y: cy - RING * 0.7, delay: 700, text: '繞著風車快快畫圈' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
         var phase = 'play', t0 = performance.now(), w = 0, p = 0, br = 0, ang = 0, samples = [], down = null, lastT = 0, wIn = 0, trace = [], nextSample = 0, override = null;  /* performance.now()：高精度的時間（毫秒），計時用 */
-        function nowS() { return (performance.now() - t0) / 1000; }  /* performance.now()：高精度的時間（毫秒），計時用 */
+        function nowS() { return (performance.now() - t0) / 1000; }
         function frame(now) {
             var t = (now - t0) / 1000, dt = Math.min(0.05, t - lastT); lastT = t; if (dt <= 0) return;
             /* 手指轉速：放開、或最近沒有新的觸控點，就是 0 */
@@ -161,7 +161,7 @@
             p = progressStep(p, inBand(q, w), dt, q.hold); br = breakStep(br, w > q.breakLine, dt);
             ang += w * 360 * dt; wheel.setAttribute('transform', 'translate(' + cx + ',' + cy + ') rotate(' + (ang % 360).toFixed(1) + ')');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             needle.style.left = X(w) + 'px'; needle.classList.toggle('pinwheel-needle--ok', inBand(q, w)); needle.classList.toggle('pinwheel-needle--bad', w > q.breakLine);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-            fill.style.width = (100 * p).toFixed(1) + '%'; fill.classList.toggle('pinwheel-prog__fill--on', inBand(q, w)); band.classList.toggle('pinwheel-band--on', inBand(q, w));  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            fill.style.width = (100 * p).toFixed(1) + '%'; fill.classList.toggle('pinwheel-prog__fill--on', inBand(q, w)); band.classList.toggle('pinwheel-band--on', inBand(q, w));
             if (t >= nextSample) { trace.push([t, w]); nextSample += SAMPLE_S; }
             if (p >= 1) finish('pass'); else if (br >= BREAK_S) finish('break'); else if (t >= q.limit) finish('time');
         }
@@ -177,7 +177,7 @@
             down = { id: e.pointerId }; samples = []; push(e);
         });
         function push(e) { var pt = kit.localPt(e, field); samples.push({ t: nowS(), x: pt.x - cx, y: pt.y - cy }); if (samples.length > 80) samples.shift(); }
-        field.addEventListener('pointermove', function (e) { if (down && e.pointerId === down.id && phase === 'play') push(e); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        field.addEventListener('pointermove', function (e) { if (down && e.pointerId === down.id && phase === 'play') push(e); });
         function up(e) { if (down && e.pointerId === down.id) { down = null; samples = []; } }
         field.addEventListener('pointerup', up); field.addEventListener('pointercancel', up);
 
@@ -188,7 +188,7 @@
             var why = whyText(kind, q);
             info.textContent = why;                     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             if (kind === 'pass') { info.classList.add('pinwheel-info--ok'); kit.flash(stage, true, api.my); Sfx.play('ok'); api.pass({ delay: 1800 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
-            info.classList.add('pinwheel-info--bad'); kit.flash(stage, false, api.my);  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            info.classList.add('pinwheel-info--bad'); kit.flash(stage, false, api.my);
             showChart(kind);
             api.fail({ delay: 4200, lines: [why, '綠色範圍 ' + q.lo.toFixed(4) + '～' + q.hi.toFixed(4) + ' 圈／秒、紅線 ' + q.breakLine.toFixed(4) + '、要撐 ' + q.hold.toFixed(4) + ' 秒', '進度停在 ' + (100 * p).toFixed(4) + '%'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }

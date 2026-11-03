@@ -26,7 +26,7 @@
         g.rowOf = function (c) { return Math.floor(c / N); };  /* Math.floor：無條件捨去成整數 */
         g.colOf = function (c) { return c % N; };
         /* 格子編號 c → 第幾宮：先算「第幾排宮、第幾欄宮」，再換成宮的編號 */
-        g.boxOf = function (c) { return Math.floor(g.rowOf(c) / boxR) * (N / boxC) + Math.floor(g.colOf(c) / boxC); };  /* Math.floor：無條件捨去成整數 */
+        g.boxOf = function (c) { return Math.floor(g.rowOf(c) / boxR) * (N / boxC) + Math.floor(g.colOf(c) / boxC); };
         var rows = [], cols = [], boxes = [];
         for (i = 0; i < N; i++) { rows.push([]); cols.push([]); boxes.push([]); }
         for (i = 0; i < N * N; i++) { rows[g.rowOf(i)].push(i); cols[g.colOf(i)].push(i); boxes[g.boxOf(i)].push(i); }
@@ -48,7 +48,7 @@
        做法：每次挑「候選數最少」的空格（最容易出錯的先試），一個一個數字試；試不下去就退回上一步（這就是回溯）。
        rand 有給就用亂數順序試數字，拿來「造一個隨機的完整盤面」。 */
     SL.solve = function (g, givens, limit, rand) {
-        var N = g.N, cells = g.cells, grid = givens.slice(), cand = new Array(cells), found = 0, first = null, i;  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        var N = g.N, cells = g.cells, grid = givens.slice(), cand = new Array(cells), found = 0, first = null, i;
         function ok() { return true; }                  /* （沒有用到的小函式，保留不影響結果） */
         for (i = 0; i < cells; i++) cand[i] = g.ALL;    /* 一開始每一格的候選數都是「全部數字」；下一行起，已經填了數字的格子要把它的數字從同排、同欄、同宮的候選數裡去掉 */
         for (i = 0; i < cells; i++) if (grid[i]) {
@@ -134,10 +134,10 @@
             g.units.forEach(function (un) {             /* forEach：對陣列的每個元素各做一次 */
                 var open = un.filter(function (c) { return !grid[c] && bitCount(cand[c]) <= k; });  /* filter：留下符合條件的元素，回傳新陣列 */
                 combos(open, k, function (cs) {
-                    var uni = 0; cs.forEach(function (c) { uni |= cand[c]; });  /* forEach：對陣列的每個元素各做一次 */
+                    var uni = 0; cs.forEach(function (c) { uni |= cand[c]; });
                     if (bitCount(uni) !== k) return;
                     var ch = false;
-                    un.forEach(function (c) { if (!grid[c] && cs.indexOf(c) < 0 && elim(c, uni)) ch = true; });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+                    un.forEach(function (c) { if (!grid[c] && cs.indexOf(c) < 0 && elim(c, uni)) ch = true; });
                     if (ch) { did = true; use(name); }
                 });
             });
@@ -151,7 +151,7 @@
                 var pos = {}, ds = [];
                 for (var dg = 1; dg <= N; dg++) {
                     var placed = un.some(function (c) { return grid[c] === dg; }); if (placed) continue;  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
-                    var sp = un.filter(function (c) { return !grid[c] && (cand[c] & (1 << dg)); });  /* filter：留下符合條件的元素，回傳新陣列 */
+                    var sp = un.filter(function (c) { return !grid[c] && (cand[c] & (1 << dg)); });
                     if (sp.length === 2) { pos[dg] = sp; ds.push(dg); }
                 }
                 combos(ds, 2, function (pr) {
@@ -201,7 +201,7 @@
                     });
                     for (var a = 0; a < two.length; a++) for (var b = a + 1; b < two.length; b++) {
                         var A = two[a].sp, B = two[b].sp;
-                        var ca = A.map(function (c) { return lines === g.rows ? g.colOf(c) : g.rowOf(c); }), cb = B.map(function (c) { return lines === g.rows ? g.colOf(c) : g.rowOf(c); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+                        var ca = A.map(function (c) { return lines === g.rows ? g.colOf(c) : g.rowOf(c); }), cb = B.map(function (c) { return lines === g.rows ? g.colOf(c) : g.rowOf(c); });
                         if (ca[0] !== cb[0] || ca[1] !== cb[1]) continue;
                         var ch = false;
                         ca.forEach(function (ci) { cross[ci].forEach(function (c) { if (!grid[c] && A.indexOf(c) < 0 && B.indexOf(c) < 0 && elim(c, bit)) ch = true; }); });
@@ -259,7 +259,7 @@
             var okLevel = res.level >= (spec.minLevel || 0);  /* 這題用到的技巧等級夠高（不會太簡單）嗎？夠高、提示數也夠少就直接用；否則記下「目前最好的一題」繼續重試 */
             if (okLevel && count <= (spec.maxCount || 999)) return pz;
             if (!best || (okLevel && !best.okLevel) || (okLevel === best.okLevel && (count < best.count))) { best = pz; best.okLevel = okLevel; }
-            if (spec.ms && Date.now() - t0 > spec.ms) break;  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
+            if (spec.ms && Date.now() - t0 > spec.ms) break;
         }
         return best;
     };

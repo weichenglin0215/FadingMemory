@@ -95,7 +95,7 @@
             for (k = 0; k < order.length; k++) { w = weights[order[k]]; if (init[w][cur[order[k]]]) kept++; }
             var moves = order.length - kept;
             count++;
-            if (moves < bestMoves) { bestMoves = moves; best = cur.slice(); }  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+            if (moves < bestMoves) { bestMoves = moves; best = cur.slice(); }
         }
         function dfs(k, net) {
             if (count > cap) return;
@@ -115,7 +115,7 @@
     }
     /* x（板子上的水平位置，單位：格；支點在 0）最接近的座位：回傳 −S～−1 或 1～S（靠近支點的 0 附近看 x 的正負決定哪一邊） */
     function nearestSlot(x, S) {
-        var s = Math.round(x);                          /* Math.round：四捨五入成整數 */
+        var s = Math.round(x);
         if (s === 0) s = x < 0 ? -1 : 1;
         return Math.max(-S, Math.min(S, s));
     }
@@ -139,7 +139,7 @@
             var slots = kit.shuffle(allSlots, rand), pos = [], fixedPos = [], fixed = [];  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
             for (i = 0; i < n; i++) { pos.push(slots[i]); fixed.push(i < np); fixedPos.push(i < np ? slots[i] : 0); }
             var net = torqueOf(weights, pos).net;
-            if (Math.abs(net) < 2 || Math.abs(net) > DIFF_MAX) continue;  /* Math.abs：取絕對值（去掉負號） */
+            if (Math.abs(net) < 2 || Math.abs(net) > DIFF_MAX) continue;
             var left = pos.filter(function (x) { return x < 0; }).length;  /* filter：留下符合條件的元素，回傳新陣列 */
             if (left === 0 || left === n) continue;                                        /* 一邊空空的：太明顯 */
             var sol = solve(weights, fixedPos, pos, S, maxSols);
@@ -175,7 +175,7 @@
     /* 動物的臉（SVG）：毛色由 CSS 的 .seesaw-an--種類 決定；不同動物的耳朵、鼻子不一樣 */
     function animalSvg(id) {
         var s = kit.svg('svg', { 'class': 'seesaw-face', viewBox: '0 0 60 60', width: 60, height: 60 });  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        function el(tag, attrs, cls) { attrs['class'] = cls; return kit.svg(tag, attrs, s); }  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        function el(tag, attrs, cls) { attrs['class'] = cls; return kit.svg(tag, attrs, s); }
         /* 耳朵（畫在臉後面） */
         if (id === 'bear' || id === 'panda') { el('circle', { cx: 13, cy: 17, r: 8 }, 'seesaw-ear' + (id === 'panda' ? ' seesaw-ear--dark' : '')); el('circle', { cx: 47, cy: 17, r: 8 }, 'seesaw-ear' + (id === 'panda' ? ' seesaw-ear--dark' : '')); }
         if (id === 'pig' || id === 'cat') { el('path', { d: 'M9 24 L13 6 L26 16 Z' }, 'seesaw-ear'); el('path', { d: 'M51 24 L47 6 L34 16 Z' }, 'seesaw-ear'); }
@@ -205,7 +205,7 @@
         var field = h('div', { 'class': 'seesaw-field' });                  /* 這一關專用的容器：所有東西和事件監聽都放在裡面，換關時整個丟掉 */
         var W = stage.clientWidth || 472, PL = Math.min(W - 12, 460), PX = W / 2, PY = 380, HALF = PL / 2, DS = (HALF - 20) / S;          /* DS：相鄰座位的間距（px） */
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-        field.appendChild(h('div', { 'class': 'qz-note seesaw-tip', text: '動物越大越重；座位離支點越遠，壓得越用力（重量×格數）' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(h('div', { 'class': 'qz-note seesaw-tip', text: '動物越大越重；座位離支點越遠，壓得越用力（重量×格數）' }));
         var pivot = h('div', { 'class': 'seesaw-pivot' });
         pivot.style.cssText = 'left:' + (PX - 40) + 'px;top:' + (PY + 6) + 'px;';
         field.appendChild(pivot);
@@ -227,7 +227,7 @@
 
         /* 動物們 */
         var els = [];
-        q.kinds.forEach(function (k, i) {               /* forEach：對陣列的每個元素各做一次 */
+        q.kinds.forEach(function (k, i) {
             var sp = SPECIES[k], el = h('div', { 'class': 'seesaw-an seesaw-an--' + sp.id + (q.fixed[i] ? ' seesaw-an--pin' : '') }), sz = sizeOf(weights[i]);
             el.style.width = el.style.height = sz + 'px';
             el.setAttribute('data-i', String(i));                                 /* 第幾隻（測試用） */
@@ -312,7 +312,7 @@
         function drop(e) {
             if (!drag || e.pointerId !== drag.id) return;
             var i = drag.i, p = kit.localPt(e, field), el = els[i];
-            drag = null; held = -1; el.classList.remove('seesaw-an--held'); el.style.top = ''; el.style.bottom = ''; aim.style.display = 'none';  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            drag = null; held = -1; el.classList.remove('seesaw-an--held'); el.style.top = ''; el.style.bottom = ''; aim.style.display = 'none';
             var s = slotAt(p), dest = lastPos[i];                                                       /* 放到板子外面：回到原來的座位 */
             if (s) {
                 var want = freeSlotFor(s, i), who = -1;
@@ -325,7 +325,7 @@
             if (s) { el.classList.remove('seesaw-an--drop'); void el.offsetWidth; el.classList.add('seesaw-an--drop'); }                 /* 坐上去有一點彈跳 */
             Sfx.play('pop');                            /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
         }
-        field.addEventListener('pointerup', drop);      /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        field.addEventListener('pointerup', drop);
         field.addEventListener('pointercancel', drop);
 
         /* 過關：鎖住畫面、顯示成功效果，並呼叫 api.pass 進下一關（或結算） */
@@ -333,7 +333,7 @@
             if (won || api.over) return;
             won = true; stage.classList.add('seesaw-happy');
             var t = torqueOf(weights, pos);
-            info.textContent = '兩邊的力矩都是 ' + t.l + '，平衡了！';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            info.textContent = '兩邊的力矩都是 ' + t.l + '，平衡了！';
             kit.flash(stage, true, api.my);             /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
             api.pass({ delay: 1800 });                  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
         }
@@ -344,7 +344,7 @@
             if (drag) { var i0 = drag.i; drag = null; held = -1; els[i0].classList.remove('seesaw-an--held'); els[i0].style.top = ''; els[i0].style.bottom = ''; aim.style.display = 'none'; pos[i0] = lastPos[i0] || 1; }
             seat();
             /* 指出一種平衡的放法：從現在的座位找最近的平衡放法，該換座位的動物圍上綠框，目標座位畫虛線圓圈 */
-            var fixedPos = q.fixed.map(function (f, i) { return f ? pos[i] : 0; }), sol = solve(weights, fixedPos, pos, S, SOLVE_CAP);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            var fixedPos = q.fixed.map(function (f, i) { return f ? pos[i] : 0; }), sol = solve(weights, fixedPos, pos, S, SOLVE_CAP);
             if (sol.best) {
                 for (var i = 0; i < n; i++) {
                     if (sol.best[i] === pos[i]) continue;
@@ -356,7 +356,7 @@
             }
             var names = sol.best ? sol.best.map(function (s, i) { return s !== pos[i] ? SPECIES[q.kinds[i]].name + '（重 ' + weights[i] + '）→ ' + (s < 0 ? '左 ' : '右 ') + Math.abs(s) + ' 格' : ''; }).filter(Boolean).join('、') : '';
             info.textContent = sol.best ? '時間到！綠框的動物搬到虛線圓圈就平衡了' : '時間到！';
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({ delay: 3400, lines: ['時間到！蹺蹺板還沒平衡', sol.best ? '一種平衡的放法：' + names : ''] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：api.solve 照最近的一種平衡放法坐好；api.wrong 直接當作時間到 */

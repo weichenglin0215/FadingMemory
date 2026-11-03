@@ -41,10 +41,10 @@
        空地共 F 格：F 是偶數 → 兩色格數必須一樣多；F 是奇數 → 起點必須在「多一格」的那一色，而且兩色只差 1 格。 */
     function parityOk(n, blocked, start) {
         var a = 0, b = 0, i;
-        for (i = 0; i < n * n; i++) if (!blocked[i]) { if ((Math.floor(i / n) + i % n) % 2) b++; else a++; }  /* Math.floor：無條件捨去成整數 */
+        for (i = 0; i < n * n; i++) if (!blocked[i]) { if ((Math.floor(i / n) + i % n) % 2) b++; else a++; }
         if ((a + b) % 2 === 0) return a === b;
         var startColor = (Math.floor(start / n) + start % n) % 2 ? 1 : 0;
-        return Math.abs(a - b) === 1 && ((a > b) === (startColor === 0));  /* Math.abs：取絕對值（去掉負號） */
+        return Math.abs(a - b) === 1 && ((a > b) === (startColor === 0));
     }
     /* 找一條從 start 出發、走遍每一格空地剛好一次的路（漢米爾頓路徑）；找不到（或搜尋太久）回傳 null。
        做法：深度優先搜尋，下一步優先挑「出路少的鄰居」（Warnsdorff 規則）、同分隨機；每走一步先剪枝——
@@ -57,7 +57,7 @@
         for (i = 0; i < total; i++) vis[i] = blocked[i] ? 2 : 0;
         var path = [start], nodes = 0;
         vis[start] = 1;
-        function degree(c) { var d = 0; neighbors(n, c).forEach(function (j) { if (!vis[j]) d++; }); return d; }  /* forEach：對陣列的每個元素各做一次 */
+        function degree(c) { var d = 0; neighbors(n, c).forEach(function (j) { if (!vis[j]) d++; }); return d; }
         /* 剪枝：從 head 出發，所有沒走過的空地必須連得起來；沒走過、而且「沒走過的鄰居」≤ 1 個（不算 head）的格子最多 1 個 */
         function ok(head, remaining) {
             if (!remaining) return true;

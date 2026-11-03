@@ -148,11 +148,11 @@
             var hint = h('div', { 'class': 'hint', text: '按住倒水，倒到杯子的「八分滿」就放手' });
             var field = h('div', { 'class': 'pour-field' });
             root.appendChild(hint);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-            root.appendChild(field);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(field);
 
             /* SVG 畫布與各個部分：水、水面線、杯子、目標線、刻度尺、水柱、水壺 */
             var svg = kit.svg('svg', { 'class': 'pour-svg', viewBox: '0 0 ' + W + ' ' + H }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-            var gWater = kit.svg('g', {}, svg);         /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+            var gWater = kit.svg('g', {}, svg);
             var water = kit.svg('path', { 'class': 'pour-water' }, gWater);
             var surf = kit.svg('path', { 'class': 'pour-surface' }, gWater);
             var gGlass = kit.svg('g', { 'class': 'pour-glass-g' }, svg);
@@ -179,7 +179,7 @@
             function fitWide(ys) {
                 var x0 = view.x - view.w, x1 = view.x + view.w * 2, yb = Math.min(GB, view.y + view.h * 2);
                 surf.setAttribute('d', 'M ' + x0 + ' ' + ys + ' L ' + x1 + ' ' + ys);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
-                water.setAttribute('d', 'M ' + x0 + ' ' + yb + ' L ' + x0 + ' ' + ys + ' L ' + x1 + ' ' + ys + ' L ' + x1 + ' ' + yb + ' Z');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                water.setAttribute('d', 'M ' + x0 + ' ' + yb + ' L ' + x0 + ' ' + ys + ' L ' + x1 + ' ' + ys + ' L ' + x1 + ' ' + yb + ' Z');
                 tline.setAttribute('x1', x0); tline.setAttribute('x2', x1);
             }
 
@@ -235,12 +235,12 @@
                     splash.forEach(function (c, i) {    /* forEach：對陣列的每個元素各做一次 */
                         var a = Math.random() * 6.28, d = 8 + Math.random() * 16;
                         c.setAttribute('cx', (SPOUT_X + Math.cos(a) * d).toFixed(1));
-                        c.setAttribute('cy', (ys - Math.abs(Math.sin(a)) * d * 0.9).toFixed(1));  /* Math.abs：取絕對值（去掉負號） */
+                        c.setAttribute('cy', (ys - Math.abs(Math.sin(a)) * d * 0.9).toFixed(1));
                         c.style.display = L > 0 ? '' : 'none';
                     });
                 } else {
                     stream.style.display = 'none';
-                    splash.forEach(function (c) { c.style.display = 'none'; });  /* forEach：對陣列的每個元素各做一次 */
+                    splash.forEach(function (c) { c.style.display = 'none'; });
                 }
             }
             /* my.loop：每個畫面更新一次 */
@@ -253,7 +253,7 @@
                 enabled: function () { return state === 'ready'; },
                 down: function (e) {
                     state = 'pour';
-                    tDown = kit.evT(e) || performance.now();  /* performance.now()：高精度的時間（毫秒），計時用 */
+                    tDown = kit.evT(e) || performance.now();
                     hint.textContent = '倒到八分滿，放手！';     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                     Sfx.pourStart();
                     /* 保底：水滿了自動停（溢出），用 setTimeout，不靠 rAF */
@@ -276,7 +276,7 @@
                 overflow = full || level >= 1;
                 state = 'settle';
                 Sfx.pourStop();
-                hint.textContent = overflow ? '滿出來了！' : '水面慢慢平靜下來…';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                hint.textContent = overflow ? '滿出來了！' : '水面慢慢平靜下來…';
                 my.after(SETTLE_MS, startZoom);
                 G.debug.last = { sec: sec, level: level, err: (level - TARGET) * 100 };
             }
@@ -351,7 +351,7 @@
                     lb.style.top = (offY + (y - view.y) * sc).toFixed(1) + 'px';
                     labels.appendChild(lb);
                 }
-                gRuler.classList.add('pour-ruler--on'); /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                gRuler.classList.add('pour-ruler--on');
             }
 
             /* 結算橫幅：顯示誤差評語與再來一次 */
@@ -364,7 +364,7 @@
                 var err = Leaderboard.fake4(realErr);
                 var shownLevel = TARGET * 100 + (errPct > 0 ? err : -err);
                 console.log('倒到八分滿：實際誤差 ' + realErr.toFixed(6) + '% → 成績 ' + err.toFixed(4) + '%（水位 ' + fmtPct(shownLevel) + '）');
-                var isNew = Reaction.setBest(ID, err, function (v, b) { return v < b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                var isNew = Reaction.setBest(ID, err, function (v, b) { return v < b; });
                 ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
                 hint.textContent = '';
                 var sfx = err < 0.5 ? 'perfect' : (err < 4 ? 'win' : 'fail');

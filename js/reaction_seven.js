@@ -97,7 +97,7 @@
                 var id = ++token, dwell = dwellFor(n), sk = isSkip(n);
                 num.textContent = String(n);            /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 card.className = 'seven-card';
-                sub.textContent = '已過 ' + passed + ' 個';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                sub.textContent = '已過 ' + passed + ' 個';
                 state = 'live';
                 shownAt = performance.now(); deadline = shownAt + dwell * 1000;  /* performance.now()：高精度的時間（毫秒），計時用 */
                 tb.set(1);
@@ -122,7 +122,7 @@
                 tb.set(0);
                 card.className = 'seven-card seven-card--ok';
                 Sfx.play(acted === 'skip' ? 'pop' : 'click');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
-                var best = Reaction.getBest(ID);        /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                var best = Reaction.getBest(ID);
                 ctx.setMeta(kit.meta(['已過 ' + passed, best != null ? '最佳 ' + best : '']));
                 my.after(GAP_S * 1000, nextNumber);
             }
@@ -135,7 +135,7 @@
                 card.className = 'seven-card seven-card--bad';
                 var msg = why(n, kind);
                 sub.textContent = msg;
-                Sfx.play('bad');                        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                Sfx.play('bad');
                 var isNew = Reaction.setBest(ID, passed, function (v, b) { return v > b; });
                 var failN = n, back = kit.resumeFrom(failN);
                 my.after(FAIL_SHOW_MS, function () {
@@ -157,7 +157,7 @@
                 if (e) e.preventDefault();              /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                 /* 空檔、等待中、已結束的點擊都不算 */
                 if (state !== 'live') return;           /* 空檔、等待中、已結束的點擊都不算 */
-                var now = performance.now();            /* performance.now()：高精度的時間（毫秒），計時用 */
+                var now = performance.now();
                 var want = isSkip(n) ? 'skip' : 'tap';
                 if (what !== want) { fail(what === 'tap' ? 'wrongTap' : 'wrongSkip'); return; }
                 rts.push((now - shownAt) / 1000);
@@ -166,7 +166,7 @@
             /* 上面的數字卡片：pointerdown＝點數字 */
             card.addEventListener('pointerdown', function (e) { act('tap', e); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             /* 下面的跳過鈕：pointerdown＝跳過 */
-            skip.addEventListener('pointerdown', function (e) { act('skip', e); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+            skip.addEventListener('pointerdown', function (e) { act('skip', e); });
 
             /* G.debug：測試用後門 */
             G.debug = {

@@ -44,7 +44,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function peopleFor(level) { return Math.round(ramp(level, PEOPLE)); }  /* Math.round：四捨五入成整數 */
-    function winFor(level) { return Math.round(ramp(level, OPEN_WIN) * 1000) / 1000; }  /* Math.round：四捨五入成整數 */
+    function winFor(level) { return Math.round(ramp(level, OPEN_WIN) * 1000) / 1000; }
     function pOpenFor(level) { return Math.round(ramp(level, P_OPEN) * 1000) / 1000; }
     function phoneFor(level) { return Math.round(ramp(level, PHONE)); }
     function timeMs() { return TIME_S * 1000; }
@@ -55,7 +55,7 @@
         var out = [], t = kit.randFloat(0, gapMean, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         while (t < T) {
             out.push([t, t + d]);
-            t += d + gapMean * kit.randFloat(GAP_JITTER[0], GAP_JITTER[1], rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+            t += d + gapMean * kit.randFloat(GAP_JITTER[0], GAP_JITTER[1], rand);
         }
         return out;
     }
@@ -85,7 +85,7 @@
     /* 全員睜眼的窗口（在 [0, T] 之內）：[{ start, end }]，把所有人的閉眼區間合併後取空隙 */
     function openWindows(q, T) {
         T = T == null ? q.timeS : T;
-        var ivs = []; q.people.forEach(function (p) { p.blinks.forEach(function (iv) { if (iv[0] < T) ivs.push([iv[0], Math.min(iv[1], T)]); }); });  /* forEach：對陣列的每個元素各做一次 */
+        var ivs = []; q.people.forEach(function (p) { p.blinks.forEach(function (iv) { if (iv[0] < T) ivs.push([iv[0], Math.min(iv[1], T)]); }); });
         ivs.sort(function (a, b) { return a[0] - b[0]; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
         var out = [], cur = 0;
         ivs.forEach(function (iv) { if (iv[0] > cur) out.push({ start: cur, end: iv[0] }); cur = Math.max(cur, iv[1]); });
@@ -125,7 +125,7 @@
     /* 一個人（SVG，viewBox 100×120）：肩膀、頭、頭髮、眼睛（睜眼／閉眼兩套，用 class 切換）、嘴；低頭看手機的人手上有手機 */
     function faceSvg(p, phone) {
         var svg = kit.svg('svg', { 'class': 'groupphoto-face', viewBox: '0 0 100 120' });  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        kit.svg('path', { 'class': 'groupphoto-shirt groupphoto-' + p.shirt, d: 'M6,120 Q8,86 50,82 Q92,86 94,120 Z' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('path', { 'class': 'groupphoto-shirt groupphoto-' + p.shirt, d: 'M6,120 Q8,86 50,82 Q92,86 94,120 Z' }, svg);
         kit.svg('rect', { 'class': 'groupphoto-neck groupphoto-' + p.skin, x: 41, y: 70, width: 18, height: 16, rx: 6 }, svg);
         kit.svg('circle', { 'class': 'groupphoto-head groupphoto-' + p.skin, cx: 50, cy: 46, r: 30 }, svg);
         kit.svg('path', { 'class': 'groupphoto-hair groupphoto-' + p.hair, d: 'M18,48 Q16,12 50,12 Q84,12 82,48 Q74,30 50,28 Q26,30 18,48 Z' }, svg);
@@ -156,13 +156,13 @@
         var field = h('div', { 'class': 'groupphoto-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note groupphoto-tip', text: level === 1 ? '等大家都睜眼的瞬間，按快門！' : '全員睜眼的瞬間按快門' });
-        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(tip);
         /* 相片區（取景框）：左右各留 12px；高度在「上方提示」和「下方快門鈕」之間 */
         var pw = W - 24, ph = Math.min(400, H - 56 - 150), photo = h('div', { 'class': 'groupphoto-photo' });
         photo.style.cssText = 'left:12px;top:52px;width:' + pw + 'px;height:' + ph + 'px;';
         field.appendChild(photo);
         var L = layout(q.n, pw, ph), faces = q.people.map(function (p, i) {  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
-            var f = L.faces[i], isPhone = q.phone.indexOf(i) >= 0, el = h('div', { 'class': 'groupphoto-person' + (isPhone ? ' groupphoto-person--phone' : '') });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+            var f = L.faces[i], isPhone = q.phone.indexOf(i) >= 0, el = h('div', { 'class': 'groupphoto-person' + (isPhone ? ' groupphoto-person--phone' : '') });
             el.style.cssText = 'left:' + f.x + 'px;top:' + f.y + 'px;width:' + f.w + 'px;height:' + f.h + 'px;';
             var svg = faceSvg(p, isPhone); svg.setAttribute('width', f.w); svg.setAttribute('height', f.h); el.appendChild(svg); photo.appendChild(el);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             return el;
@@ -191,7 +191,7 @@
         function press() {
             if (phase !== 'run' || api.over) return;
             phase = 'shot'; api.stopTimer();
-            var t = (performance.now() - t0) / 1000, closed = paint(t);  /* performance.now()：高精度的時間（毫秒），計時用 */
+            var t = (performance.now() - t0) / 1000, closed = paint(t);
             flashEl.classList.add('groupphoto-flash--go'); Sfx.play('click');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             if (!closed.length) {
                 tip.textContent = '洗出來了…';              /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
@@ -200,17 +200,17 @@
                 api.pass({ delay: 2300 });              /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
                 return;
             }
-            tip.textContent = '洗出來了…';                  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-            api.after(500, function () {                /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+            tip.textContent = '洗出來了…';
+            api.after(500, function () {
                 /* 紅圈：圈住閉眼的人的頭（頭的圓心在臉的 (50, 46)／(100, 120) 處，半徑 30） */
                 closed.forEach(function (i) {
                     var f = L.faces[i], d = Math.round(f.w * 0.78), ring = h('div', { 'class': 'groupphoto-ring' });
                     ring.style.cssText = 'left:' + Math.round(f.x + f.w / 2 - d / 2) + 'px;top:' + Math.round(f.y + f.h * 46 / 120 - d / 2) + 'px;width:' + d + 'px;height:' + d + 'px;';
                     photo.appendChild(ring);
                 });
-                info.textContent = '有 ' + closed.length + ' 個人閉眼了（紅圈）'; info.classList.add('groupphoto-info--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                info.textContent = '有 ' + closed.length + ' 個人閉眼了（紅圈）'; info.classList.add('groupphoto-info--bad');
             });
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({ delay: 3800, lines: ['按下快門的時候，有 ' + closed.length + ' 個人閉著眼睛', '（低頭看手機的不算閉眼）'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 時間到：算失敗（api.fail），通常會把正確答案亮出來 */
@@ -218,7 +218,7 @@
             if (phase !== 'run' || api.over) return;
             phase = 'shot'; info.textContent = '時間到！沒有按快門'; info.classList.add('groupphoto-info--bad');
             kit.flash(stage, false, api.my);
-            api.fail({ delay: 3000, lines: ['時間到！沒有按快門', '全員睜眼的瞬間要把握住'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
+            api.fail({ delay: 3000, lines: ['時間到！沒有按快門', '全員睜眼的瞬間要把握住'] });
         }
         /* 驗證用：現在全員睜眼才按（不然等下一次呼叫）／現在有人閉眼才按 */
         api.solve = function () { if (phase === 'run' && !closedAt(q, (performance.now() - t0) / 1000).length) press(); };

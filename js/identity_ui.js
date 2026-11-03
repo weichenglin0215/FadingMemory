@@ -81,10 +81,10 @@
             function paintTexts() {
                 if (mode === 'legacy') {
                     ctl.card.querySelector('.dlg__title').textContent = '建立暱稱與密碼';  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
-                    intro.textContent = '排行榜升級了！為了不讓別人冒用你的暱稱、換手機也能接著玩，請設一組 4 位數密碼。';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                    intro.textContent = '排行榜升級了！為了不讓別人冒用你的暱稱、換手機也能接著玩，請設一組 4 位數密碼。';
                     note.textContent = '請記下這 4 個數字，也請不要用銀行或手機的密碼。已經在別的裝置設定過？輸入同樣的暱稱與密碼，就會連在一起。';
                 } else if (mode === 'new') {
-                    ctl.card.querySelector('.dlg__title').textContent = '恭喜進榜！建立暱稱與密碼';  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
+                    ctl.card.querySelector('.dlg__title').textContent = '恭喜進榜！建立暱稱與密碼';
                     intro.textContent = '你的成績進了世界前 ' + (((cfg.game && LB.cached(cfg.game.id)) || {}).limit || LB.CFG.LIMIT_DEFAULT) + ' 名！請取個暱稱、設一組 4 位數密碼，換手機也不會弄丟成績。';
                     note.textContent = '請記下這 4 個數字，也請不要用銀行或手機的密碼。';
                 } else {
@@ -296,7 +296,7 @@
                     sync();
                 });
             }
-            Object.keys(inputs).forEach(function (k) {  /* forEach：對陣列的每個元素各做一次 */
+            Object.keys(inputs).forEach(function (k) {
                 inputs[k].addEventListener('input', function () { msg.textContent = ''; sync(); });
                 inputs[k].addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
             });

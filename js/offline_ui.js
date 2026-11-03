@@ -104,7 +104,7 @@
             children: [viewport],
             buttons: [{ text: '關閉', kind: 'line', cls: 'nav-close' }]
         });
-        list.appendChild(h('div', { 'class': 'off-note', text: '讀取中…' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        list.appendChild(h('div', { 'class': 'off-note', text: '讀取中…' }));
         render();
         return ctl;
     }

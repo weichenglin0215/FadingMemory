@@ -45,7 +45,7 @@
     /* 這一關打亂幾下 */
     function kFor(level) { return Math.round(kit.ramp(level, K_START, K_END, LEVEL_RAMP)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 這一關限時 */
-    function timeFor(level) { return kit.ramp(level, TIME_START, TIME_END, LEVEL_RAMP); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function timeFor(level) { return kit.ramp(level, TIME_START, TIME_END, LEVEL_RAMP); }
     /* 【位元遮罩（bit mask）小常識】整個棋盤用一個整數表示：第 i 格的燈亮不亮就是這個整數的第 i 個 bit（1＝亮）。1 << j 是「把 1 左移 j 位」＝只有第 j 個 bit 是 1 的數字。| 是「或」，把多個格子合起來。 */
     /* 按第 j 格會反轉哪幾格（bit mask）*/
     /* 按第 j 格會反轉哪幾格：它自己、左、右、上、下（不能超出棋盤） */
@@ -94,7 +94,7 @@
             for (var c3 = 0; c3 < n; c3++) {
                 var pr = pivotRowOfCol[c3]; if (pr < 0) continue;
                 var v = (rows[pr] >> n) & 1;                         /* x_p = 右邊 ⊕ (這列的自由變數項) */
-                free.forEach(function (f) { if (((rows[pr] >> f) & 1) && ((x >> f) & 1)) v ^= 1; });  /* forEach：對陣列的每個元素各做一次 */
+                free.forEach(function (f) { if (((rows[pr] >> f) & 1) && ((x >> f) & 1)) v ^= 1; });
                 if (v) x |= 1 << c3;
             }
             var w = popcount(x);
@@ -113,7 +113,7 @@
             board = applyPresses(N, 0, presses);
             if (board === 0) continue;
             sol = solveMin(N, board);
-            if (sol && sol.count >= Math.max(2, Math.floor(k / 2))) break;  /* Math.floor：無條件捨去成整數 */
+            if (sol && sol.count >= Math.max(2, Math.floor(k / 2))) break;
         }
         return { level: level, N: N, k: k, board: board, made: presses, min: sol.count, minMask: sol.mask, nullity: sol.nullity, time: timeFor(level) };
     }
@@ -153,14 +153,14 @@
 
             /* 畫整個棋盤（SVG）：每格有底板、燈泡，以及時間到時用來標出答案的虛線框 */
             function build() {
-                field.innerHTML = ''; cellEls = []; hintEls = [];  /* innerHTML = ''：把元素裡面的東西全部清掉 */
+                field.innerHTML = ''; cellEls = []; hintEls = [];
                 var W = P.N * CELL;
                 svg = kit.svg('svg', { 'class': 'lightsout-svg', viewBox: '0 0 ' + W + ' ' + W, preserveAspectRatio: 'xMidYMid meet' }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
                 for (var i = 0; i < P.N * P.N; i++) {
                     /* (function (i) {...})(i)：立即執行函式，讓每格的點擊事件記住自己的編號 */
                     (function (i) {
                         var x = (i % P.N) * CELL, y = Math.floor(i / P.N) * CELL;
-                        var g = kit.svg('g', { 'class': 'lightsout-cell', transform: 'translate(' + x + ',' + y + ')' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+                        var g = kit.svg('g', { 'class': 'lightsout-cell', transform: 'translate(' + x + ',' + y + ')' }, svg);
                         kit.svg('rect', { 'class': 'lightsout-tile', x: 5, y: 5, width: CELL - 10, height: CELL - 10, rx: 16 }, g);
                         kit.svg('circle', { 'class': 'lightsout-bulb', cx: CELL / 2, cy: CELL / 2, r: CELL * 0.28 }, g);
                         hintEls[i] = kit.svg('rect', { 'class': 'lightsout-hint', x: 8, y: 8, width: CELL - 16, height: CELL - 16, rx: 14, display: 'none' }, g);
@@ -215,9 +215,9 @@
                     logs.push('第 ' + level + ' 關：最少 ' + P.min + ' 步，你用了 ' + presses + ' 步' + (isPerfect ? '（完美）' : ''));
                     if (Reaction.setBest(ID, passed, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                     tb.set(0);
-                    banner.textContent = isPerfect ? '完美！剛好最少 ' + P.min + ' 步' : '過關！最少 ' + P.min + ' 步，你用了 ' + presses + ' 步';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                    banner.textContent = isPerfect ? '完美！剛好最少 ' + P.min + ' 步' : '過關！最少 ' + P.min + ' 步，你用了 ' + presses + ' 步';
                     head.textContent = '第 ' + level + ' 關　過關';
-                    Sfx.play(isPerfect ? 'win' : 'pop');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                    Sfx.play(isPerfect ? 'win' : 'pop');
                     meta();
                     my.after(NEXT_MS, function () { startPuzzle(false); });
                 }
@@ -229,7 +229,7 @@
                 tb.set(0); meta();
                 head.textContent = '時間到';
                 banner.textContent = '按這幾格就能關燈（最少 ' + P.min + ' 步）';
-                for (var i = 0; i < P.N * P.N; i++) hintEls[i].setAttribute('display', ((P.minMask >> i) & 1) ? 'inline' : 'none');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                for (var i = 0; i < P.N * P.N; i++) hintEls[i].setAttribute('display', ((P.minMask >> i) & 1) ? 'inline' : 'none');
                 logs.push('第 ' + level + ' 關時間到（最少 ' + P.min + ' 步）');
                 Sfx.play('bad');
                 /* 結算，kit.resumeFrom 可從前 5 關繼續 */

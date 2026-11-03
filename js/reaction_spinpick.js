@@ -55,7 +55,7 @@
         return sp.theta0 + sp.omega0 * tt - 0.5 * alpha * tt * tt;
     }
     /* 這一關「最多可以再提前幾秒」（線性：第 1 關 0.4 → 第 RAMP_LEVELS 關 1.2） */
-    function earlyMax(level) { return kit.ramp(level, EARLY[0], EARLY[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function earlyMax(level) { return kit.ramp(level, EARLY[0], EARLY[1], RAMP_LEVELS); }
     /* 這一關指針消失的時間點（都是「離停住還剩幾秒」）：完全看不見的時刻 fadeEnd ＝ FADE_END_BASE ＋ 隨機提前 0～earlyMax，
        開始變透明的時刻 fadeStart ＝ fadeEnd ＋ FADE_DUR */
     function fadeTimes(level, rand) {
@@ -117,7 +117,7 @@
             var a0 = k * w, a1 = (k + 1) * w, p0 = pt(a0, DISC_R), p1 = pt(a1, DISC_R);
             var d = 'M' + cx + ' ' + cy + ' L' + p0[0].toFixed(2) + ' ' + p0[1].toFixed(2) + ' A' + DISC_R + ' ' + DISC_R + ' 0 ' + (w > 180 ? 1 : 0) + ' 1 ' + p1[0].toFixed(2) + ' ' + p1[1].toFixed(2) + ' Z';
             var hue = (212 + k * (360 / N)) % 360;
-            secs.push(kit.svg('path', { d: d, fill: kit.hsl(hue, 70, 72), 'class': 'spinpick-sec' }, svg));  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+            secs.push(kit.svg('path', { d: d, fill: kit.hsl(hue, 70, 72), 'class': 'spinpick-sec' }, svg));
         }
         var needle = kit.svg('g', { 'class': 'spinpick-needle' }, svg);
         kit.svg('polygon', { points: (cx - 11) + ',' + cy + ' ' + (cx + 11) + ',' + cy + ' ' + cx + ',' + (cy - NEEDLE_R), 'class': 'spinpick-tip' }, needle);
@@ -126,16 +126,16 @@
         center.style.left = (cx - 90) + 'px'; center.style.top = (cy - 40) + 'px'; center.style.visibility = 'hidden';
         stage.appendChild(center);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note spinpick-tip-text', text: '看指針怎麼轉、怎麼慢下來' });
-        stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(tip);
         var phase = 'spin', t0 = performance.now();     /* performance.now()：高精度的時間（毫秒），計時用 */
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint(t) {
             needle.setAttribute('transform', 'rotate(' + thetaAt(sp, t).toFixed(3) + ' ' + cx + ' ' + cy + ')');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
-            needle.setAttribute('opacity', alphaAt(t, sp).toFixed(3));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+            needle.setAttribute('opacity', alphaAt(t, sp).toFixed(3));
         }
         paint(0);
         var loop = api.my.loop(function () {            /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
-            var t = (performance.now() - t0) / 1000;    /* performance.now()：高精度的時間（毫秒），計時用 */
+            var t = (performance.now() - t0) / 1000;
             paint(t);
             if (t >= sp.T || phase !== 'spin') return false;
         });
@@ -164,11 +164,11 @@
             paint(sp.T); needle.setAttribute('opacity', 1);
             center.style.visibility = 'hidden';
             secs[sp.s].classList.add('spinpick-sec--right');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-            if (k >= 0 && !ok) secs[k].classList.add('spinpick-sec--wrong');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            if (k >= 0 && !ok) secs[k].classList.add('spinpick-sec--wrong');
             var pos = (sp.offset * 100).toFixed(4);
-            tip.textContent = '指針停在第 ' + (sp.s + 1) + ' 格（格內 ' + pos + '％的位置）' + (ok ? '' : '，你選了第 ' + (k + 1) + ' 格');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            tip.textContent = '指針停在第 ' + (sp.s + 1) + ' 格（格內 ' + pos + '％的位置）' + (ok ? '' : '，你選了第 ' + (k + 1) + ' 格');
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1600 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({ delay: 2600, lines: [            /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 (k < 0 ? '時間到！' : '你選了第 ' + (k + 1) + ' 格') + '，指針停在第 ' + (sp.s + 1) + ' 格（共 ' + N + ' 格）',
                 '停點角度 ' + sp.thetaF.toFixed(4) + ' 度（從正上方順時針量）'

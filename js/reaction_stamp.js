@@ -75,13 +75,13 @@
     function centerErr(stamp, frame) {
         var wx = stamp.x - frame.x, wy = stamp.y - frame.y, c = Math.cos(rad(frame.rot)), s = Math.sin(rad(frame.rot));
         var dx = wx * c + wy * s, dy = -wx * s + wy * c;
-        return { dist: Math.sqrt(wx * wx + wy * wy), dx: dx, dy: dy };  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
+        return { dist: Math.sqrt(wx * wx + wy * wy), dx: dx, dy: dy };
     }
     function makeRound(rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var phi = kit.randFloat(-PAPER_TILT, PAPER_TILT, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         if (Math.abs(phi) < PAPER_TILT_MIN) phi = phi < 0 ? -PAPER_TILT_MIN : PAPER_TILT_MIN;   /* 不要太接近 0：不然不用轉就對了 */
-        var ox = kit.randFloat(-FRAME_OFF.x, FRAME_OFF.x, rand), oy = kit.randFloat(-FRAME_OFF.y, FRAME_OFF.y, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+        var ox = kit.randFloat(-FRAME_OFF.x, FRAME_OFF.x, rand), oy = kit.randFloat(-FRAME_OFF.y, FRAME_OFF.y, rand);
         var c = Math.cos(rad(phi)), s = Math.sin(rad(phi));
         return { phi: phi, frame: { x: PAPER.x + ox * c - oy * s, y: PAPER.y + ox * s + oy * c, rot: phi } };
     }
@@ -89,7 +89,7 @@
     function makeStamp(rand) {
         rand = rand || Math.random;
         var w = kit.randFloat(HEART_W[0], HEART_W[1], rand), c1 = kit.pick(COLORS, rand), c2;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
-        do { c2 = kit.pick(COLORS, rand); } while (c2 === c1);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        do { c2 = kit.pick(COLORS, rand); } while (c2 === c1);
         var d1 = kit.pick(DASHES, rand), g1 = kit.pick(GAPS, rand), d2, g2;
         do { d2 = kit.pick(DASHES, rand); g2 = kit.pick(GAPS, rand); } while (d2 === d1 && g2 === g1);
         return {
@@ -115,7 +115,7 @@
         if (mm < 6) return '不錯喔！';
         return '再試一次，會更準！';
     }
-    function pts2str(pts) { return pts.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+    function pts2str(pts) { return pts.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '); }
 
     /* mount：選單按下這款遊戲時會呼叫它。把「單回合計時」的流程（開始、計時、結算、最佳紀錄）交給共用骨架 kit.single，我們只提供 setup（怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
@@ -144,11 +144,11 @@
         var svg = kit.svg('svg', { 'class': 'stamp-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var full = { vx: 0, vy: 0, vw: W, vh: H };
         /* 紙張 */
-        kit.svg('rect', { x: -PAPER.w / 2, y: -PAPER.h / 2, width: PAPER.w, height: PAPER.h, rx: 6, 'class': 'stamp-paper',  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('rect', { x: -PAPER.w / 2, y: -PAPER.h / 2, width: PAPER.w, height: PAPER.h, rx: 6, 'class': 'stamp-paper',
             transform: 'translate(' + PAPER.x + ' ' + PAPER.y + ') rotate(' + cfg.phi.toFixed(3) + ')' }, svg);
         /* 紅框的四個角標（框外側） */
         var gF = kit.svg('g', { transform: 'translate(' + cfg.frame.x.toFixed(2) + ' ' + cfg.frame.y.toFixed(2) + ') rotate(' + cfg.phi.toFixed(3) + ')' }, svg);
-        [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(function (sg) {  /* forEach：對陣列的每個元素各做一次 */
+        [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(function (sg) {
             var px = sg[0] * (FW / 2 + MARK_GAP), py = sg[1] * (FH / 2 + MARK_GAP);
             kit.svg('polyline', { points: [px - sg[0] * MARK_LEG, py, px, py, px, py - sg[1] * MARK_LEG].join(','), 'class': 'stamp-mark' }, gF);
         });
@@ -169,7 +169,7 @@
         var msg = h('div', { 'class': 'stamp-msg' });
         stage.appendChild(msg);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var okBtn = h('button', { 'class': 'btn btn--go stamp-ok', text: '蓋章' });
-        stage.appendChild(okBtn);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(okBtn);
 
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從愛心中央往「紅框中央」重複移動（第一次的正確答案） */
         if (kit.once('stamp.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: st.x, y: st.y, dx: cfg.frame.x - st.x, dy: cfg.frame.y - st.y, delay: 400, text: '請把愛心的中心拖到紅框的中心' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
@@ -182,7 +182,7 @@
                 return false;
             },
             move: function (dx, dy) {
-                st.x = kit.clamp(st.x + dx, 30, W - 30); st.y = kit.clamp(st.y + dy, 30, H - 100);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
+                st.x = kit.clamp(st.x + dx, 30, W - 30); st.y = kit.clamp(st.y + dy, 30, H - 100);
                 paint();
             }
         });
@@ -198,7 +198,7 @@
             var x0 = st.x, y0 = st.y;
             my.tween(280, function (e) {                /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
                 var k = 1 - 0.06 * Math.sin(Math.PI * e);
-                gS.setAttribute('transform', 'translate(' + x0.toFixed(2) + ' ' + y0.toFixed(2) + ') scale(' + k.toFixed(4) + ')');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                gS.setAttribute('transform', 'translate(' + x0.toFixed(2) + ' ' + y0.toFixed(2) + ') scale(' + k.toFixed(4) + ')');
             }, kit.linear).then(function () {
                 outerEl.setAttribute('fill', look.outer.color); outerEl.setAttribute('fill-opacity', 0.18);
                 frameRect.setAttribute('opacity', 1);
@@ -215,12 +215,12 @@
                     if (z <= 1) return;
                     var c = { x: (st.x + fc.x) / 2, y: (st.y + fc.y) / 2 };
                     var vw = W / z, vh = H / z;
-                    Sfx.play('zoom');                   /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                    Sfx.play('zoom');
                     return kit.tweenViewBox(my, svg, full, { vx: c.x - vw / 2, vy: c.y - vh / 2, vw: vw, vh: vh }, 1100, kit.easeInOutCubic);
                 }).then(function () {
                     my.after(1700, function () {
                         api.finish(mm, { lines: [
-                            '愛心中心比紅框中心' + (res.dx >= 0 ? '偏右 ' : '偏左 ') + toMm(Math.abs(res.dx)).toFixed(4) + ' 公釐，' + (res.dy >= 0 ? '偏下 ' : '偏上 ') + toMm(Math.abs(res.dy)).toFixed(4) + ' 公釐',  /* Math.abs：取絕對值（去掉負號） */
+                            '愛心中心比紅框中心' + (res.dx >= 0 ? '偏右 ' : '偏左 ') + toMm(Math.abs(res.dx)).toFixed(4) + ' 公釐，' + (res.dy >= 0 ? '偏下 ' : '偏上 ') + toMm(Math.abs(res.dy)).toFixed(4) + ' 公釐',
                             '（方向是順著歪斜的紙來看）',
                             '只有一次機會，想拚更準就再挑戰一次'
                         ] });

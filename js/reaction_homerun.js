@@ -53,7 +53,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function flyFor(level) { return Math.round(ramp(level, FLY_S) * 1000) / 1000; }  /* Math.round：四捨五入成整數 */
-    function winFor(level) { return Math.round(ramp(level, HIT_WIN) * 10000) / 10000; }  /* Math.round：四捨五入成整數 */
+    function winFor(level) { return Math.round(ramp(level, HIT_WIN) * 10000) / 10000; }
     function pBallFor(level) { return Math.round(ramp(level, P_BALL) * 1000) / 1000; }
     function ballDistFor(level) { return Math.round(ramp(level, BALL_DIST) * 1000) / 1000; }
     function pChangeFor(level) { return Math.round(ramp(level, P_CHANGE) * 1000) / 1000; }
@@ -70,7 +70,7 @@
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var isBall = rand() < pBallFor(level), type = 'fast', F, S, dist = 0;
         if (isBall) {
-            dist = Math.round((ballDistFor(level) + kit.randFloat(0, BALL_DIST_MAX, rand)) * 1000) / 1000;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+            dist = Math.round((ballDistFor(level) + kit.randFloat(0, BALL_DIST_MAX, rand)) * 1000) / 1000;
             F = outsidePoint(dist, rand);
             if (rand() < pCurveFor(level)) {
                 type = 'curve';
@@ -99,7 +99,7 @@
         var err = tSwing - p.tFly;
         if (tSwing < 0) return { result: 'pre', err: err };
         if (!p.strike) return { result: 'ball', err: err };
-        if (Math.abs(err) <= p.win + 1e-9) return { result: 'hit', err: err };  /* Math.abs：取絕對值（去掉負號） */
+        if (Math.abs(err) <= p.win + 1e-9) return { result: 'hit', err: err };
         return { result: err < 0 ? 'early' : 'late', err: err };
     }
     function fmt4(v) { return Math.abs(v).toFixed(4); }
@@ -137,7 +137,7 @@
     /* 投手（SVG）：帽子、頭、身體、一隻會轉的手臂（手上有球）。手臂的角度由 CSS 的 transform 轉 */
     function drawPitcher(parent) {
         var svg = kit.svg('svg', { 'class': 'homerun-pitcher', viewBox: '0 0 120 150', width: 96, height: 120 }, parent);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        kit.svg('rect', { 'class': 'homerun-leg', x: 44, y: 98, width: 14, height: 46, rx: 5 }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('rect', { 'class': 'homerun-leg', x: 44, y: 98, width: 14, height: 46, rx: 5 }, svg);
         kit.svg('rect', { 'class': 'homerun-leg', x: 64, y: 98, width: 14, height: 46, rx: 5 }, svg);
         kit.svg('rect', { 'class': 'homerun-body', x: 38, y: 52, width: 46, height: 52, rx: 12 }, svg);
         kit.svg('circle', { 'class': 'homerun-head', cx: 61, cy: 36, r: 16 }, svg);
@@ -163,7 +163,7 @@
         var field = h('div', { 'class': 'homerun-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note homerun-tip', text: level === 1 ? '球到好球帶的瞬間，點一下揮棒！' : '好球才揮，壞球不揮' });
-        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(tip);
         /* 球場：上面是觀眾席、下面是草地；好球帶是畫面中央的方框；本壘板在好球帶下面 */
         var crowd = h('div', { 'class': 'homerun-crowd' }); field.appendChild(crowd);
         var grass = h('div', { 'class': 'homerun-grass' }); grass.style.top = Math.round(H * 0.34) + 'px'; field.appendChild(grass);
@@ -198,7 +198,7 @@
                 drawBall(u, true);
             });
             /* 球到了還沒揮 → 好球＝失敗、壞球＝過關（用計時器，不靠 rAF） */
-            api.after(Math.round(p.tFly * 1000) + AFTER_MS, function () { if (phase === 'fly') resolve({ result: p.strike ? 'strike' : 'pass', err: null }, null); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+            api.after(Math.round(p.tFly * 1000) + AFTER_MS, function () { if (phase === 'fly') resolve({ result: p.strike ? 'strike' : 'pass', err: null }, null); });
         }
         /* 揮棒＝點畫面 */
         field.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
@@ -219,9 +219,9 @@
             var why = whyText(r, p);
             info.textContent = why;                     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             if (r.result === 'hit' || r.result === 'pass') {
-                info.classList.add('homerun-info--ok'); /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                info.classList.add('homerun-info--ok');
                 if (r.result === 'hit') homerun(); else { ballEl.style.display = 'none'; kit.flash(stage, true, api.my); }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
-                if (r.result === 'hit') kit.flash(stage, true, api.my);  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+                if (r.result === 'hit') kit.flash(stage, true, api.my);
                 api.pass({ delay: r.result === 'hit' ? 2600 : 1900 });  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
                 return;
             }
@@ -233,7 +233,7 @@
         }
         /* 全壘打：球飛上天空、打字 */
         function homerun() {
-            ballEl.style.display = 'none'; trail.forEach(function (el) { el.style.display = 'none'; });  /* forEach：對陣列的每個元素各做一次 */
+            ballEl.style.display = 'none'; trail.forEach(function (el) { el.style.display = 'none'; });
             var hr = h('div', { 'class': 'homerun-hr', text: '全壘打！' }); field.appendChild(hr);
             var fly = h('div', { 'class': 'homerun-ball homerun-ball--hr' }); fly.style.cssText = 'display:block;left:' + (geom.C.x - 14) + 'px;top:' + (geom.C.y - 14) + 'px;width:28px;height:28px;'; field.appendChild(fly);
             api.after(30, function () { fly.classList.add('homerun-ball--go'); hr.classList.add('homerun-hr--show'); });
@@ -244,8 +244,8 @@
             var ms = replayMs(p), mark = h('div', { 'class': 'homerun-final' }); field.appendChild(mark);
             var fin = ballAt(p, 1, geom); mark.style.cssText = 'left:' + (fin.x - 30).toFixed(1) + 'px;top:' + (fin.y - 30).toFixed(1) + 'px;';
             mark.classList.add(p.strike ? 'homerun-final--strike' : 'homerun-final--ball');
-            var r0 = performance.now(), swingU = (tS != null && tS >= 0) ? Math.min(1.1, tS / p.tFly) : null, swingMark = null;  /* performance.now()：高精度的時間（毫秒），計時用 */
-            api.my.loop(function (now) {                /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
+            var r0 = performance.now(), swingU = (tS != null && tS >= 0) ? Math.min(1.1, tS / p.tFly) : null, swingMark = null;
+            api.my.loop(function (now) {
                 var pr = Math.min(1, (now - r0) / ms), u = pr * 1.0;
                 drawBall(u, true);
                 if (swingU != null && !swingMark && u >= swingU) { swingMark = h('div', { 'class': 'homerun-swingmark' }); var b = ballAt(p, u, geom); swingMark.style.cssText = 'left:' + (b.x - 22).toFixed(1) + 'px;top:' + (b.y - 22).toFixed(1) + 'px;'; field.appendChild(swingMark); }

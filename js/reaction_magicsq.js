@@ -62,7 +62,7 @@
     function search(n, givens, limit, rand) {
         var M = magicSum(n), total = n * n, g = new Array(total).fill(0), used = new Array(total + 1).fill(false), i;  /* new Array(n).fill(v)：建立長度 n、每一格都是 v 的陣列 */
         for (i = 0; i < total; i++) if (givens[i]) { if (used[givens[i]]) return { count: 0, first: null }; used[givens[i]] = true; }
-        var colSum = new Array(n).fill(0), d1 = 0, d2 = 0, count = 0, first = null;  /* new Array(n).fill(v)：建立長度 n、每一格都是 v 的陣列 */
+        var colSum = new Array(n).fill(0), d1 = 0, d2 = 0, count = 0, first = null;
         /* rec(pos)：填第 pos 格（遞迴）。rowSum、colSum、d1、d2 是目前「排／列／兩條對角線」已經累計的和，每填一格就更新，退回時再減掉（回溯） */
         function rec(pos) {
             if (pos === total) { if (d1 === M && d2 === M) { count++; if (!first) first = g.slice(); } return; }  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
@@ -122,12 +122,12 @@
         var cells = Array.apply(null, Array(n * n)).map(function (_, i) { return i; }), want = k;  /* Array.apply(null, Array(n)).map(...)：建立「0 到 n−1 的編號陣列」的常見寫法 */
         while (true) {
             for (var t = 0; t < 300; t++) {
-                var pick = kit.shuffle(cells, rand).slice(0, want), givens = new Array(n * n).fill(0);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+                var pick = kit.shuffle(cells, rand).slice(0, want), givens = new Array(n * n).fill(0);
                 pick.forEach(function (c) { givens[c] = sol[c]; });  /* forEach：對陣列的每個元素各做一次 */
                 if (countMatching(n, givens, 2) === 1) return { n: n, solution: sol, givens: givens, count: want, M: magicSum(n) };
             }
             want++;          /* 這個提示數怎麼挑都不唯一：多給一個 */
-            if (++tries > n * n) return { n: n, solution: sol, givens: sol.slice(), count: n * n, M: magicSum(n) };  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+            if (++tries > n * n) return { n: n, solution: sol, givens: sol.slice(), count: n * n, M: magicSum(n) };
         }
     }
     /* 每條線現在的狀況：{ sum, empty（空格數）, diff（目標 − 目前加總）, full, ok } */
@@ -136,14 +136,14 @@
         var M = magicSum(n);
         return linesOf(n).map(function (ln) {           /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var sum = 0, empty = 0;
-            ln.forEach(function (i) { if (grid[i]) sum += grid[i]; else empty++; });  /* forEach：對陣列的每個元素各做一次 */
+            ln.forEach(function (i) { if (grid[i]) sum += grid[i]; else empty++; });
             return { sum: sum, empty: empty, diff: M - sum, full: empty === 0, ok: empty === 0 && sum === M };
         });
     }
     /* 解開了嗎：每格都有數字、而且每條線都剛好是魔術數 */
     function isSolved(n, grid) {
         for (var i = 0; i < grid.length; i++) if (!grid[i]) return false;
-        return lineStatus(n, grid).every(function (s) { return s.ok; });  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
+        return lineStatus(n, grid).every(function (s) { return s.ok; });
     }
     /* 提示：挑一格「沒填對」的，優先選它所在的線剩下的空格最少的那一格（最好推理） */
     /* 提示：在「沒填對」的格子裡，挑它所在的線「剩下空格最少」的那格（最容易推理的一格） */
@@ -152,7 +152,7 @@
         for (var i = 0; i < n * n; i++) {
             if (grid[i] === pz.solution[i]) continue;
             var sc = 99;
-            ls.forEach(function (ln, li) { if (ln.indexOf(i) >= 0) sc = Math.min(sc, st[li].empty + (grid[i] ? 0 : 0)); });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+            ls.forEach(function (ln, li) { if (ln.indexOf(i) >= 0) sc = Math.min(sc, st[li].empty + (grid[i] ? 0 : 0)); });
             if (sc < bs) { bs = sc; best = i; }
         }
         return best;
@@ -195,10 +195,10 @@
         var wrap = h('div', { 'class': 'magicsq-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
         var board = h('div', { 'class': 'magicsq-board' });  /* board：盤面（所有格子都放在裡面） */
         board.style.setProperty('--magicsq-n', n);      /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
-        board.style.setProperty('--magicsq-cell', cell + 'px');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
+        board.style.setProperty('--magicsq-cell', cell + 'px');
         board.style.setProperty('--magicsq-statw', statW + 'px');
         board.style.setProperty('--magicsq-stath', statH + 'px');
-        board.style.setProperty('--magicsq-font', Math.round(cell * 0.5) + 'px');  /* Math.round：四捨五入成整數 */
+        board.style.setProperty('--magicsq-font', Math.round(cell * 0.5) + 'px');
         var cells = [], rowSt = [], colSt = [], r, c;
         for (r = 0; r < n; r++) {
             for (c = 0; c < n; c++) {
@@ -206,7 +206,7 @@
                 (function (idx) { kit.onTap(cl, function () { select(idx); }); })(r * n + c);  /* 用立即執行函式存住這一格的編號 idx（不這樣寫，每格點下去都會拿到迴圈結束時的值） */
                 board.appendChild(cl); cells.push(cl);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             }
-            var rs = h('div', { 'class': 'magicsq-status' }); board.appendChild(rs); rowSt.push(rs);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            var rs = h('div', { 'class': 'magicsq-status' }); board.appendChild(rs); rowSt.push(rs);
         }
         for (c = 0; c < n; c++) { var cs = h('div', { 'class': 'magicsq-status' }); board.appendChild(cs); colSt.push(cs); }
         board.appendChild(h('div', { 'class': 'magicsq-status' }));
@@ -224,7 +224,7 @@
             pad.appendChild(b); keys.push(b);
         })(d);
         var eraser = h('button', { 'class': 'btn btn--line magicsq-key', type: 'button', text: '⌫' });
-        kit.onTap(eraser, function () { enter(0); });   /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        kit.onTap(eraser, function () { enter(0); });
         pad.appendChild(eraser);
 
         var acts = h('div', { 'class': 'magicsq-tools' });
@@ -246,7 +246,7 @@
         function paint() {
             var st = lineStatus(n, grid), used = {};
             for (var i = 0; i < total; i++) {
-                cells[i].textContent = grid[i] ? String(grid[i]) : '';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                cells[i].textContent = grid[i] ? String(grid[i]) : '';
                 cells[i].className = 'magicsq-cell' + (pz.givens[i] ? ' magicsq-cell--given' : grid[i] ? ' magicsq-cell--mine' : '') + (i === sel ? ' magicsq-cell--sel' : '') + (i === hint ? ' magicsq-cell--hint' : '') + (solved ? ' magicsq-cell--ok' : '');
                 if (grid[i]) used[grid[i]] = true;
             }

@@ -46,7 +46,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function tolFor(level) { return Math.round(ramp(level, TOL) * 100) / 100; }  /* Math.round：四捨五入成整數 */
-    function lagFor(level) { return Math.round(ramp(level, MIX_LAG) * 1000) / 1000; }  /* Math.round：四捨五入成整數 */
+    function lagFor(level) { return Math.round(ramp(level, MIX_LAG) * 1000) / 1000; }
     function rateFor(level) { return ramp(level, RATE); }
     function timeMs() { return TIME_S * 1000; }
     /* sRGB（0～255）→ CIELAB（D65）：顏色差要在這個空間算才接近人眼的感覺 */
@@ -81,7 +81,7 @@
         var creamer = level >= CREAMER_FROM && rand() < CREAMER_P, milk = creamer ? CREAMER : MILK;
         var t0 = hslToRgb(kit.randFloat(14, 30, rand), kit.randFloat(55, 75, rand), kit.randFloat(20, 36, rand));          /* 紅茶：深紅褐色，濃度（亮度）每關不同 */
         var fT = kit.randFloat(F_TARGET[0], F_TARGET[1], rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
-        var rate = rateFor(level) * (creamer ? CREAMER_RATE : 1) * kit.randFloat(0.9, 1.1, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+        var rate = rateFor(level) * (creamer ? CREAMER_RATE : 1) * kit.randFloat(0.9, 1.1, rand);
         var tStar = fT / rate;
         if (tStar < T_RANGE[0]) rate = fT / T_RANGE[0]; else if (tStar > T_RANGE[1]) rate = fT / T_RANGE[1];
         tStar = fT / rate;
@@ -142,7 +142,7 @@
                     p.life -= dt; if (p.life <= 0) { p.alive = false; alive--; continue; }
                     var dx = p.x - vx, dy = p.y - vy, d2 = dx * dx + dy * dy;
                     if (d2 < P.RADIUS * P.RADIUS && d2 > 1) {                              /* 繞著漩渦中心的切線力（越靠近越強） */
-                        var d = Math.sqrt(d2), fall = 1 - d / P.RADIUS;  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
+                        var d = Math.sqrt(d2), fall = 1 - d / P.RADIUS;
                         p.vx += (-dy / d) * P.SWIRL * fall * dt * 6; p.vy += (dx / d) * P.SWIRL * fall * dt * 6;
                     }
                     p.vx += Math.sin(time * p.freq + p.phase) * p.amp * dt * 3;             /* 水波紋擺動 */
@@ -174,7 +174,7 @@
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var field = h('div', { 'class': 'milktea-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-        field.appendChild(h('div', { 'class': 'qz-note milktea-tip', text: '按住倒牛奶，兩杯一樣顏色就放手' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(h('div', { 'class': 'qz-note milktea-tip', text: '按住倒牛奶，兩杯一樣顏色就放手' }));
         var pw = Math.floor((W - 120) / 2), ph = 330, py = 56, cw = 124, cwb = 92, chh = 200;  /* Math.floor：無條件捨去成整數 */
         function panel(x, bg, title) {
             var p = h('div', { 'class': 'milktea-panel milktea-panel--' + bg }), cap = h('div', { 'class': 'milktea-cap', text: title });
@@ -189,7 +189,7 @@
             var svg = kit.svg('svg', { 'class': 'milktea-cup', viewBox: '0 0 ' + cw + ' ' + chh, width: cw, height: chh }, parent);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             svg.style.cssText = 'left:' + (cx - cw / 2) + 'px;top:' + (ph - chh - 22) + 'px;';
             var path = cupPath(cw, cwb, chh, 24);
-            var liquid = kit.svg('path', { 'class': 'milktea-liquid', d: path }, svg); liquid.style.fill = css(color);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+            var liquid = kit.svg('path', { 'class': 'milktea-liquid', d: path }, svg); liquid.style.fill = css(color);
             kit.svg('path', { 'class': 'milktea-glass', d: cupPath(cw, cwb, chh, 0) }, svg);
             return { svg: svg, liquid: liquid };
         }
@@ -245,11 +245,11 @@
             info.textContent = '顏色還在攪勻……';              /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             api.after(settleMs, function () {           /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                 /* 兩杯靠攏並排，背景一起變成中性色（不再有同時對比的錯覺） */
-                pL.classList.add('milktea-panel--join'); pR.classList.add('milktea-panel--join'); field.classList.add('milktea-field--join');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                pL.classList.add('milktea-panel--join'); pR.classList.add('milktea-panel--join'); field.classList.add('milktea-field--join');
                 pL.style.left = (W / 2 - pw) + 'px'; pR.style.left = (W / 2) + 'px';                              /* 兩杯（連同背景）往中間靠攏 */
-                api.after(750, function () {            /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+                api.after(750, function () {
                     var word = f < q.fTarget ? '牛奶倒太少了' : '牛奶倒太多了';
-                    info.textContent = '顏色差 ' + de.toFixed(4) + '%' + (ok ? '，一樣了！' : '，' + word + '（要在 ' + q.tol + '% 內）');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                    info.textContent = '顏色差 ' + de.toFixed(4) + '%' + (ok ? '，一樣了！' : '，' + word + '（要在 ' + q.tol + '% 內）');
                     kit.flash(stage, ok, api.my);       /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
                     if (ok) { api.pass({ delay: 1700 }); return; }  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
                     api.fail({ delay: 2800, lines: ['顏色差 ' + de.toFixed(4) + '%（要在 ' + q.tol + '% 內）', word + '：你倒了 ' + (f * 100).toFixed(4) + '% 的牛奶，樣品是 ' + (q.fTarget * 100).toFixed(4) + '%'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */

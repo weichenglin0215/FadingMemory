@@ -86,7 +86,7 @@
             .map(function (p) { return { type: 'text', a: p.a, b: p.b, colorable: true, st: p.st }; })  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     );
     /* COLORABLE：篩出能套用顏色的組合（emoji 自帶顏色，不能套） */
-    var COLORABLE = PAIRS.filter(function (p) { return p.colorable; });  /* filter：留下符合條件的元素，回傳新陣列 */
+    var COLORABLE = PAIRS.filter(function (p) { return p.colorable; });
     /* ═══ 難度之一：題材的「複雜度」與每一關的「目標複雜度」（細節見檔頭說明）═══ */
     var CX_LOW = 0.10, CX_HIGH = 1.0;      /* 目標複雜度的最低（符號、數字、筆畫少的字）與最高（筆畫最多的字） */
     var CX_FLAT = 10, CX_RAMP = 30;        /* 第 1～CX_FLAT 關維持最低，之後線性升高，第 CX_RAMP 關到頂 */
@@ -108,7 +108,7 @@
        （輪盤抽法：總權重乘一個 0～1 的亂數，逐組扣掉權重，扣到小於 0 的那一組就是被抽到的） */
     function pickPair(pool, level, rand) {
         rand = rand || Math.random;
-        var T = targetCx(level || 1), w = pool.map(function (p) { var d = complexityOf(p) - T; return d > CX_AHEAD ? 0 : Math.exp(-(d * d) / (2 * CX_SIGMA * CX_SIGMA)); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        var T = targetCx(level || 1), w = pool.map(function (p) { var d = complexityOf(p) - T; return d > CX_AHEAD ? 0 : Math.exp(-(d * d) / (2 * CX_SIGMA * CX_SIGMA)); });
         var sum = w.reduce(function (a, b) { return a + b; }, 0), r = rand() * sum;  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
         for (var i = 0; i < pool.length; i++) { r -= w[i]; if (r < 0) return pool[i]; }
         return pool[pool.length - 1];
@@ -179,7 +179,7 @@
         else if (hp < 5) { r1 = x; g1 = 0; b1 = c; }
         else { r1 = c; g1 = 0; b1 = x; }
         var m = v - c;
-        return { r: Math.round((r1 + m) * 255), g: Math.round((g1 + m) * 255), b: Math.round((b1 + m) * 255) };  /* Math.round：四捨五入成整數 */
+        return { r: Math.round((r1 + m) * 255), g: Math.round((g1 + m) * 255), b: Math.round((b1 + m) * 255) };
     }
     /* 把 HSV 顏色轉成 CSS 的 rgb() 字串 */
     function cssColor(c) {
@@ -244,7 +244,7 @@
             var height = heightFor(level);
             var width = widthFor(height);
             var n = width * height;
-            var oddIdx = Math.floor(Math.random() * n); /* Math.floor：無條件捨去成整數 */
+            var oddIdx = Math.floor(Math.random() * n);
 
             root.appendChild(h('div', { 'class': 'hint shapes--on-dark', text: hintTextFor(type) + '（第 ' + level + ' 關）' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
 
@@ -253,7 +253,7 @@
             /* board 用 CSS Grid 排成 width 欄 × height 列 */
             board.style.gridTemplateColumns = 'repeat(' + width + ', 1fr)';
             board.style.gridTemplateRows = 'repeat(' + height + ', 1fr)';
-            wrap.appendChild(board);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            wrap.appendChild(board);
             root.appendChild(wrap);
 
             /* 格子必須是正方形：量可用寬高，兩個方向各自除以格數，取較小的當邊長 */
@@ -298,15 +298,15 @@
             Array.prototype.forEach.call(board.children, function (c) { c.disabled = true; });
             if (ok) {
                 if (window.Sfx) Sfx.play('ok');         /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
-                cellEl.classList.add('shapes-cell--ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                cellEl.classList.add('shapes-cell--ok');
                 level++;
                 UI.wait(450).then(round);
                 return;
             }
-            if (window.Sfx) Sfx.play('bad');            /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+            if (window.Sfx) Sfx.play('bad');
             cellEl.classList.add('shapes-cell--bad');
             board.children[oddIdx].classList.add('shapes-cell--ok');
-            var isNew = Reaction.setBest(ID, level, function (v, b) { return v > b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+            var isNew = Reaction.setBest(ID, level, function (v, b) { return v > b; });
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
             /* 結算卡片疊在棋盤上（跟其他遊戲同一套 CSS：drop-result-overlay） */
             UI.wait(700).then(function () {

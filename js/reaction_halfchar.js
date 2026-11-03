@@ -153,7 +153,7 @@
         return 'inset(0 0 ' + hi + ' 0)';
     }
     /* 每題的限時 */
-    function timeFor(level) { return kit.ramp(level, TIME_START, TIME_END, LEVEL_RAMP); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function timeFor(level) { return kit.ramp(level, TIME_START, TIME_END, LEVEL_RAMP); }
     /* 這題有幾個選項（4 → 6，隨題號線性增加，四捨五入） */
     function optCount(level) { return Math.round(kit.ramp(level, OPT_START, OPT_END, OPT_RAMP)); }  /* Math.round：四捨五入成整數 */
     /* 這題大字要歪幾度（正的角度；方向由呼叫端隨機決定）：第 ROT_FROM 題以前 0，之後線性增加到第 LEVEL_RAMP 題的 ROT_MAX */
@@ -166,7 +166,7 @@
     /* 題庫檢查：回傳問題清單（空陣列＝全部合格）*/
     function checkData() {
         var bad = [];
-        ENTRIES.forEach(function (e, i) {               /* forEach：對陣列的每個元素各做一次 */
+        ENTRIES.forEach(function (e, i) {
             var tag = '#' + (i + 1) + e.a + '(' + e.side + ')';
             if (!DECOMP[e.a]) { bad.push(tag + ' 答案沒有拆字'); return; }
             if (SIDE_IDX[e.side] === undefined) bad.push(tag + ' side 不合法');
@@ -214,16 +214,16 @@
         rand = rand || Math.random;
         for (var t = 0; t < 100; t++) {
             var i = kit.randInt(0, ENTRIES.length - 1, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
-            if (recent.indexOf(i) < 0) return i;        /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+            if (recent.indexOf(i) < 0) return i;
         }
-        return kit.randInt(0, ENTRIES.length - 1, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+        return kit.randInt(0, ENTRIES.length - 1, rand);
     }
     /* n 個選項（答案 + n−1 個干擾字）洗牌，並記下答案在第幾個。干擾字先用手工審校的 3 個，不夠再從額外候選（extraPool）隨機補；
        候選不夠的話選項會比 n 少（t_halfchar 檢查過每一題都補得夠）。n 沒給就是 4 個（原本的做法） */
     function makeOptions(entry, rand, n) {
         var want = Math.max(4, n || 4) - 1, ds = entry.d.slice();  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         if (ds.length < want) ds = ds.concat(kit.shuffle(extraPool(entry), rand).slice(0, want - ds.length));  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
-        var opts = kit.shuffle([entry.a].concat(ds.slice(0, want)), rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+        var opts = kit.shuffle([entry.a].concat(ds.slice(0, want)), rand);
         return { options: opts, answer: opts.indexOf(entry.a) };
     }
 
@@ -250,7 +250,7 @@
             var tb = kit.timebar();
             var opts = h('div', { 'class': 'halfchar-opts' });
             var tip = h('div', { 'class': 'halfchar-tip' });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
-            [head, prompt, charBox, tb.el, opts, tip].forEach(function (n) { root.appendChild(n); });  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            [head, prompt, charBox, tb.el, opts, tip].forEach(function (n) { root.appendChild(n); });
 
             function meta() { ctx.setMeta(kit.meta(['答對 ' + right, '機會 ' + lives])); }
 
@@ -267,14 +267,14 @@
                 var reg = visRegion(E, q);
                 state = 'ask';
                 head.textContent = '第 ' + q + ' 題';     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-                prompt.textContent = '字被遮住一半（相似處露出、差異處遮住），是哪一個？';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                prompt.textContent = '字被遮住一半（相似處露出、差異處遮住），是哪一個？';
                 tip.textContent = '';
                 big.textContent = E.a;
                 /* 用 CSS clip-path 把大字遮住一部分（webkitClipPath 是舊版 Safari 的寫法） */
                 big.style.clipPath = clipFor(exposedSide(E), reg);
                 big.style.webkitClipPath = big.style.clipPath;
                 charBox.className = 'halfchar-box';
-                opts.innerHTML = '';                    /* innerHTML = ''：把元素裡面的東西全部清掉 */
+                opts.innerHTML = '';
                 /* 選項的欄數：4 個以內 2 欄（2×2），5～6 個 3 欄（3×2），兩種都是 2 列，所以占的高度一樣 */
                 opts.style.gridTemplateColumns = 'repeat(' + (O.options.length <= 4 ? 2 : 3) + ', 1fr)';
                 /* 建立四顆選項按鈕 */
@@ -311,7 +311,7 @@
                 var ok = i === O.answer;
                 /* 正確選項標綠，選錯的標橘 */
                 [].forEach.call(opts.children, function (b, k) { if (k === O.answer) b.classList.add('halfchar-opt--ok'); else if (k === i) b.classList.add('halfchar-opt--bad'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                charBox.classList.add(ok ? 'halfchar-box--ok' : 'halfchar-box--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                charBox.classList.add(ok ? 'halfchar-box--ok' : 'halfchar-box--bad');
                 /* 解說：「大家都有 X，關鍵是 Y，合起來就是 Z」 */
                 tip.textContent = '大家都有「' + visiblePart(E) + '」，關鍵是「' + hiddenPart(E) + '」，合起來就是「' + E.a + '」';
                 /* 答對 */
@@ -325,7 +325,7 @@
                 }
                 /* 答錯：扣機會 */
                 lives--;
-                Sfx.play('bad');                        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                Sfx.play('bad');
                 prompt.textContent = i < 0 ? '時間到！' : '選錯了…';
                 meta();
                 /* 沒有機會了 → 結算 */

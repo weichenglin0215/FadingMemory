@@ -61,7 +61,7 @@
     function makeQuestion(level, rand, avoidKind, forceKind) {
         rand = rand || Math.random;
         var delta = kit.ramp(level, DELTA_START, DELTA_END, LEVEL_RAMP);  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
-        var trap = kit.ramp(level, TRAP_START, TRAP_END, LEVEL_RAMP);  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+        var trap = kit.ramp(level, TRAP_START, TRAP_END, LEVEL_RAMP);
         /* help＝true 表示「錯覺幫忙」（錯覺方向和真相一致）；false 是「錯覺陷阱」（錯覺方向與真相相反） */
         var help = rand() >= trap;
         /* 連續兩題不出同一種錯覺（avoidKind） */
@@ -124,10 +124,10 @@
             /* 錯覺幫忙：較長的那條用箭尾（向外，看起來更長）；陷阱：較長的那條用箭頭（向內，看起來更短） */
             var tail = q.help ? isBig : !isBig;
             var x1 = cx - L / 2, x2 = cx + L / 2, y = ys[i];
-            kit.svg('line', { 'class': 'illusion-line', x1: x1, y1: y, x2: x2, y2: y }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+            kit.svg('line', { 'class': 'illusion-line', x1: x1, y1: y, x2: x2, y2: y }, svg);
             [[x1, -1], [x2, 1]].forEach(function (e) {  /* forEach：對陣列的每個元素各做一次 */
                 var dir = tail ? 1 : -1;     /* tail：翼往外；arrow：翼往內 */
-                [-1, 1].forEach(function (s) {          /* forEach：對陣列的每個元素各做一次 */
+                [-1, 1].forEach(function (s) {
                     kit.svg('line', { 'class': 'illusion-line', x1: e[0], y1: y, x2: e[0] + e[1] * dir * fin, y2: y + s * fin }, svg);
                 });
             });
@@ -317,7 +317,7 @@
        所以看起來左邊整片比右邊亮，其實遠離交界處的兩片灰色可能一樣亮（或差一點）。選項 0＝左邊、1＝右邊。q.v 是兩片遠處的灰階 */
     DRAW.cornsweet = function (svg, FW, FH, q) {
         var half = FW / 2, CUSP = 30, F = 0.45;                  /* CUSP：交界處亮暗各偏多少灰階；F：漸層占半邊寬度的比例 */
-        function g255(v) { v = Math.max(0, Math.min(255, Math.round(v))); return 'rgb(' + v + ',' + v + ',' + v + ')'; }  /* Math.round：四捨五入成整數 */
+        function g255(v) { v = Math.max(0, Math.min(255, Math.round(v))); return 'rgb(' + v + ',' + v + ',' + v + ')'; }
         var defs = kit.svg('defs', {}, svg);
         function grad(id, stops) {
             var lg = kit.svg('linearGradient', { id: id, x1: 0, y1: 0, x2: 1, y2: 0 }, defs);
@@ -365,7 +365,7 @@
             var hint = h('div', { 'class': 'illusion-q', text: '' });
             var field = h('div', { 'class': 'illusion-field' });
             root.appendChild(hint);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-            root.appendChild(field);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(field);
             root.appendChild(bar);
             var FW = field.clientWidth, FH = field.clientHeight;
 
@@ -375,7 +375,7 @@
             /* 出一題 */
             function ask() {
                 if (my.dead) return;
-                field.innerHTML = '';                   /* innerHTML = ''：把元素裡面的東西全部清掉 */
+                field.innerHTML = '';
                 var level = streak + 1;
                 /* G.dev：開發驗證用的強制設定（正式遊戲都是 null） */
                 var q = makeQuestion(level, null, lastKind, G.dev.kind);
@@ -404,7 +404,7 @@
                     var ok = idx === q.big;
                     d.hits.forEach(function (el, i) {
                         if (i === q.big) el.classList.add('illusion-hit--ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                        else if (i === idx) el.classList.add('illusion-hit--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                        else if (i === idx) el.classList.add('illusion-hit--bad');
                     });
                     /* 揭曉：畫出對齊的輔助線，讓玩家看見真正的長度／大小 */
                     d.guides(gGuides);
@@ -413,15 +413,15 @@
                     var truth = (idx === -1 ? '時間到！' : (ok ? '答對了！' : '答錯了…')) + ' 其實是「' + NAMES[q.kind][q.big] + '」比較' + what +
                         (GRAY[q.kind] ? '（灰階 ' + q.v[q.big] + ' 對 ' + q.v[1 - q.big] + '）' : '（多了 ' + pct.toFixed(4) + '%）') +
                         (q.help ? '' : '　（錯覺陷阱）');
-                    hint.textContent = truth;           /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                    hint.textContent = truth;
                     if (ok) {
                         streak++;
                         Sfx.play('ok');                 /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
-                        if (Reaction.setBest(ID, streak, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                        if (Reaction.setBest(ID, streak, function (v, b) { return v > b; })) newRec = true;
                         meta();
                         my.after(G.dev.reveal || REVEAL_MS, ask);
                     } else {
-                        Sfx.play('bad');                /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                        Sfx.play('bad');
                         my.after(REVEAL_MS + 300, function () {
                             kit.result(root, {          /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                                 score: streak,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */

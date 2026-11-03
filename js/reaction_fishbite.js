@@ -53,7 +53,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function windowFor(level) { return Math.round(ramp(level, WINDOW_S) * 1000) / 1000; }  /* Math.round：四捨五入成整數 */
-    function fakeHiFor(level) { return Math.round(ramp(level, FAKE_HI) * 1000) / 1000; }  /* Math.round：四捨五入成整數 */
+    function fakeHiFor(level) { return Math.round(ramp(level, FAKE_HI) * 1000) / 1000; }
     function fakesFor(level) { return Math.round(ramp(level, FAKES)); }
     function waveFor(level) { return Math.round(ramp(level, WAVE_PX) * 100) / 100; }
     function fishFor(level) { return FISH[(level - 1) % FISH.length]; }
@@ -64,7 +64,7 @@
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var k = fakesFor(level), hi = fakeHiFor(level), win = windowFor(level), events = [], t = kit.randFloat(FIRST_AT[0], FIRST_AT[1], rand), i;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         for (i = 0; i < k; i++) {
-            var dur = kit.randFloat(FAKE_DUR[0], FAKE_DUR[1], rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+            var dur = kit.randFloat(FAKE_DUR[0], FAKE_DUR[1], rand);
             events.push({ kind: 'fake', t: Math.round(t * 1000) / 1000, dur: Math.round(dur * 1000) / 1000, depth: Math.round(kit.randFloat(0.6 * hi, hi, rand) * 1000) / 1000 });
             t += dur + kit.randFloat(GAP[0], GAP[1], rand);
         }
@@ -134,7 +134,7 @@
     /* 魚（SVG）：身體、尾巴、眼睛、花紋；顏色依魚種編號 0～5 用 CSS 變數 */
     function fishSvg(idx, parent) {
         var svg = kit.svg('svg', { 'class': 'fishbite-fishsvg', viewBox: '0 0 120 70', width: 150, height: 88 }, parent);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        kit.svg('path', { 'class': 'fishbite-tail fishbite-fc' + idx, d: 'M96,35 L118,12 Q112,35 118,58 Z' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('path', { 'class': 'fishbite-tail fishbite-fc' + idx, d: 'M96,35 L118,12 Q112,35 118,58 Z' }, svg);
         kit.svg('ellipse', { 'class': 'fishbite-body fishbite-fc' + idx, cx: 52, cy: 35, rx: 46, ry: 26 }, svg);
         kit.svg('path', { 'class': 'fishbite-belly', d: 'M12,38 Q52,66 92,38 Q52,52 12,38 Z' }, svg);
         kit.svg('path', { 'class': 'fishbite-stripe', d: 'M40,12 Q46,35 40,58 M58,10 Q64,35 58,60' }, svg);
@@ -155,7 +155,7 @@
         var field = h('div', { 'class': 'fishbite-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note fishbite-tip', text: level === 1 ? '浮標整個沉下去，就往上滑提竿！' : '整個沉下去才提竿（往上滑）' });
-        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(tip);
         /* 水：水面以下的藍色；波紋圈（咬鉤、輕碰時冒一個） */
         var water = h('div', { 'class': 'fishbite-water' }); water.style.top = waterY + 'px'; field.appendChild(water);
         var surf = h('div', { 'class': 'fishbite-surface' }); surf.style.top = waterY + 'px'; field.appendChild(surf);
@@ -169,7 +169,7 @@
         if (level === 1 && kit.once('fishbite.hint')) kit.hintOn(stage, null, { mode: 'drag', x: W / 2, y: H * 0.86, dx: 0, dy: -130, delay: 1200, text: '浮標整個沉下去，就往上滑' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
         var phase = 'wait', t0 = performance.now(), nextRipple = 0, down = null, swipeAt = null, shown = 0;  /* performance.now()：高精度的時間（毫秒），計時用 */
-        function nowS() { return (performance.now() - t0) / 1000; }  /* performance.now()：高精度的時間（毫秒），計時用 */
+        function nowS() { return (performance.now() - t0) / 1000; }
         /* 畫浮標：depth（0～1）＋ 波浪（往下 px） */
         function drawFloat(depth, wavePx) {
             var topY = waterY - VIS + depth * VIS + wavePx;
@@ -189,7 +189,7 @@
             drawFloat(depthAt(q, t), waveAt(q.wave, t));
         });
         /* 太慢：窗口結束又過了一點時間還沒提竿 → 魚跑了（用計時器，不靠 rAF） */
-        api.after(Math.round((q.bite.tEnd + LATE_GRACE) * 1000), function () { if (phase === 'wait') finish('late', null); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+        api.after(Math.round((q.bite.tEnd + LATE_GRACE) * 1000), function () { if (phase === 'wait') finish('late', null); });
 
         /* 提竿＝往上滑 */
         field.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
@@ -202,7 +202,7 @@
             var p = kit.localPt(e, field);
             if (isUpSwipe(p.x - down.x, p.y - down.y)) { down.fired = true; pull(); }
         }
-        field.addEventListener('pointermove', track);   /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        field.addEventListener('pointermove', track);
         field.addEventListener('pointerup', function (e) { track(e); if (down && e.pointerId === down.id) down = null; });
         field.addEventListener('pointercancel', function (e) { if (down && e.pointerId === down.id) down = null; });
 
@@ -228,8 +228,8 @@
                 api.pass({ delay: 2300 });              /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
                 return;
             }
-            info.classList.add('fishbite-info--bad');   /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            info.classList.add('fishbite-info--bad');
+            kit.flash(stage, false, api.my);
             showReplay(kind, t);
             api.fail({ delay: replayMs(q) + 1500, lines: [why, '咬鉤在第 ' + q.bite.t.toFixed(4) + ' 秒，窗口 ' + q.window.toFixed(4) + ' 秒（' + q.bite.t90.toFixed(4) + '～' + q.bite.tEnd.toFixed(4) + '）' + (t != null ? '；你在第 ' + t.toFixed(4) + ' 秒提竿' : '；你沒有提竿')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
@@ -242,7 +242,7 @@
             kit.svg('rect', { 'class': 'fishbite-chart__bite', x: X(q.bite.t90), y: Y0 - 6, width: Math.max(3, X(q.bite.tEnd) - X(q.bite.t90)), height: CH + 12 }, svg);
             kit.svg('line', { 'class': 'fishbite-chart__line90', x1: 4, x2: CW - 4, y1: Y0 + CH * BITE_LINE, y2: Y0 + CH * BITE_LINE }, svg);
             var pl = kit.svg('polyline', { 'class': 'fishbite-chart__curve', points: chartPoints(q, 0, total, CW - 8, CH, 240).split(' ').map(function (pp) { var a = pp.split(','); return (+a[0] + 4).toFixed(1) + ',' + (+a[1] + Y0).toFixed(1); }).join(' ') }, svg);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
-            var lb = kit.svg('text', { 'class': 'fishbite-chart__lab fishbite-chart__lab--bite', x: Math.min(CW - 70, Math.max(70, X(q.bite.t90))), y: 18 }, svg); lb.textContent = '咬鉤';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            var lb = kit.svg('text', { 'class': 'fishbite-chart__lab fishbite-chart__lab--bite', x: Math.min(CW - 70, Math.max(70, X(q.bite.t90))), y: 18 }, svg); lb.textContent = '咬鉤';
             var l9 = kit.svg('text', { 'class': 'fishbite-chart__lab fishbite-chart__lab--ln', x: 8, y: Y0 + CH * BITE_LINE - 6 }, svg); l9.textContent = '沉到這條線以下才算咬鉤';
             if (t != null) {
                 var sx = X(Math.min(t, total)); kit.svg('line', { 'class': 'fishbite-chart__you', x1: sx, x2: sx, y1: Y0 - 6, y2: Y0 + CH + 6 }, svg);
@@ -252,10 +252,10 @@
             field.appendChild(box);
             /* 慢動作重播：浮標跟著游標一起動 */
             var rg = replayRange(q), ms = replayMs(q), r0 = performance.now();
-            api.my.loop(function (now) {                /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
+            api.my.loop(function (now) {
                 var p = Math.min(1, (now - r0) / ms), tv = rg.t0 + (rg.t1 - rg.t0) * p;
                 drawFloat(depthAt(q, tv), waveAt(q.wave, tv));
-                var x = X(Math.min(tv, total)); cur.setAttribute('x1', x); cur.setAttribute('x2', x);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                var x = X(Math.min(tv, total)); cur.setAttribute('x1', x); cur.setAttribute('x2', x);
                 if (p >= 1) return false;
             });
         }

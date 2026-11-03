@@ -39,7 +39,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function stonesFor(level) { return Math.round(kit.ramp(level, STONES[0], STONES[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
-    function gapMaxFor(level) { return Math.max(1, Math.round(kit.ramp(level, GAP_MAX[0], GAP_MAX[1], RAMP_LEVELS))); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function gapMaxFor(level) { return Math.max(1, Math.round(kit.ramp(level, GAP_MAX[0], GAP_MAX[1], RAMP_LEVELS))); }
     function trickPFor(level) { return kit.ramp(level, TRICK_P[0], TRICK_P[1], RAMP_LEVELS); }
     function isDiagonal(d) { return DIRS[d][0] !== 0 && DIRS[d][1] !== 0; }
     /* 標準開局：中間四顆（白黑／黑白交叉）。棋盤是 64 格的陣列：1 黑、−1 白、0 空 */
@@ -79,7 +79,7 @@
     /* 這一份下法清單的「最多」「第二多」：best＝最大翻子數、second＝比 best 少的最大翻子數（沒有就是 0）、bestIdxs＝翻最多的所有格子 */
     function ranking(moves) {
         var best = 0, i;
-        moves.forEach(function (m) { if (m.n > best) best = m.n; });  /* forEach：對陣列的每個元素各做一次 */
+        moves.forEach(function (m) { if (m.n > best) best = m.n; });
         var second = 0, bestIdxs = [];
         moves.forEach(function (m) { if (m.n === best) bestIdxs.push(m.idx); else if (m.n > second) second = m.n; });
         return { best: best, second: second, gap: best - second, bestIdxs: bestIdxs };
@@ -139,12 +139,12 @@
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[翻最多棋] 第 ' + level + ' 關：棋子 ' + q.stones + ' 顆，黑棋有 ' + q.moves.length + ' 個下法，最多翻 ' + q.best + '（在 ' + q.bestIdxs.map(function (i) { return '(' + Math.floor(i / N) + ',' + i % N + ')'; }).join('、') + '），第二多 ' + q.second + '（差 ' + q.gap + '）' + (q.tricky ? '；藏起來' : '') + '；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        var W = stage.clientWidth || 472, H = stage.clientHeight || 640, cell = Math.floor(Math.min((W - 16) / N, 60)), BS = cell * N, bx = Math.round((W - BS) / 2), by = 64;  /* Math.floor：無條件捨去成整數 */
+        var W = stage.clientWidth || 472, H = stage.clientHeight || 640, cell = Math.floor(Math.min((W - 16) / N, 60)), BS = cell * N, bx = Math.round((W - BS) / 2), by = 64;
         var tip = h('div', { 'class': 'qz-note reversi-tip', text: '你是黑棋：下在能翻最多顆的格子' });
         stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var board = h('div', { 'class': 'reversi-board' });  /* board：盤面（所有格子都放在裡面） */
         board.style.cssText = 'left:' + bx + 'px;top:' + by + 'px;width:' + BS + 'px;height:' + BS + 'px;';
-        stage.appendChild(board);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(board);
         var cells = [], discs = [];
         for (var i = 0; i < N * N; i++) {
             var el = h('div', { 'class': 'reversi-cell' });
@@ -175,7 +175,7 @@
         function judge(k) {
             if (done || api.over) return;
             done = true;
-            var ok = k >= 0 && q.bestIdxs.indexOf(k) >= 0;  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+            var ok = k >= 0 && q.bestIdxs.indexOf(k) >= 0;
             /* 把每個合法位置能翻幾顆標出來（最多的是綠色） */
             q.moves.forEach(function (m) {
                 var lab = h('div', { 'class': 'reversi-count' + (q.bestIdxs.indexOf(m.idx) >= 0 ? ' reversi-count--best' : ''), text: String(m.n) });
@@ -186,17 +186,17 @@
                 /* 下黑棋、夾住的白棋翻面（翻面動畫） */
                 var disc = h('div', { 'class': 'reversi-disc reversi-disc--b reversi-disc--new' }); cells[k].insertBefore(disc, cells[k].firstChild);
                 moveOf[k].flips.forEach(function (f) { if (discs[f]) { discs[f].classList.add('reversi-disc--flip'); api.after(250, function () { discs[f].classList.remove('reversi-disc--w'); discs[f].classList.add('reversi-disc--b'); }); } });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
-            } else q.bestIdxs.forEach(function (i) { cells[i].classList.add('reversi-cell--ok'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            } else q.bestIdxs.forEach(function (i) { cells[i].classList.add('reversi-cell--ok'); });
             var chosen = k >= 0 ? moveOf[k].n : 0;
             info.textContent = k >= 0 ? '你下的翻了 ' + chosen + ' 顆；最多是 ' + q.best + ' 顆（第二多 ' + q.second + ' 顆）' : '時間到！最多是 ' + q.best + ' 顆（綠色數字）';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1800 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({ delay: 2800, lines: [k >= 0 ? '你下的只翻 ' + chosen + ' 顆，最多的位置能翻 ' + q.best + ' 顆' : '時間到！', '最多 ' + q.best + ' 顆、第二多 ' + q.second + ' 顆（差 ' + q.gap + '），黑棋共有 ' + q.moves.length + ' 個下法'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.bestIdxs[0]); };
         api.wrong = function () {
-            var w = q.moves.filter(function (m) { return q.bestIdxs.indexOf(m.idx) < 0; })[0];  /* filter：留下符合條件的元素，回傳新陣列 */
+            var w = q.moves.filter(function (m) { return q.bestIdxs.indexOf(m.idx) < 0; })[0];
             judge(w ? w.idx : -1);
         };
     }

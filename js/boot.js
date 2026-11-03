@@ -280,7 +280,7 @@
             s.async = !ordered ? true : false;
             s.onload = function () { resolve(); };
             s.onerror = function () { reject(src); };
-            document.head.appendChild(s);               /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            document.head.appendChild(s);
         });
     }
 
@@ -314,7 +314,7 @@
         if (location.protocol === 'file:' || !global.fetch) return Promise.resolve(null);
         return fetch('version.json?t=' + Date.now(), { cache: 'no-store' })  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
             .then(function (r) { return r.ok ? r.json() : null; })
-            .catch(function () { return null; });       /* catch：Promise（承諾）失敗時才執行的函式，這裡用來吞掉錯誤，避免整個程式中斷 */
+            .catch(function () { return null; });
     }
 
     /* localStorage 包一層 try/catch：有些瀏覽器環境（例如無痕模式、使用者關掉
@@ -379,7 +379,7 @@
           （目前只有 three.js）用 loadWithFallback 依序處理，其餘的 JS 檔案
           才平行下載（但靠 async=false 保證還是依照清單順序執行）。 */
     fetchVersion().then(function (info) {
-        var ver = info && info.version ? String(info.version) : 'local-' + Date.now();  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
+        var ver = info && info.version ? String(info.version) : 'local-' + Date.now();
         var prev = storeGet('fm.version');
         global.FM_VERSION = { version: ver, date: info && info.date, notes: info && info.notes, previous: prev };
         if (info && info.version) {
@@ -397,7 +397,7 @@
                 else rest.push(entry);
             });
             return chain.then(function () {
-                return Promise.all(rest.map(function (src) { return loadJs(isRemote(src) ? src : src + q, true); }));  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+                return Promise.all(rest.map(function (src) { return loadJs(isRemote(src) ? src : src + q, true); }));
             });
         });
     }).catch(function (e) { fail(e); });

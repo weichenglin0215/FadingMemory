@@ -75,7 +75,7 @@
     function turnsOf(n, start, path) {
         var prev = null, turns = 0, cur = start;
         for (var i = 0; i < path.length; i++) {
-            var dr = Math.sign(Math.floor(path[i] / n) - Math.floor(cur / n)), dc = Math.sign(path[i] % n - cur % n), key = dr + ',' + dc;  /* Math.floor：無條件捨去成整數 */
+            var dr = Math.sign(Math.floor(path[i] / n) - Math.floor(cur / n)), dc = Math.sign(path[i] % n - cur % n), key = dr + ',' + dc;
             if (prev !== null && key !== prev) turns++;
             prev = key; cur = path[i];
         }
@@ -105,14 +105,14 @@
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var n = sizeFor(level), R = redsFor(level), B = bluesFor(level), minBest = minBestFor(level), gapMax = gapMaxFor(level), minTurns = minTurnsFor(level);
         for (var tr = 0; tr < 6000; tr++) {
-            var k = Math.min(minBest + kit.randInt(0, 1, rand), 12), ch = buildChain(n, k, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+            var k = Math.min(minBest + kit.randInt(0, 1, rand), 12), ch = buildChain(n, k, rand);
             if (!ch) continue;
             var board = new Int8Array(n * n), blocked = {}, i;
             ch.lands.forEach(function (l) { blocked[l] = true; });                 /* 路線上降落的格子要保持空 */
             blocked[ch.start] = false;
             var mids = ch.mids.filter(function (m, j) { return ch.mids.indexOf(m) === j; });                /* 同一顆棋子可能被跳過兩次，只放一次 */
             board[ch.start] = RED; mids.forEach(function (m) { board[m] = rand() < 0.35 ? RED : BLUE; });  /* forEach：對陣列的每個元素各做一次 */
-            var reds = [ch.start]; mids.forEach(function (m) { if (board[m] === RED) reds.push(m); });  /* forEach：對陣列的每個元素各做一次 */
+            var reds = [ch.start]; mids.forEach(function (m) { if (board[m] === RED) reds.push(m); });
             var blues = mids.filter(function (m) { return board[m] === BLUE; }).length, guard = 0;  /* filter：留下符合條件的元素，回傳新陣列 */
             while ((reds.length < R || blues < B) && guard++ < 400) {
                 var cell = kit.randInt(0, n * n - 1, rand);
@@ -126,7 +126,7 @@
             if (b1 < minBest || gap < 1 || gap > gapMax) continue;
             var turns = turnsOf(n, reds[bi], res[bi].path);
             if (turns < minTurns) continue;
-            return { n: n, board: board, reds: reds, jumps: res.map(function (x) { return x.jumps; }), paths: res.map(function (x) { return x.path; }), best: bi, bestJumps: b1, second: b2, gap: gap, turns: turns, level: level };  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            return { n: n, board: board, reds: reds, jumps: res.map(function (x) { return x.jumps; }), paths: res.map(function (x) { return x.path; }), best: bi, bestJumps: b1, second: b2, gap: gap, turns: turns, level: level };
         }
         /* 保底（極少用到）：一排棋，最左邊的紅棋連跳 3 次，另一顆紅棋只能跳 1 次 */
         var fn = 7, fb = new Int8Array(fn * fn); [[3, 0, RED], [3, 1, BLUE], [3, 3, BLUE], [3, 5, BLUE], [0, 0, RED], [0, 1, BLUE]].forEach(function (a) { fb[a[0] * fn + a[1]] = a[2]; });
@@ -161,10 +161,10 @@
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[跳棋跳最遠] 第 ' + level + ' 關：' + n + '×' + n + '，紅棋 ' + q.reds.length + ' 顆，各能連跳 ' + q.jumps.join('、') + ' 次；最多 ' + q.bestJumps + '（第二多 ' + q.second + '，差 ' + q.gap + '，路線轉 ' + q.turns + ' 個彎）；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        var W = stage.clientWidth || 472, H = stage.clientHeight || 640, cs = Math.floor(Math.min((W - 16) / n, (H - 150) / n, 60)), BS = cs * n, bx = Math.round((W - BS) / 2), by = 62, ps = Math.round(cs * 0.78), off = (cs - ps) / 2;  /* Math.round：四捨五入成整數 */
+        var W = stage.clientWidth || 472, H = stage.clientHeight || 640, cs = Math.floor(Math.min((W - 16) / n, (H - 150) / n, 60)), BS = cs * n, bx = Math.round((W - BS) / 2), by = 62, ps = Math.round(cs * 0.78), off = (cs - ps) / 2;
         var field = h('div', { 'class': 'checkers-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-        field.appendChild(h('div', { 'class': 'qz-note checkers-tip', text: '點出能連跳最多次的紅棋' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(h('div', { 'class': 'qz-note checkers-tip', text: '點出能連跳最多次的紅棋' }));
         var bd = h('div', { 'class': 'checkers-board' });
         bd.style.cssText = 'left:' + bx + 'px;top:' + by + 'px;width:' + BS + 'px;height:' + BS + 'px;background-size:' + cs + 'px ' + cs + 'px;';
         field.appendChild(bd);
@@ -194,7 +194,7 @@
                 var inner = el.firstChild;
                 el.style.transition = 'left ' + HOP_MS + 'ms linear, top ' + HOP_MS + 'ms linear';
                 place(el, path[k]);
-                inner.classList.remove('checkers-pc__in--arc'); void inner.offsetWidth; inner.classList.add('checkers-pc__in--arc'); inner.style.animationDuration = HOP_MS + 'ms';  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                inner.classList.remove('checkers-pc__in--arc'); void inner.offsetWidth; inner.classList.add('checkers-pc__in--arc'); inner.style.animationDuration = HOP_MS + 'ms';
                 Sfx.play('pop'); k++;                   /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 api.after(HOP_MS + 40, next);           /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
             }
@@ -214,7 +214,7 @@
             var go = ok ? ri : q.best;
             info.textContent = ok ? '連跳 ' + q.jumps[ri] + ' 次，是最多的！' : (ri >= 0 ? '你選的只能連跳 ' + q.jumps[ri] + ' 次，最多是 ' + q.bestJumps + ' 次' : '時間到！最多能連跳 ' + q.bestJumps + ' 次');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             kit.flash(stage, ok, api.my);               /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
-            api.after(500, function () { hop(go); });   /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+            api.after(500, function () { hop(go); });
             var hopMs = 500 + q.paths[go].length * (HOP_MS + 40);
             if (ok) { api.pass({ delay: hopMs + 900 }); return; }  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
             api.fail({ delay: hopMs + 1800, lines: [ri >= 0 ? '你選的只能連跳 ' + q.jumps[ri] + ' 次' : '時間到！', '最多能連跳 ' + q.bestJumps + ' 次（第二多 ' + q.second + ' 次）'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */

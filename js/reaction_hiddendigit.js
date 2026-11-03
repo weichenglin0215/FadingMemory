@@ -50,7 +50,7 @@
     }
     /* 挑要遮住第幾位（0＝最左邊）：個位數（最後一位）權重隨題號從 LAST_W[0] 降到 LAST_W[1]，其他位數權重 1 */
     function pickHidden(len, level, rand) {
-        var wLast = kit.ramp(level, LAST_W[0], LAST_W[1], RAMP_LEVELS);  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+        var wLast = kit.ramp(level, LAST_W[0], LAST_W[1], RAMP_LEVELS);
         var ws = [], total = 0, i;
         for (i = 0; i < len; i++) { var w = i === len - 1 ? wLast : 1; ws.push(w); total += w; }
         var x = (rand || Math.random)() * total;
@@ -115,7 +115,7 @@
         });
         ansRow.insertBefore(h('div', { 'class': 'hiddendigit-eqsign', text: '＝' }), ansRow.firstChild);
         var ask = h('div', { 'class': 'qz-note hiddendigit-ask', text: '被遮住的是哪一個數字？' });
-        stage.appendChild(eq); stage.appendChild(ansRow); stage.appendChild(ask);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(eq); stage.appendChild(ansRow); stage.appendChild(ask);
         var items = [];
         for (var d = 0; d <= 9; d++) (function (d) { items.push({ text: String(d), kind: 'sky', cls: 'hiddendigit-btn', onTap: function () { judge(d); } }); })(d);
         var grid = kit.btnGrid(stage, items, { cols: 5, h: 84, gap: 10 });  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
@@ -128,9 +128,9 @@
             var ok = v === q.answer;
             boxes[q.hidden].textContent = String(q.answer);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             boxes[q.hidden].classList.remove('hiddendigit-box--hide');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-            boxes[q.hidden].classList.add(ok ? 'hiddendigit-box--ok' : 'hiddendigit-box--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            boxes[q.hidden].classList.add(ok ? 'hiddendigit-box--ok' : 'hiddendigit-box--bad');
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 900 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: 2200, lines: [
                     (v == null ? '時間到！' : '你選了 ' + v) + '，被遮住的是 ' + q.answer,

@@ -124,7 +124,7 @@
             else if (st === 'relogin') { text = '登入已經失效'; btn = '重新登入'; act = function () { return I.askLogin(); }; }
             else { text = '還沒有帳號'; btn = '我已有帳號，登入'; act = function () { return I.askLogin(); }; }
             nickLine.appendChild(h('span', { 'class': 'lb-nickline__t', text: text }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-            nickLine.appendChild(h('button', {          /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            nickLine.appendChild(h('button', {
                 'class': 'pill pill--blue lb-nickline__btn', text: btn,
                 on: { click: function () {
                     sfx('click');
@@ -144,13 +144,13 @@
             var key = mode + '|' + (board ? JSON.stringify(board.top) + board.stale : '');  /* JSON.stringify／parse：物件和文字互轉（存進 localStorage 或傳給伺服器時用） */
             if (key === lastKey) return;                      /* 資料沒變就不重畫，避免玩家正在看的時候畫面跳一下 */
             lastKey = key;
-            list.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
+            list.innerHTML = '';
             if (mode === 'loading') {
                 list.appendChild(h('div', { 'class': 'lb-msg' }, [h('div', { 'class': 'lb-spin' }), h('div', { text: '載入世界排行榜中…' })]));
                 note.textContent = '';                  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             } else if (!board) {
                 list.appendChild(h('div', { 'class': 'lb-msg', text: '暫時連不上排行榜，沒有網路也可以照常玩。' }));
-                note.textContent = '';                  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                note.textContent = '';
             } else if (!board.top.length) {
                 list.appendChild(h('div', { 'class': 'lb-msg lb-msg--first' }, [
                     h('span', { html: global.UI.icon('trophy', 'lb-msg__icon') }),
@@ -222,7 +222,7 @@
         var k = Math.min(2, stageScale() * (global.devicePixelRatio || 1));      /* 畫布解析度倍率：夠銳利、又不會太吃效能 */
         var cv = h('canvas', { 'class': 'lb-fw' });
         cv.width = Math.round(W * k);                   /* Math.round：四捨五入成整數 */
-        cv.height = Math.round(H * k);                  /* Math.round：四捨五入成整數 */
+        cv.height = Math.round(H * k);
         host.insertBefore(cv, host.firstChild);
         var c2 = cv.getContext('2d');
         if (!c2) { removeEl(cv); return { stop: function () { } }; }
@@ -280,7 +280,7 @@
             if (next >= FW.bursts.length && !parts.length) { stop(); return; }
             raf = global.requestAnimationFrame(frame);  /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
         }
-        raf = global.requestAnimationFrame(frame);      /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
+        raf = global.requestAnimationFrame(frame);
         global.setTimeout(stop, FW.hardStopMs);
         return { stop: stop };
     }

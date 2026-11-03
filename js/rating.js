@@ -90,7 +90,7 @@
     /* 記下「今天評過 id」；順便把不是今天的舊紀錄清掉，這份資料永遠只有今天評過的那幾款 */
     function markRated(id, now) {
         var d = today(now), m = doneMap(), out = {};
-        Object.keys(m).forEach(function (k) { if (m[k] === d) out[k] = d; });  /* forEach：對陣列的每個元素各做一次 */
+        Object.keys(m).forEach(function (k) { if (m[k] === d) out[k] = d; });
         out[id] = d;
         store().set(KEY_DONE, out);
     }
@@ -120,7 +120,7 @@
        opts.force：不管快取，強制重抓。 */
     function loadStats(opts) {
         opts = opts || {};
-        var c = store().get(KEY_STATS, null), now = Date.now();  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
+        var c = store().get(KEY_STATS, null), now = Date.now();
         if (!opts.force && c && c.data && now - c.at >= 0 && now - c.at < CFG.STATS_TTL_MS) return Promise.resolve(stats());
         if (statsInflight) return statsInflight;
         var lb = LB();
@@ -180,7 +180,7 @@
         el.style.setProperty('--rate-p', pct(v && v[0]).toFixed(1) + '%');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
         var label = v ? '平均 ' + v[0].toFixed(1) + ' 顆星（' + v[1] + ' 次評價）' : '還沒有人評價';
         el.setAttribute('aria-label', label);           /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
-        el.setAttribute('title', label);                /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+        el.setAttribute('title', label);
     }
 
     function starSvg() {
@@ -222,7 +222,7 @@
                 b.setAttribute('aria-checked', k === stars - 1 ? 'true' : 'false');
             });
             say.textContent = stars ? stars + ' 顆星：' + LABELS[stars] : '還沒選星星（不選就不評分）';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-            say.classList.toggle('is-on', stars > 0);   /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            say.classList.toggle('is-on', stars > 0);
         }
 
         function finish(r) {
@@ -235,7 +235,7 @@
             if (!stars) { finish({ status: 'cancel' }); return; }
             busy = true;
             okBtn.disabled = true;
-            okBtn.textContent = '送出中…';                 /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            okBtn.textContent = '送出中…';
             submit(game, stars).then(function (r) {
                 var st = r && r.status;
                 if (st === 'sent') Dlg.toast('謝謝你的評價！');

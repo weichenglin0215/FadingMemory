@@ -50,7 +50,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function limitS(level) { return kit.ramp(level, TIME_S[0], TIME_S[1], LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function blurAt(level, ms) { var T = limitS(level) * 1000; return BLUR_MAX * (1 - kit.clamp(ms / T, 0, 1)); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
-    function spinAt(level, ms) { var T = limitS(level) * 1000; return SPIN_MAX * (1 - kit.clamp(ms / T, 0, 1)); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
+    function spinAt(level, ms) { var T = limitS(level) * 1000; return SPIN_MAX * (1 - kit.clamp(ms / T, 0, 1)); }
     /* 旋轉角度（度，未乘方向）：ω(t) 的積分 ＝ SPIN_MAX × (t − t²/(2T)) */
     function angleAt(level, ms) { var T = limitS(level), t = Math.min(ms / 1000, T); return SPIN_MAX * (t - t * t / (2 * T)); }
     /* 這一關按下的得分：(1 − t÷T) × 100；第 1 關太早按打折 */
@@ -106,9 +106,9 @@
             kit.onTap(b, function () { judge(c); });    /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             return b;
         });
-        stage.appendChild(h('div', { 'class': 'rx-btnrow clearer-opts' }, btns));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(h('div', { 'class': 'rx-btnrow clearer-opts' }, btns));
         function frame() {
-            var ms = performance.now() - t0;            /* performance.now()：高精度的時間（毫秒），計時用 */
+            var ms = performance.now() - t0;
             glyph.style.filter = 'blur(' + blurAt(level, ms).toFixed(2) + 'px)';
             glyph.style.transform = 'rotate(' + (q.start + q.dir * angleAt(level, ms)).toFixed(2) + 'deg)';
             clock.textContent = '計時 ' + kit.sec(Math.min(ms, q.limit * 1000)) + ' 秒';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
@@ -123,7 +123,7 @@
             var ms = forceMs != null ? forceMs : performance.now() - t0;
             loop.stop();
             glyph.style.filter = 'none'; glyph.style.transform = 'none';
-            clock.textContent = '按下時間 ' + kit.sec(ms) + ' 秒';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            clock.textContent = '按下時間 ' + kit.sec(ms) + ' 秒';
             btns.forEach(function (b) { if (b.textContent === q.target) b.classList.add('clearer-opt--ok'); else if (b.textContent === c) b.classList.add('clearer-opt--bad'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             if (c === q.target) {
                 var g = gainFor(level, ms), rush = level === 1 && ms < RUSH_MS;
@@ -136,7 +136,7 @@
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.target); };
-        api.wrong = function () { judge(q.options.filter(function (x) { return x !== q.target; })[0]); };  /* filter：留下符合條件的元素，回傳新陣列 */
+        api.wrong = function () { judge(q.options.filter(function (x) { return x !== q.target; })[0]); };
     }
 
     /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */

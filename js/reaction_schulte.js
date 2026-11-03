@@ -74,7 +74,7 @@
             /* 替整個畫面加上黑底的 class（樣式在 css/games/reaction_schulte.css 的 .schulte-bg） */
             root.classList.add('schulte-bg');           /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             /* 這一局結束（dispose）時，把黑底 class 拿掉，不影響下一款遊戲 */
-            my.onDispose(function () { root.classList.remove('schulte-bg'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            my.onDispose(function () { root.classList.remove('schulte-bg'); });
 
             /* makeBoard()：本局的數字排列 */
             var board = makeBoard();
@@ -87,7 +87,7 @@
             head.appendChild(info); head.appendChild(clock);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             /* 36 格的格子容器 */
             var grid = h('div', { 'class': 'schulte-grid' });
-            root.appendChild(head);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(head);
             root.appendChild(grid);
             /* ctx.setMeta：更新標題列右側的小字 */
             ctx.setMeta(fmtBest(Reaction.getBest(ID))); /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
@@ -111,7 +111,7 @@
             /* my.loop：每個畫面更新時呼叫，更新計時文字；回傳 false 會停止這個迴圈 */
             my.loop(function (now) {                    /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                 if (state !== 'play') return false;
-                clock.textContent = (t0 == null ? 0 : (now - t0) / 1000).toFixed(4) + ' 秒';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                clock.textContent = (t0 == null ? 0 : (now - t0) / 1000).toFixed(4) + ' 秒';
             });
 
             /* tap：處理一次點擊（n＝點到的數字，el＝按鈕，t＝點擊時間） */
@@ -138,7 +138,7 @@
                 /* 點對：該格變綠底白字（0.6 秒後變回黑底，所以要靠記憶記得點過哪些） */
                 el.classList.add('schulte-cell--ok');
                 my.after(OK_FLASH_MS, function () { el.classList.remove('schulte-cell--ok'); });
-                Sfx.play('ok');                         /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                Sfx.play('ok');
                 /* 全部點完（點到 36） */
                 if (next >= SIDE * SIDE) {
                     state = 'done';
@@ -149,10 +149,10 @@
                     console.log('數字方陣：實際 ' + rawSec.toFixed(6) + ' 秒 → 成績 ' + sec.toFixed(4) + ' 秒');
                     clock.textContent = sec.toFixed(4) + ' 秒';
                     /* 存最佳紀錄：這個遊戲秒數「越小越好」，所以比較函式是 v < b */
-                    var isNew = Reaction.setBest(ID, sec, function (v, b) { return v < b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                    var isNew = Reaction.setBest(ID, sec, function (v, b) { return v < b; });
                     ctx.setMeta(fmtBest(Reaction.getBest(ID)));
                     my.after(DONE_STAY_MS, function () {
-                        kit.result(root, {              /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
+                        kit.result(root, {
                             score: sec,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: sec.toFixed(4) + ' 秒', label: rating(sec),
                             lines: ['6×6 共 36 個數字全部點完'], isNew: isNew, sfx: sec <= 55 ? 'win' : 'neutral', onAgain: round

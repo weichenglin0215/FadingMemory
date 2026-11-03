@@ -44,7 +44,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function pointsFor(level) { return Math.round(ramp(level, POINTS)); }  /* Math.round：四捨五入成整數 */
-    function decoysFor(level) { return Math.round(ramp(level, DECOYS)); }  /* Math.round：四捨五入成整數 */
+    function decoysFor(level) { return Math.round(ramp(level, DECOYS)); }
     function decoyMaxFor(level) { return ramp(level, DECOY_MAX); }
     function timeMs(level) { return Math.round(ramp(level, TIME_S) * 1000); }
     /* 這一關正方形的邊長範圍 [下限, 上限]（虛擬 px） */
@@ -75,11 +75,11 @@
     }
     /* 含第 k 個點的所有 4 點組合裡，最小的 eps（排除 skip 這一組）；點很多也很快（只看含 k 的） */
     function minEpsWith(pts, k, skip) {
-        var best = 1e9, n = pts.length, skipKey = skip ? skip.slice().sort(function (x, y) { return x - y; }).join() : null;  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        var best = 1e9, n = pts.length, skipKey = skip ? skip.slice().sort(function (x, y) { return x - y; }).join() : null;
         for (var a = 0; a < n; a++) { if (a === k) continue;
             for (var b = a + 1; b < n; b++) { if (b === k) continue;
                 for (var c = b + 1; c < n; c++) { if (c === k) continue;
-                    if (skipKey && [a, b, c, k].sort(function (x, y) { return x - y; }).join() === skipKey) continue;  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
+                    if (skipKey && [a, b, c, k].sort(function (x, y) { return x - y; }).join() === skipKey) continue;
                     var e = squareErr([pts[a], pts[b], pts[c], pts[k]]); if (e < best) best = e;
                 } } }
         return best;
@@ -117,7 +117,7 @@
             var ext = s * (Math.abs(Math.cos(deg * Math.PI / 180)) + Math.abs(Math.sin(deg * Math.PI / 180))) / 2;       /* 轉過之後的半寬 */
             var lo = MARGIN + ext, hiX = FIELD.w - MARGIN - ext, hiY = FIELD.h - MARGIN - ext;
             if (hiX <= lo || hiY <= lo) continue;
-            var sq = squareAt(kit.randFloat(lo, hiX, rand), kit.randFloat(lo, hiY, rand), s, deg);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+            var sq = squareAt(kit.randFloat(lo, hiX, rand), kit.randFloat(lo, hiY, rand), s, deg);
             if (!sq.every(inField) || squareErr(sq) >= EPS_SQ) continue;
             var pts = sq.slice(), decoys = [], g;
             /* 誘餌 */
@@ -127,7 +127,7 @@
                 var eps = squareErr(dq);
                 if (!dq.every(inField) || eps < EPS_NONSQ + 0.004 || eps > dmax) continue;
                 if (!dq.every(function (p) { return farEnough(pts, p); })) continue;  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
-                var base = pts.length; dq.forEach(function (p) { pts.push(p); });  /* forEach：對陣列的每個元素各做一次 */
+                var base = pts.length; dq.forEach(function (p) { pts.push(p); });
                 var okAll = true; for (var k = base; k < pts.length && okAll; k++) if (minEpsWith(pts, k, [0, 1, 2, 3]) < EPS_NONSQ) okAll = false;
                 if (!okAll) { pts.length = base; continue; }
                 decoys.push({ idx: [base, base + 1, base + 2, base + 3], eps: eps });
@@ -143,7 +143,7 @@
             if (pts.length < N) continue;
             /* 洗牌：星星的順序打亂（真正方形不要永遠是前 4 顆）；回傳時記住新編號 */
             var order = kit.shuffle(pts.map(function (q, i) { return i; }), rand), np = order.map(function (i) { return pts[i]; }), inv = []; order.forEach(function (o, ni) { inv[o] = ni; });  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
-            return { pts: np, sq: [0, 1, 2, 3].map(function (i) { return inv[i]; }).sort(function (a, b) { return a - b; }), decoys: decoys.map(function (dc) { return { idx: dc.idx.map(function (i) { return inv[i]; }).sort(function (a, b) { return a - b; }), eps: dc.eps }; }), level: level, field: FIELD, rot: deg, side: s };  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            return { pts: np, sq: [0, 1, 2, 3].map(function (i) { return inv[i]; }).sort(function (a, b) { return a - b; }), decoys: decoys.map(function (dc) { return { idx: dc.idx.map(function (i) { return inv[i]; }).sort(function (a, b) { return a - b; }), eps: dc.eps }; }), level: level, field: FIELD, rot: deg, side: s };
         }
         /* 保底（極少用到）：一個正放的正方形加幾顆星 */
         var fb = squareAt(220, 250, 140, 30); fb.push({ x: 60, y: 60 }, { x: 380, y: 90 }, { x: 60, y: 440 }, { x: 390, y: 450 });
@@ -190,9 +190,9 @@
         stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var sky = h('div', { 'class': 'findsquare-sky' });
         sky.style.cssText = 'left:' + fx + 'px;top:' + fy + 'px;width:' + fw + 'px;height:' + fh + 'px;';
-        stage.appendChild(sky);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(sky);
         var svg = kit.svg('svg', { 'class': 'findsquare-svg', viewBox: '0 0 ' + FIELD.w + ' ' + FIELD.h, width: fw, height: fh }, sky);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        var gLines = kit.svg('g', {}, svg), gStars = kit.svg('g', {}, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var gLines = kit.svg('g', {}, svg), gStars = kit.svg('g', {}, svg);
         var starEls = pts.map(function (p, i) {
             var g = kit.svg('g', { 'class': 'findsquare-star', transform: 'translate(' + p.x + ',' + p.y + ')' }, gStars);
             kit.svg('circle', { 'class': 'findsquare-halo', cx: 0, cy: 0, r: 19 }, g);
@@ -230,12 +230,12 @@
             var ok = sel.length === 4 && squareErr(sel.map(function (i) { return pts[i]; })) < EPS_SQ;
             if (ok) {
                 drawQuad(sel, 'findsquare-line--ok');
-                info.textContent = '找到了！是一個正方形';        /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                info.textContent = '找到了！是一個正方形';
                 kit.flash(stage, true, api.my);         /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
                 api.pass({ delay: 1600 });              /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
                 return;
             }
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             if (sel.length === 4) {
                 var ds = describeQuad(pts, sel);
                 drawQuad(sel, 'findsquare-line--bad');
@@ -243,9 +243,9 @@
                 api.after(1500, function () { drawQuad(q.sq, 'findsquare-line--true'); q.sq.forEach(function (i) { starEls[i].classList.add('findsquare-star--true'); }); info.textContent = '綠色的才是真的正方形'; });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                 api.fail({ delay: 4200, lines: ['你選的四邊形：' + ds.text, '綠色的四顆星才是真的正方形'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
             } else {
-                drawQuad(q.sq, 'findsquare-line--true'); q.sq.forEach(function (i) { starEls[i].classList.add('findsquare-star--true'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                drawQuad(q.sq, 'findsquare-line--true'); q.sq.forEach(function (i) { starEls[i].classList.add('findsquare-star--true'); });
                 info.textContent = '時間到！綠色的是正方形';
-                api.fail({ delay: 3000, lines: ['時間到！', '綠色的四顆星才是真的正方形'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
+                api.fail({ delay: 3000, lines: ['時間到！', '綠色的四顆星才是真的正方形'] });
             }
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */

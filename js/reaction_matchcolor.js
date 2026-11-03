@@ -183,7 +183,7 @@
             var foot = h('div', { 'class': 'matchcolor-foot' }, [
                 h('div', { 'class': 'matchcolor-hint', text: '當你覺得兩個方塊顏色是完全相同時，\n請點擊畫面確認。' })
             ]);
-            root.appendChild(foot);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(foot);
             /* 操作提示（只在第一次進遊戲時）：點畫面任一處 → 手指縮放，放在畫面下方（不擋住兩個色塊） */
             if (Reaction.kit.once('matchcolor.hint')) Reaction.kit.hintOn(root, root, { mode: 'tap', fy: 0.82, text: '請點擊畫面' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
 
@@ -208,7 +208,7 @@
                 raf = requestAnimationFrame(frame);     /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
             }
             paint(t0);
-            raf = requestAnimationFrame(frame);         /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
+            raf = requestAnimationFrame(frame);
 
             /* 點擊畫面任一處（pointerdown 一碰就算，不是 click）：凍結最後一次畫出來的顏色，算差異度 */
             /* 點擊畫面任一處：整個 root 監聽（不是某顆按鈕）。phase 不是 running 的時候
@@ -224,14 +224,14 @@
                 var realDiff = diffPercent(leftRgb, shownRgb);
                 var diff = Leaderboard.fake4(realDiff);
                 console.log('色不異空：實際差異度 ' + realDiff.toFixed(6) + '% → 成績 ' + fmtPct(diff));
-                var isNew = Reaction.setBest(ID, diff, function (v, b) { return v < b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                var isNew = Reaction.setBest(ID, diff, function (v, b) { return v < b; });
                 ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
                 /* 兩個色塊靠攏：黑色縫的寬度用 CSS transition 縮到 0 */
                 /* 兩個色塊靠攏：黑色長方形的寬度用 CSS transition 縮到 0（見 .matchcolor-gap） */
-                gapEl.classList.add('matchcolor-gap--closed');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                gapEl.classList.add('matchcolor-gap--closed');
 
-                foot.innerHTML = '';                    /* innerHTML = ''：把元素裡面的東西全部清掉 */
+                foot.innerHTML = '';
                 if (window.Sfx) Sfx.play('click');      /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 /* 結算彈窗（公版 kit.result）：貼在畫面下緣、背後不壓暗，兩個色塊靠攏的揭曉才看得到；
                    帶 score 會在彈窗出現之後自動送世界排行榜 */

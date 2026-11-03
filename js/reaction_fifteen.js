@@ -132,7 +132,7 @@
             }
             if (hasWin(P, A) || hasWin(P, B)) return;
             var v = val(P, A, B);
-            if (v.r === 1) out.push({ A: A, B: B, n: na + nb, d: Math.ceil(v.d / 2), g: goodMoves(vk, A, B).length });  /* Math.ceil：無條件進位成整數 */
+            if (v.r === 1) out.push({ A: A, B: B, n: na + nb, d: Math.ceil(v.d / 2), g: goodMoves(vk, A, B).length });
         })(0, 0);
         /* 同一個局面會從不同拿牌順序重複走到，去掉重複 */
         var seen = {};
@@ -157,7 +157,7 @@
     function makePuzzle(level, rand) {
         rand = rand || Math.random;
         var sp = specOf(level), all = startsOf(sp.v);
-        var pool = all.filter(function (p) { return p.g >= sp.gMin && p.g <= sp.gMax; });  /* filter：留下符合條件的元素，回傳新陣列 */
+        var pool = all.filter(function (p) { return p.g >= sp.gMin && p.g <= sp.gMax; });
         if (!pool.length) {
             var best = 1e9;
             all.forEach(function (p) { var dist = p.g < sp.gMin ? sp.gMin - p.g : p.g - sp.gMax; if (dist < best) { best = dist; pool = [p]; } else if (dist === best) pool.push(p); });  /* forEach：對陣列的每個元素各做一次 */
@@ -177,13 +177,13 @@
     function computerPick(vk, A, B, rand) {
         rand = rand || Math.random;
         var P = prep(vk), best = -1, pool = [];
-        P.cards.forEach(function (c) {                  /* forEach：對陣列的每個元素各做一次 */
+        P.cards.forEach(function (c) {
             var bit = 1 << c; if ((A | B) & bit) return;
             var v = val(P, A, B | bit);          /* 輪到你 */
             var d = v.r === 1 ? v.d : (v.r === 0 ? 99 : 100);
             if (d > best) { best = d; pool = [c]; } else if (d === best) pool.push(c);
         });
-        return kit.pick(pool, rand);                    /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        return kit.pick(pool, rand);
     }
     /* 電腦的一手（V1.43.0 起，你走錯之後遊戲繼續玩到結束）：能直接湊成就湊成；否則用 computerPick（優先讓你輸、其次和局、最後才讓你贏）。
        回傳 { c: 拿的牌, win: 拿了之後電腦湊成了嗎 }；桌上沒有牌了回傳 null */
@@ -252,17 +252,17 @@
         var btns = h('div', { 'class': 'fifteen-btns' });
         var btnTake = h('button', { 'class': 'btn btn--primary fifteen-btn', type: 'button', text: '拿這張' });
         kit.onTap(btnTake, take);                       /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
-        btns.appendChild(btnTake);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        btns.appendChild(btnTake);
         wrap.appendChild(goal); wrap.appendChild(cols); wrap.appendChild(turn); wrap.appendChild(logBox); wrap.appendChild(secret); wrap.appendChild(btns);
         stage.appendChild(wrap);                        /* 把整個遊戲區放進舞台（放進去，畫面上才看得到） */
 
         var tiles = {};
         P.cards.forEach(function (c) {
             var t = h('div', { 'class': 'fifteen-card', text: String(c) });
-            kit.onTap(t, function () { choose(c); });   /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+            kit.onTap(t, function () { choose(c); });
             tiles[c] = t; table.appendChild(t);
         });
-        function sumOf(mask) { return maskToCards(mask).reduce(function (a, b) { return a + b; }, 0); }  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
+        function sumOf(mask) { return maskToCards(mask).reduce(function (a, b) { return a + b; }, 0); }
         function listOf(mask) { return maskToCards(mask).join('、'); }
         function winText(mask) { return maskToCards(mask).join('＋') + '＝' + V.T; }
         function freeCount() { return P.cards.filter(function (c) { return !((A | B) & (1 << c)); }).length; }
@@ -289,7 +289,7 @@
                 if (sel === c) cls += ' fifteen-card--sel';
                 tiles[c].className = cls;
             });
-            mineBox.innerHTML = ''; theirBox.innerHTML = '';  /* innerHTML = ''：把元素裡面的東西全部清掉 */
+            mineBox.innerHTML = ''; theirBox.innerHTML = '';
             mineBox.appendChild(h('div', { 'class': 'fifteen-hand__title', text: '你的牌' }));
             theirBox.appendChild(h('div', { 'class': 'fifteen-hand__title', text: '電腦的牌' }));
             maskToCards(A).forEach(function (c) { mineBox.appendChild(h('div', { 'class': 'fifteen-chip fifteen-chip--mine' + (winMask & (1 << c) ? ' fifteen-chip--win' : ''), text: String(c) })); });
@@ -312,7 +312,7 @@
             addLog('你拿 ' + c + '，你的牌合計 ' + sumOf(A) + '。');
             if (r.win) {
                 over = true; winMask = winSetOf(P, A); btns.style.display = 'none'; logBox.style.display = 'none'; paint();
-                turn.textContent = '你湊成了：' + winText(winMask) + '，你贏了！';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                turn.textContent = '你湊成了：' + winText(winMask) + '，你贏了！';
                 turn.classList.add('fifteen-turn--end');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 showBoard();
                 kit.flash(stage, true, api.my); api.pass({ delay: PASS_DELAY_MS }); return;  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
@@ -321,9 +321,9 @@
             busy = true; paint(); turn.textContent = '電腦思考中…';
             api.after(COMPUTER_THINK_MS, function () {  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                 var mv = computerMove(vk, A, B, api.rand);
-                tiles[mv.c].classList.add('fifteen-card--cpu');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                tiles[mv.c].classList.add('fifteen-card--cpu');
                 turn.textContent = '電腦拿了 ' + mv.c;
-                api.after(COMPUTER_SHOW_MS, function () {  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+                api.after(COMPUTER_SHOW_MS, function () {
                     B |= (1 << mv.c);
                     addLog('電腦拿 ' + mv.c + '，電腦的牌合計 ' + sumOf(B) + '。');
                     if (mv.win) { paint(); finish('cpu'); return; }
@@ -356,7 +356,7 @@
                 });
                 return;
             }
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({ delay: FAIL_HOLD_MS, lines: [head + tip] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 揭曉：玩法是洛書的話，把兩邊拿的牌放進洛書方陣，變成井字遊戲，並說明為什麼 */

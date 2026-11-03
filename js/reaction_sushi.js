@@ -46,7 +46,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function platesFor(level) { return Math.round(ramp(level, PLATES)); }  /* Math.round：四捨五入成整數 */
-    function pickFor(level) { return Math.min(Math.round(ramp(level, PICK)), platesFor(level) - 2); }  /* Math.round：四捨五入成整數 */
+    function pickFor(level) { return Math.min(Math.round(ramp(level, PICK)), platesFor(level) - 2); }
     function gapFor(level) { return Math.round(ramp(level, GAP_S) * 1000) / 1000; }
     function speedFor(level) { return Math.round(ramp(level, SPEED)); }
     function pricesFor(level) { return level >= LATER_FROM ? PRICE_LATER : PRICE_BASE; }
@@ -70,7 +70,7 @@
     function visibleAt(i, t, gap, speed, W) { var x = plateX(i, t, gap, speed, W); return x >= -PLATE_D / 4 && x <= W + PLATE_D / 4; }
     /* 拿了 taken（盤子編號的集合）的總金額與判定：{ sum, result: 'ok'｜'few'｜'many', diff } */
     function judge(q, taken) {
-        var s = 0; taken.forEach(function (k) { s += q.plates[k].price; });  /* forEach：對陣列的每個元素各做一次 */
+        var s = 0; taken.forEach(function (k) { s += q.plates[k].price; });
         return { sum: s, result: s === q.target ? 'ok' : (s < q.target ? 'few' : 'many'), diff: s - q.target };
     }
     /* 有幾種拿法剛好湊到預算（動態規劃，只用來測試和說明；盤子不多） */
@@ -121,7 +121,7 @@
         console.log('[迴轉壽司] 第 ' + level + ' 關：預算 ' + q.target + ' 元；一圈 ' + q.plates.length + ' 盤（' + q.plates.map(function (p) { return p.price; }).join(',') + '）；剛好的拿法（盤子編號） ' + q.solution.join(',') + '；速度 ' + q.speed + ' px/秒、間隔 ' + q.gap + ' 秒；一圈 ' + q.lap + ' 毫秒；共 ' + countSolutions(q) + ' 種湊法');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var field = h('div', { 'class': 'sushi-field' });
-        stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(field);
         /* 價目表：一直貼在畫面上 */
         var legend = h('div', { 'class': 'sushi-legend' });
         q.prices.forEach(function (pr) { var it = h('div', { 'class': 'sushi-legend__i' }); it.appendChild(h('div', { 'class': 'sushi-dot sushi-p' + COLOR_OF[pr] })); it.appendChild(h('div', { 'class': 'sushi-legend__t', text: pr + '元' })); legend.appendChild(it); });
@@ -140,11 +140,11 @@
         if (level === 1 && kit.once('sushi.hint')) api.after(Math.round((LEAD_S + 0.8) * 1000), function () { if (phase === 'play') kit.hintOn(stage, null, { mode: 'tap', x: W * 0.62, y: lane.offsetTop + PLATE_D / 2, delay: 200, text: '盤子經過時點它' }); });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
         var t0 = performance.now();                     /* performance.now()：高精度的時間（毫秒），計時用 */
-        function nowS() { return (performance.now() - t0) / 1000; }  /* performance.now()：高精度的時間（毫秒），計時用 */
+        function nowS() { return (performance.now() - t0) / 1000; }
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint(t) {
             q.plates.forEach(function (p, i) {
-                if (taken.indexOf(i) >= 0) return;      /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+                if (taken.indexOf(i) >= 0) return;
                 var x = plateX(i, t, q.gap, q.speed, W);
                 if (!visibleAt(i, t, q.gap, q.speed, W) && (x < 0 || x > W + PLATE_D)) { els[i].style.display = 'none'; return; }
                 els[i].style.display = 'block'; els[i].style.transform = 'translate3d(' + (x - PLATE_D / 2).toFixed(1) + 'px,0,0)';
@@ -175,8 +175,8 @@
             showSpread();
             info.textContent = why; info.style.top = ''; info.style.bottom = '116px';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             if (r.result === 'ok') { info.classList.add('sushi-info--ok'); kit.flash(stage, true, api.my); Sfx.play('ok'); api.pass({ delay: 2200 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
-            info.classList.add('sushi-info--bad'); kit.flash(stage, false, api.my);  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
-            var way = q.solution.map(function (k) { return q.plates[k].price; }).join('＋') + ' ＝ ' + q.target;  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            info.classList.add('sushi-info--bad'); kit.flash(stage, false, api.my);
+            var way = q.solution.map(function (k) { return q.plates[k].price; }).join('＋') + ' ＝ ' + q.target;
             api.fail({ delay: 4400, lines: [why, '一種剛好的拿法（第 ' + q.solution.map(function (k) { return k + 1; }).join('、') + ' 個盤子）：' + way, '你拿了 ' + taken.length + ' 盤：' + (taken.length ? taken.slice().sort(function (a, b) { return a - b; }).map(function (k) { return q.plates[k].price; }).join('＋') : '（沒拿）') + ' ＝ ' + r.sum] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         function showSpread() {

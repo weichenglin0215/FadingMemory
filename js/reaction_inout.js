@@ -47,7 +47,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function roomsFor(level) { return Math.round(ramp(level, ROOMS)); }  /* Math.round：四捨五入成整數 */
-    function depthMinFor(level) { return Math.round(ramp(level, DEPTH_MIN)); }  /* Math.round：四捨五入成整數 */
+    function depthMinFor(level) { return Math.round(ramp(level, DEPTH_MIN)); }
     function timeMs(level) { return Math.round(ramp(level, TIME_S) * 1000); }
     function varianceFor(level) { return Math.round(ramp(level, VARIANCE) * 10000) / 10000; }
     function warpAFor(level) { return Math.round(ramp(level, WARP_A) * 10000) / 10000; }
@@ -72,9 +72,9 @@
         var dIn = new Int32Array(G * G).fill(-1), dOut = new Int32Array(G * G).fill(-1), q = [], i, head;
         dIn[root] = 0; q.push(root); head = 0;
         while (head < q.length) { var cur = q[head++], r = Math.floor(cur / G), c = cur % G; DIRS.forEach(function (d) { var nr = r + d[0], nc = c + d[1]; if (nr < 0 || nr >= G || nc < 0 || nc >= G) return; var nn = nr * G + nc; if (P[nn] && dIn[nn] < 0) { dIn[nn] = dIn[cur] + 1; q.push(nn); } }); }  /* Math.floor：無條件捨去成整數 */
-        q = []; for (i = 0; i < G * G; i++) { var rr = Math.floor(i / G), cc = i % G; if (!P[i] && (rr === 0 || cc === 0 || rr === G - 1 || cc === G - 1)) { dOut[i] = 0; q.push(i); } }  /* Math.floor：無條件捨去成整數 */
+        q = []; for (i = 0; i < G * G; i++) { var rr = Math.floor(i / G), cc = i % G; if (!P[i] && (rr === 0 || cc === 0 || rr === G - 1 || cc === G - 1)) { dOut[i] = 0; q.push(i); } }
         head = 0;
-        while (head < q.length) { var cu = q[head++], r2 = Math.floor(cu / G), c2 = cu % G; DIRS.forEach(function (d) { var nr = r2 + d[0], nc = c2 + d[1]; if (nr < 0 || nr >= G || nc < 0 || nc >= G) return; var nn = nr * G + nc; if (!P[nn] && dOut[nn] < 0) { dOut[nn] = dOut[cu] + 1; q.push(nn); } }); }  /* forEach：對陣列的每個元素各做一次 */
+        while (head < q.length) { var cu = q[head++], r2 = Math.floor(cu / G), c2 = cu % G; DIRS.forEach(function (d) { var nr = r2 + d[0], nc = c2 + d[1]; if (nr < 0 || nr >= G || nc < 0 || nc >= G) return; var nn = nr * G + nc; if (!P[nn] && dOut[nn] < 0) { dOut[nn] = dOut[cu] + 1; q.push(nn); } }); }
         return { dIn: dIn, dOut: dOut };
     }
     /* 區域 P 的邊界：把每一格四邊中「對面不是 P」的邊收集起來（P 在左手邊的方向），接成一圈；回傳 { loops（每圈是頂點座標 [x,y] 的陣列，已合併同方向的邊）, edges（總邊數）} */
@@ -112,7 +112,7 @@
     /* 扭曲的參數：幅度 a（格）、四個隨機頻率與相位。頻率對應 4～8 格的波長，a ≤ 0.34 時扭曲的梯度小於 1（一對一、不會讓線穿過自己） */
     function warpParams(a, rand) {
         function k() { return 2 * Math.PI / kit.randFloat(4, 8, rand); }  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
-        function p() { return kit.randFloat(0, 2 * Math.PI, rand); }  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+        function p() { return kit.randFloat(0, 2 * Math.PI, rand); }
         return { a: a, k1: k(), k2: k(), k3: k(), k4: k(), p1: p(), p2: p(), p3: p(), p4: p() };
     }
     /* 扭曲一個點（單位：格）：x、y 各被兩個不同方向、不同頻率的正弦波推開一點點 */
@@ -154,7 +154,7 @@
             var len = Math.hypot(B.p1[0] - A.p2[0], B.p1[1] - A.p2[1]), m = Math.max(1, Math.ceil(len / STEP));  /* Math.ceil：無條件進位成整數 */
             for (t = 1; t < m; t++) pts.push([A.p2[0] + (B.p1[0] - A.p2[0]) * t / m, A.p2[1] + (B.p1[1] - A.p2[1]) * t / m]);                                                                              /* 直線切成小段 */
         }
-        return warp ? pts.map(function (p) { return warpPoint(p[0], p[1], warp); }) : pts;  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        return warp ? pts.map(function (p) { return warpPoint(p[0], p[1], warp); }) : pts;
     }
     /* 封閉折線 → SVG path（單位：每格 cs px） */
     function polyPath(pts, cs) { return pts.map(function (p, i) { return (i ? 'L' : 'M') + (p[0] * cs).toFixed(2) + ',' + (p[1] * cs).toFixed(2); }).join(' ') + ' Z'; }
@@ -196,7 +196,7 @@
         var md = dmin;
         while (md >= 0) { cands = collect(wantInside, md); if (cands.length) break; md--; }       /* 找不到夠深的就放寬，一路放寬到有為止 */
         if (!cands.length) { wantInside = !wantInside; cands = collect(wantInside, 0); }
-        var cell = kit.pick(cands, rand), loops = boundaryLoop(G, P).loops, loop = loops[0], inside = !!P[cell], rr0 = Math.floor(cell / G), cc0 = cell % G;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        var cell = kit.pick(cands, rand), loops = boundaryLoop(G, P).loops, loop = loops[0], inside = !!P[cell], rr0 = Math.floor(cell / G), cc0 = cell % G;
         /* 不規則的曲線：不均勻的格線＋整條扭曲；驗證「不自己交叉」和「螞蟻的內外沒變」，不過就換一組參數，最後退回沒有扭曲的版本 */
         var curve = null, antXY = null, v = varianceFor(level), a = warpAFor(level), xs = gridLines(G, v, rand), ys = gridLines(G, v, rand);
         for (var tr = 0; tr < 8; tr++) {
@@ -232,7 +232,7 @@
     function drawAnt(parent, x, y, s, deg) {
         var g = kit.svg('g', { 'class': 'inout-ant', transform: 'translate(' + x + ',' + y + ') rotate(' + deg + ')' }, parent);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         [-1, 0, 1].forEach(function (k) {
-            kit.svg('line', { 'class': 'inout-ant__leg', x1: k * s * 0.12, y1: 0, x2: k * s * 0.3, y2: -s * 0.4 }, g);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+            kit.svg('line', { 'class': 'inout-ant__leg', x1: k * s * 0.12, y1: 0, x2: k * s * 0.3, y2: -s * 0.4 }, g);
             kit.svg('line', { 'class': 'inout-ant__leg', x1: k * s * 0.12, y1: 0, x2: k * s * 0.3, y2: s * 0.4 }, g);
         });
         kit.svg('line', { 'class': 'inout-ant__leg', x1: s * 0.42, y1: 0, x2: s * 0.62, y2: -s * 0.2 }, g);
@@ -254,7 +254,7 @@
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, cs = Math.floor(Math.min((W - 16) / G, (H - 220) / G)), BS = cs * G, bx = Math.round((W - BS) / 2), by = 62;
         var field = h('div', { 'class': 'inout-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-        field.appendChild(h('div', { 'class': 'qz-note inout-tip', text: '螞蟻在繩圈的裡面還是外面？' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(h('div', { 'class': 'qz-note inout-tip', text: '螞蟻在繩圈的裡面還是外面？' }));
         var svg = kit.svg('svg', { 'class': 'inout-svg', viewBox: '0 0 ' + BS + ' ' + BS, width: BS, height: BS }, field);
         svg.style.cssText = 'left:' + bx + 'px;top:' + by + 'px;';
         var d = polyPath(q.curve, cs);                                           /* 不規則的曲線（V1.36.0） */
@@ -277,7 +277,7 @@
             done = true;
             var ok = inside === q.ant.inside;
             fill.classList.add('inout-fill--show');     /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-            grid.btns[q.ant.inside ? 0 : 1].classList.add('inout-btn--ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            grid.btns[q.ant.inside ? 0 : 1].classList.add('inout-btn--ok');
             if (inside !== null && !ok) grid.btns[inside ? 0 : 1].classList.add('inout-btn--bad');
             info.textContent = '螞蟻在繩圈' + (q.ant.inside ? '裡面' : '外面') + (ok ? '，答對了！' : (inside === null ? '（時間到）' : '，答錯了'));  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             kit.flash(stage, ok, api.my);               /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */

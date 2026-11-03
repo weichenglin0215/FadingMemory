@@ -42,9 +42,9 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function showMsFor(level) { return Math.round(ramp(level, SHOW_MS)); }  /* Math.round：四捨五入成整數 */
-    function respMsFor(level) { return Math.max(showMsFor(level), Math.round(ramp(level, RESP_MS))); }  /* Math.round：四捨五入成整數 */
+    function respMsFor(level) { return Math.max(showMsFor(level), Math.round(ramp(level, RESP_MS))); }
     function dirCountFor(level) { return level >= DIAG_FROM ? 8 : 4; }
-    function scatterPFor(level) { return level < SCATTER_FROM ? 0 : Math.round(kit.ramp(level, SCATTER_P[0], SCATTER_P[1], RAMP_LEVELS) * 10000) / 10000; }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function scatterPFor(level) { return level < SCATTER_FROM ? 0 : Math.round(kit.ramp(level, SCATTER_P[0], SCATTER_P[1], RAMP_LEVELS) * 10000) / 10000; }
     function opposite(d) { return (d + 4) % 8; }
     /* 方向編號 → 單位向量（x 向右、y 向下；0＝上） */
     function vec(d) { var a = d * Math.PI / 4; return { x: Math.sin(a), y: -Math.cos(a) }; }
@@ -90,7 +90,7 @@
     /* 交通號誌的箭頭：藍色圓牌上一個白色粗箭頭，朝向 d（0＝上）；回傳元素，size 是圓牌直徑 */
     function sign(parent, d, size, cls) {
         var s = kit.svg('svg', { 'class': 'swipecopy-sign ' + (cls || ''), viewBox: '-50 -50 100 100', width: size, height: size }, parent);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        kit.svg('circle', { 'class': 'swipecopy-sign__disc', cx: 0, cy: 0, r: 48 }, s);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('circle', { 'class': 'swipecopy-sign__disc', cx: 0, cy: 0, r: 48 }, s);
         var g = kit.svg('g', { transform: 'rotate(' + d * 45 + ')' }, s);
         kit.svg('path', { 'class': 'swipecopy-sign__arrow', d: 'M0,-32 L24,-4 L9,-4 L9,30 L-9,30 L-9,-4 L-24,-4 Z' }, g);
         return s;
@@ -108,7 +108,7 @@
         var field = h('div', { 'class': 'swipecopy-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note swipecopy-tip', text: '等箭頭出現，立刻往「反方向」滑' });
-        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(tip);
         var areaT = 64, areaH = H - 230, zone = h('div', { 'class': 'swipecopy-zone' });
         zone.style.cssText = 'left:12px;right:12px;top:' + areaT + 'px;height:' + areaH + 'px;';
         field.appendChild(zone);
@@ -127,7 +127,7 @@
         /* 箭頭出現：放在九宮格的某一格正中央；從這一刻起就可以滑 */
         function appear() {
             if (api.over || done) return;
-            var c = cellCenter(q.cell, zw, zh), SZ = Math.floor(Math.min(c.cw, c.ch) * 0.82);  /* Math.floor：無條件捨去成整數 */
+            var c = cellCenter(q.cell, zw, zh), SZ = Math.floor(Math.min(c.cw, c.ch) * 0.82);
             popEl = h('div', { 'class': 'swipecopy-pop' });
             popEl.style.cssText = 'left:' + (c.x - SZ / 2) + 'px;top:' + (c.y - SZ / 2) + 'px;width:' + SZ + 'px;height:' + SZ + 'px;';
             sign(popEl, q.dirs[0], SZ); zone.appendChild(popEl); Sfx.play('ok');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
@@ -136,7 +136,7 @@
             api.after(q.showMs, function () { if (popEl && popEl.parentNode) popEl.parentNode.removeChild(popEl); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
             api.after(q.respMs, function () { if (phase === 'live') fail(-1, 0); });                /* 超過時間還沒滑出方向 */
         }
-        api.after(q.prepMs, appear);                    /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+        api.after(q.prepMs, appear);
         if (level === 1 && kit.once('swipecopy.hint')) api.after(q.prepMs + 500, function () { if (phase === 'live') kit.hintOn(stage, null, { mode: 'drag', x: W / 2, y: areaT + areaH / 2 - 40, dx: 0, dy: 90, text: '箭頭朝上就往下滑' }); });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
         /* 滑：按下之後，位移一超過 MIN_SWIPE 就判定（不用等手指放開）；箭頭出現之前的動作不算 */
@@ -149,7 +149,7 @@
             if (d >= 0) judge(d, performance.now() - t0);  /* performance.now()：高精度的時間（毫秒），計時用 */
         });
         function up(e) { if (down && e.pointerId === down.id) down = null; }
-        zone.addEventListener('pointerup', up);         /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        zone.addEventListener('pointerup', up);
         zone.addEventListener('pointercancel', up);
         /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(d, rt) {
@@ -159,7 +159,7 @@
             var fl = h('div', { 'class': 'swipecopy-flash' }); fl.style.cssText = 'left:' + (zw / 2 - 36) + 'px;top:' + (zh / 2 - 36) + 'px;'; sign(fl, d, 72, 'swipecopy-sign--mine'); zone.appendChild(fl); api.after(260, function () { if (fl.parentNode) fl.parentNode.removeChild(fl); });
             if (d !== want) { fail(0, d); return; }
             done = true; phase = 'end'; api.stopTimer();
-            info.textContent = '反應 ' + (rt / 1000).toFixed(4) + ' 秒';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            info.textContent = '反應 ' + (rt / 1000).toFixed(4) + ' 秒';
             Sfx.play('click'); kit.flash(stage, true, api.my); api.pass({ delay: 900 });  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
         }
         /* 滑錯（at ＝ 0，mine ＝你滑的方向）或超時（at ＝ −1）：把箭頭、該滑的方向、你滑的方向排出來 */
@@ -179,7 +179,7 @@
             if (!timeout) { cell.appendChild(h('div', { 'class': 'swipecopy-cell__to', text: '你滑了' })); sign(cell, mine, 72, 'swipecopy-sign--bad'); }
             row.appendChild(cell); strip.appendChild(row);
             info.style.top = (strip.offsetTop + strip.offsetHeight + 14) + 'px';                /* 說明文字放在「箭頭／要滑／你滑了」那一欄的正下方（欄的高度要等內容放進去才量得到，所以排在這裡） */
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({ delay: 2600, lines: [(timeout ? '來不及：' : '滑錯了：') + '箭頭指 ' + NAMES[q.dirs[0]] + '，要往 ' + NAMES[q.req[0]] + ' 滑' + (timeout ? '' : '，你滑了 ' + NAMES[mine]), '箭頭出現在九宮格的第 ' + (q.cell + 1) + ' 格' + (q.matched ? '（就是它所指的那一邊）' : '（不是它所指的那一邊）')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：api.solve 在箭頭出現之後立刻滑出正確的方向；api.wrong 順著箭頭滑（忘了要反著滑）；箭頭還沒出現就等它出現 */

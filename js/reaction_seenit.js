@@ -80,7 +80,7 @@
         }
         if (kind === 'old' && !olds.length) kind = 'new';                      /* 「看過」的候選只剩上一關那一個：改成新的 */
         if (kind === 'old') { var o = kit.pick(olds, rand); return { item: o, kind: 'old', seenAt: seen[o].last + 1, level: idx + 1 }; }  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
-        return { item: kit.pick(fresh, rand), kind: 'new', seenAt: 0, level: idx + 1 };  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        return { item: kit.pick(fresh, rand), kind: 'new', seenAt: 0, level: idx + 1 };
     }
     /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
@@ -121,7 +121,7 @@
         var bOld = h('button', { 'class': 'btn btn--go', text: '看過' });
         var bNew = h('button', { 'class': 'btn btn--primary', text: '新的' });
         if (level === 1) bOld.disabled = true;                                 /* 第 1 關還沒有看過的圖案，只能按「新的」 */
-        stage.appendChild(h('div', { 'class': 'rx-btnrow' }, [bNew, bOld]));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(h('div', { 'class': 'rx-btnrow' }, [bNew, bOld]));
         api.timer(timeMs(level), function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         if (level === 1 && kit.once('seenit.hint')) kit.hintOn(stage, bNew, { mode: 'tap', delay: 500, text: '第一個圖案一定是新的' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
@@ -138,7 +138,7 @@
             api.fail({ delay: 1800, lines: [why + '：' + emojiOf(tr.item) + ' ' + nameOf(tr.item), isOld ? '它上次出現在第 ' + tr.seenAt + ' 關' : '前面的關卡沒有出現過它'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         kit.onTap(bOld, function () { judge(true); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
-        kit.onTap(bNew, function () { judge(false); }); /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        kit.onTap(bNew, function () { judge(false); });
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(tr.kind === 'old'); };
         api.wrong = function () { judge(level === 1 ? null : tr.kind !== 'old'); };

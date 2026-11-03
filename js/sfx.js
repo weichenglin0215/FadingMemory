@@ -181,7 +181,7 @@
         fanfare: function (t) {
             seq([67, 72, 76, 79], t, 0.1, { vol: 0.16 });
             tone(hz(84), t + 0.45, 0.55, { vol: 0.16 });
-            [72, 76, 79].forEach(function (m) { tone(hz(m), t + 0.45, 0.9, { vol: 0.09, type: 'triangle' }); });  /* forEach：對陣列的每個元素各做一次 */
+            [72, 76, 79].forEach(function (m) { tone(hz(m), t + 0.45, 0.9, { vol: 0.09, type: 'triangle' }); });
             seq([79, 84, 88, 91, 88, 91, 96], t + 1.1, 0.09, { vol: 0.14 });
             [60, 72, 76, 79, 84].forEach(function (m) { tone(hz(m), t + 1.8, 1.3, { vol: 0.09, type: 'triangle' }); });
             tone(hz(96), t + 1.8, 1.1, { vol: 0.12 });

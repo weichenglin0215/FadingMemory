@@ -46,7 +46,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function roundMinFor(level) { return Math.round(ramp(level, ROUND_MIN) * 10000) / 10000; }  /* Math.round：四捨五入成整數 */
-    function sizeMaxFor(level) { return Math.round(ramp(level, SIZE_MAX) * 10000) / 10000; }  /* Math.round：四捨五入成整數 */
+    function sizeMaxFor(level) { return Math.round(ramp(level, SIZE_MAX) * 10000) / 10000; }
     function ratioFor(level) { return Math.round(ramp(level, RATIO0) * 1000) / 1000; }
     function startFracFor(level) { return Math.round(ramp(level, START_FRAC) * 1000) / 1000; }
     function lumpFor(level) { return Math.round(ramp(level, LUMP) * 10000) / 10000; }
@@ -65,11 +65,11 @@
     /* 圓度（%）：2·r最小 ÷ (r最小 ＋ r最大) × 100 */
     function roundness(pts) { var r = radii(recenter(pts)); return Math.round(200 * r.min / (r.min + r.max) * 10000) / 10000; }
     /* 大小差（%）：跟樣品圓面積差多少 */
-    function sizeDiff(pts, sampleR) { var A0 = Math.PI * sampleR * sampleR; return Math.round(Math.abs(area(pts) - A0) / A0 * 100 * 10000) / 10000; }  /* Math.abs：取絕對值（去掉負號） */
+    function sizeDiff(pts, sampleR) { var A0 = Math.PI * sampleR * sampleR; return Math.round(Math.abs(area(pts) - A0) / A0 * 100 * 10000) / 10000; }
     /* 擀一下：方向 phi（弧度）、長度 s（px）；沿著方向放大 1 ＋ ε、垂直方向放大 1 ＋ κε；回傳新的（已經把重心移回原點的）多邊形 */
     function roll(pts, phi, s) {
         var e = ROLL_K * s, ux = Math.cos(phi), uy = Math.sin(phi), vx = -uy, vy = ux, fa = 1 + e, fp = 1 + SPREAD * e;
-        return recenter(pts.map(function (p) { var a = p.x * ux + p.y * uy, b = p.x * vx + p.y * vy; a *= fa; b *= fp; return { x: a * ux + b * vx, y: a * uy + b * vy }; }));  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        return recenter(pts.map(function (p) { var a = p.x * ux + p.y * uy, b = p.x * vx + p.y * vy; a *= fa; b *= fp; return { x: a * ux + b * vx, y: a * uy + b * vy }; }));
     }
     /* 一團麵糰：{ level, pts（K 個頂點，重心在原點）, sampleR, ratio, startR, roundMin, sizeMax, alpha（橢圓的方向）, lump } */
     function makeDough(level, rand) {
@@ -88,7 +88,7 @@
         return { round: rd, size: sz, okRound: rd >= roundMinFor(level), okSize: sz <= sizeMaxFor(level), ok: rd >= roundMinFor(level) && sz <= sizeMaxFor(level), tooBig: big };
     }
     /* 最好的下一擀：往麵皮「最短的半徑」的方向擀（把短軸拉長，麵皮就越來越圓）；回傳角度（弧度） */
-    function bestDirection(pts) { var c = recenter(pts), best = null, bd = 1e18; c.forEach(function (p) { var r = Math.hypot(p.x, p.y); if (r < bd) { bd = r; best = Math.atan2(p.y, p.x); } }); return best; }  /* forEach：對陣列的每個元素各做一次 */
+    function bestDirection(pts) { var c = recenter(pts), best = null, bd = 1e18; c.forEach(function (p) { var r = Math.hypot(p.x, p.y); if (r < bd) { bd = r; best = Math.atan2(p.y, p.x); } }); return best; }
     function whyText(j, level) {
         var t = '圓度 ' + j.round.toFixed(4) + '%（及格線 ' + roundMinFor(level).toFixed(4) + '%）、大小差 ' + j.size.toFixed(4) + '%（上限 ' + sizeMaxFor(level).toFixed(4) + '%）';
         if (j.ok) return t + '——過關！';
@@ -129,9 +129,9 @@
         var field = h('div', { 'class': 'dough-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note dough-tip', text: level === 1 ? '手指往哪拖，麵皮就往哪邊變長（要擀成虛線圓那麼大）' : '轉著方向擀成虛線圓的大小，再按「好了」' });
-        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(tip);
         var svg = kit.svg('svg', { 'class': 'dough-svg', width: W, height: H, viewBox: '0 0 ' + W + ' ' + H }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        kit.svg('circle', { 'class': 'dough-sample', cx: cx, cy: cy, r: q.sampleR }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('circle', { 'class': 'dough-sample', cx: cx, cy: cy, r: q.sampleR }, svg);
         var cut = kit.svg('circle', { 'class': 'dough-best', cx: cx, cy: cy, r: 0 }, svg);
         var skin = kit.svg('path', { 'class': 'dough-dough', d: pathOf(pts, cx, cy) }, svg);
         var pin = h('div', { 'class': 'dough-pin' }); pin.style.display = 'none'; field.appendChild(pin);
@@ -148,7 +148,7 @@
             e.preventDefault(); try { field.setPointerCapture(e.pointerId); } catch (err) { }  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             var p = kit.localPt(e, field); down = { id: e.pointerId }; last = p; showPin(p, 0);
         });
-        field.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        field.addEventListener('pointermove', function (e) {
             if (!down || e.pointerId !== down.id || phase !== 'roll') return;
             var p = kit.localPt(e, field), dx = p.x - last.x, dy = p.y - last.y, s = Math.min(MAX_STEP, Math.hypot(dx, dy));
             if (s < 1) return;
@@ -166,12 +166,12 @@
             if (phase !== 'roll' || api.over) return;
             phase = 'end'; down = null; pin.style.display = 'none'; btn.btns[0].classList.add('dough-btn--off');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             var j = judge(pts, level, q.sampleR), rr = radii(recenter(pts));
-            cut.setAttribute('r', rr.mean.toFixed(1));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+            cut.setAttribute('r', rr.mean.toFixed(1));
             var why = whyText(j, level);
             info.textContent = why; info.classList.add(j.ok ? 'dough-info--ok' : 'dough-info--bad');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-            tip.textContent = j.ok ? '擀得又圓又剛好！' : (overshoot ? '麵皮擀太大了' : (j.okRound ? '大小不對' : '麵皮不夠圓（粉色虛線圈是平均大小的圓）'));  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            tip.textContent = j.ok ? '擀得又圓又剛好！' : (overshoot ? '麵皮擀太大了' : (j.okRound ? '大小不對' : '麵皮不夠圓（粉色虛線圈是平均大小的圓）'));
             if (j.ok) { kit.flash(stage, true, api.my); Sfx.play('ok'); api.pass({ delay: 2300 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({ delay: 4200, lines: [why, '擀了 ' + rolls + ' 下', '只往同一個方向擀會變橢圓；要往麵皮比較短的方向擀才會變圓，而且不能擀過頭（變大了回不去）'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：每一次呼叫直接擀一小步（往最短的方向擀 SOLVE_STEP px），大小夠了且夠圓就按好了（solve）；wrong＝直接按好了（太小）；可以重複呼叫 */

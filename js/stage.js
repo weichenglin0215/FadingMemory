@@ -118,7 +118,7 @@
         var h = DESIGN_H * scale;
         return {
             left: Math.round(ox + sa.l + (aw - w) / 2), /* Math.round：四捨五入成整數 */
-            top: Math.round(oy + sa.t + (ah - h) / 2),  /* Math.round：四捨五入成整數 */
+            top: Math.round(oy + sa.t + (ah - h) / 2),
             width: w,
             height: h,
             scale: scale,
@@ -207,7 +207,7 @@
         document.addEventListener('gesturestart', prevent, { passive: false });
         document.addEventListener('gesturechange', prevent, { passive: false });
         document.addEventListener('touchmove', function (e) {
-            if (e.touches && e.touches.length > 1 && !e.target.closest('.multitouch')) e.preventDefault();  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            if (e.touches && e.touches.length > 1 && !e.target.closest('.multitouch')) e.preventDefault();
         }, { passive: false });
         /* 長按不跳出系統選單、不拖出圖片 */
         document.addEventListener('contextmenu', prevent);
@@ -221,7 +221,7 @@
         init: function (opts) {
             opts = opts || {};
             stageEl = document.querySelector(opts.stage || '#stage');  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
-            worldEl = document.querySelector(opts.world || '#world');  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
+            worldEl = document.querySelector(opts.world || '#world');
             if (!stageEl) throw new Error('Stage.init：找不到 #stage');
 
             probeEl = document.createElement('div');
@@ -229,7 +229,7 @@
             document.body.appendChild(probeEl);         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             dvhEl = document.createElement('div');
             dvhEl.className = 'vh-probe';
-            document.body.appendChild(dvhEl);           /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            document.body.appendChild(dvhEl);
 
             if (/[?&]debug\b/.test(global.location.search)) {
                 debugEl = document.createElement('div');
@@ -251,7 +251,7 @@
             global.addEventListener('pageshow', schedule);
             document.addEventListener('visibilitychange', function () { if (!document.hidden) schedule(); });
             /* 輸入框失去焦點（收起鍵盤）：鍵盤收起的動畫要一點時間，等一下再量 */
-            document.addEventListener('focusout', function () { [60, 300, 800].forEach(function (ms) { global.setTimeout(apply, ms); }); });  /* forEach：對陣列的每個元素各做一次 */
+            document.addEventListener('focusout', function () { [60, 300, 800].forEach(function (ms) { global.setTimeout(apply, ms); }); });
             document.addEventListener('focusin', function () { global.setTimeout(apply, 60); });
             /* 剛載入的前一兩秒，瀏覽器的版面常常還在調整（網址列、字型載入…）：多量幾次 */
             [60, 250, 700, 1500, 3000].forEach(function (ms) { global.setTimeout(apply, ms); });

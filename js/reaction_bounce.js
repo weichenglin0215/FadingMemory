@@ -167,11 +167,11 @@
         if (tHide == null) tHide = tCross;
         if (tSee > tCross) tSee = tCross;
         /* 落點收集口＝珠子 x 座標除以收集口寬度取整，並限制在 0～6 之間 */
-        var slot = Math.max(0, Math.min(SLOTS - 1, Math.floor(x / W)));  /* Math.floor：無條件捨去成整數 */
+        var slot = Math.max(0, Math.min(SLOTS - 1, Math.floor(x / W)));
         /* 越過分隔線之後的最後一段：珠子在收集口裡繼續往下掉到 REST_Y（底緣碰到收集口下緣）。
            速度取最後一步的垂直速度，用等加速度公式解「落到 REST_Y 要多久」：yCross + vy·τ + g·τ²/2 = REST_Y */
         var n = xs.length - 1, vyEnd = n > 0 ? (ys[n] - ys[n - 1]) / DT : 0, yCross = ys[n], dY = Math.max(0, REST_Y - yCross);
-        var tLand = tCross + (dY > 0 ? (-vyEnd + Math.sqrt(vyEnd * vyEnd + 2 * g * dY)) / g : 0);  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
+        var tLand = tCross + (dY > 0 ? (-vyEnd + Math.sqrt(vyEnd * vyEnd + 2 * g * dY)) / g : 0);
         return {
             xs: xs, ys: ys, slot: slot, tCross: tCross, tHide: tHide, tSee: tSee, steps: n, xEnd: x, nudged: nudged,
             tLand: tLand, landX: slot * W + W / 2, yCross: yCross, vyEnd: vyEnd, g: g
@@ -204,7 +204,7 @@
     }
     /* 第二段（慢動作）的長度（毫秒）：從玩家看到的最後位置（tSee）播到落進收集口（tLand），用 REVEAL_SPEED 倍速，夾在 REVEAL_MIN_MS～REVEAL_MAX_MS */
     function revealMs(sim) {
-        return Math.round(Math.max(REVEAL_MIN_MS, Math.min(REVEAL_MAX_MS, (sim.tLand - sim.tSee) / REVEAL_SPEED * 1000)));  /* Math.round：四捨五入成整數 */
+        return Math.round(Math.max(REVEAL_MIN_MS, Math.min(REVEAL_MAX_MS, (sim.tLand - sim.tSee) / REVEAL_SPEED * 1000)));
     }
     /* 出一關：隨機決定起點與初速，預先把整條軌跡模擬完（所以答案在珠子落下前就確定，不受畫面卡頓影響） */
     function makeRound(level, rand) {
@@ -245,8 +245,8 @@
             /* 畫檯面（SVG）：底板、釘子、分隔線、軌跡、珠子、簾子、7 個可點的收集口 */
             /* 檯面（SVG）*/
             var svg = kit.svg('svg', { 'class': 'bounce-svg', viewBox: '0 0 ' + BW + ' ' + BH, preserveAspectRatio: 'xMidYMid meet' }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-            kit.svg('rect', { 'class': 'bounce-board', x: 0, y: 0, width: BW, height: BH }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-            PEGS.forEach(function (p) { kit.svg('circle', { 'class': 'bounce-peg', cx: p.x, cy: p.y, r: PEG_R }, svg); });  /* forEach：對陣列的每個元素各做一次 */
+            kit.svg('rect', { 'class': 'bounce-board', x: 0, y: 0, width: BW, height: BH }, svg);
+            PEGS.forEach(function (p) { kit.svg('circle', { 'class': 'bounce-peg', cx: p.x, cy: p.y, r: PEG_R }, svg); });
             /* 分隔線 */
             for (var k = 1; k < SLOTS; k++) kit.svg('line', { 'class': 'bounce-div', x1: k * W, y1: DIV_Y, x2: k * W, y2: BH }, svg);
             /* 軌跡線（polyline，揭曉時才畫）：trail＝玩家看得到的那段（藍色實線）；trailHid＝被簾子蓋住的那段（橘色虛線，慢動作播放時一點一點畫出來） */
@@ -266,7 +266,7 @@
                     var g = kit.svg('g', { 'class': 'bounce-slot' }, svg);
                     slotBgs.push(kit.svg('rect', { 'class': 'bounce-slot__bg', x: s * W + 3, y: 0, width: W - 6, height: 10, rx: 10 }, g));
                     var t = kit.svg('text', { 'class': 'bounce-slot__t', x: s * W + W / 2, y: 0, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, g);
-                    t.textContent = String(s + 1);      /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                    t.textContent = String(s + 1);
                     slotTxts.push(t);
                     g.addEventListener('pointerdown', function (e) { e.preventDefault(); choose(s); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                     slotEls.push(g);
@@ -283,7 +283,7 @@
             /* 依這一關的簾子高度，擺好簾子與 7 個收集口按鈕（按鈕蓋滿簾子的範圍，數字在簾子正中間） */
             function layoutCurtain(hh) {
                 var cy = BH - hh;
-                curtain.setAttribute('y', cy); curtain.setAttribute('height', hh);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                curtain.setAttribute('y', cy); curtain.setAttribute('height', hh);
                 for (var i = 0; i < SLOTS; i++) {
                     slotBgs[i].setAttribute('y', cy + 14); slotBgs[i].setAttribute('height', hh - 20);
                     slotTxts[i].setAttribute('y', cy + hh / 2 + 6);
@@ -305,7 +305,7 @@
                 head.textContent = '第 ' + level + ' 關　已過 ' + cleared + ' 關';
                 setArmed(false);
                 curtain.setAttribute('opacity', 1);
-                slotEls.forEach(function (g) { g.classList.remove('bounce-slot--pick', 'bounce-slot--ok', 'bounce-slot--bad'); g.style.display = ''; });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                slotEls.forEach(function (g) { g.classList.remove('bounce-slot--pick', 'bounce-slot--ok', 'bounce-slot--bad'); g.style.display = ''; });
                 trail.setAttribute('points', ''); trailHid.setAttribute('points', '');
                 seen.setAttribute('class', 'bounce-seen'); seen.setAttribute('cx', -100); seenTxt.setAttribute('x', -100);
                 ball.setAttribute('cx', -100);
@@ -367,11 +367,11 @@
                 var tag = kit.svg('g', { 'class': 'bounce-result' }, svg);
                 kit.svg('rect', { 'class': 'bounce-result__bg ' + (right ? 'bounce-result__bg--ok' : 'bounce-result__bg--bad'), x: actual * W + 2, y: DIV_Y, width: W - 4, height: SLOT_H - 4, rx: 8 }, tag);
                 if (!right) kit.svg('rect', { 'class': 'bounce-result__bg bounce-result__bg--you', x: s * W + 2, y: DIV_Y, width: W - 4, height: SLOT_H - 4, rx: 8 }, tag);
-                Sfx.play(right ? 'win' : 'bad');        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                Sfx.play(right ? 'win' : 'bad');
                 banner.textContent = (right ? '猜中了！' : '猜錯了！') + '　珠子掉進第 ' + (actual + 1) + ' 號';
                 if (right) {
                     cleared = level;
-                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
                     ctx.setMeta(fmtBest(Reaction.getBest(ID)));
                     head.textContent = '第 ' + level + ' 關　過關！已過 ' + cleared + ' 關';
                     my.after(NEXT_OK_MS, function () {

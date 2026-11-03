@@ -55,8 +55,8 @@
     function sizeFor(level) {
         return {
             kinds: Math.round(kit.ramp(level, KINDS[0], KINDS[1], RAMP_LEVELS)),  /* Math.round：四捨五入成整數 */
-            events: Math.round(kit.ramp(level, EVENTS[0], EVENTS[1], RAMP_LEVELS)),  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
-            asks: Math.round(kit.ramp(level, ASKS[0], ASKS[1], RAMP_LEVELS))  /* Math.round：四捨五入成整數 */
+            events: Math.round(kit.ramp(level, EVENTS[0], EVENTS[1], RAMP_LEVELS)),
+            asks: Math.round(kit.ramp(level, ASKS[0], ASKS[1], RAMP_LEVELS))
         };
     }
     /* 某個功能從第 from 關開始出現，機會從 p[0] 走到 p[1]（到頂那關） */
@@ -82,10 +82,10 @@
         var sz = sizeFor(level), pKg = chanceOf(level, KG_FROM, KG_P), pColor = chanceOf(level, COLOR_FROM, COLOR_P);
         var fruits = kit.shuffle(FRUITS, rand).slice(0, sz.kinds);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         var start = fruits.map(function () { return kit.randInt(START[0], START[1], rand); });  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
-        var now = start.slice(), events = [];           /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        var now = start.slice(), events = [];
         for (var e = 0; e < sz.events; e++) {
             /* 每種水果至少輪到一次：前 kinds 筆依序各一種，之後隨機 */
-            var f = e < fruits.length ? e : kit.randInt(0, fruits.length - 1, rand), fr = fruits[f];  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+            var f = e < fruits.length ? e : kit.randInt(0, fruits.length - 1, rand), fr = fruits[f];
             var unit = 'pc', amt;
             if (level >= HALF_FROM && fr.perKg % 2 === 0 && rand() < HALF_P) { unit = 'half'; amt = 0.5; }
             else if (rand() < pKg) { unit = 'kg'; amt = kit.randInt(1, 3, rand); }
@@ -101,7 +101,7 @@
         events = kit.shuffle(events, rand);        /* 打亂順序（不然前幾筆剛好是每種水果各一筆） */
         /* 打亂之後要再確認「賣出的不超過當時有的」：照新順序重算一遍，不夠就把那筆改成進貨 */
         now = start.slice();
-        events.forEach(function (ev) { var p = piecesOf(ev, fruits); if (ev.dir < 0 && p > now[ev.f]) ev.dir = 1; now[ev.f] += ev.dir * p; });  /* forEach：對陣列的每個元素各做一次 */
+        events.forEach(function (ev) { var p = piecesOf(ev, fruits); if (ev.dir < 0 && p > now[ev.f]) ev.dir = 1; now[ev.f] += ev.dir * p; });
         var pz = { fruits: fruits, start: start, events: events };
         pz.answer = finalCounts(pz);
         pz.asks = pickAsks(pz, Math.min(fruits.length, sz.asks), rand);
@@ -111,8 +111,8 @@
     function pickAsks(pz, n, rand) {
         var cnt = pz.fruits.map(function () { return 0; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         pz.events.forEach(function (ev) { cnt[ev.f]++; });
-        var idx = kit.shuffle(pz.fruits.map(function (_, i) { return i; }), rand || Math.random);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
-        var rich = idx.filter(function (i) { return cnt[i] >= 2; }), rest = idx.filter(function (i) { return cnt[i] < 2; });  /* filter：留下符合條件的元素，回傳新陣列 */
+        var idx = kit.shuffle(pz.fruits.map(function (_, i) { return i; }), rand || Math.random);
+        var rich = idx.filter(function (i) { return cnt[i] >= 2; }), rest = idx.filter(function (i) { return cnt[i] < 2; });
         return rich.concat(rest).slice(0, n).sort(function (a, b) { return a - b; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
     }
     /* 某一種水果的算式：「蘋果：20 ＋ 12 − 5 − 8 ＝ 19 顆」 */
@@ -153,7 +153,7 @@
         /* 水果種類多（KINDS 到 8 種）時 667px 放不下：先把數字鍵縮矮（最矮 34px），還不夠再把水果表每一列縮矮（最矮 26px，填空格的字級跟著縮，見 css） */
         function fixedH(kh) { return 24 + (evRows * 31 + 14) + (4 * kh + 18) + 52 + 4 * 6 + 4 + K * 4; }
         var rowH = Math.floor((H - fixedH(keyH)) / K);  /* Math.floor：無條件捨去成整數 */
-        while (rowH < 36 && keyH > 34) { keyH -= 2; rowH = Math.floor((H - fixedH(keyH)) / K); }  /* Math.floor：無條件捨去成整數 */
+        while (rowH < 36 && keyH > 34) { keyH -= 2; rowH = Math.floor((H - fixedH(keyH)) / K); }
         rowH = Math.max(26, Math.min(56, rowH));
         var asked = {}; pz.asks.forEach(function (i) { asked[i] = true; });
         var ans = pz.fruits.map(function (_, i) { return asked[i] ? '' : '—'; }), sel = pz.asks[0], over = false;      /* 沒被問到的水果填「—」 */
@@ -162,7 +162,7 @@
         wrap.style.setProperty('--fruitstock-row', rowH + 'px');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
         var table = h('div', { 'class': 'fruitstock-table' });
         table.appendChild(h('div', { 'class': 'fruitstock-th', text: '水果' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-        table.appendChild(h('div', { 'class': 'fruitstock-th', text: '顏色' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        table.appendChild(h('div', { 'class': 'fruitstock-th', text: '顏色' }));
         table.appendChild(h('div', { 'class': 'fruitstock-th', text: '1 公斤' }));
         table.appendChild(h('div', { 'class': 'fruitstock-th', text: '早上' }));
         table.appendChild(h('div', { 'class': 'fruitstock-th', text: '收攤剩' }));
@@ -184,7 +184,7 @@
             evBox.appendChild(h('div', { 'class': 'fruitstock-ev fruitstock-ev--' + (ev.dir > 0 ? 'in' : 'out'), text: eventText(ev, pz.fruits) }));
         });
         var btnOk = h('button', { 'class': 'btn btn--primary fruitstock-ok', type: 'button', text: '對帳' });
-        kit.onTap(btnOk, submit);                       /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        kit.onTap(btnOk, submit);
         wrap.appendChild(table); wrap.appendChild(evBox);
         stage.appendChild(wrap);                        /* 把整個遊戲區放進舞台（放進去，畫面上才看得到） */
         var pad = Reaction.numpad(wrap, { keyH: keyH, onKey: onKey });  /* 共用數字鍵盤（7 8 9／4 5 6／1 2 3／清除 0 ⌫），按鍵會呼叫 onKey */
@@ -199,7 +199,7 @@
             });
             var left = pz.asks.filter(function (i) { return ans[i] === ''; }).length;
             btnOk.disabled = left > 0 || over;
-            btnOk.textContent = left ? '還有 ' + left + ' 種沒填' : '對帳';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            btnOk.textContent = left ? '還有 ' + left + ' 種沒填' : '對帳';
         }
         function onKey(k) {
             if (over) return;
@@ -223,15 +223,15 @@
         function timeUp() {
             if (over) return;
             over = true; pad.setEnabled(false); paint();
-            inputs.forEach(function (el, i) { if (asked[i]) { el.classList.add('fruitstock-input--bad'); el.textContent = (ans[i] === '' ? '？' : ans[i]) + '→' + pz.answer[i]; } });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            inputs.forEach(function (el, i) { if (asked[i]) { el.classList.add('fruitstock-input--bad'); el.textContent = (ans[i] === '' ? '？' : ans[i]) + '→' + pz.answer[i]; } });
             settleFail(pz.asks.slice(), '時間到了', ['時間到了']);
         }
         function settleFail(bad, label, head) {
-            var lines = bad.map(function (i) { return workOf(pz, i); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            var lines = bad.map(function (i) { return workOf(pz, i); });
             btnOk.textContent = label;
             evBox.innerHTML = ''; evBox.className = 'fruitstock-events';          /* 進出貨的位置改成列出算錯的那幾種的算式 */
             lines.forEach(function (t) { evBox.appendChild(h('div', { 'class': 'fruitstock-work', text: t })); });
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({ delay: FAIL_HOLD_MS, lines: head.concat(lines) });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */

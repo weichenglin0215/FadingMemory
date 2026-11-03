@@ -46,7 +46,7 @@
         do { th = kit.randFloat(ANG_MIN, ANG_MAX, rand); } while (Math.abs(th - 135) < AVOID);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         var c = Math.abs(Math.cos(rad(th)));            /* Math.abs：取絕對值（去掉負號） */
         var len = Math.min(Q_LEN, (S.x - 24) / Math.max(c, 1e-6));
-        var stripe = th + (rand() < 0.5 ? 1 : -1) * kit.randFloat(20, 40, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+        var stripe = th + (rand() < 0.5 ? 1 : -1) * kit.randFloat(20, 40, rand);
         return { th: th, ans: th - 90, len: len, stripe: stripe };
     }
     /* 手指位置 → 數學角（度）：y 軸朝下，所以 dy 要反過來 */
@@ -92,7 +92,7 @@
         var svg = kit.svg('svg', { 'class': 'rightangle-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var full = { vx: 0, vy: 0, vw: W, vh: H };
         /* 背景斜紋 */
-        var gBg = kit.svg('g', { transform: 'rotate(' + (-cfg.stripe).toFixed(2) + ' ' + s.x + ' ' + s.y + ')' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var gBg = kit.svg('g', { transform: 'rotate(' + (-cfg.stripe).toFixed(2) + ' ' + s.x + ' ' + s.y + ')' }, svg);
         for (var k = -14; k <= 14; k++) kit.svg('line', { x1: s.x - 700, x2: s.x + 700, y1: s.y + k * 46, y2: s.y + k * 46, 'class': 'rightangle-stripe' }, gBg);
         /* 題目線段 */
         var qx = s.x + cfg.len * Math.cos(rad(cfg.th)), qy = s.y - cfg.len * Math.sin(rad(cfg.th));
@@ -117,7 +117,7 @@
             try { stage.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             drawing = true; pid = e.pointerId; tp = null; hideHint(); say('');
         });
-        stage.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        stage.addEventListener('pointermove', function (e) {
             if (!drawing || e.pointerId !== pid) return;
             tp = pos(e);
             mine.setAttribute('x2', tp.x); mine.setAttribute('y2', tp.y + off);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
@@ -125,7 +125,7 @@
         function end(e) {
             if (!drawing || e.pointerId !== pid) return;
             drawing = false;
-            var len = tp ? Math.sqrt(Math.pow(tp.x - S.x, 2) + Math.pow(tp.y - S.y, 2)) : 0;  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
+            var len = tp ? Math.sqrt(Math.pow(tp.x - S.x, 2) + Math.pow(tp.y - S.y, 2)) : 0;
             if (!tp || len < LEN_MIN) { say('再拖長一點'); mine.setAttribute('x2', s.x); mine.setAttribute('y2', s.y); tp = null; Sfx.play('bad'); return; }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             submit();
         }
@@ -135,7 +135,7 @@
         function submit() {
             if (locked) return;
             locked = true; hideHint();
-            Sfx.play('click');                          /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+            Sfx.play('click');
             var thp = angleOf(tp), real = errDeg(thp, cfg.ans);
             var Rz = 280;
             var ix = s.x + Rz * Math.cos(rad(cfg.ans)), iy = s.y - Rz * Math.sin(rad(cfg.ans));
@@ -145,7 +145,7 @@
             var a1 = rad(cfg.th), a2 = rad(cfg.ans), m = 34;
             var p1 = { x: s.x + m * Math.cos(a1), y: s.y - m * Math.sin(a1) }, p2 = { x: s.x + m * Math.cos(a2), y: s.y - m * Math.sin(a2) };
             kit.svg('polyline', { points: [p1.x, p1.y, p1.x + p2.x - s.x, p1.y + p2.y - s.y, p2.x, p2.y].map(function (v) { return v.toFixed(1); }).join(','), 'class': 'rightangle-sq' }, gRev);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
-            mine.setAttribute('class', 'rightangle-mine rightangle-mine--rev');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+            mine.setAttribute('class', 'rightangle-mine rightangle-mine--rev');
             kit.svg('circle', { cx: ix, cy: iy, r: 6, 'class': 'rightangle-endi' }, gRev);
             kit.svg('circle', { cx: ux, cy: uy, r: 6, 'class': 'rightangle-endu' }, gRev);
             kit.svg('circle', { cx: ix, cy: iy, r: 1.2, 'class': 'rightangle-dot' }, gRev);      /* 圓心的小黑點（放在最上層，兩個圓疊在一起也看得到） */

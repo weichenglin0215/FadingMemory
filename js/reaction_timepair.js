@@ -38,8 +38,8 @@
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function pairsFor(level) { return Math.round(ramp(level, PAIRS)); }  /* Math.round：四捨五入成整數 */
     function trapAFor(level) { return Math.floor(ramp(level, TRAP_A) + 1e-9); }  /* Math.floor：無條件捨去成整數 */
-    function trapBFor(level) { return Math.floor(ramp(level, TRAP_B) + 1e-9); }  /* Math.floor：無條件捨去成整數 */
-    function spreadFor(level) { return Math.round(ramp(level, SPREAD_H) * 100) / 100; }  /* Math.round：四捨五入成整數 */
+    function trapBFor(level) { return Math.floor(ramp(level, TRAP_B) + 1e-9); }
+    function spreadFor(level) { return Math.round(ramp(level, SPREAD_H) * 100) / 100; }
     function limitFor(level) { return Math.round(ramp(level, LIMIT_S)); }
     /* 24 小時制的「時」→ 12 小時制（12 點整：0 → 12、12 → 12） */
     function h12of(h24) { return h24 % 12 === 0 ? 12 : h24 % 12; }
@@ -107,7 +107,7 @@
     /* 指針鐘（SVG，viewBox −50～50）：錶面、12 個刻度、數字 12／3／6／9、時針（短粗）、分針（長細） */
     function analogSvg(h12, m, size) {
         var svg = kit.svg('svg', { 'class': 'timepair-analog', viewBox: '-50 -50 100 100', width: size, height: size }), ang = analogAngles(h12, m);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        kit.svg('circle', { 'class': 'timepair-face', cx: 0, cy: 0, r: 47 }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('circle', { 'class': 'timepair-face', cx: 0, cy: 0, r: 47 }, svg);
         for (var k = 0; k < 12; k++) { var a = k * 30 * Math.PI / 180, r1 = k % 3 === 0 ? 36 : 40, r2 = 44; kit.svg('line', { 'class': 'timepair-tick' + (k % 3 === 0 ? ' timepair-tick--big' : ''), x1: (r1 * Math.sin(a)).toFixed(2), y1: (-r1 * Math.cos(a)).toFixed(2), x2: (r2 * Math.sin(a)).toFixed(2), y2: (-r2 * Math.cos(a)).toFixed(2) }, svg); }
         [[12, 0, -29], [3, 29, 4], [6, 0, 33], [9, -29, 4]].forEach(function (d) { var t = kit.svg('text', { 'class': 'timepair-num', x: d[1], y: d[2] }, svg); t.textContent = d[0]; });  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         kit.svg('line', { 'class': 'timepair-hand timepair-hand--h', x1: 0, y1: 4, x2: 0, y2: -22, transform: 'rotate(' + ang.hour.toFixed(2) + ')' }, svg);
@@ -128,10 +128,10 @@
         var field = h('div', { 'class': 'timepair-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note timepair-tip', text: level === 1 ? '先點指針鐘、再點同一個時間的電子鐘（15:15＝3:15）' : '指針鐘配同一個時間的電子鐘' });
-        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(tip);
         var cols = q.items.length <= 6 ? 3 : 4, gap = 8, cw = Math.floor((W - 24 - (cols - 1) * gap) / cols), rows = Math.ceil(q.items.length / cols), ch = Math.min(cw, Math.floor((H - 220 - (rows - 1) * gap) / rows));  /* Math.ceil：無條件進位成整數 */
         var grid = h('div', { 'class': 'timepair-grid' }); grid.style.cssText = 'top:' + (q.items.length <= 6 ? 120 : 76) + 'px;grid-template-columns:repeat(' + cols + ',' + cw + 'px);gap:' + gap + 'px;'; field.appendChild(grid);
-        var cards = q.items.map(function (it) {         /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        var cards = q.items.map(function (it) {
             var el = h('div', { 'class': 'timepair-card timepair-card--' + it.kind }); el.style.cssText = 'width:' + cw + 'px;height:' + ch + 'px;';
             if (it.kind === 'a') el.appendChild(analogSvg(it.h12, it.m, Math.min(cw, ch) - 8));
             else el.appendChild(h('div', { 'class': 'timepair-digital', text: digitalText(it.h24, it.m) }));
@@ -151,8 +151,8 @@
             if (other.kind === it.kind) { cards[sel].classList.remove('timepair-card--sel'); sel = id; cards[id].classList.add('timepair-card--sel'); Sfx.play('click'); return; }       /* 同一種：改選這一個 */
             var a = it.kind === 'a' ? it : other, d = it.kind === 'd' ? it : other;
             if (isMatch(a, d)) {
-                [sel, id].forEach(function (k) { done[k] = true; cards[k].classList.remove('timepair-card--sel'); cards[k].classList.add('timepair-card--ok'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                sel = null; left--; Sfx.play('ok');     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                [sel, id].forEach(function (k) { done[k] = true; cards[k].classList.remove('timepair-card--sel'); cards[k].classList.add('timepair-card--ok'); });
+                sel = null; left--; Sfx.play('ok');
                 if (left === 0) { phase = 'end'; api.stopTimer(); info.textContent = '全部配對成功！'; info.classList.add('timepair-info--ok'); kit.flash(stage, true, api.my); api.pass({ delay: 1500 }); }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
                 return;
             }
@@ -168,18 +168,18 @@
             c1.appendChild(analogSvg(a.h12, a.m, 150)); c1.appendChild(h('div', { 'class': 'timepair-cmp__t', text: '指針鐘 ' + analogText(a.h12, a.m) })); c1.appendChild(h('div', { 'class': 'timepair-cmp__s', text: a.h12 + ' 點 ' + a.m + ' 分' }));
             c2.appendChild(h('div', { 'class': 'timepair-digital timepair-digital--big', text: digitalText(d.h24, d.m) })); c2.appendChild(h('div', { 'class': 'timepair-cmp__t', text: '電子鐘 ' + digitalText(d.h24, d.m) })); c2.appendChild(h('div', { 'class': 'timepair-cmp__s', text: (d.h24 >= 12 ? '下午 ' : '上午 ') + h12of(d.h24) + ' 點 ' + d.m + ' 分（指針鐘 ' + analogText(h12of(d.h24), d.m) + '）' }));
             box.appendChild(c1); box.appendChild(h('div', { 'class': 'timepair-cmp__vs', text: '≠' })); box.appendChild(c2); field.appendChild(box);
-            info.textContent = why; info.classList.add('timepair-info--bad'); info.style.top = '420px';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            info.textContent = why; info.classList.add('timepair-info--bad'); info.style.top = '420px';
+            kit.flash(stage, false, api.my);
             api.fail({ delay: 4200, lines: [why, '電子鐘 ' + digitalText(a.h24, a.m) + ' 才是指針鐘 ' + analogText(a.h12, a.m) + ' 的搭檔', '24 小時制：15:15 ＝ 下午 3:15（減 12，不是減 10）'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 時間到：算失敗（api.fail），通常會把正確答案亮出來 */
         function timeUp() {
             if (phase !== 'play' || api.over) return; phase = 'end';
             info.textContent = '時間到！還有 ' + left + ' 對沒配完'; info.classList.add('timepair-info--bad'); kit.flash(stage, false, api.my);
-            api.fail({ delay: 3000, lines: ['時間到！還有 ' + left + ' 對沒配完'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
+            api.fail({ delay: 3000, lines: ['時間到！還有 ' + left + ' 對沒配完'] });
         }
         /* 驗證用：每次呼叫配對一對（先點指針鐘、再點它的電子鐘）；wrong＝故意配錯（把指針鐘和別組的電子鐘配）；可重複呼叫 */
-        api.solve = function () { if (phase !== 'play') return; var p = q.pairs.filter(function (x) { return !done[q.items.filter(function (it) { return it.kind === 'a' && it.pair === x.id; })[0].id]; })[0]; if (!p) return; var a = q.items.filter(function (it) { return it.kind === 'a' && it.pair === p.id; })[0], d = q.items.filter(function (it) { return it.kind === 'd' && it.pair === p.id; })[0]; choose(a.id); choose(d.id); };  /* filter：留下符合條件的元素，回傳新陣列 */
+        api.solve = function () { if (phase !== 'play') return; var p = q.pairs.filter(function (x) { return !done[q.items.filter(function (it) { return it.kind === 'a' && it.pair === x.id; })[0].id]; })[0]; if (!p) return; var a = q.items.filter(function (it) { return it.kind === 'a' && it.pair === p.id; })[0], d = q.items.filter(function (it) { return it.kind === 'd' && it.pair === p.id; })[0]; choose(a.id); choose(d.id); };
         api.wrong = function () { if (phase !== 'play') return; var a = q.items.filter(function (it) { return it.kind === 'a'; })[0], d = q.items.filter(function (it) { return it.kind === 'd' && it.pair !== a.pair; })[0]; choose(a.id); choose(d.id); };
     }
 

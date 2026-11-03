@@ -52,7 +52,7 @@
     /* 這一關有幾張臉可選 */
     function optsFor(level) { return Math.round(kit.ramp(level, OPTS_START, OPTS_END, LEVEL_RAMP)); }  /* Math.round：四捨五入成整數 */
     /* 看臉的秒數 */
-    function lookSec(level) { return kit.ramp(level, LOOK_START, LOOK_END, LEVEL_RAMP); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function lookSec(level) { return kit.ramp(level, LOOK_START, LOOK_END, LEVEL_RAMP); }
     /* 選臉的作答時限 */
     function pickSec(level) { return kit.ramp(level, PICK_START, PICK_END, LEVEL_RAMP); }
     /* 隨機產生一張臉：一張臉就是 7 個數字（每個特徵選哪一種） */
@@ -68,7 +68,7 @@
         var idx = kit.shuffle(base.map(function (_, i) { return i; }), rand).slice(0, d), f = base.slice();  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         idx.forEach(function (i) {                      /* forEach：對陣列的每個元素各做一次 */
             /* do...while：一直重抽，直到抽到和原本不同的值 */
-            var v; do { v = kit.randInt(0, SIZES[i] - 1, rand); } while (v === base[i]);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+            var v; do { v = kit.randInt(0, SIZES[i] - 1, rand); } while (v === base[i]);
             f[i] = v;
         });
         return f;
@@ -89,7 +89,7 @@
         }
         /* order 是洗牌後的順序；order.indexOf(0) 找出原本第 0 張（目標）現在排在第幾個 */
         var order = kit.shuffle(faces.map(function (_, i) { return i; }), rand);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
-        var shuffled = order.map(function (i) { return faces[i]; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        var shuffled = order.map(function (i) { return faces[i]; });
         return { target: target, faces: shuffled, answer: order.indexOf(0), d: d };  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
     }
     /* 選臉畫面的網格：4 張以內 2 欄，5 張以上 3 欄（5～9 張排成 3×2、3×3，每張臉比 2 欄多列時大，也不會超出畫面）；回傳 { cols, rows } */
@@ -112,7 +112,7 @@
     function drawFace(f, parent) {
         var svg = kit.svg('svg', { 'class': 'witness-face', viewBox: '0 -30 200 270' }, parent);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         /* S(標籤, 屬性)：建立一個 SVG 圖形；L(...) 則是再套用「只有線條」的樣式 */
-        var S = function (tag, a) { return kit.svg(tag, a, svg); };  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var S = function (tag, a) { return kit.svg(tag, a, svg); };
         var line = { fill: 'none', stroke: INK, 'stroke-width': 5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' };
         function L(tag, a) { var o = {}, k; for (k in line) o[k] = line[k]; for (k in a) o[k] = a[k]; return S(tag, o); }
         /* 髮型（畫在臉後面的部分）*/
@@ -127,7 +127,7 @@
         /* 髮型（前面的部分）*/
         if (hair === 0) S('path', { d: 'M30 112 Q28 44 100 40 Q172 44 170 112 Q150 82 100 80 Q50 82 30 112 Z', fill: HAIR });
         else if (hair === 1) S('path', { d: 'M28 120 Q20 40 100 36 Q182 38 172 104 Q122 62 70 92 Q48 102 28 120 Z', fill: HAIR });
-        else if (hair === 3) [[52, 66], [80, 50], [110, 48], [138, 58], [152, 84], [48, 96]].forEach(function (p) { S('circle', { cx: p[0], cy: p[1], r: 24, fill: HAIR }); });  /* forEach：對陣列的每個元素各做一次 */
+        else if (hair === 3) [[52, 66], [80, 50], [110, 48], [138, 58], [152, 84], [48, 96]].forEach(function (p) { S('circle', { cx: p[0], cy: p[1], r: 24, fill: HAIR }); });
         else if (hair === 4) S('path', { d: 'M30 104 L38 48 L62 80 L76 34 L100 72 L124 34 L138 80 L162 48 L170 104 Q100 72 30 104 Z', fill: HAIR });
         /* 眉毛 */
         var br = f[3];
@@ -189,11 +189,11 @@
                 S = makeSuspects(level);
                 state = 'look';
                 head.textContent = '第 ' + level + ' 關'; /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-                banner.textContent = '記住這個嫌疑人的臉！';      /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                banner.textContent = '記住這個嫌疑人的臉！';
                 stage.className = 'witness-stage witness-stage--look';
-                stage.innerHTML = '';                   /* innerHTML = ''：把元素裡面的東西全部清掉 */
+                stage.innerHTML = '';
                 stage.style.gridTemplateColumns = ''; stage.style.gridTemplateRows = '';
-                var big = h('div', { 'class': 'witness-big' }); stage.appendChild(big);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+                var big = h('div', { 'class': 'witness-big' }); stage.appendChild(big);
                 drawFace(S.target, big);
                 meta();
                 /* 主控台印出這關的目標特徵、干擾臉差異、正解位置（驗證用） */
@@ -223,8 +223,8 @@
                     cell.addEventListener('pointerdown', function (e) { e.preventDefault(); pick(i); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                     stage.appendChild(cell);
                 });
-                var t0 = performance.now(), lim = pickSec(level) * 1000;  /* performance.now()：高精度的時間（毫秒），計時用 */
-                my.loop(function (now) { if (id !== lvId || state !== 'pick') return false; tb.set(1 - (now - t0) / lim); });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
+                var t0 = performance.now(), lim = pickSec(level) * 1000;
+                my.loop(function (now) { if (id !== lvId || state !== 'pick') return false; tb.set(1 - (now - t0) / lim); });
                 /* 超過作答時限：pick(-1) 代表沒有選 */
                 my.after(lim, function () { if (id === lvId && state === 'pick') pick(-1); });
             }
@@ -238,12 +238,12 @@
                 /* 不管對錯，先把正解標成綠色 */
                 cells[S.answer].classList.add('witness-cell--ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 var ok = i === S.answer;
-                if (!ok && i >= 0) cells[i].classList.add('witness-cell--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                if (!ok && i >= 0) cells[i].classList.add('witness-cell--bad');
                 /* 答對：過關 */
                 if (ok) {
                     cleared = level;
-                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
-                    Sfx.play('win');                    /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
+                    Sfx.play('win');
                     banner.textContent = '抓對了！';
                     level++; meta();
                     my.after(NEXT_MS - 400, startLevel);

@@ -47,7 +47,7 @@
     function splitLengths(total, k, min, rand) {
         var lens = [], extra = total - k * min, i;
         for (i = 0; i < k; i++) lens.push(min);
-        for (i = 0; i < extra; i++) lens[Math.floor(rand() * k)]++;  /* Math.floor：無條件捨去成整數 */
+        for (i = 0; i < extra; i++) lens[Math.floor(rand() * k)]++;
         return lens;
     }
     /* 出一題：{ n, k, plugs:[{ c（顏色編號 0～7）, a, b（兩個插頭的格子）}], solution:[每種顏色一條路（格子編號陣列，從 a 到 b）], level }；
@@ -69,7 +69,7 @@
     /* 目前的接線狀態：occ[格子] ＝ 那一格的電線顏色（沒有＝−1，插頭那格一開始就是它的顏色）；paths[顏色] ＝ 這條電線已經鋪的格子（從某一個插頭開始）；done[顏色] ＝ 接通了嗎 */
     function newState(q) {
         var occ = new Int8Array(q.n * q.n).fill(-1), plugOf = {}, paths = {}, done = {};
-        q.plugs.forEach(function (p) { occ[p.a] = p.c; occ[p.b] = p.c; plugOf[p.a] = p.c; plugOf[p.b] = p.c; paths[p.c] = []; done[p.c] = false; });  /* forEach：對陣列的每個元素各做一次 */
+        q.plugs.forEach(function (p) { occ[p.a] = p.c; occ[p.b] = p.c; plugOf[p.a] = p.c; plugOf[p.b] = p.c; paths[p.c] = []; done[p.c] = false; });
         return { n: q.n, occ: occ, plugOf: plugOf, paths: paths, done: done, plugs: q.plugs };
     }
     function otherPlug(st, c, cell) { var p = st.plugs.filter(function (x) { return x.c === c; })[0]; return p.a === cell ? p.b : p.a; }  /* filter：留下符合條件的元素，回傳新陣列 */
@@ -136,12 +136,12 @@
         console.log('[接電線] 第 ' + level + ' 關：' + n + '×' + n + '、' + q.k + ' 種顏色（' + q.plugs.map(function (p) { return PALETTE[p.c]; }).join('、') + '）；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, topPad = 56;
-        var cell = Math.floor(Math.min((W - 20) / n, (H - topPad - 20) / n, 90)), BS = cell * n, bx = Math.round((W - BS) / 2), by = topPad + Math.round((H - topPad - BS) / 2) - 8;  /* Math.round：四捨五入成整數 */
+        var cell = Math.floor(Math.min((W - 20) / n, (H - topPad - 20) / n, 90)), BS = cell * n, bx = Math.round((W - BS) / 2), by = topPad + Math.round((H - topPad - BS) / 2) - 8;
         var tip = h('div', { 'class': 'qz-note wirelink-tip', text: '' });
         stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var board = h('div', { 'class': 'wirelink-board' });  /* board：盤面（所有格子都放在裡面） */
         board.style.cssText = 'left:' + bx + 'px;top:' + by + 'px;width:' + BS + 'px;height:' + BS + 'px;';
-        stage.appendChild(board);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(board);
         var cells = [];
         for (var i = 0; i < n * n; i++) {
             var r = Math.floor(i / n), c = i % n, el = h('div', { 'class': 'wirelink-cell' });
@@ -151,7 +151,7 @@
         function cx(i) { return (i % n + 0.5) * cell; }
         function cy(i) { return (Math.floor(i / n) + 0.5) * cell; }
         var svg = kit.svg('svg', { 'class': 'wirelink-svg', viewBox: '0 0 ' + BS + ' ' + BS, width: BS, height: BS }, board);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        var gSol = kit.svg('g', {}, svg), wires = {}, plugEls = [];  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var gSol = kit.svg('g', {}, svg), wires = {}, plugEls = [];
         q.plugs.forEach(function (p) {
             var w = kit.svg('path', { 'class': 'wirelink-wire wirelink-c' + p.c, d: '' }, svg);
             w.setAttribute('stroke-width', (cell * 0.46).toFixed(1)); wires[p.c] = w;  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
@@ -169,7 +169,7 @@
         function paint() {
             q.plugs.forEach(function (p) {
                 var path = st.paths[p.c];
-                wires[p.c].setAttribute('d', path.length ? pathD(path) + (path.length === 1 ? ' L' + (cx(path[0]) + 0.01) + ' ' + cy(path[0]) : '') : '');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                wires[p.c].setAttribute('d', path.length ? pathD(path) + (path.length === 1 ? ' L' + (cx(path[0]) + 0.01) + ' ' + cy(path[0]) : '') : '');
             });
             plugEls.forEach(function (pe) { pe.g.classList.toggle('wirelink-plug--on', !!st.done[pe.c]); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             tip.textContent = '已接通 ' + linked(st) + '／' + q.k + ' 條　填滿 ' + filled(st) + '／' + n * n + ' 格';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
@@ -207,7 +207,7 @@
             try { stage.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             paint();
         });
-        stage.addEventListener('pointermove', function (e) { if (pid === e.pointerId) feed(kit.localPt(e, stage)); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        stage.addEventListener('pointermove', function (e) { if (pid === e.pointerId) feed(kit.localPt(e, stage)); });
         function up(e) { if (pid === e.pointerId) { pid = null; drawing = -1; lastPt = null; } }
         stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
 
@@ -216,8 +216,8 @@
             if (over || api.over) return;
             over = true; pid = null;
             if (kind === 'ok') {
-                board.classList.add('wirelink-board--lit');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-                tip.textContent = '全部接好了，燈全亮！';         /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                board.classList.add('wirelink-board--lit');
+                tip.textContent = '全部接好了，燈全亮！';
                 kit.flash(stage, true, api.my);         /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
                 api.pass({ delay: 1500 });              /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
                 return;
@@ -233,7 +233,7 @@
             board.classList.add('wirelink-board--reveal');
             gSol.classList.add('wirelink-sol--draw');
             tip.textContent = '時間到！彩色粗線是其中一種接法';
-            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);
             api.fail({ delay: 3000, lines: ['時間到，還有 ' + miss + ' 條電線沒接通、' + (n * n - filled(st)) + ' 格沒填滿', '板子 ' + n + '×' + n + '、' + q.k + ' 種顏色'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：api.solve 把出題時的解一條一條接好；api.wrong 直接當作時間到 */
