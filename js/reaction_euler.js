@@ -42,18 +42,25 @@
     var GX = 36, GY = 50, GAPX = 133, GAPY = 130;    /* 格點位置（舞台座標） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 這一題的圖有幾條邊（線段）：從 EDGES 的第一個數字線性變到第二個（越多越複雜） */
     function edgesAt(level) { return Math.round(kit.ramp(level, EDGES[0], EDGES[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    /* 這一題的作答限時（毫秒） */
     function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
+    /* 「反直覺題」（看起來複雜卻能一筆畫、看起來簡單卻不能）的比例，越後面越高 */
     function counterFrac(level) { return kit.ramp(level, COUNTER[0], COUNTER[1], RAMP_LEVELS); }
     /* 線段 a→b 的黑色箭頭（三角形，放在線段 55% 的位置，尖端指向前進方向 b）：回傳 SVG polygon 的 points */
+    /* 算線段 a→b 的黑色小箭頭（三角形，放在線段 55% 的位置、尖端指向 b）：用單位向量（ux, uy）表示前進方向、垂直向量（px, py）表示左右，再算三角形的三個頂點，回傳 SVG polygon 的 points 文字 */
     function arrowPoints(a, b) {
         var dx = b.x - a.x, dy = b.y - a.y, len = Math.sqrt(dx * dx + dy * dy) || 1, ux = dx / len, uy = dy / len, px = -uy, py = ux;  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
         var cx = a.x + dx * 0.55, cy = a.y + dy * 0.55, L = 15, Wd = 11;
         return [(cx + ux * L).toFixed(1) + ',' + (cy + uy * L).toFixed(1), (cx - ux * L * 0.6 + px * Wd).toFixed(1) + ',' + (cy - uy * L * 0.6 + py * Wd).toFixed(1), (cx - ux * L * 0.6 - px * Wd).toFixed(1) + ',' + (cy - uy * L * 0.6 - py * Wd).toFixed(1)].join(' ');
     }
+    /* 第 r 列第 c 欄的格點編號（編號 ＝ 列 × N ＋ 欄） */
     function nid(r, c) { return r * N + c; }
+    /* 格點編號 → 畫面座標（x 起點 GX、間距 GAPX；y 起點 GY、間距 GAPY） */
     function posOf(id) { return { x: GX + (id % N) * GAPX, y: GY + Math.floor(id / N) * GAPY }; }  /* Math.floor：無條件捨去成整數 */
     /* 候選邊：格點相鄰（橫、直）與每個格子的兩種斜線（同一格最多選一種） */
+    /* 所有「可以畫的線」（候選邊）：相鄰格點的橫線與直線，加上每個小方格裡的兩種斜線（cell 記錄它屬於哪個小方格，同一個小方格最多只能選一種斜線，免得斜線交叉） */
     function candidates() {
         var out = [], r, c;
         for (r = 0; r < N; r++) for (c = 0; c < N; c++) {
@@ -66,9 +73,13 @@
         }
         return out;
     }
-    var CANDS = candidates();
+    var CANDS = candidates();                           /* 候選邊的清單：載入時算一次，之後出題一直重複使用 */
+    /* 算每個點「連著幾條線」（度數）：每條邊的兩個端點各加一 */
     function degrees(edges) { var d = {}; edges.forEach(function (e) { d[e[0]] = (d[e[0]] || 0) + 1; d[e[1]] = (d[e[1]] || 0) + 1; }); return d; }  /* forEach：對陣列的每個元素各做一次 */
+    /* 找出「連著奇數條線」的點（奇數點），由小到大排好 */
     function oddNodes(edges) { var d = degrees(edges); return Object.keys(d).map(Number).filter(function (k) { return d[k] % 2 === 1; }).sort(function (x, y) { return x - y; }); }  /* filter：留下符合條件的元素，回傳新陣列 */
+    /* 這些線連成一整塊嗎（連通）？用「深度優先搜尋」：先建每個點的鄰居表，從第一個點出發，用 stack（堆疊）一路走訪所有走得到的點，
+       最後看是不是每個有線的點都被走到。 */
     function connected(edges) {
         if (!edges.length) return true;
         var adj = {}; edges.forEach(function (e) { (adj[e[0]] = adj[e[0]] || []).push(e[1]); (adj[e[1]] = adj[e[1]] || []).push(e[0]); });
@@ -76,12 +87,15 @@
         while (stack.length) { var u = stack.pop(); adj[u].forEach(function (v) { if (!seen[v]) { seen[v] = true; stack.push(v); } }); }
         return Object.keys(adj).every(function (k) { return seen[k]; });  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
     }
+    /* 能不能「一筆畫」？尤拉（Euler）的定理：圖要連通，而且奇數點只能有 0 個（可以回到起點）或 2 個（從一個奇數點出發、到另一個奇數點結束）。
+       這個遊戲的核心觀念就是這條。 */
     function isEulerian(edges) { var o = oddNodes(edges).length; return connected(edges) && (o === 0 || o === 2); }
     /* 每個格點有哪些候選邊（候選邊的索引） */
-    var ADJ = (function () { var m = {}; CANDS.forEach(function (c, i) { (m[c.a] = m[c.a] || []).push(i); (m[c.b] = m[c.b] || []).push(i); }); return m; })();
-    var EKEY = function (c) { return c.a + '-' + c.b; };
+    var ADJ = (function () { var m = {}; CANDS.forEach(function (c, i) { (m[c.a] = m[c.a] || []).push(i); (m[c.b] = m[c.b] || []).push(i); }); return m; })();  /* ADJ：每個格點「有哪些候選邊」（存候選邊的索引），隨機走路時用它找下一步 */
+    var EKEY = function (c) { return c.a + '-' + c.b; };  /* EKEY：把一條邊變成字串 key（"起點-終點"），用來記錄「這條邊走過了沒」 */
     /* 隨機「走一條路」：從一個點出發，每次走一條還沒走過的邊（同一格最多一條斜線），最多走 E 條。
        走過的邊所組成的圖必定可以一筆畫（它本來就是一筆走出來的），而且一定連通。 */
+    /* 隨機「走一條路」：從一個點出發，每次走一條還沒走過的邊（同一個小方格最多一條斜線），最多走 E 條。走出來的圖一定連通、而且一定能一筆畫（本來就是一筆走出來的） */
     function randomTrail(E, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var cur = kit.randInt(0, N * N - 1, rand), used = {}, cells = {}, edges = [];  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
@@ -100,6 +114,7 @@
         return edges;
     }
     /* 在現有的點上再加一條邊（不重複、不違反斜線規則）；加不了回傳 null */
+    /* 在現有圖形的點上再加一條邊（不重複、不違反斜線規則），加不了回傳 null——用來把「能一筆畫的圖」改成「不能」 */
     function addEdge(edges, rand) {
         var nodes = {}, have = {}, cells = {};
         edges.forEach(function (e) { nodes[e[0]] = nodes[e[1]] = true; have[Math.min(e[0], e[1]) + '-' + Math.max(e[0], e[1])] = true; });
@@ -117,6 +132,9 @@
     }
     /* 出題：回傳 { edges, odd, yes, counter }。
        「能」＝隨機走一條路（邊數接近目標）；「不能」＝走一條路再加幾條邊，直到奇數點 ≥ 4 個。 */
+    /* 出題：回傳 { edges, odd 奇數點, yes 能不能一筆畫, counter 是不是反直覺題 }。
+       「能」＝隨機走一條路（邊數接近目標）；「不能」＝走一條路再加幾條邊，直到奇數點 ≥ 4 個。反直覺題：複雜卻能（邊數 ≥ COMPLEX_MIN）、簡單卻不能（邊數 ≤ SIMPLE_MAX）。
+       試 TRIES 次都不行就用保底圖（房子＝能、十字星＝不能）。 */
     function makeGraph(level, rand, wantYes) {
         rand = rand || Math.random;
         if (wantYes == null) wantYes = rand() < 0.5;
@@ -145,6 +163,8 @@
         return { edges: fb, odd: oddNodes(fb), yes: isEulerian(fb), counter: false };
     }
     /* 一筆畫路線（Hierholzer）：回傳點的順序（長度 邊數＋1）；不是歐拉圖回傳 null */
+    /* Hierholzer 演算法：算出一筆畫的實際路線（點的順序），不是尤拉圖就回傳 null。做法：從奇數點（沒有就任一點）出發，用 stack 一直往沒走過的邊走，
+       走到死路就把這個點放進結果、退回上一個點，最後把結果反過來就是一條走過所有邊各一次的路。 */
     function eulerPath(edges) {
         if (!isEulerian(edges)) return null;
         var adj = {};
@@ -162,6 +182,8 @@
        不能 → 從奇數點出發，優先走沒畫過的線；走到死路（這個點沒有沒畫過的線了）就沿最短路徑「重複走已經畫過的線」
        （kind 'repeat'）走到還有沒畫過的線的點，再繼續。回傳 { steps: [{ a, b, kind }], repeats: 重複走的線數 }。
        每一步的起點都是上一步的終點（筆不離開）。 */
+    /* 評審動畫的畫線順序：能一筆畫就直接用 eulerPath（全部是新的線）；不能的話，從奇數點出發、優先走沒畫過的線，走到死路時用 BFS（廣度優先搜尋）
+       找最近的「還有沒畫過的線」的點，沿路「重複走已經畫過的線」過去（標成 repeat，動畫裡會用不同顏色），再繼續。回傳 { steps 每一步 {a, b, kind}, repeats 重複走了幾條 }。 */
     function penRoute(edges) {
         var steps = [], path = eulerPath(edges), i, k;
         if (path) {
@@ -170,6 +192,7 @@
         }
         var adj = {}, used = {}, left = edges.length;
         edges.forEach(function (e, id) { (adj[e[0]] = adj[e[0]] || []).push({ to: e[1], id: id }); (adj[e[1]] = adj[e[1]] || []).push({ to: e[0], id: id }); });
+        /* 這個點還有沒畫過的線嗎 */
         function hasFree(u) { return adj[u].some(function (x) { return !used[x.id]; }); }  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
         var odd = oddNodes(edges), cur = odd.length ? odd[0] : edges[0][0], repeats = 0, guard = 0;
         while (left > 0 && guard++ < 500) {
@@ -215,9 +238,10 @@
 
     /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
+    /* setup：每一題開始時呼叫。hist 記錄前面幾題的答案（能／不能），用來避免連續三題答案一樣（出題時看 hist 決定這一題要「能」或「不能」） */
     function setup(api, hist) {
         var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
-        var wantYes = hist.length >= 3 && hist.slice(-3).every(function (v) { return v === hist[hist.length - 1]; }) ? !hist[hist.length - 1] : api.rand() < 0.5;
+        var wantYes = hist.length >= 3 && hist.slice(-3).every(function (v) { return v === hist[hist.length - 1]; }) ? !hist[hist.length - 1] : api.rand() < 0.5;  /* 這一題要出「能」還是「不能」：前三題答案都一樣的話，這題強迫換成相反的；否則 50% 隨機 */
         var q = makeGraph(level, api.rand, wantYes);
         hist.push(q.yes);
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
@@ -225,7 +249,7 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var svg = kit.svg('svg', { 'class': 'euler-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        var gl = kit.svg('g', {}, svg);
+        var gl = kit.svg('g', {}, svg);                 /* gl：放所有線段的群組；routeLayer：評審動畫的路線層（畫在線的上面、點的下面） */
         var routeLayer = kit.svg('g', {}, svg);                                 /* 評審動畫的路線畫在線上、點的下面 */
         var lines = q.edges.map(function (e) { var a = posOf(e[0]), b = posOf(e[1]); return kit.svg('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, 'class': 'euler-edge' }, gl); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         var deg = degrees(q.edges), dots = {};
