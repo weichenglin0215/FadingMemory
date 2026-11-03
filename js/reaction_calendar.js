@@ -26,21 +26,21 @@
     var RESP_S = [12, 6];                       /* 每一題作答的時間（秒）：第 1 關 → 到頂 */
     var TWO_FROM = 6;                           /* 第幾關起問兩題（先點 A、再點 B） */
     var PAIR_P = [0.2, 0.9];                    /* 把「長得像的一對」同時貼上去的機率：第 1 關 → 到頂 */
-    var YEARS = [2025, 2031];
+    var YEARS = [2025, 2031];                       /* 月曆的年份範圍：從 2025 年到 2031 年之間隨機抽 */
     var DISTRACT_S = 2;                         /* 圖示消失之後、問題出現之前，下方問題列上的干擾圖示閃爍幾秒 */
     var NOISE_COPIES = 2;                       /* 每個圖示在干擾裡出現幾個 */
     var NOISE_SIZE = 46;                        /* 干擾圖示的大小（px） */
     var NOISE_H = 96;                           /* 干擾區（問題列）的高度（px） */
     var MOVE_MS = 380;                          /* 干擾圖示每隔多久重新亂排一次位置（毫秒） */
     var BLINK_MS = [150, 420];                  /* 每個干擾圖示一明一暗的週期（毫秒，各自隨機） */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var ICONS = [                               /* 圖示：id、名字、長得像的夥伴 */
         { id: 'tooth', name: '牙醫', pair: 'hospital' }, { id: 'hospital', name: '回診', pair: 'tooth' },
         { id: 'cake', name: '生日蛋糕', pair: 'box' }, { id: 'box', name: '喜餅', pair: 'cake' },
         { id: 'bill', name: '繳費單', pair: null }, { id: 'scissors', name: '剪頭髮', pair: null }, { id: 'briefcase', name: '開會', pair: null },
         { id: 'bowl', name: '聚餐', pair: null }, { id: 'ball', name: '打球', pair: null }, { id: 'plane', name: '旅行', pair: null }
     ];
-    var WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+    var WEEK = ['日', '一', '二', '三', '四', '五', '六'];  /* 星期的中文字，從星期日開始排 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

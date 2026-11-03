@@ -28,7 +28,7 @@
     var SHAPE_C = { x: 250, y: 185 };               /* 目標形狀的中心：在畫面上半部、水平置中 */
     var HANDLE = 84, TOUCH_R = 62;                  /* 十字箭頭手柄的總寬（px）、可以抓住的半徑 */
     var FAR = [[0.45, 0.7], [1.4, 1.8]];            /* 初始邊長相對答案的倍率範圍（兩段擇一） */
-    var KINDS = ['circle', 'triangle', 'star', 'cross', 'ell'];
+    var KINDS = ['circle', 'triangle', 'star', 'cross', 'ell'];  /* 題目會出現的五種形狀：圓形、三角形、星形、十字、L 形 */
     /* 十字型箭頭（上下左右四個箭頭）的多邊形頂點，中心在 (0,0)，總寬 size */
     function arrowPoints(size) {
         var a = size / 2, hl = size * 0.19, hw = size * 0.12, sw = size * 0.04, b = a - hl;

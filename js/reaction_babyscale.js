@@ -29,22 +29,22 @@
     var h = UI.h, kit = Reaction.kit;
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_LEVELS = 30;
+    var RAMP_LEVELS = 30;                           /* 難度升到頂的關卡：第 1 關線性變難，到第 30 關最難，之後維持不變 */
     var ITEMS = [3, 6];                         /* 幾個人和東西：第 1 關 → 到頂 */
     var TOTAL_TO = 3;                           /* 第幾關以前有「全部一起」的紀錄（只適合前兩三題） */
     var TRIPLE_FROM = 6;                        /* 第幾關起有「三個一起」的紀錄（要 4 個人以上） */
     var DISTRACT_FROM = 12;                     /* 第幾關起多一條用不到的紀錄 */
     var SINGLE_TO = 24;                         /* 第幾關以前有「一個人單獨量」的紀錄（踏腳石）；機會從 SINGLE_P[0] 降到 SINGLE_P[1] */
-    var SINGLE_P = [0.9, 0.15];
+    var SINGLE_P = [0.9, 0.15];                     /* 出現「一個人單獨量」紀錄的機率：第 1 關 90% → 到第 SINGLE_TO 關 15%（前面關卡多給踏腳石） */
     var DIFF = [1.6, 8.0];                      /* 難度分數 D 的目標：第 1 關 → 第 RAMP_LEVELS 關（線性） */
     var DIFF_WINDOW = 0.8;                      /* 抽到的題目 D 要在「目標 ± 這個數字」之內 */
     var REC_W = { 1: 0.5, 2: 1, 3: 1.4 };       /* 一條紀錄的分數（幾個一起）；「全部一起」固定 0.6 */
     var ALL_W = 0.6, DIV_W = 1.2, ITEM_W = 0.3; /* 全部一起、要除以 2 以上、人和東西每多一個（超過 3 個） */
-    var TRIES = 800;
+    var TRIES = 800;                                /* 出題時最多重抽幾次（抽到難度剛好落在目標範圍的題目就停） */
     var MAX_EQS = 6;                            /* 紀錄最多幾條（含用不到的那條；舞台高度只放得下 6 條） */
-    var MAX_LEVEL = 90;
-    var PASS_DELAY_MS = 1500;
-    var FAIL_HOLD_MS = 7000;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
+    var PASS_DELAY_MS = 1500;                       /* 答對（過關）後停多久才換下一關（毫秒，1500 毫秒＝1.5 秒） */
+    var FAIL_HOLD_MS = 7000;                        /* 答錯（失敗）後停多久才跳出結算畫面（毫秒，7000 毫秒＝7 秒），讓玩家先看清楚答案 */
     var TIME_BASE = 25, TIME_EQ = 8, TIME_SCALE = [1, 1.5];     /* 每一關限時（秒）＝（基本 ＋ 每一條紀錄幾秒）× 係數（第 1 關 → 第 RAMP_LEVELS 關，線性）；時間到了＝失敗（V1.43.1） */
     var THINGS = [                              /* 名稱、圖示、重量範圍（公斤） */
         { name: '阿公', icon: '👴', w: [58, 80] }, { name: '阿嬤', icon: '👵', w: [42, 60] },
@@ -53,7 +53,7 @@
         { name: '小貓', icon: '🐱', w: [3, 6] }, { name: '小狗', icon: '🐶', w: [6, 18] },
         { name: '行李箱', icon: '🧳', w: [9, 24] }, { name: '西瓜', icon: '🍉', w: [4, 9] }
     ];
-    var CIRCLED = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩'];
+    var CIRCLED = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩'];  /* 紀錄前面的編號（①～⑩） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function timeFor(level, nEqs) { return (TIME_BASE + TIME_EQ * nEqs) * kit.ramp(level, TIME_SCALE[0], TIME_SCALE[1], RAMP_LEVELS); }

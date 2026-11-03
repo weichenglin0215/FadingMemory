@@ -40,16 +40,16 @@
     var NEXT_MS = 600;                          /* 挑光一盤之後多久換下一關 */
     var END_MS = 3600;                          /* 時間到之後，揭曉畫面停多久才跳出結算 */
     var SOLVE_CAP = 12;                         /* 驗證用：api.solve 最多幫忙挑幾顆 */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     /* 豆子的種類：good＝紅豆；easy＝容易分的雜物；look＝很像紅豆的雜物；diff＝跟紅豆差在哪 */
     var EASY = ['stone', 'mung', 'black'], LOOKS = ['redstone', 'pinto', 'adz'];
-    var DIFF = {
+    var DIFF = {                                    /* 每種雜物跟紅豆差在哪（答錯時顯示的說明文字） */
         stone: '灰色、有稜角', mung: '綠色、比較圓', black: '黑色',
         redstone: '紅色小石頭：顏色一樣，但形狀有稜角、表面沒有光澤（紅豆是光滑的橢圓）',
         pinto: '花豆：顏色偏暗紅，還有淺色的斑點',
         adz: '赤小豆：比紅豆小、而且比較細長'
     };
-    var NAME = { red: '紅豆', stone: '小石頭', mung: '綠豆', black: '黑豆', redstone: '紅色小石頭', pinto: '花豆', adz: '赤小豆' };
+    var NAME = { red: '紅豆', stone: '小石頭', mung: '綠豆', black: '黑豆', redstone: '紅色小石頭', pinto: '花豆', adz: '赤小豆' };  /* 每種豆子（雜物）的中文名稱 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(pair, level) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

@@ -27,11 +27,11 @@
     var STROKES_LO = [3, 12], STROKES_HI = [8, 22];     /* 字群的平均筆劃範圍：第 1 關 → 到頂 */
     var LEAD_MS = 900;                          /* 開始後多久拋第一批 */
     var BOTTOM = 1.1, EXIT = 1.14;              /* 拋出的起點、掉到這裡算落地（畫面高度的倍數） */
-    var APEX = [0.2, 0.5], T_APEX = [0.8, 1.0], X_RANGE = [0.14, 0.86];
+    var APEX = [0.2, 0.5], T_APEX = [0.8, 1.0], X_RANGE = [0.14, 0.86];  /* APEX：拋出軌跡「最高點」的範圍；T_APEX：到達最高點的時間比例範圍；X_RANGE：起點 x 座標的範圍（占畫面寬度的比例） */
     var DUMP_PX = 76;                           /* 湯圓的大小（px） */
     var HIT_EXTRA = 8;                          /* 切到的判定半徑比湯圓多幾 px */
-    var MIN_GROUP = 4;
-    var MAX_LEVEL = 90;
+    var MIN_GROUP = 4;                              /* 「長得像的字」字群至少要幾個字才拿來出題 */
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

@@ -29,12 +29,12 @@
     var ANS_S = [7, 10];                       /* 作答限時（秒）：第 1 關 → 到頂 */
     var COLOR_FROM = 8;                         /* 第幾關起圖形有顏色（而且有「同形不同色」） */
     var EXTRA = [1, 2];                         /* 「同形不同色」多幾顆按鈕：COLOR_FROM 關 → 到頂 */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     /* 八種形狀（SVG 畫在 100×100 裡）與六種顏色（色相）*/
     var SHAPES = ['circle', 'square', 'triangle', 'star', 'diamond', 'heart', 'cross', 'hexagon'];
-    var HUES = [{ n: '紅', h: 4 }, { n: '橘', h: 28 }, { n: '黃', h: 48 }, { n: '綠', h: 135 }, { n: '藍', h: 212 }, { n: '紫', h: 282 }];
+    var HUES = [{ n: '紅', h: 4 }, { n: '橘', h: 28 }, { n: '黃', h: 48 }, { n: '綠', h: 135 }, { n: '藍', h: 212 }, { n: '紫', h: 282 }];  /* 顏色的名稱 n 與色相角度 h（0～360） */
     var NEUTRAL = { n: '藍', h: 212 };          /* 前期所有圖形的顏色 */
-    var SHAPE_NAME = { circle: '圓形', square: '正方形', triangle: '三角形', star: '星形', diamond: '菱形', heart: '愛心', cross: '十字', hexagon: '六角形' };
+    var SHAPE_NAME = { circle: '圓形', square: '正方形', triangle: '三角形', star: '星形', diamond: '菱形', heart: '愛心', cross: '十字', hexagon: '六角形' };  /* 每種圖形的中文名稱 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function shapesFor(level) { return kit.clamp(Math.round(kit.ramp(level, SHAPES_N[0], SHAPES_N[1], RAMP_LEVELS)), SHAPES_N[0], SHAPES_N[1]); }

@@ -42,8 +42,8 @@
     var WASTE_CAP = 100;                        /* 衡量「冤枉路」時每種走法最多算幾步（超過的題目已經夠難，挑選時不分高下；也讓計算不要花太久） */
     var CANDS = [3, 10];                        /* 候選題數量：第 1 關 → 第 RAMP_LEVELS 關；符合全部條件的題目收集這麼多個，挑「憑直覺走的人最容易走錯」的那題（見 greedyCost） */
     var WARMUP = 1;                             /* 前幾關是暖身：不要求「最直的路走不通」、也沒有誘餌 */
-    var MAX_LEVEL = 90;
-    var neighbors = kit.gridNeighbors, adjacent = kit.gridAdjacent;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
+    var neighbors = kit.gridNeighbors, adjacent = kit.gridAdjacent;  /* neighbors：取一格的上下左右鄰格；adjacent：判斷兩格是否相鄰（都是共用工具箱 kit 的函式） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function sizeFor(level) { return Math.round(kit.ramp(level, N[0], N[1], RAMP_LEVELS)); }

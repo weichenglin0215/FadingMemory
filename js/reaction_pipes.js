@@ -36,9 +36,9 @@
     /* ═══ 可以自己調的參數 ═══ */
     /* 難度從第 1 關線性變到第 LEVEL_RAMP 關 */
     var LEVEL_RAMP = 30;
-    var GRID_START = 4, GRID_END = 8;
-    var BUCKETS_START = 1, BUCKETS_END = 10;
-    var TIME_START = 30, TIME_END = 180;
+    var GRID_START = 4, GRID_END = 8;               /* 棋盤邊長：第 1 關 4×4 → 到頂 8×8 */
+    var BUCKETS_START = 1, BUCKETS_END = 10;        /* 水桶（出水口）數：第 1 關 1 個 → 到頂 10 個 */
+    var TIME_START = 30, TIME_END = 180;            /* 每關限時（秒）：第 1 關 30 秒 → 到頂 180 秒（棋盤變大，時間給越多） */
     /* FILL：水管樹占棋盤格數的比例（其餘是空格），隨關卡增加 */
     var FILL = [0.5, 0.8];          /* 樹佔棋盤格數的比例：第 1 關 → 最後 */
     var MIN_TAPS = [5, 20];          /* 打亂後至少要轉幾次才解得開：第 1 關 → 最後 */
@@ -46,7 +46,7 @@
     var TURN_BONUS = 2;              /* 尾端延長時，轉彎的權重是直走的幾倍 */
     var CELL = 90;                   /* SVG 單位：一格的邊長 */
     var FAUCET_H = 56;               /* 水龍頭那一條的高度 */
-    var NEXT_MS = 1300, ANSWER_MS = 2600;
+    var NEXT_MS = 1300, ANSWER_MS = 2600;           /* NEXT_MS：過關後停多久才換下一關（毫秒，1300＝1.3 秒）；ANSWER_MS：時間到、亮出答案後停多久才結算（毫秒，2600＝2.6 秒） */
 
     /* 【位元（bit）小常識】一格水管的四個開口用 4 個 bit 表示，就像 4 個開關：N 上=1、E 右=2、S 下=4、W 左=8。例如 N+E = 1+2 = 3，代表上和右有開口。用數字就能同時存四個方向 */
     /* ═══ 純函式（也給 Node 測試用）═══ */

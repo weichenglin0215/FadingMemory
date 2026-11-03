@@ -51,10 +51,10 @@
     var REVEAL_LEAD_MS = 1000;                  /* 第一手之前等多久 */
     var REVEAL_STEP_MS = 1300;                  /* 每一手之間隔多久 */
     var REVEAL_HOLD_MS = 2000;                  /* 最後一手（紅線穿過五顆）之後停格多久，才跳出結算 */
-    var MAX_LEVEL = 90;
-    var BLACK = 1, WHITE = -1;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
+    var BLACK = 1, WHITE = -1;                      /* BLACK：黑棋代號 1；WHITE：白棋代號 −1 */
     var LINES = [[0, 1], [1, 0], [1, 1], [1, -1]];                             /* 四條線的方向：橫、直、斜（右下）、斜（左下） */
-    var DIR8 = [[0, 1], [1, 0], [1, 1], [1, -1], [0, -1], [-1, 0], [-1, -1], [-1, 1]];
+    var DIR8 = [[0, 1], [1, 0], [1, 1], [1, -1], [0, -1], [-1, 0], [-1, -1], [-1, 1]];  /* 八個方向的 [列差, 欄差]（右、下、右下、左下、左、上、左上、右上） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function stonesFor(level) { return Math.round(kit.ramp(level, STONES[0], STONES[1], RAMP_LEVELS)); }

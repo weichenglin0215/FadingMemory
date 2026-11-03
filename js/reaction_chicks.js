@@ -30,13 +30,13 @@
 
     /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
-    var LEVEL_RAMP = 30;
+    var LEVEL_RAMP = 30;                            /* 難度升到頂的關卡：第 1 關線性變難，到第 30 關最難，之後維持不變 */
     /* 目標數、小雞總數、速度、移動秒數都隨關卡線性增加 */
     var K_START = 1, K_END = 8;                 /* 目標數 */
     var TOTAL_START = 12, TOTAL_END = 24;       /* 小雞總數 */
     var SPEED_START = 120, SPEED_END = 360;     /* 速度（px/秒，沿著折線的平均速度）*/
     var MOVE_START = 6, MOVE_END = 9;          /* 移動秒數 */
-    var MARK_S = 2.0;
+    var MARK_S = 2.0;                               /* 標記階段顯示幾秒：讓玩家記住哪幾隻小雞頭上有星星 */
     /* 小雞畫出來的大小（px） */
     var CHICK = 64;                            /* 小雞畫出來的大小 */
     /* 起點的最小間距：保證一開始不重疊、頭上的星星也不會被壓住 */
@@ -46,8 +46,8 @@
     var SIM_DT = 1 / 120;                      /* 模擬一格幾秒（要夠小，最快的小雞一格只走 3px，不會「穿牆」） */
     var STOP_EASE_S = 0.6;                     /* 移動的最後幾秒慢慢煞車，停下來不會突然定格 */
     var SPEED_JITTER = 0.15;                   /* 每隻小雞的速度在 ±15% 之間，不會全部一樣快 */
-    var MARGIN = 30;
-    var NEXT_MS = 1500;
+    var MARGIN = 30;                                /* 小雞活動範圍離畫面邊緣的留白（px） */
+    var NEXT_MS = 1500;                             /* 答完一題後停多久才出下一題（毫秒，1500 毫秒＝1.5 秒） */
 
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 關'; }
 

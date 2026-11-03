@@ -34,7 +34,7 @@
 
     /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
-    var LEVEL_RAMP = 30;
+    var LEVEL_RAMP = 30;                            /* 難度升到頂的關卡：第 1 關線性變難，到第 30 關最難，之後維持不變 */
     /* SLIVER：差異部件露出的比例，第 1 題露 40%，越後面越少（到 12%）——原本是 55% → 25%，玩家覺得幾乎沒有難度 */
     var SLIVER_START = 0.40, SLIVER_END = 0.12; /* 差異部件從貼著相似處的那一側露出幾成（第 1 題最多，越後面越少）*/
     var TIME_START = 6, TIME_END = 2.5;          /* 每題限時（秒），原本 8 → 3.5 */
@@ -42,8 +42,8 @@
     var OPT_START = 4, OPT_END = 6, OPT_RAMP = 12;
     /* 字歪斜的角度：第 ROT_FROM 題以前不歪，之後線性增加到第 LEVEL_RAMP 題的 ROT_MAX 度（方向隨機左或右） */
     var ROT_FROM = 6, ROT_MAX = 24;
-    var LIVES = 3;
-    var NEXT_MS = 1300;
+    var LIVES = 3;                                  /* 命數（答錯一次扣一條，用完就結束） */
+    var NEXT_MS = 1300;                             /* 答完一題後停多久才出下一題（毫秒，1300 毫秒＝1.3 秒） */
     /* 最近出過的 10 題不會再出現 */
     var AVOID_RECENT = 10;                      /* 最近出過的幾題不重複 */
 

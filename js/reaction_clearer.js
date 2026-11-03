@@ -37,7 +37,7 @@
        FAMILY_KEYS＝每一關用哪一組（寫那一組的第一個字），第 N 關用第 N 個；依筆畫由少到多排好（需人工審校）。
        每組取資料庫裡那一組的前 5 個字（資料庫裡越前面的字彼此越像）。想換題目：改這裡的字，或改資料庫那一組的順序。 */
     var FAMILY_KEYS = ['待', '抱', '湖', '晴', '媽', '提', '橋', '鴨', '鑲', '讀'];
-    var FAMILIES = FAMILY_KEYS.map(function (key) {
+    var FAMILIES = FAMILY_KEYS.map(function (key) {  /* 每一關的字群：從共用字庫取每組前 5 個最像的字；找不到就丟出錯誤 */
         var g = SimilarChars.groups({ minSize: 5 }).filter(function (x) { return x.chars[0] === key; })[0];
         if (!g) throw new Error('越看越清楚：共用資料庫裡找不到「' + key + '」開頭、至少 5 個字的字群');
         return g.chars.slice(0, 5);

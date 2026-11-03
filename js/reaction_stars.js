@@ -31,7 +31,7 @@
     var STROKES_LO = [10, 16], STROKES_HI = [16, 24];   /* 字群的平均筆劃範圍：第 1 關 → 到頂 */
     var FIVE_FROM = 12;                         /* 第幾關起有 5 個選項 */
     var MIN_GROUP = 5;                          /* 字群至少幾個字（5 個選項要夠） */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

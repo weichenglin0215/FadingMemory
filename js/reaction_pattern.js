@@ -38,8 +38,8 @@
     /* 手指進入點的多大範圍內就算碰到（比畫出來的點大，好碰到） */
     var SNAP_R = 42;            /* 指尖進入多大半徑才吸附到點 */
     var NODE_R = 30;            /* 點的繪製半徑 */
-    var PREP_MS = 700;
-    var RESULT_DELAY_MS = 1300;
+    var PREP_MS = 700;                              /* 示範開始前的準備時間（毫秒） */
+    var RESULT_DELAY_MS = 1300;                     /* 玩家畫完之後，停多久才顯示結果（毫秒） */
 
     /* 最佳紀錄文字 */
     function fmtBest(v) { return v == null ? '' : '最長 ' + v + ' 點'; }

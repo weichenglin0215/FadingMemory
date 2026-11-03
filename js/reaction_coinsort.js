@@ -38,18 +38,18 @@
     var NEXT_MS = 140;                          /* 分對之後，下一枚多久出現 */
     var FLY_MS = 240;                           /* 硬幣滑進筒子的動畫時間 */
     var SOLVE_CAP = 8;                          /* 驗證用：api.solve 最多幫忙分對幾枚（不然會一直玩不完） */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     /* 每種硬幣：幾元、金屬、該往哪滑、說明（結束時顯示） */
     var TYPES = ['c50', 'c5', 'c10'];
-    var COIN = {
+    var COIN = {                                    /* 每種硬幣的資料：value 面額、metal 金屬（銅／銀）、big 是不是大硬幣、dir 該往哪個筒子滑、name 名稱、look 外觀說明（結束時顯示） */
         c50: { value: '50', metal: 'copper', big: true, dir: 'left', name: '50 元', look: '銅色、大' },
         c5: { value: '5', metal: 'copper', big: false, dir: 'down', name: '5 元', look: '銅色、小' },
         c10: { value: '10', metal: 'silver', big: true, dir: 'right', name: '10 元', look: '銀色、大' }
     };
     var DIR_OF = { c50: 'left', c5: 'down', c10: 'right' };              /* 哪種硬幣該往哪滑（要改方向只改這裡） */
     var TUBE_X = { left: 0.17, down: 0.5, right: 0.83 };                 /* 三個筒子的中心 x（占畫面寬度的比例）：左、下、右 */
-    var DIR_NAME = { left: '左', down: '下', right: '右' };
-    var DIR_ARROW = { left: '←', down: '↓', right: '→' };
+    var DIR_NAME = { left: '左', down: '下', right: '右' };  /* 方向的中文名稱：左、下、右 */
+    var DIR_ARROW = { left: '←', down: '↓', right: '→' };  /* 方向對應的箭頭符號 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function prog(n) { return Math.min(1, Math.max(0, n / RAMP_COINS)); }

@@ -25,8 +25,8 @@
     var GAP_MS = [200, 100];                    /* 字與字之間的空檔（毫秒）：第 1 關 → 到頂 */
     var RESP_S = [10, 5];                       /* 作答的時間（秒）：第 1 關 → 到頂 */
     var WHICH_FROM = 8, WHICH_P = [0.15, 0.4];  /* 第幾關起會問「第幾個字是用 X 色寫的」、機率（第 WHICH_FROM 關 → 到頂） */
-    var LEAD_MS = 600;
-    var MAX_LEVEL = 90;
+    var LEAD_MS = 600;                              /* 出第一個字之前先等多久（毫秒） */
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var COLORS = [                              /* 六種顏色：id 對應 CSS 的 .inkword-c--id 與 theme 的 --ikw-id */
         { id: 'red', name: '紅' }, { id: 'yellow', name: '黃' }, { id: 'green', name: '綠' }, { id: 'blue', name: '藍' }, { id: 'purple', name: '紫' }, { id: 'orange', name: '橘' }
     ];

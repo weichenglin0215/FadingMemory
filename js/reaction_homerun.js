@@ -39,11 +39,11 @@
     var WINDUP_MS = 900;                        /* 投手舉臂到出手的時間（每一球都一樣） */
     var AFTER_MS = 280;                         /* 球到了以後再等多久沒揮才算「沒揮」 */
     var REPLAY_SPEED = 0.35;                    /* 揭曉重播的速度 */
-    var REPLAY_MIN_MS = 2000, REPLAY_MAX_MS = 4600;
+    var REPLAY_MIN_MS = 2000, REPLAY_MAX_MS = 4600;  /* REPLAY_MIN_MS／REPLAY_MAX_MS：揭曉時球飛行的重播長度最短 2000、最長 4600 毫秒 */
     var SWING_MS = 140;                         /* 揮棒動畫時間 */
     var CURVE_POW = 3;                          /* 曲球偏移的曲線：偏移量 ＝ (F − S) × u^CURVE_POW（越後面才彎得越明顯） */
     var BALL_R = [5, 22];                       /* 球的半徑（px）：遠 → 近 */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var ZONE_W = 0.34, ZONE_ASPECT = 1.15;      /* 好球帶的寬占畫面寬度的比例、高÷寬 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */

@@ -29,10 +29,10 @@
     var COLORS = [2, 8];                        /* 顏色（電線）種數：第 1 關 → 到頂；最多 8 種（PALETTE 的長度） */
     var TIME_S = [30, 70];                      /* 每關限時（秒）：第 1 關 → 到頂 */
     var MIN_SEG = 3;                            /* 每一條電線（一段路）至少幾格 */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     /* 顏色的名稱與出現順序（CSS 變數 --wlk-0～--wlk-7 在 css/theme.css；水藍(5)像藍(1)、橘(6)像黃(3)） */
     var PALETTE = ['紅', '藍', '綠', '黃', '紫', '水藍', '橘', '粉紅'];
-    var neighbors = kit.gridNeighbors, adjacent = kit.gridAdjacent;
+    var neighbors = kit.gridNeighbors, adjacent = kit.gridAdjacent;  /* neighbors：取一格的上下左右鄰格；adjacent：判斷兩格是否相鄰（都是共用工具箱 kit 的函式） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function sizeFor(level) { return Math.round(kit.ramp(level, SIZE[0], SIZE[1], RAMP_LEVELS)); }

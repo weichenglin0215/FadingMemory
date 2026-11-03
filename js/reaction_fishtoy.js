@@ -41,8 +41,8 @@
     var ROD_ANGLE = 270;                        /* 釣竿在池塘的正上方（螢幕座標角度） */
     var REPLAY_SPEED = 0.3;                     /* 揭曉重播速度 */
     var REPLAY_PRE = 0.25, REPLAY_POST = 0.35;  /* 重播：落下前幾秒開始、落水後多幾秒 */
-    var MAX_LEVEL = 90;
-    var COLORS = ['紅', '橙', '黃', '綠', '藍', '紫'];
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
+    var COLORS = ['紅', '橙', '黃', '綠', '藍', '紫'];    /* 玩具魚的顏色：紅、橙、黃、綠、藍、紫 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

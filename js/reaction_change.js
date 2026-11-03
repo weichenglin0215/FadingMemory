@@ -30,8 +30,8 @@
     var EXTRA_FROM = 5;                         /* 答對幾題之後才會有多給零錢的題目 */
     var NOTES = [100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000];     /* 客人拿出來的整數鈔票金額 */
     var SOLVE_CAP = 10;                         /* 驗證用：api.solve 最多幫忙答對幾題 */
-    var MAX_LEVEL = 90;
-    var MINUS = '−';
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
+    var MINUS = '−';                                /* 減號（用真正的減號「−」，不是鍵盤上的連字號） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function prog(n) { return Math.min(1, Math.max(0, n / RAMP_Q)); }

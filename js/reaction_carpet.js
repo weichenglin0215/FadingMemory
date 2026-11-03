@@ -38,7 +38,7 @@
     var WARMUP = 1;                             /* 前幾關是暖身，不檢查「偷吃步」 */
     var TIME_BASE = 15, TIME_PER_CELL = 1.5;    /* 限時（秒）＝ TIME_BASE ＋ TIME_PER_CELL × 要鋪的格數 */
     var MIN_FREE = 8;                           /* 空地至少幾格（家具太多會讓房間太小） */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var FURNITURE = ['🎃', '🎄', '🧳', '🪑', '🛋️', '🛁', '🛏️', '🛌', '🪞'];      /* 家具圖案：每個家具格各自隨機抽一個（只是好看，不影響玩法） */
     var GEN_TRIES = 4000, GEN_BUDGET_MS = 340;   /* 出題：每一種放法最多試幾次；整個出題最多花幾毫秒（超過就用手上最難的候選題；沒有候選題才換下一種做法） */
     var CANDS = [2, 8];                         /* 候選題數量：第 1 關（暖身只要 1 題）→ 第 RAMP_LEVELS 關；之後再每 RAMP_LEVELS 關多 1 題，挑最難的那題（見 hardness） */

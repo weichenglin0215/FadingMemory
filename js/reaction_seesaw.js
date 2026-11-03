@@ -44,7 +44,7 @@
     var SPRING = { omega: 9, zeta: 0.5 };       /* 蹺蹺板傾斜的彈簧動畫：角頻率、阻尼比（小於 1 會有一點彈跳） */
     var SETTLE_MS = 350;                        /* 平衡之後要靜止多久才算過關 */
     var SOLVE_CAP = 400;                        /* 數「會平衡的放法」時，數到這麼多就停（超過上限的題目不要，不用數更多） */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var SPECIES = [                             /* 動物（id 對應 CSS 的 .seesaw-an--id 與 theme 的毛色變數） */
         { id: 'bear', name: '熊' }, { id: 'pig', name: '豬' }, { id: 'dog', name: '狗' }, { id: 'cat', name: '貓' },
         { id: 'rabbit', name: '兔' }, { id: 'chick', name: '雞' }, { id: 'panda', name: '貓熊' }

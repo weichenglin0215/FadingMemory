@@ -37,8 +37,8 @@
     var ANS_S = [6, 4];                         /* 停住之後的作答限時（秒）：第 1 關 → 到頂 */
     var MARGIN = 0.2;                           /* 停點離格線至少多遠（格寬的幾分之幾） */
     var DISC_R = 190, NEEDLE_R = 168, DEAD_R = 54;   /* 圓盤半徑、指針長度、中央不能點的半徑 */
-    var CENTER_Y = 300;
-    var MAX_LEVEL = 90;
+    var CENTER_Y = 300;                             /* 轉盤中心的 y 座標（px） */
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function sectorsFor(level) { return kit.clamp(Math.round(kit.ramp(level, SECTORS[0], SECTORS[1], RAMP_LEVELS)), SECTORS[0], SECTORS[1]); }

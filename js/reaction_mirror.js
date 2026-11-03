@@ -27,19 +27,19 @@
 
     /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
-    var LEVEL_RAMP = 30;
+    var LEVEL_RAMP = 30;                            /* 難度升到頂的關卡：第 1 關線性變難，到第 30 關最難，之後維持不變 */
     /* 通道半寬（隨關卡變窄）、彎的數量、手指動 1px 球動幾 px（增益） */
     var HW_START = 64, HW_END = 30;            /* 通道半寬（px） */
     var BENDS_START = 1, BENDS_END = 5;        /* 彎的數量 */
     var GAIN_START = 1.0, GAIN_END = 1.6;      /* 手指動 1px，球動幾 px */
     /* 第幾關起「上下」也顛倒 */
     var FLIP_BOTH_FROM = 8;                    /* 第幾關起上下也反 */
-    var BALL_R = 14;
+    var BALL_R = 14;                                /* 小球的半徑（px） */
     /* 每個彎最多轉幾度，避免太銳利轉不過去 */
     var MAX_TURN_DEG = 100;
-    var MARGIN_Y = 46, MARGIN_X = 6;
-    var GOAL_R = 28;
-    var NEXT_MS = 1000;
+    var MARGIN_Y = 46, MARGIN_X = 6;                /* MARGIN_Y：通道離上下邊緣的留白（px）；MARGIN_X：離左右邊緣的留白（px） */
+    var GOAL_R = 28;                                /* 終點圓圈的半徑（px），球進到圓圈裡就過關 */
+    var NEXT_MS = 1000;                             /* 答完一題後停多久才出下一題（毫秒，1000 毫秒＝1 秒） */
 
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 關'; }
 

@@ -25,9 +25,9 @@
     var GIVENS4 = [8, 5];                       /* 4×4 提示個數：第一個 4×4 關 → 第 RAMP4 關 */
     var RAMP4 = 22;                             /* 4×4 的提示數走幾關到頂 */
     var HINTS = 3;                              /* 每一題可以用幾次提示（0＝關掉提示鈕） */
-    var MAX_LEVEL = 90;
-    var PASS_DELAY_MS = 1300;
-    var CELL_MAX = 84;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
+    var PASS_DELAY_MS = 1300;                       /* 答對（過關）後停多久才換下一關（毫秒，1300 毫秒＝1.3 秒） */
+    var CELL_MAX = 84;                              /* 每個格子的最大邊長（px） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function magicSum(n) { return n * (n * n + 1) / 2; }

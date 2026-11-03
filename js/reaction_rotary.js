@@ -33,7 +33,7 @@
     var RETURN_DEG_S = 240;                     /* 轉盤自己轉回來的速度（度／秒） */
     var TICK_DEG = 30;                          /* 轉回來時每轉幾度發一聲「嗒」 */
     var HOLE_R = 25;                            /* 手指洞的半徑（px，在標準大小的轉盤上；實際依畫面縮放） */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

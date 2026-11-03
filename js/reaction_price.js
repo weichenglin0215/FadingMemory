@@ -47,13 +47,13 @@
     /* ═══ 可以自己調的參數 ═══ */
     /* 難度推到最難的題數 */
     var LEVEL_RAMP = 30;                       /* 難度推到最難的題數（優惠種類、限時、中文大寫）*/
-    var TIME_START = 14, TIME_END = 7;
-    var FORMAL_END = 0.5;
+    var TIME_START = 14, TIME_END = 7;              /* 每題限時（秒）：第 1 關 14 秒 → 到頂 7 秒 */
+    var FORMAL_END = 0.5;                           /* 標籤出現「formal（正式寫法）」的機率：第 1 關 0 → 到頂 50%（formalP） */
     /* 實付金額差距的目標（元）：[題號, 差距] 之間用線性內插，過了最後一個錨點就固定 */
     var GAP_ANCHORS = [[1, 400], [10, 90], [20, 10]];       /* 實付差距（元）：[題數, 目標差距] 之間線性內插，之後固定 */
     var GAP_LOW = 0.5;                         /* 實際差距 ≥ 目標 × GAP_LOW */
-    var MIN_PAY = 50;
-    var REVEAL_MS = 2400;
+    var MIN_PAY = 50;                               /* 實付金額最少要幾元（低於這個數字的題目不要） */
+    var REVEAL_MS = 2400;                           /* 揭曉答案停多久才換下一題（毫秒） */
     var K_MIN = 1.0, K_STEP = 0.02;            /* 標籤字級倍率最小到 1.0 倍，每次往下調 0.02 */
 
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 題'; }

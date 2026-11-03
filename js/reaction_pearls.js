@@ -35,7 +35,7 @@
     var TRAVEL_S = 0.28;                        /* 一顆珍珠從吸管底衝到最上面要多久（秒，看得到的移動） */
     var PRESS_LIMIT_S = 14;                     /* 限時：多久沒按住就失敗 */
     var END_GRACE = 0.25;                       /* 珍珠全部衝完之後再等多久（還沒放手就自動判定） */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

@@ -52,7 +52,7 @@
     var TRAVEL_MIN = 70;                        /* 每顆會動的圓點，能走的路徑至少要有多長（px）才算合格（總路徑本來就比這短的話，以總路徑為準）：走得太短就看不出在動 */
     var ANGLES = 90;                            /* 挑方向時，試幾個角度 */
     var GAP_LAST = 40;                          /* 最後的保底，圓點間距最小縮到多少（圓點半徑 DOT_R ＝ 18，再小就會疊在一起） */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function speedFor(level) { return kit.ramp(level, SPEED[0], SPEED[1], RAMP_LEVELS); }

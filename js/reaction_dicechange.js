@@ -28,9 +28,9 @@
     var SHOW_BASE = 2000, SHOW_PER = 500;       /* 記憶顯示時間（毫秒）＝ (SHOW_BASE ＋ SHOW_PER × 骰子數) × 倍率 */
     var SHOW_MUL = [1.0, 0.6];                  /* 倍率：第 1 關 → MUL_LEVELS 關 */
     var ANS_BASE = 4000, ANS_PER = 1000;         /* 作答限時（毫秒）＝ (ANS_BASE ＋ ANS_PER × 骰子數) × 倍率 */
-    var ANS_MUL = [1.2, 0.8];
+    var ANS_MUL = [1.2, 0.8];                       /* 答題時間的倍率：第 1 關 1.2 倍 → 到頂 0.8 倍（越後面時間越短） */
     var MUL_LEVELS = 30;                        /* 倍率幾關之後到頂 */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function diceFor(level) { return Math.min(DICE_MAX, DICE_FIRST + level - 1); }

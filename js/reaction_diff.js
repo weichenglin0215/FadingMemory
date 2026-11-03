@@ -35,13 +35,13 @@
     /* 大小差異比例、色相差異度數、位置位移 px：三種差異各自的起始值與終點值 */
     var SIZE_START = 0.3, SIZE_END = 0.05;
     var HUE_START = 75, HUE_END = 18;           /* 色相差異（度）：第 1 關 → 第 LEVEL_RAMP 關（V1.34：原本 40 → 5，太小，放大成 75 → 18；圖形的飽和度與亮度固定，所以差 18° 以上才一眼看得出來） */
-    var POS_START = 30, POS_END = 5;
+    var POS_START = 30, POS_END = 5;                /* 「位置不同」那種差異的位移量（px）：第 1 關 30 → 到頂 5（位移越小越難看出） */
     /* 同一關點錯幾次就結束（第 2 次點錯結束，第一次不扣） */
     var MISTAKES_MAX = 2;                      /* 同一關點到第幾個沒有差異的圖形就結束 */
-    var NEXT_MS = 700;
+    var NEXT_MS = 700;                              /* 答完一題後停多久才出下一題（毫秒，700 毫秒＝0.7 秒） */
     /* 每格版面是 4×3 = 12 個位置，從中挑 10 個放圖形，其中 5 個動手腳 */
     var COLS = 4, ROWS = 3, N_SHAPES = 10, N_DIFF = 5;
-    var BASE_R = 30;
+    var BASE_R = 30;                                /* 每個圖形的基本半徑（px） */
     /* 可以出現的圖形種類 */
     var SHAPES = ['circle', 'square', 'triangle', 'star', 'hexagon', 'diamond', 'pentagon'];
     /* 差異的三種種類：大小、顏色（hue 色相）、位置 */

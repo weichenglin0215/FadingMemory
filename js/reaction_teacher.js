@@ -41,15 +41,15 @@
     var OPPOSITE_FROM = 10, P_OPPOSITE = 0.33;
     /* 第 15 題起出現「同時點兩個方向」：機率 25% → 45%（到第 RAMP_N 題）；兩個方向要在 0.5 秒內都點到；這種題限時多 0.7 秒（要讀兩個方向、動兩根手指） */
     var DOUBLE_FROM = 15, P_DOUBLE_START = 0.25, P_DOUBLE_END = 0.45;
-    var DOUBLE_WINDOW_S = 0.5, DOUBLE_EXTRA_S = 0.7;
+    var DOUBLE_WINDOW_S = 0.5, DOUBLE_EXTRA_S = 0.7;  /* DOUBLE_WINDOW_S：「同時點兩個方向」的題目，兩個方向要在幾秒內都點到；DOUBLE_EXTRA_S：這種題目的限時多給幾秒 */
     /* 沒說「老師說」的題目最多連續幾題 */
     var NO_SAY_RUN_MAX = 3;
     var GAP_S = 0.3;                                /* 答完到下一題之間的空檔（空檔內的點擊不算）*/
-    var FAIL_SHOW_MS = 2200;
+    var FAIL_SHOW_MS = 2200;                        /* 失敗後顯示原因停多久（毫秒） */
     /* 四個方向，以及方向的中文名稱與相反方向對照表 */
     var DIRS = ['up', 'down', 'left', 'right'];
-    var DIR_NAME = { up: '上面', down: '下面', left: '左邊', right: '右邊' };
-    var OPPOSITE = { up: 'down', down: 'up', left: 'right', right: 'left' };
+    var DIR_NAME = { up: '上面', down: '下面', left: '左邊', right: '右邊' };  /* 方向的中文名稱 */
+    var OPPOSITE = { up: 'down', down: 'up', left: 'right', right: 'left' };  /* 每個方向的相反方向 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 第 i 題有「老師說」的機率 */

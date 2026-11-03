@@ -4,23 +4,25 @@
    · 顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
    ═══════════════════════════════════════ */
 
+/* 整個遊戲區的外框 */
 .fifteen-wrap {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    padding-top: 10px;
-    padding-bottom: 80px;
-    box-sizing: border-box;
+    position: absolute;          /* 脫離一般排版，直接貼著上一層（舞台）定位 */
+    inset: 0;                    /* 上下左右都貼齊舞台邊緣（等於 top/right/bottom/left 都是 0），所以剛好鋪滿整個舞台 */
+    display: flex;               /* 用「彈性盒子」排版：裡面的東西排成一條 */
+    flex-direction: column;      /* 排成直的（由上往下） */
+    align-items: center;         /* 每一個子元素水平置中 */
+    gap: 12px;                   /* 子元素之間留 12px 的空隙 */
+    padding-top: 10px;           /* 上方內縮 10px */
+    padding-bottom: 80px;        /* 下方內縮 80px：留位置給畫面底部的按鈕與時間條 */
+    box-sizing: border-box;      /* 寬高把內縮（padding）和邊框算進去，這樣不會因為加了 padding 就超出舞台 */
 }
 
+/* 最上面的目標說明（例如「三張加起來＝15」） */
 .fifteen-goal {
-    text-align: center;
-    padding: 0 10px;
-    color: var(--c-orange);
-    line-height: 1.25;
+    text-align: center;          /* 文字置中 */
+    padding: 0 10px;             /* 左右各內縮 10px（上下 0） */
+    color: var(--c-orange);      /* 顏色用 css/theme.css 定義的橘色變數，不直接寫色碼 */
+    line-height: 1.25;           /* 行高是字級的 1.25 倍 */
 }
 
 .fifteen-goal__main {
@@ -34,17 +36,18 @@
     color: var(--c-ink-soft);
 }
 
-/* 左：你的牌／中：桌上的牌／右：電腦的牌 */
+/* 左：你的牌／中：桌上的牌／右：電腦的牌，三欄排成一橫列 */
 .fifteen-cols {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 8px;
-    width: 98%;
+    display: flex;               /* 彈性盒子：預設就是由左往右排成一橫列 */
+    align-items: flex-start;     /* 三欄的上緣對齊（高度不同也不要拉成一樣高） */
+    justify-content: space-between; /* 左右兩欄貼邊，剩下的空間平均分給欄與欄之間 */
+    gap: 8px;                    /* 欄與欄之間至少留 8px */
+    width: 98%;                  /* 寬度是舞台寬度的 98% */
 }
 
+/* 兩邊「你的牌／電腦的牌」的框 */
 .fifteen-hand {
-    flex: 0 0 24%;
+    flex: 0 0 24%;               /* 彈性盒子的縮放設定：不放大(0)、不縮小(0)、基本寬度 24%＝固定佔 24% 寬 */
     display: flex;
     flex-wrap: wrap;
     align-content: flex-start;

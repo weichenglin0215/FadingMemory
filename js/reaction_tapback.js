@@ -30,7 +30,7 @@
     var MARGIN = 54;                            /* 圓點離遊戲區邊緣至少多遠 */
     var MIN_GAP = 104;                          /* 任兩個圓點圓心至少相距多少 */
     var DOT_R = 38;                             /* 圓圈的半徑（命中範圍也是這個大小） */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function lenFor(level) { return Math.min(LEN[1], LEN[0] + Math.floor((level - 1) / LEN_EVERY)); }

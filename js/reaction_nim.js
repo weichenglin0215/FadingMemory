@@ -29,9 +29,9 @@
     ];
     var COMPUTER_THINK_MS = 800;                /* 電腦「思考」多久才出手 */
     var COMPUTER_SHOW_MS = 700;                 /* 電腦選好要拿的火柴之後，停多久才真的拿走 */
-    var PASS_DELAY_MS = 1400;
+    var PASS_DELAY_MS = 1400;                       /* 答對（過關）後停多久才換下一關（毫秒，1400 毫秒＝1.4 秒） */
     var FAIL_HOLD_MS = 6000;                    /* 失敗時顯示 XOR 說明的時間 */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var MATCH_MAX_W = 26;                       /* 火柴棒最寬幾 px */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */

@@ -77,16 +77,16 @@
     var POINTER_MIN_H = 52, POINTER_MAX_H = 160;   /* 油漆刷提示的高度範圍（px）；正常是圓形直徑的 2 倍 */
     /* 底色（也是油漆的顏色）：淡色，這樣鮮豔的塗鴉才醒目；塗鴉的顏色：鮮豔的七色 */
     var BASE_COLORS = ['#FFF1C1', '#D6ECFF', '#DDF5E3', '#FFE0E8', '#EADFFF', '#FFE6C9', '#E3F7F7'];
-    var INK_COLORS = ['#E53935', '#1E88E5', '#00A152', '#8E24AA', '#FB8C00', '#D81B60', '#00ACC1'];
+    var INK_COLORS = ['#E53935', '#1E88E5', '#00A152', '#8E24AA', '#FB8C00', '#D81B60', '#00ACC1'];  /* 塗鴉的七種鮮豔顏色 */
     /* 塗鴉：
        · SCRIBBLE_MAX：處數最多幾處（第 1 關 1 處，每過一關多 1 處，到這個數字就不再增加；舊版是 10～12 處）；
        · SCRIBBLE_AREA：每一關所有塗鴉的「外框（方形）面積總和」＝54600 px²（舊版 10～12 處、每處約 88−筆頭粗細 的方框，平均算出來的），
          所以第 1 關只有 1 處時，這一處就放大到邊長約 234px（舊版每處只有約 70px）——「面積等於原來多個圖案的總面積」；
        · PEN_SIZES：筆頭粗細（直徑 px）；SCRIBBLE_GAP：塗鴉離小區邊緣的空隙；DOT_MAX_SIDE：圖案邊長超過這個數字就不抽「圓點」。 */
     var SCRIBBLE_MAX = 12;
-    var SCRIBBLE_AREA = 54600;
-    var PEN_SIZES = [6, 10, 14, 18, 22, 26, 30];
-    var SCRIBBLE_GAP = 6, DOT_MAX_SIDE = 100;
+    var SCRIBBLE_AREA = 54600;                      /* 每一關所有塗鴉「外框（方形）面積總和」＝54600 px²；處數少時每一處就畫得比較大 */
+    var PEN_SIZES = [6, 10, 14, 18, 22, 26, 30];    /* 筆頭的粗細（直徑 px）可以選的七種 */
+    var SCRIBBLE_GAP = 6, DOT_MAX_SIDE = 100;       /* SCRIBBLE_GAP：塗鴉離小區邊緣的空隙（px）；DOT_MAX_SIDE：圖案邊長超過這個數字（px）就不抽「圓點」 */
     var KINDS = ['zigzag', 'wave', 'spiral', 'loops', 'star', 'ring', 'cross', 'hatch', 'dot'];       /* 線條塗鴉的九種形狀（emoji 另外算，kind 是 'emoji'） */
     /* V1.40.0 自由擺放：每處塗鴉抽幾個候選位置，挑離已放好的最遠的（1＝完全隨機；越大越分散，但永遠沒有「不能重疊」的限制） */
     var PLACE_TRIES = 3;
@@ -97,8 +97,8 @@
        · EMOJI_GROUPS：小孩子會塗鴉的圖案，依類別（w＝抽到這一類的權重）。全部是 Emoji 5.0（2017 年）以前的，Windows 10、舊 Android 都畫得出來；
          用字串寫（含 U+FE0F 變體選擇符的 ✈️ 🌶️ ☀️ ❤️ 🕯️ 要保留，才會畫成彩色 emoji）。 */
     var EMOJI_P = 0.45, EMOJI_FS = 0.85, EMOJI_HALF = 0.62, EMOJI_ALPHA = 24;
-    var EMOJI_FONT = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", sans-serif';
-    var EMOJI_GROUPS = [
+    var EMOJI_FONT = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", sans-serif';  /* emoji 使用的字型清單（各作業系統的彩色 emoji 字型，依序嘗試） */
+    var EMOJI_GROUPS = [                            /* 小孩子會塗鴉的 emoji 圖案，依類別分組（w＝抽到這一類的權重、list＝這一類的圖案） */
         { id: 'car', name: '汽車', w: 1, list: ['🚗', '🚕', '🚙', '🚌', '🚓', '🚑', '🚒', '🚜', '🚲', '🚂', '✈️', '🚀'] },
         { id: 'food', name: '食物', w: 1, list: ['🍎', '🍌', '🍓', '🍉', '🍇', '🍊', '🍒', '🍍', '🍕', '🍔', '🍟', '🍦', '🍩', '🍪', '🍭', '🍞'] },
         { id: 'veg', name: '蔬菜', w: 1, list: ['🥕', '🥦', '🌽', '🍅', '🍆', '🥒', '🥔', '🌶️', '🍄'] },

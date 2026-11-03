@@ -23,7 +23,7 @@
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var FRAMES = [15, 1];                       /* 兩盞燈相差的影格數：第 1 關 → 到頂 */
     var WAIT_MS = [1200, 3000];                 /* 開始後隔多久第一盞燈亮 */
     var ANS_MS = 3000;                          /* 兩盞燈都亮之後的作答限時 */
@@ -31,7 +31,7 @@
     var EDGE = 20;                              /* 燈離畫面左右邊緣的距離（px） */
     var SIZE_JIT = 0.1;                        /* 兩盞燈大小的差：一盞是基準的 (1 − JIT×u)、另一盞是 (1 + JIT×u)，u 在 0.5～1 */
     var GAP_MIN = 8;                            /* 兩盞燈中間至少留的空隙（px；第 1 關兩盞 220 放不下時會自動縮到放得下） */
-    var SAME_MAX = 3, FRAME_SAMPLES = 40;
+    var SAME_MAX = 3, FRAME_SAMPLES = 40;           /* SAME_MAX：同一側最多連續先亮幾次；FRAME_SAMPLES：測量畫面更新速度時取幾個影格當樣本 */
     var frameMs = 1000 / 60;                    /* 1 影格幾毫秒（開始時量測） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */

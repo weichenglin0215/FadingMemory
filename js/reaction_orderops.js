@@ -30,12 +30,12 @@
     var TIME_BASE = 15.0, TIME_PER_NUM = 1.2;    /* 限時（秒）＝ (TIME_BASE ＋ TIME_PER_NUM × (數字個數 − 2)) × 倍率 */
     var TIME_MUL = [1.0, 3.0];                 /* 倍率：第 1 題 → 到頂（越後面越趕） */
     var MAX_ANS = 999;                          /* 正確答案最大多少 */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var SAME_MAX = 4;                           /* 正確答案放在同一個位置最多連續幾次 */
     var OPTIONS4_FROM = 15;                     /* 第幾題起改成四個答案（之前是兩個） */
 
-    var OP_TEXT = { '+': '+', '-': '−', '*': '×', '/': '÷', '(': '(', ')': ')' };
-    var CIRCLED = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩'];
+    var OP_TEXT = { '+': '+', '-': '−', '*': '×', '/': '÷', '(': '(', ')': ')' };  /* 畫面上顯示的符號（減、乘、除用數學符號 − × ÷，括號用全形） */
+    var CIRCLED = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩'];  /* 步驟前面的編號（①～⑩） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function numsFor(level) { return kit.clamp(Math.round(kit.ramp(level, NUMS[0], NUMS[1], RAMP_LEVELS)), NUMS[0], NUMS[1]); }

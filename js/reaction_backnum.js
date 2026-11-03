@@ -34,7 +34,7 @@
     var LIT_START = 0.7, LIT_END = 0.45;    /* 每格亮多久（秒） */
     var GAP_S = 0.25;             /* 兩格之間的空檔（秒） */
     var SPLASH_MS = 2400;         /* 開場大字提醒停多久 */
-    var CLEAR_MS = 900;
+    var CLEAR_MS = 900;                             /* 這一關結束後，畫面清空多久才開始下一關（毫秒） */
 
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 關'; }
 

@@ -13,7 +13,7 @@
      後面差好幾個小時（要轉好幾圈，時針也要對）。
    · 判定：按「好了」，目標與目前的環狀差（mod 720 分鐘）≤ TOL（1 分鐘）才算對。
    · 難度（第 1 → LEVEL_RAMP 關線性）：基本限時 TIME_START → TIME_END 秒、起始時間可差的整點數 0 → HOUR_OFFSET_END；
-     V1.43.0 玩家意見「時間限制太短，尤其是前面關卡必須延長」：基本限時從 5→2 秒延長成 12→4 秒，而且**要轉幾圈就多給幾圈的時間**
+     V1.43.0 玩家意見「時間限制太短，尤其是前面關卡必須延長」：基本限時從 5→2 秒延長成 12→4 秒（使用者之後手調成 12→20 秒，現在以 TIME_START／TIME_END 為準），而且**要轉幾圈就多給幾圈的時間**
      （每要轉分針一整圈＝60 分鐘，多給 TURN_SEC 秒），所以差好幾個小時的題目不會再來不及轉；
      第 HIDE_NUM_FROM 關起隱藏 1～12 的數字、第 HIDE_TICK_FROM 關起連刻度也隱藏。
    · 關卡制：超時沒撥對、或按「好了」時誤差超過容許值，就結束（錯一次就失敗，沒有「機會」次數），成績＝通過關數（越多越好）。
@@ -35,14 +35,14 @@
     /* ═══ 可以自己調的參數 ═══ */
     /* 難度從第 1 關線性變到第 LEVEL_RAMP 關，之後維持最難 */
     var LEVEL_RAMP = 30;
-    var TIME_START = 12, TIME_END = 20;       /* 每關基本限時（秒）； */
+    var TIME_START = 12, TIME_END = 20;       /* 每關基本限時（秒）：第 1 關 12 秒 → 到頂 20 秒（另外依要轉的距離再加 TURN_SEC） */
     var TURN_SEC = 2;                        /* 要轉的距離每多分針一整圈（60 分鐘），限時再多幾秒 */
     var HOUR_OFFSET_START = 1, HOUR_OFFSET_END = 6;    /* 起始時間最多可以差幾個整點 */
-    var OFFSET_MIN = 15, OFFSET_MAX = 55;      /* 除了整點之外，再差 15～45 分鐘 */
+    var OFFSET_MIN = 15, OFFSET_MAX = 55;      /* 除了整點之外，再差 OFFSET_MIN～OFFSET_MAX 分鐘（目前 15～55 分鐘） */
     var TOL = 1;                               /* 容許誤差（分鐘） */
-    var HIDE_NUM_FROM = 8, HIDE_TICK_FROM = 16;
+    var HIDE_NUM_FROM = 8, HIDE_TICK_FROM = 16;     /* HIDE_NUM_FROM：第幾關起隱藏數字時鐘的字；HIDE_TICK_FROM：第幾關起隱藏刻度 */
     var DEAD_ZONE = 0.12;                      /* 離圓心小於鐘面寬度的這個比例時不理會（角度抖動太大） */
-    var NEXT_MS = 1100;
+    var NEXT_MS = 1100;                             /* 答完一題後停多久才出下一題（毫秒，1100 毫秒＝1.1 秒） */
     /* 鐘面 SVG 的座標：圓心 (CX,CY)＝(200,200)，半徑 RADIUS；SVG 的 viewBox 是 400×400 */
     var CX = 200, CY = 200, RADIUS = 188;
 

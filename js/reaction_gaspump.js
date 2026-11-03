@@ -31,11 +31,11 @@
     var EASY_LEVELS = 5;                        /* 前幾關用整數油價 */
     var PRICE_RANGE = [26.9, 33.4];             /* 之後的油價範圍（元／公升） */
     var TARGETS = [300, 500, 800, 1000];        /* 目標金額（元）：第 TARGET_FROM 關之前只有 500 */
-    var TARGET_FROM = 4;
+    var TARGET_FROM = 4;                            /* 第幾關起目標油量才隨機挑（前面的關卡固定是 500） */
     var OVER = 1.6;                             /* 加到目標的幾倍就自動停手（加滿了） */
     var TIME_S = 30;                            /* 每關限時（秒）：整關的上限，免得一直不按 */
-    var FUELS = ['95 無鉛', '92 無鉛', '98 無鉛'];
-    var MAX_LEVEL = 90;
+    var FUELS = ['95 無鉛', '92 無鉛', '98 無鉛'];        /* 油品名稱：95 無鉛、92 無鉛、98 無鉛 */
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function tolFor(level) { return Math.round(kit.ramp(level, TOL[0], TOL[1], RAMP_LEVELS) * 10) / 10; }

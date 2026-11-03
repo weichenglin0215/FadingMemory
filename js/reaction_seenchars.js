@@ -26,7 +26,7 @@
     var STROKES_LO = [3, 8], STROKES_HI = [8, 20];   /* 字群的平均筆劃範圍（下限、上限）：第 1 關 → 到頂 */
     var RESP_S = [20, 12];                      /* 作答時間（秒）：第 1 關 → 到頂 */
     var MIN_GROUP = 4;                          /* 字群至少幾個字（才有足夠的形近字當干擾） */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

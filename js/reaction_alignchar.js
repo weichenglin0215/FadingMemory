@@ -32,13 +32,13 @@
     var KMAX = 8;                               /* 直條的速度倍數最大是幾（±1～±KMAX） */
     var ALIGN_AT = [3.0, 6.0];                  /* 第一次對準的時刻 ＝ 週期 × 這個範圍的隨機數 */
     var PIC = { w: 460, h: 460 };               /* 圖案方框的大小（邏輯 px），h 同時是直條循環的一圈長度 P */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     /* 「長得像」的字群組：選項優先從同一群挑。
        V1.33：改用共用資料庫 js/similar_chars.js（SimilarChars），不再自己寫一份字表。
        這款的直條要拼得出字，所以只用「平均筆劃 ≤ GROUP_MAX_STROKES、至少 4 個字」的字群（跟以前的字表差不多難）。 */
     var GROUP_MAX_STROKES = 15;
-    var GROUPS = SimilarChars.groups({ minSize: 4, maxStrokes: GROUP_MAX_STROKES }).map(function (g) { return g.chars; });
-    var CHARS = [];
+    var GROUPS = SimilarChars.groups({ minSize: 4, maxStrokes: GROUP_MAX_STROKES }).map(function (g) { return g.chars; });  /* 「長得像的字」群組（每一群是一個字的陣列），選項優先從同一群挑 */
+    var CHARS = [];                                 /* 所有群組裡出現過的字（不重複），下面的迴圈會把字填進來 */
     GROUPS.forEach(function (g) { g.forEach(function (c) { if (CHARS.indexOf(c) < 0) CHARS.push(c); }); });
 
     /* ═══ 純函式（也給 Node 測試用）═══ */

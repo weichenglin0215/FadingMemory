@@ -36,9 +36,9 @@
     var KIND_FROM = { rand: 1, samenum: 3, plus1: 5, mult: 9 };   /* 各題型從第幾題起出現 */
     var BIG_FROM = 11, BIG_P = 0.4, CAP2 = 99, CAP3 = 999;        /* 三位數：第幾題起、機率；兩位數與三位數的上限 */
     var DEC_FROM = 21, DEC_P = 0.4;             /* 帶小數點：第幾題起、機率 */
-    var MAX_LEVEL = 90, TRIES = 30000, SAME_SIDE = 3;
-    var KINDS = ['rand', 'samenum', 'plus1', 'mult'];
-    var KIND_HINT = {
+    var MAX_LEVEL = 90, TRIES = 30000, SAME_SIDE = 3;  /* MAX_LEVEL：最後一關，過了第 90 關就算全破（也是成績的上限）；TRIES：出題時最多重抽幾次；SAME_SIDE：較大的分數出現在同一邊最多連續幾次 */
+    var KINDS = ['rand', 'samenum', 'plus1', 'mult'];  /* 比分數的四種題型：rand 隨機、samenum 分子相同、plus1 分子分母各加一、mult 分母是倍數 */
+    var KIND_HINT = {                               /* 每種題型答錯時給的小提醒 */
         rand: '',
         samenum: '分子一樣的時候，分母越大，分數越小',
         plus1: '分子分母各差 1：分子比分母小的，加 1 之後會變大；分子比分母大的，加 1 之後會變小（都往 1 靠近）',

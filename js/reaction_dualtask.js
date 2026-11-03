@@ -77,7 +77,7 @@
     /* 亂點一次扣 1 分 */
     var STRAY_PENALTY = 1;
     var OPT_COUNT = 10, OPT_COLS = 5;         /* 答案選項：10 個連續號碼，每排 5 個（兩排） */
-    var READY_MS = 1400, REVIEW_MS = 3200;
+    var READY_MS = 1400, REVIEW_MS = 3200;          /* READY_MS：開始前的準備時間（毫秒）；REVIEW_MS：這一關結束後停多久才換關或結算（毫秒） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 第 sec 秒的難度值 d：0（開始）→ 1（第 RAMP_SEC 秒）→ 繼續變大（不設上限，各項參數有各自的下限） */

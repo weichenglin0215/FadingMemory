@@ -35,13 +35,13 @@
     var REVEAL_MS = 3000;                       /* 答錯時，揭曉畫面停多久才跳結算（讓玩家看清楚） */
     var NEUTRAL = '#B8B2A3';                    /* 沒有顏色變化的衣物，大家都是這個灰色 */
     var FACE_SIZE = 26;                         /* 頭（人像 emoji）的字級，單位是 SVG 座標（70×160 的畫布；原本頭是半徑 13 的圓） */
-    var COLORS = [
+    var COLORS = [                                  /* 路人身上衣物可能的顏色（name 中文名稱、hex 色碼） */
         { name: '紅', hex: '#D9423A' }, { name: '橙', hex: '#F0892B' }, { name: '黃', hex: '#EAC12B' }, { name: '綠', hex: '#4C9A5B' },
         { name: '藍', hex: '#3E86C4' }, { name: '紫', hex: '#8A5CC4' }, { name: '粉紅', hex: '#EE86B4' }
     ];
-    var PARTS = ['hat', 'shirt', 'pants', 'shoes'];
+    var PARTS = ['hat', 'shirt', 'pants', 'shoes'];  /* 路人身上會變的四個部位：帽子、衣服、褲子、鞋子 */
     var VARY_ORDER = ['shirt', 'hat', 'pants', 'shoes'];      /* 有顏色變化的衣物，依這個順序加入 */
-    var PART_NAME = { hat: '帽子', shirt: '衣服', pants: '褲子', shoes: '鞋子' };
+    var PART_NAME = { hat: '帽子', shirt: '衣服', pants: '褲子', shoes: '鞋子' };  /* 部位的中文名稱 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function speedAt(level) { return kit.ramp(level, SPEED[0], SPEED[1], RAMP_LEVELS); }

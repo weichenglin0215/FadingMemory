@@ -42,9 +42,9 @@
     /* ═══ 可以自己調的參數 ═══ */
     /* 難度從第 1 題線性變到第 LEVEL_RAMP 題：會變的屬性數、循環長度、限時 */
     var LEVEL_RAMP = 30;
-    var ATTR_START = 1, ATTR_END = 3;
-    var K_START = 2, K_END = 3;
-    var TIME_START = 15, TIME_END = 8;
+    var ATTR_START = 1, ATTR_END = 3;               /* 同時會變的屬性數：第 1 題 1 種 → 到頂 3 種 */
+    var K_START = 2, K_END = 3;                     /* 循環長度：第 1 題 2 → 到頂 3 */
+    var TIME_START = 15, TIME_END = 8;              /* 每題限時（秒）：第 1 題 15 秒 → 到頂 8 秒 */
     /* 顯示幾個圖案（第 n+1 個是答案）：上方最多 8 格＝7 個圖案＋「？」，隨題號 4 → 7 個 */
     var SHOWN = [4, 7];
     var NUM_SHOWN = [5, 7];                  /* 數字題顯示幾個數字 */
@@ -52,19 +52,19 @@
     var NUM_CAP = 999;                       /* 數字題裡出現的數字（絕對值）上限 */
     var SCALE_MIN = 0.32, SCALE_STEP = 0.136;     /* 圖案縮放：大小 1 級 → 0.32、每級加 0.136（6 級＝1.0） */
     var SIZE_GAP = 2;                        /* 「大小」干擾選項跟正解至少差幾級 */
-    var NEXT_MS = 1000, WRONG_MS = 3200;
-    var SIZE_MAX = 6;
+    var NEXT_MS = 1000, WRONG_MS = 3200;            /* NEXT_MS：答對後停多久才出下一題（毫秒，1000＝1 秒）；WRONG_MS：答錯／時間到、亮出規律後停多久才結算（毫秒，3200＝3.2 秒） */
+    var SIZE_MAX = 6;                               /* 大小最多有幾級（1～6 級） */
 
     /* 對稱的形狀（轉了看不出差異）／不對稱的形狀（轉了看得出來），後者才適合考「旋轉」 */
     var SHAPES_SYM = ['circle', 'square', 'hexagon', 'cross'];
-    var SHAPES_ASYM = ['tri', 'arrow', 'half', 'house', 'ell'];
+    var SHAPES_ASYM = ['tri', 'arrow', 'half', 'house', 'ell'];  /* 不對稱的形狀（轉了看得出來，適合考旋轉）：三角形、箭頭、半圓、房子、L 形 */
     /* 轉幾度會看起來一樣：圓形 0＝怎麼轉都一樣；正方形 90 度；六角形 60 度；不對稱形狀 360 度 */
     /* 轉幾度會看起來一樣：0＝怎麼轉都一樣（圓形）*/
     var ROT_PERIOD = { circle: 0, square: 90, hexagon: 60, cross: 90, tri: 360, arrow: 360, half: 360, house: 360, ell: 360 };
-    var SHAPE_NAME = { circle: '圓形', square: '方形', hexagon: '六角形', cross: '十字', tri: '三角形', arrow: '箭頭', half: '半圓', house: '房子形', ell: 'L 形' };
-    var COLOR_NAME = ['藍', '橘', '綠', '黃', '紅'];
-    var ATTRS = ['shape', 'color', 'rotation', 'size'];
-    var ROT_STEPS = [45, 90, -45, -90];
+    var SHAPE_NAME = { circle: '圓形', square: '方形', hexagon: '六角形', cross: '十字', tri: '三角形', arrow: '箭頭', half: '半圓', house: '房子形', ell: 'L 形' };  /* 每種形狀的中文名稱 */
+    var COLOR_NAME = ['藍', '橘', '綠', '黃', '紅'];     /* 五種顏色的中文名稱 */
+    var ATTRS = ['shape', 'color', 'rotation', 'size'];  /* 可以變化的四種屬性：形狀、顏色、旋轉、大小 */
+    var ROT_STEPS = [45, 90, -45, -90];             /* 每一步旋轉的角度可以是 45、90、−45、−90 度 */
     /* 大小的「波形」：0,1,2,1 重複＝變大再變小 */
     var WAVE = [0, 1, 2, 1];
 

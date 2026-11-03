@@ -31,7 +31,7 @@
     var TEETH_MIN = 8, TEETH_GAP = 3;           /* 其他齒輪最少幾齒；相鄰兩個齒輪齒數至少差幾齒（轉速不能太像） */
     var TARGET_TURN = [120, 500];               /* 對準時大齒輪離起點轉了幾度（絕對值範圍） */
     var MIN_TAP_MOVE = 12;                      /* 手指在畫面上至少移動幾 px 才算「畫圈」，放手才判定（避免誤點就失敗） */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

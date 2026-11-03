@@ -30,9 +30,9 @@
     var SEGMENT = 8;                            /* 每點到幾個換一個目標字 */
     var STROKES_LO = [3, 14], STROKES_HI = [8, 24];     /* 目標字的字群平均筆劃範圍：0 個 → 到頂 */
     var INTERMISSION_MS = 1100;                 /* 換目標字時停多久 */
-    var MIN_GROUP = 4;
+    var MIN_GROUP = 4;                              /* 「長得像的字」字群至少要幾個字才拿來出題 */
     var SOLVE_CAP = 12;                         /* 驗證用：api.solve 最多幫你點到幾個（再多就讓目標字飄走，遊戲才會結束） */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function prog(hits) { return Math.min(1, Math.max(0, hits / RAMP_HITS)); }

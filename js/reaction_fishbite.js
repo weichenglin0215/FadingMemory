@@ -39,9 +39,9 @@
     var UP_K = 0.8;                             /* 往上的分量要 ≥ 水平分量 × 這個數 */
     var REPLAY_SPEED = 0.5;                     /* 揭曉重播的速度（0.5＝慢動作兩倍） */
     var REPLAY_PRE = 0.6, REPLAY_POST = 0.5;    /* 重播從咬鉤前幾秒開始、窗口結束後多幾秒 */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var FISH = ['吳郭魚', '香魚', '鯉魚', '鱸魚', '鯽魚', '草魚'];      /* 每一關釣到的魚（依關卡輪流） */
-    var easeOut = kit.easeOutCubic, easeIO = kit.easeInOutCubic;
+    var easeOut = kit.easeOutCubic, easeIO = kit.easeInOutCubic;  /* easeOut：先快後慢的緩動函式；easeIO：慢—快—慢的緩動函式（都來自共用工具箱 kit） */
     /* 浮標往回浮的時候（easeIO 曲線）從 1.0 掉到 BITE_LINE（0.9）要走完回程的多少比例：4u³ ＝ 1 − 0.9 → u ≈ 0.292。
        窗口的結束時間 tEnd 就是「深度剛好掉到 0.9」的那一刻，所以要提早這麼多開始往回浮，畫面上看到的沉沒時間和判定才一致 */
     var U_REC = Math.pow((1 - BITE_LINE) / 4, 1 / 3);

@@ -37,10 +37,10 @@
     var GX0 = 105, GX1 = 295;             /* 杯子內側左右 */
     /* 杯底 y、杯內高度；杯口 y＝杯底 − 杯高＝水位 100% */
     var GB = 510, GH = 330;               /* 杯底 y、杯內高度（杯口 y＝GB−GH＝100% 水位） */
-    var RIM = GB - GH;
+    var RIM = GB - GH;                              /* 杯口在畫面上的 y 座標（由杯底 GB 與杯高 GH 算出） */
     var AMP = 7;                          /* 倒水時水面波動的振幅（SVG 單位，約杯高 2%） */
     var SETTLE_MS = 900;                  /* 放手後水面平靜下來的時間 */
-    var ZOOM_MS = 2200;
+    var ZOOM_MS = 2200;                             /* 揭曉時鏡頭放大的動畫時間（毫秒） */
     var ANCHOR_Y = 0.3;                   /* 結算鏡頭：目標線與水面中點放在畫面由上往下 30% 處（下方留給結算橫幅） */
     var MIN_WIN = 6;                      /* 鏡頭視窗最小高度（SVG 單位）＝放大約 93 倍 */
     /* 刻度尺的間距（%）：視窗越小，刻度越密 */
@@ -48,7 +48,7 @@
 
     /* 水位 L（0～1）轉成畫面的 y 座標 */
     var yOf = function (L) { return GB - L * GH; };
-    var YT = yOf(TARGET);
+    var YT = yOf(TARGET);                           /* 目標水位在畫面上的 y 座標（用 yOf 算好存起來） */
 
     /* 百分比的顯示格式：4 位小數（水位誤差等；成績用 Leaderboard.fake4 產生過，見 verdict） */
     function fmtPct(v) { return v.toFixed(4) + '%'; }

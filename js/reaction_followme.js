@@ -39,7 +39,7 @@
 
     /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
-    var LEVEL_RAMP = 30;
+    var LEVEL_RAMP = 30;                            /* 難度升到頂的關卡：第 1 關線性變難，到第 30 關最難，之後維持不變 */
     /* 步數、陷阱數、地圖列數都隨關卡線性增加 */
     var STEPS_START = 3, STEPS_END = 30;       /* 要走幾步 */
     var TRAPS_START = 0, TRAPS_END = 30;       /* 陷阱數量 */
@@ -47,8 +47,8 @@
     /* 地圖寬度：一般 5 格，第 8 關起 7 格 */
     var COLS_NARROW = 5, COLS_WIDE = 7, WIDE_FROM = 8;
     var DEMO_STEP_MS = 480;                    /* 示範每一步的時間 */
-    var DEMO_LEAD_MS = 900, DEMO_END_MS = 800;
-    var NEXT_MS = 1300;
+    var DEMO_LEAD_MS = 900, DEMO_END_MS = 800;      /* DEMO_LEAD_MS：示範開始前先等多久（毫秒）；DEMO_END_MS：示範結束後再停多久（毫秒） */
+    var NEXT_MS = 1300;                             /* 答完一題後停多久才出下一題（毫秒，1300 毫秒＝1.3 秒） */
     /* 三個動作對應的位移 [列變化, 欄變化]：L 往左一欄、F 往上一列（列號減 1）、R 往右一欄 */
     var MOVES = { L: [0, -1], F: [-1, 0], R: [0, 1] };     /* [dRow, dCol] */
     /* 動作的中文名稱（主控台輸出用） */

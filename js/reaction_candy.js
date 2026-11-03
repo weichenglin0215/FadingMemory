@@ -40,11 +40,11 @@
     /* 糖果總數：第 1 題 6 顆，之後每題多 2 顆（難度曲線比原本平緩），最多 N_END 顆 */
     var N_START = 6, N_STEP = 2, N_END = 70;       /* N_END＝放得下的上限：t_candy.js 會驗證在托盤 W×H 內擺得下 */
     var OPTION_COUNT = 6;                          /* 答案按鈕有幾顆（連續的一排數字） */
-    var K_START = 2, K_END = 5;
+    var K_START = 2, K_END = 5;                     /* 顏色（糖果）種類數 K：第 1 題 2 種 → 到頂 5 種（隨關卡線性增加） */
     var LEAD_START = 3, LEAD_END = 1;              /* 第一名領先第二名的顆數 */
     /* 每顆糖果至少要露出 30% 的面積（可以重疊，但不能被蓋得看不到） */
     var MIN_VIS = 0.30;                            /* 每顆糖果至少要露出幾成的面積 */
-    var SCATTER_RESTARTS = 24;
+    var SCATTER_RESTARTS = 24;                      /* 把糖果丟在桌上時，擺不下就整個重排，最多重排幾次 */
     var SHOW_START = 2000, SHOW_END = 15000;         /* 閃現時間（毫秒） */
     /* 答案按鈕之間的數字間隔：第 1～3 題差 4，之後每 GAP_EVERY 題少 1，第 10 題起差 1（GAP_MIN） */
     var GAP_START = 4, GAP_EVERY = 3, GAP_MIN = 1;

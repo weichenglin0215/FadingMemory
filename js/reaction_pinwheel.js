@@ -36,7 +36,7 @@
     var R_MIN = 36;                             /* 手指離風車中心至少多遠（px）才算畫圈 */
     var SPEED_MAX_RATIO = 2.2;                  /* 速度表的最大刻度＝中心轉速 × 這個數 */
     var SAMPLE_S = 0.05;                        /* 紀錄轉速折線圖的取樣間隔（秒） */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

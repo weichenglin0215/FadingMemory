@@ -28,11 +28,11 @@
     /* ═══ 可以自己調的參數 ═══ */
     /* 難度從第 1 張線性變到第 RAMP_N 張 */
     var RAMP_N = 30;
-    var TIME_START = 3.0, TIME_END = 1.2;
-    var TRICKY_START = 0.10, TRICKY_END = 0.50;
+    var TIME_START = 3.0, TIME_END = 1.2;           /* 每一張的作答時間（秒）：第 1 張 3.0 秒 → 第 RAMP_N 張 1.2 秒（越後面越短） */
+    var TRICKY_START = 0.10, TRICKY_END = 0.50;     /* 「刁鑽題」（容易放錯區的物品）的機率：第 1 張 10% → 第 RAMP_N 張 50% */
     /* 同一個存放區域最多連續出現幾張（避免連續答同一個答案） */
     var ZONE_RUN_MAX = 3;
-    var NEXT_MS = 650;
+    var NEXT_MS = 650;                              /* 答完一題後停多久才出下一題（毫秒，650 毫秒＝0.65 秒） */
 
     /* 三個存放區域的名稱 */
     var ZONES = { freeze: '冷凍庫', cool: '冷藏室', pantry: '櫥櫃（不用冰）' };

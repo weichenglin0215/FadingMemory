@@ -45,13 +45,13 @@
         pentagon: 'M50 5L95 38L78 92H22L5 38Z',
         drop: 'M50 5C50 5 85 45 85 65A35 35 0 0 1 15 65C15 45 50 5 50 5Z'
     };
-    var FRUITS = ['🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🍒', '🍑', '🍍', '🥝'];
-    var DIGITS = ['0', '6', '8', '9', '3', '5', '2', '7', '1', '4'];
+    var FRUITS = ['🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🍒', '🍑', '🍍', '🥝'];  /* 刮刮樂可能出現的水果 emoji */
+    var DIGITS = ['0', '6', '8', '9', '3', '5', '2', '7', '1', '4'];  /* 刮刮樂的數字（順序是故意打亂的） */
     /* 相似的中文字，依筆劃由少到多排好：第 1 次出現中文字題材用前面的、越後面越往後面（筆劃多）挑。
        V1.33：改用共用資料庫 js/similar_chars.js（SimilarChars.chars()：同一組長得像的字排在一起，字群依平均筆劃由少到多），
        所以一次取的 10 個字裡，一定有好幾個彼此長得很像。 */
     var CHARS = SimilarChars.chars();
-    var BANDS = ['shape', 'fruit', 'digit', 'char'];
+    var BANDS = ['shape', 'fruit', 'digit', 'char'];  /* 四條刮刮帶的題材：shape 形狀、fruit 水果、digit 數字、char 中文字 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function bandFor(level) { return BANDS[Math.floor((level - 1) / BAND_EVERY) % BANDS.length]; }

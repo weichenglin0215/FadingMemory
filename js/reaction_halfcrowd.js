@@ -30,7 +30,7 @@
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var N_RANGE = [10, 120];                    /* 圓形個數範圍（偶數） */
     var R_RANGE = [11, 16];                     /* 圓形半徑範圍（px） */
     var OVERLAP = 0.5;                          /* 兩個圓最多重疊多少（0.6＝60%） */
@@ -39,7 +39,7 @@
     var EDGE = 18;                              /* 圓心離畫面邊緣至少多遠（px） */
     var COUNT_STEP_MS = 1500;                   /* 「計算數量」整個動畫的時間 */
     var N_JITTER = 4;                           /* 每一關的圓形個數，在線性基準上下最多抖動幾個（偶數） */
-    var TRIES = 60;
+    var TRIES = 60;                                 /* 出題時最多重抽幾次 */
     var FACE_SCALE = 1.0;                       /* 人像 emoji 的字級＝圓直徑（2r）× 這個倍率 */
     var SHOW_CENTER = true;                     /* 要不要在每個人的中心畫小黑點（判斷左右的依據；設成 false 就只剩 emoji） */
 

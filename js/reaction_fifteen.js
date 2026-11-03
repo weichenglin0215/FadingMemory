@@ -16,15 +16,23 @@
    · 實作：不寫死策略，對「兩邊各拿了哪幾張」的局面做記憶化的完整搜尋（val）：回傳先手必勝／和局／必輸，以及要幾步（含手順）。
      出題從「你一張、電腦一張」的所有局面裡，挑出你必勝、而且第一步好走法張數落在這一關範圍內的。
    ═══════════════════════════════════════════════════════════════════ */
+/* ─── 新手導讀：這個檔案怎麼讀 ───────────────────────────────────────
+   整個檔案被包在 (function () { ... })(); 裡面（叫「立即執行函式」）：裡面宣告的變數都是這個檔案私有的，
+   不會跟別的遊戲檔案的同名變數打架。最後一行的 Reaction.register(G) 才是把這款遊戲「登記」給選單。
+   檔案分三大段，由上往下：
+     ① 參數區（用「═══」標題框起來、標題寫著可以自己調整的參數的那一段）：想改難度、秒數、文字，通常只要改這一段的數字；
+     ② 「純函式」：只做計算、不碰畫面的函式（出題、判斷輸贏、電腦怎麼下）。單元測試（test/reaction/t_fifteen.js）直接測這一段；
+     ③ 「畫面」：mount／setup 把牌畫出來、處理按鈕、顯示結果。
+   'use strict' 是嚴格模式：寫錯變數名稱（例如打錯字）時會直接報錯，而不是默默建立新變數。 */
 (function () {
     'use strict';
 
-    var ID = 'fifteen';
+    var ID = 'fifteen';                         /* 這款遊戲的代號：選單、成績、存檔、CSS 都用它來認人 */
     var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var h = UI.h, kit = Reaction.kit;           /* h：建立網頁元素的小工具（h('div', {...}, [子元素])）；kit：所有闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
-    var VARIANTS = {
+    var VARIANTS = {                                /* 三種玩法：N＝桌上牌的張數（1～N）、K＝要湊幾張、T＝目標總和、text／short＝畫面與說明的文字 */
         luoshu: { N: 9, K: 3, T: 15, text: '三張牌加起來剛好 15', short: '三張加起來＝15' },
         four20: { N: 9, K: 4, T: 20, text: '四張牌加起來剛好 20', short: '四張加起來＝20' },
         eleven17: { N: 11, K: 3, T: 17, text: '三張牌加起來剛好 17（牌有 1～11）', short: '三張加起來＝17（牌 1～11）' }
@@ -34,17 +42,21 @@
         { to: 5, v: 'luoshu', g: [3, 9] }, { to: 12, v: 'luoshu', g: [2, 3] }, { to: 20, v: 'luoshu', g: [1, 2] },
         { to: 25, v: 'four20', g: [1, 9] }, { to: 30, v: 'eleven17', g: [1, 9], gTo: 2 }
     ];
-    var COMPUTER_THINK_MS = 800;
-    var COMPUTER_SHOW_MS = 600;
-    var PASS_DELAY_MS = 1500;
-    var FAIL_HOLD_MS = 9000;
+    var COMPUTER_THINK_MS = 800;                    /* 輪到電腦時「思考」多久才拿牌（毫秒） */
+    var COMPUTER_SHOW_MS = 600;                     /* 電腦選好牌之後，標出那張牌停多久才算拿走（毫秒） */
+    var PASS_DELAY_MS = 1500;                       /* 答對（過關）後停多久才換下一關（毫秒，1500 毫秒＝1.5 秒） */
+    var FAIL_HOLD_MS = 9000;                        /* 答錯（失敗）後停多久才跳出結算畫面（毫秒，9000 毫秒＝9 秒），讓玩家先看清楚答案 */
     var DRAW_SHOW_MS = 1200;                    /* 和局：先讓玩家看一下洛書方陣，再跳出「重新出題」 */
     var LOG_SHOW = 4;                           /* 畫面上留幾行過程記錄 */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var LUOSHU = [8, 1, 6, 3, 5, 7, 4, 9, 2];   /* 洛書方陣：任一橫排、直行、對角線的三個數加起來都是 15 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    var cache = {};
+    /* 觀念：這個檔案用一個整數代表「手上有哪幾張牌」，叫位元遮罩（bitmask）。
+       第 c 張牌對應整數的第 c 個位元：拿到牌 c 就把 1 << c 加進去（用 | 合併）、檢查有沒有牌 c 用 & 判斷。
+       例如手上有 2 和 5：mask ＝ (1 << 2) | (1 << 5) ＝ 4 + 32 ＝ 36。這樣一個數字就能存一整手牌，比陣列快很多。 */
+    var cache = {};                             /* 每種玩法算過一次的資料就存在這，下次直接拿（不用重算） */
+    /* prep(玩法代號)：算出這個玩法的基本資料——所有牌、所有「湊成」的牌組合 wins（每組是一個位元遮罩）、搜尋結果的記憶表 memo */
     function prep(vk) {
         if (cache[vk]) return cache[vk];
         var V = VARIANTS[vk], cards = [], i;
@@ -56,25 +68,31 @@
         })(0, []);
         return (cache[vk] = { V: V, cards: cards, wins: wins, memo: {}, positions: null });
     }
+    /* hasWin(P, mask)：手上的牌 mask 裡，有沒有任何一組湊成目標總和的牌？（(mask & 某組) === 某組 代表那組牌全都在手上） */
     function hasWin(P, mask) { for (var i = 0; i < P.wins.length; i++) if ((mask & P.wins[i]) === P.wins[i]) return true; return false; }
+    /* winSetOf(P, mask)：同上，但回傳「是哪一組湊成的」（結束時用來把那幾張牌標亮）；沒有就回傳 0 */
     function winSetOf(P, mask) { for (var i = 0; i < P.wins.length; i++) if ((mask & P.wins[i]) === P.wins[i]) return P.wins[i]; return 0; }
+    /* maskToCards(m)：把位元遮罩換回牌號陣列，例如 36 → [2, 5]（畫面顯示、console.log 用） */
     function maskToCards(m) { var o = []; for (var c = 1; c <= 15; c++) if (m & (1 << c)) o.push(c); return o; }
     /* val(A, B)：A（輪到的人）和 B（對方）各拿了哪些牌（位元遮罩）→ { r: 1 贏／0 和／-1 輸, d: 還要幾「手」（含雙方）} */
     function val(P, A, B) {
+        /* 「記憶化」：同一個局面（A、B 一樣）只算一次。把 A、B 合成一個數字當 key，算完存進 P.memo，下次直接取。 */
         var key = A * 4096 + B;
         if (key in P.memo) return P.memo[key];
+        /* 底下是「完整搜尋」：試每一張還在桌上的牌，遞迴（函式自己呼叫自己）看對方接下來怎麼辦，
+           bestWin＝我能最快幾手贏、anyDraw＝有沒有至少能逼成和局的走法、worst＝每一步都會輸時，最久能撐幾手。 */
         var bestWin = null, anyDraw = false, worst = null, free = 0;
         for (var i = 0; i < P.cards.length; i++) {
             var bit = 1 << P.cards[i];
             if ((A | B) & bit) continue;
             free++;
-            if (hasWin(P, A | bit)) { bestWin = 1; continue; }
-            var v = val(P, B, A | bit);
+            if (hasWin(P, A | bit)) { bestWin = 1; continue; }              /* 拿這張就湊成了：一手就贏 */
+            var v = val(P, B, A | bit);                                      /* 否則換對方（角色對調：B 變成輪到的人） */
             if (v.r === -1) { var d = v.d + 1; bestWin = bestWin === null ? d : Math.min(bestWin, d); }
             else if (v.r === 0) anyDraw = true;
             else { var d2 = v.d + 1; worst = worst === null ? d2 : Math.max(worst, d2); }
         }
-        var res;
+        var res;                                                             /* 整理結果：能贏→贏；沒牌或能和→和；否則→輸 */
         if (bestWin !== null) res = { r: 1, d: bestWin };
         else if (!free || anyDraw) res = { r: 0, d: 0 };
         else res = { r: -1, d: worst };
@@ -84,8 +102,8 @@
     function positionsOf(vk) {
         var P = prep(vk);
         if (P.positions) return P.positions;
-        var seen = {}, out = {};
-        (function walk(A, B, n) {
+        var seen = {}, out = {};                 /* seen：走過的局面（不重複算）；out：整理好的結果 */
+        (function walk(A, B, n) {                /* walk：把所有可能的局面一路走過去（遞迴）；n＝到這個局面已經拿了幾張牌 */
             var key = A * 4096 + B;
             if (seen[key]) return; seen[key] = true;
             var v = val(P, A, B);
@@ -120,7 +138,9 @@
         var seen = {};
         return (P.starts = out.filter(function (p) { var k = p.A * 4096 + p.B; if (seen[k]) return false; seen[k] = true; return true; }));
     }
+    /* bitCount(m)：數位元遮罩裡有幾個 1，也就是「手上有幾張牌」 */
     function bitCount(m) { var n = 0; while (m) { n += m & 1; m >>= 1; } return n; }
+    /* specOf(關卡)：這一關要用哪種玩法（v）、第一步好走法的張數範圍（gMin～gMax）；難度設定來自上面的 STAGES */
     function specOf(level) {
         level = Math.max(1, level);
         var from = 1;
@@ -183,6 +203,7 @@
         P.cards.forEach(function (c) { var bit = 1 << c; if ((A | B) & bit) return; var r = afterPlayer(vk, A, B, c); if (r.keep) out.push(c); });
         return out;
     }
+    /* rating(過了幾關)：結算畫面的評語 */
     function rating(n) {
         if (n >= 25) return '搶十五高手！';
         if (n >= 12) return '你看穿洛書了！';
@@ -191,6 +212,8 @@
     }
 
     /* ═══ 畫面 ═══ */
+    /* mount：選單按下這款遊戲時會呼叫它。交給共用骨架 kit.run 處理「闖關」流程（第幾關、過關、失敗、結算、最佳紀錄），
+       我們只要提供 setup（每一關怎麼畫）、rating（評語）、lines（結算多寫幾行什麼）這些小零件。 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5,
@@ -201,11 +224,14 @@
         });
     }
 
+    /* setup(api)：每一關開始時呼叫一次。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
+       api.after（延遲執行，換關後自動作廢）、api.pass／api.fail（過關／失敗）、api.redo（同一關重新出題）。 */
     function setup(api) {
         var stage = api.stage, level = api.level;
         var pz = makePuzzle(level, api.rand), vk = pz.v, P = prep(vk), V = P.V;
         api.info = pz;
         console.log('[搶十五] 第 ' + level + ' 關：' + V.text + '；你 ' + maskToCards(pz.A).join(',') + '／電腦 ' + maskToCards(pz.B).join(',') + '；必勝 ' + pz.d + ' 步，第一步好走法 ' + pz.g + ' 張');
+        /* A、B：你和電腦手上的牌（位元遮罩）；sel：目前選中的牌（0＝沒選）；busy：電腦正在動作（這時不能點）；over：這一局結束了 */
         var A = pz.A, B = pz.B, sel = 0, busy = false, over = false;
         var mistake = null;                     /* 你第一次走錯（拿了之後就沒有必勝法）：{ before: {A, B}, c }，遊戲照樣玩到結束，最後才告訴你 */
         var winMask = 0;                        /* 湊成的那幾張牌（結束時標亮） */

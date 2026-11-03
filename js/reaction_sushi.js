@@ -28,16 +28,16 @@
     var SPEED = [130, 330];                     /* 輸送帶的速度（px／秒）：第 1 關 → 到頂 */
     var PRICE_BASE = [30, 40, 60, 100];         /* 一開始的價錢：白、紅、藍、金 */
     var PRICE_LATER = [30, 40, 50, 60, 100];    /* 第 LATER_FROM 關起多了 50 元的綠盤 */
-    var LATER_FROM = 10;
+    var LATER_FROM = 10;                            /* 第幾關起改用後面那組盤子價錢（PRICE_LATER） */
     var PLATE_D = 76;                           /* 盤子的直徑（px） */
     var HIT_PAD = 8;                            /* 點盤子的容許範圍（px） */
     var LEAD_S = 0.8;                           /* 開場先等多久，第一個盤子才從右邊進來（秒） */
     var END_PAD_S = 0.6;                        /* 最後一個盤子離開畫面之後，多等一下才算「轉完一圈」 */
-    var SOLVE_CAP = 99;
-    var MAX_LEVEL = 90;
-    var COLOR_OF = { 30: 'white', 40: 'red', 50: 'green', 60: 'blue', 100: 'gold' };
-    var COLOR_NAME = { 30: '白', 40: '紅', 50: '綠', 60: '藍', 100: '金' };
-    var SUSHI = ['salmon', 'egg', 'shrimp'];
+    var SOLVE_CAP = 99;                             /* 解題搜尋的上限（目前程式裡沒有用到這個設定） */
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
+    var COLOR_OF = { 30: 'white', 40: 'red', 50: 'green', 60: 'blue', 100: 'gold' };  /* 盤子價錢對應的顏色 class：30 白、40 紅、50 綠、60 藍、100 金 */
+    var COLOR_NAME = { 30: '白', 40: '紅', 50: '綠', 60: '藍', 100: '金' };  /* 盤子價錢對應的顏色中文名稱 */
+    var SUSHI = ['salmon', 'egg', 'shrimp'];        /* 壽司的種類：鮭魚、玉子、蝦子 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

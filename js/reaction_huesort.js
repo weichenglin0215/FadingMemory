@@ -39,8 +39,8 @@
                                                    邏輯上剛好貼齊也會被反鋸齒漏出一條淺色細縫；多壓進去幾 px（下一塊畫在上面蓋住）就看不到縫了（玩家意見：色塊合併後上下要緊密相連、不要白縫） */
     var MAX_LEVEL = 90;
     var MODES = ['light', 'chroma', 'hue'];     /* 漸層沿著哪個方向走：明度／彩度／色相 */
-    var KIND_NAME = { light: '明度', chroma: '彩度', hue: '色相' };
-    var RAD = Math.PI / 180;
+    var KIND_NAME = { light: '明度', chroma: '彩度', hue: '色相' };  /* 三種漸層方向的中文名稱：明度、彩度、色相 */
+    var RAD = Math.PI / 180;                        /* 角度換成弧度的係數（π／180） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

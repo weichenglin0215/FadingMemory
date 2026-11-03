@@ -38,7 +38,7 @@
     var PENALTY_MS = 3000;                      /* 選錯一組扣幾毫秒的剩餘時間 */
     var LEVEL_STEP = 3;                         /* 每隔幾關多一組（3 張牌） */
     var START_GROUPS = 2, MAX_GROUPS = 10;      /* 第 1 關 2 組＝6 張牌；最多 10 組＝30 張 */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var LIMIT_LAST_LEVEL = 30;                  /* 限時每關多 LIMIT_STEP_S 秒，加到第 30 關為止（31 關起組數、陷阱都已經到頂，限時也不再增加，不然第 90 關會有 30 多分鐘） */
     var LIMIT_BASE_S = 180, LIMIT_STEP_S = 20;  /* 第 1 關限時 180 秒，每多一關多 20 秒 */
     /* 各組數的「陷阱至少幾組」：同一個張數的三關依序變多（2 組的牌在數學上不會有陷阱） */

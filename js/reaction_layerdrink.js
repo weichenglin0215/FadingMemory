@@ -31,8 +31,8 @@
     var GLASS_H = 200;                          /* 杯子的高度（px，畫面上） */
     var DEMO_W = 112, TOP_W = 132;              /* 示範杯的寬度、你的杯子的杯口寬度（px） */
     var BLEND = 0.045;                          /* 層與層之間的漸層帶有多厚（佔杯高的比例） */
-    var MAX_LEVEL = 90;
-    var COLORS = [{ id: 'red', name: '紅' }, { id: 'yellow', name: '黃' }, { id: 'green', name: '綠' }, { id: 'blue', name: '藍' }, { id: 'purple', name: '紫' }];
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
+    var COLORS = [{ id: 'red', name: '紅' }, { id: 'yellow', name: '黃' }, { id: 'green', name: '綠' }, { id: 'blue', name: '藍' }, { id: 'purple', name: '紫' }];  /* 飲料可以疊的五種顏色（id 給程式用、name 給畫面用） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

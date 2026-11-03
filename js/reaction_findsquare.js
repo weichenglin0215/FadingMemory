@@ -34,8 +34,8 @@
     var SIDE = [100, 190];                      /* 到頂（第 RAMP_LEVELS 關）時正方形的邊長範圍 */
     var SIDE_LO = [240, 100], SIDE_HI = [270, 190];   /* 邊長的下限、上限：第 1 關 → 到頂（前面的關卡盡量放大；星空 440 寬，轉 45° 的正方形邊長最多約 277 才放得進去） */
     var ROT = [15, 75];                         /* 正方形的旋轉角（度）：大多是斜的 */
-    var MAX_LEVEL = 90;
-    var SQRT2 = Math.SQRT2;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
+    var SQRT2 = Math.SQRT2;                         /* 根號 2（正方形對角線長度的算法用） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

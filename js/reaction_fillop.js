@@ -28,9 +28,9 @@
     var TIME_BASE = 20, TIME_PER_BLANK = 3;      /* 限時（秒）＝ (TIME_BASE ＋ TIME_PER_BLANK × 空格數) × 倍率 */
     var TIME_MUL = [1.0, 3.0];                  /* 倍率：第 1 關 → 到頂 */
     var TARGET_MAX = 200;                       /* 等號右邊最大是多少 */
-    var MAX_LEVEL = 90;
-    var OPS = ['+', '-', '*', '/'];
-    var OP_TEXT = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
+    var OPS = ['+', '-', '*', '/'];                 /* 四則運算符號（程式內部用）：加、減、乘、除 */
+    var OP_TEXT = { '+': '+', '-': '−', '*': '×', '/': '÷' };  /* 畫面上顯示的符號（減、乘、除用數學符號 − × ÷） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function numsFor(level) { return kit.clamp(Math.round(kit.ramp(level, NUMS[0], NUMS[1], RAMP_LEVELS)), NUMS[0], NUMS[1]); }

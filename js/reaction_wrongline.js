@@ -27,10 +27,10 @@
     var LINES = [3, 6];                         /* 計算過程有幾行：第 1 題 → 到頂 */
     var TIME_BASE = 3.0, TIME_PER_LINE = 1.4;   /* 限時（秒）＝ (TIME_BASE ＋ TIME_PER_LINE × 行數) × 倍率 */
     var TIME_MUL = [1.3, 0.85];                 /* 倍率：第 1 題 → 到頂 */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var SHOP_P = 0.5;                           /* 出「買東西」題型的機率（其他是連續計算） */
-    var ITEMS = [['飲料', '瓶'], ['麵包', '個'], ['便當', '個'], ['水果', '盒'], ['牛奶', '瓶'], ['雞蛋', '盒']];
-    var MUL = '×', ADD = '＋', SUB = '−';
+    var ITEMS = [['飲料', '瓶'], ['麵包', '個'], ['便當', '個'], ['水果', '盒'], ['牛奶', '瓶'], ['雞蛋', '盒']];  /* 題目裡的物品與量詞：[名稱, 單位] */
+    var MUL = '×', ADD = '＋', SUB = '−';            /* MUL：乘號；ADD：加號；SUB：減號（畫面上顯示用） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function linesFor(level) { return kit.clamp(Math.round(kit.ramp(level, LINES[0], LINES[1], RAMP_LEVELS)), LINES[0], LINES[1]); }

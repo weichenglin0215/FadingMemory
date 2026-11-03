@@ -23,7 +23,7 @@
     var RAMP_LEVELS = 30;                       /* 幾題之後難度到頂 */
     var TIME_S = [4.0, 1.5];                    /* 每題限時（秒） */
     var TRAP_START = 0.2, TRAP_END = 0.8;       /* 陷阱合數佔合數題的比例 */
-    var MAX_LEVEL = 90, SAME_MAX = 4;
+    var MAX_LEVEL = 90, SAME_MAX = 4;               /* MAX_LEVEL：最後一關，過了第 90 關就算全破（也是成績的上限）；SAME_MAX：同一個答案（都是或都不是）最多連續幾次 */
     var FAIL_MS = 5000;                         /* 失敗後錯誤資訊停留多久才結算 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */

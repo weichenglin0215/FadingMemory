@@ -49,11 +49,11 @@
 
     /* 難度與數量的設定都集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
-    var LEVEL_RAMP = 30;
+    var LEVEL_RAMP = 30;                            /* 難度升到頂的關卡：第 1 關線性變難，到第 30 關最難，之後維持不變 */
     /* 陣列 [1, 6, 11]：第 1 關起 2 個時段、第 6 關起 3 個、第 11 關起 4 個（slotCount 會用到） */
     var SLOT_AT = [1, 6, 11];               /* 第幾關起時段數變成 2、3、4 */
-    var KINDS_START = 2, KINDS_END = 4;
-    var MAXCNT_START = 1, MAXCNT_END = 3;
+    var KINDS_START = 2, KINDS_END = 4;             /* 藥丸種類數：第 1 關 2 種 → 到頂 4 種 */
+    var MAXCNT_START = 1, MAXCNT_END = 3;           /* 每個時段、每種藥丸最多幾顆：第 1 關 1 顆 → 到頂 3 顆 */
     /* 看單子的時間＝SHOW_BASE ＋ 每顆藥丸的秒數 × 單子上的藥丸總顆數；每顆的秒數從第 1 關的 1.4 線性縮到 LEVEL_RAMP 關的 0.6
        （第 1 關 3 顆藥丸＝5 秒，是原本 10 秒的一半） */
     var SHOW_BASE = 0.8, PER_PILL_START = 1.4, PER_PILL_END = 0.6;
@@ -78,7 +78,7 @@
     var KIND_COLOR = ['hsl(0,0%,96%)', 'hsl(46,92%,58%)', 'hsl(210,70%,58%)', 'hsl(335,75%,72%)', 'hsl(0,0%,96%)', 'hsl(46,92%,58%)', 'hsl(210,70%,58%)', 'hsl(335,75%,72%)'];
     /* 8 種藥丸的形狀代號（pillSvg 依它決定畫圓、橢圓、方形或三角形） */
     var KIND_SHAPE = ['circle', 'ellipse', 'square', 'tri', 'ellipse', 'circle', 'tri', 'square'];
-    var N_KINDS = 8;
+    var N_KINDS = 8;                                /* 藥丸的種類總數（顏色與形狀的組合，共 8 種） */
 
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 關'; }
 

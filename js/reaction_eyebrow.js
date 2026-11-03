@@ -40,7 +40,7 @@
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
-    var THRESH = [60, 90];                      /* 及格線（相似度 %）：第 1 關 → 到頂（使用者企劃 70% → 93%） */
+    var THRESH = [60, 90];                      /* 及格線（相似度 %）：第 1 關 → 到頂（使用者企劃原本是 70% → 93%，目前程式裡是 60% → 90%） */
     var TILT_DEG = [2, 180];                     /* 臉歪的角度上限（度）：第 1 關 → 到頂（但要到第 TILT_FROM 關才開始歪） */
     var TILT_FROM = 2;                          /* 第幾關起臉會歪 */
     var SHIFT_PX = [8, 80];                     /* 臉偏離正中間的最大距離（px）：第 1 關 → 到頂（但要到第 TILT_FROM 關才開始偏） */
@@ -54,14 +54,14 @@
     var MIN_PTS = 8;                            /* 至少要畫幾個點才算一筆 */
     var MIN_LEN_FRAC = 0.4;                     /* 畫的長度至少要有眉毛長度的幾成才算一筆（太短是誤觸，不判定） */
     var SOLVE_JITTER = 1.2;                     /* 驗證用：api.solve 畫的線和標準答案的誤差（px） */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var BASE_TYPES = ['moon', 'flat', 'arch', 'raise', 'wave'];     /* 規律的眉毛形狀種類（越後面越多種可能） */
     var LOOPY = ['spring', 'clip', 'swirl'];                        /* 會打圈的創意眉毛（V1.38.0）：彈簧、迴紋針、漩渦 */
     var WEIRD = ['odd', 'zigzag', 'hook', 'twin'].concat(LOOPY);    /* 奇怪的眉毛形狀（V1.36.0 四種，V1.38.0 再加三種會打圈的） */
-    var TYPES = BASE_TYPES.concat(WEIRD);
+    var TYPES = BASE_TYPES.concat(WEIRD);           /* 眉毛的形狀種類（一般形狀＋怪形狀） */
     var STACHE_BASE = ['pencil', 'walrus', 'handlebar', 'fumanchu'];                                         /* 規律的鬍子：鉛筆、海象、八字翹、長八字 */
     var STACHE_WEIRD = ['wave', 'comb', 'zigzag', 'twin', 'scallop', 'stairs'].concat(LOOPY);                /* 奇怪的鬍子：波浪、梳子、閃電、雙峰、扇貝、階梯，加上會打圈的三種 */
-    var STACHE_TYPES = STACHE_BASE.concat(STACHE_WEIRD);
+    var STACHE_TYPES = STACHE_BASE.concat(STACHE_WEIRD);  /* 鬍子的形狀種類（一般形狀＋怪形狀） */
     var WEIRD_FROM = 2;                         /* 第幾關起會出現奇怪形狀的眉毛 */
     var WEIRD_P = [0.35, 0.9];                  /* 奇怪形狀的機率：第 WEIRD_FROM 關 → 到頂 */
     var BROW_TOP = -190, BROW_BOTTOM = -46;     /* 眉毛的高度（臉座標 v）夾在這個範圍：可以高過頭頂（頭頂在 v ＝ −180），但不碰眼睛（眼睛最上緣在 v ＝ −35）（原本 −126，V1.38.0 放寬） */

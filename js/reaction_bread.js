@@ -52,8 +52,8 @@
     var NUDGE = 0.5;                                    /* ◀ ▶ 每次移動多少 px */
     /* 手指速度快到 1px/ms 以上時，刀的移動量不打折（gain=1）；慢的時候最多打到 0.2 折，方便微調 */
     var GAIN_MIN = 0.2, GAIN_MAX = 1, SPEED_FULL = 1.0; /* 手指速度（px/ms）到 SPEED_FULL 以上時 gain＝1 */
-    var FALL_MS = 650;
-    var NEXT_MS = 2000;
+    var FALL_MS = 650;                              /* 麵包掉下去的動畫時間（毫秒） */
+    var NEXT_MS = 2000;                             /* 答完一題後停多久才出下一題（毫秒，2000 毫秒＝2 秒） */
 
     /* 這一關的過關標準 */
     function thrFor(level) { return Math.max(THR_MIN, THR_START - (level - 1) * THR_STEP); }

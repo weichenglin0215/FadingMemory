@@ -34,7 +34,7 @@
     var CREAMER_RATE = 1.5;                     /* 奶精的流量倍率 */
     var TIME_S = 20;                            /* 每關限時（秒）：免得一直不按 */
     var SETTLE_LAGS = 3;                        /* 放手後等幾倍的延遲時間才揭曉（顏色穩定了才比） */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var SWIRL_MAX = 260;                        /* 白色漩渦的粒子池上限 */
     var MILK = [250, 246, 234];                 /* 牛奶的顏色（RGB） */
     var CREAMER = [252, 244, 218];              /* 奶精的顏色（偏黃） */

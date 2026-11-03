@@ -11,11 +11,16 @@
        lib.game(cfg)         一整個數獨變體（出題、畫面、結算都包好）；數獨4／6／9 的遊戲檔案各呼叫一次
        lib.mountBoard(...)   只畫「盤面＋數字鍵＋工具列」，給夾心數獨這種要自己出題、自己加外圍線索的遊戲用
    ═══════════════════════════════════════════════════════════════════ */
+/* ─── 新手導讀 ───
+   這個檔案是數獨系列「畫面」的共用零件（出題與推理在 sudoku_engine.js）。分三大段：
+   ① 參數區；② 純函式（算尺寸、找重複、算數字出現幾次、判斷解開了沒，單元測試直接測它們）；
+   ③ lib.mountBoard（畫盤面＋數字鍵＋工具列，處理點擊）與 lib.game（把「出題＋畫面＋結算」包成一款遊戲）。
+   各款數獨遊戲檔案（reaction_sudoku4.js 等）只要呼叫 lib.game({...設定...}) 就完成了。 */
 (function () {
     'use strict';
 
-    var h = UI.h, kit = Reaction.kit, SE = window.SudokuEngine;
-    var lib = Reaction.sudokuLib = {};
+    var h = UI.h, kit = Reaction.kit, SE = window.SudokuEngine;  /* h：建立網頁元素的小工具；kit：闖關遊戲共用工具箱；SE：數獨引擎（sudoku_engine.js） */
+    var lib = Reaction.sudokuLib = {};                  /* lib 是這個檔案對外提供的工具箱，掛在 Reaction.sudokuLib 讓遊戲檔案取用 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var HINTS = 3;                              /* 每一題可以用幾次提示（0＝關掉提示鈕） */
@@ -27,11 +32,13 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 盤面的尺寸：畫面寬 W、盤面邊長 N、佔寬比例 frac、左右額外留的寬度 ring（夾心數獨的外圍線索）→ 每格邊長 */
+    /* 算盤面尺寸：可用寬度 ＝ 畫面寬 × 佔寬比例 − 外圍線索的寬度，再扣掉外框，除以 N 得到「每格邊長」（取整數，盤面才不會有小數像素的縫） */
     function boardMetrics(W, N, frac, ring) {
         var width = Math.round(W * frac) - (ring || 0), cell = Math.floor((width - BORDER) / N);
         return { cell: cell, width: cell * N + BORDER, height: cell * N + BORDER };
     }
     /* 哪些格子的數字和同排／欄／宮的別格重複 → 布林陣列 */
+    /* 找出重複：某格的數字跟「同排、同欄、同宮」任何一格相同，就標成 true（畫面上會變紅）。g.peers[i] 是第 i 格的所有「同單位的其他格」 */
     function conflictsOf(g, grid) {
         var bad = new Array(g.cells).fill(false), i, k;
         for (i = 0; i < g.cells; i++) {
@@ -41,12 +48,15 @@
         return bad;
     }
     /* 每個數字在盤面上出現幾次（數字鍵變灰用） */
+    /* 數每個數字在盤面上出現幾次（出現 N 次的數字，數字鍵就變灰：已經放完了） */
     function digitCounts(g, grid) { var c = new Array(g.N + 1).fill(0); grid.forEach(function (v) { if (v) c[v]++; }); return c; }
     /* 解開了嗎：全部填滿、沒有重複、而且跟答案一樣 */
+    /* 解開了嗎：每一格都有數字、而且跟答案一樣 */
     function isSolved(g, grid, solution) {
         for (var i = 0; i < g.cells; i++) if (!grid[i] || grid[i] !== solution[i]) return false;
         return true;
     }
+    /* 把純函式放進 lib.test，單元測試（test/reaction/t_sudokulib.js）才拿得到 */
     lib.test = { boardMetrics: boardMetrics, conflictsOf: conflictsOf, digitCounts: digitCounts, isSolved: isSolved, HINTS: HINTS, MAX_LEVEL: MAX_LEVEL };
 
     /* ═══ 盤面＋數字鍵＋工具列 ═══
@@ -54,17 +64,18 @@
        o.frac：盤面佔遊戲畫面寬度的比例；o.maxLevel：提示用的推理等級；o.ring：{ top: [每欄的線索], left: [每排的線索] }（夾心數獨）；
        o.tip：盤面下方的說明文字；o.extraConflict(grid) → 額外標紅的格子（布林陣列，夾心數獨用）
        回傳控制器 { grid, paint(), fillSolution(), putWrong() }。解開時會自己呼叫 api.pass。 */
+    /* 畫盤面並處理所有操作（點格子、填數字、筆記、提示、重來）。解開時會自己呼叫 api.pass 過關 */
     lib.mountBoard = function (api, g, pz, o) {
         o = o || {};
         var stage = api.stage, N = g.N, my = api.my;
         var W = stage.clientWidth || 472;
-        var ringW = o.ring ? Math.round(W * 0.095) : 0;
+        var ringW = o.ring ? Math.round(W * 0.095) : 0; /* ringW：夾心數獨外圍線索格的寬度（沒有外圍線索就是 0） */
         var bm = boardMetrics(W, N, o.frac || 0.96, ringW);
-        var grid = pz.givens.slice(), notes = new Array(g.cells).fill(0), sel = -1, noteMode = false, hintsLeft = o.hints != null ? o.hints : HINTS, hintCell = -1, solved = false;
-        var cells = [], cellDigit = [], cellNotes = [];
+        var grid = pz.givens.slice(), notes = new Array(g.cells).fill(0), sel = -1, noteMode = false, hintsLeft = o.hints != null ? o.hints : HINTS, hintCell = -1, solved = false;  /* grid：目前盤面（先抄一份題目，不要改到原本的題目）；notes：每格的筆記（位元遮罩，跟 sudoku_engine 一樣）； sel：目前選中的格子（−1＝沒選）；noteMode：筆記模式開關；hintsLeft：剩幾次提示；hintCell：提示標出的格子；solved：已經解開 */
+        var cells = [], cellDigit = [], cellNotes = []; /* 每一格對應的網頁元素：格子本身、顯示大數字的 span、顯示筆記的小格區（建好存起來，paint 時直接改它們） */
 
         var wrap = h('div', { 'class': 'sudokulib-wrap' });
-        wrap.style.setProperty('--sudokulib-key-h', (N >= 9 ? 52 : 64) + 'px');        /* 9×9 的盤面高，數字鍵與工具列矮一點才放得下 */
+        wrap.style.setProperty('--sudokulib-key-h', (N >= 9 ? 52 : 64) + 'px');        /* 9×9 的盤面高，數字鍵與工具列矮一點才放得下 */  /* CSS 變數：用 JS 把算好的尺寸交給 CSS 用（CSS 裡寫 var(--sudokulib-key-h)）。9×9 的盤面比較高，數字鍵要矮一點才放得下 */
         wrap.style.setProperty('--sudokulib-tool-h', (N >= 9 ? 48 : 56) + 'px');
         var frame = h('div', { 'class': 'sudokulib-frame' });
         var board = h('div', { 'class': 'sudokulib-board' });
@@ -74,6 +85,7 @@
         board.style.setProperty('--sudokulib-note', Math.max(9, Math.round(bm.cell / (g.R + 0.9) * 0.75)) + 'px');
         board.style.setProperty('--sudokulib-notecols', g.C);
         for (var i = 0; i < g.cells; i++) {
+            /* 建立每一格：依位置加上 sudokulib-cE（宮的右邊界）、sudokulib-rE（宮的下邊界）class，CSS 才會畫出比較粗的宮分隔線 */
             var c = h('div', { 'class': 'sudokulib-cell' });
             if (g.colOf(i) % g.C === g.C - 1) c.className += ' sudokulib-cE';
             if (g.rowOf(i) % g.R === g.R - 1) c.className += ' sudokulib-rE';
@@ -81,9 +93,10 @@
             var nt = h('div', { 'class': 'sudokulib-notes' });
             for (var d = 1; d <= N; d++) nt.appendChild(h('span', { 'class': 'sudokulib-note', text: String(d) }));
             c.appendChild(nt); c.appendChild(dg);
-            (function (idx) { kit.onTap(c, function () { select(idx); }); })(i);
+            (function (idx) { kit.onTap(c, function () { select(idx); }); })(i);  /* 用立即執行函式把當下的 i 存成 idx（不這樣的話，所有格子點下去都會拿到迴圈結束時的 i） */
             board.appendChild(c); cells.push(c); cellDigit.push(dg); cellNotes.push(nt);
         }
+        /* 夾心數獨才有的「外圍線索」：上方每欄一個、左邊每排一個，排在盤面外面 */
         if (o.ring) {
             var top = h('div', { 'class': 'sudokulib-ring sudokulib-ring--top' }), left = h('div', { 'class': 'sudokulib-ring sudokulib-ring--left' });
             top.style.width = bm.cell * N + 'px'; left.style.height = bm.cell * N + 'px';
@@ -106,9 +119,10 @@
 
         /* 數字鍵：N≤6 排成一排（最後一顆是擦掉）；N＝9 排成 5＋5（最後一顆是擦掉） */
         var pad = h('div', { 'class': 'sudokulib-pad' });
-        var padCols = N <= 6 ? N + 1 : 5;
+        var padCols = N <= 6 ? N + 1 : 5;               /* 數字鍵排法：N ≤ 6 排成一排（含擦掉鍵）；N ＝ 9 排成 5 欄兩列 */
         pad.style.gridTemplateColumns = 'repeat(' + padCols + ', minmax(0, 1fr))';
         var keys = [];
+        /* 一個數字一顆鍵（用立即執行函式存住 dg，原因同上） */
         for (var dd = 1; dd <= N; dd++) (function (dg) {
             var b = h('button', { 'class': 'btn btn--sky sudokulib-key', type: 'button', text: String(dg) });
             kit.onTap(b, function () { enter(dg); });
@@ -133,7 +147,12 @@
         wrap.appendChild(tools);
         stage.appendChild(wrap);
 
+        /* 點選一格：記住選中的格子並重畫 */
         function select(idx) { if (solved) return; sel = idx; paint(); }
+        /* 按下數字鍵 d（0＝擦掉）：
+           · 還沒選格子、或選到題目給的格子 → 只顯示提示文字；
+           · 筆記模式 → 切換這格的筆記 d（用 ^= 位元運算：有就拿掉、沒有就加上）；
+           · 一般模式 → 填入 d（再按一次同一個數字＝擦掉），並自動拿掉同排同欄同宮格子的 d 筆記。 */
         function enter(d) {
             if (solved) return;
             if (sel < 0) { tip.textContent = '先點一格，再點數字'; return; }
@@ -150,6 +169,7 @@
             paint();
             check();
         }
+        /* 提示：請引擎算出「現在能確定的下一格」，用閃動標出來（不說數字、不說理由）。每題只有 hintsLeft 次 */
         function useHint() {
             if (solved || hintsLeft <= 0) return;
             var c = SE.hintCell(g, pz.givens, grid, pz.solution, o.maxLevel || 1);
@@ -159,12 +179,14 @@
             tip.textContent = '閃動的格子可以確定了';
             paint();
         }
+        /* 重來：盤面回到題目的樣子、筆記清空 */
         function reset() {
             if (solved) return;
             grid = pz.givens.slice(); notes = new Array(g.cells).fill(0); sel = -1; hintCell = -1;
             tip.textContent = tipText;
             paint();
         }
+        /* 重畫整個盤面：依每格的狀態組出 class（題目／我填的／同排同欄同宮／同數字／選中／重複／提示），再更新數字與筆記，最後把「已經放完」的數字鍵變灰 */
         function paint() {
             var bad = SHOW_CONFLICT ? conflictsOf(g, grid) : new Array(g.cells).fill(false);
             var extra = o.extraConflict ? o.extraConflict(grid) : null;
@@ -186,6 +208,7 @@
             }
             keys.forEach(function (b, k) { b.classList.toggle('sudokulib-key--done', counts[k + 1] >= N); });
         }
+        /* 每次填完檢查：解開了就鎖住盤面、全部格子變綠、閃綠光並過關 */
         function check() {
             if (!isSolved(g, grid, pz.solution)) return;
             solved = true; sel = -1; hintCell = -1; paint();
@@ -195,6 +218,7 @@
             api.pass({ delay: PASS_DELAY_MS });
         }
         paint();
+        /* 回傳給遊戲檔案的「遙控器」：測試與 debug 用（grid() 看盤面、fillSolution() 一鍵填答案、putWrong() 故意填錯一格…） */
         var ctl = {
             grid: function () { return grid; },
             paint: paint,
@@ -209,9 +233,11 @@
 
     /* ═══ 一整個數獨變體 ═══
        cfg：id、name、rule、boxR／boxC（宮的排數／欄數）、spec（SE.make 的出題條件）、frac（盤面佔寬）、ratingAt（評語門檻）*/
+    /* 一整個數獨變體：依設定 cfg 組出完整的遊戲物件（出題、畫面、結算、評語） */
     lib.game = function (cfg) {
-        var g = SE.geom(cfg.boxR, cfg.boxC);
+        var g = SE.geom(cfg.boxR, cfg.boxC);            /* 先用引擎算好盤面幾何（幾排幾欄、哪些格同單位…） */
         var SCORE = { better: 'max', decimals: 0, format: '{v} 題', label: '解開題數', min: 1, max: MAX_LEVEL };
+        /* 出一題：交給引擎 SE.make，依 cfg.spec 的條件（提示數、最高技巧等級…）挖洞 */
         function makePuzzle(rand) { return SE.make(g, cfg.spec, rand || Math.random); }
         function rating(n) {
             if (n >= 30) return '數獨大師！';
@@ -230,6 +256,7 @@
                 setup: setup
             });
         }
+        /* 每一題開始時：出題 → 畫盤面（mountBoard）→ 把 api.solve／api.wrong 接到遙控器（測試用） */
         function setup(api) {
             var pz = makePuzzle(api.rand);
             api.info = pz;

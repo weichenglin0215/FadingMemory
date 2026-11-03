@@ -28,7 +28,7 @@
     var SWIPE_PX = 24;                          /* 滑超過多少 px 就判定 */
     var CELL = 60, PANEL = 360;                 /* E 的每格大小（5×5 格）、灰色面板邊長（px） */
     var BOOST_PCT = 100;                        /* 答錯時揭曉用的白色百分比 */
-    var DIRS = ['up', 'right', 'down', 'left'];
+    var DIRS = ['up', 'right', 'down', 'left'];     /* 開口的四個方向（上、右、下、左），依順時針排列 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 已取消，第 level 個 E 的白色百分比：第 1 個 100%，線性降到第 FADE_LEVELS 個的 1%，之後維持 1% */

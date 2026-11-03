@@ -40,7 +40,7 @@
     var REVEAL_MS = 1700;          /* 公布結果後多久進下一回合 */
     /* 三種拳：剪刀、石頭、布 */
     var KINDS = ['scissors', 'rock', 'paper'];
-    var NAMES = { scissors: '剪刀', rock: '石頭', paper: '布' };
+    var NAMES = { scissors: '剪刀', rock: '石頭', paper: '布' };  /* 三種手勢的中文名稱：剪刀、石頭、布 */
 
     function fmtBest(v) { return v == null ? '' : '最佳連贏 ' + v; }
 

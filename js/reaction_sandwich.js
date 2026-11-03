@@ -26,11 +26,11 @@
         { n: 6, boxR: 2, boxC: 3, to: 16, givens: [14, 6], len: 11, frac: 0.92 },
         { n: 9, boxR: 3, boxC: 3, to: 9999, givens: [30, 16], len: 14, frac: 0.96 }
     ];
-    var HINTS = 3;
-    var MAX_LEVEL = 90;
+    var HINTS = 3;                                  /* 每一題可以用幾次提示（目前 3 次） */
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var SLACK = 3;                              /* 提示數離目標不超過這麼多就收題（挖不下去時就停在能挖到的最少） */
     var DIG_MS = 900;                           /* 出題最多花幾毫秒（超過就用目前挖到的） */
-    var GEOS = {};
+    var GEOS = {};                                  /* 夾心數獨的版面幾何資料快取（依盤面大小存，算過就不重算） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function stageOf(level) {

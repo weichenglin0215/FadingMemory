@@ -34,15 +34,15 @@
     var X_RANGE = [0.14, 0.86];                 /* 水果的橫向位置（畫面寬度的倍數） */
     var FRUIT_PX = 66;                          /* 水果的大小（px） */
     var HIT_EXTRA = 8;                          /* 切到的判定半徑比水果多幾 px（比較好切） */
-    var MAX_LEVEL = 90;
-    var FRUITS = [
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
+    var FRUITS = [                                  /* 水果清單：id 給程式用、name 是中文名稱、pair 是容易看錯的另一種水果（沒有就是 null） */
         { id: 'orange', name: '柳丁', pair: 'tangerine' }, { id: 'tangerine', name: '橘子', pair: 'orange' },
         { id: 'lemon', name: '檸檬', pair: 'lime' }, { id: 'lime', name: '萊姆', pair: 'lemon' },
         { id: 'apple', name: '蘋果', pair: 'tomato' }, { id: 'tomato', name: '番茄', pair: 'apple' },
         { id: 'grape', name: '葡萄', pair: 'blueberry' }, { id: 'blueberry', name: '藍莓', pair: 'grape' },
         { id: 'banana', name: '香蕉', pair: null }, { id: 'watermelon', name: '西瓜', pair: null }, { id: 'pear', name: '梨子', pair: null }, { id: 'strawberry', name: '草莓', pair: null }
     ];
-    var PAIRS = [['orange', 'tangerine'], ['lemon', 'lime'], ['apple', 'tomato'], ['grape', 'blueberry']], SINGLES = ['banana', 'watermelon', 'pear', 'strawberry'];
+    var PAIRS = [['orange', 'tangerine'], ['lemon', 'lime'], ['apple', 'tomato'], ['grape', 'blueberry']], SINGLES = ['banana', 'watermelon', 'pear', 'strawberry'];  /* PAIRS：容易看錯的成對水果（柳丁／橘子、檸檬／萊姆、蘋果／番茄、葡萄／藍莓）；SINGLES：沒有配對的水果 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

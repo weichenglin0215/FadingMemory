@@ -31,7 +31,7 @@
     var BLINK_MS = 1500;                        /* 找齊之後，錯誤答案紅底白字閃爍多久 */
     var HOLD_MS = 1500;                         /* 閃完之後，維持紅底白字多久才出現結算 */
     var CELL = 46;                              /* 每格大小（px） */
-    var TYPES = ['ones', 'tens', 'neighbor', 'swap'];
+    var TYPES = ['ones', 'tens', 'neighbor', 'swap'];  /* 乘法表答案被動手腳（tamper）的四種方式的代號：ones、tens、neighbor、swap */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 把正解 truth 改成「看起來合理但錯誤」的數字；a、b 是這格的乘數 */

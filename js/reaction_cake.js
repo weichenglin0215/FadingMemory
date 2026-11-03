@@ -38,12 +38,12 @@
     var PASS_RATIO = 0.15;                      /* 最大塊 − 最小塊 ≤ 平均面積 × 這個比例 才過關 */
     var JITTER = 0.4;                           /* 起始偏移：最多是一塊角度的幾倍 */
     var AID_FADE_LEVELS = 4;                    /* 輔助刻度在第幾關完全消失 */
-    var LIVES = 3;
+    var LIVES = 3;                                  /* 命數（答錯一次扣一條，用完就結束） */
     var PICK_MAX_DEG = 40;                      /* 抓線時，手指方向離最近的藍線超過這麼多度就不抓（避免誤觸）*/
     var DEAD_PX = 28;                           /* 離圓心太近的點不理 */
     /* 蛋糕半徑、畫布大小（SVG 的 viewBox 是 460×460）與圓心 C */
     var R_CAKE = 190, VB = 460, C = VB / 2;
-    var NEXT_MS = 3000;
+    var NEXT_MS = 3000;                             /* 答完一題後停多久才出下一題（毫秒，3000 毫秒＝3 秒） */
 
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 關'; }
 

@@ -29,9 +29,9 @@
     var FROM = { cross: 4, back: 6, year: 10, far: 14 };   /* 各題型從第幾關開始出現 */
     var SAME_UNTIL = 7;                         /* 'same'（同月）題型出到第幾關（之後拿掉） */
     var FAR_MAX = [90, 330];                    /* 'far' 題型相差的最大天數：第 1 關 → 到頂 */
-    var FAR_MIN = 45;
+    var FAR_MIN = 45;                               /* far 題型相差的最少天數（最多天數見上面的 FAR_MAX） */
     var YEARS = [2025, 2031];                   /* 題目的年份範圍（含 2028 閏年） */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var NAMES = ['日', '一', '二', '三', '四', '五', '六'];         /* 星期的字（日＝0，跟 Date.getUTCDay 一致） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */

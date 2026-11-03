@@ -37,7 +37,7 @@
     var SPREAD = 0.25;                          /* 垂直方向跟著放大的比例（κ） */
     var MAX_STEP = 36;                          /* 一次移動事件最多算幾 px（避免一下子擀太多） */
     var SOLVE_STEP = 14;                        /* 驗證用：api.solve 每一小步擀幾 px */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

@@ -31,13 +31,13 @@
     var GRAB = 16;                              /* 抓愛心的容許範圍：愛心外框再往外多幾 px */
     var STAMP_BOTTOM = 100;                     /* 愛心起始位置的底部離舞台底的距離（要留空間給「蓋章」按鈕） */
     var PX_MM = 0.25;                           /* 1 像素 ＝ 幾公釐 */
-    var ZOOM_REF = 150, ZOOM_MAX = 25, ZOOM_DIST_MAX = 70;
+    var ZOOM_REF = 150, ZOOM_MAX = 25, ZOOM_DIST_MAX = 70;  /* 放大倍率的基準：倍率＝ZOOM_REF ÷ (距離 × 2)，距離越小放越大 */
     var HEART_N = 120;                          /* 愛心外框的取樣點數 */
     /* 虛線外框的顏色（愛心上外圈、內圈各抽一個，不會一樣）、粗細（px）、虛線「畫 / 空」長度（px） */
     var COLORS = ['#D1493F', '#2F7FC1', '#3F9A55', '#8A57B8', '#E08A1E', '#1E9C9C', '#C2468A', '#6B7280'];
-    var WIDTHS = [2, 3, 4, 5, 7];
-    var DASHES = [3, 5, 8, 12, 16];
-    var GAPS = [3, 6, 10, 16, 22];
+    var WIDTHS = [2, 3, 4, 5, 7];                   /* 虛線外框的粗細（px）可以選的五種 */
+    var DASHES = [3, 5, 8, 12, 16];                 /* 虛線「畫」的長度（px）可以選的五種 */
+    var GAPS = [3, 6, 10, 16, 22];                  /* 虛線「空」的長度（px）可以選的五種 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function rad(d) { return d * Math.PI / 180; }

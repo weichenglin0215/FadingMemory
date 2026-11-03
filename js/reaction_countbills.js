@@ -27,8 +27,8 @@
     var EXTRA = [4, 6];                         /* 目標之後再多放幾張（撥過頭用的，隨機） */
     var DENOMS_BASE = [100, 500, 1000];         /* 一開始的面額 */
     var DENOMS_LATER = [100, 200, 500, 1000, 2000];   /* 第 LATER_FROM 關起的面額（多了 200 和 2000） */
-    var LATER_FROM = 10;
-    var MAX_LEVEL = 90;
+    var LATER_FROM = 10;                            /* 第幾關起改用後面那組面額（DENOMS_LATER） */
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

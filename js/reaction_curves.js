@@ -62,12 +62,12 @@
     var BALL_SPEED = 230;                                 /* 球的速度（px/秒）下限 */
     var TRAVEL_MAX_S = 5;                                 /* 短的那條最多滑幾秒（繩子太長就加快）*/
     var VW = 468;                                         /* SVG 寬 */
-    var PAD_TOP = 36, PAD_BOT = 36;
+    var PAD_TOP = 36, PAD_BOT = 36;                 /* PAD_TOP：曲線區上緣的留白（px）；PAD_BOT：下緣的留白（px） */
     var SIDE_PAD = 22;                                    /* 繩子離自己那半邊的左右邊緣至少這麼遠 */
     var STEP_PX = 3;                                      /* 取樣間隔 */
     /* 路徑不重疊：弧長相隔超過 SEP_PX 的兩點，距離要 ≥ CLEAR_PX */
     var CLEAR_PX = 24, SEP_PX = 70;                       /* 路徑不重疊：弧長相隔 > SEP_PX 的兩點距離 ≥ CLEAR_PX */
-    var ALPHA_MIN = 0.2;
+    var ALPHA_MIN = 0.2;                            /* 長的那條曲線的左右伸展倍率（alpha）最小值（短的那條用 ALPHA_SHORT） */
     var U_MIN = 0.5;                                      /* 轉折點的左右位置至少離中線半幅寬的幾成（V1.43.0：0.4 → 0.5，靠近兩側邊緣） */
     var ALPHA_SHORT = [0.9, 1.0];                         /* 短的那條的左右伸展倍率範圍（V1.43.0：0.8～0.98 → 0.9～1.0，幾乎貼到邊） */
     var DASH_PERIODS = [14, 18, 24];                      /* 虛線的基本週期（紅段＋白段，px）：短的那條用它 */

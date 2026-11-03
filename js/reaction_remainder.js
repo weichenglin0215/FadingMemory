@@ -24,8 +24,8 @@
     var RAMP_LEVELS = 30;                       /* 幾題之後難度到頂 */
     var ANS_S = [15, 20];                        /* 作答限時（秒）：第 1 題 → 到頂 */
     var N_MAX = [300, 9999];                    /* 被除數最大是多少：第 1 題 → 到頂（最小一律 N_MIN） */
-    var N_MIN = 100;
-    var MAX_LEVEL = 90;
+    var N_MIN = 100;                                /* 被除數最小是多少（至少三位數） */
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var OPTIONS = 5;                            /* 幾顆答案按鈕 */
     /* 除數清單：從第 from 題起加入 divs 這些除數 */
     var DIV_STEPS = [

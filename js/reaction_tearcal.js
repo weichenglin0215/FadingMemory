@@ -38,11 +38,11 @@
     /* ═══ 可以自己調的參數 ═══ */
     /* 日期範圍限制在 2025～2029 年（節氣公式在這個範圍內已驗證） */
     var YEAR_MIN = 2025, YEAR_MAX = 2029;
-    var LEVEL_RAMP = 30;
+    var LEVEL_RAMP = 30;                            /* 難度升到頂的關卡：第 1 關線性變難，到第 30 關最難，之後維持不變 */
     var DMAX_START = 6, DMAX_END = 60;          /* 目標最遠離起點幾天（張） */
     var TAP_START = 0.60, TAP_END = 0.32;       /* 每撕一張允許的秒數 */
     var SLACK_START = 8, SLACK_END = 4;         /* 額外給的秒數 */
-    var NEXT_MS = 1100;
+    var NEXT_MS = 1100;                             /* 答完一題後停多久才出下一題（毫秒，1100 毫秒＝1.1 秒） */
     var TEAR_MS = 600;                          /* 被撕掉的那一張往下滑落的時間（毫秒）；要跟 css/games/reaction_tearcal.css 的 .tearcal-page--torn 動畫秒數一樣 */
 
     /* 陣列索引 0～6 對應 JS 的 getDay() 星期日～星期六 */

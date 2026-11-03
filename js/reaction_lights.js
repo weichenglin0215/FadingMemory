@@ -33,7 +33,7 @@
     var SHOW_END = 10.0;        /* N 到最大時的亮燈時間 */
     /* 回想時限＝基本 5 秒 + 每盞 0.8 秒 */
     var RECALL_BASE = 5;        /* 回想時限＝基本 + 每盞加幾秒 */
-    var RECALL_PER = 0.8;
+    var RECALL_PER = 0.8;                           /* 回想時限＝基本秒數 RECALL_BASE ＋ 每盞燈多給的秒數 RECALL_PER（這裡每盞 0.8 秒） */
     var PREP_MS = 0;          /* 每關開始前的準備時間 */
     /* 熄燈後多等一下才讓玩家點，避免視覺殘影干擾 */
     var AFTER_LIT_MS = 450;     /* 熄燈後多久才讓玩家點（避免殘影） */

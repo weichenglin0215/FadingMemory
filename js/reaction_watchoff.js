@@ -26,8 +26,8 @@
     var ERR = [0.33, 0.005];                    /* 誤差率：第 1 關 → 到頂 */
     var WINDOW_S = 30;                          /* 揭曉時用幾秒的跳動來算「秒針走了幾秒」（不再是觀察時間，只是換算用的視窗） */
     var ANS_S = [30, 60];                       /* 作答總限時（秒）：從錶開始走就開始算；第 1 關 → 到頂 */
-    var STYLES = ['roman', 'none', 'digits'];
-    var NAMES = ['A', 'B', 'C'];
+    var STYLES = ['roman', 'none', 'digits'];       /* 三款錶面的樣式：羅馬數字、無數字、阿拉伯數字 */
+    var NAMES = ['A', 'B', 'C'];                    /* 三支錶的名稱 A、B、C */
     var SIZE = 140;                             /* 錶面直徑（px） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */

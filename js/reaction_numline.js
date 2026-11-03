@@ -22,12 +22,12 @@
     /* ═══ 可以自己調的參數 ═══ */
     var TOL = [0.10, 0.01];                     /* 容許誤差（數線全長 ＝ 1）：第 1 關 → 到頂 */
     var TOL_RAMP = 15;                          /* 幾關之後容許誤差縮到最小 */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var V_MIN = 0.05, V_MAX = 0.95;             /* 數字離 0 與 1 至少多遠 */
     var START = 0.5;                            /* 圓點一開始的位置 */
     var START_GAP = 0.12;                       /* 答案離起點至少多遠 */
     var LINE_PAD = 36;                          /* 數線左右兩端離畫面邊緣 */
-    var FORMS = ['decimal', 'fraction', 'percent'];
+    var FORMS = ['decimal', 'fraction', 'percent'];  /* 數字的三種寫法：decimal 小數、fraction 分數、percent 百分比 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function tolAt(level) { return kit.ramp(level, TOL[0], TOL[1], TOL_RAMP); }

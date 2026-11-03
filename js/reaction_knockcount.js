@@ -26,7 +26,7 @@
     var COUNT = [4, 30];                        /* 師父敲木魚的總次數：第 1 關 → 到頂 */
     var TEMPO_MS = [520, 160];                  /* 組內每一下的間隔（毫秒）：第 1 關 → 到頂 */
     var BOWLS = [0, 6];                         /* 銅缽的聲數：第 BOWL_FROM 關起才有，第 BOWL_FROM 關 1 聲 → 到頂 */
-    var BOWL_FROM = 3;
+    var BOWL_FROM = 3;                              /* 第幾關起才有銅缽（銅缽的聲數見上面的 BOWLS） */
     var GROUP_MAX = 5;                          /* 每組最多幾下 */
     var PAUSE_MS = [400, 1200];                 /* 組與組之間的停頓（毫秒，隨機） */
     var BOWL_CLEAR = 90;                        /* 銅缽聲離任何一下木魚至少多遠（毫秒） */
@@ -34,7 +34,7 @@
     var BOWL_LEAD_MS = 150;                     /* 師父的手在銅缽「噹」聲響之前多久開始揮出去（毫秒；揮到一半剛好響） */
     var LEAD_MS = 700;                          /* 開始後多久師父才敲第一下 */
     var RESP_BASE = 6, RESP_PER = 0.35;         /* 作答時間（秒）＝ RESP_BASE ＋ 次數 × RESP_PER */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

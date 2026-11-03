@@ -28,7 +28,7 @@
     var SPREAD_H = [6, 2.5];                    /* 其餘時間散布的範圍（小時）：第 1 關 → 到頂（越小越接近） */
     var LIMIT_S = [30, 60];                     /* 限時（秒）：第 1 關 → 到頂 */
     var STEP_MIN = 5;                           /* 分鐘一律是這個數的倍數 */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

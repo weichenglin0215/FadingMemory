@@ -55,12 +55,12 @@
     var SLOTS = 7, W = 64;                      /* 收集口數量與寬度 */
     var BW = SLOTS * W;                         /* 檯面寬 448 */
     /* 珠子半徑：直徑是收集口寬度的 80% */
-    var BALL_R = 0.35 * W;                       /* 珠子半徑（直徑＝收集口寬度的 80%）*/
-    var PEG_R = 4;
+    var BALL_R = 0.35 * W;                       /* 珠子半徑（占收集口寬度的比例：0.35 → 直徑＝收集口寬度的 70%）*/
+    var PEG_R = 4;                                  /* 釘子的半徑（px） */
     /* 釘子列距 52px、第一列的 y、共 8 列 */
     var ROW_GAP = 52, ROW0_Y = 70, ROWS = 8;
-    var SLOT_H = 60, LEAD_BALLS = 1.5;
-    var BH = 560;
+    var SLOT_H = 60, LEAD_BALLS = 1.5;              /* SLOT_H：下方收集口的高度（px）；LEAD_BALLS：簾子除了蓋住收集口，再多蓋「幾顆珠子的高度」的倍數（簾子高度＝SLOT_H ＋ LEAD_BALLS × 基數 × 珠子半徑） */
+    var BH = 560;                                   /* 檯面（珠子彈來彈去的地方）的高度（px） */
     /* 簾子高度的「基數」：第 1 關 CURTAIN_BASE_START，每過一關加 CURTAIN_BASE_STEP，基數超過 CURTAIN_BASE_LAST 的那一關是最後一關。
        簾子高度＝收集口高度 + LEAD_BALLS × 基數 × 珠子半徑；CURTAIN_Y（簾子上緣的 y 座標）＝檯面高 − 簾子高度 */
     var CURTAIN_BASE_START = 1, CURTAIN_BASE_STEP = 0.333, CURTAIN_BASE_LAST = 11;
@@ -70,7 +70,7 @@
     var DIV_Y = BH - SLOT_H;                    /* 分隔線頂端：越過它就算進了收集口 */
     /* 重力、初速左右最大值（所有關卡一樣；舊版 8 回合是 1500 → 2400、0 → 180，現在取中間值，難度改由簾子高度決定） */
     var G_FALL = 1950;
-    var VX_MAX = 90;
+    var VX_MAX = 90;                                /* 珠子一開始往左或往右的速度上限（左右各隨機抽 0～VX_MAX） */
     /* E_PEG／E_WALL：碰撞後速度剩幾成（恢復係數，0.5＝彈起來的速度是撞擊速度的一半） */
     var E_PEG = 0.7, E_WALL = 0.7;
     var DROP_MIN = W * 1.0;                     /* 珠子從上方掉下來的位置：離左右牆至少一個收集口寬（太靠牆的落點會讓結果偏向兩邊）*/
@@ -84,7 +84,7 @@
     /* 揭曉分兩段：① 先停 REVEAL_SEEN_MS 毫秒，標出玩家看到的最後位置；② 從那裡用 REVEAL_SPEED 倍速（0.35＝慢到三分之一）播到落進收集口，
        總長夾在 REVEAL_MIN_MS～REVEAL_MAX_MS 之間（原時間太短就放慢到最短長度，太長就加快到最長長度） */
     var REVEAL_SEEN_MS = 1300;
-    var REVEAL_SPEED = 0.35, REVEAL_MIN_MS = 1800, REVEAL_MAX_MS = 6500;
+    var REVEAL_SPEED = 0.35, REVEAL_MIN_MS = 1800, REVEAL_MAX_MS = 6500;  /* REVEAL_SPEED：揭曉時慢動作的播放速度（0.35＝慢到三分之一）；REVEAL_MIN_MS／REVEAL_MAX_MS：慢動作那一段最短 1800 毫秒、最長 6500 毫秒 */
 
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 關'; }
 

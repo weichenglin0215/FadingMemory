@@ -26,10 +26,10 @@
     var ZERO_P = [0.3, 0.7];                    /* 金額中間（不是最前面）至少有一個 0 的機率：第 1 題 → 到頂 */
     var TIME_BASE = 4.5, TIME_PER_DIGIT = 0.8;  /* 限時（秒）＝ (TIME_BASE ＋ TIME_PER_DIGIT × 位數) × 倍率 */
     var TIME_MUL = [1.3, 0.8];                  /* 倍率：第 1 題 → 到頂 */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var SAME_MAX = 4;                           /* 「相符」（或「不符」）最多連續幾次 */
-    var DIG = ['零', '壹', '貳', '參', '肆', '伍', '陸', '柒', '捌', '玖'];
-    var UNIT = ['仟', '佰', '拾', ''];
+    var DIG = ['零', '壹', '貳', '參', '肆', '伍', '陸', '柒', '捌', '玖'];  /* 中文大寫數字（零壹貳參肆伍陸柒捌玖） */
+    var UNIT = ['仟', '佰', '拾', ''];                 /* 支票金額每一位的單位：仟、佰、拾，個位數不寫單位 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function digitsFor(level) { return kit.clamp(Math.round(kit.ramp(level, DIGITS[0], DIGITS[1], RAMP_LEVELS)), DIGITS[0], DIGITS[1]); }

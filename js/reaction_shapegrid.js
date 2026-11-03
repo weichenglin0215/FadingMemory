@@ -37,15 +37,15 @@
         { to: 20, n: 4, diag: true, extra: [3, 0] },
         { to: 9999, n: 5, diag: true, extra: [4, 0] }
     ];
-    var HINTS = 3;
+    var HINTS = 3;                                  /* 每一題可以用幾次提示（目前 3 次） */
     var NODE_LIMIT = 300000;                    /* 求解時最多搜尋幾步（超過就當作「不知道」，避免手機卡住） */
     var UNIQ_NODES = 60000;                     /* 出題時檢查「答案唯一」每一次最多搜尋幾步（超過就當作還不唯一，再多放一個） */
-    var MAX_LEVEL = 90;
-    var PASS_DELAY_MS = 1400;
-    var FAIL_HOLD_MS = 6000;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
+    var PASS_DELAY_MS = 1400;                       /* 答對（過關）後停多久才換下一關（毫秒，1400 毫秒＝1.4 秒） */
+    var FAIL_HOLD_MS = 6000;                        /* 答錯（失敗）後停多久才跳出結算畫面（毫秒，6000 毫秒＝6 秒），讓玩家先看清楚答案 */
     var TIME_BASE = 25, TIME_CELL = [10, 20];  /* 每一關限時（秒）＝基本 ＋ 每一個空格幾秒（第 1 關 → 第 30 關，線性縮短）；時間到了＝失敗，並亮出答案（V1.43.1） */
-    var SHAPES = ['圓形', '三角形', '正方形', '星形', '菱形'];
-    var COLORS = ['紅色', '藍色', '綠色', '黃色', '紫色'];
+    var SHAPES = ['圓形', '三角形', '正方形', '星形', '菱形'];  /* 五種形狀的名稱：圓形、三角形、正方形、星形、菱形 */
+    var COLORS = ['紅色', '藍色', '綠色', '黃色', '紫色'];    /* 五種顏色的名稱：紅、藍、綠、黃、紫 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function timeFor(level, empties) { return TIME_BASE + empties * kit.ramp(level, TIME_CELL[0], TIME_CELL[1], 30); }

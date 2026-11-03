@@ -27,7 +27,7 @@
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var SPIN = [720, 3000];                     /* 剛出現時的旋轉角速度（度／秒）：第 1 關 → 到頂（V1.24 的 10 倍） */
     var SPIN_MIN = 480;                         /* 最慢的旋轉角速度：每秒一圈 */
     var SLOW_S = 5;                             /* 幾秒之後降到最慢 */
@@ -43,7 +43,7 @@
     /* 相似字群：同一組的字互相是干擾項；s ＝ 平均筆劃數（只用來排難度）。
        V1.33：改用共用資料庫 js/similar_chars.js（SimilarChars），每組取「最像的前 FAMILY_MAX 個字」。 */
     var FAMILY_MAX = 4;
-    var FAMILIES = SimilarChars.groups({ minSize: 2 }).map(function (g) { return { s: Math.round(g.s), c: g.chars.slice(0, FAMILY_MAX) }; });
+    var FAMILIES = SimilarChars.groups({ minSize: 2 }).map(function (g) { return { s: Math.round(g.s), c: g.chars.slice(0, FAMILY_MAX) }; });  /* 相似字群：s＝平均筆劃數（只用來排難度）、c＝取最像的前 FAMILY_MAX 個字 */
     var SYMMETRIC = '大日土士人八天夫王田目';      /* 左右對稱的字：鏡射沒有意義 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */

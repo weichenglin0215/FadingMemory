@@ -29,8 +29,8 @@
     var TILT_FROM = 10, TILT_MAX = 9;           /* 第幾關起整隻蝴蝶歪斜、最多歪幾度 */
     var HIT_EXTRA = 16;                         /* 點擊判定比東西本身多幾（viewBox 單位） */
     var VB = { w: 400, h: 300 }, CENTER = 200;  /* 蝴蝶的座標系：寬 400、高 300，身體中線在 x ＝ 200 */
-    var MAX_LEVEL = 90;
-    var COLORS = ['orange', 'yellow', 'blue', 'white', 'red'];
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
+    var COLORS = ['orange', 'yellow', 'blue', 'white', 'red'];  /* 蝴蝶可能的顏色（CSS 用的英文名稱）：橘、黃、藍、白、紅 */
     /* 右翅膀的兩片：上翅（大）、下翅（小）都用橢圓近似，斑點與紋路放在裡面（中心 cx, cy、半徑 rx, ry） */
     var LOBES = [{ cx: 290, cy: 105, rx: 88, ry: 66 }, { cx: 272, cy: 205, rx: 62, ry: 52 }];
 

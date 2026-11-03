@@ -32,10 +32,10 @@
     var GAP_JITTER = [0.7, 1.3];                /* 每次間隔的隨機倍率（再乘上這個人的平均間隔） */
     var WIN_FROM = 2.0;                         /* 保證的窗口最早從第幾秒開始（讓玩家先看一下） */
     var WIN_TAIL = 1.5;                         /* 保證的窗口結束後至少還留幾秒 */
-    var MAX_LEVEL = 90;
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var HAIR = ['hair0', 'hair1', 'hair2', 'hair3'];       /* 髮色的 class（顏色在 theme.css） */
-    var SKIN = ['skin0', 'skin1', 'skin2'];
-    var SHIRT = ['shirt0', 'shirt1', 'shirt2', 'shirt3', 'shirt4'];
+    var SKIN = ['skin0', 'skin1', 'skin2'];         /* 膚色的 CSS class 名稱（三種） */
+    var SHIRT = ['shirt0', 'shirt1', 'shirt2', 'shirt3', 'shirt4'];  /* 上衣顏色的 CSS class 名稱（五種） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }

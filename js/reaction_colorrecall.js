@@ -25,16 +25,16 @@
     /* ═══ 可以自己調的參數 ═══ */
     var MEMO_S = 3;                             /* 記憶秒數 */
     var L_MIN = 20, L_MAX = 80;                 /* 明度橫條的範圍（%） */
-    var TARGET_S = [40, 90], TARGET_L = [35, 65];
+    var TARGET_S = [40, 90], TARGET_L = [35, 65];   /* TARGET_S：目標顏色的彩度範圍 40～90（%）；TARGET_L：目標顏色的明度範圍 35～65（%） */
     var START_GAP = { hue: [60, 180], sat: [25, 45], light: [20, 30] };   /* 起始值離目標的距離範圍（度／百分點） */
     var JOIN_MS = 1000;                         /* 兩個色塊靠攏的時間 */
     var COUNT_MS = 2200;                        /* 差異數字從 0 升到最後數值的時間 */
     var HOLD_MS = 1500;                         /* 數字停住之後，再維持多久才跳出結算 */
     var NUDGE = 0.5;                            /* ◀ ▶ 每按一下調幾個單位 */
-    var TRACK_W = 380, KNOB = 64;
-    var DIMS = ['hue', 'sat', 'light'];
-    var DIM_NAME = { hue: '色相', sat: '彩度', light: '明度' };
-    var DIM_UNIT = { hue: '度', sat: '%', light: '%' };
+    var TRACK_W = 380, KNOB = 64;                   /* TRACK_W：滑桿軌道的寬度（px）；KNOB：滑桿圓鈕的直徑（px） */
+    var DIMS = ['hue', 'sat', 'light'];             /* 會被考的三種顏色屬性：hue 色相、sat 彩度、light 明度 */
+    var DIM_NAME = { hue: '色相', sat: '彩度', light: '明度' };  /* 屬性的中文名稱 */
+    var DIM_UNIT = { hue: '度', sat: '%', light: '%' };  /* 屬性顯示時的單位（色相是「度」，彩度與明度是 %） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function hslToRgb(hh, s, l) {
