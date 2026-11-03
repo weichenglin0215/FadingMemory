@@ -44,12 +44,19 @@
     var CREAMER = [252, 244, 218];              /* 奶精的顏色（偏黃） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 小工具：讓 [第 1 關的值, 到頂的值] 這種成對的設定，依關卡線性變化 */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    /* 這一關容許的顏色差（ΔE，越小越難）：四捨五入到小數 2 位 */
     function tolFor(level) { return Math.round(ramp(level, TOL) * 100) / 100; }  /* Math.round：四捨五入成整數 */
+    /* 這一關「攪勻的延遲」（秒）：牛奶倒下去後，顏色要過一陣子才會真的變成目標色，越後面延遲越長（越難抓時機） */
     function lagFor(level) { return Math.round(ramp(level, MIX_LAG) * 1000) / 1000; }
+    /* 這一關倒牛奶的流量：每秒多加幾成牛奶 */
     function rateFor(level) { return ramp(level, RATE); }
+    /* 每一關的限時（毫秒），免得玩家一直不按 */
     function timeMs() { return TIME_S * 1000; }
     /* sRGB（0～255）→ CIELAB（D65）：顏色差要在這個空間算才接近人眼的感覺 */
+    /* 把 sRGB 顏色（R、G、B 各 0～255）轉成 CIELAB（L 亮度、a 紅綠、b 黃藍）：先把 sRGB 還原成「線性亮度」，再乘上轉換矩陣得到 XYZ，最後用立方根曲線轉成 Lab。
+       為什麼要轉：兩個顏色的「差」要在 Lab 空間裡算，才接近人眼真的覺得「差多少」。 */
     function rgbToLab(c) {
         function lin(v) { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
         var r = lin(c[0]), g = lin(c[1]), b = lin(c[2]);
@@ -59,23 +66,30 @@
         return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
     }
     /* 兩個顏色的差（ΔE76＝Lab 空間的歐氏距離） */
+    /* 兩個顏色的差 ΔE（Delta E 76）：就是兩個顏色在 Lab 空間裡的「直線距離」（勾股定理）；數字越小代表越接近，玩家要把差距壓在容許範圍內 */
     function deltaE(c1, c2) {
         var a = rgbToLab(c1), b = rgbToLab(c2);
         return Math.sqrt((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]) + (a[2] - b[2]) * (a[2] - b[2]));  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
     }
     /* 紅茶 T0 和牛奶 M 依牛奶比例 f（0～1）混合 */
+    /* 把紅茶顏色 t0 和牛奶顏色 m 依牛奶比例 f（0～1）混合：每個顏色頻道各自做線性內插（t0 + (m − t0) × f） */
     function mixColor(t0, m, f) { return [t0[0] + (m[0] - t0[0]) * f, t0[1] + (m[1] - t0[1]) * f, t0[2] + (m[2] - t0[2]) * f]; }
     /* 一階延遲：現在的顏色 cur 往目標 target 靠近，時間常數 tau 秒，這一步 dt 秒 */
+    /* 「一階延遲」：現在顯示的顏色 cur 慢慢靠近目標顏色 target。時間常數 tau 越大靠近得越慢；k ＝ 1 − e^(−dt/tau) 是這一小步（dt 秒）能走完的比例（像泡茶時顏色慢慢暈開） */
     function lagStep(cur, target, dt, tau) {
         var k = 1 - Math.exp(-dt / Math.max(tau, 1e-6));
         return [cur[0] + (target[0] - cur[0]) * k, cur[1] + (target[1] - cur[1]) * k, cur[2] + (target[2] - cur[2]) * k];
     }
+    /* 把 [R, G, B] 轉成 CSS 的顏色文字 rgb(…) */
     function css(c) { return 'rgb(' + Math.round(c[0]) + ',' + Math.round(c[1]) + ',' + Math.round(c[2]) + ')'; }
+    /* 把 HSL（色相 0～360、飽和度 %、亮度 %）換成 RGB（用來隨機產生「深紅褐色」的紅茶） */
     function hslToRgb(hh, s, l) {
         s /= 100; l /= 100; var k = function (n) { return (n + hh / 30) % 12; }, a = s * Math.min(l, 1 - l), f = function (n) { return l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1))); };
         return [255 * f(0), 255 * f(8), 255 * f(4)];
     }
     /* 出一關：{ t0（紅茶色）, milk（牛奶或奶精的顏色）, creamer, rate, tau, fTarget, sample（樣品色）, contrast（兩杯背景不同）, bgSample, bgTea（'wood'｜'tray'）, tol, tStar（按多久到目標）, level } */
+    /* 出一關：隨機決定紅茶的顏色（深紅褐色、濃度每關不同）、要調成的「目標牛奶比例 fT」、這關用牛奶還是奶精、流量 rate；
+       再檢查「按住多久才會到目標」（tStar ＝ fT ÷ rate）不能太短（按不準）也不能太長（無聊），超出範圍就把流量調整回範圍內。 */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var creamer = level >= CREAMER_FROM && rand() < CREAMER_P, milk = creamer ? CREAMER : MILK;
@@ -110,16 +124,19 @@
     }
 
     /* 杯子外形（SVG path）：上寬下窄的梯形，下面兩個圓角；w＝上寬、wb＝下寬、hh＝高、liquidTop＝液面離杯口的距離 */
+    /* 算杯子的外形（SVG path）：上寬下窄的梯形、下面兩個圓角（Q 是二次曲線）；w 上寬、wb 下寬、hh 高、top 液面離杯口多遠 */
     function cupPath(w, wb, hh, top) {
         var dx = (w - wb) / 2, y0 = top, xl = dx * (y0 / hh), xr = w - xl, r = 14;
         return 'M' + xl.toFixed(1) + ',' + y0 + ' L' + xr.toFixed(1) + ',' + y0 + ' L' + (w - dx - r * 0.3).toFixed(1) + ',' + (hh - r) + ' Q' + (w - dx).toFixed(1) + ',' + hh + ' ' + (w - dx - r).toFixed(1) + ',' + hh + ' L' + (dx + r).toFixed(1) + ',' + hh + ' Q' + dx.toFixed(1) + ',' + hh + ' ' + (dx + r * 0.3).toFixed(1) + ',' + (hh - r) + ' Z';
     }
 
     /* 白色漩渦：粒子池（改寫自 touchInk.js 的粒子物理）。drawIn(ctx, w, h)：在這個畫布上畫；spawn(x, y, n)：在 (x, y) 噴 n 顆；step(dt)：前進 dt 秒 */
+    /* 白色漩渦：一個「粒子池」（預先建好 SWIRL_MAX 顆粒子，用完就回收重用，不會一直產生新物件拖慢速度）。
+       回傳 spawn（噴出幾顆粒子）、step（前進 dt 秒：重力、阻力、繞漩渦中心的力、水波擺動）、draw（畫到畫布上）。 */
     function makeSwirl(vx, vy) {
         var pool = [], i, cursor = 0, alive = 0;
         for (i = 0; i < SWIRL_MAX; i++) pool.push({ alive: false, x: 0, y: 0, vx: 0, vy: 0, size: 0, life: 0, maxLife: 0, r: 0, g: 0, b: 0, phase: 0, freq: 0, amp: 0, isLine: false });
-        var P = { GRAVITY: 30, DRAG: 0.25, SWAY: [3, 7], SWIRL: 26, RADIUS: 95, LIFE: [0.8, 2.2], SIZE: [1.5, 4.5], LINE_RATIO: 0.4, LINE_SCALE: 5 };
+        var P = { GRAVITY: 30, DRAG: 0.25, SWAY: [3, 7], SWIRL: 26, RADIUS: 95, LIFE: [0.8, 2.2], SIZE: [1.5, 4.5], LINE_RATIO: 0.4, LINE_SCALE: 5 };  /* 漩渦粒子的物理參數：重力、阻力、擺動幅度、漩渦力、影響半徑、壽命範圍、大小範圍、線狀粒子的比例與長度 */
         return {
             alive: function () { return alive; },
             spawn: function (x, y, n, col) {
@@ -176,6 +193,7 @@
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         field.appendChild(h('div', { 'class': 'qz-note milktea-tip', text: '按住倒牛奶，兩杯一樣顏色就放手' }));
         var pw = Math.floor((W - 120) / 2), ph = 330, py = 56, cw = 124, cwb = 92, chh = 200;  /* Math.floor：無條件捨去成整數 */
+        /* 建立一個「展示台」（左邊是客人點的樣品、右邊是你的奶茶）：背景底色 bg、標題 title，放在 x 位置 */
         function panel(x, bg, title) {
             var p = h('div', { 'class': 'milktea-panel milktea-panel--' + bg }), cap = h('div', { 'class': 'milktea-cap', text: title });
             p.style.cssText = 'left:' + x + 'px;top:' + py + 'px;width:' + pw + 'px;height:' + ph + 'px;';
@@ -185,6 +203,7 @@
         var xL = 24, xR = W - 24 - pw;
         var pL = panel(xL, q.bgSample, '客人點的'), pR = panel(xR, q.bgTea, '你的奶茶');
         /* 杯子（SVG）：液面離杯口 24px；樣品杯是滿的、奶茶杯一開始是純紅茶 */
+        /* 畫一個杯子（SVG）：液體部分（liquid，可以改顏色）加上玻璃外框；樣品杯是滿的、奶茶杯一開始是純紅茶 */
         function cup(parent, color, cx) {
             var svg = kit.svg('svg', { 'class': 'milktea-cup', viewBox: '0 0 ' + cw + ' ' + chh, width: cw, height: chh }, parent);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             svg.style.cssText = 'left:' + (cx - cw / 2) + 'px;top:' + (ph - chh - 22) + 'px;';
@@ -213,10 +232,10 @@
         var btn = h('div', { 'class': 'milktea-btn' }, [h('div', { 'class': 'milktea-btn__text', text: '按住倒牛奶' })]);
         field.appendChild(btn);
 
-        var f = 0, shownColor = q.t0.slice(), pouring = false, done = false, loop = null, ctl = null, tHold = 0;  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        var f = 0, shownColor = q.t0.slice(), pouring = false, done = false, loop = null, ctl = null, tHold = 0;  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */  /* f：目前倒進去的牛奶比例（0～1）；shownColor：畫面上目前顯示的顏色（會慢慢追上真正的混合色）；pouring：正在倒；done：已放手；loop：每幀更新；ctl：按鈕控制；tHold：按住多久 */
         api.timer(timeMs(), function () { release(); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         if (level === 1 && kit.once('milktea.hint')) kit.hintOn(stage, btn, { mode: 'hold', delay: 700, text: '按住倒牛奶，一樣顏色就放手' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
-        ctl = kit.hold(btn, {
+        ctl = kit.hold(btn, {                           /* kit.hold(元素, { down, up })：處理「按住」：手指按下呼叫 down、放開呼叫 up（手機與滑鼠通用） */
             down: function () { if (done || api.over) return; pouring = true; btn.classList.add('milktea-btn--on'); jug.classList.add('milktea-jug--pour'); stream.classList.add('milktea-stream--on'); Sfx.play('click'); },  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             up: function () { if (pouring) release(); }
         });
@@ -235,6 +254,8 @@
             cctx.clearRect(0, 0, cw, chh); cctx.save();
             var cp = new Path2D(cupPath(cw, cwb, chh, 24)); cctx.clip(cp); swirl.draw(cctx); cctx.restore();
         });
+        /* 放手（或時間到、或滿了）：停止倒牛奶；等 SETTLE_LAGS 倍的延遲時間讓顏色穩定，再把兩杯靠攏並排，
+           算最後的顏色差 ΔE：在容許範圍內就過關，否則失敗並說明牛奶倒太多或太少。 */
         function release() {
             if (done || api.over) return;
             done = true; pouring = false;

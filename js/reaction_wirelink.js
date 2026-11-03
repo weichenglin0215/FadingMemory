@@ -35,15 +35,20 @@
     var MIN_SEG = 3;                            /* 每一條電線（一段路）至少幾格 */
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     /* 顏色的名稱與出現順序（CSS 變數 --wlk-0～--wlk-7 在 css/theme.css；水藍(5)像藍(1)、橘(6)像黃(3)） */
+    /* 電線顏色的名稱與編號（編號 0～7）；每種顏色在 CSS 對應 --wlk-編號 變數。水藍(5) 故意做得像藍(1)、橘(6) 像黃(3)，增加辨認難度 */
     var PALETTE = ['紅', '藍', '綠', '黃', '紫', '水藍', '橘', '粉紅'];
     var neighbors = kit.gridNeighbors, adjacent = kit.gridAdjacent;  /* neighbors：取一格的上下左右鄰格；adjacent：判斷兩格是否相鄰（都是共用工具箱 kit 的函式） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 這一關棋盤的邊長（格） */
     function sizeFor(level) { return Math.round(kit.ramp(level, SIZE[0], SIZE[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 這一關有幾種顏色：照線性算，但每種顏色至少要有 MIN_SEG 格，所以最多 floor(n² ÷ MIN_SEG) 種 */
+    /* 這一關有幾種顏色（幾條電線）：依關卡線性增加，但每種顏色至少要 MIN_SEG 格、所以最多 n²÷MIN_SEG 種，也不能超過調色盤 */
     function colorsFor(level) { var n = sizeFor(level); return Math.max(1, Math.min(PALETTE.length, Math.floor(n * n / MIN_SEG), Math.round(kit.ramp(level, COLORS[0], COLORS[1], RAMP_LEVELS)))); }  /* Math.floor：無條件捨去成整數 */
+    /* 這一關的限時（毫秒） */
     function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
     /* 把 total 格分成 k 段，每段至少 min 格（多出來的格子隨機分給各段）；回傳每段的長度 */
+    /* 把 total 格分成 k 段，每段至少 min 格，多出來的格子隨機分給各段（做法：先每段發 min 格，剩下的一格一格隨機丟給某一段）；回傳每段的長度 */
     function splitLengths(total, k, min, rand) {
         var lens = [], extra = total - k * min, i;
         for (i = 0; i < k; i++) lens.push(min);
@@ -52,11 +57,13 @@
     }
     /* 出一題：{ n, k, plugs:[{ c（顏色編號 0～7）, a, b（兩個插頭的格子）}], solution:[每種顏色一條路（格子編號陣列，從 a 到 b）], level }；
        先用 kit.hamPath 做一條走遍整個棋盤的路，再切成 k 段 */
+    /* 出一題：先用 kit.hamPath 做一條「走遍整個棋盤每一格剛好一次」的路（哈密頓路徑），再把這條路切成 k 段，每一段就是一種顏色的電線，
+       兩端放上同色的插頭。這樣題目一定有解（答案就是 solution），而且每一格都要被電線填滿。回傳 { n, k, plugs 插頭, solution 答案, level }。 */
     function makePuzzle(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var n = sizeFor(level), k = colorsFor(level), total = n * n, blocked = new Uint8Array(total), ham = null;
-        for (var tr = 0; tr < 300 && !ham; tr++) { var s0 = Math.floor(rand() * total); if (kit.gridParityOk(n, blocked, s0)) ham = kit.hamPath(n, blocked, s0, rand, 4000); }
-        if (!ham) { ham = []; for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) ham.push(r * n + (r % 2 ? n - 1 - c : c)); }
+        for (var tr = 0; tr < 300 && !ham; tr++) { var s0 = Math.floor(rand() * total); if (kit.gridParityOk(n, blocked, s0)) ham = kit.hamPath(n, blocked, s0, rand, 4000); }  /* 隨機挑起點試最多 300 次，直到找到走遍全盤的路（kit.gridParityOk 先用「棋盤格奇偶性」快速排除不可能的起點） */
+        if (!ham) { ham = []; for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) ham.push(r * n + (r % 2 ? n - 1 - c : c)); }  /* 保底：萬一都找不到，就用「蛇形」（一排往右、一排往左）走遍全盤 */
         var lens = splitLengths(total, k, MIN_SEG, rand), cols = kit.shuffle(Array.apply(null, Array(k)).map(function (_, i) { return i; }), rand), plugs = [], solution = [], pos = 0;  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         lens.forEach(function (len, i) {                /* forEach：對陣列的每個元素各做一次 */
             var seg = ham.slice(pos, pos + len); pos += len;
@@ -67,14 +74,17 @@
         return { n: n, k: k, plugs: plugs, solution: solution, level: level };
     }
     /* 目前的接線狀態：occ[格子] ＝ 那一格的電線顏色（沒有＝−1，插頭那格一開始就是它的顏色）；paths[顏色] ＝ 這條電線已經鋪的格子（從某一個插頭開始）；done[顏色] ＝ 接通了嗎 */
+    /* 建立目前的接線狀態：occ[格子]＝那一格的電線顏色（沒有＝−1；插頭那格一開始就是它的顏色）、plugOf＝插頭所在的格子、paths[顏色]＝這條電線已經鋪的格子、done[顏色]＝這條接通了嗎 */
     function newState(q) {
         var occ = new Int8Array(q.n * q.n).fill(-1), plugOf = {}, paths = {}, done = {};
         q.plugs.forEach(function (p) { occ[p.a] = p.c; occ[p.b] = p.c; plugOf[p.a] = p.c; plugOf[p.b] = p.c; paths[p.c] = []; done[p.c] = false; });
         return { n: q.n, occ: occ, plugOf: plugOf, paths: paths, done: done, plugs: q.plugs };
     }
+    /* 同一種顏色的兩個插頭裡，「另一個」插頭在哪一格 */
     function otherPlug(st, c, cell) { var p = st.plugs.filter(function (x) { return x.c === c; })[0]; return p.a === cell ? p.b : p.a; }  /* filter：留下符合條件的元素，回傳新陣列 */
     /* 手指在格子 cell 按下：回傳這一筆畫的顏色（−1＝按在空格或不能開始的地方）。
        按在插頭上：那條電線整條收回，從這個插頭重新開始；按在同色電線的中間：那一格之後的電線收回，從這裡接著畫；按在電線的最前端：接著畫 */
+    /* 手指在 cell 按下時要做什麼，回傳這一筆畫的顏色（−1＝按在空格或不能開始的地方）：按在插頭上＝這條電線整條收回、從這個插頭重新開始；按在同色電線的中間＝那格之後的收回、從這裡接著畫；按在電線最前端＝接著畫 */
     function startDraw(st, cell) {
         var c = st.occ[cell];
         if (c < 0) return -1;
@@ -85,11 +95,13 @@
         st.done[c] = false;
         return c;
     }
+    /* 把顏色 c 的電線整條收回（插頭那一格的顏色要保留） */
     function clearPath(st, c) {
         st.paths[c].forEach(function (k) { if (st.plugOf[k] == null) st.occ[k] = -1; });
         st.paths[c] = []; st.done[c] = false;
     }
     /* 這一筆畫（顏色 c）拖到格子 cell：回傳 'add'（往空格鋪一格）／'connect'（接到同色的另一個插頭）／'back'（拖回上一格＝收回一格）／null（不動：不相鄰、被擋住） */
+    /* 這一筆畫（顏色 c）拖到 cell 時的處理，回傳 'add'（往空格鋪一格）／'connect'（接到同色的另一個插頭）／'back'（拖回上一格＝收回一格）／null（不動：不相鄰或被擋住） */
     function applyDrag(st, c, cell) {
         var p = st.paths[c];
         if (!p.length) return null;
@@ -103,9 +115,12 @@
         if (st.plugOf[cell] === c && cell !== p[0] && cell === otherPlug(st, c, p[0])) { p.push(cell); st.done[c] = true; return 'connect'; }
         return null;
     }
+    /* 已經有電線的格子數 */
     function filled(st) { var f = 0; for (var i = 0; i < st.occ.length; i++) if (st.occ[i] >= 0) f++; return f; }
+    /* 已經接通的電線條數 */
     function linked(st) { var l = 0; Object.keys(st.done).forEach(function (c) { if (st.done[c]) l++; }); return l; }
     /* 過關：每一格都有電線、每一種顏色都接通 */
+    /* 過關條件：每一格都有電線、每一種顏色都接通 */
     function isSolved(st) { return filled(st) === st.n * st.n && linked(st) === st.plugs.length; }
     /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
@@ -136,7 +151,7 @@
         console.log('[接電線] 第 ' + level + ' 關：' + n + '×' + n + '、' + q.k + ' 種顏色（' + q.plugs.map(function (p) { return PALETTE[p.c]; }).join('、') + '）；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, topPad = 56;
-        var cell = Math.floor(Math.min((W - 20) / n, (H - topPad - 20) / n, 90)), BS = cell * n, bx = Math.round((W - BS) / 2), by = topPad + Math.round((H - topPad - BS) / 2) - 8;
+        var cell = Math.floor(Math.min((W - 20) / n, (H - topPad - 20) / n, 90)), BS = cell * n, bx = Math.round((W - BS) / 2), by = topPad + Math.round((H - topPad - BS) / 2) - 8;  /* 算棋盤尺寸：每格邊長 cell（寬或高放得下、最大 90px）、整個棋盤邊長 BS、棋盤左上角的位置 bx／by（置中） */
         var tip = h('div', { 'class': 'qz-note wirelink-tip', text: '' });
         stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var board = h('div', { 'class': 'wirelink-board' });  /* board：盤面（所有格子都放在裡面） */
@@ -148,10 +163,12 @@
             el.style.cssText = 'left:' + c * cell + 'px;top:' + r * cell + 'px;width:' + cell + 'px;height:' + cell + 'px;';
             board.appendChild(el); cells.push(el);
         }
+        /* 第 i 格的中心 x 座標（格子編號 ＝ 列 × n ＋ 欄） */
         function cx(i) { return (i % n + 0.5) * cell; }
+        /* 第 i 格的中心 y 座標 */
         function cy(i) { return (Math.floor(i / n) + 0.5) * cell; }
         var svg = kit.svg('svg', { 'class': 'wirelink-svg', viewBox: '0 0 ' + BS + ' ' + BS, width: BS, height: BS }, board);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
-        var gSol = kit.svg('g', {}, svg), wires = {}, plugEls = [];
+        var gSol = kit.svg('g', {}, svg), wires = {}, plugEls = [];  /* gSol：時間到時用來放「正確接法」的群組；wires：每種顏色的電線（SVG path）；plugEls：所有插頭的畫面元素 */
         q.plugs.forEach(function (p) {
             var w = kit.svg('path', { 'class': 'wirelink-wire wirelink-c' + p.c, d: '' }, svg);
             w.setAttribute('stroke-width', (cell * 0.46).toFixed(1)); wires[p.c] = w;  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
@@ -164,8 +181,10 @@
                 plugEls.push({ g: g, c: p.c });
             });
         });
+        /* 把一串格子編號轉成 SVG path 的路徑文字（"M x y L x y …"：M 移到起點、L 畫線到下一點） */
         function pathD(p) { return p.map(function (k, j) { return (j ? 'L' : 'M') + cx(k).toFixed(1) + ' ' + cy(k).toFixed(1); }).join(' '); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
+        /* 重畫：每條電線依目前鋪的格子畫出路徑、接通的插頭亮起來、上方顯示「已接通幾條、填滿幾格」 */
         function paint() {
             q.plugs.forEach(function (p) {
                 var path = st.paths[p.c];
@@ -181,11 +200,13 @@
             kit.hintOn(stage, null, { mode: 'drag', x: bx + cx(p0.a), y: by + cy(p0.a), dx: cx(p0.b) - cx(p0.a), dy: cy(p0.b) - cy(p0.a), delay: 500, text: '從插頭拖到同色插頭且佈滿畫面' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         }
 
-        var pid = null, drawing = -1, lastPt = null;
+        var pid = null, drawing = -1, lastPt = null;    /* pid：目前這根手指的編號（只認一根）；drawing：正在畫的顏色（−1＝沒在畫）；lastPt：手指上一個位置 */
+        /* 把舞台座標換算成格子編號（在棋盤外回傳 −1） */
         function cellAt(x, y) {
             var c = Math.floor((x - bx) / cell), r = Math.floor((y - by) / cell);
             return c < 0 || c >= n || r < 0 || r >= n ? -1 : r * n + c;
         }
+        /* 手指移動到 p：把「上一個位置到 p」這一段切成小步（每步最多 1/4 格），一步一步呼叫 applyDrag，這樣手指移太快也不會跳過格子 */
         function feed(p) {
             if (over || api.over) return;
             var from = lastPt || p, dist = kit.dist(from.x, from.y, p.x, p.y), steps = Math.max(1, Math.ceil(dist / (cell / 4)));  /* Math.ceil：無條件進位成整數 */
@@ -208,10 +229,12 @@
             paint();
         });
         stage.addEventListener('pointermove', function (e) { if (pid === e.pointerId) feed(kit.localPt(e, stage)); });
+        /* 手指放開：結束這一筆畫 */
         function up(e) { if (pid === e.pointerId) { pid = null; drawing = -1; lastPt = null; } }
         stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
 
         /* 結束：kind＝'ok'（接好了）／'time'（時間到） */
+        /* 結束：kind 是 'ok'（接好了，燈全亮、過關）或 'time'（時間到，沒接通的電線閃紅，並一條一條畫出正確接法，然後失敗） */
         function finish(kind) {
             if (over || api.over) return;
             over = true; pid = null;
