@@ -39,20 +39,32 @@
     var DIRS = [[-1, 0], [1, 0], [0, -1], [0, 1]];       /* 上、下、左、右 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 小工具：讓 [第 1 關的值, 到頂的值] 這種成對的設定依關卡線性變化，並四捨五入成整數 */
     function ramp(level, pair) { return Math.round(kit.ramp(level, pair[0], pair[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    /* 這一關棋盤的邊長（格） */
     function sizeFor(level) { return ramp(level, SIZE); }
+    /* 這一關有幾顆紅棋（要從紅棋裡挑「能連跳最多次」的那顆） */
     function redsFor(level) { return ramp(level, REDS); }
+    /* 這一關有幾顆藍棋（藍棋也可以被跳過，用來干擾判斷） */
     function bluesFor(level) { return ramp(level, BLUES); }
+    /* 這一關「最多的那顆能連跳的次數」至少要幾次 */
     function minBestFor(level) { return ramp(level, MIN_BEST); }
+    /* 最多的那顆跟第二名最多差幾次（差距小＝難分辨） */
     function gapMaxFor(level) { return ramp(level, GAP_MAX); }
+    /* 最佳路線至少要轉幾個彎（轉彎越多越難看出來） */
     function minTurnsFor(level) { return ramp(level, MIN_TURNS); }
+    /* 這一關的作答限時（毫秒） */
     function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
+    /* 第 r 列第 c 欄在棋盤（n×n）裡嗎（in bounds） */
     function inb(n, r, c) { return r >= 0 && r < n && c >= 0 && c < n; }
     /* 從 start（格子編號）出發最多能連跳幾次：回傳 { jumps, path（依序降落的格子編號）}。
        被跳的棋子不會被吃掉；同一個格子不能降落兩次（含出發那格，它在跳起來之後是空的但不能回去）。 */
+    /* 從 start 這一格出發，最多能連跳幾次？規則（像跳棋）：隔壁有棋子、而且棋子後面是空格，就能跳過去降落；被跳的棋子不會被吃掉；同一格不能降落兩次。
+       做法是「深度優先搜尋」（dfs）：每到一格就試四個方向，能跳就跳過去繼續往下試，試完要退回（path.pop／visited[land] = false），記錄走過最長的那條。回傳 { jumps 次數, path 依序降落的格子 }。 */
     function longest(board, n, start) {
         var best = { jumps: 0, path: [] }, visited = {}, path = [];
         visited[start] = true;
+        /* dfs（深度優先搜尋）：從目前的格子 cur 往下試所有跳法；先檢查「目前這條路」是不是比紀錄更長，再試上下左右四個方向 */
         function dfs(cur) {
             var r = Math.floor(cur / n), c = cur % n;   /* Math.floor：無條件捨去成整數 */
             if (path.length > best.jumps) best = { jumps: path.length, path: path.slice() };  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
@@ -72,6 +84,7 @@
         return best;
     }
     /* 一條路線轉了幾個彎（連續兩跳的方向不同就算一個彎）；出發點 start 也要給 */
+    /* 一條路線轉了幾個彎：相鄰兩跳的方向不同就算一個彎（用 Math.sign 取每一跳的列、欄移動方向，組成字串比較） */
     function turnsOf(n, start, path) {
         var prev = null, turns = 0, cur = start;
         for (var i = 0; i < path.length; i++) {
@@ -82,6 +95,7 @@
         return turns;
     }
     /* 用隨機漫步造一條 k 次連跳：回傳 { start, lands（降落格）, mids（被跳過的棋子所在格）}，造不出來回傳 null */
+    /* 用隨機漫步造一條「保證能連跳 k 次」的路線：每一步在四個方向裡隨機挑一個合法的跳法（降落格要空、不能重複降落、被跳的棋子格不能是降落格）。回傳 { start, lands 降落格, mids 被跳過的棋子所在格 }；走進死路就回傳 null */
     function buildChain(n, k, rand) {
         var start = kit.randInt(0, n * n - 1, rand), cur = start, lands = [], mids = [], landSet = {}, midSet = {};  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         landSet[start] = true;
@@ -101,13 +115,15 @@
         return { start: start, lands: lands, mids: mids };
     }
     /* 出一關：{ n, board, reds（紅棋的格子編號）, jumps（每顆紅棋的最大連跳數）, paths, best（最多的那顆在 reds 裡的位置）, bestJumps, second, gap, turns, level } */
+    /* 出一關：先造一條連跳 k 次的路線，把起點放紅棋、被跳過的格子放紅或藍棋（路線上降落的格子要保持空），再隨機補足紅棋、藍棋的數量；
+       然後算出每顆紅棋的最大連跳數（longest），檢查「最多的那顆比第二名多 1～gapMax 次、至少 minBest 次、最佳路線轉彎夠多」才收；試 6000 次不行就用保底盤面。 */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var n = sizeFor(level), R = redsFor(level), B = bluesFor(level), minBest = minBestFor(level), gapMax = gapMaxFor(level), minTurns = minTurnsFor(level);
         for (var tr = 0; tr < 6000; tr++) {
             var k = Math.min(minBest + kit.randInt(0, 1, rand), 12), ch = buildChain(n, k, rand);
             if (!ch) continue;
-            var board = new Int8Array(n * n), blocked = {}, i;
+            var board = new Int8Array(n * n), blocked = {}, i;  /* board：棋盤（Int8Array 是固定長度的整數陣列，每格存 EMPTY／RED／BLUE）；blocked：路線上要保持空的降落格 */
             ch.lands.forEach(function (l) { blocked[l] = true; });                 /* 路線上降落的格子要保持空 */
             blocked[ch.start] = false;
             var mids = ch.mids.filter(function (m, j) { return ch.mids.indexOf(m) === j; });                /* 同一顆棋子可能被跳過兩次，只放一次 */
@@ -120,7 +136,7 @@
                 if (reds.length < R && (blues >= B || rand() < 0.4)) { board[cell] = RED; reds.push(cell); } else { board[cell] = BLUE; blues++; }
             }
             if (reds.length !== R || blues < B) continue;
-            var res = reds.map(function (cc) { return longest(board, n, cc); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            var res = reds.map(function (cc) { return longest(board, n, cc); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */  /* res：每顆紅棋各自的最大連跳結果；下面依連跳次數排序，找出最多的那顆（bi）與第二名 */
             var order = res.map(function (x, j) { return j; }).sort(function (a, b) { return res[b].jumps - res[a].jumps; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
             var bi = order[0], b1 = res[bi].jumps, b2 = res[order[1]].jumps, gap = b1 - b2;
             if (b1 < minBest || gap < 1 || gap > gapMax) continue;
@@ -168,7 +184,8 @@
         var bd = h('div', { 'class': 'checkers-board' });
         bd.style.cssText = 'left:' + bx + 'px;top:' + by + 'px;width:' + BS + 'px;height:' + BS + 'px;background-size:' + cs + 'px ' + cs + 'px;';
         field.appendChild(bd);
-        var pcs = {};                                                       /* 格子編號 → 棋子的元素 */
+        var pcs = {};                                                       /* 格子編號 → 棋子的元素 */  /* pcs：格子編號 → 棋子的畫面元素 */
+        /* 把棋子元素放到某一格的位置（用 left／top，棋子比格子小，off 是置中用的位移） */
         function place(el, cell) { el.style.left = (cell % n) * cs + off + 'px'; el.style.top = Math.floor(cell / n) * cs + off + 'px'; }
         for (var cell = 0; cell < n * n; cell++) if (board[cell] !== EMPTY) {
             var el = h('div', { 'class': 'checkers-pc ' + (board[cell] === RED ? 'checkers-pc--red' : 'checkers-pc--blue') });
@@ -185,10 +202,12 @@
         q.reds.forEach(function (cellNo, ri) { kit.onTap(pcs[cellNo], function () { judge(ri); }); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
 
         /* 彈珠沿著路線連跳（外層直線移動、內層做弧線）；跳完呼叫 done */
+        /* 揭曉動畫：第 ri 顆紅棋沿著它的最佳路線一跳一跳過去（每跳 HOP_MS 毫秒，直線移動加上弧線動畫），跳完呼叫 onEnd */
         function hop(ri, onEnd) {
             var el = pcs[q.reds[ri]], path = q.paths[ri], k = 0;
             el.classList.add('checkers-pc--go');        /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             el.style.zIndex = '20';
+            /* next：跳下一步（遞迴式的動畫迴圈：每一跳用 api.after 等動畫播完才跳下一跳） */
             function next() {
                 if (k >= path.length) { onEnd && onEnd(); return; }
                 var inner = el.firstChild;
