@@ -41,17 +41,17 @@
         level = Math.max(1, level);
         for (var i = 0; i < STAGES.length; i++) if (level <= STAGES[i].to || i === STAGES.length - 1) return STAGES[i].cards;
     }
-    function slackFor(level) { return Math.round(kit.ramp(level, SLACK[0], SLACK[1], RAMP_LEVELS)); }
+    function slackFor(level) { return Math.round(kit.ramp(level, SLACK[0], SLACK[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 發牌：n 張，一半是「一組一組湊成十」的牌（每組隨機是 1-9、2-8、3-7、4-6、5-5 其中一種），洗牌 */
     function deal(n, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var deck = [];
-        for (var i = 0; i < n / 2; i++) { var a = kit.randInt(1, 5, rand); deck.push(a, 10 - a); }
-        return kit.shuffle(deck, rand);
+        for (var i = 0; i < n / 2; i++) { var a = kit.randInt(1, 5, rand); deck.push(a, 10 - a); }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+        return kit.shuffle(deck, rand);                 /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
     }
     /* 完美記憶策略要翻幾次（一次＝翻兩張）。deck[i]＝第 i 格的數字 */
     function perfectFlips(deck) {
-        var n = deck.length, gone = new Array(n).fill(false), known = new Array(n).fill(false), flips = 0, left = n;
+        var n = deck.length, gone = new Array(n).fill(false), known = new Array(n).fill(false), flips = 0, left = n;  /* new Array(n).fill(v)：建立長度 n、每一格都是 v 的陣列 */
         function knownPair() {
             for (var i = 0; i < n; i++) if (known[i] && !gone[i]) for (var j = i + 1; j < n; j++) if (known[j] && !gone[j] && deck[i] + deck[j] === 10) return [i, j];
             return null;
@@ -108,54 +108,54 @@
         api.info = pz;                                  /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[翻牌湊十] 第 ' + level + ' 關：' + n + ' 張；完美記憶策略 ' + pz.perfect + ' 次，上限 ' + pz.limit + ' 次');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
         var rows = n / COLS, W = stage.clientWidth || 472, H = stage.clientHeight || 700;
-        var cw = Math.floor(W * 0.96 / COLS) - 8, ch = Math.min(Math.floor(cw * 0.95), Math.floor((H - 200) / rows) - 8);
-        var up = [], gone = new Array(n).fill(false), pairsLeft = n / 2, used = 0, busy = false, over = false, first = -1;
+        var cw = Math.floor(W * 0.96 / COLS) - 8, ch = Math.min(Math.floor(cw * 0.95), Math.floor((H - 200) / rows) - 8);  /* Math.floor：無條件捨去成整數 */
+        var up = [], gone = new Array(n).fill(false), pairsLeft = n / 2, used = 0, busy = false, over = false, first = -1;  /* new Array(n).fill(v)：建立長度 n、每一格都是 v 的陣列 */
 
-        var wrap = h('div', { 'class': 'flipten-wrap' });
+        var wrap = h('div', { 'class': 'flipten-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
         var info = h('div', { 'class': 'flipten-info' });
-        var board = h('div', { 'class': 'flipten-board' });
-        board.style.setProperty('--flipten-cols', COLS);
-        board.style.setProperty('--flipten-w', cw + 'px');
+        var board = h('div', { 'class': 'flipten-board' });  /* board：盤面（所有格子都放在裡面） */
+        board.style.setProperty('--flipten-cols', COLS);  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
+        board.style.setProperty('--flipten-w', cw + 'px');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
         board.style.setProperty('--flipten-h', ch + 'px');
-        var tip = h('div', { 'class': 'flipten-tip', text: '翻兩張：加起來是 10 就消掉' });
+        var tip = h('div', { 'class': 'flipten-tip', text: '翻兩張：加起來是 10 就消掉' });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
         var cards = [];
         for (var i = 0; i < n; i++) {
             var c = h('div', { 'class': 'flipten-card', text: '' });
             (function (idx) { kit.onTap(c, function () { flip(idx); }); })(i);  /* 用立即執行函式存住這一次迴圈的變數（不這樣寫，每個元素點下去都會拿到迴圈結束時的值） */
-            board.appendChild(c); cards.push(c);
+            board.appendChild(c); cards.push(c);        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         }
-        wrap.appendChild(info); wrap.appendChild(board); wrap.appendChild(tip);
-        stage.appendChild(wrap);
+        wrap.appendChild(info); wrap.appendChild(board); wrap.appendChild(tip);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(wrap);                        /* 把整個遊戲區放進舞台（放進去，畫面上才看得到） */
 
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() {
-            info.textContent = '還能翻 ' + Math.max(0, pz.limit - used) + ' 次　已消 ' + (n / 2 - pairsLeft) + '/' + n / 2;
+            info.textContent = '還能翻 ' + Math.max(0, pz.limit - used) + ' 次　已消 ' + (n / 2 - pairsLeft) + '/' + n / 2;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             for (var i = 0; i < n; i++) {
-                var show = up.indexOf(i) >= 0 || (over && !gone[i]);
+                var show = up.indexOf(i) >= 0 || (over && !gone[i]);  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                 cards[i].className = 'flipten-card' + (gone[i] ? ' flipten-card--gone' : show ? ' flipten-card--up' : '') + (over && !gone[i] ? ' flipten-card--reveal' : '');
-                cards[i].textContent = show && !gone[i] ? String(deck[i]) : '';
+                cards[i].textContent = show && !gone[i] ? String(deck[i]) : '';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             }
         }
         function flip(i) {
-            if (busy || over || gone[i] || up.indexOf(i) >= 0) return;
+            if (busy || over || gone[i] || up.indexOf(i) >= 0) return;  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             up.push(i);
             if (up.length === 1) { first = i; paint(); return; }
             used++; busy = true; paint();
             var a = up[0], b = up[1];
             if (deck[a] + deck[b] === 10) {
                 tip.textContent = deck[a] + ' + ' + deck[b] + ' = 10！';
-                Sfx.play('ok');
-                api.after(MATCH_MS, function () {
+                Sfx.play('ok');                         /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                api.after(MATCH_MS, function () {       /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                     gone[a] = gone[b] = true; up = []; pairsLeft--; busy = false; first = -1; paint();
                     if (pairsLeft === 0) {
                         over = true; paint(); tip.textContent = '全部消完！用了 ' + used + ' 次（完美記憶策略 ' + pz.perfect + ' 次）';
-                        kit.flash(stage, true, api.my); api.pass({ delay: PASS_DELAY_MS });
+                        kit.flash(stage, true, api.my); api.pass({ delay: PASS_DELAY_MS });  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
                     } else if (used >= pz.limit) failNow();
                     else tip.textContent = '翻兩張：加起來是 10 就消掉';
                 });
             } else {
                 tip.textContent = deck[a] + ' + ' + deck[b] + ' = ' + (deck[a] + deck[b]) + '，不是 10，記住位置！';
-                api.after(SHOW_MS, function () {
+                api.after(SHOW_MS, function () {        /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                     up = []; busy = false; first = -1; paint();
                     if (used >= pz.limit) failNow(); else tip.textContent = '翻兩張：加起來是 10 就消掉';
                 });
@@ -165,8 +165,8 @@
             over = true; busy = true; paint();
             var text = '次數用完了（上限 ' + pz.limit + '）。完美記憶只要 ' + pz.perfect + ' 次，剩下的牌翻開給你看。';
             tip.textContent = text;
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: FAIL_HOLD_MS, lines: [text] });
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: FAIL_HOLD_MS, lines: [text] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         api.solve = function () {                  /* 驗證用：依完美記憶策略一組一組翻（直接找互補的兩格） */
             if (over) return;
@@ -180,7 +180,7 @@
             if (over) return;
             for (var i = 0; i < n; i++) for (var j = i + 1; j < n; j++) if (!gone[i] && !gone[j] && deck[i] + deck[j] !== 10) { busy = false; flip(i); flip(j); return; }
         };
-        api.state = function () { return { used: used, gone: gone.slice(), over: over, busy: busy }; };
+        api.state = function () { return { used: used, gone: gone.slice(), over: over, busy: busy }; };  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         paint();
     }
 

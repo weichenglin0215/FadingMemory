@@ -49,8 +49,8 @@
     var people = lib.people;
 
     /* names：把一串物件的名稱 n 抽出來變成陣列；others：從清單中排除某些項目 */
-    function names(arr) { return arr.map(function (x) { return x.n; }); }
-    function others(list, not) { return list.filter(function (x) { return [].concat(not).indexOf(x) < 0; }); }
+    function names(arr) { return arr.map(function (x) { return x.n; }); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+    function others(list, not) { return list.filter(function (x) { return [].concat(not).indexOf(x) < 0; }); }  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
 
     /* 時間軸：一局橫跨大半年，每一關的出發日期落在不同的月份（季節不同 → 要帶的衣服不同）。
        只用季節很明確的月份（2、3、6、9 月這種換季的月份不用），出發前 3～10 天是「今天」。
@@ -138,10 +138,10 @@
         var c2 = cs[1];
         var i1 = G.pick(c1.items);
         var i2 = G.pick(c2.items);
-        var rest2 = G.shuffle(c2.items.filter(function (x) { return x !== i2; }));
+        var rest2 = G.shuffle(c2.items.filter(function (x) { return x !== i2; }));  /* filter：留下符合條件的元素，回傳新陣列 */
         var lure = rest2[0];
         var sib2 = rest2[1];
-        var sib1 = G.any(c1.items.filter(function (x) { return x !== i1; }));
+        var sib1 = G.any(c1.items.filter(function (x) { return x !== i1; }));  /* filter：留下符合條件的元素，回傳新陣列 */
         var bus = G.num(12, 98, null, twoDiff);
         var house = rev2(bus);
         var stop = G.pick(P.stops);
@@ -235,15 +235,15 @@
         var noiseLabel = '逛' + noise.shop;
         var noiseWhy = noise.shop + '只是順口提到的新店。';
         var qs = [];
-        exec.forEach(function (e, i) {
+        exec.forEach(function (e, i) {                  /* forEach：對陣列的每個元素各做一次 */
             var lures = [];
-            if (narr[i] !== e) lures.push(L(narr[i].k, '順序顛倒', '紙條上先講到「' + narr[i].k + '」，但它是' + ord[exec.indexOf(narr[i])] + '。'));
-            exec.forEach(function (o, j) { if (j !== i) lures.push(L(o.k, '順序顛倒', '「' + o.k + '」是' + ord[j] + '。')); });
+            if (narr[i] !== e) lures.push(L(narr[i].k, '順序顛倒', '紙條上先講到「' + narr[i].k + '」，但它是' + ord[exec.indexOf(narr[i])] + '。'));  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+            exec.forEach(function (o, j) { if (j !== i) lures.push(L(o.k, '順序顛倒', '「' + o.k + '」是' + ord[j] + '。')); });  /* forEach：對陣列的每個元素各做一次 */
             lures.push(L(noiseLabel, '似曾相識', noiseWhy));
             qs.push(G.q(ord[i] + '要做什麼？', '順序', e.k, lures));
         });
         qs.push(G.q('哪一件事要搭公車？', '配對', BE.k,
-            exec.filter(function (e) { return e !== BE; }).map(function (e) { return L(e.k, '張冠李戴', '搭公車是為了去' + BE.place + '。'); })
+            exec.filter(function (e) { return e !== BE; }).map(function (e) { return L(e.k, '張冠李戴', '搭公車是為了去' + BE.place + '。'); })  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                 .concat([L(noiseLabel, '似曾相識', noiseWhy)])));
         qs.push(G.q('要搭幾號公車？', '數字', bus, G.near(bus, String, { lo: 10, hi: 99 })));
         exec.forEach(function (e, i) {

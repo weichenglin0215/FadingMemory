@@ -42,36 +42,36 @@
     var RAINBOW = [['紅', 0, 72, 52], ['橙', 28, 88, 54], ['黃', 50, 90, 54], ['綠', 125, 52, 42], ['藍', 205, 72, 50], ['靛', 240, 52, 48], ['紫', 280, 55, 50]];
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function countDelta(level) { return Math.round(kit.ramp(level, COUNT_DELTA[0], COUNT_DELTA[1], RAMP_LEVELS)); }
-    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
+    function countDelta(level) { return Math.round(kit.ramp(level, COUNT_DELTA[0], COUNT_DELTA[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
     /* 第 level 關，全部襪子共用幾種底色：1～5 關 3 種、6～10 關 2 種、11 關起 1 種 */
-    function colorCountAt(level) { var n = COLOR_STEPS[0].n; COLOR_STEPS.forEach(function (s) { if (level >= s.from) n = s.n; }); return n; }
+    function colorCountAt(level) { var n = COLOR_STEPS[0].n; COLOR_STEPS.forEach(function (s) { if (level >= s.from) n = s.n; }); return n; }  /* forEach：對陣列的每個元素各做一次 */
     function key(p) { return p.ci + '/' + p.stripes + '/' + p.dots; }
     /* 九隻襪子的旋轉角度：把 360 度分成 9 份，每份挑一個角度（±jitter），再打亂順序，所以任兩隻至少差 ROT_GAP 度 */
     function makeRotations(rand, n) {
         n = n || 9;
         var slot = 360 / n, jit = (slot - ROT_GAP) / 2 - 0.5, base = rand() * 360, out = [];
-        for (var i = 0; i < n; i++) out.push(((base + i * slot + kit.randFloat(-jit, jit, rand)) % 360 + 360) % 360);
-        return kit.shuffle(out, rand);
+        for (var i = 0; i < n; i++) out.push(((base + i * slot + kit.randFloat(-jit, jit, rand)) % 360 + 360) % 360);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+        return kit.shuffle(out, rand);                  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
     }
     /* 兩個角度（度）的最小差距 */
-    function angDiff(a, b) { var d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; }
+    function angDiff(a, b) { var d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; }  /* Math.abs：取絕對值（去掉負號） */
     /* 出題：回傳 { socks: [9 個 {ci（彩虹色索引）, stripes, dots, rot, dx, dy}]（已洗牌）, odd: 落單那隻的索引, mate: 它最像的那一對的圖案, what: 改了哪個參數, colors: 這一關用到的底色索引 } */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var nColor = colorCountAt(level), colors = kit.shuffle([0, 1, 2, 3, 4, 5, 6], rand).slice(0, nColor);
+        var nColor = colorCountAt(level), colors = kit.shuffle([0, 1, 2, 3, 4, 5, 6], rand).slice(0, nColor);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         for (var tries = 0; tries < 200; tries++) {
             /* 四組花紋互不相同；底色：先每種底色至少用一次，其餘隨機 */
             var pats = [], used = {}, k, p;
             while (pats.length < 4) {
-                p = { stripes: kit.randInt(0, 5, rand), dots: kit.randInt(0, 5, rand) };
+                p = { stripes: kit.randInt(0, 5, rand), dots: kit.randInt(0, 5, rand) };  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
                 var pk = p.stripes + '/' + p.dots;
                 if (!used[pk]) { used[pk] = true; pats.push(p); }
             }
-            var cols = colors.slice(); while (cols.length < 4) cols.push(kit.pick(colors, rand));
+            var cols = colors.slice(); while (cols.length < 4) cols.push(kit.pick(colors, rand));  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             cols = kit.shuffle(cols, rand).slice(0, 4);
-            pats.forEach(function (pp, i) { pp.ci = cols[i]; });
-            var j = kit.randInt(0, 3, rand), base = pats[j], what = kit.pick(['stripes', 'dots'], rand);
+            pats.forEach(function (pp, i) { pp.ci = cols[i]; });  /* forEach：對陣列的每個元素各做一次 */
+            var j = kit.randInt(0, 3, rand), base = pats[j], what = kit.pick(['stripes', 'dots'], rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             var oddP = { ci: base.ci, stripes: base.stripes, dots: base.dots }, sign = rand() < 0.5 ? 1 : -1, d = countDelta(level), cur = base[what], v = cur + sign * d;
             if (v < 0 || v > MAX_COUNT) v = cur - sign * d;
             oddP[what] = v;
@@ -80,7 +80,7 @@
             pats.forEach(function (pp) { socks.push(pp, pp); });
             socks.push(oddP);
             var rots = makeRotations(rand, 9);
-            socks = socks.map(function (pp, i) { return { ci: pp.ci, stripes: pp.stripes, dots: pp.dots, isOdd: i === 8, rot: rots[i], dx: kit.randFloat(-6, 6, rand), dy: kit.randFloat(-6, 6, rand) }; });
+            socks = socks.map(function (pp, i) { return { ci: pp.ci, stripes: pp.stripes, dots: pp.dots, isOdd: i === 8, rot: rots[i], dx: kit.randFloat(-6, 6, rand), dy: kit.randFloat(-6, 6, rand) }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             socks = kit.shuffle(socks, rand);
             return { socks: socks, odd: socks.findIndex(function (s) { return s.isOdd; }), mate: base, what: what, colors: colors };
         }
@@ -131,15 +131,15 @@
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[落單的襪子] 第 ' + level + ' 關：落單在第 ' + (q.odd + 1) + ' 格（改了' + WHAT_NAME[q.what] + '，差 ' + countDelta(level) + '）；底色 ' + q.colors.map(function (c) { return RAINBOW[c][0]; }).join('、') + '；限時 ' + timeMs(level) + ' ms；九隻 ' + q.socks.map(key).join(' | '));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        var W = stage.clientWidth || 472, x0 = Math.round((W - (3 * CELL + 2 * GAP)) / 2), y0 = 6;
-        var tip = h('div', { 'class': 'oddsock-tip', text: '九隻襪子裡有四對相同，找出沒有伴的那一隻' });
-        stage.appendChild(tip);
-        var cells = q.socks.map(function (s, i) {
+        var W = stage.clientWidth || 472, x0 = Math.round((W - (3 * CELL + 2 * GAP)) / 2), y0 = 6;  /* Math.round：四捨五入成整數 */
+        var tip = h('div', { 'class': 'oddsock-tip', text: '九隻襪子裡有四對相同，找出沒有伴的那一隻' });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
+        stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var cells = q.socks.map(function (s, i) {       /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var el = h('div', { 'class': 'oddsock-cell', html: sockSvg(s, level + '_' + i) });
-            el.style.left = (x0 + (i % 3) * (CELL + GAP)) + 'px'; el.style.top = (y0 + 66 + Math.floor(i / 3) * (CELL + GAP)) + 'px';
+            el.style.left = (x0 + (i % 3) * (CELL + GAP)) + 'px'; el.style.top = (y0 + 66 + Math.floor(i / 3) * (CELL + GAP)) + 'px';  /* Math.floor：無條件捨去成整數 */
             el.firstChild.style.transform = 'translate(' + s.dx.toFixed(1) + 'px,' + s.dy.toFixed(1) + 'px) rotate(' + s.rot.toFixed(1) + 'deg)';
-            kit.onTap(el, function () { judge(i); });
-            stage.appendChild(el);
+            kit.onTap(el, function () { judge(i); });   /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+            stage.appendChild(el);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             return el;
         });
         var hint = null;
@@ -151,13 +151,13 @@
         function judge(i) {
             if (api.over) return;
             var odd = q.odd;
-            cells[odd].classList.add('oddsock-cell--odd');
-            q.socks.forEach(function (s, k) { if (k !== odd && key(s) === key(q.mate)) cells[k].classList.add('oddsock-cell--mate'); });
-            if (i === odd) { api.pass({ delay: 800 }); return; }
+            cells[odd].classList.add('oddsock-cell--odd');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            q.socks.forEach(function (s, k) { if (k !== odd && key(s) === key(q.mate)) cells[k].classList.add('oddsock-cell--mate'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            if (i === odd) { api.pass({ delay: 800 }); return; }  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
             if (i >= 0) cells[i].classList.add('oddsock-cell--bad');
-            api.fail({
+            api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: 2000, lines: [
-                    (i < 0 ? '時間到！' : '選錯了！') + '落單的是第 ' + (Math.floor(odd / 3) + 1) + ' 列第 ' + (odd % 3 + 1) + ' 隻',
+                    (i < 0 ? '時間到！' : '選錯了！') + '落單的是第 ' + (Math.floor(odd / 3) + 1) + ' 列第 ' + (odd % 3 + 1) + ' 隻',  /* Math.floor：無條件捨去成整數 */
                     '它和最像的那一對只差' + WHAT_NAME[q.what] + '：差 ' + countDelta(level) + ' 個'
                 ]
             });

@@ -44,12 +44,12 @@
         return Math.max(PCT_MIN, PCT_MAX * t);
     }
     /* 百分比 → 灰階值（0～255 的整數） */
-    function valueOf(pct) { return Math.round(255 * pct / 100); }
+    function valueOf(pct) { return Math.round(255 * pct / 100); }  /* Math.round：四捨五入成整數 */
     /* 下一個方向：一定和前一個不同 */
     function nextDir(prev, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var c = DIRS.filter(function (d) { return d !== prev; });
-        return kit.pick(c, rand);
+        var c = DIRS.filter(function (d) { return d !== prev; });  /* filter：留下符合條件的元素，回傳新陣列 */
+        return kit.pick(c, rand);                       /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
     }
     /* E 的 5×5 格：基本款開口朝右（脊柱在左，三隻腳在第 0、2、4 列朝右）；
        dir 是開口方向，把格子座標旋轉回基本款來查 */
@@ -63,14 +63,14 @@
     }
     /* 判定滑動方向：比較 |dx| 與 |dy|，只回傳上下左右四種 */
     function dirOf(dx, dy) {
-        if (Math.abs(dx) >= Math.abs(dy)) return dx >= 0 ? 'right' : 'left';
+        if (Math.abs(dx) >= Math.abs(dy)) return dx >= 0 ? 'right' : 'left';  /* Math.abs：取絕對值（去掉負號） */
         return dy >= 0 ? 'down' : 'up';
     }
     /* 畫一個 E 到 canvas（灰階像素）：背景純黑（0），E 是灰階值 value（0～255） */
     function paintE(cv, dir, value) {
         var g = cv.getContext('2d'), img = g.createImageData(PANEL, PANEL), d = img.data, off = (PANEL - 5 * CELL) / 2;
         for (var y = 0; y < PANEL; y++) for (var x = 0; x < PANEL; x++) {
-            var cx = Math.floor((x - off) / CELL), cy = Math.floor((y - off) / CELL);
+            var cx = Math.floor((x - off) / CELL), cy = Math.floor((y - off) / CELL);  /* Math.floor：無條件捨去成整數 */
             var inside = x >= off && y >= off && cx >= 0 && cx < 5 && cy >= 0 && cy < 5 && inE(dir, cy, cx);
             var v = inside ? value : 0, i = (y * PANEL + x) * 4;
             d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255;
@@ -115,25 +115,25 @@
         var cv = document.createElement('canvas');
         cv.width = PANEL; cv.height = PANEL; cv.className = 'fadee-canvas';
         paintE(cv, dir, value);
-        stage.appendChild(cv);
+        stage.appendChild(cv);                          /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var note = h('div', { 'class': 'fadee-note', text: '往 E 的開口方向滑動' });
-        stage.appendChild(note);
+        stage.appendChild(note);                        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var hint = null;
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，第一個 E 的開口朝右，手指就往右滑（第一關的正確答案） */
-        if (level === 1 && kit.once('fadee.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: 236 - 50, y: 370, dx: 110, dy: 0, delay: 300 });
+        if (level === 1 && kit.once('fadee.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: 236 - 50, y: 370, dx: 110, dy: 0, delay: 300 });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
 
         var start = null, pid = null, judged = false;
-        stage.addEventListener('pointerdown', function (e) {
+        stage.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (api.over || start) return;
-            e.preventDefault();
-            try { stage.setPointerCapture(e.pointerId); } catch (err) { }
+            e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            try { stage.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             start = kit.localPt(e, stage); pid = e.pointerId;
             if (hint) { hint.remove(); hint = null; }
         });
-        stage.addEventListener('pointermove', function (e) {
+        stage.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (!start || judged || e.pointerId !== pid || api.over) return;
             var p = kit.localPt(e, stage), dx = p.x - start.x, dy = p.y - start.y;
-            if (Math.sqrt(dx * dx + dy * dy) >= SWIPE_PX) { judged = true; judge(dirOf(dx, dy)); }
+            if (Math.sqrt(dx * dx + dy * dy) >= SWIPE_PX) { judged = true; judge(dirOf(dx, dy)); }  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
         });
         function endSwipe(e) { if (e.pointerId === pid) { start = null; pid = null; } }
         stage.addEventListener('pointerup', endSwipe);
@@ -144,11 +144,11 @@
         function judge(d) {
             if (api.over) return;
             if (hint) { hint.remove(); hint = null; }
-            if (d === dir) { cv.classList.add('fadee-canvas--ok'); api.pass({ delay: 320 }); return; }
+            if (d === dir) { cv.classList.add('fadee-canvas--ok'); api.pass({ delay: 320 }); return; }  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
             paintE(cv, dir, valueOf(BOOST_PCT));
-            cv.classList.add('fadee-canvas--bad');
-            note.textContent = '加亮之後：E 的開口朝' + { up: '上', down: '下', left: '左', right: '右' }[dir];
-            api.fail({
+            cv.classList.add('fadee-canvas--bad');      /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            note.textContent = '加亮之後：E 的開口朝' + { up: '上', down: '下', left: '左', right: '右' }[dir];  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: 1700, lines: [
                     (d == null ? '時間到！' : '滑錯了！') + 'E 的開口朝' + { up: '上', down: '下', left: '左', right: '右' }[dir],
                     '這個 E 是 ' + pct.toFixed(4) + '% 的白色（灰階 ' + value + '，背景是純黑 0）',
@@ -158,7 +158,7 @@
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(dir); };
-        api.wrong = function () { judge(DIRS.filter(function (x) { return x !== dir; })[0]); };
+        api.wrong = function () { judge(DIRS.filter(function (x) { return x !== dir; })[0]); };  /* filter：留下符合條件的元素，回傳新陣列 */
     }
 
     /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */

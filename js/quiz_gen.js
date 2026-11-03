@@ -77,15 +77,15 @@
         if (n < 10) return CN[n];
         if (n === 10) return '十';
         if (n < 20) return '十' + CN[n - 10];
-        return CN[Math.floor(n / 10)] + '十' + (n % 10 ? CN[n % 10] : '');
+        return CN[Math.floor(n / 10)] + '十' + (n % 10 ? CN[n % 10] : '');  /* Math.floor：無條件捨去成整數 */
     }
     function cnCount(n) { return n === 2 ? '兩' : cnNum(n); }   /* 數量：兩個、三本 */
 
     /* 兩位數：兩個數字不同、不含 0（才能對調出另一個號碼） */
-    function twoDiff(n) { return n % 10 !== 0 && Math.floor(n / 10) !== n % 10; }
+    function twoDiff(n) { return n % 10 !== 0 && Math.floor(n / 10) !== n % 10; }  /* Math.floor：無條件捨去成整數 */
     function threeDiff(n) {
         var s = String(n);
-        return s.indexOf('0') < 0 && s[0] !== s[1] && s[1] !== s[2] && s[0] !== s[2];
+        return s.indexOf('0') < 0 && s[0] !== s[1] && s[1] !== s[2] && s[0] !== s[2];  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
     }
     function rev2(n) { return (n % 10) * 10 + Math.floor(n / 10); }
     /* 數字的所有排列（不含自己、不以 0 開頭） */
@@ -99,7 +99,7 @@
         return Object.keys(out).map(Number);
     }
 
-    function keyOf(v) { return typeof v === 'object' ? JSON.stringify(v) : String(v); }
+    function keyOf(v) { return typeof v === 'object' ? JSON.stringify(v) : String(v); }  /* JSON.stringify／parse：物件和文字互轉（存進 localStorage 或傳給伺服器時用） */
 
     /* ═══ 日曆：每一關都有明確的日期（年份不寫出來，只拿來算星期幾）═══ */
     var YEAR = 2026;
@@ -114,7 +114,7 @@
     }
     function mkDay(m, d) { return dayOf(Date.UTC(YEAR, m - 1, d)); }
     function addDays(day, n) { return dayOf(day.t + n * DAY_MS); }
-    function between(a, b) { return Math.round((b.t - a.t) / DAY_MS); }
+    function between(a, b) { return Math.round((b.t - a.t) / DAY_MS); }  /* Math.round：四捨五入成整數 */
     /* 「後天」「五天後」 */
     function fromNow(today, day) {
         var n = between(today, day);
@@ -151,11 +151,11 @@
         '外甥女': ['佳穎', '筱雯', '思妤']
     };
     var ROLES = {};
-    ['home', 'kin', 'kids', 'relatives', 'grand'].forEach(function (k) { ROLES[k] = P[k].slice(); });
+    ['home', 'kin', 'kids', 'relatives', 'grand'].forEach(function (k) { ROLES[k] = P[k].slice(); });  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
     function applyCast(G) {
         var nm = {};
-        Object.keys(CAST).forEach(function (r) { nm[r] = r + G.any(CAST[r]); });
-        Object.keys(ROLES).forEach(function (k) { P[k] = ROLES[k].map(function (r) { return nm[r]; }); });
+        Object.keys(CAST).forEach(function (r) { nm[r] = r + G.any(CAST[r]); });  /* forEach：對陣列的每個元素各做一次 */
+        Object.keys(ROLES).forEach(function (k) { P[k] = ROLES[k].map(function (r) { return nm[r]; }); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         return nm;
     }
 
@@ -189,14 +189,14 @@
         this.r = mulberry32(seed >>> 0);
         this.avoid = {};
         var self = this;
-        (avoid || []).forEach(function (k) { self.avoid[k] = 1; });
+        (avoid || []).forEach(function (k) { self.avoid[k] = 1; });  /* forEach：對陣列的每個元素各做一次 */
         this.used = [];
     }
     Gen.prototype.int = function (a, b) { return a + Math.floor(this.r() * (b - a + 1)); };
     Gen.prototype.coin = function () { return this.r() < 0.5; };
     Gen.prototype.any = function (arr) { return arr[Math.floor(this.r() * arr.length)]; };
     Gen.prototype.shuffle = function (arr) {
-        var a = arr.slice();
+        var a = arr.slice();                            /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         for (var i = a.length - 1; i > 0; i--) {
             var j = Math.floor(this.r() * (i + 1));
             var t = a[i]; a[i] = a[j]; a[j] = t;
@@ -217,8 +217,8 @@
         var self = this;
         var ex = {};
         (exclude || []).forEach(function (v) { ex[keyOf(v)] = 1; });
-        var pool = arr.filter(function (v) { return !ex[keyOf(v)]; });
-        var fresh = this.shuffle(pool.filter(function (v) { return !self.avoid[keyOf(v)]; }));
+        var pool = arr.filter(function (v) { return !ex[keyOf(v)]; });  /* filter：留下符合條件的元素，回傳新陣列 */
+        var fresh = this.shuffle(pool.filter(function (v) { return !self.avoid[keyOf(v)]; }));  /* filter：留下符合條件的元素，回傳新陣列 */
         var stale = this.shuffle(pool.filter(function (v) { return self.avoid[keyOf(v)]; }));
         var out = fresh.concat(stale).slice(0, n == null ? 1 : n);
         if (out.length < (n == null ? 1 : n)) throw new Error('題庫不夠抽');
@@ -230,7 +230,7 @@
     Gen.prototype.num = function (a, b, exclude, filter, key) {
         var arr = [];
         for (var i = a; i <= b; i++) {
-            if (exclude && exclude.indexOf(i) >= 0) continue;
+            if (exclude && exclude.indexOf(i) >= 0) continue;  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             if (filter && !filter(i)) continue;
             arr.push(i);
         }
@@ -264,7 +264,7 @@
     /* 從題庫池拿幾個「不是答案」的值當誘答 */
     Gen.prototype.others = function (pool, not, kind, n) {
         var ex = [].concat(not);
-        return this.sample(pool.filter(function (v) { return ex.indexOf(v) < 0; }), n || 3).map(function (v) { return L(v, kind || '差一點點'); });
+        return this.sample(pool.filter(function (v) { return ex.indexOf(v) < 0; }), n || 3).map(function (v) { return L(v, kind || '差一點點'); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     };
 
     /* 一題：答案＋誘答（依序列出，越前面越優先；三個誘答盡量來自不同的混淆類型）。
@@ -518,7 +518,7 @@
             used[i + 1] = r.used;
         }
         addRecalls(levels, new Gen((seed ^ 0x7f4a7c15) >>> 0));
-        return { v: GEN_V, seed: seed, theme: themeId, themeName: th.name, cast: cast, created: Date.now(), levels: levels, used: used };
+        return { v: GEN_V, seed: seed, theme: themeId, themeName: th.name, cast: cast, created: Date.now(), levels: levels, used: used };  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
     };
 
     /* ═══ 跨關回想題：後面的關卡，隨機插進前面關卡的題目，故意打亂思緒 ═══
@@ -566,14 +566,14 @@
        跟存檔的種子不同、主選單設了 fresh 旗標（UI.store.get(FRESH)）、或網址
        指定的主軸跟存檔的主軸不同。 */
     QuizGen.session = function () {
-        var s = UI.store.get(KEY, null);
+        var s = UI.store.get(KEY, null);                /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
         if (s && s.v !== GEN_V) s = null;
         var m = /[?&]seed=(\d+)/.exec(global.location.search);
         var tm = /[?&]theme=([a-z]+)/.exec(global.location.search);
         var want = tm ? tm[1] : null;
         var make = null;
         if (m) { if (!s || s.seed !== (+m[1] >>> 0) || (want && s.theme !== want)) make = +m[1]; }
-        else if (!s || UI.store.get(FRESH, false) || (want && s.theme !== want)) make = newSeed();
+        else if (!s || UI.store.get(FRESH, false) || (want && s.theme !== want)) make = newSeed();  /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
         if (make != null) {
             s = QuizGen.create(make, s, want);
             UI.store.set(KEY, s);

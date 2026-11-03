@@ -57,19 +57,19 @@
 
         /* round：開一局 */
         function round() {
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             /* 建立畫面元素：大數字、提示、按鈕 */
             var num = h('div', { 'class': 'speed-num', text: sec(TOTAL) });
             /* 低於 4.0000 秒才會亮起（一開始透明，但先占好位置，亮起來時畫面不會跳動） */
             var count = h('div', { 'class': 'speed-count', text: COUNT_TEXT });
             var hint = h('div', { 'class': 'hint', text: '默數到 0，算準時間按下面的按鈕' });
             var btn = h('button', { 'class': 'btn btn--primary speed-btn', text: '按這裡！' });
-            root.appendChild(h('div', { 'class': 'speed-wrap' }, [num, count, hint]));
-            root.appendChild(btn);
-            ctx.setMeta(fmtBest(Reaction.getBest(ID)));
+            root.appendChild(h('div', { 'class': 'speed-wrap' }, [num, count, hint]));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(btn);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            ctx.setMeta(fmtBest(Reaction.getBest(ID))); /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
             /* t0：這局開始的時間；clicked：玩家按了沒 */
-            var t0 = performance.now();
+            var t0 = performance.now();                 /* performance.now()：高精度的時間（毫秒），計時用 */
             var clicked = false;
 
             /* 每一影格都重新算「現在剩幾毫秒」，不是遞減一個計數器變數——這樣不管
@@ -83,34 +83,34 @@
                 var el = now - t0;
                 var remain = Math.max(0, TOTAL - el);
                 var op = opacityAt(remain);
-                num.textContent = op > 0 ? sec(remain) : '';
+                num.textContent = op > 0 ? sec(remain) : '';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 num.style.opacity = op.toFixed(3);
-                if (countVisible(remain)) count.classList.add('is-on');
+                if (countVisible(remain)) count.classList.add('is-on');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 /* requestAnimationFrame(tick)：請瀏覽器在下一個畫面更新時再呼叫 tick，形成持續更新的迴圈 */
-                if (!clicked) raf = requestAnimationFrame(tick);
+                if (!clicked) raf = requestAnimationFrame(tick);  /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
             }
-            raf = requestAnimationFrame(tick);
+            raf = requestAnimationFrame(tick);          /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
 
             /* 用 pointerdown（手指一碰到螢幕就觸發），不是 click——這是一個計時遊戲，
                click 在觸控裝置上要等手指離開螢幕（touchend）才觸發，等於多算了「手指按著
                不放」的時間，量到的不是玩家實際反應的那一刻，整個計時就不準了。 */
             /* pointerdown：手指一碰到就觸發 */
-            btn.addEventListener('pointerdown', function (e) {
+            btn.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
                 if (clicked) return;
-                e.preventDefault();
+                e.preventDefault();                     /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                 /* e.preventDefault()：阻止瀏覽器預設行為 */
                 clicked = true;
-                if (window.Sfx) Sfx.play('click');
+                if (window.Sfx) Sfx.play('click');      /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 cancelAnimationFrame(raf);
                 /* 算出差了幾毫秒：現在時間 − 開始時間 − 總長度（正＝慢了，負＝快了）。
                    不再四捨五入成整數毫秒——保留到 0.1 毫秒，成績才有 4 位小數（秒）可以用 */
-                finish(performance.now() - t0 - TOTAL);
+                finish(performance.now() - t0 - TOTAL); /* performance.now()：高精度的時間（毫秒），計時用 */
             });
         }
 
         /* finish：結算畫面。diffMs 是跟 0 秒差的毫秒數（可以有小數） */
         function finish(diffMs) {
-            var abs = Math.abs(diffMs);
+            var abs = Math.abs(diffMs);                 /* Math.abs：取絕對值（去掉負號） */
             /* 最終成績（秒、小數 4 位、第 3／4 位不為 0）：在這裡只產生「一次」，
                後面的畫面、最佳紀錄、排行榜全部用這同一個數字，不會出現同一局顯示不同尾數 */
             var score = Leaderboard.fake4(abs / 1000);
@@ -120,12 +120,12 @@
                v < b（新差值比舊紀錄小才算更好）——跟「神準落下」的分數（越大越好）
                方向相反，這就是 reaction_core.js 的 setBest 要求呼叫端自己傳比較
                函式、而不是寫死「數字越大越好」的原因。 */
-            var isNew = Reaction.setBest(ID, score, function (v, b) { return v < b; });
+            var isNew = Reaction.setBest(ID, score, function (v, b) { return v < b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
             /* 結算彈窗（公版 kit.result）：帶 score 會在彈窗出現之後自動送世界排行榜（非同步，進榜了會自己跳出恭喜）。
                評語與結算音效的門檻用「實際差了幾毫秒」判斷（≤30 毫秒＝超級好、≤150 毫秒＝過關） */
-            Reaction.kit.result(root, {
+            Reaction.kit.result(root, {                 /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                 num: Leaderboard.fmt(SCORE, score), label: label, isNew: isNew, score: score,
                 sfx: abs <= 30 ? 'perfect' : (abs <= 150 ? 'win' : 'neutral'), onAgain: round
             });

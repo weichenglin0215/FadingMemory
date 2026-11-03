@@ -56,10 +56,10 @@
        剩下不到 4 個字的組就不用（四個選項一定要來自同一組） */
     function charFamilies() {
         var used = {}, out = [];
-        SimilarChars.groups({ minSize: 4 }).forEach(function (g) {
-            var ids = g.chars.filter(function (c) { return !used[c]; });
+        SimilarChars.groups({ minSize: 4 }).forEach(function (g) {  /* forEach：對陣列的每個元素各做一次 */
+            var ids = g.chars.filter(function (c) { return !used[c]; });  /* filter：留下符合條件的元素，回傳新陣列 */
             if (ids.length < 4) return;
-            ids.forEach(function (c) { used[c] = 1; });
+            ids.forEach(function (c) { used[c] = 1; }); /* forEach：對陣列的每個元素各做一次 */
             out.push({ tier: charTier(g.s), ids: ids });
         });
         return out;
@@ -67,40 +67,40 @@
     var SHAPE_P = 0.25;                         /* 這一級同時有「字」和「圖形」時，抽到圖形的機率（字的組比較多，不調的話圖形很少出現） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function radiusFor(level) { return kit.ramp(level, RADIUS[0], RADIUS[1], RAMP_LEVELS); }
-    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
-    function isDigit(id) { return DIGITS.indexOf(id) >= 0; }
+    function radiusFor(level) { return kit.ramp(level, RADIUS[0], RADIUS[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
+    function isDigit(id) { return DIGITS.indexOf(id) >= 0; }  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
     /* 圖形的 id（p5、s6、g10、f8…）拆成 { kind, n }，不是圖形回傳 null */
     function shapeOf(id) { var m = /^([psgf])(\d+)$/.exec(id); return m ? { kind: m[1], n: Number(m[2]) } : null; }
     function isChar(id) { return typeof id === 'string' && id.length === 1 && id.charCodeAt(0) >= 0x4E00 && id.charCodeAt(0) <= 0x9FFF; }
     /* 這個圖案屬於複雜度第幾級（數字算 0） */
     function tierOf(id) {
         if (isDigit(id)) return 0;
-        for (var i = 0; i < FAMILIES.length; i++) if (FAMILIES[i].ids && FAMILIES[i].ids.indexOf(id) >= 0) return FAMILIES[i].tier;
+        for (var i = 0; i < FAMILIES.length; i++) if (FAMILIES[i].ids && FAMILIES[i].ids.indexOf(id) >= 0) return FAMILIES[i].tier;  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         return 0;
     }
     /* 第 level 關的複雜度（整數）：從 TIERS[0] 線性走到 TIERS[1]，每關隨機浮動 ±TIER_JITTER，夾在 0～3 */
     function tierFor(level, rand) {
-        var c = kit.ramp(level, TIERS[0], TIERS[1], RAMP_LEVELS);
-        return kit.clamp(Math.round(c + ((rand || Math.random)() * 2 - 1) * TIER_JITTER), 0, 3);
+        var c = kit.ramp(level, TIERS[0], TIERS[1], RAMP_LEVELS);  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+        return kit.clamp(Math.round(c + ((rand || Math.random)() * 2 - 1) * TIER_JITTER), 0, 3);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
     }
     /* 出一關：{ target 藏的圖案, options 四個選項（已洗牌，都來自同一組很像的圖案）, answer 答案是第幾個選項, tier 這一關的複雜度 } */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var tier = tierFor(level, rand), cands = FAMILIES.filter(function (x) { return x.tier === tier; });
+        var tier = tierFor(level, rand), cands = FAMILIES.filter(function (x) { return x.tier === tier; });  /* filter：留下符合條件的元素，回傳新陣列 */
         if (!cands.length) cands = FAMILIES;
         /* 先決定是「圖形」還是「字／數字」，再從那一類挑一組 */
         var shapeFams = cands.filter(function (x) { return x.ids && shapeOf(x.ids[0]); }), otherFams = cands.filter(function (x) { return !(x.ids && shapeOf(x.ids[0])); });
         if (shapeFams.length && otherFams.length) cands = rand() < SHAPE_P ? shapeFams : otherFams;
-        var fam = kit.pick(cands, rand), target, others;
+        var fam = kit.pick(cands, rand), target, others;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         if (fam.kind === 'digit') {
-            target = kit.pick(DIGITS, rand);
-            others = kit.shuffle(SIMILAR[target], rand).slice(0, 3);
-            var rest = kit.shuffle(DIGITS.filter(function (d) { return d !== target && others.indexOf(d) < 0; }), rand);
+            target = kit.pick(DIGITS, rand);            /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+            others = kit.shuffle(SIMILAR[target], rand).slice(0, 3);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+            var rest = kit.shuffle(DIGITS.filter(function (d) { return d !== target && others.indexOf(d) < 0; }), rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
             while (others.length < 3) others.push(rest.shift());
         } else {
             target = kit.pick(fam.ids, rand);
-            others = kit.sample(fam.ids.filter(function (x) { return x !== target; }), 3, rand);
+            others = kit.sample(fam.ids.filter(function (x) { return x !== target; }), 3, rand);  /* kit.sample(陣列, n, rand)：從陣列隨機取 n 個不重複的元素 */
         }
         var options = kit.shuffle([target].concat(others), rand);
         return { target: target, options: options, answer: options.indexOf(target), tier: tier };
@@ -180,10 +180,10 @@
         console.log('[手電筒猜圖] 第 ' + level + ' 關：藏的是 ' + nameOf(q.target) + '，選項 ' + q.options.map(nameOf).join('／') + '；光圈半徑 ' + R.toFixed(2) + '，限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        var box = { x: Math.round((W - PIC.size) / 2), y: PIC.top, w: PIC.size, h: PIC.size };
+        var box = { x: Math.round((W - PIC.size) / 2), y: PIC.top, w: PIC.size, h: PIC.size };  /* Math.round：四捨五入成整數 */
         var mid = 'flashlight-m' + (++maskSeq);
-        var svg = kit.svg('svg', { 'class': 'flashlight-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
-        kit.svg('rect', { x: 0, y: 0, width: W, height: H, 'class': 'flashlight-bg' }, svg);
+        var svg = kit.svg('svg', { 'class': 'flashlight-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('rect', { x: 0, y: 0, width: W, height: H, 'class': 'flashlight-bg' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var pic = kit.svg('g', { transform: 'translate(' + box.x + ',' + box.y + ') scale(' + (PIC.size / 100) + ')', 'class': 'flashlight-pic' }, svg);
         pic.innerHTML = picSvg(q.target).replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
         var defs = kit.svg('defs', {}, svg), mask = kit.svg('mask', { id: mid }, defs);
@@ -192,28 +192,28 @@
         var cover = kit.svg('rect', { x: 0, y: 0, width: W, height: H, 'class': 'flashlight-cover', mask: 'url(#' + mid + ')' }, svg);
         var ring = kit.svg('circle', { cx: -999, cy: -999, r: R, 'class': 'flashlight-ring' }, svg);
         var gScan = kit.svg('g', { 'class': 'flashlight-scan' }, svg);
-        var tip = h('div', { 'class': 'flashlight-tip', text: '手指在黑幕上拖曳，照出藏著的圖案' });
-        stage.appendChild(tip);
-        var items = q.options.map(function (id, i) { return { html: picSvg(id, true), kind: 'line', cls: 'flashlight-opt', onTap: function () { judge(i); } }; });
-        var grid = kit.btnGrid(stage, items, { h: 96, gap: 8 });
+        var tip = h('div', { 'class': 'flashlight-tip', text: '手指在黑幕上拖曳，照出藏著的圖案' });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
+        stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var items = q.options.map(function (id, i) { return { html: picSvg(id, true), kind: 'line', cls: 'flashlight-opt', onTap: function () { judge(i); } }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        var grid = kit.btnGrid(stage, items, { h: 96, gap: 8 });  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
         var centers = [], dragging = null, lastC = null;
         function light(pt) {
             var c = { x: pt.x, y: pt.y - (R + OFFSET_GAP) };
-            hole.setAttribute('cx', c.x); hole.setAttribute('cy', c.y); ring.setAttribute('cx', c.x); ring.setAttribute('cy', c.y);
-            ring.setAttribute('visibility', 'visible');
+            hole.setAttribute('cx', c.x); hole.setAttribute('cy', c.y); ring.setAttribute('cx', c.x); ring.setAttribute('cy', c.y);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+            ring.setAttribute('visibility', 'visible'); /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             /* 記下掃過的位置（每移動超過半徑的 1/3 才記一個，省記憶體） */
             if (!lastC || kit.dist(c.x, c.y, lastC.x, lastC.y) >= R / 3) { centers.push(c); lastC = c; }
         }
         function dark() { hole.setAttribute('cx', -999); ring.setAttribute('visibility', 'hidden'); }
         dark();
-        stage.addEventListener('pointerdown', function (e) {
+        stage.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (api.over || dragging != null) return;
             if (e.target.closest && e.target.closest('.rx-grid')) return;            /* 按在選項上，不是掃描 */
-            e.preventDefault();
-            try { stage.setPointerCapture(e.pointerId); } catch (err) { }
+            e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            try { stage.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             dragging = e.pointerId; light(kit.localPt(e, stage));
         });
-        stage.addEventListener('pointermove', function (e) { if (dragging === e.pointerId && !api.over) light(kit.localPt(e, stage)); });
+        stage.addEventListener('pointermove', function (e) { if (dragging === e.pointerId && !api.over) light(kit.localPt(e, stage)); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
         function end(e) { if (dragging === e.pointerId) { dragging = null; dark(); } }
         stage.addEventListener('pointerup', end); stage.addEventListener('pointercancel', end);
         api.timer(timeMs(level), function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
@@ -227,12 +227,12 @@
             cover.setAttribute('opacity', '0.12');
             centers.forEach(function (c) { kit.svg('circle', { cx: c.x, cy: c.y, r: R }, gScan); });
             var cov = coverage(centers, R, box);
-            grid.btns[q.answer].classList.add('flashlight-opt--right');
-            if (i != null && !ok) grid.btns[i].classList.add('flashlight-opt--wrong');
-            tip.textContent = '藏的是「' + nameOf(q.target) + '」，你掃過了 ' + (cov * 100).toFixed(4) + '％ 的範圍';
-            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1700 }); return; }
-            kit.flash(stage, false, api.my);
-            api.fail({
+            grid.btns[q.answer].classList.add('flashlight-opt--right');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            if (i != null && !ok) grid.btns[i].classList.add('flashlight-opt--wrong');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            tip.textContent = '藏的是「' + nameOf(q.target) + '」，你掃過了 ' + (cov * 100).toFixed(4) + '％ 的範圍';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1700 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: 2700, lines: [
                     (i == null ? '時間到！' : '選錯了') + '，藏的是「' + nameOf(q.target) + '」',
                     '你掃過了圖案範圍的 ' + (cov * 100).toFixed(4) + '％'

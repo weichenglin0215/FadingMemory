@@ -83,7 +83,7 @@
         var s = ss / 100, v = vv / 100;
         var c = v * s;
         var hp = hh / 60;
-        var x = c * (1 - Math.abs(hp % 2 - 1));
+        var x = c * (1 - Math.abs(hp % 2 - 1));         /* Math.abs：取絕對值（去掉負號） */
         var r1 = 0, g1 = 0, b1 = 0;
         if (hp < 1) { r1 = c; g1 = x; b1 = 0; }
         else if (hp < 2) { r1 = x; g1 = c; b1 = 0; }
@@ -92,7 +92,7 @@
         else if (hp < 5) { r1 = x; g1 = 0; b1 = c; }
         else { r1 = c; g1 = 0; b1 = x; }
         var m = v - c;
-        return { r: Math.round((r1 + m) * 255), g: Math.round((g1 + m) * 255), b: Math.round((b1 + m) * 255) };
+        return { r: Math.round((r1 + m) * 255), g: Math.round((g1 + m) * 255), b: Math.round((b1 + m) * 255) };  /* Math.round：四捨五入成整數 */
     }
     /* 把 HSV 顏色轉成 CSS 的 rgb() 字串 */
     function css(c) {
@@ -104,7 +104,7 @@
     /* 色相是圓的（0 度＝360 度），345 度跟 23 度中間只差 38 度（繞近路），不是 322 度（繞遠路）；
        直接 |a-b| 在跨過 0／360 的地方會算出這種明顯不合理的超大差異，一定要取繞圈最短的那一段。 */
     function hueDiff(a, b) {
-        var d = Math.abs(a - b) % 360;
+        var d = Math.abs(a - b) % 360;                  /* Math.abs：取絕對值（去掉負號） */
         return d > 180 ? 360 - d : d;
     }
 
@@ -115,7 +115,7 @@
             關卡: level,
             這關抽到的頻道: CH_NAME[ch],
             知覺差異: perceptFor(level).toFixed(1),
-            '正常格 H°': Math.round(base.h), '正常格 S%': Math.round(base.s), '正常格 V%': Math.round(base.v),
+            '正常格 H°': Math.round(base.h), '正常格 S%': Math.round(base.s), '正常格 V%': Math.round(base.v),  /* Math.round：四捨五入成整數 */
             '差異格 H°': Math.round(odd.h), '差異格 S%': Math.round(odd.s), '差異格 V%': Math.round(odd.v),
             'ΔH(度)': Math.round(hueDiff(base.h, odd.h)),
             'ΔS(%)': Math.round(Math.abs(odd.s - base.s)),
@@ -143,7 +143,7 @@
         var rows = [];
         for (var level = 1; level <= 21; level++) {
             var base = randBase();
-            var ch = ['h', 's', 'v'][Math.floor(Math.random() * 3)];
+            var ch = ['h', 's', 'v'][Math.floor(Math.random() * 3)];  /* Math.floor：無條件捨去成整數 */
             var odd = oddColor(base, ch, diffFor(level, ch));
             rows.push(diffRow(level, ch, base, odd));
         }
@@ -154,7 +154,7 @@
     /* mount：遊戲進場點 */
     function mount(root, ctx) {
         /* 替整個畫面加上黑底 class（樣式在 css/games/reaction_spot.css 的 .spot-dark-bg） */
-        root.classList.add('spot-dark-bg');
+        root.classList.add('spot-dark-bg');             /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         logLevelTable();
         /* level：目前關卡 */
         /* V1.34.0：從「個人最佳關卡 − 4」開始，沒玩過就是第 1 關（kit.entryLevel，見 reaction_kit.js） */
@@ -162,13 +162,13 @@
 
         /* round：畫一關 */
         function round() {
-            root.innerHTML = '';
-            var best = fmtBest(Reaction.getBest(ID));
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
+            var best = fmtBest(Reaction.getBest(ID));   /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             ctx.setMeta('第 ' + level + ' 關' + (best ? '・' + best : ''));
 
             /* 決定這一關的底色、哪個頻道不同、不同的那一格的位置和顏色 */
             var base = randBase();
-            var ch = ['h', 's', 'v'][Math.floor(Math.random() * 3)];
+            var ch = ['h', 's', 'v'][Math.floor(Math.random() * 3)];  /* Math.floor：無條件捨去成整數 */
             var delta = diffFor(level, ch);
             var oddIdx = Math.floor(Math.random() * N);
             var odd = oddColor(base, ch, delta);
@@ -178,7 +178,7 @@
                這裡印的才是「現在螢幕上看到的」這一組，可以直接拿數值跟畫面截圖核對。 */
             if (window.console && console.table) console.table([diffRow(level, ch, base, odd)]);
 
-            root.appendChild(h('div', { 'class': 'hint spot--on-dark', text: '找出顏色不一樣的那一格（第 ' + level + ' 關）' }));
+            root.appendChild(h('div', { 'class': 'hint spot--on-dark', text: '找出顏色不一樣的那一格（第 ' + level + ' 關）' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             /* 16 格的容器，CSS Grid 排成 4×4 */
             var grid = h('div', { 'class': 'spot-grid' });
             /* (function (i) {...})(i)：立即執行函式，讓每格的點擊事件記住自己的編號 */
@@ -187,28 +187,28 @@
                     var tile = h('button', { 'class': 'spot-tile' });
                     tile.style.background = css(i === oddIdx ? odd : base);
                     tile.addEventListener('click', function () { answer(i === oddIdx, tile, grid, oddIdx); });
-                    grid.appendChild(tile);
+                    grid.appendChild(tile);             /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
                 })(i);
             }
             root.appendChild(grid);
             /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在這一關「顏色不一樣的那一格」上（提醒玩家怎麼玩，也等於第一關的答案） */
-            if (Reaction.kit.once('spot.hint')) Reaction.kit.hintOn(root, grid.children[oddIdx], { mode: 'tap', text: '請點擊不一樣的色塊' });
+            if (Reaction.kit.once('spot.hint')) Reaction.kit.hintOn(root, grid.children[oddIdx], { mode: 'tap', text: '請點擊不一樣的色塊' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
         }
 
         /* 答題：答對進下一關；答錯顯示正確位置並結算 */
         function answer(ok, tile, grid, oddIdx) {
             Array.prototype.forEach.call(grid.children, function (t) { t.disabled = true; });
             if (ok) {
-                if (window.Sfx) Sfx.play('ok');
-                tile.classList.add('spot-tile--ok');
+                if (window.Sfx) Sfx.play('ok');         /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                tile.classList.add('spot-tile--ok');    /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 level++;
                 UI.wait(450).then(round);
                 return;
             }
-            if (window.Sfx) Sfx.play('bad');
+            if (window.Sfx) Sfx.play('bad');            /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             tile.classList.add('spot-tile--bad');
             grid.children[oddIdx].classList.add('spot-tile--ok');
-            var isNew = Reaction.setBest(ID, level, function (v, b) { return v > b; });
+            var isNew = Reaction.setBest(ID, level, function (v, b) { return v > b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
             UI.wait(700).then(function () {
                 /* 結算卡片疊在棋盤上（跟其他遊戲同一套 CSS：drop-result-overlay） */
@@ -220,7 +220,7 @@
                    不能用給純黑底用的 --on-dark 版本，不然字會變成白色、看不清楚。 */
                 /* 結算彈窗（公版 kit.result）：帶 score 會在彈窗「已經在畫面上」之後才自動送世界排行榜
                    （排行榜靠「畫面上有沒有結算卡片」判斷玩家是不是還在看結果，太早送的話恭喜就只剩小提示） */
-                Reaction.kit.result(root, {
+                Reaction.kit.result(root, {             /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                     num: '第 ' + level + ' 關', label: '答錯了，挑戰結束', isNew: isNew, score: level, level: level,
                     sfx: level >= 8 ? 'win' : 'fail', onAgain: function () { level = 1; round(); }
                 });

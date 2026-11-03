@@ -47,12 +47,12 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function prog(n) { return Math.min(1, Math.max(0, n / RAMP_CMDS)); }
     function lerp(pair, n) { return pair[0] + (pair[1] - pair[0]) * prog(n); }
-    function answerMsFor(n) { return Math.round(lerp(ANSWER_S, n) * 1000); }
-    function pTwoFor(n) { return Math.round(lerp(P_TWO, n) * 1000) / 1000; }
+    function answerMsFor(n) { return Math.round(lerp(ANSWER_S, n) * 1000); }  /* Math.round：四捨五入成整數 */
+    function pTwoFor(n) { return Math.round(lerp(P_TWO, n) * 1000) / 1000; }  /* Math.round：四捨五入成整數 */
     function pOrFor(n) { return Math.round(lerp(P_OR, n) * 1000) / 1000; }
     function pNegFor(n) { return Math.round(lerp(P_NEG, n) * 1000) / 1000; }
     /* 你的特徵：{ shirt: 0～3（衣服顏色編號）, glasses: true／false, hat: true／false } */
-    function makeSelf(rand) { rand = rand || Math.random; return { shirt: kit.randInt(0, 3, rand), glasses: rand() < 0.5, hat: rand() < 0.5 }; }
+    function makeSelf(rand) { rand = rand || Math.random; return { shirt: kit.randInt(0, 3, rand), glasses: rand() < 0.5, hat: rand() < 0.5 }; }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
     /* 特徵的文字描述：「穿紅衣服、戴眼鏡、沒戴帽子」 */
     function describeSelf(f) { return '穿' + COLORS[f.shirt] + '衣服、' + (f.glasses ? '戴眼鏡' : '沒戴眼鏡') + '、' + (f.hat ? '戴帽子' : '沒戴帽子'); }
     /* 條件 { attr: 'shirt'｜'glasses'｜'hat', value, neg } 的文字 */
@@ -64,15 +64,15 @@
     /* 你符不符合這個條件 */
     function atomHolds(a, f) { return (f[a.attr] === a.value) !== !!a.neg; }
     /* 整句口令是不是在說你：and＝每個條件都符合；or＝至少符合一個 */
-    function matches(c, f) { return c.mode === 'or' ? c.conds.some(function (a) { return atomHolds(a, f); }) : c.conds.every(function (a) { return atomHolds(a, f); }); }
+    function matches(c, f) { return c.mode === 'or' ? c.conds.some(function (a) { return atomHolds(a, f); }) : c.conds.every(function (a) { return atomHolds(a, f); }); }  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
     function commandText(c) { return '大風吹，吹' + c.conds.map(atomText).join(c.mode === 'or' ? '或' : '又') + '的人！'; }
     /* 隨機挑一個條件：neg＝要不要用否定說法（布林特徵＝value 取 false；顏色＝加上「不」） */
     function randomAtom(attr, neg, rand) {
-        if (attr === 'shirt') return { attr: 'shirt', value: kit.randInt(0, 3, rand), neg: neg };
+        if (attr === 'shirt') return { attr: 'shirt', value: kit.randInt(0, 3, rand), neg: neg };  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         return { attr: attr, value: !neg, neg: false };
     }
     function oneCommand(n, rand) {
-        var two = rand() < pTwoFor(n), pn = pNegFor(n), attrs = kit.shuffle(['shirt', 'glasses', 'hat'], rand), conds = [], mode = 'and';
+        var two = rand() < pTwoFor(n), pn = pNegFor(n), attrs = kit.shuffle(['shirt', 'glasses', 'hat'], rand), conds = [], mode = 'and';  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         conds.push(randomAtom(attrs[0], rand() < pn, rand));
         if (two) { conds.push(randomAtom(attrs[1], rand() < pn, rand)); mode = rand() < pOrFor(n) ? 'or' : 'and'; }
         return { conds: conds, mode: mode };
@@ -91,8 +91,8 @@
     /* 特徵改變：隨機換掉其中一項（衣服換成別的顏色、眼鏡／帽子反過來）；回傳 { self（新的特徵）, changed（改了哪一項）, text（「現在你戴上帽子了」）} */
     function changeSelf(f, rand) {
         rand = rand || Math.random;
-        var attr = kit.pick(['shirt', 'glasses', 'hat'], rand), g = { shirt: f.shirt, glasses: f.glasses, hat: f.hat }, text;
-        if (attr === 'shirt') { var others = [0, 1, 2, 3].filter(function (x) { return x !== f.shirt; }); g.shirt = kit.pick(others, rand); text = '現在你換穿' + COLORS[g.shirt] + '衣服了'; }
+        var attr = kit.pick(['shirt', 'glasses', 'hat'], rand), g = { shirt: f.shirt, glasses: f.glasses, hat: f.hat }, text;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        if (attr === 'shirt') { var others = [0, 1, 2, 3].filter(function (x) { return x !== f.shirt; }); g.shirt = kit.pick(others, rand); text = '現在你換穿' + COLORS[g.shirt] + '衣服了'; }  /* filter：留下符合條件的元素，回傳新陣列 */
         else if (attr === 'glasses') { g.glasses = !f.glasses; text = g.glasses ? '現在你戴上眼鏡了' : '現在你拿下眼鏡了'; }
         else { g.hat = !f.hat; text = g.hat ? '現在你戴上帽子了' : '現在你拿下帽子了'; }
         return { self: g, changed: attr, text: text };
@@ -124,8 +124,8 @@
 
     /* 小朋友（SVG，viewBox 100×120）：衣服顏色、頭、頭髮、眼睛、嘴；戴眼鏡／戴帽子依特徵 */
     function kidSvg(f, size, parent) {
-        var svg = kit.svg('svg', { 'class': 'windblow-kid', viewBox: '0 0 100 120', width: size, height: Math.round(size * 1.2) }, parent);
-        kit.svg('path', { 'class': 'windblow-shirt windblow-shirt' + f.shirt, d: 'M8,120 Q10,84 50,80 Q90,84 92,120 Z' }, svg);
+        var svg = kit.svg('svg', { 'class': 'windblow-kid', viewBox: '0 0 100 120', width: size, height: Math.round(size * 1.2) }, parent);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('path', { 'class': 'windblow-shirt windblow-shirt' + f.shirt, d: 'M8,120 Q10,84 50,80 Q90,84 92,120 Z' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         kit.svg('rect', { 'class': 'windblow-skin', x: 41, y: 68, width: 18, height: 16, rx: 6 }, svg);
         kit.svg('circle', { 'class': 'windblow-skin', cx: 50, cy: 46, r: 28 }, svg);
         kit.svg('path', { 'class': 'windblow-hair', d: 'M20,48 Q18,14 50,14 Q82,14 80,48 Q72,30 50,28 Q28,30 20,48 Z' }, svg);
@@ -155,8 +155,8 @@
         console.log('[大風吹] 開始：你是「' + describeSelf(self) + '」；回答時間 ' + answerMsFor(0) + ' → ' + answerMsFor(RAMP_CMDS) + ' 毫秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var field = h('div', { 'class': 'windblow-field' });
-        stage.appendChild(field);
-        var bubble = h('div', { 'class': 'windblow-bubble', text: '記住你是誰！' }); field.appendChild(bubble);
+        stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var bubble = h('div', { 'class': 'windblow-bubble', text: '記住你是誰！' }); field.appendChild(bubble);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         /* 一圈椅子和小朋友（裝飾）：答「換位子」的時候大家轉一格、答「不動」的時候大家蹦一下 */
         var ringBox = Math.min(W - 40, 300), ring = h('div', { 'class': 'windblow-ring' });
         ring.style.cssText = 'left:' + Math.round((W - ringBox) / 2) + 'px;top:150px;width:' + ringBox + 'px;height:' + ringBox + 'px;';
@@ -171,40 +171,40 @@
         /* 「你是誰」的卡片（開始時、特徵改變時顯示一下，然後收起來——平常看不到） */
         var card = h('div', { 'class': 'windblow-card' }); field.appendChild(card);
         var info = h('div', { 'class': 'qz-note windblow-info', text: '' }); field.appendChild(info);
-        var grid = kit.btnGrid(field, [
+        var grid = kit.btnGrid(field, [                 /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
             { text: '換位子', kind: 'primary', cls: 'windblow-btn', onTap: function () { answer(true); } },
             { text: '不動', kind: 'sky', cls: 'windblow-btn', onTap: function () { answer(false); } }
         ], { cols: 2, h: 112, gap: 12, bottom: 12 });
-        function enableBtns(on) { grid.btns.forEach(function (b) { b.classList.toggle('windblow-btn--off', !on); }); }
+        function enableBtns(on) { grid.btns.forEach(function (b) { b.classList.toggle('windblow-btn--off', !on); }); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         enableBtns(false);
 
         function showCard(title, f, sub, ms, done) {
-            card.innerHTML = ''; card.classList.remove('windblow-card--hide'); card.style.display = 'flex';
+            card.innerHTML = ''; card.classList.remove('windblow-card--hide'); card.style.display = 'flex';  /* innerHTML = ''：把元素裡面的東西全部清掉 */
             card.appendChild(h('div', { 'class': 'windblow-card__t', text: title }));
             var av = h('div', { 'class': 'windblow-card__av' }); kidSvg(f, 128, av); card.appendChild(av);
             card.appendChild(h('div', { 'class': 'windblow-card__d', text: describeSelf(f) }));
             if (sub) card.appendChild(h('div', { 'class': 'windblow-card__s', text: sub }));
-            api.after(ms, function () { card.classList.add('windblow-card--hide'); api.after(250, function () { card.style.display = 'none'; if (done) done(); }); });
+            api.after(ms, function () { card.classList.add('windblow-card--hide'); api.after(250, function () { card.style.display = 'none'; if (done) done(); }); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
         }
         function nextCommand() {
             if (over || api.over) return;
             cmd = makeCommand(self, count, history, api.rand); cmdNo++;
             history.push(cmd.match); if (history.length > 6) history.shift();
-            bubble.textContent = cmd.text; bubble.classList.remove('windblow-bubble--pop'); void bubble.offsetWidth; bubble.classList.add('windblow-bubble--pop');
-            info.textContent = ''; phase = 'ask'; enableBtns(true);
+            bubble.textContent = cmd.text; bubble.classList.remove('windblow-bubble--pop'); void bubble.offsetWidth; bubble.classList.add('windblow-bubble--pop');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            info.textContent = ''; phase = 'ask'; enableBtns(true);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             api.stopTimer(); api.timer(answerMsFor(count), function () { fail('timeout', null); });
             if (cmdNo === 1 && kit.once('windblow.hint')) kit.hintOn(stage, grid.btns[cmd.match ? 0 : 1], { mode: 'tap', delay: 500, text: cmd.match ? '說的是你 → 換位子' : '不是你 → 不動' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         }
         /* 開場：先看「你是誰」 */
-        api.after(250, function () { showCard('你是這個人，記住！', self, '只看一次喔', INTRO_MS, function () { bubble.textContent = '準備…'; api.after(400, nextCommand); }); });
+        api.after(250, function () { showCard('你是這個人，記住！', self, '只看一次喔', INTRO_MS, function () { bubble.textContent = '準備…'; api.after(400, nextCommand); }); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
 
         function answer(swap) {
             if (phase !== 'ask' || over || api.over) return;
             phase = 'judge'; api.stopTimer(); enableBtns(false);
             if (swap === cmd.match) {
-                count++; S.score = count; api.setInfo('答對 ' + count + ' 題'); Sfx.play('ok');
-                if (swap) { rot += 1; ring.style.transform = 'rotate(' + (rot * 360 / KIDS) + 'deg)'; kids.forEach(function (k) { k.style.transform = 'rotate(' + (-rot * 360 / KIDS) + 'deg)'; }); }
-                else { ring.classList.remove('windblow-ring--hop'); void ring.offsetWidth; ring.classList.add('windblow-ring--hop'); }
+                count++; S.score = count; api.setInfo('答對 ' + count + ' 題'); Sfx.play('ok');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                if (swap) { rot += 1; ring.style.transform = 'rotate(' + (rot * 360 / KIDS) + 'deg)'; kids.forEach(function (k) { k.style.transform = 'rotate(' + (-rot * 360 / KIDS) + 'deg)'; }); }  /* forEach：對陣列的每個元素各做一次 */
+                else { ring.classList.remove('windblow-ring--hop'); void ring.offsetWidth; ring.classList.add('windblow-ring--hop'); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 info.textContent = swap ? '換位子！大家跑起來～' : '不動！';
                 if (shouldChange(count)) {
                     var ch = changeSelf(self, api.rand); self = ch.self;
@@ -225,11 +225,11 @@
             var box = h('div', { 'class': 'windblow-cmp' }), left = h('div', { 'class': 'windblow-cmp__col' }), right = h('div', { 'class': 'windblow-cmp__col' });
             left.appendChild(h('div', { 'class': 'windblow-cmp__t', text: '你是' })); var av = h('div', { 'class': 'windblow-cmp__av' }); kidSvg(self, 84, av); left.appendChild(av); left.appendChild(h('div', { 'class': 'windblow-cmp__d', text: describeSelf(self).split('、').join('\n') }));
             right.appendChild(h('div', { 'class': 'windblow-cmp__t', text: '口令' })); right.appendChild(h('div', { 'class': 'windblow-cmp__c', text: cmd.text.replace('大風吹，', '') }));
-            cmd.conds.forEach(function (a) { var ok = atomHolds(a, self); right.appendChild(h('div', { 'class': 'windblow-cmp__r windblow-cmp__r--' + (ok ? 'y' : 'n'), text: atomText(a) + '：你' + (ok ? '符合' : '不符合') })); });
+            cmd.conds.forEach(function (a) { var ok = atomHolds(a, self); right.appendChild(h('div', { 'class': 'windblow-cmp__r windblow-cmp__r--' + (ok ? 'y' : 'n'), text: atomText(a) + '：你' + (ok ? '符合' : '不符合') })); });  /* forEach：對陣列的每個元素各做一次 */
             right.appendChild(h('div', { 'class': 'windblow-cmp__v', text: cmd.conds.length > 1 ? (cmd.mode === 'or' ? '（「或」：符合一個就算）' : '（「又」：要全部符合）') + (cmd.match ? '→ 說的是你' : '→ 不是說你') : (cmd.match ? '→ 說的是你' : '→ 不是說你') }));
             box.appendChild(left); box.appendChild(right); field.appendChild(box);
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: 4200, lines: [why, '你是「' + describeSelf(self) + '」', '口令「' + cmd.text + '」→ ' + (cmd.match ? '說的是你' : '不是說你')] });
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 4200, lines: [why, '你是「' + describeSelf(self) + '」', '口令「' + cmd.text + '」→ ' + (cmd.match ? '說的是你' : '不是說你')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：答對目前這題（最多 SOLVE_CAP 題）／故意答反；可重複呼叫 */
         api.solve = function () { if (phase !== 'ask' || count >= SOLVE_CAP) return; answer(cmd.match); };

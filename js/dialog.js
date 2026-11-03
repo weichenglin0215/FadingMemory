@@ -33,7 +33,7 @@
     var Dlg = {};
 
     function stageEl() { return document.getElementById('stage') || document.body; }
-    function sfx(name) { if (global.Sfx) { global.Sfx.unlock(); global.Sfx.play(name); } }
+    function sfx(name) { if (global.Sfx) { global.Sfx.unlock(); global.Sfx.play(name); } }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
     function removeEl(el) { if (el && el.parentNode) el.parentNode.removeChild(el); }
 
     /* ═══ 一、公版：開一個彈窗 ═══ */
@@ -47,7 +47,7 @@
         var ov = h('div', { 'class': cls.join(' '), attrs: o.attrs || {} });
         var card = h('div', { 'class': 'dlg__card' + (o.cardCls ? ' ' + o.cardCls : '') });
         var closed = false;
-        var ctl = {
+        var ctl = {                                     /* ctl：給外面（遊戲檔案、測試）用的「遙控器」，裡面是可以呼叫的函式與查詢目前狀態的函式 */
             el: ov, card: card, buttons: [],
             isOpen: function () { return !closed; },
             close: function () {
@@ -57,13 +57,13 @@
                 if (o.onClose) o.onClose();
             }
         };
-        if (o.title) card.appendChild(h('div', { 'class': 'dlg__title', text: o.title }));
-        if (o.sub) card.appendChild(h('div', { 'class': 'dlg__sub', text: o.sub }));
+        if (o.title) card.appendChild(h('div', { 'class': 'dlg__title', text: o.title }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        if (o.sub) card.appendChild(h('div', { 'class': 'dlg__sub', text: o.sub }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         if (o.text) card.appendChild(h('div', { 'class': 'dlg__text', text: o.text }));
-        (o.children || []).forEach(function (c) { if (c) card.appendChild(c); });
+        (o.children || []).forEach(function (c) { if (c) card.appendChild(c); });  /* forEach：對陣列的每個元素各做一次 */
         if (o.buttons && o.buttons.length) {
             var wrap = h('div', { 'class': 'dlg__btns' + (o.btnRow ? ' dlg__btns--row' : '') });
-            o.buttons.forEach(function (b) {
+            o.buttons.forEach(function (b) {            /* forEach：對陣列的每個元素各做一次 */
                 var el = h('button', {
                     'class': 'btn btn--' + (b.kind || 'primary') + (b.cls ? ' ' + b.cls : ''),
                     text: b.html != null ? null : b.text,
@@ -143,9 +143,9 @@
             i++;
             if (ch === '\n') { flush(); continue; }
             cur.push({ c: ch, em: chars[i - 1].em });
-            if (SENT_END.indexOf(ch) >= 0) {
+            if (SENT_END.indexOf(ch) >= 0) {            /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                 /* 吃掉緊跟著的句尾標點與右引號／右括號；最後一個字是句尾標點才換行（「…？」下面」這種不換） */
-                while (i < chars.length && (SENT_END.indexOf(chars[i].c) >= 0 || CLOSERS.indexOf(chars[i].c) >= 0)) { cur.push(chars[i]); i++; }
+                while (i < chars.length && (SENT_END.indexOf(chars[i].c) >= 0 || CLOSERS.indexOf(chars[i].c) >= 0)) { cur.push(chars[i]); i++; }  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                 if (SENT_END.indexOf(cur[cur.length - 1].c) >= 0) flush();
             }
         }
@@ -157,7 +157,7 @@
     Dlg.richText = function (text) {
         var box = h('div', { 'class': 'dlg__text dlg__rich' });
         lines(text).forEach(function (segs) {
-            box.appendChild(h('p', { 'class': 'dlg__line' }, segs.map(function (s) {
+            box.appendChild(h('p', { 'class': 'dlg__line' }, segs.map(function (s) {  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                 return s.em ? h('strong', { 'class': 'dlg__em', text: s.t }) : s.t;
             })));
         });
@@ -193,7 +193,7 @@
        把內文字級一格一格縮小，縮到剛好放得下為止（最小到 --fs-xs）。
        可用高度＝彈窗外框（標題列以下的舞台）的高度扣掉上下留白。網路字型載好之後字寬會變，所以載好再重算一次。 */
     function fitRuleCard(ctl) {
-        var text = ctl.card.querySelector('.dlg__rich');
+        var text = ctl.card.querySelector('.dlg__rich');  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
         if (!text) return;
         function run() {
             text.style.fontSize = '';
@@ -218,7 +218,7 @@
     Dlg.toast = function (text) {
         var el = h('div', { 'class': 'dlg-toast', text: text });
         stageEl().appendChild(el);
-        global.setTimeout(function () { el.classList.add('is-out'); }, 3200);
+        global.setTimeout(function () { el.classList.add('is-out'); }, 3200);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         global.setTimeout(function () { removeEl(el); }, 3700);
     };
 
@@ -245,14 +245,14 @@
         var sendBtn = ctl.buttons[1], busy = false;
         function value() { return (LB && LB.cleanFeedback) ? LB.cleanFeedback(ta.value) : String(ta.value || '').trim(); }
         function sync() {
-            count.textContent = Array.from(ta.value).length + ' / ' + FB_MAX;
+            count.textContent = Array.from(ta.value).length + ' / ' + FB_MAX;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             sendBtn.disabled = busy || Array.from(value()).length < 2;
         }
         function send() {
             var text = value();
             if (busy || Array.from(text).length < 2) return;
             busy = true;
-            sendBtn.textContent = '送出中…';
+            sendBtn.textContent = '送出中…';               /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             sync();
             var p = (LB && LB.sendFeedback) ? LB.sendFeedback(game, text) : Promise.resolve({ status: 'offline' });
             p.then(function (r) {

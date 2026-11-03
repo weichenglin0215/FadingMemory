@@ -33,9 +33,9 @@
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }
-    function kFor(level) { return Math.round(ramp(level, K)); }
-    function gridFor(level) { return Math.round(ramp(level, GRID)); }
+    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function kFor(level) { return Math.round(ramp(level, K)); }  /* Math.round：四捨五入成整數 */
+    function gridFor(level) { return Math.round(ramp(level, GRID)); }  /* Math.round：四捨五入成整數 */
     function viewMs(level) { return Math.round(ramp(level, VIEW_S) * 1000); }
     function respMs(level) { return Math.round(ramp(level, RESP_S) * 1000); }
     function strokeRange(level) { return [ramp(level, STROKES_LO), ramp(level, STROKES_HI)]; }
@@ -46,27 +46,27 @@
         /* 挑 k 個「字完全不重疊」的字群（有的字同時出現在兩個字群裡，兩組都選會讓字格裡出現同一個字兩次）；範圍內不夠就放寬到全部字群 */
         function pickGroups(pool) {
             var out = [], taken = {};
-            kit.shuffle(pool.slice(), rand).forEach(function (g) {
-                if (out.length >= k || g.chars.some(function (c) { return taken[c]; })) return;
-                out.push(g); g.chars.forEach(function (c) { taken[c] = true; });
+            kit.shuffle(pool.slice(), rand).forEach(function (g) {  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+                if (out.length >= k || g.chars.some(function (c) { return taken[c]; })) return;  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
+                out.push(g); g.chars.forEach(function (c) { taken[c] = true; });  /* forEach：對陣列的每個元素各做一次 */
             });
             return out;
         }
         var picks = pickGroups(SimilarChars.groups({ minSize: MIN_GROUP, minStrokes: rng[0], maxStrokes: rng[1] }));
         if (picks.length < k) picks = pickGroups(SimilarChars.groups({ minSize: MIN_GROUP }));
         var seen = [], used = {};
-        picks.forEach(function (g) { var c = kit.pick(g.chars, rand); seen.push(c); used[c] = true; });
+        picks.forEach(function (g) { var c = kit.pick(g.chars, rand); seen.push(c); used[c] = true; });  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         /* 干擾：先放看過的字的夥伴（每組各輪流取，越前面的越像），不夠再從其他字群補 */
-        var grid = seen.slice(), mi = 0, byGroup = picks.map(function (g, i) { return g.chars.filter(function (x) { return x !== seen[i]; }); });
+        var grid = seen.slice(), mi = 0, byGroup = picks.map(function (g, i) { return g.chars.filter(function (x) { return x !== seen[i]; }); });  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         for (var round = 0; grid.length < cells && round < 8; round++) for (var gi = 0; gi < byGroup.length && grid.length < cells; gi++) { var c2 = byGroup[gi][round]; if (c2 && !used[c2]) { used[c2] = true; grid.push(c2); } }
-        if (grid.length < cells) { var extra = kit.shuffle(SimilarChars.chars({ minSize: MIN_GROUP }).slice(), rand); for (var e = 0; e < extra.length && grid.length < cells; e++) if (!used[extra[e]]) { used[extra[e]] = true; grid.push(extra[e]); } }
+        if (grid.length < cells) { var extra = kit.shuffle(SimilarChars.chars({ minSize: MIN_GROUP }).slice(), rand); for (var e = 0; e < extra.length && grid.length < cells; e++) if (!used[extra[e]]) { used[extra[e]] = true; grid.push(extra[e]); } }  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         grid = kit.shuffle(grid, rand);
-        return { k: k, G: G, seen: seen, grid: grid, seenIdx: seen.map(function (c) { return grid.indexOf(c); }), groups: picks.map(function (g) { return g.chars; }), strokes: rng, viewMs: viewMs(level), respMs: respMs(level), level: level };
+        return { k: k, G: G, seen: seen, grid: grid, seenIdx: seen.map(function (c) { return grid.indexOf(c); }), groups: picks.map(function (g) { return g.chars; }), strokes: rng, viewMs: viewMs(level), respMs: respMs(level), level: level };  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
     }
     /* 判定：選的格子集合是否剛好等於看過的字的格子集合；回傳 { ok, missed（漏掉的格子）, wrong（多點的格子）} */
     function judgePick(q, picked) {
-        var want = {}, got = {}; q.seenIdx.forEach(function (i) { want[i] = true; }); picked.forEach(function (i) { got[i] = true; });
-        var missed = q.seenIdx.filter(function (i) { return !got[i]; }), wrong = picked.filter(function (i) { return !want[i]; });
+        var want = {}, got = {}; q.seenIdx.forEach(function (i) { want[i] = true; }); picked.forEach(function (i) { got[i] = true; });  /* forEach：對陣列的每個元素各做一次 */
+        var missed = q.seenIdx.filter(function (i) { return !got[i]; }), wrong = picked.filter(function (i) { return !want[i]; });  /* filter：留下符合條件的元素，回傳新陣列 */
         return { ok: !missed.length && !wrong.length, missed: missed, wrong: wrong };
     }
     /* 兩個字的筆畫差異（以像素比對）：回傳 { onlyA, onlyB, both }（各自的像素數）；需要瀏覽器的畫布，沒有畫布就回傳 null */
@@ -113,12 +113,12 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var field = h('div', { 'class': 'seenchars-field' });
-        stage.appendChild(field);
+        stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note seenchars-tip', text: '記住這幾個字' });
-        field.appendChild(tip);
+        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         /* 看：把看過的字排成一列（最多兩列），大大的楷書 */
         var show = h('div', { 'class': 'seenchars-show' });
-        var per = Math.min(q.k, 3), sz = Math.min(120, Math.floor((W - 40) / per) - 12);
+        var per = Math.min(q.k, 3), sz = Math.min(120, Math.floor((W - 40) / per) - 12);  /* Math.floor：無條件捨去成整數 */
         q.seen.forEach(function (c) { var b = h('div', { 'class': 'seenchars-show__ch', text: c }); b.style.cssText = 'width:' + sz + 'px;height:' + sz + 'px;font-size:' + Math.round(sz * 0.78) + 'px;line-height:' + sz + 'px;'; show.appendChild(b); });
         field.appendChild(show);
         var info = h('div', { 'class': 'qz-note seenchars-info', text: '看 ' + Math.round(q.viewMs / 1000) + ' 秒' }); field.appendChild(info);
@@ -126,38 +126,38 @@
         api.timer(q.viewMs, ask);                       /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         function ask() {
             if (api.over) return;
-            phase = 'pick'; show.style.display = 'none'; tip.textContent = '點出剛才看過的字，點完按「好了」'; info.textContent = '';
-            var cs = Math.min(82, Math.floor((W - 32) / G2) - 6), gw = cs * G2 + (G2 - 1) * 6;
+            phase = 'pick'; show.style.display = 'none'; tip.textContent = '點出剛才看過的字，點完按「好了」'; info.textContent = '';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            var cs = Math.min(82, Math.floor((W - 32) / G2) - 6), gw = cs * G2 + (G2 - 1) * 6;  /* Math.floor：無條件捨去成整數 */
             gridEl = h('div', { 'class': 'seenchars-grid' }); gridEl.style.cssText = 'left:' + Math.round((W - gw) / 2) + 'px;top:64px;width:' + gw + 'px;grid-template-columns:repeat(' + G2 + ',' + cs + 'px);grid-auto-rows:' + cs + 'px;';
             q.grid.forEach(function (c, i) {
                 var cell = h('div', { 'class': 'seenchars-cell', text: c }); cell.style.fontSize = Math.round(cs * 0.72) + 'px';
-                kit.onTap(cell, function () { toggle(i); }); gridEl.appendChild(cell); cellEls.push(cell);
+                kit.onTap(cell, function () { toggle(i); }); gridEl.appendChild(cell); cellEls.push(cell);  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             });
             field.appendChild(gridEl);
             btn = h('div', { 'class': 'btn btn--go seenchars-done', text: '好了' }); field.appendChild(btn);
-            kit.onTap(btn, function () { judge(false); });
+            kit.onTap(btn, function () { judge(false); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             api.timer(q.respMs, function () { judge(true); });
             if (level === 1 && kit.once('seenchars.hint')) kit.hintOn(stage, cellEls[q.seenIdx[0]], { mode: 'tap', delay: 1500, text: '點出剛才看過的字' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         }
         function toggle(i) {
             if (phase !== 'pick' || done || api.over) return;
-            var at = picked.indexOf(i);
-            if (at >= 0) { picked.splice(at, 1); cellEls[i].classList.remove('seenchars-cell--on'); } else { picked.push(i); cellEls[i].classList.add('seenchars-cell--on'); Sfx.play('click'); }
+            var at = picked.indexOf(i);                 /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+            if (at >= 0) { picked.splice(at, 1); cellEls[i].classList.remove('seenchars-cell--on'); } else { picked.push(i); cellEls[i].classList.add('seenchars-cell--on'); Sfx.play('click'); }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
         }
         /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(timeout) {
             if (phase !== 'pick' || done || api.over) return;
             done = true; phase = 'end'; btn.style.display = 'none';
             var r = judgePick(q, picked);
-            q.seenIdx.forEach(function (i) { cellEls[i].classList.add(picked.indexOf(i) >= 0 ? 'seenchars-cell--ok' : 'seenchars-cell--miss'); });
-            r.wrong.forEach(function (i) { cellEls[i].classList.add('seenchars-cell--bad'); });
-            if (r.ok) { info.textContent = '全部都對了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1400 }); return; }
-            tip.textContent = (timeout ? '時間到！' : '') + (r.missed.length ? '漏掉 ' + r.missed.length + ' 個' : '') + (r.missed.length && r.wrong.length ? '、' : '') + (r.wrong.length ? '多點（點錯）' + r.wrong.length + ' 個' : '');
+            q.seenIdx.forEach(function (i) { cellEls[i].classList.add(picked.indexOf(i) >= 0 ? 'seenchars-cell--ok' : 'seenchars-cell--miss'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            r.wrong.forEach(function (i) { cellEls[i].classList.add('seenchars-cell--bad'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            if (r.ok) { info.textContent = '全部都對了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1400 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            tip.textContent = (timeout ? '時間到！' : '') + (r.missed.length ? '漏掉 ' + r.missed.length + ' 個' : '') + (r.missed.length && r.wrong.length ? '、' : '') + (r.wrong.length ? '多點（點錯）' + r.wrong.length + ' 個' : '');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             /* 並排比對：每個漏掉的字，配一個你點錯的字（優先同一組的形近字），把差異的筆畫標紅 */
-            var cmp = h('div', { 'class': 'seenchars-cmp' }), pairs = [], wrongLeft = r.wrong.slice();
+            var cmp = h('div', { 'class': 'seenchars-cmp' }), pairs = [], wrongLeft = r.wrong.slice();  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
             r.missed.forEach(function (mi) {
                 var seenCh = q.grid[mi], pick = null, pj = -1;
-                wrongLeft.forEach(function (wi, j) { if (pick == null && q.groups.some(function (g) { return g.indexOf(seenCh) >= 0 && g.indexOf(q.grid[wi]) >= 0; })) { pick = q.grid[wi]; pj = j; } });
+                wrongLeft.forEach(function (wi, j) { if (pick == null && q.groups.some(function (g) { return g.indexOf(seenCh) >= 0 && g.indexOf(q.grid[wi]) >= 0; })) { pick = q.grid[wi]; pj = j; } });  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
                 if (pick == null && wrongLeft.length) { pick = q.grid[wrongLeft[0]]; pj = 0; }
                 if (pj >= 0) wrongLeft.splice(pj, 1);
                 pairs.push({ a: seenCh, b: pick });
@@ -169,12 +169,12 @@
                 cmp.appendChild(box);
             });
             if (pairs.length) { gridEl.classList.add('seenchars-grid--small'); field.appendChild(cmp); }
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: 4000, lines: [timeout ? '時間到！' : '點的字不對', '看過的字：' + q.seen.join('、') + (r.wrong.length ? '；你多點了：' + r.wrong.map(function (i) { return q.grid[i]; }).join('、') : '')] });
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 4000, lines: [timeout ? '時間到！' : '點的字不對', '看過的字：' + q.seen.join('、') + (r.wrong.length ? '；你多點了：' + r.wrong.map(function (i) { return q.grid[i]; }).join('、') : '')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { if (phase !== 'pick' || done) return; picked = q.seenIdx.slice(); judge(false); };
-        api.wrong = function () { if (phase !== 'pick' || done) return; var other = q.grid.map(function (c, i) { return i; }).filter(function (i) { return q.seenIdx.indexOf(i) < 0; })[0]; picked = q.seenIdx.slice(1).concat([other]); judge(false); };
+        api.wrong = function () { if (phase !== 'pick' || done) return; var other = q.grid.map(function (c, i) { return i; }).filter(function (i) { return q.seenIdx.indexOf(i) < 0; })[0]; picked = q.seenIdx.slice(1).concat([other]); judge(false); };  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     }
 
     /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */

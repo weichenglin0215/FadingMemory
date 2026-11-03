@@ -64,8 +64,8 @@
                 continue;
             }
             if (road.segLeft <= 0) {
-                road.tslope = kit.randFloat(-d.slope, d.slope, rand);
-                road.segLeft = d.seg * kit.randFloat(0.7, 1.3, rand);
+                road.tslope = kit.randFloat(-d.slope, d.slope, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+                road.segLeft = d.seg * kit.randFloat(0.7, 1.3, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             }
             road.segLeft -= STEP;
             /* 斜率慢慢追上目標（每點最多改 0.06，轉彎不會是突然的折角） */
@@ -78,15 +78,15 @@
             hw = Math.max(HW[1] * 0.7, hw);
             var lo = hw + EDGE_PAD, hi = W - hw - EDGE_PAD;
             road.c += road.slope * STEP;
-            if (road.c < lo) { road.c = lo; road.slope = Math.abs(road.slope); road.tslope = Math.abs(road.tslope); }
-            if (road.c > hi) { road.c = hi; road.slope = -Math.abs(road.slope); road.tslope = -Math.abs(road.tslope); }
+            if (road.c < lo) { road.c = lo; road.slope = Math.abs(road.slope); road.tslope = Math.abs(road.tslope); }  /* Math.abs：取絕對值（去掉負號） */
+            if (road.c > hi) { road.c = hi; road.slope = -Math.abs(road.slope); road.tslope = -Math.abs(road.tslope); }  /* Math.abs：取絕對值（去掉負號） */
             road.pts.push({ c: road.c, hw: hw });
         }
         return road;
     }
     /* 前進距離 s 的山路：{ c 中心、hw 半寬 }（兩個取樣點之間線性內插） */
     function roadAt(road, s) {
-        var f = Math.max(0, s) / STEP, i = Math.floor(f), u = f - i;
+        var f = Math.max(0, s) / STEP, i = Math.floor(f), u = f - i;  /* Math.floor：無條件捨去成整數 */
         var a = road.pts[Math.min(i, road.pts.length - 1)], b = road.pts[Math.min(i + 1, road.pts.length - 1)];
         return { c: a.c + (b.c - a.c) * u, hw: a.hw + (b.hw - a.hw) * u };
     }
@@ -128,13 +128,13 @@
         var road = newRoad(W, api.rand), YC = Math.round(CH * CAT_Y);   /* 貓咪的畫面 y */
         var dpr = Math.min(2, window.devicePixelRatio || 1);
         var cv = h('canvas', { 'class': 'catroad-canvas' });
-        cv.width = Math.round(W * dpr); cv.height = Math.round(CH * dpr);
+        cv.width = Math.round(W * dpr); cv.height = Math.round(CH * dpr);  /* Math.round：四捨五入成整數 */
         cv.style.width = W + 'px'; cv.style.height = CH + 'px';
-        stage.appendChild(cv);
+        stage.appendChild(cv);                          /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var g = cv.getContext('2d');
         g.scale(dpr, dpr);
         var timeEl = h('div', { 'class': 'catroad-time', text: '0.0000 秒' });
-        stage.appendChild(timeEl);
+        stage.appendChild(timeEl);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
 
         /* 橫桿 */
         var bar = h('div', { 'class': 'catroad-bar' }), knob = h('div', { 'class': 'catroad-knob' });
@@ -144,7 +144,7 @@
         var KR = 30, catX = W / 2, dragging = null, hint = null;
         function paintKnob() { knob.style.left = (catX - KR) + 'px'; }
         paintKnob();
-        function setFromPointer(e) { var p = kit.localPt(e, bar); catX = kit.clamp(p.x, KR, W - KR); paintKnob(); }
+        function setFromPointer(e) { var p = kit.localPt(e, bar); catX = kit.clamp(p.x, KR, W - KR); paintKnob(); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
 
         /* 顏色（從 css/theme.css 的變數讀，canvas 沒辦法直接用 var()） */
         var C = {
@@ -167,7 +167,7 @@
             /* 山路：左邊緣往下、右邊緣往回，連成一個多邊形；畫面 y(s') ＝ YC − (s' − s) */
             var s0 = s - (CH - YC) - STEP, s1 = s + YC + STEP;
             extendRoad(road, s1 + STEP, t);
-            var i0 = Math.max(0, Math.floor(s0 / STEP)), i1 = Math.min(road.pts.length - 1, Math.ceil(s1 / STEP));
+            var i0 = Math.max(0, Math.floor(s0 / STEP)), i1 = Math.min(road.pts.length - 1, Math.ceil(s1 / STEP));  /* Math.ceil：無條件進位成整數 */
             var i;
             g.beginPath();
             for (i = i0; i <= i1; i++) { var p = road.pts[i]; g.lineTo(p.c - p.hw, YC - (i * STEP - s)); }
@@ -210,28 +210,28 @@
             }
             var d = difficulty(t);
             t += dt / 1000; s += d.speed * dt / 1000;
-            timeEl.textContent = t.toFixed(4) + ' 秒';
+            timeEl.textContent = t.toFixed(4) + ' 秒';   /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             if (fallen(road, s, catX)) {
-                state = 'fall'; tFall = 0; fallX = catX; Sfx.play('bad');
-                timeEl.classList.add('catroad-time--dead');
+                state = 'fall'; tFall = 0; fallX = catX; Sfx.play('bad');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                timeEl.classList.add('catroad-time--dead');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             }
             draw(now);
         }
         /* 這一局結束：算出成績並進入結算畫面 */
         function finish() {
-            api.finish(t, { lines: ['路寬走到 ' + (difficulty(t).hw * 2).toFixed(0) + ' px、速度 ' + difficulty(t).speed.toFixed(0) + ' px／秒', '掉進岩漿前一共走了 ' + Math.round(s) + ' px'] });
+            api.finish(t, { lines: ['路寬走到 ' + (difficulty(t).hw * 2).toFixed(0) + ' px、速度 ' + difficulty(t).speed.toFixed(0) + ' px／秒', '掉進岩漿前一共走了 ' + Math.round(s) + ' px'] });  /* Math.round：四捨五入成整數 */
         }
         draw(0);
 
         /* 橫桿輸入 */
-        bar.addEventListener('pointerdown', function (e) {
+        bar.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (dragging != null || state === 'fall' || state === 'done') return;
-            e.preventDefault();
-            try { bar.setPointerCapture(e.pointerId); } catch (err) { }
+            e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            try { bar.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             dragging = e.pointerId; if (hint) { hint.remove(); hint = null; }
             setFromPointer(e);
         });
-        bar.addEventListener('pointermove', function (e) { if (dragging === e.pointerId && state !== 'done') setFromPointer(e); });
+        bar.addEventListener('pointermove', function (e) { if (dragging === e.pointerId && state !== 'done') setFromPointer(e); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
         function endDrag(e) { if (dragging === e.pointerId) dragging = null; }
         bar.addEventListener('pointerup', endDrag); bar.addEventListener('pointercancel', endDrag);
 
@@ -240,11 +240,11 @@
             text: '拖曳下方橫桿，讓貓咪一直走在山路上。\n山路會越來越窄、越來越彎、越來越快，\n掉進岩漿就結束，看你能撐幾秒！', btn: '出發',
             onStart: function () {
                 state = 'run'; last = null; t = 0; s = 0;
-                my.loop(function (now) { if (state === 'done') return false; step(now); });
+                my.loop(function (now) { if (state === 'done') return false; step(now); });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                 /* rAF 被暫停（分頁在背景）時每 40 毫秒補算一次 */
-                (function again() { my.after(40, function () { if (state === 'run' || state === 'fall') { step(performance.now()); again(); } }); })();
+                (function again() { my.after(40, function () { if (state === 'run' || state === 'fall') { step(performance.now()); again(); } }); })();  /* performance.now()：高精度的時間（毫秒），計時用 */
                 /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，沿著橫桿左右移動 */
-                if (kit.once('catroad.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: catX, y: CH + 8 + BAR_H / 2, dx: 110, dy: 0, text: '請往左右拖曳' });
+                if (kit.once('catroad.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: catX, y: CH + 8 + BAR_H / 2, dx: 110, dy: 0, text: '請往左右拖曳' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
             }
         });
 
@@ -254,8 +254,8 @@
             state: function () { return { state: state, t: t, s: s, catX: catX }; },
             solve: function () {
                 startNow();
-                var target = 12, k = 0, now = performance.now();
-                while (k++ < 2000 && state === 'run' && t < target) { now += 16; catX = kit.clamp(roadAt(road, s).c, KR, W - KR); step(now); }
+                var target = 12, k = 0, now = performance.now();  /* performance.now()：高精度的時間（毫秒），計時用 */
+                while (k++ < 2000 && state === 'run' && t < target) { now += 16; catX = kit.clamp(roadAt(road, s).c, KR, W - KR); step(now); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
                 if (state === 'run') { state = 'fall'; tFall = 0.7; fallX = catX; step(now + 16); }
             },
             wrong: function () {

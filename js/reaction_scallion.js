@@ -46,8 +46,8 @@
     function makeSpeeds(rand) {
         rand = rand || Math.random;
         /* 共幾段：總秒數 ÷ 每段秒數，無條件進位再多備 2 段保險 */
-        var n = Math.ceil(DURATION / SEG_S) + 2, out = [];
-        for (var i = 0; i < n; i++) out.push(BASE_V * kit.randFloat(V_LO, V_HI, rand));
+        var n = Math.ceil(DURATION / SEG_S) + 2, out = [];  /* Math.ceil：無條件進位成整數 */
+        for (var i = 0; i < n; i++) out.push(BASE_V * kit.randFloat(V_LO, V_HI, rand));  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         return out;
     }
     /* 蔥條在 tSec 秒時往前送了多遠＝每一段「速度×時間」的總和（分段等速的積分） */
@@ -55,7 +55,7 @@
     function posAt(speeds, tSec) {
         if (tSec <= 0) return 0;
         /* Math.floor：已經完整走完幾段 */
-        var full = Math.floor(tSec / SEG_S), p = 0;
+        var full = Math.floor(tSec / SEG_S), p = 0;     /* Math.floor：無條件捨去成整數 */
         /* 前面完整的幾段：每段貢獻 速度 × 該段秒數 */
         for (var i = 0; i < full && i < speeds.length; i++) p += speeds[i] * SEG_S;
         /* 最後一段還沒走完的部分 */
@@ -100,7 +100,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
             /* speeds 這局每段的速度；cutter 切刀；state 目前狀態（ready 等待開始/run 進行中/done 結束）；t0 開始時間；pile 畫面上的蔥花 */
             var speeds = makeSpeeds(), cutter = makeCutter(speeds), state = 'ready', t0 = 0, pile = [];
@@ -110,17 +110,17 @@
             var unit = h('div', { 'class': 'scallion-unit', text: '段' });
             var top = h('div', { 'class': 'scallion-top' }, [count, unit]);
             var tb = kit.timebar();
-            var board = h('div', { 'class': 'scallion-board' });
+            var board = h('div', { 'class': 'scallion-board' });  /* board：盤面（所有格子都放在裡面） */
             var bar = h('div', { 'class': 'scallion-bar' });
             var knife = h('div', { 'class': 'scallion-knife' }, [h('div', { 'class': 'scallion-knife__blade' }), h('div', { 'class': 'scallion-knife__grip' })]);
             var hint = h('div', { 'class': 'scallion-hint', text: '點一下開始！之後每點一下切一刀' });
-            [bar, knife, hint].forEach(function (x) { board.appendChild(x); });
-            [head, top, tb.el, board].forEach(function (x) { root.appendChild(x); });
-            ctx.setMeta(fmtBest(Reaction.getBest(ID)));
-            head.textContent = '20 秒內切越多段越好';
+            [bar, knife, hint].forEach(function (x) { board.appendChild(x); });  /* forEach：對陣列的每個元素各做一次 */
+            [head, top, tb.el, board].forEach(function (x) { root.appendChild(x); });  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            ctx.setMeta(fmtBest(Reaction.getBest(ID))); /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+            head.textContent = '20 秒內切越多段越好';           /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
 
             /* FW／FH 砧板的寬高；barY 蔥的垂直位置；KNIFE_X 刀子的水平位置（寬度的 66%＝右邊 1/3 處） */
-            var FW = board.clientWidth, FH = board.clientHeight, barY = Math.round(FH * 0.30), KNIFE_X = Math.round(FW * KNIFE_FRAC);
+            var FW = board.clientWidth, FH = board.clientHeight, barY = Math.round(FH * 0.30), KNIFE_X = Math.round(FW * KNIFE_FRAC);  /* Math.round：四捨五入成整數 */
             bar.style.top = barY + 'px'; bar.style.height = BAR_H + 'px';
             knife.style.left = KNIFE_X + 'px'; knife.style.top = (barY - 36) + 'px';
             /* 移動蔥條：蔥的左緣＝刀子位置 − 伸出長度，寬度加 400 讓右邊一直延伸到畫面外 */
@@ -131,7 +131,7 @@
             placeBar(0);
 
             /* my.loop：每個畫面更新一次——進行中就依時間移動蔥條、更新時間條 */
-            my.loop(function (now) {
+            my.loop(function (now) {                    /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                 if (state === 'done') return false;
                 if (state === 'run') {
                     var t = (now - t0) / 1000;
@@ -150,10 +150,10 @@
                 s.style.width = w + 'px'; s.style.height = BAR_H + 'px';
                 /* 一開始蔥片就在刀口左邊、蔥條的位置 */
                 s.style.left = (KNIFE_X - w) + 'px'; s.style.top = barY + 'px';
-                board.appendChild(s);
+                board.appendChild(s);                   /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
                 /* reach：刀子左邊可以飛多遠；dx 是水平飛行距離（reach 的 40%～95%） */
                 var reach = KNIFE_X - 36 - w;
-                var dx = -(kit.randFloat(0.4, 0.95) * reach);
+                var dx = -(kit.randFloat(0.4, 0.95) * reach);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
                 /* landY 落地的高度（蔥條下方到砧板底部之間隨機） */
                 var landY = kit.randFloat(barY + BAR_H + 24, FH - BAR_H - 14);
                 /* dy 垂直位移；arc 往上跳的高度；rot 轉動角度 */
@@ -184,18 +184,18 @@
                 if (state === 'ready') {
                     state = 'run'; t0 = tMs; hint.hidden = true;
                     my.after(DURATION * 1000, finish);
-                    Sfx.play('go');
+                    Sfx.play('go');                     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                     return;
                 }
                 /* cutter.tap 回傳這一刀切的長度，null 表示沒切成 */
                 var len = cutter.tap((tMs - t0) / 1000);
                 if (len == null) return;
                 /* 刀子往下壓一下的動畫（加 class，70 毫秒後移除） */
-                knife.classList.add('scallion-knife--down');
-                my.after(70, function () { knife.classList.remove('scallion-knife--down'); });
+                knife.classList.add('scallion-knife--down');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                my.after(70, function () { knife.classList.remove('scallion-knife--down'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 spawnSlice(len);
-                Sfx.play('click');
-                count.textContent = String(cutter.cuts());
+                Sfx.play('click');                      /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                count.textContent = String(cutter.cuts());  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 placeBar(0);
             }
 
@@ -205,12 +205,12 @@
                 state = 'done';
                 tb.set(0);
                 var n = cutter.cuts();
-                var isNew = Reaction.setBest(ID, n, function (v, b) { return v > b; });
+                var isNew = Reaction.setBest(ID, n, function (v, b) { return v > b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                 ctx.setMeta(fmtBest(Reaction.getBest(ID)));
                 Sfx.play('done');
                 /* 等 500 毫秒再顯示結算，讓玩家看到最後一刀 */
                 my.after(500, function () {
-                    kit.result(root, {
+                    kit.result(root, {                  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                         score: n,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: n + ' 段', label: rating(n),
                         lines: ['平均每秒切 ' + (n / DURATION).toFixed(4) + ' 刀'],
@@ -220,17 +220,17 @@
             }
 
             /* 點砧板任何位置都是切一刀 */
-            board.addEventListener('pointerdown', function (e) { e.preventDefault(); cut(kit.evT(e)); });
+            board.addEventListener('pointerdown', function (e) { e.preventDefault(); cut(kit.evT(e)); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             /* 操作提示（只在第一次進遊戲時）：點砧板切一刀 → 手指縮放 */
-            if (Reaction.kit.once('scallion.hint')) Reaction.kit.hintOn(root, board, { mode: 'tap', text: '請連續點擊砧板' });
+            if (Reaction.kit.once('scallion.hint')) Reaction.kit.hintOn(root, board, { mode: 'tap', text: '請連續點擊砧板' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
 
             /* G.debug：測試用後門，mash 可以模擬連續點擊 */
             G.debug = {
                 state: function () { return { state: state, cuts: cutter.cuts() }; },
                 /* 從現在起每隔 gapMs 毫秒模擬點一下，共 n 下（用真正的時間戳）*/
                 mash: function (n, gapMs) {
-                    if (state === 'ready') cut(performance.now());
-                    var base = state === 'run' ? t0 : performance.now();
+                    if (state === 'ready') cut(performance.now());  /* performance.now()：高精度的時間（毫秒），計時用 */
+                    var base = state === 'run' ? t0 : performance.now();  /* performance.now()：高精度的時間（毫秒），計時用 */
                     for (var i = 1; i <= n; i++) cut(base + i * gapMs);
                     return cutter.cuts();
                 },

@@ -52,19 +52,19 @@
        普通規則：沒有火柴可拿＝輪到的人輸（上一個人拿走最後一根）；拿最後一根輸的規則：沒有火柴可拿＝輪到的人贏。 */
     var memo = {};                                      /* 記憶表：算過的局面把答案存起來，下次直接取（同樣的局面只算一次，不然搜尋會太慢） */
     /* 把局面變成字串當記憶表的 key：只看「每堆根數」（排序後，堆的順序不影響勝負）、一次最多拿幾根、是不是「拿最後一根輸」 */
-    function key(piles, maxTake, misere) { return (misere ? 'm' : 'n') + maxTake + ':' + piles.filter(function (p) { return p > 0; }).sort(function (a, b) { return a - b; }).join(','); }
+    function key(piles, maxTake, misere) { return (misere ? 'm' : 'n') + maxTake + ':' + piles.filter(function (p) { return p > 0; }).sort(function (a, b) { return a - b; }).join(','); }  /* filter：留下符合條件的元素，回傳新陣列 */
     /* 這個局面「輪到的人有辦法贏嗎」？遞迴（函式自己呼叫自己）：試每一種拿法，
        只要有一種拿法讓對方「沒辦法贏」，我就有辦法贏（res = true）。沒火柴可拿時：普通規則＝輪到的人輸；拿最後一根輸的規則＝輪到的人贏。 */
     function isWinning(piles, maxTake, misere) {
         var k = key(piles, maxTake, misere);
         if (k in memo) return memo[k];
-        var total = 0; piles.forEach(function (p) { total += p; });
+        var total = 0; piles.forEach(function (p) { total += p; });  /* forEach：對陣列的每個元素各做一次 */
         if (total === 0) return (memo[k] = !!misere);
         var res = false;
         for (var i = 0; i < piles.length && !res; i++) {
             var lim = maxTake ? Math.min(piles[i], maxTake) : piles[i];
             for (var t = 1; t <= lim; t++) {
-                var next = piles.slice(); next[i] -= t;
+                var next = piles.slice(); next[i] -= t; /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
                 if (!isWinning(next, maxTake, misere)) { res = true; break; }
             }
         }
@@ -74,42 +74,42 @@
     /* 列出所有合法拿法：[{ pile 第幾堆, take 拿幾根 }]。maxTake 不是 0 就限制一次最多拿 maxTake 根 */
     function movesOf(piles, maxTake) {
         var out = [];
-        piles.forEach(function (p, i) { var lim = maxTake ? Math.min(p, maxTake) : p; for (var t = 1; t <= lim; t++) out.push({ pile: i, take: t }); });
+        piles.forEach(function (p, i) { var lim = maxTake ? Math.min(p, maxTake) : p; for (var t = 1; t <= lim; t++) out.push({ pile: i, take: t }); });  /* forEach：對陣列的每個元素各做一次 */
         return out;
     }
     /* 照拿法 mv 拿走火柴，回傳「拿完後的各堆根數」（先複製陣列，不改到原本的） */
-    function applyMove(piles, mv) { var n = piles.slice(); n[mv.pile] -= mv.take; return n; }
+    function applyMove(piles, mv) { var n = piles.slice(); n[mv.pile] -= mv.take; return n; }  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
     /* 必勝走法：走完之後，對方（下一個輪到的人）已經輸定了的那些拿法 */
-    function winningMoves(piles, maxTake, misere) { return movesOf(piles, maxTake).filter(function (mv) { return !isWinning(applyMove(piles, mv), maxTake, misere); }); }
+    function winningMoves(piles, maxTake, misere) { return movesOf(piles, maxTake).filter(function (mv) { return !isWinning(applyMove(piles, mv), maxTake, misere); }); }  /* filter：留下符合條件的元素，回傳新陣列 */
     /* 把各堆根數用 XOR（^，互斥或）合起來；XOR 為 0 的局面，輪到的人輸定了（失敗說明畫面用它） */
     function xorOf(piles) { var x = 0; piles.forEach(function (p) { x ^= p; }); return x; }
     /* 把數字寫成二進位字串，前面補 0 補到 w 位（說明畫面對齊用） */
     function toBin(n, w) { var s = n.toString(2); while (s.length < w) s = '0' + s; return s; }
-    function total(piles) { return piles.reduce(function (a, b) { return a + b; }, 0); }
+    function total(piles) { return piles.reduce(function (a, b) { return a + b; }, 0); }  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
 
     /* 出一關：{ piles, maxTake, misere, level }——一定是「輪到你而且你有必勝走法」的局面 */
     /* 出一關：回傳 { piles 各堆根數, maxTake, misere, level }——一定是「輪到你而且你有必勝走法」的局面。
        隨機抽各堆根數，用 isWinning 檢查；不合（全部一樣大、總數太少、輸定了）就重抽，最多 500 次，再不行用保底題。 */
     function makePuzzle(level, rand) {
         rand = rand || Math.random;
-        var s = stageOf(level), st = s.st, hi = Math.round(kit.ramp(s.idx, st.size[0], st.size[1], Math.max(2, s.len)));
+        var s = stageOf(level), st = s.st, hi = Math.round(kit.ramp(s.idx, st.size[0], st.size[1], Math.max(2, s.len)));  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
         for (var tr = 0; tr < 500; tr++) {
             var piles = [], i;
-            if (st.piles === 1) piles.push(kit.randInt(Math.max(5, hi - 3), hi, rand));
-            else for (i = 0; i < st.piles; i++) piles.push(kit.randInt(1, hi, rand));
+            if (st.piles === 1) piles.push(kit.randInt(Math.max(5, hi - 3), hi, rand));  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+            else for (i = 0; i < st.piles; i++) piles.push(kit.randInt(1, hi, rand));  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             if (total(piles) < 4) continue;
             if (st.piles > 1 && piles.every(function (p) { return p === piles[0]; })) continue;     /* 全部一樣大太好猜 */
             if (isWinning(piles, st.maxTake, st.misere)) return { piles: piles, maxTake: st.maxTake, misere: st.misere, level: level };
         }
-        return { piles: st.piles === 1 ? [hi - (hi % 4 === 0 ? 1 : 0)] : [1, 2, 3, 4].slice(0, st.piles).map(function (x) { return Math.min(x + 1, hi); }), maxTake: st.maxTake, misere: st.misere, level: level };
+        return { piles: st.piles === 1 ? [hi - (hi % 4 === 0 ? 1 : 0)] : [1, 2, 3, 4].slice(0, st.piles).map(function (x) { return Math.min(x + 1, hi); }), maxTake: st.maxTake, misere: st.misere, level: level };  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     }
     /* 電腦出手：贏得了就走必勝的那一步；輸定了就隨機走（不挑最大或最小，免得有規律） */
     /* 電腦出手：有必勝走法就走（隨機挑一種）；輸定了就隨機亂走（不挑最大或最小，免得有規律讓玩家猜） */
     function computerMove(piles, maxTake, misere, rand) {
         rand = rand || Math.random;
         var win = winningMoves(piles, maxTake, misere);
-        if (win.length) return kit.pick(win, rand);
-        return kit.pick(movesOf(piles, maxTake), rand);
+        if (win.length) return kit.pick(win, rand);     /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        return kit.pick(movesOf(piles, maxTake), rand); /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
     }
     /* 結算畫面的評語（依通過關數） */
     function rating(n) {
@@ -140,9 +140,9 @@
         var piles = pz.piles.slice(), sel = null, busy = false, over = false;     /* sel：{ pile, count }（從該堆右邊算起要拿幾根） */
         var maxPile = Math.max.apply(null, pz.piles);   /* 最長那一堆有幾根：用它決定每根火柴的寬度（越多根越細，才排得下） */
         var W = stage.clientWidth || 472;
-        var mw = Math.min(MATCH_MAX_W, Math.floor((W - 110) / maxPile));
+        var mw = Math.min(MATCH_MAX_W, Math.floor((W - 110) / maxPile));  /* Math.floor：無條件捨去成整數 */
 
-        var wrap = h('div', { 'class': 'nim-wrap' });
+        var wrap = h('div', { 'class': 'nim-wrap' });   /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
         var banner = h('div', { 'class': 'nim-banner', text: misere ? '拿到最後一根的人【輸】' : '拿到最後一根的人【贏】' });
         var note = h('div', { 'class': 'nim-note', text: maxTake ? '每回合最多拿 ' + maxTake + ' 根（一堆）' : '每回合從「同一堆」拿走任意根' });
         var rows = h('div', { 'class': 'nim-rows' });
@@ -151,11 +151,11 @@
         var btns = h('div', { 'class': 'nim-btns' });
         var btnTake = h('button', { 'class': 'btn btn--primary nim-btn', type: 'button', text: '拿走' });
         var btnClear = h('button', { 'class': 'btn btn--line nim-btn', type: 'button', text: '取消選取' });
-        kit.onTap(btnTake, take);
-        kit.onTap(btnClear, function () { if (!busy) { sel = null; paint(); } });
-        btns.appendChild(btnClear); btns.appendChild(btnTake);
-        wrap.appendChild(banner); wrap.appendChild(note); wrap.appendChild(rows); wrap.appendChild(turn); wrap.appendChild(reveal); wrap.appendChild(btns);
-        stage.appendChild(wrap);
+        kit.onTap(btnTake, take);                       /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        kit.onTap(btnClear, function () { if (!busy) { sel = null; paint(); } });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        btns.appendChild(btnClear); btns.appendChild(btnTake);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        wrap.appendChild(banner); wrap.appendChild(note); wrap.appendChild(rows); wrap.appendChild(turn); wrap.appendChild(reveal); wrap.appendChild(btns);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(wrap);                        /* 把整個遊戲區放進舞台（放進去，畫面上才看得到） */
         if (level === 11 && kit.once('nim.binary')) turn.textContent = '想一想二進位：每堆根數寫成二進位，讓每一位的 1 成雙';  /* 第 11 關（第一次出現三堆以上）提醒玩家想想二進位；kit.once 保證這個提醒整個網頁只出現一次 */
 
         var rowEls = [], matchEls = [], origin = pz.piles.slice();
@@ -192,7 +192,7 @@
                     m.className = cls;
                 });
             });
-            btnTake.textContent = sel ? '拿走 ' + sel.count + ' 根' : '拿走';
+            btnTake.textContent = sel ? '拿走 ' + sel.count + ' 根' : '拿走';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             btnTake.disabled = !sel || busy;
             btnClear.disabled = !sel || busy;
         }
@@ -205,26 +205,26 @@
             var left = total(piles);
             if (left === 0) {
                 over = true;
-                if (!misere) { turn.textContent = '你拿走了最後一根，你贏了！'; kit.flash(stage, true, api.my); api.pass({ delay: PASS_DELAY_MS }); }
+                if (!misere) { turn.textContent = '你拿走了最後一根，你贏了！'; kit.flash(stage, true, api.my); api.pass({ delay: PASS_DELAY_MS }); }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
                 else failWith(before, mv, '你拿走了最後一根——這一關拿最後一根的人輸');
                 return;
             }
             if (isWinning(piles, maxTake, misere)) { failWith(before, mv, null); return; }       /* 你走錯了：電腦有辦法一路保持必勝 */
-            busy = true; paint(); turn.textContent = '電腦思考中…';
-            api.after(COMPUTER_THINK_MS, computerTurn);
+            busy = true; paint(); turn.textContent = '電腦思考中…';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            api.after(COMPUTER_THINK_MS, computerTurn); /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
         }
         /* 電腦拿火柴：先標出它要拿的火柴（停 COMPUTER_SHOW_MS 毫秒讓玩家看見），再真的拿走；電腦拿走最後一根只會發生在它輸定的「拿最後一根輸」規則 */
         function computerTurn() {
             var mv = computerMove(piles, maxTake, misere, api.rand);
             var els = matchEls[mv.pile].slice(piles[mv.pile] - mv.take, piles[mv.pile]);
-            els.forEach(function (m) { m.classList.add('nim-match--cpu'); });
+            els.forEach(function (m) { m.classList.add('nim-match--cpu'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             turn.textContent = '電腦從第 ' + (mv.pile + 1) + ' 堆拿 ' + mv.take + ' 根';
-            api.after(COMPUTER_SHOW_MS, function () {
+            api.after(COMPUTER_SHOW_MS, function () {   /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                 piles = applyMove(piles, mv);
-                els.forEach(function (m) { m.classList.remove('nim-match--cpu'); });
+                els.forEach(function (m) { m.classList.remove('nim-match--cpu'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 busy = false; paint();
                 if (total(piles) === 0) {          /* 電腦拿走最後一根：只會發生在「拿最後一根輸」的規則（它輸定了） */
-                    over = true; turn.textContent = '電腦拿走了最後一根，你贏了！'; kit.flash(stage, true, api.my); api.pass({ delay: PASS_DELAY_MS }); return;
+                    over = true; turn.textContent = '電腦拿走了最後一根，你贏了！'; kit.flash(stage, true, api.my); api.pass({ delay: PASS_DELAY_MS }); return;  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
                 }
                 turn.textContent = '輪到你：點一根火柴，選它和它右邊的';
             });
@@ -241,14 +241,14 @@
             lines.push(text);
             if (!maxTake && !misere) {
                 var w = Math.max(3, Math.max.apply(null, before).toString(2).length), x = xorOf(after);
-                reveal.innerHTML = '';
+                reveal.innerHTML = '';                  /* innerHTML = ''：把元素裡面的東西全部清掉 */
                 reveal.appendChild(h('div', { 'class': 'nim-reveal__title', text: '拿完後的各堆（二進位）' }));
                 after.forEach(function (n, i) { reveal.appendChild(h('div', { 'class': 'nim-reveal__row', text: '第 ' + (i + 1) + ' 堆　' + n + ' 根　' + toBin(n, w) })); });
                 reveal.appendChild(h('div', { 'class': 'nim-reveal__row nim-reveal__row--xor', text: 'XOR　' + toBin(x, w) + (x === 0 ? '' : '（不是 0）') }));
                 lines.push('你拿完後 XOR＝' + x + (x === 0 ? '' : '，不是 0'));
             }
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: FAIL_HOLD_MS, lines: lines });
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: FAIL_HOLD_MS, lines: lines });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 給測試／debug 用：api.solve 走一步必勝的路、api.wrong 故意走一步讓電腦保持必勝的、api.state 回報目前狀態 */
         api.solve = function () {                  /* 驗證用：走一步必勝的路，直到贏 */

@@ -54,12 +54,12 @@
     function emojiOf(id) { return String.fromCodePoint(ITEMS[id][0]); }
     function nameOf(id) { return ITEMS[id][1]; }
     /* 第 level 關的限時（毫秒）：每多一關多 TIME_STEP_S 秒 */
-    function timeMs(level) { return Math.round((TIME0_S + (level - 1) * TIME_STEP_S) * 1000); }
+    function timeMs(level) { return Math.round((TIME0_S + (level - 1) * TIME_STEP_S) * 1000); }  /* Math.round：四捨五入成整數 */
     /* 下一關：hist 是目前為止每一關出現的圖案（依序）。回傳 { item, kind: 'new'|'old', seenAt（看過：上次出現的關，從 1 起算；新的：0）, level } */
     function nextTrial(hist, rand, kinds) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var idx = hist.length, seen = {}, i;
-        hist.forEach(function (it, k) { seen[it] = { last: k, n: (seen[it] ? seen[it].n : 0) + 1 }; });
+        hist.forEach(function (it, k) { seen[it] = { last: k, n: (seen[it] ? seen[it].n : 0) + 1 }; });  /* forEach：對陣列的每個元素各做一次 */
         var fresh = [], olds = [], prev = idx > 0 ? hist[idx - 1] : -1;                /* prev：上一關的圖案，這一關絕不能再出現（連續兩關同一個圖案會讓玩家以為還在同一關） */
         for (i = 0; i < ITEMS.length; i++) {
             if (!seen[i]) fresh.push(i);
@@ -79,8 +79,8 @@
             }
         }
         if (kind === 'old' && !olds.length) kind = 'new';                      /* 「看過」的候選只剩上一關那一個：改成新的 */
-        if (kind === 'old') { var o = kit.pick(olds, rand); return { item: o, kind: 'old', seenAt: seen[o].last + 1, level: idx + 1 }; }
-        return { item: kit.pick(fresh, rand), kind: 'new', seenAt: 0, level: idx + 1 };
+        if (kind === 'old') { var o = kit.pick(olds, rand); return { item: o, kind: 'old', seenAt: seen[o].last + 1, level: idx + 1 }; }  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        return { item: kit.pick(fresh, rand), kind: 'new', seenAt: 0, level: idx + 1 };  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
     }
     /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
@@ -117,11 +117,11 @@
         var pic = h('div', { 'class': 'seenit-pic', text: emojiOf(tr.item) });
         var name = h('div', { 'class': 'seenit-name', text: nameOf(tr.item) });
         var info = h('div', { 'class': 'seenit-info', text: level === 1 ? '第一個圖案，一定是新的' : '這個圖案在前面的關卡出現過嗎？' });
-        stage.appendChild(pic); stage.appendChild(name); stage.appendChild(info);
+        stage.appendChild(pic); stage.appendChild(name); stage.appendChild(info);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var bOld = h('button', { 'class': 'btn btn--go', text: '看過' });
         var bNew = h('button', { 'class': 'btn btn--primary', text: '新的' });
         if (level === 1) bOld.disabled = true;                                 /* 第 1 關還沒有看過的圖案，只能按「新的」 */
-        stage.appendChild(h('div', { 'class': 'rx-btnrow' }, [bNew, bOld]));
+        stage.appendChild(h('div', { 'class': 'rx-btnrow' }, [bNew, bOld]));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         api.timer(timeMs(level), function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         if (level === 1 && kit.once('seenit.hint')) kit.hintOn(stage, bNew, { mode: 'tap', delay: 500, text: '第一個圖案一定是新的' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
@@ -131,14 +131,14 @@
             if (sayOld === true && level === 1) return;                          /* 第 1 關的「看過」按鈕無法使用 */
             bOld.disabled = bNew.disabled = true;
             var isOld = tr.kind === 'old';
-            if (sayOld === isOld) { pic.classList.add('seenit-pic--ok'); api.pass({ delay: 300 }); return; }
-            pic.classList.add('seenit-pic--bad');
+            if (sayOld === isOld) { pic.classList.add('seenit-pic--ok'); api.pass({ delay: 300 }); return; }  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
+            pic.classList.add('seenit-pic--bad');       /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             var why = sayOld == null ? '時間到！' : (isOld ? '這個圖案之前出現過' : '這是新的圖案');
-            info.textContent = why + (isOld ? '（第 ' + tr.seenAt + ' 關）' : '');
-            api.fail({ delay: 1800, lines: [why + '：' + emojiOf(tr.item) + ' ' + nameOf(tr.item), isOld ? '它上次出現在第 ' + tr.seenAt + ' 關' : '前面的關卡沒有出現過它'] });
+            info.textContent = why + (isOld ? '（第 ' + tr.seenAt + ' 關）' : '');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            api.fail({ delay: 1800, lines: [why + '：' + emojiOf(tr.item) + ' ' + nameOf(tr.item), isOld ? '它上次出現在第 ' + tr.seenAt + ' 關' : '前面的關卡沒有出現過它'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
-        kit.onTap(bOld, function () { judge(true); });
-        kit.onTap(bNew, function () { judge(false); });
+        kit.onTap(bOld, function () { judge(true); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        kit.onTap(bNew, function () { judge(false); }); /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(tr.kind === 'old'); };
         api.wrong = function () { judge(level === 1 ? null : tr.kind !== 'old'); };

@@ -59,16 +59,16 @@
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function speedFor(level) { return kit.ramp(level, SPEED[0], SPEED[1], RAMP_LEVELS); }
-    function dotCountFor(level) { return Math.round(kit.ramp(level, N_DOTS[0], N_DOTS[1], RAMP_LEVELS)); }
-    function moverCountFor(level) { return Math.max(1, Math.round(kit.ramp(level, MOVE_DOTS[0], MOVE_DOTS[1], RAMP_LEVELS))); }
-    function moveTimeFor(level) { return Math.round(kit.ramp(level, MOVE_TIME[0], MOVE_TIME[1], RAMP_LEVELS) * 100) / 100; }
+    function speedFor(level) { return kit.ramp(level, SPEED[0], SPEED[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function dotCountFor(level) { return Math.round(kit.ramp(level, N_DOTS[0], N_DOTS[1], RAMP_LEVELS)); }  /* Math.round：四捨五入成整數 */
+    function moverCountFor(level) { return Math.max(1, Math.round(kit.ramp(level, MOVE_DOTS[0], MOVE_DOTS[1], RAMP_LEVELS))); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function moveTimeFor(level) { return Math.round(kit.ramp(level, MOVE_TIME[0], MOVE_TIME[1], RAMP_LEVELS) * 100) / 100; }  /* Math.round：四捨五入成整數 */
     /* 限時（秒）：1 顆會動＝TIME_S，k 顆＝TIME_S × k */
     function limitFor(k) { return TIME_S * Math.max(1, k); }
     /* 點 (px,py) 到線段 (ax,ay)-(bx,by) 的最短距離 */
     function segDist(px, py, ax, ay, bx, by) {
         var dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
-        var t = l2 === 0 ? 0 : kit.clamp(((px - ax) * dx + (py - ay) * dy) / l2, 0, 1);
+        var t = l2 === 0 ? 0 : kit.clamp(((px - ax) * dx + (py - ay) * dy) / l2, 0, 1);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
         return kit.dist(px, py, ax + t * dx, ay + t * dy);
     }
     /* 兩條線段的最短距離（相交＝0） */
@@ -83,11 +83,11 @@
     function movedTime(k, moveTime, idx, t) {
         if (t <= 0) return 0;
         if (k <= 1) {
-            var cyc = moveTime + PAUSE_S, full = Math.floor(t / cyc), rem = t - full * cyc;
+            var cyc = moveTime + PAUSE_S, full = Math.floor(t / cyc), rem = t - full * cyc;  /* Math.floor：無條件捨去成整數 */
             return full * moveTime + Math.min(rem, moveTime);
         }
-        var cycle = k * moveTime, f = Math.floor(t / cycle), r = t - f * cycle;
-        return f * moveTime + kit.clamp(r - idx * moveTime, 0, moveTime);
+        var cycle = k * moveTime, f = Math.floor(t / cycle), r = t - f * cycle;  /* Math.floor：無條件捨去成整數 */
+        return f * moveTime + kit.clamp(r - idx * moveTime, 0, moveTime);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
     }
     /* 第 t 秒有哪一顆（會動的第幾顆）正在動；沒有（暫停中）回傳 −1 */
     function activeAt(k, moveTime, t) {
@@ -116,7 +116,7 @@
             if (proj <= 0) continue;
             var perp2 = px * px + py * py - proj * proj;
             if (perp2 >= clear * clear) continue;
-            var hit = proj - Math.sqrt(clear * clear - perp2);
+            var hit = proj - Math.sqrt(clear * clear - perp2);  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
             if (hit < L) L = hit;
         }
         return Math.max(0, L);
@@ -125,8 +125,8 @@
     function placeDots(n, W, H, gap, rand) {
         var dots = [], guard = 0;
         while (dots.length < n && guard++ < 4000) {
-            var x = kit.randFloat(MARGIN, W - MARGIN, rand), y = kit.randFloat(MARGIN, H - MARGIN, rand);
-            if (dots.every(function (d) { return kit.dist(x, y, d.x, d.y) >= gap; })) dots.push({ x: x, y: y });
+            var x = kit.randFloat(MARGIN, W - MARGIN, rand), y = kit.randFloat(MARGIN, H - MARGIN, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+            if (dots.every(function (d) { return kit.dist(x, y, d.x, d.y) >= gap; })) dots.push({ x: x, y: y });  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
         }
         return dots.length === n ? dots : null;
     }
@@ -135,13 +135,13 @@
     function pickMovers(dots, ids, need, W, H, clear, accept, rand) {
         var movers = [];
         for (var m = 0; m < ids.length; m++) {
-            var di = ids[m], s0 = dots[di], obstacles = dots.filter(function (d, i) { return i !== di; }), cands = [], base = rand() * Math.PI * 2;
+            var di = ids[m], s0 = dots[di], obstacles = dots.filter(function (d, i) { return i !== di; }), cands = [], base = rand() * Math.PI * 2;  /* filter：留下符合條件的元素，回傳新陣列 */
             for (var a = 0; a < ANGLES; a++) {
                 var ang = base + a * 2 * Math.PI / ANGLES, dx = Math.cos(ang), dy = Math.sin(ang);
                 var L = Math.min(freeLen(s0.x, s0.y, dx, dy, obstacles, W, H, clear), need[m]);
                 cands.push({ dx: dx, dy: dy, len: L });
             }
-            cands.sort(function (u, v) { return v.len - u.len; });
+            cands.sort(function (u, v) { return v.len - u.len; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
             var need0 = Math.min(accept, need[m]), picked = null;
             for (var c = 0; c < cands.length && !picked; c++) {
                 var cd = cands[c];
@@ -170,14 +170,14 @@
             for (var tr = 0; tr < tries; tr++) {
                 var dots = placeDots(n, W, H, gap, rand);
                 if (!dots) continue;
-                var ids = kit.shuffle(dots.map(function (d, i) { return i; }), rand).slice(0, k);
+                var ids = kit.shuffle(dots.map(function (d, i) { return i; }), rand).slice(0, k);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
                 var movers = pickMovers(dots, ids, need, W, H, Math.min(PATH_CLEAR, gap - 4), accept, rand);
                 if (movers) return { W: W, H: H, dots: dots, movers: movers, speed: speed, moveTime: mt, limitS: limit, gap: gap };
                 if (!best) best = { dots: dots, ids: ids, gap: gap };
             }
         }
         /* 保底（極少用到）：還是隨機排列，路徑不夠長也接受（至少 1px），絕對不再用固定的格子 */
-        var dots2 = best ? best.dots : placeDots(n, W, H, GAP_LAST - 8, rand) || placeDots(n, W, H, 20, rand), ids2 = best ? best.ids : kit.shuffle(dots2.map(function (d, i) { return i; }), rand).slice(0, k);
+        var dots2 = best ? best.dots : placeDots(n, W, H, GAP_LAST - 8, rand) || placeDots(n, W, H, 20, rand), ids2 = best ? best.ids : kit.shuffle(dots2.map(function (d, i) { return i; }), rand).slice(0, k);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         var mv = pickMovers(dots2, ids2, need, W, H, 8, 1, rand) || pickMovers(dots2, ids2, need, W, H, 0, 0, rand);
         return { W: W, H: H, dots: dots2, movers: mv, speed: speed, moveTime: mt, limitS: limit, gap: best ? best.gap : 0 };
     }
@@ -207,31 +207,31 @@
         var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var W = stage.clientWidth || 472, H = (stage.clientHeight || 640) - 64;          /* 下面留 64 像素放說明文字 */
         var q = makeLevel(level, W, H, api.rand), k = q.movers.length, moverOf = {};
-        q.movers.forEach(function (m, i) { moverOf[m.idx] = i; });
+        q.movers.forEach(function (m, i) { moverOf[m.idx] = i; });  /* forEach：對陣列的每個元素各做一次 */
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[誰在偷偷動] 第 ' + level + ' 關：' + q.dots.length + ' 顆圓點，會動的 ' + k + ' 顆（第 ' + q.movers.map(function (m) { return m.idx + 1; }).join('、') + ' 顆），每顆輪流動 ' + q.moveTime + ' 秒，速度 ' + q.speed.toFixed(4) + ' 像素/秒；限時 ' + q.limitS + ' 秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        var svg = kit.svg('svg', { 'class': 'sneakmove-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
-        var gTrail = kit.svg('g', {}, svg);
-        var circles = q.dots.map(function (d) { return kit.svg('circle', { cx: d.x, cy: d.y, r: DOT_R, 'class': 'sneakmove-dot' }, svg); });
+        var svg = kit.svg('svg', { 'class': 'sneakmove-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var gTrail = kit.svg('g', {}, svg);             /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var circles = q.dots.map(function (d) { return kit.svg('circle', { cx: d.x, cy: d.y, r: DOT_R, 'class': 'sneakmove-dot' }, svg); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         var tip = h('div', { 'class': 'qz-note sneakmove-tip', text: k > 1 ? '有幾個圓點會輪流慢慢移動，找出其中一個！' : '有一個圓點在慢慢移動，找出它！' });
-        stage.appendChild(tip);
+        stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var t0 = performance.now(), found = {}, nFound = 0;               /* found[第幾顆會動的] ＝ 找到的那一刻（秒），那一顆就停在那裡 */
-        function nowSec() { return (performance.now() - t0) / 1000; }
+        function nowSec() { return (performance.now() - t0) / 1000; }  /* performance.now()：高精度的時間（毫秒），計時用 */
         function timeOf(mi, t) { return found[mi] != null ? found[mi] : t; }     /* 這一顆會動的圓點「現在該畫在哪一秒的位置」：找到了就停在找到的那一刻 */
-        var loop = api.my.loop(function () {
+        var loop = api.my.loop(function () {            /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
             if (api.over) return false;
             var t = nowSec();
-            q.movers.forEach(function (m, i) { var p = posAt(q, i, timeOf(i, t)); circles[m.idx].setAttribute('cx', p.x); circles[m.idx].setAttribute('cy', p.y); });
+            q.movers.forEach(function (m, i) { var p = posAt(q, i, timeOf(i, t)); circles[m.idx].setAttribute('cx', p.x); circles[m.idx].setAttribute('cy', p.y); });  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         });
         api.timer(q.limitS * 1000, function () { finish('time', -1, q.limitS); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         if (level === 1 && kit.once('sneakmove.hint')) kit.hintOn(stage, null, { mode: 'tap', x: q.movers[0].x0, y: q.movers[0].y0, delay: 800, text: '請點擊正在移動的圓點' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         /* 點擊：找離手指最近的圓點（在 HIT_R 以內才算點到）；點到會動的就是找到一顆（要全部找齊才過關），點到不動的就失敗 */
-        kit.onTap(stage, function (e) {
+        kit.onTap(stage, function (e) {                 /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             if (api.over) return;
             var pt = kit.localPt(e, stage), t = nowSec();
             var best = -1, bd = 1e9;
-            q.dots.forEach(function (d, i) {
+            q.dots.forEach(function (d, i) {            /* forEach：對陣列的每個元素各做一次 */
                 var p = moverOf[i] != null ? posAt(q, moverOf[i], timeOf(moverOf[i], t)) : d, dd = kit.dist(pt.x, pt.y, p.x, p.y);
                 if (dd < bd) { bd = dd; best = i; }
             });
@@ -245,9 +245,9 @@
             if (found[mi] != null) return;                                         /* 這一顆已經找到了，再點不算 */
             found[mi] = Math.min(t, q.limitS); nFound++;
             circles[i].classList.add('sneakmove-dot--right');                             /* 找到了：綠色外框，停在原地 */
-            Sfx.play('ok');
+            Sfx.play('ok');                             /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             if (nFound >= k) finish('ok', -1, t);
-            else tip.textContent = '找到了！已找到 ' + nFound + '／' + k + ' 顆，繼續找下一顆（會動的圓點輪流在動）';
+            else tip.textContent = '找到了！已找到 ' + nFound + '／' + k + ' 顆，繼續找下一顆（會動的圓點輪流在動）';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         }
 
         /* 結束：kind＝'ok'（全部找到）／'wrong'（點到不動的第 i 顆）／'time'（限時到了）。
@@ -259,18 +259,18 @@
             var lines = [];
             q.movers.forEach(function (m, mi) {
                 var tt = timeOf(mi, t), p = posAt(q, mi, tt), moved = q.speed * movedTime(k, q.moveTime, mi, tt);
-                circles[m.idx].setAttribute('cx', p.x); circles[m.idx].setAttribute('cy', p.y);
-                circles[m.idx].classList.add('sneakmove-dot--right');
+                circles[m.idx].setAttribute('cx', p.x); circles[m.idx].setAttribute('cy', p.y);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                circles[m.idx].classList.add('sneakmove-dot--right');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 kit.svg('line', { x1: m.x0, y1: m.y0, x2: p.x, y2: p.y, 'class': 'sneakmove-trail' }, gTrail);
                 kit.svg('circle', { cx: m.x0, cy: m.y0, r: 5, 'class': 'sneakmove-start' }, gTrail);
                 lines.push('第 ' + (m.idx + 1) + ' 顆漂移了 ' + moved.toFixed(4) + ' 像素');
             });
-            if (kind === 'wrong') circles[i].classList.add('sneakmove-dot--wrong');
+            if (kind === 'wrong') circles[i].classList.add('sneakmove-dot--wrong');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             /* 提示文字只有 64 像素高：會動的有好幾顆時，各自漂移多少寫在結算頁就好，這裡只留一句 */
-            tip.textContent = k > 1 ? '共 ' + k + ' 顆會動（綠框），每秒漂移 ' + q.speed.toFixed(4) + ' 像素，輪流各動 ' + q.moveTime.toFixed(4) + ' 秒' : '每秒漂移 ' + q.speed.toFixed(4) + ' 像素：' + lines.join('、');
-            if (kind === 'ok') { kit.flash(stage, true, api.my); api.pass({ delay: 1700 }); return; }
-            kit.flash(stage, false, api.my);
-            api.fail({
+            tip.textContent = k > 1 ? '共 ' + k + ' 顆會動（綠框），每秒漂移 ' + q.speed.toFixed(4) + ' 像素，輪流各動 ' + q.moveTime.toFixed(4) + ' 秒' : '每秒漂移 ' + q.speed.toFixed(4) + ' 像素：' + lines.join('、');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            if (kind === 'ok') { kit.flash(stage, true, api.my); api.pass({ delay: 1700 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: 2600, lines: [
                     (kind === 'time' ? '時間到！' : '那一顆是靜止的') + '，' + (k > 1 ? '你找到了 ' + nFound + '／' + k + ' 顆，' : '') + '會動的是第 ' + q.movers.map(function (m) { return m.idx + 1; }).join('、') + ' 顆（已標出）',
                     '它們每秒漂移 ' + q.speed.toFixed(4) + ' 像素：' + lines.join('、')

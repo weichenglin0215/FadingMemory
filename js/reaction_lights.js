@@ -47,14 +47,14 @@
     /* 亮 n 盞時燈板是幾×幾：盞數越多燈板越大（3×3→7×7） */
     function gridFor(n) { return n <= 4 ? 3 : (n <= 8 ? 4 : (n <= 16 ? 5 : (n <= 24 ? 6 : 7))); }
     /* 亮燈時間：隨盞數線性變長 */
-    function showSecFor(n) { return kit.ramp(n - N_START + 1, SHOW_START, SHOW_END, N_MAX - N_START + 1); }
+    function showSecFor(n) { return kit.ramp(n - N_START + 1, SHOW_START, SHOW_END, N_MAX - N_START + 1); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 回想時限 */
     function recallSecFor(n) { return RECALL_BASE + RECALL_PER * n; }
     /* 從 g×g 個格子隨機挑 n 個要亮的位置（洗牌後取前 n 個） */
     function pickCells(g, n, rand) {
         var all = [];
         for (var i = 0; i < g * g; i++) all.push(i);
-        return kit.shuffle(all, rand).slice(0, n);
+        return kit.shuffle(all, rand).slice(0, n);      /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
     }
 
     /* mount：遊戲進場點 */
@@ -70,7 +70,7 @@
             R = kit.round();
             var my = R;
             n = n || N_START;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             /* g 燈板邊長；state 目前階段；targets 要亮的燈編號；tapped 玩家已點過的燈；hits 已點對幾盞 */
             var g = gridFor(n);
             var state = 'prep';
@@ -78,7 +78,7 @@
             var tapped = {};
             var hits = 0;
 
-            ctx.setMeta(kit.meta(['亮 ' + n + ' 盞', fmtBest(Reaction.getBest(ID))]));
+            ctx.setMeta(kit.meta(['亮 ' + n + ' 盞', fmtBest(Reaction.getBest(ID))]));  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             /* 建立畫面元素：提示、時間條、燈板 */
             var hint = h('div', { 'class': 'hint', text: '準備…記住亮起來的燈' });
             var barWrap = h('div', { 'class': 'ld-time' }, [h('div', { 'class': 'ld-time__fill' })]);
@@ -88,14 +88,14 @@
             /* 用 CSS Grid 排成 g×g：欄與列都設成 repeat(g, 1fr)（g 個等寬） */
             grid.style.gridTemplateColumns = 'repeat(' + g + ', 1fr)';
             grid.style.gridTemplateRows = 'repeat(' + g + ', 1fr)';
-            panel.appendChild(grid);
-            root.appendChild(hint);
+            panel.appendChild(grid);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(hint);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             root.appendChild(panel);
             root.appendChild(barWrap);
 
             /* 燈板是正方形：取可用寬高中較小的那個 */
             /* 燈板是正方形：取可用寬高較小的那個 */
-            var side = Math.floor(Math.min(panel.clientWidth, panel.clientHeight));
+            var side = Math.floor(Math.min(panel.clientWidth, panel.clientHeight));  /* Math.floor：無條件捨去成整數 */
             grid.style.width = side + 'px';
             grid.style.height = side + 'px';
 
@@ -105,7 +105,7 @@
                 /* (function (i) {...})(i)：立即執行函式，讓每顆燈的事件記住自己的編號 i */
                 (function (i) {
                     var el = h('button', { 'class': 'lights-lamp' });
-                    el.addEventListener('pointerdown', function (e) { e.preventDefault(); tap(i); });
+                    el.addEventListener('pointerdown', function (e) { e.preventDefault(); tap(i); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                     grid.appendChild(el);
                     lamps.push(el);
                 })(i);
@@ -115,13 +115,13 @@
             function tap(i) {
                 if (state !== 'recall' || tapped[i]) return;
                 tapped[i] = true;
-                if (targets.indexOf(i) >= 0) {
+                if (targets.indexOf(i) >= 0) {          /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                     hits++;
-                    lamps[i].classList.add('lights-lamp--hit');
-                    Sfx.play('ok');
+                    lamps[i].classList.add('lights-lamp--hit');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                    Sfx.play('ok');                     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                     if (hits >= n) levelClear();
                 } else {
-                    lamps[i].classList.add('lights-lamp--bad');
+                    lamps[i].classList.add('lights-lamp--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                     fail('點到沒亮過的燈了');
                 }
             }
@@ -131,12 +131,12 @@
                 state = 'clear';
                 my.cancel(timer);
                 cleared = Math.max(cleared, n);
-                if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
+                if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                 ctx.setMeta(kit.meta(['亮 ' + n + ' 盞', fmtBest(Reaction.getBest(ID))]));
                 fill.style.width = '0%';
-                Sfx.play('win');
+                Sfx.play('win');                        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 if (n >= N_MAX) { my.after(CLEAR_MS, finishAll); return; }
-                hint.textContent = g !== gridFor(n + 1) ? '全對！燈板要變大了…' : '全對！再多一盞…';
+                hint.textContent = g !== gridFor(n + 1) ? '全對！燈板要變大了…' : '全對！再多一盞…';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 my.after(CLEAR_MS, function () { round(n + 1); });
             }
 
@@ -144,7 +144,7 @@
             function finishAll() {
                 /* 通過最大盞數：直接結束（只會發生在 N_MAX） */
                 state = 'done';
-                kit.result(root, {
+                kit.result(root, {                      /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                     score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                     num: '記住 ' + cleared + ' 盞', label: '太強了，全部記住！', sfx: 'perfect',
                     isNew: newRec, onAgain: restart
@@ -158,10 +158,10 @@
                 my.cancel(timer);
                 fill.style.width = '0%';
                 /* 把還沒點到的目標用黃框標出來，讓玩家看到「剛才亮的是這些」 */
-                targets.forEach(function (t) { if (!tapped[t]) lamps[t].classList.add('lights-lamp--reveal'); });
+                targets.forEach(function (t) { if (!tapped[t]) lamps[t].classList.add('lights-lamp--reveal'); });  /* forEach：對陣列的每個元素各做一次 */
                 my.after(1100, function () {
                     state = 'done';
-                    kit.result(root, {
+                    kit.result(root, {                  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                         score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: '記住 ' + cleared + ' 盞', label: reason,
                         lines: ['這一關要記 ' + n + ' 盞，你點對了 ' + hits + ' 盞'],
@@ -177,20 +177,20 @@
             /* 流程：準備 → 亮 → 熄 → 回想（限時） */
             my.after(PREP_MS, function () {
                 state = 'show';
-                hint.textContent = '看！';
+                hint.textContent = '看！';                /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 Sfx.play('go');
-                targets.forEach(function (t) { lamps[t].classList.add('lights-lamp--lit'); });
+                targets.forEach(function (t) { lamps[t].classList.add('lights-lamp--lit'); });  /* forEach：對陣列的每個元素各做一次 */
                 my.after(showSecFor(n) * 1000, function () {
                     targets.forEach(function (t) { lamps[t].classList.remove('lights-lamp--lit'); });
                     hint.textContent = '把剛才亮過的燈點出來（共 ' + n + ' 盞）';
                     my.after(AFTER_LIT_MS, function () {
                         state = 'recall';
                         /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「剛才亮過的燈」上（第一關的正確答案之一） */
-                        if (Reaction.kit.once('lights.hint')) Reaction.kit.hintOn(root, lamps[targets[0]], { mode: 'tap', text: '請點擊亮過的燈' });
+                        if (Reaction.kit.once('lights.hint')) Reaction.kit.hintOn(root, lamps[targets[0]], { mode: 'tap', text: '請點擊亮過的燈' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
                         var limit = recallSecFor(n) * 1000;
-                        var t0 = performance.now();
+                        var t0 = performance.now();     /* performance.now()：高精度的時間（毫秒），計時用 */
                         /* 倒數條 */
-                        my.loop(function (now) {
+                        my.loop(function (now) {        /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                             if (state !== 'recall') return false;
                             fill.style.width = (100 * Math.max(0, 1 - (now - t0) / limit)).toFixed(1) + '%';
                         });
@@ -201,7 +201,7 @@
 
             /* G.debug：測試用後門 */
             G.debug = {
-                state: function () { return { n: n, g: g, state: state, hits: hits, cleared: cleared, targets: targets.slice() }; },
+                state: function () { return { n: n, g: g, state: state, hits: hits, cleared: cleared, targets: targets.slice() }; },  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
                 tap: tap
             };
         }

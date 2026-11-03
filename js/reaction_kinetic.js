@@ -45,9 +45,9 @@
     var WINDOWS = ['pax', 'pax2', 'bento', 'news', 'curtain', 'empty'];            /* 窗戶裡的東西 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }
-    function viewSFor(level) { return Math.round(ramp(level, VIEW_S) * 1000) / 1000; }
-    function digitsFor(level) { return Math.round(ramp(level, DIGITS)); }
+    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function viewSFor(level) { return Math.round(ramp(level, VIEW_S) * 1000) / 1000; }  /* Math.round：四捨五入成整數 */
+    function digitsFor(level) { return Math.round(ramp(level, DIGITS)); }  /* Math.round：四捨五入成整數 */
     function carsFor(level) { return Math.round(ramp(level, CARS)); }
     function decoysFor(level) { return Math.round(ramp(level, DECOY_STICKERS)); }
     function simPFor(level) { return Math.round(ramp(level, SIM_P) * 1000) / 1000; }
@@ -68,12 +68,12 @@
     function revealX(W, cw, i) { return Math.round(W / 2 - carOffset(i, cw) - cw / 2); }
     /* 兩個號碼字串有幾個位數不同；以及這些不同的位數是不是都換成「長得像」的數字 */
     function diffPositions(a, b) { var r = []; for (var i = 0; i < a.length; i++) if (a.charAt(i) !== b.charAt(i)) r.push(i); return r; }
-    function allSimilar(a, b) { return diffPositions(a, b).every(function (i) { return SIM[+a.charAt(i)].indexOf(+b.charAt(i)) >= 0; }); }
+    function allSimilar(a, b) { return diffPositions(a, b).every(function (i) { return SIM[+a.charAt(i)].indexOf(+b.charAt(i)) >= 0; }); }  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
     /* 隨機一個 d 位數的號碼字串（第一位不是 0，也不是每一位都一樣） */
     function randomNumber(d, rand) {
         for (var tr = 0; tr < 50; tr++) {
-            var s = String(kit.randInt(1, 9, rand));
-            for (var i = 1; i < d; i++) s += kit.randInt(0, 9, rand);
+            var s = String(kit.randInt(1, 9, rand));    /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+            for (var i = 1; i < d; i++) s += kit.randInt(0, 9, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             if (!/^(\d)\1+$/.test(s)) return s;
         }
         return '1234'.slice(0, d);
@@ -81,16 +81,16 @@
     /* 把號碼 truth 的某一位換成別的數字：simp＝是否換成「長得像」的；回傳新字串。第一位不能換成 0 */
     function swapDigit(truth, pos, simp, rand) {
         var cur = +truth.charAt(pos), pool;
-        if (simp) pool = SIM[cur].slice();
-        else pool = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].filter(function (x) { return x !== cur && SIM[cur].indexOf(x) < 0; });
-        if (pos === 0) pool = pool.filter(function (x) { return x !== 0; });
+        if (simp) pool = SIM[cur].slice();              /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        else pool = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].filter(function (x) { return x !== cur && SIM[cur].indexOf(x) < 0; });  /* filter：留下符合條件的元素，回傳新陣列 */
+        if (pos === 0) pool = pool.filter(function (x) { return x !== 0; });  /* filter：留下符合條件的元素，回傳新陣列 */
         if (!pool.length) pool = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].filter(function (x) { return x !== cur && (pos > 0 || x !== 0); });
-        return truth.slice(0, pos) + kit.pick(pool, rand) + truth.slice(pos + 1);
+        return truth.slice(0, pos) + kit.pick(pool, rand) + truth.slice(pos + 1);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
     }
     /* 做一個錯誤選項：位數 ≥ 2 時，「不像」的機率是 1 − simP 會同時換 2 位、否則換 1 位；每個換掉的位數也各自依 simP 決定要不要換成長得像的 */
     function makeDecoy(truth, simP, rand) {
-        var d = truth.length, n = (d >= 2 && rand() >= simP) ? 2 : 1, pos = kit.shuffle(truth.split('').map(function (c, i) { return i; }), rand).slice(0, n), s = truth;
-        pos.forEach(function (p) { s = swapDigit(s, p, rand() < simP, rand); });
+        var d = truth.length, n = (d >= 2 && rand() >= simP) ? 2 : 1, pos = kit.shuffle(truth.split('').map(function (c, i) { return i; }), rand).slice(0, n), s = truth;  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+        pos.forEach(function (p) { s = swapDigit(s, p, rand() < simP, rand); });  /* forEach：對陣列的每個元素各做一次 */
         return s;
     }
     /* 出一關：{
@@ -100,13 +100,13 @@
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var d = digitsFor(level), cars = carsFor(level), simP = simPFor(level), number = randomNumber(d, rand);
         var opts = [number], guard = 0;
-        while (opts.length < 4 && guard++ < 400) { var c = makeDecoy(number, simP, rand); if (opts.indexOf(c) < 0) opts.push(c); }
+        while (opts.length < 4 && guard++ < 400) { var c = makeDecoy(number, simP, rand); if (opts.indexOf(c) < 0) opts.push(c); }  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         while (opts.length < 4) { var f = swapDigit(number, d - 1, false, rand); if (opts.indexOf(f) < 0) opts.push(f); }       /* 保底（極少用到） */
-        opts = kit.shuffle(opts, rand);
+        opts = kit.shuffle(opts, rand);                 /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         var target = kit.randInt(0, cars - 1, rand), windows = [], i;
-        for (i = 0; i < cars; i++) windows.push(kit.pick(WINDOWS, rand));
+        for (i = 0; i < cars; i++) windows.push(kit.pick(WINDOWS, rand));  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         var others = []; for (i = 0; i < cars; i++) if (i !== target) others.push(i);
-        var stickers = {}; kit.shuffle(others, rand).slice(0, Math.min(decoysFor(level), others.length)).forEach(function (ci) { stickers[ci] = kit.pick(LETTERS, rand); });
+        var stickers = {}; kit.shuffle(others, rand).slice(0, Math.min(decoysFor(level), others.length)).forEach(function (ci) { stickers[ci] = kit.pick(LETTERS, rand); });  /* forEach：對陣列的每個元素各做一次 */
         return { level: level, number: number, digits: d, options: opts, answerIdx: opts.indexOf(number), cars: cars, target: target, windows: windows, stickers: stickers, viewS: viewSFor(level), simP: simP };
     }
     /* 結算畫面的評語：依成績回傳一句話 */
@@ -131,7 +131,7 @@
 
     /* 畫一節車廂的窗戶裡的東西（座標以窗戶左上角為原點，窗戶 160×80） */
     function drawWindow(g, kind, rand) {
-        var s = function (tag, attrs) { return kit.svg(tag, attrs, g); };
+        var s = function (tag, attrs) { return kit.svg(tag, attrs, g); };  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         function person(cx, tone) {
             s('path', { 'class': 'kinetic-pax kinetic-pax--' + tone, d: 'M' + (cx - 30) + ',84 Q' + (cx - 30) + ',54 ' + cx + ',52 Q' + (cx + 30) + ',54 ' + (cx + 30) + ',84 Z' });
             s('circle', { 'class': 'kinetic-head', cx: cx, cy: 36, r: 16 });
@@ -166,9 +166,9 @@
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var T = trainSize(W, q.cars), v = speedFor(W, T.cw, q.viewS), endX = -(T.total + TAIL_PAD), passS = passSeconds(W, T.total + TAIL_PAD, v);
         var field = h('div', { 'class': 'kinetic-field' });
-        stage.appendChild(field);
+        stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note kinetic-tip', text: level === 1 ? '看清楚窗戶上的黃色號碼！' : '看清楚黃色的號碼貼紙' });
-        field.appendChild(tip);
+        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var trainTop = 100;
         /* 鐵軌（在車廂底下） */
         var rail = h('div', { 'class': 'kinetic-rail' }); rail.style.top = (trainTop + T.ch + 2) + 'px'; field.appendChild(rail);
@@ -180,7 +180,7 @@
         for (var i = 0; i < q.cars; i++) {
             var car = h('div', { 'class': 'kinetic-car' });
             car.style.cssText = 'left:' + carOffset(i, T.cw) + 'px;width:' + T.cw + 'px;height:' + T.ch + 'px;';
-            var svg = kit.svg('svg', { 'class': 'kinetic-svg', viewBox: '0 0 230 170', width: T.cw, height: T.ch }, car);
+            var svg = kit.svg('svg', { 'class': 'kinetic-svg', viewBox: '0 0 230 170', width: T.cw, height: T.ch }, car);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             if (i < q.cars - 1) kit.svg('rect', { 'class': 'kinetic-link', x: 226, y: 118, width: 18, height: 9, rx: 3 }, svg);          /* 連結器：最後一節後面沒有車廂，不畫 */
             kit.svg('rect', { 'class': 'kinetic-roof', x: 6, y: 0, width: 218, height: 14, rx: 7 }, svg);
             kit.svg('rect', { 'class': 'kinetic-body', x: 0, y: 8, width: 230, height: 142, rx: 14 }, svg);
@@ -206,21 +206,21 @@
 
         var phase = 'run', done = false, grid = null, x0 = W;
         function setX(x) { x0 = x; strip.style.transform = 'translate3d(' + x.toFixed(1) + 'px,0,0)'; }
-        api.after(LEAD_MS, function () {
-            var t0 = performance.now();
-            api.my.loop(function (now) {
+        api.after(LEAD_MS, function () {                /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+            var t0 = performance.now();                 /* performance.now()：高精度的時間（毫秒），計時用 */
+            api.my.loop(function (now) {                /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                 if (!strip.isConnected || phase !== 'run') return false;
                 var t = (now - t0) / 1000;
                 if (t >= passS) { setX(endX); ask(); return false; }
                 setX(trainX(t, W, v));
             });
             /* 保底：rAF 被暫停（背景分頁）時，時間到了直接跳到下一階段 */
-            api.after(Math.round(passS * 1000) + 500, function () { if (phase === 'run') { setX(endX); ask(); } });
+            api.after(Math.round(passS * 1000) + 500, function () { if (phase === 'run') { setX(endX); ask(); } });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
         });
         function ask() {
             if (phase !== 'run') return;
-            phase = 'ask'; tip.textContent = '剛才窗戶上的號碼是？';
-            grid = kit.btnGrid(field, q.options.map(function (o, k) { return { text: o, kind: 'line', cls: 'kinetic-opt', onTap: function () { judge(k); } }; }), { cols: 2, h: 92, gap: 10, bottom: 8 });
+            phase = 'ask'; tip.textContent = '剛才窗戶上的號碼是？';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            grid = kit.btnGrid(field, q.options.map(function (o, k) { return { text: o, kind: 'line', cls: 'kinetic-opt', onTap: function () { judge(k); } }; }), { cols: 2, h: 92, gap: 10, bottom: 8 });  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
             if (level === 1 && kit.once('kinetic.hint')) kit.hintOn(stage, grid.btns[q.answerIdx], { mode: 'tap', delay: 900, text: '請點剛才看到的號碼' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
             api.timer(ANSWER_S * 1000, function () { judge(-1); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         }
@@ -229,19 +229,19 @@
             if (done || api.over || phase !== 'ask') return;
             done = true; phase = 'end'; api.stopTimer();
             var ok = k === q.answerIdx;
-            grid.btns[q.answerIdx].classList.add('kinetic-ok'); if (k >= 0 && !ok) grid.btns[k].classList.add('kinetic-bad');
-            tip.textContent = '火車倒車回來看看';
+            grid.btns[q.answerIdx].classList.add('kinetic-ok'); if (k >= 0 && !ok) grid.btns[k].classList.add('kinetic-bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            tip.textContent = '火車倒車回來看看';               /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             /* 揭曉：火車倒車，停在貼號碼的那一節（正中央），號碼貼紙放大 */
             var from = x0, to = revealX(W, T.cw, q.target);
-            api.my.tween(REVERSE_MS, function (p) { setX(from + (to - from) * p); }, kit.easeOutCubic).then(function () {
+            api.my.tween(REVERSE_MS, function (p) { setX(from + (to - from) * p); }, kit.easeOutCubic).then(function () {  /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
                 if (!stickerEl || !stickerEl.isConnected) return;
-                stickerEl.classList.add('kinetic-sticker--zoom');
+                stickerEl.classList.add('kinetic-sticker--zoom');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 info.textContent = ok ? '答對了！號碼是 ' + q.number : (k >= 0 ? '正確是 ' + q.number + '，你選了 ' + q.options[k] : '時間到！號碼是 ' + q.number);
                 info.classList.add(ok ? 'kinetic-info--ok' : 'kinetic-info--bad');
             });
-            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: REVERSE_MS + ZOOM_MS + 1500 }); return; }
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: REVERSE_MS + ZOOM_MS + 2600, lines: ['正確的號碼是 ' + q.number + (k >= 0 ? '，你選了 ' + q.options[k] : '（時間到）'), '選項：' + q.options.join('、')] });
+            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: REVERSE_MS + ZOOM_MS + 1500 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: REVERSE_MS + ZOOM_MS + 2600, lines: ['正確的號碼是 ' + q.number + (k >= 0 ? '，你選了 ' + q.options[k] : '（時間到）'), '選項：' + q.options.join('、')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { if (phase === 'ask') judge(q.answerIdx); };

@@ -55,7 +55,7 @@
         chipPlace = h('span', { text: '' });
         chipTime = h('span', { 'class': 'hud-chip__time' });
         invEl = h('div', { 'class': 'hud-inv' });
-        root.appendChild(h('div', { 'class': 'hud-top' }, [
+        root.appendChild(h('div', { 'class': 'hud-top' }, [  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             menuBtn,
             h('div', { 'class': 'hud-chip' }, [chipPlace, chipTime]),
             invEl
@@ -63,7 +63,7 @@
 
         toastBox = h('div', { 'class': 'hud-toast__box' });
         toastEl = h('div', { 'class': 'hud-toast is-hidden' }, [toastBox]);
-        root.appendChild(toastEl);
+        root.appendChild(toastEl);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
 
         bannerEl = h('div', { 'class': 'hud-banner' });
         bannerEl.hidden = true;
@@ -113,36 +113,36 @@
         joy.id = null;
         joy.x = 0;
         joy.y = 0;
-        joyEl.classList.remove('is-active');
+        joyEl.classList.remove('is-active');            /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         setKnob(0, 0);
     }
 
     /* 綁定搖桿的手指事件：pointerdown 記下手指編號，pointermove 依手指與底座中心的距離算方向，超過半徑就縮回半徑長度（向量除以長度＝單位向量） */
     function bindJoystick() {
         function move(e) {
-            var r = joyEl.getBoundingClientRect();
+            var r = joyEl.getBoundingClientRect();      /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
             var radius = r.width * JOY_TRAVEL;
             var dx = (e.clientX - (r.left + r.width / 2)) / radius;
             var dy = (e.clientY - (r.top + r.height / 2)) / radius;
-            var len = Math.sqrt(dx * dx + dy * dy);
+            var len = Math.sqrt(dx * dx + dy * dy);     /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
             if (len > 1) { dx /= len; dy /= len; }
             joy.x = dx;
             joy.y = dy;
             setKnob(dx, dy);
         }
-        joyEl.addEventListener('pointerdown', function (e) {
+        joyEl.addEventListener('pointerdown', function (e) {  /* pointerdown／pointermove／pointerup：指標事件，手指與滑鼠通用（按下、移動、放開） */
             if (modal || !controlsOn) return;
-            e.preventDefault();
+            e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             joy.id = e.pointerId;
-            try { joyEl.setPointerCapture(e.pointerId); } catch (err) { }
-            joyEl.classList.add('is-active');
+            try { joyEl.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
+            joyEl.classList.add('is-active');           /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             move(e);
         });
-        joyEl.addEventListener('pointermove', function (e) {
+        joyEl.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (e.pointerId === joy.id) move(e);
         });
         /* 放開（或手指被取消）就釋放搖桿 */
-        ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (ev) {
+        ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (ev) {  /* forEach：對陣列的每個元素各做一次 */
             joyEl.addEventListener(ev, function (e) {
                 if (e.pointerId === joy.id) releaseJoy();
             });
@@ -156,7 +156,7 @@
             ArrowLeft: 'l', KeyA: 'l', ArrowRight: 'r', KeyD: 'r'
         };
         global.addEventListener('keydown', function (e) {
-            if (map[e.code]) { keys[map[e.code]] = true; e.preventDefault(); return; }
+            if (map[e.code]) { keys[map[e.code]] = true; e.preventDefault(); return; }  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             if (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyE') {
                 if (!modal && actionHandler && !actEl.hidden) { actionHandler(); e.preventDefault(); }
             }
@@ -177,7 +177,7 @@
        → 手指真的按著虛擬搖桿 → 都沒有的話退回鍵盤方向鍵／WASD 的狀態。 */
     HUD.input = function () {
         if (modal || !controlsOn) return { x: 0, y: 0 };
-        if (sim.until > performance.now()) return { x: sim.x, y: sim.y };
+        if (sim.until > performance.now()) return { x: sim.x, y: sim.y };  /* performance.now()：高精度的時間（毫秒），計時用 */
         if (joy.id !== null) return { x: joy.x, y: joy.y };
         var x = (keys.r ? 1 : 0) - (keys.l ? 1 : 0);
         var y = (keys.d ? 1 : 0) - (keys.u ? 1 : 0);
@@ -189,9 +189,9 @@
     HUD.simulate = function (x, y, ms) {
         sim.x = x;
         sim.y = y;
-        sim.until = performance.now() + ms;
+        sim.until = performance.now() + ms;             /* performance.now()：高精度的時間（毫秒），計時用 */
         setKnob(x, y);
-        setTimeout(function () { if (sim.until <= performance.now()) setKnob(0, 0); }, ms + 20);
+        setTimeout(function () { if (sim.until <= performance.now()) setKnob(0, 0); }, ms + 20);  /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
         return UI.wait(ms);
     };
 
@@ -210,7 +210,7 @@
         }
         actEl.hidden = false;
         if (actLabel.textContent !== label) {
-            actLabel.textContent = label;
+            actLabel.textContent = label;               /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             UI.fit(actLabel, UI.cssPx('--fs-sm', 26), 18);
         }
     };
@@ -234,11 +234,11 @@
         }
     }
     /* 設定地點、時間、隨身物品 */
-    HUD.setPlace = function (text) { chipPlace.textContent = text || ''; fitChip(); };
+    HUD.setPlace = function (text) { chipPlace.textContent = text || ''; fitChip(); };  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
     HUD.setTime = function (text) { chipTime.innerHTML = text ? UI.icon('clock') + '<span>' + text + '</span>' : ''; fitChip(); };
     HUD.setInventory = function (items) {
-        invEl.innerHTML = '';
-        items.forEach(function (name) {
+        invEl.innerHTML = '';                           /* innerHTML = ''：把元素裡面的東西全部清掉 */
+        items.forEach(function (name) {                 /* forEach：對陣列的每個元素各做一次 */
             invEl.appendChild(h('div', { 'class': 'hud-inv__item', html: UI.icon(name) }));
         });
         fitChip();
@@ -251,7 +251,7 @@
         toastBox.textContent = text;
         toastEl.classList.remove('is-hidden');
         clearTimeout(toastTimer);
-        toastTimer = setTimeout(function () { toastEl.classList.add('is-hidden'); }, ms || 2600);
+        toastTimer = setTimeout(function () { toastEl.classList.add('is-hidden'); }, ms || 2600);  /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
     };
 
     /* 橫幅（banner）：任務提示，常駐 */
@@ -365,7 +365,7 @@
             function render() {
                 var total = pages.length;
                 pager.textContent = total > 1 ? '第 ' + (page + 1) + ' / ' + total + ' 頁・看完最後一頁再燒掉' : '看完就按下方按鈕，紙條會燒掉';
-                btns.innerHTML = '';
+                btns.innerHTML = '';                    /* innerHTML = ''：把元素裡面的東西全部清掉 */
                 if (page > 0) {
                     btns.appendChild(h('button', {
                         'class': 'btn btn--line', html: UI.icon('back') + '<span>上一頁</span>',

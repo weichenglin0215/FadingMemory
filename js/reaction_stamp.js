@@ -48,12 +48,12 @@
     /* 以 (cx,cy) 為中心、旋轉 deg 度的 w×h 矩形四個角：左上、右上、右下、左下 */
     function corners(cx, cy, deg, w, hh) {
         var c = Math.cos(rad(deg)), s = Math.sin(rad(deg)), out = [];
-        [[-w / 2, -hh / 2], [w / 2, -hh / 2], [w / 2, hh / 2], [-w / 2, hh / 2]].forEach(function (p) {
+        [[-w / 2, -hh / 2], [w / 2, -hh / 2], [w / 2, hh / 2], [-w / 2, hh / 2]].forEach(function (p) {  /* forEach：對陣列的每個元素各做一次 */
             out.push({ x: cx + p[0] * c - p[1] * s, y: cy + p[0] * s + p[1] * c });
         });
         return out;
     }
-    function dist(a, b) { return Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)); }
+    function dist(a, b) { return Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)); }  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
     /* 愛心曲線（經典參數式）：x ＝ 16 sin³t，y ＝ 13 cos t − 5 cos 2t − 2 cos 3t − cos 4t（y 朝上）。
        這裡轉成螢幕座標（y 朝下）、平移到「外框的正中央」是 (0,0)、縮放成寬 w。回傳 { pts: [[x,y]…], w, h } */
     var RAW = (function () {
@@ -68,28 +68,28 @@
     })();
     function heartShape(w) {
         var k = w / RAW.w;
-        return { pts: RAW.pts.map(function (p) { return [(p[0] - RAW.cx) * k, (p[1] - RAW.cy) * k]; }), w: w, h: RAW.h * k };
+        return { pts: RAW.pts.map(function (p) { return [(p[0] - RAW.cx) * k, (p[1] - RAW.cy) * k]; }), w: w, h: RAW.h * k };  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     }
     function toMm(px) { return px * PX_MM; }
     /* 兩個中心的距離（px）與在紅框座標裡的偏移（dx：往紅框的右邊多少、dy：往紅框的下面多少） */
     function centerErr(stamp, frame) {
         var wx = stamp.x - frame.x, wy = stamp.y - frame.y, c = Math.cos(rad(frame.rot)), s = Math.sin(rad(frame.rot));
         var dx = wx * c + wy * s, dy = -wx * s + wy * c;
-        return { dist: Math.sqrt(wx * wx + wy * wy), dx: dx, dy: dy };
+        return { dist: Math.sqrt(wx * wx + wy * wy), dx: dx, dy: dy };  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
     }
     function makeRound(rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var phi = kit.randFloat(-PAPER_TILT, PAPER_TILT, rand);
+        var phi = kit.randFloat(-PAPER_TILT, PAPER_TILT, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         if (Math.abs(phi) < PAPER_TILT_MIN) phi = phi < 0 ? -PAPER_TILT_MIN : PAPER_TILT_MIN;   /* 不要太接近 0：不然不用轉就對了 */
-        var ox = kit.randFloat(-FRAME_OFF.x, FRAME_OFF.x, rand), oy = kit.randFloat(-FRAME_OFF.y, FRAME_OFF.y, rand);
+        var ox = kit.randFloat(-FRAME_OFF.x, FRAME_OFF.x, rand), oy = kit.randFloat(-FRAME_OFF.y, FRAME_OFF.y, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         var c = Math.cos(rad(phi)), s = Math.sin(rad(phi));
         return { phi: phi, frame: { x: PAPER.x + ox * c - oy * s, y: PAPER.y + ox * s + oy * c, rot: phi } };
     }
     /* 愛心印章的外觀：大小、外圈／內圈各自的顏色、粗細、虛線間隔（外圈與內圈的顏色一定不同；虛線樣式也不同） */
     function makeStamp(rand) {
         rand = rand || Math.random;
-        var w = kit.randFloat(HEART_W[0], HEART_W[1], rand), c1 = kit.pick(COLORS, rand), c2;
-        do { c2 = kit.pick(COLORS, rand); } while (c2 === c1);
+        var w = kit.randFloat(HEART_W[0], HEART_W[1], rand), c1 = kit.pick(COLORS, rand), c2;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        do { c2 = kit.pick(COLORS, rand); } while (c2 === c1);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         var d1 = kit.pick(DASHES, rand), g1 = kit.pick(GAPS, rand), d2, g2;
         do { d2 = kit.pick(DASHES, rand); g2 = kit.pick(GAPS, rand); } while (d2 === d1 && g2 === g1);
         return {
@@ -100,13 +100,13 @@
     }
     /* 點 p 是否抓得到愛心（愛心外框再往外多 GRAB px；愛心是空心虛線，所以用整個外框來抓） */
     function insideStamp(p, st, look) {
-        return Math.abs(p.x - st.x) <= look.w / 2 + GRAB && Math.abs(p.y - st.y) <= look.h / 2 + GRAB;
+        return Math.abs(p.x - st.x) <= look.w / 2 + GRAB && Math.abs(p.y - st.y) <= look.h / 2 + GRAB;  /* Math.abs：取絕對值（去掉負號） */
     }
     /* 愛心的起始位置：水平置中、貼近舞台下方（離紅框很遠） */
     function startOf(look, W, H) {
         return { x: W / 2, y: Math.min(H - STAMP_BOTTOM - look.h / 2, 540) };
     }
-    function zoomFor(distPx) { return distPx >= ZOOM_DIST_MAX ? 1 : kit.clamp(ZOOM_REF / Math.max(distPx * 2, 0.5), 2, ZOOM_MAX); }
+    function zoomFor(distPx) { return distPx >= ZOOM_DIST_MAX ? 1 : kit.clamp(ZOOM_REF / Math.max(distPx * 2, 0.5), 2, ZOOM_MAX); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
     /* 結算畫面的評語：依成績回傳一句話 */
     function rating(mm) {
         if (mm < 0.3) return '神乎其技！';
@@ -115,7 +115,7 @@
         if (mm < 6) return '不錯喔！';
         return '再試一次，會更準！';
     }
-    function pts2str(pts) { return pts.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '); }
+    function pts2str(pts) { return pts.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
 
     /* mount：選單按下這款遊戲時會呼叫它。把「單回合計時」的流程（開始、計時、結算、最佳紀錄）交給共用骨架 kit.single，我們只提供 setup（怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
@@ -141,14 +141,14 @@
         var st = { x: s0.x, y: s0.y }, locked = false, hint = null;
         console.log('[心在正中央] 紙張歪 ' + cfg.phi.toFixed(2) + '°，紅框中心 (' + cfg.frame.x.toFixed(1) + ', ' + cfg.frame.y.toFixed(1) + ')，愛心寬 ' + look.w.toFixed(0));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        var svg = kit.svg('svg', { 'class': 'stamp-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
+        var svg = kit.svg('svg', { 'class': 'stamp-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var full = { vx: 0, vy: 0, vw: W, vh: H };
         /* 紙張 */
-        kit.svg('rect', { x: -PAPER.w / 2, y: -PAPER.h / 2, width: PAPER.w, height: PAPER.h, rx: 6, 'class': 'stamp-paper',
+        kit.svg('rect', { x: -PAPER.w / 2, y: -PAPER.h / 2, width: PAPER.w, height: PAPER.h, rx: 6, 'class': 'stamp-paper',  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             transform: 'translate(' + PAPER.x + ' ' + PAPER.y + ') rotate(' + cfg.phi.toFixed(3) + ')' }, svg);
         /* 紅框的四個角標（框外側） */
         var gF = kit.svg('g', { transform: 'translate(' + cfg.frame.x.toFixed(2) + ' ' + cfg.frame.y.toFixed(2) + ') rotate(' + cfg.phi.toFixed(3) + ')' }, svg);
-        [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(function (sg) {
+        [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(function (sg) {  /* forEach：對陣列的每個元素各做一次 */
             var px = sg[0] * (FW / 2 + MARK_GAP), py = sg[1] * (FH / 2 + MARK_GAP);
             kit.svg('polyline', { points: [px - sg[0] * MARK_LEG, py, px, py, px, py - sg[1] * MARK_LEG].join(','), 'class': 'stamp-mark' }, gF);
         });
@@ -164,15 +164,15 @@
         var outerEl = heartEl(outerShape, look.outer);
         heartEl(innerShape, look.inner);
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
-        function paint() { gS.setAttribute('transform', 'translate(' + st.x.toFixed(2) + ' ' + st.y.toFixed(2) + ')'); }
+        function paint() { gS.setAttribute('transform', 'translate(' + st.x.toFixed(2) + ' ' + st.y.toFixed(2) + ')'); }  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         paint();
         var msg = h('div', { 'class': 'stamp-msg' });
-        stage.appendChild(msg);
+        stage.appendChild(msg);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var okBtn = h('button', { 'class': 'btn btn--go stamp-ok', text: '蓋章' });
-        stage.appendChild(okBtn);
+        stage.appendChild(okBtn);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
 
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從愛心中央往「紅框中央」重複移動（第一次的正確答案） */
-        if (kit.once('stamp.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: st.x, y: st.y, dx: cfg.frame.x - st.x, dy: cfg.frame.y - st.y, delay: 400, text: '請把愛心的中心拖到紅框的中心' });
+        if (kit.once('stamp.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: st.x, y: st.y, dx: cfg.frame.x - st.x, dy: cfg.frame.y - st.y, delay: 400, text: '請把愛心的中心拖到紅框的中心' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
 
         kit.dragDamp(stage, {
@@ -182,23 +182,23 @@
                 return false;
             },
             move: function (dx, dy) {
-                st.x = kit.clamp(st.x + dx, 30, W - 30); st.y = kit.clamp(st.y + dy, 30, H - 100);
+                st.x = kit.clamp(st.x + dx, 30, W - 30); st.y = kit.clamp(st.y + dy, 30, H - 100);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
                 paint();
             }
         });
-        kit.onTap(okBtn, function () { submit(); });
+        kit.onTap(okBtn, function () { submit(); });    /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
 
         function submit() {
             if (locked) return;
             locked = true; hideHint();
             okBtn.style.display = 'none';
-            Sfx.play('click');
+            Sfx.play('click');                          /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             var res = centerErr(st, cfg.frame), mm = toMm(res.dist);
             /* 蓋章動畫：往下壓一下 */
             var x0 = st.x, y0 = st.y;
-            my.tween(280, function (e) {
+            my.tween(280, function (e) {                /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
                 var k = 1 - 0.06 * Math.sin(Math.PI * e);
-                gS.setAttribute('transform', 'translate(' + x0.toFixed(2) + ' ' + y0.toFixed(2) + ') scale(' + k.toFixed(4) + ')');
+                gS.setAttribute('transform', 'translate(' + x0.toFixed(2) + ' ' + y0.toFixed(2) + ') scale(' + k.toFixed(4) + ')');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             }, kit.linear).then(function () {
                 outerEl.setAttribute('fill', look.outer.color); outerEl.setAttribute('fill-opacity', 0.18);
                 frameRect.setAttribute('opacity', 1);
@@ -208,19 +208,19 @@
                 kit.svg('line', { x1: fc.x - 9, y1: fc.y, x2: fc.x + 9, y2: fc.y, 'class': 'stamp-fc' }, gRev);
                 kit.svg('line', { x1: fc.x, y1: fc.y - 9, x2: fc.x, y2: fc.y + 9, 'class': 'stamp-fc' }, gRev);
                 kit.svg('circle', { cx: st.x, cy: st.y, r: 4, 'class': 'stamp-sc' }, gRev);
-                msg.textContent = '兩個中心相距 ' + mm.toFixed(4) + ' 公釐';
-                msg.classList.add('stamp-msg--on');
+                msg.textContent = '兩個中心相距 ' + mm.toFixed(4) + ' 公釐';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                msg.classList.add('stamp-msg--on');     /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 var z = zoomFor(res.dist);
                 my.wait(600).then(function () {
                     if (z <= 1) return;
                     var c = { x: (st.x + fc.x) / 2, y: (st.y + fc.y) / 2 };
                     var vw = W / z, vh = H / z;
-                    Sfx.play('zoom');
+                    Sfx.play('zoom');                   /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                     return kit.tweenViewBox(my, svg, full, { vx: c.x - vw / 2, vy: c.y - vh / 2, vw: vw, vh: vh }, 1100, kit.easeInOutCubic);
                 }).then(function () {
                     my.after(1700, function () {
                         api.finish(mm, { lines: [
-                            '愛心中心比紅框中心' + (res.dx >= 0 ? '偏右 ' : '偏左 ') + toMm(Math.abs(res.dx)).toFixed(4) + ' 公釐，' + (res.dy >= 0 ? '偏下 ' : '偏上 ') + toMm(Math.abs(res.dy)).toFixed(4) + ' 公釐',
+                            '愛心中心比紅框中心' + (res.dx >= 0 ? '偏右 ' : '偏左 ') + toMm(Math.abs(res.dx)).toFixed(4) + ' 公釐，' + (res.dy >= 0 ? '偏下 ' : '偏上 ') + toMm(Math.abs(res.dy)).toFixed(4) + ' 公釐',  /* Math.abs：取絕對值（去掉負號） */
                             '（方向是順著歪斜的紙來看）',
                             '只有一次機會，想拚更準就再挑戰一次'
                         ] });

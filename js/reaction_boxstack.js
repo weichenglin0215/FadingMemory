@@ -16,7 +16,7 @@
           照大小一排一排填就對，而「先固定出乎直覺的箱子」反而更糟（剩下的空格就變得很規矩）。所以反過來：固定的箱子優先挑最合直覺的位置，
           最出乎直覺的格子留給玩家填；刪掉多餘的箱子時先試著拿掉最出乎直覺的。
        B. **出題器要求「剩下的空格裡，答案跟每一種直覺填法都不一樣的比例」**（naiveDiff），這個比例隨關卡升高（DIFF_FRAC：原本 20% → 50%，使用者手調成目前的 50% → 80%，
-          實測 3×3 最多只做得到 40% 左右、4×5 到 65%），空格數由參數 EMPTY 控制（V1.43.1：第 1 關 → 第 30 關，預設 3 → 11 個；架子撐不住那麼多空格時取撐得住的最大值，3×3 最多 4 個），
+          實測 3×3 最多只做得到 40% 左右、4×5 到 65%），空格數由參數 EMPTY 控制（V1.43.1：第 1 關 → 第 30 關，目前是 4 → 12 個；架子撐不住那麼多空格時取撐得住的最大值，3×3 最多 4 個），
           最左上、最右下一定是最輕、最重，V1.43.1 起一律**預先放好（固定）**，不用玩家自己放，其餘固定的箱子再另外算「最少幾箱才唯一」。
        C. 階段（STAGES）：第 1～8 關 3×3、重量 1～N（seq）→ 第 9～16 關 3×4、**重量從一大段範圍取、中間有很多空隙（gap）**，
           固定的箱子是 3、17、41 這種數字，要先換算成「第幾輕」才知道它該在哪 → 第 17～24 關 4×4、**重量可以重複、有的重量沒出現
@@ -68,8 +68,8 @@
     var CELL_MAX = 96;                          /* 架上每格最大邊長（px） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function emptyFor(level) { return Math.max(1, Math.round(kit.ramp(level, EMPTY[0], EMPTY[1], RAMP_LEVELS))); }
-    function timeFor(level, empties) { return TIME_BASE + empties * kit.ramp(level, TIME_CELL[0], TIME_CELL[1], 30); }
+    function emptyFor(level) { return Math.max(1, Math.round(kit.ramp(level, EMPTY[0], EMPTY[1], RAMP_LEVELS))); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function timeFor(level, empties) { return TIME_BASE + empties * kit.ramp(level, TIME_CELL[0], TIME_CELL[1], 30); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 這一關屬於哪個難度階段：依關卡編號找出對應的設定（參數區的階段表） */
     function stageOf(level) {
         level = Math.max(1, level);
@@ -86,20 +86,20 @@
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var m = MODES[mode] || MODES.seq;
         if (mode === 'seq' || !m.span) return seqVals(N);
-        var lo = kit.randInt(VAL_LO[0], VAL_LO[1], rand), size = Math.max(N, Math.round(N * m.span));
+        var lo = kit.randInt(VAL_LO[0], VAL_LO[1], rand), size = Math.max(N, Math.round(N * m.span));  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         var pool = []; for (var i = 0; i < size; i++) pool.push(lo + i);
-        var K = m.distinct ? Math.max(2, Math.min(N - 1, Math.round(N * m.distinct))) : N;
-        var picks = kit.shuffle(pool, rand).slice(0, K).sort(function (a, b) { return a - b; });
-        var mult = picks.map(function () { return 1; }), extra = N - K;
-        while (extra > 0) { var q = kit.randInt(0, K - 1, rand); if (mult[q] < DUP_MAX) { mult[q]++; extra--; } }
+        var K = m.distinct ? Math.max(2, Math.min(N - 1, Math.round(N * m.distinct))) : N;  /* Math.round：四捨五入成整數 */
+        var picks = kit.shuffle(pool, rand).slice(0, K).sort(function (a, b) { return a - b; });  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+        var mult = picks.map(function () { return 1; }), extra = N - K;  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        while (extra > 0) { var q = kit.randInt(0, K - 1, rand); if (mult[q] < DUP_MAX) { mult[q]++; extra--; } }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         var out = [];
-        picks.forEach(function (v, q) { for (var t = 0; t < mult[q]; t++) out.push(v); });
+        picks.forEach(function (v, q) { for (var t = 0; t < mult[q]; t++) out.push(v); });  /* forEach：對陣列的每個元素各做一次 */
         return out;
     }
     /* [{ v: 重量, m: 有幾箱 }, …]（由輕到重） */
     function groupsOf(vals) {
         var gs = [];
-        vals.forEach(function (v) { if (gs.length && gs[gs.length - 1].v === v) gs[gs.length - 1].m++; else gs.push({ v: v, m: 1 }); });
+        vals.forEach(function (v) { if (gs.length && gs[gs.length - 1].v === v) gs[gs.length - 1].m++; else gs.push({ v: v, m: 1 }); });  /* forEach：對陣列的每個元素各做一次 */
         return gs;
     }
     /* 隨機產生一種合法擺法（名次 1～N）：每次在「可以放的角落」（上面和左邊都放好了的空格）隨機挑一格放下一個名次 */
@@ -109,7 +109,7 @@
         for (v = 1; v <= N; v++) {
             var cand = [];
             for (i = 0; i < r; i++) for (j = 0; j < c; j++) { var k = i * c + j; if (!g[k] && (i === 0 || g[k - c]) && (j === 0 || g[k - 1])) cand.push(k); }
-            g[kit.pick(cand, rand)] = v;
+            g[kit.pick(cand, rand)] = v;                /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         }
         return g;
     }
@@ -138,7 +138,7 @@
             var g = gs[t], total = 0;
             (function row(a, prev, left, ns) {
                 if (total >= limit) return;
-                if (a === r) { if (left === 0 && fits(shape, ns, g.v)) total += rec(t + 1, ns.slice()); return; }
+                if (a === r) { if (left === 0 && fits(shape, ns, g.v)) total += rec(t + 1, ns.slice()); return; }  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
                 for (var l = shape[a]; l <= prev; l++) {
                     var d = l - shape[a];
                     if (d > left) break;
@@ -154,8 +154,8 @@
     function countFill(r, c, given, limit) { return countFillV(r, c, given, seqVals(r * c), limit); }
     /* 偷懶的填法：剩下的重量由輕到重，照某個順序填進空格（vals＝全部的重量，沒給就是 1～N）。order：'row' 一排一排、'col' 一直行一直行、'diag' 照斜線 */
     function naiveFill(r, c, given, order, vals) {
-        var N = r * c, rest = (vals || seqVals(N)).slice(), cells = [], k, i, j, s;
-        for (k = 0; k < N; k++) if (given[k]) { var p = rest.indexOf(given[k]); if (p >= 0) rest.splice(p, 1); }
+        var N = r * c, rest = (vals || seqVals(N)).slice(), cells = [], k, i, j, s;  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        for (k = 0; k < N; k++) if (given[k]) { var p = rest.indexOf(given[k]); if (p >= 0) rest.splice(p, 1); }  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         if (order === 'row') for (k = 0; k < N; k++) cells.push(k);
         else if (order === 'col') for (j = 0; j < c; j++) for (i = 0; i < r; i++) cells.push(i * c + j);
         else for (s = 0; s <= r + c - 2; s++) for (i = 0; i < r; i++) { j = s - i; if (j >= 0 && j < c) cells.push(i * c + j); }
@@ -167,7 +167,7 @@
     function sameArr(a, b) { for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return false; return true; }
     /* 偷懶的填法有沒有剛好對 */
     function naiveWorks(r, c, given, sol, vals) {
-        return ORDERS.some(function (o) { return sameArr(naiveFill(r, c, given, o, vals), sol); });
+        return ORDERS.some(function (o) { return sameArr(naiveFill(r, c, given, o, vals), sol); });  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
     }
     /* 三種偷懶的填法裡，答案跟「每一種」都不一樣的空格比例的最小值（越大＝越不能靠直覺；固定的箱子不算） */
     function naiveDiff(r, c, given, sol, vals) {
@@ -197,8 +197,8 @@
     function surprise(r, c, rk) {
         var N = r * c, none = [], k;
         for (k = 0; k < N; k++) none.push(0);
-        var fills = ORDERS.map(function (o) { return naiveFill(r, c, none, o); });
-        return rk.map(function (x, q) { return Math.min.apply(null, fills.map(function (f) { return Math.abs(f[q] - x); })); });
+        var fills = ORDERS.map(function (o) { return naiveFill(r, c, none, o); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        return rk.map(function (x, q) { return Math.min.apply(null, fills.map(function (f) { return Math.abs(f[q] - x); })); });  /* Math.abs：取絕對值（去掉負號） */
     }
     /* 出一題：{ r, c, mode, vals（由輕到重）, sol[], given[]（0＝空格）, diff } —— 答案唯一、固定的箱子偏向合直覺的位置、空格裡三種直覺填法都對不上的比例夠高 */
     function makePuzzle(level, rand) {
@@ -222,7 +222,7 @@
             var free = order.filter(function (q) { return !given[q]; });                    /* 現在的空格數＝這題「答案唯一」撐得住的最大空格數 */
             var shortBy = Math.max(0, want - free.length);                                  /* 要的空格比撐得住的多幾個（0＝夠） */
             for (var e = 0; e < free.length - want; e++) given[free[e]] = sol[free[e]];     /* 空格比要的多：多固定幾箱（挑最合直覺的）*/
-            var diff = naiveDiff(r, c, given, sol, vals), cand = { r: r, c: c, mode: st.mode, vals: vals, sol: sol, given: given, diff: diff, empties: given.filter(function (v) { return !v; }).length };
+            var diff = naiveDiff(r, c, given, sol, vals), cand = { r: r, c: c, mode: st.mode, vals: vals, sol: sol, given: given, diff: diff, empties: given.filter(function (v) { return !v; }).length };  /* filter：留下符合條件的元素，回傳新陣列 */
             if (!naiveWorks(r, c, given, sol, vals) && !shortBy && diff >= frac) return cand;
             if (!naiveWorks(r, c, given, sol, vals) && diff - shortBy * 10 > bestScore) { best = cand; bestScore = diff - shortBy * 10; }
             if (!best) best = cand;
@@ -258,35 +258,35 @@
         api.info = pz;                                  /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[疊箱子] 第 ' + level + ' 關：' + r + '×' + c + '（' + pz.mode + '），固定 ' + pz.given.filter(Boolean).length + ' 箱；重量 ' + pz.vals.join(','));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
         var W = stage.clientWidth || 472;
-        var cell = Math.min(CELL_MAX, Math.floor((W * 0.86 - c * 6) / c));
+        var cell = Math.min(CELL_MAX, Math.floor((W * 0.86 - c * 6) / c));  /* Math.floor：無條件捨去成整數 */
         var g = pz.given.slice(), hinted = {}, pick = 0, hintsLeft = HINTS, solved = false, flagged = -1, dead = false;
 
-        var wrap = h('div', { 'class': 'boxstack-wrap' });
+        var wrap = h('div', { 'class': 'boxstack-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
         var shelfBox = h('div', { 'class': 'boxstack-shelfbox' });
         var shelf = h('div', { 'class': 'boxstack-shelf' });
-        shelf.style.setProperty('--boxstack-c', c);
-        shelf.style.setProperty('--boxstack-cell', cell + 'px');
+        shelf.style.setProperty('--boxstack-c', c);     /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
+        shelf.style.setProperty('--boxstack-cell', cell + 'px');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
         var cells = [];
         for (var k = 0; k < N; k++) {
             var cl = h('div', { 'class': 'boxstack-cell' });
             (function (kk) { kit.onTap(cl, function () { tapCell(kk); }); })(k);  /* 用立即執行函式存住這一次迴圈的變數（不這樣寫，每個元素點下去都會拿到迴圈結束時的值） */
-            shelf.appendChild(cl); cells.push(cl);
+            shelf.appendChild(cl); cells.push(cl);      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         }
-        shelfBox.appendChild(h('div', { 'class': 'boxstack-arrow boxstack-arrow--right', text: weak ? '越右邊越重（可一樣重）→' : '越右邊越重 →' }));
+        shelfBox.appendChild(h('div', { 'class': 'boxstack-arrow boxstack-arrow--right', text: weak ? '越右邊越重（可一樣重）→' : '越右邊越重 →' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var row = h('div', { 'class': 'boxstack-shelfrow' }, [shelf, h('div', { 'class': 'boxstack-arrow boxstack-arrow--down', text: weak ? '越下面越重 ↓' : '越下面越重 ↓' })]);
         shelfBox.appendChild(row);
         var tray = h('div', { 'class': 'boxstack-tray' });
         var tipDefault = weak ? '點下面的重量，再點空格放進去。一樣重的箱子可以並排' : '點下面的重量，再點空格放進去';
-        var tip = h('div', { 'class': 'boxstack-tip', text: tipDefault });
+        var tip = h('div', { 'class': 'boxstack-tip', text: tipDefault });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
         var tools = h('div', { 'class': 'boxstack-tools' });
-        var btnHint = h('button', { 'class': 'btn btn--line boxstack-tool', type: 'button', text: '提示 ' + hintsLeft });
-        var btnReset = h('button', { 'class': 'btn btn--line boxstack-tool', type: 'button', text: '重來' });
-        kit.onTap(btnHint, useHint);
-        kit.onTap(btnReset, reset);
-        if (HINTS > 0) tools.appendChild(btnHint);
+        var btnHint = h('button', { 'class': 'btn btn--line boxstack-tool', type: 'button', text: '提示 ' + hintsLeft });  /* 「提示」按鈕（文字會顯示還剩幾次提示） */
+        var btnReset = h('button', { 'class': 'btn btn--line boxstack-tool', type: 'button', text: '重來' });  /* 「重來」按鈕 */
+        kit.onTap(btnHint, useHint);                    /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        kit.onTap(btnReset, reset);                     /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        if (HINTS > 0) tools.appendChild(btnHint);      /* 提示次數 HINTS 設成 0，就連提示按鈕都不放 */
         tools.appendChild(btnReset);
         wrap.appendChild(shelfBox); wrap.appendChild(tip); wrap.appendChild(tray); wrap.appendChild(tools);
-        stage.appendChild(wrap);
+        stage.appendChild(wrap);                        /* 把整個遊戲區放進舞台（放進去，畫面上才看得到） */
 
         function placedCount() { var s = {}; g.forEach(function (v) { if (v) s[v] = (s[v] || 0) + 1; }); return s; }
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
@@ -303,9 +303,9 @@
                 if (k === flagged) cls += ' boxstack-cell--flag';
                 if (solved) cls += ' boxstack-cell--ok';
                 cells[k].className = cls;
-                cells[k].textContent = g[k] ? String(g[k]) : '';
+                cells[k].textContent = g[k] ? String(g[k]) : '';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             }
-            tray.innerHTML = '';
+            tray.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             var used = placedCount();
             groups.forEach(function (gr) {
                 var left = gr.m - (used[gr.v] || 0), first = true;
@@ -316,7 +316,7 @@
                     tray.appendChild(b);
                 }
             });
-            if (vs.length && !solved) tip.textContent = weak ? '紅色的兩箱違反規矩：上面的不能比下面重、左邊的不能比右邊重' : '紅色的兩箱違反規矩：上面的要比下面輕、左邊的要比右邊輕';
+            if (vs.length && !solved) tip.textContent = weak ? '紅色的兩箱違反規矩：上面的不能比下面重、左邊的不能比右邊重' : '紅色的兩箱違反規矩：上面的要比下面輕、左邊的要比右邊輕';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         }
         function tapCell(k) {
             if (solved || dead || pz.given[k] || hinted[k]) return;
@@ -361,16 +361,16 @@
             for (var k = 0; k < N; k++) if (!pz.given[k] && g[k] !== pz.sol[k]) { g[k] = pz.sol[k]; hinted[k] = true; }
             paint();
             tip.textContent = '時間到了！黃色的是正確答案';
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: FAIL_HOLD_MS, lines: ['時間到了'] });
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: FAIL_HOLD_MS, lines: ['時間到了'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 過關：鎖住畫面、顯示成功效果，並呼叫 api.pass 進下一關（或結算） */
         function win() {
             api.stopTimer();
             solved = true; pick = 0; paint();
             tip.textContent = weak ? '每一箱都不比上面、左邊的輕！' : '每一箱都比上面、左邊的重！';
-            kit.flash(stage, true, api.my);
-            api.pass({ delay: PASS_DELAY_MS });
+            kit.flash(stage, true, api.my);             /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.pass({ delay: PASS_DELAY_MS });         /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { g = pz.sol.slice(); paint(); win(); };

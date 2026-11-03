@@ -58,12 +58,12 @@
     var BANDS = ['shape', 'fruit', 'digit', 'char'];  /* 四條刮刮帶的題材：shape 形狀、fruit 水果、digit 數字、char 中文字 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function bandFor(level) { return BANDS[Math.floor((level - 1) / BAND_EVERY) % BANDS.length]; }
+    function bandFor(level) { return BANDS[Math.floor((level - 1) / BAND_EVERY) % BANDS.length]; }  /* Math.floor：無條件捨去成整數 */
     /* 宮格邊長：第 1～3 關 3，第 4～7 關 4，第 8～12 關 5，第 13 關起 6 */
     function gridFor(level) { return level <= 3 ? 3 : (level <= 7 ? 4 : (level <= 12 ? 5 : 6)); }
-    function shownFrac(level) { return kit.ramp(level, SHOWN[0], SHOWN[1], MAX_LEVEL); }
-    function shownCount(level) { var g = gridFor(level); return Math.max(2, Math.round(shownFrac(level) * g * g)); }
-    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], MAX_LEVEL) * 1000); }
+    function shownFrac(level) { return kit.ramp(level, SHOWN[0], SHOWN[1], MAX_LEVEL); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function shownCount(level) { var g = gridFor(level); return Math.max(2, Math.round(shownFrac(level) * g * g)); }  /* Math.round：四捨五入成整數 */
+    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], MAX_LEVEL) * 1000); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 這一關用哪 K 種圖案（依題材；中文字依關卡往後面（筆劃多的）挑） */
     function pickPatterns(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
@@ -72,33 +72,33 @@
         else if (band === 'fruit') pool = FRUITS;
         else if (band === 'digit') pool = DIGITS;
         else {
-            var span = 10, start = Math.round((CHARS.length - span) * Math.min(1, (level - 1) / (MAX_LEVEL - 1)));
+            var span = 10, start = Math.round((CHARS.length - span) * Math.min(1, (level - 1) / (MAX_LEVEL - 1)));  /* Math.round：四捨五入成整數 */
             pool = CHARS.slice(start, start + span);
         }
-        return kit.shuffle(pool.slice(), rand).slice(0, K);
+        return kit.shuffle(pool.slice(), rand).slice(0, K);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
     }
     /* 出牌：回傳 { band, grid, patterns（上方顯示的 K 種）, target, cells（12 張牌的圖案）, shown（每張牌露出的宮格編號） }
        inkOf(pattern) 可選：回傳這個圖案「有筆畫」的宮格編號陣列（瀏覽器裡用 canvas 量）；露出的格子優先從裡面挑 */
     function makeBoard(level, rand, inkOf) {
         rand = rand || Math.random;
         var patterns = pickPatterns(level, rand), target = patterns[0], others = patterns.slice(1);
-        var single = kit.randInt(0, others.length - 1, rand), cells = [target, target, target];
-        others.forEach(function (s, i) { cells.push(s); if (i !== single) cells.push(s); });
-        cells = kit.shuffle(cells, rand);
+        var single = kit.randInt(0, others.length - 1, rand), cells = [target, target, target];  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+        others.forEach(function (s, i) { cells.push(s); if (i !== single) cells.push(s); });  /* forEach：對陣列的每個元素各做一次 */
+        cells = kit.shuffle(cells, rand);               /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         var g = gridFor(level), k = Math.min(g * g, shownCount(level));
-        var shown = cells.map(function (p) {
+        var shown = cells.map(function (p) {            /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var ink = inkOf ? inkOf(p, g) : null, all = [], i;
             for (i = 0; i < g * g; i++) all.push(i);
-            var first = ink && ink.length ? kit.shuffle(ink.slice(), rand) : [];
-            var rest = kit.shuffle(all.filter(function (x) { return first.indexOf(x) < 0; }), rand);
-            return first.concat(rest).slice(0, k).sort(function (a, b) { return a - b; });
+            var first = ink && ink.length ? kit.shuffle(ink.slice(), rand) : [];  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+            var rest = kit.shuffle(all.filter(function (x) { return first.indexOf(x) < 0; }), rand);  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+            return first.concat(rest).slice(0, k).sort(function (a, b) { return a - b; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
         });
-        return { band: bandFor(level), grid: g, patterns: kit.shuffle(patterns.slice(), rand), target: target, cells: cells, shown: shown };
+        return { band: bandFor(level), grid: g, patterns: kit.shuffle(patterns.slice(), rand), target: target, cells: cells, shown: shown };  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
     }
     /* 目前翻開的牌中，有沒有任何圖案達到 TARGET_COUNT 張 */
     function winner(cells, revealed) {
         var cnt = {};
-        revealed.forEach(function (i) { cnt[cells[i]] = (cnt[cells[i]] || 0) + 1; });
+        revealed.forEach(function (i) { cnt[cells[i]] = (cnt[cells[i]] || 0) + 1; });  /* forEach：對陣列的每個元素各做一次 */
         for (var k in cnt) if (cnt[k] >= TARGET_COUNT) return k;
         return null;
     }
@@ -134,7 +134,7 @@
         var size = cv.width, d = cv.getContext('2d').getImageData(0, 0, size, size).data, out = [], cs = size / gridN;
         for (var r = 0; r < gridN; r++) for (var c = 0; c < gridN; c++) {
             var n = 0, tot = 0;
-            for (var y = Math.floor(r * cs); y < Math.floor((r + 1) * cs); y += 2) for (var x = Math.floor(c * cs); x < Math.floor((c + 1) * cs); x += 2) { tot++; if (d[(y * size + x) * 4 + 3] > 100) n++; }
+            for (var y = Math.floor(r * cs); y < Math.floor((r + 1) * cs); y += 2) for (var x = Math.floor(c * cs); x < Math.floor((c + 1) * cs); x += 2) { tot++; if (d[(y * size + x) * 4 + 3] > 100) n++; }  /* Math.floor：無條件捨去成整數 */
             if (tot && n / tot >= 0.15) out.push(r * gridN + c);
         }
         return out;
@@ -185,14 +185,14 @@
         bd.patterns.forEach(function (p) {
             var cv = document.createElement('canvas'); cv.width = refSize * SCALE; cv.height = refSize * SCALE; cv.className = 'scratch-refc';
             drawPattern(cv.getContext('2d'), band, p, refSize * SCALE, inkColor);
-            refRow.appendChild(h('div', { 'class': 'scratch-refi' }, [cv]));
+            refRow.appendChild(h('div', { 'class': 'scratch-refi' }, [cv]));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         });
-        stage.appendChild(h('div', { 'class': 'scratch-reftitle', text: '這一關的圖案（有 3 張一模一樣的）' }));
+        stage.appendChild(h('div', { 'class': 'scratch-reftitle', text: '這一關的圖案（有 3 張一模一樣的）' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         stage.appendChild(refRow);
 
         /* 下方：12 張牌 */
         var bw = COLS * CELL + (COLS - 1) * GAP, bx0 = Math.round((W - bw) / 2);
-        var board = h('div', { 'class': 'scratch-board' });
+        var board = h('div', { 'class': 'scratch-board' });  /* board：盤面（所有格子都放在裡面） */
         board.style.left = bx0 + 'px'; board.style.width = bw + 'px'; board.style.height = (ROWS * CELL + (ROWS - 1) * GAP) + 'px';
         stage.appendChild(board);
         var info = h('div', { 'class': 'scratch-info', text: '已刮開 0 / ' + MAX_REV + ' 張（點一張牌就整張刮開）' });
@@ -209,31 +209,31 @@
             var g = cv.getContext('2d'), grad = g.createLinearGradient(0, 0, SZ, SZ); grad.addColorStop(0, coat); grad.addColorStop(1, coat2);
             g.fillStyle = grad; g.fillRect(0, 0, SZ, SZ);
             var cs2 = SZ / gridN;
-            bd.shown[i].forEach(function (c) { g.clearRect(Math.floor((c % gridN) * cs2), Math.floor(Math.floor(c / gridN) * cs2), Math.ceil(cs2), Math.ceil(cs2)); });
+            bd.shown[i].forEach(function (c) { g.clearRect(Math.floor((c % gridN) * cs2), Math.floor(Math.floor(c / gridN) * cs2), Math.ceil(cs2), Math.ceil(cs2)); });  /* Math.ceil：無條件進位成整數 */
             g.strokeStyle = 'rgba(74,59,30,0.35)'; g.lineWidth = 2;                   /* 宮格線（讓玩家看出每一格的位置） */
             for (var k = 1; k < gridN; k++) { g.beginPath(); g.moveTo(k * cs2, 0); g.lineTo(k * cs2, SZ); g.moveTo(0, k * cs2); g.lineTo(SZ, k * cs2); g.stroke(); }
             el.appendChild(under); el.appendChild(cv); board.appendChild(el);
             cards.push({ el: el });
-            kit.onTap(el, function () { openCard(i); });
+            kit.onTap(el, function () { openCard(i); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
         });
         /* 操作提示（只在第一次進遊戲時）：手指點第一張牌（示範怎麼刮開，刮哪一張沒有標準答案） */
         if (level === 1 && kit.once('scratch.hint')) hint = kit.hintOn(stage, cards[0].el, { mode: 'tap', delay: 400, text: '請點牌，把它刮開' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
 
         function openCard(i) {
-            if (done || api.over || revealed.indexOf(i) >= 0) return;
+            if (done || api.over || revealed.indexOf(i) >= 0) return;  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             hideHint();
             revealed.push(i); rev++;
-            cards[i].el.classList.add('scratch-cell--open');
-            Sfx.play('pop');
-            info.textContent = '已刮開 ' + rev + ' / ' + MAX_REV + ' 張';
+            cards[i].el.classList.add('scratch-cell--open');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            Sfx.play('pop');                            /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+            info.textContent = '已刮開 ' + rev + ' / ' + MAX_REV + ' 張';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             var w = winner(bd.cells, revealed);
             if (w) { win(w); return; }
             if (rev >= MAX_REV) lose('刮開 ' + MAX_REV + ' 張還沒找到三張一樣的');
         }
         function showAll(sym) {
             cards.forEach(function (c, i) {
-                c.el.classList.add('scratch-cell--open');
+                c.el.classList.add('scratch-cell--open');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 if (revealed.indexOf(i) < 0) c.el.classList.add('scratch-cell--rest');
                 if (sym && bd.cells[i] === sym) c.el.classList.add('scratch-cell--hit');
             });
@@ -241,12 +241,12 @@
         /* 過關：鎖住畫面、顯示成功效果，並呼叫 api.pass 進下一關（或結算） */
         function win(sym) {
             done = true; showAll(sym);
-            api.pass({ delay: 1500 });
+            api.pass({ delay: 1500 });                  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
         }
         function lose(why) {
             if (done) return;
-            done = true; showAll(bd.target); info.textContent = why;
-            api.fail({ delay: 2600, lines: [why, '三張一樣的是「' + bd.target + '」', '比對露出的宮格：同一個圖案露出的格子，位置會跟完整圖案的筆畫對得起來'] });
+            done = true; showAll(bd.target); info.textContent = why;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            api.fail({ delay: 2600, lines: [why, '三張一樣的是「' + bd.target + '」', '比對露出的宮格：同一個圖案露出的格子，位置會跟完整圖案的筆畫對得起來'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         api.timer(timeMs(level), function () { lose('時間到！'); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */

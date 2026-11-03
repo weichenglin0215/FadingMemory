@@ -34,8 +34,8 @@
     /* 出題：回傳 { w1, w2, th1, th2, d0, rel, t0（第一次重疊的秒數）} */
     function makeRound(rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var w1 = kit.randFloat(W1[0], W1[1], rand), k = kit.randFloat(K[0], K[1], rand), w2 = w1 / k, rel = w1 - w2;
-        var th1 = rand() * 360, d0 = kit.randFloat(60, 300, rand);
+        var w1 = kit.randFloat(W1[0], W1[1], rand), k = kit.randFloat(K[0], K[1], rand), w2 = w1 / k, rel = w1 - w2;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+        var th1 = rand() * 360, d0 = kit.randFloat(60, 300, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         while (d0 / rel < FIRST_MIN) d0 += 360;
         return { w1: w1, w2: w2, th1: th1, th2: (th1 + d0) % 360, d0: d0, rel: rel, t0: d0 / rel };
     }
@@ -47,7 +47,7 @@
     }
     /* 離 t 最近的一次重疊時刻（秒） */
     function nearestOverlap(q, t) {
-        var n = Math.max(0, Math.round((q.rel * t - q.d0) / 360));
+        var n = Math.max(0, Math.round((q.rel * t - q.d0) / 360));  /* Math.round：四捨五入成整數 */
         return (q.d0 + 360 * n) / q.rel;
     }
     /* 結算畫面的評語：依成績回傳一句話 */
@@ -78,32 +78,32 @@
         var q = makeRound(), started = false, locked = false, t0 = 0, loop = null;
         console.log('[兩針重疊] 長針 ' + q.w1.toFixed(1) + ' 度/秒、短針 ' + q.w2.toFixed(1) + ' 度/秒；第一次重疊 ' + q.t0.toFixed(3) + ' 秒；之後每 ' + (360 / q.rel).toFixed(3) + ' 秒一次');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        var svg = kit.svg('svg', { 'class': 'handsmeet-svg', viewBox: '0 0 472 560', width: 472, height: 560 }, stage);
-        kit.svg('circle', { cx: CX, cy: CY, r: R, 'class': 'handsmeet-dial' }, svg);
+        var svg = kit.svg('svg', { 'class': 'handsmeet-svg', viewBox: '0 0 472 560', width: 472, height: 560 }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('circle', { cx: CX, cy: CY, r: R, 'class': 'handsmeet-dial' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var h2 = kit.svg('line', { x1: CX, y1: CY, x2: CX, y2: CY - LEN2, 'class': 'handsmeet-hand2' }, svg);
         var h1 = kit.svg('line', { x1: CX, y1: CY, x2: CX, y2: CY - LEN1, 'class': 'handsmeet-hand1' }, svg);
         kit.svg('circle', { cx: CX, cy: CY, r: 9, 'class': 'handsmeet-pin' }, svg);
         var msg = h('div', { 'class': 'handsmeet-msg', text: '' });
-        stage.appendChild(msg);
+        stage.appendChild(msg);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var btn = h('button', { 'class': 'btn btn--go handsmeet-btn', text: '重疊！' });
         btn.disabled = true;
-        stage.appendChild(btn);
+        stage.appendChild(btn);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         function setHands(sec) {
-            h1.setAttribute('transform', 'rotate(' + handAngle(q.th1, q.w1, sec).toFixed(2) + ' ' + CX + ' ' + CY + ')');
-            h2.setAttribute('transform', 'rotate(' + handAngle(q.th2, q.w2, sec).toFixed(2) + ' ' + CX + ' ' + CY + ')');
+            h1.setAttribute('transform', 'rotate(' + handAngle(q.th1, q.w1, sec).toFixed(2) + ' ' + CX + ' ' + CY + ')');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+            h2.setAttribute('transform', 'rotate(' + handAngle(q.th2, q.w2, sec).toFixed(2) + ' ' + CX + ' ' + CY + ')');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         }
         setHands(0);
 
         function begin() {
             if (started) return;
-            started = true; btn.disabled = false; t0 = performance.now();
-            msg.textContent = '轉動中…抓準它們疊在一起的瞬間！';
-            loop = my.loop(function () { if (locked) return false; setHands((performance.now() - t0) / 1000); });
+            started = true; btn.disabled = false; t0 = performance.now();  /* performance.now()：高精度的時間（毫秒），計時用 */
+            msg.textContent = '轉動中…抓準它們疊在一起的瞬間！';       /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            loop = my.loop(function () { if (locked) return false; setHands((performance.now() - t0) / 1000); });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
             my.after(MAX_S * 1000, function () {
                 if (locked) return;
                 locked = true; loop && loop.stop(); btn.disabled = true;
-                msg.textContent = MAX_S + ' 秒內沒有按，重新開始（不算一次機會）';
-                Sfx.play('bad');
+                msg.textContent = MAX_S + ' 秒內沒有按，重新開始（不算一次機會）';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                Sfx.play('bad');                        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 my.after(1600, function () { api.restart(); });
             });
         }
@@ -112,7 +112,7 @@
         function tapAtMs(ms) {
             if (locked || !started) return;
             locked = true; if (loop) loop.stop(); btn.disabled = true;
-            Sfx.play('click');
+            Sfx.play('click');                          /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             var sec = ms / 1000, real = diffAt(q, sec);
             setHands(sec);
             msg.textContent = '兩針夾角 ' + real.toFixed(4) + ' 度';
@@ -125,7 +125,7 @@
                 });
             });
         }
-        kit.onTap(btn, function (e) { tapAtMs(kit.evT(e) - t0); });
+        kit.onTap(btn, function (e) { tapAtMs(kit.evT(e) - t0); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
 
         G.debug = {
             state: function () { return { q: q, started: started, locked: locked }; },

@@ -36,11 +36,11 @@
     var UNIT = ['仟', '佰', '拾', ''];                 /* 支票金額每一位的單位：仟、佰、拾，個位數不寫單位 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function digitsFor(level) { return kit.clamp(Math.round(kit.ramp(level, DIGITS[0], DIGITS[1], RAMP_LEVELS)), DIGITS[0], DIGITS[1]); }
-    function ansMs(level) { return Math.round((TIME_BASE + TIME_PER_DIGIT * digitsFor(level)) * kit.ramp(level, TIME_MUL[0], TIME_MUL[1], RAMP_LEVELS) * 1000); }
+    function digitsFor(level) { return kit.clamp(Math.round(kit.ramp(level, DIGITS[0], DIGITS[1], RAMP_LEVELS)), DIGITS[0], DIGITS[1]); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function ansMs(level) { return Math.round((TIME_BASE + TIME_PER_DIGIT * digitsFor(level)) * kit.ramp(level, TIME_MUL[0], TIME_MUL[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
     /* 0～9999 的大寫寫法（沒有「元整」）：前面的 0 不寫，中間連續的 0 只寫一個「零」，結尾的 0 不寫 */
     function section(n) {
-        var d = [Math.floor(n / 1000) % 10, Math.floor(n / 100) % 10, Math.floor(n / 10) % 10, n % 10];
+        var d = [Math.floor(n / 1000) % 10, Math.floor(n / 100) % 10, Math.floor(n / 10) % 10, n % 10];  /* Math.floor：無條件捨去成整數 */
         var out = '', zero = false;
         for (var i = 0; i < 4; i++) {
             if (d[i] === 0) { if (out) zero = true; }
@@ -50,7 +50,7 @@
     }
     /* 金額 n（1～99,999,999）的大寫：肆仟參佰零捌元整 */
     function upper(n) {
-        var hi = Math.floor(n / 10000), lo = n % 10000, s = '';
+        var hi = Math.floor(n / 10000), lo = n % 10000, s = '';  /* Math.floor：無條件捨去成整數 */
         if (hi > 0) { s += section(hi) + '萬'; if (lo > 0 && lo < 1000) s += '零'; }
         if (lo > 0) s += section(lo);
         return s + '元整';
@@ -61,7 +61,7 @@
         function sec(t) {
             var total = 0, cur = 0;
             for (var i = 0; i < t.length; i++) {
-                var ch = t[i], di = DIG.indexOf(ch);
+                var ch = t[i], di = DIG.indexOf(ch);    /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                 if (ch === '零') continue;
                 if (di > 0) cur = di;
                 else if (ch === '仟') { total += cur * 1000; cur = 0; }
@@ -70,7 +70,7 @@
             }
             return total + cur;
         }
-        var p = s.indexOf('萬');
+        var p = s.indexOf('萬');                         /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         if (p < 0) return sec(s);
         return sec(s.slice(0, p)) * 10000 + sec(s.slice(p + 1));
     }
@@ -81,8 +81,8 @@
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var wantZero = rand() < zeroP;
         for (var tr = 0; tr < 200; tr++) {
-            var s = String(kit.randInt(1, 9, rand));
-            for (var i = 1; i < digits; i++) s += String(kit.randInt(0, 9, rand));
+            var s = String(kit.randInt(1, 9, rand));    /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+            for (var i = 1; i < digits; i++) s += String(kit.randInt(0, 9, rand));  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             var hasZero = s.slice(1, digits - 1).indexOf('0') >= 0;
             if (wantZero && !hasZero) { var p = kit.randInt(1, Math.max(1, digits - 2), rand); s = s.slice(0, p) + '0' + s.slice(p + 1); }
             if (!wantZero && hasZero) continue;
@@ -109,7 +109,7 @@
         /* b. 相鄰兩位對調：4308 → 4038 */
         for (i = 0; i + 1 < len; i++) if (s[i] !== s[i + 1]) add(s.slice(0, i) + s[i + 1] + s[i] + s.slice(i + 2), 1 + 2 * hard);
         /* c. 某一位 ±1：4308 → 4309／4208 */
-        for (i = 0; i < len; i++) [-1, 1].forEach(function (dl) {
+        for (i = 0; i < len; i++) [-1, 1].forEach(function (dl) {  /* forEach：對陣列的每個元素各做一次 */
             var d = parseInt(s[i], 10) + dl;
             if (d >= 0 && d <= 9) add(s.slice(0, i) + d + s.slice(i + 1), (i === len - 1 ? 1 + 2 * hard : 0.6 + hard));
         });
@@ -117,7 +117,7 @@
         var SIM = { '3': '8', '8': '3', '1': '7', '7': '1', '6': '9', '9': '6' };
         for (i = 0; i < len; i++) if (SIM[s[i]]) add(s.slice(0, i) + SIM[s[i]] + s.slice(i + 1), 0.5 + hard);
         if (!c.length) return n + 10;
-        var total = c.reduce(function (a, x) { return a + x.w; }, 0), x = rand() * total;
+        var total = c.reduce(function (a, x) { return a + x.w; }, 0), x = rand() * total;  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
         for (var j = 0; j < c.length; j++) { x -= c[j].w; if (x <= 0) return c[j].v; }
         return c[c.length - 1].v;
     }
@@ -143,7 +143,7 @@
     function makeQuestion(level, rand, wantMatch) {
         rand = rand || Math.random;
         if (wantMatch == null) wantMatch = rand() < 0.5;
-        var hard = kit.ramp(level, 0, 1, RAMP_LEVELS);
+        var hard = kit.ramp(level, 0, 1, RAMP_LEVELS);  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
         for (var tr = 0; tr < 200; tr++) {
             var n = randomAmount(digitsFor(level), kit.ramp(level, ZERO_P[0], ZERO_P[1], RAMP_LEVELS), rand);
             var right = upper(n), other = null, written = right;
@@ -197,8 +197,8 @@
         ]);
         var ask = h('div', { 'class': 'qz-note chequeamt-ask', text: '大寫和小寫相符嗎？' });
         var reveal = h('div', { 'class': 'qz-note chequeamt-reveal' });
-        stage.appendChild(card); stage.appendChild(ask); stage.appendChild(reveal);
-        var grid = kit.btnGrid(stage, [
+        stage.appendChild(card); stage.appendChild(ask); stage.appendChild(reveal);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var grid = kit.btnGrid(stage, [                 /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
             { text: '不符', kind: 'primary', onTap: function () { judge(false); } },
             { text: '相符', kind: 'go', onTap: function () { judge(true); } }
         ], { h: 96 });
@@ -209,13 +209,13 @@
         function judge(say) {
             if (api.over) return;
             var ok = say === q.match;
-            var bigEl = card.querySelector('.chequeamt-big');
+            var bigEl = card.querySelector('.chequeamt-big');  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
             if (!q.match) { reveal.innerHTML = '正確的大寫：' + q.right + '<br>支票上寫的：' + diffMark(q.right, q.written); bigEl.innerHTML = diffMark(q.right, q.written); }
-            else reveal.textContent = '大寫「' + q.right + '」＝ ' + q.small.replace('NT$ ', '') + ' 元，完全相符';
-            card.classList.add(ok ? 'chequeamt-card--ok' : 'chequeamt-card--bad');
-            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1300 }); return; }
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: 2600, lines: [
+            else reveal.textContent = '大寫「' + q.right + '」＝ ' + q.small.replace('NT$ ', '') + ' 元，完全相符';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            card.classList.add(ok ? 'chequeamt-card--ok' : 'chequeamt-card--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1300 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 2600, lines: [            /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 (say == null ? '時間到！' : (q.match ? '其實兩者是相符的' : '其實兩者不相符')) + '：' + q.small,
                 '正確的大寫：' + q.right,
                 '支票上寫的：' + q.written

@@ -40,9 +40,9 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 第 level 關的燈基準直徑（px） */
-    function lampAt(level) { return kit.ramp(level, LAMP[0], LAMP[1], RAMP_LEVELS); }
-    function framesAt(level) { return Math.round(kit.ramp(level, FRAMES[0], FRAMES[1], RAMP_LEVELS)); }
-    function median(arr) { var a = arr.slice().sort(function (x, y) { return x - y; }); return a.length ? a[Math.floor(a.length / 2)] : 0; }
+    function lampAt(level) { return kit.ramp(level, LAMP[0], LAMP[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function framesAt(level) { return Math.round(kit.ramp(level, FRAMES[0], FRAMES[1], RAMP_LEVELS)); }  /* Math.round：四捨五入成整數 */
+    function median(arr) { var a = arr.slice().sort(function (x, y) { return x - y; }); return a.length ? a[Math.floor(a.length / 2)] : 0; }  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
     /* 由量到的影格間隔（毫秒）算出「1 影格」：離譜的值（< 4 或 > 34）退回 60Hz */
     function frameFrom(samples) { var m = median(samples); return m >= 4 && m <= 34 ? m : 1000 / 60; }
     /* 先亮的一側：同側最多連續 SAME_MAX 次 */
@@ -60,12 +60,12 @@
     function makeLevel(level, rand, hist, W) {
         rand = rand || Math.random; W = W || 472;
         var base = lampAt(level), cap = (W - 2 * EDGE - GAP_MIN) / 2;
-        var u = kit.randFloat(0.5, 1, rand), small = base * (1 - SIZE_JIT * u), large = base * (1 + SIZE_JIT * u);
+        var u = kit.randFloat(0.5, 1, rand), small = base * (1 - SIZE_JIT * u), large = base * (1 + SIZE_JIT * u);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         large = Math.min(large, cap); small = Math.min(small, large - 1);                /* 放不下時，大的縮到放得下，小的再比它小一點 */
         small = Math.max(small, LAMP[1]); large = Math.max(large, small + 1);
         var leftBig = rand() < 0.5;
         return {
-            first: nextSide(hist || [], rand), frames: framesAt(level), wait: Math.round(kit.randFloat(WAIT_MS[0], WAIT_MS[1], rand)),
+            first: nextSide(hist || [], rand), frames: framesAt(level), wait: Math.round(kit.randFloat(WAIT_MS[0], WAIT_MS[1], rand)),  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             sizeL: leftBig ? large : small, sizeR: leftBig ? small : large, base: base
         };
     }
@@ -83,10 +83,10 @@
         function tick(now) {
             if (last != null) samples.push(now - last);
             last = now;
-            if (samples.length < FRAME_SAMPLES) window.requestAnimationFrame(tick);
+            if (samples.length < FRAME_SAMPLES) window.requestAnimationFrame(tick);  /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
             else frameMs = frameFrom(samples);
         }
-        window.requestAnimationFrame(tick);
+        window.requestAnimationFrame(tick);             /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
     }
 
     /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
@@ -112,57 +112,57 @@
         console.log('[誰先亮] 第 ' + level + ' 關：' + (q.first === 'L' ? '左' : '右') + '邊先亮；時間差 ' + q.frames + ' 影格（約 ' + (q.frames * frameMs / 1000).toFixed(4) + ' 秒）；等 ' + q.wait + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var lampL = h('div', { 'class': 'whofirst-lamp whofirst-lamp--a' }), lampR = h('div', { 'class': 'whofirst-lamp whofirst-lamp--b' });
-        [[lampL, q.sizeL], [lampR, q.sizeR]].forEach(function (p) {
+        [[lampL, q.sizeL], [lampR, q.sizeR]].forEach(function (p) {  /* forEach：對陣列的每個元素各做一次 */
             p[0].style.width = p[1].toFixed(1) + 'px'; p[0].style.height = p[1].toFixed(1) + 'px';
             p[0].style.borderWidth = Math.max(1, Math.min(5, p[1] / 8)).toFixed(1) + 'px';          /* 燈很小的時候邊框也要細 */
         });
         var lamps = { L: lampL, R: lampR };
-        var tip = h('div', { 'class': 'whofirst-tip', text: '兩盞燈會先後亮起，哪一盞先亮？' });
+        var tip = h('div', { 'class': 'whofirst-tip', text: '兩盞燈會先後亮起，哪一盞先亮？' });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
         var row = h('div', { 'class': 'whofirst-row' }, [lampL, lampR]);
         var info = h('div', { 'class': 'whofirst-info', text: '準備…' });
         var bL = h('button', { 'class': 'btn btn--primary', text: '左邊先亮' }), bR = h('button', { 'class': 'btn btn--go', text: '右邊先亮' });
         bL.disabled = bR.disabled = true;
-        stage.appendChild(tip); stage.appendChild(row); stage.appendChild(info);
-        stage.appendChild(h('div', { 'class': 'rx-btnrow' }, [bL, bR]));
+        stage.appendChild(tip); stage.appendChild(row); stage.appendChild(info);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(h('div', { 'class': 'rx-btnrow' }, [bL, bR]));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
 
         var second = q.first === 'L' ? 'R' : 'L', lit = 0, tA = 0, tB = 0, ready = false, delta = q.frames * frameMs;
-        function light(side) { lamps[side].classList.add('whofirst-lamp--on'); lit++; }
+        function light(side) { lamps[side].classList.add('whofirst-lamp--on'); lit++; }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         function arm() {
             if (ready) return; ready = true;
             if (tB && tA) delta = tB - tA;
-            bL.disabled = bR.disabled = false; info.textContent = '哪一盞先亮？';
+            bL.disabled = bR.disabled = false; info.textContent = '哪一盞先亮？';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             api.timer(ANS_MS, function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         }
         function begin() {
-            var k = 0, loop = api.my.loop(function (now) {
+            var k = 0, loop = api.my.loop(function (now) {  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                 if (api.over || ready) return false;
                 if (k === 0) { light(q.first); tA = now; }
                 if (k === q.frames) { light(second); tB = now; arm(); return false; }
                 k++;
             });
             /* 保底：rAF 被暫停時，照設計的時間差亮第二盞燈 */
-            api.after(Math.round(q.frames * frameMs) + 400, function () { if (!ready) { loop.stop(); if (lit < 1) light(q.first); if (lit < 2) light(second); arm(); } });
+            api.after(Math.round(q.frames * frameMs) + 400, function () { if (!ready) { loop.stop(); if (lit < 1) light(q.first); if (lit < 2) light(second); arm(); } });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
         }
-        api.after(q.wait, begin);
+        api.after(q.wait, begin);                       /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
 
         /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(side) {
             if (api.over) return;
             if (!ready) { if (lit < 1) light(q.first); if (lit < 2) light(second); ready = true; }
             var txt = '時間差 ' + (delta / 1000).toFixed(4) + ' 秒（' + q.frames + ' 影格）';
-            info.textContent = txt;
-            lamps[q.first].classList.add('whofirst-lamp--first');
+            info.textContent = txt;                     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            lamps[q.first].classList.add('whofirst-lamp--first');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             lamps[q.first].style.borderWidth = Math.max(2, Math.min(8, (q.first === 'L' ? q.sizeL : q.sizeR) / 5)).toFixed(1) + 'px';
-            if (side === q.first) { api.pass({ delay: 800 }); return; }
-            api.fail({
+            if (side === q.first) { api.pass({ delay: 800 }); return; }  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
+            api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: 1900, lines: [
                     (side == null ? '時間到！' : '選錯了！') + '先亮的是' + (q.first === 'L' ? '左邊' : '右邊') + '那一盞',
                     txt, '這一關的極限是 ' + q.frames + ' 影格；螢幕更新率越高，能分辨的時間越短'
                 ]
             });
         }
-        kit.onTap(bL, function () { judge('L'); });
-        kit.onTap(bR, function () { judge('R'); });
+        kit.onTap(bL, function () { judge('L'); });     /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        kit.onTap(bR, function () { judge('R'); });     /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.first); };
         api.wrong = function () { judge(second); };

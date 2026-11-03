@@ -124,12 +124,12 @@
         if (re <= 0) return 0;
         var n = m.n, d = m.data, added = 0;
         /* y0..y1：圓覆蓋的列範圍 */
-        var y0 = Math.max(0, Math.ceil(cy - re - 0.5)), y1 = Math.min(n - 1, Math.floor(cy + re - 0.5));
+        var y0 = Math.max(0, Math.ceil(cy - re - 0.5)), y1 = Math.min(n - 1, Math.floor(cy + re - 0.5));  /* Math.floor：無條件捨去成整數 */
         for (var y = y0; y <= y1; y++) {
             var dy = (y + 0.5) - cy;
             /* hw：這一列圓的半寬（勾股定理） */
-            var hw = Math.sqrt(re * re - dy * dy);
-            var x0 = Math.max(0, Math.ceil(cx - hw - 0.5)), x1 = Math.min(n - 1, Math.floor(cx + hw - 0.5));
+            var hw = Math.sqrt(re * re - dy * dy);      /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
+            var x0 = Math.max(0, Math.ceil(cx - hw - 0.5)), x1 = Math.min(n - 1, Math.floor(cx + hw - 0.5));  /* Math.ceil：無條件進位成整數 */
             var row = y * n;
             for (var x = x0; x <= x1; x++) {
                 if (!d[row + x]) { d[row + x] = 1; added++; }
@@ -142,9 +142,9 @@
     /* 沿線段蓋圓，間隔 ≤ min(3, r/3) px。第一個點（起點）也會蓋，所以一小段一小段呼叫時
        上一段的終點會重複蓋一次（無害） */
     function stampSegment(m, x0, y0, x1, y1, r) {
-        var len = Math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
+        var len = Math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
         var step = Math.max(0.5, Math.min(3, r / 3));
-        var k = Math.max(1, Math.ceil(len / step));
+        var k = Math.max(1, Math.ceil(len / step));     /* Math.ceil：無條件進位成整數 */
         var added = 0;
         for (var i = 0; i <= k; i++) {
             var t = i / k;
@@ -182,13 +182,13 @@
             var bx = best % n;
             out.push({ x: cx + 0.5, y: cy + 0.5, size: cnt, px: bx + 0.5, py: (best - bx) / n + 0.5 });
         }
-        out.sort(function (a, b) { return b.size - a.size; });
+        out.sort(function (a, b) { return b.size - a.size; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
         return out.slice(0, limit || 20);
     }
     /* 沾油漆後筆刷縮小到多少 */
     function brushAfter(d) { return Math.max(BRUSH_MIN, d * SHRINK); }
     /* 第 level 關沾油漆次數的上限：第 1 關 DIP_START，線性增加，第 DIP_RAMP_LEVELS 關起 DIP_END（四捨五入成整數） */
-    function dipMaxFor(level) { return Math.round(kit.ramp(level, DIP_START, DIP_END, DIP_RAMP_LEVELS)); }
+    function dipMaxFor(level) { return Math.round(kit.ramp(level, DIP_START, DIP_END, DIP_RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
 
     /* ═══ 塗鴉 ═══ */
     /* 一處塗鴉的所有線條：在邊長 s、左上角 (bx, by) 的方框裡，依 kind 畫出幾條折線（每條線是 [[x,y], …]，點跟點之間 ≤ 3px，畫出來才圓滑）。
@@ -205,24 +205,24 @@
         }
         if (kind === 'zigzag' || kind === 'hatch') {
             /* 折線：在方框的兩側來回；hatch 是來回很多趟、間距很密的刷痕（等於塗黑一塊） */
-            var n = kind === 'hatch' ? kit.randInt(7, 10, rand) : kit.randInt(4, 7, rand), horiz = rand() < 0.5, gap = kind === 'hatch' ? s * 0.85 : s;
+            var n = kind === 'hatch' ? kit.randInt(7, 10, rand) : kit.randInt(4, 7, rand), horiz = rand() < 0.5, gap = kind === 'hatch' ? s * 0.85 : s;  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             for (i = 0; i <= n; i++) { var t = i / n, a = i % 2 ? 1 : 0; pts.push(horiz ? [bx + s * t, by + (kind === 'hatch' ? (s - gap) / 2 : 0) + gap * a] : [bx + (kind === 'hatch' ? (s - gap) / 2 : 0) + gap * a, by + s * t]); }
             return [densify(pts)];
         }
         if (kind === 'wave') {
-            var amp = s * kit.randFloat(0.15, 0.32, rand), waves = kit.randInt(2, 3, rand), steps = 48, vert = rand() < 0.5;
+            var amp = s * kit.randFloat(0.15, 0.32, rand), waves = kit.randInt(2, 3, rand), steps = 48, vert = rand() < 0.5;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             for (i = 0; i <= steps; i++) { var u = i / steps, o = amp * Math.sin(u * waves * 2 * Math.PI); pts.push(vert ? [cx + o, by + s * u] : [bx + s * u, cy + o]); }
             return [densify(pts)];
         }
         if (kind === 'spiral') {
             /* 阿基米德螺線：半徑隨角度線性變大，繞 2～3 圈 */
-            var turns = kit.randFloat(1.6, 2.6, rand), R = s / 2, steps2 = 90;
+            var turns = kit.randFloat(1.6, 2.6, rand), R = s / 2, steps2 = 90;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             for (i = 0; i <= steps2; i++) { var th = i / steps2 * turns * 2 * Math.PI, r = R * i / steps2; pts.push([cx + r * Math.cos(th), cy + r * Math.sin(th)]); }
             return [densify(pts)];
         }
         if (kind === 'loops') {
             /* 連環圈（像草寫的連續 e）：一邊往右走、一邊畫圓，圓的半徑 0.2 倍方框 */
-            var loops = kit.randInt(2, 4, rand), rr = s * 0.2, steps3 = loops * 30;
+            var loops = kit.randInt(2, 4, rand), rr = s * 0.2, steps3 = loops * 30;  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             for (i = 0; i <= steps3; i++) { var uu = i / steps3, ang = uu * loops * 2 * Math.PI; pts.push([bx + rr + (s - 2 * rr) * uu + rr * Math.sin(ang) * 0.9, cy - rr * Math.cos(ang) * 0.9 + rr * 0.9]); }
             return [densify(pts)];
         }
@@ -246,20 +246,20 @@
     }
     /* 第 level 關要畫幾處塗鴉：第 1 關只有 1 處，每過一關多 1 處，最多 SCRIBBLE_MAX 處（＝舊版的 10～12 處）。
        level 沒給（舊測試、舊呼叫）就當最後一關。 */
-    function scribbleCount(level) { return level == null ? SCRIBBLE_MAX : Math.max(1, Math.min(SCRIBBLE_MAX, Math.floor(level))); }
+    function scribbleCount(level) { return level == null ? SCRIBBLE_MAX : Math.max(1, Math.min(SCRIBBLE_MAX, Math.floor(level))); }  /* Math.floor：無條件捨去成整數 */
     /* 抽一個 emoji：先依權重抽類別，再從類別裡抽一個這一關還沒用過的；回傳 { emoji, group }（全部都用過了就不管重複） */
     function pickEmoji(rand, used) {
         var total = 0, i, t;
-        EMOJI_GROUPS.forEach(function (gr) { total += gr.w; });
+        EMOJI_GROUPS.forEach(function (gr) { total += gr.w; });  /* forEach：對陣列的每個元素各做一次 */
         for (t = 0; t < 80; t++) {
             var x = rand() * total, gr = EMOJI_GROUPS[EMOJI_GROUPS.length - 1];
             for (i = 0; i < EMOJI_GROUPS.length; i++) { x -= EMOJI_GROUPS[i].w; if (x < 0) { gr = EMOJI_GROUPS[i]; break; } }
-            var e = kit.pick(gr.list, rand);
+            var e = kit.pick(gr.list, rand);            /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             if (!used[e]) { used[e] = true; return { emoji: e, group: gr.id }; }
         }
         /* 隨機一直抽到用過的（只剩一兩個沒用的時候才會發生）：把全部 emoji 洗牌，取第一個沒用過的；真的全用過了才不管重複 */
-        var all = []; EMOJI_GROUPS.forEach(function (gr) { gr.list.forEach(function (e) { all.push({ emoji: e, group: gr.id }); }); });
-        all = kit.shuffle(all, rand);
+        var all = []; EMOJI_GROUPS.forEach(function (gr) { gr.list.forEach(function (e) { all.push({ emoji: e, group: gr.id }); }); });  /* forEach：對陣列的每個元素各做一次 */
+        all = kit.shuffle(all, rand);                   /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         for (i = 0; i < all.length; i++) if (!used[all[i].emoji]) { used[all[i].emoji] = true; return all[i]; }
         return all[0];
     }
@@ -275,7 +275,7 @@
     function makeScribbles(rand, level) {
         rand = rand || Math.random;
         var K = scribbleCount(level), want = Math.sqrt(SCRIBBLE_AREA / K);
-        var sizes = kit.shuffle(PEN_SIZES, rand), out = [], lastKind = null, used = {}, pen = 0;
+        var sizes = kit.shuffle(PEN_SIZES, rand), out = [], lastKind = null, used = {}, pen = 0;  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         /* 在 [lo, hi] 的正方形裡抽 PLACE_TRIES 個中心點，挑離已有塗鴉最遠的 */
         function place(lo, hi) {
             var best = null, bestD = -1;
@@ -297,7 +297,7 @@
             var kind, tries = 0;
             do { kind = kit.pick(KINDS, rand); tries++; } while ((kind === lastKind || (kind === 'dot' && side > DOT_MAX_SIDE)) && tries < 60);        /* 連續兩個線條塗鴉不要同一種形狀 */
             lastKind = kind;
-            out.push({ kind: kind, w: w, color: kit.pick(INK_COLORS, rand), lines: scribbleLines(kind, bx, by, side, rand), side: side, cx: pl.cx, cy: pl.cy });
+            out.push({ kind: kind, w: w, color: kit.pick(INK_COLORS, rand), lines: scribbleLines(kind, bx, by, side, rand), side: side, cx: pl.cx, cy: pl.cy });  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         }
         return out;
     }
@@ -345,7 +345,7 @@
     }
     /* 把一處 emoji 畫在畫布 g 上（畫面與遮罩讀點陣都用這一個，所以兩邊的位置、大小一模一樣）；需要 canvas，只有瀏覽器會呼叫 */
     function drawEmoji(g, sc) {
-        g.font = Math.round(sc.fs) + 'px ' + EMOJI_FONT;
+        g.font = Math.round(sc.fs) + 'px ' + EMOJI_FONT;  /* Math.round：四捨五入成整數 */
         g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#000';
         g.fillText(sc.emoji, sc.cx, sc.cy);
     }
@@ -353,7 +353,7 @@
        沒有 emoji、拿不到畫布、讀回來的點陣不對（防指紋的瀏覽器會回傳空白、全不透明或雜訊）就回傳 null（遮罩改用方框）。
        點陣是否合理的檢查：要蓋的格數至少是最大那個 emoji 字級平方的 25%（emoji 約 70%），而且不能超過整張的 90%。 */
     function rasterEmojiNeed(scribbles, n) {
-        var list = scribbles.filter(function (sc) { return sc.kind === 'emoji'; });
+        var list = scribbles.filter(function (sc) { return sc.kind === 'emoji'; });  /* filter：留下符合條件的元素，回傳新陣列 */
         if (!list.length) return null;
         try {
             var cv2 = document.createElement('canvas');
@@ -396,7 +396,7 @@
 
             /* buildLevel：畫第 n 關。每一關都重新蓋一張新的方塊（新的底色、新的塗鴉），筆刷與沾油漆次數歸零 */
             function buildLevel(n) {
-                root.innerHTML = '';
+                root.innerHTML = '';                    /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
                 /* color 這關的底色（也是油漆的顏色）；scribbles 這關的塗鴉；mask 遮罩（塗鴉的格子是 0、蓋掉變 1）；D 目前筆刷直徑；dips 這關沾了幾次；budget 剩餘油漆量（可畫多長）；swept 所有筆畫掃過的面積總和 */
                 var color = kit.pick(BASE_COLORS);
@@ -437,12 +437,12 @@
                     g.strokeStyle = sc.color; g.lineWidth = sc.w;
                     sc.lines.forEach(function (ln) { g.beginPath(); g.moveTo(ln[0][0], ln[0][1]); for (var i = 1; i < ln.length; i++) g.lineTo(ln[i][0], ln[i][1]); g.stroke(); });
                 });
-                console.info('[刷油漆] 第 ' + n + ' 關：底色 ' + color + '；塗鴉 ' + scribbles.length + ' 處（' + scribbles.map(function (sc) { return sc.kind === 'emoji' ? sc.emoji : sc.kind + '×' + sc.w + 'px'; }).join('、') + '）；沾漆上限 ' + dipMax + ' 次；要蓋的格數 ' + mask.total + '（連通區域 ' + holes(mask, 99).length + ' 塊' + (scribbles.some(function (sc) { return sc.kind === 'emoji'; }) ? '；emoji 遮罩：' + (emojiNeed ? '依畫出來的點陣' : '備案（方框）') : '') + '）');
+                console.info('[刷油漆] 第 ' + n + ' 關：底色 ' + color + '；塗鴉 ' + scribbles.length + ' 處（' + scribbles.map(function (sc) { return sc.kind === 'emoji' ? sc.emoji : sc.kind + '×' + sc.w + 'px'; }).join('、') + '）；沾漆上限 ' + dipMax + ' 次；要蓋的格數 ' + mask.total + '（連通區域 ' + holes(mask, 99).length + ' 塊' + (scribbles.some(function (sc) { return sc.kind === 'emoji'; }) ? '；emoji 遮罩：' + (emojiNeed ? '依畫出來的點陣' : '備案（方框）') : '') + '）');  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                 sq.style.width = sq.style.height = SQ + 'px';
                 sq.style.background = color;
-                sq.appendChild(cv);
+                sq.appendChild(cv);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
                 var marks = h('div', { 'class': 'paint-marks' });
-                sq.appendChild(marks);
+                sq.appendChild(marks);                  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
                 field.appendChild(sq);
                 var warn = h('div', { 'class': 'paint-warn' });
                 field.appendChild(warn);
@@ -453,8 +453,8 @@
                 var brushLabel = h('div', { 'class': 'paint-brushlabel' });
                 /* 油漆刷提示：用 SVG 畫（木柄、金屬環、刷毛），刷毛的顏色＝這一局的油漆色；平常隱藏，圓形變成虛線時才顯示（見 refresh） */
                 var pointer = h('div', { 'class': 'paint-pointer' });
-                var ps = kit.svg('svg', { 'class': 'paint-pointer__svg', viewBox: '0 0 50 100', preserveAspectRatio: 'xMidYMax meet' }, pointer);
-                kit.svg('rect', { 'class': 'paint-pt-handle', x: 19, y: 2, width: 12, height: 48, rx: 6 }, ps);
+                var ps = kit.svg('svg', { 'class': 'paint-pointer__svg', viewBox: '0 0 50 100', preserveAspectRatio: 'xMidYMax meet' }, pointer);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+                kit.svg('rect', { 'class': 'paint-pt-handle', x: 19, y: 2, width: 12, height: 48, rx: 6 }, ps);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
                 kit.svg('rect', { 'class': 'paint-pt-ferrule', x: 14, y: 48, width: 22, height: 14, rx: 2 }, ps);
                 var bristle = kit.svg('path', { 'class': 'paint-pt-bristle', d: 'M15 62 H35 C38 74 33 90 25 98 C17 90 12 74 15 62 Z' }, ps);
                 bristle.style.fill = color;
@@ -480,12 +480,12 @@
                     var shown = mask.left === 0 ? '100.0000' : (Math.floor(pct * 10000) / 10000).toFixed(4);
                     info.textContent = '沾了 ' + dips + '／' + dipMax + ' 次　已蓋 ' + shown + '%';        /* 文字要短（100.0000% 也要一行放得下），才不會折成兩行把方塊擠扁 */
                     info.classList.toggle('paint-info--low', dips >= dipMax - DIP_WARN);          /* 快到上限了：字變成警示色 */
-                    ctx.setMeta(kit.meta(['第 ' + n + ' 關', fmtBest(Reaction.getBest(ID))]));
+                    ctx.setMeta(kit.meta(['第 ' + n + ' 關', fmtBest(Reaction.getBest(ID))]));  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                     gfill.style.width = (100 * budget / budgetMax).toFixed(1) + '%';
                     brush.style.width = brush.style.height = D + 'px';
                     brush.style.background = budget > 0 ? color : 'transparent';
-                    brush.classList.toggle('paint-brush--empty', budget <= 0);
-                    brushLabel.textContent = budget > 0 ? '油漆剩 ' + Math.round(100 * budget / budgetMax) + '%' : (dips === 0 ? '點圓形沾油漆' : (dips >= dipMax ? '已沾滿 ' + dipMax + ' 次，再沾就失敗' : '油漆用完了，點圓形再沾'));
+                    brush.classList.toggle('paint-brush--empty', budget <= 0);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                    brushLabel.textContent = budget > 0 ? '油漆剩 ' + Math.round(100 * budget / budgetMax) + '%' : (dips === 0 ? '點圓形沾油漆' : (dips >= dipMax ? '已沾滿 ' + dipMax + ' 次，再沾就失敗' : '油漆用完了，點圓形再沾'));  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                     /* 點擊區：筆刷直徑，但至少 HIT_MIN px（圓形在框的正中間） */
                     var S = Math.max(D, HIT_MIN);
                     brushBox.style.width = brushBox.style.height = S + 'px';
@@ -496,7 +496,7 @@
                     pointer.style.height = ph + 'px'; pointer.style.width = (ph / 2) + 'px';
                     pointer.style.left = (S / 2 + 0.12 * D - ph / 4) + 'px';
                     pointer.style.top = (S / 2 + 0.4 * D - ph) + 'px';
-                    pointer.classList.toggle('paint-pointer--on', budget <= 0 && state === 'play' && dips < dipMax);
+                    pointer.classList.toggle('paint-pointer--on', budget <= 0 && state === 'play' && dips < dipMax);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                     /* 提示按鈕：還沒塗任何東西、已經塗滿、標記還在顯示、或加上 HINT_COST 次會超過上限時都不能按（避免白白消耗／直接失敗） */
                     hintBtn.disabled = !(state === 'play' && swept > 0 && mask.left > 0 && !hintShown && hintOk());
                 }
@@ -504,7 +504,7 @@
                 function hintOk() { return dips + HINT_COST <= dipMax && (budget > 0 || dips + HINT_COST < dipMax); }
                 /* 顯示警語一陣子後自動消失 */
                 function showWarn(text) {
-                    warn.textContent = text;
+                    warn.textContent = text;            /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                     warn.classList.add('paint-warn--on');
                     my.cancel(warnTimer);
                     warnTimer = my.after(1600, function () { warn.classList.remove('paint-warn--on'); });
@@ -517,18 +517,18 @@
                     dips++; runDips++;
                     D = brushAfter(D);
                     budget = budgetMax;
-                    Sfx.play('flip');
+                    Sfx.play('flip');                   /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                     warn.classList.remove('paint-warn--on');
                     refresh();
                 }
-                brushBox.addEventListener('pointerdown', function (e) { e.preventDefault(); dip(); });
-                hintBtn.addEventListener('pointerdown', function (e) { e.preventDefault(); useHint(); });
+                brushBox.addEventListener('pointerdown', function (e) { e.preventDefault(); dip(); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+                hintBtn.addEventListener('pointerdown', function (e) { e.preventDefault(); useHint(); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
 
                 /* ─── 畫 ─── */
                 /* 方塊的左上角（螢幕座標轉成邏輯座標） */
                 var sqOrigin = null;
                 function origin() {
-                    var r = sq.getBoundingClientRect();
+                    var r = sq.getBoundingClientRect(); /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
                     var o = Stage.toLogical(r.left, r.top);
                     return o;
                 }
@@ -564,7 +564,7 @@
                     if (use < len) {            /* 油漆用完 */
                         budget = 0;
                         last = null;
-                        Sfx.play('bad');
+                        Sfx.play('bad');                /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                         if (dips < dipMax) showWarn('油漆用完了！\n點下方圓形再沾一次');
                     }
                     refresh();
@@ -591,9 +591,9 @@
                 /* 手指按下 */
                 function onDown(e) {
                     if (state !== 'play' || pid != null) return;
-                    e.preventDefault();
+                    e.preventDefault();                 /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                     pid = e.pointerId;
-                    try { field.setPointerCapture(e.pointerId); } catch (err) { }
+                    try { field.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
                     /* 每一筆都重新量方塊位置（視窗縮放後也準） */
                     sqOrigin = origin();            /* 每一筆重新量方塊位置（視窗縮放後也準） */
                     var p = toSq(e);
@@ -616,14 +616,14 @@
                     pid = null; last = null;
                 }
                 /* 綁定手指事件；setPointerCapture 讓手指移出方塊外也持續收到事件 */
-                field.addEventListener('pointerdown', onDown);
+                field.addEventListener('pointerdown', onDown);  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
                 field.addEventListener('pointermove', onMove);
                 field.addEventListener('pointerup', onUp);
                 field.addEventListener('pointercancel', onUp);
                 /* 操作提示（只在第一次進遊戲時）：先提示「點下方的圓形沾油漆」（手指縮放）；玩家沾了油漆之後，再提示「拖曳蓋掉塗鴉」（手指＋箭頭） */
-                if (Reaction.kit.once('paint.hint')) Reaction.kit.hintOn(root, brushBox, { mode: 'tap', fy: 0.75, text: '請點擊圓形沾油漆' });
+                if (Reaction.kit.once('paint.hint')) Reaction.kit.hintOn(root, brushBox, { mode: 'tap', fy: 0.75, text: '請點擊圓形沾油漆' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
                 brushBox.addEventListener('pointerdown', function () {
-                    if (Reaction.kit.once('paint.hint2')) Reaction.kit.hintOn(root, field, { mode: 'drag', dx: field.clientWidth * 0.55, dy: 0, fx: 0.2, fy: 0.25, delay: 300, text: '請拖曳，蓋掉彩色塗鴉' });
+                    if (Reaction.kit.once('paint.hint2')) Reaction.kit.hintOn(root, field, { mode: 'drag', dx: field.clientWidth * 0.55, dy: 0, fx: 0.2, fy: 0.25, delay: 300, text: '請拖曳，蓋掉彩色塗鴉' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
                 });
                 /* 這一關結束（換關、重玩）時把事件監聽拿掉 */
                 my.onDispose(function () {
@@ -634,7 +634,7 @@
                 });
 
                 /* ─── 未完成的區域（還沒蓋掉的塗鴉）：不會自動標出來，玩家按「顯示未完成區域」按鈕（消耗 HINT_COST 次沾漆）才標一處 ─── */
-                function clearMarks() { marks.innerHTML = ''; hintShown = false; }
+                function clearMarks() { marks.innerHTML = ''; hintShown = false; }  /* innerHTML = ''：把元素裡面的東西全部清掉 */
                 /* 在方塊上標一個紅色脈動圓圈：hl 是 holes() 傳回的區域；紅圈半徑：區域越大圈越大（等面積圓的半徑 + 12px），限制在 HINT_R_MIN～HINT_R_MAX */
                 function addMark(hl) {
                     var r = Math.max(HINT_R_MIN, Math.min(HINT_R_MAX, Math.sqrt(hl.size / Math.PI) + 12));
@@ -670,7 +670,7 @@
                     clearMarks();
                     refresh();
                     cleared = n;
-                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
+                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                     ctx.setMeta(kit.meta(['第 ' + n + ' 關', fmtBest(Reaction.getBest(ID))]));
                     var allClear = n >= MAX_LEVEL;
                     warn.textContent = allClear ? '全部蓋完了！' : '第 ' + n + ' 關完成！';
@@ -719,7 +719,7 @@
                     /* 機器人過關（驗證用）：沾油漆、沿著每一處塗鴉的線畫過去，油漆用完就再沾，直到這一關過關或失敗；走的是真正的 dip／startAt／drawTo */
                     solve: function () {
                         var guard = 0;
-                        scribbles.slice().sort(function (a, b) { return b.w - a.w; }).forEach(function (sc) {
+                        scribbles.slice().sort(function (a, b) { return b.w - a.w; }).forEach(function (sc) {  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
                             sc.lines.forEach(function (ln) {
                                 var i = 0;
                                 while (i < ln.length && state === 'play' && guard++ < 20000) {
@@ -766,7 +766,7 @@
             function finish(n, allClear, left, dipMax) {
                 console.log('刷油漆：結算，闖過 ' + cleared + ' 關' + (allClear ? '（全部通關）' : '，第 ' + n + ' 關失敗'));
                 var back = kit.resumeFrom(n);
-                kit.result(root, {
+                kit.result(root, {                      /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                     score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字；0 關不在有效範圍，不會送） */
                     level: n,              /* 記下到過第幾關，下次進場從最佳關卡 − 4 開始（kit.noteLevel） */
                     num: cleared + ' 關', label: rating(cleared),

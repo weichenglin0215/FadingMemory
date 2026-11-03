@@ -51,7 +51,7 @@
     /* 這一關分給幾個人 */
     function nFor(level) { return Math.min(N_MAX, N_START + level - 1); }
     /* 輔助刻度的透明度：第 1 關 100%，到第 AID_FADE_LEVELS 關變成 0（線性） */
-    function aidOpacity(level) { return kit.clamp(1 - (level - 1) / (AID_FADE_LEVELS - 1), 0, 1); }
+    function aidOpacity(level) { return kit.clamp(1 - (level - 1) / (AID_FADE_LEVELS - 1), 0, 1); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
     /* 把任何角度整理到 0～360 之間 */
     function norm360(a) { return ((a % 360) + 360) % 360; }
     /* 把螢幕座標 (dx, dy) 轉成「12 點鐘起、順時針」的角度（螢幕 y 軸往下，所以用 −dy） */
@@ -60,7 +60,7 @@
     /* 各塊的圓心角：先把所有刀線的角度排序，相鄰兩條的夾角就是每一塊；最後一塊要繞回 360 度 */
     /* 各塊的圓心角（度）：cuts 是所有刀線的角度（含第一刀），回傳排序後相鄰的夾角 */
     function sliceAngles(cuts) {
-        var s = cuts.map(norm360).sort(function (a, b) { return a - b; }), out = [];
+        var s = cuts.map(norm360).sort(function (a, b) { return a - b; }), out = [];  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
         for (var i = 0; i < s.length; i++) out.push(i + 1 < s.length ? s[i + 1] - s[i] : s[0] + 360 - s[i]);
         return out;
     }
@@ -79,7 +79,7 @@
     /* 把角度最接近 target 的那一個編號找出來（環狀距離），只在 idxs 裡找；超過 maxDeg 回傳 −1 */
     function nearestIndex(angles, idxs, target, maxDeg) {
         var best = -1, bd = 1e9;
-        idxs.forEach(function (i) { var d = Math.abs(((angles[i] - target + 540) % 360) - 180); if (d < bd) { bd = d; best = i; } });
+        idxs.forEach(function (i) { var d = Math.abs(((angles[i] - target + 540) % 360) - 180); if (d < bd) { bd = d; best = i; } });  /* forEach：對陣列的每個元素各做一次 */
         return bd <= maxDeg ? best : -1;
     }
     /* 起始切線：第一刀隨機，其他 n−1 條＝平均位置加隨機偏移；保證一開始不會已經過關 */
@@ -89,10 +89,10 @@
         var n = nFor(level), step = 360 / n;
         for (var tries = 0; tries < 400; tries++) {
             var first = rand() * 360, lines = [];
-            for (var i = 1; i < n; i++) lines.push(norm360(first + i * step + kit.randFloat(-JITTER, JITTER, rand) * step));
+            for (var i = 1; i < n; i++) lines.push(norm360(first + i * step + kit.randFloat(-JITTER, JITTER, rand) * step));  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             if (spreadRatio(sliceAngles([first].concat(lines))) >= PASS_RATIO * 2) return { n: n, first: first, lines: lines };
         }
-        return { n: n, first: 0, lines: Array.apply(null, Array(n - 1)).map(function (_, i) { return norm360((i + 1) * step + (i % 2 ? 1 : -1) * 0.35 * step); }) };
+        return { n: n, first: 0, lines: Array.apply(null, Array(n - 1)).map(function (_, i) { return norm360((i + 1) * step + (i % 2 ? 1 : -1) * 0.35 * step); }) };  /* Array.apply(null, Array(n)).map(...)：建立「0 到 n−1 的編號陣列」的常見寫法 */
     }
     /* 依通過關數給評語 */
     function rating(level) {
@@ -119,7 +119,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
             /* level 關卡；cleared 已過幾關；lives 機會；state 目前階段（play 調整中/reveal 已揭曉） */
             var level = startAt || 1, cleared = level - 1, lives = LIVES, newRec = false, state = 'idle';
@@ -131,11 +131,11 @@
             var field = h('div', { 'class': 'cake-field' });
             var cutBtn = h('button', { 'class': 'btn btn--go btn--sm cake-cut', text: '切下去' });
             var acts = h('div', { 'class': 'cake-acts' }, [cutBtn]);
-            [head, banner, field, acts].forEach(function (x) { root.appendChild(x); });
+            [head, banner, field, acts].forEach(function (x) { root.appendChild(x); });  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             function meta() { ctx.setMeta(kit.meta(['已過 ' + cleared + ' 關', '機會 ' + lives])); }
             /* SVG 蛋糕畫布：圖層由下到上依序是蛋糕、輔助點、刀線、切開後的扇形 */
-            var svg = kit.svg('svg', { 'class': 'cake-svg', viewBox: '0 0 ' + VB + ' ' + VB }, field);
-            var gCake = kit.svg('g', {}, svg);
+            var svg = kit.svg('svg', { 'class': 'cake-svg', viewBox: '0 0 ' + VB + ' ' + VB }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+            var gCake = kit.svg('g', {}, svg);          /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             var gAid = kit.svg('g', {}, svg), gCuts = kit.svg('g', {}, svg), gOut = kit.svg('g', {}, svg);
             kit.svg('circle', { 'class': 'cake-cake', cx: C, cy: C, r: R_CAKE }, gCake);
             kit.svg('circle', { 'class': 'cake-icing', cx: C, cy: C, r: R_CAKE - 16 }, gCake);
@@ -150,10 +150,10 @@
             function tip(a, r) { var t = a * Math.PI / 180; return [C + r * Math.sin(t), C - r * Math.cos(t)]; }
             /* 畫出所有藍線與線頭的圓形把手 */
             function buildLines() {
-                gCuts.innerHTML = ''; lineEls = []; handleEls = [];
+                gCuts.innerHTML = ''; lineEls = []; handleEls = [];  /* innerHTML = ''：把元素裡面的東西全部清掉 */
                 var p = tip(first, R_CAKE);
                 kit.svg('line', { 'class': 'cake-cutline cake-cutline--first', x1: C, y1: C, x2: p[0], y2: p[1] }, gCuts);
-                lines.forEach(function () {
+                lines.forEach(function () {             /* forEach：對陣列的每個元素各做一次 */
                     lineEls.push(kit.svg('line', { 'class': 'cake-cutline', x1: C, y1: C, x2: C, y2: C }, gCuts));
                     handleEls.push(kit.svg('circle', { 'class': 'cake-handle', r: 13, cx: C, cy: C }, gCuts));
                 });
@@ -163,8 +163,8 @@
             function paintLines() {
                 lines.forEach(function (a, i) {
                     var p = tip(a, R_CAKE), q = tip(a, R_CAKE + 2);
-                    lineEls[i].setAttribute('x2', p[0].toFixed(1)); lineEls[i].setAttribute('y2', p[1].toFixed(1));
-                    handleEls[i].setAttribute('cx', q[0].toFixed(1)); handleEls[i].setAttribute('cy', q[1].toFixed(1));
+                    lineEls[i].setAttribute('x2', p[0].toFixed(1)); lineEls[i].setAttribute('y2', p[1].toFixed(1));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                    handleEls[i].setAttribute('cx', q[0].toFixed(1)); handleEls[i].setAttribute('cy', q[1].toFixed(1));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
                     lineEls[i].setAttribute('class', 'cake-cutline' + (i === drag ? ' cake-cutline--drag' : ''));
                     handleEls[i].setAttribute('class', 'cake-handle' + (i === drag ? ' cake-handle--drag' : ''));
                 });
@@ -175,12 +175,12 @@
                 if (my.dead) return;
                 /* 產生這關的起始切線 */
                 st = makeStart(level);
-                first = st.first; lines = st.lines.slice(); drag = -1; state = 'play';
+                first = st.first; lines = st.lines.slice(); drag = -1; state = 'play';  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
                 gOut.innerHTML = ''; gCake.style.display = ''; gCuts.style.display = '';
                 gAid.setAttribute('opacity', aidOpacity(level).toFixed(2));
-                head.textContent = '第 ' + level + ' 關　分給 ' + st.n + ' 個人';
+                head.textContent = '第 ' + level + ' 關　分給 ' + st.n + ' 個人';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 /* 主控台印出這關的人數、第一刀角度、過關標準與起始差距，方便驗證 */
-                banner.textContent = '拖曳藍線，差 ≤ ' + tolerancePct(st.n).toFixed(4) + '% 就過關';
+                banner.textContent = '拖曳藍線，差 ≤ ' + tolerancePct(st.n).toFixed(4) + '% 就過關';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 acts.style.visibility = 'visible'; cutBtn.disabled = false;
                 buildLines(); meta();
                 try { console.info('[分蛋糕] 第 ' + level + ' 關：' + st.n + ' 個人、第一刀 ' + first.toFixed(1) + '°；標準 ' + (PASS_RATIO * 100).toFixed(0) + '%＝每塊差距最多 ' + tolerancePct(st.n).toFixed(2) + '% 的蛋糕（' + (360 * PASS_RATIO / st.n).toFixed(2) + '°）；起始差距 ' + (spreadRatio(sliceAngles([first].concat(lines))) * 100).toFixed(0) + '% 平均塊；輔助刻度透明度 ' + aidOpacity(level).toFixed(2)); } catch (e) { }
@@ -190,30 +190,30 @@
             /* ─── 拖曳 ─── */
             /* 由手指位置算出相對圓心的角度；太靠近圓心的位置不理（角度會亂跳） */
             function angleFromEvent(e) {
-                var rc = svg.getBoundingClientRect(), sc = rc.width / VB;
+                var rc = svg.getBoundingClientRect(), sc = rc.width / VB;  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
                 var dx = e.clientX - (rc.left + rc.width / 2), dy = e.clientY - (rc.top + rc.height / 2);
-                if (Math.sqrt(dx * dx + dy * dy) < DEAD_PX * sc) return null;
+                if (Math.sqrt(dx * dx + dy * dy) < DEAD_PX * sc) return null;  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
                 return angleOf(dx, dy);
             }
             /* 抓線：從所有藍線裡找出最接近手指角度的那條 */
             function grab(angle) {
-                var idxs = lines.map(function (_, i) { return i; });
+                var idxs = lines.map(function (_, i) { return i; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                 return nearestIndex(lines, idxs, angle, PICK_MAX_DEG);
             }
             var dragPid = null;
             /* 手指按下 */
-            field.addEventListener('pointerdown', function (e) {
+            field.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
                 if (state !== 'play' || dragPid != null) return;
                 var a = angleFromEvent(e); if (a == null) return;
                 var k = grab(a); if (k < 0) return;
-                e.preventDefault();
-                try { field.setPointerCapture(e.pointerId); } catch (err) { }
+                e.preventDefault();                     /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+                try { field.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
                 /* setPointerCapture：手指移出蛋糕區也能持續拖曳 */
                 dragPid = e.pointerId; drag = k;
-                lines[k] = a; paintLines(); Sfx.play('click');
+                lines[k] = a; paintLines(); Sfx.play('click');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             });
             /* 手指移動：把被抓住的那條線角度設成手指角度 */
-            field.addEventListener('pointermove', function (e) {
+            field.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
                 if (state !== 'play' || drag < 0 || e.pointerId !== dragPid) return;
                 var a = angleFromEvent(e); if (a == null) return;
                 lines[drag] = a; paintLines();
@@ -223,7 +223,7 @@
             field.addEventListener('pointerup', endDrag);
             field.addEventListener('pointercancel', endDrag);
             /* 「切下去」按鈕 */
-            cutBtn.addEventListener('pointerdown', function (e) { e.preventDefault(); submit(); });
+            cutBtn.addEventListener('pointerdown', function (e) { e.preventDefault(); submit(); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
 
             /* 送出：算出每塊的圓心角、最大最小差距，判斷過不過關，並把蛋糕切塊散開、標上百分比 */
             function submit() {
@@ -231,18 +231,18 @@
                 state = 'reveal'; drag = -1; dragPid = null;
                 acts.style.visibility = 'hidden';
                 /* all：所有刀線（含第一刀）排序後的角度 */
-                var all = [first].concat(lines).map(norm360).sort(function (a, b) { return a - b; });
+                var all = [first].concat(lines).map(norm360).sort(function (a, b) { return a - b; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
                 var angs = sliceAngles(all), n = angs.length, ok = passes(angs);
                 var mx = Math.max.apply(null, angs), mn = Math.min.apply(null, angs);
                 var diffPct = (mx - mn) / 360 * 100;
                 /* 播放音效，並隱藏原本的蛋糕與刀線，改畫切開後的扇形 */
-                Sfx.play('pop');
+                Sfx.play('pop');                        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 gCuts.style.display = 'none'; gCake.style.display = 'none';
                 for (var i = 0; i < n; i++) {
                     var a0 = all[i], a1 = a0 + angs[i], mid = (a0 + angs[i] / 2) * Math.PI / 180;
                     var g = kit.svg('g', { 'class': 'cake-slice' }, gOut);
                     /* 最大塊紅色、最小塊藍色，方便玩家看出誰最大誰最小 */
-                    var cls = 'cake-slice__p' + (Math.abs(angs[i] - mx) < 1e-9 ? ' cake-slice__p--max' : (Math.abs(angs[i] - mn) < 1e-9 ? ' cake-slice__p--min' : ''));
+                    var cls = 'cake-slice__p' + (Math.abs(angs[i] - mx) < 1e-9 ? ' cake-slice__p--max' : (Math.abs(angs[i] - mn) < 1e-9 ? ' cake-slice__p--min' : ''));  /* Math.abs：取絕對值（去掉負號） */
                     kit.svg('path', { 'class': cls, d: sectorPath(a0, a1, R_CAKE - 2) }, g);
                     /* 標籤放在這一塊的中線上、離圓心 0.6 倍半徑處 */
                     var lr = R_CAKE * 0.6;
@@ -267,7 +267,7 @@
                 /* 過關 */
                 if (ok) {
                     cleared = level;
-                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
+                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                     head.textContent = '第 ' + level + ' 關　過關！';
                     Sfx.play('win'); level++; meta();
                     my.after(NEXT_MS, startLevel);
@@ -281,7 +281,7 @@
                 /* 沒有機會了 → 結算；kit.resumeFrom 可以從前 5 關繼續 */
                 var failLevel = level, back = kit.resumeFrom(failLevel);
                 my.after(NEXT_MS, function () {
-                    kit.result(root, {
+                    kit.result(root, {                  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                         score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: cleared + ' 關', label: rating(cleared),
                         lines: ['第 ' + failLevel + ' 關（分 ' + n + ' 塊）最大塊比最小塊多 ' + diffPct.toFixed(4) + '%', '標準是 ' + tolerancePct(n).toFixed(4) + '%（平均一塊的 15%）'],
@@ -294,7 +294,7 @@
 
             /* G.debug：測試用後門，perfect() 可以把藍線放到平均分好的位置 */
             G.debug = {
-                state: function () { return { level: level, state: state, lives: lives, cleared: cleared, n: st && st.n, first: first, lines: lines.slice(), spread: spreadRatio(sliceAngles([first].concat(lines))) }; },
+                state: function () { return { level: level, state: state, lives: lives, cleared: cleared, n: st && st.n, first: first, lines: lines.slice(), spread: spreadRatio(sliceAngles([first].concat(lines))) }; },  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
                 /* 把藍線放到「平均分好」的位置（可加上 jitter 度的誤差）*/
                 perfect: function (jitter) { var n = st.n; for (var i = 1; i < n; i++) lines[i - 1] = norm360(first + i * 360 / n + (jitter || 0) * (i % 2 ? 1 : -1)); paintLines(); return lines.slice(); },
                 submit: submit,

@@ -242,13 +242,13 @@ for (const waste of [0, 0.5, 1]) {
   ok(mean(d1) < mean(ds), '第 1 關比第 12 關省油漆：' + mean(d1).toFixed(1) + ' < ' + mean(ds).toFixed(1)); }
 // ── 接線（原始碼）：每一關自己的沾漆上限、emoji 的畫法與遮罩、沒有舊的 DIP_MAX ──
 { const src = fs.readFileSync(path.resolve(__dirname, '../../js/reaction_paint.js'), 'utf8');
-  ok(!/\bDIP_MAX\b/.test(src.replace(/\/\*[\s\S]*?\*\//g, '')), '程式裡沒有舊的 DIP_MAX（改成 DIP_START／DIP_END 與每關的 dipMax）');
+  ok(!/\bDIP_MAX\b/.test(src.replace(/[ \t]*\/\*[\s\S]*?\*\//g, '')), '程式裡沒有舊的 DIP_MAX（改成 DIP_START／DIP_END 與每關的 dipMax）');
   ok(/var dipMax = dipMaxFor\(n\);/.test(src) && /finish\(n, false, left, dipMax\)/.test(src) && /function finish\(n, allClear, left, dipMax\)/.test(src), '每一關算自己的 dipMax；失敗結算用那一關的上限');
   ok(/info\.textContent = '沾了 ' \+ dips \+ '／' \+ dipMax \+ ' 次/.test(src), '畫面上顯示「沾了 x／這一關的上限 次」');
   ok(/var emojiNeed = rasterEmojiNeed\(scribbles, SQ\);\s*[^\n]*\s*var mask = scribbleMask\(scribbles, SQ, emojiNeed\);/.test(src), '先讀出 emoji 要蓋的格子，再做遮罩');
   ok(/if \(sc\.kind === 'emoji'\) \{ drawEmoji\(g, sc\); return; \}/.test(src) && /function drawEmoji\(g, sc\)[\s\S]{0,300}g\.fillText\(sc\.emoji, sc\.cx, sc\.cy\)/.test(src), '畫面與遮罩用同一個 drawEmoji（同樣的字級、位置）');
   ok(/getImageData\(0, 0, n, n\)/.test(src) && /return cnt >= 0\.25 \* big && cnt <= 0\.9 \* n \* n \? need : null;/.test(src) && /catch \(e\) \{ return null; \}/.test(src), '讀點陣失敗或點陣不合理就回傳 null（改用方框）');
-  ok(!/gridFor|小區/.test(src.replace(/\/\*[\s\S]*?\*\//g, '')), '程式碼裡不再有切小區（gridFor）的邏輯'); }
+  ok(!/gridFor|小區/.test(src.replace(/[ \t]*\/\*[\s\S]*?\*\//g, '')), '程式碼裡不再有切小區（gridFor）的邏輯'); }
 // 評語分級、成績規格
 ok(T.rating(0) === T.rating(2) && T.rating(2) !== T.rating(3) && T.rating(3) !== T.rating(6) && T.rating(6) === T.rating(9) && T.rating(6) !== T.rating(12) && T.rating(12) !== T.rating(T.MAX_LEVEL) && T.rating(T.MAX_LEVEL) === T.rating(999) && T.rating(T.MAX_LEVEL - 1) === T.rating(12), '評語分級（闖過幾關；第 12 關起塗鴉處數到頂，滿 MAX_LEVEL 關才是最高評價）');
 ok(G.score.better === 'max' && G.score.min === 1 && G.score.max === T.MAX_LEVEL && G.score.decimals === 0 && /關/.test(G.score.format), '成績規格：闖過幾關，越大越好，1～' + T.MAX_LEVEL);

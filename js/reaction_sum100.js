@@ -47,13 +47,13 @@
         var best = null;
         for (var t = 0; t < TRIES; t++) {
             var pool = []; for (var a = A_MIN; a <= A_MAX; a++) pool.push(a);
-            var picks = kit.shuffle(pool, rand).slice(0, PAIRS), cards = [];
-            picks.forEach(function (a) { cards.push(a, 100 - a); });
+            var picks = kit.shuffle(pool, rand).slice(0, PAIRS), cards = [];  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+            picks.forEach(function (a) { cards.push(a, 100 - a); });  /* forEach：對陣列的每個元素各做一次 */
             var near = nearMiss(cards);
             if (!best || near > best.near) best = { cards: cards, near: near };
             if (near >= NEAR_MIN) break;
         }
-        return { cards: kit.shuffle(best.cards, rand), near: best.near };
+        return { cards: kit.shuffle(best.cards, rand), near: best.near };  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
     }
     /* 結算畫面的評語（依用時秒數，越快越好） */
     function rating(sec) {
@@ -84,14 +84,14 @@
         console.log('[兩張成百] 牌面 ' + cards.join(',') + '；差一點的組合 ' + bd.near + ' 組');
 
         var clockWrap = h('div', { 'class': 'sum100-clock' });
-        stage.appendChild(clockWrap);
+        stage.appendChild(clockWrap);                   /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var clock = kit.clock(clockWrap, my);           /* 碼表（顯示「時間 X.XXXX 秒」）：start 開始、stop 停止、penalty 罰秒、ms 目前毫秒 */
         var grid = h('div', { 'class': 'sum100-grid' });
-        var els = cards.map(function (n, i) {
+        var els = cards.map(function (n, i) {           /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var el = h('div', { 'class': 'sum100-card', text: String(n) });
             state.push('on');
-            kit.onTap(el, function () { tap(i); });
-            grid.appendChild(el);
+            kit.onTap(el, function () { tap(i); });     /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+            grid.appendChild(el);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             return el;
         });
         stage.appendChild(grid);
@@ -104,9 +104,9 @@
             if (started) return;
             started = true; clock.start();
             /* 時間限制：每一幀檢查（罰秒也算在內），超過就失敗 */
-            my.loop(function () { if (over) return false; if (clock.ms() >= LIMIT_S * 1000) timeUp(); });
+            my.loop(function () { if (over) return false; if (clock.ms() >= LIMIT_S * 1000) timeUp(); });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
             /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「第一組加起來是 100 的牌」的第一張上 */
-            if (kit.once('sum100.hint')) {
+            if (kit.once('sum100.hint')) {              /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
                 var pa = -1;
                 for (var i0 = 0; i0 < cards.length && pa < 0; i0++) for (var j0 = i0 + 1; j0 < cards.length; j0++) if (cards[i0] + cards[j0] === 100) { pa = i0; break; }
                 if (pa >= 0) hint = kit.hintOn(stage, els[pa], { mode: 'tap', delay: 300, text: '請點擊兩張加起來是 100 的牌' });
@@ -120,20 +120,20 @@
         function tap(i) {
             if (!started || over || state[i] !== 'on') return;
             hideHint();
-            if (sel === i) { els[i].classList.remove('sum100-card--sel'); sel = -1; Sfx.play('click'); return; }
-            if (sel < 0) { sel = i; els[i].classList.add('sum100-card--sel'); Sfx.play('click'); return; }
+            if (sel === i) { els[i].classList.remove('sum100-card--sel'); sel = -1; Sfx.play('click'); return; }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+            if (sel < 0) { sel = i; els[i].classList.add('sum100-card--sel'); Sfx.play('click'); return; }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             var j = sel; sel = -1;
             if (cards[i] + cards[j] === 100) {
-                [i, j].forEach(function (k) { state[k] = 'gone'; els[k].classList.remove('sum100-card--sel'); els[k].classList.add('sum100-card--gone'); });
-                remaining -= 2; Sfx.play('ok');
+                [i, j].forEach(function (k) { state[k] = 'gone'; els[k].classList.remove('sum100-card--sel'); els[k].classList.add('sum100-card--gone'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                remaining -= 2; Sfx.play('ok');         /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 if (remaining === 0) finish();
             } else {
                 errors++;
                 if (!firstBad) firstBad = cards[j] + ' ＋ ' + cards[i] + ' ＝ ' + (cards[j] + cards[i]);
-                [i, j].forEach(function (k) { els[k].classList.remove('sum100-card--sel'); els[k].classList.add('sum100-card--bad'); });
+                [i, j].forEach(function (k) { els[k].classList.remove('sum100-card--sel'); els[k].classList.add('sum100-card--bad'); });  /* forEach：對陣列的每個元素各做一次 */
                 my.after(420, function () { [i, j].forEach(function (k) { els[k].classList.remove('sum100-card--bad'); }); });
                 clock.penalty(PENALTY_MS); Sfx.play('bad');
-                info.textContent = '失誤 ' + errors + ' 次（每次 + 3 秒）';
+                info.textContent = '失誤 ' + errors + ' 次（每次 + 3 秒）';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             }
         }
         /* 超過時間限制：失敗（不計成績、不送排行榜），結算說明還剩幾張沒消 */
@@ -141,9 +141,9 @@
         function timeUp() {
             if (over) return;
             over = true; clock.stop(); Sfx.play('bad');
-            info.textContent = '時間到！超過 ' + LIMIT_S + ' 秒';
+            info.textContent = '時間到！超過 ' + LIMIT_S + ' 秒';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             my.after(900, function () {
-                kit.result(api.root, {
+                kit.result(api.root, {                  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                     num: '時間到', label: '超過 ' + LIMIT_S + ' 秒，挑戰失敗',
                     lines: ['還有 ' + remaining + ' 張牌沒有消除', '失誤 ' + errors + ' 次，罰時 ' + (errors * PENALTY_MS / 1000).toFixed(4) + ' 秒'],
                     sfx: 'fail', onAgain: function () { api.restart(); }

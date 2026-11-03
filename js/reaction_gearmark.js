@@ -38,9 +38,9 @@
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }
-    function nFor(level) { return Math.round(ramp(level, GEARS)); }
-    function tolFor(level) { return Math.round(ramp(level, TOL) * 10) / 10; }
+    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function nFor(level) { return Math.round(ramp(level, GEARS)); }  /* Math.round：四捨五入成整數 */
+    function tolFor(level) { return Math.round(ramp(level, TOL) * 10) / 10; }  /* Math.round：四捨五入成整數 */
     function periodMaxFor(level) { return Math.round(ramp(level, PERIOD_MAX)); }
     function timeMs(level) { return Math.round(ramp(level, TIME_S) * 1000); }
     function wrap180(a) { var x = ((a + 180) % 360 + 360) % 360 - 180; return x === -180 ? 180 : x; }       /* 角度換到 (−180, 180] */
@@ -58,7 +58,7 @@
     }
     /* 每根針離正上方的誤差（度，0～180）；theta0 是大齒輪現在轉了幾度 */
     function errors(q, theta0) {
-        return q.teeth.map(function (t, i) { return Math.abs(wrap180(q.marks[i] + rotOf(q.teeth, i, theta0))); });
+        return q.teeth.map(function (t, i) { return Math.abs(wrap180(q.marks[i] + rotOf(q.teeth, i, theta0))); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     }
     function solved(q, theta0) { return Math.max.apply(null, errors(q, theta0)) <= q.tol; }
     /* 出一關：{ teeth, marks（初始針角）, target（對準時大齒輪轉的度數）, tol, period, n, level } */
@@ -66,18 +66,18 @@
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var n = nFor(level), tol = tolFor(level), pmax = periodMaxFor(level);
         for (var tr = 0; tr < 2000; tr++) {
-            var T0 = kit.pick(T0_LIST, rand), teeth = [T0], i;
+            var T0 = kit.pick(T0_LIST, rand), teeth = [T0], i;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             for (i = 1; i < n; i++) {
                 var cand = [];
-                for (var t = TEETH_MIN; t <= T0 - 2; t++) if (Math.abs(t - teeth[i - 1]) >= TEETH_GAP && teeth.indexOf(t) < 0) cand.push(t);
+                for (var t = TEETH_MIN; t <= T0 - 2; t++) if (Math.abs(t - teeth[i - 1]) >= TEETH_GAP && teeth.indexOf(t) < 0) cand.push(t);  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                 if (!cand.length) break;
-                teeth.push(kit.pick(cand, rand));
+                teeth.push(kit.pick(cand, rand));       /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             }
             if (teeth.length < n) continue;
             var P = ratioPeriod(teeth);
             if (P > pmax) continue;
-            var target = kit.randFloat(TARGET_TURN[0], TARGET_TURN[1], rand) * (rand() < 0.5 ? 1 : -1);
-            var marks = teeth.map(function (tt, k) { return wrap360(-rotOf(teeth, k, target)); });
+            var target = kit.randFloat(TARGET_TURN[0], TARGET_TURN[1], rand) * (rand() < 0.5 ? 1 : -1);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+            var marks = teeth.map(function (tt, k) { return wrap360(-rotOf(teeth, k, target)); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var q = { teeth: teeth, marks: marks, target: target, tol: tol, period: P, n: n, level: level };
             if (Math.max.apply(null, errors(q, 0)) <= tol * 3) continue;          /* 起點附近不能已經對準 */
             return q;
@@ -167,18 +167,18 @@
         console.log('[齒輪對記號] 第 ' + level + ' 關：' + n + ' 個齒輪，齒數 ' + teeth.join(':') + '，全部回到原位要 ' + q.period + ' 圈；對準位置＝大齒輪轉 ' + q.target.toFixed(1) + '°；容許誤差 ' + q.tol + '°；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        stage.appendChild(h('div', { 'class': 'qz-note gearmark-tip', text: '畫圈轉大齒輪，讓紅針全指向上' }));
+        stage.appendChild(h('div', { 'class': 'qz-note gearmark-tip', text: '畫圈轉大齒輪，讓紅針全指向上' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         /* 縮放：讓整串齒輪放進 (W−16)×(H−330) 的範圍，置中 */
         var ext = { x0: 1e9, x1: -1e9, y0: 1e9, y1: -1e9 };
-        L.pos.forEach(function (p, i) { var r = teeth[i] + 2; ext.x0 = Math.min(ext.x0, p.x - r); ext.x1 = Math.max(ext.x1, p.x + r); ext.y0 = Math.min(ext.y0, p.y - r - 8); ext.y1 = Math.max(ext.y1, p.y + r); });
+        L.pos.forEach(function (p, i) { var r = teeth[i] + 2; ext.x0 = Math.min(ext.x0, p.x - r); ext.x1 = Math.max(ext.x1, p.x + r); ext.y0 = Math.min(ext.y0, p.y - r - 8); ext.y1 = Math.max(ext.y1, p.y + r); });  /* forEach：對陣列的每個元素各做一次 */
         var areaT = 64, areaH = Math.min(H - 250, 420);
         var s = Math.min((W - 16) / (ext.x1 - ext.x0), areaH / (ext.y1 - ext.y0), 3.2);
         var ox = (W - (ext.x1 - ext.x0) * s) / 2 - ext.x0 * s, oy = areaT + (areaH - (ext.y1 - ext.y0) * s) / 2 - ext.y0 * s;
-        var svg = kit.svg('svg', { 'class': 'gearmark-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
+        var svg = kit.svg('svg', { 'class': 'gearmark-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var cx = L.pos.map(function (p) { return ox + p.x * s; }), cy = L.pos.map(function (p) { return oy + p.y * s; });
         var rot = [], gears = [], hands = [];
-        teeth.forEach(function (T, i) {
-            var R = T * s, g = kit.svg('g', { 'class': 'gearmark-gear', transform: 'translate(' + cx[i].toFixed(2) + ',' + cy[i].toFixed(2) + ')' }, svg);
+        teeth.forEach(function (T, i) {                 /* forEach：對陣列的每個元素各做一次 */
+            var R = T * s, g = kit.svg('g', { 'class': 'gearmark-gear', transform: 'translate(' + cx[i].toFixed(2) + ',' + cy[i].toFixed(2) + ')' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             /* 固定的「正上方」記號：齒輪頂端外面一個小三角形 */
             kit.svg('path', { 'class': 'gearmark-tick', d: 'M-7,' + (-R - 20) + ' L7,' + (-R - 20) + ' L0,' + (-R - 6) + ' Z' }, g);
             var spin = kit.svg('g', {}, g);
@@ -191,29 +191,29 @@
         });
         var list = h('div', { 'class': 'gearmark-list' });
         list.style.top = (areaT + areaH + 8) + 'px';
-        stage.appendChild(list);
+        stage.appendChild(list);                        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip2 = h('div', { 'class': 'qz-note gearmark-hint', text: '誤差要在 ' + q.tol + '° 內，放手就判定' });
         tip2.style.top = (areaT + areaH + 8) + 'px';
         stage.appendChild(tip2);
 
         var theta = 0, done = false, drag = null;
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
-        function paint() { teeth.forEach(function (T, i) { gears[i].setAttribute('transform', 'rotate(' + rotOf(teeth, i, theta).toFixed(3) + ')'); }); }
+        function paint() { teeth.forEach(function (T, i) { gears[i].setAttribute('transform', 'rotate(' + rotOf(teeth, i, theta).toFixed(3) + ')'); }); }  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         paint();
         api.timer(timeMs(level), function () { judge(); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         if (level === 1 && kit.once('gearmark.hint')) kit.hintOn(stage, null, { mode: 'drag', x: cx[0], y: cy[0] - teeth[0] * s * 0.7, dx: teeth[0] * s * 0.7, dy: teeth[0] * s * 0.7, delay: 700, text: '在大齒輪上畫圈' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
         function ang(p) { return Math.atan2(p.x - cx[0], -(p.y - cy[0])) * 180 / Math.PI; }     /* 手指在大齒輪的哪個方向（從正上方順時針的度數） */
-        svg.addEventListener('pointerdown', function (e) {
+        svg.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (done || api.over || drag) return;
             var p = kit.localPt(e, svg);
             if (kit.dist(p.x, p.y, cx[0], cy[0]) > teeth[0] * s * 1.25 + 10) return;           /* 只接大齒輪上（附近）的按下 */
-            e.preventDefault();
-            try { svg.setPointerCapture(e.pointerId); } catch (err) { }
+            e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            try { svg.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             drag = { id: e.pointerId, a: ang(p), x: p.x, y: p.y, moved: 0 };
-            stage.classList.add('gearmark-turning');
+            stage.classList.add('gearmark-turning');    /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         });
-        svg.addEventListener('pointermove', function (e) {
+        svg.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (!drag || e.pointerId !== drag.id || done) return;
             var p = kit.localPt(e, svg), a = ang(p);
             theta += wrap180(a - drag.a);                                                     /* 累加轉動量（不會因為轉過 360° 而跳回去） */
@@ -222,7 +222,7 @@
         });
         function release(e) {
             if (!drag || e.pointerId !== drag.id) return;
-            var moved = drag.moved; drag = null; stage.classList.remove('gearmark-turning');
+            var moved = drag.moved; drag = null; stage.classList.remove('gearmark-turning');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             if (moved >= MIN_TAP_MOVE) judge();
         }
         svg.addEventListener('pointerup', release);
@@ -232,21 +232,21 @@
         function judge() {
             if (done || api.over) return;
             done = true; drag = null; stage.classList.remove('gearmark-turning');
-            var errs = errors(q, theta), worst = Math.max.apply(null, errs), ok = worst <= q.tol, worstIdx = errs.indexOf(worst);
+            var errs = errors(q, theta), worst = Math.max.apply(null, errs), ok = worst <= q.tol, worstIdx = errs.indexOf(worst);  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             tip2.style.display = 'none';
             errs.forEach(function (er, i) {
                 var good = er <= q.tol;
                 list.appendChild(h('div', { 'class': 'gearmark-row ' + (good ? 'gearmark-row--ok' : 'gearmark-row--bad'), text: '齒輪 ' + (i + 1) + '（' + teeth[i] + ' 齒）：差 ' + deg4(er) + ' 度' }));
-                hands[i].firstChild.setAttribute('class', 'gearmark-needle ' + (good ? 'gearmark-needle--ok' : 'gearmark-needle--bad'));
+                hands[i].firstChild.setAttribute('class', 'gearmark-needle ' + (good ? 'gearmark-needle--ok' : 'gearmark-needle--bad'));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             });
             if (ok) {
                 stage.classList.add('gearmark-flash');
-                kit.flash(stage, true, api.my);
-                api.pass({ delay: 2000 });
+                kit.flash(stage, true, api.my);         /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+                api.pass({ delay: 2000 });              /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
                 return;
             }
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: 3200, lines: ['最大的誤差是齒輪 ' + (worstIdx + 1) + '：差了 ' + deg4(worst) + ' 度', '要在 ' + q.tol + ' 度以內才算對準（全部回到原位要轉 ' + q.period + ' 圈）'] });
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 3200, lines: ['最大的誤差是齒輪 ' + (worstIdx + 1) + '：差了 ' + deg4(worst) + ' 度', '要在 ' + q.tol + ' 度以內才算對準（全部回到原位要轉 ' + q.period + ' 圈）'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { theta = q.target; paint(); judge(); };

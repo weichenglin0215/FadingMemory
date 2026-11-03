@@ -58,23 +58,23 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function prog(n) { return Math.min(1, Math.max(0, n / RAMP_COINS)); }
     function lerp(pair, n) { return pair[0] + (pair[1] - pair[0]) * prog(n); }
-    function fallMsFor(n) { return Math.round(lerp(FALL_S, n) * 1000); }
-    function backPFor(n) { return Math.round(lerp(BACK_P, n) * 1000) / 1000; }
+    function fallMsFor(n) { return Math.round(lerp(FALL_S, n) * 1000); }  /* Math.round：四捨五入成整數 */
+    function backPFor(n) { return Math.round(lerp(BACK_P, n) * 1000) / 1000; }  /* Math.round：四捨五入成整數 */
     function ratio5For(n) { return Math.round(lerp(RATIO5, n) * 1000) / 1000; }
     /* 硬幣直徑（px）：W＝畫面寬 */
     function diameterOf(type, n, W) { var big = Math.round(W * COIN_D); return COIN[type].big ? big : Math.round(big * ratio5For(n)); }
     /* 手指位移 (dx, dy)（y 向下）→ 'left'｜'right'｜'down'｜'up'；位移太短回傳 null。往上滑回傳 'up'（不算數） */
     function classifySwipe(dx, dy, minDist) {
         if (Math.hypot(dx, dy) < (minDist == null ? SWIPE_MIN : minDist)) return null;
-        if (Math.abs(dx) >= Math.abs(dy) * HORIZ_K && Math.abs(dx) > 0) return dx < 0 ? 'left' : 'right';
+        if (Math.abs(dx) >= Math.abs(dy) * HORIZ_K && Math.abs(dx) > 0) return dx < 0 ? 'left' : 'right';  /* Math.abs：取絕對值（去掉負號） */
         return dy > 0 ? 'down' : 'up';
     }
     /* 下一枚硬幣：{ type, back }。三種各 1/3，但最多連續 MAX_SAME 枚同一種；back 依 backPFor(n) */
     function nextCoin(history, n, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var pool = TYPES.slice(), k = history.length;
-        if (k >= MAX_SAME) { var last = history[k - 1], same = true; for (var i = 1; i < MAX_SAME; i++) if (history[k - 1 - i] !== last) same = false; if (same) pool = pool.filter(function (t) { return t !== last; }); }
-        return { type: kit.pick(pool, rand), back: rand() < backPFor(n) };
+        var pool = TYPES.slice(), k = history.length;   /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        if (k >= MAX_SAME) { var last = history[k - 1], same = true; for (var i = 1; i < MAX_SAME; i++) if (history[k - 1 - i] !== last) same = false; if (same) pool = pool.filter(function (t) { return t !== last; }); }  /* filter：留下符合條件的元素，回傳新陣列 */
+        return { type: kit.pick(pool, rand), back: rand() < backPFor(n) };  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
     }
     /* 這次滑對不對 */
     function isRight(type, dir) { return DIR_OF[type] === dir; }
@@ -109,8 +109,8 @@
 
     /* 畫一枚硬幣（SVG，viewBox −50～50）：正面顯示幾元，背面畫一個花紋（不仿真實硬幣圖案） */
     function coinSvg(type, back, D) {
-        var c = COIN[type], svg = kit.svg('svg', { 'class': 'coinsort-coin coinsort-coin--' + c.metal, viewBox: '-50 -50 100 100', width: D, height: D });
-        kit.svg('circle', { 'class': 'coinsort-rim', cx: 0, cy: 0, r: 48 }, svg);
+        var c = COIN[type], svg = kit.svg('svg', { 'class': 'coinsort-coin coinsort-coin--' + c.metal, viewBox: '-50 -50 100 100', width: D, height: D });  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('circle', { 'class': 'coinsort-rim', cx: 0, cy: 0, r: 48 }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         kit.svg('circle', { 'class': 'coinsort-reed', cx: 0, cy: 0, r: 46 }, svg);
         kit.svg('circle', { 'class': 'coinsort-face', cx: 0, cy: 0, r: 40 }, svg);
         kit.svg('circle', { 'class': 'coinsort-ring', cx: 0, cy: 0, r: 40 }, svg);
@@ -118,7 +118,7 @@
             kit.svg('circle', { 'class': 'coinsort-pat', cx: 0, cy: 0, r: 9 }, svg);
             for (var i = 0; i < 8; i++) { var a = i * Math.PI / 4; kit.svg('circle', { 'class': 'coinsort-pat', cx: (25 * Math.cos(a)).toFixed(2), cy: (25 * Math.sin(a)).toFixed(2), r: 5 }, svg); }
         } else {
-            var t = kit.svg('text', { 'class': 'coinsort-digit coinsort-digit--' + c.value.length, x: 0, y: 3 }, svg); t.textContent = c.value;
+            var t = kit.svg('text', { 'class': 'coinsort-digit coinsort-digit--' + c.value.length, x: 0, y: 3 }, svg); t.textContent = c.value;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         }
         return svg;
     }
@@ -135,35 +135,35 @@
         console.log('[零錢入筒] 開始：掉落時間 ' + fallMsFor(0) + ' → ' + fallMsFor(RAMP_COINS) + ' 毫秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var field = h('div', { 'class': 'coinsort-field' });
-        stage.appendChild(field);
+        stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         /* 三個收集筒：左下 50 元、正下 5 元、右下 10 元；筒口的位置就是硬幣要掉到的線 */
         var TUBE_H = 150, tubeTop = H - TUBE_H - 8, lineY = tubeTop - 6, tubeW = Math.round(W * 0.28), tubes = {}, big = Math.round(W * COIN_D);
-        ['left', 'down', 'right'].forEach(function (dir) {
-            var type = TYPES.filter(function (t) { return DIR_OF[t] === dir; })[0], c = COIN[type];
+        ['left', 'down', 'right'].forEach(function (dir) {  /* forEach：對陣列的每個元素各做一次 */
+            var type = TYPES.filter(function (t) { return DIR_OF[t] === dir; })[0], c = COIN[type];  /* filter：留下符合條件的元素，回傳新陣列 */
             var el = h('div', { 'class': 'coinsort-tube' });
             el.style.cssText = 'left:' + Math.round(W * TUBE_X[dir] - tubeW / 2) + 'px;top:' + tubeTop + 'px;width:' + tubeW + 'px;height:' + TUBE_H + 'px;';
-            var ico = h('div', { 'class': 'coinsort-tube__ico' }); ico.appendChild(coinSvg(type, false, Math.round(big * 0.5)));
+            var ico = h('div', { 'class': 'coinsort-tube__ico' }); ico.appendChild(coinSvg(type, false, Math.round(big * 0.5)));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             var lab = h('div', { 'class': 'coinsort-tube__lab', text: DIR_ARROW[dir] + ' ' + c.name });
             var num = h('div', { 'class': 'coinsort-tube__num', text: '0 枚' });
             el.appendChild(ico); el.appendChild(lab); el.appendChild(num); field.appendChild(el);
             tubes[type] = { el: el, num: num, dir: dir, x: Math.round(W * TUBE_X[dir]), ico: ico };
         });
         var info = h('div', { 'class': 'qz-note coinsort-info', text: '' }); field.appendChild(info);
-        function tubeCount(type) { counts[type]++; tubes[type].num.textContent = counts[type] + ' 枚'; tubes[type].el.classList.remove('coinsort-tube--hit'); void tubes[type].el.offsetWidth; tubes[type].el.classList.add('coinsort-tube--hit'); }
+        function tubeCount(type) { counts[type]++; tubes[type].num.textContent = counts[type] + ' 枚'; tubes[type].el.classList.remove('coinsort-tube--hit'); void tubes[type].el.offsetWidth; tubes[type].el.classList.add('coinsort-tube--hit'); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
 
         /* ── 出一枚硬幣 ── */
         function spawn() {
             if (over || api.over) return;
             var nc = nextCoin(history, count, api.rand), D = diameterOf(nc.type, count, W), fall = fallMsFor(count);
             history.push(nc.type); if (history.length > 8) history.shift();
-            var x = Math.round(kit.randFloat(W * 0.3, W * 0.7, api.rand)), el = h('div', { 'class': 'coinsort-coinbox' });
+            var x = Math.round(kit.randFloat(W * 0.3, W * 0.7, api.rand)), el = h('div', { 'class': 'coinsort-coinbox' });  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             el.style.cssText = 'width:' + D + 'px;height:' + D + 'px;';
             el.appendChild(coinSvg(nc.type, nc.back, D)); field.appendChild(el);
-            coin = { type: nc.type, back: nc.back, D: D, x: x, y: -D, el: el, t0: performance.now(), fall: fall, done: false, no: ++gen };
+            coin = { type: nc.type, back: nc.back, D: D, x: x, y: -D, el: el, t0: performance.now(), fall: fall, done: false, no: ++gen };  /* performance.now()：高精度的時間（毫秒），計時用 */
             place(coin, x, -D);
-            if (count === 0 && kit.once('coinsort.hint')) {
+            if (count === 0 && kit.once('coinsort.hint')) {  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
                 var mine = coin;
-                api.after(900, function () {
+                api.after(900, function () {            /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                     if (coin !== mine || mine.done || over) return;
                     var tt = tubes[mine.type], p = Math.min(1, (performance.now() - mine.t0) / mine.fall), cy = -mine.D + lineY * p + mine.D / 2;          /* 硬幣現在的中心 y */
                     kit.hintOn(stage, null, { mode: 'drag', x: mine.x, y: cy, dx: tt.x - mine.x, dy: tubeTop + 30 - cy, text: '照筒子上的箭頭滑' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
@@ -172,7 +172,7 @@
         }
         function place(c, x, y) { c.el.style.transform = 'translate3d(' + (x - c.D / 2).toFixed(1) + 'px,' + y.toFixed(1) + 'px,0)'; }
         /* 每一格影格：硬幣往下掉；掉到筒子口還沒滑 → 結束 */
-        loop = api.my.loop(function (now) {
+        loop = api.my.loop(function (now) {             /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
             if (over || !stage.isConnected) return false;
             if (!coin || coin.done) return;
             var p = (now - coin.t0) / coin.fall;
@@ -180,14 +180,14 @@
             coin.y = -coin.D + lineY * p; place(coin, coin.x, coin.y);                 /* 頂端的 y：從 −D（剛好在畫面上方）走到 lineY − D（硬幣底部碰到筒子口） */
         });
         /* 保底：rAF 被暫停（背景分頁）時，用計時器檢查是不是掉到底了 */
-        (function guard() { api.after(250, function () { if (over || api.over) return; if (coin && !coin.done && performance.now() - coin.t0 >= coin.fall + 150) miss(); guard(); }); })();
+        (function guard() { api.after(250, function () { if (over || api.over) return; if (coin && !coin.done && performance.now() - coin.t0 >= coin.fall + 150) miss(); guard(); }); })();  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
         api.after(LEAD_MS, spawn);
 
         /* ── 滑 ── */
         var down = null;
-        field.addEventListener('pointerdown', function (e) {
+        field.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (over || api.over || down) return;
-            e.preventDefault(); try { field.setPointerCapture(e.pointerId); } catch (err) { }
+            e.preventDefault(); try { field.setPointerCapture(e.pointerId); } catch (err) { }  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             var p = kit.localPt(e, field); down = { id: e.pointerId, x: p.x, y: p.y, fired: false };
         });
         function track(e) {
@@ -196,7 +196,7 @@
             if (d == null || d === 'up') return;
             down.fired = true; swipe(d);
         }
-        field.addEventListener('pointermove', track);
+        field.addEventListener('pointermove', track);   /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
         field.addEventListener('pointerup', function (e) { track(e); if (down && e.pointerId === down.id) down = null; });
         field.addEventListener('pointercancel', function (e) { if (down && e.pointerId === down.id) down = null; });
 
@@ -206,12 +206,12 @@
             var ok = isRight(c.type, dir), tube = tubes[ok ? c.type : TYPES.filter(function (t) { return DIR_OF[t] === dir; })[0]];
             /* 硬幣飛進筒子口 */
             var fx = c.x, fy = c.y, tx = tube.x, ty = tubeTop + 22;
-            api.my.tween(FLY_MS, function (p) { place(c, fx + (tx - fx) * p, fy + (ty - c.D / 2 - fy) * p); c.el.style.opacity = String(1 - 0.6 * p); }, kit.easeInQuad).then(function () {
+            api.my.tween(FLY_MS, function (p) { place(c, fx + (tx - fx) * p, fy + (ty - c.D / 2 - fy) * p); c.el.style.opacity = String(1 - 0.6 * p); }, kit.easeInQuad).then(function () {  /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
                 if (c.el.parentNode) c.el.parentNode.removeChild(c.el);
                 if (ok && !over) { tubeCount(c.type); }
             });
             if (ok) {
-                count++; S.score = count; api.setInfo('已收 ' + count + ' 枚'); Sfx.play('ok');
+                count++; S.score = count; api.setInfo('已收 ' + count + ' 枚'); Sfx.play('ok');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 coin = null; api.after(NEXT_MS, spawn);
             } else finish('wrong', c, dir);
         }
@@ -221,8 +221,8 @@
             if (over) return;
             over = true;
             var why = whyText(c.type, kind, dir);
-            info.textContent = why;
-            tubes[c.type].el.classList.add('coinsort-tube--right');
+            info.textContent = why;                     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            tubes[c.type].el.classList.add('coinsort-tube--right');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             if (dir) { var wt = TYPES.filter(function (t) { return DIR_OF[t] === dir; })[0]; if (wt !== c.type) tubes[wt].el.classList.add('coinsort-tube--wrong'); }
             /* 那一枚硬幣放大、翻到正面 */
             if (kind === 'miss' && c.el.parentNode) c.el.parentNode.removeChild(c.el);
@@ -231,8 +231,8 @@
             bigEl.appendChild(coinSvg(c.type, false, BD)); field.appendChild(bigEl);
             api.after(40, function () { bigEl.classList.add('coinsort-bigcoin--show'); });
             info.style.top = Math.round(Math.max(70, (lineY - BD - 90) / 2 + 40) + BD + 14) + 'px';
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: 3800, lines: [why, '銅色大＝50 元（往左）、銅色小＝5 元（往下）、銀色大＝10 元（往右）'] });
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 3800, lines: [why, '銅色大＝50 元（往左）、銅色小＝5 元（往下）、銀色大＝10 元（往右）'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
 
         /* 驗證用：幫忙滑對／滑錯目前這枚（可以重複呼叫；solve 最多幫 SOLVE_CAP 枚） */

@@ -40,13 +40,13 @@
     var MINUS = '−';                            /* 減號（U+2212） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function timeMs(n) { var p = Math.min(1, Math.max(0, n / RAMP_Q)); return Math.round((TIME_S[0] + (TIME_S[1] - TIME_S[0]) * p) * 1000); }
+    function timeMs(n) { var p = Math.min(1, Math.max(0, n / RAMP_Q)); return Math.round((TIME_S[0] + (TIME_S[1] - TIME_S[0]) * p) * 1000); }  /* Math.round：四捨五入成整數 */
     /* 第 i 題（從 0 算起）的變化量 */
     function stepDelta(i) { if (i < RULE2_FROM) return -DEC; if (i < RULE3_FROM) return -DEC2; return ((i - RULE3_FROM) % 2 === 0) ? ADD3 : -SUB3; }
     /* 答對 i 題之後的數字（i＝0 是起始值）：START ＋ 前 i 題的變化量總和 */
     function valueAfter(i) { var v = START; for (var k = 0; k < i; k++) v += stepDelta(k); return v; }
     /* 這個變化量要顯示成什麼字：「−7」「＋17」 */
-    function deltaText(d) { return (d < 0 ? MINUS : '＋') + Math.abs(d); }
+    function deltaText(d) { return (d < 0 ? MINUS : '＋') + Math.abs(d); }  /* Math.abs：取絕對值（去掉負號） */
     /* 第 i 題大字：第 0 題「−7」；同一個規則的後續題目「再 −7」；規則剛換、或加減輪流時只寫「−13」「＋17」 */
     function bigText(i) { var d = stepDelta(i), t = deltaText(d); if (i === 0) return t; return (stepDelta(i - 1) === d) ? '再 ' + t : t; }
     /* 這一題前要不要先預告規則換了：回傳預告文字或 null */
@@ -60,10 +60,10 @@
        所以三組各差 10（例如 975／985／995 開頭），正確答案可能在最大、中間或最小的那一組。九個數字隨機打散，回傳 { options（9 個，打散後的順序）, idx（正確答案是第幾個）} */
     function makeOptions(ans, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var pos = kit.randInt(0, 2, rand), g = kit.randInt(0, 2, rand), start = ans - pos, nums = [];
+        var pos = kit.randInt(0, 2, rand), g = kit.randInt(0, 2, rand), start = ans - pos, nums = [];  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         for (var k = 0; k < 3; k++) for (var j = 0; j < 3; j++) nums.push(start + 10 * (k - g) + j);
-        var options = kit.shuffle(nums, rand);
-        return { options: options, idx: options.indexOf(ans) };
+        var options = kit.shuffle(nums, rand);          /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+        return { options: options, idx: options.indexOf(ans) };  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
     }
     /* 一題：{ i, from（目前的數字，不顯示）, delta, ans, options, idx, big（大字）, notice, time（毫秒）} */
     function makeQuestion(i, rand) {
@@ -71,7 +71,7 @@
         return { i: i, from: from, delta: d, ans: ans, options: op.options, idx: op.idx, big: bigText(i), notice: noticeBefore(i), time: timeMs(i) };
     }
     /* 失敗時的說明：選了 picked（null＝沒選）；算式寫出「986 − 7 ＝ 979」 */
-    function formula(q) { return q.from + ' ' + (q.delta < 0 ? MINUS : '＋') + ' ' + Math.abs(q.delta) + ' ＝ ' + q.ans; }
+    function formula(q) { return q.from + ' ' + (q.delta < 0 ? MINUS : '＋') + ' ' + Math.abs(q.delta) + ' ＝ ' + q.ans; }  /* Math.abs：取絕對值（去掉負號） */
     function whyText(q, picked) { return picked == null ? '時間到！' + formula(q) : '算錯了！' + formula(q) + '，你選了 ' + picked; }
     /* 整串數字（最後 count 步）：['1000', '993', ...] */
     function chain(upTo, count) { var out = [], from = Math.max(0, upTo - count + 1); for (var k = from; k <= upTo; k++) out.push(valueAfter(k)); return out; }
@@ -108,41 +108,41 @@
         console.log('[一路減七] 開始：從 ' + START + ' 開始；每題限時 ' + timeMs(0) + ' → ' + timeMs(RAMP_Q) + ' 毫秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var field = h('div', { 'class': 'minus7-field' });
-        stage.appendChild(field);
-        var banner = h('div', { 'class': 'minus7-banner', text: '請從 ' + START + ' 開始計數' }); field.appendChild(banner);
+        stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var banner = h('div', { 'class': 'minus7-banner', text: '請從 ' + START + ' 開始計數' }); field.appendChild(banner);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var big = h('div', { 'class': 'minus7-big minus7-pop--out', text: '' }); field.appendChild(big);
         var info = h('div', { 'class': 'qz-note minus7-info', text: '' }); field.appendChild(info);
         var grid = h('div', { 'class': 'minus7-grid minus7-pop--out' }); field.appendChild(grid);
-        var btns = [0, 1, 2, 3, 4, 5, 6, 7, 8].map(function (k) { var b = h('button', { 'class': 'btn btn--line minus7-btn', text: '' }); grid.appendChild(b); kit.onTap(b, function () { answer(k); }); return b; });
+        var btns = [0, 1, 2, 3, 4, 5, 6, 7, 8].map(function (k) { var b = h('button', { 'class': 'btn btn--line minus7-btn', text: '' }); grid.appendChild(b); kit.onTap(b, function () { answer(k); }); return b; });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
 
         /* 開場：先顯示「請從 1000 開始計數」，然後出第 0 題 */
-        api.after(INTRO_MS, function () { banner.classList.add('minus7-banner--hide'); api.after(260, function () { ask(); }); });
+        api.after(INTRO_MS, function () { banner.classList.add('minus7-banner--hide'); api.after(260, function () { ask(); }); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
 
-        function pop(inn) { big.classList.toggle('minus7-pop--out', !inn); grid.classList.toggle('minus7-pop--out', !inn); }
+        function pop(inn) { big.classList.toggle('minus7-pop--out', !inn); grid.classList.toggle('minus7-pop--out', !inn); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         /* 出一題：（規則換了先預告）→ 換字、換按鈕 → 放大出現 → 開始計時 */
         function ask() {
             if (api.over) return;
             q = makeQuestion(count, api.rand);
             var go = function () {
                 if (api.over) return;
-                big.textContent = q.big; q.options.forEach(function (v, k) { btns[k].textContent = String(v); btns[k].classList.remove('minus7-btn--ok', 'minus7-btn--bad'); });
+                big.textContent = q.big; q.options.forEach(function (v, k) { btns[k].textContent = String(v); btns[k].classList.remove('minus7-btn--ok', 'minus7-btn--bad'); });  /* forEach：對陣列的每個元素各做一次 */
                 pop(true); phase = 'wait';
-                api.after(GROW_MS, function () {
+                api.after(GROW_MS, function () {        /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                     if (api.over || phase !== 'wait') return;
                     phase = 'ask'; api.stopTimer(); api.timer(q.time, function () { fail(null); });
                     if (count === 0 && kit.once('minus7.hint')) kit.hintOn(stage, btns[q.idx], { mode: 'tap', delay: 700, text: START + ' 減 7 是多少？' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
                 });
             };
             if (q.notice) {
-                banner.textContent = q.notice; banner.classList.remove('minus7-banner--hide'); phase = 'notice';
-                api.after(NOTICE_MS, function () { banner.classList.add('minus7-banner--hide'); api.after(260, go); });
+                banner.textContent = q.notice; banner.classList.remove('minus7-banner--hide'); phase = 'notice';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                api.after(NOTICE_MS, function () { banner.classList.add('minus7-banner--hide'); api.after(260, go); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             } else go();
         }
         function answer(k) {
             if (phase !== 'ask' || api.over) return;
             phase = 'judge'; api.stopTimer(); picked = q.options[k];
             if (k === q.idx) {
-                btns[k].classList.add('minus7-btn--ok'); count++; S.score = count; api.setInfo('答對 ' + count + ' 題'); Sfx.play('ok');
+                btns[k].classList.add('minus7-btn--ok'); count++; S.score = count; api.setInfo('答對 ' + count + ' 題'); Sfx.play('ok');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 api.after(120, function () { pop(false); api.after(SHRINK_MS, ask); });         /* 「−7」和三個按鈕一起縮小消失，再出新題 */
                 return;
             }
@@ -156,11 +156,11 @@
             var why = whyText(q, pk);
             banner.textContent = why; banner.classList.remove('minus7-banner--hide'); banner.classList.add('minus7-banner--bad');          /* 結果寫在最上面的提示框（下面要留給整串數字） */
             var box = h('div', { 'class': 'minus7-chain' }), nums = chain(count, 10);
-            nums.forEach(function (v, k) { var last = k === nums.length - 1; box.appendChild(h('span', { 'class': 'minus7-chain__n' + (last ? ' minus7-chain__n--now' : ''), text: String(v) })); if (!last) box.appendChild(h('span', { 'class': 'minus7-chain__a', text: '→' })); });
+            nums.forEach(function (v, k) { var last = k === nums.length - 1; box.appendChild(h('span', { 'class': 'minus7-chain__n' + (last ? ' minus7-chain__n--now' : ''), text: String(v) })); if (!last) box.appendChild(h('span', { 'class': 'minus7-chain__a', text: '→' })); });  /* forEach：對陣列的每個元素各做一次 */
             box.appendChild(h('span', { 'class': 'minus7-chain__a', text: '→' })); box.appendChild(h('span', { 'class': 'minus7-chain__n minus7-chain__n--ans', text: q.ans + '？' }));
             field.appendChild(box);
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: 4200, lines: [why, '數字一路是：' + chain(count, 10).join(' → ') + ' → ' + q.ans, '這一題的規則：' + deltaText(q.delta)] });
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 4200, lines: [why, '數字一路是：' + chain(count, 10).join(' → ') + ' → ' + q.ans, '這一題的規則：' + deltaText(q.delta)] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：答對目前這題（最多 SOLVE_CAP 題）／選一個錯的；可重複呼叫 */
         api.solve = function () { if (phase !== 'ask' || count >= SOLVE_CAP) return; answer(q.idx); };

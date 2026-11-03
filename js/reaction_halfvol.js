@@ -47,8 +47,8 @@
     }
     /* 半徑 r(y)：y 在 0～VASE_H（從瓶底往上），rs 是 NODES 個控制點半徑 */
     function radiusAt(rs, y) {
-        var u = kit.clamp(y / VASE_H, 0, 1) * (rs.length - 1);
-        var i = Math.min(rs.length - 2, Math.floor(u)), t = u - i;
+        var u = kit.clamp(y / VASE_H, 0, 1) * (rs.length - 1);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
+        var i = Math.min(rs.length - 2, Math.floor(u)), t = u - i;  /* Math.floor：無條件捨去成整數 */
         var p0 = rs[Math.max(0, i - 1)], p1 = rs[i], p2 = rs[i + 1], p3 = rs[Math.min(rs.length - 1, i + 2)];
         return Math.max(R_FLOOR, cr(p0, p1, p2, p3, t));
     }
@@ -63,8 +63,8 @@
     }
     /* 高度 y（可以有小數）以下的面積：在累積陣列上線性內插 */
     function volumeAt(cum, y) {
-        y = kit.clamp(y, 0, VASE_H);
-        var i = Math.min(VASE_H - 1, Math.floor(y)), t = y - i;
+        y = kit.clamp(y, 0, VASE_H);                    /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
+        var i = Math.min(VASE_H - 1, Math.floor(y)), t = y - i;  /* Math.floor：無條件捨去成整數 */
         return cum[i] + (cum[i + 1] - cum[i]) * t;
     }
     /* 一半面積的高度 h*：二分搜尋 */
@@ -74,22 +74,22 @@
         return (lo + hi) / 2;
     }
     /* 誤差（%）：線以下的面積與一半總面積的差 ÷ 總面積 */
-    function errPct(cum, y) { return Math.abs(volumeAt(cum, y) - cum[VASE_H] / 2) / cum[VASE_H] * 100; }
+    function errPct(cum, y) { return Math.abs(volumeAt(cum, y) - cum[VASE_H] / 2) / cum[VASE_H] * 100; }  /* Math.abs：取絕對值（去掉負號） */
     /* 有號的差異（%）：＋＝線以下的面積超過一半、－＝不足。空瓶是 −50、滿瓶是 ＋50 */
     function signedPct(cum, y) { return (volumeAt(cum, y) - cum[VASE_H] / 2) / cum[VASE_H] * 100; }
     /* 帶正負號的百分比字串：＋3.1234% ／ −0.5000%（0 算＋） */
-    function fmtSigned(p) { return (p >= 0 ? '+' : '−') + Math.abs(p).toFixed(4) + '%'; }
+    function fmtSigned(p) { return (p >= 0 ? '+' : '−') + Math.abs(p).toFixed(4) + '%'; }  /* Math.abs：取絕對值（去掉負號） */
     /* 出題：隨機控制點半徑；h* 要離一半高度夠遠；起始水位離答案與一半高度都夠遠 */
     function makeRound(rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         for (var tries = 0; tries < 800; tries++) {
             var rs = [];
-            for (var i = 0; i < NODES; i++) rs.push(kit.randFloat(R_MIN, R_MAX, rand));
+            for (var i = 0; i < NODES; i++) rs.push(kit.randFloat(R_MIN, R_MAX, rand));  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             var cum = cumulative(rs), hs = halfHeight(cum);
             if (Math.abs(hs - VASE_H / 2) < MIN_GAP * VASE_H) continue;
             var start = null;
             for (var k = 0; k < 40 && start == null; k++) {
-                var c = kit.randFloat(0.08, 0.92, rand) * VASE_H;
+                var c = kit.randFloat(0.08, 0.92, rand) * VASE_H;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
                 if (Math.abs(c - hs) >= START_GAP * VASE_H && Math.abs(c - VASE_H / 2) >= 0.1 * VASE_H) start = c;
             }
             if (start == null) continue;
@@ -129,7 +129,7 @@
         var base = Math.min(BOTTOM, H - 100);
         function yOf(level) { return base - level; }
 
-        var svg = kit.svg('svg', { 'class': 'halfvol-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
+        var svg = kit.svg('svg', { 'class': 'halfvol-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         /* 瓶身輪廓（每 4px 取一點） */
         function side(sign) {
             var pts = [];
@@ -137,19 +137,19 @@
             return pts;
         }
         var left = side(-1), right = side(1);
-        var outline = left.concat(right.slice().reverse());
-        kit.svg('polygon', { points: outline.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '), 'class': 'halfvol-vase' }, svg);
-        var water = kit.svg('polygon', { 'class': 'halfvol-water' }, svg);
-        kit.svg('polygon', { points: outline.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '), 'class': 'halfvol-rim' }, svg);
+        var outline = left.concat(right.slice().reverse());  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        kit.svg('polygon', { points: outline.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '), 'class': 'halfvol-vase' }, svg);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        var water = kit.svg('polygon', { 'class': 'halfvol-water' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('polygon', { points: outline.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '), 'class': 'halfvol-rim' }, svg);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         var refHalfV = kit.svg('line', { x1: CX - 150, x2: CX + 150, y1: yOf(cfg.hs), y2: yOf(cfg.hs), 'class': 'halfvol-ref halfvol-ref--v', opacity: 0 }, svg);
         var line = kit.svg('line', { x1: CX - 150, x2: CX + 150, 'class': 'halfvol-line' }, svg);
         var hl = kit.svg('circle', { cx: CX - 150, r: 20, 'class': 'halfvol-knob' }, svg);
         var hr = kit.svg('circle', { cx: CX + 150, r: 20, 'class': 'halfvol-knob' }, svg);
         var diffTxt = kit.svg('text', { x: CX, y: 0, 'text-anchor': 'middle', 'class': 'halfvol-diff', opacity: 0 }, svg);   /* 水面下方：目前水量與 50% 的差異 */
         var msg = h('div', { 'class': 'halfvol-msg' });
-        stage.appendChild(msg);
+        stage.appendChild(msg);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var okBtn = h('button', { 'class': 'btn btn--go halfvol-ok', text: '確定' });
-        stage.appendChild(okBtn);
+        stage.appendChild(okBtn);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
 
         function waterPoly(level) {
             var pts = [];
@@ -161,14 +161,14 @@
         }
         /* L ＝ 藍線（玩家拖的）的位置；Wl ＝ 水位（平常等於 L，揭曉時從 0 升到 L，藍線不動） */
         function paint() {
-            water.setAttribute('points', waterPoly(Wl));
-            line.setAttribute('y1', yOf(L)); line.setAttribute('y2', yOf(L));
+            water.setAttribute('points', waterPoly(Wl));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+            line.setAttribute('y1', yOf(L)); line.setAttribute('y2', yOf(L));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             hl.setAttribute('cy', yOf(L)); hr.setAttribute('cy', yOf(L));
         }
         paint();
 
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從水位線右邊的把手往「剛好一半容量的高度」重複移動（第一次的正確答案） */
-        if (kit.once('halfvol.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: CX + 150, y: yOf(L), dx: 0, dy: yOf(cfg.hs) - yOf(L), delay: 400 });
+        if (kit.once('halfvol.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: CX + 150, y: yOf(L), dx: 0, dy: yOf(cfg.hs) - yOf(L), delay: 400 });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
 
         kit.dragDamp(stage, {
@@ -176,13 +176,13 @@
             start: function () { hideHint(); return true; },
             move: function (dx, dy) { L = kit.clamp(L - dy, 0, VASE_H); Wl = L; paint(); }
         });
-        kit.onTap(okBtn, function () { submit(); });
+        kit.onTap(okBtn, function () { submit(); });    /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
 
         function submit() {
             if (locked) return;
             locked = true; hideHint();
             okBtn.style.display = 'none';
-            Sfx.play('click');
+            Sfx.play('click');                          /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             var real = errPct(cfg.cum, L), sgn = signedPct(cfg.cum, L) >= 0 ? 1 : -1;
             var below = volumeAt(cfg.cum, L) / cfg.total * 100;
             /* 揭曉：藍線不動，水從瓶底慢慢往上累積到藍線；水面下方顯示「目前水量與 50% 的差異」（−50.0000% 一路往上，過 0 變＋）；
@@ -191,18 +191,18 @@
             diffTxt.setAttribute('opacity', 1);
             function showDiff() {
                 var p = signedPct(cfg.cum, Wl);
-                diffTxt.textContent = fmtSigned(p) + '（與 50% 的差）';
+                diffTxt.textContent = fmtSigned(p) + '（與 50% 的差）';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 diffTxt.setAttribute('y', Math.min(yOf(Wl) + 44, base - 10));
                 diffTxt.setAttribute('class', 'halfvol-diff' + (p >= 0 ? ' halfvol-diff--over' : ''));
             }
             showDiff();
-            my.tween(RISE_MS, function (e) { Wl = target * e; paint(); showDiff(); }, kit.easeInOutCubic).then(function () {
+            my.tween(RISE_MS, function (e) { Wl = target * e; paint(); showDiff(); }, kit.easeInOutCubic).then(function () {  /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
                 Wl = target; paint(); showDiff();
                 refHalfV.setAttribute('opacity', 1);
-                msg.innerHTML = '';
+                msg.innerHTML = '';                     /* innerHTML = ''：把元素裡面的東西全部清掉 */
                 msg.appendChild(h('div', { text: '線以下 ' + below.toFixed(4) + '%　線以上 ' + (100 - below).toFixed(4) + '%' }));
                 msg.appendChild(h('div', { 'class': 'halfvol-msg__sub', text: '綠線＝真正的一半面積' }));
-                msg.classList.add('halfvol-msg--on');
+                msg.classList.add('halfvol-msg--on');   /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 my.after(REVEAL_PAUSE_MS, function () {
                     api.finish(real, { sign: sgn, lines: [
                         '線以下的面積是 ' + below.toFixed(4) + '%（目標 50.0000%）',

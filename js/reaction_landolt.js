@@ -62,19 +62,19 @@
     function acuityAt(n) { return D_BASE / sizeAt(n); }
     /* 一共會出幾個 E：視力從起始值成長到上限需要幾次縮小（用對數 Math.log 反推次數） */
     /* 一共會出幾個 E：視力從 ACUITY_START 乘 1/0.9 倍數成長，到 ACUITY_MAX 為止 */
-    var N_MAX = Math.floor(Math.log(ACUITY_MAX / ACUITY_START) / Math.log(1 / SHRINK) + 1e-9) + 1;
+    var N_MAX = Math.floor(Math.log(ACUITY_MAX / ACUITY_START) / Math.log(1 / SHRINK) + 1e-9) + 1;  /* Math.floor：無條件捨去成整數 */
     /* 第 n 個 E 的限時（線性縮短） */
-    function timeAt(n) { return kit.ramp(n, TIME_START, TIME_END, N_MAX); }
+    function timeAt(n) { return kit.ramp(n, TIME_START, TIME_END, N_MAX); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 下一個方向：不能跟上一個相同 */
     /* 下一個方向：一定跟上一個不同 */
     function nextDir(prev, rand) {
-        var pool = DIRS.filter(function (d) { return d !== prev; });
-        return kit.pick(pool, rand);
+        var pool = DIRS.filter(function (d) { return d !== prev; });  /* filter：留下符合條件的元素，回傳新陣列 */
+        return kit.pick(pool, rand);                    /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
     }
     /* 手指移動向量 → 上下左右：看水平位移與垂直位移哪個比較大 */
     /* 手指移動向量 → 上下左右（角度 0＝上、順時針；螢幕座標 y 往下為正） */
     function dirFromDelta(dx, dy) {
-        if (Math.abs(dx) > Math.abs(dy)) return dx > 0 ? 90 : 270;
+        if (Math.abs(dx) > Math.abs(dy)) return dx > 0 ? 90 : 270;  /* Math.abs：取絕對值（去掉負號） */
         return dy > 0 ? 180 : 0;
     }
 
@@ -83,11 +83,11 @@
        所以旋轉 dir−90 度。5×5 格：脊柱在最左一格，三隻腳在第 1、3、5 列。 */
     function eSvg(D, dir) {
         var u = D / 5;
-        var svg = kit.svg('svg', { 'class': 'landolt-ring', viewBox: (-D / 2) + ' ' + (-D / 2) + ' ' + D + ' ' + D, width: D, height: D });
-        var g = kit.svg('g', { transform: 'rotate(' + (dir - 90) + ')', 'class': 'landolt-e' }, svg);
+        var svg = kit.svg('svg', { 'class': 'landolt-ring', viewBox: (-D / 2) + ' ' + (-D / 2) + ' ' + D + ' ' + D, width: D, height: D });  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var g = kit.svg('g', { transform: 'rotate(' + (dir - 90) + ')', 'class': 'landolt-e' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var x0 = -D / 2, y0 = -D / 2;
         kit.svg('rect', { x: x0, y: y0, width: u, height: D }, g);                       /* 脊柱 */
-        [0, 2, 4].forEach(function (row) {
+        [0, 2, 4].forEach(function (row) {              /* forEach：對陣列的每個元素各做一次 */
             kit.svg('rect', { x: x0, y: y0 + row * u, width: D, height: u }, g);        /* 三隻腳 */
         });
         return svg;
@@ -110,7 +110,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
             /* n 目前是第幾個 E；passed 已答對幾個 */
             var n = (from || 1) - 1; /* 目前是第幾個 E（從 1 起算；0＝還沒開始） */
@@ -127,16 +127,16 @@
             var field = h('div', { 'class': 'landolt-field' });
             var barWrap = h('div', { 'class': 'ld-time' }, [h('div', { 'class': 'ld-time__fill' })]);
             var fill = barWrap.firstChild;
-            root.appendChild(head);
-            root.appendChild(field);
+            root.appendChild(head);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(field);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             root.appendChild(barWrap);
             root.appendChild(hint);
 
             /* 更新標題與右上角文字 */
             function updateHead() {
                 var nn = Math.max(1, n);
-                head.textContent = '第 ' + nn + ' 個・視力 ' + fmtV(acuityShown(nn));
-                ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
+                head.textContent = '第 ' + nn + ' 個・視力 ' + fmtV(acuityShown(nn));  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             }
 
             /* 出下一個 E */
@@ -150,19 +150,19 @@
                 /* 主控台印出這個 E 的方向、外徑、視力、時限，方便驗證 */
                 console.info('[E視力檢查] 第 ' + n + ' 個 E：開口朝' + ({ 0: '上', 90: '右', 180: '下', 270: '左' })[dir] +
                     '，外徑 ' + sizeAt(n).toFixed(1) + 'px（視力 ' + fmtV(acuityAt(n)) + '），時限 ' + timeAt(n).toFixed(2) + ' 秒');
-                field.innerHTML = '';
+                field.innerHTML = '';                   /* innerHTML = ''：把元素裡面的東西全部清掉 */
                 field.appendChild(eSvg(sizeAt(n), dir));
                 var limit = timeAt(n) * 1000;
-                cur = { dir: dir, t0: performance.now(), limitMs: limit };
+                cur = { dir: dir, t0: performance.now(), limitMs: limit };  /* performance.now()：高精度的時間（毫秒），計時用 */
                 state = 'ask';
                 start = null;
                 /* 時限條：每個畫面更新；超時判定用 setTimeout（不靠 rAF） */
                 /* 時限條：每影格更新寬度；超時判定用 setTimeout（不靠 rAF） */
-                cur.loop = my.loop(function (now) {
+                cur.loop = my.loop(function (now) {     /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                     if (cur == null || state !== 'ask') return false;
                     fill.style.width = (100 * Math.max(0, 1 - (now - cur.t0) / cur.limitMs)).toFixed(1) + '%';
                 });
-                cur.timer = my.after(limit, function () { if (state === 'ask') judge(null, performance.now()); });
+                cur.timer = my.after(limit, function () { if (state === 'ask') judge(null, performance.now()); });  /* performance.now()：高精度的時間（毫秒），計時用 */
             }
 
             /* 判定：chosen 是玩家滑的方向（null＝超時）。錯一次就結束 */
@@ -175,9 +175,9 @@
                 fill.style.width = '0%';
                 var ok = chosen === cur.dir;
                 if (chosen != null) rts.push(t - cur.t0);
-                var e = field.querySelector('.landolt-e');
-                if (e) e.classList.add(ok ? 'landolt-e--ok' : 'landolt-e--bad');
-                if (ok) { passed++; Sfx.play('ok'); } else { Sfx.play('bad'); }
+                var e = field.querySelector('.landolt-e');  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
+                if (e) e.classList.add(ok ? 'landolt-e--ok' : 'landolt-e--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                if (ok) { passed++; Sfx.play('ok'); } else { Sfx.play('bad'); }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
 
                 my.after(ok ? GAP_AFTER_MS : 900, function () {
                     if (!ok) { finish(false, chosen == null ? '時間到了' : '方向滑錯了'); return; }
@@ -190,12 +190,12 @@
             function finish(allClear, reason) {
                 state = 'done';
                 var v = passed > 0 ? acuityShown(passed) : 0;
-                var isNew = v > 0 && Reaction.setBest(ID, v, function (a, b) { return a > b; });
+                var isNew = v > 0 && Reaction.setBest(ID, v, function (a, b) { return a > b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                 ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
-                var avg = rts.length ? rts.reduce(function (a, b) { return a + b; }, 0) / rts.length : 0;
+                var avg = rts.length ? rts.reduce(function (a, b) { return a + b; }, 0) / rts.length : 0;  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
                 var avgSec = Leaderboard.fake4(avg / 1000);      /* 平均反應（秒）：結算時產生一次，第 3、4 位不為 0 */
                 var back = kit.resumeFrom(n);
-                kit.result(root, {
+                kit.result(root, {                      /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                     score: v,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                     num: v > 0 ? '視力 ' + fmtV(v) : '視力 < ' + fmtV(ACUITY_START),
                     label: allClear ? reason : (v >= 1.0 ? '視力很好！' : (v > 0 ? '再努力看看！' : '第一個就看不清楚…')) + (reason ? '（' + reason + '）' : ''),
@@ -211,10 +211,10 @@
             /* ─── 輸入 ─── */
             function onDown(e) {
                 if (state !== 'ask') return;
-                e.preventDefault();
+                e.preventDefault();                     /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                 var p = kit.pt(e);
                 start = { x: p.x, y: p.y, id: e.pointerId };
-                try { root.setPointerCapture(e.pointerId); } catch (err) { }
+                try { root.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             }
             function onMove(e) {
                 if (state !== 'ask' || !start || e.pointerId !== start.id) return;
@@ -226,10 +226,10 @@
                 }
             }
             /* 綁定手指事件 */
-            root.addEventListener('pointerdown', onDown);
-            root.addEventListener('pointermove', onMove);
+            root.addEventListener('pointerdown', onDown);  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+            root.addEventListener('pointermove', onMove);  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             /* 操作提示（只在第一次進遊戲時）：上下左右四個方向的箭頭，手指依序往四個方向滑（只是示範怎麼滑，不代表答案） */
-            if (Reaction.kit.once('landolt.hint')) Reaction.kit.hintOn(root, field, { mode: 'drag4', len: 80, text: '請往上下左右拖曳' });
+            if (Reaction.kit.once('landolt.hint')) Reaction.kit.hintOn(root, field, { mode: 'drag4', len: 80, text: '請往上下左右拖曳' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
             /* 這一局結束時把事件監聽拿掉 */
             my.onDispose(function () {
                 root.removeEventListener('pointerdown', onDown);
@@ -238,8 +238,8 @@
 
             /* 開場停一下讓玩家就位 */
             /* 開場停一下讓玩家就位 */
-            head.textContent = '準備…';
-            my.after(700, function () { hint.textContent = '往 E 的開口（三隻腳）方向滑一下'; Sfx.play('go'); nextE(); });
+            head.textContent = '準備…';                   /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            my.after(700, function () { hint.textContent = '往 E 的開口（三隻腳）方向滑一下'; Sfx.play('go'); nextE(); });  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
 
             /* G.debug：測試用後門 */
             G.debug = {

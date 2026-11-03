@@ -40,7 +40,7 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function prog(hits) { return Math.min(1, Math.max(0, hits / RAMP_HITS)); }
-    function intervalFor(hits) { return Math.round(INTERVAL[0] + (INTERVAL[1] - INTERVAL[0]) * prog(hits)); }
+    function intervalFor(hits) { return Math.round(INTERVAL[0] + (INTERVAL[1] - INTERVAL[0]) * prog(hits)); }  /* Math.round：四捨五入成整數 */
     function confuseP(hits) { return CONFUSE_P[0] + (CONFUSE_P[1] - CONFUSE_P[0]) * prog(hits); }
     function dirFor(hits) { return hits >= REVERSE_AT ? -1 : 1; }                       /* 1＝順著數、−1＝倒著數 */
     function rankName(r) { return RANKS[r - 1]; }
@@ -52,11 +52,11 @@
         var count = countFor(st.k, st.dir), match = st.gap >= MAX_GAP || rand() < MATCH_P, rank;
         if (match) rank = count;
         else {
-            var cands = LOOK[st.prev] ? LOOK[st.prev].filter(function (x) { return x !== count; }) : [];
-            if (cands.length && rand() < confuseP(hits)) rank = kit.pick(cands, rand);
-            else { do { rank = kit.randInt(1, 13, rand); } while (rank === count); }
+            var cands = LOOK[st.prev] ? LOOK[st.prev].filter(function (x) { return x !== count; }) : [];  /* filter：留下符合條件的元素，回傳新陣列 */
+            if (cands.length && rand() < confuseP(hits)) rank = kit.pick(cands, rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+            else { do { rank = kit.randInt(1, 13, rand); } while (rank === count); }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         }
-        return { rank: rank, suit: kit.pick(SUITS, rand), count: count, isMatch: rank === count };
+        return { rank: rank, suit: kit.pick(SUITS, rand), count: count, isMatch: rank === count };  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
     }
     /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
@@ -89,8 +89,8 @@
         club: 'M12 2 C9.5 2 8 3.8 8 5.8 C8 7 8.6 8 9.5 8.8 C8.8 8.6 8.2 8.5 7.5 8.5 C5 8.5 3 10.3 3 12.8 C3 15.3 5 17 7.3 17 C9 17 10.4 16.3 11.2 15.2 C11 18.5 10 21 8 22.5 L16 22.5 C14 21 13 18.5 12.8 15.2 C13.6 16.3 15 17 16.7 17 C19 17 21 15.3 21 12.8 C21 10.3 19 8.5 16.5 8.5 C15.8 8.5 15.2 8.6 14.5 8.8 C15.4 8 16 7 16 5.8 C16 3.8 14.5 2 12 2 Z'
     };
     function suitSvg(suit, size) {
-        var s = kit.svg('svg', { 'class': 'cardslap-suit cardslap-suit--' + suit, viewBox: '0 0 24 24', width: size, height: size });
-        kit.svg('path', { d: SUIT_PATH[suit] }, s);
+        var s = kit.svg('svg', { 'class': 'cardslap-suit cardslap-suit--' + suit, viewBox: '0 0 24 24', width: size, height: size });  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('path', { d: SUIT_PATH[suit] }, s);     /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         return s;
     }
 
@@ -104,8 +104,8 @@
         console.log('[心臟病] 開始：翻牌間隔 ' + intervalFor(0) + ' 毫秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var field = h('div', { 'class': 'cardslap-field' });
-        stage.appendChild(field);
-        field.appendChild(h('div', { 'class': 'qz-note cardslap-tip', text: '牌＝你數到的數字就拍（點畫面）' }));
+        stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(h('div', { 'class': 'qz-note cardslap-tip', text: '牌＝你數到的數字就拍（點畫面）' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var countBox = h('div', { 'class': 'cardslap-count', text: '' }); field.appendChild(countBox);
         var table = h('div', { 'class': 'cardslap-table' }); field.appendChild(table);
         var cardEl = h('div', { 'class': 'cardslap-card cardslap-card--back' }); table.appendChild(cardEl);
@@ -116,38 +116,38 @@
         function flip() {
             if (over || api.over) return;
             if (cur && cur.isMatch && !slapped) { finish('missed'); return; }
-            if (hits === REVERSE_AT && st.dir > 0) { st = { k: 1, dir: -1, gap: st.gap, prev: st.prev }; since = 0; info.textContent = '改成倒著數！K、Q、J、10…'; }
+            if (hits === REVERSE_AT && st.dir > 0) { st = { k: 1, dir: -1, gap: st.gap, prev: st.prev }; since = 0; info.textContent = '改成倒著數！K、Q、J、10…'; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             cur = nextCard(st, hits, api.rand); slapped = false; flips++;
             st.gap = cur.isMatch ? 0 : st.gap + 1; st.prev = cur.rank; since++;
             showCard(cur);
             countBox.textContent = since <= SHOW_COUNT ? '數到：' + rankName(cur.count) : '';                        /* 只有前幾張顯示數到哪，之後要自己數 */
             st.k++;
-            shownSince = performance.now();
-            api.after(intervalFor(hits), flip);
+            shownSince = performance.now();             /* performance.now()：高精度的時間（毫秒），計時用 */
+            api.after(intervalFor(hits), flip);         /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
         }
         function showCard(c) {
             var el = h('div', { 'class': 'cardslap-card cardslap-card--' + (c.suit === 'heart' || c.suit === 'diamond' ? 'red' : 'black') });
             el.appendChild(h('div', { 'class': 'cardslap-card__r', text: rankName(c.rank) }));
             var big = h('div', { 'class': 'cardslap-card__big' }); big.appendChild(suitSvg(c.suit, 96)); el.appendChild(big);
             el.appendChild(h('div', { 'class': 'cardslap-card__r cardslap-card__r--b', text: rankName(c.rank) }));
-            table.replaceChild(el, cardEl); cardEl = el; el.classList.add('cardslap-card--flip'); Sfx.play('flip');
+            table.replaceChild(el, cardEl); cardEl = el; el.classList.add('cardslap-card--flip'); Sfx.play('flip');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
         }
-        api.after(LEAD_MS, flip);
+        api.after(LEAD_MS, flip);                       /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
         /* 拍：點畫面任何地方。這張是要拍的 → 加一分；不是 → 結束 */
-        kit.onTap(field, function () {
+        kit.onTap(field, function () {                  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             if (over || api.over || !cur) return;
             if (slapped) return;
-            if (cur.isMatch) { slapped = true; hits++; S.score = hits; api.setInfo('拍對 ' + hits + ' 次'); cardEl.classList.add('cardslap-card--ok'); Sfx.play('pop'); info.textContent = ''; }
+            if (cur.isMatch) { slapped = true; hits++; S.score = hits; api.setInfo('拍對 ' + hits + ' 次'); cardEl.classList.add('cardslap-card--ok'); Sfx.play('pop'); info.textContent = ''; }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             else finish('wrong');
         });
         /* 這一局結束：算出成績並進入結算畫面 */
         function finish(kind) {
             if (over) return;
-            over = true; cardEl.classList.add(kind === 'wrong' ? 'cardslap-card--bad' : 'cardslap-card--miss');
+            over = true; cardEl.classList.add(kind === 'wrong' ? 'cardslap-card--bad' : 'cardslap-card--miss');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             var msg = kind === 'wrong' ? '這張是「' + rankName(cur.rank) + '」，你該數到「' + rankName(cur.count) + '」，不用拍！' : '這張「' + rankName(cur.rank) + '」剛好是你該數到的，卻沒拍！';
-            info.textContent = msg; countBox.textContent = '你該數到：' + rankName(cur.count);
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: 3200, lines: [msg, '一共拍對 ' + hits + ' 次'] });
+            info.textContent = msg; countBox.textContent = '你該數到：' + rankName(cur.count);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 3200, lines: [msg, '一共拍對 ' + hits + ' 次'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用（會被重複呼叫，要冪等）：solve＝該拍的牌就拍（最多 SOLVE_CAP 次，之後故意漏拍讓遊戲結束）、wrong＝不用拍的牌就拍 */
         api.solve = function () { if (over || !cur || slapped || !cur.isMatch || hits >= SOLVE_CAP) return; field.dispatchEvent(new Event('pointerdown')); };

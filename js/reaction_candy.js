@@ -71,15 +71,15 @@
     function countFor(level) { return Math.min(N_END, N_START + N_STEP * (Math.max(level, 1) - 1)); }
     /* 答案按鈕的數字間隔：第 1～3 題 4、第 4～6 題 3、第 7～9 題 2、第 10 題起 1。
        Math.floor 是無條件捨去，所以每 GAP_EVERY 題才少 1；Math.max 保證最小是 GAP_MIN */
-    function gapFor(level) { return Math.max(GAP_MIN, GAP_START - Math.floor((Math.max(level, 1) - 1) / GAP_EVERY)); }
+    function gapFor(level) { return Math.max(GAP_MIN, GAP_START - Math.floor((Math.max(level, 1) - 1) / GAP_EVERY)); }  /* Math.floor：無條件捨去成整數 */
     /* 這一題的難度參數（顆數、間隔是逐題的階梯；顏色種類、領先、閃現時間是線性） */
     function paramsFor(level) {
         return {
             n: countFor(level),
-            k: Math.round(kit.ramp(level, K_START, K_END, LEVEL_RAMP)),
-            showMs: Math.round(kit.ramp(level, SHOW_START, SHOW_END, LEVEL_RAMP)),
+            k: Math.round(kit.ramp(level, K_START, K_END, LEVEL_RAMP)),  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+            showMs: Math.round(kit.ramp(level, SHOW_START, SHOW_END, LEVEL_RAMP)),  /* Math.round：四捨五入成整數 */
             gap: gapFor(level),
-            lead: Math.round(kit.ramp(level, LEAD_START, LEAD_END, LEVEL_RAMP))
+            lead: Math.round(kit.ramp(level, LEAD_START, LEAD_END, LEVEL_RAMP))  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
         };
     }
     /* 六個答案按鈕：連續的一排數字 s, s+gap, s+2gap, …（共 OPTION_COUNT 個），正確答案 c 放在其中隨機一格。
@@ -87,8 +87,8 @@
        回傳 { options（由小到大）, pos（答案在 options 的索引） } */
     function makeOptions(c, gap, rand) {
         rand = rand || Math.random;
-        var posMax = Math.min(OPTION_COUNT - 1, Math.floor((c - 1) / gap));
-        var pos = kit.randInt(0, posMax, rand), s = c - pos * gap, opts = [];
+        var posMax = Math.min(OPTION_COUNT - 1, Math.floor((c - 1) / gap));  /* Math.floor：無條件捨去成整數 */
+        var pos = kit.randInt(0, posMax, rand), s = c - pos * gap, opts = [];  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         for (var i = 0; i < OPTION_COUNT; i++) opts.push(s + i * gap);
         return { options: opts, pos: pos };
     }
@@ -99,21 +99,21 @@
         rand = rand || Math.random;
         var p = paramsFor(level);
         /* 挑 k 種顏色，其中一種是要數的 target */
-        var colors = kit.shuffle(COLORS.map(function (_, i) { return i; }), rand).slice(0, p.k);
-        var target = kit.pick(colors, rand);
-        var others = colors.filter(function (x) { return x !== target; });
+        var colors = kit.shuffle(COLORS.map(function (_, i) { return i; }), rand).slice(0, p.k);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+        var target = kit.pick(colors, rand);            /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        var others = colors.filter(function (x) { return x !== target; });  /* filter：留下符合條件的元素，回傳新陣列 */
         var lead = p.lead;
         /* c 是 target 的顆數：下限要夠大（其他顏色至少 1 顆且比 c 少至少 lead 顆），上限不超過剩下的空間 */
         /* c 的範圍：其他每色至少 1 顆且不超過 c − lead，所以 (k−1)(c−lead) ≥ n − c */
-        var cmin = Math.max(1 + lead, Math.ceil((p.n + (p.k - 1) * lead) / p.k)), cmax = Math.min(p.n - (p.k - 1), Math.round(p.n / p.k * 2));
+        var cmin = Math.max(1 + lead, Math.ceil((p.n + (p.k - 1) * lead) / p.k)), cmax = Math.min(p.n - (p.k - 1), Math.round(p.n / p.k * 2));  /* Math.ceil：無條件進位成整數 */
         if (cmax < cmin) cmax = cmin;
-        var c = kit.randInt(cmin, cmax, rand);
+        var c = kit.randInt(cmin, cmax, rand);          /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         var counts = {};
         /* 其他顏色先各放 1 顆，剩下的隨機分配，但每色不超過 c − lead */
-        others.forEach(function (x) { counts[x] = 1; });
+        others.forEach(function (x) { counts[x] = 1; });  /* forEach：對陣列的每個元素各做一次 */
         var rest = p.n - c - others.length, guard = 0;
         while (rest > 0 && guard++ < 10000) {
-            var x = kit.pick(others, rand);
+            var x = kit.pick(others, rand);             /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             if (counts[x] < c - lead) { counts[x]++; rest--; }
         }
         counts[target] = c;
@@ -130,9 +130,9 @@
         var x = dx * Math.cos(a) - dy * Math.sin(a), y = dx * Math.sin(a) + dy * Math.cos(a);       /* 轉回糖果自己的座標 */
         var ex = x / (R * 0.78), ey = y / (R * 0.62);
         if (ex * ex + ey * ey <= 1) return true;
-        var ax = Math.abs(x);
+        var ax = Math.abs(x);                           /* Math.abs：取絕對值（去掉負號） */
         /* 蝴蝶結：x 從 0.55R 到 1.05R，高度由 0 長到 ±0.5R */
-        if (ax >= R * 0.55 && ax <= R * 1.05) return Math.abs(y) <= (ax - R * 0.55) / (R * 0.5) * R * 0.5;
+        if (ax >= R * 0.55 && ax <= R * 1.05) return Math.abs(y) <= (ax - R * 0.55) / (R * 0.5) * R * 0.5;  /* Math.abs：取絕對值（去掉負號） */
         return false;
     }
     /* SAMPLES：在糖果形狀內取很多「取樣點」，用來算糖果被蓋住多少比例 */
@@ -145,15 +145,15 @@
     /* 糖果 i 的取樣點（世界座標） */
     function samplePoints(c) {
         var a = c.rot * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a);
-        return SAMPLES.map(function (q) { return { x: c.x + q.x * ca - q.y * sa, y: c.y + q.x * sa + q.y * ca }; });
+        return SAMPLES.map(function (q) { return { x: c.x + q.x * ca - q.y * sa, y: c.y + q.x * sa + q.y * ca }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     }
     /* 算每顆糖果「露出來的比例」（陣列越後面的越在上層）：數有多少取樣點沒被後面的糖果蓋住 */
     /* 每顆糖果露出來的比例（陣列最後一顆在最上面）。給測試與 scatter 用 */
     function visibleFractions(layout) {
         var pts = layout.map(samplePoints);
-        return layout.map(function (c, i) {
+        return layout.map(function (c, i) {             /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var vis = 0;
-            pts[i].forEach(function (q) {
+            pts[i].forEach(function (q) {               /* forEach：對陣列的每個元素各做一次 */
                 for (var j = i + 1; j < layout.length; j++) {
                     var d = layout[j];
                     if ((d.x - c.x) * (d.x - c.x) + (d.y - c.y) * (d.y - c.y) > 4.4 * R * R) continue;
@@ -210,9 +210,9 @@
 
     /* 畫一顆糖果（SVG）：兩端蝴蝶結 + 中間橢圓 + 高光 */
     function drawCandy(parent, x, y, rot, col, cls) {
-        var g = kit.svg('g', { 'class': 'candy-candy' + (cls ? ' ' + cls : ''), transform: 'translate(' + x.toFixed(1) + ' ' + y.toFixed(1) + ') rotate(' + rot.toFixed(0) + ')' }, parent);
+        var g = kit.svg('g', { 'class': 'candy-candy' + (cls ? ' ' + cls : ''), transform: 'translate(' + x.toFixed(1) + ' ' + y.toFixed(1) + ') rotate(' + rot.toFixed(0) + ')' }, parent);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         /* 糖紙兩端的蝴蝶結 */
-        kit.svg('polygon', { points: (-R * 0.55) + ',0 ' + (-R * 1.05) + ',' + (-R * 0.5) + ' ' + (-R * 1.05) + ',' + (R * 0.5), fill: col.fill, stroke: col.dark, 'stroke-width': R * 0.09, 'stroke-linejoin': 'round' }, g);
+        kit.svg('polygon', { points: (-R * 0.55) + ',0 ' + (-R * 1.05) + ',' + (-R * 0.5) + ' ' + (-R * 1.05) + ',' + (R * 0.5), fill: col.fill, stroke: col.dark, 'stroke-width': R * 0.09, 'stroke-linejoin': 'round' }, g);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         kit.svg('polygon', { points: (R * 0.55) + ',0 ' + (R * 1.05) + ',' + (-R * 0.5) + ' ' + (R * 1.05) + ',' + (R * 0.5), fill: col.fill, stroke: col.dark, 'stroke-width': R * 0.09, 'stroke-linejoin': 'round' }, g);
         kit.svg('ellipse', { rx: R * 0.78, ry: R * 0.62, fill: col.fill, stroke: col.dark, 'stroke-width': R * 0.11 }, g);
         kit.svg('ellipse', { cx: -R * 0.2, cy: -R * 0.22, rx: R * 0.3, ry: R * 0.16, fill: 'rgba(255,255,255,0.55)' }, g);
@@ -230,7 +230,7 @@
             if (R_) R_.dispose();
             R_ = kit.round();
             var my = R_;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             /* level 目前題號；right 答對數；state 目前階段；Q 這一題 */
             var level = start || 1, right = level - 1, newRec = false, state = 'idle';
             var Q = null;
@@ -243,15 +243,15 @@
             var bar = h('div', { 'class': 'ld-time' }, [h('div', { 'class': 'ld-time__fill' })]);
             var fill = bar.firstChild;
             var opts = h('div', { 'class': 'candy-opts' });
-            tray.appendChild(cover);
-            root.appendChild(head);
+            tray.appendChild(cover);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(head);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             root.appendChild(ask);
             root.appendChild(tray);
             root.appendChild(bar);
             root.appendChild(opts);
 
-            function meta() { ctx.setMeta(kit.meta(['答對 ' + right, fmtBest(Reaction.getBest(ID))])); }
-            function setHead() { head.textContent = '第 ' + level + ' 題'; }
+            function meta() { ctx.setMeta(kit.meta(['答對 ' + right, fmtBest(Reaction.getBest(ID))])); }  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+            function setHead() { head.textContent = '第 ' + level + ' 題'; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
 
             /* 出下一題 */
             function nextQ() {
@@ -261,16 +261,16 @@
                 state = 'prep';
                 setHead(); meta();
                 var col = COLORS[Q.target];
-                ask.innerHTML = '';
+                ask.innerHTML = '';                     /* innerHTML = ''：把元素裡面的東西全部清掉 */
                 ask.appendChild(h('span', { text: '請數：' }));
                 var chip = h('span', { 'class': 'candy-chip', text: col.name });
                 chip.style.background = col.fill; chip.style.borderColor = col.dark;
                 ask.appendChild(chip);
                 ask.appendChild(h('span', { text: '色糖果有幾顆？' }));
                 opts.innerHTML = '';
-                tray.querySelectorAll('svg').forEach(function (s) { s.remove(); });
-                cover.classList.remove('candy-cover--off');
-                cover.textContent = '準備…';
+                tray.querySelectorAll('svg').forEach(function (s) { s.remove(); });  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
+                cover.classList.remove('candy-cover--off');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                cover.textContent = '準備…';              /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 fill.style.width = '100%';
                 /* 主控台印出這題的各顏色顆數與答案，方便驗證 */
                 try {
@@ -289,7 +289,7 @@
                 if (!Q.layout) {
                     var list = [];
                     Q.colors.forEach(function (c) { for (var i = 0; i < Q.counts[c]; i++) list.push(c); });
-                    list = kit.shuffle(list);
+                    list = kit.shuffle(list);           /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
                     var pos = scatter(list.length, W, Hh);
                     if (!pos) throw new Error('candy: cannot place ' + list.length + ' candies in ' + W + 'x' + Hh);
                     Q.layout = list.map(function (c, i) { return { x: pos[i].x, y: pos[i].y, rot: pos[i].rot, color: c }; });
@@ -308,12 +308,12 @@
             function flash() {
                 if (state !== 'prep') return;
                 state = 'show';
-                tray.querySelectorAll('svg').forEach(function (s) { s.remove(); });
+                tray.querySelectorAll('svg').forEach(function (s) { s.remove(); });  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
                 buildSvg(false);
-                cover.classList.add('candy-cover--off');
-                Sfx.play('go');
-                var t0 = performance.now(), dur = Q.showMs;
-                var lp = my.loop(function (now) {
+                cover.classList.add('candy-cover--off');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                Sfx.play('go');                         /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                var t0 = performance.now(), dur = Q.showMs;  /* performance.now()：高精度的時間（毫秒），計時用 */
+                var lp = my.loop(function (now) {       /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                     if (state !== 'show') return false;
                     fill.style.width = (100 * Math.max(0, 1 - (now - t0) / dur)).toFixed(1) + '%';
                 });
@@ -332,11 +332,11 @@
                 opts.innerHTML = '';
                 Q.options.forEach(function (v) {
                     var b = h('button', { 'class': 'candy-opt', text: String(v) });
-                    b.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(v, b); });
+                    b.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(v, b); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                     opts.appendChild(b);
                 });
-                var t0 = performance.now(), dur = ANSWER_S * 1000;
-                var lp = my.loop(function (now) {
+                var t0 = performance.now(), dur = ANSWER_S * 1000;  /* performance.now()：高精度的時間（毫秒），計時用 */
+                var lp = my.loop(function (now) {       /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                     if (state !== 'ans') return false;
                     fill.style.width = (100 * Math.max(0, 1 - (now - t0) / dur)).toFixed(1) + '%';
                 });
@@ -360,7 +360,7 @@
                 buildSvg(true);
                 cover.classList.add('candy-cover--off');
                 ask.textContent = (v == null ? '時間到！' : (ok ? '答對了！' : '答錯了…')) + ' 正確是 ' + Q.answer + ' 顆（共 ' + Q.n + ' 顆）';
-                if (ok) { right++; Sfx.play('ok'); if (Reaction.setBest(ID, right, function (a, b) { return a > b; })) newRec = true; }
+                if (ok) { right++; Sfx.play('ok'); if (Reaction.setBest(ID, right, function (a, b) { return a > b; })) newRec = true; }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 else Sfx.play('bad');
                 var failLevel = level;
                 level++;
@@ -369,7 +369,7 @@
                     /* 答錯或超時：一次就結束，稍後顯示結算（可從失敗題數前 5 題繼續） */
                     var back = kit.resumeFrom(failLevel);
                     my.after(REVEAL_MS + 400, function () {
-                        kit.result(root, {
+                        kit.result(root, {              /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                             score: right,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: right + ' 題', label: v == null ? '來不及了' : '數錯了', lines: ['第 ' + failLevel + ' 題沒數對：' + COLORS[Q.target].name + '色（全堆最多的顏色）有 ' + Q.answer + ' 顆'],
                             isNew: newRec, sfx: right >= 8 ? 'win' : 'fail',

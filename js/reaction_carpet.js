@@ -54,10 +54,10 @@
     var DIRS = [[-1, 0], [0, 1], [1, 0], [0, -1]];      /* 上、右、下、左（順時針） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function sizeFor(level) { return Math.round(kit.ramp(level, N_RANGE[0], N_RANGE[1], RAMP_LEVELS)); }
-    function stonesFor(level) { return Math.round(kit.ramp(level, STONES[0], STONES[1], RAMP_LEVELS)); }
+    function sizeFor(level) { return Math.round(kit.ramp(level, N_RANGE[0], N_RANGE[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function stonesFor(level) { return Math.round(kit.ramp(level, STONES[0], STONES[1], RAMP_LEVELS)); }  /* Math.round：四捨五入成整數 */
     /* 限時（毫秒）：free＝要鋪的格數 */
-    function timeMs(free) { return Math.round((TIME_BASE + TIME_PER_CELL * free) * 1000); }
+    function timeMs(free) { return Math.round((TIME_BASE + TIME_PER_CELL * free) * 1000); }  /* Math.round：四捨五入成整數 */
     /* 綠線畫完要多久（毫秒）：len＝正確的路有幾格；結算彈窗要等到畫完再停格 SOL_HOLD_MS 才跳出來 */
     function solDrawMs(len) { return Math.max(SOL_MIN_MS, Math.max(0, len - 1) * SOL_MS_PER_CELL); }
     function failDelayMs(len) { return solDrawMs(len) + SOL_HOLD_MS; }
@@ -70,7 +70,7 @@
         while (moved) {
             moved = false;
             for (var k = 0; k < order.length; k++) {
-                var d = (heading + order[k]) % 4, r = Math.floor(cur / n) + DIRS[d][0], c = cur % n + DIRS[d][1];
+                var d = (heading + order[k]) % 4, r = Math.floor(cur / n) + DIRS[d][0], c = cur % n + DIRS[d][1];  /* Math.floor：無條件捨去成整數 */
                 if (r < 0 || r >= n || c < 0 || c >= n) continue;
                 var nx = r * n + c;
                 if (blocked[nx] || vis[nx]) continue;
@@ -87,7 +87,7 @@
         for (var i = 0; i < n * n; i++) vis[i] = blocked[i] ? 2 : 0;
         vis[start] = 1;
         for (;;) {
-            var best = -1, bestDeg = 99, r = Math.floor(cur / n), c = cur % n;
+            var best = -1, bestDeg = 99, r = Math.floor(cur / n), c = cur % n;  /* Math.floor：無條件捨去成整數 */
             for (var k = 0; k < 4; k++) {
                 var d = (k + tieShift) % 4, rr = r + DIRS[d][0], cc = c + DIRS[d][1];
                 if (rr < 0 || rr >= n || cc < 0 || cc >= n) continue;
@@ -118,7 +118,7 @@
     function pickLayout(n, ns, rand) {
         var plan = colorPlan(n, ns, rand);
         if (!plan) {                               /* 配不出來（家具數太極端）：回到完全隨機放 */
-            var all = kit.shuffle(plan0(n).A.concat(plan0(n).B), rand);
+            var all = kit.shuffle(plan0(n).A.concat(plan0(n).B), rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
             return { stones: all.slice(0, ns), start: all[ns] };
         }
         var remA = plan.A.slice(plan.sA), remB = plan.B.slice(plan.sB);
@@ -197,7 +197,7 @@
         function isA(x) { return (Math.floor(x / n) + x % n) % 2 === 0; }
         function dist(x) {                                       /* 到最近的家具的距離（走幾步）；還沒有家具就算很遠 */
             var best = 99, r = Math.floor(x / n), c = x % n;
-            for (var s = 0; s < stones.length; s++) { var dd = Math.abs(Math.floor(stones[s] / n) - r) + Math.abs(stones[s] % n - c); if (dd < best) best = dd; }
+            for (var s = 0; s < stones.length; s++) { var dd = Math.abs(Math.floor(stones[s] / n) - r) + Math.abs(stones[s] % n - c); if (dd < best) best = dd; }  /* Math.abs：取絕對值（去掉負號） */
             return best;
         }
         function allowed(x) {                                    /* 把家具放在 x：x 旁邊的空格都還要有 ≥ 2 個空鄰居，且強制邊預檢要過 */
@@ -250,7 +250,7 @@
             if (++nodes > cap) return false;
             var nb = neighbors(n, head), cand = [], q;
             for (q = 0; q < nb.length; q++) if (!vis[nb[q]]) { vis[nb[q]] = 1; cand.push({ j: nb[q], d: deg(nb[q]), o: (q + tie) % 4 }); vis[nb[q]] = 0; }
-            cand.sort(function (a, b) { return a.d - b.d || a.o - b.o; });
+            cand.sort(function (a, b) { return a.d - b.d || a.o - b.o; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
             for (q = 0; q < cand.length; q++) {
                 var j = cand[q].j, dead = false, nb2 = neighbors(n, j);
                 vis[j] = 1;
@@ -272,7 +272,7 @@
     /* 這一關要比幾個候選題：第 1 關 CANDS[0]（暖身另外只用 1 個）→ 第 RAMP_LEVELS 關 CANDS[1]，之後每 RAMP_LEVELS 關再多 1 個 */
     function candCount(level) {
         if (level <= WARMUP) return 1;
-        return Math.round(kit.ramp(level, CANDS[0], CANDS[1], RAMP_LEVELS)) + Math.floor(Math.max(0, level - RAMP_LEVELS) / RAMP_LEVELS);
+        return Math.round(kit.ramp(level, CANDS[0], CANDS[1], RAMP_LEVELS)) + Math.floor(Math.max(0, level - RAMP_LEVELS) / RAMP_LEVELS);  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     }
     /* 隨機造一條走遍 n×n 全部格子的一筆畫（漢米爾頓路徑）：從蛇行的路開始，一直做「咬尾巴」的變形（backbite）——
        挑路徑的一端（頭或尾），看它旁邊的一格 c（不是路徑上它的下一格），讓這一端改接到 c，
@@ -287,13 +287,13 @@
             for (i = 0; i < total; i++) pos[P[i]] = i;
             if (rand() < 0.5) {
                 /* 尾巴：旁邊的格子 c（不是倒數第二格）在路徑第 k 個位置；把第 k+1 個到最後倒過來 */
-                var nb = neighbors(n, P[total - 1]).filter(function (x) { return x !== P[total - 2]; });
+                var nb = neighbors(n, P[total - 1]).filter(function (x) { return x !== P[total - 2]; });  /* filter：留下符合條件的元素，回傳新陣列 */
                 if (!nb.length) continue;
                 var k = pos[nb[Math.floor(rand() * nb.length)]];
                 P = P.slice(0, k + 1).concat(P.slice(k + 1).reverse());
             } else {
                 /* 頭：旁邊的格子 c（不是第 2 格）在第 k 個位置；把第 0 個到第 k−1 個倒過來 */
-                var nb2 = neighbors(n, P[0]).filter(function (x) { return x !== P[1]; });
+                var nb2 = neighbors(n, P[0]).filter(function (x) { return x !== P[1]; });  /* filter：留下符合條件的元素，回傳新陣列 */
                 if (!nb2.length) continue;
                 var k2 = pos[nb2[Math.floor(rand() * nb2.length)]];
                 P = P.slice(0, k2).reverse().concat(P.slice(k2));
@@ -311,9 +311,9 @@
        budgetMs：這一關最多花幾毫秒出題（預設 GEN_BUDGET_MS；測試用小一點的值讓測試跑得快） */
     function makeLevel(level, rand, budgetMs) {
         rand = rand || Math.random; budgetMs = budgetMs || GEN_BUDGET_MS;
-        var n = sizeFor(level), ns = Math.min(stonesFor(level), n * n - MIN_FREE), total = n * n, t0 = Date.now();
+        var n = sizeFor(level), ns = Math.min(stonesFor(level), n * n - MIN_FREE), total = n * n, t0 = Date.now();  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
         function pack(stones, start, free, solution, how, hard) {
-            var sorted = stones.slice().sort(function (a, b) { return a - b; });
+            var sorted = stones.slice().sort(function (a, b) { return a - b; });  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
             return { n: n, stones: sorted, icons: pickIcons(sorted.length, rand), start: start, free: free, solution: solution, level: level, hard: hard || 0, how: how };
         }
         /* 第一階段：依序試三種放法，每一種各有一段時間（累計到 budgetMs 的 70%／85%／100%）；收集候選題，挑最難的那題。
@@ -329,7 +329,7 @@
                 var lay = sty.deg ? scatterLayout(n, ns, rand, sty.deg) : pickLayout(n, ns, rand);
                 if (!lay) continue;
                 var blocked = new Uint8Array(total), start = lay.start;
-                lay.stones.forEach(function (i) { blocked[i] = 1; });
+                lay.stones.forEach(function (i) { blocked[i] = 1; });  /* forEach：對陣列的每個元素各做一次 */
                 if (!parityOk(n, blocked, start) || !connected(n, blocked, start)) continue;
                 if (sty.deg >= 2 && !forcedOk(n, blocked, start)) continue;
                 if (level > WARMUP && shortcutWorks(n, blocked, start, free, sty.strong)) continue;
@@ -344,10 +344,10 @@
         /* 第二階段：先造一條走遍全部格子的路 P，取其中連續的 free 格當「要鋪的地」（路的前後 ns 格就是家具），這樣一定有解、空地一定連在一起（家具會擠成兩團，比較容易） */
         var free2 = total - ns;
         for (var tb = 0; tb < BITE_TRIES; tb++) {
-            if (Date.now() - t0 > budgetMs * 2) break;
+            if (Date.now() - t0 > budgetMs * 2) break;  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
             var P = randomHamPath(n, rand), a = Math.floor(rand() * (ns + 1)), sub = P.slice(a, a + free2);
             var blocked2 = new Uint8Array(total), stones2 = P.slice(0, a).concat(P.slice(a + free2));
-            stones2.forEach(function (i) { blocked2[i] = 1; });
+            stones2.forEach(function (i) { blocked2[i] = 1; });  /* forEach：對陣列的每個元素各做一次 */
             if (level > WARMUP && shortcutWorks(n, blocked2, sub[0], free2)) continue;
             return pack(stones2, sub[0], free2, sub, 'bite');
         }
@@ -374,7 +374,7 @@
     function isStuck(s) {
         if (isDone(s)) return false;
         var head = s.path[s.path.length - 1];
-        return neighbors(s.n, head).every(function (j) { return s.vis[j]; });
+        return neighbors(s.n, head).every(function (j) { return s.vis[j]; });  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
     }
     /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
@@ -407,10 +407,10 @@
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, topPad = 56;
         var cell = Math.floor(Math.min((W - 20) / n, (H - topPad - 20) / n, 96)), BS = cell * n, bx = Math.round((W - BS) / 2), by = topPad + Math.round((H - topPad - BS) / 2) - 8;
         var tip = h('div', { 'class': 'qz-note carpet-tip', text: '' });
-        stage.appendChild(tip);
-        var board = h('div', { 'class': 'carpet-board' });
+        stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var board = h('div', { 'class': 'carpet-board' });  /* board：盤面（所有格子都放在裡面） */
         board.style.cssText = 'left:' + bx + 'px;top:' + by + 'px;width:' + BS + 'px;height:' + BS + 'px;';
-        stage.appendChild(board);
+        stage.appendChild(board);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var cells = [], iconOf = {};
         q.stones.forEach(function (s, k) { iconOf[s] = q.icons[k]; });
         for (var i = 0; i < n * n; i++) {
@@ -425,24 +425,24 @@
         }
         function cx(i) { return (i % n + 0.5) * cell; }
         function cy(i) { return (Math.floor(i / n) + 0.5) * cell; }
-        var svg = kit.svg('svg', { 'class': 'carpet-svg', viewBox: '0 0 ' + BS + ' ' + BS, width: BS, height: BS }, board);
-        var solLine = kit.svg('path', { 'class': 'carpet-sol', d: '', pathLength: 1 }, svg);
+        var svg = kit.svg('svg', { 'class': 'carpet-svg', viewBox: '0 0 ' + BS + ' ' + BS, width: BS, height: BS }, board);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var solLine = kit.svg('path', { 'class': 'carpet-sol', d: '', pathLength: 1 }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var rug = kit.svg('path', { 'class': 'carpet-rug', d: '' }, svg);
         var rugPat = kit.svg('path', { 'class': 'carpet-rug-pat', d: '' }, svg);
-        rug.setAttribute('stroke-width', (cell * 0.64).toFixed(1)); rugPat.setAttribute('stroke-width', (cell * 0.34).toFixed(1));
+        rug.setAttribute('stroke-width', (cell * 0.64).toFixed(1)); rugPat.setAttribute('stroke-width', (cell * 0.34).toFixed(1));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         var roll = kit.svg('circle', { 'class': 'carpet-roll', r: cell * 0.33, cx: 0, cy: 0 }, svg), rollIn = kit.svg('circle', { 'class': 'carpet-roll-in', r: cell * 0.14, cx: 0, cy: 0 }, svg);
-        function pathD(p) { return p.map(function (k, j) { return (j ? 'L' : 'M') + cx(k).toFixed(1) + ' ' + cy(k).toFixed(1); }).join(' '); }
+        function pathD(p) { return p.map(function (k, j) { return (j ? 'L' : 'M') + cx(k).toFixed(1) + ' ' + cy(k).toFixed(1); }).join(' '); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() {
             var d = pathD(st.path), head = st.path[st.path.length - 1];
             if (st.path.length === 1) d += ' L' + (cx(head) + 0.01) + ' ' + cy(head);              /* 只有一格時畫一個圓點 */
-            rug.setAttribute('d', d); rugPat.setAttribute('d', d);
+            rug.setAttribute('d', d); rugPat.setAttribute('d', d);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             roll.setAttribute('cx', cx(head)); roll.setAttribute('cy', cy(head)); rollIn.setAttribute('cx', cx(head)); rollIn.setAttribute('cy', cy(head));
-            tip.textContent = '已鋪 ' + st.path.length + '／' + st.free + ' 格　往回拖＝把地毯捲回來';
+            tip.textContent = '已鋪 ' + st.path.length + '／' + st.free + ' 格　往回拖＝把地毯捲回來';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         }
         paint();
         api.timer(timeMs(q.free), function () { finish('time'); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
-        if (level === 1 && kit.once('carpet.hint')) {
+        if (level === 1 && kit.once('carpet.hint')) {   /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
             var nb = neighbors(n, q.start).filter(function (j) { return !st.vis[j]; })[0];
             kit.hintOn(stage, null, { mode: 'drag', x: bx + cx(q.start), y: by + cy(q.start), dx: cx(nb) - cx(q.start), dy: cy(nb) - cy(q.start), delay: 500, text: '從地毯捲往旁邊拖，每格都要鋪' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         }
@@ -455,23 +455,23 @@
         }
         function feed(p) {
             if (api.over || done) return;
-            var from = lastPt || p, dist = kit.dist(from.x, from.y, p.x, p.y), steps = Math.max(1, Math.ceil(dist / (cell / 4)));
+            var from = lastPt || p, dist = kit.dist(from.x, from.y, p.x, p.y), steps = Math.max(1, Math.ceil(dist / (cell / 4)));  /* Math.ceil：無條件進位成整數 */
             for (var s = 1; s <= steps && !done && !api.over; s++) {
                 var x = from.x + (p.x - from.x) * s / steps, y = from.y + (p.y - from.y) * s / steps, k = cellAt(x, y);
                 if (k < 0) continue;
                 var act = applyMove(st, k);
-                if (act) { Sfx.play(act === 'add' ? 'tick' : 'flip'); paint(); check(); }
+                if (act) { Sfx.play(act === 'add' ? 'tick' : 'flip'); paint(); check(); }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             }
             lastPt = p;
         }
-        stage.addEventListener('pointerdown', function (e) {
+        stage.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (api.over || done || pid != null) return;
             var p = kit.localPt(e, stage), k = cellAt(p.x, p.y), head = st.path[st.path.length - 1];
             if (k !== head) return;                                    /* 要從捲頭（黃色地毯捲）開始拖 */
-            e.preventDefault(); pid = e.pointerId; lastPt = p;
-            try { stage.setPointerCapture(e.pointerId); } catch (err) { }
+            e.preventDefault(); pid = e.pointerId; lastPt = p;  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            try { stage.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
         });
-        stage.addEventListener('pointermove', function (e) { if (pid === e.pointerId) feed(kit.localPt(e, stage)); });
+        stage.addEventListener('pointermove', function (e) { if (pid === e.pointerId) feed(kit.localPt(e, stage)); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
         function up(e) { if (pid === e.pointerId) { pid = null; lastPt = null; } }
         stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
 
@@ -484,21 +484,21 @@
             if (done || api.over) return;
             done = true; pid = null;
             if (kind === 'ok') {
-                cells.forEach(function (el) { el.classList.add('carpet-cell--ok'); });
-                tip.textContent = '整個房間都鋪好了！';
-                kit.flash(stage, true, api.my);
-                api.pass({ delay: 1500 });
+                cells.forEach(function (el) { el.classList.add('carpet-cell--ok'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                tip.textContent = '整個房間都鋪好了！';          /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                kit.flash(stage, true, api.my);         /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+                api.pass({ delay: 1500 });              /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
                 return;
             }
             /* 失敗：沒鋪到的格子閃紅，再用綠線慢慢畫出一條正確的路，畫完停格 3 秒才跳出結算 */
             var miss = 0;
-            for (var k = 0; k < n * n; k++) if (st.vis[k] === 0) { cells[k].classList.add('carpet-cell--miss'); miss++; }
+            for (var k = 0; k < n * n; k++) if (st.vis[k] === 0) { cells[k].classList.add('carpet-cell--miss'); miss++; }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             solLine.setAttribute('d', pathD(q.solution));
             solLine.style.animationDuration = solDrawMs(q.solution.length) + 'ms';            /* CSS 預設 1.6 秒，這裡依路的長度放慢 */
             solLine.classList.add('carpet-sol--draw');
             tip.textContent = '時間到！綠線是其中一種鋪法';
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: failDelayMs(q.solution.length), lines: ['時間到，還有 ' + miss + ' 格沒鋪到', '房間 ' + n + '×' + n + '、家具 ' + q.stones.length + ' 個、要鋪 ' + q.free + ' 格'] });
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: failDelayMs(q.solution.length), lines: ['時間到，還有 ' + miss + ' 格沒鋪到', '房間 ' + n + '×' + n + '、家具 ' + q.stones.length + ' 個、要鋪 ' + q.free + ' 格'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：api.solve 把地毯先全部捲回起點、再照正確的路一格一格鋪完；
            api.wrong 往最容易走進死路的方向鋪（不動腦的走法）直到被困住，然後直接宣告時間到（走進死路本身不會結束遊戲） */
@@ -511,7 +511,7 @@
             while (!done && guard++ < 400) {
                 var head = st.path[st.path.length - 1], nb = neighbors(n, head).filter(function (j) { return !st.vis[j]; });
                 if (!nb.length) break;
-                nb.sort(function (a, b) { return neighbors(n, a).filter(function (j) { return !st.vis[j]; }).length - neighbors(n, b).filter(function (j) { return !st.vis[j]; }).length; });
+                nb.sort(function (a, b) { return neighbors(n, a).filter(function (j) { return !st.vis[j]; }).length - neighbors(n, b).filter(function (j) { return !st.vis[j]; }).length; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
                 applyMove(st, nb[nb.length - 1]); paint();
                 if (isDone(st)) break;
             }

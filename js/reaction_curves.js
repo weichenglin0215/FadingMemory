@@ -81,9 +81,9 @@
     /* 這一關的長度差 */
     function diffFor(level) { return Math.max(DIFF_MIN, DIFF_START - (level - 1) * DIFF_STEP); }
     /* 這一關的轉折點基本數量 */
-    function kBase(level) { return Math.round(kit.ramp(level, K_START, K_END, K_RAMP)); }
+    function kBase(level) { return Math.round(kit.ramp(level, K_START, K_END, K_RAMP)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 這一關的上下打亂幅度 */
-    function yjitFor(level) { return kit.ramp(level, YJIT_START, YJIT_END, K_RAMP); }
+    function yjitFor(level) { return kit.ramp(level, YJIT_START, YJIT_END, K_RAMP); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 關'; }
 
     /* 純函式（也給 Node 測試用） */
@@ -92,7 +92,7 @@
     /* 點 p 到線段 q-r 的距離 */
     function ptSeg(p, q, r) {
         var dx = r.x - q.x, dy = r.y - q.y, l2 = dx * dx + dy * dy, t = l2 ? Math.max(0, Math.min(1, ((p.x - q.x) * dx + (p.y - q.y) * dy) / l2)) : 0;
-        var ex = q.x + t * dx - p.x, ey = q.y + t * dy - p.y; return Math.sqrt(ex * ex + ey * ey);
+        var ex = q.x + t * dx - p.x, ey = q.y + t * dy - p.y; return Math.sqrt(ex * ex + ey * ey);  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
     }
     /* 兩條線段之間的最短距離；若相交就是 0（ccw 判斷三點的轉向，轉向相異即表示相交） */
     /* 兩條線段（a-b、c-d）之間的最短距離 */
@@ -106,7 +106,7 @@
     /* 轉折點連成的折線（含起點終點）有沒有自己交叉／靠太近。dims＝{halfW, h}（畫面像素）；alpha＝左右伸展倍率 */
     function polyOk(shape, alpha, dims) {
         var P = [{ x: 0, y: 0 }];
-        shape.forEach(function (p) { P.push({ x: p.u * alpha * dims.halfW * CTRL_FRAC, y: p.v * dims.h }); });
+        shape.forEach(function (p) { P.push({ x: p.u * alpha * dims.halfW * CTRL_FRAC, y: p.v * dims.h }); });  /* forEach：對陣列的每個元素各做一次 */
         P.push({ x: 0, y: dims.h });
         var need = CLEAR_PX * 1.25;
         for (var i = 0; i + 1 < P.length; i++) for (var j = i + 2; j + 1 < P.length; j++) {
@@ -130,10 +130,10 @@
             for (var i = 1; i <= k && !fail; i++) {
                 var placed = false;
                 for (var tries = 0; tries < 40 && !placed; tries++) {
-                    var v = kit.clamp(i * spacing + (rand() * 2 - 1) * yjit * spacing, 0.03, 0.97);
+                    var v = kit.clamp(i * spacing + (rand() * 2 - 1) * yjit * spacing, 0.03, 0.97);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
                     if (rand() < 0.85) side = -side;                           /* 大多左右交替，偶爾連續同一邊 */
-                    var u = side * kit.randFloat(U_MIN, 1, rand);
-                    if (i > 1 && Math.abs(u - prevU) < MIN_SWING) continue;
+                    var u = side * kit.randFloat(U_MIN, 1, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+                    if (i > 1 && Math.abs(u - prevU) < MIN_SWING) continue;  /* Math.abs：取絕對值（去掉負號） */
                     pts.push({ u: u, v: v });
                     if (polyOk(pts, 0.75, dims)) { placed = true; prevU = u; } else pts.pop();
                 }
@@ -148,7 +148,7 @@
     /* 取樣：shape（上面的轉折點）＋ α（左右伸展倍率）→ 折線點 [{x,y,s}]，s＝累積弧長 */
     function buildPath(shape, alpha, cx, halfW, y0, y1) {
         var ctrl = [{ x: cx, y: y0 }];
-        shape.forEach(function (p) { ctrl.push({ x: cx + p.u * alpha * halfW * CTRL_FRAC, y: y0 + p.v * (y1 - y0) }); });
+        shape.forEach(function (p) { ctrl.push({ x: cx + p.u * alpha * halfW * CTRL_FRAC, y: y0 + p.v * (y1 - y0) }); });  /* forEach：對陣列的每個元素各做一次 */
         ctrl.push({ x: cx, y: y1 });
         var pts = [], s = 0, n = ctrl.length;
         function at(i) { return ctrl[Math.max(0, Math.min(n - 1, i))]; }
@@ -158,13 +158,13 @@
             /* 每一段取幾個點只看「伸展倍率 1」時的弦長，不隨 α 改變，這樣曲線長度對 α 是連續的，二分搜尋才能精確命中 */
             var q1 = shape[i - 1] || { u: 0, v: i === 0 ? 0 : 1 }, q2 = shape[i] || { u: 0, v: 1 };
             var dx1 = (q2.u - q1.u) * halfW * CTRL_FRAC, dy1 = (q2.v - q1.v) * (y1 - y0);
-            var m = Math.max(2, Math.ceil(Math.sqrt(dx1 * dx1 + dy1 * dy1) / STEP_PX));
+            var m = Math.max(2, Math.ceil(Math.sqrt(dx1 * dx1 + dy1 * dy1) / STEP_PX));  /* Math.ceil：無條件進位成整數 */
             for (var j = (i === 0 ? 0 : 1); j <= m; j++) {
                 var t = j / m, t2 = t * t, t3 = t2 * t;
                 /* Catmull-Rom 曲線公式：用四個相鄰控制點算出段內位置 */
                 var x = 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
                 var y = 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
-                if (pts.length) { var q = pts[pts.length - 1]; s += Math.sqrt((x - q.x) * (x - q.x) + (y - q.y) * (y - q.y)); }
+                if (pts.length) { var q = pts[pts.length - 1]; s += Math.sqrt((x - q.x) * (x - q.x) + (y - q.y) * (y - q.y)); }  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
                 pts.push({ x: x, y: y, s: s });
             }
         }
@@ -189,11 +189,11 @@
         for (i = 0; i < pts.length; i++) {
             var p = pts[i];
             if (p.x < box.x0 || p.x > box.x1 || p.y < box.y0 - 1e-6 || p.y > box.y1 + 1e-6) return false;
-            var gx = Math.floor(p.x / cell), gy = Math.floor(p.y / cell), key = gx + ',' + gy;
+            var gx = Math.floor(p.x / cell), gy = Math.floor(p.y / cell), key = gx + ',' + gy;  /* Math.floor：無條件捨去成整數 */
             (grid[key] = grid[key] || []).push(i);
         }
         for (i = 0; i < pts.length; i++) {
-            var q = pts[i], cx = Math.floor(q.x / cell), cy = Math.floor(q.y / cell);
+            var q = pts[i], cx = Math.floor(q.x / cell), cy = Math.floor(q.y / cell);  /* Math.floor：無條件捨去成整數 */
             for (var dx = -1; dx <= 1; dx++) for (var dy = -1; dy <= 1; dy++) {
                 var arr = grid[(cx + dx) + ',' + (cy + dy)];
                 if (!arr) continue;
@@ -222,11 +222,11 @@
         for (var tries = 0; tries < 1500; tries++) {
             /* isTrap：視覺陷阱——故意讓「較短的那條」轉折比較多 */
             var isTrap = rand() < trap;
-            var kS = Math.max(2, kb + (isTrap ? kit.randInt(1, 2, rand) : kit.randInt(-1, 1, rand)));
-            var kL = Math.max(2, kb + (isTrap ? -kit.randInt(1, 2, rand) : kit.randInt(-1, 1, rand)));
+            var kS = Math.max(2, kb + (isTrap ? kit.randInt(1, 2, rand) : kit.randInt(-1, 1, rand)));  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+            var kL = Math.max(2, kb + (isTrap ? -kit.randInt(1, 2, rand) : kit.randInt(-1, 1, rand)));  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             var shS = makeShape(kS, yj, rand, dims), shL = makeShape(kL, yj, rand, dims);
             if (!shS || !shL) continue;
-            var aS = kit.randFloat(ALPHA_SHORT[0], ALPHA_SHORT[1], rand);
+            var aS = kit.randFloat(ALPHA_SHORT[0], ALPHA_SHORT[1], rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             var ptsS = buildPath(shS, aS, cxS, halfW, y0, y1);
             if (!validRope(ptsS, boxOf(cxS))) continue;
             var lenS = pathLen(ptsS);
@@ -248,10 +248,10 @@
        lenL、lenR＝左右兩條的長度；沒給長度就當作一樣長（只有紅白間距稍微不同）。回傳 { L:[紅,白], R:[紅,白] } */
     function dashFor(rand, lenL, lenR) {
         rand = rand || Math.random;
-        var P = kit.pick(DASH_PERIODS, rand), lL = lenL || 1, lR = lenR || 1;
+        var P = kit.pick(DASH_PERIODS, rand), lL = lenL || 1, lR = lenR || 1;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         var shortIsL = lL <= lR, ratio = Math.max(lL, lR) / Math.min(lL, lR);
         var pS = P, pLong = P * ratio * (1 + kit.randFloat(DASH_JITTER[0], DASH_JITTER[1], rand));
-        function seg(p) { var red = Math.max(2, Math.round(p * DASH_RED * 10) / 10); return [red, Math.max(2, Math.round((p - red) * 10) / 10)]; }
+        function seg(p) { var red = Math.max(2, Math.round(p * DASH_RED * 10) / 10); return [red, Math.max(2, Math.round((p - red) * 10) / 10)]; }  /* Math.round：四捨五入成整數 */
         return shortIsL ? { L: seg(pS), R: seg(pLong) } : { L: seg(pLong), R: seg(pS) };
     }
     /* 要不要放大鏡頭：剩下那一段路的長度（弧長）夠短（差距很小）才放大；差距大就一眼看得出來，不用放大 */
@@ -266,7 +266,7 @@
         var z = Math.min(ZOOM_MAX, W / bw, H / bh);
         if (z < ZOOM_MIN) return null;
         var vw = W / z, vh = H / z, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
-        var vx = kit.clamp(cx - vw / 2, 0, W - vw), vy = kit.clamp(cy - vh / 2, 0, H - vh);
+        var vx = kit.clamp(cx - vw / 2, 0, W - vw), vy = kit.clamp(cy - vh / 2, 0, H - vh);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
         return { zoom: z, box: { vx: vx, vy: vy, vw: vw, vh: vh } };
     }
     /* 長繩子「還沒走完的那一段」：從弧長 s0（球停住的位置）到終點的所有點（第一個點是球停的位置） */
@@ -298,10 +298,10 @@
             if (Rd) Rd.dispose();
             Rd = kit.round();
             var my = Rd;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             /* 替整個畫面加上黑底 class（樣式在 css/games/reaction_curves.css 的 .curves-bg） */
-            root.classList.add('curves-bg');
-            my.onDispose(function () { root.classList.remove('curves-bg'); });
+            root.classList.add('curves-bg');            /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            my.onDispose(function () { root.classList.remove('curves-bg'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             var level = start || 1, cleared = level - 1, newRec = false, state = 'idle';
 
             /* 建立畫面元素：標題、場地、橫幅、左右兩顆選擇按鈕 */
@@ -311,15 +311,15 @@
             var btns = h('div', { 'class': 'curves-btns' });
             var bL = h('button', { 'class': 'curves-btn', text: '左邊比較短' });
             var bR = h('button', { 'class': 'curves-btn', text: '右邊比較短' });
-            btns.appendChild(bL); btns.appendChild(bR);
-            field.appendChild(banner);
+            btns.appendChild(bL); btns.appendChild(bR); /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            field.appendChild(banner);                  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             root.appendChild(head);
             root.appendChild(field);
             root.appendChild(btns);
 
             var Lv = null, svg = null, balls = null, ptsL = null, ptsR = null, fw = 0, fh = 0, ends = null;
 
-            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }
+            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
             /* 出下一關：產生左右兩條繩子並畫出來（有虛線就畫白底線疊紅色虛線） */
             function nextLevel() {
@@ -330,18 +330,18 @@
                 for (var att = 0; att < 40 && !Lv; att++) Lv = makeLevel(level, H, null, W);
                 if (!Lv) throw new Error('curves: cannot build a level');
                 state = 'pick';
-                banner.textContent = ''; banner.className = 'curves-banner';
+                banner.textContent = ''; banner.className = 'curves-banner';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 field.classList.remove('curves-field--zoom');
-                head.textContent = '第 ' + level + ' 關　哪一條比較短？';
+                head.textContent = '第 ' + level + ' 關　哪一條比較短？';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 meta();
-                field.querySelectorAll('svg').forEach(function (s) { s.remove(); });
-                svg = kit.svg('svg', { 'class': 'curves-svg', viewBox: '0 0 ' + W + ' ' + H }, field);
+                field.querySelectorAll('svg').forEach(function (s) { s.remove(); });  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
+                svg = kit.svg('svg', { 'class': 'curves-svg', viewBox: '0 0 ' + W + ' ' + H }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
                 ptsL = Lv.L.pts; ptsR = Lv.R.pts;
                 var dash = level >= DASH_FROM ? dashFor(null, Lv.L.len, Lv.R.len) : null;
                 [[ptsL, 'L'], [ptsR, 'R']].forEach(function (pr) {
-                    var d = pr[0].map(function (p, i) { return (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(' ');
+                    var d = pr[0].map(function (p, i) { return (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(' ');  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                     if (dash) {
-                        kit.svg('path', { 'class': 'curves-line curves-line--white', d: d }, svg);
+                        kit.svg('path', { 'class': 'curves-line curves-line--white', d: d }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
                         kit.svg('path', { 'class': 'curves-line curves-line--red', d: d, 'stroke-dasharray': dash[pr[1]][0] + ' ' + dash[pr[1]][1] }, svg);
                     } else {
                         kit.svg('path', { 'class': 'curves-line curves-line--solid', d: d }, svg);
@@ -369,27 +369,27 @@
                 bL.disabled = bR.disabled = true;
                 var ok = side === Lv.shortSide;
                 (side === 'L' ? bL : bR).classList.add(ok ? 'curves-btn--ok' : 'curves-btn--bad');
-                Sfx.play('whoosh');
+                Sfx.play('whoosh');                     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 head.textContent = '兩顆球一樣的速度，看誰先到…';
-                var t0 = performance.now(), arrived = false;
+                var t0 = performance.now(), arrived = false;  /* performance.now()：高精度的時間（毫秒），計時用 */
                 var lenS = Math.min(Lv.L.len, Lv.R.len);        /* 短的那條的長度：短的那顆球一到終點，長的那顆就停在這個弧長 */
                 /* 依經過時間算出兩顆球的弧長位置（最多走到 lenS：短的到了終點，長的就停在原地）；還沒到就回傳 true */
                 function place(now) {
                     var s = Math.min((now - t0) / 1000 * Lv.speed, lenS);
                     var pl = pointAt(ptsL, s), pr = pointAt(ptsR, s);
-                    balls[0].setAttribute('cx', pl.x.toFixed(1)); balls[0].setAttribute('cy', pl.y.toFixed(1));
-                    balls[1].setAttribute('cx', pr.x.toFixed(1)); balls[1].setAttribute('cy', pr.y.toFixed(1));
+                    balls[0].setAttribute('cx', pl.x.toFixed(1)); balls[0].setAttribute('cy', pl.y.toFixed(1));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                    balls[1].setAttribute('cx', pr.x.toFixed(1)); balls[1].setAttribute('cy', pr.y.toFixed(1));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
                     if (s >= lenS) {
                         if (!arrived) {
                             arrived = true;     /* 短的那顆球到的瞬間就公布結果；長的那顆停在原地，不再往前 */
-                            Sfx.play('tick');
+                            Sfx.play('tick');           /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                             verdict(ok, Lv.shortSide);
                         }
                         return false;
                     }
                     return true;
                 }
-                var lp = my.loop(function (now) { return place(now); });
+                var lp = my.loop(function (now) { return place(now); });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                 /* 保底：rAF 被暫停時，時間到了直接定位並公布 */
                 my.after(lenS / Lv.speed * 1000 + 300, function () { if (!arrived) { lp.stop(); place(t0 + lenS / Lv.speed * 1000 + 1000); } });
             }
@@ -401,7 +401,7 @@
                 var longSide = Lv.shortSide === 'L' ? 'R' : 'L', pts = longSide === 'L' ? ptsL : ptsR;
                 var lenS = Lv.shortSide === 'L' ? Lv.L.len : Lv.R.len;
                 var rest = restPoints(pts, lenS);
-                var d = rest.map(function (p, i) { return (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(' ');
+                var d = rest.map(function (p, i) { return (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(' ');  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                 var path = kit.svg('path', { 'class': 'curves-line curves-rest', d: d }, svg);
                 svg.insertBefore(path, balls[0]);                         /* 畫在球的下面 */
                 ends[longSide === 'L' ? 0 : 1].classList.add('curves-end--gap');
@@ -409,7 +409,7 @@
                 var cam = needZoom(rest[rest.length - 1].s - rest[0].s) ? zoomCamera(rest, fw, fh) : null;
                 if (!cam) return false;
                 var from = { vx: 0, vy: 0, vw: fw, vh: fh };
-                var markers = svg.querySelectorAll('.curves-start, .curves-end');
+                var markers = svg.querySelectorAll('.curves-start, .curves-end');  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
                 kit.tweenViewBox(my, svg, from, cam.box, ZOOM_MS, kit.easeInOutCubic, function (b) {
                     var z = fw / b.vw;
                     balls[0].setAttribute('r', (13 / z).toFixed(2)); balls[1].setAttribute('r', (13 / z).toFixed(2));
@@ -426,7 +426,7 @@
                 var extra = zoomed ? ZOOM_MS : 0;           /* 有放大的話，停留時間加上放大的時間 */
                 if (ok) {
                     cleared = level;
-                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
+                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                     banner.textContent = (first === 'L' ? '左' : '右') + '邊先到！答對了';
                     banner.className = 'curves-banner curves-banner--ok';
                     head.textContent = msg;
@@ -442,7 +442,7 @@
                     state = 'over';
                     var failLevel = level, back = kit.resumeFrom(failLevel);
                     my.after(2300 + extra, function () {
-                        kit.result(root, {
+                        kit.result(root, {              /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                             score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: cleared + ' 關', label: '看走眼了',
                             lines: ['第 ' + level + ' 關長度差 ' + ((Lv.ratio - 1) * 100).toFixed(4) + '%', (Lv.shortSide === 'L' ? '左' : '右') + '邊才是比較短的'],
@@ -455,8 +455,8 @@
             }
 
             /* 兩顆按鈕：pointerdown 一碰就觸發 */
-            bL.addEventListener('pointerdown', function (e) { e.preventDefault(); choose('L'); });
-            bR.addEventListener('pointerdown', function (e) { e.preventDefault(); choose('R'); });
+            bL.addEventListener('pointerdown', function (e) { e.preventDefault(); choose('L'); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            bR.addEventListener('pointerdown', function (e) { e.preventDefault(); choose('R'); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
 
             /* G.debug：測試用後門 */
             G.debug = {

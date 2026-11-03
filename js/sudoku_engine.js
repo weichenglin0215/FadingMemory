@@ -14,7 +14,7 @@
     /* 如果遮罩只剩「剛好一個」數字，回傳那個數字；否則回傳 0（用來判斷「唯一候選」） */
     function lowDigit(m) { for (var d = 1; d <= 16; d++) if (m === (1 << d)) return d; return 0; }
     /* 洗牌（Fisher-Yates）：先複製陣列，再從後往前，每個位置跟前面隨機一個位置交換。rand 是亂數函式（測試時可以給固定亂數） */
-    function shuffle(a, rand) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rand() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+    function shuffle(a, rand) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rand() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
 
     /* ═══ 幾何：宮是 boxR 排 × boxC 欄（4×4＝2×2、6×6＝2×3、9×9＝3×3）═══ */
     /* 幾何：把「第 c 格在第幾排、第幾欄、第幾宮、跟哪些格同一個單位」都先算好存起來，之後每個函式直接查表。
@@ -23,10 +23,10 @@
         var N = boxR * boxC, g = { R: boxR, C: boxC, N: N, cells: N * N, ALL: 0, units: [], peers: [], unitsOf: [] }, i, j;  /* g 是要回傳的幾何物件：N 邊長、cells 總格數、ALL 全部候選數的遮罩、units 所有「單位」（排、欄、宮）、peers 每格的「同行同列同宮的其他格」、unitsOf 每格屬於哪幾個單位 */
         for (i = 1; i <= N; i++) g.ALL |= (1 << i);
         /* 格子編號 c → 第幾排（0 起算）：編號每 N 個換一排 */
-        g.rowOf = function (c) { return Math.floor(c / N); };
+        g.rowOf = function (c) { return Math.floor(c / N); };  /* Math.floor：無條件捨去成整數 */
         g.colOf = function (c) { return c % N; };
         /* 格子編號 c → 第幾宮：先算「第幾排宮、第幾欄宮」，再換成宮的編號 */
-        g.boxOf = function (c) { return Math.floor(g.rowOf(c) / boxR) * (N / boxC) + Math.floor(g.colOf(c) / boxC); };
+        g.boxOf = function (c) { return Math.floor(g.rowOf(c) / boxR) * (N / boxC) + Math.floor(g.colOf(c) / boxC); };  /* Math.floor：無條件捨去成整數 */
         var rows = [], cols = [], boxes = [];
         for (i = 0; i < N; i++) { rows.push([]); cols.push([]); boxes.push([]); }
         for (i = 0; i < N * N; i++) { rows[g.rowOf(i)].push(i); cols[g.colOf(i)].push(i); boxes[g.boxOf(i)].push(i); }
@@ -35,7 +35,7 @@
         g.units = rows.concat(cols, boxes);
         for (i = 0; i < N * N; i++) {
             var p = [], us = [];                        /* 對每一格 i：us 存「它屬於哪幾個單位」、p（peers）存「跟它同排或同欄或同宮的其他格」——填了 i，這些格就不能再放同一個數字 */
-            for (j = 0; j < g.units.length; j++) if (g.units[j].indexOf(i) >= 0) us.push(j);
+            for (j = 0; j < g.units.length; j++) if (g.units[j].indexOf(i) >= 0) us.push(j);  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             g.unitsOf.push(us);
             for (j = 0; j < N * N; j++) if (j !== i && (g.rowOf(j) === g.rowOf(i) || g.colOf(j) === g.colOf(i) || g.boxOf(j) === g.boxOf(i))) p.push(j);
             g.peers.push(p);
@@ -48,7 +48,7 @@
        做法：每次挑「候選數最少」的空格（最容易出錯的先試），一個一個數字試；試不下去就退回上一步（這就是回溯）。
        rand 有給就用亂數順序試數字，拿來「造一個隨機的完整盤面」。 */
     SL.solve = function (g, givens, limit, rand) {
-        var N = g.N, cells = g.cells, grid = givens.slice(), cand = new Array(cells), found = 0, first = null, i;
+        var N = g.N, cells = g.cells, grid = givens.slice(), cand = new Array(cells), found = 0, first = null, i;  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         function ok() { return true; }                  /* （沒有用到的小函式，保留不影響結果） */
         for (i = 0; i < cells; i++) cand[i] = g.ALL;    /* 一開始每一格的候選數都是「全部數字」；下一行起，已經填了數字的格子要把它的數字從同排、同欄、同宮的候選數裡去掉 */
         for (i = 0; i < cells; i++) if (grid[i]) {
@@ -78,7 +78,7 @@
         return { count: found, solution: first };
     };
     /* 造一個隨機的完整盤面：從全空盤面開始解、只要 1 個解、而且用亂數順序試——每次得到的盤面都不一樣 */
-    SL.randomSolution = function (g, rand) { return SL.solve(g, new Array(g.cells).fill(0), 1, rand).solution; };
+    SL.randomSolution = function (g, rand) { return SL.solve(g, new Array(g.cells).fill(0), 1, rand).solution; };  /* new Array(n).fill(v)：建立長度 n、每一格都是 v 的陣列 */
 
     /* ═══ 技巧推理器 ═══
        等級 1：唯一候選（格子只剩一個數字能放）、唯一位置（單位裡某數字只剩一格能放）
@@ -125,19 +125,19 @@
         /* 把陣列 arr 裡「任選 k 個」的所有組合一組一組丟給 fn（遞迴 rec 負責排組合）。數對、三數組用它來試每一種組合 */
         function combos(arr, k, fn) {
             var idx = [];
-            (function rec(start) { if (idx.length === k) { fn(idx.map(function (x) { return arr[x]; })); return; } for (var x = start; x < arr.length; x++) { idx.push(x); rec(x + 1); idx.pop(); } })(0);
+            (function rec(start) { if (idx.length === k) { fn(idx.map(function (x) { return arr[x]; })); return; } for (var x = start; x < arr.length; x++) { idx.push(x); rec(x + 1); idx.pop(); } })(0);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         }
         /* 數對（k＝2）／三數組（k＝3）：某單位裡有 k 格，它們的候選數合起來只有 k 個不同數字，
            那這 k 個數字一定就在這 k 格裡，同單位其他格的候選數可以去掉這些數字。 */
         function nakedSubset(k, name) {
             var did = false;
-            g.units.forEach(function (un) {
-                var open = un.filter(function (c) { return !grid[c] && bitCount(cand[c]) <= k; });
+            g.units.forEach(function (un) {             /* forEach：對陣列的每個元素各做一次 */
+                var open = un.filter(function (c) { return !grid[c] && bitCount(cand[c]) <= k; });  /* filter：留下符合條件的元素，回傳新陣列 */
                 combos(open, k, function (cs) {
-                    var uni = 0; cs.forEach(function (c) { uni |= cand[c]; });
+                    var uni = 0; cs.forEach(function (c) { uni |= cand[c]; });  /* forEach：對陣列的每個元素各做一次 */
                     if (bitCount(uni) !== k) return;
                     var ch = false;
-                    un.forEach(function (c) { if (!grid[c] && cs.indexOf(c) < 0 && elim(c, uni)) ch = true; });
+                    un.forEach(function (c) { if (!grid[c] && cs.indexOf(c) < 0 && elim(c, uni)) ch = true; });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                     if (ch) { did = true; use(name); }
                 });
             });
@@ -150,8 +150,8 @@
             g.units.forEach(function (un) {
                 var pos = {}, ds = [];
                 for (var dg = 1; dg <= N; dg++) {
-                    var placed = un.some(function (c) { return grid[c] === dg; }); if (placed) continue;
-                    var sp = un.filter(function (c) { return !grid[c] && (cand[c] & (1 << dg)); });
+                    var placed = un.some(function (c) { return grid[c] === dg; }); if (placed) continue;  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
+                    var sp = un.filter(function (c) { return !grid[c] && (cand[c] & (1 << dg)); });  /* filter：留下符合條件的元素，回傳新陣列 */
                     if (sp.length === 2) { pos[dg] = sp; ds.push(dg); }
                 }
                 combos(ds, 2, function (pr) {
@@ -178,7 +178,7 @@
                     for (var x = 0; x < us.length; x++) {
                         var v = us[x]; if (v === u) continue;
                         var vu = g.units[v];
-                        if (!sp.every(function (c) { return vu.indexOf(c) >= 0; })) continue;
+                        if (!sp.every(function (c) { return vu.indexOf(c) >= 0; })) continue;  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
                         var ch = false;
                         vu.forEach(function (c) { if (!grid[c] && un.indexOf(c) < 0 && elim(c, bit)) ch = true; });
                         if (ch) { did = true; use('locked'); }
@@ -201,7 +201,7 @@
                     });
                     for (var a = 0; a < two.length; a++) for (var b = a + 1; b < two.length; b++) {
                         var A = two[a].sp, B = two[b].sp;
-                        var ca = A.map(function (c) { return lines === g.rows ? g.colOf(c) : g.rowOf(c); }), cb = B.map(function (c) { return lines === g.rows ? g.colOf(c) : g.rowOf(c); });
+                        var ca = A.map(function (c) { return lines === g.rows ? g.colOf(c) : g.rowOf(c); }), cb = B.map(function (c) { return lines === g.rows ? g.colOf(c) : g.rowOf(c); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                         if (ca[0] !== cb[0] || ca[1] !== cb[1]) continue;
                         var ch = false;
                         ca.forEach(function (ci) { cross[ci].forEach(function (c) { if (!grid[c] && A.indexOf(c) < 0 && B.indexOf(c) < 0 && elim(c, bit)) ch = true; }); });
@@ -242,7 +242,7 @@
     /* 出題（做法見上面這段說明）。回傳 { solution 完整答案, givens 題目（0＝空格）, count 提示數, level 用到的最高技巧等級, used 各技巧次數 } */
     SL.make = function (g, spec, rand) {
         rand = rand || Math.random;
-        var best = null, t0 = Date.now(), tr;
+        var best = null, t0 = Date.now(), tr;           /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
         for (tr = 0; tr < (spec.tries || 20); tr++) {
             var sol = SL.randomSolution(g, rand), givens = sol.slice(), count = g.cells;  /* 先造完整盤面 sol；givens 是「題目」，一開始等於完整盤面，接著一格一格挖掉；count 是還剩幾個提示 */
             var order = shuffle(Array.apply(null, Array(g.cells)).map(function (_, i) { return i; }), rand);  /* 挖洞的順序：把所有格子編號洗牌 */
@@ -259,7 +259,7 @@
             var okLevel = res.level >= (spec.minLevel || 0);  /* 這題用到的技巧等級夠高（不會太簡單）嗎？夠高、提示數也夠少就直接用；否則記下「目前最好的一題」繼續重試 */
             if (okLevel && count <= (spec.maxCount || 999)) return pz;
             if (!best || (okLevel && !best.okLevel) || (okLevel === best.okLevel && (count < best.count))) { best = pz; best.okLevel = okLevel; }
-            if (spec.ms && Date.now() - t0 > spec.ms) break;
+            if (spec.ms && Date.now() - t0 > spec.ms) break;  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
         }
         return best;
     };

@@ -124,13 +124,13 @@
     /* V1.33：出題的純函式搬到 js/ghostleg_core.js（鬼腳圖減一 也用同一套）；這裡帶入本款的參數 */
     var C = GhostlegCore({ COLS: COLS, ROWS: ROWS, X0: X0, DX: DX, Y_TOP: Y_TOP, Y_BOT: Y_BOT, SOL_GAP: SOL_GAP, DECOY_NEAR: DECOY_NEAR, BREAK_EXTRA: BREAK_EXTRA, AVOID_ENDS: AVOID_ENDS });
     var colX = C.colX, rowY = C.rowY, snapRow = C.snapRow, rungSet = C.rungSet, follow = C.follow, canPlace = C.canPlace, placements = C.placements, visitedCols = C.visitedCols, gapCounts = C.gapCounts, makeWalk = C.makeWalk, spreadRows = C.spreadRows, crowded = C.crowded, hideOf = C.hideOf, answerGroups = C.answerGroups, hardEnough = C.hardEnough, cancelPairs = C.cancelPairs, makesCancel = C.makesCancel, routeShape = C.routeShape, makeZigzag = C.makeZigzag, randomRows = C.randomRows, routeLength = C.routeLength, partialRoute = C.partialRoute, construct = C.construct;
-    function rungCap() { return Math.floor(ROWS * DENSITY_MAX); }
-    function rungCount(level) { return Math.min(rungCap(), Math.round(kit.ramp(level, RUNGS[0], RUNGS[1], RAMP_LEVELS))); }
-    function maxSolAt(level) { return Math.max(1, Math.round(kit.ramp(level, MAX_SOL[0], MAX_SOL[1], RAMP_LEVELS))); }
+    function rungCap() { return Math.floor(ROWS * DENSITY_MAX); }  /* Math.floor：無條件捨去成整數 */
+    function rungCount(level) { return Math.min(rungCap(), Math.round(kit.ramp(level, RUNGS[0], RUNGS[1], RAMP_LEVELS))); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function maxSolAt(level) { return Math.max(1, Math.round(kit.ramp(level, MAX_SOL[0], MAX_SOL[1], RAMP_LEVELS))); }  /* Math.round：四捨五入成整數 */
     /* 這一關要畫幾條橫線（1／2／3） */
     function needAt(level) { return level >= NEED_FROM[1] ? 3 : level >= NEED_FROM[0] ? 2 : 1; }
-    function timeMs(level) { return Math.round((kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) + EXTRA_RUNG_S * (needAt(level) - 1)) * 1000); }
-    function visitAt(level) { return Math.round(kit.ramp(level, VISIT[0], VISIT[1], RAMP_LEVELS)); }
+    function timeMs(level) { return Math.round((kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) + EXTRA_RUNG_S * (needAt(level) - 1)) * 1000); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function visitAt(level) { return Math.round(kit.ramp(level, VISIT[0], VISIT[1], RAMP_LEVELS)); }  /* Math.round：四捨五入成整數 */
     function turnsAt(level) { return Math.round(kit.ramp(level, TURNS[0], TURNS[1], RAMP_LEVELS)); }
     function hideAt(level) { return { b: Math.round(kit.ramp(level, HIDE_BEFORE[0], HIDE_BEFORE[1], RAMP_LEVELS)), a: Math.round(kit.ramp(level, HIDE_AFTER[0], HIDE_AFTER[1], RAMP_LEVELS)) }; }
     function groupMaxAt(level) { return Math.round(kit.ramp(level, GROUP_MAX[0], GROUP_MAX[1], RAMP_LEVELS)); }
@@ -147,9 +147,9 @@
         if (Math.max.apply(null, cc) - Math.min.apply(null, cc) > 1) return null;                    /* 各縫的橫線數最多差 1 條（便宜的檢查，放在最前面：九成以上的失敗都卡在這裡，不用再往下做耗時的窮舉） */
         var f0 = follow(rungs, start), full = rungs.concat([sol]), f1 = follow(full, start);
         if (f1.end !== target || target === f0.end || visitedCols(full, start).length < vNeed) return null;
-        var sols = placements(rungs, start).filter(function (p) { return p.end === target; }).map(function (p) { return { row: p.row, col: p.col }; });
+        var sols = placements(rungs, start).filter(function (p) { return p.end === target; }).map(function (p) { return { row: p.row, col: p.col }; });  /* filter：留下符合條件的元素，回傳新陣列 */
         var groups = answerGroups(sols);
-        if (!sols.length || groups.length > limit || groups.some(function (gr) { return gr.to - gr.from + 1 > groupMaxAt(level); })) return null;
+        if (!sols.length || groups.length > limit || groups.some(function (gr) { return gr.to - gr.from + 1 > groupMaxAt(level); })) return null;  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
         if (crowded(rungs, sol.row, sol.col) || !sols.some(function (p) { return p.row === sol.row && p.col === sol.col; })) return null;      /* 原本設計的那個位置（上下留白）一定要在解答裡 */
         if (!sols.every(function (p) { return hardEnough(rungs, start, target, p, hide); })) return null;   /* 每一種畫對的位置都不碰起點終點的直線、前後合計藏得夠深（不能留一個容易找的） */
         if (cancelPairs(rungs) || sols.some(function (p) { return makesCancel(rungs, p.row, p.col); })) return null;   /* 題目沒有「＝」；每一種答案畫上去也不會變成「＝」 */
@@ -200,7 +200,7 @@
     /* 這一級的條件（S）下，這個起點走得出路線嗎？——便宜的探路（只試之字形路線，不蓋整張圖），做不出來就整級跳過，不用把這一級的幾百次嘗試用完。
        S.pos＝true 時，路線還要讓答案落在 u 抽到的那一段。用固定的亂數種子，不影響出題的亂數 */
     function walkPossible(level, S, start, n, sweep, u) {
-        var prng = fixedRand(9000 + level * 7 + start), third = Math.min(2, Math.floor(u * 3));
+        var prng = fixedRand(9000 + level * 7 + start), third = Math.min(2, Math.floor(u * 3));  /* Math.floor：無條件捨去成整數 */
         var acc = function (w) { var k = C.answerIndex(u, w); return k >= 0 && (!S.pos || C.answerThird(k, w.length - 1) === third); };
         for (var i = 0; i < 3; i++) {
             if (makeZigzag(start, Math.max(2, S.v), sweep, Math.max(S.sh.turns, S.hide + 1), S.sh.stair, S.sh.rev, Math.min(ROWS - 2, n + 1), prng, acc)) return true;
@@ -213,7 +213,7 @@
        都不行才換別的起點，最後是最寬鬆的一級。 */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var limit = maxSolAt(level), want = rungCount(level), v0 = visitAt(level), sweep = level >= SWEEP_FROM, t0 = Date.now();
+        var limit = maxSolAt(level), want = rungCount(level), v0 = visitAt(level), sweep = level >= SWEEP_FROM, t0 = Date.now();  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
         var sh = { stair: stairAt(level), rev: revAt(level) }, fit = fitPlan(level, sh.rev), hide = fit.hide;
         sh.turns = fit.turns;
         var rel = { stair: sh.stair + 1, rev: Math.max(1, sh.rev - 1), turns: sh.turns };      /* 放寬一級的路線形狀：同方向多走 1 步、少回頭 1 次 */
@@ -225,11 +225,11 @@
             { v: v0 - 1, lim: limit + 2, hide: hide, sh: sh, n: TRIES_STAGE },
             { v: v0 - 1, lim: limit + 3, hide: Math.max(2, hide - 2), sh: rel, n: TRIES_STAGE }
         ];
-        var stages = base.map(function (s) { return Object.assign({ pos: true }, s); });
+        var stages = base.map(function (s) { return Object.assign({ pos: true }, s); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         for (var ex = 1; ex <= POS_EXTRA; ex++) {                                  /* POS_EXTRA：為了答案位置，路線形狀再多放寬幾級（只在「答案要落在抽到的那一段」的這一輪用） */
             stages.push({ v: v0 - 1, lim: limit + 3, hide: Math.max(2, hide - 2), sh: { stair: sh.stair + 1 + ex, rev: Math.max(1, sh.rev - 1 - ex), turns: sh.turns }, n: TRIES_STAGE, pos: true });
         }
-        stages = stages.concat(base.map(function (s) { return Object.assign({ pos: false }, s); }));
+        stages = stages.concat(base.map(function (s) { return Object.assign({ pos: false }, s); }));  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         /* 橫線數：先試剛好 want 條；做不出來先試多 1 條（各縫的橫線數最多差 1 條，want 剛好是縫數的倍數時一定要每縫一樣多，很難湊；多 1 條就好湊多了），再一條一條少放 */
         var counts = [want, want + 1];
         for (var dn = 1; dn <= 14 && want - dn >= 1; dn++) counts.push(want - dn);
@@ -240,14 +240,14 @@
                 if (Date.now() - t0 > GEN_BUDGET_MS) { ci = counts.length; break; }    /* 花太久了：直接跳到下面最寬鬆的條件 */
                 if (!walkPossible(level, S, start, nn, sweep, u)) continue;
                 for (var tries = 0; tries < S.n; tries++) {
-                    if (Date.now() - t0 > GEN_BUDGET_MS) { ci = counts.length; st = stages.length; break; }
+                    if (Date.now() - t0 > GEN_BUDGET_MS) { ci = counts.length; st = stages.length; break; }  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
                     var lv = buildLevel(level, start, nn, S.lim, Math.max(2, S.v), S.hide, sweep, S.sh, u, S.pos, rand);
                     if (lv) return lv;
                 }
             }
         }
         var others = []; for (var c0 = 0; c0 < COLS; c0++) if (c0 !== start) others.push(c0);
-        others = kit.shuffle(others, rand);
+        others = kit.shuffle(others, rand);             /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         for (var s2 = 0; s2 < others.length; s2++) for (var t2 = 0; t2 < TRIES_STAGE; t2++) {       /* 這個起點真的出不了題：換別的起點再試 */
             if (Date.now() - t0 > GEN_BUDGET_MS) break;
             var lv2 = buildLevel(level, others[s2], want, limit + 3, Math.max(2, v0 - 1), Math.max(2, hide - 2), sweep, rel, u, false, rand);
@@ -256,11 +256,11 @@
         /* V1.33.1：最寬鬆的條件（前後合計藏 2 個轉彎、回頭 1 次、不必碰兩邊、少一點轉彎）——還是一張完整的圖，不會退回只有 1 條橫線 */
         var easy = { stair: sh.stair + 2, rev: 1, turns: Math.min(sh.turns, 6) };
         for (var e = 0; e < 400; e++) {
-            var lv3 = buildLevel(level, kit.randInt(0, COLS - 1, rand), Math.max(1, want - (e % 6)), limit + 3, 2, 2, false, easy, u, false, rand);
+            var lv3 = buildLevel(level, kit.randInt(0, COLS - 1, rand), Math.max(1, want - (e % 6)), limit + 3, 2, 2, false, easy, u, false, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             if (lv3) return lv3;
         }
         var r0 = [{ row: 4, col: 2 }], f0 = follow(r0, 0);                          /* 保底：很簡單的一題（現有 1 條橫線，把起點接到隔壁） */
-        return { rungs: r0, start: 0, target: 1, end0: f0.end, sol: { row: 4, col: 0 }, sweep: false, hide: { before: 0, after: 0 }, shape: { maxRun: 1, rev: 0 }, turn: 0, turns: 1, solutions: placements(r0, 0).filter(function (p) { return p.end === 1; }).map(function (p) { return { row: p.row, col: p.col }; }) };
+        return { rungs: r0, start: 0, target: 1, end0: f0.end, sol: { row: 4, col: 0 }, sweep: false, hide: { before: 0, after: 0 }, shape: { maxRun: 1, rev: 0 }, turn: 0, turns: 1, solutions: placements(r0, 0).filter(function (p) { return p.end === 1; }).map(function (p) { return { row: p.row, col: p.col }; }) };  /* filter：留下符合條件的元素，回傳新陣列 */
     }
     /* 從 start 走下去，走過哪些橫線（依序，每條 { row, col }） */
     function routeRungs(rungs, start) {
@@ -275,7 +275,7 @@
     function minimalNeed(rungs, start, target, need) {
         if (follow(rungs, start).end === target) return false;
         var singles = placements(rungs, start);
-        if (singles.some(function (p) { return p.end === target; })) return false;
+        if (singles.some(function (p) { return p.end === target; })) return false;  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
         if (need >= 3) {
             for (var i = 0; i < singles.length; i++) {
                 var r1 = rungs.concat([{ row: singles[i].row, col: singles[i].col }]);
@@ -297,7 +297,7 @@
             var cand = routeRungs(base.rungs.concat([base.sol]), base.start).filter(function (g) { return !sameAs(g, base.sol); });
             if (cand.length < need - 1) continue;
             for (var k = 0; k < 14; k++) {
-                var pick = kit.shuffle(cand, rand).slice(0, need - 1);
+                var pick = kit.shuffle(cand, rand).slice(0, need - 1);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
                 var rungs2 = base.rungs.filter(function (g) { return !pick.some(function (p) { return sameAs(p, g); }); });
                 if (!minimalNeed(rungs2, base.start, base.target, need)) continue;
                 var req = [base.sol].concat(pick);
@@ -307,7 +307,7 @@
         return Object.assign({}, base, { need: 1, req: [base.sol] });          /* 保底（實測不會用到）：做不出來就當一般的一條橫線 */
     }
     /* 評審動畫花多久：路線越長越久（每 px 約 2.4 毫秒），夾在 ROUTE_MS 範圍內 */
-    function routeMs(route) { return Math.round(kit.clamp(routeLength(route) * 2.4, ROUTE_MS[0], ROUTE_MS[1])); }
+    function routeMs(route) { return Math.round(kit.clamp(routeLength(route) * 2.4, ROUTE_MS[0], ROUTE_MS[1])); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
     /* 答案區段的文字：「第 5～7 層的 乙～丙 之間」 */
     function groupText(g) { return '第 ' + (g.from + 1) + (g.to > g.from ? '～' + (g.to + 1) : '') + ' 層的 ' + LABELS[g.col] + '～' + LABELS[g.col + 1] + ' 之間'; }
     /* 結算畫面的評語：依成績回傳一句話 */
@@ -346,18 +346,18 @@
 
         /* 操作提示（只在第一次進遊戲時）：鉛筆圖示在「正確位置」畫出一條藍色水平橫線，重複播放（沒有手指圖示）；玩家一按下去就消失 */
         var hintOn = false, pencil = null;
-        if (level === 1 && kit.once('ghostleg.hint') && q.solutions.length) {
+        if (level === 1 && kit.once('ghostleg.hint') && q.solutions.length) {  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
             var sol = q.solutions[0], hy = rowY(sol.row), hx1 = colX(sol.col), hx2 = colX(sol.col + 1);
-            var hl = kit.svg('line', { x1: hx1, y1: hy, x2: hx1, y2: hy, 'class': 'ghostleg-user ghostleg-user--hint' }, gHint);
+            var hl = kit.svg('line', { x1: hx1, y1: hy, x2: hx1, y2: hy, 'class': 'ghostleg-user ghostleg-user--hint' }, gHint);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             pencil = h('div', { 'class': 'ghostleg-pencil', text: String.fromCodePoint(0x270F) + String.fromCodePoint(0xFE0F) });
-            stage.appendChild(pencil);
+            stage.appendChild(pencil);                  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             hintOn = true;
-            var t0h = performance.now();
-            my.loop(function (now) {
+            var t0h = performance.now();                /* performance.now()：高精度的時間（毫秒），計時用 */
+            my.loop(function (now) {                    /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                 if (!hintOn) return false;
                 var p = ((now - t0h) % 2400) / 2400, e = Math.min(1, p / 0.7);
                 var x2 = hx1 + (hx2 - hx1) * e;
-                hl.setAttribute('x2', x2.toFixed(1)); hl.setAttribute('opacity', p > 0.9 ? Math.max(0, (1 - p) / 0.1) : 1);
+                hl.setAttribute('x2', x2.toFixed(1)); hl.setAttribute('opacity', p > 0.9 ? Math.max(0, (1 - p) / 0.1) : 1);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
                 pencil.style.left = (x2 - 6) + 'px'; pencil.style.top = (hy - 34) + 'px';
             });
         }
@@ -368,31 +368,31 @@
         function colAt(x, y) {
             if (y < Y_TOP - 6 || y > Y_BOT + 6) return -1;
             var best = -1, bd = 1e9;
-            for (var k = 0; k < COLS; k++) { var d = Math.abs(x - colX(k)); if (d < bd) { bd = d; best = k; } }
+            for (var k = 0; k < COLS; k++) { var d = Math.abs(x - colX(k)); if (d < bd) { bd = d; best = k; } }  /* Math.abs：取絕對值（去掉負號） */
             return bd <= TOUCH_X ? best : -1;
         }
-        stage.addEventListener('pointerdown', function (e) {
+        stage.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (api.over || locked || drag) return;
             var p = kit.localPt(e, stage), col = colAt(p.x, p.y);
             if (col < 0) return;
-            e.preventDefault();
-            try { stage.setPointerCapture(e.pointerId); } catch (err) { }
+            e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            try { stage.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             hideHint();
             drag = { id: e.pointerId, col: col, row: snapRow(p.y), x0: p.x, dir: 0, line: null };
         });
-        stage.addEventListener('pointermove', function (e) {
+        stage.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (!drag || e.pointerId !== drag.id || locked) return;
             var p = kit.localPt(e, stage), dx = p.x - drag.x0;
             if (!drag.dir) {
-                if (Math.abs(dx) < DRAG_MIN) return;
+                if (Math.abs(dx) < DRAG_MIN) return;    /* Math.abs：取絕對值（去掉負號） */
                 var dir = dx > 0 ? 1 : -1, nb = drag.col + dir;
                 if (nb < 0 || nb > COLS - 1) return;                       /* 那一邊沒有直線 */
                 drag.dir = dir;
                 var y = rowY(drag.row);
-                drag.line = kit.svg('line', { x1: colX(drag.col), y1: y, x2: colX(drag.col), y2: y, 'class': 'ghostleg-user' }, gUser);
+                drag.line = kit.svg('line', { x1: colX(drag.col), y1: y, x2: colX(drag.col), y2: y, 'class': 'ghostleg-user' }, gUser);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             }
-            var from = colX(drag.col), to = colX(drag.col + drag.dir), f = kit.clamp((p.x - from) / (to - from), 0, 1);
-            drag.line.setAttribute('x2', (from + (to - from) * f).toFixed(1));
+            var from = colX(drag.col), to = colX(drag.col + drag.dir), f = kit.clamp((p.x - from) / (to - from), 0, 1);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
+            drag.line.setAttribute('x2', (from + (to - from) * f).toFixed(1));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             if (f >= JOIN_FRAC) { var d0 = drag; drag = null; commit(d0); }
         });
         function up(e) {
@@ -403,18 +403,18 @@
         stage.addEventListener('pointerup', up);
         stage.addEventListener('pointercancel', up);
 
-        function flash(text) { msg.textContent = text; }
+        function flash(text) { msg.textContent = text; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         function progressText() { return NEED > 1 ? '已畫 ' + placed.length + '／' + NEED + ' 條（畫在同一條橫線上再畫一次＝刪掉它）' : ''; }
         function commit(d) {
             var col = Math.min(d.col, d.col + d.dir), row = d.row;
             /* V1.43.0：畫在自己已經畫過的橫線上（同一層、同一個位置）＝把那一條刪掉 */
             for (var i = 0; i < placed.length; i++) if (placed[i].row === row && placed[i].col === col) {
                 gUser.removeChild(d.line); gUser.removeChild(placed[i].line); placed.splice(i, 1);
-                Sfx.play('click'); flash(progressText());
+                Sfx.play('click'); flash(progressText());  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 return;
             }
             if (!canPlace(q.rungs.concat(placed), row, col)) {             /* 那一層那個位置已經有橫線（或緊鄰）：不算，請換個位置 */
-                gUser.removeChild(d.line); Sfx.play('bad');
+                gUser.removeChild(d.line); Sfx.play('bad');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 flash('那裡已經有橫線了，換個位置畫');
                 return;
             }
@@ -424,22 +424,22 @@
             Sfx.play('click');
             if (placed.length < NEED) { flash(progressText()); return; }       /* 還沒畫滿：繼續畫 */
             locked = true; api.stopTimer();
-            msg.textContent = '';
+            msg.textContent = '';                       /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             judge();
         }
         /* 評審動畫：從起點開始畫出一條綠色粗虛線，經過每個轉折點，看看最後能不能抵達終點 */
         function judge() {
             var f = follow(q.rungs.concat(placed.map(function (p) { return { row: p.row, col: p.col }; })), q.start), ms = routeMs(f.route), total = routeLength(f.route);
             var line = kit.svg('polyline', { points: '', 'class': 'ghostleg-route' }, gRoute);
-            my.tween(ms, function (e) {
+            my.tween(ms, function (e) {                 /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
                 line.setAttribute('points', partialRoute(f.route, total * e).map(function (p) { return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' '));
             }, kit.linear).then(function () {
                 var win = f.end === q.target;
                 C.markEnds(board, f.end, q.target);
                 Sfx.play(win ? 'ok' : 'bad');
-                api.after(HOLD_MS, function () {
-                    if (win) api.pass({ delay: 0 });
-                    else api.fail({ delay: 0, lines: [NEED > 1 ? '這 ' + NEED + ' 條橫線畫在這裡，會走到終點 ' + (f.end + 1) + '，不是綠色的終點 ' + (q.target + 1) : '這條橫線畫在這裡，會走到終點 ' + (f.end + 1) + '，不是綠色的終點 ' + (q.target + 1), '只有一次機會，要想清楚橫線畫在哪一層、哪兩條直線之間'] });
+                api.after(HOLD_MS, function () {        /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+                    if (win) api.pass({ delay: 0 });    /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
+                    else api.fail({ delay: 0, lines: [NEED > 1 ? '這 ' + NEED + ' 條橫線畫在這裡，會走到終點 ' + (f.end + 1) + '，不是綠色的終點 ' + (q.target + 1) : '這條橫線畫在這裡，會走到終點 ' + (f.end + 1) + '，不是綠色的終點 ' + (q.target + 1), '只有一次機會，要想清楚橫線畫在哪一層、哪兩條直線之間'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 });
             });
         }
@@ -448,12 +448,12 @@
             if (drag && drag.line) gUser.removeChild(drag.line);
             drag = null;
             msg.textContent = '';
-            api.fail({ delay: 600, lines: ['時間到了', '答案：' + answerGroups(q.solutions).slice(0, 3).map(groupText).join('、')] });
+            api.fail({ delay: 600, lines: ['時間到了', '答案：' + answerGroups(q.solutions).slice(0, 3).map(groupText).join('、')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         });
 
         /* 驗證用：用真的 PointerEvent 畫一條橫線（往右拖到隔壁的直線） */
         function fire(type, x, y) {
-            var r = stage.getBoundingClientRect(), sc = r.width / (stage.clientWidth || r.width);
+            var r = stage.getBoundingClientRect(), sc = r.width / (stage.clientWidth || r.width);  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
             stage.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 9, clientX: r.left + x * sc, clientY: r.top + y * sc }));
         }
         function drawAt(row, col, dir) {
@@ -463,7 +463,7 @@
             fire('pointerup', b, y);
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
-        api.solve = function () { q.req.forEach(function (s) { drawAt(s.row, s.col, 1); }); };
+        api.solve = function () { q.req.forEach(function (s) { drawAt(s.row, s.col, 1); }); };  /* forEach：對陣列的每個元素各做一次 */
         api.wrong = function () {
             /* 畫滿 NEED 條、而且走不到終點：每一條都挑「畫上去之後終點不對」的位置（畫得滿就好，走不到終點由 minimalNeed 保證不到 NEED 條時成立） */
             for (var k = 0; k < NEED; k++) {

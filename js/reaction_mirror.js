@@ -45,11 +45,11 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 通道半寬：線性變窄 */
-    function hwFor(level) { return kit.ramp(level, HW_START, HW_END, LEVEL_RAMP); }
+    function hwFor(level) { return kit.ramp(level, HW_START, HW_END, LEVEL_RAMP); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 彎的數量：線性增加，Math.round 四捨五入 */
-    function bendsFor(level) { return Math.round(kit.ramp(level, BENDS_START, BENDS_END, LEVEL_RAMP)); }
+    function bendsFor(level) { return Math.round(kit.ramp(level, BENDS_START, BENDS_END, LEVEL_RAMP)); }  /* Math.round：四捨五入成整數 */
     /* 增益：線性增加 */
-    function gainFor(level) { return kit.ramp(level, GAIN_START, GAIN_END, LEVEL_RAMP); }
+    function gainFor(level) { return kit.ramp(level, GAIN_START, GAIN_END, LEVEL_RAMP); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 這一關上下是否也顛倒 */
     function flipBoth(level) { return level >= FLIP_BOTH_FROM; }
     /* 把手指移動量換成球的移動量：x 取負（左右顛倒），y 看關卡（高關卡也取負） */
@@ -64,7 +64,7 @@
         var vx = bx - ax, vy = by - ay, wx = px - ax, wy = py - ay;
         var c = vx * vx + vy * vy, t = c ? Math.max(0, Math.min(1, (wx * vx + wy * vy) / c)) : 0;
         var qx = ax + vx * t, qy = ay + vy * t;
-        return Math.sqrt((px - qx) * (px - qx) + (py - qy) * (py - qy));
+        return Math.sqrt((px - qx) * (px - qx) + (py - qy) * (py - qy));  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
     }
     /* 點到折線（多段線）的距離＝到每段線段距離的最小值 */
     function distToPolyline(p, pts) {
@@ -76,7 +76,7 @@
     function turnDeg(a, b, c) {
         var v1x = b.x - a.x, v1y = b.y - a.y, v2x = c.x - b.x, v2y = c.y - b.y;
         var d = Math.atan2(v1x * v2y - v1y * v2x, v1x * v2x + v1y * v2y);
-        return Math.abs(d) * 180 / Math.PI;
+        return Math.abs(d) * 180 / Math.PI;             /* Math.abs：取絕對值（去掉負號） */
     }
     /* 產生通道中心線：從上方中央出發，經過 bends 個彎（左右交替），到下方終點 */
     /* 通道中心線：起點在上方中央，終點在下方；中間 bends 個彎，左右交替。回傳折線點陣列。 */
@@ -91,10 +91,10 @@
             for (var i = 1; i <= B; i++) {
                 var y = y0 + (y1 - y0) * i / (B + 1);
                 var side = i % 2 ? 1 : -1;
-                var x = cx + side * kit.randFloat(0.45, 1.0, rand) * Math.min(xMax - cx, cx - xMin);
+                var x = cx + side * kit.randFloat(0.45, 1.0, rand) * Math.min(xMax - cx, cx - xMin);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
                 pts.push({ x: x, y: y });
             }
-            pts.push({ x: cx + kit.randFloat(-0.3, 0.3, rand) * (xMax - cx), y: y1 });
+            pts.push({ x: cx + kit.randFloat(-0.3, 0.3, rand) * (xMax - cx), y: y1 });  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             var ok = true;
             for (var k = 1; k < pts.length - 1; k++) if (turnDeg(pts[k - 1], pts[k], pts[k + 1]) > MAX_TURN_DEG) { ok = false; break; }
             if (ok) return pts;
@@ -119,7 +119,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
             /* level 關卡；cleared 已過幾關；state 目前狀態；lvId 關卡流水號 */
             var level = startAt || 1, cleared = level - 1, newRec = false, state = 'idle', lvId = 0;
@@ -129,34 +129,34 @@
             var head = h('div', { 'class': 'mirror-head' });
             var field = h('div', { 'class': 'mirror-field' });
             var hint = h('div', { 'class': 'mirror-hint' });
-            [head, field, hint].forEach(function (n) { root.appendChild(n); });
+            [head, field, hint].forEach(function (n) { root.appendChild(n); });  /* forEach：對陣列的每個元素各做一次 */
             var svg = null, ballEl = null, goalEl = null, ghost = null;
 
             /* 更新標題列右側的小字 */
-            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }
+            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
             /* 畫出通道、起點、終點、球 */
             function build() {
                 if (svg && svg.parentNode) svg.parentNode.removeChild(svg);
                 FW = field.clientWidth; FH = field.clientHeight;
-                svg = kit.svg('svg', { 'class': 'mirror-svg', viewBox: '0 0 ' + FW + ' ' + FH }, field);
+                svg = kit.svg('svg', { 'class': 'mirror-svg', viewBox: '0 0 ' + FW + ' ' + FH }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
                 /* 把折線點轉成 SVG path 字串：M 是移動到、L 是畫線到（M x y L x y L x y…） */
-                var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(' ');
+                var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(' ');  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                 /* 先畫較寬的牆壁線，再在上面畫較窄的通道線，兩條線寬的差就是牆的厚度 */
-                kit.svg('path', { 'class': 'mirror-wall', d: d, 'stroke-width': hw * 2 + 8 }, svg);
+                kit.svg('path', { 'class': 'mirror-wall', d: d, 'stroke-width': hw * 2 + 8 }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
                 kit.svg('path', { 'class': 'mirror-lane', d: d, 'stroke-width': hw * 2 - 4 }, svg);
                 var s = pts[0], g = pts[pts.length - 1];
                 kit.svg('circle', { 'class': 'mirror-start', cx: s.x, cy: s.y, r: BALL_R + 8 }, svg);
                 goalEl = kit.svg('circle', { 'class': 'mirror-goal', cx: g.x, cy: g.y, r: GOAL_R }, svg);
                 var flag = kit.svg('text', { 'class': 'mirror-goal-t', x: g.x, y: g.y, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, svg);
-                flag.textContent = '終點';
+                flag.textContent = '終點';                /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 /* ghost：跟著手指跑的小圓圈（顯示手指在哪，因為球的方向和手指相反） */
                 ghost = kit.svg('circle', { 'class': 'mirror-ghost', cx: -100, cy: -100, r: 18 }, svg);
                 ballEl = kit.svg('circle', { 'class': 'mirror-ball', r: BALL_R }, svg);
                 setBall(s.x, s.y);
             }
             /* 設定球的位置 */
-            function setBall(x, y) { ball.x = x; ball.y = y; ballEl.setAttribute('cx', x.toFixed(1)); ballEl.setAttribute('cy', y.toFixed(1)); }
+            function setBall(x, y) { ball.x = x; ball.y = y; ballEl.setAttribute('cx', x.toFixed(1)); ballEl.setAttribute('cy', y.toFixed(1)); }  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
 
             /* 開始一關 */
             function startLevel() {
@@ -168,7 +168,7 @@
                 pts = makeCenterline(level, FW, FH);
                 build();
                 state = 'play';
-                head.textContent = '第 ' + level + ' 關';
+                head.textContent = '第 ' + level + ' 關'; /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 hint.textContent = flipBoth(level) ? '現在連上下也是反的！' : '手指往右，球往左';
                 meta();
                 /* 主控台印出這關的實際數值（半寬、彎數、增益、手指容許誤差），方便驗證難度 */
@@ -178,12 +178,12 @@
             /* 碰牆：一次就結束（球出了通道的那一下通道會閃紅，稍後顯示結算） */
             function bump() {
                 state = 'bump';
-                Sfx.play('bad');
-                svg.classList.add('mirror-svg--bump');
+                Sfx.play('bad');                        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                svg.classList.add('mirror-svg--bump');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 meta();
                 my.after(700, function () {
                     var back = kit.resumeFrom(level);
-                    kit.result(root, {
+                    kit.result(root, {                  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                         score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: cleared + ' 關', label: cleared >= 8 ? '腦袋轉得真快！' : (cleared >= 4 ? '適應得不錯！' : '再試一次，會更順！'),
                         lines: ['第 ' + level + ' 關碰到牆了'], isNew: newRec, sfx: cleared >= 5 ? 'win' : 'fail', onAgain: function () { round(1); },
@@ -195,9 +195,9 @@
             function win() {
                 state = 'clear';
                 cleared = level;
-                if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
-                goalEl.classList.add('mirror-goal--ok');
-                Sfx.play('win');
+                if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                goalEl.classList.add('mirror-goal--ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                Sfx.play('win');                        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 level++;
                 meta();
                 my.after(NEXT_MS, startLevel);
@@ -206,7 +206,7 @@
             /* 球移到新位置：沿途取樣檢查，避免快速滑動「穿牆」 */
             function moveBall(nx, ny) {
                 /* steps：依移動距離切成每 4px 一步（Math.ceil 無條件進位） */
-                var steps = Math.max(1, Math.ceil(Math.sqrt((nx - ball.x) * (nx - ball.x) + (ny - ball.y) * (ny - ball.y)) / 4));
+                var steps = Math.max(1, Math.ceil(Math.sqrt((nx - ball.x) * (nx - ball.x) + (ny - ball.y) * (ny - ball.y)) / 4));  /* Math.ceil：無條件進位成整數 */
                 var sx = ball.x, sy = ball.y;
                 for (var i = 1; i <= steps; i++) {
                     var x = sx + (nx - sx) * i / steps, y = sy + (ny - sy) * i / steps;
@@ -215,24 +215,24 @@
                     if (!inCorridor(p, pts, hw)) { setBall(x, y); bump(); return; }
                     var g = pts[pts.length - 1];
                     /* 任何一步進入終點圈就是過關 */
-                    if (Math.sqrt((x - g.x) * (x - g.x) + (y - g.y) * (y - g.y)) <= GOAL_R) { setBall(x, y); win(); return; }
+                    if (Math.sqrt((x - g.x) * (x - g.x) + (y - g.y) * (y - g.y)) <= GOAL_R) { setBall(x, y); win(); return; }  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
                 }
                 setBall(nx, ny);
             }
 
             /* 手指控制：這是「相對控制」——球的移動量＝手指移動量（經過映射），手指落在哪裡不重要 */
             var drag = null;
-            field.addEventListener('pointerdown', function (e) {
+            field.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
                 if (state !== 'play' || drag) return;
-                e.preventDefault();
-                try { field.setPointerCapture(e.pointerId); } catch (err) { }
+                e.preventDefault();                     /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+                try { field.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
                 var p = kit.localPt(e, field);
                 /* 記下手指按下的位置 fx,fy 與球當時的位置 bx,by */
                 drag = { id: e.pointerId, fx: p.x, fy: p.y, bx: ball.x, by: ball.y };
-                ghost.setAttribute('cx', p.x); ghost.setAttribute('cy', p.y);
+                ghost.setAttribute('cx', p.x); ghost.setAttribute('cy', p.y);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             });
             /* 手指移動 */
-            field.addEventListener('pointermove', function (e) {
+            field.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
                 if (!drag || e.pointerId !== drag.id) return;
                 /* getCoalescedEvents：取回被瀏覽器合併掉的中間點，快速移動時也不會漏掉 */
                 var evs = e.getCoalescedEvents ? e.getCoalescedEvents() : null;
@@ -254,12 +254,12 @@
                 state: function () { return { level: level, state: state, cleared: cleared, ball: { x: ball.x, y: ball.y }, pts: pts, hw: hw }; },
                 /* 用真的 PointerEvent 讓球沿著中心線走到終點（反推手指要怎麼動）*/
                 solve: function () {
-                    var rect = field.getBoundingClientRect(), sc = rect.width / FW;
+                    var rect = field.getBoundingClientRect(), sc = rect.width / FW;  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
                     var fx = rect.left + 60 * sc, fy = rect.top + 60 * sc, pid = 31;
                     field.dispatchEvent(new PointerEvent('pointerdown', { clientX: fx, clientY: fy, bubbles: true, cancelable: true, pointerId: pid }));
                     var cx = 0, cy = 0, flip = flipBoth(level), g = gainFor(level);
                     for (var i = 1; i < pts.length && state === 'play'; i++) {
-                        var segLen = Math.sqrt(Math.pow(pts[i].x - pts[i - 1].x, 2) + Math.pow(pts[i].y - pts[i - 1].y, 2)), n = Math.ceil(segLen / 6);
+                        var segLen = Math.sqrt(Math.pow(pts[i].x - pts[i - 1].x, 2) + Math.pow(pts[i].y - pts[i - 1].y, 2)), n = Math.ceil(segLen / 6);  /* Math.ceil：無條件進位成整數 */
                         for (var k = 1; k <= n && state === 'play'; k++) {
                             var tx = pts[i - 1].x + (pts[i].x - pts[i - 1].x) * k / n - pts[0].x, ty = pts[i - 1].y + (pts[i].y - pts[i - 1].y) * k / n - pts[0].y;
                             /* 球位移 = (−dx·g, ±dy·g) → 手指位移 = (−tx/g, ±ty/g) */
@@ -271,7 +271,7 @@
                     return state;
                 },
                 wall: function () {     /* 讓球直接穿出通道（往左大幅度拖）*/
-                    var rect = field.getBoundingClientRect(), sc = rect.width / FW, pid = 32;
+                    var rect = field.getBoundingClientRect(), sc = rect.width / FW, pid = 32;  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
                     field.dispatchEvent(new PointerEvent('pointerdown', { clientX: rect.left + 100, clientY: rect.top + 100, bubbles: true, cancelable: true, pointerId: pid }));
                     field.dispatchEvent(new PointerEvent('pointermove', { clientX: rect.left + 100 + 300 * sc, clientY: rect.top + 100, bubbles: true, cancelable: true, pointerId: pid }));
                     field.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: pid }));

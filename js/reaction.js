@@ -32,7 +32,7 @@
        只看得到 ctx.setMeta，看不到、也不需要知道 barMeta 這個 DOM 元素變數本身
        ——用一層函式包起來，遊戲模組不用知道標題列的 DOM 結構長怎樣，以後要改
        標題列的 HTML 結構，也只要改這個檔案，不用動到任何一個遊戲模組。 */
-    function setMeta(text) { barMeta.textContent = text || ''; }
+    function setMeta(text) { barMeta.textContent = text || ''; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
 
     /* 顯示玩法說明彈窗（彈窗公版 Dlg.rule）。onClose 是「使用者按下開始挑戰之後要做什麼」，由呼叫端
        決定——進場時傳的是「真的開始 mount 遊戲」（有排行榜的遊戲是「先彈排行榜」），
@@ -48,7 +48,7 @@
     /* 喇叭按鈕：圖示跟著目前是否靜音換 */
     function paintSound() {
         barSound.innerHTML = UI.icon(Sfx.isMuted() ? 'mute' : 'volume');
-        barSound.setAttribute('aria-label', Sfx.isMuted() ? '開啟音效' : '關閉音效');
+        barSound.setAttribute('aria-label', Sfx.isMuted() ? '開啟音效' : '關閉音效');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
     }
 
     /* 結算畫面偵測（見檔案最上面的說明） */
@@ -56,7 +56,7 @@
     function findResult(node) {
         if (!node || node.nodeType !== 1) return null;
         if (node.matches && node.matches(RESULT_SEL)) return node;
-        return node.querySelector ? node.querySelector(RESULT_SEL) : null;
+        return node.querySelector ? node.querySelector(RESULT_SEL) : null;  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
     }
     function watchResults() {
         if (!window.MutationObserver) return;
@@ -66,7 +66,7 @@
            沒有就代表玩家已經開始下一局，進榜的恭喜不要用大彈窗打斷他 */
         Reaction.resultShowing = function () { return !!showing; };
         new MutationObserver(function (list) {
-            list.forEach(function (m) {
+            list.forEach(function (m) {                 /* forEach：對陣列的每個元素各做一次 */
                 Array.prototype.forEach.call(m.addedNodes, function (n) {
                     var el = findResult(n);
                     if (!el || showing) return;
@@ -75,11 +75,11 @@
                     if (window.FMPlays && game && !(el.getAttribute && el.getAttribute('data-bgm') === '0')) FMPlays.noteDone(game.id);
                     var kind = el.getAttribute && el.getAttribute('data-sfx');
                     /* 帶 data-sfx 的卡片自己決定輸贏；舊遊戲的結算不知道輸贏，播中性的「完成」音 */
-                    Sfx.play(kind === 'win' ? 'win' : kind === 'fail' ? 'fail' : kind === 'perfect' ? 'perfect' : 'done');
+                    Sfx.play(kind === 'win' ? 'win' : kind === 'fail' ? 'fail' : kind === 'perfect' ? 'perfect' : 'done');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                     clearTimeout(bgmTimer);
                     /* data-bgm="0"：只播短旋律，不接結算背景音樂（例如多關卡遊戲每一關的小結算） */
                     if (!el.getAttribute || el.getAttribute('data-bgm') !== '0') {
-                        bgmTimer = setTimeout(function () { if (showing) Sfx.bgm('result'); }, 1100);
+                        bgmTimer = setTimeout(function () { if (showing) Sfx.bgm('result'); }, 1100);  /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
                     }
                 });
                 Array.prototype.forEach.call(m.removedNodes, function (n) {
@@ -111,7 +111,7 @@
             Sfx.stopBgm(); location.href = 'index.html?games=1';
         });
         barHelp.addEventListener('click', function () {
-            Sfx.play('click');
+            Sfx.play('click');                          /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             showRule(function () { }, hasBoard ? { okText: '知道了', softSound: true, boardButton: true } : null);
         });
         if (barSound) {
@@ -124,7 +124,7 @@
             });
         }
 
-        ['pointerdown', 'pointerup', 'click', 'keydown', 'touchend'].forEach(function (ev) {
+        ['pointerdown', 'pointerup', 'click', 'keydown', 'touchend'].forEach(function (ev) {  /* forEach：對陣列的每個元素各做一次 */
             document.addEventListener(ev, Sfx.unlock, true);
         });
         watchResults();
@@ -135,9 +135,9 @@
            或清單裡沒有這個 id）就退回隨機挑一個，保留「直接開 reaction.html
            不帶參數」也能玩的舊行為。 */
         var m = /[?&]game=([a-z0-9]+)/.exec(location.search);
-        var want = m && list.filter(function (g) { return g.id === m[1]; })[0];
-        game = want || list[Math.floor(Math.random() * list.length)];
-        barTitle.textContent = game.name;
+        var want = m && list.filter(function (g) { return g.id === m[1]; })[0];  /* filter：留下符合條件的元素，回傳新陣列 */
+        game = want || list[Math.floor(Math.random() * list.length)];  /* Math.floor：無條件捨去成整數 */
+        barTitle.textContent = game.name;               /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         /* 告訴共用工具「現在玩的是哪一款」：kit.result 帶 score 時，會用它把成績送到這一款的世界排行榜 */
         Reaction.current = game;
 
@@ -158,7 +158,7 @@
             game.mount(screen, { setMeta: setMeta });
             /* V1.35.0：這款遊戲的 mount 已經跑完（舊單位的最佳紀錄遷移都做完了），本機的最佳紀錄可以信任了：
                已登入的話，跟帳號同步這一款的個人最佳（見 js/identity.js 的 gameMounted）。 */
-            if (window.Identity && Identity.gameMounted) window.setTimeout(function () { Identity.gameMounted(game.id); }, 0);
+            if (window.Identity && Identity.gameMounted) window.setTimeout(function () { Identity.gameMounted(game.id); }, 0);  /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
         }
         if (hasBoard) {
             showRule(function () {

@@ -82,7 +82,7 @@ ok(monoHit === 0, '第 ' + (T.WARMUP + 1) + ' 關起，只往右、往上走的�
 // 效能
 { for (const lv of [6, 12, 20, 30]) { let mx = 0, sum = 0; const N = 40; for (let i = 0; i < N; i++) { const t0 = process.hrtime.bigint(); T.makeLevel(lv, rnd); const ms = Number(process.hrtime.bigint() - t0) / 1e6; mx = Math.max(mx, ms); sum += ms; } console.log('第' + lv + '關 出題平均 ' + (sum / N).toFixed(1) + 'ms 最慢 ' + mx.toFixed(0) + 'ms'); ok(sum / N < 120 && mx < 800, '第 ' + lv + ' 關出題夠快'); } }
 // 程式裡的接線
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_oneway.js'), css = rd('../../css/games/reaction_oneway.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_oneway.js'), css = rd('../../css/games/reaction_oneway.css').replace(/[ \t]*\/\*[\s\S]*?\*\//g, '').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
   ok(/stageClass: 'oneway-stage'/.test(src) && /\.oneway-stage \{ touch-action: none;/.test(css), '舞台不捲動');
   ok(/api\.fail\(\{ delay: 2800/.test(src), '失敗停格 2 秒以上');
   ok(/\.oneway-bad \{ fill: none; stroke: var\(--c-bad-light\)/.test(css) && /\.oneway-sol \{ fill: none; stroke: var\(--c-ok\)/.test(css), '紅圈、綠線用 CSS 變數');

@@ -59,12 +59,12 @@
     var HUES = [{ n: '紅', h: 4 }, { n: '橘', h: 28 }, { n: '黃', h: 48 }, { n: '綠', h: 135 }, { n: '藍', h: 212 }, { n: '紫', h: 282 }];  /* 顏色的名稱 n 與色相角度 h（0～360） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function gapFor(level) { return kit.ramp(level, GAP[0], GAP[1], RAMP_LEVELS); }
-    function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }
+    function gapFor(level) { return kit.ramp(level, GAP[0], GAP[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
     /* 加速度 a、經過 t 秒，離起跑線多遠（cap 有給的話，到 cap 就停住；V1.32 起小人衝過終點不停，所以遊戲裡不給 cap） */
     function distAt(a, t, cap) { var d = 0.5 * a * t * t; return cap == null ? d : Math.min(cap, d); }
     /* 加速度 a 要幾秒到達距離 D */
-    function arriveT(a, D) { return Math.sqrt(2 * D / a); }
+    function arriveT(a, D) { return Math.sqrt(2 * D / a); }  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
     /* 跑的時間 T → 加速度 */
     function accelOf(T, D) { return 2 * D / (T * T); }
     /* 小人在哨音後第 t 秒的位置（含起跑延遲 d） */
@@ -81,15 +81,15 @@
     function makeRace(level, D, rand, exitD) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         exitD = exitD || D * 1.25;
-        var gap = gapFor(level), t1 = kit.randFloat(T_WIN[0], T_WIN[1], rand);
+        var gap = gapFor(level), t1 = kit.randFloat(T_WIN[0], T_WIN[1], rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         var times = [t1, t1 + gap], r, lanes = [], T = [];
         for (r = 2; r < RUNNERS; r++) times.push(times[r - 1] + gap * kit.randFloat(SPREAD[0], SPREAD[1], rand));       /* 第三名以後：每一名再慢 GAP × SPREAD */
         for (r = 0; r < RUNNERS; r++) { lanes.push(r); T.push(0); }
-        lanes = kit.shuffle(lanes, rand);
-        lanes.forEach(function (lane, rank) { T[lane] = times[rank]; });
-        var d = T.map(function (t) { return kit.randFloat(0, Math.max(0, Math.min(DELAY_MAX, t - MIN_RUN)), rand); });
-        var run = T.map(function (t, k) { return t - d[k]; });
-        var cols = kit.sample(HUES, RUNNERS, rand);
+        lanes = kit.shuffle(lanes, rand);               /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+        lanes.forEach(function (lane, rank) { T[lane] = times[rank]; });  /* forEach：對陣列的每個元素各做一次 */
+        var d = T.map(function (t) { return kit.randFloat(0, Math.max(0, Math.min(DELAY_MAX, t - MIN_RUN)), rand); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        var run = T.map(function (t, k) { return t - d[k]; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        var cols = kit.sample(HUES, RUNNERS, rand);     /* kit.sample(陣列, n, rand)：從陣列隨機取 n 個不重複的元素 */
         var acc = run.map(function (r) { return accelOf(r, D); });
         return { D: D, exitD: exitD, gap: gap, T: T, exitT: acc.map(function (a, k) { return d[k] + arriveT(a, exitD); }), d: d, run: run, a: acc, win: lanes[0], order: lanes, hues: cols };
     }
@@ -116,15 +116,15 @@
     /* 小人（面向右邊）：頭、身體（衣服的顏色）、兩隻手、兩隻腳；回傳 { g, set(pose) }，原點在腰的位置 */
     function makeRunner(parent, hue) {
         var shirt = kit.hsl(hue, 78, 52), shirtDk = kit.hsl(hue, 70, 34), pants = '#4A3B1E', skin = '#FFE3B8';
-        var g = kit.svg('g', { 'class': 'racefirst-runner' }, parent);
-        var armB = kit.svg('line', { x1: 0, y1: -16, x2: 0, y2: 4, stroke: shirtDk, 'stroke-width': 6, 'stroke-linecap': 'round' }, g);
+        var g = kit.svg('g', { 'class': 'racefirst-runner' }, parent);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var armB = kit.svg('line', { x1: 0, y1: -16, x2: 0, y2: 4, stroke: shirtDk, 'stroke-width': 6, 'stroke-linecap': 'round' }, g);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var legB = kit.svg('line', { x1: 0, y1: 8, x2: 0, y2: 30, stroke: pants, 'stroke-width': 7, 'stroke-linecap': 'round' }, g);
         kit.svg('line', { x1: 1, y1: -18, x2: 3, y2: 9, stroke: shirt, 'stroke-width': 15, 'stroke-linecap': 'round' }, g);
         kit.svg('circle', { cx: 5, cy: -32, r: 10, fill: skin, stroke: '#4A3B1E', 'stroke-width': 2.5 }, g);
         kit.svg('circle', { cx: 9, cy: -34, r: 1.8, fill: '#4A3B1E' }, g);
         var legA = kit.svg('line', { x1: 0, y1: 8, x2: 0, y2: 30, stroke: pants, 'stroke-width': 7, 'stroke-linecap': 'round' }, g);
         var armA = kit.svg('line', { x1: 0, y1: -16, x2: 0, y2: 4, stroke: shirt, 'stroke-width': 6, 'stroke-linecap': 'round' }, g);
-        function limb(el, x1, y1, len, deg) { var r = deg * Math.PI / 180; el.setAttribute('x2', (x1 + len * Math.sin(r)).toFixed(2)); el.setAttribute('y2', (y1 + len * Math.cos(r)).toFixed(2)); }
+        function limb(el, x1, y1, len, deg) { var r = deg * Math.PI / 180; el.setAttribute('x2', (x1 + len * Math.sin(r)).toFixed(2)); el.setAttribute('y2', (y1 + len * Math.cos(r)).toFixed(2)); }  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         return {
             g: g,
             set: function (p) { limb(legA, 0, 8, 22, p.legA); limb(legB, 0, 8, 22, p.legB); limb(armA, 0, -16, 19, p.armA); limb(armB, 0, -16, 19, p.armB); }
@@ -149,7 +149,7 @@
             kit.svg('rect', { x: 10, y: top + laneH * i + 6, width: W - 20, height: laneH - 12, rx: 14, 'class': 'racefirst-lane' }, svg);
             halos.push(kit.svg('circle', { cx: X0, cy: cy, r: 40, 'class': 'racefirst-halo' }, svg));
             var rn = makeRunner(svg, q.hues[i].h);
-            rn.set(poseAt(q, i, 0)); rn.g.setAttribute('transform', 'translate(' + X0 + ' ' + cy + ') scale(' + RUNNER_SCALE + ')');
+            rn.set(poseAt(q, i, 0)); rn.g.setAttribute('transform', 'translate(' + X0 + ' ' + cy + ') scale(' + RUNNER_SCALE + ')');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             runners.push({ run: rn, cy: cy });
             var t = kit.svg('text', { x: X1 - 10, y: cy + 46, 'text-anchor': 'end', 'class': 'racefirst-time' }, svg); labs.push(t);
         }
@@ -157,9 +157,9 @@
         kit.svg('line', { x1: X1, y1: top, x2: X1, y2: top + laneH * RUNNERS, 'class': 'racefirst-finish' }, svg);       /* 終點線畫在「到達」的位置：小人的腰碰到這條線＝到達 */
         for (i = 0; i < RUNNERS; i++) fmarks.push(kit.svg('circle', { cx: X1, cy: runners[i].cy, r: 34, 'class': 'racefirst-fmark' }, svg));       /* 衝過終點線的那一刻，在線上閃一個圈 */
         var tip = h('div', { 'class': 'qz-note racefirst-tip', text: '準備…' });
-        stage.appendChild(tip);
+        stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var count = h('div', { 'class': 'racefirst-count', text: '' });
-        stage.appendChild(count);
+        stage.appendChild(count);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var phase = 'wait', t0 = 0;
         /* 把哨音後第 tt 秒的畫面畫出來（位置＋跑步姿勢；小人的位置是離起跑線的距離，原點在腰） */
         function paint(tt) {
@@ -171,54 +171,54 @@
             }
         }
         function go() {
-            phase = 'run'; count.textContent = ''; tip.textContent = '看！'; t0 = performance.now(); Sfx.play('go');
+            phase = 'run'; count.textContent = ''; tip.textContent = '看！'; t0 = performance.now(); Sfx.play('go');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             var maxE = Math.max.apply(null, q.exitT);                                       /* 最後一個小人跑出畫面的時間 */
-            api.my.loop(function () {
-                var tt = (performance.now() - t0) / 1000;
+            api.my.loop(function () {                   /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
+                var tt = (performance.now() - t0) / 1000;  /* performance.now()：高精度的時間（毫秒），計時用 */
                 paint(tt);
                 if (tt >= maxE + 0.02) return false;
             });
-            api.after(maxE * 1000 + 120, function () {
+            api.after(maxE * 1000 + 120, function () {  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                 paint(maxE + 1); phase = 'ask';
-                tip.textContent = '最先到終點的是哪一個？點它！';
+                tip.textContent = '最先到終點的是哪一個？點它！';     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 api.timer(ansMs(level), function () { judge(-1); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
                 if (level === 1 && kit.once('racefirst.hint')) kit.hintOn(stage, null, { mode: 'tap', x: X1, y: top + laneH * q.win + laneH / 2, delay: 300, text: '請點擊最先到終點的小人' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
             });
         }
         /* 開跑前：畫面中央疊上 3、2、1 倒數，再開跑 */
         for (var c = 0; c < COUNT_STEPS; c++) (function (c) {
-            api.after(400 + c * COUNT_MS, function () { count.textContent = String(COUNT_STEPS - c); count.classList.remove('racefirst-count--pop'); void count.offsetWidth; count.classList.add('racefirst-count--pop'); Sfx.play('tick'); });
+            api.after(400 + c * COUNT_MS, function () { count.textContent = String(COUNT_STEPS - c); count.classList.remove('racefirst-count--pop'); void count.offsetWidth; count.classList.add('racefirst-count--pop'); Sfx.play('tick'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         })(c);
-        api.after(400 + COUNT_STEPS * COUNT_MS, go);
+        api.after(400 + COUNT_STEPS * COUNT_MS, go);    /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
         /* 整條跑道都可以點 */
         for (i = 0; i < RUNNERS; i++) (function (lane) {
             var hit = h('div', { 'class': 'racefirst-hit' });
             hit.style.left = '0px'; hit.style.width = W + 'px'; hit.style.top = (top + laneH * lane) + 'px'; hit.style.height = laneH + 'px';
-            kit.onTap(hit, function () { if (phase === 'ask') judge(lane); });
+            kit.onTap(hit, function () { if (phase === 'ask') judge(lane); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             stage.appendChild(hit);
         })(i);
 
-        function rankText(k) { return '第 ' + (q.order.indexOf(k) + 1) + ' 名　' + q.T[k].toFixed(4) + ' 秒'; }
-        function times() { for (var k = 0; k < RUNNERS; k++) { labs[k].textContent = rankText(k); if (k === q.win) labs[k].classList.add('racefirst-time--win'); } }
+        function rankText(k) { return '第 ' + (q.order.indexOf(k) + 1) + ' 名　' + q.T[k].toFixed(4) + ' 秒'; }  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+        function times() { for (var k = 0; k < RUNNERS; k++) { labs[k].textContent = rankText(k); if (k === q.win) labs[k].classList.add('racefirst-time--win'); } }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         /* 小人 k 衝過終點線的那一刻：線上閃一個圈、標出名次與到達時間；第一名是綠色，並圍上綠圈 */
         function mark(k) {
-            labs[k].textContent = rankText(k);
-            fmarks[k].classList.remove('racefirst-fmark--pop'); void fmarks[k].getBoundingClientRect(); fmarks[k].classList.add('racefirst-fmark--pop');
-            Sfx.play('tick');
+            labs[k].textContent = rankText(k);          /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            fmarks[k].classList.remove('racefirst-fmark--pop'); void fmarks[k].getBoundingClientRect(); fmarks[k].classList.add('racefirst-fmark--pop');  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
+            Sfx.play('tick');                           /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             if (k === q.win) { fmarks[k].classList.add('racefirst-fmark--win'); halos[k].classList.add('racefirst-halo--win'); labs[k].classList.add('racefirst-time--win'); }
         }
         /* 慢動作重播（不管答對答錯）：從第一名到終點前 REPLAY_FROM 秒開始、播到最後一個小人跑出畫面，速度 SLOW 倍；回傳花多久（毫秒） */
         function replay() {
-            var minT = Math.min.apply(null, q.T), maxE = Math.max.apply(null, q.exitT) + 0.03, tStart = Math.max(0, minT - REPLAY_FROM), shown = [], rt0 = performance.now();
+            var minT = Math.min.apply(null, q.T), maxE = Math.max.apply(null, q.exitT) + 0.03, tStart = Math.max(0, minT - REPLAY_FROM), shown = [], rt0 = performance.now();  /* performance.now()：高精度的時間（毫秒），計時用 */
             for (var k0 = 0; k0 < RUNNERS; k0++) shown.push(false);
             paint(tStart);
-            api.my.loop(function () {
+            api.my.loop(function () {                   /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                 var tt = tStart + (performance.now() - rt0) / 1000 * SLOW;
                 paint(Math.min(tt, maxE));
                 for (var k = 0; k < RUNNERS; k++) if (!shown[k] && tt >= q.T[k]) { shown[k] = true; mark(k); }
                 if (tt >= maxE) { paint(maxE); times(); return false; }
             });
-            return Math.round((maxE - tStart) / SLOW * 1000);
+            return Math.round((maxE - tStart) / SLOW * 1000);  /* Math.round：四捨五入成整數 */
         }
         /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(lane) {
@@ -226,13 +226,13 @@
             phase = 'done';
             var ok = lane === q.win;
             if (lane >= 0) halos[lane].classList.add(ok ? 'racefirst-halo--win' : 'racefirst-halo--wrong');
-            kit.flash(stage, ok, api.my);
+            kit.flash(stage, ok, api.my);               /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
             tip.textContent = '慢動作重播（' + SLOW + ' 倍速）…';                               /* 提示列只有一行的寬度（再長會蓋到第一條跑道） */
             /* 每一關都慢動作重播衝過終點線的過程（不管對錯），播完才換下一關／結算 */
             var ms = replay();
             api.after(ms + 80, function () { tip.textContent = (ok ? '答對了！' : (lane < 0 ? '時間到！' : '不是那個！')) + q.hues[q.win].n + '色最先到'; });
-            if (ok) { api.pass({ delay: ms + 1100 }); return; }
-            api.fail({
+            if (ok) { api.pass({ delay: ms + 1100 }); return; }  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
+            api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: ms + 1600, lines: [
                     (lane < 0 ? '時間到！' : '你選了 ' + q.hues[lane].n + '色（' + q.T[lane].toFixed(4) + ' 秒）') + '，最先到的是 ' + q.hues[q.win].n + '色（' + q.T[q.win].toFixed(4) + ' 秒）',
                     '第一名領先第二名 ' + q.gap.toFixed(4) + ' 秒'

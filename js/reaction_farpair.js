@@ -48,17 +48,17 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 一對圓點裡，起點 a 畫大的（DOT_R）、終點 b 畫小的（DOT_R2） */
     function dotR(end) { return end === 'a' ? DOT_R : DOT_R2; }
-    function pairsFor(level) { return kit.clamp(Math.round(kit.ramp(level, PAIRS[0], PAIRS[1], PAIR_LEVELS)), PAIRS[0], PAIRS[1]); }
-    function ratioFor(level) { return kit.ramp(level, RATIO[0], RATIO[1], RAMP_LEVELS); }
-    function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }
+    function pairsFor(level) { return kit.clamp(Math.round(kit.ramp(level, PAIRS[0], PAIRS[1], PAIR_LEVELS)), PAIRS[0], PAIRS[1]); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function ratioFor(level) { return kit.ramp(level, RATIO[0], RATIO[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
     /* 把一對圓點（距離 d）放進 W×H 的區域：角度隨機、位置隨機，兩個點都要在邊界內、離已放的點 ≥ MIN_GAP；放不進去回傳 null */
     function placePair(d, W, H, placed, rand) {
         for (var tr = 0; tr < 300; tr++) {
             var ang = rand() * Math.PI * 2, vx = Math.cos(ang) * d, vy = Math.sin(ang) * d;
             var loX = MARGIN + Math.max(0, -vx), hiX = W - MARGIN - Math.max(0, vx), loY = MARGIN + Math.max(0, -vy), hiY = H - MARGIN - Math.max(0, vy);
             if (hiX < loX || hiY < loY) continue;
-            var ax = kit.randFloat(loX, hiX, rand), ay = kit.randFloat(loY, hiY, rand), bx = ax + vx, by = ay + vy;
-            var far = placed.every(function (p) { return kit.dist(ax, ay, p.x, p.y) >= MIN_GAP && kit.dist(bx, by, p.x, p.y) >= MIN_GAP; });
+            var ax = kit.randFloat(loX, hiX, rand), ay = kit.randFloat(loY, hiY, rand), bx = ax + vx, by = ay + vy;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+            var far = placed.every(function (p) { return kit.dist(ax, ay, p.x, p.y) >= MIN_GAP && kit.dist(bx, by, p.x, p.y) >= MIN_GAP; });  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
             if (far) return { a: { x: ax, y: ay }, b: { x: bx, y: by } };
         }
         return null;
@@ -68,12 +68,12 @@
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var n = pairsFor(level), ratio = ratioFor(level);
         for (var tr = 0; tr < 300; tr++) {
-            var d1 = kit.randFloat(D1_MIN, Math.min(D1_MAX, Math.sqrt(W * W + H * H) - 2 * MARGIN - 10), rand), d2 = d1 / ratio;
+            var d1 = kit.randFloat(D1_MIN, Math.min(D1_MAX, Math.sqrt(W * W + H * H) - 2 * MARGIN - 10), rand), d2 = d1 / ratio;  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
             if (d2 < D_MIN * 1.3) continue;
             var ds = [d1, d2];
-            for (var i = 2; i < n; i++) ds.push(Math.max(D_MIN, d2 * kit.randFloat(OTHER[0], OTHER[1], rand)));
+            for (var i = 2; i < n; i++) ds.push(Math.max(D_MIN, d2 * kit.randFloat(OTHER[0], OTHER[1], rand)));  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             /* 先放最遠的，再依距離從長到短放（長的最難放，先放） */
-            var order = ds.map(function (d, k) { return k; });
+            var order = ds.map(function (d, k) { return k; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var placed = [], res = [], good = true;
             for (var k = 0; k < order.length; k++) {
                 var pr = placePair(ds[order[k]], W, H, placed, rand);
@@ -82,11 +82,11 @@
                 res.push({ a: pr.a, b: pr.b, d: ds[order[k]] });
             }
             if (!good) continue;
-            var cols = kit.shuffle(HUES, rand).slice(0, n);
+            var cols = kit.shuffle(HUES, rand).slice(0, n);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
             /* 洗牌：最遠那一對不一定是第一個 */
-            var idx = kit.shuffle(res.map(function (r, j) { return j; }), rand);
-            var pairs = idx.map(function (j, pos) { return { color: cols[pos].n, hue: cols[pos].h, a: res[j].a, b: res[j].b, d: res[j].d }; });
-            var best = idx.indexOf(0);
+            var idx = kit.shuffle(res.map(function (r, j) { return j; }), rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+            var pairs = idx.map(function (j, pos) { return { color: cols[pos].n, hue: cols[pos].h, a: res[j].a, b: res[j].b, d: res[j].d }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            var best = idx.indexOf(0);                  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             return { W: W, H: H, pairs: pairs, best: best, ratio: ratio };
         }
         /* 保底：固定的 2 對 */
@@ -122,21 +122,21 @@
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[哪對離最遠] 第 ' + level + ' 關：' + q.pairs.length + ' 對；各對距離 ' + q.pairs.map(function (p) { return p.color + p.d.toFixed(4); }).join('、') + '；最遠是 ' + q.pairs[q.best].color + '（最遠÷第二遠＝' + q.ratio.toFixed(4) + '）');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        var svg = kit.svg('svg', { 'class': 'farpair-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
-        var gLine = kit.svg('g', {}, svg), gDot = kit.svg('g', {}, svg), gText = kit.svg('g', {}, svg);
+        var svg = kit.svg('svg', { 'class': 'farpair-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var gLine = kit.svg('g', {}, svg), gDot = kit.svg('g', {}, svg), gText = kit.svg('g', {}, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var dots = [];
-        q.pairs.forEach(function (p, i) {
+        q.pairs.forEach(function (p, i) {               /* forEach：對陣列的每個元素各做一次 */
             var fill = kit.hsl(p.hue, 78, 52), stroke = kit.hsl(p.hue, 70, 30);
-            ['a', 'b'].forEach(function (k) {
+            ['a', 'b'].forEach(function (k) {           /* forEach：對陣列的每個元素各做一次 */
                 var c = kit.svg('circle', { cx: p[k].x, cy: p[k].y, r: dotR(k), fill: fill, stroke: stroke, 'stroke-width': k === 'a' ? 3 : 2, 'class': 'farpair-dot' }, gDot);
                 dots.push({ el: c, pair: i, end: k });
             });
         });
         var tip = h('div', { 'class': 'qz-note farpair-tip', text: '哪一對（同顏色）的兩個點離得最遠？' });
-        stage.appendChild(tip);
+        stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         api.timer(ansMs(level), function () { judge(-1, null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         if (level === 1 && kit.once('farpair.hint')) kit.hintOn(stage, null, { mode: 'tap', x: q.pairs[q.best].a.x, y: q.pairs[q.best].a.y, delay: 600, text: '請點擊距離最遠那一對的圓點' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
-        kit.onTap(stage, function (e) {
+        kit.onTap(stage, function (e) {                 /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             if (api.over) return;
             var pt = kit.localPt(e, stage), bi = -1, bd = 1e9;
             dots.forEach(function (d, i) { var pp = q.pairs[d.pair][d.end], dd = kit.dist(pt.x, pt.y, pp.x, pp.y); if (dd < bd) { bd = dd; bi = i; } });
@@ -147,12 +147,12 @@
         function drawLine(pi, fromKey, cls) {
             var p = q.pairs[pi], from = p[fromKey], to = p[fromKey === 'a' ? 'b' : 'a'];
             var ln = kit.svg('line', { x1: from.x, y1: from.y, x2: from.x, y2: from.y, 'class': 'farpair-line ' + cls }, gLine);
-            return api.my.tween(650, function (e) {
-                ln.setAttribute('x2', from.x + (to.x - from.x) * e); ln.setAttribute('y2', from.y + (to.y - from.y) * e);
+            return api.my.tween(650, function (e) {     /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
+                ln.setAttribute('x2', from.x + (to.x - from.x) * e); ln.setAttribute('y2', from.y + (to.y - from.y) * e);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             }, kit.easeOutCubic).then(function () {
                 var mx = (from.x + to.x) / 2, my = (from.y + to.y) / 2;
                 var tx = kit.svg('text', { x: mx, y: my - 10, 'text-anchor': 'middle', 'class': 'farpair-dist ' + cls }, gText);
-                tx.textContent = p.color + '：' + p.d.toFixed(4);
+                tx.textContent = p.color + '：' + p.d.toFixed(4);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             });
         }
         /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
@@ -161,9 +161,9 @@
             api.stopTimer();
             var ok = pi === q.best;
             if (pi < 0) {                       /* 時間到：直接揭曉最遠的那一對 */
-                tip.textContent = '時間到！最遠的是 ' + q.pairs[q.best].color + ' 那一對';
+                tip.textContent = '時間到！最遠的是 ' + q.pairs[q.best].color + ' 那一對';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 drawLine(q.best, 'a', 'farpair-line--right');
-                api.fail({ delay: 3400, lines: ['時間到！', '最遠的是 ' + q.pairs[q.best].color + ' 那一對，距離 ' + q.pairs[q.best].d.toFixed(4) + ' 像素'] });
+                api.fail({ delay: 3400, lines: ['時間到！', '最遠的是 ' + q.pairs[q.best].color + ' 那一對，距離 ' + q.pairs[q.best].d.toFixed(4) + ' 像素'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 return;
             }
             tip.textContent = ok ? '答對了！' : '再看一次';
@@ -174,9 +174,9 @@
                     return drawLine(q.best, 'a', 'farpair-line--right');
                 });
             });
-            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1900 }); return; }
-            kit.flash(stage, false, api.my);
-            api.fail({
+            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1900 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: 3400, lines: [
                     '你選了 ' + q.pairs[pi].color + '（' + q.pairs[pi].d.toFixed(4) + ' 像素）',
                     '最遠的是 ' + q.pairs[q.best].color + '（' + q.pairs[q.best].d.toFixed(4) + ' 像素）'

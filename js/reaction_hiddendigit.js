@@ -38,10 +38,10 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function typesFor(level) {
-        return Object.keys(TYPES).filter(function (k) { return level >= TYPES[k].from; });
+        return Object.keys(TYPES).filter(function (k) { return level >= TYPES[k].from; });  /* filter：留下符合條件的元素，回傳新陣列 */
     }
     function ansMs(level, type) {
-        return Math.round(TYPES[type].sec * kit.ramp(level, TIME_MUL[0], TIME_MUL[1], RAMP_LEVELS) * 1000);
+        return Math.round(TYPES[type].sec * kit.ramp(level, TIME_MUL[0], TIME_MUL[1], RAMP_LEVELS) * 1000);  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     }
     /* 算式的值 */
     function calc(type, a, b) {
@@ -50,7 +50,7 @@
     }
     /* 挑要遮住第幾位（0＝最左邊）：個位數（最後一位）權重隨題號從 LAST_W[0] 降到 LAST_W[1]，其他位數權重 1 */
     function pickHidden(len, level, rand) {
-        var wLast = kit.ramp(level, LAST_W[0], LAST_W[1], RAMP_LEVELS);
+        var wLast = kit.ramp(level, LAST_W[0], LAST_W[1], RAMP_LEVELS);  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
         var ws = [], total = 0, i;
         for (i = 0; i < len; i++) { var w = i === len - 1 ? wLast : 1; ws.push(w); total += w; }
         var x = (rand || Math.random)() * total;
@@ -60,14 +60,14 @@
     /* 出一題：{ type, a, b, op, result, digits（答案的每一位）, hidden（第幾位被遮住）, answer（被遮住的數字）, text 算式文字, full 完整算式 } */
     function makeQuestion(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var type = kit.pick(typesFor(level), rand);
+        var type = kit.pick(typesFor(level), rand);     /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         /* 新解鎖的題型多出現一點：最新解鎖的那一種權重加倍 */
         var types = typesFor(level);
-        var newest = types.slice().sort(function (x, y) { return TYPES[y].from - TYPES[x].from; })[0];
+        var newest = types.slice().sort(function (x, y) { return TYPES[y].from - TYPES[x].from; })[0];  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         if (rand() < 0.3) type = newest;
         var t = TYPES[type];
         for (var tr = 0; tr < 300; tr++) {
-            var a = kit.randInt(t.a[0], t.a[1], rand), b = kit.randInt(t.b[0], t.b[1], rand);
+            var a = kit.randInt(t.a[0], t.a[1], rand), b = kit.randInt(t.b[0], t.b[1], rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             if (type === 'sub2' && b >= a - 5) continue;
             var result = calc(type, a, b);
             if (result < 10) continue;
@@ -108,17 +108,17 @@
 
         var eq = h('div', { 'class': 'qz-big hiddendigit-eq', text: q.text });
         var ansRow = h('div', { 'class': 'hiddendigit-ans' });
-        var boxes = q.digits.map(function (d, i) {
+        var boxes = q.digits.map(function (d, i) {      /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var b = h('div', { 'class': 'hiddendigit-box' + (i === q.hidden ? ' hiddendigit-box--hide' : ''), text: i === q.hidden ? '？' : String(d) });
-            ansRow.appendChild(b);
+            ansRow.appendChild(b);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             return b;
         });
         ansRow.insertBefore(h('div', { 'class': 'hiddendigit-eqsign', text: '＝' }), ansRow.firstChild);
         var ask = h('div', { 'class': 'qz-note hiddendigit-ask', text: '被遮住的是哪一個數字？' });
-        stage.appendChild(eq); stage.appendChild(ansRow); stage.appendChild(ask);
+        stage.appendChild(eq); stage.appendChild(ansRow); stage.appendChild(ask);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var items = [];
         for (var d = 0; d <= 9; d++) (function (d) { items.push({ text: String(d), kind: 'sky', cls: 'hiddendigit-btn', onTap: function () { judge(d); } }); })(d);
-        var grid = kit.btnGrid(stage, items, { cols: 5, h: 84, gap: 10 });
+        var grid = kit.btnGrid(stage, items, { cols: 5, h: 84, gap: 10 });  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
         api.timer(ansMs(level, q.type), function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         if (level === 1 && kit.once('hiddendigit.hint')) kit.hintOn(stage, grid.btns[q.answer], { mode: 'tap', delay: 500, text: '請點擊數字' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
@@ -126,12 +126,12 @@
         function judge(v) {
             if (api.over) return;
             var ok = v === q.answer;
-            boxes[q.hidden].textContent = String(q.answer);
-            boxes[q.hidden].classList.remove('hiddendigit-box--hide');
-            boxes[q.hidden].classList.add(ok ? 'hiddendigit-box--ok' : 'hiddendigit-box--bad');
-            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 900 }); return; }
-            kit.flash(stage, false, api.my);
-            api.fail({
+            boxes[q.hidden].textContent = String(q.answer);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            boxes[q.hidden].classList.remove('hiddendigit-box--hide');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            boxes[q.hidden].classList.add(ok ? 'hiddendigit-box--ok' : 'hiddendigit-box--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 900 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: 2200, lines: [
                     (v == null ? '時間到！' : '你選了 ' + v) + '，被遮住的是 ' + q.answer,
                     q.full

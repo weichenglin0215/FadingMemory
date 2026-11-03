@@ -66,7 +66,7 @@
 
     /* ─── 第 4 關：顏色形狀（布置生日會的東西、party 零食、紀念相片盒） ─── */
     var B_THINGS4 = P.partyThings.concat(['派對拉旗', '吹泡泡棒', '許願卡片', '小禮物袋', '生日胸章', '氣球棒']);
-    var B_ODDSNACKS = P.oddSnacks.map(function (s) { return { n: s.n, u: '包', typ: s.typ, odd: [s.odd] }; });
+    var B_ODDSNACKS = P.oddSnacks.map(function (s) { return { n: s.n, u: '包', typ: s.typ, odd: [s.odd] }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
 
     /* ═══ 第 1 關：新手暖身（一件事，幾乎沒有干擾） ═══ */
     /* 【新手導讀】寫法與 js/quiz_travel.js 完全相同（共用 js/quiz_gen.js 的出題引擎）：G 是這一關的出題器，S 是整局共用資料，T 是範本代入，L 是誘答選項，finish 挑出要用的題目。B1 是生日主軸的第 1 關（最簡單），B2～B8 逐關加干擾；逐行說明請看 quiz_travel.js 的第 1 關。 */
@@ -115,10 +115,10 @@
         var c2 = cs[1];
         var i1 = G.pick(c1.items);
         var i2 = G.pick(c2.items);
-        var rest2 = G.shuffle(c2.items.filter(function (x) { return x !== i2; }));
+        var rest2 = G.shuffle(c2.items.filter(function (x) { return x !== i2; }));  /* filter：留下符合條件的元素，回傳新陣列 */
         var lure = rest2[0];
         var sib2 = rest2[1];
-        var sib1 = G.any(c1.items.filter(function (x) { return x !== i1; }));
+        var sib1 = G.any(c1.items.filter(function (x) { return x !== i1; }));  /* filter：留下符合條件的元素，回傳新陣列 */
         var bus = G.num(12, 98, null, twoDiff);
         var house = rev2(bus);
         var stop = G.pick(P.stops);
@@ -209,15 +209,15 @@
         var noiseLabel = '逛' + noise.shop;
         var noiseWhy = noise.shop + '只是順口提到的新店。';
         var qs = [];
-        exec.forEach(function (e, i) {
+        exec.forEach(function (e, i) {                  /* forEach：對陣列的每個元素各做一次 */
             var lures = [];
-            if (narr[i] !== e) lures.push(L(narr[i].k, '順序顛倒', '紙條上先講到「' + narr[i].k + '」，但它是' + ord[exec.indexOf(narr[i])] + '。'));
-            exec.forEach(function (o, j) { if (j !== i) lures.push(L(o.k, '順序顛倒', '「' + o.k + '」是' + ord[j] + '。')); });
+            if (narr[i] !== e) lures.push(L(narr[i].k, '順序顛倒', '紙條上先講到「' + narr[i].k + '」，但它是' + ord[exec.indexOf(narr[i])] + '。'));  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+            exec.forEach(function (o, j) { if (j !== i) lures.push(L(o.k, '順序顛倒', '「' + o.k + '」是' + ord[j] + '。')); });  /* forEach：對陣列的每個元素各做一次 */
             lures.push(L(noiseLabel, '似曾相識', noiseWhy));
             qs.push(G.q(ord[i] + '要做什麼？', '順序', e.k, lures));
         });
         qs.push(G.q('哪一件事要搭公車？', '配對', BE.k,
-            exec.filter(function (e) { return e !== BE; }).map(function (e) { return L(e.k, '張冠李戴', '搭公車是為了去' + BE.place + '。'); })
+            exec.filter(function (e) { return e !== BE; }).map(function (e) { return L(e.k, '張冠李戴', '搭公車是為了去' + BE.place + '。'); })  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                 .concat([L(noiseLabel, '似曾相識', noiseWhy)])));
         qs.push(G.q('要搭幾號公車？', '數字', bus, G.near(bus, String, { lo: 10, hi: 99 })));
         exec.forEach(function (e, i) {
@@ -263,7 +263,7 @@
         var pos = G.pick(P.places);
         var jc = cols[G.int(0, 2)];
         var mat = G.pick(P.boxMats);
-        var lc = G.any(P.colors.filter(function (c) { return cols.indexOf(c) < 0 && fc.indexOf(c) < 0; }));
+        var lc = G.any(P.colors.filter(function (c) { return cols.indexOf(c) < 0 && fc.indexOf(c) < 0; }));  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         var v = {
             who: who, nb: nb, g: g, street: street, shop: shop, lc: lc, pos: pos, jc: jc, mat: mat,
             sk1: sn[0].n, sk2: sn[1].n, fc1: fc[0], fc2: fc[1], fn1: cnCount(fn[0]), fn2: cnCount(fn[1]), su1: sn[0].u, su2: sn[1].u, box: box,

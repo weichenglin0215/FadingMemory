@@ -46,7 +46,7 @@
     var signCache = {};
     K.own = function (r) { owned.push(r); return r; };
     K.disposeOwned = function () {
-        owned.forEach(function (r) { try { r.dispose(); } catch (e) { } });
+        owned.forEach(function (r) { try { r.dispose(); } catch (e) { } });  /* forEach：對陣列的每個元素各做一次 */
         owned = [];
         signCache = {};
     };
@@ -76,7 +76,7 @@
     var matCache = {};
     /* K.mat：建立（或取用快取的）一般材質，會受光影響（Lambert 材質） */
     K.mat = function (color, opt) {
-        var key = 'L' + color + (opt ? JSON.stringify(opt) : '');
+        var key = 'L' + color + (opt ? JSON.stringify(opt) : '');  /* JSON.stringify／parse：物件和文字互轉（存進 localStorage 或傳給伺服器時用） */
         if (!matCache[key]) {
             var p = { color: color };
             for (var k in opt) p[k] = opt[k];
@@ -86,7 +86,7 @@
     };
     /* K.basic：不受光影響的材質（顏色固定，適合招牌、天空） */
     K.basic = function (color, opt) {
-        var key = 'B' + color + (opt ? JSON.stringify(opt) : '');
+        var key = 'B' + color + (opt ? JSON.stringify(opt) : '');  /* JSON.stringify／parse：物件和文字互轉（存進 localStorage 或傳給伺服器時用） */
         if (!matCache[key]) {
             var p = { color: color };
             for (var k in opt) p[k] = opt[k];
@@ -181,7 +181,7 @@
             }
             var pad = o.pad == null ? H * 0.14 : o.pad;
             var gap = o.lineGap || 1.15;
-            var size = o.max || Math.floor((H - pad * 2) / (lines.length * gap));
+            var size = o.max || Math.floor((H - pad * 2) / (lines.length * gap));  /* Math.floor：無條件捨去成整數 */
             var weight = o.weight || 900;
             for (; size > 8; size -= 2) {
                 g.font = weight + ' ' + size + 'px ' + FONT;
@@ -194,7 +194,7 @@
             g.textBaseline = 'middle';
             var lh = size * gap;
             var y0 = H / 2 - lh * (lines.length - 1) / 2 + size * 0.04;
-            lines.forEach(function (l, i) { g.fillText(l, W / 2, y0 + i * lh); });
+            lines.forEach(function (l, i) { g.fillText(l, W / 2, y0 + i * lh); });  /* forEach：對陣列的每個元素各做一次 */
         }, text);
     };
 
@@ -204,8 +204,8 @@
         var sw = o.sw || 2;
         var sh = o.sh || 0.6;
         var ratio = sw / sh;
-        var W = ratio >= 1 ? 512 : Math.max(64, Math.round(512 * ratio));
-        var H = ratio >= 1 ? Math.max(64, Math.round(512 / ratio)) : 512;
+        var W = ratio >= 1 ? 512 : Math.max(64, Math.round(512 * ratio));  /* Math.round：四捨五入成整數 */
+        var H = ratio >= 1 ? Math.max(64, Math.round(512 / ratio)) : 512;  /* Math.round：四捨五入成整數 */
         /* 同一場景裡，同樣的字＋同樣配色＋同樣比例的招牌共用一張貼圖 */
         var key = [text, W, H, o.bg, o.fg, o.border, o.bw].join('|');
         var mat = signCache[key];
@@ -435,7 +435,7 @@
         o = o || {};
         var dx = x1 - x0;
         var dz = z1 - z0;
-        var len = Math.sqrt(dx * dx + dz * dz);
+        var len = Math.sqrt(dx * dx + dz * dz);         /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
         /* 每面牆有自己的材質，擋住鏡頭時才能單獨變半透明 */
         var m = new T.Mesh(G.plane, o.mat || K.own(new T.MeshLambertMaterial({ color: color })));
         m.scale.set(len, h, 1);
@@ -473,7 +473,7 @@
         function segs(a0, a1, list) {
             var out = [];
             var cur = a0;
-            (list || []).slice().sort(function (p, q) { return p[0] - q[0]; }).forEach(function (gp) {
+            (list || []).slice().sort(function (p, q) { return p[0] - q[0]; }).forEach(function (gp) {  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
                 if (gp[0] > cur) out.push([cur, gp[0]]);
                 cur = Math.max(cur, gp[1]);
             });
@@ -621,7 +621,7 @@
         var g = new T.Group();
         g.position.set(x, 0, z);
         K.cyl(g, 0, 0, 0, 0.18 * s, 1.8 * s, C.trunk);
-        var leaf = [C.leafA, C.leafB, C.leafC][Math.abs(Math.round(x * 3 + z * 7)) % 3];
+        var leaf = [C.leafA, C.leafB, C.leafC][Math.abs(Math.round(x * 3 + z * 7)) % 3];  /* Math.abs：取絕對值（去掉負號） */
         K.ball(g, 0, 2.5 * s, 0, 1.15 * s, leaf);
         K.ball(g, 0.6 * s, 2.1 * s, 0.3 * s, 0.8 * s, leaf);
         K.ball(g, -0.55 * s, 2.2 * s, -0.25 * s, 0.75 * s, leaf);
@@ -705,7 +705,7 @@
         K.box(g, -0.75, 0, 0, 0.08, 0.42, 0.45, C.dark);
         K.box(g, 0.75, 0, 0, 0.08, 0.42, 0.45, C.dark);
         ctx.add(g);
-        var c = Math.abs(Math.sin(ry || 0)) > 0.7;
+        var c = Math.abs(Math.sin(ry || 0)) > 0.7;      /* Math.abs：取絕對值（去掉負號） */
         ctx.blockRect(x, z, c ? 0.6 : 1.9, c ? 1.9 : 0.6);
         return g;
     };
@@ -766,7 +766,7 @@
     /* 斑馬線的條紋位置（交給 K.stripes 一次畫完） */
     /* K.crosswalkStripes：斑馬線的條紋 */
     K.crosswalkStripes = function (list, x, z0, z1, alongZ) {
-        var n = Math.floor(Math.abs(z1 - z0) / 1.0);
+        var n = Math.floor(Math.abs(z1 - z0) / 1.0);    /* Math.floor：無條件捨去成整數 */
         for (var i = 0; i < n; i++) {
             var t = z0 + (i + 0.5) * (z1 - z0) / n;
             if (alongZ) list.push([t, x, 0.5, 3]);

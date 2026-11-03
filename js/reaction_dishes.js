@@ -44,12 +44,12 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function prog(n) { return Math.min(1, Math.max(0, n / RAMP_PLATES)); }
     function lerp(pair, n) { return pair[0] + (pair[1] - pair[0]) * prog(n); }
-    function spotsFor(n) { return Math.round(lerp(SPOTS, n)); }
-    function spotRFor(n) { return Math.round(lerp(SPOT_R, n) * 10) / 10; }
+    function spotsFor(n) { return Math.round(lerp(SPOTS, n)); }  /* Math.round：四捨五入成整數 */
+    function spotRFor(n) { return Math.round(lerp(SPOT_R, n) * 10) / 10; }  /* Math.round：四捨五入成整數 */
     function needFor(n) { return Math.round(lerp(NEED, n)); }
     function visFor(n) { return Math.round(lerp(VIS, n) * 1000) / 1000; }
     function patsFor(n) { return Math.round(lerp(PATS, n)); }
-    function simFor(n) { return Math.min(SIM_MAX, Math.floor(prog(n) * (SIM_MAX + 1) * 0.999)); }
+    function simFor(n) { return Math.min(SIM_MAX, Math.floor(prog(n) * (SIM_MAX + 1) * 0.999)); }  /* Math.floor：無條件捨去成整數 */
     /* 做一個盤子：{ n, vis, sim, spots（[{ x, y, r, need, v, blob }]，座標以盤心為原點）, pats（[{ kind, x, y, rot, size }]）}
        污漬在離盤心 INNER_R 之內、彼此不重疊（至少隔 MIN_GAP）；花紋沿著盤緣排成一圈（第一圈）、多的排在第二圈，另外盤心有一朵大的 */
     function makePlate(n, rand) {
@@ -62,12 +62,12 @@
             for (var i = 0; i < k; i++) {
                 var best = null, bestGap = -1e9;
                 for (var c = 0; c < 40; c++) {
-                    var a = rand() * 2 * Math.PI, rr = r * shrink * kit.randFloat(0.85, 1.05, rand), d = Math.sqrt(rand()) * (PLATE_R - EDGE_PAD - rr), x = d * Math.cos(a), y = d * Math.sin(a), gap = 1e9;
+                    var a = rand() * 2 * Math.PI, rr = r * shrink * kit.randFloat(0.85, 1.05, rand), d = Math.sqrt(rand()) * (PLATE_R - EDGE_PAD - rr), x = d * Math.cos(a), y = d * Math.sin(a), gap = 1e9;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
                     for (var j = 0; j < spots.length; j++) gap = Math.min(gap, Math.hypot(x - spots[j].x, y - spots[j].y) - rr - spots[j].r);
                     if (gap >= MIN_GAP + 0.3 && gap > bestGap) { bestGap = gap; best = { x: x, y: y, rr: rr }; }
                 }
                 if (!best) break;
-                var blob = []; for (var bb = 0; bb < 3; bb++) { var ba = rand() * 6.283, bd = best.rr * 0.4 * rand(); blob.push([Math.round(bd * Math.cos(ba) * 10) / 10, Math.round(bd * Math.sin(ba) * 10) / 10, Math.round(best.rr * kit.randFloat(0.55, 0.85, rand) * 10) / 10]); }
+                var blob = []; for (var bb = 0; bb < 3; bb++) { var ba = rand() * 6.283, bd = best.rr * 0.4 * rand(); blob.push([Math.round(bd * Math.cos(ba) * 10) / 10, Math.round(bd * Math.sin(ba) * 10) / 10, Math.round(best.rr * kit.randFloat(0.55, 0.85, rand) * 10) / 10]); }  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
                 spots.push({ x: Math.round(best.x * 10) / 10, y: Math.round(best.y * 10) / 10, r: Math.round(best.rr * 10) / 10, need: Math.round(needFor(n) * kit.randFloat(0.85, 1.15, rand)), v: 1, blob: blob });
             }
         }
@@ -79,16 +79,16 @@
     /* 刷：手指在盤子座標 (x, y)、剛移動了 len（px）：半徑 BRUSH_R 之內的每塊污漬，v 減少 len ÷ need；回傳這一刷之後「這個盤子洗乾淨了沒」 */
     function scrub(plate, x, y, len) {
         var clean = true;
-        plate.spots.forEach(function (s) {
+        plate.spots.forEach(function (s) {              /* forEach：對陣列的每個元素各做一次 */
             if (s.v > CLEAN_EPS && Math.hypot(x - s.x, y - s.y) <= s.r + BRUSH_R) s.v = Math.max(0, s.v - len / s.need);
             if (s.v > CLEAN_EPS) clean = false;
         });
         return clean;
     }
-    function isClean(plate) { return plate.spots.every(function (s) { return s.v <= CLEAN_EPS; }); }
-    function remaining(plate) { return plate.spots.filter(function (s) { return s.v > CLEAN_EPS; }); }
+    function isClean(plate) { return plate.spots.every(function (s) { return s.v <= CLEAN_EPS; }); }  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
+    function remaining(plate) { return plate.spots.filter(function (s) { return s.v > CLEAN_EPS; }); }  /* filter：留下符合條件的元素，回傳新陣列 */
     /* 刷乾淨一個盤子至少要移動多遠（px）：每塊污漬的 need 總和（刷子可以同時刷到相鄰的污漬，所以實際可能更少） */
-    function totalNeed(plate) { return plate.spots.reduce(function (s, p) { return s + p.need; }, 0); }
+    function totalNeed(plate) { return plate.spots.reduce(function (s, p) { return s + p.need; }, 0); }  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
     /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 20) return '洗碗達人！';
@@ -114,18 +114,18 @@
 
     /* 畫一個盤子（SVG，viewBox 300×300，盤心在 150,150）：盤子本體、花紋、污漬；回傳每塊污漬的 SVG 群組 */
     function drawPlate(parent, plate) {
-        var svg = kit.svg('svg', { 'class': 'dishes-svg', viewBox: '0 0 300 300', width: 330, height: 330 }, parent);
-        var g = kit.svg('g', { transform: 'translate(150,150)' }, svg);
+        var svg = kit.svg('svg', { 'class': 'dishes-svg', viewBox: '0 0 300 300', width: 330, height: 330 }, parent);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var g = kit.svg('g', { transform: 'translate(150,150)' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         kit.svg('circle', { 'class': 'dishes-plate', cx: 0, cy: 0, r: PLATE_R }, g);
         kit.svg('circle', { 'class': 'dishes-rim', cx: 0, cy: 0, r: PLATE_R - 18 }, g);
-        plate.pats.forEach(function (p) {
+        plate.pats.forEach(function (p) {               /* forEach：對陣列的每個元素各做一次 */
             var pg = kit.svg('g', { 'class': 'dishes-pat dishes-pat' + plate.sim, transform: 'translate(' + p.x + ',' + p.y + ') rotate(' + p.rot + ')' }, g);
             if (p.kind === 'petal') kit.svg('ellipse', { cx: 0, cy: 0, rx: p.size * 0.55, ry: p.size }, pg);
             else if (p.kind === 'dot') kit.svg('circle', { cx: 0, cy: 0, r: p.size * 0.6 }, pg);
             else if (p.kind === 'arc') kit.svg('path', { 'class': 'dishes-pat__stroke', d: 'M-' + p.size + ',2 Q0,-' + p.size + ' ' + p.size + ',2' }, pg);
             else { for (var k = 0; k < 5; k++) kit.svg('ellipse', { cx: 0, cy: -p.size * 0.62, rx: p.size * 0.38, ry: p.size * 0.62, transform: 'rotate(' + (k * 72) + ')' }, pg); kit.svg('circle', { cx: 0, cy: 0, r: p.size * 0.22 }, pg); }
         });
-        var spotG = plate.spots.map(function (s) {
+        var spotG = plate.spots.map(function (s) {      /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var sg = kit.svg('g', { 'class': 'dishes-spot', transform: 'translate(' + s.x + ',' + s.y + ')', opacity: plate.vis }, g);
             s.blob.forEach(function (b) { kit.svg('circle', { cx: b[0], cy: b[1], r: b[2] }, sg); });
             kit.svg('circle', { cx: 0, cy: 0, r: s.r * 0.7 }, sg);
@@ -145,34 +145,34 @@
         console.log('[洗盤子] 開始：限時 ' + TIME_S + ' 秒；第 0 個盤子 ' + spotsFor(0) + ' 塊污漬 → 到頂 ' + spotsFor(RAMP_PLATES) + ' 塊');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var field = h('div', { 'class': 'dishes-field' });
-        stage.appendChild(field);
+        stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note dishes-tip', text: '用手指在污漬上來回刷，花紋刷不掉' });
-        field.appendChild(tip);
+        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var holder = h('div', { 'class': 'dishes-holder' }); holder.style.cssText = 'left:' + Math.round((W - 330) / 2) + 'px;top:90px;'; field.appendChild(holder);
         var info = h('div', { 'class': 'qz-note dishes-info', text: '' }); info.style.top = '440px'; field.appendChild(info);
         /* 盤子座標 ↔ 螢幕座標：盤子的 SVG 330px 對應 300 個單位 */
         var SC = 330 / 300;
-        function toPlate(e) { var r = holder.getBoundingClientRect(), sx = r.width / 300; return { x: (e.clientX - r.left) / sx - 150, y: (e.clientY - r.top) / sx - 150 }; }
+        function toPlate(e) { var r = holder.getBoundingClientRect(), sx = r.width / 300; return { x: (e.clientX - r.left) / sx - 150, y: (e.clientY - r.top) / sx - 150 }; }  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
         function newPlate(first) {
-            plate = makePlate(count, api.rand); holder.innerHTML = ''; view = drawPlate(holder, plate);
-            view.svg.classList.add('dishes-svg--in'); api.after(20, function () { view.svg.classList.remove('dishes-svg--in'); });
+            plate = makePlate(count, api.rand); holder.innerHTML = ''; view = drawPlate(holder, plate);  /* innerHTML = ''：把元素裡面的東西全部清掉 */
+            view.svg.classList.add('dishes-svg--in'); api.after(20, function () { view.svg.classList.remove('dishes-svg--in'); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
             console.log('[洗盤子] 第 ' + (count + 1) + ' 個：污漬 ' + plate.spots.length + ' 塊（半徑約 ' + spotRFor(count) + '、要刷 ' + needFor(count) + ' px）、花紋 ' + plate.pats.length + '、花紋顏色級數 ' + plate.sim + '、濃度 ' + plate.vis);
             if (first && kit.once('dishes.hint')) { var sp = plate.spots[0]; kit.hintOn(stage, null, { mode: 'drag', x: holder.offsetLeft + (150 + sp.x - 40) * SC, y: holder.offsetTop + (150 + sp.y) * SC, dx: 80 * SC, dy: 0, delay: 700, text: '在污漬上來回刷' }); }  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         }
         newPlate(true);
-        function paintSpots() { plate.spots.forEach(function (s, i) { view.spots[i].setAttribute('opacity', (plate.vis * s.v).toFixed(3)); }); }
+        function paintSpots() { plate.spots.forEach(function (s, i) { view.spots[i].setAttribute('opacity', (plate.vis * s.v).toFixed(3)); }); }  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         /* 手指：按住移動就是在刷；每個移動事件算移動的距離（盤子座標），套用 scrub */
         var down = null;
-        field.addEventListener('pointerdown', function (e) {
+        field.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (phase !== 'play' || api.over || down) return;
-            e.preventDefault(); try { field.setPointerCapture(e.pointerId); } catch (err) { }
+            e.preventDefault(); try { field.setPointerCapture(e.pointerId); } catch (err) { }  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             down = { id: e.pointerId }; last = toPlate(e);
         });
-        field.addEventListener('pointermove', function (e) {
+        field.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (!down || e.pointerId !== down.id || phase !== 'play') return;
             var p = toPlate(e), len = Math.hypot(p.x - last.x, p.y - last.y); last = p;
             if (len <= 0 || Math.hypot(p.x, p.y) > PLATE_R + 20) return;
-            var onDirt = plate.spots.some(function (s) { return s.v > CLEAN_EPS && Math.hypot(p.x - s.x, p.y - s.y) <= s.r + BRUSH_R; });
+            var onDirt = plate.spots.some(function (s) { return s.v > CLEAN_EPS && Math.hypot(p.x - s.x, p.y - s.y) <= s.r + BRUSH_R; });  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
             if (len > 3 && bubbles < 14) bubble(e, onDirt);
             var clean = scrub(plate, p.x, p.y, len); paintSpots();
             if (clean) washed();
@@ -181,15 +181,15 @@
         field.addEventListener('pointerup', up); field.addEventListener('pointercancel', up);
         /* 泡泡（裝飾）：刷的地方冒幾個泡泡 */
         function bubble(e, onDirt) {
-            var r = field.getBoundingClientRect(), b = h('div', { 'class': 'dishes-bubble' + (onDirt ? ' dishes-bubble--dirt' : '') }); bubbles++;
+            var r = field.getBoundingClientRect(), b = h('div', { 'class': 'dishes-bubble' + (onDirt ? ' dishes-bubble--dirt' : '') }); bubbles++;  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
             b.style.cssText = 'left:' + (e.clientX - r.left - 8 + (Math.random() - 0.5) * 24).toFixed(0) + 'px;top:' + (e.clientY - r.top - 8 + (Math.random() - 0.5) * 24).toFixed(0) + 'px;';
-            field.appendChild(b); api.after(520, function () { bubbles--; if (b.parentNode) b.parentNode.removeChild(b); });
+            field.appendChild(b); api.after(520, function () { bubbles--; if (b.parentNode) b.parentNode.removeChild(b); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
         }
         /* 洗乾淨了：自動換下一個盤子 */
         function washed() {
             if (phase !== 'play') return; phase = 'next';
-            count++; S.score = count; api.setInfo('洗了 ' + count + ' 個'); Sfx.play('ok'); info.textContent = '乾淨了！下一個～'; view.svg.classList.add('dishes-svg--out');
-            api.after(NEXT_MS, function () { if (api.over) return; info.textContent = ''; newPlate(false); phase = 'play'; });
+            count++; S.score = count; api.setInfo('洗了 ' + count + ' 個'); Sfx.play('ok'); info.textContent = '乾淨了！下一個～'; view.svg.classList.add('dishes-svg--out');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+            api.after(NEXT_MS, function () { if (api.over) return; info.textContent = ''; newPlate(false); phase = 'play'; });  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         }
         /* 全部的限時：時間到就結束，把目前盤子沒洗掉的污漬圈起來 */
         api.timer(TIME_S * 1000, function () { timeUp(); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
@@ -200,9 +200,9 @@
             phase = 'end';
             if (rem.length) rem.forEach(function (s) { var c = kit.svg('circle', { 'class': 'dishes-ring', cx: s.x, cy: s.y, r: s.r + 8 }, view.g); void c; });
             var why = '時間到！一共洗了 ' + count + ' 個盤子' + (rem.length ? '；這個盤子還有 ' + rem.length + ' 塊污漬沒洗掉（紅圈）' : '');
-            info.textContent = why; info.classList.add('dishes-info--end'); down = null; holder.classList.add('dishes-holder--big');
-            kit.flash(stage, count >= 1, api.my);
-            api.fail({ delay: 3800, lines: [why] });
+            info.textContent = why; info.classList.add('dishes-info--end'); down = null; holder.classList.add('dishes-holder--big');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            kit.flash(stage, count >= 1, api.my);       /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 3800, lines: [why] });    /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：直接把目前盤子的污漬全刷掉（solve；最多 SOLVE_CAP 個盤子）；wrong＝馬上時間到；可以重複呼叫 */
         api.solve = function () { if (phase !== 'play' || count >= SOLVE_CAP) return; plate.spots.forEach(function (s) { scrub(plate, s.x, s.y, s.need * 2); }); paintSpots(); if (isClean(plate)) washed(); };

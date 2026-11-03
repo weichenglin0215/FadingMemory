@@ -43,9 +43,9 @@
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }
-    function centerFor(level) { return Math.round(ramp(level, CENTER) * 1000) / 1000; }
-    function halfBandFor(level) { return Math.round(ramp(level, HALF_BAND) * 1000) / 1000; }
+    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function centerFor(level) { return Math.round(ramp(level, CENTER) * 1000) / 1000; }  /* Math.round：四捨五入成整數 */
+    function halfBandFor(level) { return Math.round(ramp(level, HALF_BAND) * 1000) / 1000; }  /* Math.round：四捨五入成整數 */
     function holdFor(level) { return Math.round(ramp(level, HOLD_S) * 1000) / 1000; }
     function gustFor(level) { return Math.round(ramp(level, GUST) * 1000) / 1000; }
     function limitFor(level) { return Math.round(ramp(level, LIMIT_S) * 1000) / 1000; }
@@ -55,7 +55,7 @@
         var c = centerFor(level), hb = halfBandFor(level), lo = c * (1 - hb), hi = c * (1 + hb);
         return {
             level: level, center: c, half: hb, lo: Math.round(lo * 1000) / 1000, hi: Math.round(hi * 1000) / 1000, breakLine: Math.round(hi * BREAK_RATIO * 1000) / 1000, hold: holdFor(level), limit: limitFor(level),
-            gust: { A: gustFor(level), f1: Math.round(kit.randFloat(0.35, 0.6, rand) * 1000) / 1000, f2: Math.round(kit.randFloat(0.9, 1.5, rand) * 1000) / 1000, p1: Math.round(kit.randFloat(0, 6.28, rand) * 1000) / 1000, p2: Math.round(kit.randFloat(0, 6.28, rand) * 1000) / 1000 }, maxSpeed: Math.round(c * SPEED_MAX_RATIO * 100) / 100
+            gust: { A: gustFor(level), f1: Math.round(kit.randFloat(0.35, 0.6, rand) * 1000) / 1000, f2: Math.round(kit.randFloat(0.9, 1.5, rand) * 1000) / 1000, p1: Math.round(kit.randFloat(0, 6.28, rand) * 1000) / 1000, p2: Math.round(kit.randFloat(0, 6.28, rand) * 1000) / 1000 }, maxSpeed: Math.round(c * SPEED_MAX_RATIO * 100) / 100  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         };
     }
     /* 陣風：t 秒時對風車轉速的加速度（圈／秒²） */
@@ -71,7 +71,7 @@
             if (prev != null) { var d = a - prev; if (d > Math.PI) d -= 2 * Math.PI; else if (d < -Math.PI) d += 2 * Math.PI; tot += d; }
             prev = a;
         }
-        return Math.abs(tot) / (2 * Math.PI) / win;
+        return Math.abs(tot) / (2 * Math.PI) / win;     /* Math.abs：取絕對值（去掉負號） */
     }
     /* 風車轉速往前走 dt 秒：ω' ＝ (ωin − ω)/TAU ＋ 陣風加速度；轉速不會是負的 */
     function stepWheel(w, wIn, dt, gAcc, tau) { tau = tau == null ? TAU : tau; return Math.max(0, w + ((wIn - w) / tau + gAcc) * dt); }
@@ -128,9 +128,9 @@
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var cx = Math.round(W / 2), cy = Math.round(H * 0.50), RING = Math.min(200, Math.round(W * 0.4));
         var field = h('div', { 'class': 'pinwheel-field' });
-        stage.appendChild(field);
+        stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note pinwheel-tip', text: level === 1 ? '繞著風車畫圈，停在綠色範圍！' : '轉速停在綠色範圍，撐滿進度' });
-        field.appendChild(tip);
+        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         /* 速度表（橫條）：0～maxSpeed；綠色範圍、紅色危險區、目前轉速的指針 */
         var BW = W - 40, bar = h('div', { 'class': 'pinwheel-gauge' }); bar.style.cssText = 'left:20px;top:64px;width:' + BW + 'px;'; field.appendChild(bar);
         function X(v) { return Math.round(BW * Math.min(1, v / q.maxSpeed)); }
@@ -139,8 +139,8 @@
         var needle = h('div', { 'class': 'pinwheel-needle' }); bar.appendChild(needle);
         var lab = h('div', { 'class': 'pinwheel-gauge__lab', text: '綠色＝' + q.lo.toFixed(4) + '～' + q.hi.toFixed(4) + ' 圈／秒' }); lab.style.cssText = 'left:20px;top:100px;right:20px;'; field.appendChild(lab);
         /* 軌道圈（提示怎麼畫）、風車 */
-        var svg = kit.svg('svg', { 'class': 'pinwheel-svg', width: W, height: H, viewBox: '0 0 ' + W + ' ' + H }, field);
-        kit.svg('circle', { 'class': 'pinwheel-track', cx: cx, cy: cy, r: RING }, svg);
+        var svg = kit.svg('svg', { 'class': 'pinwheel-svg', width: W, height: H, viewBox: '0 0 ' + W + ' ' + H }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('circle', { 'class': 'pinwheel-track', cx: cx, cy: cy, r: RING }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var wheel = kit.svg('g', { 'class': 'pinwheel-wheel', transform: 'translate(' + cx + ',' + cy + ')' }, svg), blades = kit.svg('g', {}, wheel);
         for (var b = 0; b < 4; b++) { kit.svg('path', { 'class': 'pinwheel-blade pinwheel-blade' + b, d: 'M0,0 L-34,-8 Q-30,-62 0,-66 Z', transform: 'rotate(' + (b * 90) + ')' }, blades); }
         kit.svg('circle', { 'class': 'pinwheel-hub', cx: 0, cy: 0, r: 9 }, wheel);
@@ -151,33 +151,33 @@
         var info = h('div', { 'class': 'qz-note pinwheel-info', text: '' }); info.style.cssText = 'top:' + (cy + RING + 18 + 76) + 'px;'; field.appendChild(info);
         if (level === 1 && kit.once('pinwheel.hint')) kit.hintOn(stage, null, { mode: 'hold', x: cx + RING * 0.7, y: cy - RING * 0.7, delay: 700, text: '繞著風車快快畫圈' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
-        var phase = 'play', t0 = performance.now(), w = 0, p = 0, br = 0, ang = 0, samples = [], down = null, lastT = 0, wIn = 0, trace = [], nextSample = 0, override = null;
-        function nowS() { return (performance.now() - t0) / 1000; }
+        var phase = 'play', t0 = performance.now(), w = 0, p = 0, br = 0, ang = 0, samples = [], down = null, lastT = 0, wIn = 0, trace = [], nextSample = 0, override = null;  /* performance.now()：高精度的時間（毫秒），計時用 */
+        function nowS() { return (performance.now() - t0) / 1000; }  /* performance.now()：高精度的時間（毫秒），計時用 */
         function frame(now) {
             var t = (now - t0) / 1000, dt = Math.min(0.05, t - lastT); lastT = t; if (dt <= 0) return;
             /* 手指轉速：放開、或最近沒有新的觸控點，就是 0 */
             wIn = override ? override(t, w) : (down ? angularRate(samples, t) : 0);
             w = stepWheel(w, wIn, dt, gustAt(q.gust, t));
             p = progressStep(p, inBand(q, w), dt, q.hold); br = breakStep(br, w > q.breakLine, dt);
-            ang += w * 360 * dt; wheel.setAttribute('transform', 'translate(' + cx + ',' + cy + ') rotate(' + (ang % 360).toFixed(1) + ')');
-            needle.style.left = X(w) + 'px'; needle.classList.toggle('pinwheel-needle--ok', inBand(q, w)); needle.classList.toggle('pinwheel-needle--bad', w > q.breakLine);
-            fill.style.width = (100 * p).toFixed(1) + '%'; fill.classList.toggle('pinwheel-prog__fill--on', inBand(q, w)); band.classList.toggle('pinwheel-band--on', inBand(q, w));
+            ang += w * 360 * dt; wheel.setAttribute('transform', 'translate(' + cx + ',' + cy + ') rotate(' + (ang % 360).toFixed(1) + ')');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+            needle.style.left = X(w) + 'px'; needle.classList.toggle('pinwheel-needle--ok', inBand(q, w)); needle.classList.toggle('pinwheel-needle--bad', w > q.breakLine);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            fill.style.width = (100 * p).toFixed(1) + '%'; fill.classList.toggle('pinwheel-prog__fill--on', inBand(q, w)); band.classList.toggle('pinwheel-band--on', inBand(q, w));  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             if (t >= nextSample) { trace.push([t, w]); nextSample += SAMPLE_S; }
             if (p >= 1) finish('pass'); else if (br >= BREAK_S) finish('break'); else if (t >= q.limit) finish('time');
         }
-        api.my.loop(function (now) { if (phase !== 'play' || api.over || !stage.isConnected) return false; frame(now); });
+        api.my.loop(function (now) { if (phase !== 'play' || api.over || !stage.isConnected) return false; frame(now); });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
         /* 保底：rAF 被暫停時，限時一到還是要結束 */
-        api.after(Math.round(q.limit * 1000) + 400, function () { if (phase === 'play') finish('time'); });
+        api.after(Math.round(q.limit * 1000) + 400, function () { if (phase === 'play') finish('time'); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
         api.timer(Math.round(q.limit * 1000), function () { if (phase === 'play') finish('time'); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
 
         /* 手指：按住畫圈（pointerdown／move／up／cancel）；座標換成「相對風車中心」 */
-        field.addEventListener('pointerdown', function (e) {
+        field.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (phase !== 'play' || api.over || down) return;
-            e.preventDefault(); try { field.setPointerCapture(e.pointerId); } catch (err) { }
+            e.preventDefault(); try { field.setPointerCapture(e.pointerId); } catch (err) { }  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             down = { id: e.pointerId }; samples = []; push(e);
         });
         function push(e) { var pt = kit.localPt(e, field); samples.push({ t: nowS(), x: pt.x - cx, y: pt.y - cy }); if (samples.length > 80) samples.shift(); }
-        field.addEventListener('pointermove', function (e) { if (down && e.pointerId === down.id && phase === 'play') push(e); });
+        field.addEventListener('pointermove', function (e) { if (down && e.pointerId === down.id && phase === 'play') push(e); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
         function up(e) { if (down && e.pointerId === down.id) { down = null; samples = []; } }
         field.addEventListener('pointerup', up); field.addEventListener('pointercancel', up);
 
@@ -186,11 +186,11 @@
             if (phase !== 'play' || api.over) return;
             phase = 'end'; api.stopTimer();
             var why = whyText(kind, q);
-            info.textContent = why;
-            if (kind === 'pass') { info.classList.add('pinwheel-info--ok'); kit.flash(stage, true, api.my); Sfx.play('ok'); api.pass({ delay: 1800 }); return; }
-            info.classList.add('pinwheel-info--bad'); kit.flash(stage, false, api.my);
+            info.textContent = why;                     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            if (kind === 'pass') { info.classList.add('pinwheel-info--ok'); kit.flash(stage, true, api.my); Sfx.play('ok'); api.pass({ delay: 1800 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            info.classList.add('pinwheel-info--bad'); kit.flash(stage, false, api.my);  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
             showChart(kind);
-            api.fail({ delay: 4200, lines: [why, '綠色範圍 ' + q.lo.toFixed(4) + '～' + q.hi.toFixed(4) + ' 圈／秒、紅線 ' + q.breakLine.toFixed(4) + '、要撐 ' + q.hold.toFixed(4) + ' 秒', '進度停在 ' + (100 * p).toFixed(4) + '%'] });
+            api.fail({ delay: 4200, lines: [why, '綠色範圍 ' + q.lo.toFixed(4) + '～' + q.hi.toFixed(4) + ' 圈／秒、紅線 ' + q.breakLine.toFixed(4) + '、要撐 ' + q.hold.toFixed(4) + ' 秒', '進度停在 ' + (100 * p).toFixed(4) + '%'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 揭曉：轉速隨時間變化的折線圖，疊上綠色範圍和紅線 */
         function showChart(kind) {
@@ -199,7 +199,7 @@
             kit.svg('rect', { 'class': 'pinwheel-chart__bg', x: 0, y: 0, width: CW, height: CH + 8, rx: 10 }, s);
             kit.svg('rect', { 'class': 'pinwheel-chart__band', x: 4, y: Y(q.hi), width: CW - 8, height: Math.max(2, Y(q.lo) - Y(q.hi)) }, s);
             kit.svg('line', { 'class': 'pinwheel-chart__red', x1: 4, x2: CW - 4, y1: Y(q.breakLine), y2: Y(q.breakLine) }, s);
-            kit.svg('polyline', { 'class': 'pinwheel-chart__curve', points: trace.map(function (r) { return XX(r[0]).toFixed(1) + ',' + Y(r[1]).toFixed(1); }).join(' ') }, s);
+            kit.svg('polyline', { 'class': 'pinwheel-chart__curve', points: trace.map(function (r) { return XX(r[0]).toFixed(1) + ',' + Y(r[1]).toFixed(1); }).join(' ') }, s);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             field.appendChild(box);
         }
         /* 驗證用：不真的畫圈，直接覆蓋「手指轉速」——solve＝一個簡單的比例控制器，把轉速穩穩拉到範圍中心；wrong＝一直轉太快（衝進紅色區）；可以重複呼叫 */

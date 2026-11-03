@@ -21,7 +21,7 @@
     var ID = global.Identity;
     var NICK_DEBOUNCE_MS = 500;        /* 暱稱欄停止輸入多久之後才去問資料庫「這個暱稱能不能用」 */
 
-    function sfx(name) { if (global.Sfx) { global.Sfx.unlock(); global.Sfx.play(name); } }
+    function sfx(name) { if (global.Sfx) { global.Sfx.unlock(); global.Sfx.play(name); } }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
     function toast(text) { if (global.Dlg && global.Dlg.toast) global.Dlg.toast(text); }
 
     /* 暱稱輸入框與 4 位數密碼輸入框
@@ -74,17 +74,17 @@
             function pinValue() { return ID.cleanPin(pin.value); }
             function setMsg(kind, text) {
                 msg.className = 'idn-msg' + (kind ? ' idn-msg--' + kind : '');
-                msg.textContent = text || '';
+                msg.textContent = text || '';           /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             }
 
             /* 說明文字（依模式）。舊玩家與新玩家都要「簡短說明這次改版的用意」 */
             function paintTexts() {
                 if (mode === 'legacy') {
-                    ctl.card.querySelector('.dlg__title').textContent = '建立暱稱與密碼';
-                    intro.textContent = '排行榜升級了！為了不讓別人冒用你的暱稱、換手機也能接著玩，請設一組 4 位數密碼。';
+                    ctl.card.querySelector('.dlg__title').textContent = '建立暱稱與密碼';  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
+                    intro.textContent = '排行榜升級了！為了不讓別人冒用你的暱稱、換手機也能接著玩，請設一組 4 位數密碼。';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                     note.textContent = '請記下這 4 個數字，也請不要用銀行或手機的密碼。已經在別的裝置設定過？輸入同樣的暱稱與密碼，就會連在一起。';
                 } else if (mode === 'new') {
-                    ctl.card.querySelector('.dlg__title').textContent = '恭喜進榜！建立暱稱與密碼';
+                    ctl.card.querySelector('.dlg__title').textContent = '恭喜進榜！建立暱稱與密碼';  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
                     intro.textContent = '你的成績進了世界前 ' + (((cfg.game && LB.cached(cfg.game.id)) || {}).limit || LB.CFG.LIMIT_DEFAULT) + ' 名！請取個暱稱、設一組 4 位數密碼，換手機也不會弄丟成績。';
                     note.textContent = '請記下這 4 個數字，也請不要用銀行或手機的密碼。';
                 } else {
@@ -261,7 +261,7 @@
     function formDialog(cfg) {
         return new Promise(function (resolve) {
             var inputs = {}, rows = [];
-            (cfg.fields || []).forEach(function (f) {
+            (cfg.fields || []).forEach(function (f) {   /* forEach：對陣列的每個元素各做一次 */
                 var el = f.key === 'pin' ? pinInput() : nickInput(f.initial);
                 inputs[f.key] = el;
                 rows.push(fieldRow(f.label, el));
@@ -296,7 +296,7 @@
                     sync();
                 });
             }
-            Object.keys(inputs).forEach(function (k) {
+            Object.keys(inputs).forEach(function (k) {  /* forEach：對陣列的每個元素各做一次 */
                 inputs[k].addEventListener('input', function () { msg.textContent = ''; sync(); });
                 inputs[k].addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
             });

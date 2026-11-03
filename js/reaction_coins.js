@@ -71,12 +71,12 @@
     /* 這一關有哪些面額：V1.21.0 起每一關都是五種（桌上每一種至少有一枚）；level 參數保留，之後要依關卡增減面額時用 */
     function denomsFor(level) { return [50, 20, 10, 5, 1]; }
     /* 題目金額至少要是桌上總額的幾成（比例隨關卡線性升高） */
-    function minRatio(level) { return kit.ramp(level, RATIO_START, RATIO_END, LEVEL_RAMP); }
-    function timeFor(level) { return kit.ramp(level, TIME_START, TIME_END, LEVEL_RAMP); }
+    function minRatio(level) { return kit.ramp(level, RATIO_START, RATIO_END, LEVEL_RAMP); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function timeFor(level) { return kit.ramp(level, TIME_START, TIME_END, LEVEL_RAMP); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 答案裡每種面額最多拿幾枚 */
     /* 答案裡每種幣值最多拿幾枚 */
     function cntMax(level, d) {
-        var r = function (a, b) { return Math.round(kit.ramp(level, a, b, LEVEL_RAMP)); };
+        var r = function (a, b) { return Math.round(kit.ramp(level, a, b, LEVEL_RAMP)); };  /* Math.round：四捨五入成整數 */
         if (d === 50) return r(1, 9);
         if (d === 20) return r(1, 5);
         if (d === 10) return r(2, 9);
@@ -84,7 +84,7 @@
         return r(3, 19);
     }
     /* 「多給」的枚數上限（桌上比答案多放的硬幣就是陷阱） */
-    function surpMax(level) { return Math.round(kit.ramp(level, SURP_START, SURP_END, LEVEL_RAMP)); }
+    function surpMax(level) { return Math.round(kit.ramp(level, SURP_START, SURP_END, LEVEL_RAMP)); }  /* Math.round：四捨五入成整數 */
     /* 桌上硬幣總數的上限／下限 */
     function coinCap(level) { return Math.round(kit.ramp(level, COINS_START, COINS_END, LEVEL_RAMP)); }
     function coinMin(level) { return Math.round(kit.ramp(level, MIN_START, MIN_END, LEVEL_RAMP)); }
@@ -115,7 +115,7 @@
             if (cnt >= lim) return;
             if (i === den.length) { if (rem === 0 && k === 0) cnt++; return; }
             var d = den[i];
-            for (var x = Math.min(a[i], Math.floor(rem / d), k); x >= 0; x--) rec(i + 1, rem - x * d, k - x);
+            for (var x = Math.min(a[i], Math.floor(rem / d), k); x >= 0; x--) rec(i + 1, rem - x * d, k - x);  /* Math.floor：無條件捨去成整數 */
         })(0, N, K);
         return cnt;
     }
@@ -124,7 +124,7 @@
     function greedy(den, a, N) {
         var rem = N, out = [];
         for (var i = 0; i < den.length; i++) {
-            var t = Math.min(a[i], Math.floor(rem / den[i]));
+            var t = Math.min(a[i], Math.floor(rem / den[i]));  /* Math.floor：無條件捨去成整數 */
             out.push(t);
             rem -= t * den[i];
         }
@@ -137,10 +137,10 @@
         var out = null;
         (function rec(i, rem, acc) {
             if (out) return;
-            if (i === den.length) { if (rem === 0) out = acc.slice(); return; }
+            if (i === den.length) { if (rem === 0) out = acc.slice(); return; }  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
             var d = den[i], cap = 0;
             for (var j = i + 1; j < den.length; j++) cap += a[j] * den[j];
-            var hi = Math.min(a[i], Math.floor(rem / d)), lo = Math.max(0, Math.ceil((rem - cap) / d));
+            var hi = Math.min(a[i], Math.floor(rem / d)), lo = Math.max(0, Math.ceil((rem - cap) / d));  /* Math.ceil：無條件進位成整數 */
             for (var x = hi; x >= lo; x--) { acc.push(x); rec(i + 1, rem - x * d, acc); acc.pop(); if (out) return; }
         })(0, N, []);
         return out;
@@ -152,22 +152,22 @@
         var cap = coinCap(level), capMin = Math.max(5, coinMin(level)), nr = nRange(level), minUsed = level <= 2 ? 2 : 3;
         for (var tries = 0; tries < 4000; tries++) {
             /* 先決定桌上總共幾枚、每種幣值先放一枚，剩下的隨機分給各面額（每種不超過上限） */
-            var total = kit.randInt(Math.max(den.length, capMin), cap, rand);
-            var a = den.map(function () { return 1; });
-            var lim = den.map(function (d) { return Math.max(1, Math.min(cntMax(level, d) + surpMax(level), 12)); });
+            var total = kit.randInt(Math.max(den.length, capMin), cap, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+            var a = den.map(function () { return 1; }); /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            var lim = den.map(function (d) { return Math.max(1, Math.min(cntMax(level, d) + surpMax(level), 12)); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             for (var left = total - den.length, guard = 0; left > 0 && guard < 300; guard++) {
-                var pick = kit.randInt(0, den.length - 1, rand);
+                var pick = kit.randInt(0, den.length - 1, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
                 if (a[pick] < lim[pick]) { a[pick]++; left--; }
             }
             if (left > 0) continue;
             var max = 0;
-            a.forEach(function (x, i) { max += x * den[i]; });
+            a.forEach(function (x, i) { max += x * den[i]; });  /* forEach：對陣列的每個元素各做一次 */
             /* 題目金額：落在 nRange 裡、不比桌上總額小太多（minRatio）、也比總額小一點（才有「多給」的陷阱） */
-            var nLo = Math.max(nr[0], Math.ceil(max * minRatio(level))), nHi = Math.min(nr[1], max - 10);
+            var nLo = Math.max(nr[0], Math.ceil(max * minRatio(level))), nHi = Math.min(nr[1], max - 10);  /* Math.ceil：無條件進位成整數 */
             if (nLo > nHi) continue;
             var N = kit.randInt(nLo, nHi, rand);
             var c = findSolution(den, a, N);
-            if (!c || c.filter(function (x) { return x > 0; }).length < minUsed) continue;
+            if (!c || c.filter(function (x) { return x > 0; }).length < minUsed) continue;  /* filter：留下符合條件的元素，回傳新陣列 */
             if (greedy(den, a, N) !== null) continue;
             return { c: c, a: a, N: N, total: total, tries: tries };
         }
@@ -199,7 +199,7 @@
         var p = null;
         for (var t = 0; t < UNIQ_TRIES; t++) {
             p = planBase(level, rand);
-            p.K = p.c.reduce(function (s, x) { return s + x; }, 0);
+            p.K = p.c.reduce(function (s, x) { return s + x; }, 0);  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
             if (countSolutionsK(p.den, p.a, p.N, p.K, 2) === 1) { p.uniqueTries = t; return p; }
         }
         p.uniqueTries = -1;
@@ -207,7 +207,7 @@
     }
     function planBase(level, rand) {
         rand = rand || Math.random;
-        var den = denomsFor(level), has50 = den.indexOf(50) >= 0;
+        var den = denomsFor(level), has50 = den.indexOf(50) >= 0;  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         var cap = coinCap(level), capMin = coinMin(level), sMax = surpMax(level), nr = nRange(level);
         var minUsed = level <= 2 ? 2 : 3;        /* 答案裡至少用到幾種幣值 */
         /* 各種陷阱的機率隨關卡線性增加 */
@@ -221,7 +221,7 @@
         if (wGF) {
             var g0 = planGreedyFail(level, den, rand);
             if (g0) {
-                var tr0 = { over50: has50 && g0.a[0] * 50 > g0.N, bulk: g0.a[g0.a.length - 1] >= bulkLow(level), decoy: g0.c.some(function (x, i) { return x === 0 && g0.a[i] > 0; }), greedyFails: true, carry: has50 && g0.c[0] >= 1 && g0.c.slice(1).filter(function (x) { return x > 0; }).length >= 2 };
+                var tr0 = { over50: has50 && g0.a[0] * 50 > g0.N, bulk: g0.a[g0.a.length - 1] >= bulkLow(level), decoy: g0.c.some(function (x, i) { return x === 0 && g0.a[i] > 0; }), greedyFails: true, carry: has50 && g0.c[0] >= 1 && g0.c.slice(1).filter(function (x) { return x > 0; }).length >= 2 };  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
                 return { den: den, c: g0.c, a: g0.a, N: g0.N, traps: tr0, coins: g0.total, tries: g0.tries, pass: 0 };
             }
         }
@@ -232,7 +232,7 @@
                 var N = kit.randInt(nr[0], nr[1], rand);
                 var c = decompose(den, N, level, wantOver, wantGF, rand);
                 if (!c) continue;
-                if (c.filter(function (x) { return x > 0; }).length < minUsed) continue;
+                if (c.filter(function (x) { return x > 0; }).length < minUsed) continue;  /* filter：留下符合條件的元素，回傳新陣列 */
                 if (wantOver && !(has50 && c[0] >= 1)) continue;
                 var a = c.map(function (x, i) {
                     var d = den[i];
@@ -242,14 +242,14 @@
                 });
                 if (wantOver) a[0] = Math.max(a[0], Math.floor(N / 50) + 1);               /* 桌上的 50 元總額超過 N */
                 if (wantBulk) { var lo = Math.max(c[c.length - 1] + 1, bulkLow(level)); a[a.length - 1] = Math.max(a[a.length - 1], Math.min(19, lo + kit.randInt(0, 4, rand))); }
-                var total = a.reduce(function (s, x) { return s + x; }, 0);
+                var total = a.reduce(function (s, x) { return s + x; }, 0);  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
                 if (total > cap || total < Math.max(5, capMin)) continue;
                 /* 題目金額不能比桌上硬幣總額小太多（最後一輪放寬） */
-                if (pass < 2) { var tableSum = 0; a.forEach(function (x, i) { tableSum += x * den[i]; }); if (N < tableSum * minRatio(level)) continue; }
+                if (pass < 2) { var tableSum = 0; a.forEach(function (x, i) { tableSum += x * den[i]; }); if (N < tableSum * minRatio(level)) continue; }  /* forEach：對陣列的每個元素各做一次 */
                 var gf = greedy(den, a, N) === null;
                 if (wantGF && !gf) continue;
                 var over50 = has50 && a[0] * 50 > N, bulk = a[a.length - 1] >= bulkLow(level);
-                var decoy = c.some(function (x, i) { return x === 0 && a[i] > 0; });
+                var decoy = c.some(function (x, i) { return x === 0 && a[i] > 0; });  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
                 /* 湊零頭：答案裡 50 用了、而且零頭（N 除掉 50 的整倍數之後）還要用到 3 種以上的小面額 */
                 var carry = has50 && c[0] >= 1 && c.slice(1).filter(function (x) { return x > 0; }).length >= 2;
                 return { den: den, c: c, a: a, N: N, traps: { over50: over50, bulk: bulk, decoy: decoy, greedyFails: gf, carry: carry }, coins: total, tries: tries, pass: pass };
@@ -267,7 +267,7 @@
     var EDGE = 10;                                   /* 硬幣離桌面邊緣至少幾 px */
     function scatter(list, W, Hh, rand) {
         rand = rand || Math.random;
-        var sorted = list.slice().sort(function (p, q) { return q - p; });
+        var sorted = list.slice().sort(function (p, q) { return q - p; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
         for (var attempt = 0; attempt < 24; attempt++) {
             var out = [], failed = false;
             for (var k = 0; k < sorted.length && !failed; k++) {
@@ -283,7 +283,7 @@
                 }
                 if (placed) out.push(placed); else failed = true;
             }
-            if (!failed) return kit.shuffle(out, rand);
+            if (!failed) return kit.shuffle(out, rand); /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         }
         return null;
     }
@@ -298,7 +298,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             /* level 目前關卡；cleared 已過幾關；newRec 有沒有破紀錄 */
             var level = start || 1, cleared = level - 1, newRec = false;
 
@@ -309,8 +309,8 @@
             var bar = h('div', { 'class': 'ld-time' }, [h('div', { 'class': 'ld-time__fill' })]);
             var fill = bar.firstChild;
             var clearBtn = h('button', { 'class': 'btn btn--line btn--sm', text: '全部放回' });
-            root.appendChild(target);
-            root.appendChild(sumLine);
+            root.appendChild(target);                   /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(sumLine);                  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             root.appendChild(table);
             root.appendChild(bar);
             root.appendChild(clearBtn);
@@ -318,7 +318,7 @@
             /* q 這一題；coins 桌上的硬幣；sum 目前已選的總額；state 目前階段；timer／loop 倒數 */
             var q = null, coins = [], sum = 0, cnt = 0, state = 'idle', timer = null, loop = null;
 
-            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }
+            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
             /* 更新「已選幾枚、幾元／還差」文字（V1.43.0：枚數和金額都要剛好），超過就變橘色 */
             function paintSum() {
@@ -327,25 +327,25 @@
                 if (!over) rest = '還差 ' + dc + ' 枚、' + ds + ' 元';
                 else rest = [dc < 0 ? '多了 ' + (-dc) + ' 枚' : dc > 0 ? '還差 ' + dc + ' 枚' : '', ds < 0 ? '多了 ' + (-ds) + ' 元' : ds > 0 ? '還差 ' + ds + ' 元' : ''].filter(Boolean).join('、');
                 sumLine.className = 'coins-sum' + (over ? ' coins-sum--over' : '');
-                sumLine.textContent = '已選 ' + cnt + ' 枚、' + sum + ' 元　' + rest;
+                sumLine.textContent = '已選 ' + cnt + ' 枚、' + sum + ' 元　' + rest;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             }
 
             /* 點一枚硬幣：切換選取，總額剛好等於題目就過關 */
             function toggle(co) {
                 if (state !== 'play') return;
                 co.on = !co.on;
-                co.el.classList.toggle('coins-coin--on', co.on);
+                co.el.classList.toggle('coins-coin--on', co.on);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 sum += co.on ? co.d : -co.d; cnt += co.on ? 1 : -1;
-                Sfx.play('click');
+                Sfx.play('click');                      /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 paintSum();
                 if (cnt === q.K && sum === q.N) solved();
             }
 
             /* 全部放回 */
-            clearBtn.addEventListener('pointerdown', function (e) {
-                e.preventDefault();
+            clearBtn.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+                e.preventDefault();                     /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                 if (state !== 'play') return;
-                coins.forEach(function (co) { co.on = false; co.el.classList.remove('coins-coin--on'); });
+                coins.forEach(function (co) { co.on = false; co.el.classList.remove('coins-coin--on'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 sum = 0; cnt = 0;
                 paintSum();
             });
@@ -372,8 +372,8 @@
                     }).join('、') + '；共 ' + q.coins + ' 枚；限定 ' + q.K + ' 枚湊 ' + q.N + '，剛好 ' + countSolutionsK(q.den, q.a, q.N, q.K, 200) + ' 組解（只湊金額約 ' + countSolutions(q.den, q.a, q.N, 200) + ' 組）；陷阱：' +
                         ['over50', 'carry', 'bulk', 'decoy', 'greedyFails'].filter(function (k) { return q.traps[k]; }).join('、'));
                 } catch (e) { }
-                target.textContent = q.K + ' 枚湊出 ' + q.N;
-                table.innerHTML = '';
+                target.textContent = q.K + ' 枚湊出 ' + q.N;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                table.innerHTML = '';                   /* innerHTML = ''：把元素裡面的東西全部清掉 */
                 coins = []; sum = 0; cnt = 0; state = 'play';
                 /* 把每枚硬幣畫成一顆按鈕，放在隨機位置上 */
                 pos.forEach(function (p) {
@@ -382,19 +382,19 @@
                     el.style.left = (p.x - SIZE[p.d] / 2) + 'px';
                     el.style.top = (p.y - SIZE[p.d] / 2) + 'px';
                     var co = { d: p.d, el: el, on: false };
-                    el.addEventListener('pointerdown', function (e) { e.preventDefault(); toggle(co); });
+                    el.addEventListener('pointerdown', function (e) { e.preventDefault(); toggle(co); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                     table.appendChild(el);
                     coins.push(co);
                 });
                 paintSum();
                 /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「答案裡會用到的硬幣」上（第一關的正確答案之一） */
-                if (Reaction.kit.once('coins.hint')) {
-                    var hintCoin = coins.filter(function (co) { return q.c[q.den.indexOf(co.d)] > 0; })[0] || coins[0];
+                if (Reaction.kit.once('coins.hint')) {  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
+                    var hintCoin = coins.filter(function (co) { return q.c[q.den.indexOf(co.d)] > 0; })[0] || coins[0];  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                     Reaction.kit.hintOn(root, hintCoin.el, { mode: 'tap', text: '請點擊硬幣湊出題目' });
                 }
                 /* 倒數時間條 */
-                var limit = timeFor(level) * 1000, t0 = performance.now();
-                loop = my.loop(function (now) {
+                var limit = timeFor(level) * 1000, t0 = performance.now();  /* performance.now()：高精度的時間（毫秒），計時用 */
+                loop = my.loop(function (now) {         /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                     if (state !== 'play') return false;
                     fill.style.width = (100 * Math.max(0, 1 - (now - t0) / limit)).toFixed(1) + '%';
                 });
@@ -407,11 +407,11 @@
                 my.cancel(timer); loop.stop();
                 fill.style.width = '0%';
                 cleared = level;
-                if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
+                if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                 coins.forEach(function (co) { if (co.on) co.el.classList.add('coins-coin--ok'); });
                 sumLine.className = 'coins-sum coins-sum--ok';
                 sumLine.textContent = '剛好 ' + q.K + ' 枚、' + q.N + ' 元！';
-                Sfx.play('win');
+                Sfx.play('win');                        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 level++;
                 my.after(NEXT_MS, ask);
             }
@@ -422,7 +422,7 @@
                 state = 'over';
                 fill.style.width = '0%';
                 /* 答案的硬幣用黃框標出來（每種幣值取前 c 枚） */
-                var left = q.c.slice();
+                var left = q.c.slice();                 /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
                 coins.forEach(function (co) {
                     var i = q.den.indexOf(co.d);
                     if (left[i] > 0) { left[i]--; co.el.classList.add('coins-coin--answer'); }
@@ -432,7 +432,7 @@
                 var failLevel = level, back = kit.resumeFrom(failLevel);
                 my.after(1800, function () {
                     var ans = q.den.map(function (d, i) { return q.c[i] > 0 ? d + ' 元 ×' + q.c[i] : null; }).filter(Boolean).join('、');
-                    kit.result(root, {
+                    kit.result(root, {                  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                         score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: cleared + ' 關', label: '時間到了',
                         lines: ['第 ' + failLevel + ' 關要用 ' + q.K + ' 枚湊 ' + q.N + ' 元', '答案：' + ans],

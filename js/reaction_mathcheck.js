@@ -37,9 +37,9 @@
     var BIG_DIFF_FROM = 25;                     /* 第幾題起，錯的算式也可能差 20 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function ansMs() { return Math.round(ANS_S * 1000); }
+    function ansMs() { return Math.round(ANS_S * 1000); }  /* Math.round：四捨五入成整數 */
     /* 數字範圍：第 1 題 a、第 RAMP_LEVELS 題 b，之後維持 */
-    function R(level, a, b) { return Math.round(kit.ramp(level, a, b, RAMP_LEVELS)); }
+    function R(level, a, b) { return Math.round(kit.ramp(level, a, b, RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 這一題要不要「對」：一半一半，連續太多次就換邊 */
     function nextCorrect(hist, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
@@ -68,18 +68,18 @@
     function makeEquation(type, rand, level) {
         rand = rand || Math.random; level = level || 1;
         var a, b, op, truth, explain, lhs, neg = false, t, o;
-        if (type === 'mul1') { a = kit.randInt(3, 9, rand); b = kit.randInt(3, 9, rand); op = '×'; truth = a * b; explain = a + '×' + b + ' ＝ ' + truth; }
-        else if (type === 'add1') { a = kit.randInt(4, 9, rand); b = kit.randInt(4, 9, rand); op = '＋'; truth = a + b; explain = a + ' ＋ ' + b + ' ＝ ' + truth; }
+        if (type === 'mul1') { a = kit.randInt(3, 9, rand); b = kit.randInt(3, 9, rand); op = '×'; truth = a * b; explain = a + '×' + b + ' ＝ ' + truth; }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+        else if (type === 'add1') { a = kit.randInt(4, 9, rand); b = kit.randInt(4, 9, rand); op = '＋'; truth = a + b; explain = a + ' ＋ ' + b + ' ＝ ' + truth; }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         else if (type === 'mul21') {
             a = kit.randInt(12, R(level, 29, 49), rand); b = kit.randInt(3, R(level, 7, 9), rand); op = '×'; truth = a * b;
-            t = Math.floor(a / 10) * 10; o = a % 10;
+            t = Math.floor(a / 10) * 10; o = a % 10;    /* Math.floor：無條件捨去成整數 */
             explain = a + '×' + b + ' ＝ ' + t + '×' + b + ' ＋ ' + o + '×' + b + ' ＝ ' + (t * b) + ' ＋ ' + (o * b) + ' ＝ ' + truth;
         } else if (type === 'add2') { var hi = R(level, 49, 99); a = kit.randInt(16, hi, rand); b = kit.randInt(16, hi, rand); op = '＋'; truth = a + b; explain = a + ' ＋ ' + b + ' ＝ ' + truth; }
         else if (type === 'sub2') {
             a = kit.randInt(40, R(level, 70, 99), rand); b = kit.randInt(12, a - 8, rand); op = '－'; truth = a - b; explain = a + ' － ' + b + ' ＝ ' + truth;
         } else if (type === 'mul22') {
             a = kit.randInt(12, R(level, 29, 39), rand); b = kit.randInt(12, R(level, 24, 29), rand); op = '×'; truth = a * b;
-            t = Math.floor(a / 10) * 10; o = a % 10;
+            t = Math.floor(a / 10) * 10; o = a % 10;    /* Math.floor：無條件捨去成整數 */
             explain = a + '×' + b + ' ＝ ' + t + '×' + b + ' ＋ ' + o + '×' + b + ' ＝ ' + (t * b) + ' ＋ ' + (o * b) + ' ＝ ' + truth;
         } else if (type === 'negsub') {
             /* 小的減大的，答案是負數：17 － 45 ＝ −28 */
@@ -104,7 +104,7 @@
             neg = true; a = -kit.randInt(6, R(level, 14, 29), rand); b = kit.randInt(3, R(level, 9, 15), rand); op = '×';
             if (rand() < 0.4) b = -b;
             truth = a * b;
-            explain = par(a) + ' × ' + par(b) + ' ＝ ' + (truth < 0 ? '−' : '') + '(' + (-a) + '×' + Math.abs(b) + ') ＝ ' + num(truth);
+            explain = par(a) + ' × ' + par(b) + ' ＝ ' + (truth < 0 ? '−' : '') + '(' + (-a) + '×' + Math.abs(b) + ') ＝ ' + num(truth);  /* Math.abs：取絕對值（去掉負號） */
         }
         lhs = (a < 0 && (op === '×' || type === 'negneg' && op === '－' && b < 0) ? par(a) : num(a)) + ' ' + op + ' ' + par(b);
         return { a: a, b: b, op: op, lhs: lhs, truth: truth, explain: explain, type: type, neg: neg };
@@ -114,7 +114,7 @@
        沒有要求保留個位時，還可能個位差 1、十位個位對調。結果不會等於正解；沒有負數的題一定是正數 */
     function wrongOf(truth, rand, o) {
         rand = rand || Math.random; o = o || {};
-        var c = [], abs = Math.abs(truth), sgn = truth < 0 ? -1 : 1;
+        var c = [], abs = Math.abs(truth), sgn = truth < 0 ? -1 : 1;  /* Math.abs：取絕對值（去掉負號） */
         function add(v, w) { for (var i = 0; i < (w || 1); i++) c.push(v); }
         add(truth + 10, 2); add(truth - 10, 2);
         if (o.big) { add(truth + 20); add(truth - 20); }
@@ -132,18 +132,18 @@
                 if (sw !== truth) add(sw, 2);
             }
         }
-        c = c.filter(function (v) {
+        c = c.filter(function (v) {                     /* filter：留下符合條件的元素，回傳新陣列 */
             if (v === truth || v === 0) return false;
             if (!o.neg) return v > 0;
             return v === -truth || (v < 0) === (truth < 0);          /* 有負數的題：正負號不變，除非是「正負號顛倒」這一種 */
         });
         if (!c.length) c = [truth + 10];
-        return kit.pick(c, rand);
+        return kit.pick(c, rand);                       /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
     }
     /* 出題函式：依關卡難度與亂數產生這一題的資料（純函式，不碰畫面，單元測試直接測它） */
     function makeQuestion(level, rand, wantCorrect) {
         rand = rand || Math.random;
-        var eq = makeEquation(kit.pick(typesFor(level), rand), rand, level);
+        var eq = makeEquation(kit.pick(typesFor(level), rand), rand, level);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         if (wantCorrect == null) wantCorrect = rand() < 0.5;
         eq.isCorrect = wantCorrect;
         var keep = level >= KEEP_UNIT_FROM || rand() < KEEP_UNIT_P_EARLY;
@@ -200,32 +200,32 @@
         if (px < EQ_FONT && eq.style) eq.style.fontSize = px + 'px';
         var fix = h('div', { 'class': 'mathcheck-fix' });          /* 題目是錯的時候，黑色顯示正確算式 */
         var msg = h('div', { 'class': 'mathcheck-msg' });          /* 時間到：紅字「超出時間未回答」 */
-        stage.appendChild(eq); stage.appendChild(fix); stage.appendChild(msg);
+        stage.appendChild(eq); stage.appendChild(fix); stage.appendChild(msg);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var bYes = h('button', { 'class': 'btn btn--go', text: '對' });
         var bNo = h('button', { 'class': 'btn btn--primary', text: '錯' });
-        stage.appendChild(h('div', { 'class': 'rx-btnrow' }, [bNo, bYes]));
+        stage.appendChild(h('div', { 'class': 'rx-btnrow' }, [bNo, bYes]));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         api.timer(ansMs(), function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
 
         /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(sayCorrect) {
             if (api.over) return;
             /* 題目一直留在畫面上；算式是錯的就在下面用黑色顯示正確算式（不管玩家答對答錯） */
-            if (!q.isCorrect) fix.textContent = '正確：' + q.right;
+            if (!q.isCorrect) fix.textContent = '正確：' + q.right;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             if (sayCorrect === q.isCorrect) {
-                eq.classList.add('mathcheck-eq--ok');
-                api.pass({ delay: q.isCorrect ? 650 : 1100 });
+                eq.classList.add('mathcheck-eq--ok');   /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                api.pass({ delay: q.isCorrect ? 650 : 1100 });  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
             } else {
-                eq.classList.add('mathcheck-eq--bad');
-                if (sayCorrect == null) msg.textContent = '超出時間未回答';
-                api.fail({ delay: 2000, lines: [
+                eq.classList.add('mathcheck-eq--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                if (sayCorrect == null) msg.textContent = '超出時間未回答';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                api.fail({ delay: 2000, lines: [        /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                     (sayCorrect == null ? '時間到！' : (q.isCorrect ? '這個算式是對的' : '這個算式是錯的')) + '：' + q.text,
                     '正確算式：' + q.right,
                     '速算拆法：' + q.explain
                 ] });
             }
         }
-        kit.onTap(bYes, function () { judge(true); });
-        kit.onTap(bNo, function () { judge(false); });
+        kit.onTap(bYes, function () { judge(true); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        kit.onTap(bNo, function () { judge(false); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.isCorrect); };
         api.wrong = function () { judge(!q.isCorrect); };

@@ -18,14 +18,14 @@
 
     /* 格子編號 i ＝ 列 × n ＋ 欄；回傳 i 的相鄰格（上右下左，超出房間的略過） */
     function neighbors(n, i) {
-        var r = Math.floor(i / n), c = i % n, out = [];
+        var r = Math.floor(i / n), c = i % n, out = []; /* Math.floor：無條件捨去成整數 */
         for (var d = 0; d < 4; d++) {
             var rr = r + DIRS[d][0], cc = c + DIRS[d][1];
             if (rr >= 0 && rr < n && cc >= 0 && cc < n) out.push(rr * n + cc);
         }
         return out;
     }
-    function adjacent(n, a, b) { return Math.abs(Math.floor(a / n) - Math.floor(b / n)) + Math.abs(a % n - b % n) === 1; }
+    function adjacent(n, a, b) { return Math.abs(Math.floor(a / n) - Math.floor(b / n)) + Math.abs(a % n - b % n) === 1; }  /* Math.abs：取絕對值（去掉負號） */
     /* 房間裡「空地」連不連得起來（從 start 出發能走到全部空地）；blocked 是家具格的集合（Uint8Array，1＝家具） */
     function connected(n, blocked, start) {
         var seen = new Uint8Array(n * n), stack = [start], cnt = 0, free = 0, i;
@@ -33,7 +33,7 @@
         seen[start] = 1;
         while (stack.length) {
             var cur = stack.pop(); cnt++;
-            neighbors(n, cur).forEach(function (j) { if (!blocked[j] && !seen[j]) { seen[j] = 1; stack.push(j); } });
+            neighbors(n, cur).forEach(function (j) { if (!blocked[j] && !seen[j]) { seen[j] = 1; stack.push(j); } });  /* forEach：對陣列的每個元素各做一次 */
         }
         return cnt === free;
     }
@@ -41,10 +41,10 @@
        空地共 F 格：F 是偶數 → 兩色格數必須一樣多；F 是奇數 → 起點必須在「多一格」的那一色，而且兩色只差 1 格。 */
     function parityOk(n, blocked, start) {
         var a = 0, b = 0, i;
-        for (i = 0; i < n * n; i++) if (!blocked[i]) { if ((Math.floor(i / n) + i % n) % 2) b++; else a++; }
+        for (i = 0; i < n * n; i++) if (!blocked[i]) { if ((Math.floor(i / n) + i % n) % 2) b++; else a++; }  /* Math.floor：無條件捨去成整數 */
         if ((a + b) % 2 === 0) return a === b;
         var startColor = (Math.floor(start / n) + start % n) % 2 ? 1 : 0;
-        return Math.abs(a - b) === 1 && ((a > b) === (startColor === 0));
+        return Math.abs(a - b) === 1 && ((a > b) === (startColor === 0));  /* Math.abs：取絕對值（去掉負號） */
     }
     /* 找一條從 start 出發、走遍每一格空地剛好一次的路（漢米爾頓路徑）；找不到（或搜尋太久）回傳 null。
        做法：深度優先搜尋，下一步優先挑「出路少的鄰居」（Warnsdorff 規則）、同分隨機；每走一步先剪枝——
@@ -57,7 +57,7 @@
         for (i = 0; i < total; i++) vis[i] = blocked[i] ? 2 : 0;
         var path = [start], nodes = 0;
         vis[start] = 1;
-        function degree(c) { var d = 0; neighbors(n, c).forEach(function (j) { if (!vis[j]) d++; }); return d; }
+        function degree(c) { var d = 0; neighbors(n, c).forEach(function (j) { if (!vis[j]) d++; }); return d; }  /* forEach：對陣列的每個元素各做一次 */
         /* 剪枝：從 head 出發，所有沒走過的空地必須連得起來；沒走過、而且「沒走過的鄰居」≤ 1 個（不算 head）的格子最多 1 個 */
         function ok(head, remaining) {
             if (!remaining) return true;
@@ -77,9 +77,9 @@
         function dfs(head, count) {
             if (count === free) return true;
             if (++nodes > budget) return false;
-            var cand = neighbors(n, head).filter(function (j) { return !vis[j]; });
-            var scored = cand.map(function (j) { vis[j] = 1; var d = degree(j); vis[j] = 0; return { j: j, d: d, r: rand() }; });
-            scored.sort(function (a, b) { return a.d - b.d || a.r - b.r; });
+            var cand = neighbors(n, head).filter(function (j) { return !vis[j]; });  /* filter：留下符合條件的元素，回傳新陣列 */
+            var scored = cand.map(function (j) { vis[j] = 1; var d = degree(j); vis[j] = 0; return { j: j, d: d, r: rand() }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            scored.sort(function (a, b) { return a.d - b.d || a.r - b.r; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
             for (var k = 0; k < scored.length; k++) {
                 var j2 = scored[k].j;
                 vis[j2] = 1; path.push(j2);
@@ -89,7 +89,7 @@
             }
             return false;
         }
-        return dfs(start, 1) ? path.slice() : null;
+        return dfs(start, 1) ? path.slice() : null;     /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
     }
 
     kit.gridNeighbors = neighbors;

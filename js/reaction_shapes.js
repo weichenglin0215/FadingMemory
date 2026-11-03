@@ -44,7 +44,7 @@
     /* ═══ 格數：第 1 關 2×3，之後高度每關 +1，寬度＝高度/1.5 四捨五入，
        上限寬 20、高 30（兩個上限剛好同時在高度=30 的時候碰到，不用另外處理）═══ */
     function heightFor(level) { return Math.min(30, level + 2); }
-    function widthFor(height) { return Math.min(20, Math.round(height / 1.5)); }
+    function widthFor(height) { return Math.min(20, Math.round(height / 1.5)); }  /* Math.round：四捨五入成整數 */
 
     /* ═══ 圖形／文字／emoji 的「一對」：a／b 兩個長得不一樣但同一類的東西，
        隨機決定哪個當多數、哪個當少數那一格。type='svg' 的 a/b 是下面
@@ -82,11 +82,11 @@
     ].concat(
         /* V1.33：長得很像的中文字改用共用資料庫 js/similar_chars.js（SimilarChars），每一組取最像的前兩個字；
            st＝兩個字的平均筆畫數（第 10 關之後筆畫多的字才慢慢常出現，見 targetCx、pickPair）。想加字就加在共用資料庫裡。 */
-        SimilarChars.pairs().filter(function (p) { return p.st <= SIMILAR_MAX_ST; })
-            .map(function (p) { return { type: 'text', a: p.a, b: p.b, colorable: true, st: p.st }; })
+        SimilarChars.pairs().filter(function (p) { return p.st <= SIMILAR_MAX_ST; })  /* filter：留下符合條件的元素，回傳新陣列 */
+            .map(function (p) { return { type: 'text', a: p.a, b: p.b, colorable: true, st: p.st }; })  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     );
     /* COLORABLE：篩出能套用顏色的組合（emoji 自帶顏色，不能套） */
-    var COLORABLE = PAIRS.filter(function (p) { return p.colorable; });
+    var COLORABLE = PAIRS.filter(function (p) { return p.colorable; });  /* filter：留下符合條件的元素，回傳新陣列 */
     /* ═══ 難度之一：題材的「複雜度」與每一關的「目標複雜度」（細節見檔頭說明）═══ */
     var CX_LOW = 0.10, CX_HIGH = 1.0;      /* 目標複雜度的最低（符號、數字、筆畫少的字）與最高（筆畫最多的字） */
     var CX_FLAT = 10, CX_RAMP = 30;        /* 第 1～CX_FLAT 關維持最低，之後線性升高，第 CX_RAMP 關到頂 */
@@ -108,8 +108,8 @@
        （輪盤抽法：總權重乘一個 0～1 的亂數，逐組扣掉權重，扣到小於 0 的那一組就是被抽到的） */
     function pickPair(pool, level, rand) {
         rand = rand || Math.random;
-        var T = targetCx(level || 1), w = pool.map(function (p) { var d = complexityOf(p) - T; return d > CX_AHEAD ? 0 : Math.exp(-(d * d) / (2 * CX_SIGMA * CX_SIGMA)); });
-        var sum = w.reduce(function (a, b) { return a + b; }, 0), r = rand() * sum;
+        var T = targetCx(level || 1), w = pool.map(function (p) { var d = complexityOf(p) - T; return d > CX_AHEAD ? 0 : Math.exp(-(d * d) / (2 * CX_SIGMA * CX_SIGMA)); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        var sum = w.reduce(function (a, b) { return a + b; }, 0), r = rand() * sum;  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
         for (var i = 0; i < pool.length; i++) { r -= w[i]; if (r < 0) return pool[i]; }
         return pool[pool.length - 1];
     }
@@ -170,7 +170,7 @@
         var s = ss / 100, v = vv / 100;
         var c = v * s;
         var hp = hh / 60;
-        var x = c * (1 - Math.abs(hp % 2 - 1));
+        var x = c * (1 - Math.abs(hp % 2 - 1));         /* Math.abs：取絕對值（去掉負號） */
         var r1 = 0, g1 = 0, b1 = 0;
         if (hp < 1) { r1 = c; g1 = x; b1 = 0; }
         else if (hp < 2) { r1 = x; g1 = c; b1 = 0; }
@@ -179,7 +179,7 @@
         else if (hp < 5) { r1 = x; g1 = 0; b1 = c; }
         else { r1 = c; g1 = 0; b1 = x; }
         var m = v - c;
-        return { r: Math.round((r1 + m) * 255), g: Math.round((g1 + m) * 255), b: Math.round((b1 + m) * 255) };
+        return { r: Math.round((r1 + m) * 255), g: Math.round((g1 + m) * 255), b: Math.round((b1 + m) * 255) };  /* Math.round：四捨五入成整數 */
     }
     /* 把 HSV 顏色轉成 CSS 的 rgb() 字串 */
     function cssColor(c) {
@@ -188,7 +188,7 @@
     }
 
     /* 從陣列隨機挑一個 */
-    function pickAny(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    function pickAny(arr) { return arr[Math.floor(Math.random() * arr.length)]; }  /* Math.floor：無條件捨去成整數 */
 
     /* 依關卡決定考驗類型：第 1～14 關「混合」（形狀與顏色同時不同，顏色逐關變淡），第 15 關起「形狀」（黑白，只剩形狀不同） */
     function typeFor(level) {
@@ -228,15 +228,15 @@
     /* mount：遊戲進場點 */
     function mount(root, ctx) {
         /* 替整個畫面加上黑底 class（樣式在 css/games/reaction_shapes.css 的 .shapes-dark-bg） */
-        root.classList.add('shapes-dark-bg');
+        root.classList.add('shapes-dark-bg');           /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         /* level：目前關卡，放在 mount 裡讓下面的函式共用（閉包） */
         /* V1.34.0：從「個人最佳關卡 − 4」開始，沒玩過就是第 1 關（kit.entryLevel，見 reaction_kit.js） */
         var level = Reaction.kit.entryLevel(ID, 0);          /* 這兩款的成績本身就是「撐到第幾關」，所以舊紀錄不用再 ＋1 */
 
         /* round：畫一關 */
         function round() {
-            root.innerHTML = '';
-            var best = fmtBest(Reaction.getBest(ID));
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
+            var best = fmtBest(Reaction.getBest(ID));   /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             ctx.setMeta('第 ' + level + ' 關' + (best ? '・' + best : ''));
 
             /* 決定這一關的考驗類型、格數（高×寬）和「不一樣的那一格」的位置 */
@@ -244,16 +244,16 @@
             var height = heightFor(level);
             var width = widthFor(height);
             var n = width * height;
-            var oddIdx = Math.floor(Math.random() * n);
+            var oddIdx = Math.floor(Math.random() * n); /* Math.floor：無條件捨去成整數 */
 
-            root.appendChild(h('div', { 'class': 'hint shapes--on-dark', text: hintTextFor(type) + '（第 ' + level + ' 關）' }));
+            root.appendChild(h('div', { 'class': 'hint shapes--on-dark', text: hintTextFor(type) + '（第 ' + level + ' 關）' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
 
-            var wrap = h('div', { 'class': 'shapes-wrap' });
-            var board = h('div', { 'class': 'shapes-board' });
+            var wrap = h('div', { 'class': 'shapes-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
+            var board = h('div', { 'class': 'shapes-board' });  /* board：盤面（所有格子都放在裡面） */
             /* board 用 CSS Grid 排成 width 欄 × height 列 */
             board.style.gridTemplateColumns = 'repeat(' + width + ', 1fr)';
             board.style.gridTemplateRows = 'repeat(' + height + ', 1fr)';
-            wrap.appendChild(board);
+            wrap.appendChild(board);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             root.appendChild(wrap);
 
             /* 格子必須是正方形：量可用寬高，兩個方向各自除以格數，取較小的當邊長 */
@@ -290,30 +290,30 @@
                 })(i);
             }
             /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在這一關「不一樣的那一格」上（也等於第一關的答案） */
-            if (Reaction.kit.once('shapes.hint')) Reaction.kit.hintOn(root, board.children[oddIdx], { mode: 'tap', text: '請點擊不一樣的圖形' });
+            if (Reaction.kit.once('shapes.hint')) Reaction.kit.hintOn(root, board.children[oddIdx], { mode: 'tap', text: '請點擊不一樣的圖形' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
         }
 
         /* 答題：答對進下一關；答錯顯示正確位置並結算 */
         function answer(ok, cellEl, board, oddIdx) {
             Array.prototype.forEach.call(board.children, function (c) { c.disabled = true; });
             if (ok) {
-                if (window.Sfx) Sfx.play('ok');
-                cellEl.classList.add('shapes-cell--ok');
+                if (window.Sfx) Sfx.play('ok');         /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                cellEl.classList.add('shapes-cell--ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 level++;
                 UI.wait(450).then(round);
                 return;
             }
-            if (window.Sfx) Sfx.play('bad');
+            if (window.Sfx) Sfx.play('bad');            /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             cellEl.classList.add('shapes-cell--bad');
             board.children[oddIdx].classList.add('shapes-cell--ok');
-            var isNew = Reaction.setBest(ID, level, function (v, b) { return v > b; });
+            var isNew = Reaction.setBest(ID, level, function (v, b) { return v > b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             ctx.setMeta(fmtBest(Reaction.getBest(ID)));
             /* 結算卡片疊在棋盤上（跟其他遊戲同一套 CSS：drop-result-overlay） */
             UI.wait(700).then(function () {
                 /* 不清空畫面：保留剛剛的棋盤（哪格答錯、哪格才是真正不一樣的）
                    留在背景，結算卡片疊一層半透明底蓋上去——跟其他遊戲同一套做法。 */
                 /* 結算彈窗（公版 kit.result）：帶 score 會在彈窗出現之後自動送世界排行榜 */
-                Reaction.kit.result(root, {
+                Reaction.kit.result(root, {             /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                     num: '第 ' + level + ' 關', label: '答錯了，挑戰結束', isNew: isNew, score: level, level: level,
                     sfx: level >= 8 ? 'win' : 'fail', onAgain: function () { level = 1; round(); }
                 });

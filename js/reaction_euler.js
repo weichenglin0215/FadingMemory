@@ -42,17 +42,17 @@
     var GX = 36, GY = 50, GAPX = 133, GAPY = 130;    /* 格點位置（舞台座標） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function edgesAt(level) { return Math.round(kit.ramp(level, EDGES[0], EDGES[1], RAMP_LEVELS)); }
-    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
-    function counterFrac(level) { return kit.ramp(level, COUNTER[0], COUNTER[1], RAMP_LEVELS); }
+    function edgesAt(level) { return Math.round(kit.ramp(level, EDGES[0], EDGES[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
+    function counterFrac(level) { return kit.ramp(level, COUNTER[0], COUNTER[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 線段 a→b 的黑色箭頭（三角形，放在線段 55% 的位置，尖端指向前進方向 b）：回傳 SVG polygon 的 points */
     function arrowPoints(a, b) {
-        var dx = b.x - a.x, dy = b.y - a.y, len = Math.sqrt(dx * dx + dy * dy) || 1, ux = dx / len, uy = dy / len, px = -uy, py = ux;
+        var dx = b.x - a.x, dy = b.y - a.y, len = Math.sqrt(dx * dx + dy * dy) || 1, ux = dx / len, uy = dy / len, px = -uy, py = ux;  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
         var cx = a.x + dx * 0.55, cy = a.y + dy * 0.55, L = 15, Wd = 11;
         return [(cx + ux * L).toFixed(1) + ',' + (cy + uy * L).toFixed(1), (cx - ux * L * 0.6 + px * Wd).toFixed(1) + ',' + (cy - uy * L * 0.6 + py * Wd).toFixed(1), (cx - ux * L * 0.6 - px * Wd).toFixed(1) + ',' + (cy - uy * L * 0.6 - py * Wd).toFixed(1)].join(' ');
     }
     function nid(r, c) { return r * N + c; }
-    function posOf(id) { return { x: GX + (id % N) * GAPX, y: GY + Math.floor(id / N) * GAPY }; }
+    function posOf(id) { return { x: GX + (id % N) * GAPX, y: GY + Math.floor(id / N) * GAPY }; }  /* Math.floor：無條件捨去成整數 */
     /* 候選邊：格點相鄰（橫、直）與每個格子的兩種斜線（同一格最多選一種） */
     function candidates() {
         var out = [], r, c;
@@ -67,14 +67,14 @@
         return out;
     }
     var CANDS = candidates();
-    function degrees(edges) { var d = {}; edges.forEach(function (e) { d[e[0]] = (d[e[0]] || 0) + 1; d[e[1]] = (d[e[1]] || 0) + 1; }); return d; }
-    function oddNodes(edges) { var d = degrees(edges); return Object.keys(d).map(Number).filter(function (k) { return d[k] % 2 === 1; }).sort(function (x, y) { return x - y; }); }
+    function degrees(edges) { var d = {}; edges.forEach(function (e) { d[e[0]] = (d[e[0]] || 0) + 1; d[e[1]] = (d[e[1]] || 0) + 1; }); return d; }  /* forEach：對陣列的每個元素各做一次 */
+    function oddNodes(edges) { var d = degrees(edges); return Object.keys(d).map(Number).filter(function (k) { return d[k] % 2 === 1; }).sort(function (x, y) { return x - y; }); }  /* filter：留下符合條件的元素，回傳新陣列 */
     function connected(edges) {
         if (!edges.length) return true;
-        var adj = {}; edges.forEach(function (e) { (adj[e[0]] = adj[e[0]] || []).push(e[1]); (adj[e[1]] = adj[e[1]] || []).push(e[0]); });
+        var adj = {}; edges.forEach(function (e) { (adj[e[0]] = adj[e[0]] || []).push(e[1]); (adj[e[1]] = adj[e[1]] || []).push(e[0]); });  /* forEach：對陣列的每個元素各做一次 */
         var start = edges[0][0], seen = {}, stack = [start]; seen[start] = true;
         while (stack.length) { var u = stack.pop(); adj[u].forEach(function (v) { if (!seen[v]) { seen[v] = true; stack.push(v); } }); }
-        return Object.keys(adj).every(function (k) { return seen[k]; });
+        return Object.keys(adj).every(function (k) { return seen[k]; });  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
     }
     function isEulerian(edges) { var o = oddNodes(edges).length; return connected(edges) && (o === 0 || o === 2); }
     /* 每個格點有哪些候選邊（候選邊的索引） */
@@ -84,16 +84,16 @@
        走過的邊所組成的圖必定可以一筆畫（它本來就是一筆走出來的），而且一定連通。 */
     function randomTrail(E, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var cur = kit.randInt(0, N * N - 1, rand), used = {}, cells = {}, edges = [];
+        var cur = kit.randInt(0, N * N - 1, rand), used = {}, cells = {}, edges = [];  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         while (edges.length < E) {
-            var opts = ADJ[cur].filter(function (i) {
+            var opts = ADJ[cur].filter(function (i) {   /* filter：留下符合條件的元素，回傳新陣列 */
                 var c = CANDS[i];
                 if (used[EKEY(c)]) return false;
                 if (c.cell >= 0 && cells[c.cell] && cells[c.cell] !== EKEY(c)) return false;
                 return true;
             });
             if (!opts.length) break;
-            var c = CANDS[kit.pick(opts, rand)];
+            var c = CANDS[kit.pick(opts, rand)];        /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             used[EKEY(c)] = true; if (c.cell >= 0) cells[c.cell] = EKEY(c);
             edges.push([c.a, c.b]); cur = c.a === cur ? c.b : c.a;
         }
@@ -112,7 +112,7 @@
             return nodes[c.a] || nodes[c.b];
         });
         if (!opts.length) return null;
-        var c = kit.pick(opts, rand);
+        var c = kit.pick(opts, rand);                   /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         return [c.a, c.b];
     }
     /* 出題：回傳 { edges, odd, yes, counter }。
@@ -170,7 +170,7 @@
         }
         var adj = {}, used = {}, left = edges.length;
         edges.forEach(function (e, id) { (adj[e[0]] = adj[e[0]] || []).push({ to: e[1], id: id }); (adj[e[1]] = adj[e[1]] || []).push({ to: e[0], id: id }); });
-        function hasFree(u) { return adj[u].some(function (x) { return !used[x.id]; }); }
+        function hasFree(u) { return adj[u].some(function (x) { return !used[x.id]; }); }  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
         var odd = oddNodes(edges), cur = odd.length ? odd[0] : edges[0][0], repeats = 0, guard = 0;
         while (left > 0 && guard++ < 500) {
             var free = adj[cur].filter(function (x) { return !used[x.id]; });
@@ -217,24 +217,24 @@
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api, hist) {
         var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
-        var wantYes = hist.length >= 3 && hist.slice(-3).every(function (v) { return v === hist[hist.length - 1]; }) ? !hist[hist.length - 1] : api.rand() < 0.5;
+        var wantYes = hist.length >= 3 && hist.slice(-3).every(function (v) { return v === hist[hist.length - 1]; }) ? !hist[hist.length - 1] : api.rand() < 0.5;  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
         var q = makeGraph(level, api.rand, wantYes);
         hist.push(q.yes);
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[能一筆畫嗎] 第 ' + level + ' 題：' + q.edges.length + ' 條邊，奇數點 ' + q.odd.length + ' 個（' + (q.yes ? '能' : '不能') + (q.counter ? '，反直覺題' : '') + '），限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        var svg = kit.svg('svg', { 'class': 'euler-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
-        var gl = kit.svg('g', {}, svg);
+        var svg = kit.svg('svg', { 'class': 'euler-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var gl = kit.svg('g', {}, svg);                 /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var routeLayer = kit.svg('g', {}, svg);                                 /* 評審動畫的路線畫在線上、點的下面 */
-        var lines = q.edges.map(function (e) { var a = posOf(e[0]), b = posOf(e[1]); return kit.svg('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, 'class': 'euler-edge' }, gl); });
+        var lines = q.edges.map(function (e) { var a = posOf(e[0]), b = posOf(e[1]); return kit.svg('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, 'class': 'euler-edge' }, gl); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         var deg = degrees(q.edges), dots = {};
         Object.keys(deg).forEach(function (k) { var p = posOf(Number(k)); dots[k] = kit.svg('circle', { cx: p.x, cy: p.y, r: 11, 'class': 'euler-node' }, svg); });
         var msg = h('div', { 'class': 'euler-msg', text: '不重複、筆不離開，能把全部的線畫完嗎？' });
-        stage.appendChild(msg);
+        stage.appendChild(msg);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var bNo = h('button', { 'class': 'btn btn--primary', text: '不能' });
         var bYes = h('button', { 'class': 'btn btn--go', text: '能' });
-        stage.appendChild(h('div', { 'class': 'rx-btnrow' }, [bNo, bYes]));
+        stage.appendChild(h('div', { 'class': 'rx-btnrow' }, [bNo, bYes]));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         api.timer(timeMs(level), function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
 
         /* 評審動畫：從起點開始一條一條畫出路線——粗綠線＋黑色箭頭；必須重複走已畫過的線時用粗紅色虛線（不用文字說明奇數點）。
@@ -243,11 +243,11 @@
             var route = penRoute(q.edges), n = route.steps.length, each = Math.max(STEP_MS[0], Math.min(STEP_MS[1], ANIM_MAX_MS / Math.max(1, n)));
             var layer = routeLayer;
             route.steps.forEach(function (s, i) {
-                api.after(each * i, function () {
+                api.after(each * i, function () {       /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                     var a = posOf(s.a), b = posOf(s.b);
                     kit.svg('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, 'class': 'euler-route' + (s.kind === 'repeat' ? ' euler-route--rep' : '') }, layer);
                     kit.svg('polygon', { points: arrowPoints(a, b), 'class': 'euler-arrow' }, layer);
-                    Sfx.play('tick');
+                    Sfx.play('tick');                   /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 });
             });
             return each * n;
@@ -258,15 +258,15 @@
             if (api.over || judged) return;
             judged = true; api.stopTimer();
             bNo.disabled = bYes.disabled = true;
-            msg.textContent = '';
+            msg.textContent = '';                       /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             var right = sayYes === q.yes, ms = drawRoute();
-            if (right) api.after(ms + HOLD_PASS_MS, function () { api.pass({ delay: 0 }); });
-            else api.after(ms + HOLD_MS, function () {
-                api.fail({ delay: 0, lines: [(sayYes == null ? '時間到！' : '答錯了：') + '這個圖形' + (q.yes ? '可以' : '不能') + '一筆畫'] });
+            if (right) api.after(ms + HOLD_PASS_MS, function () { api.pass({ delay: 0 }); });  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
+            else api.after(ms + HOLD_MS, function () {  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+                api.fail({ delay: 0, lines: [(sayYes == null ? '時間到！' : '答錯了：') + '這個圖形' + (q.yes ? '可以' : '不能') + '一筆畫'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
             });
         }
-        kit.onTap(bYes, function () { judge(true); });
-        kit.onTap(bNo, function () { judge(false); });
+        kit.onTap(bYes, function () { judge(true); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        kit.onTap(bNo, function () { judge(false); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.yes); };
         api.wrong = function () { judge(!q.yes); };

@@ -66,7 +66,7 @@
     var deferred = null;    /* Android Chrome 送來的安裝事件（按「安裝」時才呼叫它的 prompt()） */
 
     /* preventDefault：擋掉瀏覽器自己的小橫幅，改由我們挑時機提示 */
-    global.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferred = e; });
+    global.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferred = e; });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
     global.addEventListener('appinstalled', function () { deferred = null; });
 
     function canGuide() {
@@ -88,7 +88,7 @@
                 var ta = document.createElement('textarea');
                 ta.value = text;
                 ta.style.cssText = 'position:fixed;left:-9999px';
-                document.body.appendChild(ta);
+                document.body.appendChild(ta);          /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
                 ta.select();
                 var ok = false;
                 try { ok = document.execCommand('copy'); } catch (e) { }
@@ -126,7 +126,7 @@
                     text: '複製連結', kind: 'go', keep: true,
                     onClick: function (ctl, el) {
                         copyText(cleanUrl()).then(function (ok) {
-                            el.textContent = ok ? '已經複製，去瀏覽器貼上' : '複製失敗，請長按網址複製';
+                            el.textContent = ok ? '已經複製，去瀏覽器貼上' : '複製失敗，請長按網址複製';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                         });
                     }
                 },
@@ -177,20 +177,20 @@
 
     /* 玩家第 3 次回到選單時，自動提示一次：已經安裝／在內建瀏覽器裡／還不到次數／14 天內提示過，都不跳 */
     function maybePrompt() {
-        var visits = global.UI.store.get(KEY_VISITS, 0) || 0;
+        var visits = global.UI.store.get(KEY_VISITS, 0) || 0;  /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
         if (!sGet(SS_COUNTED)) {
             sSet(SS_COUNTED, '1');
             visits += 1;
-            global.UI.store.set(KEY_VISITS, visits);
+            global.UI.store.set(KEY_VISITS, visits);    /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
         }
         if (visits < PROMPT_VISITS) return;
         var asked = global.UI.store.get(KEY_ASKED, 0) || 0;
-        if (asked && Date.now() - asked < SNOOZE_MS) return;
+        if (asked && Date.now() - asked < SNOOZE_MS) return;  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
         global.UI.wait(PROMPT_DELAY_MS).then(function () {
             if (!canGuide()) return;
             /* 已經有別的彈窗開著（玩家正在選遊戲、看分享…）就不打擾，下次再說 */
-            if (document.querySelector('.dlg, .share-dlg:not([hidden]), .theme-dlg:not([hidden]), .game-dlg:not([hidden])')) return;
-            global.UI.store.set(KEY_ASKED, Date.now());
+            if (document.querySelector('.dlg, .share-dlg:not([hidden]), .theme-dlg:not([hidden]), .game-dlg:not([hidden])')) return;  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
+            global.UI.store.set(KEY_ASKED, Date.now()); /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
             openGuide();
         });
     }

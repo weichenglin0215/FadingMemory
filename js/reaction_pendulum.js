@@ -107,7 +107,7 @@
         var state = 'idle';
 
         function updateMeta() {
-            ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
+            ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
         }
 
         /* round：開一局（只有一次機會） */
@@ -115,22 +115,22 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             state = 'swing';
             updateMeta();
 
             var hint = h('div', { 'class': 'hint', text: '點一下，讓鐘擺停在六點鐘方向' });
             var field = h('div', { 'class': 'pendulum-field' });
-            root.appendChild(hint);
-            root.appendChild(field);
+            root.appendChild(hint);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(field);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             /* 操作提示（只在第一次進遊戲時）：點畫面任一處 → 手指縮放，放在畫面下方（不擋住鐘擺） */
-            if (Reaction.kit.once('pendulum.hint')) Reaction.kit.hintOn(root, field, { mode: 'tap', fy: 0.9, text: '請點擊畫面' });
+            if (Reaction.kit.once('pendulum.hint')) Reaction.kit.hintOn(root, field, { mode: 'tap', fy: 0.9, text: '請點擊畫面' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
 
             /* FW／FH 場地大小；Px、Py 支點位置 */
             var FW = field.clientWidth, FH = field.clientHeight;
             var Px = FW / 2, Py = PIVOT_Y;
             /* SVG 畫布；viewBox 是畫布座標，結算時改 viewBox 就能做「鏡頭推進」 */
-            var svg = kit.svg('svg', { 'class': 'pendulum-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'none' }, field);
+            var svg = kit.svg('svg', { 'class': 'pendulum-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'none' }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             var full = { vx: 0, vy: 0, vw: FW, vh: FH };
 
             /* 極座標轉換：從支點出發，角度 deg、距離 r 的位置（sin／cos） */
@@ -144,7 +144,7 @@
                刻度「以針尖所在的半徑為中心」上下對稱畫（不是畫在弧外面一段距離）：
                鏡頭放大 800 倍時，哪怕只差 0.1 個世界座標單位也會變成 80 px，
                刻度離針尖太遠就會直接掉出畫面，看不到。 */
-            var gArc = kit.svg('g', {}, svg);
+            var gArc = kit.svg('g', {}, svg);           /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             var a0 = polar(-ARC_MAX_DEG, LEN), a1 = polar(ARC_MAX_DEG, LEN);
             kit.svg('path', {
                 'class': 'pendulum-arc', fill: 'none', 'vector-effect': 'non-scaling-stroke',
@@ -160,13 +160,13 @@
             }
             /* 時鐘數字：±30° 是 5 點與 7 點，正下方 0° 是 6 點 */
             /* 時鐘數字：±30° 是 5 點與 7 點（5 在右、7 在左），正下方 0° 是 6 點 */
-            [[30, '5'], [0, '6'], [-30, '7']].forEach(function (n) {
+            [[30, '5'], [0, '6'], [-30, '7']].forEach(function (n) {  /* forEach：對陣列的每個元素各做一次 */
                 var tp = polar(n[0], LEN + 40);
                 var t = kit.svg('text', {
                     'class': 'pendulum-num' + (n[0] === 0 ? ' pendulum-num--zero' : ''),
                     x: tp.x, y: tp.y, 'text-anchor': 'middle', 'dominant-baseline': 'central'
                 }, gArc);
-                t.textContent = n[1];
+                t.textContent = n[1];                   /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             });
             tickLine(gArc, 'pendulum-zero', 0, 14);
 
@@ -186,15 +186,15 @@
 
             /* 轉到角度 deg：SVG 的 rotate(角度 圓心x 圓心y) */
             function setAngle(deg) {
-                gPend.setAttribute('transform', 'rotate(' + (-deg) + ' ' + Px + ' ' + Py + ')');
+                gPend.setAttribute('transform', 'rotate(' + (-deg) + ' ' + Px + ' ' + Py + ')');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             }
 
             /* p 鐘擺參數；t0 這一局開始時間 */
             var p = params();
-            var t0 = performance.now();
+            var t0 = performance.now();                 /* performance.now()：高精度的時間（毫秒），計時用 */
             setAngle(thetaAt(p, 0));
             /* my.loop：每個畫面更新一次，依時間算出角度 */
-            var swing = my.loop(function (now) { setAngle(thetaAt(p, (now - t0) / 1000)); });
+            var swing = my.loop(function (now) { setAngle(thetaAt(p, (now - t0) / 1000)); });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
 
             /* 點下去：定格 */
             /* ─── 點下去：定格 ─── */
@@ -202,12 +202,12 @@
                 if (state !== 'swing' || my.dead) return;
                 if (e.target && e.target.closest && e.target.closest('button')) return;
                 /* 開頭 400ms 內點了不算（避免上一局手指殘留） */
-                if (performance.now() - t0 < ARM_MS) return;
-                e.preventDefault();
+                if (performance.now() - t0 < ARM_MS) return;  /* performance.now()：高精度的時間（毫秒），計時用 */
+                e.preventDefault();                     /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                 /* 用事件時間 kit.evT(e) 算停止角度 */
                 stopAt(kit.evT(e) - t0 - LATENCY_COMP_MS);
             };
-            root.addEventListener('pointerdown', onDown);
+            root.addEventListener('pointerdown', onDown);  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             my.onDispose(function () { root.removeEventListener('pointerdown', onDown); });
 
             /* 測試用：在指定時間直接停擺 */
@@ -227,9 +227,9 @@
                 /* 定格：停掉擺動迴圈，不然下一影格又會把角度改回去 */
                 swing.stop();      /* 定格：停掉擺動迴圈，不然下一影格又會把角度改回去 */
                 var theta = thetaAt(p, tMs / 1000);
-                var err = Math.abs(theta);
+                var err = Math.abs(theta);              /* Math.abs：取絕對值（去掉負號） */
                 setAngle(theta);
-                Sfx.play('click');
+                Sfx.play('click');                      /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 hint.style.visibility = 'hidden';
                 G.debug.last = { theta: theta, err: err };
 
@@ -241,9 +241,9 @@
                 /* my.wait 回傳 Promise；用 .then 把每一段放大串起來，一段完成才播下一段 */
                 var chain = my.wait(FREEZE_MS);
                 var cur = full;
-                plan.forEach(function (z) {
+                plan.forEach(function (z) {             /* forEach：對陣列的每個元素各做一次 */
                     chain = chain.then(function () {
-                        Sfx.play('zoom');
+                        Sfx.play('zoom');               /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                         var to = boxFor(tip, z);
                         /* kit.tweenViewBox：動畫修改 SVG 的 viewBox */
                         return kit.tweenViewBox(my, svg, cur, to, ZOOM_MS, kit.easeInOutCubic, onZoomFrame).then(function () {
@@ -271,8 +271,8 @@
                    所以直接隱藏。 */
                 var far = z > 20 ? 'none' : '';
                 bob.style.display = far; rod.style.display = far; pivot.style.display = far;
-                gFine2.setAttribute('opacity', kit.clamp((z - 6) / 30, 0, 1).toFixed(3));
-                gFine3.setAttribute('opacity', kit.clamp((z - 60) / 300, 0, 1).toFixed(3));
+                gFine2.setAttribute('opacity', kit.clamp((z - 6) / 30, 0, 1).toFixed(3));  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
+                gFine3.setAttribute('opacity', kit.clamp((z - 60) / 300, 0, 1).toFixed(3));  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
             }
 
             /* 細刻度：只畫會被看到的那一小段 */
@@ -280,7 +280,7 @@
             function buildFine(theta, plan) {
                 var lo = Math.min(0, theta), hi = Math.max(0, theta);
                 function layer(g, step, half, from, to) {
-                    var k0 = Math.floor(from / step), k1 = Math.ceil(to / step);
+                    var k0 = Math.floor(from / step), k1 = Math.ceil(to / step);  /* Math.floor：無條件捨去成整數 */
                     if (k1 - k0 > 240) return;
                     for (var k = k0; k <= k1; k++) {
                         var deg = k * step;
@@ -296,17 +296,17 @@
             /* ─── 結算（只有一次機會：永遠是「再挑戰一次」）─── */
             function verdict(theta, realErr) {
                 state = 'verdict';
-                var side = Math.abs(theta) < 0.005 ? '' : (theta < 0 ? '偏左' : '偏右');
+                var side = Math.abs(theta) < 0.005 ? '' : (theta < 0 ? '偏左' : '偏右');  /* Math.abs：取絕對值（去掉負號） */
                 /* 最終成績：第 3、4 位不為 0，只產生這一次（之後的評語、最佳紀錄、畫面文字都用它） */
                 var err = Leaderboard.fake4(realErr);
                 console.log('六點鐘方向：實際差 ' + realErr.toFixed(6) + ' 度 → 成績 ' + fmtDeg(err) + ' 度');
-                var isNewErr = Reaction.setBest(ID, err, function (v, b) { return v < b; });
+                var isNewErr = Reaction.setBest(ID, err, function (v, b) { return v < b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                 updateMeta();
 
                 var sfx = err < 0.05 ? 'perfect' : (err < 1 ? 'win' : 'fail');
                 /* 結算彈窗（公版 kit.result）：貼在畫面上緣、背後不壓暗——針尖放大後的細節還要看得到；
                    帶 score 會在彈窗出現之後自動送世界排行榜 */
-                kit.result(root, {
+                kit.result(root, {                      /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                     num: rating(err), label: err < 0.005 ? '差了 ' + fmtDeg(err) + ' 度・分毫不差！' : '差了 ' + fmtDeg(err) + ' 度',
                     lines: [side ? '針尖在紅線' + (theta < 0 ? '左' : '右') + '邊（' + side + '）' : '針尖正好壓在紅線上'],
                     isNew: isNewErr, score: err, dock: 'top', sfx: sfx, onAgain: round

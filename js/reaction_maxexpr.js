@@ -42,7 +42,7 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function gcd(a, b) { return b ? gcd(b, a % b) : a; }
-    function fr(n, d) { if (d < 0) { n = -n; d = -d; } var g = gcd(Math.abs(n), d) || 1; return { n: n / g, d: d / g }; }
+    function fr(n, d) { if (d < 0) { n = -n; d = -d; } var g = gcd(Math.abs(n), d) || 1; return { n: n / g, d: d / g }; }  /* Math.abs：取絕對值（去掉負號） */
     function apply(x, op, y) {
         if (op === '+') return fr(x.n * y.d + y.n * x.d, x.d * y.d);
         if (op === '-') return fr(x.n * y.d - y.n * x.d, x.d * y.d);
@@ -76,31 +76,31 @@
     }
     /* 直覺做法：最大的三張由大到小依序填 */
     function greedyArr(cards) {
-        var idx = cards.map(function (v, i) { return i; }).sort(function (x, y) { return cards[y] - cards[x]; });
+        var idx = cards.map(function (v, i) { return i; }).sort(function (x, y) { return cards[y] - cards[x]; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         return idx.slice(0, 3);
     }
     function opsFor(level) { return level >= DIV_FROM ? ['+', '-', '*', '/'] : ['+', '-', '*']; }
-    function rangeFor(level) { return [1, Math.round(kit.ramp(level, HI[0], HI[1], RAMP_LEVELS))]; }
+    function rangeFor(level) { return [1, Math.round(kit.ramp(level, HI[0], HI[1], RAMP_LEVELS))]; }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 這一關有幾張負數牌 */
-    function negCount(level) { return level < NEG_FROM ? 0 : Math.min(NEG_MAX, 1 + Math.floor((level - NEG_FROM) / NEG_EVERY)); }
+    function negCount(level) { return level < NEG_FROM ? 0 : Math.min(NEG_MAX, 1 + Math.floor((level - NEG_FROM) / NEG_EVERY)); }  /* Math.floor：無條件捨去成整數 */
     /* 兩個符號：預設一定是「一個加減＋一個乘除」（順序隨機）；SAME_FROM 關起有 SAME_P 機率抽任意兩個 */
     function pickOps(level, rand) {
-        var pool = opsFor(level), lows = pool.filter(function (o) { return !isHigh(o); }), highs = pool.filter(function (o) { return isHigh(o); });
-        if (level >= SAME_FROM && rand() < SAME_P) return [kit.pick(pool, rand), kit.pick(pool, rand)];
-        var lo = kit.pick(lows, rand), hi = kit.pick(highs, rand);
+        var pool = opsFor(level), lows = pool.filter(function (o) { return !isHigh(o); }), highs = pool.filter(function (o) { return isHigh(o); });  /* filter：留下符合條件的元素，回傳新陣列 */
+        if (level >= SAME_FROM && rand() < SAME_P) return [kit.pick(pool, rand), kit.pick(pool, rand)];  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        var lo = kit.pick(lows, rand), hi = kit.pick(highs, rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         return rand() < 0.5 ? [lo, hi] : [hi, lo];
     }
     /* 6 張牌：n 張負數（1～HI 的負數）、其餘正數，同號的不重複，洗牌 */
     function makeCards(level, rand) {
         var hi = rangeFor(level)[1], n = negCount(level);
-        var neg = distinct(1, hi, n, rand).map(function (v) { return -v; }), pos = distinct(1, hi, 6 - n, rand);
-        return kit.shuffle(neg.concat(pos), rand);
+        var neg = distinct(1, hi, n, rand).map(function (v) { return -v; }), pos = distinct(1, hi, 6 - n, rand);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        return kit.shuffle(neg.concat(pos), rand);      /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
     }
-    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
-    function greedyFailFrac(level) { return level < GREEDY_FROM ? 0 : kit.ramp(level - GREEDY_FROM + 1, GREEDY_FAIL[0], GREEDY_FAIL[1], RAMP_LEVELS - GREEDY_FROM + 1); }
+    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
+    function greedyFailFrac(level) { return level < GREEDY_FROM ? 0 : kit.ramp(level - GREEDY_FROM + 1, GREEDY_FAIL[0], GREEDY_FAIL[1], RAMP_LEVELS - GREEDY_FROM + 1); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function distinct(lo, hi, n, rand) {
         var pool = []; for (var v = lo; v <= hi; v++) pool.push(v);
-        return kit.shuffle(pool, rand).slice(0, n);
+        return kit.shuffle(pool, rand).slice(0, n);     /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
     }
     /* 出題：回傳 { ops, cards, best, arrs, greedyFails, worst } */
     function makeLevel(level, rand) {
@@ -146,10 +146,10 @@
 
         var slots = [0, 1, 2].map(function () { return h('div', { 'class': 'maxexpr-slot' }); });
         var expr = h('div', { 'class': 'maxexpr-expr' }, [slots[0], h('div', { 'class': 'maxexpr-op', text: SYM[q.ops[0]] }), slots[1], h('div', { 'class': 'maxexpr-op', text: SYM[q.ops[1]] }), slots[2]]);
-        var tip = h('div', { 'class': 'maxexpr-tip', text: negCount(level) ? '有負數：負負相乘（除）得正，減負數等於加' : '依序點 3 張牌填入空格，讓算式的值最大（乘除先算）' });
+        var tip = h('div', { 'class': 'maxexpr-tip', text: negCount(level) ? '有負數：負負相乘（除）得正，減負數等於加' : '依序點 3 張牌填入空格，讓算式的值最大（乘除先算）' });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
         var cardEls = q.cards.map(function (v, i) {
             var el = h('div', { 'class': 'maxexpr-card' + (v < 0 ? ' maxexpr-card--neg' : ''), text: cardText(v) });
-            kit.onTap(el, function () { pick(i); });
+            kit.onTap(el, function () { pick(i); });    /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             return el;
         });
         var grid = h('div', { 'class': 'maxexpr-cards' }, cardEls);
@@ -157,7 +157,7 @@
         var bReset = h('button', { 'class': 'btn btn--line', text: '重來' });
         var bOk = h('button', { 'class': 'btn btn--go', text: '確定' });
         bOk.disabled = true;
-        [expr, tip, grid, info, h('div', { 'class': 'rx-btnrow' }, [bReset, bOk])].forEach(function (e) { stage.appendChild(e); });
+        [expr, tip, grid, info, h('div', { 'class': 'rx-btnrow' }, [bReset, bOk])].forEach(function (e) { stage.appendChild(e); });  /* forEach：對陣列的每個元素各做一次 */
         var hint = null;
         /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「最大算式的第一張牌」上（第一關的正確答案） */
         if (level === 1 && kit.once('maxexpr.hint')) hint = kit.hintOn(stage, cardEls[q.arrs[0][0]], { mode: 'tap', text: '請依序點擊數字牌' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
@@ -165,17 +165,17 @@
 
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() {
-            slots.forEach(function (s, i) { s.textContent = i < picked.length ? cardText(q.cards[picked[i]]) : ''; s.classList.toggle('maxexpr-slot--on', i < picked.length); });
-            cardEls.forEach(function (el, i) { el.classList.toggle('maxexpr-card--used', !!used[i]); });
+            slots.forEach(function (s, i) { s.textContent = i < picked.length ? cardText(q.cards[picked[i]]) : ''; s.classList.toggle('maxexpr-slot--on', i < picked.length); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            cardEls.forEach(function (el, i) { el.classList.toggle('maxexpr-card--used', !!used[i]); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             bOk.disabled = picked.length < 3;
         }
         function pick(i) {
             if (api.over || used[i] || picked.length >= 3) return;
-            hideHint(); used[i] = true; picked.push(i); Sfx.play('click'); paint();
+            hideHint(); used[i] = true; picked.push(i); Sfx.play('click'); paint();  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
         }
         /* 重來：把這一題恢復成剛開始的樣子 */
-        function reset() { if (api.over) return; picked = []; used = {}; Sfx.play('click'); paint(); }
-        kit.onTap(bReset, reset);
+        function reset() { if (api.over) return; picked = []; used = {}; Sfx.play('click'); paint(); }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+        kit.onTap(bReset, reset);                       /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
         function bestText() {
             var a = q.arrs[0];
             return exprText(q.cards[a[0]], q.ops[0], q.cards[a[1]], q.ops[1], q.cards[a[2]]) + ' ＝ ' + valText(q.best);
@@ -185,23 +185,23 @@
             var v = evalExpr(q.cards[picked[0]], q.ops[0], q.cards[picked[1]], q.ops[1], q.cards[picked[2]]);
             var mine = exprText(q.cards[picked[0]], q.ops[0], q.cards[picked[1]], q.ops[1], q.cards[picked[2]]) + ' ＝ ' + valText(v);
             if (cmp(v, q.best) >= 0) {
-                info.textContent = '最大了！' + mine; info.classList.add('maxexpr-info--ok');
-                api.pass({ delay: 900 });
+                info.textContent = '最大了！' + mine; info.classList.add('maxexpr-info--ok');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                api.pass({ delay: 900 });               /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
             } else {
-                info.textContent = '你的：' + mine + '　最大：' + bestText(); info.classList.add('maxexpr-info--bad');
-                api.fail({ delay: 2200, lines: ['你的排法：' + mine, '最大的排法：' + bestText(), '不是把最大的牌放前面就最大——要看符號，還有負數'] });
+                info.textContent = '你的：' + mine + '　最大：' + bestText(); info.classList.add('maxexpr-info--bad');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                api.fail({ delay: 2200, lines: ['你的排法：' + mine, '最大的排法：' + bestText(), '不是把最大的牌放前面就最大——要看符號，還有負數'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
             }
         }
         kit.onTap(bOk, confirm);
         api.timer(timeMs(level), function () {          /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
             info.textContent = '時間到！最大的是：' + bestText(); info.classList.add('maxexpr-info--bad');
-            api.fail({ delay: 2200, lines: ['時間到！', '最大的排法：' + bestText()] });
+            api.fail({ delay: 2200, lines: ['時間到！', '最大的排法：' + bestText()] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         });
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
-        api.solve = function () { picked = q.arrs[0].slice(); used = {}; picked.forEach(function (i) { used[i] = true; }); paint(); confirm(); };
+        api.solve = function () { picked = q.arrs[0].slice(); used = {}; picked.forEach(function (i) { used[i] = true; }); paint(); confirm(); };  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         api.wrong = function () {
             if (cmp(q.worst, q.best) === 0) { api.solve(); return; }
-            picked = q.worstArr.slice(); used = {}; picked.forEach(function (i) { used[i] = true; }); paint(); confirm();
+            picked = q.worstArr.slice(); used = {}; picked.forEach(function (i) { used[i] = true; }); paint(); confirm();  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         };
     }
 

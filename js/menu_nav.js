@@ -25,7 +25,7 @@
     var KEY_BEST = 'fm.reaction.best.';
     var SCROLL_THRESHOLD = 8;          /* 手指移動超過幾個舞台像素才算拖曳（沒超過就是點一下，「玩」按鈕照常收到點擊） */
 
-    function sfx(name) { if (global.Sfx) { global.Sfx.unlock(); global.Sfx.play(name); } }
+    function sfx(name) { if (global.Sfx) { global.Sfx.unlock(); global.Sfx.play(name); } }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
     function toast(text) { if (global.Dlg && global.Dlg.toast) global.Dlg.toast(text); }
     function byId(id) { return document.getElementById(id); }
 
@@ -42,15 +42,15 @@
     function buildRows(o) {
         o = o || {};
         var order = {};
-        (o.order || []).forEach(function (id, i) { order[id] = i; });
+        (o.order || []).forEach(function (id, i) { order[id] = i; });  /* forEach：對陣列的每個元素各做一次 */
         var seen = {}, ranked = [];
-        (o.ranks || []).forEach(function (x) {
+        (o.ranks || []).forEach(function (x) {          /* forEach：對陣列的每個元素各做一次 */
             if (!x || order[x.game_id] == null || seen[x.game_id]) return;
-            if (typeof x.rank !== 'number' || !(x.rank >= 1) || x.rank !== Math.floor(x.rank) || typeof x.score !== 'number' || !isFinite(x.score)) return;
+            if (typeof x.rank !== 'number' || !(x.rank >= 1) || x.rank !== Math.floor(x.rank) || typeof x.score !== 'number' || !isFinite(x.score)) return;  /* Math.floor：無條件捨去成整數 */
             seen[x.game_id] = true;
             ranked.push({ id: x.game_id, rank: x.rank, score: x.score });
         });
-        ranked.sort(function (a, b) { return (a.rank - b.rank) || (order[a.id] - order[b.id]); });
+        ranked.sort(function (a, b) { return (a.rank - b.rank) || (order[a.id] - order[b.id]); });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
 
         var recent = {};
         (o.recent || []).forEach(function (id, i) { recent[id] = i; });
@@ -60,7 +60,7 @@
             if (order[id] == null || seen[id] || typeof v !== 'number' || !isFinite(v)) return;
             played.push({ id: id, score: v });
         });
-        played.sort(function (a, b) {
+        played.sort(function (a, b) {                   /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
             var ra = recent[a.id] != null ? recent[a.id] : 1e6, rb = recent[b.id] != null ? recent[b.id] : 1e6;
             return (ra - rb) || (order[a.id] - order[b.id]);
         });
@@ -102,9 +102,9 @@
             var paintSound = function () {
                 var on = !global.Sfx.isMuted();
                 soundIco.innerHTML = global.UI.icon(on ? 'volume' : 'mute');
-                soundRow.classList.toggle('is-off', !on);
-                soundRow.setAttribute('aria-checked', on ? 'true' : 'false');
-                soundRow.setAttribute('aria-label', '音樂音效：' + (on ? '開' : '關'));
+                soundRow.classList.toggle('is-off', !on);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                soundRow.setAttribute('aria-checked', on ? 'true' : 'false');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                soundRow.setAttribute('aria-label', '音樂音效：' + (on ? '開' : '關'));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             };
             soundRow.addEventListener('click', function () {
                 global.Sfx.setMuted(!global.Sfx.isMuted());
@@ -117,13 +117,13 @@
         /* 依目前身分重畫暱稱區（登入、改暱稱之後也會呼叫） */
         function paint() {
             var st = LB.identityState(), nick = LB.getNick();
-            nickEl.textContent = nick || '（還沒有暱稱）';
-            nickEl.classList.toggle('set-nick--none', !nick);
+            nickEl.textContent = nick || '（還沒有暱稱）';     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            nickEl.classList.toggle('set-nick--none', !nick);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             var text = '', login = '';
             if (st === 'guest') { text = '成績進入世界前 30 名時，就能取暱稱。'; login = '我已有帳號，登入'; }
             else if (st === 'relogin') { text = '登入已經失效，請重新登入後再修改暱稱。'; login = '重新登入'; }
             else if (st === 'legacy') { text = '你的暱稱還沒有設密碼，按「修改暱稱」會先請你建立密碼。'; }
-            hint.textContent = text;
+            hint.textContent = text;                    /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             hint.hidden = !text;
             loginBtn.textContent = login;
             loginBtn.hidden = !login;
@@ -185,21 +185,21 @@
         var viewport = h('div', { 'class': 'lb-viewport' }, [list, thumb]);
         var scroller = global.Scroller.make(viewport, list, thumb, { threshold: SCROLL_THRESHOLD });
         var closed = false;
-        var order = M.GAME_CELLS.map(function (c) { return c.id; });
+        var order = M.GAME_CELLS.map(function (c) { return c.id; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
 
         /* ranks：資料庫的名次（可以是 null＝還沒拿到／連不上）；offline：連不上網路 */
         function render(ranks, offline) {
             var rows = buildRows({ ranks: ranks || [], bests: localBests(), order: order, recent: M.recentIds() });
             var st = LB.identityState();
-            list.innerHTML = '';
+            list.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             if (!rows.ranked.length && !rows.played.length) {
-                list.appendChild(h('div', { 'class': 'lb-msg lb-msg--first' }, [
+                list.appendChild(h('div', { 'class': 'lb-msg lb-msg--first' }, [  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
                     h('span', { html: global.UI.icon('trophy', 'lb-msg__icon') }),
                     h('div', { text: '還沒有成績' }),
                     h('div', { 'class': 'lb-msg__sub', text: '到「秒反應」玩一款吧！' })
                 ]));
             } else {
-                rows.ranked.forEach(function (r) { list.appendChild(rowEl(r)); });
+                rows.ranked.forEach(function (r) { list.appendChild(rowEl(r)); });  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
                 if (rows.played.length) {
                     list.appendChild(h('div', { 'class': 'sc-sep', text: rows.ranked.length ? '還沒進世界前 ' + limit + ' 名' : '你玩過的遊戲' }));
                     rows.played.forEach(function (r) { list.appendChild(rowEl({ id: r.id, rank: null, score: r.score })); });

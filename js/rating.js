@@ -49,13 +49,13 @@
     function h() { return global.UI.h.apply(null, arguments); }
     function store() { return global.UI.store; }
     function LB() { return global.Leaderboard; }
-    function sfx(name) { if (global.Sfx) { global.Sfx.unlock(); global.Sfx.play(name); } }
+    function sfx(name) { if (global.Sfx) { global.Sfx.unlock(); global.Sfx.play(name); } }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
 
     /* ═══ 一、純函式（Node 測試直接呼叫：test/reaction/t_rating.js）═══ */
 
     /* 台灣時間的「今天」，格式 'YYYY-MM-DD'（now 是毫秒時間戳，預設現在） */
     function today(now) {
-        var t = (typeof now === 'number' ? now : Date.now()) + CFG.TZ_OFFSET_MIN * 60000;
+        var t = (typeof now === 'number' ? now : Date.now()) + CFG.TZ_OFFSET_MIN * 60000;  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
         return new Date(t).toISOString().slice(0, 10);
     }
 
@@ -70,11 +70,11 @@
     function cleanStats(raw) {
         var out = {};
         if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
-        Object.keys(raw).forEach(function (id) {
+        Object.keys(raw).forEach(function (id) {        /* forEach：對陣列的每個元素各做一次 */
             var v = raw[id];
             if (!/^[a-z0-9_]{1,32}$/.test(id) || !Array.isArray(v)) return;
             var a = Number(v[0]), n = Number(v[1]);
-            if (a >= 1 && a <= MAX && n >= 1 && n === Math.floor(n)) out[id] = [a, n];
+            if (a >= 1 && a <= MAX && n >= 1 && n === Math.floor(n)) out[id] = [a, n];  /* Math.floor：無條件捨去成整數 */
         });
         return out;
     }
@@ -90,7 +90,7 @@
     /* 記下「今天評過 id」；順便把不是今天的舊紀錄清掉，這份資料永遠只有今天評過的那幾款 */
     function markRated(id, now) {
         var d = today(now), m = doneMap(), out = {};
-        Object.keys(m).forEach(function (k) { if (m[k] === d) out[k] = d; });
+        Object.keys(m).forEach(function (k) { if (m[k] === d) out[k] = d; });  /* forEach：對陣列的每個元素各做一次 */
         out[id] = d;
         store().set(KEY_DONE, out);
     }
@@ -120,7 +120,7 @@
        opts.force：不管快取，強制重抓。 */
     function loadStats(opts) {
         opts = opts || {};
-        var c = store().get(KEY_STATS, null), now = Date.now();
+        var c = store().get(KEY_STATS, null), now = Date.now();  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
         if (!opts.force && c && c.data && now - c.at >= 0 && now - c.at < CFG.STATS_TTL_MS) return Promise.resolve(stats());
         if (statsInflight) return statsInflight;
         var lb = LB();
@@ -146,7 +146,7 @@
     function submit(ref, stars, retried) {
         var id = ref && typeof ref === 'object' ? ref.id : ref;
         var lb = LB();
-        stars = Math.round(Number(stars));
+        stars = Math.round(Number(stars));              /* Math.round：四捨五入成整數 */
         if (!id || !(stars >= 1 && stars <= MAX)) return Promise.resolve({ status: 'rejected' });
         if (!lb || !lb.rpc || !lb.pid) return Promise.resolve({ status: 'offline' });
         /* p_token：已登入就帶裝置憑證（用帳號的編號評價）；沒登入給 null＝匿名評價（沒有帳號的玩家也能評；匿名不能冒用已建立帳號的編號） */
@@ -177,10 +177,10 @@
     /* 把某款遊戲目前的平均（快取裡的）畫到 bar 上；data 不給就自己讀快取 */
     function paint(el, id, data) {
         var v = (data || stats())[id];
-        el.style.setProperty('--rate-p', pct(v && v[0]).toFixed(1) + '%');
+        el.style.setProperty('--rate-p', pct(v && v[0]).toFixed(1) + '%');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
         var label = v ? '平均 ' + v[0].toFixed(1) + ' 顆星（' + v[1] + ' 次評價）' : '還沒有人評價';
-        el.setAttribute('aria-label', label);
-        el.setAttribute('title', label);
+        el.setAttribute('aria-label', label);           /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+        el.setAttribute('title', label);                /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
     }
 
     function starSvg() {
@@ -202,7 +202,7 @@
                     on: { click: function () { if (busy) return; sfx('pop'); stars = (stars === n) ? 0 : n; paintPick(); } }
                 });
                 starEls.push(b);
-                row.appendChild(b);
+                row.appendChild(b);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             })(i);
         }
         var say = h('div', { 'class': 'rate-pick__say' });
@@ -218,11 +218,11 @@
         function paintPick() {
             starEls.forEach(function (b, k) {
                 var on = k < stars;
-                b.classList.toggle('is-on', on);
+                b.classList.toggle('is-on', on);        /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 b.setAttribute('aria-checked', k === stars - 1 ? 'true' : 'false');
             });
-            say.textContent = stars ? stars + ' 顆星：' + LABELS[stars] : '還沒選星星（不選就不評分）';
-            say.classList.toggle('is-on', stars > 0);
+            say.textContent = stars ? stars + ' 顆星：' + LABELS[stars] : '還沒選星星（不選就不評分）';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            say.classList.toggle('is-on', stars > 0);   /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         }
 
         function finish(r) {
@@ -235,7 +235,7 @@
             if (!stars) { finish({ status: 'cancel' }); return; }
             busy = true;
             okBtn.disabled = true;
-            okBtn.textContent = '送出中…';
+            okBtn.textContent = '送出中…';                 /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             submit(game, stars).then(function (r) {
                 var st = r && r.status;
                 if (st === 'sent') Dlg.toast('謝謝你的評價！');

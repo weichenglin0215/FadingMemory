@@ -40,22 +40,22 @@
     function diceFor(level) { return Math.min(DICE_MAX, DICE_FIRST + level - 1); }
     function changedFor(level) {
         var c = 1;
-        CHANGED_STEPS.forEach(function (s) { if (level >= s[0]) c = s[1]; });
-        return Math.min(c, Math.floor(diceFor(level) / 2));
+        CHANGED_STEPS.forEach(function (s) { if (level >= s[0]) c = s[1]; });  /* forEach：對陣列的每個元素各做一次 */
+        return Math.min(c, Math.floor(diceFor(level) / 2));  /* Math.floor：無條件捨去成整數 */
     }
-    function showMs(level) { return Math.round((SHOW_BASE + SHOW_PER * diceFor(level)) * kit.ramp(level, SHOW_MUL[0], SHOW_MUL[1], MUL_LEVELS)); }
-    function ansMs(level) { return Math.round((ANS_BASE + ANS_PER * diceFor(level)) * kit.ramp(level, ANS_MUL[0], ANS_MUL[1], MUL_LEVELS)); }
+    function showMs(level) { return Math.round((SHOW_BASE + SHOW_PER * diceFor(level)) * kit.ramp(level, SHOW_MUL[0], SHOW_MUL[1], MUL_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function ansMs(level) { return Math.round((ANS_BASE + ANS_PER * diceFor(level)) * kit.ramp(level, ANS_MUL[0], ANS_MUL[1], MUL_LEVELS)); }  /* Math.round：四捨五入成整數 */
     /* 骰子排成幾欄：2～3 顆排一列、4 顆 2×2、5～9 顆 3 欄、10 顆以上 4 欄 */
     function colsFor(n) { return n <= 3 ? n : (n === 4 ? 2 : (n <= 9 ? 3 : 4)); }
     /* 在 W×H 的區域排骰子：回傳每顆骰子的位置 { x, y }（左上角）與邊長 cell；最後一列不滿時置中 */
     function layout(n, W, H) {
-        var cols = colsFor(n), rows = Math.ceil(n / cols), gap = 14;
-        var cell = Math.floor(Math.min((W - (cols - 1) * gap) / cols, (H - (rows - 1) * gap) / rows, 150));
+        var cols = colsFor(n), rows = Math.ceil(n / cols), gap = 14;  /* Math.ceil：無條件進位成整數 */
+        var cell = Math.floor(Math.min((W - (cols - 1) * gap) / cols, (H - (rows - 1) * gap) / rows, 150));  /* Math.floor：無條件捨去成整數 */
         var pos = [];
         for (var i = 0; i < n; i++) {
             var r = Math.floor(i / cols), c = i % cols, inRow = (r === rows - 1) ? n - r * cols : cols;
             var rowW = inRow * cell + (inRow - 1) * gap;
-            pos.push({ x: Math.round((W - rowW) / 2 + c * (cell + gap)), y: Math.round((H - (rows * cell + (rows - 1) * gap)) / 2 + r * (cell + gap)) });
+            pos.push({ x: Math.round((W - rowW) / 2 + c * (cell + gap)), y: Math.round((H - (rows * cell + (rows - 1) * gap)) / 2 + r * (cell + gap)) });  /* Math.round：四捨五入成整數 */
         }
         return { cols: cols, rows: rows, cell: cell, gap: gap, pos: pos };
     }
@@ -64,15 +64,15 @@
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var n = diceFor(level), k = changedFor(level), i;
         var before = [];
-        for (i = 0; i < n; i++) before.push(kit.randInt(1, 6, rand));
+        for (i = 0; i < n; i++) before.push(kit.randInt(1, 6, rand));  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         var idx = []; for (i = 0; i < n; i++) idx.push(i);
-        var changed = kit.sample(idx, k, rand).sort(function (a, b) { return a - b; });
-        var after = before.slice();
-        changed.forEach(function (c) {
+        var changed = kit.sample(idx, k, rand).sort(function (a, b) { return a - b; });  /* kit.sample(陣列, n, rand)：從陣列隨機取 n 個不重複的元素 */
+        var after = before.slice();                     /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        changed.forEach(function (c) {                  /* forEach：對陣列的每個元素各做一次 */
             var v = before[c], opts = [];
             if (v > 1) opts.push(v - 1);
             if (v < 6) opts.push(v + 1);
-            after[c] = kit.pick(opts, rand);
+            after[c] = kit.pick(opts, rand);            /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         });
         return { n: n, before: before, after: after, changed: changed };
     }
@@ -118,22 +118,22 @@
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, areaH = H - 120;
         var lay = layout(q.n, W, areaH);
         var msg = h('div', { 'class': 'qz-note dicechange-msg' });
-        stage.appendChild(msg);
-        var dice = q.before.map(function (v, i) {
+        stage.appendChild(msg);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var dice = q.before.map(function (v, i) {       /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var d = h('div', { 'class': 'dicechange-die', html: dieSvg(v) });
             d.style.left = lay.pos[i].x + 'px'; d.style.top = lay.pos[i].y + 'px';
             d.style.width = d.style.height = lay.cell + 'px';
-            stage.appendChild(d);
+            stage.appendChild(d);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             return d;
         });
         var phase = 'show', found = 0, picked = {};
-        function setFaces(vals) { dice.forEach(function (d, i) { d.innerHTML = dieSvg(vals[i]); d.classList.remove('dicechange-die--cover'); }); }
-        function cover() { dice.forEach(function (d) { d.innerHTML = '<div class="dicechange-back">？</div>'; d.classList.add('dicechange-die--cover'); }); }
-        msg.textContent = '請記住盤面（約 ' + Math.round(showMs(level) / 1000) + ' 秒）';
-        api.after(showMs(level), function () {
+        function setFaces(vals) { dice.forEach(function (d, i) { d.innerHTML = dieSvg(vals[i]); d.classList.remove('dicechange-die--cover'); }); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+        function cover() { dice.forEach(function (d) { d.innerHTML = '<div class="dicechange-back">？</div>'; d.classList.add('dicechange-die--cover'); }); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+        msg.textContent = '請記住盤面（約 ' + Math.round(showMs(level) / 1000) + ' 秒）';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+        api.after(showMs(level), function () {          /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
             phase = 'cover'; cover();
-            msg.textContent = '盤面蓋住了，請在心裡記住（' + (COVER_MS / 1000) + ' 秒）';
-            api.after(COVER_MS, function () {
+            msg.textContent = '盤面蓋住了，請在心裡記住（' + (COVER_MS / 1000) + ' 秒）';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            api.after(COVER_MS, function () {           /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                 phase = 'answer'; setFaces(q.after);
                 msg.textContent = '請點擊點數被更換過的骰子（還有 ' + (q.changed.length - found) + ' 顆）';
                 api.timer(ansMs(level), function () { reveal(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
@@ -141,12 +141,12 @@
             });
         });
         dice.forEach(function (d, i) {
-            kit.onTap(d, function () {
+            kit.onTap(d, function () {                  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
                 if (api.over || phase !== 'answer' || picked[i]) return;
-                if (q.changed.indexOf(i) < 0) { reveal(i); return; }
+                if (q.changed.indexOf(i) < 0) { reveal(i); return; }  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                 picked[i] = true; found++;
                 d.classList.add('dicechange-die--found');
-                Sfx.play('ok');
+                Sfx.play('ok');                         /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 msg.textContent = found >= q.changed.length ? '全部找到了！' : '請點擊點數被更換過的骰子（還有 ' + (q.changed.length - found) + ' 顆）';
                 if (found >= q.changed.length) { phase = 'done'; reveal('ok'); }
             });
@@ -162,13 +162,13 @@
                 lab.style.left = lay.pos[c].x + 'px'; lab.style.top = (lay.pos[c].y + lay.cell - 6) + 'px'; lab.style.width = lay.cell + 'px';
                 stage.appendChild(lab);
             });
-            if (i === 'ok') { kit.flash(stage, true, api.my); api.pass({ delay: 1500 }); return; }
+            if (i === 'ok') { kit.flash(stage, true, api.my); api.pass({ delay: 1500 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
             if (typeof i === 'number') dice[i].classList.add('dicechange-die--wrong');
-            kit.flash(stage, false, api.my);
-            api.fail({
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: 2600, lines: [
                     (i == null ? '時間到！' : '那一顆的點數沒有變') + '（被換掉的有 ' + q.changed.length + ' 顆）',
-                    '被換掉的：' + q.changed.map(function (c) { return '第 ' + (c + 1) + ' 顆 ' + q.before[c] + ' → ' + q.after[c]; }).join('、')
+                    '被換掉的：' + q.changed.map(function (c) { return '第 ' + (c + 1) + ' 顆 ' + q.before[c] + ' → ' + q.after[c]; }).join('、')  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                 ]
             });
         }
@@ -181,7 +181,7 @@
         };
         api.wrong = function () {
             if (phase !== 'answer') return;
-            var other = 0; while (q.changed.indexOf(other) >= 0) other++;
+            var other = 0; while (q.changed.indexOf(other) >= 0) other++;  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             reveal(other);
         };
     }

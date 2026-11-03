@@ -54,9 +54,9 @@
     function makeGeom(B) {
         var N = B * B, g = { B: B, N: N, cells: N * N, ALL: 0, PEERS: [], UNITS: [], rowOf: null, colOf: null, blockOf: null }, i, j;
         for (i = 1; i <= N; i++) g.ALL |= (1 << i);
-        g.rowOf = function (c) { return Math.floor(c / N); };
+        g.rowOf = function (c) { return Math.floor(c / N); };  /* Math.floor：無條件捨去成整數 */
         g.colOf = function (c) { return c % N; };
-        g.blockOf = function (c) { return Math.floor(g.rowOf(c) / B) * B + Math.floor(g.colOf(c) / B); };
+        g.blockOf = function (c) { return Math.floor(g.rowOf(c) / B) * B + Math.floor(g.colOf(c) / B); };  /* Math.floor：無條件捨去成整數 */
         var rows = [], cols = [], blocks = [];
         for (i = 0; i < N; i++) { rows.push([]); cols.push([]); blocks.push([]); }
         for (i = 0; i < N * N; i++) { rows[g.rowOf(i)].push(i); cols[g.colOf(i)].push(i); blocks[g.blockOf(i)].push(i); }
@@ -74,7 +74,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 盤面的尺寸：畫面寬 W、盤面邊長 N（4 或 9）→ { width（含左外框，＝W × BOARD_FRAC 取整）, cell（每格邊長，可以有小數）, height（含上外框；格子是正方形所以＝width） } */
     function boardMetrics(W, N) {
-        var width = Math.round(W * BOARD_FRAC), cell = (width - BORDER) / N;
+        var width = Math.round(W * BOARD_FRAC), cell = (width - BORDER) / N;  /* Math.round：四捨五入成整數 */
         return { width: width, cell: cell, height: cell * N + BORDER };
     }
     /* 第 level 關屬於哪個階段：{ g 盤面幾何, idx 這個階段的第幾關（從 1 起算）, len 這個階段走幾關到頂 } */
@@ -83,8 +83,8 @@
         if (level <= FOUR_LEVELS) return { g: GEO4, idx: level, len: Math.max(2, FOUR_LEVELS) };
         return { g: GEO9, idx: level - FOUR_LEVELS, len: RAMP9 };
     }
-    function givensFor(level) { var s = stageOf(level), r = s.g === GEO4 ? GIVENS4 : GIVENS9; return Math.round(kit.ramp(s.idx, r[0], r[1], s.len)); }
-    function ansMs(level) { var s = stageOf(level), r = s.g === GEO4 ? ANS4_S : ANS9_S; return Math.round(kit.ramp(s.idx, r[0], r[1], s.len) * 1000); }
+    function givensFor(level) { var s = stageOf(level), r = s.g === GEO4 ? GIVENS4 : GIVENS9; return Math.round(kit.ramp(s.idx, r[0], r[1], s.len)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function ansMs(level) { var s = stageOf(level), r = s.g === GEO4 ? ANS4_S : ANS9_S; return Math.round(kit.ramp(s.idx, r[0], r[1], s.len) * 1000); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function deepP(level) { var s = stageOf(level); return kit.ramp(s.idx, DEEP_P[0], DEEP_P[1], s.len); }
     function bitCount(m) { var c = 0; while (m) { c += m & 1; m >>= 1; } return c; }
     function onlyDigit(m) { for (var d = 1; d <= 9; d++) if (m === (1 << d)) return d; return 0; }
@@ -94,11 +94,11 @@
        這些洗牌都不會破壞規則，所以每一個結果都是合法的完整盤面。 */
     function makeSolution(g, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var B = g.B, N = g.N, digits = kit.shuffle(Array.apply(null, Array(N)).map(function (_, i) { return i + 1; }), rand);
+        var B = g.B, N = g.N, digits = kit.shuffle(Array.apply(null, Array(N)).map(function (_, i) { return i + 1; }), rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         /* 洗牌後的排／欄順序：先洗「組」的順序，組裡面再各自洗 */
         function order() {
-            var bands = kit.shuffle(Array.apply(null, Array(B)).map(function (_, i) { return i; }), rand), out = [];
-            bands.forEach(function (b) { kit.shuffle(Array.apply(null, Array(B)).map(function (_, i) { return b * B + i; }), rand).forEach(function (x) { out.push(x); }); });
+            var bands = kit.shuffle(Array.apply(null, Array(B)).map(function (_, i) { return i; }), rand), out = [];  /* Array.apply(null, Array(n)).map(...)：建立「0 到 n−1 的編號陣列」的常見寫法 */
+            bands.forEach(function (b) { kit.shuffle(Array.apply(null, Array(B)).map(function (_, i) { return b * B + i; }), rand).forEach(function (x) { out.push(x); }); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             return out;
         }
         var rowMap = order(), colMap = order(), sol = [];
@@ -113,11 +113,11 @@
          ② 單位裡的唯一位置：某個數字在某一排／某一欄／某一個宮裡只剩一格能放，就填它。
        反覆做到推不動為止。回傳 { grid（推理後的盤面，0＝推不出）, steps（用了幾輪）, solved（目標是否推出）, value（推出的目標數字或 0） } */
     function deduce(g, givens, target) {
-        var cand = [], gr = givens.slice(), i, d, N = g.N;
+        var cand = [], gr = givens.slice(), i, d, N = g.N;  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         for (i = 0; i < g.cells; i++) cand.push(g.ALL);
         function place(idx, dg) {
             gr[idx] = dg; cand[idx] = 1 << dg;
-            g.PEERS[idx].forEach(function (p) { if (gr[p] !== dg) cand[p] &= ~(1 << dg); });
+            g.PEERS[idx].forEach(function (p) { if (gr[p] !== dg) cand[p] &= ~(1 << dg); });  /* forEach：對陣列的每個元素各做一次 */
         }
         for (i = 0; i < g.cells; i++) if (gr[i]) place(i, gr[i]);
         var steps = 0, changed = true;
@@ -126,10 +126,10 @@
             for (i = 0; i < g.cells; i++) {
                 if (!gr[i] && bitCount(cand[i]) === 1) { place(i, onlyDigit(cand[i])); changed = true; }
             }
-            g.UNITS.forEach(function (u) {
+            g.UNITS.forEach(function (u) {              /* forEach：對陣列的每個元素各做一次 */
                 for (d = 1; d <= N; d++) {
-                    if (u.some(function (c) { return gr[c] === d; })) continue;
-                    var spots = u.filter(function (c) { return !gr[c] && (cand[c] & (1 << d)); });
+                    if (u.some(function (c) { return gr[c] === d; })) continue;  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
+                    var spots = u.filter(function (c) { return !gr[c] && (cand[c] & (1 << d)); });  /* filter：留下符合條件的元素，回傳新陣列 */
                     if (spots.length === 1) { place(spots[0], d); changed = true; }
                 }
             });
@@ -145,15 +145,15 @@
         rand = rand || Math.random;
         var g = stageOf(level).g, want = givensFor(level), best = null;
         for (var tr = 0; tr < 40; tr++) {
-            var sol = makeSolution(g, rand), target = kit.randInt(0, g.cells - 1, rand);
-            var givens = sol.slice(); givens[target] = 0;
+            var sol = makeSolution(g, rand), target = kit.randInt(0, g.cells - 1, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+            var givens = sol.slice(); givens[target] = 0;  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
             var others = [];
             for (var i = 0; i < g.cells; i++) if (i !== target) others.push(i);
             var count = others.length;
-            var order = kit.shuffle(others, rand);
+            var order = kit.shuffle(others, rand);      /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
             /* 「繞一圈」的題目：先拿「跟目標同橫排、同直排、同宮」的提示，留下不相干的格子，推理就得先靠它們推出別格，再推目標 */
             if (tr < 10 && rand() < deepP(level)) {
-                var near = order.filter(function (c) { return g.PEERS[target].indexOf(c) >= 0; }), far = order.filter(function (c) { return g.PEERS[target].indexOf(c) < 0; });
+                var near = order.filter(function (c) { return g.PEERS[target].indexOf(c) >= 0; }), far = order.filter(function (c) { return g.PEERS[target].indexOf(c) < 0; });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                 order = near.concat(far);
             }
             order.forEach(function (c) {
@@ -205,7 +205,7 @@
         var W = stage.clientWidth || 472, bm = boardMetrics(W, N);
         var board = h('div', { 'class': 'sudokuone-board sudokuone-board--n' + N });
         board.style.setProperty('--sdk-cell', bm.cell.toFixed(3) + 'px');                 /* 每格邊長：盤面寬度是畫面寬的 96% */
-        board.style.setProperty('--sdk-font', Math.round(bm.cell * (N === 4 ? 0.62 : 0.72)) + 'px');
+        board.style.setProperty('--sdk-font', Math.round(bm.cell * (N === 4 ? 0.62 : 0.72)) + 'px');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
         var cells = [];
         for (var i = 0; i < g.cells; i++) {
             var c = h('div', { 'class': 'sudokuone-cell' });
@@ -213,17 +213,17 @@
             if (g.rowOf(i) % B === B - 1) c.className += ' sudokuone-rE';
             if (i === q.target) c.className += ' sudokuone-cell--target';
             else if (g.rowOf(i) === g.rowOf(q.target) || g.colOf(i) === g.colOf(q.target) || g.blockOf(i) === g.blockOf(q.target)) c.className += ' sudokuone-cell--peer';
-            if (q.givens[i]) { c.textContent = String(q.givens[i]); c.className += ' sudokuone-cell--given'; }
-            else if (i === q.target) c.textContent = '？';
-            board.appendChild(c); cells.push(c);
+            if (q.givens[i]) { c.textContent = String(q.givens[i]); c.className += ' sudokuone-cell--given'; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            else if (i === q.target) c.textContent = '？';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            board.appendChild(c); cells.push(c);        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         }
         var tip = h('div', { 'class': 'qz-note sudokuone-tip sudokuone-tip--n' + N, text: '黃色那一格數字是哪個？' });
-        tip.style.top = Math.round(10 + bm.height + 4) + 'px';
-        stage.appendChild(board); stage.appendChild(tip);
+        tip.style.top = Math.round(10 + bm.height + 4) + 'px';  /* Math.round：四捨五入成整數 */
+        stage.appendChild(board); stage.appendChild(tip);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var items = [];
         for (var d = 1; d <= N; d++) (function (d) { items.push({ text: String(d), kind: 'sky', cls: 'sudokuone-btn', onTap: function () { judge(d); } }); })(d);
         /* 數字鍵：4×4 排成一排 4 顆（每顆大一點）；9×9 排成 3×3 */
-        var grid = kit.btnGrid(stage, items, N === 4 ? { cols: 4, h: 84, gap: 8 } : { cols: 5, h: 62, gap: 8 });
+        var grid = kit.btnGrid(stage, items, N === 4 ? { cols: 4, h: 84, gap: 8 } : { cols: 5, h: 62, gap: 8 });  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
         api.timer(ansMs(level), function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         if (level === 1 && kit.once('sudokuone.hint')) kit.hintOn(stage, grid.btns[q.answer - 1], { mode: 'tap', delay: 700, text: '請點擊數字' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
@@ -233,12 +233,12 @@
             var ok = v === q.answer;
             /* 揭曉：整個解答都填出來，目標那一格標大字 */
             cells.forEach(function (c, k) {
-                if (!q.givens[k]) { c.textContent = String(q.solution[k]); c.classList.add('sudokuone-cell--fill'); }
+                if (!q.givens[k]) { c.textContent = String(q.solution[k]); c.classList.add('sudokuone-cell--fill'); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             });
-            cells[q.target].classList.add(ok ? 'sudokuone-cell--ok' : 'sudokuone-cell--bad');
-            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1200 }); return; }
-            kit.flash(stage, false, api.my);
-            api.fail({
+            cells[q.target].classList.add(ok ? 'sudokuone-cell--ok' : 'sudokuone-cell--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1200 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: REVEAL_FAIL_MS, lines: [
                     (v == null ? '時間到！' : '你選了 ' + v) + '，黃色那一格是 ' + q.answer,
                     '第 ' + (g.rowOf(q.target) + 1) + ' 排第 ' + (g.colOf(q.target) + 1) + ' 格；整個盤面的解答已填出'

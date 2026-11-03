@@ -42,12 +42,12 @@
     function makeRound(rand, W) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         W = W || STAGE_W;
-        var L = kit.randFloat(W * LEN_MIN_PCT, W * LEN_MAX_PCT, rand);
+        var L = kit.randFloat(W * LEN_MIN_PCT, W * LEN_MAX_PCT, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         /* 垂直方向放不下的陡角度要排除：L·sin(角) ≤ Y_BOT − Y_TOP */
         var amax = Math.min(ANGLE_MAX, Math.asin(Math.min(1, (Y_BOT - Y_TOP) / L)) * 180 / Math.PI);
-        var deg = kit.randFloat(ANGLE_MIN, Math.max(ANGLE_MIN, amax), rand);
+        var deg = kit.randFloat(ANGLE_MIN, Math.max(ANGLE_MIN, amax), rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         var a = (rand() < 0.5 ? -1 : 1) * deg * Math.PI / 180;
-        var span = L * Math.cos(a), rise = Math.abs(L * Math.sin(a));
+        var span = L * Math.cos(a), rise = Math.abs(L * Math.sin(a));  /* Math.abs：取絕對值（去掉負號） */
         var x = kit.randFloat(X_PAD, Math.max(X_PAD, W - X_PAD - span), rand);
         var top = kit.randFloat(Y_TOP, Math.max(Y_TOP, Y_BOT - rise), rand);
         return { L: L, a: a, x: x, y: a >= 0 ? top : top + rise };
@@ -63,8 +63,8 @@
         };
     }
     /* 手指位置 → 橫線長度（夾在 0～MAX_DRAW） */
-    function lenFor(px) { return kit.clamp(px - START.x, 0, MAX_DRAW); }
-    function errPct(len, L) { return Math.abs(len - L) / L * 100; }
+    function lenFor(px) { return kit.clamp(px - START.x, 0, MAX_DRAW); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
+    function errPct(len, L) { return Math.abs(len - L) / L * 100; }  /* Math.abs：取絕對值（去掉負號） */
     /* 結算畫面的評語：依成績回傳一句話 */
     function rating(e) {
         if (e < 0.5) return '神準！';
@@ -95,49 +95,49 @@
         var sy = Math.min(START.y, H - 60);
         console.log('[畫一樣長] 斜線長度 ' + cfg.L.toFixed(2) + '（寬度的 ' + (cfg.L / W * 100).toFixed(1) + '%），角度 ' + (cfg.a * 180 / Math.PI).toFixed(1) + '°，左端 (' + cfg.x.toFixed(1) + ', ' + cfg.y.toFixed(1) + ')');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        var svg = kit.svg('svg', { 'class': 'samelen-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
-        var gGuide = kit.svg('g', {}, svg);
+        var svg = kit.svg('svg', { 'class': 'samelen-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var gGuide = kit.svg('g', {}, svg);             /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var ref = kit.svg('g', {}, svg);
         var refLine = kit.svg('line', { x1: 0, y1: 0, x2: (cfg.L * Math.cos(cfg.a)).toFixed(2), y2: (cfg.L * Math.sin(cfg.a)).toFixed(2), 'class': 'samelen-ref' }, ref);
         /* 兩端的黑色記號（垂直於線）：線轉成橫放時，兩個記號都要跟著轉（V1.25：以前左邊那個一直是水平的，是錯的） */
         var ends0 = capEnds(cfg.a, cfg.L);
         var capT = kit.svg('line', { x1: ends0.t[0], y1: ends0.t[1], x2: ends0.t[2], y2: ends0.t[3], 'class': 'samelen-cap' }, ref);
         var capB = kit.svg('line', { x1: ends0.b[0], y1: ends0.b[1], x2: ends0.b[2], y2: ends0.b[3], 'class': 'samelen-cap' }, ref);
-        ref.setAttribute('transform', 'translate(' + cfg.x.toFixed(2) + ' ' + cfg.y.toFixed(2) + ')');
+        ref.setAttribute('transform', 'translate(' + cfg.x.toFixed(2) + ' ' + cfg.y.toFixed(2) + ')');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         var mine = kit.svg('line', { x1: START.x, y1: sy, x2: START.x, y2: sy, 'class': 'samelen-mine' }, svg);
         kit.svg('line', { x1: START.x, y1: sy - CAP, x2: START.x, y2: sy + CAP, 'class': 'samelen-cap' }, svg);
         var endCap = kit.svg('line', { x1: START.x, y1: sy - CAP, x2: START.x, y2: sy + CAP, 'class': 'samelen-cap', opacity: 0 }, svg);
         var dot = kit.svg('circle', { cx: START.x, cy: sy, r: 12, 'class': 'samelen-start' }, svg);
         var msg = h('div', { 'class': 'samelen-msg' });
-        stage.appendChild(msg);
+        stage.appendChild(msg);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
 
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從起點往右移動「參考線一樣長」的距離（第一次的正確答案） */
-        if (kit.once('samelen.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: START.x, y: sy, dx: cfg.L, dy: 0, delay: 300 });
+        if (kit.once('samelen.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: START.x, y: sy, dx: cfg.L, dy: 0, delay: 300 });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
-        function say(t) { msg.textContent = t; msg.classList.toggle('samelen-msg--on', !!t); }
+        function say(t) { msg.textContent = t; msg.classList.toggle('samelen-msg--on', !!t); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() {
-            mine.setAttribute('x2', START.x + len);
+            mine.setAttribute('x2', START.x + len);     /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             endCap.setAttribute('x1', START.x + len); endCap.setAttribute('x2', START.x + len); endCap.setAttribute('opacity', len > 0 ? 1 : 0);
         }
 
-        stage.addEventListener('pointerdown', function (e) {
+        stage.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (locked || drawing) return;
             var p = kit.localPt(e, stage), dx = p.x - START.x, dy = p.y - sy;
-            if (Math.sqrt(dx * dx + dy * dy) > START_R) { say('請從左下的起點開始拖'); return; }
-            e.preventDefault();
-            try { stage.setPointerCapture(e.pointerId); } catch (err) { }
+            if (Math.sqrt(dx * dx + dy * dy) > START_R) { say('請從左下的起點開始拖'); return; }  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
+            e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            try { stage.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             drawing = true; pid = e.pointerId; hideHint(); say('');
             len = 0; paint();
         });
-        stage.addEventListener('pointermove', function (e) {
+        stage.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (!drawing || e.pointerId !== pid) return;
             len = lenFor(kit.localPt(e, stage).x); paint();
         });
         function end(e) {
             if (!drawing || e.pointerId !== pid) return;
             drawing = false;
-            if (len < MIN_VALID) { say('再往右拖長一點'); len = 0; paint(); Sfx.play('bad'); return; }
+            if (len < MIN_VALID) { say('再往右拖長一點'); len = 0; paint(); Sfx.play('bad'); return; }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             submit();
         }
         stage.addEventListener('pointerup', end);
@@ -146,11 +146,11 @@
         function submit() {
             if (locked) return;
             locked = true; hideHint(); dot.setAttribute('opacity', 0);
-            Sfx.play('click');
+            Sfx.play('click');                          /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             var real = errPct(len, cfg.L), tgt = sy - 70;
             /* 揭曉：斜線以左端為軸轉成橫放，移到你的橫線上方 */
             var tx0 = cfg.x, ty0 = cfg.y;
-            my.tween(1000, function (e) {
+            my.tween(1000, function (e) {               /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
                 var x = tx0 + (START.x - tx0) * e, y = ty0 + (tgt - ty0) * e, a = cfg.a * (1 - e);
                 refLine.setAttribute('x1', 0); refLine.setAttribute('y1', 0);
                 refLine.setAttribute('x2', cfg.L * Math.cos(a)); refLine.setAttribute('y2', cfg.L * Math.sin(a));
@@ -175,7 +175,7 @@
         }
 
         function fire(type, x, y) {
-            var r = stage.getBoundingClientRect(), sc = r.width / (stage.clientWidth || r.width);
+            var r = stage.getBoundingClientRect(), sc = r.width / (stage.clientWidth || r.width);  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
             stage.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 9, clientX: r.left + x * sc, clientY: r.top + y * sc }));
         }
         function drawLen(L) {

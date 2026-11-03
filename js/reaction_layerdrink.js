@@ -39,9 +39,9 @@
     var COLORS = [{ id: 'red', name: '紅' }, { id: 'yellow', name: '黃' }, { id: 'green', name: '綠' }, { id: 'blue', name: '藍' }, { id: 'purple', name: '紫' }];  /* 飲料可以疊的五種顏色（id 給程式用、name 給畫面用） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }
-    function layersFor(level) { return Math.round(ramp(level, LAYERS)); }
-    function viewMs(level) { return Math.round(ramp(level, VIEW_S) * 1000); }
+    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function layersFor(level) { return Math.round(ramp(level, LAYERS)); }  /* Math.round：四捨五入成整數 */
+    function viewMs(level) { return Math.round(ramp(level, VIEW_S) * 1000); }  /* Math.round：四捨五入成整數 */
     function tolFor(level) { return Math.round(ramp(level, TOL) * 10) / 10; }
     function ratioFor(level) { return Math.round(ramp(level, RATIO) * 1000) / 1000; }
     function fillS(level) { return Math.round(ramp(level, FILL_S) * 10) / 10; }
@@ -58,32 +58,32 @@
     function flowRate(ratio, fillTime) { return volumeAt(1, ratio) / fillTime; }
     /* 兩杯的最大差：demo[i]、player[i] 都是第 i 層的厚度（佔杯高的比例）；回傳百分比（0～100） */
     function maxDiff(demo, player) {
-        var m = 0; for (var i = 0; i < demo.length; i++) m = Math.max(m, Math.abs(demo[i] - (player[i] || 0)));
+        var m = 0; for (var i = 0; i < demo.length; i++) m = Math.max(m, Math.abs(demo[i] - (player[i] || 0)));  /* Math.abs：取絕對值（去掉負號） */
         return m * 100;
     }
     /* 由每層放手時的液面高度（累積）算每層厚度 */
-    function thicknesses(bounds) { return bounds.map(function (b, i) { return b - (i ? bounds[i - 1] : 0); }); }
+    function thicknesses(bounds) { return bounds.map(function (b, i) { return b - (i ? bounds[i - 1] : 0); }); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     /* 隨機分成 n 層，每層至少 MIN_FRAC、總和 1（用「先給每層最小值，剩下的隨機分配」）*/
     function splitLayers(n, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         for (var tr = 0; tr < 200; tr++) {
             var rest = 1 - n * MIN_FRAC, w = [], s = 0, i;
             for (i = 0; i < n; i++) { var x = -Math.log(1 - rand() * 0.999) + 0.25; w.push(x); s += x; }
-            var f = w.map(function (x) { return MIN_FRAC + rest * x / s; });
+            var f = w.map(function (x) { return MIN_FRAC + rest * x / s; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             if (n < 2 || Math.max.apply(null, f) - Math.min.apply(null, f) > 0.08) return f;                 /* 不要每層一樣厚（那就不用記了） */
         }
-        return Array.apply(null, { length: n }).map(function (x, i) { return 1 / n; });
+        return Array.apply(null, { length: n }).map(function (x, i) { return 1 / n; });  /* Array.apply(null, Array(n)).map(...)：建立「0 到 n−1 的編號陣列」的常見寫法 */
     }
     /* 出一關：{ n, colors（色碼編號，下到上）, fracs（每層厚度）, ratio, rate（每秒倒進的體積）, fillS, tol, viewMs, level } */
     function makeLevel(level, rand) {
         rand = rand || Math.random;
-        var n = layersFor(level), colors = kit.shuffle([0, 1, 2, 3, 4], rand).slice(0, n), ratio = ratioFor(level), fs = fillS(level);
+        var n = layersFor(level), colors = kit.shuffle([0, 1, 2, 3, 4], rand).slice(0, n), ratio = ratioFor(level), fs = fillS(level);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         return { n: n, colors: colors, fracs: splitLayers(n, rand), ratio: ratio, rate: flowRate(ratio, fs), fillS: fs, tol: tolFor(level), viewMs: viewMs(level), level: level };
     }
     /* 完美的倒法：每層要按住多久（秒）——從 demo 的累計高度反推需要的累計體積，一層一層相減，再除以流量 */
     function perfectHolds(q) {
         var y = 0, prev = 0, out = [];
-        q.fracs.forEach(function (f) { y += f; var v = volumeAt(Math.min(1, y), q.ratio); out.push((v - prev) / q.rate); prev = v; });
+        q.fracs.forEach(function (f) { y += f; var v = volumeAt(Math.min(1, y), q.ratio); out.push((v - prev) / q.rate); prev = v; });  /* forEach：對陣列的每個元素各做一次 */
         return out;
     }
     /* 結算畫面的評語：依成績回傳一句話 */
@@ -111,8 +111,8 @@
     var gid = 0;
     function glass(parent, wTop, wBottom) {
         var W = 170, cx = W / 2, y0 = 12, y1 = y0 + GLASS_H, id = 'layerdrink-clip-' + (++gid);
-        var svg = kit.svg('svg', { 'class': 'layerdrink-glass', viewBox: '0 0 ' + W + ' ' + (GLASS_H + 28), width: W, height: GLASS_H + 28 }, parent);
-        var defs = kit.svg('defs', {}, svg), cp = kit.svg('clipPath', { id: id }, defs);
+        var svg = kit.svg('svg', { 'class': 'layerdrink-glass', viewBox: '0 0 ' + W + ' ' + (GLASS_H + 28), width: W, height: GLASS_H + 28 }, parent);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var defs = kit.svg('defs', {}, svg), cp = kit.svg('clipPath', { id: id }, defs);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var pts = (cx - wTop / 2) + ',' + y0 + ' ' + (cx + wTop / 2) + ',' + y0 + ' ' + (cx + wBottom / 2) + ',' + y1 + ' ' + (cx - wBottom / 2) + ',' + y1;
         kit.svg('polygon', { points: pts }, cp);
         kit.svg('polygon', { 'class': 'layerdrink-glass__bg', points: pts }, svg);                          /* 杯子裡淡淡的玻璃色（畫在液體後面，才不會把液體的顏色蓋淡） */
@@ -123,10 +123,10 @@
         return {
             svg: svg,
             setLayers: function (bounds, colors, cur) {
-                liquid.innerHTML = '';
+                liquid.innerHTML = '';                  /* innerHTML = ''：把元素裡面的東西全部清掉 */
                 var prev = 0, list = bounds.map(function (b, i) { return { top: b, color: colors[i] }; });
                 if (cur) list.push(cur);
-                list.forEach(function (L, i) {
+                list.forEach(function (L, i) {          /* forEach：對陣列的每個元素各做一次 */
                     var yT = Y(L.top), yB = Y(prev);
                     var r = kit.svg('rect', { 'class': 'layerdrink-layer layerdrink-c--' + COLORS[L.color].id, x: 0, y: yT, width: W, height: Math.max(0, yB - yT) }, liquid);
                     prev = L.top;
@@ -152,9 +152,9 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var field = h('div', { 'class': 'layerdrink-field' });
-        stage.appendChild(field);
+        stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note layerdrink-tip', text: '記住每一層的顏色和高度' });
-        field.appendChild(tip);
+        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         /* 左：示範杯（直筒）；右：你的杯子（上寬下窄） */
         var demoBox = h('div', { 'class': 'layerdrink-box' }), myBox = h('div', { 'class': 'layerdrink-box' });
         demoBox.style.cssText = 'left:' + (W / 2 - 190) + 'px;top:62px;'; myBox.style.cssText = 'left:' + (W / 2 + 20) + 'px;top:62px;';
@@ -173,11 +173,11 @@
         field.appendChild(bottles);
 
         var phase = 'view', step = 0, bounds = [], v = 0, y = 0, pouring = -1, done = false, ctl = [], loop = null;
-        info.textContent = '看 ' + Math.round(q.viewMs / 1000) + ' 秒';
+        info.textContent = '看 ' + Math.round(q.viewMs / 1000) + ' 秒';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         api.timer(q.viewMs, begin);                     /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         function begin() {
             if (api.over) return;
-            phase = 'pour'; demoBox.classList.add('layerdrink-box--hide'); tip.textContent = '照順序倒：按住瓶子倒、放手停'; info.textContent = '第 1 層：' + COLORS[q.colors[0]].name + '色';
+            phase = 'pour'; demoBox.classList.add('layerdrink-box--hide'); tip.textContent = '照順序倒：按住瓶子倒、放手停'; info.textContent = '第 1 層：' + COLORS[q.colors[0]].name + '色';  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             mine.setLayers([], [], null);
             api.timer(20000 + n * 6000, function () { finish(true); });
             if (level === 1 && kit.once('layerdrink.hint')) kit.hintOn(stage, bEls[q.colors[0]], { mode: 'hold', delay: 500, text: '按住倒，到記得的高度放手' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
@@ -188,8 +188,8 @@
                 down: function () {
                     if (phase !== 'pour' || done || api.over || pouring >= 0) return;
                     if (ci !== q.colors[step]) { wrongColor(ci); return; }
-                    pouring = ci; el.classList.add('layerdrink-bottle--pour'); stream.className = 'layerdrink-stream layerdrink-stream--on layerdrink-c--' + COLORS[ci].id; Sfx.play('click');
-                    loop = api.my.loop(frame);
+                    pouring = ci; el.classList.add('layerdrink-bottle--pour'); stream.className = 'layerdrink-stream layerdrink-stream--on layerdrink-c--' + COLORS[ci].id; Sfx.play('click');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                    loop = api.my.loop(frame);          /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                 },
                 up: function () { if (pouring === ci) endLayer(); }
             });
@@ -202,18 +202,18 @@
         }
         function endLayer() {
             if (pouring < 0) return;
-            bEls[pouring].classList.remove('layerdrink-bottle--pour'); stream.className = 'layerdrink-stream'; pouring = -1; if (loop) loop.stop();
+            bEls[pouring].classList.remove('layerdrink-bottle--pour'); stream.className = 'layerdrink-stream'; pouring = -1; if (loop) loop.stop();  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             bounds.push(y); mine.setLayers(bounds, q.colors, null); step++;
             if (step >= n || y >= 1) { finish(false); return; }
-            info.textContent = '第 ' + (step + 1) + ' 層：' + COLORS[q.colors[step]].name + '色';
+            info.textContent = '第 ' + (step + 1) + ' 層：' + COLORS[q.colors[step]].name + '色';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         }
         function wrongColor(ci) {
             done = true; phase = 'end'; api.stopTimer();
             ctl.forEach(function (c) { c.destroy(); });
             info.textContent = '第 ' + (step + 1) + ' 層要倒「' + COLORS[q.colors[step]].name + '」，你按了「' + COLORS[ci].name + '」';
             demoBox.classList.remove('layerdrink-box--hide'); bEls[q.colors[step]].classList.add('layerdrink-bottle--ok'); bEls[ci].classList.add('layerdrink-bottle--bad');
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: 3200, lines: ['第 ' + (step + 1) + ' 層顏色錯了：要倒「' + COLORS[q.colors[step]].name + '」，你按了「' + COLORS[ci].name + '」', '顏色順序（下到上）：' + q.colors.map(function (c) { return COLORS[c].name; }).join('、')] });
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 3200, lines: ['第 ' + (step + 1) + ' 層顏色錯了：要倒「' + COLORS[q.colors[step]].name + '」，你按了「' + COLORS[ci].name + '」', '顏色順序（下到上）：' + q.colors.map(function (c) { return COLORS[c].name; }).join('、')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 這一局結束：算出成績並進入結算畫面 */
         function finish(timeout) {
@@ -226,15 +226,15 @@
             mine.setLayers(bounds, q.colors, null); demoBox.classList.remove('layerdrink-box--hide');
             tip.textContent = '兩杯並排比一比';
             info.textContent = '最大差 ' + md.toFixed(4) + '%' + (ok ? '，一樣了！' : '（要在 ' + q.tol + '% 內）');
-            kit.flash(stage, ok, api.my);
-            if (ok) { api.pass({ delay: 2000 }); return; }
-            var worst = 0; q.fracs.forEach(function (f, i) { if (Math.abs(f - (thick[i] || 0)) > Math.abs(q.fracs[worst] - (thick[worst] || 0))) worst = i; });
-            api.fail({ delay: 3200, lines: ['最大差 ' + md.toFixed(4) + '%（要在 ' + q.tol + '% 內）', '差最多的是第 ' + (worst + 1) + ' 層（' + COLORS[q.colors[worst]].name + '）：示範 ' + (q.fracs[worst] * 100).toFixed(4) + '%、你倒了 ' + ((thick[worst] || 0) * 100).toFixed(4) + '%'] });
+            kit.flash(stage, ok, api.my);               /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            if (ok) { api.pass({ delay: 2000 }); return; }  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
+            var worst = 0; q.fracs.forEach(function (f, i) { if (Math.abs(f - (thick[i] || 0)) > Math.abs(q.fracs[worst] - (thick[worst] || 0))) worst = i; });  /* Math.abs：取絕對值（去掉負號） */
+            api.fail({ delay: 3200, lines: ['最大差 ' + md.toFixed(4) + '%（要在 ' + q.tol + '% 內）', '差最多的是第 ' + (worst + 1) + ' 層（' + COLORS[q.colors[worst]].name + '）：示範 ' + (q.fracs[worst] * 100).toFixed(4) + '%、你倒了 ' + ((thick[worst] || 0) * 100).toFixed(4) + '%'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：solve＝依完美倒法算出每層的累計高度，直接放進去結算；wrong＝第一層倒到一半就結束 */
         api.solve = function () {
             if (phase !== 'pour' || done) return;
-            bounds = demoBounds.slice(); step = n; y = bounds[n - 1]; finish(false);
+            bounds = demoBounds.slice(); step = n; y = bounds[n - 1]; finish(false);  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         };
         api.wrong = function () {
             if (phase !== 'pour' || done) return;

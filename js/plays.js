@@ -43,18 +43,18 @@
     /* ═══ 日期的純函式 ═══ */
     /* 這支瀏覽器的本地日期 'YYYY-MM-DD' */
     function localDay(now) {
-        var d = new Date(now == null ? Date.now() : now);
+        var d = new Date(now == null ? Date.now() : now);  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
         return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
     }
     /* 台灣日期 'YYYY-MM-DD'（跟資料庫一樣用台灣時間算一天；js/rating.js 也是 +8 小時） */
     function taipeiDay(now) {
-        return new Date((now == null ? Date.now() : now) + TAIPEI_MS).toISOString().slice(0, 10);
+        return new Date((now == null ? Date.now() : now) + TAIPEI_MS).toISOString().slice(0, 10);  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
     }
     /* 兩個 'YYYY-MM-DD' 相差幾天（b − a）；格式不對回傳 NaN */
     function daysBetween(a, b) {
         var ra = /^(\d{4})-(\d{2})-(\d{2})$/.exec(a || ''), rb = /^(\d{4})-(\d{2})-(\d{2})$/.exec(b || '');
         if (!ra || !rb) return NaN;
-        return Math.round((Date.UTC(+rb[1], +rb[2] - 1, +rb[3]) - Date.UTC(+ra[1], +ra[2] - 1, +ra[3])) / 86400000);
+        return Math.round((Date.UTC(+rb[1], +rb[2] - 1, +rb[3]) - Date.UTC(+ra[1], +ra[2] - 1, +ra[3])) / 86400000);  /* Math.round：四捨五入成整數 */
     }
 
     /* ═══ 本機紀錄 ═══ */
@@ -62,11 +62,11 @@
     function all() {
         var raw = sget(KEY, null), out = {};
         var g = raw && typeof raw === 'object' && raw.g && typeof raw.g === 'object' ? raw.g : {};
-        Object.keys(g).forEach(function (id) {
+        Object.keys(g).forEach(function (id) {          /* forEach：對陣列的每個元素各做一次 */
             var e = g[id];
             if (!/^[a-z0-9_]{1,32}$/.test(id) || !e || typeof e !== 'object') return;
             if (!/^\d{4}-\d{2}-\d{2}$/.test(e.last || '')) return;
-            out[id] = { n: e.n >= 0 ? Math.floor(e.n) : 0, first: /^\d{4}-\d{2}-\d{2}$/.test(e.first || '') ? e.first : e.last, last: e.last };
+            out[id] = { n: e.n >= 0 ? Math.floor(e.n) : 0, first: /^\d{4}-\d{2}-\d{2}$/.test(e.first || '') ? e.first : e.last, last: e.last };  /* Math.floor：無條件捨去成整數 */
             if (e.boot) out[id].boot = true;
         });
         return out;
@@ -95,9 +95,9 @@
         if (sget(KEY_BOOT, false)) return false;
         sset(KEY_BOOT, true);
         var m = all(), day = localDay(now), recent = sget('fm.menu.recent', null), last = sget('fm.menu.lastGame', null), changed = false;
-        (ids || []).forEach(function (id) {
+        (ids || []).forEach(function (id) {             /* forEach：對陣列的每個元素各做一次 */
             if (m[id]) return;
-            var played = sget('fm.reaction.best.' + id, null) != null || (Array.isArray(recent) && recent.indexOf(id) >= 0) || last === id;
+            var played = sget('fm.reaction.best.' + id, null) != null || (Array.isArray(recent) && recent.indexOf(id) >= 0) || last === id;  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             if (played) { m[id] = { n: 1, first: day, last: day, boot: true }; changed = true; }
         });
         if (changed) save(m);
@@ -107,9 +107,9 @@
     /* ═══ 推薦（純函式，Node 測試直接呼叫）═══ */
     /* 洗牌（Fisher-Yates），不動原陣列 */
     function shuffle(list, rand) {
-        var a = list.slice();
+        var a = list.slice();                           /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         for (var i = a.length - 1; i > 0; i--) {
-            var j = Math.floor(rand() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t;
+            var j = Math.floor(rand() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t;  /* Math.floor：無條件捨去成整數 */
         }
         return a;
     }
@@ -128,7 +128,7 @@
             if (d >= staleDays) stale.push({ id: id, kind: 'stale', days: d });
         });
         fresh = shuffle(fresh, rand);
-        stale.sort(function (a, b) { return b.days - a.days || (a.id < b.id ? -1 : 1); });
+        stale.sort(function (a, b) { return b.days - a.days || (a.id < b.id ? -1 : 1); });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
         var takeStale = Math.min(stale.length, Math.max(staleMin, n - fresh.length));
         var takeFresh = Math.min(fresh.length, n - takeStale);
         takeStale = Math.min(stale.length, n - takeFresh);
@@ -143,15 +143,15 @@
         var inIds = {}, seen = {}, out = [];
         (ids || []).forEach(function (id) { inIds[id] = true; });
         var lastOf = function (id) { return (plays && plays[id] && plays[id].last) || ''; };
-        (Array.isArray(ranks) ? ranks : []).filter(function (r) { return r && inIds[r.game_id] && r.rank >= 1; })
-            .sort(function (a, b) { return a.rank - b.rank || (lastOf(b.game_id) > lastOf(a.game_id) ? 1 : lastOf(b.game_id) < lastOf(a.game_id) ? -1 : 0) || (a.game_id < b.game_id ? -1 : 1); })
+        (Array.isArray(ranks) ? ranks : []).filter(function (r) { return r && inIds[r.game_id] && r.rank >= 1; })  /* filter：留下符合條件的元素，回傳新陣列 */
+            .sort(function (a, b) { return a.rank - b.rank || (lastOf(b.game_id) > lastOf(a.game_id) ? 1 : lastOf(b.game_id) < lastOf(a.game_id) ? -1 : 0) || (a.game_id < b.game_id ? -1 : 1); })  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
             .forEach(function (r) {
                 if (out.length >= n || seen[r.game_id]) return;
                 seen[r.game_id] = true;
                 out.push({ id: r.game_id, rank: r.rank, n: (plays && plays[r.game_id] && plays[r.game_id].n) || 0 });
             });
         if (out.length < n) {
-            Object.keys(plays || {}).filter(function (id) { return inIds[id] && !seen[id] && plays[id].n >= minPlays; })
+            Object.keys(plays || {}).filter(function (id) { return inIds[id] && !seen[id] && plays[id].n >= minPlays; })  /* filter：留下符合條件的元素，回傳新陣列 */
                 .sort(function (a, b) { return plays[b].n - plays[a].n || (plays[b].last > plays[a].last ? 1 : plays[b].last < plays[a].last ? -1 : 0) || (a < b ? -1 : 1); })
                 .slice(0, n - out.length)
                 .forEach(function (id) { out.push({ id: id, rank: null, n: plays[id].n }); });

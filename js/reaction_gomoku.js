@@ -61,38 +61,38 @@
     var DIR8 = [[0, 1], [1, 0], [1, 1], [1, -1], [0, -1], [-1, 0], [-1, -1], [-1, 1]];  /* 八個方向的 [列差, 欄差]（右、下、右下、左下、左、上、左上、右上） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function stonesFor(level) { return Math.round(kit.ramp(level, STONES[0], STONES[1], RAMP_LEVELS)); }
+    function stonesFor(level) { return Math.round(kit.ramp(level, STONES[0], STONES[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 揭曉動畫從開始到結算跳出來，總共幾毫秒（pvLen＝白棋致勝的手數，黑棋被逼著擋的也算在內） */
     function revealMs(pvLen) { return REVEAL_LEAD_MS + pvLen * REVEAL_STEP_MS + REVEAL_HOLD_MS; }
-    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
-    function decoysFor(level) { return Math.round(kit.ramp(level, DECOYS[0], DECOYS[1], RAMP_LEVELS)); }
+    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
+    function decoysFor(level) { return Math.round(kit.ramp(level, DECOYS[0], DECOYS[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function cornerPFor(level) { return level < CORNER_FROM ? 0 : kit.ramp(level, CORNER_P[0], CORNER_P[1], RAMP_LEVELS); }
     /* 這一關各種題型的比例 [模板, D1, D2, D3]（第 BANK_FROM 關以前全是模板） */
     function tierWeights(level) {
         if (level < BANK_FROM || !bankEntries(1).length) return [1, 0, 0, 0];
         var t = kit.ramp(level, 0, 1, RAMP_LEVELS), out = [], sum = 0, i;
         for (i = 0; i < 4; i++) { out.push(TIER_P0[i] + (TIER_P1[i] - TIER_P0[i]) * t); sum += out[i]; }
-        return out.map(function (v) { return v / sum; });
+        return out.map(function (v) { return v / sum; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     }
     /* 題庫裡級別 d（1～3）的題目；沒有載入題庫（window.GOMOKU_BANK）就是空的 */
     var bankCache = null;
     function bankEntries(d) {
         if (!bankCache) {
             bankCache = { 1: [], 2: [], 3: [] };
-            (window.GOMOKU_BANK || []).forEach(function (e) { if (bankCache[e[0]]) bankCache[e[0]].push(e); });
+            (window.GOMOKU_BANK || []).forEach(function (e) { if (bankCache[e[0]]) bankCache[e[0]].push(e); });  /* forEach：對陣列的每個元素各做一次 */
         }
         return bankCache[d] || [];
     }
     /* 把題庫的一題放到棋盤上：隨機翻轉旋轉（8 種）、隨機平移到棋盤內；回傳 { white, black, x }，放不下回傳 null */
     function placeBank(e, n, rand) {
-        var s = kit.randInt(0, 7, rand);
+        var s = kit.randInt(0, 7, rand);                /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         function tf(r, c) { if (s & 1) c = -c; if (s & 2) r = -r; if (s & 4) { var t = r; r = c; c = t; } return [r, c]; }
         function pairs(arr) { var out = []; for (var i = 0; i < arr.length; i += 2) out.push(tf(arr[i], arr[i + 1])); return out; }
         var w = pairs(e[3]), b = pairs(e[4]), x = tf(e[1], e[2]), all = w.concat(b, [x]);
-        var minR = Math.min.apply(null, all.map(function (p) { return p[0]; })), maxR = Math.max.apply(null, all.map(function (p) { return p[0]; }));
+        var minR = Math.min.apply(null, all.map(function (p) { return p[0]; })), maxR = Math.max.apply(null, all.map(function (p) { return p[0]; }));  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         var minC = Math.min.apply(null, all.map(function (p) { return p[1]; })), maxC = Math.max.apply(null, all.map(function (p) { return p[1]; }));
         if (maxR - minR >= n || maxC - minC >= n) return null;
-        var or = kit.randInt(0, n - 1 - (maxR - minR), rand) - minR, oc = kit.randInt(0, n - 1 - (maxC - minC), rand) - minC;
+        var or = kit.randInt(0, n - 1 - (maxR - minR), rand) - minR, oc = kit.randInt(0, n - 1 - (maxC - minC), rand) - minC;  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         function id(p) { return (p[0] + or) * n + p[1] + oc; }
         return { white: w.map(id), black: b.map(id), x: id(x) };
     }
@@ -100,7 +100,7 @@
     function inb(n, r, c) { return r >= 0 && r < n && c >= 0 && c < n; }
     /* color 的棋在 idx（空格或已經有 color 的棋都可以）會不會連成五顆以上？會就回傳連成的那一條線的格子（連續、至少 5 個），不會回傳 null */
     function fiveThrough(b, n, idx, color) {
-        var r0 = Math.floor(idx / n), c0 = idx % n;
+        var r0 = Math.floor(idx / n), c0 = idx % n;     /* Math.floor：無條件捨去成整數 */
         for (var d = 0; d < 4; d++) {
             var dr = LINES[d][0], dc = LINES[d][1], cells = [idx], r = r0 + dr, c = c0 + dc;
             while (inb(n, r, c) && b[r * n + c] === color) { cells.push(r * n + c); r += dr; c += dc; }
@@ -118,7 +118,7 @@
     }
     /* 剛下了 idx（已經放上棋盤）之後，經過它的四條線上、距離 4 格以內的空格，哪些是 color 的致勝點 */
     function localWinCells(b, n, idx, color) {
-        var r0 = Math.floor(idx / n), c0 = idx % n, out = [], seen = {};
+        var r0 = Math.floor(idx / n), c0 = idx % n, out = [], seen = {};  /* Math.floor：無條件捨去成整數 */
         for (var d = 0; d < 4; d++) for (var k = -4; k <= 4; k++) {
             if (!k) continue;
             var r = r0 + LINES[d][0] * k, c = c0 + LINES[d][1] * k;
@@ -184,12 +184,12 @@
     /* 黑棋所有能讓白棋贏不了的下法（在 relevantCells 裡窮舉；每一手都用 whiteWins 驗證） */
     function solutionCells(b, n, depth) {
         var out = [], cells = relevantCells(b, n);
-        cells.forEach(function (c) {
+        cells.forEach(function (c) {                    /* forEach：對陣列的每個元素各做一次 */
             b[c] = BLACK;
             if (!whiteWins(b, n, depth).win) out.push(c);
             b[c] = 0;
         });
-        return out.sort(function (x, y) { return x - y; });
+        return out.sort(function (x, y) { return x - y; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
     }
     /* 這個盤面是不是一道好題：黑棋沒有現成的五顆可連、也沒有反擊的苗頭、「黑棋不下」白棋會贏（所以遠處的下法都是輸）、而且能擋住的下法剛好只有 want 這一格。
        為了快：先確認 want 真的擋得住，再一個個試其他格，只要發現第二個擋法就立刻回 false。 */
@@ -218,7 +218,7 @@
     function placeFour(n, r0, c0, d, broken) {
         var cell = function (k) { return lineCell(n, r0, c0, d, k); };
         var ks = broken ? [0, 1, 3, 4] : [0, 1, 2, 3], x = cell(broken ? 2 : 4), W = ks.map(cell);
-        if (x < 0 || W.some(function (v) { return v < 0; })) return null;
+        if (x < 0 || W.some(function (v) { return v < 0; })) return null;  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
         var B = [];
         if (!broken && cell(-1) >= 0) B.push(cell(-1));                    /* 另一端在棋盤內就放黑棋堵住；在棋盤邊緣就不用放 */
         return { white: W, black: B, x: x };
@@ -229,7 +229,7 @@
         if (d1 === d2 || (d1 + 4) % 8 === d2) return null;                 /* 兩個方向不能在同一條線上 */
         var cell1 = function (k) { return lineCell(n, r0, c0, d1, k); }, cell2 = function (k) { return lineCell(n, r0, c0, d2, k); };
         var W = [cell1(1), cell1(2), cell1(3), cell2(1), cell2(2), cell2(3)], x = r0 * n + c0;
-        if (W.some(function (v) { return v < 0; })) return null;
+        if (W.some(function (v) { return v < 0; })) return null;  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
         if (cell1(4) < 0 || cell2(4) < 0 || cell1(-1) < 0 || cell2(-1) < 0) return null;
         return { white: W, black: [], x: x };
     }
@@ -283,7 +283,7 @@
             var color = rand() < 0.5 ? WHITE : BLACK, safe;
             if (color === BLACK) {
                 if (!relevant) relevant = relevantCells(b, n);
-                safe = relevant.indexOf(k) < 0;
+                safe = relevant.indexOf(k) < 0;         /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             } else safe = !touchesWhite(b, n, k);
             if (!safe && used >= budget) continue;
             b[k] = color;
@@ -294,14 +294,14 @@
     }
     /* 題庫題目：挑一題、隨機翻轉旋轉平移、重新驗證（平移後碰到棋盤邊緣可能改變局面）、放假威脅與雜訊；做不出來回傳 null */
     function makeFromBank(level, tier, rand, n, target, want) {
-        var list = bankEntries(tier), t0 = Date.now();
+        var list = bankEntries(tier), t0 = Date.now();  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
         if (!list.length) return null;
         /* 題庫的題目本身就有不少棋子；這一關的棋子數目標比較少時，只挑棋子數不超過「目標＋STONE_SLACK」的題目（全都超過就挑最少的那幾題） */
-        var small = list.filter(function (e) { return (e[3].length + e[4].length) / 2 <= target + STONE_SLACK; });
-        if (!small.length) { var mn = Math.min.apply(null, list.map(function (e) { return (e[3].length + e[4].length) / 2; })); small = list.filter(function (e) { return (e[3].length + e[4].length) / 2 <= mn + 1; }); }
+        var small = list.filter(function (e) { return (e[3].length + e[4].length) / 2 <= target + STONE_SLACK; });  /* filter：留下符合條件的元素，回傳新陣列 */
+        if (!small.length) { var mn = Math.min.apply(null, list.map(function (e) { return (e[3].length + e[4].length) / 2; })); small = list.filter(function (e) { return (e[3].length + e[4].length) / 2 <= mn + 1; }); }  /* filter：留下符合條件的元素，回傳新陣列 */
         list = small;
-        for (var tr = 0; tr < 80 && Date.now() - t0 < BANK_MS; tr++) {
-            var tpl = placeBank(kit.pick(list, rand), n, rand);
+        for (var tr = 0; tr < 80 && Date.now() - t0 < BANK_MS; tr++) {  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
+            var tpl = placeBank(kit.pick(list, rand), n, rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             if (!tpl) continue;
             var b = newBoard(n);
             tpl.white.forEach(function (k) { b[k] = WHITE; });
@@ -369,17 +369,17 @@
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[堵住五子] 第 ' + level + ' 關（' + (q.kind === 'four' ? '四顆一排' : q.kind === 'corner' ? '兩個三顆交叉' : '題庫 D' + q.tier) + '）：棋子 ' + q.stones + ' 顆（假威脅 ' + q.decoys + ' 組），答案 (' + Math.floor(q.x / n) + ',' + q.x % n + ')；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        var W = stage.clientWidth || 472, cell = Math.floor(Math.min((W - 12) / n, 40)), BS = cell * n, bx = Math.round((W - BS) / 2), by = 64;
+        var W = stage.clientWidth || 472, cell = Math.floor(Math.min((W - 12) / n, 40)), BS = cell * n, bx = Math.round((W - BS) / 2), by = 64;  /* Math.round：四捨五入成整數 */
         var tip = h('div', { 'class': 'qz-note gomoku-tip', text: q.kind === 'bank' ? '白棋快贏了！點唯一能化解的位置' : '白棋下一步就贏！點唯一的擋法' });
-        stage.appendChild(tip);
-        var board = h('div', { 'class': 'gomoku-board' });
+        stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var board = h('div', { 'class': 'gomoku-board' });  /* board：盤面（所有格子都放在裡面） */
         board.style.cssText = 'left:' + bx + 'px;top:' + by + 'px;width:' + BS + 'px;height:' + BS + 'px;';
-        stage.appendChild(board);
-        var svg = kit.svg('svg', { 'class': 'gomoku-svg', viewBox: '0 0 ' + BS + ' ' + BS, width: BS, height: BS }, board);
+        stage.appendChild(board);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var svg = kit.svg('svg', { 'class': 'gomoku-svg', viewBox: '0 0 ' + BS + ' ' + BS, width: BS, height: BS }, board);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         function px(k) { return (k % n + 0.5) * cell; }
         function py(k) { return (Math.floor(k / n) + 0.5) * cell; }
         for (var i = 0; i < n; i++) {
-            kit.svg('line', { 'class': 'gomoku-grid', x1: (i + 0.5) * cell, y1: cell / 2, x2: (i + 0.5) * cell, y2: BS - cell / 2 }, svg);
+            kit.svg('line', { 'class': 'gomoku-grid', x1: (i + 0.5) * cell, y1: cell / 2, x2: (i + 0.5) * cell, y2: BS - cell / 2 }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             kit.svg('line', { 'class': 'gomoku-grid', x1: cell / 2, y1: (i + 0.5) * cell, x2: BS - cell / 2, y2: (i + 0.5) * cell }, svg);
         }
         var gStones = kit.svg('g', {}, svg), gMark = kit.svg('g', {}, svg);
@@ -393,12 +393,12 @@
         var done = false;
         api.timer(timeMs(level), function () { judge(-1); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         if (level === 1 && kit.once('gomoku.hint')) kit.hintOn(stage, null, { mode: 'tap', x: bx + px(q.x), y: by + py(q.x), delay: 700, text: '請點能擋住白棋的位置' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
-        kit.onTap(board, function (e) {
+        kit.onTap(board, function (e) {                 /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             if (done || api.over) return;
             var p = kit.localPt(e, board), c = Math.floor(p.x / cell), r = Math.floor(p.y / cell);
             if (c < 0 || c >= n || r < 0 || r >= n) return;
             var idx = r * n + c;
-            if (b[idx]) { tip.textContent = '那一格已經有棋子了，換一格'; Sfx.play('bad'); return; }
+            if (b[idx]) { tip.textContent = '那一格已經有棋子了，換一格'; Sfx.play('bad'); return; }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             judge(idx);
         });
         /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
@@ -409,16 +409,16 @@
             if (idx >= 0) { b[idx] = BLACK; stone(idx, BLACK, 'gomoku-stone--new'); }
             kit.svg('circle', { 'class': 'gomoku-ring', cx: px(q.x), cy: py(q.x), r: cell * 0.55 }, gMark);
             if (ok) {
-                info.textContent = '擋住了！白棋的威脅化解了';
-                kit.flash(stage, true, api.my);
-                api.pass({ delay: 1500 });
+                info.textContent = '擋住了！白棋的威脅化解了';      /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                kit.flash(stage, true, api.my);         /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+                api.pass({ delay: 1500 });              /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
                 return;
             }
             /* 失敗：白棋依序下出致勝的幾手（被逼著擋的黑棋也畫出來），最後用紅線穿過連成的五顆 */
             var pv = whiteWins(b, n, q.depth || WIN_DEPTH).pv;
-            info.textContent = idx >= 0 ? '擋不住！綠圈才是唯一的擋法' : '時間到！綠圈才是唯一的擋法';
+            info.textContent = idx >= 0 ? '擋不住！綠圈才是唯一的擋法' : '時間到！綠圈才是唯一的擋法';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             pv.forEach(function (m, j) {
-                api.after(REVEAL_LEAD_MS + j * REVEAL_STEP_MS, function () {
+                api.after(REVEAL_LEAD_MS + j * REVEAL_STEP_MS, function () {  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                     b[m.cell] = m.c; stone(m.cell, m.c, 'gomoku-stone--new');
                     if (j === pv.length - 1) {
                         var five = fiveThrough(b, n, m.cell, WHITE);
@@ -426,8 +426,8 @@
                     }
                 });
             });
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: revealMs(pv.length), lines: [idx >= 0 ? '你下的位置擋不住，白棋連成五顆了' : '時間到！', '唯一的擋法是第 ' + (Math.floor(q.x / n) + 1) + ' 列第 ' + (q.x % n + 1) + ' 欄（綠圈）'] });
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: revealMs(pv.length), lines: [idx >= 0 ? '你下的位置擋不住，白棋連成五顆了' : '時間到！', '唯一的擋法是第 ' + (Math.floor(q.x / n) + 1) + ' 列第 ' + (q.x % n + 1) + ' 欄（綠圈）'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.x); };

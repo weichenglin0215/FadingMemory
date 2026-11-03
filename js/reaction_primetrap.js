@@ -44,8 +44,8 @@
         return n + ' ＝ ' + f.join(' × ');
     }
     function rangeFor(level) { return level <= 8 ? [11, 60] : (level <= 20 ? [11, 150] : [101, 300]); }
-    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
-    function trapFrac(level) { return kit.ramp(level, TRAP_START, TRAP_END, RAMP_LEVELS); }
+    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function trapFrac(level) { return kit.ramp(level, TRAP_START, TRAP_END, RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 範圍內的數字池：質數、陷阱合數（最小質因數 ≥ 7）、一般合數 */
     var poolCache = {};
     function poolsFor(level) {
@@ -78,8 +78,8 @@
         var branchTrap = !wantPrime && pools.traps.length > 0 && (pools.plain.length === 0 || rand() < trapFrac(level));
         for (var t = 0; t < 50; t++) {
             var n, trap = false;
-            if (wantPrime) n = kit.pick(pools.primes, rand);
-            else if (branchTrap) { n = kit.pick(pools.traps, rand); trap = true; }
+            if (wantPrime) n = kit.pick(pools.primes, rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+            else if (branchTrap) { n = kit.pick(pools.traps, rand); trap = true; }  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             else {
                 /* 一般合數：前期偶數、5 的倍數多；越後面這類「太容易」的數字越少（被抽到時有一定機率重抽） */
                 n = kit.pick(pools.plain, rand);
@@ -124,33 +124,33 @@
         var num = h('div', { 'class': 'primetrap-num', text: String(q.n) });
         var note = h('div', { 'class': 'primetrap-note' });
         var why = h('div', { 'class': 'primetrap-why' });
-        stage.appendChild(num); stage.appendChild(note); stage.appendChild(why);
+        stage.appendChild(num); stage.appendChild(note); stage.appendChild(why);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var bComp = h('button', { 'class': 'btn btn--primary primetrap-btn', html: '合數<small>（非質數）</small>' });
         var bPrime = h('button', { 'class': 'btn btn--go primetrap-btn', text: '質數' });
-        stage.appendChild(h('div', { 'class': 'rx-btnrow' }, [bComp, bPrime]));
+        stage.appendChild(h('div', { 'class': 'rx-btnrow' }, [bComp, bPrime]));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         api.timer(timeMs(level), function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
 
         /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(sayPrime) {
             if (api.over) return;
             var text = q.prime ? q.n + ' 是質數' : factorText(q.n);
-            note.textContent = text;
+            note.textContent = text;                    /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             if (sayPrime === q.prime) {
-                num.classList.add('primetrap-num--ok');
-                api.pass({ delay: 600 });
+                num.classList.add('primetrap-num--ok'); /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                api.pass({ delay: 600 });               /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
             } else {
-                num.classList.add('primetrap-num--bad');
+                num.classList.add('primetrap-num--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 note.classList.add('primetrap-note--bad');
-                why.textContent = (sayPrime == null ? '時間到！' : '答錯了：') + q.n + (q.prime ? ' 是質數' : ' 不是質數') + (q.trap ? '\n它不能被 2、3、5 整除，看起來像質數，其實是合數' : '');
-                api.fail({ delay: FAIL_MS, lines: [
+                why.textContent = (sayPrime == null ? '時間到！' : '答錯了：') + q.n + (q.prime ? ' 是質數' : ' 不是質數') + (q.trap ? '\n它不能被 2、3、5 整除，看起來像質數，其實是合數' : '');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                api.fail({ delay: FAIL_MS, lines: [     /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                     (sayPrime == null ? '時間到！' : '答錯了：') + q.n + (q.prime ? ' 是質數' : ' 不是質數'),
                     text,
                     q.trap ? '它不能被 2、3、5 整除，看起來像質數，其實是合數' : ''
-                ].filter(function (x) { return x; }) });
+                ].filter(function (x) { return x; }) });  /* filter：留下符合條件的元素，回傳新陣列 */
             }
         }
-        kit.onTap(bPrime, function () { judge(true); });
-        kit.onTap(bComp, function () { judge(false); });
+        kit.onTap(bPrime, function () { judge(true); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        kit.onTap(bComp, function () { judge(false); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.prime); };
         api.wrong = function () { judge(!q.prime); };

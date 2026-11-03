@@ -37,13 +37,13 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 這一關算式裡有幾個數字：從 NUMS 的第一個數字線性變到第二個，並限制在範圍內（kit.clamp） */
-    function numsFor(level) { return kit.clamp(Math.round(kit.ramp(level, NUMS[0], NUMS[1], RAMP_LEVELS)), NUMS[0], NUMS[1]); }
+    function numsFor(level) { return kit.clamp(Math.round(kit.ramp(level, NUMS[0], NUMS[1], RAMP_LEVELS)), NUMS[0], NUMS[1]); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 這一關有幾個符號被藏起來：從 BLANKS 線性增加，但不能超過「符號數」（數字數 − 1） */
-    function blanksFor(level) { return kit.clamp(Math.round(kit.ramp(level, BLANKS[0], BLANKS[1], RAMP_LEVELS)), BLANKS[0], numsFor(level) - 1); }
+    function blanksFor(level) { return kit.clamp(Math.round(kit.ramp(level, BLANKS[0], BLANKS[1], RAMP_LEVELS)), BLANKS[0], numsFor(level) - 1); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
     /* 這一關的作答限時（毫秒）＝（基本秒數 ＋ 每個空格的秒數 × 空格數）× 倍率 × 1000 */
-    function ansMs(level) { return Math.round((TIME_BASE + TIME_PER_BLANK * blanksFor(level)) * kit.ramp(level, TIME_MUL[0], TIME_MUL[1], RAMP_LEVELS) * 1000); }
+    function ansMs(level) { return Math.round((TIME_BASE + TIME_PER_BLANK * blanksFor(level)) * kit.ramp(level, TIME_MUL[0], TIME_MUL[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
     /* 最大公因數（輾轉相除法）：用來把分數約到最簡 */
-    function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { var t = a % b; a = b; b = t; } return a; }
+    function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { var t = a % b; a = b; b = t; } return a; }  /* Math.abs：取絕對值（去掉負號） */
     /* 分數 {n,d}（d>0）：加減乘除，除以 0 回傳 null */
     /* 建立最簡分數 { n 分子, d 分母 }：分母一定是正的（負號放分子），再除以最大公因數 */
     function rat(n, d) { if (d < 0) { n = -n; d = -d; } var g = gcd(n, d) || 1; return { n: n / g, d: d / g }; }
@@ -61,7 +61,7 @@
     /* 算式 nums（整數）與符號 ops（比數字少一個）算出結果（分數）。照數學規則：先乘除、後加減；除以 0 回傳 null。
        exact 為 true 時，只要有任何一個除法「除不盡」也回傳 null（出題時要求真正的算式每一步都是整數）。 */
     function evalOps(nums, ops, exact) {
-        var vals = nums.map(function (x) { return rat(x, 1); }), os = ops.slice(), i;
+        var vals = nums.map(function (x) { return rat(x, 1); }), os = ops.slice(), i;  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         for (i = 0; i < os.length;) {
             if (os[i] === '*' || os[i] === '/') {
                 var r = rop(os[i], vals[i], vals[i + 1]);
@@ -82,8 +82,8 @@
         var total = 0, combo = [];
         function rec(k) {
             if (k === blanks.length) {
-                var os = ops.slice();
-                blanks.forEach(function (bi, j) { os[bi] = combo[j]; });
+                var os = ops.slice();                   /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+                blanks.forEach(function (bi, j) { os[bi] = combo[j]; });  /* forEach：對陣列的每個元素各做一次 */
                 if (ratEqInt(evalOps(nums, os), target)) total++;
                 return;
             }
@@ -101,12 +101,12 @@
         var numMax = (level <= BIG_NUM_LEVELS && b <= 2 && n <= 4) ? 12 : 9;
         for (var tr = 0; tr < 800; tr++) {
             var nums = [], ops = [], i;
-            for (i = 0; i < n; i++) nums.push(kit.randInt(1, numMax, rand));
-            for (i = 0; i < n - 1; i++) ops.push(kit.pick(OPS, rand));
+            for (i = 0; i < n; i++) nums.push(kit.randInt(1, numMax, rand));  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+            for (i = 0; i < n - 1; i++) ops.push(kit.pick(OPS, rand));  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             var t = evalOps(nums, ops, true);
             if (t == null || t.d !== 1 || t.n < 1 || t.n > TARGET_MAX) continue;
             var idx = []; for (i = 0; i < n - 1; i++) idx.push(i);
-            var blanks = kit.sample(idx, b, rand).sort(function (x, y) { return x - y; });
+            var blanks = kit.sample(idx, b, rand).sort(function (x, y) { return x - y; });  /* kit.sample(陣列, n, rand)：從陣列隨機取 n 個不重複的元素 */
             if (countSolutions(nums, ops, blanks, t.n) !== 1) continue;
             return { nums: nums, ops: ops, blanks: blanks, target: t.n, text: toText(nums, ops, t.n) };
         }
@@ -117,7 +117,7 @@
     /* 把算式組成文字，例如「8 ÷ 2 ＋ 2 × 3 ＝ 10」（符號換成畫面用的數學符號） */
     function toText(nums, ops, target) {
         var s = '';
-        nums.forEach(function (x, i) { s += (i ? ' ' + OP_TEXT[ops[i - 1]] + ' ' : '') + x; });
+        nums.forEach(function (x, i) { s += (i ? ' ' + OP_TEXT[ops[i - 1]] + ' ' : '') + x; });  /* forEach：對陣列的每個元素各做一次 */
         return s + ' ＝ ' + target;
     }
     /* 玩家的填法 → 算出來是多少？（分數轉成字串；除不盡就寫 ≈ 小數 4 位；除以 0 寫「不能算」） */
@@ -159,14 +159,14 @@
         var cols = [];                                                  /* 每個空格的四顆按鈕 */  /* cols：每個空格的四顆符號按鈕（之後揭曉時要依序標出對錯） */
         q.nums.forEach(function (x, i) {
             if (i > 0) {
-                var bi = q.blanks.indexOf(i - 1);
-                if (bi < 0) row.appendChild(h('div', { 'class': 'fillop-fixed', text: OP_TEXT[q.ops[i - 1]] }));
+                var bi = q.blanks.indexOf(i - 1);       /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+                if (bi < 0) row.appendChild(h('div', { 'class': 'fillop-fixed', text: OP_TEXT[q.ops[i - 1]] }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
                 else {
                     var col = h('div', { 'class': 'fillop-col' });
-                    var bs = OPS.map(function (op) {
+                    var bs = OPS.map(function (op) {    /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                         var b = h('button', { 'class': 'fillop-op', text: OP_TEXT[op] });
-                        kit.onTap(b, function () { choose(bi, op); });
-                        col.appendChild(b);
+                        kit.onTap(b, function () { choose(bi, op); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+                        col.appendChild(b);             /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
                         return b;
                     });
                     cols.push(bs);
@@ -180,17 +180,17 @@
         stage.appendChild(row); stage.appendChild(eqLine); stage.appendChild(live);
         var okBtn = null;
         if (q.blanks.length > 1) {
-            var grid = kit.btnGrid(stage, [{ text: '確定', kind: 'go', cls: 'fillop-ok fillop-ok--off', onTap: function () { if (allChosen()) judge(); } }], { h: 84 });
+            var grid = kit.btnGrid(stage, [{ text: '確定', kind: 'go', cls: 'fillop-ok fillop-ok--off', onTap: function () { if (allChosen()) judge(); } }], { h: 84 });  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
             okBtn = grid.btns[0];
         }
         api.timer(ansMs(level), function () { judge(); });  /* 開始倒數：時間到就直接判定（沒選好就算錯）；上方的時間條由共用骨架畫 */
-        if (level === 1 && kit.once('fillop.hint')) {
-            var hint = kit.hintOn(stage, cols[0][OPS.indexOf(q.ops[q.blanks[0]])], { mode: 'tap', delay: 500, text: '請點擊正確的符號' });
+        if (level === 1 && kit.once('fillop.hint')) {   /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
+            var hint = kit.hintOn(stage, cols[0][OPS.indexOf(q.ops[q.blanks[0]])], { mode: 'tap', delay: 500, text: '請點擊正確的符號' });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             if (hint.label) { hint.label.style.top = '4px'; }                  /* 提示文字放在最上面，才不會蓋住算式裡的數字 */
         }
 
         /* 所有空格都選了符號嗎 */
-        function allChosen() { return chosen.every(function (c) { return c != null; }); }
+        function allChosen() { return chosen.every(function (c) { return c != null; }); }  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
         /* 把玩家目前選的符號填進真正的符號陣列（沒被藏起來的符號維持原樣），拿去算結果 */
         function currentOps() {
             var os = q.ops.slice();
@@ -200,14 +200,14 @@
         /* 玩家點某個空格的某個符號：記下並標亮；只有一個空格就直接判定，多個空格要等全部選好再按「確定」；全選好時順便顯示「現在算出來是多少」 */
         function choose(j, op) {
             if (api.over) return;
-            Sfx.play('click');
+            Sfx.play('click');                          /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             chosen[j] = op;
-            cols[j].forEach(function (b, k) { b.classList.toggle('fillop-op--on', OPS[k] === op); });
+            cols[j].forEach(function (b, k) { b.classList.toggle('fillop-op--on', OPS[k] === op); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             if (q.blanks.length === 1) { judge(); return; }
             if (allChosen()) {
-                live.textContent = '現在算出來是 ' + valueText(evalOps(q.nums, currentOps())) + '（目標 ' + q.target + '）';
-                okBtn.classList.remove('fillop-ok--off');
-            } else live.textContent = '每個空格選一個符號';
+                live.textContent = '現在算出來是 ' + valueText(evalOps(q.nums, currentOps())) + '（目標 ' + q.target + '）';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                okBtn.classList.remove('fillop-ok--off');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            } else live.textContent = '每個空格選一個符號';      /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         }
         /* 判定：結果等於目標才算對。揭曉時把正確的符號標綠、玩家選錯的標紅，並寫出完整的正確算式；對就過關、錯就失敗 */
         function judge() {
@@ -222,11 +222,11 @@
                 });
             });
             live.textContent = '正確的算式：' + q.text;
-            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1100 }); return; }
-            kit.flash(stage, false, api.my);
-            api.fail({
+            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1100 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: 2400, lines: [
-                    allChosen() ? '你的填法算出 ' + valueText(evalOps(q.nums, currentOps())) + '，目標是 ' + q.target : (chosen.some(function (c) { return c != null; }) ? '時間到，還有空格沒選！' : '時間到！'),
+                    allChosen() ? '你的填法算出 ' + valueText(evalOps(q.nums, currentOps())) + '，目標是 ' + q.target : (chosen.some(function (c) { return c != null; }) ? '時間到，還有空格沒選！' : '時間到！'),  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
                     '正確的算式：' + q.text
                 ]
             });
@@ -234,7 +234,7 @@
         /* 給測試／debug 用：api.solve 全部選對並判定、api.wrong 故意把第一個空格選錯並判定 */
         api.solve = function () { q.blanks.forEach(function (bi, j) { chosen[j] = q.ops[bi]; }); judge(); };
         api.wrong = function () {
-            var j = 0, bad = OPS.filter(function (o) { return o !== q.ops[q.blanks[0]]; })[0];
+            var j = 0, bad = OPS.filter(function (o) { return o !== q.ops[q.blanks[0]]; })[0];  /* filter：留下符合條件的元素，回傳新陣列 */
             q.blanks.forEach(function (bi, k) { chosen[k] = q.ops[bi]; });
             chosen[j] = bad;
             judge();

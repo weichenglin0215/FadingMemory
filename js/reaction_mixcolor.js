@@ -39,7 +39,7 @@
     var TARGET_RANGE = [40, 215];               /* 目標顏色每個頻道的範圍（避免太黑太白不好比） */
 
     /* ═══ 顏色換算（跟 js/reaction_matchcolor.js 同一套公式）═══ */
-    function cssRgb(c) { return 'rgb(' + Math.round(c.r) + ',' + Math.round(c.g) + ',' + Math.round(c.b) + ')'; }
+    function cssRgb(c) { return 'rgb(' + Math.round(c.r) + ',' + Math.round(c.g) + ',' + Math.round(c.b) + ')'; }  /* Math.round：四捨五入成整數 */
     function toLinear(u) { var c = u / 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
     function labF(t) { return t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116; }
     function rgbToLab(c) {
@@ -53,9 +53,9 @@
     /* 顏色差異度（%）＝ΔE76 */
     function diffPercent(c1, c2) {
         var p = rgbToLab(c1), q = rgbToLab(c2);
-        return Math.sqrt(Math.pow(p.L - q.L, 2) + Math.pow(p.a - q.a, 2) + Math.pow(p.b - q.b, 2));
+        return Math.sqrt(Math.pow(p.L - q.L, 2) + Math.pow(p.a - q.a, 2) + Math.pow(p.b - q.b, 2));  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
     }
-    function roundRgb(c) { return { r: Math.round(c.r), g: Math.round(c.g), b: Math.round(c.b) }; }
+    function roundRgb(c) { return { r: Math.round(c.r), g: Math.round(c.g), b: Math.round(c.b) }; }  /* Math.round：四捨五入成整數 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 按住 holdSec 秒時的變化速度（單位／秒）：線性加快到上限 */
@@ -65,9 +65,9 @@
     /* 出一局：目標色、右邊色塊的起始色（離目標至少 START_MIN，三個頻道各偏一點） */
     function newRound(rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var T = TARGET_RANGE, target = { r: Math.round(kit.randFloat(T[0], T[1], rand)), g: Math.round(kit.randFloat(T[0], T[1], rand)), b: Math.round(kit.randFloat(T[0], T[1], rand)) };
+        var T = TARGET_RANGE, target = { r: Math.round(kit.randFloat(T[0], T[1], rand)), g: Math.round(kit.randFloat(T[0], T[1], rand)), b: Math.round(kit.randFloat(T[0], T[1], rand)) };  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         for (var i = 0; i < 400; i++) {
-            var s = { r: Math.round(kit.randFloat(0, 255, rand)), g: Math.round(kit.randFloat(0, 255, rand)), b: Math.round(kit.randFloat(0, 255, rand)) };
+            var s = { r: Math.round(kit.randFloat(0, 255, rand)), g: Math.round(kit.randFloat(0, 255, rand)), b: Math.round(kit.randFloat(0, 255, rand)) };  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             if (diffPercent(target, s) >= START_MIN) return { target: target, start: s };
         }
         return { target: target, start: { r: target.r > 128 ? 0 : 255, g: target.g > 128 ? 0 : 255, b: target.b > 128 ? 0 : 255 } };
@@ -91,21 +91,21 @@
 
     /* mount：選單按下這款遊戲時會呼叫它，負責把遊戲畫面建立在 root（遊戲區）裡；ctx 是選單給的工具（例如 ctx.setMeta 設定標題列右邊的文字）。 */
     function mount(root, ctx) {
-        root.classList.add('mixcolor-bg');
+        root.classList.add('mixcolor-bg');              /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         var R = null;
 
         function round() {
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
-            ctx.setMeta(fmtBest(Reaction.getBest(ID)));
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
+            ctx.setMeta(fmtBest(Reaction.getBest(ID))); /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             var rd = newRound();
             var cur = { r: rd.start.r, g: rd.start.g, b: rd.start.b };         /* 浮點數，顯示時四捨五入 */
             var leftEl = h('div', { 'class': 'mixcolor-block' }), gapEl = h('div', { 'class': 'mixcolor-gap' }), rightEl = h('div', { 'class': 'mixcolor-block' });
             leftEl.style.background = cssRgb(rd.target);
             gapEl.style.flexBasis = GAP_PX + 'px';
-            root.appendChild(h('div', { 'class': 'mixcolor-field' }, [leftEl, gapEl, rightEl]));
+            root.appendChild(h('div', { 'class': 'mixcolor-field' }, [leftEl, gapEl, rightEl]));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
             function paint() { rightEl.style.background = cssRgb(cur); }
             paint();
@@ -113,9 +113,9 @@
 
             var pad = h('div', { 'class': 'mixcolor-pad' }), okBtn = h('button', { 'class': 'btn btn--go mixcolor-ok', text: '確定' });
             var btnEls = {};
-            BUTTONS.forEach(function (b) {
+            BUTTONS.forEach(function (b) {              /* forEach：對陣列的每個元素各做一次 */
                 var el = h('button', { 'class': 'mixcolor-btn ' + b.cls, text: b.text, attrs: { 'aria-label': ({ r: '紅', g: '綠', b: '藍' })[b.ch] + (b.dir > 0 ? '增加' : '減少') } });
-                btnEls[b.id] = el; pad.appendChild(el);
+                btnEls[b.id] = el; pad.appendChild(el); /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             });
             var foot = h('div', { 'class': 'mixcolor-foot' }, [h('div', { 'class': 'mixcolor-hint', text: '按住 ＋ ／ － 調整右邊色塊的顏色，\n調到跟左邊一樣，再按「確定」。' }), pad, okBtn]);
             root.appendChild(foot);
@@ -132,32 +132,32 @@
                 for (var k in held) { var it = held[k]; cur[it.b.ch] = stepChannel(cur[it.b.ch], it.b.dir, (now - it.t0) / 1000, dt); changed = true; }
                 if (changed) paint();
             }
-            my.loop(function (now) { tick(now); if (locked) return false; });
-            (function again() { my.after(40, function () { if (!locked) { tick(performance.now()); again(); } }); })();
-            BUTTONS.forEach(function (b) {
+            my.loop(function (now) { tick(now); if (locked) return false; });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
+            (function again() { my.after(40, function () { if (!locked) { tick(performance.now()); again(); } }); })();  /* performance.now()：高精度的時間（毫秒），計時用 */
+            BUTTONS.forEach(function (b) {              /* forEach：對陣列的每個元素各做一次 */
                 var el = btnEls[b.id];
-                el.addEventListener('pointerdown', function (e) {
+                el.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
                     if (locked) return;
-                    e.preventDefault();
-                    try { el.setPointerCapture(e.pointerId); } catch (err) { }
+                    e.preventDefault();                 /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+                    try { el.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
                     if (hint) { hint.remove(); hint = null; }
-                    held[e.pointerId] = { b: b, t0: performance.now() };
+                    held[e.pointerId] = { b: b, t0: performance.now() };  /* performance.now()：高精度的時間（毫秒），計時用 */
                     lastAdjust = performance.now();
                     cur[b.ch] = Math.min(255, Math.max(0, cur[b.ch] + b.dir));          /* 一按下去先動 1 個單位（點一下也能微調） */
-                    el.classList.add('mixcolor-btn--on'); paint(); Sfx.play('click');
+                    el.classList.add('mixcolor-btn--on'); paint(); Sfx.play('click');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 });
-                function up(e) { if (held[e.pointerId]) { delete held[e.pointerId]; el.classList.remove('mixcolor-btn--on'); lastAdjust = performance.now(); } }
-                el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('lostpointercapture', up);
+                function up(e) { if (held[e.pointerId]) { delete held[e.pointerId]; el.classList.remove('mixcolor-btn--on'); lastAdjust = performance.now(); } }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('lostpointercapture', up);  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             });
             /* 操作提示（只在第一次進遊戲時）：手指按住「差最多的那個頻道要按的那顆按鈕」（第一次的正確方向） */
-            if (kit.once('mixcolor.hint')) {
+            if (kit.once('mixcolor.hint')) {            /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
                 var best = null, bd = -1;
-                ['r', 'g', 'b'].forEach(function (ch) { var d = Math.abs(rd.target[ch] - rd.start[ch]); if (d > bd) { bd = d; best = ch + (rd.target[ch] > rd.start[ch] ? '+' : '-'); } });
+                ['r', 'g', 'b'].forEach(function (ch) { var d = Math.abs(rd.target[ch] - rd.start[ch]); if (d > bd) { bd = d; best = ch + (rd.target[ch] > rd.start[ch] ? '+' : '-'); } });  /* Math.abs：取絕對值（去掉負號） */
                 hint = kit.hintOn(root, btnEls[best], { mode: 'hold', delay: 500, text: '請按住按鈕調整顏色' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
             }
 
             /* 確定：右邊色塊定住，兩個色塊靠攏，顯示差異度 */
-            kit.onTap(okBtn, function () {
+            kit.onTap(okBtn, function () {              /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
                 if (locked) return;
                 /* 防誤觸：還有 ＋／－ 按著、或剛放開不久，這一下很可能是手指滑到「確定」，不算 */
                 if (anyHeld() || performance.now() - lastAdjust < OK_GUARD_MS) return;
@@ -166,13 +166,13 @@
                 var shown = roundRgb(cur), real = diffPercent(rd.target, shown);
                 var diff = Leaderboard.fake4(real);
                 console.log('混出什麼色：實際差異度 ' + real.toFixed(6) + '% → 成績 ' + fmtPct(diff) + '；你調到 rgb(' + shown.r + ',' + shown.g + ',' + shown.b + ')');
-                var isNew = Reaction.setBest(ID, diff, function (v, b) { return v < b; });
+                var isNew = Reaction.setBest(ID, diff, function (v, b) { return v < b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                 ctx.setMeta(fmtBest(Reaction.getBest(ID)));
                 gapEl.classList.add('mixcolor-gap--closed');
-                Sfx.play('click');
+                Sfx.play('click');                      /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 foot.style.visibility = 'hidden';
                 my.after(CLOSE_MS + 150, function () {
-                    kit.result(root, {
+                    kit.result(root, {                  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                         num: '顏色差異度 ' + fmtPct(diff), isNew: isNew, score: diff, dock: 'bottom',
                         lines: ['你調到 rgb(' + shown.r + ', ' + shown.g + ', ' + shown.b + ')', '目標是 rgb(' + rd.target.r + ', ' + rd.target.g + ', ' + rd.target.b + ')'],
                         label: rating(diff),
@@ -188,7 +188,7 @@
                 hold: function (id, ms) {
                     var el = btnEls[id];
                     el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerId: 93 }));
-                    return new Promise(function (res) { setTimeout(function () { el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 93 })); res(roundRgb(cur)); }, ms); });
+                    return new Promise(function (res) { setTimeout(function () { el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 93 })); res(roundRgb(cur)); }, ms); });  /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
                 }
             };
         }

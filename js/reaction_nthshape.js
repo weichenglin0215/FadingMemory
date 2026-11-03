@@ -41,11 +41,11 @@
     var SHAPE_NAME = { circle: '圓形', square: '正方形', triangle: '三角形', star: '星形', diamond: '菱形', heart: '愛心', cross: '十字', hexagon: '六角形' };  /* 每種圖形的中文名稱 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function shapesFor(level) { return kit.clamp(Math.round(kit.ramp(level, SHAPES_N[0], SHAPES_N[1], RAMP_LEVELS)), SHAPES_N[0], SHAPES_N[1]); }
-    function seqFor(level) { return kit.clamp(Math.round(kit.ramp(level, SEQ_N[0], SEQ_N[1], RAMP_LEVELS)), SEQ_N[0], SEQ_N[1]); }
-    function showMs(level) { return Math.round(kit.ramp(level, SHOW_MS[0], SHOW_MS[1], RAMP_LEVELS)); }
-    function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }
-    function extraFor(level) { return level < COLOR_FROM ? 0 : kit.clamp(Math.round(kit.ramp(level, EXTRA[0], EXTRA[1], RAMP_LEVELS - COLOR_FROM + 1)), EXTRA[0], EXTRA[1]); }
+    function shapesFor(level) { return kit.clamp(Math.round(kit.ramp(level, SHAPES_N[0], SHAPES_N[1], RAMP_LEVELS)), SHAPES_N[0], SHAPES_N[1]); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function seqFor(level) { return kit.clamp(Math.round(kit.ramp(level, SEQ_N[0], SEQ_N[1], RAMP_LEVELS)), SEQ_N[0], SEQ_N[1]); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
+    function showMs(level) { return Math.round(kit.ramp(level, SHOW_MS[0], SHOW_MS[1], RAMP_LEVELS)); }  /* Math.round：四捨五入成整數 */
+    function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function extraFor(level) { return level < COLOR_FROM ? 0 : kit.clamp(Math.round(kit.ramp(level, EXTRA[0], EXTRA[1], RAMP_LEVELS - COLOR_FROM + 1)), EXTRA[0], EXTRA[1]); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
     /* 圖形的 SVG（100×100）；fill 是填色 */
     function shapeSvg(shape, fill, stroke) {
         var body;
@@ -71,27 +71,27 @@
     /* 出一關：{ pool:[{shape, hue, cname}]（所有可能的圖形，也就是答案按鈕）, seq（閃現順序，pool 的索引）, ask（問第幾個，1 起算）, ans（答案是 pool 的第幾個） } */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var n = shapesFor(level), shapes = kit.sample(SHAPES, n, rand), pool = [], i;
+        var n = shapesFor(level), shapes = kit.sample(SHAPES, n, rand), pool = [], i;  /* kit.sample(陣列, n, rand)：從陣列隨機取 n 個不重複的元素 */
         if (level < COLOR_FROM) {
-            shapes.forEach(function (s) { pool.push({ shape: s, hue: NEUTRAL.h, cname: NEUTRAL.n }); });
+            shapes.forEach(function (s) { pool.push({ shape: s, hue: NEUTRAL.h, cname: NEUTRAL.n }); });  /* forEach：對陣列的每個元素各做一次 */
         } else {
-            var cols = kit.shuffle(HUES, rand);
-            shapes.forEach(function (s, k) { var c = cols[k % cols.length]; pool.push({ shape: s, hue: c.h, cname: c.n }); });
+            var cols = kit.shuffle(HUES, rand);         /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+            shapes.forEach(function (s, k) { var c = cols[k % cols.length]; pool.push({ shape: s, hue: c.h, cname: c.n }); });  /* forEach：對陣列的每個元素各做一次 */
             /* 同形不同色：挑 extra 種形狀，各多一個「不同顏色」的版本 */
-            kit.sample(shapes, Math.min(extraFor(level), shapes.length), rand).forEach(function (s) {
-                var used = pool.filter(function (p) { return p.shape === s; }).map(function (p) { return p.hue; });
-                var c = kit.pick(HUES.filter(function (x) { return used.indexOf(x.h) < 0; }), rand);
+            kit.sample(shapes, Math.min(extraFor(level), shapes.length), rand).forEach(function (s) {  /* kit.sample(陣列, n, rand)：從陣列隨機取 n 個不重複的元素 */
+                var used = pool.filter(function (p) { return p.shape === s; }).map(function (p) { return p.hue; });  /* filter：留下符合條件的元素，回傳新陣列 */
+                var c = kit.pick(HUES.filter(function (x) { return used.indexOf(x.h) < 0; }), rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
                 pool.push({ shape: s, hue: c.h, cname: c.n });
             });
-            pool = kit.shuffle(pool, rand);
+            pool = kit.shuffle(pool, rand);             /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         }
         var L = seqFor(level), seq = [];
-        for (i = 0; i < L; i++) seq.push(kit.randInt(0, pool.length - 1, rand));
+        for (i = 0; i < L; i++) seq.push(kit.randInt(0, pool.length - 1, rand));  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         /* 至少 2 種不同的圖形出現，不然問題沒意義 */
         if (new Set(seq).size < 2) seq[L - 1] = (seq[L - 1] + 1) % pool.length;
         /* 問第幾個：頭尾權重 0.6、中間 1 */
-        var ws = seq.map(function (v, k) { return (k === 0 || k === L - 1) ? 0.6 : 1; });
-        var tot = ws.reduce(function (a, b) { return a + b; }, 0), x = rand() * tot, ask = L;
+        var ws = seq.map(function (v, k) { return (k === 0 || k === L - 1) ? 0.6 : 1; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        var tot = ws.reduce(function (a, b) { return a + b; }, 0), x = rand() * tot, ask = L;  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
         for (i = 0; i < L; i++) { x -= ws[i]; if (x <= 0) { ask = i + 1; break; } }
         return { pool: pool, seq: seq, ask: ask, ans: seq[ask - 1] };
     }
@@ -127,20 +127,20 @@
         var tip = h('div', { 'class': 'qz-note nthshape-tip', text: '請看圖形依序出現，要記得第幾個' });
         var show = h('div', { 'class': 'nthshape-show' });
         var strip = h('div', { 'class': 'nthshape-strip' });
-        stage.appendChild(tip); stage.appendChild(show); stage.appendChild(strip);
+        stage.appendChild(tip); stage.appendChild(show); stage.appendChild(strip);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var phase = 'show', btns = null;
         var t = 700, sm = showMs(level);
         q.seq.forEach(function (pi) {
-            api.after(t, function () { show.innerHTML = itemSvg(q.pool[pi]); Sfx.play('tick'); });
-            api.after(t + sm, function () { show.innerHTML = ''; });
+            api.after(t, function () { show.innerHTML = itemSvg(q.pool[pi]); Sfx.play('tick'); });  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+            api.after(t + sm, function () { show.innerHTML = ''; });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
             t += sm + GAP_MS;
         });
-        api.after(t + 100, function () {
+        api.after(t + 100, function () {                /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
             phase = 'ask';
-            tip.textContent = '第 ' + q.ask + ' 個出現的是哪一個圖形？';
-            tip.classList.add('nthshape-tip--ask');
+            tip.textContent = '第 ' + q.ask + ' 個出現的是哪一個圖形？';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            tip.classList.add('nthshape-tip--ask');     /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             var cols = q.pool.length <= 4 ? q.pool.length : 4;
-            btns = kit.btnGrid(stage, q.pool.map(function (it, i) {
+            btns = kit.btnGrid(stage, q.pool.map(function (it, i) {  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
                 return { html: itemSvg(it), kind: 'line', cls: 'nthshape-btn', onTap: function () { judge(i); } };
             }), { cols: cols, h: 96, gap: 10 }).btns;
             api.timer(ansMs(level), function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
@@ -153,22 +153,22 @@
             phase = 'done';
             var ok = i === q.ans;
             /* 揭曉：整個順序排成一列，被問的那一個圈起來 */
-            strip.innerHTML = '';
+            strip.innerHTML = '';                       /* innerHTML = ''：把元素裡面的東西全部清掉 */
             q.seq.forEach(function (pi, k) {
                 var c = h('div', { 'class': 'nthshape-cell' + (k + 1 === q.ask ? ' nthshape-cell--ask' : ''), html: itemSvg(q.pool[pi]) + '<span>' + (k + 1) + '</span>' });
-                strip.appendChild(c);
+                strip.appendChild(c);                   /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             });
-            show.innerHTML = '';
+            show.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             if (btns) {
-                btns[q.ans].classList.add('nthshape-btn--right');
+                btns[q.ans].classList.add('nthshape-btn--right');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 if (i != null && !ok) btns[i].classList.add('nthshape-btn--wrong');
             }
-            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1500 }); return; }
-            kit.flash(stage, false, api.my);
-            api.fail({
+            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1500 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: 2600, lines: [
                     (i == null ? '時間到！' : '選錯了') + '，第 ' + q.ask + ' 個出現的是：' + nm(q.pool[q.ans]),
-                    '完整順序：' + q.seq.map(function (pi) { return nm(q.pool[pi]); }).join('、')
+                    '完整順序：' + q.seq.map(function (pi) { return nm(q.pool[pi]); }).join('、')  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                 ]
             });
         }

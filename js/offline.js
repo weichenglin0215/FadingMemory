@@ -188,9 +188,9 @@
     function checkUpdate() {
         if (global.navigator.onLine === false) return Promise.resolve({ kind: 'offline' });
         var current = (global.FM_VERSION && global.FM_VERSION.version) || '';
-        var get = global.fetch('version.json?_=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; });
+        var get = global.fetch('version.json?_=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; });  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
         var timeout = new Promise(function (resolve) { global.setTimeout(function () { resolve(null); }, UPDATE_MS); });
-        return getReg().then(function (reg) { if (reg && reg.update) reg.update().catch(function () { }); }).then(function () {
+        return getReg().then(function (reg) { if (reg && reg.update) reg.update().catch(function () { }); }).then(function () {  /* catch：Promise（承諾）失敗時才執行的函式，這裡用來吞掉錯誤，避免整個程式中斷 */
             return Promise.race([get, timeout]);
         }).then(function (latest) {
             if (!latest || latest.version == null) return { kind: 'error' };
@@ -208,13 +208,13 @@
         var p = Promise.resolve();
         if ('serviceWorker' in global.navigator) {
             p = global.navigator.serviceWorker.getRegistrations().then(function (regs) {
-                return Promise.all(regs.map(function (r) { return r.unregister(); }));
-            }).catch(function () { });
+                return Promise.all(regs.map(function (r) { return r.unregister(); }));  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            }).catch(function () { });                  /* catch：Promise（承諾）失敗時才執行的函式，這裡用來吞掉錯誤，避免整個程式中斷 */
         }
         return p.then(function () {
             if (!global.caches) return;
             return global.caches.keys().then(function (names) {
-                return Promise.all(names.filter(function (n) { return n.indexOf(CACHE_PREFIX) === 0; }).map(function (n) { return global.caches.delete(n); }));
+                return Promise.all(names.filter(function (n) { return n.indexOf(CACHE_PREFIX) === 0; }).map(function (n) { return global.caches.delete(n); }));  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             });
         }).catch(function () { }).then(function () { global.location.reload(); });
     }

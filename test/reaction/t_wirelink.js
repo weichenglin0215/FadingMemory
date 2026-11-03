@@ -74,7 +74,7 @@ for (let rep = 0; rep < 60; rep++) {
 // ── 效能 ──
 { const t0 = Date.now(); for (let i = 0; i < 100; i++) T.makePuzzle(24 + (i % 20), rnd); const per = (Date.now() - t0) / 100; console.log('最高難度出題平均 ' + per.toFixed(2) + ' 毫秒'); ok(per < 100, '出題夠快：' + per.toFixed(2) + ' 毫秒'); }
 // ── 程式裡的接線 ──
-{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_wirelink.js'), css = rd('../../css/games/reaction_wirelink.css').split(/\s+/).join(' '), theme = rd('../../css/theme.css'), boot = rd('../../js/boot.js');
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_wirelink.js'), css = rd('../../css/games/reaction_wirelink.css').replace(/[ \t]*\/\*[\s\S]*?\*\//g, '').split(/\s+/).join(' '), theme = rd('../../css/theme.css'), boot = rd('../../js/boot.js');
   ok(/stageClass: 'wirelink-stage'/.test(src) && /\.wirelink-stage \{ touch-action: none;/.test(css), '舞台不捲動');
   for (let i = 0; i < 8; i++) ok(new RegExp('--wlk-' + i + ': hsl').test(theme) && new RegExp('\\.wirelink-c' + i + ' \\{ --wc: var\\(--wlk-' + i + '\\); \\}').test(css), '電線顏色 ' + i + ' 有 CSS 變數');
   ok(/api\.fail\(\{ delay: 3000/.test(src) && /wirelink-board--lit/.test(src), '失敗停格 3 秒、全部接好整塊板子亮燈');

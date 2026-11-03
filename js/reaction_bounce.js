@@ -65,7 +65,7 @@
        簾子高度＝收集口高度 + LEAD_BALLS × 基數 × 珠子半徑；CURTAIN_Y（簾子上緣的 y 座標）＝檯面高 − 簾子高度 */
     var CURTAIN_BASE_START = 1, CURTAIN_BASE_STEP = 0.333, CURTAIN_BASE_LAST = 11;
     /* 最後一關的編號：基數 > CURTAIN_BASE_LAST 的第一關（算出來是 32；1e-9 是避免小數誤差剛好差一點點） */
-    var LAST_LEVEL = Math.floor((CURTAIN_BASE_LAST - CURTAIN_BASE_START) / CURTAIN_BASE_STEP + 1e-9) + 2;
+    var LAST_LEVEL = Math.floor((CURTAIN_BASE_LAST - CURTAIN_BASE_START) / CURTAIN_BASE_STEP + 1e-9) + 2;  /* Math.floor：無條件捨去成整數 */
     /* DIV_Y：分隔線上緣；珠子中心越過這條線就算「掉進收集口」 */
     var DIV_Y = BH - SLOT_H;                    /* 分隔線頂端：越過它就算進了收集口 */
     /* 重力、初速左右最大值（所有關卡一樣；舊版 8 回合是 1500 → 2400、0 → 180，現在取中間值，難度改由簾子高度決定） */
@@ -119,7 +119,7 @@
         var cy = curtainY(level || 1);
         var x = x0, y = BALL_R + 4, vx = vx0, vy = 0, xs = [x], ys = [y], t = 0, yMark = y, yMarkW = y, tHide = null, tSee = 0, tCross = null, nudged = 0;
         /* vy（垂直速度）每步加 g×DT（重力加速度）；位置每步加 速度×DT */
-        var maxSteps = Math.round(MAX_SIM_S / DT);
+        var maxSteps = Math.round(MAX_SIM_S / DT);      /* Math.round：四捨五入成整數 */
         for (var step = 0; step < maxSteps; step++) {
             vy += g * DT;
             x += vx * DT; y += vy * DT;
@@ -131,10 +131,10 @@
             /* 釘子（只檢查附近的列）*/
             for (var i = 0; i < PEGS.length; i++) {
                 var p = PEGS[i];
-                if (Math.abs(p.y - y) > BALL_R + PEG_R + 2) continue;
+                if (Math.abs(p.y - y) > BALL_R + PEG_R + 2) continue;  /* Math.abs：取絕對值（去掉負號） */
                 var dx = x - p.x, dy = y - p.y, d2 = dx * dx + dy * dy, rr = BALL_R + PEG_R;
                 if (d2 < rr * rr) {
-                    var d = Math.sqrt(d2) || 1e-6, nx = dx / d, ny = dy / d;
+                    var d = Math.sqrt(d2) || 1e-6, nx = dx / d, ny = dy / d;  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
                     x = p.x + nx * rr; y = p.y + ny * rr;
                     /* vn 是速度在碰撞方向上的分量；vn < 0 表示正在靠近釘子，才需要反彈 */
                     var vn = vx * nx + vy * ny;
@@ -167,11 +167,11 @@
         if (tHide == null) tHide = tCross;
         if (tSee > tCross) tSee = tCross;
         /* 落點收集口＝珠子 x 座標除以收集口寬度取整，並限制在 0～6 之間 */
-        var slot = Math.max(0, Math.min(SLOTS - 1, Math.floor(x / W)));
+        var slot = Math.max(0, Math.min(SLOTS - 1, Math.floor(x / W)));  /* Math.floor：無條件捨去成整數 */
         /* 越過分隔線之後的最後一段：珠子在收集口裡繼續往下掉到 REST_Y（底緣碰到收集口下緣）。
            速度取最後一步的垂直速度，用等加速度公式解「落到 REST_Y 要多久」：yCross + vy·τ + g·τ²/2 = REST_Y */
         var n = xs.length - 1, vyEnd = n > 0 ? (ys[n] - ys[n - 1]) / DT : 0, yCross = ys[n], dY = Math.max(0, REST_Y - yCross);
-        var tLand = tCross + (dY > 0 ? (-vyEnd + Math.sqrt(vyEnd * vyEnd + 2 * g * dY)) / g : 0);
+        var tLand = tCross + (dY > 0 ? (-vyEnd + Math.sqrt(vyEnd * vyEnd + 2 * g * dY)) / g : 0);  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
         return {
             xs: xs, ys: ys, slot: slot, tCross: tCross, tHide: tHide, tSee: tSee, steps: n, xEnd: x, nudged: nudged,
             tLand: tLand, landX: slot * W + W / 2, yCross: yCross, vyEnd: vyEnd, g: g
@@ -193,7 +193,7 @@
     /* 軌跡線的點（"x,y x,y …" 字串）：從 tStart（不傳＝出發）畫到時間 tEnd；取樣點太密，每隔幾個取一個（最多約 160 個點），
        第一點是 tStart 當下的位置、最後一點一定是 tEnd 當下的位置 */
     function trailPoints(sim, tEnd, tStart) {
-        var t0 = Math.max(0, tStart || 0), tc = Math.min(tEnd, sim.tCross), iEnd = Math.min(sim.steps, Math.floor(tc / DT)), stride = Math.max(1, Math.ceil(sim.steps / 160)), pts = [];
+        var t0 = Math.max(0, tStart || 0), tc = Math.min(tEnd, sim.tCross), iEnd = Math.min(sim.steps, Math.floor(tc / DT)), stride = Math.max(1, Math.ceil(sim.steps / 160)), pts = [];  /* Math.ceil：無條件進位成整數 */
         var iFrom = 0;
         if (t0 > 0) { var s0 = pathAt(sim, Math.min(t0, sim.tCross)); pts.push(s0.x.toFixed(1) + ',' + s0.y.toFixed(1)); iFrom = Math.floor(t0 / DT) + 1; }
         for (var i = iFrom; i <= iEnd; i += stride) pts.push(sim.xs[i].toFixed(1) + ',' + sim.ys[i].toFixed(1));
@@ -204,12 +204,12 @@
     }
     /* 第二段（慢動作）的長度（毫秒）：從玩家看到的最後位置（tSee）播到落進收集口（tLand），用 REVEAL_SPEED 倍速，夾在 REVEAL_MIN_MS～REVEAL_MAX_MS */
     function revealMs(sim) {
-        return Math.round(Math.max(REVEAL_MIN_MS, Math.min(REVEAL_MAX_MS, (sim.tLand - sim.tSee) / REVEAL_SPEED * 1000)));
+        return Math.round(Math.max(REVEAL_MIN_MS, Math.min(REVEAL_MAX_MS, (sim.tLand - sim.tSee) / REVEAL_SPEED * 1000)));  /* Math.round：四捨五入成整數 */
     }
     /* 出一關：隨機決定起點與初速，預先把整條軌跡模擬完（所以答案在珠子落下前就確定，不受畫面卡頓影響） */
     function makeRound(level, rand) {
         rand = rand || Math.random;
-        var x0 = kit.randFloat(DROP_MIN, BW - DROP_MIN, rand), vx0 = kit.randFloat(-VX_MAX, VX_MAX, rand);
+        var x0 = kit.randFloat(DROP_MIN, BW - DROP_MIN, rand), vx0 = kit.randFloat(-VX_MAX, VX_MAX, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         var sim = simulate(x0, vx0, G_FALL, level);
         return { level: level, x0: x0, vx0: vx0, g: G_FALL, sim: sim, base: baseAt(level), hiddenH: hiddenH(level), curtainY: curtainY(level) };
     }
@@ -232,21 +232,21 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
             /* level 目前第幾關；cleared 已經猜中幾關；newRec 有沒有刷新最佳；cur 這一關的資料；picked 玩家猜的收集口 */
             var level = (startAt || 1) - 1, cleared = level, newRec = false, state = 'idle', rid = 0, cur = null, picked = null;
             var head = h('div', { 'class': 'bounce-head' });
             var banner = h('div', { 'class': 'bounce-banner' });
             var field = h('div', { 'class': 'bounce-field' });
-            [head, banner, field].forEach(function (n) { root.appendChild(n); });
-            ctx.setMeta(fmtBest(Reaction.getBest(ID)));
+            [head, banner, field].forEach(function (n) { root.appendChild(n); });  /* forEach：對陣列的每個元素各做一次 */
+            ctx.setMeta(fmtBest(Reaction.getBest(ID))); /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
             /* 畫檯面（SVG）：底板、釘子、分隔線、軌跡、珠子、簾子、7 個可點的收集口 */
             /* 檯面（SVG）*/
-            var svg = kit.svg('svg', { 'class': 'bounce-svg', viewBox: '0 0 ' + BW + ' ' + BH, preserveAspectRatio: 'xMidYMid meet' }, field);
-            kit.svg('rect', { 'class': 'bounce-board', x: 0, y: 0, width: BW, height: BH }, svg);
-            PEGS.forEach(function (p) { kit.svg('circle', { 'class': 'bounce-peg', cx: p.x, cy: p.y, r: PEG_R }, svg); });
+            var svg = kit.svg('svg', { 'class': 'bounce-svg', viewBox: '0 0 ' + BW + ' ' + BH, preserveAspectRatio: 'xMidYMid meet' }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+            kit.svg('rect', { 'class': 'bounce-board', x: 0, y: 0, width: BW, height: BH }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+            PEGS.forEach(function (p) { kit.svg('circle', { 'class': 'bounce-peg', cx: p.x, cy: p.y, r: PEG_R }, svg); });  /* forEach：對陣列的每個元素各做一次 */
             /* 分隔線 */
             for (var k = 1; k < SLOTS; k++) kit.svg('line', { 'class': 'bounce-div', x1: k * W, y1: DIV_Y, x2: k * W, y2: BH }, svg);
             /* 軌跡線（polyline，揭曉時才畫）：trail＝玩家看得到的那段（藍色實線）；trailHid＝被簾子蓋住的那段（橘色虛線，慢動作播放時一點一點畫出來） */
@@ -256,7 +256,7 @@
             var seen = kit.svg('circle', { 'class': 'bounce-seen', cx: -100, cy: -100, r: BALL_R + 6 }, svg);
             var ball = kit.svg('circle', { 'class': 'bounce-ball', cx: -100, cy: -100, r: BALL_R }, svg);
             var seenTxt = kit.svg('text', { 'class': 'bounce-seen__t', x: -100, y: -100, 'text-anchor': 'middle' }, svg);
-            seenTxt.textContent = '最後看到';
+            seenTxt.textContent = '最後看到';               /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             /* 簾子（遮住最下面的收集口）：高度每一關不一樣，位置在 layoutCurtain 裡設定 */
             var curtain = kit.svg('rect', { 'class': 'bounce-curtain', x: 0, y: curtainY(level + 1), width: BW, height: hiddenH(level + 1) }, svg);
             var slotEls = [], slotBgs = [], slotTxts = [];
@@ -266,9 +266,9 @@
                     var g = kit.svg('g', { 'class': 'bounce-slot' }, svg);
                     slotBgs.push(kit.svg('rect', { 'class': 'bounce-slot__bg', x: s * W + 3, y: 0, width: W - 6, height: 10, rx: 10 }, g));
                     var t = kit.svg('text', { 'class': 'bounce-slot__t', x: s * W + W / 2, y: 0, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, g);
-                    t.textContent = String(s + 1);
+                    t.textContent = String(s + 1);      /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                     slotTxts.push(t);
-                    g.addEventListener('pointerdown', function (e) { e.preventDefault(); choose(s); });
+                    g.addEventListener('pointerdown', function (e) { e.preventDefault(); choose(s); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                     slotEls.push(g);
                 })(s);
             }
@@ -276,14 +276,14 @@
             var armed = false;
             function setArmed(on) {
                 armed = on;
-                slotEls.forEach(function (g) { g.classList.toggle('bounce-slot--wait', !on); });
+                slotEls.forEach(function (g) { g.classList.toggle('bounce-slot--wait', !on); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 banner.textContent = on ? '猜珠子會掉進幾號（不限時間）' : '珠子還在掉，等它掉完再猜…';
             }
-            function setBall(x, y) { ball.setAttribute('cx', x.toFixed(1)); ball.setAttribute('cy', y.toFixed(1)); }
+            function setBall(x, y) { ball.setAttribute('cx', x.toFixed(1)); ball.setAttribute('cy', y.toFixed(1)); }  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             /* 依這一關的簾子高度，擺好簾子與 7 個收集口按鈕（按鈕蓋滿簾子的範圍，數字在簾子正中間） */
             function layoutCurtain(hh) {
                 var cy = BH - hh;
-                curtain.setAttribute('y', cy); curtain.setAttribute('height', hh);
+                curtain.setAttribute('y', cy); curtain.setAttribute('height', hh);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
                 for (var i = 0; i < SLOTS; i++) {
                     slotBgs[i].setAttribute('y', cy + 14); slotBgs[i].setAttribute('height', hh - 20);
                     slotTxts[i].setAttribute('y', cy + hh / 2 + 6);
@@ -305,16 +305,16 @@
                 head.textContent = '第 ' + level + ' 關　已過 ' + cleared + ' 關';
                 setArmed(false);
                 curtain.setAttribute('opacity', 1);
-                slotEls.forEach(function (g) { g.classList.remove('bounce-slot--pick', 'bounce-slot--ok', 'bounce-slot--bad'); g.style.display = ''; });
+                slotEls.forEach(function (g) { g.classList.remove('bounce-slot--pick', 'bounce-slot--ok', 'bounce-slot--bad'); g.style.display = ''; });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 trail.setAttribute('points', ''); trailHid.setAttribute('points', '');
                 seen.setAttribute('class', 'bounce-seen'); seen.setAttribute('cx', -100); seenTxt.setAttribute('x', -100);
                 ball.setAttribute('cx', -100);
                 state = 'fall';
                 /* 主控台印出這一關的實際資料（簾子、起點、初速、全程秒數、落在哪個收集口），方便驗證 */
                 try { console.info('[球會跑去哪] 第 ' + level + ' 關：簾子基數 ' + cur.base.toFixed(3) + '（高 ' + cur.hiddenH.toFixed(1) + 'px，上緣 y=' + cur.curtainY.toFixed(1) + '）；起點 x=' + cur.x0.toFixed(1) + '、初速 ' + cur.vx0.toFixed(0) + ' px/秒；全程 ' + cur.sim.tCross.toFixed(2) + ' 秒、最後看到在 ' + cur.sim.tSee.toFixed(2) + ' 秒、整顆被簾子蓋住時 ' + cur.sim.tHide.toFixed(2) + ' 秒；會掉進第 ' + (cur.sim.slot + 1) + ' 個收集口'); } catch (e) { }
-                var t0 = performance.now();
+                var t0 = performance.now();             /* performance.now()：高精度的時間（毫秒），計時用 */
                 /* my.loop：每個畫面更新一次，用「現在時間」查表算出珠子位置；珠子掉完（或玩家已經選了）就停 */
-                my.loop(function (now) {
+                my.loop(function (now) {                /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                     if (id !== rid || state !== 'fall') return false;
                     var t = (now - t0) / 1000;
                     var p = pathAt(cur.sim, Math.min(t, cur.sim.tCross));
@@ -329,7 +329,7 @@
                 if (state !== 'fall' || !armed) return;
                 picked = s;
                 slotEls[s].classList.add('bounce-slot--pick');
-                Sfx.play('click');
+                Sfx.play('click');                      /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 reveal(s);
             }
 
@@ -352,7 +352,7 @@
                     if (id !== rid) return;
                     banner.textContent = '慢動作：簾子後面…';
                     seen.setAttribute('class', 'bounce-seen bounce-seen--keep');
-                    my.tween(revealMs(sim), function (p) {
+                    my.tween(revealMs(sim), function (p) {  /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
                         var ts = tS + (sim.tLand - tS) * p, q = motionAt(sim, ts);
                         trailHid.setAttribute('points', trailPoints(sim, ts, tS));
                         setBall(q.x, q.y);
@@ -367,11 +367,11 @@
                 var tag = kit.svg('g', { 'class': 'bounce-result' }, svg);
                 kit.svg('rect', { 'class': 'bounce-result__bg ' + (right ? 'bounce-result__bg--ok' : 'bounce-result__bg--bad'), x: actual * W + 2, y: DIV_Y, width: W - 4, height: SLOT_H - 4, rx: 8 }, tag);
                 if (!right) kit.svg('rect', { 'class': 'bounce-result__bg bounce-result__bg--you', x: s * W + 2, y: DIV_Y, width: W - 4, height: SLOT_H - 4, rx: 8 }, tag);
-                Sfx.play(right ? 'win' : 'bad');
+                Sfx.play(right ? 'win' : 'bad');        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 banner.textContent = (right ? '猜中了！' : '猜錯了！') + '　珠子掉進第 ' + (actual + 1) + ' 號';
                 if (right) {
                     cleared = level;
-                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
+                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                     ctx.setMeta(fmtBest(Reaction.getBest(ID)));
                     head.textContent = '第 ' + level + ' 關　過關！已過 ' + cleared + ' 關';
                     my.after(NEXT_OK_MS, function () {
@@ -387,7 +387,7 @@
             function finish(all) {
                 state = 'done';
                 console.log('球會跑去哪：通過 ' + cleared + ' 關' + (all ? '（全部通關）' : '，第 ' + level + ' 關猜錯（簾子基數 ' + cur.base.toFixed(3) + '）'));
-                kit.result(root, {
+                kit.result(root, {                      /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                     score: cleared, level: level,        /* 世界排行榜成績（跟 setBest 存的同一個數字；0 關不在有效範圍，不會送）；level：記下到過第幾關 */
                     num: cleared + ' 關', label: rating(cleared),
                     lines: all ? [LAST_LEVEL + ' 關全部猜中！簾子已經高到幾乎看不到任何東西了'] : ['第 ' + level + ' 關猜錯了', '只有猜中那一格才算過關，沒有時間限制'],

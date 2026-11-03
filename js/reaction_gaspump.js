@@ -42,28 +42,28 @@
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function tolFor(level) { return Math.round(kit.ramp(level, TOL[0], TOL[1], RAMP_LEVELS) * 10) / 10; }
-    function accelFor(level) { return kit.ramp(level, ACCEL[0], ACCEL[1], RAMP_LEVELS); }
+    function tolFor(level) { return Math.round(kit.ramp(level, TOL[0], TOL[1], RAMP_LEVELS) * 10) / 10; }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function accelFor(level) { return kit.ramp(level, ACCEL[0], ACCEL[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function timeMs() { return TIME_S * 1000; }
-    function round1(v) { return Math.round(v * 10) / 10; }
+    function round1(v) { return Math.round(v * 10) / 10; }  /* Math.round：四捨五入成整數 */
     /* 按住 t 秒之後累計加了幾公升（流量 r0 + a×t） */
     function litersAt(t, r0, a) { return r0 * t + a * t * t / 2; }
     /* 反過來：累計 L 公升要按幾秒（解二次方程式；a＝0 時是等速） */
-    function timeFor(L, r0, a) { return a < 1e-12 ? L / r0 : (-r0 + Math.sqrt(r0 * r0 + 2 * a * L)) / a; }
+    function timeFor(L, r0, a) { return a < 1e-12 ? L / r0 : (-r0 + Math.sqrt(r0 * r0 + 2 * a * L)) / a; }  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
     /* 畫面上的公升數：取到小數 2 位、無條件捨去（加一點點誤差避免浮點數 16.78 變成 16.7799） */
-    function shown(L) { return Math.floor(L * 100 + 1e-9) / 100; }
+    function shown(L) { return Math.floor(L * 100 + 1e-9) / 100; }  /* Math.floor：無條件捨去成整數 */
     /* 放手時的結算：金額 ＝ 畫面公升數 × 油價；diff ＝ 金額 − 目標（正＝多加了） */
     function settle(Lshown, price, target, tol) {
         var amount = Lshown * price, diff = amount - target;
-        return { amount: amount, diff: diff, ok: Math.abs(diff) <= tol };
+        return { amount: amount, diff: diff, ok: Math.abs(diff) <= tol };  /* Math.abs：取絕對值（去掉負號） */
     }
     function fmt4(x) { return x.toFixed(4); }
     /* 出一關：{ fuel, price, target, targetL, r0, a, T, q, tol, maxL, level } */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var price = level <= EASY_LEVELS ? kit.pick(PRICES_EASY, rand) : round1(kit.randFloat(PRICE_RANGE[0], PRICE_RANGE[1], rand));
-        var target = level < TARGET_FROM ? 500 : kit.pick(TARGETS, rand);
-        var targetL = target / price, q = accelFor(level) * kit.randFloat(0.85, 1.15, rand), T = kit.randFloat(T_RANGE[0], T_RANGE[1], rand);
+        var price = level <= EASY_LEVELS ? kit.pick(PRICES_EASY, rand) : round1(kit.randFloat(PRICE_RANGE[0], PRICE_RANGE[1], rand));  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        var target = level < TARGET_FROM ? 500 : kit.pick(TARGETS, rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        var targetL = target / price, q = accelFor(level) * kit.randFloat(0.85, 1.15, rand), T = kit.randFloat(T_RANGE[0], T_RANGE[1], rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         var r0 = targetL / (T * (1 + q / 2));
         var rEnd = r0 * (1 + q);
         if (rEnd > RATE_MAX) { T = Math.min(T_MAX, T * rEnd / RATE_MAX); r0 = targetL / (T * (1 + q / 2)); }
@@ -92,8 +92,8 @@
 
     /* 油槍圖示（SVG）：紅色槍身＋黑色握把＋油管 */
     function gunSvg(parent) {
-        var s = kit.svg('svg', { 'class': 'gaspump-gun__icon', viewBox: '0 0 96 64', width: 96, height: 64 }, parent);
-        kit.svg('path', { 'class': 'gaspump-gun__hose', d: 'M4 54 Q30 60 38 40' }, s);
+        var s = kit.svg('svg', { 'class': 'gaspump-gun__icon', viewBox: '0 0 96 64', width: 96, height: 64 }, parent);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('path', { 'class': 'gaspump-gun__hose', d: 'M4 54 Q30 60 38 40' }, s);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         kit.svg('path', { 'class': 'gaspump-gun__body', d: 'M30 18 L66 18 L66 12 L84 12 L84 24 L70 24 L70 44 Q70 52 62 52 L44 52 Q36 52 36 44 L36 30 Z' }, s);
         kit.svg('rect', { 'class': 'gaspump-gun__grip', x: 40, y: 34, width: 22, height: 8, rx: 4 }, s);
         kit.svg('rect', { 'class': 'gaspump-gun__nozzle', x: 84, y: 15, width: 10, height: 6, rx: 3 }, s);
@@ -109,8 +109,8 @@
         console.log('[加到五百] 第 ' + level + ' 關：' + q.fuel + ' ' + q.price + ' 元／公升，加 ' + q.target + ' 元（約 ' + q.targetL.toFixed(2) + ' 公升）；流量 ' + q.r0.toFixed(2) + ' → ' + q.rEnd.toFixed(2) + ' 公升／秒（約按 ' + q.T.toFixed(1) + ' 秒）；容許 ±' + q.tol + ' 元');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var field = h('div', { 'class': 'gaspump-field' });
-        stage.appendChild(field);
-        field.appendChild(h('div', { 'class': 'qz-note gaspump-tip', text: '按住加油，覺得剛好就放手' }));
+        stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(h('div', { 'class': 'qz-note gaspump-tip', text: '按住加油，覺得剛好就放手' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         field.appendChild(h('div', { 'class': 'gaspump-card' }, [
             h('div', { 'class': 'gaspump-card__fuel', text: '今天 ' + q.fuel + '　' + q.price + ' 元／公升' }),
             h('div', { 'class': 'gaspump-card__goal' }, [h('span', { text: '請加 ' }), h('b', { text: String(q.target) }), h('span', { text: ' 元' })]),
@@ -135,32 +135,32 @@
         api.timer(timeMs(), function () { release(); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         if (level === 1 && kit.once('gaspump.hint')) kit.hintOn(stage, gun, { mode: 'hold', delay: 700, text: '按住加油，剛好就放手' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         ctl = kit.hold(gun, {
-            down: function () { if (done || api.over) return; pumping = true; gun.classList.add('gaspump-gun--on'); Sfx.play('click'); loop = api.my.loop(frame); },
+            down: function () { if (done || api.over) return; pumping = true; gun.classList.add('gaspump-gun--on'); Sfx.play('click'); loop = api.my.loop(frame); },  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             up: function () { if (pumping) release(); }
         });
         function frame(now, dt) {
             if (!pumping || done) return false;
             t += Math.min(dt, 50) / 1000;
             L = litersAt(t, q.r0, q.a);
-            if (L >= q.maxL) { L = q.maxL; lit.textContent = shown(L).toFixed(2); release(); return false; }
-            lit.textContent = shown(L).toFixed(2);
+            if (L >= q.maxL) { L = q.maxL; lit.textContent = shown(L).toFixed(2); release(); return false; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            lit.textContent = shown(L).toFixed(2);      /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         }
         /* 放手：鏡頭推近油表最後一位 → 撕貼紙揭曉金額與誤差 */
         function release() {
             if (done || api.over) return;
-            done = true; pumping = false; gun.classList.remove('gaspump-gun--on');
+            done = true; pumping = false; gun.classList.remove('gaspump-gun--on');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             if (loop) loop.stop();
             if (ctl) ctl.destroy();
             var Ls = shown(L), r = settle(Ls, q.price, q.target, q.tol);
-            lit.textContent = Ls.toFixed(2); lit.classList.add('gaspump-digits--zoom');
-            api.after(650, function () {
+            lit.textContent = Ls.toFixed(2); lit.classList.add('gaspump-digits--zoom');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            api.after(650, function () {                /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                 sticker.classList.add('gaspump-sticker--off'); amountBox.textContent = fmt4(r.amount);
                 var word = r.diff >= 0 ? '多加了' : '少加了';
-                info.textContent = word + ' ' + fmt4(Math.abs(r.diff)) + ' 元' + (r.ok ? '，在範圍內！' : '，超出範圍了');
+                info.textContent = word + ' ' + fmt4(Math.abs(r.diff)) + ' 元' + (r.ok ? '，在範圍內！' : '，超出範圍了');  /* Math.abs：取絕對值（去掉負號） */
                 amountBox.classList.add(r.ok ? 'gaspump-amount--ok' : 'gaspump-amount--bad');
-                kit.flash(stage, r.ok, api.my);
-                if (r.ok) { api.pass({ delay: 1700 }); return; }
-                api.fail({ delay: 2800, lines: [fmt4(r.amount) + ' 元，' + word + ' ' + fmt4(Math.abs(r.diff)) + ' 元', '容許誤差 ±' + q.tol + ' 元（' + q.target + ' 元 ÷ ' + q.price + ' ＝ ' + (q.target / q.price).toFixed(4) + ' 公升）'] });
+                kit.flash(stage, r.ok, api.my);         /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+                if (r.ok) { api.pass({ delay: 1700 }); return; }  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
+                api.fail({ delay: 2800, lines: [fmt4(r.amount) + ' 元，' + word + ' ' + fmt4(Math.abs(r.diff)) + ' 元', '容許誤差 ±' + q.tol + ' 元（' + q.target + ' 元 ÷ ' + q.price + ' ＝ ' + (q.target / q.price).toFixed(4) + ' 公升）'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
             });
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */

@@ -34,7 +34,7 @@
 
     /* 拖曳方向 → 短文字：橫向「請往左右拖曳」、直向「請往上下拖曳」、斜向「請往上下左右拖曳」 */
     kit.dragText = function (dx, dy) {
-        var ax = Math.abs(dx || 0), ay = Math.abs(dy || 0);
+        var ax = Math.abs(dx || 0), ay = Math.abs(dy || 0);  /* Math.abs：取絕對值（去掉負號） */
         if (ax > ay * 2) return '請往左右拖曳';
         if (ay > ax * 2) return '請往上下拖曳';
         return '請往上下左右拖曳';
@@ -62,25 +62,25 @@
         var text = o.text;
         if (mode === 'drag') {
             var dx = o.dx || 0, dy = o.dy || 0;
-            var len = Math.sqrt(dx * dx + dy * dy), ang = Math.atan2(dy, dx) * 180 / Math.PI;
+            var len = Math.sqrt(dx * dx + dy * dy), ang = Math.atan2(dy, dx) * 180 / Math.PI;  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
             /* 箭頭：從起點畫到終點（淡淡的線＋箭頭尖端），手指沿著它重複移動 */
             var arrow = h('div', { 'class': 'rx-hint__arrow' });
             arrow.style.width = len + 'px';
             arrow.style.transform = 'rotate(' + ang.toFixed(2) + 'deg)';
-            root.appendChild(arrow);
-            finger.style.setProperty('--dx', dx + 'px');
-            finger.style.setProperty('--dy', dy + 'px');
+            root.appendChild(arrow);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            finger.style.setProperty('--dx', dx + 'px');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
+            finger.style.setProperty('--dy', dy + 'px');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
             box.l = Math.min(o.x, o.x + dx) - 30; box.r = Math.max(o.x, o.x + dx) + 40;
             box.t = Math.min(o.y, o.y + dy) - 30; box.b = Math.max(o.y, o.y + dy) + 72;
             if (!text) text = kit.dragText(dx, dy);
         } else if (mode === 'drag4') {
             /* 四個方向各一支箭頭；手指依序往上、右、下、左各走一趟再回到中心（見 css 的 rx-drag4） */
             var L = o.len || 80;
-            [[0, -1, -90], [1, 0, 0], [0, 1, 90], [-1, 0, 180]].forEach(function (d) {
+            [[0, -1, -90], [1, 0, 0], [0, 1, 90], [-1, 0, 180]].forEach(function (d) {  /* forEach：對陣列的每個元素各做一次 */
                 var a = h('div', { 'class': 'rx-hint__arrow' });
                 a.style.width = L + 'px';
                 a.style.transform = 'rotate(' + d[2] + 'deg)';
-                root.appendChild(a);
+                root.appendChild(a);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             });
             finger.style.setProperty('--l', L + 'px');
             box.l = o.x - L - 30; box.r = o.x + L + 40; box.t = o.y - L - 30; box.b = o.y + L + 72;
@@ -111,7 +111,7 @@
         if (o.delay) {
             root.style.visibility = 'hidden';
             if (label) label.style.visibility = 'hidden';
-            setTimeout(function () {
+            setTimeout(function () {                    /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
                 root.style.visibility = '';
                 if (label) label.style.visibility = '';
             }, o.delay);
@@ -128,7 +128,7 @@
     /* kit.ptIn(host, el, fx, fy)：元素 el 的某個位置（寬的 fx、高的 fy，預設正中央）在 host 裡的座標（邏輯 px）。
        操作提示的手指要擺在「正確的點擊位置」，就用它從答案元素算出座標。 */
     kit.ptIn = function (host, el, fx, fy) {
-        var hr = host.getBoundingClientRect(), r = el.getBoundingClientRect();
+        var hr = host.getBoundingClientRect(), r = el.getBoundingClientRect();  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
         var sc = hr.width / (host.clientWidth || hr.width) || 1;
         return {
             x: (r.left - hr.left + r.width * (fx == null ? 0.5 : fx)) / sc,
@@ -138,7 +138,7 @@
 
     /* kit.onTap：綁 pointerdown（preventDefault 避免觸控裝置多送一次 click）；fn 回傳 false 不擋預設行為 */
     kit.onTap = function (el, fn) {
-        el.addEventListener('pointerdown', function (e) { e.preventDefault(); fn(e); });
+        el.addEventListener('pointerdown', function (e) { e.preventDefault(); fn(e); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
     };
 
     /* kit.dragDamp(el, o)：慢速微調拖曳。
@@ -150,20 +150,20 @@
     kit.dragDamp = function (el, o) {
         var gMin = o.gainMin == null ? 0.25 : o.gainMin, vFull = o.speedFull || 1;
         var d = null;
-        function gainFor(speed) { return kit.lerp(gMin, 1, kit.clamp(speed / vFull, 0, 1)); }
-        el.addEventListener('pointerdown', function (e) {
+        function gainFor(speed) { return kit.lerp(gMin, 1, kit.clamp(speed / vFull, 0, 1)); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
+        el.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (d || (o.enabled && !o.enabled())) return;
             var p = kit.localPt(e, o.ref || el);
             if (o.start && o.start(p, e) === false) return;
-            e.preventDefault();
-            try { el.setPointerCapture(e.pointerId); } catch (err) { }
-            d = { id: e.pointerId, x: p.x, y: p.y, t: performance.now() };
+            e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            try { el.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
+            d = { id: e.pointerId, x: p.x, y: p.y, t: performance.now() };  /* performance.now()：高精度的時間（毫秒），計時用 */
         });
-        el.addEventListener('pointermove', function (e) {
+        el.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (!d || e.pointerId !== d.id) return;
-            var p = kit.localPt(e, o.ref || el), now = performance.now();
+            var p = kit.localPt(e, o.ref || el), now = performance.now();  /* performance.now()：高精度的時間（毫秒），計時用 */
             var rx = p.x - d.x, ry = p.y - d.y, dt = Math.max(1, now - d.t);
-            var g = gainFor(Math.sqrt(rx * rx + ry * ry) / dt);
+            var g = gainFor(Math.sqrt(rx * rx + ry * ry) / dt);  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
             d.x = p.x; d.y = p.y; d.t = now;
             o.move(rx * g, ry * g, p, e);
         });
@@ -184,10 +184,10 @@
         var btn = h('button', { 'class': 'btn btn--go', text: o.btn || '開始' });
         var cover = h('div', { 'class': 'rx-cover' }, [h('div', { 'class': 'rx-cover__text', text: o.text || '' }), btn]);
         stage.appendChild(cover);
-        kit.onTap(btn, function () {
+        kit.onTap(btn, function () {                    /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             if (!cover.parentNode) return;
             cover.parentNode.removeChild(cover);
-            Sfx.play('go');
+            Sfx.play('go');                             /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             o.onStart();
         });
         return { remove: function () { if (cover.parentNode) cover.parentNode.removeChild(cover); }, btn: btn };
@@ -200,15 +200,15 @@
         if (parent) parent.appendChild(el);
         var t0 = null, pen = 0, stopped = null, loop = null;
         function total() { return stopped != null ? stopped : (t0 == null ? 0 : performance.now() - t0 + pen); }
-        function paint() { el.textContent = '時間 ' + kit.sec(total()) + ' 秒'; }
+        function paint() { el.textContent = '時間 ' + kit.sec(total()) + ' 秒'; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         return {
             el: el,
             start: function () {
                 t0 = performance.now(); pen = 0; stopped = null;
-                loop = my.loop(function () { paint(); });
+                loop = my.loop(function () { paint(); });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
             },
             stop: function () { if (stopped == null) stopped = total(); if (loop) { loop.stop(); loop = null; } paint(); return stopped; },
-            penalty: function (ms) { pen += ms; el.classList.add('rx-clock--pen'); my.after(400, function () { el.classList.remove('rx-clock--pen'); }); paint(); },
+            penalty: function (ms) { pen += ms; el.classList.add('rx-clock--pen'); my.after(400, function () { el.classList.remove('rx-clock--pen'); }); paint(); },  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             ms: total
         };
     };
@@ -278,7 +278,7 @@
        o.title（預設「答對了！」）／o.text／o.children（說明內容）／o.btn（預設「下一關」；最後一關改叫「看結果」）／o.gain／o.log */
     kit.passNext = function (api, o) {
         o = o || {};
-        api.pass({
+        api.pass({                                      /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
             gain: o.gain, log: o.log,
             manual: function (go) {
                 var last = api.S.level >= (api.maxLevel || 1e9);
@@ -296,7 +296,7 @@
         var G = o.G;
         function numText(v) { return o.numText(v); }
         function fmtBest(v) { return v == null ? '' : '最佳 ' + (o.fmtBest || numText)(v); }
-        ctx.setMeta(fmtBest(Reaction.getBest(o.id)));
+        ctx.setMeta(fmtBest(Reaction.getBest(o.id)));   /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
         function livesText() {
             if (!(o.lives > 1)) return '';
@@ -305,7 +305,7 @@
             return s;
         }
         function paintHead() {
-            elLv.textContent = o.head ? o.head(S.level, S) : '第 ' + S.level + ' 關';
+            elLv.textContent = o.head ? o.head(S.level, S) : '第 ' + S.level + ' 關';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             var info = o.info ? o.info(S) : livesText();
             elInfo.textContent = info || '';
         }
@@ -314,14 +314,14 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             from = from || 1;
             S = { level: from, cleared: from - 1, lives: o.lives || 1, score: 0, over: false, finished: false, log: [] };
             elLv = h('div', { 'class': 'rx-head__lv' });
             elInfo = h('div', { 'class': 'rx-head__info' });
             var head = h('div', { 'class': 'rx-head' }, [elLv, elInfo]);
             bar = kit.timebar();
-            bar.el.classList.add('rx-timebar');
+            bar.el.classList.add('rx-timebar');         /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             stage = h('div', { 'class': 'rx-stage' });
             root.appendChild(head); root.appendChild(bar.el); root.appendChild(stage);
             bar.set(0);
@@ -335,7 +335,7 @@
             S.level = n;
             var my = R, myTok = tok;
             var tm = null, tmLoop = null;
-            stage.innerHTML = '';
+            stage.innerHTML = '';                       /* innerHTML = ''：把元素裡面的東西全部清掉 */
             stage.className = 'rx-stage' + (o.stageClass ? ' ' + o.stageClass : '');
             bar.set(0);
             api = {
@@ -358,7 +358,7 @@
                         });
                     }
                     arm(ms);
-                    tmLoop = my.loop(function () { bar.set(1 - (performance.now() - t0) / ms); });
+                    tmLoop = my.loop(function () { bar.set(1 - (performance.now() - t0) / ms); });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                     /* cut(d)：從剩餘時間扣掉 d 毫秒（選錯的罰時）；時間條也跟著縮短 */
                     return {
                         left: function () { return Math.max(0, ms - (performance.now() - t0)); }, total: ms,
@@ -380,7 +380,7 @@
                     x = x || {};
                     S.cleared++; S.score += x.gain || 0;
                     if (x.log) S.log.push(x.log);
-                    Sfx.play('ok'); paintHead();
+                    Sfx.play('ok'); paintHead();        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                     var wait = x.delay != null ? x.delay : (o.passDelay != null ? o.passDelay : 700);
                     var last = o.maxLevel && n >= o.maxLevel;
                     if (x.manual) {          /* 等玩家按「下一關」才換關（只會換一次） */
@@ -399,7 +399,7 @@
                     if (api.over) return S.lives;
                     S.lives--;
                     paintHead();
-                    if (S.lives <= 0) { api.fail(x); return 0; }
+                    if (S.lives <= 0) { api.fail(x); return 0; }  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                     Sfx.play('bad');
                     return S.lives;
                 }
@@ -412,7 +412,7 @@
             if (S.finished) return;
             S.finished = true;
             var score = o.scoreOf ? o.scoreOf(S) : (o.scoreBase ? Math.min(S.cleared + o.scoreBase, o.maxLevel || 1e9) : S.cleared);   /* o.scoreBase：成績＝通過關數＋幾（撐到第幾關＝＋1） */
-            var isNew = score > 0 ? Reaction.setBest(o.id, score, gt) : false;
+            var isNew = score > 0 ? Reaction.setBest(o.id, score, gt) : false;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             ctx.setMeta(fmtBest(Reaction.getBest(o.id)));
             var resume = null, leveled = o.resume !== false && !o.scoreOf;     /* leveled：成績＝過關數的闖關遊戲（才記關卡、才從最佳關卡 − 5 進場） */
             if (leveled && !allClear && S.level > 1) {
@@ -421,7 +421,7 @@
             }
             var lines = (o.lines ? o.lines(S, allClear) : []).concat((x && x.lines) || []);
             console.log('[' + (G && G.name || o.id) + '] 結算：成績 ' + score + (S.level ? '（停在第 ' + S.level + ' 關）' : ''));
-            kit.result(root, {
+            kit.result(root, {                          /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                 score: score,
                 num: numText(score),
                 label: o.rating ? o.rating(score, S) : '',
@@ -482,7 +482,7 @@
             var my = R;
             done = false;
             root.innerHTML = '';
-            var tip = h('div', { 'class': 'rx-tip', text: o.title || '' });
+            var tip = h('div', { 'class': 'rx-tip', text: o.title || '' });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
             var stage = h('div', { 'class': 'rx-stage' + (o.stageClass ? ' ' + o.stageClass : '') });
             root.appendChild(tip); root.appendChild(stage);
             api = {
@@ -498,7 +498,7 @@
                     console.log('[' + (G && G.name || o.id) + '] 實際 ' + Number(real).toFixed(6) + ' → 成績 ' + Number(v).toFixed(4));
                     var isNew = Reaction.setBest(o.id, v, better);
                     ctx.setMeta(fmtBest(Reaction.getBest(o.id)));
-                    kit.result(root, {
+                    kit.result(root, {                  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                         /* x.sign（＋1／−1）：結算大字加上正負號（容量一半：＋倒太多、−倒太少）；成績與排行榜仍是不帶號的 v */
                         score: v, num: (x.sign ? (x.sign > 0 ? '+' : '−') : '') + o.numText(v), label: o.rating ? o.rating(v) : '',
                         lines: x.lines || [], isNew: isNew,

@@ -42,9 +42,9 @@
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }
-    function targetFor(level) { return Math.round(ramp(level, TARGET)); }
-    function pClusterFor(level) { return Math.round(ramp(level, P_CLUSTER) * 1000) / 1000; }
+    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function targetFor(level) { return Math.round(ramp(level, TARGET)); }  /* Math.round：四捨五入成整數 */
+    function pClusterFor(level) { return Math.round(ramp(level, P_CLUSTER) * 1000) / 1000; }  /* Math.round：四捨五入成整數 */
     function clusterMaxFor(level) { return Math.round(ramp(level, CLUSTER_MAX)); }
     function gapSingleFor(level) { return Math.round(ramp(level, GAP_SINGLE) * 1000) / 1000; }
     function gapInFor(level) { return Math.round(ramp(level, GAP_IN) * 1000) / 1000; }
@@ -53,7 +53,7 @@
     function splitClusters(total, pCluster, maxSize, rand) {
         var out = [], left = total;
         while (left > 0) {
-            var sz = (maxSize >= 2 && rand() < pCluster) ? kit.randInt(2, maxSize, rand) : 1;
+            var sz = (maxSize >= 2 && rand() < pCluster) ? kit.randInt(2, maxSize, rand) : 1;  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             sz = Math.min(sz, left); out.push(sz); left -= sz;
         }
         return out;
@@ -64,13 +64,13 @@
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var n = targetFor(level), pc = pClusterFor(level), cm = clusterMaxFor(level), gs = gapSingleFor(level), gi = gapInFor(level), mw = minWinFor(level);
-        var extra = kit.randInt(EXTRA[0], EXTRA[1], rand);
-        var c1 = splitClusters(n, pc, cm, rand), c2 = splitClusters(extra, pc, cm, rand), clusters = c1.concat(c2), arrive = [], t = kit.randFloat(FIRST_AT[0], FIRST_AT[1], rand), idx = 0, total = n + extra;
+        var extra = kit.randInt(EXTRA[0], EXTRA[1], rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+        var c1 = splitClusters(n, pc, cm, rand), c2 = splitClusters(extra, pc, cm, rand), clusters = c1.concat(c2), arrive = [], t = kit.randFloat(FIRST_AT[0], FIRST_AT[1], rand), idx = 0, total = n + extra;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         for (var ci = 0; ci < clusters.length; ci++) {
             for (var k = 0; k < clusters[ci]; k++) {
                 if (idx > 0) {
                     var within = k > 0;
-                    if (within) t += gi * kit.randFloat(GAP_JITTER[0], GAP_JITTER[1], rand);
+                    if (within) t += gi * kit.randFloat(GAP_JITTER[0], GAP_JITTER[1], rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
                     else if (idx === n) t += mw * kit.randFloat(1, 1.5, rand);                             /* 第 N 顆和第 N+1 顆之間：一定 ≥ minWin（放手的窗口） */
                     else t += gs * kit.randFloat(GAP_JITTER[0], GAP_JITTER[1], rand);
                 }
@@ -123,9 +123,9 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var field = h('div', { 'class': 'pearls-field' });
-        stage.appendChild(field);
+        stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var goal = h('div', { 'class': 'pearls-goal' });
-        goal.appendChild(h('span', { 'class': 'pearls-goal__t', text: '吸 ' })); goal.appendChild(h('span', { 'class': 'pearls-goal__n', text: String(q.n) })); goal.appendChild(h('span', { 'class': 'pearls-goal__t', text: ' 顆珍珠' }));
+        goal.appendChild(h('span', { 'class': 'pearls-goal__t', text: '吸 ' })); goal.appendChild(h('span', { 'class': 'pearls-goal__n', text: String(q.n) })); goal.appendChild(h('span', { 'class': 'pearls-goal__t', text: ' 顆珍珠' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         field.appendChild(goal);
         var cx = Math.round(W / 2), strawTop = 118, cupTop = Math.round(H * 0.5), strawBot = cupTop + 36, L = strawBot - strawTop, SW = 46, PD = 30;
         /* 嘴（吸管上端）：珍珠衝到這裡就進嘴裡 */
@@ -136,7 +136,7 @@
         for (var d = 0; d < 26; d++) { var dp = h('div', { 'class': 'pearls-deco' }); dp.style.cssText = 'left:' + Math.round(10 + api.rand() * 196) + 'px;bottom:' + Math.round(4 + api.rand() * 38) + 'px;'; cup.appendChild(dp); }
         /* 吸管：從杯子裡一直伸到嘴 */
         var straw = h('div', { 'class': 'pearls-straw' }); straw.style.cssText = 'left:' + (cx - SW / 2) + 'px;top:' + strawTop + 'px;width:' + SW + 'px;height:' + L + 'px;'; field.appendChild(straw);
-        var pearls = q.arrive.map(function (a, i) { var p = h('div', { 'class': 'pearls-pearl' }); p.style.cssText = 'left:' + (cx - PD / 2) + 'px;width:' + PD + 'px;height:' + PD + 'px;display:none;'; field.appendChild(p); return p; });
+        var pearls = q.arrive.map(function (a, i) { var p = h('div', { 'class': 'pearls-pearl' }); p.style.cssText = 'left:' + (cx - PD / 2) + 'px;width:' + PD + 'px;height:' + PD + 'px;display:none;'; field.appendChild(p); return p; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         var infoTop = cupTop + Math.round(H * 0.24) + 8, info = h('div', { 'class': 'qz-note pearls-info', text: level === 1 ? '按住吸，數珍珠，剛好就放手！' : '按住吸、邊吸邊數、剛好就放手' }); info.style.top = infoTop + 'px'; field.appendChild(info);
         var row = h('div', { 'class': 'pearls-row' }); row.style.cssText = 'display:none;top:' + (cupTop + 46) + 'px;'; field.appendChild(row);
         var holdEl = h('div', { 'class': 'pearls-hold', text: '按住 吸' }); field.appendChild(holdEl);
@@ -153,15 +153,15 @@
         paint(0);
         /* 開始吸：從按下去的那一刻起算「按住時間」T；每一格影格重畫珍珠、數到新的一顆就「咕嚕」一聲 */
         function begin() {
-            phase = 'suck'; tDown = performance.now(); holdEl.classList.add('pearls-hold--down'); mouth.classList.add('pearls-mouth--suck'); straw.classList.add('pearls-straw--suck'); api.stopTimer();
-            api.my.loop(function (now) {
+            phase = 'suck'; tDown = performance.now(); holdEl.classList.add('pearls-hold--down'); mouth.classList.add('pearls-mouth--suck'); straw.classList.add('pearls-straw--suck'); api.stopTimer();  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            api.my.loop(function (now) {                /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                 if (phase !== 'suck' || !stage.isConnected) return false;
                 T = (now - tDown) / 1000; paint(T);
-                var c = countAt(q, T); while (ticked < c) { ticked++; Sfx.play('tick'); }
+                var c = countAt(q, T); while (ticked < c) { ticked++; Sfx.play('tick'); }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 if (T > q.arrive[q.total - 1] + END_GRACE) release('auto');
             });
             /* 保底：rAF 被暫停時，珍珠全部衝完的時間一到也要自動判定 */
-            api.after(Math.round((q.arrive[q.total - 1] + END_GRACE) * 1000) + 300, function () { if (phase === 'suck') release('auto'); });
+            api.after(Math.round((q.arrive[q.total - 1] + END_GRACE) * 1000) + 300, function () { if (phase === 'suck') release('auto'); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
         }
         ctl = kit.hold(holdEl, {
             enabled: function () { return phase === 'wait'; },
@@ -174,20 +174,20 @@
         /* 放手（或珍珠全部衝完）：用「放手那一刻的按住時間」判定 */
         function release(reason) {
             if (phase !== 'suck') return;
-            T = (performance.now() - tDown) / 1000; if (reason === 'auto') T = q.arrive[q.total - 1] + END_GRACE;
+            T = (performance.now() - tDown) / 1000; if (reason === 'auto') T = q.arrive[q.total - 1] + END_GRACE;  /* performance.now()：高精度的時間（毫秒），計時用 */
             phase = 'end'; paint(T);
-            holdEl.classList.remove('pearls-hold--down'); mouth.classList.remove('pearls-mouth--suck'); straw.classList.remove('pearls-straw--suck');
+            holdEl.classList.remove('pearls-hold--down'); mouth.classList.remove('pearls-mouth--suck'); straw.classList.remove('pearls-straw--suck');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             var r = judgeRelease(q, T), why = whyText(r, q);
-            info.textContent = why;
+            info.textContent = why;                     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             showRow(r);
-            if (r.result === 'ok') { info.classList.add('pearls-info--ok'); kit.flash(stage, true, api.my); api.pass({ delay: 2000 }); return; }
-            info.classList.add('pearls-info--bad'); kit.flash(stage, false, api.my);
-            api.fail({ delay: 4000, lines: [why, '放手的窗口是按住 ' + q.winStart.toFixed(4) + '～' + q.winEnd.toFixed(4) + ' 秒之間（共 ' + (q.winEnd - q.winStart).toFixed(4) + ' 秒）', '你按住了 ' + T.toFixed(4) + ' 秒'] });
+            if (r.result === 'ok') { info.classList.add('pearls-info--ok'); kit.flash(stage, true, api.my); api.pass({ delay: 2000 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            info.classList.add('pearls-info--bad'); kit.flash(stage, false, api.my);  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 4000, lines: [why, '放手的窗口是按住 ' + q.winStart.toFixed(4) + '～' + q.winEnd.toFixed(4) + ' 秒之間（共 ' + (q.winEnd - q.winStart).toFixed(4) + ' 秒）', '你按住了 ' + T.toFixed(4) + ' 秒'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 揭曉：嘴裡的珍珠排成一排、依序編號；第 N 顆標綠色、多出來的標紅色 */
         function showRow(r) {
-            row.innerHTML = ''; row.style.display = 'flex';
-            var cols = Math.min(r.count, 13), size = Math.max(22, Math.min(40, Math.floor((W - 24) / Math.max(cols, 1)) - 4));
+            row.innerHTML = ''; row.style.display = 'flex';  /* innerHTML = ''：把元素裡面的東西全部清掉 */
+            var cols = Math.min(r.count, 13), size = Math.max(22, Math.min(40, Math.floor((W - 24) / Math.max(cols, 1)) - 4));  /* Math.floor：無條件捨去成整數 */
             for (var i = 0; i < r.count; i++) { var b = h('div', { 'class': 'pearls-rowp' + (i < q.n ? (i === q.n - 1 ? ' pearls-rowp--n' : '') : ' pearls-rowp--extra'), text: String(i + 1) }); b.style.cssText = 'width:' + size + 'px;height:' + size + 'px;line-height:' + size + 'px;font-size:' + Math.round(size * 0.55) + 'px;'; row.appendChild(b); }
             if (!r.count) row.appendChild(h('div', { 'class': 'pearls-rowp--none', text: '嘴裡一顆都沒有' }));
         }
@@ -196,7 +196,7 @@
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { if (armed || phase !== 'wait') return; armed = true; ctl && holdSim((q.winStart + q.winEnd) / 2); };
         api.wrong = function () { if (armed || phase !== 'wait') return; armed = true; ctl && holdSim(q.winEnd + 0.03); };
-        function holdSim(Tstar) { begin(); api.after(Math.round(Tstar * 1000), function () { release('up'); }); }
+        function holdSim(Tstar) { begin(); api.after(Math.round(Tstar * 1000), function () { release('up'); }); }  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
     }
 
     /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */

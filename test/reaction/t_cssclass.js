@@ -26,7 +26,7 @@ const jsDir = path.join(ROOT, 'js'), cssDir = path.join(ROOT, 'css');
 const games = fs.readdirSync(jsDir).filter(f => /^reaction_.+\.js$/.test(f) && !NOT_GAME.test(f)).map(f => f.replace(/^reaction_|\.js$/g, '')).sort();
 ok(games.length >= 100, '找到的遊戲檔案數量（應該有 100 多個）：' + games.length);
 
-const strip = s => s.replace(/\/\*[\s\S]*?\*\//g, '');
+const strip = s => s.replace(/[ \t]*\/\*[\s\S]*?\*\//g, '');
 // 取出一份 CSS 裡的選擇器 class／id 名稱與動畫名稱
 function cssTokens(text) {
   const out = new Set(), kf = new Set();

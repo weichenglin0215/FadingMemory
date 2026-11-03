@@ -68,7 +68,7 @@
     function chunk(n, S) {
         var out = '', zero = false, started = false;
         for (var p = 3; p >= 0; p--) {
-            var d = Math.floor(n / Math.pow(10, p)) % 10;
+            var d = Math.floor(n / Math.pow(10, p)) % 10;  /* Math.floor：無條件捨去成整數 */
             if (d === 0) { if (started) zero = true; continue; }
             if (zero) { out += S.d[0]; zero = false; }
             out += S.d[d] + S.u[p];
@@ -80,7 +80,7 @@
     /* 1~99999 → 中文。formal＝財務大寫 */
     function toChinese(n, formal) {
         var S = formal ? FORMAL : PLAIN;
-        var hi = Math.floor(n / 10000), lo = n % 10000, s = '';
+        var hi = Math.floor(n / 10000), lo = n % 10000, s = '';  /* Math.floor：無條件捨去成整數 */
         if (hi > 0) {
             s = chunk(hi, S) + S.big;
             if (lo > 0 && lo < 1000) s += S.d[0];          /* 一萬零五百 */
@@ -95,8 +95,8 @@
     /* 折數的中文：8 → 八折、8.5 → 八五折 */
     function foldText(f) {
         var d = PLAIN.d;
-        if (Math.abs(f - Math.round(f)) < 1e-9) return d[Math.round(f)] + '折';
-        return d[Math.floor(f)] + d[Math.round((f - Math.floor(f)) * 10)] + '折';
+        if (Math.abs(f - Math.round(f)) < 1e-9) return d[Math.round(f)] + '折';  /* Math.round：四捨五入成整數 */
+        return d[Math.floor(f)] + d[Math.round((f - Math.floor(f)) * 10)] + '折';  /* Math.round：四捨五入成整數 */
     }
 
     /* 優惠步驟與金額 */
@@ -141,7 +141,7 @@
         }
         return '';
     }
-    function discLines(card) { return card.steps.map(function (st, i) { return stepText(st, card.formal, i === 0); }); }
+    function discLines(card) { return card.steps.map(function (st, i) { return stepText(st, card.formal, i === 0); }); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     /* 字級倍率：從 kMax 開始，每次減 step，找到第一個「放得下」的倍率（fits(k) 回傳 true），最小到 kMin；
        純函式（fits 由呼叫端提供：瀏覽器裡是量標籤有沒有溢出，測試裡是假的），所以可以在 Node 裡測 */
     function fitScale(kMax, kMin, step, fits) {
@@ -169,8 +169,8 @@
         var gap = gapFor(level);
         return {
             gap: gap, gapLow: gap * GAP_LOW,
-            time: kit.ramp(level, TIME_START, TIME_END, LEVEL_RAMP),
-            formalP: kit.ramp(level, 0, FORMAL_END, LEVEL_RAMP),
+            time: kit.ramp(level, TIME_START, TIME_END, LEVEL_RAMP),  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+            formalP: kit.ramp(level, 0, FORMAL_END, LEVEL_RAMP),  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
             unit: level <= 3 ? 100 : (level <= 6 ? 50 : 10),
             maxOrig: Math.round(kit.ramp(level, 3000, 9000, LEVEL_RAMP) / 100) * 100,
             member: level >= 8
@@ -197,8 +197,8 @@
     /* 隨機產生一個優惠步驟 */
     function randStep(level, kind, rand) {
         switch (kind) {
-            case 'fold': return { k: 'fold', fold: kit.pick(level >= 4 ? FOLDS_ALL : FOLDS_INT, rand) };
-            case 'off': return { k: 'off', amt: kit.pick(OFFS, rand) };
+            case 'fold': return { k: 'fold', fold: kit.pick(level >= 4 ? FOLDS_ALL : FOLDS_INT, rand) };  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+            case 'off': return { k: 'off', amt: kit.pick(OFFS, rand) };  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             case 'coupon': return { k: 'coupon', amt: kit.pick(COUPONS, rand) };
             case 'step': { var s = kit.pick(STEPS, rand); return { k: 'step', every: s[0], minus: s[1] }; }
             default: { var t = kit.pick(THRESH, rand); return { k: 'thresh', min: t[0], amt: t[1] }; }
@@ -210,10 +210,10 @@
         var kinds = kindsFor(level), n = Math.min(maxSteps(level) - (withMember && maxSteps(level) > 2 ? 1 : 0), kinds.length);
         var want = 1 + (n > 1 && rand() < kit.ramp(level, 0.15, 0.8, LEVEL_RAMP) ? 1 : 0);
         if (n > 2 && want === 2 && rand() < kit.ramp(level, 0, 0.6, LEVEL_RAMP)) want = 3;
-        var picked = kit.shuffle(kinds.slice(), rand).slice(0, want);
+        var picked = kit.shuffle(kinds.slice(), rand).slice(0, want);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         var order = { fold: 0, step: 1, thresh: 2, off: 3, coupon: 4 };
-        picked.sort(function (a, b) { return order[a] - order[b]; });
-        return picked.map(function (k) { return randStep(level, k, rand); });
+        picked.sort(function (a, b) { return order[a] - order[b]; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
+        return picked.map(function (k) { return randStep(level, k, rand); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     }
 
     /* 出題：兩張標籤的原價不同、優惠都不同；實付差距落在目標範圍；而且「原價低的那張折扣比例比較小」，讓「挑原價低的」與「挑折得多的」兩種直覺指向不同張 */
@@ -224,7 +224,7 @@
         var P = paramsFor(level), memberStep = P.member && rand() < 0.65 ? { k: 'member', fold: kit.pick([8, 9], rand) } : null;
         /* 最多嘗試 600 次產生符合條件的題目 */
         for (var tries = 0; tries < 600; tries++) {
-            var A = { orig: P.unit * kit.randInt(Math.ceil(300 / P.unit), Math.floor(P.maxOrig / P.unit), rand), steps: randSteps(level, !!memberStep, rand), formal: rand() < P.formalP };
+            var A = { orig: P.unit * kit.randInt(Math.ceil(300 / P.unit), Math.floor(P.maxOrig / P.unit), rand), steps: randSteps(level, !!memberStep, rand), formal: rand() < P.formalP };  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             if (memberStep) A.steps.push(memberStep);
             var ra = payOf(A); if (!ra) continue;
             A.final = ra.final; A.trail = ra.trail;
@@ -232,16 +232,16 @@
             if (memberStep) B.steps.push(memberStep);
             /* 兩張的優惠不能有任何一個相同（會員優惠除外） */
             /* 兩張的優惠不能有任何一個相同（member 除外）*/
-            var keysA = A.steps.filter(function (s) { return s.k !== 'member'; }).map(stepKey);
-            if (B.steps.some(function (s) { return s.k !== 'member' && keysA.indexOf(stepKey(s)) >= 0; })) continue;
+            var keysA = A.steps.filter(function (s) { return s.k !== 'member'; }).map(stepKey);  /* filter：留下符合條件的元素，回傳新陣列 */
+            if (B.steps.some(function (s) { return s.k !== 'member' && keysA.indexOf(stepKey(s)) >= 0; })) continue;  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             /* 掃描 B 的原價，找出所有「實付差距合格、原價不同、折扣比例條件成立」的候選 */
             /* 掃描 B 的原價：實付差距落在 [gapLow, gap]，原價不同，而且「原價低的那張折扣比例比較小」*/
             var cands = [], bCheaper = rand() < 0.5;           /* 先決定 B 要比 A 便宜還是貴，這樣「便宜的是原價低的那張」只佔一半 */
-            for (var o = P.unit * Math.ceil(300 / P.unit); o <= P.maxOrig * 1.3; o += P.unit) {
+            for (var o = P.unit * Math.ceil(300 / P.unit); o <= P.maxOrig * 1.3; o += P.unit) {  /* Math.ceil：無條件進位成整數 */
                 if (o === A.orig) continue;
                 B.orig = o;
                 var rb = payOf(B); if (!rb) continue;
-                var d = Math.abs(rb.final - A.final);
+                var d = Math.abs(rb.final - A.final);   /* Math.abs：取絕對值（去掉負號） */
                 if (d < P.gapLow - 1e-9 || d > P.gap + 1e-9) continue;
                 if ((rb.final < A.final) !== bCheaper) continue;
                 B.final = rb.final;
@@ -253,12 +253,12 @@
             B.orig = kit.pick(cands, rand);
             var rbf = payOf(B); B.final = rbf.final; B.trail = rbf.trail;
             var tags = rand() < 0.5 ? [A, B] : [B, A];
-            return { tags: tags, lowIdx: tags[0].final < tags[1].final ? 0 : 1, gap: Math.abs(A.final - B.final), params: P, tries: tries };
+            return { tags: tags, lowIdx: tags[0].final < tags[1].final ? 0 : 1, gap: Math.abs(A.final - B.final), params: P, tries: tries };  /* Math.abs：取絕對值（去掉負號） */
         }
         /* 保底：測試保證不會用到 */
         /* 保底（測試保證不會用到）*/
         var X = { orig: 3000, steps: [{ k: 'fold', fold: 8 }], formal: false }, Y = { orig: 3400, steps: [{ k: 'fold', fold: 7 }], formal: false };
-        [X, Y].forEach(function (c) { var r = payOf(c); c.final = r.final; c.trail = r.trail; });
+        [X, Y].forEach(function (c) { var r = payOf(c); c.final = r.final; c.trail = r.trail; });  /* forEach：對陣列的每個元素各做一次 */
         return { tags: [X, Y], lowIdx: Y.final < X.final ? 1 : 0, gap: Math.abs(X.final - Y.final), params: P, tries: -1 };
     }
 
@@ -272,7 +272,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             /* level 目前題號；right 答對數；state 目前階段；Q 這一題 */
             var level = start || 1, right = level - 1, newRec = false, state = 'idle', Q = null;
 
@@ -280,27 +280,27 @@
             var head = h('div', { 'class': 'price-head' });
             var bar = h('div', { 'class': 'ld-time' }, [h('div', { 'class': 'ld-time__fill' })]);
             var fill = bar.firstChild;
-            var wrap = h('div', { 'class': 'price-wrap' });
-            root.appendChild(head);
-            root.appendChild(bar);
+            var wrap = h('div', { 'class': 'price-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
+            root.appendChild(head);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(bar);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             root.appendChild(wrap);
             var tagEls = [];
 
-            function meta() { ctx.setMeta(kit.meta(['答對 ' + right, fmtBest(Reaction.getBest(ID))])); }
+            function meta() { ctx.setMeta(kit.meta(['答對 ' + right, fmtBest(Reaction.getBest(ID))])); }  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
             /* 標籤的字級倍率：從 theme.css 的 --pr-scale（1.66）開始，放不下就往下調到剛好放得下。
                「放得下」＝每張標籤裡的內容（不含吊牌的洞）上下不超出標籤的內側，而且沒有任何一行比標籤還寬 */
             function fitTags(els) {
                 var kMax = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pr-scale')) || 1.66;
                 function fits(k) {
-                    els.forEach(function (el) { el.style.setProperty('--pr-k', String(k)); });
-                    return els.every(function (el) {
-                        var cs = getComputedStyle(el), r = el.getBoundingClientRect(), s = r.height / (el.offsetHeight || r.height) || 1;
+                    els.forEach(function (el) { el.style.setProperty('--pr-k', String(k)); });  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
+                    return els.every(function (el) {    /* every：陣列裡「每一個」元素都符合條件才回傳 true */
+                        var cs = getComputedStyle(el), r = el.getBoundingClientRect(), s = r.height / (el.offsetHeight || r.height) || 1;  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
                         var inner = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-                        var kids = [].filter.call(el.children, function (c) { return c.className.indexOf('price-tag__hole') < 0; });
+                        var kids = [].filter.call(el.children, function (c) { return c.className.indexOf('price-tag__hole') < 0; });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                         var top = Infinity, bottom = -Infinity, wide = false;
-                        kids.forEach(function (c) {
-                            var cr = c.getBoundingClientRect();
+                        kids.forEach(function (c) {     /* forEach：對陣列的每個元素各做一次 */
+                            var cr = c.getBoundingClientRect();  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
                             top = Math.min(top, cr.top); bottom = Math.max(bottom, cr.bottom);
                             if (c.scrollWidth > c.clientWidth + 1 || cr.width > el.clientWidth * s + 1) wide = true;
                         });
@@ -317,9 +317,9 @@
                 if (my.dead) return;
                 Q = makeQuestion(level);
                 state = 'ask';
-                head.textContent = '第 ' + level + ' 題　付得比較少的是哪張？';
+                head.textContent = '第 ' + level + ' 題　付得比較少的是哪張？';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 meta();
-                wrap.innerHTML = '';
+                wrap.innerHTML = '';                    /* innerHTML = ''：把元素裡面的東西全部清掉 */
                 /* 建立兩張標籤（吊牌造型的按鈕）：原價、優惠行、算式（答完才顯示） */
                 tagEls = Q.tags.map(function (tg, i) {
                     var ot = priceText(tg.orig, tg.formal);
@@ -330,13 +330,13 @@
                         h('span', { 'class': 'price-tag__disc' }, discLines(tg).map(function (t, k) { return h('span', { 'class': 'price-tag__line' + (tg.steps[k].k === 'member' ? ' price-tag__line--member' : ''), text: t }); })),
                         h('span', { 'class': 'price-tag__calc', text: calcText(tg) })      /* 算式先排好版（透明），答完才顯示，版面不會跳動 */
                     ]);
-                    el.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(i); });
+                    el.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(i); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                     wrap.appendChild(el);
                     return el;
                 });
                 fitTags(tagEls);
                 /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「實際付的錢比較少」的那張標籤上（第一題的正確答案） */
-                if (Reaction.kit.once('price.hint')) Reaction.kit.hintOn(root, tagEls[Q.lowIdx], { mode: 'tap', text: '請點擊付得比較少的標籤' });
+                if (Reaction.kit.once('price.hint')) Reaction.kit.hintOn(root, tagEls[Q.lowIdx], { mode: 'tap', text: '請點擊付得比較少的標籤' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
                 /* 主控台印出這題兩張標籤與算式、答案，方便驗證 */
                 try {
                     console.info('[價格陷阱] 第 ' + level + ' 題 目標差距 ' + Q.params.gapLow.toFixed(0) + '～' + Q.params.gap.toFixed(0) + ' 元，實際差 ' + Q.gap + ' 元：' +
@@ -344,8 +344,8 @@
                         ' ⇒ 答案是' + (Q.lowIdx ? '下' : '上') + '面那張');
                 } catch (e) { }
                 /* 倒數時間條 */
-                var t0 = performance.now(), limit = Q.params.time * 1000;
-                var lp = my.loop(function (now) {
+                var t0 = performance.now(), limit = Q.params.time * 1000;  /* performance.now()：高精度的時間（毫秒），計時用 */
+                var lp = my.loop(function (now) {       /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                     if (state !== 'ask') return false;
                     fill.style.width = (100 * Math.max(0, 1 - (now - t0) / limit)).toFixed(1) + '%';
                 });
@@ -363,21 +363,21 @@
                 tagEls.forEach(function (el, k) {
                     el.classList.add('price-tag--rev', k === Q.lowIdx ? 'price-tag--low' : 'price-tag--high');       /* price-tag--rev：顯示算式 */
                 });
-                if (i >= 0) tagEls[i].classList.add('price-tag--pick');
-                head.textContent = (i < 0 ? '時間到！' : (ok ? '答對了！' : '答錯了…')) + (Q.lowIdx ? '下' : '上') + '面便宜（差 ' + Q.gap + ' 元）';
+                if (i >= 0) tagEls[i].classList.add('price-tag--pick');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                head.textContent = (i < 0 ? '時間到！' : (ok ? '答對了！' : '答錯了…')) + (Q.lowIdx ? '下' : '上') + '面便宜（差 ' + Q.gap + ' 元）';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 if (ok) {
                     right++;
-                    Sfx.play('ok');
-                    if (Reaction.setBest(ID, right, function (a, b) { return a > b; })) newRec = true;
+                    Sfx.play('ok');                     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                    if (Reaction.setBest(ID, right, function (a, b) { return a > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                     meta();
                     level++;
                     my.after(REVEAL_MS, next);
                 } else {
-                    Sfx.play('bad');
+                    Sfx.play('bad');                    /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                     state = 'over';
                     var failLevel = level, back = kit.resumeFrom(failLevel);
                     my.after(REVEAL_MS + 400, function () {
-                        kit.result(root, {
+                        kit.result(root, {              /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                             score: right,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: right + ' 題', label: i < 0 ? '來不及算' : '被折扣騙到了',
                             lines: ['便宜的是 ' + calcText(Q.tags[Q.lowIdx]), '貴的是 ' + calcText(Q.tags[1 - Q.lowIdx])],

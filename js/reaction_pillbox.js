@@ -84,27 +84,27 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 第 level 關有幾個時段：從 1 開始，每達到一個門檻就 +1 */
-    function slotCount(level) { var n = 1; SLOT_AT.forEach(function (a, i) { if (level >= a) n = i + 2; }); return n; }
+    function slotCount(level) { var n = 1; SLOT_AT.forEach(function (a, i) { if (level >= a) n = i + 2; }); return n; }  /* forEach：對陣列的每個元素各做一次 */
     /* 藥種數：kit.ramp 線性從 2 增加到 4，Math.round 四捨五入成整數 */
-    function kindCount(level) { return Math.round(kit.ramp(level, KINDS_START, KINDS_END, LEVEL_RAMP)); }
+    function kindCount(level) { return Math.round(kit.ramp(level, KINDS_START, KINDS_END, LEVEL_RAMP)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 每格每種最多幾顆 */
-    function maxCnt(level) { return Math.round(kit.ramp(level, MAXCNT_START, MAXCNT_END, LEVEL_RAMP)); }
+    function maxCnt(level) { return Math.round(kit.ramp(level, MAXCNT_START, MAXCNT_END, LEVEL_RAMP)); }  /* Math.round：四捨五入成整數 */
     /* 每顆藥丸給的觀看秒數：第 1 關 1.4 秒，線性縮到第 LEVEL_RAMP 關的 0.6 秒 */
-    function perPill(level) { return kit.ramp(level, PER_PILL_START, PER_PILL_END, LEVEL_RAMP); }
+    function perPill(level) { return kit.ramp(level, PER_PILL_START, PER_PILL_END, LEVEL_RAMP); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 看單子的秒數＝基本秒數 ＋ 每顆秒數 × 單子上的藥丸總顆數（單子越複雜看越久；第 1 關 3 顆＝5 秒） */
     function showSec(level, sheet) { return SHOW_BASE + perPill(level) * needTotal(sheet); }
     /* 故意多放的顆數上限 */
-    function extraMax(level) { return Math.round(kit.ramp(level, EXTRA_START, EXTRA_END, LEVEL_RAMP)); }
+    function extraMax(level) { return Math.round(kit.ramp(level, EXTRA_START, EXTRA_END, LEVEL_RAMP)); }  /* Math.round：四捨五入成整數 */
     /* 干擾藥丸的種類數 */
     function decoyKinds(level) { return Math.round(kit.ramp(level, DECOY_START, DECOY_END, LEVEL_RAMP)); }
     /* 單子上總共要放幾顆：reduce 是「累加」——把每一列再累加成一個數字 */
-    function needTotal(sheet) { return sheet.reduce(function (sum, row) { return sum + row.reduce(function (a, b) { return a + b; }, 0); }, 0); }
+    function needTotal(sheet) { return sheet.reduce(function (sum, row) { return sum + row.reduce(function (a, b) { return a + b; }, 0); }, 0); }  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
     /* 填藥盒的限時＝基本秒數 + 每顆需要的藥丸再加一點時間 */
     function fillSec(sheet) { return FILL_BASE + FILL_PER_PILL * needTotal(sheet); }
     /* 一列的總顆數 */
-    function total(row) { return row.reduce(function (s, x) { return s + x; }, 0); }
+    function total(row) { return row.reduce(function (s, x) { return s + x; }, 0); }  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
     /* 兩列的差距：各藥種顆數差的絕對值加總 */
-    function rowDiff(a, b) { var s = 0; for (var i = 0; i < a.length; i++) s += Math.abs(a[i] - b[i]); return s; }
+    function rowDiff(a, b) { var s = 0; for (var i = 0; i < a.length; i++) s += Math.abs(a[i] - b[i]); return s; }  /* Math.abs：取絕對值（去掉負號） */
     /* 兩列是否完全相同 */
     function sameRow(a, b) { return rowDiff(a, b) === 0; }
 
@@ -131,12 +131,12 @@
         var row = []; for (var k = 0; k < K; k++) row.push(0);
         for (var i = 0; i < t; i++) {
             var open = []; for (var j = 0; j < K; j++) if (row[j] < M) open.push(j);
-            row[kit.pick(open, rand)]++;
+            row[kit.pick(open, rand)]++;                /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         }
         return row;
     }
     /* 把單子轉成字串（拿來判斷「跟上一關的單子是不是一模一樣」） */
-    function sheetKey(sheet) { return sheet.map(function (r) { return r.join(','); }).join('|'); }
+    function sheetKey(sheet) { return sheet.map(function (r) { return r.join(','); }).join('|'); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
 
     /* 出一張單子：回傳 { slots 時段數, kinds 藥種數, maxCnt 每格上限, sheet[時段][藥種]＝顆數, nearPair 刻意只差 1 顆的兩個時段 }。
        總顆數剛好是 pillTarget(level)；prev 是上一關的單子，有給的話這一張一定跟它不一樣。
@@ -149,23 +149,23 @@
         var sh = shapeFor(level), S = sh.S, K = sh.K, M = sh.M, T = sh.T, KM = K * M, n = S - 2;
         var prevKey = prev ? sheetKey(prev.sheet || prev) : null;
         /* tA 的範圍：2·tA + 1 ＋ 其他列的總顆數（n 列，每列 1～KM 顆）＝ T */
-        var lo = Math.max(1, Math.ceil((T - 1 - n * KM) / 2)), hi = Math.min(KM - 1, Math.floor((T - 1 - n) / 2));
+        var lo = Math.max(1, Math.ceil((T - 1 - n * KM) / 2)), hi = Math.min(KM - 1, Math.floor((T - 1 - n) / 2));  /* Math.floor：無條件捨去成整數 */
         for (var tries = 0; tries < 200 && lo <= hi; tries++) {
-            var tA = kit.randInt(lo, hi, rand);
+            var tA = kit.randInt(lo, hi, rand);         /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             var A = fillRow(tA, K, M, rand), open = [];
             for (var k = 0; k < K; k++) if (A[k] < M) open.push(k);
-            var B = A.slice(); B[kit.pick(open, rand)]++;
+            var B = A.slice(); B[kit.pick(open, rand)]++;  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
             /* 其餘 n 個時段：每列的顆數在「還能保證剩下的列放得下」的範圍內隨機挑 */
             var rows = [A, B], rest = T - (2 * tA + 1);
             for (var i = 0; i < n; i++) {
                 var left = n - i - 1, tmin = Math.max(1, rest - left * KM), tmax = Math.min(KM, rest - left);
-                var ti = kit.randInt(tmin, tmax, rand);
+                var ti = kit.randInt(tmin, tmax, rand); /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
                 rows.push(fillRow(ti, K, M, rand)); rest -= ti;
             }
             /* 隨機排進各時段，並記下近似那一對的位置 */
-            var order = kit.shuffle(rows.map(function (_, idx) { return idx; }), rand);
-            var sheet = order.map(function (idx) { return rows[idx]; });
-            var a = order.indexOf(0), b = order.indexOf(1);
+            var order = kit.shuffle(rows.map(function (_, idx) { return idx; }), rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+            var sheet = order.map(function (idx) { return rows[idx]; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            var a = order.indexOf(0), b = order.indexOf(1);  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             if (prevKey != null && sheetKey(sheet) === prevKey) continue;
             return { slots: S, kinds: K, maxCnt: M, sheet: sheet, nearPair: [a, b] };
         }
@@ -176,7 +176,7 @@
     }
     /* 單子只有 K 種藥丸，補 0 補到 8 種才能和藥盒（8 種）比對 */
     /* 單子的一列補 0 補到 8 種藥丸，才能跟藥盒（8 種）比 */
-    function pad(row) { var out = row.slice(); while (out.length < N_KINDS) out.push(0); return out; }
+    function pad(row) { var out = row.slice(); while (out.length < N_KINDS) out.push(0); return out; }  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
     /* 判定：藥盒的每一格都要和單子的對應列完全相同 */
     function judge(sheet, box) {
         if (sheet.length !== box.length) return false;
@@ -186,7 +186,7 @@
     /* 把一列轉成文字（例如「白圓 2、黃橢圓 1」），顯示答錯原因用 */
     function rowText(row) {
         var t = [];
-        row.forEach(function (c, k) { if (c > 0) t.push(KIND_NAME[k] + ' ' + c); });
+        row.forEach(function (c, k) { if (c > 0) t.push(KIND_NAME[k] + ' ' + c); });  /* forEach：對陣列的每個元素各做一次 */
         return t.length ? t.join('、') : '（空）';
     }
     /* 上方的藥丸盤：回傳每顆藥丸的種類編號 */
@@ -226,10 +226,10 @@
             });
             var cand = extraIdx.length ? extraIdx : (decoyMoreIdx.length ? decoyMoreIdx : decoyLastIdx);
             if (!cand.length) break;
-            var drop = cand[Math.floor(rand() * cand.length)]; have[list[drop]]--; list.splice(drop, 1);
+            var drop = cand[Math.floor(rand() * cand.length)]; have[list[drop]]--; list.splice(drop, 1);  /* Math.floor：無條件捨去成整數 */
         }
         /* 最後洗牌，藥丸在藥盤裡的順序是隨機的 */
-        return kit.shuffle(list, rand);
+        return kit.shuffle(list, rand);                 /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
     }
 
     /* 藥丸放大後放得下嗎：n 顆藥丸、寬 W 高 H 的區域，每顆佔 (大小 + step) 的格子（step＝內距＋間距），
@@ -238,17 +238,17 @@
         var sz = Math.round(base * PILL_SCALE);
         for (; sz > PILL_MIN; sz -= 2) {
             var per = Math.max(1, Math.floor((W + step) / (sz + step)));
-            if (Math.ceil(Math.max(1, n) / per) * (sz + step) - step <= H) return sz;
+            if (Math.ceil(Math.max(1, n) / per) * (sz + step) - step <= H) return sz;  /* Math.ceil：無條件進位成整數 */
         }
         return PILL_MIN;
     }
     /* 畫藥丸圖示：用 SVG 向量圖，k 是種類編號，size 是畫出來的邊長（px） */
     /* 藥丸圖示 */
     function pillSvg(k, size) {
-        var s = kit.svg('svg', { 'class': 'pillbox-pill', viewBox: '0 0 40 40', width: size, height: size });
+        var s = kit.svg('svg', { 'class': 'pillbox-pill', viewBox: '0 0 40 40', width: size, height: size });  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var f = { fill: KIND_COLOR[k], stroke: 'rgba(74,59,30,0.65)', 'stroke-width': 2.5, 'stroke-linejoin': 'round' };
         /* 小工具 m(標籤, 屬性)：建立形狀並合併共用的填色、外框屬性 */
-        function m(tag, a) { var o = {}, x; for (x in a) o[x] = a[x]; for (x in f) o[x] = f[x]; kit.svg(tag, o, s); }
+        function m(tag, a) { var o = {}, x; for (x in a) o[x] = a[x]; for (x in f) o[x] = f[x]; kit.svg(tag, o, s); }  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var shape = KIND_SHAPE[k];
         if (shape === 'circle') m('circle', { cx: 20, cy: 20, r: 15 });
         else if (shape === 'ellipse') m('ellipse', { cx: 20, cy: 20, rx: 17, ry: 10 });
@@ -267,7 +267,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
             /* level 關卡；cleared 已過幾關；state 目前階段（show 看單子/fill 填藥盒/judged 已判定）；lvId 關卡流水號 */
             var level = startAt || 1, cleared = level - 1, newRec = false, state = 'idle', lvId = 0;
@@ -280,17 +280,17 @@
             var ringNum = kit.svg('text', { x: 30, y: 31, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'class': 'pillbox-ring__n' });
             var ringArc = kit.svg('circle', { cx: 30, cy: 30, r: RING_R, 'class': 'pillbox-ring__arc', transform: 'rotate(-90 30 30)' });
             var ring = kit.svg('svg', { 'class': 'pillbox-ring', viewBox: '0 0 60 60', width: 56, height: 56 });
-            ring.appendChild(kit.svg('circle', { cx: 30, cy: 30, r: RING_R, 'class': 'pillbox-ring__track' }));
-            ring.appendChild(ringArc); ring.appendChild(ringNum);
+            ring.appendChild(kit.svg('circle', { cx: 30, cy: 30, r: RING_R, 'class': 'pillbox-ring__track' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            ring.appendChild(ringArc); ring.appendChild(ringNum);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             ring.style.display = 'none';
             var head = h('div', { 'class': 'pillbox-head' }, [ring, headText]);
             /* 標題文字（head 裡還有圓環，所以只改文字那一段） */
-            function setHead(t) { headText.textContent = t; }
+            function setHead(t) { headText.textContent = t; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             function setRing(frac, secLeft) {
                 var C = 2 * Math.PI * RING_R;
-                ringArc.setAttribute('stroke-dasharray', C.toFixed(2));
-                ringArc.setAttribute('stroke-dashoffset', (C * (1 - Math.max(0, Math.min(1, frac)))).toFixed(2));
-                ringNum.textContent = String(Math.max(0, Math.ceil(secLeft)));
+                ringArc.setAttribute('stroke-dasharray', C.toFixed(2));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                ringArc.setAttribute('stroke-dashoffset', (C * (1 - Math.max(0, Math.min(1, frac)))).toFixed(2));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                ringNum.textContent = String(Math.max(0, Math.ceil(secLeft)));  /* Math.ceil：無條件進位成整數 */
             }
             var sheetEl = h('div', { 'class': 'pillbox-sheet' });
             var boxEl = h('div', { 'class': 'pillbox-box' });
@@ -302,7 +302,7 @@
             [head, sheetEl, boxEl, tb.el, acts, layer].forEach(function (n) { root.appendChild(n); });
 
             /* 更新標題列右側的小字 */
-            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }
+            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
             /* 統計藥盒每格目前放了什麼：box[時段][藥種]＝顆數 */
             /* 每個格子現在放了哪些藥丸：box[s][k] ＝ 顆數 */
@@ -325,7 +325,7 @@
             }
             /* 畫「藥單」：每個時段一行（時段名 + 該放的藥丸圖案） */
             function drawSheet() {
-                sheetEl.innerHTML = '';
+                sheetEl.innerHTML = '';                 /* innerHTML = ''：把元素裡面的東西全部清掉 */
                 sheetEl.className = 'pillbox-sheet';
                 var ssz = sheetPillSize(Sh.sheet);
                 Sh.sheet.forEach(function (row, s) {
@@ -342,7 +342,7 @@
             /* 建立一顆可操作的藥丸：按下去就開始拖曳 */
             function pillItem(p, size) {
                 var el = h('div', { 'class': 'pillbox-item', attrs: { 'data-id': String(p.id) } }, [pillSvg(p.kind, size)]);
-                el.addEventListener('pointerdown', function (e) { startDrag(e, p, el, size); });
+                el.addEventListener('pointerdown', function (e) { startDrag(e, p, el, size); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
                 return el;
             }
             /* 藥丸太多時縮小圖示，才擠得進藥盤與格子（舞台寬固定 500px） */
@@ -360,7 +360,7 @@
                 sheetEl.className = 'pillbox-sheet pillbox-tray';
                 sheetEl.appendChild(h('div', { 'class': 'pillbox-tray__cap', text: '藥丸（拖曳到下面的格子）' }));
                 var grid = h('div', { 'class': 'pillbox-tray__grid' });
-                var inTray = pills.filter(function (p) { return p.where < 0; }), sz = trayPillSize(inTray.length);
+                var inTray = pills.filter(function (p) { return p.where < 0; }), sz = trayPillSize(inTray.length);  /* filter：留下符合條件的元素，回傳新陣列 */
                 inTray.forEach(function (p) { grid.appendChild(pillItem(p, sz)); });
                 sheetEl.appendChild(grid);
             }
@@ -370,10 +370,10 @@
                 Sh.sheet.forEach(function (_, s) {
                     var cell = h('div', { 'class': 'pillbox-cell' + (s === sel ? ' pillbox-cell--sel' : ''), attrs: { 'data-s': String(s) } }, [h('span', { 'class': 'pillbox-cell__name', text: SLOT_NAME[s] })]);
                     var wrap = h('span', { 'class': 'pillbox-cell__pills' });
-                    var inCell = pills.filter(function (p) { return p.where === s; }), sz = cellPillSize(Math.max(inCell.length, Math.ceil(needTotal(Sh.sheet) / Sh.slots) + 1));
+                    var inCell = pills.filter(function (p) { return p.where === s; }), sz = cellPillSize(Math.max(inCell.length, Math.ceil(needTotal(Sh.sheet) / Sh.slots) + 1));  /* filter：留下符合條件的元素，回傳新陣列 */
                     inCell.forEach(function (p) { wrap.appendChild(pillItem(p, sz)); });
                     cell.appendChild(wrap);
-                    cell.addEventListener('pointerdown', function (e) { if (state === 'fill' && !(e.target.closest && e.target.closest('.pillbox-item'))) { sel = s; Sfx.play('click'); drawBox(); } });
+                    cell.addEventListener('pointerdown', function (e) { if (state === 'fill' && !(e.target.closest && e.target.closest('.pillbox-item'))) { sel = s; Sfx.play('click'); drawBox(); } });  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                     boxEl.appendChild(cell);
                 });
             }
@@ -386,9 +386,9 @@
             /* startDrag：手指按在某顆藥丸上時呼叫 */
             function startDrag(e, p, el, size) {
                 if (state !== 'fill' || dragging) return;
-                e.preventDefault();
+                e.preventDefault();                     /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                 /* setPointerCapture：讓手指移出這個元素外仍持續收到 pointermove／pointerup */
-                try { el.setPointerCapture(e.pointerId); } catch (err) { }
+                try { el.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
                 /* ghost 是跟著手指跑的「分身」，畫在最上層的 .pillbox-layer 上；kit.localPt 把螢幕座標換算成舞台座標 */
                 var pt = kit.localPt(e, layer), ghost = h('div', { 'class': 'pillbox-ghost' }, [pillSvg(p.kind, GHOST)]);
                 dragging = { id: e.pointerId, p: p, el: el, x0: e.clientX, y0: e.clientY, ghost: ghost, moved: false };
@@ -403,7 +403,7 @@
                     /* 還沒移動超過 8px 就不當作拖曳 */
                     if (!dragging.moved && dx * dx + dy * dy < DRAG_MOVE_PX * DRAG_MOVE_PX) return;
                     /* 第一次超過門檻：顯示分身、讓原本那顆變淡 */
-                    if (!dragging.moved) { dragging.moved = true; ghost.style.display = ''; el.classList.add('pillbox-item--lifted'); }
+                    if (!dragging.moved) { dragging.moved = true; ghost.style.display = ''; el.classList.add('pillbox-item--lifted'); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                     var q = kit.localPt(ev, layer);
                     ghost.style.left = (q.x - GHOST / 2) + 'px'; ghost.style.top = (q.y - GHOST / 2) + 'px';
                     /* 標出手指正在哪一格上方（該格亮綠色） */
@@ -422,7 +422,7 @@
                     if (!d.moved) tapPill(d.p);
                     else dropPill(d.p, targetAt(ev.clientX, ev.clientY));
                 }
-                el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+                el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             }
             /* 放開的位置在哪：document.elementsFromPoint 取得該座標上所有重疊的元素，由上往下找出藥盒的格子或藥盤 */
             /* 放開的位置在哪：回傳 { s:格子編號 } 或 { tray:true } 或 null */
@@ -439,12 +439,12 @@
             function markTarget(x, y) {
                 clearMarks();
                 var t = targetAt(x, y);
-                if (t && t.s != null) { var c = boxEl.children[t.s]; if (c) c.classList.add('pillbox-cell--over'); }
+                if (t && t.s != null) { var c = boxEl.children[t.s]; if (c) c.classList.add('pillbox-cell--over'); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             }
             function clearMarks() { [].forEach.call(boxEl.children, function (c) { c.classList.remove('pillbox-cell--over'); }); }
             /* 放下：放進格子（位置=格子編號）或放回藥盤（位置=-1） */
             function dropPill(p, t) {
-                if (t && t.s != null) { p.where = t.s; sel = t.s; Sfx.play('pop'); }
+                if (t && t.s != null) { p.where = t.s; sel = t.s; Sfx.play('pop'); }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 else if (t && t.tray) { p.where = -1; Sfx.play('click'); }
                 redraw();
             }
@@ -473,10 +473,10 @@
                 tb.el.style.visibility = 'hidden'; ring.style.display = '';                 /* 看單子：不用底下的藍色倒數條，改用標題旁的圓環 */
                 /* 主控台印出這關單子與藥盤的實際內容（除錯用） */
                 try { console.info('[分藥盒] 第 ' + level + ' 關 單子：' + Sh.sheet.map(function (r, s) { return SLOT_NAME[s] + '＝' + rowText(r); }).join('；') + '；藥盤共 ' + pills.length + ' 顆（需要 ' + needTotal(Sh.sheet) + ' 顆，其中干擾 ' + pills.filter(function (p) { return p.kind >= 4; }).length + ' 顆）；看 ' + showSec(level, Sh.sheet).toFixed(1) + ' 秒、填 ' + fillSec(Sh.sheet).toFixed(0) + ' 秒'); } catch (e) { }
-                var t0 = performance.now(), lim = showSec(level, Sh.sheet) * 1000;
+                var t0 = performance.now(), lim = showSec(level, Sh.sheet) * 1000;  /* performance.now()：高精度的時間（毫秒），計時用 */
                 /* 看單子的倒數時間條 */
                 setRing(1, lim / 1000);
-                my.loop(function (now) { if (id !== lvId || state !== 'show') return false; var left = lim - (now - t0); setRing(left / lim, left / 1000); });
+                my.loop(function (now) { if (id !== lvId || state !== 'show') return false; var left = lim - (now - t0); setRing(left / lim, left / 1000); });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                 /* 時間到：蓋掉單子，換成藥丸盤，進入「填藥盒」階段，開始填藥盒的倒數 */
                 my.after(lim, function () {
                     if (id !== lvId || state !== 'show') return;
@@ -484,12 +484,12 @@
                     ring.style.display = 'none'; tb.el.style.visibility = '';                    /* 填藥盒：隱藏圓環，照舊用底下的藍色倒數條 */
                     drawTray(); drawBox();
                     /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從藥盤裡「第一顆該放的藥丸」往「它要放進的藥盒格子」重複移動（第一關的正確放法） */
-                    if (Reaction.kit.once('pillbox.hint')) (function () {
+                    if (Reaction.kit.once('pillbox.hint')) (function () {  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
                         for (var s = 0; s < Sh.slots; s++) {
                             for (var k = 0; k < Sh.kinds; k++) {
                                 if (!(Sh.sheet[s][k] > 0)) continue;
                                 var pill = pills.filter(function (p) { return p.kind === k && p.where < 0; })[0];
-                                var itemEl = pill && root.querySelector('.pillbox-item[data-id="' + pill.id + '"]');
+                                var itemEl = pill && root.querySelector('.pillbox-item[data-id="' + pill.id + '"]');  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
                                 if (itemEl && boxEl.children[s]) { Reaction.kit.hintOn(root, itemEl, { mode: 'drag', to: boxEl.children[s], text: '請把藥丸拖進藥盒格子' }); return; }
                             }
                         }
@@ -497,8 +497,8 @@
                     setHead('把正確的藥丸拖曳到格子裡');
                     acts.style.visibility = 'visible'; boxEl.classList.remove('pillbox-box--dim');
                     Sfx.play('go');
-                    var f0 = performance.now(), fl = fillSec(Sh.sheet) * 1000;
-                    my.loop(function (now) { if (id !== lvId || state !== 'fill') return false; tb.set(1 - (now - f0) / fl); });
+                    var f0 = performance.now(), fl = fillSec(Sh.sheet) * 1000;  /* performance.now()：高精度的時間（毫秒），計時用 */
+                    my.loop(function (now) { if (id !== lvId || state !== 'fill') return false; tb.set(1 - (now - f0) / fl); });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                     /* 填藥盒的時間到了：submit(true) 會先判斷藥盒，放對就過關 */
                     my.after(fl, function () { if (id === lvId && state === 'fill') submit(true); });
                 });
@@ -516,7 +516,7 @@
                 drawSheet();                       /* 揭曉：把單子再亮出來 */
                 if (ok) {
                     cleared = level;
-                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
+                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                     Sfx.play('win');
                     setHead(timeout ? '時間到，剛好放對了！' : '全部正確！');
                     level++;
@@ -537,7 +537,7 @@
                 my.after(2200, function () {
                     /* kit.resumeFrom：失敗後可從前 5 關繼續 */
                     var back = kit.resumeFrom(level);
-                    kit.result(root, {
+                    kit.result(root, {                  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                         score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: cleared + ' 關', label: cleared >= 8 ? '細心的好幫手！' : (cleared >= 4 ? '記得很清楚！' : '再試一次，會更準！'),
                         lines: wrong.slice(0, 3), note: '藥丸是虛構的圖案，不是用藥建議；遊戲成績，不是醫療檢查',
@@ -547,7 +547,7 @@
                 });
             }
             /* 「清空這格」：把目前選取格子的藥丸全部放回藥盤 */
-            clear.addEventListener('pointerdown', function (e) { e.preventDefault(); if (state === 'fill') { pills.forEach(function (p) { if (p.where === sel) p.where = -1; }); Sfx.play('click'); redraw(); } });
+            clear.addEventListener('pointerdown', function (e) { e.preventDefault(); if (state === 'fill') { pills.forEach(function (p) { if (p.where === sel) p.where = -1; }); Sfx.play('click'); redraw(); } });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             /* 「好了」：送出 */
             done.addEventListener('pointerdown', function (e) { e.preventDefault(); submit(false); });
 

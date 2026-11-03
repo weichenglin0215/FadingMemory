@@ -39,15 +39,15 @@
     var neighbors = kit.gridNeighbors, adjacent = kit.gridAdjacent;  /* neighbors：取一格的上下左右鄰格；adjacent：判斷兩格是否相鄰（都是共用工具箱 kit 的函式） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function sizeFor(level) { return Math.round(kit.ramp(level, SIZE[0], SIZE[1], RAMP_LEVELS)); }
+    function sizeFor(level) { return Math.round(kit.ramp(level, SIZE[0], SIZE[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 這一關有幾種顏色：照線性算，但每種顏色至少要有 MIN_SEG 格，所以最多 floor(n² ÷ MIN_SEG) 種 */
-    function colorsFor(level) { var n = sizeFor(level); return Math.max(1, Math.min(PALETTE.length, Math.floor(n * n / MIN_SEG), Math.round(kit.ramp(level, COLORS[0], COLORS[1], RAMP_LEVELS)))); }
-    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
+    function colorsFor(level) { var n = sizeFor(level); return Math.max(1, Math.min(PALETTE.length, Math.floor(n * n / MIN_SEG), Math.round(kit.ramp(level, COLORS[0], COLORS[1], RAMP_LEVELS)))); }  /* Math.floor：無條件捨去成整數 */
+    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
     /* 把 total 格分成 k 段，每段至少 min 格（多出來的格子隨機分給各段）；回傳每段的長度 */
     function splitLengths(total, k, min, rand) {
         var lens = [], extra = total - k * min, i;
         for (i = 0; i < k; i++) lens.push(min);
-        for (i = 0; i < extra; i++) lens[Math.floor(rand() * k)]++;
+        for (i = 0; i < extra; i++) lens[Math.floor(rand() * k)]++;  /* Math.floor：無條件捨去成整數 */
         return lens;
     }
     /* 出一題：{ n, k, plugs:[{ c（顏色編號 0～7）, a, b（兩個插頭的格子）}], solution:[每種顏色一條路（格子編號陣列，從 a 到 b）], level }；
@@ -57,8 +57,8 @@
         var n = sizeFor(level), k = colorsFor(level), total = n * n, blocked = new Uint8Array(total), ham = null;
         for (var tr = 0; tr < 300 && !ham; tr++) { var s0 = Math.floor(rand() * total); if (kit.gridParityOk(n, blocked, s0)) ham = kit.hamPath(n, blocked, s0, rand, 4000); }
         if (!ham) { ham = []; for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) ham.push(r * n + (r % 2 ? n - 1 - c : c)); }
-        var lens = splitLengths(total, k, MIN_SEG, rand), cols = kit.shuffle(Array.apply(null, Array(k)).map(function (_, i) { return i; }), rand), plugs = [], solution = [], pos = 0;
-        lens.forEach(function (len, i) {
+        var lens = splitLengths(total, k, MIN_SEG, rand), cols = kit.shuffle(Array.apply(null, Array(k)).map(function (_, i) { return i; }), rand), plugs = [], solution = [], pos = 0;  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+        lens.forEach(function (len, i) {                /* forEach：對陣列的每個元素各做一次 */
             var seg = ham.slice(pos, pos + len); pos += len;
             if (rand() < 0.5) seg.reverse();
             plugs.push({ c: cols[i], a: seg[0], b: seg[seg.length - 1] });
@@ -69,17 +69,17 @@
     /* 目前的接線狀態：occ[格子] ＝ 那一格的電線顏色（沒有＝−1，插頭那格一開始就是它的顏色）；paths[顏色] ＝ 這條電線已經鋪的格子（從某一個插頭開始）；done[顏色] ＝ 接通了嗎 */
     function newState(q) {
         var occ = new Int8Array(q.n * q.n).fill(-1), plugOf = {}, paths = {}, done = {};
-        q.plugs.forEach(function (p) { occ[p.a] = p.c; occ[p.b] = p.c; plugOf[p.a] = p.c; plugOf[p.b] = p.c; paths[p.c] = []; done[p.c] = false; });
+        q.plugs.forEach(function (p) { occ[p.a] = p.c; occ[p.b] = p.c; plugOf[p.a] = p.c; plugOf[p.b] = p.c; paths[p.c] = []; done[p.c] = false; });  /* forEach：對陣列的每個元素各做一次 */
         return { n: q.n, occ: occ, plugOf: plugOf, paths: paths, done: done, plugs: q.plugs };
     }
-    function otherPlug(st, c, cell) { var p = st.plugs.filter(function (x) { return x.c === c; })[0]; return p.a === cell ? p.b : p.a; }
+    function otherPlug(st, c, cell) { var p = st.plugs.filter(function (x) { return x.c === c; })[0]; return p.a === cell ? p.b : p.a; }  /* filter：留下符合條件的元素，回傳新陣列 */
     /* 手指在格子 cell 按下：回傳這一筆畫的顏色（−1＝按在空格或不能開始的地方）。
        按在插頭上：那條電線整條收回，從這個插頭重新開始；按在同色電線的中間：那一格之後的電線收回，從這裡接著畫；按在電線的最前端：接著畫 */
     function startDraw(st, cell) {
         var c = st.occ[cell];
         if (c < 0) return -1;
         if (st.plugOf[cell] != null) { clearPath(st, c); st.paths[c] = [cell]; return c; }
-        var p = st.paths[c], idx = p.indexOf(cell);
+        var p = st.paths[c], idx = p.indexOf(cell);     /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         if (idx < 0) return -1;
         while (p.length > idx + 1) { var gone = p.pop(); if (st.plugOf[gone] == null) st.occ[gone] = -1; }       /* 插頭那一格的顏色不能清掉 */
         st.done[c] = false;
@@ -136,12 +136,12 @@
         console.log('[接電線] 第 ' + level + ' 關：' + n + '×' + n + '、' + q.k + ' 種顏色（' + q.plugs.map(function (p) { return PALETTE[p.c]; }).join('、') + '）；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, topPad = 56;
-        var cell = Math.floor(Math.min((W - 20) / n, (H - topPad - 20) / n, 90)), BS = cell * n, bx = Math.round((W - BS) / 2), by = topPad + Math.round((H - topPad - BS) / 2) - 8;
+        var cell = Math.floor(Math.min((W - 20) / n, (H - topPad - 20) / n, 90)), BS = cell * n, bx = Math.round((W - BS) / 2), by = topPad + Math.round((H - topPad - BS) / 2) - 8;  /* Math.round：四捨五入成整數 */
         var tip = h('div', { 'class': 'qz-note wirelink-tip', text: '' });
-        stage.appendChild(tip);
-        var board = h('div', { 'class': 'wirelink-board' });
+        stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var board = h('div', { 'class': 'wirelink-board' });  /* board：盤面（所有格子都放在裡面） */
         board.style.cssText = 'left:' + bx + 'px;top:' + by + 'px;width:' + BS + 'px;height:' + BS + 'px;';
-        stage.appendChild(board);
+        stage.appendChild(board);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var cells = [];
         for (var i = 0; i < n * n; i++) {
             var r = Math.floor(i / n), c = i % n, el = h('div', { 'class': 'wirelink-cell' });
@@ -150,11 +150,11 @@
         }
         function cx(i) { return (i % n + 0.5) * cell; }
         function cy(i) { return (Math.floor(i / n) + 0.5) * cell; }
-        var svg = kit.svg('svg', { 'class': 'wirelink-svg', viewBox: '0 0 ' + BS + ' ' + BS, width: BS, height: BS }, board);
-        var gSol = kit.svg('g', {}, svg), wires = {}, plugEls = [];
+        var svg = kit.svg('svg', { 'class': 'wirelink-svg', viewBox: '0 0 ' + BS + ' ' + BS, width: BS, height: BS }, board);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var gSol = kit.svg('g', {}, svg), wires = {}, plugEls = [];  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         q.plugs.forEach(function (p) {
             var w = kit.svg('path', { 'class': 'wirelink-wire wirelink-c' + p.c, d: '' }, svg);
-            w.setAttribute('stroke-width', (cell * 0.46).toFixed(1)); wires[p.c] = w;
+            w.setAttribute('stroke-width', (cell * 0.46).toFixed(1)); wires[p.c] = w;  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         });
         q.plugs.forEach(function (p) {
             [p.a, p.b].forEach(function (k) {
@@ -164,19 +164,19 @@
                 plugEls.push({ g: g, c: p.c });
             });
         });
-        function pathD(p) { return p.map(function (k, j) { return (j ? 'L' : 'M') + cx(k).toFixed(1) + ' ' + cy(k).toFixed(1); }).join(' '); }
+        function pathD(p) { return p.map(function (k, j) { return (j ? 'L' : 'M') + cx(k).toFixed(1) + ' ' + cy(k).toFixed(1); }).join(' '); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() {
             q.plugs.forEach(function (p) {
                 var path = st.paths[p.c];
-                wires[p.c].setAttribute('d', path.length ? pathD(path) + (path.length === 1 ? ' L' + (cx(path[0]) + 0.01) + ' ' + cy(path[0]) : '') : '');
+                wires[p.c].setAttribute('d', path.length ? pathD(path) + (path.length === 1 ? ' L' + (cx(path[0]) + 0.01) + ' ' + cy(path[0]) : '') : '');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             });
-            plugEls.forEach(function (pe) { pe.g.classList.toggle('wirelink-plug--on', !!st.done[pe.c]); });
-            tip.textContent = '已接通 ' + linked(st) + '／' + q.k + ' 條　填滿 ' + filled(st) + '／' + n * n + ' 格';
+            plugEls.forEach(function (pe) { pe.g.classList.toggle('wirelink-plug--on', !!st.done[pe.c]); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            tip.textContent = '已接通 ' + linked(st) + '／' + q.k + ' 條　填滿 ' + filled(st) + '／' + n * n + ' 格';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         }
         paint();
         api.timer(timeMs(level), function () { finish('time'); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
-        if (level === 1 && kit.once('wirelink.hint')) {
+        if (level === 1 && kit.once('wirelink.hint')) { /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
             var p0 = q.plugs[0];
             kit.hintOn(stage, null, { mode: 'drag', x: bx + cx(p0.a), y: by + cy(p0.a), dx: cx(p0.b) - cx(p0.a), dy: cy(p0.b) - cy(p0.a), delay: 500, text: '從插頭拖到同色插頭且佈滿畫面' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         }
@@ -188,26 +188,26 @@
         }
         function feed(p) {
             if (over || api.over) return;
-            var from = lastPt || p, dist = kit.dist(from.x, from.y, p.x, p.y), steps = Math.max(1, Math.ceil(dist / (cell / 4)));
+            var from = lastPt || p, dist = kit.dist(from.x, from.y, p.x, p.y), steps = Math.max(1, Math.ceil(dist / (cell / 4)));  /* Math.ceil：無條件進位成整數 */
             for (var s = 1; s <= steps && !over && !api.over; s++) {
                 var x = from.x + (p.x - from.x) * s / steps, y = from.y + (p.y - from.y) * s / steps, k = cellAt(x, y);
                 if (k < 0) continue;
                 var act = applyDrag(st, drawing, k);
-                if (act) { Sfx.play(act === 'connect' ? 'ok' : (act === 'add' ? 'tick' : 'flip')); paint(); if (isSolved(st)) finish('ok'); }
+                if (act) { Sfx.play(act === 'connect' ? 'ok' : (act === 'add' ? 'tick' : 'flip')); paint(); if (isSolved(st)) finish('ok'); }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             }
             lastPt = p;
         }
-        stage.addEventListener('pointerdown', function (e) {
+        stage.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (over || api.over || pid != null) return;
             var p = kit.localPt(e, stage), k = cellAt(p.x, p.y);
             if (k < 0) return;
             var c = startDraw(st, k);
             if (c < 0) return;
-            e.preventDefault(); pid = e.pointerId; drawing = c; lastPt = p;
-            try { stage.setPointerCapture(e.pointerId); } catch (err) { }
+            e.preventDefault(); pid = e.pointerId; drawing = c; lastPt = p;  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            try { stage.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             paint();
         });
-        stage.addEventListener('pointermove', function (e) { if (pid === e.pointerId) feed(kit.localPt(e, stage)); });
+        stage.addEventListener('pointermove', function (e) { if (pid === e.pointerId) feed(kit.localPt(e, stage)); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
         function up(e) { if (pid === e.pointerId) { pid = null; drawing = -1; lastPt = null; } }
         stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
 
@@ -216,10 +216,10 @@
             if (over || api.over) return;
             over = true; pid = null;
             if (kind === 'ok') {
-                board.classList.add('wirelink-board--lit');
-                tip.textContent = '全部接好了，燈全亮！';
-                kit.flash(stage, true, api.my);
-                api.pass({ delay: 1500 });
+                board.classList.add('wirelink-board--lit');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                tip.textContent = '全部接好了，燈全亮！';         /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                kit.flash(stage, true, api.my);         /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+                api.pass({ delay: 1500 });              /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
                 return;
             }
             /* 時間到：沒接通的電線閃紅；正確的接法一條一條畫出來（每條晚 0.25 秒） */
@@ -233,8 +233,8 @@
             board.classList.add('wirelink-board--reveal');
             gSol.classList.add('wirelink-sol--draw');
             tip.textContent = '時間到！彩色粗線是其中一種接法';
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: 3000, lines: ['時間到，還有 ' + miss + ' 條電線沒接通、' + (n * n - filled(st)) + ' 格沒填滿', '板子 ' + n + '×' + n + '、' + q.k + ' 種顏色'] });
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 3000, lines: ['時間到，還有 ' + miss + ' 條電線沒接通、' + (n * n - filled(st)) + ' 格沒填滿', '板子 ' + n + '×' + n + '、' + q.k + ' 種顏色'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：api.solve 把出題時的解一條一條接好；api.wrong 直接當作時間到 */
         api.solve = function () {

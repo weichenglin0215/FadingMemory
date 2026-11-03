@@ -57,16 +57,16 @@
     /* 純函式（也給 Node 測試用） */
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 這一關有幾個杯子 */
-    function cupsFor(level) { return Math.min(CUPS_MAX, CUPS_START + Math.floor((level - 1) / CUPS_EVERY)); }
+    function cupsFor(level) { return Math.min(CUPS_MAX, CUPS_START + Math.floor((level - 1) / CUPS_EVERY)); }  /* Math.floor：無條件捨去成整數 */
     /* 這一關要交換幾次 */
     function swapsFor(level) { return Math.min(SWAPS_MAX, SWAPS_START + SWAPS_STEP * (level - 1)); }
     /* 這一關每次交換花幾秒 */
-    function swapSecFor(level) { return kit.ramp(level, SWAP_SEC_START, SWAP_SEC_END, RAMP_LEVELS); }
+    function swapSecFor(level) { return kit.ramp(level, SWAP_SEC_START, SWAP_SEC_END, RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
 
     /* 兩個位置在圓環上的「環上距離」（相隔幾格，走近的那一邊）：0～floor(n/2) */
-    function ringDist(n, a, b) { var d = Math.abs(a - b) % n; return Math.min(d, n - d); }
+    function ringDist(n, a, b) { var d = Math.abs(a - b) % n; return Math.min(d, n - d); }  /* Math.abs：取絕對值（去掉負號） */
     /* 兩個位置夠不夠「遠」：杯子要移動到圓環的另一端（V1.34 玩家意見），所以交換的兩個位置至少相隔 FAR_FRAC × n 格（n 小時至少 1 格） */
-    function farEnough(n, a, b) { return ringDist(n, a, b) >= Math.max(1, Math.round(n * FAR_FRAC)); }
+    function farEnough(n, a, b) { return ringDist(n, a, b) >= Math.max(1, Math.round(n * FAR_FRAC)); }  /* Math.round：四捨五入成整數 */
     /* 兩條弦（交換 p＝[a,b] 與交換 q＝[c,d] 的路線）在圓裡會不會交叉：c、d 一個在 a～b 之間、一個在外面就會交叉 */
     function chordsCross(p, q) {
         var lo = Math.min(p[0], p[1]), hi = Math.max(p[0], p[1]);
@@ -93,7 +93,7 @@
                 /* 先找「夠遠、路線不交叉」的（前 200 次，亂數抽樣；杯子多的時候夠遠又不交叉的組合比例低，要多抽幾次）；找不到就先放寬「不交叉」（接下來 50 次，只要夠遠）；再找不到才連「夠遠」也放寬（只要是不同的位置）。
                    例如 5 個杯子、一步兩對：兩對都至少相隔 2 格的組合，路線一定交叉，所以會走到第二關。 */
                 for (tr = 0; tr < 300 && !step; tr++) {
-                    var slots = kit.shuffle(Array.apply(null, Array(n)).map(function (_, i) { return i; }), rand);
+                    var slots = kit.shuffle(Array.apply(null, Array(n)).map(function (_, i) { return i; }), rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
                     var s1 = [slots[0], slots[1]];
                     if (tr < 250 && !farEnough(n, s1[0], s1[1])) continue;
                     if (two) {
@@ -104,18 +104,18 @@
                     } else step = [s1];
                 }
                 /* 不連續做一模一樣的交換（等於沒換）；JSON.stringify 把交換內容轉成字串好比較 */
-                var key = JSON.stringify(step.map(function (p) { return p.slice().sort(); }).sort());
+                var key = JSON.stringify(step.map(function (p) { return p.slice().sort(); }).sort());  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
                 if (key === prevKey) continue;      /* 不連續做一模一樣的交換（等於沒換） */
                 prevKey = key;
                 /* 照這一步交換，更新球的位置 */
-                step.forEach(function (p) {
+                step.forEach(function (p) {             /* forEach：對陣列的每個元素各做一次 */
                     if (ball === p[0]) { ball = p[1]; touched++; }
                     else if (ball === p[1]) { ball = p[0]; touched++; }
                 });
                 steps.push(step);
                 made += step.length;
             }
-            if (touched >= Math.min(count, Math.max(2, Math.floor(count / 3)))) return { steps: steps, finalBall: ball };
+            if (touched >= Math.min(count, Math.max(2, Math.floor(count / 3)))) return { steps: steps, finalBall: ball };  /* Math.floor：無條件捨去成整數 */
         }
         return { steps: steps, finalBall: ball };
     }
@@ -127,7 +127,7 @@
     function ringLayout(n, FW, FH) {
         /* 先量這 n 個位置的「單位圓」範圍：水平最遠 |sin θ|、垂直 −cos θ 的最小與最大（偶數個杯子垂直範圍是 2，3 個杯子只有 1.5，不一定是 2R） */
         var sinMax = 0, cMin = 1e9, cMax = -1e9, i;
-        for (i = 0; i < n; i++) { var a = 2 * Math.PI * i / n; sinMax = Math.max(sinMax, Math.abs(Math.sin(a))); cMin = Math.min(cMin, -Math.cos(a)); cMax = Math.max(cMax, -Math.cos(a)); }
+        for (i = 0; i < n; i++) { var a = 2 * Math.PI * i / n; sinMax = Math.max(sinMax, Math.abs(Math.sin(a))); cMin = Math.min(cMin, -Math.cos(a)); cMax = Math.max(cMax, -Math.cos(a)); }  /* Math.abs：取絕對值（去掉負號） */
         var span = cMax - cMin, CW = CUP_W_MAX, CH = CW * CUP_H, R = 0;
         for (var it = 0; it < 40; it++) {
             R = Math.max(30, Math.min((FW / 2 - RING_PAD - CW / 2) / sinMax, (FH - 2 * RING_PAD - CH * CUP_TOP) / span));
@@ -148,14 +148,14 @@
        路線＝兩端之間的直線，再往「出發→目的」方向的垂直方向凸出 sin(π e) × ARC_PX × dir。
        同一對交換的兩個杯子，出發→目的的方向剛好相反，垂直方向也相反，所以兩個杯子用同樣的 dir，就會往相反的兩側凸出去，路線不會正面撞上。 */
     function swapPos(from, to, e, dir) {
-        var dx = to.x - from.x, dy = to.y - from.y, len = Math.sqrt(dx * dx + dy * dy) || 1, arc = Math.sin(Math.PI * e) * ARC_PX * dir;
+        var dx = to.x - from.x, dy = to.y - from.y, len = Math.sqrt(dx * dx + dy * dy) || 1, arc = Math.sin(Math.PI * e) * ARC_PX * dir;  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
         return { x: from.x + dx * e - dy / len * arc, y: from.y + dy * e + dx / len * arc };
     }
     /* 照一串交換走一遍，回傳球最後在哪個位置（驗證 makeSwaps 用） */
     /* 照一串交換走一遍，回傳球最後在哪個位置（用來驗證 makeSwaps 的 finalBall） */
     function applySwaps(steps, ballSlot) {
         var ball = ballSlot;
-        steps.forEach(function (step) {
+        steps.forEach(function (step) {                 /* forEach：對陣列的每個元素各做一次 */
             step.forEach(function (p) {
                 if (ball === p[0]) ball = p[1]; else if (ball === p[1]) ball = p[0];
             });
@@ -167,7 +167,7 @@
     function mount(root, ctx) {
         var R = null;
         /* bestLevel：進場時的最佳紀錄，用來判斷這次有沒有破紀錄 */
-        var bestLevel = Reaction.getBest(ID);
+        var bestLevel = Reaction.getBest(ID);           /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
         /* round：開一關 */
         function round(level) {
@@ -175,26 +175,26 @@
             R = kit.round();
             var my = R;
             level = level || 1;
-            root.innerHTML = '';
-            ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))]));
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
+            ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))]));  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
             /* n 這關杯子數 */
             var n = cupsFor(level);
             /* 建立畫面元素：提示、場地 */
             var hint = h('div', { 'class': 'hint', text: '記住球在哪個杯子' });
             var field = h('div', { 'class': 'cups-field' });
-            root.appendChild(hint);
-            root.appendChild(field);
+            root.appendChild(hint);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(field);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             var FW = field.clientWidth, FH = field.clientHeight;
             /* SVG 畫布 */
-            var svg = kit.svg('svg', { 'class': 'cups-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'none' }, field);
+            var svg = kit.svg('svg', { 'class': 'cups-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'none' }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
 
             /* 圓環版面：n 個位置平均排在一個圓上（像時鐘，第 0 個在 12 點鐘、順時針）；CW 杯子寬、CH 杯子高；P[i] 是第 i 個位置的杯底座標 */
             var layout = ringLayout(n, FW, FH), CW = layout.CW, CH = layout.CH, P = [];
             for (var si = 0; si < n; si++) P.push(slotPoint(layout, si));
 
             /* 隨機決定球一開始在哪個位置，並先算好整串交換 */
-            var ballSlot = kit.randInt(0, n - 1);
+            var ballSlot = kit.randInt(0, n - 1);       /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             var plan = makeSwaps(n, swapsFor(level), level >= PAIRS_FROM_LEVEL, ballSlot);
 
             /* 杯子們：cups[c] 是第 c 號杯子（編號固定不變），slotOf[c] 是它目前站在第幾個位置 */
@@ -203,7 +203,7 @@
             for (var c = 0; c < n; c++) {
                 slotOf.push(c);
                 /* 每個杯子是一個 SVG 群組 <g>：包含球（只有一個杯子有）和杯身 */
-                var g = kit.svg('g', { 'class': 'cups-cup' }, svg);
+                var g = kit.svg('g', { 'class': 'cups-cup' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
                 var ballEl = null;
                 if (c === ballSlot) ballEl = kit.svg('circle', { 'class': 'cups-ball', cx: 0, cy: -CW * 0.2, r: CW * 0.2 }, g);
                 var lift = kit.svg('g', { 'class': 'cups-lift' }, g);
@@ -220,13 +220,13 @@
             /* 放置一個杯子：(x, y) 是杯底座標，liftPx 是掀開的高度 */
             function place(cup, x, y, liftPx) {
                 cup.y = y;
-                cup.g.setAttribute('transform', 'translate(' + x.toFixed(2) + ' ' + y.toFixed(2) + ')');
-                cup.lift.setAttribute('transform', 'translate(0 ' + (-liftPx).toFixed(2) + ')');
+                cup.g.setAttribute('transform', 'translate(' + x.toFixed(2) + ' ' + y.toFixed(2) + ')');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                cup.lift.setAttribute('transform', 'translate(0 ' + (-liftPx).toFixed(2) + ')');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             }
             /* 前後遮擋：杯底越靠下（y 越大）的杯子越靠前、畫在上面。順序有變才重排 DOM，免得每個影格都動 DOM */
             function sortZ() {
-                var order = cups.slice().sort(function (a, b) { return a.y - b.y; });
-                var same = order.length === zOrder.length && order.every(function (cp, i) { return zOrder[i] === cp; });
+                var order = cups.slice().sort(function (a, b) { return a.y - b.y; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
+                var same = order.length === zOrder.length && order.every(function (cp, i) { return zOrder[i] === cp; });  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
                 if (same) return;
                 zOrder = order;
                 order.forEach(function (cp) { svg.appendChild(cp.g); });
@@ -240,7 +240,7 @@
             function setLift(cupIdx, to, ms) {
                 var cup = cups[cupIdx], pt = P[slotOf[cupIdx]];
                 var from = cup._lift || 0;
-                return my.tween(ms, function (e) {
+                return my.tween(ms, function (e) {      /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
                     cup._lift = from + (to - from) * e;
                     place(cup, pt.x, pt.y, cup._lift);
                 }, kit.easeInOutCubic);
@@ -251,15 +251,15 @@
             function doStep(step, sec) {
                 var moves = [];
                 step.forEach(function (pr) {
-                    var ca = slotOf.indexOf(pr[0]), cb = slotOf.indexOf(pr[1]), dir = Math.random() < 0.5 ? 1 : -1;
+                    var ca = slotOf.indexOf(pr[0]), cb = slotOf.indexOf(pr[1]), dir = Math.random() < 0.5 ? 1 : -1;  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                     /* 兩個杯子的路線方向相反，垂直方向（法線）也跟著相反，所以用同一個 dir 就會往相反的兩側凸出去；dir 每一對隨機，凸的方向才有變化 */
                     moves.push({ cup: ca, from: pr[0], to: pr[1], dir: dir, delay: Math.random() * STAGGER });
                     moves.push({ cup: cb, from: pr[1], to: pr[0], dir: dir, delay: Math.random() * STAGGER });
                 });
                 /* my.tween(毫秒, 回呼, 緩動函式)：在指定時間內每個畫面呼叫一次回呼；這裡用線性的 u（0→1），每個杯子再用自己的出發時間與緩動算進度 */
-                return my.tween(sec * 1000, function (u) {
+                return my.tween(sec * 1000, function (u) {  /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
                     moves.forEach(function (m) {
-                        var e = kit.easeInOutCubic(kit.clamp((u - m.delay) / (1 - STAGGER), 0, 1)), p = swapPos(P[m.from], P[m.to], e, m.dir);
+                        var e = kit.easeInOutCubic(kit.clamp((u - m.delay) / (1 - STAGGER), 0, 1)), p = swapPos(P[m.from], P[m.to], e, m.dir);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
                         place(cups[m.cup], p.x, p.y, cups[m.cup]._lift || 0);
                     });
                     sortZ();
@@ -273,22 +273,22 @@
             /* ─── 流程：掀開露出球 → 蓋回 → 交換 → 玩家點 ─── */
             my.wait(500)
                 .then(function () { return setLift(ballCup, LIFT_PX, 350); })
-                .then(function () { Sfx.play('flip'); return my.wait(REVEAL_MS); })
+                .then(function () { Sfx.play('flip'); return my.wait(REVEAL_MS); })  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 .then(function () { return setLift(ballCup, 0, 300); })
                 .then(function () {
                     state = 'swap';
-                    hint.textContent = '盯緊…';
+                    hint.textContent = '盯緊…';           /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                     var chain = my.wait(250), sec = swapSecFor(level);
                     plan.steps.forEach(function (step) {
-                        chain = chain.then(function () { Sfx.play('whoosh'); return doStep(step, sec); }).then(function () { return my.wait(GAP_MS); });
+                        chain = chain.then(function () { Sfx.play('whoosh'); return doStep(step, sec); }).then(function () { return my.wait(GAP_MS); });  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                     });
                     return chain;
                 })
                 .then(function () {
                     state = 'pick';
                     /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「現在有球的那個杯子」上（第一關的正確答案） */
-                    if (Reaction.kit.once('cups.hint')) Reaction.kit.hintOn(root, cups[slotOf.indexOf(plan.finalBall)].g, { mode: 'tap', text: '請點擊有球的杯子' });
-                    hint.textContent = '球在哪個杯子？點一下！';
+                    if (Reaction.kit.once('cups.hint')) Reaction.kit.hintOn(root, cups[slotOf.indexOf(plan.finalBall)].g, { mode: 'tap', text: '請點擊有球的杯子' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
+                    hint.textContent = '球在哪個杯子？點一下！';   /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                     Sfx.play('go');
                 });
 
@@ -297,7 +297,7 @@
             function pickSlot(slot) {
                 if (state !== 'pick') return;
                 state = 'result';
-                var cupIdx = slotOf.indexOf(slot);
+                var cupIdx = slotOf.indexOf(slot);      /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                 var correct = slot === plan.finalBall;
                 var right = slotOf.indexOf(plan.finalBall);
                 setLift(cupIdx, LIFT_PX + 10, 280);
@@ -315,7 +315,7 @@
                     my.after(1700, function () {
                         var passed = level - 1;
                         var isNew = passed > 0 && Reaction.getBest(ID) === passed && bestLevel !== passed;
-                        kit.result(root, {
+                        kit.result(root, {              /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                             score: passed,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             level: level,         /* 記下到過第幾關，下次進場從最佳關卡 − 4 開始（kit.noteLevel） */
                             num: '通過 ' + passed + ' 關', label: '猜錯了，球在另一個杯子', sfx: passed >= 5 ? 'win' : 'fail',
@@ -329,21 +329,21 @@
             /* 點杯子：杯子位置一直換，所以用事件當下點擊的位置，找離它最近的「位置」（圓環上的 n 個杯位；比較的是杯身中心） */
             var onDown = function (e) {
                 if (state !== 'pick') return;
-                e.preventDefault();
-                var rect = field.getBoundingClientRect();
+                e.preventDefault();                     /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+                var rect = field.getBoundingClientRect();  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
                 var x = (e.clientX - rect.left) * FW / rect.width, y = (e.clientY - rect.top) * FH / rect.height;
                 var best = 0, bd = 1e18;
                 for (var s = 0; s < n; s++) { var dx = P[s].x - x, dy = P[s].y - CH / 2 - y, d = dx * dx + dy * dy; if (d < bd) { bd = d; best = s; } }
                 pickSlot(best);
             };
             /* 綁定點擊（pointerdown 一碰就觸發） */
-            field.addEventListener('pointerdown', onDown);
+            field.addEventListener('pointerdown', onDown);  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             /* 這一局結束時把事件監聽拿掉 */
             my.onDispose(function () { field.removeEventListener('pointerdown', onDown); });
 
             /* G.debug：測試用後門 */
             G.debug = {
-                state: function () { return { level: level, n: n, state: state, ballSlot: ballSlot, finalBall: plan.finalBall, swaps: plan.steps.length, slotOf: slotOf.slice() }; },
+                state: function () { return { level: level, n: n, state: state, ballSlot: ballSlot, finalBall: plan.finalBall, swaps: plan.steps.length, slotOf: slotOf.slice() }; },  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
                 layout: function () { return { layout: layout, P: P, FW: FW, FH: FH }; },
                 pickSlot: pickSlot
             };

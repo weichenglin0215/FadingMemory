@@ -39,9 +39,9 @@
     var LOBES = [{ cx: 290, cy: 105, rx: 88, ry: 66 }, { cx: 272, cy: 205, rx: 62, ry: 52 }];
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }
-    function spotsFor(level) { return Math.round(ramp(level, SPOTS)); }
-    function sizeDiffFor(level) { return Math.round(ramp(level, SIZE_DIFF) * 1000) / 1000; }
+    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function spotsFor(level) { return Math.round(ramp(level, SPOTS)); }  /* Math.round：四捨五入成整數 */
+    function sizeDiffFor(level) { return Math.round(ramp(level, SIZE_DIFF) * 1000) / 1000; }  /* Math.round：四捨五入成整數 */
     function hueDiffFor(level) { return Math.round(ramp(level, HUE_DIFF) * 10) / 10; }
     function angleDiffFor(level) { return Math.round(ramp(level, ANGLE_DIFF) * 10) / 10; }
     function timeMs(level) { return Math.round(ramp(level, TIME_S) * 1000); }
@@ -49,7 +49,7 @@
     function kindsFor(level) { var k = ['size']; if (level >= COLOR_FROM) k.push('color'); if (level >= ANGLE_FROM) k.push('angle'); return k; }
     /* 斑點的半徑：斑點越多越小（20 個時約 5、4 個時 14） */
     function spotRadius(n) { return Math.max(5, 14 - (n - 4) * 0.55); }
-    function inLobe(x, y, r) { return LOBES.some(function (l) { var dx = (x - l.cx) / (l.rx - r - 4), dy = (y - l.cy) / (l.ry - r - 4); return dx * dx + dy * dy <= 1; }); }
+    function inLobe(x, y, r) { return LOBES.some(function (l) { var dx = (x - l.cx) / (l.rx - r - 4), dy = (y - l.cy) / (l.ry - r - 4); return dx * dx + dy * dy <= 1; }); }  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
     /* 出一關：{ spots（右翅膀的斑點 [{ x, y, r, c（顏色編號）}]）, stripes（[{ x, y, len, ang }]）, mod: { kind, index（第幾個，在 spots 或 stripes 裡）, side（'L'｜'R'：改在哪一邊）, delta（改了多少：比例／度）}, tilt（整隻蝴蝶歪幾度）, timeMs, level } */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
@@ -58,28 +58,28 @@
         /* 先放紋路（比較大、數量少），再放斑點（斑點會自己避開紋路）；這樣斑點多到 20 個也放得下 */
         var ns = Math.max(2, Math.round(n / 4)); guard = 0;
         while (stripes.length < ns && guard++ < 4000) {
-            var len = kit.randFloat(22, 32, rand), sx = kit.randFloat(CENTER + 24, 392, rand), sy = kit.randFloat(24, 270, rand);
-            if (inLobe(sx, sy, len / 2) && free(sx, sy, len / 2)) stripes.push({ x: sx, y: sy, len: len, ang: kit.randFloat(0, 180, rand) });
+            var len = kit.randFloat(22, 32, rand), sx = kit.randFloat(CENTER + 24, 392, rand), sy = kit.randFloat(24, 270, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+            if (inLobe(sx, sy, len / 2) && free(sx, sy, len / 2)) stripes.push({ x: sx, y: sy, len: len, ang: kit.randFloat(0, 180, rand) });  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         }
         guard = 0;
         while (spots.length < n && guard++ < 8000) {
             var r = r0 * kit.randFloat(0.8, 1.2, rand), x = kit.randFloat(CENTER + 24, 392, rand), y = kit.randFloat(24, 270, rand);
-            if (inLobe(x, y, r * 1.1) && free(x, y, r)) spots.push({ x: x, y: y, r: r, c: kit.randInt(0, COLORS.length - 1, rand) });
+            if (inLobe(x, y, r * 1.1) && free(x, y, r)) spots.push({ x: x, y: y, r: r, c: kit.randInt(0, COLORS.length - 1, rand) });  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         }
-        var kinds = kindsFor(level), kind = kit.pick(kinds, rand), mod;
-        if (kind === 'size') mod = { kind: 'size', index: kit.randInt(0, spots.length - 1, rand), delta: sizeDiffFor(level) * (rand() < 0.5 ? 1 : -1) };
+        var kinds = kindsFor(level), kind = kit.pick(kinds, rand), mod;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        if (kind === 'size') mod = { kind: 'size', index: kit.randInt(0, spots.length - 1, rand), delta: sizeDiffFor(level) * (rand() < 0.5 ? 1 : -1) };  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         else if (kind === 'color') mod = { kind: 'color', index: kit.randInt(0, spots.length - 1, rand), delta: hueDiffFor(level) * (rand() < 0.5 ? 1 : -1) };
         else mod = { kind: 'angle', index: kit.randInt(0, stripes.length - 1, rand), delta: angleDiffFor(level) * (rand() < 0.5 ? 1 : -1) };
         mod.side = rand() < 0.5 ? 'L' : 'R';
         var tm = tiltMaxFor(level), tilt = tm ? kit.randFloat(-tm, tm, rand) : 0;
-        if (tm && Math.abs(tilt) < tm * 0.4) tilt = (tilt < 0 ? -1 : 1) * tm * 0.4;
+        if (tm && Math.abs(tilt) < tm * 0.4) tilt = (tilt < 0 ? -1 : 1) * tm * 0.4;  /* Math.abs：取絕對值（去掉負號） */
         return { spots: spots, stripes: stripes, mod: mod, tilt: tilt, timeMs: timeMs(level), level: level };
     }
     /* 一邊翅膀實際要畫的東西（以右翅膀的座標）：mod 只套在被改的那一邊（沒有就傳 null）。回傳 { spots（[{ x, y, r, c, hue }]）, stripes（[{ x, y, len, ang }]）} */
     function wingElements(q, mod) {
         return {
-            spots: q.spots.map(function (s, i) { var hit = mod && mod.index === i; return { x: s.x, y: s.y, r: hit && mod.kind === 'size' ? s.r * (1 + mod.delta) : s.r, c: s.c, hue: hit && mod.kind === 'color' ? mod.delta : 0 }; }),
-            stripes: q.stripes.map(function (s, i) { var hit = mod && mod.kind === 'angle' && mod.index === i; return { x: s.x, y: s.y, len: s.len, ang: s.ang + (hit ? mod.delta : 0) }; })
+            spots: q.spots.map(function (s, i) { var hit = mod && mod.index === i; return { x: s.x, y: s.y, r: hit && mod.kind === 'size' ? s.r * (1 + mod.delta) : s.r, c: s.c, hue: hit && mod.kind === 'color' ? mod.delta : 0 }; }),  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            stripes: q.stripes.map(function (s, i) { var hit = mod && mod.kind === 'angle' && mod.index === i; return { x: s.x, y: s.y, len: s.len, ang: s.ang + (hit ? mod.delta : 0) }; })  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         };
     }
     /* 被改的東西的位置（兩邊各一：R 在右、L 是它的鏡像）；回傳 { right: { x, y, r }, left: { x, y, r }, modSide } */
@@ -99,7 +99,7 @@
     }
     /* 差異的文字說明 */
     function describeMod(m) {
-        if (m.kind === 'size') return '斑點的大小差了 ' + (Math.abs(m.delta) * 100).toFixed(0) + '%';
+        if (m.kind === 'size') return '斑點的大小差了 ' + (Math.abs(m.delta) * 100).toFixed(0) + '%';  /* Math.abs：取絕對值（去掉負號） */
         if (m.kind === 'color') return '斑點的顏色差了（色相轉 ' + Math.abs(m.delta).toFixed(0) + '°）';
         return '紋路的方向差了 ' + Math.abs(m.delta).toFixed(0) + '°';
     }
@@ -125,14 +125,14 @@
 
     /* 畫一邊翅膀（右邊）：兩片翅膀、斑點、紋路；mods 是要套在這一邊的修改（只有被改的那一邊才有）。回傳畫好的 <g> */
     function drawWing(parent, q, mod) {
-        var g = kit.svg('g', {}, parent), el = wingElements(q, mod);
-        kit.svg('path', { 'class': 'butterfly-wing', d: 'M200,140 C232,18 372,18 388,112 C394,152 300,162 200,150 Z' }, g);
+        var g = kit.svg('g', {}, parent), el = wingElements(q, mod);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('path', { 'class': 'butterfly-wing', d: 'M200,140 C232,18 372,18 388,112 C394,152 300,162 200,150 Z' }, g);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         kit.svg('path', { 'class': 'butterfly-wing butterfly-wing--low', d: 'M200,150 C300,162 348,192 332,244 C320,288 244,282 200,192 Z' }, g);
-        el.stripes.forEach(function (s) {
+        el.stripes.forEach(function (s) {               /* forEach：對陣列的每個元素各做一次 */
             var a = s.ang * Math.PI / 180, dx = Math.cos(a) * s.len / 2, dy = Math.sin(a) * s.len / 2;
             kit.svg('line', { 'class': 'butterfly-stripe', x1: s.x - dx, y1: s.y - dy, x2: s.x + dx, y2: s.y + dy }, g);
         });
-        el.spots.forEach(function (s) {
+        el.spots.forEach(function (s) {                 /* forEach：對陣列的每個元素各做一次 */
             var c = kit.svg('circle', { 'class': 'butterfly-spot butterfly-c--' + COLORS[s.c], cx: s.x, cy: s.y, r: s.r }, g);
             if (s.hue) c.style.filter = 'hue-rotate(' + s.hue + 'deg) brightness(' + (1 + (s.hue > 0 ? 0.12 : -0.12)) + ')';
         });
@@ -149,8 +149,8 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, BW = Math.min(W - 16, 460), BH = Math.round(BW * VB.h / VB.w), scale = BW / VB.w;
         var field = h('div', { 'class': 'butterfly-field' });
-        stage.appendChild(field);
-        field.appendChild(h('div', { 'class': 'qz-note butterfly-tip', text: '左右翅膀哪裡不一樣？點那個地方' }));
+        stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        field.appendChild(h('div', { 'class': 'qz-note butterfly-tip', text: '左右翅膀哪裡不一樣？點那個地方' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var svg = kit.svg('svg', { 'class': 'butterfly-svg', viewBox: '0 0 ' + VB.w + ' ' + VB.h, width: BW, height: BH }, field);
         svg.style.cssText = 'left:' + Math.round((W - BW) / 2) + 'px;top:80px;';
         var tilt = kit.svg('g', { transform: 'rotate(' + q.tilt.toFixed(2) + ' ' + CENTER + ' ' + VB.h / 2 + ')' }, svg);
@@ -165,7 +165,7 @@
         var done = false;
         api.timer(q.timeMs, function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         if (level === 1 && kit.once('butterfly.hint')) { var t = modTarget(q), side = m.side === 'R' ? t.right : t.left; kit.hintOn(stage, null, { mode: 'tap', x: Math.round((W - BW) / 2) + side.x * scale, y: 80 + side.y * scale, delay: 1500, text: '請點不對稱的地方' }); }  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
-        kit.onTap(svg, function (e) {
+        kit.onTap(svg, function (e) {                   /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             if (done || api.over) return;
             var p = kit.localPt(e, svg); judge({ x: p.x / scale, y: p.y / scale });
         });
@@ -175,13 +175,13 @@
             done = true;
             var ok = pt != null && isHit(q, pt.x, pt.y), t = modTarget(q);
             /* 揭曉：左翅膀翻過去，半透明地疊在右翅膀上（左翅膀本身留在原地），不一樣的地方會出現「重影」，並閃紅圈 */
-            var ghost = drawWing(overlay, q, m.side === 'L' ? m : null); ghost.setAttribute('class', 'butterfly-ghost');
+            var ghost = drawWing(overlay, q, m.side === 'L' ? m : null); ghost.setAttribute('class', 'butterfly-ghost');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             [t.right, t.left].forEach(function (s) { kit.svg('circle', { 'class': 'butterfly-ring', cx: s.x, cy: s.y, r: s.r + 10 }, overlay); });
             if (pt) kit.svg('circle', { 'class': 'butterfly-tap ' + (ok ? 'butterfly-tap--ok' : 'butterfly-tap--bad'), cx: untilt(pt.x, pt.y, q.tilt).x, cy: untilt(pt.x, pt.y, q.tilt).y, r: 14 }, overlay);
-            info.textContent = (ok ? '找到了！' : (pt ? '點錯了，' : '時間到！')) + describeMod(m);
-            kit.flash(stage, ok, api.my);
-            if (ok) { api.pass({ delay: 1800 }); return; }
-            api.fail({ delay: 3200, lines: [pt ? '點的地方是對稱的' : '時間到！', describeMod(m) + '（紅圈）'] });
+            info.textContent = (ok ? '找到了！' : (pt ? '點錯了，' : '時間到！')) + describeMod(m);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            kit.flash(stage, ok, api.my);               /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            if (ok) { api.pass({ delay: 1800 }); return; }  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
+            api.fail({ delay: 3200, lines: [pt ? '點的地方是對稱的' : '時間到！', describeMod(m) + '（紅圈）'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：solve＝點被改的那個東西（歪斜後的位置）、wrong＝點蝴蝶身體上一個不相干的地方 */
         function toView(x, y) { var a = q.tilt * Math.PI / 180, dx = x - CENTER, dy = y - VB.h / 2; return { x: CENTER + dx * Math.cos(a) - dy * Math.sin(a), y: VB.h / 2 + dx * Math.sin(a) + dy * Math.cos(a) }; }

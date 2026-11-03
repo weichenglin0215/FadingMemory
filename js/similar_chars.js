@@ -22,10 +22,15 @@
      SimilarChars.strokes(字)   → 這個字的筆劃數（查不到回傳 undefined）
      SimilarChars.pairs(條件)   → 每一組最像的前兩個字 [{ a, b, st:兩字平均筆劃 }]
    ═══════════════════════════════════════════════════════════════════ */
+/* 新手導讀：這個檔案「不是遊戲」，是一份共用的字庫（資料＋查詢函式），好幾款遊戲一起用。
+   做法是：把「字＋筆劃數」寫在 RAW 陣列的字串裡（資料），載入時用迴圈整理成 GROUPS／STROKES 兩份查詢表，最後掛在 window.SimilarChars 上，
+   遊戲檔案就能呼叫 SimilarChars.groups()、chars()、near()… 取用。想加新字群只要在 RAW 加一行，不用改程式。
+   整個檔案包在 (function () { ... })(); 裡（立即執行函式），所以 RAW、GROUPS 這些變數是私有的，外面只能用 window.SimilarChars 提供的函式。 */
 (function () {
     'use strict';
 
     /* ═══ 原始資料：一組一行（越前面的字彼此越像）═══ */
+    /* RAW：原始資料，一個字串一組。字串裡「一個字接著它的筆劃數」，例如 '日4曰4目5白5' ＝ 日(4 劃)、曰(4 劃)、目(5 劃)、白(5 劃)；越前面的字彼此越像 */
     var RAW = [
         /* —— 筆劃很少（2～6 劃）—— */
         '人2入2八2',
@@ -143,53 +148,61 @@
     ];
 
     /* ═══ 把原始資料整理成字群 ═══ */
-    var STROKES = {};            /* 字 → 筆劃數 */
-    var GROUPS = [];             /* [{ id, chars, s }]，依平均筆劃由少到多排好 */
-    RAW.forEach(function (line) {
+    var STROKES = {};            /* 字 → 筆劃數 */          /* STROKES：字 → 筆劃數 的查詢表（例如 STROKES['日'] 是 4），下面的迴圈填進來 */
+    var GROUPS = [];             /* [{ id, chars, s }]，依平均筆劃由少到多排好 */  /* GROUPS：整理好的字群陣列，每組 { id 編號, chars 這組的字, s 平均筆劃, raw 原始字串 }，依平均筆劃由少到多排好 */
+    /* 整理資料：對 RAW 的每一行，用正規表達式 /(\D)(\d+)/g（「一個非數字的字」接著「一串數字」）一組一組取出字與筆劃數；同一組裡重複的字只算一次，同一個字第一次寫的筆劃數為準 */
+    RAW.forEach(function (line) {                       /* forEach：對陣列的每個元素各做一次 */
         var chars = [], sum = 0, re = /(\D)(\d+)/g, m;
         while ((m = re.exec(line))) {
             var ch = m[1], n = Number(m[2]);
-            if (chars.indexOf(ch) < 0) { chars.push(ch); sum += n; }
+            if (chars.indexOf(ch) < 0) { chars.push(ch); sum += n; }  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             if (STROKES[ch] === undefined) STROKES[ch] = n;     /* 同一個字第一次寫的筆劃數為準（測試會檢查前後一致） */
         }
         GROUPS.push({ chars: chars, s: sum / chars.length, raw: line });
     });
     /* 依平均筆劃排序（一樣多就維持原本的順序），再編號 */
-    GROUPS = GROUPS.map(function (g, i) { g.order = i; return g; })
-        .sort(function (a, b) { return a.s - b.s || a.order - b.order; });
-    GROUPS.forEach(function (g, i) { g.id = i; });
+    /* 先記下原本的順序（order），再排序：平均筆劃少的在前，一樣多就維持原本順序（a.s − b.s 是負數代表 a 排前面） */
+    GROUPS = GROUPS.map(function (g, i) { g.order = i; return g; })  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        .sort(function (a, b) { return a.s - b.s || a.order - b.order; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
+    GROUPS.forEach(function (g, i) { g.id = i; });      /* 排好順序之後，依序給每一組編號 id */
 
     /* 依條件挑出字群（回傳複本） */
+    /* SimilarChars.groups：依條件挑出字群（minSize 至少幾個字、minStrokes／maxStrokes 平均筆劃範圍）。回傳的是「複本」，遊戲拿去改也不會弄壞這份資料庫 */
     function groups(opt) {
         opt = opt || {};
-        return GROUPS.filter(function (g) {
+        return GROUPS.filter(function (g) {             /* filter：留下符合條件的元素，回傳新陣列 */
             if (opt.minSize && g.chars.length < opt.minSize) return false;
             if (opt.minStrokes !== undefined && g.s < opt.minStrokes) return false;
             if (opt.maxStrokes !== undefined && g.s > opt.maxStrokes) return false;
             return true;
-        }).map(function (g) { return { id: g.id, chars: g.chars.slice(), s: g.s }; });
+        }).map(function (g) { return { id: g.id, chars: g.chars.slice(), s: g.s }; });  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
     }
     /* 符合條件的字群攤平成一串字（同組的字相鄰、不重複） */
+    /* SimilarChars.chars：把符合條件的字群攤平成一串字（同一組的字排在一起、不重複） */
     function chars(opt) {
         var out = [];
-        groups(opt).forEach(function (g) { g.chars.forEach(function (c) { if (out.indexOf(c) < 0) out.push(c); }); });
+        groups(opt).forEach(function (g) { g.chars.forEach(function (c) { if (out.indexOf(c) < 0) out.push(c); }); });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         return out;
     }
     /* 跟 ch 同一組的其他字（可能來自好幾組；越前面的組、越前面的字排越前面） */
+    /* SimilarChars.near：找跟字 ch 同組的其他字（一個字可能在好幾組，越前面的組、越前面的字排越前面） */
     function near(ch) {
         var out = [];
-        GROUPS.forEach(function (g) {
+        GROUPS.forEach(function (g) {                   /* forEach：對陣列的每個元素各做一次 */
             if (g.chars.indexOf(ch) < 0) return;
             g.chars.forEach(function (c) { if (c !== ch && out.indexOf(c) < 0) out.push(c); });
         });
         return out;
     }
+    /* SimilarChars.strokes：查一個字的筆劃數（查不到回傳 undefined） */
     function strokes(ch) { return STROKES[ch]; }
     /* 每一組最像的前兩個字 */
+    /* SimilarChars.pairs：每一組最像的前兩個字，回傳 [{ a, b, st：兩字平均筆劃 }] */
     function pairs(opt) {
-        return groups(opt).map(function (g) { return { a: g.chars[0], b: g.chars[1], st: (STROKES[g.chars[0]] + STROKES[g.chars[1]]) / 2 }; });
+        return groups(opt).map(function (g) { return { a: g.chars[0], b: g.chars[1], st: (STROKES[g.chars[0]] + STROKES[g.chars[1]]) / 2 }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     }
 
+    /* 把查詢函式交出去：遊戲檔案用 SimilarChars.xxx() 呼叫；RAW 也一併交出，單元測試要檢查資料用 */
     window.SimilarChars = {
         RAW: RAW,
         groups: groups, chars: chars, near: near, strokes: strokes, pairs: pairs,

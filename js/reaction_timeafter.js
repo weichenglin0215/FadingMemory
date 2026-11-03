@@ -47,15 +47,15 @@
     ];
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }
+    function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function fmtTime(m) {
-        var hh = Math.floor(m / 60), mm = m % 60;
+        var hh = Math.floor(m / 60), mm = m % 60;       /* Math.floor：無條件捨去成整數 */
         return (hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm;
     }
-    function beforeP(level) { return level < BEFORE_FROM ? 0 : kit.ramp(level, BEFORE_P[0], BEFORE_P[1], RAMP_LEVELS); }
+    function beforeP(level) { return level < BEFORE_FROM ? 0 : kit.ramp(level, BEFORE_P[0], BEFORE_P[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 把「過了多久」拆成小時＋零頭，產生揭曉文字 */
     function explain(kind, start, delta, ans) {
-        var H = Math.floor(delta / 60), R = delta % 60, sgn = kind === 'after' ? 1 : -1, verb = kind === 'after' ? '加' : '減';
+        var H = Math.floor(delta / 60), R = delta % 60, sgn = kind === 'after' ? 1 : -1, verb = kind === 'after' ? '加' : '減';  /* Math.floor：無條件捨去成整數 */
         var parts = [], cur = start;
         if (H > 0) { cur += sgn * H * 60; parts.push('先' + verb + ' ' + H + ' 小時 ＝ ' + fmtTime(cur)); }
         if (R > 0) { cur += sgn * R; parts.push((H > 0 ? '再' : '') + verb + ' ' + R + ' 分鐘 ＝ ' + fmtTime(cur)); }
@@ -82,18 +82,18 @@
         var step = level >= STEP1_FROM ? 1 : 5;
         for (var tr = 0; tr < 500; tr++) {
             var kind = rand() < beforeP(level) ? 'before' : 'after';
-            var dLo = Math.round(kit.ramp(level, D_MIN[0], D_MIN[1], RAMP_LEVELS)), dHi = Math.round(kit.ramp(level, D_MAX[0], D_MAX[1], RAMP_LEVELS));
+            var dLo = Math.round(kit.ramp(level, D_MIN[0], D_MIN[1], RAMP_LEVELS)), dHi = Math.round(kit.ramp(level, D_MAX[0], D_MAX[1], RAMP_LEVELS));  /* Math.round：四捨五入成整數 */
             dLo = Math.ceil(dLo / step) * step; dHi = Math.floor(dHi / step) * step;     /* 前期範圍的頭尾也要是 5 的倍數 */
-            var delta = Math.round(kit.randInt(dLo, dHi, rand) / step) * step;
+            var delta = Math.round(kit.randInt(dLo, dHi, rand) / step) * step;  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             var start = kit.randInt(6 * 60, 20 * 60, rand);              /* 起始時間 06:00～20:00 */
-            if (step === 5) start = Math.round(start / 5) * 5;
+            if (step === 5) start = Math.round(start / 5) * 5;  /* Math.round：四捨五入成整數 */
             var ans = kind === 'after' ? start + delta : start - delta;
             if (ans < 0 || ans >= DAY) continue;
             var c = decoyCandidates(kind, start, delta, ans, level);
             if (!c.length) continue;
-            var total = c.reduce(function (a, x) { return a + x.w; }, 0), x = rand() * total, pick = c[c.length - 1];
+            var total = c.reduce(function (a, x) { return a + x.w; }, 0), x = rand() * total, pick = c[c.length - 1];  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
             for (var i = 0; i < c.length; i++) { x -= c[i].w; if (x <= 0) { pick = c[i]; break; } }
-            var tpl = kit.pick(kind === 'after' ? TPL_AFTER : TPL_BEFORE, rand);
+            var tpl = kit.pick(kind === 'after' ? TPL_AFTER : TPL_BEFORE, rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             return {
                 kind: kind, start: start, delta: delta, ans: ans, decoy: pick.m, decoyKind: pick.kind,
                 text: tpl.replace('{t}', fmtTime(start)).replace('{d}', String(delta)), explain: explain(kind, start, delta, ans)
@@ -145,9 +145,9 @@
 
         var qEl = h('div', { 'class': 'timeafter-mid timeafter-q', text: q.text });
         var reveal = h('div', { 'class': 'qz-note timeafter-reveal' });
-        stage.appendChild(qEl); stage.appendChild(reveal);
+        stage.appendChild(qEl); stage.appendChild(reveal);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var vals = truthLeft ? [q.ans, q.decoy] : [q.decoy, q.ans];
-        var grid = kit.btnGrid(stage, vals.map(function (m) {
+        var grid = kit.btnGrid(stage, vals.map(function (m) {  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
             return { text: fmtTime(m), kind: 'sky', cls: 'timeafter-btn', onTap: function () { judge(m); } };
         }), { h: 120 });
         var bRight = grid.btns[truthLeft ? 0 : 1];
@@ -158,11 +158,11 @@
         function judge(m) {
             if (api.over) return;
             var ok = m === q.ans;
-            qEl.classList.add(ok ? 'qz-ok' : 'qz-bad');
-            reveal.textContent = q.explain;
-            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1100 }); return; }
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: 2400, lines: [
+            qEl.classList.add(ok ? 'qz-ok' : 'qz-bad'); /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            reveal.textContent = q.explain;             /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1100 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 2400, lines: [            /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 (m == null ? '時間到！' : '你選了 ' + fmtTime(m)) + '，正確是 ' + fmtTime(q.ans),
                 q.explain
             ] });

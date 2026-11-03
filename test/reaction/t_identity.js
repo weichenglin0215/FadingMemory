@@ -286,7 +286,7 @@ const calls = (name) => rpcLog.filter((c) => c.name === name);
   const reactionJs = fs.readFileSync(ROOT + 'js/reaction.js', 'utf8');
   ok(/Identity\.gameMounted/.test(reactionJs) && /game\.mount\(screen/.test(reactionJs), 'reaction.js：mount 之後呼叫 Identity.gameMounted');
   const css = fs.readFileSync(ROOT + 'css/identity.css', 'utf8');
-  ok(!/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/.test(css.replace(/\/\*[\s\S]*?\*\//g, '')), 'identity.css：沒有寫死的顏色（一律用 theme.css 的變數）');
+  ok(!/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/.test(css.replace(/[ \t]*\/\*[\s\S]*?\*\//g, '')), 'identity.css：沒有寫死的顏色（一律用 theme.css 的變數）');
   const html = fs.readFileSync(ROOT + 'index.html', 'utf8');
   ok(/FM_PAGE\s*=\s*'menu'/.test(html), 'index.html 是 menu 頁');
   const lbSrc = fs.readFileSync(ROOT + 'js/leaderboard.js', 'utf8');

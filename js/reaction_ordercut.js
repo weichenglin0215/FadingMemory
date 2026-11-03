@@ -47,10 +47,10 @@
     var FRUITS = 6;                             /* 水果的顏色種數（CSS 的 ordercut-f0～5） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function ramp(level, pair, maxLevel) { return kit.ramp(level, pair[0], pair[1], maxLevel == null ? RAMP_LEVELS : maxLevel); }
+    function ramp(level, pair, maxLevel) { return kit.ramp(level, pair[0], pair[1], maxLevel == null ? RAMP_LEVELS : maxLevel); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function isExpr(level) { return level >= EXPR_FROM; }
-    function countFor(level) { return isExpr(level) ? Math.round(ramp(level - EXPR_FROM + 1, EXPR_COUNT, EXPR_RAMP)) : Math.round(ramp(level, NUM_COUNT, NUM_RAMP)); }
-    function flightFor(level) { return Math.round(ramp(level, FLIGHT_S) * 1000) / 1000; }
+    function countFor(level) { return isExpr(level) ? Math.round(ramp(level - EXPR_FROM + 1, EXPR_COUNT, EXPR_RAMP)) : Math.round(ramp(level, NUM_COUNT, NUM_RAMP)); }  /* Math.round：四捨五入成整數 */
+    function flightFor(level) { return Math.round(ramp(level, FLIGHT_S) * 1000) / 1000; }  /* Math.round：四捨五入成整數 */
     function gapFor(level) { return Math.round(ramp(level, GAP_CUT) * 1000) / 1000; }
     function chaosFor(level) { return Math.round(ramp(level, CHAOS) * 1000) / 1000; }
     function omegaFor(level) { return Math.round(ramp(level, OMEGA_DEG)); }
@@ -58,11 +58,11 @@
     /* 一個算式：{ text, value }。ops＝可用的運算（'+'、'-'、'*'、'/'），除法保證整除、減法不會是負數、答案在 1～99 */
     function makeExpr(ops, rand) {
         for (var tr = 0; tr < 200; tr++) {
-            var op = kit.pick(ops, rand), a, b, v;
-            if (op === '+') { a = kit.randInt(1, 60, rand); b = kit.randInt(1, 60, rand); v = a + b; return v <= 99 ? { text: a + '＋' + b, value: v } : makeExpr(ops, rand); }
-            if (op === '-') { a = kit.randInt(5, 99, rand); b = kit.randInt(1, a - 1, rand); return { text: a + '－' + b, value: a - b }; }
+            var op = kit.pick(ops, rand), a, b, v;      /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+            if (op === '+') { a = kit.randInt(1, 60, rand); b = kit.randInt(1, 60, rand); v = a + b; return v <= 99 ? { text: a + '＋' + b, value: v } : makeExpr(ops, rand); }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+            if (op === '-') { a = kit.randInt(5, 99, rand); b = kit.randInt(1, a - 1, rand); return { text: a + '－' + b, value: a - b }; }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             if (op === '*') { a = kit.randInt(2, 12, rand); b = kit.randInt(2, 12, rand); v = a * b; if (v <= 99) return { text: a + '×' + b, value: v }; continue; }
-            b = kit.randInt(2, 12, rand); v = kit.randInt(1, Math.floor(99 / b), rand); return { text: (v * b) + '÷' + b, value: v };
+            b = kit.randInt(2, 12, rand); v = kit.randInt(1, Math.floor(99 / b), rand); return { text: (v * b) + '÷' + b, value: v };  /* Math.floor：無條件捨去成整數 */
         }
         return { text: '1＋1', value: 2 };
     }
@@ -78,16 +78,16 @@
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var expr = isExpr(level), N = countFor(level), T = flightFor(level), gap = gapFor(level), chaos = chaosFor(level), om = omegaFor(level), labels, values;
-        if (expr) { var ops = level >= MULDIV_FROM ? ['+', '-', '*', '/'] : ['+', '-'], es = makeExprs(N, ops, rand); labels = es.map(function (e) { return e.text; }); values = es.map(function (e) { return e.value; }); }
+        if (expr) { var ops = level >= MULDIV_FROM ? ['+', '-', '*', '/'] : ['+', '-'], es = makeExprs(N, ops, rand); labels = es.map(function (e) { return e.text; }); values = es.map(function (e) { return e.value; }); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         else { values = []; for (var i = 1; i <= N; i++) values.push(i); labels = values.map(String); }
         /* 照答案由小到大排：第 k 個要切的是第 k 小的 */
-        var idx = values.map(function (v, i) { return i; }).sort(function (a, b) { return values[a] - values[b]; });
+        var idx = values.map(function (v, i) { return i; }).sort(function (a, b) { return values[a] - values[b]; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
         var plan = [], c = T * U_MAX + 0.2, fruits = [];
         for (var k = 0; k < N; k++) {
-            if (k > 0) c += gap * kit.randFloat(0.85, 1.2, rand);
+            if (k > 0) c += gap * kit.randFloat(0.85, 1.2, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             plan.push(Math.round(c * 1000) / 1000);
-            var j = idx[k], u = kit.clamp(0.5 + (rand() * 2 - 1) * U_SPREAD * chaos, U_MIN, U_MAX);
-            var sg = rand() < 0.5 ? -1 : 1, x0 = kit.randFloat(0.18, 0.82, rand);
+            var j = idx[k], u = kit.clamp(0.5 + (rand() * 2 - 1) * U_SPREAD * chaos, U_MIN, U_MAX);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
+            var sg = rand() < 0.5 ? -1 : 1, x0 = kit.randFloat(0.18, 0.82, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             fruits.push({ rank: k + 1, label: labels[j], value: values[j], color: kit.randInt(0, FRUITS - 1, rand), x0: Math.round(x0 * 1000) / 1000, vx: Math.round(sg * kit.randFloat(0.02, VX / 472, rand) * 1000) / 1000,
                 A: Math.round(kit.randFloat(APEX[0], APEX[1], rand) * 1000) / 1000, t: Math.round((plan[k] - u * T) * 1000) / 1000, T: T, u: Math.round(u * 1000) / 1000, a0: Math.round(kit.randFloat(0, 360, rand)), w: Math.round((rand() < 0.5 ? -1 : 1) * kit.randFloat(om * 0.6, om, rand)) });
         }
@@ -113,9 +113,9 @@
     /* 手指這一段線（a→b）切到的水果：依沿著線的順序（s 由小到大）；cand＝[{ id, x, y }]，R＝水果半徑 */
     function sliceSegment(cand, ax, ay, bx, by, R) {
         var hits = [];
-        cand.forEach(function (c) { var r = distToSeg(c.x, c.y, ax, ay, bx, by); if (r.d <= R + HIT_PAD) hits.push({ id: c.id, s: r.s, d: r.d }); });
-        hits.sort(function (p, q) { return p.s - q.s || p.d - q.d; });
-        return hits.map(function (x) { return x.id; });
+        cand.forEach(function (c) { var r = distToSeg(c.x, c.y, ax, ay, bx, by); if (r.d <= R + HIT_PAD) hits.push({ id: c.id, s: r.s, d: r.d }); });  /* forEach：對陣列的每個元素各做一次 */
+        hits.sort(function (p, q) { return p.s - q.s || p.d - q.d; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
+        return hits.map(function (x) { return x.id; }); /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     }
     /* 切到 hitIds（依順序）而「下一號」是 next：回傳 { ok（有沒有照順序）, cut（切成功的顆數）, wrong（切錯的那一顆，沒有就 null）} */
     function judgeCuts(hitIds, next, rankOf) {
@@ -157,11 +157,11 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, R = radiusFor(level, W), geom = { W: W, H: H, R: R };
         var field = h('div', { 'class': 'ordercut-field' });
-        stage.appendChild(field);
+        stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note ordercut-tip', text: q.expr ? '照答案由小到大，一顆一顆切！' : (level === 1 ? '照號碼 1、2、3… 的順序，用手指劃過去切！' : '照號碼順序切（6 和 9 看底線）') });
-        field.appendChild(tip);
+        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var next = h('div', { 'class': 'ordercut-next', text: '下一個：' + (q.expr ? '最小的' : '1') }); field.appendChild(next);
-        var svg = kit.svg('svg', { 'class': 'ordercut-trail', width: W, height: H, viewBox: '0 0 ' + W + ' ' + H }, field), trail = kit.svg('polyline', { 'class': 'ordercut-trail__l', points: '' }, svg);
+        var svg = kit.svg('svg', { 'class': 'ordercut-trail', width: W, height: H, viewBox: '0 0 ' + W + ' ' + H }, field), trail = kit.svg('polyline', { 'class': 'ordercut-trail__l', points: '' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var els = q.fruits.map(function (f, i) {
             var el = h('div', { 'class': 'ordercut-fruit ordercut-f' + f.color + (q.expr ? ' ordercut-fruit--expr' : '') });
             el.style.cssText = 'width:' + 2 * R + 'px;height:' + 2 * R + 'px;display:none;';
@@ -170,13 +170,13 @@
             field.appendChild(el); return el;
         });
         var state = q.fruits.map(function () { return 'wait'; });       /* 'wait'（還沒拋）｜'fly'（在空中）｜'cut'（已切）｜'gone'（掉出去了） */
-        var nextRank = 1, phase = 'play', t0 = performance.now() + LEAD_S * 1000, pts = [], down = null, tFreeze = 0, posOf = [];
-        function nowT() { return (performance.now() - t0) / 1000; }
+        var nextRank = 1, phase = 'play', t0 = performance.now() + LEAD_S * 1000, pts = [], down = null, tFreeze = 0, posOf = [];  /* performance.now()：高精度的時間（毫秒），計時用 */
+        function nowT() { return (performance.now() - t0) / 1000; }  /* performance.now()：高精度的時間（毫秒），計時用 */
         function rankOf(id) { return q.fruits[id].rank; }
         function expectedFruit() { return q.fruits[nextRank - 1]; }
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint(t) {
-            q.fruits.forEach(function (f, i) {
+            q.fruits.forEach(function (f, i) {          /* forEach：對陣列的每個元素各做一次 */
                 if (state[i] === 'cut' || state[i] === 'gone') return;
                 var p = fruitPos(f, t, geom); posOf[i] = p;
                 if (!p) { els[i].style.display = 'none'; return; }
@@ -185,32 +185,32 @@
             });
         }
         /* api.over：這一關已經結束（例如測試用 debug.goto 跳關）就不要再動作——kit 的 api.fail／api.pass 是對「目前這一關」生效，舊關卡的迴圈如果還在跑會誤殺新的一關 */
-        api.my.loop(function (now) {
+        api.my.loop(function (now) {                    /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
             if (phase !== 'play' || api.over || !stage.isConnected) return false;
             var t = nowT(); paint(t);
             /* 掉出畫面還沒被切：失敗 */
             for (var i = 0; i < q.fruits.length; i++) if (state[i] === 'fly' && t > q.fruits[i].t + q.fruits[i].T - 0.02) { state[i] = 'gone'; els[i].style.display = 'none'; lost(i); return; }
         });
         /* 保底：rAF 被暫停時，用計時器檢查有沒有水果掉出去 */
-        (function guard() { api.after(300, function () { if (phase !== 'play' || api.over) return; var t = nowT(); for (var i = 0; i < q.fruits.length; i++) if (state[i] !== 'cut' && state[i] !== 'gone' && t > q.fruits[i].t + q.fruits[i].T + 0.05) { state[i] = 'gone'; lost(i); return; } guard(); }); })();
-        if (level === 1 && kit.once('ordercut.hint')) api.after(Math.round((LEAD_S + q.plan[0] - 0.9) * 1000), function () {
+        (function guard() { api.after(300, function () { if (phase !== 'play' || api.over) return; var t = nowT(); for (var i = 0; i < q.fruits.length; i++) if (state[i] !== 'cut' && state[i] !== 'gone' && t > q.fruits[i].t + q.fruits[i].T + 0.05) { state[i] = 'gone'; lost(i); return; } guard(); }); })();  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+        if (level === 1 && kit.once('ordercut.hint')) api.after(Math.round((LEAD_S + q.plan[0] - 0.9) * 1000), function () {  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
             if (phase !== 'play') return; var f = q.fruits[0], p = fruitPos(f, q.plan[0] - 0.4, geom) || { x: W / 2, y: H / 2 };
             kit.hintOn(stage, null, { mode: 'drag', x: Math.max(40, p.x - 90), y: p.y, dx: 180, dy: 0, delay: 100, text: '劃過 1 號水果' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         });
 
         /* 手指劃過畫面：每一小段線檢查切到哪些水果 */
-        field.addEventListener('pointerdown', function (e) {
+        field.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (phase !== 'play' || api.over || down) return;
-            e.preventDefault(); try { field.setPointerCapture(e.pointerId); } catch (err) { }
+            e.preventDefault(); try { field.setPointerCapture(e.pointerId); } catch (err) { }  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             var p = kit.localPt(e, field); down = { id: e.pointerId, x: p.x, y: p.y }; pts = [[p.x, p.y]]; drawTrail();
         });
-        field.addEventListener('pointermove', function (e) {
+        field.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (!down || e.pointerId !== down.id || phase !== 'play') return;
             var p = kit.localPt(e, field); slice(down.x, down.y, p.x, p.y); down.x = p.x; down.y = p.y; pts.push([p.x, p.y]); if (pts.length > 10) pts.shift(); drawTrail();
         });
-        function up(e) { if (down && e.pointerId === down.id) { down = null; api.after(160, function () { pts = []; drawTrail(); }); } }
+        function up(e) { if (down && e.pointerId === down.id) { down = null; api.after(160, function () { pts = []; drawTrail(); }); } }  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
         field.addEventListener('pointerup', up); field.addEventListener('pointercancel', up);
-        function drawTrail() { trail.setAttribute('points', pts.map(function (p) { return p[0].toFixed(0) + ',' + p[1].toFixed(0); }).join(' ')); }
+        function drawTrail() { trail.setAttribute('points', pts.map(function (p) { return p[0].toFixed(0) + ',' + p[1].toFixed(0); }).join(' ')); }  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         function slice(ax, ay, bx, by) {
             var t = nowT(), cand = [];
             q.fruits.forEach(function (f, i) { if (state[i] !== 'fly') return; var p = fruitPos(f, t, geom); if (onScreen(p, geom)) cand.push({ id: i, x: p.x, y: p.y }); });
@@ -221,15 +221,15 @@
             else if (nextRank > q.N) win();
         }
         function cutFruit(i) {
-            state[i] = 'cut'; nextRank++; Sfx.play('click');
+            state[i] = 'cut'; nextRank++; Sfx.play('click');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             var p = posOf[i] || fruitPos(q.fruits[i], nowT(), geom); els[i].style.display = 'none';
             if (p) [-1, 1].forEach(function (s) { var half = h('div', { 'class': 'ordercut-half ordercut-f' + q.fruits[i].color + (s < 0 ? ' ordercut-half--l' : ' ordercut-half--r') }); half.style.cssText = 'width:' + R + 'px;height:' + 2 * R + 'px;left:' + (p.x - (s < 0 ? R : 0)).toFixed(1) + 'px;top:' + (p.y - R).toFixed(1) + 'px;'; field.appendChild(half); api.after(30, function () { half.style.transform = 'translate(' + (s * 40) + 'px,60px) rotate(' + (s * 40) + 'deg)'; half.style.opacity = '0'; }); api.after(700, function () { if (half.parentNode) half.parentNode.removeChild(half); }); });
-            next.textContent = nextRank > q.N ? '全部切完！' : '下一個：' + (q.expr ? '第 ' + nextRank + ' 小的' : q.fruits[nextRank - 1].label);
+            next.textContent = nextRank > q.N ? '全部切完！' : '下一個：' + (q.expr ? '第 ' + nextRank + ' 小的' : q.fruits[nextRank - 1].label);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         }
         /* 過關：鎖住畫面、顯示成功效果，並呼叫 api.pass 進下一關（或結算） */
         function win() {
             if (phase !== 'play' || api.over) return; phase = 'end'; info('全部照順序切完了！', true);
-            kit.flash(stage, true, api.my); Sfx.play('ok'); api.pass({ delay: 1500 });
+            kit.flash(stage, true, api.my); Sfx.play('ok'); api.pass({ delay: 1500 });  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
         }
         function wrongCut(id) { fail('wrong', q.fruits[id], id); }
         function lost(i) { fail('lost', q.fruits[i], i); }
@@ -243,11 +243,11 @@
                 var p = fruitPos(f, tFreeze, geom); if (!p || !onScreen(p, geom)) return;
                 els[i].style.display = 'block'; els[i].style.transform = 'translate3d(' + (p.x - R).toFixed(1) + 'px,' + (p.y - R).toFixed(1) + 'px,0) rotate(0deg)';
                 var b = h('div', { 'class': 'ordercut-badge' + (i === gotId && kind === 'wrong' ? ' ordercut-badge--bad' : (f.rank === nextRank ? ' ordercut-badge--ok' : '')), text: '第 ' + f.rank + (q.expr ? '＝' + f.value : '') }); b.style.cssText = 'left:' + (p.x - 36).toFixed(1) + 'px;top:' + (p.y + R * 0.4).toFixed(1) + 'px;'; field.appendChild(b);
-                if (i === gotId && kind === 'wrong') els[i].classList.add('ordercut-fruit--bad'); else if (f.rank === nextRank) els[i].classList.add('ordercut-fruit--ok');
+                if (i === gotId && kind === 'wrong') els[i].classList.add('ordercut-fruit--bad'); else if (f.rank === nextRank) els[i].classList.add('ordercut-fruit--ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             });
             if (kind === 'lost') { els[gotId].style.display = 'none'; }
-            info(why, false); kit.flash(stage, false, api.my);
-            api.fail({ delay: 4000, lines: [why, '已經照順序切了 ' + (nextRank - 1) + ' 顆（一共 ' + q.N + ' 顆）', q.expr ? '答案由小到大：' + q.fruits.map(function (f) { return f.value; }).join('、') : '順序：1 到 ' + q.N] });
+            info(why, false); kit.flash(stage, false, api.my);  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 4000, lines: [why, '已經照順序切了 ' + (nextRank - 1) + ' 顆（一共 ' + q.N + ' 顆）', q.expr ? '答案由小到大：' + q.fruits.map(function (f) { return f.value; }).join('、') : '順序：1 到 ' + q.N] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：在計畫的時間依序切（solve，直接呼叫切水果）；故意先切第 2 號（wrong）；只排一次 */
         var armed = false;

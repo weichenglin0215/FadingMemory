@@ -40,13 +40,13 @@
     /* 這一關方陣的邊長（4×4、5×5、7×7） */
     function sizeFor(level) { return stageOf(level).n; }
     /* 這一關格子裡數字的最大值：從 NUM_MAX 的第一個數字線性變到第二個數字（kit.ramp 做線性插值） */
-    function maxNumFor(level) { return Math.round(kit.ramp(level, NUM_MAX[0], NUM_MAX[1], RAMP_LEVELS)); }
+    function maxNumFor(level) { return Math.round(kit.ramp(level, NUM_MAX[0], NUM_MAX[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
 
     /* 每排每列留下的數字加總 → { rowT, colT }；keep[i]＝true 表示留下 */
     /* 算每一排、每一列「留下的數字」加總：nums 是所有格子的數字、keep[i] 為 true 代表這格留下。回傳 { rowT 每排的和, colT 每列的和 }。出題時用答案算出目標 */
     function targetsOf(nums, keep, n) {
-        var rowT = new Array(n).fill(0), colT = new Array(n).fill(0);
-        for (var i = 0; i < n * n; i++) if (keep[i]) { rowT[Math.floor(i / n)] += nums[i]; colT[i % n] += nums[i]; }
+        var rowT = new Array(n).fill(0), colT = new Array(n).fill(0);  /* new Array(n).fill(v)：建立長度 n、每一格都是 v 的陣列 */
+        for (var i = 0; i < n * n; i++) if (keep[i]) { rowT[Math.floor(i / n)] += nums[i]; colT[i % n] += nums[i]; }  /* Math.floor：無條件捨去成整數 */
         return { rowT: rowT, colT: colT };
     }
     /* 目前的狀況：每排每列「現在留下的加總 − 目標」（0＝剛好；正＝還要再刪；負＝刪多了） */
@@ -59,7 +59,7 @@
     /* 解開了嗎：每一排、每一列的差都是 0 */
     function isSolved(nums, keep, n, rowT, colT) {
         var d = diffsOf(nums, keep, n, rowT, colT);
-        return d.rows.every(function (v) { return v === 0; }) && d.cols.every(function (v) { return v === 0; });
+        return d.rows.every(function (v) { return v === 0; }) && d.cols.every(function (v) { return v === 0; });  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
     }
     /* 數解的個數（最多數到 limit）：一排一排選「留哪幾格」，列的加總超過目標或湊不到就剪掉 */
     /* 數有幾種刪法能湊出目標（最多數到 limit 種），出題用它確認「答案只有一種」。
@@ -79,7 +79,7 @@
         }
         /* rest[r][c]：從第 r 排到最後一排，第 c 列還能再加多少 */
         var rest = [];                                  /* rest[r][c]：從第 r 排到最後一排，第 c 列「最多還能再加多少」（全部留下的話）。用來判斷「就算後面全留，這列也湊不到目標」→ 剪枝 */
-        for (r = n; r >= 0; r--) { rest[r] = new Array(n).fill(0); if (r < n) for (var cc = 0; cc < n; cc++) rest[r][cc] = rest[r + 1][cc] + nums[r * n + cc]; }
+        for (r = n; r >= 0; r--) { rest[r] = new Array(n).fill(0); if (r < n) for (var cc = 0; cc < n; cc++) rest[r][cc] = rest[r + 1][cc] + nums[r * n + cc]; }  /* new Array(n).fill(v)：建立長度 n、每一格都是 v 的陣列 */
         for (var q = 0; q <= n; q++) if (!rest[q]) rest[q] = new Array(n).fill(0);
         var count = 0, part = new Array(n).fill(0);
         /* dfs：一排一排往下試；row 是正在決定第幾排。part[c] 是目前已累計的各列和。試完一種留法要把它加進去的數字再減回來（回溯） */
@@ -108,7 +108,7 @@
         var n = sizeFor(level), mx = maxNumFor(level), best = null;
         for (var tr = 0; tr < TRIES; tr++) {
             var nums = [], keep = [], i, dels = 0;
-            for (i = 0; i < n * n; i++) { nums.push(kit.randInt(1, mx, rand)); var kp = rand() < KEEP_P; keep.push(kp); if (!kp) dels++; }
+            for (i = 0; i < n * n; i++) { nums.push(kit.randInt(1, mx, rand)); var kp = rand() < KEEP_P; keep.push(kp); if (!kp) dels++; }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             if (dels < Math.ceil(n * n * DEL_MIN)) continue;  /* 刪掉的格子太少（低於 DEL_MIN 比例）就重抽——題目太簡單 */
             var t = targetsOf(nums, keep, n), okLines = true, r, c;
             /* 每一排、每一列都至少要刪一格、至少要留一格，否則那一行不用算 */
@@ -128,7 +128,7 @@
     /* 提示：挑一格「現在跟答案不一樣」的；優先挑它所在的排或列還沒湊對的 */
     function hintCell(pz, keep) {
         var n = pz.n, d = diffsOf(pz.nums, keep, n, pz.rowT, pz.colT), pick = -1, i;
-        for (i = 0; i < n * n; i++) if (keep[i] !== pz.keep[i] && (d.rows[Math.floor(i / n)] !== 0 || d.cols[i % n] !== 0)) { pick = i; break; }
+        for (i = 0; i < n * n; i++) if (keep[i] !== pz.keep[i] && (d.rows[Math.floor(i / n)] !== 0 || d.cols[i % n] !== 0)) { pick = i; break; }  /* Math.floor：無條件捨去成整數 */
         if (pick < 0) for (i = 0; i < n * n; i++) if (keep[i] !== pz.keep[i]) { pick = i; break; }
         return pick;
     }
@@ -164,15 +164,15 @@
         var headW = 66, cell = Math.min(CELL_MAX, Math.floor((W * 0.96 - headW - n * 4) / n));  /* 算每格大小：舞台寬度 ×0.96 扣掉左邊目標欄（headW）與格子間距，再除以邊長，最大不超過 CELL_MAX */
         var keep = pz.nums.map(function () { return true; }), hintsLeft = HINTS, hint = -1, solved = false;  /* keep：目前每格是否「留著」（一開始全部留著，玩家點一下就刪掉）；hint：提示標出的格子；solved：已解開 */
 
-        var wrap = h('div', { 'class': 'sumdel-wrap' });
-        var board = h('div', { 'class': 'sumdel-board' });
+        var wrap = h('div', { 'class': 'sumdel-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
+        var board = h('div', { 'class': 'sumdel-board' });  /* board：盤面（所有格子都放在裡面） */
         board.style.setProperty('--sumdel-n', n);       /* 用 JS 把算好的尺寸交給 CSS 變數（CSS 裡用 var(--sumdel-cell) 取得） */
-        board.style.setProperty('--sumdel-cell', cell + 'px');
-        board.style.setProperty('--sumdel-head', headW + 'px');
-        board.style.setProperty('--sumdel-font', Math.round(cell * 0.46) + 'px');
-        board.appendChild(h('div', { 'class': 'sumdel-corner' }));
+        board.style.setProperty('--sumdel-cell', cell + 'px');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
+        board.style.setProperty('--sumdel-head', headW + 'px');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
+        board.style.setProperty('--sumdel-font', Math.round(cell * 0.46) + 'px');  /* Math.round：四捨五入成整數 */
+        board.appendChild(h('div', { 'class': 'sumdel-corner' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var colHead = [], rowHead = [], cells = [], i, r, c;
-        for (c = 0; c < n; c++) { var ch = h('div', { 'class': 'sumdel-head sumdel-head--col' }); board.appendChild(ch); colHead.push(ch); }
+        for (c = 0; c < n; c++) { var ch = h('div', { 'class': 'sumdel-head sumdel-head--col' }); board.appendChild(ch); colHead.push(ch); }  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         for (r = 0; r < n; r++) {
             var rh = h('div', { 'class': 'sumdel-head sumdel-head--row' }); board.appendChild(rh); rowHead.push(rh);
             for (c = 0; c < n; c++) {
@@ -182,20 +182,20 @@
             }
         }
         var tipText = '點數字刪掉它；旁邊的 −N＝還要少 N，＋N＝刪過頭了';
-        var tip = h('div', { 'class': 'sumdel-tip', text: tipText });
+        var tip = h('div', { 'class': 'sumdel-tip', text: tipText });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
         var acts = h('div', { 'class': 'sumdel-tools' });
-        var btnHint = h('button', { 'class': 'btn btn--line sumdel-tool', type: 'button', text: '提示 ' + hintsLeft });
-        var btnReset = h('button', { 'class': 'btn btn--line sumdel-tool', type: 'button', text: '重來' });
-        kit.onTap(btnHint, useHint);
-        kit.onTap(btnReset, reset);
-        if (HINTS > 0) acts.appendChild(btnHint);
+        var btnHint = h('button', { 'class': 'btn btn--line sumdel-tool', type: 'button', text: '提示 ' + hintsLeft });  /* 「提示」按鈕（文字會顯示還剩幾次提示） */
+        var btnReset = h('button', { 'class': 'btn btn--line sumdel-tool', type: 'button', text: '重來' });  /* 「重來」按鈕 */
+        kit.onTap(btnHint, useHint);                    /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        kit.onTap(btnReset, reset);                     /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        if (HINTS > 0) acts.appendChild(btnHint);       /* 提示次數 HINTS 設成 0，就連提示按鈕都不放 */
         acts.appendChild(btnReset);
         wrap.appendChild(board); wrap.appendChild(tip); wrap.appendChild(acts);
-        stage.appendChild(wrap);
+        stage.appendChild(wrap);                        /* 把整個遊戲區放進舞台（放進去，畫面上才看得到） */
 
         /* 更新一個目標欄位：上面寫目標數字，下面寫還差多少（✓／−N／＋N） */
         function headText(el, target, diff) {
-            el.innerHTML = '';
+            el.innerHTML = '';                          /* innerHTML = ''：把元素裡面的東西全部清掉 */
             el.appendChild(h('div', { 'class': 'sumdel-target', text: String(target) }));
             el.appendChild(h('div', { 'class': 'sumdel-diff' + (diff === 0 ? ' sumdel-diff--ok' : diff < 0 ? ' sumdel-diff--over' : ''), text: diff === 0 ? '✓' : diff > 0 ? '−' + diff : '＋' + (-diff) }));
         }
@@ -213,23 +213,23 @@
         }
         /* 解開：全部變綠、閃綠光並過關 */
         function win() {
-            solved = true; paint(); tip.textContent = '每排每列都剛好！';
-            kit.flash(stage, true, api.my);
-            api.pass({ delay: PASS_DELAY_MS });
+            solved = true; paint(); tip.textContent = '每排每列都剛好！';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            kit.flash(stage, true, api.my);             /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.pass({ delay: PASS_DELAY_MS });         /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
         }
         /* 提示：標出一格跟答案不一樣的（每題 HINTS 次） */
         function useHint() {
             if (solved || hintsLeft <= 0) return;
             var c = hintCell(pz, keep);
             if (c < 0) return;
-            hintsLeft--; btnHint.textContent = '提示 ' + hintsLeft; btnHint.disabled = hintsLeft <= 0;
+            hintsLeft--; btnHint.textContent = '提示 ' + hintsLeft; btnHint.disabled = hintsLeft <= 0;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             hint = c; tip.textContent = '黃色閃動的那一格，跟答案不一樣'; paint();
         }
         /* 重來：全部格子恢復成「留著」 */
-        function reset() { if (solved) return; keep = pz.nums.map(function () { return true; }); hint = -1; paint(); }
+        function reset() { if (solved) return; keep = pz.nums.map(function () { return true; }); hint = -1; paint(); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         /* 給測試／debug 用：api.solve 一鍵變成答案、api.wrong 故意弄錯一格、api.state 回報目前狀態 */
-        api.solve = function () { keep = pz.keep.slice(); paint(); if (isSolved(pz.nums, keep, n, pz.rowT, pz.colT)) win(); };
-        api.wrong = function () { keep = pz.keep.slice(); keep[0] = !keep[0]; paint(); };
+        api.solve = function () { keep = pz.keep.slice(); paint(); if (isSolved(pz.nums, keep, n, pz.rowT, pz.colT)) win(); };  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        api.wrong = function () { keep = pz.keep.slice(); keep[0] = !keep[0]; paint(); };  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         api.state = function () { return { keep: keep.slice(), solved: solved, hintsLeft: hintsLeft }; };
         paint();
     }

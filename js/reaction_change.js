@@ -40,8 +40,8 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function prog(n) { return Math.min(1, Math.max(0, n / RAMP_Q)); }
     function lerp(pair, n) { return pair[0] + (pair[1] - pair[0]) * prog(n); }
-    function maxPriceFor(n) { return Math.round(lerp(MAX_PRICE, n)); }
-    function minPriceFor(n) { return Math.max(15, Math.round(maxPriceFor(n) * MIN_FRAC)); }
+    function maxPriceFor(n) { return Math.round(lerp(MAX_PRICE, n)); }  /* Math.round：四捨五入成整數 */
+    function minPriceFor(n) { return Math.max(15, Math.round(maxPriceFor(n) * MIN_FRAC)); }  /* Math.round：四捨五入成整數 */
     function timeMs(n) { return Math.round(lerp(TIME_S, n) * 1000); }
     function borrowMinFor(n) { return Math.round(lerp(BORROW_MIN, n)); }
     function pExtraFor(n) { return n >= EXTRA_FROM ? Math.round(lerp(P_EXTRA, n) * 1000) / 1000 : 0; }
@@ -65,10 +65,10 @@
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var hi = maxPriceFor(n), lo = minPriceFor(n), need = borrowMinFor(n), best = null;
         for (var tr = 0; tr < 400; tr++) {
-            var price = kit.randInt(lo, hi, rand), cands = NOTES.filter(function (v) { return v >= price + 10; }).slice(0, n < 20 ? 2 : 3);
+            var price = kit.randInt(lo, hi, rand), cands = NOTES.filter(function (v) { return v >= price + 10; }).slice(0, n < 20 ? 2 : 3);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             if (!cands.length) continue;
-            var base = kit.pick(cands, rand), extra = 0;
-            if (rand() < pExtraFor(n)) { extra = kit.randInt(1, 49, rand); while ((base + extra - price) % 5 !== 0) extra++; }
+            var base = kit.pick(cands, rand), extra = 0;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+            if (rand() < pExtraFor(n)) { extra = kit.randInt(1, 49, rand); while ((base + extra - price) % 5 !== 0) extra++; }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             var paid = base + extra, change = paid - price, br = countBorrows(paid, price);
             best = { n: n, price: price, base: base, extra: extra, paid: paid, change: change, digits: String(change).length, borrows: br };
             if (br >= need) return best;
@@ -113,27 +113,27 @@
         console.log('[找錢] 開始：價錢上限 ' + maxPriceFor(0) + ' → ' + maxPriceFor(RAMP_Q) + '；每題限時 ' + timeMs(0) + ' → ' + timeMs(RAMP_Q) + ' 毫秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var field = h('div', { 'class': 'change-field' });
-        stage.appendChild(field);
-        var bill = h('div', { 'class': 'change-bill' }); field.appendChild(bill);
+        stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var bill = h('div', { 'class': 'change-bill' }); field.appendChild(bill);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var lcd = h('div', { 'class': 'change-lcd' }), lcdLab = h('div', { 'class': 'change-lcd__lab', text: '要找' }), lcdNum = h('div', { 'class': 'change-lcd__num', text: '' }); lcd.appendChild(lcdLab); lcd.appendChild(lcdNum); field.appendChild(lcd);
         var info = h('div', { 'class': 'qz-note change-info', text: '' }); field.appendChild(info);
         var drawer = h('div', { 'class': 'change-drawer', text: '叮！' }); field.appendChild(drawer);
-        var keys = [], items = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '⌫', '0', '✓'].map(function (k) {
+        var keys = [], items = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '⌫', '0', '✓'].map(function (k) {  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             return { text: k, kind: k === '✓' ? 'go' : (k === '⌫' ? 'sky' : 'line'), cls: 'change-key', onTap: function () { press(k); } };
         });
-        var pad = kit.btnGrid(field, items, { cols: 3, h: 84, gap: 8, bottom: 8 });
-        function paintLcd() { lcdNum.textContent = typed === '' ? '0' : typed; lcdNum.classList.toggle('change-lcd__num--empty', typed === ''); }
+        var pad = kit.btnGrid(field, items, { cols: 3, h: 84, gap: 8, bottom: 8 });  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
+        function paintLcd() { lcdNum.textContent = typed === '' ? '0' : typed; lcdNum.classList.toggle('change-lcd__num--empty', typed === ''); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         paintLcd();
 
         /* 出一題 */
         function ask() {
             if (api.over) return;
-            q = makeQuestion(count, api.rand); typed = ''; paintLcd(); phase = 'ask'; drawer.classList.remove('change-drawer--open');
-            bill.innerHTML = '';
+            q = makeQuestion(count, api.rand); typed = ''; paintLcd(); phase = 'ask'; drawer.classList.remove('change-drawer--open');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            bill.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             bill.appendChild(h('div', { 'class': 'change-bill__l', text: '客人買了 ' }));
             bill.lastChild.appendChild(h('span', { 'class': 'change-bill__n', text: String(q.price) })); bill.lastChild.appendChild(document.createTextNode(' 元'));
             var l2 = h('div', { 'class': 'change-bill__l', text: '給你 ' }); l2.appendChild(h('span', { 'class': 'change-bill__n change-bill__n--paid', text: String(q.paid) })); l2.appendChild(document.createTextNode(' 元')); bill.appendChild(l2);
-            info.textContent = ''; api.stopTimer(); api.timer(timeMs(count), function () { fail(); });
+            info.textContent = ''; api.stopTimer(); api.timer(timeMs(count), function () { fail(); });  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             if (count === 0 && kit.once('change.hint')) kit.hintOn(stage, pad.btns[items.map(function (it) { return it.text; }).indexOf(String(q.change).charAt(0))], { mode: 'tap', delay: 800, text: '輸入要找的錢' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         }
         ask();
@@ -151,9 +151,9 @@
             if (phase !== 'ask') return;
             phase = 'judge'; api.stopTimer();
             if (+typed === q.change && typed.charAt(0) !== '0') {
-                count++; S.score = count; api.setInfo('答對 ' + count + ' 題'); Sfx.play('ok');
+                count++; S.score = count; api.setInfo('答對 ' + count + ' 題'); Sfx.play('ok');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 lcd.classList.add('change-lcd--ok'); drawer.classList.add('change-drawer--open');
-                api.after(420, function () { lcd.classList.remove('change-lcd--ok'); ask(); });
+                api.after(420, function () { lcd.classList.remove('change-lcd--ok'); ask(); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                 return;
             }
             fail(typed);
@@ -165,16 +165,16 @@
             var why = whyText(q, t), v = vertical(q.paid, q.price);
             lcd.classList.add('change-lcd--bad'); info.textContent = t ? '找錯了！' : '時間到！'; info.classList.add('change-info--bad');          /* 完整的算式寫在下面的直式減法裡 */
             var box = h('div', { 'class': 'change-vert' });
-            function row(chars, cls, sign) { var r = h('div', { 'class': 'change-vert__r ' + cls }); r.appendChild(h('span', { 'class': 'change-vert__s', text: sign || '' })); chars.forEach(function (c, i) { r.appendChild(h('span', { 'class': 'change-vert__c' + (v.borrow[i] && cls !== 'change-vert__r--res' ? ' change-vert__c--borrow' : ''), text: c === ' ' ? ' ' : c })); }); return r; }
+            function row(chars, cls, sign) { var r = h('div', { 'class': 'change-vert__r ' + cls }); r.appendChild(h('span', { 'class': 'change-vert__s', text: sign || '' })); chars.forEach(function (c, i) { r.appendChild(h('span', { 'class': 'change-vert__c' + (v.borrow[i] && cls !== 'change-vert__r--res' ? ' change-vert__c--borrow' : ''), text: c === ' ' ? ' ' : c })); }); return r; }  /* forEach：對陣列的每個元素各做一次 */
             box.appendChild(row(v.top, 'change-vert__r--top')); box.appendChild(row(v.bot, 'change-vert__r--bot', MINUS)); box.appendChild(h('div', { 'class': 'change-vert__line' })); box.appendChild(row(v.res, 'change-vert__r--res'));
             box.appendChild(h('div', { 'class': 'change-vert__t', text: v.borrow.some(Boolean) ? '紅色的欄位要向左邊借位' : '這題不用借位' }));
             if (t) box.appendChild(h('div', { 'class': 'change-vert__t change-vert__t--you', text: '你輸入：' + t + '　正確：' + q.change }));
             field.appendChild(box); pad.el.style.display = 'none';                 /* 鍵盤收起來，騰出位置給直式減法 */
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: 4200, lines: [why, '直式減法：' + q.paid + ' ' + MINUS + ' ' + q.price + ' ＝ ' + q.change + '（借位 ' + q.borrows + ' 次）' + (q.extra ? '；客人多給了 ' + q.extra + ' 元零錢（' + q.base + ' ＋ ' + q.extra + '）' : '')] });
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 4200, lines: [why, '直式減法：' + q.paid + ' ' + MINUS + ' ' + q.price + ' ＝ ' + q.change + '（借位 ' + q.borrows + ' 次）' + (q.extra ? '；客人多給了 ' + q.extra + ' 元零錢（' + q.base + ' ＋ ' + q.extra + '）' : '')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：把正確答案一個數字一個數字按進去（最多 SOLVE_CAP 題）／按一個錯的；可重複呼叫 */
-        api.solve = function () { if (phase !== 'ask' || count >= SOLVE_CAP) return; String(q.change).split('').forEach(function (d) { press(d); }); };
+        api.solve = function () { if (phase !== 'ask' || count >= SOLVE_CAP) return; String(q.change).split('').forEach(function (d) { press(d); }); };  /* forEach：對陣列的每個元素各做一次 */
         api.wrong = function () { if (phase !== 'ask') return; var w = String(q.change + 1).split(''); w.forEach(function (d) { press(d); }); if (phase === 'ask') press('✓'); };
     }
 

@@ -244,7 +244,7 @@
     ];
     /* 用 id 快速找到那一款（recent 頁籤只存 id，顯示時要靠它換回完整資料） */
     var gameById = {};
-    GAME_CELLS.forEach(function (c) { gameById[c.id] = c; });
+    GAME_CELLS.forEach(function (c) { gameById[c.id] = c; });  /* forEach：對陣列的每個元素各做一次 */
 
     /* function 是「函式」：把一段會重複使用的程式取個名字。soonCell 負責做出一個「構想中」的灰色格子。 */
     /* 「構想中」佔位格（主軸彈窗用）：cls 參數是 'theme'，拼出對應的 class 名稱（theme-cell--soon），
@@ -270,7 +270,7 @@
         /* 從這裡進測試模式＝新的一局：題目在 quiz.html 一進去就全部重新產生（見 js/quiz_gen.js） */
         /* UI.store 是 localStorage 的小包裝（瀏覽器關掉也會記住的資料）。這裡先做個記號，
            告訴 quiz 頁「這是全新的一局」，題目要重新產生。 */
-        UI.store.set('fm.quiz.fresh', true);
+        UI.store.set('fm.quiz.fresh', true);            /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
         /* 改變 location.href 就會跳到另一個網頁；? 後面是「查詢參數」，另一頁用它得知要玩哪個主軸。 */
         location.href = 'quiz.html?theme=' + id;
     }
@@ -278,7 +278,7 @@
     /* 建立「選主軸」彈窗的內容。THEME_CELLS.map(...) 的意思是：把清單裡每一項轉成一個按鈕，回傳新陣列。 */
     function buildThemeDlg() {
         themeBuilt = true;
-        var cells = THEME_CELLS.map(function (c) {
+        var cells = THEME_CELLS.map(function (c) {      /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             if (!c) return soonCell('theme');
             /* on: { click: ... } 是綁定「點擊事件」。e.stopPropagation() 表示事件到此為止，
                不要往上傳給外層的背景（不然點按鈕時背景的「點了就關閉」也會一起觸發）。 */
@@ -291,7 +291,7 @@
             h('div', { 'class': 'theme-dlg__title', text: '選一個想練習的主題' }),
             h('div', { 'class': 'theme-grid' }, cells)
         ]);
-        themeDlg.appendChild(card);
+        themeDlg.appendChild(card);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         closeOnBg(themeDlg);
     }
 
@@ -306,10 +306,10 @@
 
     /* 最近玩過的 id 清單：去掉已經不存在的遊戲、重複的；從來沒存過「最近」但有「上次玩的」就用它當第一筆 */
     function recentIds() {
-        var raw = UI.store.get(RECENT_KEY, null);
+        var raw = UI.store.get(RECENT_KEY, null);       /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
         var out = [];
         if (Array.isArray(raw)) {
-            raw.forEach(function (id) { if (gameById[id] && out.indexOf(id) < 0) out.push(id); });
+            raw.forEach(function (id) { if (gameById[id] && out.indexOf(id) < 0) out.push(id); });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         } else {
             var last = UI.store.get(LAST_GAME_KEY, null);
             if (gameById[last]) out.push(last);
@@ -320,7 +320,7 @@
     /* 玩家點了一款遊戲：記下來（上次玩的、最近玩過），再跳到那款遊戲 */
     function pickGame(id) {
         UI.store.set(LAST_GAME_KEY, id);
-        var list = recentIds().filter(function (x) { return x !== id; });
+        var list = recentIds().filter(function (x) { return x !== id; });  /* filter：留下符合條件的元素，回傳新陣列 */
         list.unshift(id);
         UI.store.set(RECENT_KEY, list.slice(0, RECENT_MAX));
         location.href = 'reaction.html?game=' + id;
@@ -329,9 +329,9 @@
     /* 某個頁籤要顯示哪些遊戲（回傳 GAME_CELLS 裡的項目陣列）：
        全部＝每一款；最近＝recentIds() 的順序；其他＝cat 相同的那幾款（順序同「全部」）。 */
     function tabGames(tab) {
-        if (tab === 'all') return GAME_CELLS.slice();
-        if (tab === 'recent') return recentIds().map(function (id) { return gameById[id]; });
-        return GAME_CELLS.filter(function (c) { return c.cat === tab; });
+        if (tab === 'all') return GAME_CELLS.slice();   /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        if (tab === 'recent') return recentIds().map(function (id) { return gameById[id]; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        return GAME_CELLS.filter(function (c) { return c.cat === tab; });  /* filter：留下符合條件的元素，回傳新陣列 */
     }
 
     /* 搜尋遊戲（V1.43.0，頁籤列最右邊的「搜尋」）：關鍵字只要是遊戲名稱的「一部分」就算符合。
@@ -345,19 +345,19 @@
     }
     function searchGames(q) {
         var words = normSearch(q).split(/\s+/).filter(Boolean);
-        if (!words.length) return GAME_CELLS.slice();
+        if (!words.length) return GAME_CELLS.slice();   /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         var byName = [], byId = [];
-        GAME_CELLS.forEach(function (c) {
+        GAME_CELLS.forEach(function (c) {               /* forEach：對陣列的每個元素各做一次 */
             var name = normSearch(c.name), id = c.id.toLowerCase();
-            if (words.every(function (w) { return name.indexOf(w) >= 0; })) byName.push(c);
-            else if (words.every(function (w) { return name.indexOf(w) >= 0 || id.indexOf(w) >= 0; })) byId.push(c);
+            if (words.every(function (w) { return name.indexOf(w) >= 0; })) byName.push(c);  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
+            else if (words.every(function (w) { return name.indexOf(w) >= 0 || id.indexOf(w) >= 0; })) byId.push(c);  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         });
         return byName.concat(byId);
     }
 
     /* 這個頁籤 id 是不是合法的（存檔裡的值可能是舊版留下的、或被改壞） */
     function isTab(id) {
-        return GAME_TABS.some(function (t) { return t.id === id; });
+        return GAME_TABS.some(function (t) { return t.id === id; });  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
     }
 
     /* ═══ 五星評價的平均星數（V1.25.0，js/rating.js）═══
@@ -481,9 +481,9 @@
             emoji = it.rank === 1 ? '👑' : '😎';
             badge = it.rank ? rankBadge(it.rank) : tagBadge('玩過' + it.n + '局'); say = it.rank ? '你是世界第 ' + it.rank + ' 名' : '你玩過 ' + it.n + ' 局';
         }
-        cell.setAttribute('aria-label', it.cell.name + '，' + say);
-        var pic = cell.querySelector('.game-cell__pic');
-        pic.appendChild(h('span', { 'class': 'game-cell__heart', text: emoji, attrs: { 'aria-hidden': 'true' } }));
+        cell.setAttribute('aria-label', it.cell.name + '，' + say);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+        var pic = cell.querySelector('.game-cell__pic');  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
+        pic.appendChild(h('span', { 'class': 'game-cell__heart', text: emoji, attrs: { 'aria-hidden': 'true' } }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         pic.appendChild(badge);
         return cell;
     }
@@ -508,7 +508,7 @@
     function within(p, ms) {
         return new Promise(function (resolve) {
             var done = false;
-            var t = window.setTimeout(function () { if (!done) { done = true; resolve([]); } }, Math.max(0, ms));
+            var t = window.setTimeout(function () { if (!done) { done = true; resolve([]); } }, Math.max(0, ms));  /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
             p.then(function (v) { if (!done) { done = true; window.clearTimeout(t); resolve(v); } },
                 function () { if (!done) { done = true; window.clearTimeout(t); resolve([]); } });
         });
@@ -536,10 +536,10 @@
     function checkPopup() {
         if (!window.Dlg) return;
         closePopup();
-        var token = popupToken, t0 = Date.now(), kinds = popupOrder(UI.store.get(POPUP_KEY, null));
+        var token = popupToken, t0 = Date.now(), kinds = popupOrder(UI.store.get(POPUP_KEY, null));  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
         (function tryAt(i) {
             if (i >= kinds.length || token !== popupToken || gameDlg.hidden) return;
-            popupItems(kinds[i], POPUP_WAIT_MS - (Date.now() - t0)).then(function (items) {
+            popupItems(kinds[i], POPUP_WAIT_MS - (Date.now() - t0)).then(function (items) {  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
                 if (token !== popupToken || gameDlg.hidden) return;
                 if (!items.length) { tryAt(i + 1); return; }
                 if (Date.now() - t0 > POPUP_WAIT_MS) return;
@@ -617,7 +617,7 @@
             var searching = query !== '';
             var items = searching ? searchGames(query) : tabGames(curTab);
             var last = UI.store.get(LAST_GAME_KEY, null);
-            grid.innerHTML = '';
+            grid.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             if (!items.length) {
                 grid.appendChild(h('div', { 'class': 'game-empty' }, searching ? [
                     h('div', { 'class': 'game-empty__t', text: '找不到「' + query + '」' }),
@@ -631,16 +631,16 @@
                 var el = cellEls[c.id];
                 if (!el) {
                     el = cellEls[c.id] = gameCell(c);
-                    var bar = el.querySelector('.rate-bar');
+                    var bar = el.querySelector('.rate-bar');  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
                     if (bar) rateEls[c.id] = bar;
                 }
-                el.classList.toggle('game-cell--last', c.id === last);
+                el.classList.toggle('game-cell--last', c.id === last);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 grid.appendChild(el);
             });
             GAME_TABS.forEach(function (t) {
                 var on = !searching && t.id === curTab;
-                tabEls[t.id].classList.toggle('is-on', on);
-                tabEls[t.id].setAttribute('aria-selected', on ? 'true' : 'false');
+                tabEls[t.id].classList.toggle('is-on', on);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                tabEls[t.id].setAttribute('aria-selected', on ? 'true' : 'false');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             });
             searchBtn.classList.toggle('is-on', searching);
             searchBtn.setAttribute('aria-pressed', searching ? 'true' : 'false');
@@ -674,7 +674,7 @@
             input.value = query;
             var count = h('div', { 'class': 'search-count' });
             function paintCount() {
-                count.textContent = query === '' ? '共 ' + GAME_CELLS.length + ' 款，打幾個字就會留下符合的' : '找到 ' + searchGames(query).length + ' 款';
+                count.textContent = query === '' ? '共 ' + GAME_CELLS.length + ' 款，打幾個字就會留下符合的' : '找到 ' + searchGames(query).length + ' 款';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             }
             function apply() {
                 var q = input.value.trim();
@@ -688,7 +688,7 @@
             input.addEventListener('compositionend', apply);
             input.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter' || e.key === 'Escape') {
-                    e.preventDefault();
+                    e.preventDefault();                 /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                     e.stopPropagation();                 /* Esc 只關搜尋彈窗，不要連整個遊戲選單一起關掉 */
                     if (!e.isComposing) closeSearch();
                 }
@@ -719,7 +719,7 @@
             var el = cellEls[UI.store.get(LAST_GAME_KEY, null)];
             if (!el || el.parentNode !== grid) return;
             var sc = stageScale();
-            var top = (el.getBoundingClientRect().top - list.getBoundingClientRect().top) / sc;
+            var top = (el.getBoundingClientRect().top - list.getBoundingClientRect().top) / sc;  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
             scroller.scrollTo(top - (viewport.clientHeight - el.offsetHeight) / 2);
         }
 
@@ -800,7 +800,7 @@
         var el = document.getElementById('menu-version');
         if (v && el) {
             var shown = /^local-/.test(v.version) ? '本機版' : '版本 ' + v.version;
-            el.textContent = v.updated ? '已更新到最新 ' + shown : shown;
+            el.textContent = v.updated ? '已更新到最新 ' + shown : shown;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         }
     });
 })();

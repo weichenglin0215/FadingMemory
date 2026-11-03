@@ -33,9 +33,9 @@
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }
-    function gapFor(level) { return Math.round(ramp(level, GAP)); }
-    function speedFor(level) { return Math.round(ramp(level, SPEED)); }
+    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function gapFor(level) { return Math.round(ramp(level, GAP)); }  /* Math.round：四捨五入成整數 */
+    function speedFor(level) { return Math.round(ramp(level, SPEED)); }  /* Math.round：四捨五入成整數 */
     function respMs(level) { return Math.round(ramp(level, RESP_S) * 1000); }
     function strokeRange(level) { return [ramp(level, STROKES_LO), ramp(level, STROKES_HI)]; }
     /* 門縫左緣的位置（px，字的左邊緣是 0）：t 秒時 */
@@ -49,10 +49,10 @@
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var rg = strokeRange(level), pool = SimilarChars.groups({ minSize: MIN_GROUP, minStrokes: rg[0], maxStrokes: rg[1] });
         if (!pool.length) pool = SimilarChars.groups({ minSize: MIN_GROUP });
-        var g = kit.pick(pool, rand), answer = kit.pick(g.chars, rand);
-        var mates = g.chars.filter(function (c) { return c !== answer; }), take = kit.shuffle(mates.slice(0, Math.min(mates.length, N_OPT + 1)), rand).slice(0, N_OPT - 1);
-        var options = kit.shuffle(take.concat([answer]), rand);
-        return { answer: answer, options: options, answerIdx: options.indexOf(answer), group: g.chars, gap: gapFor(level), speed: speedFor(level), strokes: rg, respMs: respMs(level), level: level };
+        var g = kit.pick(pool, rand), answer = kit.pick(g.chars, rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        var mates = g.chars.filter(function (c) { return c !== answer; }), take = kit.shuffle(mates.slice(0, Math.min(mates.length, N_OPT + 1)), rand).slice(0, N_OPT - 1);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+        var options = kit.shuffle(take.concat([answer]), rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+        return { answer: answer, options: options, answerIdx: options.indexOf(answer), group: g.chars, gap: gapFor(level), speed: speedFor(level), strokes: rg, respMs: respMs(level), level: level };  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
     }
     /* 兩個字的筆畫差異（像素比對），畫在 canvas 上：兩個字都有的筆畫是墨色、只有一個有的塗紅（需要瀏覽器的畫布） */
     function drawDiff(canvas, a, b, size) {
@@ -98,9 +98,9 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, BW = W - 24, BH = Math.min(BW, H - 320);
         var field = h('div', { 'class': 'doorslit-field' });
-        stage.appendChild(field);
+        stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note doorslit-tip', text: '從門縫偷看，是哪個字？' });
-        field.appendChild(tip);
+        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         /* 字盒：大大的黑字，上面蓋兩片白色方塊（左、右）；縫在兩片中間 */
         var box = h('div', { 'class': 'doorslit-box' }); box.style.cssText = 'left:12px;top:56px;width:' + BW + 'px;height:' + BH + 'px;';
         var glyph = h('div', { 'class': 'doorslit-glyph', text: q.answer }); glyph.style.fontSize = Math.round(Math.min(BW, BH) * 0.92) + 'px'; glyph.style.lineHeight = BH + 'px';
@@ -112,9 +112,9 @@
         setSlit(-q.gap);                                                                   /* 一開始縫在字的左邊外面：整個字都蓋住 */
         var info = h('div', { 'class': 'qz-note doorslit-info', text: '' }); info.style.top = (56 + BH + 8) + 'px'; field.appendChild(info);
         var phase = 'sweep', done = false, grid = null, t0 = null, total = sweepSeconds(BW, q.gap, q.speed);
-        api.after(LEAD_MS, function () {
-            t0 = performance.now();
-            var loop = api.my.loop(function (now) {
+        api.after(LEAD_MS, function () {                /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+            t0 = performance.now();                     /* performance.now()：高精度的時間（毫秒），計時用 */
+            var loop = api.my.loop(function (now) {     /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                 if (!box.isConnected) return false;
                 var t = (now - t0) / 1000, x = slitX(t, q.gap, q.speed);
                 setSlit(Math.min(x, BW + q.gap));
@@ -123,8 +123,8 @@
         });
         function ask() {
             if (phase !== 'sweep') return;
-            phase = 'ask'; tip.textContent = '剛才那個字是？';
-            grid = kit.btnGrid(field, q.options.map(function (c, i) { return { text: c, kind: 'line', cls: 'doorslit-opt', onTap: function () { judge(i); } }; }), { cols: 2, h: 92, gap: 10 });
+            phase = 'ask'; tip.textContent = '剛才那個字是？'; /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            grid = kit.btnGrid(field, q.options.map(function (c, i) { return { text: c, kind: 'line', cls: 'doorslit-opt', onTap: function () { judge(i); } }; }), { cols: 2, h: 92, gap: 10 });  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
             api.timer(q.respMs, function () { judge(-1); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         }
         /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
@@ -132,17 +132,17 @@
             if (done || api.over || phase !== 'ask') return;
             done = true; phase = 'end';
             var ok = i === q.answerIdx;
-            grid.btns[q.answerIdx].classList.add('doorslit-ok'); if (i >= 0 && !ok) grid.btns[i].classList.add('doorslit-bad');
+            grid.btns[q.answerIdx].classList.add('doorslit-ok'); if (i >= 0 && !ok) grid.btns[i].classList.add('doorslit-bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             /* 揭曉：兩片白色方塊往兩邊打開，字整個露出來 */
-            coverL.classList.add('doorslit-cover--open'); coverR.classList.add('doorslit-cover--open'); coverL.style.transform = 'translateX(-' + (CW + 20) + 'px)'; coverR.style.transform = 'translateX(' + (BW + 20) + 'px)';
-            if (ok) { info.textContent = '是「' + q.answer + '」，答對了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1500 }); return; }
-            info.textContent = '正確「' + q.answer + '」' + (i >= 0 ? '，你選「' + q.options[i] + '」（紅＝差異）' : '（時間到）');
+            coverL.classList.add('doorslit-cover--open'); coverR.classList.add('doorslit-cover--open'); coverL.style.transform = 'translateX(-' + (CW + 20) + 'px)'; coverR.style.transform = 'translateX(' + (BW + 20) + 'px)';  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            if (ok) { info.textContent = '是「' + q.answer + '」，答對了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1500 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            info.textContent = '正確「' + q.answer + '」' + (i >= 0 ? '，你選「' + q.options[i] + '」（紅＝差異）' : '（時間到）');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             if (i >= 0) {
                 var sq = Math.min(BW, BH), cv = h('canvas', { 'class': 'doorslit-diff' }); cv.style.cssText = 'left:' + Math.round((BW - sq) / 2) + 'px;top:' + Math.round((BH - sq) / 2) + 'px;width:' + sq + 'px;height:' + sq + 'px;';
-                api.after(450, function () { try { drawDiff(cv, q.answer, q.options[i], 240); box.appendChild(cv); glyph.style.visibility = 'hidden'; } catch (err) { } });
+                api.after(450, function () { try { drawDiff(cv, q.answer, q.options[i], 240); box.appendChild(cv); glyph.style.visibility = 'hidden'; } catch (err) { } });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
             }
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: 3400, lines: ['正確的字是「' + q.answer + '」' + (i >= 0 ? '，你選了「' + q.options[i] + '」' : '（時間到）'), '選項：' + q.options.join('、')] });
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 3400, lines: ['正確的字是「' + q.answer + '」' + (i >= 0 ? '，你選了「' + q.options[i] + '」' : '（時間到）'), '選項：' + q.options.join('、')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：不等門縫掃完，直接進入作答（會被重複呼叫，ask／judge 都有防重複） */
         api.solve = function () { if (phase === 'sweep') ask(); if (phase === 'ask') judge(q.answerIdx); };

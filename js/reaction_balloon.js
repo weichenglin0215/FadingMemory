@@ -46,14 +46,14 @@
     var CUE_NOISE = 0.18;                      /* 顏色線索的雜訊大小（占進度的比例） */
 
     /* 把數字加上千分位逗號（例如 12345 → 12,345）；正規表達式 \B(?=(\d{3})+(?!\d)) 的意思是「每三位數前面加逗號」 */
-    function fmtNum(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+    function fmtNum(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }  /* Math.round：四捨五入成整數 */
     function fmtBest(v) { return v == null ? '' : '最高 ' + fmtNum(v); }
 
     /* 純函式（也給 Node 測試用） */
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 灌了 tau 秒的容量：每幀累加 1、2、3…，n 幀後容量＝1+2+…+n＝n(n+1)/2（高斯求和公式） */
     /* 灌了 tau 秒（標準速度）的容量 */
-    function capacityAt(tau) { var n = Math.floor(Math.max(0, tau) * FPS); return n * (n + 1) / 2; }
+    function capacityAt(tau) { var n = Math.floor(Math.max(0, tau) * FPS); return n * (n + 1) / 2; }  /* Math.floor：無條件捨去成整數 */
     function capOfFrames(n) { return n * (n + 1) / 2; }
     /* 氣球半徑：隨按住秒數線性長大 */
     function radiusAt(t) { return R0 + (R1 - R0) * Math.min(1, Math.max(0, t) / T_FULL); }
@@ -62,8 +62,8 @@
     /* 產生一局的氣球：隨機灌氣速度、總容量（±2%），算出爆破需要按住的秒數 */
     /* 一局的氣球：灌氣速度 speed、總容量 capBurst（±CAP_TOL）、爆破要按住的真實秒數 burstT */
     function makeBurst(rand) {
-        var speed = kit.randFloat(SPEED_MIN, SPEED_MAX, rand);
-        var delta = kit.randFloat(-CAP_TOL, CAP_TOL, rand);
+        var speed = kit.randFloat(SPEED_MIN, SPEED_MAX, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+        var delta = kit.randFloat(-CAP_TOL, CAP_TOL, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         /* 解一元二次方程式 n(n+1)/2 = 總容量，得到爆破的幀數 nB（公式解 n = (−1+√(1+8×容量))/2） */
         var n0 = TAU_BURST * FPS, nB = (-1 + Math.sqrt(1 + 8 * capOfFrames(n0) * (1 + delta))) / 2;     /* 解 n(n+1)/2 = 總容量 */
         var tauB = nB / FPS;
@@ -86,7 +86,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
             /* BB 這局的氣球資料；burstT 爆破要按住的秒數；speed 灌氣速度 */
             var BB = makeBurst(), burstT = BB.burstT, speed = BB.speed;
@@ -96,16 +96,16 @@
             var cueNoise = 0, lastNoiseAt = 0;
             /* 主控台印出這局的速度、容量與爆破時間（玩家看不到，驗證用） */
             try { console.info('[吹氣球] 這局灌氣速度 ×' + speed.toFixed(3) + '，總容量 ' + fmtNum(BB.capBurst) + '（標準 ' + fmtNum(capacityAt(TAU_BURST)) + '，誤差 ' + (BB.delta * 100).toFixed(2) + '%），會在按住 ' + burstT.toFixed(2) + ' 秒時爆。玩家看不到這些數字。'); } catch (e) { }
-            ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
+            ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
             var hint = h('div', { 'class': 'hint', text: '按住畫面充氣，覺得夠了就放手（爆了就 0 分）' });
             var field = h('div', { 'class': 'balloon-field' });
-            root.appendChild(hint);
-            root.appendChild(field);
+            root.appendChild(hint);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(field);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             /* SVG 畫布與氣球的各個部分（本體、高光、結、繩子） */
-            var svg = kit.svg('svg', { 'class': 'balloon-svg', viewBox: '0 0 400 600', preserveAspectRatio: 'xMidYMid meet' }, field);
+            var svg = kit.svg('svg', { 'class': 'balloon-svg', viewBox: '0 0 400 600', preserveAspectRatio: 'xMidYMid meet' }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             var CX = 200, BASE_Y = 330;                        /* 氣球中心 */
-            var gBalloon = kit.svg('g', {}, svg);
+            var gBalloon = kit.svg('g', {}, svg);       /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             var string = kit.svg('path', { 'class': 'balloon-string' }, svg);
             var body = kit.svg('ellipse', { 'class': 'balloon-body' }, gBalloon);
             var shine = kit.svg('ellipse', { 'class': 'balloon-shine' }, gBalloon);
@@ -120,8 +120,8 @@
             function drawBalloon(r, jx, jy, js, cue) {
                 var rx = r * js, ry = r * 1.15 * js;
                 var cy = BASE_Y - ry * 0.25;
-                body.setAttribute('cx', CX + jx); body.setAttribute('cy', cy + jy);
-                body.setAttribute('rx', rx.toFixed(2)); body.setAttribute('ry', ry.toFixed(2));
+                body.setAttribute('cx', CX + jx); body.setAttribute('cy', cy + jy);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                body.setAttribute('rx', rx.toFixed(2)); body.setAttribute('ry', ry.toFixed(2));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
                 body.setAttribute('fill', color(52 + 22 * cue));
                 shine.setAttribute('cx', CX + jx - rx * 0.38); shine.setAttribute('cy', cy + jy - ry * 0.42);
                 shine.setAttribute('rx', (rx * 0.2).toFixed(2)); shine.setAttribute('ry', (ry * 0.12).toFixed(2));
@@ -140,7 +140,7 @@
                 var jx = (Math.random() - 0.5) * 2 * amp, jy = (Math.random() - 0.5) * 2 * amp;
                 var js = 1 + (Math.random() - 0.5) * 0.02 * (1 + t / T_FULL * 2);
                 if (now - lastNoiseAt > 220) { cueNoise = (Math.random() - 0.5) * 2 * CUE_NOISE; lastNoiseAt = now; }
-                var cue = kit.clamp(t / burstT + cueNoise, 0, 1);
+                var cue = kit.clamp(t / burstT + cueNoise, 0, 1);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
                 drawBalloon(radiusAt(t), jx, jy, js, cue);
             }
 
@@ -149,16 +149,16 @@
                 enabled: function () { return state === 'ready'; },
                 down: function (e) {
                     state = 'blow';
-                    tDown = kit.evT(e) || performance.now();
-                    hint.textContent = '';
+                    tDown = kit.evT(e) || performance.now();  /* performance.now()：高精度的時間（毫秒），計時用 */
+                    hint.textContent = '';              /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                     Sfx.inflateStart();
-                    my.loop(frame);
+                    my.loop(frame);                     /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                     /* 保底：用 setTimeout 準時爆，不靠 rAF（分頁在背景時 rAF 會被暫停） */
                     /* 保底：用 setTimeout 準時爆，不靠 rAF */
                     R.burstTimer = my.after(burstT * 1000, function () { if (state === 'blow') finish(burstT, true); });
                     /* rAF 被暫停時也要有東西在動：每 50ms 補畫一次 */
                     /* rAF 被暫停時也要有東西在動：每 50ms 補畫一次 */
-                    (function again() { my.after(50, function () { if (state === 'blow') { frame(performance.now()); again(); } }); })();
+                    (function again() { my.after(50, function () { if (state === 'blow') { frame(performance.now()); again(); } }); })();  /* performance.now()：高精度的時間（毫秒），計時用 */
                 },
                 up: function (e, reason) {
                     if (state !== 'blow') return;
@@ -168,7 +168,7 @@
             });
             my.onDispose(function () { holder.destroy(); Sfx.inflateStop(); });
             /* 操作提示（只在第一次進遊戲時）：手指按住不放 → 「請持續按住螢幕」，放在場地下方 */
-            if (Reaction.kit.once('balloon.hint')) Reaction.kit.hintOn(root, field, { mode: 'hold', fy: 0.82, text: '請持續按住螢幕' });
+            if (Reaction.kit.once('balloon.hint')) Reaction.kit.hintOn(root, field, { mode: 'hold', fy: 0.82, text: '請持續按住螢幕' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
 
             /* 結算：burst 為 true 表示氣球爆了 */
             function finish(t, burst) {
@@ -179,14 +179,14 @@
                 tHeld = burst ? burstT : Math.max(0, t);
                 var burstNow = burst || tHeld >= burstT;
                 if (burstNow) {
-                    Sfx.play('pop');
+                    Sfx.play('pop');                    /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                     explode();
                     my.after(1100, function () { showResult(0, true); });
                 } else {
                     /* 沒爆：容量＝放手那一刻對應的容量 */
                     var cap = capacityAt(tHeld * speed);
-                    drawBalloon(radiusAt(tHeld), 0, 0, 1, kit.clamp(tHeld / burstT, 0, 1));
-                    hint.textContent = '放手了！看看容量…';
+                    drawBalloon(radiusAt(tHeld), 0, 0, 1, kit.clamp(tHeld / burstT, 0, 1));  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
+                    hint.textContent = '放手了！看看容量…';     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                     my.after(500, function () { showResult(cap, false); });
                 }
                 G.debug.last = { held: tHeld, burst: burstNow, burstT: burstT, speed: speed, cap: burstNow ? 0 : capacityAt(tHeld * speed) };
@@ -203,14 +203,14 @@
                     p.style.transformOrigin = '0 0';
                     p.setAttribute('transform', 'translate(' + CX + ' ' + cy + ')');
                     p.style.transition = 'transform 0.8s cubic-bezier(.1,.7,.3,1), opacity 0.8s ease';
-                    (function (p, a, d) { setTimeout(function () { p.setAttribute('transform', 'translate(' + (CX + Math.cos(a) * d) + ' ' + (cy + Math.sin(a) * d) + ') rotate(' + (Math.random() * 360) + ')'); p.style.opacity = '0.1'; }, 20); })(p, a, d);
+                    (function (p, a, d) { setTimeout(function () { p.setAttribute('transform', 'translate(' + (CX + Math.cos(a) * d) + ' ' + (cy + Math.sin(a) * d) + ') rotate(' + (Math.random() * 360) + ')'); p.style.opacity = '0.1'; }, 20); })(p, a, d);  /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
                 }
             }
 
             /* 顯示結果卡片，並把數字從 0 數上來 */
             function showResult(cap, burst) {
                 var maxCap = BB.capBurst;
-                var isNew = !burst && Reaction.setBest(ID, cap, function (v, b) { return v > b; });
+                var isNew = !burst && Reaction.setBest(ID, cap, function (v, b) { return v > b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                 ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
                 var frac = burst ? 0 : cap / maxCap;
                 /* 結算畫面上的成績類數字（撐了幾秒、氣球的爆破時間、拿到極限的幾 %）：4 位小數、第 3／4 位不為 0，各產生一次。
@@ -222,21 +222,21 @@
                 console.log('吹氣球：實際撐了 ' + tHeld.toFixed(6) + ' 秒（爆破 ' + burstT.toFixed(6) + ' 秒）、拿到極限的 ' + (frac * 100).toFixed(6) + '% → 顯示 ' + heldShown.toFixed(4) + ' 秒、爆破 ' + burstShown.toFixed(4) + ' 秒、' + fracShown.toFixed(4) + '%');
                 var lines = [
                     burst ? '按太久了，氣球在 ' + burstShown.toFixed(4) + ' 秒爆掉' : '你撐了 ' + heldShown.toFixed(4) + ' 秒',
-                    '這局灌氣比標準' + (speed >= 1 ? '快 ' : '慢 ') + (Math.abs(speed - 1) * 100).toFixed(0) + '%，最多撐到 ' + burstShown.toFixed(4) + ' 秒，總容量 ' + fmtNum(maxCap)
+                    '這局灌氣比標準' + (speed >= 1 ? '快 ' : '慢 ') + (Math.abs(speed - 1) * 100).toFixed(0) + '%，最多撐到 ' + burstShown.toFixed(4) + ' 秒，總容量 ' + fmtNum(maxCap)  /* Math.abs：取絕對值（去掉負號） */
                 ];
                 if (!burst) lines.push('拿到極限的 ' + fracShown.toFixed(4) + '%');
                 state = 'result';
-                var res = kit.result(root, {
+                var res = kit.result(root, {            /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                     score: burst ? null : Math.round(cap),        /* 世界排行榜成績：畫面上看到的整數容量；爆掉不算成績（null 不送） */
                     num: '0', label: burst ? '砰！氣球爆了' : rating(frac),
                     lines: lines, isNew: isNew, sfx: burst ? 'fail' : (frac >= 0.8 ? 'perfect' : 'win'), onAgain: round
                 });
                 /* 數字從 0 數上來 */
-                var numEl = res.querySelector('.rx-result__num');
+                var numEl = res.querySelector('.rx-result__num');  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
                 if (!burst && numEl) {
                     var t0 = performance.now(), dur = 900;
                     /* my.tween 在 900 毫秒內逐步改變數字，easeOutCubic 讓速度先快後慢 */
-                    my.tween(dur, function (e) { numEl.textContent = fmtNum(cap * e); }, kit.easeOutCubic);
+                    my.tween(dur, function (e) { numEl.textContent = fmtNum(cap * e); }, kit.easeOutCubic);  /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
                 }
             }
 
@@ -251,7 +251,7 @@
                 hold: function (sec) {
                     if (state !== 'ready') return state;
                     state = 'blow'; tDown = performance.now(); hint.textContent = '';
-                    my.loop(frame);
+                    my.loop(frame);                     /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                     R.burstTimer = my.after(burstT * 1000, function () { if (state === 'blow') finish(burstT, true); });
                     my.after(sec * 1000, function () { if (state === 'blow') finish((performance.now() - tDown) / 1000, false); });
                     return 'blow';

@@ -40,7 +40,7 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function makeRound(rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var R = kit.randFloat(R_MIN, R_MAX, rand), ang = kit.randFloat(ANG_MIN, ANG_MAX, rand) * Math.PI / 180;
+        var R = kit.randFloat(R_MIN, R_MAX, rand), ang = kit.randFloat(ANG_MIN, ANG_MAX, rand) * Math.PI / 180;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         return { R: R, ang: ang, start: { x: CENTER.x + R * Math.cos(ang), y: CENTER.y + R * Math.sin(ang) } };
     }
     /* 十字型箭頭（上下左右四個箭頭）的多邊形頂點，中心在 (0,0)，總寬 size：
@@ -56,7 +56,7 @@
         if (!pts.length) return [];
         var out = [pts[pts.length - 1]], acc = 0;
         for (var i = pts.length - 2; i >= 0; i--) {
-            var a = pts[i], b = pts[i + 1], dx = a.x - b.x, dy = a.y - b.y, d = Math.sqrt(dx * dx + dy * dy);
+            var a = pts[i], b = pts[i + 1], dx = a.x - b.x, dy = a.y - b.y, d = Math.sqrt(dx * dx + dy * dy);  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
             if (acc + d >= maxLen) {
                 var t = d > 0 ? (maxLen - acc) / d : 0;
                 out.push({ x: b.x + dx * t, y: b.y + dy * t });
@@ -70,7 +70,7 @@
     function resample(pts, step) {
         var out = [pts[0]], acc = 0, prev = pts[0];
         for (var i = 1; i < pts.length; i++) {
-            var p = pts[i], dx = p.x - prev.x, dy = p.y - prev.y, d = Math.sqrt(dx * dx + dy * dy);
+            var p = pts[i], dx = p.x - prev.x, dy = p.y - prev.y, d = Math.sqrt(dx * dx + dy * dy);  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
             while (acc + d >= step && d > 0) {
                 var t = (step - acc) / d;
                 prev = { x: prev.x + dx * t, y: prev.y + dy * t };
@@ -101,7 +101,7 @@
         var rms = Math.sqrt(sum2 / rs.length);
         var gap = Math.sqrt(Math.pow(rs[0].x - rs[rs.length - 1].x, 2) + Math.pow(rs[0].y - rs[rs.length - 1].y, 2));
         return {
-            valid: Math.abs(turnDeg) >= TURN_MIN && Math.abs(turnDeg) <= TURN_MAX && len >= LEN_MIN,
+            valid: Math.abs(turnDeg) >= TURN_MIN && Math.abs(turnDeg) <= TURN_MAX && len >= LEN_MIN,  /* Math.abs：取絕對值（去掉負號） */
             turn: turnDeg, len: len, rms: rms, meanR: sumR / rs.length, gap: gap, devs: devs, samples: rs,
             roundness: Math.max(0, 100 - rms / R * 100)
         };
@@ -135,49 +135,49 @@
         var cfg = makeRound(), pts = [], drawing = false, locked = false, hint = null, pid = null;
         console.log('[盲畫一個圓] 半徑 ' + cfg.R.toFixed(2) + '，起點方位 ' + (cfg.ang * 180 / Math.PI).toFixed(1) + '°');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        var svg = kit.svg('svg', { 'class': 'blindcircle-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
-        var gRev = kit.svg('g', {}, svg);
+        var svg = kit.svg('svg', { 'class': 'blindcircle-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var gRev = kit.svg('g', {}, svg);               /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         /* 圓心十字與起點 */
         var cx = CENTER.x, cy = CENTER.y;
         kit.svg('line', { x1: cx - 16, x2: cx + 16, y1: cy, y2: cy, 'class': 'blindcircle-cross' }, svg);
         kit.svg('line', { x1: cx, x2: cx, y1: cy - 16, y2: cy + 16, 'class': 'blindcircle-cross' }, svg);
         /* 起點：十字型的箭頭（150px），中心是真正的起點，再加一個小黑點標出正中心 */
-        var dot = kit.svg('polygon', { points: arrowPoints(ARROW).map(function (p) { return (cfg.start.x + p[0]).toFixed(1) + ',' + (cfg.start.y + p[1]).toFixed(1); }).join(' '), 'class': 'blindcircle-start' }, svg);
+        var dot = kit.svg('polygon', { points: arrowPoints(ARROW).map(function (p) { return (cfg.start.x + p[0]).toFixed(1) + ',' + (cfg.start.y + p[1]).toFixed(1); }).join(' '), 'class': 'blindcircle-start' }, svg);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         kit.svg('circle', { cx: cfg.start.x, cy: cfg.start.y, r: 4, 'class': 'blindcircle-startdot' }, svg);
         var trail = kit.svg('polyline', { 'class': 'blindcircle-trail', points: '' }, svg);          /* 手指身後 160px 的黑色虛線軌跡 */
         var msg = h('div', { 'class': 'blindcircle-msg' });
-        stage.appendChild(msg);
+        stage.appendChild(msg);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         function paintTrail() {
-            trail.setAttribute('points', tailOf(pts, TRAIL_LEN).map(function (p) { return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' '));
+            trail.setAttribute('points', tailOf(pts, TRAIL_LEN).map(function (p) { return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' '));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         }
 
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從起點出發，沿著圓的切線方向（順時針）重複移動 */
         var tx = -Math.sin(cfg.ang), ty = Math.cos(cfg.ang);
-        if (kit.once('blindcircle.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: cfg.start.x, y: cfg.start.y, dx: tx * 80, dy: ty * 80, delay: 300, text: '請繞著圓心畫一圈' });
+        if (kit.once('blindcircle.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: cfg.start.x, y: cfg.start.y, dx: tx * 80, dy: ty * 80, delay: 300, text: '請繞著圓心畫一圈' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
-        function say(t) { msg.textContent = t; msg.classList.toggle('blindcircle-msg--on', !!t); }
+        function say(t) { msg.textContent = t; msg.classList.toggle('blindcircle-msg--on', !!t); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
 
         function loc(e) { return kit.localPt(e, stage); }
-        stage.addEventListener('pointerdown', function (e) {
+        stage.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (locked || drawing) return;
             var p = loc(e), dx = p.x - cfg.start.x, dy = p.y - cfg.start.y;
-            if (Math.sqrt(dx * dx + dy * dy) > START_R) { dot.classList.add('blindcircle-start--blink'); my.after(500, function () { dot.classList.remove('blindcircle-start--blink'); }); say('請從起點的圓點開始畫'); return; }
-            e.preventDefault();
-            try { stage.setPointerCapture(e.pointerId); } catch (err) { }
+            if (Math.sqrt(dx * dx + dy * dy) > START_R) { dot.classList.add('blindcircle-start--blink'); my.after(500, function () { dot.classList.remove('blindcircle-start--blink'); }); say('請從起點的圓點開始畫'); return; }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            try { stage.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             drawing = true; pid = e.pointerId; pts = [p]; hideHint(); say(''); paintTrail();
         });
-        stage.addEventListener('pointermove', function (e) {
+        stage.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (!drawing || e.pointerId !== pid) return;
             pts.push(loc(e));                                          /* 只畫手指身後 TRAIL_LEN 長的虛線，前面的筆跡消失（盲畫） */
             paintTrail();
         });
         function end(e) {
             if (!drawing || e.pointerId !== pid) return;
-            drawing = false; trail.setAttribute('points', '');
+            drawing = false; trail.setAttribute('points', '');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             var res = analyze(pts, CENTER, cfg.R);
             if (!res.valid) {
-                say(Math.abs(res.turn) < TURN_MIN ? '要繞圓心畫完整一圈，再畫一次' : (res.len < LEN_MIN ? '再畫大一點，再畫一次' : '畫太多圈了，再畫一次'));
-                pts = []; Sfx.play('bad');
+                say(Math.abs(res.turn) < TURN_MIN ? '要繞圓心畫完整一圈，再畫一次' : (res.len < LEN_MIN ? '再畫大一點，再畫一次' : '畫太多圈了，再畫一次'));  /* Math.abs：取絕對值（去掉負號） */
+                pts = []; Sfx.play('bad');              /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 return;
             }
             submit(res);
@@ -188,7 +188,7 @@
         function submit(res) {
             if (locked) return;
             locked = true; hideHint();
-            Sfx.play('click');
+            Sfx.play('click');                          /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             /* 揭曉：標準圓＋依偏離上色的筆跡 */
             kit.svg('circle', { cx: cx, cy: cy, r: cfg.R, 'class': 'blindcircle-ref' }, gRev);
             var s = res.samples;
@@ -209,7 +209,7 @@
 
         /* 驗證用：用真的 PointerEvent 畫一圈（noise＝半徑的隨機抖動比例；scale＝整圈半徑倍率） */
         function fire(type, x, y) {
-            var r = stage.getBoundingClientRect(), sc = r.width / (stage.clientWidth || r.width);
+            var r = stage.getBoundingClientRect(), sc = r.width / (stage.clientWidth || r.width);  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
             stage.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 9, clientX: r.left + x * sc, clientY: r.top + y * sc }));
         }
         function drawCircle(noise, scale, turns) {

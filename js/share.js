@@ -40,18 +40,18 @@
     function loadQrLib(cb, i) {
         i = i || 0;
         if (window.QRCode) { cb(); return; }
-        if (i >= QR_LIB_SRCS.length) { qrWrap.textContent = 'QR Code 載入失敗，請檢查網路連線。'; return; }
+        if (i >= QR_LIB_SRCS.length) { qrWrap.textContent = 'QR Code 載入失敗，請檢查網路連線。'; return; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         var s = document.createElement('script');
         s.src = QR_LIB_SRCS[i];
         s.onload = cb;
         s.onerror = function () { document.head.removeChild(s); loadQrLib(cb, i + 1); };
-        document.head.appendChild(s);
+        document.head.appendChild(s);                   /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
     }
 
     function renderQr() {
         loadQrLib(function () {
             if (!window.QRCode || !qrWrap) return;
-            qrWrap.innerHTML = '';
+            qrWrap.innerHTML = '';                      /* innerHTML = ''：把元素裡面的東西全部清掉 */
             new window.QRCode(qrWrap, {
                 text: SHARE_LINK,
                 width: QR_SIZE,
@@ -73,14 +73,14 @@
     function copyLink() {
         var orig = copyBtn.textContent;
         function done() {
-            copyBtn.textContent = '已經複製';
+            copyBtn.textContent = '已經複製';               /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             UI.wait(2200).then(function () { copyBtn.textContent = orig; });
         }
         function fallback() {
             var ta = document.createElement('textarea');
             ta.value = SHARE_LINK;
             ta.style.cssText = 'position:fixed;left:-9999px';
-            document.body.appendChild(ta);
+            document.body.appendChild(ta);              /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             ta.select();
             try { document.execCommand('copy'); } catch (e) { }
             document.body.removeChild(ta);
@@ -134,7 +134,7 @@
                 on: {
                     click: function (e) {
                         e.stopPropagation();
-                        navigator.share({ title: SHARE_TITLE, text: SHARE_TEXT, url: SHARE_LINK }).catch(function () { });
+                        navigator.share({ title: SHARE_TITLE, text: SHARE_TEXT, url: SHARE_LINK }).catch(function () { });  /* catch：Promise（承諾）失敗時才執行的函式，這裡用來吞掉錯誤，避免整個程式中斷 */
                     }
                 }
             }));

@@ -46,10 +46,10 @@
         }
     }
     function geoOf(st) { return GEOS[st.n] || (GEOS[st.n] = SE.geom(st.boxR, st.boxC)); }
-    function givensFor(level) { var s = stageOf(level); return Math.round(kit.ramp(s.idx, s.st.givens[0], s.st.givens[1], s.st.len)); }
+    function givensFor(level) { var s = stageOf(level); return Math.round(kit.ramp(s.idx, s.st.givens[0], s.st.givens[1], s.st.len)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 一條線（n 個格子的數值，空格是 0）的夾心狀況：{ both（1 和 N 都放好了）, sum（夾在中間已填數字的加總）, gap（中間有幾格）, empty（中間還有幾格沒填）} */
     function sandwichOf(vals, n) {
-        var a = vals.indexOf(1), b = vals.indexOf(n);
+        var a = vals.indexOf(1), b = vals.indexOf(n);   /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         if (a < 0 || b < 0) return { both: false };
         var lo = Math.min(a, b), hi = Math.max(a, b), sum = 0, empty = 0;
         for (var i = lo + 1; i < hi; i++) { if (vals[i]) sum += vals[i]; else empty++; }
@@ -68,14 +68,14 @@
         if (s.sum > clue) return false;
         if (s.empty === 0) return s.sum === clue;
         /* 還有 s.empty 個空格要填 2～n−1 的數字（不能跟這條線上已有的重複）：最小與最大可能的加總 */
-        var free = []; for (var d = 2; d <= n - 1; d++) if (vals.indexOf(d) < 0) free.push(d);
+        var free = []; for (var d = 2; d <= n - 1; d++) if (vals.indexOf(d) < 0) free.push(d);  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         if (free.length < s.empty) return false;
         var mn = 0, mx = 0; for (var k = 0; k < s.empty; k++) { mn += free[k]; mx += free[free.length - 1 - k]; }
         return s.sum + mn <= clue && clue <= s.sum + mx;
     }
     /* 回溯數解：給定提示 givens（0＝空）與夾心數字，最多數 limit 個解（用來確認唯一）；超過 maxNodes 個節點就放棄回傳 -1（不確定） */
     function countSolutions(g, givens, clues, limit, maxNodes) {
-        var n = g.N, cells = g.cells, grid = givens.slice(), cand = new Array(cells), count = 0, nodes = 0, i, d;
+        var n = g.N, cells = g.cells, grid = givens.slice(), cand = new Array(cells), count = 0, nodes = 0, i, d;  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         for (i = 0; i < cells; i++) cand[i] = g.ALL;
         for (i = 0; i < cells; i++) if (grid[i]) {
             if (!(cand[i] & (1 << grid[i]))) return 0;
@@ -96,7 +96,7 @@
             if (best < 0) { count++; return; }
             for (var v = 1; v <= n; v++) {
                 if (!(cd[best] & (1 << v))) continue;
-                var g2 = gr.slice(), c2 = cd.slice(), bad = false;
+                var g2 = gr.slice(), c2 = cd.slice(), bad = false;  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
                 g2[best] = v; c2[best] = 1 << v;
                 for (var y = 0; y < g.peers[best].length; y++) { var pp = g.peers[best][y]; if (!g2[pp]) { c2[pp] &= ~(1 << v); if (!c2[pp]) { bad = true; break; } } }
                 if (bad || !lineOk(g2, g.rowOf(best), g.colOf(best))) continue;
@@ -110,12 +110,12 @@
     /* 出一題：{ n, solution, givens, clues, count（提示數）, want } */
     function makePuzzle(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var s = stageOf(level), g = geoOf(s.st), want = givensFor(level), t0 = Date.now();
+        var s = stageOf(level), g = geoOf(s.st), want = givensFor(level), t0 = Date.now();  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
         var sol = SE.randomSolution(g, rand), clues = cluesOf(g, sol);
         var givens = sol.slice(), count = g.cells;
-        var order = kit.shuffle(Array.apply(null, Array(g.cells)).map(function (_, i) { return i; }), rand);
+        var order = kit.shuffle(Array.apply(null, Array(g.cells)).map(function (_, i) { return i; }), rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         for (var k = 0; k < order.length && count > want; k++) {
-            if (Date.now() - t0 > DIG_MS) break;
+            if (Date.now() - t0 > DIG_MS) break;        /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
             var c = order[k], save = givens[c];
             givens[c] = 0;
             if (countSolutions(g, givens, clues, 2, 20000) === 1) count--; else givens[c] = save;
@@ -124,9 +124,9 @@
     }
     /* 這個盤面上，哪些格子「夾在 1 和 N 中間、而且加總不對」（填滿的線才判斷）→ 布林陣列（標紅用） */
     function badSandwichCells(g, grid, clues) {
-        var n = g.N, bad = new Array(g.cells).fill(false), r, c, q;
+        var n = g.N, bad = new Array(g.cells).fill(false), r, c, q;  /* new Array(n).fill(v)：建立長度 n、每一格都是 v 的陣列 */
         function mark(idxs, clue) {
-            var vals = idxs.map(function (i) { return grid[i]; }), s = sandwichOf(vals, n);
+            var vals = idxs.map(function (i) { return grid[i]; }), s = sandwichOf(vals, n);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             if (!s.both || s.empty > 0 || s.sum === clue) return;
             var a = vals.indexOf(1), b = vals.indexOf(n);
             for (var k = Math.min(a, b) + 1; k < Math.max(a, b); k++) bad[idxs[k]] = true;

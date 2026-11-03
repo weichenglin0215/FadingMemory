@@ -48,23 +48,23 @@
     /* 洗牌（打亂陣列順序） */
     function shuffle(a) {
         for (var i = a.length - 1; i > 0; i--) {
-            var j = Math.floor(Math.random() * (i + 1));
+            var j = Math.floor(Math.random() * (i + 1));  /* Math.floor：無條件捨去成整數 */
             var t = a[i]; a[i] = a[j]; a[j] = t;
         }
         return a;
     }
     /* 在清單裡找離 x 最近的值（距離不超過 d） */
     function near(x, list, d) {
-        return (list || []).some(function (v) { return Math.abs(v - x) < (d || 4); });
+        return (list || []).some(function (v) { return Math.abs(v - x) < (d || 4); });  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
     }
     /* 可重現的偽亂數：同一個 n 永遠得到同一個 0～1 的小數（sin 乘大數取小數部分的老技巧），讓路人與裝飾每次進場位置都相同 */
-    function hash(n) { var x = Math.sin(n * 127.1) * 43758.5453; return x - Math.floor(x); }
+    function hash(n) { var x = Math.sin(n * 127.1) * 43758.5453; return x - Math.floor(x); }  /* Math.floor：無條件捨去成整數 */
 
     /* 等公車：三輛公車依序進站，再讓玩家選。o = {stopX, laneZ, dir, routes, cam:{pos,look}} */
     async function busSequence(ctx, api, o) {
         api.freeze(true);
         var far = o.far || 95;
-        var buses = o.routes.map(function (r, i) {
+        var buses = o.routes.map(function (r, i) {      /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var b = K.bus(r, { stripe: [C.green, C.blue, C.orange][i % 3], stripe2: [C.blue, C.yellow, C.green][i % 3] });
             b.rotation.y = o.dir > 0 ? 0 : Math.PI;
             b.position.set(o.stopX - o.dir * (far + i * 16), 0, o.laneZ);
@@ -74,7 +74,7 @@
         FM.core.camTo(v3(o.cam.pos), v3(o.cam.look), 2.2);
         api.toast('公車來了！');
         api.sfx('bus');
-        await Promise.all(buses.map(function (b, i) {
+        await Promise.all(buses.map(function (b, i) {   /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var from = b.position.x;
             var to = o.stopX - o.dir * (i * 13);
             return wait(i * 650).then(function () {
@@ -84,9 +84,9 @@
         api.sfx('ding');
         var pick = await api.ask({
             title: '公車來了！', text: '要搭幾號公車？', cols: 3, big: true, speak: '要搭幾號公車？',
-            choices: shuffle(o.routes.slice()).map(function (r) { return { label: r, value: r, kind: 'sky' }; })
+            choices: shuffle(o.routes.slice()).map(function (r) { return { label: r, value: r, kind: 'sky' }; })  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         });
-        var bus = buses[o.routes.indexOf(pick)];
+        var bus = buses[o.routes.indexOf(pick)];        /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         await FM.core.tween(0.45, function (t) { bus.position.y = Math.sin(t * Math.PI) * 0.35; });
         return pick;
     }
@@ -116,14 +116,14 @@
         K.box(R, 0, 0, -5.05, span, 0.14, 0.2, C.curb);
         K.box(R, 0, 0, 5.05, span, 0.14, 0.2, C.curb);
 
-        (o.north || []).forEach(function (b) {
+        (o.north || []).forEach(function (b) {          /* forEach：對陣列的每個元素各做一次 */
             var d = b.d || 14;
             var spec = {};
             for (var k in b) spec[k] = b[k];
             spec.x = (b.x0 + b.x1) / 2; spec.z = -9 - d / 2; spec.w = b.x1 - b.x0; spec.d = d; spec.face = 's';
             b.obj = K.building(ctx, spec);
         });
-        (o.south || []).forEach(function (b) {
+        (o.south || []).forEach(function (b) {          /* forEach：對陣列的每個元素各做一次 */
             var d = b.d || 14;
             var spec = {};
             for (var k in b) spec[k] = b[k];
@@ -160,14 +160,14 @@
     /* 沿著一組街道（可走區）的兩側自動蓋房子；回傳佔用的地塊 */
     /* fillBuildings：在街道兩側填滿建築 */
     function fillBuildings(ctx, streets, o) {
-        var occupied = (o.occupied || []).slice();
+        var occupied = (o.occupied || []).slice();      /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         var sw = o.sidewalk == null ? 3 : o.sidewalk;
         var clear = streets.map(function (r) { return { x0: r.x0 - sw, x1: r.x1 + sw, z0: r.z0 - sw, z1: r.z1 + sw }; });
         function hit(a, b) { return a.x0 < b.x1 - 0.01 && a.x1 > b.x0 + 0.01 && a.z0 < b.z1 - 0.01 && a.z1 > b.z0 + 0.01; }
         var signs = o.signs || [];
         var count = 0;
         streets.forEach(function (r, ri) {
-            if (o.only && o.only.indexOf(ri) < 0) return;
+            if (o.only && o.only.indexOf(ri) < 0) return;  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             var alongX = (r.x1 - r.x0) >= (r.z1 - r.z0);
             var a0 = alongX ? r.x0 - sw : r.z0 - sw;
             var a1 = alongX ? r.x1 + sw : r.z1 + sw;
@@ -186,7 +186,7 @@
                         var xe = side < 0 ? r.x0 - sw : r.x1 + sw;
                         fp = { x0: side < 0 ? xe - d : xe, x1: side < 0 ? xe : xe + d, z0: pos, z1: pos + w };
                     }
-                    var ok = !clear.some(function (c) { return hit(fp, c); }) && !occupied.some(function (c) { return hit(fp, c); });
+                    var ok = !clear.some(function (c) { return hit(fp, c); }) && !occupied.some(function (c) { return hit(fp, c); });  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
                     if (ok) {
                         occupied.push(fp);
                         var face = alongX ? (side < 0 ? 's' : 'n') : (side < 0 ? 'e' : 'w');
@@ -506,7 +506,7 @@
                         cam: { pos: [-3, 6.5, 6.5], look: [24, 1.2, -2.6] }
                     });
                     if (pick === '236') api.go('bus', ROUTES.r236, { text: '搭上 236 號公車' });
-                    else api.fail('搭錯車了！這是 ' + pick + ' 號公車。');
+                    else api.fail('搭錯車了！這是 ' + pick + ' 號公車。');  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 }
             });
             ctx.item({ label: '進公司', x: -3, z: -8.6, fx: -3, fz: -9, y: 2.75, r: 2.6, use: function () { api.toast('已經下班了，回家吧！'); } });
@@ -603,7 +603,7 @@
                 if (FM.core.ctx !== ctx) return;
                 if (passed) {
                     api.banner(null);
-                    api.fail('坐過站了！應該在「' + p.target + '」下車。');
+                    api.fail('坐過站了！應該在「' + p.target + '」下車。');  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                     return;
                 }
                 ctx.data.focusX = ctx.data.stopX[i];
@@ -721,7 +721,7 @@
             var tgt = pts[(i + 1) % pts.length];
             var dx = tgt[0] - p.position.x;
             var dz = tgt[1] - p.position.z;
-            var d = Math.sqrt(dx * dx + dz * dz);
+            var d = Math.sqrt(dx * dx + dz * dz);       /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
             if (d < 0.2) { i = (i + 1) % pts.length; return; }
             var speed = FM.CONFIG.npcSpeed;
             var s = Math.min(d, speed * dt);
@@ -1199,7 +1199,7 @@
             /* HUD 顯示目前所在的路 */
             ctx.tick(function () {
                 var P = FM.core.player;
-                var names = GRID.filter(function (s) { return P.pos.x >= s.x0 && P.pos.x <= s.x1 && P.pos.z >= s.z0 && P.pos.z <= s.z1; }).map(function (s) { return s.name; });
+                var names = GRID.filter(function (s) { return P.pos.x >= s.x0 && P.pos.x <= s.x1 && P.pos.z >= s.z0 && P.pos.z <= s.z1; }).map(function (s) { return s.name; });  /* filter：留下符合條件的元素，回傳新陣列 */
                 if (!names.length) return;
                 var label = names.join('・');
                 if (label !== ctx.data.lastPlace) { ctx.data.lastPlace = label; api.place(label); }

@@ -161,7 +161,7 @@
         /* 超級好：更長的歡呼＋和弦 */
         perfect: function (t) {
             seq([67, 72, 76, 79, 84, 79, 84, 88], t, 0.085, { vol: 0.15 });
-            [72, 76, 79, 84].forEach(function (m) { tone(hz(m), t + 0.7, 0.7, { vol: 0.09, type: 'triangle' }); });
+            [72, 76, 79, 84].forEach(function (m) { tone(hz(m), t + 0.7, 0.7, { vol: 0.09, type: 'triangle' }); });  /* forEach：對陣列的每個元素各做一次 */
             tone(hz(96), t + 0.7, 0.55, { vol: 0.1 });
         },
         /* 失敗：往下掉的短旋律（最後一個音拖長下滑） */
@@ -181,7 +181,7 @@
         fanfare: function (t) {
             seq([67, 72, 76, 79], t, 0.1, { vol: 0.16 });
             tone(hz(84), t + 0.45, 0.55, { vol: 0.16 });
-            [72, 76, 79].forEach(function (m) { tone(hz(m), t + 0.45, 0.9, { vol: 0.09, type: 'triangle' }); });
+            [72, 76, 79].forEach(function (m) { tone(hz(m), t + 0.45, 0.9, { vol: 0.09, type: 'triangle' }); });  /* forEach：對陣列的每個元素各做一次 */
             seq([79, 84, 88, 91, 88, 91, 96], t + 1.1, 0.09, { vol: 0.14 });
             [60, 72, 76, 79, 84].forEach(function (m) { tone(hz(m), t + 1.8, 1.3, { vol: 0.09, type: 'triangle' }); });
             tone(hz(96), t + 1.8, 1.1, { vol: 0.12 });

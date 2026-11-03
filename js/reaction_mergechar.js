@@ -74,7 +74,7 @@
         '犭苗貓 犭句狗 犭良狼 犭且狙',
         '米分粉 米青精 米且粗 米胡糊 米立粒 米唐糖',
         '酉己配'
-    ].join(' ').split(/\s+/).filter(function (s) { return s; });
+    ].join(' ').split(/\s+/).filter(function (s) { return s; });  /* filter：留下符合條件的元素，回傳新陣列 */
     /* ═══ 「也是真的字」的補充字庫（V1.34 玩家意見）═══
        玩家說：左邊的偏旁有時候可以跟右邊的兩個偏旁都合成字（不是唯一解），這是可以接受的，但配對的當下不要就判錯。
        所以除了上面「出題用」的 COMBO_TEXT，再收一份「也能合成字、只是不拿來當答案」的 EXTRA_TEXT（同樣的格式：左、右、合成的字），
@@ -114,20 +114,20 @@
         '犭交狡 犭胡猢 犭艮狠 犭包狍 犭昌猖',
         '米良粮 米占粘 米白粕 米巴粑',
         '酉各酪 酉昔醋 酉勺酌 酉每酶 酉同酮 酉分酚 酉乍酢'
-    ].join(' ').split(/\s+/).filter(function (s) { return s; });
-    var EXTRA_COMBOS = EXTRA_TEXT.map(function (t) { return { l: t[0], r: t[1], ch: t[2] }; });
-    var COMBOS = COMBO_TEXT.map(function (t) { return { l: t[0], r: t[1], ch: t[2] }; });
+    ].join(' ').split(/\s+/).filter(function (s) { return s; });  /* filter：留下符合條件的元素，回傳新陣列 */
+    var EXTRA_COMBOS = EXTRA_TEXT.map(function (t) { return { l: t[0], r: t[1], ch: t[2] }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+    var COMBOS = COMBO_TEXT.map(function (t) { return { l: t[0], r: t[1], ch: t[2] }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     var BY_PAIR = {};
     EXTRA_COMBOS.forEach(function (c) { if (!BY_PAIR[c.l + c.r]) BY_PAIR[c.l + c.r] = c.ch; });       /* 先放補充字庫，再讓出題字庫蓋過去（兩邊同一組時以出題字庫為準） */
-    COMBOS.forEach(function (c) { BY_PAIR[c.l + c.r] = c.ch; });
+    COMBOS.forEach(function (c) { BY_PAIR[c.l + c.r] = c.ch; });  /* forEach：對陣列的每個元素各做一次 */
     var LEFTS = [];
-    COMBOS.forEach(function (c) { if (LEFTS.indexOf(c.l) < 0) LEFTS.push(c.l); });
+    COMBOS.forEach(function (c) { if (LEFTS.indexOf(c.l) < 0) LEFTS.push(c.l); });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
     var RIGHTS = [];
-    COMBOS.forEach(function (c) { if (RIGHTS.indexOf(c.r) < 0) RIGHTS.push(c.r); });
+    COMBOS.forEach(function (c) { if (RIGHTS.indexOf(c.r) < 0) RIGHTS.push(c.r); });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function colsFor(level) { var c = COL_STEPS[0][1]; COL_STEPS.forEach(function (s) { if (level >= s[0]) c = s[1]; }); return c; }
-    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
+    function colsFor(level) { var c = COL_STEPS[0][1]; COL_STEPS.forEach(function (s) { if (level >= s[0]) c = s[1]; }); return c; }  /* forEach：對陣列的每個元素各做一次 */
+    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 左偏旁 l 加右偏旁 r 能合成什麼字？不能就回傳 null */
     function merge(l, r) { return BY_PAIR[l + r] || null; }
     /* 畫面上這些左、右偏旁之間，所有能合成字的組合（驗證用） */
@@ -155,25 +155,25 @@
             for (i = 0; i < NEED && ok; i++) {
                 var opts = COMBOS.filter(function (c) {
                     if (taken(c.l, usedL, usedR) || taken(c.r, usedL, usedR) || c.l === c.r) return false;
-                    return pairs.every(function (p) { return !merge(c.l, p.r) && !merge(p.l, c.r); });
+                    return pairs.every(function (p) { return !merge(c.l, p.r) && !merge(p.l, c.r); });  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
                 });
                 if (!opts.length) { ok = false; break; }
-                var c = kit.pick(opts, rand);
+                var c = kit.pick(opts, rand);           /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
                 pairs.push(c); usedL[c.l] = true; usedR[c.r] = true;
             }
             if (!ok) continue;
-            var poolL = LEFTS.filter(function (l) { return !taken(l, usedL, usedR) && pairs.every(function (p) { return !merge(l, p.r); }); });
+            var poolL = LEFTS.filter(function (l) { return !taken(l, usedL, usedR) && pairs.every(function (p) { return !merge(l, p.r); }); });  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
             if (poolL.length < extra) continue;
-            var decoyL = kit.sample(poolL, extra, rand);
+            var decoyL = kit.sample(poolL, extra, rand);  /* kit.sample(陣列, n, rand)：從陣列隨機取 n 個不重複的元素 */
             decoyL.forEach(function (l) { usedL[l] = true; });
             var lefts = pairs.map(function (p) { return p.l; }).concat(decoyL);
             var poolR = RIGHTS.filter(function (r) { return !taken(r, usedL, usedR) && lefts.every(function (l) { return !merge(l, r); }); });
             if (poolR.length < extra) continue;
-            var decoyR = kit.sample(poolR, extra, rand);
+            var decoyR = kit.sample(poolR, extra, rand);  /* kit.sample(陣列, n, rand)：從陣列隨機取 n 個不重複的元素 */
             var L = lefts, R = pairs.map(function (p) { return p.r; }).concat(decoyR);
             var edges = edgesOf(L, R);
             if (edges.length !== NEED) continue;
-            return { L: kit.shuffle(L, rand), R: kit.shuffle(R, rand), pairs: pairs, decoyL: decoyL, decoyR: decoyR };
+            return { L: kit.shuffle(L, rand), R: kit.shuffle(R, rand), pairs: pairs, decoyL: decoyL, decoyR: decoyR };  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         }
         var fb = [{ l: '氵', r: '工', ch: '江' }, { l: '亻', r: '言', ch: '信' }, { l: '扌', r: '丁', ch: '打' }, { l: '口', r: '巴', ch: '吧' }, { l: '日', r: '月', ch: '明' }];
         return { L: fb.map(function (p) { return p.l; }), R: fb.map(function (p) { return p.r; }), pairs: fb, decoyL: [], decoyR: [] };
@@ -193,7 +193,7 @@
         conns.forEach(function (c) { usedL[c.l] = true; usedR[c.r] = true; });
         var restL = q.L.filter(function (t) { return !usedL[t]; }), restR = q.R.filter(function (t) { return !usedR[t]; });
         function txt(p) { return p.l + '＋' + p.r + '＝' + p.ch; }
-        function isDesigned(c) { return q.pairs.some(function (p) { return p.l === c.l && p.r === c.r; }); }
+        function isDesigned(c) { return q.pairs.some(function (p) { return p.l === c.l && p.r === c.r; }); }  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
         var detours = conns.filter(function (c) { return !isDesigned(c); });
         var lines = ['剩下的「' + restL.join('、') + '」和「' + restR.join('、') + '」，任何一組都合成不了字'];
         if (detours.length) lines.push('你連的「' + detours.map(txt).join('」「') + '」確實是字，但它用掉了別組需要的偏旁，後面就配不起來了');
@@ -230,28 +230,28 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var n = q.L.length, top = 66, gap = 8, bottom = 16;
-        var ph = Math.min(88, Math.floor((H - top - bottom - (n - 1) * gap) / n)), pw = 124;
-        var svg = kit.svg('svg', { 'class': 'mergechar-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
-        var gLines = kit.svg('g', {}, svg);
+        var ph = Math.min(88, Math.floor((H - top - bottom - (n - 1) * gap) / n)), pw = 124;  /* Math.floor：無條件捨去成整數 */
+        var svg = kit.svg('svg', { 'class': 'mergechar-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        var gLines = kit.svg('g', {}, svg);             /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var tip = h('div', { 'class': 'qz-note mergechar-tip', text: '先點左邊一塊，再點右邊一塊' });
         var prog = h('div', { 'class': 'mergechar-prog', text: '已連對 0／' + NEED });
-        stage.appendChild(tip); stage.appendChild(prog);
+        stage.appendChild(tip); stage.appendChild(prog);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         function mk(side, text, i) {
             var b = h('button', { 'class': 'mergechar-piece mergechar-piece--' + side, text: text });
             b.style.width = pw + 'px'; b.style.height = ph + 'px';
             b.style.fontSize = Math.min(58, Math.floor(ph * 0.68)) + 'px'; b.style.lineHeight = '1';         /* 欄越擠、字越小，字才不會超出方塊 */
             b.style.left = (side === 'L' ? 8 : W - pw - 8) + 'px'; b.style.top = (top + i * (ph + gap)) + 'px';
-            kit.onTap(b, function () { tapPiece(side, i); });
-            stage.appendChild(b);
+            kit.onTap(b, function () { tapPiece(side, i); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+            stage.appendChild(b);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             return b;
         }
         var LP = q.L.map(function (t, i) { return mk('L', t, i); }), RP = q.R.map(function (t, i) { return mk('R', t, i); });
         function center(side, i) { return { x: side === 'L' ? 8 + pw : W - pw - 8, y: top + i * (ph + gap) + ph / 2 }; }
         var sel = null, done = 0, locked = {}, busy = false, conns = [], usedL = {}, usedR = {};
         function setSel(s) {
-            if (sel) (sel.side === 'L' ? LP : RP)[sel.i].classList.remove('mergechar-piece--sel');
+            if (sel) (sel.side === 'L' ? LP : RP)[sel.i].classList.remove('mergechar-piece--sel');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             sel = s;
-            if (sel) (sel.side === 'L' ? LP : RP)[sel.i].classList.add('mergechar-piece--sel');
+            if (sel) (sel.side === 'L' ? LP : RP)[sel.i].classList.add('mergechar-piece--sel');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         }
         function line(li, ri, cls) {
             var a = center('L', li), b = center('R', ri);
@@ -266,7 +266,7 @@
         }
         function tapPiece(side, i) {
             if (api.over || busy || locked[side + i]) return;
-            Sfx.play('click');
+            Sfx.play('click');                          /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             if (!sel || sel.side === side) { setSel(sel && sel.side === side && sel.i === i ? null : { side: side, i: i }); return; }
             var li = side === 'L' ? i : sel.i, ri = side === 'R' ? i : sel.i;
             setSel(null);
@@ -280,14 +280,14 @@
                 usedL[q.L[li]] = true; usedR[q.R[ri]] = true; conns.push({ l: q.L[li], r: q.R[ri], ch: ch });
                 LP[li].classList.add('mergechar-piece--done'); RP[ri].classList.add('mergechar-piece--done');
                 line(li, ri, 'mergechar-line--ok'); badge(li, ri, ch, 'mergechar-badge--ok');
-                Sfx.play('ok');
-                done++; prog.textContent = '已連對 ' + done + '／' + NEED;
-                if (done >= NEED) { kit.flash(stage, true, api.my); api.pass({ delay: 1100 }); }
+                Sfx.play('ok');                         /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                done++; prog.textContent = '已連對 ' + done + '／' + NEED;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                if (done >= NEED) { kit.flash(stage, true, api.my); api.pass({ delay: 1100 }); }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
                 else if (isStuck(q.L, q.R, usedL, usedR)) {
                     /* 剩下的偏旁任何一組都合成不了字：到這裡才宣布失敗，並說明原因（原本設計的連法用灰線標出來） */
-                    busy = true; showAll(); kit.flash(stage, false, api.my);
-                    tip.textContent = '剩下的偏旁配不起來了！';
-                    api.fail({ delay: 3200, lines: stuckLines(q, conns) });
+                    busy = true; showAll(); kit.flash(stage, false, api.my);  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+                    tip.textContent = '剩下的偏旁配不起來了！';    /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                    api.fail({ delay: 3200, lines: stuckLines(q, conns) });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 }
             } else {
                 busy = true;
@@ -296,7 +296,7 @@
                 kit.flash(stage, false, api.my);
                 var left = api.lose({ lines: ['「' + q.L[li] + '」和「' + q.R[ri] + '」不能合成字', '要連的是：' + q.pairs.map(function (p) { return p.l + '＋' + p.r + '＝' + p.ch; }).join('　')] });
                 if (left <= 0) { showAll(); return; }
-                api.after(700, function () { ln.remove(); LP[li].classList.remove('mergechar-piece--bad'); RP[ri].classList.remove('mergechar-piece--bad'); busy = false; });
+                api.after(700, function () { ln.remove(); LP[li].classList.remove('mergechar-piece--bad'); RP[ri].classList.remove('mergechar-piece--bad'); busy = false; });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
             }
         }
         /* 揭曉：還沒連的組用灰線連出來並標出合成的字 */
@@ -310,7 +310,7 @@
         api.timer(timeMs(level), function () {          /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
             if (api.over) return;
             showAll();
-            api.fail({ delay: 2600, lines: ['時間到！', '要連的是：' + q.pairs.map(function (p) { return p.l + '＋' + p.r + '＝' + p.ch; }).join('　')] });
+            api.fail({ delay: 2600, lines: ['時間到！', '要連的是：' + q.pairs.map(function (p) { return p.l + '＋' + p.r + '＝' + p.ch; }).join('　')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         });
         if (level === 1 && kit.once('mergechar.hint')) kit.hintOn(stage, LP[q.L.indexOf(q.pairs[0].l)], { mode: 'tap', delay: 700, text: '請依序點擊左右兩塊偏旁' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */

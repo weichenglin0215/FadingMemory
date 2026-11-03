@@ -43,11 +43,11 @@
     ];
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }
-    function nMaxFor(level) { return Math.round(kit.ramp(level, N_MAX[0], N_MAX[1], RAMP_LEVELS)); }
+    function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function nMaxFor(level) { return Math.round(kit.ramp(level, N_MAX[0], N_MAX[1], RAMP_LEVELS)); }  /* Math.round：四捨五入成整數 */
     function divsFor(level) {
         var out = [];
-        DIV_STEPS.forEach(function (s) { if (level >= s.from) out = out.concat(s.divs); });
+        DIV_STEPS.forEach(function (s) { if (level >= s.from) out = out.concat(s.divs); });  /* forEach：對陣列的每個元素各做一次 */
         return out;
     }
     /* 選項：正確餘數 r ＋ OPTIONS−1 個其他合理餘數（0～d−1），越接近正確答案（差 1、差 2、互補 d−r）越容易被選上；
@@ -57,31 +57,31 @@
         var all = [], i;
         for (i = 0; i < d; i++) if (i !== r) all.push(i);
         var need = OPTIONS - 1;
-        if (all.length <= need) return [r].concat(all).sort(function (a, b) { return a - b; });
+        if (all.length <= need) return [r].concat(all).sort(function (a, b) { return a - b; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
         var picked = [];
         while (picked.length < need) {
             /* 權重：離 r 越近越大；互補數（d − r，與 r 互補的那個餘數）額外加權 */
-            var weights = all.map(function (v) {
-                var w = 1 / Math.pow(1 + Math.abs(v - r), 2);
+            var weights = all.map(function (v) {        /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+                var w = 1 / Math.pow(1 + Math.abs(v - r), 2);  /* Math.abs：取絕對值（去掉負號） */
                 if (v === d - r) w += 0.5;
                 return w;
             });
-            var total = weights.reduce(function (a, b) { return a + b; }, 0), x = rand() * total, idx = 0;
+            var total = weights.reduce(function (a, b) { return a + b; }, 0), x = rand() * total, idx = 0;  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
             for (i = 0; i < all.length; i++) { x -= weights[i]; if (x <= 0) { idx = i; break; } idx = i; }
             picked.push(all[idx]);
             all.splice(idx, 1);
         }
-        return picked.concat([r]).sort(function (a, b) { return a - b; });
+        return picked.concat([r]).sort(function (a, b) { return a - b; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
     }
     /* 出一題：{ d 除數, q 商, r 餘數, n 被除數, options 五個選項（由小到大）, explain 揭曉文字 } */
     function makeQuestion(level, rand) {
         rand = rand || Math.random;
         var nMax = nMaxFor(level);
         for (var tr = 0; tr < 500; tr++) {
-            var d = kit.pick(divsFor(level), rand), r = kit.randInt(0, d - 1, rand);
-            var qLo = Math.max(1, Math.ceil((N_MIN - r) / d)), qHi = Math.floor((nMax - r) / d);
+            var d = kit.pick(divsFor(level), rand), r = kit.randInt(0, d - 1, rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+            var qLo = Math.max(1, Math.ceil((N_MIN - r) / d)), qHi = Math.floor((nMax - r) / d);  /* Math.floor：無條件捨去成整數 */
             if (qHi < qLo) continue;
-            var q = kit.randInt(qLo, qHi, rand), n = q * d + r;
+            var q = kit.randInt(qLo, qHi, rand), n = q * d + r;  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             if (n < N_MIN || n > nMax) continue;
             return { d: d, q: q, r: r, n: n, options: makeOptions(d, r, rand), explain: n + ' ＝ ' + d + ' × ' + q + ' ＋ ' + r };
         }
@@ -119,11 +119,11 @@
         var eq = h('div', { 'class': 'qz-big remainder-eq', text: q.n + ' ÷ ' + q.d });
         var ask = h('div', { 'class': 'qz-note remainder-ask', text: '餘數是多少？' });
         var reveal = h('div', { 'class': 'qz-note remainder-reveal' });
-        stage.appendChild(eq); stage.appendChild(ask); stage.appendChild(reveal);
-        var grid = kit.btnGrid(stage, q.options.map(function (v) {
+        stage.appendChild(eq); stage.appendChild(ask); stage.appendChild(reveal);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var grid = kit.btnGrid(stage, q.options.map(function (v) {  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
             return { text: String(v), kind: 'sky', cls: 'remainder-btn', onTap: function () { judge(v); } };
         }), { h: 120, gap: 8 });
-        var bRight = grid.btns[q.options.indexOf(q.r)];
+        var bRight = grid.btns[q.options.indexOf(q.r)]; /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         api.timer(ansMs(level), function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         if (level === 1 && kit.once('remainder.hint')) kit.hintOn(stage, bRight, { mode: 'tap', delay: 500, text: '請點擊數字' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
@@ -131,11 +131,11 @@
         function judge(v) {
             if (api.over) return;
             var ok = v === q.r;
-            eq.classList.add(ok ? 'qz-ok' : 'qz-bad');
-            reveal.textContent = q.explain + '，餘數是 ' + q.r;
-            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1000 }); return; }
-            kit.flash(stage, false, api.my);
-            api.fail({
+            eq.classList.add(ok ? 'qz-ok' : 'qz-bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            reveal.textContent = q.explain + '，餘數是 ' + q.r;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1000 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: 2300, lines: [
                     (v == null ? '時間到！' : '你選了 ' + v) + '，正確餘數是 ' + q.r,
                     q.explain

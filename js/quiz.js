@@ -54,8 +54,8 @@
        呼叫 setBar() 時傳不同的 back 函式，所以同一顆「返回」按鈕在選關頁、
        紙條頁、答題頁、結果頁的行為都不一樣（見下面各個 show*() 函式開頭）。 */
     function setBar(title, meta, progress, back) {
-        barTitle.textContent = title;
-        barMeta.textContent = meta || '';
+        barTitle.textContent = title;                   /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+        barMeta.textContent = meta || '';               /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         barProgress.style.width = progress == null ? '0' : (progress * 100) + '%';
         backAction = back;
         barBack.innerHTML = UI.icon('back') + '<span>返回</span>';
@@ -65,9 +65,9 @@
        套路是「整頁重建」，不是局部更新），順便重置捲動位置跟 is-feedback 這個
        答錯回饋專用的 class（見 css/quiz.css 的 .screen.is-feedback）。 */
     function clear() {
-        screen.innerHTML = '';
+        screen.innerHTML = '';                          /* innerHTML = ''：把元素裡面的東西全部清掉 */
         screen.scrollTop = 0;
-        screen.classList.remove('is-feedback');
+        screen.classList.remove('is-feedback');         /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
     }
 
     /* 最佳紀錄在 localStorage 的鍵名：每一關各自一個 */
@@ -76,7 +76,7 @@
     /* 確認彈窗：回傳 Promise，玩家按「是」resolve(true)、按「否」resolve(false)，呼叫端用 .then 接結果 */
     function askConfirm(text, yesLabel, noLabel) {
         return new Promise(function (resolve) {
-            confirmEl.innerHTML = '';
+            confirmEl.innerHTML = '';                   /* innerHTML = ''：把元素裡面的東西全部清掉 */
             var card = h('div', { 'class': 'confirm__card' }, [
                 h('div', { 'class': 'confirm__text', text: text }),
                 h('div', { 'class': 'row' }, [
@@ -84,7 +84,7 @@
                     h('button', { 'class': 'btn btn--primary', text: yesLabel, on: { click: function () { done(true); } } })
                 ])
             ]);
-            confirmEl.appendChild(card);
+            confirmEl.appendChild(card);                /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             confirmEl.hidden = false;
             function done(v) {
                 confirmEl.hidden = true;
@@ -100,9 +100,9 @@
         clear();
         var list = h('div', { 'class': 'lv-list' });
         /* forEach 處理每一關；UI.store.get 讀這一關的最佳答對率 */
-        LEVELS.forEach(function (lv, idx) {
-            var best = UI.store.get(bestKey(lv.id), null);
-            list.appendChild(h('button', { 'class': 'lv', on: { click: function () { startLevel(idx); } } }, [
+        LEVELS.forEach(function (lv, idx) {             /* forEach：對陣列的每個元素各做一次 */
+            var best = UI.store.get(bestKey(lv.id), null);  /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
+            list.appendChild(h('button', { 'class': 'lv', on: { click: function () { startLevel(idx); } } }, [  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
                 h('span', { 'class': 'lv__num', text: String(lv.id) }),
                 h('span', { 'class': 'lv__main' }, [
                     h('span', { 'class': 'lv__name', text: lv.name }),
@@ -215,7 +215,7 @@
         var opts = h('div', { 'class': 'q-opts' });
         var letters = ['A', 'B', 'C', 'D'];
         var pairs = [];
-        q.o.forEach(function (label, i) {
+        q.o.forEach(function (label, i) {               /* forEach：對陣列的每個元素各做一次 */
             var t = h('span', { 'class': 'opt__text', text: label });
             var b = h('button', { 'class': 'opt' }, [h('span', { 'class': 'opt__badge', text: letters[i] }), t]);
             pairs.push([t, b]);
@@ -254,15 +254,15 @@
         var ok = i === q.c;
         S.answers.push({
             q: q.q, t: q.from ? '第 ' + q.from + ' 關的回想題' : q.t, chosen: q.o[i], correct: q.o[q.c], ok: ok,
-            kind: q.k[i], why: q.w[i], kinds: q.k.filter(function (k) { return k; })
+            kind: q.k[i], why: q.w[i], kinds: q.k.filter(function (k) { return k; })  /* filter：留下符合條件的元素，回傳新陣列 */
         });
         Array.prototype.forEach.call(ui.opts.children, function (b, idx) {
             b.disabled = true;
-            if (idx === q.c) b.classList.add('is-ok');
+            if (idx === q.c) b.classList.add('is-ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             else if (idx === i) b.classList.add('is-bad');
         });
         if (ok) {
-            setTimeout(nextQuestion, 650);
+            setTimeout(nextQuestion, 650);              /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
             return;
         }
         showFeedback(q, i, ui);
@@ -304,24 +304,24 @@
     function confusionStats() {
         var st = {};
         S.answers.forEach(function (a) {
-            a.kinds.filter(function (k, i, arr) { return arr.indexOf(k) === i; }).forEach(function (k) {
+            a.kinds.filter(function (k, i, arr) { return arr.indexOf(k) === i; }).forEach(function (k) {  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                 st[k] = st[k] || { seen: 0, hit: 0 };
                 st[k].seen++;
             });
             if (!a.ok && a.kind) st[a.kind].hit++;
         });
-        return Object.keys(st).filter(function (k) { return st[k].hit > 0; }).sort(function (a, b) {
+        return Object.keys(st).filter(function (k) { return st[k].hit > 0; }).sort(function (a, b) {  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
             return st[b].hit - st[a].hit || st[b].hit / st[b].seen - st[a].hit / st[a].seen;
-        }).slice(0, 3).map(function (k) { return { k: k, hit: st[k].hit, seen: st[k].seen }; });
+        }).slice(0, 3).map(function (k) { return { k: k, hit: st[k].hit, seen: st[k].seen }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     }
 
     /* 結果畫面：答對率圓環、評語星星、混淆分析、按鈕 */
     function showResult() {
         var lv = LEVELS[S.lv];
         var total = S.answers.length;
-        var okCount = S.answers.filter(function (a) { return a.ok; }).length;
-        var pct = Math.round(okCount / total * 100);
-        var best = UI.store.get(bestKey(lv.id), null);
+        var okCount = S.answers.filter(function (a) { return a.ok; }).length;  /* filter：留下符合條件的元素，回傳新陣列 */
+        var pct = Math.round(okCount / total * 100);    /* Math.round：四捨五入成整數 */
+        var best = UI.store.get(bestKey(lv.id), null);  /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
         if (best == null || pct > best) UI.store.set(bestKey(lv.id), pct);
         S.wrong = S.answers.filter(function (a) { return !a.ok; });
 
@@ -441,7 +441,7 @@
         sess.levels.forEach(function (lv) {
             console.group('第 ' + lv.id + ' 關・' + lv.name + '（' + lv.tag + '・' + lv.date + '・共 ' + lv.qs.length + ' 題）');
             console.log('紙條：\n' + lv.note.join('\n'));
-            console.table(lv.qs.map(function (q, i) {
+            console.table(lv.qs.map(function (q, i) {   /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                 return {
                     題號: i + 1,
                     題目: q.q,
@@ -465,7 +465,7 @@
     window.FMQuiz = {
         levels: function () { return LEVELS; },
         question: function (lv, qi) { S.lv = lv; S.qi = qi; S.answers = []; showQuestion(); },
-        pick: function (i) { var b = screen.querySelectorAll('.opt')[i]; if (b) b.click(); return !!b; },
+        pick: function (i) { var b = screen.querySelectorAll('.opt')[i]; if (b) b.click(); return !!b; },  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
         result: function (lv, answers) { S.lv = lv; S.answers = answers; showResult(); }
     };
 
@@ -502,6 +502,6 @@
         /* 給驗證用：網址加 ?level=3 直接進某關 */
         /* 給驗證用：?level=3 直接進某關；?seed=數字 重現某一局 */
         var m = /[?&]level=(\d+)/.exec(location.search);
-        if (m) setTimeout(function () { startLevel(Math.max(0, Math.min(LEVELS.length - 1, +m[1] - 1))); }, 1600);
+        if (m) setTimeout(function () { startLevel(Math.max(0, Math.min(LEVELS.length - 1, +m[1] - 1))); }, 1600);  /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
     });
 })();

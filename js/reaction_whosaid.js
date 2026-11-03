@@ -41,20 +41,20 @@
     ];
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function peopleFor(level) { return kit.clamp(Math.round(kit.ramp(level, PEOPLE[0], PEOPLE[1], RAMP_LEVELS)), PEOPLE[0], PEOPLE[1]); }
-    function saysFor(level) { return kit.clamp(Math.round(kit.ramp(level, SAYS[0], SAYS[1], RAMP_LEVELS)), SAYS[0], SAYS[1]); }
-    function sayMs(level) { return Math.round(kit.ramp(level, SAY_MS[0], SAY_MS[1], RAMP_LEVELS)); }
-    function ansMs(level) { return Math.round((ANS_BASE + ANS_PER * saysFor(level)) * kit.ramp(level, ANS_MUL[0], ANS_MUL[1], RAMP_LEVELS)); }
+    function peopleFor(level) { return kit.clamp(Math.round(kit.ramp(level, PEOPLE[0], PEOPLE[1], RAMP_LEVELS)), PEOPLE[0], PEOPLE[1]); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function saysFor(level) { return kit.clamp(Math.round(kit.ramp(level, SAYS[0], SAYS[1], RAMP_LEVELS)), SAYS[0], SAYS[1]); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
+    function sayMs(level) { return Math.round(kit.ramp(level, SAY_MS[0], SAY_MS[1], RAMP_LEVELS)); }  /* Math.round：四捨五入成整數 */
+    function ansMs(level) { return Math.round((ANS_BASE + ANS_PER * saysFor(level)) * kit.ramp(level, ANS_MUL[0], ANS_MUL[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 把 0～9 分給 n 個小人，每人說 m 個數字：回傳 digits[i]（第 i 個小人要說的 m 個數字，不同小人之間絕不重複）。
        作法：打亂 0～9，依序切成 n 個專屬池子（池子大小盡量平均）；每個小人從自己的池子抽 m 個，池子比 m 小就全部用上、不夠的再從自己的池子重複抽。 */
     function assignDigits(n, m, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var all = kit.shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], rand), base = Math.floor(all.length / n), extra = all.length % n, pos = 0, out = [];
+        var all = kit.shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], rand), base = Math.floor(all.length / n), extra = all.length % n, pos = 0, out = [];  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         for (var i = 0; i < n; i++) {
             var size = base + (i < extra ? 1 : 0), pool = all.slice(pos, pos + size), say;
             pos += size;
-            if (pool.length >= m) say = kit.shuffle(pool, rand).slice(0, m);
-            else { say = pool.slice(); while (say.length < m) say.push(kit.pick(pool, rand)); say = kit.shuffle(say, rand); }
+            if (pool.length >= m) say = kit.shuffle(pool, rand).slice(0, m);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+            else { say = pool.slice(); while (say.length < m) say.push(kit.pick(pool, rand)); say = kit.shuffle(say, rand); }  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             out.push(say);
         }
         return kit.shuffle(out, rand);
@@ -63,17 +63,17 @@
     function makeLevel(level, rand) {
         rand = rand || Math.random;
         var n = peopleFor(level), m = saysFor(level), i, j;
-        var people = kit.sample(COLORS, n, rand);
+        var people = kit.sample(COLORS, n, rand);       /* kit.sample(陣列, n, rand)：從陣列隨機取 n 個不重複的元素 */
         var events = [], digits = assignDigits(n, m, rand);
         for (i = 0; i < n; i++) for (j = 0; j < m; j++) events.push({ who: i, digit: digits[i][j] });
         events = kit.shuffle(events, rand);
-        var ask = kit.randInt(0, n - 1, rand);
-        var expect = events.filter(function (e) { return e.who === ask; }).map(function (e) { return e.digit; });
+        var ask = kit.randInt(0, n - 1, rand);          /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+        var expect = events.filter(function (e) { return e.who === ask; }).map(function (e) { return e.digit; });  /* filter：留下符合條件的元素，回傳新陣列 */
         return { people: people, events: events, says: m, ask: ask, expect: expect };
     }
     /* 每個小人說過的數字（依說話順序），揭曉用 */
     function spoken(q) {
-        return q.people.map(function (p, i) { return q.events.filter(function (e) { return e.who === i; }).map(function (e) { return e.digit; }); });
+        return q.people.map(function (p, i) { return q.events.filter(function (e) { return e.who === i; }).map(function (e) { return e.digit; }); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     }
     /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
@@ -114,15 +114,15 @@
         console.log('[誰說的] 第 ' + level + ' 關：' + q.people.length + ' 個小人、每人 ' + q.says + ' 句；順序 ' + q.events.map(function (e) { return q.people[e.who].n + e.digit; }).join(' ') + '；問 ' + q.people[q.ask].n + '，答案 ' + q.expect.join('') + '；每句 ' + sayMs(level) + ' ms，限時 ' + ansMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
-        var n = q.people.length, pw = Math.min(100, Math.floor((W - 20) / n)), top = 170;
+        var n = q.people.length, pw = Math.min(100, Math.floor((W - 20) / n)), top = 170;  /* Math.floor：無條件捨去成整數 */
         var tip = h('div', { 'class': 'qz-note whosaid-tip', text: '請看小人說了什麼數字' });
-        stage.appendChild(tip);
-        var persons = q.people.map(function (p, i) {
+        stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var persons = q.people.map(function (p, i) {    /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var el = h('div', { 'class': 'whosaid-person' });
             el.style.width = pw + 'px';
-            el.style.left = Math.round((W - n * pw) / 2 + i * pw) + 'px'; el.style.top = top + 'px';
+            el.style.left = Math.round((W - n * pw) / 2 + i * pw) + 'px'; el.style.top = top + 'px';  /* Math.round：四捨五入成整數 */
             el.innerHTML = '<div class="whosaid-bubble"></div>' + personSvg(p) + '<div class="whosaid-name" style="color:' + kit.hsl(p.h, p.s, Math.max(20, p.l - 14)) + '">' + p.n + '</div>';
-            stage.appendChild(el);
+            stage.appendChild(el);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             return el;
         });
         var slots = h('div', { 'class': 'whosaid-slots' });
@@ -132,17 +132,17 @@
         var phase = 'say', got = 0, padBtns = null;
         /* 依序讓每個小人說話 */
         var t = 500;
-        q.events.forEach(function (e) {
-            api.after(t, function () {
-                persons.forEach(function (p) { p.classList.remove('whosaid-person--say'); });
+        q.events.forEach(function (e) {                 /* forEach：對陣列的每個元素各做一次 */
+            api.after(t, function () {                  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+                persons.forEach(function (p) { p.classList.remove('whosaid-person--say'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 var el = persons[e.who];
-                el.classList.add('whosaid-person--say');
-                el.querySelector('.whosaid-bubble').textContent = String(e.digit);
-                Sfx.play('tick');
+                el.classList.add('whosaid-person--say');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                el.querySelector('.whosaid-bubble').textContent = String(e.digit);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                Sfx.play('tick');                       /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             });
-            api.after(t + sayMs(level), function () {
+            api.after(t + sayMs(level), function () {   /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                 persons[e.who].classList.remove('whosaid-person--say');
-                persons[e.who].querySelector('.whosaid-bubble').textContent = '';
+                persons[e.who].querySelector('.whosaid-bubble').textContent = '';  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
             });
             t += sayMs(level) + GAP_MS;
         });
@@ -154,7 +154,7 @@
             persons[q.ask].classList.add('whosaid-person--ask');
             var items = [];
             for (var d = 0; d <= 9; d++) (function (d) { items.push({ text: String(d), kind: 'sky', cls: 'whosaid-btn', onTap: function () { press(d); } }); })(d);
-            padBtns = kit.btnGrid(stage, items, { cols: 5, h: 84, gap: 10 }).btns;
+            padBtns = kit.btnGrid(stage, items, { cols: 5, h: 84, gap: 10 }).btns;  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
             api.timer(ansMs(level), function () { reveal(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
             if (level === 1 && kit.once('whosaid.hint')) kit.hintOn(stage, padBtns[q.expect[0]], { mode: 'tap', delay: 600, text: '請點擊數字' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         });
@@ -162,18 +162,18 @@
         function press(d) {
             if (api.over || phase !== 'ask') return;
             if (d !== q.expect[got]) { reveal(d); return; }
-            slotEls[got].textContent = String(d); slotEls[got].classList.add('whosaid-slot--ok');
+            slotEls[got].textContent = String(d); slotEls[got].classList.add('whosaid-slot--ok');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             got++;
             if (got >= q.expect.length) { phase = 'done'; reveal('ok'); }
         }
         function reveal(d) {
             if (api.over) return;
             phase = 'done';
-            persons.forEach(function (p, i) { p.querySelector('.whosaid-bubble').textContent = sp[i].join(' '); p.classList.add('whosaid-person--list'); });
+            persons.forEach(function (p, i) { p.querySelector('.whosaid-bubble').textContent = sp[i].join(' '); p.classList.add('whosaid-person--list'); });  /* forEach：對陣列的每個元素各做一次 */
             q.expect.forEach(function (v, k) { if (!slotEls[k].textContent) { slotEls[k].textContent = String(v); slotEls[k].classList.add('whosaid-slot--miss'); } });
-            if (d === 'ok') { kit.flash(stage, true, api.my); api.pass({ delay: 1400 }); return; }
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: 2600, lines: [
+            if (d === 'ok') { kit.flash(stage, true, api.my); api.pass({ delay: 1400 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 2600, lines: [            /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 (d == null ? '時間到！' : '按錯了（你按了 ' + d + '）') + '，' + q.people[q.ask].n + '色小人說過的是 ' + q.expect.join(' '),
                 q.people.map(function (p, i) { return p.n + '：' + sp[i].join(' '); }).join('　')
             ] });

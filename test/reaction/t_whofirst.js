@@ -32,6 +32,6 @@ ok(T.rating(2) !== T.rating(6) && T.rating(6) !== T.rating(10) && T.rating(10) !
 // V1.27：燈的大小慢慢縮小：第 1 關 220px → 到頂 10px，離左右邊緣 20px
 ok(Math.abs(T.lampAt(1) - 220) < 1e-9 && Math.abs(T.lampAt(T.RAMP_LEVELS) - 10) < 1e-9 && Math.abs(T.lampAt(T.MAX_LEVEL) - 10) < 1e-9 && T.EDGE === 20, '燈直徑 220 → 10px、離邊緣 20px');
 for (let l = 2; l <= T.MAX_LEVEL; l++) ok(T.lampAt(l) <= T.lampAt(l - 1) + 1e-9, '燈越來越小 ' + l);
-{ const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_whofirst.css'), 'utf8'), i = css.indexOf('.whofirst-row {');
+{ const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_whofirst.css'), 'utf8').replace(/[ \t]*\/\*[\s\S]*?\*\//g, ''), i = css.indexOf('.whofirst-row {');
   ok(/left: 20px;\s*right: 20px;/.test(css.slice(i, i + 160)) && /justify-content: space-between/.test(css.slice(i, i + 260)), '版面：兩盞燈靠左右邊緣（20px）'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

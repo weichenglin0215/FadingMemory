@@ -68,25 +68,25 @@
        Math.max 確保不會短於 LEN_MIN */
     function stickLen(level, FH) { return Math.max(LEN_MIN, FH * LEN_FRAC * Math.pow(SHRINK, level - 1)); }
     /* 重力：kit.ramp 是「線性」難度（從 G_START 平均增加到 G_END），不是越來越快的指數增加 */
-    function gravity(level) { return kit.ramp(level, G_START, G_END, RAMP); }
+    function gravity(level) { return kit.ramp(level, G_START, G_END, RAMP); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 鬆手後 tSec 秒，棍子頂端往下掉了多少 px */
     /* 自由落體公式 位移 = ½ × g × t²。這就是「棍子在時間 t 掉了多少」的唯一真理，
        畫面和判定都用同一個公式，所以不會因為手機畫面卡頓而判錯 */
     function topAt(g, tSec) { return tSec <= 0 ? 0 : 0.5 * g * tSec * tSec; }
     /* 從鬆手到整根掉出場地下緣（頂端到達 FH）要幾秒 */
     /* 掉到畫面底部要多久：把 ½gt² = FH 解出 t */
-    function exitSec(g, FH) { return Math.sqrt(2 * FH / g); }
+    function exitSec(g, FH) { return Math.sqrt(2 * FH / g); }  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
     /* 鬆手時間表：回傳 [{i, t}]（t 單位秒，依時間遞增），i 是棍子編號 0..N-1 */
     /* 排出六根棍子「何時鬆手」：先把編號 0..5 隨機洗牌，第一根在 FIRST_MIN~MAX 秒，之後每根再加上一個隨機間隔 */
     function makeSchedule(rand) {
         rand = rand || Math.random;
         /* Array.apply(null, Array(N)).map(...) 是產生 [0,1,2,3,4,5] 的老寫法；kit.shuffle 把它洗牌 */
-        var order = kit.shuffle(Array.apply(null, Array(N)).map(function (_, k) { return k; }), rand);
+        var order = kit.shuffle(Array.apply(null, Array(N)).map(function (_, k) { return k; }), rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         /* t 是累計時間，out 是結果清單 */
-        var t = kit.randFloat(FIRST_MIN, FIRST_MAX, rand), out = [];
+        var t = kit.randFloat(FIRST_MIN, FIRST_MAX, rand), out = [];  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         /* forEach 依序處理每一根；k > 0 表示不是第一根，就把時間往後加一個間隔 */
-        order.forEach(function (i, k) {
-            if (k > 0) t += kit.randFloat(GAP_MIN, GAP_MAX, rand);
+        order.forEach(function (i, k) {                 /* forEach：對陣列的每個元素各做一次 */
+            if (k > 0) t += kit.randFloat(GAP_MIN, GAP_MAX, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             out.push({ i: i, t: t });
         });
         return out;
@@ -96,7 +96,7 @@
     /* 判定一次點擊：回傳 'none'（沒點到）、'early'（搶按，犯規）、'hit'（接住）三種結果 */
     function judgeTap(st, g, tap) {
         /* 左右偏離棍子中心超過一半命中寬度，就不是點這一根 */
-        if (Math.abs(tap.x - st.cx) > HIT_W / 2) return 'none';
+        if (Math.abs(tap.x - st.cx) > HIT_W / 2) return 'none';  /* Math.abs：取絕對值（去掉負號） */
         /* relT 是「鬆手時刻」，null 表示棍子還掛著沒掉 */
         if (st.relT == null) {
             return tap.y <= st.len + HIT_PAD ? 'early' : 'none';
@@ -125,15 +125,15 @@
             R = kit.round();
             var my = R;
             /* 清空畫面（root 是 reaction.html 的 #screen） */
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
             /* level 目前關卡；cleared 已通過的關數；newRec 這次有沒有破紀錄；state 目前狀態（idle/play/clear/over）；levelNo 第幾次 startLevel（防止舊計時器亂入） */
             var level = startAt || 1, cleared = level - 1, newRec = false, state = 'idle', levelNo = 0;
             /* 建立標題列和場地兩個 HTML 元素；'sticks-head' 等 class 的樣式在 css/games/reaction_sticks.css */
             var head = h('div', { 'class': 'sticks-head' });
             var field = h('div', { 'class': 'sticks-field' });
-            root.appendChild(head);
-            root.appendChild(field);
+            root.appendChild(head);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(field);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             var rail = h('div', { 'class': 'sticks-rail' });
             field.appendChild(rail);
 
@@ -142,13 +142,13 @@
             /* sticks：六根棍子的資料；misses：已錯失幾根；resolved：已處理（接住或錯失）幾根；g：這關的重力 */
             var sticks = [], misses = 0, resolved = 0, g = G_START, len = 0, drawLoop = null;
             /* 操作提示（只在第一次進遊戲時）：見 release()——第一根棍子鬆手時才顯示 */
-            var hintWanted = Reaction.kit.once('sticks.hint');
+            var hintWanted = Reaction.kit.once('sticks.hint');  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
 
             /* 更新標題列右側的小字：kit.meta 把陣列用「・」串起來並略過空字串 */
-            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }
+            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             /* 更新場地上方那行字 */
             function paintHead() {
-                head.textContent = '第 ' + level + ' 關　棍長 ' + Math.round(len) + '　' + (misses ? '已錯失 ' + misses + ' 根' : '還能錯失 ' + MISS_ALLOWED + ' 根');
+                head.textContent = '第 ' + level + ' 關　棍長 ' + Math.round(len) + '　' + (misses ? '已錯失 ' + misses + ' 根' : '還能錯失 ' + MISS_ALLOWED + ' 根');  /* Math.round：四捨五入成整數 */
             }
 
             /* startLevel：開始（或進入下一關的）一關 */
@@ -163,7 +163,7 @@
                 g = gravity(level);
                 misses = 0; resolved = 0; state = 'play';
                 /* 把上一關殘留的棍子元素從畫面移除 */
-                sticks.forEach(function (s) { if (s.el.parentNode) s.el.parentNode.removeChild(s.el); });
+                sticks.forEach(function (s) { if (s.el.parentNode) s.el.parentNode.removeChild(s.el); });  /* forEach：對陣列的每個元素各做一次 */
                 sticks = [];
                 /* 把場地寬度平均分成 N 欄，每根棍子放在欄的中央 */
                 var gap = FW / N;
@@ -182,7 +182,7 @@
                 /* console.info：在瀏覽器主控台印出這關的實際數值（方便除錯與驗證；try/catch 是怕主控台不存在時出錯） */
                 try {
                     console.info('[落下棍子] 第 ' + level + ' 關 棍長 ' + len.toFixed(1) + 'px、重力 ' + g.toFixed(0) + ' px/秒²、整根掉出要 ' + exitSec(g, FH).toFixed(3) + ' 秒；鬆手順序 ' +
-                        sched.map(function (s) { return '棍' + (s.i + 1) + '@' + s.t.toFixed(2) + 's'; }).join(' '));
+                        sched.map(function (s) { return '棍' + (s.i + 1) + '@' + s.t.toFixed(2) + 's'; }).join(' '));  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                 } catch (e) { }
                 /* 替每根棍子排一個「到時間就鬆手」的計時器：my.after(毫秒, 函式) */
                 sched.forEach(function (s) {
@@ -194,7 +194,7 @@
                 /* 如果之前有一個畫面更新迴圈，先停掉 */
                 if (drawLoop) drawLoop.stop();
                 /* my.loop：每一個畫面更新（約 60 次／秒）呼叫一次，回傳 false 就停止 */
-                drawLoop = my.loop(function (now) {
+                drawLoop = my.loop(function (now) {     /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                     if (myLevel !== levelNo) return false;
                     sticks.forEach(function (s) {
                         if (s.state === 'fall' || s.state === 'missed' && s.relT != null) {
@@ -211,9 +211,9 @@
                 if (state !== 'play' || s.state !== 'hang') return;
                 s.state = 'fall';
                 /* performance.now() 是高精度時間（毫秒）；之後所有掉落位置都用「現在 − relT」算出來 */
-                s.relT = performance.now();
+                s.relT = performance.now();             /* performance.now()：高精度的時間（毫秒），計時用 */
                 /* Sfx.play('tick')：播放音效（js/sfx.js） */
-                Sfx.play('tick');
+                Sfx.play('tick');                       /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 /* 操作提示（只在第一次進遊戲時）：第一根棍子鬆手時，手指縮放擺在它掉落的路徑上（這一欄、掉了 0.3 秒的位置） */
                 if (hintWanted) { hintWanted = false; Reaction.kit.hintOn(root, field, { mode: 'tap', fx: s.cx / FW, fy: Math.min(0.85, (topAt(g, 0.3) + len * 0.5) / FH), text: '請點擊落下的棍子' }); }
                 /* 排一個計時器：掉出畫面下緣那一刻還沒被接住，就算錯失 */
@@ -234,15 +234,15 @@
                 s.state = 'caught';
                 s.top = topAt(g, (now - s.relT) / 1000);
                 s.el.style.transform = 'translateY(' + s.top.toFixed(1) + 'px)';
-                s.el.classList.add('sticks-stick--ok');
-                Sfx.play('ok');
+                s.el.classList.add('sticks-stick--ok'); /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                Sfx.play('ok');                         /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 resolve();
             }
             /* 錯失一根（foul＝true 代表是搶按）：變橘紅，錯失數 +1 */
             function lose(s, foul) {
                 if (s.state === 'caught' || s.state === 'missed' || s.state === 'foul') return;
                 s.state = foul ? 'foul' : 'missed';
-                s.el.classList.add('sticks-stick--bad');
+                s.el.classList.add('sticks-stick--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 Sfx.play('bad');
                 misses++;
                 resolve();
@@ -255,10 +255,10 @@
                 if (ok) {
                     /* Reaction.setBest：存最佳紀錄，第三個參數是「新值是否比舊值好」的比較函式；回傳是否破紀錄 */
                     cleared = level;
-                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
+                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                     meta();
                     Sfx.play('win');
-                    head.textContent = '第 ' + level + ' 關過關！';
+                    head.textContent = '第 ' + level + ' 關過關！';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                     level++;
                     /* 等一下（NEXT_MS 毫秒）再開始下一關 */
                     my.after(NEXT_MS, startLevel);
@@ -268,11 +268,11 @@
                         /* kit.resumeFrom：失敗後「從失敗關卡往前 5 關」可繼續玩的起點 */
                         var back = kit.resumeFrom(level);
                         /* kit.result：顯示結算畫面（成績、評語、再玩一次、從某關繼續…） */
-                        kit.result(root, {
+                        kit.result(root, {              /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                             score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: cleared + ' 關',
                             label: cleared >= 8 ? '眼明手快！' : (cleared >= 4 ? '反應不錯！' : '再試一次，會更快！'),
-                            lines: ['第 ' + level + ' 關錯失了 ' + misses + ' 根棍子', '那一關棍長 ' + Math.round(len) + ' px'],
+                            lines: ['第 ' + level + ' 關錯失了 ' + misses + ' 根棍子', '那一關棍長 ' + Math.round(len) + ' px'],  /* Math.round：四捨五入成整數 */
                             isNew: newRec, sfx: cleared >= 6 ? 'win' : 'fail', onAgain: function () { round(1); },
                             resume: { level: back, run: function () { round(back); } }
                         });
@@ -295,9 +295,9 @@
                 return 'none';
             }
             /* pointerdown 比 click 更即時（手指一碰到螢幕就觸發，不用等放開），計時遊戲一定要用它 */
-            field.addEventListener('pointerdown', function (e) {
+            field.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
                 /* preventDefault：阻止瀏覽器的預設行為（例如雙擊縮放、長按選單） */
-                e.preventDefault();
+                e.preventDefault();                     /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                 /* kit.localPt：把螢幕座標換算成場地內的座標 */
                 var p = kit.localPt(e, field);
                 /* kit.evT(e)：取得事件的精確時間 */
@@ -306,12 +306,12 @@
 
             /* G.debug：除錯／測試用後門，下面的函式讓自動測試可以「假裝玩家」操作 */
             G.debug = {
-                state: function () { return { level: level, state: state, misses: misses, resolved: resolved, cleared: cleared, len: len, g: g, FH: FH, sticks: sticks.map(function (s) { return s.state; }) }; },
+                state: function () { return { level: level, state: state, misses: misses, resolved: resolved, cleared: cleared, len: len, g: g, FH: FH, sticks: sticks.map(function (s) { return s.state; }) }; },  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                 /* 模擬在第 i 根掉下去 sec 秒後點它（還沒鬆手就用 sec＝null 當搶按） */
                 tapStick: function (i, secAfterRelease) {
                     var s = sticks[i];
                     if (!s) return 'no';
-                    var t = s.relT == null ? performance.now() : s.relT + secAfterRelease * 1000;
+                    var t = s.relT == null ? performance.now() : s.relT + secAfterRelease * 1000;  /* performance.now()：高精度的時間（毫秒），計時用 */
                     var top = s.relT == null ? 0 : topAt(g, secAfterRelease);
                     return handleTap(s.cx, top + s.len / 2, t);
                 },

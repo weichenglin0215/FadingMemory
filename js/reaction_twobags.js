@@ -33,7 +33,7 @@
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂（也是最後一關） */
     var GEM = '💎';                   /* 💎（V1.28 玩家意見：「石頭」改成「鑽石」，圖案改成 💎） */
     var GEM_K = 0.82;                           /* 💎 的字級 ＝ 直徑 × GEM_K（emoji 的圖案比字級略寬，這樣畫面看到的大小約等於直徑） */
-    function gemPx(d) { return Math.round(d * GEM_K * 10) / 10; }
+    function gemPx(d) { return Math.round(d * GEM_K * 10) / 10; }  /* Math.round：四捨五入成整數 */
     var N0 = [4, 9];                            /* 鑽石數：第 1 關 → 極限關卡（RAMP_LEVELS），中間線性增加。重點是用眼睛比面積，不是數數量，所以不用太多顆 */
     var TOL = [0.1, 0.01];                     /* 容許誤差（占總重的比例）：第 1 關 → 到頂 */
     var D_MIN = 40, D_MAX = 100;                 /* 鑽石直徑範圍（px） */
@@ -50,14 +50,14 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function weightOf(d) { return WEIGHT_K * Math.pow(d / 10, 2); }
-    function diameterOf(w) { return 10 * Math.sqrt(w / WEIGHT_K); }
-    function tolAt(level) { return kit.ramp(level, TOL[0], TOL[1], RAMP_LEVELS); }
-    function countAt(level) { return Math.round(kit.ramp(level, N0[0], N0[1], RAMP_LEVELS)); }
+    function diameterOf(w) { return 10 * Math.sqrt(w / WEIGHT_K); }  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
+    function tolAt(level) { return kit.ramp(level, TOL[0], TOL[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function countAt(level) { return Math.round(kit.ramp(level, N0[0], N0[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 分法：mask 的第 i 位是 1 ＝ 第 i 顆放左邊。回傳左右重量差的絕對值 */
     function diffOf(w, mask) {
         var l = 0, r = 0;
         for (var i = 0; i < w.length; i++) if (mask & (1 << i)) l += w[i]; else r += w[i];
-        return Math.abs(l - r);
+        return Math.abs(l - r);                         /* Math.abs：取絕對值（去掉負號） */
     }
     /* 最佳分法：差最小的 mask 與差 */
     function bestPartition(w) {
@@ -67,17 +67,17 @@
     }
     /* 「貪婪法」的分法：由大到小，每一顆都放進目前較輕的那一邊（人腦最自然的做法） */
     function greedyPartition(w) {
-        var idx = w.map(function (x, i) { return i; }).sort(function (a, b) { return w[b] - w[a]; }), l = 0, r = 0, m = 0;
-        idx.forEach(function (i) { if (l <= r) { l += w[i]; m |= 1 << i; } else r += w[i]; });
+        var idx = w.map(function (x, i) { return i; }).sort(function (a, b) { return w[b] - w[a]; }), l = 0, r = 0, m = 0;  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        idx.forEach(function (i) { if (l <= r) { l += w[i]; m |= 1 << i; } else r += w[i]; });  /* forEach：對陣列的每個元素各做一次 */
         return m;
     }
     /* 「由大到小交錯放」的分法 */
     function altPartition(d) {
-        var idx = d.map(function (x, i) { return i; }).sort(function (a, b) { return d[b] - d[a]; }), m = 0;
-        idx.forEach(function (i, k) { if (k % 2 === 0) m |= 1 << i; });
+        var idx = d.map(function (x, i) { return i; }).sort(function (a, b) { return d[b] - d[a]; }), m = 0;  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
+        idx.forEach(function (i, k) { if (k % 2 === 0) m |= 1 << i; });  /* forEach：對陣列的每個元素各做一次 */
         return m;
     }
-    function fitArea(d) { return d.reduce(function (s, x) { return s + (x + PAD) * (x + PAD); }, 0); }
+    function fitArea(d) { return d.reduce(function (s, x) { return s + (x + PAD) * (x + PAD); }, 0); }  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
     /* 出題：回傳 { d, w, total, tol, best: {mask, diff}, n }；level 決定鑽石數與容許誤差 */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
@@ -86,20 +86,20 @@
         var ratioMax = Math.min(RATIO_MIN, D_MAX / D_MIN * 0.9);
         /* 條件太嚴、出不了題時（直徑範圍小、鑽石多、面積上限緊），分幾個階段逐步放寬「直徑比」與「面積上限」，最後一階段兩個都不要求，保證一定出得了題 */
         for (var t = 0; t < TRIES * RELAX.length; t++) {
-            var stage = Math.floor(t / TRIES), ratioReq = ratioMax * RELAX[stage][0], fitMax = FIT_AREA * RELAX[stage][1];
+            var stage = Math.floor(t / TRIES), ratioReq = ratioMax * RELAX[stage][0], fitMax = FIT_AREA * RELAX[stage][1];  /* Math.floor：無條件捨去成整數 */
             /* 構造：先隨機 n−1 顆（對數均勻），隨機分左右，最後一顆補上差額（再加一點雜訊，讓答案有一個小範圍） */
             var w = [], i;
-            for (i = 0; i < n - 1; i++) w.push(Math.exp(kit.randFloat(Math.log(wMin), Math.log(wMax), rand)));
+            for (i = 0; i < n - 1; i++) w.push(Math.exp(kit.randFloat(Math.log(wMin), Math.log(wMax), rand)));  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             var maskL = 0, sl = 0, sr = 0;
             for (i = 0; i < n - 1; i++) { if (rand() < 0.5) { maskL |= 1 << i; sl += w[i]; } else sr += w[i]; }
-            var gap = Math.abs(sl - sr), tot0 = sl + sr + gap;
+            var gap = Math.abs(sl - sr), tot0 = sl + sr + gap;  /* Math.abs：取絕對值（去掉負號） */
             var noise = (rand() - 0.5) * tol * tot0 * 0.6, wl = gap + noise;
             if (wl < wMin || wl > wMax) continue;
             w.push(wl);
             var d = w.map(diameterOf);
             if (Math.max.apply(null, d) / Math.min.apply(null, d) < ratioReq) continue;
             if (fitArea(d) > fitMax) continue;
-            var total = w.reduce(function (a, b) { return a + b; }, 0), best = bestPartition(w);
+            var total = w.reduce(function (a, b) { return a + b; }, 0), best = bestPartition(w);  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
             last = { d: d, w: w, total: total, tol: tol, best: best, n: n };
             if (best.diff > tol * total) continue;                                  /* 1. 一定要有解 */
             if (n >= HEUR_FROM) {
@@ -158,12 +158,12 @@
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[兩袋一樣重] 第 ' + level + ' 關：' + n + ' 顆；直徑 ' + q.d.map(function (x) { return x.toFixed(1); }).join(',') + '；重量 ' + q.w.map(function (x) { return x.toFixed(2); }).join(',') + '；總重 ' + q.total.toFixed(2) + '；容許 ' + (q.tol * 100).toFixed(2) + '%（' + (q.tol * q.total).toFixed(3) + ' 克拉）；最佳差 ' + q.best.diff.toFixed(3) + '；貪婪法差 ' + diffOf(q.w, greedyPartition(q.w)).toFixed(3) + '，交錯分法差 ' + diffOf(q.w, altPartition(q.d)).toFixed(3));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        var tip = h('div', { 'class': 'twobags-tip', text: '把鑽石拖到左右秤盤，讓兩邊一樣重' });
+        var tip = h('div', { 'class': 'twobags-tip', text: '把鑽石拖到左右秤盤，讓兩邊一樣重' });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
         var tray = h('div', { 'class': 'twobags-zone twobags-tray' });
         var info = h('div', { 'class': 'twobags-info' });
         var okBtn = h('button', { 'class': 'btn btn--go twobags-ok', text: '確認' });
         okBtn.disabled = true;
-        var zw = Math.floor((W - 12 - BAL_GAP) / 2), cx = 6 + zw + BAL_GAP / 2, HL = zw / 2 + BAL_GAP / 2, panTop = BEAM_Y + STRING_H;
+        var zw = Math.floor((W - 12 - BAL_GAP) / 2), cx = 6 + zw + BAL_GAP / 2, HL = zw / 2 + BAL_GAP / 2, panTop = BEAM_Y + STRING_H;  /* Math.floor：無條件捨去成整數 */
         tray.style.left = '6px'; tray.style.top = TRAY_TOP + 'px'; tray.style.width = (W - 12) + 'px'; tray.style.height = TRAY_H + 'px';
         info.style.top = (BASE_Y + 26) + 'px';
 
@@ -174,16 +174,16 @@
         base.style.left = (cx - 62) + 'px'; base.style.top = BASE_Y + 'px';
         beam.style.left = (cx - HL - 20) + 'px'; beam.style.width = (2 * HL + 40) + 'px'; beam.style.top = (BEAM_Y - 5) + 'px';
         pivot.style.left = (cx - 9) + 'px'; pivot.style.top = (BEAM_Y - 9) + 'px';
-        [post, base, beam, pivot].forEach(function (e) { bal.appendChild(e); });
+        [post, base, beam, pivot].forEach(function (e) { bal.appendChild(e); });  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         function hanger(centerX) {
             var el = h('div', { 'class': 'twobags-hang' });
             el.style.left = (centerX - zw / 2) + 'px'; el.style.top = BEAM_Y + 'px'; el.style.width = zw + 'px';
-            var svg = kit.svg('svg', { 'class': 'twobags-str', width: zw, height: STRING_H, viewBox: '0 0 ' + zw + ' ' + STRING_H }, el);
-            kit.svg('line', { x1: zw / 2, y1: 0, x2: 5, y2: STRING_H }, svg);
+            var svg = kit.svg('svg', { 'class': 'twobags-str', width: zw, height: STRING_H, viewBox: '0 0 ' + zw + ' ' + STRING_H }, el);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+            kit.svg('line', { x1: zw / 2, y1: 0, x2: 5, y2: STRING_H }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             kit.svg('line', { x1: zw / 2, y1: 0, x2: zw - 5, y2: STRING_H }, svg);
             var pan = h('div', { 'class': 'twobags-pan' }), num = h('div', { 'class': 'twobags-num', text: '--' });
             pan.style.height = PAN_H + 'px'; num.style.height = NUM_H + 'px'; num.style.lineHeight = NUM_H + 'px';
-            el.appendChild(pan); el.appendChild(num); bal.appendChild(el);
+            el.appendChild(pan); el.appendChild(num); bal.appendChild(el);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             return { el: el, pan: pan, num: num };
         }
         var hl = hanger(cx - HL), hr = hanger(cx + HL);
@@ -201,23 +201,23 @@
             hl.el.style.transform = 'translate(' + sh.l.dx.toFixed(2) + 'px,' + sh.l.dy.toFixed(2) + 'px)';
             hr.el.style.transform = 'translate(' + sh.r.dx.toFixed(2) + 'px,' + sh.r.dy.toFixed(2) + 'px)';
         }
-        function tiltTo(deg) { var from = curTilt; return api.my.tween(TILT_MS, function (e) { setTilt(from + (deg - from) * e); }, settle); }
+        function tiltTo(deg) { var from = curTilt; return api.my.tween(TILT_MS, function (e) { setTilt(from + (deg - from) * e); }, settle); }  /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
         setTilt(0);
 
         for (var i = 0; i < n; i++) (function (i) {
             side.push('T');
             var el = h('div', { 'class': 'twobags-stone', text: GEM });
             el.style.width = q.d[i].toFixed(1) + 'px'; el.style.height = q.d[i].toFixed(1) + 'px'; el.style.fontSize = gemPx(q.d[i]) + 'px';
-            el.setAttribute('data-i', i);
+            el.setAttribute('data-i', i);               /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             tray.appendChild(el); els.push(el);
         })(i);
         function place(i, where) {
             side[i] = where;
             ['T', 'L', 'R'].forEach(function (k) { els.forEach(function (el, j) { if (side[j] === k) pans[k].appendChild(el); }); });   /* 每個容器裡永遠照編號排，位置穩定 */
-            okBtn.disabled = side.some(function (s) { return s === 'T'; });
+            okBtn.disabled = side.some(function (s) { return s === 'T'; });  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
         }
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從第一顆鑽石往「它在最佳分法裡的那一邊秤盤」重複移動（第一關的正確答案） */
-        if (level === 1 && kit.once('twobags.hint')) {
+        if (level === 1 && kit.once('twobags.hint')) {  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
             var hz = (q.best.mask & 1) ? rects.L : rects.R, hx = 6 + 14 + q.d[0] / 2, hy = TRAY_TOP + 10 + q.d[0] / 2;
             hint = kit.fingerHint(stage, { mode: 'drag', x: hx, y: hy, dx: hz.x + hz.w / 2 - hx, dy: panTop + PAN_H / 2 - hy, delay: 400, text: '請把鑽石拖進' + ((q.best.mask & 1) ? '左' : '右') + '邊的秤盤' });
         }
@@ -230,26 +230,26 @@
             return null;
         }
         var locked = false;
-        stage.addEventListener('pointerdown', function (e) {
+        stage.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (locked || api.over || drag) return;
             var t = e.target.closest ? e.target.closest('.twobags-stone') : null;
             if (!t) return;
-            e.preventDefault();
-            try { stage.setPointerCapture(e.pointerId); } catch (err) { }
+            e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            try { stage.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             var i = Number(t.getAttribute('data-i')), p = kit.localPt(e, stage);
             var ghost = h('div', { 'class': 'twobags-stone twobags-ghost', text: GEM });
             ghost.style.width = q.d[i].toFixed(1) + 'px'; ghost.style.height = q.d[i].toFixed(1) + 'px'; ghost.style.fontSize = gemPx(q.d[i]) + 'px';
             stage.appendChild(ghost);
-            els[i].classList.add('twobags-stone--lift');
+            els[i].classList.add('twobags-stone--lift');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             drag = { id: e.pointerId, i: i, ghost: ghost };
-            move(p); hideHint(); Sfx.play('click');
+            move(p); hideHint(); Sfx.play('click');     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
         });
         function move(p) { drag.ghost.style.left = (p.x - q.d[drag.i] / 2) + 'px'; drag.ghost.style.top = (p.y - q.d[drag.i] / 2) + 'px'; }
-        stage.addEventListener('pointermove', function (e) { if (drag && e.pointerId === drag.id) move(kit.localPt(e, stage)); });
+        stage.addEventListener('pointermove', function (e) { if (drag && e.pointerId === drag.id) move(kit.localPt(e, stage)); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
         function drop(e) {
             if (!drag || e.pointerId !== drag.id) return;
             var p = kit.localPt(e, stage), z = zoneAt(p), i = drag.i;
-            stage.removeChild(drag.ghost); els[i].classList.remove('twobags-stone--lift');
+            stage.removeChild(drag.ghost); els[i].classList.remove('twobags-stone--lift');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             if (z) place(i, z);
             drag = null;
         }
@@ -261,19 +261,19 @@
             return { l: l, r: r };
         }
         function confirm() {
-            if (api.over || locked || side.some(function (s) { return s === 'T'; })) return;
+            if (api.over || locked || side.some(function (s) { return s === 'T'; })) return;  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
             locked = true; hideHint(); okBtn.style.display = 'none';
-            Sfx.play('click');
+            Sfx.play('click');                          /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             var s = sums(side), diff = Math.abs(s.l - s.r), lim = q.tol * q.total, good = diff <= lim;
             //我手動刪除了"克拉"字樣，避免介面超過寬度
-            nums.L.textContent = s.l.toFixed(4); nums.R.textContent = s.r.toFixed(4);
-            info.textContent = '差 ' + diff.toFixed(4) + ' 克拉（容許 ' + lim.toFixed(4) + ' 克拉，總重的 ' + (q.tol * 100).toFixed(4) + '%）';
+            nums.L.textContent = s.l.toFixed(4); nums.R.textContent = s.r.toFixed(4);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            info.textContent = '差 ' + diff.toFixed(4) + ' 克拉（容許 ' + lim.toFixed(4) + ' 克拉，總重的 ' + (q.tol * 100).toFixed(4) + '%）';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             bal.classList.add(good ? 'twobags-bal--ok' : 'twobags-bal--bad');          /* 超出範圍：天秤與數字變紅色 */
             info.classList.add(good ? 'twobags-info--ok' : 'twobags-info--bad');
             tiltTo(tiltOf(s.l, s.r, q.tol));                                   /* 天秤依兩邊的重量傾斜：範圍內微傾、範圍外明顯傾斜 */
-            if (good) { api.pass({ delay: 2000 }); return; }
+            if (good) { api.pass({ delay: 2000 }); return; }  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
             /* 答錯：鑽石自動移到一種可行的分法，天秤也跟著回到接近水平 */
-            api.after(TILT_MS + 600, function () {
+            api.after(TILT_MS + 600, function () {      /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                 for (var i = 0; i < n; i++) place(i, q.best.mask & (1 << i) ? 'L' : 'R');
                 var b = sums(side);
                 //我手動刪除了"克拉"字樣，避免介面超過寬度
@@ -282,7 +282,7 @@
                 bal.classList.remove('twobags-bal--bad'); bal.classList.add('twobags-bal--ok');
                 tiltTo(tiltOf(b.l, b.r, q.tol));
             });
-            api.fail({
+            api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: 3800, lines: [
                     '兩邊差了 ' + diff.toFixed(4) + ' 克拉，超過容許的 ' + lim.toFixed(4) + ' 克拉',
                     '左 ' + s.l.toFixed(4) + ' 克拉　右 ' + s.r.toFixed(4) + ' 克拉',
@@ -290,7 +290,7 @@
                 ]
             });
         }
-        kit.onTap(okBtn, confirm);
+        kit.onTap(okBtn, confirm);                      /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { for (var i = 0; i < n; i++) place(i, q.best.mask & (1 << i) ? 'L' : 'R'); confirm(); };
         api.wrong = function () { for (var i = 0; i < n; i++) place(i, 'L'); confirm(); };

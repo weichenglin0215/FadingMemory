@@ -51,19 +51,19 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 裁判時中間的符號：相等＝「＝」、不相等＝「≠」 */
     function signOf(isEqual) { return isEqual ? '＝' : '≠'; }
-    function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }
-    function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { var t = a % b; a = b; b = t; } return a; }
+    function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { var t = a % b; a = b; b = t; } return a; }  /* Math.abs：取絕對值（去掉負號） */
     /* 兩個分數 {n,d} 是否相等（交叉相乘，整數運算，沒有誤差） */
     function ratEq(a, b) { return a.n * b.d === b.n * a.d; }
     /* 這一題有哪些分母可用／有哪些寫法組合可用 */
     function densFor(level) {
         var out = [];
-        DEN_STEPS.forEach(function (s) { if (level >= s.from) out = out.concat(s.dens); });
+        DEN_STEPS.forEach(function (s) { if (level >= s.from) out = out.concat(s.dens); });  /* forEach：對陣列的每個元素各做一次 */
         return out;
     }
     function pairsFor(level) {
         var out = [];
-        FORM_STEPS.forEach(function (s) { if (level >= s.from) out = out.concat(s.pairs); });
+        FORM_STEPS.forEach(function (s) { if (level >= s.from) out = out.concat(s.pairs); });  /* forEach：對陣列的每個元素各做一次 */
         return out;
     }
     /* 小數字串 '0.375' → 分數 {n:375, d:1000}（沒有小數點就是整數） */
@@ -117,7 +117,7 @@
     function tweakDigits(s, hard, rand) {
         var cands = [];                       /* { str, w } 每一種改法＋權重（難度越高，越細的改法權重越大） */
         var dig = digitPositions(s);
-        var dot = s.indexOf('.');
+        var dot = s.indexOf('.');                       /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         /* a. 小數點移位：0.375 → 0.0375 或 3.75（很明顯，只在前期出現） */
         var plain = s.replace('.', '');
         [-1, 1].forEach(function (mv) {
@@ -153,7 +153,7 @@
             var r = SIMILAR[s[p]];
             if (r != null) cands.push({ str: s.slice(0, p) + r + s.slice(p + 1), w: 0.5 + hard });
         });
-        var total = cands.reduce(function (a, c) { return a + c.w; }, 0);
+        var total = cands.reduce(function (a, c) { return a + c.w; }, 0);  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
         if (!cands.length || total <= 0) return null;
         var x = rand() * total;
         for (var j = 0; j < cands.length; j++) { x -= cands[j].w; if (x <= 0) return cands[j].str; }
@@ -168,9 +168,9 @@
             if (d + dl >= 2) cands.push({ n: n, d: d + dl, w: 1 + hard });
         });
         cands.push({ n: n * 2 + 1, d: d * 2, w: 0.6 + hard });               /* 分子分母各乘 2 再把分子加 1：看起來像約分過 */
-        cands = cands.filter(function (c) { return c.n * d !== n * c.d; });
+        cands = cands.filter(function (c) { return c.n * d !== n * c.d; });  /* filter：留下符合條件的元素，回傳新陣列 */
         if (!cands.length) return null;
-        var total = cands.reduce(function (a, c) { return a + c.w; }, 0), x = rand() * total;
+        var total = cands.reduce(function (a, c) { return a + c.w; }, 0), x = rand() * total;  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
         for (var j = 0; j < cands.length; j++) { x -= cands[j].w; if (x <= 0) return cands[j]; }
         return cands[cands.length - 1];
     }
@@ -189,12 +189,12 @@
     function makeQuestion(level, rand, wantEqual) {
         rand = rand || Math.random;
         if (wantEqual == null) wantEqual = rand() < 0.5;
-        var hard = kit.ramp(level, 0, 1, RAMP_LEVELS);
+        var hard = kit.ramp(level, 0, 1, RAMP_LEVELS);  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
         for (var tr = 0; tr < 400; tr++) {
-            var d = kit.pick(densFor(level), rand), n = kit.randInt(1, d - 1, rand);
+            var d = kit.pick(densFor(level), rand), n = kit.randInt(1, d - 1, rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             if (gcd(n, d) !== 1) continue;                      /* 一律用約分過的分數，例如不出 6/8（出 3/4） */
             var val = { n: n, d: d };
-            var pair = kit.pick(pairsFor(level), rand);
+            var pair = kit.pick(pairsFor(level), rand); /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             var lf = pair[0], rf = pair[1];
             var leftText = writeForm(lf, val), rightText = writeForm(rf, val);
             var wrongVal = null;
@@ -273,14 +273,14 @@
         console.log('[等不等於] 第 ' + level + ' 題：' + q.left.text + ' ＝ ' + q.right.text + '（' + (q.isEqual ? '相等' : '不相等') + '），限時 ' + ansMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var eq = h('div', { 'class': 'qz-big isequal-eq' });
-        eq.appendChild(h('span', { text: q.left.text }));
+        eq.appendChild(h('span', { text: q.left.text }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var sign = h('span', { 'class': 'isequal-sign', text: '＝' });
-        eq.appendChild(sign);
+        eq.appendChild(sign);                           /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         eq.appendChild(h('span', { text: q.right.text }));
         var ask = h('div', { 'class': 'qz-note isequal-ask', text: '左右兩邊相等嗎？' });
         var reveal = h('div', { 'class': 'qz-note isequal-reveal' });
         stage.appendChild(eq); stage.appendChild(ask); stage.appendChild(reveal);
-        var grid = kit.btnGrid(stage, [
+        var grid = kit.btnGrid(stage, [                 /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
             { text: '不相等', kind: 'primary', onTap: function () { judge(false); } },
             { text: '相等', kind: 'go', onTap: function () { judge(true); } }
         ], { h: 84 });
@@ -293,12 +293,12 @@
             if (api.over) return;
             var ok = sayEqual === q.isEqual;
             sign.textContent = signOf(q.isEqual);                 /* 裁判：中間符號換成真正的關係（＝ 或 ≠），答對綠色、答錯紅色 */
-            sign.classList.add(ok ? 'qz-ok' : 'qz-bad');
+            sign.classList.add(ok ? 'qz-ok' : 'qz-bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             var lv = bothForms(q.A), rv = bothForms(q.B);
             reveal.innerHTML = '左邊 ' + q.left.text + ' ＝ ' + lv + '<br>右邊 ' + q.right.text + ' ＝ ' + rv;
-            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 900 }); return; }
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: 2200, lines: [
+            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 900 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 2200, lines: [            /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 (sayEqual == null ? '時間到！' : (q.isEqual ? '其實兩邊是相等的' : '其實兩邊不相等')) + '：' + q.left.text + ' ＝ ' + q.right.text,
                 '左邊 ' + q.left.text + ' ＝ ' + lv, '右邊 ' + q.right.text + ' ＝ ' + rv
             ] });

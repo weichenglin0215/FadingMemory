@@ -69,11 +69,11 @@
     var TRIES = 400;                                /* 出題時最多重抽幾次，抽到符合條件的橋就停 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function bwAt(level) { return kit.ramp(level, BW[0], BW[1], RAMP_LEVELS); }
-    function ampAt(level) { return kit.ramp(level, AMP[0], AMP[1], RAMP_LEVELS); }
+    function bwAt(level) { return kit.ramp(level, BW[0], BW[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function ampAt(level) { return kit.ramp(level, AMP[0], AMP[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function overlapAt(level) { return kit.ramp(level, OVERLAP[0], OVERLAP[1], RAMP_LEVELS); }
     /* 橫板兩端往下的虛線長度比例（0～1） */
-    function lineAt(level) { return kit.clamp(kit.ramp(level, INDEXLINE[0], INDEXLINE[1], RAMP_LEVELS), 0, 1); }
+    function lineAt(level) { return kit.clamp(kit.ramp(level, INDEXLINE[0], INDEXLINE[1], RAMP_LEVELS), 0, 1); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
     function omegaAt(level) { return kit.ramp(level, OMEGA[0], OMEGA[1], RAMP_LEVELS); }
     function asymAt(level) { return kit.ramp(level, ASYM[0], ASYM[1], RAMP_LEVELS); }
     function offsetAt(level) { return kit.ramp(level, OFFSET[0], OFFSET[1], RAMP_LEVELS); }
@@ -139,20 +139,20 @@
         var bw = bwAt(level), omega = omegaAt(level), asym = asymAt(level), off = (opts.offset == null ? offsetAt(level) : opts.offset) * W, ovT = overlapAt(level), last = null;
         var pwMax = Math.max(MIN_GAP + 2 * (END_MARGIN + 1), W - 2 * EDGE_X);       /* 橫板最寬只能到這麼寬（要完整留在畫面內） */
         var Amp = ampAt(level);
-        var ratios = opts.ratios || FREQ_RATIO.slice(0, Math.min(FREQ_RATIO.length, 1 + Math.floor((level - 1) * (FREQ_RATIO.length - 1) / Math.max(1, RAMP_LEVELS - 1) + 1e-9)));
+        var ratios = opts.ratios || FREQ_RATIO.slice(0, Math.min(FREQ_RATIO.length, 1 + Math.floor((level - 1) * (FREQ_RATIO.length - 1) / Math.max(1, RAMP_LEVELS - 1) + 1e-9)));  /* Math.floor：無條件捨去成整數 */
         for (var tr = 0; tr < TRIES; tr++) {            /* 用亂數一直重抽，最多 TRIES 次，抽到符合條件的題目就收下 */
             /* 頻率：快的那一塊是 omega，慢的是 omega × p／q；哪一邊快是隨機的。Tc ＝ 兩塊同時回到同一個姿勢的時間（快的跑 q 圈、慢的跑 p 圈） */
-            var rt = kit.pick(ratios, rand), p = rt[0], q = rt[1], fastLeft = rand() < 0.5;
+            var rt = kit.pick(ratios, rand), p = rt[0], q = rt[1], fastLeft = rand() < 0.5;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             var wF = omega, wS = omega * p / q, wL = fastLeft ? wF : wS, wR = fastLeft ? wS : wF;
             var T = 2 * Math.PI / omega * q;                      /* 這個 T ＝ Tc：成功的時機每隔 Tc 重複一次 */
-            var pw = Math.min(kit.randInt(plankW[0], plankW[1], rand), pwMax), side = rand() < 0.5 ? -1 : 1;
-            var cx = W / 2 + side * off * kit.randFloat(0.7, 1, rand);
-            var x0 = Math.round(kit.clamp(cx - pw / 2, EDGE_X, Math.max(EDGE_X, W - pw - EDGE_X))), x1 = x0 + pw;
+            var pw = Math.min(kit.randInt(plankW[0], plankW[1], rand), pwMax), side = rand() < 0.5 ? -1 : 1;  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+            var cx = W / 2 + side * off * kit.randFloat(0.7, 1, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+            var x0 = Math.round(kit.clamp(cx - pw / 2, EDGE_X, Math.max(EDGE_X, W - pw - EDGE_X))), x1 = x0 + pw;  /* Math.round：四捨五入成整數 */
             var plank = { x0: x0, w: pw };
             var ov = Math.max(END_MARGIN + 1, Math.min(ovT, (pw - MIN_GAP) / 2));      /* 兩塊方塊在橫板下面不能撞在一起 */
             var innerL = x0 + ov - bw / 2, innerR = x1 - ov + bw / 2;
             var Amin = ov / 2 + aminExtra, sgn = rand() < 0.5 ? 1 : -1;
-            var AL = Math.max(Amin, Amp * (1 + sgn * asym * kit.randFloat(0.6, 1, rand))), AR = Math.max(Amin, Amp * (1 - sgn * asym * kit.randFloat(0.6, 1, rand)));
+            var AL = Math.max(Amin, Amp * (1 + sgn * asym * kit.randFloat(0.6, 1, rand))), AR = Math.max(Amin, Amp * (1 - sgn * asym * kit.randFloat(0.6, 1, rand)));  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             var cL = innerL - AL, cR = innerR + AR;
             /* 左右兩塊「最靠近中間」的時刻各自離 t* 差 dL／dR（弧度）：t* 時它們還要頂住橫板至少 END_MARGIN px */
             function maxPhase(A) { var q = (ov - END_MARGIN - 0.5) / A; return q >= 2 ? Math.PI : Math.acos(1 - q); }
@@ -213,14 +213,14 @@
         api.info = cfg;                                 /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         var ST = motionStats(cfg, W);
         console.log('[搭一座橋] 第 ' + level + ' 關：橫板 x ' + cfg.plank.x0 + '～' + (cfg.plank.x0 + cfg.plank.w) + '（寬 ' + cfg.plank.w + '）；快的 ω ' + cfg.omega.toFixed(2) + '、慢的是它的 ' + cfg.ratio.join('/') + '（' + (cfg.fastLeft ? '左快右慢' : '右快左慢') + '），成功時機每 ' + cfg.T.toFixed(2) + ' 秒重複；左 ' + Math.round(cfg.L.c) + '±' + Math.round(cfg.L.A) + '、右 ' +  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
-            Math.round(cfg.R.c) + '±' + Math.round(cfg.R.A) + '；最近間距 ' + ST.minGap.toFixed(1) + 'px；成功時機約佔 ' + (successShare(cfg) * 100).toFixed(1) + '% 的時間（第 ' + cfg.tStar.toFixed(2) + ' 秒一定成功）');
+            Math.round(cfg.R.c) + '±' + Math.round(cfg.R.A) + '；最近間距 ' + ST.minGap.toFixed(1) + 'px；成功時機約佔 ' + (successShare(cfg) * 100).toFixed(1) + '% 的時間（第 ' + cfg.tStar.toFixed(2) + ' 秒一定成功）');  /* Math.round：四捨五入成整數 */
 
         var BW_L = cfg.bw;                                        /* 這一關方塊的寬度（V1.30：隨關卡 48 → 4） */
         var BTN_H = 84, SVG_H = H - BTN_H - 16;
         var GROUND = SVG_H - 18, BTOP = GROUND - BH;              /* 地面與方塊頂面的 y（SVG 座標，往下為正） */
         var PLANK_Y0 = 92;                                        /* 橫板一開始的上緣 y（上方留給兩行提示文字） */
-        var svg = kit.svg('svg', { 'class': 'bridge-svg', viewBox: '0 0 ' + W + ' ' + SVG_H, width: W, height: SVG_H }, stage);
-        kit.svg('rect', { x: 0, y: GROUND, width: W, height: 40, 'class': 'bridge-ground' }, svg);
+        var svg = kit.svg('svg', { 'class': 'bridge-svg', viewBox: '0 0 ' + W + ' ' + SVG_H, width: W, height: SVG_H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('rect', { x: 0, y: GROUND, width: W, height: 40, 'class': 'bridge-ground' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var bl = kit.svg('rect', { x: 0, y: BTOP, width: BW_L, height: BH, rx: Math.min(6, BW_L / 2), 'class': 'bridge-block bridge-block--l' }, svg);
         var br = kit.svg('rect', { x: 0, y: BTOP, width: BW_L, height: BH, rx: Math.min(6, BW_L / 2), 'class': 'bridge-block bridge-block--r' }, svg);
         var plank = kit.svg('rect', { x: cfg.plank.x0, y: PLANK_Y0, width: cfg.plank.w, height: PLANK_H, rx: 4, 'class': 'bridge-plank' }, svg);
@@ -228,60 +228,60 @@
         var guideY1 = PLANK_Y0 + PLANK_H, guideY2 = guideY1 + (BTOP - guideY1) * cfg.line;
         var guideL = kit.svg('line', { x1: cfg.plank.x0, x2: cfg.plank.x0, y1: guideY1, y2: guideY2, 'class': 'bridge-guide' }, svg);
         var guideR = kit.svg('line', { x1: cfg.plank.x0 + cfg.plank.w, x2: cfg.plank.x0 + cfg.plank.w, y1: guideY1, y2: guideY2, 'class': 'bridge-guide' }, svg);
-        if (cfg.line <= 0.001) { guideL.setAttribute('visibility', 'hidden'); guideR.setAttribute('visibility', 'hidden'); }
+        if (cfg.line <= 0.001) { guideL.setAttribute('visibility', 'hidden'); guideR.setAttribute('visibility', 'hidden'); }  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         var msg = h('div', { 'class': 'bridge-msg' });
         var okBtn = h('button', { 'class': 'btn btn--go bridge-ok', text: '放下' });
-        stage.appendChild(msg); stage.appendChild(okBtn);
-        var tip = h('div', { 'class': 'bridge-tip', text: '兩塊方塊都頂住橫板（碰到橫板的左右兩端）時，按「放下」' });
-        stage.appendChild(tip);
+        stage.appendChild(msg); stage.appendChild(okBtn);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var tip = h('div', { 'class': 'bridge-tip', text: '兩塊方塊都頂住橫板（碰到橫板的左右兩端）時，按「放下」' });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
+        stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
 
-        var t0 = performance.now(), frozen = null, locked = false;
+        var t0 = performance.now(), frozen = null, locked = false;  /* performance.now()：高精度的時間（毫秒），計時用 */
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint(t) {
             var p = posAt(cfg, t);
-            bl.setAttribute('x', (p.L - BW_L / 2).toFixed(2)); br.setAttribute('x', (p.R - BW_L / 2).toFixed(2));
+            bl.setAttribute('x', (p.L - BW_L / 2).toFixed(2)); br.setAttribute('x', (p.R - BW_L / 2).toFixed(2));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             return p;
         }
         paint(0);
-        var loop = my.loop(function (now) { if (locked) return false; paint((now - t0) / 1000); });
+        var loop = my.loop(function (now) { if (locked) return false; paint((now - t0) / 1000); });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
         /* rAF 被暫停（分頁在背景）時每 50 毫秒補畫一次 */
-        (function again() { my.after(50, function () { if (!locked && !api.over) { paint((performance.now() - t0) / 1000); again(); } }); })();
+        (function again() { my.after(50, function () { if (!locked && !api.over) { paint((performance.now() - t0) / 1000); again(); } }); })();  /* performance.now()：高精度的時間（毫秒），計時用 */
 
         /* 放下：立刻把兩塊方塊固定在目前的位置，再讓橫板落下 */
         function drop(tOverride) {
             if (locked || api.over) return;
             locked = true;
             if (loop) loop.stop();
-            Sfx.play('click');
+            Sfx.play('click');                          /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             var t = tOverride != null ? tOverride : (performance.now() - t0) / 1000;
             var p = paint(t), res = judge(cfg.plank, p.L, p.R, END_MARGIN, BW_L);
             tip.style.visibility = 'hidden'; guideL.setAttribute('opacity', 0); guideR.setAttribute('opacity', 0);
             var land = BTOP - PLANK_H, fallTo = res.reason === 'none' ? GROUND - PLANK_H : land;
-            my.tween(FALL_MS, function (e) { plank.setAttribute('y', (PLANK_Y0 + (fallTo - PLANK_Y0) * e).toFixed(2)); }, kit.easeInQuad).then(function () {
+            my.tween(FALL_MS, function (e) { plank.setAttribute('y', (PLANK_Y0 + (fallTo - PLANK_Y0) * e).toFixed(2)); }, kit.easeInQuad).then(function () {  /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
                 if (res.ok) {
-                    Sfx.play('ok');
-                    msg.textContent = '穩穩的！橋搭好了'; msg.classList.add('bridge-msg--ok');
-                    plank.classList.add('bridge-plank--ok');
-                    api.pass({ gain: 1, delay: 700 });
+                    Sfx.play('ok');                     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                    msg.textContent = '穩穩的！橋搭好了'; msg.classList.add('bridge-msg--ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                    plank.classList.add('bridge-plank--ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                    api.pass({ gain: 1, delay: 700 });  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
                     return;
                 }
                 Sfx.play('bad');
-                msg.textContent = FAIL_TEXT[res.reason]; msg.classList.add('bridge-msg--bad');
+                msg.textContent = FAIL_TEXT[res.reason]; msg.classList.add('bridge-msg--bad');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 var sign, px, py;
                 if (res.reason === 'none') {
-                    my.tween(500, function (e) { plank.setAttribute('transform', 'rotate(' + (e * 12).toFixed(1) + ' ' + (cfg.plank.x0 + cfg.plank.w / 2) + ' ' + (GROUND) + ')'); }, kit.easeInQuad).then(function () { api.fail({ delay: 500, lines: [FAIL_TEXT.none] }); });
+                    my.tween(500, function (e) { plank.setAttribute('transform', 'rotate(' + (e * 12).toFixed(1) + ' ' + (cfg.plank.x0 + cfg.plank.w / 2) + ' ' + (GROUND) + ')'); }, kit.easeInQuad).then(function () { api.fail({ delay: 500, lines: [FAIL_TEXT.none] }); });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                     return;
                 }
                 /* 只有一塊頂住（或重心沒被撐住）：繞著接觸範圍最外側的那個點轉開（沒撐住的那一邊往下掉），再滑掉 */
                 var toLeft = res.side === 'L';
                 sign = toLeft ? -1 : 1;
                 px = res.pivot; py = land;
-                my.tween(700, function (e) {
+                my.tween(700, function (e) {            /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
                     plank.setAttribute('transform', 'rotate(' + (sign * 34 * e).toFixed(1) + ' ' + px.toFixed(1) + ' ' + py.toFixed(1) + ') translate(0 ' + (e * 50).toFixed(1) + ')');
-                }, kit.easeInQuad).then(function () { api.fail({ delay: 500, lines: [FAIL_TEXT[res.reason]] }); });
+                }, kit.easeInQuad).then(function () { api.fail({ delay: 500, lines: [FAIL_TEXT[res.reason]] }); });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
             });
         }
-        kit.onTap(okBtn, function () { drop(); });
+        kit.onTap(okBtn, function () { drop(); });      /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
 
         /* 驗證用：solve 在「成功時刻」放下（往後推幾個週期，等於玩家等到那一刻）；wrong 找一個一定失敗的時刻 */
         api.solve = function () { drop(cfg.tStar + 2 * cfg.T); };

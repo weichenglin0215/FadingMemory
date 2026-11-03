@@ -38,39 +38,39 @@
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }
-    function tilesFor(level) { return Math.round(ramp(level, TILES)); }
-    function returnS(level) { return Math.round(ramp(level, RETURN_S) * 100) / 100; }
+    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function tilesFor(level) { return Math.round(ramp(level, TILES)); }  /* Math.round：四捨五入成整數 */
+    function returnS(level) { return Math.round(ramp(level, RETURN_S) * 100) / 100; }  /* Math.round：四捨五入成整數 */
     function limitMs(level) { return Math.round(returnS(level) * LIMIT * 1000); }
     function optsFor(level) { return level >= FIVE_FROM ? 5 : 4; }
     function strokeRange(level) { return [ramp(level, STROKES_LO), ramp(level, STROKES_HI)]; }
     function easeInOut(p) { return p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2; }
     /* 小方塊在 t 秒時的位置（起點 s、終點 e 都是 {x, y}；tile 有 d（延遲）、m（花多久））：還沒開始在起點、走完就在終點 */
     function tilePos(tile, s, e, t) {
-        var p = kit.clamp((t - tile.d) / tile.m, 0, 1), k = easeInOut(p);
+        var p = kit.clamp((t - tile.d) / tile.m, 0, 1), k = easeInOut(p);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
         return { x: s.x + (e.x - s.x) * k, y: s.y + (e.y - s.y) * k };
     }
     /* 時間 t 秒時已經到位的小方塊比例 */
-    function arrivedFraction(tiles, t) { var n = 0; tiles.forEach(function (x) { if (t >= x.d + x.m - 1e-9) n++; }); return n / tiles.length; }
+    function arrivedFraction(tiles, t) { var n = 0; tiles.forEach(function (x) { if (t >= x.d + x.m - 1e-9) n++; }); return n / tiles.length; }  /* forEach：對陣列的每個元素各做一次 */
     /* 出一關：{ answer, options, group, N, tret（秒）, tiles（[{ sx, sy（起點，佔畫面寬高的比例）, d, m }]，由左到右由上到下，第 k 個是字裡第 (k%N, ⌊k/N⌋) 格）, limitMs, level } */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var rg = strokeRange(level), no = optsFor(level), N = tilesFor(level), T = returnS(level);
         var pool = SimilarChars.groups({ minSize: MIN_GROUP, minStrokes: rg[0], maxStrokes: rg[1] });
         if (!pool.length) pool = SimilarChars.groups({ minSize: MIN_GROUP });
-        var g = kit.pick(pool, rand), answer = kit.pick(g.chars, rand);
-        var mates = g.chars.filter(function (c) { return c !== answer; }), options = kit.shuffle(kit.shuffle(mates.slice(), rand).slice(0, no - 1).concat([answer]), rand);
+        var g = kit.pick(pool, rand), answer = kit.pick(g.chars, rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        var mates = g.chars.filter(function (c) { return c !== answer; }), options = kit.shuffle(kit.shuffle(mates.slice(), rand).slice(0, no - 1).concat([answer]), rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         var n2 = N * N, tiles = [], k;
         for (k = 0; k < n2; k++) {
-            var m = kit.randFloat(MOVE[0], MOVE[1], rand) * T, a = kit.randFloat(ARRIVE_MIN, 1, rand) * T;
+            var m = kit.randFloat(MOVE[0], MOVE[1], rand) * T, a = kit.randFloat(ARRIVE_MIN, 1, rand) * T;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             if (a < m) a = m;
-            tiles.push({ sx: kit.randFloat(0.02, 0.98, rand), sy: kit.randFloat(0.02, 0.98, rand), d: a - m, m: m });
+            tiles.push({ sx: kit.randFloat(0.02, 0.98, rand), sy: kit.randFloat(0.02, 0.98, rand), d: a - m, m: m });  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         }
         /* 保證：至少有一些剛好在最後才到（整個字要到 T 才完整），而且時限（T × LIMIT）時至少有 STRAGGLE 比例還沒到位 */
-        var order = kit.shuffle(tiles.map(function (x, i) { return i; }), rand), lastN = Math.max(2, Math.ceil(n2 * 0.06)), lateN = Math.max(lastN, Math.ceil(n2 * (STRAGGLE + 0.05)));
+        var order = kit.shuffle(tiles.map(function (x, i) { return i; }), rand), lastN = Math.max(2, Math.ceil(n2 * 0.06)), lateN = Math.max(lastN, Math.ceil(n2 * (STRAGGLE + 0.05)));  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         order.slice(0, lastN).forEach(function (i) { tiles[i].d = T - tiles[i].m; });                                              /* 剛好在 T 到 */
         order.slice(lastN, lateN).forEach(function (i) { var x = tiles[i], a = kit.randFloat(LIMIT + 0.03, 1, rand) * T; if (a < x.m) a = x.m; x.d = a - x.m; });   /* 時限之後才到 */
-        return { answer: answer, options: options, answerIdx: options.indexOf(answer), group: g.chars, N: N, tret: T, tiles: tiles, limitMs: limitMs(level), strokes: rg, level: level };
+        return { answer: answer, options: options, answerIdx: options.indexOf(answer), group: g.chars, N: N, tret: T, tiles: tiles, limitMs: limitMs(level), strokes: rg, level: level };  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
     }
     /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
@@ -102,9 +102,9 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, S = Math.min(Math.round(W * 0.9), H - 210), fx = Math.round((W - S) / 2), fy = 56;
         var field = h('div', { 'class': 'stars-field' });
-        stage.appendChild(field);
+        stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note stars-tip', text: '碎片慢慢拼回來，猜是哪個字' });
-        field.appendChild(tip);
+        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         /* 看不見的畫布：把字畫上去（字大約佔 S 的 90%）；顯示用的畫布：依小方塊目前的位置一塊塊貼上去 */
         var off = document.createElement('canvas'); off.width = off.height = S;
         var ox = off.getContext('2d'), inkColor = getComputedStyle(document.documentElement).getPropertyValue('--c-ink').trim() || '#4A3B1E';
@@ -113,10 +113,10 @@
         field.appendChild(cv);
         var cx = cv.getContext('2d'), tw = S / N;
         /* 每個小方塊：終點是它在字裡的位置（加上字盒的位移），起點是畫布上的隨機位置 */
-        var starts = q.tiles.map(function (t) { return { x: t.sx * (W - tw), y: t.sy * (S + 20 - tw) }; });
-        var ends = q.tiles.map(function (t, k) { return { x: fx + (k % N) * tw, y: 10 + Math.floor(k / N) * tw }; });
+        var starts = q.tiles.map(function (t) { return { x: t.sx * (W - tw), y: t.sy * (S + 20 - tw) }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        var ends = q.tiles.map(function (t, k) { return { x: fx + (k % N) * tw, y: 10 + Math.floor(k / N) * tw }; });  /* Math.floor：無條件捨去成整數 */
         var info = h('div', { 'class': 'qz-note stars-info', text: '' }); info.style.top = (fy + S + 6) + 'px'; field.appendChild(info);
-        var phase = 'play', done = false, t0 = performance.now(), snapAt = null;
+        var phase = 'play', done = false, t0 = performance.now(), snapAt = null;  /* performance.now()：高精度的時間（毫秒），計時用 */
         function draw(t, snapP) {
             cx.clearRect(0, 0, cv.width, cv.height);
             for (var k = 0; k < q.tiles.length; k++) {
@@ -125,9 +125,9 @@
             }
         }
         draw(0);
-        var grid = kit.btnGrid(field, q.options.map(function (c, i) { return { text: c, kind: 'line', cls: 'stars-opt', onTap: function () { judge(i); } }; }), { cols: q.options.length, h: 92, gap: 8 });
+        var grid = kit.btnGrid(field, q.options.map(function (c, i) { return { text: c, kind: 'line', cls: 'stars-opt', onTap: function () { judge(i); } }; }), { cols: q.options.length, h: 92, gap: 8 });  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
         api.timer(q.limitMs, function () { judge(-1); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
-        var loop = api.my.loop(function (now) {
+        var loop = api.my.loop(function (now) {         /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
             if (!cv.isConnected) return false;
             if (phase === 'play') draw((now - t0) / 1000);
             else if (snapAt) { var p = Math.min(1, (now - snapAt.t) / 500); draw(0, { from: snapAt.from, k: kit.easeOutCubic(p) }); if (p >= 1) return false; }
@@ -136,14 +136,14 @@
         function judge(i) {
             if (done || api.over || phase !== 'play') return;
             done = true; phase = 'end';
-            var ok = i === q.answerIdx, nowT = (performance.now() - t0) / 1000;
-            grid.btns[q.answerIdx].classList.add('stars-ok'); if (i >= 0 && !ok) grid.btns[i].classList.add('stars-bad');
+            var ok = i === q.answerIdx, nowT = (performance.now() - t0) / 1000;  /* performance.now()：高精度的時間（毫秒），計時用 */
+            grid.btns[q.answerIdx].classList.add('stars-ok'); if (i >= 0 && !ok) grid.btns[i].classList.add('stars-bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             /* 揭曉：所有小方塊在 0.5 秒內飛回原位 */
             snapAt = { t: performance.now(), from: q.tiles.map(function (t, k) { return tilePos(t, starts[k], ends[k], nowT); }) };
-            info.textContent = ok ? '是「' + q.answer + '」，答對了！（拼好了 ' + Math.round(100 * arrivedFraction(q.tiles, nowT)) + '%）' : '正確的字是「' + q.answer + '」' + (i >= 0 ? '，你選了「' + q.options[i] + '」' : '（時間到）');
-            kit.flash(stage, ok, api.my);
-            if (ok) { api.pass({ delay: 1500 }); return; }
-            api.fail({ delay: 3000, lines: ['正確的字是「' + q.answer + '」' + (i >= 0 ? '，你選了「' + q.options[i] + '」' : '（時間到）'), '選項：' + q.options.join('、')] });
+            info.textContent = ok ? '是「' + q.answer + '」，答對了！（拼好了 ' + Math.round(100 * arrivedFraction(q.tiles, nowT)) + '%）' : '正確的字是「' + q.answer + '」' + (i >= 0 ? '，你選了「' + q.options[i] + '」' : '（時間到）');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            kit.flash(stage, ok, api.my);               /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            if (ok) { api.pass({ delay: 1500 }); return; }  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
+            api.fail({ delay: 3000, lines: ['正確的字是「' + q.answer + '」' + (i >= 0 ? '，你選了「' + q.options[i] + '」' : '（時間到）'), '選項：' + q.options.join('、')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.answerIdx); };

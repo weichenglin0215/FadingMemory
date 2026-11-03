@@ -43,13 +43,13 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function hslToRgb(hh, s, l) {
         hh = ((hh % 360) + 360) % 360; s /= 100; l /= 100;
-        var c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((hh / 60) % 2 - 1)), m = l - c / 2, r = 0, g = 0, b = 0;
+        var c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((hh / 60) % 2 - 1)), m = l - c / 2, r = 0, g = 0, b = 0;  /* Math.abs：取絕對值（去掉負號） */
         if (hh < 60) { r = c; g = x; } else if (hh < 120) { r = x; g = c; } else if (hh < 180) { g = c; b = x; }
         else if (hh < 240) { g = x; b = c; } else if (hh < 300) { r = x; b = c; } else { r = c; b = x; }
         return [(r + m) * 255, (g + m) * 255, (b + m) * 255];
     }
     function rgbToLab(rgb) {
-        var lin = rgb.map(function (v) { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+        var lin = rgb.map(function (v) { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         var X = (0.4124564 * lin[0] + 0.3575761 * lin[1] + 0.1804375 * lin[2]) / 0.95047;
         var Y = 0.2126729 * lin[0] + 0.7151522 * lin[1] + 0.0721750 * lin[2];
         var Z = (0.0193339 * lin[0] + 0.1191920 * lin[1] + 0.9503041 * lin[2]) / 1.08883;
@@ -60,7 +60,7 @@
     function labOf(c) { return rgbToLab(hslToRgb(c.h, c.s, c.l)); }
     function deltaE(c1, c2) {
         var a = labOf(c1), b = labOf(c2);
-        return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2) + Math.pow(a[2] - b[2], 2));
+        return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2) + Math.pow(a[2] - b[2], 2));  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
     }
     /* 橫條位置 t（0～1）與維度數值互換 */
     function valueAt(dim, t) { return dim === 'hue' ? t * 360 : (dim === 'sat' ? t * 100 : L_MIN + t * (L_MAX - L_MIN)); }
@@ -71,14 +71,14 @@
     function withDim(c, dim, v) { var o = { h: c.h, s: c.s, l: c.l }; o[dimKey(dim)] = v; return o; }
     function makeRound(rand, forceDim) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var target = { h: kit.randFloat(0, 360, rand), s: kit.randFloat(TARGET_S[0], TARGET_S[1], rand), l: kit.randFloat(TARGET_L[0], TARGET_L[1], rand) };
-        var dim = forceDim || kit.pick(DIMS, rand), tv = target[dimKey(dim)], gap = START_GAP[dim], g = kit.randFloat(gap[0], gap[1], rand), sign = rand() < 0.5 ? 1 : -1, v;
+        var target = { h: kit.randFloat(0, 360, rand), s: kit.randFloat(TARGET_S[0], TARGET_S[1], rand), l: kit.randFloat(TARGET_L[0], TARGET_L[1], rand) };  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+        var dim = forceDim || kit.pick(DIMS, rand), tv = target[dimKey(dim)], gap = START_GAP[dim], g = kit.randFloat(gap[0], gap[1], rand), sign = rand() < 0.5 ? 1 : -1, v;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         if (dim === 'hue') v = ((tv + sign * g) % 360 + 360) % 360;
         else {
             var lo = dim === 'sat' ? 0 : L_MIN, hi = dim === 'sat' ? 100 : L_MAX;
             v = tv + sign * g;
             if (v < lo || v > hi) v = tv - sign * g;
-            v = kit.clamp(v, lo, hi);
+            v = kit.clamp(v, lo, hi);                   /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
         }
         return { target: target, dim: dim, start: v };
     }
@@ -124,9 +124,9 @@
         var memo = h('div', { 'class': 'colorrecall-memo', text: '請記住左邊顏色' });
         var dimTag = h('div', { 'class': 'colorrecall-dim', text: '這次考：' + DIM_NAME[cfg.dim] });
         left.style.background = css(cfg.target);
-        right.classList.add('colorrecall-block--info');
-        right.appendChild(count); right.appendChild(memo);
-        [left, right, dimTag].forEach(function (e) { stage.appendChild(e); });
+        right.classList.add('colorrecall-block--info'); /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+        right.appendChild(count); right.appendChild(memo);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        [left, right, dimTag].forEach(function (e) { stage.appendChild(e); });  /* forEach：對陣列的每個元素各做一次 */
 
         /* 調整區（記憶結束後才出現） */
         var trackY = 420, x0 = (W - TRACK_W) / 2;
@@ -139,8 +139,8 @@
         var msg = h('div', { 'class': 'colorrecall-msg' });
         var big = h('div', { 'class': 'colorrecall-big', text: fmtDiffPct(0) });        /* 揭曉時的大字：差異 XX.XXXX% */
         var ctrl = [track, knob, nudges, okBtn];
-        ctrl.forEach(function (e) { e.style.display = 'none'; stage.appendChild(e); });
-        stage.appendChild(msg); stage.appendChild(big);
+        ctrl.forEach(function (e) { e.style.display = 'none'; stage.appendChild(e); });  /* forEach：對陣列的每個元素各做一次 */
+        stage.appendChild(msg); stage.appendChild(big); /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         function mine() { return withDim(cfg.target, cfg.dim, valueAt(cfg.dim, t)); }
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() {
@@ -149,50 +149,50 @@
         }
 
         /* 倒數 */
-        for (var k = 1; k <= MEMO_S; k++) (function (k) { my.after(k * 1000, function () { if (k < MEMO_S) { count.textContent = String(MEMO_S - k); Sfx.play('tick'); } else toAdjust(); }); })(k);
+        for (var k = 1; k <= MEMO_S; k++) (function (k) { my.after(k * 1000, function () { if (k < MEMO_S) { count.textContent = String(MEMO_S - k); Sfx.play('tick'); } else toAdjust(); }); })(k);  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
         function toAdjust() {
             phase = 'adjust';
-            left.style.background = ''; left.classList.add('colorrecall-block--info'); left.textContent = '請調整下方橫條，讓右邊色塊與剛剛相同';
-            right.classList.remove('colorrecall-block--info'); right.innerHTML = '';
+            left.style.background = ''; left.classList.add('colorrecall-block--info'); left.textContent = '請調整下方橫條，讓右邊色塊與剛剛相同';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            right.classList.remove('colorrecall-block--info'); right.innerHTML = '';  /* innerHTML = ''：把元素裡面的東西全部清掉 */
             ctrl.forEach(function (e) { e.style.display = ''; });
             paint();
             /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從圓點現在的位置往「剛剛那個顏色的位置」重複移動（第一次的正確答案） */
-            if (kit.once('colorrecall.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: x0 + t * TRACK_W, y: trackY + 4, dx: (tFor(cfg.dim, cfg.target[dimKey(cfg.dim)]) - t) * TRACK_W, dy: 0, delay: 300 });
-            Sfx.play('go');
+            if (kit.once('colorrecall.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: x0 + t * TRACK_W, y: trackY + 4, dx: (tFor(cfg.dim, cfg.target[dimKey(cfg.dim)]) - t) * TRACK_W, dy: 0, delay: 300 });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
+            Sfx.play('go');                             /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
         }
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
 
         kit.dragDamp(stage, {
             enabled: function () { return phase === 'adjust' && !locked; },
             start: function () { hideHint(); return true; },
-            move: function (dx) { t = kit.clamp(t + dx / TRACK_W, 0, 1); paint(); }
+            move: function (dx) { t = kit.clamp(t + dx / TRACK_W, 0, 1); paint(); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
         });
         function nudge(btn, dir) {
             var rep = null;
             function step() { if (phase === 'adjust' && !locked) { t = kit.clamp(t + dir * NUDGE / unitsPerT(cfg.dim), 0, 1); paint(); } }
-            btn.addEventListener('pointerdown', function (e) {
-                e.preventDefault(); hideHint(); step();
+            btn.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+                e.preventDefault(); hideHint(); step(); /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                 var n = 0;
                 (function again() { rep = my.after(n++ < 3 ? 350 : 60, function () { step(); again(); }); })();
             });
             function stop() { if (rep != null) { my.cancel(rep); rep = null; } }
-            btn.addEventListener('pointerup', stop); btn.addEventListener('pointerleave', stop); btn.addEventListener('pointercancel', stop);
+            btn.addEventListener('pointerup', stop); btn.addEventListener('pointerleave', stop); btn.addEventListener('pointercancel', stop);  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
         }
         nudge(bL, -1); nudge(bR, 1);
-        kit.onTap(okBtn, function () { submit(); });
+        kit.onTap(okBtn, function () { submit(); });    /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
 
         function submit() {
             if (locked || phase !== 'adjust') return;
             locked = true; hideHint(); ctrl.forEach(function (e) { e.style.display = 'none'; });
             Sfx.play('click');
             var m = mine(), real = deltaE(m, cfg.target);
-            left.classList.remove('colorrecall-block--info'); left.textContent = ''; left.style.background = css(cfg.target);
+            left.classList.remove('colorrecall-block--info'); left.textContent = ''; left.style.background = css(cfg.target);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             var tv = cfg.target[dimKey(cfg.dim)], mv = valueAt(cfg.dim, t);
             /* 揭曉：左圖去掉右邊的白框線、右圖去掉左邊的白框線 → 兩張圖往中間靠攏併齊，同時下方的差異數字從 0 往上跳 */
             left.classList.add('colorrecall-block--join-l'); right.classList.add('colorrecall-block--join-r');
             big.classList.add('colorrecall-big--on');
-            my.tween(COUNT_MS, function (e) { big.textContent = fmtDiffPct(real * e); }, kit.easeOutCubic).then(function () {
-                big.textContent = fmtDiffPct(real);
+            my.tween(COUNT_MS, function (e) { big.textContent = fmtDiffPct(real * e); }, kit.easeOutCubic).then(function () {  /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
+                big.textContent = fmtDiffPct(real);     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 my.after(HOLD_MS, function () {
                     api.finish(real, { lines: [
                         '這一回合考' + DIM_NAME[cfg.dim] + '：目標 ' + tv.toFixed(4) + DIM_UNIT[cfg.dim] + '，你調到 ' + mv.toFixed(4) + DIM_UNIT[cfg.dim],
@@ -201,7 +201,7 @@
                     ] });
                 });
             });
-            my.tween(JOIN_MS, function (e) {
+            my.tween(JOIN_MS, function (e) {            /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
                 var p = joinPos(e); left.style.left = p.l.toFixed(2) + 'px'; right.style.left = p.r.toFixed(2) + 'px';
             }, kit.easeInOutCubic);
         }

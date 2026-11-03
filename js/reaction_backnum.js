@@ -41,9 +41,9 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 第 level 關要記幾個：3 + 每過 2 關才多 1 個。Math.floor 是「無條件捨去」，
        所以第 1、2 關都是 3 個（floor(0/2)＝0、floor(1/2)＝0），第 3、4 關是 4 個（floor(2/2)＝1、floor(3/2)＝1）… */
-    function seqLen(level) { return SEQ_START + Math.floor((level - 1) / SEQ_EVERY); }
+    function seqLen(level) { return SEQ_START + Math.floor((level - 1) / SEQ_EVERY); }  /* Math.floor：無條件捨去成整數 */
     /* 每一格亮多久：kit.ramp 是線性難度，隨關卡從 0.7 秒平均縮短到 0.45 秒 */
-    function litSec(level) { return kit.ramp(level, LIT_START, LIT_END, RAMP); }
+    function litSec(level) { return kit.ramp(level, LIT_START, LIT_END, RAMP); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 產生亮燈順序（1～9 的數字）。長度 ≤ 9 時用洗牌取前 L 個（不重複）；超過 9 就逐個隨機挑，但相鄰不能相同 */
     /* 亮燈順序：每格 1～9，相鄰不同；長度 ≤ 9 時盡量不重複（用洗牌取前 L 個） */
     function makeSeq(L, rand) {
@@ -51,10 +51,10 @@
         rand = rand || Math.random;
         var nums = [1, 2, 3, 4, 5, 6, 7, 8, 9], out = [];
         /* kit.shuffle 洗牌，.slice(0, L) 取前 L 個 */
-        if (L <= 9) return kit.shuffle(nums, rand).slice(0, L);
+        if (L <= 9) return kit.shuffle(nums, rand).slice(0, L);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         /* while：還沒湊滿 L 個就繼續挑 */
         while (out.length < L) {
-            var n = kit.pick(nums, rand);
+            var n = kit.pick(nums, rand);               /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             /* 如果挑到的數字和上一個一樣就 continue（跳過這次，重挑） */
             if (out.length && out[out.length - 1] === n) continue;
             out.push(n);
@@ -62,7 +62,7 @@
         return out;
     }
     /* slice() 先複製陣列再 reverse() 倒過來（reverse 會直接改原陣列，所以先複製避免弄壞原本的順序） */
-    function reversed(seq) { return seq.slice().reverse(); }
+    function reversed(seq) { return seq.slice().reverse(); }  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
 
     /* mount：遊戲進場點 */
     function mount(root, ctx) {
@@ -74,7 +74,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
             /* level 關卡；cleared 已過幾關；seq 亮燈順序；want 要按的順序（倒過來）；idx 目前按到第幾個；runId 每次播放 +1，讓舊的排程知道自己過期 */
             var level = startAt || 1, cleared = level - 1, newRec = false, state = 'idle', seq = [], want = [], idx = 0, runId = 0;
@@ -90,29 +90,29 @@
                 (function (n) {
                     var el = h('button', { 'class': 'backnum-cell', text: String(n) });
                     /* pointerdown：手指一碰到就算按下，比 click 更即時 */
-                    el.addEventListener('pointerdown', function (e) { e.preventDefault(); tap(n); });
+                    el.addEventListener('pointerdown', function (e) { e.preventDefault(); tap(n); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                     cells[n] = el;
-                    grid.appendChild(el);
+                    grid.appendChild(el);               /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
                 })(n);
             }
             /* 把元素依序放進畫面 */
-            [head, banner, grid].forEach(function (x) { root.appendChild(x); });
-            root.appendChild(splash);
+            [head, banner, grid].forEach(function (x) { root.appendChild(x); });  /* forEach：對陣列的每個元素各做一次 */
+            root.appendChild(splash);                   /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
 
             /* 更新標題列右側的小字 */
-            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }
+            function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))])); }  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             /* 更新標題文字：顯示第幾關、要記幾個（按錯一次就結束，所以不用顯示「還能錯幾次」） */
             function paintHead() {
-                head.textContent = '第 ' + level + ' 關・' + seqLen(level) + ' 個數字';
+                head.textContent = '第 ' + level + ' 關・' + seqLen(level) + ' 個數字';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             }
             /* 設定橫幅的文字與樣式（cls 是顏色變化版） */
-            function setBanner(text, cls) { banner.textContent = text; banner.className = 'backnum-banner' + (cls ? ' backnum-banner--' + cls : ''); }
+            function setBanner(text, cls) { banner.textContent = text; banner.className = 'backnum-banner' + (cls ? ' backnum-banner--' + cls : ''); }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
 
             /* 讓某格閃一下 class（發亮、答對或答錯的顏色），ms 毫秒後移除 */
             function flash(n, cls, ms) {
                 var el = cells[n];
-                el.classList.add(cls);
-                my.after(ms, function () { el.classList.remove(cls); });
+                el.classList.add(cls);                  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                my.after(ms, function () { el.classList.remove(cls); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             }
 
             /* 播放亮燈順序：每格依序亮起，最後進入「輸入階段」 */
@@ -126,8 +126,8 @@
                 /* lit 每格亮的毫秒數、gap 格子間的空檔、t 目前的時間軸（從 400ms 開始） */
                 var lit = litSec(level) * 1000, gap = GAP_S * 1000, t = 400;
                 /* 用 forEach 為每個數字排一個「幾毫秒後亮起」的計時器：my.after(延遲, 函式) */
-                seq.forEach(function (n) {
-                    my.after(t, function () { if (id === runId) { flash(n, 'backnum-cell--lit', lit); Sfx.play('tick'); } });
+                seq.forEach(function (n) {              /* forEach：對陣列的每個元素各做一次 */
+                    my.after(t, function () { if (id === runId) { flash(n, 'backnum-cell--lit', lit); Sfx.play('tick'); } });  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                     t += lit + gap;
                 });
                 /* 全部亮完後切換到輸入階段 */
@@ -135,9 +135,9 @@
                     if (id !== runId) return;
                     state = 'input';
                     /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「要先按的那一格」上＝剛才亮的順序裡最後亮的那一格（要倒著按） */
-                    if (Reaction.kit.once('backnum.hint')) Reaction.kit.hintOn(root, cells[seq[seq.length - 1]], { mode: 'tap', text: '請倒著點擊，先點這一格' });
+                    if (Reaction.kit.once('backnum.hint')) Reaction.kit.hintOn(root, cells[seq[seq.length - 1]], { mode: 'tap', text: '請倒著點擊，先點這一格' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
                     setBanner('換你了：倒著按！', 'go');
-                    Sfx.play('go');
+                    Sfx.play('go');                     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 });
             }
 
@@ -165,7 +165,7 @@
                     if (idx >= want.length) {
                         state = 'clear';
                         cleared = level;
-                        if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
+                        if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                         meta();
                         setBanner('過關！', 'ok');
                         Sfx.play('win');
@@ -182,7 +182,7 @@
                 my.after(900, function () {
                     /* kit.resumeFrom：失敗後可從前 5 關繼續 */
                     var back = kit.resumeFrom(level);
-                    kit.result(root, {
+                    kit.result(root, {                  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                         score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: cleared + ' 關', label: cleared >= 8 ? '記憶力驚人！' : (cleared >= 4 ? '很不錯！' : '再試一次，會更準！'),
                         lines: ['第 ' + level + ' 關要按：' + want.join('、'), '你按到 ' + n + '，應該是 ' + want[idx]],
@@ -194,7 +194,7 @@
 
             /* G.debug：測試用後門 */
             G.debug = {
-                state: function () { return { level: level, state: state, seq: seq.slice(), want: want.slice(), idx: idx, cleared: cleared }; },
+                state: function () { return { level: level, state: state, seq: seq.slice(), want: want.slice(), idx: idx, cleared: cleared }; },  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
                 tapNext: function () { if (state === 'input') tap(want[idx]); return state; },
                 tapWrong: function () { if (state === 'input') tap(want[idx] === 9 ? 1 : want[idx] + 1); return state; }
             };

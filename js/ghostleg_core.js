@@ -22,9 +22,9 @@
         function colX(c) { return X0 + c * DX; }
         function rowY(r) { return Y_TOP + (r + 0.5) * (Y_BOT - Y_TOP) / ROWS; }
         /* y 座標最近的一層（0～ROWS−1） */
-        function snapRow(y) { return kit.clamp(Math.round((y - Y_TOP) * ROWS / (Y_BOT - Y_TOP) - 0.5), 0, ROWS - 1); }
+        function snapRow(y) { return kit.clamp(Math.round((y - Y_TOP) * ROWS / (Y_BOT - Y_TOP) - 0.5), 0, ROWS - 1); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
         /* 橫線集合 → 查詢用的表 */
-        function rungSet(rungs) { var s = {}; rungs.forEach(function (g) { s[g.row + ',' + g.col] = true; }); return s; }
+        function rungSet(rungs) { var s = {}; rungs.forEach(function (g) { s[g.row + ',' + g.col] = true; }); return s; }  /* forEach：對陣列的每個元素各做一次 */
         /* 從 start 欄往下走：回傳 { end, route（折線點，舞台座標）} */
         function follow(rungs, start) {
             var s = rungSet(rungs), col = start, route = [{ x: colX(col), y: Y_TOP }];
@@ -69,12 +69,12 @@
                 if (s[r + ',' + col]) col++; else if (s[r + ',' + (col - 1)]) col--;
                 seen[col] = true;
             }
-            return Object.keys(seen).map(Number).sort(function (x, y) { return x - y; });
+            return Object.keys(seen).map(Number).sort(function (x, y) { return x - y; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
         }
         /* 每個「縫」（第 g 縫＝第 g 條與第 g+1 條直線之間）有幾條橫線 */
         function gapCounts(rungs) {
             var cnt = []; for (var g = 0; g < COLS - 1; g++) cnt.push(0);
-            rungs.forEach(function (r) { cnt[r.col]++; });
+            rungs.forEach(function (r) { cnt[r.col]++; });  /* forEach：對陣列的每個元素各做一次 */
             return cnt;
         }
         /* 隨機走一條路線：從 start 出發，每一步往左或往右一條直線，一路走到「經過 vNeed 條不同的直線、而且轉了 turns 次彎」為止；回傳走過的欄 [start, c1, c2, …]，辦不到回傳 null */
@@ -84,8 +84,8 @@
                 var cur = walk[walk.length - 1], opts = [];
                 if (cur > 0) opts.push(cur - 1);
                 if (cur < COLS - 1) opts.push(cur + 1);
-                var fresh = opts.filter(function (o) { return !seen[o]; });
-                var next = (nSeen < vNeed && fresh.length && rand() < 0.85) ? kit.pick(fresh, rand) : kit.pick(opts, rand);
+                var fresh = opts.filter(function (o) { return !seen[o]; });  /* filter：留下符合條件的元素，回傳新陣列 */
+                var next = (nSeen < vNeed && fresh.length && rand() < 0.85) ? kit.pick(fresh, rand) : kit.pick(opts, rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
                 walk.push(next);
                 if (!seen[next]) { seen[next] = true; nSeen++; }
             }
@@ -95,7 +95,7 @@
         function spreadRows(m, rand) {
             var rows = [], prev = -1;
             for (var i = 0; i < m; i++) {
-                var r = Math.floor((i + 0.15 + 0.7 * rand()) * ROWS / m);
+                var r = Math.floor((i + 0.15 + 0.7 * rand()) * ROWS / m);  /* Math.floor：無條件捨去成整數 */
                 r = Math.max(r, prev + 1);
                 r = Math.min(r, ROWS - 1 - (m - 1 - i));
                 if (r <= prev) return null;
@@ -105,7 +105,7 @@
         }
         /* 這個位置（row, col）上下 SOL_GAP 層以內、跟它相接的兩條直線上（縫 col−1、col、col+1），有沒有其他橫線 */
         function crowded(rungs, row, col) {
-            return rungs.some(function (g) { return Math.abs(g.row - row) < SOL_GAP && g.col >= col - 1 && g.col <= col + 1 && !(g.row === row && g.col === col); });
+            return rungs.some(function (g) { return Math.abs(g.row - row) < SOL_GAP && g.col >= col - 1 && g.col <= col + 1 && !(g.row === row && g.col === col); });  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
         }
         /* 答案藏得多深：在 sol（第 sol.row 層、第 sol.col～sol.col+1 條直線之間）畫上橫線之後，從起點走下去——
            before＝走到這條橫線之前已經轉了幾次彎、after＝走過這條橫線之後還要轉幾次彎（只算現有的橫線）。
@@ -122,7 +122,7 @@
         }
         /* 把畫對的位置分成「答案區段」：同一對直線之間（col 一樣）、上下相連的幾層算同一個答案；回傳 [{ col, from, to }]（from～to 是層的範圍） */
         function answerGroups(sols) {
-            var list = sols.slice().sort(function (x, y) { return x.col - y.col || x.row - y.row; }), out = [];
+            var list = sols.slice().sort(function (x, y) { return x.col - y.col || x.row - y.row; }), out = [];  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
             list.forEach(function (p) {
                 var last = out[out.length - 1];
                 if (last && last.col === p.col && p.row === last.to + 1) last.to = p.row;
@@ -133,7 +133,7 @@
         /* 這個答案夠不夠「難找」：不碰起點、終點的直線（AVOID_ENDS），而且前後「合計」藏了 hide 個以上的轉彎（V1.33.2：以前是前後各至少 hb、ha 個）。
            前後合計＝這條正確路線的轉彎數減 1，所以前面藏得少、後面就藏得多；答案可以在路線的前段、中段、後段。 */
         function hardEnough(rungs, start, target, sol, hide) {
-            if (AVOID_ENDS && [sol.col, sol.col + 1].some(function (c) { return c === start || c === target; })) return false;
+            if (AVOID_ENDS && [sol.col, sol.col + 1].some(function (c) { return c === start || c === target; })) return false;  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
             var hd = hideOf(rungs, start, sol);
             return hd.before + hd.after >= hide;
         }
@@ -143,7 +143,7 @@
             var byGap = {}, n = 0;
             rungs.forEach(function (g) { (byGap[g.col] = byGap[g.col] || []).push(g.row); });
             Object.keys(byGap).forEach(function (k) {
-                var g = Number(k), rows = byGap[k].sort(function (x, y) { return x - y; });
+                var g = Number(k), rows = byGap[k].sort(function (x, y) { return x - y; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
                 for (var i = 1; i < rows.length; i++) {
                     var r1 = rows[i - 1], r2 = rows[i];
                     if (!rungs.some(function (o) { return (o.col === g - 1 || o.col === g + 1) && o.row > r1 && o.row < r2; })) { n++; if (list) list.push({ col: g, r1: r1, r2: r2 }); }
@@ -200,8 +200,8 @@
                 /* 還沒碰到的邊緣（或還沒走過的直線）在哪一邊，就比較常往那邊走 */
                 var want = 0, need = [];
                 for (var c = 0; c < COLS; c++) if (!seen[c] && (needEdges ? (c === 0 || c === COLS - 1) : nSeen < vNeed)) need.push(c);
-                if (need.length) { var tgt = need.reduce(function (x, y) { return Math.abs(y - cur) < Math.abs(x - cur) ? y : x; }); want = tgt > cur ? 1 : -1; }
-                var d2 = (want && opts.indexOf(want) >= 0 && rand() < 0.6) ? want : kit.pick(opts, rand);
+                if (need.length) { var tgt = need.reduce(function (x, y) { return Math.abs(y - cur) < Math.abs(x - cur) ? y : x; }); want = tgt > cur ? 1 : -1; }  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
+                var d2 = (want && opts.indexOf(want) >= 0 && rand() < 0.6) ? want : kit.pick(opts, rand);  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                 if (dir && d2 !== dir) rev++;
                 run = d2 === dir ? run + 1 : 1; dir = d2;
                 walk.push(cur + d2);
@@ -227,21 +227,21 @@
             var slack = ROWS - 1 - sum;
             if (slack < 0) return null;
             var parts = []; for (k = 0; k <= m; k++) parts.push(0);                  /* m＋1 個地方可以多放空層：最上面、m−1 個間隔、最下面 */
-            for (var t = 0; t < slack; t++) parts[Math.floor(rand() * parts.length)]++;
+            for (var t = 0; t < slack; t++) parts[Math.floor(rand() * parts.length)]++;  /* Math.floor：無條件捨去成整數 */
             var rows = [parts[0]];
             for (k = 1; k < m; k++) rows.push(rows[k - 1] + need[k - 1] + parts[k]);
             return rows;
         }
         /* 折線從頭走 len 像素的那一段（評審動畫：一路畫出綠色虛線）：回傳點陣列 */
         function routeLength(route) {
-            var s = 0; for (var i = 1; i < route.length; i++) s += Math.sqrt(Math.pow(route[i].x - route[i - 1].x, 2) + Math.pow(route[i].y - route[i - 1].y, 2));
+            var s = 0; for (var i = 1; i < route.length; i++) s += Math.sqrt(Math.pow(route[i].x - route[i - 1].x, 2) + Math.pow(route[i].y - route[i - 1].y, 2));  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
             return s;
         }
         function partialRoute(route, len) {
             var out = [route[0]], acc = 0;
             if (len <= 0) return out;
             for (var i = 1; i < route.length; i++) {
-                var a = route[i - 1], b = route[i], seg = Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2));
+                var a = route[i - 1], b = route[i], seg = Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2));  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
                 if (acc + seg <= len) { out.push(b); acc += seg; continue; }
                 var t = seg ? (len - acc) / seg : 0;
                 out.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
@@ -268,7 +268,7 @@
             var want = lo + u * (hi - lo + 1) - 0.5, best = -1, bd = 1e9;           /* want＝u 對應的位置（轉彎編號，可以有小數） */
             for (var j = lo; j <= hi; j++) {
                 if (!answerOk(walk, j)) continue;
-                var d = Math.abs(j - want);
+                var d = Math.abs(j - want);             /* Math.abs：取絕對值（去掉負號） */
                 if (d < bd) { bd = d; best = j; }
             }
             return best;
@@ -296,8 +296,8 @@
             if (m - 1 > n) return null;
             var sj = answerIndex(u, walk), rows = randomRows(m, sj, rand, walk);
             if (!rows) return null;
-            var turns = rows.map(function (r, i) { return { row: r, col: Math.min(walk[i], walk[i + 1]) }; });
-            var sol = turns[sj], rungs = turns.filter(function (g, i) { return i !== sj; });
+            var turns = rows.map(function (r, i) { return { row: r, col: Math.min(walk[i], walk[i + 1]) }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            var sol = turns[sj], rungs = turns.filter(function (g, i) { return i !== sj; });  /* filter：留下符合條件的元素，回傳新陣列 */
             var colAt = [], r, i2;                                                      /* 正確路線在每一層（轉彎之前）在哪一條直線上 */
             for (r = 0; r < ROWS; r++) { var passed = 0; for (i2 = 0; i2 < m; i2++) if (rows[i2] < r) passed++; colAt.push(walk[passed]); }
             var rowLoad = []; for (r = 0; r < ROWS; r++) rowLoad.push(0);
@@ -328,13 +328,13 @@
                 }
                 if (!cands.length) return null;
                 if (!pairs.length) {
-                    var minG = Math.min.apply(null, cands.map(function (x) { return cnt[x.col]; }));
+                    var minG = Math.min.apply(null, cands.map(function (x) { return cnt[x.col]; }));  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                     cands = cands.filter(function (x) { return cnt[x.col] === minG; });              /* 四個縫的橫線數最多差 1 條 */
                 }
                 /* 權重：貼著路線旁邊（這一縫碰到路線隔壁的直線）的位置 × DECOY_NEAR；同一層已經有橫線的 ÷ 2（分散到各層） */
                 var wsum = 0;
                 cands.forEach(function (x) {
-                    var c0 = colAt[x.row], dist = Math.min(Math.abs(x.col - c0), Math.abs(x.col + 1 - c0));
+                    var c0 = colAt[x.row], dist = Math.min(Math.abs(x.col - c0), Math.abs(x.col + 1 - c0));  /* Math.abs：取絕對值（去掉負號） */
                     x.w = (dist === 1 ? DECOY_NEAR : 1) / (1 + rowLoad[x.row]) * (1 + x.breaks);           /* 一次打斷越多對越好 */
                     wsum += x.w;
                 });
@@ -350,24 +350,24 @@
            回傳 { svg, rungEls（"層,縫" → 那一條橫線的 SVG 元素）, gUser（玩家操作的圖層）, gRoute（評審動畫的圖層）, gHint, endBoxes, msg } */
         function drawBoard(stage, q, labels, msgText) {
             var W = stage.clientWidth || 472, H = stage.clientHeight || 640, c, rungEls = {};
-            var svg = kit.svg('svg', { 'class': 'gl-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
-            for (c = 0; c < COLS; c++) kit.svg('line', { x1: colX(c), x2: colX(c), y1: Y_TOP, y2: Y_BOT, 'class': 'gl-col' }, svg);
+            var svg = kit.svg('svg', { 'class': 'gl-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+            for (c = 0; c < COLS; c++) kit.svg('line', { x1: colX(c), x2: colX(c), y1: Y_TOP, y2: Y_BOT, 'class': 'gl-col' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             q.rungs.forEach(function (g) { rungEls[g.row + ',' + g.col] = kit.svg('line', { x1: colX(g.col), x2: colX(g.col + 1), y1: rowY(g.row), y2: rowY(g.row), 'class': 'gl-rung' }, svg); });
             var gUser = kit.svg('g', {}, svg), gRoute = kit.svg('g', {}, svg), gHint = kit.svg('g', {}, svg), endBoxes = [];
             for (c = 0; c < COLS; c++) {
                 kit.svg('circle', { cx: colX(c), cy: Y_TOP - 28, r: 22, 'class': 'gl-token' + (c === q.start ? ' gl-token--go' : '') }, svg);
-                var t1 = kit.svg('text', { x: colX(c), y: Y_TOP - 20, 'text-anchor': 'middle', 'class': 'gl-label' }, svg); t1.textContent = labels[c];
+                var t1 = kit.svg('text', { x: colX(c), y: Y_TOP - 20, 'text-anchor': 'middle', 'class': 'gl-label' }, svg); t1.textContent = labels[c];  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 endBoxes.push(kit.svg('rect', { x: colX(c) - 22, y: Y_BOT + 8, width: 44, height: 44, rx: 8, 'class': 'gl-end' + (c === q.target ? ' gl-end--go' : '') }, svg));
-                var t2 = kit.svg('text', { x: colX(c), y: Y_BOT + 40, 'text-anchor': 'middle', 'class': 'gl-label' }, svg); t2.textContent = String(c + 1);
+                var t2 = kit.svg('text', { x: colX(c), y: Y_BOT + 40, 'text-anchor': 'middle', 'class': 'gl-label' }, svg); t2.textContent = String(c + 1);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             }
             var msg = UI.h('div', { 'class': 'gl-msg', text: msgText });
-            stage.appendChild(msg);
+            stage.appendChild(msg);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             return { svg: svg, rungEls: rungEls, gUser: gUser, gRoute: gRoute, gHint: gHint, endBoxes: endBoxes, msg: msg };
         }
         /* 評審動畫走完之後標出結果：走到的終點——對＝加粗綠框、錯＝紅框，而且把正確的終點用黑色虛線框起來 */
         function markEnds(board, end, target) {
-            board.endBoxes[end].classList.add(end === target ? 'gl-end--ok' : 'gl-end--bad');
-            if (end !== target) board.endBoxes[target].classList.add('gl-end--want');
+            board.endBoxes[end].classList.add(end === target ? 'gl-end--ok' : 'gl-end--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            if (end !== target) board.endBoxes[target].classList.add('gl-end--want');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         }
         return {
             colX: colX, rowY: rowY, snapRow: snapRow, rungSet: rungSet, follow: follow, canPlace: canPlace, placements: placements, visitedCols: visitedCols, gapCounts: gapCounts, makeWalk: makeWalk, spreadRows: spreadRows, crowded: crowded, hideOf: hideOf, answerGroups: answerGroups, hardEnough: hardEnough, cancelPairs: cancelPairs, makesCancel: makesCancel, routeShape: routeShape, makeZigzag: makeZigzag, randomRows: randomRows, routeLength: routeLength, partialRoute: partialRoute,

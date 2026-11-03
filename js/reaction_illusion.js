@@ -60,13 +60,13 @@
        回傳：{ kind, delta, help, big(較大／較亮那個選項的編號 0 或 1), q0, q1(兩個選項的真實數量), ... } */
     function makeQuestion(level, rand, avoidKind, forceKind) {
         rand = rand || Math.random;
-        var delta = kit.ramp(level, DELTA_START, DELTA_END, LEVEL_RAMP);
-        var trap = kit.ramp(level, TRAP_START, TRAP_END, LEVEL_RAMP);
+        var delta = kit.ramp(level, DELTA_START, DELTA_END, LEVEL_RAMP);  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+        var trap = kit.ramp(level, TRAP_START, TRAP_END, LEVEL_RAMP);  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
         /* help＝true 表示「錯覺幫忙」（錯覺方向和真相一致）；false 是「錯覺陷阱」（錯覺方向與真相相反） */
         var help = rand() >= trap;
         /* 連續兩題不出同一種錯覺（avoidKind） */
-        var pool = KINDS.filter(function (k) { return k !== avoidKind; });
-        var kind = forceKind || pool[Math.floor(rand() * pool.length)];
+        var pool = KINDS.filter(function (k) { return k !== avoidKind; });  /* filter：留下符合條件的元素，回傳新陣列 */
+        var kind = forceKind || pool[Math.floor(rand() * pool.length)];  /* Math.floor：無條件捨去成整數 */
         var q = { kind: kind, delta: delta, help: help };
         /* big：真實數量比較大的那個選項（0 或 1）。有些錯覺的方向綁定位置（上面／垂直／深色底），所以由 help 決定 */
         /* big：真實數量比較大的那個選項。ponzo／vh／contrast 的錯覺方向跟「位置」綁死
@@ -86,8 +86,8 @@
         /* 較小的是 base，較大的是 base × (1 + Δ)；灰階題改用灰階差（Δ × 255） */
         /* 較小的是 base，較大的是 base × (1 + Δ)；contrast／cornsweet 用灰階差：Δ × 255 */
         if (GRAY[kind]) {
-            var gap = Math.round(delta * 255);
-            var lo = Math.round(kit.randFloat(95, 150, rand));
+            var gap = Math.round(delta * 255);          /* Math.round：四捨五入成整數 */
+            var lo = Math.round(kit.randFloat(95, 150, rand));  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             q.v = [0, 0];
             q.v[q.big] = lo + gap; q.v[1 - q.big] = lo;
         } else {
@@ -111,7 +111,7 @@
 
     /* 點擊範圍：透明的矩形，蓋在圖形上讓手指好點 */
     function hitRect(svg, x, y, w, hh) {
-        return kit.svg('rect', { 'class': 'illusion-hit', x: x, y: y, width: w, height: hh, rx: 18 }, svg);
+        return kit.svg('rect', { 'class': 'illusion-hit', x: x, y: y, width: w, height: hh, rx: 18 }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
     }
 
     /* 繆勒－萊爾：兩條一樣長（或差一點）的線，箭尾向外的看起來比較長 */
@@ -124,10 +124,10 @@
             /* 錯覺幫忙：較長的那條用箭尾（向外，看起來更長）；陷阱：較長的那條用箭頭（向內，看起來更短） */
             var tail = q.help ? isBig : !isBig;
             var x1 = cx - L / 2, x2 = cx + L / 2, y = ys[i];
-            kit.svg('line', { 'class': 'illusion-line', x1: x1, y1: y, x2: x2, y2: y }, svg);
-            [[x1, -1], [x2, 1]].forEach(function (e) {
+            kit.svg('line', { 'class': 'illusion-line', x1: x1, y1: y, x2: x2, y2: y }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+            [[x1, -1], [x2, 1]].forEach(function (e) {  /* forEach：對陣列的每個元素各做一次 */
                 var dir = tail ? 1 : -1;     /* tail：翼往外；arrow：翼往內 */
-                [-1, 1].forEach(function (s) {
+                [-1, 1].forEach(function (s) {          /* forEach：對陣列的每個元素各做一次 */
                     kit.svg('line', { 'class': 'illusion-line', x1: e[0], y1: y, x2: e[0] + e[1] * dir * fin, y2: y + s * fin }, svg);
                 });
             });
@@ -298,7 +298,7 @@
 
     /* 長方形面積：直的（選項 0）與橫的（選項 1）兩個長寬比一樣（1:2）的長方形，直的看起來比較大。揭曉時把直的轉成橫的疊在橫的上面比 */
     DRAW.rectarea = function (svg, FW, FH, q) {
-        var cy = FH * 0.5, tall = Math.sqrt(q.v[0] / 2), wide = Math.sqrt(q.v[1] / 2);
+        var cy = FH * 0.5, tall = Math.sqrt(q.v[0] / 2), wide = Math.sqrt(q.v[1] / 2);  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
         var r0 = { w: tall, h: tall * 2, cx: FW * 0.26 }, r1 = { w: wide * 2, h: wide, cx: FW * 0.73 }, hits = [];
         [r0, r1].forEach(function (r) {
             kit.svg('rect', { 'class': 'illusion-rect', x: r.cx - r.w / 2, y: cy - r.h / 2, width: r.w, height: r.h, rx: 6 }, svg);
@@ -317,7 +317,7 @@
        所以看起來左邊整片比右邊亮，其實遠離交界處的兩片灰色可能一樣亮（或差一點）。選項 0＝左邊、1＝右邊。q.v 是兩片遠處的灰階 */
     DRAW.cornsweet = function (svg, FW, FH, q) {
         var half = FW / 2, CUSP = 30, F = 0.45;                  /* CUSP：交界處亮暗各偏多少灰階；F：漸層占半邊寬度的比例 */
-        function g255(v) { v = Math.max(0, Math.min(255, Math.round(v))); return 'rgb(' + v + ',' + v + ',' + v + ')'; }
+        function g255(v) { v = Math.max(0, Math.min(255, Math.round(v))); return 'rgb(' + v + ',' + v + ',' + v + ')'; }  /* Math.round：四捨五入成整數 */
         var defs = kit.svg('defs', {}, svg);
         function grad(id, stops) {
             var lg = kit.svg('linearGradient', { id: id, x1: 0, y1: 0, x2: 1, y2: 0 }, defs);
@@ -355,7 +355,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             newRec = false;
             /* streak 連續答對題數；lastKind 上一題的種類 */
             var streak = 0, lastKind = null;
@@ -364,18 +364,18 @@
             var fill = bar.firstChild;
             var hint = h('div', { 'class': 'illusion-q', text: '' });
             var field = h('div', { 'class': 'illusion-field' });
-            root.appendChild(hint);
-            root.appendChild(field);
+            root.appendChild(hint);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(field);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             root.appendChild(bar);
             var FW = field.clientWidth, FH = field.clientHeight;
 
-            function meta() { ctx.setMeta(kit.meta(['連對 ' + streak, fmtBest(Reaction.getBest(ID))])); }
+            function meta() { ctx.setMeta(kit.meta(['連對 ' + streak, fmtBest(Reaction.getBest(ID))])); }  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             meta();
 
             /* 出一題 */
             function ask() {
                 if (my.dead) return;
-                field.innerHTML = '';
+                field.innerHTML = '';                   /* innerHTML = ''：把元素裡面的東西全部清掉 */
                 var level = streak + 1;
                 /* G.dev：開發驗證用的強制設定（正式遊戲都是 null） */
                 var q = makeQuestion(level, null, lastKind, G.dev.kind);
@@ -384,11 +384,11 @@
                 var svg = kit.svg('svg', { 'class': 'illusion-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'none' }, field);
                 var d = DRAW[q.kind](svg, FW, FH, q);
                 var gGuides = kit.svg('g', {}, svg);
-                hint.textContent = QTEXT[q.kind];
+                hint.textContent = QTEXT[q.kind];       /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 var answered = false;
-                var t0 = performance.now(), limit = q.time * 1000;
+                var t0 = performance.now(), limit = q.time * 1000;  /* performance.now()：高精度的時間（毫秒），計時用 */
                 /* my.loop：每個畫面更新一次，更新倒數條 */
-                var loop = my.loop(function (now) {
+                var loop = my.loop(function (now) {     /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                     if (answered) return false;
                     fill.style.width = (100 * Math.max(0, 1 - (now - t0) / limit)).toFixed(1) + '%';
                 });
@@ -403,8 +403,8 @@
                     fill.style.width = '0%';
                     var ok = idx === q.big;
                     d.hits.forEach(function (el, i) {
-                        if (i === q.big) el.classList.add('illusion-hit--ok');
-                        else if (i === idx) el.classList.add('illusion-hit--bad');
+                        if (i === q.big) el.classList.add('illusion-hit--ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                        else if (i === idx) el.classList.add('illusion-hit--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                     });
                     /* 揭曉：畫出對齊的輔助線，讓玩家看見真正的長度／大小 */
                     d.guides(gGuides);
@@ -413,17 +413,17 @@
                     var truth = (idx === -1 ? '時間到！' : (ok ? '答對了！' : '答錯了…')) + ' 其實是「' + NAMES[q.kind][q.big] + '」比較' + what +
                         (GRAY[q.kind] ? '（灰階 ' + q.v[q.big] + ' 對 ' + q.v[1 - q.big] + '）' : '（多了 ' + pct.toFixed(4) + '%）') +
                         (q.help ? '' : '　（錯覺陷阱）');
-                    hint.textContent = truth;
+                    hint.textContent = truth;           /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                     if (ok) {
                         streak++;
-                        Sfx.play('ok');
-                        if (Reaction.setBest(ID, streak, function (v, b) { return v > b; })) newRec = true;
+                        Sfx.play('ok');                 /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                        if (Reaction.setBest(ID, streak, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                         meta();
                         my.after(G.dev.reveal || REVEAL_MS, ask);
                     } else {
-                        Sfx.play('bad');
+                        Sfx.play('bad');                /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                         my.after(REVEAL_MS + 300, function () {
-                            kit.result(root, {
+                            kit.result(root, {          /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                                 score: streak,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                                 num: streak + ' 題', label: idx === -1 ? '時間到了' : '被錯覺騙到了',
                                 note: truth,
@@ -434,10 +434,10 @@
                 }
                 /* 替每個選項的點擊範圍綁 pointerdown */
                 d.hits.forEach(function (el, i) {
-                    el.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(i); });
+                    el.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(i); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                 });
                 /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「這題真正比較大（長、亮）的那個」上（第一題的正確答案） */
-                if (Reaction.kit.once('illusion.hint')) Reaction.kit.hintOn(root, d.hits[q.big], { mode: 'tap', text: '請點擊比較' + WHAT[q.kind] + '的那個' });
+                if (Reaction.kit.once('illusion.hint')) Reaction.kit.hintOn(root, d.hits[q.big], { mode: 'tap', text: '請點擊比較' + WHAT[q.kind] + '的那個' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
                 /* G.debug：測試用後門 */
                 G.debug = { q: q, answer: answer, streak: function () { return streak; } };
             }

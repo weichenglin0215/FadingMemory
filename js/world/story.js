@@ -48,7 +48,7 @@
         clockOn: false,
         failing: false,
         voiceHeld: false,
-        voice: UI.store.get('fm.voice', true)
+        voice: UI.store.get('fm.voice', true)           /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
     };
 
     /* 音效：用 Web Audio 即時合成（不需要音檔），詳細原理見 js/sfx.js 檔頭的說明 */
@@ -88,7 +88,7 @@
             else if (name === 'door') { tone(440, 0, 0.18, 'triangle', 0.1); tone(330, 0.1, 0.25, 'triangle', 0.1); }
             else if (name === 'good') { tone(523, 0, 0.25); tone(659, 0.1, 0.25); tone(784, 0.2, 0.45); }
             else if (name === 'bad') { tone(392, 0, 0.3, 'triangle', 0.14); tone(311, 0.2, 0.5, 'triangle', 0.14); }
-            else if (name === 'win') { [523, 659, 784, 1047, 784, 1047].forEach(function (f, i) { tone(f, i * 0.13, 0.4); }); }
+            else if (name === 'win') { [523, 659, 784, 1047, 784, 1047].forEach(function (f, i) { tone(f, i * 0.13, 0.4); }); }  /* forEach：對陣列的每個元素各做一次 */
         } catch (e) { }
     }
 
@@ -115,8 +115,8 @@
         function pickVoice() {
             try {
                 var vs = synth.getVoices();
-                voice = vs.filter(function (x) { return /zh[-_]TW/i.test(x.lang); })[0] ||
-                    vs.filter(function (x) { return /^(zh|cmn)/i.test(x.lang); })[0] || null;
+                voice = vs.filter(function (x) { return /zh[-_]TW/i.test(x.lang); })[0] ||  /* filter：留下符合條件的元素，回傳新陣列 */
+                    vs.filter(function (x) { return /^(zh|cmn)/i.test(x.lang); })[0] || null;  /* filter：留下符合條件的元素，回傳新陣列 */
             } catch (e) { voice = null; }
         }
         if (synth) {
@@ -156,7 +156,7 @@
                 if (p) out.push(p);
             });
             var merged = [];
-            out.forEach(function (p) {
+            out.forEach(function (p) {                  /* forEach：對陣列的每個元素各做一次 */
                 var n = merged.length;
                 if (n && merged[n - 1].length + p.length <= 24) merged[n - 1] += p;
                 else merged.push(p);
@@ -168,16 +168,16 @@
         function hush() {
             gen++;
             cur = null;
-            hushAt = performance.now();
+            hushAt = performance.now();                 /* performance.now()：高精度的時間（毫秒），計時用 */
             try { synth.cancel(); } catch (e) { }
         }
 
         /* next：從佇列取下一句來念；念完（onend）自動念下一句 */
         function next() {
             if (cur || paused || !synth || !st.voice) return;
-            var now = performance.now();
+            var now = performance.now();                /* performance.now()：高精度的時間（毫秒），計時用 */
             /* cancel() 之後馬上 speak()，有些瀏覽器會把新的一句吃掉：稍等一下 */
-            if (now - hushAt < 80) { setTimeout(next, 90); return; }
+            if (now - hushAt < 80) { setTimeout(next, 90); return; }  /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
             while (queue.length && queue[0].until && queue[0].until < now) queue.shift();
             var item = queue.shift();
             if (!item) return;
@@ -237,8 +237,8 @@
     /* 時鐘：真實 1 秒＝遊戲 10 秒 */
     /* ─── 時鐘：真實 1 秒 = 遊戲 10 秒 ─── */
     function clockText() {
-        var m = Math.floor(st.clock / 60);
-        var hh = Math.floor(m / 60) % 24;
+        var m = Math.floor(st.clock / 60);              /* Math.floor：無條件捨去成整數 */
+        var hh = Math.floor(m / 60) % 24;               /* Math.floor：無條件捨去成整數 */
         var mm = m % 60;
         return (hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm;
     }
@@ -252,8 +252,8 @@
     /* 物品欄：更新資料與畫面上的圖示 */
     /* ─── 物品 ─── */
     function setInv(list) {
-        st.inv = list.slice();
-        HUD.setInventory(st.inv.map(function (k) { return ITEM_ICON[k] || 'star'; }));
+        st.inv = list.slice();                          /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        HUD.setInventory(st.inv.map(function (k) { return ITEM_ICON[k] || 'star'; }));  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     }
 
     /* 凍結：劇情演出時玩家不能動、搖桿隱藏 */
@@ -295,7 +295,7 @@
         return !!FM.core.ctx && !FM.core.busy && !FM.core.paused && !st.failing && !HUD.isModal();
     }
     function playSeconds() {
-        return st.started ? Math.round((performance.now() - st.started - st.pausedMs) / 1000) : 0;
+        return st.started ? Math.round((performance.now() - st.started - st.pausedMs) / 1000) : 0;  /* Math.round：四捨五入成整數 */
     }
 
     /* 換場景：async/await 是讓非同步程式碼寫起來像一步一步的語法——await 表示「等這件事做完再往下」。流程：淡出 → 載入新場景 → 存檢查點 → 淡入 → 呼叫場景的 enter */
@@ -313,7 +313,7 @@
         /* 從暫停選單按「重來這一段」：舊場景的劇情已隨換場景作廢，這時才解除暫停 */
         if (FM.core.paused) setPaused(false);
         HUD.setPlace(FM.core.ctx.place);
-        if (opts.checkpoint !== false) st.cp = { id: id, params: params || {}, inv: st.inv.slice() };
+        if (opts.checkpoint !== false) st.cp = { id: id, params: params || {}, inv: st.inv.slice() };  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         await UI.wait(opts.text ? 450 : 150);
         await HUD.fade(false);
         FM.core.busy = false;
@@ -398,7 +398,7 @@
         var secs = playSeconds();
         var mm = Math.floor(secs / 60);
         var ss = secs % 60;
-        var best = UI.store.get('fm.world.best', null);
+        var best = UI.store.get('fm.world.best', null); /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
         var isBest = best == null || secs < best;
         if (isBest) UI.store.set('fm.world.best', secs);
         await FM.core.wait(2600);
@@ -463,8 +463,8 @@
         banner: function (t) { HUD.banner(t); },
         place: function (t) { HUD.setPlace(t); },
         freeze: freeze,
-        give: function (k) { if (st.inv.indexOf(k) < 0) setInv(st.inv.concat([k])); },
-        has: function (k) { return st.inv.indexOf(k) >= 0; },
+        give: function (k) { if (st.inv.indexOf(k) < 0) setInv(st.inv.concat([k])); },  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+        has: function (k) { return st.inv.indexOf(k) >= 0; },  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         go: go,
         fail: fail,
         win: win,
@@ -503,14 +503,14 @@
         menu: function () { menu(); return FM.core.paused; },
         act: function () { FM.core.use(FM.core.near); },
         pick: function (text) {
-            var b = Array.prototype.filter.call(document.querySelectorAll('.dlg button'), function (x) {
+            var b = Array.prototype.filter.call(document.querySelectorAll('.dlg button'), function (x) {  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
                 return x.textContent.indexOf(text) >= 0;
             })[0];
             if (b) b.click();
             return !!b;
         },
         dialog: function () {
-            var d = document.querySelector('.dlg');
+            var d = document.querySelector('.dlg');     /* querySelector：用 CSS 選擇器在網頁裡找元素 */
             return d ? d.textContent : null;
         }
     };

@@ -78,9 +78,9 @@
 
     /* 等待時間（秒）說成玩家看得懂的話：「1 分鐘」「8 分鐘」「2 小時 40 分鐘」 */
     function fmtWait(sec) {
-        var m = Math.max(1, Math.ceil((Number(sec) || 0) / 60));
+        var m = Math.max(1, Math.ceil((Number(sec) || 0) / 60));  /* Math.ceil：無條件進位成整數 */
         if (m < 60) return m + ' 分鐘';
-        var hh = Math.floor(m / 60), mm = m % 60;
+        var hh = Math.floor(m / 60), mm = m % 60;       /* Math.floor：無條件捨去成整數 */
         return hh + ' 小時' + (mm ? ' ' + mm + ' 分鐘' : '');
     }
 
@@ -135,7 +135,7 @@
         if (!it || typeof it.g !== 'string' || !ID_RE.test(it.g)) return null;
         var out = { g: it.g, b: it.b === 'min' ? 'min' : 'max' };
         if (typeof it.s === 'number' && isFinite(it.s)) out.s = it.s;
-        if (typeof it.lv === 'number' && isFinite(it.lv) && it.lv >= 1 && it.lv === Math.floor(it.lv)) out.lv = it.lv;
+        if (typeof it.lv === 'number' && isFinite(it.lv) && it.lv >= 1 && it.lv === Math.floor(it.lv)) out.lv = it.lv;  /* Math.floor：無條件捨去成整數 */
         return (out.s == null && out.lv == null) ? null : out;
     }
 
@@ -209,7 +209,7 @@
     function whoami() {
         if (!LB.isLoggedIn()) return Promise.resolve({ ok: false, error: 'bad_token' });
         return call('MF_whoami', { p_player_id: LB.peekPid(), p_token: LB.token() }).then(function (r) {
-            if (r.ok) { if (r.data.nick) LB.cacheNick(r.data.nick); store().set(KEY_WHOAMIAT, Date.now()); }
+            if (r.ok) { if (r.data.nick) LB.cacheNick(r.data.nick); store().set(KEY_WHOAMIAT, Date.now()); }  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
             else if (r.error === 'bad_token') LB.markRelogin();
             return r;
         });
@@ -235,8 +235,8 @@
     function localGameIds() {
         var ids = {};
         try {
-            Object.keys(global.localStorage).forEach(function (k) {
-                var rest = k.indexOf(PREFIX_BEST) === 0 ? k.slice(PREFIX_BEST.length) : (k.indexOf(PREFIX_LV) === 0 ? k.slice(PREFIX_LV.length) : null);
+            Object.keys(global.localStorage).forEach(function (k) {  /* forEach：對陣列的每個元素各做一次 */
+                var rest = k.indexOf(PREFIX_BEST) === 0 ? k.slice(PREFIX_BEST.length) : (k.indexOf(PREFIX_LV) === 0 ? k.slice(PREFIX_LV.length) : null);  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                 if (rest && ID_RE.test(rest)) ids[rest] = 1;
             });
         } catch (e) { }
@@ -255,7 +255,7 @@
     /* 要上傳的項目：最佳關卡（V1.34 起才有，一定是現行單位）一律上傳；最佳成績只傳「確認是現行單位」的。 */
     function collect(ids) {
         var items = [];
-        (ids || localGameIds()).forEach(function (id) {
+        (ids || localGameIds()).forEach(function (id) { /* forEach：對陣列的每個元素各做一次 */
             if (!ID_RE.test(id)) return;
             var it = { g: id }, s = localBest(id), lv = localLv(id);
             if (s != null && trusted(id)) it.s = s;
@@ -298,7 +298,7 @@
                 return r;
             }
             var n = applyServer(r.data.items);
-            if (opts.all) store().set(KEY_SYNCAT, Date.now());
+            if (opts.all) store().set(KEY_SYNCAT, Date.now());  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
             /* 這次上傳過的項目，從「待上傳」名單拿掉 */
             var pend = store().get(KEY_BESTPEND, {}) || {};
             items.forEach(function (it) { delete pend[it.g]; });
@@ -337,7 +337,7 @@
     function clearLocalBests() {
         try {
             Object.keys(global.localStorage).forEach(function (k) {
-                if (k.indexOf(PREFIX_BEST) === 0) {
+                if (k.indexOf(PREFIX_BEST) === 0) {     /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                     var rest = k.slice(PREFIX_BEST.length);
                     if (ID_RE.test(rest) || (/\.sync$/.test(rest) && ID_RE.test(rest.slice(0, -5)))) global.localStorage.removeItem(k);
                 } else if (k.indexOf(PREFIX_LV) === 0 && ID_RE.test(k.slice(PREFIX_LV.length))) {

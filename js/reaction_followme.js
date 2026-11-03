@@ -58,11 +58,11 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 這一關要走幾步 */
-    function stepsWanted(level) { return Math.round(kit.ramp(level, STEPS_START, STEPS_END, LEVEL_RAMP)); }
+    function stepsWanted(level) { return Math.round(kit.ramp(level, STEPS_START, STEPS_END, LEVEL_RAMP)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 這一關的陷阱數 */
-    function trapsWanted(level) { return Math.round(kit.ramp(level, TRAPS_START, TRAPS_END, LEVEL_RAMP)); }
+    function trapsWanted(level) { return Math.round(kit.ramp(level, TRAPS_START, TRAPS_END, LEVEL_RAMP)); }  /* Math.round：四捨五入成整數 */
     /* 這一關地圖有幾列 */
-    function rowsFor(level) { return Math.round(kit.ramp(level, ROWS_START, ROWS_END, LEVEL_RAMP)); }
+    function rowsFor(level) { return Math.round(kit.ramp(level, ROWS_START, ROWS_END, LEVEL_RAMP)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 這一關地圖有幾欄 */
     function colsFor(level) { return level >= WIDE_FROM ? COLS_WIDE : COLS_NARROW; }
     /* 把格子 (r,c) 轉成字串 "r,c"，當作物件的鍵（方便查某格有沒有陷阱） */
@@ -99,7 +99,7 @@
                 if (pr < 0 || pr >= dist.length || pc < 0 || pc >= dist[0].length || traps[cellKey(pr, pc)]) continue;
                 if (dist[pr][pc] === d - 1) preds.push({ m: m, r: pr, c: pc });
             }
-            var p = kit.pick(preds, rand);
+            var p = kit.pick(preds, rand);              /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             path.unshift(p.m);
             cur = { r: p.r, c: p.c };
         }
@@ -108,7 +108,7 @@
     /* 把一串動作從起點走完，回傳最後的位置 */
     function applyMoves(start, moves) {
         var r = start.r, c = start.c;
-        moves.forEach(function (m) { r += MOVES[m][0]; c += MOVES[m][1]; });
+        moves.forEach(function (m) { r += MOVES[m][0]; c += MOVES[m][1]; });  /* forEach：對陣列的每個元素各做一次 */
         return { r: r, c: c };
     }
     /* 放陷阱：排成一道道「牆」，每道牆留一個缺口，缺口左右輪流開，逼路線轉彎（細節見檔頭說明） */
@@ -121,16 +121,16 @@
         /* 從起點上方兩列開始，每隔一列放一道牆，往上走 */
         for (var r = start.r - 2; r >= 1 && remaining > 0; r -= 2) {
             /* 缺口輪流開在左側（欄 0～1）或右側（最右兩欄） */
-            var gap = side < 0 ? kit.randInt(0, 1, rand) : kit.randInt(cols - 2, cols - 1, rand), cs = [], c;
+            var gap = side < 0 ? kit.randInt(0, 1, rand) : kit.randInt(cols - 2, cols - 1, rand), cs = [], c;  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             for (c = 0; c < cols; c++) if (c !== gap) cs.push(c);
             /* 陷阱不夠放滿一整道牆：把剩下的放在離目前所在欄最近的格子 */
             if (remaining < cs.length) {
                 /* 不足一整道牆：放在最靠近「目前所在欄」的格子（逼路線繞開）*/
                 /* sort 排序：離 prevCol 越近越前面 */
-                cs.sort(function (x, y) { return Math.abs(x - prevCol) - Math.abs(y - prevCol) || x - y; });
+                cs.sort(function (x, y) { return Math.abs(x - prevCol) - Math.abs(y - prevCol) || x - y; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
                 cs = cs.slice(0, remaining);
             }
-            cs.forEach(function (cc) { traps[cellKey(r, cc)] = true; list.push([r, cc]); });
+            cs.forEach(function (cc) { traps[cellKey(r, cc)] = true; list.push([r, cc]); });  /* forEach：對陣列的每個元素各做一次 */
             remaining -= cs.length;
             wallRows.push(r); gaps.push(gap); lastWallRow = r;
             prevCol = gap; side = -side;
@@ -157,7 +157,7 @@
                 if (d === best.d) cand.push({ r: rr, c: cc });
             }
             if (cand.length) {
-                var target = kit.pick(cand, rand);
+                var target = kit.pick(cand, rand);      /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
                 return { rows: rows, cols: cols, start: start, target: target, traps: T.traps, trapList: T.trapList, steps: best.d, path: randomShortestPath(dist, start, target, T.traps, rand), wallRows: T.wallRows, gaps: T.gaps, dist: dist };
             }
         }
@@ -171,8 +171,8 @@
     /* 畫小人（圓頭 + 圓角身體） */
     /* 圖示 */
     function drawMan(g) {
-        kit.svg('circle', { cx: 0, cy: -16, r: 11, fill: 'hsl(28,62%,80%)', stroke: 'hsl(24,40%,22%)', 'stroke-width': 3 }, g);
-        kit.svg('rect', { x: -12, y: -5, width: 24, height: 26, rx: 8, fill: 'hsl(210,62%,52%)', stroke: 'hsl(24,40%,22%)', 'stroke-width': 3 }, g);
+        kit.svg('circle', { cx: 0, cy: -16, r: 11, fill: 'hsl(28,62%,80%)', stroke: 'hsl(24,40%,22%)', 'stroke-width': 3 }, g);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('rect', { x: -12, y: -5, width: 24, height: 26, rx: 8, fill: 'hsl(210,62%,52%)', stroke: 'hsl(24,40%,22%)', 'stroke-width': 3 }, g);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
     }
 
     /* mount：遊戲進場點 */
@@ -185,7 +185,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
             /* level 關卡；cleared 已過幾關；state 目前階段（demo 示範中/play 玩家走/end 結束）；L 這關的資料；pos 玩家目前位置；remain 剩餘步數；CELL 一格的大小 */
             var level = startAt || 1, cleared = level - 1, newRec = false, state = 'idle', lvId = 0, L = null, pos = null, remain = 0, CELL = 40;
@@ -197,7 +197,7 @@
             var bF = h('button', { 'class': 'btn btn--go followme-btn', text: '▲ 前進' });
             var bR = h('button', { 'class': 'btn btn--sky followme-btn', text: '右方 ▶' });
             var btns = h('div', { 'class': 'followme-btns' }, [bL, bF, bR]);
-            [head, banner, field, btns].forEach(function (n) { root.appendChild(n); });
+            [head, banner, field, btns].forEach(function (n) { root.appendChild(n); });  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             var svg = null, man = null, flag = null, trapEls = {};
 
             function meta() { ctx.setMeta(kit.meta(['第 ' + level + ' 關'])); }
@@ -228,7 +228,7 @@
                 /* 一開始顯示陷阱（示範階段玩家要看） */
                 showTraps(true);
                 var s = kit.svg('text', { 'class': 'followme-startlbl', x: (L.start.c + 0.5) * CELL, y: (L.start.r + 0.94) * CELL, 'text-anchor': 'middle' }, svg);
-                s.textContent = '起點';
+                s.textContent = '起點';                   /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 /* 旗子：用 opacity 控制顯示（0＝隱藏） */
                 flag = kit.svg('g', { 'class': 'followme-flag', transform: 'translate(' + ((L.target.c + 0.5) * CELL) + ' ' + ((L.target.r + 0.5) * CELL) + ')', opacity: 0 }, svg);
                 kit.svg('line', { x1: -CELL * 0.18, y1: CELL * 0.42, x2: -CELL * 0.18, y2: -CELL * 0.4, 'class': 'followme-flag__pole' }, flag);
@@ -240,12 +240,12 @@
             }
 
             /* 顯示／隱藏所有陷阱 */
-            function showTraps(on) { Object.keys(trapEls).forEach(function (k) { trapEls[k].setAttribute('opacity', on ? 1 : 0); }); }
+            function showTraps(on) { Object.keys(trapEls).forEach(function (k) { trapEls[k].setAttribute('opacity', on ? 1 : 0); }); }  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             /* 啟用／停用三顆按鈕 */
             function setButtons(on) { [bL, bF, bR].forEach(function (b) { b.disabled = !on; }); }
             /* 更新標題文字 */
             function paintHead() {
-                head.textContent = state === 'play' ? '剩餘步數 ' + remain + ' ／ ' + L.steps : '第 ' + level + ' 關　要走 ' + L.steps + ' 步';
+                head.textContent = state === 'play' ? '剩餘步數 ' + remain + ' ／ ' + L.steps : '第 ' + level + ' 關　要走 ' + L.steps + ' 步';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             }
 
             /* 開始一關 */
@@ -260,15 +260,15 @@
                 state = 'demo'; setButtons(false); paintHead(); meta();
                 banner.textContent = '看小人走到旗子那裡，記住陷阱的位置';
                 /* 主控台印出這關的實際資料（地圖大小、陷阱數、步數、終點、示範路線） */
-                try { console.info('[照著走] 第 ' + level + ' 關：' + L.rows + '×' + L.cols + '、陷阱 ' + L.trapList.length + ' 個、要走 ' + L.steps + ' 步；終點 (列' + L.target.r + ',欄' + L.target.c + ')；示範 ' + L.path.map(function (m) { return MOVE_NAME[m]; }).join('→')); } catch (e) { }
+                try { console.info('[照著走] 第 ' + level + ' 關：' + L.rows + '×' + L.cols + '、陷阱 ' + L.trapList.length + ' 個、要走 ' + L.steps + ' 步；終點 (列' + L.target.r + ',欄' + L.target.c + ')；示範 ' + L.path.map(function (m) { return MOVE_NAME[m]; }).join('→')); } catch (e) { }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                 /* 示範階段顯示旗子 */
-                flag.setAttribute('opacity', 1);
+                flag.setAttribute('opacity', 1);        /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
                 /* 依序排每一步的動畫：每隔 DEMO_STEP_MS 毫秒小人走一格 */
                 var t = DEMO_LEAD_MS, r = L.start.r, c = L.start.c;
                 L.path.forEach(function (m) {
                     r += MOVES[m][0]; c += MOVES[m][1];
                     var rr = r, cc = c;
-                    my.after(t, function () { if (id !== lvId) return; setMan(rr, cc, true); Sfx.play('tick'); });
+                    my.after(t, function () { if (id !== lvId) return; setMan(rr, cc, true); Sfx.play('tick'); });  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                     t += DEMO_STEP_MS;
                 });
                 /* 示範結束：旗子和陷阱都隱藏，小人回到起點 */
@@ -283,7 +283,7 @@
                     if (id !== lvId) return;
                     state = 'play'; setButtons(true); paintHead();
                     banner.textContent = '換你走！旗子和陷阱都藏起來了，只能走 ' + L.steps + ' 步';
-                    Sfx.play('go');
+                    Sfx.play('go');                     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 });
             }
 
@@ -327,7 +327,7 @@
                 paintHead();
                 if (ok) {
                     cleared = level;
-                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
+                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                     banner.textContent = '到了！過關！';
                     Sfx.play('win');
                     level++;
@@ -336,11 +336,11 @@
                     return;
                 }
                 Sfx.play('bad');
-                if (why === 'trap') { var tg = trapEls[cellKey(pos.r, pos.c)]; if (tg) tg.classList.add('followme-trap--hit'); }
+                if (why === 'trap') { var tg = trapEls[cellKey(pos.r, pos.c)]; if (tg) tg.classList.add('followme-trap--hit'); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 banner.textContent = why === 'trap' ? '踩到陷阱了！' : '步數用完了，旗子在這裡';
                 my.after(1900, function () {
                     var back = kit.resumeFrom(level);
-                    kit.result(root, {
+                    kit.result(root, {                  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                         score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: cleared + ' 關', label: cleared >= 8 ? '記路高手！' : (cleared >= 4 ? '方向感不錯！' : '再試一次，會更穩！'),
                         lines: ['第 ' + level + ' 關：' + (why === 'trap' ? '走進了陷阱格' : '步數用完沒到終點'), '要走 ' + L.steps + ' 步，陷阱 ' + L.trapList.length + ' 個'],
@@ -350,13 +350,13 @@
                 });
             }
             /* 三顆方向鈕：pointerdown 一碰就觸發 */
-            bL.addEventListener('pointerdown', function (e) { e.preventDefault(); press('L'); });
-            bF.addEventListener('pointerdown', function (e) { e.preventDefault(); press('F'); });
-            bR.addEventListener('pointerdown', function (e) { e.preventDefault(); press('R'); });
+            bL.addEventListener('pointerdown', function (e) { e.preventDefault(); press('L'); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            bF.addEventListener('pointerdown', function (e) { e.preventDefault(); press('F'); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+            bR.addEventListener('pointerdown', function (e) { e.preventDefault(); press('R'); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
 
             /* G.debug：測試用後門，play() 可以依示範路線一次按完 */
             G.debug = {
-                state: function () { return { level: level, state: state, remain: remain, pos: pos, L: L, cleared: cleared, flagShown: flag.getAttribute('opacity') === '1', trapsShown: Object.keys(trapEls).some(function (k) { return trapEls[k].getAttribute('opacity') === '1'; }) }; },
+                state: function () { return { level: level, state: state, remain: remain, pos: pos, L: L, cleared: cleared, flagShown: flag.getAttribute('opacity') === '1', trapsShown: Object.keys(trapEls).some(function (k) { return trapEls[k].getAttribute('opacity') === '1'; }) }; },  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
                 press: press,
                 waitPlay: function () { return state; },
                 /* 依示範路線（或自訂走法）按完（最後一步之後 state 是 'moving'，小人走到定位才變成 'end'） */

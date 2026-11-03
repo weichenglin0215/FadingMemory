@@ -117,8 +117,8 @@
         var w = DESIGN_W * scale;
         var h = DESIGN_H * scale;
         return {
-            left: Math.round(ox + sa.l + (aw - w) / 2),
-            top: Math.round(oy + sa.t + (ah - h) / 2),
+            left: Math.round(ox + sa.l + (aw - w) / 2), /* Math.round：四捨五入成整數 */
+            top: Math.round(oy + sa.t + (ah - h) / 2),  /* Math.round：四捨五入成整數 */
             width: w,
             height: h,
             scale: scale,
@@ -165,7 +165,7 @@
             s.height = r.height + 'px';
         }
         rect = r;
-        document.documentElement.classList.add('stage-ready');
+        document.documentElement.classList.add('stage-ready');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         for (var i = 0; i < subs.length; i++) {
             try { subs[i](rect); } catch (e) { console.error(e); }
         }
@@ -186,7 +186,7 @@
        節流（throttle）：同一個畫面刷新週期內不管 schedule() 被呼叫幾次，
        apply() 最多只會真正執行一次（pending 旗標避免重複排程）。 */
     function schedule() {
-        if (!pending) pending = global.requestAnimationFrame(apply);
+        if (!pending) pending = global.requestAnimationFrame(apply);  /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
     }
 
     /* 監看：不靠事件，自己定時重量。可視範圍（或舞台位置）跟上次套用的不一樣就重算。
@@ -197,7 +197,7 @@
         if (sigOf(measure()) !== lastSig) apply();
     }
 
-    function prevent(e) { e.preventDefault(); }
+    function prevent(e) { e.preventDefault(); }         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
 
     /* 擋掉會干擾「遊戲」體驗的瀏覽器預設手勢：雙指縮放整頁、長按跳出系統選單、
        把圖片拖出頁面——這些在一般網頁是正常功能，但在這種固定版面的遊戲介面裡
@@ -207,7 +207,7 @@
         document.addEventListener('gesturestart', prevent, { passive: false });
         document.addEventListener('gesturechange', prevent, { passive: false });
         document.addEventListener('touchmove', function (e) {
-            if (e.touches && e.touches.length > 1 && !e.target.closest('.multitouch')) e.preventDefault();
+            if (e.touches && e.touches.length > 1 && !e.target.closest('.multitouch')) e.preventDefault();  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
         }, { passive: false });
         /* 長按不跳出系統選單、不拖出圖片 */
         document.addEventListener('contextmenu', prevent);
@@ -220,16 +220,16 @@
 
         init: function (opts) {
             opts = opts || {};
-            stageEl = document.querySelector(opts.stage || '#stage');
-            worldEl = document.querySelector(opts.world || '#world');
+            stageEl = document.querySelector(opts.stage || '#stage');  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
+            worldEl = document.querySelector(opts.world || '#world');  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
             if (!stageEl) throw new Error('Stage.init：找不到 #stage');
 
             probeEl = document.createElement('div');
             probeEl.className = 'sa-probe';
-            document.body.appendChild(probeEl);
+            document.body.appendChild(probeEl);         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             dvhEl = document.createElement('div');
             dvhEl.className = 'vh-probe';
-            document.body.appendChild(dvhEl);
+            document.body.appendChild(dvhEl);           /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
 
             if (/[?&]debug\b/.test(global.location.search)) {
                 debugEl = document.createElement('div');
@@ -241,7 +241,7 @@
             global.addEventListener('resize', schedule);
             /* 轉向：瀏覽器常在轉完之前就回報（量到舊的尺寸），所以隔一段時間多量幾次 */
             global.addEventListener('orientationchange', function () {
-                [100, 300, 700, 1500].forEach(function (ms) { global.setTimeout(apply, ms); });
+                [100, 300, 700, 1500].forEach(function (ms) { global.setTimeout(apply, ms); });  /* forEach：對陣列的每個元素各做一次 */
             });
             if (global.visualViewport) {
                 global.visualViewport.addEventListener('resize', schedule);
@@ -251,7 +251,7 @@
             global.addEventListener('pageshow', schedule);
             document.addEventListener('visibilitychange', function () { if (!document.hidden) schedule(); });
             /* 輸入框失去焦點（收起鍵盤）：鍵盤收起的動畫要一點時間，等一下再量 */
-            document.addEventListener('focusout', function () { [60, 300, 800].forEach(function (ms) { global.setTimeout(apply, ms); }); });
+            document.addEventListener('focusout', function () { [60, 300, 800].forEach(function (ms) { global.setTimeout(apply, ms); }); });  /* forEach：對陣列的每個元素各做一次 */
             document.addEventListener('focusin', function () { global.setTimeout(apply, 60); });
             /* 剛載入的前一兩秒，瀏覽器的版面常常還在調整（網址列、字型載入…）：多量幾次 */
             [60, 250, 700, 1500, 3000].forEach(function (ms) { global.setTimeout(apply, ms); });
@@ -269,7 +269,7 @@
             subs.push(fn);
             if (stageEl) fn(rect);
             return function off() {
-                var i = subs.indexOf(fn);
+                var i = subs.indexOf(fn);               /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                 if (i >= 0) subs.splice(i, 1);
             };
         },
@@ -282,7 +282,7 @@
            #stage 元素目前實際畫出來的寬度 b.width，除以設計寬度 500 得到目前
            縮放倍率 s，再用這個倍率把滑鼠座標換算回邏輯座標。 */
         toLogical: function (clientX, clientY) {
-            var b = stageEl.getBoundingClientRect();
+            var b = stageEl.getBoundingClientRect();    /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
             var s = b.width / DESIGN_W;
             return { x: (clientX - b.left) / s, y: (clientY - b.top) / s };
         },

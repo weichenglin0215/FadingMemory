@@ -64,7 +64,7 @@
             fill: kit.randFloat(FILL_MIN, FILL_MAX, rand),     /* 平均從空到滿的秒數 */
             a: kit.randFloat(0.30, 0.55, rand),                /* 流量起伏幅度（0.55＝±55%） */
             w: kit.randFloat(2.0, 3.5, rand),                  /* 起伏角頻率（弧度／秒） */
-            phi: kit.randFloat(0, Math.PI * 2, rand)
+            phi: kit.randFloat(0, Math.PI * 2, rand)    /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         };
     }
     /* 倒了 t 秒後的水位：流量 = r0×(1 + a·sin(ωt+φ))，對時間積分就得到這個公式；流量永遠為正，所以水位一直上升 */
@@ -90,7 +90,7 @@
     /* 結算鏡頭視窗的高度：誤差越小，放得越大 */
     /* 結算鏡頭視窗的高度（SVG 單位）：誤差的 3.2 倍，最小 MIN_WIN，最大整張圖 */
     function zoomWindow(errPct) {
-        return Math.min(H, Math.max(MIN_WIN, Math.abs(errPct) / 100 * GH * 3.2));
+        return Math.min(H, Math.max(MIN_WIN, Math.abs(errPct) / 100 * GH * 3.2));  /* Math.abs：取絕對值（去掉負號） */
     }
     /* 刻度尺的間距：讓視窗內最多約 10 條刻度 */
     /* 刻度尺間距：視窗內最多約 10 條刻度 */
@@ -127,7 +127,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
             /* prof 這局的流量曲線；tFull 倒到滿要多久 */
             var prof = makeProfile();
@@ -144,15 +144,15 @@
             var angle = 0;                     /* 水壺傾斜角（度），平滑追蹤目標角 */
             var fullTimer = null;
 
-            ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
+            ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             var hint = h('div', { 'class': 'hint', text: '按住倒水，倒到杯子的「八分滿」就放手' });
             var field = h('div', { 'class': 'pour-field' });
-            root.appendChild(hint);
-            root.appendChild(field);
+            root.appendChild(hint);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(field);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
 
             /* SVG 畫布與各個部分：水、水面線、杯子、目標線、刻度尺、水柱、水壺 */
-            var svg = kit.svg('svg', { 'class': 'pour-svg', viewBox: '0 0 ' + W + ' ' + H }, field);
-            var gWater = kit.svg('g', {}, svg);
+            var svg = kit.svg('svg', { 'class': 'pour-svg', viewBox: '0 0 ' + W + ' ' + H }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+            var gWater = kit.svg('g', {}, svg);         /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             var water = kit.svg('path', { 'class': 'pour-water' }, gWater);
             var surf = kit.svg('path', { 'class': 'pour-surface' }, gWater);
             var gGlass = kit.svg('g', { 'class': 'pour-glass-g' }, svg);
@@ -178,8 +178,8 @@
             /* 結算放大時：水面、水體、目標線只畫到「鏡頭範圍左右各多一個寬度、往下兩個高度」 */
             function fitWide(ys) {
                 var x0 = view.x - view.w, x1 = view.x + view.w * 2, yb = Math.min(GB, view.y + view.h * 2);
-                surf.setAttribute('d', 'M ' + x0 + ' ' + ys + ' L ' + x1 + ' ' + ys);
-                water.setAttribute('d', 'M ' + x0 + ' ' + yb + ' L ' + x0 + ' ' + ys + ' L ' + x1 + ' ' + ys + ' L ' + x1 + ' ' + yb + ' Z');
+                surf.setAttribute('d', 'M ' + x0 + ' ' + ys + ' L ' + x1 + ' ' + ys);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                water.setAttribute('d', 'M ' + x0 + ' ' + yb + ' L ' + x0 + ' ' + ys + ' L ' + x1 + ' ' + ys + ' L ' + x1 + ' ' + yb + ' Z');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
                 tline.setAttribute('x1', x0); tline.setAttribute('x2', x1);
             }
 
@@ -211,7 +211,7 @@
                         var jit = amp ? (Math.random() - 0.5) * amp * 0.5 : 0;
                         pts.push([x, ys + bob + waveY(x, t, ph, amp) + jit]);
                     }
-                    var line = pts.map(function (p, i) { return (i ? 'L ' : 'M ') + p[0].toFixed(1) + ' ' + p[1].toFixed(2); }).join(' ');
+                    var line = pts.map(function (p, i) { return (i ? 'L ' : 'M ') + p[0].toFixed(1) + ' ' + p[1].toFixed(2); }).join(' ');  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                     surf.setAttribute('d', line);
                     /* 水體：水面線往下封到杯底 */
                     /* 水體：水面線往下封到杯底，左右拉很寬，鏡頭放大後不會看到邊 */
@@ -232,20 +232,20 @@
                     stream.setAttribute('d', 'M ' + (SPOUT_X + 2) + ' ' + (SPOUT_Y + 6) + ' Q ' + (SPOUT_X + wob) + ' ' + ((SPOUT_Y + ys) / 2) + ' ' + SPOUT_X + ' ' + ys);
                     stream.setAttribute('stroke-width', wdt.toFixed(1));
                     stream.style.display = '';
-                    splash.forEach(function (c, i) {
+                    splash.forEach(function (c, i) {    /* forEach：對陣列的每個元素各做一次 */
                         var a = Math.random() * 6.28, d = 8 + Math.random() * 16;
                         c.setAttribute('cx', (SPOUT_X + Math.cos(a) * d).toFixed(1));
-                        c.setAttribute('cy', (ys - Math.abs(Math.sin(a)) * d * 0.9).toFixed(1));
+                        c.setAttribute('cy', (ys - Math.abs(Math.sin(a)) * d * 0.9).toFixed(1));  /* Math.abs：取絕對值（去掉負號） */
                         c.style.display = L > 0 ? '' : 'none';
                     });
                 } else {
                     stream.style.display = 'none';
-                    splash.forEach(function (c) { c.style.display = 'none'; });
+                    splash.forEach(function (c) { c.style.display = 'none'; });  /* forEach：對陣列的每個元素各做一次 */
                 }
             }
             /* my.loop：每個畫面更新一次 */
-            my.loop(function (now) { draw(now); if (state === 'zoom' || state === 'verdict') return false; });
-            draw(performance.now());
+            my.loop(function (now) { draw(now); if (state === 'zoom' || state === 'verdict') return false; });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
+            draw(performance.now());                    /* performance.now()：高精度的時間（毫秒），計時用 */
 
             /* 按住倒水／放手：kit.hold 處理「按住／放開」，切到背景一律視為放開 */
             /* ─── 按住倒水／放手 ─── */
@@ -253,8 +253,8 @@
                 enabled: function () { return state === 'ready'; },
                 down: function (e) {
                     state = 'pour';
-                    tDown = kit.evT(e) || performance.now();
-                    hint.textContent = '倒到八分滿，放手！';
+                    tDown = kit.evT(e) || performance.now();  /* performance.now()：高精度的時間（毫秒），計時用 */
+                    hint.textContent = '倒到八分滿，放手！';     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                     Sfx.pourStart();
                     /* 保底：水滿了自動停（溢出），用 setTimeout，不靠 rAF */
                     /* 保底：水滿了自動停（溢出），用 setTimeout，不靠 rAF */
@@ -264,7 +264,7 @@
             });
             my.onDispose(function () { holder.destroy(); Sfx.pourStop(); });
             /* 操作提示（只在第一次進遊戲時）：手指按住不放 → 「請持續按住螢幕」，放在場地下方 */
-            if (Reaction.kit.once('pour.hint')) Reaction.kit.hintOn(root, field, { mode: 'hold', fy: 0.8, text: '請持續按住螢幕' });
+            if (Reaction.kit.once('pour.hint')) Reaction.kit.hintOn(root, field, { mode: 'hold', fy: 0.8, text: '請持續按住螢幕' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
 
             /* 停止倒水：用事件時間算出水位（不受畫面卡頓影響） */
             function stop(t, full) {
@@ -276,7 +276,7 @@
                 overflow = full || level >= 1;
                 state = 'settle';
                 Sfx.pourStop();
-                hint.textContent = overflow ? '滿出來了！' : '水面慢慢平靜下來…';
+                hint.textContent = overflow ? '滿出來了！' : '水面慢慢平靜下來…';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 my.after(SETTLE_MS, startZoom);
                 G.debug.last = { sec: sec, level: level, err: (level - TARGET) * 100 };
             }
@@ -292,10 +292,10 @@
                 var win = zoomWindow(errPct);
                 var ys = yOf(level);
                 var cy = (ys + YT) / 2;
-                gTarget.classList.add('pour-target--on');
+                gTarget.classList.add('pour-target--on');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 pitcher.style.display = 'none';
                 hint.textContent = '放大看看差多少…';
-                Sfx.play('zoom');
+                Sfx.play('zoom');                       /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 var zlabel = h('div', { 'class': 'pour-zoomlabel', text: '放大 ×1' });
                 field.appendChild(zlabel);
                 var from = { vh: H, cy: H / 2 }, to = { vh: win, cy: cy };
@@ -306,12 +306,12 @@
                     view = { x: W / 2 - vw / 2, y: cyy - vh * frac, w: vw, h: vh };
                     svg.setAttribute('viewBox', view.x + ' ' + view.y + ' ' + view.w + ' ' + view.h);
                     fitWide(ys);
-                    zlabel.textContent = '放大 ×' + (H / vh < 10 ? (H / vh).toFixed(1) : Math.round(H / vh));
+                    zlabel.textContent = '放大 ×' + (H / vh < 10 ? (H / vh).toFixed(1) : Math.round(H / vh));  /* Math.round：四捨五入成整數 */
                     /* 放大到杯壁已經在鏡頭外時就不畫（省下超大圖形的算圖）；字也跟著縮 */
                     gGlass.style.display = vh < H * 0.5 ? 'none' : '';
                 }
                 /* my.tween：鏡頭放大動畫；倍率用指數內插，放大感覺比較均勻 */
-                my.tween(ZOOM_MS, function (e) {
+                my.tween(ZOOM_MS, function (e) {        /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
                     /* 倍率用指數內插，放大感覺比較均勻 */
                     var vh = Math.exp(Math.log(from.vh) + (Math.log(to.vh) - Math.log(from.vh)) * e);
                     setBox(vh, from.cy + (to.cy - from.cy) * e, e);
@@ -335,8 +335,8 @@
                 var labels = h('div', { 'class': 'pour-labels' });
                 field.appendChild(labels);
                 /* 刻度 k 的 y = yTarget - k·stepU；只畫落在鏡頭內的 */
-                var kMin = Math.ceil((yTarget - (top + win)) / stepU);
-                var kMax = Math.floor((yTarget - top) / stepU);
+                var kMin = Math.ceil((yTarget - (top + win)) / stepU);  /* Math.ceil：無條件進位成整數 */
+                var kMax = Math.floor((yTarget - top) / stepU);  /* Math.floor：無條件捨去成整數 */
                 for (var k = kMin; k <= kMax; k++) {
                     var y = yTarget - k * stepU;
                     var major = k === 0;
@@ -351,7 +351,7 @@
                     lb.style.top = (offY + (y - view.y) * sc).toFixed(1) + 'px';
                     labels.appendChild(lb);
                 }
-                gRuler.classList.add('pour-ruler--on');
+                gRuler.classList.add('pour-ruler--on'); /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             }
 
             /* 結算橫幅：顯示誤差評語與再來一次 */
@@ -364,13 +364,13 @@
                 var err = Leaderboard.fake4(realErr);
                 var shownLevel = TARGET * 100 + (errPct > 0 ? err : -err);
                 console.log('倒到八分滿：實際誤差 ' + realErr.toFixed(6) + '% → 成績 ' + err.toFixed(4) + '%（水位 ' + fmtPct(shownLevel) + '）');
-                var isNew = Reaction.setBest(ID, err, function (v, b) { return v < b; });
+                var isNew = Reaction.setBest(ID, err, function (v, b) { return v < b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                 ctx.setMeta(kit.meta([fmtBest(Reaction.getBest(ID))]));
                 hint.textContent = '';
                 var sfx = err < 0.5 ? 'perfect' : (err < 4 ? 'win' : 'fail');
                 /* 結算彈窗（公版 kit.result）：貼在畫面下緣、背後不壓暗——放大後的水位刻度還要看得到；
                    帶 score 會在彈窗出現之後自動送世界排行榜 */
-                kit.result(root, {
+                kit.result(root, {                      /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                     num: rating(err),
                     label: overflow ? '水滿出來了，水位 100%' : (err < 0.005 ? '分毫不差！' : (errPct > 0 ? '多倒了 ' : '少倒了 ') + fmtPct(err)),
                     lines: ['水位 ' + fmtPct(overflow ? 100 : shownLevel) + '，目標 80%'],

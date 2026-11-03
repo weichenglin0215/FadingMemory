@@ -48,7 +48,7 @@
         }
     }
     /* 這一關要留幾個提示數（已經填好的格子）：從階段第 1 關的數字線性變到階段到頂的數字（越少越難） */
-    function givensFor(level) { var s = stageOf(level), r = GIVENS[s.n]; return Math.round(kit.ramp(s.idx, r[0], r[1], s.len)); }
+    function givensFor(level) { var s = stageOf(level), r = GIVENS[s.n]; return Math.round(kit.ramp(s.idx, r[0], r[1], s.len)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 顏色代號換成文字：1＝黑、其他＝白（說明文字用） */
     function nameOf(c) { return c === BLACK ? '黑' : '白'; }
 
@@ -57,7 +57,7 @@
     /* 檢查「在第 i 格放 color」會不會違規，不會真的放下去（grid 不會被改）。
        這個函式特別有意思：它不是檢查整盤，而是只看「這一格會造成的問題」，所以玩家按下去時能立刻說明是哪一排哪幾格出問題。 */
     function violationAt(grid, n, i, color) {
-        var r = Math.floor(i / n), c = i % n, half = n / 2, k, s;
+        var r = Math.floor(i / n), c = i % n, half = n / 2, k, s;  /* Math.floor：無條件捨去成整數 */
         /* 小工具：取 (rr, cc) 這格的顏色，但「正在檢查的那一格」要當成已經放了 color */
         function at(rr, cc) { return rr * n + cc === i ? color : grid[rr * n + cc]; }
         /* 橫向檢查三連：包含這一格的三格窗口最多三個（起點 s 從 c−2 到 c），三格都是同色就違規 */
@@ -102,12 +102,12 @@
        反覆做到推不動。回傳 { grid, order（依序推出的格子）, solved, dead（推出矛盾） } */
     /* 推理器（不猜、只用規則一步一步推）：一直套用三招，直到推不動為止。出題用它確認「題目不用猜就解得出來」 */
     function propagate(start, n) {
-        var g = start.slice(), order = [], dead = false, half = n / 2, changed = true;
+        var g = start.slice(), order = [], dead = false, half = n / 2, changed = true;  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         /* 把第 i 格設成 v（只能設空格；已經是別的顏色就代表矛盾 dead）；有設成功就記入 order、並標記「有進展」 */
         function setc(i, v) { if (g[i] === 0) { g[i] = v; order.push(i); changed = true; } else if (g[i] !== v) dead = true; }
         /* 對一條線（一排或一列，idxs 是這條線的格子編號）套用三招：連兩個同色→兩邊填另一色；同色夾一格→中間填另一色；某色已用到一半→其餘空格全填另一色 */
         function line(idxs) {
-            var k, a = idxs.map(function (i) { return g[i]; });
+            var k, a = idxs.map(function (i) { return g[i]; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             for (k = 0; k + 1 < n; k++) if (a[k] && a[k] === a[k + 1]) {
                 var o = 3 - a[k];
                 if (k - 1 >= 0 && !g[idxs[k - 1]]) setc(idxs[k - 1], o);
@@ -115,8 +115,8 @@
             }
             for (k = 0; k + 2 < n; k++) if (a[k] && a[k] === a[k + 2] && !g[idxs[k + 1]]) setc(idxs[k + 1], 3 - a[k]);
             var cnt = [0, 0, 0];
-            idxs.forEach(function (i) { cnt[g[i]]++; });
-            [BLACK, WHITE].forEach(function (col) {
+            idxs.forEach(function (i) { cnt[g[i]]++; });  /* forEach：對陣列的每個元素各做一次 */
+            [BLACK, WHITE].forEach(function (col) {     /* forEach：對陣列的每個元素各做一次 */
                 if (cnt[col] > half) dead = true;
                 if (cnt[col] === half) idxs.forEach(function (i) { if (!g[i]) setc(i, 3 - col); });
             });
@@ -126,13 +126,13 @@
         var guard = 0;
         while (changed && !dead && guard++ < 200) { changed = false; lines.forEach(line); }  /* 一直重複套用，直到整盤都沒有新進展（changed 為 false）；guard 防止意外無限迴圈 */
         if (!dead && findViolations(g, n).length) dead = true;
-        return { grid: g, order: order, solved: !dead && g.every(function (v) { return v > 0; }), dead: dead };
+        return { grid: g, order: order, solved: !dead && g.every(function (v) { return v > 0; }), dead: dead };  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
     }
     /* 造一個合法的滿盤：一格一格亂數放顏色，違規就換色，兩色都不行就退回上一格 */
     /* 造一個合法的完整盤面：一格一格隨機放顏色，違規就換另一色，兩色都不行就退回上一格重來（這種「試、錯、退」叫回溯） */
     function randomSolution(n, rand) {
-        var g = new Array(n * n).fill(0), i = 0, tried = new Array(n * n).fill(0), guard = 0;
-        var first = new Array(n * n).fill(0);
+        var g = new Array(n * n).fill(0), i = 0, tried = new Array(n * n).fill(0), guard = 0;  /* new Array(n).fill(v)：建立長度 n、每一格都是 v 的陣列 */
+        var first = new Array(n * n).fill(0);           /* new Array(n).fill(v)：建立長度 n、每一格都是 v 的陣列 */
         while (i < n * n && guard++ < 100000) {
             if (i < 0) return randomSolution(n, rand);
             if (!first[i]) first[i] = rand() < 0.5 ? BLACK : WHITE;
@@ -153,8 +153,8 @@
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var st = stageOf(level), n = st.n, want = givensFor(level), best = null;
         for (var tr = 0; tr < 25; tr++) {
-            var sol = randomSolution(n, rand), givens = sol.slice(), count = n * n;
-            var order = kit.shuffle(Array.apply(null, Array(n * n)).map(function (_, i) { return i; }), rand);
+            var sol = randomSolution(n, rand), givens = sol.slice(), count = n * n;  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+            var order = kit.shuffle(Array.apply(null, Array(n * n)).map(function (_, i) { return i; }), rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
             for (var k = 0; k < order.length && count > want; k++) {
                 var c = order[k], save = givens[c];
                 givens[c] = 0;
@@ -205,45 +205,45 @@
         api.info = pz;                                  /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[黑白不連三] 第 ' + level + ' 關：' + n + '×' + n + '，提示 ' + pz.count + ' 個（想要 ' + pz.want + '）');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
         var W = stage.clientWidth || 472;
-        var cell = Math.min(CELL_MAX, Math.floor(W * 0.96 / n));
+        var cell = Math.min(CELL_MAX, Math.floor(W * 0.96 / n));  /* Math.floor：無條件捨去成整數 */
         var grid = pz.givens.slice(), tool = BLACK, hintsLeft = HINTS, hint = -1, solved = false, popup = null;  /* grid：目前盤面（先抄一份題目）；tool：目前選的畫筆（黑／白／清除）；hintsLeft：剩幾次提示；hint：提示標出的格子；solved：已解開；popup：違規說明彈窗 */
 
-        var wrap = h('div', { 'class': 'takuzu-wrap' });
-        var board = h('div', { 'class': 'takuzu-board' });
-        board.style.setProperty('--takuzu-n', n);
-        board.style.setProperty('--takuzu-cell', cell + 'px');
+        var wrap = h('div', { 'class': 'takuzu-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
+        var board = h('div', { 'class': 'takuzu-board' });  /* board：盤面（所有格子都放在裡面） */
+        board.style.setProperty('--takuzu-n', n);       /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
+        board.style.setProperty('--takuzu-cell', cell + 'px');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
         var cells = [], discs = [];
         for (var i = 0; i < n * n; i++) {
             var d = h('span', { 'class': 'takuzu-disc' });
             var c = h('div', { 'class': 'takuzu-cell' }, [d]);
             (function (idx) { kit.onTap(c, function () { tap(idx); }); })(i);  /* 用立即執行函式把當下的 i 存成 idx，每一格點下去才知道自己是哪一格 */
-            board.appendChild(c); cells.push(c); discs.push(d);
+            board.appendChild(c); cells.push(c); discs.push(d);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         }
-        var tip = h('div', { 'class': 'takuzu-tip', text: '選顏色，再點格子' });
+        var tip = h('div', { 'class': 'takuzu-tip', text: '選顏色，再點格子' });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
         var palette = h('div', { 'class': 'takuzu-tools' });
         var btnB = h('button', { 'class': 'btn btn--line takuzu-tool takuzu-tool--black', type: 'button', html: '<i class="takuzu-swatch takuzu-swatch--black"></i>黑' });
         var btnW = h('button', { 'class': 'btn btn--line takuzu-tool takuzu-tool--white', type: 'button', html: '<i class="takuzu-swatch takuzu-swatch--white"></i>白' });
         var btnE = h('button', { 'class': 'btn btn--line takuzu-tool', type: 'button', text: '清除' });
-        kit.onTap(btnB, function () { setTool(BLACK); });
-        kit.onTap(btnW, function () { setTool(WHITE); });
+        kit.onTap(btnB, function () { setTool(BLACK); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        kit.onTap(btnW, function () { setTool(WHITE); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
         kit.onTap(btnE, function () { setTool(0); });
-        [btnB, btnW, btnE].forEach(function (b) { palette.appendChild(b); });
+        [btnB, btnW, btnE].forEach(function (b) { palette.appendChild(b); });  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var acts = h('div', { 'class': 'takuzu-tools' });
-        var btnHint = h('button', { 'class': 'btn btn--line takuzu-tool', type: 'button', text: '提示 ' + hintsLeft });
-        var btnReset = h('button', { 'class': 'btn btn--line takuzu-tool', type: 'button', text: '重來' });
+        var btnHint = h('button', { 'class': 'btn btn--line takuzu-tool', type: 'button', text: '提示 ' + hintsLeft });  /* 「提示」按鈕（文字會顯示還剩幾次提示） */
+        var btnReset = h('button', { 'class': 'btn btn--line takuzu-tool', type: 'button', text: '重來' });  /* 「重來」按鈕 */
         kit.onTap(btnHint, useHint);
         kit.onTap(btnReset, reset);
-        if (HINTS > 0) acts.appendChild(btnHint);
+        if (HINTS > 0) acts.appendChild(btnHint);       /* 提示次數 HINTS 設成 0，就連提示按鈕都不放 */
         acts.appendChild(btnReset);
         wrap.appendChild(board); wrap.appendChild(tip); wrap.appendChild(palette); wrap.appendChild(acts);
-        stage.appendChild(wrap);
+        stage.appendChild(wrap);                        /* 把整個遊戲區放進舞台（放進去，畫面上才看得到） */
         setTool(BLACK);
 
         /* 切換畫筆：記住選了哪一種，並讓對應的按鈕亮起來 */
         function setTool(t) {
             tool = t;
-            btnB.classList.toggle('takuzu-tool--on', t === BLACK);
-            btnW.classList.toggle('takuzu-tool--on', t === WHITE);
+            btnB.classList.toggle('takuzu-tool--on', t === BLACK);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            btnW.classList.toggle('takuzu-tool--on', t === WHITE);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             btnE.classList.toggle('takuzu-tool--on', t === 0);
         }
         /* 重畫：每一格依狀態（題目／提示／解開）設 class，並依盤面顏色畫黑白圓點 */
@@ -258,13 +258,13 @@
            會違規就彈出說明（這一步不會放下去），沒違規才放下去；放完若全盤完成就過關。 */
         function tap(i) {
             if (solved || popup) return;
-            if (pz.givens[i]) { tip.textContent = '這一格是題目給的，不能改'; return; }
+            if (pz.givens[i]) { tip.textContent = '這一格是題目給的，不能改'; return; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             hint = -1;
             if (tool === 0 || grid[i] === tool) { grid[i] = 0; paint(); return; }
             var v = violationAt(grid, n, i, tool);
             if (v) { explain(i, v); return; }
             grid[i] = tool;
-            tip.textContent = '選顏色，再點格子';
+            tip.textContent = '選顏色，再點格子';               /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             paint();
             if (isComplete(grid, n)) win();
         }
@@ -272,8 +272,8 @@
         function win() {
             solved = true; paint();
             tip.textContent = '解開了！';
-            kit.flash(stage, true, api.my);
-            api.pass({ delay: PASS_DELAY_MS });
+            kit.flash(stage, true, api.my);             /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.pass({ delay: PASS_DELAY_MS });         /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
         }
         /* 提示：請 hintCell 找出「現在可以確定」的格子並閃動標示（每題 HINTS 次） */
         function useHint() {
@@ -293,7 +293,7 @@
         /* 違規說明彈窗：把違規的那一排／列畫出來（紅圈＝違規的格子），再附一張規則示意圖。
            Dlg.open 是共用的彈窗：host 指定蓋在哪裡、children 是內容、buttons 是按鈕。 */
         function explain(i, v) {
-            Sfx.play('bad');
+            Sfx.play('bad');                            /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             var line = [], k;
             for (k = 0; k < n; k++) line.push(v.dir === 'row' ? v.index * n + k : k * n + v.index);
             var after = grid.slice(); after[i] = v.color;
@@ -333,17 +333,17 @@
     /* 畫說明彈窗裡的規則示意圖（SVG 向量圖）：上面是玩家這一排的樣子，下面是「錯／對」範例。svg 的 viewBox 是內部座標，縮放時會等比例變大變小 */
     function ruleSvg(after, lineIdx, v, placedIdx, n) {
         var cs = Math.min(46, Math.floor(400 / n)), W = 400, x0 = (W - cs * n) / 2;
-        var svg = kit.svg('svg', { viewBox: '0 0 ' + W + ' 196', 'class': 'takuzu-svg', width: '100%' });
+        var svg = kit.svg('svg', { viewBox: '0 0 ' + W + ' 196', 'class': 'takuzu-svg', width: '100%' });  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         /* 畫一顆圓點：有顏色就畫黑／白圓，沒顏色畫小灰點；red 為 true 時外面再畫一圈紅圈（標出違規） */
         function disc(x, y, s, val, red) {
-            if (val) kit.svg('circle', { cx: x + s / 2, cy: y + s / 2, r: s * 0.36, 'class': 'takuzu-svg-disc takuzu-svg-disc--' + (val === BLACK ? 'black' : 'white') }, svg);
+            if (val) kit.svg('circle', { cx: x + s / 2, cy: y + s / 2, r: s * 0.36, 'class': 'takuzu-svg-disc takuzu-svg-disc--' + (val === BLACK ? 'black' : 'white') }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             else kit.svg('circle', { cx: x + s / 2, cy: y + s / 2, r: s * 0.12, 'class': 'takuzu-svg-dot' }, svg);
             if (red) kit.svg('circle', { cx: x + s / 2, cy: y + s / 2, r: s * 0.46, 'class': 'takuzu-svg-bad' }, svg);
         }
         function text(x, y, str, cls, anchor) { var t = kit.svg('text', { x: x, y: y, 'text-anchor': anchor || 'start', 'class': cls }, svg); t.textContent = str; }
         lineIdx.forEach(function (ci, k) {
             kit.svg('rect', { x: x0 + k * cs, y: 6, width: cs, height: cs, 'class': 'takuzu-svg-cell' + (ci === placedIdx ? ' takuzu-svg-cell--new' : '') }, svg);
-            disc(x0 + k * cs, 6, cs, after[ci], v.cells.indexOf(ci) >= 0);
+            disc(x0 + k * cs, 6, cs, after[ci], v.cells.indexOf(ci) >= 0);  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         });
         text(W / 2, cs + 30, '你的這一' + (v.dir === 'row' ? '排' : '列') + '（黃框＝剛放的那格）', 'takuzu-svg-cap', 'middle');
         /* 規則範例：錯的一列、對的一列 */

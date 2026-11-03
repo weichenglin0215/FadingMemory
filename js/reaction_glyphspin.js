@@ -52,10 +52,10 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function spinAt(level) { return kit.ramp(level, SPIN[0], SPIN[1], RAMP_LEVELS); }       /* 這一關剛出現時的角速度 */
-    function optCount(level) { return Math.round(kit.ramp(level, OPT[0], OPT[1], RAMP_LEVELS)); }
-    function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }
+    function optCount(level) { return Math.round(kit.ramp(level, OPT[0], OPT[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
     /* 這一關的目標筆劃數（線性，MAX_LEVEL 關之後維持） */
-    function strokeTarget(level) { return kit.ramp(level, STROKES[0], STROKES[1], MAX_LEVEL); }
+    function strokeTarget(level) { return kit.ramp(level, STROKES[0], STROKES[1], MAX_LEVEL); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 角速度（度／秒）隨時間降低：t 秒時 ＝ SPIN_MIN ＋ (v0 − SPIN_MIN) × (1 − t/SLOW_S)²，SLOW_S 秒之後維持 SPIN_MIN */
     function speedAt(v0, ms) {
         var u = Math.max(0, 1 - ms / 1000 / SLOW_S);
@@ -79,25 +79,25 @@
         recent = recent || [];
         var tg = strokeTarget(level), n = optCount(level);
         var near = [], i;
-        for (i = 0; i < FAMILIES.length; i++) if (Math.abs(FAMILIES[i].s - tg) <= STROKE_SPREAD) near.push(i);
+        for (i = 0; i < FAMILIES.length; i++) if (Math.abs(FAMILIES[i].s - tg) <= STROKE_SPREAD) near.push(i);  /* Math.abs：取絕對值（去掉負號） */
         if (!near.length) {                                 /* 保底：挑筆劃最接近的 4 組 */
-            near = FAMILIES.map(function (f, k) { return k; }).sort(function (a, b) { return Math.abs(FAMILIES[a].s - tg) - Math.abs(FAMILIES[b].s - tg); }).slice(0, 4);
+            near = FAMILIES.map(function (f, k) { return k; }).sort(function (a, b) { return Math.abs(FAMILIES[a].s - tg) - Math.abs(FAMILIES[b].s - tg); }).slice(0, 4);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         }
-        var fresh = near.filter(function (k) { return recent.indexOf(k) < 0; });
-        var fi = kit.pick(fresh.length ? fresh : near, rand), fam = FAMILIES[fi].c;
-        var target = kit.pick(fam, rand);
-        var opts = [target].concat(kit.shuffle(fam.filter(function (c) { return c !== target; }), rand));
+        var fresh = near.filter(function (k) { return recent.indexOf(k) < 0; });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+        var fi = kit.pick(fresh.length ? fresh : near, rand), fam = FAMILIES[fi].c;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        var target = kit.pick(fam, rand);               /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        var opts = [target].concat(kit.shuffle(fam.filter(function (c) { return c !== target; }), rand));  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         if (opts.length > n) opts = opts.slice(0, n);
         if (opts.length < n) {                              /* 不夠：從筆劃最接近的別組補 */
-            var others = FAMILIES.map(function (f, k) { return k; }).filter(function (k) { return k !== fi; })
-                .sort(function (a, b) { return Math.abs(FAMILIES[a].s - FAMILIES[fi].s) - Math.abs(FAMILIES[b].s - FAMILIES[fi].s) || rand() - 0.5; });
+            var others = FAMILIES.map(function (f, k) { return k; }).filter(function (k) { return k !== fi; })  /* filter：留下符合條件的元素，回傳新陣列 */
+                .sort(function (a, b) { return Math.abs(FAMILIES[a].s - FAMILIES[fi].s) - Math.abs(FAMILIES[b].s - FAMILIES[fi].s) || rand() - 0.5; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
             for (i = 0; i < others.length && opts.length < n; i++) {
-                kit.shuffle(FAMILIES[others[i]].c.slice(), rand).forEach(function (c) { if (opts.length < n && opts.indexOf(c) < 0) opts.push(c); });
+                kit.shuffle(FAMILIES[others[i]].c.slice(), rand).forEach(function (c) { if (opts.length < n && opts.indexOf(c) < 0) opts.push(c); });  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
             }
         }
-        var mirror = SYMMETRIC.indexOf(target) < 0 && rand() < MIRROR_P;
+        var mirror = SYMMETRIC.indexOf(target) < 0 && rand() < MIRROR_P;  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         return {
-            fam: fi, target: target, options: kit.shuffle(opts, rand), mirror: mirror,
+            fam: fi, target: target, options: kit.shuffle(opts, rand), mirror: mirror,  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
             dir: rand() < 0.5 ? 1 : -1, spin: spinAt(level), start: rand() * 360, strokes: FAMILIES[fi].s
         };
     }
@@ -134,37 +134,37 @@
 
         var glyph = h('div', { 'class': 'glyphspin-glyph', text: q.target });
         var note = h('div', { 'class': 'glyphspin-note', text: q.mirror ? '字被左右鏡射了，還在轉！' : '字在轉！' });
-        stage.appendChild(note); stage.appendChild(glyph);
-        var btns = q.options.map(function (c) {
+        stage.appendChild(note); stage.appendChild(glyph);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var btns = q.options.map(function (c) {         /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var b = h('button', { 'class': 'btn btn--line glyphspin-opt', text: c });
-            kit.onTap(b, function () { judge(c); });
+            kit.onTap(b, function () { judge(c); });    /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             return b;
         });
-        stage.appendChild(h('div', { 'class': 'rx-btnrow glyphspin-opts' }, btns));
-        var t0 = performance.now(), running = true;
+        stage.appendChild(h('div', { 'class': 'rx-btnrow glyphspin-opts' }, btns));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var t0 = performance.now(), running = true;     /* performance.now()：高精度的時間（毫秒），計時用 */
         /* 字的方框固定是畫面寬度的 90%（.glyphspin-glyph），縮小靠 scale：最後縮到 10% ÷ 90% */
         function frame() {
-            var ms = performance.now() - t0, k = sizeFrac(ms, limit) / (SIZE_PCT[0] / 100);
+            var ms = performance.now() - t0, k = sizeFrac(ms, limit) / (SIZE_PCT[0] / 100);  /* performance.now()：高精度的時間（毫秒），計時用 */
             glyph.style.transform = 'rotate(' + angleAt(q, ms).toFixed(2) + 'deg) scale(' + (q.mirror ? '-' : '') + k.toFixed(4) + ', ' + k.toFixed(4) + ')';
         }
         frame();
-        var loop = api.my.loop(function () { if (!running || api.over) return false; frame(); });
+        var loop = api.my.loop(function () { if (!running || api.over) return false; frame(); });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
         api.timer(limit, function () { judge(null); }); /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
 
         /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(c) {
             if (api.over) return;
             running = false; loop.stop();
-            glyph.style.transform = 'none'; glyph.textContent = q.target;
-            note.textContent = '答案是「' + q.target + '」';
-            btns.forEach(function (b) { if (b.textContent === q.target) b.classList.add('glyphspin-opt--ok'); else if (b.textContent === c) b.classList.add('glyphspin-opt--bad'); });
-            if (c === q.target) api.pass({ delay: 700 });
-            else api.fail({
+            glyph.style.transform = 'none'; glyph.textContent = q.target;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            note.textContent = '答案是「' + q.target + '」'; /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            btns.forEach(function (b) { if (b.textContent === q.target) b.classList.add('glyphspin-opt--ok'); else if (b.textContent === c) b.classList.add('glyphspin-opt--bad'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            if (c === q.target) api.pass({ delay: 700 });  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
+            else api.fail({                             /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: 1900, lines: [
                     (c == null ? '時間到！' : '選錯了：你選「' + c + '」') + '，正確答案是「' + q.target + '」',
                     q.mirror ? '這一關的字被左右鏡射了' : '',
                     '相似的字：' + q.options.join('、')
-                ].filter(function (x) { return x; })
+                ].filter(function (x) { return x; })    /* filter：留下符合條件的元素，回傳新陣列 */
             });
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */

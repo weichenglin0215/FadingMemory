@@ -52,7 +52,7 @@
     var COLORS = ['紅色', '藍色', '綠色', '黃色', '紫色'];    /* 五種顏色的名稱：紅、藍、綠、黃、紫 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function timeFor(level, empties) { return TIME_BASE + empties * kit.ramp(level, TIME_CELL[0], TIME_CELL[1], 30); }
+    function timeFor(level, empties) { return TIME_BASE + empties * kit.ramp(level, TIME_CELL[0], TIME_CELL[1], 30); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 這一關屬於哪個難度階段：依關卡編號找出對應的設定（參數區的階段表） */
     function stageOf(level) {
         level = Math.max(1, level);
@@ -63,13 +63,13 @@
         }
     }
     /* 圖形編號 p＝形狀 × n ＋ 顏色 */
-    function shapeOf(p, n) { return Math.floor(p / n); }
+    function shapeOf(p, n) { return Math.floor(p / n); }  /* Math.floor：無條件捨去成整數 */
     function colorOf(p, n) { return p % n; }
     /* 兩個圖形能不能相鄰：形狀不同而且顏色不同 */
     function canTouch(a, b, n) { return shapeOf(a, n) !== shapeOf(b, n) && colorOf(a, n) !== colorOf(b, n); }
     /* 鄰居：上下左右；diag 為真時連四個斜角也算 */
     function neighbors(k, n, diag) {
-        var r = Math.floor(k / n), c = k % n, out = [];
+        var r = Math.floor(k / n), c = k % n, out = []; /* Math.floor：無條件捨去成整數 */
         if (r > 0) out.push(k - n); if (r < n - 1) out.push(k + n); if (c > 0) out.push(k - 1); if (c < n - 1) out.push(k + 1);
         if (diag) {
             if (r > 0 && c > 0) out.push(k - n - 1); if (r > 0 && c < n - 1) out.push(k - n + 1);
@@ -85,7 +85,7 @@
             var c = k % n, pairs = [[k + 1, false], [k + n, false]];
             if (c === n - 1) pairs[0] = null;
             if (diag) { if (c < n - 1) pairs.push([k + n + 1, true]); if (c > 0) pairs.push([k + n - 1, true]); }
-            pairs.forEach(function (pq) {
+            pairs.forEach(function (pq) {               /* forEach：對陣列的每個元素各做一次 */
                 if (!pq) return;
                 var q = pq[0];
                 if (q >= N || g[q] < 0) return;
@@ -99,7 +99,7 @@
        每一步挑「合法圖形最少」的空格先填（最少候選優先，沒有合法圖形就立刻退回去），比一格一格往下填快得多。
        rand 有給就隨機挑圖形的順序（出題用）；超過 nodeLimit 步就放棄（gaveUp）。回傳 { count, first, gaveUp } */
     function search(g, n, diag, rand, limit, nodeLimit) {
-        var N = n * n, used = [], cur = g.slice(), nodes = 0, count = 0, first = null, gaveUp = false, k, p, nbs = [];
+        var N = n * n, used = [], cur = g.slice(), nodes = 0, count = 0, first = null, gaveUp = false, k, p, nbs = [];  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         for (p = 0; p < N; p++) used.push(false);
         for (k = 0; k < N; k++) nbs.push(neighbors(k, n, diag));
         for (k = 0; k < N; k++) if (cur[k] >= 0) { if (used[cur[k]]) return { count: 0, first: null, gaveUp: false }; used[cur[k]] = true; }
@@ -123,8 +123,8 @@
                 if (!cand.length) return;                          /* 有一格已經沒有圖形可放：這條路走不通 */
                 if (!best || cand.length < best.length) { best = cand; bestK = kk; if (cand.length === 1) break; }
             }
-            if (bestK < 0) { count++; if (!first) first = cur.slice(); return; }
-            if (rand) best = kit.shuffle(best, rand);
+            if (bestK < 0) { count++; if (!first) first = cur.slice(); return; }  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+            if (rand) best = kit.shuffle(best, rand);   /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
             for (var i = 0; i < best.length; i++) {
                 if (++nodes > nodeLimit) { gaveUp = true; return; }
                 used[best[i]] = true; cur[bestK] = best[i];
@@ -154,15 +154,15 @@
         if (!sol) {                                  /* 保底（實測不會用到）：形狀＝(列＋行) mod n、顏色＝(列＋2×行) mod n（只保證上下左右合格） */
             diag = false; sol = []; for (k = 0; k < N; k++) { var r = Math.floor(k / n), c = k % n; sol.push(((r + c) % n) * n + (r + 2 * c) % n); }
         }
-        var order = kit.shuffle(Object.keys(sol).map(Number), rand), given = empty.slice();
+        var order = kit.shuffle(Object.keys(sol).map(Number), rand), given = empty.slice();  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         for (var a = 0; a < N && !isUnique(given, n, diag); a++) given[order[a]] = sol[order[a]];             /* 一個一個固定，直到唯一 */
         kit.shuffle(order, rand).forEach(function (q) {                                                          /* 再拿掉多餘的 */
             if (given[q] < 0) return;
             var v = given[q]; given[q] = -1;
             if (!isUnique(given, n, diag)) given[q] = v;
         });
-        var extra = Math.round(kit.ramp(s.idx, s.st.extra[0], s.st.extra[1], Math.max(2, s.len)));
-        var free = order.filter(function (q) { return given[q] < 0; });
+        var extra = Math.round(kit.ramp(s.idx, s.st.extra[0], s.st.extra[1], Math.max(2, s.len)));  /* Math.round：四捨五入成整數 */
+        var free = order.filter(function (q) { return given[q] < 0; });  /* filter：留下符合條件的元素，回傳新陣列 */
         for (var e = 0; e < extra && e < free.length - 2; e++) given[free[e]] = sol[free[e]];
         return { n: n, diag: diag, sol: sol, given: given };
     }
@@ -180,8 +180,8 @@
     var SVGNS = 'http://www.w3.org/2000/svg';
     function shapeSvg(s, c) {
         var svg = document.createElementNS(SVGNS, 'svg');
-        svg.setAttribute('viewBox', '0 0 100 100');
-        svg.setAttribute('class', 'shapegrid-svg');
+        svg.setAttribute('viewBox', '0 0 100 100');     /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+        svg.setAttribute('class', 'shapegrid-svg');     /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         var el;
         if (s === 0) { el = document.createElementNS(SVGNS, 'circle'); el.setAttribute('cx', 50); el.setAttribute('cy', 50); el.setAttribute('r', 40); }
         else if (s === 2) { el = document.createElementNS(SVGNS, 'rect'); el.setAttribute('x', 13); el.setAttribute('y', 13); el.setAttribute('width', 74); el.setAttribute('height', 74); el.setAttribute('rx', 6); }
@@ -193,7 +193,7 @@
             el.setAttribute('points', pts);
         }
         el.setAttribute('class', 'shapegrid-fill shapegrid-fill--' + c);
-        svg.appendChild(el);
+        svg.appendChild(el);                            /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         return svg;
     }
 
@@ -219,37 +219,37 @@
         api.info = pz;                                  /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[形色不相鄰] 第 ' + level + ' 關：' + n + '×' + n + (diag ? '（含斜角）' : '') + '，先放好 ' + pz.given.filter(function (v) { return v >= 0; }).length + ' 個');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
         var W = stage.clientWidth || 472, H = stage.clientHeight || 700;
-        var chip = n >= 5 ? 52 : 60, perRow = Math.floor((W * 0.96 + 6) / (chip + 6)), trayRows = Math.ceil(N / perRow);
+        var chip = n >= 5 ? 52 : 60, perRow = Math.floor((W * 0.96 + 6) / (chip + 6)), trayRows = Math.ceil(N / perRow);  /* Math.ceil：無條件進位成整數 */
         var cell = Math.min(116, Math.floor((W * 0.92 - (n - 1) * 6) / n), Math.floor((H - trayRows * (chip + 6) - 150 - (n - 1) * 6) / n));
         var g = pz.given.slice(), hinted = {}, pick = -1, hintsLeft = HINTS, solved = false, flagged = -1, dead = false;
 
-        var wrap = h('div', { 'class': 'shapegrid-wrap' });
-        var board = h('div', { 'class': 'shapegrid-board' });
-        board.style.setProperty('--shapegrid-n', n);
-        board.style.setProperty('--shapegrid-cell', cell + 'px');
+        var wrap = h('div', { 'class': 'shapegrid-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
+        var board = h('div', { 'class': 'shapegrid-board' });  /* board：盤面（所有格子都放在裡面） */
+        board.style.setProperty('--shapegrid-n', n);    /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
+        board.style.setProperty('--shapegrid-cell', cell + 'px');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
         var cells = [];
         for (var k = 0; k < N; k++) {
             var cl = h('div', { 'class': 'shapegrid-cell' });
             (function (kk) { kit.onTap(cl, function () { tapCell(kk); }); })(k);  /* 用立即執行函式存住這一次迴圈的變數（不這樣寫，每個元素點下去都會拿到迴圈結束時的值） */
-            board.appendChild(cl); cells.push(cl);
+            board.appendChild(cl); cells.push(cl);      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         }
-        var tip = h('div', { 'class': 'shapegrid-tip', text: tipDefault });
+        var tip = h('div', { 'class': 'shapegrid-tip', text: tipDefault });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
         var tray = h('div', { 'class': 'shapegrid-tray' });
         tray.style.setProperty('--shapegrid-chip', chip + 'px');
         var tools = h('div', { 'class': 'shapegrid-tools' });
-        var btnHint = h('button', { 'class': 'btn btn--line shapegrid-tool', type: 'button', text: '提示 ' + hintsLeft });
-        var btnReset = h('button', { 'class': 'btn btn--line shapegrid-tool', type: 'button', text: '重來' });
-        kit.onTap(btnHint, useHint);
-        kit.onTap(btnReset, reset);
-        if (HINTS > 0) tools.appendChild(btnHint);
+        var btnHint = h('button', { 'class': 'btn btn--line shapegrid-tool', type: 'button', text: '提示 ' + hintsLeft });  /* 「提示」按鈕（文字會顯示還剩幾次提示） */
+        var btnReset = h('button', { 'class': 'btn btn--line shapegrid-tool', type: 'button', text: '重來' });  /* 「重來」按鈕 */
+        kit.onTap(btnHint, useHint);                    /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        kit.onTap(btnReset, reset);                     /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        if (HINTS > 0) tools.appendChild(btnHint);      /* 提示次數 HINTS 設成 0，就連提示按鈕都不放 */
         tools.appendChild(btnReset);
         wrap.appendChild(board); wrap.appendChild(tip); wrap.appendChild(tray); wrap.appendChild(tools);
-        stage.appendChild(wrap);
+        stage.appendChild(wrap);                        /* 把整個遊戲區放進舞台（放進去，畫面上才看得到） */
 
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() {
             var vs = violations(g, n, diag), bad = {};
-            vs.forEach(function (v) { bad[v.a] = true; bad[v.b] = true; });
+            vs.forEach(function (v) { bad[v.a] = true; bad[v.b] = true; });  /* forEach：對陣列的每個元素各做一次 */
             for (var k = 0; k < N; k++) {
                 var el = cells[k], cls = 'shapegrid-cell';
                 if (pz.given[k] >= 0) cls += ' shapegrid-cell--given';
@@ -259,10 +259,10 @@
                 if (k === flagged) cls += ' shapegrid-cell--flag';
                 if (solved) cls += ' shapegrid-cell--ok';
                 el.className = cls;
-                el.innerHTML = '';
+                el.innerHTML = '';                      /* innerHTML = ''：把元素裡面的東西全部清掉 */
                 if (g[k] >= 0) el.appendChild(shapeSvg(shapeOf(g[k], n), colorOf(g[k], n)));
             }
-            tray.innerHTML = '';
+            tray.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             var used = {}; g.forEach(function (p) { if (p >= 0) used[p] = true; });
             for (var p = 0; p < N; p++) {
                 if (used[p]) continue;
@@ -271,7 +271,7 @@
                 (function (pp) { kit.onTap(b, function () { if (!solved && !dead) { pick = pick === pp ? -1 : pp; paint(); } }); })(p);
                 tray.appendChild(b);
             }
-            if (!solved) tip.textContent = vs.length ? whyText(vs[0], g, n) : (pick >= 0 ? '再點一個空格放進去' : tipDefault);
+            if (!solved) tip.textContent = vs.length ? whyText(vs[0], g, n) : (pick >= 0 ? '再點一個空格放進去' : tipDefault);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             tip.className = 'shapegrid-tip' + (vs.length && !solved ? ' shapegrid-tip--bad' : '');
         }
         function tapCell(k) {
@@ -279,9 +279,9 @@
             flagged = -1;
             if (pick >= 0) { g[k] = pick; pick = -1; }
             else if (g[k] >= 0) g[k] = -1;
-            else { tip.textContent = '先點下面的一個圖形'; return; }
+            else { tip.textContent = '先點下面的一個圖形'; return; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             paint();
-            if (g.every(function (p) { return p >= 0; }) && !violations(g, n, diag).length) win();
+            if (g.every(function (p) { return p >= 0; }) && !violations(g, n, diag).length) win();  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
         }
         /* 提示：標出一個線索，並扣掉一次提示次數（次數上限在參數區的 HINTS） */
         function useHint() {
@@ -293,11 +293,11 @@
                 hintsLeft--; btnHint.textContent = '提示 ' + hintsLeft; btnHint.disabled = hintsLeft <= 0;
                 g[k] = r.sol[k]; hinted[k] = true; pick = -1;
                 paint(); tip.textContent = '黃框的這一格替你放好了';
-                if (g.every(function (p) { return p >= 0; }) && !violations(g, n, diag).length) win();
+                if (g.every(function (p) { return p >= 0; }) && !violations(g, n, diag).length) win();  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
                 return;
             }
             /* 目前的擺法擺不完：用「先放好的＋提示放的」找一種擺法，標出跟它不一樣的那一格 */
-            var base = g.map(function (p, q) { return pz.given[q] >= 0 || hinted[q] ? p : -1; });
+            var base = g.map(function (p, q) { return pz.given[q] >= 0 || hinted[q] ? p : -1; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var r2 = solve(base, n, null, NODE_LIMIT, diag), target = r2.sol || pz.sol;
             for (k = 0; k < N; k++) if (g[k] >= 0 && pz.given[k] < 0 && !hinted[k] && g[k] !== target[k]) break;
             if (k >= N) return;
@@ -308,7 +308,7 @@
         /* 重來：把這一題恢復成剛開始的樣子 */
         function reset() {
             if (solved || dead) return;
-            g = pz.given.map(function (p, q) { return hinted[q] ? g[q] : p; });
+            g = pz.given.map(function (p, q) { return hinted[q] ? g[q] : p; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             pick = -1; flagged = -1; paint();
         }
         /* 時間到：把正確答案擺上去（黃框），結算 */
@@ -319,22 +319,22 @@
             paint();
             tip.textContent = '時間到了！黃框的是正確答案';
             tip.className = 'shapegrid-tip';
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: FAIL_HOLD_MS, lines: ['時間到了'] });
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: FAIL_HOLD_MS, lines: ['時間到了'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 過關：鎖住畫面、顯示成功效果，並呼叫 api.pass 進下一關（或結算） */
         function win() {
             api.stopTimer();
             solved = true; pick = -1; paint();
             tip.textContent = '全部擺好了，沒有相鄰的！';
-            kit.flash(stage, true, api.my);
-            api.pass({ delay: PASS_DELAY_MS });
+            kit.flash(stage, true, api.my);             /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.pass({ delay: PASS_DELAY_MS });         /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { g = pz.sol.slice(); paint(); win(); };
         api.wrong = function () {           /* 驗證用：放一個跟鄰居衝突的 */
             for (var k = 0; k < N; k++) if (pz.given[k] < 0) {
-                var nb = neighbors(k, n, diag).filter(function (q) { return g[q] >= 0; })[0];
+                var nb = neighbors(k, n, diag).filter(function (q) { return g[q] >= 0; })[0];  /* filter：留下符合條件的元素，回傳新陣列 */
                 if (nb == null) continue;
                 var used = {}; g.forEach(function (p) { if (p >= 0) used[p] = true; });
                 for (var p = 0; p < N; p++) if (!used[p] && !canTouch(p, g[nb], n)) { g[k] = p; paint(); return; }

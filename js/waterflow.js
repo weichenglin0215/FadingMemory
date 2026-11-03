@@ -99,12 +99,12 @@
     }
     var FALLBACK_INK = { 5: '#8A6CC8', 4: '#3E86C4', 3: '#4C9A5B', 2: '#E0AA25', 1: '#D9483B' };   /* 紫藍綠黃紅 */
     function inkOf(n) { return parseColor(cssVar('--flow-ink-' + n)) || parseColor(FALLBACK_INK[n]); }
-    function cssRgb(c) { return 'rgb(' + Math.round(c[0] * 255) + ',' + Math.round(c[1] * 255) + ',' + Math.round(c[2] * 255) + ')'; }
+    function cssRgb(c) { return 'rgb(' + Math.round(c[0] * 255) + ',' + Math.round(c[1] * 255) + ',' + Math.round(c[2] * 255) + ')'; }  /* Math.round：四捨五入成整數 */
 
     /* 筆畫 → 平滑折線（Catmull-Rom），並算出累積長度 */
     function buildPath(n) {
-        var strokes = STROKES[n].map(function (raw) {
-            var P = raw.map(function (q) { return { x: BOX.x + q[0] * BOX.w, y: BOX.y + q[1] * BOX.h }; });
+        var strokes = STROKES[n].map(function (raw) {   /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            var P = raw.map(function (q) { return { x: BOX.x + q[0] * BOX.w, y: BOX.y + q[1] * BOX.h }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var pts = [];
             if (P.length === 2) {
                 for (var s = 0; s <= 12; s++) pts.push({ x: P[0].x + (P[1].x - P[0].x) * s / 12, y: P[0].y + (P[1].y - P[0].y) * s / 12 });
@@ -131,7 +131,7 @@
             return { pts: pts, cum: cum, len: cum[cum.length - 1] };
         });
         var total = 0;
-        strokes.forEach(function (s) { s.start = total; total += s.len; });
+        strokes.forEach(function (s) { s.start = total; total += s.len; });  /* forEach：對陣列的每個元素各做一次 */
         return { strokes: strokes, total: total };
     }
 
@@ -169,7 +169,7 @@
         cv.width = W;
         cv.height = H;
         var g = cv.getContext('2d');
-        var sb = stage.getBoundingClientRect();
+        var sb = stage.getBoundingClientRect();         /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
         var ss = sb.width / LW || 1;            /* 螢幕 px ÷ 邏輯 px */
         var k = W / LW;                          /* 畫布 px ÷ 邏輯 px */
         function X(cx) { return (cx - sb.left) / ss * k; }
@@ -177,7 +177,7 @@
 
         /* 卡片 */
         var cs = getComputedStyle(note);
-        var nb = note.getBoundingClientRect();
+        var nb = note.getBoundingClientRect();          /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
         var x = X(nb.left);
         var y = Y(nb.top);
         var w = nb.width / ss * k;
@@ -485,7 +485,7 @@
         gl.enableVertexAttribArray(0);
         gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
-        function res(r) { return { w: r, h: Math.round(r * canvas.height / canvas.width) }; }
+        function res(r) { return { w: r, h: Math.round(r * canvas.height / canvas.width) }; }  /* Math.round：四捨五入成整數 */
         var sim = res(SIM_RES);
         var inkR = res(DYE_RES);
         var velocity = doubleFbo(sim.w, sim.h);
@@ -643,7 +643,7 @@
         };
 
         this.destroy = function () {
-            Object.keys(P).forEach(function (key) { gl.deleteProgram(P[key].program); });
+            Object.keys(P).forEach(function (key) { gl.deleteProgram(P[key].program); });  /* forEach：對陣列的每個元素各做一次 */
             textures.forEach(function (t) { gl.deleteTexture(t); });
             fbos.forEach(function (f) { gl.deleteFramebuffer(f); });
             gl.deleteBuffer(quad);
@@ -682,15 +682,15 @@
             var note = o.note;
             var root = document.createElement('div');
             root.className = 'wflow hit';
-            stage.appendChild(root);
+            stage.appendChild(root);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
 
             var resolved = false;
             function leave() {
                 if (resolved) return;
                 resolved = true;
-                root.classList.add('is-leaving');
+                root.classList.add('is-leaving');       /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 resolve();
-                setTimeout(function () { root.remove(); }, T_LEAVE * 1000 + 50);
+                setTimeout(function () { root.remove(); }, T_LEAVE * 1000 + 50);  /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
             }
 
             var ctl = null;
@@ -707,12 +707,12 @@
     /* ─── 備案：數字直接疊在紙條上淡入、模糊淡出（一樣的節奏）─── */
     function simplePlay(o, root, leave) {
         [5, 4, 3, 2, 1].forEach(function (n, i) {
-            setTimeout(function () {
+            setTimeout(function () {                    /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
                 var d = document.createElement('div');
-                d.textContent = n;
+                d.textContent = n;                      /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 d.style.cssText = 'position:absolute;left:0;right:0;top:170px;text-align:center;line-height:1;' +
                     'font:900 460px "Noto Sans TC",sans-serif;color:' + cssRgb(inkOf(n)) + ';opacity:0.85;';
-                root.appendChild(d);
+                root.appendChild(d);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
                 if (o.onTick) try { o.onTick(n); } catch (e) { }
                 if (d.animate) {
                     d.animate([
@@ -755,12 +755,12 @@
         var digit = null;
         var ended = false;
         var destroyed = false;
-        var ctl = {};
+        var ctl = {};                                   /* ctl：給外面（遊戲檔案、測試）用的「遙控器」，裡面是可以呼叫的函式與查詢目前狀態的函式 */
 
         function update(dt) {
             if (destroyed) return;
             t += dt;
-            var k = Math.floor((t - T_START) / T_DIGIT);
+            var k = Math.floor((t - T_START) / T_DIGIT);  /* Math.floor：無條件捨去成整數 */
             if (t >= T_START && k >= 0 && k < 5 && k !== cur) {
                 cur = k;
                 var n = 5 - k;
@@ -822,9 +822,9 @@
                     update(dt);
                     if (!destroyed) draw();
                 }
-                requestAnimationFrame(frame);
+                requestAnimationFrame(frame);           /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
             }
-            requestAnimationFrame(frame);
+            requestAnimationFrame(frame);               /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
         };
         /* 驗證用：固定步長推進 sec 秒並畫出來 */
         ctl.step = function (sec) {

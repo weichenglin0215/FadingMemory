@@ -39,9 +39,9 @@
     /* 純函式（也給 Node 測試用） */
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 要不要跳過：n % 7 === 0（是 7 的倍數，% 是取餘數）或者把數字變成字串後含有 '7' */
-    function isSkip(n) { return n % 7 === 0 || String(n).indexOf('7') >= 0; }
+    function isSkip(n) { return n % 7 === 0 || String(n).indexOf('7') >= 0; }  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
     /* 每個數字的倒數秒數：第 1 個 2.0 秒，線性縮短到第 60 個的 0.8 秒 */
-    function dwellFor(n) { return kit.ramp(n, DWELL_START, DWELL_END, RAMP_N); }
+    function dwellFor(n) { return kit.ramp(n, DWELL_START, DWELL_END, RAMP_N); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 為什麼要跳過（失敗時顯示） */
     /* 為什麼要跳過 */
     function skipReason(n) {
@@ -75,7 +75,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
             /* n 目前的數字；passed 已通過的最大數字；state 目前階段（live 等待玩家/gap 兩數字之間的空檔/over 結束）；token 每個數字 +1；shownAt／deadline 這個數字出現／截止的時間；rts 每次的反應秒數 */
             var n = (startAt || 1) - 1, passed = n, state = 'idle', token = 0, shownAt = 0, deadline = 0, rts = [], over = false;
@@ -86,8 +86,8 @@
             var card = h('div', { 'class': 'seven-card' }, [num]);
             var tb = kit.timebar();
             var skip = h('div', { 'class': 'seven-pad seven-pad--skip' }, [h('span', { 'class': 'seven-pad__t', text: '跳過' })]);
-            [head, sub, card, tb.el, skip].forEach(function (x) { root.appendChild(x); });
-            ctx.setMeta(Reaction.getBest(ID) != null ? '最佳 ' + Reaction.getBest(ID) : '');
+            [head, sub, card, tb.el, skip].forEach(function (x) { root.appendChild(x); });  /* forEach：對陣列的每個元素各做一次 */
+            ctx.setMeta(Reaction.getBest(ID) != null ? '最佳 ' + Reaction.getBest(ID) : '');  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
             /* 出下一個數字 */
             function nextNumber() {
@@ -95,18 +95,18 @@
                 n++;
                 /* dwell 這個數字的倒數秒數；sk 這個數字要不要跳過 */
                 var id = ++token, dwell = dwellFor(n), sk = isSkip(n);
-                num.textContent = String(n);
+                num.textContent = String(n);            /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 card.className = 'seven-card';
-                sub.textContent = '已過 ' + passed + ' 個';
+                sub.textContent = '已過 ' + passed + ' 個';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 state = 'live';
-                shownAt = performance.now(); deadline = shownAt + dwell * 1000;
+                shownAt = performance.now(); deadline = shownAt + dwell * 1000;  /* performance.now()：高精度的時間（毫秒），計時用 */
                 tb.set(1);
                 /* 操作提示（只在第一次玩、數字 1 出現的時候）：手指縮放，擺在上面的數字格子上（1 要點數字） */
-                if (n === 1 && kit.once('seven.hint')) kit.hintOn(root, card, { mode: 'tap', text: '請點擊數字' });
+                if (n === 1 && kit.once('seven.hint')) kit.hintOn(root, card, { mode: 'tap', text: '請點擊數字' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
                 /* 主控台印出這個數字應該怎麼做與倒數時間，方便驗證 */
                 try { console.info('[逢七過] ' + n + '：' + (sk ? '要跳過（' + skipReason(n) + '）' : '要點數字') + '，倒數 ' + dwell.toFixed(3) + ' 秒'); } catch (e) { }
                 /* 倒數條 */
-                my.loop(function (now) {
+                my.loop(function (now) {                /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                     if (id !== token || state !== 'live') return false;
                     tb.set((deadline - now) / (dwell * 1000));
                 });
@@ -121,8 +121,8 @@
                 token++;
                 tb.set(0);
                 card.className = 'seven-card seven-card--ok';
-                Sfx.play(acted === 'skip' ? 'pop' : 'click');
-                var best = Reaction.getBest(ID);
+                Sfx.play(acted === 'skip' ? 'pop' : 'click');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                var best = Reaction.getBest(ID);        /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                 ctx.setMeta(kit.meta(['已過 ' + passed, best != null ? '最佳 ' + best : '']));
                 my.after(GAP_S * 1000, nextNumber);
             }
@@ -135,12 +135,12 @@
                 card.className = 'seven-card seven-card--bad';
                 var msg = why(n, kind);
                 sub.textContent = msg;
-                Sfx.play('bad');
+                Sfx.play('bad');                        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 var isNew = Reaction.setBest(ID, passed, function (v, b) { return v > b; });
                 var failN = n, back = kit.resumeFrom(failN);
                 my.after(FAIL_SHOW_MS, function () {
-                    var avg = rts.length ? rts.reduce(function (a, b) { return a + b; }, 0) / rts.length : null;
-                    kit.result(root, {
+                    var avg = rts.length ? rts.reduce(function (a, b) { return a + b; }, 0) / rts.length : null;  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
+                    kit.result(root, {                  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                         score: passed,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: String(passed), label: rating(passed),
                         lines: [msg].concat(avg != null ? ['答對的平均反應 ' + fmtSec(Leaderboard.fake4(avg))] : []),
@@ -154,23 +154,23 @@
             /* act：玩家的動作——what 是 'tap'（點上面數字）或 'skip'（按下面跳過），判斷是否和正確動作一致 */
             /* act：'tap'＝點上面的數字格子；'skip'＝按下面的「跳過」*/
             function act(what, e) {
-                if (e) e.preventDefault();
+                if (e) e.preventDefault();              /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                 /* 空檔、等待中、已結束的點擊都不算 */
                 if (state !== 'live') return;           /* 空檔、等待中、已結束的點擊都不算 */
-                var now = performance.now();
+                var now = performance.now();            /* performance.now()：高精度的時間（毫秒），計時用 */
                 var want = isSkip(n) ? 'skip' : 'tap';
                 if (what !== want) { fail(what === 'tap' ? 'wrongTap' : 'wrongSkip'); return; }
                 rts.push((now - shownAt) / 1000);
                 passIt(what);
             }
             /* 上面的數字卡片：pointerdown＝點數字 */
-            card.addEventListener('pointerdown', function (e) { act('tap', e); });
+            card.addEventListener('pointerdown', function (e) { act('tap', e); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             /* 下面的跳過鈕：pointerdown＝跳過 */
-            skip.addEventListener('pointerdown', function (e) { act('skip', e); });
+            skip.addEventListener('pointerdown', function (e) { act('skip', e); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
 
             /* G.debug：測試用後門 */
             G.debug = {
-                state: function () { return { n: n, passed: passed, state: state, over: over, skip: isSkip(n), rts: rts.slice() }; },
+                state: function () { return { n: n, passed: passed, state: state, over: over, skip: isSkip(n), rts: rts.slice() }; },  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
                 tap: function () { act('tap'); },
                 skip: function () { act('skip'); },
                 right: function () { act(isSkip(n) ? 'skip' : 'tap'); }

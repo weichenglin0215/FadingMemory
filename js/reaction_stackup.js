@@ -65,7 +65,7 @@
     function topAt(b, x) {
         if (x < b.x0 || x > b.x0 + b.w) return null;
         if (b.kind === 'rect') return b.y0 + b.h;
-        if (b.kind === 'tri') return b.y0 + b.h * (1 - Math.abs(x - (b.x0 + b.w / 2)) / (b.w / 2));
+        if (b.kind === 'tri') return b.y0 + b.h * (1 - Math.abs(x - (b.x0 + b.w / 2)) / (b.w / 2));  /* Math.abs：取絕對值（去掉負號） */
         var e = b.w * (1 - TRAP_TOP) / 2, u = x - b.x0, d = Math.min(u, b.w - u);
         return b.y0 + b.h * Math.min(1, d / e);
     }
@@ -82,13 +82,13 @@
     /* 底寬 w 的方塊放在左邊界 x0：它底下所有方塊頂面的最高點（沒有就是地板 0） */
     function restLevel(tower, x0, w) {
         var R = 0, x1 = x0 + w;
-        tower.forEach(function (b) {
+        tower.forEach(function (b) {                    /* forEach：對陣列的每個元素各做一次 */
             var a = Math.max(x0, b.x0), z = Math.min(x1, b.x0 + b.w);
             if (a > z) return;
             var cand = [a, z];
             if (b.kind === 'tri') cand.push(b.x0 + b.w / 2);
             if (b.kind === 'trap') { var e = b.w * (1 - TRAP_TOP) / 2; cand.push(b.x0 + e, b.x0 + b.w - e); }
-            cand.forEach(function (x) { if (x >= a && x <= z) { var t = topAt(b, x); if (t != null && t > R) R = t; } });
+            cand.forEach(function (x) { if (x >= a && x <= z) { var t = topAt(b, x); if (t != null && t > R) R = t; } });  /* forEach：對陣列的每個元素各做一次 */
         });
         return R;
     }
@@ -146,10 +146,10 @@
     /* 出一塊：形狀（依關卡機率）、寬度（畫面寬的 1/6～1/2）、顏色 */
     function makeBlock(level, W, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var pT = level >= TRAP_FROM ? kit.ramp(level - TRAP_FROM + 1, TRAP_P[0], TRAP_P[1], TRAP_RAMP) : 0;
-        var pR = level >= TRI_FROM ? kit.ramp(level - TRI_FROM + 1, TRI_P[0], TRI_P[1], TRI_RAMP) : 0;
+        var pT = level >= TRAP_FROM ? kit.ramp(level - TRAP_FROM + 1, TRAP_P[0], TRAP_P[1], TRAP_RAMP) : 0;  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+        var pR = level >= TRI_FROM ? kit.ramp(level - TRI_FROM + 1, TRI_P[0], TRI_P[1], TRI_RAMP) : 0;  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
         var r = rand(), kind = r < pR ? 'tri' : (r < pR + pT ? 'trap' : 'rect');
-        return { kind: kind, w: kit.randInt(Math.round(W * W_MIN_RATIO), Math.round(W * W_MAX_RATIO), rand), h: BLOCK_H, hue: Math.round(rand() * 360) };
+        return { kind: kind, w: kit.randInt(Math.round(W * W_MIN_RATIO), Math.round(W * W_MAX_RATIO), rand), h: BLOCK_H, hue: Math.round(rand() * 360) };  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
     }
     /* 找「站得住」的左邊界清單（每隔 step px 試一次）；除錯／測試用 */
     function stableSpots(tower, block, W, ZH, step) {
@@ -204,14 +204,14 @@
         var ZH = Math.max(200, H - PREVIEW_H - BAR_H - 84 - 36);        /* 疊塔區高度：扣掉預覽、橫桿、按鈕與間距 */
         var block = makeBlock(level, W, api.rand);
         api.info = { block: block, towerSize: tower.length, W: W, ZH: ZH };
-        var x0 = Math.round((W - block.w) / 2);
+        var x0 = Math.round((W - block.w) / 2);         /* Math.round：四捨五入成整數 */
         console.log('[重心疊疊樂] 第 ' + level + ' 塊：' + ({ rect: '長方形', trap: '梯形', tri: '三角形' })[block.kind] + '，寬 ' + block.w + 'px；塔上已有 ' + tower.length + ' 塊');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         /* 世界座標（地板往上）→ SVG 座標（上方往下） */
         var SVG_H = PREVIEW_H + ZH;
         function sy(y) { return PREVIEW_H + ZH - y; }
-        var svg = kit.svg('svg', { 'class': 'stackup-svg', viewBox: '0 0 ' + W + ' ' + SVG_H, width: W, height: SVG_H }, stage);
-        kit.svg('line', { x1: 0, x2: W, y1: sy(ZH), y2: sy(ZH), 'class': 'stackup-ceil' }, svg);
+        var svg = kit.svg('svg', { 'class': 'stackup-svg', viewBox: '0 0 ' + W + ' ' + SVG_H, width: W, height: SVG_H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('line', { x1: 0, x2: W, y1: sy(ZH), y2: sy(ZH), 'class': 'stackup-ceil' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         kit.svg('rect', { x: 0, y: sy(0), width: W, height: 400, 'class': 'stackup-floor' }, svg);
 
         function pts(b, dx) {
@@ -220,7 +220,7 @@
             if (b.kind === 'trap') { var e = b.w * (1 - TRAP_TOP) / 2; return [[x, y0], [x + b.w, y0], [x + b.w - e, y0 + b.h], [x + e, y0 + b.h]]; }
             return [[x, y0], [x + b.w, y0], [x + b.w, y0 + b.h], [x, y0 + b.h]];
         }
-        function pointsStr(b, dx, dy) { return pts(b, dx).map(function (p) { return p[0].toFixed(1) + ',' + (sy(p[1]) + (dy || 0)).toFixed(1); }).join(' '); }
+        function pointsStr(b, dx, dy) { return pts(b, dx).map(function (p) { return p[0].toFixed(1) + ',' + (sy(p[1]) + (dy || 0)).toFixed(1); }).join(' '); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         function drawBlock(b, parent) {
             return kit.svg('polygon', { points: pointsStr(b), 'class': 'stackup-block', style: 'fill:hsl(' + b.hue + ',62%,70%)' }, parent);
         }
@@ -235,41 +235,41 @@
         var guide = kit.svg('line', { x1: 0, x2: 0, y1: sy(ZH), y2: sy(0), 'class': 'stackup-guide' }, svg);
         function paintPrev() {
             prev.x0 = x0;
-            polyPrev.setAttribute('points', pointsStr(prev));
-            guide.setAttribute('x1', x0 + block.w / 2); guide.setAttribute('x2', x0 + block.w / 2);
+            polyPrev.setAttribute('points', pointsStr(prev));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+            guide.setAttribute('x1', x0 + block.w / 2); guide.setAttribute('x2', x0 + block.w / 2);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         }
         paintPrev();
 
         /* 橫桿：拖曳旋鈕決定方塊的左右位置 */
         var bar = h('div', { 'class': 'stackup-bar' }), track = h('div', { 'class': 'stackup-track' }), knob = h('div', { 'class': 'stackup-knob' });
-        bar.appendChild(track); bar.appendChild(knob);
+        bar.appendChild(track); bar.appendChild(knob);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var okBtn = h('button', { 'class': 'btn btn--go stackup-ok', text: '放下' });
-        stage.appendChild(bar); stage.appendChild(okBtn);
+        stage.appendChild(bar); stage.appendChild(okBtn);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var KR = 24;                                   /* 旋鈕半徑 */
         function knobX() { return KR + (W - 2 * KR) * (W - block.w > 0 ? x0 / (W - block.w) : 0.5); }
         function paintKnob() { knob.style.left = (knobX() - KR) + 'px'; }
         paintKnob();
         var locked = false, hint = null;
         function setFromPointer(e) {
-            var p = kit.localPt(e, bar), f = kit.clamp((p.x - KR) / (W - 2 * KR), 0, 1);
-            x0 = Math.round(f * (W - block.w));
+            var p = kit.localPt(e, bar), f = kit.clamp((p.x - KR) / (W - 2 * KR), 0, 1);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
+            x0 = Math.round(f * (W - block.w));         /* Math.round：四捨五入成整數 */
             paintPrev(); paintKnob();
         }
         var dragging = null;
-        bar.addEventListener('pointerdown', function (e) {
+        bar.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (locked || dragging != null) return;
-            e.preventDefault();
-            try { bar.setPointerCapture(e.pointerId); } catch (err) { }
+            e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            try { bar.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             dragging = e.pointerId;
             if (hint) { hint.remove(); hint = null; }
             setFromPointer(e);
         });
-        bar.addEventListener('pointermove', function (e) { if (dragging === e.pointerId && !locked) setFromPointer(e); });
+        bar.addEventListener('pointermove', function (e) { if (dragging === e.pointerId && !locked) setFromPointer(e); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
         function endDrag(e) { if (dragging === e.pointerId) dragging = null; }
         bar.addEventListener('pointerup', endDrag);
         bar.addEventListener('pointercancel', endDrag);
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，沿著橫桿左右移動 */
-        if (level === 1 && kit.once('stackup.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: knobX(), y: SVG_H + 8 + BAR_H / 2, dx: 120, dy: 0, delay: 400, text: '請往左右拖曳' });
+        if (level === 1 && kit.once('stackup.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: knobX(), y: SVG_H + 8 + BAR_H / 2, dx: 120, dy: 0, delay: 400, text: '請往左右拖曳' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
         var msg = h('div', { 'class': 'stackup-msg' });
         stage.appendChild(msg);
 
@@ -278,7 +278,7 @@
             if (locked || api.over) return;
             locked = true;
             if (hint) { hint.remove(); hint = null; }
-            Sfx.play('click');
+            Sfx.play('click');                          /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             var res = evaluateDrop(tower, block, x0, W, ZH);
             gPrev.style.display = 'none'; guide.setAttribute('opacity', 0);
             var fallG = kit.svg('g', {}, svg);
@@ -289,23 +289,23 @@
                 fallG.setAttribute('transform', '');
                 if (res.ok) {
                     tower = res.tower;
-                    Sfx.play('ok');
-                    msg.textContent = '站穩了！'; msg.classList.add('stackup-msg--ok');
-                    api.pass({ gain: 1, delay: 600 });
+                    Sfx.play('ok');                     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                    msg.textContent = '站穩了！'; msg.classList.add('stackup-msg--ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                    api.pass({ gain: 1, delay: 600 });  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
                 } else {
                     failAnim(res, fallG);
                 }
             });
         }
-        function my_tween(ms, fn, ease) { return api.my.tween(ms, fn, ease); }
+        function my_tween(ms, fn, ease) { return api.my.tween(ms, fn, ease); }  /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
         /* 失敗動畫：失敗的那一塊（連同壓在它上面的）繞著支撐邊緣轉開，再掉下去 */
         function failAnim(res, fallG) {
             Sfx.play('bad');
-            msg.textContent = FAIL_TEXT[res.reason] || '失敗了'; msg.classList.add('stackup-msg--bad');
+            msg.textContent = FAIL_TEXT[res.reason] || '失敗了'; msg.classList.add('stackup-msg--bad');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             var idx = res.fail ? res.fail.idx : res.tower.length - 1;
             var groups = [];
             var set = {}; set[idx] = true;
-            res.tower.forEach(function (b, i) { if (i > idx && b.sup.some(function (c) { return set[c.i]; })) set[i] = true; });
+            res.tower.forEach(function (b, i) { if (i > idx && b.sup.some(function (c) { return set[c.i]; })) set[i] = true; });  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
             res.tower.forEach(function (b, i) { if (set[i]) groups.push(i === res.tower.length - 1 ? fallG : gEls[i]); });
             var pv = res.fail ? res.fail.pivot : { x: x0 + block.w / 2, y: res.rest };
             var sign = res.fail ? res.fail.dir : (x0 + block.w / 2 < W / 2 ? -1 : 1);
@@ -315,16 +315,16 @@
                 var ps = tipPose(e);
                 groups.forEach(function (g) { g.setAttribute('transform', 'translate(0 ' + ps.dy.toFixed(1) + ') rotate(' + (sign * ps.angle).toFixed(2) + ' ' + px.toFixed(2) + ' ' + py.toFixed(2) + ')'); });
             }, kit.linear).then(function () {
-                api.fail({ delay: 500, lines: [FAIL_TEXT[res.reason] || '失敗了', '塔上共 ' + tower.length + ' 塊'] });
+                api.fail({ delay: 500, lines: [FAIL_TEXT[res.reason] || '失敗了', '塔上共 ' + tower.length + ' 塊'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
             });
         }
-        kit.onTap(okBtn, drop);
+        kit.onTap(okBtn, drop);                         /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
 
         /* 驗證用：solve 放在一個站得住的位置；wrong 放在一個站不住的位置（找不到就直接判失敗） */
         api.solve = function () {
             var spots = stableSpots(tower, block, W, ZH, 2);
-            if (!spots.length) { api.fail({ lines: ['沒有地方可以放了'] }); return; }
-            x0 = spots[Math.floor(spots.length / 2)]; paintPrev(); paintKnob(); drop();
+            if (!spots.length) { api.fail({ lines: ['沒有地方可以放了'] }); return; }  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
+            x0 = spots[Math.floor(spots.length / 2)]; paintPrev(); paintKnob(); drop();  /* Math.floor：無條件捨去成整數 */
         };
         api.wrong = function () {
             var bad = null, x;

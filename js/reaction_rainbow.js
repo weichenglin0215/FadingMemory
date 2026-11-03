@@ -95,7 +95,7 @@
     /* RED：一開始只要點紅色 */
     var RED = COLORS[0];
     /* EXTRA_POOL：之後能加進來當目標的顏色（要有符號，所以靛色不能當目標，永遠只是干擾） */
-    var EXTRA_POOL = COLORS.filter(function (c) { return c.emoji && c !== RED; });
+    var EXTRA_POOL = COLORS.filter(function (c) { return c.emoji && c !== RED; });  /* filter：留下符合條件的元素，回傳新陣列 */
 
     /* 2×2 格子在 CSS Grid 的編號是左上0、右上1、左下2、右下3 */
     /* 2×2 格子在 CSS Grid 裡的編號是左上0、右上1、左下2、右下3；
@@ -106,16 +106,16 @@
     /* 已經換過 steps 個方塊之後的間隔（毫秒）：從 START_INTERVAL_MS 每個方塊縮短 INTERVAL_STEP_MS，最短 MIN_INTERVAL_MS */
     function intervalAt(steps) { return Math.max(MIN_INTERVAL_MS, START_INTERVAL_MS - steps * INTERVAL_STEP_MS); }
     /* 從陣列隨機挑一個 */
-    function pickAny(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    function pickAny(arr) { return arr[Math.floor(Math.random() * arr.length)]; }  /* Math.floor：無條件捨去成整數 */
     /* 提示文字：「請點擊 🔴紅 … 方塊」 */
     function hintTextFor(targets) {
-        return '請點擊' + targets.map(function (c) { return c.emoji + c.name; }).join('') + '方塊，超時就失敗。';
+        return '請點擊' + targets.map(function (c) { return c.emoji + c.name; }).join('') + '方塊，超時就失敗。';  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     }
 
     /* mount：遊戲進場點 */
     function mount(root, ctx) {
         /* 替整個畫面加上黑底 class（樣式在 css/games/reaction_rainbow.css 的 .rainbow-bg） */
-        root.classList.add('rainbow-bg');
+        root.classList.add('rainbow-bg');               /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         /* 規則彈窗元素：「?」重看規則時，換方塊要暫停等它關掉 */
         function ruleOpen() { return Reaction.kit.ruleOpen(); }
 
@@ -125,7 +125,7 @@
         /* round：開一局 */
         function round() {
             var myGen = ++gen;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
             /* targets 目前要點的顏色清單；hits 成功點擊數（成績）；steps 已換過幾個方塊（決定間隔縮到多短）；pending 還沒被點掉的目標方塊 */
             var targets = [RED];
@@ -143,28 +143,28 @@
             /* extendFirst：節奏剛被打斷（開局、新規則之後）；下一個出現的目標色方塊停留時間 ×FIRST_TARGET_MULT，用掉就關掉 */
             var extendFirst = true;
             /* 操作提示（只在第一次進遊戲時）：第一個「要點的顏色」方塊出現時，手指縮放擺在那個方塊上（也提醒玩家要點哪個顏色）；玩家第一次碰畫面就不再提示 */
-            var hintWanted = Reaction.kit.once('rainbow.hint'), hintObj = null;
-            root.addEventListener('pointerdown', function () { hintWanted = false; }, { capture: true, once: true });
+            var hintWanted = Reaction.kit.once('rainbow.hint'), hintObj = null;  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
+            root.addEventListener('pointerdown', function () { hintWanted = false; }, { capture: true, once: true });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
 
             /* 標題列右側的文字要短：太長會把中間的遊戲名稱擠成「七…」，所以只寫
                「N 個・最佳 M」，不像結算卡片那樣寫完整的「成功／個」。 */
             function updateMeta() {
-                var b = Reaction.getBest(ID);
+                var b = Reaction.getBest(ID);           /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                 ctx.setMeta(hits + ' 個' + (b == null ? '' : '・最佳 ' + b));
             }
             updateMeta();
 
             var hint = h('div', { 'class': 'rainbow-top', text: hintTextFor(targets) });
-            var wrap = h('div', { 'class': 'rainbow-wrap' });
-            var board = h('div', { 'class': 'rainbow-board' });
-            wrap.appendChild(board);
-            root.appendChild(hint);
+            var wrap = h('div', { 'class': 'rainbow-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
+            var board = h('div', { 'class': 'rainbow-board' });  /* board：盤面（所有格子都放在裡面） */
+            wrap.appendChild(board);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(hint);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             root.appendChild(wrap);
 
             /* 棋盤是正方形：量 wrap 實際可用的寬高，取小的那個（取偶數，兩格剛好平分）
                當邊長；剩下的空間靠 .rainbow-wrap 的 flex 置中，留白平均分在兩側／上下。 */
             /* 棋盤是正方形：取可用寬高較小者，取偶數讓兩格剛好平分 */
-            var side = Math.floor(Math.min(wrap.clientWidth, wrap.clientHeight) / 2) * 2;
+            var side = Math.floor(Math.min(wrap.clientWidth, wrap.clientHeight) / 2) * 2;  /* Math.floor：無條件捨去成整數 */
             board.style.width = side + 'px';
             board.style.height = side + 'px';
             var cellPx = side / 2;
@@ -174,7 +174,7 @@
             for (var i = 0; i < 4; i++) {
                 (function (i) {
                     var el = h('div', { 'class': 'rainbow-cell' });
-                    el.addEventListener('pointerdown', function (e) { e.preventDefault(); tap(i); });
+                    el.addEventListener('pointerdown', function (e) { e.preventDefault(); tap(i); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                     board.appendChild(el);
                     cells.push(el);
                 })(i);
@@ -186,7 +186,7 @@
             /* 排下一次換方塊 */
             function schedule(ms) {
                 clearTimeout(timer);
-                timer = setTimeout(function () { if (myGen === gen) tick(); }, ms);
+                timer = setTimeout(function () { if (myGen === gen) tick(); }, ms);  /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
             }
 
             /* 換下一個方塊：①上一個目標沒被點到＝超時失敗 ②拿掉白邊 ③換上新顏色（可能壓干擾字）④排下一次 */
@@ -201,25 +201,25 @@
                 state = 'play';
                 if (hintObj) { hintObj.remove(); hintObj = null; }
 
-                if (cur >= 0) cells[ORDER[cur]].classList.remove('rainbow-cell--new');
+                if (cur >= 0) cells[ORDER[cur]].classList.remove('rainbow-cell--new');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 cur = (cur + 1) % 4;
                 var idx = ORDER[cur], el = cells[idx];
 
                 /* 依機率決定這個方塊是不是目標色 */
                 var isTarget = Math.random() < TARGET_PROB;
-                var nonTargets = COLORS.filter(function (c) { return targets.indexOf(c) < 0; });
+                var nonTargets = COLORS.filter(function (c) { return targets.indexOf(c) < 0; });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                 var color = isTarget ? pickAny(targets) : pickAny(nonTargets);
                 el.style.background = color.css;
-                el.innerHTML = '';
+                el.innerHTML = '';                      /* innerHTML = ''：把元素裡面的東西全部清掉 */
                 el.classList.remove('rainbow-cell--hit');
                 handled[idx] = false;
                 if (isTarget) {
                     pending = { idx: idx };
                     if (hintWanted) hintObj = Reaction.kit.hintOn(root, el, { mode: 'tap', text: '請點擊' + color.name + '色的方塊' });
                 } else if (Math.random() < DECOY_PROB) {
-                    var inkPool = targets.map(function (c) { return c.css; }).concat(['#FFFFFF', '#000000']);
+                    var inkPool = targets.map(function (c) { return c.css; }).concat(['#FFFFFF', '#000000']);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                     var letter = h('span', { 'class': 'rainbow-letter', text: pickAny(targets).name });
-                    letter.style.fontSize = Math.round(cellPx * 0.8) + 'px';
+                    letter.style.fontSize = Math.round(cellPx * 0.8) + 'px';  /* Math.round：四捨五入成整數 */
                     letter.style.color = pickAny(inkPool);
                     el.appendChild(letter);
                 }
@@ -236,11 +236,11 @@
                開局（等第一個方塊）與換階段（新規則彈窗關掉之後）共用；「?」規則視窗開著的時候先停在原地等它關掉。 */
             function countdownAt(el, n, done) {
                 if (myGen !== gen || (state !== 'play' && state !== 'ready')) return;
-                if (ruleOpen()) { timer = setTimeout(function () { countdownAt(el, n, done); }, 150); return; }
+                if (ruleOpen()) { timer = setTimeout(function () { countdownAt(el, n, done); }, 150); return; }  /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
                 el.innerHTML = '';
                 if (n <= 0) { done(); return; }
                 var num = h('span', { 'class': 'rainbow-letter', text: String(n) });
-                num.style.fontSize = Math.round(cellPx * 0.8) + 'px';
+                num.style.fontSize = Math.round(cellPx * 0.8) + 'px';  /* Math.round：四捨五入成整數 */
                 num.style.color = '#FFFFFF';
                 el.appendChild(num);
                 timer = setTimeout(function () { countdownAt(el, n - 1, done); }, COUNTDOWN_STEP_MS);
@@ -268,7 +268,7 @@
             function newStage() {
                 state = 'paused';
                 clearTimeout(timer);
-                var extra = pickAny(EXTRA_POOL.filter(function (c) { return targets.indexOf(c) < 0; }));
+                var extra = pickAny(EXTRA_POOL.filter(function (c) { return targets.indexOf(c) < 0; }));  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                 targets.push(extra);
 
                 /* 下一個要出現方塊的那一格先清成黑底，預告位置 */
@@ -302,7 +302,7 @@
                 function close() {
                     if (state !== 'paused' || myGen !== gen || okBtn.disabled) return;
                     overlay.remove();
-                    hint.textContent = hintTextFor(targets);
+                    hint.textContent = hintTextFor(targets);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                     handled = [true, true, true, true];
                     stageHits = 0;
                     state = 'play';
@@ -317,16 +317,16 @@
                稍等一下再疊上結算卡片，跟其他遊戲同一套做法。 */
             function fail(reason, badIdx, missedIdx) {
                 state = 'over';
-                if (window.Sfx) Sfx.play('bad');
+                if (window.Sfx) Sfx.play('bad');        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 clearTimeout(timer);
                 if (badIdx != null) cells[badIdx].classList.add('rainbow-cell--bad');
                 if (missedIdx != null) cells[missedIdx].classList.add('rainbow-cell--missed');
-                var isNew = hits > 0 && Reaction.setBest(ID, hits, function (v, b) { return v > b; });
+                var isNew = hits > 0 && Reaction.setBest(ID, hits, function (v, b) { return v > b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                 updateMeta();
                 UI.wait(700).then(function () {
                     if (myGen !== gen) return;
                     /* 結算彈窗（公版）：帶 score 就會在彈窗出現之後自動送世界排行榜（0 個不在有效範圍，會自己略過） */
-                    Reaction.kit.result(root, {
+                    Reaction.kit.result(root, {         /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                         num: hits + ' 個', label: reason, isNew: isNew, score: hits,
                         sfx: hits >= 15 ? 'win' : 'fail', onAgain: round
                     });

@@ -95,12 +95,12 @@
     /* 建立 SVG 元素的小工具（和 kit.svg 同功能，這款比 kit 早寫所以自己有一份） */
     function svgEl(tag, attrs) {
         var el = document.createElementNS(SVGNS, tag);
-        for (var k in attrs) el.setAttribute(k, attrs[k]);
+        for (var k in attrs) el.setAttribute(k, attrs[k]);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         return el;
     }
     /* 設定 SVG 的 viewBox（x y 寬 高）：改 viewBox 就是「鏡頭」移動與放大 */
     function setViewBox(svg, box) {
-        svg.setAttribute('viewBox', box.vx + ' ' + box.vy + ' ' + box.vw + ' ' + box.vh);
+        svg.setAttribute('viewBox', box.vx + ' ' + box.vy + ' ' + box.vw + ' ' + box.vh);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
     }
 
     /* 把 SVG 的 viewBox 從 from 補間到 to：跟 js/reaction_drop.js 的 tweenViewBox
@@ -120,7 +120,7 @@
                 setViewBox(svg, to);
                 resolve();
             }
-            var t0 = performance.now();
+            var t0 = performance.now();                 /* performance.now()：高精度的時間（毫秒），計時用 */
             function frame(now) {
                 if (done) return;
                 var p = Math.min(1, (now - t0) / duration);
@@ -131,10 +131,10 @@
                     vw: from.vw + (to.vw - from.vw) * e,
                     vh: from.vh + (to.vh - from.vh) * e
                 });
-                if (p < 1) requestAnimationFrame(frame); else finishOnce();
+                if (p < 1) requestAnimationFrame(frame); else finishOnce();  /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
             }
-            requestAnimationFrame(frame);
-            setTimeout(finishOnce, duration + 400);
+            requestAnimationFrame(frame);               /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
+            setTimeout(finishOnce, duration + 400);     /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
         });
     }
 
@@ -143,7 +143,7 @@
         /* 舊版最佳紀錄存的是 px，現在存公分（4 位小數、第 3／4 位不為 0）：第一次進來換算一次 */
         Reaction.migrateBest(ID, function (px) { return Leaderboard.fake4(cmOf(px)); });
         /* 替整個畫面加上白底 class */
-        root.classList.add('impossible-white-bg');
+        root.classList.add('impossible-white-bg');      /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
 
         /* 照片的長寬比只需要量一次（不會因為重玩而改變），先用一個不會進畫面的
            Image() 探測，知道比例之後，SVG 裡的 <image> 才能用「寬 150、高照比例
@@ -164,11 +164,11 @@
 
         /* startRound：真正畫出畫面 */
         function startRound() {
-            root.innerHTML = '';
-            ctx.setMeta(fmtBest(Reaction.getBest(ID)));
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
+            ctx.setMeta(fmtBest(Reaction.getBest(ID))); /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
             var field = h('div', { 'class': 'impossible-field' });
-            root.appendChild(field);
+            root.appendChild(field);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
 
             /* FW／FH 場地大小；imgH 照片高；maxY 照片最多能掉到哪裡（下緣碰到警戒線） */
             var FW = field.clientWidth, FH = field.clientHeight;
@@ -178,7 +178,7 @@
             var maxY = barY - imgH;     /* 圖片 y 最多能到哪裡（下緣剛好碰到警戒線上緣） */
 
             var svg = svgEl('svg', { 'class': 'impossible-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'xMidYMid slice' });
-            field.appendChild(svg);
+            field.appendChild(svg);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
 
             /* 摔到警戒線時照片要變紅：用 SVG 濾鏡 feColorMatrix 重新計算每個像素的 RGB，alpha 不變，所以透明的部分仍然透明 */
             /* 摔到警戒線時照片要變紅：用 SVG 濾鏡 feColorMatrix 重新計算每個像素的 RGB，
@@ -212,7 +212,7 @@
             var hint = h('div', { 'class': 'impossible-hint', text: '點擊畫面讓阿湯哥下降' });
             field.appendChild(hint);
             /* 操作提示（只在第一次進遊戲時）：點畫面任一處 → 手指縮放，放在畫面中下方（不擋住下墜的照片） */
-            if (Reaction.kit.once('impossible.hint')) Reaction.kit.hintOn(root, root, { mode: 'tap', fy: 0.72, text: '請點擊畫面' });
+            if (Reaction.kit.once('impossible.hint')) Reaction.kit.hintOn(root, root, { mode: 'tap', fy: 0.72, text: '請點擊畫面' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
 
             var phase = 'idle';   /* idle：等第一下點擊／falling：下墜中／done：定格、推進或已結束 */
             var raf = null;
@@ -226,19 +226,19 @@
                手指按著不放的時間，時機全部算錯（跟「神準落下」的 dropBtn 用
                同一個理由、同一招）。 */
             /* 點畫面：idle 時開始下墜，falling 時停住（用 pointerdown，不是 click，時機才準） */
-            field.addEventListener('pointerdown', function (e) {
-                if (phase === 'idle') { e.preventDefault(); if (window.Sfx) Sfx.play('whoosh'); startFall(); }
-                else if (phase === 'falling') { e.preventDefault(); if (window.Sfx) Sfx.play('click'); stopFall(); }
+            field.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+                if (phase === 'idle') { e.preventDefault(); if (window.Sfx) Sfx.play('whoosh'); startFall(); }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                else if (phase === 'falling') { e.preventDefault(); if (window.Sfx) Sfx.play('click'); stopFall(); }  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             });
 
             /* 開始下墜 */
             function startFall() {
                 phase = 'falling';
-                hint.textContent = '點擊畫面讓阿湯哥停止';
-                hint.classList.add('impossible-hint--danger');
+                hint.textContent = '點擊畫面讓阿湯哥停止';        /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                hint.classList.add('impossible-hint--danger');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
 
                 /* t0 開始時間 */
-                var t0 = performance.now();
+                var t0 = performance.now();             /* performance.now()：高精度的時間（毫秒），計時用 */
                 var landed = false;
                 /* frame：每個畫面更新一次；自由落體位置 y = ½ × a × t² */
                 function frame(now) {
@@ -338,7 +338,7 @@
                     'class': 'impossible-measure-title ' + (success ? 'impossible-measure-title--ok' : 'impossible-measure-title--bad'),
                     x: midX, y: titleY, 'font-size': titleSize, 'text-anchor': 'middle', 'stroke-width': titleSize * 0.14
                 });
-                title.textContent = success ? '成功！' : '任務失敗';
+                title.textContent = success ? '成功！' : '任務失敗';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 svg.appendChild(title);
 
                 /* 數字最長會長到「4200.00 公分」這種寬度，所以 pill 的寬度不是猜的，
@@ -401,7 +401,7 @@
                 console.log('不可能任務：實際 ' + rawCm.toFixed(6) + ' 公分（' + gapPx.toFixed(4) + ' px）→ 成績 ' + cm.toFixed(4) + ' 公分');
                 var success = !crashed && cm < SUCCESS_CM;
 
-                var isNew = success && Reaction.setBest(ID, cm, function (v, b) { return v < b; });
+                var isNew = success && Reaction.setBest(ID, cm, function (v, b) { return v < b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                 ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
                 /* 定格一秒（參考使用者給的示意圖：剛停下來那一刻，提示文字都還在、
@@ -419,7 +419,7 @@
                        只有「成功」才給 score（才會送世界排行榜）！摔到警戒線（crashed）時距離是 0 公分，
                        如果不判斷 success 就送，失敗會變成世界第一名的 0.0000 公分；
                        離太遠的失敗（≥ 30 公分）則本來就不在有效範圍 */
-                    Reaction.kit.result(root, {
+                    Reaction.kit.result(root, {         /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                         num: success ? cm.toFixed(4) + ' 公分' : (crashed ? '摔到警戒線了' : '離警戒線太遠了'),
                         label: success ? (cm < 1 ? '超級驚險！' : '成功停在警戒線前') : '挑戰失敗',
                         isNew: isNew, score: success ? cm : null, dock: 'bottom',

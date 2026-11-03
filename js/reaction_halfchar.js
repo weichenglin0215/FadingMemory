@@ -88,7 +88,7 @@
     for (var ek in EXTRA) DECOMP[ek] = EXTRA[ek];
     /* TB：上下結構的字（其他都是左右結構）。選干擾字時結構要跟答案一樣，露出來的那一側才會跟選項對得上 */
     var TB = {};
-    '草花苦英家字守宅想思念息雲雪電霜桌菜茶荷若芳安完定室宇恩怒意忍感雷零露需霧'.split('').forEach(function (c) { TB[c] = true; });
+    '草花苦英家字守宅想思念息雲雪電霜桌菜茶荷若芳安完定室宇恩怒意忍感雷零露需霧'.split('').forEach(function (c) { TB[c] = true; });  /* forEach：對陣列的每個元素各做一次 */
     /* side 對應的部件索引：left/top 是第 0 個部件，right/bottom 是第 1 個 */
     var SIDE_IDX = { left: 0, top: 0, right: 1, bottom: 1 };
     /* BOUNDS：第一個部件占整個字寬（或字高）的比例＝兩部件的分界線，用來決定遮罩的切點 */
@@ -131,7 +131,7 @@
     /* 這個字的分界線位置：題庫有寫 b 就用它，否則查 BOUNDS，再沒有就用 0.45 */
     function boundOf(entry) { return entry.b != null ? entry.b : (BOUNDS[DECOMP[entry.a][0]] != null ? BOUNDS[DECOMP[entry.a][0]] : 0.45); }
     /* 這題露出差異部件的比例（線性隨題號變少） */
-    function revealOf(level) { return kit.ramp(level, SLIVER_START, SLIVER_END, LEVEL_RAMP); }
+    function revealOf(level) { return kit.ramp(level, SLIVER_START, SLIVER_END, LEVEL_RAMP); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 露出的是哪一側：差異部件的另一側（相似處那一側） */
     /* 露出的是哪一側：差異部件的另一側（相似處那一側） */
     function exposedSide(entry) { return { left: 'right', right: 'left', top: 'bottom', bottom: 'top' }[entry.side]; }
@@ -153,9 +153,9 @@
         return 'inset(0 0 ' + hi + ' 0)';
     }
     /* 每題的限時 */
-    function timeFor(level) { return kit.ramp(level, TIME_START, TIME_END, LEVEL_RAMP); }
+    function timeFor(level) { return kit.ramp(level, TIME_START, TIME_END, LEVEL_RAMP); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 這題有幾個選項（4 → 6，隨題號線性增加，四捨五入） */
-    function optCount(level) { return Math.round(kit.ramp(level, OPT_START, OPT_END, OPT_RAMP)); }
+    function optCount(level) { return Math.round(kit.ramp(level, OPT_START, OPT_END, OPT_RAMP)); }  /* Math.round：四捨五入成整數 */
     /* 這題大字要歪幾度（正的角度；方向由呼叫端隨機決定）：第 ROT_FROM 題以前 0，之後線性增加到第 LEVEL_RAMP 題的 ROT_MAX */
     function rotOf(level) { return level <= ROT_FROM ? 0 : ROT_MAX * Math.min(1, (level - ROT_FROM) / (LEVEL_RAMP - ROT_FROM)); }
     /* visiblePart＝相似的部件（完整露出）；hiddenPart＝差異的部件（大部分被遮住） */
@@ -166,7 +166,7 @@
     /* 題庫檢查：回傳問題清單（空陣列＝全部合格）*/
     function checkData() {
         var bad = [];
-        ENTRIES.forEach(function (e, i) {
+        ENTRIES.forEach(function (e, i) {               /* forEach：對陣列的每個元素各做一次 */
             var tag = '#' + (i + 1) + e.a + '(' + e.side + ')';
             if (!DECOMP[e.a]) { bad.push(tag + ' 答案沒有拆字'); return; }
             if (SIDE_IDX[e.side] === undefined) bad.push(tag + ' side 不合法');
@@ -190,8 +190,8 @@
     /* 額外的干擾字候選：拆字表裡「結構跟答案一樣、相似部件在同一個位置、差異部件跟答案不同」的字，扣掉答案與手工審校的 3 個干擾字 */
     function extraPool(entry) {
         var idx = SIDE_IDX[entry.side], vis = visiblePart(entry), hid = hiddenPart(entry);
-        return Object.keys(DECOMP).filter(function (c) {
-            return c !== entry.a && entry.d.indexOf(c) < 0 && !!TB[c] === isTB(entry) && DECOMP[c][1 - idx] === vis && DECOMP[c][idx] !== hid;
+        return Object.keys(DECOMP).filter(function (c) {  /* filter：留下符合條件的元素，回傳新陣列 */
+            return c !== entry.a && entry.d.indexOf(c) < 0 && !!TB[c] === isTB(entry) && DECOMP[c][1 - idx] === vis && DECOMP[c][idx] !== hid;  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         });
     }
     /* 檢查額外干擾字：每一題至少找得到 OPT_END − 4 個，而且每個都符合規則（Node 測試會呼叫它）；回傳問題清單 */
@@ -213,17 +213,17 @@
     function pickEntry(recent, rand) {
         rand = rand || Math.random;
         for (var t = 0; t < 100; t++) {
-            var i = kit.randInt(0, ENTRIES.length - 1, rand);
-            if (recent.indexOf(i) < 0) return i;
+            var i = kit.randInt(0, ENTRIES.length - 1, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+            if (recent.indexOf(i) < 0) return i;        /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         }
-        return kit.randInt(0, ENTRIES.length - 1, rand);
+        return kit.randInt(0, ENTRIES.length - 1, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
     }
     /* n 個選項（答案 + n−1 個干擾字）洗牌，並記下答案在第幾個。干擾字先用手工審校的 3 個，不夠再從額外候選（extraPool）隨機補；
        候選不夠的話選項會比 n 少（t_halfchar 檢查過每一題都補得夠）。n 沒給就是 4 個（原本的做法） */
     function makeOptions(entry, rand, n) {
-        var want = Math.max(4, n || 4) - 1, ds = entry.d.slice();
-        if (ds.length < want) ds = ds.concat(kit.shuffle(extraPool(entry), rand).slice(0, want - ds.length));
-        var opts = kit.shuffle([entry.a].concat(ds.slice(0, want)), rand);
+        var want = Math.max(4, n || 4) - 1, ds = entry.d.slice();  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        if (ds.length < want) ds = ds.concat(kit.shuffle(extraPool(entry), rand).slice(0, want - ds.length));  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+        var opts = kit.shuffle([entry.a].concat(ds.slice(0, want)), rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         return { options: opts, answer: opts.indexOf(entry.a) };
     }
 
@@ -237,7 +237,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
             /* q 目前題號；right 答對數；lives 機會；state 目前階段；qid 每題 +1；recent 最近出過的題；E 這題的題庫資料；O 這題的選項 */
             var q = (startAt || 1) - 1, right = q, lives = LIVES, newRec = false, state = 'idle', qid = 0, recent = [], cur = null, E = null, O = null;
@@ -246,11 +246,11 @@
             var prompt = h('div', { 'class': 'halfchar-prompt' });
             var charBox = h('div', { 'class': 'halfchar-box' });
             var big = h('div', { 'class': 'halfchar-char' });
-            charBox.appendChild(big);
+            charBox.appendChild(big);                   /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             var tb = kit.timebar();
             var opts = h('div', { 'class': 'halfchar-opts' });
-            var tip = h('div', { 'class': 'halfchar-tip' });
-            [head, prompt, charBox, tb.el, opts, tip].forEach(function (n) { root.appendChild(n); });
+            var tip = h('div', { 'class': 'halfchar-tip' });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
+            [head, prompt, charBox, tb.el, opts, tip].forEach(function (n) { root.appendChild(n); });  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
 
             function meta() { ctx.setMeta(kit.meta(['答對 ' + right, '機會 ' + lives])); }
 
@@ -266,36 +266,36 @@
                 /* 算出這題要露出哪個區間 */
                 var reg = visRegion(E, q);
                 state = 'ask';
-                head.textContent = '第 ' + q + ' 題';
-                prompt.textContent = '字被遮住一半（相似處露出、差異處遮住），是哪一個？';
+                head.textContent = '第 ' + q + ' 題';     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                prompt.textContent = '字被遮住一半（相似處露出、差異處遮住），是哪一個？';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 tip.textContent = '';
                 big.textContent = E.a;
                 /* 用 CSS clip-path 把大字遮住一部分（webkitClipPath 是舊版 Safari 的寫法） */
                 big.style.clipPath = clipFor(exposedSide(E), reg);
                 big.style.webkitClipPath = big.style.clipPath;
                 charBox.className = 'halfchar-box';
-                opts.innerHTML = '';
+                opts.innerHTML = '';                    /* innerHTML = ''：把元素裡面的東西全部清掉 */
                 /* 選項的欄數：4 個以內 2 欄（2×2），5～6 個 3 欄（3×2），兩種都是 2 列，所以占的高度一樣 */
                 opts.style.gridTemplateColumns = 'repeat(' + (O.options.length <= 4 ? 2 : 3) + ', 1fr)';
                 /* 建立四顆選項按鈕 */
                 O.options.forEach(function (c, i) {
                     var b = h('button', { 'class': 'halfchar-opt', text: c });
-                    b.addEventListener('pointerdown', function (e) { e.preventDefault(); judge(i); });
+                    b.addEventListener('pointerdown', function (e) { e.preventDefault(); judge(i); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                     opts.appendChild(b);
                 });
                 /* 字級要先縮小再依字框大小放大，量到的框高度才準 */
                 big.style.fontSize = '120px';          /* 先縮小，量到的字框高度才不會被大字撐開 */
                 /* 字歪斜：第 ROT_FROM 題之後隨機往左或往右歪 rotOf(q) 度；歪了之後字的外接框會變大（邊長 × (cos＋sin)），
                    所以字級要先除以這個倍數，才不會被字框裁到邊角 */
-                var rot = rotOf(q) * (Math.random() < 0.5 ? -1 : 1), rad = Math.abs(rot) * Math.PI / 180;
+                var rot = rotOf(q) * (Math.random() < 0.5 ? -1 : 1), rad = Math.abs(rot) * Math.PI / 180;  /* Math.abs：取絕對值（去掉負號） */
                 big.style.transform = rot ? 'rotate(' + rot.toFixed(1) + 'deg)' : '';
-                big.style.fontSize = Math.floor(Math.min(charBox.clientHeight, charBox.clientWidth) * 0.92 / (Math.cos(rad) + Math.sin(rad))) + 'px';
+                big.style.fontSize = Math.floor(Math.min(charBox.clientHeight, charBox.clientWidth) * 0.92 / (Math.cos(rad) + Math.sin(rad))) + 'px';  /* Math.floor：無條件捨去成整數 */
                 meta();
                 /* 主控台印出這題的細節（答案、露出哪一側、相似與差異部件、分界線、限時），方便驗證 */
                 try { console.info('[半邊字] 第 ' + q + ' 題：答案「' + E.a + '」露出' + ({ left: '左', right: '右', top: '上', bottom: '下' })[exposedSide(E)] + '半（相似的「' + visiblePart(E) + '」整個露出，差異的「' + hiddenPart(E) + '」只露出 ' + (revealOf(q) * 100).toFixed(0) + '%，分界線 ' + boundOf(E).toFixed(2) + '）；選項 ' + O.options.join('、') + '；限時 ' + timeFor(q).toFixed(1) + ' 秒'); } catch (e) { }
-                var t0 = performance.now(), lim = timeFor(q) * 1000;
+                var t0 = performance.now(), lim = timeFor(q) * 1000;  /* performance.now()：高精度的時間（毫秒），計時用 */
                 /* 倒數時間條 */
-                my.loop(function (now) { if (id !== qid || state !== 'ask') return false; tb.set(1 - (now - t0) / lim); });
+                my.loop(function (now) { if (id !== qid || state !== 'ask') return false; tb.set(1 - (now - t0) / lim); });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                 /* 時間到：judge(-1) 代表沒有選 */
                 my.after(lim, function () { if (id === qid && state === 'ask') judge(-1); });
             }
@@ -310,22 +310,22 @@
                 big.style.transform = '';
                 var ok = i === O.answer;
                 /* 正確選項標綠，選錯的標橘 */
-                [].forEach.call(opts.children, function (b, k) { if (k === O.answer) b.classList.add('halfchar-opt--ok'); else if (k === i) b.classList.add('halfchar-opt--bad'); });
-                charBox.classList.add(ok ? 'halfchar-box--ok' : 'halfchar-box--bad');
+                [].forEach.call(opts.children, function (b, k) { if (k === O.answer) b.classList.add('halfchar-opt--ok'); else if (k === i) b.classList.add('halfchar-opt--bad'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                charBox.classList.add(ok ? 'halfchar-box--ok' : 'halfchar-box--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 /* 解說：「大家都有 X，關鍵是 Y，合起來就是 Z」 */
                 tip.textContent = '大家都有「' + visiblePart(E) + '」，關鍵是「' + hiddenPart(E) + '」，合起來就是「' + E.a + '」';
                 /* 答對 */
                 if (ok) {
                     right++;
-                    Sfx.play('ok');
-                    if (Reaction.setBest(ID, right, function (v, b) { return v > b; })) newRec = true;
+                    Sfx.play('ok');                     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                    if (Reaction.setBest(ID, right, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                     meta();
                     my.after(NEXT_MS, next);
                     return;
                 }
                 /* 答錯：扣機會 */
                 lives--;
-                Sfx.play('bad');
+                Sfx.play('bad');                        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 prompt.textContent = i < 0 ? '時間到！' : '選錯了…';
                 meta();
                 /* 沒有機會了 → 結算 */
@@ -333,7 +333,7 @@
                     my.after(1900, function () {
                         /* kit.resumeFrom：失敗後可從前 5 題繼續 */
                         var back = kit.resumeFrom(q);
-                        kit.result(root, {
+                        kit.result(root, {              /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                             score: right,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: right + ' 題', label: right >= 20 ? '識字高手！' : (right >= 10 ? '眼力不錯！' : '再試一次，會更準！'),
                             lines: ['最後一題：「' + E.a + '」', '大家都有「' + visiblePart(E) + '」，關鍵是「' + hiddenPart(E) + '」'],

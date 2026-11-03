@@ -48,14 +48,14 @@
     function polyArea(pts) {
         var a = 0;
         for (var i = 0; i < pts.length; i++) { var p = pts[i], q = pts[(i + 1) % pts.length]; a += p[0] * q[1] - q[0] * p[1]; }
-        return Math.abs(a) / 2;
+        return Math.abs(a) / 2;                         /* Math.abs：取絕對值（去掉負號） */
     }
     /* 依形狀種類與目標面積 A，算出形狀（圓：半徑；多邊形：以形狀中心為原點的頂點） */
     function shapeOf(kind, A) {
-        if (kind === 'circle') return { kind: kind, r: Math.sqrt(A / Math.PI) };
+        if (kind === 'circle') return { kind: kind, r: Math.sqrt(A / Math.PI) };  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
         var pts, i;
         if (kind === 'triangle') {
-            var a = Math.sqrt(4 * A / Math.sqrt(3)), t = a * Math.sqrt(3) / 2;
+            var a = Math.sqrt(4 * A / Math.sqrt(3)), t = a * Math.sqrt(3) / 2;  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
             pts = [[0, -2 * t / 3], [-a / 2, t / 3], [a / 2, t / 3]];
         } else if (kind === 'star') {
             var R = Math.sqrt(A / (5 * STAR_K * Math.sin(Math.PI / 5)));
@@ -77,16 +77,16 @@
     /* 出題：形狀、目標面積、方塊初始邊長（離答案至少 25%） */
     function makeRound(rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var kind = kit.pick(KINDS, rand);
-        var eq = kit.randFloat(EQ_MIN, EQ_MAX, rand), A = eq * eq;
+        var kind = kit.pick(KINDS, rand);               /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        var eq = kit.randFloat(EQ_MIN, EQ_MAX, rand), A = eq * eq;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         var sAns = Math.sqrt(A);
         var band = FAR[rand() < 0.5 ? 0 : 1];
-        var s0 = kit.clamp(sAns * kit.randFloat(band[0], band[1], rand), SQ_MIN, SQ_MAX);
-        if (Math.abs(s0 / sAns - 1) < 0.25) s0 = kit.clamp(sAns * (s0 > sAns ? 0.55 : 1.5), SQ_MIN, SQ_MAX);
+        var s0 = kit.clamp(sAns * kit.randFloat(band[0], band[1], rand), SQ_MIN, SQ_MAX);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
+        if (Math.abs(s0 / sAns - 1) < 0.25) s0 = kit.clamp(sAns * (s0 > sAns ? 0.55 : 1.5), SQ_MIN, SQ_MAX);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
         return { kind: kind, A: A, sAns: sAns, s0: s0 };
     }
     /* 誤差（%）：方塊面積與目標面積的差 ÷ 目標面積 */
-    function errPct(s, A) { return Math.abs(s * s - A) / A * 100; }
+    function errPct(s, A) { return Math.abs(s * s - A) / A * 100; }  /* Math.abs：取絕對值（去掉負號） */
     /* 有號的面積差（%）：＋＝方塊比較大、－＝方塊比較小 */
     function signedPct(s, A) { return (s * s - A) / A * 100; }
     /* 數字動畫的字串：正數不加號（XX.XXXX%），負數加負號（-XX.XXXX%） */
@@ -121,31 +121,31 @@
         var s = cfg.s0, locked = false, hint = null;
         console.log('[面積一樣大] 形狀 ' + cfg.kind + '，目標面積 ' + cfg.A.toFixed(2) + '（等效邊長 ' + cfg.sAns.toFixed(2) + '），方塊起始邊長 ' + cfg.s0.toFixed(2));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        var svg = kit.svg('svg', { 'class': 'area-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
+        var svg = kit.svg('svg', { 'class': 'area-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         /* 目標形狀 */
-        var gShape = kit.svg('g', { transform: 'translate(' + SHAPE_C.x + ' ' + SHAPE_C.y + ')' }, svg);
+        var gShape = kit.svg('g', { transform: 'translate(' + SHAPE_C.x + ' ' + SHAPE_C.y + ')' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var shapeEl;
         if (shape.kind === 'circle') shapeEl = kit.svg('circle', { cx: 0, cy: 0, r: shape.r, 'class': 'area-shape' }, gShape);
-        else shapeEl = kit.svg('polygon', { points: shape.pts.map(function (p) { return p[0].toFixed(2) + ',' + p[1].toFixed(2); }).join(' '), 'class': 'area-shape' }, gShape);
+        else shapeEl = kit.svg('polygon', { points: shape.pts.map(function (p) { return p[0].toFixed(2) + ',' + p[1].toFixed(2); }).join(' '), 'class': 'area-shape' }, gShape);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         /* 方塊（左上角固定）與手柄 */
         var gSq = kit.svg('g', {}, svg);
         var rect = kit.svg('rect', { x: ANCHOR.x, y: ANCHOR.y, width: s, height: s, 'class': 'area-sq' }, gSq);
-        var handle = kit.svg('polygon', { points: arrowPoints(HANDLE).map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '), 'class': 'area-handle' }, svg);
+        var handle = kit.svg('polygon', { points: arrowPoints(HANDLE).map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '), 'class': 'area-handle' }, svg);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         var legend = h('div', { 'class': 'area-legend' });
-        stage.appendChild(legend);
+        stage.appendChild(legend);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var diffEl = h('div', { 'class': 'area-diff', text: fmtDiff(0) });   /* 揭曉時的面積差數字動畫 */
-        stage.appendChild(diffEl);
+        stage.appendChild(diffEl);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() {
-            rect.setAttribute('width', s); rect.setAttribute('height', s);
-            handle.setAttribute('transform', 'translate(' + (ANCHOR.x + s).toFixed(2) + ' ' + (ANCHOR.y + s).toFixed(2) + ')');
+            rect.setAttribute('width', s); rect.setAttribute('height', s);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+            handle.setAttribute('transform', 'translate(' + (ANCHOR.x + s).toFixed(2) + ' ' + (ANCHOR.y + s).toFixed(2) + ')');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         }
         paint();
         var okBtn = h('button', { 'class': 'btn btn--go area-ok', text: '確定' });
         stage.appendChild(okBtn);
 
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從手柄出發，沿對角線往「面積一樣大的位置」重複移動（第一次的正確答案） */
-        if (kit.once('area.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: ANCHOR.x + s, y: ANCHOR.y + s, dx: cfg.sAns - s, dy: cfg.sAns - s, delay: 400, text: '請拖曳十字箭頭調整方塊大小' });
+        if (kit.once('area.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: ANCHOR.x + s, y: ANCHOR.y + s, dx: cfg.sAns - s, dy: cfg.sAns - s, delay: 400, text: '請拖曳十字箭頭調整方塊大小' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
 
         kit.dragDamp(stage, {
@@ -162,28 +162,28 @@
             }
         });
 
-        kit.onTap(okBtn, function () { submit(); });
+        kit.onTap(okBtn, function () { submit(); });    /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
 
         function submit() {
             if (locked) return;
             locked = true; hideHint();
             okBtn.style.display = 'none'; handle.style.display = 'none';
-            Sfx.play('click');
+            Sfx.play('click');                          /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             var real = errPct(s, cfg.A);
             /* 揭曉：方塊移到形狀上（中心對齊），兩個都半透明 */
             var cx0 = ANCHOR.x + s / 2, cy0 = ANCHOR.y + s / 2;
             var tx = SHAPE_C.x - cx0, ty = SHAPE_C.y - cy0;
-            shapeEl.classList.add('area-shape--rev'); rect.classList.add('area-sq--rev');
-            legend.textContent = '橘色＝只有圖形有　藍色＝只有方塊有';
-            legend.classList.add('area-legend--on');
-            my.tween(900, function (e) {
+            shapeEl.classList.add('area-shape--rev'); rect.classList.add('area-sq--rev');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            legend.textContent = '橘色＝只有圖形有　藍色＝只有方塊有';   /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            legend.classList.add('area-legend--on');    /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            my.tween(900, function (e) {                /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
                 gSq.setAttribute('transform', 'translate(' + (tx * e).toFixed(2) + ' ' + (ty * e).toFixed(2) + ')');
             }, kit.easeInOutCubic).then(function () {
                 var bigger = s * s > cfg.A, sp = signedPct(s, cfg.A);
                 /* 疊合之後：面積差從 0.0000% 跑到最後的數字（正＝方塊比較大、負＝比較小），停住後再維持 HOLD_MS */
                 diffEl.classList.add('area-diff--on');
                 diffEl.classList.toggle('area-diff--neg', sp < 0);
-                return my.tween(COUNT_MS, function (e) { diffEl.textContent = fmtDiff(sp * e); }, kit.easeOutCubic).then(function () {
+                return my.tween(COUNT_MS, function (e) { diffEl.textContent = fmtDiff(sp * e); }, kit.easeOutCubic).then(function () {  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                     diffEl.textContent = fmtDiff(sp);
                     return bigger;
                 });

@@ -48,7 +48,7 @@
     /* 枚數的規矩：digit＝1～9 枚；even＝2、4、…、18 枚 */
     function rangeOf(mode) { return mode === 'even' ? { lo: 2, hi: 18, step: 2 } : { lo: 1, hi: 9, step: 1 }; }
     function weightOf(ws, cs) { var s = 0; for (var i = 0; i < ws.length; i++) s += ws[i] * cs[i]; return s; }
-    function countOf(cs) { return cs.reduce(function (a, b) { return a + b; }, 0); }
+    function countOf(cs) { return cs.reduce(function (a, b) { return a + b; }, 0); }  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
     /* 窮舉：符合規矩、總重＝W（N 不是 null 時總枚數也要＝N）的組合有幾種（最多數到 limit） */
     function countSolutions(ws, W, N, mode, limit) {
         var r = rangeOf(mode), k = ws.length, n = 0, cs = [];
@@ -68,8 +68,8 @@
         var st = stageOf(level), last = null;
         var mode = level >= EVEN_FROM && rand() < EVEN_P ? 'even' : 'digit', r = rangeOf(mode);
         for (var tr = 0; tr < TRIES; tr++) {            /* 用亂數一直重抽，最多 TRIES 次，抽到符合條件的題目就收下 */
-            var ws = kit.shuffle(st.primes, rand).slice(0, st.k).sort(function (a, b) { return a - b; });
-            var cs = ws.map(function () { return r.lo + r.step * kit.randInt(0, (r.hi - r.lo) / r.step, rand); });
+            var ws = kit.shuffle(st.primes, rand).slice(0, st.k).sort(function (a, b) { return a - b; });  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+            var cs = ws.map(function () { return r.lo + r.step * kit.randInt(0, (r.hi - r.lo) / r.step, rand); });  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             var W = weightOf(ws, cs), N = st.giveN ? countOf(cs) : null;
             last = { ws: ws, cs: cs, W: W, N: N, mode: mode };
             if (countSolutions(ws, W, N, mode, 2) === 1) return last;
@@ -83,7 +83,7 @@
         return weightOf(pz.ws, cs) === pz.W && (pz.N == null || countOf(cs) === pz.N);
     }
     /* 算式：「13×4 ＋ 17×6 ＝ 154 克」 */
-    function equation(ws, cs) { return ws.map(function (w, i) { return w + '×' + cs[i]; }).join(' ＋ ') + ' ＝ ' + weightOf(ws, cs) + ' 克'; }
+    function equation(ws, cs) { return ws.map(function (w, i) { return w + '×' + cs[i]; }).join(' ＋ ') + ' ＝ ' + weightOf(ws, cs) + ' 克'; }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
         if (n >= 25) return '撲滿透視眼！';
@@ -110,9 +110,9 @@
         var pz = makePuzzle(level, api.rand), k = pz.ws.length, r = rangeOf(pz.mode);
         api.info = pz;                                  /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[撲滿有多少] 第 ' + level + ' 關：' + pz.ws.join('、') + ' 克，' + (pz.mode === 'even' ? '偶數枚' : '1～9 枚') + (pz.N != null ? '，共 ' + pz.N + ' 枚' : ''));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
-        var cs = pz.ws.map(function () { return r.lo; }), over = false;
+        var cs = pz.ws.map(function () { return r.lo; }), over = false;  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
 
-        var wrap = h('div', { 'class': 'piggybank-wrap' });
+        var wrap = h('div', { 'class': 'piggybank-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
         var pig = h('div', { 'class': 'piggybank-pig' }, [
             h('div', { 'class': 'piggybank-pig__icon', text: '🐷' }),
             h('div', { 'class': 'piggybank-pig__info' }, [
@@ -123,24 +123,24 @@
         var ruleBox = h('div', { 'class': 'piggybank-rule', text: pz.mode === 'even' ? '每種硬幣都是「偶數枚」（2～18 枚）' : '每種硬幣都是「1～9 枚」' });
         var list = h('div', { 'class': 'piggybank-list' });
         var nums = [];
-        pz.ws.forEach(function (w, i) {
+        pz.ws.forEach(function (w, i) {                 /* forEach：對陣列的每個元素各做一次 */
             var num = h('div', { 'class': 'piggybank-num' });
             var minus = h('button', { 'class': 'btn btn--line piggybank-step', type: 'button', text: '−' });
             var plus = h('button', { 'class': 'btn btn--line piggybank-step', type: 'button', text: '＋' });
-            kit.onTap(minus, function () { bump(i, -1); });
-            kit.onTap(plus, function () { bump(i, 1); });
+            kit.onTap(minus, function () { bump(i, -1); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+            kit.onTap(plus, function () { bump(i, 1); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             var coin = h('div', { 'class': 'piggybank-coin piggybank-coin--' + i }, [h('span', { 'class': 'piggybank-coin__w', text: String(w) }), h('span', { 'class': 'piggybank-coin__g', text: '克' })]);
-            list.appendChild(h('div', { 'class': 'piggybank-row' }, [coin, h('div', { 'class': 'piggybank-times', text: '×' }), minus, num, plus, h('div', { 'class': 'piggybank-unit', text: '枚' })]));
+            list.appendChild(h('div', { 'class': 'piggybank-row' }, [coin, h('div', { 'class': 'piggybank-times', text: '×' }), minus, num, plus, h('div', { 'class': 'piggybank-unit', text: '枚' })]));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             nums.push(num);
         });
-        var tip = h('div', { 'class': 'piggybank-tip', text: '調好每種的枚數，再按「打開撲滿」' });
+        var tip = h('div', { 'class': 'piggybank-tip', text: '調好每種的枚數，再按「打開撲滿」' });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
         var btnOpen = h('button', { 'class': 'btn btn--primary piggybank-open', type: 'button', text: '打開撲滿' });
         kit.onTap(btnOpen, openIt);
-        wrap.appendChild(pig); wrap.appendChild(ruleBox); wrap.appendChild(list); wrap.appendChild(tip); wrap.appendChild(btnOpen);
-        stage.appendChild(wrap);
+        wrap.appendChild(pig); wrap.appendChild(ruleBox); wrap.appendChild(list); wrap.appendChild(tip); wrap.appendChild(btnOpen);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(wrap);                        /* 把整個遊戲區放進舞台（放進去，畫面上才看得到） */
 
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
-        function paint() { nums.forEach(function (el, i) { el.textContent = String(cs[i]); }); }
+        function paint() { nums.forEach(function (el, i) { el.textContent = String(cs[i]); }); }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         function bump(i, d) {
             if (over) return;
             var v = cs[i] + d * r.step;
@@ -152,9 +152,9 @@
             over = true; btnOpen.disabled = true;
             var lines = ['正確：' + equation(pz.ws, pz.cs)];
             if (isRight(pz, cs)) {
-                tip.textContent = equation(pz.ws, cs);
-                list.classList.add('piggybank-list--ok');
-                kit.flash(stage, true, api.my);
+                tip.textContent = equation(pz.ws, cs);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                list.classList.add('piggybank-list--ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                kit.flash(stage, true, api.my);         /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
                 /* V1.43.0：每關的題目長得很像，玩家沒發現換了新題目 → 答對先跳說明彈窗，按「下一關」才換 */
                 kit.passNext(api, { children: [
                     h('div', { 'class': 'piggybank-pass__eq', text: equation(pz.ws, cs) }),
@@ -164,14 +164,14 @@
             }
             var yw = weightOf(pz.ws, cs), why = yw !== pz.W ? '你的組合重 ' + yw + ' 克，對不上 ' + pz.W + ' 克' : '重量對了，但一共是 ' + countOf(cs) + ' 枚，不是 ' + pz.N + ' 枚';
             tip.textContent = why;
-            nums.forEach(function (el, i) { el.textContent = cs[i] === pz.cs[i] ? String(cs[i]) : cs[i] + '→' + pz.cs[i]; if (cs[i] !== pz.cs[i]) el.classList.add('piggybank-num--bad'); });
+            nums.forEach(function (el, i) { el.textContent = cs[i] === pz.cs[i] ? String(cs[i]) : cs[i] + '→' + pz.cs[i]; if (cs[i] !== pz.cs[i]) el.classList.add('piggybank-num--bad'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             wrap.appendChild(h('div', { 'class': 'piggybank-answer', text: lines[0] }));
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: FAIL_HOLD_MS, lines: [why].concat(lines) });
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: FAIL_HOLD_MS, lines: [why].concat(lines) });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
-        api.solve = function () { cs = pz.cs.slice(); paint(); openIt(); };
-        api.wrong = function () { cs = pz.cs.slice(); cs[0] = cs[0] + r.step <= r.hi ? cs[0] + r.step : cs[0] - r.step; paint(); openIt(); };
+        api.solve = function () { cs = pz.cs.slice(); paint(); openIt(); };  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        api.wrong = function () { cs = pz.cs.slice(); cs[0] = cs[0] + r.step <= r.hi ? cs[0] + r.step : cs[0] - r.step; paint(); openIt(); };  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         api.state = function () { return { cs: cs.slice(), over: over }; };
         paint();
     }

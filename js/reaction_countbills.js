@@ -35,23 +35,23 @@
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }
-    function countFor(level) { return Math.round(ramp(level, COUNT)); }
-    function timeMs(level) { return Math.round(ramp(level, TIME_S) * 1000); }
+    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function countFor(level) { return Math.round(ramp(level, COUNT)); }  /* Math.round：四捨五入成整數 */
+    function timeMs(level) { return Math.round(ramp(level, TIME_S) * 1000); }  /* Math.round：四捨五入成整數 */
     function denomsFor(level) { return level >= LATER_FROM ? DENOMS_LATER : DENOMS_BASE; }
     /* 撥出去前 k 張的總和 */
     function sumFirst(notes, k) { var s = 0; for (var i = 0; i < k && i < notes.length; i++) s += notes[i]; return s; }
     /* 出一關：{ level, notes（整疊鈔票從上到下的面額）, n（撥幾張剛好）, target（目標金額）, extra, time（限時毫秒）, denoms（這一關的面額表）} */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var n = countFor(level), denoms = denomsFor(level), extra = kit.randInt(EXTRA[0], EXTRA[1], rand), notes = [], i;
+        var n = countFor(level), denoms = denomsFor(level), extra = kit.randInt(EXTRA[0], EXTRA[1], rand), notes = [], i;  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         for (var tr = 0; tr < 100; tr++) {
-            notes = []; for (i = 0; i < n; i++) notes.push(kit.pick(denoms, rand));
+            notes = []; for (i = 0; i < n; i++) notes.push(kit.pick(denoms, rand));  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             if (new Set(notes).size >= 2) break;                                   /* 至少 2 種不同面額 */
         }
         if (new Set(notes).size < 2) notes[n - 1] = denoms[0] === notes[0] ? denoms[1] : denoms[0];
         var target = sumFirst(notes, n);
-        for (i = 0; i < extra; i++) notes.push(kit.pick(denoms, rand));
+        for (i = 0; i < extra; i++) notes.push(kit.pick(denoms, rand));  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         return { level: level, notes: notes, n: n, target: target, extra: extra, time: timeMs(level), denoms: denoms };
     }
     /* 撥了 taken 張的判定：{ sum, result: 'ok'｜'few'｜'many', diff（sum − target）} */
@@ -87,8 +87,8 @@
     /* 一張鈔票（div）：底色依面額（CSS class countbills-d100…）、中間大大的面額、四個角落小字與花紋 */
     function noteEl(v, cls) {
         var el = h('div', { 'class': 'countbills-note countbills-d' + v + (cls ? ' ' + cls : '') });
-        el.appendChild(h('div', { 'class': 'countbills-note__c countbills-note__c--l', text: String(v) }));
-        el.appendChild(h('div', { 'class': 'countbills-note__c countbills-note__c--r', text: String(v) }));
+        el.appendChild(h('div', { 'class': 'countbills-note__c countbills-note__c--l', text: String(v) }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        el.appendChild(h('div', { 'class': 'countbills-note__c countbills-note__c--r', text: String(v) }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         el.appendChild(h('div', { 'class': 'countbills-note__v', text: String(v) }));
         el.appendChild(h('div', { 'class': 'countbills-note__p' }));
         return el;
@@ -113,30 +113,30 @@
         lab1.style.cssText = 'left:20px;top:' + (top0 - 38) + 'px;width:' + NW + 'px;'; lab2.style.cssText = 'right:20px;top:' + (top0 - 38) + 'px;width:' + NW + 'px;'; field.appendChild(lab1); field.appendChild(lab2);
         /* 整疊鈔票（全部先放好，用 class 控制在「疊上」還是「撥出去」） */
         var table = h('div', { 'class': 'countbills-table' }); table.style.cssText = 'top:' + top0 + 'px;height:' + (NH + 40) + 'px;'; field.appendChild(table);
-        var els = q.notes.map(function (v, i) { var el = noteEl(v, ''); el.style.cssText = 'width:' + NW + 'px;height:' + NH + 'px;'; table.appendChild(el); return el; });
+        var els = q.notes.map(function (v, i) { var el = noteEl(v, ''); el.style.cssText = 'width:' + NW + 'px;height:' + NH + 'px;'; table.appendChild(el); return el; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         var taken = 0, phase = 'play';
         /* 排位置：每張鈔票都用 transform 擺在「疊上（左邊）」或「撥出去（右邊）」；
            疊上只畫最上面 3 張（越下面越暗、偏下一點）；撥出去只畫最後撥的 3 張（歪一點點）——其他的藏在底下看不到 */
         function layout() {
-            els.forEach(function (el, i) {
+            els.forEach(function (el, i) {              /* forEach：對陣列的每個元素各做一次 */
                 var out = i < taken, depth = out ? (taken - 1 - i) : (i - taken);               /* 疊上：離最上面幾張；撥出去：離最後撥的那張幾張 */
                 if (depth > 2) { el.style.display = 'none'; return; }
                 el.style.display = 'block'; el.style.zIndex = String(10 - depth);
                 var x = out ? W - 20 - NW : 20, rot = out ? [3, -4, 5][depth] : 0, dy = depth * 6;
                 el.style.transform = 'translate(' + x + 'px,' + dy + 'px) rotate(' + rot + 'deg)';
-                el.classList.toggle('countbills-note--out', out); el.classList.toggle('countbills-note--under', !out && depth > 0);
+                el.classList.toggle('countbills-note--out', out); el.classList.toggle('countbills-note--under', !out && depth > 0);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             });
         }
         layout();
         var info = h('div', { 'class': 'qz-note countbills-info', text: level === 1 ? '算好了就按「好了」，多了少了都不行！' : '邊撥邊心算，剛好就按「好了」' }); info.style.top = (top0 + NH + 56) + 'px'; field.appendChild(info);
-        var btn = kit.btnGrid(field, [{ text: '好了！', kind: 'primary', cls: 'countbills-btn', onTap: function () { done('done'); } }], { cols: 1, h: 96, bottom: 12 });
+        var btn = kit.btnGrid(field, [{ text: '好了！', kind: 'primary', cls: 'countbills-btn', onTap: function () { done('done'); } }], { cols: 1, h: 96, bottom: 12 });  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
         if (level === 1 && kit.once('countbills.hint')) kit.hintOn(stage, null, { mode: 'tap', x: 20 + NW / 2, y: top0 + NH / 2, delay: 700, text: '點一下，最上面那張就撥出去' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         /* 撥一張：點「疊上」的區域（整個桌面都可以點，手指比較好點） */
-        table.addEventListener('pointerdown', function (e) {
+        table.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (phase !== 'play' || api.over) return;
-            e.preventDefault();
+            e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             if (taken >= q.notes.length) return;
-            taken++; layout(); Sfx.play('tick');
+            taken++; layout(); Sfx.play('tick');        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
         });
         api.timer(q.time, function () { done('timeout'); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
 
@@ -145,18 +145,18 @@
             if (phase !== 'play' || api.over) return;
             phase = 'end'; api.stopTimer();
             var r = judge(q, taken), why = (kind === 'timeout' ? '時間到！' : '') + whyText(r, q);
-            btn.btns[0].classList.add('countbills-btn--off');
+            btn.btns[0].classList.add('countbills-btn--off');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             table.style.display = 'none'; lab1.style.display = 'none'; lab2.style.display = 'none';
             showSpread(r);
-            info.textContent = why; info.style.top = ''; info.style.bottom = '124px';
-            if (r.result === 'ok') { info.classList.add('countbills-info--ok'); kit.flash(stage, true, api.my); Sfx.play('ok'); api.pass({ delay: 2200 }); return; }
-            info.classList.add('countbills-info--bad'); kit.flash(stage, false, api.my);
-            api.fail({ delay: 4200, lines: [why, '前 ' + q.n + ' 張是 ' + q.notes.slice(0, q.n).join('＋') + ' ＝ ' + q.target + ' 元', '你撥了 ' + taken + ' 張：' + (taken ? q.notes.slice(0, taken).join('＋') : '（沒撥）') + ' ＝ ' + r.sum + ' 元'] });
+            info.textContent = why; info.style.top = ''; info.style.bottom = '124px';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            if (r.result === 'ok') { info.classList.add('countbills-info--ok'); kit.flash(stage, true, api.my); Sfx.play('ok'); api.pass({ delay: 2200 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            info.classList.add('countbills-info--bad'); kit.flash(stage, false, api.my);  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 4200, lines: [why, '前 ' + q.n + ' 張是 ' + q.notes.slice(0, q.n).join('＋') + ' ＝ ' + q.target + ' 元', '你撥了 ' + taken + ' 張：' + (taken ? q.notes.slice(0, taken).join('＋') : '（沒撥）') + ' ＝ ' + r.sum + ' 元'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 攤開：每張一個小格，下面寫累加的總和；剛好湊到目標的那張標綠、多撥的標紅；撥少了就多顯示下一張（灰色） */
         function showSpread(r) {
             var box = h('div', { 'class': 'countbills-spread' }); box.style.top = '110px';
-            var show = Math.max(taken, 0), cols = 4, cw = Math.floor((W - 24 - (cols - 1) * 8) / cols), nh = Math.round(cw * 0.52), run = 0, count = show + (r.result === 'few' ? 1 : 0);
+            var show = Math.max(taken, 0), cols = 4, cw = Math.floor((W - 24 - (cols - 1) * 8) / cols), nh = Math.round(cw * 0.52), run = 0, count = show + (r.result === 'few' ? 1 : 0);  /* Math.floor：無條件捨去成整數 */
             if (!show) box.appendChild(h('div', { 'class': 'countbills-spread__none', text: '一張都沒撥' }));
             for (var i = 0; i < count; i++) {
                 var v = q.notes[i], cell = h('div', { 'class': 'countbills-cell' }), ghost = i >= taken;
@@ -169,7 +169,7 @@
         }
         /* 驗證用：撥 n 張再按好了（solve）／少撥一張再按好了（wrong）；只排一次 */
         var armed = false;
-        function run(cnt) { armed = true; for (var i = 0; i < cnt; i++) (function (k) { api.after(60 + k * 90, function () { if (phase === 'play') { taken++; layout(); } }); })(i); api.after(60 + cnt * 90 + 80, function () { done('done'); }); }
+        function run(cnt) { armed = true; for (var i = 0; i < cnt; i++) (function (k) { api.after(60 + k * 90, function () { if (phase === 'play') { taken++; layout(); } }); })(i); api.after(60 + cnt * 90 + 80, function () { done('done'); }); }  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { if (!armed && phase === 'play') run(q.n); };
         api.wrong = function () { if (!armed && phase === 'play') run(q.n - 1); };

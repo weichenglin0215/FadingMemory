@@ -60,7 +60,7 @@ ok(T.DISTRACT_S === 2 && T.NOISE_COPIES >= 2 && T.MOVE_MS > 0 && T.BLINK_MS[0] <
   const xs = new Set(), ys = new Set(); for (let k = 0; k < 50; k++) T.noiseSpots(12, W, H, S, rnd).forEach(p => { xs.add(Math.floor(p.x / 40)); ys.add(Math.floor(p.y / 20)); });
   ok(xs.size >= 8 && ys.size >= 3, '位置是隨機散開的（橫向 ' + xs.size + ' 格、縱向 ' + ys.size + ' 格都出現過）');
   ok(JSON.stringify(T.noiseSpots(3, 10, 10, 20, rnd)) === '[{"x":0,"y":0},{"x":0,"y":0},{"x":0,"y":0}]', '問題列比圖示還小時不會出現負數位置'); }
-{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_calendar.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_calendar.css'), 'utf8').split(/\s+/).join(' ');
+{ const src = require('fs').readFileSync(require('path').resolve(__dirname, '../../js/reaction_calendar.js'), 'utf8'), css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_calendar.css'), 'utf8').replace(/[ \t]*\/\*[\s\S]*?\*\//g, '').split(/\s+/).join(' ');
   ok(src.indexOf("phase = 'distract'") > 0 && src.indexOf('api.after(DISTRACT_S * 1000') > 0 && src.indexOf("stopNoise(); phase = 'ask'") > 0, '貼紙收起來之後進入「干擾」階段，DISTRACT_S 秒後才進入「問題」階段');
   { const a = src.indexOf('function hide()'), b = src.indexOf('function startNoise()'); ok(a > 0 && b > a && src.slice(a, b).indexOf('nextAsk()') > src.slice(a, b).indexOf('api.after(DISTRACT_S'), '問題（nextAsk）在干擾結束之後才出現'); }
   ok(css.indexOf('.calendar-noise__i { position: absolute; animation: calendar-blink') >= 0 && css.indexOf('@keyframes calendar-blink') >= 0, '干擾圖示會閃爍（有樣式）');

@@ -112,15 +112,15 @@
     function cellIndex(x, stripW, level) {
         var L = stripLayout(stripW, level);
         if (x < 0 || x >= stripW) return -1;
-        if (x < L.centerX) return Math.min(3, Math.floor(x / L.sideW));
+        if (x < L.centerX) return Math.min(3, Math.floor(x / L.sideW));  /* Math.floor：無條件捨去成整數 */
         if (x < L.centerX + L.centerW) return 4;
-        return Math.min(8, 5 + Math.floor((x - L.centerX - L.centerW) / L.sideW));
+        return Math.min(8, 5 + Math.floor((x - L.centerX - L.centerW) / L.sideW));  /* Math.floor：無條件捨去成整數 */
     }
 
     /* 建立 SVG 元素的小工具 */
     function svgEl(tag, attrs) {
         var el = document.createElementNS(SVGNS, tag);
-        for (var k in attrs) el.setAttribute(k, attrs[k]);
+        for (var k in attrs) el.setAttribute(k, attrs[k]);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         return el;
     }
 
@@ -130,7 +130,7 @@
 
     /* 設定 SVG 的 viewBox：改 viewBox 就是移動／放大「鏡頭」，而且是向量重畫，永遠銳利 */
     function setViewBox(svg, box) {
-        svg.setAttribute('viewBox', box.vx + ' ' + box.vy + ' ' + box.vw + ' ' + box.vh);
+        svg.setAttribute('viewBox', box.vx + ' ' + box.vy + ' ' + box.vw + ' ' + box.vh);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
     }
 
     /* 把 SVG 的 viewBox 從 from 緩動到 to：不是改 CSS transform，是每一影格
@@ -155,7 +155,7 @@
                 setViewBox(svg, to);
                 resolve();
             }
-            var t0 = performance.now();
+            var t0 = performance.now();                 /* performance.now()：高精度的時間（毫秒），計時用 */
             function frame(now) {
                 if (done) return;
                 var p = Math.min(1, (now - t0) / duration);
@@ -166,11 +166,11 @@
                     vw: from.vw + (to.vw - from.vw) * e,
                     vh: from.vh + (to.vh - from.vh) * e
                 });
-                if (p < 1) requestAnimationFrame(frame);
+                if (p < 1) requestAnimationFrame(frame);  /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
                 else finishOnce();
             }
-            requestAnimationFrame(frame);
-            setTimeout(finishOnce, duration + 400);
+            requestAnimationFrame(frame);               /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
+            setTimeout(finishOnce, duration + 400);     /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
         });
     }
 
@@ -191,7 +191,7 @@
         for (var i = 0; i < 9; i++) {
             var mid = i === 4, w = mid ? centerW : sideW;
             var x = i < 4 ? i * sideW : (i === 4 ? 4 * sideW : 4 * sideW + centerW + (i - 5) * sideW);
-            root.appendChild(svgEl('rect', {
+            root.appendChild(svgEl('rect', {            /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
                 x: x, y: 0, width: w, height: stripH,
                 'class': 'drop-rect' + (mid ? ' drop-rect--mid' : '')
             }));
@@ -201,8 +201,8 @@
                     'text-anchor': 'middle', 'dominant-baseline': 'central',
                     'class': 'drop-label'
                 });
-                t.textContent = String(LABELS[i]);
-                root.appendChild(t);
+                t.textContent = String(LABELS[i]);      /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                root.appendChild(t);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             } else {
                 buildSub(root, x, stripH, subW, subsubW);
             }
@@ -248,12 +248,12 @@
         /* V1.43.0：成績從「分數（1～1000）」變成「通過幾關」，舊的最佳紀錄不能比，第一次進來清掉
            （不用 Reaction.migrateBest：它看到 .sync 記號就當成新單位、不會清，做法跟挑豆子一樣）。 */
         var flag143 = Reaction.bestKey(ID) + '.v143';
-        if (!UI.store.get(flag143, false)) {
-            UI.store.set(Reaction.bestKey(ID), null);
+        if (!UI.store.get(flag143, false)) {            /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
+            UI.store.set(Reaction.bestKey(ID), null);   /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
             UI.store.set(Reaction.bestKey(ID) + '.sync', false);
             UI.store.set(flag143, true);
         }
-        ctx.setMeta(fmtBest(Reaction.getBest(ID)));
+        ctx.setMeta(fmtBest(Reaction.getBest(ID)));     /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
         /* 橫跨每一局的狀態：ALT+A 熱鍵的監聽只註冊一次，所以用 mount 層級的變數讓它讀得到「這一局」的狀態 */
         /* 橫跨每一局（round）的狀態：ALT+A 的鍵盤監聽只註冊一次（見檔案最下面），
@@ -271,8 +271,8 @@
             Rd = Reaction.kit.round();
             var my = Rd;
             phase = 'intro';
-            root.innerHTML = '';
-            ctx.setMeta(Reaction.kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))]));
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
+            ctx.setMeta(Reaction.kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))]));  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             var hint = h('div', { 'class': 'hint', text: '第 ' + level + ' 關：把三角形插進中間的紅色目標區（寬度是畫面的 1/' + Math.min(DEN_MAX, TARGET_BASE + level) + '）' });
             root.appendChild(hint);
             var field = h('div', { 'class': 'drop-field' });
@@ -377,10 +377,10 @@
             /* 用 pointerdown（手指一碰到螢幕就觸發），不是 click——click 在觸控裝置上要等
                手指離開螢幕（touchend）才會觸發，對「算準時機」的遊戲來說，玩家看準時機按下去
                的那一刻跟遊戲真正判定的時間點會差了手指按著不放的時間，時機全部算錯。 */
-            dropBtn.addEventListener('pointerdown', function (e) {
+            dropBtn.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
                 if (dropBtn.disabled) return;
-                e.preventDefault();
-                if (window.Sfx) Sfx.play('whoosh');
+                e.preventDefault();                     /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+                if (window.Sfx) Sfx.play('whoosh');     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 startFall();
             });
 
@@ -416,7 +416,7 @@
                     onLand(outcome, finalLeft);
                 }
 
-                var t0 = performance.now();
+                var t0 = performance.now();             /* performance.now()：高精度的時間（毫秒），計時用 */
                 function frame(now) {
                     if (landed) return;
                     var el = Math.min(FALL_MS, now - t0);
@@ -429,7 +429,7 @@
                     else land();
                 }
                 requestAnimationFrame(frame);
-                setTimeout(land, FALL_MS + 400);
+                setTimeout(land, FALL_MS + 400);        /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
             }
 
             /* 判定落點：算出接觸點落在第幾格（idx1），中間格再往下算第幾子格（idx2）、第幾孫格（idx3） */
@@ -492,8 +492,8 @@
                     ctx.setMeta(Reaction.kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))]));
                     var perfect = outcome.idx2 === 4 && outcome.idx3 === 4;
                     hint.style.opacity = '1';
-                    hint.textContent = perfect ? '第 ' + level + ' 關過關！正中紫色核心，PERFECT！' : '第 ' + level + ' 關過關！下一關目標區更窄';
-                    if (window.Sfx) Sfx.play(perfect ? 'perfect' : 'win');
+                    hint.textContent = perfect ? '第 ' + level + ' 關過關！正中紫色核心，PERFECT！' : '第 ' + level + ' 關過關！下一關目標區更窄';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                    if (window.Sfx) Sfx.play(perfect ? 'perfect' : 'win');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                     phase = 'next';
                     my.after(NEXT_MS, function () { level++; round(null, true); });
                     return;
@@ -504,12 +504,12 @@
                 else {
                     var x = outcome.x, a = SL.centerX, b = SL.centerX + SL.centerW;
                     dist = x < a ? a - x : x - b;
-                    label = '差了 ' + Math.round(dist) + ' 像素，落在目標區' + (x < a ? '左' : '右') + '邊';
+                    label = '差了 ' + Math.round(dist) + ' 像素，落在目標區' + (x < a ? '左' : '右') + '邊';  /* Math.round：四捨五入成整數 */
                 }
                 var failLevel = level, back = Reaction.kit.resumeFrom(failLevel);
                 phase = 'result';
                 /* 結算彈窗（公版 kit.result）：帶 score 會在彈窗出現之後自動送世界排行榜（成績＝通過幾關） */
-                Reaction.kit.result(root, {
+                Reaction.kit.result(root, {             /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                     num: cleared + ' 關', label: label, isNew: newRec, score: cleared,
                     lines: ['第 ' + failLevel + ' 關：目標區寬度是畫面的 1/' + Math.min(DEN_MAX, TARGET_BASE + failLevel)],
                     sfx: cleared >= 8 ? 'win' : 'fail',
@@ -537,7 +537,7 @@
            結果畫面時先重開一局，再觸發；開場演出／下落／變焦中按了不理會，避免狀態衝突。 */
         document.addEventListener('keydown', function (e) {
             if (!e.altKey || e.code !== 'KeyA') return;
-            e.preventDefault();
+            e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             if (phase === 'result') round(1);
             if (phase === 'idle' && triggerPerfect) triggerPerfect();
         });

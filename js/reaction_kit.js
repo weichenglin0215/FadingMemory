@@ -40,8 +40,8 @@
     /* kit.svg：建立 SVG 元素（標籤、屬性、要放進哪個父元素） */
     kit.svg = function (tag, attrs, parent) {
         var el = document.createElementNS(SVGNS, tag);
-        if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]);
-        if (parent) parent.appendChild(el);
+        if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+        if (parent) parent.appendChild(el);             /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         return el;
     };
 
@@ -79,15 +79,15 @@
             var a = new Uint32Array(1);
             global.crypto.getRandomValues(a);
             return a[0];
-        } catch (e) { return Math.floor(Math.random() * 4294967296); }
+        } catch (e) { return Math.floor(Math.random() * 4294967296); }  /* Math.floor：無條件捨去成整數 */
     };
     /* 用 rand（0～1 的函式，預設 Math.random）做的小工具：randInt 整數、randFloat 小數、pick 從陣列挑一個、shuffle 洗牌（Fisher–Yates 演算法） */
     /* 用 rand（0~1 的函式，預設 Math.random）做的小工具 */
-    kit.randInt = function (a, b, rand) { return a + Math.floor((rand || Math.random)() * (b - a + 1)); };
+    kit.randInt = function (a, b, rand) { return a + Math.floor((rand || Math.random)() * (b - a + 1)); };  /* Math.floor：無條件捨去成整數 */
     kit.randFloat = function (a, b, rand) { return a + (b - a) * (rand || Math.random)(); };
     kit.pick = function (arr, rand) { return arr[Math.floor((rand || Math.random)() * arr.length)]; };
     kit.shuffle = function (arr, rand) {
-        var a = arr.slice();
+        var a = arr.slice();                            /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         for (var i = a.length - 1; i > 0; i--) {
             var j = Math.floor((rand || Math.random)() * (i + 1));
             var t = a[i]; a[i] = a[j]; a[j] = t;
@@ -110,7 +110,7 @@
     /* e.timeStamp 跟 performance.now() 是同一個時間基準；合成事件或舊瀏覽器給怪值時退回 now */
     /* 事件時間：e.timeStamp 與 performance.now() 同一個時間基準；合成事件給怪值時退回現在時間 */
     kit.evT = function (e) {
-        var now = performance.now();
+        var now = performance.now();                    /* performance.now()：高精度的時間（毫秒），計時用 */
         var t = e && e.timeStamp;
         return (t > 0 && t <= now + 50 && t > now - 60000) ? t : now;
     };
@@ -153,9 +153,9 @@
                 var dt = last == null ? 16 : Math.min(50, now - last);
                 last = now;
                 if (fn(now, dt) === false) { handle.stopped = true; delete r.rafs[my]; return; }
-                r.rafs[my] = global.requestAnimationFrame(frame);
+                r.rafs[my] = global.requestAnimationFrame(frame);  /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
             }
-            r.rafs[my] = global.requestAnimationFrame(frame);
+            r.rafs[my] = global.requestAnimationFrame(frame);  /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
             handle.stop = function () {
                 handle.stopped = true;
                 if (r.rafs[my] != null) { global.cancelAnimationFrame(r.rafs[my]); delete r.rafs[my]; }
@@ -177,7 +177,7 @@
                     onFrame(1);
                     resolve();
                 }
-                var t0 = performance.now();
+                var t0 = performance.now();             /* performance.now()：高精度的時間（毫秒），計時用 */
                 var loop = r.loop(function (now) {
                     var p = Math.min(1, (now - t0) / duration);
                     onFrame(ease(p));
@@ -194,9 +194,9 @@
         r.dispose = function () {
             if (r.dead) return;
             r.dead = true;
-            r.timers.forEach(function (id) { global.clearTimeout(id); });
+            r.timers.forEach(function (id) { global.clearTimeout(id); });  /* forEach：對陣列的每個元素各做一次 */
             for (var k in r.rafs) global.cancelAnimationFrame(r.rafs[k]);
-            r.hooks.forEach(function (fn) { try { fn(); } catch (e) { } });
+            r.hooks.forEach(function (fn) { try { fn(); } catch (e) { } });  /* forEach：對陣列的每個元素各做一次 */
         };
         return r;
     };
@@ -204,7 +204,7 @@
     /* SVG 鏡頭推進：改 viewBox 就是移動／放大「鏡頭」，向量圖永遠銳利 */
     /* ─── SVG 鏡頭推進 ─── */
     kit.setViewBox = function (svg, b) {
-        svg.setAttribute('viewBox', b.vx + ' ' + b.vy + ' ' + b.vw + ' ' + b.vh);
+        svg.setAttribute('viewBox', b.vx + ' ' + b.vy + ' ' + b.vw + ' ' + b.vh);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
     };
     /* 把 viewBox 從 from 補間到 to（r 是 kit.round()）；onFrame(box, p) 讓呼叫端
        跟著放大倍率調整其他東西（例如越放大越顯示更細的刻度） */
@@ -229,7 +229,7 @@
         var ov = ctl.el, card = ctl.card;
         if (!ov || !card || !ov.clientHeight || !global.getComputedStyle) return;
         var cs = global.getComputedStyle(ov);
-        if (card.offsetHeight > ov.clientHeight - (parseFloat(cs.paddingTop) || 0) - (parseFloat(cs.paddingBottom) || 0)) ov.classList.add('dlg--snug');
+        if (card.offsetHeight > ov.clientHeight - (parseFloat(cs.paddingTop) || 0) - (parseFloat(cs.paddingBottom) || 0)) ov.classList.add('dlg--snug');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
     }
 
     /* ═══ 結算彈窗（所有遊戲共用的公版）═══
@@ -270,7 +270,7 @@
         if (o.feedback !== false) {
             var minorKids = [h('button', {
                 'class': 'btn btn--line btn--sm dlg__feedback', type: 'button', html: UI.icon('chat') + '<span>我有話要說</span>',
-                on: { click: function () { if (global.Sfx) { Sfx.unlock(); Sfx.play('click'); } if (global.Dlg && Dlg.feedback) Dlg.feedback(Reaction.current); } }
+                on: { click: function () { if (global.Sfx) { Sfx.unlock(); Sfx.play('click'); } if (global.Dlg && Dlg.feedback) Dlg.feedback(Reaction.current); } }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             })];
             if (global.Rating && Reaction.current) { var rb = global.Rating.button(Reaction.current); if (rb) minorKids.push(rb); }
             foot.push(h('div', { 'class': 'dlg__minor' }, minorKids));
@@ -306,14 +306,14 @@
             if (o.up) o.up(e, reason);
         }
         /* pointerdown：開始按住；setPointerCapture 讓手指移出元素外仍能收到放開事件 */
-        el.addEventListener('pointerdown', function (e) {
+        el.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (holding || (o.enabled && !o.enabled())) return;
-            e.preventDefault();
+            e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             holding = true;
-            try { el.setPointerCapture(e.pointerId); } catch (err) { }
+            try { el.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             o.down(e);
         });
-        el.addEventListener('pointerup', function (e) { up(e, 'up'); });
+        el.addEventListener('pointerup', function (e) { up(e, 'up'); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
         el.addEventListener('pointercancel', function (e) { up(e, 'cancel'); });
         function onHidden() { if (document.hidden) up(null, 'hidden'); }
         function onBlur() { up(null, 'hidden'); }
@@ -331,14 +331,14 @@
 
     /* kit.meta：把「第 N 關」「最佳 …」這類字串用「・」接起來，空字串會被略過 */
     /* 回傳遊戲 id 專屬的 meta 文字小工具：把「第 N 關・最佳 …」這類字串接起來 */
-    kit.meta = function (parts) { return parts.filter(function (p) { return p; }).join('・'); };
+    kit.meta = function (parts) { return parts.filter(function (p) { return p; }).join('・'); };  /* filter：留下符合條件的元素，回傳新陣列 */
 
     /* 後來新增的小工具 */
     /* ─── 1.16.0 新增的小工具 ─── */
     /* kit.localPt：事件座標換成「某個元素左上角」為原點的邏輯 px（舞台縮放後也準） */
     /* 事件座標換成「某個元素左上角」為原點的邏輯 px（舞台縮放後也準） */
     kit.localPt = function (e, el) {
-        var r = el.getBoundingClientRect();
+        var r = el.getBoundingClientRect();             /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
         var a = Stage.toLogical(e.clientX, e.clientY), o = Stage.toLogical(r.left, r.top);
         return { x: a.x - o.x, y: a.y - o.y };
     };
@@ -347,8 +347,8 @@
     kit.timebar = function (parent) {
         var fill = h('div', { 'class': 'ld-time__fill' });
         var bar = h('div', { 'class': 'ld-time' }, [fill]);
-        if (parent) parent.appendChild(bar);
-        return { el: bar, set: function (f) { fill.style.width = (100 * kit.clamp(f, 0, 1)).toFixed(1) + '%'; } };
+        if (parent) parent.appendChild(bar);            /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        return { el: bar, set: function (f) { fill.style.width = (100 * kit.clamp(f, 0, 1)).toFixed(1) + '%'; } };  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
     };
     /* 線性插值：t 從 0 到 1，結果從 a 走到 b */
     kit.lerp = function (a, b, t) { return a + (b - a) * t; };
@@ -371,14 +371,14 @@
     kit.lvKey = function (id) { return 'fm.reaction.lvbest.' + id; };
     /* 讀這款遊戲「到過的最高關卡」；沒玩過回傳 0 */
     kit.levelBest = function (id) {
-        var v = UI.store.get(kit.lvKey(id), 0);
+        var v = UI.store.get(kit.lvKey(id), 0);         /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
         return typeof v === 'number' && isFinite(v) && v > 0 ? Math.floor(v) : 0;
     };
     /* 這一局結束時停在第 level 關：比舊紀錄高才更新（所以從第 26 關開始、只玩到第 28 關，紀錄不會被改小） */
     kit.noteLevel = function (id, level) {
         if (!id || !(level > 1)) return false;
         if (level <= kit.levelBest(id)) return false;
-        UI.store.set(kit.lvKey(id), Math.floor(level));
+        UI.store.set(kit.lvKey(id), Math.floor(level)); /* UI.store.get／set：讀寫 localStorage（關掉瀏覽器也會記住的資料） */
         if (global.Identity && global.Identity.noteBest) global.Identity.noteBest(id);       /* V1.35.0：已登入的話，稍後把新的最佳關卡同步到帳號 */
         return true;
     };
@@ -390,7 +390,7 @@
     kit.entryLevel = function (id, legacyAdd) {
         var lv = kit.levelBest(id);
         if (!lv) {
-            var b = Reaction.getBest(id);
+            var b = Reaction.getBest(id);               /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             if (typeof b === 'number' && isFinite(b) && b > 0) {
                 lv = Math.floor(b) + (legacyAdd == null ? 1 : legacyAdd);
                 kit.noteLevel(id, lv);

@@ -42,15 +42,15 @@
        每組取資料庫裡那一組的前 5 個字（資料庫裡越前面的字彼此越像）。想換題目：改這裡的字，或改資料庫那一組的順序。 */
     var FAMILY_KEYS = ['待', '抱', '湖', '晴', '媽', '提', '橋', '鴨', '鑲', '讀'];
     var FAMILIES = FAMILY_KEYS.map(function (key) {  /* 每一關的字群：從共用字庫取每組前 5 個最像的字；找不到就丟出錯誤 */
-        var g = SimilarChars.groups({ minSize: 5 }).filter(function (x) { return x.chars[0] === key; })[0];
+        var g = SimilarChars.groups({ minSize: 5 }).filter(function (x) { return x.chars[0] === key; })[0];  /* filter：留下符合條件的元素，回傳新陣列 */
         if (!g) throw new Error('越看越清楚：共用資料庫裡找不到「' + key + '」開頭、至少 5 個字的字群');
         return g.chars.slice(0, 5);
     });
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function limitS(level) { return kit.ramp(level, TIME_S[0], TIME_S[1], LEVELS); }
-    function blurAt(level, ms) { var T = limitS(level) * 1000; return BLUR_MAX * (1 - kit.clamp(ms / T, 0, 1)); }
-    function spinAt(level, ms) { var T = limitS(level) * 1000; return SPIN_MAX * (1 - kit.clamp(ms / T, 0, 1)); }
+    function limitS(level) { return kit.ramp(level, TIME_S[0], TIME_S[1], LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function blurAt(level, ms) { var T = limitS(level) * 1000; return BLUR_MAX * (1 - kit.clamp(ms / T, 0, 1)); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
+    function spinAt(level, ms) { var T = limitS(level) * 1000; return SPIN_MAX * (1 - kit.clamp(ms / T, 0, 1)); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
     /* 旋轉角度（度，未乘方向）：ω(t) 的積分 ＝ SPIN_MAX × (t − t²/(2T)) */
     function angleAt(level, ms) { var T = limitS(level), t = Math.min(ms / 1000, T); return SPIN_MAX * (t - t * t / (2 * T)); }
     /* 這一關按下的得分：(1 − t÷T) × 100；第 1 關太早按打折 */
@@ -63,8 +63,8 @@
     /* 出題函式：依關卡難度與亂數產生這一關的資料（純函式，不碰畫面，單元測試直接測它） */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var fam = FAMILIES[(level - 1) % FAMILIES.length], target = kit.pick(fam, rand);
-        return { target: target, options: kit.shuffle(fam, rand), dir: rand() < 0.5 ? 1 : -1, start: rand() * 360, limit: limitS(level) };
+        var fam = FAMILIES[(level - 1) % FAMILIES.length], target = kit.pick(fam, rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        return { target: target, options: kit.shuffle(fam, rand), dir: rand() < 0.5 ? 1 : -1, start: rand() * 360, limit: limitS(level) };  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
     }
     /* 結算畫面的評語：依成績回傳一句話 */
     function rating(v) {
@@ -80,7 +80,7 @@
         kit.run(root, ctx, {
             id: ID, G: G, maxLevel: LEVELS, goodAt: 3,
             head: function (lv) { return '第 ' + lv + ' / ' + LEVELS + ' 關'; },
-            info: function (S) { return '累計 ' + Math.floor(S.score) + ' 分'; },
+            info: function (S) { return '累計 ' + Math.floor(S.score) + ' 分'; },  /* Math.floor：無條件捨去成整數 */
             scoreOf: function (S) { return S.score > 0 ? Math.min(SCORE.max, Leaderboard.fake4(S.score)) : 0; },
             numText: function (v) { return v.toFixed(4) + ' 分'; },
             rating: rating,
@@ -93,28 +93,28 @@
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
-        var q = makeLevel(level, api.rand), t0 = performance.now();
+        var q = makeLevel(level, api.rand), t0 = performance.now();  /* performance.now()：高精度的時間（毫秒），計時用 */
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[越看越清楚] 第 ' + level + ' 關：答案「' + q.target + '」，選項 ' + q.options.join('') + '；限時 ' + q.limit.toFixed(2) + ' 秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var glyph = h('div', { 'class': 'clearer-glyph', text: q.target });
         var clock = h('div', { 'class': 'clearer-clock', text: '計時 0.0000 秒' });
         var note = h('div', { 'class': 'clearer-note', text: level === 1 ? '字越來越清楚，認出就按，按錯結束' : '越快按，分數越高' });
-        stage.appendChild(note); stage.appendChild(glyph); stage.appendChild(clock);
-        var btns = q.options.map(function (c) {
+        stage.appendChild(note); stage.appendChild(glyph); stage.appendChild(clock);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var btns = q.options.map(function (c) {         /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var b = h('button', { 'class': 'btn btn--line clearer-opt', text: c });
-            kit.onTap(b, function () { judge(c); });
+            kit.onTap(b, function () { judge(c); });    /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             return b;
         });
-        stage.appendChild(h('div', { 'class': 'rx-btnrow clearer-opts' }, btns));
+        stage.appendChild(h('div', { 'class': 'rx-btnrow clearer-opts' }, btns));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         function frame() {
-            var ms = performance.now() - t0;
+            var ms = performance.now() - t0;            /* performance.now()：高精度的時間（毫秒），計時用 */
             glyph.style.filter = 'blur(' + blurAt(level, ms).toFixed(2) + 'px)';
             glyph.style.transform = 'rotate(' + (q.start + q.dir * angleAt(level, ms)).toFixed(2) + 'deg)';
-            clock.textContent = '計時 ' + kit.sec(Math.min(ms, q.limit * 1000)) + ' 秒';
+            clock.textContent = '計時 ' + kit.sec(Math.min(ms, q.limit * 1000)) + ' 秒';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         }
         frame();
-        var loop = api.my.loop(function () { if (api.over) return false; frame(); });
+        var loop = api.my.loop(function () { if (api.over) return false; frame(); });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
         api.timer(Math.round(q.limit * 1000), function () { judge(null, q.limit * 1000); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
 
         /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
@@ -123,20 +123,20 @@
             var ms = forceMs != null ? forceMs : performance.now() - t0;
             loop.stop();
             glyph.style.filter = 'none'; glyph.style.transform = 'none';
-            clock.textContent = '按下時間 ' + kit.sec(ms) + ' 秒';
-            btns.forEach(function (b) { if (b.textContent === q.target) b.classList.add('clearer-opt--ok'); else if (b.textContent === c) b.classList.add('clearer-opt--bad'); });
+            clock.textContent = '按下時間 ' + kit.sec(ms) + ' 秒';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            btns.forEach(function (b) { if (b.textContent === q.target) b.classList.add('clearer-opt--ok'); else if (b.textContent === c) b.classList.add('clearer-opt--bad'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             if (c === q.target) {
                 var g = gainFor(level, ms), rush = level === 1 && ms < RUSH_MS;
                 note.textContent = '答對！清晰度 ' + clarityPct(level, ms).toFixed(4) + '%，得 ' + g.toFixed(4) + ' 分' + (rush ? '（搶答打折）' : '');
-                api.pass({ gain: g, delay: 1100, log: '第 ' + level + ' 關「' + q.target + '」：清晰度 ' + clarityPct(level, ms).toFixed(4) + '%，得 ' + g.toFixed(4) + ' 分' + (rush ? '（搶答打折）' : '') });
+                api.pass({ gain: g, delay: 1100, log: '第 ' + level + ' 關「' + q.target + '」：清晰度 ' + clarityPct(level, ms).toFixed(4) + '%，得 ' + g.toFixed(4) + ' 分' + (rush ? '（搶答打折）' : '') });  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
             } else {
                 note.textContent = (c == null ? '時間到！' : '按錯了！') + '答案是「' + q.target + '」';
-                api.fail({ delay: 1900, lines: [(c == null ? '時間到！' : '按錯了：你選「' + c + '」') + '，答案是「' + q.target + '」', '按下時清晰度只有 ' + clarityPct(level, ms).toFixed(4) + '%'] });
+                api.fail({ delay: 1900, lines: [(c == null ? '時間到！' : '按錯了：你選「' + c + '」') + '，答案是「' + q.target + '」', '按下時清晰度只有 ' + clarityPct(level, ms).toFixed(4) + '%'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
             }
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.target); };
-        api.wrong = function () { judge(q.options.filter(function (x) { return x !== q.target; })[0]); };
+        api.wrong = function () { judge(q.options.filter(function (x) { return x !== q.target; })[0]); };  /* filter：留下符合條件的元素，回傳新陣列 */
     }
 
     /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */

@@ -49,9 +49,9 @@
     var PAIRS = [['orange', 'tangerine'], ['lemon', 'lime'], ['apple', 'tomato'], ['grape', 'blueberry']], SINGLES = ['banana', 'watermelon', 'pear', 'strawberry'];  /* PAIRS：容易看錯的成對水果（柳丁／橘子、檸檬／萊姆、蘋果／番茄、葡萄／藍莓）；SINGLES：沒有配對的水果 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }
-    function menuCountFor(level) { return Math.round(ramp(level, MENU_N)); }
-    function totalFor(level) { return Math.round(ramp(level, TOTAL)); }
+    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function menuCountFor(level) { return Math.round(ramp(level, MENU_N)); }  /* Math.round：四捨五入成整數 */
+    function totalFor(level) { return Math.round(ramp(level, TOTAL)); }  /* Math.round：四捨五入成整數 */
     function spawnMsFor(level) { return Math.round(ramp(level, SPAWN_MS)); }
     function fruitOf(id) { for (var i = 0; i < FRUITS.length; i++) if (FRUITS[i].id === id) return FRUITS[i]; return null; }
     function nameOf(id) { var f = fruitOf(id); return f ? f.name : id; }
@@ -59,14 +59,14 @@
     function menuFor(m, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var menu = [];
-        kit.shuffle(PAIRS.slice(), rand).forEach(function (p) { if (menu.length < m) menu.push(kit.pick(p, rand)); });
-        kit.shuffle(SINGLES.slice(), rand).forEach(function (s) { if (menu.length < m) menu.push(s); });
+        kit.shuffle(PAIRS.slice(), rand).forEach(function (p) { if (menu.length < m) menu.push(kit.pick(p, rand)); });  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+        kit.shuffle(SINGLES.slice(), rand).forEach(function (s) { if (menu.length < m) menu.push(s); });  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         return menu;
     }
     /* 誘餌池：不在菜單上的水果；{ partners（菜單水果的夥伴）, others（其他）} */
     function decoyPools(menu) {
         var partners = [], others = [];
-        FRUITS.forEach(function (f) { if (menu.indexOf(f.id) >= 0) return; if (f.pair && menu.indexOf(f.pair) >= 0) partners.push(f.id); else others.push(f.id); });
+        FRUITS.forEach(function (f) { if (menu.indexOf(f.id) >= 0) return; if (f.pair && menu.indexOf(f.pair) >= 0) partners.push(f.id); else others.push(f.id); });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         return { partners: partners, others: others };
     }
     /* 一顆水果的飛行：toss = { x0, vx, ya, ta }（x0、vx 以畫面寬度計；ya＝最高點的高度；ta＝到最高點的秒數）；t 秒時的位置（x、y 都是畫面寬高的倍數）*/
@@ -77,11 +77,11 @@
     /* 這顆水果落地（掉回 EXIT 這條線以下）的時間（秒）：解二次方程式，取下降的那一根 */
     function landTime(tz) {
         var g = 2 * (BOTTOM - tz.ya) / (tz.ta * tz.ta), vy0 = -g * tz.ta, c = BOTTOM - EXIT;
-        return (-vy0 + Math.sqrt(vy0 * vy0 - 2 * g * c)) / g;
+        return (-vy0 + Math.sqrt(vy0 * vy0 - 2 * g * c)) / g;  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
     }
     /* 線段 (ax, ay)→(bx, by) 有沒有碰到圓（圓心 cx, cy、半徑 r）：點到線段的最短距離 ≤ r */
     function segHitsCircle(ax, ay, bx, by, cx, cy, r) {
-        var dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy, t = l2 < 1e-12 ? 0 : kit.clamp(((cx - ax) * dx + (cy - ay) * dy) / l2, 0, 1);
+        var dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy, t = l2 < 1e-12 ? 0 : kit.clamp(((cx - ax) * dx + (cy - ay) * dy) / l2, 0, 1);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
         return Math.hypot(ax + t * dx - cx, ay + t * dy - cy) <= r;
     }
     /* 出一關：{ menu, pools, total, tosses（[{ t, fruit, onMenu, x0, vx, ya, ta, spin }]）, spawnMs, viewMs, level } */
@@ -90,18 +90,18 @@
         var m = menuCountFor(level), F = totalFor(level), spawn = spawnMsFor(level), menu = menuFor(m, rand), pools = decoyPools(menu);
         var nMenu = Math.max(m, Math.round(F * MENU_FRAC)), list = [], i;
         menu.forEach(function (f) { list.push({ fruit: f, onMenu: true }); });                              /* 每種菜單水果至少一顆 */
-        for (i = menu.length; i < nMenu; i++) list.push({ fruit: kit.pick(menu, rand), onMenu: true });
+        for (i = menu.length; i < nMenu; i++) list.push({ fruit: kit.pick(menu, rand), onMenu: true });  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         for (i = nMenu; i < F; i++) {
             var usePartner = pools.partners.length && (rand() < PARTNER_FRAC || !pools.others.length);
-            list.push({ fruit: kit.pick(usePartner ? pools.partners : pools.others.concat(pools.partners), rand), onMenu: false });
+            list.push({ fruit: kit.pick(usePartner ? pools.partners : pools.others.concat(pools.partners), rand), onMenu: false });  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         }
-        list = kit.shuffle(list, rand);
+        list = kit.shuffle(list, rand);                 /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         var t = LEAD_MS, lastX = 0.5;
-        var tosses = list.map(function (it) {
-            var x0 = kit.randFloat(X_RANGE[0], X_RANGE[1], rand), guard = 0;
-            while (Math.abs(x0 - lastX) < 0.18 && guard++ < 20) x0 = kit.randFloat(X_RANGE[0], X_RANGE[1], rand);
+        var tosses = list.map(function (it) {           /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            var x0 = kit.randFloat(X_RANGE[0], X_RANGE[1], rand), guard = 0;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+            while (Math.abs(x0 - lastX) < 0.18 && guard++ < 20) x0 = kit.randFloat(X_RANGE[0], X_RANGE[1], rand);  /* Math.abs：取絕對值（去掉負號） */
             lastX = x0;
-            var tz = { t: Math.round(t), fruit: it.fruit, onMenu: it.onMenu, x0: x0, vx: (0.5 - x0) * kit.randFloat(0.05, 0.3, rand), ya: kit.randFloat(APEX[0], APEX[1], rand), ta: kit.randFloat(T_APEX[0], T_APEX[1], rand), spin: kit.randFloat(-220, 220, rand) };
+            var tz = { t: Math.round(t), fruit: it.fruit, onMenu: it.onMenu, x0: x0, vx: (0.5 - x0) * kit.randFloat(0.05, 0.3, rand), ya: kit.randFloat(APEX[0], APEX[1], rand), ta: kit.randFloat(T_APEX[0], T_APEX[1], rand), spin: kit.randFloat(-220, 220, rand) };  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             t += spawn * kit.randFloat(0.85, 1.15, rand);
             return tz;
         });
@@ -143,8 +143,8 @@
         strawberry: [['path', { d: 'M32 58 C8 46 6 22 22 18 C28 16 32 20 32 20 C32 20 36 16 42 18 C58 22 56 46 32 58 Z' }, 'body'], ['circle', { cx: 24, cy: 30, r: 1.5 }, 'dot'], ['circle', { cx: 38, cy: 28, r: 1.5 }, 'dot'], ['circle', { cx: 31, cy: 38, r: 1.5 }, 'dot'], ['circle', { cx: 24, cy: 44, r: 1.5 }, 'dot'], ['circle', { cx: 40, cy: 42, r: 1.5 }, 'dot'], ['path', { d: 'M32 18 L24 10 L30 14 L32 6 L34 14 L40 10 Z' }, 'leaf']]
     };
     function fruitSvg(id, size) {
-        var s = kit.svg('svg', { 'class': 'menuslice-f menuslice-f--' + id, viewBox: '0 0 64 64', width: size, height: size });
-        (SHAPES[id] || []).forEach(function (sp) { var a = Object.assign({}, sp[1]); a['class'] = 'menuslice-' + sp[2]; kit.svg(sp[0], a, s); });
+        var s = kit.svg('svg', { 'class': 'menuslice-f menuslice-f--' + id, viewBox: '0 0 64 64', width: size, height: size });  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        (SHAPES[id] || []).forEach(function (sp) { var a = Object.assign({}, sp[1]); a['class'] = 'menuslice-' + sp[2]; kit.svg(sp[0], a, s); });  /* forEach：對陣列的每個元素各做一次 */
         return s;
     }
 
@@ -158,26 +158,26 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var field = h('div', { 'class': 'menuslice-field' });
-        stage.appendChild(field);
+        stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note menuslice-tip', text: '記住菜單，等一下只切菜單上的' });
-        field.appendChild(tip);
+        field.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         /* 黑板菜單 */
         var board = h('div', { 'class': 'menuslice-board' }, [h('div', { 'class': 'menuslice-board__title', text: '今日菜單' })]);
         var items = h('div', { 'class': 'menuslice-board__items' });
-        q.menu.forEach(function (id) { var it = h('div', { 'class': 'menuslice-item' }); it.appendChild(fruitSvg(id, 52)); it.appendChild(h('div', { 'class': 'menuslice-item__name', text: nameOf(id) })); items.appendChild(it); });
+        q.menu.forEach(function (id) { var it = h('div', { 'class': 'menuslice-item' }); it.appendChild(fruitSvg(id, 52)); it.appendChild(h('div', { 'class': 'menuslice-item__name', text: nameOf(id) })); items.appendChild(it); });  /* forEach：對陣列的每個元素各做一次 */
         board.appendChild(items); field.appendChild(board);
         var counter = h('div', { 'class': 'menuslice-counter', text: '' }); field.appendChild(counter);
         var info = h('div', { 'class': 'qz-note menuslice-info', text: '' }); field.appendChild(info);
         var arena = h('div', { 'class': 'menuslice-arena' }); field.appendChild(arena);          /* 水果飛的範圍（整個畫面） */
 
         var phase = 'view', resolved = 0, flying = [], halted = false, lastP = null, down = false, over = false, t0 = 0;
-        info.textContent = '看 ' + VIEW_S + ' 秒';
+        info.textContent = '看 ' + VIEW_S + ' 秒';        /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         api.timer(q.viewMs, begin);                     /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         function begin() {
             if (api.over) return;
-            phase = 'play'; board.classList.add('menuslice-board--gone'); tip.textContent = '用手指切過水果：只切菜單上的！'; info.textContent = ''; counter.textContent = '0／' + F;
-            t0 = performance.now();
-            q.tosses.forEach(function (tz) { api.after(tz.t, function () { launch(tz); }); });
+            phase = 'play'; board.classList.add('menuslice-board--gone'); tip.textContent = '用手指切過水果：只切菜單上的！'; info.textContent = ''; counter.textContent = '0／' + F;  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            t0 = performance.now();                     /* performance.now()：高精度的時間（毫秒），計時用 */
+            q.tosses.forEach(function (tz) { api.after(tz.t, function () { launch(tz); }); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
         }
         if (level === 1 && kit.once('menuslice.hint')) api.after(q.viewMs + LEAD_MS + 600, function () { if (!over) kit.hintOn(stage, null, { mode: 'drag', x: W * 0.3, y: H * 0.55, dx: W * 0.4, dy: -40, text: '用手指切過水果' }); });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         /* 發射一顆：建立元素，丟進 flying 清單，由迴圈每個畫格更新位置 */
@@ -187,7 +187,7 @@
             var sv = fruitSvg(tz.fruit, FRUIT_PX); el.appendChild(sv); arena.appendChild(el);
             flying.push({ tz: tz, el: el, t: 0, cut: false, done: false, lt: landTime(tz) });
         }
-        api.my.loop(function (now, dt) {
+        api.my.loop(function (now, dt) {                /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
             if (!arena.isConnected) return false;
             if (halted) return;
             var d = Math.min(dt, 50) / 1000;
@@ -205,14 +205,14 @@
             }
         });
         function resolve() {
-            resolved++; counter.textContent = resolved + '／' + F;
-            if (resolved >= F && !over) { over = true; phase = 'end'; info.textContent = '全部處理完了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1100 }); }
+            resolved++; counter.textContent = resolved + '／' + F;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            if (resolved >= F && !over) { over = true; phase = 'end'; info.textContent = '全部處理完了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1100 }); }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
         }
         /* 手指：按下時記下位置；移動時，走過的線段碰到水果就切 */
-        arena.addEventListener('pointerdown', function (e) { if (phase !== 'play' || over) return; e.preventDefault(); try { arena.setPointerCapture(e.pointerId); } catch (err) { } var p = kit.localPt(e, arena); lastP = p; down = true; sliceSeg(p, p); });
-        arena.addEventListener('pointermove', function (e) { if (!down || phase !== 'play' || over) return; var p = kit.localPt(e, arena); sliceSeg(lastP, p); lastP = p; });
+        arena.addEventListener('pointerdown', function (e) { if (phase !== 'play' || over) return; e.preventDefault(); try { arena.setPointerCapture(e.pointerId); } catch (err) { } var p = kit.localPt(e, arena); lastP = p; down = true; sliceSeg(p, p); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+        arena.addEventListener('pointermove', function (e) { if (!down || phase !== 'play' || over) return; var p = kit.localPt(e, arena); sliceSeg(lastP, p); lastP = p; });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
         function end(e) { down = false; lastP = null; }
-        arena.addEventListener('pointerup', end); arena.addEventListener('pointercancel', end);
+        arena.addEventListener('pointerup', end); arena.addEventListener('pointercancel', end);  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
         function sliceSeg(a, b) {
             for (var i = flying.length - 1; i >= 0 && !over; i--) {
                 var f = flying[i]; if (f.cut || f.px == null) continue;
@@ -224,19 +224,19 @@
             f.cut = true; flying.splice(idx, 1);
             var el = f.el, ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
             [['left', -1], ['right', 1]].forEach(function (half) {
-                var c = el.cloneNode(true); c.className = 'menuslice-half menuslice-half--' + half[0]; c.style.transform = el.style.transform; c.style.setProperty('--dir', half[1]); c.style.setProperty('--ang', ang + 'deg');
-                arena.appendChild(c); api.after(650, function () { c.remove(); });
+                var c = el.cloneNode(true); c.className = 'menuslice-half menuslice-half--' + half[0]; c.style.transform = el.style.transform; c.style.setProperty('--dir', half[1]); c.style.setProperty('--ang', ang + 'deg');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
+                arena.appendChild(c); api.after(650, function () { c.remove(); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
             });
             el.remove();
-            for (var k = 0; k < 8; k++) { var j = h('div', { 'class': 'menuslice-juice menuslice-f--' + f.tz.fruit }); j.style.left = f.px + 'px'; j.style.top = f.py + 'px'; j.style.setProperty('--dx', (Math.cos(k * 0.785 + Math.random()) * (30 + Math.random() * 30)).toFixed(0) + 'px'); j.style.setProperty('--dy', (Math.sin(k * 0.785 + Math.random()) * (30 + Math.random() * 30)).toFixed(0) + 'px'); arena.appendChild(j); api.after(550, function () { j.remove(); }); }
-            Sfx.play('pop');
+            for (var k = 0; k < 8; k++) { var j = h('div', { 'class': 'menuslice-juice menuslice-f--' + f.tz.fruit }); j.style.left = f.px + 'px'; j.style.top = f.py + 'px'; j.style.setProperty('--dx', (Math.cos(k * 0.785 + Math.random()) * (30 + Math.random() * 30)).toFixed(0) + 'px'); j.style.setProperty('--dy', (Math.sin(k * 0.785 + Math.random()) * (30 + Math.random() * 30)).toFixed(0) + 'px'); arena.appendChild(j); api.after(550, function () { j.remove(); }); }  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
+            Sfx.play('pop');                            /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             if (!f.tz.onMenu) { wrong(f); return; }
             resolve();
         }
         /* 失敗：停住畫面，把菜單再亮出來，你切錯（漏掉）的那顆和菜單上的那顆並排 */
         function showMenuAgain(badId, partnerId, missedFlag) {
             halted = true; over = true; phase = 'end';
-            board.classList.remove('menuslice-board--gone'); board.classList.add('menuslice-board--again'); tip.textContent = '菜單在這裡';
+            board.classList.remove('menuslice-board--gone'); board.classList.add('menuslice-board--again'); tip.textContent = '菜單在這裡';  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             var cmp = h('div', { 'class': 'menuslice-cmp' });
             function box(id, label, cls) { var b = h('div', { 'class': 'menuslice-cmp__box ' + (cls || '') }); b.appendChild(fruitSvg(id, 72)); b.appendChild(h('div', { 'class': 'menuslice-cmp__name', text: label + nameOf(id) })); return b; }
             if (missedFlag) cmp.appendChild(box(badId, '漏掉：', 'menuslice-cmp__box--bad'));
@@ -246,18 +246,18 @@
             [].forEach.call(items.children, function (it, k) { var id = q.menu[k]; if (id === partnerId || (missedFlag && id === badId)) it.classList.add('menuslice-item--mark'); });
         }
         function wrong(f) {
-            var id = f.tz.fruit, partner = fruitOf(id).pair && q.menu.indexOf(fruitOf(id).pair) >= 0 ? fruitOf(id).pair : null;
+            var id = f.tz.fruit, partner = fruitOf(id).pair && q.menu.indexOf(fruitOf(id).pair) >= 0 ? fruitOf(id).pair : null;  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             info.textContent = nameOf(id) + '不在菜單上！';
             showMenuAgain(id, partner, false);
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: 3600, lines: ['你切了 ' + nameOf(id) + '（不在菜單上）' + (partner ? '，菜單上是 ' + nameOf(partner) : ''), '菜單：' + q.menu.map(nameOf).join('、')] });
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 3600, lines: ['你切了 ' + nameOf(id) + '（不在菜單上）' + (partner ? '，菜單上是 ' + nameOf(partner) : ''), '菜單：' + q.menu.map(nameOf).join('、')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         function missed(f) {
             var id = f.tz.fruit;
             info.textContent = '漏掉了' + nameOf(id) + '（在菜單上）！';
             showMenuAgain(id, null, true);
             kit.flash(stage, false, api.my);
-            api.fail({ delay: 3600, lines: ['漏掉了 ' + nameOf(id) + '（它在菜單上）', '菜單：' + q.menu.map(nameOf).join('、')] });
+            api.fail({ delay: 3600, lines: ['漏掉了 ' + nameOf(id) + '（它在菜單上）', '菜單：' + q.menu.map(nameOf).join('、')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：solve＝每顆菜單上的水果一出現就切、wrong＝切第一顆菜單外的（沒有就漏掉一顆菜單上的）；兩者都會被重複呼叫，要冪等 */
         api.solve = function () {

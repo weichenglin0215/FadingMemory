@@ -48,9 +48,9 @@
             var opts = [];
             if (b > 1) opts.push(a * (b - 1)); if (b < N) opts.push(a * (b + 1));
             if (a > 1) opts.push((a - 1) * b); if (a < N) opts.push((a + 1) * b);
-            v = kit.pick(opts, rand);
+            v = kit.pick(opts, rand);                   /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         } else {
-            var t = Math.floor(truth / 10), o = truth % 10;
+            var t = Math.floor(truth / 10), o = truth % 10;  /* Math.floor：無條件捨去成整數 */
             v = truth >= 10 && t !== o ? o * 10 + t : truth + 1;
         }
         if (v === truth || v < 1) v = truth + 1;
@@ -66,7 +66,7 @@
         count = Math.max(1, Math.min(count == null ? FOUND : count, pairs.length));
         var list = null;
         for (var tries = 0; tries < 1500 && !list; tries++) {
-            var lineMax = LINE_MAX + Math.floor(tries / 500), pick = kit.shuffle(pairs, rand).slice(0, count), rowN = {}, colN = {}, cand = [], good = true;
+            var lineMax = LINE_MAX + Math.floor(tries / 500), pick = kit.shuffle(pairs, rand).slice(0, count), rowN = {}, colN = {}, cand = [], good = true;  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
             for (var i = 0; i < pick.length && good; i++) {
                 var flip = rand() < 0.5, ca = flip ? pick[i][1] : pick[i][0], cb = flip ? pick[i][0] : pick[i][1];
                 rowN[ca] = (rowN[ca] || 0) + 1; colN[cb] = (colN[cb] || 0) + 1;
@@ -77,8 +77,8 @@
         }
         if (!list) list = pairs.slice(0, count).map(function (p) { return { a: p[1], b: p[0] }; });      /* 保底（用不到）：固定挑前幾組 */
         return {
-            tampered: list.map(function (c) {
-                var type = kit.pick(TYPES, rand), shown = tamper(c.a, c.b, type, rand);
+            tampered: list.map(function (c) {           /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+                var type = kit.pick(TYPES, rand), shown = tamper(c.a, c.b, type, rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
                 return { a: c.a, b: c.b, shown: shown, truth: c.a * c.b, type: type };
             })
         };
@@ -112,11 +112,11 @@
         var stage = api.stage, my = api.my;
         var first = kit.once('timestable.hint'), total = FOUND + (first ? HINT_EXTRA : 0);      /* 第一次進遊戲：系統會引導找出第一格，所以多改 HINT_EXTRA 格，玩家自己還是找 FOUND 格 */
         var tb = makeTable(null, total), found = 0, errors = 0, started = false, hint = null, wrongSet = {};
-        var bad = {}; tb.tampered.forEach(function (c) { bad[c.a + ',' + c.b] = c; });
+        var bad = {}; tb.tampered.forEach(function (c) { bad[c.a + ',' + c.b] = c; });  /* forEach：對陣列的每個元素各做一次 */
         console.log('[乘法表抓錯] ' + (first ? '第一次進遊戲（系統引導 1 格、玩家找 ' + FOUND + ' 格）' : '') + '被改的 ' + total + ' 格：' + tb.tampered.map(function (c) { return c.a + '×' + c.b + '＝' + c.shown + '（正解 ' + c.truth + '，' + TYPE_NAME[c.type] + '）'; }).join('；'));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var clockWrap = h('div', { 'class': 'timestable-clock' });
-        stage.appendChild(clockWrap);
+        stage.appendChild(clockWrap);                   /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var clock = kit.clock(clockWrap, my);
         var table = h('div', { 'class': 'timestable-table' });
         table.style.gridTemplateColumns = 'repeat(' + (N + 1) + ', ' + CELL + 'px)';
@@ -124,8 +124,8 @@
         for (var r = 0; r <= N; r++) for (var c = 0; c <= N; c++) (function (r, c) {
             var head = r === 0 || c === 0, txt = r === 0 && c === 0 ? '×' : (r === 0 ? String(c) : (c === 0 ? String(r) : String(bad[r + ',' + c] ? bad[r + ',' + c].shown : r * c)));
             var el = h('div', { 'class': 'timestable-cell' + (head ? ' timestable-cell--head' : ''), text: txt });
-            if (!head) { els[r + ',' + c] = el; kit.onTap(el, function () { tap(r, c); }); }
-            table.appendChild(el);
+            if (!head) { els[r + ',' + c] = el; kit.onTap(el, function () { tap(r, c); }); }  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+            table.appendChild(el);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         })(r, c);
         stage.appendChild(table);
         var info = h('div', { 'class': 'timestable-info', text: '還有 ' + total + ' 格　點錯 0 次（每次 + 3 秒）' });
@@ -146,23 +146,23 @@
             var key = r + ',' + c, el = els[key], cell = bad[key];
             if (cell) {
                 if (el.classList.contains('timestable-cell--found')) return;
-                el.classList.add('timestable-cell--found'); el.textContent = cell.shown + '→' + cell.truth;
-                found++; Sfx.play('ok');
-                info.textContent = '還有 ' + (total - found) + ' 格　點錯 ' + errors + ' 次（每次 + 3 秒）';
+                el.classList.add('timestable-cell--found'); el.textContent = cell.shown + '→' + cell.truth;  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                found++; Sfx.play('ok');                /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                info.textContent = '還有 ' + (total - found) + ' 格　點錯 ' + errors + ' 次（每次 + 3 秒）';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 if (found === total) finish();
             } else {
                 if (wrongSet[key]) return;
                 wrongSet[key] = true; errors++;
-                el.classList.add('timestable-cell--bad'); clock.penalty(PENALTY_MS); Sfx.play('bad');
-                my.after(500, function () { el.classList.remove('timestable-cell--bad'); });
-                info.textContent = '還有 ' + (total - found) + ' 格　點錯 ' + errors + ' 次（每次 + 3 秒）';
+                el.classList.add('timestable-cell--bad'); clock.penalty(PENALTY_MS); Sfx.play('bad');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                my.after(500, function () { el.classList.remove('timestable-cell--bad'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                info.textContent = '還有 ' + (total - found) + ' 格　點錯 ' + errors + ' 次（每次 + 3 秒）';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             }
         }
         /* 這一局結束：算出成績並進入結算畫面 */
         function finish() {
             var sec = clock.stop() / 1000;
             /* 揭曉：被改的答案一起變成紅底白字閃爍 BLINK_MS，再維持 HOLD_MS，才結算 */
-            tb.tampered.forEach(function (c) {
+            tb.tampered.forEach(function (c) {          /* forEach：對陣列的每個元素各做一次 */
                 var el = els[c.a + ',' + c.b];
                 el.classList.remove('timestable-cell--found'); el.classList.add('timestable-cell--wrong', 'timestable-cell--blink');
             });
@@ -170,7 +170,7 @@
             my.after(BLINK_MS, function () { tb.tampered.forEach(function (c) { els[c.a + ',' + c.b].classList.remove('timestable-cell--blink'); }); });
             my.after(BLINK_MS + HOLD_MS, function () {
                 /* 被改的格子很多（9～10 格），結算只列前 3 格當例子（全部都已經用紅底白字標在表上了） */
-                var ex = tb.tampered.slice(0, 3).map(function (c) { return c.a + '×' + c.b + ' 被改成 ' + c.shown + '，應該是 ' + c.truth + '（' + TYPE_NAME[c.type] + '）'; });
+                var ex = tb.tampered.slice(0, 3).map(function (c) { return c.a + '×' + c.b + ' 被改成 ' + c.shown + '，應該是 ' + c.truth + '（' + TYPE_NAME[c.type] + '）'; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                 if (tb.tampered.length > 3) ex.push('…一共 ' + tb.tampered.length + ' 格被改過，都標成紅底白字了');
                 api.finish(sec, { lines: ex.concat(['點錯 ' + errors + ' 次，罰時 ' + (errors * PENALTY_MS / 1000).toFixed(4) + ' 秒']) });
             });

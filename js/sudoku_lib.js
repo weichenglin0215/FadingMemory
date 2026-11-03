@@ -34,13 +34,13 @@
     /* 盤面的尺寸：畫面寬 W、盤面邊長 N、佔寬比例 frac、左右額外留的寬度 ring（夾心數獨的外圍線索）→ 每格邊長 */
     /* 算盤面尺寸：可用寬度 ＝ 畫面寬 × 佔寬比例 − 外圍線索的寬度，再扣掉外框，除以 N 得到「每格邊長」（取整數，盤面才不會有小數像素的縫） */
     function boardMetrics(W, N, frac, ring) {
-        var width = Math.round(W * frac) - (ring || 0), cell = Math.floor((width - BORDER) / N);
+        var width = Math.round(W * frac) - (ring || 0), cell = Math.floor((width - BORDER) / N);  /* Math.floor：無條件捨去成整數 */
         return { cell: cell, width: cell * N + BORDER, height: cell * N + BORDER };
     }
     /* 哪些格子的數字和同排／欄／宮的別格重複 → 布林陣列 */
     /* 找出重複：某格的數字跟「同排、同欄、同宮」任何一格相同，就標成 true（畫面上會變紅）。g.peers[i] 是第 i 格的所有「同單位的其他格」 */
     function conflictsOf(g, grid) {
-        var bad = new Array(g.cells).fill(false), i, k;
+        var bad = new Array(g.cells).fill(false), i, k; /* new Array(n).fill(v)：建立長度 n、每一格都是 v 的陣列 */
         for (i = 0; i < g.cells; i++) {
             if (!grid[i]) continue;
             for (k = 0; k < g.peers[i].length; k++) if (grid[g.peers[i][k]] === grid[i]) { bad[i] = true; break; }
@@ -49,7 +49,7 @@
     }
     /* 每個數字在盤面上出現幾次（數字鍵變灰用） */
     /* 數每個數字在盤面上出現幾次（出現 N 次的數字，數字鍵就變灰：已經放完了） */
-    function digitCounts(g, grid) { var c = new Array(g.N + 1).fill(0); grid.forEach(function (v) { if (v) c[v]++; }); return c; }
+    function digitCounts(g, grid) { var c = new Array(g.N + 1).fill(0); grid.forEach(function (v) { if (v) c[v]++; }); return c; }  /* forEach：對陣列的每個元素各做一次 */
     /* 解開了嗎：全部填滿、沒有重複、而且跟答案一樣 */
     /* 解開了嗎：每一格都有數字、而且跟答案一樣 */
     function isSolved(g, grid, solution) {
@@ -74,15 +74,15 @@
         var grid = pz.givens.slice(), notes = new Array(g.cells).fill(0), sel = -1, noteMode = false, hintsLeft = o.hints != null ? o.hints : HINTS, hintCell = -1, solved = false;  /* grid：目前盤面（先抄一份題目，不要改到原本的題目）；notes：每格的筆記（位元遮罩，跟 sudoku_engine 一樣）； sel：目前選中的格子（−1＝沒選）；noteMode：筆記模式開關；hintsLeft：剩幾次提示；hintCell：提示標出的格子；solved：已經解開 */
         var cells = [], cellDigit = [], cellNotes = []; /* 每一格對應的網頁元素：格子本身、顯示大數字的 span、顯示筆記的小格區（建好存起來，paint 時直接改它們） */
 
-        var wrap = h('div', { 'class': 'sudokulib-wrap' });
+        var wrap = h('div', { 'class': 'sudokulib-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
         wrap.style.setProperty('--sudokulib-key-h', (N >= 9 ? 52 : 64) + 'px');        /* 9×9 的盤面高，數字鍵與工具列矮一點才放得下 */  /* CSS 變數：用 JS 把算好的尺寸交給 CSS 用（CSS 裡寫 var(--sudokulib-key-h)）。9×9 的盤面比較高，數字鍵要矮一點才放得下 */
-        wrap.style.setProperty('--sudokulib-tool-h', (N >= 9 ? 48 : 56) + 'px');
+        wrap.style.setProperty('--sudokulib-tool-h', (N >= 9 ? 48 : 56) + 'px');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
         var frame = h('div', { 'class': 'sudokulib-frame' });
-        var board = h('div', { 'class': 'sudokulib-board' });
-        board.style.setProperty('--sudokulib-n', N);
+        var board = h('div', { 'class': 'sudokulib-board' });  /* board：盤面（所有格子都放在裡面） */
+        board.style.setProperty('--sudokulib-n', N);    /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
         board.style.setProperty('--sudokulib-cell', bm.cell + 'px');
-        board.style.setProperty('--sudokulib-font', Math.round(bm.cell * (N <= 6 ? 0.62 : 0.68)) + 'px');
-        board.style.setProperty('--sudokulib-note', Math.max(9, Math.round(bm.cell / (g.R + 0.9) * 0.75)) + 'px');
+        board.style.setProperty('--sudokulib-font', Math.round(bm.cell * (N <= 6 ? 0.62 : 0.68)) + 'px');  /* Math.round：四捨五入成整數 */
+        board.style.setProperty('--sudokulib-note', Math.max(9, Math.round(bm.cell / (g.R + 0.9) * 0.75)) + 'px');  /* Math.round：四捨五入成整數 */
         board.style.setProperty('--sudokulib-notecols', g.C);
         for (var i = 0; i < g.cells; i++) {
             /* 建立每一格：依位置加上 sudokulib-cE（宮的右邊界）、sudokulib-rE（宮的下邊界）class，CSS 才會畫出比較粗的宮分隔線 */
@@ -91,8 +91,8 @@
             if (g.rowOf(i) % g.R === g.R - 1) c.className += ' sudokulib-rE';
             var dg = h('span', { 'class': 'sudokulib-digit' });
             var nt = h('div', { 'class': 'sudokulib-notes' });
-            for (var d = 1; d <= N; d++) nt.appendChild(h('span', { 'class': 'sudokulib-note', text: String(d) }));
-            c.appendChild(nt); c.appendChild(dg);
+            for (var d = 1; d <= N; d++) nt.appendChild(h('span', { 'class': 'sudokulib-note', text: String(d) }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            c.appendChild(nt); c.appendChild(dg);       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             (function (idx) { kit.onTap(c, function () { select(idx); }); })(i);  /* 用立即執行函式把當下的 i 存成 idx（不這樣的話，所有格子點下去都會拿到迴圈結束時的 i） */
             board.appendChild(c); cells.push(c); cellDigit.push(dg); cellNotes.push(nt);
         }
@@ -114,7 +114,7 @@
         wrap.appendChild(frame);
 
         var tipText = o.tip || '先點一格，再點數字';
-        var tip = h('div', { 'class': 'sudokulib-tip', text: tipText });
+        var tip = h('div', { 'class': 'sudokulib-tip', text: tipText });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
         wrap.appendChild(tip);
 
         /* 數字鍵：N≤6 排成一排（最後一顆是擦掉）；N＝9 排成 5＋5（最後一顆是擦掉） */
@@ -125,27 +125,27 @@
         /* 一個數字一顆鍵（用立即執行函式存住 dg，原因同上） */
         for (var dd = 1; dd <= N; dd++) (function (dg) {
             var b = h('button', { 'class': 'btn btn--sky sudokulib-key', type: 'button', text: String(dg) });
-            kit.onTap(b, function () { enter(dg); });
+            kit.onTap(b, function () { enter(dg); });   /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             pad.appendChild(b); keys.push(b);
         })(dd);
         var eraser = h('button', { 'class': 'btn btn--line sudokulib-key sudokulib-key--erase', type: 'button', html: '⌫' });
-        kit.onTap(eraser, function () { enter(0); });
+        kit.onTap(eraser, function () { enter(0); });   /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
         pad.appendChild(eraser);
         wrap.appendChild(pad);
 
         /* 工具列：筆記、提示、重來 */
         var tools = h('div', { 'class': 'sudokulib-tools' });
         var btnNote = h('button', { 'class': 'btn btn--line sudokulib-tool', type: 'button', text: '筆記：關' });
-        var btnHint = h('button', { 'class': 'btn btn--line sudokulib-tool', type: 'button', text: '提示 ' + hintsLeft });
-        var btnReset = h('button', { 'class': 'btn btn--line sudokulib-tool', type: 'button', text: '重來' });
-        kit.onTap(btnNote, function () { noteMode = !noteMode; btnNote.textContent = '筆記：' + (noteMode ? '開' : '關'); btnNote.classList.toggle('sudokulib-tool--on', noteMode); });
+        var btnHint = h('button', { 'class': 'btn btn--line sudokulib-tool', type: 'button', text: '提示 ' + hintsLeft });  /* 「提示」按鈕（文字會顯示還剩幾次提示） */
+        var btnReset = h('button', { 'class': 'btn btn--line sudokulib-tool', type: 'button', text: '重來' });  /* 「重來」按鈕 */
+        kit.onTap(btnNote, function () { noteMode = !noteMode; btnNote.textContent = '筆記：' + (noteMode ? '開' : '關'); btnNote.classList.toggle('sudokulib-tool--on', noteMode); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         kit.onTap(btnHint, function () { useHint(); });
         kit.onTap(btnReset, function () { reset(); });
         tools.appendChild(btnNote);
         if (hintsLeft > 0) tools.appendChild(btnHint);
         tools.appendChild(btnReset);
         wrap.appendChild(tools);
-        stage.appendChild(wrap);
+        stage.appendChild(wrap);                        /* 把整個遊戲區放進舞台（放進去，畫面上才看得到） */
 
         /* 點選一格：記住選中的格子並重畫 */
         function select(idx) { if (solved) return; sel = idx; paint(); }
@@ -155,8 +155,8 @@
            · 一般模式 → 填入 d（再按一次同一個數字＝擦掉），並自動拿掉同排同欄同宮格子的 d 筆記。 */
         function enter(d) {
             if (solved) return;
-            if (sel < 0) { tip.textContent = '先點一格，再點數字'; return; }
-            if (pz.givens[sel]) { tip.textContent = '這格是題目給的'; return; }
+            if (sel < 0) { tip.textContent = '先點一格，再點數字'; return; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            if (pz.givens[sel]) { tip.textContent = '這格是題目給的'; return; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             hintCell = -1;
             if (d === 0) { grid[sel] = 0; notes[sel] = 0; }
             else if (noteMode && !grid[sel]) notes[sel] ^= (1 << d);
@@ -164,7 +164,7 @@
             else if (grid[sel] === d) grid[sel] = 0;
             else {
                 grid[sel] = d; notes[sel] = 0;
-                if (AUTO_CLEAN_NOTES) g.peers[sel].forEach(function (p) { notes[p] &= ~(1 << d); });
+                if (AUTO_CLEAN_NOTES) g.peers[sel].forEach(function (p) { notes[p] &= ~(1 << d); });  /* forEach：對陣列的每個元素各做一次 */
             }
             paint();
             check();
@@ -182,13 +182,13 @@
         /* 重來：盤面回到題目的樣子、筆記清空 */
         function reset() {
             if (solved) return;
-            grid = pz.givens.slice(); notes = new Array(g.cells).fill(0); sel = -1; hintCell = -1;
+            grid = pz.givens.slice(); notes = new Array(g.cells).fill(0); sel = -1; hintCell = -1;  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
             tip.textContent = tipText;
             paint();
         }
         /* 重畫整個盤面：依每格的狀態組出 class（題目／我填的／同排同欄同宮／同數字／選中／重複／提示），再更新數字與筆記，最後把「已經放完」的數字鍵變灰 */
         function paint() {
-            var bad = SHOW_CONFLICT ? conflictsOf(g, grid) : new Array(g.cells).fill(false);
+            var bad = SHOW_CONFLICT ? conflictsOf(g, grid) : new Array(g.cells).fill(false);  /* new Array(n).fill(v)：建立長度 n、每一格都是 v 的陣列 */
             var extra = o.extraConflict ? o.extraConflict(grid) : null;
             var counts = digitCounts(g, grid);
             var selDigit = sel >= 0 ? grid[sel] : 0;
@@ -206,7 +206,7 @@
                 cellNotes[i].style.display = !grid[i] && notes[i] ? 'grid' : 'none';
                 if (!grid[i] && notes[i]) for (var d = 1; d <= N; d++) cellNotes[i].children[d - 1].style.visibility = (notes[i] & (1 << d)) ? 'visible' : 'hidden';
             }
-            keys.forEach(function (b, k) { b.classList.toggle('sudokulib-key--done', counts[k + 1] >= N); });
+            keys.forEach(function (b, k) { b.classList.toggle('sudokulib-key--done', counts[k + 1] >= N); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         }
         /* 每次填完檢查：解開了就鎖住盤面、全部格子變綠、閃綠光並過關 */
         function check() {
@@ -214,15 +214,15 @@
             solved = true; sel = -1; hintCell = -1; paint();
             tip.textContent = '解開了！';
             cells.forEach(function (c) { c.classList.add('sudokulib-cell--ok'); });
-            kit.flash(stage, true, my);
-            api.pass({ delay: PASS_DELAY_MS });
+            kit.flash(stage, true, my);                 /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.pass({ delay: PASS_DELAY_MS });         /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
         }
         paint();
         /* 回傳給遊戲檔案的「遙控器」：測試與 debug 用（grid() 看盤面、fillSolution() 一鍵填答案、putWrong() 故意填錯一格…） */
-        var ctl = {
+        var ctl = {                                     /* ctl：給外面（遊戲檔案、測試）用的「遙控器」，裡面是可以呼叫的函式與查詢目前狀態的函式 */
             grid: function () { return grid; },
             paint: paint,
-            fillSolution: function () { grid = pz.solution.slice(); paint(); check(); },
+            fillSolution: function () { grid = pz.solution.slice(); paint(); check(); },  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
             putWrong: function () { for (var i = 0; i < g.cells; i++) if (!pz.givens[i]) { grid[i] = pz.solution[i] % N + 1; break; } paint(); },
             hintLeft: function () { return hintsLeft; },
             state: function () { return { sel: sel, hintCell: hintCell, hintsLeft: hintsLeft, solved: solved, noteMode: noteMode }; },

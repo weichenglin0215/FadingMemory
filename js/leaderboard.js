@@ -109,13 +109,13 @@
     function fake4(v, rand) {
         rand = rand || Math.random;
         var sign = v < 0 ? -1 : 1;
-        var n = Math.round(Math.abs(v) * 10000);
+        var n = Math.round(Math.abs(v) * 10000);        /* Math.round：四捨五入成整數 */
         if (!isFinite(n)) return v;
         if (n === 0) return 0;
         var d4 = n % 10;                       /* 小數第 4 位 */
         var d3 = Math.floor(n / 10) % 10;      /* 小數第 3 位 */
-        if (d4 === 0) n += 1 + Math.floor(rand() * 9);
-        if (d3 === 0) n += 10 * (1 + Math.floor(rand() * 9));
+        if (d4 === 0) n += 1 + Math.floor(rand() * 9);  /* Math.floor：無條件捨去成整數 */
+        if (d3 === 0) n += 10 * (1 + Math.floor(rand() * 9));  /* Math.floor：無條件捨去成整數 */
         return sign * n / 10000;
     }
 
@@ -194,7 +194,7 @@
         }
         b[6] = (b[6] & 0x0f) | 0x40;      /* 版本 4 */
         b[8] = (b[8] & 0x3f) | 0x80;      /* 變體 */
-        var hex = b.map(function (x) { return (x + 256).toString(16).slice(1); }).join('');
+        var hex = b.map(function (x) { return (x + 256).toString(16).slice(1); }).join('');  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         return hex.slice(0, 8) + '-' + hex.slice(8, 12) + '-' + hex.slice(12, 16) + '-' + hex.slice(16, 20) + '-' + hex.slice(20);
     }
 
@@ -333,10 +333,10 @@
        回到「訪客」。個人最佳的清除在 js/identity.js（它知道有哪些 key）。 */
     function clearIdentity() {
         [KEY_PID, KEY_TOKEN, KEY_NICK, KEY_RELOGIN, KEY_PENDING, KEY_FBPEND, KEY_OVERTAKE].forEach(del);
-        Object.keys(state.boards).forEach(function (k) { delete state.boards[k]; });
-        ((global.Reaction && global.Reaction.list && global.Reaction.list()) || []).forEach(function (g) { del(KEY_BOARD + g.id); });
+        Object.keys(state.boards).forEach(function (k) { delete state.boards[k]; });  /* forEach：對陣列的每個元素各做一次 */
+        ((global.Reaction && global.Reaction.list && global.Reaction.list()) || []).forEach(function (g) { del(KEY_BOARD + g.id); });  /* forEach：對陣列的每個元素各做一次 */
         try {
-            Object.keys(global.localStorage).forEach(function (k) { if (k.indexOf(KEY_BOARD) === 0) global.localStorage.removeItem(k); });
+            Object.keys(global.localStorage).forEach(function (k) { if (k.indexOf(KEY_BOARD) === 0) global.localStorage.removeItem(k); });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         } catch (e) { }
     }
 
@@ -360,21 +360,21 @@
         if (!global.fetch) return Promise.resolve({ ok: false, error: 'nofetch' });
         var ctl = global.AbortController ? new global.AbortController() : null;
         var timer = ctl ? global.setTimeout(function () { ctl.abort(); }, timeoutMs) : null;
-        var t0 = Date.now();
+        var t0 = Date.now();                            /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
         return global.fetch(CFG.URL + '/rest/v1/rpc/' + name, {
             method: 'POST',
             headers: { 'apikey': CFG.KEY, 'Authorization': 'Bearer ' + CFG.KEY, 'Content-Type': 'application/json' },
-            body: JSON.stringify(args),
+            body: JSON.stringify(args),                 /* JSON.stringify／parse：物件和文字互轉（存進 localStorage 或傳給伺服器時用） */
             signal: ctl ? ctl.signal : undefined
         }).then(function (res) {
             return res.json().then(function (data) {
                 return res.ok ? { ok: true, data: data } : { ok: false, error: 'http_' + res.status, detail: data };
             }, function () { return { ok: false, error: 'badjson' }; });
-        }).catch(function (e) {
+        }).catch(function (e) {                         /* catch：Promise（承諾）失敗時才執行的函式，這裡用來吞掉錯誤，避免整個程式中斷 */
             return { ok: false, error: (e && e.name === 'AbortError') ? 'timeout' : 'network' };
         }).then(function (r) {
             if (timer) global.clearTimeout(timer);
-            r.ms = Date.now() - t0;
+            r.ms = Date.now() - t0;                     /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
             return r;
         });
     }
@@ -608,7 +608,7 @@
         var g = resolveGame(ref);
         if (!supports(g) || typeof value !== 'number' || !isFinite(value)) return Promise.resolve({ status: 'skip' });
         var spec = g.score, id = g.id;
-        var score = Math.round(value * 10000) / 10000;
+        var score = Math.round(value * 10000) / 10000;  /* Math.round：四捨五入成整數 */
         log('結算', g.name, '成績', fmt(spec, score), '（原始數字 ' + score + '）');
         /* 超出這款遊戲 score.min～max 的成績不送（例如 0 關、沒成功的不可能任務）：
            資料庫也會用同一個範圍擋掉，在這裡先擋可以省一次連線，而且不會問玩家任何事 */
@@ -668,7 +668,7 @@
         var q = store().get(KEY_FBPEND, []) || [];
         if (!q.length) return Promise.resolve();
         var keep = [], i = 0, stop = false;
-        q = q.filter(function (it) { return it && it.game && it.text && Date.now() - it.at < 30 * 24 * 3600 * 1000; });
+        q = q.filter(function (it) { return it && it.game && it.text && Date.now() - it.at < 30 * 24 * 3600 * 1000; });  /* filter：留下符合條件的元素，回傳新陣列 */
         function next() {
             if (i >= q.length || stop) { store().set(KEY_FBPEND, keep.concat(q.slice(i))); return Promise.resolve(); }
             var it = q[i++];
@@ -702,10 +702,10 @@
     /* 只留格式正確的列（防止資料庫回傳的東西或 localStorage 被改壞時，畫面拿到奇怪的值） */
     function cleanOvertaken(list) {
         if (!Array.isArray(list)) return [];
-        return list.filter(function (x) {
+        return list.filter(function (x) {               /* filter：留下符合條件的元素，回傳新陣列 */
             return x && typeof x.game_id === 'string' && /^[a-z0-9_]{1,32}$/.test(x.game_id) &&
                 typeof x.rank === 'number' && x.rank >= 2 && x.rank === Math.floor(x.rank);
-        }).map(function (x) { return { game_id: x.game_id, rank: x.rank, at: x.at || null }; });
+        }).map(function (x) { return { game_id: x.game_id, rank: x.rank, at: x.at || null }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     }
 
     function overtaken(opts) {

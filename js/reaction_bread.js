@@ -89,7 +89,7 @@
             var p = pts[i], q = pts[(i + 1) % pts.length];
             s += p[0] * q[1] - q[0] * p[1];
         }
-        return Math.abs(s) / 2;
+        return Math.abs(s) / 2;                         /* Math.abs：取絕對值（去掉負號） */
     }
     /* 用垂直線 x=c 裁切多邊形（Sutherland–Hodgman 演算法）：逐一檢查每條邊，穿過切線時補一個交點 */
     /* 用垂直線 x=c 裁切凸多邊形，keepLeft＝保留左邊（x ≤ c）或右邊 */
@@ -123,9 +123,9 @@
     /* 切在 c，總重量 grams：回傳左右兩邊顯示在秤上的重量（四捨五入到 0.1 g）和差距% */
     function weighCut(pts, c, grams) {
         var total = polyArea(pts), aL = areaLeft(pts, c);
-        var wL = Math.round(grams * aL / total * 10) / 10;
-        var wR = Math.round(grams * (total - aL) / total * 10) / 10;
-        var diff = Math.abs(wL - wR) / Math.max(wL, wR, 1e-9) * 100;
+        var wL = Math.round(grams * aL / total * 10) / 10;  /* Math.round：四捨五入成整數 */
+        var wR = Math.round(grams * (total - aL) / total * 10) / 10;  /* Math.round：四捨五入成整數 */
+        var diff = Math.abs(wL - wR) / Math.max(wL, wR, 1e-9) * 100;  /* Math.abs：取絕對值（去掉負號） */
         return { wL: wL, wR: wR, diff: diff };
     }
 
@@ -139,7 +139,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             /* level 目前關卡；cleared 已過幾關 */
             var level = start || 1, cleared = level - 1, newRec = false;
 
@@ -150,27 +150,27 @@
             var btnL = h('button', { 'class': 'btn btn--line bread-nudge', text: '◀' });
             var btnCut = h('button', { 'class': 'btn btn--primary bread-cut', text: '切下去' });
             var btnR = h('button', { 'class': 'btn btn--line bread-nudge', text: '▶' });
-            ctrl.appendChild(btnL); ctrl.appendChild(btnCut); ctrl.appendChild(btnR);
-            root.appendChild(info);
+            ctrl.appendChild(btnL); ctrl.appendChild(btnCut); ctrl.appendChild(btnR);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(info);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             root.appendChild(zone);
             root.appendChild(ctrl);
 
             /* 整個場景畫在一個 SVG：上面麵包、下面兩個電子秤 */
             /* 整個場景畫在一個 SVG：上面麵包、下面兩個秤 */
             var SW = 468, SH = 560;
-            var svg = kit.svg('svg', { 'class': 'bread-svg', viewBox: '0 0 ' + SW + ' ' + SH, preserveAspectRatio: 'xMidYMid meet' }, zone);
+            var svg = kit.svg('svg', { 'class': 'bread-svg', viewBox: '0 0 ' + SW + ' ' + SH, preserveAspectRatio: 'xMidYMid meet' }, zone);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             /* 麵包左上角在 SVG 裡的位置（水平置中） */
             var OX = (SW - W) / 2;                       /* 麵包左上角在 SVG 的位置 */
-            var gBread = kit.svg('g', { transform: 'translate(' + OX + ' ' + BREAD_Y + ')' }, svg);
+            var gBread = kit.svg('g', { transform: 'translate(' + OX + ' ' + BREAD_Y + ')' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             /* 秤的位置：平台在 y=350（以前是 400，往上移 50），秤的下面留出約 100 個單位的空間顯示「差距 X.XXXX%」與「過關！／沒過關」 */
             var PLAT_W = 200, PLAT_Y = 350, SCALE_CX = [SW * 0.25, SW * 0.75];
             /* 畫兩個電子秤（底座、螢幕、克數文字、秤盤） */
-            var scaleEls = SCALE_CX.map(function (cx) {
+            var scaleEls = SCALE_CX.map(function (cx) { /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                 var g = kit.svg('g', {}, svg);
                 kit.svg('rect', { 'class': 'bread-sbase', x: cx - 105, y: PLAT_Y + 14, width: 210, height: 96, rx: 14 }, g);
                 kit.svg('rect', { 'class': 'bread-slcd', x: cx - 80, y: PLAT_Y + 34, width: 160, height: 56, rx: 8 }, g);
                 var txt = kit.svg('text', { 'class': 'bread-sgram', x: cx, y: PLAT_Y + 74, 'text-anchor': 'middle' }, g);
-                txt.textContent = '0.0 g';
+                txt.textContent = '0.0 g';              /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 var plat = kit.svg('rect', { 'class': 'bread-splat', x: cx - PLAT_W / 2, y: PLAT_Y, width: PLAT_W, height: 14, rx: 6 }, g);
                 return { cx: cx, txt: txt, plat: plat };
             });
@@ -179,8 +179,8 @@
             var wordTxt = kit.svg('text', { 'class': 'bread-vw', x: SW / 2, y: PLAT_Y + 186, 'text-anchor': 'middle' }, svg);
             /* 清掉上一塊麵包的判定結果 */
             function clearVerdict() {
-                diffTxt.textContent = ''; diffTxt.setAttribute('class', 'bread-vd');
-                wordTxt.textContent = ''; wordTxt.setAttribute('class', 'bread-vw');
+                diffTxt.textContent = ''; diffTxt.setAttribute('class', 'bread-vd');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                wordTxt.textContent = ''; wordTxt.setAttribute('class', 'bread-vw');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             }
 
             /* B 這關的麵包；grams 總重；knife 刀的 x 位置；state 目前階段（aim 瞄準/cut 切下去/verdict 揭曉） */
@@ -189,32 +189,32 @@
 
             function setInfo() {
                 info.textContent = '第 ' + level + ' 關　兩邊重量差距要在 ' + thrFor(level).toFixed(4) + '% 以內';
-                ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))]));
+                ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))]));  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             }
 
             /* 畫新的一塊麵包與刀（刀一開始放在隨機位置） */
             function drawBread() {
-                gBread.innerHTML = '';
+                gBread.innerHTML = '';                  /* innerHTML = ''：把元素裡面的東西全部清掉 */
                 pieces = [];
                 clearVerdict();
                 B = makeBread(level);
-                grams = Math.round(kit.randFloat(G_MIN, G_MAX) * 10) / 10;
-                scaleEls.forEach(function (s) { s.txt.textContent = '0.0 g'; s.txt.classList.remove('bread-sgram--on'); s.plat.setAttribute('y', PLAT_Y); });
-                var poly = kit.svg('polygon', { 'class': 'bread-bread', points: B.pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' ') }, gBread);
+                grams = Math.round(kit.randFloat(G_MIN, G_MAX) * 10) / 10;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+                scaleEls.forEach(function (s) { s.txt.textContent = '0.0 g'; s.txt.classList.remove('bread-sgram--on'); s.plat.setAttribute('y', PLAT_Y); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                var poly = kit.svg('polygon', { 'class': 'bread-bread', points: B.pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' ') }, gBread);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                 /* 麵包上的紋路，單純裝飾 */
                 gKnife = kit.svg('g', { 'class': 'bread-knife' }, gBread);
                 kit.svg('line', { 'class': 'bread-knife__line', x1: 0, y1: -30, x2: 0, y2: HB + 30 }, gKnife);
                 kit.svg('polygon', { 'class': 'bread-knife__grip', points: '-14,-30 14,-30 0,-8' }, gKnife);
                 var bx = B.pts.map(function (p) { return p[0]; });
-                knife = kit.randFloat(W * 0.2, W * 0.8);
+                knife = kit.randFloat(W * 0.2, W * 0.8);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
                 moveKnife(knife);
                 state = 'aim';
                 btnCut.disabled = false;
                 setInfo();
                 /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從刀子現在的位置往「剛好對半的位置」重複移動（第一關的正確答案） */
-                if (Reaction.kit.once('bread.hint')) {
-                    var sr = svg.getBoundingClientRect(), pxPerUnit = Math.min(sr.width / SW, sr.height / SH) / ((root.getBoundingClientRect().width / root.clientWidth) || 1);
-                    Reaction.kit.hintOn(root, gKnife.querySelector('.bread-knife__line'), { mode: 'drag', dx: (balanceX(B.pts) - knife) * pxPerUnit, dy: 0, text: '請往左右拖曳刀子' });
+                if (Reaction.kit.once('bread.hint')) {  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
+                    var sr = svg.getBoundingClientRect(), pxPerUnit = Math.min(sr.width / SW, sr.height / SH) / ((root.getBoundingClientRect().width / root.clientWidth) || 1);  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
+                    Reaction.kit.hintOn(root, gKnife.querySelector('.bread-knife__line'), { mode: 'drag', dx: (balanceX(B.pts) - knife) * pxPerUnit, dy: 0, text: '請往左右拖曳刀子' });  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
                 }
                 /* 主控台印出這關的形狀、總重、標準、剛好對半的位置，方便驗證 */
                 try {
@@ -225,8 +225,8 @@
             }
             /* 移動刀：clamp 限制在麵包範圍內（0～W） */
             function moveKnife(x) {
-                knife = kit.clamp(x, 0, W);
-                gKnife.setAttribute('transform', 'translate(' + knife.toFixed(2) + ' 0)');
+                knife = kit.clamp(x, 0, W);             /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
+                gKnife.setAttribute('transform', 'translate(' + knife.toFixed(2) + ' 0)');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             }
 
             /* 操作：拖曳（速度打折）＋ ◀ ▶ 微調 */
@@ -234,23 +234,23 @@
             var drag = null;
             /* 把手指螢幕座標轉成 SVG 座標 */
             function svgX(e) {
-                var r = svg.getBoundingClientRect();
+                var r = svg.getBoundingClientRect();    /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
                 var s = Math.min(r.width / SW, r.height / SH);
                 var left = r.left + (r.width - SW * s) / 2;
                 return (e.clientX - left) / s - OX;
             }
             /* 手指按下：刀先跳到手指位置（粗調） */
-            zone.addEventListener('pointerdown', function (e) {
+            zone.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
                 if (state !== 'aim' || drag) return;
-                e.preventDefault();
-                try { zone.setPointerCapture(e.pointerId); } catch (err) { }
-                drag = { id: e.pointerId, x: svgX(e), t: performance.now() };
+                e.preventDefault();                     /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+                try { zone.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
+                drag = { id: e.pointerId, x: svgX(e), t: performance.now() };  /* performance.now()：高精度的時間（毫秒），計時用 */
                 moveKnife(drag.x);                 /* 粗調：刀先跳到手指下面 */
             });
             /* 手指移動：移動量依手指速度打折（慢速精細、快速粗略） */
-            zone.addEventListener('pointermove', function (e) {
+            zone.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
                 if (state !== 'aim' || !drag || e.pointerId !== drag.id) return;
-                var x = svgX(e), now = performance.now();
+                var x = svgX(e), now = performance.now();  /* performance.now()：高精度的時間（毫秒），計時用 */
                 var dx = x - drag.x, dt = Math.max(1, now - drag.t);
                 var speed = Math.abs(dx) / dt;                              /* px/ms */
                 var gain = GAIN_MIN + (GAIN_MAX - GAIN_MIN) * Math.min(1, speed / SPEED_FULL);
@@ -266,7 +266,7 @@
                 var rep = null;
                 function step() { if (state === 'aim') moveKnife(knife + dir * NUDGE); }
                 btn.addEventListener('pointerdown', function (e) {
-                    e.preventDefault();
+                    e.preventDefault();                 /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                     step();
                     var n = 0;
                     function again() { rep = my.after(n++ < 3 ? 350 : 60, function () { step(); again(); }); }
@@ -289,7 +289,7 @@
                 /* 「切下去」按鈕立刻變成不能按（灰的），一直到算完重量、進入下一關（drawBread）才恢復；
                    避免過關後手指又不小心按到下一塊麵包的「切下去」（V1.25 玩家意見） */
                 btnCut.disabled = true;
-                Sfx.play('pop');
+                Sfx.play('pop');                        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 var c = knife;
                 /* 裁切出左半與右半 */
                 var left = clipV(B.pts, c, true), right = clipV(B.pts, c, false);
@@ -297,7 +297,7 @@
                 var bal = balanceX(B.pts);
                 gBread.innerHTML = '';
                 var parts = [{ pts: left, side: 0 }, { pts: right, side: 1 }];
-                parts.forEach(function (pt) {
+                parts.forEach(function (pt) {           /* forEach：對陣列的每個元素各做一次 */
                     var g = kit.svg('g', {}, gBread);
                     kit.svg('polygon', { 'class': 'bread-bread', points: pt.pts.map(function (p) { return p[0].toFixed(2) + ',' + p[1].toFixed(2); }).join(' ') }, g);
                     var xs = pt.pts.map(function (p) { return p[0]; }), ys = pt.pts.map(function (p) { return p[1]; });
@@ -309,23 +309,23 @@
                 });
                 var plat = scaleEls;
                 /* 掉落動畫：先往兩側分開（水平緩動），同時重力下墜（垂直 e² 加速） */
-                my.tween(FALL_MS, function (e) {
+                my.tween(FALL_MS, function (e) {        /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
                     /* 先往兩側分開一點，同時重力下墜（ease-in） */
-                    parts.forEach(function (pt) {
+                    parts.forEach(function (pt) {       /* forEach：對陣列的每個元素各做一次 */
                         var ex = kit.easeInOutCubic(Math.min(1, e * 1.4));
                         pt.g.setAttribute('transform', 'translate(' + (pt.tx * ex).toFixed(2) + ' ' + (pt.ty * e * e).toFixed(2) + ')');
                     });
                 }, kit.linear).then(function () {
                     if (my.dead) return;
-                    Sfx.play('flip');
+                    Sfx.play('flip');                   /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                     scaleEls.forEach(function (s) { s.plat.setAttribute('y', PLAT_Y + 4); });
                     /* 秤上的數字從 0 跳到實際重量 */
                     var targets = [wc.wL, wc.wR];
                     /* 秤上的數字從 0 逐漸跳到實際重量；差距百分比跟著一起往上跳，跳完的那一刻就是真實的差距 */
-                    return my.tween(600, function (e) {
+                    return my.tween(600, function (e) { /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
                         scaleEls.forEach(function (s, i) {
                             s.txt.textContent = (targets[i] * e).toFixed(1) + ' g';
-                            s.txt.classList.add('bread-sgram--on');
+                            s.txt.classList.add('bread-sgram--on');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                         });
                         diffTxt.textContent = '差距 ' + (wc.diff * e).toFixed(4) + '%';
                         diffTxt.setAttribute('class', 'bread-vd bread-vd--on');
@@ -349,7 +349,7 @@
                 wordTxt.setAttribute('class', 'bread-vw ' + (pass ? 'bread-vw--ok' : 'bread-vw--bad'));
                 if (pass) {
                     cleared = level;
-                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
+                    if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                     ctx.setMeta(kit.meta(['第 ' + level + ' 關', fmtBest(Reaction.getBest(ID))]));
                     info.textContent = '差距 ' + wc.diff.toFixed(4) + '%（標準 ' + thr.toFixed(4) + '%）過關！';
                     info.classList.add('bread-info--ok');
@@ -361,7 +361,7 @@
                     var back = kit.resumeFrom(level);
                     my.after(1600, function () {
                         info.classList.remove('bread-info--bad');
-                        kit.result(root, {
+                        kit.result(root, {              /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                             score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: cleared + ' 關', label: '差太多了',
                             lines: [

@@ -38,15 +38,15 @@
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }
-    function totalFor(level) { return Math.round(ramp(level, TOTAL)); }
-    function spawnMsFor(level) { return Math.round(ramp(level, SPAWN_MS)); }
+    function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function totalFor(level) { return Math.round(ramp(level, TOTAL)); }  /* Math.round：四捨五入成整數 */
+    function spawnMsFor(level) { return Math.round(ramp(level, SPAWN_MS)); }  /* Math.round：四捨五入成整數 */
     function batchMaxFor(level) { return Math.max(1, Math.round(ramp(level, BATCH))); }
     function strokeRange(level) { return [ramp(level, STROKES_LO), ramp(level, STROKES_HI)]; }
     function flightPos(tz, t) { var g = 2 * (BOTTOM - tz.ya) / (tz.ta * tz.ta), vy0 = -g * tz.ta; return { x: tz.x0 + tz.vx * t, y: BOTTOM + vy0 * t + g * t * t / 2 }; }
-    function landTime(tz) { var g = 2 * (BOTTOM - tz.ya) / (tz.ta * tz.ta), vy0 = -g * tz.ta, c = BOTTOM - EXIT; return (-vy0 + Math.sqrt(vy0 * vy0 - 2 * g * c)) / g; }
+    function landTime(tz) { var g = 2 * (BOTTOM - tz.ya) / (tz.ta * tz.ta), vy0 = -g * tz.ta, c = BOTTOM - EXIT; return (-vy0 + Math.sqrt(vy0 * vy0 - 2 * g * c)) / g; }  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
     function segHitsCircle(ax, ay, bx, by, cx, cy, r) {
-        var dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy, t = l2 < 1e-12 ? 0 : kit.clamp(((cx - ax) * dx + (cy - ay) * dy) / l2, 0, 1);
+        var dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy, t = l2 < 1e-12 ? 0 : kit.clamp(((cx - ax) * dx + (cy - ay) * dy) / l2, 0, 1);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
         return Math.hypot(ax + t * dx - cx, ay + t * dy - cy) <= r;
     }
     /* 出一關：{ target, mates（干擾字候選）, group, total, tosses（[{ t, ch, onTarget, x0, vx, ya, ta, spin }]）, spawnMs, strokes, level } */
@@ -54,20 +54,20 @@
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var rg = strokeRange(level), pool = SimilarChars.groups({ minSize: MIN_GROUP, minStrokes: rg[0], maxStrokes: rg[1] });
         if (!pool.length) pool = SimilarChars.groups({ minSize: MIN_GROUP });
-        var g = kit.pick(pool, rand), target = kit.pick(g.chars, rand), mates = g.chars.filter(function (c) { return c !== target; });
+        var g = kit.pick(pool, rand), target = kit.pick(g.chars, rand), mates = g.chars.filter(function (c) { return c !== target; });  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         var F = totalFor(level), nT = Math.max(3, Math.round(F * TARGET_FRAC)), list = [], i;
         for (i = 0; i < nT; i++) list.push({ ch: target, onTarget: true });
         for (i = nT; i < F; i++) list.push({ ch: mates[(i - nT) % mates.length], onTarget: false });
-        list = kit.shuffle(list, rand);
+        list = kit.shuffle(list, rand);                 /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         var spawn = spawnMsFor(level), bmax = batchMaxFor(level), t = LEAD_MS, tosses = [], idx = 0;
         while (idx < list.length) {
-            var b = Math.min(list.length - idx, kit.randInt(1, bmax, rand)), xs = [];
+            var b = Math.min(list.length - idx, kit.randInt(1, bmax, rand)), xs = [];  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             for (i = 0; i < b; i++) {
-                var x0 = kit.randFloat(X_RANGE[0], X_RANGE[1], rand), guard = 0;
-                while (xs.some(function (x) { return Math.abs(x - x0) < 0.2; }) && guard++ < 30) x0 = kit.randFloat(X_RANGE[0], X_RANGE[1], rand);
+                var x0 = kit.randFloat(X_RANGE[0], X_RANGE[1], rand), guard = 0;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+                while (xs.some(function (x) { return Math.abs(x - x0) < 0.2; }) && guard++ < 30) x0 = kit.randFloat(X_RANGE[0], X_RANGE[1], rand);  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
                 xs.push(x0);
                 var it = list[idx++];
-                tosses.push({ t: Math.round(t + i * 140), ch: it.ch, onTarget: it.onTarget, x0: x0, vx: (0.5 - x0) * kit.randFloat(0.05, 0.3, rand), ya: kit.randFloat(APEX[0], APEX[1], rand), ta: kit.randFloat(T_APEX[0], T_APEX[1], rand), spin: kit.randFloat(-220, 220, rand) });
+                tosses.push({ t: Math.round(t + i * 140), ch: it.ch, onTarget: it.onTarget, x0: x0, vx: (0.5 - x0) * kit.randFloat(0.05, 0.3, rand), ya: kit.randFloat(APEX[0], APEX[1], rand), ta: kit.randFloat(T_APEX[0], T_APEX[1], rand), spin: kit.randFloat(-220, 220, rand) });  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             }
             t += spawn * b * kit.randFloat(0.85, 1.15, rand);                       /* 一次拋越多顆，下一批隔越久（整體密度才不會爆掉） */
         }
@@ -117,15 +117,15 @@
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var field = h('div', { 'class': 'slicechar-field' });
-        stage.appendChild(field);
+        stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var goal = h('div', { 'class': 'slicechar-goal' }, [h('span', { 'class': 'slicechar-goal__t', text: '只切：' }), h('span', { 'class': 'slicechar-goal__ch', text: q.target })]);
-        field.appendChild(goal);
+        field.appendChild(goal);                        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var counter = h('div', { 'class': 'slicechar-counter', text: '0／' + F }); field.appendChild(counter);
         var info = h('div', { 'class': 'qz-note slicechar-info', text: '' }); field.appendChild(info);
         var arena = h('div', { 'class': 'slicechar-arena' }); field.appendChild(arena);
 
         var resolved = 0, flying = [], halted = false, lastP = null, down = false, over = false;
-        q.tosses.forEach(function (tz) { api.after(tz.t, function () { launch(tz); }); });
+        q.tosses.forEach(function (tz) { api.after(tz.t, function () { launch(tz); }); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
         if (level === 1 && kit.once('slicechar.hint')) api.after(LEAD_MS + 600, function () { if (!over) kit.hintOn(stage, null, { mode: 'drag', x: W * 0.3, y: H * 0.55, dx: W * 0.4, dy: -40, text: '只切目標字' }); });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         function launch(tz) {
             if (halted || api.over) return;
@@ -134,7 +134,7 @@
             arena.appendChild(el);
             flying.push({ tz: tz, el: el, t: 0, cut: false, lt: landTime(tz) });
         }
-        api.my.loop(function (now, dt) {
+        api.my.loop(function (now, dt) {                /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
             if (!arena.isConnected) return false;
             if (halted) return;
             var d = Math.min(dt, 50) / 1000;
@@ -152,13 +152,13 @@
             }
         });
         function resolve() {
-            resolved++; counter.textContent = resolved + '／' + F;
-            if (resolved >= F && !over) { over = true; info.textContent = '全部處理完了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1100 }); }
+            resolved++; counter.textContent = resolved + '／' + F;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            if (resolved >= F && !over) { over = true; info.textContent = '全部處理完了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1100 }); }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
         }
-        arena.addEventListener('pointerdown', function (e) { if (over) return; e.preventDefault(); try { arena.setPointerCapture(e.pointerId); } catch (err) { } var p = kit.localPt(e, arena); lastP = p; down = true; sliceSeg(p, p); });
-        arena.addEventListener('pointermove', function (e) { if (!down || over) return; var p = kit.localPt(e, arena); sliceSeg(lastP, p); lastP = p; });
+        arena.addEventListener('pointerdown', function (e) { if (over) return; e.preventDefault(); try { arena.setPointerCapture(e.pointerId); } catch (err) { } var p = kit.localPt(e, arena); lastP = p; down = true; sliceSeg(p, p); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+        arena.addEventListener('pointermove', function (e) { if (!down || over) return; var p = kit.localPt(e, arena); sliceSeg(lastP, p); lastP = p; });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
         function endDrag() { down = false; lastP = null; }
-        arena.addEventListener('pointerup', endDrag); arena.addEventListener('pointercancel', endDrag);
+        arena.addEventListener('pointerup', endDrag); arena.addEventListener('pointercancel', endDrag);  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
         function sliceSeg(a, b) {
             for (var i = flying.length - 1; i >= 0 && !over; i--) {
                 var f = flying[i]; if (f.cut || f.px == null) continue;
@@ -169,11 +169,11 @@
         function cut(f, idx, a, b) {
             f.cut = true; flying.splice(idx, 1);
             var el = f.el;
-            [['left', -1], ['right', 1]].forEach(function (half) {
-                var c = el.cloneNode(true); c.className = 'slicechar-half slicechar-half--' + half[0]; c.style.transform = el.style.transform; c.style.setProperty('--dir', half[1]);
-                arena.appendChild(c); api.after(650, function () { c.remove(); });
+            [['left', -1], ['right', 1]].forEach(function (half) {  /* forEach：對陣列的每個元素各做一次 */
+                var c = el.cloneNode(true); c.className = 'slicechar-half slicechar-half--' + half[0]; c.style.transform = el.style.transform; c.style.setProperty('--dir', half[1]);  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
+                arena.appendChild(c); api.after(650, function () { c.remove(); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
             });
-            el.remove(); Sfx.play('pop');
+            el.remove(); Sfx.play('pop');               /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             if (!f.tz.onTarget) { wrong(f); return; }
             resolve();
         }
@@ -189,14 +189,14 @@
             } else { box.appendChild(h('div', { 'class': 'slicechar-cmp__box slicechar-cmp__box--bad' }, [h('div', { 'class': 'slicechar-cmp__t', text: '漏掉了' }), h('div', { 'class': 'slicechar-cmp__big', text: q.target })])); field.appendChild(box); }
         }
         function wrong(f) {
-            info.textContent = '「' + f.tz.ch + '」不是目標字「' + q.target + '」！';
-            compare(f.tz.ch, false); kit.flash(stage, false, api.my);
-            api.fail({ delay: 3600, lines: ['你切了「' + f.tz.ch + '」，目標字是「' + q.target + '」', '形近字：' + q.group.join('、')] });
+            info.textContent = '「' + f.tz.ch + '」不是目標字「' + q.target + '」！';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            compare(f.tz.ch, false); kit.flash(stage, false, api.my);  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 3600, lines: ['你切了「' + f.tz.ch + '」，目標字是「' + q.target + '」', '形近字：' + q.group.join('、')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         function missed(f) {
             info.textContent = '漏掉了一個「' + q.target + '」！';
             compare(null, true); kit.flash(stage, false, api.my);
-            api.fail({ delay: 3400, lines: ['漏掉了一個目標字「' + q.target + '」', '形近字：' + q.group.join('、')] });
+            api.fail({ delay: 3400, lines: ['漏掉了一個目標字「' + q.target + '」', '形近字：' + q.group.join('、')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用（會被重複呼叫，要冪等）：solve＝切掉所有在空中的目標字、wrong＝切第一個在空中的干擾字 */
         api.solve = function () {

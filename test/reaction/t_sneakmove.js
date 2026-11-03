@@ -96,6 +96,6 @@ ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !
   ok(src.indexOf('function timeOf(mi, t)') > 0 && src.indexOf('posAt(q, i, timeOf(i, t))') > 0, '找到的那顆停在找到的那一刻');
   ok(src.indexOf('api.solve = function () { q.movers.forEach(function (m) { tapDot(m.idx, nowSec()); }); };') > 0, 'api.solve 依序點出每一顆會動的');
   ok(/一顆接著一顆把「所有」會動的圓點都點出來/.test(G.rule) && /紅框/.test(G.rule), '玩法說明有寫要全部找出來、點錯是紅框');
-  const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_sneakmove.css'), 'utf8').split(/\s+/).join(' ');
+  const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_sneakmove.css'), 'utf8').replace(/[ \t]*\/\*[\s\S]*?\*\//g, '').split(/\s+/).join(' ');
   ok(css.indexOf('.sneakmove-dot--right { stroke: var(--c-ok); stroke-width: 6; }') > 0 && css.indexOf('.sneakmove-dot--wrong { stroke: var(--c-bad-light); stroke-width: 6; }') > 0 && css.indexOf('.sneakmove-dot--mover') < 0, 'CSS：答對綠色外框、答錯紅色外框（只用 CSS 變數）'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

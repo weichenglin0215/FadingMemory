@@ -53,10 +53,10 @@
         var el = document.createElement(tag);
         props = props || {};
         if (props['class']) el.className = props['class'];
-        if (props.text != null) el.textContent = props.text;
+        if (props.text != null) el.textContent = props.text;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         if (props.html != null) el.innerHTML = props.html;
         if (props.attrs) {
-            for (var k in props.attrs) el.setAttribute(k, props.attrs[k]);
+            for (var k in props.attrs) el.setAttribute(k, props.attrs[k]);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         }
         if (props.style) {
             for (var s in props.style) el.style.setProperty(s, props.style[s]);
@@ -64,11 +64,11 @@
         if (props.on) {
             for (var ev in props.on) el.addEventListener(ev, props.on[ev]);
         }
-        (children || []).forEach(function (c) {
+        (children || []).forEach(function (c) {         /* forEach：對陣列的每個元素各做一次 */
             if (c == null) return;
-            el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+            el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         });
-        if (tag === 'button' && !el.hasAttribute('type')) el.setAttribute('type', 'button');
+        if (tag === 'button' && !el.hasAttribute('type')) el.setAttribute('type', 'button');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         return el;
     };
 
@@ -120,7 +120,7 @@
         var pages = [];
         var cur = [];
         function render(list) {
-            box.innerHTML = list.map(function (p) { return '<p>' + UI.esc(p) + '</p>'; }).join('');
+            box.innerHTML = list.map(function (p) { return '<p>' + UI.esc(p) + '</p>'; }).join('');  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         }
         function overflow() { return box.scrollHeight > box.clientHeight + TOL; }
         for (var i = 0; i < paras.length; i++) {
@@ -134,12 +134,12 @@
             }
         }
         if (cur.length) pages.push(cur);
-        box.innerHTML = '';
+        box.innerHTML = '';                             /* innerHTML = ''：把元素裡面的東西全部清掉 */
         return pages;
     };
 
     UI.renderParas = function (box, list) {
-        box.innerHTML = list.map(function (p) { return '<p>' + UI.esc(p) + '</p>'; }).join('');
+        box.innerHTML = list.map(function (p) { return '<p>' + UI.esc(p) + '</p>'; }).join('');  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     };
 
     /* 等 Google Fonts 真的載好再畫畫面：網路字型（繁中標題用的 Noto Serif/Sans TC）
@@ -151,7 +151,7 @@
     UI.fonts = function (fontSpecs, text, timeout) {
         if (!document.fonts || !document.fonts.load) return Promise.resolve();
         var loads = fontSpecs.map(function (f) {
-            return document.fonts.load(f, text || '回家的路').catch(function () { });
+            return document.fonts.load(f, text || '回家的路').catch(function () { });  /* catch：Promise（承諾）失敗時才執行的函式，這裡用來吞掉錯誤，避免整個程式中斷 */
         });
         return Promise.race([Promise.all(loads), UI.wait(timeout || 2500)]);
     };
@@ -164,11 +164,11 @@
         get: function (key, fallback) {
             try {
                 var raw = global.localStorage.getItem(key);
-                return raw == null ? fallback : JSON.parse(raw);
+                return raw == null ? fallback : JSON.parse(raw);  /* JSON.stringify／parse：物件和文字互轉（存進 localStorage 或傳給伺服器時用） */
             } catch (e) { return fallback; }
         },
         set: function (key, value) {
-            try { global.localStorage.setItem(key, JSON.stringify(value)); } catch (e) { }
+            try { global.localStorage.setItem(key, JSON.stringify(value)); } catch (e) { }  /* JSON.stringify／parse：物件和文字互轉（存進 localStorage 或傳給伺服器時用） */
         },
         /* 刪掉一個項目（V1.35.0：登出時清掉帳號資料用） */
         remove: function (key) {

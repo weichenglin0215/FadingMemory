@@ -68,9 +68,9 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 第 n 張的限時（越來越短） */
-    function timeFor(n) { return kit.ramp(n, TIME_START, TIME_END, RAMP_N); }
+    function timeFor(n) { return kit.ramp(n, TIME_START, TIME_END, RAMP_N); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 第 n 張出「反直覺」食物的機率（越來越高） */
-    function trickyP(n) { return kit.ramp(n, TRICKY_START, TRICKY_END, RAMP_N); }
+    function trickyP(n) { return kit.ramp(n, TRICKY_START, TRICKY_END, RAMP_N); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 抽下一張牌：不能和上一張相同，同一區也不能連續太多張 */
     /* 第 n 張（從 1 起算）要出哪一樣；history＝之前出過的物品陣列 */
     function nextFood(n, history, rand) {
@@ -84,8 +84,8 @@
         /* 最多抽 100 次，避免遇到無解條件時卡死 */
         for (var tries = 0; tries < 100; tries++) {
             /* filter：從 FOODS 篩出符合條件的子集合（!!f.tricky 把 undefined 轉成 false 方便比較） */
-            var pool = FOODS.filter(function (f) { return !!f.tricky === wantTricky; });
-            var f = kit.pick(pool, rand);
+            var pool = FOODS.filter(function (f) { return !!f.tricky === wantTricky; });  /* filter：留下符合條件的元素，回傳新陣列 */
+            var f = kit.pick(pool, rand);               /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             if (last && f.name === last.name) continue;
             if (last && run >= ZONE_RUN_MAX && f.zone === last.zone) continue;
             return f;
@@ -96,7 +96,7 @@
     /* （舊版的滑動操作用的函式，現在改成點按鈕，保留給測試） */
     /* 滑動向量 → 區域：上＝冷凍、左＝冷藏、右＝櫥櫃，往下＝null */
     function zoneFromDelta(dx, dy) {
-        if (Math.abs(dx) >= Math.abs(dy)) return dx > 0 ? 'pantry' : 'cool';
+        if (Math.abs(dx) >= Math.abs(dy)) return dx > 0 ? 'pantry' : 'cool';  /* Math.abs：取絕對值（去掉負號） */
         return dy < 0 ? 'freeze' : null;
     }
 
@@ -105,7 +105,7 @@
     function drawIcon(icon, hue, parent) {
         var fill = 'hsl(' + hue + ',68%,60%)', dark = 'hsl(' + hue + ',55%,32%)', light = 'hsl(' + hue + ',75%,82%)';
         /* 小工具 S(標籤, 屬性)：建立一個形狀，沒指定填色就用主色，沒指定外框就用深色 */
-        var S = function (tag, a) { a = a || {}; if (a.fill === undefined && !a.stroke) a.fill = fill; if (a.stroke === undefined && a.fill !== 'none') { a.stroke = dark; a['stroke-width'] = 3; a['stroke-linejoin'] = 'round'; } return kit.svg(tag, a, parent); };
+        var S = function (tag, a) { a = a || {}; if (a.fill === undefined && !a.stroke) a.fill = fill; if (a.stroke === undefined && a.fill !== 'none') { a.stroke = dark; a['stroke-width'] = 3; a['stroke-linejoin'] = 'round'; } return kit.svg(tag, a, parent); };  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         if (icon === 'bottle') { S('rect', { x: 34, y: 34, width: 32, height: 58, rx: 8 }); S('rect', { x: 42, y: 14, width: 16, height: 22, rx: 3, fill: light }); S('rect', { x: 40, y: 8, width: 20, height: 9, rx: 3, fill: dark }); }
         else if (icon === 'box') { S('rect', { x: 18, y: 22, width: 64, height: 66, rx: 6 }); S('line', { x1: 18, y1: 40, x2: 82, y2: 40, stroke: dark, 'stroke-width': 3 }); S('circle', { cx: 50, cy: 64, r: 12, fill: light }); }
         else if (icon === 'can') { S('rect', { x: 24, y: 24, width: 52, height: 60, rx: 6 }); S('ellipse', { cx: 50, cy: 24, rx: 26, ry: 8, fill: light }); S('rect', { x: 24, y: 44, width: 52, height: 22, fill: light, stroke: 'none' }); }
@@ -132,7 +132,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
             /* n 目前第幾張；right 連續答對數；history 已出過的食物；cur 目前這張；cardId 每張 +1，讓舊計時器知道自己過期 */
             var n = (startAt || 1) - 1, right = n, newRec = false, state = 'idle', history = [], cur = null, cardId = 0;
@@ -145,16 +145,16 @@
             var arena = h('div', { 'class': 'fridge-arena' });
             var card = h('div', { 'class': 'fridge-card' });
             var tb = kit.timebar();
-            var tip = h('div', { 'class': 'fridge-tip' });
-            arena.appendChild(card);
+            var tip = h('div', { 'class': 'fridge-tip' });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
+            arena.appendChild(card);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             /* 排版：左邊一欄放冷藏室＋冷凍庫（上下），右邊放櫥櫃（版面細節在 css/games/reaction_fridge.css 的 .fridge-answers） */
             var answers = h('div', { 'class': 'fridge-answers' }, [h('div', { 'class': 'fridge-col' }, [zCool, zFreeze]), zPantry]);
-            [head, arena, tb.el, tip, answers].forEach(function (x) { root.appendChild(x); });
+            [head, arena, tb.el, tip, answers].forEach(function (x) { root.appendChild(x); });  /* forEach：對陣列的每個元素各做一次 */
             /* zEl：區域代號 → 按鈕元素，方便用代號操作 */
             var zEl = { freeze: zFreeze, cool: zCool, pantry: zPantry };
 
             /* 更新標題列右側的小字 */
-            function meta() { ctx.setMeta(kit.meta(['連對 ' + right, fmtBest(Reaction.getBest(ID))])); }
+            function meta() { ctx.setMeta(kit.meta(['連對 ' + right, fmtBest(Reaction.getBest(ID))])); }  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
             /* 出下一張卡 */
             function nextCard() {
@@ -165,19 +165,19 @@
                 history.push(cur);
                 /* 主控台印出這張的實際資料（食物、答案、限時、反直覺機率），方便驗證 */
                 try { console.info('[冰箱歸位] 第 ' + n + ' 張：' + cur.name + ' → ' + ZONES[cur.zone] + (cur.tricky ? '（反直覺）' : '') + '；限時 ' + timeFor(n).toFixed(2) + ' 秒；反直覺機率 ' + trickyP(n).toFixed(2)); } catch (e) { }
-                head.textContent = '第 ' + n + ' 張';
-                tip.textContent = '';
-                card.innerHTML = '';
+                head.textContent = '第 ' + n + ' 張';     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                tip.textContent = '';                   /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                card.innerHTML = '';                    /* innerHTML = ''：把元素裡面的東西全部清掉 */
                 card.className = 'fridge-card';
                 /* 畫食物圖示和名稱 */
-                var svg = kit.svg('svg', { 'class': 'fridge-icon', viewBox: '0 0 100 100' }, card);
+                var svg = kit.svg('svg', { 'class': 'fridge-icon', viewBox: '0 0 100 100' }, card);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
                 drawIcon(cur.icon, cur.hue, svg);
-                card.appendChild(h('div', { 'class': 'fridge-name', text: cur.name }));
+                card.appendChild(h('div', { 'class': 'fridge-name', text: cur.name }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
                 state = 'ask';
                 meta();
                 /* 倒數時間條 */
-                var t0 = performance.now(), lim = timeFor(n) * 1000;
-                my.loop(function (now) { if (id !== cardId || state !== 'ask') return false; tb.set(1 - (now - t0) / lim); });
+                var t0 = performance.now(), lim = timeFor(n) * 1000;  /* performance.now()：高精度的時間（毫秒），計時用 */
+                my.loop(function (now) { if (id !== cardId || state !== 'ask') return false; tb.set(1 - (now - t0) / lim); });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                 /* 時間到：judge(null) 表示沒有作答 */
                 my.after(lim, function () { if (id === cardId && state === 'ask') judge(null); });
             }
@@ -190,29 +190,29 @@
                 /* 選的區域＝食物該放的區域就是答對 */
                 var ok = zone === cur.zone;
                 /* 先清掉上一張留下的綠／橘標記 */
-                Object.keys(zEl).forEach(function (k) { zEl[k].classList.remove('fridge-zone--ok', 'fridge-zone--bad'); });
+                Object.keys(zEl).forEach(function (k) { zEl[k].classList.remove('fridge-zone--ok', 'fridge-zone--bad'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 /* 不論對錯，都把正確答案的區域標成綠色 */
-                zEl[cur.zone].classList.add('fridge-zone--ok');
+                zEl[cur.zone].classList.add('fridge-zone--ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 /* 答對：加一分、播音效、稍後出下一張 */
                 if (ok) {
                     right++;
                     card.classList.add('fridge-card--ok');
-                    Sfx.play('ok');
-                    if (Reaction.setBest(ID, right, function (v, b) { return v > b; })) newRec = true;
+                    Sfx.play('ok');                     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                    if (Reaction.setBest(ID, right, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                     meta();
-                    my.after(NEXT_MS, function () { Object.keys(zEl).forEach(function (k) { zEl[k].classList.remove('fridge-zone--ok', 'fridge-zone--bad'); }); nextCard(); });
+                    my.after(NEXT_MS, function () { Object.keys(zEl).forEach(function (k) { zEl[k].classList.remove('fridge-zone--ok', 'fridge-zone--bad'); }); nextCard(); });  /* forEach：對陣列的每個元素各做一次 */
                     return;
                 }
                 /* 答錯或超時：一次就結束。玩家選的區域標橘色，並顯示提示，稍後結算 */
                 if (zone) zEl[zone].classList.add('fridge-zone--bad');
                 card.classList.add('fridge-card--bad');
-                Sfx.play('bad');
+                Sfx.play('bad');                        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 tip.textContent = (zone == null ? '時間到！' : '放錯了…') + cur.name + '要放' + ZONES[cur.zone] + (cur.tip ? '（' + cur.tip + '）' : '');
                 meta();
                 my.after(1800, function () {
                     /* kit.resumeFrom：失敗後可從前 5 張繼續 */
                     var back = kit.resumeFrom(n);
-                    kit.result(root, {
+                    kit.result(root, {                  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                         score: right,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: right + ' 張', label: right >= 20 ? '收納高手！' : (right >= 10 ? '很會整理！' : '再試一次，會更快！'),
                         lines: [cur.name + '要放' + ZONES[cur.zone] + (cur.tip ? '：' + cur.tip : '')],
@@ -223,7 +223,7 @@
             }
 
             /* 替三個答案按鈕各綁定 pointerdown（一碰就觸發，比 click 即時） */
-            Object.keys(zEl).forEach(function (k) { zEl[k].addEventListener('pointerdown', function (e) { e.preventDefault(); judge(k); }); });
+            Object.keys(zEl).forEach(function (k) { zEl[k].addEventListener('pointerdown', function (e) { e.preventDefault(); judge(k); }); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
 
             /* G.debug：測試用後門 */
             G.debug = {

@@ -66,14 +66,14 @@
     /* 計算有幾個開口（把 4 個 bit 加起來） */
     function bits(m) { return (m & 1) + ((m >> 1) & 1) + ((m >> 2) & 1) + ((m >> 3) & 1); }
     /* 這一關棋盤邊長 */
-    function gridFor(level) { return Math.round(kit.ramp(level, GRID_START, GRID_END, LEVEL_RAMP)); }
+    function gridFor(level) { return Math.round(kit.ramp(level, GRID_START, GRID_END, LEVEL_RAMP)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 這一關水桶數 */
-    function bucketsFor(level) { return Math.round(kit.ramp(level, BUCKETS_START, BUCKETS_END, LEVEL_RAMP)); }
+    function bucketsFor(level) { return Math.round(kit.ramp(level, BUCKETS_START, BUCKETS_END, LEVEL_RAMP)); }  /* Math.round：四捨五入成整數 */
     /* 這一關限時（棋盤越大給越多時間） */
-    function timeFor(level) { return kit.ramp(level, TIME_START, TIME_END, LEVEL_RAMP); }
+    function timeFor(level) { return kit.ramp(level, TIME_START, TIME_END, LEVEL_RAMP); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 樹要占幾格 */
     function fillFor(level) { return kit.ramp(level, FILL[0], FILL[1], LEVEL_RAMP); }
-    function sizeFor(N, level) { return Math.round(N * N * fillFor(level == null ? 1 : level)); }
+    function sizeFor(N, level) { return Math.round(N * N * fillFor(level == null ? 1 : level)); }  /* Math.round：四捨五入成整數 */
     /* 打亂後至少要轉幾次 */
     function minTapsFor(level) { return Math.round(kit.ramp(level, MIN_TAPS[0], MIN_TAPS[1], LEVEL_RAMP)); }
 
@@ -84,13 +84,13 @@
     function makeTree(N, B, S, rand, f) {
         rand = rand || Math.random;
         f = f || 0;
-        var fx = f % N, fy = Math.floor(f / N);
+        var fx = f % N, fy = Math.floor(f / N);         /* Math.floor：無條件捨去成整數 */
         /* cells：每格的開口（0＝空格） */
         var cells = []; for (var i = 0; i < N * N; i++) cells.push(0);
         cells[f] = N_;                                          /* 水龍頭那格：水從上面進來 */
         function free(i) {                                       /* 一格旁邊還空著的方向 */
-            var x = i % N, y = Math.floor(i / N), out = [];
-            DIRS.forEach(function (d) {
+            var x = i % N, y = Math.floor(i / N), out = [];  /* Math.floor：無條件捨去成整數 */
+            DIRS.forEach(function (d) {                 /* forEach：對陣列的每個元素各做一次 */
                 var nx = x + DX[d], ny = y + DY[d];
                 if (nx >= 0 && ny >= 0 && nx < N && ny < N && cells[ny * N + nx] === 0) out.push({ d: d, j: ny * N + nx });
             });
@@ -98,7 +98,7 @@
         }
         /* attach：把兩格接起來（兩邊各加上對應的開口 bit，|= 是「或」運算） */
         function attach(i, fr) { cells[i] |= fr.d; cells[fr.j] |= OPP[fr.d]; }
-        function dist(j) { return Math.abs((j % N) - fx) + Math.abs(Math.floor(j / N) - fy); }
+        function dist(j) { return Math.abs((j % N) - fx) + Math.abs(Math.floor(j / N) - fy); }  /* Math.abs：取絕對值（去掉負號） */
         /* 依權重隨機挑一個 */
         function pickW(list) {
             var tot = 0, k;
@@ -107,12 +107,12 @@
             for (k = 0; k < list.length; k++) { r -= list[k].w; if (r <= 0) return list[k]; }
             return list[list.length - 1];
         }
-        var f0 = kit.pick(free(f), rand); if (!f0) return null;
+        var f0 = kit.pick(free(f), rand); if (!f0) return null;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         attach(f, f0);
         /* 樹要長 S−2 次：其中 B−1 次是「分岔」（T 字管），其餘是「延長」 */
         var steps = S - 2, isBranch = [];
         for (var s = 0; s < steps; s++) isBranch.push(false);
-        kit.shuffle(isBranch.map(function (_, k) { return k; }), rand).slice(0, B - 1).forEach(function (k) { isBranch[k] = true; });
+        kit.shuffle(isBranch.map(function (_, k) { return k; }), rand).slice(0, B - 1).forEach(function (k) { isBranch[k] = true; });  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         if (steps < B - 1) return null;
         for (var s2 = 0; s2 < steps; s2++) {
             var cand = [];
@@ -121,7 +121,7 @@
                 var deg = bits(cells[c]);
                 /* 分岔要挑「剛好有 2 個開口」的格子，延長要挑「只有 1 個開口」的尾端 */
                 if (isBranch[s2] ? deg === 2 : (deg === 1 && c !== f)) {
-                    free(c).forEach(function (fr) {
+                    free(c).forEach(function (fr) {     /* forEach：對陣列的每個元素各做一次 */
                         var w = Math.pow(1 + dist(fr.j), SPREAD_POW);
                         if (!isBranch[s2] && fr.d !== OPP[cells[c]]) w *= TURN_BONUS;        /* 尾端延長：轉彎比直走更容易被選 */
                         cand.push({ c: c, fr: fr, w: w });
@@ -141,7 +141,7 @@
     /* 通水：回傳 { wet:[bool], leaks:[{i,d}], buckets 是否都有水由 solved 判斷 } */
     function flow(board, N, f) {
         f = f || 0;                                              /* 水龍頭在上排第 f 格（預設左上角） */
-        var wet = board.map(function () { return false; }), leaks = [];
+        var wet = board.map(function () { return false; }), leaks = [];  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         /* 水龍頭那格沒有上方開口就完全不通水 */
         if (!(board[f] & N_)) return { wet: wet, leaks: leaks };
         /* stack 堆疊：後進先出，一直處理到沒有待處理的格子 */
@@ -173,7 +173,7 @@
     /* 解出來：沒有漏水，而且每個水桶都有水 */
     function solved(board, N, buckets, faucet) {
         var f = flow(board, N, faucet);
-        return f.leaks.length === 0 && buckets.every(function (b) { return f.wet[b]; });
+        return f.leaks.length === 0 && buckets.every(function (b) { return f.wet[b]; });  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
     }
     /* 把一格轉成目標形狀至少要點幾下 */
     /* 把一格轉成目標形狀至少要點幾下 */
@@ -185,14 +185,14 @@
         rand = rand || Math.random;
         var N = gridFor(level), B = bucketsFor(level), S = sizeFor(N, level), tree = null;
         /* 水龍頭的位置：上排隨機一格（每一關都不一樣） */
-        var faucet = kit.randInt(0, N - 1, rand);
+        var faucet = kit.randInt(0, N - 1, rand);       /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         /* 最多嘗試 300 次長出樹 */
         for (var t = 0; t < 300 && !tree; t++) tree = makeTree(N, B, S, rand, faucet);
         if (!tree) throw new Error('pipes: cannot build a tree');
         var sol = tree.cells, board, need = minTapsFor(level);
         /* 最多嘗試 200 次打亂 */
         for (var a = 0; a < 200; a++) {
-            board = sol.map(function (m) { return m ? rotN(m, Math.floor(rand() * 4)) : 0; });
+            board = sol.map(function (m) { return m ? rotN(m, Math.floor(rand() * 4)) : 0; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             if (!solved(board, N, tree.leaves, faucet) && tapsToSolve(board, sol) >= need) break;
         }
         return { level: level, N: N, B: B, S: S, faucet: faucet, sol: sol, board: board, buckets: tree.leaves, time: timeFor(level) };
@@ -215,7 +215,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
             /* level 目前關卡（先減 1，startLevel 會先加 1）；passed 已過幾關；L 這關資料；board 目前每格開口；state 目前階段；token 流水號；times 每關花的秒數 */
             var level = (startAt || 1) - 1, passed = level, L = null, board = null, state = 'idle', token = 0, times = [], t0 = 0, newRec = false;
@@ -224,20 +224,20 @@
             var banner = h('div', { 'class': 'pipes-banner', text: ' ' });
             var field = h('div', { 'class': 'pipes-field' });
             var tb = kit.timebar();
-            [head, banner, field, tb.el].forEach(function (x) { root.appendChild(x); });
-            ctx.setMeta(Reaction.getBest(ID) != null ? '最佳 ' + Reaction.getBest(ID) + ' 關' : '');
+            [head, banner, field, tb.el].forEach(function (x) { root.appendChild(x); });  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            ctx.setMeta(Reaction.getBest(ID) != null ? '最佳 ' + Reaction.getBest(ID) + ' 關' : '');  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
             /* svg 與每格的元素 */
             var svg, cellEls = [];
 
             /* 畫整個棋盤（SVG）：水龍頭、每格的底板、4 個方向的管子、中心圓點、水桶、漏水的紅點 */
             function build() {
-                field.innerHTML = ''; cellEls = [];
+                field.innerHTML = ''; cellEls = [];     /* innerHTML = ''：把元素裡面的東西全部清掉 */
                 var W = L.N * CELL, Ht = L.N * CELL + FAUCET_H;
-                svg = kit.svg('svg', { 'class': 'pipes-svg', viewBox: '0 0 ' + W + ' ' + Ht, preserveAspectRatio: 'xMidYMid meet' }, field);
+                svg = kit.svg('svg', { 'class': 'pipes-svg', viewBox: '0 0 ' + W + ' ' + Ht, preserveAspectRatio: 'xMidYMid meet' }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
                 /* 水龍頭（在左上角那格的上方）*/
                 var fx = L.faucet * CELL + CELL / 2;              /* 水龍頭在上排第 faucet 欄（每關隨機） */
-                kit.svg('line', { 'class': 'pipes-source', x1: fx, y1: FAUCET_H - 18, x2: fx, y2: FAUCET_H }, svg);
+                kit.svg('line', { 'class': 'pipes-source', x1: fx, y1: FAUCET_H - 18, x2: fx, y2: FAUCET_H }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
                 kit.svg('rect', { 'class': 'pipes-faucet', x: fx - 34, y: 6, width: 68, height: 22, rx: 8 }, svg);
                 kit.svg('rect', { 'class': 'pipes-faucet', x: fx - 12, y: 24, width: 24, height: FAUCET_H - 40, rx: 4 }, svg);
                 var g = kit.svg('g', { transform: 'translate(0,' + FAUCET_H + ')' }, svg);
@@ -253,10 +253,10 @@
                         var hub = kit.svg('circle', { 'class': 'pipes-hub', cx: c, cy: c, r: 15 }, cg);
                         if (!L.sol[i]) hub.setAttribute('display', 'none');           /* 樹外的空格不畫水管中心 */
                         var bucket = null;
-                        if (L.buckets.indexOf(i) >= 0) bucket = kit.svg('circle', { 'class': 'pipes-bucket', cx: c, cy: c, r: 26 }, cg);
+                        if (L.buckets.indexOf(i) >= 0) bucket = kit.svg('circle', { 'class': 'pipes-bucket', cx: c, cy: c, r: 26 }, cg);  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                         DIRS.forEach(function (d) { leaks[d] = kit.svg('circle', { 'class': 'pipes-leak', cx: ends[d][0] + (d === 2 ? -6 : d === 8 ? 6 : 0), cy: ends[d][1] + (d === 4 ? -6 : d === 1 ? 6 : 0), r: 8 }, cg); });
                         /* 點一格就轉一下 */
-                        cg.addEventListener('pointerdown', function (e) { e.preventDefault(); turn(i); });
+                        cg.addEventListener('pointerdown', function (e) { e.preventDefault(); turn(i); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                         cellEls[i] = { g: cg, lines: lines, leaks: leaks, bucket: bucket };
                     })(i);
                 }
@@ -270,13 +270,13 @@
                 for (var i = 0; i < board.length; i++) {
                     var e = cellEls[i];
                     DIRS.forEach(function (d) {
-                        e.lines[d].setAttribute('display', (board[i] & d) ? 'inline' : 'none');
-                        e.leaks[d].setAttribute('display', leakSet[i + ':' + d] ? 'inline' : 'none');
+                        e.lines[d].setAttribute('display', (board[i] & d) ? 'inline' : 'none');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+                        e.leaks[d].setAttribute('display', leakSet[i + ':' + d] ? 'inline' : 'none');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
                     });
                     e.g.setAttribute('class', 'pipes-cell' + (f.wet[i] ? ' pipes-cell--wet' : '') + (board[i] ? ' pipes-cell--pipe' : ''));
                 }
-                var full = L.buckets.filter(function (b) { return f.wet[b]; }).length;
-                banner.textContent = '水桶 ' + full + '／' + L.buckets.length + (f.leaks.length ? '　漏水 ' + f.leaks.length + ' 處' : '');
+                var full = L.buckets.filter(function (b) { return f.wet[b]; }).length;  /* filter：留下符合條件的元素，回傳新陣列 */
+                banner.textContent = '水桶 ' + full + '／' + L.buckets.length + (f.leaks.length ? '　漏水 ' + f.leaks.length + ' 處' : '');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 return f;
             }
 
@@ -286,22 +286,22 @@
                 level++;
                 /* 產生這關 */
                 L = makeLevel(level);
-                board = L.board.slice();
+                board = L.board.slice();                /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
                 var id = ++token;
                 state = 'play';
-                head.textContent = '第 ' + level + ' 關　限時 ' + Math.round(L.time) + ' 秒';
+                head.textContent = '第 ' + level + ' 關　限時 ' + Math.round(L.time) + ' 秒';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 build();
-                ctx.setMeta(kit.meta(['已過 ' + passed + ' 關', Reaction.getBest(ID) != null ? '最佳 ' + Reaction.getBest(ID) : '']));
-                t0 = performance.now();
+                ctx.setMeta(kit.meta(['已過 ' + passed + ' 關', Reaction.getBest(ID) != null ? '最佳 ' + Reaction.getBest(ID) : '']));  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+                t0 = performance.now();                 /* performance.now()：高精度的時間（毫秒），計時用 */
                 /* 主控台印出這關的實際資料（棋盤大小、水桶數、T 管數、至少要轉幾下、限時） */
                 try { console.info('[接水管] 第 ' + level + ' 關：' + L.N + '×' + L.N + '、水桶 ' + L.B + '、T 管 ' + (L.B - 1) + '、水龍頭第 ' + (L.faucet + 1) + ' 欄、樹 ' + L.S + ' 格、至少要轉 ' + tapsToSolve(L.board, L.sol) + ' 下、限時 ' + L.time.toFixed(1) + ' 秒'); } catch (e) { }
                 tb.set(1);
                 /* 倒數 */
-                my.loop(function (now) {
+                my.loop(function (now) {                /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                     if (id !== token || state !== 'play') return false;
                     var left = L.time - (now - t0) / 1000;
                     tb.set(left / L.time);
-                    head.textContent = '第 ' + level + ' 關　剩 ' + Math.max(0, Math.ceil(left)) + ' 秒';
+                    head.textContent = '第 ' + level + ' 關　剩 ' + Math.max(0, Math.ceil(left)) + ' 秒';  /* Math.ceil：無條件進位成整數 */
                 });
                 my.after(L.time * 1000, function () { if (id === token && state === 'play') timeUp(); });
             }
@@ -310,17 +310,17 @@
             function turn(i) {
                 if (state !== 'play' || !board[i]) return;
                 board[i] = rot(board[i]);
-                Sfx.play('click');
+                Sfx.play('click');                      /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 var f = paint();
                 /* 接通了 → 過關 */
                 if (solved(board, L.N, L.buckets, L.faucet)) {
                     state = 'won'; token++;
-                    passed = level; times.push((performance.now() - t0) / 1000);
+                    passed = level; times.push((performance.now() - t0) / 1000);  /* performance.now()：高精度的時間（毫秒），計時用 */
                     tb.set(0);
                     if (Reaction.setBest(ID, passed, function (v, b) { return v > b; })) newRec = true;
                     banner.textContent = '通水了！';
                     head.textContent = '第 ' + level + ' 關　過關';
-                    Sfx.play('win');
+                    Sfx.play('win');                    /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                     ctx.setMeta(kit.meta(['已過 ' + passed + ' 關', '最佳 ' + Reaction.getBest(ID)]));
                     my.after(NEXT_MS, startLevel);
                 }
@@ -338,10 +338,10 @@
                 banner.textContent = '答案是這樣接';
                 Sfx.play('bad');
                 my.after(ANSWER_MS, function () {
-                    var avg = times.length ? times.reduce(function (a, b) { return a + b; }, 0) / times.length : null;
+                    var avg = times.length ? times.reduce(function (a, b) { return a + b; }, 0) / times.length : null;  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
                     /* kit.resumeFrom：失敗後可從前 5 關繼續 */
                     var back = kit.resumeFrom(level);
-                    kit.result(root, {
+                    kit.result(root, {                  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                         score: passed,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: passed + ' 關', label: rating(passed),
                         lines: ['第 ' + level + ' 關（' + L.N + '×' + L.N + '、' + L.B + ' 個水桶）沒接完'].concat(avg != null ? ['過關平均 ' + Leaderboard.fake4(avg).toFixed(4) + ' 秒'] : []),
@@ -353,7 +353,7 @@
 
             /* G.debug：測試用後門，solve() 可以照答案一格一格轉到位 */
             G.debug = {
-                state: function () { return { level: level, passed: passed, state: state, N: L && L.N, B: L && L.B, faucet: L && L.faucet, board: board && board.slice(), sol: L && L.sol.slice(), buckets: L && L.buckets.slice(), time: L && L.time }; },
+                state: function () { return { level: level, passed: passed, state: state, N: L && L.N, B: L && L.B, faucet: L && L.faucet, board: board && board.slice(), sol: L && L.sol.slice(), buckets: L && L.buckets.slice(), time: L && L.time }; },  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
                 turn: turn,
                 timeUp: function () { if (state === 'play') timeUp(); },
                 /* 照答案把每一格轉到位（用 turn，所以會真的觸發判定）*/

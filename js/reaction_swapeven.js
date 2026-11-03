@@ -37,10 +37,10 @@
     var TRIES = 4000, RELAX_AT = 2000;          /* 出題最多試幾次；試超過 RELAX_AT 次還湊不到誘餌就放寬 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function ramp(level, pair) { return Math.round(kit.ramp(level, pair[0], pair[1], RAMP_LEVELS)); }
+    function ramp(level, pair) { return Math.round(kit.ramp(level, pair[0], pair[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function cardsFor(level) { return ramp(level, CARDS); }
     function vmaxFor(level) { return ramp(level, VMAX); }
-    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
+    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
     function halfRange(level) { return [ramp(level, HALF_MIN), ramp(level, HALF_MAX)]; }
     function fullDecoysFor(level) { return ramp(level, FULL_DECOYS); }
     function revDecoysFor(level) { return ramp(level, REV_DECOYS); }
@@ -65,7 +65,7 @@
         var out = [], rem = total;
         for (var i = 0; i < count; i++) {
             var left = count - 1 - i, lo = Math.max(1, rem - V * left), hi = Math.min(V, rem - left);
-            var v = kit.randInt(lo, hi, rand);
+            var v = kit.randInt(lo, hi, rand);          /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             out.push(v); rem -= v;
         }
         return out;
@@ -75,7 +75,7 @@
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var k = cardsFor(level), V = vmaxFor(level), hr = halfRange(level);
         for (var tr = 0; tr < TRIES; tr++) {            /* 用亂數一直重抽，最多 TRIES 次，抽到符合條件的題目就收下 */
-            var hh = Math.min(kit.randInt(hr[0], hr[1], rand), V - 1), g = (rand() < 0.5 ? 1 : -1) * hh;
+            var hh = Math.min(kit.randInt(hr[0], hr[1], rand), V - 1), g = (rand() < 0.5 ? 1 : -1) * hh;  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             var bLo = Math.max(1, 1 - g), bHi = Math.min(V, V - g);
             if (bLo > bHi) continue;
             var bStar = kit.randInt(bLo, bHi, rand), aStar = bStar + g;
@@ -83,7 +83,7 @@
             /* 總和要求：sA − sB = 2g ⇒ (其餘上排) − (其餘下排) = g */
             var restB = composition(sum(restA) - g, k - 1, V, rand);
             if (!restB) continue;
-            var A = kit.shuffle([aStar].concat(restA), rand), B = kit.shuffle([bStar].concat(restB), rand);
+            var A = kit.shuffle([aStar].concat(restA), rand), B = kit.shuffle([bStar].concat(restB), rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
             var ans = answers(A, B);
             if (ans.length !== 1) continue;
             var needFull = 2 * hh <= V - 1 ? fullDecoysFor(level) : 0, needRev = revDecoysFor(level);
@@ -118,8 +118,8 @@
 
     /* 小朋友的臉：圓臉、兩個眼睛、微笑（SVG） */
     function face(parent) {
-        var s = kit.svg('svg', { 'class': 'swapeven-face', viewBox: '0 0 40 40', width: 44, height: 44 }, parent);
-        kit.svg('circle', { 'class': 'swapeven-face__head', cx: 20, cy: 20, r: 17 }, s);
+        var s = kit.svg('svg', { 'class': 'swapeven-face', viewBox: '0 0 40 40', width: 44, height: 44 }, parent);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('circle', { 'class': 'swapeven-face__head', cx: 20, cy: 20, r: 17 }, s);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         kit.svg('circle', { 'class': 'swapeven-face__eye', cx: 14, cy: 17, r: 2.4 }, s);
         kit.svg('circle', { 'class': 'swapeven-face__eye', cx: 26, cy: 17, r: 2.4 }, s);
         kit.svg('path', { 'class': 'swapeven-face__mouth', d: 'M12 25 Q20 32 28 25' }, s);
@@ -134,12 +134,12 @@
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[換一張就平] 第 ' + level + ' 關：每排 ' + k + ' 張（1～' + q.V + '）上 ' + A.join(',') + '＝' + q.sA + '、下 ' + B.join(',') + '＝' + q.sB + '；答案 上' + A[q.ans.i] + '↔下' + B[q.ans.j] + '（差的一半 ' + q.half + '）；誘餌 差' + (2 * Math.abs(q.half)) + ' ' + q.full + ' 對、反向 ' + q.rev + ' 對；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        var W = stage.clientWidth || 472, gap = 6, cw = Math.min(78, Math.floor((W - 16 - (k - 1) * gap) / k)), ch = Math.round(cw * 1.35);
-        var x0 = Math.round((W - (k * cw + (k - 1) * gap)) / 2);
+        var W = stage.clientWidth || 472, gap = 6, cw = Math.min(78, Math.floor((W - 16 - (k - 1) * gap) / k)), ch = Math.round(cw * 1.35);  /* Math.floor：無條件捨去成整數 */
+        var x0 = Math.round((W - (k * cw + (k - 1) * gap)) / 2);  /* Math.round：四捨五入成整數 */
         var yA = 144, yB = yA + ch + 112;
         var tip = h('div', { 'class': 'qz-note swapeven-tip', text: '上下各點一張交換，讓兩排總和一樣' });
-        stage.appendChild(tip);
-        stage.appendChild(h('div', { 'class': 'swapeven-table' }));
+        stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        stage.appendChild(h('div', { 'class': 'swapeven-table' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         stage.lastChild.style.cssText = 'left:6px;right:6px;top:' + (yA - 16) + 'px;height:' + (yB + ch + 16 - (yA - 16)) + 'px;';
 
         /* 對話泡泡（總和）：小朋友的臉＋泡泡 */
@@ -149,21 +149,21 @@
             face(wrap);
             var b = h('div', { 'class': 'swapeven-bub', text: who + ' 總和 ' + sum0 });
             wrap.appendChild(b);
-            stage.appendChild(wrap);
+            stage.appendChild(wrap);                    /* 把整個遊戲區放進舞台（放進去，畫面上才看得到） */
             return b;
         }
         var bubA = bubble(56, '上排', q.sA), bubB = bubble(yB + ch + 30, '下排', q.sB);
 
         function pos(row, idx) { return { left: x0 + idx * (cw + gap), top: row === 0 ? yA : yB }; }
         var cards = [[], []], sel = [-1, -1], locked = false;
-        [A, B].forEach(function (arr, row) {
-            arr.forEach(function (v, idx) {
+        [A, B].forEach(function (arr, row) {            /* forEach：對陣列的每個元素各做一次 */
+            arr.forEach(function (v, idx) {             /* forEach：對陣列的每個元素各做一次 */
                 var el = h('div', { 'class': 'swapeven-card', text: String(v) });
                 var p = pos(row, idx);
                 el.style.cssText = 'left:' + p.left + 'px;top:' + p.top + 'px;width:' + cw + 'px;height:' + ch + 'px;font-size:' + Math.round(cw * (q.V >= 10 ? 0.46 : 0.58)) + 'px;';
                 stage.appendChild(el);
                 cards[row].push(el);
-                kit.onTap(el, function () { choose(row, idx); });
+                kit.onTap(el, function () { choose(row, idx); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             });
         });
         var info = h('div', { 'class': 'qz-note swapeven-info', text: '' });
@@ -174,10 +174,10 @@
 
         function choose(row, idx) {
             if (locked || api.over) return;
-            if (sel[row] === idx) { sel[row] = -1; cards[row][idx].classList.remove('swapeven-card--sel'); return; }
-            if (sel[row] >= 0) cards[row][sel[row]].classList.remove('swapeven-card--sel');
+            if (sel[row] === idx) { sel[row] = -1; cards[row][idx].classList.remove('swapeven-card--sel'); return; }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            if (sel[row] >= 0) cards[row][sel[row]].classList.remove('swapeven-card--sel');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             sel[row] = idx; cards[row][idx].classList.add('swapeven-card--sel');
-            Sfx.play('click');
+            Sfx.play('click');                          /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             if (sel[0] >= 0 && sel[1] >= 0) doSwap(sel[0], sel[1]);
         }
         /* 換牌動畫＋判定 */
@@ -187,25 +187,25 @@
             elA.style.left = pb.left + 'px'; elA.style.top = pb.top + 'px';
             elB.style.left = pa.left + 'px'; elB.style.top = pa.top + 'px';
             var sA2 = q.sA - a + b, sB2 = q.sB - b + a, ok = sA2 === sB2;
-            api.after(560, function () {
-                bubA.textContent = '上排 總和 ' + sA2; bubB.textContent = '下排 總和 ' + sB2;
+            api.after(560, function () {                /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+                bubA.textContent = '上排 總和 ' + sA2; bubB.textContent = '下排 總和 ' + sB2;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 bubA.classList.add(ok ? 'swapeven-bub--ok' : 'swapeven-bub--bad'); bubB.classList.add(ok ? 'swapeven-bub--ok' : 'swapeven-bub--bad');
                 if (ok) {
-                    info.textContent = '兩排都是 ' + sA2 + '，一樣了！（換的是差 ' + Math.abs(a - b) + ' 的兩張）';
-                    kit.flash(stage, true, api.my);
-                    api.pass({ delay: 1500 });
+                    info.textContent = '兩排都是 ' + sA2 + '，一樣了！（換的是差 ' + Math.abs(a - b) + ' 的兩張）';  /* Math.abs：取絕對值（去掉負號） */
+                    kit.flash(stage, true, api.my);     /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+                    api.pass({ delay: 1500 });          /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
                     return;
                 }
                 reveal();
-                info.textContent = '上排 ' + q.sA + '→' + sA2 + '、下排 ' + q.sB + '→' + sB2 + '，不一樣！';
-                api.after(1300, function () { info.textContent = explain(); });
-                kit.flash(stage, false, api.my);
-                api.fail({ delay: 3600, lines: ['你換了 ' + a + ' 和 ' + b + '：上排 ' + q.sA + '→' + sA2 + '、下排 ' + q.sB + '→' + sB2 + '，不一樣', explainLong()] });
+                info.textContent = '上排 ' + q.sA + '→' + sA2 + '、下排 ' + q.sB + '→' + sB2 + '，不一樣！';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                api.after(1300, function () { info.textContent = explain(); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+                kit.flash(stage, false, api.my);        /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+                api.fail({ delay: 3600, lines: ['你換了 ' + a + ' 和 ' + b + '：上排 ' + q.sA + '→' + sA2 + '、下排 ' + q.sB + '→' + sB2 + '，不一樣', explainLong()] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
             });
         }
         /* 說明：兩排差 d，要換「差 d 的一半」的兩張 */
         function explain() {
-            var d = Math.abs(q.sA - q.sB), a = A[q.ans.i], b = B[q.ans.j];
+            var d = Math.abs(q.sA - q.sB), a = A[q.ans.i], b = B[q.ans.j];  /* Math.abs：取絕對值（去掉負號） */
             return '差 ' + d + '，要換差 ' + (d / 2) + ' 的：' + a + ' 和 ' + b;
         }
         function explainLong() { var d = Math.abs(q.sA - q.sB); return '兩排差 ' + d + '，要換「差的一半」' + (d / 2) + ' 的兩張：' + A[q.ans.i] + ' 和 ' + B[q.ans.j]; }
@@ -219,7 +219,7 @@
             locked = true; reveal();
             info.textContent = '時間到！' + explain();
             kit.flash(stage, false, api.my);
-            api.fail({ delay: 2800, lines: ['時間到！', explainLong()] });
+            api.fail({ delay: 2800, lines: ['時間到！', explainLong()] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { choose(0, q.ans.i); choose(1, q.ans.j); };

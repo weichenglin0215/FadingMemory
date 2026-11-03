@@ -45,7 +45,7 @@
     function speedFor(hits) { return lerp(SPEED, prog(hits)); }
     function targetPx(hits) { return lerp(TARGET_PX, prog(hits)); }
     function strokeRange(hits) { var p = prog(hits); return [lerp(STROKES_LO, p), lerp(STROKES_HI, p)]; }
-    function segmentOf(hits) { return Math.floor(hits / SEGMENT); }
+    function segmentOf(hits) { return Math.floor(hits / SEGMENT); }  /* Math.floor：無條件捨去成整數 */
     /* 下一個字是不是目標字：機率 TARGET_P；已經連續 MAX_GAP 個不是目標了，這個一定是 */
     function nextIsTarget(sinceTarget, rand) { return sinceTarget >= MAX_GAP || (rand || Math.random)() < TARGET_P; }
     /* 這一段（每 SEGMENT 個換一次）的目標字與干擾字：{ target, mates, group, strokes } */
@@ -53,20 +53,20 @@
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var rg = strokeRange(hits), pool = SimilarChars.groups({ minSize: MIN_GROUP, minStrokes: rg[0], maxStrokes: rg[1] });
         if (!pool.length) pool = SimilarChars.groups({ minSize: MIN_GROUP });
-        var g = kit.pick(pool, rand), target = kit.pick(g.chars, rand);
-        if (avoid && g.chars.indexOf(avoid) >= 0 && pool.length > 1) { g = kit.pick(pool.filter(function (x) { return x.chars.indexOf(avoid) < 0; }), rand) || g; target = kit.pick(g.chars, rand); }
-        return { target: target, mates: g.chars.filter(function (c) { return c !== target; }), group: g.chars, strokes: rg };
+        var g = kit.pick(pool, rand), target = kit.pick(g.chars, rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        if (avoid && g.chars.indexOf(avoid) >= 0 && pool.length > 1) { g = kit.pick(pool.filter(function (x) { return x.chars.indexOf(avoid) < 0; }), rand) || g; target = kit.pick(g.chars, rand); }  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+        return { target: target, mates: g.chars.filter(function (c) { return c !== target; }), group: g.chars, strokes: rg };  /* filter：留下符合條件的元素，回傳新陣列 */
     }
     /* 生一個字的資料：{ ch, isTarget, size（px）, speed（px／秒）, lane（0～1，畫面高度的位置）} */
     function makeItem(hits, seg, sinceTarget, rand) {
         rand = rand || Math.random;
         var isT = nextIsTarget(sinceTarget, rand);
-        return { ch: isT ? seg.target : kit.pick(seg.mates, rand), isTarget: isT, size: isT ? Math.round(targetPx(hits)) : Math.round(kit.randFloat(DECOY_PX[0], DECOY_PX[1], rand)), speed: speedFor(hits) * kit.randFloat(0.75, 1.25, rand), lane: rand() };
+        return { ch: isT ? seg.target : kit.pick(seg.mates, rand), isTarget: isT, size: isT ? Math.round(targetPx(hits)) : Math.round(kit.randFloat(DECOY_PX[0], DECOY_PX[1], rand)), speed: speedFor(hits) * kit.randFloat(0.75, 1.25, rand), lane: rand() };  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
     }
     /* 點在 (x, y)：哪個字被點到（items 是 [{ x, y, size }]（中心位置）；回傳離中心最近、而且在「size 的 0.75 倍 + extra」範圍內的那個的編號，沒有回傳 −1） */
     function hitItem(items, x, y, extra) {
         var best = -1, bd = 1e9;
-        items.forEach(function (it, i) { var d = Math.hypot(it.x - x, it.y - y); if (d <= it.size * 0.75 + (extra == null ? 12 : extra) && d < bd) { bd = d; best = i; } });
+        items.forEach(function (it, i) { var d = Math.hypot(it.x - x, it.y - y); if (d <= it.size * 0.75 + (extra == null ? 12 : extra) && d < bd) { bd = d; best = i; } });  /* forEach：對陣列的每個元素各做一次 */
         return best;
     }
     /* 結算畫面的評語：依成績回傳一句話 */
@@ -102,14 +102,14 @@
         console.log('[彈幕找字] 目標「' + seg.target + '」，干擾 ' + seg.mates.join(''));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var field = h('div', { 'class': 'danmaku-field' });
-        stage.appendChild(field);
+        stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var goal = h('div', { 'class': 'danmaku-goal' }, [h('span', { 'class': 'danmaku-goal__t', text: '目標：' }), h('span', { 'class': 'danmaku-goal__ch', text: seg.target })]);
-        field.appendChild(goal);
+        field.appendChild(goal);                        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var info = h('div', { 'class': 'qz-note danmaku-info', text: '' }); field.appendChild(info);
         var arena = h('div', { 'class': 'danmaku-arena' }); field.appendChild(arena);
         var carry = 0, last = null;
         if (kit.once('danmaku.hint')) kit.hintOn(stage, null, { mode: 'tap', x: W * 0.5, y: H * 0.5, delay: 1200, text: '看到目標字就點它' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
-        api.my.loop(function (now, dt) {
+        api.my.loop(function (now, dt) {                /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
             if (!arena.isConnected) return false;
             if (over || paused) return;
             var d = Math.min(dt, 50) / 1000;
@@ -127,39 +127,39 @@
         function spawn() {
             var data = makeItem(hits, seg, since, api.rand);
             since = data.isTarget ? 0 : since + 1;
-            var el = h('div', { 'class': 'danmaku-ch', text: data.ch }); el.style.cssText = 'width:' + data.size + 'px;height:' + data.size + 'px;font-size:' + Math.round(data.size * 0.86) + 'px;line-height:' + data.size + 'px;';
+            var el = h('div', { 'class': 'danmaku-ch', text: data.ch }); el.style.cssText = 'width:' + data.size + 'px;height:' + data.size + 'px;font-size:' + Math.round(data.size * 0.86) + 'px;line-height:' + data.size + 'px;';  /* Math.round：四捨五入成整數 */
             arena.appendChild(el);
             var y = 60 + data.lane * (H - 120 - data.size / 2) + data.size / 2;
             items.push({ el: el, data: data, x: W + data.size, y: y });
         }
-        kit.onTap(arena, function (e) {
+        kit.onTap(arena, function (e) {                 /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             if (over || paused || api.over) return;
-            var p = kit.localPt(e, arena), i = hitItem(items.map(function (it) { return { x: it.x, y: it.y, size: it.data.size }; }), p.x, p.y);
+            var p = kit.localPt(e, arena), i = hitItem(items.map(function (it) { return { x: it.x, y: it.y, size: it.data.size }; }), p.x, p.y);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             if (i < 0) return;
             take(i);
         });
         function take(i) {
             var it = items[i];
             if (!it.data.isTarget) { wrong(it); return; }
-            items.splice(i, 1); it.el.classList.add('danmaku-ch--pop'); api.after(260, function () { it.el.remove(); });
-            hits++; S.score = hits; api.setInfo('點到 ' + hits + ' 個'); Sfx.play('pop');
+            items.splice(i, 1); it.el.classList.add('danmaku-ch--pop'); api.after(260, function () { it.el.remove(); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+            hits++; S.score = hits; api.setInfo('點到 ' + hits + ' 個'); Sfx.play('pop');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             if (hits % SEGMENT === 0) newTarget();
         }
         /* 每 SEGMENT 個換目標字：清掉畫面、停一下、告訴你新的目標字（筆劃越來越多） */
         function newTarget() {
-            paused = true; items.forEach(function (it) { it.el.remove(); }); items = [];
+            paused = true; items.forEach(function (it) { it.el.remove(); }); items = [];  /* forEach：對陣列的每個元素各做一次 */
             seg = pickTarget(hits, api.rand, seg.target); since = 0; carry = 0;
-            info.textContent = '換目標字！新的是「' + seg.target + '」'; goal.querySelector('.danmaku-goal__ch').textContent = seg.target; goal.classList.add('danmaku-goal--new');
-            api.after(INTERMISSION_MS, function () { paused = false; info.textContent = ''; goal.classList.remove('danmaku-goal--new'); });
+            info.textContent = '換目標字！新的是「' + seg.target + '」'; goal.querySelector('.danmaku-goal__ch').textContent = seg.target; goal.classList.add('danmaku-goal--new');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            api.after(INTERMISSION_MS, function () { paused = false; info.textContent = ''; goal.classList.remove('danmaku-goal--new'); });  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         }
         /* 結束：暫停，畫面上所有目標字圈綠色；點錯的字圈紅色 */
         function finish(msg, bad) {
             over = true;
-            items.forEach(function (it) { it.el.classList.add(it.data.isTarget ? 'danmaku-ch--target' : 'danmaku-ch--dim'); });
+            items.forEach(function (it) { it.el.classList.add(it.data.isTarget ? 'danmaku-ch--target' : 'danmaku-ch--dim'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             if (bad) bad.el.classList.add('danmaku-ch--bad');
-            info.textContent = msg;
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: 3000, lines: [msg, '目標字是「' + seg.target + '」，形近字：' + seg.group.join('、')] });
+            info.textContent = msg;                     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 3000, lines: [msg, '目標字是「' + seg.target + '」，形近字：' + seg.group.join('、')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         function wrong(it) { finish('「' + it.data.ch + '」不是目標字「' + seg.target + '」！', it); }
         function miss() { finish('讓「' + seg.target + '」飄走了！', null); }

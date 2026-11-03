@@ -80,11 +80,11 @@
             s.v *= Math.exp(-dt / PHYS.edgeTau);
             var over = (s.y - edge) * Math.exp(-dt / PHYS.springTau);
             s.y = edge + over;
-            if (Math.abs(over) < 0.3 && Math.abs(s.v) < PHYS.stopV * 4) { s.y = edge; s.v = 0; return true; }
+            if (Math.abs(over) < 0.3 && Math.abs(s.v) < PHYS.stopV * 4) { s.y = edge; s.v = 0; return true; }  /* Math.abs：取絕對值（去掉負號） */
             return false;
         }
         s.v *= Math.exp(-dt / PHYS.tau);
-        if (Math.abs(s.v) < PHYS.stopV) { s.v = 0; return true; }
+        if (Math.abs(s.v) < PHYS.stopV) { s.v = 0; return true; }  /* Math.abs：取絕對值（去掉負號） */
         return false;
     }
 
@@ -124,9 +124,9 @@
         /* 滑桿平常淡出，捲動時亮起來，停止 0.9 秒後再淡出 */
         function showThumb() {
             if (!thumb || max <= 0) return;
-            thumb.classList.add('is-on');
+            thumb.classList.add('is-on');               /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             global.clearTimeout(thumbTimer);
-            thumbTimer = global.setTimeout(function () { thumb.classList.remove('is-on'); }, 900);
+            thumbTimer = global.setTimeout(function () { thumb.classList.remove('is-on'); }, 900);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         }
         function stop() {
             if (raf) { global.cancelAnimationFrame(raf); raf = 0; }
@@ -135,14 +135,14 @@
         /* 放手後的慣性動畫迴圈：每個畫面呼叫 flingStep，停了就結束 */
         function run() {
             if (raf) return;
-            lastT = global.performance.now();
-            raf = global.requestAnimationFrame(function frame(now) {
+            lastT = global.performance.now();           /* performance.now()：高精度的時間（毫秒），計時用 */
+            raf = global.requestAnimationFrame(function frame(now) {  /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
                 var dt = Math.min(50, Math.max(1, now - lastT));      /* 單格最多算 50ms：夠涵蓋 30fps 的舊手機，又不會在分頁從背景回來時一次飛很遠 */
                 lastT = now;
                 var done = flingStep(s, dt, max);
                 paint();
                 showThumb();
-                raf = done ? 0 : global.requestAnimationFrame(frame);
+                raf = done ? 0 : global.requestAnimationFrame(frame);  /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
             });
         }
 
@@ -151,14 +151,14 @@
             drag.on = true;
             drag.y0 = e.clientY / stageScale();            /* 以「開始拖曳的這一刻」為基準，所以門檻內的小抖動不會讓內容跳一下 */
             drag.pos0 = s.y;
-            drag.samples = [{ t: global.performance.now(), y: drag.y0 }];
-            try { viewport.setPointerCapture(e.pointerId); } catch (err) { }
+            drag.samples = [{ t: global.performance.now(), y: drag.y0 }];  /* performance.now()：高精度的時間（毫秒），計時用 */
+            try { viewport.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             viewport.classList.add('is-drag');
             swallowClick = true;
             showThumb();
         }
 
-        viewport.addEventListener('pointerdown', function (e) {
+        viewport.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (e.pointerType === 'mouse' && e.button !== 0) return;
             measure();
             /* 還在慣性滑行時按下去＝「讓它停住」，這一下不是要點按鈕：吃掉隨後的 click */
@@ -168,13 +168,13 @@
             drag = { id: e.pointerId, on: false, x0: e.clientX / stageScale(), sy0: e.clientY / stageScale() };
             if (threshold <= 0) startDrag(e);
         });
-        viewport.addEventListener('pointermove', function (e) {
+        viewport.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (!drag || e.pointerId !== drag.id) return;
             if (!drag.on) {
                 /* 還沒超過門檻：什麼都不做（手指沒真的拖，就是在「點」） */
                 var sc = stageScale();
                 var dx = e.clientX / sc - drag.x0, dy = e.clientY / sc - drag.sy0;
-                if (Math.sqrt(dx * dx + dy * dy) < threshold) return;
+                if (Math.sqrt(dx * dx + dy * dy) < threshold) return;  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
                 startDrag(e);
                 return;
             }
@@ -203,14 +203,14 @@
             if (!swallowClick) return;
             swallowClick = false;
             e.stopPropagation();
-            e.preventDefault();
+            e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
         }, true);
 
         /* 滑鼠滾輪：直接移動（觸控板本身就會送出帶慣性的連續滾動事件，不用再加一層） */
         viewport.addEventListener('wheel', function (e) {
             measure();
             if (max <= 0) return;
-            e.preventDefault();
+            e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
             var d = e.deltaMode === 1 ? e.deltaY * 40 : (e.deltaMode === 2 ? e.deltaY * viewport.clientHeight : e.deltaY);
             stop();
             s.y = Math.min(max, Math.max(0, s.y + d / stageScale()));

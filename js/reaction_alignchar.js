@@ -43,13 +43,13 @@
     var GROUP_MAX_STROKES = 15;
     var GROUPS = SimilarChars.groups({ minSize: 4, maxStrokes: GROUP_MAX_STROKES }).map(function (g) { return g.chars; });  /* 「長得像的字」群組（每一群是一個字的陣列），選項優先從同一群挑 */
     var CHARS = [];                                 /* 所有群組裡出現過的字（不重複），下面的迴圈會把字填進來 */
-    GROUPS.forEach(function (g) { g.forEach(function (c) { if (CHARS.indexOf(c) < 0) CHARS.push(c); }); });
+    GROUPS.forEach(function (g) { g.forEach(function (c) { if (CHARS.indexOf(c) < 0) CHARS.push(c); }); });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function stripsFor(level) { return kit.clamp(Math.round(kit.ramp(level, STRIPS[0], STRIPS[1], RAMP_LEVELS)), STRIPS[0], STRIPS[1]); }
-    function optionsFor(level) { return kit.clamp(Math.round(kit.ramp(level, OPTIONS[0], OPTIONS[1], RAMP_LEVELS)), OPTIONS[0], OPTIONS[1]); }
-    function cycleFor(level) { return kit.ramp(level, CYCLE_S[0], CYCLE_S[1], RAMP_LEVELS); }
-    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
+    function stripsFor(level) { return kit.clamp(Math.round(kit.ramp(level, STRIPS[0], STRIPS[1], RAMP_LEVELS)), STRIPS[0], STRIPS[1]); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function optionsFor(level) { return kit.clamp(Math.round(kit.ramp(level, OPTIONS[0], OPTIONS[1], RAMP_LEVELS)), OPTIONS[0], OPTIONS[1]); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
+    function cycleFor(level) { return kit.ramp(level, CYCLE_S[0], CYCLE_S[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
     /* 第 t 秒，速度倍數 k 的直條往下偏移多少（0～P） */
     function offsetAt(k, t, tAlign, cycle, P) {
         var x = (k * (t - tAlign) / cycle * P) % P;
@@ -58,18 +58,18 @@
     /* 這一刻，所有直條「離完全對準」最遠的是多少（像素，0＝完全對準；偏移 P − x 也算 x，因為循環） */
     function misalign(ks, t, tAlign, cycle, P) {
         var m = 0;
-        ks.forEach(function (k) { var o = offsetAt(k, t, tAlign, cycle, P); m = Math.max(m, Math.min(o, P - o)); });
+        ks.forEach(function (k) { var o = offsetAt(k, t, tAlign, cycle, P); m = Math.max(m, Math.min(o, P - o)); });  /* forEach：對陣列的每個元素各做一次 */
         return m;
     }
     /* 選項：同群的字優先，不夠再從別的群補 */
     function makeOptions(target, count, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var groups = GROUPS.filter(function (g) { return g.indexOf(target) >= 0; });
+        var groups = GROUPS.filter(function (g) { return g.indexOf(target) >= 0; });  /* filter：留下符合條件的元素，回傳新陣列 */
         var near = [];
-        groups.forEach(function (g) { g.forEach(function (c) { if (c !== target && near.indexOf(c) < 0) near.push(c); }); });
-        var opts = kit.shuffle(near, rand).slice(0, count - 1);
+        groups.forEach(function (g) { g.forEach(function (c) { if (c !== target && near.indexOf(c) < 0) near.push(c); }); });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+        var opts = kit.shuffle(near, rand).slice(0, count - 1);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         if (opts.length < count - 1) {
-            var rest = kit.shuffle(CHARS.filter(function (c) { return c !== target && opts.indexOf(c) < 0; }), rand);
+            var rest = kit.shuffle(CHARS.filter(function (c) { return c !== target && opts.indexOf(c) < 0; }), rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
             while (opts.length < count - 1) opts.push(rest.shift());
         }
         return kit.shuffle([target].concat(opts), rand);
@@ -80,15 +80,15 @@
         var n = stripsFor(level), ks = [], i;
         for (var tr = 0; tr < 200; tr++) {
             ks = [];
-            for (i = 0; i < n; i++) ks.push(kit.randInt(2, KMAX, rand) * (rand() < 0.5 ? -1 : 1));
-            var pos = ks.filter(function (k) { return k > 0; }).length, speeds = {};
-            ks.forEach(function (k) { speeds[Math.abs(k)] = 1; });
+            for (i = 0; i < n; i++) ks.push(kit.randInt(2, KMAX, rand) * (rand() < 0.5 ? -1 : 1));  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+            var pos = ks.filter(function (k) { return k > 0; }).length, speeds = {};  /* filter：留下符合條件的元素，回傳新陣列 */
+            ks.forEach(function (k) { speeds[Math.abs(k)] = 1; });  /* Math.abs：取絕對值（去掉負號） */
             /* 所有速度倍數的最大公因數要是 1：都是偶數的話，半個週期就會多對準一次（週期其實只有一半） */
-            var g = ks.reduce(function (x, k) { k = Math.abs(k); while (k) { var t = x % k; x = k; k = t; } return x; }, 0);
+            var g = ks.reduce(function (x, k) { k = Math.abs(k); while (k) { var t = x % k; x = k; k = t; } return x; }, 0);  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
             if (pos > 0 && pos < n && Object.keys(speeds).length >= 2 && g === 1) break;
         }
-        var ch = kit.pick(CHARS, rand), options = makeOptions(ch, optionsFor(level), rand), cycle = cycleFor(level);
-        return { ch: ch, options: options, answer: options.indexOf(ch), n: n, ks: ks, cycle: cycle, tAlign: cycle * kit.randFloat(ALIGN_AT[0], ALIGN_AT[1], rand) };
+        var ch = kit.pick(CHARS, rand), options = makeOptions(ch, optionsFor(level), rand), cycle = cycleFor(level);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        return { ch: ch, options: options, answer: options.indexOf(ch), n: n, ks: ks, cycle: cycle, tAlign: cycle * kit.randFloat(ALIGN_AT[0], ALIGN_AT[1], rand) };  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
     }
     /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
@@ -121,10 +121,10 @@
         var W = stage.clientWidth || 472, DPR = 2, cw = PIC.w, ch = PIC.h;
         var cv = h('canvas', { 'class': 'alignchar-canvas' });
         cv.width = cw * DPR; cv.height = ch * DPR; cv.style.width = cw + 'px'; cv.style.height = ch + 'px';
-        cv.style.left = Math.round((W - cw) / 2) + 'px'; cv.style.top = '30px';
-        stage.appendChild(cv);
+        cv.style.left = Math.round((W - cw) / 2) + 'px'; cv.style.top = '30px';  /* Math.round：四捨五入成整數 */
+        stage.appendChild(cv);                          /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note alignchar-tip', text: '直條上下移動，對準的瞬間字會浮現' });
-        stage.appendChild(tip);
+        stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         /* 先把整個字畫在看不見的畫布上，之後每一格都從這張「底圖」切直條 */
         var gl = document.createElement('canvas');
         gl.width = cw * DPR; gl.height = ch * DPR;
@@ -144,11 +144,11 @@
                 ctx.drawImage(gl, sx, 0, sW, gl.height, sx, Math.round((off - ch) * DPR), sW, gl.height);
             }
         }
-        var t0 = performance.now();
+        var t0 = performance.now();                     /* performance.now()：高精度的時間（毫秒），計時用 */
         draw(0, false);
-        var loop = api.my.loop(function () { if (api.over) return false; draw((performance.now() - t0) / 1000, false); });
+        var loop = api.my.loop(function () { if (api.over) return false; draw((performance.now() - t0) / 1000, false); });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
         var cols = q.options.length <= 5 ? q.options.length : 3;
-        var grid = kit.btnGrid(stage, q.options.map(function (c, i) { return { text: c, kind: 'line', cls: 'alignchar-opt', onTap: function () { judge(i); } }; }), { cols: cols, h: 84, gap: 8 });
+        var grid = kit.btnGrid(stage, q.options.map(function (c, i) { return { text: c, kind: 'line', cls: 'alignchar-opt', onTap: function () { judge(i); } }; }), { cols: cols, h: 84, gap: 8 });  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
         api.timer(timeMs(level), function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         if (level === 1 && kit.once('alignchar.hint')) kit.hintOn(stage, grid.btns[q.answer], { mode: 'tap', delay: 800, text: '請點擊你看到的字' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
@@ -157,12 +157,12 @@
             if (api.over) return;
             loop.stop(); draw(0, true);
             var ok = i === q.answer;
-            grid.btns[q.answer].classList.add('alignchar-opt--right');
-            if (i != null && !ok) grid.btns[i].classList.add('alignchar-opt--wrong');
-            tip.textContent = '這個字是「' + q.ch + '」';
-            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1300 }); return; }
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: 2300, lines: [(i == null ? '時間到！' : '選錯了') + '，答案是「' + q.ch + '」', '直條每 ' + q.cycle.toFixed(4) + ' 秒對準一次'] });
+            grid.btns[q.answer].classList.add('alignchar-opt--right');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            if (i != null && !ok) grid.btns[i].classList.add('alignchar-opt--wrong');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            tip.textContent = '這個字是「' + q.ch + '」';     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1300 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 2300, lines: [(i == null ? '時間到！' : '選錯了') + '，答案是「' + q.ch + '」', '直條每 ' + q.cycle.toFixed(4) + ' 秒對準一次'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.answer); };

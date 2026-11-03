@@ -53,9 +53,9 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 第 i 題有「老師說」的機率 */
-    function pSay(i) { return kit.ramp(i, P_SAY_START, P_SAY_END, RAMP_N); }
+    function pSay(i) { return kit.ramp(i, P_SAY_START, P_SAY_END, RAMP_N); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 第 i 題是「同時點兩個方向」的機率（沒到 DOUBLE_FROM 題是 0） */
-    function pDouble(i) { return i < DOUBLE_FROM ? 0 : kit.ramp(i, P_DOUBLE_START, P_DOUBLE_END, RAMP_N); }
+    function pDouble(i) { return i < DOUBLE_FROM ? 0 : kit.ramp(i, P_DOUBLE_START, P_DOUBLE_END, RAMP_N); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 指令是不是「同時點兩個方向」 */
     function isDouble(cmd) { return !!cmd && !!cmd.dir2; }
     /* 第 i 題的限時；dbl 為 true（同時點兩個方向）時多給 DOUBLE_EXTRA_S 秒 */
@@ -82,9 +82,9 @@
             /* 先決定是不是「同時點兩個方向」（是的話就不再「相反」）；兩個方向從四個裡面抽兩個不同的 */
             var dbl = i >= DOUBLE_FROM && rand() < pDouble(i);
             var opposite = !dbl && i >= OPPOSITE_FROM && rand() < P_OPPOSITE;
-            var dir = kit.pick(DIRS, rand);
+            var dir = kit.pick(DIRS, rand);             /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             cmd = { say: say, opposite: opposite, dir: dir };
-            if (dbl) cmd.dir2 = kit.pick(DIRS.filter(function (d) { return d !== dir; }), rand);
+            if (dbl) cmd.dir2 = kit.pick(DIRS.filter(function (d) { return d !== dir; }), rand);  /* filter：留下符合條件的元素，回傳新陣列 */
             if (!sameCmd(cmd, prev)) break;
         }
         cmd.text = textOf(cmd);
@@ -129,8 +129,8 @@
 
     /* 畫老師的臉（SVG：頭、頭髮、眼鏡、眼睛、嘴巴） */
     function faceSvg() {
-        var svg = kit.svg('svg', { 'class': 'teacher-face', viewBox: '0 0 100 100' });
-        kit.svg('circle', { 'class': 'teacher-face__head', cx: 50, cy: 52, r: 40 }, svg);
+        var svg = kit.svg('svg', { 'class': 'teacher-face', viewBox: '0 0 100 100' });  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
+        kit.svg('circle', { 'class': 'teacher-face__head', cx: 50, cy: 52, r: 40 }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         kit.svg('path', { 'class': 'teacher-face__hair', d: 'M12 46 Q14 14 50 12 Q86 14 88 46 Q70 28 50 30 Q30 28 12 46 Z' }, svg);
         kit.svg('circle', { 'class': 'teacher-face__glass', cx: 35, cy: 52, r: 11 }, svg);
         kit.svg('circle', { 'class': 'teacher-face__glass', cx: 65, cy: 52, r: 11 }, svg);
@@ -153,7 +153,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
             /* i 目前第幾題；streak 連續答對數；history 已出過的指令；cmd 目前指令；state 目前階段；token 每題 +1，讓舊計時器知道自己過期；over 是否已失敗 */
             var i = (startAt || 1) - 1, streak = i, history = [], cmd = null, state = 'idle', token = 0, over = false, nowLimit = 1;
@@ -169,20 +169,20 @@
             /* held：「同時點兩個方向」的題目，已經點到的方向（{ left: true }）；放開手指不算取消，因為兩個方向只要在 DOUBLE_WINDOW_S 秒內都點到過就行 */
             var held = {};
             /* 建立四個方向鍵（上下左右），用 css grid 排成十字形（樣式在 css/games/reaction_teacher.css） */
-            DIRS.forEach(function (d) {
+            DIRS.forEach(function (d) {                 /* forEach：對陣列的每個元素各做一次 */
                 var b = h('button', { 'class': 'btn teacher-btn teacher-btn--' + d, text: DIR_NAME[d] });
-                b.addEventListener('pointerdown', function (e) { e.preventDefault(); press(d); });
-                btns[d] = b; pad.appendChild(b);
+                b.addEventListener('pointerdown', function (e) { e.preventDefault(); press(d); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+                btns[d] = b; pad.appendChild(b);        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             });
-            [top, sub, tb.el, pad].forEach(function (x) { root.appendChild(x); });
-            ctx.setMeta(Reaction.getBest(ID) != null ? '最佳 ' + Reaction.getBest(ID) : '');
+            [top, sub, tb.el, pad].forEach(function (x) { root.appendChild(x); });  /* forEach：對陣列的每個元素各做一次 */
+            ctx.setMeta(Reaction.getBest(ID) != null ? '最佳 ' + Reaction.getBest(ID) : '');  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
             /* 清掉「已點到」的標記（換題、答對、失敗時） */
-            function clearHeld() { held = {}; DIRS.forEach(function (d) { btns[d].classList.remove('teacher-btn--held'); }); }
+            function clearHeld() { held = {}; DIRS.forEach(function (d) { btns[d].classList.remove('teacher-btn--held'); }); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             function heldCount() { return Object.keys(held).length; }
 
             /* 換老師的表情 */
-            function setFace(mood) { face.setAttribute('class', 'teacher-face teacher-face--' + mood); face._mouth.setAttribute('d', MOUTH[mood]); }
+            function setFace(mood) { face.setAttribute('class', 'teacher-face teacher-face--' + mood); face._mouth.setAttribute('d', MOUTH[mood]); }  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             setFace('normal');
 
             /* 出下一題指令 */
@@ -193,20 +193,20 @@
                 cmd = makeCommand(i, history, null);
                 history.push(cmd);
                 clearHeld();
-                var id = ++token, limit = limitFor(i, isDouble(cmd)), t0 = performance.now();
+                var id = ++token, limit = limitFor(i, isDouble(cmd)), t0 = performance.now();  /* performance.now()：高精度的時間（毫秒），計時用 */
                 nowLimit = limit;
                 var tx = textOf(cmd);
                 /* 顯示指令文字 */
-                pre.textContent = tx.prefix || ' '; act.textContent = tx.action;
+                pre.textContent = tx.prefix || ' '; act.textContent = tx.action;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 bubble.className = 'teacher-bubble' + (cmd.say ? ' teacher-bubble--say' : '');
-                sub.textContent = '連對 ' + streak + ' 題';
+                sub.textContent = '連對 ' + streak + ' 題';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 setFace(cmd.say ? 'normal' : 'tease');
                 state = 'live';
                 tb.set(1);
                 /* 主控台印出這題內容、正確答案與限時，方便驗證 */
                 try { console.info('[老師說] 第 ' + i + ' 題：' + (tx.prefix ? tx.prefix + ' ' : '') + tx.action + '；答案＝' + (([].concat(expectedAction(cmd) || [])).join('＋') || '不要點') + '；限時 ' + limit.toFixed(3) + ' 秒；P(說)=' + pSay(i).toFixed(2)); } catch (e) { }
                 /* my.loop：每個畫面更新一次，更新倒數時間條 */
-                my.loop(function (now) {
+                my.loop(function (now) {                /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                     if (id !== token || state !== 'live') return false;
                     tb.set(1 - (now - t0) / (limit * 1000));
                 });
@@ -222,8 +222,8 @@
                 tb.set(0);
                 setFace('happy');
                 bubble.className = 'teacher-bubble teacher-bubble--ok';
-                Sfx.play(silent ? 'pop' : 'click');
-                var best = Reaction.getBest(ID);
+                Sfx.play(silent ? 'pop' : 'click');     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                var best = Reaction.getBest(ID);        /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                 ctx.setMeta(kit.meta(['連對 ' + streak, best != null ? '最佳 ' + best : '']));
                 my.after(GAP_S * 1000, nextCommand);
             }
@@ -238,11 +238,11 @@
                 bubble.className = 'teacher-bubble teacher-bubble--bad';
                 var msg = why(cmd, kind, got);
                 sub.textContent = msg;
-                Sfx.play('bad');
+                Sfx.play('bad');                        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 var isNew = Reaction.setBest(ID, streak, function (v, b) { return v > b; });
                 my.after(FAIL_SHOW_MS, function () {
                     var back = kit.resumeFrom(i);
-                    kit.result(root, {
+                    kit.result(root, {                  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                         score: streak,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: String(streak), label: rating(streak),
                         lines: [msg], isNew: isNew && streak > 0, sfx: streak >= 8 ? 'win' : 'fail', onAgain: function () { round(1); },
@@ -270,11 +270,11 @@
                 }
                 /* 同時點兩個方向：點了不在清單裡的方向＝失敗；同一個方向連點不算；兩個都點到就過關；
                    只點到一個時，另一個要在 DOUBLE_WINDOW_S 秒內點到 */
-                if (exp.indexOf(d) < 0) { fail('wrong', d); return; }
+                if (exp.indexOf(d) < 0) { fail('wrong', d); return; }  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                 if (held[d]) return;
                 held[d] = true;
-                btns[d].classList.add('teacher-btn--held');
-                if (exp.every(function (x) { return held[x]; })) { good(false); return; }
+                btns[d].classList.add('teacher-btn--held');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                if (exp.every(function (x) { return held[x]; })) { good(false); return; }  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
                 var pid = token;
                 my.after(DOUBLE_WINDOW_S * 1000, function () { if (pid === token && state === 'live') fail('half', d); });
             }

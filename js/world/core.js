@@ -95,7 +95,7 @@
     };
     Ctx.prototype.blockRect = function (cx, cz, w, d) { this.block(cx - w / 2, cx + w / 2, cz - d / 2, cz + d / 2); };
     Ctx.prototype.unblock = function (c) {
-        var i = this.colliders.indexOf(c);
+        var i = this.colliders.indexOf(c);              /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         if (i >= 0) this.colliders.splice(i, 1);
     };
     Ctx.prototype.lastCollider = function () { return this.colliders[this.colliders.length - 1]; };
@@ -130,7 +130,7 @@
             def.markerObj.userData.isMarker = true;
             this.root.add(def.markerObj);
         }
-        (def.hit || []).forEach(function (o) { o.userData.fmItem = def; });
+        (def.hit || []).forEach(function (o) { o.userData.fmItem = def; });  /* forEach：對陣列的每個元素各做一次 */
         this.items.push(def);
         return def;
     };
@@ -149,7 +149,7 @@
     Core.init = function (worldEl) {
         renderer = new T.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
         renderer.setClearColor(0xFFF1D2);
-        worldEl.appendChild(renderer.domElement);
+        worldEl.appendChild(renderer.domElement);       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
 
         scene = new T.Scene();
         scene.fog = new T.Fog(0xFFF1D2, 70, 210);
@@ -180,8 +180,8 @@
         bindTap(renderer.domElement);
         HUD.onAction(function () { if (Core.near) Core.use(Core.near); });
 
-        document.addEventListener('visibilitychange', function () { last = performance.now(); });
-        requestAnimationFrame(frame);
+        document.addEventListener('visibilitychange', function () { last = performance.now(); });  /* performance.now()：高精度的時間（毫秒），計時用 */
+        requestAnimationFrame(frame);                   /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
     };
 
     /* 重設畫布解析度與相機長寬比 */
@@ -205,7 +205,7 @@
             updateCamera(dt);
             updateOccluders(dt);
         }
-        var hs = hooks.slice();
+        var hs = hooks.slice();                         /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         for (var j = 0; j < hs.length; j++) hs[j](dt);
         sky.position.copy(camera.position);
     }
@@ -222,7 +222,7 @@
        document.hidden 時直接跳過 update（分頁不可見時不用算遊戲邏輯），但
        requestAnimationFrame(frame) 這行要留在最前面，分頁切回來才能繼續跑。 */
     function frame(now) {
-        requestAnimationFrame(frame);
+        requestAnimationFrame(frame);                   /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
         var dt = last ? Math.min(0.05, (now - last) / 1000) : 0.016;
         last = now;
         if (document.hidden) return;
@@ -235,7 +235,7 @@
     /* 驗證用：用固定時間步長推進遊戲 seconds 秒（不依賴螢幕更新頻率；暫停中不會推進） */
     Core.step = function (seconds, fps) {
         var dt = 1 / (fps || 30);
-        var n = Math.max(1, Math.round(seconds / dt));
+        var n = Math.max(1, Math.round(seconds / dt));  /* Math.round：四捨五入成整數 */
         if (!Core.paused) for (var i = 0; i < n; i++) update(dt);
         renderer.render(scene, camera);
     };
@@ -268,7 +268,7 @@
         return new Promise(function (resolve) {
             var t = 0;
             function step(dt) {
-                if (ctx !== owner) { hooks.splice(hooks.indexOf(step), 1); return; }
+                if (ctx !== owner) { hooks.splice(hooks.indexOf(step), 1); return; }  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
                 t = duration > 0 ? Math.min(1, t + dt / duration) : 1;
                 fn(t);
                 if (t >= 1) {
@@ -338,8 +338,8 @@
     function updatePlayer(dt) {
         var active = ctx.mode !== 'none' && !Core.frozen && !Core.busy;
         var inp = active ? HUD.input() : { x: 0, y: 0 };
-        var ix = Math.abs(inp.x) < 0.14 ? 0 : inp.x;
-        var iy = Math.abs(inp.y) < 0.14 ? 0 : inp.y;
+        var ix = Math.abs(inp.x) < 0.14 ? 0 : inp.x;    /* Math.abs：取絕對值（去掉負號） */
+        var iy = Math.abs(inp.y) < 0.14 ? 0 : inp.y;    /* Math.abs：取絕對值（去掉負號） */
         var cfg = CFG[P.mode] || CFG.walk;
 
         /* 轉彎：yaw（朝向角）依左右輸入增減 */
@@ -410,12 +410,12 @@
         for (var i = 0; i < ctx.items.length; i++) {
             var it = ctx.items[i];
             var en = it.enabled ? it.enabled() : true;
-            var d = Math.sqrt((it.x - P.pos.x) * (it.x - P.pos.x) + (it.z - P.pos.z) * (it.z - P.pos.z));
+            var d = Math.sqrt((it.x - P.pos.x) * (it.x - P.pos.x) + (it.z - P.pos.z) * (it.z - P.pos.z));  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
             it.dist = d;
             /* 面向判斷：角色正前方與「角色→物件」的夾角 */
             var ox = it.fx - P.pos.x;
             var oz = it.fz - P.pos.z;
-            var od = Math.sqrt(ox * ox + oz * oz);
+            var od = Math.sqrt(ox * ox + oz * oz);      /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
             /* 面向判斷：玩家正前方與「玩家→物件」的夾角（用內積 dot product 比較 cos 值） */
             it.facing = od < 0.7 || (ox * fwdX + oz * fwdZ) / od >= cosFace;
             if (it.markerObj) {
@@ -447,10 +447,10 @@
     /* ─── 點擊 3D 物件 ─── */
     function bindTap(canvas) {
         var start = null;
-        canvas.addEventListener('pointerdown', function (e) {
-            start = { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId };
+        canvas.addEventListener('pointerdown', function (e) {  /* pointerdown／pointermove／pointerup：指標事件，手指與滑鼠通用（按下、移動、放開） */
+            start = { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId };  /* performance.now()：高精度的時間（毫秒），計時用 */
         });
-        canvas.addEventListener('pointerup', function (e) {
+        canvas.addEventListener('pointerup', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (!start || e.pointerId !== start.id) return;
             var moved = Math.hypot(e.clientX - start.x, e.clientY - start.y);
             var quick = performance.now() - start.t < 700;
@@ -470,11 +470,11 @@
     /* 射線偵測：把點擊位置換成射線，找出第一個被打到的物件 */
     function tap(cx, cy) {
         if (!ctx || Core.frozen || Core.busy || HUD.isModal() || ctx.mode === 'none') return;
-        var r = renderer.domElement.getBoundingClientRect();
+        var r = renderer.domElement.getBoundingClientRect();  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
         ndc.set(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1);
         raycaster.setFromCamera(ndc, camera);
         var targets = [];
-        ctx.items.forEach(function (it) {
+        ctx.items.forEach(function (it) {               /* forEach：對陣列的每個元素各做一次 */
             if (it.enabled && !it.enabled()) return;
             (it.hit || []).forEach(function (o) { targets.push(o); });
             if (it.markerObj && it.markerObj.visible) targets.push(it.markerObj);
@@ -738,7 +738,7 @@
             x: +P.pos.x.toFixed(2), z: +P.pos.z.toFixed(2), yaw: +P.yaw.toFixed(2),
             mode: P.mode, near: Core.near && Core.near.label,
             frozen: Core.frozen, busy: Core.busy, paused: Core.paused, modal: HUD.isModal(),
-            fps: Math.round(perf.fps), quality: quality,
+            fps: Math.round(perf.fps), quality: quality,  /* Math.round：四捨五入成整數 */
             calls: renderer.info.render.calls, tris: renderer.info.render.triangles,
             geos: renderer.info.memory.geometries, texs: renderer.info.memory.textures
         };

@@ -39,13 +39,13 @@
     var NAMES = ['日', '一', '二', '三', '四', '五', '六'];         /* 星期的字（日＝0，跟 Date.getUTCDay 一致） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
-    function farMax(level) { return Math.round(kit.ramp(level, FAR_MAX[0], FAR_MAX[1], RAMP_LEVELS)); }
+    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function farMax(level) { return Math.round(kit.ramp(level, FAR_MAX[0], FAR_MAX[1], RAMP_LEVELS)); }  /* Math.round：四捨五入成整數 */
     function dayName(w) { return '星期' + NAMES[w]; }
     function daysIn(y, m) { return new Date(Date.UTC(y, m, 0)).getUTCDate(); }                       /* 某年某月有幾天（m 是 1～12） */
     function dow(y, m, d) { return new Date(Date.UTC(y, m - 1, d)).getUTCDay(); }                    /* 星期幾（日＝0） */
     function addDays(dt, n) { var t = new Date(Date.UTC(dt.y, dt.m - 1, dt.d + n)); return { y: t.getUTCFullYear(), m: t.getUTCMonth() + 1, d: t.getUTCDate() }; }
-    function diffDays(a, b) { return Math.round((Date.UTC(b.y, b.m - 1, b.d) - Date.UTC(a.y, a.m - 1, a.d)) / 86400000); }
+    function diffDays(a, b) { return Math.round((Date.UTC(b.y, b.m - 1, b.d) - Date.UTC(a.y, a.m - 1, a.d)) / 86400000); }  /* Math.round：四捨五入成整數 */
     function mod7(n) { return ((n % 7) + 7) % 7; }
     function withW(dt) { return { y: dt.y, m: dt.m, d: dt.d, w: dow(dt.y, dt.m, dt.d) }; }
     /* 這一關可以出哪些題型 */
@@ -69,8 +69,8 @@
         var m, d, off, t, dim;
         if (type === 'same') {
             for (var g = 0; g < 100; g++) {
-                m = kit.randInt(1, 12, rand); dim = daysIn(year, m);
-                off = 7 * kit.randInt(1, 3, rand) + kit.randInt(-2, 2, rand);
+                m = kit.randInt(1, 12, rand); dim = daysIn(year, m);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+                off = 7 * kit.randInt(1, 3, rand) + kit.randInt(-2, 2, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
                 if (off < 1 || off > dim - 1) continue;
                 d = kit.randInt(1, dim - off, rand);
                 return { from: { y: year, m: m, d: d }, to: { y: year, m: m, d: d + off } };
@@ -93,13 +93,13 @@
     /* 出一關：{ known, target（都含 w＝星期）, offset（目標 − 已知 的天數，可負）, type, months（兩個日期之間的月份）, level } */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var type = kit.pick(typesFor(level), rand), year = kit.randInt(YEARS[0], YEARS[1] - 1, rand), pair, known, target;
+        var type = kit.pick(typesFor(level), rand), year = kit.randInt(YEARS[0], YEARS[1] - 1, rand), pair, known, target;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         if (type === 'far') {
             var span = kit.randInt(FAR_MIN, Math.max(FAR_MIN, farMax(level)), rand), back = rand() < 0.5;
             var start = addDays({ y: year, m: 1, d: 1 }, kit.randInt(0, 364, rand));
             known = start; target = addDays(start, back ? -span : span);
         } else {
-            var base = type === 'back' ? kit.pick(['same', 'cross'].concat(level >= FROM.year ? ['year'] : []), rand) : type;
+            var base = type === 'back' ? kit.pick(['same', 'cross'].concat(level >= FROM.year ? ['year'] : []), rand) : type;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             pair = forwardPair(base, year, rand);
             if (type === 'back') { known = pair.to; target = pair.from; } else { known = pair.from; target = pair.to; }
         }
@@ -109,7 +109,7 @@
     }
     /* 說明算式：相差 n 天 ＝ w 週又 r 天，星期 K 往後（前）數 r 天 ＝ 星期 T */
     function explainText(q) {
-        var n = Math.abs(q.offset), w = Math.floor(n / 7), r = n % 7, dir = q.offset > 0 ? '往後' : '往前';
+        var n = Math.abs(q.offset), w = Math.floor(n / 7), r = n % 7, dir = q.offset > 0 ? '往後' : '往前';  /* Math.floor：無條件捨去成整數 */
         if (r === 0) return '相差 ' + n + ' 天＝整整 ' + w + ' 週，星期不變，還是' + dayName(q.target.w);
         return '相差 ' + n + ' 天＝' + (w ? w + ' 週又 ' : '') + r + ' 天，' + dayName(q.known.w) + dir + '數 ' + r + ' 天＝' + dayName(q.target.w);
     }
@@ -142,10 +142,10 @@
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[推星期幾] 第 ' + level + ' 關（' + q.type + '）：' + dateText(K) + dayName(K.w) + ' → ' + dateText(T) + '？答案 ' + dayName(T.w) + '（相差 ' + q.offset + ' 天）；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        stage.appendChild(h('div', { 'class': 'qz-note weekday-tip', text: '推推看：下面那天是星期幾？' }));
+        stage.appendChild(h('div', { 'class': 'qz-note weekday-tip', text: '推推看：下面那天是星期幾？' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         /* 大小月口訣（要跨月的題型才放） */
         if (q.type !== 'same') {
-            stage.appendChild(h('div', { 'class': 'weekday-memo' }, [
+            stage.appendChild(h('div', { 'class': 'weekday-memo' }, [  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
                 h('div', { text: '大月 31 天：1 3 5 7 8 10 12' }),
                 h('div', { text: '小月 30 天：4 6 9 11' }),
                 h('div', { text: '2 月：28 天（閏年 29 天）' })
@@ -166,7 +166,7 @@
         var info = h('div', { 'class': 'qz-note weekday-info', text: '' });
         body.appendChild(info);
         var done = false, picked = -1;
-        var grid = kit.btnGrid(stage, NAMES.map(function (n, i) { return { text: n, kind: 'line', cls: 'weekday-opt', onTap: function () { judge(i); } }; }), { cols: 7, h: 100, gap: 6 });
+        var grid = kit.btnGrid(stage, NAMES.map(function (n, i) { return { text: n, kind: 'line', cls: 'weekday-opt', onTap: function () { judge(i); } }; }), { cols: 7, h: 100, gap: 6 });  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
         var btns = grid.btns;
         api.timer(timeMs(level), function () { judge(-1); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         if (level === 1 && kit.once('weekday.hint')) kit.hintOn(stage, btns[T.w], { mode: 'tap', delay: 700, text: '先算相差幾天，再除以 7' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
@@ -176,43 +176,43 @@
             if (done || api.over) return;
             done = true; picked = i;
             var ok = i === T.w;
-            btns[T.w].classList.add('weekday-opt--ok');
-            if (i >= 0 && !ok) btns[i].classList.add('weekday-opt--bad');
+            btns[T.w].classList.add('weekday-opt--ok'); /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            if (i >= 0 && !ok) btns[i].classList.add('weekday-opt--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             if (ok) {
-                info.textContent = explainText(q);
-                kit.flash(stage, true, api.my);
-                api.pass({ delay: 1600 });
+                info.textContent = explainText(q);      /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                kit.flash(stage, true, api.my);         /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+                api.pass({ delay: 1600 });              /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
                 return;
             }
-            kit.flash(stage, false, api.my);
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
             var steps = revealCalendar();
-            info.textContent = (i >= 0 ? '你選了' + dayName(i) + '，' : '時間到！') + '答案是' + dayName(T.w);
-            api.after(700 + steps.ms, function () { info.textContent = explainText(q); });
-            api.fail({ delay: 700 + steps.ms + 2400, lines: [i >= 0 ? '你選了' + dayName(i) + '，答案是' + dayName(T.w) : '時間到！答案是' + dayName(T.w), explainText(q)] });
+            info.textContent = (i >= 0 ? '你選了' + dayName(i) + '，' : '時間到！') + '答案是' + dayName(T.w);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            api.after(700 + steps.ms, function () { info.textContent = explainText(q); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+            api.fail({ delay: 700 + steps.ms + 2400, lines: [i >= 0 ? '你選了' + dayName(i) + '，答案是' + dayName(T.w) : '時間到！答案是' + dayName(T.w), explainText(q)] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 畫月曆（相差的月份在兩個以內才畫），從已知那天一格一格數到目標；回傳 { ms：動畫總時間 } */
         function revealCalendar() {
             if (q.months.length > 2) return { ms: 0 };
             page.style.display = 'none'; ask.style.display = 'none';
             var cs = q.months.length === 1 ? 40 : 31, cal = h('div', { 'class': 'weekday-cal' }), cells = {};
-            q.months.forEach(function (mo) {
+            q.months.forEach(function (mo) {            /* forEach：對陣列的每個元素各做一次 */
                 var box = h('div', { 'class': 'weekday-cal__m' });
                 box.appendChild(h('div', { 'class': 'weekday-cal__title', text: mo.y + ' 年 ' + mo.m + ' 月' }));
                 var g = h('div', { 'class': 'weekday-cal__grid' });
                 g.style.gridTemplateColumns = 'repeat(7, ' + cs + 'px)'; g.style.gridAutoRows = cs + 'px';
-                NAMES.forEach(function (n) { g.appendChild(h('div', { 'class': 'weekday-day weekday-day--head', text: n })); });
+                NAMES.forEach(function (n) { g.appendChild(h('div', { 'class': 'weekday-day weekday-day--head', text: n })); });  /* forEach：對陣列的每個元素各做一次 */
                 for (var b = 0; b < dow(mo.y, mo.m, 1); b++) g.appendChild(h('div', { 'class': 'weekday-day weekday-day--blank' }));
                 for (var d = 1; d <= daysIn(mo.y, mo.m); d++) { var c = h('div', { 'class': 'weekday-day', text: String(d) }); cells[mo.y + '-' + mo.m + '-' + d] = c; g.appendChild(c); }
                 box.appendChild(g); cal.appendChild(box);
             });
             body.appendChild(cal);
             /* 一天一天走：從已知那天走到目標（倒著推就往前走） */
-            var n = Math.abs(q.offset), dir = q.offset > 0 ? 1 : -1, stepMs = kit.clamp(Math.round(1500 / Math.max(1, n)), 30, 140);
+            var n = Math.abs(q.offset), dir = q.offset > 0 ? 1 : -1, stepMs = kit.clamp(Math.round(1500 / Math.max(1, n)), 30, 140);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
             cells[K.y + '-' + K.m + '-' + K.d].classList.add('weekday-day--from');
             for (var s = 1; s <= n; s++) (function (s) {
-                api.after(500 + s * stepMs, function () {
+                api.after(500 + s * stepMs, function () {  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                     var dt = addDays(K, dir * s), el = cells[dt.y + '-' + dt.m + '-' + dt.d];
-                    el.classList.add(s === n ? 'weekday-day--to' : 'weekday-day--walk'); Sfx.play('tick');
+                    el.classList.add(s === n ? 'weekday-day--to' : 'weekday-day--walk'); Sfx.play('tick');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 });
             })(s);
             return { ms: 500 + n * stepMs };

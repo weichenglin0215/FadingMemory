@@ -263,7 +263,7 @@
             l.rel = 'stylesheet';
             l.href = href;
             l.onload = l.onerror = function () { resolve(); };
-            document.head.appendChild(l);
+            document.head.appendChild(l);               /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         });
     }
 
@@ -280,7 +280,7 @@
             s.async = !ordered ? true : false;
             s.onload = function () { resolve(); };
             s.onerror = function () { reject(src); };
-            document.head.appendChild(s);
+            document.head.appendChild(s);               /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         });
     }
 
@@ -292,7 +292,7 @@
         function next() {
             var src = list[i];
             var url = isRemote(src) ? src : src + q;
-            return loadJs(url, true).catch(function (e) {
+            return loadJs(url, true).catch(function (e) {  /* catch：Promise（承諾）失敗時才執行的函式，這裡用來吞掉錯誤，避免整個程式中斷 */
                 i++;
                 if (i < list.length) return next();
                 throw e;
@@ -312,9 +312,9 @@
        主控台也乾乾淨淨。用本機伺服器（http://localhost:...）開啟完全不受影響。 */
     function fetchVersion() {
         if (location.protocol === 'file:' || !global.fetch) return Promise.resolve(null);
-        return fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
+        return fetch('version.json?t=' + Date.now(), { cache: 'no-store' })  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
             .then(function (r) { return r.ok ? r.json() : null; })
-            .catch(function () { return null; });
+            .catch(function () { return null; });       /* catch：Promise（承諾）失敗時才執行的函式，這裡用來吞掉錯誤，避免整個程式中斷 */
     }
 
     /* localStorage 包一層 try/catch：有些瀏覽器環境（例如無痕模式、使用者關掉
@@ -328,11 +328,11 @@
        一片空白，見 HTML 裡 html:not(.stage-ready) body{visibility:hidden} 那條
        規則），再疊一個全螢幕的錯誤訊息方塊上去。 */
     function fail(what) {
-        document.documentElement.classList.add('stage-ready');
+        document.documentElement.classList.add('stage-ready');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         var box = document.createElement('div');
         box.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;' +
             'background:#FBF3D9;color:#4A3B1E;font:700 20px/1.6 sans-serif;text-align:center;z-index:99';
-        box.textContent = '檔案載入失敗（' + what + '）。請確認網路連線後重新整理。';
+        box.textContent = '檔案載入失敗（' + what + '）。請確認網路連線後重新整理。';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         document.body ? document.body.appendChild(box) : document.addEventListener('DOMContentLoaded', function () { document.body.appendChild(box); });
     }
 
@@ -379,7 +379,7 @@
           （目前只有 three.js）用 loadWithFallback 依序處理，其餘的 JS 檔案
           才平行下載（但靠 async=false 保證還是依照清單順序執行）。 */
     fetchVersion().then(function (info) {
-        var ver = info && info.version ? String(info.version) : 'local-' + Date.now();
+        var ver = info && info.version ? String(info.version) : 'local-' + Date.now();  /* Date.now()：現在的時間（毫秒），拿來算「經過了多久」 */
         var prev = storeGet('fm.version');
         global.FM_VERSION = { version: ver, date: info && info.date, notes: info && info.notes, previous: prev };
         if (info && info.version) {
@@ -388,16 +388,16 @@
         }
         var q = '?v=' + encodeURIComponent(ver);
 
-        return Promise.all(page.css.map(function (h) { return loadCss(h + q); })).then(function () {
+        return Promise.all(page.css.map(function (h) { return loadCss(h + q); })).then(function () {  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             /* 有備援來源的（three.js）先載好，其餘平行下載、照順序執行 */
             var chain = Promise.resolve();
             var rest = [];
-            page.js.forEach(function (entry) {
+            page.js.forEach(function (entry) {          /* forEach：對陣列的每個元素各做一次 */
                 if (Array.isArray(entry)) chain = chain.then(function () { return loadWithFallback(entry, q); });
                 else rest.push(entry);
             });
             return chain.then(function () {
-                return Promise.all(rest.map(function (src) { return loadJs(isRemote(src) ? src : src + q, true); }));
+                return Promise.all(rest.map(function (src) { return loadJs(isRemote(src) ? src : src + q, true); }));  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             });
         });
     }).catch(function (e) { fail(e); });

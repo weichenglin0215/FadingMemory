@@ -39,8 +39,8 @@
     function sizeFor(level) { return level <= Math.min(8, LEVELS3) ? 3 : 4; }
     /* 這一關要給幾個提示數（已經填好的格子）：3×3 與 4×4 各自從第一個數字線性變到第二個（越少越難） */
     function givensFor(level) {
-        if (sizeFor(level) === 3) return Math.round(kit.ramp(level, GIVENS3[0], GIVENS3[1], Math.max(2, Math.min(8, LEVELS3))));
-        return Math.round(kit.ramp(level - Math.min(8, LEVELS3), GIVENS4[0], GIVENS4[1], RAMP4));
+        if (sizeFor(level) === 3) return Math.round(kit.ramp(level, GIVENS3[0], GIVENS3[1], Math.max(2, Math.min(8, LEVELS3))));  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+        return Math.round(kit.ramp(level - Math.min(8, LEVELS3), GIVENS4[0], GIVENS4[1], RAMP4));  /* Math.round：四捨五入成整數 */
     }
     /* 所有的線（排、列、兩條對角線），每條線是 n 個格子的編號 */
     /* 列出所有「要加起來是魔術數」的線：n 條排、n 條列、2 條對角線；每條線是 n 個格子編號的陣列（編號 ＝ 排 × n ＋ 欄） */
@@ -60,17 +60,17 @@
        rand 有給就用亂數順序試數字（用來「隨機造一個魔方陣」）。回傳 { count 找到幾個, first 第一個 }。
        剪枝（提早放棄走不通的路）：每排／列／對角線的加總不能超過魔術數、填滿那條線時要剛好等於魔術數。 */
     function search(n, givens, limit, rand) {
-        var M = magicSum(n), total = n * n, g = new Array(total).fill(0), used = new Array(total + 1).fill(false), i;
+        var M = magicSum(n), total = n * n, g = new Array(total).fill(0), used = new Array(total + 1).fill(false), i;  /* new Array(n).fill(v)：建立長度 n、每一格都是 v 的陣列 */
         for (i = 0; i < total; i++) if (givens[i]) { if (used[givens[i]]) return { count: 0, first: null }; used[givens[i]] = true; }
-        var colSum = new Array(n).fill(0), d1 = 0, d2 = 0, count = 0, first = null;
+        var colSum = new Array(n).fill(0), d1 = 0, d2 = 0, count = 0, first = null;  /* new Array(n).fill(v)：建立長度 n、每一格都是 v 的陣列 */
         /* rec(pos)：填第 pos 格（遞迴）。rowSum、colSum、d1、d2 是目前「排／列／兩條對角線」已經累計的和，每填一格就更新，退回時再減掉（回溯） */
         function rec(pos) {
-            if (pos === total) { if (d1 === M && d2 === M) { count++; if (!first) first = g.slice(); } return; }
-            var r = Math.floor(pos / n), c = pos % n, rowSum = 0, k;
+            if (pos === total) { if (d1 === M && d2 === M) { count++; if (!first) first = g.slice(); } return; }  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+            var r = Math.floor(pos / n), c = pos % n, rowSum = 0, k;  /* Math.floor：無條件捨去成整數 */
             for (k = 0; k < c; k++) rowSum += g[r * n + k];
             var vals = [];
             if (givens[pos]) vals.push(givens[pos]);
-            else { for (var v0 = 1; v0 <= total; v0++) if (!used[v0]) vals.push(v0); if (rand) vals = kit.shuffle(vals, rand); }
+            else { for (var v0 = 1; v0 <= total; v0++) if (!used[v0]) vals.push(v0); if (rand) vals = kit.shuffle(vals, rand); }  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
             for (var vi = 0; vi < vals.length; vi++) {
                 var v = vals[vi], fixed = !!givens[pos];
                 var rs = rowSum + v;
@@ -103,7 +103,7 @@
         all3 = [];
         /* 3×3 太小，直接窮舉 9! 種排列最快 */
         var perm = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-        (function pm(a, k) { if (k === a.length) { var s = linesOf(3).every(function (ln) { return ln.reduce(function (t, i) { return t + a[i]; }, 0) === 15; }); if (s) all3.push(a.slice()); return; } for (var i = k; i < a.length; i++) { var t = a[k]; a[k] = a[i]; a[i] = t; pm(a, k + 1); t = a[k]; a[k] = a[i]; a[i] = t; } })(perm, 0);
+        (function pm(a, k) { if (k === a.length) { var s = linesOf(3).every(function (ln) { return ln.reduce(function (t, i) { return t + a[i]; }, 0) === 15; }); if (s) all3.push(a.slice()); return; } for (var i = k; i < a.length; i++) { var t = a[k]; a[k] = a[i]; a[i] = t; pm(a, k + 1); t = a[k]; a[k] = a[i]; a[i] = t; } })(perm, 0);  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
         return all3;
     }
     /* 符合提示（givens：0＝空格）的魔方陣有幾個（最多數到 limit） */
@@ -116,34 +116,34 @@
         rand = rand || Math.random;
         var n = sizeFor(level), k = givensFor(level), sol = null, tries = 0;
         if (n === 3) {
-            var all = enumerate3(), fresh = usedSolutions ? all.filter(function (s) { return usedSolutions.indexOf(s.join(',')) < 0; }) : all;
-            sol = kit.pick(fresh.length ? fresh : all, rand);
+            var all = enumerate3(), fresh = usedSolutions ? all.filter(function (s) { return usedSolutions.indexOf(s.join(',')) < 0; }) : all;  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+            sol = kit.pick(fresh.length ? fresh : all, rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         } else sol = search(4, new Array(16).fill(0), 1, rand).first;
-        var cells = Array.apply(null, Array(n * n)).map(function (_, i) { return i; }), want = k;
+        var cells = Array.apply(null, Array(n * n)).map(function (_, i) { return i; }), want = k;  /* Array.apply(null, Array(n)).map(...)：建立「0 到 n−1 的編號陣列」的常見寫法 */
         while (true) {
             for (var t = 0; t < 300; t++) {
-                var pick = kit.shuffle(cells, rand).slice(0, want), givens = new Array(n * n).fill(0);
-                pick.forEach(function (c) { givens[c] = sol[c]; });
+                var pick = kit.shuffle(cells, rand).slice(0, want), givens = new Array(n * n).fill(0);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+                pick.forEach(function (c) { givens[c] = sol[c]; });  /* forEach：對陣列的每個元素各做一次 */
                 if (countMatching(n, givens, 2) === 1) return { n: n, solution: sol, givens: givens, count: want, M: magicSum(n) };
             }
             want++;          /* 這個提示數怎麼挑都不唯一：多給一個 */
-            if (++tries > n * n) return { n: n, solution: sol, givens: sol.slice(), count: n * n, M: magicSum(n) };
+            if (++tries > n * n) return { n: n, solution: sol, givens: sol.slice(), count: n * n, M: magicSum(n) };  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         }
     }
     /* 每條線現在的狀況：{ sum, empty（空格數）, diff（目標 − 目前加總）, full, ok } */
     /* 每條線現在的狀況：加總 sum、空格數 empty、離目標還差多少 diff（目標 − 目前）、填滿了嗎 full、填滿而且剛好嗎 ok（畫面上「差 N／多 N／✓／✗」就來自這裡） */
     function lineStatus(n, grid) {
         var M = magicSum(n);
-        return linesOf(n).map(function (ln) {
+        return linesOf(n).map(function (ln) {           /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var sum = 0, empty = 0;
-            ln.forEach(function (i) { if (grid[i]) sum += grid[i]; else empty++; });
+            ln.forEach(function (i) { if (grid[i]) sum += grid[i]; else empty++; });  /* forEach：對陣列的每個元素各做一次 */
             return { sum: sum, empty: empty, diff: M - sum, full: empty === 0, ok: empty === 0 && sum === M };
         });
     }
     /* 解開了嗎：每格都有數字、而且每條線都剛好是魔術數 */
     function isSolved(n, grid) {
         for (var i = 0; i < grid.length; i++) if (!grid[i]) return false;
-        return lineStatus(n, grid).every(function (s) { return s.ok; });
+        return lineStatus(n, grid).every(function (s) { return s.ok; });  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
     }
     /* 提示：挑一格「沒填對」的，優先選它所在的線剩下的空格最少的那一格（最好推理） */
     /* 提示：在「沒填對」的格子裡，挑它所在的線「剩下空格最少」的那格（最容易推理的一格） */
@@ -152,7 +152,7 @@
         for (var i = 0; i < n * n; i++) {
             if (grid[i] === pz.solution[i]) continue;
             var sc = 99;
-            ls.forEach(function (ln, li) { if (ln.indexOf(i) >= 0) sc = Math.min(sc, st[li].empty + (grid[i] ? 0 : 0)); });
+            ls.forEach(function (ln, li) { if (ln.indexOf(i) >= 0) sc = Math.min(sc, st[li].empty + (grid[i] ? 0 : 0)); });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             if (sc < bs) { bs = sc; best = i; }
         }
         return best;
@@ -192,27 +192,27 @@
         var grid = pz.givens.slice(), sel = -1, hint = -1, hintsLeft = HINTS, solved = false;  /* grid：目前盤面（先抄一份題目）；sel：選中的格子（−1＝沒選）；hint：提示標出的格子；hintsLeft：剩幾次提示；solved：已解開 */
         var lines = linesOf(n);
 
-        var wrap = h('div', { 'class': 'magicsq-wrap' });
-        var board = h('div', { 'class': 'magicsq-board' });
-        board.style.setProperty('--magicsq-n', n);
-        board.style.setProperty('--magicsq-cell', cell + 'px');
+        var wrap = h('div', { 'class': 'magicsq-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
+        var board = h('div', { 'class': 'magicsq-board' });  /* board：盤面（所有格子都放在裡面） */
+        board.style.setProperty('--magicsq-n', n);      /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
+        board.style.setProperty('--magicsq-cell', cell + 'px');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
         board.style.setProperty('--magicsq-statw', statW + 'px');
         board.style.setProperty('--magicsq-stath', statH + 'px');
-        board.style.setProperty('--magicsq-font', Math.round(cell * 0.5) + 'px');
+        board.style.setProperty('--magicsq-font', Math.round(cell * 0.5) + 'px');  /* Math.round：四捨五入成整數 */
         var cells = [], rowSt = [], colSt = [], r, c;
         for (r = 0; r < n; r++) {
             for (c = 0; c < n; c++) {
                 var cl = h('div', { 'class': 'magicsq-cell' });
                 (function (idx) { kit.onTap(cl, function () { select(idx); }); })(r * n + c);  /* 用立即執行函式存住這一格的編號 idx（不這樣寫，每格點下去都會拿到迴圈結束時的值） */
-                board.appendChild(cl); cells.push(cl);
+                board.appendChild(cl); cells.push(cl);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             }
-            var rs = h('div', { 'class': 'magicsq-status' }); board.appendChild(rs); rowSt.push(rs);
+            var rs = h('div', { 'class': 'magicsq-status' }); board.appendChild(rs); rowSt.push(rs);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         }
         for (c = 0; c < n; c++) { var cs = h('div', { 'class': 'magicsq-status' }); board.appendChild(cs); colSt.push(cs); }
         board.appendChild(h('div', { 'class': 'magicsq-status' }));
         var diagTip = h('div', { 'class': 'magicsq-diag' });
         var tipText = '每條線加起來都要是 ' + pz.M;
-        var tip = h('div', { 'class': 'magicsq-tip', text: tipText });
+        var tip = h('div', { 'class': 'magicsq-tip', text: tipText });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
 
         var pad = h('div', { 'class': 'magicsq-pad' });
         pad.style.gridTemplateColumns = 'repeat(' + (total === 9 ? 5 : 9) + ', minmax(0, 1fr))';
@@ -220,44 +220,44 @@
         /* 一個數字一顆鍵（用立即執行函式存住 dg，原因同上）；用過的數字會變灰 */
         for (var d = 1; d <= total; d++) (function (dg) {
             var b = h('button', { 'class': 'btn btn--sky magicsq-key', type: 'button', text: String(dg) });
-            kit.onTap(b, function () { enter(dg); });
+            kit.onTap(b, function () { enter(dg); });   /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             pad.appendChild(b); keys.push(b);
         })(d);
         var eraser = h('button', { 'class': 'btn btn--line magicsq-key', type: 'button', text: '⌫' });
-        kit.onTap(eraser, function () { enter(0); });
+        kit.onTap(eraser, function () { enter(0); });   /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
         pad.appendChild(eraser);
 
         var acts = h('div', { 'class': 'magicsq-tools' });
-        var btnHint = h('button', { 'class': 'btn btn--line magicsq-tool', type: 'button', text: '提示 ' + hintsLeft });
-        var btnReset = h('button', { 'class': 'btn btn--line magicsq-tool', type: 'button', text: '重來' });
+        var btnHint = h('button', { 'class': 'btn btn--line magicsq-tool', type: 'button', text: '提示 ' + hintsLeft });  /* 「提示」按鈕（文字會顯示還剩幾次提示） */
+        var btnReset = h('button', { 'class': 'btn btn--line magicsq-tool', type: 'button', text: '重來' });  /* 「重來」按鈕 */
         kit.onTap(btnHint, useHint);
         kit.onTap(btnReset, reset);
-        if (HINTS > 0) acts.appendChild(btnHint);
+        if (HINTS > 0) acts.appendChild(btnHint);       /* 提示次數 HINTS 設成 0，就連提示按鈕都不放 */
         acts.appendChild(btnReset);
         wrap.appendChild(board); wrap.appendChild(diagTip); wrap.appendChild(tip); wrap.appendChild(pad); wrap.appendChild(acts);
-        stage.appendChild(wrap);
+        stage.appendChild(wrap);                        /* 把整個遊戲區放進舞台（放進去，畫面上才看得到） */
 
         /* 更新一條線旁邊的小字：還沒填滿寫「差 N／多 N」，填滿了寫 ✓（剛好）或 ✗（不對），多了或錯了標紅 */
         function statText(el, s) {
-            el.textContent = s.full ? (s.ok ? '✓' : '✗') : (s.diff >= 0 ? '差 ' + s.diff : '多 ' + (-s.diff));
+            el.textContent = s.full ? (s.ok ? '✓' : '✗') : (s.diff >= 0 ? '差 ' + s.diff : '多 ' + (-s.diff));  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             el.className = 'magicsq-status' + (s.full ? (s.ok ? ' magicsq-status--ok' : ' magicsq-status--bad') : (s.diff < 0 ? ' magicsq-status--bad' : ''));
         }
         /* 重畫整個盤面：格子數字與狀態、每排每列旁邊的「差多少」、對角線、數字鍵是否已用過 */
         function paint() {
             var st = lineStatus(n, grid), used = {};
             for (var i = 0; i < total; i++) {
-                cells[i].textContent = grid[i] ? String(grid[i]) : '';
+                cells[i].textContent = grid[i] ? String(grid[i]) : '';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 cells[i].className = 'magicsq-cell' + (pz.givens[i] ? ' magicsq-cell--given' : grid[i] ? ' magicsq-cell--mine' : '') + (i === sel ? ' magicsq-cell--sel' : '') + (i === hint ? ' magicsq-cell--hint' : '') + (solved ? ' magicsq-cell--ok' : '');
                 if (grid[i]) used[grid[i]] = true;
             }
             for (var k = 0; k < n; k++) { statText(rowSt[k], st[k]); statText(colSt[k], st[n + k]); }
             var s1 = st[2 * n], s2 = st[2 * n + 1];
-            diagTip.innerHTML = '';
+            diagTip.innerHTML = '';                     /* innerHTML = ''：把元素裡面的東西全部清掉 */
             [['↘ 對角線', s1], ['↙ 對角線', s2]].forEach(function (p) {
                 var s = p[1];
                 diagTip.appendChild(h('span', { 'class': 'magicsq-diag__item' + (s.full ? (s.ok ? ' magicsq-diag__item--ok' : ' magicsq-diag__item--bad') : (s.diff < 0 ? ' magicsq-diag__item--bad' : '')), text: p[0] + ' ' + (s.full ? (s.ok ? '✓' : '✗') : (s.diff >= 0 ? '差 ' + s.diff : '多 ' + (-s.diff))) }));
             });
-            keys.forEach(function (b, k2) { b.disabled = !!used[k2 + 1]; b.classList.toggle('magicsq-key--used', !!used[k2 + 1]); });
+            keys.forEach(function (b, k2) { b.disabled = !!used[k2 + 1]; b.classList.toggle('magicsq-key--used', !!used[k2 + 1]); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         }
         /* 點選一格 */
         function select(i) { if (solved) return; sel = i; paint(); }
@@ -273,8 +273,8 @@
         /* 解開：全部變綠、閃綠光並過關 */
         function win() {
             solved = true; sel = -1; paint(); tip.textContent = '每條線都是 ' + pz.M + '！';
-            kit.flash(stage, true, api.my);
-            api.pass({ delay: PASS_DELAY_MS });
+            kit.flash(stage, true, api.my);             /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.pass({ delay: PASS_DELAY_MS });         /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
         }
         /* 提示：標出最好推理的一格（每題 HINTS 次） */
         function useHint() {

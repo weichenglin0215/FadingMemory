@@ -79,7 +79,7 @@
         var s = ss / 100, v = vv / 100;
         var c = v * s;
         var hp = hh / 60;
-        var x = c * (1 - Math.abs(hp % 2 - 1));
+        var x = c * (1 - Math.abs(hp % 2 - 1));         /* Math.abs：取絕對值（去掉負號） */
         var r1 = 0, g1 = 0, b1 = 0;
         if (hp < 1) { r1 = c; g1 = x; b1 = 0; }
         else if (hp < 2) { r1 = x; g1 = c; b1 = 0; }
@@ -88,7 +88,7 @@
         else if (hp < 5) { r1 = x; g1 = 0; b1 = c; }
         else { r1 = c; g1 = 0; b1 = x; }
         var m = v - c;
-        return { r: Math.round((r1 + m) * 255), g: Math.round((g1 + m) * 255), b: Math.round((b1 + m) * 255) };
+        return { r: Math.round((r1 + m) * 255), g: Math.round((g1 + m) * 255), b: Math.round((b1 + m) * 255) };  /* Math.round：四捨五入成整數 */
     }
     /* 把顏色轉成 CSS 的 rgb() 字串 */
     function cssRgb(c) { return 'rgb(' + c.r + ',' + c.g + ',' + c.b + ')'; }
@@ -113,7 +113,7 @@
     /* 顏色差異度（％）＝ ΔE76：兩個顏色在 L*a*b* 空間裡的直線距離 */
     function diffPercent(c1, c2) {
         var p = rgbToLab(c1), q = rgbToLab(c2);
-        return Math.sqrt(Math.pow(p.L - q.L, 2) + Math.pow(p.a - q.a, 2) + Math.pow(p.b - q.b, 2));
+        return Math.sqrt(Math.pow(p.L - q.L, 2) + Math.pow(p.a - q.a, 2) + Math.pow(p.b - q.b, 2));  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
     }
 
     /* 把 u 折回 [lo, hi]：像三角波來回走，讓彩度／亮度一直來回掃，不會衝出範圍 */
@@ -130,7 +130,7 @@
        回傳 { dim, left:{h,s,v}, valueAt(秒) → 右邊色塊那個維度在第幾秒的值 }。 */
     function newRound() {
         /* 隨機挑一個維度 */
-        var dim = DIM_KEYS[Math.floor(Math.random() * DIM_KEYS.length)];
+        var dim = DIM_KEYS[Math.floor(Math.random() * DIM_KEYS.length)];  /* Math.floor：無條件捨去成整數 */
         var cfg = DIMS[dim];
         /* 左邊色塊：色相整圈隨機；彩度／亮度落在中段，上下留餘裕給右邊色塊來回掃 */
         var left = { h: rand(0, 360), s: rand(55, 85), v: rand(60, 90) };
@@ -162,12 +162,12 @@
         /* 舊版最佳紀錄只有兩位小數的真實差異度：第一次進來換算成「4 位、第 3／4 位不為 0」 */
         Reaction.migrateBest(ID, function (v) { return Leaderboard.fake4(v); });
         /* 替整個畫面加上黑底 class（樣式在 css/games/reaction_matchcolor.css 的 .matchcolor-bg） */
-        root.classList.add('matchcolor-bg');
+        root.classList.add('matchcolor-bg');            /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
 
         /* round：開一局 */
         function round() {
-            root.innerHTML = '';
-            ctx.setMeta(fmtBest(Reaction.getBest(ID)));
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
+            ctx.setMeta(fmtBest(Reaction.getBest(ID))); /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
             var rd = newRound();
             var leftRgb = hsvToRgb(rd.left.h, rd.left.s, rd.left.v);
@@ -178,20 +178,20 @@
             var rightEl = h('div', { 'class': 'matchcolor-block' });
             leftEl.style.background = cssRgb(leftRgb);
             gapEl.style.flexBasis = GAP_PX + 'px';
-            root.appendChild(h('div', { 'class': 'matchcolor-field' }, [leftEl, gapEl, rightEl]));
+            root.appendChild(h('div', { 'class': 'matchcolor-field' }, [leftEl, gapEl, rightEl]));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
 
             var foot = h('div', { 'class': 'matchcolor-foot' }, [
                 h('div', { 'class': 'matchcolor-hint', text: '當你覺得兩個方塊顏色是完全相同時，\n請點擊畫面確認。' })
             ]);
-            root.appendChild(foot);
+            root.appendChild(foot);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             /* 操作提示（只在第一次進遊戲時）：點畫面任一處 → 手指縮放，放在畫面下方（不擋住兩個色塊） */
-            if (Reaction.kit.once('matchcolor.hint')) Reaction.kit.hintOn(root, root, { mode: 'tap', fy: 0.82, text: '請點擊畫面' });
+            if (Reaction.kit.once('matchcolor.hint')) Reaction.kit.hintOn(root, root, { mode: 'tap', fy: 0.82, text: '請點擊畫面' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
 
             /* phase 目前階段；raf 動畫的編號；shownRgb 玩家眼睛實際看到的最後一次畫出來的顏色 */
             var phase = 'running';
             var raf = null;
             var shownRgb = null;     /* 玩家眼睛實際看到的、最後一次畫出來的右邊顏色 */
-            var t0 = performance.now();
+            var t0 = performance.now();                 /* performance.now()：高精度的時間（毫秒），計時用 */
 
             /* 畫一個畫面：算出右邊色塊現在的顏色 */
             function paint(now) {
@@ -205,17 +205,17 @@
             function frame(now) {
                 if (phase !== 'running') return;
                 paint(now);
-                raf = requestAnimationFrame(frame);
+                raf = requestAnimationFrame(frame);     /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
             }
             paint(t0);
-            raf = requestAnimationFrame(frame);
+            raf = requestAnimationFrame(frame);         /* requestAnimationFrame：請瀏覽器在下一次畫面更新前呼叫函式（做動畫用，約每秒 60 次） */
 
             /* 點擊畫面任一處（pointerdown 一碰就算，不是 click）：凍結最後一次畫出來的顏色，算差異度 */
             /* 點擊畫面任一處：整個 root 監聽（不是某顆按鈕）。phase 不是 running 的時候
                （已經結算了），點畫面不做事，只有「再玩一次」按鈕能重來。 */
-            root.addEventListener('pointerdown', function onDown(e) {
+            root.addEventListener('pointerdown', function onDown(e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
                 if (phase !== 'running') return;
-                e.preventDefault();
+                e.preventDefault();                     /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                 phase = 'done';
                 cancelAnimationFrame(raf);
                 root.removeEventListener('pointerdown', onDown);
@@ -224,18 +224,18 @@
                 var realDiff = diffPercent(leftRgb, shownRgb);
                 var diff = Leaderboard.fake4(realDiff);
                 console.log('色不異空：實際差異度 ' + realDiff.toFixed(6) + '% → 成績 ' + fmtPct(diff));
-                var isNew = Reaction.setBest(ID, diff, function (v, b) { return v < b; });
+                var isNew = Reaction.setBest(ID, diff, function (v, b) { return v < b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                 ctx.setMeta(fmtBest(Reaction.getBest(ID)));
 
                 /* 兩個色塊靠攏：黑色縫的寬度用 CSS transition 縮到 0 */
                 /* 兩個色塊靠攏：黑色長方形的寬度用 CSS transition 縮到 0（見 .matchcolor-gap） */
-                gapEl.classList.add('matchcolor-gap--closed');
+                gapEl.classList.add('matchcolor-gap--closed');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
 
-                foot.innerHTML = '';
-                if (window.Sfx) Sfx.play('click');
+                foot.innerHTML = '';                    /* innerHTML = ''：把元素裡面的東西全部清掉 */
+                if (window.Sfx) Sfx.play('click');      /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 /* 結算彈窗（公版 kit.result）：貼在畫面下緣、背後不壓暗，兩個色塊靠攏的揭曉才看得到；
                    帶 score 會在彈窗出現之後自動送世界排行榜 */
-                Reaction.kit.result(root, {
+                Reaction.kit.result(root, {             /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                     num: '顏色差異度 ' + fmtPct(diff), isNew: isNew, score: diff, dock: 'bottom',
                     sfx: diff <= 1 ? 'perfect' : (diff <= 5 ? 'win' : 'neutral'), againText: '再玩一次', onAgain: round
                 });
@@ -256,5 +256,5 @@
     });
     /* 讓 CLOSE_MS 同時決定 CSS transition 的時間（用 CSS 變數 --mc-close-ms） */
     /* 讓 CLOSE_MS 這個參數同時決定 CSS transition 的時間（見 mount 之後的 style 設定） */
-    document.documentElement.style.setProperty('--mc-close-ms', CLOSE_MS + 'ms');
+    document.documentElement.style.setProperty('--mc-close-ms', CLOSE_MS + 'ms');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
 })();

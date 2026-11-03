@@ -48,27 +48,27 @@
     var SHOW_CENTER = true;                     /* 要不要在每個人的中心畫小黑點（判斷左右的依據；設成 false 就只剩 emoji） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function skewAt(level) { return kit.ramp(level, 0, SKEW_MAX, RAMP_LEVELS); }
-    function gapAt(level) { return kit.ramp(level, GAP[0], GAP[1], RAMP_LEVELS); }
+    function skewAt(level) { return kit.ramp(level, 0, SKEW_MAX, RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function gapAt(level) { return kit.ramp(level, GAP[0], GAP[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 第 level 關的圓形個數（偶數）：N_RANGE[0] → N_RANGE[1] 線性變多，再在基準上下 ±N_JITTER 抖動，夾在 N_RANGE 內 */
     function nAt(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var base = kit.ramp(level, N_RANGE[0], N_RANGE[1], RAMP_LEVELS);
-        var n = 2 * Math.round((base + kit.randFloat(-N_JITTER, N_JITTER, rand)) / 2);
-        var lo = 2 * Math.ceil(N_RANGE[0] / 2), hi = 2 * Math.floor(N_RANGE[1] / 2);
-        return kit.clamp(n, lo, hi);
+        var n = 2 * Math.round((base + kit.randFloat(-N_JITTER, N_JITTER, rand)) / 2);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+        var lo = 2 * Math.ceil(N_RANGE[0] / 2), hi = 2 * Math.floor(N_RANGE[1] / 2);  /* Math.floor：無條件捨去成整數 */
+        return kit.clamp(n, lo, hi);                    /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
     }
     /* 數數量的動畫計畫：左右各 nl、nr 個——先左右成對數 min(nl,nr) 組（綠＋藍），再數多出來的（那一邊 side：−1 左、＋1 右、0 一樣多）變紅色 */
-    function countPlan(nl, nr) { return { pairs: Math.min(nl, nr), extra: Math.abs(nl - nr), side: nl > nr ? -1 : (nr > nl ? 1 : 0) }; }
+    function countPlan(nl, nr) { return { pairs: Math.min(nl, nr), extra: Math.abs(nl - nr), side: nl > nr ? -1 : (nr > nl ? 1 : 0) }; }  /* Math.abs：取絕對值（去掉負號） */
     /* 動畫進度 e（0～1）時已經數了幾組、幾個多出來的：每個步驟一樣久，先數成對的、再數多出來的 */
     function planAt(plan, e) {
-        var total = plan.pairs + plan.extra, n = Math.round(total * e);
+        var total = plan.pairs + plan.extra, n = Math.round(total * e);  /* Math.round：四捨五入成整數 */
         return { pairs: Math.min(n, plan.pairs), extra: Math.max(0, n - plan.pairs) };
     }
     /* 兩個圓能不能放在一起：圓心距離 ≥ (1 − OVERLAP) ×（r1＋r2）／… 這裡用「距離 ≥ 0.4×(r1+r2)」（重疊最多 60%） */
     function minDist(r1, r2) { return (1 - OVERLAP) * (r1 + r2); }
     /* 圓心 x 小於線的算左邊；等於線的算右邊 */
-    function countLeft(circles, lineX) { var n = 0; circles.forEach(function (c) { if (c.x < lineX) n++; }); return n; }
+    function countLeft(circles, lineX) { var n = 0; circles.forEach(function (c) { if (c.x < lineX) n++; }); return n; }  /* forEach：對陣列的每個元素各做一次 */
     /* 出一關：回傳 { circles:[{x,y,r}], N, lo, hi（第 N/2 與 N/2+1 個圓心的 x）, gap, skew, W, H } */
     function makeLevel(level, W, H, rand) {
         rand = rand || Math.random;
@@ -76,12 +76,12 @@
         for (var tr = 0; tr < TRIES; tr++) {            /* 用亂數一直重抽，最多 TRIES 次，抽到符合條件的題目就收下 */
             var N = nAt(level, rand);
             /* 擠在哪裡：偏離中央至少 skew×0.28 倍畫面寬，左右隨機；擠成的區域寬度＝畫面寬的 0.3～0.18（越不平均越窄） */
-            var side = rand() < 0.5 ? -1 : 1, cc = W / 2 + side * kit.randFloat(0.35, 1, rand) * skew * W * 0.34, sigma = W * kit.lerp(0.14, 0.07, skew / SKEW_MAX);
+            var side = rand() < 0.5 ? -1 : 1, cc = W / 2 + side * kit.randFloat(0.35, 1, rand) * skew * W * 0.34, sigma = W * kit.lerp(0.14, 0.07, skew / SKEW_MAX);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
             var cs = [], ok = true, i, k;
             for (i = 0; i < N && ok; i++) {
                 var placed = false;
                 for (k = 0; k < 400 && !placed; k++) {
-                    var r = kit.randInt(R_RANGE[0], R_RANGE[1], rand), x, y = kit.randFloat(EDGE + r, H - EDGE - r, rand);
+                    var r = kit.randInt(R_RANGE[0], R_RANGE[1], rand), x, y = kit.randFloat(EDGE + r, H - EDGE - r, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
                     if (rand() < skew) {                                  /* 擠在 cc 附近（高斯分布，用兩個均勻亂數相加近似）*/
                         x = cc + (rand() + rand() + rand() - 1.5) * 2 * sigma;
                     } else x = kit.randFloat(EDGE + r, W - EDGE - r, rand);
@@ -97,7 +97,7 @@
             }
             if (!ok) continue;
             /* 容許寬度不夠：把右半邊最靠左的那一顆往右推開（要沒撞到別的圓、沒出界） */
-            var sorted = cs.slice().sort(function (a, b) { return a.x - b.x; }), lo = sorted[N / 2 - 1], hi = sorted[N / 2];
+            var sorted = cs.slice().sort(function (a, b) { return a.x - b.x; }), lo = sorted[N / 2 - 1], hi = sorted[N / 2];  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
             last = { circles: cs, N: N, lo: lo.x, hi: hi.x, gap: hi.x - lo.x, skew: skew, W: W, H: H, need: need };
             if (hi.x - lo.x < need) {
                 var nx = lo.x + need + 0.5, can = nx <= W - EDGE - hi.r;
@@ -108,7 +108,7 @@
                 }
                 if (!can) continue;
                 hi.x = nx;
-                sorted = cs.slice().sort(function (a, b) { return a.x - b.x; });
+                sorted = cs.slice().sort(function (a, b) { return a.x - b.x; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
                 if (sorted[N / 2 - 1].x >= sorted[N / 2].x || sorted[N / 2] !== hi) continue;
                 last.lo = sorted[N / 2 - 1].x; last.hi = sorted[N / 2].x; last.gap = last.hi - last.lo;
                 if (last.gap < need) continue;
@@ -117,7 +117,7 @@
         }
         /* 一直達不到要求的容許寬度：回傳最後一次的結果，但 lo／hi 要照現在的圓心位置重算（推開圓形的嘗試失敗後，圓心位置可能已經動過） */
         if (last) {
-            var srt = last.circles.slice().sort(function (a, b) { return a.x - b.x; });
+            var srt = last.circles.slice().sort(function (a, b) { return a.x - b.x; });  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
             last.lo = srt[last.N / 2 - 1].x; last.hi = srt[last.N / 2].x; last.gap = last.hi - last.lo;
         }
         return last;
@@ -157,45 +157,45 @@
         var info = h('div', { 'class': 'halfcrowd-count' }, [
             h('span', { 'class': 'halfcrowd-count__g', text: '綠色 0' }), h('span', { 'class': 'halfcrowd-count__vs', text: '：' }), h('span', { 'class': 'halfcrowd-count__b', text: '0 藍色' })
         ]);
-        stage.appendChild(info);
-        var svg = kit.svg('svg', { 'class': 'halfcrowd-svg', viewBox: '0 0 ' + W + ' ' + AH, width: W, height: AH }, stage);
+        stage.appendChild(info);                        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var svg = kit.svg('svg', { 'class': 'halfcrowd-svg', viewBox: '0 0 ' + W + ' ' + AH, width: W, height: AH }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         svg.style.top = TOP + 'px';
         /* 每個人：底圈（平常看不見，數過之後變綠／藍／紅）＋人像 emoji；中心點全部畫在最上層（見 SHOW_CENTER） */
-        var els = q.circles.map(function (c) {
-            var g = kit.svg('g', {}, svg);
+        var els = q.circles.map(function (c) {          /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            var g = kit.svg('g', {}, svg);              /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
             var cir = kit.svg('circle', { cx: c.x.toFixed(2), cy: c.y.toFixed(2), r: c.r, 'class': 'halfcrowd-circle' }, g);
             var face = kit.svg('text', { x: c.x.toFixed(2), y: c.y.toFixed(2), 'class': 'halfcrowd-face', 'font-size': (c.r * 2 * FACE_SCALE).toFixed(1), 'text-anchor': 'middle', 'dominant-baseline': 'central' }, g);
-            face.textContent = kit.pick(kit.PERSON_EMOJI, api.rand);
+            face.textContent = kit.pick(kit.PERSON_EMOJI, api.rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             return cir;
         });
-        if (SHOW_CENTER) q.circles.forEach(function (c) { kit.svg('circle', { cx: c.x.toFixed(2), cy: c.y.toFixed(2), r: 2.4, 'class': 'halfcrowd-dot' }, svg); });
+        if (SHOW_CENTER) q.circles.forEach(function (c) { kit.svg('circle', { cx: c.x.toFixed(2), cy: c.y.toFixed(2), r: 2.4, 'class': 'halfcrowd-dot' }, svg); });  /* forEach：對陣列的每個元素各做一次 */
         var line = kit.svg('line', { x1: W / 2, x2: W / 2, y1: 0, y2: AH, 'class': 'halfcrowd-line' }, svg);
 
         /* 橫桿與微調鈕 */
         var X = W / 2, locked = false, hint = null;
         var bar = h('div', { 'class': 'halfcrowd-bar' }), knob = h('div', { 'class': 'halfcrowd-knob' });
-        bar.appendChild(h('div', { 'class': 'halfcrowd-track' })); bar.appendChild(knob);
+        bar.appendChild(h('div', { 'class': 'halfcrowd-track' })); bar.appendChild(knob);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var bL = h('button', { 'class': 'btn btn--line halfcrowd-nudge halfcrowd-nudge--l', text: '◀' }), bR = h('button', { 'class': 'btn btn--line halfcrowd-nudge halfcrowd-nudge--r', text: '▶' });
         var okBtn = h('button', { 'class': 'btn btn--go halfcrowd-ok', text: '計算數量' });
         [bar, bL, bR, okBtn].forEach(function (e) { stage.appendChild(e); });
         var KR = 22;
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() {
-            line.setAttribute('x1', X.toFixed(2)); line.setAttribute('x2', X.toFixed(2));
+            line.setAttribute('x1', X.toFixed(2)); line.setAttribute('x2', X.toFixed(2));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             knob.style.left = (KR + (W - 2 * KR) * X / W - KR) + 'px';
         }
         paint();
-        function setX(v) { X = kit.clamp(v, 0, W); paint(); }
+        function setX(v) { X = kit.clamp(v, 0, W); paint(); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
         var dragging = null;
         function fromPointer(e) { var p = kit.localPt(e, bar); setX((p.x - KR) / (W - 2 * KR) * W); }
-        bar.addEventListener('pointerdown', function (e) {
+        bar.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (locked || dragging != null) return;
-            e.preventDefault();
-            try { bar.setPointerCapture(e.pointerId); } catch (err) { }
+            e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            try { bar.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             dragging = e.pointerId; if (hint) { hint.remove(); hint = null; }
             fromPointer(e);
         });
-        bar.addEventListener('pointermove', function (e) { if (dragging === e.pointerId && !locked) fromPointer(e); });
+        bar.addEventListener('pointermove', function (e) { if (dragging === e.pointerId && !locked) fromPointer(e); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
         function endDrag(e) { if (dragging === e.pointerId) dragging = null; }
         bar.addEventListener('pointerup', endDrag); bar.addEventListener('pointercancel', endDrag);
         /* ◀ ▶：按一下移 1 px，按住 0.35 秒後每 0.06 秒再移 1 px */
@@ -203,17 +203,17 @@
             var t1 = null, t2 = null;
             function stop() { if (t1) clearTimeout(t1); if (t2) clearInterval(t2); t1 = t2 = null; }
             btn.addEventListener('pointerdown', function (e) {
-                e.preventDefault(); if (locked) return;
+                e.preventDefault(); if (locked) return; /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                 if (hint) { hint.remove(); hint = null; }
                 setX(X + d);
-                t1 = setTimeout(function () { t2 = setInterval(function () { if (locked) stop(); else setX(X + d); }, 60); }, 350);
+                t1 = setTimeout(function () { t2 = setInterval(function () { if (locked) stop(); else setX(X + d); }, 60); }, 350);  /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
             });
             ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) { btn.addEventListener(ev, stop); });
             my.onDispose(stop);
         }
         nudge(bL, -1); nudge(bR, 1);
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，沿著橫桿往「剛好一半」的位置移動（第一關的正確答案） */
-        if (level === 1 && kit.once('halfcrowd.hint')) {
+        if (level === 1 && kit.once('halfcrowd.hint')) {  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
             var mid = (q.lo + q.hi) / 2, y = TOP + AH + 8 + 28;
             var x0 = KR + (W - 2 * KR) * X / W, x1 = KR + (W - 2 * KR) * mid / W;
             hint = kit.fingerHint(stage, { mode: 'drag', x: x0, y: y, dx: x1 - x0, dy: 0, delay: 400, text: '請往左右拖曳，讓兩邊一樣多' });
@@ -226,42 +226,42 @@
             if (locked || api.over) return;
             locked = true;
             if (hint) { hint.remove(); hint = null; }
-            Sfx.play('click');
+            Sfx.play('click');                          /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             var left = [], right = [];
             q.circles.forEach(function (c, i) { (c.x < X ? left : right).push({ i: i, x: c.x }); });
             /* 從離豎線最近的開始數：左邊由右往左、右邊由左往右 */
-            left.sort(function (a, b) { return b.x - a.x; });
+            left.sort(function (a, b) { return b.x - a.x; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
             right.sort(function (a, b) { return a.x - b.x; });
-            var gEl = info.querySelector('.halfcrowd-count__g'), bEl = info.querySelector('.halfcrowd-count__b'), exEl = h('span', { 'class': 'halfcrowd-count__r', text: '' });
+            var gEl = info.querySelector('.halfcrowd-count__g'), bEl = info.querySelector('.halfcrowd-count__b'), exEl = h('span', { 'class': 'halfcrowd-count__r', text: '' });  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
             var plan = countPlan(left.length, right.length), shownP = 0, shownX = 0;
             if (plan.extra) { if (plan.side < 0) info.insertBefore(exEl, gEl); else info.appendChild(exEl); }
             function show(e) {
                 var st = planAt(plan, e);
-                for (; shownP < st.pairs; shownP++) { els[left[shownP].i].classList.add('halfcrowd-circle--g'); els[right[shownP].i].classList.add('halfcrowd-circle--b'); }
+                for (; shownP < st.pairs; shownP++) { els[left[shownP].i].classList.add('halfcrowd-circle--g'); els[right[shownP].i].classList.add('halfcrowd-circle--b'); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 var big = plan.side < 0 ? left : right;
-                for (; shownX < st.extra; shownX++) els[big[plan.pairs + shownX].i].classList.add('halfcrowd-circle--r');
+                for (; shownX < st.extra; shownX++) els[big[plan.pairs + shownX].i].classList.add('halfcrowd-circle--r');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 var nl = st.pairs + (plan.side < 0 ? st.extra : 0), nr = st.pairs + (plan.side > 0 ? st.extra : 0);
-                gEl.textContent = '綠色 ' + st.pairs; bEl.textContent = st.pairs + ' 藍色';
-                exEl.textContent = st.extra ? (plan.side < 0 ? st.extra + ' 紅色 ＋' : '＋ ' + st.extra + ' 紅色') : '';
+                gEl.textContent = '綠色 ' + st.pairs; bEl.textContent = st.pairs + ' 藍色';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                exEl.textContent = st.extra ? (plan.side < 0 ? st.extra + ' 紅色 ＋' : '＋ ' + st.extra + ' 紅色') : '';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 void nl; void nr;
             }
-            my.tween(COUNT_STEP_MS, show, kit.linear).then(function () {
+            my.tween(COUNT_STEP_MS, show, kit.linear).then(function () {  /* my.tween(毫秒, 函式)：動畫補間：在這段時間內，函式每一幀會收到 0→1 的進度 */
                 show(1);
                 var ok = left.length === right.length;
                 if (ok) {
-                    Sfx.play('ok'); info.classList.add('halfcrowd-count--ok');
+                    Sfx.play('ok'); info.classList.add('halfcrowd-count--ok');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                     msg.textContent = '一樣多！左右各 ' + left.length + ' 個'; msg.classList.add('halfcrowd-msg--ok');
-                    api.pass({ gain: 1, delay: 1100 });
+                    api.pass({ gain: 1, delay: 1100 }); /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
                 } else {
                     Sfx.play('bad'); info.classList.add('halfcrowd-count--bad');
                     msg.textContent = '左邊 ' + left.length + ' 個、右邊 ' + right.length + ' 個，不一樣多（多的 ' + plan.extra + ' 個是紅色）'; msg.classList.add('halfcrowd-msg--bad');
                     /* 標出正確的位置：綠色虛線 */
                     var ok2 = kit.svg('line', { x1: ((q.lo + q.hi) / 2).toFixed(2), x2: ((q.lo + q.hi) / 2).toFixed(2), y1: 0, y2: AH, 'class': 'halfcrowd-line halfcrowd-line--ans' }, svg);
-                    api.fail({ delay: 1800, lines: ['這一關有 ' + q.N + ' 個人', '你的線左邊 ' + left.length + ' 個、右邊 ' + right.length + ' 個', '剛好一半的位置在綠色虛線附近（x ' + q.lo.toFixed(4) + '～' + q.hi.toFixed(4) + '）'] });
+                    api.fail({ delay: 1800, lines: ['這一關有 ' + q.N + ' 個人', '你的線左邊 ' + left.length + ' 個、右邊 ' + right.length + ' 個', '剛好一半的位置在綠色虛線附近（x ' + q.lo.toFixed(4) + '～' + q.hi.toFixed(4) + '）'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 }
             });
         }
-        kit.onTap(okBtn, count);
+        kit.onTap(okBtn, count);                        /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
 
         /* 驗證用：solve 把線放在剛好一半的位置；wrong 放在一個一定數不一樣的位置 */
         api.solve = function () { setX((q.lo + q.hi) / 2); count(); };

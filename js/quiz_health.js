@@ -31,7 +31,7 @@
     var timeline = lib.timeline;
 
     /* others：從清單中排除某些項目 */
-    function others(list, not) { return list.filter(function (x) { return [].concat(not).indexOf(x) < 0; }); }
+    function others(list, not) { return list.filter(function (x) { return [].concat(not).indexOf(x) < 0; }); }  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
     var yuan = function (n) { return n + ' 元'; };
     var DAILY = ['降血壓藥', '降血糖藥', '胃藥', '鈣片', '維他命', '降血脂藥'];
     var DOSES = ['半顆', '一顆', '一顆半', '兩顆', '三顆'];
@@ -52,7 +52,7 @@
         var out = [];
         while (out.length < n) {
             var c = G.any(P.medColors) + G.any(P.medShapes);
-            if (out.indexOf(c) < 0) out.push(c);
+            if (out.indexOf(c) < 0) out.push(c);        /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         }
         return out;
     }
@@ -109,10 +109,10 @@
         var c2 = cs[1];
         var i1 = G.pick(c1.items);
         var i2 = G.pick(c2.items);
-        var rest2 = G.shuffle(c2.items.filter(function (x) { return x !== i2; }));
+        var rest2 = G.shuffle(c2.items.filter(function (x) { return x !== i2; }));  /* filter：留下符合條件的元素，回傳新陣列 */
         var lure = rest2[0];
         var sib2 = rest2[1];
-        var sib1 = G.any(c1.items.filter(function (x) { return x !== i1; }));
+        var sib1 = G.any(c1.items.filter(function (x) { return x !== i1; }));  /* filter：留下符合條件的元素，回傳新陣列 */
         var bus = G.num(12, 98, null, twoDiff);
         var house = rev2(bus);
         var stop = G.pick(P.stops);
@@ -206,15 +206,15 @@
         var noiseLabel = '逛' + noise.shop;
         var noiseWhy = noise.shop + '只是順口提到的新店。';
         var qs = [];
-        exec.forEach(function (e, i) {
+        exec.forEach(function (e, i) {                  /* forEach：對陣列的每個元素各做一次 */
             var lures = [];
             if (narr[i] !== e) lures.push(L(narr[i].k, '順序顛倒', '紙條上先講到「' + narr[i].k + '」，但它是' + ord[exec.indexOf(narr[i])] + '。'));
-            exec.forEach(function (o, j) { if (j !== i) lures.push(L(o.k, '順序顛倒', '「' + o.k + '」是' + ord[j] + '。')); });
+            exec.forEach(function (o, j) { if (j !== i) lures.push(L(o.k, '順序顛倒', '「' + o.k + '」是' + ord[j] + '。')); });  /* forEach：對陣列的每個元素各做一次 */
             lures.push(L(noiseLabel, '似曾相識', noiseWhy));
             qs.push(G.q(ord[i] + '要做什麼？', '順序', e.k, lures));
         });
         qs.push(G.q('哪一件事要搭公車？', '配對', BE.k,
-            exec.filter(function (e) { return e !== BE; }).map(function (e) { return L(e.k, '張冠李戴', '搭公車是為了去' + BE.place + '。'); })
+            exec.filter(function (e) { return e !== BE; }).map(function (e) { return L(e.k, '張冠李戴', '搭公車是為了去' + BE.place + '。'); })  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
                 .concat([L(noiseLabel, '似曾相識', noiseWhy)])));
         qs.push(G.q('要搭幾號公車？', '數字', bus, G.near(bus, String, { lo: 10, hi: 99 })));
         exec.forEach(function (e, i) {
@@ -247,7 +247,7 @@
         var x;
         var y;
         do { x = G.int(0, 2); y = G.int(0, 2); } while (si[x] === y);
-        var objs = G.shuffle([0, 1, 2].map(function (i) { return { n: things[i], c: cols[i], s: shs[si[i]] }; })
+        var objs = G.shuffle([0, 1, 2].map(function (i) { return { n: things[i], c: cols[i], s: shs[si[i]] }; })  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             .concat([{ n: things[3], c: cols[x], s: shs[y] }]));
         var meds = G.pick(H_ODDMEDS, 2);
         var fc = [G.any(meds[0].odd)];
@@ -601,7 +601,7 @@
         var fee = G.int(2, 4) * 50;
         var self = G.num(10, 18, null, null, 'self') * 50;
         var oldTotal = fee * 2 + self;
-        var cash = Math.ceil((oldTotal + G.int(1, 3) * 50) / 100) * 100;
+        var cash = Math.ceil((oldTotal + G.int(1, 3) * 50) / 100) * 100;  /* Math.ceil：無條件進位成整數 */
         var self2 = self + (cash - oldTotal) + G.int(1, 4) * 50;
         var total = fee * 2 + self2;
         var diff = total - cash;

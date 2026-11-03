@@ -42,8 +42,8 @@
     var CIRCLED = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩'];  /* 步驟前面的編號（①～⑩） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function numsFor(level) { return kit.clamp(Math.round(kit.ramp(level, NUMS[0], NUMS[1], RAMP_LEVELS)), NUMS[0], NUMS[1]); }
-    function numMaxFor(level) { return Math.round(kit.ramp(level, NUM_MAX[0], NUM_MAX[1], RAMP_LEVELS)); }
+    function numsFor(level) { return kit.clamp(Math.round(kit.ramp(level, NUMS[0], NUMS[1], RAMP_LEVELS)), NUMS[0], NUMS[1]); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function numMaxFor(level) { return Math.round(kit.ramp(level, NUM_MAX[0], NUM_MAX[1], RAMP_LEVELS)); }  /* Math.round：四捨五入成整數 */
     function parensFor(level, nums) {
         var p = level >= PAREN2_FROM ? 2 : (level >= PAREN1_FROM ? 1 : 0);
         if (p === 2 && nums < 5) p = 1;
@@ -56,21 +56,21 @@
        prefer 是想要的個位數（例如放進另一邊答案的個位數，讓「只算個位數」也分不出來）；那個個位數不能用就隨機挑一個。
        回傳 null＝挑不出來（不會發生：最多只有 3 個要避開的數） */
     function nearAnswer(v, exclude, prefer, rand) {
-        var base = Math.floor(v / 10) * 10, pool = [], d, c;
+        var base = Math.floor(v / 10) * 10, pool = [], d, c;  /* Math.floor：無條件捨去成整數 */
         for (d = 0; d < 10; d++) {
             c = base + d;
-            if (c !== v && c >= 1 && exclude.indexOf(c) < 0) pool.push(c);
+            if (c !== v && c >= 1 && exclude.indexOf(c) < 0) pool.push(c);  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         }
         if (!pool.length) return null;
         if (prefer != null && prefer !== v % 10) {
             c = base + prefer;
-            if (pool.indexOf(c) >= 0) return c;
+            if (pool.indexOf(c) >= 0) return c;         /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         }
-        return kit.pick(pool, rand);
+        return kit.pick(pool, rand);                    /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
     }
     function ansMs(level) {
         var n = numsFor(level);
-        return Math.round((TIME_BASE + TIME_PER_NUM * (n - 2)) * kit.ramp(level, TIME_MUL[0], TIME_MUL[1], RAMP_LEVELS) * 1000);
+        return Math.round((TIME_BASE + TIME_PER_NUM * (n - 2)) * kit.ramp(level, TIME_MUL[0], TIME_MUL[1], RAMP_LEVELS) * 1000);  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     }
     /* 算式還原器：tokens 是 [數字, '+'|'-'|'*'|'/', 數字, …, '(' , ')' …] 的陣列。
        mode：'std'＝照數學規則（括號先算、再乘除、最後加減）；'ltr'＝不管先乘除、由左到右一路算（括號還是先算）；
@@ -78,21 +78,21 @@
        回傳 { value 結果, steps 每一步的文字, bad 有除以 0, frac 有除不盡的除法, neg 有算出負數 } */
     function reduceExpr(tokens, mode) {
         var steps = [], bad = false, frac = false, neg = false;
-        var arr = tokens.slice();
-        if (mode === 'noparen') arr = arr.filter(function (t) { return t !== '(' && t !== ')'; });
+        var arr = tokens.slice();                       /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        if (mode === 'noparen') arr = arr.filter(function (t) { return t !== '(' && t !== ')'; });  /* filter：留下符合條件的元素，回傳新陣列 */
         /* a[i] 是運算符號，a[i-1]、a[i+1] 是左右數字：算完換成一個結果 */
         function apply(a, i) {
             var x = a[i - 1], op = a[i], y = a[i + 1], r;
             if (op === '+') r = x + y;
             else if (op === '-') r = x - y;
             else if (op === '*') r = x * y;
-            else { if (y === 0) { bad = true; r = 0; } else { r = x / y; if (r !== Math.floor(r)) frac = true; } }
+            else { if (y === 0) { bad = true; r = 0; } else { r = x / y; if (r !== Math.floor(r)) frac = true; } }  /* Math.floor：無條件捨去成整數 */
             if (r < 0) neg = true;
-            steps.push(x + ' ' + OP_TEXT[op] + ' ' + y + ' ＝ ' + (r === Math.floor(r) ? r : Math.round(r * 10000) / 10000));
+            steps.push(x + ' ' + OP_TEXT[op] + ' ' + y + ' ＝ ' + (r === Math.floor(r) ? r : Math.round(r * 10000) / 10000));  /* Math.round：四捨五入成整數 */
             a.splice(i - 1, 3, r);
         }
         function flat(a) {
-            a = a.slice();
+            a = a.slice();                              /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
             if (mode === 'ltr') { while (a.length > 1) apply(a, 1); return a[0]; }
             for (; ;) {
                 var idx = -1;
@@ -113,39 +113,39 @@
     }
     /* tokens → 畫面上的字（運算符號換成 × ÷ −，數字與符號之間留空白） */
     function toText(tokens) {
-        var parts = tokens.map(function (t) { return typeof t === 'number' ? String(t) : OP_TEXT[t]; });
+        var parts = tokens.map(function (t) { return typeof t === 'number' ? String(t) : OP_TEXT[t]; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         var out = '';
-        parts.forEach(function (s, i) {
+        parts.forEach(function (s, i) {                 /* forEach：對陣列的每個元素各做一次 */
             if (i > 0 && s !== ')' && parts[i - 1] !== '(') out += ' ';     /* 左括號後面、右括號前面不留空白 */
             out += s;
         });
         return out;
     }
     /* 步驟文字 → 「① 3 × 2 ＝ 6　② 8 − 6 ＝ 2」 */
-    function stepsText(steps) { return steps.map(function (s, i) { return CIRCLED[i] + ' ' + s; }).join('　'); }
+    function stepsText(steps) { return steps.map(function (s, i) { return CIRCLED[i] + ' ' + s; }).join('　'); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     /* 隨機排一個算式；回傳 tokens 與括號的位置記錄 */
     function randomTokens(level, rand) {
         var n = numsFor(level), mx = numMaxFor(level);
         var nums = [], i;
-        for (i = 0; i < n; i++) nums.push(kit.randInt(1, mx, rand));
+        for (i = 0; i < n; i++) nums.push(kit.randInt(1, mx, rand));  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         var pool = ['+', '-', '*'];
         if (level >= DIV_FROM) pool.push('/');
         var ops = [];
-        for (i = 0; i < n - 1; i++) ops.push(kit.pick(pool, rand));
+        for (i = 0; i < n - 1; i++) ops.push(kit.pick(pool, rand));  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         /* 至少要有一個乘除、一個加減，不然「先乘除」就沒有意義 */
-        var mdCount = ops.filter(function (o) { return o === '*' || o === '/'; }).length;
-        if (mdCount === 0) ops[kit.randInt(0, n - 2, rand)] = level >= DIV_FROM && rand() < 0.4 ? '/' : '*';
+        var mdCount = ops.filter(function (o) { return o === '*' || o === '/'; }).length;  /* filter：留下符合條件的元素，回傳新陣列 */
+        if (mdCount === 0) ops[kit.randInt(0, n - 2, rand)] = level >= DIV_FROM && rand() < 0.4 ? '/' : '*';  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         else if (mdCount === ops.length) ops[kit.randInt(0, n - 2, rand)] = rand() < 0.5 ? '+' : '-';
         /* 括號：隨機挑不重疊的 2～3 個數字包起來（至少 2 個數字、至少 1 個運算符號） */
         var parens = parensFor(level, n), spans = [], t;
         for (t = 0; t < 30 && spans.length < parens; t++) {
             var len = kit.randInt(2, Math.min(3, n - 1), rand), st = kit.randInt(0, n - len, rand);
             if (len >= n) continue;
-            if (spans.every(function (s) { return st + len - 1 < s[0] || st > s[1]; })) spans.push([st, st + len - 1]);
+            if (spans.every(function (s) { return st + len - 1 < s[0] || st > s[1]; })) spans.push([st, st + len - 1]);  /* every：陣列裡「每一個」元素都符合條件才回傳 true */
         }
         var tokens = [];
         for (i = 0; i < n; i++) {
-            spans.forEach(function (s) { if (s[0] === i) tokens.push('('); });
+            spans.forEach(function (s) { if (s[0] === i) tokens.push('('); });  /* forEach：對陣列的每個元素各做一次 */
             tokens.push(nums[i]);
             spans.forEach(function (s) { if (s[1] === i) tokens.push(')'); });
             if (i < n - 1) tokens.push(ops[i]);
@@ -241,11 +241,11 @@
         eq.style.fontSize = fs + 'px';
         var ask = h('div', { 'class': 'qz-note orderops-ask', text: '正確答案是哪一個？' });
         var reveal = h('div', { 'class': 'qz-note orderops-reveal' });
-        stage.appendChild(eq); stage.appendChild(ask); stage.appendChild(reveal);
+        stage.appendChild(eq); stage.appendChild(ask); stage.appendChild(reveal);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         /* 正確答案放在 slot，其餘答案隨機填進剩下的位置 */
-        var others = kit.shuffle(q.options.filter(function (v) { return v !== q.truth; }), api.rand), vals = [];
+        var others = kit.shuffle(q.options.filter(function (v) { return v !== q.truth; }), api.rand), vals = [];  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         for (var si = 0; si < count; si++) vals.push(si === slot ? q.truth : others.shift());
-        var grid = kit.btnGrid(stage, vals.map(function (v) {
+        var grid = kit.btnGrid(stage, vals.map(function (v) {  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
             return { text: String(v), kind: 'sky', cls: 'orderops-btn', onTap: function () { judge(v); } };
         }), count === 4 ? { cols: 2, h: 100 } : { h: 120 });
         var bTruth = grid.btns[slot];
@@ -256,11 +256,11 @@
         function judge(v) {
             if (api.over) return;
             var ok = v === q.truth;
-            eq.classList.add(ok ? 'qz-ok' : 'qz-bad');
-            reveal.textContent = stepsText(q.steps);
-            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1000 }); return; }
-            kit.flash(stage, false, api.my);
-            api.fail({
+            eq.classList.add(ok ? 'qz-ok' : 'qz-bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            reveal.textContent = stepsText(q.steps);    /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1000 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: 2400, lines: [
                     (v == null ? '時間到！' : '你選了 ' + v) + '，正確答案是 ' + q.truth,
                     '運算順序：' + stepsText(q.steps),

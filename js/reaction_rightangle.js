@@ -43,10 +43,10 @@
     function makeRound(rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var th;
-        do { th = kit.randFloat(ANG_MIN, ANG_MAX, rand); } while (Math.abs(th - 135) < AVOID);
-        var c = Math.abs(Math.cos(rad(th)));
+        do { th = kit.randFloat(ANG_MIN, ANG_MAX, rand); } while (Math.abs(th - 135) < AVOID);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+        var c = Math.abs(Math.cos(rad(th)));            /* Math.abs：取絕對值（去掉負號） */
         var len = Math.min(Q_LEN, (S.x - 24) / Math.max(c, 1e-6));
-        var stripe = th + (rand() < 0.5 ? 1 : -1) * kit.randFloat(20, 40, rand);
+        var stripe = th + (rand() < 0.5 ? 1 : -1) * kit.randFloat(20, 40, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         return { th: th, ans: th - 90, len: len, stripe: stripe };
     }
     /* 手指位置 → 數學角（度）：y 軸朝下，所以 dy 要反過來 */
@@ -56,7 +56,7 @@
     function zoomFor(err, R) {
         var gap = 2 * R * Math.sin(rad(err) / 2);
         if (gap >= ZOOM_GAP_MAX) return 1;
-        return kit.clamp(ZOOM_REF / Math.max(gap, 0.05), 1.5, 40);
+        return kit.clamp(ZOOM_REF / Math.max(gap, 0.05), 1.5, 40);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
     }
     /* 結算畫面的評語：依成績回傳一句話 */
     function rating(e) {
@@ -89,10 +89,10 @@
         var off = s.y - S.y;       /* 舞台比預設矮時整體上移（座標一律用 S，畫的時候加 off） */
         console.log('[畫成直角] 題目線角度 ' + cfg.th.toFixed(2) + '°，標準垂線 ' + cfg.ans.toFixed(2) + '°');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        var svg = kit.svg('svg', { 'class': 'rightangle-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);
+        var svg = kit.svg('svg', { 'class': 'rightangle-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var full = { vx: 0, vy: 0, vw: W, vh: H };
         /* 背景斜紋 */
-        var gBg = kit.svg('g', { transform: 'rotate(' + (-cfg.stripe).toFixed(2) + ' ' + s.x + ' ' + s.y + ')' }, svg);
+        var gBg = kit.svg('g', { transform: 'rotate(' + (-cfg.stripe).toFixed(2) + ' ' + s.x + ' ' + s.y + ')' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         for (var k = -14; k <= 14; k++) kit.svg('line', { x1: s.x - 700, x2: s.x + 700, y1: s.y + k * 46, y2: s.y + k * 46, 'class': 'rightangle-stripe' }, gBg);
         /* 題目線段 */
         var qx = s.x + cfg.len * Math.cos(rad(cfg.th)), qy = s.y - cfg.len * Math.sin(rad(cfg.th));
@@ -101,32 +101,32 @@
         var mine = kit.svg('line', { x1: s.x, y1: s.y, x2: s.x, y2: s.y, 'class': 'rightangle-mine' }, svg);
         var dot = kit.svg('circle', { cx: s.x, cy: s.y, r: 13, 'class': 'rightangle-start' }, svg);
         var msg = h('div', { 'class': 'rightangle-msg' });
-        stage.appendChild(msg);
+        stage.appendChild(msg);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
 
         /* 操作提示（只在第一次進遊戲時）：手指＋箭頭，從起點往「標準垂線的方向」重複移動（第一次的正確答案） */
-        if (kit.once('rightangle.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: s.x, y: s.y, dx: 110 * Math.cos(rad(cfg.ans)), dy: -110 * Math.sin(rad(cfg.ans)), delay: 300, text: '請拖曳畫出垂直的線' });
+        if (kit.once('rightangle.hint')) hint = kit.fingerHint(stage, { mode: 'drag', x: s.x, y: s.y, dx: 110 * Math.cos(rad(cfg.ans)), dy: -110 * Math.sin(rad(cfg.ans)), delay: 300, text: '請拖曳畫出垂直的線' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
         function hideHint() { if (hint) { hint.remove(); hint = null; } }
-        function say(t) { msg.textContent = t; msg.classList.toggle('rightangle-msg--on', !!t); }
+        function say(t) { msg.textContent = t; msg.classList.toggle('rightangle-msg--on', !!t); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         function pos(e) { var p = kit.localPt(e, stage); return { x: p.x, y: p.y - off }; }
 
-        stage.addEventListener('pointerdown', function (e) {
+        stage.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (locked || drawing) return;
             var p = pos(e), dx = p.x - S.x, dy = p.y - S.y;
-            if (Math.sqrt(dx * dx + dy * dy) > START_R) { say('請從下方中間的起點開始拖'); return; }
-            e.preventDefault();
-            try { stage.setPointerCapture(e.pointerId); } catch (err) { }
+            if (Math.sqrt(dx * dx + dy * dy) > START_R) { say('請從下方中間的起點開始拖'); return; }  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
+            e.preventDefault();                         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            try { stage.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
             drawing = true; pid = e.pointerId; tp = null; hideHint(); say('');
         });
-        stage.addEventListener('pointermove', function (e) {
+        stage.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (!drawing || e.pointerId !== pid) return;
             tp = pos(e);
-            mine.setAttribute('x2', tp.x); mine.setAttribute('y2', tp.y + off);
+            mine.setAttribute('x2', tp.x); mine.setAttribute('y2', tp.y + off);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         });
         function end(e) {
             if (!drawing || e.pointerId !== pid) return;
             drawing = false;
-            var len = tp ? Math.sqrt(Math.pow(tp.x - S.x, 2) + Math.pow(tp.y - S.y, 2)) : 0;
-            if (!tp || len < LEN_MIN) { say('再拖長一點'); mine.setAttribute('x2', s.x); mine.setAttribute('y2', s.y); tp = null; Sfx.play('bad'); return; }
+            var len = tp ? Math.sqrt(Math.pow(tp.x - S.x, 2) + Math.pow(tp.y - S.y, 2)) : 0;  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
+            if (!tp || len < LEN_MIN) { say('再拖長一點'); mine.setAttribute('x2', s.x); mine.setAttribute('y2', s.y); tp = null; Sfx.play('bad'); return; }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             submit();
         }
         stage.addEventListener('pointerup', end);
@@ -135,7 +135,7 @@
         function submit() {
             if (locked) return;
             locked = true; hideHint();
-            Sfx.play('click');
+            Sfx.play('click');                          /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             var thp = angleOf(tp), real = errDeg(thp, cfg.ans);
             var Rz = 280;
             var ix = s.x + Rz * Math.cos(rad(cfg.ans)), iy = s.y - Rz * Math.sin(rad(cfg.ans));
@@ -144,8 +144,8 @@
             kit.svg('line', { x1: s.x, y1: s.y, x2: ix, y2: iy, 'class': 'rightangle-ideal' }, gRev);
             var a1 = rad(cfg.th), a2 = rad(cfg.ans), m = 34;
             var p1 = { x: s.x + m * Math.cos(a1), y: s.y - m * Math.sin(a1) }, p2 = { x: s.x + m * Math.cos(a2), y: s.y - m * Math.sin(a2) };
-            kit.svg('polyline', { points: [p1.x, p1.y, p1.x + p2.x - s.x, p1.y + p2.y - s.y, p2.x, p2.y].map(function (v) { return v.toFixed(1); }).join(','), 'class': 'rightangle-sq' }, gRev);
-            mine.setAttribute('class', 'rightangle-mine rightangle-mine--rev');
+            kit.svg('polyline', { points: [p1.x, p1.y, p1.x + p2.x - s.x, p1.y + p2.y - s.y, p2.x, p2.y].map(function (v) { return v.toFixed(1); }).join(','), 'class': 'rightangle-sq' }, gRev);  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            mine.setAttribute('class', 'rightangle-mine rightangle-mine--rev');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
             kit.svg('circle', { cx: ix, cy: iy, r: 6, 'class': 'rightangle-endi' }, gRev);
             kit.svg('circle', { cx: ux, cy: uy, r: 6, 'class': 'rightangle-endu' }, gRev);
             kit.svg('circle', { cx: ix, cy: iy, r: 1.2, 'class': 'rightangle-dot' }, gRev);      /* 圓心的小黑點（放在最上層，兩個圓疊在一起也看得到） */
@@ -172,7 +172,7 @@
         }
 
         function fire(type, x, y) {
-            var r = stage.getBoundingClientRect(), sc = r.width / (stage.clientWidth || r.width);
+            var r = stage.getBoundingClientRect(), sc = r.width / (stage.clientWidth || r.width);  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
             stage.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 9, clientX: r.left + x * sc, clientY: r.top + (y + off) * sc }));
         }
         function drawAngle(deg, len) {

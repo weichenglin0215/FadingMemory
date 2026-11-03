@@ -39,24 +39,24 @@
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function prog(n) { return Math.min(1, Math.max(0, n / RAMP_Q)); }
     function lerp(pair, n) { return pair[0] + (pair[1] - pair[0]) * prog(n); }
-    function timeMs(n) { return Math.round(lerp(TIME_S, n) * 1000); }
-    function maxOrigFor(n) { return Math.round(lerp(MAX_ORIG, n)); }
+    function timeMs(n) { return Math.round(lerp(TIME_S, n) * 1000); }  /* Math.round：四捨五入成整數 */
+    function maxOrigFor(n) { return Math.round(lerp(MAX_ORIG, n)); }  /* Math.round：四捨五入成整數 */
     function pOddFor(n) { return Math.round(lerp(P_ODD, n) * 1000) / 1000; }
     /* 折數 r ＝ 付幾 %：1～9 折＝10%～90%；兩位數的折（75、85、95、65）就是那個 % */
     function pctOf(r) { return r < 10 ? r * 10 : r; }
     function labelOf(r) { return r + ' 折'; }
     /* 目前會出現的折數（答案的候選）：POOL0 加上已經解鎖的 */
-    function poolFor(n) { var p = POOL0.slice(); STAGES.forEach(function (s) { if (n >= s.from) p = p.concat(s.add); }); return p; }
+    function poolFor(n) { var p = POOL0.slice(); STAGES.forEach(function (s) { if (n >= s.from) p = p.concat(s.add); }); return p; }  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
     /* 目前的按鈕：1～9 折，再加上池裡兩位數的折（由小到大） */
-    function buttonsFor(n) { var extra = poolFor(n).filter(function (r) { return r >= 10; }); return BASE_BTN.concat(extra.sort(function (a, b) { return a - b; })); }
+    function buttonsFor(n) { var extra = poolFor(n).filter(function (r) { return r >= 10; }); return BASE_BTN.concat(extra.sort(function (a, b) { return a - b; })); }  /* filter：留下符合條件的元素，回傳新陣列 */
     /* 「互補」的折數（打 7 折 ↔ 打 3 折：7 折是付 70%，3 折是付 30%）：r ＋ 互補 ＝ 10；兩位數的折沒有互補 */
     function complementOf(r) { return r < 10 ? 10 - r : null; }
     /* 一題：{ n, r（正確折數）, pct, orig, sale, label, buttons, time } */
     function makeQuestion(n, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var pool = poolFor(n), r = kit.pick(pool, rand), pct = pctOf(r), hi = maxOrigFor(n), orig;
-        if (rand() < pOddFor(n)) { var lo20 = Math.ceil(MIN_ORIG / 20); orig = 20 * kit.randInt(lo20, Math.floor(hi / 20), rand); if (orig % 100 === 0) orig += 20; }
-        else orig = 100 * kit.randInt(Math.ceil(MIN_ORIG / 100), Math.max(2, Math.floor(hi / 100)), rand);
+        var pool = poolFor(n), r = kit.pick(pool, rand), pct = pctOf(r), hi = maxOrigFor(n), orig;  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        if (rand() < pOddFor(n)) { var lo20 = Math.ceil(MIN_ORIG / 20); orig = 20 * kit.randInt(lo20, Math.floor(hi / 20), rand); if (orig % 100 === 0) orig += 20; }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+        else orig = 100 * kit.randInt(Math.ceil(MIN_ORIG / 100), Math.max(2, Math.floor(hi / 100)), rand);  /* Math.floor：無條件捨去成整數 */
         var sale = orig * pct / 100;
         return { n: n, r: r, pct: pct, orig: orig, sale: sale, label: labelOf(r), buttons: buttonsFor(n), time: timeMs(n) };
     }
@@ -101,21 +101,21 @@
         console.log('[打了幾折] 開始：每題限時 ' + timeMs(0) + ' → ' + timeMs(RAMP_Q) + ' 毫秒；折數池 ' + poolFor(0).join(',') + ' → ' + poolFor(RAMP_Q).join(','));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var field = h('div', { 'class': 'discount-field' });
-        stage.appendChild(field);
-        var tag = h('div', { 'class': 'discount-tag' }); field.appendChild(tag);
+        stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var tag = h('div', { 'class': 'discount-tag' }); field.appendChild(tag);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var info = h('div', { 'class': 'qz-note discount-info', text: '' }); field.appendChild(info);
 
         function ask() {
             if (api.over) return;
-            q = makeQuestion(count, api.rand); phase = 'ask'; picked = null; info.textContent = ''; info.className = 'qz-note discount-info';
-            tag.innerHTML = '';
+            q = makeQuestion(count, api.rand); phase = 'ask'; picked = null; info.textContent = ''; info.className = 'qz-note discount-info';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            tag.innerHTML = '';                         /* innerHTML = ''：把元素裡面的東西全部清掉 */
             tag.appendChild(h('div', { 'class': 'discount-tag__sale', text: '特價' }));
             tag.appendChild(h('div', { 'class': 'discount-tag__orig' })); tag.lastChild.appendChild(document.createTextNode('原價 ')); tag.lastChild.appendChild(h('s', { text: q.orig + ' 元' }));
             var sp = h('div', { 'class': 'discount-tag__price' }); sp.appendChild(h('span', { 'class': 'discount-tag__n', text: String(q.sale) })); sp.appendChild(document.createTextNode(' 元')); tag.appendChild(sp);
             tag.appendChild(h('div', { 'class': 'discount-tag__q', text: '這是打幾折？' }));
             if (grid) grid.el.remove();
             var btns = q.buttons, cols = btns.length > 9 ? 4 : 3;
-            grid = kit.btnGrid(field, btns.map(function (r) { return { text: labelOf(r), kind: 'line', cls: 'discount-btn', onTap: function () { answer(r); } }; }), { cols: cols, h: btns.length > 9 ? 76 : 96, gap: 8, bottom: 8 });
+            grid = kit.btnGrid(field, btns.map(function (r) { return { text: labelOf(r), kind: 'line', cls: 'discount-btn', onTap: function () { answer(r); } }; }), { cols: cols, h: btns.length > 9 ? 76 : 96, gap: 8, bottom: 8 });  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
             api.stopTimer(); api.timer(q.time, function () { fail(null); });
             if (count === 0 && kit.once('discount.hint')) kit.hintOn(stage, grid.btns[q.buttons.indexOf(q.r)], { mode: 'tap', delay: 900, text: '7 折＝付 70%' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         }
@@ -123,27 +123,27 @@
         function answer(r) {
             if (phase !== 'ask' || api.over) return;
             phase = 'judge'; api.stopTimer(); picked = r;
-            var k = q.buttons.indexOf(r);
+            var k = q.buttons.indexOf(r);               /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             if (r === q.r) {
-                grid.btns[k].classList.add('discount-btn--ok'); count++; S.score = count; api.setInfo('答對 ' + count + ' 題'); Sfx.play('ok');
-                info.textContent = formula(q); info.classList.add('discount-info--ok');
-                api.after(520, ask); return;
+                grid.btns[k].classList.add('discount-btn--ok'); count++; S.score = count; api.setInfo('答對 ' + count + ' 題'); Sfx.play('ok');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                info.textContent = formula(q); info.classList.add('discount-info--ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                api.after(520, ask); return;            /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
             }
-            grid.btns[k].classList.add('discount-btn--bad'); fail(r);
+            grid.btns[k].classList.add('discount-btn--bad'); fail(r);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
         }
         /* 結束：寫出算式；選的是互補的折數就特別說明 */
         function fail(r) {
             if (api.over || phase === 'end') return;
             phase = 'end'; api.stopTimer();
-            var k = q.buttons.indexOf(q.r); grid.btns[k].classList.add('discount-btn--ok');
+            var k = q.buttons.indexOf(q.r); grid.btns[k].classList.add('discount-btn--ok');  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             var why = whyText(q, r);
-            info.textContent = why; info.classList.add('discount-info--bad');
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: 4200, lines: [why, '特價 ÷ 原價 ＝ 付幾成：' + q.sale + ' ÷ ' + q.orig + ' ＝ ' + (q.sale / q.orig), '打 ' + q.label + '＝付原價的 ' + q.pct + '%（不是減 ' + q.pct + '%）'] });
+            info.textContent = why; info.classList.add('discount-info--bad');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 4200, lines: [why, '特價 ÷ 原價 ＝ 付幾成：' + q.sale + ' ÷ ' + q.orig + ' ＝ ' + (q.sale / q.orig), '打 ' + q.label + '＝付原價的 ' + q.pct + '%（不是減 ' + q.pct + '%）'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：點正確的按鈕（最多 SOLVE_CAP 題）／點一個錯的；可重複呼叫 */
         api.solve = function () { if (phase !== 'ask' || count >= SOLVE_CAP) return; answer(q.r); };
-        api.wrong = function () { if (phase !== 'ask') return; var comp = complementOf(q.r), w = (comp != null && q.buttons.indexOf(comp) >= 0) ? comp : q.buttons.filter(function (b) { return b !== q.r; })[0]; answer(w); };
+        api.wrong = function () { if (phase !== 'ask') return; var comp = complementOf(q.r), w = (comp != null && q.buttons.indexOf(comp) >= 0) ? comp : q.buttons.filter(function (b) { return b !== q.r; })[0]; answer(w); };  /* filter：留下符合條件的元素，回傳新陣列 */
     }
 
     /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */

@@ -32,32 +32,32 @@
         var grid = h('div', { 'class': 'rx-grid' + (o.cls ? ' ' + o.cls : '') });
         grid.style.gridTemplateColumns = 'repeat(' + cols + ', minmax(0, 1fr))';
         if (o.gap != null) grid.style.gap = o.gap + 'px';
-        if (o.h) grid.style.setProperty('--rx-grid-h', o.h + 'px');
+        if (o.h) grid.style.setProperty('--rx-grid-h', o.h + 'px');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
         if (o.bottom) grid.style.bottom = o.bottom + 'px';
-        var btns = items.map(function (it, i) {
+        var btns = items.map(function (it, i) {         /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var b = h('button', { 'class': 'btn btn--' + (it.kind || 'line') + (it.cls ? ' ' + it.cls : '') });
-            if (it.html != null) b.innerHTML = it.html; else b.textContent = it.text;
-            if (it.onTap) kit.onTap(b, function (e) { it.onTap(b, i, e); });
-            grid.appendChild(b);
+            if (it.html != null) b.innerHTML = it.html; else b.textContent = it.text;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            if (it.onTap) kit.onTap(b, function (e) { it.onTap(b, i, e); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+            grid.appendChild(b);                        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             return b;
         });
-        parent.appendChild(grid);
+        parent.appendChild(grid);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         return { el: grid, btns: btns };
     };
 
     /* 永遠不是負數的餘數：kit.mod(-1, 12) 是 11（JavaScript 的 -1 % 12 是 -1） */
     kit.mod = function (a, n) { return ((a % n) + n) % n; };
     /* 從陣列隨機挑 n 個不重複的元素（rand 可以注入，測試用） */
-    kit.sample = function (arr, n, rand) { return kit.shuffle(arr, rand).slice(0, n); };
+    kit.sample = function (arr, n, rand) { return kit.shuffle(arr, rand).slice(0, n); };  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
     /* 兩點距離 */
-    kit.dist = function (x1, y1, x2, y2) { return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)); };
+    kit.dist = function (x1, y1, x2, y2) { return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)); };  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
     /* 色碼字串：色相 0～360、飽和度與亮度 0～100 */
-    kit.hsl = function (hue, s, l) { return 'hsl(' + (Math.round(hue * 10) / 10) + ',' + s + '%,' + l + '%)'; };
+    kit.hsl = function (hue, s, l) { return 'hsl(' + (Math.round(hue * 10) / 10) + ',' + s + '%,' + l + '%)'; };  /* Math.round：四捨五入成整數 */
     /* 答對／答錯時，讓元素（通常是遊戲區）閃一下顏色框：ok＝綠、否則橘紅，0.5 秒後自動拿掉 */
     kit.flash = function (el, ok, my) {
         var cls = ok ? 'rx-flash-ok' : 'rx-flash-bad';
-        el.classList.add(cls);
-        var off = function () { el.classList.remove(cls); };
-        if (my) my.after(500, off); else setTimeout(off, 500);
+        el.classList.add(cls);                          /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+        var off = function () { el.classList.remove(cls); };  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+        if (my) my.after(500, off); else setTimeout(off, 500);  /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
     };
 })(window);

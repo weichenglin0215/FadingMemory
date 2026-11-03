@@ -53,8 +53,8 @@
     /* 這一關三種差異各自的量（線性隨關卡變小） */
     function amounts(level) {
         return {
-            size: kit.ramp(level, SIZE_START, SIZE_END, LEVEL_RAMP),
-            hue: kit.ramp(level, HUE_START, HUE_END, LEVEL_RAMP),
+            size: kit.ramp(level, SIZE_START, SIZE_END, LEVEL_RAMP),  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+            hue: kit.ramp(level, HUE_START, HUE_END, LEVEL_RAMP),  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
             pos: kit.ramp(level, POS_START, POS_END, LEVEL_RAMP)
         };
     }
@@ -69,13 +69,13 @@
         /* 從 4×3 = 12 個格子隨機挑 10 個，每個格子裡再亂數偏移一點 */
         var cells = [];
         for (var c = 0; c < COLS * ROWS; c++) cells.push(c);
-        cells = kit.shuffle(cells, rand).slice(0, N_SHAPES);
+        cells = kit.shuffle(cells, rand).slice(0, N_SHAPES);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         var cw = W / COLS, ch = Hh / ROWS;
-        var items = cells.map(function (cell) {
-            var cx = (cell % COLS + 0.5) * cw, cy = (Math.floor(cell / COLS) + 0.5) * ch;
+        var items = cells.map(function (cell) {         /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            var cx = (cell % COLS + 0.5) * cw, cy = (Math.floor(cell / COLS) + 0.5) * ch;  /* Math.floor：無條件捨去成整數 */
             return {
-                shape: kit.pick(SHAPES, rand),
-                hue: kit.randInt(0, 359, rand),
+                shape: kit.pick(SHAPES, rand),          /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+                hue: kit.randInt(0, 359, rand),         /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
                 r: BASE_R,
                 x: cx + (rand() - 0.5) * Math.max(0, cw - 2 * BASE_R - 28),
                 y: cy + (rand() - 0.5) * Math.max(0, ch - 2 * BASE_R - 28)
@@ -83,12 +83,12 @@
         });
         /* 挑 5 個要動手腳的圖形，差異種類三種都至少出現一次，其餘隨機；每個差異改在上格或下格也是隨機的 */
         /* 挑 5 個動手腳；差異種類：三種都至少一次，其餘隨機 */
-        var idx = kit.shuffle(items.map(function (_, i) { return i; }), rand).slice(0, N_DIFF);
+        var idx = kit.shuffle(items.map(function (_, i) { return i; }), rand).slice(0, N_DIFF);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         /* kinds 先放三種，再補到 5 個，最後洗牌 */
-        var kinds = KINDS.slice();
-        while (kinds.length < N_DIFF) kinds.push(kit.pick(KINDS, rand));
+        var kinds = KINDS.slice();                      /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        while (kinds.length < N_DIFF) kinds.push(kit.pick(KINDS, rand));  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         kinds = kit.shuffle(kinds, rand);
-        var diffs = idx.map(function (i, k) {
+        var diffs = idx.map(function (i, k) {           /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var kind = kinds[k], d = { i: i, kind: kind, panel: rand() < 0.5 ? 'top' : 'bot', amount: amt[kind], dh: 0, ds: 1, dx: 0, dy: 0 };
             if (kind === 'size') d.ds = 1 + (rand() < 0.5 ? -1 : 1) * amt.size;
             if (kind === 'hue') d.dh = (rand() < 0.5 ? -1 : 1) * amt.hue;
@@ -109,7 +109,7 @@
     /* 某一格（'top'／'bot'）裡第 i 個圖形最終的樣子 */
     function itemIn(level, panel, i) {
         var it = level.items[i], out = { shape: it.shape, hue: it.hue, r: it.r, x: it.x, y: it.y };
-        level.diffs.forEach(function (d) {
+        level.diffs.forEach(function (d) {              /* forEach：對陣列的每個元素各做一次 */
             if (d.i === i && d.panel === panel) {
                 out.r = it.r * d.ds;
                 out.hue = (it.hue + d.dh + 360) % 360;
@@ -147,7 +147,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             /* levelNo 目前關卡；cleared 已過幾關；newRec 有沒有破紀錄 */
             var levelNo = start || 1, cleared = levelNo - 1, newRec = false;
 
@@ -158,8 +158,8 @@
             var top = h('div', { 'class': 'diff-panel' });
             var bot = h('div', { 'class': 'diff-panel' });
             var flash = h('div', { 'class': 'diff-penalty', text: '點錯了' });
-            root.appendChild(head);
-            root.appendChild(top);
+            root.appendChild(head);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(top);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             root.appendChild(bot);
             root.appendChild(flash);
 
@@ -167,38 +167,38 @@
             var L = null, found = 0, svgs = {}, t0 = 0, state = 'idle', foundSet = {}, mistakes = 0;
 
             /* 更新標題列右側的小字 */
-            function meta() { ctx.setMeta(kit.meta(['第 ' + levelNo + ' 關', fmtBest(Reaction.getBest(ID))])); }
+            function meta() { ctx.setMeta(kit.meta(['第 ' + levelNo + ' 關', fmtBest(Reaction.getBest(ID))])); }  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             /* 更新標題文字（找到幾個、還能點錯幾次、花了幾秒） */
             function paintHead() {
                 var left = MISTAKES_MAX - 1 - mistakes;
-                head.innerHTML = '';
+                head.innerHTML = '';                    /* innerHTML = ''：把元素裡面的東西全部清掉 */
                 head.appendChild(h('span', { 'class': 'diff-head__main', text: '第 ' + levelNo + ' 關　找到 ' + found + ' / ' + N_DIFF }));
-                head.appendChild(h('span', { 'class': 'diff-head__sub' + (left <= 0 ? ' diff-head__sub--warn' : ''), text: (left > 0 ? '還能點錯 ' + left + ' 次' : '再點錯就結束了') + '　本關 ' + Math.floor((performance.now() - t0) / 1000) + ' 秒' }));
+                head.appendChild(h('span', { 'class': 'diff-head__sub' + (left <= 0 ? ' diff-head__sub--warn' : ''), text: (left > 0 ? '還能點錯 ' + left + ' 次' : '再點錯就結束了') + '　本關 ' + Math.floor((performance.now() - t0) / 1000) + ' 秒' }));  /* performance.now()：高精度的時間（毫秒），計時用 */
             }
 
             /* 畫其中一格（上或下）：每個圖形畫成 SVG 形狀，外加一個看不見但可點的「熱區」圓和標記圈 */
             function drawPanel(el, panel, W, Hh) {
                 el.innerHTML = '';
-                var svg = kit.svg('svg', { 'class': 'diff-svg', viewBox: '0 0 ' + W + ' ' + Hh }, el);
+                var svg = kit.svg('svg', { 'class': 'diff-svg', viewBox: '0 0 ' + W + ' ' + Hh }, el);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
                 svgs[panel] = svg;
-                L.items.forEach(function (_, i) {
+                L.items.forEach(function (_, i) {       /* forEach：對陣列的每個元素各做一次 */
                     var s = itemIn(L, panel, i);
-                    var g = kit.svg('g', { transform: 'translate(' + s.x.toFixed(2) + ' ' + s.y.toFixed(2) + ')' }, svg);
+                    var g = kit.svg('g', { transform: 'translate(' + s.x.toFixed(2) + ' ' + s.y.toFixed(2) + ')' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
                     var fillC = 'hsl(' + s.hue.toFixed(1) + ', 72%, 56%)';
                     if (s.shape === 'circle') kit.svg('circle', { 'class': 'diff-shape', r: s.r.toFixed(2), fill: fillC }, g);
                     else kit.svg('polygon', { 'class': 'diff-shape', fill: fillC, points: polyPoints(s.shape, s.r).map(function (p) { return p[0].toFixed(2) + ',' + p[1].toFixed(2); }).join(' ') }, g);
                     kit.svg('circle', { 'class': 'diff-ring', r: BASE_R + 12, id: '' }, g);
                     var hit = kit.svg('circle', { 'class': 'diff-hit', r: BASE_R + 14 }, g);
-                    hit.addEventListener('pointerdown', function (e) { e.preventDefault(); tap(i, panel, g); });
-                    g.setAttribute('data-i', i);
+                    hit.addEventListener('pointerdown', function (e) { e.preventDefault(); tap(i, panel, g); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+                    g.setAttribute('data-i', i);        /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
                 });
             }
 
             /* 同時在上下兩格的同一個圖形外面加標記圈（答對綠色、揭曉橘色） */
             function ringBoth(i, cls) {
                 ['top', 'bot'].forEach(function (p) {
-                    var g = svgs[p].querySelector('g[data-i="' + i + '"]');
-                    if (g) g.querySelector('.diff-ring').classList.add(cls);
+                    var g = svgs[p].querySelector('g[data-i="' + i + '"]');  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
+                    if (g) g.querySelector('.diff-ring').classList.add(cls);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 });
             }
 
@@ -206,11 +206,11 @@
             function startLevel() {
                 if (my.dead) return;
                 L = makeLevel(levelNo, top.clientWidth, top.clientHeight);
-                found = 0; foundSet = {}; mistakes = 0; state = 'play'; t0 = performance.now();
+                found = 0; foundSet = {}; mistakes = 0; state = 'play'; t0 = performance.now();  /* performance.now()：高精度的時間（毫秒），計時用 */
                 drawPanel(top, 'top', top.clientWidth, top.clientHeight);
                 drawPanel(bot, 'bot', bot.clientWidth, bot.clientHeight);
                 /* 操作提示（只在第一次進遊戲時）：手指縮放，擺在「第一個不一樣的圖形」上（第一關的正確答案之一） */
-                if (Reaction.kit.once('diff.hint')) Reaction.kit.hintOn(root, svgs.top.querySelector('g[data-i="' + L.diffs[0].i + '"] .diff-hit'), { mode: 'tap', text: '請點擊不一樣的圖形' });
+                if (Reaction.kit.once('diff.hint')) Reaction.kit.hintOn(root, svgs.top.querySelector('g[data-i="' + L.diffs[0].i + '"] .diff-hit'), { mode: 'tap', text: '請點擊不一樣的圖形' });  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
                 paintHead(); meta();
                 /* 主控台印出這一關三種差異量與 5 個差異的位置（驗證用） */
                 try {
@@ -227,19 +227,19 @@
             function tap(i, panel, g) {
                 if (state !== 'play' || foundSet[i]) return;
                 /* 這個圖形是不是 5 個差異之一 */
-                var isDiff = L.diffs.some(function (d) { return d.i === i; });
+                var isDiff = L.diffs.some(function (d) { return d.i === i; });  /* some：陣列裡「只要有一個」元素符合條件就回傳 true */
                 if (isDiff) {
                     foundSet[i] = true; found++;
                     ringBoth(i, 'diff-ring--ok');
-                    Sfx.play('ok');
+                    Sfx.play('ok');                     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                     paintHead();
                     if (found >= N_DIFF) levelClear();
                     /* 不是差異：點錯，顯示橘色圈，累計次數，達上限就結束 */
                 } else {
-                    g.querySelector('.diff-ring').classList.add('diff-ring--bad');
-                    my.after(450, function () { g.querySelector('.diff-ring').classList.remove('diff-ring--bad'); });
+                    g.querySelector('.diff-ring').classList.add('diff-ring--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                    my.after(450, function () { g.querySelector('.diff-ring').classList.remove('diff-ring--bad'); });  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
                     mistakes++;
-                    Sfx.play('bad');
+                    Sfx.play('bad');                    /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                     flash.classList.remove('diff-penalty--on'); void flash.offsetWidth; flash.classList.add('diff-penalty--on');
                     paintHead();
                     if (mistakes >= MISTAKES_MAX) gameOver();
@@ -250,7 +250,7 @@
             function levelClear() {
                 state = 'clear';
                 cleared = levelNo;
-                if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;
+                if (Reaction.setBest(ID, cleared, function (v, b) { return v > b; })) newRec = true;  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                 Sfx.play('win');
                 levelNo++;
                 my.after(NEXT_MS, startLevel);
@@ -264,9 +264,9 @@
                 head.innerHTML = '';
                 head.appendChild(h('span', { 'class': 'diff-head__main', text: '第二次點錯了！' }));
                 head.appendChild(h('span', { 'class': 'diff-head__sub', text: '黃圈是沒找到的' }));
-                var failLevel = levelNo, back = kit.resumeFrom(failLevel), secs = Math.round((performance.now() - t0) / 1000);
+                var failLevel = levelNo, back = kit.resumeFrom(failLevel), secs = Math.round((performance.now() - t0) / 1000);  /* Math.round：四捨五入成整數 */
                 my.after(2200, function () {
-                    kit.result(root, {
+                    kit.result(root, {                  /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                         score: cleared,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                         num: cleared + ' 關', label: '點錯兩次了',
                         lines: ['第 ' + failLevel + ' 關找到 ' + found + ' / ' + N_DIFF + '，花了 ' + secs + ' 秒'],

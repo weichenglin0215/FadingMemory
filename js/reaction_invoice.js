@@ -96,15 +96,15 @@
     /* 隨機產生 n 位數字字串 */
     function randDigits(n, rand) {
         var s = '';
-        for (var i = 0; i < n; i++) s += kit.randInt(0, 9, rand);
+        for (var i = 0; i < n; i++) s += kit.randInt(0, 9, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         return s;
     }
     /* 把一個數字換成「長得像的」數字 */
-    function simDigit(ch, rand) { return String(kit.pick(SIM[+ch], rand)); }
+    function simDigit(ch, rand) { return String(kit.pick(SIM[+ch], rand)); }  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
     /* 把一個數字換成「不同的」數字（do...while：一直重抽到不同為止） */
     function otherDigit(ch, rand) {
         var d;
-        do { d = String(kit.randInt(0, 9, rand)); } while (d === ch);
+        do { d = String(kit.randInt(0, 9, rand)); } while (d === ch);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         return d;
     }
     /* 把字串 s 的第 i 個字元換成 c */
@@ -131,7 +131,7 @@
     /* 兩個號碼的末 3 碼，有幾個數字相同（把末 3 碼當成可重複的集合比對，不看位置）*/
     function tailOverlap(num, F) {
         var pool = F.slice(5).split(''), n = 0;
-        num.slice(5).split('').forEach(function (c) { var k = pool.indexOf(c); if (k >= 0) { pool.splice(k, 1); n++; } });
+        num.slice(5).split('').forEach(function (c) { var k = pool.indexOf(c); if (k >= 0) { pool.splice(k, 1); n++; } });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
         return n;
     }
     /* 抽開獎號碼：末 2 碼三組一樣、倒數第 3 碼三組各不同、前 5 碼彼此差很多——這樣只看尾巴排除不了，一定要細看 */
@@ -139,7 +139,7 @@
     function makeAnnounce(rand) {
         for (var t = 0; t < 2000; t++) {
             var tail2 = randDigits(2, rand);
-            var thirds = kit.shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], rand).slice(0, 3);
+            var thirds = kit.shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], rand).slice(0, 3);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
             var f5 = randDigits(5, rand), a5 = randDigits(5, rand), b5 = randDigits(5, rand);
             if (hamming(f5, a5) < ANNOUNCE_MIN_DIFF || hamming(f5, b5) < ANNOUNCE_MIN_DIFF || hamming(a5, b5) < ANNOUNCE_MIN_DIFF) continue;
             /* F＝第一獎、S1＝一號特別獎、S2＝二號特別獎 */
@@ -186,7 +186,7 @@
             var p3 = kit.randInt(5, 7, rand);
             out = frontTweak(setCh(F, p3, neighborDigit(F[p3], rand)), 0.5, rand);
         } else if (kind === 'trans') {
-            var at = kit.pick([[6, 7], [5, 6], [4, 5]], rand);
+            var at = kit.pick([[6, 7], [5, 6], [4, 5]], rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             out = frontTweak(swapCh(F, at[0], at[1]), 0.7, rand);
         } else if (kind === 'shift') {
             out = frontTweak(rand() < 0.5 ? F.slice(1) + F[0] : F[7] + F.slice(0, 7), 0.7, rand);
@@ -223,7 +223,7 @@
         /* 特別獎與一獎各一張（只有第一批） */
         if (first) { add(A.S1, 'S1', 0.55); add(A.S2, 'S2', 0.55); add(A.F, 'win1', 0.45); }
         /* 二獎～六獎 */
-        [2, 3, 4, 5, 6].forEach(function (pz) {
+        [2, 3, 4, 5, 6].forEach(function (pz) {         /* forEach：對陣列的每個元素各做一次 */
             var k = 9 - pz;                   /* 二獎末 7、三獎末 6、四獎末 5、五獎末 4、六獎末 3 */
             var need = WIN_COUNTS[pz];
             for (var n = 0, guard = 0; n < need && guard < 3000; guard++) {
@@ -233,7 +233,7 @@
             }
         });
         /* 沒中獎的干擾 */
-        Object.keys(DECOY_COUNTS).forEach(function (kind) {
+        Object.keys(DECOY_COUNTS).forEach(function (kind) {  /* forEach：對陣列的每個元素各做一次 */
             var need = DECOY_COUNTS[kind];
             for (var n = 0, guard = 0; n < need && guard < 5000; guard++) {
                 var num = mkDecoy(A, kind, rand);
@@ -244,7 +244,7 @@
         });
         /* 順序：難度＋雜訊，前面比較容易 */
         items.forEach(function (it) { it.key = it.diff + (rand() - 0.5) * 0.9; });
-        items.sort(function (a, b) { return a.key - b.key; });
+        items.sort(function (a, b) { return a.key - b.key; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
         return items;
     }
     /* 產生開獎號碼與第一批發票。回傳 { A, deck:[{num, btn, kind, diff}], used }（used 要留著，補下一批時避免號碼重複） */
@@ -269,7 +269,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
             /* D 整副發票（每批 BATCH 張，用完補一批，開獎號碼不變）；A 開獎號碼 */
             var D = makeDeck();
@@ -278,11 +278,11 @@
             var idx = 0, right = 0, money = 0, state = 'idle', cur = null;
             var rts = [];
             /* byBtn 統計每種按鈕的答題數與答對數，結算用 */
-            var byBtn = BTNS.map(function () { return { n: 0, ok: 0 }; });
+            var byBtn = BTNS.map(function () { return { n: 0, ok: 0 }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             /* 主控台印出開獎號碼與第一批各獎項張數，方便驗證 */
             try {
                 console.info('[對發票] 開獎號碼 第一獎 ' + A.F + '／一號特別獎 ' + A.S1 + '／二號特別獎 ' + A.S2 +
-                    '；第一批 ' + deck.length + ' 張：有獎 ' + deck.filter(function (d) { return d.btn !== 8; }).length + ' 張、沒中獎 ' + deck.filter(function (d) { return d.btn === 8; }).length + ' 張');
+                    '；第一批 ' + deck.length + ' 張：有獎 ' + deck.filter(function (d) { return d.btn !== 8; }).length + ' 張、沒中獎 ' + deck.filter(function (d) { return d.btn === 8; }).length + ' 張');  /* filter：留下符合條件的元素，回傳新陣列 */
                 var cnt = {};
                 deck.forEach(function (d) { cnt[BTNS[d.btn].name] = (cnt[BTNS[d.btn].name] || 0) + 1; });
                 console.info('[對發票] 各獎項張數', cnt);
@@ -294,8 +294,8 @@
             var bar = h('div', { 'class': 'ld-time' }, [h('div', { 'class': 'ld-time__fill' })]);
             var fill = bar.firstChild;
             var btns = h('div', { 'class': 'invoice-btns' });
-            root.appendChild(info);
-            root.appendChild(card);
+            root.appendChild(info);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            root.appendChild(card);                     /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             root.appendChild(bar);
             root.appendChild(btns);
 
@@ -309,36 +309,36 @@
                     h('span', { 'class': 'invoice-btn__name' }, [h('b', { text: b.name }), b.sub ? h('i', { text: b.sub }) : null]),
                     h('span', { 'class': 'invoice-btn__num', text: num })
                 ]);
-                el.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(i, kit.evT(e)); });
+                el.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(i, kit.evT(e)); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                 btns.appendChild(el);
                 els[i] = el;
             });
 
-            function meta() { ctx.setMeta(kit.meta(['答對 ' + right, fmtBest(Reaction.getBest(ID))])); }
+            function meta() { ctx.setMeta(kit.meta(['答對 ' + right, fmtBest(Reaction.getBest(ID))])); }  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             /* 上方資訊：第幾張、累計獎金 */
-            function paintInfo() { info.textContent = '第 ' + (idx + 1) + ' 張　獎金 ' + fmtMoney(money); }
+            function paintInfo() { info.textContent = '第 ' + (idx + 1) + ' 張　獎金 ' + fmtMoney(money); }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
 
             /* 出下一張（這一批用完就補一批新的） */
             function next() {
                 if (my.dead) return;
                 if (idx >= deck.length) deck = deck.concat(moreDeck(D));
                 var it = deck[idx];
-                cur = { it: it, t0: performance.now(), limit: timeFor(idx + 1) * 1000 };
+                cur = { it: it, t0: performance.now(), limit: timeFor(idx + 1) * 1000 };  /* performance.now()：高精度的時間（毫秒），計時用 */
                 state = 'ask';
                 els.forEach(function (el) { el.className = el.className.replace(/ invoice-btn--(ok|bad|miss)/g, ''); });
                 paintInfo();
-                card.innerHTML = '';
+                card.innerHTML = '';                    /* innerHTML = ''：把元素裡面的東西全部清掉 */
                 card.appendChild(h('div', { 'class': 'invoice-card__head', text: '統一發票' }));
                 var row = h('div', { 'class': 'invoice-digits' });
                 it.num.split('').forEach(function (ch) { row.appendChild(h('span', { 'class': 'invoice-d', text: ch })); });
                 card.appendChild(row);
                 meta();
                 fill.style.width = '100%';
-                cur.loop = my.loop(function (now) {
+                cur.loop = my.loop(function (now) {     /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                     if (state !== 'ask') return false;
                     fill.style.width = (100 * Math.max(0, 1 - (now - cur.t0) / cur.limit)).toFixed(1) + '%';
                 });
-                cur.timer = my.after(cur.limit, function () { if (state === 'ask') answer(-1, performance.now()); });
+                cur.timer = my.after(cur.limit, function () { if (state === 'ask') answer(-1, performance.now()); });  /* performance.now()：高精度的時間（毫秒），計時用 */
             }
 
             /* 作答：標示對錯，把相同的末碼標綠，讓玩家看到「到底對上幾碼」；答對換下一張、答錯（或超時）就結束 */
@@ -349,23 +349,23 @@
                 var it = cur.it, ok = i === it.btn;
                 byBtn[it.btn].n++;
                 if (ok) { right++; money += BTNS[it.btn].amount; byBtn[it.btn].ok++; rts.push(t - cur.t0); }
-                els[it.btn].classList.add(ok ? 'invoice-btn--ok' : 'invoice-btn--miss');
-                if (!ok && i >= 0) els[i].classList.add('invoice-btn--bad');
+                els[it.btn].classList.add(ok ? 'invoice-btn--ok' : 'invoice-btn--miss');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                if (!ok && i >= 0) els[i].classList.add('invoice-btn--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 /* 把相同的末碼標綠，讓玩家看到「到底對上幾碼」 */
-                var digits = card.querySelectorAll('.invoice-d');
+                var digits = card.querySelectorAll('.invoice-d');  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
                 var m = it.btn >= 6 ? (it.btn === 8 ? 0 : 8) : suffixMatch(it.num, A.F);        /* 沒中獎就不標色 */
                 for (var k = 0; k < m; k++) digits[7 - k].classList.add(it.btn >= 6 ? 'invoice-d--sp' : 'invoice-d--m');
                 idx++;
                 meta();
                 fill.style.width = '0%';
                 if (ok) {
-                    Sfx.play('ok');
-                    info.textContent = '第 ' + idx + ' 張　獎金 ' + fmtMoney(money);
+                    Sfx.play('ok');                     /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+                    info.textContent = '第 ' + idx + ' 張　獎金 ' + fmtMoney(money);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                     my.after(NEXT_OK_MS, next);
                     return;
                 }
                 /* 答錯或超時：一次就結束，停一下讓玩家看到正確答案，再結算 */
-                Sfx.play('bad');
+                Sfx.play('bad');                        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 info.textContent = (i < 0 ? '時間到！' : '答錯了…') + '這張是「' + BTNS[it.btn].name + '」';
                 my.after(NEXT_BAD_MS, function () { finish(it, i); });
             }
@@ -373,9 +373,9 @@
             /* 結算：主要看答對幾張，另外算中獎總金額、有獎與沒中獎各對幾張、平均反應；failIt 是答錯（或超時）的那一張，picked 是玩家點的按鈕（−1＝超時） */
             function finish(failIt, picked) {
                 state = 'done';
-                var isNew = right > 0 && Reaction.setBest(ID, right, function (v, b) { return v > b; });
+                var isNew = right > 0 && Reaction.setBest(ID, right, function (v, b) { return v > b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                 ctx.setMeta(kit.meta(['答對 ' + right, fmtBest(Reaction.getBest(ID))]));
-                var avg = rts.length ? rts.reduce(function (a, b) { return a + b; }, 0) / rts.length : 0;
+                var avg = rts.length ? rts.reduce(function (a, b) { return a + b; }, 0) / rts.length : 0;  /* reduce：把陣列的元素一個一個累積成一個值（例如加總） */
                 var lines = [];
                 var sp = byBtn[6].ok + byBtn[7].ok, spN = byBtn[6].n + byBtn[7].n;
                 var win = 0, winN = 0;
@@ -385,7 +385,7 @@
                 lines.push('第 ' + idx + ' 張：' + (picked < 0 ? '時間到，沒來得及按' : '你按了「' + BTNS[picked].name + '」') + '，正確是「' + BTNS[failIt.btn].name + '」');
                 /* 平均反應（秒）：4 位小數、第 3／4 位不為 0，結算時產生一次 */
                 if (rts.length) lines.push('答對的平均反應 ' + Leaderboard.fake4(avg / 1000).toFixed(4) + ' 秒');
-                kit.result(root, {
+                kit.result(root, {                      /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                     score: right,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                     num: right + ' 張', label: right >= 50 ? '眼力超強的對獎達人！' : (right >= 25 ? '很會對發票！' : '再仔細看看數字喔'),
                     lines: lines, isNew: isNew, sfx: right >= 40 ? 'perfect' : (right >= 20 ? 'win' : 'fail'), onAgain: round

@@ -42,18 +42,18 @@
     /* 這一關的表格大小：站數 S（列數）與班次 T（欄數），各自從第 1 關的數字線性變到到頂的數字 */
     function sizeFor(level) {
         return {
-            S: Math.round(kit.ramp(level, STATIONS[0], STATIONS[1], RAMP_LEVELS)),
-            T: Math.round(kit.ramp(level, TRAINS[0], TRAINS[1], RAMP_LEVELS))
+            S: Math.round(kit.ramp(level, STATIONS[0], STATIONS[1], RAMP_LEVELS)),  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+            T: Math.round(kit.ramp(level, TRAINS[0], TRAINS[1], RAMP_LEVELS))  /* Math.round：四捨五入成整數 */
         };
     }
     /* 分鐘 → 「7:58」；24 點以後也照樣往上加（實際上不會出現） */
     /* 分鐘數換成顯示用的時間字串，例如 478 分鐘 → 「7:58」（分鐘不足兩位要補 0） */
-    function fmt(min) { var hh = Math.floor(min / 60), mm = min % 60; return hh + ':' + (mm < 10 ? '0' : '') + mm; }
+    function fmt(min) { var hh = Math.floor(min / 60), mm = min % 60; return hh + ':' + (mm < 10 ? '0' : '') + mm; }  /* Math.floor：無條件捨去成整數 */
     /* 玩家打的數字字串（最多 4 位）→ 分鐘；最後兩位是分。分超過 59 或空字串回傳 null */
     /* 玩家用數字鍵打的字串 → 分鐘數：最後兩位是「分」，前面是「時」（打 758 ＝ 7 時 58 分）。不足三位、分超過 59、時超過 23 都算無效，回傳 null */
     function parseTyped(s) {
         if (!s) return null;
-        var n = parseInt(s, 10), mm = n % 100, hh = Math.floor(n / 100);
+        var n = parseInt(s, 10), mm = n % 100, hh = Math.floor(n / 100);  /* Math.floor：無條件捨去成整數 */
         if (s.length < 3 || mm > 59 || hh > 23) return null;
         return hh * 60 + mm;
     }
@@ -69,8 +69,8 @@
         var parent = [], i;
         for (i = 0; i < S + T; i++) parent.push(i);
         function find(x) { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; }  /* find：找一個節點屬於哪個群（沿著 parent 一路往上找到「代表」；順便縮短路徑讓下次更快） */
-        var cells = kit.shuffle(usable, rand), tree = [];
-        cells.forEach(function (k) {
+        var cells = kit.shuffle(usable, rand), tree = [];  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+        cells.forEach(function (k) {                    /* forEach：對陣列的每個元素各做一次 */
             var s = Math.floor(k / T), t = k % T, a = find(s), b = find(S + t);
             if (a !== b) { parent[a] = b; tree.push(k); }
         });
@@ -83,8 +83,8 @@
     function makePuzzle(level, rand) {
         rand = rand || Math.random;
         var sz = sizeFor(level), S = sz.S, T = sz.T, s, t, k;
-        var offset = [0], dep = [kit.randInt(FIRST_DEP[0], FIRST_DEP[1], rand)];
-        for (s = 1; s < S; s++) offset.push(offset[s - 1] + kit.randInt(HOP_MIN[0], HOP_MIN[1], rand));
+        var offset = [0], dep = [kit.randInt(FIRST_DEP[0], FIRST_DEP[1], rand)];  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+        for (s = 1; s < S; s++) offset.push(offset[s - 1] + kit.randInt(HOP_MIN[0], HOP_MIN[1], rand));  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         var gaps = [];
         for (t = 1; t < T; t++) { var g = kit.randInt(GAP_MIN[0], GAP_MIN[1], rand); gaps.push(g); dep.push(dep[t - 1] + g); }
         if (gaps.every(function (x) { return x === gaps[0]; })) { dep[T - 1] += 3; }      /* 發車間隔不能全部一樣 */  /* 發車間隔不能每班都一樣（那就變成猜規律而不是推理），一樣的話把最後一班晚 3 分鐘 */
@@ -94,13 +94,13 @@
         var usable = [];
         for (k = 0; k < S * T; k++) if (!skip[k]) usable.push(k);
         var tree = spanningCells(S, T, usable, rand);
-        var blanksWant = Math.round(usable.length * kit.ramp(level, BLANK_P[0], BLANK_P[1], RAMP_LEVELS));
+        var blanksWant = Math.round(usable.length * kit.ramp(level, BLANK_P[0], BLANK_P[1], RAMP_LEVELS));  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
         var shownCount = Math.max(tree.length, usable.length - blanksWant);
-        var shown = times.map(function () { return false; });
-        tree.forEach(function (c) { shown[c] = true; });
-        var extra = kit.shuffle(usable.filter(function (c) { return !shown[c]; }), rand);
+        var shown = times.map(function () { return false; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        tree.forEach(function (c) { shown[c] = true; });  /* forEach：對陣列的每個元素各做一次 */
+        var extra = kit.shuffle(usable.filter(function (c) { return !shown[c]; }), rand);  /* filter：留下符合條件的元素，回傳新陣列 */
         for (var e = 0; e < shownCount - tree.length; e++) shown[extra[e]] = true;
-        var names = kit.shuffle(STOP_NAMES, rand).slice(0, S);
+        var names = kit.shuffle(STOP_NAMES, rand).slice(0, S);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         return { S: S, T: T, names: names, times: times, shown: shown, skip: skip, offset: offset, dep: dep };
     }
     /* 看得到的格子能不能把整張表推出來（連通＝推得出來）。known[k]＝true 的格子當作已知 */
@@ -170,7 +170,7 @@
         var stage = api.stage, level = api.level;
         var pz = makePuzzle(level, api.rand), S = pz.S, T = pz.T;
         api.info = pz;
-        console.log('[時刻表補字] 第 ' + level + ' 關：' + S + ' 站 × ' + T + ' 班，糊掉 ' + pz.shown.filter(function (v, k) { return !v && !pz.skip[k]; }).length + ' 格');
+        console.log('[時刻表補字] 第 ' + level + ' 關：' + S + ' 站 × ' + T + ' 班，糊掉 ' + pz.shown.filter(function (v, k) { return !v && !pz.skip[k]; }).length + ' 格');  /* filter：留下符合條件的元素，回傳新陣列 */
         var W = stage.clientWidth || 472, H = stage.clientHeight || 700;
         /* 版面：舞台高 667px 要放下「表格（S＋1 列）＋提示文字＋兩顆工具鈕＋4 排數字鍵」，站多的時候數字鍵與每列都變矮 */
         var nameW = 74, keyH = S >= 6 ? 46 : 54;        /* 算版面：站名欄寬 nameW、數字鍵高 keyH（站多時要矮一點才放得下）；下面再算每格的寬 cellW 與每列的高 rowH */
@@ -179,16 +179,16 @@
         var answers = pz.times.map(function () { return null; }), typed = '', sel = -1, hintsLeft = HINTS, solved = false;  /* answers：玩家填的答案（分鐘，null＝沒填）；typed：打到一半的數字字串；sel：選中的格子；hintsLeft：剩幾次提示；solved：已解開 */
         var marks = {};                          /* k → 'wrong'｜'hint'｜'rect'：暫時的標記 */  /* marks：暫時的標記（k → 錯誤 wrong／提示格 hint／提示的長方形 rect），換格子或再按鍵就清掉 */
 
-        var wrap = h('div', { 'class': 'timetable-wrap' });
-        var board = h('div', { 'class': 'timetable-board' });
-        board.style.setProperty('--timetable-t', T);
-        board.style.setProperty('--timetable-name', nameW + 'px');
+        var wrap = h('div', { 'class': 'timetable-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
+        var board = h('div', { 'class': 'timetable-board' });  /* board：盤面（所有格子都放在裡面） */
+        board.style.setProperty('--timetable-t', T);    /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
+        board.style.setProperty('--timetable-name', nameW + 'px');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
         board.style.setProperty('--timetable-cell', cellW + 'px');
         board.style.setProperty('--timetable-row', rowH + 'px');
         board.style.setProperty('--timetable-font', cellW < 64 ? 'var(--fs-xs)' : 'var(--fs-sm)');     /* 格子窄的時候「17:47」用小一號的字才放得下 */
-        board.appendChild(h('div', { 'class': 'timetable-corner', text: '站＼班' }));
+        board.appendChild(h('div', { 'class': 'timetable-corner', text: '站＼班' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var t, s;
-        for (t = 0; t < T; t++) board.appendChild(h('div', { 'class': 'timetable-colhead', text: (T >= 5 ? '' : '第') + (t + 1) + '班' }));
+        for (t = 0; t < T; t++) board.appendChild(h('div', { 'class': 'timetable-colhead', text: (T >= 5 ? '' : '第') + (t + 1) + '班' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var cells = [];
         for (s = 0; s < S; s++) {
             board.appendChild(h('div', { 'class': 'timetable-name', text: pz.names[s] }));
@@ -199,24 +199,24 @@
                 board.appendChild(cl); cells.push(cl);
             }
         }
-        var tip = h('div', { 'class': 'timetable-tip', text: '點灰色的格子，打 758＝7:58' });
+        var tip = h('div', { 'class': 'timetable-tip', text: '點灰色的格子，打 758＝7:58' });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
         var tools = h('div', { 'class': 'timetable-tools' });
-        var btnHint = h('button', { 'class': 'btn btn--line timetable-tool', type: 'button', text: '提示 ' + hintsLeft });
+        var btnHint = h('button', { 'class': 'btn btn--line timetable-tool', type: 'button', text: '提示 ' + hintsLeft });  /* 「提示」按鈕（文字會顯示還剩幾次提示） */
         var btnCheck = h('button', { 'class': 'btn btn--line timetable-tool', type: 'button', text: '檢查' });
-        kit.onTap(btnHint, useHint);
-        kit.onTap(btnCheck, check);
-        if (HINTS > 0) tools.appendChild(btnHint);
+        kit.onTap(btnHint, useHint);                    /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        kit.onTap(btnCheck, check);                     /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
+        if (HINTS > 0) tools.appendChild(btnHint);      /* 提示次數 HINTS 設成 0，就連提示按鈕都不放 */
         tools.appendChild(btnCheck);
         wrap.appendChild(board); wrap.appendChild(tip); wrap.appendChild(tools);
-        stage.appendChild(wrap);
+        stage.appendChild(wrap);                        /* 把整個遊戲區放進舞台（放進去，畫面上才看得到） */
         var pad = Reaction.numpad(wrap, { keyH: keyH, onKey: onKey });  /* 共用的數字鍵盤（7 8 9／4 5 6／1 2 3／清除 0 ⌫）：按下去會呼叫 onKey */
 
         /* 重畫整張表：每格依狀態（不停／題目給的／糊掉的、選中、已填、錯誤、提示、解開）設 class 與文字 */
         function paint() {
             for (var k = 0; k < S * T; k++) {
                 var el = cells[k], cls = 'timetable-cell';
-                if (pz.skip[k]) { cls += ' timetable-cell--skip'; el.textContent = '不停'; }
-                else if (pz.shown[k]) { cls += ' timetable-cell--given'; el.textContent = fmt(pz.times[k]); }
+                if (pz.skip[k]) { cls += ' timetable-cell--skip'; el.textContent = '不停'; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                else if (pz.shown[k]) { cls += ' timetable-cell--given'; el.textContent = fmt(pz.times[k]); }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 else {
                     cls += ' timetable-cell--blank';
                     if (k === sel && typed) el.textContent = typedText(typed);
@@ -287,7 +287,7 @@
         function useHint() {
             if (solved || hintsLeft <= 0) return;
             commitTyped();
-            var known = pz.times.map(function (v, k) { return pz.shown[k] || answers[k] === v; });
+            var known = pz.times.map(function (v, k) { return pz.shown[k] || answers[k] === v; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var r = hintRect(pz, known);
             if (!r) return;
             hintsLeft--; btnHint.textContent = '提示 ' + hintsLeft; btnHint.disabled = hintsLeft <= 0;
@@ -295,19 +295,19 @@
             sel = r.cell; typed = '';
             tip.textContent = '黃框四格：左上＋右下＝右上＋左下';
             paint();
-            api.after(HINT_SHOW_MS, function () { if (marks[r.cell] === 'hint') { marks = {}; paint(); } });
+            api.after(HINT_SHOW_MS, function () { if (marks[r.cell] === 'hint') { marks = {}; paint(); } });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
         }
         /* 解開：數字鍵停用、全部變綠、閃綠光並過關 */
         function win() {
             solved = true; sel = -1; marks = {}; paint(); pad.setEnabled(false);
             tip.textContent = '時刻表補好了！';
-            kit.flash(stage, true, api.my);
-            api.pass({ delay: PASS_DELAY_MS });
+            kit.flash(stage, true, api.my);             /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.pass({ delay: PASS_DELAY_MS });         /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
         }
         /* 給測試／debug 用：api.solve 一鍵填成答案、api.wrong 故意填錯一格、api.state 回報目前狀態 */
-        api.solve = function () { answers = pz.times.slice(); typed = ''; paint(); if (checkAll(pz, answers).done) win(); };
-        api.wrong = function () { var k = pz.shown.indexOf(false); while (k >= 0 && pz.skip[k]) k = pz.shown.indexOf(false, k + 1); if (k >= 0) { answers[k] = pz.times[k] + 1; paint(); } };
-        api.state = function () { return { answers: answers.slice(), sel: sel, typed: typed, solved: solved, hintsLeft: hintsLeft }; };
+        api.solve = function () { answers = pz.times.slice(); typed = ''; paint(); if (checkAll(pz, answers).done) win(); };  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        api.wrong = function () { var k = pz.shown.indexOf(false); while (k >= 0 && pz.skip[k]) k = pz.shown.indexOf(false, k + 1); if (k >= 0) { answers[k] = pz.times[k] + 1; paint(); } };  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+        api.state = function () { return { answers: answers.slice(), sel: sel, typed: typed, solved: solved, hintsLeft: hintsLeft }; };  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         paint();
     }
 

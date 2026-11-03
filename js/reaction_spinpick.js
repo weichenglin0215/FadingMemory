@@ -45,9 +45,9 @@
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function sectorsFor(level) { return kit.clamp(Math.round(kit.ramp(level, SECTORS[0], SECTORS[1], RAMP_LEVELS)), SECTORS[0], SECTORS[1]); }
+    function sectorsFor(level) { return kit.clamp(Math.round(kit.ramp(level, SECTORS[0], SECTORS[1], RAMP_LEVELS)), SECTORS[0], SECTORS[1]); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function omegaFor(level) { return kit.ramp(level, OMEGA_REV[0], OMEGA_REV[1], RAMP_LEVELS) * 360; }     /* 度／秒 */
-    function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }
+    function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
     function norm360(a) { return ((a % 360) + 360) % 360; }
     /* 指針在第 t 秒的角度（t 超過 SPIN_S 就停在終點） */
     function thetaAt(sp, t) {
@@ -55,7 +55,7 @@
         return sp.theta0 + sp.omega0 * tt - 0.5 * alpha * tt * tt;
     }
     /* 這一關「最多可以再提前幾秒」（線性：第 1 關 0.4 → 第 RAMP_LEVELS 關 1.2） */
-    function earlyMax(level) { return kit.ramp(level, EARLY[0], EARLY[1], RAMP_LEVELS); }
+    function earlyMax(level) { return kit.ramp(level, EARLY[0], EARLY[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 這一關指針消失的時間點（都是「離停住還剩幾秒」）：完全看不見的時刻 fadeEnd ＝ FADE_END_BASE ＋ 隨機提前 0～earlyMax，
        開始變透明的時刻 fadeStart ＝ fadeEnd ＋ FADE_DUR */
     function fadeTimes(level, rand) {
@@ -70,12 +70,12 @@
         return (rem - sp.fadeEnd) / (sp.fadeStart - sp.fadeEnd);
     }
     /* 角度 theta 落在 N 格裡的第幾格 */
-    function sectorOf(theta, N) { return Math.floor(norm360(theta) / (360 / N)) % N; }
+    function sectorOf(theta, N) { return Math.floor(norm360(theta) / (360 / N)) % N; }  /* Math.floor：無條件捨去成整數 */
     /* 出一關：{ N, s（停在第幾格）, thetaF（停點角度）, theta0, omega0, T, offset（停點在格內的位置 0～1） } */
     function makeSpin(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var N = sectorsFor(level), w = 360 / N;
-        var s = kit.randInt(0, N - 1, rand), offset = kit.randFloat(MARGIN, 1 - MARGIN, rand);
+        var s = kit.randInt(0, N - 1, rand), offset = kit.randFloat(MARGIN, 1 - MARGIN, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         var thetaF = s * w + offset * w, omega0 = omegaFor(level);
         var theta0 = norm360(thetaF - omega0 * SPIN_S / 2), fd = fadeTimes(level, rand);
         return { N: N, s: s, thetaF: thetaF, theta0: theta0, omega0: omega0, T: SPIN_S, offset: offset, fadeEnd: fd.fadeEnd, fadeStart: fd.fadeStart };
@@ -109,7 +109,7 @@
         console.log('[轉盤停哪格] 第 ' + level + ' 關：' + N + ' 格，停在第 ' + (sp.s + 1) + ' 格（格內 ' + (sp.offset * 100).toFixed(1) + '％）；起轉 ' + sp.omega0.toFixed(2) + ' 度/秒，起始角 ' + sp.theta0.toFixed(2) + ' 度，終點角 ' + sp.thetaF.toFixed(2) + ' 度；離停住 ' + sp.fadeStart.toFixed(2) + ' 秒時開始變透明、' + sp.fadeEnd.toFixed(2) + ' 秒時完全看不見（看不見之後還會掃過 ' + (thetaAt(sp, sp.T) - thetaAt(sp, sp.T - sp.fadeEnd)).toFixed(1) + ' 度）；限時 ' + ansMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, cx = W / 2, cy = CENTER_Y;
-        var svg = kit.svg('svg', { 'class': 'spinpick-svg', viewBox: '0 0 ' + W + ' 640', width: W, height: 640 }, stage);
+        var svg = kit.svg('svg', { 'class': 'spinpick-svg', viewBox: '0 0 ' + W + ' 640', width: W, height: 640 }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         /* 圓盤：N 個扇形 */
         function pt(theta, r) { var a = (theta - 90) * Math.PI / 180; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; }
         var secs = [];
@@ -117,41 +117,41 @@
             var a0 = k * w, a1 = (k + 1) * w, p0 = pt(a0, DISC_R), p1 = pt(a1, DISC_R);
             var d = 'M' + cx + ' ' + cy + ' L' + p0[0].toFixed(2) + ' ' + p0[1].toFixed(2) + ' A' + DISC_R + ' ' + DISC_R + ' 0 ' + (w > 180 ? 1 : 0) + ' 1 ' + p1[0].toFixed(2) + ' ' + p1[1].toFixed(2) + ' Z';
             var hue = (212 + k * (360 / N)) % 360;
-            secs.push(kit.svg('path', { d: d, fill: kit.hsl(hue, 70, 72), 'class': 'spinpick-sec' }, svg));
+            secs.push(kit.svg('path', { d: d, fill: kit.hsl(hue, 70, 72), 'class': 'spinpick-sec' }, svg));  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         }
         var needle = kit.svg('g', { 'class': 'spinpick-needle' }, svg);
         kit.svg('polygon', { points: (cx - 11) + ',' + cy + ' ' + (cx + 11) + ',' + cy + ' ' + cx + ',' + (cy - NEEDLE_R), 'class': 'spinpick-tip' }, needle);
         kit.svg('circle', { cx: cx, cy: cy, r: 17, 'class': 'spinpick-hub' }, svg);
         var center = h('div', { 'class': 'spinpick-center', html: '請點擊指針<br>指向哪個方向' });
         center.style.left = (cx - 90) + 'px'; center.style.top = (cy - 40) + 'px'; center.style.visibility = 'hidden';
-        stage.appendChild(center);
+        stage.appendChild(center);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note spinpick-tip-text', text: '看指針怎麼轉、怎麼慢下來' });
-        stage.appendChild(tip);
-        var phase = 'spin', t0 = performance.now();
+        stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var phase = 'spin', t0 = performance.now();     /* performance.now()：高精度的時間（毫秒），計時用 */
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint(t) {
-            needle.setAttribute('transform', 'rotate(' + thetaAt(sp, t).toFixed(3) + ' ' + cx + ' ' + cy + ')');
-            needle.setAttribute('opacity', alphaAt(t, sp).toFixed(3));
+            needle.setAttribute('transform', 'rotate(' + thetaAt(sp, t).toFixed(3) + ' ' + cx + ' ' + cy + ')');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+            needle.setAttribute('opacity', alphaAt(t, sp).toFixed(3));  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         }
         paint(0);
-        var loop = api.my.loop(function () {
-            var t = (performance.now() - t0) / 1000;
+        var loop = api.my.loop(function () {            /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
+            var t = (performance.now() - t0) / 1000;    /* performance.now()：高精度的時間（毫秒），計時用 */
             paint(t);
             if (t >= sp.T || phase !== 'spin') return false;
         });
-        api.after(sp.T * 1000 + 30, function () {
+        api.after(sp.T * 1000 + 30, function () {       /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
             loop.stop(); paint(sp.T);
             phase = 'ask'; center.style.visibility = ''; needle.setAttribute('opacity', 0);
-            tip.textContent = '指針停了：它指向哪一格？';
+            tip.textContent = '指針停了：它指向哪一格？';           /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             api.timer(ansMs(level), function () { judge(-1); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
-            if (level === 1 && kit.once('spinpick.hint')) {
+            if (level === 1 && kit.once('spinpick.hint')) {  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
                 var hp = pt(sp.s * w + w / 2, DISC_R * 0.62);
                 kit.hintOn(stage, null, { mode: 'tap', x: hp[0], y: hp[1], delay: 300, text: '請點擊指針指向的方向' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
             }
         });
-        kit.onTap(stage, function (e) {
+        kit.onTap(stage, function (e) {                 /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             if (api.over || phase !== 'ask') return;
-            var p = kit.localPt(e, stage), dx = p.x - cx, dy = p.y - cy, r = Math.sqrt(dx * dx + dy * dy);
+            var p = kit.localPt(e, stage), dx = p.x - cx, dy = p.y - cy, r = Math.sqrt(dx * dx + dy * dy);  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
             if (r < DEAD_R || r > DISC_R) return;
             judge(sectorOf(Math.atan2(dx, -dy) * 180 / Math.PI, N));
         });
@@ -163,13 +163,13 @@
             var ok = k === sp.s;
             paint(sp.T); needle.setAttribute('opacity', 1);
             center.style.visibility = 'hidden';
-            secs[sp.s].classList.add('spinpick-sec--right');
-            if (k >= 0 && !ok) secs[k].classList.add('spinpick-sec--wrong');
+            secs[sp.s].classList.add('spinpick-sec--right');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            if (k >= 0 && !ok) secs[k].classList.add('spinpick-sec--wrong');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             var pos = (sp.offset * 100).toFixed(4);
-            tip.textContent = '指針停在第 ' + (sp.s + 1) + ' 格（格內 ' + pos + '％的位置）' + (ok ? '' : '，你選了第 ' + (k + 1) + ' 格');
-            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1600 }); return; }
-            kit.flash(stage, false, api.my);
-            api.fail({ delay: 2600, lines: [
+            tip.textContent = '指針停在第 ' + (sp.s + 1) + ' 格（格內 ' + pos + '％的位置）' + (ok ? '' : '，你選了第 ' + (k + 1) + ' 格');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1600 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
+            api.fail({ delay: 2600, lines: [            /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 (k < 0 ? '時間到！' : '你選了第 ' + (k + 1) + ' 格') + '，指針停在第 ' + (sp.s + 1) + ' 格（共 ' + N + ' 格）',
                 '停點角度 ' + sp.thetaF.toFixed(4) + ' 度（從正上方順時針量）'
             ] });

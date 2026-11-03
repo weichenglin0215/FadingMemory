@@ -61,11 +61,11 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 難度進度 0～1：clamp 把值限制在 0 到 1 之間 */
-    function prog(q) { return kit.clamp((q - 1) / (RAMP_Q - 1), 0, 1); }
+    function prog(q) { return kit.clamp((q - 1) / (RAMP_Q - 1), 0, 1); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
     /* 上格顯示秒數（隨題號線性變短） */
-    function showSec(q) { return kit.ramp(q, SHOW_START, SHOW_END, RAMP_Q); }
+    function showSec(q) { return kit.ramp(q, SHOW_START, SHOW_END, RAMP_Q); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 空白秒數（隨題號線性變長，考記憶） */
-    function blankSec(q) { return kit.ramp(q, BLANK_START, BLANK_END, RAMP_Q); }
+    function blankSec(q) { return kit.ramp(q, BLANK_START, BLANK_END, RAMP_Q); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 作答時限（隨題號線性變短） */
     function askSec(q) { return kit.ramp(q, ASK_START, ASK_END, RAMP_Q); }
     /* 「不相同」題使用相似選項的機率（越後面越高） */
@@ -86,24 +86,24 @@
         rand = rand || Math.random;
         var t = unlockedTypes(q);
         if (t.length === 1) return t[0];
-        return rand() < 0.5 ? t[t.length - 1] : kit.pick(t, rand);
+        return rand() < 0.5 ? t[t.length - 1] : kit.pick(t, rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
     }
     /* 每 10 題裡 5 題「相同」、5 題「不相同」，洗牌決定順序（不是每題擲骰子，才不會連續出現同一種答案太多次） */
     /* 每 10 題裡 5 題一樣、5 題不一樣（洗牌）。blockIdx＝第幾個 10 題 */
     function sameFlags(rand) {
         var a = [true, true, true, true, true, false, false, false, false, false];
-        return kit.shuffle(a, rand);
+        return kit.shuffle(a, rand);                    /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
     }
 
     /* 出水果題：same 為 true 兩邊相同；否則 B 換成別種（越後面越有機會是長得像的） */
     function makeFruit(q, same, rand) {
         /* a：上格的水果；b 先設成跟 a 一樣 */
-        var a = kit.pick(FRUITS, rand), b = a;
+        var a = kit.pick(FRUITS, rand), b = a;          /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         if (!same) {
             /* 找出 a 所屬的相似群組 */
-            var grp = FRUIT_GROUPS.filter(function (g) { return g.indexOf(a) >= 0; })[0];
+            var grp = FRUIT_GROUPS.filter(function (g) { return g.indexOf(a) >= 0; })[0];  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
             /* 同組裡「不是 a」的水果＝長得像的候選 */
-            var near = grp.filter(function (f) { return f !== a; });
+            var near = grp.filter(function (f) { return f !== a; });  /* filter：留下符合條件的元素，回傳新陣列 */
             /* 有長得像的候選，而且亂數小於相似機率時，就選長得像的 */
             if (near.length && rand() < simP(q)) b = kit.pick(near, rand);
             /* 否則一直重抽直到跟 a 不同（do...while 至少會執行一次） */
@@ -119,7 +119,7 @@
         /* p：難度進度，用在 kit.lerp（線性插值）算出差距，越後面差距越小越難分辨 */
         var p = prog(q);
         /* 隨機產生一個圖形（形狀、色相 hue 0~359、縮放） */
-        function randItem() { return { kind: 'shape', shape: kit.pick(SHAPES, rand), hue: kit.randInt(0, 359, rand), scale: kit.randFloat(0.55, 1.0, rand) }; }
+        function randItem() { return { kind: 'shape', shape: kit.pick(SHAPES, rand), hue: kit.randInt(0, 359, rand), scale: kit.randFloat(0.55, 1.0, rand) }; }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         var A = randItem(), B = randItem();
         /* 比大小：兩邊一定用「同一種圖案、同一個顏色」（B 複製 A 的形狀與色相），只差大小，避免「不同圖案怎麼比面積」的爭議。
            不相同時，B 的縮放是 A 的 r 倍（變大或變小）；r 隨難度從 1.7 縮到 1.12 */
@@ -162,7 +162,7 @@
             /* split('') 把數字字串拆成一個一個字元的陣列 */
             var arr = s.split('');
             if (rand() < 0.5) {
-                var i = kit.randInt(0, arr.length - 2, rand);
+                var i = kit.randInt(0, arr.length - 2, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
                 var t = arr[i]; arr[i] = arr[i + 1]; arr[i + 1] = t;
             } else {
                 var j = kit.randInt(0, arr.length - 1, rand);
@@ -217,14 +217,14 @@
     function makeExpr(q, same, rand) {
         var ops = q >= UNLOCK.expr2 ? ['+', '−', '×', '÷'] : ['+', '−'];
         /* 顯示用的減號 − 要換成一般的 -（內部計算用） */
-        ops = ops.map(function (o) { return o === '−' ? '-' : o; });
+        ops = ops.map(function (o) { return o === '−' ? '-' : o; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         /* 數值上限：加減題小一點，四則題大一點 */
         var vMax = q >= UNLOCK.expr2 ? 60 : 25;
         var va = kit.randInt(6, vMax, rand);
         var vb = va;
         if (!same) {
             /* 不相同時，答案差 d（越後面差越小，最小 1） */
-            var d = Math.max(1, Math.round(kit.lerp(3, 1, prog(q))));
+            var d = Math.max(1, Math.round(kit.lerp(3, 1, prog(q))));  /* Math.round：四捨五入成整數 */
             vb = va + (rand() < 0.5 ? d : -d);
             if (vb < 2) vb = va + d;
         }
@@ -247,7 +247,7 @@
     /* ═══ 畫圖 ═══ */
     /* S 是簡寫：建立一個 SVG 元素並放進 svg。每個 S('path', {d: ...}) 畫一條路徑；d 是 SVG 路徑指令（M 移動、C 曲線、Z 封閉） */
     function drawFruit(kind, svg) {
-        var S = function (tag, attrs) { return kit.svg(tag, attrs, svg); };
+        var S = function (tag, attrs) { return kit.svg(tag, attrs, svg); };  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         if (kind === 'apple') {
             S('path', { d: 'M100 62 C 62 40, 22 72, 30 122 C 38 168, 76 186, 100 174 C 124 186, 162 168, 170 122 C 178 72, 138 40, 100 62 Z', fill: 'hsl(4,78%,52%)', stroke: 'hsl(4,60%,32%)', 'stroke-width': 4 });
             S('path', { d: 'M100 62 C 98 44, 104 30, 116 22', stroke: 'hsl(28,50%,28%)', 'stroke-width': 8, fill: 'none', 'stroke-linecap': 'round' });
@@ -258,9 +258,9 @@
         } else if (kind === 'orange') {
             S('circle', { cx: 100, cy: 112, r: 72, fill: 'hsl(28,95%,55%)', stroke: 'hsl(20,70%,34%)', 'stroke-width': 4 });
             S('path', { d: 'M100 40 C 104 24, 124 18, 136 26 C 128 40, 112 46, 100 40 Z', fill: 'hsl(120,45%,40%)' });
-            [[70, 96], [118, 90], [92, 132], [132, 128], [66, 138]].forEach(function (p) { S('circle', { cx: p[0], cy: p[1], r: 3, fill: 'hsl(24,80%,40%)' }); });
+            [[70, 96], [118, 90], [92, 132], [132, 128], [66, 138]].forEach(function (p) { S('circle', { cx: p[0], cy: p[1], r: 3, fill: 'hsl(24,80%,40%)' }); });  /* forEach：對陣列的每個元素各做一次 */
         } else if (kind === 'grape') {
-            [[78, 82], [122, 82], [58, 118], [100, 118], [142, 118], [78, 154], [122, 154], [100, 186]].forEach(function (p) {
+            [[78, 82], [122, 82], [58, 118], [100, 118], [142, 118], [78, 154], [122, 154], [100, 186]].forEach(function (p) {  /* forEach：對陣列的每個元素各做一次 */
                 S('circle', { cx: p[0], cy: p[1] - 10, r: 24, fill: 'hsl(282,48%,46%)', stroke: 'hsl(282,45%,28%)', 'stroke-width': 3 });
                 S('circle', { cx: p[0] - 7, cy: p[1] - 18, r: 5, fill: 'rgba(255,255,255,0.45)' });
             });
@@ -293,10 +293,10 @@
     /* 畫一個圖形（圓、方、三角、六邊形、菱形、星星）；顏色用 hsl(色相, 飽和度, 亮度) */
     function drawShape(item, svg) {
         var R = 92 * item.scale;
-        var fill = 'hsl(' + Math.round(item.hue) + ',72%,56%)', stroke = 'hsl(' + Math.round(item.hue) + ',60%,30%)';
+        var fill = 'hsl(' + Math.round(item.hue) + ',72%,56%)', stroke = 'hsl(' + Math.round(item.hue) + ',60%,30%)';  /* Math.round：四捨五入成整數 */
         var common = { fill: fill, stroke: stroke, 'stroke-width': 4, 'stroke-linejoin': 'round' };
         var attrs;
-        if (item.shape === 'circle') { attrs = { cx: 0, cy: 0, r: R }; return kit.svg('circle', mix(attrs, common), svg); }
+        if (item.shape === 'circle') { attrs = { cx: 0, cy: 0, r: R }; return kit.svg('circle', mix(attrs, common), svg); }  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         if (item.shape === 'square') { attrs = { x: -R * 0.9, y: -R * 0.9, width: R * 1.8, height: R * 1.8 }; return kit.svg('rect', mix(attrs, common), svg); }
         if (item.shape === 'triangle') { attrs = { points: polyPts(3, R * 1.1, -Math.PI / 2) }; return kit.svg('polygon', mix(attrs, common), svg); }
         if (item.shape === 'hexagon') { attrs = { points: polyPts(6, R, 0) }; return kit.svg('polygon', mix(attrs, common), svg); }
@@ -310,7 +310,7 @@
 
     /* 把一個東西畫進格子 box：水果／圖形畫 SVG，其他（數字、算式）畫文字 */
     function renderItem(box, item) {
-        box.innerHTML = '';
+        box.innerHTML = '';                             /* innerHTML = ''：把元素裡面的東西全部清掉 */
         if (!item) return;
         if (item.kind === 'fruit') {
             var s = kit.svg('svg', { 'class': 'same-svg', viewBox: '0 0 200 200' }, box);
@@ -319,7 +319,7 @@
             var s2 = kit.svg('svg', { 'class': 'same-svg', viewBox: '-100 -100 200 200' }, box);
             drawShape(item, s2);
         } else {
-            box.appendChild(h('div', { 'class': 'same-text' + (item.text.length > 4 ? ' same-text--long' : ''), text: item.text }));
+            box.appendChild(h('div', { 'class': 'same-text' + (item.text.length > 4 ? ' same-text--long' : ''), text: item.text }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         }
     }
 
@@ -334,7 +334,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
             /* q 目前題號（從 0 起算，next() 會先 +1）；right 答對數；state 目前階段（showA/blank/ask/reveal）；cur 目前這題 */
             var q = (startAt || 1) - 1, right = q, newRec = false, state = 'idle', cur = null;
@@ -353,10 +353,10 @@
             /* 按鈕一開始先隱藏（style.visibility='hidden' 隱藏但仍佔位置，版面不會跳動） */
             btns.style.visibility = 'hidden';
             /* 把所有元素依序放進畫面 */
-            [head, prompt, boxA, boxB, tb.el, btns].forEach(function (n) { root.appendChild(n); });
+            [head, prompt, boxA, boxB, tb.el, btns].forEach(function (n) { root.appendChild(n); });  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
 
-            function meta() { ctx.setMeta(kit.meta(['答對 ' + right, fmtBest(Reaction.getBest(ID))])); }
-            function paintHead() { head.textContent = '第 ' + q + ' 題'; }
+            function meta() { ctx.setMeta(kit.meta(['答對 ' + right, fmtBest(Reaction.getBest(ID))])); }  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+            function paintHead() { head.textContent = '第 ' + q + ' 題'; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
 
             /* next：出下一題 */
             function next() {
@@ -373,14 +373,14 @@
                         '；上格 ' + showSec(q).toFixed(2) + ' 秒、空白 ' + blankSec(q).toFixed(2) + ' 秒、作答 ' + askSec(q).toFixed(2) + ' 秒');
                 } catch (e) { }
                 paintHead(); meta();
-                prompt.textContent = cur.prompt;
+                prompt.textContent = cur.prompt;        /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 boxA.className = 'same-box'; boxB.className = 'same-box';
                 boxB.innerHTML = ''; boxA.innerHTML = '';
                 btns.style.visibility = 'hidden';
                 tb.set(0);
                 state = 'showA';
                 renderItem(boxA, cur.A);
-                Sfx.play('go');
+                Sfx.play('go');                         /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 /* 上格顯示 showSec 秒後清空，進入空白階段；再等 blankSec 秒後顯示下格 */
                 my.after(showSec(q) * 1000, function () {
                     if (my_id !== genId) return;
@@ -392,9 +392,9 @@
                         btns.style.visibility = 'visible';
                         state = 'ask';
                         /* 作答階段開始：記錄開始時間 t0 與作答時限 lim（毫秒） */
-                        var t0 = performance.now(), lim = askSec(q) * 1000;
+                        var t0 = performance.now(), lim = askSec(q) * 1000;  /* performance.now()：高精度的時間（毫秒），計時用 */
                         /* my.loop：每個畫面更新一次，更新時間條；回傳 false 停止 */
-                        my.loop(function (now) {
+                        my.loop(function (now) {        /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                             if (my_id !== genId || state !== 'ask') return false;
                             tb.set(1 - (now - t0) / lim);
                         });
@@ -415,9 +415,9 @@
                 var ok = isSame === cur.same;
                 /* 揭曉：把上格內容重新顯示，兩格都標上對錯顏色 */
                 renderItem(boxA, cur.A);       /* 揭曉：上格再亮出來，兩格一起看 */
-                boxA.classList.add(ok ? 'same-box--ok' : 'same-box--bad');
-                boxB.classList.add(ok ? 'same-box--ok' : 'same-box--bad');
-                if (ok) { right++; Sfx.play('ok'); if (Reaction.setBest(ID, right, function (v, b) { return v > b; })) newRec = true; }
+                boxA.classList.add(ok ? 'same-box--ok' : 'same-box--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                boxB.classList.add(ok ? 'same-box--ok' : 'same-box--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                if (ok) { right++; Sfx.play('ok'); if (Reaction.setBest(ID, right, function (v, b) { return v > b; })) newRec = true; }  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 else Sfx.play('bad');
                 prompt.textContent = (isSame == null ? '時間到！' : (ok ? '答對了！' : '答錯了…')) + '　正確是「' + (cur.same ? '相同' : '不相同') + '」';
                 meta();
@@ -426,7 +426,7 @@
                     my.after(REVEAL_MS + 400, function () {
                         /* kit.resumeFrom：失敗後「從失敗題號往前 5 題」可繼續玩 */
                         var back = kit.resumeFrom(q);
-                        kit.result(root, {
+                        kit.result(root, {              /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                             score: right,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                             num: right + ' 題', label: right >= 20 ? '記性真好！' : (right >= 10 ? '很不錯！' : '再試一次，會更準！'),
                             lines: ['一共出了 ' + q + ' 題', '最後一題：' + describe(cur.A) + ' ／ ' + describe(cur.B)],
@@ -437,8 +437,8 @@
                 } else my.after(REVEAL_MS, next);
             }
             /* 兩顆按鈕：pointerdown 一碰到就作答 */
-            bNo.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(false); });
-            bYes.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(true); });
+            bNo.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(false); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+            bYes.addEventListener('pointerdown', function (e) { e.preventDefault(); answer(true); });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
 
             /* G.debug：測試用後門 */
             G.debug = {

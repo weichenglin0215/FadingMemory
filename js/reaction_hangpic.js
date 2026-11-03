@@ -53,9 +53,9 @@
     /* 角度正規化成 (-90, 90]：矩形轉 180° 一樣 */
     function norm180(deg) { var d = ((deg % 180) + 180) % 180; return d > 90 ? d - 180 : d; }
     /* 誤差＝相框離水平差幾度（取絕對值） */
-    function errDeg(theta) { return Math.abs(norm180(theta)); }
+    function errDeg(theta) { return Math.abs(norm180(theta)); }  /* Math.abs：取絕對值（去掉負號） */
     /* 依手指轉動速度算增益：kit.lerp 線性插值，kit.clamp 把速度限制在 0～1 */
-    function gainFor(speed) { return kit.lerp(GAIN_MIN, 1, kit.clamp(speed / SPEED_FULL, 0, 1)); }
+    function gainFor(speed) { return kit.lerp(GAIN_MIN, 1, kit.clamp(speed / SPEED_FULL, 0, 1)); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
     /* 兩個角度之間的最短有號差（避免 359 度到 1 度被誤認為轉了 358 度） */
     /* 兩個角度之間的最短有號差 */
     function angDelta(a, b) { return ((b - a + 540) % 360) - 180; }
@@ -75,14 +75,14 @@
     function makeRound(rand) {
         rand = rand || Math.random;
         var wall = rand() < 0.5 ? 'stripes' : 'flowers';
-        var mag = kit.randFloat(12, 38, rand);
+        var mag = kit.randFloat(12, 38, rand);          /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         /* 牆面條紋的傾斜角：刻意避開 0 度（水平）與 90 度（垂直），才不會有線索 */
         var alpha = (rand() < 0.5 ? 1 : -1) * (rand() < 0.5 ? mag : 90 - mag + 0);      /* 12～38° 或 52～78° */
-        var dev = START_DEV * kit.randFloat(0.6, 1, rand);
+        var dev = START_DEV * kit.randFloat(0.6, 1, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         return {
-            hue: kit.randInt(0, 359, rand), wall: wall, alpha: alpha,
+            hue: kit.randInt(0, 359, rand), wall: wall, alpha: alpha,  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
             start: (rand() < 0.5 ? 1 : -1) * dev, contrast: CONTRAST,
-            seed: kit.randInt(1, 1e9, rand)
+            seed: kit.randInt(1, 1e9, rand)             /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         };
     }
     /* 依這一次的誤差給評語 */
@@ -105,7 +105,7 @@
             if (R) R.dispose();
             R = kit.round();
             var my = R;
-            root.innerHTML = '';
+            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
             /* theta 相框目前的旋轉角度；cfg 這一次的設定；lastErr 這一次的誤差（按下「掛好了」之後才有） */
             var theta = 0, state = 'idle', cfg = null, lastErr = null;
@@ -117,9 +117,9 @@
             var nudgeR = h('button', { 'class': 'btn btn--line hangpic-nudge', text: '▶' });
             var ctrl = h('div', { 'class': 'hangpic-ctrl' }, [nudgeL, doneBtn, nudgeR]);
             var verdict = h('div', { 'class': 'hangpic-verdict' });
-            [head, field, ctrl].forEach(function (x) { root.appendChild(x); });
-            field.appendChild(verdict);
-            ctx.setMeta(fmtBest(Reaction.getBest(ID)));
+            [head, field, ctrl].forEach(function (x) { root.appendChild(x); });  /* forEach：對陣列的每個元素各做一次 */
+            field.appendChild(verdict);                 /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            ctx.setMeta(fmtBest(Reaction.getBest(ID))); /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
             /* SVG 繪圖用的變數：場地大小、各個圖層（牆、相框、紅線、綠線）和相框中心 (CX,CY) */
             var FW = 0, FH = 0, svg = null, gWall = null, gFrame = null, refLine = null, edgeLine = null, full = null, CX = 0, CY = 0;
@@ -132,18 +132,18 @@
                 if (svg && svg.parentNode) svg.parentNode.removeChild(svg);
                 FW = field.clientWidth; FH = field.clientHeight; CX = FW / 2; CY = FH * 0.46;
                 /* 用 SVG 畫：viewBox 是畫布座標，結算時改 viewBox 就能「鏡頭推進」，而且向量圖放大永遠不糊 */
-                svg = kit.svg('svg', { 'class': 'hangpic-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'none' });
+                svg = kit.svg('svg', { 'class': 'hangpic-svg', viewBox: '0 0 ' + FW + ' ' + FH, preserveAspectRatio: 'none' });  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
                 field.insertBefore(svg, verdict);
                 full = { vx: 0, vy: 0, vw: FW, vh: FH };
                 var wallL = 84, hue = cfg.hue;
                 /* 牆面底色：大矩形鋪滿（座標故意超出畫面，放大時才不會露出邊緣） */
-                kit.svg('rect', { x: -2000, y: -2000, width: 5000, height: 5000, fill: 'hsl(' + hue + ',32%,' + wallL + '%)' }, svg);
+                kit.svg('rect', { x: -2000, y: -2000, width: 5000, height: 5000, fill: 'hsl(' + hue + ',32%,' + wallL + '%)' }, svg);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
                 gWall = kit.svg('g', {}, svg);
                 var rnd = seeded(cfg.seed);
                 /* 斜條紋牆：畫很多斜的長條矩形，整組 rotate(傾斜角) */
                 if (cfg.wall === 'stripes') {
                     var g = kit.svg('g', { transform: 'rotate(' + cfg.alpha + ' ' + CX + ' ' + CY + ')' }, gWall);
-                    var diag = Math.sqrt(FW * FW + FH * FH);
+                    var diag = Math.sqrt(FW * FW + FH * FH);  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
                     for (var x = -diag; x < diag; x += 58) kit.svg('rect', { x: CX + x, y: CY - diag, width: 26, height: diag * 2, fill: 'hsl(' + hue + ',32%,' + (wallL - 5) + '%)' }, g);
                 } else {
                     /* 碎花牆：「拒絕取樣」——隨機取點，離已有的花太近就丟掉重取，避免碎花排成整齊的行列（那會變成判斷水平的線索） */
@@ -155,7 +155,7 @@
                         if (okp) pts.push([px, py]);
                     }
                     /* 每朵花：5 片花瓣的圓 + 中心花蕊 */
-                    pts.forEach(function (p) {
+                    pts.forEach(function (p) {          /* forEach：對陣列的每個元素各做一次 */
                         var f = kit.svg('g', { transform: 'translate(' + p[0].toFixed(1) + ' ' + p[1].toFixed(1) + ') rotate(' + (rnd() * 72).toFixed(0) + ') scale(' + (0.8 + rnd() * 0.5).toFixed(2) + ')' }, gWall);
                         for (var k = 0; k < 5; k++) {
                             var a = k * 72 * Math.PI / 180;
@@ -183,7 +183,7 @@
                 setTheta(theta);
             }
             /* 轉到角度 t：設定 SVG 的 rotate(角度 圓心x 圓心y) */
-            function setTheta(t) { theta = t; gFrame.setAttribute('transform', 'rotate(' + t.toFixed(4) + ' ' + CX + ' ' + CY + ')'); }
+            function setTheta(t) { theta = t; gFrame.setAttribute('transform', 'rotate(' + t.toFixed(4) + ' ' + CX + ' ' + CY + ')'); }  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
 
             /* 開始（只有一次機會） */
             function startRound() {
@@ -192,9 +192,9 @@
                 cfg = makeRound();
                 theta = cfg.start;
                 build();
-                verdict.textContent = ''; verdict.classList.remove('hangpic-verdict--on');
+                verdict.textContent = ''; verdict.classList.remove('hangpic-verdict--on');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 state = 'play';
-                head.textContent = '只有一次機會　把相框轉成水平';
+                head.textContent = '只有一次機會　把相框轉成水平';    /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 try { console.info('[掛畫] 牆面 ' + cfg.wall + (cfg.wall === 'stripes' ? '（條紋傾斜 ' + cfg.alpha.toFixed(1) + '°）' : '') + '，畫框比牆暗 ' + cfg.contrast.toFixed(1) + '%，起始歪斜 ' + cfg.start.toFixed(2) + '°'); } catch (e) { }
             }
 
@@ -203,25 +203,25 @@
             /* drag 記錄正在拖曳的手指 */
             var drag = null;
             /* 相框中心在螢幕上的座標（每次重新量，因為畫面會被縮放） */
-            function centerClient() { var rc = svg.getBoundingClientRect(); return { x: rc.left + rc.width * CX / FW, y: rc.top + rc.height * CY / FH }; }
+            function centerClient() { var rc = svg.getBoundingClientRect(); return { x: rc.left + rc.width * CX / FW, y: rc.top + rc.height * CY / FH }; }  /* getBoundingClientRect：取得元素在螢幕上的位置與大小（算點擊位置、版面用） */
             /* 手指按下：離中心太近的位置不理（角度會抖得很厲害） */
-            field.addEventListener('pointerdown', function (e) {
+            field.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
                 if (state !== 'play' || drag) return;
                 var c = centerClient(), dx = e.clientX - c.x, dy = e.clientY - c.y;
-                if (Math.sqrt(dx * dx + dy * dy) < DEAD_ZONE) return;
-                e.preventDefault();
-                try { field.setPointerCapture(e.pointerId); } catch (err) { }
+                if (Math.sqrt(dx * dx + dy * dy) < DEAD_ZONE) return;  /* Math.sqrt：開根號（算兩點距離時常用：勾股定理） */
+                e.preventDefault();                     /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+                try { field.setPointerCapture(e.pointerId); } catch (err) { }  /* setPointerCapture：手指移出元素範圍後，仍然持續收到這個元素的移動事件（拖曳才不會中斷） */
                 /* 記下手指目前的角度（Math.atan2 算出角度，乘 180/π 把弧度換成度）與時間 */
-                drag = { id: e.pointerId, a: Math.atan2(dy, dx) * 180 / Math.PI, t: performance.now() };
+                drag = { id: e.pointerId, a: Math.atan2(dy, dx) * 180 / Math.PI, t: performance.now() };  /* performance.now()：高精度的時間（毫秒），計時用 */
             });
             /* 手指移動：計算角度變化 da 與花費時間 dt，速度＝da/dt；轉越慢增益越小，方便微調 */
-            field.addEventListener('pointermove', function (e) {
+            field.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
                 if (state !== 'play' || !drag || e.pointerId !== drag.id) return;
                 var c = centerClient(), dx = e.clientX - c.x, dy = e.clientY - c.y;
                 if (Math.sqrt(dx * dx + dy * dy) < DEAD_ZONE) return;
-                var a = Math.atan2(dy, dx) * 180 / Math.PI, now = performance.now();
+                var a = Math.atan2(dy, dx) * 180 / Math.PI, now = performance.now();  /* performance.now()：高精度的時間（毫秒），計時用 */
                 var da = angDelta(drag.a, a), dt = Math.max(1, now - drag.t);
-                setTheta(theta + da * gainFor(Math.abs(da) / dt));
+                setTheta(theta + da * gainFor(Math.abs(da) / dt));  /* Math.abs：取絕對值（去掉負號） */
                 drag.a = a; drag.t = now;
             });
             function endDrag(e) { if (drag && e.pointerId === drag.id) drag = null; }
@@ -233,7 +233,7 @@
                 var rep = null;
                 function step() { if (state === 'play') setTheta(theta + dir * NUDGE_DEG); }
                 btn.addEventListener('pointerdown', function (e) {
-                    e.preventDefault(); step();
+                    e.preventDefault(); step();         /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                     var n = 0;
                     /* 這是遞迴的小技巧：again() 每次排下一次 step()，直到 stop() 取消 */
                     (function again() { rep = my.after(n++ < 3 ? 350 : 60, function () { step(); again(); }); })();
@@ -267,18 +267,18 @@
                 var e = Leaderboard.fake4(realE);
                 console.log('掛畫：實際差 ' + realE.toFixed(6) + ' 度 → 成績 ' + e.toFixed(4) + ' 度');
                 lastErr = e;
-                Sfx.play('click');
+                Sfx.play('click');                      /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 var bl = corner(-1), br = corner(1);
-                refLine.setAttribute('y1', bl.y); refLine.setAttribute('y2', bl.y); refLine.setAttribute('opacity', 1);
+                refLine.setAttribute('y1', bl.y); refLine.setAttribute('y2', bl.y); refLine.setAttribute('opacity', 1);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
                 edgeLine.setAttribute('opacity', 1);
-                head.textContent = '紅線是真正的水平，綠線是畫框的下緣';
+                head.textContent = '紅線是真正的水平，綠線是畫框的下緣'; /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 /* plan＝要放大的倍率清單 */
                 var plan = zoomPlan(Math.abs(br.y - bl.y));
                 /* my.wait 回傳 Promise（等一下）；用 .then 把每一段放大動畫「串」起來，一段播完才播下一段 */
                 var chain = my.wait(400), cur = full;
                 plan.forEach(function (z) {
                     chain = chain.then(function () {
-                        Sfx.play('zoom');
+                        Sfx.play('zoom');               /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                         gWall.style.display = 'none';
                         var to = boxFor(br, z);
                         /* kit.tweenViewBox：動畫修改 SVG 的 viewBox，達成平順的鏡頭推進 */
@@ -288,7 +288,7 @@
                 chain.then(function () {
                     var side = norm180(theta) > 0.005 ? '（順時針歪）' : (norm180(theta) < -0.005 ? '（逆時針歪）' : '');
                     verdict.textContent = e < 0.005 ? '差了 ' + e.toFixed(4) + ' 度・分毫不差！' : '差了 ' + e.toFixed(4) + ' 度' + side;
-                    verdict.classList.add('hangpic-verdict--on');
+                    verdict.classList.add('hangpic-verdict--on');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                     Sfx.play(e < 0.2 ? 'win' : 'click');
                     /* 讓玩家看一下放大後的畫面，再蓋上結算卡片（有「再挑戰一次」） */
                     my.after(NEXT_MS, function () { finish(e, side); });
@@ -299,9 +299,9 @@
             function finish(e, side) {
                 state = 'done';
                 /* 這個遊戲誤差「越小越好」，所以比較函式是 v < b */
-                var isNew = Reaction.setBest(ID, e, function (v, b) { return v < b; });
+                var isNew = Reaction.setBest(ID, e, function (v, b) { return v < b; });  /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
                 ctx.setMeta(fmtBest(Reaction.getBest(ID)));
-                kit.result(root, {
+                kit.result(root, {                      /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                     score: e,        /* 世界排行榜成績（跟 setBest 存的同一個數字） */
                     num: e.toFixed(4) + ' 度', label: rating(e),
                     lines: ['相框' + (side ? side.replace(/[（）]/g, '') : '剛好水平'), '只有一次機會，想拚更準就再挑戰一次'],
@@ -315,7 +315,7 @@
                 setTheta: setTheta,
                 submit: submit,
                 spin: function (deg) {      /* 用真的 PointerEvent 繞著相框中心轉 deg 度（快速） */
-                    var c = centerClient(), rad = 120, a0 = 0, n = Math.max(1, Math.ceil(Math.abs(deg) / 8));
+                    var c = centerClient(), rad = 120, a0 = 0, n = Math.max(1, Math.ceil(Math.abs(deg) / 8));  /* Math.ceil：無條件進位成整數 */
                     function at(a) { var t = a * Math.PI / 180; return { clientX: c.x + rad * Math.cos(t), clientY: c.y + rad * Math.sin(t) }; }
                     var p = at(a0);
                     field.dispatchEvent(new PointerEvent('pointerdown', { clientX: p.clientX, clientY: p.clientY, bubbles: true, cancelable: true, pointerId: 21 }));

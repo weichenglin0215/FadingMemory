@@ -35,20 +35,20 @@
     var SIZE = 140;                             /* 錶面直徑（px） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function errAt(level) { return kit.ramp(level, ERR[0], ERR[1], RAMP_LEVELS); }
-    function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }
+    function errAt(level) { return kit.ramp(level, ERR[0], ERR[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
     /* 出題：回傳 { periods[3], phases[3], odd, e（帶正負：正＝快）, styles[3], rots[3] } */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var odd = kit.randInt(0, 2, rand), e = errAt(level) * (rand() < 0.5 ? 1 : -1), periods = [1, 1, 1];
+        var odd = kit.randInt(0, 2, rand), e = errAt(level) * (rand() < 0.5 ? 1 : -1), periods = [1, 1, 1];  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
         periods[odd] = 1 / (1 + e);
         return {
             periods: periods, phases: [rand(), rand(), rand()], odd: odd, e: e,
-            styles: kit.shuffle(STYLES, rand), rots: [rand() * 360, rand() * 360, rand() * 360]
+            styles: kit.shuffle(STYLES, rand), rots: [rand() * 360, rand() * 360, rand() * 360]  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         };
     }
     /* 秒針角度（度）：t 是經過的秒數；每過一個 period 跳 6 度 */
-    function handDeg(period, phase, t) { return (6 * Math.floor((t + phase) / period)) % 360; }
+    function handDeg(period, phase, t) { return (6 * Math.floor((t + phase) / period)) % 360; }  /* Math.floor：無條件捨去成整數 */
     /* 這支錶在 sec 秒內，秒針走了幾秒（每跳一格算 1 秒） */
     function dialSeconds(period, sec) { return sec / period; }
     /* 結算畫面的評語：依成績回傳一句話 */
@@ -69,7 +69,7 @@
         }
         var nums = style === 'roman' ? ['XII', 'III', 'VI', 'IX'] : (style === 'digits' ? ['12', '3', '6', '9'] : []);
         var pos = [[70, 36], [104, 76], [70, 116], [36, 76]];
-        nums.forEach(function (t, k) { s += '<text x="' + pos[k][0] + '" y="' + pos[k][1] + '" text-anchor="middle" font-size="16" font-weight="900" fill="#4A3B1E" font-family="Noto Serif TC, serif">' + t + '</text>'; });
+        nums.forEach(function (t, k) { s += '<text x="' + pos[k][0] + '" y="' + pos[k][1] + '" text-anchor="middle" font-size="16" font-weight="900" fill="#4A3B1E" font-family="Noto Serif TC, serif">' + t + '</text>'; });  /* forEach：對陣列的每個元素各做一次 */
         s += '<line x1="70" y1="70" x2="70" y2="12" stroke="#D46F3C" stroke-width="3.5" stroke-linecap="round" class="watchoff-hand"/><circle cx="70" cy="70" r="5" fill="#4A3B1E"/></svg>';
         return s;
     }
@@ -89,33 +89,33 @@
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, level = api.level, W = stage.clientWidth || 472;
-        var q = makeLevel(level, api.rand), t0 = performance.now(), canAnswer = true, done = false;
+        var q = makeLevel(level, api.rand), t0 = performance.now(), canAnswer = true, done = false;  /* performance.now()：高精度的時間（毫秒），計時用 */
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[哪支錶不準] 第 ' + level + ' 關：不準的是錶 ' + NAMES[q.odd] + '（誤差 ' + (q.e * 100).toFixed(3) + '%，' + (q.e > 0 ? '偏快' : '偏慢') + '）；錶面 ' + q.styles.join('/') + '；作答限時 ' + ansMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        var tip = h('div', { 'class': 'watchoff-tip', text: '三支錶一起走，其中一支走得比較快或比較慢' });
+        var tip = h('div', { 'class': 'watchoff-tip', text: '三支錶一起走，其中一支走得比較快或比較慢' });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
         var obs = h('div', { 'class': 'watchoff-obs', text: '哪一支走得不準？' });
         var info = h('div', { 'class': 'watchoff-info' });
-        stage.appendChild(tip); stage.appendChild(obs);
-        var gap = Math.floor((W - 3 * SIZE) / 4);
-        var faces = q.styles.map(function (st, i) {
+        stage.appendChild(tip); stage.appendChild(obs); /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        var gap = Math.floor((W - 3 * SIZE) / 4);       /* Math.floor：無條件捨去成整數 */
+        var faces = q.styles.map(function (st, i) {     /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var el = h('div', { 'class': 'watchoff-face' }, [h('div', { 'class': 'watchoff-dial', html: faceSvg(st) }), h('div', { 'class': 'watchoff-name', text: NAMES[i] })]);
             el.style.left = (gap + i * (SIZE + gap)) + 'px';
             el.firstChild.style.transform = 'rotate(' + q.rots[i].toFixed(1) + 'deg)';
-            stage.appendChild(el);
+            stage.appendChild(el);                      /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             return el;
         });
-        var hands = faces.map(function (f) { return f.querySelector('.watchoff-hand'); });
+        var hands = faces.map(function (f) { return f.querySelector('.watchoff-hand'); });  /* querySelector：用 CSS 選擇器在網頁裡找元素 */
         stage.appendChild(info);
         function frame() {
-            var sec = (performance.now() - t0) / 1000;
-            hands.forEach(function (hd, i) { hd.setAttribute('transform', 'rotate(' + handDeg(q.periods[i], q.phases[i], sec).toFixed(1) + ' 70 70)'); });
+            var sec = (performance.now() - t0) / 1000;  /* performance.now()：高精度的時間（毫秒），計時用 */
+            hands.forEach(function (hd, i) { hd.setAttribute('transform', 'rotate(' + handDeg(q.periods[i], q.phases[i], sec).toFixed(1) + ' 70 70)'); });  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         }
         frame();
-        api.my.loop(function () { if (api.over) return false; frame(); });
-        var btns = NAMES.map(function (n, i) {
+        api.my.loop(function () { if (api.over) return false; frame(); });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
+        var btns = NAMES.map(function (n, i) {          /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var b = h('button', { 'class': 'btn btn--line', text: '選 ' + n });
-            kit.onTap(b, function () { if (canAnswer && !b.disabled) choose(i); });
+            kit.onTap(b, function () { if (canAnswer && !b.disabled) choose(i); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             return b;
         });
         stage.appendChild(h('div', { 'class': 'rx-btnrow' }, btns));
@@ -126,16 +126,16 @@
             done = true; canAnswer = false;
             btns.forEach(function (b) { b.disabled = true; });                  /* 點了答案之後按鈕立刻停用，直到下一關才恢復（每一關重建） */
             var lines = [];
-            faces.forEach(function (f, k) {
+            faces.forEach(function (f, k) {             /* forEach：對陣列的每個元素各做一次 */
                 var ds = dialSeconds(q.periods[k], WINDOW_S);
-                f.classList.toggle('watchoff-face--odd', k === q.odd);
-                if (k === i && k !== q.odd) f.classList.add('watchoff-face--bad');
+                f.classList.toggle('watchoff-face--odd', k === q.odd);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                if (k === i && k !== q.odd) f.classList.add('watchoff-face--bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 f.appendChild(h('div', { 'class': 'watchoff-sec', text: ds.toFixed(4) + ' 秒' }));
-                lines.push('錶 ' + NAMES[k] + '：' + WINDOW_S + ' 秒內秒針走了 ' + ds.toFixed(4) + ' 秒' + (k === q.odd ? '（' + (q.e > 0 ? '偏快' : '偏慢') + ' ' + Math.abs(q.e * 100).toFixed(4) + '%）' : ''));
+                lines.push('錶 ' + NAMES[k] + '：' + WINDOW_S + ' 秒內秒針走了 ' + ds.toFixed(4) + ' 秒' + (k === q.odd ? '（' + (q.e > 0 ? '偏快' : '偏慢') + ' ' + Math.abs(q.e * 100).toFixed(4) + '%）' : ''));  /* Math.abs：取絕對值（去掉負號） */
             });
-            info.textContent = '不準的是錶 ' + NAMES[q.odd] + '，' + (q.e > 0 ? '偏快' : '偏慢') + ' ' + Math.abs(q.e * 100).toFixed(4) + '%';
-            if (i === q.odd) api.pass({ delay: 1700 });
-            else api.fail({ delay: 2400, lines: [(i < 0 ? '時間到！' : '選錯了！') + '不準的是錶 ' + NAMES[q.odd]].concat(lines) });
+            info.textContent = '不準的是錶 ' + NAMES[q.odd] + '，' + (q.e > 0 ? '偏快' : '偏慢') + ' ' + Math.abs(q.e * 100).toFixed(4) + '%';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            if (i === q.odd) api.pass({ delay: 1700 }); /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
+            else api.fail({ delay: 2400, lines: [(i < 0 ? '時間到！' : '選錯了！') + '不準的是錶 ' + NAMES[q.odd]].concat(lines) });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { choose(q.odd); };
