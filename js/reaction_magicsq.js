@@ -13,11 +13,14 @@
    · 提示（每題 HINTS 次）：標出「所在的排／列／對角線剩最少空格」的一個沒填對的格子（最好推理的那一格），不說數字。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
+    /* 新手導讀：整個檔案包在 (function () { ... })(); 裡，裡面的變數都是這個檔案私有的。
+       分三段：① 參數區（難度在這）；② 純函式（算魔方陣、搜尋答案、出題、判斷對錯，單元測試直接測）；③ 畫面（mount／setup）。
+       魔方陣：把 1～N×N 各填一次，讓每一排、每一列、兩條對角線的和都一樣（叫「魔術數」，3×3 是 15、4×4 是 34）。 */
     'use strict';
 
-    var ID = 'magicsq';
+    var ID = 'magicsq';                                 /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴（magicsq-）都用它 */
     var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };
-    var h = UI.h, kit = Reaction.kit;
+    var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var LEVELS3 = 8;                            /* 前幾關是 3×3（最多 8，因為 3×3 只有 8 種）；之後是 4×4 */
@@ -30,13 +33,17 @@
     var CELL_MAX = 84;                              /* 每個格子的最大邊長（px） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 魔術數：1～n² 的總和是 n²(n²+1)/2，平均分給 n 排，每排就是 n(n²+1)/2（3×3 → 15、4×4 → 34） */
     function magicSum(n) { return n * (n * n + 1) / 2; }
+    /* 這一關是幾乘幾：前 LEVELS3 關（最多 8 關）是 3×3，之後是 4×4 */
     function sizeFor(level) { return level <= Math.min(8, LEVELS3) ? 3 : 4; }
+    /* 這一關要給幾個提示數（已經填好的格子）：3×3 與 4×4 各自從第一個數字線性變到第二個（越少越難） */
     function givensFor(level) {
         if (sizeFor(level) === 3) return Math.round(kit.ramp(level, GIVENS3[0], GIVENS3[1], Math.max(2, Math.min(8, LEVELS3))));
         return Math.round(kit.ramp(level - Math.min(8, LEVELS3), GIVENS4[0], GIVENS4[1], RAMP4));
     }
     /* 所有的線（排、列、兩條對角線），每條線是 n 個格子的編號 */
+    /* 列出所有「要加起來是魔術數」的線：n 條排、n 條列、2 條對角線；每條線是 n 個格子編號的陣列（編號 ＝ 排 × n ＋ 欄） */
     function linesOf(n) {
         var L = [], r, c;
         for (r = 0; r < n; r++) { var a = []; for (c = 0; c < n; c++) a.push(r * n + c); L.push(a); }
@@ -49,10 +56,14 @@
     /* 搜尋魔方陣：givens＝已固定的格子（0＝空），一格一格往下填，不合就退回；最多找 limit 個答案。
        rand 有給就用亂數順序試數字（用來「隨機造一個魔方陣」）。回傳 { count, first }。
        剪枝：每排／列／對角線的加總不能超過目標、填滿時要剛好等於目標。 */
+    /* 用回溯法找魔方陣：givens 是已固定的格子（0＝空），一格一格由左上往右下填，不合規定就退回上一格；最多找 limit 個答案。
+       rand 有給就用亂數順序試數字（用來「隨機造一個魔方陣」）。回傳 { count 找到幾個, first 第一個 }。
+       剪枝（提早放棄走不通的路）：每排／列／對角線的加總不能超過魔術數、填滿那條線時要剛好等於魔術數。 */
     function search(n, givens, limit, rand) {
         var M = magicSum(n), total = n * n, g = new Array(total).fill(0), used = new Array(total + 1).fill(false), i;
         for (i = 0; i < total; i++) if (givens[i]) { if (used[givens[i]]) return { count: 0, first: null }; used[givens[i]] = true; }
         var colSum = new Array(n).fill(0), d1 = 0, d2 = 0, count = 0, first = null;
+        /* rec(pos)：填第 pos 格（遞迴）。rowSum、colSum、d1、d2 是目前「排／列／兩條對角線」已經累計的和，每填一格就更新，退回時再減掉（回溯） */
         function rec(pos) {
             if (pos === total) { if (d1 === M && d2 === M) { count++; if (!first) first = g.slice(); } return; }
             var r = Math.floor(pos / n), c = pos % n, rowSum = 0, k;
@@ -85,7 +96,8 @@
         return { count: count, first: first };
     }
     /* 3×3 的 8 個魔方陣全部列出來（4×4 有 7040 個，不列，改用 search 隨機造＋數個數） */
-    var all3 = null;
+    var all3 = null;                                    /* 3×3 的魔方陣只有 8 個，第一次用到時全部列出來存著（all3），之後直接取 */
+    /* 窮舉 3×3 的所有魔方陣：把 1～9 的所有排列（9! ＝ 362880 種）都試一遍，每條線都是 15 的就收下。3×3 很小，窮舉最簡單 */
     function enumerate3() {
         if (all3) return all3;
         all3 = [];
@@ -95,8 +107,11 @@
         return all3;
     }
     /* 符合提示（givens：0＝空格）的魔方陣有幾個（最多數到 limit） */
+    /* 符合這些提示的魔方陣有幾個（最多數到 limit）：出題時用它確認「答案只有一個」 */
     function countMatching(n, givens, limit) { return search(n, givens, limit || 2, null).count; }
     /* 出一題：{ n, solution, givens, count, M }。usedSolutions（選填）：3×3 前幾關不要重複用同一個答案 */
+    /* 出一題：先挑一個答案（3×3 從 8 個裡挑、4×4 用 search 隨機造），再隨機挑幾格當提示，
+       用 countMatching 確認「只有這個答案」才收；300 次都不唯一就多給一個提示。usedSolutions：3×3 的前幾關不重複用同一個答案。 */
     function makePuzzle(level, rand, usedSolutions) {
         rand = rand || Math.random;
         var n = sizeFor(level), k = givensFor(level), sol = null, tries = 0;
@@ -116,6 +131,7 @@
         }
     }
     /* 每條線現在的狀況：{ sum, empty（空格數）, diff（目標 − 目前加總）, full, ok } */
+    /* 每條線現在的狀況：加總 sum、空格數 empty、離目標還差多少 diff（目標 − 目前）、填滿了嗎 full、填滿而且剛好嗎 ok（畫面上「差 N／多 N／✓／✗」就來自這裡） */
     function lineStatus(n, grid) {
         var M = magicSum(n);
         return linesOf(n).map(function (ln) {
@@ -124,11 +140,13 @@
             return { sum: sum, empty: empty, diff: M - sum, full: empty === 0, ok: empty === 0 && sum === M };
         });
     }
+    /* 解開了嗎：每格都有數字、而且每條線都剛好是魔術數 */
     function isSolved(n, grid) {
         for (var i = 0; i < grid.length; i++) if (!grid[i]) return false;
         return lineStatus(n, grid).every(function (s) { return s.ok; });
     }
     /* 提示：挑一格「沒填對」的，優先選它所在的線剩下的空格最少的那一格（最好推理） */
+    /* 提示：在「沒填對」的格子裡，挑它所在的線「剩下空格最少」的那格（最容易推理的一格） */
     function hintCell(pz, grid) {
         var n = pz.n, ls = linesOf(n), st = lineStatus(n, grid), best = -1, bs = 99;
         for (var i = 0; i < n * n; i++) {
@@ -139,6 +157,7 @@
         }
         return best;
     }
+    /* 結算畫面的評語（依解開題數） */
     function rating(n) {
         if (n >= 25) return '洛書高手！';
         if (n >= 12) return '加總很穩！';
@@ -147,6 +166,7 @@
     }
 
     /* ═══ 畫面 ═══ */
+    /* 遊戲進場：交給共用骨架 kit.run 處理闖關流程。leaveSettle: true 代表「沒有失敗」的自由解題——按返回會先結算再離開。usedSol 記下 3×3 用過的答案 */
     function mount(root, ctx) {
         var usedSol = [];
         kit.run(root, ctx, {
@@ -160,6 +180,7 @@
         });
     }
 
+    /* 每一關開始時呼叫：出題、建立盤面、數字鍵與按鈕。api 是共用骨架給的工具（api.stage 畫面容器、api.pass 過關…） */
     function setup(api, usedSol) {
         var stage = api.stage, level = api.level;
         var pz = makePuzzle(level, api.rand, usedSol), n = pz.n, total = n * n;
@@ -167,8 +188,8 @@
         api.info = pz;
         console.log('[魔方陣] 第 ' + level + ' 關：' + n + '×' + n + '，總和 ' + pz.M + '，提示 ' + pz.count + ' 個');
         var W = stage.clientWidth || 472;
-        var statW = 80, statH = 44, cell = Math.min(CELL_MAX, Math.floor((W * 0.96 - statW - n * 4) / n));
-        var grid = pz.givens.slice(), sel = -1, hint = -1, hintsLeft = HINTS, solved = false;
+        var statW = 80, statH = 44, cell = Math.min(CELL_MAX, Math.floor((W * 0.96 - statW - n * 4) / n));  /* 算每格大小：舞台寬度 ×0.96 扣掉右邊「差多少」欄（statW）與格子間距，再除以邊長，最大不超過 CELL_MAX */
+        var grid = pz.givens.slice(), sel = -1, hint = -1, hintsLeft = HINTS, solved = false;  /* grid：目前盤面（先抄一份題目）；sel：選中的格子（−1＝沒選）；hint：提示標出的格子；hintsLeft：剩幾次提示；solved：已解開 */
         var lines = linesOf(n);
 
         var wrap = h('div', { 'class': 'magicsq-wrap' });
@@ -182,7 +203,7 @@
         for (r = 0; r < n; r++) {
             for (c = 0; c < n; c++) {
                 var cl = h('div', { 'class': 'magicsq-cell' });
-                (function (idx) { kit.onTap(cl, function () { select(idx); }); })(r * n + c);
+                (function (idx) { kit.onTap(cl, function () { select(idx); }); })(r * n + c);  /* 用立即執行函式存住這一格的編號 idx（不這樣寫，每格點下去都會拿到迴圈結束時的值） */
                 board.appendChild(cl); cells.push(cl);
             }
             var rs = h('div', { 'class': 'magicsq-status' }); board.appendChild(rs); rowSt.push(rs);
@@ -196,6 +217,7 @@
         var pad = h('div', { 'class': 'magicsq-pad' });
         pad.style.gridTemplateColumns = 'repeat(' + (total === 9 ? 5 : 9) + ', minmax(0, 1fr))';
         var keys = [];
+        /* 一個數字一顆鍵（用立即執行函式存住 dg，原因同上）；用過的數字會變灰 */
         for (var d = 1; d <= total; d++) (function (dg) {
             var b = h('button', { 'class': 'btn btn--sky magicsq-key', type: 'button', text: String(dg) });
             kit.onTap(b, function () { enter(dg); });
@@ -215,10 +237,12 @@
         wrap.appendChild(board); wrap.appendChild(diagTip); wrap.appendChild(tip); wrap.appendChild(pad); wrap.appendChild(acts);
         stage.appendChild(wrap);
 
+        /* 更新一條線旁邊的小字：還沒填滿寫「差 N／多 N」，填滿了寫 ✓（剛好）或 ✗（不對），多了或錯了標紅 */
         function statText(el, s) {
             el.textContent = s.full ? (s.ok ? '✓' : '✗') : (s.diff >= 0 ? '差 ' + s.diff : '多 ' + (-s.diff));
             el.className = 'magicsq-status' + (s.full ? (s.ok ? ' magicsq-status--ok' : ' magicsq-status--bad') : (s.diff < 0 ? ' magicsq-status--bad' : ''));
         }
+        /* 重畫整個盤面：格子數字與狀態、每排每列旁邊的「差多少」、對角線、數字鍵是否已用過 */
         function paint() {
             var st = lineStatus(n, grid), used = {};
             for (var i = 0; i < total; i++) {
@@ -235,7 +259,9 @@
             });
             keys.forEach(function (b, k2) { b.disabled = !!used[k2 + 1]; b.classList.toggle('magicsq-key--used', !!used[k2 + 1]); });
         }
+        /* 點選一格 */
         function select(i) { if (solved) return; sel = i; paint(); }
+        /* 按下數字鍵 v（0＝擦掉）：填進選中的格子（題目給的格子不能改），填完檢查是不是解開了 */
         function enter(v) {
             if (solved) return;
             if (sel < 0) { tip.textContent = '先點一格，再點數字'; return; }
@@ -244,11 +270,13 @@
             paint();
             if (isSolved(n, grid)) win();
         }
+        /* 解開：全部變綠、閃綠光並過關 */
         function win() {
             solved = true; sel = -1; paint(); tip.textContent = '每條線都是 ' + pz.M + '！';
             kit.flash(stage, true, api.my);
             api.pass({ delay: PASS_DELAY_MS });
         }
+        /* 提示：標出最好推理的一格（每題 HINTS 次） */
         function useHint() {
             if (solved || hintsLeft <= 0) return;
             var c = hintCell(pz, grid);
@@ -256,13 +284,16 @@
             hintsLeft--; btnHint.textContent = '提示 ' + hintsLeft; btnHint.disabled = hintsLeft <= 0;
             hint = c; sel = c; tip.textContent = '閃動的那格最好推理'; paint();
         }
+        /* 重來：盤面回到題目的樣子 */
         function reset() { if (solved) return; grid = pz.givens.slice(); sel = -1; hint = -1; paint(); }
+        /* 給測試／debug 用：api.solve 一鍵填成答案、api.wrong 故意填錯一格、api.state 回報目前狀態 */
         api.solve = function () { grid = pz.solution.slice(); paint(); if (isSolved(n, grid)) win(); };
         api.wrong = function () { for (var i = 0; i < total; i++) if (!pz.givens[i]) { grid[i] = pz.solution[i] % total + 1; break; } paint(); };
         api.state = function () { return { grid: grid.slice(), solved: solved, hintsLeft: hintsLeft }; };
         paint();
     }
 
+    /* 遊戲登記資料：id、名稱、規則文字（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式 */
     var G = {
         id: ID,
         name: '魔方陣',
@@ -275,5 +306,6 @@
             LEVELS3: LEVELS3, GIVENS3: GIVENS3, GIVENS4: GIVENS4, RAMP4: RAMP4, HINTS: HINTS, MAX_LEVEL: MAX_LEVEL
         }
     };
+    /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);
 })();
