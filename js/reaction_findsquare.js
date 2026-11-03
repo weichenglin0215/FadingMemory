@@ -28,9 +28,9 @@
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var POINTS = [8, 30];                       /* 星星總數：第 1 關 → 到頂 */
-    var DECOYS = [0, 3];                        /* 誘餌（差一點的菱形／長方形）組數：第 1 關 → 到頂 */
-    var DECOY_MAX = [0.20, 0.06];               /* 誘餌的誤差（eps）上限：第 1 關 → 到頂（越小越像正方形） */
-    var TIME_S = [20, 10];                      /* 每關限時（秒）：第 1 關 → 到頂 */
+    var DECOYS = [1, 4];                        /* 誘餌（差一點的菱形／長方形）組數：第 1 關 → 到頂 */
+    var DECOY_MAX = [0.20, 0.05];               /* 誘餌的誤差（eps）上限：第 1 關 → 到頂（越小越像正方形） */
+    var TIME_S = [20, 40];                      /* 每關限時（秒）：第 1 關 → 到頂 */
     var EPS_SQ = 0.012;                         /* eps 小於這個就算「是正方形」（出題時真正方形只有座標四捨五入的誤差） */
     var EPS_NONSQ = 0.03;                       /* 其他任何 4 個點的 eps 都要至少這麼大（才不會有第二個「幾乎是正方形」） */
     var FIELD = { w: 440, h: 500 };             /* 虛擬的星空大小（顯示時等比例縮放） */
@@ -40,6 +40,8 @@
     var ROT = [15, 75];                         /* 正方形的旋轉角（度）：大多是斜的 */
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var SQRT2 = Math.SQRT2;                         /* 根號 2（正方形對角線長度的算法用） */
+    /* 干擾用的動態條紋背景（共用元件 js/reaction_bgstripe.js，各欄位的意思見該檔開頭）：from 是從第幾關開始出現（想關掉改成 0，想晚一點出現就調大）；數字寫成 [起, 終] 會從第 from 關起漸漸變強 */
+    var BG = { from: 6, type: 'hex', diff: [2, 8], width: [64, 24], move: 'all', speed: 12, hue: 226, sat: 46, light: 24 };  /* 第 8 關起出現：六角形拼盤、亮度差 4% → 8%、半徑 28px、全方向捲動 12px／秒；色調同夜空（--fsq-sky） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
@@ -76,12 +78,17 @@
     /* 含第 k 個點的所有 4 點組合裡，最小的 eps（排除 skip 這一組）；點很多也很快（只看含 k 的） */
     function minEpsWith(pts, k, skip) {
         var best = 1e9, n = pts.length, skipKey = skip ? skip.slice().sort(function (x, y) { return x - y; }).join() : null;
-        for (var a = 0; a < n; a++) { if (a === k) continue;
-            for (var b = a + 1; b < n; b++) { if (b === k) continue;
-                for (var c = b + 1; c < n; c++) { if (c === k) continue;
+        for (var a = 0; a < n; a++) {
+            if (a === k) continue;
+            for (var b = a + 1; b < n; b++) {
+                if (b === k) continue;
+                for (var c = b + 1; c < n; c++) {
+                    if (c === k) continue;
                     if (skipKey && [a, b, c, k].sort(function (x, y) { return x - y; }).join() === skipKey) continue;
                     var e = squareErr([pts[a], pts[b], pts[c], pts[k]]); if (e < best) best = e;
-                } } }
+                }
+            }
+        }
         return best;
     }
     /* 你點的四顆星哪裡不像正方形：回傳 { text, pct（那項誤差的百分比，X.XXXX）, kind } */
@@ -191,6 +198,7 @@
         var sky = h('div', { 'class': 'findsquare-sky' });
         sky.style.cssText = 'left:' + fx + 'px;top:' + fy + 'px;width:' + fw + 'px;height:' + fh + 'px;';
         stage.appendChild(sky);
+        kit.bgStripe(sky, api.my, level, BG);          /* 在夜空底板裡墊一層淡淡的動態花紋（BG.from 關之後才出現），星星畫在它上面 */
         var svg = kit.svg('svg', { 'class': 'findsquare-svg', viewBox: '0 0 ' + FIELD.w + ' ' + FIELD.h, width: fw, height: fh }, sky);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var gLines = kit.svg('g', {}, svg), gStars = kit.svg('g', {}, svg);
         var starEls = pts.map(function (p, i) {

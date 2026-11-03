@@ -9,6 +9,9 @@
    是否在線的左右，以「中心點」為準。
    · V1.40.0（玩家回饋）：圓點圖案換成人像 emoji（每個人隨機一種）。emoji 大小＝圓的直徑 × FACE_SCALE；數過之後的綠／藍／紅色圈畫在 emoji 底下；
      中心點（SHOW_CENTER）是一顆小黑點（白邊），全部畫在最上層，不會被別人的 emoji 蓋住——判斷左右是看中心點不是臉的邊緣。
+   · 玩家回饋（前面的關卡，正確位置自然會有一道明顯的空隙，找縫就能過關）：出題後多一道 addDecoys，在正確位置的左右兩邊各開幾道同樣明顯的「假空隙」（DECOY：整群人往外平推，
+     不影響「剛好一半」的答案與容許寬度）；channelsOf 負責找出畫面上所有這種豎直空隙，測試用它檢查假空隙真的存在。
+   · 玩家回饋（數量動畫的色圈被人像蓋住看不出來）：色圈半徑＝人的半徑 × RING_SCALE，而且所有色圈先畫、所有人像後畫（人像永遠在色圈上面）。
    關卡制：成績＝過了幾關。越後面圓形的分布越不平均（越擠在某一側），豎線要移得越遠、容許的位置也越窄。
    ───────────────────────────────────────────────────────────────────
    · V1.28（玩家意見：某一關會突然冒出大量圓形）：以前每一關的個數是在 N_RANGE 之間「完全隨機」抽，所以第 2 關也可能 120 個；
@@ -35,9 +38,9 @@
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
-    var N_RANGE = [10, 120];                    /* 圓形個數範圍（偶數） */
-    var R_RANGE = [11, 16];                     /* 圓形半徑範圍（px） */
-    var OVERLAP = 0.5;                          /* 兩個圓最多重疊多少（0.6＝60%） */
+    var N_RANGE = [10, 100];                    /* 圓形個數範圍（偶數） */
+    var R_RANGE = [10, 20];                     /* 圓形半徑範圍（px） */
+    var OVERLAP = 0.0;                          /* 兩個圓最多重疊多少（0.6＝60%） */
     var SKEW_MAX = 0.85;                        /* 最後一關的不平均程度（0＝平均分布，1＝幾乎全擠在一處） */
     var GAP = [60, 3];                           /* 容許的位置寬度（lo～hi 的距離，px）：第 1 關 → 到頂（最少值） */
     var EDGE = 18;                              /* 圓心離畫面邊緣至少多遠（px） */
@@ -45,7 +48,17 @@
     var N_JITTER = 4;                           /* 每一關的圓形個數，在線性基準上下最多抖動幾個（偶數） */
     var TRIES = 60;                                 /* 出題時最多重抽幾次 */
     var FACE_SCALE = 1.0;                       /* 人像 emoji 的字級＝圓直徑（2r）× 這個倍率 */
-    var SHOW_CENTER = true;                     /* 要不要在每個人的中心畫小黑點（判斷左右的依據；設成 false 就只剩 emoji） */
+    var SHOW_CENTER = false;                     /* 要不要在每個人的中心畫小黑點（判斷左右的依據；設成 false 就只剩 emoji） */
+    var RING_SCALE = 1.4;                       /* 「計算數量」時，人像底下那圈綠／藍／紅色圓的半徑＝人的半徑 r × 這個倍率（1＝跟人一樣大，會被人像整個蓋住；調大才看得到色圈從人像四周露出來；只影響色圈，不影響人與人之間的距離） */
+    /* 假空隙（干擾用）：前面的關卡「剛好一半」的容許寬度很大（見 GAP），正確位置會自然出現一道明顯的豎直空隙，玩家找空隙就能過關、不用數人頭。
+       解法：在正確位置的左、右兩邊各開出幾道同樣明顯（甚至更寬）的假空隙——做法是把一整群人往外平推，所以人不會重疊、左右各一半的答案也不會變。
+       from：從第幾關開始（0＝完全關掉）；to：到第幾關為止（含，0＝不設上限）；count：正確位置的左邊、右邊「各」開幾道；
+       rank：假空隙離正確位置幾個人（1～6＝假空隙那條線左邊的人數，跟「一半」差 1～6 個；人少的關卡最多差到一半少一個）；min：假空隙至少要多寬（px，推不出這麼寬就不開）；
+       ratio：假空隙的寬度＝「max(min, 正確位置那道空隙的寬度) × 這個範圍內的隨機倍率」（大於 1＝假的比真的還寬，找最寬的縫就會被騙）；
+       keep：人群太擠、沒地方推的時候，會把別處「自然出現」的空隙壓窄來騰出位置，被壓的空隙最少還留幾 px（正確位置那道與已經開好的假空隙不會被壓） */
+    var DECOY = { from: 1, to: 20, count: 1, rank: [1, 6], min: 18, ratio: [0.9, 1.4], keep: 8 };
+    /* 干擾用的動態條紋背景（共用元件 js/reaction_bgstripe.js，各欄位的意思見該檔開頭）：from 是從第幾關開始出現（想關掉改成 0，想晚一點出現就調大）；數字寫成 [起, 終] 會從第 from 關起漸漸變強 */
+    var BG = { from: 0, type: 'checker', diff: [3, 6], width: 44, move: 'all', speed: 14 };  /* from 0＝目前關閉；若改成 8 就是第 8 關起出現：棋盤格、亮度差 3% → 6%（20 關內漸強）、格寬 44px、全方向捲動 14px／秒 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function skewAt(level) { return kit.ramp(level, 0, SKEW_MAX, RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
@@ -69,8 +82,107 @@
     function minDist(r1, r2) { return (1 - OVERLAP) * (r1 + r2); }
     /* 圓心 x 小於線的算左邊；等於線的算右邊 */
     function countLeft(circles, lineX) { var n = 0; circles.forEach(function (c) { if (c.x < lineX) n++; }); return n; }  /* forEach：對陣列的每個元素各做一次 */
-    /* 出一關：回傳 { circles:[{x,y,r}], N, lo, hi（第 N/2 與 N/2+1 個圓心的 x）, gap, skew, W, H } */
+    function byX(a, b) { return a.x - b.x; }            /* 排序用：依中心點 x 由小到大 */
+    /* 這一關有沒有假空隙：DECOY.from ≤ 關卡 ≤ DECOY.to（from 是 0 就完全不開；to 是 0 代表不設上限） */
+    function decoyOn(level) { return DECOY.from > 0 && DECOY.count > 0 && level >= DECOY.from && (!DECOY.to || level <= DECOY.to); }
+    /* 空隙分析：每個人佔的 x 範圍是 [x−r, x+r]；從左掃到右，找出「整條豎線都碰不到任何人」的空隙（只算人與人之間，窄過 minW 的不算）。
+       回傳 [{ x0, x1, w 寬度, mid 中點, left 這道空隙左邊有幾個人 }]；left 剛好是人數的一半的那一道，就是正確答案所在的空隙 */
+    function channelsOf(circles, minW) {
+        var arr = circles.map(function (c) { return { a: c.x - c.r, b: c.x + c.r }; }), out = [], i;
+        arr.sort(function (p, q) { return p.a - q.a; });
+        var reach = arr.length ? arr[0].b : 0;           /* reach：目前已經掃過的人，最右邊碰到哪裡 */
+        for (i = 1; i < arr.length; i++) {
+            var w = arr[i].a - reach;
+            if (w > 0 && w >= (minW || 0)) out.push({ x0: reach, x1: arr[i].a, w: w, mid: (reach + arr[i].a) / 2, left: i });
+            if (arr[i].b > reach) reach = arr[i].b;
+        }
+        return out;
+    }
+    /* 一群人往 dir 方向（−1 往左、＋1 往右）「壓緊」時，每個人最多能移多遠（回傳和 group 同順序的陣列）：
+       先依 x 範圍把這群人切成幾「塊」（兩塊之間隔著一道整條都空的縫）；最靠邊那塊最多移到貼著畫面邊緣（EDGE），
+       下一塊最多再多移「那道縫的寬度 − DECOY.keep」（縫壓到只剩 keep 寬，不能再窄、也不能讓人撞在一起），以此類推。
+       base：這群人左邊（整個畫面）已經有幾個人；prot：不准壓縮的縫（用「縫左邊有幾個人」當鍵：正確答案那道縫、已經開好的假空隙）——
+       被保護的縫兩邊的人移動量一樣，寬度不變 */
+    function packCaps(group, base, dir, W, prot) {
+        var items = group.map(function (c, i) { return { i: i, a: dir < 0 ? c.x - c.r : W - c.x - c.r, b: dir < 0 ? c.x + c.r : W - c.x + c.r }; });  /* dir＞0 時把畫面左右翻過來算，這樣都是「往 a 變小的方向移」 */
+        items.sort(function (p, q) { return p.a - q.a; });
+        var caps = new Array(group.length), cap = items.length ? Math.max(0, items[0].a - EDGE) : 0, reach = items.length ? items[0].b : 0;  /* reach：已經掃過的人，最遠碰到哪 */
+        for (var k = 0; k < items.length; k++) {
+            var it = items[k];
+            if (k > 0 && it.a > reach) {                    /* 這個人前面隔著一道整條都空的縫（前面已經掃過 k 個人） */
+                var leftCount = dir < 0 ? base + k : base + items.length - k;  /* 這道縫在真實畫面上，左邊有幾個人 */
+                if (!prot[leftCount]) cap += Math.max(0, it.a - reach - DECOY.keep);
+            }
+            caps[it.i] = cap;
+            if (it.b > reach) reach = it.b;
+        }
+        return caps;
+    }
+    /* 規劃一道假空隙：sorted 是依中心點 x 排好的人；前 j 個人是「左群」、其餘是「右群」，要讓兩群之間的空隙寬到 want。
+       做法是把左群往左壓緊 dl、右群往右壓緊 dr（每個人實際移 min(dl, 他的上限)，上限見 packCaps；side＝−1 先壓左群、＋1 先壓右群，壓到極限還不夠才壓另一群，而且只壓到剛好夠寬）。
+       移動只會讓兩群離得更遠、群內的人不會撞在一起，每個人的左右順序（誰是第幾個）也不變。回傳 { j, w 開完的空隙寬, dx 每個人要移多少, move 總移動量 }（只是計畫，還沒動人） */
+    function carvePlan(sorted, j, want, W, side, prot) {
+        var L = sorted.slice(0, j), R = sorted.slice(j), capL = packCaps(L, 0, -1, W, prot), capR = packCaps(R, j, 1, W, prot), i;
+        var maxL = Math.max.apply(null, capL), maxR = Math.max.apply(null, capR);
+        function width(dl, dr) {                            /* 左群移 dl、右群移 dr 之後，兩群之間的空隙寬（負的＝兩邊的 x 範圍還互相重疊） */
+            var aR = -1e9, bL = 1e9, n;
+            for (n = 0; n < L.length; n++) aR = Math.max(aR, L[n].x + L[n].r - Math.min(dl, capL[n]));
+            for (n = 0; n < R.length; n++) bL = Math.min(bL, R[n].x - R[n].r + Math.min(dr, capR[n]));
+            return bL - aR;
+        }
+        function least(f, top) {                            /* 二分搜尋：在 0～top 之間找「最小的 d，讓 f(d) ≥ want」；到 top 都不夠就回傳 top */
+            if (f(0) >= want) return 0;
+            if (f(top) < want) return top;
+            var lo = 0, hi = top;
+            for (var it = 0; it < 24; it++) { var mid = (lo + hi) / 2; if (f(mid) >= want) hi = mid; else lo = mid; }
+            return hi;
+        }
+        var dl = 0, dr = 0;
+        if (side < 0) { dl = least(function (d) { return width(d, 0); }, maxL); if (width(dl, 0) < want) dr = least(function (d) { return width(dl, d); }, maxR); }
+        else { dr = least(function (d) { return width(0, d); }, maxR); if (width(0, dr) < want) dl = least(function (d) { return width(d, dr); }, maxL); }
+        var dx = [], move = 0;
+        for (i = 0; i < sorted.length; i++) { var m = i < j ? -Math.min(dl, capL[i]) : Math.min(dr, capR[i - j]); dx.push(m); move += Math.abs(m); }
+        return { j: j, w: width(dl, dr), dx: dx, move: move };
+    }
+    /* 在剛出好的題目 q 裡開假空隙（見 DECOY）：正確位置的左、右兩邊各 DECOY.count 道，離正確位置 DECOY.rank 個人。
+       開完把 q.lo／q.hi／q.gap 照新位置重算（整群平移，順序沒變，所以「第 N/2、N/2+1 個」還是同兩個人，寬度也不變）；q.decoys 記下開了哪幾道（除錯與測試用） */
+    function addDecoys(q, level, rand) {
+        q.decoys = [];
+        if (!decoyOn(level)) return q;
+        var half = q.N / 2, sorted = q.circles.slice().sort(byX), kmax = Math.min(DECOY.rank[1], half - 1), kmin = Math.min(DECOY.rank[0], kmax);
+        var ans = channelsOf(q.circles, 0).filter(function (c) { return c.left === half; })[0], aw = ans ? ans.w : 0;  /* 正確位置那道空隙的寬度（沒有空隙就是 0） */
+        var prot = {}, firstSide = rand() < 0.5 ? -1 : 1;  /* prot：不准被壓縮的縫（鍵＝縫左邊的人數）：先保護正確答案那道，之後開好的假空隙也加進來 */
+        prot[half] = true;
+        for (var s = 0; s < 2; s++) {
+            var side = s ? -firstSide : firstSide;        /* −1＝正確位置的左邊、＋1＝右邊；左右兩邊都要有 */
+            for (var t = 0; t < DECOY.count; t++) {
+                var want = Math.max(DECOY.min, aw) * kit.randFloat(DECOY.ratio[0], DECOY.ratio[1], rand), best = null;
+                for (var k = kmin; k <= kmax; k++) {         /* 試每一個距離，挑「寬度夠、人移得少、又離正確位置近」的那個切點（近的比較有誘惑力：每遠 1 個人，扣 25 分＝多移 25px） */
+                    var j = half + side * k;
+                    if (j < 1 || j > q.N - 1 || prot[j]) continue;
+                    var p = carvePlan(sorted, j, want, q.W, side, prot);
+                    if (p.w < DECOY.min) continue;
+                    p.score = Math.min(p.w, want) * 1000 - p.move - k * 25;
+                    if (!best || p.score > best.score) best = p;
+                }
+                if (!best) break;
+                sorted.forEach(function (c, i) { c.x += best.dx[i]; });
+                prot[best.j] = true;
+                q.decoys.push({ j: best.j, off: best.j - half, w: best.w, want: want });
+            }
+        }
+        var srt = q.circles.slice().sort(byX);
+        q.lo = srt[half - 1].x; q.hi = srt[half].x; q.gap = q.hi - q.lo;
+        return q;
+    }
+    /* 出一關：回傳 { circles:[{x,y,r}], N, lo, hi（第 N/2 與 N/2+1 個圓心的 x）, gap, skew, W, H, decoys }；先照原本的方式出題（baseLevel），再開假空隙（addDecoys） */
     function makeLevel(level, W, H, rand) {
+        rand = rand || Math.random;
+        var q = baseLevel(level, W, H, rand);
+        return q ? addDecoys(q, level, rand) : q;
+    }
+    /* 原本的出題：亂數放人（越後面越擠在某一側），算出 lo／hi，容許寬度不夠就把中間那一顆往右推開 */
+    function baseLevel(level, W, H, rand) {
         rand = rand || Math.random;
         var skew = skewAt(level), need = gapAt(level), last = null;
         for (var tr = 0; tr < TRIES; tr++) {            /* 用亂數一直重抽，最多 TRIES 次，抽到符合條件的題目就收下 */
@@ -147,12 +259,13 @@
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, level = api.level, my = api.my;
+        kit.bgStripe(stage, my, level, BG);            /* 在舞台最底下墊一層淡淡的動態棋盤格（BG.from 關之後才出現），干擾對人數多寡的判斷 */
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var TOP = 48, BOT = 56 + 84 + 20;                         /* 上方數量列高度、下方橫桿＋按鈕區高度 */
         var AH = H - TOP - BOT;                                   /* 圓形區高度 */
         var q = makeLevel(level, W, AH, api.rand);
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
-        console.log('[一半的人] 第 ' + level + ' 關：' + q.N + ' 個人、不平均程度 ' + q.skew.toFixed(2) + '；正確範圍 x＝' + q.lo.toFixed(2) + '～' + q.hi.toFixed(2) + '（寬 ' + q.gap.toFixed(2) + 'px，要求至少 ' + q.need.toFixed(1) + 'px）；線從 ' + (W / 2) + ' 開始');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
+        console.log('[一半的人] 第 ' + level + ' 關：' + q.N + ' 個人、不平均程度 ' + q.skew.toFixed(2) + '；正確範圍 x＝' + q.lo.toFixed(2) + '～' + q.hi.toFixed(2) + '（寬 ' + q.gap.toFixed(2) + 'px，要求至少 ' + q.need.toFixed(1) + 'px）；假空隙 ' + q.decoys.length + ' 道；線從 ' + (W / 2) + ' 開始');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var info = h('div', { 'class': 'halfcrowd-count' }, [
             h('span', { 'class': 'halfcrowd-count__g', text: '綠色 0' }), h('span', { 'class': 'halfcrowd-count__vs', text: '：' }), h('span', { 'class': 'halfcrowd-count__b', text: '0 藍色' })
@@ -160,11 +273,12 @@
         stage.appendChild(info);                        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var svg = kit.svg('svg', { 'class': 'halfcrowd-svg', viewBox: '0 0 ' + W + ' ' + AH, width: W, height: AH }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         svg.style.top = TOP + 'px';
-        /* 每個人：底圈（平常看不見，數過之後變綠／藍／紅）＋人像 emoji；中心點全部畫在最上層（見 SHOW_CENTER） */
+        /* 每個人：底圈（平常看不見，數過之後變綠／藍／紅；半徑＝r × RING_SCALE）＋人像 emoji；中心點全部畫在最上層（見 SHOW_CENTER）。
+           先畫一層「所有人的底圈」、再畫一層「所有人的人像」：底圈比人像大，這樣才不會有人的色圈蓋住鄰居的臉 */
+        var ringLayer = kit.svg('g', {}, svg), faceLayer = kit.svg('g', {}, svg);
         var els = q.circles.map(function (c) {          /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
-            var g = kit.svg('g', {}, svg);
-            var cir = kit.svg('circle', { cx: c.x.toFixed(2), cy: c.y.toFixed(2), r: c.r, 'class': 'halfcrowd-circle' }, g);
-            var face = kit.svg('text', { x: c.x.toFixed(2), y: c.y.toFixed(2), 'class': 'halfcrowd-face', 'font-size': (c.r * 2 * FACE_SCALE).toFixed(1), 'text-anchor': 'middle', 'dominant-baseline': 'central' }, g);
+            var cir = kit.svg('circle', { cx: c.x.toFixed(2), cy: c.y.toFixed(2), r: (c.r * RING_SCALE).toFixed(2), 'class': 'halfcrowd-circle' }, ringLayer);
+            var face = kit.svg('text', { x: c.x.toFixed(2), y: c.y.toFixed(2), 'class': 'halfcrowd-face', 'font-size': (c.r * 2 * FACE_SCALE).toFixed(1), 'text-anchor': 'middle', 'dominant-baseline': 'central' }, faceLayer);
             face.textContent = kit.pick(kit.PERSON_EMOJI, api.rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
             return cir;
         });
@@ -279,7 +393,7 @@
         rule: '畫面上有一堆人，越後面越多，每個人的中間有一個小黑點（中心）。拖曳下方的橫桿，把豎線移到**「左右兩邊的人數一樣多」**的位置（以中心點為準），旁邊的 ◀ ▶ 可以一次移 1 像素。按「計算數量」後，左邊的人會一個一個亮起綠圈、右邊亮起藍圈，**多出來的人會亮起紅圈**，兩邊一樣多才過關。人群的分布會越來越不平均，**線不會在正中間喔**！',
         mount: mount,
         score: SCORE,
-        test: { FACE_SCALE: FACE_SCALE, SHOW_CENTER: SHOW_CENTER, GAP: GAP, nAt: nAt, countPlan: countPlan, planAt: planAt, N_JITTER: N_JITTER, RAMP_LEVELS: RAMP_LEVELS, skewAt: skewAt, gapAt: gapAt, minDist: minDist, countLeft: countLeft, makeLevel: makeLevel, N_RANGE: N_RANGE, R_RANGE: R_RANGE, EDGE: EDGE, OVERLAP: OVERLAP, SKEW_MAX: SKEW_MAX }
+        test: { FACE_SCALE: FACE_SCALE, SHOW_CENTER: SHOW_CENTER, RING_SCALE: RING_SCALE, DECOY: DECOY, decoyOn: decoyOn, channelsOf: channelsOf, packCaps: packCaps, carvePlan: carvePlan, addDecoys: addDecoys, GAP: GAP, nAt: nAt, countPlan: countPlan, planAt: planAt, N_JITTER: N_JITTER, RAMP_LEVELS: RAMP_LEVELS, skewAt: skewAt, gapAt: gapAt, minDist: minDist, countLeft: countLeft, makeLevel: makeLevel, N_RANGE: N_RANGE, R_RANGE: R_RANGE, EDGE: EDGE, OVERLAP: OVERLAP, SKEW_MAX: SKEW_MAX }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);

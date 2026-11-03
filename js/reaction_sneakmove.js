@@ -57,6 +57,8 @@
     var ANGLES = 90;                            /* 挑方向時，試幾個角度 */
     var GAP_LAST = 40;                          /* 最後的保底，圓點間距最小縮到多少（圓點半徑 DOT_R ＝ 18，再小就會疊在一起） */
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
+    /* 干擾用的動態條紋背景（共用元件 js/reaction_bgstripe.js，各欄位的意思見該檔開頭）：from 是從第幾關開始出現（想關掉改成 0，想晚一點出現就調大）；數字寫成 [起, 終] 會從第 from 關起漸漸變強 */
+    var BG = { from: 3, type: 'random', diff: [2, 4], width: [96, 32], move: 'both', speed: [8, 32], spin: [1, 2] };  /* 第 12 關起出現：橫條紋、亮度差 3% → 5%、條寬 30px、上下捲動 8px／秒（背景也在慢慢動，更難分辨哪顆圓點在偷動） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function speedFor(level) { return kit.ramp(level, SPEED[0], SPEED[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
@@ -205,6 +207,7 @@
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
+        kit.bgStripe(stage, api.my, level, BG);        /* 在舞台最底下墊一層淡淡的慢速橫條紋（BG.from 關之後才出現），干擾對「誰在動」的判斷 */
         var W = stage.clientWidth || 472, H = (stage.clientHeight || 640) - 64;          /* 下面留 64 像素放說明文字 */
         var q = makeLevel(level, W, H, api.rand), k = q.movers.length, moverOf = {};
         q.movers.forEach(function (m, i) { moverOf[m.idx] = i; });  /* forEach：對陣列的每個元素各做一次 */

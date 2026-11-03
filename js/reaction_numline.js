@@ -32,6 +32,8 @@
     var START_GAP = 0.12;                       /* 答案離起點至少多遠 */
     var LINE_PAD = 36;                          /* 數線左右兩端離畫面邊緣 */
     var FORMS = ['decimal', 'fraction', 'percent'];  /* 數字的三種寫法：decimal 小數、fraction 分數、percent 百分比 */
+    /* 干擾用的動態條紋背景（共用元件 js/reaction_bgstripe.js，各欄位的意思見該檔開頭）：from 是從第幾關開始出現（想關掉改成 0，想晚一點出現就調大）；數字寫成 [起, 終] 會從第 from 關起漸漸變強 */
+    var BG = { from: 6, type: 'vstripe', diff: [1, 6], width: [96, 24], move: 'x', speed: [8, 24] };  /* 第 6 關起出現：直條紋、亮度差 3% → 6%（20 關內漸強）、條寬 24px、左右捲動 18px／秒（直條紋會讓數線上的位置感變得模糊） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function tolAt(level) { return kit.ramp(level, TOL[0], TOL[1], TOL_RAMP); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
@@ -86,6 +88,7 @@
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
+        kit.bgStripe(stage, api.my, level, BG);        /* 在舞台最底下墊一層淡淡的動態直條紋（BG.from 關之後才出現），干擾對數線位置的判斷 */
         var q = makeQuestion(level, api.rand);
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;

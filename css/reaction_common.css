@@ -194,6 +194,44 @@
     -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
+/* 干擾用的動態條紋背景（js/reaction_bgstripe.js 的 kit.bgStripe）：墊在遊戲區最底下、不擋觸控。
+   結構：.rx-bgstripe（鋪滿遊戲區、裁掉超出的部分）> __rot（正方形，負責傾斜與旋轉）> __tx（左右移動）> __pat（上下移動、畫花紋的 SVG）。
+   大小與位置由 JS 依遊戲區尺寸算好，直接寫在元素的 style 上 */
+.rx-bgstripe {
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    z-index: -1;                                        /* 疊放順序 -1：墊在遊戲區所有東西的最底下（遊戲區已用 isolation 自成一個疊放層，不會跑到更後面去） */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示（花紋圖層比遊戲區大，會移動、旋轉） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去，不影響玩遊戲） */
+}
+
+/* 負責傾斜與旋轉的正方形（寬高、位置由 JS 設定），繞著正中心轉 */
+.rx-bgstripe__rot {
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    transform-origin: 50% 50%;                          /* 變形（旋轉）的中心點：正中央 */
+}
+
+/* 負責左右移動的那一層（跟正方形一樣大） */
+.rx-bgstripe__tx {
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    width: 100%;                                        /* 寬度：100% */
+    height: 100%;                                       /* 高度：100% */
+}
+
+/* 畫花紋的 SVG（上下移動的是它自己） */
+.rx-bgstripe__pat {
+    display: block;                                     /* 獨佔一整行的區塊 */
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    will-change: transform;                             /* 預告這個元素的 transform 會一直變：瀏覽器先把它畫成一張圖，移動時只搬圖、不重畫，比較省電 */
+}
+
 /* 遊戲區底部的一排按鈕 */
 .rx-btnrow {
     position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */

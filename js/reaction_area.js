@@ -42,6 +42,8 @@
     var COUNT_MS = 2200;                            /* 面積差數字從 0 跑到答案花的時間 */
     var HOLD_MS = 2000;                             /* 數字停住之後，畫面再維持多久才跳出結算彈窗 */
     var STAR_K = 0.4;                               /* 五角星內外半徑比 */
+    /* 干擾用的動態條紋背景（共用元件 js/reaction_bgstripe.js，各欄位的意思見該檔開頭）：from 是從第幾關開始出現（想關掉改成 0，想晚一點出現就調大）；數字寫成 [起, 終] 會從第 from 關起漸漸變強 */
+    var BG = { from: 1, type: 'random', diff: 4, width: 64, move: 'x', speed: 16, spin: 4 };  /* 單回合遊戲，一開始就有：棋盤格、亮度差 4%、格寬 36px、左右捲動 18px／秒 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 簡單多邊形面積（鞋帶公式） */
@@ -116,6 +118,7 @@
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, my = api.my;
+        kit.bgStripe(stage, my, 1, BG);                 /* 在舞台最底下墊一層淡淡的動態條紋，干擾面積的目測（單回合遊戲沒有關卡，一律當第 1 關） */
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var cfg = makeRound(), shape = shapeOf(cfg.kind, cfg.A);
         var s = cfg.s0, locked = false, hint = null;

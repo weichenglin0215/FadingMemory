@@ -24,18 +24,20 @@
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
-    var TOTAL = [8, 30];                        /* 這一關拋出的字總數：第 1 關 → 到頂 */
-    var SPAWN_MS = [1000, 420];                 /* 每一批拋出的間隔（毫秒）：第 1 關 → 到頂 */
-    var BATCH = [1, 3];                         /* 一次最多拋幾顆：第 1 關 → 到頂 */
+    var TOTAL = [8, 32];                        /* 這一關拋出的字總數：第 1 關 → 到頂 */
+    var SPAWN_MS = [1000, 330];                 /* 每一批拋出的間隔（毫秒）：第 1 關 → 到頂 */
+    var BATCH = [1, 4];                         /* 一次最多拋幾顆：第 1 關 → 到頂 */
     var TARGET_FRAC = 0.4;                      /* 拋出的字裡，目標字佔幾成 */
     var STROKES_LO = [3, 12], STROKES_HI = [8, 22];     /* 字群的平均筆劃範圍：第 1 關 → 到頂 */
     var LEAD_MS = 900;                          /* 開始後多久拋第一批 */
     var BOTTOM = 1.1, EXIT = 1.14;              /* 拋出的起點、掉到這裡算落地（畫面高度的倍數） */
     var APEX = [0.2, 0.5], T_APEX = [0.8, 1.0], X_RANGE = [0.14, 0.86];  /* APEX：拋出軌跡「最高點」的範圍；T_APEX：到達最高點的時間比例範圍；X_RANGE：起點 x 座標的範圍（占畫面寬度的比例） */
-    var DUMP_PX = 76;                           /* 湯圓的大小（px） */
+    var DUMP_PX = 96;                           /* 湯圓的大小（px） */
     var HIT_EXTRA = 8;                          /* 切到的判定半徑比湯圓多幾 px */
     var MIN_GROUP = 4;                              /* 「長得像的字」字群至少要幾個字才拿來出題 */
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
+    /* 干擾用的動態條紋背景（共用元件 js/reaction_bgstripe.js，各欄位的意思見該檔開頭）：from 是從第幾關開始出現（想關掉改成 0，想晚一點出現就調大）；數字寫成 [起, 終] 會從第 from 關起漸漸變強 */
+    var BG = { from: 5, type: 'random', diff: [2, 6], width: [96, 32], move: 'all', speed: [8, 24], spin: [1, 4] };  /* 第 8 關起出現：棋盤格、亮度差 3% → 6%、格寬 36px、全方向捲動 16px／秒 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 小工具：讓 [第 1 關的值, 到頂的值] 這種成對的設定，依關卡線性變化 */
@@ -126,6 +128,7 @@
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
+        kit.bgStripe(stage, api.my, level, BG);        /* 在舞台最底下墊一層淡淡的動態棋盤格（BG.from 關之後才出現），干擾對飛來的字的辨認 */
         var q = makeLevel(level, api.rand), F = q.total;
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[切字] 第 ' + level + ' 關：目標「' + q.target + '」，干擾 ' + q.mates.join('') + '；拋 ' + F + ' 顆（目標 ' + q.tosses.filter(function (t) { return t.onTarget; }).length + ' 顆），一批最多 ' + q.batchMax + ' 顆，間隔約 ' + q.spawnMs + ' 毫秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */

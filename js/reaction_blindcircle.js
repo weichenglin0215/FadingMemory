@@ -36,6 +36,8 @@
     var TURN_MIN = 300, TURN_MAX = 450;     /* 有效的繞行總角度（度） */
     var LEN_MIN = 200;                      /* 有效的筆畫長度下限（px） */
     var GOOD = 0.02, OK = 0.05;             /* 揭曉上色門檻（相對半徑） */
+    /* 干擾用的動態條紋背景（共用元件 js/reaction_bgstripe.js，各欄位的意思見該檔開頭）：from 是從第幾關開始出現（想關掉改成 0，想晚一點出現就調大）；數字寫成 [起, 終] 會從第 from 關起漸漸變強 */
+    var BG = { from: 1, type: 'spiral', diff: 4, width: 64, move: 'none', spin: 40 };  /* 單回合遊戲，一開始就有：螺紋、亮度差 4%、帶寬 28px、不平移、每秒順時針轉 5 度 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 出一回合：隨機決定圓的半徑 R 與起點方位 ang（從圓心往右下的角度），算出起點座標（圓心 ＋ R×(cos, sin)，三角函數把「角度」換成「x、y 座標」） */
@@ -50,7 +52,7 @@
     function arrowPoints(size) {
         var a = size / 2, hl = size * 0.19, hw = size * 0.12, sw = size * 0.04, b = a - hl;
         var pts = [[0, -a], [hw, -b], [sw, -b], [sw, -sw], [b, -sw], [b, -hw], [a, 0], [b, hw], [b, sw], [sw, sw], [sw, b], [hw, b],
-            [0, a], [-hw, b], [-sw, b], [-sw, sw], [-b, sw], [-b, hw], [-a, 0], [-b, -hw], [-b, -sw], [-sw, -sw], [-sw, -b], [-hw, -b]];
+        [0, a], [-hw, b], [-sw, b], [-sw, sw], [-b, sw], [-b, hw], [-a, 0], [-b, -hw], [-b, -sw], [-sw, -sw], [-sw, -b], [-hw, -b]];
         return pts;
     }
     /* 折線最後面 maxLen（px）長的那一段：從最新的點往回數，累積長度超過 maxLen 的那一段線段只留一部分（剛好湊滿 maxLen） */
@@ -138,6 +140,7 @@
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, my = api.my;
+        kit.bgStripe(stage, my, 1, BG);                 /* 在舞台最底下墊一層淡淡的旋轉螺紋，干擾對「圓」的感覺（單回合遊戲沒有關卡，一律當第 1 關） */
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var cfg = makeRound(), pts = [], drawing = false, locked = false, hint = null, pid = null;  /* cfg：這一回合的圓（半徑、起點）；pts：手指畫過的點；drawing：正在畫；locked：已經交卷；hint：操作提示；pid：目前這根手指的編號（多指時只認第一根） */
         console.log('[盲畫一個圓] 半徑 ' + cfg.R.toFixed(2) + '，起點方位 ' + (cfg.ang * 180 / Math.PI).toFixed(1) + '°');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
@@ -212,11 +215,13 @@
             var more = res.meanR - cfg.R;
             say('平均半徑' + (more >= 0 ? '偏大 ' : '偏小 ') + Math.abs(more).toFixed(4) + ' 像素　首尾間距 ' + res.gap.toFixed(4) + ' 像素');
             my.after(2300, function () {
-                api.finish(res.roundness, { lines: [
-                    '平均半徑' + (more >= 0 ? '偏大 ' : '偏小 ') + Math.abs(more).toFixed(4) + ' 像素',
-                    '首尾沒接上的缺口 ' + res.gap.toFixed(4) + ' 像素',
-                    '只有一次機會，想拚更圓就再挑戰一次'
-                ] });
+                api.finish(res.roundness, {
+                    lines: [
+                        '平均半徑' + (more >= 0 ? '偏大 ' : '偏小 ') + Math.abs(more).toFixed(4) + ' 像素',
+                        '首尾沒接上的缺口 ' + res.gap.toFixed(4) + ' 像素',
+                        '只有一次機會，想拚更圓就再挑戰一次'
+                    ]
+                });
             });
         }
 

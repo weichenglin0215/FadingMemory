@@ -47,6 +47,8 @@
     var MUZZLE_DY = 80;                         /* 砲口比圓環中心低多少（砲台在環內偏下方） */
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var TOP_DEG = -90;                          /* 「正上方」的角度（從正右方順時針量，上方是 −90 度） */
+    /* 干擾用的動態條紋背景（共用元件 js/reaction_bgstripe.js，各欄位的意思見該檔開頭）：from 是從第幾關開始出現（想關掉改成 0，想晚一點出現就調大）；數字寫成 [起, 終] 會從第 from 關起漸漸變強 */
+    var BG = { from: 8, type: 'spiral', diff: [1, 6], width: [64, 32], move: 'none', spin: [4, 12] };  /* 第 10 關起出現：螺紋、亮度差 3% → 6%、帶寬 34px、不平移、每秒轉 8 度（方向每關隨機） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function omegaDeg(level) { return kit.ramp(level, OMEGA_REV[0], OMEGA_REV[1], RAMP_LEVELS) * 360; }       /* 度／秒 */
@@ -134,6 +136,7 @@
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
+        kit.bgStripe(stage, api.my, level, BG);        /* 在舞台最底下墊一層淡淡的旋轉螺紋（BG.from 關之後才出現），干擾對旋轉缺口的判斷 */
         var W = stage.clientWidth || 472, cx = W / 2, cy = CENTER_Y;
         /* 這一圈的轉速：接著上一圈（上一發剛結束、carry.level ＝ level − 1）的轉速變快或變慢 5%～20%；第一圈（或中途開始）在基準附近隨機 */
         var om = nextOmega(carry && carry.level === level - 1 ? carry.om : null, level, api.rand), gap = gapFor(level), geom = ballGeom();

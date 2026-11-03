@@ -61,6 +61,8 @@
     var ROPE_CLEAR = 24, ROPE_SEP = 70;         /* 繩子曲線不重疊：弧長相隔超過 ROPE_SEP 像素的兩點，距離都要 ≥ ROPE_CLEAR 像素 */
     /* 各種曲線出現的關卡範圍 [從第幾關起, 到第幾關為止]：S 形太平緩，第 3 關之後就不再出現（不然拿直線隨便畫都過關） */
     var TYPE_RANGE = { scurve: [1, 3], rope: [1, 999], wave: [3, 999], right: [6, 999], bolt: [9, 999], spiral: [12, 999], clip: [15, 999] };
+    /* 干擾用的動態條紋背景（共用元件 js/reaction_bgstripe.js，各欄位的意思見該檔開頭）：from 是從第幾關開始出現（想關掉改成 0，想晚一點出現就調大）；數字寫成 [起, 終] 會從第 from 關起漸漸變強 */
+    var BG = { from: 10, type: 'hex', diff: [4, 8], width: 30, move: 'all', speed: 12, hue: 38, sat: 27, light: 18 };  /* 第 10 關起出現：六角形拼盤、亮度差 4% → 8%（20 關內漸強）、半徑 30px、全方向捲動 12px／秒；色調同深褐色的畫板（--cc-board） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function reqSim(level) { return kit.ramp(level, REQ[0], REQ[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
@@ -385,6 +387,8 @@
             return { el: p, svg: svg };
         }
         var L = panel('L'), R = panel('R');
+        var bgSeed = Math.floor(api.rand() * 1e9);      /* 兩塊畫板用同一個亂數種子，花紋、方向、起始位置都一樣，只是各自墊在自己的板子裡（BG.from 關之後才出現） */
+        var bgL = kit.bgStripe(L.el, api.my, level, BG, kit.rng(bgSeed)), bgR = kit.bgStripe(R.el, api.my, level, BG, kit.rng(bgSeed));  /* 回傳背景的控制物件（這一關沒有背景就是 null），判定時要用它的 hide() 把背景收起來 */
         var labL = h('div', { 'class': 'copycurve-lab', text: '照這條畫' }), labR = h('div', { 'class': 'copycurve-lab', text: '你畫在這裡' });
         labL.style.left = '0px'; labL.style.width = PW + 'px'; labR.style.left = (W - PW) + 'px'; labR.style.width = PW + 'px';
         stage.appendChild(labL); stage.appendChild(labR);
@@ -411,6 +415,7 @@
             console.log('[照抄曲線] 相似度 ' + sim.toFixed(4) + '％（真實 ' + raw.toFixed(6) + '），要求 ' + need.toFixed(4) + '％ → ' + (ok ? '過關' : '沒過'));
             drawn.setAttribute('d', pathD(pts));
             msg.textContent = '兩張圖疊在一起…';               /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            if (bgL) bgL.hide(); if (bgR) bgR.hide();         /* 判定時兩塊板子會疊在一起：先把干擾背景收起來，否則右邊板子的花紋會蓋住左邊的題目曲線，看不出兩條線重不重疊 */
             stage.classList.add('copycurve-stage--merge');
             api.after(1100, function () {               /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
                 msg.innerHTML = '相似度 <b class="' + (ok ? 'qz-ok' : 'qz-bad') + '">' + sim.toFixed(4) + '％</b>（要求 ' + need.toFixed(4) + '％）';

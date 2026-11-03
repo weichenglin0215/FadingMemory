@@ -35,6 +35,8 @@
     var START_R = 56;                           /* 手指要在起點多近的地方按下才算 */
     var MIN_VALID = 20;                         /* 放開時橫線短於這個長度就當作沒畫（重來，不算一次機會） */
     var CAP = 28, CAP_L = 100;                  /* 線兩端黑色記號的半長（線加粗成 24px，記號要比線寬）；CAP_L 只給測試用的預設線長 */
+    /* 干擾用的動態條紋背景（共用元件 js/reaction_bgstripe.js，各欄位的意思見該檔開頭）：from 是從第幾關開始出現（想關掉改成 0，想晚一點出現就調大）；數字寫成 [起, 終] 會從第 from 關起漸漸變強 */
+    var BG = { from: 1, type: 'hex', diff: 2, width: 24, move: 'all', speed: 16, spin: 1 };  /* 單回合遊戲，一開始就有：六角形拼盤、亮度差 4%、六角形半徑 30px、全方向捲動 16px／秒 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 出一題：W＝遊戲區寬度。回傳 { L 線長, a 方向角（弧度，從 x 軸往下量：正＝往右下、負＝往右上）, x, y 左端的位置 }；
@@ -90,6 +92,7 @@
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, my = api.my;
+        kit.bgStripe(stage, my, 1, BG);                 /* 在舞台最底下墊一層淡淡的動態花紋，干擾對長度的判斷（單回合遊戲沒有關卡，一律當第 1 關） */
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var cfg = makeRound(null, W), len = 0, drawing = false, locked = false, hint = null, pid = null;
         var sy = Math.min(START.y, H - 60);
@@ -165,11 +168,13 @@
                 var diff = len - cfg.L;
                 say((diff < 0 ? '你畫短了 ' : '你畫長了 ') + Math.abs(diff / cfg.L * 100).toFixed(4) + '%');
                 my.after(1800, function () {
-                    api.finish(real, { lines: [
-                        diff < 0 ? '橫線比斜線短 ' + Math.abs(diff).toFixed(4) + ' 像素' : '橫線比斜線長 ' + Math.abs(diff).toFixed(4) + ' 像素',
-                        '斜線沒辦法直接跟橫線對齊著比，只能靠目測',
-                        '只有一次機會，想拚更準就再挑戰一次'
-                    ] });
+                    api.finish(real, {
+                        lines: [
+                            diff < 0 ? '橫線比斜線短 ' + Math.abs(diff).toFixed(4) + ' 像素' : '橫線比斜線長 ' + Math.abs(diff).toFixed(4) + ' 像素',
+                            '斜線沒辦法直接跟橫線對齊著比，只能靠目測',
+                            '只有一次機會，想拚更準就再挑戰一次'
+                        ]
+                    });
                 });
             });
         }

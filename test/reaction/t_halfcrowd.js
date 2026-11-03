@@ -30,7 +30,7 @@ ok(T.countLeft([{ x: 1 }, { x: 5 }, { x: 5 }, { x: 9 }], 5) === 1, '圓心剛好
 const t0 = Date.now(); let slow = 0;
 const sk = {};
 for (let lv = 1; lv <= 20; lv++) {
-  let medOff = 0, minGapSeen = 1e9; const NQ = lv % 3 === 1 ? 12 : 6;
+  let medOff = 0, minGapSeen = 1e9; const NQ = (lv === 1 || lv === 20) ? 80 : (lv % 3 === 1 ? 12 : 6);   // 第 1 關與第 20 關要比較「離中央多遠」，樣本太少會被亂數左右（只有 6 個時偶爾會低於門檻）
   for (let k = 0; k < NQ; k++) {
     const t1 = Date.now(), q = T.makeLevel(lv, W, H, rnd); if (Date.now() - t1 > 400) slow++;
     ok(q.N % 2 === 0 && q.N >= T.N_RANGE[0] && q.N <= T.N_RANGE[1] && q.circles.length === q.N, '個數是 N_RANGE 內的偶數 lv' + lv + ' N=' + q.N + ' len=' + q.circles.length);
@@ -62,11 +62,74 @@ ok(slow === 0, '出題夠快');
   ok(kit.PERSON_EMOJI.filter(e => Array.from(e).length > 1).length === 10, '10 個是複合 emoji（髮色、性別變體；字串不能被拆開）');
   const src = fs.readFileSync(path.resolve(__dirname, '../../js/reaction_halfcrowd.js'), 'utf8'), css = fs.readFileSync(path.resolve(__dirname, '../../css/games/reaction_halfcrowd.css'), 'utf8').replace(/[ \t]*\/\*[\s\S]*?\*\//g, '').split(/\s+/).join(' ');
   ok(/kit\.svg\('text', \{[^}]*'class': 'halfcrowd-face'[^}]*'font-size': \(c\.r \* 2 \* FACE_SCALE\)\.toFixed\(1\)[^}]*'text-anchor': 'middle'[^}]*'dominant-baseline': 'central'/.test(src) && /face\.textContent = kit\.pick\(kit\.PERSON_EMOJI, api\.rand\)/.test(src), '每個圓的位置畫一個人像 emoji（置中，字級＝直徑 × FACE_SCALE，每個人隨機一種）');
-  ok(T.FACE_SCALE > 0.8 && T.FACE_SCALE <= 1.3 && T.SHOW_CENTER === true, 'FACE_SCALE ' + T.FACE_SCALE + '；預設畫出中心點（判斷左右看中心點）');
+  ok(T.FACE_SCALE > 0.8 && T.FACE_SCALE <= 1.3 && typeof T.SHOW_CENTER === 'boolean', 'FACE_SCALE ' + T.FACE_SCALE + '；SHOW_CENTER ＝ ' + T.SHOW_CENTER + '（要不要畫中心點，玩家自己調過）');
   // 碰撞範圍沒變：仍然是半徑 r 的圓（makeLevel 與重疊限制不動），數量與「剛好一半」的算法不受 emoji 影響
   ok(src.indexOf("if (SHOW_CENTER) q.circles.forEach(function (c) { kit.svg('circle', { cx: c.x.toFixed(2), cy: c.y.toFixed(2), r: 2.4, 'class': 'halfcrowd-dot' }, svg); });") > src.indexOf("var els = q.circles.map"), '中心點全部畫在所有人像的上面（不會被別人的 emoji 蓋住）');
   ok(/\.halfcrowd-circle \{ fill: none; stroke: none; \}/.test(css) && /\.halfcrowd-circle--g \{[^}]*fill: var\(--c-green-light\)/.test(css) && /\.halfcrowd-circle--b \{[^}]*fill: var\(--c-blue-light\)/.test(css) && /\.halfcrowd-circle--r \{[^}]*fill: var\(--c-bad-light\)/.test(css), '底圈平常看不見；數過之後亮起綠／藍／紅色圈，畫在 emoji 底下');
   ok(/\.halfcrowd-dot \{[^}]*stroke: var\(--c-on-accent\)/.test(css) && /\.halfcrowd-face \{[^}]*pointer-events: none/.test(css), '中心點有白邊；emoji 不吃點擊');
   ok(/人/.test(G.rule) && !/圓/.test(G.rule) && /中心/.test(G.rule), '玩法說明改用「人」「中心」，沒有「圓」');
   ok(!/個圓/.test(src.replace(/[ \t]*\/\*[\s\S]*?\*\//g, '')) && !/圓心不是/.test(src), '畫面上的訊息不再說「圓」（結算：這一關有 N 個人）'); }
+// ═══ 玩家回饋：① 前面的關卡正確位置會自然出現一道明顯的空隙（找縫就能過關）→ 左右兩邊開「假空隙」；② 數量動畫的色圈被人像蓋住 → 色圈尺寸比例 RING_SCALE ═══
+{ const fs = require('fs'), path = require('path'), D = T.DECOY, W2 = 472, H2 = 450, rnd2 = rng(seedOf(20261105));
+  // 空隙分析 channelsOf：手算的小例子（x 範圍 [x−r, x+r]；整條豎線都碰不到人才算空隙）
+  { const cs = [{ x: 50, y: 50, r: 20 }, { x: 140, y: 80, r: 20 }, { x: 160, y: 300, r: 20 }, { x: 300, y: 90, r: 10 }];
+    const ch = T.channelsOf(cs, 0);
+    ok(ch.length === 2 && ch[0].x0 === 70 && ch[0].x1 === 120 && ch[0].w === 50 && ch[0].left === 1 && ch[1].x0 === 180 && ch[1].x1 === 290 && ch[1].w === 110 && ch[1].left === 3, '空隙分析：' + JSON.stringify(ch));
+    ok(T.channelsOf(cs, 60).length === 1 && T.channelsOf(cs, 60)[0].left === 3, '比 minW 窄的縫不算');
+    ok(T.channelsOf([{ x: 100, y: 0, r: 30 }, { x: 120, y: 90, r: 30 }], 0).length === 0, 'x 範圍重疊的兩個人之間沒有縫（就算 y 差很遠）'); }
+  // 開一道假空隙 carvePlan：ABCD 四個人，各佔 40px、之間的縫 20px；在 B、C 之間開一道 60px 的縫
+  { const mk = () => [60, 120, 180, 240].map(x => ({ x, y: 100, r: 20 })), keep = D.keep;
+    const apply = (cs, p) => { cs.forEach((c, i) => { c.x += p.dx[i]; }); return cs; };
+    let cs = mk(), p = T.carvePlan(cs, 2, 60, W2, -1, {});
+    ok(p.w >= 60 - 1e-6, '開得出 60px 的縫：' + p.w);
+    apply(cs, p); const gap = (a, b) => (cs[b].x - cs[b].r) - (cs[a].x + cs[a].r);
+    ok(Math.abs(gap(1, 2) - p.w) < 1e-6 && cs[0].x - cs[0].r >= T.EDGE - 1e-6 && gap(0, 1) >= keep - 1e-6 && gap(2, 3) >= 20 - 1e-6 && p.dx[0] <= 0 && p.dx[1] <= 0 && p.dx[2] >= 0 && p.dx[3] >= 0, '先壓左群：左群往左壓到貼邊、被壓的縫至少留 keep=' + keep + '；右群只移到剛好夠寬 gap=' + gap(1, 2).toFixed(2) + ' ' + JSON.stringify(p.dx));
+    cs = mk(); p = T.carvePlan(cs, 2, 60, W2, -1, { 1: true }); apply(cs, p);
+    ok(Math.abs(gap(0, 1) - 20) < 1e-9 && Math.abs(gap(1, 2) - p.w) < 1e-6 && p.w >= 60 - 1e-6, '被保護的縫（A、B 之間，左邊有 1 個人）不會被壓縮：' + gap(0, 1));
+    cs = mk(); p = T.carvePlan(cs, 2, 400, W2, -1, {}); ok(p.w < 400 && p.w > 60, '想開的比畫面能給的還寬時，盡量開到極限（' + p.w.toFixed(1) + '）而不是出界');
+    cs = mk(); p = T.carvePlan(cs, 2, 400, W2, 1, {}); apply(cs, p); ok(cs[3].x + cs[3].r <= W2 - T.EDGE + 1e-6 && cs[0].x - cs[0].r >= T.EDGE - 1e-6, '推到極限也不會出畫面邊緣'); }
+  // 開關與範圍
+  { const f = D.from, t = D.to;
+    ok(T.decoyOn(D.from) && T.decoyOn(D.to) && !T.decoyOn(D.to + 1) && !T.decoyOn(0), '第 ' + D.from + '～' + D.to + ' 關有假空隙');
+    D.from = 0; ok(!T.decoyOn(1) && !T.decoyOn(10), 'from 0＝完全關掉');
+    D.from = 3; ok(!T.decoyOn(2) && T.decoyOn(3), 'from 3＝第 3 關才開始');
+    D.from = f; D.to = 0; ok(T.decoyOn(99), 'to 0＝不設上限'); D.to = t; }
+  // 隨機關卡：假空隙真的存在、不影響答案
+  const kmax = lv => Math.min(D.rank[1], T.N_RANGE[1] / 2), res = {};
+  for (const lv of [1, 2, 3, 5, 8, 10, 15, 20, 21, 30]) {
+    let any = 0, both = 0, widest = 0, n = 120, hasAns = 0;
+    for (let k = 0; k < n; k++) {
+      const f0 = D.from; D.from = 0; const q = T.makeLevel(lv, W2, H2, rnd2); D.from = f0;
+      const before = q.circles.map(c => ({ y: c.y, r: c.r })), g0 = q.gap, order0 = q.circles.map((c, i) => i).sort((a, b) => q.circles[a].x - q.circles[b].x).join(','), half = q.N / 2;
+      const ans0 = T.channelsOf(q.circles, 0).filter(c => c.left === half)[0], loP = q.circles.slice().sort((a, b) => a.x - b.x)[half - 1];
+      ok(q.decoys.length === 0, '關閉時沒有假空隙');
+      T.addDecoys(q, lv, rnd2);
+      ok(q.circles.every((c, i) => c.y === before[i].y && c.r === before[i].r), '只動 x，y 與大小不變');
+      ok(q.circles.map((c, i) => i).sort((a, b) => q.circles[a].x - q.circles[b].x).join(',') === order0, '每個人的左右順序（誰是第幾個）不變 lv' + lv);
+      ok(Math.abs(q.gap - g0) < 1e-9 && Math.abs(q.hi - q.lo - g0) < 1e-9, '剛好一半的容許寬度不變 lv' + lv + ' ' + q.gap + ' vs ' + g0);
+      ok(T.countLeft(q.circles, (q.lo + q.hi) / 2) === half, '正確位置還是左右各一半');
+      const ch = T.channelsOf(q.circles, 0), ans1 = ch.filter(c => c.left === half)[0];
+      if (ans0) { hasAns++; ok(ans1 && ans1.w >= ans0.w - 1e-6, '正確位置那道縫不會變窄（最多是隔壁被推走的人讓它更寬一點）lv' + lv + ' ' + ans0.w + ' → ' + (ans1 && ans1.w)); }
+      if (lv > D.to) ok(q.decoys.length === 0, '超過 to 的關卡沒有假空隙');
+      q.decoys.forEach(d => {
+        const c = ch.filter(x => x.left === d.j)[0];
+        ok(c && c.w >= d.w - 1e-6 && d.w >= D.min - 1e-6, '記下的假空隙真的存在而且夠寬 lv' + lv + ' w=' + d.w);
+        ok(d.off === d.j - half && Math.abs(d.off) >= D.rank[0] && Math.abs(d.off) <= Math.min(D.rank[1], half - 1), '假空隙離正確位置 ' + d.off + ' 個人（範圍 ' + D.rank + '）');
+        ok(!(c.left === half), '假空隙不是正確位置');
+      });
+      if (q.decoys.length) any++;
+      if (q.decoys.some(d => d.off < 0) && q.decoys.some(d => d.off > 0)) both++;
+      const wide = ch.slice().sort((a, b) => b.w - a.w)[0]; if (ans1 && wide === ans1) widest++;
+    }
+    res[lv] = { any: any / n, both: both / n, widest: widest / n, hasAns: hasAns / n };
+  }
+  console.log('假空隙：' + [1, 2, 3, 5, 8, 10, 15, 20].map(lv => 'lv' + lv + ' 有假縫 ' + (100 * res[lv].any).toFixed(0) + '%／左右都有 ' + (100 * res[lv].both).toFixed(0) + '%／最寬的縫是答案 ' + (100 * res[lv].widest).toFixed(0) + '%').join('；'));
+  [1, 2, 3].forEach(lv => ok(res[lv].any >= 0.9 && res[lv].both >= 0.6 && res[lv].widest <= 0.25, '前面的關卡幾乎都有假空隙、多半左右兩邊都有，「最寬的縫＝答案」不會常常成立 lv' + lv + ' ' + JSON.stringify(res[lv])));
+  ok(res[5].any >= 0.7, '第 5 關多數也有假空隙 ' + res[5].any);
+  ok(res[21].any === 0 && res[30].any === 0, '超過 to 沒有假空隙');
+  // 數量動畫的色圈：半徑＝人的半徑 × RING_SCALE，而且所有色圈先畫、所有人像後畫
+  const src2 = fs.readFileSync(path.resolve(__dirname, '../../js/reaction_halfcrowd.js'), 'utf8');
+  ok(typeof T.RING_SCALE === 'number' && T.RING_SCALE > 0, 'RING_SCALE ＝ ' + T.RING_SCALE);
+  ok(/r: \(c\.r \* RING_SCALE\)\.toFixed\(2\), 'class': 'halfcrowd-circle' \}, ringLayer\)/.test(src2), '色圈半徑 ＝ c.r × RING_SCALE（碰撞用的 c.r 不變）');
+  ok(/'class': 'halfcrowd-face'[^}]*\}, faceLayer\)/.test(src2) && /var ringLayer = kit\.svg\('g', \{\}, svg\), faceLayer = kit\.svg\('g', \{\}, svg\);/.test(src2), '先建色圈層、再建人像層（人像在所有色圈上面）'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

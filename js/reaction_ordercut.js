@@ -4,13 +4,16 @@
    一堆水果拋上來，每顆上面寫一個數字（1、2、3…）。**照號碼順序一顆一顆切**（用手指在畫面上劃過去）：先切 1、再切 2……
    **切錯順序就結束**，水果掉到畫面下面還沒被切到也結束。
    ───────────────────────────────────────────────────────────────────
-   · 水果在空中的軌跡（fruitPos）：每顆水果從畫面下方拋出，走一條拋物線再掉下去，飛行時間 T（秒）；水平方向慢慢飄、整顆水果一直旋轉（所以 6 和 9 轉一轉會分不清——
+   · 水果在空中的軌跡（fruitPos）：像煙火——每顆水果從畫面下方「噴」上去（很快，越爬越慢），到頂點之後慢慢往下飄（很慢，慢慢加速），飛行時間 T（秒）；
+     上升占 RISE_FRAC、起始衝勁 RISE_EASE、下降的加速 FALL_EASE（曲線見 lift）；水平方向慢慢飄、整顆水果一直旋轉（所以 6 和 9 轉一轉會分不清——
      數字下面有一條底線，底線在下面的才是正的）。位置只由「時間」決定（不是一格一格累加），畫面和判定用同一個函式。
-   · 保證切得完（makeLevel）：先排好一張「計畫切的時間表」c₁ < c₂ < … < c_N（相鄰間隔 GAP_CUT 秒左右），再決定每顆水果什麼時候拋：
-     第 k 號水果在計畫切它的那一刻，剛好飛到整段飛行的 u 位置（u 在 [0.5 − 0.35·混亂度, 0.5 + 0.35·混亂度]，永遠落在 [0.15, 0.85] 之內）。
-     所以每一顆在被計畫切的時間點一定在畫面上、離出現和落下都還有餘裕。混亂度越高，u 越分散，拋出的順序和號碼順序越不一樣（拋得越來越亂）。
-   · 第 15 關起改成算式：每顆水果寫一個算式（2＋3、12÷4、6×7…），**照答案由小到大的順序切**；每顆算式的答案都不一樣；
-     算式關卡的水果數重新從 5 顆開始往 15 顆增加；第 20 關起加入乘法和除法（除法一定整除）。
+   · 一波一波發射（VOLLEY）：每一波有好幾顆「號碼連續」的水果，幾乎同時（差不到 VOLLEY_SPREAD_S 秒）從畫面下方不同位置噴出，
+     畫面上常常同時有好幾顆，玩家要判斷號碼順序、依序切；每波顆數隨關卡增加，放不下時自動減少。
+   · 保證切得完（makeLevel）：先排好一張「計畫切的時間表」c₁ < c₂ < … < c_N（相鄰間隔 GAP_CUT 秒左右），再決定每一波什麼時候噴：
+     第 k 號水果在計畫切它的那一刻，飛到整段飛行的 u 位置（u 一定在 [max(U_MIN, RISE_FRAC), U_MAX] 之內＝已經過了頂點、離落下還有餘裕）。
+     所以每一顆在被計畫切的時間點一定在畫面上。混亂度越高，一波的第一次切落在飛行的哪裡越分散。
+   · 號碼一定從 1 開始、連續不跳號：數字關是 1～N；算式關每顆水果寫一個算式（2＋3、12÷4、6×7…），算式的答案剛好是 1～N（makeExprs），
+     **照答案由小到大的順序切**。算式關卡的水果數從 5 顆開始往 15 顆增加；第 20 關起加入乘法和除法（除法一定整除）。
    · 切的判定（sliceSegment）：手指從上一點到這一點畫出一小段線；這一段線穿過（離線段 ≤ 水果半徑＋HIT_PAD）的水果，依「沿著線的順序」一顆一顆切。
      第一顆被切到的必須剛好是「下一號」，不是就失敗；一刀穿過兩顆（下一號、再下一號）是可以的。
    · 難度（線性，到 RAMP_LEVELS 關到頂）：飛行時間 2.8 → 1.8 秒、計畫切的間隔 0.8 → 0.4 秒、混亂度 0.1 → 1、旋轉速度 80 → 280 度／秒；水果數見上。
@@ -30,21 +33,28 @@
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var NUM_COUNT = [4, 15], NUM_RAMP = 14;     /* 數字關：水果數 4 → 15，在第 14 關到頂（之後維持 15；第 15 關起改成算式） */
-    var EXPR_FROM = 15;                         /* 第幾關起改成算式 */
+    var EXPR_FROM = 1;                         /* 第幾關起改成算式 */
     var EXPR_COUNT = [5, 15], EXPR_RAMP = 15;   /* 算式關：水果數 5 → 15，從 EXPR_FROM 起算 15 關到頂 */
     var MULDIV_FROM = 20;                       /* 第幾關起算式加入 × 和 ÷ */
     var FLIGHT_S = [2.8, 1.8];                  /* 一顆水果從拋出到掉出畫面的時間（秒）：第 1 關 → 到頂 */
     var GAP_CUT = [0.8, 0.4];                   /* 計畫切的時間間隔（秒）：第 1 關 → 到頂 */
     var CHAOS = [0.1, 1];                       /* 混亂度（0～1）：第 1 關 → 到頂 */
     var OMEGA_DEG = [80, 280];                  /* 旋轉速度（度／秒）：第 1 關 → 到頂 */
-    var U_MIN = 0.15, U_MAX = 0.85, U_SPREAD = 0.35;   /* 計畫切的時刻在飛行的哪個位置（比例）：中心 0.5、最多偏 U_SPREAD × 混亂度 */
-    var APEX = [0.28, 0.62];                    /* 拋物線頂點的高度（占畫面高度的比例，從畫面底算起） */
+    var U_MIN = 0.15, U_MAX = 0.85, U_SPREAD = 0.35;   /* 計畫切的時刻在飛行的哪個位置（比例）：最早 U_MIN（實際還會取 RISE_FRAC 以上，要等水果過了頂點）、最晚 U_MAX；U_SPREAD 是舊的「一顆一顆拋」才用的偏移量，改成一波一波發射後不再使用（混亂度改成決定一波的第一次切落在 [最早, 最晚] 的哪裡） */
+    var APEX = [0.6, 0.90];                    /* 水果飛到最高點的高度（占畫面高度的比例，從畫面底算起） */
+    var VOLLEY = [2, 4];                        /* 同時發射幾顆水果（一「波」）：第 1 關 → 到頂（RAMP_LEVELS 關）。同一波的水果幾乎同時從畫面下方不同位置噴出，號碼是連續的（例如 1、2、3 同一波），玩家得在空中判斷號碼順序再依序切；1＝一顆一顆拋。一波放得下的顆數受「切的間隔、飛行時間」限制，放不下時會自動減少 */
+    var VOLLEY_SPREAD_S = 0.15;                 /* 同一波的水果，發射時間最多相差幾秒（0＝完全同時發射） */
+    var RISE_FRAC = 0.22;                       /* 煙火式飛行：上升（噴上去）占整段飛行時間的比例。越小＝噴得越快、在空中慢慢落下的時間越長（0.22＝22% 的時間往上衝、78% 的時間慢慢掉） */
+    var RISE_EASE = 2.2;                        /* 上升的減速率：1＝等速衝到頂點；2＝像丟石頭一樣越爬越慢（到頂點時速度剛好是 0）；越大＝一開始噴得越猛、接近頂點時越慢 */
+    var FALL_EASE = 1.5;                        /* 下降的加速率：1＝等速慢慢掉；2＝像自由落體越掉越快；小於 1＝像降落傘越掉越慢；越小越方便觀察、計算數字 */
     var VX = 70;                                /* 水平飄移速度的最大值（px／秒） */
     var R_NUM = 36, R_EXPR = 56;                /* 水果半徑（px）：數字關／算式關（算式字比較多，水果比較大） */
     var HIT_PAD = 8;                            /* 手指劃過去離水果邊緣這麼近也算切到（px） */
     var LEAD_S = 0.8;                           /* 開場等多久才拋第一顆（秒） */
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var FRUITS = 6;                             /* 水果的顏色種數（CSS 的 ordercut-f0～5） */
+    /* 干擾用的動態條紋背景（共用元件 js/reaction_bgstripe.js，各欄位的意思見該檔開頭）：from 是從第幾關開始出現（想關掉改成 0，想晚一點出現就調大）；數字寫成 [起, 終] 會從第 from 關起漸漸變強 */
+    var BG = { from: 8, type: 'spiral', diff: [4, 8], width: 36, move: 'none', spin: 6, hue: 24, sat: 26, light: 22 };  /* 第 8 關起出現：螺紋、亮度差 4% → 8%、帶寬 36px、不平移、每秒轉 6 度；色調同深色木板（--ocf-board） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair, maxLevel) { return kit.ramp(level, pair[0], pair[1], maxLevel == null ? RAMP_LEVELS : maxLevel); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
@@ -54,22 +64,29 @@
     function gapFor(level) { return Math.round(ramp(level, GAP_CUT) * 1000) / 1000; }
     function chaosFor(level) { return Math.round(ramp(level, CHAOS) * 1000) / 1000; }
     function omegaFor(level) { return Math.round(ramp(level, OMEGA_DEG)); }
+    function volleyFor(level) { return Math.max(1, Math.round(ramp(level, VOLLEY))); }
     function radiusFor(level, W) { return Math.round((isExpr(level) ? R_EXPR : R_NUM) * Math.min(1, (W || 472) / 472)); }
-    /* 一個算式：{ text, value }。ops＝可用的運算（'+'、'-'、'*'、'/'），除法保證整除、減法不會是負數、答案在 1～99 */
-    function makeExpr(ops, rand) {
-        for (var tr = 0; tr < 200; tr++) {
-            var op = kit.pick(ops, rand), a, b, v;      /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
-            if (op === '+') { a = kit.randInt(1, 60, rand); b = kit.randInt(1, 60, rand); v = a + b; return v <= 99 ? { text: a + '＋' + b, value: v } : makeExpr(ops, rand); }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
-            if (op === '-') { a = kit.randInt(5, 99, rand); b = kit.randInt(1, a - 1, rand); return { text: a + '－' + b, value: a - b }; }
-            if (op === '*') { a = kit.randInt(2, 12, rand); b = kit.randInt(2, 12, rand); v = a * b; if (v <= 99) return { text: a + '×' + b, value: v }; continue; }
-            b = kit.randInt(2, 12, rand); v = kit.randInt(1, Math.floor(99 / b), rand); return { text: (v * b) + '÷' + b, value: v };  /* Math.floor：無條件捨去成整數 */
-        }
-        return { text: '1＋1', value: 2 };
+    /* 乘法能不能湊出 v：回傳所有「a × b ＝ v，而且 a、b 都在 2～12」的 [a, b]（質數、太大的數湊不出來就是空陣列） */
+    function mulPairs(v) {
+        var out = [];
+        for (var a = 2; a <= 12; a++) if (v % a === 0 && v / a >= 2 && v / a <= 12) out.push([a, v / a]);  /* % 是除法的餘數：整除才會是 0 */
+        return out;
     }
-    /* n 個「答案都不一樣」的算式 */
+    /* 一個「答案剛好是 v」的算式：{ text, value }。ops＝可用的運算（'+'、'-'、'*'、'/'）；除法保證整除、減法不會是負數、算式裡的數字都在 99 以內。
+       先挑出「湊得出 v」的運算（例如 v＝1 湊不出加法、質數湊不出乘法），再從裡面隨機挑一種；減法一定湊得出來，所以不會挑不到 */
+    function makeExprFor(v, ops, rand) {
+        var cand = ops.filter(function (op) { return op === '+' ? v >= 2 : (op === '-' ? v <= 98 : (op === '*' ? mulPairs(v).length > 0 : (op === '/' && v <= 49))); });  /* filter：留下符合條件的元素，回傳新陣列 */
+        if (!cand.length) cand = ['-'];
+        var op = kit.pick(cand, rand), a, b;            /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        if (op === '+') { a = kit.randInt(1, v - 1, rand); return { text: a + '＋' + (v - a), value: v }; }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
+        if (op === '-') { b = kit.randInt(1, Math.min(60, 99 - v), rand); return { text: (v + b) + '－' + b, value: v }; }
+        if (op === '*') { var pr = kit.pick(mulPairs(v), rand); return { text: pr[0] + '×' + pr[1], value: v }; }
+        b = kit.randInt(2, Math.min(12, Math.floor(99 / v)), rand); return { text: (v * b) + '÷' + b, value: v };  /* Math.floor：無條件捨去成整數 */
+    }
+    /* n 個算式，答案剛好是 1、2、3…、n（一個都不能少、不能跳號，玩家才抓得到「從 1 開始、依序往上」的訣竅；順序是亂的由出題時再排） */
     function makeExprs(n, ops, rand) {
-        var out = [], seen = {}, guard = 0;
-        while (out.length < n && guard++ < 5000) { var e = makeExpr(ops, rand); if (!seen[e.value]) { seen[e.value] = 1; out.push(e); } }
+        var out = [];
+        for (var v = 1; v <= n; v++) out.push(makeExprFor(v, ops, rand));
         return out;
     }
     /* 出一關：{
@@ -77,29 +94,61 @@
          fruits（依「要切的順序」排好；每顆 { rank（1～N，要切的順序）, label（寫在水果上的字）, value（數字或算式的答案）, color, x0（0～1，占畫面寬）, vx（占畫面寬／秒）, A（拋物線高度，占畫面高）, t（拋出時間）, T（飛行時間）, u（計畫切的時刻在飛行的位置）, a0（起始角度）, w（旋轉速度，度／秒）}）} */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var expr = isExpr(level), N = countFor(level), T = flightFor(level), gap = gapFor(level), chaos = chaosFor(level), om = omegaFor(level), labels, values;
+        var expr = isExpr(level), N = countFor(level), T = flightFor(level), gap = gapFor(level), chaos = chaosFor(level), om = omegaFor(level), size = volleyFor(level), labels, values;
         if (expr) { var ops = level >= MULDIV_FROM ? ['+', '-', '*', '/'] : ['+', '-'], es = makeExprs(N, ops, rand); labels = es.map(function (e) { return e.text; }); values = es.map(function (e) { return e.value; }); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
         else { values = []; for (var i = 1; i <= N; i++) values.push(i); labels = values.map(String); }
         /* 照答案由小到大排：第 k 個要切的是第 k 小的 */
         var idx = values.map(function (v, i) { return i; }).sort(function (a, b) { return values[a] - values[b]; });  /* sort：排序；比較函式回傳負數代表 a 排前面、回傳正數代表 b 排前面 */
-        var plan = [], c = T * U_MAX + 0.2, fruits = [];
-        for (var k = 0; k < N; k++) {
-            if (k > 0) c += gap * kit.randFloat(0.85, 1.2, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
-            plan.push(Math.round(c * 1000) / 1000);
-            var j = idx[k], u = kit.clamp(0.5 + (rand() * 2 - 1) * U_SPREAD * chaos, U_MIN, U_MAX);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
-            var sg = rand() < 0.5 ? -1 : 1, x0 = kit.randFloat(0.18, 0.82, rand);
-            fruits.push({ rank: k + 1, label: labels[j], value: values[j], color: kit.randInt(0, FRUITS - 1, rand), x0: Math.round(x0 * 1000) / 1000, vx: Math.round(sg * kit.randFloat(0.02, VX / 472, rand) * 1000) / 1000,
-                A: Math.round(kit.randFloat(APEX[0], APEX[1], rand) * 1000) / 1000, t: Math.round((plan[k] - u * T) * 1000) / 1000, T: T, u: Math.round(u * 1000) / 1000, a0: Math.round(kit.randFloat(0, 360, rand)), w: Math.round((rand() < 0.5 ? -1 : 1) * kit.randFloat(om * 0.6, om, rand)) });
+        /* 分成一波一波發射：每一波有 n 顆「號碼連續」的水果，幾乎同時（相差不到 VOLLEY_SPREAD_S 秒）從畫面下方不同位置噴出；
+           切的時間表照號碼往下排（相鄰間隔 gap 秒左右，不管是不是同一波）。
+           一波的第一次切，落在「噴出之後 u1 倍飛行時間」；最後一次切落在 u1 ＋ 這一波切的時間跨度。
+           u 一定在 [lo, hi]（lo ＝ 頂點之後：max(U_MIN, RISE_FRAC) 再加上發射時間差的餘裕；hi ＝ U_MAX），所以切的那一刻每顆水果都在畫面上、而且已經過了快速上衝的階段。
+           一波放不下（跨度超過 hi − lo）就減少這一波的顆數；最後如果只剩 1 顆，併進前一波，不讓單獨一顆孤零零地飛 */
+        var S = VOLLEY_SPREAD_S, lo = Math.max(U_MIN, RISE_FRAC) + S / T, hi = U_MAX;
+        var plan = [], fruits = [], volleys = [], k = 0, lastCut = 0, i;
+        while (k < N) {
+            var n = Math.min(size, N - k), d;
+            if (N - k - n === 1) n++;
+            for (; ; n--) {                                 /* 排出這一波每次切的時間（相對第一次切），放不下就少一顆再試 */
+                d = [0]; for (i = 1; i < n; i++) d.push(d[i - 1] + gap * kit.randFloat(0.85, 1.2, rand));  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+                if (n === 1 || d[n - 1] / T <= hi - lo) break;
+            }
+            var span = d[n - 1] / T, room = Math.max(0, hi - lo - span);
+            var u1 = lo + room * kit.clamp(0.5 + (rand() * 2 - 1) * chaos * 0.5, 0, 1);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大）；混亂度越高，第一次切落在飛行的哪裡越分散 */
+            var L, cFirst;                                  /* L：這一波的發射時間；cFirst：這一波第一次切的時間 */
+            if (k === 0) { L = 0.2; cFirst = L + u1 * T; }
+            else { cFirst = lastCut + gap * kit.randFloat(0.85, 1.2, rand); L = cFirst - u1 * T; if (L < 0.2) { cFirst += 0.2 - L; L = 0.2; } }  /* 不會比開場早發射 */
+            var slots = []; for (i = 0; i < n; i++) slots.push(i);
+            for (i = n - 1; i > 0; i--) { var jj = Math.floor(rand() * (i + 1)), tmp = slots[i]; slots[i] = slots[jj]; slots[jj] = tmp; }  /* 洗牌：同一波的水果各佔畫面寬度的一格，左右分開，不會疊在一起 */
+            volleys.push(n);
+            for (i = 0; i < n; i++, k++) {
+                var c = Math.round((cFirst + d[i]) * 1000) / 1000; plan.push(c);
+                var j = idx[k], s = rand() * S, t = L + s, u = (c - t) / T;
+                var sg = rand() < 0.5 ? -1 : 1, x0 = 0.18 + 0.64 / n * (slots[i] + kit.randFloat(0.15, 0.85, rand));
+                fruits.push({
+                    rank: k + 1, label: labels[j], value: values[j], color: kit.randInt(0, FRUITS - 1, rand), x0: Math.round(x0 * 1000) / 1000, vx: Math.round(sg * kit.randFloat(0.02, VX / 472, rand) * 1000) / 1000,
+                    A: Math.round(kit.randFloat(APEX[0], APEX[1], rand) * 1000) / 1000, t: Math.round(t * 1000) / 1000, T: T, u: Math.round(u * 1000) / 1000, a0: Math.round(kit.randFloat(0, 360, rand)), w: Math.round((rand() < 0.5 ? -1 : 1) * kit.randFloat(om * 0.6, om, rand)), volley: volleys.length - 1
+                });
+            }
+            lastCut = plan[k - 1];
         }
-        return { level: level, expr: expr, N: N, flight: T, plan: plan, fruits: fruits };
+        return { level: level, expr: expr, N: N, flight: T, plan: plan, fruits: fruits, volleys: volleys };
+    }
+    /* 煙火式的高度曲線：飛行進度 u（0～1）→ 高度比例 h（0＝在畫面下方、1＝頂點）。
+       前 RISE_FRAC 的時間往上衝：h ＝ 1 − (1 − p)^RISE_EASE（p 是這一段的進度；一開始最快、越爬越慢）；
+       之後慢慢落下：h ＝ 1 − p^FALL_EASE（p 是下降這一段的進度；從頂點開始越掉越快，FALL_EASE 越小掉得越平緩） */
+    function lift(u) {
+        if (u <= 0 || u >= 1) return 0;
+        if (u < RISE_FRAC) return 1 - Math.pow(1 - u / RISE_FRAC, RISE_EASE);  /* Math.pow(x, y)：x 的 y 次方 */
+        return 1 - Math.pow((u - RISE_FRAC) / (1 - RISE_FRAC), FALL_EASE);
     }
     /* 水果 f 在時間 t 的位置：geom ＝ { W, H, R }；飛行之外（還沒拋、已經掉出去）回傳 null。
        飛行進度 u ＝ (t − 拋出時間) ÷ 飛行時間（0～1）。
        x：W·x0 ＋ W·vx·(t − 拋出時間)，限制在 R～W−R 之內（不會飄出左右邊界）；
-       y（水果中心）：從畫面底下 yb ＝ H ＋ R 拋出、再掉回 yb；中間走拋物線 y ＝ yb − 4·(A·H)·u·(1−u)，頂點（u＝0.5）在 yb − A·H。 */
+       y（水果中心）：從畫面底下 yb ＝ H ＋ R 噴出、再掉回 yb；高度照煙火式曲線 lift(u)：y ＝ yb − (A·H)·lift(u)，頂點（u＝RISE_FRAC）在 yb − A·H。 */
     function fruitPos(f, t, geom) {
         var tau = t - f.t; if (tau < 0 || tau > f.T) return null;
-        var u = tau / f.T, yb = geom.H + geom.R, y = yb - 4 * (f.A * geom.H) * u * (1 - u);
+        var u = tau / f.T, yb = geom.H + geom.R, y = yb - (f.A * geom.H) * lift(u);
         var x = geom.W * f.x0 + geom.W * f.vx * tau; x = Math.max(geom.R, Math.min(geom.W - geom.R, x));
         return { x: x, y: y, ang: f.a0 + f.w * tau, u: u };
     }
@@ -158,6 +207,7 @@
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, R = radiusFor(level, W), geom = { W: W, H: H, R: R };
         var field = h('div', { 'class': 'ordercut-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        kit.bgStripe(field, api.my, level, BG);        /* 在木板上墊一層淡淡的旋轉螺紋（BG.from 關之後才出現），水果畫在它上面 */
         var tip = h('div', { 'class': 'qz-note ordercut-tip', text: q.expr ? '照答案由小到大，一顆一顆切！' : (level === 1 ? '照號碼 1、2、3… 的順序，用手指劃過去切！' : '照號碼順序切（6 和 9 看底線）') });
         field.appendChild(tip);
         var next = h('div', { 'class': 'ordercut-next', text: '下一個：' + (q.expr ? '最小的' : '1') }); field.appendChild(next);
@@ -266,13 +316,13 @@
     var G = {
         id: ID,
         name: '照號切水果',
-        rule: '水果一顆一顆拋上來，每顆上面寫一個數字。**照號碼 1、2、3… 的順序**，用手指在畫面上劃過去切它。**切錯順序就結束**，水果掉到畫面下面還沒切到也結束。水果會在空中旋轉，**6 和 9 看底線**（底線在下面才是正的）。**第 15 關起**，水果上面改成算式（像「2＋3」「12÷4」），要照答案由小到大的順序切！',
+        rule: '水果像煙火一樣噴上來（常常好幾顆同時），每顆上面寫一個數字。**照號碼 1、2、3… 的順序**，用手指在畫面上劃過去切它。**切錯順序就結束**，水果掉到畫面下面還沒切到也結束。水果會在空中旋轉，**6 和 9 看底線**（底線在下面才是正的）。**第 15 關起**，水果上面改成算式（像「2＋3」「12÷4」），要照答案由小到大的順序切！',
         mount: mount,
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
-            isExpr: isExpr, countFor: countFor, flightFor: flightFor, gapFor: gapFor, chaosFor: chaosFor, omegaFor: omegaFor, radiusFor: radiusFor, makeExpr: makeExpr, makeExprs: makeExprs, makeLevel: makeLevel, fruitPos: fruitPos, onScreen: onScreen, distToSeg: distToSeg, sliceSegment: sliceSegment, judgeCuts: judgeCuts, whyText: whyText, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, NUM_COUNT: NUM_COUNT, NUM_RAMP: NUM_RAMP, EXPR_FROM: EXPR_FROM, EXPR_COUNT: EXPR_COUNT, EXPR_RAMP: EXPR_RAMP, MULDIV_FROM: MULDIV_FROM, FLIGHT_S: FLIGHT_S, GAP_CUT: GAP_CUT, CHAOS: CHAOS, OMEGA_DEG: OMEGA_DEG, U_MIN: U_MIN, U_MAX: U_MAX, U_SPREAD: U_SPREAD, APEX: APEX, VX: VX, R_NUM: R_NUM, R_EXPR: R_EXPR, HIT_PAD: HIT_PAD, LEAD_S: LEAD_S, MAX_LEVEL: MAX_LEVEL, FRUITS: FRUITS
+            isExpr: isExpr, countFor: countFor, flightFor: flightFor, gapFor: gapFor, chaosFor: chaosFor, omegaFor: omegaFor, radiusFor: radiusFor, makeExprFor: makeExprFor, mulPairs: mulPairs, makeExprs: makeExprs, volleyFor: volleyFor, lift: lift, makeLevel: makeLevel, fruitPos: fruitPos, onScreen: onScreen, distToSeg: distToSeg, sliceSegment: sliceSegment, judgeCuts: judgeCuts, whyText: whyText, rating: rating,
+            RAMP_LEVELS: RAMP_LEVELS, NUM_COUNT: NUM_COUNT, NUM_RAMP: NUM_RAMP, EXPR_FROM: EXPR_FROM, EXPR_COUNT: EXPR_COUNT, EXPR_RAMP: EXPR_RAMP, MULDIV_FROM: MULDIV_FROM, FLIGHT_S: FLIGHT_S, GAP_CUT: GAP_CUT, CHAOS: CHAOS, OMEGA_DEG: OMEGA_DEG, U_MIN: U_MIN, U_MAX: U_MAX, U_SPREAD: U_SPREAD, APEX: APEX, VOLLEY: VOLLEY, VOLLEY_SPREAD_S: VOLLEY_SPREAD_S, RISE_FRAC: RISE_FRAC, RISE_EASE: RISE_EASE, FALL_EASE: FALL_EASE, VX: VX, R_NUM: R_NUM, R_EXPR: R_EXPR, HIT_PAD: HIT_PAD, LEAD_S: LEAD_S, MAX_LEVEL: MAX_LEVEL, FRUITS: FRUITS
         }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */

@@ -20,7 +20,7 @@ let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log('FAIL', m); } }
 const FAMILY = {};
 ['sudoku4', 'sudoku6e', 'sudoku6m', 'sudoku9e', 'sudoku9m', 'sudoku9h', 'sandwich'].forEach(id => { FAMILY[id] = { css: 'sudoku_lib.css', prefix: 'sudokulib' }; });
 // 共用元件：不是遊戲，但檔名也叫 reaction_*.js
-const NOT_GAME = /^reaction_(core|kit\d*)\.js$/;
+const NOT_GAME = /^reaction_(core|kit\d*|bgstripe)\.js$/;
 
 const jsDir = path.join(ROOT, 'js'), cssDir = path.join(ROOT, 'css');
 const games = fs.readdirSync(jsDir).filter(f => /^reaction_.+\.js$/.test(f) && !NOT_GAME.test(f)).map(f => f.replace(/^reaction_|\.js$/g, '')).sort();

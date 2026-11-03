@@ -43,6 +43,8 @@
     var TIME_START = 4.0, TIME_END = 2.5;         /* 每題限時（秒） */
     var LEVEL_RAMP = 30;                            /* 難度升到頂的關卡：第 1 關線性變難，到第 30 關最難，之後維持不變 */
     var REVEAL_MS = 1500;       /* 答完後揭曉真相停多久 */
+    /* 干擾用的動態條紋背景（共用元件 js/reaction_bgstripe.js，各欄位的意思見該檔開頭）：from 是從第幾關開始出現（想關掉改成 0，想晚一點出現就調大）；數字寫成 [起, 終] 會從第 from 關起漸漸變強 */
+    var BG = { from: 3, type: 'circles', diff: [3, 6], width: 26, move: 'all', path: 'swing', speed: 14, hue: 50, sat: 100, light: 97 };  /* 第 6 題（連對 5 題）起出現：同心圓、亮度差 3% → 6%、全方向來回擺動、色調同場地的米白色 */
     /* 五種錯覺的代號 */
     var KINDS = ['muller', 'ebbinghaus', 'ponzo', 'vh', 'contrast', 'delboeuf', 'oppel', 'irradiation', 'hat', 'rectarea', 'cornsweet'];
     /* 錯覺的方向跟「位置」綁死（所以「錯覺幫忙」時較大的那個固定在某個位置）：ponzo／vh／contrast（舊的）與 irradiation／hat／rectarea／cornsweet（新的）；
@@ -377,6 +379,7 @@
                 if (my.dead) return;
                 field.innerHTML = '';
                 var level = streak + 1;
+                kit.bgStripe(field, my, level, BG);      /* 在場地最底下墊一層淡淡的動態條紋（連對 5 題之後才出現），題目圖形照樣畫在上面 */
                 /* G.dev：開發驗證用的強制設定（正式遊戲都是 null） */
                 var q = makeQuestion(level, null, lastKind, G.dev.kind);
                 if (G.dev.time) q.time = G.dev.time;

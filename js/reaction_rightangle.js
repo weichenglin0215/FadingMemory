@@ -33,6 +33,8 @@
     var START_R = 60;                       /* 手指要在起點多近的地方按下才算 */
     var ZOOM_REF = 140;                     /* ZOOM 時，兩個末端的距離放大到螢幕上約幾 px */
     var ZOOM_GAP_MAX = 100;                 /* 兩個末端距離超過這個值就不 ZOOM */
+    /* 干擾用的動態條紋背景（共用元件 js/reaction_bgstripe.js，各欄位的意思見該檔開頭）。這款是單回合遊戲，沒有關卡：from 寫 1＝一開始就有，寫 0＝關掉 */
+    var BG = { from: 1, type: 'hstripe', diff: 4, width: 64, angle: 'skew', move: 'y', speed: 24, spin: 4 };  /* 單回合遊戲，一開始就有：橫條紋、亮度差 5%、條寬 34px、傾斜角每次隨機（避開水平垂直，不然擺正的條紋會變提示）、沿著條紋的垂直方向捲動 22px／秒 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function rad(d) { return d * Math.PI / 180; }
@@ -84,6 +86,7 @@
     function setup(api) {
         var stage = api.stage, my = api.my;
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
+        kit.bgStripe(stage, my, 1, BG);                 /* 在舞台最底下墊一層很淡、會慢慢移動的條紋，干擾對直角的判斷（單回合遊戲沒有關卡，一律當第 1 關） */
         var cfg = makeRound(), drawing = false, locked = false, hint = null, pid = null, tp = null;
         var s = { x: S.x, y: Math.min(S.y, H - 60) };
         var off = s.y - S.y;       /* 舞台比預設矮時整體上移（座標一律用 S，畫的時候加 off） */
@@ -93,7 +96,8 @@
         var full = { vx: 0, vy: 0, vw: W, vh: H };
         /* 背景斜紋 */
         var gBg = kit.svg('g', { transform: 'rotate(' + (-cfg.stripe).toFixed(2) + ' ' + s.x + ' ' + s.y + ')' }, svg);
-        for (var k = -14; k <= 14; k++) kit.svg('line', { x1: s.x - 700, x2: s.x + 700, y1: s.y + k * 46, y2: s.y + k * 46, 'class': 'rightangle-stripe' }, gBg);
+        /* 取消繪製原有的背景干擾線，只留下共用元件背景干擾線*/
+        //for (var k = -14; k <= 14; k++) kit.svg('line', { x1: s.x - 700, x2: s.x + 700, y1: s.y + k * 46, y2: s.y + k * 46, 'class': 'rightangle-stripe' }, gBg);
         /* 題目線段 */
         var qx = s.x + cfg.len * Math.cos(rad(cfg.th)), qy = s.y - cfg.len * Math.sin(rad(cfg.th));
         kit.svg('line', { x1: s.x, y1: s.y, x2: qx, y2: qy, 'class': 'rightangle-q' }, svg);
@@ -156,10 +160,12 @@
             var done = function () {
                 say('差了 ' + real.toFixed(4) + ' 度（你的線偏' + side + '）');
                 my.after(2000, function () {
-                    api.finish(real, { lines: [
-                        '你的線比標準垂線偏' + side + ' ' + real.toFixed(4) + ' 度',
-                        '只有一次機會，想拚更準就再挑戰一次'
-                    ] });
+                    api.finish(real, {
+                        lines: [
+                            '你的線比標準垂線偏' + side + ' ' + real.toFixed(4) + ' 度',
+                            '只有一次機會，想拚更準就再挑戰一次'
+                        ]
+                    });
                 });
             };
             my.wait(500).then(function () {

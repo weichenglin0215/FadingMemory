@@ -44,6 +44,9 @@
     var ZOOM_MS = 1000, ZOOM_HOLD_MS = 600, VIEW_RED_PX = 200;  /* ZOOM_MS：每一段放大動畫的時間（毫秒）；ZOOM_HOLD_MS：放大後停多久（毫秒）；VIEW_RED_PX：放大後，紅線到錨點最多顯示多少 px */
     var NEXT_MS = 1600;                             /* 答完一題後停多久才出下一題（毫秒，1600 毫秒＝1.6 秒） */
     var DEAD_ZONE = 30;                                /* 離相框中心多近就不理（px，客戶端座標）*/
+    /* 干擾用的動態條紋背景（共用元件 js/reaction_bgstripe.js，各欄位的意思見該檔開頭）：from 是從第幾關開始出現（想關掉改成 0）；這款是單回合遊戲，寫 1＝一開始就有。
+       色調（hue、sat、light）不用寫：會自動跟這一次的牆面底色一樣。螺紋沒有直線，不會洩漏水平的線索 */
+    var BG = { from: 1, type: 'hstripe', diff: 4, width: 40, move: 'x', speed: 24, spin: 4 };  /* 單回合遊戲，一開始就有：螺紋、亮度差 4%、帶寬 40px、不平移、每秒轉 4 度（方向每次隨機） */
 
     /* 最佳紀錄顯示文字（單次誤差，度，4 位小數） */
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v.toFixed(4) + '°'; }
@@ -122,7 +125,7 @@
             ctx.setMeta(fmtBest(Reaction.getBest(ID))); /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
 
             /* SVG 繪圖用的變數：場地大小、各個圖層（牆、相框、紅線、綠線）和相框中心 (CX,CY) */
-            var FW = 0, FH = 0, svg = null, gWall = null, gFrame = null, refLine = null, edgeLine = null, full = null, CX = 0, CY = 0;
+            var FW = 0, FH = 0, svg = null, wallBase = null, bg = null, gWall = null, gFrame = null, refLine = null, edgeLine = null, full = null, CX = 0, CY = 0;
 
             /* 可重現的亂數函式（mulberry32）：同一個 seed 每次都畫出一樣的碎花，這回合重新建構畫面時不會變 */
             function seeded(seed) { var a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -137,7 +140,13 @@
                 full = { vx: 0, vy: 0, vw: FW, vh: FH };
                 var wallL = 84, hue = cfg.hue;
                 /* 牆面底色：大矩形鋪滿（座標故意超出畫面，放大時才不會露出邊緣） */
-                kit.svg('rect', { x: -2000, y: -2000, width: 5000, height: 5000, fill: 'hsl(' + hue + ',32%,' + wallL + '%)' }, svg);
+                wallBase = kit.svg('rect', { x: -2000, y: -2000, width: 5000, height: 5000, fill: 'hsl(' + hue + ',32%,' + wallL + '%)' }, svg);
+                /* 動態條紋背景墊在牆面底下（SVG 的後面）：底色改成透明才看得到它；顏色跟牆面底色一樣，只差一點亮度。結算放大時會收起來（見 submit） */
+                var bgOpts = {}, bk;
+                for (bk in BG) bgOpts[bk] = BG[bk];
+                bgOpts.hue = hue; bgOpts.sat = 32; bgOpts.light = wallL;
+                bg = kit.bgStripe(field, my, 1, bgOpts);
+                wallBase.setAttribute('fill-opacity', bg ? 0 : 1);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
                 gWall = kit.svg('g', {}, svg);
                 var rnd = seeded(cfg.seed);
                 /* 斜條紋牆：畫很多斜的長條矩形，整組 rotate(傾斜角) */
@@ -261,6 +270,7 @@
             function submit() {
                 if (state !== 'play') return;
                 state = 'zoom';
+                if (bg) { bg.hide(); wallBase.setAttribute('fill-opacity', 1); }  /* 鏡頭推進時背景不跟著放大：收起動態條紋，牆面底色換回實心 */
                 /* 這一次的誤差（度）＝最終成績：第 3、4 位不為 0，只產生這一次；畫面上的文字、最佳紀錄、世界排行榜都用它。
                    放大看到的紅線與綠線（zoomPlan）仍然是真實的角度差 */
                 var realE = errDeg(theta);

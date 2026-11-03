@@ -37,9 +37,9 @@
     var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
-    var MAX_LEVEL = 90;                 /* 疊滿幾塊算全破 */
-    var BLOCK_H = 56;                   /* 方塊高度（固定，px） */
-    var W_MIN_RATIO = 1 / 6, W_MAX_RATIO = 1 / 2;      /* 方塊寬度佔畫面寬的比例範圍 */
+    var MAX_LEVEL = 180;                 /* 疊滿幾塊算全破 */
+    var BLOCK_H = 48;                   /* 方塊高度（固定，px） */
+    var W_MIN_RATIO = 1 / 16, W_MAX_RATIO = 1 / 3;      /* 方塊寬度佔畫面寬的比例範圍 */
     var TRAP_TOP = 0.5;                 /* 梯形的頂寬是底寬的幾倍 */
     var EPS = 2;                        /* 兩個高度差在這個值以內算「一樣高」（接觸）（px） */
     var MIN_CONTACT = 8;                /* 支撐範圍至少要多寬，不然算落在尖點或斜面上、會滑掉（px） */
@@ -53,6 +53,8 @@
     var TIP_SPLIT = 0.62;               /* 傾倒動畫前面多少比例是「繞著支點慢慢轉開」，後面是「失去支撐掉下去」 */
     var TIP_ANGLE = 62;                 /* 繞著支點轉開的角度（度） */
     var TIP_DROP = 240;                 /* 最後掉下去的距離（px） */
+    /* 干擾用的動態條紋背景（共用元件 js/reaction_bgstripe.js，各欄位的意思見該檔開頭）：from 是從第幾關開始出現（想關掉改成 0，想晚一點出現就調大）；數字寫成 [起, 終] 會從第 from 關起漸漸變強 */
+    var BG = { from: 0, type: 'dots', diff: [3, 6], width: 40, move: 'all', speed: 16 };  /* 第 12 關起出現：圓點、亮度差 3% → 6%（20 關內漸強）、點徑 26px、全方向捲動 14px／秒 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 方塊面積（＝重量）：長方形 w×h、梯形 (底＋頂)／2×h、三角形 w×h／2 */
@@ -199,6 +201,7 @@
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
+        kit.bgStripe(stage, api.my, level, BG);        /* 在舞台最底下墊一層淡淡的動態圓點（BG.from 關之後才出現），干擾對重心位置的判斷 */
         if (level === 1) tower = [];
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var ZH = Math.max(200, H - PREVIEW_H - BAR_H - 84 - 36);        /* 疊塔區高度：扣掉預覽、橫桿、按鈕與間距 */

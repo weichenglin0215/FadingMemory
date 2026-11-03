@@ -438,6 +438,7 @@ var PRECACHE = [
     'js/reaction_balloon.js',
     'js/reaction_basket.js',
     'js/reaction_beans.js',
+    'js/reaction_bgstripe.js',
     'js/reaction_blindcircle.js',
     'js/reaction_bounce.js',
     'js/reaction_boxstack.js',

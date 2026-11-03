@@ -42,6 +42,8 @@
     var WIDTHS = [2, 3, 4, 5, 7];                   /* 虛線外框的粗細（px）可以選的五種 */
     var DASHES = [3, 5, 8, 12, 16];                 /* 虛線「畫」的長度（px）可以選的五種 */
     var GAPS = [3, 6, 10, 16, 22];                  /* 虛線「空」的長度（px）可以選的五種 */
+    /* 干擾用的動態條紋背景（共用元件 js/reaction_bgstripe.js，各欄位的意思見該檔開頭）：from 是從第幾關開始出現（想關掉改成 0，想晚一點出現就調大）；數字寫成 [起, 終] 會從第 from 關起漸漸變強 */
+    var BG = { from: 1, type: 'circles', diff: 5, width: 30, move: 'all', path: 'swing', speed: 14 };  /* 單回合遊戲，一開始就有：同心圓、亮度差 5%、圈寬 30px、全方向來回擺動（圓心一直在晃，更難判斷哪裡是正中央） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function rad(d) { return d * Math.PI / 180; }
@@ -136,6 +138,7 @@
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, my = api.my;
+        kit.bgStripe(stage, my, 1, BG);                 /* 在舞台最底下墊一層淡淡的晃動同心圓，干擾對中心的判斷（單回合遊戲沒有關卡，一律當第 1 關） */
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var cfg = makeRound(), look = makeStamp(), s0 = startOf(look, W, H);
         var st = { x: s0.x, y: s0.y }, locked = false, hint = null;

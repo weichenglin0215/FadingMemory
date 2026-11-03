@@ -67,6 +67,8 @@
     var MARGIN = 6;                             /* 統計用：方塊離畫面邊緣多遠算「在畫面內」（出題不再用它限制方塊的移動，方塊可以移出畫面） */
     var FALL_MS = 420;                          /* 橫板落下的時間 */
     var TRIES = 400;                                /* 出題時最多重抽幾次，抽到符合條件的橋就停 */
+    /* 干擾用的動態條紋背景（共用元件 js/reaction_bgstripe.js，各欄位的意思見該檔開頭）：from 是從第幾關開始出現（想關掉改成 0，想晚一點出現就調大）；數字寫成 [起, 終] 會從第 from 關起漸漸變強 */
+    var BG = { from: 5, type: 'vstripe', diff: [1, 6], width: [96, 24], move: 'x', speed: [4, 32] };  /* 第 10 關起出現：直條紋、亮度差 3% → 6%（20 關內漸強）、條寬 28px、左右捲動 26px／秒 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function bwAt(level) { return kit.ramp(level, BW[0], BW[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
@@ -208,6 +210,7 @@
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, level = api.level, my = api.my;
+        kit.bgStripe(stage, my, level, BG);            /* 在舞台最底下墊一層淡淡的動態直條紋（BG.from 關之後才出現），干擾對橫板與方塊位置的判斷 */
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var cfg = makeLevel(level, W, api.rand) || makeLevel(1, W, api.rand);       /* 萬一出不了題（不應該發生）：退回第 1 關，不要讓畫面一片空白 */
         api.info = cfg;                                 /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */

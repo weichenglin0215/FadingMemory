@@ -28,11 +28,11 @@
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂（對數用 PAIR_LEVELS） */
-    var PAIR_LEVELS = 16;                       /* 對數幾關之後到頂 */
+    var PAIR_LEVELS = 20;                       /* 對數幾關之後到頂 */
     var PAIRS = [2, 7];                         /* 有幾對圓點：第 1 關 → 到頂 */
-    var RATIO = [1.25, 1.05];                    /* 最遠 ÷ 第二遠：第 1 關 → 到頂 */
+    var RATIO = [1.33, 1.01];                    /* 最遠 ÷ 第二遠：第 1 關 → 到頂 */
     var ANS_S = [15, 60];                        /* 作答限時（秒）：第 1 關 → 到頂 */
-    var D1_MIN = 250, D1_MAX = 420;             /* 最遠那一對的距離範圍（像素） */
+    var D1_MIN = 300, D1_MAX = 450;             /* 最遠那一對的距離範圍（像素） */
     var D_MIN = 90;                             /* 任何一對的最短距離 */
     var OTHER = [0.8, 0.98];                   /* 其他對的距離 ＝ 第二遠 × 這個範圍內的隨機數 */
     var MIN_GAP = 64;                           /* 任兩個圓點圓心至少相距多少 */
@@ -44,6 +44,8 @@
     /* 八種顏色（色相，飽和度與亮度固定）：紅、橘、黃、綠、藍、紫、粉紅、青；彼此夠不一樣。
        顏色數一定要 ≥ 最多的對數 PAIRS[1]（V1.29 修正：PAIRS 調成 7 對時，原本只有 6 種顏色，最後幾關出題會當機） */
     var HUES = [{ n: '紅', h: 4 }, { n: '橘', h: 28 }, { n: '黃', h: 50 }, { n: '綠', h: 135 }, { n: '藍', h: 212 }, { n: '紫', h: 282 }, { n: '粉紅', h: 328 }, { n: '青', h: 178 }];
+    /* 干擾用的動態條紋背景（共用元件 js/reaction_bgstripe.js，各欄位的意思見該檔開頭）：from 是從第幾關開始出現（想關掉改成 0，想晚一點出現就調大）；數字寫成 [起, 終] 會從第 from 關起漸漸變強 */
+    var BG = { from: 5, type: 'random', diff: [2, 5], width: [96, 24], move: 'all', speed: [8, 16], hue: 'random', sat: 45, light: 92 };  /* 第 5 關起出現：圓點、亮度差 3% → 6%、點徑 24px、全方向捲動 14px／秒；底色每關隨機換色相 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 一對圓點裡，起點 a 畫大的（DOT_R）、終點 b 畫小的（DOT_R2） */
@@ -117,6 +119,7 @@
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
+        kit.bgStripe(stage, api.my, level, BG);        /* 在舞台最底下墊一層淡淡的動態圓點（BG.from 關之後才出現），干擾對距離的判斷 */
         var W = stage.clientWidth || 472, H = (stage.clientHeight || 640) - 64;          /* 下面留 64 像素放說明文字 */
         var q = makeLevel(level, W, H, api.rand);
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */

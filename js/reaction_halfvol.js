@@ -38,6 +38,8 @@
     var CX = 236, BOTTOM = 575;             /* 花瓶中軸 x、瓶底 y（舞台座標） */
     var RISE_MS = 2600;                     /* 揭曉時水位從瓶底升到藍線花的時間 */
     var REVEAL_PAUSE_MS = 2000;             /* 動畫結束（水停住、綠線出現）之後，停多久才出現結算彈窗 */
+    /* 干擾用的動態條紋背景（共用元件 js/reaction_bgstripe.js，各欄位的意思見該檔開頭）：from 是從第幾關開始出現（想關掉改成 0，想晚一點出現就調大）；數字寫成 [起, 終] 會從第 from 關起漸漸變強 */
+    var BG = { from: 1, type: 'hstripe', diff: 5, width: 26, move: 'y', speed: 16 };  /* 單回合遊戲，一開始就有：橫條紋、亮度差 5%、條寬 26px、上下捲動 16px／秒（跟水位一起上下，更難判斷高度） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* Catmull-Rom 內插：四個相鄰控制點 p0 p1 p2 p3，t 在 p1～p2 之間 */
@@ -123,6 +125,7 @@
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, my = api.my;
+        kit.bgStripe(stage, my, 1, BG);                 /* 在舞台最底下墊一層淡淡的動態條紋，干擾對水位高度的判斷（單回合遊戲沒有關卡，一律當第 1 關） */
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var cfg = makeRound(), L = cfg.start, Wl = L, locked = false, hint = null;
         console.log('[容量一半] 一半面積的高度 ' + cfg.hs.toFixed(2) + '（一半高度 ' + (VASE_H / 2) + '），起始水位 ' + cfg.start.toFixed(2));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
