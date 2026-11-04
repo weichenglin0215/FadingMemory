@@ -9,7 +9,7 @@
 
 ### 👉 [立即開始玩](https://weichenglin0215.github.io/FadingMemory/) 👈
 
-目前版本 **V1.43.1**　｜　**181 款**小遊戲　｜　免安裝、免註冊　｜　[更新歷程與重點](GITHUB主要更新歷程.md)
+目前版本 **V1.44.1**　｜　**181 款**小遊戲　｜　免安裝、免註冊　｜　[更新歷程與重點](GITHUB主要更新歷程.md)
 
 </div>
 
@@ -234,7 +234,7 @@
 | <img src="img/reaction/wrongline.png" alt="哪一行算錯" height="110"> | **哪一行算錯** | 一份計算過程有好幾行，其中「有一行算錯」，點出算錯的那一行。算錯的結果，後面幾行會接著用下去，所以要一行一行檢查。點錯或來不及就結束，看你能連續答對幾題。越後面，行數越多、錯得越細！ |
 | <img src="img/reaction/fillop.png" alt="挑加減乘除" height="110"> | **挑加減乘除** | 算式裡有加減乘除符號不見了，換成直排的四顆按鈕（＋ − × ÷）。請選出正確的符號，讓等號成立。只有一種填法是對的。空格有好幾個時，每個空格各選一個，確認算出來的數字再按「確定」。選錯或來不及就結束，看你能過幾關。 |
 | <img src="img/reaction/chequeamt.png" alt="支票金額" height="110"> | **支票金額** | 支票上有小寫金額（阿拉伯數字）和大寫金額（壹貳參肆…），判斷兩者「相符」還是「不符」。不符的地方都很小：少寫一個零、仟佰互換、數字對調。答錯或來不及就結束，看你能連續答對幾題。越後面，金額越大、零越多！ |
-| <img src="img/reaction/swapeven.png" alt="換一張就平" height="110"> | **換一張就平** | 上下兩排數字牌，頭上的泡泡寫著各自的總和。上排點一張、下排點一張，兩張交換，要讓交換後兩排的總和一樣。答案只有一組。小心：兩排差多少，不是找差多少的牌，要找的是「差的一半」！選錯或來不及就結束，看你能過幾關。 |
+| <img src="img/reaction/swapeven.png" alt="換一張就平" height="110"> | **換一張就平** | 上下兩排數字牌，頭上的泡泡寫著各自的總和。上排點一張、下排點一張，兩張交換，要讓交換後兩排的總和一樣。答案通常只有一組。 |
 | <img src="img/reaction/weekday.png" alt="推星期幾" height="110"> | **推星期幾** | 上面是撕日曆，寫著某一天是星期幾。下面問另一天是星期幾，點七顆星期按鈕。先算兩天相差幾天，再除以 7 看餘數，星期就往後（或往前）推那麼多天。 |
 | <img src="img/reaction/gaspump.png" alt="加到五百" height="110"> | **加到五百** | 加油站的油槍。上面寫著油價和要加多少元。按住油槍開始加油，畫面上只顯示「已加幾公升」（一直在跳），金額被蓋住了。要自己心算：金額 ÷ 油價 ＝ 要加幾公升。 |
 | <img src="img/reaction/countbills.png" alt="數鈔票" height="110"> | **數鈔票** | 一疊鈔票，面額 100、500、1000 元混在一起，順序打亂。上面寫著目標金額（例如「數出 3700 元」）。每點一下，最上面那張鈔票就撥到右邊，要邊撥邊心算。你覺得撥出去的剛好是目標金額，就按「好了」。 |
@@ -268,7 +268,7 @@
 | <img src="img/reaction/carpet.png" alt="鋪地毯" height="110"> | **鋪地毯** | 房間裡要鋪地毯。手指從黃色的地毯捲開始，往上下左右的相鄰格拖，一路把地毯鋪出去。每一格地板都要剛好鋪到一次，放著家具的格子不能走。往回拖就是把地毯捲回來，走進死路不會結束，自己捲回去換條路。 |
 | <img src="img/reaction/wirelink.png" alt="接電線" height="110"> | **接電線** | 方格板上有幾對同顏色的插頭。手指從一個插頭拖到同色的另一個插頭，拖過的格子會變成電線。電線必須占滿每一格且不能交叉才過關。拖錯了，從插頭重新拖就好。來不及就結束，看你能過幾關。 |
 | <img src="img/reaction/oneway.png" alt="單行道" height="110"> | **單行道** | 街道上畫滿了單行道的箭頭。手指從左下角的計程車開始，沿著街道拖出路線，只能順著箭頭的方向走，逆向的路段拖不過去。把計程車帶到右上角的醫院就過關。拖回上一個路口，路線就退回一格。 |
-| <img src="img/reaction/mahjong3.png" alt="缺哪一張" height="110"> | **缺哪一張** | 麻將桌上有一排同花色的數字牌（一～九）。補哪些牌，就能把整排剛好分成「三張連號」或「三張一樣」的組？例如 2 3 4 是連號、5 5 5 是三張一樣。能補成功的牌可能不只一張，要全部點起來，再按「我選好了」。 |
+| <img src="img/reaction/mahjong3.png" alt="缺哪一張" height="110"> | **缺哪一張** | 麻將桌上有一排同花色的數字牌（一～九）。補哪些牌，就能把整排湊成「三張連號」或「三張一樣」的組，再加一對相同的牌？例如 2 3 4 是連號、5 5 5 是三張一樣。 |
 | <img src="img/reaction/reversi.png" alt="翻最多棋" height="110"> | **翻最多棋** | 這是黑白棋（奧賽羅）的殘局，你是黑棋。點一個空格下黑棋，夾住的白棋全部會翻過來。要下在「這一步能翻最多顆」的那一格（並列最多也算對）。下完會把每個位置能翻幾顆都標出來，你下的不是最多就結束，看你能過幾關。 |
 | <img src="img/reaction/gomoku.png" alt="堵住五子" height="110"> | **堵住五子** | 這是五子棋的盤面，白棋快要贏了。你只能下一顆黑棋，點那個唯一能化解的位置。 |
 | <img src="img/reaction/seesaw.png" alt="蹺蹺板比重" height="110"> | **蹺蹺板比重** | 蹺蹺板上一開始就坐著幾隻動物，板子是歪的。動物越大越重（身上的數字是重量），座位離支點越遠，壓得越用力：每隻動物的力道＝重量×離支點的格數。把動物拖到合適的座位，讓兩邊的力道加起來一樣，蹺蹺板就平衡了。 |
@@ -509,7 +509,7 @@ js/ghostleg_core.js                    鬼腳圖的共用工具（GhostlegCore�
 img/reaction/<id>.png                  選單每一格的縮圖（160 張，高 256 像素；make_icons.mjs 產生）
 css/dialog.css                         ★ 彈窗公版樣式（玩法說明、世界前 30 名、暱稱、進榜恭喜、結算、我有話要說共用一個外框與卡片；數值在 theme.css 的「彈窗公版」段）
 js/dialog.js                           ★ 彈窗公版（Dlg.open／Dlg.rule／Dlg.feedback／Dlg.toast）；彈窗蓋在標題列下面，「返回」隨時點得到
-js/reaction_kit4.js                     「秒反應」第四批共用小工具（方格地圖 kit.gridNeighbors／gridAdjacent／gridConnected／gridParityOk／hamPath：接電線、單行道等走格子的遊戲共用）
+js/reaction_kit4.js                     「秒反應」第四批共用小工具（方格地圖 kit.gridNeighbors／gridAdjacent／gridConnected／gridParityOk／hamPath：接電線、單行道等走格子的遊戲共用；V1.44.1 新增蜿蜒曲線 kit.meander／selfClear：誰先到？、照抄曲線共用）
 js/gomoku_bank.js                      堵住五子的題庫（V1.36.0，509 題：白棋沒有現成的四、卻能連續衝四取勝，且只有一格擋得住；自動產生，勿手改，產生器 test/reaction/gen_gomoku_bank.cjs；boot.js 要排在 reaction_gomoku.js 前面）
 js/reaction_<id>.js（V1.34 新增 51 款） carpet 鋪地毯／wirelink 接電線／oneway 單行道／mahjong3 缺哪一張／reversi 翻最多棋／gomoku 堵住五子／swapeven 換一張就平／weekday 推星期幾／gearmark 齒輪對記號／seesaw 蹺蹺板比重／findsquare 找正方形／checkers 跳棋跳最遠／inout 圈內圈外／gaspump 加到五百／milktea 奶茶調色／rotary 轉盤電話／swipecopy 反著滑／knockcount 敲幾下／menuslice 切菜單上的／inkword 字的顏色／calendar 記行事曆／layerdrink 照樣調一杯／seenchars 看過的字／doorslit 門縫偷看／stars 找星座／slicechar 切字／butterfly 蝴蝶不對稱／danmaku 彈幕找字／cardslap 心臟病／flags 舉旗子／huesort 色票排隊／kinetic 動態視力／coinsort 零錢入筒／groupphoto 大合照／fishbite 釣魚提竿／homerun 全壘打／windblow 大風吹／pearls 吸珍珠／fishtoy 釣魚玩具／countbills 數鈔票／ordercut 照號切水果／pinwheel 轉風車／dishes 洗盤子／beans 挑豆子／minus7 一路減七／sushi 迴轉壽司／change 找錢／discount 打了幾折／timepair 時間連連看／eyebrow 畫眉毛／dough 擀水餃皮
 js/reaction_<id>.js（V1.22 新增 23 款） copycurve 照抄曲線／isequal 等不等於／orderops 先乘除／remainder 求餘數／hiddendigit 遮住的數字／timeafter 幾點幾分後／wrongline 哪一行算錯／fillop 挑加減乘除／fastblink 誰閃得快／sneakmove 誰在偷偷動／farpair 哪對離最遠／dicechange 骰子少一點／whosaid 誰說的／tapback 倒著點／nthshape 第幾個出現／spingap 穿過旋轉縫／sudokuone 數獨猜一格／chequeamt 支票金額／mergechar 左右合字／flashlight 手電筒猜圖／racefirst 誰先衝線／spinpick 轉盤停哪格／alignchar 對準才看到

@@ -56,7 +56,7 @@ for (let i = 0; i < 300; i++) {
   ok(T.similarity(q.pts, jit) > 90, '輕微抖動仍 > 90：' + T.similarity(q.pts, jit).toFixed(2) + ' ' + q.type);
   // 故意亂畫（偵錯用的 wrong 路徑）一定過不了第 1 關的要求
   const badp = T.densify([q.start, { x: T.PW - 6, y: T.PH / 2 }, { x: 6, y: T.PH - 6 }, q.end], 3);
-  ok(T.similarity(q.pts, badp) < T.reqSim(1), '亂畫過不了：' + T.similarity(q.pts, badp).toFixed(1) + ' ' + q.type);
+  ok(T.similarity(q.pts, badp) < Math.max(T.reqSim(1), 60), '亂畫過不了（相似度要低於 ' + Math.max(T.reqSim(1), 60) + '；第 1 關的要求玩家調成 ' + T.reqSim(1) + '，亂畫也不該比 60 好）：' + T.similarity(q.pts, badp).toFixed(1) + ' ' + q.type);
 }
 // 難度：複雜曲線隨便畫一條直線過不了（第 7 關起的曲線，直線相似度 < 要求）
 let lineFail = 0, lineTot = 0;
@@ -74,7 +74,7 @@ for (let l = 2; l <= 60; l++) ok(T.bendsFor(l) >= T.bendsFor(l - 1) && T.bendsFo
 console.log('彎數：' + [1, 3, 5, 8, 12, 16, 20, 25].map(l => '第' + l + '關 ' + T.bendsFor(l)).join('　'));
 { // 實際量：沿曲線走，每隔約 12 像素取一點，數「轉向方向（左轉／右轉）的左右換邊次數」＝彎數；各種類（有彎數的）的平均彎數都隨關卡上升
   const bends = pts => { const r = T.resample(pts, 90); let last = 0, n = 0; for (let i = 2; i < r.length; i++) { const a = r[i - 2], b = r[i - 1], c = r[i], cr = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x); if (Math.abs(cr) < 8) continue; const s = cr > 0 ? 1 : -1; if (last && s !== last) n++; last = s; } return n; };
-  const avg = (lv, type) => { const xs = []; for (let i = 0; i < 400 && xs.length < 60; i++) { const q = T.makeCurve(lv, rnd, null); if (q.type === type) xs.push(bends(q.pts)); } return xs.length >= 10 ? xs.reduce((a, b) => a + b, 0) / xs.length : null; };
+  const avg = (lv, type) => { const xs = []; for (let i = 0; i < 2500 && xs.length < 60; i++) { const q = T.makeCurve(lv, rnd, null); if (q.type === type) xs.push(bends(q.pts)); } return xs.length >= 10 ? xs.reduce((a, b) => a + b, 0) / xs.length : null; };
   for (const type of ['rope', 'wave', 'bolt']) { const row = [6, 10, 14, 18, 22, 25].map(l => avg(l, type)).filter(v => v != null); let up = true; for (let i = 1; i < row.length; i++) if (row[i] < row[i - 1] - 0.6) up = false; ok(row.length >= 4 && up && row[row.length - 1] > row[0] + 2, type + ' 的實測彎數隨關卡上升：' + row.map(v => v.toFixed(1)).join(' → ')); console.log(type + ' 實測彎數（第 6/10/14/18/22/25 關）：' + row.map(v => v.toFixed(1)).join(' → ')); }
   // 重點：相鄰兩關（任何種類）的「名義彎數」不會往回掉（第 3 關十個彎、第 4 關又變簡單這種事不會發生）
   let bad2 = 0; for (let lv = 2; lv <= 40; lv++) for (let i = 0; i < 40; i++) { const a = T.makeCurve(lv - 1, rnd, null), b = T.makeCurve(lv, rnd, null); if (a.bends != null && b.bends != null && b.bends < a.bends) bad2++; } ok(bad2 === 0, '有彎數的種類：下一關的彎數永遠 ≥ 上一關：退步 ' + bad2 + ' 次');

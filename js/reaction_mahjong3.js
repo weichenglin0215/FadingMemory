@@ -1,26 +1,25 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_mahjong3.js — 秒反應・缺哪一張（企劃 231；V1.36.0 改成「聽牌」玩法：答案不只一張，要全部找出來）
    樣式：css/games/reaction_mahjong3.css（這款專屬的 class 一律以「mahjong3-」開頭；共用元件在 css/reaction_common.css）
-   麻將桌上一排同花色的數字牌（1～9，例如 2 3 4 5 6）。下面有九顆牌鍵（答案卡）：
-   **補哪些牌，就能把整排剛好分成一組一組的「三張連號」（例如 3 4 5）或「三張一樣」（例如 5 5 5）？**能補成功的牌可能有好幾張
-   （例如 2 3 4 5 6，補 1、4、7 都行：1 2 3＋4 5 6、2 3 4＋4 5 6、2 3 4＋5 6 7），**把全部都點起來，再按「我選好了」**；漏一張、多一張都算錯。
-   有的題目整排還要多留「一對」（兩張一樣的牌，就是麻將的「將」）：例如 1 1 2 3 4 5 6 7 8 9 9 9 9 … 這種才是真正的「聽牌」。
+   麻將桌上一排同花色的數字牌（1～9，例如 2 3 4 5 6 7 8 8 少一張）。下面有九顆牌鍵（答案卡）。
+   **每一關的規則都一樣（V1.44.1 統一）：整排牌要能湊成「若干組三張（連號 3 4 5，或三張一樣 5 5 5）＋剛好一對相同的牌（兩張一樣，麻將的「將」）」，也就是麻將的「胡牌」。**
+   補哪些牌就能胡牌？答案可能不只一張（例如 2 3 4 5 6 7 8 8 補 2、5、8 都行），**把所有能胡牌的牌都點起來，再按「我選好了」**；漏一張、多一張都算錯。
    畫面上方一直寫著規則（不會打麻將也看得懂）。
    ───────────────────────────────────────────────────────────────────
    · 這種題目，對人類來說難在哪（V1.36.0 的出題設計依據）：
        ① 「找全部」比「找一個」難非常多：要把九種牌逐一試過，而且每一張都要想「剩下的牌能不能分完」；找到一兩張就想收工，是最常見的錯誤（漏張）。
        ② 好找的答案是「補在旁邊」的牌（手上有 4 5，補 3 或 6）；藏起來的答案要換一種分法才看得到——
           例如 2 3 4 5 6：多數人只想到 2 3 4 ＋ 5 6（補 4、7）或 2 3 ＋ 4 5 6（補 1、4），看漏另一種；連續的牌越長、重複的牌越多，可以拆的方法越多，越容易漏。
-       ③ 有「一對」的真聽牌：湊成一組一組之外，還要剛好留一對，答案常常有 4、5 張以上（13 張的清一色最多可以聽到 9 張），而且常有「補了只能湊一部分」的誘餌牌。
+       ③ 一定有「一對」（真正的聽牌）：湊成一組一組之外，還要剛好留一對，答案常常有 4、5 張以上（13 張的清一色最多可以聽到 9 張），而且常有「補了只能湊一部分」的誘餌牌。
        ④ 麻將一種牌只有 4 張：手上已經有 4 張的牌，補不了第 5 張（「死牌」），明明湊得起來也不能算——很多人會忘記數張數。
-     所以出題時：答案張數、手牌張數、有沒有一對、誘餌牌數、死牌陷阱都隨關卡增加；候選題裡再挑「可以拆的分法最多」的那一題。
-   · 難度（都是線性）：手上的牌 5 → 14 張（TILES；沒有一對時補一張之後要是 3 的倍數，所以是 5、8、11、14 張；有一對時是 4、7、10、13 張，取最接近線性的那一個）、
-     答案張數 1 → 6（ANSWERS；沒有一對的題目最多只有 3 張）、「只補局部」的誘餌牌至少 0 → 3 個（DECOYS）、第 PAIR_FROM 關起有一對的題目越來越多（PAIR_P）、
-     限時 12 → 24 秒（TIME_S：牌多了要看得久，又要按「我選好了」，所以時間跟著變長；難度來自題目本身，不是靠趕時間）。
-   · 出題（makeLevel）：先隨機湊一副完整的牌（若干組連號／三張一樣，有的再加一對；同一個數字最多 4 張，牌愈集中愈容易有多張答案），拿走一張當題目，
+     所以出題時：答案張數、手牌張數、誘餌牌數、死牌陷阱都隨關卡增加；候選題裡再挑「可以拆的分法最多」的那一題。
+   · 難度（都是線性）：手上的牌 4 → 13 張（TILES；一定有一對，補一張之後要是 3 的倍數加 2，所以是 4、7、10、13 張，取最接近線性的那一個）、
+     答案張數 2 → 6（ANSWERS）、「只補局部」的誘餌牌至少 1 → 3 個（DECOYS）、死牌陷阱從第 DEAD_FROM 關起越來越多（DEAD_P）、
+     限時 10 → 30 秒（TIME_S：牌多了要看得久，又要按「我選好了」，所以時間跟著變長；難度來自題目本身，不是靠趕時間）。
+   · 出題（makeLevel）：先隨機湊一副完整的牌（若干組連號／三張一樣，再加一對；同一個數字最多 4 張，牌愈集中愈容易有多張答案），拿走一張當題目，
      再用程式窮舉 1～9 九種補法（winners），**答案張數要剛好等於這一關的目標**才出（目標湊不出來時才一張一張放寬）；
      而且要有至少 DECOYS 個誘餌（nearMisses：補了它之後，能湊出「比整排少一組」、而且那張牌自己有參加的分組，但湊不齊整排）。
-   · 判定：補的牌 x 能不能把「手牌＋x」完全分成三張一組（有一對的題目：還要剛好留一對）（canGroup：每次拿最小的牌，只有「三張一樣」、「兩張一樣當對」或「連號」三種拿法，遞迴窮舉）；
+   · 判定：補的牌 x 能不能把「手牌＋x」完全分成三張一組、而且剛好留一對（canGroup 的 needPair；每一關都要一對）（canGroup：每次拿最小的牌，只有「三張一樣」、「兩張一樣當對」或「連號」三種拿法，遞迴窮舉）；
      手上已經有 4 張的牌不能再補（MAX_SAME）。你選的牌必須剛好等於全部答案。
    · 揭曉：每個答案卡上色（選對＝綠、漏掉＝橘虛線、選錯＝紅）；上方列出每一張答案怎麼湊成組；選錯的牌會畫出「湊不起來的牌」（標紅），停格 2.8 秒。
    ═══════════════════════════════════════════════════════════════════ */
@@ -37,14 +36,12 @@
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
-    var TILES = [5, 14];                        /* 手上的牌數：第 1 關 → 到頂（沒有一對時實際是 5、8、11、14；有一對時是 4、7、10、13） */
-    var TIME_S = [12, 24];                      /* 每題限時（秒）：第 1 關 → 到頂（要找全部答案、還要按「我選好了」，牌多了要看得久，所以越後面越長） */
-    var ANSWERS = [1, 6];                       /* 答案（補了能湊成功的牌）有幾張：第 1 關 → 到頂（沒有一對的題目最多 3 張） */
-    var DECOYS = [0, 3];                        /* 「只補局部」的誘餌牌至少幾個：第 1 關 → 到頂 */
-    var PAIR_FROM = 4;                          /* 第幾關起才有「要多一對」的題目（前面幾關只有最單純的「全部分成三張一組」） */
-    var PAIR_P = [0.3, 0.85];                   /* 有一對的題目的機率：第 PAIR_FROM 關 → 到頂 */
+    var TILES = [5, 14];                        /* 手上的牌數：第 1 關 → 到頂（每一關都要一對，所以實際只會是 4、7、10、13） */
+    var TIME_S = [10, 30];                      /* 每題限時（秒）：第 1 關 → 到頂（要找全部答案、還要按「我選好了」，牌多了要看得久，所以越後面越長） */
+    var ANSWERS = [2, 6];                       /* 答案（補了能胡牌的牌）有幾張：第 1 關 → 到頂 */
+    var DECOYS = [1, 3];                        /* 「只補局部」的誘餌牌至少幾個：第 1 關 → 到頂 */
     var DEAD_FROM = 6;                          /* 第幾關起才會有「死牌陷阱」（手上已有 4 張、補第 5 張就湊得起來的牌；要補它是不行的） */
-    var DEAD_P = [0.2, 0.55];                   /* 出現死牌陷阱的題目機率：第 DEAD_FROM 關 → 到頂 */
+    var DEAD_P = [0.2, 0.66];                   /* 出現死牌陷阱的題目機率：第 DEAD_FROM 關 → 到頂 */
     var SHOW_COUNT_UNTIL = 3;                   /* 前幾關會告訴你「答案共幾張」，之後不說（要自己判斷找齊了沒） */
     var MAX_SAME = 4;                           /* 同一個數字最多幾張（真的麻將一種牌只有 4 張） */
     var CANDS = 6, TRIES = 6000;                /* 出題：收集幾個候選題再挑最難的；最多隨機湊幾副牌 */
@@ -52,20 +49,17 @@
     var NUMERALS = ['一', '二', '三', '四', '五', '六', '七', '八', '九'];  /* 麻將牌上的中文數字（一～九） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    /* 這一關有沒有「一對」：第 PAIR_FROM 關起，機率從 PAIR_P[0] 線性升到 PAIR_P[1] */
-    function pairProb(level) { return level < PAIR_FROM ? 0 : kit.ramp(level, PAIR_P[0], PAIR_P[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
-    /* 這一關手上幾張牌：線性算出 5～14，再取最接近的合法張數（沒有一對：3 的倍數減 1＝5、8、11、14；有一對：3 的倍數加 1＝4、7、10、13） */
-    function tilesFor(level, pair) {
-        var t = kit.ramp(level, TILES[0], TILES[1], RAMP_LEVELS);
-        if (pair) { var k2 = Math.round((t - 1) / 3); return Math.max(4, Math.min(13, k2 * 3 + 1)); }  /* Math.round：四捨五入成整數 */
-        var k = Math.round((t - 2) / 3);
-        return Math.max(5, Math.min(14, k * 3 + 2));
+    /* 這一關手上幾張牌：線性算出 TILES[0]～TILES[1]，再取最接近的合法張數（一定有一對：3 的倍數加 1＝4、7、10、13；補一張之後是 3 的倍數加 2＝一對加若干組） */
+    function tilesFor(level) {
+        var t = kit.ramp(level, TILES[0], TILES[1], RAMP_LEVELS);  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+        var k = Math.round((t - 1) / 3);                /* Math.round：四捨五入成整數 */
+        return Math.max(4, Math.min(13, k * 3 + 1));
     }
     function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
     function decoysFor(level) { return Math.round(kit.ramp(level, DECOYS[0], DECOYS[1], RAMP_LEVELS)); }
     function deadProb(level) { return level < DEAD_FROM ? 0 : kit.ramp(level, DEAD_P[0], DEAD_P[1], RAMP_LEVELS); }
-    /* 這一關的答案要幾張：線性 ANSWERS[0] → ANSWERS[1]；沒有一對的題目最多 3 張 */
-    function answersFor(level, pair) { return Math.min(pair ? ANSWERS[1] : 3, Math.max(1, Math.round(kit.ramp(level, ANSWERS[0], ANSWERS[1], RAMP_LEVELS)))); }
+    /* 這一關的答案要幾張：線性 ANSWERS[0] → ANSWERS[1] */
+    function answersFor(level) { return Math.max(1, Math.round(kit.ramp(level, ANSWERS[0], ANSWERS[1], RAMP_LEVELS))); }
     /* 牌（1～9 的陣列）→ 每個數字幾張（counts[1]～counts[9]，counts[0] 不用） */
     function countsOf(tiles) { var c = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; tiles.forEach(function (t) { c[t]++; }); return c; }  /* forEach：對陣列的每個元素各做一次 */
     /* 能不能完全分成「三張連號」或「三張一樣」的組？needPair 為真時還要剛好留一對。
@@ -164,12 +158,11 @@
         }
         return null;
     }
-    /* 出一關：{ hand（排序後的手牌）, winners（全部答案，由小到大）, near（誘餌牌）, dead（死牌陷阱）, pair（要不要多一對）, ways（這些答案總共有幾種分法）, tiles, target（這一關的答案張數目標）, level }
-       forcePair（選填，測試用）：true／false 強制有沒有一對 */
-    function makeLevel(level, rand, forcePair) {
+    /* 出一關：{ hand（排序後的手牌）, winners（全部答案，由小到大）, near（誘餌牌）, dead（死牌陷阱）, pair（一律 true：每一關都要一對）, ways（這些答案總共有幾種分法）, tiles, target（這一關的答案張數目標）, level } */
+    function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var pair = forcePair == null ? rand() < pairProb(level) : !!forcePair;
-        var m = tilesFor(level, pair), g = pair ? (m - 1) / 3 : (m + 1) / 3, need = decoysFor(level), target = answersFor(level, pair), best = null, got = 0;
+        var pair = true;                                /* 每一關都是「若干組三張＋一對」（V1.44.1：不再有沒有一對的題目） */
+        var m = tilesFor(level), g = (m - 1) / 3, need = decoysFor(level), target = answersFor(level), best = null, got = 0;
         var wantDead = rand() < deadProb(level);                                        /* 這一題要不要做「死牌陷阱」（做不出來時，後半段的嘗試會改成不要） */
         for (var tr = 0; tr < TRIES && got < CANDS; tr++) {
             var tgt = Math.max(1, target - Math.floor(tr * 4 / TRIES));                /* 目標湊不出來時，一張一張放寬（最多放寬 3 張） */
@@ -199,9 +192,9 @@
             if (!best || score > best.score) best = { hand: hand, winners: win, near: near, dead: dead, pair: pair, ways: ways, tiles: m, target: tgt, level: level, score: score };
         }
         if (best) return best;
-        /* 保底（極少用到）：1 1 1 2 3，補 1（111＋123）或補 4（111＋234）都行 */
-        var fb = [1, 1, 1, 2, 3];
-        return { hand: fb, winners: winners(fb, false), near: nearMisses(fb, false), dead: deadTraps(fb, false), pair: false, ways: 2, tiles: 5, target: 2, level: level, score: 0 };
+        /* 保底（極少用到）：2 3 4 5，補 2（22＋345）或補 5（234＋55）都能胡牌 */
+        var fb = [2, 3, 4, 5];
+        return { hand: fb, winners: winners(fb, true), near: nearMisses(fb, true), dead: deadTraps(fb, true), pair: true, ways: 2, tiles: 4, target: 2, level: level, score: 0 };
     }
     /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
@@ -265,9 +258,9 @@
         var q = makeLevel(level, api.rand), W = q.winners, isWin = {}, sel = {};
         W.forEach(function (w) { isWin[w] = true; });
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
-        console.log('[缺哪一張] 第 ' + level + ' 關：手牌 ' + q.hand.join(' ') + '（' + q.hand.length + ' 張' + (q.pair ? '，要一對' : '') + '），答案 ' + W.join('、') + '（' + W.length + ' 張）；誘餌 ' + (q.near.join('、') || '（無）') + '；死牌陷阱 ' + (q.dead.join('、') || '（無）') + '；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
+        console.log('[缺哪一張] 第 ' + level + ' 關：手牌 ' + q.hand.join(' ') + '（' + q.hand.length + ' 張，要一對），答案 ' + W.join('、') + '（' + W.length + ' 張）；誘餌 ' + (q.near.join('、') || '（無）') + '；死牌陷阱 ' + (q.dead.join('、') || '（無）') + '；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        var rule = h('div', { 'class': 'qz-note mahjong3-rule', text: q.pair ? '補哪些牌，整排能分成一組一組的三張（連號或三張一樣），剛好再留一對？' : '補哪些牌，整排能剛好分成「三張連號」或「三張一樣」的組？' });
+        var rule = h('div', { 'class': 'qz-note mahjong3-rule', text: '要湊成：三張連號或三張一樣，再加一對相同' });
         stage.appendChild(rule);
         var table = h('div', { 'class': 'mahjong3-table' });
         stage.appendChild(table);
@@ -290,7 +283,7 @@
             var n = chosen().length;
             go.disabled = n === 0;
             go.textContent = n ? '我選好了（選了 ' + n + ' 張）' : '我選好了';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-            note.textContent = level <= SHOW_COUNT_UNTIL ? '答案共 ' + W.length + ' 張' : '答案可能不只一張，要全部找出來';
+            note.textContent = level <= SHOW_COUNT_UNTIL ? '選出所有能胡牌的答案（共 ' + W.length + ' 張）' : '選出所有能夠胡牌的答案（可能不只一張）';
         }
         refresh();
         function toggle(v) {
@@ -301,7 +294,7 @@
             refresh();
         }
         api.timer(timeMs(level), function () { judge(); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
-        if (level === 1 && kit.once('mahjong3.hint')) kit.hintOn(stage, keyEls[W[0] - 1], { mode: 'tap', delay: 700, text: '點補上去能湊成組的牌，再按「我選好了」' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
+        if (level === 1 && kit.once('mahjong3.hint')) kit.hintOn(stage, keyEls[W[0] - 1], { mode: 'tap', delay: 700, text: '點補上去能胡牌的牌（可能不只一張），再按「我選好了」' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
         /* 揭曉：全部選對（剛好等於全部答案）才過關；時間到就拿目前選的來算 */
         function judge() {
@@ -357,14 +350,14 @@
     var G = {
         id: ID,
         name: '缺哪一張',
-        rule: '麻將桌上有一排同花色的數字牌（一～九）。**補哪些牌，就能把整排剛好分成「三張連號」或「三張一樣」的組？**例如 2 3 4 是連號、5 5 5 是三張一樣。**能補成功的牌可能不只一張，要全部點起來**，再按「我選好了」。有的題目整排還要多留**一對（兩張一樣）**。一種牌最多 4 張，手上已經有 4 張就不能再補。漏一張、多一張都算錯，來不及也結束，看你能過幾關。越後面，牌越多、答案越多、越多牌「補了只能湊一部分」來騙你！',
+        rule: '麻將桌上有一排同花色的數字牌（一～九）。**補哪些牌，就能把整排湊成「三張連號」或「三張一樣」的組，再加一對相同的牌？**例如 2 3 4 是連號、5 5 5 是三張一樣。**每一關整排都還要剛好多留一對（兩張一樣）**，湊成這樣就是麻將的「胡牌」。**能夠胡牌的答案可能不只一張，要全部點起來**，再按「我選好了」。一種牌最多 4 張，手上已經有 4 張就不能再補。漏一張、多一張都算錯，來不及也結束，看你能過幾關。越後面，牌越多、答案越多、越多牌「補了只能湊一部分」來騙你！',
         mount: mount,
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
-            pairProb: pairProb, tilesFor: tilesFor, timeMs: timeMs, decoysFor: decoysFor, answersFor: answersFor, countsOf: countsOf, canGroup: canGroup, groupsOf: groupsOf, countWays: countWays, bestGroups: bestGroups,
+            tilesFor: tilesFor, timeMs: timeMs, decoysFor: decoysFor, answersFor: answersFor, countsOf: countsOf, canGroup: canGroup, groupsOf: groupsOf, countWays: countWays, bestGroups: bestGroups,
             winners: winners, deadTraps: deadTraps, deadProb: deadProb, nearMisses: nearMisses, randomComplete: randomComplete, makeLevel: makeLevel, layout: layout, decompText: decompText, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, TILES: TILES, TIME_S: TIME_S, ANSWERS: ANSWERS, DECOYS: DECOYS, PAIR_FROM: PAIR_FROM, PAIR_P: PAIR_P, DEAD_FROM: DEAD_FROM, DEAD_P: DEAD_P, SHOW_COUNT_UNTIL: SHOW_COUNT_UNTIL, MAX_SAME: MAX_SAME, MAX_LEVEL: MAX_LEVEL
+            RAMP_LEVELS: RAMP_LEVELS, TILES: TILES, TIME_S: TIME_S, ANSWERS: ANSWERS, DECOYS: DECOYS, DEAD_FROM: DEAD_FROM, DEAD_P: DEAD_P, SHOW_COUNT_UNTIL: SHOW_COUNT_UNTIL, MAX_SAME: MAX_SAME, MAX_LEVEL: MAX_LEVEL
         }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */

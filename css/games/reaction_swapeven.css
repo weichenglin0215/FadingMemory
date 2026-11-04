@@ -73,6 +73,11 @@
     transition: background 0.3s;                        /* 狀態改變時的過渡動畫（屬性、時間、緩動）：background 0.3s */
 }
 
+/* 「swapeven-bub」在「隱藏總和（第 HIDE_SUM_FROM 關起）」時的樣子：整個泡泡看不見，但位置還在 */
+.swapeven-bub--hide {
+    visibility: hidden;                                 /* 看不見（但還佔著位置，版面不會跳動）：hidden */
+}
+
 /* 「swapeven-bub」在「正確（成功）時」的樣子的樣式 */
 .swapeven-bub--ok {
     background: var(--c-ok-light);                      /* 背景：主題變數 --c-ok-light */

@@ -12,6 +12,9 @@
      誘餌：「差整整 2g」的對數至少 FULL_DECOYS、「反方向差 g」的對數至少 REV_DECOYS（太難湊到時會放寬，題目一定會出）。
    · 難度（線性）：每排牌數 3 → 8（CARDS）、數字上限 9 → 60（VMAX）、限時 12 → 6 秒（TIME_S）、
      差的一半的範圍：第 1 關固定 3（兩排差 6），之後下限 3 → 2、上限 3 → 15（HALF_MIN／HALF_MAX）、誘餌對數 1 → 3 與 0 → 2。
+   · 每排只有 2 張牌時（CARDS 設 2）：上排 p、q，下排 r、s，總和相差 2g 就一定 p − r ＝ q − s ＝ g，所以一定剛好有「兩組」答案（換 p、r 或換 q、s 都行），不可能只有一組；
+     這種題目兩組都算對，揭曉時兩組都標綠框。3 張以上才是唯一答案。
+   · 總和提示：泡泡裡的「總和 XX」從第 HIDE_SUM_FROM 關起隱藏（要自己把牌加起來），交換之後或時間到才顯示。
    · 揭曉：交換動畫照做，泡泡裡的總和換成交換後的數字；答錯時再用綠框標出正確的兩張，並說明「差的一半」。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
@@ -27,14 +30,16 @@
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
-    var CARDS = [3, 8];                         /* 每排幾張牌：第 1 關 → 到頂 */
-    var VMAX = [9, 60];                         /* 牌上的數字範圍 1～VMAX：第 1 關 → 到頂 */
-    var TIME_S = [12, 6];                       /* 每題限時（秒）：第 1 關 → 到頂 */
-    var HALF_MIN = [3, 2], HALF_MAX = [3, 15];  /* 「差的一半」的下限／上限（第 1 關固定 3，也就是兩排差 6） */
+    var CARDS = [2.4, 6.0];                         /* 每排幾張牌：第 1 關 → 到頂 */
+    var VMAX = [9, 99];                         /* 牌上的數字範圍 1～VMAX：第 1 關 → 到頂 */
+    var TIME_S = [60, 180];                       /* 每題限時（秒）：第 1 關 → 到頂 */
+    var HALF_MIN = [2, 2], HALF_MAX = [3, 15];  /* 「差的一半」的下限／上限（第 1 關固定 3，也就是兩排差 6） */
     var FULL_DECOYS = [1, 3];                   /* 誘餌：「差整整 2g（＝兩排的差）」的牌對數至少幾對 */
     var REV_DECOYS = [0, 2];                    /* 誘餌：「反方向差 g」的牌對數至少幾對 */
+    var FILL_W = 0.92;                          /* 數字佔答案卡寬度的比例（0～1，越大數字越大；數字會自動算大小，剛好填到這個寬度） */
+    var HIDE_SUM_FROM = 5;                      /* 第幾關起隱藏泡泡裡的「總和 XX」提示（要自己把每排的牌加起來）：4＝第 4 關起隱藏；1＝一開始就隱藏；填很大的數字（例如 999）＝永遠顯示。交換之後或時間到，一定會顯示總和 */
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
-    var TRIES = 4000, RELAX_AT = 2000;          /* 出題最多試幾次；試超過 RELAX_AT 次還湊不到誘餌就放寬 */
+    var TRIES = 4000, RELAX_AT = 2000;          /* 出題最多試幾次；試超過 RELAX_AT 次還湊不到誘餌就放寬（超過 RELAX_AT 加 1000 次連「差 2g」的誘餌也不要求） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return Math.round(kit.ramp(level, pair[0], pair[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
@@ -44,6 +49,7 @@
     function halfRange(level) { return [ramp(level, HALF_MIN), ramp(level, HALF_MAX)]; }
     function fullDecoysFor(level) { return ramp(level, FULL_DECOYS); }
     function revDecoysFor(level) { return ramp(level, REV_DECOYS); }
+    function hideSumAt(level) { return level >= HIDE_SUM_FROM; }                    /* 這一關要不要隱藏泡泡裡的總和 */
     function sum(a) { var s = 0; for (var i = 0; i < a.length; i++) s += a[i]; return s; }
     /* 交換上排第 i 張、下排第 j 張之後，「上排總和 − 下排總和」（0 ＝ 一樣＝答對） */
     function gapAfter(A, B, i, j) { return (sum(A) - sum(B)) - 2 * (A[i] - B[j]); }
@@ -70,7 +76,7 @@
         }
         return out;
     }
-    /* 出一關：{ A, B（兩排的數字）, sA, sB, half（差的一半，有正負：A 答案牌 − B 答案牌）, ans: { i, j }, full, rev（誘餌對數）, k, V, level } */
+    /* 出一關：{ A, B（兩排的數字）, sA, sB, half（差的一半，有正負：A 答案牌 − B 答案牌）, ans: { i, j }（第一組答案）, all（全部答案；每排 3 張以上一定只有一組，每排 2 張一定剛好兩組）, full, rev（誘餌對數）, k, V, level } */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var k = cardsFor(level), V = vmaxFor(level), hr = halfRange(level);
@@ -85,16 +91,17 @@
             if (!restB) continue;
             var A = kit.shuffle([aStar].concat(restA), rand), B = kit.shuffle([bStar].concat(restB), rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
             var ans = answers(A, B);
-            if (ans.length !== 1) continue;
+            if (ans.length !== 1 && !(k === 2 && ans.length === 2)) continue;          /* 每排 2 張時數學上一定有兩組答案（見檔頭），其他情況答案要唯一 */
             var needFull = 2 * hh <= V - 1 ? fullDecoysFor(level) : 0, needRev = revDecoysFor(level);
             if (tr >= RELAX_AT) { needFull = Math.min(needFull, 1); needRev = 0; }
+            if (tr >= RELAX_AT + 1000) needFull = 0;
             var full = countDiff(A, B, 2 * g), rev = countDiff(A, B, -g);
             if (full < needFull || rev < needRev) continue;
-            return { A: A, B: B, sA: sum(A), sB: sum(B), half: g, ans: ans[0], full: full, rev: rev, k: k, V: V, level: level };
+            return { A: A, B: B, sA: sum(A), sB: sum(B), half: g, ans: ans[0], all: ans, full: full, rev: rev, k: k, V: V, level: level };
         }
-        /* 保底（極少用到）：固定的一題 */
-        var fa = [9, 3, 5], fb = [6, 1, 4];
-        return { A: fa, B: fb, sA: 17, sB: 11, half: 3, ans: answers(fa, fb)[0], full: countDiff(fa, fb, 6), rev: countDiff(fa, fb, -3), k: 3, V: 9, level: level };
+        /* 保底（極少用到）：固定的一題（牌數跟著 k：每排 2 張就用 2 張的題，否則 3 張） */
+        var fa = k === 2 ? [6, 4] : [9, 3, 5], fb = k === 2 ? [3, 1] : [6, 1, 4], fans = answers(fa, fb);
+        return { A: fa, B: fb, sA: sum(fa), sB: sum(fb), half: 3, ans: fans[0], all: fans, full: countDiff(fa, fb, 6), rev: countDiff(fa, fb, -3), k: fa.length, V: 9, level: level };
     }
     /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
@@ -137,6 +144,21 @@
         var W = stage.clientWidth || 472, gap = 6, cw = Math.min(78, Math.floor((W - 16 - (k - 1) * gap) / k)), ch = Math.round(cw * 1.35);  /* Math.floor：無條件捨去成整數 */
         var x0 = Math.round((W - (k * cw + (k - 1) * gap)) / 2);
         var yA = 144, yB = yA + ch + 112;
+        /* 數字字級：讓「這一關最寬的數字」（盤面上最大那個數字的位數 × 最寬的一個數字）剛好填滿答案卡的寬度（扣掉邊框、留一點空隙），高度也不能超過卡片；量字寬用瀏覽器真正的字型 */
+        function fitFont() {
+            var probe = h('div', { 'class': 'swapeven-card', text: '0' });
+            probe.style.visibility = 'hidden'; stage.appendChild(probe);
+            var digits = String(Math.max.apply(null, A.concat(B))).length, cs = window.getComputedStyle(probe), widest = 0, fs = Math.round(cw * (digits >= 2 ? 0.46 : 0.58));   /* getComputedStyle：讀出元素「實際算出來」的樣式 */
+            try {
+                var ctx = document.createElement('canvas').getContext('2d');
+                ctx.font = cs.fontWeight + ' 100px ' + cs.fontFamily;
+                for (var d = 0; d <= 9; d++) widest = Math.max(widest, ctx.measureText(String(d)).width);
+                if (widest > 0) fs = Math.floor(Math.min(((cw - 6) * FILL_W) / (widest * digits) * 100, (ch - 6) * 0.85));
+            } catch (e) { /* 量不到字寬就用估計的大小 */ }
+            stage.removeChild(probe);
+            return fs;
+        }
+        var fontPx = fitFont();
         var tip = h('div', { 'class': 'qz-note swapeven-tip', text: '上下各點一張交換，讓兩排總和一樣' });
         stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         stage.appendChild(h('div', { 'class': 'swapeven-table' }));
@@ -147,11 +169,13 @@
             var wrap = h('div', { 'class': 'swapeven-who' });
             wrap.style.top = top + 'px';
             face(wrap);
-            var b = h('div', { 'class': 'swapeven-bub', text: who + ' 總和 ' + sum0 });
+            var b = h('div', { 'class': 'swapeven-bub' + (hideSum ? ' swapeven-bub--hide' : ''), text: who + ' 總和 ' + sum0 });
             wrap.appendChild(b);
             stage.appendChild(wrap);                    /* 把整個遊戲區放進舞台（放進去，畫面上才看得到） */
             return b;
         }
+        var hideSum = hideSumAt(level);                 /* 這一關要不要隱藏總和（揭曉時 showSums 會把它顯示出來） */
+        function showSums() { bubA.classList.remove('swapeven-bub--hide'); bubB.classList.remove('swapeven-bub--hide'); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變 */
         var bubA = bubble(56, '上排', q.sA), bubB = bubble(yB + ch + 30, '下排', q.sB);
 
         function pos(row, idx) { return { left: x0 + idx * (cw + gap), top: row === 0 ? yA : yB }; }
@@ -160,7 +184,7 @@
             arr.forEach(function (v, idx) {
                 var el = h('div', { 'class': 'swapeven-card', text: String(v) });
                 var p = pos(row, idx);
-                el.style.cssText = 'left:' + p.left + 'px;top:' + p.top + 'px;width:' + cw + 'px;height:' + ch + 'px;font-size:' + Math.round(cw * (q.V >= 10 ? 0.46 : 0.58)) + 'px;';
+                el.style.cssText = 'left:' + p.left + 'px;top:' + p.top + 'px;width:' + cw + 'px;height:' + ch + 'px;font-size:' + fontPx + 'px;';
                 stage.appendChild(el);
                 cards[row].push(el);
                 kit.onTap(el, function () { choose(row, idx); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
@@ -188,6 +212,7 @@
             elB.style.left = pa.left + 'px'; elB.style.top = pa.top + 'px';
             var sA2 = q.sA - a + b, sB2 = q.sB - b + a, ok = sA2 === sB2;
             api.after(560, function () {                /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+                showSums();
                 bubA.textContent = '上排 總和 ' + sA2; bubB.textContent = '下排 總和 ' + sB2;  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 bubA.classList.add(ok ? 'swapeven-bub--ok' : 'swapeven-bub--bad'); bubB.classList.add(ok ? 'swapeven-bub--ok' : 'swapeven-bub--bad');
                 if (ok) {
@@ -211,12 +236,12 @@
         function explainLong() { var d = Math.abs(q.sA - q.sB); return '兩排差 ' + d + '，要換「差的一半」' + (d / 2) + ' 的兩張：' + A[q.ans.i] + ' 和 ' + B[q.ans.j]; }
         /* 標出正確的兩張牌（綠框；牌會跟著動畫換位，所以標在牌上） */
         function reveal() {
-            cards[0][q.ans.i].classList.add('swapeven-card--ans'); cards[1][q.ans.j].classList.add('swapeven-card--ans');
+            q.all.forEach(function (a) { cards[0][a.i].classList.add('swapeven-card--ans'); cards[1][a.j].classList.add('swapeven-card--ans'); });
         }
         /* 時間到：算失敗（api.fail），通常會把正確答案亮出來 */
         function timeout() {
             if (locked || api.over) return;
-            locked = true; reveal();
+            locked = true; reveal(); showSums();
             info.textContent = '時間到！' + explain();
             kit.flash(stage, false, api.my);
             api.fail({ delay: 2800, lines: ['時間到！', explainLong()] });
@@ -232,14 +257,14 @@
     var G = {
         id: ID,
         name: '換一張就平',
-        rule: '上下兩排數字牌，頭上的泡泡寫著各自的總和。**上排點一張、下排點一張，兩張交換**，要讓**交換後兩排的總和一樣**。答案只有一組。小心：兩排差多少，不是找差多少的牌，要找的是「**差的一半**」！選錯或來不及就結束，看你能過幾關。越後面，牌越多、數字越大、時間越短。',
+        rule: '上下兩排數字牌，頭上的泡泡寫著各自的總和。**上排點一張、下排點一張，兩張交換**，要讓**交換後兩排的總和一樣**。答案通常只有一組。小心：兩排差多少，不是找差多少的牌，要找的是「**差的一半**」！選錯或來不及就結束，看你能過幾關。越後面，牌越多、數字越大、時間越短，連泡泡裡的總和都不再告訴你，要自己加！',
         mount: mount,
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             cardsFor: cardsFor, vmaxFor: vmaxFor, timeMs: timeMs, halfRange: halfRange, fullDecoysFor: fullDecoysFor, revDecoysFor: revDecoysFor,
             sum: sum, gapAfter: gapAfter, answers: answers, countDiff: countDiff, composition: composition, makeLevel: makeLevel, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, CARDS: CARDS, VMAX: VMAX, TIME_S: TIME_S, HALF_MIN: HALF_MIN, HALF_MAX: HALF_MAX, FULL_DECOYS: FULL_DECOYS, REV_DECOYS: REV_DECOYS, MAX_LEVEL: MAX_LEVEL
+            RAMP_LEVELS: RAMP_LEVELS, CARDS: CARDS, VMAX: VMAX, TIME_S: TIME_S, HALF_MIN: HALF_MIN, HALF_MAX: HALF_MAX, FULL_DECOYS: FULL_DECOYS, REV_DECOYS: REV_DECOYS, MAX_LEVEL: MAX_LEVEL, HIDE_SUM_FROM: HIDE_SUM_FROM, FILL_W: FILL_W, hideSumAt: hideSumAt
         }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */

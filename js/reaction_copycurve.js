@@ -55,9 +55,10 @@
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var BENDS = [2, 10];                        /* 彎數（轉折點、半個波、轉角的個數）：第 1 關 → 到頂關卡（RAMP_LEVELS）線性；每一種曲線都照這個數字出，難度才不會忽高忽低（V1.34） */
     var RIGHT_MAX = 8;                          /* 直角轉彎最多幾段線（彎數很多的後期關卡，放不進長方格就會一直重抽，所以封頂） */
-    var ROPE_P = 0.5;                           /* 有「繩子曲線」可選的關卡，抽到它的機率（其餘種類平分） */
-    var ROPE_YJIT = [0.8, 1.3];                 /* 繩子曲線：轉折點上下打亂的幅度（倍的間距）：第 1 關 → 到頂；越大越會往回走 */
-    var ROPE_SWING = 0.8;                       /* 繩子曲線：相鄰兩個轉折點的左右距離，至少是半幅寬的幾倍 */
+    var ROPE_P = 0.8;                           /* 有「繩子曲線」（蜿蜒曲線，像手畫的）可選的關卡，抽到它的機率（其餘種類平分；直角轉彎、閃電、迴紋針比較生硬，所以只佔少數） */
+    var ROPE_ALT = [0.8, 0.6];                  /* 繩子曲線：轉向「左右交替」的機率，第 1 關 → 到頂；交替＝S 形的大圓弧，其餘機率連續往同一邊轉＝繞出圈圈、螺旋（越後面越容易繞圈） */
+    var ROPE_RADIUS = [0.14, 0.34];             /* 繩子曲線：每個圓弧的半徑（占曲線可用寬度的比例）；越大＝大波浪 */
+    var ROPE_ARC = [60, 230];                   /* 繩子曲線：每個圓弧轉多少度（最小, 最大）；轉得多＝繞圈、螺旋 */
     var ROPE_CLEAR = 24, ROPE_SEP = 70;         /* 繩子曲線不重疊：弧長相隔超過 ROPE_SEP 像素的兩點，距離都要 ≥ ROPE_CLEAR 像素 */
     /* 各種曲線出現的關卡範圍 [從第幾關起, 到第幾關為止]：S 形太平緩，第 3 關之後就不再出現（不然拿直線隨便畫都過關） */
     var TYPE_RANGE = { scurve: [1, 3], rope: [1, 999], wave: [3, 999], right: [6, 999], bolt: [9, 999], spiral: [12, 999], clip: [15, 999] };
@@ -119,96 +120,19 @@
         for (var i = 0; i <= n; i++) { var a = a0 + (a1 - a0) * i / n; out.push({ x: cx + r * Math.cos(a), y: cy - r * Math.sin(a) }); }
         return out;
     }
-    /* ═══ 繩子曲線（V1.34 玩家意見：抄「誰先到？」的曲線畫法，讓曲線更有變化）═══
-       畫法抄自 js/reaction_curves.js（誰先到？的尋寶繩子）：
-       · 一條曲線有 k 個「轉折點」：轉折點的左右位置差異很大（大多左右交替、偶爾連續同一邊；相鄰兩點的左右距離至少 ROPE_SWING 倍半幅寬、大小不一），
-         上下位置也故意打亂（上下間距 × 打亂幅度），所以路線會忽左忽右、有時還會往回走，不是工整的正弦波；
-       · 轉折點是「一個一個加上去」的，每加一個就檢查整條折線有沒有交叉、有沒有貼太近（至少 ROPE_CLEAR 像素）、有沒有折成太尖的髮夾彎；
-       · 最後用 Catmull-Rom 曲線把「起點、所有轉折點、終點」連成一條平滑的曲線（每約 STEP 像素一點），再檢查真正畫出來的曲線：
-         不跑出太多、「路徑上相隔超過 ROPE_SEP 像素的兩點」距離都要 ≥ ROPE_CLEAR（不會自己貼在自己身上）。
-       · 跟「誰先到？」不同的地方：起點、終點的左右位置也隨機（不一定都在正中間）；轉折點的數量固定＝這一關的彎數 bendsFor(level)。 */
-    var ROPE_FRAC = 0.86;                                             /* 轉折點最多伸到半幅寬的這個比例（曲線過彎時會稍微衝出去，要留空間） */
-    function ptSegDist(p, q, r) { return distToPoly(p, [q, r]); }
-    function segSegDist(a, b, c, e) { return segCross(a, b, c, e) ? 0 : Math.min(ptSegDist(a, c, e), ptSegDist(b, c, e), ptSegDist(c, a, b), ptSegDist(e, a, b)); }
-    /* 折線 P（起點、轉折點…、終點）有沒有「自己交叉／貼太近／折成髮夾彎」：沒有＝true */
-    function polyClear(P, clear) {
-        var need = clear * 1.25, i, j;
-        for (i = 0; i + 1 < P.length; i++) for (j = i + 2; j + 1 < P.length; j++) if (segSegDist(P[i], P[i + 1], P[j], P[j + 1]) < need) return false;
-        for (i = 0; i + 2 < P.length; i++) if (ptSegDist(P[i], P[i + 1], P[i + 2]) < clear || ptSegDist(P[i + 2], P[i], P[i + 1]) < clear) return false;
-        return true;
-    }
-    /* 起點（u0）、轉折點 [{u,v}]、終點（u1）→ 折線的點：u＝左右位置（−1～1，相對半幅寬）、v＝上下位置（0～1） */
-    function ropePoly(u0, u1, turn, halfW, H) {
-        var P = [{ x: u0 * halfW * ROPE_FRAC, y: 0 }];
-        turn.forEach(function (t) { P.push({ x: t.u * halfW * ROPE_FRAC, y: t.v * H }); });  /* forEach：對陣列的每個元素各做一次 */
-        P.push({ x: u1 * halfW * ROPE_FRAC, y: H });
-        return P;
-    }
-    /* Catmull-Rom 曲線：把控制點連成平滑曲線，每段依長度取點（約每 STEP 像素一個），並記下累積弧長 s */
-    function catmull(ctrl) {
-        var pts = [], s = 0, n = ctrl.length;
-        function at(i) { return ctrl[Math.max(0, Math.min(n - 1, i))]; }
-        for (var i = 0; i < n - 1; i++) {
-            var p0 = at(i - 1), p1 = at(i), p2 = at(i + 1), p3 = at(i + 2), m = Math.max(2, Math.ceil(kit.dist(p1.x, p1.y, p2.x, p2.y) / STEP));
-            for (var j = (i === 0 ? 0 : 1); j <= m; j++) {
-                var t = j / m, t2 = t * t, t3 = t2 * t;
-                var x = 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
-                var y = 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
-                if (pts.length) { var q = pts[pts.length - 1]; s += kit.dist(x, y, q.x, q.y); }
-                pts.push({ x: x, y: y, s: s });
-            }
-        }
-        return pts;
-    }
-    /* 畫出來的曲線有沒有在範圍內、有沒有自己貼自己（用格子雜湊：只比較相鄰格子裡的點，O(n)）：好＝true */
-    function ropeValid(pts, box) {
-        var cell = ROPE_CLEAR, grid = {}, i;
-        for (i = 0; i < pts.length; i++) {
-            var p = pts[i];
-            if (p.x < box.x0 || p.x > box.x1 || p.y < box.y0 || p.y > box.y1) return false;
-            var key = Math.floor(p.x / cell) + ',' + Math.floor(p.y / cell);  /* Math.floor：無條件捨去成整數 */
-            (grid[key] = grid[key] || []).push(i);
-        }
-        for (i = 0; i < pts.length; i++) {
-            var a = pts[i], cx = Math.floor(a.x / cell), cy = Math.floor(a.y / cell);
-            for (var dx = -1; dx <= 1; dx++) for (var dy = -1; dy <= 1; dy++) {
-                var arr = grid[(cx + dx) + ',' + (cy + dy)];
-                if (!arr) continue;
-                for (var k = 0; k < arr.length; k++) {
-                    var j = arr[k]; if (j <= i) continue;
-                    if (pts[j].s - a.s <= ROPE_SEP) continue;
-                    var ddx = pts[j].x - a.x, ddy = pts[j].y - a.y;
-                    if (ddx * ddx + ddy * ddy < ROPE_CLEAR * ROPE_CLEAR) return false;
-                }
-            }
-        }
-        return true;
-    }
-    /* 產生一條繩子曲線：bends＝轉折點個數；d＝難度 0～1（上下打亂的幅度隨難度增加）。回傳「還沒放進長方格」的原始座標（中心在原點），做不出來回傳 null */
+    /* ═══ 繩子曲線（V1.34 玩家意見：抄「誰先到？」的曲線畫法，讓曲線更有變化；之後再改成「蜿蜒」畫法）═══
+       · 用 kit.meander（見 js/reaction_kit4.js）走出一條像手畫的蜿蜒線：一段一段接起來，每段先直走一小段、再沿著一個圓弧轉彎（半徑 ROPE_RADIUS、轉的角度 ROPE_ARC 都隨機），
+         大多左右交替（S 形的大圓弧），偶爾連續往同一邊轉（繞出圈圈、螺旋）；圓弧的個數＝這一關的彎數 bendsFor(level)。上下左右都能走，曲線可以往回繞，
+         不再只是左右來回、直角轉彎或工整的迴紋針。
+       · 整條曲線不能自己交疊、不能貼太近：「路徑上相隔超過 ROPE_SEP 像素的兩點」距離都要 ≥ ROPE_CLEAR（重疊會讓玩家誤判）。
+       · 起點、終點的上下位置在兩端，左右位置不固定（跟「誰先到？」不同，那邊起點終點固定在正中間）。 */
+    /* 產生一條繩子曲線：bends＝圓弧個數；d＝難度 0～1（越難越容易繞圈）。回傳「還沒放進長方格」的原始座標（中心在原點），做不出來回傳 null */
     function genRope(bends, rand, d) {
-        var halfW = (PW - 2 * MG) / 2, H = PH - 2 * MG, k = Math.max(1, Math.round(bends)), yjit = kit.lerp(ROPE_YJIT[0], ROPE_YJIT[1], d == null ? 0.5 : d);
-        var box = { x0: -halfW * 1.2, x1: halfW * 1.2, y0: -0.06 * H, y1: 1.06 * H };
-        for (var attempt = 0; attempt < 80; attempt++) {
-            var u0 = kit.randFloat(-0.5, 0.5, rand), u1 = kit.randFloat(-0.5, 0.5, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
-            var turn = [], spacing = 1 / (k + 1), prevU = u0, side = rand() < 0.5 ? -1 : 1, fail = false, i, tries;
-            for (i = 1; i <= k && !fail; i++) {
-                var placed = false;
-                for (tries = 0; tries < 40 && !placed; tries++) {
-                    var v = kit.clamp(i * spacing + (rand() * 2 - 1) * yjit * spacing, 0.03, 0.97);
-                    if (rand() < 0.85) side = -side;                              /* 大多左右交替，偶爾連續同一邊 */
-                    var u = side * kit.randFloat(0.4, 1, rand);
-                    if (i > 1 && Math.abs(u - prevU) < ROPE_SWING) continue;  /* Math.abs：取絕對值（去掉負號） */
-                    turn.push({ u: u, v: v });
-                    if (polyClear(ropePoly(u0, u1, turn, halfW, H), ROPE_CLEAR)) { placed = true; prevU = u; } else turn.pop();
-                }
-                if (!placed) fail = true;
-            }
-            if (fail) continue;
-            var pts = catmull(ropePoly(u0, u1, turn, halfW, H));
-            if (!ropeValid(pts, box)) continue;
-            return pts.map(function (p) { return { x: p.x, y: p.y - H / 2 }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
-        }
-        return null;
+        var W = PW - 2 * MG, H = PH - 2 * MG, k = Math.max(2, Math.round(bends)), alt = kit.lerp(ROPE_ALT[0], ROPE_ALT[1], d == null ? 0.5 : d);
+        var line = Math.max(0.35, 0.9 * (H / W) / (k + 1));        /* 弧很少的時候，兩個弧之間要直走比較遠，才走得滿整個高度 */
+        var pts = kit.meander({ W: W, H: H, k: k, alt: alt, radius: ROPE_RADIUS, arc: ROPE_ARC, line: [0, line], clear: ROPE_CLEAR, sep: ROPE_SEP, margin: 4, scale: [0.5, 2.4], ds: STEP, tries: 400 }, rand);
+        if (!pts) return null;
+        return pts.map(function (p) { return { x: p.x - W / 2, y: p.y - H / 2 }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     }
     function genScurve(d, rand) {
         var A = kit.lerp(45, 96, d), H = PH - 2 * MG, sx = MG + 40, ex = PW - MG - 40, sgn = rand() < 0.5 ? 1 : -1;

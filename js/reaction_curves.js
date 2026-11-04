@@ -4,11 +4,12 @@
    黑色畫面，左右各一條從上到下的「尋寶路線」繩子，判斷哪一條比較短。按下按鈕後，兩顆球用
    一樣的速度沿著繩子滑下來，看誰先到。
    ───────────────────────────────────────────────────────────────────
-   · 繩子像在紙上畫出來的尋寶路線圖：起點在自己那一半畫面的上方中間、終點在下方中間（兩條一樣），中間經過
-     k 個「轉折點」。轉折點的左右位置差異很大（相鄰兩點至少隔 MIN_SWING 倍的半幅寬，而且大小不一、
-     不會對齊），上下位置也故意打亂（YJIT 倍的間距），所以路線會往回、往上走。每條繩子只在自己那一半，
-     不會跨到另一半。
-   · 轉折點之間用 Catmull-Rom 曲線連起來（每 3px 取一點，記錄累積弧長）。
+   · 繩子像手畫的蜿蜒尋寶路線：起點在自己那一半畫面的上方中間、終點在下方中間（兩條一樣）。曲線用 kit.meander（js/reaction_kit4.js）
+     「烏龜走路」走出來：一段一段接起來，每段先直走一小段、再沿著一個圓弧轉彎（半徑 ARC_RADIUS、轉的角度 ARC_DEG 都隨機），
+     共 k 個圓弧；大多左右交替（S 形的大圓弧），偶爾連續往同一邊轉（繞出圈圈、螺旋，機率隨關卡增加，見 altFor）。
+     上下左右都能走，曲線可以往回繞，不再只是把轉折點往左右移動。每條繩子只在自己那一半，不會跨到另一半。
+   · 走出來的密集曲線每隔 CTRL_GAP 像素取一個控制點，再用 Catmull-Rom 曲線連起來（每 3px 取一點，記錄累積弧長）；調整長度時，
+     只把控制點的左右位置乘上伸展倍率 α（左右壓扁或拉寬）。
    · 路徑不能重疊（validRope）：整條都在自己的半邊裡，而且「弧長相隔超過 SEP_PX 的兩點」距離都要 ≥ CLEAR_PX，
      所以不會自己交叉、也不會貼得太近（用格子雜湊檢查，O(n)）。
    · 長度差（長的比短的多幾 %）：第 1 關 30%，每關少 3%，最低 3%（diffFor）。做法：先隨機做出短的那條，
@@ -18,11 +19,11 @@
      （視覺陷阱，機率隨關卡線性上升）。
    · 第 DASH_FROM 關起畫成虛線：白色底線上疊紅色虛線，左右兩條的「紅段／白段」長度明顯不同，
      沒辦法靠數虛線段數來比長度。
+   · V1.44.0 玩家意見（曲線太死板）：以前的繩子大多只是把控制點往左右移動，上下都固定在一個梯子上，所以看起來很生硬。現在改成蜿蜒畫法（kit.meander）：
+     上下左右都能走、圓弧大小不一、偶爾繞圈，但整條曲線絕對不交疊（重疊會讓玩家誤判）。「照抄曲線」的繩子曲線也用同一個產生器。
    · V1.43.0 玩家意見：
-       ① **曲線儘量靠近左右兩側的邊緣、而且可以往上繞**（以前只是在中間左右扭動，很單調）：轉折點離中線至少 U_MIN（0.5）倍半幅寬
-         （以前 0.4）、短的那條的左右伸展倍率 ALPHA_SHORT（0.9～1.0，以前 0.8～0.98）、轉折點可以伸到半幅寬的 CTRL_FRAC（0.96，以前 0.86）、
-         相鄰兩點的左右距離至少 MIN_SWING（0.9 倍半幅寬）、上下打亂幅度 YJIT（1.0 → 1.5，以前 0.8 → 1.3；超過 1 就會往回走、往上繞）。
-         實測左右伸展約 143px（以前約 115px，半邊最多 190px）。
+       ① **曲線儘量靠近左右兩側的邊緣、而且可以往上繞**（以前只是在中間左右扭動，很單調）：（當時的做法是把轉折點拉向兩側、加大上下打亂幅度；
+         之後整個改成蜿蜒畫法，見上面第一條與「V1.44.0 玩家意見」。）
        ② **左右兩條虛線的紅白間距要接近**（以前一條 6／6、另一條 34／20，差太多，沒有誤導的作用）：兩條的虛線週期（紅段＋白段）
          只差在「週期 × 長度」讓兩條的虛線**段數幾乎一樣**——長的那條週期乘上 長度比 × (1＋隨機 −4%～＋6%)，所以靠數紅白段數猜不出誰比較短
          （段數差距比長度差距小，有時段數還是短的那條比較多），見 dashFor。
@@ -53,8 +54,10 @@
     /* 轉折點數量隨關卡增加 */
     var K_START = 3, K_END = 7, K_RAMP = 12;              /* 轉折點的數量 */
     /* 轉折點上下打亂的幅度（>1 時路線會往回走） */
-    var YJIT_START = 1.0, YJIT_END = 1.5;               /* 轉折點上下打亂的幅度（倍的間距，> 1 就會往回走）*/
-    var MIN_SWING = 0.9;                                  /* 相鄰兩個轉折點的左右距離，至少是半幅寬的幾倍 */
+    var ALT_START = 0.8, ALT_END = 0.6;                   /* 轉向「左右交替」的機率：第 1 關 → 到頂（K_RAMP 關）。交替＝S 形的大圓弧；其餘機率連續往同一邊轉＝繞出圈圈、螺旋（越後面越容易繞圈） */
+    var ARC_RADIUS = [0.14, 0.34];                        /* 蜿蜒曲線每個圓弧的半徑（占繩子可用寬度的比例）：越大圓弧越大、越像大波浪 */
+    var ARC_DEG = [60, 230];                              /* 每個圓弧轉多少度（最小, 最大）：轉得多＝繞圈、螺旋 */
+    var CTRL_GAP = 20;                                    /* 曲線上每隔幾像素取一個控制點（再用 Catmull-Rom 連成平滑曲線） */
     var TRAP_END = 0.7;                                   /* 「短的那條轉折比較多」的機率（線性上升到這個） */
     /* 第 4 關起畫成虛線（無法靠數段數比長度） */
     var DASH_FROM = 4;                                    /* 第幾關起是虛線 */
@@ -68,7 +71,6 @@
     /* 路徑不重疊：弧長相隔超過 SEP_PX 的兩點，距離要 ≥ CLEAR_PX */
     var CLEAR_PX = 24, SEP_PX = 70;                       /* 路徑不重疊：弧長相隔 > SEP_PX 的兩點距離 ≥ CLEAR_PX */
     var ALPHA_MIN = 0.2;                            /* 長的那條曲線的左右伸展倍率（alpha）最小值（短的那條用 ALPHA_SHORT） */
-    var U_MIN = 0.5;                                      /* 轉折點的左右位置至少離中線半幅寬的幾成（V1.43.0：0.4 → 0.5，靠近兩側邊緣） */
     var ALPHA_SHORT = [0.9, 1.0];                         /* 短的那條的左右伸展倍率範圍（V1.43.0：0.8～0.98 → 0.9～1.0，幾乎貼到邊） */
     var DASH_PERIODS = [14, 18, 24];                      /* 虛線的基本週期（紅段＋白段，px）：短的那條用它 */
     var DASH_JITTER = [-0.04, 0.06];                      /* 長的那條週期 ＝ 基本週期 × 長度比 × (1 ＋ 這個範圍的亂數)：段數只差幾 % */
@@ -82,8 +84,8 @@
     function diffFor(level) { return Math.max(DIFF_MIN, DIFF_START - (level - 1) * DIFF_STEP); }
     /* 這一關的轉折點基本數量 */
     function kBase(level) { return Math.round(kit.ramp(level, K_START, K_END, K_RAMP)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
-    /* 這一關的上下打亂幅度 */
-    function yjitFor(level) { return kit.ramp(level, YJIT_START, YJIT_END, K_RAMP); }
+    /* 這一關轉向左右交替的機率（越後面越低＝越容易繞圈） */
+    function altFor(level) { return kit.ramp(level, ALT_START, ALT_END, K_RAMP); }
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 關'; }
 
     /* 純函式（也給 Node 測試用） */
@@ -102,45 +104,24 @@
         if (ccw(a, c, d) !== ccw(b, c, d) && ccw(a, b, c) !== ccw(a, b, d)) return 0;      /* 相交 */
         return Math.min(pd(a, c, d), pd(b, c, d), pd(c, a, b), pd(d, a, b));
     }
-    /* 轉折點連成的折線（含起點終點）有沒有自己交叉或靠太近 */
-    /* 轉折點連成的折線（含起點終點）有沒有自己交叉／靠太近。dims＝{halfW, h}（畫面像素）；alpha＝左右伸展倍率 */
-    function polyOk(shape, alpha, dims) {
-        var P = [{ x: 0, y: 0 }];
-        shape.forEach(function (p) { P.push({ x: p.u * alpha * dims.halfW * CTRL_FRAC, y: p.v * dims.h }); });  /* forEach：對陣列的每個元素各做一次 */
-        P.push({ x: 0, y: dims.h });
-        var need = CLEAR_PX * 1.25;
-        for (var i = 0; i + 1 < P.length; i++) for (var j = i + 2; j + 1 < P.length; j++) {
-            if (segDist(P[i], P[i + 1], P[j], P[j + 1]) < need) return false;
-        }
-        /* 連續三個轉折點不能折成太尖的髮夾彎（兩條邊會貼在一起）*/
-        for (var t = 0; t + 2 < P.length; t++) {
-            if (ptSeg(P[t], P[t + 1], P[t + 2]) < CLEAR_PX || ptSeg(P[t + 2], P[t], P[t + 1]) < CLEAR_PX) return false;
-        }
-        return true;
-    }
-    /* 產生一條繩子的形狀：k 個轉折點（u 左右位置 −1～1、v 上下位置 0～1），一個一個加上去，每次檢查折線是否交叉；做不出來回傳 null */
-    /* 一條繩子的形狀：k 個轉折點，u＝左右位置（−1～1，相對半幅寬）、v＝上下位置（0～1）。
-       轉折點是一個一個加上去的，連成的折線不能交叉、不能靠太近；做不出來回傳 null。 */
-    function makeShape(k, yjit, rand, dims) {
+    /* 一條繩子的形狀：用 kit.meander（見 js/reaction_kit4.js）走出一條蜿蜒曲線——k 個圓弧、半徑與轉的角度都隨機，大多左右交替（S 形大圓弧）、偶爾繞圈，
+       起點在正上方中間、終點在正下方中間，整條不會自己交疊或貼太近；再每隔 CTRL_GAP 像素取一個控制點（不含起點、終點：buildPath 會自己放在正上、正下）。
+       回傳控制點 [{ u（左右位置，−1～1，相對半幅寬）, v（上下位置，0～1）}]；alt＝轉向左右交替的機率；做不出來回傳 null。
+       控制點個數很多（每 CTRL_GAP 像素一個），Catmull-Rom 連起來就跟走出來的曲線幾乎一樣；之後 buildPath 的 alpha 只把它左右壓扁或拉寬，用來調整長度。 */
+    function makeShape(k, alt, rand, dims) {
         rand = rand || Math.random;
         dims = dims || { halfW: 95, h: 460 };
+        var hw = dims.halfW * CTRL_FRAC, w = 2 * hw, line = Math.max(0.35, 0.9 * (dims.h / w) / (k + 1));  /* 弧很少的時候，兩個弧之間要直走比較遠，才走得滿整個高度 */
         var box = { x0: -dims.halfW, x1: dims.halfW, y0: 0, y1: dims.h };
-        for (var attempt = 0; attempt < 60; attempt++) {
-            var pts = [], spacing = 1 / (k + 1), prevU = 0, side = rand() < 0.5 ? -1 : 1, fail = false;
-            for (var i = 1; i <= k && !fail; i++) {
-                var placed = false;
-                for (var tries = 0; tries < 40 && !placed; tries++) {
-                    var v = kit.clamp(i * spacing + (rand() * 2 - 1) * yjit * spacing, 0.03, 0.97);  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內（太小就取最小、太大就取最大） */
-                    if (rand() < 0.85) side = -side;                           /* 大多左右交替，偶爾連續同一邊 */
-                    var u = side * kit.randFloat(U_MIN, 1, rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
-                    if (i > 1 && Math.abs(u - prevU) < MIN_SWING) continue;  /* Math.abs：取絕對值（去掉負號） */
-                    pts.push({ u: u, v: v });
-                    if (polyOk(pts, 0.75, dims)) { placed = true; prevU = u; } else pts.pop();
-                }
-                if (!placed) fail = true;
+        for (var attempt = 0; attempt < 8; attempt++) {
+            var pts = kit.meander({ W: w, H: dims.h, k: k, alt: alt, radius: ARC_RADIUS, arc: ARC_DEG, line: [0, line], clear: CLEAR_PX, sep: SEP_PX, ends: true, margin: 8, scale: [0.5, 2.4], tries: 150 }, rand);
+            if (!pts) continue;
+            var total = pts[pts.length - 1].s, shape = [], last = 0;
+            for (var i = 1; i + 1 < pts.length; i++) {
+                if (pts[i].s - last >= CTRL_GAP && total - pts[i].s >= CTRL_GAP * 0.6) { shape.push({ u: (pts[i].x - hw) / hw, v: pts[i].y / dims.h }); last = pts[i].s; }
             }
-            /* 折線過關之後，再檢查真正畫出來的曲線（曲線會把轉角削圓、稍微衝出去）*/
-            if (!fail && polyOk(pts, 0.75, dims) && validRope(buildPath(pts, 0.85, 0, dims.halfW, 0, dims.h), box)) return pts;
+            /* 平滑曲線（Catmull-Rom）真正畫出來的樣子還要再檢查一次 */
+            if (validRope(buildPath(shape, 1, 0, dims.halfW, 0, dims.h), box)) return shape;
         }
         return null;
     }
@@ -213,7 +194,7 @@
         rand = rand || Math.random;
         var VWd = W || VW, halfW = VWd / 4 - SIDE_PAD;
         var d = diffFor(level) / 100, y0 = PAD_TOP, y1 = H - PAD_BOT;
-        var kb = kBase(level), yj = yjitFor(level), trap = kit.ramp(level, 0, TRAP_END, K_RAMP);
+        var kb = kBase(level), alt = altFor(level), trap = kit.ramp(level, 0, TRAP_END, K_RAMP);
         var shortSide = rand() < 0.5 ? 'L' : 'R';
         var cxS = shortSide === 'L' ? VWd * 0.25 : VWd * 0.75, cxL = shortSide === 'L' ? VWd * 0.75 : VWd * 0.25;
         var dims = { halfW: halfW, h: y1 - y0 };
@@ -223,8 +204,8 @@
             /* isTrap：視覺陷阱——故意讓「較短的那條」轉折比較多 */
             var isTrap = rand() < trap;
             var kS = Math.max(2, kb + (isTrap ? kit.randInt(1, 2, rand) : kit.randInt(-1, 1, rand)));  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
-            var kL = Math.max(2, kb + (isTrap ? -kit.randInt(1, 2, rand) : kit.randInt(-1, 1, rand)));
-            var shS = makeShape(kS, yj, rand, dims), shL = makeShape(kL, yj, rand, dims);
+            var kL = Math.max(2, kb + (isTrap ? -kit.randInt(1, 2, rand) : kit.randInt(-1, 1, rand) + (d > 0.15 ? 1 : 0)));  /* 長度差大的前幾關，長的那條多一個彎，比較容易剛好長出需要的長度 */
+            var shS = makeShape(kS, alt, rand, dims), shL = makeShape(kL, alt, rand, dims);
             if (!shS || !shL) continue;
             var aS = kit.randFloat(ALPHA_SHORT[0], ALPHA_SHORT[1], rand);
             var ptsS = buildPath(shS, aS, cxS, halfW, y0, y1);
@@ -485,7 +466,7 @@
         /* 世界排行榜的成績規格 */
         score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
-        test: { segDist: segDist, polyOk: polyOk, diffFor: diffFor, kBase: kBase, yjitFor: yjitFor, makeShape: makeShape, buildPath: buildPath, solveAlpha: solveAlpha, validRope: validRope, makeLevel: makeLevel, speedFor: speedFor, dashFor: dashFor, pointAt: pointAt, pathLen: pathLen, zoomCamera: zoomCamera, restPoints: restPoints, needZoom: needZoom, ZOOM_REST_MAX: ZOOM_REST_MAX, ZOOM_MIN: ZOOM_MIN, ZOOM_MAX: ZOOM_MAX, ZOOM_PAD: ZOOM_PAD, MIN_SWING: MIN_SWING, CLEAR_PX: CLEAR_PX, SEP_PX: SEP_PX, SIDE_PAD: SIDE_PAD, PAD_TOP: PAD_TOP, PAD_BOT: PAD_BOT, VW: VW }
+        test: { segDist: segDist, diffFor: diffFor, kBase: kBase, altFor: altFor, ARC_RADIUS: ARC_RADIUS, ARC_DEG: ARC_DEG, CTRL_GAP: CTRL_GAP, makeShape: makeShape, buildPath: buildPath, solveAlpha: solveAlpha, validRope: validRope, makeLevel: makeLevel, speedFor: speedFor, dashFor: dashFor, pointAt: pointAt, pathLen: pathLen, zoomCamera: zoomCamera, restPoints: restPoints, needZoom: needZoom, ZOOM_REST_MAX: ZOOM_REST_MAX, ZOOM_MIN: ZOOM_MIN, ZOOM_MAX: ZOOM_MAX, ZOOM_PAD: ZOOM_PAD, CLEAR_PX: CLEAR_PX, SEP_PX: SEP_PX, SIDE_PAD: SIDE_PAD, PAD_TOP: PAD_TOP, PAD_BOT: PAD_BOT, VW: VW }
     };
     /* 登記到遊戲清單 */
     Reaction.register(G);

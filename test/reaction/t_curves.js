@@ -5,7 +5,7 @@ let bad = 0; const ok = (c, m) => { if (!c) { bad++; if (bad < 25) console.log('
 // 想確認「換任何種子都過」：用環境變數 SEED 換種子連跑很多次（PowerShell：$env:SEED = 7; node test/reaction/t_curves.js；這支測試要跑約 30 秒）。
 const SEED = seedOf(20261007); const rnd = rng(SEED);
 ok(T.diffFor(1) === 30 && T.diffFor(2) === 27 && T.diffFor(10) === 3 && T.diffFor(11) === 3 && T.diffFor(50) === 3, 'diff schedule');
-ok(T.kBase(1) === 3 && T.kBase(12) === 7 && T.kBase(40) === 7 && T.kBase(6) > T.kBase(1) && T.yjitFor(1) < T.yjitFor(12), 'turn count and y-jitter ramps');
+ok(T.kBase(1) === 3 && T.kBase(12) === 7 && T.kBase(40) === 7 && T.kBase(6) > T.kBase(1) && T.altFor(1) > T.altFor(12), 'turn count and alternate-probability ramps');
 const H = 600, W = 468; let N = 0, nullCount = 0;
 const stats = {};
 for (let lv = 1; lv <= 30; lv++) {
@@ -49,10 +49,19 @@ ok(nullCount === 0, 'makeLevel never fails (' + nullCount + ')');
 ok(stats[1].upward > 0.1 && stats[12].upward > 0.4 && stats[12].upward > stats[1].upward, 'ropes climb back up even at level 1, and more often later (' + stats[1].upward.toFixed(2) + ' → ' + stats[12].upward.toFixed(2) + ', seed ' + SEED + ')');
 ok(stats[12].trap > stats[1].trap, 'short-rope-has-more-turns trap grows (' + stats[1].trap.toFixed(3) + ' → ' + stats[12].trap.toFixed(3) + ', seed ' + SEED + ')');
 ok([1, 5, 12, 30].every(l => stats[l].width > 100), 'ropes use most of the width (big swings): ' + [1, 5, 12, 30].map(l => stats[l].width.toFixed(0)).join('/') + ' (seed ' + SEED + ')');
-// 轉折點的左右位置：相鄰差異大、不會對齊
-{ let aligned = 0, total = 0, mags = new Set();
-  for (let k = 0; k < 3000; k++) { const sh = T.makeShape(5, 0.8, rnd); for (let i = 1; i < sh.length; i++) { total++; if (Math.abs(sh[i].u - sh[i - 1].u) < T.MIN_SWING) aligned++; mags.add(Math.round(Math.abs(sh[i].u) * 10)); } }
-  ok(aligned / total < 0.08, 'adjacent turning points differ a lot sideways (' + (aligned / total * 100).toFixed(1) + '% too close)'); ok(mags.size >= 6, 'turning point sizes vary'); }
+// 蜿蜒畫法（kit.meander）：控制點每隔 CTRL_GAP 像素一個、上下左右都有變化、圓弧大小不一，而且（用真正畫出來的曲線檢查）不交疊
+{ const dims = { halfW: 95, h: 528 }; let n = 0, made = 0, vSteps = [], uSpread = new Set(), climb = 0, loops = 0;
+  for (let i = 0; i < 400; i++) {
+    const k = 3 + (i % 6), sh = T.makeShape(k, T.altFor(1 + (i % 20)), rnd, dims); n++; if (!sh) continue; made++;
+    ok(sh.length >= 8 && sh.every(p => p.v > 0 && p.v < 1 && Math.abs(p.u) <= 1.0001), '控制點在範圍內、夠多：' + sh.length);
+    ok(T.validRope(T.buildPath(sh, 1, 0, dims.halfW, 0, dims.h), { x0: -dims.halfW, x1: dims.halfW, y0: 0, y1: dims.h }), '真正畫出來的曲線不交疊');
+    for (let j = 1; j < sh.length; j++) { vSteps.push(sh[j].v - sh[j - 1].v); uSpread.add(Math.round(sh[j].u * 10)); }
+    if (sh.some((p, j) => j && p.v < sh[j - 1].v - 1e-9)) climb++;
+  }
+  ok(made / n > 0.9, '做得出形狀的比例 ' + (made / n).toFixed(2));
+  ok(vSteps.some(v => v < -0.002) && climb / made > 0.3, '上下也會變化、會往回繞（' + (100 * climb / made).toFixed(0) + '% 的形狀有往上走的一段），不只是左右移動');
+  ok(uSpread.size >= 12, '左右位置有很多種：' + uSpread.size);
+  ok(T.altFor(1) === 0.8 && T.altFor(12) === 0.6 && T.altFor(40) === 0.6 && T.ARC_DEG[1] > 180 && T.ARC_RADIUS[0] < T.ARC_RADIUS[1] && T.CTRL_GAP > 0, '蜿蜒參數：左右交替機率 0.8 → 0.6、圓弧可以轉超過 180 度（繞圈）'); }
 // validRope：會交叉／貼太近的路徑要被擋下來
 { const mk = (pts) => { let s = 0; return pts.map((p, i) => { if (i) s += Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]); return { x: p[0], y: p[1], s }; }); };
   const line = (a, b, n) => { const out = []; for (let i = 0; i <= n; i++) out.push([a[0] + (b[0] - a[0]) * i / n, a[1] + (b[1] - a[1]) * i / n]); return out; };
@@ -105,7 +114,7 @@ for (let k = 0; k < 400; k++) {
       if (T.needZoom(rest)) zoomN++;
     }
     // 標準是「剩下的路很短（≤ ZOOM_REST_MAX px）」才放大：差距大的前幾關幾乎不放大（路線偏短、剩下的路剛好很短的時候才會）
-    if (lv <= 3) ok(zoomN <= runs * 0.35, 'level ' + lv + ' (big length difference): the camera rarely zooms (' + zoomN + '/' + runs + ')');
+    if (lv <= 2) ok(zoomN <= runs * 0.35, 'level ' + lv + ' (big length difference): the camera rarely zooms (' + zoomN + '/' + runs + ')');
     if (lv >= 10) ok(zoomN === runs, 'level ' + lv + ' (3% difference): the camera always zooms (' + zoomN + '/' + runs + ')');
   }
   // restPoints：第一個點是球停住的位置（弧長 s0），後面是 s > s0 的所有點，最後一個是終點

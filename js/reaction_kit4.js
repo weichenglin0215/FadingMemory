@@ -7,6 +7,9 @@
        kit.gridConnected(n, blocked, s)   從 s 出發，能不能走到所有「沒被擋住」的格子（blocked 是 Uint8Array，1＝擋住）
        kit.gridParityOk(n, blocked, s)    棋盤格奇偶檢查：一定無解的「走遍每一格」配置先擋掉
        kit.hamPath(n, blocked, s, rand, budget)   隨機找一條從 s 出發、走遍每一格空地剛好一次的路（漢米爾頓路徑），找不到回傳 null
+   · 蜿蜒曲線（「誰先到？」「照抄曲線」共用）：
+       kit.meander(o, rand)               像手畫的蜿蜒線（圓弧接圓弧，大多左右交替、偶爾繞圈），整條不交疊；回傳密集的點 [{x, y, s}]
+       kit.selfClear(pts, clear, sep)     曲線有沒有自己貼自己（弧長相隔超過 sep 的兩點距離都要 ≥ clear）
    ═══════════════════════════════════════════════════════════════════ */
 (function (global) {
     /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
@@ -93,6 +96,99 @@
     }
 
     kit.gridNeighbors = neighbors;
+    /* ═══ 蜿蜒曲線（「誰先到？」與「照抄曲線」共用）═══
+       以前的曲線只是把轉折點往左右移動、折成直角、或是工整的迴紋針，很死板。現在改成像手畫的蜿蜒線：
+       用「烏龜走路」的方式一段一段接起來——先直走一小段，再沿著一個圓弧轉彎（半徑、轉多少度都隨機），
+       大多數時候左轉右轉交替（S 形的大圓弧），偶爾連續往同一邊轉（繞出圈圈、螺旋）。上下左右都能走，曲線可以往回繞，
+       但整條曲線不能自己交疊或貼得太近（重疊會讓玩家誤判）。走完再整體縮放、置中，放進指定的範圍裡。 */
+    /* 曲線有沒有自己貼自己：「弧長相隔超過 sep 的兩點」距離都要 ≥ clear（用格子雜湊，只比相鄰格子，O(n)）。pts＝[{x, y, s（累積弧長）}]，好＝true */
+    function selfClear(pts, clear, sep) {
+        var cell = clear, grid = {}, i;
+        for (i = 0; i < pts.length; i++) {
+            var key = Math.floor(pts[i].x / cell) + ',' + Math.floor(pts[i].y / cell);  /* Math.floor：無條件捨去成整數 */
+            (grid[key] = grid[key] || []).push(i);
+        }
+        for (i = 0; i < pts.length; i++) {
+            var a = pts[i], cx = Math.floor(a.x / cell), cy = Math.floor(a.y / cell);
+            for (var dx = -1; dx <= 1; dx++) for (var dy = -1; dy <= 1; dy++) {
+                var arr = grid[(cx + dx) + ',' + (cy + dy)];
+                if (!arr) continue;
+                for (var m = 0; m < arr.length; m++) {
+                    var j = arr[m]; if (j <= i || pts[j].s - a.s <= sep) continue;
+                    var ddx = pts[j].x - a.x, ddy = pts[j].y - a.y;
+                    if (ddx * ddx + ddy * ddy < clear * clear) return false;
+                }
+            }
+        }
+        return true;
+    }
+    /* kit.meander(o, rand)：產生一條蜿蜒曲線，回傳密集的點 [{x, y, s}]（約每 o.ds 像素一個，s＝累積弧長），整條落在 [0, W]×[0, H] 裡；做不出來回傳 null。
+       o：{ W, H（要放進去的範圍，像素）, k（弧的個數＝彎數）, alt（轉向左右交替的機率，其餘＝繼續往同一邊轉）, radius:[最小, 最大]（圓弧半徑，占 W 的比例）,
+            arc:[最小, 最大]（每個圓弧轉多少度）, line:[最短, 最長]（兩個圓弧之間直走多遠，占 W 的比例）, clear（曲線自己貼自己的最短距離，像素）, sep（弧長相隔多遠以內的點不檢查，預設 70）,
+            margin（離範圍邊緣至少多遠，預設 0）, fill（左右至少占滿 W 的幾成，預設 0.5）, scale:[最小, 最大]（上下縮放倍率的範圍，預設 0.5～1.6）, aniso（左右、上下倍率最多差幾倍，預設 1.4；差越多圓弧被壓得越扁）, sway（左右交替轉彎時，方向最多偏離「往下」幾度，預設 100）, ds（取樣間距，預設 3）,
+            ends（true＝起點一定在最上面、終點一定在最下面、而且都在左右正中央：把整條曲線沿上下方向做「剪切」把兩端拉到中央，「誰先到？」用）, tries（最多重抽幾次，預設 300）}
+       做法：一段一段走完 → 量外框 → 上下縮放成剛好高 H（倍率要在 scale 範圍內）、左右縮放到放得進 W（盡量跟上下同倍率）→ 置中 → 檢查不貼太近。 */
+    function meander(o, rand) {
+        rand = rand || Math.random;
+        var W = o.W, H = o.H, ds = o.ds || 3, mg = o.margin || 0, sep = o.sep || 70, fill = o.fill == null ? 0.5 : o.fill, sc = o.scale || [0.5, 1.6], an = o.aniso || 1.4, sway = (o.sway || 100) * Math.PI / 180;
+        for (var attempt = 0; attempt < (o.tries || 300); attempt++) {
+            var th = Math.PI / 2 + kit.randFloat(-0.4, 0.4, rand), x = 0, y = 0, s = 0, sgn = rand() < 0.5 ? -1 : 1, raw = [{ x: 0, y: 0, s: 0 }], i;
+            var step = function (len, dth) {                /* 沿目前方向走 len（同時轉 dth 弧度），每 ds 像素記一個點 */
+                var n = Math.max(1, Math.round(len / ds)), d = len / n;
+                for (var q = 0; q < n; q++) { th += dth / n / 2; x += d * Math.cos(th); y += d * Math.sin(th); th += dth / n / 2; s += d; raw.push({ x: x, y: y, s: s }); }
+            };
+            for (i = 0; i < o.k; i++) {
+                var alter = rand() < o.alt;                  /* 這一次左右交替，還是繼續往同一邊轉（繞圈） */
+                sgn = alter ? -sgn : sgn;
+                step(kit.randFloat(o.line[0], o.line[1], rand) * W, 0);
+                var R = kit.randFloat(o.radius[0], o.radius[1], rand) * W, A = kit.randFloat(o.arc[0], o.arc[1], rand) * Math.PI / 180;
+                if (!alter) R *= kit.randFloat(0.55, 0.8, rand);  /* 連續往同一邊轉：半徑越轉越小（往內捲的螺旋），不然轉一圈就會撞到自己 */
+                if (alter) {                                 /* 左右交替時，方向最多偏離「往下」sway 度，不然會一直往旁邊或往上繞，整條曲線走不滿整個高度 */
+                    var dev = th - Math.PI / 2; dev = Math.atan2(Math.sin(dev), Math.cos(dev));
+                    A = Math.min(A, Math.max(20 * Math.PI / 180, sway - sgn * dev));
+                }
+                step(R * A, sgn * A);
+            }
+            step(kit.randFloat(o.line[0], o.line[1], rand) * W, 0);
+            var x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+            raw.forEach(function (p) { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); });  /* forEach：對陣列的每個元素各做一次 */
+            var bw = x1 - x0, bh = y1 - y0;
+            if (bh < 1) continue;
+            var fy = (H - 2 * mg) / bh;                      /* 上下縮放成剛好高 H（扣掉邊） */
+            if (fy < sc[0] || fy > sc[1]) continue;
+            var fx = kit.clamp(fy, fill * W / bw, (W - 2 * mg) / bw);   /* 左右盡量跟上下同倍率（圓還是圓），放不進寬度、或太窄時才單獨調整 */
+            if (fx > fy * an || fx < fy / an) continue;      /* 左右、上下的倍率差太多，圓弧會被壓得太扁，不要 */
+            var cx = (x0 + x1) / 2, sAcc = 0;
+            var pts = raw.map(function (p, idx) {            /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+                var q = { x: W / 2 + (p.x - cx) * fx, y: mg + (p.y - y0) * fy, s: 0 };
+                if (idx) { var pr = raw[idx - 1]; sAcc += Math.sqrt(Math.pow((p.x - pr.x) * fx, 2) + Math.pow((p.y - pr.y) * fy, 2)); q.s = sAcc; }  /* Math.pow(x, y)：x 的 y 次方 */
+                return q;
+            });
+            if (o.ends) {
+                var a = pts[0], b = pts[pts.length - 1];
+                if (a.y > mg + 0.05 * H || b.y < H - mg - 0.05 * H) continue;  /* 起點要在最上面、終點在最下面 */
+                var okShear = true, out = [], len = 0;
+                pts.forEach(function (p, idx) {
+                    var t = (p.y - a.y) / (b.y - a.y), nx = p.x - (a.x + t * (b.x - a.x)) + W / 2;   /* 剪切：把起點終點的連線拉成正中央的直線 */
+                    if (nx < mg || nx > W - mg) okShear = false;
+                    if (idx) len += Math.sqrt((nx - out[idx - 1].x) * (nx - out[idx - 1].x) + (p.y - out[idx - 1].y) * (p.y - out[idx - 1].y));
+                    out.push({ x: nx, y: p.y, s: len });
+                });
+                if (!okShear) continue;
+                pts = out;
+            }
+            if (!selfClear(pts, o.clear, sep)) continue;
+            var dense = [pts[0]], acc = 0;                   /* 放大之後點的間距會變大：每隔約 ds 像素補點（直線內插），讓畫面和相似度比對都用細密的點 */
+            for (i = 1; i < pts.length; i++) {
+                var pa = pts[i - 1], pb = pts[i], dd = Math.sqrt((pb.x - pa.x) * (pb.x - pa.x) + (pb.y - pa.y) * (pb.y - pa.y)), nn = Math.max(1, Math.ceil(dd / ds));
+                for (var q = 1; q <= nn; q++) { var tt = q / nn; acc += dd / nn; dense.push({ x: pa.x + (pb.x - pa.x) * tt, y: pa.y + (pb.y - pa.y) * tt, s: acc }); }
+            }
+            return dense;
+        }
+        return null;
+    }
+    kit.selfClear = selfClear;
+    kit.meander = meander;
     kit.gridAdjacent = adjacent;
     kit.gridConnected = connected;
     kit.gridParityOk = parityOk;

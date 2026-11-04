@@ -41,7 +41,7 @@ for (let i = 0; i < 1500; i++) {
   ok(q.A.concat(q.B).every(v => Number.isInteger(v) && v >= 1 && v <= V), '第 ' + lv + ' 關：數字都在 1～' + V);
   ok(q.sA === T.sum(q.A) && q.sB === T.sum(q.B) && q.sA - q.sB === 2 * q.half && q.half !== 0, '總和對得上：差 = 2×差的一半');
   const ans = T.answers(q.A, q.B);
-  ok(ans.length === 1 && ans[0].i === q.ans.i && ans[0].j === q.ans.j, '第 ' + lv + ' 關：答案唯一（' + JSON.stringify(ans) + '）');
+  ok((k === 2 ? ans.length === 2 : ans.length === 1) && ans[0].i === q.ans.i && ans[0].j === q.ans.j && JSON.stringify(ans) === JSON.stringify(q.all), '第 ' + lv + ' 關：答案唯一（每排 2 張時剛好 2 組）（' + JSON.stringify(ans) + '）');
   ok(q.A[q.ans.i] - q.B[q.ans.j] === q.half, '答案那一對的差正好是「差的一半」');
   const A2 = q.A.slice(), B2 = q.B.slice(); const t = A2[q.ans.i]; A2[q.ans.i] = B2[q.ans.j]; B2[q.ans.j] = t; ok(T.sum(A2) === T.sum(B2), '實際交換後兩排總和一樣');
   const hh = Math.abs(q.half); ok(hh >= Math.min(hr[0], V - 1) && hh <= Math.min(hr[1], V - 1) || q.k === 3 && q.V === 9, '差的一半 ' + hh + ' 在範圍 ' + hr + ' 內');
@@ -56,12 +56,21 @@ ok(signs.pos > 500 && signs.neg > 500, '兩排誰大誰小各半');
 ok(Object.keys(rowsCount).length >= 20, '答案牌的位置分散：' + Object.keys(rowsCount).length + ' 種位置組合');
 // 整體誘餌：大部分題目都有達標（太難湊到時才放寬）
 { let hit = 0, n = 400; for (let i = 0; i < n; i++) { const lv = 1 + (i % 40), q = T.makeLevel(lv, rnd), hh = Math.abs(q.half), V = T.vmaxFor(lv); if ((2 * hh > V - 1 || q.full >= T.fullDecoysFor(lv)) && q.rev >= T.revDecoysFor(lv)) hit++; } ok(hit / n > 0.9, '誘餌達標的比例 ' + (100 * hit / n).toFixed(0) + '%'); }
+// 每排固定 2 張（使用者把 CARDS 設成 2）：不會變成 3 張的保底題，答案剛好 2 組（數學上一定是這樣）
+{ const save = T.CARDS.slice(); T.CARDS[0] = 2; T.CARDS[1] = 2;
+  let wrong = 0, notTwo = 0, n = 0; for (let lv = 1; lv <= 40; lv++) for (let i = 0; i < 40; i++) { const q = T.makeLevel(lv, rnd); n++; if (q.k !== 2 || q.A.length !== 2 || q.B.length !== 2) wrong++; if (q.all.length !== 2) notTwo++; }
+  T.CARDS[0] = save[0]; T.CARDS[1] = save[1];
+  ok(wrong === 0 && notTwo === 0, 'CARDS 設 2：每排一定是 2 張、剛好 2 組答案：不是 2 張 ' + wrong + '／' + n + '、答案不是 2 組 ' + notTwo + '／' + n); }
+// 總和提示：HIDE_SUM_FROM（預設第 4 關起隱藏）
+ok(T.HIDE_SUM_FROM === 4 && !T.hideSumAt(1) && !T.hideSumAt(3) && T.hideSumAt(4) && T.hideSumAt(30), '總和提示：第 1～3 關顯示，第 4 關起隱藏');
 // 效能
 for (const lv of [1, 6, 12, 24, 40]) { const t0 = Date.now(); let worst = 0; for (let i = 0; i < 100; i++) { const t1 = Date.now(); T.makeLevel(lv, rnd); worst = Math.max(worst, Date.now() - t1); } const per = (Date.now() - t0) / 100; console.log('第' + lv + '關 出題平均 ' + per.toFixed(2) + ' 毫秒、最慢 ' + worst); ok(per < 20 && worst < 200, '第 ' + lv + ' 關出題夠快：' + per.toFixed(2) + '／' + worst); }
 // 程式裡的接線
 { const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_swapeven.js'), css = rd('../../css/games/reaction_swapeven.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
   ok(/api\.fail\(\{ delay: 3600/.test(src) && /swapeven-card--ans/.test(src), '失敗停格 3 秒以上、綠框標出正確的牌');
   ok(/\.swapeven-card--ans \{[^}]*var\(--c-ok\)/.test(css) && /\.swapeven-bub--bad \{[^}]*var\(--c-bad/.test(css), '綠框、紅字用 CSS 變數');
+  ok(src.includes('swapeven-bub--hide') && css.includes('.swapeven-bub--hide { visibility: hidden;') && src.includes('function showSums') && src.indexOf('showSums();') > 0, '隱藏總和：泡泡加 swapeven-bub--hide、交換後 showSums 再顯示');
+  ok(src.includes('function fitFont') && src.includes('measureText') && src.includes('FILL_W') && src.includes('fontPx') && !src.includes('Math.round(cw * (q.V >= 10 ? 0.46 : 0.58)) + '), '數字字級：用真實字型量字寬、填滿答案卡（不再因為進位變兩位數就縮小）');
   ok(boot.indexOf("'js/reaction_swapeven.js'") > 0 && /差的一半/.test(G.rule), 'boot.js 有載入、玩法說明提到差的一半'); }
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20) !== T.rating(30), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

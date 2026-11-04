@@ -1,26 +1,22 @@
 // 缺哪一張（mahjong3，企劃 231）的純函式檢查：分組判定（含一對）、答案不只一張、死牌（一種牌最多 4 張）、誘餌牌、牌數／答案數／限時／誘餌數線性
-// V1.36.0：改成「聽牌」玩法——補哪些牌都行，要全部找出來；高關卡有「一對」（真正的麻將聽牌）
+// V1.36.0：改成「聽牌」玩法——補哪些牌都行，要全部找出來；V1.44.1：每一關都是「若干組三張＋一對相同」（不再有沒有一對的題目）
 const { game, rng, seedOf } = require('./load.js');
 const G = game('reaction_mahjong3.js'); const T = G.test;
 let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log('FAIL', m); } };
 const SEED = seedOf(20261104), rnd = rng(SEED);
 
-// ── 難度 ──
-ok(T.tilesFor(1, false) === 5 && T.tilesFor(T.RAMP_LEVELS, false) === 14 && T.tilesFor(999, false) === 14, '沒有一對：手牌數 5 → 14（第 ' + T.RAMP_LEVELS + ' 關到頂）');
-ok(T.tilesFor(1, true) === 4 && T.tilesFor(T.RAMP_LEVELS, true) === 13 && T.tilesFor(999, true) === 13, '有一對：手牌數 4 → 13');
+// ── 難度（每一關都有一對：手牌數只會是 4、7、10、13）──
+ok(T.tilesFor(1) === 4 && T.tilesFor(T.RAMP_LEVELS) === 13 && T.tilesFor(999) === 13, '手牌數 4 → 13（第 ' + T.RAMP_LEVELS + ' 關到頂）');
 for (let l = 1; l <= 90; l++) {
-  const a = T.tilesFor(l, false), b = T.tilesFor(l, true);
-  ok([5, 8, 11, 14].includes(a), '沒有一對的手牌數只會是 5、8、11、14：第 ' + l + ' 關 ' + a);
-  ok([4, 7, 10, 13].includes(b), '有一對的手牌數只會是 4、7、10、13：第 ' + l + ' 關 ' + b);
-  if (l > 1) ok(a >= T.tilesFor(l - 1, false) && b >= T.tilesFor(l - 1, true), '手牌數單調');
+  const b = T.tilesFor(l);
+  ok([4, 7, 10, 13].includes(b), '手牌數只會是 4、7、10、13：第 ' + l + ' 關 ' + b);
+  if (l > 1) ok(b >= T.tilesFor(l - 1), '手牌數單調');
 }
-console.log('手牌數（無對／有對）：' + [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 30].map(l => '第' + l + '關 ' + T.tilesFor(l, false) + '/' + T.tilesFor(l, true)).join('　'));
+console.log('手牌數：' + [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 30].map(l => '第' + l + '關 ' + T.tilesFor(l)).join('　'));
 ok(T.timeMs(1) === T.TIME_S[0] * 1000 && T.timeMs(T.RAMP_LEVELS) === T.TIME_S[1] * 1000, '限時 ' + T.TIME_S);
 ok(T.decoysFor(1) === T.DECOYS[0] && T.decoysFor(T.RAMP_LEVELS) === T.DECOYS[1], '誘餌牌數 ' + T.DECOYS);
-ok(T.answersFor(1, true) === T.ANSWERS[0] && T.answersFor(T.RAMP_LEVELS, true) === T.ANSWERS[1] && T.answersFor(T.RAMP_LEVELS, false) === 3, '答案張數 ' + T.ANSWERS + '（沒有一對的題目最多 3 張）');
-for (let l = 2; l <= 90; l++) ok(T.timeMs(l) >= T.timeMs(l - 1) && T.decoysFor(l) >= T.decoysFor(l - 1) && T.answersFor(l, true) >= T.answersFor(l - 1, true), '單調 ' + l);
-ok(T.pairProb(T.PAIR_FROM - 1) === 0 && T.pairProb(T.PAIR_FROM) >= T.PAIR_P[0] && Math.abs(T.pairProb(T.RAMP_LEVELS) - T.PAIR_P[1]) < 1e-9 && Math.abs(T.pairProb(999) - T.PAIR_P[1]) < 1e-9, '有一對的題目：第 ' + T.PAIR_FROM + ' 關以前沒有，之後機率升到 ' + T.PAIR_P[1] + '（第 ' + T.RAMP_LEVELS + ' 關到頂）');
-for (let l = T.PAIR_FROM + 1; l <= 60; l++) ok(T.pairProb(l) >= T.pairProb(l - 1), '有一對的機率單調：第 ' + l + ' 關');
+ok(T.answersFor(1) === T.ANSWERS[0] && T.answersFor(T.RAMP_LEVELS) === T.ANSWERS[1], '答案張數 ' + T.ANSWERS);
+for (let l = 2; l <= 90; l++) ok(T.timeMs(l) >= T.timeMs(l - 1) && T.decoysFor(l) >= T.decoysFor(l - 1) && T.answersFor(l) >= T.answersFor(l - 1), '單調 ' + l);
 // ── 分組判定 ──
 const can = (tiles, pair) => T.canGroup(T.countsOf(tiles), pair);
 ok(can([1, 1, 1]) && can([1, 2, 3]) && can([2, 3, 4, 5, 5, 5]) && can([]) && can([1, 1, 1, 2, 3, 4]), '能分組：三張一樣、連號、混合');
@@ -67,35 +63,37 @@ ok(T.winners([1, 1, 1, 2, 3], false).join() === '1,4', '1 1 1 2 3 → 補 1、4'
 // 高關卡的題目裡真的會出現死牌陷阱（手上有 4 張、補第 5 張就湊得起來的牌），而且比例隨關卡增加
 { const frac = lv => { let d = 0, N = 300; for (let k = 0; k < N; k++) if (T.makeLevel(lv, rnd).dead.length) d++; return d / N; }; const f3 = frac(3), f10 = frac(10), f30 = frac(30); console.log('有死牌陷阱的題目比例：第 3 關 ' + (f3 * 100).toFixed(0) + '％、第 10 關 ' + (f10 * 100).toFixed(0) + '％、第 30 關 ' + (f30 * 100).toFixed(0) + '％');
   ok(f30 >= 0.3 && f30 > f3, '第 30 關至少 3 成的題目有死牌陷阱，比第 3 關多'); ok(T.deadProb(T.DEAD_FROM - 1) === 0 && T.deadProb(T.RAMP_LEVELS) > T.deadProb(T.DEAD_FROM), '死牌陷阱的機率：第 ' + T.DEAD_FROM + ' 關起，越後面越高'); }
-// ── 整關 ──
-const stat = {}, kinds = { pairs: 0, nopair: 0 }, byAnswers = {};
+// ── 整關：每一關（含第 1～3 關）都必須是「若干組三張＋一對」──
+const byAnswers = {}, early = { n: 0, withPair: 0 };
 for (let i = 0; i < 700; i++) {
-  const lv = 1 + (i % 45), q = T.makeLevel(lv, rnd), g = q.pair ? (q.tiles - 1) / 3 : (q.tiles + 1) / 3;
-  kinds[q.pair ? 'pairs' : 'nopair']++;
-  ok(q.pair ? lv >= T.PAIR_FROM : true, '第 ' + T.PAIR_FROM + ' 關以前沒有一對的題目');
-  ok(q.tiles === T.tilesFor(lv, q.pair) && q.hand.length === q.tiles && q.hand.every(t => t >= 1 && t <= 9), '第 ' + lv + ' 關：' + q.tiles + ' 張牌、都是 1～9');
+  const lv = 1 + (i % 45), q = T.makeLevel(lv, rnd), g = (q.tiles - 1) / 3;
+  ok(q.pair === true, '第 ' + lv + ' 關一定要一對');
+  ok(q.tiles === T.tilesFor(lv) && q.hand.length === q.tiles && q.hand.every(t => t >= 1 && t <= 9), '第 ' + lv + ' 關：' + q.tiles + ' 張牌、都是 1～9');
   ok(q.hand.every((t, k) => !k || q.hand[k - 1] <= t), '手牌已排序');
-  const win = T.winners(q.hand, q.pair);
+  const win = T.winners(q.hand, true);
   ok(win.join() === q.winners.join() && win.length >= 1, '第 ' + lv + ' 關：winners 與題目附的一致且至少一張（' + win.join(',') + '）');
-  ok(win.length <= T.answersFor(lv, q.pair) && win.length >= Math.max(1, T.answersFor(lv, q.pair) - 3), '第 ' + lv + ' 關：答案 ' + win.length + ' 張（目標 ' + T.answersFor(lv, q.pair) + '，最多放寬 3 張）');
+  ok(win.length <= T.answersFor(lv) && win.length >= Math.max(1, T.answersFor(lv) - 3), '第 ' + lv + ' 關：答案 ' + win.length + ' 張（目標 ' + T.answersFor(lv) + '，最多放寬 3 張）');
   byAnswers[lv] = byAnswers[lv] || []; byAnswers[lv].push(win.length);
   const bc = T.countsOf(q.hand);
   ok(bc.every(n => n <= T.MAX_SAME), '手牌每個數字最多 ' + T.MAX_SAME + ' 張');
-  win.forEach(w => { ok(bc[w] < T.MAX_SAME, '答案不是死牌'); const c2 = bc.slice(); c2[w]++; ok(c2.every(n => n <= T.MAX_SAME), '補了之後每個數字最多 ' + T.MAX_SAME + ' 張'); const r = T.groupsOf(c2, q.pair); ok(r && r.groups.length === g && r.groups.every(isSet3) && (q.pair ? r.pair > 0 : r.pair === 0), '答案 ' + w + ' 可以分成 ' + g + ' 組' + (q.pair ? '＋一對' : '')); });
-  for (let x = 1; x <= 9; x++) if (!win.includes(x) && bc[x] < T.MAX_SAME) { const c2 = bc.slice(); c2[x]++; ok(!T.canGroup(c2, q.pair), '非答案的牌 ' + x + ' 湊不起來'); }
+  win.forEach(w => {
+    ok(bc[w] < T.MAX_SAME, '答案不是死牌'); const c2 = bc.slice(); c2[w]++; ok(c2.every(n => n <= T.MAX_SAME), '補了之後每個數字最多 ' + T.MAX_SAME + ' 張');
+    const r = T.groupsOf(c2, true); ok(r && r.groups.length === g && r.groups.every(isSet3) && r.pair > 0 && c2[r.pair] >= 2, '答案 ' + w + ' 可以分成 ' + g + ' 組＋一對');
+    // 自己重算：湊成的牌，扣掉一對之後必須剛好是 g 組三張（任何一種拆法都行）
+    let found = false; for (let p = 1; p <= 9 && !found; p++) if (c2[p] >= 2) { const c3 = c2.slice(); c3[p] -= 2; if (T.canGroup(c3, false)) found = true; } ok(found, '答案 ' + w + '：扣掉某一對之後剛好分成三張一組');
+  });
+  for (let x = 1; x <= 9; x++) if (!win.includes(x) && bc[x] < T.MAX_SAME) { const c2 = bc.slice(); c2[x]++; ok(!T.canGroup(c2, true), '非答案的牌 ' + x + ' 湊不起來'); }
   ok(q.near.length >= T.decoysFor(lv) && q.near.every(y => !win.includes(y) && bc[y] < T.MAX_SAME && T.bestGroups(q.hand.concat([y]), y).n >= g - 1), '第 ' + lv + ' 關：誘餌牌 ' + q.near.length + ' ≥ ' + T.decoysFor(lv));
   ok(q.dead.every(x => bc[x] >= T.MAX_SAME && !win.includes(x)), '死牌陷阱都是手上已有 ' + T.MAX_SAME + ' 張的牌');
   ok(q.ways >= win.length, '分法數 ≥ 答案數');
+  if (lv <= 3) { early.n++; if (q.pair && q.tiles % 3 === 1) early.withPair++; }
 }
 const avg = a => a.reduce((x, y) => x + y, 0) / a.length;
-console.log('出題：有一對 ' + kinds.pairs + ' 題、沒有一對 ' + kinds.nopair + ' 題；各關平均答案張數：' + [1, 3, 6, 10, 15, 20, 30, 40].map(l => '第' + l + '關 ' + avg(byAnswers[l]).toFixed(1)).join('　'));
-ok(avg(byAnswers[1]) === 1 && avg(byAnswers[30]) > avg(byAnswers[6]) && avg(byAnswers[30]) >= 3, '答案張數隨關卡增加：第 1 關全是 1 張、第 30 關平均 ≥ 3 張');
-// 前面的關卡只有沒有一對的題目；高關卡有一對的題目是多數
-{ let early = 0; for (let k = 0; k < 200; k++) if (T.makeLevel(1 + (k % 3), rnd).pair) early++; ok(early === 0, '第 1～3 關沒有一對的題目'); let late = 0; for (let k = 0; k < 300; k++) if (T.makeLevel(30, rnd).pair) late++; ok(late >= 300 * 0.7, '第 30 關有一對的題目是多數：' + late + '／300'); }
-// 例子：使用者說的 2 3 4 5 6 → 1、4、7：第 1～3 關附近的題目也可以出現連號的多張答案
-{ let multi = 0, N = 300; for (let k = 0; k < N; k++) { const q = T.makeLevel(12, rnd, false); if (q.winners.length >= 2) multi++; } ok(multi >= N * 0.5, '第 12 關（沒有一對）過半的題目有 2 張以上的答案：' + multi + '／' + N); }
-// 強制模式
-{ ok(T.makeLevel(10, rnd, true).pair === true && T.makeLevel(10, rnd, false).pair === false, 'forcePair 可以強制有沒有一對'); }
+console.log('各關平均答案張數：' + [1, 3, 6, 10, 15, 20, 30, 40].map(l => '第' + l + '關 ' + avg(byAnswers[l]).toFixed(1)).join('　'));
+ok(avg(byAnswers[30]) > avg(byAnswers[3]) && avg(byAnswers[30]) >= 3, '答案張數隨關卡增加：第 30 關平均 ≥ 3 張');
+ok(early.n > 30 && early.withPair === early.n, '第 1～3 關也一定有一對（手牌是 3 的倍數加 1 張）：' + early.withPair + '／' + early.n);
+// 前三關的題目，肉眼可驗證的例子：補一張之後，要有「兩張一樣」的一對 ＋ 其他剛好是整組
+{ for (let lv = 1; lv <= 3; lv++) for (let k = 0; k < 50; k++) { const q = T.makeLevel(lv, rnd); q.winners.forEach(w => { const c = T.countsOf(q.hand); c[w]++; ok(c.some(n => n >= 2), '第 ' + lv + ' 關補 ' + w + ' 之後有至少一個數字有 2 張以上（可當一對）'); }); } }
 // layout：補的牌放進排序後的位置
 { const L = T.layout([2, 3, 3, 4, 5, 5, 6, 7], 4, [[2, 3, 4], [3, 4, 5], [5, 6, 7]]); ok(L.tiles.join('') === '233445567' && L.addedIdx === 4 && L.groupIdx.length === 3 && L.groupIdx.every(g => g.length === 3) && new Set([].concat(...L.groupIdx)).size === 9, 'layout：排序、補的位置、分組位置不重複'); }
 // decompText
@@ -109,6 +107,7 @@ ok(avg(byAnswers[1]) === 1 && avg(byAnswers[30]) > avg(byAnswers[6]) && avg(byAn
   ok(/\.mahjong3-key--sel \{ border-color: var\(--c-orange\);/.test(css) && /\.mahjong3-key--miss \{ border: 3px dashed var\(--c-orange\);/.test(css) && /\.mahjong3-go \{/.test(css), '已選、漏掉的牌鍵與「我選好了」都有樣式（顏色用變數）');
   ok(/我選好了/.test(src) && /go\.disabled = n === 0/.test(src), '「我選好了」一張都沒選時按不下去');
   ok(boot.indexOf("'js/reaction_mahjong3.js'") > 0, 'boot.js 有載入');
-  ok(/補哪些牌/.test(G.rule) && /三張連號/.test(G.rule) && /全部點起來/.test(G.rule) && /一對/.test(G.rule) && /最多 4 張/.test(G.rule), '玩法說明寫了規則（全部找出來、一對、4 張上限）'); }
+  ok(/補哪些牌/.test(G.rule) && /三張連號/.test(G.rule) && /全部點起來/.test(G.rule) && /一對/.test(G.rule) && /最多 4 張/.test(G.rule) && /胡牌/.test(G.rule) && !/有的題目/.test(G.rule), '玩法說明寫了規則（每一關都要一對、胡牌、全部找出來、4 張上限）');
+  ok(/選出所有能夠胡牌的答案（可能不只一張）/.test(src) && /三張連號或三張一樣/.test(src) && /再加一對相同/.test(src), '畫面上寫著「選出所有能夠胡牌的答案（可能不只一張）」與每一關一樣的規則'); }
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20) !== T.rating(30), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');
