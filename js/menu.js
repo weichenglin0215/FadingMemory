@@ -240,7 +240,10 @@
         { id: 'fruitstock', name: '水果進出貨', cat: 'number', img: 'img/reaction/fruitstock.png' },
         { id: 'boxstack', name: '疊箱子', cat: 'logic', img: 'img/reaction/boxstack.png' },
         { id: 'shapegrid', name: '形色不相鄰', cat: 'logic', img: 'img/reaction/shapegrid.png' },
-        { id: 'babyscale', name: '抱著量體重', cat: 'number', img: 'img/reaction/babyscale.png' }
+        { id: 'babyscale', name: '抱著量體重', cat: 'number', img: 'img/reaction/babyscale.png' },
+        { id: 'skyshot', name: '砲打飛機', cat: 'reaction', img: 'img/reaction/skyshot.png' },
+        { id: 'forestpeek', name: '草叢找動物', cat: 'reaction', img: 'img/reaction/forestpeek.png' },
+        { id: 'rocketland', name: '火箭回收', cat: 'hand', img: 'img/reaction/rocketland.png' }
     ];
     /* 用 id 快速找到那一款（recent 頁籤只存 id，顯示時要靠它換回完整資料） */
     var gameById = {};

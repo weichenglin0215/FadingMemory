@@ -183,5 +183,8 @@ window.FM_SCORE_SPECS = {
     "fruitstock": {"better":"max","decimals":0,"format":"{v} 關"},
     "boxstack": {"better":"max","decimals":0,"format":"{v} 關"},
     "shapegrid": {"better":"max","decimals":0,"format":"{v} 關"},
-    "babyscale": {"better":"max","decimals":0,"format":"{v} 關"}
+    "babyscale": {"better":"max","decimals":0,"format":"{v} 關"},
+    "skyshot": {"better":"max","decimals":0,"format":"{v} 分"},
+    "forestpeek": {"better":"max","decimals":0,"format":"{v} 隻"},
+    "rocketland": {"better":"max","decimals":0,"format":"{v} 關"}
 };

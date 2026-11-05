@@ -1,0 +1,43 @@
+/* ═══════════════════════════════════════
+   reaction_skyshot.css — 砲打飛機（js/reaction_skyshot.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「skyshot-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 天空、飛行器、砲塔都畫在 canvas 上（顏色寫在 js 的 COL）；這裡只有畫布與「剩幾發砲彈」的小牌子。
+   ═══════════════════════════════════════ */
+
+/* 遊戲區 */
+.skyshot-stage {
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理點擊 */
+    user-select: none;                                  /* 文字不能被選取（避免連點時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（Safari） */
+}
+
+/* 畫布：鋪滿遊戲區 */
+.skyshot-canvas {
+    position: absolute;                                 /* 脫離一般排版，貼著遊戲區擺放 */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    display: block;                                     /* 區塊元素（下面不會多出一條空隙） */
+    cursor: crosshair;                                  /* 滑鼠游標變成十字準星 */
+}
+
+/* 剩幾發砲彈（左下角的小牌子） */
+.skyshot-ammo {
+    position: absolute;                                 /* 脫離一般排版，貼著遊戲區擺放 */
+    left: var(--sp-3);                                  /* 離左邊：主題變數 --sp-3 */
+    bottom: var(--sp-2);                                /* 離下邊：主題變數 --sp-2 */
+    padding: var(--sp-1) var(--sp-3);                   /* 內縮：上下 --sp-1、左右 --sp-3 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    border: 2px solid var(--c-ink-soft);                /* 邊框：2px 實線 --c-ink-soft */
+    border-radius: var(--r-pill);                       /* 圓角：膠囊形 */
+    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);                        /* 粗體 */
+    pointer-events: none;                               /* 不擋點擊（點在牌子上也會開砲） */
+}
+
+/* 剩 5 發以下：牌子變橘色提醒 */
+.skyshot-ammo--low {
+    background: var(--c-orange);                        /* 背景：主題變數 --c-orange */
+    color: var(--c-on-accent);                          /* 文字顏色：白字 */
+    border-color: var(--c-orange);                      /* 邊框顏色：同背景 */
+}

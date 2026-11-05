@@ -1,0 +1,97 @@
+/* ═══════════════════════════════════════
+   reaction_rocketland.css — 火箭回收（js/reaction_rocketland.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「rocketland-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 天空、標靶、火箭、風向旗都畫在 canvas 上（顏色寫在 js 的 COL）；這裡是畫布、上方的燃料條與中間的提示字。
+   ═══════════════════════════════════════ */
+
+/* 遊戲區 */
+.rocketland-stage {
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理按壓 */
+    user-select: none;                                  /* 文字不能被選取（避免按住時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（Safari） */
+    -webkit-touch-callout: none;                        /* 長按不跳出系統選單（iPhone） */
+    background: var(--c-ink);                           /* 背景：深色（最上方燃料條那一條的底色；天空畫在下面的畫布上） */
+}
+
+/* 畫布：鋪滿遊戲區 */
+.rocketland-canvas {
+    position: absolute;                                 /* 脫離一般排版，貼著遊戲區擺放 */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    display: block;                                     /* 區塊元素（下面不會多出一條空隙） */
+}
+
+/* 燃料條（最上方的橫條） */
+.rocketland-fuel {
+    position: absolute;                                 /* 脫離一般排版，貼著遊戲區擺放 */
+    left: var(--sp-3);                                  /* 離左邊：主題變數 --sp-3 */
+    right: var(--sp-3);                                 /* 離右邊：主題變數 --sp-3 */
+    top: 7px;                                           /* 離上邊 7px（燃料條那一條高 40px，置中） */
+    height: 26px;                                       /* 高度 26px */
+    border: 2px solid var(--c-card);                    /* 邊框：2px 實線（淺色，在深色天空上看得清楚） */
+    border-radius: var(--r-pill);                       /* 圓角：膠囊形 */
+    background: rgba(0, 0, 0, 0.35);                    /* 背景：半透明黑（燃料用掉的部分） */
+    overflow: hidden;                                   /* 超出圓角的部分裁掉 */
+    pointer-events: none;                               /* 不擋按壓（按在燃料條上也會噴火） */
+}
+
+/* 燃料條裡剩下的燃料：平常水藍色 */
+.rocketland-fuel__fill {
+    position: absolute;                                 /* 脫離一般排版，貼著燃料條擺放 */
+    left: 0;                                            /* 從左邊開始 */
+    top: 0;                                             /* 離上邊 0 */
+    bottom: 0;                                          /* 離下邊 0（跟燃料條一樣高） */
+    width: 100%;                                        /* 寬度＝剩下的比例（JS 會改） */
+    background: var(--c-sky);                           /* 背景：水藍色（主題變數 --c-sky） */
+}
+
+/* 燃料條上的「燃料」兩個字 */
+.rocketland-fuel__t {
+    position: absolute;                                 /* 脫離一般排版，貼著燃料條擺放 */
+    left: var(--sp-3);                                  /* 離左邊：主題變數 --sp-3 */
+    top: 50%;                                           /* 垂直置中（搭配下面的 transform） */
+    transform: translateY(-50%);                        /* 往上移自己高度的一半，才會真的置中 */
+    color: var(--c-card);                               /* 文字顏色：淺色 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 粗體 */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);          /* 文字陰影（在水藍色上也看得清楚） */
+}
+
+/* 剩 20% 以下：改紅色 */
+.rocketland-fuel--low .rocketland-fuel__fill {
+    background: var(--c-bad-light);                     /* 背景：紅色（主題變數 --c-bad-light） */
+}
+
+/* 剩 10% 以下：紅色閃爍 */
+.rocketland-fuel--crit .rocketland-fuel__fill {
+    animation: rocketland-blink 0.5s steps(2, start) infinite;  /* 動畫：每 0.5 秒亮暗一次，一直重複 */
+}
+
+/* 閃爍：一下亮、一下暗 */
+@keyframes rocketland-blink {
+    to { opacity: 0.15; }                               /* 暗的時候只剩 15% 不透明 */
+}
+
+/* 畫面中間的提示字（準備…、穩穩降落！、墜毀！） */
+.rocketland-msg {
+    position: absolute;                                 /* 脫離一般排版，貼著遊戲區擺放 */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0（左右撐滿，文字置中） */
+    top: 38%;                                           /* 離上邊 38% */
+    text-align: center;                                 /* 文字置中 */
+    color: var(--c-card);                               /* 文字顏色：淺色 */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    font-weight: var(--fw-bold);                        /* 粗體 */
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);          /* 文字陰影（在天空上看得清楚） */
+    pointer-events: none;                               /* 不擋按壓 */
+}
+
+/* 成功：綠字 */
+.rocketland-msg--ok {
+    color: var(--c-ok-light);                           /* 文字顏色：淺綠（主題變數 --c-ok-light） */
+}
+
+/* 失敗：紅字 */
+.rocketland-msg--bad {
+    color: var(--c-bad-light);                          /* 文字顏色：紅色（主題變數 --c-bad-light） */
+}
