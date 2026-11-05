@@ -1,16 +1,19 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_forestpeek.js — 秒反應・草叢找動物
    樣式：css/games/reaction_forestpeek.css（這款專屬的 class 一律以「forestpeek-」開頭；共用元件在 css/reaction_common.css）
-   森林裡密密麻麻、一層疊一層的花草，小動物會不定時從花草的空隙之間鑽出來、跑一小段又躲回去。
-   **看到小動物就點牠**，點到一隻得 1 分。限時 60 秒，成績＝一共點到幾隻（越多越好）。
+   一整片草原，長滿一叢一叢、開著各色花朵的低矮灌木（不規則地散布），小動物會不定時在灌木後面冒出來、跑一小段又躲回去。
+   **看到小動物就點牠**，點到一隻得 1 分。限時 TIME_S（60）秒，成績＝一共點到幾隻（越多越好）。
    ───────────────────────────────────────────────────────────────────
-   · 畫面（canvas）：上面是樹林，下面分成 ROWS 排草叢，越下面越靠近你。每一排的小動物會被「自己這一排」與「前面幾排」的草擋住一部分，
-     只能從草葉之間的縫看到；牠從地面冒出來（POP_S 秒）、橫著跑一小段、再沉下去（POP_S 秒）。
-   · 難度跟著「分數」走（RAMP_SCORE 分到頂，線性）：出現的間隔 INTERVAL_S 1.5 → 0.5 秒、同時出現的隻數 1 → 3（ALIVE_AT）、
-     露臉的時間 SHOW_S 2.4 → 0.8 秒、跑的速度 SPEED 30 → 180 px／秒。
-   · 跟著「時間」走（60 秒內線性）：小動物的大小 SIZE_PX 72 → 34 px（越後面越小、越難點）。
-     前 HINT_S（20）秒是新手期：小動物出現時，牠身邊的草葉會用力晃動，刻意提醒你牠在哪裡。
-   · 點擊判定：點在小動物中心 HIT_K × 大小 ＋ HIT_PAD 的範圍內就算點到（被草擋住的部分也算），露出不到 30% 的時候不算。點到空白處沒有懲罰。
+   · 畫面（canvas）：整片草原（沒有天空、沒有樹），由上到下 ROWS 排灌木，越下面越靠近你。每一排的小動物會被「自己這一排」與「前面那一排」的灌木擋住，
+     **只能從灌木之間的空隙看到牠的一部分**（灌木比小動物高、排得很密，看不到整隻）；牠從地面冒出來（POP_S 秒）、橫著跑一小段、再沉下去（POP_S 秒）。
+   · 每一叢灌木是一團大小不一的葉球＋葉片紋理＋好幾朵不同顏色的花（BUSH_*、FLOWERS、COL.flower），開場時各畫成一張小圖，之後每一格只要貼圖，手機也跑得動。
+   · 小動物除了原本的顏色，還蓋上一層淡淡的綠色（TINT），跟灌木混在一起更難分辨。
+   · 出場前先試幾條路線（VIS_TRIES），用像素算出沿路「最多露出幾成」，挑落在 VIS（一成多～五成）之間的：一定看得到一部分、但看不到整隻。
+   · 難度跟著「分數」走（LEVEL_RAMP＝30 分到頂，線性）：出現的間隔 INTERVAL_S 1.2 → 0.3 秒、同時出現的隻數 1 → 3（ALIVE_AT：0／6／18 分）、
+     露臉的時間 SHOW_S 2.0 → 0.8 秒、跑的速度 SPEED 60 → 180 px／秒。
+   · 跟著「時間」走（60 秒內線性）：小動物的大小 SIZE_PX 60 → 20 px（越後面越小、越難點）。
+     前 HINT_S（10）秒是新手期：小動物出現時，牠身邊的灌木會用力晃動，刻意提醒你牠在哪裡。
+   · 點擊判定：點在小動物中心 HIT_K × 大小 ＋ HIT_PAD 的範圍內就算點到（被灌木擋住的部分也算），露出不到 30% 的時候不算。點到空白處沒有懲罰。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
@@ -25,17 +28,27 @@
 
     /* ═══ 可以自己調的參數 ═══ */
     var TIME_S = 60;                                    /* 限時幾秒 */
-    var RAMP_SCORE = 40;                                /* 幾分之後難度到頂 */
-    var INTERVAL_S = [1.5, 0.5];                        /* 兩隻小動物出現的平均間隔（秒）：0 分 → 到頂（每次再乘 0.7～1.3 的隨機倍率） */
+    var LEVEL_RAMP = 30;                                /* 幾分之後難度到頂 */
+    var INTERVAL_S = [1.2, 0.3];                        /* 兩隻小動物出現的平均間隔（秒）：0 分 → 到頂（每次再乘 0.7～1.3 的隨機倍率） */
     var ALIVE_AT = [0, 6, 18];                          /* 同時最多幾隻：0 分起 1 隻、6 分起 2 隻、18 分起 3 隻 */
-    var SHOW_S = [2.4, 0.8];                            /* 每隻露臉的時間（秒，含冒出來與沉下去）：0 分 → 到頂 */
-    var SPEED = [30, 180];                              /* 橫著跑的速度（px／秒）：0 分 → 到頂（每隻再乘 0.8～1.2） */
-    var SIZE_PX = [72, 34];                             /* 小動物的大小（px）：第 0 秒 → 第 60 秒（線性變小） */
-    var HINT_S = 20;                                    /* 前幾秒，小動物身邊的草會用力晃動（提醒你） */
+    var SHOW_S = [2.0, 0.8];                            /* 每隻露臉的時間（秒，含冒出來與沉下去）：0 分 → 到頂 */
+    var SPEED = [60, 180];                              /* 橫著跑的速度（px／秒）：0 分 → 到頂（每隻再乘 0.8～1.2） */
+    var SIZE_PX = [60, 20];                             /* 小動物的大小（px）：第 0 秒 → 第 60 秒（線性變小） */
+    var HINT_S = 10;                                    /* 前幾秒，小動物身邊的灌木會用力晃動（提醒你） */
     var POP_S = 0.18;                                   /* 冒出來、沉下去各要幾秒 */
     var HIT_K = 0.6, HIT_PAD = 10;                      /* 點擊範圍：中心 HIT_K × 大小 ＋ HIT_PAD px 以內 */
-    var ROWS = 6;                                       /* 幾排草叢 */
-    var ROW_TOP = 0.34, ROW_BOTTOM = 0.97;              /* 第一排與最後一排草叢的地面位置（畫面高度的比例） */
+    var ROWS = 7;                                       /* 幾排灌木 */
+    var ROW_TOP = 0.13, ROW_BOTTOM = 0.98;              /* 第一排與最後一排灌木的地面位置（畫面高度的比例；整片都是草原，從很上面就開始） */
+    var BUSH_W = [56, 124];                             /* 一叢灌木的寬度（px，隨機） */
+    var BUSH_H = [0.8, 1.15];                           /* 一叢灌木的高度＝排距的幾倍（隨機；比 1 大就會蓋到後面那一排的下半部） */
+    var BUSH_GAP = [-22, 6];                            /* 相鄰兩叢之間的距離（px，負的＝互相重疊）：排得很密，只留小縫 */
+    var HOLE_P = 0.25, HOLE_W = [10, 22];               /* 偶爾留一個比較大的空隙：機率、寬度（px） */
+    var BUSH_DY = 10;                                   /* 每一叢的地面位置上下隨機偏移（px），看起來不規則、不是排成一直線 */
+    var RISE = 0.68;                                    /* 小動物冒出來的高度：中心在地面上方「大小 × RISE」（越大露得越多） */
+    var VIS = [0.12, 0.5];                              /* 每隻小動物最多露出幾成：要在這個範圍內（太少＝根本看不到、太多＝看到整隻）；出場前先試幾條路線挑一條符合的 */
+    var VIS_TRIES = 8;                                  /* 最多試幾條路線 */
+    var FLOWERS = [3, 9];                               /* 每一叢開幾朵花（隨機） */
+    var TINT = 'rgba(70, 150, 60, 0.30)';               /* 蓋在小動物身上的淡綠色（最後一個數字＝濃淡，0～1） */
     var PLUS_MS = 800;                                  /* 「+1」字樣飄多久 */
     var SOLVE_CAP = 15;                                 /* 驗證用：api.solve 最多幫你點到幾隻 */
     var MAX_LEVEL = 1;                                  /* 只有一局（成績用 scoreOf＝點到幾隻） */
@@ -43,13 +56,14 @@
     var ANIMALS = ['😺', '😸', '🐵', '🐶', '🐺', '🐱', '🦁', '🐯', '🦒', '🦊', '🦝', '🐮', '🐷', '🐼', '🐸', '🦓', '🐴', '🦄', '🐔', '🐕‍🦺', '🐕', '🐈', '🐆', '🦌', '🦏', '🐂', '🐄', '🐖', '🐏', '🐑', '🐐', '🐪', '🐫', '🦙', '🦘', '🦨', '🐘', '🦔', '🐇', '🐿', '🦎', '🐍', '🐉', '🦕', '🐠', '🐡', '🐓', '🦅', '🦢', '🦜', '🦩', '🦉', '🐦', '🐧', '🐤'];
     /* 畫布用的顏色（canvas 不能直接用 CSS 變數，所以寫在這裡） */
     var COL = {
-        sky: '#CFE8C8', sky2: '#9CC98F', trunk: '#6B4F34', canopy: ['#3F7A3A', '#4E8C44', '#2F6630'], ground: '#4C7A36', ground2: '#3A6229',
-        grass: ['#3E7D2E', '#4F9A38', '#5DAE45', '#2F6A26', '#6FBF52'], leaf: ['#3B7F33', '#2E6B2B', '#4A9440'],
-        flower: ['#F25C7A', '#FFD23F', '#FFFFFF', '#B784F0', '#FF8C42', '#5CC8F2'], ink: '#2E2A1E', plus: '#FFD23F'
+        meadow: '#86BE63', meadow2: '#4F8C3A', tuft: ['#6FAE50', '#5C9C44', '#9ACB72'], shadow: 'rgba(20, 50, 15, 0.35)',
+        leaf: ['#2C6427', '#357430', '#41853A', '#4F9744', '#5FA84F', '#73B95E'],      /* 灌木的葉子：越下面越深、越上面越亮 */
+        flower: ['#F25C7A', '#FFD23F', '#FFFFFF', '#B784F0', '#FF8C42', '#5CC8F2', '#E8433A', '#FF9ECF', '#7B6CF0', '#F7F0A0'], center: ['#FFD23F', '#8A5A2B', '#FFF4C2'],
+        ink: '#2E2A1E', plus: '#FFD23F'
     };
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function prog(score) { return Math.min(1, Math.max(0, score / RAMP_SCORE)); }
+    function prog(score) { return Math.min(1, Math.max(0, score / LEVEL_RAMP)); }
     function lerp(pair, p) { return pair[0] + (pair[1] - pair[0]) * p; }
     /* 難度（輸入＝目前分數）：{ interval（秒）, alive（同時最多幾隻）, show（露臉秒數）, speed（px／秒）} */
     function diffFor(score) {
@@ -90,6 +104,19 @@
         });
         return best;
     }
+    /* 一排灌木的位置：從畫面左邊外面排到右邊外面，寬度、高度、間距都隨機（大多互相重疊，偶爾留一個空隙），地面位置上下錯開。
+       gap＝排距（px）。回傳 [{ x 中心, y 地面, w 寬, h 高 }] */
+    function layoutRow(W, base, gap, rand) {
+        rand = rand || Math.random;
+        var out = [], x = -BUSH_W[0] * 0.4 - rand() * 20;
+        while (x < W + BUSH_W[0] * 0.4) {
+            var w = kit.randFloat(BUSH_W[0], BUSH_W[1], rand), hh = gap * kit.randFloat(BUSH_H[0], BUSH_H[1], rand);
+            out.push({ x: x + w / 2, y: base + (rand() - 0.5) * 2 * BUSH_DY, w: w, h: hh });
+            x += w + kit.randFloat(BUSH_GAP[0], BUSH_GAP[1], rand);
+            if (rand() < HOLE_P) x += kit.randFloat(HOLE_W[0], HOLE_W[1], rand);
+        }
+        return out;
+    }
     /* 草叢第 r 排的地面高度（px） */
     function rowY(H, r) { return H * (ROW_TOP + (ROW_BOTTOM - ROW_TOP) * r / (ROWS - 1)); }
     /* 結算評語 */
@@ -126,35 +153,78 @@
         stage.appendChild(cv);                          /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var g = cv.getContext('2d'); g.scale(dpr, dpr);
 
-        var rows = [], r;
+        var PAD = 12;                                   /* 灌木小圖四周多留的邊（葉子、花會超出灌木的外框一點點） */
+        var rows = [], r, rowGap = rowY(H, 1) - rowY(H, 0);
         for (r = 0; r < ROWS; r++) rows.push(makeRow(r));
-        var trees = makeTrees();
+        var bg = makeMeadow();
         var animals = [], floats = [], rings = [], clock = 0, nextAt = 0.8, last = null, over = false, started = false;
         S.score = 0; api.setInfo('找到 0 隻');
         api.info = { get animals() { return animals; }, get clock() { return clock; }, get score() { return S.score; } };
-        console.log('[草叢找動物] 開始：' + ROWS + ' 排草叢，難度 ' + JSON.stringify(diffFor(0)) + ' → ' + JSON.stringify(diffFor(RAMP_SCORE)));  /* 在瀏覽器主控台（按 F12）印出設定，方便除錯 */
+        console.log('[草叢找動物] 開始：' + ROWS + ' 排草叢，難度 ' + JSON.stringify(diffFor(0)) + ' → ' + JSON.stringify(diffFor(LEVEL_RAMP)));  /* 在瀏覽器主控台（按 F12）印出設定，方便除錯 */
         if (kit.once('forestpeek.hint')) kit.hintOn(stage, null, { mode: 'tap', x: W * 0.5, y: H * 0.6, delay: 600, text: '小動物冒出來就點牠' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         api.timer(TIME_S * 1000, timeUp);               /* 開始倒數（畫面上方的時間條）：時間到就呼叫 timeUp */
         started = true;
 
-        /* 第 r 排草叢：細長的草葉、葉叢、花（位置隨機，有疏有密，留下一些縫） */
+        /* 第 r 排灌木：位置用 layoutRow 排好，每一叢先畫成一張小圖（之後每一格只要貼圖） */
         function makeRow(ri) {
-            var base = rowY(H, ri), items = [], x = -10, near = ri / (ROWS - 1);
-            while (x < W + 10) {
-                x += 4 + rand() * 8;
-                if (rand() < 0.12) x += 14 + rand() * 18;                                   /* 留一個縫 */
-                var hh = (38 + rand() * 52) * (0.85 + near * 0.35);
-                items.push({ t: 'blade', x: x, h: hh, w: 2.5 + rand() * 3 + near * 2, bend: (rand() - 0.5) * 18, c: kit.pick(COL.grass, rand), ph: rand() * 6.28 });
-                if (rand() < 0.06) items.push({ t: 'bush', x: x, y: base - 6 - rand() * 14, rx: 14 + rand() * 12, ry: 9 + rand() * 7, c: kit.pick(COL.leaf, rand), ph: rand() * 6.28 });
-                if (rand() < 0.08) items.push({ t: 'flower', x: x + (rand() - 0.5) * 6, h: hh * (0.6 + rand() * 0.35), r: 4 + rand() * 3 + near * 2, c: kit.pick(COL.flower, rand), ph: rand() * 6.28 });
-            }
-            items.sort(function (a, b) { return (a.t === 'blade' ? 1 : 0) - (b.t === 'blade' ? 1 : 0); });   /* 葉叢先畫、草葉後畫（草葉蓋在葉叢上） */
-            return { base: base, items: items };
+            var base = rowY(H, ri);
+            var bushes = layoutRow(W, base, rowGap, rand).map(function (b) { b.ph = rand() * 6.28; b.spr = makeBush(b.w, b.h); return b; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            return { base: base, bushes: bushes };
         }
-        function makeTrees() {
-            var out = [];
-            for (var i = 0; i < 9; i++) out.push({ x: (i + 0.5) * W / 9 + (rand() - 0.5) * 30, w: 14 + rand() * 16, r: 40 + rand() * 30, c: kit.pick(COL.canopy, rand) });
-            return out;
+        /* 小圖用的畫布（照螢幕的像素密度放大，才不會糊） */
+        function sprite(w, hh) { var c = document.createElement('canvas'); c.width = Math.ceil(w * dpr); c.height = Math.ceil(hh * dpr); var x = c.getContext('2d'); x.scale(dpr, dpr); return { c: c, g: x, w: w, h: hh }; }
+        /* 一叢灌木：底下一塊陰影、一團大小不一的葉球（下面深、上面亮）、葉片紋理、好幾朵不同顏色的花 */
+        function makeBush(w, hh) {
+            var s = sprite(w + PAD * 2, hh + PAD * 2), b = s.g, i, k;
+            b.translate(PAD + w / 2, PAD + hh);         /* 原點移到灌木的地面中心，往上是負的 */
+            b.fillStyle = COL.shadow; b.beginPath(); b.ellipse(0, -2, w * 0.52, 7, 0, 0, Math.PI * 2); b.fill();
+            var n = 9 + Math.round(w / 9), blobs = [];
+            for (i = 0; i < n; i++) {
+                var u = rand() * 2 - 1, r = w * kit.randFloat(0.13, 0.24, rand), top = hh * (1 - 0.3 * u * u);   /* 中間高、兩邊矮的圓頂 */
+                blobs.push({ x: u * (w / 2 - r * 0.7), y: -Math.max(r * 0.7, Math.min(top - r, r * 0.7 + rand() * (top - r * 1.4))), r: r });
+            }
+            blobs.push({ x: -w * 0.22, y: -hh * 0.22, r: w * 0.26 }, { x: w * 0.22, y: -hh * 0.22, r: w * 0.26 }, { x: 0, y: -hh * 0.5, r: Math.min(w * 0.3, hh * 0.45) });   /* 中間下半部一定塞滿 */
+            blobs.sort(function (p, q) { return q.y - p.y; });   /* 下面的先畫，上面的蓋在上面 */
+            blobs.forEach(function (o) {                /* forEach：對陣列的每個元素各做一次 */
+                var lv = Math.min(COL.leaf.length - 1, Math.max(0, Math.floor(-o.y / hh * (COL.leaf.length - 1) + rand() * 1.5)));
+                b.fillStyle = COL.leaf[lv]; b.beginPath(); b.arc(o.x, o.y, o.r, 0, Math.PI * 2); b.fill();
+                for (k = 0; k < 7; k++) {               /* 葉片：一圈小橢圓，讓外框凹凸不平 */
+                    var a = rand() * Math.PI * 2, d = o.r * kit.randFloat(0.55, 1.02, rand);
+                    b.fillStyle = COL.leaf[Math.min(COL.leaf.length - 1, lv + (rand() < 0.5 ? 1 : 0))];
+                    b.beginPath(); b.ellipse(o.x + Math.cos(a) * d, o.y + Math.sin(a) * d, o.r * 0.32, o.r * 0.17, a + 1.2, 0, Math.PI * 2); b.fill();
+                }
+            });
+            var nf = Math.round(kit.randFloat(FLOWERS[0], FLOWERS[1] + 0.99, rand) - 0.5);
+            for (i = 0; i < nf; i++) {                  /* 花：開在葉球的上半部 */
+                var o2 = blobs[Math.floor(rand() * blobs.length)], fa = -Math.PI * kit.randFloat(0.1, 0.9, rand), fd = o2.r * kit.randFloat(0.3, 0.85, rand);
+                drawFlower(b, o2.x + Math.cos(fa) * fd, o2.y + Math.sin(fa) * fd, kit.randFloat(3.5, 6.5, rand), kit.pick(COL.flower, rand), kit.pick(COL.center, rand));
+            }
+            return s;
+        }
+        function drawFlower(b, x, y, r, c, mid) {
+            var n = rand() < 0.5 ? 5 : 6, ph = rand() * 6.28;
+            b.fillStyle = c;
+            for (var k = 0; k < n; k++) { var a = ph + k * Math.PI * 2 / n; b.beginPath(); b.ellipse(x + Math.cos(a) * r * 0.8, y + Math.sin(a) * r * 0.8, r * 0.7, r * 0.45, a, 0, Math.PI * 2); b.fill(); }
+            b.fillStyle = mid; b.beginPath(); b.arc(x, y, r * 0.45, 0, Math.PI * 2); b.fill();
+        }
+        /* 草原的底圖：上淺下深的綠，加上很多短短的小草（只是紋理，不會擋住小動物） */
+        function makeMeadow() {
+            var s = sprite(W, H), b = s.g, gr = b.createLinearGradient(0, 0, 0, H);
+            gr.addColorStop(0, COL.meadow); gr.addColorStop(1, COL.meadow2);
+            b.fillStyle = gr; b.fillRect(0, 0, W, H);
+            for (var i = 0; i < 520; i++) {
+                var x = rand() * W, y = rand() * H, l = 3 + rand() * 5 * (0.6 + y / H);
+                b.strokeStyle = kit.pick(COL.tuft, rand); b.lineWidth = 1.2; b.beginPath(); b.moveTo(x, y); b.lineTo(x + (rand() - 0.5) * 3, y - l); b.stroke();
+            }
+            return s;
+        }
+        /* 小動物的圖：emoji 原本的顏色，再蓋一層淡淡的綠色（只蓋在 emoji 有顏色的地方：source-atop） */
+        function makeAnimal(ch, size) {
+            var d = Math.ceil(size * 1.35), s = sprite(d, d), b = s.g;
+            b.font = Math.round(size) + 'px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif'; b.textAlign = 'center'; b.textBaseline = 'middle';
+            b.fillText(ch, d / 2, d / 2);
+            b.globalCompositeOperation = 'source-atop'; b.fillStyle = TINT; b.fillRect(0, 0, d, d);   /* globalCompositeOperation：source-atop＝只畫在已經有顏色的地方 */
+            return s;
         }
 
         /* 點擊：點到小動物就 +1 */
@@ -164,12 +234,12 @@
             if (i < 0) { rings.push({ x: p.x, y: p.y, t: 0 }); return; }
             catchIt(i);
         });
-        function view(a) { var ps = poseAt(a, clock - a.born); return { x: ps.x, y: a.base - a.size * 0.55 * ps.up - a.size * 0.05, size: a.size, up: ps.up }; }
+        function view(a) { var ps = poseAt(a, clock - a.born); return { x: ps.x, y: a.base - a.size * RISE * ps.up - a.size * 0.05, size: a.size, up: ps.up }; }
         function catchIt(i) {
             var a = animals[i], v = view(a);
             animals.splice(i, 1);                       /* splice：從陣列中刪掉元素 */
             S.score++; api.setInfo('找到 ' + S.score + ' 隻'); Sfx.play('pop');  /* Sfx.play(名稱)：播放音效（音效是程式即時合成的） */
-            floats.push({ x: v.x, y: v.y - a.size * 0.5, t: 0, ch: a.ch, size: a.size });
+            floats.push({ x: v.x, y: v.y - a.size * 0.5, t: 0, ch: a.ch, size: a.size, spr: a.spr });
         }
 
         api.my.loop(function (now, dt) {                /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
@@ -192,9 +262,17 @@
             var used = animals.map(function (a) { return a.row; }), free = [];
             for (var k = 0; k < ROWS; k++) if (used.indexOf(k) < 0) free.push(k);  /* indexOf：找元素在陣列裡的位置，找不到回傳 −1 */
             if (!free.length) return;
-            var row = kit.pick(free, rand), size = sizeFor(clock), sp = df.speed * kit.randFloat(0.8, 1.2, rand);
-            var path = planPath(W, size, sp, df.show, rand), ch = pickAnimal(rand, last); last = ch;
-            animals.push({ ch: ch, row: row, base: rows[row].base, size: size, born: clock, show: df.show, dir: path.dir, x0: path.x0, speed: path.speed });
+            var size = sizeFor(clock), sp = df.speed * kit.randFloat(0.8, 1.2, rand), ch = pickAnimal(rand, last), spr = makeAnimal(ch, size); last = ch;
+            /* 試幾條路線（排、起點、方向），沿路取 5 個點算「露出幾成」，最多露出的那一點要在 VIS 範圍內；都不符合就用最接近的 */
+            var best = null, bestErr = 1e9;
+            for (var tr = 0; tr < VIS_TRIES; tr++) {
+                var row = kit.pick(free, rand), path = planPath(W, size, sp, df.show, rand), base = rows[row].base, y = base - size * RISE - size * 0.05, mx = 0;
+                for (var q = 0; q <= 4; q++) mx = Math.max(mx, coverAt(row, path.x0 + path.dir * path.speed * df.show * q / 4, y, spr));
+                var err = mx < VIS[0] ? VIS[0] - mx : mx > VIS[1] ? mx - VIS[1] : 0;
+                if (err < bestErr) { bestErr = err; best = { row: row, path: path, vis: mx }; }
+                if (!err) break;
+            }
+            animals.push({ ch: ch, row: best.row, base: rows[best.row].base, size: size, born: clock, show: df.show, dir: best.path.dir, x0: best.path.x0, speed: best.path.speed, spr: spr, vis: best.vis });
         }
         function timeUp() {
             if (over) return;
@@ -205,68 +283,68 @@
 
         /* ═══ 畫面 ═══ */
         function draw() {
-            var sky = g.createLinearGradient(0, 0, 0, rows[0].base);
-            sky.addColorStop(0, COL.sky); sky.addColorStop(1, COL.sky2);
-            g.fillStyle = sky; g.fillRect(0, 0, W, H);
-            /* 樹林 */
-            trees.forEach(function (tr) {
-                g.fillStyle = COL.trunk; g.fillRect(tr.x - tr.w / 2, rows[0].base - 170, tr.w, 170);
-                g.fillStyle = tr.c; g.beginPath(); g.arc(tr.x, rows[0].base - 175, tr.r, 0, Math.PI * 2); g.arc(tr.x - tr.r * 0.6, rows[0].base - 150, tr.r * 0.7, 0, Math.PI * 2); g.arc(tr.x + tr.r * 0.6, rows[0].base - 150, tr.r * 0.7, 0, Math.PI * 2); g.fill();
-            });
-            var gr = g.createLinearGradient(0, rows[0].base - 30, 0, H);
-            gr.addColorStop(0, COL.ground); gr.addColorStop(1, COL.ground2);
-            g.fillStyle = gr; g.fillRect(0, rows[0].base - 30, W, H);
-            var hint = hintOn(clock) && !over, views = animals.map(function (a) { var v = view(a); v.row = a.row; v.ch = a.ch; v.base = a.base; return v; });
+            g.drawImage(bg.c, 0, 0, W, H);              /* 草原底圖 */
+            var hint = hintOn(clock) && !over, views = animals.map(function (a) { var v = view(a); v.row = a.row; v.spr = a.spr; v.base = a.base; return v; });
             for (var ri = 0; ri < ROWS; ri++) {
-                /* 這一排的小動物：只畫地面以上的部分（下半身「躲」在地面後面） */
+                /* 這一排的小動物：只畫地面以上的部分（下半身「躲」在地面後面），再畫這一排的灌木蓋在牠前面 */
                 views.forEach(function (v) {
                     if (v.row !== ri || v.up <= 0) return;
                     g.save(); g.beginPath(); g.rect(0, 0, W, v.base); g.clip();
-                    g.font = Math.round(v.size) + 'px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-                    g.fillText(v.ch, v.x, v.y);
+                    g.drawImage(v.spr.c, v.x - v.spr.w / 2, v.y - v.spr.h / 2, v.spr.w, v.spr.h);
                     g.restore();
                 });
                 drawRow(rows[ri], ri, hint ? views : null);
             }
-            /* 點到的小動物：放大、變淡；+1 */
+            /* 點到的小動物：整隻跳出來、放大、變淡；+1 */
             floats.forEach(function (f) {
-                var k = f.t / PLUS_MS;
+                var k = f.t / PLUS_MS, z = 1 + k * 0.6;
                 g.save(); g.globalAlpha = 1 - k;
-                g.font = Math.round(f.size * (1 + k * 0.6)) + 'px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-                g.fillText(f.ch, f.x, f.y + f.size * 0.5 - 20 * k);
-                g.font = '900 30px sans-serif'; g.lineWidth = 5; g.strokeStyle = COL.ink; g.strokeText('+1', f.x, f.y - 10 - 40 * k);
+                g.drawImage(f.spr.c, f.x - f.spr.w * z / 2, f.y + f.size * 0.5 - 20 * k - f.spr.h * z / 2, f.spr.w * z, f.spr.h * z);
+                g.font = '900 30px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = 5; g.strokeStyle = COL.ink; g.strokeText('+1', f.x, f.y - 10 - 40 * k);
                 g.fillStyle = COL.plus; g.fillText('+1', f.x, f.y - 10 - 40 * k);
                 g.restore();
             });
             rings.forEach(function (q) { var k = q.t / 300; g.save(); g.globalAlpha = 0.6 * (1 - k); g.strokeStyle = '#FFFFFF'; g.lineWidth = 2; g.beginPath(); g.arc(q.x, q.y, 8 + 16 * k, 0, Math.PI * 2); g.stroke(); g.restore(); });
         }
-        /* 畫一排草叢。shakers：新手期要晃動的小動物（在牠身邊、同一排與前一排的草會用力晃） */
+        /* 畫一排灌木（貼小圖，以地面中心為軸微微擺動）。shakers：新手期要晃動的小動物（牠身邊、同一排與前一排的灌木會用力晃） */
         function drawRow(row, ri, shakers) {
-            var t = clock, base = row.base;
-            row.items.forEach(function (it) {
-                var sway = 2.2 * Math.sin(t * 1.6 + it.ph);
+            var t = clock;
+            row.bushes.forEach(function (bu) {
+                var sway = 0.012 * Math.sin(t * 1.3 + bu.ph);
                 if (shakers) shakers.forEach(function (v) {
                     if (v.up <= 0 || (v.row !== ri && v.row !== ri - 1)) return;
-                    var dx = Math.abs((it.x) - v.x), reach = v.size * 1.3;
-                    if (dx < reach) sway += 8 * (1 - dx / reach) * Math.sin(t * 22 + it.ph * 3) * v.up;
+                    var dx = Math.abs(bu.x - v.x), reach = bu.w / 2 + v.size * 0.6;
+                    if (dx < reach) sway += 0.09 * (1 - dx / reach) * Math.sin(t * 22 + bu.ph * 3) * v.up;
                 });
-                if (it.t === 'blade') {
-                    g.fillStyle = it.c;
-                    g.beginPath(); g.moveTo(it.x - it.w / 2, base + 4);
-                    g.quadraticCurveTo(it.x + it.bend * 0.4 + sway * 0.4, base - it.h * 0.5, it.x + it.bend + sway, base - it.h);
-                    g.quadraticCurveTo(it.x + it.bend * 0.4 + sway * 0.4 + it.w * 0.3, base - it.h * 0.5, it.x + it.w / 2, base + 4);
-                    g.fill();
-                } else if (it.t === 'bush') {
-                    g.fillStyle = it.c; g.beginPath(); g.ellipse(it.x + sway * 0.6, it.y, it.rx, it.ry, 0, 0, Math.PI * 2); g.fill();
-                } else {
-                    var fx = it.x + sway, fy = base - it.h;
-                    g.strokeStyle = COL.grass[0]; g.lineWidth = 1.5; g.beginPath(); g.moveTo(it.x, base); g.quadraticCurveTo(it.x, fy + it.h * 0.5, fx, fy); g.stroke();
-                    g.fillStyle = it.c;
-                    for (var k = 0; k < 5; k++) { var a = k * 1.2566 + it.ph; g.beginPath(); g.arc(fx + Math.cos(a) * it.r, fy + Math.sin(a) * it.r, it.r * 0.8, 0, Math.PI * 2); g.fill(); }
-                    g.fillStyle = '#FFD23F'; g.beginPath(); g.arc(fx, fy, it.r * 0.6, 0, Math.PI * 2); g.fill();
-                }
+                g.save(); g.translate(bu.x, bu.y); g.rotate(sway);
+                g.drawImage(bu.spr.c, -bu.w / 2 - PAD, -bu.h - PAD, bu.spr.w, bu.spr.h);
+                g.restore();
             });
         }
+        /* 小動物（圖 spr）在第 row 排、中心 (x, y) 的時候露出幾成（0～1）：把牠畫在一張跟牠一樣大的小畫布上（地面以下切掉），
+           再用這一排與前面幾排的灌木「挖掉」，比較挖掉前後還有顏色的像素。出場前挑路線用，也給除錯看 */
+        var scratch = document.createElement('canvas');
+        function coverAt(row, x, y, spr) {
+            var sw = Math.ceil(spr.w), sh = Math.ceil(spr.h), base = rows[row].base, ox = x - spr.w / 2, oy = y - spr.h / 2, k, full = 0, left = 0;
+            if (scratch.width !== sw || scratch.height !== sh) { scratch.width = sw; scratch.height = sh; }
+            var b = scratch.getContext('2d', { willReadFrequently: true });
+            b.setTransform(1, 0, 0, 1, 0, 0); b.globalCompositeOperation = 'source-over'; b.clearRect(0, 0, sw, sh);
+            b.save(); b.beginPath(); b.rect(0, 0, sw, Math.max(0, base - oy)); b.clip(); b.drawImage(spr.c, 0, 0, spr.w, spr.h); b.restore();
+            var px = b.getImageData(0, 0, sw, sh).data;
+            for (k = 3; k < px.length; k += 4) if (px[k] > 40) full++;
+            if (!full) return 0;
+            b.globalCompositeOperation = 'destination-out';
+            for (var ri = row; ri < ROWS; ri++) rows[ri].bushes.forEach(function (bu) {
+                if (bu.x + bu.w / 2 + PAD < ox || bu.x - bu.w / 2 - PAD > ox + sw || bu.y - bu.h - PAD > oy + sh) return;   /* 離太遠的不用畫 */
+                b.drawImage(bu.spr.c, bu.x - bu.w / 2 - PAD - ox, bu.y - bu.h - PAD - oy, bu.spr.w, bu.spr.h);
+            });
+            px = b.getImageData(0, 0, sw, sh).data;
+            for (k = 3; k < px.length; k += 4) if (px[k] > 40) left++;
+            return left / full;
+        }
+        /* 除錯用：第 i 隻小動物現在露出幾成 */
+        function visibleOf(i) { var a = animals[i]; if (!a) return null; var v = view(a); return coverAt(a.row, v.x, v.y, a.spr); }
+        api.info.visibleOf = visibleOf;
 
         /* 驗證用（會被重複呼叫，要冪等）：solve＝點掉畫面上露出來的小動物（最多 SOLVE_CAP 隻）；wrong＝點一下空白處（沒有懲罰） */
         api.solve = function () {
@@ -281,13 +359,13 @@
     var G = {
         id: ID,
         name: '草叢找動物',
-        rule: '森林裡長滿一層又一層的花草，小動物會不定時從草叢的縫裡鑽出來，跑一小段又躲回去。**看到小動物就點牠**，點到一隻得 1 分。限時 60 秒，成績是**一共找到幾隻**。前 20 秒小動物出現時，牠身邊的草會晃動提醒你。分數越高，小動物出現得越頻繁（還會兩、三隻同時出現），**露臉的時間越短、跑得越快**；時間越後面，小動物也越來越小！',
+        rule: '草原上長滿一叢一叢開著花的矮灌木，小動物會不定時在灌木後面冒出來，跑一小段又躲回去，**只能從灌木的空隙看到牠的一部分**。**看到小動物就點牠**，點到一隻得 1 分。限時 ' + TIME_S + ' 秒，成績是一共找到幾隻。前 ' + HINT_S + ' 秒小動物出現時，牠身邊的灌木會晃動提醒你。分數越高，小動物出現得越頻繁（還會兩、三隻同時出現），**露臉的時間越短、跑得越快**；時間越後面，小動物也越來越小，而且身上帶著一點綠色，跟灌木混在一起！',
         mount: mount,
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
-            diffFor: diffFor, sizeFor: sizeFor, hintOn: hintOn, pickAnimal: pickAnimal, planPath: planPath, poseAt: poseAt, hitAnimal: hitAnimal, rowY: rowY, rating: rating,
-            TIME_S: TIME_S, RAMP_SCORE: RAMP_SCORE, INTERVAL_S: INTERVAL_S, ALIVE_AT: ALIVE_AT, SHOW_S: SHOW_S, SPEED: SPEED, SIZE_PX: SIZE_PX, HINT_S: HINT_S, POP_S: POP_S, HIT_K: HIT_K, HIT_PAD: HIT_PAD, ROWS: ROWS, ANIMALS: ANIMALS, SOLVE_CAP: SOLVE_CAP, MAX_LEVEL: MAX_LEVEL
+            diffFor: diffFor, sizeFor: sizeFor, hintOn: hintOn, pickAnimal: pickAnimal, planPath: planPath, poseAt: poseAt, hitAnimal: hitAnimal, rowY: rowY, layoutRow: layoutRow, rating: rating,
+            TIME_S: TIME_S, LEVEL_RAMP: LEVEL_RAMP, INTERVAL_S: INTERVAL_S, ALIVE_AT: ALIVE_AT, SHOW_S: SHOW_S, SPEED: SPEED, SIZE_PX: SIZE_PX, HINT_S: HINT_S, POP_S: POP_S, HIT_K: HIT_K, HIT_PAD: HIT_PAD, ROWS: ROWS, ROW_TOP: ROW_TOP, BUSH_W: BUSH_W, BUSH_H: BUSH_H, BUSH_GAP: BUSH_GAP, HOLE_W: HOLE_W, BUSH_DY: BUSH_DY, FLOWERS: FLOWERS, RISE: RISE, VIS: VIS, VIS_TRIES: VIS_TRIES, TINT: TINT, ANIMALS: ANIMALS, SOLVE_CAP: SOLVE_CAP, MAX_LEVEL: MAX_LEVEL
         }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */

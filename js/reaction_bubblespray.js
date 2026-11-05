@@ -5,10 +5,12 @@
    一層一個顏色：紅 → 橘 → 黃 → 綠 → 藍 → 靛 → 紫（LAYERS 層），最小的紫泡泡被打中就直接破掉。限時 TIME_S 秒，成績＝打破幾顆。
    ───────────────────────────────────────────────────────────────────
    · 這款求的是「連射的爽感」：子彈打不完、不會失敗，只比打破多少顆。
-   · 第 0 秒出現第 1 顆紅色大泡泡，之後每 SPAWN_EVERY（10）秒再多一顆（第 10 秒第 2 顆、第 20 秒第 3 顆…）。
-     一顆紅泡泡全部打完是 2^LAYERS − 1 顆（7 層＝127 顆），30 秒 3 顆紅泡泡＝滿分 381 顆。
+   · 第 0 秒出現第 1 顆紅色大泡泡，之後每 SPAWN_EVERY（5）秒再多一顆（第 5 秒第 2 顆、第 10 秒第 3 顆…）。
+     一顆紅泡泡全部打完是 2^LAYERS − 1 顆（7 層＝127 顆）；60 秒共 12 顆紅泡泡＝滿分 maxScore()＝1524 顆（SCORE.max 要比它大）。
    · 泡泡之間可以互相重疊、不會碰撞；碰到畫面邊緣會反彈。越小的泡泡飄得越快（SPEED）。
    · 子彈從畫面下方中央的砲塔射出，朝手指的方向直直飛（每秒 FIRE_RATE 發，略有散布 SPREAD_DEG）；**每顆子彈打中一顆泡泡就消失**。
+   · 每打中一顆紅色大泡泡，連射每秒多 RED_FIRE_BONUS 發、子彈快 RED_SPEED_BONUS px／秒（上限 FIRE_RATE_MAX、BULLET_V_MAX）：
+     一開始每秒 6 發、400 px／秒，12 顆紅泡泡都打中後每秒 30 發（剛好到上限）、1192 px／秒，越早打中紅泡泡越有利。
      碰撞用「這一格子彈走過的線段」對每顆泡泡算交點（掃掠），子彈很快也不會穿過小泡泡；同一格碰到好幾顆，取最先碰到的那顆。
    · 破掉時有「分子」特效：一圈水珠往外噴、慢慢變小變淡，再加一圈擴散的光環。
    ═══════════════════════════════════════════════════════════════════ */
@@ -20,25 +22,30 @@
     'use strict';
 
     var ID = 'bubblespray';                             /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 顆', label: '打破幾顆', min: 1, max: 1000 };  /* 成績規格：better（max＝越大越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 顆', label: '打破幾顆', min: 1, max: 2000 };  /* 成績規格：better（max＝越大越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
     var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
-    var TIME_S = 30;                                    /* 限時幾秒 */
-    var SPAWN_EVERY = 10;                               /* 每隔幾秒多一顆紅色大泡泡（第 0 秒就有第 1 顆） */
+    var TIME_S = 60;                                    /* 限時幾秒 */
+    var SPAWN_EVERY = 5;                               /* 每隔幾秒多一顆紅色大泡泡（第 0 秒就有第 1 顆） */
     /* 每一層的顏色（由大到小）：紅、橘、黃、綠、藍、靛、紫；有幾個顏色就有幾層 */
-    var COLORS = ['#E8433A', '#F5892B', '#F7C934', '#5CBF4A', '#3FA9E8', '#4A5FD1', '#9B57D3'];
+    var COLORS = ['hsla(3, 79%, 57%, 1.00)', 'hsla(28, 91%, 56%, 1.00)', '#F7C934', '#5CBF4A', '#3FA9E8', '#4A5FD1', '#9B57D3'];
     var LAYERS = COLORS.length;                         /* 幾層（最後一層打中就直接破掉，不再分裂） */
-    var R0 = 110;                                       /* 紅色大泡泡的半徑（px） */
-    var R_SHRINK = 0.74;                                /* 每往下一層，半徑乘幾倍（110 → 81 → 60 → 45 → 33 → 24 → 18） */
-    var SPEED = [36, 150];                              /* 飄浮速度（px／秒）：最大的紅泡泡 → 最小的紫泡泡（中間線性） */
-    var KICK = [70, 160];                               /* 分裂時兩顆小泡泡往兩邊彈開的速度（px／秒）：第 2 層 → 最後一層 */
-    var FIRE_RATE = 12;                                 /* 按住時每秒射幾發 */
-    var BULLET_V = 950;                                 /* 子彈速度（px／秒） */
-    var BULLET_R = 5;                                   /* 子彈半徑（px） */
+    var R0 = 20;                                       /* 紅色大泡泡的半徑（px） */
+    var R_SHRINK = 0.9;                                /* 每往下一層，半徑乘幾倍（20 → 18 → 16.2 → 14.6 → 13.1 → 11.8 → 10.6） */
+    var SPEED = [50, 150];                              /* 飄浮速度（px／秒）：最大的紅泡泡 → 最小的紫泡泡（中間線性） */
+    var KICK = [160, 240];                               /* 分裂時兩顆小泡泡往兩邊彈開的速度（px／秒）：第 2 層 → 最後一層 */
+    var FIRE_RATE = 6;                                 /* 按住時每秒射幾發 */
+    var BULLET_V = 400;                                 /* 子彈速度（px／秒） */
+    /* 打中紅色大泡泡的獎勵：每打中一顆紅泡泡，連射變快、子彈變快（越早打中紅泡泡越有利） */
+    var RED_FIRE_BONUS = 2.0;                           /* 每打中一顆紅泡泡，每秒多射幾發（FIRE_RATE 加上這個數） */
+    var RED_SPEED_BONUS = 66;                          /* 每打中一顆紅泡泡，子彈速度多幾 px／秒（BULLET_V 加上這個數） */
+    var FIRE_RATE_MAX = 30;                             /* 連射最快每秒幾發（加到這裡就不再加） */
+    var BULLET_V_MAX = 3000;                            /* 子彈最快幾 px／秒（加到這裡就不再加） */
+    var BULLET_R = 3;                                   /* 子彈半徑（px） */
     var SPREAD_DEG = 2.5;                               /* 子彈的散布（左右各幾度以內隨機），掃射起來比較有感覺 */
     var MIN_UP_DEG = 8;                                 /* 砲口最低只能壓到水平線上幾度（手指按在砲塔旁邊時，不會射進地面） */
-    var DRIFT_SPAWN_Y = 0.28;                           /* 新的紅泡泡從畫面上方幾分之幾的高度飄進來 */
+    var DRIFT_SPAWN_Y = 0.20;                           /* 新的紅泡泡從畫面上方幾分之幾的高度飄進來 */
     var SOLVE_CAP = 60;                                 /* 驗證用：api.solve 最多幫你打破幾顆 */
     var MAX_LEVEL = 1;                                  /* 只有一局（成績用 scoreOf＝打破幾顆） */
 
@@ -47,6 +54,8 @@
     function radiusOf(layer) { return R0 * Math.pow(R_SHRINK, layer); }
     function colorOf(layer) { return COLORS[Math.max(0, Math.min(LAYERS - 1, layer))]; }
     function speedOf(layer) { return SPEED[0] + (SPEED[1] - SPEED[0]) * layer / Math.max(1, LAYERS - 1); }
+    /* 已經打中 reds 顆紅泡泡時的連射速度（每秒幾發）與子彈速度（px／秒） */
+    function gunAfter(reds) { return { rate: Math.min(FIRE_RATE_MAX, FIRE_RATE + reds * RED_FIRE_BONUS), v: Math.min(BULLET_V_MAX, BULLET_V + reds * RED_SPEED_BONUS) }; }
     /* 一顆紅泡泡全部打完一共幾顆（1 + 2 + 4 + … ＝ 2^LAYERS − 1） */
     function perRed() { return Math.pow(2, LAYERS) - 1; }
     /* 這一局哪幾秒會出現紅色大泡泡（0、10、20…，在 TIME_S 之前） */
@@ -138,9 +147,10 @@
         var g = cv.getContext('2d'); g.scale(dpr, dpr);
 
         var bubbles = [], bullets = [], parts = [], spawns = spawnTimes(), spawned = 0, clock = 0, over = false, fireAcc = 0, auto = false;
+        var reds = 0, gun = gunAfter(0);                /* reds：打中幾顆紅泡泡了；gun：目前的連射速度與子彈速度 */
         var down = null, aim = -Math.PI / 2;
-        S.score = 0; api.setInfo('打破 0 顆');
-        api.info = { get bubbles() { return bubbles; }, get clock() { return clock; }, get score() { return S.score; } };
+        S.score = 0; showInfo();
+        api.info = { get bubbles() { return bubbles; }, get clock() { return clock; }, get score() { return S.score; }, get gun() { return gun; }, get reds() { return reds; } };
         console.log('[泡泡掃射] ' + LAYERS + ' 層，一顆紅泡泡 ' + perRed() + ' 顆；紅泡泡出現在第 ' + spawns.join('、') + ' 秒，滿分 ' + maxScore());  /* 在瀏覽器主控台（按 F12）印出設定，方便除錯 */
         if (kit.once('bubblespray.hint')) kit.hintOn(stage, null, { mode: 'hold', x: W * 0.5, y: H * 0.35, delay: 500, text: '按住不放，一直掃射' });  /* 操作提示（手指圖示）：玩家第一次按下就消失 */
         api.timer(TIME_S * 1000, timeUp);               /* 開始倒數（畫面上方的時間條）：時間到就呼叫 timeUp */
@@ -174,7 +184,7 @@
             if (target) aim = aimAngle(MX, MY, target.x, target.y);
             /* 連射 */
             if (target) {
-                fireAcc += d * FIRE_RATE;
+                fireAcc += d * gun.rate;
                 while (fireAcc >= 1) { fireAcc -= 1; shoot(); }
             } else fireAcc = Math.min(fireAcc, 0.999);
             bubbles.forEach(function (b) { drift(b, W, GROUND, d); });  /* forEach：對陣列的每個元素各做一次 */
@@ -182,7 +192,10 @@
             for (var i = bullets.length - 1; i >= 0; i--) {
                 var u = bullets[i], x1 = u.x + u.vx * d, y1 = u.y + u.vy * d;
                 var k = firstHit(u.x, u.y, x1, y1, bubbles, BULLET_R);
-                if (k >= 0) { bullets.splice(i, 1); pop(k, Math.atan2(u.vy, u.vx)); continue; }  /* splice：從陣列中刪掉元素 */
+                if (k >= 0) {
+                    bullets.splice(i, 1); pop(k, Math.atan2(u.vy, u.vx));
+                    continue;
+                }  /* splice：從陣列中刪掉元素 */
                 u.x = x1; u.y = y1;
                 if (u.x < -20 || u.x > W + 20 || u.y < -20 || u.y > H + 20) bullets.splice(i, 1);
             }
@@ -192,22 +205,30 @@
             for (var j = parts.length - 1; j >= 0; j--) {
                 var q = parts[j]; q.t += d;
                 if (q.t >= q.life) { parts.splice(j, 1); continue; }
-                var drag = Math.exp(-3 * d); q.vx *= drag; q.vy *= drag; q.vy += 60 * d;
+                var drag = Math.exp(-3 * d); q.vx *= drag; q.vy *= drag; if (q.kind !== 'txt') q.vy += 60 * d;
                 q.x += q.vx * d; q.y += q.vy * d; q.r += (q.grow || 0) * d;
             }
         }
         function shoot() {
             var a = aim + (rand() - 0.5) * 2 * SPREAD_DEG * Math.PI / 180;
-            bullets.push({ x: MX + Math.cos(aim) * BARREL, y: MY + Math.sin(aim) * BARREL, vx: Math.cos(a) * BULLET_V, vy: Math.sin(a) * BULLET_V });
+            bullets.push({ x: MX + Math.cos(aim) * BARREL, y: MY + Math.sin(aim) * BARREL, vx: Math.cos(a) * gun.v, vy: Math.sin(a) * gun.v });
         }
         /* 打破第 k 顆：+1、分子特效、分裂成兩顆下一層的 */
         function pop(k, ang) {
             var b = bubbles[k];
             bubbles.splice(k, 1);
-            S.score++; api.setInfo('打破 ' + S.score + ' 顆'); Sfx.play('pop');  /* Sfx.play(名稱)：播放音效（音效是程式即時合成的） */
+            S.score++; Sfx.play('pop');  /* Sfx.play(名稱)：播放音效（音效是程式即時合成的） */
             molecules(b);
+            if (b.layer === 0) {                         /* 打中紅色大泡泡：連射與子彈都變快，泡泡的位置跳出「射速 ↑」 */
+                reds++; gun = gunAfter(reds);
+                parts.push({ x: b.x, y: b.y, vx: 0, vy: -50, r: 0, t: 0, life: 1.1, kind: 'txt', c: '#FFF3B0', text: '射速 ↑' });
+                console.log('[泡泡掃射] 打中第 ' + reds + ' 顆紅泡泡：每秒 ' + gun.rate + ' 發、子彈 ' + gun.v + ' px／秒');
+            }
+            showInfo();
             Array.prototype.push.apply(bubbles, split(b, ang, rand));
         }
+        /* 上方資訊列：打破幾顆＋目前每秒幾發 */
+        function showInfo() { api.setInfo('打破 ' + S.score + ' 顆・每秒 ' + (Math.round(gun.rate * 10) / 10) + ' 發'); }
         /* 分子特效：一圈水珠往外噴（顏色跟泡泡一樣，還有幾顆白色亮點），加一圈擴散的光環 */
         function molecules(b) {
             var n = 10 + Math.round(b.r / 6), col = colorOf(b.layer);
@@ -250,7 +271,8 @@
         function drawPart(q) {
             var k = q.t / q.life;
             g.save();
-            if (q.kind === 'ring') { g.globalAlpha = 0.7 * (1 - k); g.strokeStyle = q.c; g.lineWidth = 4 * (1 - k) + 1; g.beginPath(); g.arc(q.x, q.y, q.r, 0, Math.PI * 2); g.stroke(); }
+            if (q.kind === 'txt') { g.globalAlpha = Math.min(1, 2.5 * (1 - k)); g.fillStyle = q.c; g.font = 'bold 22px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = 4; g.strokeStyle = 'rgba(28,42,74,0.9)'; g.strokeText(q.text, q.x, q.y); g.fillText(q.text, q.x, q.y); }
+            else if (q.kind === 'ring') { g.globalAlpha = 0.7 * (1 - k); g.strokeStyle = q.c; g.lineWidth = 4 * (1 - k) + 1; g.beginPath(); g.arc(q.x, q.y, q.r, 0, Math.PI * 2); g.stroke(); }
             else { g.globalAlpha = 1 - k; g.fillStyle = q.c; g.beginPath(); g.arc(q.x, q.y, Math.max(0.5, q.r * (1 - k * 0.7)), 0, Math.PI * 2); g.fill(); }
             g.restore();
         }
@@ -273,13 +295,13 @@
     var G = {
         id: ID,
         name: '泡泡掃射',
-        rule: '**按住畫面，砲塔就朝手指的方向一直連射**，手指移到哪裡就掃到哪裡。紅色大泡泡被打中會破成兩顆橘色泡泡，橘色再破成黃色，接著是綠、藍、靛、紫，越破越小、越多、飄得越快。每顆子彈打中一顆泡泡就會消失，泡泡之間會重疊不會互撞。第 0 秒出現第一顆紅泡泡，之後每 10 秒再多一顆。限時 30 秒，**看你能打破幾顆**！',
+        rule: '**按住畫面，砲塔就朝手指的方向一直連射**，手指移到哪裡就掃到哪裡。紅色大泡泡被打中會破成兩顆橘色泡泡，橘色再破成黃色，接著是綠、藍、靛、紫，越破越小、越多、飄得越快。每顆子彈打中一顆泡泡就會消失，泡泡之間會重疊不會互撞。第 0 秒出現第一顆紅泡泡，之後每 ' + SPAWN_EVERY + ' 秒再多一顆。**每打中一顆紅泡泡，連射和子彈都會變快**，越早打中越有利。限時 ' + TIME_S + ' 秒，看你能打破幾顆！',
         mount: mount,
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
-            radiusOf: radiusOf, colorOf: colorOf, speedOf: speedOf, perRed: perRed, spawnTimes: spawnTimes, maxScore: maxScore, segHit: segHit, firstHit: firstHit, aimAngle: aimAngle, split: split, drift: drift, rating: rating,
-            TIME_S: TIME_S, SPAWN_EVERY: SPAWN_EVERY, COLORS: COLORS, LAYERS: LAYERS, R0: R0, R_SHRINK: R_SHRINK, SPEED: SPEED, KICK: KICK, FIRE_RATE: FIRE_RATE, BULLET_V: BULLET_V, BULLET_R: BULLET_R, SPREAD_DEG: SPREAD_DEG, MIN_UP_DEG: MIN_UP_DEG, SOLVE_CAP: SOLVE_CAP, MAX_LEVEL: MAX_LEVEL
+            radiusOf: radiusOf, colorOf: colorOf, speedOf: speedOf, perRed: perRed, gunAfter: gunAfter, spawnTimes: spawnTimes, maxScore: maxScore, segHit: segHit, firstHit: firstHit, aimAngle: aimAngle, split: split, drift: drift, rating: rating,
+            TIME_S: TIME_S, SPAWN_EVERY: SPAWN_EVERY, COLORS: COLORS, LAYERS: LAYERS, R0: R0, R_SHRINK: R_SHRINK, SPEED: SPEED, KICK: KICK, FIRE_RATE: FIRE_RATE, BULLET_V: BULLET_V, RED_FIRE_BONUS: RED_FIRE_BONUS, RED_SPEED_BONUS: RED_SPEED_BONUS, FIRE_RATE_MAX: FIRE_RATE_MAX, BULLET_V_MAX: BULLET_V_MAX, BULLET_R: BULLET_R, SPREAD_DEG: SPREAD_DEG, MIN_UP_DEG: MIN_UP_DEG, SOLVE_CAP: SOLVE_CAP, MAX_LEVEL: MAX_LEVEL
         }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */

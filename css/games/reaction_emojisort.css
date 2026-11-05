@@ -6,90 +6,134 @@
 
 /* 遊戲區 */
 .emojisort-stage {
-    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理點擊 */
-    user-select: none;                                  /* 文字不能被選取（避免連點時誤選） */
-    -webkit-user-select: none;                          /* 文字不能被選取（Safari） */
+    touch-action: none;
+    /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理點擊 */
+    user-select: none;
+    /* 文字不能被選取（避免連點時誤選） */
+    -webkit-user-select: none;
+    /* 文字不能被選取（Safari） */
 }
 
 /* 上方的題目（只寫要點的種類） */
 .emojisort-prompt {
-    position: absolute;                                 /* 脫離一般排版，貼著遊戲區擺放 */
-    left: var(--sp-3);                                  /* 離左邊：主題變數 --sp-3 */
-    right: var(--sp-3);                                 /* 離右邊：主題變數 --sp-3 */
-    top: var(--sp-2);                                   /* 離上邊：主題變數 --sp-2 */
-    height: 52px;                                       /* 高度 52px */
-    display: flex;                                      /* 彈性盒子：子元素排成一列 */
-    align-items: center;                                /* 上下置中 */
-    justify-content: center;                            /* 左右置中 */
-    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
-    background: var(--c-card);                          /* 背景：主題變數 --c-card */
-    border: 3px solid var(--c-orange);                  /* 邊框：3px 實線橘色 */
-    border-radius: var(--r-pill);                       /* 圓角：膠囊形 */
-    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
-    white-space: nowrap;                                /* 文字不換行 */
+    position: absolute;
+    /* 脫離一般排版，貼著遊戲區擺放 */
+    left: var(--sp-3);
+    /* 離左邊：主題變數 --sp-3 */
+    right: var(--sp-3);
+    /* 離右邊：主題變數 --sp-3 */
+    top: var(--sp-2);
+    /* 離上邊：主題變數 --sp-2 */
+    height: 52px;
+    /* 高度 52px */
+    display: flex;
+    /* 彈性盒子：子元素排成一列 */
+    align-items: center;
+    /* 上下置中 */
+    justify-content: center;
+    /* 左右置中 */
+    gap: var(--sp-2);
+    /* 子元素之間的空隙：主題變數 --sp-2 */
+    background: var(--c-card);
+    /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-orange);
+    /* 邊框：3px 實線橘色 */
+    border-radius: var(--r-pill);
+    /* 圓角：膠囊形 */
+    box-shadow: var(--shadow-card);
+    /* 方塊陰影（立體感） */
+    white-space: nowrap;
+    /* 文字不換行 */
 }
 
 /* 題目的「請點：」 */
 .emojisort-prompt__t {
-    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
-    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
-    font-weight: var(--fw-bold);                        /* 粗體 */
+    color: var(--c-ink-soft);
+    /* 文字顏色：主題變數 --c-ink-soft */
+    font-size: var(--fs-sm);
+    /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);
+    /* 粗體 */
 }
 
 /* 題目的種類（例如「圓臉😀、動物🐒」） */
 .emojisort-prompt__c {
-    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
-    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
-    font-weight: var(--fw-bold);                        /* 粗體 */
+    color: var(--c-ink);
+    /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-md);
+    /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);
+    /* 粗體 */
 }
 
 /* 題目有三種時字比較多：兩段文字都縮小、空隙變窄，才放得進同一條 */
 .emojisort-prompt--long {
-    gap: var(--sp-1);                                   /* 子元素之間的空隙：主題變數 --sp-1 */
+    gap: var(--sp-1);
+    /* 子元素之間的空隙：主題變數 --sp-1 */
 }
 
 /* 題目有三種時，「請點：」縮小 */
 .emojisort-prompt--long .emojisort-prompt__t {
-    font-size: 22px;                                    /* 字級 22px */
+    font-size: 22px;
+    /* 字級 22px */
 }
 
 /* 題目有三種時，種類文字縮小 */
 .emojisort-prompt--long .emojisort-prompt__c {
-    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-size: var(--fs-sm);
+    /* 字級：主題變數 --fs-sm */
 }
 
 /* 方格（位置、大小由 JS 算好寫在 style 上） */
 .emojisort-grid {
-    position: absolute;                                 /* 脫離一般排版，貼著遊戲區擺放 */
-    background: var(--c-card);                          /* 背景：主題變數 --c-card */
-    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
-    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
+    position: absolute;
+    /* 脫離一般排版，貼著遊戲區擺放 */
+    background: var(--c-card);
+    /* 背景：主題變數 --c-card */
+    border-radius: var(--r-md);
+    /* 圓角：主題變數 --r-md */
+    box-shadow: var(--shadow-card);
+    /* 方塊陰影（立體感） */
 }
 
 /* 一格（位置、大小、字級由 JS 寫在 style 上） */
 .emojisort-cell {
-    position: absolute;                                 /* 脫離一般排版，貼著方格擺放 */
-    box-sizing: border-box;                             /* 寬高把邊框也算進去 */
-    text-align: center;                                 /* emoji 左右置中 */
-    border: 1px solid var(--c-frame);                   /* 格線：主題變數 --c-frame */
-    cursor: pointer;                                    /* 滑鼠游標變成手指 */
-    transition: opacity 0.15s, transform 0.15s;         /* 點掉時淡出、縮小的過渡動畫 */
+    position: absolute;
+    /* 脫離一般排版，貼著方格擺放 */
+    box-sizing: border-box;
+    /* 寬高把邊框也算進去 */
+    text-align: center;
+    /* emoji 左右置中 */
+    border: 1px solid var(--c-frame);
+    /* 格線：主題變數 --c-frame */
+    cursor: pointer;
+    /* 滑鼠游標變成手指 */
+    transition: opacity 0.15s, transform 0.15s;
+    /* 點掉時淡出、縮小的過渡動畫 */
 }
 
 /* 點對了：變淡、縮小，打上綠色底 */
 .emojisort-cell--ok {
-    opacity: 0.25;                                      /* 不透明度 25%（淡掉） */
-    transform: scale(0.8);                              /* 縮小到 80% */
-    background: var(--c-ok-soft);                       /* 背景：淡綠（主題變數 --c-ok-soft） */
+    opacity: 0.6;
+    /* 不透明度 60%（淡掉） */
+    transform: scale(0.88);
+    /* 縮小到 88% */
+    background: var(--c-ok-hard);
+    /* 背景：淡綠（主題變數 --c-ok-hard） */
 }
 
 /* 點錯了：紅色粗框 */
 .emojisort-cell--bad {
-    background: var(--c-bad-soft);                      /* 背景：淡紅（主題變數 --c-bad-soft） */
-    border: 4px solid var(--c-bad);                     /* 邊框：4px 實線紅色 */
+    background: var(--c-bad-hard);
+    /* 背景：淡紅（主題變數 --c-bad-hard） */
+    border: 4px solid var(--c-bad);
+    /* 邊框：4px 實線紅色 */
 }
 
 /* 失敗時，還沒點到的正確格子：綠色粗框 */
 .emojisort-cell--miss {
-    border: 4px solid var(--c-ok);                      /* 邊框：4px 實線綠色 */
+    border: 4px solid var(--c-ok);
+    /* 邊框：4px 實線綠色 */
+    background: var(--c-ok-hard);
+    /* 背景：淡綠（主題變數 --c-ok-hard） */
 }

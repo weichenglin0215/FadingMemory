@@ -1381,10 +1381,10 @@ insert into public."MF_games" (game_id, title, better, min_score, max_score) val
     ('boxstack',     '疊箱子', 'max', 1, 90),
     ('shapegrid',    '形色不相鄰', 'max', 1, 90),
     ('babyscale',    '抱著量體重', 'max', 1, 90),
-    ('skyshot',      '砲打飛機', 'max', 1, 30),
+    ('skyshot',      '砲打飛機', 'max', 1, 85),
     ('forestpeek',   '草叢找動物', 'max', 1, 200),
     ('rocketland',   '火箭回收', 'max', 1, 30),
-    ('bubblespray',  '泡泡掃射', 'max', 1, 1000),
+    ('bubblespray',  '泡泡掃射', 'max', 1, 2000),
     ('emojisort',    '分類點擊', 'max', 1, 22),
     -- <<< 自動產生結束
     ('zz_test', '（測試用，可刪）', 'max', 0, 1000)

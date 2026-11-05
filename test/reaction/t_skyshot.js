@@ -12,7 +12,7 @@ ok(T.TYPES.length === 10, '10 種飛行器');
 ok(T.TYPES.map(t => t.key).join() === 'heli,biplane,prop,bizjet,airbus,fighter,stealth,rocket,satellite,ufo', '型式順序：直升機 → 飛碟');
 ok(near(T.scaleOf(0), 1.0) && near(T.scaleOf(9), 0.2), '直升機（最下面）1.0、飛碟（最上面）0.2');
 { const d = []; for (let k = 1; k < 10; k++) d.push(T.scaleOf(k - 1) - T.scaleOf(k)); ok(d.every(x => near(x, d[0])), '中間的尺寸線性分配'); }
-for (let k = 1; k < 10; k++) ok(T.TYPES[k].speed > T.TYPES[k - 1].speed, '速度由慢到快：' + T.TYPES[k].name);
+for (let k = 0; k < 10; k++) ok(T.TYPES[k].speed > 0, '有速度：' + T.TYPES[k].name);
 // ── 航道 ──
 { const L = T.lanes(H);
   ok(L.length === 10, '10 條航道');
@@ -24,7 +24,7 @@ for (let k = 1; k < 10; k++) ok(T.TYPES[k].speed > T.TYPES[k - 1].speed, '速度
 { let lo = 1e9, hi = 0, wlo = 1e9, whi = 0, L = 0, R = 0;
   for (let i = 0; i < 20000; i++) { const s = T.entrySpeed(3, rnd); lo = Math.min(lo, s); hi = Math.max(hi, s); const w = T.waitSec(rnd); wlo = Math.min(wlo, w); whi = Math.max(whi, w); const e = T.entryPos(W, 80, rnd); if (e.dir > 0) { L++; ok(e.x < -40, '從左邊進場的起點在畫面外'); } else { R++; ok(e.x > W + 40, '從右邊進場的起點在畫面外'); } }
   const b = T.TYPES[3].speed;
-  ok(lo >= b * 0.8 - 1e-9 && hi <= b * 1.2 + 1e-9 && lo < b * 0.82 && hi > b * 1.18, '重新進場速度在 −20%～＋20%：' + lo.toFixed(1) + '～' + hi.toFixed(1));
+  const J = T.SPEED_JITTER; ok(lo >= b * (1 - J) - 1e-9 && hi <= b * (1 + J) + 1e-9 && lo < b * (1 - J + 0.02) && hi > b * (1 + J - 0.02), '重新進場速度在 ±' + Math.round(J * 100) + '%：' + lo.toFixed(1) + '～' + hi.toFixed(1));
   ok(wlo >= 0.5 && whi <= 1.5 && wlo < 0.52 && whi > 1.48, '等待 0.5～1.5 秒：' + wlo.toFixed(3) + '～' + whi.toFixed(3));
   ok(L > 9000 && R > 9000, '左右各一半：' + L + '/' + R); }
 ok(T.isOut(W + 53, 100, 1, W) && !T.isOut(W + 40, 100, 1, W) && T.isOut(-53, 100, -1, W) && !T.isOut(-40, 100, -1, W), '整架都飛出去才算出畫面');
@@ -44,6 +44,15 @@ ok(T.SHELLS === 30 && T.HITS_TO_KILL * T.TYPES.length === 30, '30 發砲彈，�
 { const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_skyshot.js'), boot = rd('../../js/boot.js'), menu = rd('../../js/menu.js');
   ok(boot.indexOf("'js/reaction_skyshot.js'") > 0 && boot.indexOf("'css/games/reaction_skyshot.css'") > 0, 'boot.js 有載入 js 與 css');
   ok(/id: 'skyshot', name: '砲打飛機'/.test(menu) && G.name === '砲打飛機', '選單有這一款');
-  ok(/scoreOf/.test(src) && /max: 30/.test(src) && /'\+1'/.test(src), '成績用 scoreOf、上限 30、會畫 +1'); }
-ok(new Set([0, 8, 16, 24, 30].map(T.rating)).size === 5, '評語分級');
+  ok(/scoreOf/.test(src) && T.SCORE.max === T.maxScore() && /text: '\+' \+ pts/.test(src), '成績用 scoreOf、上限＝滿分、會畫 +N');
+  ok(/api\.timer\(TIME_S \* 1000/.test(src) && T.TIME_S === 180, '限時 180 秒');
+  ok(/p\.speed \*= SLOW_PER_HIT/.test(src) && /slowed\(entrySpeed\(p\.k, rand\), p\.hits\)/.test(src), '打中就變慢，重新進場也一樣慢');
+  ok(/globalAlpha = SMOKE_ALPHA/.test(src) && /Math\.sqrt\(SPARK_AREA\)/.test(src) && /Math\.sqrt\(BOOM_AREA\)/.test(src), '黑煙變淡、火花變小、爆炸變大'); }
+// ── 計分：前兩次各 1 分，第 3 次（擊毀）直升機 2 分 … 飛碟 11 分 ──
+for (let k = 0; k < 10; k++) ok(T.pointsFor(k, 1) === 1 && T.pointsFor(k, 2) === 1 && T.pointsFor(k, 3) === k + 2, T.TYPES[k].name + '：擊毀 ' + (k + 2) + ' 分');
+ok(T.maxScore() === 10 * 2 + (2 + 11) * 10 / 2, '滿分 ' + T.maxScore());
+// ── 變慢：每打中一次 × 0.9 ──
+ok(near(T.SLOW_PER_HIT, 0.9) && near(T.slowed(100, 0), 100) && near(T.slowed(100, 1), 90) && near(T.slowed(100, 2), 81), '打中 1 次 90%、2 次 81%');
+ok(T.SMOKE_ALPHA > 0 && T.SMOKE_ALPHA < 0.55 && T.SPARK_AREA > 0 && T.BOOM_AREA > 0, '黑煙比原本淡（' + T.SMOKE_ALPHA.toFixed(3) + '）、火花面積 ×' + T.SPARK_AREA + '、爆炸面積 ×' + T.BOOM_AREA);
+ok(new Set([0, 15, 35, 55, 75].map(T.rating)).size === 5, '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

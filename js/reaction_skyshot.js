@@ -5,14 +5,16 @@
    畫面上方 2/3 的天空，由上到下分成 10 條航道，各有一種飛行器左右飛來飛去；**算好砲彈飛上去要多久、飛機飛過來要多久**，才打得中。
    ───────────────────────────────────────────────────────────────────
    · 10 種飛行器（由下到上）：直升機、雙層翼、螺旋槳飛機、私人飛機、空中巴士、噴射戰鬥機、隱形戰機、火箭、衛星、飛碟。
-     越上面的越小（尺寸比例：最上面 0.2、最下面 1.0，中間線性分配）、也越快（速度見 TYPES 的 speed）。
+     越上面的越小（尺寸比例：最上面 0.2、最下面 1.0，中間線性分配）；速度各不相同（TYPES 的 speed：420～600 px／秒，飛碟最快）。
    · 每一種飛行器的速度都不一樣，隨機往左或往右飛；飛出畫面後等 0.5～1.5 秒（WAIT_S），再隨機從左邊或右邊飛進來，
-     而且每次重新進場的速度都會變動 −20%～＋20%（SPEED_JITTER），讓你沒辦法背。
-   · 被打中第 1 次冒黑煙、第 2 次冒火花、第 3 次爆炸消失（消失就不再出現）。每打中一次得 1 分，飛行器上方跳出大大的「+1」。
-     10 種 × 3 次 ＝ 30 分，剛好等於 30 發砲彈：滿分就是一發都不浪費。
+     而且每次重新進場的速度都會變動 −33%～＋33%（SPEED_JITTER），讓你沒辦法背。
+   · 被打中第 1 次冒黑煙（SMOKE_ALPHA：很淡）、第 2 次冒火花（SPARK_AREA：面積 2 倍）、第 3 次爆炸消失（BOOM_AREA：原本大小；消失就不再出現）。第 1、2 次各得 1 分；**第 3 次（擊毀）得 KILL_PTS 分**：
+     最下面的直升機 2 分、雙層翼飛機 3 分……最上面的飛碟 11 分（越上面越小，分數越高）。飛行器上方跳出大大的「+N」。滿分＝maxScore()。
+   · 每被打中一次，那架飛行器的速度就變成原本的 SLOW_PER_HIT（90%），之後重新進場也一樣慢（比較好打，也讓你更想繼續打它）。
+   · 限時 TIME_S（180）秒：時間到、30 發都打完、或 10 架全部打爆，就結算。
    · 砲彈只會打中「最先碰到」的那一架（砲彈從下往上飛，所以下面的大飛機會替上面的小飛機擋子彈）。
      碰撞用「這一格砲彈走過的整段距離」來判斷（掃掠），砲彈很快、上面的飛機很扁，也不會穿過去。
-   · 成績＝得分（越多越好）。30 發都打完、而且最後一發飛出畫面（或 10 架全部打爆）就結算。
+   · 成績＝得分（越多越好）。30 發都打完、而且最後一發飛出畫面（或 10 架全部打爆、或時間到）就結算。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
@@ -22,37 +24,43 @@
     'use strict';
 
     var ID = 'skyshot';                                 /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 分', label: '得分', min: 1, max: 30 };  /* 成績規格：better（max＝越大越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
+    var SCORE = { better: 'max', decimals: 0, format: '{v} 分', label: '得分', min: 1, max: 85 };  /* 成績規格：better（max＝越大越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
     var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var SHELLS = 30;                                    /* 一局有幾發砲彈 */
     var SHELL_V = 620;                                  /* 砲彈往上飛的速度（px／秒，全程等速） */
     var SHELL_R = 4;                                    /* 砲彈半徑（px，畫出來與碰撞都用它） */
-    var FIRE_GAP_MS = 180;                              /* 兩發之間至少隔多久（毫秒）：避免手指抖一下就連發兩顆 */
+    var FIRE_GAP_MS = 330;                              /* 兩發之間至少隔多久（毫秒）：避免手指抖一下就連發兩顆 */
     var HITS_TO_KILL = 3;                               /* 打中幾次會爆炸消失（第 1 次黑煙、第 2 次火花） */
+    var KILL_PTS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11];    /* 第 3 次打中（擊毀）得幾分：依 TYPES 的順序（直升機 2 分 … 飛碟 11 分）；第 1、2 次各 1 分 */
+    var SLOW_PER_HIT = 0.9;                             /* 每被打中一次，速度變成原本的幾倍（0.9＝慢 10%；重新進場也一樣慢） */
+    var TIME_S = 180;                                   /* 限時幾秒 */
+    var SMOKE_ALPHA = 0.55 * 0.2;                      /* 黑煙的不透明度（原本 0.55，現在只剩 20%） */
+    var SPARK_AREA = 2.0;                               /* 火花的面積是原本的幾倍（半徑 × 開根號） */
+    var BOOM_AREA = 1;                                  /* 爆炸的面積是原本的幾倍（火焰、碎片的大小與噴出去的距離 × 開根號） */
     var SCALE_TOP = 0.2, SCALE_BOTTOM = 1.0;            /* 最上面、最下面那條航道的尺寸比例（中間線性分配） */
     var SKY_TOP = 30;                                   /* 最上面那條航道的上緣（px） */
     var SKY_FRAC = 2 / 3;                               /* 航道區佔畫面高度的比例（上方 2/3） */
     var BASE_W = 128;                                   /* 尺寸比例 1.0 時，飛行器的基本寬度（px；各型再乘自己的 w） */
-    var SPEED_JITTER = 0.2;                             /* 每次重新進場，速度隨機變動 ±20% */
+    var SPEED_JITTER = 0.33;                             /* 每次重新進場，速度隨機變動 ±33% */
     var WAIT_S = [0.5, 1.5];                            /* 飛出畫面後，等幾秒再進來（隨機） */
     var END_DELAY_MS = 900;                             /* 最後一發結束後，停多久才結算 */
-    var PLUS_MS = 1000;                                 /* 「+1」字樣飄多久 */
+    var PLUS_MS = 1000;                                 /* 「+N」得分字樣飄多久 */
     var SOLVE_CAP = 12;                                 /* 驗證用：api.solve 最多幫你打中幾次 */
     var MAX_LEVEL = 1;                                  /* 只有一局（成績用 scoreOf＝得分） */
     /* 10 種飛行器（由下到上：越上面越小、越快）：key 代號、name 名稱、speed 基本速度（px／秒）、w／h 外框的寬高（BASE_W 的倍數） */
     var TYPES = [
-        { key: 'heli', name: '直升機', speed: 52, w: 1.0, h: 0.5 },
-        { key: 'biplane', name: '雙層翼飛機', speed: 70, w: 1.0, h: 0.46 },
-        { key: 'prop', name: '螺旋槳飛機', speed: 90, w: 1.0, h: 0.38 },
-        { key: 'bizjet', name: '私人飛機', speed: 112, w: 1.05, h: 0.32 },
-        { key: 'airbus', name: '空中巴士', speed: 132, w: 1.25, h: 0.36 },
-        { key: 'fighter', name: '噴射戰鬥機', speed: 165, w: 1.0, h: 0.32 },
-        { key: 'stealth', name: '隱形戰機', speed: 195, w: 1.0, h: 0.26 },
-        { key: 'rocket', name: '火箭', speed: 228, w: 1.1, h: 0.26 },
-        { key: 'satellite', name: '衛星', speed: 258, w: 1.1, h: 0.46 },
-        { key: 'ufo', name: '飛碟', speed: 300, w: 0.9, h: 0.42 }
+        { key: 'heli', name: '直升機', speed: 530, w: 0.6, h: 0.3 },
+        { key: 'biplane', name: '雙層翼飛機', speed: 510, w: 0.6, h: 0.3 },
+        { key: 'prop', name: '螺旋槳飛機', speed: 490, w: 0.7, h: 0.28 },
+        { key: 'bizjet', name: '私人飛機', speed: 470, w: 1.0, h: 0.30 },
+        { key: 'airbus', name: '空中巴士', speed: 450, w: 1.2, h: 0.35 },
+        { key: 'fighter', name: '噴射戰鬥機', speed: 480, w: 1.0, h: 0.32 },
+        { key: 'stealth', name: '隱形戰機', speed: 510, w: 1.0, h: 0.26 },
+        { key: 'rocket', name: '火箭', speed: 540, w: 1.1, h: 0.26 },
+        { key: 'satellite', name: '衛星', speed: 570, w: 1.1, h: 0.46 },
+        { key: 'ufo', name: '飛碟', speed: 600, w: 0.9, h: 0.42 }
     ];
     /* 畫布用的顏色（canvas 不能直接用 CSS 變數，所以寫在這裡） */
     var COL = {
@@ -107,12 +115,18 @@
         var t = (cy - p.y) / SHELL_V, fx = p.x + p.dir * p.speed * t;
         return Math.abs(fx - cx) <= p.w * 0.35;
     }
+    /* 打中第 k 種飛行器的第 hits 次（1～3）得幾分：第 3 次（擊毀）得 KILL_PTS[k]，其他 1 分 */
+    function pointsFor(k, hits) { return hits >= HITS_TO_KILL ? KILL_PTS[k] : 1; }
+    /* 滿分：每一種都打 3 次（前兩次各 1 分＋擊毀分） */
+    function maxScore() { var s = 0; for (var k = 0; k < TYPES.length; k++) s += (HITS_TO_KILL - 1) + KILL_PTS[k]; return s; }
+    /* 被打中 hits 次之後的速度：原本的速度 × SLOW_PER_HIT^hits */
+    function slowed(speed, hits) { return speed * Math.pow(SLOW_PER_HIT, hits); }
     /* 結算評語 */
     function rating(n) {
-        if (n >= 30) return '彈無虛發，神砲手！';
-        if (n >= 24) return '百發百中！';
-        if (n >= 16) return '抓到時機了！';
-        if (n >= 8) return '再算準一點！';
+        if (n >= 75) return '彈無虛發，神砲手！';
+        if (n >= 55) return '百發百中！';
+        if (n >= 35) return '抓到時機了！';
+        if (n >= 15) return '再算準一點！';
         return '先看飛機要多久飛到砲口上方！';
     }
 
@@ -125,7 +139,7 @@
             scoreOf: function (S) { return S.score; },
             numText: function (v) { return v + ' 分'; },
             rating: rating,
-            lines: function (S) { return ['30 發砲彈，打中 ' + S.score + ' 次（命中率 ' + Math.round(100 * S.score / SHELLS) + '%）']; },
+            lines: function (S) { var n = S.hits || 0; return ['30 發砲彈，打中 ' + n + ' 次（命中率 ' + Math.round(100 * n / SHELLS) + '%）、擊毀 ' + (S.kills || 0) + ' 架']; },
             setup: setup
         });
     }
@@ -148,7 +162,8 @@
             var dir = rand() < 0.5 ? 1 : -1;
             return { k: ln.k, x: kit.randFloat(ln.w, W - ln.w, rand), y: ln.y, w: ln.w, h: ln.h, scale: ln.scale, dir: dir, speed: entrySpeed(ln.k, rand), hits: 0, alive: true, gone: false, wait: 0, emit: 0, phase: rand() * 10 };
         });
-        S.score = 0; api.setInfo('得分 0');
+        S.score = 0; S.hits = 0; S.kills = 0; api.setInfo('得分 0');
+        api.timer(TIME_S * 1000, function () { end('time'); });   /* 開始倒數（畫面上方的時間條）：時間到就結算 */
         api.info = { get left() { return left; }, get planes() { return planes; }, get score() { return S.score; } };
         console.log('[砲打飛機] 航道：' + planes.map(function (p) { return TYPES[p.k].name + ' ' + Math.round(p.w) + 'px ' + Math.round(p.speed) + 'px/s'; }).join('、'));  /* 在瀏覽器主控台（按 F12）印出這一局的設定，方便除錯 */
         var ammo = h('div', { 'class': 'skyshot-ammo', text: '' }); stage.appendChild(ammo);
@@ -180,7 +195,7 @@
             /* 飛行器：飛、出畫面、等、再進場 */
             planes.forEach(function (p) {               /* forEach：對陣列的每個元素各做一次 */
                 if (p.gone) return;
-                if (!p.alive) { p.wait -= d; if (p.wait <= 0) { var e = entryPos(W, p.w, rand); p.x = e.x; p.dir = e.dir; p.speed = entrySpeed(p.k, rand); p.alive = true; } return; }
+                if (!p.alive) { p.wait -= d; if (p.wait <= 0) { var e = entryPos(W, p.w, rand); p.x = e.x; p.dir = e.dir; p.speed = slowed(entrySpeed(p.k, rand), p.hits); p.alive = true; } return; }
                 p.x += p.dir * p.speed * d;
                 if (isOut(p.x, p.w, p.dir, W)) { p.alive = false; p.wait = waitSec(rand); return; }
                 /* 受傷的樣子：冒黑煙（1 次）、火花（2 次） */
@@ -207,42 +222,44 @@
             recoil = Math.max(0, recoil - d * 6); flash = Math.max(0, flash - d * 9);
             /* 結算：砲彈打完、而且空中沒有砲彈了；或 10 架全部打爆 */
             var allDown = planes.every(function (p) { return p.gone; });  /* every：陣列裡「每一個」都符合才回傳 true */
-            if ((left <= 0 && !shells.length) || allDown) end(allDown);
+            if ((left <= 0 && !shells.length) || allDown) end(allDown ? 'all' : 'ammo');
         }
 
-        /* 打中一架：+1 分、跳出「+1」；第 3 次爆炸 */
+        /* 打中一架：第 1、2 次 +1 分，第 3 次爆炸、得 KILL_PTS 分；跳出「+N」；每打中一次速度變成 SLOW_PER_HIT 倍 */
         function strike(p, sx) {
-            p.hits++; S.score++; api.setInfo('得分 ' + S.score);
-            floats.push({ x: p.x, y: p.y - p.h / 2 - 8, t: 0, big: Math.max(26, 44 * p.scale + 14) });
+            p.hits++; S.hits++; p.speed *= SLOW_PER_HIT;
+            var pts = pointsFor(p.k, p.hits), kill = p.hits >= HITS_TO_KILL;
+            S.score += pts; api.setInfo('得分 ' + S.score);
+            floats.push({ x: p.x, y: p.y - p.h / 2 - 8, t: 0, big: Math.max(26, 44 * p.scale + 14) * (kill ? 1.25 : 1), text: '+' + pts });
             var dmg = damageOf(p.hits);
-            if (dmg === 'boom') { explode(p); p.alive = false; p.gone = true; Sfx.play('ok'); }
+            if (dmg === 'boom') { S.kills++; explode(p); p.alive = false; p.gone = true; Sfx.play('ok'); }
             else { burst(sx, p.y, p.scale, dmg === 'spark' ? 14 : 8, dmg === 'spark'); Sfx.play('pop'); }
         }
         function burst(x, y, sc, n, hot) {
             for (var i = 0; i < n; i++) {
                 var a = rand() * Math.PI * 2, v = (60 + rand() * 140) * (0.5 + sc);
-                parts.push({ x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 160, r: (1.5 + rand() * 2.5) * (0.5 + sc), grow: 0, t: 0, life: 0.35 + rand() * 0.3, kind: hot ? 'spark' : 'chip' });
+                parts.push({ x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 160, r: (1.5 + rand() * 2.5) * (0.5 + sc) * (hot ? Math.sqrt(SPARK_AREA) : 1), grow: 0, t: 0, life: 0.35 + rand() * 0.3, kind: hot ? 'spark' : 'chip' });
             }
         }
         function explode(p) {
-            var sc = p.scale, i;
-            parts.push({ x: p.x, y: p.y, vx: 0, vy: 0, r: p.w * 0.2, grow: p.w * 1.6, t: 0, life: 0.45, kind: 'ring' });
-            for (i = 0; i < 28; i++) {
-                var a = rand() * Math.PI * 2, v = (60 + rand() * 260) * (0.4 + sc);
-                parts.push({ x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 120, r: (2 + rand() * 4) * (0.5 + sc), grow: 0, t: 0, life: 0.5 + rand() * 0.5, kind: rand() < 0.5 ? 'spark' : 'fire' });
+            var sc = p.scale, i, k = Math.sqrt(BOOM_AREA);  /* k：長度放大的倍數（面積 × BOOM_AREA → 長度 × 開根號） */
+            parts.push({ x: p.x, y: p.y, vx: 0, vy: 0, r: p.w * 0.2 * k, grow: p.w * 1.6 * k, t: 0, life: 0.45, kind: 'ring' });
+            for (i = 0; i < 28 * 2; i++) {               /* 範圍變大，碎片也多一倍，才不會稀稀疏疏 */
+                var a = rand() * Math.PI * 2, v = (60 + rand() * 260) * (0.4 + sc) * k;
+                parts.push({ x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 120, r: (2 + rand() * 4) * (0.5 + sc) * k, grow: 0, t: 0, life: 0.5 + rand() * 0.5, kind: rand() < 0.5 ? 'spark' : 'fire' });
             }
-            for (i = 0; i < 12; i++) parts.push({ x: p.x + (rand() - 0.5) * p.w * 0.5, y: p.y, vx: (rand() - 0.5) * 50, vy: -20 - rand() * 40, g: 0, r: 4 * (0.4 + sc), grow: 26 * (0.4 + sc), t: 0, life: 0.9 + rand() * 0.6, kind: 'smoke' });
+            for (i = 0; i < 12; i++) parts.push({ x: p.x + (rand() - 0.5) * p.w * 0.5 * k, y: p.y, vx: (rand() - 0.5) * 50 * k, vy: -20 - rand() * 40, g: 0, r: 4 * (0.4 + sc) * k, grow: 26 * (0.4 + sc) * k, t: 0, life: 0.9 + rand() * 0.6, kind: 'smoke' });
         }
         /* 受傷的飛機在機尾冒煙（黑煙）或噴火花 */
         function emitDamage(p) {
             var tx = p.x - p.dir * p.w * 0.36, sc = p.scale;
-            if (p.hits >= 2 && rand() < 0.65) parts.push({ x: tx, y: p.y, vx: -p.dir * (20 + rand() * 60) + (rand() - 0.5) * 80, vy: (rand() - 0.7) * 90, g: 220, r: (1.2 + rand() * 1.8) * (0.5 + sc), grow: 0, t: 0, life: 0.3 + rand() * 0.3, kind: 'spark' });
+            if (p.hits >= 2 && rand() < 0.65) parts.push({ x: tx, y: p.y, vx: -p.dir * (20 + rand() * 60) + (rand() - 0.5) * 80, vy: (rand() - 0.7) * 90, g: 220, r: (1.2 + rand() * 1.8) * (0.5 + sc) * Math.sqrt(SPARK_AREA), grow: 0, t: 0, life: 0.3 + rand() * 0.3, kind: 'spark' });
             else parts.push({ x: tx, y: p.y - p.h * 0.1, vx: -p.dir * 18 + (rand() - 0.5) * 16, vy: -14 - rand() * 18, g: 0, r: 3 * (0.4 + sc), grow: 18 * (0.4 + sc), t: 0, life: 0.8 + rand() * 0.6, kind: 'smoke' });
         }
-        function end(allDown) {
+        function end(why) {
             if (over) return;
             over = true;
-            var msg = allDown ? '10 架全部打下來了！' : '30 發砲彈都打完了！';
+            var msg = why === 'all' ? '10 架全部打下來了！' : why === 'time' ? TIME_S + ' 秒到了！' : '30 發砲彈都打完了！';
             console.log('[砲打飛機] 結算：得分 ' + S.score);
             api.after(END_DELAY_MS, function () { api.fail({ delay: 600, lines: [msg] }); });  /* api.fail({ delay, lines })：這局結束，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
@@ -274,15 +291,15 @@
                 var k = f.t / PLUS_MS, y = f.y - 46 * k;
                 g.save(); g.globalAlpha = 1 - k * k;
                 g.font = '900 ' + Math.round(f.big) + 'px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'bottom';
-                g.lineWidth = 5; g.strokeStyle = COL.ink; g.strokeText('+1', f.x, y);
-                g.fillStyle = COL.yellow; g.fillText('+1', f.x, y);
+                g.lineWidth = 5; g.strokeStyle = COL.ink; g.strokeText(f.text, f.x, y);
+                g.fillStyle = COL.yellow; g.fillText(f.text, f.x, y);
                 g.restore();
             });
         }
         function drawPart(q) {
             var k = q.t / q.life;
             g.save();
-            if (q.kind === 'smoke') { g.globalAlpha = 0.55 * (1 - k); g.fillStyle = '#2B2B2B'; }
+            if (q.kind === 'smoke') { g.globalAlpha = SMOKE_ALPHA * (1 - k); g.fillStyle = '#2B2B2B'; }
             else if (q.kind === 'spark') { g.globalAlpha = 1 - k; g.fillStyle = k < 0.4 ? '#FFF3A0' : COL.orange; }
             else if (q.kind === 'fire') { g.globalAlpha = 1 - k; g.fillStyle = k < 0.3 ? COL.yellow : COL.red; }
             else if (q.kind === 'ring') { g.globalAlpha = 0.8 * (1 - k); g.strokeStyle = COL.yellow; g.lineWidth = 6 * (1 - k) + 1; g.beginPath(); g.arc(q.x, q.y, q.r, 0, Math.PI * 2); g.stroke(); g.restore(); return; }
@@ -417,13 +434,13 @@
     var G = {
         id: ID,
         name: '砲打飛機',
-        rule: '畫面最下方有一座固定不動的砲塔，**點畫面任何地方就往正上方開一砲**，砲彈等速往上飛，一共只有 30 發。天空由上到下有 10 種飛行器飛來飛去：飛碟、衛星、火箭、隱形戰機、戰鬥機、空中巴士、私人飛機、螺旋槳飛機、雙層翼飛機、直升機，越上面越小、也飛得越快。飛出畫面的飛機過一下會再從左邊或右邊飛進來，速度還會變快或變慢。**算好砲彈飛上去的時間**，提早開砲才打得中！每架打中第 1 次冒黑煙、第 2 次冒火花、第 3 次爆炸。**每打中一次得 1 分**，滿分 30 分。',
+        rule: '畫面最下方有一座固定不動的砲塔，**點畫面任何地方就往正上方開一砲**，砲彈等速往上飛，一共只有 30 發。天空由上到下有 10 種飛行器飛來飛去：飛碟、衛星、火箭、隱形戰機、戰鬥機、空中巴士、私人飛機、螺旋槳飛機、雙層翼飛機、直升機，越上面越小，速度各不相同。飛出畫面的飛機過一下會再從左邊或右邊飛進來，速度還會變快或變慢。**算好砲彈飛上去的時間**，提早開砲才打得中！每架打中第 1 次冒黑煙、第 2 次冒火花，各得 1 分，而且會變慢一點。**第 3 次打中就爆炸，越上面的分數越高**：直升機 2 分、雙層翼飛機 3 分……飛碟 11 分。限時 180 秒！',
         mount: mount,
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
-            scaleOf: scaleOf, lanes: lanes, entrySpeed: entrySpeed, waitSec: waitSec, entryPos: entryPos, isOut: isOut, sweepHit: sweepHit, damageOf: damageOf, willHit: willHit, rating: rating,
-            SHELLS: SHELLS, SHELL_V: SHELL_V, SHELL_R: SHELL_R, FIRE_GAP_MS: FIRE_GAP_MS, HITS_TO_KILL: HITS_TO_KILL, SCALE_TOP: SCALE_TOP, SCALE_BOTTOM: SCALE_BOTTOM, SKY_TOP: SKY_TOP, SKY_FRAC: SKY_FRAC, BASE_W: BASE_W, SPEED_JITTER: SPEED_JITTER, WAIT_S: WAIT_S, TYPES: TYPES, SOLVE_CAP: SOLVE_CAP, MAX_LEVEL: MAX_LEVEL
+            scaleOf: scaleOf, lanes: lanes, entrySpeed: entrySpeed, waitSec: waitSec, entryPos: entryPos, isOut: isOut, sweepHit: sweepHit, damageOf: damageOf, pointsFor: pointsFor, maxScore: maxScore, slowed: slowed, willHit: willHit, rating: rating,
+            SHELLS: SHELLS, SHELL_V: SHELL_V, SHELL_R: SHELL_R, FIRE_GAP_MS: FIRE_GAP_MS, HITS_TO_KILL: HITS_TO_KILL, SCALE_TOP: SCALE_TOP, SCALE_BOTTOM: SCALE_BOTTOM, SKY_TOP: SKY_TOP, SKY_FRAC: SKY_FRAC, BASE_W: BASE_W, SPEED_JITTER: SPEED_JITTER, WAIT_S: WAIT_S, TYPES: TYPES, KILL_PTS: KILL_PTS, SLOW_PER_HIT: SLOW_PER_HIT, TIME_S: TIME_S, SMOKE_ALPHA: SMOKE_ALPHA, SPARK_AREA: SPARK_AREA, BOOM_AREA: BOOM_AREA, SCORE: SCORE, SOLVE_CAP: SOLVE_CAP, MAX_LEVEL: MAX_LEVEL
         }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */

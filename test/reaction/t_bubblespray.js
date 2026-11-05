@@ -7,9 +7,9 @@ const SEED = seedOf(20261108), rnd = rng(SEED);
 const near = (a, b, e) => Math.abs(a - b) <= (e == null ? 1e-9 : e);
 
 // ── 層、顏色、大小、速度 ──
-ok(T.COLORS[0] === '#E8433A' && T.COLORS[1] === '#F5892B' && T.COLORS[2] === '#F7C934' && T.LAYERS === T.COLORS.length && T.LAYERS >= 5, '第一層紅、第二層橘、第三層黃…（' + T.LAYERS + ' 層）');
+ok(T.LAYERS === T.COLORS.length && T.LAYERS >= 5 && new Set(T.COLORS).size === T.LAYERS, '一層一個顏色（' + T.LAYERS + ' 層）');
 for (let L = 1; L < T.LAYERS; L++) ok(T.radiusOf(L) < T.radiusOf(L - 1) && T.speedOf(L) > T.speedOf(L - 1) && T.colorOf(L) !== T.colorOf(L - 1), '第 ' + (L + 1) + ' 層：更小、更快、換顏色');
-ok(near(T.radiusOf(0), T.R0) && T.radiusOf(T.LAYERS - 1) > T.BULLET_R * 2, '最小的泡泡還是比子彈大很多：' + T.radiusOf(T.LAYERS - 1).toFixed(1));
+ok(near(T.radiusOf(0), T.R0) && T.radiusOf(T.LAYERS - 1) > T.BULLET_R, '最小的泡泡還是比子彈大：' + T.radiusOf(T.LAYERS - 1).toFixed(1));
 ok(T.perRed() === Math.pow(2, T.LAYERS) - 1, '一顆紅泡泡全部打完 ' + T.perRed() + ' 顆');
 // 一顆紅泡泡實際分裂：第 n 層剛好 2^n 顆
 { let all = [{ layer: 0, r: T.radiusOf(0), x: 200, y: 200, vx: 30, vy: 0 }], count = {}, total = 0;
@@ -21,8 +21,14 @@ ok(T.perRed() === Math.pow(2, T.LAYERS) - 1, '一顆紅泡泡全部打完 ' + T.
 { const kids = T.split({ layer: 0, r: 110, x: 200, y: 200, vx: 0, vy: 0 }, -Math.PI / 2, () => 0.5);
   ok(kids[0].vx * kids[1].vx < 0 && Math.abs(kids[0].vy) < 1e-6, '子彈往上打，兩顆小泡泡往左右兩邊彈開'); }
 // ── 出現時間、滿分 ──
-ok(T.spawnTimes().join() === '0,10,20' && T.TIME_S === 30 && T.SPAWN_EVERY === 10, '第 0、10、20 秒各出現一顆紅泡泡（限時 30 秒）');
-ok(T.maxScore() === 3 * T.perRed(), '滿分 ' + T.maxScore());
+ok(T.spawnTimes().every((s, i) => s === i * T.SPAWN_EVERY) && T.spawnTimes()[0] === 0 && T.spawnTimes().slice(-1)[0] < T.TIME_S && T.spawnTimes().slice(-1)[0] + T.SPAWN_EVERY >= T.TIME_S, '第 0 秒起每 ' + T.SPAWN_EVERY + ' 秒出現一顆紅泡泡（限時 ' + T.TIME_S + ' 秒）');
+ok(T.maxScore() === T.spawnTimes().length * T.perRed(), '滿分 ' + T.maxScore());
+// ── 打中紅泡泡的獎勵：連射與子彈變快、有上限 ──
+{ const g0 = T.gunAfter(0), g1 = T.gunAfter(1), big = T.gunAfter(1000);
+  ok(g0.rate === T.FIRE_RATE && g0.v === T.BULLET_V, '還沒打中紅泡泡：原本的射速 ' + g0.rate + ' 發／秒、' + g0.v + ' px／秒');
+  ok(near(g1.rate, T.FIRE_RATE + T.RED_FIRE_BONUS) && near(g1.v, T.BULLET_V + T.RED_SPEED_BONUS), '打中 1 顆：每秒多 ' + T.RED_FIRE_BONUS + ' 發、子彈快 ' + T.RED_SPEED_BONUS);
+  ok(big.rate === T.FIRE_RATE_MAX && big.v === T.BULLET_V_MAX, '加到上限就停');
+  for (let r = 1; r <= 40; r++) { const a = T.gunAfter(r - 1), b = T.gunAfter(r); ok(b.rate >= a.rate && b.v >= a.v, '只增不減（第 ' + r + ' 顆）'); } }
 // ── 子彈碰撞 ──
 ok(near(T.segHit(0, 100, 0, -100, 0, 0, 10), 0.45) && T.segHit(20, 100, 20, -100, 0, 0, 10) === -1 && T.segHit(0, 5, 0, -100, 0, 0, 10) === 0 && T.segHit(0, 100, 0, 50, 0, 0, 10) === -1, '線段對圓：交點、擦過、起點在裡面、還沒到');
 { const bs = [{ x: 0, y: -50, r: 20 }, { x: 0, y: 30, r: 10 }, { x: 0, y: 10, r: 40 }];
@@ -30,7 +36,7 @@ ok(near(T.segHit(0, 100, 0, -100, 0, 0, 10), 0.45) && T.segHit(20, 100, 20, -100
   ok(T.firstHit(100, 100, 100, -200, bs, 5) === -1, '沒碰到');
   ok(T.firstHit(0, 100, 0, 75, [{ x: 0, y: 30, r: 10 }], 5) === -1 && T.firstHit(0, 100, 0, 44, [{ x: 0, y: 30, r: 10 }], 5) === 0, '泡泡半徑加子彈半徑才算碰到'); }
 // 很快的子彈也不會穿過最小的泡泡（一格 50ms 的距離遠大於泡泡直徑）
-{ const r = T.radiusOf(T.LAYERS - 1), step = T.BULLET_V * 0.05; ok(step > 2 * r && T.firstHit(0, step / 2, 0, -step / 2, [{ x: 0, y: 0, r }], T.BULLET_R) === 0, '掃掠：一格跳過整顆泡泡也打得中'); }
+{ const r = T.radiusOf(T.LAYERS - 1), step = T.BULLET_V_MAX * 0.05; ok(step > 2 * r && T.firstHit(0, step / 2, 0, -step / 2, [{ x: 0, y: 0, r }], T.BULLET_R) === 0, '掃掠：一格跳過整顆泡泡也打得中'); }
 // ── 瞄準 ──
 { const up = -Math.PI / 2, lo = -T.MIN_UP_DEG * Math.PI / 180;
   ok(near(T.aimAngle(200, 500, 200, 100), up), '手指在正上方：往上射');
@@ -46,6 +52,7 @@ ok(near(T.segHit(0, 100, 0, -100, 0, 0, 10), 0.45) && T.segHit(20, 100, 20, -100
 { const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_bubblespray.js'), boot = rd('../../js/boot.js'), menu = rd('../../js/menu.js');
   ok(boot.indexOf("'js/reaction_bubblespray.js'") > 0 && boot.indexOf("'css/games/reaction_bubblespray.css'") > 0, 'boot.js 有載入 js 與 css');
   ok(/id: 'bubblespray', name: '泡泡掃射'/.test(menu) && G.name === '泡泡掃射', '選單有這一款');
+  ok(/b\.layer === 0\)[^}]*gun = gunAfter\(reds\)/.test(src) && /fireAcc \+= d \* gun\.rate/.test(src) && /\* gun\.v/.test(src), '打中紅泡泡就換成更快的連射與子彈');
   ok(/bullets\.splice\(i, 1\); pop\(/.test(src) && /molecules\(b\)/.test(src), '子彈打中就消失、破掉有分子特效');
   ok(/api\.timer\(TIME_S \* 1000/.test(src) && /scoreOf/.test(src), '限時用 api.timer、成績用 scoreOf'); }
 ok(new Set([10, 60, 130, 210, 310].map(T.rating)).size === 5, '評語分級');

@@ -14,620 +14,1095 @@
    整站換個主色調、調整字級比例，只要改這裡，不用到處找哪裡寫死了舊的值。 */
 :root {
     /* ── 字體 ───────────────────────────────────────────── */
-    --font-ui: "Noto Sans TC", "PingFang TC", "Heiti TC", "Microsoft JhengHei", sans-serif;  /* 自訂變數 --font-ui（下面用 var(--font-ui) 取用；可以由 JS 動態設定） */
-    --font-note: "Noto Serif TC", "Songti TC", "PMingLiU", serif;  /* 自訂變數 --font-note（下面用 var(--font-note) 取用；可以由 JS 動態設定） */
-    --fw-regular: 500;                                  /* 自訂變數 --fw-regular（下面用 var(--fw-regular) 取用；可以由 JS 動態設定） */
-    --fw-bold: 700;                                     /* 自訂變數 --fw-bold（下面用 var(--fw-bold) 取用；可以由 JS 動態設定） */
-    --fw-black: 900;                                    /* 自訂變數 --fw-black（下面用 var(--fw-black) 取用；可以由 JS 動態設定） */
+    --font-ui: "Noto Sans TC", "PingFang TC", "Heiti TC", "Microsoft JhengHei", sans-serif;
+    /* 自訂變數 --font-ui（下面用 var(--font-ui) 取用；可以由 JS 動態設定） */
+    --font-note: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+    /* 自訂變數 --font-note（下面用 var(--font-note) 取用；可以由 JS 動態設定） */
+    --fw-regular: 500;
+    /* 自訂變數 --fw-regular（下面用 var(--fw-regular) 取用；可以由 JS 動態設定） */
+    --fw-bold: 700;
+    /* 自訂變數 --fw-bold（下面用 var(--fw-bold) 取用；可以由 JS 動態設定） */
+    --fw-black: 900;
+    /* 自訂變數 --fw-black（下面用 var(--fw-black) 取用；可以由 JS 動態設定） */
 
     /* ── 字級（基本刻度）──────────────────────────────── */
-    --fs-xs: 22px;                                      /* 自訂變數 --fs-xs（下面用 var(--fs-xs) 取用；可以由 JS 動態設定） */
-    --fs-sm: 26px;                                      /* 自訂變數 --fs-sm（下面用 var(--fs-sm) 取用；可以由 JS 動態設定） */
-    --fs-md: 30px;                                      /* 自訂變數 --fs-md（下面用 var(--fs-md) 取用；可以由 JS 動態設定） */
-    --fs-lg: 34px;                                      /* 自訂變數 --fs-lg（下面用 var(--fs-lg) 取用；可以由 JS 動態設定） */
-    --fs-xl: 40px;                                      /* 自訂變數 --fs-xl（下面用 var(--fs-xl) 取用；可以由 JS 動態設定） */
-    --fs-xxl: 58px;                                     /* 自訂變數 --fs-xxl（下面用 var(--fs-xxl) 取用；可以由 JS 動態設定） */
-    --fs-xxxl: 72px;                                    /* 自訂變數 --fs-xxxl（下面用 var(--fs-xxxl) 取用；可以由 JS 動態設定） */
-    --fs-xxxxl: 96px;                                   /* 自訂變數 --fs-xxxxl（下面用 var(--fs-xxxxl) 取用；可以由 JS 動態設定） */
+    --fs-xs: 22px;
+    /* 自訂變數 --fs-xs（下面用 var(--fs-xs) 取用；可以由 JS 動態設定） */
+    --fs-sm: 26px;
+    /* 自訂變數 --fs-sm（下面用 var(--fs-sm) 取用；可以由 JS 動態設定） */
+    --fs-md: 30px;
+    /* 自訂變數 --fs-md（下面用 var(--fs-md) 取用；可以由 JS 動態設定） */
+    --fs-lg: 34px;
+    /* 自訂變數 --fs-lg（下面用 var(--fs-lg) 取用；可以由 JS 動態設定） */
+    --fs-xl: 40px;
+    /* 自訂變數 --fs-xl（下面用 var(--fs-xl) 取用；可以由 JS 動態設定） */
+    --fs-xxl: 58px;
+    /* 自訂變數 --fs-xxl（下面用 var(--fs-xxl) 取用；可以由 JS 動態設定） */
+    --fs-xxxl: 72px;
+    /* 自訂變數 --fs-xxxl（下面用 var(--fs-xxxl) 取用；可以由 JS 動態設定） */
+    --fs-xxxxl: 96px;
+    /* 自訂變數 --fs-xxxxl（下面用 var(--fs-xxxxl) 取用；可以由 JS 動態設定） */
     /* ── 字級（用途）：自動縮字的上限／下限 ──────────── */
-    --fs-bar-title: var(--fs-lg);                       /* 自訂變數 --fs-bar-title（下面用 var(--fs-bar-title) 取用；可以由 JS 動態設定） */
-    --fs-question: var(--fs-xl);                        /* 自訂變數 --fs-question（下面用 var(--fs-question) 取用；可以由 JS 動態設定） */
-    --fs-question-min: 26px;                            /* 自訂變數 --fs-question-min（下面用 var(--fs-question-min) 取用；可以由 JS 動態設定） */
-    --fs-option: var(--fs-lg);                          /* 自訂變數 --fs-option（下面用 var(--fs-option) 取用；可以由 JS 動態設定） */
-    --fs-option-min: 24px;                              /* 自訂變數 --fs-option-min（下面用 var(--fs-option-min) 取用；可以由 JS 動態設定） */
-    --fs-note: var(--fs-lg);                            /* 自訂變數 --fs-note（下面用 var(--fs-note) 取用；可以由 JS 動態設定） */
-    --fs-note-min: 26px;                                /* 自訂變數 --fs-note-min（下面用 var(--fs-note-min) 取用；可以由 JS 動態設定） */
-    --fs-dialog: var(--fs-md);                          /* 自訂變數 --fs-dialog（下面用 var(--fs-dialog) 取用；可以由 JS 動態設定） */
+    --fs-bar-title: var(--fs-lg);
+    /* 自訂變數 --fs-bar-title（下面用 var(--fs-bar-title) 取用；可以由 JS 動態設定） */
+    --fs-question: var(--fs-xl);
+    /* 自訂變數 --fs-question（下面用 var(--fs-question) 取用；可以由 JS 動態設定） */
+    --fs-question-min: 26px;
+    /* 自訂變數 --fs-question-min（下面用 var(--fs-question-min) 取用；可以由 JS 動態設定） */
+    --fs-option: var(--fs-lg);
+    /* 自訂變數 --fs-option（下面用 var(--fs-option) 取用；可以由 JS 動態設定） */
+    --fs-option-min: 24px;
+    /* 自訂變數 --fs-option-min（下面用 var(--fs-option-min) 取用；可以由 JS 動態設定） */
+    --fs-note: var(--fs-lg);
+    /* 自訂變數 --fs-note（下面用 var(--fs-note) 取用；可以由 JS 動態設定） */
+    --fs-note-min: 26px;
+    /* 自訂變數 --fs-note-min（下面用 var(--fs-note-min) 取用；可以由 JS 動態設定） */
+    --fs-dialog: var(--fs-md);
+    /* 自訂變數 --fs-dialog（下面用 var(--fs-dialog) 取用；可以由 JS 動態設定） */
 
-    --lh-tight: 1.2;                                    /* 自訂變數 --lh-tight（下面用 var(--lh-tight) 取用；可以由 JS 動態設定） */
-    --lh-body: 1.4;                                     /* 自訂變數 --lh-body（下面用 var(--lh-body) 取用；可以由 JS 動態設定） */
-    --lh-note: 1.55;                                    /* 自訂變數 --lh-note（下面用 var(--lh-note) 取用；可以由 JS 動態設定） */
+    --lh-tight: 1.2;
+    /* 自訂變數 --lh-tight（下面用 var(--lh-tight) 取用；可以由 JS 動態設定） */
+    --lh-body: 1.4;
+    /* 自訂變數 --lh-body（下面用 var(--lh-body) 取用；可以由 JS 動態設定） */
+    --lh-note: 1.55;
+    /* 自訂變數 --lh-note（下面用 var(--lh-note) 取用；可以由 JS 動態設定） */
 
     /* ── 顏色：宣紙底 ＋ 黃／綠／藍 ＋ 少量橘 ─────────── */
-    --c-frame: #EFE3B8;                                 /* 自訂變數 --c-frame（下面用 var(--c-frame) 取用；可以由 JS 動態設定） */
+    --c-frame: #EFE3B8;
+    /* 自訂變數 --c-frame（下面用 var(--c-frame) 取用；可以由 JS 動態設定） */
     /* 舞台外的裱框色 */
-    --c-paper: #FBF3D9;                                 /* 自訂變數 --c-paper（下面用 var(--c-paper) 取用；可以由 JS 動態設定） */
+    --c-paper: #FBF3D9;
+    /* 自訂變數 --c-paper（下面用 var(--c-paper) 取用；可以由 JS 動態設定） */
     /* 宣紙底 */
-    --c-card: #FFFDF3;                                  /* 自訂變數 --c-card（下面用 var(--c-card) 取用；可以由 JS 動態設定） */
+    --c-card: #FFFDF3;
+    /* 自訂變數 --c-card（下面用 var(--c-card) 取用；可以由 JS 動態設定） */
     /* 卡片、紙條 */
-    --c-card-alt: #FFF6D8;                              /* 自訂變數 --c-card-alt（下面用 var(--c-card-alt) 取用；可以由 JS 動態設定） */
+    --c-card-alt: #FFF6D8;
+    /* 自訂變數 --c-card-alt（下面用 var(--c-card-alt) 取用；可以由 JS 動態設定） */
     /* 選項、關卡卡片 */
-    --c-ink: #4A3B1E;                                   /* 自訂變數 --c-ink（下面用 var(--c-ink) 取用；可以由 JS 動態設定） */
+    --c-ink: #4A3B1E;
+    /* 自訂變數 --c-ink（下面用 var(--c-ink) 取用；可以由 JS 動態設定） */
     /* 主文字（暖棕） */
-    --c-ink-soft: #7E6A3C;                              /* 自訂變數 --c-ink-soft（下面用 var(--c-ink-soft) 取用；可以由 JS 動態設定） */
+    --c-ink-soft: #7E6A3C;
+    /* 自訂變數 --c-ink-soft（下面用 var(--c-ink-soft) 取用；可以由 JS 動態設定） */
     /* 次要文字 */
-    --c-on-accent: #FFFFFF;                             /* 自訂變數 --c-on-accent（下面用 var(--c-on-accent) 取用；可以由 JS 動態設定） */
+    --c-on-accent: #FFFFFF;
+    /* 自訂變數 --c-on-accent（下面用 var(--c-on-accent) 取用；可以由 JS 動態設定） */
     /* 彩色按鈕上的字 */
-    --c-black: #000000;                                 /* 自訂變數 --c-black（下面用 var(--c-black) 取用；可以由 JS 動態設定） */
+    --c-black: #000000;
+    /* 自訂變數 --c-black（下面用 var(--c-black) 取用；可以由 JS 動態設定） */
     /* 純黑：玩法說明裡的重點句子（.dlg__em），在次要文字色的段落裡最醒目 */
 
-    --c-yellow: hsl(43, 75%, 51%);                      /* 自訂變數 --c-yellow（下面用 var(--c-yellow) 取用；可以由 JS 動態設定） */
-    --c-green: hsl(132, 34%, 45%);                      /* 自訂變數 --c-green（下面用 var(--c-green) 取用；可以由 JS 動態設定） */
-    --c-green-light: hsl(132, 72%, 80%);                /* 自訂變數 --c-green-light（下面用 var(--c-green-light) 取用；可以由 JS 動態設定） */
-    --c-blue: hsl(208, 53%, 51%);                       /* 自訂變數 --c-blue（下面用 var(--c-blue) 取用；可以由 JS 動態設定） */
-    --c-blue-light: hsl(208, 72%, 80%);                 /* 自訂變數 --c-blue-light（下面用 var(--c-blue-light) 取用；可以由 JS 動態設定） */
-    --c-orange: hsl(27, 80%, 55%);                      /* 自訂變數 --c-orange（下面用 var(--c-orange) 取用；可以由 JS 動態設定） */
-    --c-sky: hsl(195, 82%, 56%);                        /* 自訂變數 --c-sky（下面用 var(--c-sky) 取用；可以由 JS 動態設定） */
+    --c-yellow: hsl(43, 75%, 51%);
+    /* 自訂變數 --c-yellow（下面用 var(--c-yellow) 取用；可以由 JS 動態設定） */
+    --c-green: hsl(132, 34%, 45%);
+    /* 自訂變數 --c-green（下面用 var(--c-green) 取用；可以由 JS 動態設定） */
+    --c-green-light: hsl(132, 72%, 80%);
+    /* 自訂變數 --c-green-light（下面用 var(--c-green-light) 取用；可以由 JS 動態設定） */
+    --c-blue: hsl(208, 53%, 51%);
+    /* 自訂變數 --c-blue（下面用 var(--c-blue) 取用；可以由 JS 動態設定） */
+    --c-blue-light: hsl(208, 72%, 80%);
+    /* 自訂變數 --c-blue-light（下面用 var(--c-blue-light) 取用；可以由 JS 動態設定） */
+    --c-orange: hsl(27, 80%, 55%);
+    /* 自訂變數 --c-orange（下面用 var(--c-orange) 取用；可以由 JS 動態設定） */
+    --c-sky: hsl(195, 82%, 56%);
+    /* 自訂變數 --c-sky（下面用 var(--c-sky) 取用；可以由 JS 動態設定） */
     /* 水藍色：找回小雞頭上閃爍的星星（V1.24） */
-    --pb-bd-w: 5px;                                     /* 自訂變數 --pb-bd-w（下面用 var(--pb-bd-w) 取用；可以由 JS 動態設定） */
+    --pb-bd-w: 5px;
+    /* 自訂變數 --pb-bd-w（下面用 var(--pb-bd-w) 取用；可以由 JS 動態設定） */
     /* 分藥盒：下方藥盒格子的邊線粗細（V1.24，原本跟一般邊框一樣是 2px） */
-    --pb-bd-c: var(--c-ink-soft);                       /* 自訂變數 --pb-bd-c（下面用 var(--pb-bd-c) 取用；可以由 JS 動態設定） */
+    --pb-bd-c: var(--c-ink-soft);
+    /* 自訂變數 --pb-bd-c（下面用 var(--pb-bd-c) 取用；可以由 JS 動態設定） */
     /* 分藥盒：下方藥盒格子的邊線顏色 */
 
     /* ── V1.34 接電線（.wlk-）：8 種電線顏色；第 6 種（水藍）刻意跟第 2 種（藍）接近、第 7 種（橘）跟第 4 種（黃）接近 ── */
-    --wlk-0: hsl(4, 78%, 52%);                          /* 自訂變數 --wlk-0（下面用 var(--wlk-0) 取用；可以由 JS 動態設定） */
-    --wlk-1: hsl(215, 70%, 48%);                        /* 自訂變數 --wlk-1（下面用 var(--wlk-1) 取用；可以由 JS 動態設定） */
-    --wlk-2: hsl(135, 55%, 40%);                        /* 自訂變數 --wlk-2（下面用 var(--wlk-2) 取用；可以由 JS 動態設定） */
-    --wlk-3: hsl(50, 92%, 50%);                         /* 自訂變數 --wlk-3（下面用 var(--wlk-3) 取用；可以由 JS 動態設定） */
-    --wlk-4: hsl(280, 55%, 52%);                        /* 自訂變數 --wlk-4（下面用 var(--wlk-4) 取用；可以由 JS 動態設定） */
-    --wlk-5: hsl(195, 85%, 58%);                        /* 自訂變數 --wlk-5（下面用 var(--wlk-5) 取用；可以由 JS 動態設定） */
-    --wlk-6: hsl(27, 90%, 55%);                         /* 自訂變數 --wlk-6（下面用 var(--wlk-6) 取用；可以由 JS 動態設定） */
-    --wlk-7: hsl(330, 75%, 65%);                        /* 自訂變數 --wlk-7（下面用 var(--wlk-7) 取用；可以由 JS 動態設定） */
+    --wlk-0: hsl(4, 78%, 52%);
+    /* 自訂變數 --wlk-0（下面用 var(--wlk-0) 取用；可以由 JS 動態設定） */
+    --wlk-1: hsl(215, 70%, 48%);
+    /* 自訂變數 --wlk-1（下面用 var(--wlk-1) 取用；可以由 JS 動態設定） */
+    --wlk-2: hsl(135, 55%, 40%);
+    /* 自訂變數 --wlk-2（下面用 var(--wlk-2) 取用；可以由 JS 動態設定） */
+    --wlk-3: hsl(50, 92%, 50%);
+    /* 自訂變數 --wlk-3（下面用 var(--wlk-3) 取用；可以由 JS 動態設定） */
+    --wlk-4: hsl(280, 55%, 52%);
+    /* 自訂變數 --wlk-4（下面用 var(--wlk-4) 取用；可以由 JS 動態設定） */
+    --wlk-5: hsl(195, 85%, 58%);
+    /* 自訂變數 --wlk-5（下面用 var(--wlk-5) 取用；可以由 JS 動態設定） */
+    --wlk-6: hsl(27, 90%, 55%);
+    /* 自訂變數 --wlk-6（下面用 var(--wlk-6) 取用；可以由 JS 動態設定） */
+    --wlk-7: hsl(330, 75%, 65%);
+    /* 自訂變數 --wlk-7（下面用 var(--wlk-7) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 缺哪一張（.mj3-）：分好的三組牌的外框顏色（綠色桌布上要看得清楚，所以不用綠色）── */
-    --mj3-g0: hsl(50, 92%, 55%);                        /* 自訂變數 --mj3-g0（下面用 var(--mj3-g0) 取用；可以由 JS 動態設定） */
-    --mj3-g1: hsl(208, 80%, 62%);                       /* 自訂變數 --mj3-g1（下面用 var(--mj3-g1) 取用；可以由 JS 動態設定） */
-    --mj3-g2: hsl(330, 75%, 70%);                       /* 自訂變數 --mj3-g2（下面用 var(--mj3-g2) 取用；可以由 JS 動態設定） */
+    --mj3-g0: hsl(50, 92%, 55%);
+    /* 自訂變數 --mj3-g0（下面用 var(--mj3-g0) 取用；可以由 JS 動態設定） */
+    --mj3-g1: hsl(208, 80%, 62%);
+    /* 自訂變數 --mj3-g1（下面用 var(--mj3-g1) 取用；可以由 JS 動態設定） */
+    --mj3-g2: hsl(330, 75%, 70%);
+    /* 自訂變數 --mj3-g2（下面用 var(--mj3-g2) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 翻最多棋（.rvs-）：木紋棋盤的底色與格線 ── */
-    --rvs-wood: hsl(32, 52%, 58%);                      /* 自訂變數 --rvs-wood（下面用 var(--rvs-wood) 取用；可以由 JS 動態設定） */
-    --rvs-line: hsl(28, 45%, 34%);                      /* 自訂變數 --rvs-line（下面用 var(--rvs-line) 取用；可以由 JS 動態設定） */
+    --rvs-wood: hsl(32, 52%, 58%);
+    /* 自訂變數 --rvs-wood（下面用 var(--rvs-wood) 取用；可以由 JS 動態設定） */
+    --rvs-line: hsl(28, 45%, 34%);
+    /* 自訂變數 --rvs-line（下面用 var(--rvs-line) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 堵住五子（.gmk-）：公園石桌上的米色棋盤與格線 ── */
-    --gmk-board: hsl(40, 62%, 80%);                     /* 自訂變數 --gmk-board（下面用 var(--gmk-board) 取用；可以由 JS 動態設定） */
-    --gmk-line: hsl(32, 40%, 38%);                      /* 自訂變數 --gmk-line（下面用 var(--gmk-line) 取用；可以由 JS 動態設定） */
+    --gmk-board: hsl(40, 62%, 80%);
+    /* 自訂變數 --gmk-board（下面用 var(--gmk-board) 取用；可以由 JS 動態設定） */
+    --gmk-line: hsl(32, 40%, 38%);
+    /* 自訂變數 --gmk-line（下面用 var(--gmk-line) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 換一張就平（.swe-）：綠色牌桌 ── */
-    --swe-felt: hsl(140, 38%, 62%);                     /* 自訂變數 --swe-felt（下面用 var(--swe-felt) 取用；可以由 JS 動態設定） */
-    --swe-felt-edge: hsl(140, 30%, 40%);                /* 自訂變數 --swe-felt-edge（下面用 var(--swe-felt-edge) 取用；可以由 JS 動態設定） */
+    --swe-felt: hsl(140, 38%, 62%);
+    /* 自訂變數 --swe-felt（下面用 var(--swe-felt) 取用；可以由 JS 動態設定） */
+    --swe-felt-edge: hsl(140, 30%, 40%);
+    /* 自訂變數 --swe-felt-edge（下面用 var(--swe-felt-edge) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 齒輪對記號（.grm-）：銅色齒輪 ── */
-    --grm-copper: hsl(28, 58%, 58%);                    /* 自訂變數 --grm-copper（下面用 var(--grm-copper) 取用；可以由 JS 動態設定） */
-    --grm-copper-light: hsl(34, 68%, 70%);              /* 自訂變數 --grm-copper-light（下面用 var(--grm-copper-light) 取用；可以由 JS 動態設定） */
-    --grm-copper-dark: hsl(24, 50%, 32%);               /* 自訂變數 --grm-copper-dark（下面用 var(--grm-copper-dark) 取用；可以由 JS 動態設定） */
+    --grm-copper: hsl(28, 58%, 58%);
+    /* 自訂變數 --grm-copper（下面用 var(--grm-copper) 取用；可以由 JS 動態設定） */
+    --grm-copper-light: hsl(34, 68%, 70%);
+    /* 自訂變數 --grm-copper-light（下面用 var(--grm-copper-light) 取用；可以由 JS 動態設定） */
+    --grm-copper-dark: hsl(24, 50%, 32%);
+    /* 自訂變數 --grm-copper-dark（下面用 var(--grm-copper-dark) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 蹺蹺板比重（.sea-）：木板與七種動物的毛色 ── */
-    --sea-plank: hsl(30, 55%, 58%);                     /* 自訂變數 --sea-plank（下面用 var(--sea-plank) 取用；可以由 JS 動態設定） */
-    --sea-bear: hsl(25, 48%, 52%);                      /* 自訂變數 --sea-bear（下面用 var(--sea-bear) 取用；可以由 JS 動態設定） */
-    --sea-pig: hsl(350, 75%, 84%);                      /* 自訂變數 --sea-pig（下面用 var(--sea-pig) 取用；可以由 JS 動態設定） */
-    --sea-pig-snout: hsl(350, 70%, 74%);                /* 自訂變數 --sea-pig-snout（下面用 var(--sea-pig-snout) 取用；可以由 JS 動態設定） */
-    --sea-dog: hsl(36, 58%, 70%);                       /* 自訂變數 --sea-dog（下面用 var(--sea-dog) 取用；可以由 JS 動態設定） */
-    --sea-dog-ear: hsl(28, 45%, 48%);                   /* 自訂變數 --sea-dog-ear（下面用 var(--sea-dog-ear) 取用；可以由 JS 動態設定） */
-    --sea-cat: hsl(28, 85%, 64%);                       /* 自訂變數 --sea-cat（下面用 var(--sea-cat) 取用；可以由 JS 動態設定） */
-    --sea-rabbit: hsl(0, 0%, 94%);                      /* 自訂變數 --sea-rabbit（下面用 var(--sea-rabbit) 取用；可以由 JS 動態設定） */
-    --sea-chick: hsl(48, 92%, 66%);                     /* 自訂變數 --sea-chick（下面用 var(--sea-chick) 取用；可以由 JS 動態設定） */
-    --sea-panda: hsl(0, 0%, 97%);                       /* 自訂變數 --sea-panda（下面用 var(--sea-panda) 取用；可以由 JS 動態設定） */
+    --sea-plank: hsl(30, 55%, 58%);
+    /* 自訂變數 --sea-plank（下面用 var(--sea-plank) 取用；可以由 JS 動態設定） */
+    --sea-bear: hsl(25, 48%, 52%);
+    /* 自訂變數 --sea-bear（下面用 var(--sea-bear) 取用；可以由 JS 動態設定） */
+    --sea-pig: hsl(350, 75%, 84%);
+    /* 自訂變數 --sea-pig（下面用 var(--sea-pig) 取用；可以由 JS 動態設定） */
+    --sea-pig-snout: hsl(350, 70%, 74%);
+    /* 自訂變數 --sea-pig-snout（下面用 var(--sea-pig-snout) 取用；可以由 JS 動態設定） */
+    --sea-dog: hsl(36, 58%, 70%);
+    /* 自訂變數 --sea-dog（下面用 var(--sea-dog) 取用；可以由 JS 動態設定） */
+    --sea-dog-ear: hsl(28, 45%, 48%);
+    /* 自訂變數 --sea-dog-ear（下面用 var(--sea-dog-ear) 取用；可以由 JS 動態設定） */
+    --sea-cat: hsl(28, 85%, 64%);
+    /* 自訂變數 --sea-cat（下面用 var(--sea-cat) 取用；可以由 JS 動態設定） */
+    --sea-rabbit: hsl(0, 0%, 94%);
+    /* 自訂變數 --sea-rabbit（下面用 var(--sea-rabbit) 取用；可以由 JS 動態設定） */
+    --sea-chick: hsl(48, 92%, 66%);
+    /* 自訂變數 --sea-chick（下面用 var(--sea-chick) 取用；可以由 JS 動態設定） */
+    --sea-panda: hsl(0, 0%, 97%);
+    /* 自訂變數 --sea-panda（下面用 var(--sea-panda) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 找正方形（.fsq-）：夜空與星星 ── */
-    --fsq-sky: hsl(226, 46%, 24%);                      /* 自訂變數 --fsq-sky（下面用 var(--fsq-sky) 取用；可以由 JS 動態設定） */
-    --fsq-star: hsl(48, 96%, 70%);                      /* 自訂變數 --fsq-star（下面用 var(--fsq-star) 取用；可以由 JS 動態設定） */
-    --fsq-star-edge: hsl(40, 90%, 52%);                 /* 自訂變數 --fsq-star-edge（下面用 var(--fsq-star-edge) 取用；可以由 JS 動態設定） */
+    --fsq-sky: hsl(226, 46%, 24%);
+    /* 自訂變數 --fsq-sky（下面用 var(--fsq-sky) 取用；可以由 JS 動態設定） */
+    --fsq-star: hsl(48, 96%, 70%);
+    /* 自訂變數 --fsq-star（下面用 var(--fsq-star) 取用；可以由 JS 動態設定） */
+    --fsq-star-edge: hsl(40, 90%, 52%);
+    /* 自訂變數 --fsq-star-edge（下面用 var(--fsq-star-edge) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 跳棋跳最遠（.chk-）：棋盤與紅藍彈珠 ── */
-    --chk-board: hsl(40, 62%, 84%);                     /* 自訂變數 --chk-board（下面用 var(--chk-board) 取用；可以由 JS 動態設定） */
-    --chk-hole: hsl(32, 38%, 70%);                      /* 自訂變數 --chk-hole（下面用 var(--chk-hole) 取用；可以由 JS 動態設定） */
-    --chk-shadow: hsla(28, 45%, 20%, 0.35);             /* 自訂變數 --chk-shadow（下面用 var(--chk-shadow) 取用；可以由 JS 動態設定） */
-    --chk-red-hi: hsl(5, 88%, 78%);                     /* 自訂變數 --chk-red-hi（下面用 var(--chk-red-hi) 取用；可以由 JS 動態設定） */
-    --chk-red: hsl(5, 75%, 52%);                        /* 自訂變數 --chk-red（下面用 var(--chk-red) 取用；可以由 JS 動態設定） */
-    --chk-red-lo: hsl(5, 70%, 36%);                     /* 自訂變數 --chk-red-lo（下面用 var(--chk-red-lo) 取用；可以由 JS 動態設定） */
-    --chk-blue-hi: hsl(210, 85%, 80%);                  /* 自訂變數 --chk-blue-hi（下面用 var(--chk-blue-hi) 取用；可以由 JS 動態設定） */
-    --chk-blue: hsl(210, 65%, 50%);                     /* 自訂變數 --chk-blue（下面用 var(--chk-blue) 取用；可以由 JS 動態設定） */
-    --chk-blue-lo: hsl(210, 60%, 34%);                  /* 自訂變數 --chk-blue-lo（下面用 var(--chk-blue-lo) 取用；可以由 JS 動態設定） */
+    --chk-board: hsl(40, 62%, 84%);
+    /* 自訂變數 --chk-board（下面用 var(--chk-board) 取用；可以由 JS 動態設定） */
+    --chk-hole: hsl(32, 38%, 70%);
+    /* 自訂變數 --chk-hole（下面用 var(--chk-hole) 取用；可以由 JS 動態設定） */
+    --chk-shadow: hsla(28, 45%, 20%, 0.35);
+    /* 自訂變數 --chk-shadow（下面用 var(--chk-shadow) 取用；可以由 JS 動態設定） */
+    --chk-red-hi: hsl(5, 88%, 78%);
+    /* 自訂變數 --chk-red-hi（下面用 var(--chk-red-hi) 取用；可以由 JS 動態設定） */
+    --chk-red: hsl(5, 75%, 52%);
+    /* 自訂變數 --chk-red（下面用 var(--chk-red) 取用；可以由 JS 動態設定） */
+    --chk-red-lo: hsl(5, 70%, 36%);
+    /* 自訂變數 --chk-red-lo（下面用 var(--chk-red-lo) 取用；可以由 JS 動態設定） */
+    --chk-blue-hi: hsl(210, 85%, 80%);
+    /* 自訂變數 --chk-blue-hi（下面用 var(--chk-blue-hi) 取用；可以由 JS 動態設定） */
+    --chk-blue: hsl(210, 65%, 50%);
+    /* 自訂變數 --chk-blue（下面用 var(--chk-blue) 取用；可以由 JS 動態設定） */
+    --chk-blue-lo: hsl(210, 60%, 34%);
+    /* 自訂變數 --chk-blue-lo（下面用 var(--chk-blue-lo) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 圈內圈外（.iof-）：紅色粗繩 ── */
-    --iof-rope: hsl(6, 72%, 52%);                       /* 自訂變數 --iof-rope（下面用 var(--iof-rope) 取用；可以由 JS 動態設定） */
+    --iof-rope: hsl(6, 72%, 52%);
+    /* 自訂變數 --iof-rope（下面用 var(--iof-rope) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 加到五百（.gsp-）：加油機的黑底黃字面板、紅色油槍 ── */
-    --gsp-panel: hsl(28, 20%, 12%);                     /* 自訂變數 --gsp-panel（下面用 var(--gsp-panel) 取用；可以由 JS 動態設定） */
-    --gsp-digit: hsl(48, 96%, 60%);                     /* 自訂變數 --gsp-digit（下面用 var(--gsp-digit) 取用；可以由 JS 動態設定） */
-    --gsp-sticker: hsl(48, 96%, 62%);                   /* 自訂變數 --gsp-sticker（下面用 var(--gsp-sticker) 取用；可以由 JS 動態設定） */
-    --gsp-gun: hsl(6, 76%, 52%);                        /* 自訂變數 --gsp-gun（下面用 var(--gsp-gun) 取用；可以由 JS 動態設定） */
-    --gsp-gun-dark: hsl(6, 70%, 34%);                   /* 自訂變數 --gsp-gun-dark（下面用 var(--gsp-gun-dark) 取用；可以由 JS 動態設定） */
-    --gsp-font: "Courier New", ui-monospace, monospace; /* 自訂變數 --gsp-font（下面用 var(--gsp-font) 取用；可以由 JS 動態設定） */
+    --gsp-panel: hsl(28, 20%, 12%);
+    /* 自訂變數 --gsp-panel（下面用 var(--gsp-panel) 取用；可以由 JS 動態設定） */
+    --gsp-digit: hsl(48, 96%, 60%);
+    /* 自訂變數 --gsp-digit（下面用 var(--gsp-digit) 取用；可以由 JS 動態設定） */
+    --gsp-sticker: hsl(48, 96%, 62%);
+    /* 自訂變數 --gsp-sticker（下面用 var(--gsp-sticker) 取用；可以由 JS 動態設定） */
+    --gsp-gun: hsl(6, 76%, 52%);
+    /* 自訂變數 --gsp-gun（下面用 var(--gsp-gun) 取用；可以由 JS 動態設定） */
+    --gsp-gun-dark: hsl(6, 70%, 34%);
+    /* 自訂變數 --gsp-gun-dark（下面用 var(--gsp-gun-dark) 取用；可以由 JS 動態設定） */
+    --gsp-font: "Courier New", ui-monospace, monospace;
+    /* 自訂變數 --gsp-font（下面用 var(--gsp-font) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 奶茶調色（.mlt-）：深色木桌、白色托盤、玻璃杯、牛奶 ── */
-    --mlt-wood: hsl(24, 38%, 28%);                      /* 自訂變數 --mlt-wood（下面用 var(--mlt-wood) 取用；可以由 JS 動態設定） */
-    --mlt-tray: hsl(40, 30%, 94%);                      /* 自訂變數 --mlt-tray（下面用 var(--mlt-tray) 取用；可以由 JS 動態設定） */
-    --mlt-glass: hsl(200, 25%, 62%);                    /* 自訂變數 --mlt-glass（下面用 var(--mlt-glass) 取用；可以由 JS 動態設定） */
-    --mlt-milk: hsl(45, 45%, 97%);                      /* 自訂變數 --mlt-milk（下面用 var(--mlt-milk) 取用；可以由 JS 動態設定） */
-    --mlt-btn-dark: hsl(208, 53%, 34%);                 /* 自訂變數 --mlt-btn-dark（下面用 var(--mlt-btn-dark) 取用；可以由 JS 動態設定） */
+    --mlt-wood: hsl(24, 38%, 28%);
+    /* 自訂變數 --mlt-wood（下面用 var(--mlt-wood) 取用；可以由 JS 動態設定） */
+    --mlt-tray: hsl(40, 30%, 94%);
+    /* 自訂變數 --mlt-tray（下面用 var(--mlt-tray) 取用；可以由 JS 動態設定） */
+    --mlt-glass: hsl(200, 25%, 62%);
+    /* 自訂變數 --mlt-glass（下面用 var(--mlt-glass) 取用；可以由 JS 動態設定） */
+    --mlt-milk: hsl(45, 45%, 97%);
+    /* 自訂變數 --mlt-milk（下面用 var(--mlt-milk) 取用；可以由 JS 動態設定） */
+    --mlt-btn-dark: hsl(208, 53%, 34%);
+    /* 自訂變數 --mlt-btn-dark（下面用 var(--mlt-btn-dark) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 轉盤電話（.rtr-）：黑色電話底板、銀色轉盤、擋片 ── */
-    --rtr-plate: hsl(20, 12%, 14%);                     /* 自訂變數 --rtr-plate（下面用 var(--rtr-plate) 取用；可以由 JS 動態設定） */
-    --rtr-metal: hsl(40, 12%, 78%);                     /* 自訂變數 --rtr-metal（下面用 var(--rtr-metal) 取用；可以由 JS 動態設定） */
-    --rtr-metal-edge: hsl(30, 10%, 42%);                /* 自訂變數 --rtr-metal-edge（下面用 var(--rtr-metal-edge) 取用；可以由 JS 動態設定） */
-    --rtr-stop: hsl(40, 20%, 55%);                      /* 自訂變數 --rtr-stop（下面用 var(--rtr-stop) 取用；可以由 JS 動態設定） */
+    --rtr-plate: hsl(20, 12%, 14%);
+    /* 自訂變數 --rtr-plate（下面用 var(--rtr-plate) 取用；可以由 JS 動態設定） */
+    --rtr-metal: hsl(40, 12%, 78%);
+    /* 自訂變數 --rtr-metal（下面用 var(--rtr-metal) 取用；可以由 JS 動態設定） */
+    --rtr-metal-edge: hsl(30, 10%, 42%);
+    /* 自訂變數 --rtr-metal-edge（下面用 var(--rtr-metal-edge) 取用；可以由 JS 動態設定） */
+    --rtr-stop: hsl(40, 20%, 55%);
+    /* 自訂變數 --rtr-stop（下面用 var(--rtr-stop) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 反著滑（.swc-）：交通號誌的藍色圓牌 ── */
-    --swc-blue: hsl(208, 72%, 42%);                     /* 自訂變數 --swc-blue（下面用 var(--swc-blue) 取用；可以由 JS 動態設定） */
+    --swc-blue: hsl(208, 72%, 42%);
+    /* 自訂變數 --swc-blue（下面用 var(--swc-blue) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 敲幾下（.knk-）：木魚與木槌的木頭色、銅缽的銅色 ── */
-    --knk-wood: hsl(28, 62%, 52%);                      /* 自訂變數 --knk-wood（下面用 var(--knk-wood) 取用；可以由 JS 動態設定） */
-    --knk-wood-dark: hsl(22, 55%, 30%);                 /* 自訂變數 --knk-wood-dark（下面用 var(--knk-wood-dark) 取用；可以由 JS 動態設定） */
-    --knk-copper: hsl(36, 72%, 54%);                    /* 自訂變數 --knk-copper（下面用 var(--knk-copper) 取用；可以由 JS 動態設定） */
-    --knk-copper-light: hsl(44, 85%, 72%);              /* 自訂變數 --knk-copper-light（下面用 var(--knk-copper-light) 取用；可以由 JS 動態設定） */
-    --knk-copper-dark: hsl(28, 62%, 32%);               /* 自訂變數 --knk-copper-dark（下面用 var(--knk-copper-dark) 取用；可以由 JS 動態設定） */
+    --knk-wood: hsl(28, 62%, 52%);
+    /* 自訂變數 --knk-wood（下面用 var(--knk-wood) 取用；可以由 JS 動態設定） */
+    --knk-wood-dark: hsl(22, 55%, 30%);
+    /* 自訂變數 --knk-wood-dark（下面用 var(--knk-wood-dark) 取用；可以由 JS 動態設定） */
+    --knk-copper: hsl(36, 72%, 54%);
+    /* 自訂變數 --knk-copper（下面用 var(--knk-copper) 取用；可以由 JS 動態設定） */
+    --knk-copper-light: hsl(44, 85%, 72%);
+    /* 自訂變數 --knk-copper-light（下面用 var(--knk-copper-light) 取用；可以由 JS 動態設定） */
+    --knk-copper-dark: hsl(28, 62%, 32%);
+    /* 自訂變數 --knk-copper-dark（下面用 var(--knk-copper-dark) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 切菜單上的（.msl-）：黑板菜單與十二種水果的顏色 ── */
-    --msl-board: hsl(150, 16%, 22%);                    /* 自訂變數 --msl-board（下面用 var(--msl-board) 取用；可以由 JS 動態設定） */
-    --msl-frame: hsl(28, 45%, 42%);                     /* 自訂變數 --msl-frame（下面用 var(--msl-frame) 取用；可以由 JS 動態設定） */
-    --msl-chalk: hsl(48, 30%, 94%);                     /* 自訂變數 --msl-chalk（下面用 var(--msl-chalk) 取用；可以由 JS 動態設定） */
-    --msl-leaf: hsl(125, 48%, 38%);                     /* 自訂變數 --msl-leaf（下面用 var(--msl-leaf) 取用；可以由 JS 動態設定） */
-    --msl-stem: hsl(25, 50%, 28%);                      /* 自訂變數 --msl-stem（下面用 var(--msl-stem) 取用；可以由 JS 動態設定） */
-    --msl-orange: hsl(30, 96%, 56%);                    /* 自訂變數 --msl-orange（下面用 var(--msl-orange) 取用；可以由 JS 動態設定） */
-    --msl-tangerine: hsl(18, 92%, 54%);                 /* 自訂變數 --msl-tangerine（下面用 var(--msl-tangerine) 取用；可以由 JS 動態設定） */
-    --msl-lemon: hsl(52, 96%, 58%);                     /* 自訂變數 --msl-lemon（下面用 var(--msl-lemon) 取用；可以由 JS 動態設定） */
-    --msl-lime: hsl(98, 66%, 48%);                      /* 自訂變數 --msl-lime（下面用 var(--msl-lime) 取用；可以由 JS 動態設定） */
-    --msl-apple: hsl(354, 78%, 50%);                    /* 自訂變數 --msl-apple（下面用 var(--msl-apple) 取用；可以由 JS 動態設定） */
-    --msl-tomato: hsl(8, 86%, 52%);                     /* 自訂變數 --msl-tomato（下面用 var(--msl-tomato) 取用；可以由 JS 動態設定） */
-    --msl-grape: hsl(285, 48%, 42%);                    /* 自訂變數 --msl-grape（下面用 var(--msl-grape) 取用；可以由 JS 動態設定） */
-    --msl-blueberry: hsl(228, 56%, 42%);                /* 自訂變數 --msl-blueberry（下面用 var(--msl-blueberry) 取用；可以由 JS 動態設定） */
-    --msl-banana: hsl(50, 94%, 62%);                    /* 自訂變數 --msl-banana（下面用 var(--msl-banana) 取用；可以由 JS 動態設定） */
-    --msl-watermelon: hsl(135, 50%, 34%);               /* 自訂變數 --msl-watermelon（下面用 var(--msl-watermelon) 取用；可以由 JS 動態設定） */
-    --msl-pear: hsl(75, 62%, 58%);                      /* 自訂變數 --msl-pear（下面用 var(--msl-pear) 取用；可以由 JS 動態設定） */
-    --msl-strawberry: hsl(350, 86%, 56%);               /* 自訂變數 --msl-strawberry（下面用 var(--msl-strawberry) 取用；可以由 JS 動態設定） */
+    --msl-board: hsl(150, 16%, 22%);
+    /* 自訂變數 --msl-board（下面用 var(--msl-board) 取用；可以由 JS 動態設定） */
+    --msl-frame: hsl(28, 45%, 42%);
+    /* 自訂變數 --msl-frame（下面用 var(--msl-frame) 取用；可以由 JS 動態設定） */
+    --msl-chalk: hsl(48, 30%, 94%);
+    /* 自訂變數 --msl-chalk（下面用 var(--msl-chalk) 取用；可以由 JS 動態設定） */
+    --msl-leaf: hsl(125, 48%, 38%);
+    /* 自訂變數 --msl-leaf（下面用 var(--msl-leaf) 取用；可以由 JS 動態設定） */
+    --msl-stem: hsl(25, 50%, 28%);
+    /* 自訂變數 --msl-stem（下面用 var(--msl-stem) 取用；可以由 JS 動態設定） */
+    --msl-orange: hsl(30, 96%, 56%);
+    /* 自訂變數 --msl-orange（下面用 var(--msl-orange) 取用；可以由 JS 動態設定） */
+    --msl-tangerine: hsl(18, 92%, 54%);
+    /* 自訂變數 --msl-tangerine（下面用 var(--msl-tangerine) 取用；可以由 JS 動態設定） */
+    --msl-lemon: hsl(52, 96%, 58%);
+    /* 自訂變數 --msl-lemon（下面用 var(--msl-lemon) 取用；可以由 JS 動態設定） */
+    --msl-lime: hsl(98, 66%, 48%);
+    /* 自訂變數 --msl-lime（下面用 var(--msl-lime) 取用；可以由 JS 動態設定） */
+    --msl-apple: hsl(354, 78%, 50%);
+    /* 自訂變數 --msl-apple（下面用 var(--msl-apple) 取用；可以由 JS 動態設定） */
+    --msl-tomato: hsl(8, 86%, 52%);
+    /* 自訂變數 --msl-tomato（下面用 var(--msl-tomato) 取用；可以由 JS 動態設定） */
+    --msl-grape: hsl(285, 48%, 42%);
+    /* 自訂變數 --msl-grape（下面用 var(--msl-grape) 取用；可以由 JS 動態設定） */
+    --msl-blueberry: hsl(228, 56%, 42%);
+    /* 自訂變數 --msl-blueberry（下面用 var(--msl-blueberry) 取用；可以由 JS 動態設定） */
+    --msl-banana: hsl(50, 94%, 62%);
+    /* 自訂變數 --msl-banana（下面用 var(--msl-banana) 取用；可以由 JS 動態設定） */
+    --msl-watermelon: hsl(135, 50%, 34%);
+    /* 自訂變數 --msl-watermelon（下面用 var(--msl-watermelon) 取用；可以由 JS 動態設定） */
+    --msl-pear: hsl(75, 62%, 58%);
+    /* 自訂變數 --msl-pear（下面用 var(--msl-pear) 取用；可以由 JS 動態設定） */
+    --msl-strawberry: hsl(350, 86%, 56%);
+    /* 自訂變數 --msl-strawberry（下面用 var(--msl-strawberry) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 字的顏色（.ikw-）：毛筆字的六種墨水顏色 ── */
-    --ikw-red: hsl(2, 78%, 48%);                        /* 自訂變數 --ikw-red（下面用 var(--ikw-red) 取用；可以由 JS 動態設定） */
-    --ikw-yellow: hsl(46, 96%, 50%);                    /* 自訂變數 --ikw-yellow（下面用 var(--ikw-yellow) 取用；可以由 JS 動態設定） */
-    --ikw-green: hsl(135, 52%, 34%);                    /* 自訂變數 --ikw-green（下面用 var(--ikw-green) 取用；可以由 JS 動態設定） */
-    --ikw-blue: hsl(214, 72%, 46%);                     /* 自訂變數 --ikw-blue（下面用 var(--ikw-blue) 取用；可以由 JS 動態設定） */
-    --ikw-purple: hsl(280, 52%, 42%);                   /* 自訂變數 --ikw-purple（下面用 var(--ikw-purple) 取用；可以由 JS 動態設定） */
-    --ikw-orange: hsl(26, 94%, 52%);                    /* 自訂變數 --ikw-orange（下面用 var(--ikw-orange) 取用；可以由 JS 動態設定） */
+    --ikw-red: hsl(2, 78%, 48%);
+    /* 自訂變數 --ikw-red（下面用 var(--ikw-red) 取用；可以由 JS 動態設定） */
+    --ikw-yellow: hsl(46, 96%, 50%);
+    /* 自訂變數 --ikw-yellow（下面用 var(--ikw-yellow) 取用；可以由 JS 動態設定） */
+    --ikw-green: hsl(135, 52%, 34%);
+    /* 自訂變數 --ikw-green（下面用 var(--ikw-green) 取用；可以由 JS 動態設定） */
+    --ikw-blue: hsl(214, 72%, 46%);
+    /* 自訂變數 --ikw-blue（下面用 var(--ikw-blue) 取用；可以由 JS 動態設定） */
+    --ikw-purple: hsl(280, 52%, 42%);
+    /* 自訂變數 --ikw-purple（下面用 var(--ikw-purple) 取用；可以由 JS 動態設定） */
+    --ikw-orange: hsl(26, 94%, 52%);
+    /* 自訂變數 --ikw-orange（下面用 var(--ikw-orange) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 記行事曆（.cld-）：月曆標題色、格線、貼紙的奶油色與粉紅 ── */
-    --cld-head: hsl(6, 70%, 52%);                       /* 自訂變數 --cld-head（下面用 var(--cld-head) 取用；可以由 JS 動態設定） */
-    --cld-line: hsl(36, 30%, 78%);                      /* 自訂變數 --cld-line（下面用 var(--cld-line) 取用；可以由 JS 動態設定） */
-    --cld-pink: hsl(350, 80%, 84%);                     /* 自訂變數 --cld-pink（下面用 var(--cld-pink) 取用；可以由 JS 動態設定） */
-    --cld-cream: hsl(46, 88%, 88%);                     /* 自訂變數 --cld-cream（下面用 var(--cld-cream) 取用；可以由 JS 動態設定） */
+    --cld-head: hsl(6, 70%, 52%);
+    /* 自訂變數 --cld-head（下面用 var(--cld-head) 取用；可以由 JS 動態設定） */
+    --cld-line: hsl(36, 30%, 78%);
+    /* 自訂變數 --cld-line（下面用 var(--cld-line) 取用；可以由 JS 動態設定） */
+    --cld-pink: hsl(350, 80%, 84%);
+    /* 自訂變數 --cld-pink（下面用 var(--cld-pink) 取用；可以由 JS 動態設定） */
+    --cld-cream: hsl(46, 88%, 88%);
+    /* 自訂變數 --cld-cream（下面用 var(--cld-cream) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 照樣調一杯（.lyd-）：五種飲料顏色、玻璃杯 ── */
-    --lyd-red: hsl(2, 78%, 52%);                        /* 自訂變數 --lyd-red（下面用 var(--lyd-red) 取用；可以由 JS 動態設定） */
-    --lyd-yellow: hsl(46, 96%, 56%);                    /* 自訂變數 --lyd-yellow（下面用 var(--lyd-yellow) 取用；可以由 JS 動態設定） */
-    --lyd-green: hsl(135, 52%, 42%);                    /* 自訂變數 --lyd-green（下面用 var(--lyd-green) 取用；可以由 JS 動態設定） */
-    --lyd-blue: hsl(212, 72%, 52%);                     /* 自訂變數 --lyd-blue（下面用 var(--lyd-blue) 取用；可以由 JS 動態設定） */
-    --lyd-purple: hsl(282, 52%, 48%);                   /* 自訂變數 --lyd-purple（下面用 var(--lyd-purple) 取用；可以由 JS 動態設定） */
-    --lyd-glass: hsl(200, 40%, 96%);                    /* 自訂變數 --lyd-glass（下面用 var(--lyd-glass) 取用；可以由 JS 動態設定） */
+    --lyd-red: hsl(2, 78%, 52%);
+    /* 自訂變數 --lyd-red（下面用 var(--lyd-red) 取用；可以由 JS 動態設定） */
+    --lyd-yellow: hsl(46, 96%, 56%);
+    /* 自訂變數 --lyd-yellow（下面用 var(--lyd-yellow) 取用；可以由 JS 動態設定） */
+    --lyd-green: hsl(135, 52%, 42%);
+    /* 自訂變數 --lyd-green（下面用 var(--lyd-green) 取用；可以由 JS 動態設定） */
+    --lyd-blue: hsl(212, 72%, 52%);
+    /* 自訂變數 --lyd-blue（下面用 var(--lyd-blue) 取用；可以由 JS 動態設定） */
+    --lyd-purple: hsl(282, 52%, 48%);
+    /* 自訂變數 --lyd-purple（下面用 var(--lyd-purple) 取用；可以由 JS 動態設定） */
+    --lyd-glass: hsl(200, 40%, 96%);
+    /* 自訂變數 --lyd-glass（下面用 var(--lyd-glass) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 看過的字（.skc-）：書法練習簿的字帖紙 ── */
-    --skc-paper: hsl(46, 70%, 95%);                     /* 自訂變數 --skc-paper（下面用 var(--skc-paper) 取用；可以由 JS 動態設定） */
-    --skc-guide: hsla(14, 60%, 55%, 0.35);              /* 自訂變數 --skc-guide（下面用 var(--skc-guide) 取用；可以由 JS 動態設定） */
-    --skc-pick: hsl(50, 92%, 84%);                      /* 自訂變數 --skc-pick（下面用 var(--skc-pick) 取用；可以由 JS 動態設定） */
+    --skc-paper: hsl(46, 70%, 95%);
+    /* 自訂變數 --skc-paper（下面用 var(--skc-paper) 取用；可以由 JS 動態設定） */
+    --skc-guide: hsla(14, 60%, 55%, 0.35);
+    /* 自訂變數 --skc-guide（下面用 var(--skc-guide) 取用；可以由 JS 動態設定） */
+    --skc-pick: hsl(50, 92%, 84%);
+    /* 自訂變數 --skc-pick（下面用 var(--skc-pick) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 門縫偷看（.dsl-）：老公寓的木門框、門縫裡的光 ── */
-    --dsl-door: hsl(28, 40%, 40%);                      /* 自訂變數 --dsl-door（下面用 var(--dsl-door) 取用；可以由 JS 動態設定） */
-    --dsl-light: hsl(48, 80%, 90%);                     /* 自訂變數 --dsl-light（下面用 var(--dsl-light) 取用；可以由 JS 動態設定） */
+    --dsl-door: hsl(28, 40%, 40%);
+    /* 自訂變數 --dsl-door（下面用 var(--dsl-door) 取用；可以由 JS 動態設定） */
+    --dsl-light: hsl(48, 80%, 90%);
+    /* 自訂變數 --dsl-light（下面用 var(--dsl-light) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 找星座（.stz-）：碎片飛行的底色 ── */
-    --stz-sky: hsl(46, 70%, 92%);                       /* 自訂變數 --stz-sky（下面用 var(--stz-sky) 取用；可以由 JS 動態設定） */
+    --stz-sky: hsl(46, 70%, 92%);
+    /* 自訂變數 --stz-sky（下面用 var(--stz-sky) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 切字（.scc-）：湯圓的顏色 ── */
-    --scc-dump: hsl(46, 70%, 96%);                      /* 自訂變數 --scc-dump（下面用 var(--scc-dump) 取用；可以由 JS 動態設定） */
-    --scc-dump-edge: hsl(30, 40%, 62%);                 /* 自訂變數 --scc-dump-edge（下面用 var(--scc-dump-edge) 取用；可以由 JS 動態設定） */
+    --scc-dump: hsl(46, 70%, 96%);
+    /* 自訂變數 --scc-dump（下面用 var(--scc-dump) 取用；可以由 JS 動態設定） */
+    --scc-dump-edge: hsl(30, 40%, 62%);
+    /* 自訂變數 --scc-dump-edge（下面用 var(--scc-dump-edge) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 蝴蝶不對稱（.btf-）：鳳蝶、斑蝶的配色 ── */
-    --btf-wing: hsl(36, 90%, 58%);                      /* 自訂變數 --btf-wing（下面用 var(--btf-wing) 取用；可以由 JS 動態設定） */
-    --btf-wing-low: hsl(30, 88%, 54%);                  /* 自訂變數 --btf-wing-low（下面用 var(--btf-wing-low) 取用；可以由 JS 動態設定） */
-    --btf-black: hsl(24, 30%, 14%);                     /* 自訂變數 --btf-black（下面用 var(--btf-black) 取用；可以由 JS 動態設定） */
-    --btf-orange: hsl(22, 92%, 52%);                    /* 自訂變數 --btf-orange（下面用 var(--btf-orange) 取用；可以由 JS 動態設定） */
-    --btf-yellow: hsl(50, 96%, 62%);                    /* 自訂變數 --btf-yellow（下面用 var(--btf-yellow) 取用；可以由 JS 動態設定） */
-    --btf-blue: hsl(212, 78%, 52%);                     /* 自訂變數 --btf-blue（下面用 var(--btf-blue) 取用；可以由 JS 動態設定） */
-    --btf-white: hsl(48, 40%, 96%);                     /* 自訂變數 --btf-white（下面用 var(--btf-white) 取用；可以由 JS 動態設定） */
-    --btf-red: hsl(2, 78%, 50%);                        /* 自訂變數 --btf-red（下面用 var(--btf-red) 取用；可以由 JS 動態設定） */
+    --btf-wing: hsl(36, 90%, 58%);
+    /* 自訂變數 --btf-wing（下面用 var(--btf-wing) 取用；可以由 JS 動態設定） */
+    --btf-wing-low: hsl(30, 88%, 54%);
+    /* 自訂變數 --btf-wing-low（下面用 var(--btf-wing-low) 取用；可以由 JS 動態設定） */
+    --btf-black: hsl(24, 30%, 14%);
+    /* 自訂變數 --btf-black（下面用 var(--btf-black) 取用；可以由 JS 動態設定） */
+    --btf-orange: hsl(22, 92%, 52%);
+    /* 自訂變數 --btf-orange（下面用 var(--btf-orange) 取用；可以由 JS 動態設定） */
+    --btf-yellow: hsl(50, 96%, 62%);
+    /* 自訂變數 --btf-yellow（下面用 var(--btf-yellow) 取用；可以由 JS 動態設定） */
+    --btf-blue: hsl(212, 78%, 52%);
+    /* 自訂變數 --btf-blue（下面用 var(--btf-blue) 取用；可以由 JS 動態設定） */
+    --btf-white: hsl(48, 40%, 96%);
+    /* 自訂變數 --btf-white（下面用 var(--btf-white) 取用；可以由 JS 動態設定） */
+    --btf-red: hsl(2, 78%, 50%);
+    /* 自訂變數 --btf-red（下面用 var(--btf-red) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 彈幕找字（.dmk-）：淡淡的風景背景（不干擾） ── */
-    --dmk-sky-top: hsl(200, 55%, 80%);                  /* 自訂變數 --dmk-sky-top（下面用 var(--dmk-sky-top) 取用；可以由 JS 動態設定） */
-    --dmk-sky-bottom: hsl(110, 38%, 78%);               /* 自訂變數 --dmk-sky-bottom（下面用 var(--dmk-sky-bottom) 取用；可以由 JS 動態設定） */
+    --dmk-sky-top: hsl(200, 55%, 80%);
+    /* 自訂變數 --dmk-sky-top（下面用 var(--dmk-sky-top) 取用；可以由 JS 動態設定） */
+    --dmk-sky-bottom: hsl(110, 38%, 78%);
+    /* 自訂變數 --dmk-sky-bottom（下面用 var(--dmk-sky-bottom) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 心臟病（.csl-）：綠色牌桌、牌背 ── */
-    --csl-felt: hsl(145, 40%, 38%);                     /* 自訂變數 --csl-felt（下面用 var(--csl-felt) 取用；可以由 JS 動態設定） */
-    --csl-felt-edge: hsl(145, 35%, 24%);                /* 自訂變數 --csl-felt-edge（下面用 var(--csl-felt-edge) 取用；可以由 JS 動態設定） */
-    --csl-back: hsl(212, 60%, 48%);                     /* 自訂變數 --csl-back（下面用 var(--csl-back) 取用；可以由 JS 動態設定） */
+    --csl-felt: hsl(145, 40%, 38%);
+    /* 自訂變數 --csl-felt（下面用 var(--csl-felt) 取用；可以由 JS 動態設定） */
+    --csl-felt-edge: hsl(145, 35%, 24%);
+    /* 自訂變數 --csl-felt-edge（下面用 var(--csl-felt-edge) 取用；可以由 JS 動態設定） */
+    --csl-back: hsl(212, 60%, 48%);
+    /* 自訂變數 --csl-back（下面用 var(--csl-back) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 舉旗子（.flg-）：紅旗、白旗與左右按壓區 ── */
-    --flg-red: hsl(2, 78%, 50%);                        /* 自訂變數 --flg-red（下面用 var(--flg-red) 取用；可以由 JS 動態設定） */
-    --flg-red-soft: hsla(2, 78%, 55%, 0.12);            /* 自訂變數 --flg-red-soft（下面用 var(--flg-red-soft) 取用；可以由 JS 動態設定） */
-    --flg-red-down: hsla(2, 78%, 55%, 0.30);            /* 自訂變數 --flg-red-down（下面用 var(--flg-red-down) 取用；可以由 JS 動態設定） */
-    --flg-white-soft: hsla(210, 30%, 60%, 0.10);        /* 自訂變數 --flg-white-soft（下面用 var(--flg-white-soft) 取用；可以由 JS 動態設定） */
-    --flg-white-down: hsla(210, 30%, 60%, 0.28);        /* 自訂變數 --flg-white-down（下面用 var(--flg-white-down) 取用；可以由 JS 動態設定） */
-    --flg-shirt: hsl(212, 60%, 62%);                    /* 自訂變數 --flg-shirt（下面用 var(--flg-shirt) 取用；可以由 JS 動態設定） */
+    --flg-red: hsl(2, 78%, 50%);
+    /* 自訂變數 --flg-red（下面用 var(--flg-red) 取用；可以由 JS 動態設定） */
+    --flg-red-soft: hsla(2, 78%, 55%, 0.12);
+    /* 自訂變數 --flg-red-soft（下面用 var(--flg-red-soft) 取用；可以由 JS 動態設定） */
+    --flg-red-down: hsla(2, 78%, 55%, 0.30);
+    /* 自訂變數 --flg-red-down（下面用 var(--flg-red-down) 取用；可以由 JS 動態設定） */
+    --flg-white-soft: hsla(210, 30%, 60%, 0.10);
+    /* 自訂變數 --flg-white-soft（下面用 var(--flg-white-soft) 取用；可以由 JS 動態設定） */
+    --flg-white-down: hsla(210, 30%, 60%, 0.28);
+    /* 自訂變數 --flg-white-down（下面用 var(--flg-white-down) 取用；可以由 JS 動態設定） */
+    --flg-shirt: hsl(212, 60%, 62%);
+    /* 自訂變數 --flg-shirt（下面用 var(--flg-shirt) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 色票排隊（.hus-）：記號的白邊與紅 X ── */
-    --hus-edge: hsl(0, 0%, 100%);                       /* 自訂變數 --hus-edge（下面用 var(--hus-edge) 取用；可以由 JS 動態設定） */
-    --hus-x: hsl(2, 78%, 50%);                          /* 自訂變數 --hus-x（下面用 var(--hus-x) 取用；可以由 JS 動態設定） */
+    --hus-edge: hsl(0, 0%, 100%);
+    /* 自訂變數 --hus-edge（下面用 var(--hus-edge) 取用；可以由 JS 動態設定） */
+    --hus-x: hsl(2, 78%, 50%);
+    /* 自訂變數 --hus-x（下面用 var(--hus-x) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 動態視力（.knt-）：區間車、窗戶裡的東西、號碼貼紙 ── */
-    --knt-body: hsl(48, 30%, 96%);                      /* 自訂變數 --knt-body（下面用 var(--knt-body) 取用；可以由 JS 動態設定） */
-    --knt-band: hsl(212, 70%, 45%);                     /* 自訂變數 --knt-band（下面用 var(--knt-band) 取用；可以由 JS 動態設定） */
-    --knt-roof: hsl(210, 10%, 42%);                     /* 自訂變數 --knt-roof（下面用 var(--knt-roof) 取用；可以由 JS 動態設定） */
-    --knt-glass: hsl(200, 45%, 80%);                    /* 自訂變數 --knt-glass（下面用 var(--knt-glass) 取用；可以由 JS 動態設定） */
-    --knt-frame: hsl(210, 8%, 30%);                     /* 自訂變數 --knt-frame（下面用 var(--knt-frame) 取用；可以由 JS 動態設定） */
-    --knt-wheel: hsl(210, 8%, 22%);                     /* 自訂變數 --knt-wheel（下面用 var(--knt-wheel) 取用；可以由 JS 動態設定） */
-    --knt-link: hsl(210, 8%, 35%);                      /* 自訂變數 --knt-link（下面用 var(--knt-link) 取用；可以由 JS 動態設定） */
-    --knt-rail: hsl(30, 15%, 42%);                      /* 自訂變數 --knt-rail（下面用 var(--knt-rail) 取用；可以由 JS 動態設定） */
-    --knt-pax0: hsl(8, 55%, 50%);                       /* 自訂變數 --knt-pax0（下面用 var(--knt-pax0) 取用；可以由 JS 動態設定） */
-    --knt-pax1: hsl(215, 45%, 45%);                     /* 自訂變數 --knt-pax1（下面用 var(--knt-pax1) 取用；可以由 JS 動態設定） */
-    --knt-pax2: hsl(140, 30%, 38%);                     /* 自訂變數 --knt-pax2（下面用 var(--knt-pax2) 取用；可以由 JS 動態設定） */
-    --knt-head: hsl(28, 55%, 76%);                      /* 自訂變數 --knt-head（下面用 var(--knt-head) 取用；可以由 JS 動態設定） */
-    --knt-hair: hsl(25, 30%, 22%);                      /* 自訂變數 --knt-hair（下面用 var(--knt-hair) 取用；可以由 JS 動態設定） */
-    --knt-bento: hsl(20, 45%, 36%);                     /* 自訂變數 --knt-bento（下面用 var(--knt-bento) 取用；可以由 JS 動態設定） */
-    --knt-rice: hsl(48, 40%, 96%);                      /* 自訂變數 --knt-rice（下面用 var(--knt-rice) 取用；可以由 JS 動態設定） */
-    --knt-egg: hsl(45, 90%, 62%);                       /* 自訂變數 --knt-egg（下面用 var(--knt-egg) 取用；可以由 JS 動態設定） */
-    --knt-veg: hsl(110, 45%, 42%);                      /* 自訂變數 --knt-veg（下面用 var(--knt-veg) 取用；可以由 JS 動態設定） */
-    --knt-paper: hsl(45, 35%, 94%);                     /* 自訂變數 --knt-paper（下面用 var(--knt-paper) 取用；可以由 JS 動態設定） */
-    --knt-line: hsl(40, 10%, 45%);                      /* 自訂變數 --knt-line（下面用 var(--knt-line) 取用；可以由 JS 動態設定） */
-    --knt-curtain: hsl(205, 55%, 52%);                  /* 自訂變數 --knt-curtain（下面用 var(--knt-curtain) 取用；可以由 JS 動態設定） */
-    --knt-fold: hsla(205, 55%, 30%, 0.5);               /* 自訂變數 --knt-fold（下面用 var(--knt-fold) 取用；可以由 JS 動態設定） */
-    --knt-sticker: hsl(50, 100%, 58%);                  /* 自訂變數 --knt-sticker（下面用 var(--knt-sticker) 取用；可以由 JS 動態設定） */
-    --knt-sticker-edge: hsl(40, 80%, 38%);              /* 自訂變數 --knt-sticker-edge（下面用 var(--knt-sticker-edge) 取用；可以由 JS 動態設定） */
-    --knt-digit: hsl(40, 20%, 12%);                     /* 自訂變數 --knt-digit（下面用 var(--knt-digit) 取用；可以由 JS 動態設定） */
+    --knt-body: hsl(48, 30%, 96%);
+    /* 自訂變數 --knt-body（下面用 var(--knt-body) 取用；可以由 JS 動態設定） */
+    --knt-band: hsl(212, 70%, 45%);
+    /* 自訂變數 --knt-band（下面用 var(--knt-band) 取用；可以由 JS 動態設定） */
+    --knt-roof: hsl(210, 10%, 42%);
+    /* 自訂變數 --knt-roof（下面用 var(--knt-roof) 取用；可以由 JS 動態設定） */
+    --knt-glass: hsl(200, 45%, 80%);
+    /* 自訂變數 --knt-glass（下面用 var(--knt-glass) 取用；可以由 JS 動態設定） */
+    --knt-frame: hsl(210, 8%, 30%);
+    /* 自訂變數 --knt-frame（下面用 var(--knt-frame) 取用；可以由 JS 動態設定） */
+    --knt-wheel: hsl(210, 8%, 22%);
+    /* 自訂變數 --knt-wheel（下面用 var(--knt-wheel) 取用；可以由 JS 動態設定） */
+    --knt-link: hsl(210, 8%, 35%);
+    /* 自訂變數 --knt-link（下面用 var(--knt-link) 取用；可以由 JS 動態設定） */
+    --knt-rail: hsl(30, 15%, 42%);
+    /* 自訂變數 --knt-rail（下面用 var(--knt-rail) 取用；可以由 JS 動態設定） */
+    --knt-pax0: hsl(8, 55%, 50%);
+    /* 自訂變數 --knt-pax0（下面用 var(--knt-pax0) 取用；可以由 JS 動態設定） */
+    --knt-pax1: hsl(215, 45%, 45%);
+    /* 自訂變數 --knt-pax1（下面用 var(--knt-pax1) 取用；可以由 JS 動態設定） */
+    --knt-pax2: hsl(140, 30%, 38%);
+    /* 自訂變數 --knt-pax2（下面用 var(--knt-pax2) 取用；可以由 JS 動態設定） */
+    --knt-head: hsl(28, 55%, 76%);
+    /* 自訂變數 --knt-head（下面用 var(--knt-head) 取用；可以由 JS 動態設定） */
+    --knt-hair: hsl(25, 30%, 22%);
+    /* 自訂變數 --knt-hair（下面用 var(--knt-hair) 取用；可以由 JS 動態設定） */
+    --knt-bento: hsl(20, 45%, 36%);
+    /* 自訂變數 --knt-bento（下面用 var(--knt-bento) 取用；可以由 JS 動態設定） */
+    --knt-rice: hsl(48, 40%, 96%);
+    /* 自訂變數 --knt-rice（下面用 var(--knt-rice) 取用；可以由 JS 動態設定） */
+    --knt-egg: hsl(45, 90%, 62%);
+    /* 自訂變數 --knt-egg（下面用 var(--knt-egg) 取用；可以由 JS 動態設定） */
+    --knt-veg: hsl(110, 45%, 42%);
+    /* 自訂變數 --knt-veg（下面用 var(--knt-veg) 取用；可以由 JS 動態設定） */
+    --knt-paper: hsl(45, 35%, 94%);
+    /* 自訂變數 --knt-paper（下面用 var(--knt-paper) 取用；可以由 JS 動態設定） */
+    --knt-line: hsl(40, 10%, 45%);
+    /* 自訂變數 --knt-line（下面用 var(--knt-line) 取用；可以由 JS 動態設定） */
+    --knt-curtain: hsl(205, 55%, 52%);
+    /* 自訂變數 --knt-curtain（下面用 var(--knt-curtain) 取用；可以由 JS 動態設定） */
+    --knt-fold: hsla(205, 55%, 30%, 0.5);
+    /* 自訂變數 --knt-fold（下面用 var(--knt-fold) 取用；可以由 JS 動態設定） */
+    --knt-sticker: hsl(50, 100%, 58%);
+    /* 自訂變數 --knt-sticker（下面用 var(--knt-sticker) 取用；可以由 JS 動態設定） */
+    --knt-sticker-edge: hsl(40, 80%, 38%);
+    /* 自訂變數 --knt-sticker-edge（下面用 var(--knt-sticker-edge) 取用；可以由 JS 動態設定） */
+    --knt-digit: hsl(40, 20%, 12%);
+    /* 自訂變數 --knt-digit（下面用 var(--knt-digit) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 零錢入筒（.cns-）：銅色、銀色硬幣 ── */
-    --cns-copper: hsl(26, 68%, 56%);                    /* 自訂變數 --cns-copper（下面用 var(--cns-copper) 取用；可以由 JS 動態設定） */
-    --cns-copper-rim: hsl(24, 62%, 46%);                /* 自訂變數 --cns-copper-rim（下面用 var(--cns-copper-rim) 取用；可以由 JS 動態設定） */
-    --cns-copper-line: hsl(20, 55%, 30%);               /* 自訂變數 --cns-copper-line（下面用 var(--cns-copper-line) 取用；可以由 JS 動態設定） */
-    --cns-silver: hsl(210, 10%, 86%);                   /* 自訂變數 --cns-silver（下面用 var(--cns-silver) 取用；可以由 JS 動態設定） */
-    --cns-silver-rim: hsl(210, 9%, 72%);                /* 自訂變數 --cns-silver-rim（下面用 var(--cns-silver-rim) 取用；可以由 JS 動態設定） */
-    --cns-silver-line: hsl(210, 10%, 42%);              /* 自訂變數 --cns-silver-line（下面用 var(--cns-silver-line) 取用；可以由 JS 動態設定） */
-    --cns-digit: hsl(24, 40%, 20%);                     /* 自訂變數 --cns-digit（下面用 var(--cns-digit) 取用；可以由 JS 動態設定） */
-    --cns-pattern: hsla(24, 40%, 20%, 0.45);            /* 自訂變數 --cns-pattern（下面用 var(--cns-pattern) 取用；可以由 JS 動態設定） */
+    --cns-copper: hsl(26, 68%, 56%);
+    /* 自訂變數 --cns-copper（下面用 var(--cns-copper) 取用；可以由 JS 動態設定） */
+    --cns-copper-rim: hsl(24, 62%, 46%);
+    /* 自訂變數 --cns-copper-rim（下面用 var(--cns-copper-rim) 取用；可以由 JS 動態設定） */
+    --cns-copper-line: hsl(20, 55%, 30%);
+    /* 自訂變數 --cns-copper-line（下面用 var(--cns-copper-line) 取用；可以由 JS 動態設定） */
+    --cns-silver: hsl(210, 10%, 86%);
+    /* 自訂變數 --cns-silver（下面用 var(--cns-silver) 取用；可以由 JS 動態設定） */
+    --cns-silver-rim: hsl(210, 9%, 72%);
+    /* 自訂變數 --cns-silver-rim（下面用 var(--cns-silver-rim) 取用；可以由 JS 動態設定） */
+    --cns-silver-line: hsl(210, 10%, 42%);
+    /* 自訂變數 --cns-silver-line（下面用 var(--cns-silver-line) 取用；可以由 JS 動態設定） */
+    --cns-digit: hsl(24, 40%, 20%);
+    /* 自訂變數 --cns-digit（下面用 var(--cns-digit) 取用；可以由 JS 動態設定） */
+    --cns-pattern: hsla(24, 40%, 20%, 0.45);
+    /* 自訂變數 --cns-pattern（下面用 var(--cns-pattern) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 大合照（.gph-）：牆面、人臉、手機、洗照片 ── */
-    --gph-bg: hsl(200, 38%, 88%);                       /* 自訂變數 --gph-bg（下面用 var(--gph-bg) 取用；可以由 JS 動態設定） */
-    --gph-frame: hsl(28, 48%, 40%);                     /* 自訂變數 --gph-frame（下面用 var(--gph-frame) 取用；可以由 JS 動態設定） */
-    --gph-corner: hsla(0, 0%, 100%, 0.9);               /* 自訂變數 --gph-corner（下面用 var(--gph-corner) 取用；可以由 JS 動態設定） */
-    --gph-flash: hsl(0, 0%, 100%);                      /* 自訂變數 --gph-flash（下面用 var(--gph-flash) 取用；可以由 JS 動態設定） */
-    --gph-ring: hsl(2, 78%, 52%);                       /* 自訂變數 --gph-ring（下面用 var(--gph-ring) 取用；可以由 JS 動態設定） */
-    --gph-eyewhite: hsl(0, 0%, 100%);                   /* 自訂變數 --gph-eyewhite（下面用 var(--gph-eyewhite) 取用；可以由 JS 動態設定） */
-    --gph-pupil: hsl(24, 30%, 14%);                     /* 自訂變數 --gph-pupil（下面用 var(--gph-pupil) 取用；可以由 JS 動態設定） */
-    --gph-skin0: hsl(28, 62%, 80%);                     /* 自訂變數 --gph-skin0（下面用 var(--gph-skin0) 取用；可以由 JS 動態設定） */
-    --gph-skin1: hsl(26, 48%, 68%);                     /* 自訂變數 --gph-skin1（下面用 var(--gph-skin1) 取用；可以由 JS 動態設定） */
-    --gph-skin2: hsl(24, 38%, 56%);                     /* 自訂變數 --gph-skin2（下面用 var(--gph-skin2) 取用；可以由 JS 動態設定） */
-    --gph-hair0: hsl(24, 40%, 16%);                     /* 自訂變數 --gph-hair0（下面用 var(--gph-hair0) 取用；可以由 JS 動態設定） */
-    --gph-hair1: hsl(28, 50%, 30%);                     /* 自訂變數 --gph-hair1（下面用 var(--gph-hair1) 取用；可以由 JS 動態設定） */
-    --gph-hair2: hsl(40, 10%, 42%);                     /* 自訂變數 --gph-hair2（下面用 var(--gph-hair2) 取用；可以由 JS 動態設定） */
-    --gph-hair3: hsl(36, 70%, 48%);                     /* 自訂變數 --gph-hair3（下面用 var(--gph-hair3) 取用；可以由 JS 動態設定） */
-    --gph-shirt0: hsl(8, 58%, 56%);                     /* 自訂變數 --gph-shirt0（下面用 var(--gph-shirt0) 取用；可以由 JS 動態設定） */
-    --gph-shirt1: hsl(212, 52%, 56%);                   /* 自訂變數 --gph-shirt1（下面用 var(--gph-shirt1) 取用；可以由 JS 動態設定） */
-    --gph-shirt2: hsl(140, 34%, 46%);                   /* 自訂變數 --gph-shirt2（下面用 var(--gph-shirt2) 取用；可以由 JS 動態設定） */
-    --gph-shirt3: hsl(278, 34%, 58%);                   /* 自訂變數 --gph-shirt3（下面用 var(--gph-shirt3) 取用；可以由 JS 動態設定） */
-    --gph-shirt4: hsl(44, 80%, 58%);                    /* 自訂變數 --gph-shirt4（下面用 var(--gph-shirt4) 取用；可以由 JS 動態設定） */
-    --gph-phone: hsl(215, 14%, 24%);                    /* 自訂變數 --gph-phone（下面用 var(--gph-phone) 取用；可以由 JS 動態設定） */
-    --gph-phone-screen: hsl(198, 80%, 72%);             /* 自訂變數 --gph-phone-screen（下面用 var(--gph-phone-screen) 取用；可以由 JS 動態設定） */
+    --gph-bg: hsl(200, 38%, 88%);
+    /* 自訂變數 --gph-bg（下面用 var(--gph-bg) 取用；可以由 JS 動態設定） */
+    --gph-frame: hsl(28, 48%, 40%);
+    /* 自訂變數 --gph-frame（下面用 var(--gph-frame) 取用；可以由 JS 動態設定） */
+    --gph-corner: hsla(0, 0%, 100%, 0.9);
+    /* 自訂變數 --gph-corner（下面用 var(--gph-corner) 取用；可以由 JS 動態設定） */
+    --gph-flash: hsl(0, 0%, 100%);
+    /* 自訂變數 --gph-flash（下面用 var(--gph-flash) 取用；可以由 JS 動態設定） */
+    --gph-ring: hsl(2, 78%, 52%);
+    /* 自訂變數 --gph-ring（下面用 var(--gph-ring) 取用；可以由 JS 動態設定） */
+    --gph-eyewhite: hsl(0, 0%, 100%);
+    /* 自訂變數 --gph-eyewhite（下面用 var(--gph-eyewhite) 取用；可以由 JS 動態設定） */
+    --gph-pupil: hsl(24, 30%, 14%);
+    /* 自訂變數 --gph-pupil（下面用 var(--gph-pupil) 取用；可以由 JS 動態設定） */
+    --gph-skin0: hsl(28, 62%, 80%);
+    /* 自訂變數 --gph-skin0（下面用 var(--gph-skin0) 取用；可以由 JS 動態設定） */
+    --gph-skin1: hsl(26, 48%, 68%);
+    /* 自訂變數 --gph-skin1（下面用 var(--gph-skin1) 取用；可以由 JS 動態設定） */
+    --gph-skin2: hsl(24, 38%, 56%);
+    /* 自訂變數 --gph-skin2（下面用 var(--gph-skin2) 取用；可以由 JS 動態設定） */
+    --gph-hair0: hsl(24, 40%, 16%);
+    /* 自訂變數 --gph-hair0（下面用 var(--gph-hair0) 取用；可以由 JS 動態設定） */
+    --gph-hair1: hsl(28, 50%, 30%);
+    /* 自訂變數 --gph-hair1（下面用 var(--gph-hair1) 取用；可以由 JS 動態設定） */
+    --gph-hair2: hsl(40, 10%, 42%);
+    /* 自訂變數 --gph-hair2（下面用 var(--gph-hair2) 取用；可以由 JS 動態設定） */
+    --gph-hair3: hsl(36, 70%, 48%);
+    /* 自訂變數 --gph-hair3（下面用 var(--gph-hair3) 取用；可以由 JS 動態設定） */
+    --gph-shirt0: hsl(8, 58%, 56%);
+    /* 自訂變數 --gph-shirt0（下面用 var(--gph-shirt0) 取用；可以由 JS 動態設定） */
+    --gph-shirt1: hsl(212, 52%, 56%);
+    /* 自訂變數 --gph-shirt1（下面用 var(--gph-shirt1) 取用；可以由 JS 動態設定） */
+    --gph-shirt2: hsl(140, 34%, 46%);
+    /* 自訂變數 --gph-shirt2（下面用 var(--gph-shirt2) 取用；可以由 JS 動態設定） */
+    --gph-shirt3: hsl(278, 34%, 58%);
+    /* 自訂變數 --gph-shirt3（下面用 var(--gph-shirt3) 取用；可以由 JS 動態設定） */
+    --gph-shirt4: hsl(44, 80%, 58%);
+    /* 自訂變數 --gph-shirt4（下面用 var(--gph-shirt4) 取用；可以由 JS 動態設定） */
+    --gph-phone: hsl(215, 14%, 24%);
+    /* 自訂變數 --gph-phone（下面用 var(--gph-phone) 取用；可以由 JS 動態設定） */
+    --gph-phone-screen: hsl(198, 80%, 72%);
+    /* 自訂變數 --gph-phone-screen（下面用 var(--gph-phone-screen) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 釣魚提竿（.fbt-）：水、浮標、魚、折線圖 ── */
-    --fbt-water-top: hsl(200, 55%, 62%);                /* 自訂變數 --fbt-water-top（下面用 var(--fbt-water-top) 取用；可以由 JS 動態設定） */
-    --fbt-water-bottom: hsl(210, 55%, 38%);             /* 自訂變數 --fbt-water-bottom（下面用 var(--fbt-water-bottom) 取用；可以由 JS 動態設定） */
-    --fbt-surface: hsla(0, 0%, 100%, 0.55);             /* 自訂變數 --fbt-surface（下面用 var(--fbt-surface) 取用；可以由 JS 動態設定） */
-    --fbt-ripple: hsla(0, 0%, 100%, 0.85);              /* 自訂變數 --fbt-ripple（下面用 var(--fbt-ripple) 取用；可以由 JS 動態設定） */
-    --fbt-float-red: hsl(4, 80%, 52%);                  /* 自訂變數 --fbt-float-red（下面用 var(--fbt-float-red) 取用；可以由 JS 動態設定） */
-    --fbt-float-white: hsl(40, 40%, 96%);               /* 自訂變數 --fbt-float-white（下面用 var(--fbt-float-white) 取用；可以由 JS 動態設定） */
-    --fbt-line: hsla(30, 20%, 30%, 0.7);                /* 自訂變數 --fbt-line（下面用 var(--fbt-line) 取用；可以由 JS 動態設定） */
-    --fbt-fish0: hsl(100, 22%, 52%);                    /* 自訂變數 --fbt-fish0（下面用 var(--fbt-fish0) 取用；可以由 JS 動態設定） */
-    --fbt-fish1: hsl(72, 34%, 46%);                     /* 自訂變數 --fbt-fish1（下面用 var(--fbt-fish1) 取用；可以由 JS 動態設定） */
-    --fbt-fish2: hsl(28, 78%, 56%);                     /* 自訂變數 --fbt-fish2（下面用 var(--fbt-fish2) 取用；可以由 JS 動態設定） */
-    --fbt-fish3: hsl(208, 24%, 62%);                    /* 自訂變數 --fbt-fish3（下面用 var(--fbt-fish3) 取用；可以由 JS 動態設定） */
-    --fbt-fish4: hsl(42, 70%, 56%);                     /* 自訂變數 --fbt-fish4（下面用 var(--fbt-fish4) 取用；可以由 JS 動態設定） */
-    --fbt-fish5: hsl(150, 24%, 44%);                    /* 自訂變數 --fbt-fish5（下面用 var(--fbt-fish5) 取用；可以由 JS 動態設定） */
-    --fbt-belly: hsla(40, 60%, 94%, 0.85);              /* 自訂變數 --fbt-belly（下面用 var(--fbt-belly) 取用；可以由 JS 動態設定） */
-    --fbt-stripe: hsla(24, 40%, 20%, 0.35);             /* 自訂變數 --fbt-stripe（下面用 var(--fbt-stripe) 取用；可以由 JS 動態設定） */
-    --fbt-eye: hsl(24, 30%, 12%);                       /* 自訂變數 --fbt-eye（下面用 var(--fbt-eye) 取用；可以由 JS 動態設定） */
-    --fbt-bite-zone: hsla(140, 55%, 45%, 0.28);         /* 自訂變數 --fbt-bite-zone（下面用 var(--fbt-bite-zone) 取用；可以由 JS 動態設定） */
-    --fbt-curve: hsl(210, 60%, 42%);                    /* 自訂變數 --fbt-curve（下面用 var(--fbt-curve) 取用；可以由 JS 動態設定） */
-    --fbt-you: hsl(24, 90%, 48%);                       /* 自訂變數 --fbt-you（下面用 var(--fbt-you) 取用；可以由 JS 動態設定） */
+    --fbt-water-top: hsl(200, 55%, 62%);
+    /* 自訂變數 --fbt-water-top（下面用 var(--fbt-water-top) 取用；可以由 JS 動態設定） */
+    --fbt-water-bottom: hsl(210, 55%, 38%);
+    /* 自訂變數 --fbt-water-bottom（下面用 var(--fbt-water-bottom) 取用；可以由 JS 動態設定） */
+    --fbt-surface: hsla(0, 0%, 100%, 0.55);
+    /* 自訂變數 --fbt-surface（下面用 var(--fbt-surface) 取用；可以由 JS 動態設定） */
+    --fbt-ripple: hsla(0, 0%, 100%, 0.85);
+    /* 自訂變數 --fbt-ripple（下面用 var(--fbt-ripple) 取用；可以由 JS 動態設定） */
+    --fbt-float-red: hsl(4, 80%, 52%);
+    /* 自訂變數 --fbt-float-red（下面用 var(--fbt-float-red) 取用；可以由 JS 動態設定） */
+    --fbt-float-white: hsl(40, 40%, 96%);
+    /* 自訂變數 --fbt-float-white（下面用 var(--fbt-float-white) 取用；可以由 JS 動態設定） */
+    --fbt-line: hsla(30, 20%, 30%, 0.7);
+    /* 自訂變數 --fbt-line（下面用 var(--fbt-line) 取用；可以由 JS 動態設定） */
+    --fbt-fish0: hsl(100, 22%, 52%);
+    /* 自訂變數 --fbt-fish0（下面用 var(--fbt-fish0) 取用；可以由 JS 動態設定） */
+    --fbt-fish1: hsl(72, 34%, 46%);
+    /* 自訂變數 --fbt-fish1（下面用 var(--fbt-fish1) 取用；可以由 JS 動態設定） */
+    --fbt-fish2: hsl(28, 78%, 56%);
+    /* 自訂變數 --fbt-fish2（下面用 var(--fbt-fish2) 取用；可以由 JS 動態設定） */
+    --fbt-fish3: hsl(208, 24%, 62%);
+    /* 自訂變數 --fbt-fish3（下面用 var(--fbt-fish3) 取用；可以由 JS 動態設定） */
+    --fbt-fish4: hsl(42, 70%, 56%);
+    /* 自訂變數 --fbt-fish4（下面用 var(--fbt-fish4) 取用；可以由 JS 動態設定） */
+    --fbt-fish5: hsl(150, 24%, 44%);
+    /* 自訂變數 --fbt-fish5（下面用 var(--fbt-fish5) 取用；可以由 JS 動態設定） */
+    --fbt-belly: hsla(40, 60%, 94%, 0.85);
+    /* 自訂變數 --fbt-belly（下面用 var(--fbt-belly) 取用；可以由 JS 動態設定） */
+    --fbt-stripe: hsla(24, 40%, 20%, 0.35);
+    /* 自訂變數 --fbt-stripe（下面用 var(--fbt-stripe) 取用；可以由 JS 動態設定） */
+    --fbt-eye: hsl(24, 30%, 12%);
+    /* 自訂變數 --fbt-eye（下面用 var(--fbt-eye) 取用；可以由 JS 動態設定） */
+    --fbt-bite-zone: hsla(140, 55%, 45%, 0.28);
+    /* 自訂變數 --fbt-bite-zone（下面用 var(--fbt-bite-zone) 取用；可以由 JS 動態設定） */
+    --fbt-curve: hsl(210, 60%, 42%);
+    /* 自訂變數 --fbt-curve（下面用 var(--fbt-curve) 取用；可以由 JS 動態設定） */
+    --fbt-you: hsl(24, 90%, 48%);
+    /* 自訂變數 --fbt-you（下面用 var(--fbt-you) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 全壘打（.hmr-）：球場、好球帶、球與球棒 ── */
-    --hmr-crowd-bg: hsl(220, 22%, 34%);                 /* 自訂變數 --hmr-crowd-bg（下面用 var(--hmr-crowd-bg) 取用；可以由 JS 動態設定） */
-    --hmr-crowd-dot1: hsl(8, 60%, 62%);                 /* 自訂變數 --hmr-crowd-dot1（下面用 var(--hmr-crowd-dot1) 取用；可以由 JS 動態設定） */
-    --hmr-crowd-dot2: hsl(44, 80%, 66%);                /* 自訂變數 --hmr-crowd-dot2（下面用 var(--hmr-crowd-dot2) 取用；可以由 JS 動態設定） */
-    --hmr-grass: hsl(112, 40%, 46%);                    /* 自訂變數 --hmr-grass（下面用 var(--hmr-grass) 取用；可以由 JS 動態設定） */
-    --hmr-mound: hsl(28, 40%, 52%);                     /* 自訂變數 --hmr-mound（下面用 var(--hmr-mound) 取用；可以由 JS 動態設定） */
-    --hmr-zone-line: hsla(0, 0%, 100%, 0.95);           /* 自訂變數 --hmr-zone-line（下面用 var(--hmr-zone-line) 取用；可以由 JS 動態設定） */
-    --hmr-zone-fill: hsla(0, 0%, 100%, 0.14);           /* 自訂變數 --hmr-zone-fill（下面用 var(--hmr-zone-fill) 取用；可以由 JS 動態設定） */
-    --hmr-plate: hsl(0, 0%, 98%);                       /* 自訂變數 --hmr-plate（下面用 var(--hmr-plate) 取用；可以由 JS 動態設定） */
-    --hmr-leg: hsl(220, 15%, 40%);                      /* 自訂變數 --hmr-leg（下面用 var(--hmr-leg) 取用；可以由 JS 動態設定） */
-    --hmr-body: hsl(8, 62%, 52%);                       /* 自訂變數 --hmr-body（下面用 var(--hmr-body) 取用；可以由 JS 動態設定） */
-    --hmr-skin: hsl(28, 60%, 78%);                      /* 自訂變數 --hmr-skin（下面用 var(--hmr-skin) 取用；可以由 JS 動態設定） */
-    --hmr-cap: hsl(220, 50%, 38%);                      /* 自訂變數 --hmr-cap（下面用 var(--hmr-cap) 取用；可以由 JS 動態設定） */
-    --hmr-ball: hsl(48, 30%, 98%);                      /* 自訂變數 --hmr-ball（下面用 var(--hmr-ball) 取用；可以由 JS 動態設定） */
-    --hmr-ball-shade: hsl(40, 12%, 80%);                /* 自訂變數 --hmr-ball-shade（下面用 var(--hmr-ball-shade) 取用；可以由 JS 動態設定） */
-    --hmr-seam: hsl(4, 70%, 50%);                       /* 自訂變數 --hmr-seam（下面用 var(--hmr-seam) 取用；可以由 JS 動態設定） */
-    --hmr-bat: hsl(28, 50%, 42%);                       /* 自訂變數 --hmr-bat（下面用 var(--hmr-bat) 取用；可以由 JS 動態設定） */
-    --hmr-bat-lite: hsl(34, 60%, 66%);                  /* 自訂變數 --hmr-bat-lite（下面用 var(--hmr-bat-lite) 取用；可以由 JS 動態設定） */
-    --hmr-hr: hsl(8, 80%, 52%);                         /* 自訂變數 --hmr-hr（下面用 var(--hmr-hr) 取用；可以由 JS 動態設定） */
-    --hmr-final-ok: hsl(140, 60%, 40%);                 /* 自訂變數 --hmr-final-ok（下面用 var(--hmr-final-ok) 取用；可以由 JS 動態設定） */
-    --hmr-final-bad: hsl(2, 78%, 52%);                  /* 自訂變數 --hmr-final-bad（下面用 var(--hmr-final-bad) 取用；可以由 JS 動態設定） */
-    --hmr-swing: hsl(36, 95%, 52%);                     /* 自訂變數 --hmr-swing（下面用 var(--hmr-swing) 取用；可以由 JS 動態設定） */
+    --hmr-crowd-bg: hsl(220, 22%, 34%);
+    /* 自訂變數 --hmr-crowd-bg（下面用 var(--hmr-crowd-bg) 取用；可以由 JS 動態設定） */
+    --hmr-crowd-dot1: hsl(8, 60%, 62%);
+    /* 自訂變數 --hmr-crowd-dot1（下面用 var(--hmr-crowd-dot1) 取用；可以由 JS 動態設定） */
+    --hmr-crowd-dot2: hsl(44, 80%, 66%);
+    /* 自訂變數 --hmr-crowd-dot2（下面用 var(--hmr-crowd-dot2) 取用；可以由 JS 動態設定） */
+    --hmr-grass: hsl(112, 40%, 46%);
+    /* 自訂變數 --hmr-grass（下面用 var(--hmr-grass) 取用；可以由 JS 動態設定） */
+    --hmr-mound: hsl(28, 40%, 52%);
+    /* 自訂變數 --hmr-mound（下面用 var(--hmr-mound) 取用；可以由 JS 動態設定） */
+    --hmr-zone-line: hsla(0, 0%, 100%, 0.95);
+    /* 自訂變數 --hmr-zone-line（下面用 var(--hmr-zone-line) 取用；可以由 JS 動態設定） */
+    --hmr-zone-fill: hsla(0, 0%, 100%, 0.14);
+    /* 自訂變數 --hmr-zone-fill（下面用 var(--hmr-zone-fill) 取用；可以由 JS 動態設定） */
+    --hmr-plate: hsl(0, 0%, 98%);
+    /* 自訂變數 --hmr-plate（下面用 var(--hmr-plate) 取用；可以由 JS 動態設定） */
+    --hmr-leg: hsl(220, 15%, 40%);
+    /* 自訂變數 --hmr-leg（下面用 var(--hmr-leg) 取用；可以由 JS 動態設定） */
+    --hmr-body: hsl(8, 62%, 52%);
+    /* 自訂變數 --hmr-body（下面用 var(--hmr-body) 取用；可以由 JS 動態設定） */
+    --hmr-skin: hsl(28, 60%, 78%);
+    /* 自訂變數 --hmr-skin（下面用 var(--hmr-skin) 取用；可以由 JS 動態設定） */
+    --hmr-cap: hsl(220, 50%, 38%);
+    /* 自訂變數 --hmr-cap（下面用 var(--hmr-cap) 取用；可以由 JS 動態設定） */
+    --hmr-ball: hsl(48, 30%, 98%);
+    /* 自訂變數 --hmr-ball（下面用 var(--hmr-ball) 取用；可以由 JS 動態設定） */
+    --hmr-ball-shade: hsl(40, 12%, 80%);
+    /* 自訂變數 --hmr-ball-shade（下面用 var(--hmr-ball-shade) 取用；可以由 JS 動態設定） */
+    --hmr-seam: hsl(4, 70%, 50%);
+    /* 自訂變數 --hmr-seam（下面用 var(--hmr-seam) 取用；可以由 JS 動態設定） */
+    --hmr-bat: hsl(28, 50%, 42%);
+    /* 自訂變數 --hmr-bat（下面用 var(--hmr-bat) 取用；可以由 JS 動態設定） */
+    --hmr-bat-lite: hsl(34, 60%, 66%);
+    /* 自訂變數 --hmr-bat-lite（下面用 var(--hmr-bat-lite) 取用；可以由 JS 動態設定） */
+    --hmr-hr: hsl(8, 80%, 52%);
+    /* 自訂變數 --hmr-hr（下面用 var(--hmr-hr) 取用；可以由 JS 動態設定） */
+    --hmr-final-ok: hsl(140, 60%, 40%);
+    /* 自訂變數 --hmr-final-ok（下面用 var(--hmr-final-ok) 取用；可以由 JS 動態設定） */
+    --hmr-final-bad: hsl(2, 78%, 52%);
+    /* 自訂變數 --hmr-final-bad（下面用 var(--hmr-final-bad) 取用；可以由 JS 動態設定） */
+    --hmr-swing: hsl(36, 95%, 52%);
+    /* 自訂變數 --hmr-swing（下面用 var(--hmr-swing) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 大風吹（.wbl-）：小朋友的衣服、眼鏡、帽子 ── */
-    --wbl-shirt0: hsl(4, 76%, 54%);                     /* 自訂變數 --wbl-shirt0（下面用 var(--wbl-shirt0) 取用；可以由 JS 動態設定） */
-    --wbl-shirt1: hsl(212, 66%, 54%);                   /* 自訂變數 --wbl-shirt1（下面用 var(--wbl-shirt1) 取用；可以由 JS 動態設定） */
-    --wbl-shirt2: hsl(46, 92%, 58%);                    /* 自訂變數 --wbl-shirt2（下面用 var(--wbl-shirt2) 取用；可以由 JS 動態設定） */
-    --wbl-shirt3: hsl(138, 48%, 44%);                   /* 自訂變數 --wbl-shirt3（下面用 var(--wbl-shirt3) 取用；可以由 JS 動態設定） */
-    --wbl-skin: hsl(28, 62%, 80%);                      /* 自訂變數 --wbl-skin（下面用 var(--wbl-skin) 取用；可以由 JS 動態設定） */
-    --wbl-hair: hsl(24, 40%, 18%);                      /* 自訂變數 --wbl-hair（下面用 var(--wbl-hair) 取用；可以由 JS 動態設定） */
-    --wbl-eye: hsl(24, 30%, 14%);                       /* 自訂變數 --wbl-eye（下面用 var(--wbl-eye) 取用；可以由 JS 動態設定） */
-    --wbl-glass-fill: hsla(200, 60%, 90%, 0.45);        /* 自訂變數 --wbl-glass-fill（下面用 var(--wbl-glass-fill) 取用；可以由 JS 動態設定） */
-    --wbl-hat: hsl(28, 85%, 55%);                       /* 自訂變數 --wbl-hat（下面用 var(--wbl-hat) 取用；可以由 JS 動態設定） */
-    --wbl-chair: hsl(28, 40%, 58%);                     /* 自訂變數 --wbl-chair（下面用 var(--wbl-chair) 取用；可以由 JS 動態設定） */
+    --wbl-shirt0: hsl(4, 76%, 54%);
+    /* 自訂變數 --wbl-shirt0（下面用 var(--wbl-shirt0) 取用；可以由 JS 動態設定） */
+    --wbl-shirt1: hsl(212, 66%, 54%);
+    /* 自訂變數 --wbl-shirt1（下面用 var(--wbl-shirt1) 取用；可以由 JS 動態設定） */
+    --wbl-shirt2: hsl(46, 92%, 58%);
+    /* 自訂變數 --wbl-shirt2（下面用 var(--wbl-shirt2) 取用；可以由 JS 動態設定） */
+    --wbl-shirt3: hsl(138, 48%, 44%);
+    /* 自訂變數 --wbl-shirt3（下面用 var(--wbl-shirt3) 取用；可以由 JS 動態設定） */
+    --wbl-skin: hsl(28, 62%, 80%);
+    /* 自訂變數 --wbl-skin（下面用 var(--wbl-skin) 取用；可以由 JS 動態設定） */
+    --wbl-hair: hsl(24, 40%, 18%);
+    /* 自訂變數 --wbl-hair（下面用 var(--wbl-hair) 取用；可以由 JS 動態設定） */
+    --wbl-eye: hsl(24, 30%, 14%);
+    /* 自訂變數 --wbl-eye（下面用 var(--wbl-eye) 取用；可以由 JS 動態設定） */
+    --wbl-glass-fill: hsla(200, 60%, 90%, 0.45);
+    /* 自訂變數 --wbl-glass-fill（下面用 var(--wbl-glass-fill) 取用；可以由 JS 動態設定） */
+    --wbl-hat: hsl(28, 85%, 55%);
+    /* 自訂變數 --wbl-hat（下面用 var(--wbl-hat) 取用；可以由 JS 動態設定） */
+    --wbl-chair: hsl(28, 40%, 58%);
+    /* 自訂變數 --wbl-chair（下面用 var(--wbl-chair) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 吸珍珠（.prl-）：珍珠奶茶、吸管、嘴唇 ── */
-    --prl-goal: hsl(24, 70%, 44%);                      /* 自訂變數 --prl-goal（下面用 var(--prl-goal) 取用；可以由 JS 動態設定） */
-    --prl-lip: hsl(352, 62%, 74%);                      /* 自訂變數 --prl-lip（下面用 var(--prl-lip) 取用；可以由 JS 動態設定） */
-    --prl-lip-line: hsl(350, 55%, 46%);                 /* 自訂變數 --prl-lip-line（下面用 var(--prl-lip-line) 取用；可以由 JS 動態設定） */
-    --prl-cup: hsla(200, 40%, 92%, 0.65);               /* 自訂變數 --prl-cup（下面用 var(--prl-cup) 取用；可以由 JS 動態設定） */
-    --prl-tea-top: hsl(32, 48%, 66%);                   /* 自訂變數 --prl-tea-top（下面用 var(--prl-tea-top) 取用；可以由 JS 動態設定） */
-    --prl-tea-bottom: hsl(26, 44%, 48%);                /* 自訂變數 --prl-tea-bottom（下面用 var(--prl-tea-bottom) 取用；可以由 JS 動態設定） */
-    --prl-pearl: hsl(24, 40%, 12%);                     /* 自訂變數 --prl-pearl（下面用 var(--prl-pearl) 取用；可以由 JS 動態設定） */
-    --prl-pearl-lite: hsl(24, 24%, 34%);                /* 自訂變數 --prl-pearl-lite（下面用 var(--prl-pearl-lite) 取用；可以由 JS 動態設定） */
-    --prl-straw: hsla(200, 45%, 92%, 0.85);             /* 自訂變數 --prl-straw（下面用 var(--prl-straw) 取用；可以由 JS 動態設定） */
-    --prl-straw-line: hsl(205, 40%, 60%);               /* 自訂變數 --prl-straw-line（下面用 var(--prl-straw-line) 取用；可以由 JS 動態設定） */
-    --prl-straw-on: hsla(200, 60%, 82%, 0.95);          /* 自訂變數 --prl-straw-on（下面用 var(--prl-straw-on) 取用；可以由 JS 動態設定） */
-    --prl-num: hsl(40, 90%, 85%);                       /* 自訂變數 --prl-num（下面用 var(--prl-num) 取用；可以由 JS 動態設定） */
-    --prl-hold: hsl(34, 90%, 62%);                      /* 自訂變數 --prl-hold（下面用 var(--prl-hold) 取用；可以由 JS 動態設定） */
-    --prl-hold-on: hsl(28, 85%, 52%);                   /* 自訂變數 --prl-hold-on（下面用 var(--prl-hold-on) 取用；可以由 JS 動態設定） */
-    --prl-hold-line: hsl(24, 70%, 38%);                 /* 自訂變數 --prl-hold-line（下面用 var(--prl-hold-line) 取用；可以由 JS 動態設定） */
-    --prl-hold-text: hsl(40, 60%, 98%);                 /* 自訂變數 --prl-hold-text（下面用 var(--prl-hold-text) 取用；可以由 JS 動態設定） */
+    --prl-goal: hsl(24, 70%, 44%);
+    /* 自訂變數 --prl-goal（下面用 var(--prl-goal) 取用；可以由 JS 動態設定） */
+    --prl-lip: hsl(352, 62%, 74%);
+    /* 自訂變數 --prl-lip（下面用 var(--prl-lip) 取用；可以由 JS 動態設定） */
+    --prl-lip-line: hsl(350, 55%, 46%);
+    /* 自訂變數 --prl-lip-line（下面用 var(--prl-lip-line) 取用；可以由 JS 動態設定） */
+    --prl-cup: hsla(200, 40%, 92%, 0.65);
+    /* 自訂變數 --prl-cup（下面用 var(--prl-cup) 取用；可以由 JS 動態設定） */
+    --prl-tea-top: hsl(32, 48%, 66%);
+    /* 自訂變數 --prl-tea-top（下面用 var(--prl-tea-top) 取用；可以由 JS 動態設定） */
+    --prl-tea-bottom: hsl(26, 44%, 48%);
+    /* 自訂變數 --prl-tea-bottom（下面用 var(--prl-tea-bottom) 取用；可以由 JS 動態設定） */
+    --prl-pearl: hsl(24, 40%, 12%);
+    /* 自訂變數 --prl-pearl（下面用 var(--prl-pearl) 取用；可以由 JS 動態設定） */
+    --prl-pearl-lite: hsl(24, 24%, 34%);
+    /* 自訂變數 --prl-pearl-lite（下面用 var(--prl-pearl-lite) 取用；可以由 JS 動態設定） */
+    --prl-straw: hsla(200, 45%, 92%, 0.85);
+    /* 自訂變數 --prl-straw（下面用 var(--prl-straw) 取用；可以由 JS 動態設定） */
+    --prl-straw-line: hsl(205, 40%, 60%);
+    /* 自訂變數 --prl-straw-line（下面用 var(--prl-straw-line) 取用；可以由 JS 動態設定） */
+    --prl-straw-on: hsla(200, 60%, 82%, 0.95);
+    /* 自訂變數 --prl-straw-on（下面用 var(--prl-straw-on) 取用；可以由 JS 動態設定） */
+    --prl-num: hsl(40, 90%, 85%);
+    /* 自訂變數 --prl-num（下面用 var(--prl-num) 取用；可以由 JS 動態設定） */
+    --prl-hold: hsl(34, 90%, 62%);
+    /* 自訂變數 --prl-hold（下面用 var(--prl-hold) 取用；可以由 JS 動態設定） */
+    --prl-hold-on: hsl(28, 85%, 52%);
+    /* 自訂變數 --prl-hold-on（下面用 var(--prl-hold-on) 取用；可以由 JS 動態設定） */
+    --prl-hold-line: hsl(24, 70%, 38%);
+    /* 自訂變數 --prl-hold-line（下面用 var(--prl-hold-line) 取用；可以由 JS 動態設定） */
+    --prl-hold-text: hsl(40, 60%, 98%);
+    /* 自訂變數 --prl-hold-text（下面用 var(--prl-hold-text) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 釣魚玩具（.fty-）：池塘、釣竿、塑膠魚 ── */
-    --fty-water: hsl(198, 62%, 74%);                    /* 自訂變數 --fty-water（下面用 var(--fty-water) 取用；可以由 JS 動態設定） */
-    --fty-pond-line: hsl(202, 50%, 46%);                /* 自訂變數 --fty-pond-line（下面用 var(--fty-pond-line) 取用；可以由 JS 動態設定） */
-    --fty-ring: hsla(210, 50%, 36%, 0.35);              /* 自訂變數 --fty-ring（下面用 var(--fty-ring) 取用；可以由 JS 動態設定） */
-    --fty-spot: hsl(24, 90%, 50%);                      /* 自訂變數 --fty-spot（下面用 var(--fty-spot) 取用；可以由 JS 動態設定） */
-    --fty-rod: hsl(28, 50%, 36%);                       /* 自訂變數 --fty-rod（下面用 var(--fty-rod) 取用；可以由 JS 動態設定） */
-    --fty-line: hsla(24, 20%, 24%, 0.8);                /* 自訂變數 --fty-line（下面用 var(--fty-line) 取用；可以由 JS 動態設定） */
-    --fty-hook: hsl(0, 0%, 72%);                        /* 自訂變數 --fty-hook（下面用 var(--fty-hook) 取用；可以由 JS 動態設定） */
-    --fty-c0: hsl(2, 78%, 56%);                         /* 自訂變數 --fty-c0（下面用 var(--fty-c0) 取用；可以由 JS 動態設定） */
-    --fty-c1: hsl(28, 92%, 54%);                        /* 自訂變數 --fty-c1（下面用 var(--fty-c1) 取用；可以由 JS 動態設定） */
-    --fty-c2: hsl(50, 92%, 54%);                        /* 自訂變數 --fty-c2（下面用 var(--fty-c2) 取用；可以由 JS 動態設定） */
-    --fty-c3: hsl(138, 50%, 46%);                       /* 自訂變數 --fty-c3（下面用 var(--fty-c3) 取用；可以由 JS 動態設定） */
-    --fty-c4: hsl(212, 70%, 54%);                       /* 自訂變數 --fty-c4（下面用 var(--fty-c4) 取用；可以由 JS 動態設定） */
-    --fty-c5: hsl(278, 46%, 56%);                       /* 自訂變數 --fty-c5（下面用 var(--fty-c5) 取用；可以由 JS 動態設定） */
-    --fty-eye: hsl(24, 30%, 12%);                       /* 自訂變數 --fty-eye（下面用 var(--fty-eye) 取用；可以由 JS 動態設定） */
-    --fty-hole: hsl(350, 40%, 22%);                     /* 自訂變數 --fty-hole（下面用 var(--fty-hole) 取用；可以由 JS 動態設定） */
-    --fty-focus: hsl(24, 95%, 50%);                     /* 自訂變數 --fty-focus（下面用 var(--fty-focus) 取用；可以由 JS 動態設定） */
-    --fty-text-shadow: hsla(24, 40%, 12%, 0.6);         /* 自訂變數 --fty-text-shadow（下面用 var(--fty-text-shadow) 取用；可以由 JS 動態設定） */
+    --fty-water: hsl(198, 62%, 74%);
+    /* 自訂變數 --fty-water（下面用 var(--fty-water) 取用；可以由 JS 動態設定） */
+    --fty-pond-line: hsl(202, 50%, 46%);
+    /* 自訂變數 --fty-pond-line（下面用 var(--fty-pond-line) 取用；可以由 JS 動態設定） */
+    --fty-ring: hsla(210, 50%, 36%, 0.35);
+    /* 自訂變數 --fty-ring（下面用 var(--fty-ring) 取用；可以由 JS 動態設定） */
+    --fty-spot: hsl(24, 90%, 50%);
+    /* 自訂變數 --fty-spot（下面用 var(--fty-spot) 取用；可以由 JS 動態設定） */
+    --fty-rod: hsl(28, 50%, 36%);
+    /* 自訂變數 --fty-rod（下面用 var(--fty-rod) 取用；可以由 JS 動態設定） */
+    --fty-line: hsla(24, 20%, 24%, 0.8);
+    /* 自訂變數 --fty-line（下面用 var(--fty-line) 取用；可以由 JS 動態設定） */
+    --fty-hook: hsl(0, 0%, 72%);
+    /* 自訂變數 --fty-hook（下面用 var(--fty-hook) 取用；可以由 JS 動態設定） */
+    --fty-c0: hsl(2, 78%, 56%);
+    /* 自訂變數 --fty-c0（下面用 var(--fty-c0) 取用；可以由 JS 動態設定） */
+    --fty-c1: hsl(28, 92%, 54%);
+    /* 自訂變數 --fty-c1（下面用 var(--fty-c1) 取用；可以由 JS 動態設定） */
+    --fty-c2: hsl(50, 92%, 54%);
+    /* 自訂變數 --fty-c2（下面用 var(--fty-c2) 取用；可以由 JS 動態設定） */
+    --fty-c3: hsl(138, 50%, 46%);
+    /* 自訂變數 --fty-c3（下面用 var(--fty-c3) 取用；可以由 JS 動態設定） */
+    --fty-c4: hsl(212, 70%, 54%);
+    /* 自訂變數 --fty-c4（下面用 var(--fty-c4) 取用；可以由 JS 動態設定） */
+    --fty-c5: hsl(278, 46%, 56%);
+    /* 自訂變數 --fty-c5（下面用 var(--fty-c5) 取用；可以由 JS 動態設定） */
+    --fty-eye: hsl(24, 30%, 12%);
+    /* 自訂變數 --fty-eye（下面用 var(--fty-eye) 取用；可以由 JS 動態設定） */
+    --fty-hole: hsl(350, 40%, 22%);
+    /* 自訂變數 --fty-hole（下面用 var(--fty-hole) 取用；可以由 JS 動態設定） */
+    --fty-focus: hsl(24, 95%, 50%);
+    /* 自訂變數 --fty-focus（下面用 var(--fty-focus) 取用；可以由 JS 動態設定） */
+    --fty-text-shadow: hsla(24, 40%, 12%, 0.6);
+    /* 自訂變數 --fty-text-shadow（下面用 var(--fty-text-shadow) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 數鈔票（.cbl-）：各面額的顏色（200 近 100、2000 近 1000） ── */
-    --cbl-goal: hsl(24, 72%, 44%);                      /* 自訂變數 --cbl-goal（下面用 var(--cbl-goal) 取用；可以由 JS 動態設定） */
-    --cbl-edge: hsl(30, 25%, 38%);                      /* 自訂變數 --cbl-edge（下面用 var(--cbl-edge) 取用；可以由 JS 動態設定） */
-    --cbl-d100: hsl(2, 56%, 80%);                       /* 自訂變數 --cbl-d100（下面用 var(--cbl-d100) 取用；可以由 JS 動態設定） */
-    --cbl-d200: hsl(18, 62%, 78%);                      /* 自訂變數 --cbl-d200（下面用 var(--cbl-d200) 取用；可以由 JS 動態設定） */
-    --cbl-d500: hsl(100, 38%, 74%);                     /* 自訂變數 --cbl-d500（下面用 var(--cbl-d500) 取用；可以由 JS 動態設定） */
-    --cbl-d1000: hsl(205, 56%, 76%);                    /* 自訂變數 --cbl-d1000（下面用 var(--cbl-d1000) 取用；可以由 JS 動態設定） */
-    --cbl-d2000: hsl(222, 52%, 74%);                    /* 自訂變數 --cbl-d2000（下面用 var(--cbl-d2000) 取用；可以由 JS 動態設定） */
-    --cbl-stripe: hsla(0, 0%, 100%, 0.28);              /* 自訂變數 --cbl-stripe（下面用 var(--cbl-stripe) 取用；可以由 JS 動態設定） */
-    --cbl-num: hsl(24, 40%, 18%);                       /* 自訂變數 --cbl-num（下面用 var(--cbl-num) 取用；可以由 JS 動態設定） */
-    --cbl-num-glow: hsla(0, 0%, 100%, 0.85);            /* 自訂變數 --cbl-num-glow（下面用 var(--cbl-num-glow) 取用；可以由 JS 動態設定） */
+    --cbl-goal: hsl(24, 72%, 44%);
+    /* 自訂變數 --cbl-goal（下面用 var(--cbl-goal) 取用；可以由 JS 動態設定） */
+    --cbl-edge: hsl(30, 25%, 38%);
+    /* 自訂變數 --cbl-edge（下面用 var(--cbl-edge) 取用；可以由 JS 動態設定） */
+    --cbl-d100: hsl(2, 56%, 80%);
+    /* 自訂變數 --cbl-d100（下面用 var(--cbl-d100) 取用；可以由 JS 動態設定） */
+    --cbl-d200: hsl(18, 62%, 78%);
+    /* 自訂變數 --cbl-d200（下面用 var(--cbl-d200) 取用；可以由 JS 動態設定） */
+    --cbl-d500: hsl(100, 38%, 74%);
+    /* 自訂變數 --cbl-d500（下面用 var(--cbl-d500) 取用；可以由 JS 動態設定） */
+    --cbl-d1000: hsl(205, 56%, 76%);
+    /* 自訂變數 --cbl-d1000（下面用 var(--cbl-d1000) 取用；可以由 JS 動態設定） */
+    --cbl-d2000: hsl(222, 52%, 74%);
+    /* 自訂變數 --cbl-d2000（下面用 var(--cbl-d2000) 取用；可以由 JS 動態設定） */
+    --cbl-stripe: hsla(0, 0%, 100%, 0.28);
+    /* 自訂變數 --cbl-stripe（下面用 var(--cbl-stripe) 取用；可以由 JS 動態設定） */
+    --cbl-num: hsl(24, 40%, 18%);
+    /* 自訂變數 --cbl-num（下面用 var(--cbl-num) 取用；可以由 JS 動態設定） */
+    --cbl-num-glow: hsla(0, 0%, 100%, 0.85);
+    /* 自訂變數 --cbl-num-glow（下面用 var(--cbl-num-glow) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 照號切水果（.ocf-）：深色木板、水果、白色粗字 ── */
-    --ocf-board: hsl(24, 26%, 22%);                     /* 自訂變數 --ocf-board（下面用 var(--ocf-board) 取用；可以由 JS 動態設定） */
-    --ocf-trail: hsla(0, 0%, 100%, 0.85);               /* 自訂變數 --ocf-trail（下面用 var(--ocf-trail) 取用；可以由 JS 動態設定） */
-    --ocf-shade: hsla(24, 40%, 10%, 0.22);              /* 自訂變數 --ocf-shade（下面用 var(--ocf-shade) 取用；可以由 JS 動態設定） */
-    --ocf-leaf: hsl(120, 50%, 40%);                     /* 自訂變數 --ocf-leaf（下面用 var(--ocf-leaf) 取用；可以由 JS 動態設定） */
-    --ocf-num: hsl(0, 0%, 100%);                        /* 自訂變數 --ocf-num（下面用 var(--ocf-num) 取用；可以由 JS 動態設定） */
-    --ocf-num-edge: hsl(24, 30%, 10%);                  /* 自訂變數 --ocf-num-edge（下面用 var(--ocf-num-edge) 取用；可以由 JS 動態設定） */
-    --ocf-f0: hsl(2, 72%, 52%);                         /* 自訂變數 --ocf-f0（下面用 var(--ocf-f0) 取用；可以由 JS 動態設定） */
-    --ocf-f1: hsl(28, 92%, 54%);                        /* 自訂變數 --ocf-f1（下面用 var(--ocf-f1) 取用；可以由 JS 動態設定） */
-    --ocf-f2: hsl(52, 92%, 54%);                        /* 自訂變數 --ocf-f2（下面用 var(--ocf-f2) 取用；可以由 JS 動態設定） */
-    --ocf-f3: hsl(110, 52%, 44%);                       /* 自訂變數 --ocf-f3（下面用 var(--ocf-f3) 取用；可以由 JS 動態設定） */
-    --ocf-f4: hsl(188, 56%, 48%);                       /* 自訂變數 --ocf-f4（下面用 var(--ocf-f4) 取用；可以由 JS 動態設定） */
-    --ocf-f5: hsl(300, 40%, 52%);                       /* 自訂變數 --ocf-f5（下面用 var(--ocf-f5) 取用；可以由 JS 動態設定） */
+    --ocf-board: hsl(24, 26%, 22%);
+    /* 自訂變數 --ocf-board（下面用 var(--ocf-board) 取用；可以由 JS 動態設定） */
+    --ocf-trail: hsla(0, 0%, 100%, 0.85);
+    /* 自訂變數 --ocf-trail（下面用 var(--ocf-trail) 取用；可以由 JS 動態設定） */
+    --ocf-shade: hsla(24, 40%, 10%, 0.22);
+    /* 自訂變數 --ocf-shade（下面用 var(--ocf-shade) 取用；可以由 JS 動態設定） */
+    --ocf-leaf: hsl(120, 50%, 40%);
+    /* 自訂變數 --ocf-leaf（下面用 var(--ocf-leaf) 取用；可以由 JS 動態設定） */
+    --ocf-num: hsl(0, 0%, 100%);
+    /* 自訂變數 --ocf-num（下面用 var(--ocf-num) 取用；可以由 JS 動態設定） */
+    --ocf-num-edge: hsl(24, 30%, 10%);
+    /* 自訂變數 --ocf-num-edge（下面用 var(--ocf-num-edge) 取用；可以由 JS 動態設定） */
+    --ocf-f0: hsl(2, 72%, 52%);
+    /* 自訂變數 --ocf-f0（下面用 var(--ocf-f0) 取用；可以由 JS 動態設定） */
+    --ocf-f1: hsl(28, 92%, 54%);
+    /* 自訂變數 --ocf-f1（下面用 var(--ocf-f1) 取用；可以由 JS 動態設定） */
+    --ocf-f2: hsl(52, 92%, 54%);
+    /* 自訂變數 --ocf-f2（下面用 var(--ocf-f2) 取用；可以由 JS 動態設定） */
+    --ocf-f3: hsl(110, 52%, 44%);
+    /* 自訂變數 --ocf-f3（下面用 var(--ocf-f3) 取用；可以由 JS 動態設定） */
+    --ocf-f4: hsl(188, 56%, 48%);
+    /* 自訂變數 --ocf-f4（下面用 var(--ocf-f4) 取用；可以由 JS 動態設定） */
+    --ocf-f5: hsl(300, 40%, 52%);
+    /* 自訂變數 --ocf-f5（下面用 var(--ocf-f5) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 轉風車（.pwl-）：速度表、風車 ── */
-    --pwl-gauge: hsl(40, 40%, 92%);                     /* 自訂變數 --pwl-gauge（下面用 var(--pwl-gauge) 取用；可以由 JS 動態設定） */
-    --pwl-band: hsla(140, 55%, 45%, 0.35);              /* 自訂變數 --pwl-band（下面用 var(--pwl-band) 取用；可以由 JS 動態設定） */
-    --pwl-band-on: hsla(140, 60%, 42%, 0.6);            /* 自訂變數 --pwl-band-on（下面用 var(--pwl-band-on) 取用；可以由 JS 動態設定） */
-    --pwl-danger: hsla(2, 78%, 55%, 0.35);              /* 自訂變數 --pwl-danger（下面用 var(--pwl-danger) 取用；可以由 JS 動態設定） */
-    --pwl-needle: hsl(24, 40%, 24%);                    /* 自訂變數 --pwl-needle（下面用 var(--pwl-needle) 取用；可以由 JS 動態設定） */
-    --pwl-track: hsla(210, 40%, 40%, 0.35);             /* 自訂變數 --pwl-track（下面用 var(--pwl-track) 取用；可以由 JS 動態設定） */
-    --pwl-b0: hsl(2, 76%, 58%);                         /* 自訂變數 --pwl-b0（下面用 var(--pwl-b0) 取用；可以由 JS 動態設定） */
-    --pwl-b1: hsl(48, 92%, 58%);                        /* 自訂變數 --pwl-b1（下面用 var(--pwl-b1) 取用；可以由 JS 動態設定） */
-    --pwl-b2: hsl(208, 66%, 58%);                       /* 自訂變數 --pwl-b2（下面用 var(--pwl-b2) 取用；可以由 JS 動態設定） */
-    --pwl-b3: hsl(140, 46%, 48%);                       /* 自訂變數 --pwl-b3（下面用 var(--pwl-b3) 取用；可以由 JS 動態設定） */
-    --pwl-pole: hsl(28, 40%, 52%);                      /* 自訂變數 --pwl-pole（下面用 var(--pwl-pole) 取用；可以由 JS 動態設定） */
-    --pwl-prog: hsl(40, 80%, 58%);                      /* 自訂變數 --pwl-prog（下面用 var(--pwl-prog) 取用；可以由 JS 動態設定） */
-    --pwl-curve: hsl(212, 62%, 42%);                    /* 自訂變數 --pwl-curve（下面用 var(--pwl-curve) 取用；可以由 JS 動態設定） */
+    --pwl-gauge: hsl(40, 40%, 92%);
+    /* 自訂變數 --pwl-gauge（下面用 var(--pwl-gauge) 取用；可以由 JS 動態設定） */
+    --pwl-band: hsla(140, 55%, 45%, 0.35);
+    /* 自訂變數 --pwl-band（下面用 var(--pwl-band) 取用；可以由 JS 動態設定） */
+    --pwl-band-on: hsla(140, 60%, 42%, 0.6);
+    /* 自訂變數 --pwl-band-on（下面用 var(--pwl-band-on) 取用；可以由 JS 動態設定） */
+    --pwl-danger: hsla(2, 78%, 55%, 0.35);
+    /* 自訂變數 --pwl-danger（下面用 var(--pwl-danger) 取用；可以由 JS 動態設定） */
+    --pwl-needle: hsl(24, 40%, 24%);
+    /* 自訂變數 --pwl-needle（下面用 var(--pwl-needle) 取用；可以由 JS 動態設定） */
+    --pwl-track: hsla(210, 40%, 40%, 0.35);
+    /* 自訂變數 --pwl-track（下面用 var(--pwl-track) 取用；可以由 JS 動態設定） */
+    --pwl-b0: hsl(2, 76%, 58%);
+    /* 自訂變數 --pwl-b0（下面用 var(--pwl-b0) 取用；可以由 JS 動態設定） */
+    --pwl-b1: hsl(48, 92%, 58%);
+    /* 自訂變數 --pwl-b1（下面用 var(--pwl-b1) 取用；可以由 JS 動態設定） */
+    --pwl-b2: hsl(208, 66%, 58%);
+    /* 自訂變數 --pwl-b2（下面用 var(--pwl-b2) 取用；可以由 JS 動態設定） */
+    --pwl-b3: hsl(140, 46%, 48%);
+    /* 自訂變數 --pwl-b3（下面用 var(--pwl-b3) 取用；可以由 JS 動態設定） */
+    --pwl-pole: hsl(28, 40%, 52%);
+    /* 自訂變數 --pwl-pole（下面用 var(--pwl-pole) 取用；可以由 JS 動態設定） */
+    --pwl-prog: hsl(40, 80%, 58%);
+    /* 自訂變數 --pwl-prog（下面用 var(--pwl-prog) 取用；可以由 JS 動態設定） */
+    --pwl-curve: hsl(212, 62%, 42%);
+    /* 自訂變數 --pwl-curve（下面用 var(--pwl-curve) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 洗盤子（.dsh-）：白瓷盤、青花紋、醬汁污漬、泡泡 ── */
-    --dsh-plate: hsl(45, 40%, 98%);                     /* 自訂變數 --dsh-plate（下面用 var(--dsh-plate) 取用；可以由 JS 動態設定） */
-    --dsh-plate-line: hsl(210, 14%, 62%);               /* 自訂變數 --dsh-plate-line（下面用 var(--dsh-plate-line) 取用；可以由 JS 動態設定） */
-    --dsh-rim: hsl(210, 20%, 80%);                      /* 自訂變數 --dsh-rim（下面用 var(--dsh-rim) 取用；可以由 JS 動態設定） */
-    --dsh-sauce: hsl(24, 62%, 30%);                     /* 自訂變數 --dsh-sauce（下面用 var(--dsh-sauce) 取用；可以由 JS 動態設定） */
-    --dsh-pat0: hsl(215, 64%, 46%);                     /* 自訂變數 --dsh-pat0（下面用 var(--dsh-pat0) 取用；可以由 JS 動態設定） */
-    --dsh-pat1: hsl(212, 38%, 44%);                     /* 自訂變數 --dsh-pat1（下面用 var(--dsh-pat1) 取用；可以由 JS 動態設定） */
-    --dsh-pat2: hsl(24, 30%, 40%);                      /* 自訂變數 --dsh-pat2（下面用 var(--dsh-pat2) 取用；可以由 JS 動態設定） */
-    --dsh-pat3: hsl(24, 56%, 32%);                      /* 自訂變數 --dsh-pat3（下面用 var(--dsh-pat3) 取用；可以由 JS 動態設定） */
-    --dsh-bubble: hsla(200, 60%, 60%, 0.9);             /* 自訂變數 --dsh-bubble（下面用 var(--dsh-bubble) 取用；可以由 JS 動態設定） */
-    --dsh-bubble-fill: hsla(200, 80%, 92%, 0.6);        /* 自訂變數 --dsh-bubble-fill（下面用 var(--dsh-bubble-fill) 取用；可以由 JS 動態設定） */
+    --dsh-plate: hsl(45, 40%, 98%);
+    /* 自訂變數 --dsh-plate（下面用 var(--dsh-plate) 取用；可以由 JS 動態設定） */
+    --dsh-plate-line: hsl(210, 14%, 62%);
+    /* 自訂變數 --dsh-plate-line（下面用 var(--dsh-plate-line) 取用；可以由 JS 動態設定） */
+    --dsh-rim: hsl(210, 20%, 80%);
+    /* 自訂變數 --dsh-rim（下面用 var(--dsh-rim) 取用；可以由 JS 動態設定） */
+    --dsh-sauce: hsl(24, 62%, 30%);
+    /* 自訂變數 --dsh-sauce（下面用 var(--dsh-sauce) 取用；可以由 JS 動態設定） */
+    --dsh-pat0: hsl(215, 64%, 46%);
+    /* 自訂變數 --dsh-pat0（下面用 var(--dsh-pat0) 取用；可以由 JS 動態設定） */
+    --dsh-pat1: hsl(212, 38%, 44%);
+    /* 自訂變數 --dsh-pat1（下面用 var(--dsh-pat1) 取用；可以由 JS 動態設定） */
+    --dsh-pat2: hsl(24, 30%, 40%);
+    /* 自訂變數 --dsh-pat2（下面用 var(--dsh-pat2) 取用；可以由 JS 動態設定） */
+    --dsh-pat3: hsl(24, 56%, 32%);
+    /* 自訂變數 --dsh-pat3（下面用 var(--dsh-pat3) 取用；可以由 JS 動態設定） */
+    --dsh-bubble: hsla(200, 60%, 60%, 0.9);
+    /* 自訂變數 --dsh-bubble（下面用 var(--dsh-bubble) 取用；可以由 JS 動態設定） */
+    --dsh-bubble-fill: hsla(200, 80%, 92%, 0.6);
+    /* 自訂變數 --dsh-bubble-fill（下面用 var(--dsh-bubble-fill) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 挑豆子（.bns-）：木盤、紅豆與各種雜物 ── */
-    --bns-wood: hsl(32, 48%, 66%);                      /* 自訂變數 --bns-wood（下面用 var(--bns-wood) 取用；可以由 JS 動態設定） */
-    --bns-wood-edge: hsl(28, 44%, 38%);                 /* 自訂變數 --bns-wood-edge（下面用 var(--bns-wood-edge) 取用；可以由 JS 動態設定） */
-    --bns-red: hsl(4, 58%, 34%);                        /* 自訂變數 --bns-red（下面用 var(--bns-red) 取用；可以由 JS 動態設定） */
-    --bns-adz: hsl(6, 52%, 36%);                        /* 自訂變數 --bns-adz（下面用 var(--bns-adz) 取用；可以由 JS 動態設定） */
-    --bns-pinto: hsl(354, 40%, 25%);                    /* 自訂變數 --bns-pinto（下面用 var(--bns-pinto) 取用；可以由 JS 動態設定） */
-    --bns-mung: hsl(100, 42%, 44%);                     /* 自訂變數 --bns-mung（下面用 var(--bns-mung) 取用；可以由 JS 動態設定） */
-    --bns-black: hsl(24, 12%, 14%);                     /* 自訂變數 --bns-black（下面用 var(--bns-black) 取用；可以由 JS 動態設定） */
-    --bns-redstone: hsl(8, 46%, 40%);                   /* 自訂變數 --bns-redstone（下面用 var(--bns-redstone) 取用；可以由 JS 動態設定） */
-    --bns-redstone-edge: hsl(8, 40%, 26%);              /* 自訂變數 --bns-redstone-edge（下面用 var(--bns-redstone-edge) 取用；可以由 JS 動態設定） */
-    --bns-stone: hsl(30, 4%, 54%);                      /* 自訂變數 --bns-stone（下面用 var(--bns-stone) 取用；可以由 JS 動態設定） */
-    --bns-stone-edge: hsl(30, 6%, 34%);                 /* 自訂變數 --bns-stone-edge（下面用 var(--bns-stone-edge) 取用；可以由 JS 動態設定） */
-    --bns-shine: hsla(0, 0%, 100%, 0.4);                /* 自訂變數 --bns-shine（下面用 var(--bns-shine) 取用；可以由 JS 動態設定） */
-    --bns-spot: hsl(40, 50%, 78%);                      /* 自訂變數 --bns-spot（下面用 var(--bns-spot) 取用；可以由 JS 動態設定） */
-    --bns-shadow: hsla(24, 40%, 10%, 0.45);             /* 自訂變數 --bns-shadow（下面用 var(--bns-shadow) 取用；可以由 JS 動態設定） */
+    --bns-wood: hsl(32, 48%, 66%);
+    /* 自訂變數 --bns-wood（下面用 var(--bns-wood) 取用；可以由 JS 動態設定） */
+    --bns-wood-edge: hsl(28, 44%, 38%);
+    /* 自訂變數 --bns-wood-edge（下面用 var(--bns-wood-edge) 取用；可以由 JS 動態設定） */
+    --bns-red: hsl(4, 58%, 34%);
+    /* 自訂變數 --bns-red（下面用 var(--bns-red) 取用；可以由 JS 動態設定） */
+    --bns-adz: hsl(6, 52%, 36%);
+    /* 自訂變數 --bns-adz（下面用 var(--bns-adz) 取用；可以由 JS 動態設定） */
+    --bns-pinto: hsl(354, 40%, 25%);
+    /* 自訂變數 --bns-pinto（下面用 var(--bns-pinto) 取用；可以由 JS 動態設定） */
+    --bns-mung: hsl(100, 42%, 44%);
+    /* 自訂變數 --bns-mung（下面用 var(--bns-mung) 取用；可以由 JS 動態設定） */
+    --bns-black: hsl(24, 12%, 14%);
+    /* 自訂變數 --bns-black（下面用 var(--bns-black) 取用；可以由 JS 動態設定） */
+    --bns-redstone: hsl(8, 46%, 40%);
+    /* 自訂變數 --bns-redstone（下面用 var(--bns-redstone) 取用；可以由 JS 動態設定） */
+    --bns-redstone-edge: hsl(8, 40%, 26%);
+    /* 自訂變數 --bns-redstone-edge（下面用 var(--bns-redstone-edge) 取用；可以由 JS 動態設定） */
+    --bns-stone: hsl(30, 4%, 54%);
+    /* 自訂變數 --bns-stone（下面用 var(--bns-stone) 取用；可以由 JS 動態設定） */
+    --bns-stone-edge: hsl(30, 6%, 34%);
+    /* 自訂變數 --bns-stone-edge（下面用 var(--bns-stone-edge) 取用；可以由 JS 動態設定） */
+    --bns-shine: hsla(0, 0%, 100%, 0.4);
+    /* 自訂變數 --bns-shine（下面用 var(--bns-shine) 取用；可以由 JS 動態設定） */
+    --bns-spot: hsl(40, 50%, 78%);
+    /* 自訂變數 --bns-spot（下面用 var(--bns-spot) 取用；可以由 JS 動態設定） */
+    --bns-shadow: hsla(24, 40%, 10%, 0.45);
+    /* 自訂變數 --bns-shadow（下面用 var(--bns-shadow) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 一路減七（.mn7-）：老式計算機的綠色液晶與銀色按鍵 ── */
-    --mn7-lcd-bg: hsl(86, 26%, 62%);                    /* 自訂變數 --mn7-lcd-bg（下面用 var(--mn7-lcd-bg) 取用；可以由 JS 動態設定） */
-    --mn7-lcd: hsl(130, 40%, 16%);                      /* 自訂變數 --mn7-lcd（下面用 var(--mn7-lcd) 取用；可以由 JS 動態設定） */
-    --mn7-lcd-glow: hsla(96, 60%, 80%, 0.5);            /* 自訂變數 --mn7-lcd-glow（下面用 var(--mn7-lcd-glow) 取用；可以由 JS 動態設定） */
-    --mn7-lcd-shadow: hsla(130, 40%, 12%, 0.35);        /* 自訂變數 --mn7-lcd-shadow（下面用 var(--mn7-lcd-shadow) 取用；可以由 JS 動態設定） */
-    --mn7-case: hsl(210, 8%, 44%);                      /* 自訂變數 --mn7-case（下面用 var(--mn7-case) 取用；可以由 JS 動態設定） */
-    --mn7-key-top: hsl(210, 10%, 94%);                  /* 自訂變數 --mn7-key-top（下面用 var(--mn7-key-top) 取用；可以由 JS 動態設定） */
-    --mn7-key-bottom: hsl(210, 10%, 78%);               /* 自訂變數 --mn7-key-bottom（下面用 var(--mn7-key-bottom) 取用；可以由 JS 動態設定） */
-    --mn7-key-edge: hsl(210, 10%, 50%);                 /* 自訂變數 --mn7-key-edge（下面用 var(--mn7-key-edge) 取用；可以由 JS 動態設定） */
+    --mn7-lcd-bg: hsl(86, 26%, 62%);
+    /* 自訂變數 --mn7-lcd-bg（下面用 var(--mn7-lcd-bg) 取用；可以由 JS 動態設定） */
+    --mn7-lcd: hsl(130, 40%, 16%);
+    /* 自訂變數 --mn7-lcd（下面用 var(--mn7-lcd) 取用；可以由 JS 動態設定） */
+    --mn7-lcd-glow: hsla(96, 60%, 80%, 0.5);
+    /* 自訂變數 --mn7-lcd-glow（下面用 var(--mn7-lcd-glow) 取用；可以由 JS 動態設定） */
+    --mn7-lcd-shadow: hsla(130, 40%, 12%, 0.35);
+    /* 自訂變數 --mn7-lcd-shadow（下面用 var(--mn7-lcd-shadow) 取用；可以由 JS 動態設定） */
+    --mn7-case: hsl(210, 8%, 44%);
+    /* 自訂變數 --mn7-case（下面用 var(--mn7-case) 取用；可以由 JS 動態設定） */
+    --mn7-key-top: hsl(210, 10%, 94%);
+    /* 自訂變數 --mn7-key-top（下面用 var(--mn7-key-top) 取用；可以由 JS 動態設定） */
+    --mn7-key-bottom: hsl(210, 10%, 78%);
+    /* 自訂變數 --mn7-key-bottom（下面用 var(--mn7-key-bottom) 取用；可以由 JS 動態設定） */
+    --mn7-key-edge: hsl(210, 10%, 50%);
+    /* 自訂變數 --mn7-key-edge（下面用 var(--mn7-key-edge) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 迴轉壽司（.ssh-）：彩色盤子、輸送帶、壽司 ── */
-    --ssh-goal: hsl(14, 74%, 46%);                      /* 自訂變數 --ssh-goal（下面用 var(--ssh-goal) 取用；可以由 JS 動態設定） */
-    --ssh-plate-in: hsl(45, 40%, 98%);                  /* 自訂變數 --ssh-plate-in（下面用 var(--ssh-plate-in) 取用；可以由 JS 動態設定） */
-    --ssh-c-white: hsl(210, 14%, 80%);                  /* 自訂變數 --ssh-c-white（下面用 var(--ssh-c-white) 取用；可以由 JS 動態設定） */
-    --ssh-c-red: hsl(2, 74%, 56%);                      /* 自訂變數 --ssh-c-red（下面用 var(--ssh-c-red) 取用；可以由 JS 動態設定） */
-    --ssh-c-green: hsl(138, 46%, 48%);                  /* 自訂變數 --ssh-c-green（下面用 var(--ssh-c-green) 取用；可以由 JS 動態設定） */
-    --ssh-c-blue: hsl(212, 66%, 56%);                   /* 自訂變數 --ssh-c-blue（下面用 var(--ssh-c-blue) 取用；可以由 JS 動態設定） */
-    --ssh-c-gold: hsl(44, 90%, 54%);                    /* 自訂變數 --ssh-c-gold（下面用 var(--ssh-c-gold) 取用；可以由 JS 動態設定） */
-    --ssh-belt-a: hsl(210, 8%, 76%);                    /* 自訂變數 --ssh-belt-a（下面用 var(--ssh-belt-a) 取用；可以由 JS 動態設定） */
-    --ssh-belt-b: hsl(210, 8%, 68%);                    /* 自訂變數 --ssh-belt-b（下面用 var(--ssh-belt-b) 取用；可以由 JS 動態設定） */
-    --ssh-belt-edge: hsl(210, 8%, 50%);                 /* 自訂變數 --ssh-belt-edge（下面用 var(--ssh-belt-edge) 取用；可以由 JS 動態設定） */
-    --ssh-rice: hsl(48, 40%, 96%);                      /* 自訂變數 --ssh-rice（下面用 var(--ssh-rice) 取用；可以由 JS 動態設定） */
-    --ssh-salmon: hsl(14, 88%, 62%);                    /* 自訂變數 --ssh-salmon（下面用 var(--ssh-salmon) 取用；可以由 JS 動態設定） */
-    --ssh-egg: hsl(46, 92%, 62%);                       /* 自訂變數 --ssh-egg（下面用 var(--ssh-egg) 取用；可以由 JS 動態設定） */
-    --ssh-shrimp: hsl(354, 70%, 72%);                   /* 自訂變數 --ssh-shrimp（下面用 var(--ssh-shrimp) 取用；可以由 JS 動態設定） */
+    --ssh-goal: hsl(14, 74%, 46%);
+    /* 自訂變數 --ssh-goal（下面用 var(--ssh-goal) 取用；可以由 JS 動態設定） */
+    --ssh-plate-in: hsl(45, 40%, 98%);
+    /* 自訂變數 --ssh-plate-in（下面用 var(--ssh-plate-in) 取用；可以由 JS 動態設定） */
+    --ssh-c-white: hsl(210, 14%, 80%);
+    /* 自訂變數 --ssh-c-white（下面用 var(--ssh-c-white) 取用；可以由 JS 動態設定） */
+    --ssh-c-red: hsl(2, 74%, 56%);
+    /* 自訂變數 --ssh-c-red（下面用 var(--ssh-c-red) 取用；可以由 JS 動態設定） */
+    --ssh-c-green: hsl(138, 46%, 48%);
+    /* 自訂變數 --ssh-c-green（下面用 var(--ssh-c-green) 取用；可以由 JS 動態設定） */
+    --ssh-c-blue: hsl(212, 66%, 56%);
+    /* 自訂變數 --ssh-c-blue（下面用 var(--ssh-c-blue) 取用；可以由 JS 動態設定） */
+    --ssh-c-gold: hsl(44, 90%, 54%);
+    /* 自訂變數 --ssh-c-gold（下面用 var(--ssh-c-gold) 取用；可以由 JS 動態設定） */
+    --ssh-belt-a: hsl(210, 8%, 76%);
+    /* 自訂變數 --ssh-belt-a（下面用 var(--ssh-belt-a) 取用；可以由 JS 動態設定） */
+    --ssh-belt-b: hsl(210, 8%, 68%);
+    /* 自訂變數 --ssh-belt-b（下面用 var(--ssh-belt-b) 取用；可以由 JS 動態設定） */
+    --ssh-belt-edge: hsl(210, 8%, 50%);
+    /* 自訂變數 --ssh-belt-edge（下面用 var(--ssh-belt-edge) 取用；可以由 JS 動態設定） */
+    --ssh-rice: hsl(48, 40%, 96%);
+    /* 自訂變數 --ssh-rice（下面用 var(--ssh-rice) 取用；可以由 JS 動態設定） */
+    --ssh-salmon: hsl(14, 88%, 62%);
+    /* 自訂變數 --ssh-salmon（下面用 var(--ssh-salmon) 取用；可以由 JS 動態設定） */
+    --ssh-egg: hsl(46, 92%, 62%);
+    /* 自訂變數 --ssh-egg（下面用 var(--ssh-egg) 取用；可以由 JS 動態設定） */
+    --ssh-shrimp: hsl(354, 70%, 72%);
+    /* 自訂變數 --ssh-shrimp（下面用 var(--ssh-shrimp) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 找錢（.chg-）：老式收銀機的綠色液晶、抽屜 ── */
-    --chg-price: hsl(212, 62%, 44%);                    /* 自訂變數 --chg-price（下面用 var(--chg-price) 取用；可以由 JS 動態設定） */
-    --chg-paid: hsl(14, 74%, 46%);                      /* 自訂變數 --chg-paid（下面用 var(--chg-paid) 取用；可以由 JS 動態設定） */
-    --chg-lcd-bg: hsl(86, 26%, 62%);                    /* 自訂變數 --chg-lcd-bg（下面用 var(--chg-lcd-bg) 取用；可以由 JS 動態設定） */
-    --chg-lcd: hsl(130, 40%, 16%);                      /* 自訂變數 --chg-lcd（下面用 var(--chg-lcd) 取用；可以由 JS 動態設定） */
-    --chg-lcd-shadow: hsla(130, 40%, 12%, 0.35);        /* 自訂變數 --chg-lcd-shadow（下面用 var(--chg-lcd-shadow) 取用；可以由 JS 動態設定） */
-    --chg-case: hsl(210, 8%, 44%);                      /* 自訂變數 --chg-case（下面用 var(--chg-case) 取用；可以由 JS 動態設定） */
-    --chg-drawer: hsl(28, 50%, 42%);                    /* 自訂變數 --chg-drawer（下面用 var(--chg-drawer) 取用；可以由 JS 動態設定） */
+    --chg-price: hsl(212, 62%, 44%);
+    /* 自訂變數 --chg-price（下面用 var(--chg-price) 取用；可以由 JS 動態設定） */
+    --chg-paid: hsl(14, 74%, 46%);
+    /* 自訂變數 --chg-paid（下面用 var(--chg-paid) 取用；可以由 JS 動態設定） */
+    --chg-lcd-bg: hsl(86, 26%, 62%);
+    /* 自訂變數 --chg-lcd-bg（下面用 var(--chg-lcd-bg) 取用；可以由 JS 動態設定） */
+    --chg-lcd: hsl(130, 40%, 16%);
+    /* 自訂變數 --chg-lcd（下面用 var(--chg-lcd) 取用；可以由 JS 動態設定） */
+    --chg-lcd-shadow: hsla(130, 40%, 12%, 0.35);
+    /* 自訂變數 --chg-lcd-shadow（下面用 var(--chg-lcd-shadow) 取用；可以由 JS 動態設定） */
+    --chg-case: hsl(210, 8%, 44%);
+    /* 自訂變數 --chg-case（下面用 var(--chg-case) 取用；可以由 JS 動態設定） */
+    --chg-drawer: hsl(28, 50%, 42%);
+    /* 自訂變數 --chg-drawer（下面用 var(--chg-drawer) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 打了幾折（.dsc-）：百貨公司週年慶的吊牌 ── */
-    --dsc-tag: hsl(48, 90%, 92%);                       /* 自訂變數 --dsc-tag（下面用 var(--dsc-tag) 取用；可以由 JS 動態設定） */
-    --dsc-tag-edge: hsl(8, 70%, 50%);                   /* 自訂變數 --dsc-tag-edge（下面用 var(--dsc-tag-edge) 取用；可以由 JS 動態設定） */
-    --dsc-red: hsl(4, 80%, 50%);                        /* 自訂變數 --dsc-red（下面用 var(--dsc-red) 取用；可以由 JS 動態設定） */
+    --dsc-tag: hsl(48, 90%, 92%);
+    /* 自訂變數 --dsc-tag（下面用 var(--dsc-tag) 取用；可以由 JS 動態設定） */
+    --dsc-tag-edge: hsl(8, 70%, 50%);
+    /* 自訂變數 --dsc-tag-edge（下面用 var(--dsc-tag-edge) 取用；可以由 JS 動態設定） */
+    --dsc-red: hsl(4, 80%, 50%);
+    /* 自訂變數 --dsc-red（下面用 var(--dsc-red) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 時間連連看（.tpr-）：車站的指針鐘與紅色電子看板 ── */
-    --tpr-sel: hsl(48, 92%, 88%);                       /* 自訂變數 --tpr-sel（下面用 var(--tpr-sel) 取用；可以由 JS 動態設定） */
-    --tpr-sel-edge: hsl(36, 90%, 48%);                  /* 自訂變數 --tpr-sel-edge（下面用 var(--tpr-sel-edge) 取用；可以由 JS 動態設定） */
-    --tpr-face: hsl(45, 40%, 98%);                      /* 自訂變數 --tpr-face（下面用 var(--tpr-face) 取用；可以由 JS 動態設定） */
-    --tpr-rim: hsl(210, 14%, 52%);                      /* 自訂變數 --tpr-rim（下面用 var(--tpr-rim) 取用；可以由 JS 動態設定） */
-    --tpr-ink: hsl(24, 30%, 16%);                       /* 自訂變數 --tpr-ink（下面用 var(--tpr-ink) 取用；可以由 JS 動態設定） */
-    --tpr-led-bg: hsl(0, 0%, 14%);                      /* 自訂變數 --tpr-led-bg（下面用 var(--tpr-led-bg) 取用；可以由 JS 動態設定） */
-    --tpr-led: hsl(6, 90%, 60%);                        /* 自訂變數 --tpr-led（下面用 var(--tpr-led) 取用；可以由 JS 動態設定） */
-    --tpr-led-glow: hsla(6, 90%, 60%, 0.7);             /* 自訂變數 --tpr-led-glow（下面用 var(--tpr-led-glow) 取用；可以由 JS 動態設定） */
+    --tpr-sel: hsl(48, 92%, 88%);
+    /* 自訂變數 --tpr-sel（下面用 var(--tpr-sel) 取用；可以由 JS 動態設定） */
+    --tpr-sel-edge: hsl(36, 90%, 48%);
+    /* 自訂變數 --tpr-sel-edge（下面用 var(--tpr-sel-edge) 取用；可以由 JS 動態設定） */
+    --tpr-face: hsl(45, 40%, 98%);
+    /* 自訂變數 --tpr-face（下面用 var(--tpr-face) 取用；可以由 JS 動態設定） */
+    --tpr-rim: hsl(210, 14%, 52%);
+    /* 自訂變數 --tpr-rim（下面用 var(--tpr-rim) 取用；可以由 JS 動態設定） */
+    --tpr-ink: hsl(24, 30%, 16%);
+    /* 自訂變數 --tpr-ink（下面用 var(--tpr-ink) 取用；可以由 JS 動態設定） */
+    --tpr-led-bg: hsl(0, 0%, 14%);
+    /* 自訂變數 --tpr-led-bg（下面用 var(--tpr-led-bg) 取用；可以由 JS 動態設定） */
+    --tpr-led: hsl(6, 90%, 60%);
+    /* 自訂變數 --tpr-led（下面用 var(--tpr-led) 取用；可以由 JS 動態設定） */
+    --tpr-led-glow: hsla(6, 90%, 60%, 0.7);
+    /* 自訂變數 --tpr-led-glow（下面用 var(--tpr-led-glow) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 畫眉毛（.ebw-）：素描風的臉、咖啡色眉筆、淡紅色的鏡射眉 ── */
-    --ebw-skin: hsl(30, 70%, 90%);                      /* 自訂變數 --ebw-skin（下面用 var(--ebw-skin) 取用；可以由 JS 動態設定） */
-    --ebw-line: hsl(24, 24%, 34%);                      /* 自訂變數 --ebw-line（下面用 var(--ebw-line) 取用；可以由 JS 動態設定） */
-    --ebw-eyewhite: hsl(0, 0%, 100%);                   /* 自訂變數 --ebw-eyewhite（下面用 var(--ebw-eyewhite) 取用；可以由 JS 動態設定） */
-    --ebw-brow: hsl(24, 50%, 24%);                      /* 自訂變數 --ebw-brow（下面用 var(--ebw-brow) 取用；可以由 JS 動態設定） */
-    --ebw-ghost: hsl(2, 80%, 66%);                      /* 自訂變數 --ebw-ghost（下面用 var(--ebw-ghost) 取用；可以由 JS 動態設定） */
+    --ebw-skin: hsl(30, 70%, 90%);
+    /* 自訂變數 --ebw-skin（下面用 var(--ebw-skin) 取用；可以由 JS 動態設定） */
+    --ebw-line: hsl(24, 24%, 34%);
+    /* 自訂變數 --ebw-line（下面用 var(--ebw-line) 取用；可以由 JS 動態設定） */
+    --ebw-eyewhite: hsl(0, 0%, 100%);
+    /* 自訂變數 --ebw-eyewhite（下面用 var(--ebw-eyewhite) 取用；可以由 JS 動態設定） */
+    --ebw-brow: hsl(24, 50%, 24%);
+    /* 自訂變數 --ebw-brow（下面用 var(--ebw-brow) 取用；可以由 JS 動態設定） */
+    --ebw-ghost: hsl(2, 80%, 66%);
+    /* 自訂變數 --ebw-ghost（下面用 var(--ebw-ghost) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 擀水餃皮（.dgh-）：撒了麵粉的桌面、麵皮、擀麵棍 ── */
-    --dgh-table: hsl(32, 40%, 74%);                     /* 自訂變數 --dgh-table（下面用 var(--dgh-table) 取用；可以由 JS 動態設定） */
-    --dgh-flour: hsla(0, 0%, 100%, 0.35);               /* 自訂變數 --dgh-flour（下面用 var(--dgh-flour) 取用；可以由 JS 動態設定） */
-    --dgh-sample: hsl(212, 50%, 42%);                   /* 自訂變數 --dgh-sample（下面用 var(--dgh-sample) 取用；可以由 JS 動態設定） */
-    --dgh-best: hsl(2, 74%, 56%);                       /* 自訂變數 --dgh-best（下面用 var(--dgh-best) 取用；可以由 JS 動態設定） */
-    --dgh-dough: hsl(48, 60%, 96%);                     /* 自訂變數 --dgh-dough（下面用 var(--dgh-dough) 取用；可以由 JS 動態設定） */
-    --dgh-dough-edge: hsl(36, 30%, 62%);                /* 自訂變數 --dgh-dough-edge（下面用 var(--dgh-dough-edge) 取用；可以由 JS 動態設定） */
-    --dgh-pin: hsl(28, 48%, 44%);                       /* 自訂變數 --dgh-pin（下面用 var(--dgh-pin) 取用；可以由 JS 動態設定） */
-    --dgh-pin-lite: hsl(34, 56%, 62%);                  /* 自訂變數 --dgh-pin-lite（下面用 var(--dgh-pin-lite) 取用；可以由 JS 動態設定） */
-    --dgh-pin-edge: hsl(26, 44%, 30%);                  /* 自訂變數 --dgh-pin-edge（下面用 var(--dgh-pin-edge) 取用；可以由 JS 動態設定） */
+    --dgh-table: hsl(32, 40%, 74%);
+    /* 自訂變數 --dgh-table（下面用 var(--dgh-table) 取用；可以由 JS 動態設定） */
+    --dgh-flour: hsla(0, 0%, 100%, 0.35);
+    /* 自訂變數 --dgh-flour（下面用 var(--dgh-flour) 取用；可以由 JS 動態設定） */
+    --dgh-sample: hsl(212, 50%, 42%);
+    /* 自訂變數 --dgh-sample（下面用 var(--dgh-sample) 取用；可以由 JS 動態設定） */
+    --dgh-best: hsl(2, 74%, 56%);
+    /* 自訂變數 --dgh-best（下面用 var(--dgh-best) 取用；可以由 JS 動態設定） */
+    --dgh-dough: hsl(48, 60%, 96%);
+    /* 自訂變數 --dgh-dough（下面用 var(--dgh-dough) 取用；可以由 JS 動態設定） */
+    --dgh-dough-edge: hsl(36, 30%, 62%);
+    /* 自訂變數 --dgh-dough-edge（下面用 var(--dgh-dough-edge) 取用；可以由 JS 動態設定） */
+    --dgh-pin: hsl(28, 48%, 44%);
+    /* 自訂變數 --dgh-pin（下面用 var(--dgh-pin) 取用；可以由 JS 動態設定） */
+    --dgh-pin-lite: hsl(34, 56%, 62%);
+    /* 自訂變數 --dgh-pin-lite（下面用 var(--dgh-pin-lite) 取用；可以由 JS 動態設定） */
+    --dgh-pin-edge: hsl(26, 44%, 30%);
+    /* 自訂變數 --dgh-pin-edge（下面用 var(--dgh-pin-edge) 取用；可以由 JS 動態設定） */
     /* V1.34 新遊戲顏色 end */
-    --pr-scale: 1.66;                                   /* 自訂變數 --pr-scale（下面用 var(--pr-scale) 取用；可以由 JS 動態設定） */
+    --pr-scale: 1.66;
+    /* 自訂變數 --pr-scale（下面用 var(--pr-scale) 取用；可以由 JS 動態設定） */
     /* 價格陷阱：標籤上所有文字放大的倍率（166%）；標籤放不下時 JS 會自動往下調，最小 1.0 倍 */
 
-    --c-yellow-soft: rgba(224, 170, 37, 0.18);          /* 自訂變數 --c-yellow-soft（下面用 var(--c-yellow-soft) 取用；可以由 JS 動態設定） */
-    --c-green-soft: rgba(76, 154, 91, 0.16);            /* 自訂變數 --c-green-soft（下面用 var(--c-green-soft) 取用；可以由 JS 動態設定） */
-    --c-blue-soft: rgba(62, 134, 196, 0.15);            /* 自訂變數 --c-blue-soft（下面用 var(--c-blue-soft) 取用；可以由 JS 動態設定） */
-    --c-orange-soft: rgba(232, 130, 46, 0.16);          /* 自訂變數 --c-orange-soft（下面用 var(--c-orange-soft) 取用；可以由 JS 動態設定） */
+    --c-yellow-soft: hsla(43, 75%, 51%, 0.18);
+    /* 自訂變數 --c-yellow-soft（下面用 var(--c-yellow-soft) 取用；可以由 JS 動態設定） */
+    --c-green-soft: hsla(132, 34%, 45%, 0.16);
+    /* 自訂變數 --c-green-soft（下面用 var(--c-green-soft) 取用；可以由 JS 動態設定） */
+    --c-blue-soft: hsla(208, 53%, 51%, 0.15);
+    /* 自訂變數 --c-blue-soft（下面用 var(--c-blue-soft) 取用；可以由 JS 動態設定） */
+    --c-orange-soft: hsla(27, 80%, 55%, 0.16);
+    /* 自訂變數 --c-orange-soft（下面用 var(--c-orange-soft) 取用；可以由 JS 動態設定） */
 
-    --c-ok: var(--c-green);                             /* 自訂變數 --c-ok（下面用 var(--c-ok) 取用；可以由 JS 動態設定） */
-    --c-ok-light: var(--c-green-light);                 /* 自訂變數 --c-ok-light（下面用 var(--c-ok-light) 取用；可以由 JS 動態設定） */
-    --c-ok-soft: var(--c-green-soft);                   /* 自訂變數 --c-ok-soft（下面用 var(--c-ok-soft) 取用；可以由 JS 動態設定） */
-    --c-bad: #D46F3C;                                   /* 自訂變數 --c-bad（下面用 var(--c-bad) 取用；可以由 JS 動態設定） */
+    --c-ok: var(--c-green);
+    /* 自訂變數 --c-ok（下面用 var(--c-ok) 取用；可以由 JS 動態設定） */
+    --c-ok-light: var(--c-green-light);
+    /* 自訂變數 --c-ok-light（下面用 var(--c-ok-light) 取用；可以由 JS 動態設定） */
+    --c-ok-soft: var(--c-green-soft);
+    /* 自訂變數 --c-ok-soft（下面用 var(--c-ok-soft) 取用；可以由 JS 動態設定） */
+    --c-ok-hard: hsla(132, 66%, 60%, 0.66);
+    /* 自訂變數 --c-ok-hard（下面用 var(--c-ok-hard) 取用；可以由 JS 動態設定） */
+    --c-bad: #D46F3C;
+    /* 自訂變數 --c-bad（下面用 var(--c-bad) 取用；可以由 JS 動態設定） */
     /* 答錯：暖橘紅，不用刺眼的紅 */
-    --c-bad-light: hsl(6, 77%, 60%);                    /* 自訂變數 --c-bad-light（下面用 var(--c-bad-light) 取用；可以由 JS 動態設定） */
-    --c-bad-soft: rgba(212, 111, 60, 0.16);             /* 自訂變數 --c-bad-soft（下面用 var(--c-bad-soft) 取用；可以由 JS 動態設定） */
-
-    --c-recall: #B23A2E;                                /* 自訂變數 --c-recall（下面用 var(--c-recall) 取用；可以由 JS 動態設定） */
+    --c-bad-light: hsl(6, 77%, 60%);
+    /* 自訂變數 --c-bad-light（下面用 var(--c-bad-light) 取用；可以由 JS 動態設定） */
+    --c-bad-soft: hsla(20, 64%, 53%, 0.16);
+    /* 自訂變數 --c-bad-soft（下面用 var(--c-bad-soft) 取用；可以由 JS 動態設定） */
+    --c-bad-hard: hsla(0, 72%, 60%, 0.66);
+    /* 自訂變數 --c-bad-hard（下面用 var(--c-bad-hard) 取用；可以由 JS 動態設定） */
+    --c-recall: #B23A2E;
+    /* 自訂變數 --c-recall（下面用 var(--c-recall) 取用；可以由 JS 動態設定） */
     /* 回想題標籤：磚紅，刻意跟 --c-bad 區分，加強提醒效果 */
-    --c-recall-soft: #F8D9D2;                           /* 自訂變數 --c-recall-soft（下面用 var(--c-recall-soft) 取用；可以由 JS 動態設定） */
+    --c-recall-soft: #F8D9D2;
+    /* 自訂變數 --c-recall-soft（下面用 var(--c-recall-soft) 取用；可以由 JS 動態設定） */
     /* 回想題標籤：粉底 */
 
     /* ── 邊框／圓角／陰影 ─────────────────────────────── */
-    --bd-w: 2px;                                        /* 自訂變數 --bd-w（下面用 var(--bd-w) 取用；可以由 JS 動態設定） */
-    --bd-c: #E3D19A;                                    /* 自訂變數 --bd-c（下面用 var(--bd-c) 取用；可以由 JS 動態設定） */
-    --bd: var(--bd-w) solid var(--bd-c);                /* 自訂變數 --bd（下面用 var(--bd) 取用；可以由 JS 動態設定） */
-    --r-sm: 10px;                                       /* 自訂變數 --r-sm（下面用 var(--r-sm) 取用；可以由 JS 動態設定） */
-    --r-md: 16px;                                       /* 自訂變數 --r-md（下面用 var(--r-md) 取用；可以由 JS 動態設定） */
-    --r-lg: 22px;                                       /* 自訂變數 --r-lg（下面用 var(--r-lg) 取用；可以由 JS 動態設定） */
-    --r-pill: 999px;                                    /* 自訂變數 --r-pill（下面用 var(--r-pill) 取用；可以由 JS 動態設定） */
-    --shadow-card: 0 3px 10px rgba(74, 59, 30, 0.08);   /* 自訂變數 --shadow-card（下面用 var(--shadow-card) 取用；可以由 JS 動態設定） */
-    --shadow-pop: 0 10px 30px rgba(74, 59, 30, 0.22);   /* 自訂變數 --shadow-pop（下面用 var(--shadow-pop) 取用；可以由 JS 動態設定） */
+    --bd-w: 2px;
+    /* 自訂變數 --bd-w（下面用 var(--bd-w) 取用；可以由 JS 動態設定） */
+    --bd-c: #E3D19A;
+    /* 自訂變數 --bd-c（下面用 var(--bd-c) 取用；可以由 JS 動態設定） */
+    --bd: var(--bd-w) solid var(--bd-c);
+    /* 自訂變數 --bd（下面用 var(--bd) 取用；可以由 JS 動態設定） */
+    --r-sm: 10px;
+    /* 自訂變數 --r-sm（下面用 var(--r-sm) 取用；可以由 JS 動態設定） */
+    --r-md: 16px;
+    /* 自訂變數 --r-md（下面用 var(--r-md) 取用；可以由 JS 動態設定） */
+    --r-lg: 22px;
+    /* 自訂變數 --r-lg（下面用 var(--r-lg) 取用；可以由 JS 動態設定） */
+    --r-pill: 999px;
+    /* 自訂變數 --r-pill（下面用 var(--r-pill) 取用；可以由 JS 動態設定） */
+    --shadow-card: 0 3px 10px rgba(74, 59, 30, 0.08);
+    /* 自訂變數 --shadow-card（下面用 var(--shadow-card) 取用；可以由 JS 動態設定） */
+    --shadow-pop: 0 10px 30px rgba(74, 59, 30, 0.22);
+    /* 自訂變數 --shadow-pop（下面用 var(--shadow-pop) 取用；可以由 JS 動態設定） */
 
     /* ── 間距（刻意壓小，讓一個畫面裝得下）───────────── */
-    --sp-1: 4px;                                        /* 自訂變數 --sp-1（下面用 var(--sp-1) 取用；可以由 JS 動態設定） */
-    --sp-2: 8px;                                        /* 自訂變數 --sp-2（下面用 var(--sp-2) 取用；可以由 JS 動態設定） */
-    --sp-3: 12px;                                       /* 自訂變數 --sp-3（下面用 var(--sp-3) 取用；可以由 JS 動態設定） */
-    --sp-4: 16px;                                       /* 自訂變數 --sp-4（下面用 var(--sp-4) 取用；可以由 JS 動態設定） */
-    --sp-5: 24px;                                       /* 自訂變數 --sp-5（下面用 var(--sp-5) 取用；可以由 JS 動態設定） */
-    --pad-screen: 14px;                                 /* 自訂變數 --pad-screen（下面用 var(--pad-screen) 取用；可以由 JS 動態設定） */
-    --pad-card: 12px;                                   /* 自訂變數 --pad-card（下面用 var(--pad-card) 取用；可以由 JS 動態設定） */
+    --sp-1: 4px;
+    /* 自訂變數 --sp-1（下面用 var(--sp-1) 取用；可以由 JS 動態設定） */
+    --sp-2: 8px;
+    /* 自訂變數 --sp-2（下面用 var(--sp-2) 取用；可以由 JS 動態設定） */
+    --sp-3: 12px;
+    /* 自訂變數 --sp-3（下面用 var(--sp-3) 取用；可以由 JS 動態設定） */
+    --sp-4: 16px;
+    /* 自訂變數 --sp-4（下面用 var(--sp-4) 取用；可以由 JS 動態設定） */
+    --sp-5: 24px;
+    /* 自訂變數 --sp-5（下面用 var(--sp-5) 取用；可以由 JS 動態設定） */
+    --pad-screen: 14px;
+    /* 自訂變數 --pad-screen（下面用 var(--pad-screen) 取用；可以由 JS 動態設定） */
+    --pad-card: 12px;
+    /* 自訂變數 --pad-card（下面用 var(--pad-card) 取用；可以由 JS 動態設定） */
 
     /* ── 按鈕 ─────────────────────────────────────────── */
-    --btn-h: 84px;                                      /* 自訂變數 --btn-h（下面用 var(--btn-h) 取用；可以由 JS 動態設定） */
-    --btn-h-sm: 68px;                                   /* 自訂變數 --btn-h-sm（下面用 var(--btn-h-sm) 取用；可以由 JS 動態設定） */
-    --btn-r: var(--r-md);                               /* 自訂變數 --btn-r（下面用 var(--btn-r) 取用；可以由 JS 動態設定） */
-    --btn-fs: var(--fs-md);                             /* 自訂變數 --btn-fs（下面用 var(--btn-fs) 取用；可以由 JS 動態設定） */
-    --btn-fw: var(--fw-bold);                           /* 自訂變數 --btn-fw（下面用 var(--btn-fw) 取用；可以由 JS 動態設定） */
+    --btn-h: 84px;
+    /* 自訂變數 --btn-h（下面用 var(--btn-h) 取用；可以由 JS 動態設定） */
+    --btn-h-sm: 68px;
+    /* 自訂變數 --btn-h-sm（下面用 var(--btn-h-sm) 取用；可以由 JS 動態設定） */
+    --btn-r: var(--r-md);
+    /* 自訂變數 --btn-r（下面用 var(--btn-r) 取用；可以由 JS 動態設定） */
+    --btn-fs: var(--fs-md);
+    /* 自訂變數 --btn-fs（下面用 var(--btn-fs) 取用；可以由 JS 動態設定） */
+    --btn-fw: var(--fw-bold);
+    /* 自訂變數 --btn-fw（下面用 var(--btn-fw) 取用；可以由 JS 動態設定） */
 
-    --btn-primary-bg: linear-gradient(135deg, #F3B24F 0%, var(--c-orange) 100%);  /* 自訂變數 --btn-primary-bg（下面用 var(--btn-primary-bg) 取用；可以由 JS 動態設定） */
-    --btn-primary-fg: var(--c-on-accent);               /* 自訂變數 --btn-primary-fg（下面用 var(--btn-primary-fg) 取用；可以由 JS 動態設定） */
-    --btn-primary-shadow: 0 4px 14px rgba(232, 130, 46, 0.35);  /* 自訂變數 --btn-primary-shadow（下面用 var(--btn-primary-shadow) 取用；可以由 JS 動態設定） */
+    --btn-primary-bg: linear-gradient(135deg, #F3B24F 0%, var(--c-orange) 100%);
+    /* 自訂變數 --btn-primary-bg（下面用 var(--btn-primary-bg) 取用；可以由 JS 動態設定） */
+    --btn-primary-fg: var(--c-on-accent);
+    /* 自訂變數 --btn-primary-fg（下面用 var(--btn-primary-fg) 取用；可以由 JS 動態設定） */
+    --btn-primary-shadow: 0 4px 14px rgba(232, 130, 46, 0.35);
+    /* 自訂變數 --btn-primary-shadow（下面用 var(--btn-primary-shadow) 取用；可以由 JS 動態設定） */
 
-    --btn-go-bg: linear-gradient(135deg, #6CBD79 0%, var(--c-green) 100%);  /* 自訂變數 --btn-go-bg（下面用 var(--btn-go-bg) 取用；可以由 JS 動態設定） */
-    --btn-go-fg: var(--c-on-accent);                    /* 自訂變數 --btn-go-fg（下面用 var(--btn-go-fg) 取用；可以由 JS 動態設定） */
-    --btn-go-shadow: 0 4px 14px rgba(76, 154, 91, 0.32);  /* 自訂變數 --btn-go-shadow（下面用 var(--btn-go-shadow) 取用；可以由 JS 動態設定） */
+    --btn-go-bg: linear-gradient(135deg, #6CBD79 0%, var(--c-green) 100%);
+    /* 自訂變數 --btn-go-bg（下面用 var(--btn-go-bg) 取用；可以由 JS 動態設定） */
+    --btn-go-fg: var(--c-on-accent);
+    /* 自訂變數 --btn-go-fg（下面用 var(--btn-go-fg) 取用；可以由 JS 動態設定） */
+    --btn-go-shadow: 0 4px 14px rgba(76, 154, 91, 0.32);
+    /* 自訂變數 --btn-go-shadow（下面用 var(--btn-go-shadow) 取用；可以由 JS 動態設定） */
 
-    --btn-sky-bg: linear-gradient(135deg, #71B0E2 0%, var(--c-blue) 100%);  /* 自訂變數 --btn-sky-bg（下面用 var(--btn-sky-bg) 取用；可以由 JS 動態設定） */
-    --btn-sky-fg: var(--c-on-accent);                   /* 自訂變數 --btn-sky-fg（下面用 var(--btn-sky-fg) 取用；可以由 JS 動態設定） */
-    --btn-sky-shadow: 0 4px 14px rgba(62, 134, 196, 0.3);  /* 自訂變數 --btn-sky-shadow（下面用 var(--btn-sky-shadow) 取用；可以由 JS 動態設定） */
+    --btn-sky-bg: linear-gradient(135deg, #71B0E2 0%, var(--c-blue) 100%);
+    /* 自訂變數 --btn-sky-bg（下面用 var(--btn-sky-bg) 取用；可以由 JS 動態設定） */
+    --btn-sky-fg: var(--c-on-accent);
+    /* 自訂變數 --btn-sky-fg（下面用 var(--btn-sky-fg) 取用；可以由 JS 動態設定） */
+    --btn-sky-shadow: 0 4px 14px rgba(62, 134, 196, 0.3);
+    /* 自訂變數 --btn-sky-shadow（下面用 var(--btn-sky-shadow) 取用；可以由 JS 動態設定） */
 
-    --btn-line-bg: var(--c-card);                       /* 自訂變數 --btn-line-bg（下面用 var(--btn-line-bg) 取用；可以由 JS 動態設定） */
-    --btn-line-fg: var(--c-blue);                       /* 自訂變數 --btn-line-fg（下面用 var(--btn-line-fg) 取用；可以由 JS 動態設定） */
-    --btn-line-bd: var(--bd-w) solid var(--c-blue);     /* 自訂變數 --btn-line-bd（下面用 var(--btn-line-bd) 取用；可以由 JS 動態設定） */
+    --btn-line-bg: var(--c-card);
+    /* 自訂變數 --btn-line-bg（下面用 var(--btn-line-bg) 取用；可以由 JS 動態設定） */
+    --btn-line-fg: var(--c-blue);
+    /* 自訂變數 --btn-line-fg（下面用 var(--btn-line-fg) 取用；可以由 JS 動態設定） */
+    --btn-line-bd: var(--bd-w) solid var(--c-blue);
+    /* 自訂變數 --btn-line-bd（下面用 var(--btn-line-bd) 取用；可以由 JS 動態設定） */
 
     /* ── 答案選項 ─────────────────────────────────────── */
-    --opt-h: 96px;                                      /* 自訂變數 --opt-h（下面用 var(--opt-h) 取用；可以由 JS 動態設定） */
-    --opt-bg: var(--c-card-alt);                        /* 自訂變數 --opt-bg（下面用 var(--opt-bg) 取用；可以由 JS 動態設定） */
-    --opt-bd: var(--bd);                                /* 自訂變數 --opt-bd（下面用 var(--opt-bd) 取用；可以由 JS 動態設定） */
-    --opt-badge: 54px;                                  /* 自訂變數 --opt-badge（下面用 var(--opt-badge) 取用；可以由 JS 動態設定） */
+    --opt-h: 96px;
+    /* 自訂變數 --opt-h（下面用 var(--opt-h) 取用；可以由 JS 動態設定） */
+    --opt-bg: var(--c-card-alt);
+    /* 自訂變數 --opt-bg（下面用 var(--opt-bg) 取用；可以由 JS 動態設定） */
+    --opt-bd: var(--bd);
+    /* 自訂變數 --opt-bd（下面用 var(--opt-bd) 取用；可以由 JS 動態設定） */
+    --opt-badge: 54px;
+    /* 自訂變數 --opt-badge（下面用 var(--opt-badge) 取用；可以由 JS 動態設定） */
 
     /* ── 紙條消失的水流特效（js/waterflow.js）─────────────
        倒數 5→1，每個數字的墨色與水流顏色：紫、藍、綠、黃、紅 */
-    --flow-ink-5: #8A6CC8;                              /* 自訂變數 --flow-ink-5（下面用 var(--flow-ink-5) 取用；可以由 JS 動態設定） */
+    --flow-ink-5: #8A6CC8;
+    /* 自訂變數 --flow-ink-5（下面用 var(--flow-ink-5) 取用；可以由 JS 動態設定） */
     /* 紫 */
-    --flow-ink-4: var(--c-blue);                        /* 自訂變數 --flow-ink-4（下面用 var(--flow-ink-4) 取用；可以由 JS 動態設定） */
+    --flow-ink-4: var(--c-blue);
+    /* 自訂變數 --flow-ink-4（下面用 var(--flow-ink-4) 取用；可以由 JS 動態設定） */
     /* 藍 */
-    --flow-ink-3: var(--c-green);                       /* 自訂變數 --flow-ink-3（下面用 var(--flow-ink-3) 取用；可以由 JS 動態設定） */
+    --flow-ink-3: var(--c-green);
+    /* 自訂變數 --flow-ink-3（下面用 var(--flow-ink-3) 取用；可以由 JS 動態設定） */
     /* 綠 */
-    --flow-ink-2: var(--c-yellow);                      /* 自訂變數 --flow-ink-2（下面用 var(--flow-ink-2) 取用；可以由 JS 動態設定） */
+    --flow-ink-2: var(--c-yellow);
+    /* 自訂變數 --flow-ink-2（下面用 var(--flow-ink-2) 取用；可以由 JS 動態設定） */
     /* 黃 */
-    --flow-ink-1: #D9483B;                              /* 自訂變數 --flow-ink-1（下面用 var(--flow-ink-1) 取用；可以由 JS 動態設定） */
+    --flow-ink-1: #D9483B;
+    /* 自訂變數 --flow-ink-1（下面用 var(--flow-ink-1) 取用；可以由 JS 動態設定） */
     /* 紅 */
-    --flow-stroke: 56px;                                /* 自訂變數 --flow-stroke（下面用 var(--flow-stroke) 取用；可以由 JS 動態設定） */
+    --flow-stroke: 56px;
+    /* 自訂變數 --flow-stroke（下面用 var(--flow-stroke) 取用；可以由 JS 動態設定） */
     /* 數字筆畫粗細（邏輯 px） */
 
     /* ── 世界排行榜（js/leaderboard_ui.js、css/leaderboard.css）──────
@@ -638,109 +1113,179 @@
        要統一調整彈窗的長相，只改這一段：
        overlay＝背後壓暗的顏色；pad＝卡片距離舞台邊緣；card-pad＝卡片內側留白；gap＝卡片裡各區塊的間距；
        w＝卡片最寬多少；title-fs／text-fs＝標題與內文字級。按鈕尺寸用上面的 --btn-h、顏色用 --btn-*-bg。 */
-    --dlg-overlay: rgba(74, 59, 30, 0.45);              /* 自訂變數 --dlg-overlay（下面用 var(--dlg-overlay) 取用；可以由 JS 動態設定） */
-    --dlg-pad: var(--sp-5);                             /* 自訂變數 --dlg-pad（下面用 var(--dlg-pad) 取用；可以由 JS 動態設定） */
-    --dlg-card-pad: var(--sp-5) var(--sp-4) var(--sp-4);  /* 自訂變數 --dlg-card-pad（下面用 var(--dlg-card-pad) 取用；可以由 JS 動態設定） */
-    --dlg-gap: var(--sp-3);                             /* 自訂變數 --dlg-gap（下面用 var(--dlg-gap) 取用；可以由 JS 動態設定） */
-    --dlg-w: 452px;                                     /* 自訂變數 --dlg-w（下面用 var(--dlg-w) 取用；可以由 JS 動態設定） */
-    --dlg-title-fs: var(--fs-lg);                       /* 自訂變數 --dlg-title-fs（下面用 var(--dlg-title-fs) 取用；可以由 JS 動態設定） */
-    --dlg-text-fs: var(--fs-sm);                        /* 自訂變數 --dlg-text-fs（下面用 var(--dlg-text-fs) 取用；可以由 JS 動態設定） */
+    --dlg-overlay: rgba(74, 59, 30, 0.45);
+    /* 自訂變數 --dlg-overlay（下面用 var(--dlg-overlay) 取用；可以由 JS 動態設定） */
+    --dlg-pad: var(--sp-5);
+    /* 自訂變數 --dlg-pad（下面用 var(--dlg-pad) 取用；可以由 JS 動態設定） */
+    --dlg-card-pad: var(--sp-5) var(--sp-4) var(--sp-4);
+    /* 自訂變數 --dlg-card-pad（下面用 var(--dlg-card-pad) 取用；可以由 JS 動態設定） */
+    --dlg-gap: var(--sp-3);
+    /* 自訂變數 --dlg-gap（下面用 var(--dlg-gap) 取用；可以由 JS 動態設定） */
+    --dlg-w: 452px;
+    /* 自訂變數 --dlg-w（下面用 var(--dlg-w) 取用；可以由 JS 動態設定） */
+    --dlg-title-fs: var(--fs-lg);
+    /* 自訂變數 --dlg-title-fs（下面用 var(--dlg-title-fs) 取用；可以由 JS 動態設定） */
+    --dlg-text-fs: var(--fs-sm);
+    /* 自訂變數 --dlg-text-fs（下面用 var(--dlg-text-fs) 取用；可以由 JS 動態設定） */
 
     /* ── 五星評價（js/rating.js、css/rating.css，V1.25.0）──────────────
        on＝實心的黃色星星；off＝選單格子裡還沒塗到的星星空位（淡色）；edge＝評價彈窗星星的外框線；
        bar-w＝選單格子裡那一排五顆星的總寬度（每顆＝五分之一）；pick＝評價彈窗每顆星星按鈕的大小。 */
-    --rate-on: #F6B400;                                 /* 自訂變數 --rate-on（下面用 var(--rate-on) 取用；可以由 JS 動態設定） */
-    --rate-off: rgba(126, 106, 60, 0.22);               /* 自訂變數 --rate-off（下面用 var(--rate-off) 取用；可以由 JS 動態設定） */
-    --rate-edge: var(--c-ink-soft);                     /* 自訂變數 --rate-edge（下面用 var(--rate-edge) 取用；可以由 JS 動態設定） */
-    --rate-bar-w: 100px;                                /* 自訂變數 --rate-bar-w（下面用 var(--rate-bar-w) 取用；可以由 JS 動態設定） */
-    --rate-pick: 72px;                                  /* 自訂變數 --rate-pick（下面用 var(--rate-pick) 取用；可以由 JS 動態設定） */
+    --rate-on: #F6B400;
+    /* 自訂變數 --rate-on（下面用 var(--rate-on) 取用；可以由 JS 動態設定） */
+    --rate-off: rgba(126, 106, 60, 0.22);
+    /* 自訂變數 --rate-off（下面用 var(--rate-off) 取用；可以由 JS 動態設定） */
+    --rate-edge: var(--c-ink-soft);
+    /* 自訂變數 --rate-edge（下面用 var(--rate-edge) 取用；可以由 JS 動態設定） */
+    --rate-bar-w: 100px;
+    /* 自訂變數 --rate-bar-w（下面用 var(--rate-bar-w) 取用；可以由 JS 動態設定） */
+    --rate-pick: 72px;
+    /* 自訂變數 --rate-pick（下面用 var(--rate-pick) 取用；可以由 JS 動態設定） */
 
     /* ── 阿嬤都比你厲害（js/menu.js、css/menu.css，V1.25.0）──
        rank-ink／rank-edge＝格子上名次數字的「黑字白框」；rank-fs＝名次數字的字級（大尺寸）；heart-fs＝💔的大小 */
-    --gm-rank-ink: var(--c-black);                      /* 自訂變數 --gm-rank-ink（下面用 var(--gm-rank-ink) 取用；可以由 JS 動態設定） */
-    --gm-rank-edge: #FFFFFF;                            /* 自訂變數 --gm-rank-edge（下面用 var(--gm-rank-edge) 取用；可以由 JS 動態設定） */
-    --gm-rank-fs: 56px;                                 /* 自訂變數 --gm-rank-fs（下面用 var(--gm-rank-fs) 取用；可以由 JS 動態設定） */
-    --gm-heart-fs: 40px;                                /* 自訂變數 --gm-heart-fs（下面用 var(--gm-heart-fs) 取用；可以由 JS 動態設定） */
+    --gm-rank-ink: var(--c-black);
+    /* 自訂變數 --gm-rank-ink（下面用 var(--gm-rank-ink) 取用；可以由 JS 動態設定） */
+    --gm-rank-edge: #FFFFFF;
+    /* 自訂變數 --gm-rank-edge（下面用 var(--gm-rank-edge) 取用；可以由 JS 動態設定） */
+    --gm-rank-fs: 56px;
+    /* 自訂變數 --gm-rank-fs（下面用 var(--gm-rank-fs) 取用；可以由 JS 動態設定） */
+    --gm-heart-fs: 40px;
+    /* 自訂變數 --gm-heart-fs（下面用 var(--gm-heart-fs) 取用；可以由 JS 動態設定） */
 
     /* ── 貓咪走山路（js/reaction_catroad.js，畫在 canvas 上，程式用 getComputedStyle 讀這些顏色）──
        lava＝岩漿的兩個顏色；cliff＝斷崖邊緣；road＝山路與山路邊線；cat＝貓咪身體；cat-ink＝貓咪的線條與眼睛 */
-    --cr-lava-1: #D9421F;                               /* 自訂變數 --cr-lava-1（下面用 var(--cr-lava-1) 取用；可以由 JS 動態設定） */
-    --cr-lava-2: #F4A53A;                               /* 自訂變數 --cr-lava-2（下面用 var(--cr-lava-2) 取用；可以由 JS 動態設定） */
-    --cr-cliff: #5B4630;                                /* 自訂變數 --cr-cliff（下面用 var(--cr-cliff) 取用；可以由 JS 動態設定） */
-    --cr-road: #C9B58A;                                 /* 自訂變數 --cr-road（下面用 var(--cr-road) 取用；可以由 JS 動態設定） */
-    --cr-road-edge: #8A6F43;                            /* 自訂變數 --cr-road-edge（下面用 var(--cr-road-edge) 取用；可以由 JS 動態設定） */
-    --cr-cat: #F3B24F;                                  /* 自訂變數 --cr-cat（下面用 var(--cr-cat) 取用；可以由 JS 動態設定） */
-    --cr-cat-ink: #4A3B1E;                              /* 自訂變數 --cr-cat-ink（下面用 var(--cr-cat-ink) 取用；可以由 JS 動態設定） */
+    --cr-lava-1: #D9421F;
+    /* 自訂變數 --cr-lava-1（下面用 var(--cr-lava-1) 取用；可以由 JS 動態設定） */
+    --cr-lava-2: #F4A53A;
+    /* 自訂變數 --cr-lava-2（下面用 var(--cr-lava-2) 取用；可以由 JS 動態設定） */
+    --cr-cliff: #5B4630;
+    /* 自訂變數 --cr-cliff（下面用 var(--cr-cliff) 取用；可以由 JS 動態設定） */
+    --cr-road: #C9B58A;
+    /* 自訂變數 --cr-road（下面用 var(--cr-road) 取用；可以由 JS 動態設定） */
+    --cr-road-edge: #8A6F43;
+    /* 自訂變數 --cr-road-edge（下面用 var(--cr-road-edge) 取用；可以由 JS 動態設定） */
+    --cr-cat: #F3B24F;
+    /* 自訂變數 --cr-cat（下面用 var(--cr-cat) 取用；可以由 JS 動態設定） */
+    --cr-cat-ink: #4A3B1E;
+    /* 自訂變數 --cr-cat-ink（下面用 var(--cr-cat-ink) 取用；可以由 JS 動態設定） */
 
     /* ── 混出什麼色（js/reaction_mixcolor.js）：六顆按鈕的底色，亮色＝增加、暗色＝減少 ── */
-    --cm-r-hi: #FF5A4D;                                 /* 自訂變數 --cm-r-hi（下面用 var(--cm-r-hi) 取用；可以由 JS 動態設定） */
-    --cm-r-lo: #8E2A22;                                 /* 自訂變數 --cm-r-lo（下面用 var(--cm-r-lo) 取用；可以由 JS 動態設定） */
-    --cm-g-hi: #48D66B;                                 /* 自訂變數 --cm-g-hi（下面用 var(--cm-g-hi) 取用；可以由 JS 動態設定） */
-    --cm-g-lo: #22703A;                                 /* 自訂變數 --cm-g-lo（下面用 var(--cm-g-lo) 取用；可以由 JS 動態設定） */
-    --cm-b-hi: #4F86FF;                                 /* 自訂變數 --cm-b-hi（下面用 var(--cm-b-hi) 取用；可以由 JS 動態設定） */
-    --cm-b-lo: #213F94;                                 /* 自訂變數 --cm-b-lo（下面用 var(--cm-b-lo) 取用；可以由 JS 動態設定） */
+    --cm-r-hi: #FF5A4D;
+    /* 自訂變數 --cm-r-hi（下面用 var(--cm-r-hi) 取用；可以由 JS 動態設定） */
+    --cm-r-lo: #8E2A22;
+    /* 自訂變數 --cm-r-lo（下面用 var(--cm-r-lo) 取用；可以由 JS 動態設定） */
+    --cm-g-hi: #48D66B;
+    /* 自訂變數 --cm-g-hi（下面用 var(--cm-g-hi) 取用；可以由 JS 動態設定） */
+    --cm-g-lo: #22703A;
+    /* 自訂變數 --cm-g-lo（下面用 var(--cm-g-lo) 取用；可以由 JS 動態設定） */
+    --cm-b-hi: #4F86FF;
+    /* 自訂變數 --cm-b-hi（下面用 var(--cm-b-hi) 取用；可以由 JS 動態設定） */
+    --cm-b-lo: #213F94;
+    /* 自訂變數 --cm-b-lo（下面用 var(--cm-b-lo) 取用；可以由 JS 動態設定） */
 
     /* ── V1.22 新遊戲專用色（css/reaction5.css）──
        照抄曲線：cc-board＝兩個長方格的深色底（白色筆跡才看得見）、cc-curve＝綠色的目標曲線、cc-start＝黃色起點、
        cc-end＝水藍色終點、cc-draw＝玩家畫的白色曲線；dk-bg＝全黑畫面（手電筒猜圖）、flt-pic＝被光照到的圖案顏色 */
-    --cc-board: #3B3222;                                /* 自訂變數 --cc-board（下面用 var(--cc-board) 取用；可以由 JS 動態設定） */
-    --cc-curve: #62C470;                                /* 自訂變數 --cc-curve（下面用 var(--cc-curve) 取用；可以由 JS 動態設定） */
-    --cc-start: var(--c-yellow);                        /* 自訂變數 --cc-start（下面用 var(--cc-start) 取用；可以由 JS 動態設定） */
-    --cc-end: #5EC8E8;                                  /* 自訂變數 --cc-end（下面用 var(--cc-end) 取用；可以由 JS 動態設定） */
-    --cc-draw: #FFFFFF;                                 /* 自訂變數 --cc-draw（下面用 var(--cc-draw) 取用；可以由 JS 動態設定） */
-    --dk-bg: #000000;                                   /* 自訂變數 --dk-bg（下面用 var(--dk-bg) 取用；可以由 JS 動態設定） */
-    --fe-note: #9A9A9A;                                 /* 自訂變數 --fe-note（下面用 var(--fe-note) 取用；可以由 JS 動態設定） */
+    --cc-board: #3B3222;
+    /* 自訂變數 --cc-board（下面用 var(--cc-board) 取用；可以由 JS 動態設定） */
+    --cc-curve: #62C470;
+    /* 自訂變數 --cc-curve（下面用 var(--cc-curve) 取用；可以由 JS 動態設定） */
+    --cc-start: var(--c-yellow);
+    /* 自訂變數 --cc-start（下面用 var(--cc-start) 取用；可以由 JS 動態設定） */
+    --cc-end: #5EC8E8;
+    /* 自訂變數 --cc-end（下面用 var(--cc-end) 取用；可以由 JS 動態設定） */
+    --cc-draw: #FFFFFF;
+    /* 自訂變數 --cc-draw（下面用 var(--cc-draw) 取用；可以由 JS 動態設定） */
+    --dk-bg: #000000;
+    /* 自訂變數 --dk-bg（下面用 var(--dk-bg) 取用；可以由 JS 動態設定） */
+    --fe-note: #9A9A9A;
+    /* 自訂變數 --fe-note（下面用 var(--fe-note) 取用；可以由 JS 動態設定） */
     /* 淡到看不見：黑底上的提示文字（V1.25） */
-    --flt-pic: #FFE08A;                                 /* 自訂變數 --flt-pic（下面用 var(--flt-pic) 取用；可以由 JS 動態設定） */
-    --lb-shine: rgba(255, 255, 255, 0.55);              /* 自訂變數 --lb-shine（下面用 var(--lb-shine) 取用；可以由 JS 動態設定） */
-    --lb-gold-bg: linear-gradient(135deg, #FFEFB8 0%, #F2C14B 100%);  /* 自訂變數 --lb-gold-bg（下面用 var(--lb-gold-bg) 取用；可以由 JS 動態設定） */
-    --lb-gold-row: linear-gradient(135deg, #FFF6D6 0%, #FFE08A 100%);  /* 自訂變數 --lb-gold-row（下面用 var(--lb-gold-row) 取用；可以由 JS 動態設定） */
-    --lb-gold-ink: #6B4700;                             /* 自訂變數 --lb-gold-ink（下面用 var(--lb-gold-ink) 取用；可以由 JS 動態設定） */
-    --lb-gold-edge: #E0AA25;                            /* 自訂變數 --lb-gold-edge（下面用 var(--lb-gold-edge) 取用；可以由 JS 動態設定） */
-    --lb-gold-glow: rgba(224, 170, 37, 0.45);           /* 自訂變數 --lb-gold-glow（下面用 var(--lb-gold-glow) 取用；可以由 JS 動態設定） */
-    --lb-silver-bg: linear-gradient(135deg, #FAFBFC 0%, #BFC7D2 100%);  /* 自訂變數 --lb-silver-bg（下面用 var(--lb-silver-bg) 取用；可以由 JS 動態設定） */
-    --lb-silver-row: linear-gradient(135deg, #F7F9FB 0%, #DDE3EA 100%);  /* 自訂變數 --lb-silver-row（下面用 var(--lb-silver-row) 取用；可以由 JS 動態設定） */
-    --lb-silver-ink: #46515F;                           /* 自訂變數 --lb-silver-ink（下面用 var(--lb-silver-ink) 取用；可以由 JS 動態設定） */
-    --lb-silver-edge: #A9B3C0;                          /* 自訂變數 --lb-silver-edge（下面用 var(--lb-silver-edge) 取用；可以由 JS 動態設定） */
-    --lb-silver-glow: rgba(150, 162, 178, 0.4);         /* 自訂變數 --lb-silver-glow（下面用 var(--lb-silver-glow) 取用；可以由 JS 動態設定） */
-    --lb-bronze-bg: linear-gradient(135deg, #FBE0C4 0%, #D79A5C 100%);  /* 自訂變數 --lb-bronze-bg（下面用 var(--lb-bronze-bg) 取用；可以由 JS 動態設定） */
-    --lb-bronze-row: linear-gradient(135deg, #FFF0E0 0%, #F3CFA6 100%);  /* 自訂變數 --lb-bronze-row（下面用 var(--lb-bronze-row) 取用；可以由 JS 動態設定） */
-    --lb-bronze-ink: #6A3A10;                           /* 自訂變數 --lb-bronze-ink（下面用 var(--lb-bronze-ink) 取用；可以由 JS 動態設定） */
-    --lb-bronze-edge: #CC8A4A;                          /* 自訂變數 --lb-bronze-edge（下面用 var(--lb-bronze-edge) 取用；可以由 JS 動態設定） */
-    --lb-bronze-glow: rgba(204, 138, 74, 0.4);          /* 自訂變數 --lb-bronze-glow（下面用 var(--lb-bronze-glow) 取用；可以由 JS 動態設定） */
-    --lb-row-h: 64px;                                   /* 自訂變數 --lb-row-h（下面用 var(--lb-row-h) 取用；可以由 JS 動態設定） */
+    --flt-pic: #FFE08A;
+    /* 自訂變數 --flt-pic（下面用 var(--flt-pic) 取用；可以由 JS 動態設定） */
+    --lb-shine: rgba(255, 255, 255, 0.55);
+    /* 自訂變數 --lb-shine（下面用 var(--lb-shine) 取用；可以由 JS 動態設定） */
+    --lb-gold-bg: linear-gradient(135deg, #FFEFB8 0%, #F2C14B 100%);
+    /* 自訂變數 --lb-gold-bg（下面用 var(--lb-gold-bg) 取用；可以由 JS 動態設定） */
+    --lb-gold-row: linear-gradient(135deg, #FFF6D6 0%, #FFE08A 100%);
+    /* 自訂變數 --lb-gold-row（下面用 var(--lb-gold-row) 取用；可以由 JS 動態設定） */
+    --lb-gold-ink: #6B4700;
+    /* 自訂變數 --lb-gold-ink（下面用 var(--lb-gold-ink) 取用；可以由 JS 動態設定） */
+    --lb-gold-edge: #E0AA25;
+    /* 自訂變數 --lb-gold-edge（下面用 var(--lb-gold-edge) 取用；可以由 JS 動態設定） */
+    --lb-gold-glow: rgba(224, 170, 37, 0.45);
+    /* 自訂變數 --lb-gold-glow（下面用 var(--lb-gold-glow) 取用；可以由 JS 動態設定） */
+    --lb-silver-bg: linear-gradient(135deg, #FAFBFC 0%, #BFC7D2 100%);
+    /* 自訂變數 --lb-silver-bg（下面用 var(--lb-silver-bg) 取用；可以由 JS 動態設定） */
+    --lb-silver-row: linear-gradient(135deg, #F7F9FB 0%, #DDE3EA 100%);
+    /* 自訂變數 --lb-silver-row（下面用 var(--lb-silver-row) 取用；可以由 JS 動態設定） */
+    --lb-silver-ink: #46515F;
+    /* 自訂變數 --lb-silver-ink（下面用 var(--lb-silver-ink) 取用；可以由 JS 動態設定） */
+    --lb-silver-edge: #A9B3C0;
+    /* 自訂變數 --lb-silver-edge（下面用 var(--lb-silver-edge) 取用；可以由 JS 動態設定） */
+    --lb-silver-glow: rgba(150, 162, 178, 0.4);
+    /* 自訂變數 --lb-silver-glow（下面用 var(--lb-silver-glow) 取用；可以由 JS 動態設定） */
+    --lb-bronze-bg: linear-gradient(135deg, #FBE0C4 0%, #D79A5C 100%);
+    /* 自訂變數 --lb-bronze-bg（下面用 var(--lb-bronze-bg) 取用；可以由 JS 動態設定） */
+    --lb-bronze-row: linear-gradient(135deg, #FFF0E0 0%, #F3CFA6 100%);
+    /* 自訂變數 --lb-bronze-row（下面用 var(--lb-bronze-row) 取用；可以由 JS 動態設定） */
+    --lb-bronze-ink: #6A3A10;
+    /* 自訂變數 --lb-bronze-ink（下面用 var(--lb-bronze-ink) 取用；可以由 JS 動態設定） */
+    --lb-bronze-edge: #CC8A4A;
+    /* 自訂變數 --lb-bronze-edge（下面用 var(--lb-bronze-edge) 取用；可以由 JS 動態設定） */
+    --lb-bronze-glow: rgba(204, 138, 74, 0.4);
+    /* 自訂變數 --lb-bronze-glow（下面用 var(--lb-bronze-glow) 取用；可以由 JS 動態設定） */
+    --lb-row-h: 64px;
+    /* 自訂變數 --lb-row-h（下面用 var(--lb-row-h) 取用；可以由 JS 動態設定） */
     /* 一般名次的列高 */
-    --lb-row-h-top: 88px;                               /* 自訂變數 --lb-row-h-top（下面用 var(--lb-row-h-top) 取用；可以由 JS 動態設定） */
+    --lb-row-h-top: 88px;
+    /* 自訂變數 --lb-row-h-top（下面用 var(--lb-row-h-top) 取用；可以由 JS 動態設定） */
     /* 前三名的列高（比較高、比較顯眼） */
-    --lb-rank-col: 64px;                                /* 自訂變數 --lb-rank-col（下面用 var(--lb-rank-col) 取用；可以由 JS 動態設定） */
+    --lb-rank-col: 64px;
+    /* 自訂變數 --lb-rank-col（下面用 var(--lb-rank-col) 取用；可以由 JS 動態設定） */
     /* 名次欄寬 */
 
     /* ── 版面 ─────────────────────────────────────────── */
-    --bar-h: 78px;                                      /* 自訂變數 --bar-h（下面用 var(--bar-h) 取用；可以由 JS 動態設定） */
+    --bar-h: 78px;
+    /* 自訂變數 --bar-h（下面用 var(--bar-h) 取用；可以由 JS 動態設定） */
 
     /* ── 正式模式 HUD ─────────────────────────────────── */
-    --hud-edge: 16px;                                   /* 自訂變數 --hud-edge（下面用 var(--hud-edge) 取用；可以由 JS 動態設定） */
-    --hud-chip-h: 60px;                                 /* 自訂變數 --hud-chip-h（下面用 var(--hud-chip-h) 取用；可以由 JS 動態設定） */
-    --joy-size: 200px;                                  /* 自訂變數 --joy-size（下面用 var(--joy-size) 取用；可以由 JS 動態設定） */
-    --joy-knob: 90px;                                   /* 自訂變數 --joy-knob（下面用 var(--joy-knob) 取用；可以由 JS 動態設定） */
-    --act-size: 150px;                                  /* 自訂變數 --act-size（下面用 var(--act-size) 取用；可以由 JS 動態設定） */
+    --hud-edge: 16px;
+    /* 自訂變數 --hud-edge（下面用 var(--hud-edge) 取用；可以由 JS 動態設定） */
+    --hud-chip-h: 60px;
+    /* 自訂變數 --hud-chip-h（下面用 var(--hud-chip-h) 取用；可以由 JS 動態設定） */
+    --joy-size: 200px;
+    /* 自訂變數 --joy-size（下面用 var(--joy-size) 取用；可以由 JS 動態設定） */
+    --joy-knob: 90px;
+    /* 自訂變數 --joy-knob（下面用 var(--joy-knob) 取用；可以由 JS 動態設定） */
+    --act-size: 150px;
+    /* 自訂變數 --act-size（下面用 var(--act-size) 取用；可以由 JS 動態設定） */
 }
 
 /* ═══ 基本 ═══ */
 body {
-    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
-    font-weight: var(--fw-regular);                     /* 字重（粗細）：主題變數 --fw-regular */
-    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-family: var(--font-ui);
+    /* 字型：主題變數 --font-ui */
+    font-weight: var(--fw-regular);
+    /* 字重（粗細）：主題變數 --fw-regular */
+    color: var(--c-ink);
+    /* 文字顏色：主題變數 --c-ink */
 }
 
 /* 搭配 js/ui.js 的 UI.icon()：那邊產生的 <svg class="icon">，大小統一用
    1em×1em（跟目前文字大小一樣大，字級一變圖示也跟著變大小，不用另外調） */
 .icon {
-    width: 1em;                                         /* 寬度：1em */
-    height: 1em;                                        /* 高度：1em */
-    flex: 0 0 auto;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
-    display: inline-block;                              /* 像文字一樣排在同一行，但可以設定寬高 */
-    vertical-align: middle;                             /* 垂直對齊：middle */
+    width: 1em;
+    /* 寬度：1em */
+    height: 1em;
+    /* 高度：1em */
+    flex: 0 0 auto;
+    /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    display: inline-block;
+    /* 像文字一樣排在同一行，但可以設定寬高 */
+    vertical-align: middle;
+    /* 垂直對齊：middle */
 }
 
 /* ═══ 按鈕 ═══
@@ -748,27 +1293,44 @@ body {
    .btn--xxx 只負責換顏色/背景（primary 橘色強調、go 綠色、sky 藍色、line 外框
    樣式），一個按鈕通常是 class="btn btn--primary" 這樣兩個 class 疊著用。 */
 .btn {
-    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
-    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
-    justify-content: center;                            /* 子元素沿排列方向置中 */
-    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
-    width: 100%;                                        /* 寬度：100% */
-    height: var(--btn-h);                               /* 高度：主題變數 --btn-h */
-    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
-    border: none;                                       /* 沒有邊框 */
-    border-radius: var(--btn-r);                        /* 圓角：主題變數 --btn-r */
-    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
-    font-size: var(--btn-fs);                           /* 字級：主題變數 --btn-fs */
-    font-weight: var(--btn-fw);                         /* 字重（粗細）：主題變數 --btn-fw */
-    line-height: var(--lh-tight);                       /* 行高：主題變數 --lh-tight（文字每一行佔的高度） */
-    text-align: center;                                 /* 文字置中 */
-    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
-    transition: transform 0.1s ease, filter 0.15s ease, opacity 0.15s ease;  /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.1s ease, filter 0.15s ease, opacity 0. */
+    display: flex;
+    /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;
+    /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;
+    /* 子元素沿排列方向置中 */
+    gap: var(--sp-2);
+    /* 子元素之間的空隙：主題變數 --sp-2 */
+    width: 100%;
+    /* 寬度：100% */
+    height: var(--btn-h);
+    /* 高度：主題變數 --btn-h */
+    padding: 0 var(--sp-3);
+    /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    border: none;
+    /* 沒有邊框 */
+    border-radius: var(--btn-r);
+    /* 圓角：主題變數 --btn-r */
+    font-family: var(--font-ui);
+    /* 字型：主題變數 --font-ui */
+    font-size: var(--btn-fs);
+    /* 字級：主題變數 --btn-fs */
+    font-weight: var(--btn-fw);
+    /* 字重（粗細）：主題變數 --btn-fw */
+    line-height: var(--lh-tight);
+    /* 行高：主題變數 --lh-tight（文字每一行佔的高度） */
+    text-align: center;
+    /* 文字置中 */
+    cursor: pointer;
+    /* 滑鼠移上去變成手指（表示可以點） */
+    transition: transform 0.1s ease, filter 0.15s ease, opacity 0.15s ease;
+    /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.1s ease, filter 0.15s ease, opacity 0. */
 }
 
 /* 按下去的瞬間縮小一點點（97%），給觸控一個「有按到」的視覺回饋 */
 .btn:active {
-    transform: scale(0.97);                             /* 變形：縮放 0.97 倍 */
+    transform: scale(0.97);
+    /* 變形：縮放 0.97 倍 */
 }
 
 /* :focus-visible（不是 :focus）：只有「用鍵盤 Tab 切換焦點」時才顯示這個藍色外框，
@@ -778,185 +1340,276 @@ body {
 .btn:focus-visible,
 .opt:focus-visible,
 .lv:focus-visible {
-    outline: 4px solid var(--c-blue);                   /* 外框線：4px solid 主題變數 --c-blue */
-    outline-offset: 3px;                                /* 外框線離元素多遠：3px */
+    outline: 4px solid var(--c-blue);
+    /* 外框線：4px solid 主題變數 --c-blue */
+    outline-offset: 3px;
+    /* 外框線離元素多遠：3px */
 }
 
 /* 「btn」這個元素的樣式 */
 .btn[disabled] {
-    opacity: 0.45;                                      /* 透明度 0.45（1＝完全不透明、0＝全透明） */
-    cursor: default;                                    /* 滑鼠游標樣式：default */
+    opacity: 0.45;
+    /* 透明度 0.45（1＝完全不透明、0＝全透明） */
+    cursor: default;
+    /* 滑鼠游標樣式：default */
 }
 
 /* 「btn」在「主要（強調）時」的樣子的樣式 */
 .btn--primary {
-    background: var(--btn-primary-bg);                  /* 背景：主題變數 --btn-primary-bg */
-    color: var(--btn-primary-fg);                       /* 文字顏色：主題變數 --btn-primary-fg */
-    box-shadow: var(--btn-primary-shadow);              /* 方塊陰影（立體感） */
+    background: var(--btn-primary-bg);
+    /* 背景：主題變數 --btn-primary-bg */
+    color: var(--btn-primary-fg);
+    /* 文字顏色：主題變數 --btn-primary-fg */
+    box-shadow: var(--btn-primary-shadow);
+    /* 方塊陰影（立體感） */
 }
 
 /* 「btn」的「go」變化版的樣式 */
 .btn--go {
-    background: var(--btn-go-bg);                       /* 背景：主題變數 --btn-go-bg */
-    color: var(--btn-go-fg);                            /* 文字顏色：主題變數 --btn-go-fg */
-    box-shadow: var(--btn-go-shadow);                   /* 方塊陰影（立體感） */
+    background: var(--btn-go-bg);
+    /* 背景：主題變數 --btn-go-bg */
+    color: var(--btn-go-fg);
+    /* 文字顏色：主題變數 --btn-go-fg */
+    box-shadow: var(--btn-go-shadow);
+    /* 方塊陰影（立體感） */
 }
 
 /* 「btn」的「sky」變化版的樣式 */
 .btn--sky {
-    background: var(--btn-sky-bg);                      /* 背景：主題變數 --btn-sky-bg */
-    color: var(--btn-sky-fg);                           /* 文字顏色：主題變數 --btn-sky-fg */
-    box-shadow: var(--btn-sky-shadow);                  /* 方塊陰影（立體感） */
+    background: var(--btn-sky-bg);
+    /* 背景：主題變數 --btn-sky-bg */
+    color: var(--btn-sky-fg);
+    /* 文字顏色：主題變數 --btn-sky-fg */
+    box-shadow: var(--btn-sky-shadow);
+    /* 方塊陰影（立體感） */
 }
 
 /* 「btn」在「只有外框時」的樣子的樣式 */
 .btn--line {
-    background: var(--btn-line-bg);                     /* 背景：主題變數 --btn-line-bg */
-    color: var(--btn-line-fg);                          /* 文字顏色：主題變數 --btn-line-fg */
-    border: var(--btn-line-bd);                         /* 邊框（粗細、線型、顏色）：主題變數 --btn-line-bd */
+    background: var(--btn-line-bg);
+    /* 背景：主題變數 --btn-line-bg */
+    color: var(--btn-line-fg);
+    /* 文字顏色：主題變數 --btn-line-fg */
+    border: var(--btn-line-bd);
+    /* 邊框（粗細、線型、顏色）：主題變數 --btn-line-bd */
 }
 
 /* 「btn」的「sm」變化版的樣式 */
 .btn--sm {
-    height: var(--btn-h-sm);                            /* 高度：主題變數 --btn-h-sm */
+    height: var(--btn-h-sm);
+    /* 高度：主題變數 --btn-h-sm */
 }
 
 /* .row：一排並排的按鈕（例如結果頁的「再玩一次／下一關」），每個子元素
    （.row > *）用 flex:1 1 0 平分寬度，min-width:0 是避免文字太長的子元素
    把 flex 容器撐爆（flex 預設子元素不會縮小到比內容還窄，加這個才會真的平分）。 */
 .row {
-    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
-    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
+    display: flex;
+    /* 彈性盒子：子元素排成一列（或一欄） */
+    gap: var(--sp-3);
+    /* 子元素之間的空隙：主題變數 --sp-3 */
 }
 
 /* 所有元素的樣式 */
 .row>* {
-    flex: 1 1 0;                                        /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
-    min-width: 0;                                       /* 最小寬度：0 */
+    flex: 1 1 0;
+    /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 0（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-width: 0;
+    /* 最小寬度：0 */
 }
 
 /* ═══ 卡片／標籤 ═══ */
 .card {
-    background: var(--c-card);                          /* 背景：主題變數 --c-card */
-    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
-    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
-    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
+    background: var(--c-card);
+    /* 背景：主題變數 --c-card */
+    border: var(--bd);
+    /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-radius: var(--r-lg);
+    /* 圓角：主題變數 --r-lg */
+    box-shadow: var(--shadow-card);
+    /* 方塊陰影（立體感） */
 }
 
 /* .pill：膠囊形狀的小標籤（圓角 999px＝視覺上兩端完全是半圓），用來標註
    「這是第幾關」「這是回想題」之類的簡短狀態文字。.pill 本身只管形狀，
    顏色由下面的 .pill--藍/黃/綠/橘/recall 這些修飾用 class 決定。 */
 .pill {
-    display: inline-flex;                               /* 像文字一樣排在同一行的彈性盒子 */
-    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
-    gap: var(--sp-1);                                   /* 子元素之間的空隙：主題變數 --sp-1 */
-    height: 44px;                                       /* 高度：44px */
-    padding: 0 var(--sp-4);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-4 */
-    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill */
-    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
-    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
-    white-space: nowrap;                                /* 文字不換行 */
+    display: inline-flex;
+    /* 像文字一樣排在同一行的彈性盒子 */
+    align-items: center;
+    /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-1);
+    /* 子元素之間的空隙：主題變數 --sp-1 */
+    height: 44px;
+    /* 高度：44px */
+    padding: 0 var(--sp-4);
+    /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-4 */
+    border-radius: var(--r-pill);
+    /* 圓角：主題變數 --r-pill */
+    font-size: var(--fs-xs);
+    /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);
+    /* 字重（粗細）：主題變數 --fw-bold */
+    white-space: nowrap;
+    /* 文字不換行 */
 }
 
 /* 「pill」的「blue」變化版的樣式 */
 .pill--blue {
-    color: var(--c-blue);                               /* 文字顏色：主題變數 --c-blue */
-    background: var(--c-blue-soft);                     /* 背景：主題變數 --c-blue-soft */
+    color: var(--c-blue);
+    /* 文字顏色：主題變數 --c-blue */
+    background: var(--c-blue-soft);
+    /* 背景：主題變數 --c-blue-soft */
 }
 
 /* 「pill」的「yellow」變化版的樣式 */
 .pill--yellow {
-    color: #9A6D0B;                                     /* 文字顏色：#9A6D0B */
-    background: var(--c-yellow-soft);                   /* 背景：主題變數 --c-yellow-soft */
+    color: #9A6D0B;
+    /* 文字顏色：#9A6D0B */
+    background: var(--c-yellow-soft);
+    /* 背景：主題變數 --c-yellow-soft */
 }
 
 /* 「pill」的「green」變化版的樣式 */
 .pill--green {
-    color: var(--c-green);                              /* 文字顏色：主題變數 --c-green */
-    background: var(--c-green-soft);                    /* 背景：主題變數 --c-green-soft */
+    color: var(--c-green);
+    /* 文字顏色：主題變數 --c-green */
+    background: var(--c-green-soft);
+    /* 背景：主題變數 --c-green-soft */
 }
 
 /* 「pill」的「orange」變化版的樣式 */
 .pill--orange {
-    color: var(--c-orange);                             /* 文字顏色：主題變數 --c-orange */
-    background: var(--c-orange-soft);                   /* 背景：主題變數 --c-orange-soft */
+    color: var(--c-orange);
+    /* 文字顏色：主題變數 --c-orange */
+    background: var(--c-orange-soft);
+    /* 背景：主題變數 --c-orange-soft */
 }
 
 /* 跨關回想題標籤：紅框粉底紅字，比一般標籤更顯眼（配色專用，閃爍動畫在 quiz.css） */
 .pill--recall {
-    color: var(--c-recall);                             /* 文字顏色：主題變數 --c-recall */
-    background: var(--c-recall-soft);                   /* 背景：主題變數 --c-recall-soft */
-    border: 2px solid var(--c-recall);                  /* 邊框（粗細、線型、顏色）：2px solid 主題變數 --c-recall */
+    color: var(--c-recall);
+    /* 文字顏色：主題變數 --c-recall */
+    background: var(--c-recall-soft);
+    /* 背景：主題變數 --c-recall-soft */
+    border: 2px solid var(--c-recall);
+    /* 邊框（粗細、線型、顏色）：2px solid 主題變數 --c-recall */
 }
 
 /* ═══ 上方標題列 ═══ */
 .bar {
-    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
-    left: 0;                                            /* 離左邊 0 */
-    right: 0;                                           /* 離右邊 0 */
-    top: 0;                                             /* 離上邊 0 */
-    height: var(--bar-h);                               /* 高度：主題變數 --bar-h */
-    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
-    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
-    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
-    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
-    background: var(--c-card);                          /* 背景：主題變數 --c-card */
-    border-bottom: var(--bd);                           /* 下邊框：主題變數 --bd */
-    z-index: 5;                                         /* 疊放順序：數字越大越在上面（5） */
+    position: absolute;
+    /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;
+    /* 離左邊 0 */
+    right: 0;
+    /* 離右邊 0 */
+    top: 0;
+    /* 離上邊 0 */
+    height: var(--bar-h);
+    /* 高度：主題變數 --bar-h */
+    display: flex;
+    /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;
+    /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-2);
+    /* 子元素之間的空隙：主題變數 --sp-2 */
+    padding: 0 var(--sp-3);
+    /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    background: var(--c-card);
+    /* 背景：主題變數 --c-card */
+    border-bottom: var(--bd);
+    /* 下邊框：主題變數 --bd */
+    z-index: 5;
+    /* 疊放順序：數字越大越在上面（5） */
 }
 
 /* 「bar」裡面的「back」部分的樣式 */
 .bar__back {
-    flex: 0 0 auto;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
-    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
-    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
-    gap: var(--sp-1);                                   /* 子元素之間的空隙：主題變數 --sp-1 */
-    height: 58px;                                       /* 高度：58px */
-    padding: 0 var(--sp-3) 0 var(--sp-2);               /* 內縮（padding，內容跟邊框的距離）：上 0、右 主題變數、下 --sp-3、左 0 */
-    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
-    border: var(--btn-line-bd);                         /* 邊框（粗細、線型、顏色）：主題變數 --btn-line-bd */
-    background: var(--btn-line-bg);                     /* 背景：主題變數 --btn-line-bg */
-    color: var(--btn-line-fg);                          /* 文字顏色：主題變數 --btn-line-fg */
-    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
-    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    flex: 0 0 auto;
+    /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    display: flex;
+    /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;
+    /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-1);
+    /* 子元素之間的空隙：主題變數 --sp-1 */
+    height: 58px;
+    /* 高度：58px */
+    padding: 0 var(--sp-3) 0 var(--sp-2);
+    /* 內縮（padding，內容跟邊框的距離）：上 0、右 主題變數、下 --sp-3、左 0 */
+    border-radius: var(--r-md);
+    /* 圓角：主題變數 --r-md */
+    border: var(--btn-line-bd);
+    /* 邊框（粗細、線型、顏色）：主題變數 --btn-line-bd */
+    background: var(--btn-line-bg);
+    /* 背景：主題變數 --btn-line-bg */
+    color: var(--btn-line-fg);
+    /* 文字顏色：主題變數 --btn-line-fg */
+    font-size: var(--fs-sm);
+    /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);
+    /* 字重（粗細）：主題變數 --fw-bold */
 }
 
 /* white-space:nowrap + overflow:hidden + text-overflow:ellipsis 這三個一定要
    一起出現：標題文字太長、塞不進可用寬度時，不換行、裁掉超出的部分，
    在裁掉的地方顯示「…」，而不是把標題列撐高或讓文字溢出版面。 */
 .bar__title {
-    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
-    min-width: 0;                                       /* 最小寬度：0 */
-    text-align: center;                                 /* 文字置中 */
-    font-size: var(--fs-bar-title);                     /* 字級：主題變數 --fs-bar-title */
-    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
-    white-space: nowrap;                                /* 文字不換行 */
-    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
-    text-overflow: ellipsis;                            /* 文字太長時，用「…」顯示 */
+    flex: 1 1 auto;
+    /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-width: 0;
+    /* 最小寬度：0 */
+    text-align: center;
+    /* 文字置中 */
+    font-size: var(--fs-bar-title);
+    /* 字級：主題變數 --fs-bar-title */
+    font-weight: var(--fw-black);
+    /* 字重（粗細）：主題變數 --fw-black */
+    white-space: nowrap;
+    /* 文字不換行 */
+    overflow: hidden;
+    /* 超出範圍的內容裁掉不顯示 */
+    text-overflow: ellipsis;
+    /* 文字太長時，用「…」顯示 */
 }
 
 /* font-variant-numeric: tabular-nums：數字改用等寬字（0~9 每個數字寬度一樣），
    像「最佳 1000 分」這種會動態更新的數字，不會因為「1」比「8」窄，每次更新
    數字時文字寬度跟著抖動、旁邊文字跟著輕微晃動。 */
 .bar__meta {
-    flex: 0 0 auto;                                     /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
-    min-width: 96px;                                    /* 最小寬度：96px */
-    text-align: right;                                  /* 文字靠右 */
-    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
-    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
-    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
-    font-variant-numeric: tabular-nums;                 /* 數字等寬顯示（數字跳動時版面不抖） */
+    flex: 0 0 auto;
+    /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-width: 96px;
+    /* 最小寬度：96px */
+    text-align: right;
+    /* 文字靠右 */
+    font-size: var(--fs-sm);
+    /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);
+    /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);
+    /* 文字顏色：主題變數 --c-ink-soft */
+    font-variant-numeric: tabular-nums;
+    /* 數字等寬顯示（數字跳動時版面不抖） */
 }
 
 /* 「bar」裡面的「progress」部分的樣式 */
 .bar__progress {
-    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
-    left: 0;                                            /* 離左邊 0 */
-    bottom: calc(-1 * var(--bd-w));                     /* 離下邊 calc(-1 * 主題變數 --bd-w) */
-    height: 6px;                                        /* 高度：6px */
-    width: 0;                                           /* 寬度：0 */
-    background: linear-gradient(90deg, var(--c-yellow), var(--c-green));  /* 漸層背景 */
-    transition: width 0.25s ease;                       /* 狀態改變時的過渡動畫（屬性、時間、緩動）：width 0.25s ease */
+    position: absolute;
+    /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;
+    /* 離左邊 0 */
+    bottom: calc(-1 * var(--bd-w));
+    /* 離下邊 calc(-1 * 主題變數 --bd-w) */
+    height: 6px;
+    /* 高度：6px */
+    width: 0;
+    /* 寬度：0 */
+    background: linear-gradient(90deg, var(--c-yellow), var(--c-green));
+    /* 漸層背景 */
+    transition: width 0.25s ease;
+    /* 狀態改變時的過渡動畫（屬性、時間、緩動）：width 0.25s ease */
 }
 
 /* ═══ 畫面容器（標題列下方的一整塊，不捲動）═══
@@ -965,27 +1618,40 @@ body {
    從標題列下面開始，不會被標題列蓋住。各遊戲/各畫面要自己在這個容器裡面
    排版（JS 把內容塞進去的時候，外層容器的 flex 排版已經先決定好了）。 */
 .screen {
-    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
-    left: 0;                                            /* 離左邊 0 */
-    right: 0;                                           /* 離右邊 0 */
-    top: var(--bar-h);                                  /* 離上邊 主題變數 --bar-h */
-    bottom: 0;                                          /* 離下邊 0 */
-    padding: var(--pad-screen);                         /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --pad-screen */
-    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
-    flex-direction: column;                             /* 子元素由上往下排 */
-    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
-    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    position: absolute;
+    /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;
+    /* 離左邊 0 */
+    right: 0;
+    /* 離右邊 0 */
+    top: var(--bar-h);
+    /* 離上邊 主題變數 --bar-h */
+    bottom: 0;
+    /* 離下邊 0 */
+    padding: var(--pad-screen);
+    /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --pad-screen */
+    display: flex;
+    /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;
+    /* 子元素由上往下排 */
+    gap: var(--sp-3);
+    /* 子元素之間的空隙：主題變數 --sp-3 */
+    overflow: hidden;
+    /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* 「screen」的「full」變化版的樣式 */
 .screen--full {
-    top: 0;                                             /* 離上邊 0 */
+    top: 0;
+    /* 離上邊 0 */
 }
 
 /* 自動縮字的容器：高度由版面決定，字太多就縮字，不捲動 */
 .fit {
-    min-height: 0;                                      /* 最小高度：0 */
-    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    min-height: 0;
+    /* 最小高度：0 */
+    overflow: hidden;
+    /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* ═══ 答案選項 ═══
@@ -995,78 +1661,118 @@ body {
    答對的那一個（或答錯後系統公布的正確答案）變綠色，使用者自己點錯的那個
    變橘紅色，讓玩家一眼就看出「我選了哪個、正確答案是哪個」。 */
 .opt {
-    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
-    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
-    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
-    width: 100%;                                        /* 寬度：100% */
-    height: var(--opt-h);                               /* 高度：主題變數 --opt-h */
-    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
-    background: var(--opt-bg);                          /* 背景：主題變數 --opt-bg */
-    border: var(--opt-bd);                              /* 邊框（粗細、線型、顏色）：主題變數 --opt-bd */
-    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
-    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
-    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
-    font-size: var(--fs-option);                        /* 字級：主題變數 --fs-option */
-    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
-    line-height: var(--lh-tight);                       /* 行高：主題變數 --lh-tight（文字每一行佔的高度） */
-    text-align: left;                                   /* 文字靠左 */
-    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
-    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    display: flex;
+    /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;
+    /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: var(--sp-3);
+    /* 子元素之間的空隙：主題變數 --sp-3 */
+    width: 100%;
+    /* 寬度：100% */
+    height: var(--opt-h);
+    /* 高度：主題變數 --opt-h */
+    padding: 0 var(--sp-3);
+    /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    background: var(--opt-bg);
+    /* 背景：主題變數 --opt-bg */
+    border: var(--opt-bd);
+    /* 邊框（粗細、線型、顏色）：主題變數 --opt-bd */
+    border-radius: var(--r-md);
+    /* 圓角：主題變數 --r-md */
+    color: var(--c-ink);
+    /* 文字顏色：主題變數 --c-ink */
+    font-family: var(--font-ui);
+    /* 字型：主題變數 --font-ui */
+    font-size: var(--fs-option);
+    /* 字級：主題變數 --fs-option */
+    font-weight: var(--fw-bold);
+    /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: var(--lh-tight);
+    /* 行高：主題變數 --lh-tight（文字每一行佔的高度） */
+    text-align: left;
+    /* 文字靠左 */
+    cursor: pointer;
+    /* 滑鼠移上去變成手指（表示可以點） */
+    overflow: hidden;
+    /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* 「opt」這個元素，按下去時的樣式 */
 .opt:active {
-    transform: scale(0.98);                             /* 變形：縮放 0.98 倍 */
+    transform: scale(0.98);
+    /* 變形：縮放 0.98 倍 */
 }
 
 /* 「opt」裡面的「badge」部分的樣式 */
 .opt__badge {
-    flex: 0 0 var(--opt-badge);                         /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 主題變數 --opt-badge（0 0 = 固定大小，1 1 auto = 有空間就長大） */
-    width: var(--opt-badge);                            /* 寬度：主題變數 --opt-badge */
-    height: var(--opt-badge);                           /* 高度：主題變數 --opt-badge */
-    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
-    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
-    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
-    justify-content: center;                            /* 子元素沿排列方向置中 */
-    background: var(--c-yellow-soft);                   /* 背景：主題變數 --c-yellow-soft */
-    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
-    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
-    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    flex: 0 0 var(--opt-badge);
+    /* 彈性縮放：放大比例 0、縮小比例 0、基本大小 主題變數 --opt-badge（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    width: var(--opt-badge);
+    /* 寬度：主題變數 --opt-badge */
+    height: var(--opt-badge);
+    /* 高度：主題變數 --opt-badge */
+    border-radius: 50%;
+    /* 圓形（或膠囊形）的圓角 */
+    display: flex;
+    /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;
+    /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;
+    /* 子元素沿排列方向置中 */
+    background: var(--c-yellow-soft);
+    /* 背景：主題變數 --c-yellow-soft */
+    color: var(--c-ink-soft);
+    /* 文字顏色：主題變數 --c-ink-soft */
+    font-size: var(--fs-sm);
+    /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);
+    /* 字重（粗細）：主題變數 --fw-black */
 }
 
 /* 「opt」裡面的「text」部分的樣式 */
 .opt__text {
-    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
-    min-width: 0;                                       /* 最小寬度：0 */
+    flex: 1 1 auto;
+    /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    min-width: 0;
+    /* 最小寬度：0 */
 }
 
 /* 「is-ok」這個元素（同時有 .opt）的樣式 */
 .opt.is-ok {
-    background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */
-    border-color: var(--c-ok);                          /* 邊框顏色：主題變數 --c-ok */
+    background: var(--c-ok-soft);
+    /* 背景：主題變數 --c-ok-soft */
+    border-color: var(--c-ok);
+    /* 邊框顏色：主題變數 --c-ok */
 }
 
 /* 「opt」裡面的「badge」部分的樣式 */
 .opt.is-ok .opt__badge {
-    background: var(--c-ok);                            /* 背景：主題變數 --c-ok */
-    color: var(--c-on-accent);                          /* 文字顏色：主題變數 --c-on-accent */
+    background: var(--c-ok);
+    /* 背景：主題變數 --c-ok */
+    color: var(--c-on-accent);
+    /* 文字顏色：主題變數 --c-on-accent */
 }
 
 /* 「is-bad」這個元素（同時有 .opt）的樣式 */
 .opt.is-bad {
-    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
-    border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
+    background: var(--c-bad-soft);
+    /* 背景：主題變數 --c-bad-soft */
+    border-color: var(--c-bad);
+    /* 邊框顏色：主題變數 --c-bad */
 }
 
 /* 「opt」裡面的「badge」部分的樣式 */
 .opt.is-bad .opt__badge {
-    background: var(--c-bad);                           /* 背景：主題變數 --c-bad */
-    color: var(--c-on-accent);                          /* 文字顏色：主題變數 --c-on-accent */
+    background: var(--c-bad);
+    /* 背景：主題變數 --c-bad */
+    color: var(--c-on-accent);
+    /* 文字顏色：主題變數 --c-on-accent */
 }
 
 /* 「opt」這個元素的樣式 */
 .opt[disabled] {
-    cursor: default;                                    /* 滑鼠游標樣式：default */
+    cursor: default;
+    /* 滑鼠游標樣式：default */
 }
 
 /* ═══ 紙條 ═══
@@ -1077,40 +1783,62 @@ body {
    .is-burning 是「按下燒掉」那一刻加上的 class：淡出＋模糊＋提高亮度對比度＋
    往上飄走並放大旋轉一點點，做出「燒成灰燼飛走」的動態效果。 */
 .note {
-    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
-    background: var(--c-card);                          /* 背景：主題變數 --c-card */
-    border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
-    border-left: 8px solid var(--c-orange);             /* 左邊框：8px solid 主題變數 --c-orange */
-    border-radius: var(--r-sm) var(--r-lg) var(--r-lg) var(--r-sm);  /* 圓角：主題變數 --r-sm 主題變數 --r-lg 主題變數 --r-lg 主題變數 --r-sm */
-    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
-    padding: var(--sp-4) var(--sp-4) var(--sp-4) var(--sp-5);  /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-4、下 主題變數、左 --sp-4 */
-    font-family: var(--font-note);                      /* 字型：主題變數 --font-note */
-    font-size: var(--fs-note);                          /* 字級：主題變數 --fs-note */
-    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
-    line-height: var(--lh-note);                        /* 行高：主題變數 --lh-note（文字每一行佔的高度） */
-    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
-    transition: opacity 0.7s ease, filter 0.7s ease, transform 0.7s ease;  /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.7s ease, filter 0.7s ease, transform 0.7 */
+    position: relative;
+    /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
+    background: var(--c-card);
+    /* 背景：主題變數 --c-card */
+    border: var(--bd);
+    /* 邊框（粗細、線型、顏色）：主題變數 --bd */
+    border-left: 8px solid var(--c-orange);
+    /* 左邊框：8px solid 主題變數 --c-orange */
+    border-radius: var(--r-sm) var(--r-lg) var(--r-lg) var(--r-sm);
+    /* 圓角：主題變數 --r-sm 主題變數 --r-lg 主題變數 --r-lg 主題變數 --r-sm */
+    box-shadow: var(--shadow-card);
+    /* 方塊陰影（立體感） */
+    padding: var(--sp-4) var(--sp-4) var(--sp-4) var(--sp-5);
+    /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-4、下 主題變數、左 --sp-4 */
+    font-family: var(--font-note);
+    /* 字型：主題變數 --font-note */
+    font-size: var(--fs-note);
+    /* 字級：主題變數 --fs-note */
+    font-weight: var(--fw-bold);
+    /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: var(--lh-note);
+    /* 行高：主題變數 --lh-note（文字每一行佔的高度） */
+    color: var(--c-ink);
+    /* 文字顏色：主題變數 --c-ink */
+    transition: opacity 0.7s ease, filter 0.7s ease, transform 0.7s ease;
+    /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.7s ease, filter 0.7s ease, transform 0.7 */
 }
 
 /* 「p」標籤的樣式 */
 .note p+p {
-    margin-top: var(--sp-2);                            /* 上外距（跟上面的元素距離）：主題變數 --sp-2 */
+    margin-top: var(--sp-2);
+    /* 上外距（跟上面的元素距離）：主題變數 --sp-2 */
 }
 
 /* 「is-burning」這個元素（同時有 .note）的樣式 */
 .note.is-burning {
-    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
-    filter: blur(4px) brightness(1.35) saturate(1.5);   /* 濾鏡效果：blur(4px) brightness(1.35) saturate(1.5) */
-    transform: translateY(-18px) scale(1.04) rotate(1.5deg);  /* 變形：垂直移動 -18px 縮放 1.04 倍 旋轉 1.5deg */
+    opacity: 0;
+    /* 透明度 0（1＝完全不透明、0＝全透明） */
+    filter: blur(4px) brightness(1.35) saturate(1.5);
+    /* 濾鏡效果：blur(4px) brightness(1.35) saturate(1.5) */
+    transform: translateY(-18px) scale(1.04) rotate(1.5deg);
+    /* 變形：垂直移動 -18px 縮放 1.04 倍 旋轉 1.5deg */
 }
 
 /* 「hint」這個元素的樣式 */
 .hint {
-    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
-    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
-    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
-    text-align: center;                                 /* 文字置中 */
-    line-height: var(--lh-body);                        /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
+    font-size: var(--fs-xs);
+    /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);
+    /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);
+    /* 文字顏色：主題變數 --c-ink-soft */
+    text-align: center;
+    /* 文字置中 */
+    line-height: var(--lh-body);
+    /* 行高：主題變數 --lh-body（文字每一行佔的高度） */
 }
 
 /* prefers-reduced-motion：作業系統裡有一個「減少動態效果」的無障礙設定
@@ -1125,6 +1853,7 @@ body {
     .btn,
     .opt,
     .bar__progress {
-        transition: none;                               /* 狀態改變時的過渡動畫（屬性、時間、緩動）：none */
+        transition: none;
+        /* 狀態改變時的過渡動畫（屬性、時間、緩動）：none */
     }
 }

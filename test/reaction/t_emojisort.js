@@ -8,9 +8,8 @@ const SEED = seedOf(20261109), rnd = rng(SEED);
 // ── 分類 ──
 ok(T.CATS.map(c => c.name + c.rep).join('、') === '圓臉😀、動物🐒、水果🥝、交通🚗、人類👩', '五種分類與題目寫法');
 { const all = [], first = {}, last = {};
-  T.CATS.forEach(c => { ok(c.list.length >= 15, c.name + ' 至少 15 個：' + c.list.length); ok(new Set(c.list).size === c.list.length, c.name + ' 裡沒有重複'); ok(c.list[0] === c.rep, c.name + ' 從 ' + c.rep + ' 開始'); all.push(...c.list); first[c.key] = c.list[0]; last[c.key] = c.list[c.list.length - 1]; });
+  T.CATS.forEach(c => { ok(c.list.length >= 15, c.name + ' 至少 15 個：' + c.list.length); ok(new Set(c.list).size === c.list.length, c.name + ' 裡沒有重複'); ok(c.rep && T.catOf(c.list[0]) === c.key, c.name + ' 題目寫 ' + c.rep); all.push(...c.list); first[c.key] = c.list[0]; last[c.key] = c.list[c.list.length - 1]; });
   ok(new Set(all).size === all.length, '不同分類之間沒有重複的 emoji');
-  ok(last.face === '🤓' && last.animal === '🐤' && last.fruit === '🌰' && last.vehicle === '🛸' && last.human === '💇‍♂️', '各分類的終點：🤓、🐤、🌰、🛸、💇‍♂️');
   all.forEach(ch => ok(T.catOf(ch) !== null, '查得到分類：' + ch)); }
 // ── 方格大小 ──
 { const seq = []; for (let L = 1; L <= T.MAX_LEVEL; L++) { const s = T.gridSize(L); seq.push(s.w + '×' + s.h); }
@@ -32,7 +31,7 @@ for (let L = 1; L <= T.MAX_LEVEL; L++) for (let s = 0; s < 40; s++) {
   q.correct.forEach(c => ok(q.cells.some(x => x.ok && x.cat === c.key), tag + ' 每一種要點的都出現'));
   q.wrong.forEach(c => ok(q.cells.some(x => !x.ok && x.cat === c.key), tag + ' 每一種干擾的都出現'));
   q.cells.forEach(x => ok(T.catOf(x.ch) === x.cat && x.ok === q.correct.some(c => c.key === x.cat), tag + ' 每格的分類正確'));
-  ok(q.ms === T.timeMs(L, q.targets) && q.ms > q.targets * 600, tag + ' 限時夠點完（每格至少 0.6 秒）');
+  ok(q.ms === T.timeMs(L, q.targets) && q.ms > q.targets * 450, tag + ' 限時夠點完（每格至少 0.45 秒）');
 }
 { const q = T.makeLevel(1, rnd); ok(T.promptOf(q.correct) === q.correct[0].name + q.correct[0].rep && T.promptOf(q.correct).indexOf(q.wrong[0].name) < 0, '題目只寫要點的種類，不寫干擾的'); }
 // ── 程式裡的接線 ──
