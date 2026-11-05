@@ -1,0 +1,22 @@
+/* ═══════════════════════════════════════
+   reaction_bubblespray.css — 泡泡掃射（js/reaction_bubblespray.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「bubblespray-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 泡泡、子彈、砲塔、破掉的特效都畫在 canvas 上（顏色寫在 js 的 COLORS）；這裡只有畫布本身。
+   ═══════════════════════════════════════ */
+
+/* 遊戲區 */
+.bubblespray-stage {
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理按住與拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免按住時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（Safari） */
+    -webkit-touch-callout: none;                        /* 長按不跳出系統選單（iPhone） */
+}
+
+/* 畫布：鋪滿遊戲區 */
+.bubblespray-canvas {
+    position: absolute;                                 /* 脫離一般排版，貼著遊戲區擺放 */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    display: block;                                     /* 區塊元素（下面不會多出一條空隙） */
+    cursor: crosshair;                                  /* 滑鼠游標變成十字準星 */
+}

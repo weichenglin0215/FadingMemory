@@ -186,5 +186,7 @@ window.FM_SCORE_SPECS = {
     "babyscale": {"better":"max","decimals":0,"format":"{v} 關"},
     "skyshot": {"better":"max","decimals":0,"format":"{v} 分"},
     "forestpeek": {"better":"max","decimals":0,"format":"{v} 隻"},
-    "rocketland": {"better":"max","decimals":0,"format":"{v} 關"}
+    "rocketland": {"better":"max","decimals":0,"format":"{v} 關"},
+    "bubblespray": {"better":"max","decimals":0,"format":"{v} 顆"},
+    "emojisort": {"better":"max","decimals":0,"format":"{v} 關"}
 };
