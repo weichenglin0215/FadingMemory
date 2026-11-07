@@ -6,6 +6,8 @@
      **翻牌的次數有上限**（畫面上有「剩 N 次」）。每翻錯一次，兩張牌的數字會露出 SHOW_MS（預設 1.5 秒）再蓋回——
      這是給你看的時間，不是作答的時限；沒有計時，想多久都可以，但要記住它們在哪裡。
    · 頓悟：記位置＋心算互補數（1-9、2-8、3-7、4-6、5-5）。翻到 1 之後，要去找 9 在哪；翻過的牌要記得。
+   · V1.47（玩家意見）：發牌後**盡量不要讓「加起來是 10 的兩張牌」左右相鄰或上下相鄰**（相鄰的話，翻到一張順手翻旁邊那張就中了，太容易）。
+     但也不要完全避免：每發現一組這樣的相鄰，就擲一次骰子，有 KEEP_ADJ_P（30%）的機會「保留」它們相鄰，其餘 70% 才把其中一張跟別處的牌對調（見 spread）。
    · 關卡：8 張（第 1～5 關）→ 16 張（第 6～15 關）→ 24 張（第 16 關起；每列 COLS 張，目前每列 6 張＝4 列 × 6 欄）。
    · 翻牌上限 ＝ 「完美記憶策略」在這個牌面要翻的次數 ＋ 寬限（第 1 → 30 關：SLACK 目前是 2 → 12，越後面寬限越多；原本是 12 → 4）。
      完美記憶策略（perfectFlips）：永遠記得每張翻過的牌；只要記得的牌裡有一組湊成十，就翻它們；
@@ -30,6 +32,7 @@
     var COLS = 6;                               /* 每一列幾張 */
     var SLACK = [2, 12];                        /* 寬限：比完美記憶策略多出幾次：第 1 關 → 第 RAMP_LEVELS 關 */
     var RAMP_LEVELS = 30;                           /* 難度升到頂的關卡：第 1 關線性變難，到第 30 關最難，之後維持不變 */
+    var KEEP_ADJ_P = 0.3;                       /* V1.47：每發現一組「加起來是 10、又左右或上下相鄰」的牌，保留它們相鄰的機會（0＝完全避開、1＝不處理，跟以前一樣全憑運氣） */
     var SHOW_MS = 1500;                         /* 翻錯時，兩張牌露出多久才蓋回（毫秒；不是作答時限） */
     var MATCH_MS = 650;                         /* 翻對時，兩張牌停多久才消掉 */
     var PASS_DELAY_MS = 1300;                       /* 答對（過關）後停多久才換下一關（毫秒，1300 毫秒＝1.3 秒） */
@@ -45,12 +48,60 @@
     /* 這一關的「寬限」：比「完美記憶」的翻牌次數多給幾次（從 SLACK 第一個數字線性變到第二個） */
     function slackFor(level) { return Math.round(kit.ramp(level, SLACK[0], SLACK[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 發牌：n 張，一半是「一組一組湊成十」的牌（每組隨機是 1-9、2-8、3-7、4-6、5-5 其中一種），洗牌 */
-    /* 發牌：n 張牌，一半的位置是「一組一組湊成十」的兩張（隨機是 1-9、2-8、3-7、4-6、5-5），全部洗牌 */
-    function deal(n, rand) {
+    /* 發牌：n 張牌，一半的位置是「一組一組湊成十」的兩張（隨機是 1-9、2-8、3-7、4-6、5-5），全部洗牌，
+       再用 spread 把「湊成十又相鄰」的牌拆開一些（V1.47）。cols＝每列幾張（沒給就用 COLS），算相鄰要用。 */
+    function deal(n, rand, cols) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var deck = [];
         for (var i = 0; i < n / 2; i++) { var a = kit.randInt(1, 5, rand); deck.push(a, 10 - a); }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
-        return kit.shuffle(deck, rand);                 /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+        return spread(kit.shuffle(deck, rand), cols || COLS, rand);   /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+    }
+    /* 第 i 張牌的鄰居：同一列左右各一張、同一欄上下各一張（牌是由左到右、由上到下排成每列 cols 張；最後一列可能不滿，超出張數的不算） */
+    function neighborsOf(i, n, cols) {
+        var out = [], c = i % cols;
+        if (c > 0) out.push(i - 1);
+        if (c < cols - 1 && i + 1 < n) out.push(i + 1);
+        if (i - cols >= 0) out.push(i - cols);
+        if (i + cols < n) out.push(i + cols);
+        return out;
+    }
+    /* 所有「加起來是 10、又左右或上下相鄰」的兩張牌：[[位置小的, 位置大的], …]（測試與 spread 都用它） */
+    function adjacentPairs(deck, cols) {
+        var out = [];
+        for (var i = 0; i < deck.length; i++) neighborsOf(i, deck.length, cols).forEach(function (j) { if (j > i && deck[i] + deck[j] === 10) out.push([i, j]); });  /* forEach：對陣列的每個元素各做一次 */
+        return out;
+    }
+    /* 把「湊成十又相鄰」的牌拆開一些（V1.47）：
+         ① 找出第一組還沒處理過的相鄰湊十（i, j）；
+         ② 擲骰子：有 KEEP_ADJ_P（30%）的機會「保留」——這兩個位置標成「凍結」（之後不會再被對調走），照原樣相鄰；
+         ③ 否則（70%）試著拆開：把 i 或 j（沒被凍結的那一張）跟別處某一張牌對調，而且對調之後這兩個位置都不能再有「湊成十的鄰居」；
+            每個候選位置都試過還是不行（牌很少、或到處是凍結的牌）就放著不管（所以不保證 100% 沒有相鄰，只是盡量）。
+         每成功拆開一組，全盤「湊成十又相鄰」的組數就一定減少（對調後那兩個位置都沒有湊成十的鄰居），所以迴圈一定會結束。
+       deck 不會被改（回傳新陣列）；rand 可以傳固定的亂數，測試才能重現。 */
+    function spread(deck, cols, rand) {
+        rand = rand || Math.random;
+        var d = deck.slice(), n = d.length, kept = {}, frozen = {}, guard = 0;   /* slice()：複製一份陣列（之後改複本，不會動到原本的資料）；kept：已經決定保留的組（key＝「小位置,大位置」）；frozen：被保留的組佔住的位置（不能動） */
+        function mates(k) {                             /* 第 k 張牌旁邊有幾張「跟它加起來是 10」的牌 */
+            var c = 0; neighborsOf(k, n, cols).forEach(function (j) { if (d[k] + d[j] === 10) c++; });
+            return c;
+        }
+        while (guard++ < 500) {
+            var todo = adjacentPairs(d, cols).filter(function (p) { return !kept[p[0] + ',' + p[1]]; });  /* filter：留下符合條件的元素；還沒決定過要不要保留的組 */
+            if (!todo.length) break;
+            var p = todo[0], i = p[0], j = p[1];
+            if (rand() < KEEP_ADJ_P) { kept[i + ',' + j] = true; frozen[i] = frozen[j] = true; continue; }   /* 這一組保留相鄰（30%） */
+            var done = false;
+            [i, j].forEach(function (a) {               /* 先試著搬 i，不行再試著搬 j */
+                if (done || frozen[a]) return;
+                kit.shuffle(d.map(function (_, q) { return q; }), rand).forEach(function (q) {   /* 隨機順序逐一試每個位置 q（map：把陣列的每個元素轉成別的東西，這裡先轉成位置編號 0～n−1） */
+                    if (done || q === i || q === j || frozen[q]) return;
+                    var t = d[a]; d[a] = d[q]; d[q] = t;               /* 對調 a 與 q */
+                    if (mates(a) === 0 && mates(q) === 0) done = true; else { t = d[a]; d[a] = d[q]; d[q] = t; }   /* 對調後兩處都沒有湊成十的鄰居就收下；不然換回來 */
+                });
+            });
+            if (!done) { kept[i + ',' + j] = true; frozen[i] = frozen[j] = true; }   /* 拆不開：只好留著（當作保留） */
+        }
+        return d;
     }
     /* 完美記憶策略要翻幾次（一次＝翻兩張）。deck[i]＝第 i 格的數字 */
     /* 算「完美記憶策略」要翻幾次（一次＝翻兩張）：模擬一個「永遠記得每張翻過的牌」的玩家——
@@ -206,7 +257,7 @@
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
-            STAGES: STAGES, COLS: COLS, SLACK: SLACK, RAMP_LEVELS: RAMP_LEVELS, SHOW_MS: SHOW_MS, cardsFor: cardsFor, slackFor: slackFor, deal: deal,
+            STAGES: STAGES, COLS: COLS, SLACK: SLACK, RAMP_LEVELS: RAMP_LEVELS, SHOW_MS: SHOW_MS, cardsFor: cardsFor, slackFor: slackFor, deal: deal, spread: spread, adjacentPairs: adjacentPairs, neighborsOf: neighborsOf, KEEP_ADJ_P: KEEP_ADJ_P,
             perfectFlips: perfectFlips, limitFor: limitFor, makePuzzle: makePuzzle, rating: rating, MAX_LEVEL: MAX_LEVEL
         }
     };

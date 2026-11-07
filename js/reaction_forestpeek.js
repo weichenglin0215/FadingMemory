@@ -13,6 +13,9 @@
      露臉的時間 SHOW_S 2.0 → 0.8 秒、跑的速度 SPEED 60 → 180 px／秒。
    · 跟著「時間」走（60 秒內線性）：小動物的大小 SIZE_PX 60 → 20 px（越後面越小、越難點）。
      前 HINT_S（10）秒是新手期：小動物出現時，牠身邊的灌木會用力晃動，刻意提醒你牠在哪裡。
+   · 小動物的圖（V1.47，玩家意見）：iPhone 上動物的大小只剩約一半，幾乎看不到從縫隙冒出來的動物。原因是動物原本用「字型 emoji」畫在 canvas 上，
+     每個平台的 emoji 字型大小與畫法不同（iPhone 的 emoji 還比較寫實）。現在改成貼 PNG 圖片：事先在電腦的瀏覽器把動物畫下來（背景透明），
+     存在 img/emoji/emoji.png，用 js/emoji_png.js 的 EP.draw 貼上去，再蓋淡綠色——每個平台的大小、樣子都一樣。圖集載好才開始遊戲；載入失敗就退回文字 emoji。
    · 點擊判定：點在小動物中心 HIT_K × 大小 ＋ HIT_PAD 的範圍內就算點到（被灌木擋住的部分也算），露出不到 30% 的時候不算。點到空白處沒有懲罰。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
@@ -130,16 +133,23 @@
 
     /* mount：選單按下這款遊戲時會呼叫它。把流程（結算、最佳紀錄）交給共用骨架 kit.run；只有一局，成績用 scoreOf（S.score＝點到幾隻）。 */
     function mount(root, ctx) {
-        kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 15, stageClass: 'forestpeek-stage', resume: false,
-            head: function () { return '草叢找動物'; },
-            info: function (S) { return '找到 ' + S.score + ' 隻'; },
-            scoreOf: function (S) { return S.score; },
-            numText: function (v) { return v + ' 隻'; },
-            rating: rating,
-            lines: function (S) { return ['60 秒內一共找到 ' + S.score + ' 隻小動物']; },
-            setup: setup
-        });
+        function go() {
+            kit.run(root, ctx, {
+                id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 15, stageClass: 'forestpeek-stage', resume: false,
+                head: function () { return '草叢找動物'; },
+                info: function (S) { return '找到 ' + S.score + ' 隻'; },
+                scoreOf: function (S) { return S.score; },
+                numText: function (v) { return v + ' 隻'; },
+                rating: rating,
+                lines: function (S) { return ['60 秒內一共找到 ' + S.score + ' 隻小動物']; },
+                setup: setup
+            });
+        }
+        var EP = Reaction.emojiPng;
+        if (!EP) { go(); return; }
+        /* 動物的圖集（約 2 MB）載好才開始，不然限時已經在跑、動物卻出不來。載入失敗也照樣開始（退回文字 emoji） */
+        root.appendChild(h('div', { 'class': 'rx-tip', text: '載入圖片…' }));
+        EP.load(function () { if (root.isConnected) { root.innerHTML = ''; go(); } });   /* isConnected：這個畫面還在不在（玩家等不及先離開了，就不用開始） */
     }
 
     /* setup(api)：遊戲開始時呼叫一次，把畫面建出來、開始動畫迴圈並處理點擊。 */
@@ -218,11 +228,13 @@
             }
             return s;
         }
-        /* 小動物的圖：emoji 原本的顏色，再蓋一層淡淡的綠色（只蓋在 emoji 有顏色的地方：source-atop） */
+        /* 小動物的圖：emoji 的 PNG 貼圖（V1.47，見 js/emoji_png.js；平台字型不同、iPhone 上會變小的問題就不會發生），再蓋一層淡淡的綠色（只蓋在 emoji 有顏色的地方：source-atop） */
         function makeAnimal(ch, size) {
-            var d = Math.ceil(size * 1.35), s = sprite(d, d), b = s.g;
-            b.font = Math.round(size) + 'px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif'; b.textAlign = 'center'; b.textBaseline = 'middle';
-            b.fillText(ch, d / 2, d / 2);
+            var d = Math.ceil(size * 1.35), s = sprite(d, d), b = s.g, EP = Reaction.emojiPng;
+            if (!(EP && EP.draw(b, ch, d / 2, d / 2, size))) {   /* 貼 PNG 圖片（V1.47）：大小跟「字級 size px 的文字 emoji」一樣；圖集沒載好或沒有這隻動物才退回文字 emoji */
+                b.font = Math.round(size) + 'px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif'; b.textAlign = 'center'; b.textBaseline = 'middle';
+                b.fillText(ch, d / 2, d / 2);
+            }
             b.globalCompositeOperation = 'source-atop'; b.fillStyle = TINT; b.fillRect(0, 0, d, d);   /* globalCompositeOperation：source-atop＝只畫在已經有顏色的地方 */
             return s;
         }

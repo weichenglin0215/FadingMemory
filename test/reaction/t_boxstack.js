@@ -36,7 +36,7 @@ for (const mode of ['seq', 'gap', 'dup', 'mix']) for (let k = 0; k < 40; k++) {
   if (T.isWeak(mode)) ok(gs.length < N && gs.length >= 2 && gs.every(g => g.m <= 4) && gs.some(g => g.m >= 2), mode + '：有重複的重量、有的重量沒出現（' + vals.join(',') + '）');
 }
 // 出題
-const hist = {}; let nDiff = 0, nDiffOk = 0;
+const hist = {}; let nDiff = 0, nDiffOk = 0, diffSum = 0;
 for (let lv = 1; lv <= 40; lv++) for (let k = 0; k < (lv >= 25 ? 6 : 12); k++) {
   const p = T.makePuzzle(lv, rnd), st = T.stageOf(lv).st, N = p.r * p.c;
   ok(p.r === st.r && p.c === st.c, '第 ' + lv + ' 關：' + st.r + '×' + st.c);
@@ -48,13 +48,27 @@ for (let lv = 1; lv <= 40; lv++) for (let k = 0; k < (lv >= 25 ? 6 : 12); k++) {
   ok(T.countFillV(p.r, p.c, p.given, p.vals, 2) === 1, '第 ' + lv + ' 關：答案唯一');
   ok(!T.naiveWorks(p.r, p.c, p.given, p.sol, p.vals), '第 ' + lv + ' 關：照大小一排一排、一直行一直行、照斜線填都不對');
   ok(p.given[0] === p.vals[0] && p.given[N - 1] === p.vals[N - 1], '第 ' + lv + ' 關：最左上（最輕）、最右下（最重）預先放好（V1.43.1）');
-  const want = Reaction.kit.ramp(lv, T.DIFF_FRAC[0], T.DIFF_FRAC[1], 30); nDiff++; if (p.diff >= want - 1e-9) nDiffOk++;
+  const want = Reaction.kit.ramp(lv, T.DIFF_FRAC[0], T.DIFF_FRAC[1], 30); nDiff++; diffSum += p.diff; if (p.diff >= want - 1e-9) nDiffOk++;
   if (T.isWeak(p.mode)) { ok(p.vals.some((v, i) => i && v === p.vals[i - 1]), '第 ' + lv + ' 關：有一樣重的箱子'); }
 }
 Object.keys(hist).forEach(k => { const a = hist[k]; console.log('  ' + k + ' 固定箱數 平均 ' + (a.reduce((x, y) => x + y, 0) / a.length).toFixed(1) + '（' + Math.min(...a) + '～' + Math.max(...a) + '）'); });
-ok(nDiffOk / nDiff > 0.95, '空格裡跟三種直覺填法都不一樣的比例，絕大多數題目達到該關的要求（' + nDiffOk + '/' + nDiff + '）');
-ok(T.stageOf(1).st.mode === 'seq' && T.stageOf(9).st.mode === 'gap' && T.stageOf(17).st.mode === 'dup' && T.stageOf(25).st.mode === 'mix', '階段的重量種類：seq → gap → dup → mix');
-ok(T.stageOf(1).st.r === 3 && T.stageOf(9).st.c === 4 && T.stageOf(17).st.r === 4 && T.stageOf(25).st.c === 5, '階段');
+// 玩家自己調過 DIFF_FRAC（目前 0.6 → 0.9，太高會找不到題目，找不到就用最接近的那一題）：測試跟著參數走——
+// 只要求「平均」的比例夠高（至少 DIFF_FRAC[0] 的 2/3），不要求每一題都達到該關的要求
+console.log('  達到該關比例要求的題目 ' + nDiffOk + '/' + nDiff + '，平均比例 ' + (diffSum / nDiff).toFixed(2));
+ok(diffSum / nDiff >= T.DIFF_FRAC[0] * 2 / 3, '空格裡跟三種直覺填法都不一樣的比例，平均夠高（' + (diffSum / nDiff).toFixed(2) + '）');
+// 階段（玩家自己調過 STAGES）：用 T.STAGES 驗證——每個階段的最後一關、架子大小、重量種類順序 seq → gap → dup → mix
+{
+  let from = 1; const seen = [];
+  T.STAGES.forEach((s, i) => {
+    const last = i === T.STAGES.length - 1, lv = last ? from + 3 : s.to;
+    ok(T.stageOf(from).st === s && T.stageOf(lv).st === s, '階段 ' + (i + 1) + '：第 ' + from + '～' + (last ? '…' : s.to) + ' 關 ' + s.r + '×' + s.c + '（' + s.mode + '）');
+    if (seen[seen.length - 1] !== s.mode) seen.push(s.mode);
+    from = s.to + 1;
+  });
+  const order = ['seq', 'gap', 'dup', 'mix'];
+  ok(seen.join() === order.filter(m => seen.indexOf(m) >= 0).join() && seen.length === 4, '階段的重量種類由簡單到難：' + seen.join(' → '));
+  ok(T.STAGES.every((s, i) => i === 0 || (s.r * s.c >= T.STAGES[i - 1].r * T.STAGES[i - 1].c)), '架子只會越來越大');
+}
 // V1.43.1：空格數（EMPTY：第 1 關 → 第 30 關）
 {
   ok(T.EMPTY.length === 2 && T.emptyFor(1) === T.EMPTY[0] && T.emptyFor(30) === T.EMPTY[1] && T.emptyFor(90) === T.EMPTY[1], '空格數 第 1 關 ' + T.EMPTY[0] + '、第 30 關 ' + T.EMPTY[1] + '、之後維持');
@@ -67,10 +81,45 @@ ok(T.stageOf(1).st.r === 3 && T.stageOf(9).st.c === 4 && T.stageOf(17).st.r === 
 }
 // V1.43.1：限時答題（原本不限時）：空格越多時間越長，後面每格的秒數變少
 {
-  ok(T.TIME_BASE > 0 && T.TIME_CELL[0] > T.TIME_CELL[1], '限時參數');
+  // 玩家自己調過 TIME_CELL（目前 4 → 6，後面每格的秒數反而變多）：測試跟著參數走，不假設是變多還是變少
+  ok(T.TIME_BASE > 0 && T.TIME_CELL[0] > 0 && T.TIME_CELL[1] > 0, '限時參數');
   for (const l of [1, 15, 30]) ok(T.timeFor(l, 12) > T.timeFor(l, 5), '第 ' + l + ' 關：空格越多時間越長');
-  ok(T.timeFor(30, 10) < T.timeFor(1, 10), '同樣空格數，後面的關卡給的時間較少');
-  for (const l of [1, 5, 10, 20, 30]) { const p = T.makePuzzle(l), e = p.given.filter(v => !v).length, t = T.timeFor(l, e); ok(e >= 1 && t / e >= 5, '第 ' + l + ' 關每個空格至少 5 秒：' + e + ' 格 ' + t.toFixed(0) + ' 秒'); }
+  ok((T.timeFor(30, 10) - T.timeFor(1, 10)) * (T.TIME_CELL[1] - T.TIME_CELL[0]) >= 0, '每格秒數隨關卡的走向，跟 TIME_CELL 一致');
+  const minCell = Math.min(T.TIME_CELL[0], T.TIME_CELL[1]);
+  for (const l of [1, 5, 10, 20, 30]) { const p = T.makePuzzle(l), e = p.given.filter(v => !v).length, t = T.timeFor(l, e); ok(e >= 1 && t / e >= minCell, '第 ' + l + ' 關每個空格至少 ' + minCell + ' 秒：' + e + ' 格 ' + t.toFixed(0) + ' 秒'); }
+}
+// V1.47（玩家意見）：下面的重量清單最多兩橫行、依箱數縮放；數字依字數縮小字級；架子大小也看高度；前幾關才有「提示」；可以從最佳關卡進場
+{
+  const W = 472, trayW = Math.floor(W * 0.96);
+  for (let n = 1; n <= 40; n++) {
+    const c = T.chipLayout(n, trayW);
+    ok(c.rows >= 1 && c.rows <= T.TRAY_ROWS, n + ' 顆重量：最多 ' + T.TRAY_ROWS + ' 行（' + c.rows + '）');
+    ok(c.size >= T.CHIP_MIN && c.size <= T.CHIP_MAX && c.width <= trayW, n + ' 顆：每顆 ' + c.size + 'px、清單寬 ' + c.width + ' 放得進 ' + trayW);
+    ok(c.perRow * c.rows >= n && c.perRow * (c.rows - 1) < n, n + ' 顆：每行 ' + c.perRow + '、' + c.rows + ' 行剛好放得下');
+    if (n >= 2) { const s = T.chipLayout(n - 1, trayW).size; ok(s >= c.size, '箱子越多每顆越小或一樣大（' + (n - 1) + ' → ' + n + '：' + s + ' → ' + c.size + '）'); }
+  }
+  ok(T.chipLayout(4, trayW).size === T.CHIP_MAX && T.chipLayout(4, trayW).rows === 1, '箱子少：一行、最大邊長');
+  // 實際用「出題器」出的題目：每一關的重量清單都是兩行以內
+  for (const l of [1, 6, 12, 20, 30, 60]) { const p = T.makePuzzle(l, rnd), e = p.given.filter(v => !v).length, c = T.chipLayout(e, trayW); ok(c.rows <= 2, '第 ' + l + ' 關（' + e + ' 個空格）清單 ' + c.rows + ' 行、每顆 ' + c.size + 'px'); }
+  // 數字不超出方格：字數越多字級越小；「長度 × 0.62 倍字級」一定不超過方格內寬
+  for (const box of [26, 40, 52, 66, 80]) for (let len = 1; len <= 5; len++) {
+    const f = T.fitFs(len, box, 40); ok(f <= 40 && f >= 10, '字級範圍');
+    if (f > 10) ok(len * 0.62 * f <= box - 6, len + ' 個字、方格 ' + box + 'px：字級 ' + f + ' 放得下（寬約 ' + (len * 0.62 * f).toFixed(0) + '）');
+    if (len > 1) ok(f <= T.fitFs(len - 1, box, 40), '字數越多字級越小或一樣');
+  }
+  ok(T.fitFs(1, 80, T.CELL_FS) === T.CELL_FS, '一位數、方格夠大：用最大字級');
+  // 架上每格：寬度、高度都放得下（5×6 在 H＝667 時不會把清單與按鈕擠出畫面）
+  for (const [r, c, e] of [[3, 3, 4], [3, 4, 7], [4, 4, 10], [4, 5, 14], [5, 5, 18], [5, 6, 20]]) {
+    const ch = T.chipLayout(e, trayW), trayH = ch.rows * ch.size + (ch.rows - 1) * 6, cell = T.cellFor(W, 667, r, c, trayH);
+    const total = 6 + 26 + 4 + 20 + 6 * (r - 1) + r * cell + 36 + 30 + trayH + 60;
+    ok(cell >= 30 && cell <= T.CELL_MAX && total <= 667 + 1, r + '×' + c + '、' + e + ' 個空格：每格 ' + cell + 'px、全部高度 ' + total + ' ≤ 667');
+    ok(c * cell + (c - 1) * 6 <= W * 0.86, r + '×' + c + '：架子寬度放得進畫面');
+  }
+}
+{
+  const fs = require('fs'), path = require('path'), src = fs.readFileSync(path.join(__dirname, '../../js/reaction_boxstack.js'), 'utf8');
+  ok(/HINTS > 0 && kit\.hintsAllowed\(level\)\) tools\.appendChild\(btnHint\)/.test(src), '提示按鈕只在前 kit.HINT_LEVELS 關放（kit.hintsAllowed）');
+  ok(!/resume:\s*false/.test(src), '沒有 resume:false——重玩時會從「最佳關卡 − 4」進場（kit.run 統一處理）');
 }
 console.log(bad ? 'FAILED ' + bad : 'ALL PASS');
 process.exitCode = bad ? 1 : 0;

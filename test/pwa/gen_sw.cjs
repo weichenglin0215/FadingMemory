@@ -5,7 +5,7 @@
 // 清單怎麼來的：
 //   · 四個頁面（menu／reaction／quiz／world）各自需要的 CSS／JS：直接「執行」js/boot.js、把它想載入的檔案記下來
 //     （所以 boot.js 的 PAGES 清單一改，這裡自動跟著變，不會有兩份清單對不上）；
-//   · 四個 HTML 頁、manifest、version.json、boot.js 本身、vendor/ 的程式庫、App 圖示、不可能任務的圖、全部遊戲縮圖（img/reaction/*.png）。
+//   · 四個 HTML 頁、manifest、version.json、boot.js 本身、vendor/ 的程式庫、App 圖示、不可能任務的圖、全部遊戲縮圖（img/reaction/*.png）、emoji 圖集（img/emoji/*.png，V1.47：分類點擊、草叢找動物貼圖用）。
 //   不放：admin/、test/、note/、supabase/、screen_adaptive.*、README（開發用）；icons/og.png（只有貼連結預覽用，玩遊戲用不到）。
 const fs = require('fs');
 const path = require('path');
@@ -60,6 +60,7 @@ async function build() {
   ]);
   for (const p of PAGES) (await bootFiles(p)).forEach(f => set.add(f));
   listDir('img/reaction', /\.png$/i).forEach(f => set.add(f));
+  listDir('img/emoji', /\.png$/i).forEach(f => set.add(f));          // emoji 圖集（V1.47）：沒有它，離線時這兩款遊戲的圖就出不來
   return Array.from(set).sort();
 }
 

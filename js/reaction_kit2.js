@@ -259,7 +259,9 @@
        o.head(level, S)：標題列左邊的文字（預設「第 N 關」）
        o.info(S)：標題列右邊的文字（預設：多條命時顯示命）
        o.lines(S)：結算頁的說明行
-       o.resume：false 表示不提供從前 5 關繼續（也不會在下次進場時從「個人最佳關卡 − 5」開始）
+       o.resume：false 表示不提供從前 5 關繼續（也不會在下次進場時從「個人最佳關卡 − 4」開始）。
+         ⚠ 只有「成績是累計分數／單局」（本來就沒有 scoreOf 以外的關卡數可記）或「後面的關卡要靠前面關卡的內容」（這個看過嗎、重心疊疊樂）才該設 false；
+         一般的闖關遊戲（包含不限時的自由解題）都不要設，不然玩到高關卡後重玩永遠從第 1 關開始（V1.47 稽核：test/reaction/t_entrylevel.js）
        o.leaveSettle：true 表示這是「沒有失敗、玩到不想玩為止」的自由解題遊戲（數獨系列、黑白不連三…）——玩家按左上角「返回」時，
          不是直接離開，而是先把這一局結算（顯示結算卡片、記最佳、送世界排行榜）；結算卡片出來之後再按「返回」才真的離開。
          一題都還沒解開就按返回，直接離開（見 Reaction.onLeave，js/reaction.js 的返回鈕會先問它）
@@ -292,6 +294,7 @@
 
     kit.run = function (root, ctx, o) {
         var R = null, S = null, api = null, tok = 0;
+        var startAt = 1;                                /* 這一局從第幾關開始（V1.47.0：從「最佳關卡 − 4」進場時會大於 1；「返回」要用它判斷『這一局到底有沒有解開任何一題』） */
         var elLv, elInfo, bar, stage;
         var G = o.G;
         function numText(v) { return o.numText(v); }
@@ -316,6 +319,7 @@
             var my = R;
             root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             from = from || 1;
+            startAt = from;
             S = { level: from, cleared: from - 1, lives: o.lives || 1, score: 0, over: false, finished: false, log: [] };
             elLv = h('div', { 'class': 'rx-head__lv' });
             elInfo = h('div', { 'class': 'rx-head__info' });
@@ -451,7 +455,7 @@
         kit.entryNotice(o.id, from0);
         /* 自由解題遊戲：「返回」＝結束這一局（先結算，見檔頭說明）。回傳 true＝已經處理（顯示結算卡片），返回鈕不要離開 */
         Reaction.onLeave = o.leaveSettle ? function () {
-            if (!S || S.finished || S.cleared < 1) return false;
+            if (!S || S.finished || S.cleared < startAt) return false;   /* cleared 一開始就是 startAt − 1（跳過的關卡也算過了），所以「< startAt」＝這一局一題都還沒解開，直接離開 */
             if (api) api.over = true;
             finish({}, false);
             return true;

@@ -188,7 +188,7 @@
     /* 遊戲進場：交給共用骨架 kit.run 處理闖關流程。leaveSettle: true 代表「沒有失敗」的自由解題——按返回會先結算（顯示成績）再離開 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, resume: false, leaveSettle: true,
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, leaveSettle: true,
             head: function (level) { return '第 ' + level + ' 關'; },
             info: function (S) { return '已解 ' + S.cleared + ' 關'; },
             numText: function (v) { return v + ' 關'; },
@@ -233,7 +233,7 @@
         var btnReset = h('button', { 'class': 'btn btn--line takuzu-tool', type: 'button', text: '重來' });  /* 「重來」按鈕 */
         kit.onTap(btnHint, useHint);
         kit.onTap(btnReset, reset);
-        if (HINTS > 0) acts.appendChild(btnHint);       /* 提示次數 HINTS 設成 0，就連提示按鈕都不放 */
+        if (HINTS > 0 && kit.hintsAllowed(level)) acts.appendChild(btnHint);  /* 提示次數 HINTS 設成 0，或已經過了前 kit.HINT_LEVELS（4）關，就連提示按鈕都不放（V1.47.0；見 reaction_kit.js 的 kit.hintsAllowed） */
         acts.appendChild(btnReset);
         wrap.appendChild(board); wrap.appendChild(tip); wrap.appendChild(palette); wrap.appendChild(acts);
         stage.appendChild(wrap);                        /* 把整個遊戲區放進舞台（放進去，畫面上才看得到） */

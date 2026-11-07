@@ -359,6 +359,14 @@
     kit.RESUME_BACK = 5;
     kit.resumeFrom = function (failLevel) { return Math.max(1, failLevel - kit.RESUME_BACK); };
 
+    /* ═══ 「提示」按鈕只出現在前幾關（V1.47.0，使用者要求）═══
+       有「提示」功能的遊戲（疊箱子、形色不相鄰、魔方陣、數獨系列…）只在前 HINT_LEVELS 關畫出「提示」按鈕，
+       第 HINT_LEVELS + 1 關起連按鈕都不放（玩家要自己推理）。想改成別的關數，只要改這個數字（全部遊戲一起變）。
+       用法：遊戲建按鈕的地方寫  if (HINTS > 0 && kit.hintsAllowed(level)) tools.appendChild(btnHint);
+       （從「最佳關卡 − 4」進場時也一樣照關卡判斷：進場關卡 > HINT_LEVELS 就沒有提示按鈕。） */
+    kit.HINT_LEVELS = 4;
+    kit.hintsAllowed = function (level) { return level <= kit.HINT_LEVELS; };
+
     /* ═══ 記住每一款闖關遊戲「個人最佳到過第幾關」，下次進來直接從「最佳關卡 − 5」開始（V1.34.0）═══
        為什麼：資深玩家每次都從第 1 關慢慢打上來很浪費時間。
        例：最佳到過第 30 關，下次進這款遊戲就從第 26 關開始——第 26、27、28、29、30 這 5 關再熱身一遍（使用者指定的例子）。

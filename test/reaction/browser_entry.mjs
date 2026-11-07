@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { connect, openGame, sleep } from './cdp.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../');
-const PORT = 8743;
+const PORT = Number(process.env.FM_PORT) || 8743;   // 8743 若被 Windows 保留（WinError 10013），用環境變數 FM_PORT 換一個埠（例如 8900）
 const want = process.argv.slice(2);
 
 (async () => {

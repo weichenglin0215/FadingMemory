@@ -8,7 +8,9 @@ ok(G.id === 'flipten' && [...G.name].length <= 5 && /\*\*/.test(G.rule) && G.sco
 // 張數與寬限曲線
 T.STAGES.forEach((st, i) => { const from = i === 0 ? 1 : T.STAGES[i - 1].to + 1; ok(T.cardsFor(from) === st.cards && T.cardsFor(Math.min(st.to, from + 2)) === st.cards, '階段 ' + st.cards + ' 張'); ok(st.cards % T.COLS === 0, st.cards + ' 張排得成 ' + T.COLS + ' 欄'); });
 ok(T.slackFor(1) === T.SLACK[0] && T.slackFor(T.RAMP_LEVELS) === T.SLACK[1] && T.slackFor(200) === T.SLACK[1], '寬限 ' + T.SLACK);
-for (let l = 2; l <= 50; l++) ok(T.slackFor(l) <= T.slackFor(l - 1) && T.cardsFor(l) >= T.cardsFor(l - 1), '單調 ' + l);
+// 玩家自己調過 SLACK（目前 2 → 12，後面寬限反而變多）：測試跟著參數走，不假設是變多還是變少
+const slackDir = Math.sign(T.SLACK[1] - T.SLACK[0]);
+for (let l = 2; l <= 50; l++) ok((T.slackFor(l) - T.slackFor(l - 1)) * slackDir >= 0 && T.cardsFor(l) >= T.cardsFor(l - 1), '單調 ' + l);
 // 發牌：一半是成對湊十，所有牌可以全部消完
 for (const n of [8, 16, 24]) for (let i = 0; i < 60; i++) {
   const d = T.deal(n, rnd), c = new Array(11).fill(0);
@@ -58,7 +60,46 @@ for (let i = 0; i < 100; i++) { const d = T.deal(8 * (1 + (i % 3)), rnd); ok(sim
 }
 // 出題
 for (const lv of [1, 5, 6, 15, 16, 30, 60]) { const p = T.makePuzzle(lv, rnd); ok(p.n === T.cardsFor(lv) && p.deck.length === p.n && p.limit === p.perfect + T.slackFor(lv), '第 ' + lv + ' 關'); }
-ok(T.SHOW_MS >= 1000 && T.rating(30) !== T.rating(1) && T.MAX_LEVEL === 90, '常數與評語');
+ok(T.SHOW_MS >= 1000 && T.rating(30) !== T.rating(1) && T.MAX_LEVEL >= 30, '常數與評語（MAX_LEVEL 玩家調過，目前 ' + T.MAX_LEVEL + '）');
+
+// ── V1.47（玩家意見）：盡量不要讓「加起來是 10 的兩張牌」左右或上下相鄰，但不完全避免——每發現一組有 KEEP_ADJ_P（30%）的機會保留 ──
+ok(T.KEEP_ADJ_P === 0.3, '保留相鄰的機率是 30%（參數 KEEP_ADJ_P）');
+// 鄰居：每列 6 張、共 8 張（最後一列只有 2 張）
+ok(T.neighborsOf(0, 24, 6).sort((a, b) => a - b).join() === '1,6' && T.neighborsOf(5, 24, 6).sort((a, b) => a - b).join() === '4,11' && T.neighborsOf(7, 24, 6).sort((a, b) => a - b).join() === '1,6,8,13', '鄰居＝左右上下（左右不跨列）');
+ok(T.neighborsOf(6, 8, 6).sort((a, b) => a - b).join() === '0,7' && T.neighborsOf(7, 8, 6).sort((a, b) => a - b).join() === '1,6', '最後一列不滿：超出張數的不算');
+ok(T.adjacentPairs([1, 9, 5, 5, 2, 3], 6).length === 2 && T.adjacentPairs([1, 5, 9, 5, 2, 3], 6).length === 0, 'adjacentPairs：左右相鄰的湊十（1,9 與 5,5）');
+ok(T.adjacentPairs([1, 2, 3, 4, 5, 6, 9, 7, 8, 1, 1, 1], 6).map(p => p.join('-')).join() === '0-6', 'adjacentPairs：上下相鄰也算（1 與 9 在同一欄、其他都不湊十）');
+{
+  // spread：牌的內容不變（只是換位置）、不改傳進去的陣列、同一個亂數結果相同
+  for (const n of [6, 12, 24, 48]) for (let i = 0; i < 40; i++) {
+    const base = T.deal(n, rnd, T.COLS), s0 = base.slice(), s1 = T.spread(base, T.COLS, rng(i + 1)), s2 = T.spread(base, T.COLS, rng(i + 1));
+    ok(base.join() === s0.join(), 'spread 不改原陣列');
+    ok(s1.slice().sort().join() === base.slice().sort().join(), n + ' 張：spread 後牌的內容不變');
+    ok(s1.join() === s2.join(), '同一個亂數，結果一樣');
+    ok(T.adjacentPairs(s1, T.COLS).length <= T.adjacentPairs(base, T.COLS).length, 'spread 不會讓相鄰的湊十變多');
+  }
+  // 統計：用同一副洗好的牌，拆之前有幾組相鄰湊十、拆之後留下幾組。留下的比例應該接近 30%（拆不開的也算保留，所以略高；
+  //       有時拆別組順便拆掉另一組，所以略低）——門檻訂得很寬：0.15～0.5（實測 24～39%，每種張數 400 副牌）
+  for (const n of [12, 24, 48]) {
+    let before = 0, after = 0;
+    for (let t = 0; t < 400; t++) {
+      const deck = []; for (let i = 0; i < n / 2; i++) { const a = 1 + Math.floor(rnd() * 5); deck.push(a, 10 - a); }
+      for (let i = n - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [deck[i], deck[j]] = [deck[j], deck[i]]; }
+      before += T.adjacentPairs(deck, T.COLS).length; after += T.adjacentPairs(T.spread(deck, T.COLS, rnd), T.COLS).length;
+    }
+    ok(before > 400 && after / before >= 0.15 && after / before <= 0.5, n + ' 張：相鄰湊十 ' + (before / 400).toFixed(2) + ' → ' + (after / 400).toFixed(2) + ' 組，保留 ' + (after / before * 100).toFixed(0) + '%（目標約 30%）');
+  }
+  // deal 預設就會 spread：相鄰湊十的組數比完全不處理（隨機洗牌）少很多
+  let rawSum = 0, dealSum = 0;
+  for (let t = 0; t < 300; t++) {
+    const n = 24, raw = []; for (let i = 0; i < n / 2; i++) { const a = 1 + Math.floor(rnd() * 5); raw.push(a, 10 - a); }
+    for (let i = n - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [raw[i], raw[j]] = [raw[j], raw[i]]; }
+    rawSum += T.adjacentPairs(raw, T.COLS).length; dealSum += T.adjacentPairs(T.deal(n, rnd), T.COLS).length;
+  }
+  ok(dealSum < rawSum * 0.5, 'deal(24)：相鄰湊十平均 ' + (dealSum / 300).toFixed(2) + ' 組，完全隨機是 ' + (rawSum / 300).toFixed(2) + ' 組');
+  // 還是每個數字都有搭檔、全部可以消完
+  for (const n of [6, 24, 48]) for (let i = 0; i < 30; i++) { const d = T.deal(n, rnd), c = new Array(11).fill(0); d.forEach(v => c[v]++); ok([1, 2, 3, 4].every(a => c[a] === c[10 - a]) && c[5] % 2 === 0, n + ' 張 spread 後每個數字還是有搭檔'); }
+}
 
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');
 process.exitCode = bad ? 1 : 0;

@@ -155,7 +155,7 @@
     /* 遊戲進場：交給共用骨架 kit.run 處理闖關流程。leaveSettle: true 代表「沒有失敗」的自由解題——按返回會先結算再離開 */
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, resume: false, leaveSettle: true,
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, leaveSettle: true,
             head: function (level) { return '第 ' + level + ' 關'; },
             info: function (S) { return '已解 ' + S.cleared + ' 關'; },
             numText: function (v) { return v + ' 關'; },
@@ -205,7 +205,7 @@
         var btnCheck = h('button', { 'class': 'btn btn--line timetable-tool', type: 'button', text: '檢查' });
         kit.onTap(btnHint, useHint);                    /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
         kit.onTap(btnCheck, check);
-        if (HINTS > 0) tools.appendChild(btnHint);      /* 提示次數 HINTS 設成 0，就連提示按鈕都不放 */
+        if (HINTS > 0 && kit.hintsAllowed(level)) tools.appendChild(btnHint);  /* 提示次數 HINTS 設成 0，或已經過了前 kit.HINT_LEVELS（4）關，就連提示按鈕都不放（V1.47.0；見 reaction_kit.js 的 kit.hintsAllowed） */
         tools.appendChild(btnCheck);
         wrap.appendChild(board); wrap.appendChild(tip); wrap.appendChild(tools);
         stage.appendChild(wrap);                        /* 把整個遊戲區放進舞台（放進去，畫面上才看得到） */

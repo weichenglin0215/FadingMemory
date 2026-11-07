@@ -24,7 +24,7 @@
 /* 上半部：水果資料表（水果｜顏色｜1 公斤｜早上｜收攤），每種水果一列 */
 .fruitstock-table {
     display: grid;                                      /* 格線排版：子元素排進格子 */
-    grid-template-columns: 1.55fr 0.9fr 0.95fr 1fr 1fr; /* 格線的欄（每欄的寬度）：1.55fr 0.9fr 0.95fr 1fr 1fr */
+    grid-template-columns: 1.9fr 0.8fr 0.95fr 1fr 1fr;      /* 格線的欄（每欄的寬度比例）：水果｜顏色｜1 公斤｜早上｜收攤（V1.47：名稱欄加寬、顏色欄縮窄，因為名稱字變大） */
     grid-auto-rows: var(--fruitstock-row, 52px);        /* 自動新增的列的高度：var(--fruitstock-row, 52px) */
     grid-template-rows: 24px;                           /* 格線的列（每列的高度）：24px */
     gap: 4px 6px;                                       /* 子元素之間的空隙：4px 6px */
@@ -35,7 +35,7 @@
 /* 「fruitstock-th」這個元素的樣式 */
 .fruitstock-th {
     text-align: center;                                 /* 文字置中 */
-    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs（表頭的字不是題目，維持原本大小，欄位窄放不下更大的字） */
     font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
     color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
@@ -50,19 +50,19 @@
 
 /* 「fruitstock-icon」這個元素的樣式 */
 .fruitstock-icon {
-    font-size: min(var(--fs-lg), calc(var(--fruitstock-row, 52px) - 2px));  /* 字級：min(主題變數 --fs-lg, calc(var(--fruitstock-row, 52px) - 2px)) */
+    font-size: min(calc(var(--fruitstock-tb-fs, var(--fs-xs)) * 1.5), calc(var(--fruitstock-row, 52px) - 2px)); /* 字級：水果圖示 ＝ 表格字級的 1.5 倍，但不超過列高 − 2px */
     line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
 }
 
 /* 「fruitstock-fname」這個元素的樣式 */
 .fruitstock-fname {
-    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-size: var(--fruitstock-tb-fs, var(--fs-xs)); /* 字級：水果名稱，JS 算好的 --fruitstock-tb-fs（V1.47 放大） */
     font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
     color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
     white-space: nowrap;                                /* 文字不換行 */
 }
 
-.fruitstock-color { font-weight: var(--fw-black); font-size: var(--fs-xs); }
+.fruitstock-color { font-weight: var(--fw-black); font-size: var(--fruitstock-tb-fs, var(--fs-xs)); }   /* V1.47：字級跟水果名稱一樣大（--fruitstock-tb-fs） */
 .fruitstock-color--red { color: var(--fruitstock-red); }
 .fruitstock-color--orange { color: var(--fruitstock-orange); }
 .fruitstock-color--yellow { color: var(--fruitstock-yellow); }
@@ -72,7 +72,7 @@
 /* 「fruitstock-td」這個元素的樣式 */
 .fruitstock-td {
     text-align: center;                                 /* 文字置中 */
-    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-size: var(--fruitstock-td-fs, var(--fs-sm)); /* 字級：「1 公斤、早上」，JS 算好的 --fruitstock-td-fs（V1.47 放大） */
     font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
     color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
     white-space: nowrap;                                /* 文字不換行 */
@@ -155,7 +155,7 @@
 
 /* 「fruitstock-ev」這個元素的樣式 */
 .fruitstock-ev {
-    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-size: var(--fruitstock-ev-fs, var(--fs-xs)); /* 字級：進出貨的文字，JS 算好的 --fruitstock-ev-fs（V1.47 放大；畫面放得下就盡量大） */
     font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
     line-height: 1.25;                                  /* 行高：1.25（文字每一行佔的高度） */
     color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */

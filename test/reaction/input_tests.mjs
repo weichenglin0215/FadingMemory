@@ -175,7 +175,7 @@ const T = {
     for (const id of ids) {
       const errs = [];
       try {
-        await openGame(cdp, id.replace(/\d+$/, ''), { port: 8743, root: ROOT });          // fillop2、dicechange2 是同一款遊戲的第二個情境（多個空格／多顆被換）
+        await openGame(cdp, id.replace(/\d+$/, ''), { port: Number(process.env.FM_PORT) || 8743, root: ROOT });          // fillop2、dicechange2 是同一款遊戲的第二個情境（多個空格／多顆被換）
         await cdp.evalJs('window.__errs = []; window.addEventListener("error", function (e) { window.__errs.push(String(e.message)); }); 1');
         await sleep(500);
         await T[id]();

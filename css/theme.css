@@ -973,6 +973,12 @@
     /* 自訂變數 --c-blue-soft（下面用 var(--c-blue-soft) 取用；可以由 JS 動態設定） */
     --c-orange-soft: hsla(27, 80%, 55%, 0.16);
     /* 自訂變數 --c-orange-soft（下面用 var(--c-orange-soft) 取用；可以由 JS 動態設定） */
+    --c-gray: hsl(40, 5%, 56%);
+    /* 自訂變數 --c-gray（下面用 var(--c-gray) 取用；可以由 JS 動態設定） */
+    /* V1.47.0 灰色（略帶暖色，跟宣紙底色搭）：玩家自己做的「記憶」記號（數獨猜一格）用的灰色數字 */
+    --c-gray-soft: hsl(40, 7%, 87%);
+    /* 自訂變數 --c-gray-soft（下面用 var(--c-gray-soft) 取用；可以由 JS 動態設定） */
+    /* V1.47.0 淺灰色底：「題目先放好、不能動」的方格（形色不相鄰）用的底色 */
 
     --c-ok: var(--c-green);
     /* 自訂變數 --c-ok（下面用 var(--c-ok) 取用；可以由 JS 動態設定） */

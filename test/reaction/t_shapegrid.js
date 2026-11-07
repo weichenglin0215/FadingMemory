@@ -77,5 +77,24 @@ ok(T.stageOf(1).st.n === 3 && !T.stageOf(1).st.diag && T.stageOf(5).st.n === 4 &
   for (const l of [1, 15, 30]) ok(T.timeFor(l, 12) > T.timeFor(l, 5), '第 ' + l + ' 關：空格越多時間越長');
   for (const l of [1, 6, 14, 26]) { const p = T.makePuzzle(l), e = p.given.filter(v => v < 0).length, t = T.timeFor(l, e); ok(e >= 1 && t / e >= 6, '第 ' + l + ' 關每個空格至少 6 秒：' + e + ' 格 ' + t.toFixed(0) + ' 秒'); }
 }
+// V1.47（玩家意見）：盤面寬度＝畫面寬度的 96%、維持正方形；先放好的格子淺灰色底＋粗黑框；提示只在前幾關
+{
+  ok(T.BOARD_FRAC === 0.96, '盤面寬度比例 96%');
+  for (const W of [360, 414, 472, 500]) for (const [n, chips] of [[3, 7], [4, 12], [5, 20], [5, 25]]) {
+    const L = T.layoutFor(W, 667, n, chips);
+    ok(L.board === Math.round(W * 0.96), 'W=' + W + '：盤面（含外框）寬 ' + L.board + '＝畫面的 96%');
+    ok(L.size >= T.CHIP_MIN && L.size <= T.CHIP_MAX, n + '×' + n + '：清單每顆 ' + L.size + 'px');
+    ok(L.rows * L.perRow >= chips && L.trayW <= Math.round(W * 0.96), n + '×' + n + '（' + chips + ' 顆）：' + L.rows + ' 行 × ' + L.perRow + ' 顆，清單寬 ' + L.trayW + ' 放得進畫面');
+    if (W === 472) { const total = 8 + L.board + 36 + L.trayH + 60 + 30; ok(L.size === T.CHIP_MIN || total <= 667, n + '×' + n + '（' + chips + ' 顆）：整個畫面高度 ' + total + ' ≤ 667（除非清單已經縮到最小）'); }
+  }
+  ok(T.layoutFor(472, 667, 3, 5).size === T.CHIP_MAX, '圖形少、空間夠：每顆最大');
+  ok(T.layoutFor(472, 667, 5, 20).size < T.layoutFor(472, 667, 3, 5).size, '5×5 圖形多：每顆縮小');
+  const fs = require('fs'), path = require('path'), src = fs.readFileSync(path.join(__dirname, '../../js/reaction_shapegrid.js'), 'utf8'), css = fs.readFileSync(path.join(__dirname, '../../css/games/reaction_shapegrid.css'), 'utf8');
+  ok(/HINTS > 0 && kit\.hintsAllowed\(level\)\) tools\.appendChild\(btnHint\)/.test(src), '提示按鈕只在前 kit.HINT_LEVELS 關放');
+  ok(!/resume:\s*false/.test(src), '沒有 resume:false（重玩從最佳關卡 − 4 進場）');
+  ok(/\.shapegrid-board \{[^}]*width: var\(--shapegrid-board[^}]*height: var\(--shapegrid-board/.test(css), '盤面的寬、高都用 --shapegrid-board（正方形）');
+  ok(/\.shapegrid-cell--given \{[^}]*background: var\(--c-gray-soft\)[^}]*border: 4px solid var\(--c-ink\)/.test(css), '先放好的格子：淺灰色底、保留粗黑框');
+  ok(/--c-gray-soft:/.test(fs.readFileSync(path.join(__dirname, '../../css/theme.css'), 'utf8')), 'theme.css 有 --c-gray-soft');
+}
 console.log(bad ? 'FAILED ' + bad : 'ALL PASS');
 process.exitCode = bad ? 1 : 0;

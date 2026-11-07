@@ -12,6 +12,10 @@
    · 種類數（KINDS）：第 1 關「1 種要點的＋1 種干擾的」，越後面越多，最多「3 種要點的＋2 種干擾的」（五種分類全部上場）。
      題目只寫要點的種類，不寫干擾的種類。
    · 要點的格子佔整個方格的 TARGET_FRAC（第 1 關 66% → 最後一關 33%）；每一種要點的、每一種干擾的都至少出現一個。
+   · 圖片（V1.47，玩家意見）：iPhone 的 emoji 變得比較寫實、失去卡通圖示的風格。所以方格裡的 emoji 與題目上的代表圖示都**改成貼 PNG 圖片**——
+     事先在電腦的瀏覽器把 emoji 畫下來、背景保持透明（才能襯在點對／點錯的底色上），存成一張圖集 img/emoji/emoji.png，用 js/emoji_png.js 貼圖
+     （產生器：test/reaction/make_emoji_png.mjs）。每個平台看到的都一樣。圖集載好才開始遊戲（載入中會寫「載入圖片…」）；載入失敗就退回文字 emoji。
+     結算說明裡不放 emoji 字元（用分類的名稱），避免在 iPhone 又跑出寫實的樣子。
    · 限時：BASE_S（3 秒）＋ 要點的格數 × PER_TARGET_S（每格 1.0 → 0.5 秒；第 22 關約 50 格 ≈ 28 秒）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
@@ -33,6 +37,8 @@
     var BASE_S = 3;                                     /* 限時：基本秒數 */
     var PER_TARGET_S = [1.0, 0.5];                     /* 限時：每個要點的格子再加幾秒（第 1 關 → 最後一關，線性） */
     var EMOJI_K = 0.75;                                 /* emoji 的大小＝格子邊長的幾倍 */
+    var EMOJI_MAX = 110;                                /* V1.47：emoji 最大字級（px）。圖集一格只有 128px，第 1～3 關的格子很大（2×2 時 226px），放太大會糊，所以限制上限（格子還是一樣大，只是 emoji 不超過這個大小） */
+    var PROMPT_EMOJI = [30, 26];                        /* V1.47：題目上代表圖示的大小（px）：一～兩種要點的種類（跟文字 --fs-md 一樣大）→ 三種（跟 --fs-sm 一樣大） */
     var SOLVE_CAP = 99;                                 /* 驗證用（這款每關都能 solve） */
     /* 五種分類：name 題目上的名稱、rep 題目上的代表 emoji、list 這一類的 emoji（依 Unicode 順序，從起點到終點） */
     var CATS = [
@@ -64,8 +70,16 @@
     }
     /* 限時（毫秒）：基本秒數＋要點的格數 × 每格秒數 */
     function timeMs(level, targets) { return Math.round((BASE_S + targets * lerp(PER_TARGET_S, prog(level))) * 1000); }
-    /* 題目文字（只寫要點的種類）：「圓臉😀、動物🐒」 */
+    /* 題目文字（只寫要點的種類）：「圓臉😀、動物🐒」（給測試與主控台用；畫面上的代表圖示是貼圖，見 setup） */
     function promptOf(cats) { return cats.map(function (c) { return c.name + c.rep; }).join('、'); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+    /* 只有名稱、不含 emoji：「圓臉、動物」（結算說明用，避免在 iPhone 又出現寫實的 emoji） */
+    function namesOf(cats) { return cats.map(function (c) { return c.name; }).join('、'); }
+    /* 一個 emoji 的畫面元素：有圖集就貼圖（inline＝true 時跟文字排在同一行），沒有（或圖集檔案不見了）就用文字 emoji */
+    function emo(ch, px, inline) {
+        var EP = Reaction.emojiPng;
+        if (EP) return EP.el(ch, px, inline);
+        var s = document.createElement('span'); s.textContent = ch; s.style.fontSize = px + 'px'; return s;
+    }
     /* 出一關：{ level, w, h, cells: [{ ch, cat（分類 key）, ok（是不是要點的）}]（由左上往右、往下排）, correct: [分類], wrong: [分類], targets, ms } */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
@@ -95,13 +109,20 @@
 
     /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run。 */
     function mount(root, ctx) {
-        kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 8, stageClass: 'emojisort-stage',
-            numText: function (v) { return v + ' 關'; },
-            rating: rating,
-            lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
-            setup: setup
-        });
+        function go() {
+            kit.run(root, ctx, {
+                id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 8, stageClass: 'emojisort-stage',
+                numText: function (v) { return v + ' 關'; },
+                rating: rating,
+                lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
+                setup: setup
+            });
+        }
+        var EP = Reaction.emojiPng;
+        if (!EP) { go(); return; }
+        /* 圖集（約 2 MB）載好才開始，不然限時已經在跑、格子卻是空白的，對玩家不公平。載入失敗也照樣開始（退回文字 emoji） */
+        root.appendChild(h('div', { 'class': 'rx-tip', text: '載入圖片…' }));
+        EP.load(function () { if (root.isConnected) { root.innerHTML = ''; go(); } });   /* isConnected：這個畫面還在不在（玩家等不及先離開了，就不用開始） */
     }
 
     /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
@@ -113,7 +134,12 @@
         api.info = { q: q, get left() { return left; } };
         console.log('[分類點擊] 第 ' + q.level + ' 關 ' + q.w + '×' + q.h + '：點「' + promptOf(q.correct) + '」（干擾：' + promptOf(q.wrong) + '），要點 ' + q.targets + ' 格，限時 ' + (q.ms / 1000).toFixed(1) + ' 秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        var top = h('div', { 'class': 'emojisort-prompt' }, [h('span', { 'class': 'emojisort-prompt__t', text: '請點：' }), h('span', { 'class': 'emojisort-prompt__c', text: promptOf(q.correct) })]);
+        var pc = h('span', { 'class': 'emojisort-prompt__c' }), pxEmoji = PROMPT_EMOJI[q.correct.length >= 3 ? 1 : 0];
+        q.correct.forEach(function (c, i) {             /* 題目：「圓臉」＋圖片、「動物」＋圖片…（名稱用文字，代表圖示貼 PNG） */
+            if (i) pc.appendChild(document.createTextNode('、'));
+            pc.appendChild(document.createTextNode(c.name)); pc.appendChild(emo(c.rep, pxEmoji, true));
+        });
+        var top = h('div', { 'class': 'emojisort-prompt' }, [h('span', { 'class': 'emojisort-prompt__t', text: '請點：' }), pc]);
         if (q.correct.length >= 3) top.classList.add('emojisort-prompt--long');   /* 三種的題目比較長：字縮小一點才放得下 */
         stage.appendChild(top);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         api.setInfo('還有 ' + left + ' 個');
@@ -123,8 +149,9 @@
         grid.style.cssText = 'left:' + Math.round((W - gw) / 2) + 'px;top:' + Math.round(TOP + (H - TOP - PAD - gh) / 2) + 'px;width:' + gw + 'px;height:' + gh + 'px;';
         stage.appendChild(grid);
         var els = q.cells.map(function (c, i) {
-            var el = h('div', { 'class': 'emojisort-cell', text: c.ch });
-            el.style.cssText = 'left:' + (i % q.w) * cell + 'px;top:' + Math.floor(i / q.w) * cell + 'px;width:' + cell + 'px;height:' + cell + 'px;font-size:' + Math.round(cell * EMOJI_K) + 'px;line-height:' + cell + 'px;';
+            var el = h('div', { 'class': 'emojisort-cell' });
+            el.appendChild(emo(c.ch, Math.min(EMOJI_MAX, Math.round(cell * EMOJI_K))));          /* 格子裡貼 emoji 的 PNG 圖片（V1.47）；大小＝格子的 EMOJI_K 倍，但不超過 EMOJI_MAX */
+            el.style.cssText = 'left:' + (i % q.w) * cell + 'px;top:' + Math.floor(i / q.w) * cell + 'px;width:' + cell + 'px;height:' + cell + 'px;';
             kit.onTap(el, function () { tap(i); });     /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用） */
             grid.appendChild(el);
             return el;
@@ -146,9 +173,9 @@
             if (over) return;
             over = true;
             q.cells.forEach(function (c, i) { if (c.ok && !done[i]) els[i].classList.add('emojisort-cell--miss'); });  /* forEach：對陣列的每個元素各做一次 */
-            var why = bad == null ? '時間到了！還有 ' + left + ' 個沒點到' : '「' + q.cells[bad].ch + '」是' + CATS.filter(function (c) { return c.key === q.cells[bad].cat; })[0].name + '，不是' + promptOf(q.correct) + '！';  /* filter：留下符合條件的元素，回傳新陣列 */
+            var why = bad == null ? '時間到了！還有 ' + left + ' 個沒點到' : '點錯了：那是「' + CATS.filter(function (c) { return c.key === q.cells[bad].cat; })[0].name + '」，不是要點的' + namesOf(q.correct) + '！';  /* filter：留下符合條件的元素，回傳新陣列 */
             kit.flash(stage, false, api.my);            /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
-            api.fail({ delay: 2600, lines: [why, '這一關要點：' + promptOf(q.correct) + '（干擾：' + promptOf(q.wrong) + '）'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
+            api.fail({ delay: 2600, lines: [why, '這一關要點：' + namesOf(q.correct) + '（干擾：' + namesOf(q.wrong) + '）'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用（會被重複呼叫，要冪等）：solve＝點完所有正確的格子；wrong＝點一個干擾的格子 */
         api.solve = function () { q.cells.forEach(function (c, i) { if (c.ok) tap(i); }); };
@@ -159,12 +186,12 @@
     var G = {
         id: ID,
         name: '分類點擊',
-        rule: '方格裡排滿各種 emoji：圓臉、動物、水果、交通工具、人類。畫面上方寫著這一關要點的種類，例如「圓臉😀、動物🐒」，**在時間內把屬於這幾類的全部點掉**。**點錯一個就失敗**，時間到了還沒點完也失敗。第一關是 2×2 的方格，一關比一關大，最後是 10×15；種類也越來越多，最多要同時找 3 種，還混著 2 種干擾的！',
+        rule: '方格裡排滿各種 emoji：圓臉、動物、水果、交通工具、人類。畫面上方寫著這一關要點的種類（名稱後面有代表圖案），例如「圓臉、動物」，**在時間內把屬於這幾類的全部點掉**。**點錯一個就失敗**，時間到了還沒點完也失敗。第一關是 2×2 的方格，一關比一關大，最後是 10×15；種類也越來越多，最多要同時找 3 種，還混著 2 種干擾的！',
         mount: mount,
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
-            gridSize: gridSize, maxLevel: maxLevel, kindsFor: kindsFor, timeMs: timeMs, promptOf: promptOf, makeLevel: makeLevel, catOf: catOf, rating: rating,
+            gridSize: gridSize, maxLevel: maxLevel, kindsFor: kindsFor, timeMs: timeMs, promptOf: promptOf, namesOf: namesOf, EMOJI_MAX: EMOJI_MAX, PROMPT_EMOJI: PROMPT_EMOJI, makeLevel: makeLevel, catOf: catOf, rating: rating,
             MAX_W: MAX_W, MAX_H: MAX_H, CORRECT_AT: CORRECT_AT, WRONG_AT: WRONG_AT, TARGET_FRAC: TARGET_FRAC, BASE_S: BASE_S, PER_TARGET_S: PER_TARGET_S, EMOJI_K: EMOJI_K, CATS: CATS, SOLVE_CAP: SOLVE_CAP, MAX_LEVEL: MAX_LEVEL
         }
     };

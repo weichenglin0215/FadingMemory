@@ -102,8 +102,14 @@
     /* 脫離一般排版，貼著方格擺放 */
     box-sizing: border-box;
     /* 寬高把邊框也算進去 */
-    text-align: center;
+    display: flex;
+    /* 彈性盒子：裡面的 emoji 圖片（js/emoji_png.js 貼的 PNG）用它置中 */
+    align-items: center;
+    /* emoji 上下置中 */
+    justify-content: center;
     /* emoji 左右置中 */
+    text-align: center;
+    /* 退回文字 emoji 時，文字左右置中 */
     border: 1px solid var(--c-frame);
     /* 格線：主題變數 --c-frame */
     cursor: pointer;

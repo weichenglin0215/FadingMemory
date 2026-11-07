@@ -24,8 +24,12 @@
 /* 「shapegrid-board」這個元素的樣式 */
 .shapegrid-board {
     display: grid;                                      /* 格線排版：子元素排進格子 */
-    grid-template-columns: repeat(var(--shapegrid-n, 3), var(--shapegrid-cell, 100px));  /* 格線的欄（每欄的寬度）：repeat(var(--shapegrid-n, 3), var(--shapegrid-cell, 100px)) */
-    grid-auto-rows: var(--shapegrid-cell, 100px);       /* 自動新增的列的高度：var(--shapegrid-cell, 100px) */
+    flex: 0 0 auto;                                     /* 不跟著縮小（外層是直排的彈性盒子，空間不夠時預設會把盤面壓扁，就不是正方形了） */
+    width: var(--shapegrid-board, 300px);               /* 寬度：JS 算好的 --shapegrid-board（V1.47：遊戲畫面寬度的 96%） */
+    height: var(--shapegrid-board, 300px);              /* 高度：跟寬度一樣，盤面維持正方形 */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（所以盤面「含外框」剛好是 --shapegrid-board） */
+    grid-template-columns: repeat(var(--shapegrid-n, 3), minmax(0, 1fr));  /* 格線的欄：n 欄平分寬度（minmax(0, 1fr)＝每欄一樣寬，不會被裡面的圖形撐開） */
+    grid-template-rows: repeat(var(--shapegrid-n, 3), minmax(0, 1fr));     /* 格線的列：n 列平分高度 */
     gap: 6px;                                           /* 子元素之間的空隙：6px */
     padding: 6px;                                       /* 內縮（padding，內容跟邊框的距離）：四邊都是 6px */
     border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
@@ -52,9 +56,9 @@
     background: var(--c-card-alt);                      /* 背景：主題變數 --c-card-alt */
 }
 
-/* 一開始就放好的：灰底粗框（不能動） */
+/* 一開始就放好的：淺灰色底＋粗黑框（不能動；V1.47 底色改成淺灰色，跟空格、玩家放的圖形一眼分得出來） */
 .shapegrid-cell--given {
-    background: var(--c-paper);                         /* 背景：主題變數 --c-paper */
+    background: var(--c-gray-soft);                     /* 背景：主題變數 --c-gray-soft（淺灰色） */
     border: 4px solid var(--c-ink);                     /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --c-ink */
 }
 
@@ -129,8 +133,8 @@
     flex-wrap: wrap;                                    /* 放不下就換行 */
     justify-content: center;                            /* 子元素沿排列方向置中 */
     gap: 6px;                                           /* 子元素之間的空隙：6px */
-    width: 96%;                                         /* 寬度：96% */
-    min-height: var(--shapegrid-chip, 60px);            /* 最小高度：var(--shapegrid-chip, 60px) */
+    width: var(--shapegrid-tray-w, 96%);                /* 寬度：剛好放得下「每行幾顆」那麼寬，換行的位置固定（V1.47；JS 算好 --shapegrid-tray-w） */
+    min-height: var(--shapegrid-tray-h, var(--shapegrid-chip, 60px));  /* 最小高度：清單一開始的高度（圖形放出去、清單變少，下面的按鈕也不會往上跳；JS 算好 --shapegrid-tray-h） */
 }
 
 /* 「shapegrid-chip」這個元素的樣式 */

@@ -27,7 +27,11 @@
      狀態＝目前階梯形（每一排填到第幾格，最多 126 種），一種重量一種重量地往外長，數有幾種長法（見 countFillV）。
    · 限時（V1.43.1，原本是不限時的自由解題）：每一關限時 ＝ TIME_BASE ＋ 空格數 × 每格幾秒（7 → 5 秒，線性），上面的時間條倒數；時間到了＝失敗（把正確答案放上去）。
      全部放好而且都符合規矩就過關（答案唯一），成績＝解開幾題。
-   · 提示（每題 HINTS 次）：有放錯的箱子就標出它；都沒放錯就替你放好一箱（標成黃色）。
+   · 提示（每題 HINTS 次）：有放錯的箱子就標出它；都沒放錯就替你放好一箱（標成黃色）。**只有前 kit.HINT_LEVELS（4）關才有「提示」按鈕**，第 5 關起連按鈕都沒有（V1.47）。
+   · 進場關卡（V1.47）：本來這款遊戲把 kit.run 的 resume 選項設成 false（是不限時的自由解題時期留下的），所以玩到高關卡後再玩，永遠從第 1 關開始；
+     V1.43.1 改成限時、答錯就失敗之後早該拿掉。現在跟其他闖關遊戲一樣：下次從「最佳關卡 − 4」進場，失敗後可以從前 5 關繼續。
+   · 版面（V1.47，玩家意見）：① 下面的重量清單（答案區）**最多只放兩橫行**，依要放的箱數縮放每顆的大小（chipLayout）；
+     ② 箱子上的數字依字數縮小字級（fitFs），三位數也不會超出方格的寬度；③ 架子大小同時考慮畫面高度，清單與按鈕不會被擠出畫面。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
@@ -42,13 +46,15 @@
 
     /* ═══ 可以自己調的參數 ═══ */
     var STAGES = [                              /* to＝這個階段的最後一關；r×c＝架子幾層幾格；mode＝重量的種類（seq／gap／dup／mix） */
-        { to: 3, r: 3, c: 3, mode: 'seq' },
-        { to: 6, r: 3, c: 4, mode: 'seq' },
-        { to: 9, r: 3, c: 4, mode: 'gap' },
-        { to: 12, r: 4, c: 4, mode: 'dup' },
-        { to: 9999, r: 4, c: 5, mode: 'mix' }
+        { to: 2, r: 3, c: 3, mode: 'seq' },
+        { to: 4, r: 3, c: 4, mode: 'seq' },
+        { to: 6, r: 3, c: 4, mode: 'gap' },
+        { to: 9, r: 4, c: 4, mode: 'dup' },
+        { to: 12, r: 4, c: 5, mode: 'mix' },
+        { to: 15, r: 5, c: 5, mode: 'mix' },
+        { to: 9999, r: 5, c: 6, mode: 'mix' }
     ];
-    var EMPTY = [4, 12];                        /* 空格數（玩家要自己放的箱子數，不含已經固定的）：第 1 關 → 第 RAMP_LEVELS 關（線性）。要的比這種架子「答案還唯一」撐得住的空格數更多時，就用撐得住的最大空格數（V1.43.1） */
+    var EMPTY = [7, 20];   /*4 12*/                      /* 空格數（玩家要自己放的箱子數，不含已經固定的）：第 1 關 → 第 RAMP_LEVELS 關（線性）。要的比這種架子「答案還唯一」撐得住的空格數更多時，就用撐得住的最大空格數（V1.43.1） */
     var MODES = {                               /* span＝重量的範圍有多寬（格子數的幾倍）；distinct＝不同的重量佔格子數的幾成（沒寫＝每格都不同） */
         seq: {},
         gap: { span: 3.5 },
@@ -56,15 +62,18 @@
         mix: { span: 3.5, distinct: 0.65 }
     };
     var VAL_LO = [1, 9];                        /* 最輕的重量從這個範圍亂數挑（gap／dup／mix） */
-    var DUP_MAX = 3;                            /* 同一種重量最多重複幾箱 */
+    var DUP_MAX = 2;                            /* 同一種重量最多重複幾箱 */
     var RAMP_LEVELS = 30;                           /* 難度升到頂的關卡：第 1 關線性變難，到第 30 關最難，之後維持不變 */
-    var DIFF_FRAC = [0.5, 0.8];                 /* 剩下的空格裡，答案跟「每一種直覺填法」都不一樣的比例至少多少：第 1 關 → 到頂（太高會找不到題目，見檔頭說明） */
+    var DIFF_FRAC = [0.6, 0.9];                 /* 剩下的空格裡，答案跟「每一種直覺填法」都不一樣的比例至少多少：第 1 關 → 到頂（太高會找不到題目，見檔頭說明） */
     var HINTS = 3;                                  /* 每一題可以用幾次提示（目前 3 次） */
-    var TRIES = 300;                                /* 出題時最多重抽幾次（都達不到空格數與難度比例，就用最接近的那一題） */
+    var TRIES = 500;                                /* 出題時最多重抽幾次（都達不到空格數與難度比例，就用最接近的那一題） */
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var PASS_DELAY_MS = 1400;                       /* 答對（過關）後停多久才換下一關（毫秒，1400 毫秒＝1.4 秒） */
     var FAIL_HOLD_MS = 6000;                        /* 答錯（失敗）後停多久才跳出結算畫面（毫秒，6000 毫秒＝6 秒），讓玩家先看清楚答案 */
-    var TIME_BASE = 15, TIME_CELL = [7, 5];  /* 每一關限時（秒）＝基本 ＋ 每一個空格幾秒（第 1 關 → 第 30 關，線性縮短）；時間到了＝失敗，並亮出答案（V1.43.1） */
+    var TIME_BASE = 15, TIME_CELL = [4, 6];  /* 每一關限時（秒）＝基本 ＋ 每一個空格幾秒（第 1 關 → 第 30 關，線性縮短）；時間到了＝失敗，並亮出答案（V1.43.1） */
+    var TRAY_ROWS = 2;                          /* V1.47：下面的重量清單最多放幾橫行（箱子多就縮小每顆，不增加行數） */
+    var CHIP_MAX = 66, CHIP_MIN = 14;           /* 清單上每顆重量的邊長範圍（px）：箱子少時 66，箱子多時縮小（空格 20 個時約 39）；小到 14 就是極限了（再小也看不清楚），這時要多放幾個空格得改 TRAY_ROWS */
+    var CELL_FS = 40, CHIP_FS = 34;             /* 架上的箱子、清單上的重量「最大字級」（px，對應主題的 --fs-xl、--fs-lg）；數字字數多、方格放不下時才會比這小（fitFs） */
     var CELL_MAX = 96;                          /* 架上每格最大邊長（px） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
@@ -78,6 +87,26 @@
             if (level <= STAGES[i].to || i === STAGES.length - 1) return { st: STAGES[i], idx: level - from + 1, len: Math.min(STAGES[i].to, from + 9) - from + 1 };
             from = STAGES[i].to + 1;
         }
+    }
+    /* V1.47 清單版面：count 顆重量、清單可用寬度 trayW → { perRow 每行幾顆, gap 間隔, size 每顆邊長, width 清單實際寬度, rows 幾行 }。
+       做法：一行放得下（以最大邊長 CHIP_MAX 算）就一行；放不下就分成 TRAY_ROWS（2）行，每行 ⌈count ÷ 2⌉ 顆，再算每顆多大（不小於 CHIP_MIN）。
+       清單的寬度剛好是「每行幾顆」那麼寬，flex 換行就一定換在同一個位置，絕對不會超過 TRAY_ROWS 行。 */
+    function chipLayout(count, trayW) {
+        count = Math.max(1, count);
+        var gap = 10, fit = Math.max(1, Math.floor((trayW + gap) / (CHIP_MAX + gap)));          /* fit：邊長 CHIP_MAX 時，一行放得下幾顆 */
+        var perRow = count <= fit ? count : Math.ceil(count / TRAY_ROWS);                       /* Math.ceil：無條件進位成整數 */
+        if (perRow > fit) gap = 6;                                                              /* 一行要放很多顆時，間隔縮小一點 */
+        var size = Math.max(CHIP_MIN, Math.min(CHIP_MAX, Math.floor((trayW - (perRow - 1) * gap) / perRow)));  /* Math.floor：無條件捨去成整數 */
+        return { perRow: perRow, gap: gap, size: size, width: perRow * size + (perRow - 1) * gap, rows: Math.ceil(count / perRow) };
+    }
+    /* V1.47 字級：len 個字的數字放進邊長 box（px）的方塊，最大字級 max（px）——算出放得下的字級。
+       黑體數字每個字約 0.62 倍字級寬，所以字級 ≤ （方塊邊長 − 邊框與留白 10）÷（字數 × 0.64）；不夠大就用算出來的，最小 10。 */
+    function fitFs(len, box, max) { return Math.max(10, Math.min(max, Math.floor((box - 10) / (Math.max(1, len) * 0.64)))); }
+    /* V1.47 架上每格的邊長：不超過 CELL_MAX、不超過寬度（架子佔畫面寬 86%）、也不超過高度（上面的說明文字、架子、提示文字、清單、按鈕全部要放得進畫面高度 H）。
+       trayH：清單的高度；r、c：架子幾層幾格。高度的扣除項：上方留白 6 ＋ 橫向箭頭 26 ＋ 間隔 4 ＋ 架子內縮與外框 20 ＋ 格間隔 6 × (r−1) ＋ 三處間隔 12 × 3 ＋ 提示文字 30 ＋ 清單 ＋ 按鈕 60 */
+    function cellFor(W, H, r, c, trayH) {
+        var byW = Math.floor((W * 0.86 - c * 6) / c), byH = Math.floor((H - (6 + 26 + 4 + 20 + 6 * (r - 1) + 36 + 30 + trayH + 60)) / r);
+        return Math.max(30, Math.min(CELL_MAX, byW, byH));
     }
     function isWeak(mode) { return mode === 'dup' || mode === 'mix'; }      /* 重量會重複（一樣重可以放一起） */
     function seqVals(N) { var a = []; for (var i = 1; i <= N; i++) a.push(i); return a; }
@@ -240,7 +269,7 @@
     /* ═══ 畫面 ═══ */
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, resume: false,
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5,
             head: function (level) { return '第 ' + level + ' 關'; },
             info: function (S) { return '已解 ' + S.cleared + ' 關'; },
             numText: function (v) { return v + ' 關'; },
@@ -257,8 +286,9 @@
         var pz = makePuzzle(level, api.rand), r = pz.r, c = pz.c, N = r * c, weak = isWeak(pz.mode), groups = groupsOf(pz.vals);
         api.info = pz;                                  /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[疊箱子] 第 ' + level + ' 關：' + r + '×' + c + '（' + pz.mode + '），固定 ' + pz.given.filter(Boolean).length + ' 箱；重量 ' + pz.vals.join(','));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
-        var W = stage.clientWidth || 472;
-        var cell = Math.min(CELL_MAX, Math.floor((W * 0.86 - c * 6) / c));  /* Math.floor：無條件捨去成整數 */
+        var W = stage.clientWidth || 472, H = stage.clientHeight || 667;
+        var chips = chipLayout(pz.given.filter(function (v) { return !v; }).length, Math.floor(W * 0.96)), trayH = chips.rows * chips.size + (chips.rows - 1) * chips.gap;   /* 清單的版面：一開始有幾顆重量（＝空格數）就決定每顆多大，之後放出去就越來越少，但大小不變 */
+        var cell = cellFor(W, H, r, c, trayH);          /* 架上每格邊長（同時考慮寬度與高度） */
         var g = pz.given.slice(), hinted = {}, pick = 0, hintsLeft = HINTS, solved = false, flagged = -1, dead = false;
 
         var wrap = h('div', { 'class': 'boxstack-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
@@ -276,14 +306,18 @@
         var row = h('div', { 'class': 'boxstack-shelfrow' }, [shelf, h('div', { 'class': 'boxstack-arrow boxstack-arrow--down', text: weak ? '越下面越重 ↓' : '越下面越重 ↓' })]);
         shelfBox.appendChild(row);
         var tray = h('div', { 'class': 'boxstack-tray' });
-        var tipDefault = weak ? '點下面的重量，再點空格放進去。一樣重的箱子可以並排' : '點下面的重量，再點空格放進去';
+        tray.style.setProperty('--boxstack-chip', chips.size + 'px');             /* 清單每顆邊長、間隔、整個清單的寬與高：交給 css 用 var() 取用 */
+        tray.style.setProperty('--boxstack-gap', chips.gap + 'px');
+        tray.style.setProperty('--boxstack-tray-w', chips.width + 'px');
+        tray.style.setProperty('--boxstack-tray-h', trayH + 'px');
+        var tipDefault = weak ? '先選下面，再放上去。同重箱子可並排' : '點下面的重量，再點空格放進去';
         var tip = h('div', { 'class': 'boxstack-tip', text: tipDefault });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
         var tools = h('div', { 'class': 'boxstack-tools' });
         var btnHint = h('button', { 'class': 'btn btn--line boxstack-tool', type: 'button', text: '提示 ' + hintsLeft });  /* 「提示」按鈕（文字會顯示還剩幾次提示） */
         var btnReset = h('button', { 'class': 'btn btn--line boxstack-tool', type: 'button', text: '重來' });  /* 「重來」按鈕 */
         kit.onTap(btnHint, useHint);                    /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
         kit.onTap(btnReset, reset);
-        if (HINTS > 0) tools.appendChild(btnHint);      /* 提示次數 HINTS 設成 0，就連提示按鈕都不放 */
+        if (HINTS > 0 && kit.hintsAllowed(level)) tools.appendChild(btnHint);   /* 提示次數 HINTS 設成 0，或已經過了前 kit.HINT_LEVELS（4）關，就連提示按鈕都不放（V1.47） */
         tools.appendChild(btnReset);
         wrap.appendChild(shelfBox); wrap.appendChild(tip); wrap.appendChild(tray); wrap.appendChild(tools);
         stage.appendChild(wrap);                        /* 把整個遊戲區放進舞台（放進去，畫面上才看得到） */
@@ -304,6 +338,8 @@
                 if (solved) cls += ' boxstack-cell--ok';
                 cells[k].className = cls;
                 cells[k].textContent = g[k] ? String(g[k]) : '';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+                var cfs = fitFs(String(g[k] || '').length, cell - 6, CELL_FS);     /* 數字字數多就縮小字級，不超出方格（V1.47）；放得下就不設定，沿用主題的 --fs-xl */
+                if (g[k] && cfs < CELL_FS) cells[k].style.setProperty('--boxstack-fs', cfs + 'px'); else cells[k].style.removeProperty('--boxstack-fs');
             }
             tray.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             var used = placedCount();
@@ -312,6 +348,8 @@
                 for (var t = 0; t < left; t++) {
                     var b = h('div', { 'class': 'boxstack-chip' + (gr.v === pick && first ? ' boxstack-chip--sel' : ''), text: String(gr.v) });
                     first = false;
+                    var pfs = fitFs(String(gr.v).length, chips.size - 6, CHIP_FS);     /* 清單上的數字同樣依字數縮小（V1.47） */
+                    if (pfs < CHIP_FS) b.style.setProperty('--boxstack-fs', pfs + 'px');
                     (function (vv) { kit.onTap(b, function () { if (!solved && !dead) { pick = pick === vv ? 0 : vv; paint(); } }); })(gr.v);
                     tray.appendChild(b);
                 }
@@ -388,11 +426,12 @@
     var G = {
         id: ID,
         name: '疊箱子',
-        rule: '倉庫的架子每格放一箱，規矩是**越下面越重、越右邊越重**：每一箱都要比它上面那箱重、也比它左邊那箱重（後面的關卡**一樣重也可以**）。**深色的箱子已經貼好重量、固定在那裡**（左上角一定最輕、右下角一定最重，已經先放好了），其他的重量在下面的清單上。**重量不一定是 1、2、3…，有的關卡中間會跳號、甚至有一樣重的箱子**，先想想每一箱的「第幾輕」。點清單上的重量、再點空格放進去；點自己放的箱子可以拿回來。答案只有一種，照大小隨便排是排不對的。每一關有時間限制（上面的時間條，空格越多給的時間越長），時間到了也算失敗；全部放對就過關，成績是解開幾題。',
+        rule: '倉庫的架子每格放一箱，規矩是**越下面越重、越右邊越重**：每一箱都要比它上面那箱重、也比它左邊那箱重（後面的關卡**一樣重也可以**）。**深色的箱子已經貼好重量、固定在那裡**（左上角一定最輕、右下角一定最重，已經先放好了），其他的重量在下面的清單上。**重量不一定是 1、2、3…，有的關卡中間會跳號、甚至有一樣重的箱子**，先想想每一箱的「第幾輕」。點清單上的重量、再點空格放進去；點自己放的箱子可以拿回來。答案只有一種，照大小隨便排是排不對的。只有前 4 關有「提示」按鈕。每一關有時間限制（上面的時間條，空格越多給的時間越長），時間到了也算失敗；全部放對就過關，成績是解開幾題。',
         mount: mount,
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
+            chipLayout: chipLayout, fitFs: fitFs, cellFor: cellFor, TRAY_ROWS: TRAY_ROWS, CHIP_MAX: CHIP_MAX, CHIP_MIN: CHIP_MIN, CELL_FS: CELL_FS, CHIP_FS: CHIP_FS, CELL_MAX: CELL_MAX,
             stageOf: stageOf, emptyFor: emptyFor, EMPTY: EMPTY, timeFor: timeFor, TIME_BASE: TIME_BASE, TIME_CELL: TIME_CELL, isWeak: isWeak, makeValues: makeValues, groupsOf: groupsOf, randomStack: randomStack, countFill: countFill, countFillV: countFillV,
             naiveFill: naiveFill, naiveWorks: naiveWorks, naiveDiff: naiveDiff, surprise: surprise, violations: violations,
             makePuzzle: makePuzzle, rating: rating, STAGES: STAGES, MODES: MODES, DIFF_FRAC: DIFF_FRAC, HINTS: HINTS, MAX_LEVEL: MAX_LEVEL

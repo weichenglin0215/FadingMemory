@@ -145,7 +145,7 @@
     /* ═══ 畫面（盤面、數字鍵、工具列都是 sudoku_lib.js 的 mountBoard，這裡只加外圍的夾心數字）═══ */
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, resume: false, leaveSettle: true,
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, leaveSettle: true,
             head: function (level) { return '第 ' + level + ' 題'; },
             info: function (S) { return '已解 ' + S.cleared + ' 題'; },
             numText: function (v) { return v + ' 題'; },

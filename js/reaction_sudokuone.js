@@ -8,6 +8,8 @@
      V1.24 改成兩種標準數獨，由簡單到困難：
         第 1～FOUR_LEVELS（6）關：4×4 四宮格——2×2 的宮共 4 個，數字 1～4，每橫排、每直排、每宮 1～4 各一個；
         第 7 關起：9×9 九宮格——3×3 的宮共 9 個，數字 1～9，每橫排、每直排、每宮 1～9 各一個（更難）。
+     V1.47（玩家意見）：4×4 一下子跳到 9×9 難度升太快，所以中間加一個階段 6×6——**3×2 的宮**（每個宮寬 3 格、高 2 格，共 6 個宮），
+        數字 1～6，每橫排、每直排、每宮 1～6 各一個。現在是 4×4（第 1～FOUR_LEVELS 關）→ 6×6（接著 SIX_LEVELS 關）→ 9×9 三個階段。
    · 關卡制：猜錯或來不及就結束，成績＝通過幾關。
    ───────────────────────────────────────────────────────────────────
    · 出題（規範 Q1、Q2）：先做出一個完整正確的盤面（解答：用「基本圖形＋洗牌」，一定合法），挑一格當目標，
@@ -18,6 +20,10 @@
      越少越要多繞幾步推理；作答限時 4×4 20 → 14 秒、9×9 40 → 24 秒。
      盤面上會用淡黃色標出目標那一格所在的橫排、直排和宮，幫你看該看哪裡（不會揭露答案）。
    · 揭曉：整個盤面的解答都填出來（目標那一格用大字標出）。
+   · V1.47（玩家意見）：(1) 6×6 階段（見上面）；(2) 底色統一：**沒有數字的格子一律是淡黃色**（原本只有「跟目標同排、同欄、同宮」的格子是淡黃色，
+     其他沒有數字的格子是白色，玩家以為是題目漏印了數字）；有數字的格子是白底，跟目標同排／同欄／同宮的有數字格子改用淡藍色底（保留「該看哪裡」的提示）；
+     (3) 新功能「記憶」：點一下沒有數字的格子，會在它上面跳出一個數字選單（1～N），選一個數字，那格就會用灰色顯示它，幫你記住自己推理到的結果
+     （再選一次同一個數字＝取消）。這個功能只開放到第 MEMO_UNTIL（20）關，之後的關卡點沒有數字的格子，只會在下方出現「此關卡不提供記憶功能」。
    · V1.29（玩家意見）：(1) 盤面（題目格子）盡量加寬：整個盤面的寬度 ＝ 遊戲畫面寬度的 BOARD_FRAC（96%），每格邊長由它算出來
      （boardMetrics），數字鍵隨著盤面變高而排得更緊湊（9×9 的數字鍵改成 5 欄 2 排）；
      (2) 答錯／逾時時，最後顯示正確答案要停留 REVEAL_FAIL_MS（6 秒），讓玩家看清楚，才跳出結算彈窗。
@@ -35,6 +41,11 @@
 
     /* ═══ 可以自己調的參數 ═══ */
     var FOUR_LEVELS = 10;                        /* 前幾關是 4×4（之後是 9×9）。設 0＝全部 9×9；設很大（例如 999）＝全部 4×4 */
+    var SIX_LEVELS = 10;                        /* V1.47：4×4 之後有幾關是 6×6（3×2 的宮，數字 1～6），再之後才是 9×9。設 0＝沒有 6×6 這個階段 */
+    var GIVENS6 = [24, 10];                     /* 6×6：盤面上留下幾個提示數字（不含目標那格，共 35 格可留）：階段第 1 關 → 第 SIX_LEVELS 關；留不下這麼少時，留到不能再拿為止 */
+    var ANS6_S = [60, 240];                     /* 6×6 作答限時（秒）：階段第 1 關 → 到頂（介於 4×4 與 9×9 之間） */
+    var MEMO_UNTIL = 20;                        /* V1.47：到第幾關（含）為止，點沒有數字的格子可以做「記憶」（跳出 1～N 的選單，選一個數字，那格用灰色顯示）；更後面的關卡點了只會出現「此關卡不提供記憶功能」。設 0＝全部關卡都沒有記憶功能 */
+    var MEMO_TIP_MS = 2200;                     /* 「此關卡不提供記憶功能」這行提示停多久（毫秒）才換回原本的說明 */
     var RAMP9 = 24;                             /* 9×9 的難度走幾關到頂（第 7 關起算第 1 個 9×9 關卡） */
     var DEEP_P = [0, 0.9];                      /* 出「要先推出別格、再推目標」這種題目的機率：階段的第 1 關 → 到頂 */
     var GIVENS4 = [12, 6];                      /* 4×4：盤面上留下幾個提示數字（不含目標那格，共 15 格可留）：第 1 關 → 第 FOUR_LEVELS 關；留不下這麼少時，留到不能再拿為止 */
@@ -46,17 +57,19 @@
     var REVEAL_FAIL_MS = 6000;                  /* 答錯或逾時：顯示正確答案要停多久才跳出結算彈窗 */
     var SLACK = 4;                              /* 提示個數離目標不超過這麼多就收題，否則多試幾次、用提示最少的那次 */
 
-    /* ═══ 盤面的幾何（4×4 與 9×9 各做一份）═══
-       makeGeom(B)：宮的邊長 B（2 或 3），盤面邊長 N＝B×B。
+    /* ═══ 盤面的幾何（4×4、6×6、9×9 各做一份）═══
+       makeGeom(BR, BC)：宮的高 BR 排、寬 BC 欄，盤面邊長 N＝BR×BC。只給一個數字＝正方形的宮（makeGeom(2)＝4×4、makeGeom(3)＝9×9）；
+       V1.47 新增 makeGeom(2, 3)＝6×6：宮高 2 排、寬 3 欄（也就是「3×2 的宮」），6 個宮（直的 3 個、橫的 2 個）。
        rowOf／colOf／blockOf：第 i 格在第幾排／第幾欄／第幾個宮；
        UNITS：所有「單位」（N 排、N 欄、N 個宮），每個單位是 N 個格子的編號；PEERS[i]：跟第 i 格同單位的其他格；
        ALL：1～N 的位元遮罩（bit1～bitN，推理器用位元表示「這格還可能放哪些數字」）。 */
-    function makeGeom(B) {
-        var N = B * B, g = { B: B, N: N, cells: N * N, ALL: 0, PEERS: [], UNITS: [], rowOf: null, colOf: null, blockOf: null }, i, j;
+    function makeGeom(BR, BC) {
+        BC = BC || BR;                                  /* 沒給第二個數字＝正方形的宮 */
+        var N = BR * BC, g = { B: BR, BR: BR, BC: BC, N: N, cells: N * N, ALL: 0, PEERS: [], UNITS: [], rowOf: null, colOf: null, blockOf: null }, i, j;  /* B：舊程式與測試用的名字（＝宮的高 BR，正方形的宮兩者相同） */
         for (i = 1; i <= N; i++) g.ALL |= (1 << i);
         g.rowOf = function (c) { return Math.floor(c / N); };  /* Math.floor：無條件捨去成整數 */
         g.colOf = function (c) { return c % N; };
-        g.blockOf = function (c) { return Math.floor(g.rowOf(c) / B) * B + Math.floor(g.colOf(c) / B); };
+        g.blockOf = function (c) { return Math.floor(g.rowOf(c) / BR) * (N / BC) + Math.floor(g.colOf(c) / BC); };  /* 宮編號：由左到右、由上到下；每一橫排有 N / BC 個宮（4×4＝2、6×6＝2、9×9＝3） */
         var rows = [], cols = [], blocks = [];
         for (i = 0; i < N; i++) { rows.push([]); cols.push([]); blocks.push([]); }
         for (i = 0; i < N * N; i++) { rows[g.rowOf(i)].push(i); cols[g.colOf(i)].push(i); blocks[g.blockOf(i)].push(i); }
@@ -69,7 +82,7 @@
         }
         return g;
     }
-    var GEO4 = makeGeom(2), GEO9 = makeGeom(3);
+    var GEO4 = makeGeom(2), GEO6 = makeGeom(2, 3), GEO9 = makeGeom(3);
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     /* 盤面的尺寸：畫面寬 W、盤面邊長 N（4 或 9）→ { width（含左外框，＝W × BOARD_FRAC 取整）, cell（每格邊長，可以有小數）, height（含上外框；格子是正方形所以＝width） } */
@@ -77,34 +90,38 @@
         var width = Math.round(W * BOARD_FRAC), cell = (width - BORDER) / N;  /* Math.round：四捨五入成整數 */
         return { width: width, cell: cell, height: cell * N + BORDER };
     }
-    /* 第 level 關屬於哪個階段：{ g 盤面幾何, idx 這個階段的第幾關（從 1 起算）, len 這個階段走幾關到頂 } */
+    /* 第 level 關屬於哪個階段：{ g 盤面幾何, idx 這個階段的第幾關（從 1 起算）, len 這個階段走幾關到頂, givens 這個階段的提示數範圍, ans 這個階段的作答限時範圍（秒） }
+       三個階段：第 1～FOUR_LEVELS 關 4×4 → 接著 SIX_LEVELS 關 6×6（V1.47）→ 再之後 9×9。 */
     function stageOf(level) {
         level = Math.max(1, level);
-        if (level <= FOUR_LEVELS) return { g: GEO4, idx: level, len: Math.max(2, FOUR_LEVELS) };
-        return { g: GEO9, idx: level - FOUR_LEVELS, len: RAMP9 };
+        if (level <= FOUR_LEVELS) return { g: GEO4, idx: level, len: Math.max(2, FOUR_LEVELS), givens: GIVENS4, ans: ANS4_S };
+        if (level <= FOUR_LEVELS + SIX_LEVELS) return { g: GEO6, idx: level - FOUR_LEVELS, len: Math.max(2, SIX_LEVELS), givens: GIVENS6, ans: ANS6_S };
+        return { g: GEO9, idx: level - FOUR_LEVELS - SIX_LEVELS, len: RAMP9, givens: GIVENS9, ans: ANS9_S };
     }
-    function givensFor(level) { var s = stageOf(level), r = s.g === GEO4 ? GIVENS4 : GIVENS9; return Math.round(kit.ramp(s.idx, r[0], r[1], s.len)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
-    function ansMs(level) { var s = stageOf(level), r = s.g === GEO4 ? ANS4_S : ANS9_S; return Math.round(kit.ramp(s.idx, r[0], r[1], s.len) * 1000); }
+    /* 這一關有沒有「記憶」功能（點沒有數字的格子可以記數字）：第 MEMO_UNTIL 關（含）以前有 */
+    function memoAllowed(level) { return level <= MEMO_UNTIL; }
+    function givensFor(level) { var s = stageOf(level); return Math.round(kit.ramp(s.idx, s.givens[0], s.givens[1], s.len)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function ansMs(level) { var s = stageOf(level); return Math.round(kit.ramp(s.idx, s.ans[0], s.ans[1], s.len) * 1000); }
     function deepP(level) { var s = stageOf(level); return kit.ramp(s.idx, DEEP_P[0], DEEP_P[1], s.len); }
     function bitCount(m) { var c = 0; while (m) { c += m & 1; m >>= 1; } return c; }
     function onlyDigit(m) { for (var d = 1; d <= 9; d++) if (m === (1 << d)) return d; return 0; }
     /* 做出一個完整正確的盤面（N×N，每個數字 1～N）。
        做法（標準的數獨造盤法）：先用公式排出一個一定合法的基本盤面 base(r, c)＝(B×(r mod B)＋⌊r÷B⌋＋c) mod N，
-       再隨機洗牌——數字 1～N 重新對應、「宮列」（每 B 排一組）彼此交換、同一個宮列裡的排互相交換、「宮行」與欄同理——
+       再隨機洗牌——數字 1～N 重新對應、「宮列」（每 BR 排一組）彼此交換、同一個宮列裡的排互相交換、「宮行」（每 BC 欄一組）與欄同理——
        這些洗牌都不會破壞規則，所以每一個結果都是合法的完整盤面。 */
     function makeSolution(g, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var B = g.B, N = g.N, digits = kit.shuffle(Array.apply(null, Array(N)).map(function (_, i) { return i + 1; }), rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
-        /* 洗牌後的排／欄順序：先洗「組」的順序，組裡面再各自洗 */
-        function order() {
-            var bands = kit.shuffle(Array.apply(null, Array(B)).map(function (_, i) { return i; }), rand), out = [];  /* Array.apply(null, Array(n)).map(...)：建立「0 到 n−1 的編號陣列」的常見寫法 */
-            bands.forEach(function (b) { kit.shuffle(Array.apply(null, Array(B)).map(function (_, i) { return b * B + i; }), rand).forEach(function (x) { out.push(x); }); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        var BR = g.BR, BC = g.BC, N = g.N, digits = kit.shuffle(Array.apply(null, Array(N)).map(function (_, i) { return i + 1; }), rand);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
+        /* 洗牌後的排／欄順序：N 條線每 size 條分成一「組」；先洗「組」的順序，組裡面再各自洗（排用 size＝BR，欄用 size＝BC） */
+        function order(size) {
+            var bands = kit.shuffle(Array.apply(null, Array(N / size)).map(function (_, i) { return i; }), rand), out = [];  /* Array.apply(null, Array(n)).map(...)：建立「0 到 n−1 的編號陣列」的常見寫法 */
+            bands.forEach(function (b) { kit.shuffle(Array.apply(null, Array(size)).map(function (_, i) { return b * size + i; }), rand).forEach(function (x) { out.push(x); }); });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             return out;
         }
-        var rowMap = order(), colMap = order(), sol = [];
+        var rowMap = order(BR), colMap = order(BC), sol = [];
         for (var r = 0; r < N; r++) for (var c = 0; c < N; c++) {
             var rr = rowMap[r], cc = colMap[c];
-            sol.push(digits[(B * (rr % B) + Math.floor(rr / B) + cc) % N]);
+            sol.push(digits[(BC * (rr % BR) + Math.floor(rr / BR) + cc) % N]);   /* 基本盤面的公式：同一個宮裡的數字互不相同（正方形的宮 BR＝BC＝B 時，就是原本的 B×(rr mod B)＋⌊rr÷B⌋＋cc） */
         }
         return sol;
     }
@@ -197,33 +214,91 @@
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
-        var q = makePuzzle(level, api.rand), g = q.g, N = g.N, B = g.B;
+        var q = makePuzzle(level, api.rand), g = q.g, N = g.N;
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
-        console.log('[數獨猜一格] 第 ' + level + ' 關：' + N + '×' + N + '（' + B + '×' + B + ' 的宮）目標第 ' + (g.rowOf(q.target) + 1) + ' 排第 ' + (g.colOf(q.target) + 1) + ' 格，答案 ' + q.answer + '；提示 ' + q.count + ' 個（想要 ' + givensFor(level) + '），推理 ' + q.steps + ' 輪；限時 ' + ansMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
+        console.log('[數獨猜一格] 第 ' + level + ' 關：' + N + '×' + N + '（' + g.BC + '×' + g.BR + ' 的宮）目標第 ' + (g.rowOf(q.target) + 1) + ' 排第 ' + (g.colOf(q.target) + 1) + ' 格，答案 ' + q.answer + '；提示 ' + q.count + ' 個（想要 ' + givensFor(level) + '），推理 ' + q.steps + ' 輪；限時 ' + ansMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         /* 盤面：N 欄 N 列的格子，每一格的邊長由 css 的 .sudokuone-board--n4／--n9 決定；每個宮的最右一欄、最下一排畫粗線（sudokuone-cE／sudokuone-rE） */
         var W = stage.clientWidth || 472, bm = boardMetrics(W, N);
         var board = h('div', { 'class': 'sudokuone-board sudokuone-board--n' + N });
         board.style.setProperty('--sdk-cell', bm.cell.toFixed(3) + 'px');                 /* 每格邊長：盤面寬度是畫面寬的 96% */
-        board.style.setProperty('--sdk-font', Math.round(bm.cell * (N === 4 ? 0.62 : 0.72)) + 'px');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
-        var cells = [];
+        board.style.setProperty('--sdk-font', Math.round(bm.cell * (N === 4 ? 0.62 : N === 6 ? 0.68 : 0.72)) + 'px');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
+        var cells = [], memo = [], pop = null;          /* memo[k]：玩家在第 k 格記的數字（0＝沒記）；pop：目前開著的「記憶」數字選單（沒開＝null） */
+        var memoOn = memoAllowed(level);                /* 這一關有沒有「記憶」功能 */
         for (var i = 0; i < g.cells; i++) {
             var c = h('div', { 'class': 'sudokuone-cell' });
-            if (g.colOf(i) % B === B - 1) c.className += ' sudokuone-cE';
-            if (g.rowOf(i) % B === B - 1) c.className += ' sudokuone-rE';
+            if (g.colOf(i) % g.BC === g.BC - 1) c.className += ' sudokuone-cE';   /* 每個宮的最右一欄畫粗線（宮寬 BC 格） */
+            if (g.rowOf(i) % g.BR === g.BR - 1) c.className += ' sudokuone-rE';   /* 每個宮的最下一排畫粗線（宮高 BR 格） */
+            var isPeer = g.rowOf(i) === g.rowOf(q.target) || g.colOf(i) === g.colOf(q.target) || g.blockOf(i) === g.blockOf(q.target);  /* 跟目標同排、同欄或同宮 */
+            memo.push(0);
             if (i === q.target) c.className += ' sudokuone-cell--target';
-            else if (g.rowOf(i) === g.rowOf(q.target) || g.colOf(i) === g.colOf(q.target) || g.blockOf(i) === g.blockOf(q.target)) c.className += ' sudokuone-cell--peer';
+            else if (q.givens[i]) { if (isPeer) c.className += ' sudokuone-cell--peer'; }          /* 有數字：白底；跟目標同排／同欄／同宮的是淡藍色底（V1.47） */
+            else c.className += ' sudokuone-cell--blank';                                           /* 沒有數字：一律淡黃色底（V1.47：不管在不在目標的同排、同欄、同宮），可以點它做「記憶」 */
             if (q.givens[i]) { c.textContent = String(q.givens[i]); c.className += ' sudokuone-cell--given'; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             else if (i === q.target) c.textContent = '？';
+            else (function (k) { kit.onTap(c, function () { tapBlank(k); }); })(i);                 /* 沒有數字的格子（不含目標那一格）才可以點；用立即執行函式存住這一次迴圈的 i */
             board.appendChild(c); cells.push(c);        /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         }
-        var tip = h('div', { 'class': 'qz-note sudokuone-tip sudokuone-tip--n' + N, text: '黃色那一格數字是哪個？' });
+        var tipText = memoOn ? '黃色那格是幾？點淡黃空格可記憶' : '黃色那一格數字是哪個？';   /* 盤面下方的說明：有記憶功能的關卡順便告訴玩家 */
+        var tip = h('div', { 'class': 'qz-note sudokuone-tip sudokuone-tip--n' + N, text: tipText });
         tip.style.top = Math.round(10 + bm.height + 4) + 'px';
         stage.appendChild(board); stage.appendChild(tip);
+
+        /* ═══ 「記憶」功能（V1.47）═══
+           tapBlank(k)：點到沒有數字的第 k 格——有記憶功能的關卡就在它上面開數字選單；沒有的話，只在下方的說明列寫「此關卡不提供記憶功能」。
+           openPop(k)：開選單——一個小方塊放 1～N 的數字（4×4 排 2×2、6×6 排 3×2、9×9 排 3×3），中心對準那一格，但不會超出舞台；
+                       選單後面有一張透明的全舞台背板，點背板（選單以外的地方）＝關掉選單、什麼都不改。
+           選一個數字＝那格改用灰色顯示這個數字；再選一次同一個數字＝取消。記憶只是玩家自己的記號，不影響答案的判定。 */
+        var docClose = null;                            /* 「點選單以外的任何地方就關閉」的監聽函式（選單開著才有；舞台以外的邊緣也要能關，所以掛在整個 document 上） */
+        function closePop() {
+            if (pop) { pop.remove(); pop = null; }      /* remove()：把元素從畫面上拿掉 */
+            if (docClose) { document.removeEventListener('pointerdown', docClose, true); docClose = null; }   /* 選單關了就把監聽拿掉（不拿掉會越積越多） */
+        }
+        function paintMemo(k) {                         /* 把第 k 格的記憶畫出來：有記就顯示灰色數字，沒記就清成空白 */
+            cells[k].textContent = memo[k] ? String(memo[k]) : '';
+            cells[k].classList.toggle('sudokuone-cell--memo', !!memo[k]);   /* classList.toggle(名稱, 開關)：開關為 true 就加上 class，false 就拿掉 */
+        }
+        function tapBlank(k) {
+            if (api.over) return;
+            if (!memoOn) {                              /* 這一關沒有記憶功能：下方說明列改寫一會兒，再換回原本的說明 */
+                tip.textContent = '此關卡不提供記憶功能';
+                api.after(MEMO_TIP_MS, function () { if (!api.over) tip.textContent = tipText; });   /* api.after：過幾毫秒再做；換關或結束後自動作廢 */
+                return;
+            }
+            openPop(k);
+        }
+        function openPop(k) {
+            closePop();
+            var cols = N === 4 ? 2 : 3, rows = Math.ceil(N / cols), P = 60, GAP = 6, PAD = 8;   /* 選單每顆數字 P px，間隔 GAP px，四周留 PAD px */
+            var pw = cols * P + (cols - 1) * GAP + PAD * 2, ph = rows * P + (rows - 1) * GAP + PAD * 2;
+            var SW = stage.clientWidth || 472, SH = stage.clientHeight || 640;
+            var cx = (SW - bm.width) / 2 + 4 + (g.colOf(k) + 0.5) * bm.cell, cy = 10 + 4 + (g.rowOf(k) + 0.5) * bm.cell;   /* 那一格的中心（盤面置中，上方離 10px，左、上外框各 4px） */
+            var back = h('div', { 'class': 'sudokuone-memo-back' });
+            var box = h('div', { 'class': 'sudokuone-memo' });
+            box.style.setProperty('--sdk-memo-c', cols);                                     /* 選單幾欄、每顆多大、間隔、內縮：交給 css 用 var() 取用 */
+            box.style.setProperty('--sdk-memo-p', P + 'px');
+            box.style.setProperty('--sdk-memo-gap', GAP + 'px');
+            box.style.setProperty('--sdk-memo-pad', PAD + 'px');
+            box.style.left = Math.round(Math.max(4, Math.min(SW - pw - 4, cx - pw / 2))) + 'px';   /* 中心對準那一格，但左右、上下各離舞台邊緣至少 4px */
+            box.style.top = Math.round(Math.max(4, Math.min(SH - ph - 4, cy - ph / 2))) + 'px';
+            for (var d = 1; d <= N; d++) (function (dd) {
+                var b = h('div', { 'class': 'sudokuone-memo-d' + (memo[k] === dd ? ' sudokuone-memo-d--on' : ''), text: String(dd) });
+                kit.onTap(b, function () { memo[k] = memo[k] === dd ? 0 : dd; paintMemo(k); closePop(); Sfx.play('click'); });   /* 再選一次同一個數字＝取消 */
+                box.appendChild(b);
+            })(d);
+            back.appendChild(box); stage.appendChild(back); pop = back;
+            /* 點選單以外的任何地方（背板、舞台外面的邊緣）＝關掉選單、什麼都不改。第三個參數 true＝在「捕獲階段」就先收到，所以不管點到什麼都會先關掉；
+               背板蓋在數字鍵上面，所以這一下只會關選單，不會同時按到下面的數字鍵（不會誤交答案）。 */
+            docClose = function (e) {
+                if (!back.isConnected) { closePop(); return; }   /* 這一關已經結束、選單早被拿掉了：順便把監聽也拿掉 */
+                if (!box.contains(e.target)) closePop();         /* contains：判斷點到的東西是不是在選單裡面；在選單裡面（點數字）就不關，讓數字自己處理 */
+            };
+            document.addEventListener('pointerdown', docClose, true);
+        }
         var items = [];
         for (var d = 1; d <= N; d++) (function (d) { items.push({ text: String(d), kind: 'sky', cls: 'sudokuone-btn', onTap: function () { judge(d); } }); })(d);
-        /* 數字鍵：4×4 排成一排 4 顆（每顆大一點）；9×9 排成 3×3 */
-        var grid = kit.btnGrid(stage, items, N === 4 ? { cols: 4, h: 84, gap: 8 } : { cols: 5, h: 62, gap: 8 });  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
+        /* 數字鍵：4×4 排成一排 4 顆、6×6 排成一排 6 顆（每顆大一點）；9×9 排成 5 欄 2 排 */
+        var grid = kit.btnGrid(stage, items, N === 4 ? { cols: 4, h: 84, gap: 8 } : N === 6 ? { cols: 6, h: 84, gap: 8 } : { cols: 5, h: 62, gap: 8 });  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
         api.timer(ansMs(level), function () { judge(null); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
         if (level === 1 && kit.once('sudokuone.hint')) kit.hintOn(stage, grid.btns[q.answer - 1], { mode: 'tap', delay: 700, text: '請點擊數字' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
@@ -231,9 +306,10 @@
         function judge(v) {
             if (api.over) return;
             var ok = v === q.answer;
-            /* 揭曉：整個解答都填出來，目標那一格標大字 */
+            closePop();                                 /* 記憶選單還開著就先關掉 */
+            /* 揭曉：整個解答都填出來，目標那一格標大字（玩家記的灰色數字也換成答案） */
             cells.forEach(function (c, k) {
-                if (!q.givens[k]) { c.textContent = String(q.solution[k]); c.classList.add('sudokuone-cell--fill'); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                if (!q.givens[k]) { c.textContent = String(q.solution[k]); c.classList.remove('sudokuone-cell--memo'); c.classList.add('sudokuone-cell--fill'); }  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             });
             cells[q.target].classList.add(ok ? 'sudokuone-cell--ok' : 'sudokuone-cell--bad');
             if (ok) { kit.flash(stage, true, api.my); api.pass({ delay: 1200 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
@@ -254,12 +330,12 @@
     var G = {
         id: ID,
         name: '數獨猜一格',
-        rule: '標準的數獨：**每一橫排、每一直排、每一個宮裡，數字都不重複**。前面的關卡是 4×4（四個 2×2 的宮，數字 1～4），第 11 關起變成更難的 9×9（九個 3×3 的宮，數字 1～9）。盤面上黃色的那一格，**只要猜出它是幾就好**。猜錯或來不及就結束，看你能過幾關。越後面，提示數字越少，要多推理幾步！',
+        rule: '標準的數獨：**每一橫排、每一直排、每一個宮裡，數字都不重複**。前面的關卡是 4×4（四個 2×2 的宮，數字 1～4），第 ' + (FOUR_LEVELS + 1) + ' 關起是 6×6（六個 3×2 的宮，數字 1～6），第 ' + (FOUR_LEVELS + SIX_LEVELS + 1) + ' 關起變成更難的 9×9（九個 3×3 的宮，數字 1～9）。盤面上黃色的那一格，**只要猜出它是幾就好**。猜錯或來不及就結束，看你能過幾關。**前 ' + MEMO_UNTIL + ' 關可以點淡黃色的空格做記憶**：選一個數字，那格就用灰色記住它。越後面，提示數字越少，要多推理幾步！',
         mount: mount,
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
-            boardMetrics: boardMetrics, BOARD_FRAC: BOARD_FRAC, REVEAL_FAIL_MS: REVEAL_FAIL_MS, GEO4: GEO4, GEO9: GEO9, makeGeom: makeGeom, stageOf: stageOf, givensFor: givensFor, ansMs: ansMs, deepP: deepP, makeSolution: makeSolution, deduce: deduce, makePuzzle: makePuzzle, rating: rating,
+            boardMetrics: boardMetrics, BOARD_FRAC: BOARD_FRAC, REVEAL_FAIL_MS: REVEAL_FAIL_MS, GEO4: GEO4, GEO6: GEO6, GEO9: GEO9, makeGeom: makeGeom, stageOf: stageOf, memoAllowed: memoAllowed, SIX_LEVELS: SIX_LEVELS, GIVENS6: GIVENS6, ANS6_S: ANS6_S, MEMO_UNTIL: MEMO_UNTIL, givensFor: givensFor, ansMs: ansMs, deepP: deepP, makeSolution: makeSolution, deduce: deduce, makePuzzle: makePuzzle, rating: rating,
             FOUR_LEVELS: FOUR_LEVELS, RAMP9: RAMP9, GIVENS4: GIVENS4, GIVENS9: GIVENS9, ANS4_S: ANS4_S, ANS9_S: ANS9_S, MAX_LEVEL: MAX_LEVEL
         }
     };

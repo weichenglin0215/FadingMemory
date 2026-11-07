@@ -35,6 +35,13 @@
     var PASS_DELAY_MS = 1500;                       /* 答對（過關）後停多久才換下一關（毫秒，1500 毫秒＝1.5 秒） */
     var FAIL_HOLD_MS = 7000;                        /* 答錯（失敗）後停多久才跳出結算畫面（毫秒，7000 毫秒＝7 秒），讓玩家先看清楚答案 */
     var TIME_BASE = 10, TIME_EVENT = [5, 3], TIME_ASK = 4;     /* 每一關限時（秒）＝基本 ＋ 每一筆進出貨幾秒（第 1 關 → 第 RAMP_LEVELS 關，線性縮短）＋ 每問一種水果幾秒；時間到了＝失敗（V1.43.1） */
+    /* V1.47（玩家意見：題目的字太小）：進出貨的文字與水果表的字放大。畫面高度有限，所以「能放多大就放多大」（layoutFor）：
+       進出貨的字級從 EV_FS 最大值往下試，先看一行放不放得下（兩欄的版面比較窄），再看整個畫面高度夠不夠；水果表每一列至少要 ROW_MIN 高，字級再跟著列高算。 */
+    var EV_FS = [22, 32];                       /* 進出貨文字的字級（px）：最小 → 最大（以前固定 22） */
+    var TB_FS = [22, 28];                       /* 水果表（水果名稱、顏色）的字級（px）：最小 → 最大（以前固定 22；「1 公斤、早上」多 4px，見 layoutFor） */
+    var ROW_MIN = 30, ROW_MAX = 56;             /* 水果表每一列的高度範圍（px）；水果種類多到連 ROW_MIN 都放不下時，退到 FALLBACK_ROW */
+    var FALLBACK_ROW = 26;                      /* 最難的關卡（水果 8 種、進出貨 10 筆）放不下時，水果表每一列最矮的高度（px），字級也退回最小 */
+    var KEY_H = [34, 42];                       /* 數字鍵每顆的高度（px）：最矮 → 最高；空間不夠時先把數字鍵縮矮 */
     var COLOR_ICON = { 紅色: '🔴', 橘色: '🟠', 黃色: '🟡', 綠色: '🟢', 紫色: '🟣', 粉色: '🌸' };    /* 寫「顏色的」那幾行，名稱前面放顏色的圓點 */
     var FRUITS = [                              /* 名稱、圖示、顏色（文字）、顏色的 CSS 變數名尾碼、1 公斤幾顆 */
         { name: '蘋果', icon: '🍎', color: '紅色', c: 'red', perKg: 4 },
@@ -52,6 +59,30 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function timeFor(level, nEvents, nAsks) { return TIME_BASE + nEvents * kit.ramp(level, TIME_EVENT[0], TIME_EVENT[1], RAMP_LEVELS) + nAsks * TIME_ASK; }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    /* 版面（V1.47）：舞台高 H、寬 W，水果 K 種、進出貨 nEv 筆，算出「字能放多大」。
+       textW(f)：進出貨最長那一行在字級 f px 時的寬度（畫面上用 canvas 量；測試可以傳估計值，沒給就不檢查寬度）。
+       回傳 { evFs 進出貨字級, tbFs 水果名稱／顏色字級, tdFs 「1 公斤、早上」字級, rowH 水果表每列高, keyH 數字鍵高, evCols 進出貨幾欄 }。
+       做法：進出貨字級由大到小試（EV_FS[1] → EV_FS[0]，每次少 2px）：① 一行放不放得下（超過 5 筆分兩欄，每欄比較窄）；
+       ② 把數字鍵由高縮到矮（KEY_H），看剩下的高度能不能讓水果表每列有 ROW_MIN。第一組放得下的就用；
+       都放不下（最難的關卡）→ 字級用最小、數字鍵最矮、每列至少 FALLBACK_ROW（跟 V1.43 以前一樣擠）。 */
+    function layoutFor(H, W, K, nEv, textW) {
+        var evCols = nEv > 5 ? 2 : 1, evRows = Math.ceil(nEv / evCols);   /* Math.ceil：無條件進位成整數 */
+        var colW = (W * 0.96 - 16 - (evCols - 1) * 8) / evCols;           /* 進出貨每一欄可以放文字的寬度（外框 96%、左右內縮各 8、欄距 8） */
+        /* 除了水果表每一列以外，其他東西佔的高度：表頭 24 ＋ 進出貨（每行「字級 × 1.25 行高 ＋ 4 間隔」＋ 外框內縮 10）＋ 數字鍵（4 排 ＋ 間隔 18）＋ 對帳鈕 52 ＋ 區塊間隔 24 ＋ 上方 4 ＋ 水果表列間隔 K × 4 */
+        function fixedH(kh, evFs) { return 24 + (evRows * (Math.ceil(evFs * 1.25) + 4) + 10) + (4 * kh + 18) + 52 + 24 + 4 + K * 4; }
+        function make(evFs, kh, rowH) {
+            var tb = Math.max(TB_FS[0], Math.min(TB_FS[1], rowH - 8));    /* 水果名稱、顏色的字級：隨列高，最小 22、最大 28 */
+            return { evFs: evFs, tbFs: tb, tdFs: tb + 4, rowH: rowH, keyH: kh, evCols: evCols };   /* 「1 公斤、早上」的字本來就比名稱大一級（26 對 22），所以多 4px */
+        }
+        for (var f = EV_FS[1]; f >= EV_FS[0]; f -= 2) {
+            if (f > EV_FS[0] && textW && textW(f) > colW) continue;      /* 這個字級一行放不下（最小字級不檢查，跟以前一樣） */
+            for (var kh = KEY_H[1]; kh >= KEY_H[0]; kh -= 2) {
+                var rowH = Math.floor((H - fixedH(kh, f)) / K);           /* Math.floor：無條件捨去成整數 */
+                if (rowH >= ROW_MIN) return make(f, kh, Math.min(ROW_MAX, rowH));
+            }
+        }
+        return make(EV_FS[0], KEY_H[0], Math.max(FALLBACK_ROW, Math.min(ROW_MAX, Math.floor((H - fixedH(KEY_H[0], EV_FS[0])) / K))));
+    }
     function sizeFor(level) {
         return {
             kinds: Math.round(kit.ramp(level, KINDS[0], KINDS[1], RAMP_LEVELS)),  /* Math.round：四捨五入成整數 */
@@ -147,19 +178,25 @@
         var pz = makePuzzle(level, api.rand), K = pz.fruits.length;
         api.info = pz;                                  /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[水果進出貨] 第 ' + level + ' 關：' + K + ' 種、' + pz.events.length + ' 筆');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
-        /* 版面：舞台高 667px 要放下「水果表（標題＋K 列）＋進出貨（超過 5 筆分兩欄）＋4 排數字鍵＋對帳鈕」，剩下的高度平均分給水果表的每一列 */
-        var H = stage.clientHeight || 667, keyH = 42;
-        var evRows = pz.events.length > 5 ? Math.ceil(pz.events.length / 2) : pz.events.length;  /* Math.ceil：無條件進位成整數 */
-        /* 水果種類多（KINDS 到 8 種）時 667px 放不下：先把數字鍵縮矮（最矮 34px），還不夠再把水果表每一列縮矮（最矮 26px，填空格的字級跟著縮，見 css） */
-        function fixedH(kh) { return 24 + (evRows * 31 + 14) + (4 * kh + 18) + 52 + 4 * 6 + 4 + K * 4; }
-        var rowH = Math.floor((H - fixedH(keyH)) / K);  /* Math.floor：無條件捨去成整數 */
-        while (rowH < 36 && keyH > 34) { keyH -= 2; rowH = Math.floor((H - fixedH(keyH)) / K); }
-        rowH = Math.max(26, Math.min(56, rowH));
+        /* 版面：舞台高 667px 要放下「水果表（標題＋K 列）＋進出貨（超過 5 筆分兩欄）＋4 排數字鍵＋對帳鈕」。
+           V1.47：字能放多大就放多大——layoutFor 依高度與寬度算出進出貨字級、水果表字級、每列高度與數字鍵高度（最難的關卡擠不下時退回最小字級）。 */
+        var H = stage.clientHeight || 667, W = stage.clientWidth || 472;
+        var measure = document.createElement('canvas').getContext('2d');   /* 用一張看不見的畫布量文字寬度（measureText），判斷進出貨一行放不放得下 */
+        var fam = getComputedStyle(stage).fontFamily || 'sans-serif';      /* 遊戲現在用的字型（量出來的寬度才準） */
+        var evTexts = pz.events.map(function (ev) { return eventText(ev, pz.fruits); });   /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        var lay = layoutFor(H, W, K, pz.events.length, function (f) {
+            measure.font = '700 ' + f + 'px ' + fam;
+            return Math.max.apply(null, evTexts.map(function (t) { return measure.measureText(t).width; }));   /* 最長的一行有多寬 */
+        });
+        var rowH = lay.rowH, keyH = lay.keyH;
         var asked = {}; pz.asks.forEach(function (i) { asked[i] = true; });
         var ans = pz.fruits.map(function (_, i) { return asked[i] ? '' : '—'; }), sel = pz.asks[0], over = false;      /* 沒被問到的水果填「—」 */
 
         var wrap = h('div', { 'class': 'fruitstock-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
         wrap.style.setProperty('--fruitstock-row', rowH + 'px');  /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
+        wrap.style.setProperty('--fruitstock-ev-fs', lay.evFs + 'px');   /* V1.47：進出貨的字級 */
+        wrap.style.setProperty('--fruitstock-tb-fs', lay.tbFs + 'px');   /* V1.47：水果名稱、顏色的字級 */
+        wrap.style.setProperty('--fruitstock-td-fs', lay.tdFs + 'px');   /* V1.47：「1 公斤、早上」的字級 */
         var table = h('div', { 'class': 'fruitstock-table' });
         table.appendChild(h('div', { 'class': 'fruitstock-th', text: '水果' }));  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         table.appendChild(h('div', { 'class': 'fruitstock-th', text: '顏色' }));
@@ -179,9 +216,9 @@
             if (asked[i]) kit.onTap(inp, function () { if (!over) { sel = i; paint(); } });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             table.appendChild(inp); inputs.push(inp);
         });
-        var evBox = h('div', { 'class': 'fruitstock-events' + (pz.events.length > 5 ? ' fruitstock-events--two' : '') });
+        var evBox = h('div', { 'class': 'fruitstock-events' + (lay.evCols > 1 ? ' fruitstock-events--two' : '') });
         pz.events.forEach(function (ev, i) {
-            evBox.appendChild(h('div', { 'class': 'fruitstock-ev fruitstock-ev--' + (ev.dir > 0 ? 'in' : 'out'), text: eventText(ev, pz.fruits) }));
+            evBox.appendChild(h('div', { 'class': 'fruitstock-ev fruitstock-ev--' + (ev.dir > 0 ? 'in' : 'out'), text: evTexts[i] }));
         });
         var btnOk = h('button', { 'class': 'btn btn--primary fruitstock-ok', type: 'button', text: '對帳' });
         kit.onTap(btnOk, submit);
@@ -252,6 +289,7 @@
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
+            layoutFor: layoutFor, EV_FS: EV_FS, TB_FS: TB_FS, ROW_MIN: ROW_MIN, ROW_MAX: ROW_MAX, FALLBACK_ROW: FALLBACK_ROW, KEY_H: KEY_H,
             sizeFor: sizeFor, timeFor: timeFor, TIME_BASE: TIME_BASE, TIME_EVENT: TIME_EVENT, TIME_ASK: TIME_ASK, chanceOf: chanceOf, eventText: eventText, piecesOf: piecesOf, finalCounts: finalCounts, makePuzzle: makePuzzle, workOf: workOf, pickAsks: pickAsks, rating: rating, ASKS: ASKS,
             FRUITS: FRUITS, RAMP_LEVELS: RAMP_LEVELS, KINDS: KINDS, EVENTS: EVENTS, KG_FROM: KG_FROM, COLOR_FROM: COLOR_FROM, HALF_FROM: HALF_FROM, MAX_LEVEL: MAX_LEVEL
         }

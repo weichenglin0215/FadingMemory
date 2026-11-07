@@ -55,7 +55,7 @@ export async function connect() {
 // 開啟某一款遊戲並進到「遊戲開始」：載入頁面 → 換上假的排行榜資料庫（不連網路）→ 略過玩法說明與世界排行榜彈窗（按「下一步」「開始挑戰」）。
 //   opts.port：本機伺服器埠號（預設 8743）；opts.root：專案根目錄（找 fake_backend.js 用）
 export async function openGame(cdp, id, opts) {
-  const port = (opts && opts.port) || 8743, root = (opts && opts.root) || process.cwd();
+  const port = (opts && opts.port) || Number(process.env.FM_PORT) || 8743, root = (opts && opts.root) || process.cwd();
   await cdp.send('Page.navigate', { url: 'http://localhost:' + port + '/reaction.html?game=' + id + '&t=' + Date.now() });
   for (let i = 0; i < 200; i++) {
     const ok = await cdp.evalJs('!!(window.Reaction && Reaction.current && document.readyState === "complete" && window.Leaderboard && document.querySelector(".dlg"))').catch(() => false);

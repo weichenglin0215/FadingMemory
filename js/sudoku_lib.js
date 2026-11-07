@@ -142,7 +142,7 @@
         kit.onTap(btnHint, function () { useHint(); });
         kit.onTap(btnReset, function () { reset(); });
         tools.appendChild(btnNote);
-        if (hintsLeft > 0) tools.appendChild(btnHint);
+        if (hintsLeft > 0 && kit.hintsAllowed(api.level)) tools.appendChild(btnHint);   /* V1.47.0：只有前 kit.HINT_LEVELS（4）關才放「提示」按鈕 */
         tools.appendChild(btnReset);
         wrap.appendChild(tools);
         stage.appendChild(wrap);                        /* 把整個遊戲區放進舞台（放進去，畫面上才看得到） */
@@ -247,7 +247,7 @@
         }
         function mount(root, ctx) {
             kit.run(root, ctx, {
-                id: cfg.id, G: G, maxLevel: MAX_LEVEL, goodAt: 5, resume: false, leaveSettle: true,
+                id: cfg.id, G: G, maxLevel: MAX_LEVEL, goodAt: 5, leaveSettle: true,
                 head: function (level) { return '第 ' + level + ' 題'; },
                 info: function (S) { return '已解 ' + S.cleared + ' 題'; },
                 numText: function (v) { return v + ' 題'; },

@@ -41,13 +41,15 @@
         { to: 20, n: 4, diag: true, extra: [3, 0] },
         { to: 9999, n: 5, diag: true, extra: [4, 0] }
     ];
-    var HINTS = 3;                                  /* 每一題可以用幾次提示（目前 3 次） */
+    var HINTS = 3;                                  /* 每一題可以用幾次提示（目前 3 次）；只有前 kit.HINT_LEVELS（4）關才有「提示」按鈕（V1.47） */
+    var BOARD_FRAC = 0.96;                      /* V1.47：盤面（含外框）的寬度＝遊戲畫面寬度的幾成；盤面一律是正方形，所以高度跟寬度一樣 */
+    var CHIP_MAX = 60, CHIP_MIN = 24, CHIP_GAP = 6;   /* 下面那一盒圖形：每顆的邊長範圍（px）與間隔。圖形多、畫面高度不夠時，每顆會縮小（最小 CHIP_MIN） */
     var NODE_LIMIT = 300000;                    /* 求解時最多搜尋幾步（超過就當作「不知道」，避免手機卡住） */
     var UNIQ_NODES = 60000;                     /* 出題時檢查「答案唯一」每一次最多搜尋幾步（超過就當作還不唯一，再多放一個） */
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var PASS_DELAY_MS = 1400;                       /* 答對（過關）後停多久才換下一關（毫秒，1400 毫秒＝1.4 秒） */
     var FAIL_HOLD_MS = 6000;                        /* 答錯（失敗）後停多久才跳出結算畫面（毫秒，6000 毫秒＝6 秒），讓玩家先看清楚答案 */
-    var TIME_BASE = 25, TIME_CELL = [10, 20];  /* 每一關限時（秒）＝基本 ＋ 每一個空格幾秒（第 1 關 → 第 30 關，線性縮短）；時間到了＝失敗，並亮出答案（V1.43.1） */
+    var TIME_BASE = 25, TIME_CELL = [15, 30];  /* 每一關限時（秒）＝基本 ＋ 每一個空格幾秒（第 1 關 → 第 30 關，線性縮短）；時間到了＝失敗，並亮出答案（V1.43.1） */
     var SHAPES = ['圓形', '三角形', '正方形', '星形', '菱形'];  /* 五種形狀的名稱：圓形、三角形、正方形、星形、菱形 */
     var COLORS = ['紅色', '藍色', '綠色', '黃色', '紫色'];    /* 五種顏色的名稱：紅、藍、綠、黃、紫 */
 
@@ -61,6 +63,20 @@
             if (level <= STAGES[i].to || i === STAGES.length - 1) return { st: STAGES[i], idx: level - from + 1, len: Math.min(STAGES[i].to - from + 1, 10) };
             from = STAGES[i].to + 1;
         }
+    }
+    /* V1.47 版面：畫面寬 W、高 H、盤面邊長 n 格、清單一開始有 nChips 個圖形 → { board 盤面（含外框）的邊長, size 清單每顆的邊長, perRow 每行幾顆, rows 幾行, trayW／trayH 清單的寬與高 }。
+       盤面寬度＝W × BOARD_FRAC（96%），正方形；盤面下面還要放「說明文字 36（最小高 32、行高會撐到約 34）＋ 清單 ＋ 按鈕 60」，加上上方留白 8 與三處間隔 10，剩下的高度就是清單可以用的高度。
+       清單試 1～4 行，挑「每顆最大」的那種（受寬度與高度兩邊限制），最小 CHIP_MIN；清單寬度剛好是「每行幾顆」那麼寬，所以換行的位置固定。 */
+    function layoutFor(W, H, n, nChips) {
+        var board = Math.round(W * BOARD_FRAC), trayMax = Math.round(W * 0.96), availH = H - 8 - board - 36 - 60 - 30, best = null;  /* Math.round：四捨五入成整數 */
+        nChips = Math.max(1, nChips);
+        for (var rows = 1; rows <= 4; rows++) {
+            var perRow = Math.ceil(nChips / rows);        /* Math.ceil：無條件進位成整數 */
+            var size = Math.min(CHIP_MAX, Math.floor((trayMax - (perRow - 1) * CHIP_GAP) / perRow), Math.floor((availH - (rows - 1) * CHIP_GAP) / rows));  /* Math.floor：無條件捨去成整數 */
+            if (!best || size > best.size) best = { perRow: perRow, size: size };
+        }
+        var sz = Math.max(CHIP_MIN, best.size), realRows = Math.ceil(nChips / best.perRow);
+        return { board: board, size: sz, perRow: best.perRow, rows: realRows, trayW: best.perRow * sz + (best.perRow - 1) * CHIP_GAP, trayH: realRows * sz + (realRows - 1) * CHIP_GAP };
     }
     /* 圖形編號 p＝形狀 × n ＋ 顏色 */
     function shapeOf(p, n) { return Math.floor(p / n); }  /* Math.floor：無條件捨去成整數 */
@@ -200,7 +216,7 @@
     /* ═══ 畫面 ═══ */
     function mount(root, ctx) {
         kit.run(root, ctx, {
-            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5, resume: false,
+            id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5,
             head: function (level) { return '第 ' + level + ' 關'; },
             info: function (S) { return '已解 ' + S.cleared + ' 關'; },
             numText: function (v) { return v + ' 關'; },
@@ -215,18 +231,17 @@
     function setup(api) {
         var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var pz = makePuzzle(level, api.rand), n = pz.n, N = n * n, diag = pz.diag;
-        var tipDefault = diag ? '形狀一樣、顏色一樣的，上下左右、斜角都不能相鄰' : '形狀一樣、顏色一樣的，都不能相鄰';
+        var tipDefault = diag ? '一樣形狀、顏色的，斜角也不能相鄰' : '形狀一樣、顏色一樣的，都不能相鄰';   /* 說明文字只放一行（V1.47：盤面放大後，下面的空間要留給圖形清單） */
         api.info = pz;                                  /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[形色不相鄰] 第 ' + level + ' 關：' + n + '×' + n + (diag ? '（含斜角）' : '') + '，先放好 ' + pz.given.filter(function (v) { return v >= 0; }).length + ' 個');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
-        var W = stage.clientWidth || 472, H = stage.clientHeight || 700;
-        var chip = n >= 5 ? 52 : 60, perRow = Math.floor((W * 0.96 + 6) / (chip + 6)), trayRows = Math.ceil(N / perRow);  /* Math.ceil：無條件進位成整數 */
-        var cell = Math.min(116, Math.floor((W * 0.92 - (n - 1) * 6) / n), Math.floor((H - trayRows * (chip + 6) - 150 - (n - 1) * 6) / n));
+        var W = stage.clientWidth || 472, H = stage.clientHeight || 667;
+        var lay = layoutFor(W, H, n, pz.given.filter(function (v) { return v < 0; }).length);   /* 版面（V1.47）：盤面寬度＝畫面的 96%、正方形；清單每顆多大由剩下的高度決定 */
         var g = pz.given.slice(), hinted = {}, pick = -1, hintsLeft = HINTS, solved = false, flagged = -1, dead = false;
 
         var wrap = h('div', { 'class': 'shapegrid-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
         var board = h('div', { 'class': 'shapegrid-board' });  /* board：盤面（所有格子都放在裡面） */
         board.style.setProperty('--shapegrid-n', n);    /* style.setProperty('--名稱', 值)：用 JS 設定 CSS 變數，CSS 裡用 var(--名稱) 取用（把算好的尺寸交給樣式） */
-        board.style.setProperty('--shapegrid-cell', cell + 'px');
+        board.style.setProperty('--shapegrid-board', lay.board + 'px');   /* 盤面（含外框）的邊長：寬、高都用它，所以一定是正方形；格子由 css 用 1fr 平分 */
         var cells = [];
         for (var k = 0; k < N; k++) {
             var cl = h('div', { 'class': 'shapegrid-cell' });
@@ -235,13 +250,15 @@
         }
         var tip = h('div', { 'class': 'shapegrid-tip', text: tipDefault });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
         var tray = h('div', { 'class': 'shapegrid-tray' });
-        tray.style.setProperty('--shapegrid-chip', chip + 'px');
+        tray.style.setProperty('--shapegrid-chip', lay.size + 'px');   /* 清單每顆的邊長、整個清單的寬與高：交給 css 用 var() 取用 */
+        tray.style.setProperty('--shapegrid-tray-w', lay.trayW + 'px');
+        tray.style.setProperty('--shapegrid-tray-h', lay.trayH + 'px');
         var tools = h('div', { 'class': 'shapegrid-tools' });
         var btnHint = h('button', { 'class': 'btn btn--line shapegrid-tool', type: 'button', text: '提示 ' + hintsLeft });  /* 「提示」按鈕（文字會顯示還剩幾次提示） */
         var btnReset = h('button', { 'class': 'btn btn--line shapegrid-tool', type: 'button', text: '重來' });  /* 「重來」按鈕 */
         kit.onTap(btnHint, useHint);                    /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
         kit.onTap(btnReset, reset);
-        if (HINTS > 0) tools.appendChild(btnHint);      /* 提示次數 HINTS 設成 0，就連提示按鈕都不放 */
+        if (HINTS > 0 && kit.hintsAllowed(level)) tools.appendChild(btnHint);   /* 提示次數 HINTS 設成 0，或已經過了前 kit.HINT_LEVELS（4）關，就連提示按鈕都不放（V1.47） */
         tools.appendChild(btnReset);
         wrap.appendChild(board); wrap.appendChild(tip); wrap.appendChild(tray); wrap.appendChild(tools);
         stage.appendChild(wrap);                        /* 把整個遊戲區放進舞台（放進去，畫面上才看得到） */
@@ -303,7 +320,7 @@
             if (k >= N) return;
             hintsLeft--; btnHint.textContent = '提示 ' + hintsLeft; btnHint.disabled = hintsLeft <= 0;
             flagged = k; paint();
-            tip.textContent = '照現在這樣擺不完了，閃動的這一格先拿起來';
+            tip.textContent = '擺不完了：把閃動的那一格先拿起來';
         }
         /* 重來：把這一題恢復成剛開始的樣子 */
         function reset() {
@@ -350,11 +367,12 @@
     var G = {
         id: ID,
         name: '形色不相鄰',
-        rule: '九宮格（之後是 16 格、25 格）。下面有一盒圖形，**每種形狀配每種顏色剛好一個**。把全部的圖形擺進格子：**形狀一樣或顏色一樣的兩個，不可以左右相鄰，也不可以上下相鄰**，後面的關卡**連斜角也不能相鄰**，隨手亂擺會卡死，要推理。**每一題的答案只有一種**，先放好的圖形（粗黑框）不能動。點下面的圖形，再點格子放進去；點自己放的圖形可以拿回來，違規的兩格會變紅。每一關有時間限制（上面的時間條，空格越多給的時間越長），時間到了也算失敗；全部擺完而且沒有違規就過關，成績是解開幾題。',
+        rule: '九宮格（之後是 16 格、25 格）。下面有一盒圖形，**每種形狀配每種顏色剛好一個**。把全部的圖形擺進格子：**形狀一樣或顏色一樣的兩個，不可以左右相鄰，也不可以上下相鄰**，後面的關卡**連斜角也不能相鄰**，隨手亂擺會卡死，要推理。**每一題的答案只有一種**，先放好的圖形（淺灰色底、粗黑框）不能動。點下面的圖形，再點格子放進去；點自己放的圖形可以拿回來，違規的兩格會變紅。每一關有時間限制（上面的時間條，空格越多給的時間越長），時間到了也算失敗；只有前 4 關有「提示」按鈕；全部擺完而且沒有違規就過關，成績是解開幾題。',
         mount: mount,
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
+            layoutFor: layoutFor, BOARD_FRAC: BOARD_FRAC, CHIP_MAX: CHIP_MAX, CHIP_MIN: CHIP_MIN, CHIP_GAP: CHIP_GAP,
             stageOf: stageOf, timeFor: timeFor, TIME_BASE: TIME_BASE, TIME_CELL: TIME_CELL, shapeOf: shapeOf, colorOf: colorOf, canTouch: canTouch, neighbors: neighbors, violations: violations, solve: solve, search: search, countSolutions: countSolutions, isUnique: isUnique,
             makePuzzle: makePuzzle, whyText: whyText, rating: rating, STAGES: STAGES, HINTS: HINTS, NODE_LIMIT: NODE_LIMIT, MAX_LEVEL: MAX_LEVEL, SHAPES: SHAPES, COLORS: COLORS
         }

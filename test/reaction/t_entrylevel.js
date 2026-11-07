@@ -89,6 +89,35 @@ ok(/kit\.entryLevel\(o\.id/.test(kit2) && /kit\.entryNotice\(o\.id/.test(kit2), 
 ok(/level: leveled/.test(kit2), 'kit.run 結算把關卡交給 kit.result');
 ok(/o\.resume !== false && !o\.scoreOf/.test(kit2), 'resume:false、scoreOf 的遊戲不套用');
 
+// ── V1.47（玩家意見）：高關卡的優待（從最佳關卡 − 4 進場）不能漏掉；「提示」按鈕只在前 4 關 ──
+// 疊箱子、形色不相鄰是 V1.42 的不限時自由解題時期抄來的 resume:false，V1.43.1 改成限時、答錯就失敗之後沒拿掉，所以玩到高關卡後重玩永遠從第 1 關開始。
+// 現在檢查：還在用 resume:false 的遊戲，一定是有理由的（累計分數的單局遊戲、要靠前面關卡記憶的遊戲）。
+{
+  const KEEP = {   // 允許保留 resume:false 的遊戲與理由
+    seenit: '每一關問「前面關卡出現過嗎」，從後面的關卡開始就沒有前面的紀錄了', stackup: '塔是一關一關疊起來的，從後面開始沒有塔'
+  };
+  const SCORE_GAMES = fs.readdirSync(dir).filter(f => /^reaction_.*\.js$/.test(f) && !/kit|core/.test(f)).filter(f => /scoreOf/.test(fs.readFileSync(path.join(dir, f), 'utf8'))).map(f => f.replace(/^reaction_|\.js$/g, ''));
+  const offenders = [];
+  files.forEach(f => {
+    const id = f.replace(/^reaction_|\.js$/g, ''), src = fs.readFileSync(path.join(dir, f), 'utf8');
+    if (/resume:\s*false/.test(src) && !KEEP[id] && SCORE_GAMES.indexOf(id) < 0) offenders.push(id);
+  });
+  ok(offenders.length === 0, '關卡制的遊戲不該用 resume:false（會失去「從最佳關卡 − 4 進場」）：' + offenders.join('、'));
+  const lib = fs.readFileSync(path.join(dir, 'sudoku_lib.js'), 'utf8');
+  ok(!/resume:\s*false/.test(lib), '數獨系列（sudoku_lib）也有進場優待');
+  ['boxstack', 'shapegrid', 'magicsq', 'sandwich', 'sumdel', 'takuzu', 'timetable'].forEach(id => ok(!/resume:\s*false/.test(fs.readFileSync(path.join(dir, 'reaction_' + id + '.js'), 'utf8')), id + '：有進場優待'));
+  // 沒有失敗的自由解題（leaveSettle）：按「返回」時如果這一局一題都沒解開（從第 26 關進場也一樣），要直接離開，不能跳出結算
+  ok(/startAt/.test(kit2) && /S\.cleared < startAt/.test(kit2), 'leaveSettle：「這一局一題都沒解開」用 startAt 判斷（從最佳關卡進場時 cleared 一開始就大於 0）');
+}
+// 提示按鈕：kit.hintsAllowed、前 4 關
+ok(kit.HINT_LEVELS === 4 && kit.hintsAllowed(1) && kit.hintsAllowed(4) && !kit.hintsAllowed(5) && !kit.hintsAllowed(26), '提示按鈕只在前 4 關：第 1～4 關有、第 5 關起沒有');
+{
+  // 所有有「提示」按鈕的遊戲（建按鈕：btnHint）都要先問 kit.hintsAllowed
+  const hintFiles = fs.readdirSync(dir).filter(f => /\.js$/.test(f) && /btnHint\s*=\s*h\(/.test(fs.readFileSync(path.join(dir, f), 'utf8')));
+  ok(hintFiles.length >= 7, '有提示按鈕的檔案 ' + hintFiles.length + ' 個：' + hintFiles.join('、'));
+  hintFiles.forEach(f => { const src = fs.readFileSync(path.join(dir, f), 'utf8'); ok(/appendChild\(btnHint\)/.test(src) && /kit\.hintsAllowed\(/.test(src) && !/if \((HINTS > 0|hintsLeft > 0)\) \w+\.appendChild\(btnHint\)/.test(src), f + '：提示按鈕有先問 kit.hintsAllowed'); });
+}
+
 // ── 模擬一整個玩家的歷程 ──
 reset(); Reaction.current = { id: 'sim' };
 let from = kit.entryLevel('sim');

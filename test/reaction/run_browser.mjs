@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { connect, sleep } from './cdp.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../');
-const PORT = 8743;
+const PORT = Number(process.env.FM_PORT) || 8743;   // 8743 若被 Windows 保留（WinError 10013），用環境變數 FM_PORT 換一個埠（例如 8900）
 const [kind, ...rest] = process.argv.slice(2);
 if (!/^(new|new23|hints)$/.test(kind || '')) { console.log('用法：node test/reaction/run_browser.mjs new23|new <id…>|hints [<id…>]'); process.exit(1); }
 const read = f => fs.readFileSync(path.join(ROOT, f), 'utf8');
