@@ -1,0 +1,371 @@
+/* ═══════════════════════════════════════════════════════════════════
+   hexcolor_test.css — 六角著色（參數測試版）的版面與配色
+   ───────────────────────────────────────────────────────────────────
+   ★ 要調外觀，改最上面 :root 的變數就好（顏色、字級、尺寸都在那裡）。
+   ★ 專案規則：顏色／字級一律用 CSS 變數；這支檔案的其他規則只用 var(--...)，不寫死數值。
+     共用的變數（--c-paper、--c-ink、--bd…）在 css/theme.css，這裡只新增 --hx- 開頭的。
+   ★ 版面是 500×850 的「邏輯畫面」（css/stage.css 會整體縮放），所以單位都是 px。
+   CSS 速查（給新手）：
+     · display:flex 讓子元素排成一列（或一欄）；flex:1 表示「把剩下的空間都吃掉」。
+     · var(--名稱) 取用變數；:root 是整個網頁最外層，寫在那裡的變數到處都能用。
+     · 用 class 名稱（.hx-xxx）選元素，樣式依 class 切換（例如 .is-selected 表示被選取）。
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+    /* ── 8 種遊戲顏色（前 4 種是藍、橘、綠、黃，符合專案的「黃綠藍＋少量橘」；後面是補色） ── */
+    --hx-c0: var(--c-blue);
+    --hx-c1: var(--c-orange);
+    --hx-c2: var(--c-green);
+    --hx-c3: var(--c-yellow);
+    --hx-c4: var(--c-red);
+    --hx-c5: hsl(280, 45%, 55%);
+    --hx-c6: hsl(330, 70%, 68%);
+    --hx-c7: hsl(28, 40%, 36%);
+
+    /* ── 盤面 ── */
+    --hx-empty: var(--bd-c);                 /* 還沒塗色的空格 */
+    --hx-gap: var(--c-paper);                /* 格子之間的縫（跟背景同色） */
+    --hx-lock-ring: var(--c-ink);            /* 預填格（鎖住）裡面那圈線 */
+    --hx-ghost-line: var(--c-ink);           /* 顯示解答時，非預填格的虛線外框 */
+    --hx-mark-fg: var(--c-on-accent);        /* 相鄰同色的「✕」記號：內線 */
+    --hx-mark-bg: var(--c-ink);              /* 相鄰同色的「✕」記號：外框 */
+    --hx-win-bg: var(--c-ok-soft);           /* 過關時盤面底色 */
+
+    /* ── 字級（測試版面板刻意比專案一般畫面小，才能把盤面留大；想放大就改這裡） ── */
+    --hx-fs-panel: 20px;                     /* 滑桿標籤與數字、按鈕 */
+    --hx-fs-status: 17px;                    /* 狀態列 */
+    --hx-pal-num: 54px;                      /* 顏色格中間的「剩餘數量」（單位：該格 SVG 的座標，會跟著格子大小縮放） */
+
+    /* ── 尺寸 ── */
+    --hx-palette-h: 120px;                   /* 下方顏色列的高度 */
+    --hx-pal-max-w: 82px;                    /* 每個顏色格最寬多少 */
+    --hx-pal-selected-scale: 1.1;            /* 被選取的顏色格放大幾倍 */
+    --hx-slider-h: 22px;                     /* 滑桿高度 */
+}
+
+/* 8 個「顏色 class」：只做一件事——把這個元素的 --hx-fill 設成第 i 種顏色。
+   盤面格子與下方顏色格都用 fill: var(--hx-fill) 上色，所以顏色只要在這裡對應一次。 */
+.hx-col-0 { --hx-fill: var(--hx-c0); }
+.hx-col-1 { --hx-fill: var(--hx-c1); }
+.hx-col-2 { --hx-fill: var(--hx-c2); }
+.hx-col-3 { --hx-fill: var(--hx-c3); }
+.hx-col-4 { --hx-fill: var(--hx-c4); }
+.hx-col-5 { --hx-fill: var(--hx-c5); }
+.hx-col-6 { --hx-fill: var(--hx-c6); }
+.hx-col-7 { --hx-fill: var(--hx-c7); }
+
+/* 滑桿旁邊的小色點用的背景色 */
+.hx-bg-0 { background: var(--hx-c0); }
+.hx-bg-1 { background: var(--hx-c1); }
+.hx-bg-2 { background: var(--hx-c2); }
+.hx-bg-3 { background: var(--hx-c3); }
+.hx-bg-4 { background: var(--hx-c4); }
+.hx-bg-5 { background: var(--hx-c5); }
+.hx-bg-6 { background: var(--hx-c6); }
+.hx-bg-7 { background: var(--hx-c7); }
+
+/* ── 整個畫面：由上到下三塊（面板／盤面／顏色列），盤面把剩下的高度全吃掉 ── */
+#stage.hx {
+    display: flex;
+    flex-direction: column;                 /* 子元素由上往下排 */
+    font-family: var(--font-ui);
+    font-weight: var(--fw-regular);
+    color: var(--c-ink);
+}
+
+/* ═════ ① 參數面板 ═════ */
+.hx-panel {
+    flex: none;                             /* 高度由內容決定，不被壓縮 */
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-1);
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--c-card);
+    border-bottom: var(--bd);
+}
+
+.hx-row {
+    display: flex;
+    gap: var(--sp-4);                       /* 左右兩個控制項之間的距離 */
+    align-items: center;
+}
+
+/* 一個「標籤＋滑桿＋數字」 */
+.hx-ctl {
+    flex: 1 1 0;                            /* 左右兩個平分寬度 */
+    min-width: 0;                           /* 允許被壓窄（沒有這行，滑桿會把版面撐爆） */
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    font-size: var(--hx-fs-panel);
+    line-height: var(--lh-tight);
+}
+
+.hx-ctl label {
+    flex: none;
+    width: 2.1em;                           /* 兩個中文字的寬度，讓四個標籤對齊 */
+    font-weight: var(--fw-bold);
+}
+
+.hx-ctl output {
+    flex: none;
+    width: 1.6em;                           /* 最多兩位數 */
+    text-align: right;
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 滑桿：accent-color 一行就能換成主題色。
+   touch-action: pan-y 表示「手指橫向拖曳歸滑桿處理」（只允許直向捲動；專案規定不可寫 auto） */
+.hx-ctl input[type="range"],
+.hx-cc input[type="range"] {
+    flex: 1 1 0;
+    min-width: 0;
+    height: var(--hx-slider-h);
+    accent-color: var(--c-green);
+    touch-action: pan-y;
+    cursor: pointer;
+}
+
+/* 每種顏色的格數：一排最多 4 個，色數多就自動換到下一排 */
+.hx-colors {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);  /* 4 欄等寬 */
+    gap: 0 var(--sp-3);
+}
+
+.hx-cc {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-1);
+    min-width: 0;
+    font-size: var(--hx-fs-panel);
+}
+
+.hx-cc .hx-dot {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    border-radius: var(--r-pill);           /* 圓形 */
+    border: var(--bd);
+}
+
+.hx-cc output {
+    flex: none;
+    width: 1.5em;
+    text-align: right;
+    font-weight: var(--fw-bold);
+    color: var(--c-ink-soft);
+}
+
+/* 按鈕列：兩顆按鈕＋狀態文字 */
+.hx-row--act {
+    gap: var(--sp-2);
+    align-items: stretch;
+}
+
+.hx-btn {
+    flex: none;
+    padding: 0 var(--sp-3);
+    min-height: 40px;
+    border-radius: var(--r-sm);
+    font-size: var(--hx-fs-panel);
+    font-weight: var(--fw-bold);
+    background: var(--btn-go-bg);
+    color: var(--btn-go-fg);
+    box-shadow: var(--btn-go-shadow);
+}
+
+.hx-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+/* 參數改過、還沒按「重新產生」：按鈕變橘色提醒 */
+.hx-btn.is-dirty {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-fg);
+    box-shadow: var(--btn-primary-shadow);
+}
+
+/* 「解答」按鈕：外框款；顯示中填滿藍色 */
+.hx-btn--alt {
+    background: var(--btn-line-bg);
+    color: var(--btn-line-fg);
+    border: var(--btn-line-bd);
+    box-shadow: none;
+}
+
+.hx-btn--alt.is-on {
+    background: var(--btn-sky-bg);
+    color: var(--btn-sky-fg);
+}
+
+/* 「極難」按鈕：紅底，一眼跟一般按鈕區分 */
+.hx-btn--hard {
+    background: var(--c-red);
+    color: var(--c-on-accent);
+    box-shadow: none;
+}
+
+/* 狀態列：獨立一行放在按鈕下面（按鈕變多之後，放在同一行會太窄）。
+   平常一行；文字比較長才會變兩行，盤面會自動重新計算大小。 */
+.hx-status {
+    min-height: calc(var(--hx-fs-status) * var(--lh-tight));
+    font-size: var(--hx-fs-status);
+    line-height: var(--lh-tight);
+    color: var(--c-ink-soft);
+}
+
+.hx-status.is-win {
+    color: var(--c-ok);
+    font-weight: var(--fw-bold);
+}
+
+.hx-status.is-bad {
+    color: var(--c-bad);
+}
+
+/* ═════ ② 盤面 ═════ */
+.hx-board {
+    flex: 1 1 0;                            /* 吃掉面板與顏色列之外剩下的所有高度 */
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sp-2);
+    overflow: hidden;
+}
+
+.hx-board.is-win {
+    background: var(--hx-win-bg);
+}
+
+.hx-board svg {
+    display: block;
+    overflow: visible;
+}
+
+/* 一個六角格子 */
+.hx-poly {
+    fill: var(--hx-fill, var(--hx-empty));  /* 沒有顏色 class 時用空格色 */
+    stroke: var(--hx-gap);                  /* 用跟背景同色的邊線在格子之間留出縫隙 */
+    stroke-width: 0.1;                      /* SVG 內的單位：1＝六角形的外接圓半徑 */
+    stroke-linejoin: round;
+    cursor: pointer;
+}
+
+.hx-cell.hx-empty .hx-poly {
+    fill: var(--hx-empty);
+}
+
+/* 預填格：裡面多一圈線（用來跟玩家自己塗的區分） */
+.hx-ring {
+    display: none;
+    fill: none;
+    stroke: var(--hx-lock-ring);
+    stroke-width: 0.09;
+    pointer-events: none;                   /* 不擋滑鼠，點擊仍然落在底下的六角形 */
+}
+
+.hx-cell.hx-locked .hx-ring {
+    display: inline;
+}
+
+/* 相鄰同色：中間畫「✕」（不只靠顏色，色弱也看得出來） */
+.hx-x-bg,
+.hx-x-fg {
+    display: none;
+    fill: none;
+    stroke-linecap: round;
+    pointer-events: none;
+}
+
+.hx-x-bg { stroke: var(--hx-mark-bg); stroke-width: 0.26; }
+.hx-x-fg { stroke: var(--hx-mark-fg); stroke-width: 0.12; }
+
+.hx-cell.hx-conflict .hx-x-bg,
+.hx-cell.hx-conflict .hx-x-fg {
+    display: inline;
+}
+
+/* 顯示解答時，不是預填的格子加虛線外框 */
+.hx-cell.hx-ghost .hx-poly {
+    stroke: var(--hx-ghost-line);
+    stroke-width: 0.07;
+    stroke-dasharray: 0.16 0.12;
+}
+
+/* ═════ ③ 顏色選擇列 ═════ */
+.hx-palette {
+    flex: none;
+    height: var(--hx-palette-h);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--c-card-alt);
+    border-top: var(--bd);
+}
+
+/* 每個顏色是一顆六角形按鈕：寬度由 flex 平分（最多 --hx-pal-max-w），高度用比例算出來 */
+.hx-pal-btn {
+    flex: 1 1 0;
+    max-width: var(--hx-pal-max-w);
+    aspect-ratio: 100 / 115.47;             /* 尖頂六角形的寬高比（√3 : 2） */
+    padding: 0;
+}
+
+.hx-pal-btn svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    transition: transform 0.1s;
+}
+
+.hx-pal-poly {
+    fill: var(--hx-fill);
+    stroke: var(--c-ink-soft);
+    stroke-width: 3;
+    stroke-linejoin: round;
+}
+
+/* 中間的剩餘數量：白字加深色描邊，每種底色上都看得清楚 */
+.hx-pal-num {
+    font-size: var(--hx-pal-num);
+    font-weight: var(--fw-black);
+    fill: var(--c-on-accent);
+    stroke: var(--c-ink);
+    stroke-width: 9;
+    stroke-linejoin: round;
+    paint-order: stroke;                    /* 先畫描邊再畫填色，字才不會被描邊吃細 */
+    pointer-events: none;
+}
+
+/* 被選取的顏色：放大並加粗外框 */
+.hx-pal-btn.is-selected svg {
+    transform: scale(var(--hx-pal-selected-scale));
+}
+
+.hx-pal-btn.is-selected .hx-pal-poly {
+    stroke: var(--c-ink);
+    stroke-width: 7;
+}
+
+/* 用完了：變淡 */
+.hx-pal-btn.is-zero svg {
+    opacity: 0.38;
+}
+
+/* 想放已經用完的顏色時，顏色格左右抖一下 */
+.hx-pal-btn.is-shake svg {
+    animation: hx-shake 0.3s;
+}
+
+@keyframes hx-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+}

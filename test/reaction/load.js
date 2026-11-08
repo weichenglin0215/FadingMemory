@@ -21,6 +21,7 @@ require(ROOT + 'js/sudoku_engine.js');     // 數獨系列的出題與推理引�
 require(ROOT + 'js/sudoku_lib.js');        // 數獨系列的共用畫面零件（Reaction.sudokuLib）
 require(ROOT + 'js/numpad_lib.js');        // 共用數字鍵盤（V1.42；時刻表補字、水果進出貨、抱著量體重）
 require(ROOT + 'js/ghostleg_core.js');     // 鬼腳圖的共用出題工具（V1.33.0；鬼腳圖、鬼腳圖減一 都用它）
+require(ROOT + 'js/hexcolor_core.js');     // 六角著色的形狀產生器（V1.50；六角著色與參數測試版 hexcolor_test.html 共用）
 require(ROOT + 'js/leaderboard.js');       // 遊戲的結算流程會呼叫 Leaderboard.fake4／fmtNum／submit（測試只呼叫純函式，但要找得到它）
 exports.game = function (file) {
   const before = Reaction.list().length;

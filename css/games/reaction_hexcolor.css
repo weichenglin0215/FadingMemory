@@ -1,0 +1,393 @@
+/* ═══════════════════════════════════════
+   reaction_hexcolor.css — 六角著色（js/reaction_hexcolor.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「hexcolor-」開頭，只給這一款遊戲用。
+   · 顏色一律用變數：四種遊戲顏色 --hexcolor-c0～c3（藍、橘、綠、黃，跟專案的「黃綠藍＋少量橘」一致），
+     每一色都配一個「同色系的深色」當邊線 --hexcolor-e0～e3（使用者要求：邊線不要一律咖啡色，要跟底色相近的深色）。
+   · 盤面是 SVG：座標單位是「六角形的半徑＝1」，所以線條粗細（stroke-width）都是 0.0x 這種小數。
+     文字（?、X、！、剩餘數量）外面包了一層 scale(0.01)，所以字級寫 100px 左右（見 js 的 textIn 說明）。
+   ═══════════════════════════════════════ */
+
+/* 整個遊戲畫面：由上到下＝盤面／提示文字／顏色列 */
+.hexcolor-wrap {
+    --hexcolor-c0: var(--c-blue);                       /* 第 1 色：藍 */
+    --hexcolor-c1: var(--c-orange);                     /* 第 2 色：橘 */
+    --hexcolor-c2: var(--c-green);                      /* 第 3 色：綠 */
+    --hexcolor-c3: var(--c-yellow);                     /* 第 4 色：黃 */
+    --hexcolor-e0: hsl(208, 55%, 33%);                  /* 藍色格子的邊線：深藍 */
+    --hexcolor-e1: hsl(27, 72%, 36%);                   /* 橘色格子的邊線：深橘 */
+    --hexcolor-e2: hsl(132, 38%, 27%);                  /* 綠色格子的邊線：深綠 */
+    --hexcolor-e3: hsl(43, 78%, 33%);                   /* 黃色格子的邊線：深黃（土黃） */
+    --hexcolor-empty: var(--bd-c);                      /* 空格的顏色（「收回」按鈕也用這個顏色） */
+    --hexcolor-empty-edge: hsl(44, 50%, 56%);           /* 空格的邊線：比空格深一點的米黃 */
+    --hexcolor-warn: hsl(0, 62%, 30%);                  /* 「！」警示格的暗紅底 */
+    --hexcolor-warn-edge: hsl(0, 70%, 20%);             /* 「！」警示格的邊線：更深的紅 */
+    --hexcolor-dim: hsla(40, 30%, 15%, 0.18);           /* 記號彈窗後面那層淡淡的暗色（點它＝關掉彈窗） */
+    position: absolute;                                 /* 脫離一般排版，貼著舞台擺放 */
+    inset: 0;                                           /* 上下左右都貼齊舞台 */
+    display: flex;                                      /* 彈性盒子：子元素排成一欄 */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素左右置中 */
+    gap: 8px;                                           /* 區塊之間的空隙：8px（js 的 GAP 也是 8，算盤面大小時要一致） */
+    padding: 8px;                                       /* 四周留白：8px */
+    box-sizing: border-box;                             /* 寬高把留白也算進去 */
+    font-family: var(--font-ui);                        /* 字型：主題變數 --font-ui */
+}
+
+/* 「出題中…」：出題的那零點幾秒顯示在畫面正中央 */
+.hexcolor-wait {
+    position: absolute;                                 /* 疊在舞台上 */
+    inset: 0;                                           /* 蓋滿整個舞台 */
+    display: flex;                                      /* 彈性盒子：讓文字置中 */
+    align-items: center;                                /* 上下置中 */
+    justify-content: center;                            /* 左右置中 */
+    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
+    font-weight: var(--fw-bold);                        /* 字重：粗體 */
+    color: var(--c-ink-soft);                           /* 文字顏色：淡一點的墨色 */
+}
+
+/* ── 盤面 ── */
+.hexcolor-board {
+    flex: 1 1 0;                                        /* 吃掉提示列與顏色列以外剩下的所有高度 */
+    min-height: 0;                                      /* 允許被壓扁（沒有這行，SVG 會把版面撐爆） */
+    width: 100%;                                        /* 寬度：撐滿 */
+    display: flex;                                      /* 彈性盒子：讓 SVG 置中 */
+    align-items: center;                                /* 上下置中 */
+    justify-content: center;                            /* 左右置中 */
+}
+
+/* 盤面的 SVG（寬高由 js 算好寫在屬性上） */
+.hexcolor-svg {
+    display: block;                                     /* 區塊元素（去掉行內元素底下的空隙） */
+    overflow: visible;                                  /* 邊線超出一點點也畫出來 */
+    touch-action: none;                                 /* 關掉瀏覽器的觸控手勢，長按、點擊都由程式處理 */
+}
+
+/* 一個六角格（整個 <g>）：滑鼠移上去顯示手指 */
+.hexcolor-cell {
+    cursor: pointer;                                    /* 滑鼠游標：手指 */
+}
+
+/* 六角形本體：顏色來自 --hexcolor-fill／--hexcolor-edge（由 hexcolor-col-N 決定），沒有顏色＝空格的顏色 */
+.hexcolor-hex {
+    fill: var(--hexcolor-fill, var(--hexcolor-empty));          /* 填色：這格的顏色（沒有就用空格色） */
+    stroke: var(--hexcolor-edge, var(--hexcolor-empty-edge));   /* 邊線：同色系的深色 */
+    stroke-width: 0.07;                                 /* 邊線粗細：半徑的 7% */
+    stroke-linejoin: round;                             /* 邊線轉角：圓的 */
+}
+
+/* 四種顏色：只做一件事——設定這個元素（和裡面）的填色與邊線色 */
+.hexcolor-col-0 { --hexcolor-fill: var(--hexcolor-c0); --hexcolor-edge: var(--hexcolor-e0); }   /* 藍 */
+.hexcolor-col-1 { --hexcolor-fill: var(--hexcolor-c1); --hexcolor-edge: var(--hexcolor-e1); }   /* 橘 */
+.hexcolor-col-2 { --hexcolor-fill: var(--hexcolor-c2); --hexcolor-edge: var(--hexcolor-e2); }   /* 綠 */
+.hexcolor-col-3 { --hexcolor-fill: var(--hexcolor-c3); --hexcolor-edge: var(--hexcolor-e3); }   /* 黃 */
+
+/* 顏色組合小六角形裡的每一塊（顏色由 hexcolor-col-N 決定） */
+.hexcolor-fill {
+    fill: var(--hexcolor-fill);                         /* 填色：這一塊的顏色 */
+}
+
+/* 顏色組合小六角形的外框 */
+.hexcolor-combo__edge {
+    fill: none;                                         /* 不填色（只畫線） */
+    stroke: var(--c-ink);                               /* 線的顏色：墨色 */
+    stroke-width: 0.06;                                 /* 線的粗細 */
+    stroke-linejoin: round;                             /* 轉角：圓的 */
+}
+
+/* 預填格裡面的一圈線（不是預填的格子不顯示） */
+.hexcolor-ring {
+    display: none;                                      /* 平常隱藏 */
+    fill: none;                                         /* 不填色 */
+    stroke: var(--hexcolor-edge, var(--hexcolor-empty-edge));   /* 顏色：跟邊線一樣的深色 */
+    stroke-width: 0.1;                                  /* 線的粗細 */
+    pointer-events: none;                               /* 不擋點擊（點擊仍然落在六角形上） */
+}
+
+/* 預填格：顯示裡面那圈線 */
+.hexcolor-cell--given .hexcolor-ring {
+    display: inline;                                    /* 顯示 */
+}
+
+/* 提示塗的格子：粗的墨色外框 */
+.hexcolor-cell--hinted .hexcolor-hex {
+    stroke: var(--c-ink);                               /* 邊線：墨色 */
+    stroke-width: 0.14;                                 /* 邊線加粗 */
+}
+
+/* 時間到之後補上的正確答案：虛線外框 */
+.hexcolor-cell--revealed .hexcolor-hex {
+    stroke: var(--c-ink);                               /* 邊線：墨色 */
+    stroke-width: 0.08;                                 /* 邊線粗細 */
+    stroke-dasharray: 0.16 0.12;                        /* 虛線：畫 0.16、空 0.12 */
+}
+
+/* 提示說「塗錯了、要收回」的那一格：一閃一閃 */
+.hexcolor-cell--flag .hexcolor-hex {
+    stroke: var(--c-ink);                               /* 邊線：墨色 */
+    stroke-width: 0.16;                                 /* 邊線加粗 */
+    animation: hexcolor-blink 0.6s step-end infinite;   /* 每 0.6 秒閃一次（一直閃到玩家動手） */
+}
+
+/* 閃爍：一半時間變透明 */
+@keyframes hexcolor-blink {
+    50% { opacity: 0.35; }                              /* 動畫的一半：變淡 */
+}
+
+/* 相鄰同色的「✕」：平常隱藏 */
+.hexcolor-x {
+    display: none;                                      /* 平常隱藏 */
+    fill: none;                                         /* 不填色 */
+    stroke-linecap: round;                              /* 線頭：圓的 */
+    pointer-events: none;                               /* 不擋點擊 */
+}
+
+.hexcolor-x--bg { stroke: var(--c-on-accent); stroke-width: 0.28; }   /* ✕ 的白色外框（在什麼底色上都看得清楚） */
+.hexcolor-x--fg { stroke: var(--c-ink); stroke-width: 0.13; }         /* ✕ 的墨色內線 */
+
+/* 相鄰同色的格子：顯示 ✕ */
+.hexcolor-cell--bad .hexcolor-x {
+    display: inline;                                    /* 顯示 */
+}
+
+/* 「！」警示格：暗紅底 */
+.hexcolor-cell--warn .hexcolor-hex {
+    fill: var(--hexcolor-warn);                         /* 填色：暗紅 */
+    stroke: var(--hexcolor-warn-edge);                  /* 邊線：更深的紅 */
+}
+
+/* 警示的「！」：平常隱藏 */
+.hexcolor-bang {
+    display: none;                                      /* 平常隱藏 */
+    font-size: 110px;                                   /* 字級（外層縮小 100 倍＝半徑的 1.1 倍） */
+    font-weight: var(--fw-black);                       /* 字重：最粗 */
+    fill: var(--c-on-accent);                           /* 文字顏色：白 */
+    pointer-events: none;                               /* 不擋點擊 */
+}
+
+/* 「！」警示格：顯示「！」 */
+.hexcolor-cell--warn .hexcolor-bang {
+    display: inline;                                    /* 顯示 */
+}
+
+/* 記號（?、X、顏色組合）：不擋點擊 */
+.hexcolor-mark {
+    pointer-events: none;                               /* 不擋點擊（點擊仍然落在六角形上） */
+}
+
+/* 記號的「?」「X」：字級寫 100px（外層會縮小），白色描邊讓它在什麼底色上都看得清楚 */
+.hexcolor-glyph {
+    font-size: 100px;                                   /* 字級（外層縮小後＝要的大小） */
+    font-weight: var(--fw-black);                       /* 字重：最粗 */
+    stroke: var(--c-on-accent);                         /* 描邊：白色 */
+    stroke-width: 14px;                                 /* 描邊粗細 */
+    stroke-linejoin: round;                             /* 描邊轉角：圓的 */
+    paint-order: stroke;                                /* 先畫描邊再畫字（字才不會被描邊吃細） */
+}
+
+.hexcolor-glyph--q { fill: var(--c-black); }            /* 「?」：黑色 */
+.hexcolor-glyph--x { fill: var(--c-red); }              /* 「X」：紅色 */
+
+/* ── 提示文字（一行）── */
+.hexcolor-tip {
+    flex: none;                                         /* 高度固定，不被壓縮 */
+    width: 100%;                                        /* 寬度：撐滿 */
+    height: 40px;                                       /* 高度：40px（js 的 TIP_H 也是 40） */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    line-height: 40px;                                  /* 行高＝高度：文字上下置中 */
+    font-weight: var(--fw-bold);                        /* 字重：粗體 */
+    color: var(--c-ink-soft);                           /* 文字顏色：淡一點的墨色 */
+    text-align: center;                                 /* 文字置中 */
+    white-space: nowrap;                                /* 不換行 */
+    overflow: hidden;                                   /* 太長的部分不顯示 */
+    text-overflow: ellipsis;                            /* 太長就用「…」結尾 */
+}
+
+/* 提示文字：出錯時（紅字） */
+.hexcolor-tip--bad {
+    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
+    font-weight: var(--fw-black);                       /* 字重：最粗 */
+}
+
+/* ── 下方：顏色列＋工具按鈕 ── */
+.hexcolor-bar {
+    flex: none;                                         /* 高度固定 */
+    width: 100%;                                        /* 寬度：撐滿 */
+    height: 104px;                                      /* 高度：104px（js 的 BAR_H 也是 104） */
+    display: flex;                                      /* 彈性盒子：顏色列在左、工具按鈕在右 */
+    align-items: center;                                /* 上下置中 */
+    gap: 8px;                                           /* 左右之間的空隙 */
+}
+
+/* 顏色列：k 種顏色＋「收回」 */
+.hexcolor-pal {
+    flex: 1 1 auto;                                     /* 吃掉工具按鈕以外的寬度 */
+    min-width: 0;                                       /* 允許被壓窄 */
+    height: 100%;                                       /* 高度：撐滿 */
+    display: flex;                                      /* 彈性盒子：橫排 */
+    align-items: center;                                /* 上下置中 */
+    justify-content: center;                            /* 左右置中 */
+    gap: 6px;                                           /* 按鈕之間的空隙 */
+}
+
+/* 顏色按鈕（六角形）：寬度平分，最寬 80px */
+.hexcolor-palbtn {
+    flex: 1 1 0;                                        /* 平分寬度 */
+    max-width: 80px;                                    /* 最寬 80px */
+    height: 100%;                                       /* 高度：撐滿顏色列 */
+    padding: 0;                                         /* 不要內縮 */
+    border: 0;                                          /* 不要框線 */
+    background: none;                                   /* 不要底色（六角形自己有顏色） */
+    display: flex;                                      /* 彈性盒子：讓六角形置中 */
+    align-items: center;                                /* 上下置中 */
+    justify-content: center;                            /* 左右置中 */
+    touch-action: manipulation;                         /* 關掉雙擊放大，點擊反應更快 */
+}
+
+/* 顏色按鈕裡的 SVG 六角形 */
+.hexcolor-palsvg {
+    display: block;                                     /* 區塊元素 */
+    width: 100%;                                        /* 寬度：撐滿按鈕 */
+    max-height: 100%;                                   /* 高度不超過按鈕 */
+    overflow: visible;                                  /* 選取時放大、邊線加粗都畫得出來 */
+    transition: transform 0.1s;                         /* 放大縮小有 0.1 秒的過場 */
+}
+
+/* 「收回」按鈕：跟空格同色 */
+.hexcolor-palbtn--recall .hexcolor-hex {
+    fill: var(--hexcolor-empty);                        /* 填色：空格的顏色 */
+    stroke: var(--hexcolor-empty-edge);                 /* 邊線：空格的邊線色 */
+}
+
+/* 被選取的按鈕：放大、邊線變墨色加粗 */
+.hexcolor-palbtn--sel .hexcolor-palsvg {
+    transform: scale(1.1);                              /* 放大 1.1 倍 */
+}
+
+.hexcolor-palbtn--sel .hexcolor-hex {
+    stroke: var(--c-ink);                               /* 邊線：墨色 */
+    stroke-width: 0.16;                                 /* 邊線加粗 */
+}
+
+/* 用完的顏色：變淡 */
+.hexcolor-palbtn--zero .hexcolor-palsvg {
+    opacity: 0.38;                                      /* 透明度：38% */
+}
+
+/* 想塗已經用完的顏色：左右抖一下 */
+.hexcolor-palbtn--shake .hexcolor-palsvg {
+    animation: hexcolor-shake 0.3s;                     /* 抖 0.3 秒 */
+}
+
+@keyframes hexcolor-shake {
+    0%, 100% { transform: translateX(0); }              /* 開始與結束：原位 */
+    25% { transform: translateX(-6px); }                /* 往左 6px */
+    75% { transform: translateX(6px); }                 /* 往右 6px */
+}
+
+/* 顏色按鈕中間的「剩餘數量」：白字＋墨色描邊（每種底色上都看得清楚） */
+.hexcolor-palnum {
+    font-size: 100px;                                   /* 字級（外層縮小 100 倍） */
+    font-weight: var(--fw-black);                       /* 字重：最粗 */
+    fill: var(--c-on-accent);                           /* 文字顏色：白 */
+    stroke: var(--c-ink);                               /* 描邊：墨色 */
+    stroke-width: 16px;                                 /* 描邊粗細 */
+    stroke-linejoin: round;                             /* 描邊轉角：圓的 */
+    paint-order: stroke;                                /* 先畫描邊再畫字 */
+    pointer-events: none;                               /* 不擋點擊 */
+}
+
+/* 「收回」兩個字：墨色、不描邊 */
+.hexcolor-palnum--recall {
+    font-size: 58px;                                    /* 字級：兩個字要放得進六角形 */
+    fill: var(--c-ink);                                 /* 文字顏色：墨色 */
+    stroke: none;                                       /* 不描邊 */
+}
+
+/* 工具按鈕（提示、重來）：疊成一欄放在顏色列右邊 */
+.hexcolor-tools {
+    flex: none;                                         /* 寬度固定 */
+    width: 104px;                                       /* 寬度：104px */
+    display: flex;                                      /* 彈性盒子 */
+    flex-direction: column;                             /* 上下疊 */
+    gap: 8px;                                           /* 按鈕之間的空隙 */
+}
+
+/* 一顆工具按鈕：比一般按鈕矮 */
+.hexcolor-tool {
+    height: 46px;                                       /* 高度：46px */
+    min-height: 0;                                      /* 取消共用按鈕的最小高度 */
+    padding: 0;                                         /* 不要內縮 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重：最粗 */
+}
+
+/* ── 記號彈窗 ── */
+/* 外層：蓋滿遊戲畫面（裡面是透明遮罩＋彈窗本體） */
+.hexcolor-popwrap {
+    position: absolute;                                 /* 疊在遊戲畫面上 */
+    inset: 0;                                           /* 蓋滿 */
+    z-index: 5;                                         /* 疊在盤面上面 */
+}
+
+/* 遮罩：淡淡的暗色，點它＝關掉彈窗 */
+.hexcolor-cover {
+    position: absolute;                                 /* 疊在外層裡 */
+    inset: 0;                                           /* 蓋滿 */
+    background: var(--hexcolor-dim);                    /* 背景：淡淡的暗色 */
+}
+
+/* 彈窗本體：長條（寬度由 js 設成畫面的 2/5），位置由 js 算（放在被按的格子另一邊） */
+.hexcolor-pop {
+    position: absolute;                                 /* 由 js 指定 left／top */
+    box-sizing: border-box;                             /* 寬高把留白也算進去 */
+    padding: 8px;                                       /* 內縮：8px */
+    display: flex;                                      /* 彈性盒子 */
+    flex-direction: column;                             /* 由上往下排：記號格子、清除按鈕 */
+    gap: 8px;                                           /* 區塊之間的空隙 */
+    background: var(--c-card);                          /* 背景：卡片色 */
+    border: var(--bd);                                  /* 外框：主題變數 --bd */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    box-shadow: 0 6px 18px var(--hexcolor-dim);         /* 陰影：往下一點的淡陰影 */
+}
+
+/* 記號格子：兩欄 */
+.hexcolor-pop__grid {
+    display: grid;                                      /* 格線排版 */
+    grid-template-columns: 1fr 1fr;                     /* 兩欄等寬 */
+    gap: 6px;                                           /* 格子之間的空隙 */
+}
+
+/* 一個記號選項 */
+.hexcolor-pop__item {
+    height: 72px;                                       /* 高度：72px */
+    padding: 4px;                                       /* 內縮：4px */
+    background: var(--c-card-alt);                      /* 背景：淡黃卡片色 */
+    border: 3px solid transparent;                      /* 外框：平常透明（選中時才有顏色） */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    display: flex;                                      /* 彈性盒子：讓圖示置中 */
+    align-items: center;                                /* 上下置中 */
+    justify-content: center;                            /* 左右置中 */
+    touch-action: manipulation;                         /* 關掉雙擊放大 */
+}
+
+/* 這一格目前用的記號：墨色外框 */
+.hexcolor-pop__item--on {
+    border-color: var(--c-ink);                         /* 外框：墨色 */
+}
+
+/* 記號選項裡的 SVG 圖示 */
+.hexcolor-pop__svg {
+    display: block;                                     /* 區塊元素 */
+    height: 100%;                                       /* 高度：撐滿選項 */
+    width: auto;                                        /* 寬度：照比例 */
+    overflow: visible;                                  /* 邊線超出一點點也畫出來 */
+}
+
+/* 「清除記號」按鈕 */
+.hexcolor-pop__clear {
+    height: 50px;                                       /* 高度：50px */
+    min-height: 0;                                      /* 取消共用按鈕的最小高度 */
+    padding: 0;                                         /* 不要內縮 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-black);                       /* 字重：最粗 */
+}

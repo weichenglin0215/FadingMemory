@@ -1,0 +1,91 @@
+<!-- ═══════════════════════════════════════════════════════════════════
+     hexcolor_test.html — 六角著色（參數測試版）
+     ───────────────────────────────────────────────────────────────────
+     這是「測試專用」的獨立頁面：用來調整參數、摸索這個玩法的樂趣與難度，
+     還沒有接進「秒反應」的選單，也沒有放進離線清單（sw.js）與版本號。
+     規則：六角格子相鄰不可同色；每個顏色要「剛好」用掉指定的格數；有些格子已經預先塗好。
+     畫面由上到下：參數面板（滑桿）／遊戲盤面／顏色選擇列（格子中間是剩餘數量）。
+     檔案分工：
+       js/hexcolor_core.js  盤面產生器＋解題器（純邏輯）
+       js/hexcolor_test.js  畫面與操作
+       css/hexcolor_test.css 版面與配色（顏色、字級都是 CSS 變數，要調外觀改最上面的 :root）
+     本機開啟：用專案資料夾起一個本機伺服器後，網址 /hexcolor_test.html
+     ═══════════════════════════════════════════════════════════════════ -->
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache">
+    <title>六角著色（參數測試版）</title>
+
+    <!-- 沿用專案共用的字型、主題變數、舞台（固定 500×850 再整體縮放）。
+         注意：不連結 screen_adaptive.*（專案規定那是舊專案參考用，遊戲不可使用）。 -->
+    <link rel="stylesheet" href="css/fonts.css">
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/stage.css">
+    <link rel="stylesheet" href="css/hexcolor_test.css">
+    <!-- 舞台縮放算好之前先藏起來（stage.js 算完會幫 html 加上 stage-ready） -->
+    <style>html:not(.stage-ready) body { visibility: hidden; }</style>
+</head>
+
+<body>
+    <div id="stage" class="hx">
+
+        <!-- ① 參數面板：每個參數一支滑桿；改了滑桿只是改參數，按「重新產生」才會套用到盤面 -->
+        <div class="hx-panel">
+            <div class="hx-row">
+                <!-- 顏色有幾種（2~8）：改了會把格子平均分給各色，再用下面的小滑桿微調 -->
+                <div class="hx-ctl">
+                    <label for="ctl-k">色數</label>
+                    <input id="ctl-k" type="range" min="2" max="8" step="1" value="4">
+                    <output id="out-k">4</output>
+                </div>
+                <!-- 格子總數：就是各色格數的總和。拉它會「依比例」放大縮小各色；拉各色的小滑桿則總數跟著變 -->
+                <div class="hx-ctl">
+                    <label for="ctl-n">格數</label>
+                    <input id="ctl-n" type="range" min="4" max="90" step="1" value="24">
+                    <output id="out-n">24</output>
+                </div>
+            </div>
+            <div class="hx-row">
+                <!-- 預先塗好幾格（顏色取自隱藏解答，所以一定有解） -->
+                <div class="hx-ctl">
+                    <label for="ctl-p">預填</label>
+                    <input id="ctl-p" type="range" min="0" max="24" step="1" value="4">
+                    <output id="out-p">4</output>
+                </div>
+                <!-- 格子分布的緊密度：1＝每格至少貼著 1 個鄰居（鬆）… 3＝至少貼著 3 個（緊，角落做不到就放寬） -->
+                <div class="hx-ctl">
+                    <label for="ctl-c">緊密</label>
+                    <input id="ctl-c" type="range" min="1" max="3" step="1" value="2">
+                    <output id="out-c">2</output>
+                </div>
+            </div>
+            <!-- 每種顏色的格數（至少 1 格）：小滑桿由 js/hexcolor_test.js 依「色數」動態產生 -->
+            <div class="hx-colors" id="hx-colors"></div>
+            <div class="hx-row hx-row--act">
+                <button id="btn-gen" class="hx-btn" type="button">重新產生</button>
+                <button id="btn-sol" class="hx-btn hx-btn--alt" type="button" aria-pressed="false">解答</button>
+                <!-- 叫出事先搜尋並驗證過的極難盤面（資料在 js/hexcolor_hard.js）；再按一次等於清空重來 -->
+                <button id="btn-hard-a" class="hx-btn hx-btn--hard" type="button">極難A</button>
+                <button id="btn-hard-b" class="hx-btn hx-btn--hard" type="button">極難B</button>
+            </div>
+            <div class="hx-status" id="hx-status"></div>
+        </div>
+
+        <!-- ② 遊戲盤面：六角格子用 SVG 畫，由 js 動態塞進來 -->
+        <div class="hx-board" id="hx-board"></div>
+
+        <!-- ③ 顏色選擇列：先點顏色、再點盤面的格子；格子中間的數字是「還要放幾格」 -->
+        <div class="hx-palette" id="hx-palette"></div>
+    </div>
+
+    <script src="js/stage.js"></script>
+    <script src="js/hexcolor_core.js"></script>
+    <script src="js/hexcolor_hard.js"></script>
+    <script src="js/hexcolor_test.js"></script>
+</body>
+
+</html>

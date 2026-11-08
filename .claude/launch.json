@@ -6,6 +6,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8743"],
       "port": 8743
+    },
+    {
+      "name": "fading-memory-static-8900",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8900", "--bind", "127.0.0.1"],
+      "port": 8900
     }
   ]
 }

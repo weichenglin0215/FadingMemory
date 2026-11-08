@@ -245,7 +245,8 @@
         { id: 'forestpeek', name: '草叢找動物', cat: 'reaction', img: 'img/reaction/forestpeek.png' },
         { id: 'rocketland', name: '火箭回收', cat: 'hand', img: 'img/reaction/rocketland.png' },
         { id: 'bubblespray', name: '泡泡掃射', cat: 'reaction', img: 'img/reaction/bubblespray.png' },
-        { id: 'emojisort', name: '分類點擊', cat: 'visual', img: 'img/reaction/emojisort.png' }
+        { id: 'emojisort', name: '分類點擊', cat: 'visual', img: 'img/reaction/emojisort.png' },
+        { id: 'hexcolor', name: '六角著色', cat: 'logic', img: 'img/reaction/hexcolor.png' }
     ];
     /* 用 id 快速找到那一款（recent 頁籤只存 id，顯示時要靠它換回完整資料） */
     var gameById = {};

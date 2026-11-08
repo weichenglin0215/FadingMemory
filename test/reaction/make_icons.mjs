@@ -43,6 +43,14 @@ const WAIT = {
   alignchar: 3000,
   spingap: 2000
 };
+// 有些遊戲剛開始幾乎是空的（例如六角著色第 1 關只有幾格有顏色）：拍之前先執行一段 JavaScript 把畫面布置得有特色一點（從按下「開始挑戰」起算，等 WAIT 之後才執行）
+const PREP = {
+  hexcolor: `(async function(){
+    Reaction.current.debug.goto(8);                                   // 第 8 關：4 色、37 格
+    for (var t = 0; t < 40 && !(Reaction.current.debug.api().preview); t++) await new Promise(function (r) { setTimeout(r, 50); });
+    Reaction.current.debug.api().preview(0.55);                       // 照答案塗一半多，再放一個「?」與一個顏色組合記號
+  })()`
+};
 
 // ─── 遊戲清單：讀 js/menu.js 的 GAME_CELLS（id 與名稱）───
 function gameIds() {
@@ -60,6 +68,7 @@ async function shoot(cdp, game) {
     if (b) b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerId: 5 }));
   })()`);
   await sleep((WAIT[game.id] != null ? WAIT[game.id] : WAIT_DEFAULT) - 400 > 0 ? (WAIT[game.id] != null ? WAIT[game.id] : WAIT_DEFAULT) - 400 : 0);
+  if (PREP[game.id]) { await cdp.evalJs(PREP[game.id]); await sleep(300); }
   // 把操作提示藏起來
   if (!KEEP_HINTS) await cdp.evalJs(`(function(){ var s = document.getElementById('icon-style'); if (!s) { s = document.createElement('style'); s.id = 'icon-style'; s.textContent = '.rx-hint,.rx-hint__label{display:none!important}'; document.head.appendChild(s); } })()`);
   await sleep(60);
