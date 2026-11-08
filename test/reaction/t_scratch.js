@@ -4,12 +4,14 @@ let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log('FAIL', m); } }
 const near = (a, b, e) => Math.abs(a - b) < (e || 1e-9);
 const SEED = seedOf(20261009); const rnd = rng(SEED);
 
-// 題材：每 3 關換一種，循環；宮格：3／4／5／6；露出比例線性 60%→30%；限時 60→35 秒
+// 題材：每 3 關換一種，循環；宮格：3／4／5／6；露出比例線性 60%→30%；限時 60→35 秒（第 RAMP_LEVELS＝30 關到頂，之後維持到第 MAX_LEVEL＝90 關）
 ok(T.bandFor(1) === 'shape' && T.bandFor(3) === 'shape' && T.bandFor(4) === 'fruit' && T.bandFor(7) === 'digit' && T.bandFor(10) === 'char' && T.bandFor(13) === 'shape' && T.bandFor(16) === 'fruit' && T.bandFor(20) === 'digit', '題材每 3 關換一種：' + [1, 4, 7, 10, 13].map(T.bandFor).join());
 ok([1, 3, 4, 7, 8, 12, 13, 20].map(T.gridFor).join() === '3,3,4,4,5,5,6,6', '宮格：3×3→4×4→5×5→6×6');
-ok(near(T.shownFrac(1), 0.6) && near(T.shownFrac(T.MAX_LEVEL), 0.3), '露出比例端點 60%→30%');
-for (let l = 2; l <= T.MAX_LEVEL; l++) ok(T.shownFrac(l) < T.shownFrac(l - 1), '露出比例每關降低 ' + l);
-ok(T.timeMs(1) === 60000 && T.timeMs(T.MAX_LEVEL) === 35000, '限時端點');
+ok(T.RAMP_LEVELS === 30 && T.MAX_LEVEL === 90, '難度第 30 關到頂、紀錄到第 90 關');
+ok(near(T.shownFrac(1), T.SHOWN[0]) && near(T.shownFrac(T.RAMP_LEVELS), T.SHOWN[1]), '露出比例端點 ' + T.SHOWN);
+for (let l = 2; l <= T.RAMP_LEVELS; l++) ok(T.shownFrac(l) < T.shownFrac(l - 1), '露出比例每關降低 ' + l);
+ok(T.timeMs(1) === T.TIME_S[0] * 1000 && T.timeMs(T.RAMP_LEVELS) === T.TIME_S[1] * 1000, '限時端點 ' + T.TIME_S);
+for (let l = T.RAMP_LEVELS + 1; l <= T.MAX_LEVEL; l++) ok(near(T.shownFrac(l), T.SHOWN[1]) && T.timeMs(l) === T.TIME_S[1] * 1000, '第 ' + l + ' 關維持到頂的難度');
 for (let l = 1; l <= T.MAX_LEVEL; l++) { const g = T.gridFor(l); ok(T.shownCount(l) >= 2 && T.shownCount(l) <= g * g, '露出格數合理 ' + l + '：' + T.shownCount(l)); }
 // 圖案池：沒有重複；每個題材至少有 K 種；形狀都有路徑；中文字都是單一漢字
 for (const [name, pool] of [['shape', T.SHAPES], ['fruit', T.FRUITS], ['digit', T.DIGITS]]) ok(new Set(pool).size === pool.length && pool.length >= T.K, name + ' 圖案池');

@@ -9,8 +9,9 @@
    ───────────────────────────────────────────────────────────────────
    · 圖案有四種「題材」，每 3 關換一種，循環：幾何圖形（路徑畫的）→ 水果（emoji）→ 阿拉伯數字 → 相似的中文字（筆劃多）。
    · 宮格大小隨關卡增加：第 1～3 關 3×3，第 4～7 關 4×4，第 8～12 關 5×5，第 13 關起 6×6；
-     每張牌露出的比例從 60% 線性降到 30%（至少 2 格）；露出的格子優先挑「有筆畫（有墨水）的格子」，不會只露出一片空白。
-   · 限時 TIME_S 60→35 秒。
+     每張牌露出的比例從 60% 線性降到 30%（至少 2 格，第 RAMP_LEVELS 關到頂）；露出的格子優先挑「有筆畫（有墨水）的格子」，不會只露出一片空白。
+   · 限時 TIME_S 60→35 秒（第 RAMP_LEVELS 關到頂）。之後維持最難，一直玩到第 MAX_LEVEL 關。
+   · 中文字題材的字池：一路到第 MAX_LEVEL 關慢慢往筆劃多的字移動（跟鏡中旋轉字的筆劃一樣，是讓 90 關裡出現的字不一直重複，不是難度旋鈕）。
    · 牌用兩層 canvas：底下是完整圖案，上面是刮刮漆（露出的宮格是透明的）；翻開時漆層淡出。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
@@ -25,12 +26,13 @@
     var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
-    var MAX_LEVEL = 90;                             /* 最後一關 */
+    var RAMP_LEVELS = 30;                           /* 幾關之後難度到頂（限時、露出比例在這一關到頂，之後維持最難） */
+    var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var COLS = 4, ROWS = 3, CELL = 108, GAP = 10;   /* 牌的排列與大小（px） */
     var TARGET_COUNT = 3;                           /* 要找到幾張一樣的 */
     var MAX_REV = 6;                                /* 最多刮開幾張（超過還沒找到三張一樣的就失敗） */
-    var TIME_S = [60, 35];                          /* 每關限時（秒）：第 1 關 → 最後一關 */
-    var SHOWN = [0.6, 0.3];                         /* 每張牌露出的宮格比例：第 1 關 → 最後一關 */
+    var TIME_S = [60, 35];                          /* 每關限時（秒）：第 1 關 → 第 RAMP_LEVELS 關 */
+    var SHOWN = [0.6, 0.3];                         /* 每張牌露出的宮格比例：第 1 關 → 第 RAMP_LEVELS 關 */
     var BAND_EVERY = 3;                             /* 每幾關換一種題材 */
     var K = 6;                                      /* 每關的圖案種數 */
     var SCALE = 2;                                  /* canvas 的像素密度（畫得比較清楚） */
@@ -61,10 +63,10 @@
     function bandFor(level) { return BANDS[Math.floor((level - 1) / BAND_EVERY) % BANDS.length]; }  /* Math.floor：無條件捨去成整數 */
     /* 宮格邊長：第 1～3 關 3，第 4～7 關 4，第 8～12 關 5，第 13 關起 6 */
     function gridFor(level) { return level <= 3 ? 3 : (level <= 7 ? 4 : (level <= 12 ? 5 : 6)); }
-    function shownFrac(level) { return kit.ramp(level, SHOWN[0], SHOWN[1], MAX_LEVEL); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    function shownFrac(level) { return kit.ramp(level, SHOWN[0], SHOWN[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function shownCount(level) { var g = gridFor(level); return Math.max(2, Math.round(shownFrac(level) * g * g)); }  /* Math.round：四捨五入成整數 */
-    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], MAX_LEVEL) * 1000); }
-    /* 這一關用哪 K 種圖案（依題材；中文字依關卡往後面（筆劃多的）挑） */
+    function timeMs(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS) * 1000); }
+    /* 這一關用哪 K 種圖案（依題材；中文字依關卡往後面（筆劃多的）挑，走到第 MAX_LEVEL 關，讓 90 關裡的字不一直重複） */
     function pickPatterns(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var band = bandFor(level), pool;
@@ -267,7 +269,7 @@
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             bandFor: bandFor, gridFor: gridFor, shownFrac: shownFrac, shownCount: shownCount, timeMs: timeMs, pickPatterns: pickPatterns, makeBoard: makeBoard, winner: winner, rating: rating,
-            SHAPES: SHAPES, SHAPE_D: SHAPE_D, FRUITS: FRUITS, DIGITS: DIGITS, CHARS: CHARS, BANDS: BANDS, COLS: COLS, ROWS: ROWS, CELL: CELL, GAP: GAP, MAX_REV: MAX_REV, MAX_LEVEL: MAX_LEVEL,
+            SHAPES: SHAPES, SHAPE_D: SHAPE_D, FRUITS: FRUITS, DIGITS: DIGITS, CHARS: CHARS, BANDS: BANDS, COLS: COLS, ROWS: ROWS, CELL: CELL, GAP: GAP, MAX_REV: MAX_REV, MAX_LEVEL: MAX_LEVEL, RAMP_LEVELS: RAMP_LEVELS,
             TARGET_COUNT: TARGET_COUNT, K: K, TIME_S: TIME_S, SHOWN: SHOWN, BAND_EVERY: BAND_EVERY
         }
     };

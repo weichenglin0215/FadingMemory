@@ -52,11 +52,57 @@ ok(T.diameterOf('c5', T.RAMP_COINS, 472) / T.diameterOf('c50', T.RAMP_COINS, 472
   ok(st.runMax <= T.MAX_SAME, '最多連續 ' + T.MAX_SAME + ' 枚同一種：' + st.runMax);
   // 背面機率隨分對枚數增加
   function backRate(n) { let k = 0, M = 20000; for (let i = 0; i < M; i++) if (T.nextCoin([], n, rnd).back) k++; return k / M; }
-  const a = backRate(0), b = backRate(20), c = backRate(40); ok(a === 0 && b > 0.3 && b < 0.4 && c > 0.66 && c < 0.74, '背面朝上的比例 ' + a + ' → ' + b.toFixed(2) + ' → ' + c.toFixed(2)); }
+  const mid = Math.round(T.RAMP_COINS / 2), a = backRate(0), b = backRate(mid), c = backRate(T.RAMP_COINS), bw = T.backPFor(mid);
+  ok(a === 0 && Math.abs(b - bw) < 0.03 && c > T.BACK_P[1] - 0.04 && c < T.BACK_P[1] + 0.04, '背面朝上的比例 ' + a + ' → ' + b.toFixed(2) + '（第 ' + mid + ' 枚）→ ' + c.toFixed(2)); }
 // 一直都是同一種的歷史：下一枚一定換
 { for (const t of T.TYPES) { const hist = [t, t, t]; for (let i = 0; i < 300; i++) ok(T.nextCoin(hist, 5, rnd).type !== t, '連 3 枚 ' + t + ' 之後換別種'); } }
 
+// ── V1.51：推進加快（玩家意見）──
+ok(T.RAMP_COINS <= 25 && T.FALL_S[0] <= 2.6 && T.FALL_S[1] <= 0.9, '難度推進加快：' + T.RAMP_COINS + ' 枚到頂、掉落 ' + T.FALL_S + ' 秒');
+
+// ── V1.51：一次掉好幾枚（靠很近，要先滑最下面那枚）──
+ok(T.groupPFor(0) === 0 && T.groupPFor(T.GROUP_FROM - 1) === 0 && T.groupPFor(T.GROUP_FROM) === T.GROUP_P[0] && T.groupPFor(T.RAMP_COINS) === T.GROUP_P[1] && T.groupPFor(999) === T.GROUP_P[1], '一次好幾枚的機率：前 ' + T.GROUP_FROM + ' 枚沒有，之後 ' + T.GROUP_P);
+for (let n = T.GROUP_FROM + 1; n <= T.RAMP_COINS; n++) ok(T.groupPFor(n) >= T.groupPFor(n - 1) && T.trioPFor(n) >= T.trioPFor(n - 1) && T.gapRangeFor(n)[0] <= T.gapRangeFor(n - 1)[0] + 1e-12 && T.gapRangeFor(n)[1] <= T.gapRangeFor(n - 1)[1] + 1e-12 && T.edgePFor(n) >= T.edgePFor(n - 1), '單調（好幾枚、3 枚、高低差、貼邊）' + n);
+ok(near(T.gapRangeFor(0)[0], T.GAP_D[0][0]) && near(T.gapRangeFor(T.RAMP_COINS)[1], T.GAP_D[1][1]) && T.GAP_D[1][0] > 0.2, '高低差 ' + JSON.stringify(T.GAP_D) + '（到頂仍 ≥ 0.2 枚，看得出上下）');
+{ const W = 472, big = Math.round(W * T.COIN_D), lineY = 640 - 150 - 8 - 6, st = { 1: 0, 2: 0, 3: 0 }, early = { 1: 0, 2: 0, 3: 0 }, stat = { edge: 0, trick: 0, edgeN: 0, minGap: 99, minGapEarly: 99 };
+  for (let k = 0; k < 20000; k++) {
+    const n = k % 2 ? T.RAMP_COINS + (k % 7) : (k % (T.GROUP_FROM + 3)), plan = T.planSpawn([], n, W, rnd);
+    ok(plan.length >= 1 && plan.length <= 3, '一次 1～3 枚');
+    if (n < T.GROUP_FROM) ok(plan.length === 1, '前 ' + T.GROUP_FROM + ' 枚一次只掉一枚');
+    (n >= T.RAMP_COINS ? st : early)[plan.length]++;
+    ok(plan[0].off === 0, '最下面那枚從畫面上緣出現（off 0）');
+    plan.forEach((c, i) => {
+      ok(T.TYPES.includes(c.type) && c.D === T.diameterOf(c.type, n, W), '種類與直徑');
+      ok(c.x - c.D / 2 >= 0 && c.x + c.D / 2 <= W, '硬幣整枚在畫面裡（x=' + c.x + '）');
+      if (i) {
+        const p = plan[i - 1], gap = p.off - c.off, gr = T.gapRangeFor(n);
+        ok(gap > 0, '後面的一枚比較高');
+        // 上下關係在「上緣、中心、下緣」三種看法都一致：下面那枚的上緣也比較低
+        ok((p.off - p.D) > (c.off - c.D) && (p.off - p.D / 2) > (c.off - c.D / 2), '上緣、中心、下緣的上下關係都一致（' + p.D + '/' + c.D + '，差 ' + gap + '）');
+        ok(gap >= Math.abs(p.D - c.D) + T.GAP_EDGE * big - 1 && gap <= Math.max(gr[1] * big, Math.abs(p.D - c.D) + T.GAP_EDGE * big) + 1 + (T.overlaps(p, c.x, c.off + 4, c.D) ? 999 : 0), '高低差在範圍內：' + gap + '（放不下時才會往上挪）');
+        if (n >= T.RAMP_COINS) stat.minGap = Math.min(stat.minGap, gap); else stat.minGapEarly = Math.min(stat.minGapEarly, gap);
+      }
+      for (let j = 0; j < i; j++) ok(!T.overlaps(plan[j], c.x, c.off, c.D), '同一組的硬幣不會疊在一起');
+    });
+    // 同一組的速度一樣，所以最下面那枚最先到筒子口（off 最大＝時間最早）
+    if (plan.length > 1) ok(plan.every((c, i) => !i || c.off < plan[i - 1].off), '由下往上排');
+    if (n >= T.RAMP_COINS && plan.length === 1) { const c = plan[0], lo0 = c.D / 2 + 4, hi0 = W - c.D / 2 - 4, band = T.EDGE_BAND * W; if (c.x <= lo0 + band || c.x >= hi0 - band) { stat.edge++; if (c.type !== 'c5') { stat.edgeN++; if ((T.DIR_OF[c.type] === 'left') === (c.x > W / 2)) stat.trick++; } } }
+  }
+  const tot = st[1] + st[2] + st[3], grp = (st[2] + st[3]) / tot, trio = st[3] / (st[2] + st[3]);
+  console.log('到頂時：一次 1/2/3 枚 ' + JSON.stringify(st) + '；早期 ' + JSON.stringify(early) + '；最小高低差 ' + stat.minGap + 'px（早期 ' + stat.minGapEarly + 'px）；單枚貼邊 ' + stat.edge + '（反方向 ' + stat.trick + '/' + stat.edgeN + '）');
+  ok(Math.abs(grp - T.GROUP_P[1]) < 0.02 && Math.abs(trio - T.TRIO_P[1]) < 0.03, '到頂：好幾枚 ' + grp.toFixed(3) + '、其中 3 枚 ' + trio.toFixed(3));
+  ok(stat.minGap >= big * 0.2, '到頂的高低差最小 ' + stat.minGap + 'px（≥ 0.2 枚）');
+  ok(stat.edgeN > 0 && stat.trick / stat.edgeN > 0.58 && stat.trick / stat.edgeN < 0.72, '貼邊時多半放在反方向那邊：' + (stat.trick / stat.edgeN).toFixed(2));
+  // 一組的掉落時間：最上面那枚最晚到，但也不會晚太多（玩家要連滑）
+  const fall = T.fallMsFor(T.RAMP_COINS) * T.GROUP_SLOW; ok(fall >= 1100, '到頂時一組的掉落時間 ' + fall + ' 毫秒');
+}
+// 左右範圍：越後面越寬，到頂接近整個畫面
+{ const W = 472, D = Math.round(W * T.COIN_D), r0 = T.xRangeFor(0, D, W), r1 = T.xRangeFor(T.RAMP_COINS, D, W), rw = T.xRangeFor(0, D, W, true);
+  ok(r0[1] - r0[0] < r1[1] - r1[0] && r1[0] >= D / 2 && r1[1] <= W - D / 2 && rw[0] === D / 2 + 4 && rw[1] === W - D / 2 - 4, '左右範圍 ' + r0.map(Math.round) + ' → ' + r1.map(Math.round));
+  let xs = []; for (let i = 0; i < 4000; i++) xs.push(T.spawnX('c50', 0, D, W, rnd)); ok(Math.min(...xs) >= r0[0] && Math.max(...xs) <= r0[1], '一開始都在中間（不貼邊）'); }
+
 // ── 結束時的說明 ──
+ok(/順序錯了/.test(T.whyText('c10', 'order', 'left')) && /最下面/.test(T.whyText('c10', 'order', 'left')) && /往右滑/.test(T.whyText('c10', 'order', 'left')), 'order 的說明（滑了上面那枚的方向）');
 ok(/來不及了/.test(T.whyText('c5', 'miss')) && /5 元/.test(T.whyText('c5', 'miss')) && /銅色、小/.test(T.whyText('c5', 'miss')) && /往下滑/.test(T.whyText('c5', 'miss')), 'miss 的說明');
 ok(/滑錯了/.test(T.whyText('c50', 'wrong', 'right')) && /50 元/.test(T.whyText('c50', 'wrong', 'right')) && /往左滑/.test(T.whyText('c50', 'wrong', 'right')) && /你滑了右/.test(T.whyText('c50', 'wrong', 'right')), 'wrong 的說明');
 ok(/銀色、大/.test(T.whyText('c10', 'wrong', 'down')) && /往右滑/.test(T.whyText('c10', 'wrong', 'down')) && /你滑了下/.test(T.whyText('c10', 'wrong', 'down')), '10 元說明');
@@ -67,6 +113,7 @@ ok(/銀色、大/.test(T.whyText('c10', 'wrong', 'down')) && /往右滑/.test(T.
   ok(/scoreOf/.test(src) && /resume: false/.test(src) && /max: 300/.test(src) && /SOLVE_CAP/.test(src), '成績用 scoreOf、不從前幾關繼續、成績上限 300、solve 有上限');
   ok(/pointerdown/.test(src) && /pointermove/.test(src) && /pointerup/.test(src) && /pointercancel/.test(src), '滑：pointerdown／move／up／cancel');
   ok(/\.coinsort-coin--copper \.coinsort-face \{[^}]*var\(--cns-copper\)/.test(css) && /\.coinsort-coin--silver \.coinsort-face \{[^}]*var\(--cns-silver\)/.test(css) && /\.coinsort-tube--right \{[^}]*var\(--c-ok/.test(css) && /\.coinsort-tube--wrong \{[^}]*var\(--c-bad-light\)/.test(css), '銅色、銀色、對錯的筒子用 CSS 變數');
-  ok(boot.indexOf("'js/reaction_coinsort.js'") > 0 && /50 元/.test(G.rule) && /往左滑/.test(G.rule) && /往下滑/.test(G.rule) && /往右滑/.test(G.rule), 'boot.js 有載入、玩法說明寫出三種硬幣的方向'); }
+  ok(boot.indexOf("'js/reaction_coinsort.js'") > 0 && /50 元/.test(G.rule) && /往左滑/.test(G.rule) && /往下滑/.test(G.rule) && /往右滑/.test(G.rule), 'boot.js 有載入、玩法說明寫出三種硬幣的方向');
+  ok(/最下面那一枚/.test(G.rule) && /lowest\(\)/.test(src) && /coinsort-coinbox--dim/.test(src) && /\.coinsort-coinbox--dim \{/.test(css), 'V1.51：玩法說明寫「滑最下面那一枚」、程式滑 lowest()、結束時其他硬幣變淡'); }
 ok(T.rating(2) !== T.rating(10) && T.rating(10) !== T.rating(25) && T.rating(25) !== T.rating(50) && T.rating(50) !== T.rating(90), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

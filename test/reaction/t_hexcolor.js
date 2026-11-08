@@ -1,4 +1,4 @@
-// 六角著色（hexcolor）：關卡規格（線性）、各色格數、解題器（跟暴力窮舉對照）、30 關出題（答案合法、預填跟答案一致、
+// 六角著色（hexcolor）：關卡規格（線性）、各色格數、解題器（跟暴力窮舉對照）、出題（第 1～30 關＋到頂之後抽 3 關）（答案合法、預填跟答案一致、
 // 唯一解的關卡用「研究工具的另一個解題器」完整數完＝1 種）、陷阱挑法（同色預填避開「隔一格」花樣、各色平均）、
 // 相鄰同色／「！」警示／過關判斷、記號彈窗的顏色組合、限時、檔案規矩（沒有 resume:false、提示只在前 4 關、CSS 用變數）
 const { game, rng, seedOf } = require('./load.js');
@@ -11,21 +11,25 @@ const SEED = seedOf(20261108);
 // ── 登記資料 ──
 ok(G.id === 'hexcolor' && G.name === '六角著色' && [...G.name].length <= 5, '登記資料：id、名稱（最多 5 個字）');
 ok((G.rule.match(/\*\*/g) || []).length % 2 === 0 && /\*\*/.test(G.rule), '玩法說明有成對的 **重點**');
-ok(G.score.better === 'max' && G.score.min === 1 && G.score.max === T.MAX_LEVEL && T.MAX_LEVEL === 30, '成績：越多關越好、1～30 關');
+ok(G.score.better === 'max' && G.score.min === 1 && G.score.max === T.MAX_LEVEL, '成績：越多關越好、1～' + T.MAX_LEVEL + ' 關');
 
-// ── 關卡規格（每一項都是線性）──
-const sp = lv => T.specFor(lv);
-ok([1, 2, 3].every(l => sp(l).k === 3 && sp(l).compact === 3 && sp(l).unique), '第 1～3 關：三色入門、實心、唯一解');
-ok(sp(1).n === T.N3[0] && sp(3).n === T.N3[1] && sp(1).extra === T.EXTRA3[0] && sp(3).extra === T.EXTRA3[1], '三色入門：格數 19 → 31、暖身預填 3 → 1');
-ok(sp(4).k === 4 && sp(4).n === T.N4[0] && sp(30).n === T.N4[1], '4 色：第 4 關 30 格 → 第 30 關 75 格');
-for (let l = 5; l <= 30; l++) ok(sp(l).n >= sp(l - 1).n || l === 4, '格數不會變少（第 ' + l + ' 關）');
-ok(Math.abs(sp(4).rare - 0.25) < 1e-9 && Math.abs(sp(20).rare - 0.15) < 1e-9 && Math.abs(sp(30).rare - 0.15) < 1e-9, '最少那色的比例：25% → 第 20 關 15%，之後維持');
-ok(Math.abs(sp(12).rare - (0.25 + (0.15 - 0.25) * 8 / 16)) < 1e-9, '比例是線性的（第 12 關剛好走一半）');
-ok(sp(4).compact === 2 && sp(30).compact === 3, '緊密度 2 → 3');
-ok([4, 5, 8, 11].every(l => !sp(l).unique) && [12, 20, 30].every(l => sp(l).unique), '第 4～11 關自由擺、第 12 關起唯一解');
-ok(sp(4).fill === Math.round(30 * 0.30) && sp(11).fill === Math.round(sp(11).n * 0.20), '自由擺的預填 30% → 20%');
-ok(sp(12).extra === T.EXTRA4[0] && sp(30).extra === T.EXTRA4[1] && sp(4).extra === 0, '唯一解的暖身預填 3 → 0');
-ok(T.specFor(0).n === sp(1).n && T.specFor(99).n === sp(30).n, '關卡超出範圍時夾在 1～30');
+// ── 關卡規格（每一項都是線性；測試跟著參數走：K3_TO＝三色入門到第幾關、RAMP_LEVELS＝難度到頂、MAX_LEVEL＝紀錄到頂）──
+const sp = lv => T.specFor(lv), F = T.K3_TO + 1, MX = T.RAMP_LEVELS;    // F：4 色的第一關；MX：難度到頂的那一關
+ok(T.RAMP_LEVELS === 30 && T.MAX_LEVEL === 90, '難度第 ' + T.RAMP_LEVELS + ' 關到頂、紀錄到第 ' + T.MAX_LEVEL + ' 關（全站 30／90）');
+for (let l = MX + 1; l <= T.MAX_LEVEL; l++) ok(JSON.stringify(sp(l)) === JSON.stringify(sp(MX)) && T.timeFor(l, 40) === T.timeFor(MX, 40), '第 ' + l + ' 關維持到頂的難度與限時');
+ok(Array.from({ length: T.K3_TO }, (_, i) => i + 1).every(l => sp(l).k === 3 && sp(l).compact === 3 && sp(l).unique), '第 1～' + T.K3_TO + ' 關：三色入門、實心、唯一解');
+ok(sp(1).n === T.N3[0] && sp(T.K3_TO).n === T.N3[1] && sp(1).extra === T.EXTRA3[0] && sp(T.K3_TO).extra === T.EXTRA3[1], '三色入門：格數 ' + T.N3 + '、暖身預填 ' + T.EXTRA3);
+// V1.51 玩家意見：第 3 關太簡單、只有 2 格預填 → 第 3 關改成 4 色自由擺，預填 9 格
+ok(sp(3).k === 4 && !sp(3).unique && sp(3).fill >= 9, '第 3 關：4 色自由擺、預填 ' + sp(3).fill + ' 格（舊版 3 色只有 2 格）');
+ok(sp(F).k === 4 && sp(F).n === T.N4[0] && sp(MX).n === T.N4[1], '4 色：第 ' + F + ' 關 ' + T.N4[0] + ' 格 → 第 ' + MX + ' 關 ' + T.N4[1] + ' 格');
+for (let l = F + 1; l <= MX; l++) ok(sp(l).n >= sp(l - 1).n, '格數不會變少（第 ' + l + ' 關）');
+ok(Math.abs(sp(F).rare - T.RARE[0]) < 1e-9 && Math.abs(sp(T.RARE_AT).rare - T.RARE[1]) < 1e-9 && Math.abs(sp(MX).rare - T.RARE[1]) < 1e-9, '最少那色的比例：' + T.RARE[0] + ' → 第 ' + T.RARE_AT + ' 關 ' + T.RARE[1] + '，之後維持');
+ok(Math.abs(sp(12).rare - (T.RARE[0] + (T.RARE[1] - T.RARE[0]) * (12 - F) / (T.RARE_AT - F))) < 1e-9, '比例是線性的（第 12 關）');
+ok(sp(F).compact === 2 && sp(MX).compact === 3, '緊密度 2 → 3');
+ok([F, F + 1, T.FREE_TO].every(l => !sp(l).unique) && [T.FREE_TO + 1, 20, 30, MX].every(l => sp(l).unique), '第 ' + F + '～' + T.FREE_TO + ' 關自由擺、第 ' + (T.FREE_TO + 1) + ' 關起唯一解');
+ok(sp(F).fill === Math.round(T.N4[0] * T.FREE_FILL[0]) && sp(T.FREE_TO).fill === Math.round(sp(T.FREE_TO).n * T.FREE_FILL[1]), '自由擺的預填 ' + T.FREE_FILL);
+ok(sp(T.FREE_TO + 1).extra === T.EXTRA4[0] && sp(MX).extra === T.EXTRA4[1] && sp(F).extra === 0, '唯一解的暖身預填 ' + T.EXTRA4);
+ok(T.specFor(0).n === sp(1).n && T.specFor(T.MAX_LEVEL + 9).n === sp(MX).n, '關卡超出範圍時夾在 1～' + T.MAX_LEVEL);
 
 // ── 各色格數 ──
 for (const [n, k, r] of [[30, 4, 0.25], [75, 4, 0.15], [58, 4, 0.15], [47, 4, 0.2]]) {
@@ -73,14 +77,15 @@ for (const cells of shapes) {
 }
 ok(engineCases > 200, '解題器對照了 ' + engineCases + ' 種情況');
 
-// ── 30 關出題 ──
+// ── 出題：第 1～30 關全部＋到頂之後抽 3 關，各 3 題 ──
 function connected(cells) {
   const Gr = Core.buildGraph(cells), seen = new Set([0]), st = [0];
   while (st.length) { const x = st.pop(); Gr.nbrs[x].forEach(y => { if (!seen.has(y)) { seen.add(y); st.push(y); } }); }
   return seen.size === cells.length;
 }
 let uniqueChecked = 0, totalMs = 0, maxMs = 0, sameNear = 0, brkNear = 0, shares = [];
-for (let lv = 1; lv <= 30; lv++) {
+const LEVELS = Array.from({ length: T.RAMP_LEVELS }, (_, i) => i + 1).concat([45, 60, T.MAX_LEVEL]);     // 到頂之後抽幾關（跟第 30 關一樣難）
+for (const lv of LEVELS) {
   for (let s = 0; s < 3; s++) {
     const r = rng(SEED + lv * 101 + s), t0 = Date.now();
     const z = T.makeLevel(lv, r);
@@ -116,12 +121,12 @@ for (let lv = 1; lv <= 30; lv++) {
     }
   }
 }
-ok(uniqueChecked === (30 - 8) * 3, '唯一解的關卡都用第三方解題器數過（' + uniqueChecked + ' 題）');
+ok(uniqueChecked === LEVELS.filter(l => sp(l).unique).length * 3, '唯一解的關卡都用第三方解題器數過（' + uniqueChecked + ' 題）');
 // 陷阱挑法（自由擺的 24 題）：實測同色預填 99～100% 都避開「隔一格」花樣（隨機挑約 71～77%），門檻訂 90%；最多那色佔預填中位 33～38%（隨機 44%），門檻 45%
 ok(brkNear / Math.max(1, sameNear + brkNear) >= 0.9, '自由擺：附近的同色預填 ≥ 90% 避開「隔一格」花樣（' + brkNear + '／' + (sameNear + brkNear) + '）');
 shares.sort((a, b) => a - b);
 ok(shares[shares.length >> 1] <= 0.45, '自由擺：最多那色佔預填的中位數 ≤ 45%（' + (100 * shares[shares.length >> 1]).toFixed(0) + '%）');
-console.log('出題 90 題：平均 ' + (totalMs / 90).toFixed(0) + 'ms、最久 ' + maxMs + 'ms');
+console.log('出題 ' + LEVELS.length * 3 + ' 題：平均 ' + (totalMs / (LEVELS.length * 3)).toFixed(0) + 'ms、最久 ' + maxMs + 'ms');
 
 // ── 陷阱分數 ──
 {
@@ -179,7 +184,7 @@ console.log('出題 90 題：平均 ' + (totalMs / 90).toFixed(0) + 'ms、最久
 }
 
 // ── 限時、圖形 ──
-ok(T.timeFor(1, 15) === (30 + 15 * 5) * 1000 && T.timeFor(30, 60) === (30 + 60 * 9) * 1000, '限時＝30 秒＋空格 × 5 → 9 秒');
+ok(T.timeFor(1, 15) === (T.TIME_BASE + 15 * T.TIME_CELL[0]) * 1000 && T.timeFor(MX, 60) === (T.TIME_BASE + 60 * T.TIME_CELL[1]) * 1000, '限時＝' + T.TIME_BASE + ' 秒＋空格 × ' + T.TIME_CELL[0] + ' → ' + T.TIME_CELL[1] + ' 秒');
 ok(T.timeFor(15, 40) > T.timeFor(14, 40), '每格秒數隨關卡變多');
 const hp = T.roundHexPath(1, 0.2);
 ok((hp.match(/Q/g) || []).length === 6 && /Z$/.test(hp), '圓角六角形：6 個圓角、封閉');

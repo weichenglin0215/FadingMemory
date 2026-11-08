@@ -6,7 +6,7 @@
 //   ④ 相鄰同色會打 ✕；空格四周用到所有顏色會變暗紅底＋白色「！」
 //   ⑤ 提示按鈕只在前 4 關；按了會替你塗一格
 //   ⑥ 塗完答案就過關、進下一關；時間到會失敗、亮出答案、跳出結算卡片
-//   ⑦ 第 30 關（75 格）版面放得下、出題時間；手機大小的視窗（390×844）再跑一次長按與點擊
+//   ⑦ 第 30 關（難度到頂，75 格）版面放得下、出題時間；手機大小的視窗（390×844）再跑一次長按與點擊
 //   ⑧ 全程沒有 JS 錯誤
 // 前置：本機伺服器已開（例如在專案根目錄執行  python -m http.server 8900 --bind 127.0.0.1）。
 // 用法（在專案根目錄）：  FM_PORT=8900 node test/reaction/browser_hexcolor.mjs
@@ -125,10 +125,10 @@ async function run(view) {
   await J('(Reaction.current.debug.api().solve(), 1)');
   await sleep(1900); await waitBuilt();
   ok((await J('Reaction.current.debug.state().level')) === 2 && (await J('Reaction.current.debug.state().cleared')) === cl0 + 1, view + '：塗完答案 → 過關、進第 2 關');
-  // 4 色的彈窗
-  await gotoLevel(4);
+  // 4 色的彈窗（V1.51：第 3 關起就是 4 色自由擺，預填 9 格——玩家說舊的第 3 關太簡單）
+  await gotoLevel(3);
   z = await info(); s = await st();
-  ok(z.k === 4 && !z.unique, view + '：第 4 關 4 色、自由擺');
+  ok(z.k === 4 && !z.unique && z.given.filter(v => v >= 0).length >= 9, view + '：第 3 關 4 色、自由擺、預填 ' + z.given.filter(v => v >= 0).length + ' 格');
   const e4 = s.paint.findIndex((v, i) => v < 0), r4 = await cellRect(e4);
   await longPress(r4.x, r4.y);
   ok((await J('document.querySelectorAll(".hexcolor-pop__item").length')) === 12, view + '：4 色時有 ?、X、6 種兩色、4 種三色＝12 個選項');
@@ -139,19 +139,20 @@ async function run(view) {
   ok((await J('document.querySelectorAll(".hexcolor-cell[data-i=\\"' + e4 + '\\"] .hexcolor-combo polygon").length')) === 3, view + '：小六角形切成三塊');
   await gotoLevel(5);
   ok(!(await J('/提示/.test(document.querySelector(".hexcolor-tools").textContent)')), view + '：第 5 關起沒有提示按鈕');
-  // ⑦ 第 30 關
-  const ms30 = await gotoLevel(30);
+  // ⑦ 難度到頂的那一關（第 RAMP_LEVELS＝30 關，格數最多）
+  const LAST = await J('Reaction.current.test.RAMP_LEVELS'), NMAX = await J('Reaction.current.test.N4[1]');
+  const ms30 = await gotoLevel(LAST);
   z = await info();
-  ok(z.n === 75 && z.unique, view + '：第 30 關 75 格、唯一解');
-  ok((await overflow()).length === 0, view + '：第 30 關版面放得下 ' + JSON.stringify(await overflow()));
+  ok(z.n === NMAX && z.unique, view + '：第 ' + LAST + ' 關 ' + NMAX + ' 格、唯一解');
+  ok((await overflow()).length === 0, view + '：第 ' + LAST + ' 關版面放得下 ' + JSON.stringify(await overflow()));
   const hw = await J('(function(){ var h = document.querySelector(".hexcolor-cell .hexcolor-hex").getBoundingClientRect().width, s = document.getElementById("stage").getBoundingClientRect().width; return h / s * 500; })()');
-  ok(hw >= 38, view + '：第 30 關一格寬 ' + hw.toFixed(1) + ' px（舞台 500 寬換算），手指點得到');
-  console.log(view + '：第 30 關出題＋畫面 ' + ms30 + 'ms，一格寬 ' + hw.toFixed(1) + ' px');
+  ok(hw >= 38, view + '：第 ' + LAST + ' 關一格寬 ' + hw.toFixed(1) + ' px（舞台 500 寬換算），手指點得到');
+  console.log(view + '：第 ' + LAST + ' 關出題＋畫面 ' + ms30 + 'ms，一格寬 ' + hw.toFixed(1) + ' px');
   // 第 30 關點一格塗色（大盤面上的座標換算）
   s = await st();
   const e30 = s.paint.findIndex(v => v < 0), r30 = await cellRect(e30);
   await pick(0); await click(r30.x, r30.y);
-  ok((await st()).paint[e30] === 0, view + '：第 30 關點得到格子');
+  ok((await st()).paint[e30] === 0, view + '：第 ' + LAST + ' 關點得到格子');
   // 時間到：失敗、亮出答案、結算
   await J('(Reaction.current.debug.api().timeout(), 1)');
   await sleep(300);

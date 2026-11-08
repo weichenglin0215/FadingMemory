@@ -31,6 +31,11 @@
     will-change: transform;                             /* 提示瀏覽器這個屬性會變動，先準備好（讓動畫更順） */
 }
 
+/* V1.51：結束時，畫面上其他還沒處理的硬幣變淡（一次掉好幾枚時，看得出是哪一枚出錯） */
+.coinsort-coinbox--dim {
+    opacity: 0.3;                                       /* 不透明度 0.3（變淡） */
+}
+
 /* 「coinsort-coin」這個元素的樣式 */
 .coinsort-coin {
     display: block;                                     /* 獨佔一整行的區塊 */

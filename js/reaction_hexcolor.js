@@ -10,14 +10,17 @@
      某個空格的六個鄰居已經用到所有顏色時，那格變成暗紅底＋白色「！」（放什麼都會出錯）。
      全部塗滿、沒有相鄰同色就過關（各色格數剛好用完是自然的結果）；每一關限時，時間到＝失敗並亮出答案。成績＝解開幾關。
    · 關卡規劃（研究結論見筆記；每一項都是線性，見 specFor）：
-       ① 第 1～3 關「三色入門」：3 色、形狀實心（緊密 3）。3 色時每個小三角形一定三色都有，
+       ① 第 1～2 關「三色入門」：3 色、形狀實心（緊密 3）。3 色時每個小三角形一定三色都有，
           所以「同一排隔兩格的格子一定同色」（剛體），一格決定就整片連鎖，教玩家看懂鄰居的規則。
-       ② 第 4 關起 4 色：格數 30 → 75、緊密度 2 → 3、最少那色的比例（破格率）25%（四色一樣多）→ 15%（第 20 關到頂）。
+          （V1.51 玩家意見：原本的第 3 關（3 色 31 格、只有 2 格預填）太簡單。3 色實心盤面不管預填幾格都是「一格決定整片」，
+           多給預填只會更簡單，所以改成三色入門只有 2 關，第 3 關就進入 4 色自由擺：預填 9 格、真的要動腦。）
+       ② 第 3 關起 4 色：格數 30 → 75（第 RAMP_LEVELS 關）、緊密度 2 → 3、最少那色的比例（破格率）25%（四色一樣多）→ 15%（第 20 關到頂）。
           研究發現「破格率 10～20%」最難（倒 U 型），所以最後停在 15%（大約 2:2:2:1）。
-       ③ 第 4～11 關「自由擺」：答案不只一種，塗得出任何一種合格的就過關；預填 30% → 20%（挑陷阱分數高的位置）。
+       ③ 第 3～11 關「自由擺」：答案不只一種，塗得出任何一種合格的就過關；預填 30% → 20%（挑陷阱分數高的位置）。
           （原本想用「最多允許幾種解」當旋鈕，實測行不通：解太多時根本數不完，預填數其實是被搜尋上限決定的，見筆記第 9 節。）
-       ④ 第 12 關起唯一解：先找出「剛好唯一」需要的最少預填，再多送幾格暖身（第 12 關 3 格 → 第 30 關 0 格）。
+       ④ 第 12 關起唯一解：先找出「剛好唯一」需要的最少預填，再多送幾格暖身（第 12 關 3 格 → 第 RAMP_LEVELS 關 0 格）。
           研究發現「預填越少越難」是最穩定的規則（多 1 格約打 7 折），位置的口訣效果都很弱。
+       （格數、緊密度、暖身、限時的每格秒數，都是線性走到第 RAMP_LEVELS（30）關到頂，之後維持最難，一直玩到第 MAX_LEVEL（90）關。）
    · 出題流程（makeLevel）：
        1. 長形狀：同一組參數長 SHAPE_TRIES 個，挑「六角形畫得最大」的那個（盤面比較好點）。
        2. 隱藏答案：3 色＝隨機合法著色（實心形狀幾乎只有一種塗法，各色格數直接從答案數出來）；
@@ -43,23 +46,24 @@
     'use strict';
 
     var ID = 'hexcolor';                                /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
-    var MAX_LEVEL = 30;                                 /* 最後一關：過了第 30 關就算全破（也是成績的上限） */
+    var RAMP_LEVELS = 30;                               /* 幾關之後難度到頂（格數、緊密度、暖身、每格秒數都在這一關到頂，之後維持最難） */
+    var MAX_LEVEL = 90;                                 /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: MAX_LEVEL };  /* 成績規格：better（max＝越大越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
     var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
     var Core = window.HexColorCore;                     /* 共用的形狀產生器（js/hexcolor_core.js，boot.js 會比這個檔案先載入） */
     var SQRT3 = Math.sqrt(3);                           /* √3：六角形的寬是半徑的 √3 倍 */
 
     /* ═══ 可以自己調的參數（難度曲線都是線性：kit.ramp 從起點走到終點，之後維持）═══ */
-    var K3_TO = 3;                                      /* 第 1～3 關是「三色入門」；第 4 關起 4 色 */
-    var FREE_TO = 11;                                   /* 第 4～11 關「自由擺」：答案不只一種，塗得出任何一種合格的就過關；第 12 關起答案只有一種（唯一解） */
-    var N3 = [19, 31];                                  /* 三色入門的格數：第 1 關 19 格 → 第 3 關 31 格 */
-    var N4 = [30, 75];                                  /* 4 色的格數：第 4 關 30 格 → 第 30 關 75 格（85 格以上手指不好點、手機出題太慢，難度也沒有再變高，見研究筆記第 9 節） */
-    var COMPACT4 = [2, 3];                              /* 4 色的形狀緊密度（每格至少貼著幾格）：第 4 關 2 → 第 30 關 3（四捨五入；4 色時越實心越難） */
-    var RARE = [0.25, 0.15], RARE_AT = 20;              /* 最少那一色佔全部格數的比例（破格率）：第 4 關 25%（四色一樣多）→ 第 20 關 15%（約 2:2:2:1，研究的最難區 10～20%） */
-    var FREE_FILL = [0.30, 0.20];                       /* 自由擺的關卡：預填佔全部格數的比例：第 4 關 30% → 第 11 關 20% */
-    var EXTRA3 = [3, 1];                                /* 三色入門：比「剛好唯一」多送幾格預填暖身：第 1 關 3 格 → 第 3 關 1 格 */
+    var K3_TO = 2;                                      /* 第 1～2 關是「三色入門」；第 3 關起 4 色（V1.51：3 → 2，玩家說第 3 關太簡單） */
+    var FREE_TO = 11;                                   /* 第 3～11 關「自由擺」：答案不只一種，塗得出任何一種合格的就過關；第 12 關起答案只有一種（唯一解） */
+    var N3 = [19, 25];                                  /* 三色入門的格數：第 1 關 19 格 → 第 2 關 25 格 */
+    var N4 = [30, 75];                                  /* 4 色的格數：第 3 關 30 格 → 第 30 關（RAMP_LEVELS）75 格（85 格以上手指不好點、手機出題太慢，難度也沒有再變高，見研究筆記第 9 節） */
+    var COMPACT4 = [2, 3];                              /* 4 色的形狀緊密度（每格至少貼著幾格）：第 3 關 2 → 第 30 關 3（四捨五入；4 色時越實心越難） */
+    var RARE = [0.25, 0.15], RARE_AT = 20;              /* 最少那一色佔全部格數的比例（破格率）：第 3 關 25%（四色一樣多）→ 第 20 關 15%（約 2:2:2:1，研究的最難區 10～20%） */
+    var FREE_FILL = [0.30, 0.20];                       /* 自由擺的關卡：預填佔全部格數的比例：第 3 關 30%（30 格裡 9 格）→ 第 11 關 20% */
+    var EXTRA3 = [3, 2];                                /* 三色入門：比「剛好唯一」多送幾格預填暖身：第 1 關 3 格 → 第 2 關 2 格 */
     var EXTRA4 = [3, 0];                                /* 4 色唯一解的關卡：多送幾格暖身：第 12 關 3 格 → 第 30 關 0 格（剛好唯一，最難） */
-    var TIME_BASE = 30, TIME_CELL = [5, 9];             /* 每一關限時（秒）＝ 30 ＋ 空格數 × 每格秒數（第 1 關 5 秒 → 第 30 關 9 秒；後面的題目要推理，給得比較多） */
+    var TIME_BASE = 30, TIME_CELL = [6, 18];             /* 每一關限時（秒）＝ 30 ＋ 空格數 × 每格秒數（第 1 關 6 秒 → 第 30 關 18 秒；後面的題目要推理，給得比較多） */
     var HINTS = 3;                                      /* 每一題可以用幾次提示；只有前 kit.HINT_LEVELS（4）關才有「提示」按鈕 */
     var LONG_MS = 450;                                  /* 按住多久算「長按」（毫秒，450 毫秒＝0.45 秒）：長按跳出記號彈窗 */
     var MOVE_TOL = 14;                                  /* 按下之後手指移動超過幾 px 就不算點擊／長按（避免滑動時誤塗） */
@@ -91,14 +95,14 @@
         if (level <= K3_TO) {
             return { k: 3, n: Math.round(lin(level, N3[0], N3[1], 1, K3_TO)), compact: 3, rare: 0, unique: true, fill: 0, extra: Math.round(lin(level, EXTRA3[0], EXTRA3[1], 1, K3_TO)) };  /* Math.round：四捨五入成整數 */
         }
-        var f = K3_TO + 1, n = Math.round(lin(level, N4[0], N4[1], f, MAX_LEVEL)), unique = level > FREE_TO;   /* f：4 色的第一關 */
+        var f = K3_TO + 1, n = Math.round(lin(level, N4[0], N4[1], f, RAMP_LEVELS)), unique = level > FREE_TO;   /* f：4 色的第一關 */
         return {
             k: 4, n: n,
-            compact: Math.round(lin(level, COMPACT4[0], COMPACT4[1], f, MAX_LEVEL)),
+            compact: Math.round(lin(level, COMPACT4[0], COMPACT4[1], f, RAMP_LEVELS)),
             rare: lin(level, RARE[0], RARE[1], f, RARE_AT),
             unique: unique,
             fill: unique ? 0 : Math.round(n * lin(level, FREE_FILL[0], FREE_FILL[1], f, FREE_TO)),
-            extra: unique ? Math.round(lin(level, EXTRA4[0], EXTRA4[1], FREE_TO + 1, MAX_LEVEL)) : 0
+            extra: unique ? Math.round(lin(level, EXTRA4[0], EXTRA4[1], FREE_TO + 1, RAMP_LEVELS)) : 0
         };
     }
     /* 依比例算各色格數：最少那色＝n × rare（四捨五入），其餘平均分給另外 k−1 色（除不盡的從第一色開始多 1 格） */
@@ -108,8 +112,8 @@
         out.push(r);
         return out;
     }
-    /* 每一關限時（毫秒）：30 秒＋空格數 × 每格秒數（第 1 關 5 秒 → 第 30 關 9 秒，線性） */
-    function timeFor(level, empties) { return Math.round((TIME_BASE + empties * kit.ramp(level, TIME_CELL[0], TIME_CELL[1], MAX_LEVEL)) * 1000); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」變化 */
+    /* 每一關限時（毫秒）：TIME_BASE 秒＋空格數 × 每格秒數（TIME_CELL：第 1 關 → 第 RAMP_LEVELS 關，線性，之後維持） */
+    function timeFor(level, empties) { return Math.round((TIME_BASE + empties * kit.ramp(level, TIME_CELL[0], TIME_CELL[1], RAMP_LEVELS)) * 1000); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」變化 */
 
     /* 六角格的「花樣」小工具（座標 [q, r]：q 往右、r 往右下）
        parityOf：「隔一格」的花樣——人習慣把同色隔一格擺（一排的第 1、3、5 格，斜的方向也一樣），這些格子的 q、r 奇偶都相同，共 4 類；
@@ -183,7 +187,7 @@
         }
         /* 反覆套用規則直到推不動；矛盾回傳 false */
         function propagate(s, q) {
-            for (;;) {
+            for (; ;) {
                 while (q.length) {
                     var i = q.pop();
                     if (s[COL + i] !== -1) continue;
@@ -324,7 +328,7 @@
             return { level: level, k: k, n: n, cells: cells, nbrs: pz.nbrs, counts: counts2, sol: sol2, given: g, unique: false, minimal: -1, clues: sp.fill, engine: E2 };
         }
         /* 步驟 3：加預填，直到只剩一種解（而且是完整數完，不是中途放棄） */
-        for (;;) {
+        for (; ;) {
             var r = E2.count(g, counts2, 2, NODE_STEP);
             if ((!r.aborted && r.found <= 1) || ++guard > n) break;
             var alt = null;
@@ -830,7 +834,7 @@
             specFor: specFor, countsFor: countsFor, timeFor: timeFor, makeEngine: makeEngine, makeLevel: makeLevel, randomColoring: randomColoring,
             trapScore: trapScore, parityOf: parityOf, subOf: subOf, hexDist: hexDist, centerOf: centerOf, boundsOf: boundsOf, fitScale: fitScale,
             conflictsOf: conflictsOf, deadCellsOf: deadCellsOf, isSolved: isSolved, combosFor: combosFor, popPlace: popPlace, roundHexPath: roundHexPath, rating: rating,
-            MAX_LEVEL: MAX_LEVEL, K3_TO: K3_TO, N3: N3, N4: N4, COMPACT4: COMPACT4, RARE: RARE, RARE_AT: RARE_AT, FREE_TO: FREE_TO, FREE_FILL: FREE_FILL,
+            MAX_LEVEL: MAX_LEVEL, RAMP_LEVELS: RAMP_LEVELS, K3_TO: K3_TO, N3: N3, N4: N4, COMPACT4: COMPACT4, RARE: RARE, RARE_AT: RARE_AT, FREE_TO: FREE_TO, FREE_FILL: FREE_FILL,
             EXTRA3: EXTRA3, EXTRA4: EXTRA4, TIME_BASE: TIME_BASE, TIME_CELL: TIME_CELL, HINTS: HINTS, LONG_MS: LONG_MS, POP_FRAC: POP_FRAC, MIN_BUDGET: MIN_BUDGET, NODE_MIN: NODE_MIN
         }
     };

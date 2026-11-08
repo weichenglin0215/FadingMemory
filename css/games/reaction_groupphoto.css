@@ -227,6 +227,19 @@
     fill: var(--gph-phone-screen);                      /* SVG 圖形的填色：主題變數 --gph-phone-screen */
 }
 
+/* V1.51：手機（整支）。低頭看手機的人「抬頭」時（身上沒有 groupphoto-person--phone）：手機往下移、淡掉，眼睛變回一般的睜眼 */
+.groupphoto-phonegrp {
+    transform: translateY(26px);                        /* 往下移 26（SVG 座標單位）：手機放下去了 */
+    opacity: 0;                                         /* 完全透明（看不到） */
+    transition: transform 0.2s ease-out, opacity 0.2s ease-out;  /* 0.2 秒內慢慢移動、淡入淡出（不會瞬間跳） */
+}
+
+/* 低頭看手機的時候：手機拿在胸前、看得到 */
+.groupphoto-person--phone .groupphoto-phonegrp {
+    transform: none;                                    /* 不移動（原來的位置） */
+    opacity: 1;                                         /* 完全不透明 */
+}
+
 /* 洗照片：閃光、閉眼的人圈紅圈 */
 .groupphoto-flash {
     position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
