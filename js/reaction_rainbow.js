@@ -52,303 +52,302 @@
 
 /* （這款是較早寫的遊戲：只有一局、沒有關卡，所以不用 kit.round，直接用 setTimeout；共通結構見 js/reaction_sticks.js 開頭的「新手導讀」） */
 (function () {
-    'use strict';
+  'use strict';
 
-    var ID = 'rainbow';
+  var ID = 'rainbow';
 
-    /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 rainbow 那一列要一致
-       （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
-    var SCORE = { better: 'max', decimals: 0, format: '{v} 個', label: '點中個數', min: 1, max: 1000 };
-    var h = UI.h;
+  /* 世界排行榜的成績規格（欄位說明見 js/leaderboard.js 開頭）；資料庫 MF_games 裡 rainbow 那一列要一致
+     （node test/leaderboard/gen_games_sql.cjs 會從這裡產生 insert，test/reaction/t_leaderboard.js 會檢查兩邊是否一致）。 */
+  var SCORE = { better: 'max', decimals: 0, format: '{v} 個', label: '點中個數', min: 1, max: 1000 };
+  var h = UI.h;
 
-    /* 設定集中在這一區 */
-    /* ═══ 可以自己調的參數 ═══ */
-    /* 每成功點擊幾個目標之後暫停並多加一種顏色 */
-    var TARGETS_PER_STAGE = 10;     /* 每個階段成功點擊幾個目標色方塊之後，暫停並加一種新顏色 */
-    var MAX_TARGETS = 6;            /* 要點的顏色最多加到幾種 */
-    /* 換方塊的間隔（＝點擊的時間限制：下一個方塊出現前要點下去）從 1200ms 開始，每換一個縮短一點，最短 400ms。
-       V1.34 玩家意見：「請延長點擊的時間限制，讓玩家有更長的時間去點擊」——起始從 800 → 1200 ms、最短從 200 → 400 ms（每個方塊的反應時間多了 400 ms／200 ms）。 */
-    var START_INTERVAL_MS = 1200;  /* 換方塊的間隔起始值（每個方塊一開始停留多久，也是點擊的時間限制） */
-    var MIN_INTERVAL_MS = 400;      /* 間隔最短縮到多少（再短人就按不到了） */
-    /* 每換一個方塊，間隔縮短幾毫秒（從 START_INTERVAL_MS 縮到 MIN_INTERVAL_MS 大約
-       要換 (START − MIN) ÷ 這個數字 個方塊） */
-    var INTERVAL_STEP_MS = 5.0;
-    var FIRST_DELAY_MS = 400;       /* 一局開始到「3」出現的等待時間 */
-    var FIRST_TARGET_MULT = 1.5;    /* 開局、每次新規則之後，第一個目標色方塊的停留時間是平常間隔的幾倍（給玩家比較充裕的反應時間） */
-    var COUNTDOWN_FROM = 3;         /* 換階段、關掉新規則彈窗之後，從幾開始倒數 */
-    var COUNTDOWN_STEP_MS = 1000;   /* 倒數每個數字停留多久 */
-    var TARGET_PROB = 0.3;          /* 每個新方塊是目標色的機率 */
-    var DECOY_PROB = 0.23;          /* 非目標色的方塊上，出現干擾字的機率（原本 0.7，再降成它的 1/3 ≈ 0.23） */
-    var RULE_ARM_MS = 1000;         /* 新規則彈窗跳出後，「知道了」按鈕要等多久才按得下去（防止誤觸） */
+  /* 設定集中在這一區 */
+  /* ═══ 可以自己調的參數 ═══ */
+  /* 每成功點擊幾個目標之後暫停並多加一種顏色 */
+  var TARGETS_PER_STAGE = 10;     /* 每個階段成功點擊幾個目標色方塊之後，暫停並加一種新顏色 */
+  var MAX_TARGETS = 5;            /* 要點的顏色最多加到幾種 */
+  /* 換方塊的間隔（＝點擊的時間限制：下一個方塊出現前要點下去）從 1200ms 開始，每換一個縮短一點，最短 400ms。
+     V1.34 玩家意見：「請延長點擊的時間限制，讓玩家有更長的時間去點擊」——起始從 800 → 1200 ms、最短從 200 → 400 ms（每個方塊的反應時間多了 400 ms／200 ms）。 */
+  var START_INTERVAL_MS = 1200;  /* 換方塊的間隔起始值（每個方塊一開始停留多久，也是點擊的時間限制） */
+  var MIN_INTERVAL_MS = 400;      /* 間隔最短縮到多少（再短人就按不到了） */
+  /* 每換一個方塊，間隔縮短幾毫秒（從 START_INTERVAL_MS 縮到 MIN_INTERVAL_MS 大約
+     要換 (START − MIN) ÷ 這個數字 個方塊） */
+  var INTERVAL_STEP_MS = 5.0;
+  var FIRST_DELAY_MS = 400;       /* 一局開始到「3」出現的等待時間 */
+  var FIRST_TARGET_MULT = 1.5;    /* 開局、每次新規則之後，第一個目標色方塊的停留時間是平常間隔的幾倍（給玩家比較充裕的反應時間） */
+  var COUNTDOWN_FROM = 3;         /* 換階段、關掉新規則彈窗之後，從幾開始倒數 */
+  var COUNTDOWN_STEP_MS = 1000;   /* 倒數每個數字停留多久 */
+  var TARGET_PROB = 0.3;          /* 每個新方塊是目標色的機率 */
+  var DECOY_PROB = 0.25;          /* 非目標色的方塊上，出現干擾字的機率（原本 0.7，再降成它的 1/3 ≈ 0.23） */
+  var RULE_ARM_MS = 1000;         /* 新規則彈窗跳出後，「知道了」按鈕要等多久才按得下去（防止誤觸） */
 
-    /* 七個顏色的資料：id、名稱、提示用符號 emoji、CSS 顏色碼 */
-    /* 七個固定的鮮豔七彩顏色。emoji 是提示文字用的圓形符號（靛色沒有，所以不能當目標）。 */
-    var COLORS = [
-        { id: 'red', name: '紅', emoji: '🔴', css: '#FF1F1F' },
-        { id: 'orange', name: '橙', emoji: '🟠', css: '#FF8A00' },
-        { id: 'yellow', name: '黃', emoji: '🟡', css: '#FFE600' },
-        { id: 'green', name: '綠', emoji: '🟢', css: '#14C83C' },
-        { id: 'blue', name: '藍', emoji: '🔵', css: '#1E7BFF' },
-        { id: 'indigo', name: '靛', emoji: '', css: '#4B2BFF' },
-        { id: 'purple', name: '紫', emoji: '🟣', css: '#B026FF' }
-    ];
-    /* RED：一開始只要點紅色 */
-    var RED = COLORS[0];
-    /* EXTRA_POOL：之後能加進來當目標的顏色（要有符號，所以靛色不能當目標，永遠只是干擾） */
-    var EXTRA_POOL = COLORS.filter(function (c) { return c.emoji && c !== RED; });  /* filter：留下符合條件的元素，回傳新陣列 */
+  /* 六個顏色的資料：id、名稱、提示用符號 emoji、CSS 顏色碼 */
+  /* 六個固定的鮮豔顏色。emoji 是提示文字用的圓形符號（靛色沒有，所以不能當目標）。 */
+  var COLORS = [
+    { id: 'red', name: '紅', emoji: '🔴', css: 'hsla(0, 100%, 56%, 1.00)' },
+    { id: 'orange', name: '橙', emoji: '🟠', css: 'hsla(32, 100%, 50%, 1.00)' },
+    { id: 'yellow', name: '黃', emoji: '🟡', css: 'hsla(60, 100%, 50%, 1.00)' },
+    { id: 'green', name: '綠', emoji: '🟢', css: 'hsla(133, 82%, 43%, 1.00)' },
+    { id: 'blue', name: '藍', emoji: '🔵', css: 'hsla(220, 100%, 56%, 1.00)' },
+    { id: 'purple', name: '紫', emoji: '🟣', css: 'hsla(280, 100%, 57%, 1.00)' }
+  ];
+  /* RED：一開始只要點紅色 */
+  var RED = COLORS[0];
+  /* EXTRA_POOL：之後能加進來當目標的顏色（要有符號，所以靛色不能當目標，永遠只是干擾） */
+  var EXTRA_POOL = COLORS.filter(function (c) { return c.emoji && c !== RED; });  /* filter：留下符合條件的元素，回傳新陣列 */
 
-    /* 2×2 格子在 CSS Grid 的編號是左上0、右上1、左下2、右下3 */
-    /* 2×2 格子在 CSS Grid 裡的編號是左上0、右上1、左下2、右下3；
-       順時針換方塊的順序就是 左上→右上→右下→左下。 */
-    /* ORDER：順時針換方塊的順序（左上→右上→右下→左下） */
-    var ORDER = [0, 1, 3, 2];
+  /* 2×2 格子在 CSS Grid 的編號是左上0、右上1、左下2、右下3 */
+  /* 2×2 格子在 CSS Grid 裡的編號是左上0、右上1、左下2、右下3；
+     順時針換方塊的順序就是 左上→右上→右下→左下。 */
+  /* ORDER：順時針換方塊的順序（左上→右上→右下→左下） */
+  var ORDER = [0, 1, 3, 2];
 
-    /* 已經換過 steps 個方塊之後的間隔（毫秒）：從 START_INTERVAL_MS 每個方塊縮短 INTERVAL_STEP_MS，最短 MIN_INTERVAL_MS */
-    function intervalAt(steps) { return Math.max(MIN_INTERVAL_MS, START_INTERVAL_MS - steps * INTERVAL_STEP_MS); }
-    /* 從陣列隨機挑一個 */
-    function pickAny(arr) { return arr[Math.floor(Math.random() * arr.length)]; }  /* Math.floor：無條件捨去成整數 */
-    /* 提示文字：「請點擊 🔴紅 … 方塊」 */
-    function hintTextFor(targets) {
-        return '請點擊' + targets.map(function (c) { return c.emoji + c.name; }).join('') + '方塊，超時就失敗。';  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
-    }
+  /* 已經換過 steps 個方塊之後的間隔（毫秒）：從 START_INTERVAL_MS 每個方塊縮短 INTERVAL_STEP_MS，最短 MIN_INTERVAL_MS */
+  function intervalAt(steps) { return Math.max(MIN_INTERVAL_MS, START_INTERVAL_MS - steps * INTERVAL_STEP_MS); }
+  /* 從陣列隨機挑一個 */
+  function pickAny(arr) { return arr[Math.floor(Math.random() * arr.length)]; }  /* Math.floor：無條件捨去成整數 */
+  /* 提示文字：「請點擊 🔴紅 … 方塊」 */
+  function hintTextFor(targets) {
+    return '請點擊' + targets.map(function (c) { return c.emoji + c.name; }).join('') + '方塊，超時就失敗。';  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+  }
 
-    /* mount：遊戲進場點 */
-    function mount(root, ctx) {
-        /* 替整個畫面加上黑底 class（樣式在 css/games/reaction_rainbow.css 的 .rainbow-bg） */
-        root.classList.add('rainbow-bg');               /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-        /* 規則彈窗元素：「?」重看規則時，換方塊要暫停等它關掉 */
-        function ruleOpen() { return Reaction.kit.ruleOpen(); }
+  /* mount：遊戲進場點 */
+  function mount(root, ctx) {
+    /* 替整個畫面加上黑底 class（樣式在 css/games/reaction_rainbow.css 的 .rainbow-bg） */
+    root.classList.add('rainbow-bg');               /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+    /* 規則彈窗元素：「?」重看規則時，換方塊要暫停等它關掉 */
+    function ruleOpen() { return Reaction.kit.ruleOpen(); }
 
-        /* gen：每開一局 +1；上一局還沒跑完的計時器發現世代不一樣就自己停掉 */
-        var gen = 0;    /* 每開一局就 +1：上一局還沒跑完的計時器發現世代不一樣就自己停掉 */
+    /* gen：每開一局 +1；上一局還沒跑完的計時器發現世代不一樣就自己停掉 */
+    var gen = 0;    /* 每開一局就 +1：上一局還沒跑完的計時器發現世代不一樣就自己停掉 */
 
-        /* round：開一局 */
-        function round() {
-            var myGen = ++gen;
-            root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
+    /* round：開一局 */
+    function round() {
+      var myGen = ++gen;
+      root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
 
-            /* targets 目前要點的顏色清單；hits 成功點擊數（成績）；steps 已換過幾個方塊（決定間隔縮到多短）；pending 還沒被點掉的目標方塊 */
-            var targets = [RED];
-            var hits = 0;               /* 成功點擊的目標數（成績） */
-            var stageHits = 0;          /* 這個階段已經成功點擊的目標數 */
-            var steps = 0;              /* 已經換過幾個方塊（決定間隔縮到多短） */
-            var cur = -1;               /* 目前最新的方塊在 ORDER 裡的位置 */
-            var pending = null;         /* 還沒被點掉的目標色方塊：{ idx } */
-            /* handled：這一格的目標方塊已點過（再點不算錯，避免連點兩下就失敗） */
-            var handled = [false, false, false, false];   /* 這一格的目標色方塊已經成功點過（再點不算錯） */
-            /* state：ready 等第一個方塊/play 進行中/paused 新規則彈窗/over 結束 */
-            var state = 'ready';        /* ready：等第一個方塊／play：進行中／paused：新規則彈窗／over：結束 */
-            var timer = null;
-            var resumeAfterRule = false;
-            /* extendFirst：節奏剛被打斷（開局、新規則之後）；下一個出現的目標色方塊停留時間 ×FIRST_TARGET_MULT，用掉就關掉 */
-            var extendFirst = true;
-            /* 操作提示（只在第一次進遊戲時）：第一個「要點的顏色」方塊出現時，手指縮放擺在那個方塊上（也提醒玩家要點哪個顏色）；玩家第一次碰畫面就不再提示 */
-            var hintWanted = Reaction.kit.once('rainbow.hint'), hintObj = null;  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
-            root.addEventListener('pointerdown', function () { hintWanted = false; }, { capture: true, once: true });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+      /* targets 目前要點的顏色清單；hits 成功點擊數（成績）；steps 已換過幾個方塊（決定間隔縮到多短）；pending 還沒被點掉的目標方塊 */
+      var targets = [RED];
+      var hits = 0;               /* 成功點擊的目標數（成績） */
+      var stageHits = 0;          /* 這個階段已經成功點擊的目標數 */
+      var steps = 0;              /* 已經換過幾個方塊（決定間隔縮到多短） */
+      var cur = -1;               /* 目前最新的方塊在 ORDER 裡的位置 */
+      var pending = null;         /* 還沒被點掉的目標色方塊：{ idx } */
+      /* handled：這一格的目標方塊已點過（再點不算錯，避免連點兩下就失敗） */
+      var handled = [false, false, false, false];   /* 這一格的目標色方塊已經成功點過（再點不算錯） */
+      /* state：ready 等第一個方塊/play 進行中/paused 新規則彈窗/over 結束 */
+      var state = 'ready';        /* ready：等第一個方塊／play：進行中／paused：新規則彈窗／over：結束 */
+      var timer = null;
+      var resumeAfterRule = false;
+      /* extendFirst：節奏剛被打斷（開局、新規則之後）；下一個出現的目標色方塊停留時間 ×FIRST_TARGET_MULT，用掉就關掉 */
+      var extendFirst = true;
+      /* 操作提示（只在第一次進遊戲時）：第一個「要點的顏色」方塊出現時，手指縮放擺在那個方塊上（也提醒玩家要點哪個顏色）；玩家第一次碰畫面就不再提示 */
+      var hintWanted = Reaction.kit.once('rainbow.hint'), hintObj = null;  /* kit.once(key)：同一個頁面只有第一次回傳 true（用來讓提示只出現一次） */
+      root.addEventListener('pointerdown', function () { hintWanted = false; }, { capture: true, once: true });  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
 
-            /* 標題列右側的文字要短：太長會把中間的遊戲名稱擠成「七…」，所以只寫
-               「N 個・最佳 M」，不像結算卡片那樣寫完整的「成功／個」。 */
-            function updateMeta() {
-                var b = Reaction.getBest(ID);           /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
-                ctx.setMeta(hits + ' 個' + (b == null ? '' : '・最佳 ' + b));
-            }
-            updateMeta();
+      /* 標題列右側的文字要短：太長會把中間的遊戲名稱擠成「七…」，所以只寫
+         「N 個・最佳 M」，不像結算卡片那樣寫完整的「成功／個」。 */
+      function updateMeta() {
+        var b = Reaction.getBest(ID);           /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
+        ctx.setMeta(hits + ' 個' + (b == null ? '' : '・最佳 ' + b));
+      }
+      updateMeta();
 
-            var hint = h('div', { 'class': 'rainbow-top', text: hintTextFor(targets) });
-            var wrap = h('div', { 'class': 'rainbow-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
-            var board = h('div', { 'class': 'rainbow-board' });  /* board：盤面（所有格子都放在裡面） */
-            wrap.appendChild(board);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
-            root.appendChild(hint);
-            root.appendChild(wrap);
+      var hint = h('div', { 'class': 'rainbow-top', text: hintTextFor(targets) });
+      var wrap = h('div', { 'class': 'rainbow-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
+      var board = h('div', { 'class': 'rainbow-board' });  /* board：盤面（所有格子都放在裡面） */
+      wrap.appendChild(board);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+      root.appendChild(hint);
+      root.appendChild(wrap);
 
-            /* 棋盤是正方形：量 wrap 實際可用的寬高，取小的那個（取偶數，兩格剛好平分）
-               當邊長；剩下的空間靠 .rainbow-wrap 的 flex 置中，留白平均分在兩側／上下。 */
-            /* 棋盤是正方形：取可用寬高較小者，取偶數讓兩格剛好平分 */
-            var side = Math.floor(Math.min(wrap.clientWidth, wrap.clientHeight) / 2) * 2;
-            board.style.width = side + 'px';
-            board.style.height = side + 'px';
-            var cellPx = side / 2;
+      /* 棋盤是正方形：量 wrap 實際可用的寬高，取小的那個（取偶數，兩格剛好平分）
+         當邊長；剩下的空間靠 .rainbow-wrap 的 flex 置中，留白平均分在兩側／上下。 */
+      /* 棋盤是正方形：取可用寬高較小者，取偶數讓兩格剛好平分 */
+      var side = Math.floor(Math.min(wrap.clientWidth, wrap.clientHeight) / 2) * 2;
+      board.style.width = side + 'px';
+      board.style.height = side + 'px';
+      var cellPx = side / 2;
 
-            var cells = [];
-            /* 建立 4 個格子，每格綁 pointerdown（一碰就觸發） */
-            for (var i = 0; i < 4; i++) {
-                (function (i) {
-                    var el = h('div', { 'class': 'rainbow-cell' });
-                    el.addEventListener('pointerdown', function (e) { e.preventDefault(); tap(i); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
-                    board.appendChild(el);
-                    cells.push(el);
-                })(i);
-            }
+      var cells = [];
+      /* 建立 4 個格子，每格綁 pointerdown（一碰就觸發） */
+      for (var i = 0; i < 4; i++) {
+        (function (i) {
+          var el = h('div', { 'class': 'rainbow-cell' });
+          el.addEventListener('pointerdown', function (e) { e.preventDefault(); tap(i); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+          board.appendChild(el);
+          cells.push(el);
+        })(i);
+      }
 
 
-            /* 目前的間隔（隨換方塊數縮短） */
-            function intervalNow() { return intervalAt(steps); }
-            /* 排下一次換方塊 */
-            function schedule(ms) {
-                clearTimeout(timer);
-                timer = setTimeout(function () { if (myGen === gen) tick(); }, ms);  /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
-            }
+      /* 目前的間隔（隨換方塊數縮短） */
+      function intervalNow() { return intervalAt(steps); }
+      /* 排下一次換方塊 */
+      function schedule(ms) {
+        clearTimeout(timer);
+        timer = setTimeout(function () { if (myGen === gen) tick(); }, ms);  /* setTimeout(函式, 毫秒)：過一段時間後執行一次函式 */
+      }
 
-            /* 換下一個方塊：①上一個目標沒被點到＝超時失敗 ②拿掉白邊 ③換上新顏色（可能壓干擾字）④排下一次 */
-            /* 換下一個方塊。順序固定是：①先檢查上一個目標有沒有被點掉（沒有＝超時）
-               ②拿掉上一個方塊的白邊 ③新方塊換上隨機顏色＋白邊（非目標色再看要不要壓干擾字）
-               ④排下一次換方塊。 */
-            function tick() {
-                if (state !== 'play' && state !== 'ready') return;
-                if (ruleOpen()) { resumeAfterRule = true; schedule(150); return; }
-                if (resumeAfterRule) { resumeAfterRule = false; schedule(intervalNow()); return; }
-                if (pending) { fail('超時了，來不及點！', null, pending.idx); return; }
-                state = 'play';
-                if (hintObj) { hintObj.remove(); hintObj = null; }
+      /* 換下一個方塊：①上一個目標沒被點到＝超時失敗 ②拿掉白邊 ③換上新顏色（可能壓干擾字）④排下一次 */
+      /* 換下一個方塊。順序固定是：①先檢查上一個目標有沒有被點掉（沒有＝超時）
+         ②拿掉上一個方塊的白邊 ③新方塊換上隨機顏色＋白邊（非目標色再看要不要壓干擾字）
+         ④排下一次換方塊。 */
+      function tick() {
+        if (state !== 'play' && state !== 'ready') return;
+        if (ruleOpen()) { resumeAfterRule = true; schedule(150); return; }
+        if (resumeAfterRule) { resumeAfterRule = false; schedule(intervalNow()); return; }
+        if (pending) { fail('超時了，來不及點！', null, pending.idx); return; }
+        state = 'play';
+        if (hintObj) { hintObj.remove(); hintObj = null; }
 
-                if (cur >= 0) cells[ORDER[cur]].classList.remove('rainbow-cell--new');
-                cur = (cur + 1) % 4;
-                var idx = ORDER[cur], el = cells[idx];
+        if (cur >= 0) cells[ORDER[cur]].classList.remove('rainbow-cell--new');
+        cur = (cur + 1) % 4;
+        var idx = ORDER[cur], el = cells[idx];
 
-                /* 依機率決定這個方塊是不是目標色 */
-                var isTarget = Math.random() < TARGET_PROB;
-                var nonTargets = COLORS.filter(function (c) { return targets.indexOf(c) < 0; });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
-                var color = isTarget ? pickAny(targets) : pickAny(nonTargets);
-                el.style.background = color.css;
-                el.innerHTML = '';
-                el.classList.remove('rainbow-cell--hit');
-                handled[idx] = false;
-                if (isTarget) {
-                    pending = { idx: idx };
-                    if (hintWanted) hintObj = Reaction.kit.hintOn(root, el, { mode: 'tap', text: '請點擊' + color.name + '色的方塊' });
-                } else if (Math.random() < DECOY_PROB) {
-                    var inkPool = targets.map(function (c) { return c.css; }).concat(['#FFFFFF', '#000000']);
-                    var letter = h('span', { 'class': 'rainbow-letter', text: pickAny(targets).name });
-                    letter.style.fontSize = Math.round(cellPx * 0.8) + 'px';  /* Math.round：四捨五入成整數 */
-                    letter.style.color = pickAny(inkPool);
-                    el.appendChild(letter);
-                }
-                el.classList.add('rainbow-cell--new');
-
-                var ms = intervalNow();
-                /* 節奏剛被打斷之後的第一個目標色方塊：停留時間加長成 1.5 倍（只加長這一個） */
-                if (isTarget && extendFirst) { ms = ms * FIRST_TARGET_MULT; extendFirst = false; }
-                steps++;
-                schedule(ms);
-            }
-
-            /* 倒數：在格子 el 上顯示白色大數字 n，COUNTDOWN_STEP_MS 之後換 n-1；倒數到 0 就把數字拿掉、呼叫 done。
-               開局（等第一個方塊）與換階段（新規則彈窗關掉之後）共用；「?」規則視窗開著的時候先停在原地等它關掉。 */
-            function countdownAt(el, n, done) {
-                if (myGen !== gen || (state !== 'play' && state !== 'ready')) return;
-                if (ruleOpen()) { timer = setTimeout(function () { countdownAt(el, n, done); }, 150); return; }
-                el.innerHTML = '';
-                if (n <= 0) { done(); return; }
-                var num = h('span', { 'class': 'rainbow-letter', text: String(n) });
-                num.style.fontSize = Math.round(cellPx * 0.8) + 'px';
-                num.style.color = '#FFFFFF';
-                el.appendChild(num);
-                timer = setTimeout(function () { countdownAt(el, n - 1, done); }, COUNTDOWN_STEP_MS);
-            }
-
-            /* 玩家點了某一格：必須剛好是待點的目標，否則失敗 */
-            function tap(idx) {
-                if (state !== 'play') return;
-                if (handled[idx]) return;
-                if (!pending || idx !== pending.idx) { fail('點錯了！那不是要點的方塊', idx, pending ? pending.idx : null); return; }
-
-                /* 成功：方塊維持原本的顏色（不變黑）；外圍變成粗黑框（白框的兩倍粗）當作點對了的回饋，直到下一個方塊出現 */
-                cells[idx].classList.add('rainbow-cell--hit');
-                handled[idx] = true;
-                pending = null;
-                hits++;
-                stageHits++;
-                updateMeta();
-
-                if (stageHits >= TARGETS_PER_STAGE && targets.length < MAX_TARGETS) newStage();
-            }
-
-            /* 換階段：暫停、加一種新目標色、彈出新規則視窗 */
-            /* 換階段：先暫停（取消換方塊的計時器），再彈出新規則彈窗 */
-            function newStage() {
-                state = 'paused';
-                clearTimeout(timer);
-                var extra = pickAny(EXTRA_POOL.filter(function (c) { return targets.indexOf(c) < 0; }));
-                targets.push(extra);
-
-                /* 下一個要出現方塊的那一格先清成黑底，預告位置 */
-                /* 下一個要出現方塊的那一格先清成黑底（舊顏色、干擾字都拿掉），預先讓玩家
-                   知道下一個方塊會出現在哪；其他三格維持原樣。 */
-                var nextEl = cells[ORDER[(cur + 1) % 4]];
-                nextEl.style.background = '#000';
-                nextEl.innerHTML = '';
-
-                /* 公版彈窗（放在遊戲畫面裡）：標題、新規則說明、目前要點的顏色、「知道了」。
-                   按鈕設 keep：由 close() 檢查完狀態才關（避免鬼點擊或換局之後誤關） */
-                var dlg = Dlg.open({
-                    host: root, cls: 'dlg--result',
-                    title: '新規則！',
-                    children: [
-                        h('div', { 'class': 'rainbow-rule-text', text: '除了原本的顏色，現在' + extra.emoji + extra.name + '色的方塊也要點！其他顏色一律不能點，來不及點或點錯，都算失敗。' }),
-                        h('div', { 'class': 'rainbow-rule-targets', text: targets.map(function (c) { return c.emoji + c.name; }).join('　') })
-                    ],
-                    buttons: [{ text: '知道了', kind: 'primary', keep: true, onClick: function () { close(); } }]
-                });
-                var okBtn = dlg.buttons[0];
-                okBtn.disabled = true;
-                var overlay = dlg.el;
-
-                /* 「知道了」按鈕剛出現的 1 秒內是灰的（防止手指的「鬼點擊」立刻把彈窗關掉） */
-                setTimeout(function () { if (myGen === gen) okBtn.disabled = false; }, RULE_ARM_MS);
-
-                /* 關掉彈窗：舊方塊全部標成「已處理」，然後倒數 3、2、1 才接著換方塊 */
-                /* 關掉彈窗：棋盤保持原樣（不清空、不重設 cur），舊方塊全部標成「已處理」，
-                   然後在下一個位置倒數 3、2、1，倒數完才從那一格接著換方塊。 */
-                function close() {
-                    if (state !== 'paused' || myGen !== gen || okBtn.disabled) return;
-                    overlay.remove();
-                    hint.textContent = hintTextFor(targets);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-                    handled = [true, true, true, true];
-                    stageHits = 0;
-                    state = 'play';
-                    extendFirst = true;                 /* 倒數完之後第一個目標色方塊：反應時間多給 50% */
-                    countdownAt(nextEl, COUNTDOWN_FROM, tick);
-                }
-            }
-
-            /* 失敗：標出點錯的那一格（紅虛線）與漏掉的那一格（白虛線），稍後顯示結算 */
-            /* 失敗：停掉計時器，標出哪一格出事——badIdx＝點錯的那一格（鮮紅色虛線框）、
-               missedIdx＝本來該點、卻沒點到的那一格（白色虛線框，告訴玩家「正確的是這個」），
-               稍等一下再疊上結算卡片，跟其他遊戲同一套做法。 */
-            function fail(reason, badIdx, missedIdx) {
-                state = 'over';
-                if (window.Sfx) Sfx.play('bad');        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
-                clearTimeout(timer);
-                if (badIdx != null) cells[badIdx].classList.add('rainbow-cell--bad');
-                if (missedIdx != null) cells[missedIdx].classList.add('rainbow-cell--missed');
-                var isNew = hits > 0 && Reaction.setBest(ID, hits, function (v, b) { return v > b; });
-                updateMeta();
-                UI.wait(700).then(function () {
-                    if (myGen !== gen) return;
-                    /* 結算彈窗（公版）：帶 score 就會在彈窗出現之後自動送世界排行榜（0 個不在有效範圍，會自己略過） */
-                    Reaction.kit.result(root, {         /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
-                        num: hits + ' 個', label: reason, isNew: isNew, score: hits,
-                        sfx: hits >= 15 ? 'win' : 'fail', onAgain: round
-                    });
-                });
-            }
-
-            /* 開局：等一下，先在第一個方塊要出現的那一格（左上角）倒數 3、2、1，倒數完才出第一個方塊 */
-            timer = setTimeout(function () { if (myGen === gen) countdownAt(cells[ORDER[0]], COUNTDOWN_FROM, tick); }, FIRST_DELAY_MS);
+        /* 依機率決定這個方塊是不是目標色 */
+        var isTarget = Math.random() < TARGET_PROB;
+        var nonTargets = COLORS.filter(function (c) { return targets.indexOf(c) < 0; });  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+        var color = isTarget ? pickAny(targets) : pickAny(nonTargets);
+        el.style.background = color.css;
+        el.innerHTML = '';
+        el.classList.remove('rainbow-cell--hit');
+        handled[idx] = false;
+        if (isTarget) {
+          pending = { idx: idx };
+          if (hintWanted) hintObj = Reaction.kit.hintOn(root, el, { mode: 'tap', text: '請點擊' + color.name + '色的方塊' });
+        } else if (Math.random() < DECOY_PROB) {
+          var inkPool = targets.map(function (c) { return c.css; }).concat(['#FFFFFF', '#000000']);
+          var letter = h('span', { 'class': 'rainbow-letter', text: pickAny(targets).name });
+          letter.style.fontSize = Math.round(cellPx * 0.8) + 'px';  /* Math.round：四捨五入成整數 */
+          letter.style.color = pickAny(inkPool);
+          el.appendChild(letter);
         }
+        el.classList.add('rainbow-cell--new');
 
-        round();
+        var ms = intervalNow();
+        /* 節奏剛被打斷之後的第一個目標色方塊：停留時間加長成 1.5 倍（只加長這一個） */
+        if (isTarget && extendFirst) { ms = ms * FIRST_TARGET_MULT; extendFirst = false; }
+        steps++;
+        schedule(ms);
+      }
+
+      /* 倒數：在格子 el 上顯示白色大數字 n，COUNTDOWN_STEP_MS 之後換 n-1；倒數到 0 就把數字拿掉、呼叫 done。
+         開局（等第一個方塊）與換階段（新規則彈窗關掉之後）共用；「?」規則視窗開著的時候先停在原地等它關掉。 */
+      function countdownAt(el, n, done) {
+        if (myGen !== gen || (state !== 'play' && state !== 'ready')) return;
+        if (ruleOpen()) { timer = setTimeout(function () { countdownAt(el, n, done); }, 150); return; }
+        el.innerHTML = '';
+        if (n <= 0) { done(); return; }
+        var num = h('span', { 'class': 'rainbow-letter', text: String(n) });
+        num.style.fontSize = Math.round(cellPx * 0.8) + 'px';
+        num.style.color = '#FFFFFF';
+        el.appendChild(num);
+        timer = setTimeout(function () { countdownAt(el, n - 1, done); }, COUNTDOWN_STEP_MS);
+      }
+
+      /* 玩家點了某一格：必須剛好是待點的目標，否則失敗 */
+      function tap(idx) {
+        if (state !== 'play') return;
+        if (handled[idx]) return;
+        if (!pending || idx !== pending.idx) { fail('點錯了！那不是要點的方塊', idx, pending ? pending.idx : null); return; }
+
+        /* 成功：方塊維持原本的顏色（不變黑）；外圍變成粗黑框（白框的兩倍粗）當作點對了的回饋，直到下一個方塊出現 */
+        cells[idx].classList.add('rainbow-cell--hit');
+        handled[idx] = true;
+        pending = null;
+        hits++;
+        stageHits++;
+        updateMeta();
+
+        if (stageHits >= TARGETS_PER_STAGE && targets.length < MAX_TARGETS) newStage();
+      }
+
+      /* 換階段：暫停、加一種新目標色、彈出新規則視窗 */
+      /* 換階段：先暫停（取消換方塊的計時器），再彈出新規則彈窗 */
+      function newStage() {
+        state = 'paused';
+        clearTimeout(timer);
+        var extra = pickAny(EXTRA_POOL.filter(function (c) { return targets.indexOf(c) < 0; }));
+        targets.push(extra);
+
+        /* 下一個要出現方塊的那一格先清成黑底，預告位置 */
+        /* 下一個要出現方塊的那一格先清成黑底（舊顏色、干擾字都拿掉），預先讓玩家
+           知道下一個方塊會出現在哪；其他三格維持原樣。 */
+        var nextEl = cells[ORDER[(cur + 1) % 4]];
+        nextEl.style.background = '#000';
+        nextEl.innerHTML = '';
+
+        /* 公版彈窗（放在遊戲畫面裡）：標題、新規則說明、目前要點的顏色、「知道了」。
+           按鈕設 keep：由 close() 檢查完狀態才關（避免鬼點擊或換局之後誤關） */
+        var dlg = Dlg.open({
+          host: root, cls: 'dlg--result',
+          title: '新規則！',
+          children: [
+            h('div', { 'class': 'rainbow-rule-text', text: '除了原本的顏色，現在' + extra.emoji + extra.name + '色的方塊也要點！其他顏色一律不能點，來不及點或點錯，都算失敗。' }),
+            h('div', { 'class': 'rainbow-rule-targets', text: targets.map(function (c) { return c.emoji + c.name; }).join('　') })
+          ],
+          buttons: [{ text: '知道了', kind: 'primary', keep: true, onClick: function () { close(); } }]
+        });
+        var okBtn = dlg.buttons[0];
+        okBtn.disabled = true;
+        var overlay = dlg.el;
+
+        /* 「知道了」按鈕剛出現的 1 秒內是灰的（防止手指的「鬼點擊」立刻把彈窗關掉） */
+        setTimeout(function () { if (myGen === gen) okBtn.disabled = false; }, RULE_ARM_MS);
+
+        /* 關掉彈窗：舊方塊全部標成「已處理」，然後倒數 3、2、1 才接著換方塊 */
+        /* 關掉彈窗：棋盤保持原樣（不清空、不重設 cur），舊方塊全部標成「已處理」，
+           然後在下一個位置倒數 3、2、1，倒數完才從那一格接著換方塊。 */
+        function close() {
+          if (state !== 'paused' || myGen !== gen || okBtn.disabled) return;
+          overlay.remove();
+          hint.textContent = hintTextFor(targets);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+          handled = [true, true, true, true];
+          stageHits = 0;
+          state = 'play';
+          extendFirst = true;                 /* 倒數完之後第一個目標色方塊：反應時間多給 50% */
+          countdownAt(nextEl, COUNTDOWN_FROM, tick);
+        }
+      }
+
+      /* 失敗：標出點錯的那一格（紅虛線）與漏掉的那一格（白虛線），稍後顯示結算 */
+      /* 失敗：停掉計時器，標出哪一格出事——badIdx＝點錯的那一格（鮮紅色虛線框）、
+         missedIdx＝本來該點、卻沒點到的那一格（白色虛線框，告訴玩家「正確的是這個」），
+         稍等一下再疊上結算卡片，跟其他遊戲同一套做法。 */
+      function fail(reason, badIdx, missedIdx) {
+        state = 'over';
+        if (window.Sfx) Sfx.play('bad');        /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
+        clearTimeout(timer);
+        if (badIdx != null) cells[badIdx].classList.add('rainbow-cell--bad');
+        if (missedIdx != null) cells[missedIdx].classList.add('rainbow-cell--missed');
+        var isNew = hits > 0 && Reaction.setBest(ID, hits, function (v, b) { return v > b; });
+        updateMeta();
+        UI.wait(700).then(function () {
+          if (myGen !== gen) return;
+          /* 結算彈窗（公版）：帶 score 就會在彈窗出現之後自動送世界排行榜（0 個不在有效範圍，會自己略過） */
+          Reaction.kit.result(root, {         /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
+            num: hits + ' 個', label: reason, isNew: isNew, score: hits,
+            sfx: hits >= 15 ? 'win' : 'fail', onAgain: round
+          });
+        });
+      }
+
+      /* 開局：等一下，先在第一個方塊要出現的那一格（左上角）倒數 3、2、1，倒數完才出第一個方塊 */
+      timer = setTimeout(function () { if (myGen === gen) countdownAt(cells[ORDER[0]], COUNTDOWN_FROM, tick); }, FIRST_DELAY_MS);
     }
 
-    /* Reaction.register：把這款遊戲登記到遊戲清單 */
-    Reaction.register({
-        id: ID,
-        name: '七彩陷阱',
-        rule: '畫面上有 2×2 四個方塊，會照順時針的順序，一個接一個換上七彩顏色（最新的那個有白邊），而且換得越來越快。**一開始只要點「紅色」方塊**：紅色一出現，**就要在下一個方塊出現之前馬上點下去**！來不及，或是點到別的方塊，都算失敗。小心，其他顏色的方塊上面可能**壓著「紅」字來騙你**。每成功點擊幾個之後，遊戲會暫停並增加新的顏色也要點，看你能撐多久！**第一個要點的方塊多給 50% 時間**。',
-        mount: mount,
-        /* 世界排行榜的成績規格 */
-        score: SCORE,
-        /* test 匯出純函式給 Node 自動測試 */
-        test: { intervalAt: intervalAt, START_INTERVAL_MS: START_INTERVAL_MS, MIN_INTERVAL_MS: MIN_INTERVAL_MS, INTERVAL_STEP_MS: INTERVAL_STEP_MS, FIRST_TARGET_MULT: FIRST_TARGET_MULT }
-    });
+    round();
+  }
+
+  /* Reaction.register：把這款遊戲登記到遊戲清單 */
+  Reaction.register({
+    id: ID,
+    name: '七彩陷阱',
+    rule: '畫面上有 2×2 四個方塊，會照順時針的順序，一個接一個換上七彩顏色（最新的那個有白邊），而且換得越來越快。**一開始只要點「紅色」方塊**：紅色一出現，**就要在下一個方塊出現之前馬上點下去**！來不及，或是點到別的方塊，都算失敗。小心，其他顏色的方塊上面可能**壓著「紅」字來騙你**。每成功點擊幾個之後，遊戲會暫停並增加新的顏色也要點，看你能撐多久！**第一個要點的方塊多給 50% 時間**。',
+    mount: mount,
+    /* 世界排行榜的成績規格 */
+    score: SCORE,
+    /* test 匯出純函式給 Node 自動測試 */
+    test: { intervalAt: intervalAt, START_INTERVAL_MS: START_INTERVAL_MS, MIN_INTERVAL_MS: MIN_INTERVAL_MS, INTERVAL_STEP_MS: INTERVAL_STEP_MS, FIRST_TARGET_MULT: FIRST_TARGET_MULT }
+  });
 })();

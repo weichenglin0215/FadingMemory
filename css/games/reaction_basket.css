@@ -61,6 +61,10 @@
 
 /* 蔬果圖案（emoji，V1.28） */
 .basket-ico {
+    display: flex;                                      /* 彈性盒子：裡面的貼圖置中 */
+    justify-content: center;                            /* 左右置中 */
+    align-items: center;                                /* 上下置中（貼圖四周有透明留白，比這一格高一點沒關係） */
+    height: 51px;                                       /* 高度固定（跟以前的文字 emoji 一樣），方塊大小才不會變 */
     font-size: 46px;                                    /* 字級：46px */
     line-height: 1.1;                                   /* 行高：1.1（文字每一行佔的高度） */
 }

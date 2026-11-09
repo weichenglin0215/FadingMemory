@@ -61,7 +61,7 @@ ok(slow === 0, '出題夠快');
   ok(kit.PERSON_EMOJI.join('') === USER_LIST && kit.PERSON_EMOJI.length === 26 && new Set(kit.PERSON_EMOJI).size === 26, '人像 emoji 清單 ＝ 玩家指定的 26 種（kit.PERSON_EMOJI），複合 emoji（👩‍🦰、👱‍♀️、👳‍♂️…）各是一個字串');
   ok(kit.PERSON_EMOJI.filter(e => Array.from(e).length > 1).length === 10, '10 個是複合 emoji（髮色、性別變體；字串不能被拆開）');
   const src = fs.readFileSync(path.resolve(__dirname, '../../js/reaction_halfcrowd.js'), 'utf8'), css = fs.readFileSync(path.resolve(__dirname, '../../css/games/reaction_halfcrowd.css'), 'utf8').replace(/[ \t]*\/\*[\s\S]*?\*\//g, '').split(/\s+/).join(' ');
-  ok(/kit\.svg\('text', \{[^}]*'class': 'halfcrowd-face'[^}]*'font-size': \(c\.r \* 2 \* FACE_SCALE\)\.toFixed\(1\)[^}]*'text-anchor': 'middle'[^}]*'dominant-baseline': 'central'/.test(src) && /face\.textContent = kit\.pick\(kit\.PERSON_EMOJI, api\.rand\)/.test(src), '每個圓的位置畫一個人像 emoji（置中，字級＝直徑 × FACE_SCALE，每個人隨機一種）');
+  ok(/emojiPng\.svg\(faceLayer, kit\.pick\(kit\.PERSON_EMOJI, api\.rand\), c\.x, c\.y, c\.r \* 2 \* FACE_SCALE, 'halfcrowd-face'\)/.test(src), '每個圓的位置貼一個人像 emoji（置中，字級＝直徑 × FACE_SCALE，每個人隨機一種）');
   ok(T.FACE_SCALE > 0.8 && T.FACE_SCALE <= 1.3 && typeof T.SHOW_CENTER === 'boolean', 'FACE_SCALE ' + T.FACE_SCALE + '；SHOW_CENTER ＝ ' + T.SHOW_CENTER + '（要不要畫中心點，玩家自己調過）');
   // 碰撞範圍沒變：仍然是半徑 r 的圓（makeLevel 與重疊限制不動），數量與「剛好一半」的算法不受 emoji 影響
   ok(src.indexOf("if (SHOW_CENTER) q.circles.forEach(function (c) { kit.svg('circle', { cx: c.x.toFixed(2), cy: c.y.toFixed(2), r: 2.4, 'class': 'halfcrowd-dot' }, svg); });") > src.indexOf("var els = q.circles.map"), '中心點全部畫在所有人像的上面（不會被別人的 emoji 蓋住）');
@@ -131,5 +131,5 @@ ok(slow === 0, '出題夠快');
   const src2 = fs.readFileSync(path.resolve(__dirname, '../../js/reaction_halfcrowd.js'), 'utf8');
   ok(typeof T.RING_SCALE === 'number' && T.RING_SCALE > 0, 'RING_SCALE ＝ ' + T.RING_SCALE);
   ok(/r: \(c\.r \* RING_SCALE\)\.toFixed\(2\), 'class': 'halfcrowd-circle' \}, ringLayer\)/.test(src2), '色圈半徑 ＝ c.r × RING_SCALE（碰撞用的 c.r 不變）');
-  ok(/'class': 'halfcrowd-face'[^}]*\}, faceLayer\)/.test(src2) && /var ringLayer = kit\.svg\('g', \{\}, svg\), faceLayer = kit\.svg\('g', \{\}, svg\);/.test(src2), '先建色圈層、再建人像層（人像在所有色圈上面）'); }
+  ok(/emojiPng\.svg\(faceLayer,/.test(src2) && /var ringLayer = kit\.svg\('g', \{\}, svg\), faceLayer = kit\.svg\('g', \{\}, svg\);/.test(src2), '先建色圈層、再建人像層（人像在所有色圈上面）'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

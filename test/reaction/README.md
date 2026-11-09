@@ -82,3 +82,7 @@ node test/reaction/shot_state.mjs 輸出.png fifteen "400:Reaction.current.debug
 ## 泡泡掃射、分類點擊（V1.46.0）
 
 `t_bubblespray.js`（泡泡掃射）、`t_emojisort.js`（分類點擊）：一層一個顏色（紅 → 橘 → 黃…）、每層一分為二且更小更快、一顆紅泡泡剛好 127 顆、第 0／10／20 秒出現、子彈掃掠碰撞（取最先碰到的、快子彈也不會穿過小泡泡）、瞄準不會射進地面、反彈不出界；五種分類不重複不跨類、方格 2×2 → 10×10 → 10×15 共 22 關、種類數 1＋1 → 3＋2、每一關每種都出現、題目只寫要點的種類、限時夠點完。
+
+## emoji 圖片庫擴大（V1.52.0）
+
+`t_emojipng.js`：`這個看過嗎`、`菜籃總價` 的食物與 `kit.PERSON_EMOJI` 人像全部在圖集裡，`seenit`、`basket`、`halfcrowd`、`sneakmove` 都用 `Reaction.emojiPng` 貼圖、等圖集載好才開始。要新增 emoji 時改遊戲的清單，再跑 `node test/reaction/make_emoji_png.mjs --write`（要在 Windows 上跑，才會是 Segoe UI Emoji 的圖案）。

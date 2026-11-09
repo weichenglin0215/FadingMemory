@@ -22,6 +22,7 @@ require(ROOT + 'js/menu.js');
 const M = global.FMMenu;
 const CELLS = M.GAME_CELLS, TABS = M.GAME_TABS;
 const len = (s) => Array.from(s).length;
+const wid = (s) => Array.from(s).reduce((a, c) => a + (c.charCodeAt(0) < 128 ? 0.5 : 1), 0);   // 名稱列的寬度：英數字只有中文的一半寬
 
 // ═══ 1. 清單本身 ═══
 ok(CELLS.length === 187, '共 187 款（' + CELLS.length + '）');
@@ -29,7 +30,7 @@ const ids = new Set(CELLS.map(c => c.id));
 ok(ids.size === CELLS.length, 'id 不重複');
 CELLS.forEach(c => {
   ok(/^[a-z0-9]+$/.test(c.id), c.id + ' id 只有小寫英數');
-  ok(typeof c.name === 'string' && len(c.name) >= 2 && len(c.name) <= 5, c.id + ' 名稱「' + c.name + '」2～5 個字（' + len(c.name) + '）');
+  ok(typeof c.name === 'string' && len(c.name) >= 2 && wid(c.name) <= 5, c.id + ' 名稱「' + c.name + '」2～5 個字（英數字算半個字：' + wid(c.name) + '）');
   ok(!/\s/.test(c.name), c.id + ' 名稱沒有空白');
   ok(c.img === 'img/reaction/' + c.id + '.png', c.id + ' 縮圖路徑固定是 img/reaction/<id>.png：' + c.img);
   const f = ROOT + c.img;

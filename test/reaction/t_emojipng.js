@@ -53,6 +53,15 @@ ok(depth === 8 && ctype === 6, '8 位元 RGBA（帶透明度）：depth ' + dept
 const rd = p => fs.readFileSync(path.join(ROOT, p), 'utf8'), boot = rd('js/boot.js');
 ok(boot.indexOf("'js/emoji_png.js'") > 0 && boot.indexOf("'js/emoji_png.js'") < boot.indexOf("'js/reaction_emojisort.js'") && boot.indexOf("'js/emoji_png.js'") < boot.indexOf("'js/reaction_forestpeek.js'"), 'boot.js 在兩款遊戲之前載入 emoji_png.js');
 const srcE = rd('js/reaction_emojisort.js'), srcF = rd('js/reaction_forestpeek.js');
+// 這個看過嗎、菜籃總價、一半的人、誰在偷偷動：用到的 emoji 全部在圖集裡，畫面只貼圖、圖集載好才開始
+{ const cp = c => String.fromCodePoint(c[0]);
+  game('reaction_seenit.js').test.ITEMS.forEach(c => ok(EP.has(cp(c)), '這個看過嗎：' + cp(c) + ' 在圖集裡'));
+  game('reaction_basket.js').test.ITEMS.forEach(c => ok(EP.has(cp(c)), '菜籃總價：' + cp(c) + ' 在圖集裡'));
+  Reaction.kit.PERSON_EMOJI.forEach(ch => ok(EP.has(ch), '人像：' + ch + ' 在圖集裡'));
+  ['seenit', 'basket', 'halfcrowd', 'sneakmove'].forEach(id => { const s = rd('js/reaction_' + id + '.js'); ok(/emojiPng\.whenReady\(root,/.test(s) && boot.indexOf("'js/emoji_png.js'") < boot.indexOf("'js/reaction_" + id + ".js'"), id + '：圖集載好才開始'); });
+  ok(/emojiPng\.el\(emojiOf\(tr\.item\)/.test(rd('js/reaction_seenit.js')) && !/text: emojiOf/.test(rd('js/reaction_seenit.js')) && !/\+ emojiOf\(tr\.item\) \+/.test(rd('js/reaction_seenit.js')), '這個看過嗎：圖案貼圖，結算說明不放字型 emoji');
+  ok(/emojiPng\.el\(q\.emojis\[i\]/.test(rd('js/reaction_basket.js')) && !/text: q\.emojis/.test(rd('js/reaction_basket.js')), '菜籃總價：圖案貼圖');
+  ok(/emojiPng\.svg\(gFace, kit\.pick\(kit\.PERSON_EMOJI/.test(rd('js/reaction_sneakmove.js')) && /emojiPng\.svgMove\(faces\[i\]/.test(rd('js/reaction_sneakmove.js')), '誰在偷偷動：人臉貼圖、會跟著移動'); }
 ok(/Reaction\.emojiPng/.test(srcE) && /EP\.el\(/.test(srcE) && /EP\.load\(/.test(srcE), '分類點擊：用 Reaction.emojiPng 貼圖、載好才開始');
 ok(!/text: c\.ch/.test(srcE), '分類點擊：格子不再用文字 emoji');
 ok(/Reaction\.emojiPng/.test(srcF) && /EP\.draw\(/.test(srcF) && /EP\.load\(/.test(srcF), '草叢找動物：用 Reaction.emojiPng 貼圖、載好才開始');

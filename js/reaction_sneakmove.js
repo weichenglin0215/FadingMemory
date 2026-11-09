@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_sneakmove.js — 秒反應・誰在偷偷動（企劃 152）
    樣式：css/games/reaction_sneakmove.css（這款專屬的 class 一律以「sneakmove-」開頭；共用元件在 css/reaction_common.css）
-   畫面上散著一堆圓點，其中有幾個會「偷偷地」極慢移動，其他全部靜止，在限時內把會動的點出來。
+   畫面上散著一堆人臉（跟「一半的人」同一套人像 emoji，貼圖集的 PNG；程式與註解裡的「圓點」就是指這些人臉），其中有幾個會「偷偷地」極慢移動，其他全部靜止，在限時內把會動的點出來。
    越後面，圓點越多、會動的越多、漂移越慢（每秒 20 像素 → 2 像素）。關卡制：點錯或來不及就結束，成績＝通過幾關。
    ───────────────────────────────────────────────────────────────────
    · V1.29（玩家意見）改玩法：
@@ -47,7 +47,9 @@
     var MOVE_DOTS = [1, 3];                     /* 會動的圓點個數：第 1 關 → 到頂關卡 */
     var MOVE_TIME = [0.5, 0.1];                     /* 每顆會動的圓點，一次連續移動幾秒：第 1 關 → 到頂關卡 */
     var PAUSE_S = 1.0;                            /* 只有 1 顆會動時，移動之後暫停幾秒（2 顆以上時不暫停，立刻換下一顆） */
-    var DOT_R = 18;                             /* 圓點畫出來的半徑 */
+    var DOT_R = 18;                             /* 人臉的半徑（人像 emoji 的字級＝DOT_R × 2 × FACE_SCALE） */
+    var FACE_SCALE = 1.0;                       /* 人臉放大幾倍 */
+    var RING_SCALE = 1.35;                      /* 綠／紅外框的半徑＝DOT_R × 這個倍率（要比人臉大，才看得到） */
     var HIT_R = 40;                             /* 命中半徑（比畫出來的大，手指好點） */
     var MIN_GAP = 74;                           /* 任兩顆圓點圓心至少相距多少 */
     var MIN_GAP_FLOOR = 50;                     /* 圓點太多排不下時，間距最小縮到多少 */
@@ -194,13 +196,13 @@
 
     /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
-        kit.run(root, ctx, {
+        Reaction.emojiPng.whenReady(root, function () { kit.run(root, ctx, {   /* 人臉是貼圖：圖集載好才開始 */
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 6,
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
             setup: setup
-        });
+        }); });
     }
 
     /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
@@ -216,8 +218,11 @@
 
         var svg = kit.svg('svg', { 'class': 'sneakmove-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, stage);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
         var gTrail = kit.svg('g', {}, svg);
-        var circles = q.dots.map(function (d) { return kit.svg('circle', { cx: d.x, cy: d.y, r: DOT_R, 'class': 'sneakmove-dot' }, svg); });
-        var tip = h('div', { 'class': 'qz-note sneakmove-tip', text: k > 1 ? '有幾個圓點會輪流慢慢移動，找出其中一個！' : '有一個圓點在慢慢移動，找出它！' });
+        var gRing = kit.svg('g', {}, svg), gFace = kit.svg('g', {}, svg);   /* 先畫外框、再畫人臉：外框比人臉大一圈，才不會蓋住鄰居的臉 */
+        var circles = q.dots.map(function (d) { return kit.svg('circle', { cx: d.x, cy: d.y, r: DOT_R * RING_SCALE, 'class': 'sneakmove-dot' }, gRing); });   /* 平常看不見，答對／答錯才出現綠／紅外框 */
+        var faces = q.dots.map(function (d) { return Reaction.emojiPng.svg(gFace, kit.pick(kit.PERSON_EMOJI, api.rand), d.x, d.y, DOT_R * 2 * FACE_SCALE, 'sneakmove-face'); });   /* 人臉：每個人隨機一種 */
+        function place(i, p) { circles[i].setAttribute('cx', p.x); circles[i].setAttribute('cy', p.y); Reaction.emojiPng.svgMove(faces[i], p.x, p.y); }   /* 把第 i 個人（外框＋人臉）移到 p */
+        var tip = h('div', { 'class': 'qz-note sneakmove-tip', text: k > 1 ? '有幾個人會輪流慢慢移動，全部找出來！' : '有一個人在慢慢移動，把人找出來！' });
         stage.appendChild(tip);                         /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var t0 = performance.now(), found = {}, nFound = 0;               /* found[第幾顆會動的] ＝ 找到的那一刻（秒），那一顆就停在那裡 */
         function nowSec() { return (performance.now() - t0) / 1000; }  /* performance.now()：高精度的時間（毫秒），計時用 */
@@ -225,10 +230,10 @@
         var loop = api.my.loop(function () {            /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
             if (api.over) return false;
             var t = nowSec();
-            q.movers.forEach(function (m, i) { var p = posAt(q, i, timeOf(i, t)); circles[m.idx].setAttribute('cx', p.x); circles[m.idx].setAttribute('cy', p.y); });  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+            q.movers.forEach(function (m, i) { var p = posAt(q, i, timeOf(i, t)); place(m.idx, p); });  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         });
         api.timer(q.limitS * 1000, function () { finish('time', -1, q.limitS); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
-        if (level === 1 && kit.once('sneakmove.hint')) kit.hintOn(stage, null, { mode: 'tap', x: q.movers[0].x0, y: q.movers[0].y0, delay: 800, text: '請點擊正在移動的圓點' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
+        if (level === 1 && kit.once('sneakmove.hint')) kit.hintOn(stage, null, { mode: 'tap', x: q.movers[0].x0, y: q.movers[0].y0, delay: 800, text: '請點擊正在移動的人' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         /* 點擊：找離手指最近的圓點（在 HIT_R 以內才算點到）；點到會動的就是找到一顆（要全部找齊才過關），點到不動的就失敗 */
         kit.onTap(stage, function (e) {                 /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             if (api.over) return;
@@ -250,7 +255,7 @@
             circles[i].classList.add('sneakmove-dot--right');                             /* 找到了：綠色外框，停在原地 */
             Sfx.play('ok');                             /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             if (nFound >= k) finish('ok', -1, t);
-            else tip.textContent = '找到了！已找到 ' + nFound + '／' + k + ' 顆，繼續找下一顆（會動的圓點輪流在動）';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            else tip.textContent = '找到了！已找到 ' + nFound + '／' + k + ' 個，繼續找下一個（會動的人輪流在動）';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
         }
 
         /* 結束：kind＝'ok'（全部找到）／'wrong'（點到不動的第 i 顆）／'time'（限時到了）。
@@ -262,20 +267,20 @@
             var lines = [];
             q.movers.forEach(function (m, mi) {
                 var tt = timeOf(mi, t), p = posAt(q, mi, tt), moved = q.speed * movedTime(k, q.moveTime, mi, tt);
-                circles[m.idx].setAttribute('cx', p.x); circles[m.idx].setAttribute('cy', p.y);
+                place(m.idx, p);
                 circles[m.idx].classList.add('sneakmove-dot--right');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
                 kit.svg('line', { x1: m.x0, y1: m.y0, x2: p.x, y2: p.y, 'class': 'sneakmove-trail' }, gTrail);
                 kit.svg('circle', { cx: m.x0, cy: m.y0, r: 5, 'class': 'sneakmove-start' }, gTrail);
-                lines.push('第 ' + (m.idx + 1) + ' 顆漂移了 ' + moved.toFixed(4) + ' 像素');
+                lines.push('第 ' + (m.idx + 1) + ' 個漂移了 ' + moved.toFixed(4) + ' 像素');
             });
             if (kind === 'wrong') circles[i].classList.add('sneakmove-dot--wrong');
             /* 提示文字只有 64 像素高：會動的有好幾顆時，各自漂移多少寫在結算頁就好，這裡只留一句 */
-            tip.textContent = k > 1 ? '共 ' + k + ' 顆會動（綠框），每秒漂移 ' + q.speed.toFixed(4) + ' 像素，輪流各動 ' + q.moveTime.toFixed(4) + ' 秒' : '每秒漂移 ' + q.speed.toFixed(4) + ' 像素：' + lines.join('、');
+            tip.textContent = k > 1 ? '共 ' + k + ' 個會動（綠框），每秒漂移 ' + q.speed.toFixed(4) + ' 像素，輪流各動 ' + q.moveTime.toFixed(4) + ' 秒' : '每秒漂移 ' + q.speed.toFixed(4) + ' 像素：' + lines.join('、');
             if (kind === 'ok') { kit.flash(stage, true, api.my); api.pass({ delay: 1700 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
             kit.flash(stage, false, api.my);
             api.fail({                                  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
                 delay: 2600, lines: [
-                    (kind === 'time' ? '時間到！' : '那一顆是靜止的') + '，' + (k > 1 ? '你找到了 ' + nFound + '／' + k + ' 顆，' : '') + '會動的是第 ' + q.movers.map(function (m) { return m.idx + 1; }).join('、') + ' 顆（已標出）',
+                    (kind === 'time' ? '時間到！' : '那一個是靜止的') + '，' + (k > 1 ? '你找到了 ' + nFound + '／' + k + ' 個，' : '') + '會動的是第 ' + q.movers.map(function (m) { return m.idx + 1; }).join('、') + ' 顆（已標出）',
                     '它們每秒漂移 ' + q.speed.toFixed(4) + ' 像素：' + lines.join('、')
                 ]
             });
@@ -292,7 +297,7 @@
     var G = {
         id: ID,
         name: '誰在偷偷動',
-        rule: '畫面上有一堆圓點，其中**有幾個會輪流慢慢移動**，其他都不動。一顆動一下就換下一顆，**在限時內，一顆接著一顆把「所有」會動的圓點都點出來**（點對的會加上綠框、停下來）。越後面，圓點越多、會動的越多、漂移得越慢！會動的圓點越多，限時就越長。點到不動的圓點（紅框）或來不及找齊就結束，看你能過幾關。',
+        rule: '畫面上有一堆人臉，其中**有幾個會輪流慢慢移動**，其他都不動。一個動一下就換下一個，**在限時內，一個接著一個把「所有」會動的人都點出來**（點對的會加上綠框、停下來）。越後面，人越多、會動的越多、漂移得越慢！會動的人越多，限時就越長。點到不動的人（紅框）或來不及找齊就結束，看你能過幾關。',
         mount: mount,
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */

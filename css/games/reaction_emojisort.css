@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════
-   reaction_emojisort.css — 分類點擊（js/reaction_emojisort.js）的專屬樣式
+   reaction_emojisort.css — emoji選（js/reaction_emojisort.js）的專屬樣式
    · 這個檔案裡的 class 名稱一律以「emojisort-」開頭，只給這一款遊戲用，不會跟別款撞名。
    · 共用的畫面元件（操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數。
    ═══════════════════════════════════════ */

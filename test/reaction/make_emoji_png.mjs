@@ -1,4 +1,4 @@
-// 幫「分類點擊」「草叢找動物」用到的 emoji 拍成一張 PNG 圖集：img/emoji/emoji.png（V1.47）。
+// 幫「emoji選」「草叢找動物」「這個看過嗎」「菜籃總價」「一半的人」「誰在偷偷動」用到的 emoji 拍成一張 PNG 圖集：img/emoji/emoji.png（V1.47）。
 //
 // 為什麼要有這個：emoji 是「字型」畫出來的，每個平台長得不一樣——iPhone 的 emoji 比較寫實、失去卡通圖示的風格，
 // 而且在 canvas 裡畫出來的大小跟電腦差很多（草叢找動物在 iPhone 上動物只剩一半大）。
@@ -8,7 +8,7 @@
 //       在一張透明的 canvas 上，把每個 emoji 用「Segoe UI Emoji」（Windows 內建的卡通風格 emoji 字型）畫在一格 CELL×CELL 的格子裡，
 //       存成 PNG（canvas.toDataURL 預設就是透明背景），再把「有哪些 emoji、排在第幾格」寫進 js/emoji_png.js 的自動產生區塊。
 //
-// 哪些 emoji：把「分類點擊」的五種分類（reaction_emojisort.js 的 CATS，含題目用的代表圖示）＋「草叢找動物」的動物（reaction_forestpeek.js 的 ANIMALS）全部收進來，
+// 哪些 emoji：把「emoji選」的五種分類（reaction_emojisort.js 的 CATS，含題目用的代表圖示）＋「草叢找動物」的動物（ANIMALS）＋「這個看過嗎」「菜籃總價」的食物（ITEMS）＋人像（kit.PERSON_EMOJI）全部收進來，
 //       用「去掉變體選擇符 U+FE0F 之後的字串」當 key（所以 🐿 與 🐿️ 算同一個）。新增 emoji 之後重跑一次這支程式就好。
 //
 // 用法（在專案根目錄；不需要本機伺服器）：
@@ -35,14 +35,19 @@ const FONT = 100;       // 畫的時候用的字級（px）：emoji 在一格 CE
 
 const VS16 = String.fromCharCode(0xFE0F);                   // 變體選擇符（寫成程式算出來的，免得檔案裡出現看不見的字元）
 const strip = ch => ch.split(VS16).join('');            // key：去掉變體選擇符
-// ─── 收集要拍的 emoji（順序固定：分類點擊的分類 → 代表圖示 → 草叢找動物）───
-const list = [];
-const add = ch => { const k = strip(ch); if (!list.includes(k)) list.push(k); };
+// ─── 收集要拍的 emoji（順序固定：emoji選的分類 → 代表圖示 → 草叢找動物 → 食物 → 人像）───
+// list 存 key；form 存「畫的時候用的寫法」（保留 U+FE0F：👱‍♀️ 這種 ZWJ 組合少了它，字型會拆成兩個圖）
+const list = [], form = {};
+const add = ch => { const k = strip(ch); if (!list.includes(k)) { list.push(k); form[k] = ch; } else if (ch.includes(VS16)) form[k] = ch; };
 const es = game('reaction_emojisort.js').test, fp = game('reaction_forestpeek.js').test;
 es.CATS.forEach(c => c.list.forEach(add));
 es.CATS.forEach(c => add(c.rep));
 fp.ANIMALS.forEach(add);
-console.log('要拍的 emoji：' + list.length + ' 個（分類點擊 ' + es.CATS.reduce((a, c) => a + c.list.length, 0) + ' ＋ 代表圖示、草叢找動物補上其餘）');
+const cp = c => String.fromCodePoint(c[0]);
+game('reaction_seenit.js').test.ITEMS.forEach(c => add(cp(c)));
+game('reaction_basket.js').test.ITEMS.forEach(c => add(cp(c)));
+globalThis.Reaction.kit.PERSON_EMOJI.forEach(add);
+console.log('要拍的 emoji：' + list.length + ' 個');
 
 // ─── 在瀏覽器裡畫圖＋檢查（這段字串會被送進頁面執行）───
 const PAGE_JS = `(async function (list, CELL, COLS, FONT) {
@@ -81,7 +86,7 @@ const PAGE_JS = `(async function (list, CELL, COLS, FONT) {
     rep.push({ ch: list[j], n: bb.n, colorRatio: bb.n ? bb.col / bb.n : 0, l: bb.l, r: bb.r, t: bb.t, b: bb.b, tofu: same });
   }
   return { dy: dy, rows: rows, png: cv.toDataURL('image/png'), rep: rep };
-})(${JSON.stringify(list)}, ${CELL}, ${COLS}, ${FONT})`;
+})(${JSON.stringify(list.map(k => form[k]))}, ${CELL}, ${COLS}, ${FONT})`;
 
 const cdp = await connect();
 let res;

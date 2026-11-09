@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════
-   emoji_png.js — emoji 圖片庫（V1.47；「分類點擊」「草叢找動物」用）
+   emoji_png.js — emoji 圖片庫（V1.47 起；「emoji選」「草叢找動物」「這個看過嗎」「菜籃總價」「一半的人」「誰在偷偷動」用）
    ───────────────────────────────────────────────────────────────────
    為什麼要有它：emoji 是「字型」畫出來的，每個平台長得不一樣——iPhone 的 emoji 比較寫實、失去卡通圖示的風格，
    而且在 canvas 裡畫出來的大小跟電腦差很多（草叢找動物在 iPhone 上，動物只剩一半大，幾乎看不見）。
@@ -11,11 +11,14 @@
      EP.has(ch)                  這個 emoji 有沒有在圖集裡
      EP.load(cb)                 開始載入圖集（只載一次）；載好（或載失敗）後呼叫 cb(影像｜null)
      EP.ready()                  圖集載好了沒
-     EP.el(ch, fontPx, inline)   回傳一個 <span>，用貼圖畫出這個 emoji，大小跟「字級 fontPx 的文字 emoji」差不多（給 DOM 版面用，例如分類點擊的格子）；
+     EP.el(ch, fontPx, inline)   回傳一個 <span>，用貼圖畫出這個 emoji，大小跟「字級 fontPx 的文字 emoji」差不多（給 DOM 版面用，例如 emoji選的格子）；
                                   inline 為 true 時跟前後的文字排在同一行（題目上的代表圖示），否則是獨佔一整行的方塊；
                                   圖集裡沒有這個 emoji 就改用文字 emoji（跟以前一樣）
      EP.draw(ctx, ch, cx, cy, fontPx)  在 canvas 的 ctx 上，以 (cx, cy) 為中心畫這個 emoji（給 canvas 版面用，例如草叢找動物）；
                                   回傳 true＝畫了貼圖，false＝圖集還沒載好或沒有這個 emoji（呼叫的人可以改用文字）
+     EP.svg(parent, ch, cx, cy, fontPx, cls)  在 SVG 裡以 (cx, cy) 為中心放這個 emoji（給 SVG 版面用，例如一半的人）；回傳元素，圖集裡沒有就退回 SVG 文字
+     EP.svgMove(el, cx, cy)      把 EP.svg 回傳的元素移到新的中心（例如誰在偷偷動）
+     EP.whenReady(root, go)      在 root 顯示「載入圖片…」，圖集載好（或載失敗）後清空 root 再呼叫 go（限時遊戲要等圖片好了才開始，才公平）
    ═══════════════════════════════════════════════════════════════════ */
 (function (global) {
     'use strict';
@@ -45,7 +48,13 @@
         '🙍', '🙎', '🙅', '🙆', '💁', '🙋', '🧏', '🙇', '🤦', '🤷', '👮', '🕵',
         '💂', '👷', '🧕', '🤵', '👰', '🤱', '🦸', '🦹', '🧙', '🧚', '🧛', '🧜',
         '🧝', '🧞', '🧟', '💆', '👩', '😺', '😸', '🐵', '🐸', '🐕‍🦺', '🦏', '🦎',
-        '🐍', '🐉', '🦕', '🐠', '🐡', '🦅', '🦢', '🦜', '🦩', '🦉', '🐦', '🐧'
+        '🐍', '🐉', '🦕', '🐠', '🐡', '🦅', '🦢', '🦜', '🦩', '🦉', '🐦', '🐧',
+        '🍇', '🍈', '🍉', '🍊', '🍋', '🍌', '🍍', '🥭', '🍎', '🍏', '🍐', '🍑',
+        '🍒', '🍓', '🍕', '🍔', '🍟', '🌭', '🍿', '🥐', '🥨', '🧀', '🍖', '🍗',
+        '🥩', '🍘', '🍙', '🍜', '🍣', '🍤', '🥣', '🍦', '🍧', '🍩', '🍰', '🍬',
+        '🍭', '🍡', '🍮', '🍷', '🍸', '🍹', '🍺', '👨', '🧑', '👧', '👦', '🧒',
+        '👶', '👵', '👴', '🧓', '👩‍🦰', '👨‍🦰', '👩‍🦱', '👨‍🦱', '👩‍🦳', '👨‍🦳', '👱‍♀', '👱‍♂',
+        '👸', '🤴', '👳‍♀', '👳‍♂', '👲', '🧔', '🤶', '🎅'
     ];
     /* EMOJI-LIST-END */
 
@@ -106,6 +115,36 @@
         var d = EP.CELL * fontPx / EP.FONT;
         ctx.drawImage(img, (i % EP.COLS) * EP.CELL, Math.floor(i / EP.COLS) * EP.CELL, EP.CELL, EP.CELL, cx - d / 2, cy - d / 2, d, d);   /* drawImage(影像, 來源 x, y, 寬, 高, 目的 x, y, 寬, 高)：把圖集裡的一格貼到畫布上，順便縮放 */
         return true;
+    };
+
+    /* SVG 版：一個巢狀的 <svg>（只露出圖集的一格），裡面放整張圖集。_off：中心到左上角的距離（EP.svgMove 用） */
+    var SVG_NS = 'http://www.w3.org/2000/svg', XLINK_NS = 'http://www.w3.org/1999/xlink';
+    EP.svg = function (parent, ch, cx, cy, fontPx, cls) {
+        var i = EP.index(ch), doc = global.document, el;
+        if (i < 0) {                                    /* 圖集裡沒有：退回 SVG 文字 */
+            el = doc.createElementNS(SVG_NS, 'text'); el.textContent = ch; el._off = 0;
+            el.setAttribute('font-size', fontPx); el.setAttribute('text-anchor', 'middle'); el.setAttribute('dominant-baseline', 'central');
+        } else {
+            var d = EP.CELL * fontPx / EP.FONT, rows = Math.ceil(EP.LIST.length / EP.COLS), img2 = doc.createElementNS(SVG_NS, 'image'), u = url();
+            el = doc.createElementNS(SVG_NS, 'svg'); el._off = d / 2;
+            el.setAttribute('width', d); el.setAttribute('height', d);
+            el.setAttribute('viewBox', ((i % EP.COLS) * EP.CELL) + ' ' + (Math.floor(i / EP.COLS) * EP.CELL) + ' ' + EP.CELL + ' ' + EP.CELL);   /* viewBox：只看圖集裡的這一格（外面的會被切掉） */
+            img2.setAttribute('width', EP.COLS * EP.CELL); img2.setAttribute('height', rows * EP.CELL);
+            img2.setAttribute('href', u); img2.setAttributeNS(XLINK_NS, 'xlink:href', u);   /* 舊版 Safari 只認 xlink:href */
+            el.appendChild(img2);
+        }
+        if (cls) el.setAttribute('class', cls);
+        EP.svgMove(el, cx, cy);
+        parent.appendChild(el);
+        return el;
+    };
+    EP.svgMove = function (el, cx, cy) { el.setAttribute('x', cx - el._off); el.setAttribute('y', cy - el._off); };
+
+    /* 限時遊戲的共用開場：圖集載好才開始（不然時間已經在跑、圖卻是空白的）。載入失敗也照樣開始（退回文字 emoji） */
+    EP.whenReady = function (root, go) {
+        var tip = global.document.createElement('div'); tip.className = 'rx-tip'; tip.textContent = '載入圖片…';
+        root.appendChild(tip);
+        EP.load(function () { if (root.isConnected) { root.innerHTML = ''; go(); } });   /* isConnected：這個畫面還在不在（玩家等不及先離開了，就不用開始） */
     };
 
     Reaction.emojiPng = EP;

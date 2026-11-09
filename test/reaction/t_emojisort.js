@@ -6,7 +6,7 @@ let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log('FAIL', m); } }
 const SEED = seedOf(20261109), rnd = rng(SEED);
 
 // ── 分類 ──
-ok(T.CATS.map(c => c.name + c.rep).join('、') === '圓臉😀、動物🐒、水果🥝、交通🚗、人類👩', '五種分類與題目寫法');
+ok(T.CATS.map(c => c.name + c.rep).join('、') === '圓臉😀、動物🐒、蔬果🥝、交通🚗、人形👩', '五種分類與題目寫法');
 { const all = [], first = {}, last = {};
   T.CATS.forEach(c => { ok(c.list.length >= 15, c.name + ' 至少 15 個：' + c.list.length); ok(new Set(c.list).size === c.list.length, c.name + ' 裡沒有重複'); ok(c.rep && T.catOf(c.list[0]) === c.key, c.name + ' 題目寫 ' + c.rep); all.push(...c.list); first[c.key] = c.list[0]; last[c.key] = c.list[c.list.length - 1]; });
   ok(new Set(all).size === all.length, '不同分類之間沒有重複的 emoji');
@@ -37,7 +37,7 @@ for (let L = 1; L <= T.MAX_LEVEL; L++) for (let s = 0; s < 40; s++) {
 // ── 程式裡的接線 ──
 { const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_emojisort.js'), boot = rd('../../js/boot.js'), menu = rd('../../js/menu.js');
   ok(boot.indexOf("'js/reaction_emojisort.js'") > 0 && boot.indexOf("'css/games/reaction_emojisort.css'") > 0, 'boot.js 有載入 js 與 css');
-  ok(/id: 'emojisort', name: '分類點擊'/.test(menu) && G.name === '分類點擊', '選單有這一款');
+  ok(/id: 'emojisort', name: 'emoji選'/.test(menu) && G.name === 'emoji選', '選單有這一款');
   ok(/if \(!c\.ok\) \{[^}]*finish\(i\)/.test(src) && /api\.timer\(q\.ms/.test(src), '點錯就失敗、時間到也失敗'); }
 ok(new Set([1, 5, 10, 16, 22].map(T.rating)).size === 5, '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

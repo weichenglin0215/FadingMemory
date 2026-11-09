@@ -245,14 +245,14 @@
 
     /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
-        kit.run(root, ctx, {
+        Reaction.emojiPng.whenReady(root, function () { kit.run(root, ctx, {   /* 人像改貼 PNG（每種裝置看到的都一樣）：圖集載好才開始 */
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 5,
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
             stageClass: 'halfcrowd-stage',
             setup: setup
-        });
+        }); });
     }
 
     /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
@@ -278,8 +278,7 @@
         var ringLayer = kit.svg('g', {}, svg), faceLayer = kit.svg('g', {}, svg);
         var els = q.circles.map(function (c) {          /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
             var cir = kit.svg('circle', { cx: c.x.toFixed(2), cy: c.y.toFixed(2), r: (c.r * RING_SCALE).toFixed(2), 'class': 'halfcrowd-circle' }, ringLayer);
-            var face = kit.svg('text', { x: c.x.toFixed(2), y: c.y.toFixed(2), 'class': 'halfcrowd-face', 'font-size': (c.r * 2 * FACE_SCALE).toFixed(1), 'text-anchor': 'middle', 'dominant-baseline': 'central' }, faceLayer);
-            face.textContent = kit.pick(kit.PERSON_EMOJI, api.rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+            Reaction.emojiPng.svg(faceLayer, kit.pick(kit.PERSON_EMOJI, api.rand), c.x, c.y, c.r * 2 * FACE_SCALE, 'halfcrowd-face');  /* 貼圖集裡的人像（每個人隨機一種；kit.pick(陣列, rand)：從陣列隨機挑一個元素） */
             return cir;
         });
         if (SHOW_CENTER) q.circles.forEach(function (c) { kit.svg('circle', { cx: c.x.toFixed(2), cy: c.y.toFixed(2), r: 2.4, 'class': 'halfcrowd-dot' }, svg); });

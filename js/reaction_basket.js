@@ -41,6 +41,7 @@
         [0x1F345, '番茄'], [0x1F346, '茄子'], [0x1F33D, '玉米'], [0x1F336, '辣椒'], [0x1F344, '香菇'], [0x1F951, '酪梨'], [0x1F952, '小黃瓜'],
         [0x1F96C, '青菜'], [0x1F966, '花椰菜'], [0x1F954, '馬鈴薯'], [0x1F9C4, '大蒜'], [0x1F9C5, '洋蔥'], [0x1F955, '紅蘿蔔'], [0x1F330, '栗子']
     ];
+    var ICO_FONT = 46;                                  /* 蔬果圖案的大小（跟字級 46px 的文字 emoji 一樣大） */
     function emojiOf(item) { return String.fromCodePoint(item[0]); }
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
@@ -116,13 +117,13 @@
 
     /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
     function mount(root, ctx) {
-        kit.run(root, ctx, {
+        Reaction.emojiPng.whenReady(root, function () { kit.run(root, ctx, {   /* 蔬果圖案改貼 PNG（每種裝置看到的都一樣）：圖集載好才開始 */
             id: ID, G: G, maxLevel: MAX_LEVEL, lives: LIVES, goodAt: 5,
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
             setup: setup
-        });
+        }); });
     }
 
     /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
@@ -137,7 +138,7 @@
         var tip = h('div', { 'class': 'basket-tip', text: '挑幾樣，讓價格加起來剛好是總價' });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
         var tiles = q.prices.map(function (p, i) {
             var el = h('div', { 'class': 'basket-tile' }, [
-                h('div', { 'class': 'basket-ico', text: q.emojis[i] }), h('div', { 'class': 'basket-name', text: q.names[i] }), h('div', { 'class': 'basket-price', text: p + ' 元' })
+                h('div', { 'class': 'basket-ico' }, [Reaction.emojiPng.el(q.emojis[i], ICO_FONT)]), h('div', { 'class': 'basket-name', text: q.names[i] }), h('div', { 'class': 'basket-price', text: p + ' 元' })
             ]);
             kit.onTap(el, function () { toggle(i); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
             return el;

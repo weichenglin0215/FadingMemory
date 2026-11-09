@@ -14,9 +14,13 @@
 
 /* 「sneakmove-dot」這個元素的樣式 */
 .sneakmove-dot {
-    fill: var(--c-blue);                                /* SVG 圖形的填色：主題變數 --c-blue */
-    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
-    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+    fill: none;                                         /* 人臉是貼圖，這個圓只當外框：平常完全看不見 */
+    stroke: none;                                       /* 沒有線條（答對／答錯才加上綠／紅外框） */
+}
+
+/* 人臉（貼圖）：手指的點擊交給外面的 SVG 處理 */
+.sneakmove-face {
+    pointer-events: none;                               /* 不接收點擊 */
 }
 
 /* 答對（找到會動的圓點、或失敗時標出沒找到的答案）：綠色外框 */

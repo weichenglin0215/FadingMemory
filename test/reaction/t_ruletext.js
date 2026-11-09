@@ -82,8 +82,8 @@ games.forEach(g => {
   });
   const last = plain(L[L.length - 1]);
   ok(/[。！？]$|[。！？][」』）)]$/.test(last), tag + ' 最後一行以句號／驚嘆號／問號結束：「' + last.slice(-8) + '」');
-  // 遊戲名稱最多 5 個字（選單格子的名稱列只放得下 5 個字）
-  ok(Array.from(g.name).length <= 5, tag + ' 名稱不超過 5 個字（' + Array.from(g.name).length + '）');
+  // 遊戲名稱最多 5 個字（選單格子的名稱列只放得下 5 個字；英數字只有中文的一半寬，算半個字）
+  { const w = Array.from(g.name).reduce((a, c) => a + (c.charCodeAt(0) < 128 ? 0.5 : 1), 0); ok(w <= 5, tag + ' 名稱不超過 5 個字（' + w + '）'); }
 });
 ok(ids.size === games.length && games.length === 187, '187 款遊戲 id 不重複（' + games.length + '）');
 

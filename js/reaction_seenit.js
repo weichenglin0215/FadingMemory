@@ -51,6 +51,7 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function itemCount() { return ITEMS.length; }
+    var PIC_FONT = 150;                                 /* 圖案的大小（跟字級 150px 的文字 emoji 一樣大） */
     function emojiOf(id) { return String.fromCodePoint(ITEMS[id][0]); }
     function nameOf(id) { return ITEMS[id][1]; }
     /* 第 level 關的限時（毫秒）：每多一關多 TIME_STEP_S 秒 */
@@ -96,13 +97,13 @@
         /* V1.28 起這個看過嗎改版（不再有暖身、沒有命、emoji 圖案、每關限時 +1 秒），舊版的最佳紀錄不能比：第一次進來清掉（只清一次） */
         Reaction.migrateBest(ID, function () { return null; }, '.v128');
         var hist = [], kinds = [];
-        kit.run(root, ctx, {
+        Reaction.emojiPng.whenReady(root, function () { kit.run(root, ctx, {   /* 圖案改貼 PNG（每種裝置看到的都一樣）：圖集載好才開始 */
             id: ID, G: G, maxLevel: MAX_LEVEL, goodAt: 8, resume: false,
             numText: function (v) { return v + ' 關'; },
             rating: rating,
             lines: function (S) { return ['通過 ' + S.cleared + ' 關']; },
             setup: function (api) { if (api.level === 1) { hist.length = 0; kinds.length = 0; } setup(api, hist, kinds); }
-        });
+        }); });
     }
 
     /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
@@ -114,7 +115,7 @@
         api.info = tr;                                  /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[這個看過嗎] 第 ' + level + ' 關：' + nameOf(tr.item) + '（' + (tr.kind === 'old' ? '看過，上次在第 ' + tr.seenAt + ' 關' : '新的') + '）；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        var pic = h('div', { 'class': 'seenit-pic', text: emojiOf(tr.item) });
+        var pic = h('div', { 'class': 'seenit-pic' }, [Reaction.emojiPng.el(emojiOf(tr.item), PIC_FONT)]);
         var name = h('div', { 'class': 'seenit-name', text: nameOf(tr.item) });
         var info = h('div', { 'class': 'seenit-info', text: level === 1 ? '第一個圖案，一定是新的' : '這個圖案在前面的關卡出現過嗎？' });
         stage.appendChild(pic); stage.appendChild(name); stage.appendChild(info);  /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
@@ -135,7 +136,7 @@
             pic.classList.add('seenit-pic--bad');       /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             var why = sayOld == null ? '時間到！' : (isOld ? '這個圖案之前出現過' : '這是新的圖案');
             info.textContent = why + (isOld ? '（第 ' + tr.seenAt + ' 關）' : '');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-            api.fail({ delay: 1800, lines: [why + '：' + emojiOf(tr.item) + ' ' + nameOf(tr.item), isOld ? '它上次出現在第 ' + tr.seenAt + ' 關' : '前面的關卡沒有出現過它'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
+            api.fail({ delay: 1800, lines: [why + '：' + nameOf(tr.item), isOld ? '它上次出現在第 ' + tr.seenAt + ' 關' : '前面的關卡沒有出現過它'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         kit.onTap(bOld, function () { judge(true); });  /* kit.onTap(元素, 函式)：幫元素綁定「點一下」的動作（手機觸控與電腦滑鼠通用，反應比一般 click 快） */
         kit.onTap(bNew, function () { judge(false); });
