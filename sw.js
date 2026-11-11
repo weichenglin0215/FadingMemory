@@ -8,6 +8,13 @@
    快取優先的話，忘了重新產生下面的清單就會永遠卡在舊版，「明明改了程式、畫面卻沒變」會變得更嚴重。
    網路優先就沒有這個風險；清單只負責「保證一次就把全部檔案存好」。
 
+   【V1.53 起：版本相同就直接用備份，不連網】進遊戲要載入一百多個 css、一百多個 js（boot.js 全都加了 ?v=版本號）。
+   以前每一個都先問網路（網路優先），訊號不好時每個檔案都要等一個來回、慢的還要等 NET_TIMEOUT_MS 才改用備份，進一款遊戲動輒好幾秒。
+   現在：網址帶 ?v=X 的 css／js，如果備份裡的 version.json 也是 X，就代表備份是「同一版的完整備份」，直接用備份、一個請求都不送。
+   （「備份裡有 version.json」＝備份完整：refreshAll 一開始先把它刪掉、全部檔案都抓好才放回去；中途失敗它就不在，這時一律回到網路優先。）
+   版本不一樣（剛發佈新版）或沒有備份時，照舊網路優先；頁面檔、boot.js、version.json 本身永遠網路優先（它們決定「版本是不是新的」）。
+   開發用的本機網址（localhost、127.0.0.1）不走這條：改程式不一定會改版本號，要永遠拿到最新的檔案。
+
    【比對快取時一律忽略 ?query】boot.js 載入檔案時會加 ?t=時間戳（boot.js 自己）和 ?v=版本號（其他檔案），
    網址每次都不一樣，所以快取的 key 一律是「去掉 ? 之後的網址」（keyOf）。reaction.html?game=speed 也是同一份 reaction.html。
 
@@ -25,7 +32,7 @@
 'use strict';
 
 var CACHE = 'fm-cache-v1';
-var NET_TIMEOUT_MS = 4000;                 /* 網路超過這麼久沒回應，而且手機裡有備份，就先用備份 */
+var NET_TIMEOUT_MS = 2000;                 /* 網路超過這麼久沒回應，而且手機裡有備份，就先用備份（V1.53：4000 → 2000，訊號不好時少等一點） */
 var NO_CACHE_DIRS = ['admin/', 'test/', 'note/', 'supabase/', '.claude/'];
 var NO_CACHE_FILES = ['sw.js', 'screen_adaptive.html', 'screen_adaptive.css', 'screen_adaptive.js', 'README.md'];
 var FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
@@ -692,6 +699,33 @@ function lookup(key) {
     return caches.open(CACHE).then(function (c) { return c.match(key, { ignoreVary: true }); });
 }
 
+/* 備份是哪一版：讀備份裡的 version.json（沒有、壞掉＝null）。一個頁面一次要幾百個檔案，所以結果只記 1 秒（memoVer）；
+   refreshAll 開始時直接設成 null（備份正在更新、不完整，不能當成「同一版」）。 */
+var memoVer = null;
+function cachedVersion() {
+    var now = Date.now();
+    if (memoVer && now - memoVer.t < 1000) return memoVer.p;
+    var p = lookup(keyOf(scoped('version.json'))).then(function (res) {
+        if (!res) return null;
+        return res.json().then(function (j) { return j && j.version ? String(j.version) : null; }, function () { return null; });
+    }).catch(function () { return null; });
+    memoVer = { t: now, p: p };
+    return p;
+}
+
+/* 開發用的本機網址（localhost、127.0.0.1、::1）：改了程式不一定會改版本號，所以永遠網路優先、看得到最新的檔案；正式網站才用「版本相同就用備份」 */
+var DEV_HOST = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(self.location.hostname);
+
+/* 帶 ?v=版本號 的 css／js：備份是同一版就直接用備份（見檔頭「V1.53 起」）；不是（或備份裡沒有這個檔）就網路優先。其他請求回傳 null，由呼叫的人走原本的網路優先 */
+function versioned(event, req, key) {
+    var u = new URL(req.url), v = u.searchParams.get('v');
+    if (DEV_HOST || !v || !/\.(js|css)$/.test(u.pathname)) return null;
+    return cachedVersion().then(function (cv) {
+        if (cv !== v) return networkFirst(event, req, key);
+        return lookup(key).then(function (hit) { return hit || networkFirst(event, req, key); });
+    });
+}
+
 /* 存進備份：只存「成功、沒被轉址、同一份內容（ETag 一樣）就不重存」的回應，省掉每次開頁面都重寫一遍幾 MB 的檔案 */
 function store(key, res) {
     if (!res || !res.ok || res.redirected || res.type === 'opaque') return Promise.resolve();
@@ -710,6 +744,7 @@ function store(key, res) {
 var refreshing = null;
 function refreshAll() {
     if (refreshing) return refreshing;
+    memoVer = null;
     var one = function (c, rel) {
         var url = scoped(rel);
         return fetch(new Request(url, { cache: 'no-cache' })).then(function (res) {
@@ -719,8 +754,13 @@ function refreshAll() {
     };
     refreshing = caches.open(CACHE).then(function (c) {
         var rest = PRECACHE.filter(function (rel) { return rel !== 'version.json'; });
-        return Promise.all(rest.map(function (rel) { return one(c, rel); })).then(function () { return one(c, 'version.json'); });
-    }).then(function () { refreshing = null; }, function (e) { refreshing = null; throw e; });
+        memoVer = null;
+        /* 先把備份裡的 version.json 刪掉：更新途中（新舊檔案混在一起）不能被當成「同一版的完整備份」；全部抓好才放回去 */
+        return c.delete(keyOf(scoped('version.json'))).then(function () {
+            memoVer = null;                             /* 刪掉之後再清一次：刪的途中如果有人讀了，記下的還是舊的 */
+            return Promise.all(rest.map(function (rel) { return one(c, rel); }));
+        }).then(function () { return one(c, 'version.json'); });
+    }).then(function () { refreshing = null; memoVer = null; }, function (e) { refreshing = null; memoVer = null; throw e; });
     return refreshing;
 }
 
@@ -821,5 +861,6 @@ self.addEventListener('fetch', function (event) {
     var host = new URL(req.url).hostname;
     if (FONT_HOSTS.indexOf(host) >= 0) { event.respondWith(fonts(event)); return; }
     if (!handled(req.url)) return;
-    event.respondWith(networkFirst(event, req, keyOf(req.url)));
+    var key = keyOf(req.url);
+    event.respondWith(versioned(event, req, key) || networkFirst(event, req, key));
 });

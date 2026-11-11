@@ -61,6 +61,7 @@
     ];
     var GAME_CELLS = [
         { id: 'rainbow', name: '七彩陷阱', cat: 'reaction', img: 'img/reaction/rainbow.png' },
+        { id: 'inkword', name: '字的顏色', cat: 'memory', img: 'img/reaction/inkword.png' },
         { id: 'speed', name: '零秒出手', cat: 'reaction', img: 'img/reaction/speed.png' },
         { id: 'impossible', name: '不可能任務', cat: 'reaction', img: 'img/reaction/impossible.png' },
         { id: 'shapes', name: '形形色色', cat: 'visual', img: 'img/reaction/shapes.png' },
@@ -205,7 +206,6 @@
         { id: 'gaspump', name: '加到五百', cat: 'number', img: 'img/reaction/gaspump.png' },
         { id: 'rotary', name: '轉盤電話', cat: 'memory', img: 'img/reaction/rotary.png' },
         { id: 'menuslice', name: '切菜單上的', cat: 'reaction', img: 'img/reaction/menuslice.png' },
-        { id: 'inkword', name: '字的顏色', cat: 'memory', img: 'img/reaction/inkword.png' },
         { id: 'calendar', name: '記行事曆', cat: 'memory', img: 'img/reaction/calendar.png' },
         { id: 'slicechar', name: '切字', cat: 'reaction', img: 'img/reaction/slicechar.png' },
         { id: 'ordercut', name: '照號切水果', cat: 'reaction', img: 'img/reaction/ordercut.png' },
@@ -376,6 +376,34 @@
         if (!window.Rating) return;
         var data = Rating.stats();
         Object.keys(rateEls).forEach(function (id) { Rating.paint(rateEls[id], id, data); });
+    }
+
+    /* ═══ 世界前三名徽章（V1.53）═══
+       「選一個想玩的遊戲」列表裡，玩家在世界排行榜拿到前三名的遊戲，格子右上角會多一顆圓形的金／銀／銅牌，中間是名次數字
+       （圖案跟「世界前 30 名」彈窗裡的名次徽章 .lb-medal 一樣，樣式見 css/leaderboard.css 的 .lb-medal--r1～r3；第一名上緣多一頂皇冠 .lb-crown）。
+       名次來自 Leaderboard.myRanks（資料庫 MF_get_my_ranks；要登入才有，沒登入完全不連網）：
+       列表一打開先用「上次存的名次」（cachedMyRanks，同步、不連網）畫出來，網路回來（30 秒內有查過就直接用快取）再更新，所以不會讓玩家多等。 */
+    var MEDAL_MAX = 3;                  /* 前幾名才顯示徽章 */
+    var medalRanks = {};                /* 目前的前三名：{ 遊戲id: 名次 }（純函式 medalMap 算出來的） */
+    /* 名次清單（[{ game_id, rank }]）→ { 遊戲id: 名次 }：只留選單裡有的遊戲、名次在 1～MEDAL_MAX 之內（純函式，t_menu.js 測試） */
+    function medalMap(list) {
+        var out = {};
+        (Array.isArray(list) ? list : []).forEach(function (x) {
+            if (x && gameById[x.game_id] && x.rank >= 1 && x.rank <= MEDAL_MAX && x.rank === Math.floor(x.rank)) out[x.game_id] = x.rank;
+        });
+        return out;
+    }
+    /* 把（或拿掉）一格遊戲右上角的名次徽章；名次沒變就不動，格子的朗讀名稱也跟著更新 */
+    function paintMedal(cell, id) {
+        var rank = medalRanks[id] || 0, old = cell.querySelector('.game-cell__medal');
+        if (old && Number(old.getAttribute('data-rank')) === rank) return;
+        if (old) old.parentNode.removeChild(old);
+        var name = gameById[id] ? gameById[id].name : id;
+        if (!rank) { cell.setAttribute('aria-label', name); return; }
+        var medal = h('span', { 'class': 'lb-medal lb-medal--r' + rank + ' game-cell__medal game-cell__medal--r' + rank, text: String(rank), attrs: { 'data-rank': String(rank), 'aria-hidden': 'true' } });
+        if (rank === 1) medal.appendChild(h('span', { 'class': 'lb-crown', html: window.UI.icon('crown') }));   /* 第一名多一頂皇冠（跟「世界前 30 名」彈窗一樣：.lb-crown 疊在牌子上緣） */
+        cell.appendChild(medal);
+        cell.setAttribute('aria-label', name + '，世界第 ' + rank + ' 名');  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
     }
 
     /* 這個函式負責做出一格遊戲按鈕（縮圖＋名字＋平均星數）。 */
@@ -642,6 +670,7 @@
                     if (bar) rateEls[c.id] = bar;
                 }
                 el.classList.toggle('game-cell--last', c.id === last);  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+                paintMedal(el, c.id);
                 grid.appendChild(el);
             });
             GAME_TABS.forEach(function (t) {
@@ -652,6 +681,15 @@
             searchBtn.classList.toggle('is-on', searching);
             searchBtn.setAttribute('aria-pressed', searching ? 'true' : 'false');
             scroller.refresh();
+        }
+
+        /* 前三名徽章：先畫「上次存的名次」（同步、不連網），再背景更新（30 秒內查過就用快取；沒登入不連網）；連不上（null）就維持原狀 */
+        function refreshMedals() {
+            var lb = window.Leaderboard;
+            if (!lb || !lb.myRanks) return;
+            function apply(list) { medalRanks = medalMap(list); Object.keys(cellEls).forEach(function (id) { paintMedal(cellEls[id], id); }); }
+            apply(lb.cachedMyRanks ? lb.cachedMyRanks() : null);
+            lb.myRanks().then(function (list) { if (list) apply(list); });
         }
 
         /* 換頁籤：記住這次選的、重畫、捲回最上面（搜尋中換頁籤＝離開搜尋，關鍵字清掉） */
@@ -750,6 +788,7 @@
                 scroller.scrollTo(0);
                 if (curTab === 'all') scrollToLast();
                 if (window.Rating) Rating.loadStats().then(paintRates);              /* 快取過期才會真的連網 */
+                refreshMedals();
                 checkPopup();
             }
         };
@@ -760,7 +799,7 @@
     window.FMMenu = {
         GAME_CELLS: GAME_CELLS, GAME_TABS: GAME_TABS, THEME_CELLS: THEME_CELLS, tabGames: tabGames, searchGames: searchGames, RECENT_MAX: RECENT_MAX,
         gameById: gameById, recentIds: recentIds, pickGame: pickGame,
-        grandmaItems: grandmaItems, GRANDMA_MAX: GRANDMA_MAX,
+        grandmaItems: grandmaItems, GRANDMA_MAX: GRANDMA_MAX, medalMap: medalMap, MEDAL_MAX: MEDAL_MAX,
         comeonItems: comeonItems, masterItems: masterItems, popupOrder: popupOrder, POPUP_ORDER: POPUP_ORDER, POPUP_META: POPUP_META, POPUP_MAX: POPUP_MAX, POPUP_WAIT_MS: POPUP_WAIT_MS,
         keys: { last: LAST_GAME_KEY, recent: RECENT_KEY, tab: TAB_KEY, popup: POPUP_KEY }
     };

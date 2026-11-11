@@ -307,6 +307,26 @@
     box-shadow: 0 2px 8px var(--lb-bronze-glow);        /* 方塊陰影（立體感） */
 }
 
+/* 名次徽章的獨立版（不用包在 .lb-row--rN 裡也能上色）：主選單遊戲格子右上角的前三名徽章（js/menu.js 的 paintMedal）用 */
+.lb-medal--r1 {
+    background: var(--lb-gold-bg);                      /* 背景：主題變數 --lb-gold-bg（金） */
+    color: var(--lb-gold-ink);                          /* 文字顏色：主題變數 --lb-gold-ink */
+}
+
+/* 銀牌 */
+.lb-medal--r2 {
+    background: var(--lb-silver-bg);                    /* 背景：主題變數 --lb-silver-bg（銀） */
+    color: var(--lb-silver-ink);                        /* 文字顏色：主題變數 --lb-silver-ink */
+    box-shadow: 0 2px 8px var(--lb-silver-glow);        /* 方塊陰影（立體感） */
+}
+
+/* 銅牌 */
+.lb-medal--r3 {
+    background: var(--lb-bronze-bg);                    /* 背景：主題變數 --lb-bronze-bg（銅） */
+    color: var(--lb-bronze-ink);                        /* 文字顏色：主題變數 --lb-bronze-ink */
+    box-shadow: 0 2px 8px var(--lb-bronze-glow);        /* 方塊陰影（立體感） */
+}
+
 /* 第一名徽章上方的皇冠 */
 .lb-crown {
     position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */

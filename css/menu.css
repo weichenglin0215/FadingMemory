@@ -758,6 +758,32 @@
     padding: var(--sp-1) 0;                             /* 內縮（padding，內容跟邊框的距離）：上 主題變數、左右 --sp-1、下 0 */
 }
 
+/* 世界前三名徽章：遊戲格子的右上角，圓形金／銀／銅牌＋名次數字（顏色與 .lb-medal--r1～r3 同「世界前 30 名」彈窗；尺寸比彈窗裡的小）。
+   用兩個 class 疊在一起（.lb-medal.game-cell__medal）讓尺寸一定蓋過 .lb-medal 的 56px，不受兩個 css 檔載入先後影響 */
+.lb-medal.game-cell__medal {
+    position: absolute;                                 /* 脫離一般排版，貼著格子右上角擺放 */
+    top: 4px;                                           /* 離上邊 4px */
+    right: 4px;                                         /* 離右邊 4px */
+    z-index: 2;                                         /* 疊放順序 2：蓋在縮圖上面 */
+    width: 40px;                                        /* 寬度：40px */
+    height: 40px;                                       /* 高度：40px */
+    border-width: 2px;                                  /* 邊框粗細：2px */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去，點格子照常進遊戲） */
+}
+
+/* 第一名：牌子往下移一點，讓上緣那頂皇冠（.lb-crown，跟「世界前 30 名」彈窗同一個圖）放得進格子裡（格子會裁掉超出的部分） */
+.lb-medal.game-cell__medal--r1 {
+    top: 20px;                                          /* 離上邊 20px（其他名次是 4px） */
+}
+
+/* 皇冠：縮小到 26px，坐在牌子的上緣 */
+.game-cell__medal .lb-crown {
+    top: -17px;                                         /* 離牌子上緣 -17px（往上突出） */
+    font-size: 26px;                                    /* 字級（圖示大小）：26px */
+}
+
 /* 💔：右上角，一直輕輕地跳動 */
 .game-cell__heart {
     position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */

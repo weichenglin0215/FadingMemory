@@ -48,9 +48,10 @@ function pngSize(file) {
     ok(/<link rel="apple-touch-icon" href="icons\/apple-touch-icon\.png">/.test(s), p + ' 有 apple-touch-icon');
     ok(/<meta name="theme-color" content="#[0-9A-Fa-f]{6}">/.test(s), p + ' 有 theme-color');
     ok(/<meta name="apple-mobile-web-app-capable" content="yes">/.test(s), p + ' 有 apple-mobile-web-app-capable');
-    // 沒有必要的外部資源：src／href 如果是 http(s)，只准是 Google Fonts
+    // 沒有必要的外部資源：src／href 如果是 http(s)，只准是 Google Fonts；<link rel="preconnect">（只是先打通連線、不載入任何東西）可以指向自己的 Supabase
     [...s.matchAll(/(?:src|href)="(https?:\/\/[^"]+)"/g)].forEach(m => {
-      ok(/^https:\/\/fonts\.(googleapis|gstatic)\.com(\/|$)/.test(m[1]), p + ' 不該依賴外部資源：' + m[1]);
+      const preconnectSupabase = s.indexOf('<link rel="preconnect" href="' + m[1] + '" crossorigin>') >= 0 && /^https:\/\/[a-z0-9]+\.supabase\.co$/.test(m[1]);
+      ok(/^https:\/\/fonts\.(googleapis|gstatic)\.com(\/|$)/.test(m[1]) || preconnectSupabase, p + ' 不該依賴外部資源：' + m[1]);
     });
   });
   const idx = read('index.html');

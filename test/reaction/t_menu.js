@@ -125,5 +125,23 @@ CELLS.forEach(c => ok(sg(c.name).indexOf(c.id) >= 0, c.id + '「' + c.name + '�
 const nameFirst = M.searchGames('sudoku').map(c => c.id);
 ok(nameFirst.length >= 6, '搜尋 id 片段 sudoku 會找到數獨系列（' + nameFirst.length + ' 款）');
 
+// ═══ 世界前三名徽章（V1.53）：遊戲格子右上角的金／銀／銅牌＋名次數字 ═══
+{ const mm = (l) => JSON.stringify(M.medalMap(l));
+  ok(M.MEDAL_MAX === 3, '前 3 名才有徽章');
+  ok(mm([{ game_id: 'spot', rank: 1 }, { game_id: 'speed', rank: 2 }, { game_id: 'rainbow', rank: 3 }]) === JSON.stringify({ spot: 1, speed: 2, rainbow: 3 }), '第 1、2、3 名都有徽章');
+  ok(mm([{ game_id: 'spot', rank: 4 }, { game_id: 'speed', rank: 30 }]) === '{}', '第 4 名以後沒有徽章');
+  ok(mm([{ game_id: 'nogame', rank: 1 }, { game_id: 'spot', rank: 0 }, { game_id: 'speed', rank: 1.5 }, { game_id: 'rainbow', rank: -1 }, null, undefined, { game_id: 'spot' }]) === '{}', '不在選單裡的遊戲、名次不合理的列都忽略');
+  ok(mm(null) === '{}' && mm(undefined) === '{}' && mm([]) === '{}' && mm('x') === '{}', '沒有資料（沒登入、連不上）就沒有徽章');
+  ok(mm([{ game_id: 'spot', rank: 3 }, { game_id: 'spot', rank: 1 }]) === JSON.stringify({ spot: 1 }), '同一款有兩列時以後面的為準（資料庫一款只會有一列）');
+  const src = fs.readFileSync(ROOT + 'js/menu.js', 'utf8'), lbCss = fs.readFileSync(ROOT + 'css/leaderboard.css', 'utf8').replace(/[ 	]*\/\*[\s\S]*?\*\//g, ''), menuCss = fs.readFileSync(ROOT + 'css/menu.css', 'utf8').replace(/[ 	]*\/\*[\s\S]*?\*\//g, '');
+  ok(/'lb-medal lb-medal--r' \+ rank \+ ' game-cell__medal /.test(src), '徽章用世界前 30 名彈窗同一個圓形牌子 .lb-medal');
+  ok(/apply\(lb\.cachedMyRanks \? lb\.cachedMyRanks\(\) : null\);\s*lb\.myRanks\(\)\.then/.test(src) && /refreshMedals\(\);\s*checkPopup\(\)/.test(src), '列表一打開先畫上次存的名次、再背景更新（不讓玩家等網路）');
+  ok(/paintMedal\(el, c\.id\);\s*grid\.appendChild\(el\)/.test(src), '切換頁籤、搜尋時新做的格子也有徽章');
+  ok(!/paintMedal/.test(src.split('function popupCell')[1].split('function closePopup')[0]), '推薦彈窗的格子不加徽章（右上角已經是表情）');
+  ok(/\.lb-medal--r1\s*\{[^}]*--lb-gold-bg/.test(lbCss) && /\.lb-medal--r2\s*\{[^}]*--lb-silver-bg/.test(lbCss) && /\.lb-medal--r3\s*\{[^}]*--lb-bronze-bg/.test(lbCss), '金、銀、銅三種顏色');
+  ok(/if \(rank === 1\) medal\.appendChild\(h\('span', \{ 'class': 'lb-crown', html: window\.UI\.icon\('crown'\) \}\)\)/.test(src), '第一名的徽章多一頂皇冠（跟世界前 30 名彈窗同一個 .lb-crown）');
+  ok(/\.lb-medal\.game-cell__medal--r1\s*\{[^}]*top:\s*20px/.test(menuCss) && /\.game-cell__medal \.lb-crown\s*\{[^}]*top:\s*-17px[^}]*font-size:\s*26px/.test(menuCss), '第一名的牌子往下移、皇冠縮小，放得進格子裡');
+  ok(/\.lb-medal\.game-cell__medal\s*\{[^}]*position:\s*absolute;[^}]*top:\s*4px;[^}]*right:\s*4px;/.test(menuCss) && /\.lb-medal\.game-cell__medal\s*\{[^}]*pointer-events:\s*none/.test(menuCss), '徽章貼在格子右上角、不擋點擊'); }
+
 console.log(bad ? 'FAILED ' + bad + ' / ' + total : 'ALL PASS (' + total + ' checks)');
 process.exitCode = bad ? 1 : 0;

@@ -699,6 +699,18 @@
         store().set(KEY_MYRANKS, null);        /* 名次變了：「成績」彈窗的名次也一起重抓（同一件事） */
     }
 
+    /* 忘掉某款遊戲在這支瀏覽器上的榜單相關資料（開發測試時想清掉自己亂測出來的第一名用，見 Identity.forgetBest）：
+       記憶體與 localStorage 裡這款的榜單快取、還沒送出的成績，以及「各遊戲名次」「被超越」兩份快取（名次會變，下次重抓）。
+       只動這支瀏覽器；資料庫裡的成績要另外用 SQL 刪（見 note/世界排行榜說明.md「刪掉自己測試出來的最佳成績」）。 */
+    function forgetGame(id) {
+        if (!id) return;
+        delete state.boards[id];
+        del(KEY_BOARD + id);
+        var p = store().get(KEY_PENDING, {}) || {};
+        if (p[id]) { delete p[id]; store().set(KEY_PENDING, p); }
+        forgetOvertaken();
+    }
+
     /* 只留格式正確的列（防止資料庫回傳的東西或 localStorage 被改壞時，畫面拿到奇怪的值） */
     function cleanOvertaken(list) {
         if (!Array.isArray(list)) return [];
@@ -825,6 +837,7 @@
     Leaderboard.clearIdentity = clearIdentity;
     Leaderboard.flushPending = flushPending;
     Leaderboard.forgetOvertaken = forgetOvertaken;
+    Leaderboard.forgetGame = forgetGame;          /* 忘掉某款遊戲在這支瀏覽器上的榜單快取、待送成績（Identity.forgetBest 用） */
     Leaderboard.putBoard = putBoard;
     Leaderboard.cleanFeedback = cleanFeedback;
     Leaderboard.sendFeedback = sendFeedback;

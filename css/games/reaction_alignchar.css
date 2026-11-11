@@ -28,6 +28,12 @@
     color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
 }
 
+/* 答案按鈕：左右不留內縮、行高 1（字的大小由 js 依按鈕短邊的 4/5 設定，選項多、按鈕窄時字大也放得下） */
+.rx-grid .alignchar-opt {
+    padding: 0;                                         /* 內縮（padding，內容跟邊框的距離）：四邊都是 0 */
+    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
+}
+
 /* 「alignchar-opt」在「正確時」的樣子的樣式 */
 .alignchar-opt--right {
     background: var(--c-ok-soft);                       /* 背景：主題變數 --c-ok-soft */

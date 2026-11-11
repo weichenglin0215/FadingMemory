@@ -1,13 +1,30 @@
 /* ═══════════════════════════════════════
    reaction_bubblespray.css — 泡泡掃射（js/reaction_bubblespray.js）的專屬樣式
    · 這個檔案裡的 class 名稱一律以「bubblespray-」開頭，只給這一款遊戲用，不會跟別款撞名。
-   · 泡泡、子彈、砲塔、破掉的特效都畫在 canvas 上（顏色寫在 js 的 COLORS）；這裡只有畫布本身。
+   · 球、砲彈、砲塔、破掉的特效都畫在 canvas 上（顏色寫在 js 的 COLORS）；這裡只有畫布本身，以及縮小上方標題與時間條的空隙。
    ═══════════════════════════════════════ */
+
+/* 整個遊戲畫面（.screen 是各遊戲共用的容器，JS 在 setup 開頭加上 bubblespray-screen、離開時拿掉）：
+   標題列、時間條、遊戲區之間的空隙從 12px 縮成 2px、上方留白 14px → 4px、下方 14px → 6px，把高度讓給遊戲區 */
+.screen.bubblespray-screen {
+    gap: 2px;
+    /* 子元素之間的空隙：2px */
+    padding-top: 4px;
+    /* 上方內縮：4px */
+    padding-bottom: 6px;
+    /* 下方內縮：6px */
+}
+
+/* 標題列（泡泡掃射／打破幾顆・每秒幾發）：行高縮到剛好包住文字，不要多撐出上下空白 */
+.screen.bubblespray-screen .rx-head {
+    line-height: 1.1;
+    /* 行高：1.1（文字每一行佔的高度） */
+}
 
 /* 遊戲區 */
 .bubblespray-stage {
-    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理按住與拖曳 */
-    user-select: none;                                  /* 文字不能被選取（避免按住時誤選） */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
     -webkit-user-select: none;                          /* 文字不能被選取（Safari） */
     -webkit-touch-callout: none;                        /* 長按不跳出系統選單（iPhone） */
 }
@@ -18,5 +35,5 @@
     left: 0;                                            /* 離左邊 0 */
     top: 0;                                             /* 離上邊 0 */
     display: block;                                     /* 區塊元素（下面不會多出一條空隙） */
-    cursor: crosshair;                                  /* 滑鼠游標變成十字準星 */
+    cursor: ew-resize;                                  /* 滑鼠游標變成左右箭頭（提示可以左右拖曳） */
 }

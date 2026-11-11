@@ -1,7 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════
    boot.js — 版本檢查＋載入所有遊戲檔案
    ───────────────────────────────────────────────────────────────────
-   1. 每次開頁面都（不經快取）讀 version.json 的版本號。
+   1. 每次開頁面都（不經快取）讀 version.json 的版本號。V1.53：訊號不好、超過 VERSION_WAIT_MS 還沒回來，
+      而且這支手機以前讀過版本號（localStorage 的 fm.version）→ 先用「上次的版本號」開頁面（配合 sw.js，備份是同一版就完全不用連網），
+      version.json 晚點才回來也照常處理（記下新版本，下次開頁面就是新的）。第一次來（沒有記錄）還是要等。
    2. 所有 CSS / JS 都加上 ?v=版本號 載入：
       版本號一改，網址就變了，瀏覽器一定會重新下載最新檔案；
       版本號沒變，就照常用快取（省流量、開得快）。
@@ -368,6 +370,10 @@
         if (document.readyState === 'complete') go(); else global.addEventListener('load', go);
     }
 
+    /* 等 version.json 最多等幾毫秒（V1.53）：超過就先用上次的版本號開頁面（見檔頭第 1 點）。網路正常時 version.json 幾百毫秒就回來，完全不受影響 */
+    var VERSION_WAIT_MS = 1500;
+    var SLOW = { slow: true };                      /* 賽跑時代表「等太久了」的記號 */
+
     cleanShareParam();
     registerSw();
 
@@ -384,14 +390,25 @@
           （避免畫面在還沒套上樣式前就被 JS 動到）。JS 的部分：陣列型態的項目
           （目前只有 three.js）用 loadWithFallback 依序處理，其餘的 JS 檔案
           才平行下載（但靠 async=false 保證還是依照清單順序執行）。 */
-    fetchVersion().then(function (info) {
-        var ver = info && info.version ? String(info.version) : 'local-' + Date.now();
-        var prev = storeGet('fm.version');
-        global.FM_VERSION = { version: ver, date: info && info.date, notes: info && info.notes, previous: prev };
+    var versionP = fetchVersion();                  /* 一定會跑完（失敗＝null）；就算賽跑輸了也繼續在背景等它，不中斷（sw.js 靠這個請求發現新版本） */
+    var known = storeGet('fm.version');             /* 上次讀到的版本號（第一次來是 null） */
+    (known ? Promise.race([versionP, new Promise(function (r) { global.setTimeout(function () { r(SLOW); }, VERSION_WAIT_MS); })]) : versionP).then(function (info) {
+        var slow = info === SLOW;
+        if (slow) info = null;
+        /* 讀不到 version.json（太慢、或離線）又有上次的版本號 → 用上次的（備份是同一版就直接用備份）；兩樣都沒有才用時間戳（每次都載最新檔案） */
+        var ver = info && info.version ? String(info.version) : (known || 'local-' + Date.now());
+        var prev = known;
+        global.FM_VERSION = { version: ver, date: info && info.date, notes: info && info.notes, previous: prev, slow: slow };
         if (info && info.version) {
             if (prev && prev !== ver) global.FM_VERSION.updated = true;
             storeSet('fm.version', ver);
         }
+        if (slow) versionP.then(function (late) {   /* 晚到的 version.json：記下新版本號（下次開頁面就用新的），不動這一次已經在載的檔案 */
+            if (late && late.version) {
+                if (String(late.version) !== ver) global.FM_VERSION.latest = String(late.version);
+                storeSet('fm.version', String(late.version));
+            }
+        });
         var q = '?v=' + encodeURIComponent(ver);
 
         return Promise.all(page.css.map(function (h) { return loadCss(h + q); })).then(function () {  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */

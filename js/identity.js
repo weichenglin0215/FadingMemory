@@ -333,6 +333,31 @@
         if (LB.isLoggedIn()) syncBests({ ids: [id] });
     }
 
+    /* 這款遊戲在這支瀏覽器上的個人最佳存在哪些 localStorage key（純函式，測試用）：最佳成績、單位記號 .sync、最佳關卡。
+       （遷移旗標 .v2 之類的不在內：留著，不然舊單位的遷移會再跑一次。） */
+    function bestKeysOf(id) { return [PREFIX_BEST + id, PREFIX_BEST + id + '.sync', PREFIX_LV + id]; }
+
+    /* 開發測試用：忘掉某款遊戲在「這支瀏覽器」上的最佳成績（在瀏覽器主控台打  Identity.forgetBest('bubblespray') ，然後重新整理）。
+       清掉：最佳成績、單位記號、最佳關卡、「待上傳的個人最佳」、這款的榜單快取與待送成績、名次快取。
+       ★ 為什麼光刪資料庫的 MF_player_bests 沒用：畫面上的「最佳」是讀這支瀏覽器的 localStorage，而且只要還留著，下次進這款遊戲（或每小時同步）
+         就會把它「重新上傳」，資料庫那一列又長回來；世界排行榜（第一名）在另一張表 MF_scores，也要刪。
+       ★ 順序：先在資料庫刪（SQL 會印在主控台，player_id 已經填好），再叫這個函式；不然這個函式清掉本機之後，
+         進遊戲時會把資料庫還在的最佳「下載回來」。其他裝置（手機）上如果也有這個最佳，也要在那邊清，不然它會被那邊重新上傳。
+       回傳 { id, keys（清掉的 key）, pid, sql（兩行 SQL）}；沒有這款遊戲的代號格式就回傳 null。 */
+    function forgetBest(id) {
+        if (!id || !ID_RE.test(id)) return null;
+        bestKeysOf(id).forEach(del);
+        var pend = store().get(KEY_BESTPEND, {}) || {};
+        if (pend[id]) { delete pend[id]; store().set(KEY_BESTPEND, pend); }
+        if (LB.forgetGame) LB.forgetGame(id);
+        var pid = LB.peekPid(), nick = LB.getNick();
+        var who = pid ? "'" + pid + "'" : "(select player_id from public.\"MF_players\" where nickname = '" + String(nick || '你的暱稱').replace(/'/g, "''") + "')";
+        var sql = 'delete from public."MF_scores" where game_id = \'' + id + '\' and player_id = ' + who + ';\n' +
+                  'delete from public."MF_player_bests" where game_id = \'' + id + '\' and player_id = ' + who + ';';
+        log('已清掉這支瀏覽器上「' + id + '」的最佳成績與榜單快取。請重新整理頁面。\n資料庫裡的要另外刪（Supabase → SQL Editor，建議「先」執行這兩行再叫本函式）：\n' + sql);
+        return { id: id, keys: bestKeysOf(id), pid: pid, sql: sql };
+    }
+
     /* 登出時清掉本機個人最佳：只清「最佳成績本身」與 .sync 記號、最佳關卡（遷移旗標 .v2 之類的要留著，不然舊單位的遷移會再跑一次） */
     function clearLocalBests() {
         try {
@@ -453,6 +478,7 @@
     Identity.noteBest = noteBest;
     Identity.flushBests = flushBests;
     Identity.gameMounted = gameMounted;
+    Identity.forgetBest = forgetBest;        /* 開發測試用：忘掉某款遊戲在這支瀏覽器上的最佳成績（主控台：Identity.forgetBest('遊戲代號')） */
     Identity.ensureLegacy = ensureLegacy;
     Identity.gateForScore = gateForScore;
     Identity.askLogin = askLogin;
@@ -466,7 +492,7 @@
     Identity.test = {
         cleanPin: cleanPin, validPin: validPin, fmtWait: fmtWait, fmtDate: fmtDate, errorText: errorText, isNetworkError: isNetworkError,
         betterOf: betterOf, cleanServerItem: cleanServerItem, localGameIds: localGameIds, collect: collect, applyServer: applyServer,
-        clearLocalBests: clearLocalBests, call: call, KEY_BESTPEND: KEY_BESTPEND, KEY_SYNCAT: KEY_SYNCAT, KEY_HINT: KEY_HINT, KEY_WHOAMIAT: KEY_WHOAMIAT,
+        clearLocalBests: clearLocalBests, bestKeysOf: bestKeysOf, forgetBest: forgetBest, call: call, KEY_BESTPEND: KEY_BESTPEND, KEY_SYNCAT: KEY_SYNCAT, KEY_HINT: KEY_HINT, KEY_WHOAMIAT: KEY_WHOAMIAT,
         PREFIX_BEST: PREFIX_BEST, PREFIX_LV: PREFIX_LV, flushBests: flushBests, trusted: trusted
     };
 

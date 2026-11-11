@@ -44,15 +44,23 @@
     pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
-/* 「fishbite-surface」這個元素的樣式 */
-.fishbite-surface {
+/* 水面線（V1.53）：一條白色半透明的線畫在水面的波形上，跟著水面上下抖動，波形從浮標往左右兩側傳出去（js 每個畫面更新 points） */
+.fishbite-wave {
     position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
     left: 0;                                            /* 離左邊 0 */
-    right: 0;                                           /* 離右邊 0 */
-    height: 6px;                                        /* 高度：6px */
-    margin-top: -3px;                                   /* 上外距（跟上面的元素距離）：-3px */
-    background: var(--fbt-surface);                     /* 背景：主題變數 --fbt-surface */
+    top: 0;                                             /* 離上邊 0 */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
     pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 1;                                         /* 疊放順序 1：蓋在水的上面 */
+}
+
+/* 水面線本身 */
+.fishbite-wave__line {
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--fbt-surface);                         /* SVG 線條顏色：主題變數 --fbt-surface */
+    stroke-width: 5;                                    /* SVG 線條粗細：5 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
 }
 
 /* 浮標的裁切框：只顯示水面以上，沉下去的部分看不見 */
@@ -82,6 +90,7 @@
 /* 浮標：細長的天線（紅白相間）＋紅色的頭＋白色的身體 */
 .fishbite-float {
     position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    transform-origin: 0 0;                              /* 變形的軸心：左上角（js 用 transform 先放大、再傾斜、最後移到水面上的位置） */
     will-change: transform;                             /* 提示瀏覽器這個屬性會變動，先準備好（讓動畫更順） */
 }
 
@@ -121,30 +130,6 @@
     border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
     border-radius: 0 0 50% 50%;                         /* 圓角：0 0 50% 50% */
     box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
-}
-
-/* 波紋圈：魚在動的時候冒出來（輕碰和咬鉤都會冒，不是線索） */
-.fishbite-ripple {
-    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
-    width: 80px;                                        /* 寬度：80px */
-    height: 24px;                                       /* 高度：24px */
-    border: 3px solid var(--fbt-ripple);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --fbt-ripple */
-    border-radius: 50%;                                 /* 圓形（或膠囊形）的圓角 */
-    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
-    animation: fishbite-ripple 0.9s ease-out forwards;  /* 播放動畫（名稱、時間、緩動、次數）：fishbite-ripple 0.9s ease-out forwards */
-}
-
-/* 動畫 fishbite-ripple：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
-@keyframes fishbite-ripple {
-    from {
-        transform: scale(0.4);                          /* 變形：縮放 0.4 倍 */
-        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
-    }
-
-    to {
-        transform: scale(2.2);                          /* 變形：縮放 2.2 倍 */
-        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
-    }
 }
 
 /* 「fishbite-info」這個元素的樣式 */
