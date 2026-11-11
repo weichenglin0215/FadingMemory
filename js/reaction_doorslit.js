@@ -9,6 +9,11 @@
    · 題目與選項：題目字來自共用字庫（SimilarChars）的形近字群，選項是同一群的四個字（差別常常就在中間一小段）。
    · 難度（線性）：縫寬 60 → 8 px（GAP）、掃過的速度 300 → 460 px／秒（SPEED，「略增」）、字的平均筆劃範圍 4～10 → 10～22（STROKES：筆劃越多越難拼）、作答時間 8 → 5 秒（RESP_S）。
    · 揭曉：兩片方塊往兩邊打開，字整個露出來；答錯時，你選的字和正確的字比對，只有其中一個有的筆畫塗紅。
+   · V1.54.0（玩家意見：難度太低）：
+       ① 門縫分成上下多條（SLITS：第 1 關 1 條 → 到頂 6 條）：字被切成橫的好幾層，每一層各有自己的兩片白色方塊和一條縫，各掃各的；
+       ② 每一條縫出發的時間都不一樣（DELAY_STEP：每條差 0.25 秒左右，順序是隨機的），所以同一個時刻每一條縫在字的不同位置；
+       ③ 有些縫故意從右往左掃（REV_P，兩條以上的時候一定至少有一條往左、至少有一條往右）；
+       ④ 拿掉縫兩側那兩條直的咖啡色線。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
@@ -23,10 +28,14 @@
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
-    var GAP = [60, 8];                          /* 門縫的寬度（px）：第 1 關 → 到頂 */
-    var SPEED = [300, 460];                     /* 門縫掃過的速度（px／秒）：第 1 關 → 到頂 */
+    var GAP = [40, 4];                          /* 門縫的寬度（px）：第 1 關 → 到頂 */
+    var SPEED = [250, 500];                     /* 門縫掃過的速度（px／秒）：第 1 關 → 到頂 */
+    var SLITS = [1, 6];                         /* 門縫的條數（字被分成上下幾層，每層一條縫）：第 1 關 → 到頂（V1.54.0 新增） */
+    var DELAY_STEP = 0.25;                      /* 每多一條縫，出發時間平均再晚幾秒（每條縫的出發時間都不同，順序隨機；V1.54.0 新增） */
+    var DELAY_JITTER = 0.5;                     /* 出發時間再隨機加上 0～（DELAY_STEP × 這個比例）秒，讓間隔不整齊 */
+    var REV_P = 0.4;                            /* 每條縫「從右往左掃」的機率（兩條以上時一定至少有一條往左、一條往右） */
     var STROKES_LO = [4, 10], STROKES_HI = [10, 22];   /* 題目字群的平均筆劃範圍（下限、上限）：第 1 關 → 到頂 */
-    var RESP_S = [8, 5];                        /* 作答時間（秒）：第 1 關 → 到頂 */
+    var RESP_S = [10, 6];                        /* 作答時間（秒）：第 1 關 → 到頂 */
     var N_OPT = 4;                              /* 選項數 */
     var LEAD_MS = 700;                          /* 開始後多久才開始掃 */
     var MIN_GROUP = 4;                              /* 「長得像的字」字群至少要幾個字才拿來出題 */
@@ -37,14 +46,30 @@
     function gapFor(level) { return Math.round(ramp(level, GAP)); }  /* Math.round：四捨五入成整數 */
     function speedFor(level) { return Math.round(ramp(level, SPEED)); }
     function respMs(level) { return Math.round(ramp(level, RESP_S) * 1000); }
+    function slitsFor(level) { return Math.round(ramp(level, SLITS)); }
     function strokeRange(level) { return [ramp(level, STROKES_LO), ramp(level, STROKES_HI)]; }
-    /* 門縫左緣的位置（px，字的左邊緣是 0）：t 秒時 */
-    function slitX(t, gap, speed) { return -gap + speed * t; }
+    /* 門縫左緣的位置（px，字的左邊緣是 0）：t 秒時。往右掃（dir 預設 1）：從 −gap 走到字的右邊緣 W；往左掃（dir 是 −1）：從 W 走到 −gap（W 要傳字的寬度） */
+    function slitX(t, gap, speed, W, dir) { return dir < 0 ? W - speed * t : -gap + speed * t; }
     /* 掃完要多久（秒）：門縫左緣從 −gap 走到字的右邊緣 W */
     function sweepSeconds(W, gap, speed) { return (W + gap) / speed; }
     /* 字上某個橫向位置 x（0～W）會在縫裡出現多久（秒）：縫寬 ÷ 速度 */
     function exposureSeconds(gap, speed) { return gap / speed; }
-    /* 出一關：{ answer, options（含答案、順序洗牌）, group（同一群的字）, answerIdx, gap, speed, strokes, respMs, level } */
+    /* 每條縫的出發時間與方向：回傳 n 個 { row（第幾層，0 是最上面）, delay（晚幾秒出發）, dir（1＝往右掃、−1＝往左掃）}。
+       出發時間：第 k 個出發的差 k × DELAY_STEP 秒（再加一點隨機），哪一層第幾個出發是洗牌的；最早的一條 delay 是 0。 */
+    function makeBands(n, rand) {
+        rand = rand || Math.random;
+        var order = kit.shuffle(Array.apply(null, Array(n)).map(function (_, i) { return i; }), rand), bands = [], i;  /* kit.shuffle：把陣列隨機洗牌 */
+        for (i = 0; i < n; i++) bands.push({ row: i, delay: order[i] === 0 ? 0 : order[i] * DELAY_STEP + rand() * DELAY_STEP * DELAY_JITTER, dir: n > 1 && rand() < REV_P ? -1 : 1 });
+        if (n > 1) {
+            var left = bands.filter(function (b) { return b.dir < 0; }).length;
+            if (left === 0) bands[Math.floor(rand() * n)].dir = -1;                          /* 至少一條往左 */
+            else if (left === n) bands[Math.floor(rand() * n)].dir = 1;                      /* 至少一條往右 */
+        }
+        return bands;
+    }
+    /* 全部掃完要多久（秒）：最晚出發的那一條出發時間 ＋ 掃一趟 */
+    function totalSeconds(bands, W, gap, speed) { return Math.max.apply(null, bands.map(function (b) { return b.delay; })) + sweepSeconds(W, gap, speed); }
+    /* 出一關：{ answer, options（含答案、順序洗牌）, group（同一群的字）, answerIdx, gap, speed, slits, bands, strokes, respMs, level } */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var rg = strokeRange(level), pool = SimilarChars.groups({ minSize: MIN_GROUP, minStrokes: rg[0], maxStrokes: rg[1] });
@@ -52,7 +77,8 @@
         var g = kit.pick(pool, rand), answer = kit.pick(g.chars, rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
         var mates = g.chars.filter(function (c) { return c !== answer; }), take = kit.shuffle(mates.slice(0, Math.min(mates.length, N_OPT + 1)), rand).slice(0, N_OPT - 1);  /* kit.shuffle(陣列, rand)：把陣列隨機洗牌，回傳新陣列（不會動到原本的） */
         var options = kit.shuffle(take.concat([answer]), rand);
-        return { answer: answer, options: options, answerIdx: options.indexOf(answer), group: g.chars, gap: gapFor(level), speed: speedFor(level), strokes: rg, respMs: respMs(level), level: level };  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
+        var n = slitsFor(level);
+        return { answer: answer, options: options, answerIdx: options.indexOf(answer), group: g.chars, gap: gapFor(level), speed: speedFor(level), slits: n, bands: makeBands(n, rand), strokes: rg, respMs: respMs(level), level: level };  /* indexOf：找元素在陣列（或字串）裡的位置，找不到回傳 −1（所以 < 0 代表「不在裡面」） */
     }
     /* 兩個字的筆畫差異（像素比對），畫在 canvas 上：兩個字都有的筆畫是墨色、只有一個有的塗紅（需要瀏覽器的畫布） */
     function drawDiff(canvas, a, b, size) {
@@ -94,7 +120,7 @@
         var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand);
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
-        console.log('[門縫偷看] 第 ' + level + ' 關：答案 ' + q.answer + '，選項 ' + q.options.join('') + '；縫寬 ' + q.gap + ' px、速度 ' + q.speed + ' px/秒；字群平均筆劃範圍 ' + q.strokes.map(function (x) { return x.toFixed(1); }).join('～'));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
+        console.log('[門縫偷看] 第 ' + level + ' 關：答案 ' + q.answer + '，選項 ' + q.options.join('') + '；縫寬 ' + q.gap + ' px、速度 ' + q.speed + ' px/秒；' + q.slits + ' 條縫（' + q.bands.map(function (b) { return (b.dir < 0 ? '←' : '→') + b.delay.toFixed(2); }).join(' ') + '）；字群平均筆劃範圍 ' + q.strokes.map(function (x) { return x.toFixed(1); }).join('～'));  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640, BW = W - 24, BH = Math.min(BW, H - 320);
         var field = h('div', { 'class': 'doorslit-field' });
@@ -104,21 +130,27 @@
         /* 字盒：大大的黑字，上面蓋兩片白色方塊（左、右）；縫在兩片中間 */
         var box = h('div', { 'class': 'doorslit-box' }); box.style.cssText = 'left:12px;top:56px;width:' + BW + 'px;height:' + BH + 'px;';
         var glyph = h('div', { 'class': 'doorslit-glyph', text: q.answer }); glyph.style.fontSize = Math.round(Math.min(BW, BH) * 0.92) + 'px'; glyph.style.lineHeight = BH + 'px';
-        var coverL = h('div', { 'class': 'doorslit-cover doorslit-cover--l' }), coverR = h('div', { 'class': 'doorslit-cover doorslit-cover--r' });
-        box.appendChild(glyph); box.appendChild(coverL); box.appendChild(coverR); field.appendChild(box);
+        box.appendChild(glyph); field.appendChild(box);
         var CW = BW + q.gap + 40;                                                           /* 方塊要夠寬：左方塊的右緣貼著縫、要一路蓋到字的左邊；右方塊的左緣貼著縫、要一路蓋到右邊 */
-        coverL.style.width = CW + 'px'; coverR.style.width = CW + 'px';
-        function setSlit(x) { coverL.style.transform = 'translateX(' + (x - CW).toFixed(1) + 'px)'; coverR.style.transform = 'translateX(' + (x + q.gap).toFixed(1) + 'px)'; }
-        setSlit(-q.gap);                                                                   /* 一開始縫在字的左邊外面：整個字都蓋住 */
+        /* 字從上到下切成 q.slits 層：每層一個 band，裡面有自己的兩片白色方塊（左、右）和一條縫（V1.54.0）。
+           每層的高度用百分比切；除了最後一層，多蓋 1px 跟下一層重疊，免得小數點的接縫透出黑字 */
+        var bands = q.bands.map(function (b) {
+            var el = h('div', { 'class': 'doorslit-band' }), cl = h('div', { 'class': 'doorslit-cover doorslit-cover--l' }), cr = h('div', { 'class': 'doorslit-cover doorslit-cover--r' });
+            el.style.top = (100 * b.row / q.slits).toFixed(4) + '%'; el.style.height = b.row < q.slits - 1 ? 'calc(' + (100 / q.slits).toFixed(4) + '% + 1px)' : (100 / q.slits).toFixed(4) + '%';
+            cl.style.width = CW + 'px'; cr.style.width = CW + 'px'; el.appendChild(cl); el.appendChild(cr); box.appendChild(el);
+            return { b: b, cl: cl, cr: cr };
+        });
+        function setSlit(bd, x) { bd.cl.style.transform = 'translateX(' + (x - CW).toFixed(1) + 'px)'; bd.cr.style.transform = 'translateX(' + (x + q.gap).toFixed(1) + 'px)'; }
+        bands.forEach(function (bd) { setSlit(bd, slitX(0, q.gap, q.speed, BW, bd.b.dir)); });   /* 一開始縫在字的外面（往右掃的在左邊、往左掃的在右邊）：整個字都蓋住 */
         var info = h('div', { 'class': 'qz-note doorslit-info', text: '' }); info.style.top = (56 + BH + 8) + 'px'; field.appendChild(info);
-        var phase = 'sweep', done = false, grid = null, t0 = null, total = sweepSeconds(BW, q.gap, q.speed);
+        var phase = 'sweep', done = false, grid = null, t0 = null, total = totalSeconds(q.bands, BW, q.gap, q.speed), one = sweepSeconds(BW, q.gap, q.speed);
         api.after(LEAD_MS, function () {                /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
             t0 = performance.now();                     /* performance.now()：高精度的時間（毫秒），計時用 */
             var loop = api.my.loop(function (now) {     /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                 if (!box.isConnected) return false;
-                var t = (now - t0) / 1000, x = slitX(t, q.gap, q.speed);
-                setSlit(Math.min(x, BW + q.gap));
-                if (t >= total) { setSlit(BW + q.gap); ask(); return false; }
+                var t = (now - t0) / 1000;
+                bands.forEach(function (bd) { setSlit(bd, slitX(Math.min(one, Math.max(0, t - bd.b.delay)), q.gap, q.speed, BW, bd.b.dir)); });   /* 每條縫各自出發、各自停在掃完的位置 */
+                if (t >= total) { ask(); return false; }
             });
         });
         function ask() {
@@ -134,7 +166,7 @@
             var ok = i === q.answerIdx;
             grid.btns[q.answerIdx].classList.add('doorslit-ok'); if (i >= 0 && !ok) grid.btns[i].classList.add('doorslit-bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             /* 揭曉：兩片白色方塊往兩邊打開，字整個露出來 */
-            coverL.classList.add('doorslit-cover--open'); coverR.classList.add('doorslit-cover--open'); coverL.style.transform = 'translateX(-' + (CW + 20) + 'px)'; coverR.style.transform = 'translateX(' + (BW + 20) + 'px)';
+            bands.forEach(function (bd) { bd.cl.classList.add('doorslit-cover--open'); bd.cr.classList.add('doorslit-cover--open'); bd.cl.style.transform = 'translateX(-' + (CW + 20) + 'px)'; bd.cr.style.transform = 'translateX(' + (BW + 20) + 'px)'; });
             if (ok) { info.textContent = '是「' + q.answer + '」，答對了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1500 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
             info.textContent = '正確「' + q.answer + '」' + (i >= 0 ? '，你選「' + q.options[i] + '」（紅＝差異）' : '（時間到）');
             if (i >= 0) {
@@ -153,13 +185,13 @@
     var G = {
         id: ID,
         name: '門縫偷看',
-        rule: '一個滿版的黑色大字，上面蓋著兩片白色方塊，中間只留一條窄窄的縫。兩片方塊一起由左往右移動，縫就從字的左邊掃到右邊——**你只能透過門縫，一條一條看到經過的筆畫**。掃過去之後，**點出那是哪個字**（四個選項，全是長得很像的字，差別常常就在中間一小段）。大腦會自動把一條一條拼起來，試試看！答錯或來不及就結束，看你能過幾關。越後面，字的筆劃越多、縫越窄、掃得越快！',
+        rule: '一個滿版的黑色大字，上面蓋著白色方塊，把字分成上下好幾層，**每一層都只留一條窄窄的縫**。縫從字的一邊掃到另一邊——**你只能透過門縫，一條一條看到經過的筆畫**。小心：**每一層的縫出發的時間都不一樣，有些還故意從右往左掃**，要在腦中把不同時間、不同方向看到的片段拼起來。掃完之後，**點出那是哪個字**（四個選項，全是長得很像的字，差別常常就在中間一小段）。答錯或來不及就結束，看你能過幾關。越後面，縫的層數越多（1 → 6 層）、字的筆劃越多、縫越窄、掃得越快！',
         mount: mount,
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
-            gapFor: gapFor, speedFor: speedFor, respMs: respMs, strokeRange: strokeRange, slitX: slitX, sweepSeconds: sweepSeconds, exposureSeconds: exposureSeconds, makeLevel: makeLevel, drawDiff: drawDiff, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, GAP: GAP, SPEED: SPEED, STROKES_LO: STROKES_LO, STROKES_HI: STROKES_HI, RESP_S: RESP_S, N_OPT: N_OPT, LEAD_MS: LEAD_MS, MIN_GROUP: MIN_GROUP, MAX_LEVEL: MAX_LEVEL
+            gapFor: gapFor, speedFor: speedFor, slitsFor: slitsFor, makeBands: makeBands, totalSeconds: totalSeconds, respMs: respMs, strokeRange: strokeRange, slitX: slitX, sweepSeconds: sweepSeconds, exposureSeconds: exposureSeconds, makeLevel: makeLevel, drawDiff: drawDiff, rating: rating,
+            RAMP_LEVELS: RAMP_LEVELS, GAP: GAP, SPEED: SPEED, SLITS: SLITS, DELAY_STEP: DELAY_STEP, DELAY_JITTER: DELAY_JITTER, REV_P: REV_P, STROKES_LO: STROKES_LO, STROKES_HI: STROKES_HI, RESP_S: RESP_S, N_OPT: N_OPT, LEAD_MS: LEAD_MS, MIN_GROUP: MIN_GROUP, MAX_LEVEL: MAX_LEVEL
         }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */

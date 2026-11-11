@@ -10,9 +10,12 @@ ok(T.intervalFor(0) === T.INTERVAL[0] && T.intervalFor(T.RAMP_CMDS) === T.INTERV
 ok(T.graceFor(0) === Math.round(T.INTERVAL[0] * T.GRACE) && T.graceFor(T.RAMP_CMDS) === Math.round(T.INTERVAL[1] * T.GRACE), '寬限時間 = 間隔 × ' + T.GRACE);
 ok(near(T.negPFor(0), T.NEG_P[0]) && near(T.negPFor(T.RAMP_CMDS), T.NEG_P[1]), '否定句機率 ' + T.NEG_P);
 ok(T.bothPFor(T.BOTH_FROM - 1) === 0 && near(T.bothPFor(T.BOTH_FROM), T.BOTH_P[0], 1e-9) && near(T.bothPFor(T.RAMP_CMDS), T.BOTH_P[1]), '兩面旗一起：第 ' + T.BOTH_FROM + ' 句起、到頂 ' + T.BOTH_P[1]);
-for (let n = 1; n <= 80; n++) ok(T.intervalFor(n) <= T.intervalFor(n - 1) && T.graceFor(n) <= T.graceFor(n - 1) && T.negPFor(n) >= T.negPFor(n - 1) && T.bothPFor(n) >= T.bothPFor(n - 1), '單調 ' + n);
+ok(T.swapPFor(T.SWAP_FROM - 1) === 0 && near(T.swapPFor(T.SWAP_FROM), T.SWAP_P[0]) && near(T.swapPFor(T.RAMP_CMDS), T.SWAP_P[1]), '對調口令：第 ' + T.SWAP_FROM + ' 句起、到頂 ' + T.SWAP_P[1]);
+for (let n = 1; n <= 80; n++) ok(T.intervalFor(n) <= T.intervalFor(n - 1) && T.graceFor(n) <= T.graceFor(n - 1) && T.negPFor(n) >= T.negPFor(n - 1) && T.bothPFor(n) >= T.bothPFor(n - 1) && T.swapPFor(n) >= T.swapPFor(n - 1), '單調 ' + n);
 { const d = []; for (let n = 1; n <= T.RAMP_CMDS; n++) d.push(T.intervalFor(n - 1) - T.intervalFor(n)); ok(Math.max(...d) - Math.min(...d) <= 1, '間隔線性縮短：每句 −' + Math.min(...d) + '～−' + Math.max(...d) + ' 毫秒'); }
-ok(T.graceFor(T.RAMP_CMDS) >= 500, '最快的時候寬限時間還有 ' + T.graceFor(T.RAMP_CMDS) + ' 毫秒（人反應得過來）');
+ok(T.graceFor(T.RAMP_CMDS) >= 400, '最快的時候寬限時間還有 ' + T.graceFor(T.RAMP_CMDS) + ' 毫秒（人反應得過來）');
+// V1.54.0 玩家意見「難度太低，縮短時間限制」：間隔與寬限都比原本（2200 → 950、62%）短
+ok(T.INTERVAL[0] <= 1800 && T.INTERVAL[1] <= 800 && T.GRACE <= 0.62 && T.RAMP_CMDS <= 40, '時間限制縮短：間隔 ' + T.INTERVAL + '、寬限比例 ' + T.GRACE + '、' + T.RAMP_CMDS + ' 句到頂');
 
 // ── 套用口令 ──
 ok(JSON.stringify(T.applyCommand({ L: false, R: true }, { kind: 'raise', flags: ['L'], to: true })) === '{"L":true,"R":true}', '紅旗舉起來：紅旗該舉著、白旗不變');
@@ -25,13 +28,17 @@ ok(T.wrongFlags({ L: true, R: false }, { L: false, R: true }).join() === 'L,R' &
 ok(T.describeState({ L: true, R: false }) === '紅旗舉著、白旗放下', 'describeState');
 
 // ── 產生口令：長期模擬 ──
-let req = { L: false, R: false }, prev = null, total = 0, st = { raise: 0, lower: 0, keep: 0, both: 0, negUp: 0, negDown: 0, same: 0, single: 0 }, text = new Set();
+let req = { L: false, R: false }, prev = null, total = 0, st = { raise: 0, lower: 0, keep: 0, both: 0, swap: 0, negUp: 0, negDown: 0, same: 0, single: 0 }, text = new Set();
 for (let i = 0; i < 60000; i++) {
   const count = i % 60, cmd = T.nextCommand(req, prev, count, rnd); total++; text.add(cmd.text);
-  ok(['raise', 'lower', 'keep'].includes(cmd.kind) && cmd.flags.length >= 1 && cmd.flags.every(f => f === 'L' || f === 'R'), '口令的種類與旗子');
-  ok((cmd.kind === 'keep') === (cmd.to === null) && (cmd.kind === 'raise' ? cmd.to === true : cmd.kind === 'lower' ? cmd.to === false : true), 'to 與種類對得上');
-  ok(/^(紅旗|白旗)(舉起來|放下|不要舉|不舉|不要放下)$/.test(cmd.text) || /^兩面旗一起(舉起來|放下)$/.test(cmd.text), '口令文字格式：' + cmd.text);
-  if (cmd.flags.length === 2) { st.both++; ok(count >= T.BOTH_FROM, '兩面旗一起只在第 ' + T.BOTH_FROM + ' 句之後：' + count); }
+  ok(['raise', 'lower', 'keep', 'swap'].includes(cmd.kind) && cmd.flags.length >= 1 && cmd.flags.every(f => f === 'L' || f === 'R'), '口令的種類與旗子');
+  ok(((cmd.kind === 'keep' || cmd.kind === 'swap') === (cmd.to === null)) && (cmd.kind === 'raise' ? cmd.to === true : cmd.kind === 'lower' ? cmd.to === false : true), 'to 與種類對得上');
+  ok(/^(紅旗|白旗)(舉起來|放下|不要舉|不舉|不要放下)$/.test(cmd.text) || /^兩面旗一起(舉起來|放下)$/.test(cmd.text) || /^(紅旗|白旗)(舉起來|放下)、(紅旗|白旗)(舉起來|放下)$/.test(cmd.text), '口令文字格式：' + cmd.text);
+  if (cmd.kind === 'swap') {
+    st.swap++; ok(count >= T.SWAP_FROM, '對調只在第 ' + T.SWAP_FROM + ' 句之後：' + count);
+    ok(req.L !== req.R && cmd.flags.length === 2 && cmd.set.L === !req.L && cmd.set.R === !req.R, '對調只在兩面旗一高一低時出，兩面旗都要換狀態：' + cmd.text);
+    ok(cmd.text.split('、').length === 2 && cmd.text.indexOf('紅旗') >= 0 && cmd.text.indexOf('白旗') >= 0 && cmd.text.indexOf(cmd.set.L ? '紅旗舉起來' : '紅旗放下') >= 0 && cmd.text.indexOf(cmd.set.R ? '白旗舉起來' : '白旗放下') >= 0, '對調的文字跟 set 一致（一手舉、一手放）：' + cmd.text);
+  } else if (cmd.flags.length === 2) { st.both++; ok(count >= T.BOTH_FROM, '兩面旗一起只在第 ' + T.BOTH_FROM + ' 句之後：' + count); }
   if (cmd.kind === 'keep') { const f = cmd.flags[0]; st.keep++; if (/不要放下/.test(cmd.text)) { st.negDown++; ok(req[f] === true, '「不要放下」只在旗子現在舉著的時候出'); } else { st.negUp++; ok(req[f] === false && /不要舉|不舉/.test(cmd.text), '「不要舉／不舉」只在旗子現在放下的時候出'); } ok(cmd.text.startsWith(T.NAMES[f]), '否定句點名的旗子'); }
   if (cmd.kind === 'raise') st.raise++; if (cmd.kind === 'lower') st.lower++;
   if (prev && prev.flags.length === 1 && cmd.flags.length === 1) { st.single++; if (prev.flags[0] === cmd.flags[0]) st.same++; }
@@ -40,12 +47,28 @@ for (let i = 0; i < 60000; i++) {
 }
 console.log('口令分布 ' + JSON.stringify(st) + '；不同的口令文字 ' + text.size + ' 種');
 ok(text.size >= 10, '口令文字有變化（紅白×舉放不要…）：' + text.size);
-ok(st.raise > 8000 && st.lower > 8000 && st.keep > 6000 && st.both > 1500, '各類口令都有出現');
+ok(st.raise > 8000 && st.lower > 8000 && st.keep > 4000 && st.both > 1500 && st.swap > 1500, '各類口令都有出現（含對調 ' + st.swap + ' 句）');
 ok(st.negUp > 1500 && st.negDown > 1500, '兩種否定句都有出現（不要舉／不要放下）');
 { const rate = st.same / st.single; ok(rate > 0.55 && rate < 0.85, '連續同一面旗子的比例偏高：' + (100 * rate).toFixed(0) + '%（SAME_P ' + T.SAME_P + ' ＋ 隨機）'); }
 // 否定句比例隨答對句數增加
 { function negRate(n) { let rq = { L: false, R: false }, pv = null, k = 0, N = 20000; for (let i = 0; i < N; i++) { const c = T.nextCommand(rq, pv, n, rnd); if (c.kind === 'keep') k++; rq = T.applyCommand(rq, c); pv = c; } return k / N; }
-  const a = negRate(0), b = negRate(40); ok(b > a + 0.1, '否定句越後面越多（到頂還要扣掉「兩面一起」佔的 30%）：' + (100 * a).toFixed(0) + '% → ' + (100 * b).toFixed(0) + '%'); }
+  const a = negRate(0), b = negRate(40); ok(b > a + 0.04, '否定句越後面越多（到頂還要扣掉「兩面一起」「對調」佔的機率）：' + (100 * a).toFixed(0) + '% → ' + (100 * b).toFixed(0) + '%'); }
+
+// ── V1.54.0 對調口令：一手放下、另一手同時舉起 ──
+{ const a = T.nextCommand({ L: true, R: false }, null, 40, (() => { let i = 0; const v = [0.0, 0.3]; return () => v[i++ % v.length]; })());
+  ok(a.kind === 'swap' && a.text === '紅旗放下、白旗舉起來' && JSON.stringify(a.set) === '{"L":false,"R":true}', '紅旗舉著、白旗放下 → 「紅旗放下、白旗舉起來」：' + a.text);
+  const b = T.nextCommand({ L: true, R: false }, null, 40, (() => { let i = 0; const v = [0.0, 0.9]; return () => v[i++ % v.length]; })());
+  ok(b.kind === 'swap' && b.text === '白旗舉起來、紅旗放下', '也會先講另一面旗：' + b.text);
+  ok(JSON.stringify(T.applyCommand({ L: true, R: false }, a)) === '{"L":false,"R":true}' && JSON.stringify(T.applyCommand({ L: false, R: true }, T.nextCommand({ L: false, R: true }, null, 40, () => 0))) === '{"L":true,"R":false}', 'applyCommand：對調兩面旗');
+  // 兩面旗一樣高的時候不會出對調
+  for (let i = 0; i < 3000; i++) { const s = rnd() < 0.5, c = T.nextCommand({ L: s, R: s }, null, 60, rnd); ok(c.kind !== 'swap', '兩面旗同高不出對調'); }
+  // 前 SWAP_FROM 句不會出；後面越來越多
+  for (let i = 0; i < 3000; i++) ok(T.nextCommand({ L: true, R: false }, null, T.SWAP_FROM - 1, rnd).kind !== 'swap', '還沒到第 ' + T.SWAP_FROM + ' 句不出對調');
+  { const rate = n => { let k = 0, N = 20000; for (let i = 0; i < N; i++) if (T.nextCommand({ L: true, R: false }, null, n, rnd).kind === 'swap') k++; return k / N; }; const r0 = rate(T.SWAP_FROM), r1 = rate(T.RAMP_CMDS); console.log('一高一低時對調的比例：第 ' + T.SWAP_FROM + ' 句 ' + (100 * r0).toFixed(0) + '% → 到頂 ' + (100 * r1).toFixed(0) + '%'); ok(r0 < 0.03 && r1 > 0.3 && r1 < 0.5, '對調比例 0 → 約 ' + 100 * T.SWAP_P[1] + '%'); }
+  // 玩家只動一隻手（另一隻不動）→ 對調一定錯；兩手都換才對
+  const sw = { kind: 'swap', flags: ['L', 'R'], to: null, set: { L: false, R: true } }, rq = T.applyCommand({ L: true, R: false }, sw);
+  ok(!T.consistent({ L: false, R: false }, rq) && !T.consistent({ L: true, R: true }, rq) && T.consistent({ L: false, R: true }, rq) && T.wrongFlags({ L: true, R: false }, rq).join() === 'L,R', '對調：只動一隻手不算數，兩手都要換');
+}
 
 // ── 判定規則的模擬：完美玩家永遠不會錯；少動一下／亂動就錯 ──
 function simulate(policy) {   // policy(cmd, actual, req) 回傳「寬限時間內玩家把旗子調成什麼」；回傳第幾句錯了（沒錯回傳 −1）
@@ -78,7 +101,7 @@ ok(T.rating(3) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20)
   const a0 = actionRate(0, 30000), a20 = actionRate(20, 30000), a40 = actionRate(40, 30000), a80 = actionRate(80, 30000);
   console.log('要動手指的口令比例：第 0 句 ' + (100 * a0.act).toFixed(0) + '%、20 句 ' + (100 * a20.act).toFixed(0) + '%、40 句 ' + (100 * a40.act).toFixed(0) + '%');
   ok(a0.act >= 0.8 && a20.act >= 0.7 && a40.act >= 0.65 && a80.act >= 0.65, '大部分口令都要按住或放開（原本只有一半）');
-  ok(a0.up >= 0.3 && a0.down >= 0.3 && a40.up >= 0.25 && a40.down >= 0.25, '按住（舉起來）和放開（放下）的口令都常常出現');
+  ok(a0.up >= 0.3 && a0.down >= 0.3 && a40.up >= 0.2 && a40.down >= 0.2, '按住（舉起來）和放開（放下）的口令都常常出現');
   ok(T.CHANGE_P >= 0.85 && T.NEG_P[0] <= 0.1 && T.NEG_P[1] <= 0.3, '不用動的「不要」類口令機率降低：' + T.NEG_P);
   // 兩面旗一起：永遠往至少一面會動的方向
   for (let i = 0; i < 4000; i++) { const rq = { L: rnd() < 0.5, R: rnd() < 0.5 }, c = T.nextCommand(rq, null, 60, rnd); if (c.flags.length === 2) { const nq = T.applyCommand(rq, c); ok(nq.L !== rq.L || nq.R !== rq.R, '兩面旗一起一定有旗子會動：' + JSON.stringify(rq) + ' ' + c.text); } }
@@ -88,5 +111,6 @@ ok(T.rating(3) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20)
   ok(/\.flags-grace__fill \{[^}]*background: var\(--c-blue\)/.test(css) && /\.flags-grace \{[^}]*bottom: 10px/.test(css) && /@keyframes flags-grace \{ from \{ transform: scaleX\(1\);[^}]*\} to \{ transform: scaleX\(0\);/.test(css), '藍色橫條在口令框下緣，從滿縮到空');
   ok(/flags-cmd--inL/.test(src) && /flags-cmd--inR/.test(src) && /cmdNo % 2/.test(src) && /Sfx\.play\('pop'\)/.test(src), '換新口令：左右交替滑進來、啵一聲');
   ok(/\.flags-cmd--inL \{ animation: flags-in-l 0\.26s[^}]*flags-flash 0\.45s/.test(css) && /@keyframes flags-flash \{ from \{ background: var\(--c-yellow\);/.test(css), '換新口令的動畫很快（0.26 秒滑進、0.45 秒閃色）');
-  ok(/藍色橫條/.test(G.rule), '玩法說明提到藍色橫條'); }
+  ok(/藍色橫條/.test(G.rule), '玩法說明提到藍色橫條');
+  ok(/一手放下、另一手同時舉起/.test(G.rule) && /雙手一起動/.test(G.rule), '玩法說明提到雙手一起動、一手放下另一手舉起'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

@@ -6,160 +6,234 @@
 
 /* ═══ 舉旗子（.flags-）═══ */
 .flags-stage {
-    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
-    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
-    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
+    touch-action: none;
+    /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;
+    /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;
+    /* 文字不能被選取（避免拖曳時誤選） */
 }
 
 /* 「flags-field」這個元素的樣式 */
 .flags-field {
-    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
-    left: 0;                                            /* 離左邊 0 */
-    top: 0;                                             /* 離上邊 0 */
-    right: 0;                                           /* 離右邊 0 */
-    bottom: 0;                                          /* 離下邊 0 */
-    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    position: absolute;
+    /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;
+    /* 離左邊 0 */
+    top: 0;
+    /* 離上邊 0 */
+    right: 0;
+    /* 離右邊 0 */
+    bottom: 0;
+    /* 離下邊 0 */
+    touch-action: none;
+    /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
 }
 
 /* 左右半邊的按壓區：左＝紅旗、右＝白旗；按住時變深 */
 .flags-pad {
-    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
-    top: 0;                                             /* 離上邊 0 */
-    bottom: 0;                                          /* 離下邊 0 */
-    width: 50%;                                         /* 寬度：50% */
-    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
-    align-items: flex-end;                              /* 子元素靠交叉方向的終點（橫排時靠下） */
-    justify-content: center;                            /* 子元素沿排列方向置中 */
-    padding-bottom: 16px;                               /* 下方內縮：16px */
-    transition: background 0.1s;                        /* 狀態改變時的過渡動畫（屬性、時間、緩動）：background 0.1s */
+    position: absolute;
+    /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    top: 0;
+    /* 離上邊 0 */
+    bottom: 0;
+    /* 離下邊 0 */
+    width: 50%;
+    /* 寬度：50% */
+    display: flex;
+    /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: flex-end;
+    /* 子元素靠交叉方向的終點（橫排時靠下） */
+    justify-content: center;
+    /* 子元素沿排列方向置中 */
+    padding-bottom: 16px;
+    /* 下方內縮：16px */
+    transition: background 0.1s;
+    /* 狀態改變時的過渡動畫（屬性、時間、緩動）：background 0.1s */
 }
 
 /* 「flags-pad」的「L」變化版的樣式 */
 .flags-pad--L {
-    left: 0;                                            /* 離左邊 0 */
-    background: var(--flg-red-soft);                    /* 背景：主題變數 --flg-red-soft */
-    border-right: 2px dashed var(--c-ink-soft);         /* 右邊框：2px dashed 主題變數 --c-ink-soft */
+    left: 0;
+    /* 離左邊 0 */
+    background: var(--flg-red-soft);
+    /* 背景：主題變數 --flg-red-soft */
+    border-right: 2px dashed var(--c-ink-soft);
+    /* 右邊框：2px dashed 主題變數 --c-ink-soft */
 }
 
 /* 「flags-pad」的「R」變化版的樣式 */
 .flags-pad--R {
-    right: 0;                                           /* 離右邊 0 */
-    background: var(--flg-white-soft);                  /* 背景：主題變數 --flg-white-soft */
+    right: 0;
+    /* 離右邊 0 */
+    background: var(--flg-white-soft);
+    /* 背景：主題變數 --flg-white-soft */
 }
 
 /* 「flags-pad」的「down」變化版（同時有 .flags-pad--L）的樣式 */
 .flags-pad--L.flags-pad--down {
-    background: var(--flg-red-down);                    /* 背景：主題變數 --flg-red-down */
+    background: var(--flg-red-down);
+    /* 背景：主題變數 --flg-red-down */
 }
 
 /* 「flags-pad」的「down」變化版（同時有 .flags-pad--R）的樣式 */
 .flags-pad--R.flags-pad--down {
-    background: var(--flg-white-down);                  /* 背景：主題變數 --flg-white-down */
+    background: var(--flg-white-down);
+    /* 背景：主題變數 --flg-white-down */
 }
 
 /* 「flags-pad」裡面的「t」部分的樣式 */
 .flags-pad__t {
-    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
-    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
-    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
-    text-align: center;                                 /* 文字置中 */
-    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    color: var(--c-ink);
+    /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-md);
+    /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);
+    /* 字重（粗細）：主題變數 --fw-bold */
+    text-align: center;
+    /* 文字置中 */
+    pointer-events: none;
+    /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 口令 */
 .flags-cmd {
-    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
-    left: 12px;                                         /* 離左邊 12px */
-    right: 12px;                                        /* 離右邊 12px */
-    top: 14px;                                          /* 離上邊 14px */
-    padding: var(--sp-3) var(--sp-2);                   /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-3、下 主題變數、左 --sp-2 */
-    background: var(--c-card);                          /* 背景：主題變數 --c-card */
-    border: 4px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --c-ink-soft */
-    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
-    box-shadow: var(--shadow-card);                     /* 方塊陰影（立體感） */
-    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
-    font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
-    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
-    text-align: center;                                 /* 文字置中 */
-    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
-    z-index: 2;                                         /* 疊放順序：數字越大越在上面（2） */
-    padding-bottom: calc(var(--sp-3) + 18px);           /* 下方內縮：calc(主題變數 --sp-3 + 18px) */
+    position: absolute;
+    /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 12px;
+    /* 離左邊 12px */
+    right: 12px;
+    /* 離右邊 12px */
+    top: 14px;
+    /* 離上邊 14px */
+    padding: var(--sp-3) var(--sp-2);
+    /* 內縮（padding，內容跟邊框的距離）：上 主題變數、右 --sp-3、下 主題變數、左 --sp-2 */
+    background: var(--c-card);
+    /* 背景：主題變數 --c-card */
+    border: 4px solid var(--c-ink-soft);
+    /* 邊框（粗細、線型、顏色）：4px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-lg);
+    /* 圓角：主題變數 --r-lg */
+    box-shadow: var(--shadow-card);
+    /* 方塊陰影（立體感） */
+    color: var(--c-ink);
+    /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-xxl);
+    /* 字級：主題變數 --fs-xxl */
+    font-weight: var(--fw-black);
+    /* 字重（粗細）：主題變數 --fw-black */
+    text-align: center;
+    /* 文字置中 */
+    pointer-events: none;
+    /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 2;
+    /* 疊放順序：數字越大越在上面（2） */
+    padding-bottom: calc(var(--sp-3) + 18px);
+    /* 下方內縮：calc(主題變數 --sp-3 + 18px) */
     /* 下緣留位置給寬限時間的藍色橫條 */
 }
 
 /* 換新口令的表演（V1.38.0，要快：0.26 秒滑進來、0.45 秒閃一下）：左右兩邊交替滑進來，連續兩句一模一樣的口令也看得出是新的 */
 .flags-cmd--inL {
-    animation: flags-in-l 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.15), flags-flash 0.45s ease-out;  /* 播放動畫（名稱、時間、緩動、次數）：flags-in-l 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.15) */
+    animation: flags-in-l 0.2s cubic-bezier(0.1, 0.45, 0.15, 1.075), flags-flash 0.33s ease-out;
+    /* 播放動畫（名稱、時間、緩動、次數）原有參數：flags-in-l 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.15) */
 }
 
 /* 「flags-cmd」的「inR」變化版的樣式 */
 .flags-cmd--inR {
-    animation: flags-in-r 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.15), flags-flash 0.45s ease-out;  /* 播放動畫（名稱、時間、緩動、次數）：flags-in-r 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.15) */
+    animation: flags-in-r 0.2s cubic-bezier(0.1, 0.45, 0.15, 1.75), flags-flash 0.33s ease-out;
+    /* 播放動畫（名稱、時間、緩動、次數）原有參數：flags-in-r 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.15) */
 }
 
 /* 動畫 flags-in-l：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes flags-in-l {
     from {
-        transform: translateX(-70%) scale(1.1);         /* 變形：水平移動 -70% 縮放 1.1 倍 */
-        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
+        transform: translateX(-70%) scale(1.1);
+        /* 變形：水平移動 -70% 縮放 1.1 倍 */
+        opacity: 0;
+        /* 透明度 0（1＝完全不透明、0＝全透明） */
     }
 
     to {
-        transform: none;                                /* 變形：none */
-        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
+        transform: none;
+        /* 變形：none */
+        opacity: 1;
+        /* 透明度 1（1＝完全不透明、0＝全透明） */
     }
 }
 
 /* 動畫 flags-in-r：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes flags-in-r {
     from {
-        transform: translateX(70%) scale(1.1);          /* 變形：水平移動 70% 縮放 1.1 倍 */
-        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
+        transform: translateX(70%) scale(1.1);
+        /* 變形：水平移動 70% 縮放 1.1 倍 */
+        opacity: 0;
+        /* 透明度 0（1＝完全不透明、0＝全透明） */
     }
 
     to {
-        transform: none;                                /* 變形：none */
-        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
+        transform: none;
+        /* 變形：none */
+        opacity: 1;
+        /* 透明度 1（1＝完全不透明、0＝全透明） */
     }
 }
 
 /* 動畫 flags-flash：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes flags-flash {
     from {
-        background: var(--c-yellow);                    /* 背景：主題變數 --c-yellow */
-        border-color: var(--c-orange);                  /* 邊框顏色：主題變數 --c-orange */
+        background: var(--c-yellow);
+        /* 背景：主題變數 --c-yellow */
+        border-color: var(--c-orange);
+        /* 邊框顏色：主題變數 --c-orange */
     }
 
     to {
-        background: var(--c-card);                      /* 背景：主題變數 --c-card */
-        border-color: var(--c-ink-soft);                /* 邊框顏色：主題變數 --c-ink-soft */
+        background: var(--c-card);
+        /* 背景：主題變數 --c-card */
+        border-color: var(--c-ink-soft);
+        /* 邊框顏色：主題變數 --c-ink-soft */
     }
 }
 
 /* 寬限時間（V1.38.0）：口令框下緣的藍色橫條，口令一出現就從滿縮到空；時間長度由 JS 設在 animation-duration（每句不一樣） */
 .flags-grace {
-    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
-    left: 14px;                                         /* 離左邊 14px */
-    right: 14px;                                        /* 離右邊 14px */
-    bottom: 10px;                                       /* 離下邊 10px */
-    height: 12px;                                       /* 高度：12px */
-    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill */
-    background: var(--c-blue-soft);                     /* 背景：主題變數 --c-blue-soft */
-    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+    position: absolute;
+    /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 14px;
+    /* 離左邊 14px */
+    right: 14px;
+    /* 離右邊 14px */
+    bottom: 10px;
+    /* 離下邊 10px */
+    height: 12px;
+    /* 高度：12px */
+    border-radius: var(--r-pill);
+    /* 圓角：主題變數 --r-pill */
+    background: var(--c-blue-soft);
+    /* 背景：主題變數 --c-blue-soft */
+    overflow: hidden;
+    /* 超出範圍的內容裁掉不顯示 */
 }
 
 /* 「flags-grace」裡面的「fill」部分的樣式 */
 .flags-grace__fill {
-    height: 100%;                                       /* 高度：100% */
-    border-radius: inherit;                             /* 圓角：inherit */
-    background: var(--c-blue);                          /* 背景：主題變數 --c-blue */
-    transform-origin: left center;                      /* 變形的基準點：left center */
-    transform: scaleX(0);                               /* 變形：scaleX(0) */
+    height: 100%;
+    /* 高度：100% */
+    border-radius: inherit;
+    /* 圓角：inherit */
+    background: var(--c-blue);
+    /* 背景：主題變數 --c-blue */
+    transform-origin: left center;
+    /* 變形的基準點：left center */
+    transform: scaleX(0);
+    /* 變形：scaleX(0) */
 }
 
 /* 「flags-grace__fill」的「run」變化版的樣式 */
 .flags-grace__fill--run {
-    transform: scaleX(1);                               /* 變形：scaleX(1) */
+    transform: scaleX(1);
+    /* 變形：scaleX(1) */
     animation-name: flags-grace;
     animation-timing-function: linear;
     animation-fill-mode: forwards;
@@ -168,127 +242,186 @@
 /* 動畫 flags-grace：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
 @keyframes flags-grace {
     from {
-        transform: scaleX(1);                           /* 變形：scaleX(1) */
+        transform: scaleX(1);
+        /* 變形：scaleX(1) */
     }
 
     to {
-        transform: scaleX(0);                           /* 變形：scaleX(0) */
+        transform: scaleX(0);
+        /* 變形：scaleX(0) */
     }
 }
 
 /* 「flags-cmd」在「錯誤（失敗）時」的樣子的樣式 */
 .flags-cmd--bad {
-    border-color: var(--c-bad-light);                   /* 邊框顏色：主題變數 --c-bad-light */
-    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
+    border-color: var(--c-bad-light);
+    /* 邊框顏色：主題變數 --c-bad-light */
+    background: var(--c-bad-soft);
+    /* 背景：主題變數 --c-bad-soft */
 }
 
 /* 小人與旗子 */
 .flags-svg {
-    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
-    display: block;                                     /* 獨佔一整行的區塊 */
-    overflow: visible;                                  /* 超出的內容照樣顯示 */
-    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+    position: absolute;
+    /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    display: block;
+    /* 獨佔一整行的區塊 */
+    overflow: visible;
+    /* 超出的內容照樣顯示 */
+    pointer-events: none;
+    /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 「flags-head」這個元素的樣式 */
 .flags-head {
-    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
-    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
-    stroke-width: 4;                                    /* SVG 線條粗細：4 */
+    fill: var(--c-card);
+    /* SVG 圖形的填色：主題變數 --c-card */
+    stroke: var(--c-ink-soft);
+    /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 4;
+    /* SVG 線條粗細：4 */
 }
 
 /* 「flags-body」這個元素的樣式 */
 .flags-body {
-    fill: var(--flg-shirt);                             /* SVG 圖形的填色：主題變數 --flg-shirt */
-    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
-    stroke-width: 4;                                    /* SVG 線條粗細：4 */
-    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+    fill: var(--flg-shirt);
+    /* SVG 圖形的填色：主題變數 --flg-shirt */
+    stroke: var(--c-ink-soft);
+    /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 4;
+    /* SVG 線條粗細：4 */
+    stroke-linejoin: round;
+    /* SVG 線條轉角形狀：round */
 }
 
 /* 「flags-arm」這個元素的樣式 */
 .flags-arm {
-    transform-origin: 0 0;                              /* 變形的基準點：0 0 */
-    transition: transform 0.22s ease-out;               /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.22s ease-out */
+    transform-origin: 0 0;
+    /* 變形的基準點：0 0 */
+    transition: transform 0.22s ease-out;
+    /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.22s ease-out */
 }
 
 /* 「flags-stick」這個元素的樣式 */
 .flags-stick {
-    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
-    stroke-width: 6;                                    /* SVG 線條粗細：6 */
-    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke: var(--c-ink);
+    /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 6;
+    /* SVG 線條粗細：6 */
+    stroke-linecap: round;
+    /* SVG 線條端點形狀：round */
 }
 
 /* 「flags-cloth」這個元素的樣式 */
 .flags-cloth {
-    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
-    stroke-width: 3;                                    /* SVG 線條粗細：3 */
-    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+    stroke: var(--c-ink);
+    /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;
+    /* SVG 線條粗細：3 */
+    stroke-linejoin: round;
+    /* SVG 線條轉角形狀：round */
 }
 
 /* 「flags-cloth」的「L」變化版的樣式 */
 .flags-cloth--L {
-    fill: var(--flg-red);                               /* SVG 圖形的填色：主題變數 --flg-red */
+    fill: var(--flg-red);
+    /* SVG 圖形的填色：主題變數 --flg-red */
 }
 
 /* 「flags-cloth」的「R」變化版的樣式 */
 .flags-cloth--R {
-    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    fill: var(--c-card);
+    /* SVG 圖形的填色：主題變數 --c-card */
 }
 
 /* 「flags-info」這個元素的樣式 */
 .flags-info {
-    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
-    left: 0;                                            /* 離左邊 0 */
-    right: 0;                                           /* 離右邊 0 */
-    bottom: 84px;                                       /* 離下邊 84px */
-    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
-    text-align: center;                                 /* 文字置中 */
-    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
-    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
-    z-index: 2;                                         /* 疊放順序：數字越大越在上面（2） */
+    position: absolute;
+    /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;
+    /* 離左邊 0 */
+    right: 0;
+    /* 離右邊 0 */
+    bottom: 84px;
+    /* 離下邊 84px */
+    padding: 0 var(--sp-3);
+    /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
+    text-align: center;
+    /* 文字置中 */
+    font-weight: var(--fw-bold);
+    /* 字重（粗細）：主題變數 --fw-bold */
+    pointer-events: none;
+    /* 不接收點擊／觸控（點下去會穿過去） */
+    z-index: 2;
+    /* 疊放順序：數字越大越在上面（2） */
 }
 
 /* 失敗：該有的旗子和你的旗子並排，不一樣的標紅 */
 .flags-cmp {
-    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
-    left: 12px;                                         /* 離左邊 12px */
-    right: 12px;                                        /* 離右邊 12px */
-    top: 368px;                                         /* 離上邊 368px */
-    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
-    justify-content: center;                            /* 子元素沿排列方向置中 */
-    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
-    z-index: 3;                                         /* 疊放順序：數字越大越在上面（3） */
+    position: absolute;
+    /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 12px;
+    /* 離左邊 12px */
+    right: 12px;
+    /* 離右邊 12px */
+    top: 368px;
+    /* 離上邊 368px */
+    display: flex;
+    /* 彈性盒子：子元素排成一列（或一欄） */
+    justify-content: center;
+    /* 子元素沿排列方向置中 */
+    gap: var(--sp-3);
+    /* 子元素之間的空隙：主題變數 --sp-3 */
+    z-index: 3;
+    /* 疊放順序：數字越大越在上面（3） */
 }
 
 /* 「flags-cmp」裡面的「col」部分的樣式 */
 .flags-cmp__col {
-    flex: 1;                                            /* 有剩餘空間就平分長大（flex: 1） */
-    padding: var(--sp-2);                               /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --sp-2 */
-    background: var(--c-card);                          /* 背景：主題變數 --c-card */
-    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
-    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
-    box-shadow: var(--shadow-pop);                      /* 方塊陰影（立體感） */
-    text-align: center;                                 /* 文字置中 */
+    flex: 1;
+    /* 有剩餘空間就平分長大（flex: 1） */
+    padding: var(--sp-2);
+    /* 內縮（padding，內容跟邊框的距離）：上下 主題變數、左右 --sp-2 */
+    background: var(--c-card);
+    /* 背景：主題變數 --c-card */
+    border: 3px solid var(--c-ink-soft);
+    /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-md);
+    /* 圓角：主題變數 --r-md */
+    box-shadow: var(--shadow-pop);
+    /* 方塊陰影（立體感） */
+    text-align: center;
+    /* 文字置中 */
 }
 
 /* 「flags-cmp」裡面的「t」部分的樣式 */
 .flags-cmp__t {
-    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
-    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
-    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);
+    /* 文字顏色：主題變數 --c-ink-soft */
+    font-size: var(--fs-sm);
+    /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);
+    /* 字重（粗細）：主題變數 --fw-bold */
 }
 
 /* 「flags-cmp」裡面的「flag」部分的樣式 */
 .flags-cmp__flag {
-    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
-    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
-    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
-    line-height: 1.5;                                   /* 行高：1.5（文字每一行佔的高度） */
+    color: var(--c-ink);
+    /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-md);
+    /* 字級：主題變數 --fs-md */
+    font-weight: var(--fw-bold);
+    /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: 1.5;
+    /* 行高：1.5（文字每一行佔的高度） */
 }
 
 /* 「flags-cmp__flag」在「錯誤（失敗）時」的樣子的樣式 */
 .flags-cmp__flag--bad {
-    color: var(--c-bad);                                /* 文字顏色：主題變數 --c-bad */
-    background: var(--c-bad-soft);                      /* 背景：主題變數 --c-bad-soft */
-    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    color: var(--c-bad);
+    /* 文字顏色：主題變數 --c-bad */
+    background: var(--c-bad-soft);
+    /* 背景：主題變數 --c-bad-soft */
+    border-radius: var(--r-sm);
+    /* 圓角：主題變數 --r-sm */
 }

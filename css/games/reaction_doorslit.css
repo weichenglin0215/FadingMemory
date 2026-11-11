@@ -52,7 +52,15 @@
     text-align: center;                                 /* 文字置中 */
 }
 
-/* 兩片白色方塊：JS 每個畫格用 transform 讓它們一起往右移，中間留一條縫 */
+/* 一層（V1.54.0）：字從上到下切成幾層，每層是一個橫條，裡面有自己的兩片白色方塊和一條縫；位置與高度由 JS 設定 */
+.doorslit-band {
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    width: 100%;                                        /* 寬度：100% */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示（方塊移到橫條外面就看不到） */
+}
+
+/* 兩片白色方塊：JS 每個畫格用 transform 讓它們一起移動（往右或往左），中間留一條縫 */
 .doorslit-cover {
     position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
     left: 0;                                            /* 離左邊 0 */
@@ -62,15 +70,7 @@
     will-change: transform;                             /* 提示瀏覽器這個屬性會變動，先準備好（讓動畫更順） */
 }
 
-/* 「doorslit-cover」的「l」變化版的樣式 */
-.doorslit-cover--l {
-    border-right: 3px solid var(--dsl-door);            /* 右邊框：3px solid 主題變數 --dsl-door */
-}
-
-/* 「doorslit-cover」的「r」變化版的樣式 */
-.doorslit-cover--r {
-    border-left: 3px solid var(--dsl-door);             /* 左邊框：3px solid 主題變數 --dsl-door */
-}
+/* V1.54.0：拿掉縫兩側那兩條直的咖啡色線（原本 .doorslit-cover--l 的右邊框、--r 的左邊框） */
 
 /* 揭曉時往兩邊打開 */
 .doorslit-cover--open {

@@ -21,7 +21,33 @@ ok(T.slitX(0, 40, 300) === -40 && near(T.slitX(1, 40, 300), 260) && near(T.slitX
 // 整個字每一條都會被縫掃到：把時間切成小格，縫蓋過的範圍聯集要覆蓋 [0, W]（沒有漏掉的條紋）
 for (const [gap, sp] of [[60, 300], [30, 380], [8, 460]]) { const W = 440, total = T.sweepSeconds(W, gap, sp), covered = new Uint8Array(W); const dt = 1 / 120; for (let t = 0; t <= total + dt; t += dt) { const x = T.slitX(t, gap, sp); for (let px = Math.max(0, Math.floor(x)); px < Math.min(W, Math.ceil(x + gap)); px++) covered[px] = 1; } ok(covered.every(v => v === 1), '120 fps 取樣：縫 ' + gap + ' px、速度 ' + sp + '：整個字（0～' + W + '）每個位置都被縫掃過'); }
 ok(near(T.exposureSeconds(8, 460), 8 / 460) && near(T.exposureSeconds(60, 300), 0.2), '每個位置在縫裡出現 縫寬／速度 秒');
-{ const e = T.exposureSeconds(T.gapFor(T.RAMP_LEVELS), T.speedFor(T.RAMP_LEVELS)), e1 = T.exposureSeconds(T.gapFor(1), T.speedFor(1)); ok(e < 0.02 && e1 > 0.15 && e1 / e > 8, '第 1 關每條露出 ' + (e1 * 1000).toFixed(0) + ' 毫秒、到頂只有 ' + (e * 1000).toFixed(1) + ' 毫秒'); }
+{ const e = T.exposureSeconds(T.gapFor(T.RAMP_LEVELS), T.speedFor(T.RAMP_LEVELS)), e1 = T.exposureSeconds(T.gapFor(1), T.speedFor(1)); ok(e < 0.02 && e1 > 0.12 && e1 / e > 8, '第 1 關每條露出 ' + (e1 * 1000).toFixed(0) + ' 毫秒、到頂只有 ' + (e * 1000).toFixed(1) + ' 毫秒'); }
+
+// ── V1.54.0 玩家意見：門縫分成上下多條（1 → 6）、每條出發時間不同、有些從右往左、拿掉縫兩側的咖啡色線 ──
+ok(T.slitsFor(1) === T.SLITS[0] && T.slitsFor(T.RAMP_LEVELS) === T.SLITS[1] && T.slitsFor(99) === T.SLITS[1] && T.SLITS.join() === '1,6', '縫的條數：第 1 關 1 條 → 到頂 6 條');
+for (let l = 2; l <= 60; l++) ok(T.slitsFor(l) >= T.slitsFor(l - 1), '條數單調 ' + l);
+{ const seen = new Set(); for (let l = 1; l <= T.RAMP_LEVELS; l++) seen.add(T.slitsFor(l)); ok(seen.size === 6, '1～6 條每個數字都有關卡用到：' + [...seen]); }
+// 往左掃：從字的右邊緣走到 −縫寬，跟往右掃剛好鏡像；掃完時兩個方向都剛好離開字
+ok(T.slitX(0, 40, 300, 440, -1) === 440 && near(T.slitX(1, 40, 300, 440, -1), 140) && T.slitX(0, 40, 300, 440, 1) === -40 && T.slitX(0, 40, 300) === -40, '往左掃：從 W 開始、每秒 −速度；往右掃不變');
+for (const [gap, sp] of [[40, 300], [20, 380], [4, 460]]) { const W = 440, one = T.sweepSeconds(W, gap, sp); ok(near(T.slitX(one, gap, sp, W, -1), -gap, 1e-9), '往左掃完時縫的左緣剛好在 −縫寬：縫 ' + gap + '、速 ' + sp);
+  const covered = new Uint8Array(W), dt = 1 / 120; for (let t = 0; t <= one + dt; t += dt) { const x = T.slitX(t, gap, sp, W, -1); for (let px = Math.max(0, Math.floor(x)); px < Math.min(W, Math.ceil(x + gap)); px++) covered[px] = 1; } ok(covered.every(v => v === 1), '往左掃也把整個字每個位置都掃過：縫 ' + gap); }
+{ const st = { dirs: 0, left: 0, delays: 0, groups: 0 };
+  for (let i = 0; i < 4000; i++) {
+    const n = 1 + (i % 6), b = T.makeBands(n, rnd); st.groups++;
+    ok(b.length === n && b.map(x => x.row).sort().join() === [...Array(n).keys()].join(), n + ' 條縫：每層一條（row 0～' + (n - 1) + '）');
+    ok(b.every(x => (x.dir === 1 || x.dir === -1) && x.delay >= 0 && isFinite(x.delay)), '方向是 1 或 −1、出發時間 ≥ 0');
+    ok(Math.min(...b.map(x => x.delay)) === 0, '最早出發的一條 delay 是 0（不乾等）');
+    ok(new Set(b.map(x => x.delay.toFixed(4))).size === n, n + ' 條縫的出發時間都不一樣');
+    if (n > 1) { const ds = b.map(x => x.delay).sort((p, q) => p - q); for (let k = 1; k < n; k++) ok(ds[k] - ds[k - 1] >= T.DELAY_STEP * (1 - T.DELAY_JITTER) - 1e-9, '出發時間至少差 ' + (T.DELAY_STEP * (1 - T.DELAY_JITTER)).toFixed(3) + ' 秒：' + ds.map(x => x.toFixed(2))); ok(ds[n - 1] <= (n - 1) * T.DELAY_STEP * (1 + T.DELAY_JITTER) + 1e-9, '最晚出發不超過 ' + ((n - 1) * T.DELAY_STEP * (1 + T.DELAY_JITTER)).toFixed(2) + ' 秒'); }
+    if (n === 1) ok(b[0].dir === 1 && b[0].delay === 0, '只有一條縫：從左往右、馬上出發');
+    else { const left = b.filter(x => x.dir < 0).length; ok(left >= 1 && left <= n - 1, n + ' 條縫：至少一條往左、至少一條往右（往左 ' + left + '）'); st.dirs += n; st.left += left; }
+    const tt = T.totalSeconds(b, 440, 8, 400); ok(near(tt, Math.max(...b.map(x => x.delay)) + T.sweepSeconds(440, 8, 400), 1e-9) && tt < 5, '全部掃完的時間：' + tt.toFixed(2) + ' 秒');
+  }
+  ok(st.left / st.dirs > 0.3 && st.left / st.dirs < 0.6, '往左掃的比例約 ' + (100 * T.REV_P) + '%：' + (100 * st.left / st.dirs).toFixed(0) + '%'); }
+{ // 出發的順序是洗牌的：每一層都有機會最早、最晚出發
+  const first = {}, last = {}; for (let i = 0; i < 3000; i++) { const b = T.makeBands(6, rnd), ord = b.slice().sort((p, q) => p.delay - q.delay); first[ord[0].row] = (first[ord[0].row] || 0) + 1; last[ord[5].row] = (last[ord[5].row] || 0) + 1; }
+  ok(Object.keys(first).length === 6 && Object.keys(last).length === 6 && Math.min(...Object.values(first)) > 300 && Math.min(...Object.values(last)) > 300, '哪一層先出發是隨機的：' + JSON.stringify(first)); }
+for (const lv of [1, 5, 12, 20, 30, 45]) { const q = T.makeLevel(lv, rnd); ok(q.slits === T.slitsFor(lv) && q.bands.length === q.slits, '第 ' + lv + ' 關：' + q.slits + ' 條縫'); }
 
 // ── 整關 ──
 let total = 0, inRange = 0;
@@ -41,6 +67,10 @@ ok(inRange / total > 0.95, '字群的筆劃落在這一關的範圍內');
 { const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_doorslit.js'), css = rd('../../css/games/reaction_doorslit.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
   ok(/api\.fail\(\{ delay: 3400/.test(src) && /drawDiff/.test(src) && /doorslit-cover--open/.test(src), '失敗：兩片方塊打開、差異筆畫塗紅、停格 2 秒以上');
   ok(/\.doorslit-cover \{[^}]*var\(--c-card\)/.test(css) && /\.doorslit-glyph \{[^}]*var\(--c-ink\)/.test(css) && /\.doorslit-bad \{[^}]*var\(--c-bad/.test(css), '白色方塊、黑字、紅色用 CSS 變數');
+  const cssNoCmt = rd('../../css/games/reaction_doorslit.css').replace(/[ \t]*\/\*[\s\S]*?\*\//g, '').split(/\s+/).join(' ');
+  ok(!/\.doorslit-cover--[lr] \{[^}]*border/.test(cssNoCmt) && !/\.doorslit-cover \{[^}]*border/.test(cssNoCmt), '縫兩側的兩條直的咖啡色線已拿掉（白色方塊沒有邊框）');
+  ok(/\.doorslit-band \{[^}]*overflow: hidden/.test(cssNoCmt) && /doorslit-band/.test(src) && /slitX\([^)]*bd\.b\.dir\)/.test(src), '每一層（doorslit-band）各自一對方塊、依 dir 往左或往右');
+  ok(/一層都只留一條窄窄的縫/.test(G.rule) && /出發的時間都不一樣/.test(G.rule) && /從右往左/.test(G.rule), '玩法說明提到分層、出發時間不同、從右往左');
   ok(boot.indexOf("'js/reaction_doorslit.js'") > 0 && /白色方塊/.test(G.rule), 'boot.js 有載入、玩法說明提到白色方塊'); }
 ok(T.rating(2) !== T.rating(4) && T.rating(4) !== T.rating(7) && T.rating(7) !== T.rating(12) && T.rating(12) !== T.rating(20), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

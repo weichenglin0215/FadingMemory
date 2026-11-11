@@ -21,6 +21,10 @@
        ② 換新口令有明顯的表演：口令框從左右兩邊交替快速滑進來（0.26 秒）＋ 閃一下黃色底 ＋ 「啵」一聲（連續兩句一模一樣的口令也看得出來是新的）；
        ③ 口令要常常讓手指動：一般口令有 CHANGE_P（90%）會讓旗子換狀態（現在放下就叫你舉、現在舉著就叫你放）；「兩面一起」也一定往會動的方向；
           「不要」類（不用動的）機率降低（12%→40% 改成 8%→28%）。所以大多數口令都要按住或放開，不會一直發呆。
+   · V1.54.0（玩家意見：難度太低）：
+       ① 時間更短：口令間隔 2200 → 950 改成 1700 → 750 毫秒（INTERVAL）、寬限時間比例 62% → 60%（GRACE），30 句就到頂（RAMP_CMDS，原本 40）；
+       ② 雙手一起動、分別動：「兩面旗一起」更早（第 5 句起）、機率更高（0 → 40%）；新增「對調」口令——一手放下、另一手同時舉起（例如「紅旗放下、白旗舉起來」），
+          只在兩面旗一高一低的時候出（SWAP_FROM 第 4 句起、機率 0 → 40%，SWAP_P），兩隻手指要同時往相反方向動。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
@@ -34,12 +38,13 @@
     var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_CMDS = 40;                         /* 答對幾句之後難度到頂 */
-    var INTERVAL = [2200, 950];                 /* 兩句口令之間的間隔（毫秒）：0 句 → 到頂 */
-    var GRACE = 0.62;                           /* 寬限時間 ＝ 間隔 × 這個比例 */
+    var RAMP_CMDS = 30;                         /* 答對幾句之後難度到頂（V1.54.0：原本 40，玩家說太簡單） */
+    var INTERVAL = [1700, 750];                 /* 兩句口令之間的間隔（毫秒）：0 句 → 到頂（V1.54.0：原本 2200 → 950） */
+    var GRACE = 0.66;                            /* 寬限時間 ＝ 間隔 × 這個比例（原本 0.62） */
     var NEG_P = [0.08, 0.28];                   /* 否定句（不要舉／不要放下，旗子不用動）的機率：0 句 → 到頂（原本 12% → 40%，V1.38.0 降低：玩家說大部分口令不用動手指） */
     var CHANGE_P = 0.9;                         /* 一般口令（舉起來／放下）讓旗子換狀態（要按住或放開）的機率；其餘是「已經是那樣了」的重複口令（V1.38.0） */
-    var BOTH_FROM = 10, BOTH_P = [0, 0.3];      /* 第幾句起會出「兩面旗一起」、機率：第 BOTH_FROM 句 → 到頂 */
+    var BOTH_FROM = 5, BOTH_P = [0, 0.4];       /* 第幾句起會出「兩面旗一起」、機率：第 BOTH_FROM 句 → 到頂（V1.54.0：原本第 10 句起、到頂 30%） */
+    var SWAP_FROM = 4, SWAP_P = [0, 0.4];       /* 第幾句起會出「對調」口令（一手放下、另一手同時舉起；只在兩面旗一高一低時出）、機率：第 SWAP_FROM 句 → 到頂（V1.54.0 新增） */
     var SAME_P = 0.45;                          /* 這句口令跟上一句是同一面旗子的機率 */
     var LEAD_MS = 1500;                         /* 開始後多久出第一句口令 */
     var SOLVE_CAP = 8;                          /* 驗證用：api.solve 最多幫你答對幾句（再多就故意不動，遊戲才會結束） */
@@ -52,10 +57,17 @@
     function graceFor(n) { return Math.round(intervalFor(n) * GRACE); }
     function negPFor(n) { return NEG_P[0] + (NEG_P[1] - NEG_P[0]) * prog(n); }
     function bothPFor(n) { return n < BOTH_FROM ? 0 : BOTH_P[0] + (BOTH_P[1] - BOTH_P[0]) * Math.min(1, (n - BOTH_FROM) / (RAMP_CMDS - BOTH_FROM)); }
-    /* 一句口令：{ text, kind（'raise'｜'lower'｜'keep'）, flags（被點名的旗子 ['L']｜['R']｜['L','R']）, to（舉起來／放下之後的狀態 true｜false；keep 時為 null）}
+    function swapPFor(n) { return n < SWAP_FROM ? 0 : SWAP_P[0] + (SWAP_P[1] - SWAP_P[0]) * Math.min(1, (n - SWAP_FROM) / (RAMP_CMDS - SWAP_FROM)); }
+    /* 一句口令：{ text, kind（'raise'｜'lower'｜'keep'｜'swap'）, flags（被點名的旗子 ['L']｜['R']｜['L','R']）, to（舉起來／放下之後的狀態 true｜false；keep 與 swap 時為 null）,
+       set（只有 swap 有：{ L: 要的狀態, R: 要的狀態 }，兩面旗各自往相反方向動）}
        req 是目前「該有的狀態」{ L, R }；prev 是上一句口令（用來決定要不要連續同一面旗子）。 */
     function nextCommand(req, prev, count, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
+        if (req.L !== req.R && rand() < swapPFor(count)) {
+            /* 對調：一高一低的兩面旗，現在舉著的放下、放下的舉起來——兩隻手指同時往相反方向動；先講哪一面隨機 */
+            var seq = rand() < 0.5 ? ['L', 'R'] : ['R', 'L'], set = { L: !req.L, R: !req.R };
+            return { text: seq.map(function (f) { return NAMES[f] + (set[f] ? '舉起來' : '放下'); }).join('、'), kind: 'swap', flags: ['L', 'R'], to: null, set: set };
+        }
         if (rand() < bothPFor(count)) {
             /* 兩面旗一起：往「至少一面會動」的方向（兩面都舉著就放下、都放下就舉起來；一高一低隨機） */
             var up = req.L === req.R ? !req.L : rand() < 0.5;
@@ -73,7 +85,8 @@
     /* 套用口令：回傳新的「該有的狀態」 */
     function applyCommand(req, cmd) {
         var out = { L: req.L, R: req.R };
-        if (cmd.kind !== 'keep') cmd.flags.forEach(function (f) { out[f] = cmd.to; });  /* forEach：對陣列的每個元素各做一次 */
+        if (cmd.kind === 'swap') { out.L = cmd.set.L; out.R = cmd.set.R; }
+        else if (cmd.kind !== 'keep') cmd.flags.forEach(function (f) { out[f] = cmd.to; });  /* forEach：對陣列的每個元素各做一次 */
         return out;
     }
     function consistent(actual, req) { return actual.L === req.L && actual.R === req.R; }
@@ -210,20 +223,20 @@
             if (over || !cmd || count >= SOLVE_CAP) return;
             ['L', 'R'].forEach(function (f) { setActual(f, req[f]); });
         };
-        api.wrong = function () { if (over || !cmd) return; ['L', 'R'].forEach(function (f) { setActual(f, !req[f]); }); };
+        api.wrong = function () { if (over || !cmd) return;['L', 'R'].forEach(function (f) { setActual(f, !req[f]); }); };
     }
 
     /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '舉旗子',
-        rule: '你兩手各拿一面旗子：**左手紅旗、右手白旗**。口令一句一句出現：「紅旗舉起來」「白旗不要放下」。畫面左半邊（左手拇指）管紅旗、右半邊（右手拇指）管白旗，**按住＝舉起來，放開＝放下**，左右可以同時用。口令下面的**藍色橫條是反應時間**，縮完旗子就要對了；**旗子的狀態要隨時跟口令一致**；口令說「不要」就保持不動（動了就錯）。小心：同一面旗子會連續出現，後面口令越來越快，還會出現「兩面旗一起」。做錯就結束，看你能答對幾句。',
+        rule: '你兩手各拿一面旗子：**左手紅旗、右手白旗**。口令一句一句出現：「紅旗舉起來」「白旗不要放下」。畫面左半邊（左手拇指）管紅旗、右半邊（右手拇指）管白旗，**按住＝舉起來，放開＝放下**，左右可以同時用。口令下面的**藍色橫條是反應時間**，縮完旗子就要對了；旗子的狀態要隨時跟口令一致；口令說「不要」就保持不動（動了就錯）。小心：同一面旗子會連續出現，後面口令越來越快，還會出現**雙手一起動**的口令：「兩面旗一起舉起來」，或是一手放下、另一手同時舉起（「紅旗放下、白旗舉起來」）。做錯就結束，看你能答對幾句。',
         mount: mount,
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
-            intervalFor: intervalFor, graceFor: graceFor, negPFor: negPFor, bothPFor: bothPFor, nextCommand: nextCommand, applyCommand: applyCommand, consistent: consistent, wrongFlags: wrongFlags, describeState: describeState, rating: rating,
-            RAMP_CMDS: RAMP_CMDS, INTERVAL: INTERVAL, GRACE: GRACE, NEG_P: NEG_P, CHANGE_P: CHANGE_P, BOTH_FROM: BOTH_FROM, BOTH_P: BOTH_P, SAME_P: SAME_P, LEAD_MS: LEAD_MS, SOLVE_CAP: SOLVE_CAP, NAMES: NAMES, MAX_LEVEL: MAX_LEVEL
+            intervalFor: intervalFor, graceFor: graceFor, negPFor: negPFor, bothPFor: bothPFor, swapPFor: swapPFor, nextCommand: nextCommand, applyCommand: applyCommand, consistent: consistent, wrongFlags: wrongFlags, describeState: describeState, rating: rating,
+            RAMP_CMDS: RAMP_CMDS, INTERVAL: INTERVAL, GRACE: GRACE, NEG_P: NEG_P, CHANGE_P: CHANGE_P, BOTH_FROM: BOTH_FROM, BOTH_P: BOTH_P, SWAP_FROM: SWAP_FROM, SWAP_P: SWAP_P, SAME_P: SAME_P, LEAD_MS: LEAD_MS, SOLVE_CAP: SOLVE_CAP, NAMES: NAMES, MAX_LEVEL: MAX_LEVEL
         }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
