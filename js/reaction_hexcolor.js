@@ -10,10 +10,11 @@
      某個空格的六個鄰居已經用到所有顏色時，那格變成暗紅底＋白色「！」（放什麼都會出錯）。
      全部塗滿、沒有相鄰同色就過關（各色格數剛好用完是自然的結果）；每一關限時，時間到＝失敗並亮出答案。成績＝解開幾關。
    · 關卡規劃（研究結論見筆記；每一項都是線性，見 specFor）：
-       ① 第 1～2 關「三色入門」：3 色、形狀實心（緊密 3）。3 色時每個小三角形一定三色都有，
-          所以「同一排隔兩格的格子一定同色」（剛體），一格決定就整片連鎖，教玩家看懂鄰居的規則。
-          （V1.51 玩家意見：原本的第 3 關（3 色 31 格、只有 2 格預填）太簡單。3 色實心盤面不管預填幾格都是「一格決定整片」，
-           多給預填只會更簡單，所以改成三色入門只有 2 關，第 3 關就進入 4 色自由擺：預填 9 格、真的要動腦。）
+       ① 第 1～2 關「三色入門」：3 色、形狀不實心（緊密 2，而且最大一塊剛體不超過 RIGID_MAX）。3 色時每個小三角形一定三色都有，
+          所以連成一片的三角形是「剛體」（同一排隔兩格的格子一定同色），一格決定就整片連鎖。
+          （V1.51 玩家意見：原本的第 3 關（3 色 31 格、只有 2 格預填）太簡單，所以三色入門只有 2 關，第 3 關進入 4 色自由擺。
+           V1.56 玩家意見：三色「實心」盤面整盤只有一種規律塗法，玩家照「每隔兩格同色」擺就解完，預填怎麼挑都改變不了，所以三色也不再用實心形狀：
+           盤面拆成幾塊剛體、靠細頸相連，每塊的配色不同，答案不再是一種規律花樣。）
        ② 第 3 關起 4 色：格數 30 → 75（第 RAMP_LEVELS 關）、緊密度 2 → 3、最少那色的比例（破格率）25%（四色一樣多）→ 15%（第 20 關到頂）。
           研究發現「破格率 10～20%」最難（倒 U 型），所以最後停在 15%（大約 2:2:2:1）。
        ③ 第 3～11 關「自由擺」：答案不只一種，塗得出任何一種合格的就過關；預填 30% → 20%（挑陷阱分數高的位置）。
@@ -23,17 +24,23 @@
        （格數、緊密度、暖身、限時的每格秒數，都是線性走到第 RAMP_LEVELS（30）關到頂，之後維持最難，一直玩到第 MAX_LEVEL（90）關。）
    · 出題流程（makeLevel）：
        1. 長形狀：同一組參數長 SHAPE_TRIES 個，挑「六角形畫得最大」的那個（盤面比較好點）。
-       2. 隱藏答案：3 色＝隨機合法著色（實心形狀幾乎只有一種塗法，各色格數直接從答案數出來）；
-          4 色＝依比例算好各色格數，用解題器找一個「剛好符合格數」的合法著色。
+       2. 隱藏答案：3 色＝隨機合法著色（各色格數直接從答案數出來）；4 色＝依比例算好各色格數，用解題器找一個「剛好符合格數」的合法著色。
+          （V1.56）同一個形狀找 SOL_TRIES 個答案，挑「最不像規律花樣」的那一個（regularity：最像的花樣吻合幾成；
+           規律花樣＝人最愛用的「照固定間隔重複」擺法：三色 1 種×6 種換色、四色再加 4 種×24 種換色，見 patternsFor）。
+          （V1.56）三色另外要求形狀「不是一整塊剛體」（rigidFrac ≤ RIGID_MAX）。
        3. 預填（唯一解的關卡）：從空盤開始數解（最多數到 2 種）；還有第二種解，就找一個「另一種解」跟答案不一樣的格子，
-          把答案的顏色填進去（每填一格都會讓那種解消失）。有好幾格可以選時，用 trapScore 挑「最會讓人卡住」的：
+          把答案的顏色填進去（每填一格都會讓那種解消失）。有好幾格可以選時，用 pickScore 挑（V1.56：先分散、先打破規律，唯一解是順便達成的）：
+            · 離其他預填越遠越好（COVER_W）、越能跟「已經吻合很多預填的規律花樣」唱反調越好（breakScore × BREAK_W）；
+            · 加完唯一解還要補兩件事：① 補洞——每一格離最近的預填不能超過 COVER_D 步（不會有整區一個預填也沒有）；
+              ② 破規律——預填裡最像的規律花樣最多只吻合 FIT_MAX 的預填（至少要有幾格唱反調，不能照花樣擺就對）；
+            · 再用 trapScore 挑「最會讓人卡住」的（4 色才用）：
             · 兩格同色時，避開「隔一格」的位置（例如一排的第 1、3 格）——人習慣把同色隔一格擺，那樣等於幫玩家；
               改放在第 1、4 格或第 1、6 格（使用者的觀察），讓「隔一格擺」的習慣行不通；
             · 兩格不同色、中間隔一格（例如第 3 格黃、第 5 格藍）：夾住中間那格，玩家要先想中間六格怎麼放。
           自由擺的關卡不用數解：直接從答案挑 fill 格陷阱分數最高的當預填。
-       4. 再把多餘的預填拿掉（先拿陷阱分數最低的），每拿一格都重新確認仍是唯一解；
+       4. 再把多餘的預填拿掉（先拿陷阱分數最低的），每拿一格都先確認「還是分散、還是看不出規律」，再重新確認仍是唯一解；
           這一步最花時間，所以有節點預算 MIN_BUDGET，超過就停（題目只會稍微簡單一點，仍然唯一解）。
-       5. 依關卡多送 extra 格暖身（隨機挑）。
+       5. 依關卡多送 extra 格暖身（挑離其他預填最遠、又能打破規律的空格）。
      每一次「確認解數」都是完整搜尋（沒有中途放棄）才算數，所以「唯一解」是保證，不是猜的。
    · 解題器（makeEngine）：每格記「還能用哪些顏色」，規則①相鄰排除、只剩一色就填；規則②某色用完、某色的候選格剛好等於剩下的格數。
      推不動就挑候選最少的格子試（回溯）。各色的候選格數用「增量」維護（不用每次重數），手機上出題才夠快。
@@ -55,12 +62,18 @@
 
     /* ═══ 可以自己調的參數（難度曲線都是線性：kit.ramp 從起點走到終點，之後維持）═══ */
     var K3_TO = 2;                                      /* 第 1～2 關是「三色入門」；第 3 關起 4 色（V1.51：3 → 2，玩家說第 3 關太簡單） */
-    var FREE_TO = 11;                                   /* 第 3～11 關「自由擺」：答案不只一種，塗得出任何一種合格的就過關；第 12 關起答案只有一種（唯一解） */
+    var FREE_TO = 6;                                   /* 第 3～6 關「自由擺」：答案不只一種，塗得出任何一種合格的就過關；第 12 關起答案只有一種（唯一解） */
+    var K3_COMPACT = 2;                                 /* 三色入門的形狀緊密度（V1.56.0：3 → 2）：3 色的實心盤面只有「同一排每隔兩格同色」這一種塗法，預填再怎麼挑都是無腦照擺，所以不再用實心形狀 */
+    var RIGID_MAX = 0.5;                                /* 三色入門：形狀裡最大那一塊「剛體」（連成一片的三角形）最多佔全部格數幾成；超過就換形狀（整個盤面是一塊＝只有一種規律解） */
+    var SOL_TRIES = 20;                                 /* 找答案：同一個形狀找幾個不同的答案，挑「最不像規律花樣」的那一個（V1.56.0：玩家照「固定間隔」擺就能解的題目太無聊） */
+    var COVER_D = [2, 3];                               /* 預填要分散：每一格離最近的預填格最多幾步 [第一關, 到頂]（不會有整區一個預填也沒有的空白區） */
+    var FIT_MAX = 0.6;                                  /* 預填要「看不出規律」：最像的規律花樣最多只能吻合這個比例的預填格（至少要有 1 格唱反調） */
+    var COVER_W = 1.2, BREAK_W = 4;                     /* 挑預填的分數：離其他預填越遠 ＋ COVER_W 每步（最多算 4 步）；越能打破規律花樣 ＋ BREAK_W × 0～1（跟陷阱分數、隨機 0～1.5 相加） */
     var N3 = [19, 25];                                  /* 三色入門的格數：第 1 關 19 格 → 第 2 關 25 格 */
     var N4 = [30, 75];                                  /* 4 色的格數：第 3 關 30 格 → 第 30 關（RAMP_LEVELS）75 格（85 格以上手指不好點、手機出題太慢，難度也沒有再變高，見研究筆記第 9 節） */
     var COMPACT4 = [2, 3];                              /* 4 色的形狀緊密度（每格至少貼著幾格）：第 3 關 2 → 第 30 關 3（四捨五入；4 色時越實心越難） */
-    var RARE = [0.25, 0.15], RARE_AT = 20;              /* 最少那一色佔全部格數的比例（破格率）：第 3 關 25%（四色一樣多）→ 第 20 關 15%（約 2:2:2:1，研究的最難區 10～20%） */
-    var FREE_FILL = [0.30, 0.20];                       /* 自由擺的關卡：預填佔全部格數的比例：第 3 關 30%（30 格裡 9 格）→ 第 11 關 20% */
+    var RARE = [0.20, 0.10], RARE_AT = 20;              /* 最少那一色佔全部格數的比例（破格率）：第 3 關 25%（四色一樣多）→ 第 20 關 15%（約 2:2:2:1，研究的最難區 10～20%） */
+    var FREE_FILL = [0.30, 0.33];                       /* 自由擺的關卡：預填佔全部格數的比例：第 3 關 30%（30 格裡 9 格）→ 第 11 關 20% */
     var EXTRA3 = [3, 2];                                /* 三色入門：比「剛好唯一」多送幾格預填暖身：第 1 關 3 格 → 第 2 關 2 格 */
     var EXTRA4 = [3, 0];                                /* 4 色唯一解的關卡：多送幾格暖身：第 12 關 3 格 → 第 30 關 0 格（剛好唯一，最難） */
     var TIME_BASE = 30, TIME_CELL = [6, 18];             /* 每一關限時（秒）＝ 30 ＋ 空格數 × 每格秒數（第 1 關 6 秒 → 第 30 關 18 秒；後面的題目要推理，給得比較多） */
@@ -88,12 +101,14 @@
         var p = Math.min(1, Math.max(0, (level - from) / (to - from)));
         return a + (b - a) * p;
     }
+    /* 預填要分散：第 level 關「每一格離最近的預填格最多幾步」（COVER_D：第 1 關 → 第 RAMP_LEVELS 關，線性） */
+    function coverAt(level) { return Math.max(1, Math.round(lin(level, COVER_D[0], COVER_D[1], 1, RAMP_LEVELS))); }
     /* 第 level 關的規格：{ k 色數, n 格數, compact 緊密度, rare 最少那色的比例, unique 答案是不是只有一種,
-       fill 自由擺的預填數（unique 為 false 時才用）, extra 唯一解多送幾格暖身 } */
+       fill 自由擺的預填數（unique 為 false 時才用）, extra 唯一解多送幾格暖身, cover 預填最多隔幾步 } */
     function specFor(level) {
         level = Math.max(1, Math.min(MAX_LEVEL, level));
         if (level <= K3_TO) {
-            return { k: 3, n: Math.round(lin(level, N3[0], N3[1], 1, K3_TO)), compact: 3, rare: 0, unique: true, fill: 0, extra: Math.round(lin(level, EXTRA3[0], EXTRA3[1], 1, K3_TO)) };  /* Math.round：四捨五入成整數 */
+            return { k: 3, n: Math.round(lin(level, N3[0], N3[1], 1, K3_TO)), compact: K3_COMPACT, rare: 0, unique: true, fill: 0, extra: Math.round(lin(level, EXTRA3[0], EXTRA3[1], 1, K3_TO)), cover: coverAt(level) };  /* Math.round：四捨五入成整數 */
         }
         var f = K3_TO + 1, n = Math.round(lin(level, N4[0], N4[1], f, RAMP_LEVELS)), unique = level > FREE_TO;   /* f：4 色的第一關 */
         return {
@@ -102,7 +117,8 @@
             rare: lin(level, RARE[0], RARE[1], f, RARE_AT),
             unique: unique,
             fill: unique ? 0 : Math.round(n * lin(level, FREE_FILL[0], FREE_FILL[1], f, FREE_TO)),
-            extra: unique ? Math.round(lin(level, EXTRA4[0], EXTRA4[1], FREE_TO + 1, RAMP_LEVELS)) : 0
+            extra: unique ? Math.round(lin(level, EXTRA4[0], EXTRA4[1], FREE_TO + 1, RAMP_LEVELS)) : 0,
+            cover: coverAt(level)
         };
     }
     /* 依比例算各色格數：最少那色＝n × rare（四捨五入），其餘平均分給另外 k−1 色（除不盡的從第一色開始多 1 格） */
@@ -143,6 +159,94 @@
             } else if (d === 2) pinch++;
         }
         return best + worst + Math.min(pinch, 2) - 0.6 * same;
+    }
+
+    /* ─── 規律花樣：人最愛用的「照固定間隔重複」擺法（V1.56.0）───
+       玩家看到預填之後，常常不動腦：照著一種花樣一路擺下去（一排的第 1、4、7 格同色、第 1、3、5 格同色…）。
+       每個花樣＝一條陣列（每格該塗哪一色）。花樣有五種：
+         · 三色花樣：(q − r) 除以 3 的餘數決定顏色（同一排每隔兩格同色）；3 色時這是唯一的規律擺法，4 色時有一色不用（用在別處）；
+         · 四色花樣（只有 4 色才有）：q、r 的奇偶（隔一格同色）、(q＋2r)、(2q＋r)、(q−r) 除以 4 的餘數。
+       每種花樣的「類別 → 顏色」有很多種對應（只是換顏色），全部列出來。三色 6 種、四色 120 種。
+       用途：① 挑答案時，挑「最不像任何規律花樣」的（regularity 越低越好）；② 挑預填時，讓預填裡「最像的花樣」至少有幾格唱反調（prefillFit）。 */
+    var PAT_FAMILIES = [
+        [3, function (c) { return kit.mod(c[0] - c[1], 3); }],
+        [4, function (c) { return kit.mod(c[0], 2) * 2 + kit.mod(c[1], 2); }],
+        [4, function (c) { return kit.mod(c[0] + 2 * c[1], 4); }],
+        [4, function (c) { return kit.mod(2 * c[0] + c[1], 4); }],
+        [4, function (c) { return kit.mod(c[0] - c[1], 4); }]
+    ];
+    function patternsFor(cells, k) {
+        var out = [];
+        PAT_FAMILIES.forEach(function (fam) {
+            var m = fam[0];
+            if (m > k) return;                                       /* 4 色花樣要 4 種顏色才擺得出來 */
+            var cls = cells.map(fam[1]);
+            (function rec(map) {                                     /* map[類別]＝顏色：把 k 種顏色挑 m 種、排成 m 個類別的對應 */
+                if (map.length === m) { out.push(Int8Array.from(cls, function (x) { return map[x]; })); return; }
+                for (var c = 0; c < k; c++) if (map.indexOf(c) < 0) { map.push(c); rec(map); map.pop(); }
+            })([]);
+        });
+        return out;
+    }
+    /* 答案有多規律：所有規律花樣裡，最像答案（sol）的那一個吻合幾成（1＝整盤都照花樣擺、隨機答案約 0.5～0.6；越低越好） */
+    function regularity(pats, sol) {
+        var best = 0;
+        for (var p = 0; p < pats.length; p++) {
+            var a = 0;
+            for (var i = 0; i < sol.length; i++) if (pats[p][i] === sol[i]) a++;
+            if (a > best) best = a;
+        }
+        return best / sol.length;
+    }
+    /* 預填看起來有多規律：最像的規律花樣吻合幾格預填。回傳 { best 吻合的格數, total 預填格數 }（g：−1＝空格） */
+    function prefillFit(pats, g) {
+        var total = 0, best = 0;
+        for (var i = 0; i < g.length; i++) if (g[i] >= 0) total++;
+        for (var p = 0; p < pats.length; p++) {
+            var a = 0;
+            for (var j = 0; j < g.length; j++) if (g[j] >= 0 && pats[p][j] === g[j]) a++;
+            if (a > best) best = a;
+        }
+        return { best: best, total: total };
+    }
+    /* 預填夠不夠「看不出規律」：預填 2 格以內不算；否則最像的花樣最多吻合 max(2, FIT_MAX × 預填數) 格（至少 1 格唱反調） */
+    function fitOk(best, total) { return total <= 2 || best <= Math.max(2, Math.floor(FIT_MAX * total)); }
+    /* 預填分散的程度：每一格離最近的預填格幾步，回傳最大的那個（99＝一格預填也沒有；越小越分散） */
+    function nearGap(cells, g) {
+        var gi = [], mx = 0;
+        for (var i = 0; i < g.length; i++) if (g[i] >= 0) gi.push(i);
+        if (!gi.length) return 99;
+        for (var a = 0; a < cells.length; a++) {
+            var d = 99;
+            for (var t = 0; t < gi.length; t++) d = Math.min(d, hexDist(cells[a], cells[gi[t]]));
+            if (d > mx) mx = d;
+        }
+        return mx;
+    }
+    /* 形狀有多「剛體」：3 色時每個三角形（三格兩兩相鄰）一定三色都有，靠共用一條邊連起來的三角形（一整塊）只有 6 種塗法、整塊都是同一種規律花樣。
+       回傳最大那一塊的格數佔全部格數的比例（1＝整個盤面就是一塊＝只有一種規律解）。nbrs：每格的鄰居編號。 */
+    function rigidFrac(nbrs) {
+        var n = nbrs.length, tri = [], seen = {}, par = [], comp = {}, big = 0;
+        function find(x) { while (par[x] !== x) { par[x] = par[par[x]]; x = par[x]; } return x; }
+        for (var a = 0; a < n; a++) {
+            for (var u = 0; u < nbrs[a].length; u++) {
+                var b = nbrs[a][u];
+                if (b <= a) continue;
+                for (var v = 0; v < nbrs[b].length; v++) {
+                    var c = nbrs[b][v];
+                    if (c <= b || nbrs[a].indexOf(c) < 0) continue;      /* a、b、c 兩兩相鄰＝一個三角形 */
+                    var id = tri.length;
+                    tri.push([a, b, c]); par.push(id);
+                    [[a, b], [a, c], [b, c]].forEach(function (e) {      /* 兩個三角形共用一條邊（兩格）→ 同一塊 */
+                        var key = e[0] * n + e[1];
+                        if (seen[key] === undefined) seen[key] = id; else par[find(id)] = find(seen[key]);
+                    });
+                }
+            }
+        }
+        tri.forEach(function (t, id) { var r = find(id); comp[r] = comp[r] || {}; t.forEach(function (x) { comp[r][x] = 1; }); });
+        Object.keys(comp).forEach(function (r) { big = Math.max(big, Object.keys(comp[r]).length); });
+        return big / n;
     }
 
     /* ─── 解題器：nbrs[i]＝第 i 格的鄰居編號、k 種顏色 ───
@@ -218,7 +322,7 @@
         function colorAt(s, i) { return s[COL + i]; }
         /* 數解：最多數到 cap 種、最多搜尋 nodeLimit 步（超過＝aborted，數不清楚）；rand 有給就隨機挑分支（找隨機答案用）。
            回傳 { found 找到幾種, aborted, nodes 搜尋步數, sols 找到的解（陣列） } */
-        function count(g, counts, cap, nodeLimit, rand) {
+        function count(g, counts, cap, nodeLimit, rand, pref) {
             var out = { found: 0, aborted: false, nodes: 0, sols: [] };
             var s0 = start(g, counts);
             if (!s0) return out;
@@ -235,6 +339,7 @@
                 var cs = [];
                 for (var c = 0; c < k; c++) if ((s[best] >> c) & 1) cs.push(c);
                 if (rand) cs = kit.shuffle(cs, rand);   /* kit.shuffle(陣列, rand)：隨機洗牌，回傳新陣列 */
+                if (pref && pref[best] >= 0 && cs.indexOf(pref[best]) > 0) { cs.splice(cs.indexOf(pref[best]), 1); cs.unshift(pref[best]); }   /* pref：每格「最想塗的顏色」，有的話先試它（讓找到的答案盡量長成指定的樣子） */
                 for (var t = 0; t < cs.length; t++) {
                     var s2 = s.slice(), q = [];         /* slice()：複製整個狀態（之後改複本，不會動到原本的） */
                     if (assign(s2, best, cs[t], q) && propagate(s2, q)) dfs(s2);
@@ -285,49 +390,96 @@
     /* 這個形狀放進 W×H 的盤面，六角形半徑最大能畫幾 px */
     function fitScale(cells, W, H) { var b = boundsOf(cells); return Math.min(W / b.w, H / b.h); }
 
-    /* 出一關：回傳 { level, k, n, cells, nbrs, counts, sol 答案, given 預填（−1＝空格）, unique 答案是否唯一, minimal 剛好唯一要幾格預填（自由擺是 −1）, clues 實際預填數 }。
+    /* 出一關：回傳 { level, k, n, cells, nbrs, counts, sol 答案, given 預填（−1＝空格）, unique 答案是否唯一, minimal 剛好唯一要幾格預填（自由擺是 −1）, clues 實際預填數,
+       reg 答案有多規律, gap 預填最大空白距離 }。
        rand：亂數（測試傳固定種子）；W／H：盤面的大小（挑形狀用，沒給就用預設）。流程見檔頭。 */
     function makeLevel(level, rand, W, H) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         W = W || 456; H = H || 470;
         var sp = specFor(level), n = sp.n, k = sp.k, pz = null;
-        for (var t = 0; t < 40 && !pz; t++) {
+        for (var t = 0; t < 60 && !pz; t++) {
+            var strict = t < 40;                        /* 前 40 次嚴格挑形狀（三色不能太「剛體」）；真的挑不到才放寬，保證一定出得了題 */
             var shape = null, best = -1;
             for (var a = 0; a < SHAPE_TRIES; a++) {
-                var sh = Core.makeShape(n, sp.compact, rand), f = fitScale(sh.cells, W, H);
+                var sh = Core.makeShape(n, sp.compact, rand);
+                if (strict && k === 3 && rigidFrac(Core.buildGraph(sh.cells).nbrs) > RIGID_MAX) continue;
+                var f = fitScale(sh.cells, W, H);
                 if (f > best) { best = f; shape = sh; }
             }
-            var G = Core.buildGraph(shape.cells), E = makeEngine(G.nbrs, k), sol = null, counts;
+            if (!shape) continue;
+            var G = Core.buildGraph(shape.cells), E = makeEngine(G.nbrs, k), pats = patternsFor(shape.cells, k), sol = null, counts, bestD = 9;
             if (k === 3) {
-                sol = randomColoring(G.nbrs, 3, rand);
+                for (var s3 = 0; s3 < SOL_TRIES; s3++) {      /* 找 SOL_TRIES 個答案，挑最不像規律花樣的 */
+                    var c3 = randomColoring(G.nbrs, 3, rand);
+                    if (!c3) continue;
+                    var d3 = regularity(pats, c3);
+                    if (d3 < bestD) { bestD = d3; sol = c3; }
+                }
                 if (!sol) continue;
                 counts = [0, 0, 0];
                 for (var i = 0; i < n; i++) counts[sol[i]]++;
             } else {
                 counts = countsFor(n, k, sp.rare);
-                var r0 = E.count(new Int8Array(n).fill(-1), counts, 1, NODE_SOL, rand);
-                if (!r0.found) continue;                /* 這個形狀湊不出這組格數（或太難找）：換一個形狀 */
-                sol = r0.sols[0];
+                var none = new Int8Array(n).fill(-1);
+                for (var s4 = 0; s4 < SOL_TRIES; s4++) {
+                    var r0 = E.count(none, counts, 1, NODE_SOL, rand);
+                    if (!r0.found) { if (!sol) break; continue; }   /* 第一個就找不到：這個形狀湊不出這組格數（或太難找），換一個形狀 */
+                    var d4 = regularity(pats, r0.sols[0]);
+                    if (d4 < bestD) { bestD = d4; sol = r0.sols[0]; }
+                }
+                if (!sol) continue;
             }
-            pz = { cells: shape.cells, nbrs: G.nbrs, E: E, sol: sol, counts: counts };
+            pz = { cells: shape.cells, nbrs: G.nbrs, E: E, sol: sol, counts: counts, pats: pats, reg: bestD };
         }
         if (!pz) return null;
-        var cells = pz.cells, sol2 = pz.sol, counts2 = pz.counts, E2 = pz.E, trapOn = k >= 4;
+        var cells = pz.cells, sol2 = pz.sol, counts2 = pz.counts, E2 = pz.E, pats2 = pz.pats, trapOn = k >= 4, cover = sp.cover;
         var g = new Int8Array(n).fill(-1), guard = 0;
-        if (!sp.unique) {
-            /* 自由擺：從答案挑 fill 格當預填，每次挑「陷阱分數最高」的那格（答案不只一種，塗得出任何一種合格的就過關） */
-            for (var f2 = 0; f2 < sp.fill; f2++) {
-                var pk = -1, pv = -1e9;
-                for (var c0 = 0; c0 < n; c0++) {
-                    if (g[c0] >= 0) continue;
-                    var v0 = trapScore(c0, sol2[c0], cells, g) + rand() * 1.5;
-                    if (v0 > pv) { pv = v0; pk = c0; }
-                }
-                g[pk] = sol2[pk];
+        /* 預填的「狀態」：fit[p]＝預填裡有幾格吻合規律花樣 p、dmin[i]＝第 i 格離最近的預填格幾步（每次預填變動就整個重算，盤面小，很快） */
+        var fit = new Int16Array(pats2.length), dmin = new Int8Array(n);
+        function recalc() {
+            fit.fill(0); dmin.fill(99);
+            for (var i1 = 0; i1 < n; i1++) {
+                if (g[i1] < 0) continue;
+                for (var p1 = 0; p1 < pats2.length; p1++) if (pats2[p1][i1] === g[i1]) fit[p1]++;
+                for (var j1 = 0; j1 < n; j1++) { var d1 = hexDist(cells[i1], cells[j1]); if (d1 < dmin[j1]) dmin[j1] = d1; }
             }
-            return { level: level, k: k, n: n, cells: cells, nbrs: pz.nbrs, counts: counts2, sol: sol2, given: g, unique: false, minimal: -1, clues: sp.fill, engine: E2 };
         }
-        /* 步驟 3：加預填，直到只剩一種解（而且是完整數完，不是中途放棄） */
+        function put(i1) { g[i1] = sol2[i1]; recalc(); }
+        function givenCount() { var m = 0; for (var i1 = 0; i1 < n; i1++) if (g[i1] >= 0) m++; return m; }
+        function maxFit() { var m = 0; for (var p1 = 0; p1 < fit.length; p1++) if (fit[p1] > m) m = fit[p1]; return m; }
+        function gapOk() { for (var i1 = 0; i1 < n; i1++) if (dmin[i1] > cover) return false; return true; }
+        /* 打破規律的分數（0～1）：第 i 格照答案的顏色放進預填，跟「已經吻合很多預填」的規律花樣唱反調的程度（越吻合的花樣權重越大，平方） */
+        function breakScore(i1) {
+            var tot = 0, agr = 0;
+            for (var p1 = 0; p1 < pats2.length; p1++) { var w = (fit[p1] + 1) * (fit[p1] + 1); tot += w; if (pats2[p1][i1] === sol2[i1]) agr += w; }
+            return 1 - agr / tot;
+        }
+        /* 第 i 格放進預填之後，最像的規律花樣會吻合幾格預填 */
+        function fitAfter(i1) {
+            var m = 0;
+            for (var p1 = 0; p1 < pats2.length; p1++) { var v = fit[p1] + (pats2[p1][i1] === sol2[i1] ? 1 : 0); if (v > m) m = v; }
+            return m;
+        }
+        /* 挑預填的總分：陷阱分數（4 色才用）＋ 離其他預填越遠越好 ＋ 越能打破規律花樣越好 ＋ 隨機 */
+        function pickScore(i1) {
+            return (trapOn ? trapScore(i1, sol2[i1], cells, g) : 0) + COVER_W * Math.min(dmin[i1], 4) + BREAK_W * breakScore(i1) + rand() * 1.5;
+        }
+        /* 挑下一格預填：分數最高的空格（skip 回傳 true 的格子不挑）；放進去會讓預填「看得出規律」（fitOk 不過）的排在最後，沒得選才挑 */
+        function choose(score, skip) {
+            var pk1 = -1, pv1 = -1e9, tot = givenCount() + 1;
+            for (var i1 = 0; i1 < n; i1++) {
+                if (g[i1] >= 0 || (skip && skip(i1))) continue;
+                var v1 = score(i1) - (fitOk(fitAfter(i1), tot) ? 0 : 100);
+                if (v1 > pv1) { pv1 = v1; pk1 = i1; }
+            }
+            return pk1;
+        }
+        if (!sp.unique) {
+            /* 自由擺：從答案挑 fill 格當預填，每次挑總分最高的那格（答案不只一種，塗得出任何一種合格的就過關） */
+            for (var f2 = 0; f2 < sp.fill; f2++) put(choose(pickScore));
+            return { level: level, k: k, n: n, cells: cells, nbrs: pz.nbrs, counts: counts2, sol: sol2, given: g, unique: false, minimal: -1, clues: sp.fill, engine: E2, reg: pz.reg, gap: Math.max.apply(null, dmin) };
+        }
+        /* 步驟 3：加預填，直到只剩一種解（而且是完整數完，不是中途放棄）。挑哪一格看 pickScore：先分散、先打破規律，唯一解是順便達成的 */
         for (; ;) {
             var r = E2.count(g, counts2, 2, NODE_STEP);
             if ((!r.aborted && r.found <= 1) || ++guard > n) break;
@@ -335,34 +487,55 @@
             for (var s = 0; s < r.sols.length && !alt; s++) {
                 for (var j = 0; j < n; j++) if (r.sols[s][j] !== sol2[j]) { alt = r.sols[s]; break; }
             }
-            var pick = -1, ps = -1e9;
-            for (var c = 0; c < n; c++) {
-                if (g[c] >= 0 || (alt && alt[c] === sol2[c])) continue;    /* 只挑「另一種解」跟答案不一樣的格子（填了就能排除那種解） */
-                var sc = (trapOn ? trapScore(c, sol2[c], cells, g) : 0) + rand() * 1.5;
-                if (sc > ps) { ps = sc; pick = c; }
-            }
+            var pick = choose(pickScore, function (c) { return alt && alt[c] === sol2[c]; });    /* 只挑「另一種解」跟答案不一樣的格子（填了就能排除那種解） */
             if (pick < 0) break;
-            g[pick] = sol2[pick];
+            put(pick);
         }
-        /* 步驟 4：拿掉多餘的預填（先拿陷阱分數最低的），每拿一格都完整確認仍是唯一解；總搜尋步數超過 MIN_BUDGET 就停 */
+        /* 步驟 3b：補洞——有格子離最近的預填超過 cover 步（整區都沒有預填，那區會很無聊），就在最空的地方補一格（挑能補到最多空洞的、再看打破規律） */
+        for (var it = 0; it < n && !gapOk(); it++) {
+            var holes = [];
+            for (var h0 = 0; h0 < n; h0++) if (dmin[h0] > cover) holes.push(h0);
+            var bc = -1, bv = -1e9;
+            for (var c5 = 0; c5 < n; c5++) {
+                if (g[c5] >= 0) continue;
+                var gain = 0;
+                for (var h1 = 0; h1 < holes.length; h1++) if (hexDist(cells[c5], cells[holes[h1]]) <= cover) gain++;
+                if (!gain) continue;
+                var vv = gain + 2 * breakScore(c5) + rand();
+                if (vv > bv) { bv = vv; bc = c5; }
+            }
+            if (bc < 0) break;
+            put(bc);
+        }
+        /* 步驟 3c：破規律——預填裡最像的規律花樣吻合太多格（照那個花樣擺就對了），就補一格「跟那個花樣唱反調」的 */
+        for (var it2 = 0; it2 < n && !fitOk(maxFit(), givenCount()); it2++) {
+            var bc2 = -1, bv2 = -1e9;
+            for (var c6 = 0; c6 < n; c6++) {
+                if (g[c6] >= 0) continue;
+                var v6 = BREAK_W * breakScore(c6) + 0.5 * Math.min(dmin[c6], 3) + rand() * 0.3;
+                if (v6 > bv2) { bv2 = v6; bc2 = c6; }
+            }
+            if (bc2 < 0) break;
+            put(bc2);
+        }
+        /* 步驟 4：拿掉多餘的預填（先拿陷阱分數最低的），每拿一格都先確認「還是分散、還是看不出規律」，再完整確認仍是唯一解；總搜尋步數超過 MIN_BUDGET 就停 */
         var list = [], spent = 0;
         for (var c2 = 0; c2 < n; c2++) if (g[c2] >= 0) list.push({ i: c2, v: (trapOn ? trapScore(c2, g[c2], cells, g) : 0) + rand() });
         list.sort(function (x, y) { return x.v - y.v; });   /* sort：由小到大排序 */
         for (var m = 0; m < list.length && spent < MIN_BUDGET; m++) {
             var ci = list[m].i, keep = g[ci];
-            g[ci] = -1;
+            g[ci] = -1; recalc();
+            if (!gapOk() || !fitOk(maxFit(), givenCount())) { g[ci] = keep; recalc(); continue; }   /* 拿掉會留下空白區、或讓預填變得有規律：不拿 */
             var r2 = E2.count(g, counts2, 2, NODE_MIN);
             spent += r2.nodes;
-            if (r2.aborted || r2.found !== 1) g[ci] = keep;
+            if (r2.aborted || r2.found !== 1) { g[ci] = keep; recalc(); }
         }
-        var minimal = 0;
-        for (var c3 = 0; c3 < n; c3++) if (g[c3] >= 0) minimal++;
-        /* 步驟 5：多送 extra 格暖身（隨機挑空格，至少留 2 格給玩家） */
-        var free = [];
-        for (var c4 = 0; c4 < n; c4++) if (g[c4] < 0) free.push(c4);
-        free = kit.shuffle(free, rand);
-        for (var e = 0; e < sp.extra && e < free.length - 2; e++) g[free[e]] = sol2[free[e]];
-        return { level: level, k: k, n: n, cells: cells, nbrs: pz.nbrs, counts: counts2, sol: sol2, given: g, unique: true, minimal: minimal, clues: minimal + Math.min(sp.extra, Math.max(0, free.length - 2)), engine: E2 };
+        var minimal = givenCount();
+        /* 步驟 5：多送 extra 格暖身（挑離其他預填最遠、又能打破規律的空格；至少留 2 格給玩家） */
+        for (var e = 0; e < sp.extra && n - givenCount() > 2; e++) {
+            put(choose(function (c4) { return COVER_W * Math.min(dmin[c4], 4) + BREAK_W * breakScore(c4) + rand() * 1.5; }));
+        }
+        return { level: level, k: k, n: n, cells: cells, nbrs: pz.nbrs, counts: counts2, sol: sol2, given: g, unique: true, minimal: minimal, clues: givenCount(), engine: E2, reg: pz.reg, gap: Math.max.apply(null, dmin) };
     }
 
     /* 盤面上「相鄰同色」的格子：回傳 bad[i]＝1 表示第 i 格跟某個鄰居同色（paint[i]：−1＝空格） */
@@ -832,6 +1005,8 @@
         /* test：把內部函式與參數交給單元測試（test/reaction/t_hexcolor.js）使用，遊戲本身不會用到。 */
         test: {
             specFor: specFor, countsFor: countsFor, timeFor: timeFor, makeEngine: makeEngine, makeLevel: makeLevel, randomColoring: randomColoring,
+            patternsFor: patternsFor, regularity: regularity, prefillFit: prefillFit, fitOk: fitOk, nearGap: nearGap, rigidFrac: rigidFrac, coverAt: coverAt,
+            K3_COMPACT: K3_COMPACT, RIGID_MAX: RIGID_MAX, SOL_TRIES: SOL_TRIES, COVER_D: COVER_D, FIT_MAX: FIT_MAX,
             trapScore: trapScore, parityOf: parityOf, subOf: subOf, hexDist: hexDist, centerOf: centerOf, boundsOf: boundsOf, fitScale: fitScale,
             conflictsOf: conflictsOf, deadCellsOf: deadCellsOf, isSolved: isSolved, combosFor: combosFor, popPlace: popPlace, roundHexPath: roundHexPath, rating: rating,
             MAX_LEVEL: MAX_LEVEL, RAMP_LEVELS: RAMP_LEVELS, K3_TO: K3_TO, N3: N3, N4: N4, COMPACT4: COMPACT4, RARE: RARE, RARE_AT: RARE_AT, FREE_TO: FREE_TO, FREE_FILL: FREE_FILL,

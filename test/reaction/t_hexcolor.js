@@ -1,6 +1,7 @@
 // 六角著色（hexcolor）：關卡規格（線性）、各色格數、解題器（跟暴力窮舉對照）、出題（第 1～30 關＋到頂之後抽 3 關）（答案合法、預填跟答案一致、
 // 唯一解的關卡用「研究工具的另一個解題器」完整數完＝1 種）、陷阱挑法（同色預填避開「隔一格」花樣、各色平均）、
 // 相鄰同色／「！」警示／過關判斷、記號彈窗的顏色組合、限時、檔案規矩（沒有 resume:false、提示只在前 4 關、CSS 用變數）
+// V1.56.0 玩家意見（照「固定間隔」擺就能解完太無聊）：規律花樣（三色 6 種、四色 120 種）、答案不能太像規律花樣、預填要分散、預填要看不出規律、三色形狀不能是一整塊剛體
 const { game, rng, seedOf } = require('./load.js');
 const fs = require('fs'), path = require('path');
 const G = game('reaction_hexcolor.js'); const T = G.test;
@@ -17,7 +18,10 @@ ok(G.score.better === 'max' && G.score.min === 1 && G.score.max === T.MAX_LEVEL,
 const sp = lv => T.specFor(lv), F = T.K3_TO + 1, MX = T.RAMP_LEVELS;    // F：4 色的第一關；MX：難度到頂的那一關
 ok(T.RAMP_LEVELS === 30 && T.MAX_LEVEL === 90, '難度第 ' + T.RAMP_LEVELS + ' 關到頂、紀錄到第 ' + T.MAX_LEVEL + ' 關（全站 30／90）');
 for (let l = MX + 1; l <= T.MAX_LEVEL; l++) ok(JSON.stringify(sp(l)) === JSON.stringify(sp(MX)) && T.timeFor(l, 40) === T.timeFor(MX, 40), '第 ' + l + ' 關維持到頂的難度與限時');
-ok(Array.from({ length: T.K3_TO }, (_, i) => i + 1).every(l => sp(l).k === 3 && sp(l).compact === 3 && sp(l).unique), '第 1～' + T.K3_TO + ' 關：三色入門、實心、唯一解');
+ok(Array.from({ length: T.K3_TO }, (_, i) => i + 1).every(l => sp(l).k === 3 && sp(l).compact === T.K3_COMPACT && sp(l).unique), '第 1～' + T.K3_TO + ' 關：三色入門、唯一解、形狀緊密度 ' + T.K3_COMPACT);
+ok(T.K3_COMPACT < 3, '三色入門不用實心形狀（3 色的實心盤面只有一種規律塗法，預填怎麼挑都是無腦照擺）');
+ok(T.coverAt(1) === T.COVER_D[0] && T.coverAt(MX) === T.COVER_D[1] && T.coverAt(T.MAX_LEVEL) === T.COVER_D[1] && sp(1).cover === T.COVER_D[0] && sp(MX).cover === T.COVER_D[1], '預填分散的距離上限 ' + T.COVER_D + '（第 1 關 → 第 ' + MX + ' 關）');
+for (let l = 2; l <= MX; l++) ok(T.coverAt(l) >= T.coverAt(l - 1), '預填分散的距離上限不會變小（第 ' + l + ' 關）');
 ok(sp(1).n === T.N3[0] && sp(T.K3_TO).n === T.N3[1] && sp(1).extra === T.EXTRA3[0] && sp(T.K3_TO).extra === T.EXTRA3[1], '三色入門：格數 ' + T.N3 + '、暖身預填 ' + T.EXTRA3);
 // V1.51 玩家意見：第 3 關太簡單、只有 2 格預填 → 第 3 關改成 4 色自由擺，預填 9 格
 ok(sp(3).k === 4 && !sp(3).unique && sp(3).fill >= 9, '第 3 關：4 色自由擺、預填 ' + sp(3).fill + ' 格（舊版 3 色只有 2 格）');
@@ -83,7 +87,7 @@ function connected(cells) {
   while (st.length) { const x = st.pop(); Gr.nbrs[x].forEach(y => { if (!seen.has(y)) { seen.add(y); st.push(y); } }); }
   return seen.size === cells.length;
 }
-let uniqueChecked = 0, totalMs = 0, maxMs = 0, sameNear = 0, brkNear = 0, shares = [];
+let uniqueChecked = 0, totalMs = 0, maxMs = 0, sameNear = 0, brkNear = 0, shares = [], regs = [], regs3 = [];
 const LEVELS = Array.from({ length: T.RAMP_LEVELS }, (_, i) => i + 1).concat([45, 60, T.MAX_LEVEL]);     // 到頂之後抽幾關（跟第 30 關一樣難）
 for (const lv of LEVELS) {
   for (let s = 0; s < 3; s++) {
@@ -98,6 +102,13 @@ for (const lv of LEVELS) {
     for (let i = 0; i < z.n; i++) if (z.given[i] >= 0) { clues++; if (z.given[i] !== z.sol[i]) mism++; }
     ok(mism === 0 && clues === z.clues, tag + '：預填跟答案一致、預填數正確');
     ok(clues < z.n - 1, tag + '：至少留 2 格給玩家');
+    // V1.56.0：不能讓人照「固定間隔」擺就解完
+    const pats = T.patternsFor(z.cells, z.k), reg = T.regularity(pats, z.sol), pf = T.prefillFit(pats, z.given), gap = T.nearGap(z.cells, z.given);
+    regs.push(reg); if (S.k === 3) regs3.push(reg);
+    ok(reg < 0.9, tag + '：答案不是照規律花樣擺的（最像的花樣只吻合 ' + (100 * reg).toFixed(0) + '%；舊版三色實心盤面是 100%）');
+    ok(T.fitOk(pf.best, pf.total), tag + '：預填看不出規律（最像的花樣吻合 ' + pf.best + '／' + pf.total + ' 格預填）');
+    ok(gap <= S.cover + (S.unique ? 0 : 1), tag + '：預填分散（每格離最近的預填最多 ' + gap + ' 步，上限 ' + S.cover + (S.unique ? '' : '＋1') + '）');
+    if (S.k === 3) ok(T.rigidFrac(z.nbrs) <= T.RIGID_MAX + 1e-9, tag + '：三色形狀不是一整塊剛體（最大一塊佔 ' + (100 * T.rigidFrac(z.nbrs)).toFixed(0) + '%）');
     if (S.k === 4) {
       const c = z.counts;
       ok(c[3] === Math.round(S.n * S.rare), tag + '：最少那色 ' + c[3] + ' 格');
@@ -122,6 +133,9 @@ for (const lv of LEVELS) {
   }
 }
 ok(uniqueChecked === LEVELS.filter(l => sp(l).unique).length * 3, '唯一解的關卡都用第三方解題器數過（' + uniqueChecked + ' 題）');
+// 實測（每關 30 盤）：答案最像的規律花樣吻合 0.42～0.53（舊版 4 色高關卡 0.73～0.77、三色實心 1.00）；三色 0.50～0.52
+ok(regs.reduce((a, b) => a + b, 0) / regs.length <= 0.6, '全部題目：答案最像的規律花樣平均只吻合 ' + (100 * regs.reduce((a, b) => a + b, 0) / regs.length).toFixed(0) + '%（≤ 60%）');
+ok(regs3.reduce((a, b) => a + b, 0) / regs3.length <= 0.65, '三色入門：答案最像的規律花樣平均只吻合 ' + (100 * regs3.reduce((a, b) => a + b, 0) / regs3.length).toFixed(0) + '%（舊版 100%）');
 // 陷阱挑法（自由擺的 24 題）：實測同色預填 99～100% 都避開「隔一格」花樣（隨機挑約 71～77%），門檻訂 90%；最多那色佔預填中位 33～38%（隨機 44%），門檻 45%
 ok(brkNear / Math.max(1, sameNear + brkNear) >= 0.9, '自由擺：附近的同色預填 ≥ 90% 避開「隔一格」花樣（' + brkNear + '／' + (sameNear + brkNear) + '）');
 shares.sort((a, b) => a - b);
@@ -137,6 +151,41 @@ console.log('出題 ' + LEVELS.length * 3 + ' 題：平均 ' + (totalMs / (LEVEL
   ok(T.parityOf([0, 0]) === T.parityOf([2, 0]) && T.parityOf([0, 0]) === T.parityOf([0, 2]) && T.parityOf([0, 0]) === T.parityOf([-2, 2]) && T.parityOf([0, 0]) !== T.parityOf([1, 0]), '「隔一格」花樣：三個方向隔一格都同一類');
   ok(T.subOf([0, 0]) === T.subOf([3, 0]) && T.subOf([0, 0]) !== T.subOf([1, 0]) && T.subOf([0, 0]) !== T.subOf([2, 0]), '三色花樣：一排每隔兩格同一類');
   ok(T.hexDist([0, 0], [2, 0]) === 2 && T.hexDist([0, 0], [1, 1]) === 2 && T.hexDist([0, 0], [1, -1]) === 1, '六角距離');
+}
+
+// ── 規律花樣（V1.56.0）──
+{
+  const big = [];
+  for (let q = -4; q <= 4; q++) for (let r = -4; r <= 4; r++) if (Math.abs(q + r) <= 4) big.push([q, r]);      // 一個半徑 4 的大六角盤（61 格）
+  const Gb = Core.buildGraph(big);
+  const p3 = T.patternsFor(big, 3), p4 = T.patternsFor(big, 4);
+  ok(p3.length === 6 && p4.length === 24 * 4 + 24, '規律花樣：三色 6 種、四色 ' + p4.length + ' 種（五種花樣 × 顏色對應）');
+  const proper = p => big.every((_, i) => Gb.nbrs[i].every(j => p[i] !== p[j]));
+  ok(p3.every(proper) && p4.every(proper), '每個規律花樣都是合法的塗法（相鄰不同色）');
+  ok(p3.every(p => new Set(Array.from(p)).size === 3) && p4.filter(p => new Set(Array.from(p)).size === 4).length === 96, '三色花樣用滿 3 色；四色花樣 96 種用滿 4 色、24 種是「三色花樣＋一色不用」');
+  const sub = big.map(c => T.subOf(c));
+  ok(T.regularity(p3, sub) === 1 && T.regularity(p4, sub) === 1, '完全照「每隔兩格同色」擺的答案：規律程度 100%');
+  const rnd = rng(SEED + 7), shuffled = Array.from(sub, v => (v + (rnd() < 0.5 ? 1 : 0)) % 4);
+  ok(T.regularity(p4, shuffled) < 0.9, '亂改過的答案：規律程度降低');
+  // 預填看起來的規律程度
+  const g0 = new Int8Array(big.length).fill(-1);
+  [[0, 0], [3, 0], [0, 3], [-3, 3]].forEach(c => { const i = big.findIndex(x => x[0] === c[0] && x[1] === c[1]); g0[i] = p3[0][i]; });
+  const f0 = T.prefillFit(p3, g0);
+  ok(f0.total === 4 && f0.best === 4 && !T.fitOk(f0.best, f0.total), '預填 4 格全都照三色花樣：吻合 4／4，不及格（看得出規律）');
+  const i1 = big.findIndex(x => x[0] === 3 && x[1] === -3); g0[i1] = (p3[0][i1] + 1) % 3;       // [3,−3] 跟前面 4 格同一類（每隔兩格同色），卻塗成別的顏色：所有花樣都得跟它唱反調
+  const f1 = T.prefillFit(p3, g0);
+  ok(f1.total === 5 && f1.best === 4 && f1.best / f1.total < f0.best / f0.total, '加一格唱反調的預填：最像的花樣只吻合 4／5（原本 4／4）');
+  ok(T.fitOk(0, 2) && T.fitOk(2, 3) && !T.fitOk(3, 3) && T.fitOk(5, 10) && !T.fitOk(8, 10), '預填 ≤ 2 格不算；3 格最多吻合 2 格；10 格最多吻合 6 格');
+  // 預填分散的程度
+  const gg = new Int8Array(big.length).fill(-1);
+  ok(T.nearGap(big, gg) === 99, '沒有預填：空白距離 99');
+  gg[big.findIndex(x => x[0] === 0 && x[1] === 0)] = 0;
+  ok(T.nearGap(big, gg) === 4, '一格預填放正中央：最遠的格子離它 4 步');
+  // 剛體：實心六角盤＝一整塊；一排＝沒有三角形；兩片三角形只靠一個角連起來＝兩塊
+  ok(T.rigidFrac(Gb.nbrs) === 1, '實心盤面：整個是一塊剛體（100%）');
+  ok(T.rigidFrac(Core.buildGraph([[0, 0], [1, 0], [2, 0], [3, 0], [4, 0]]).nbrs) === 0, '一排格子：沒有三角形（0%）');
+  const tw = Core.buildGraph([[0, 0], [1, 0], [0, 1], [2, 0], [3, 0], [2, 1]]);     // 兩個三角形（[0,0][1,0][0,1] 與 [2,0][3,0][2,1]）只靠 [1,0]-[2,0] 這條邊連起來，沒有共用邊
+  ok(Math.abs(T.rigidFrac(tw.nbrs) - 0.5) < 1e-9, '兩個三角形只靠一條邊連著（沒有共用邊）：各是一塊，最大一塊佔 50%');
 }
 
 // ── 相鄰同色、「！」警示、過關 ──
