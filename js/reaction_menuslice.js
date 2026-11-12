@@ -11,6 +11,8 @@
    · 切：手指在畫面上拖過水果（手指走過的線段碰到水果的圓就算切到，segHitsCircle）。切到菜單外的 → 馬上結束；
      菜單上的水果落地還沒切 → 結束；所有水果都處理完（切了或落地了）就過關。
    · 難度（線性）：菜單 2 → 6 種（MENU_N）、水果總數 8 → 30 顆（TOTAL）、拋出間隔 1100 → 450 毫秒（SPAWN_MS）；看菜單的時間 3 秒（VIEW_S）。
+   · V1.55.0（玩家意見）：① 水果放大成 200%（拋出去的水果 FRUIT_PX 66 → 132、黑板菜單上的水果圖案 MENU_FRUIT_PX 52 → 104）；
+     ② 上方的菜單框不再是黑色底，改成跟遊戲畫面一樣的底色（--msl-board ＝ --c-paper），字改用深色（--msl-chalk ＝ --c-ink）。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
@@ -36,7 +38,8 @@
     var APEX = [0.2, 0.5];                      /* 最高點（畫面高度的倍數，0＝畫面上緣） */
     var T_APEX = [0.8, 1.0];                    /* 從拋出到最高點的時間（秒） */
     var X_RANGE = [0.14, 0.86];                 /* 水果的橫向位置（畫面寬度的倍數） */
-    var FRUIT_PX = 66;                          /* 水果的大小（px） */
+    var FRUIT_PX = 132;                         /* 拋出去的水果的大小（px）：V1.55.0 放大成 200%（原本 66） */
+    var MENU_FRUIT_PX = 104;                    /* 黑板菜單上水果圖案的大小（px）：V1.55.0 放大成 200%（原本 52） */
     var HIT_EXTRA = 8;                          /* 切到的判定半徑比水果多幾 px（比較好切） */
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var FRUITS = [                                  /* 水果清單：id 給程式用、name 是中文名稱、pair 是容易看錯的另一種水果（沒有就是 null） */
@@ -179,7 +182,7 @@
         /* 黑板菜單 */
         var board = h('div', { 'class': 'menuslice-board' }, [h('div', { 'class': 'menuslice-board__title', text: '今日菜單' })]);  /* 黑板菜單：標題「今日菜單」加上每種水果的圖與名字（items 放那一排）；看完時間到就收起來 */
         var items = h('div', { 'class': 'menuslice-board__items' });
-        q.menu.forEach(function (id) { var it = h('div', { 'class': 'menuslice-item' }); it.appendChild(fruitSvg(id, 52)); it.appendChild(h('div', { 'class': 'menuslice-item__name', text: nameOf(id) })); items.appendChild(it); });
+        q.menu.forEach(function (id) { var it = h('div', { 'class': 'menuslice-item' }); it.appendChild(fruitSvg(id, MENU_FRUIT_PX)); it.appendChild(h('div', { 'class': 'menuslice-item__name', text: nameOf(id) })); items.appendChild(it); });
         board.appendChild(items); field.appendChild(board);
         var counter = h('div', { 'class': 'menuslice-counter', text: '' }); field.appendChild(counter);
         var info = h('div', { 'class': 'qz-note menuslice-info', text: '' }); field.appendChild(info);
@@ -265,6 +268,7 @@
             if (missedFlag) cmp.appendChild(box(badId, '漏掉：', 'menuslice-cmp__box--bad'));
             else { cmp.appendChild(box(badId, '你切了：', 'menuslice-cmp__box--bad')); if (partnerId) cmp.appendChild(box(partnerId, '菜單上是：', 'menuslice-cmp__box--ok')); }
             field.appendChild(cmp);
+            if (board.offsetHeight > 0) cmp.style.top = (board.offsetTop + board.offsetHeight + 12) + 'px';   /* 水果放大後菜單框變高：對照圖排在菜單框下面，不蓋住它 */
             /* 菜單上對應的那一項標起來 */
             [].forEach.call(items.children, function (it, k) { var id = q.menu[k]; if (id === partnerId || (missedFlag && id === badId)) it.classList.add('menuslice-item--mark'); });
         }
@@ -305,7 +309,7 @@
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             menuCountFor: menuCountFor, totalFor: totalFor, spawnMsFor: spawnMsFor, fruitOf: fruitOf, nameOf: nameOf, menuFor: menuFor, decoyPools: decoyPools, flightPos: flightPos, landTime: landTime, segHitsCircle: segHitsCircle, makeLevel: makeLevel, fruitSvg: fruitSvg, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, MENU_N: MENU_N, TOTAL: TOTAL, SPAWN_MS: SPAWN_MS, VIEW_S: VIEW_S, MENU_FRAC: MENU_FRAC, PARTNER_FRAC: PARTNER_FRAC, LEAD_MS: LEAD_MS, BOTTOM: BOTTOM, EXIT: EXIT, APEX: APEX, T_APEX: T_APEX, X_RANGE: X_RANGE, FRUIT_PX: FRUIT_PX, FRUITS: FRUITS, PAIRS: PAIRS, SINGLES: SINGLES, SHAPES: SHAPES, MAX_LEVEL: MAX_LEVEL
+            RAMP_LEVELS: RAMP_LEVELS, MENU_N: MENU_N, TOTAL: TOTAL, SPAWN_MS: SPAWN_MS, VIEW_S: VIEW_S, MENU_FRAC: MENU_FRAC, PARTNER_FRAC: PARTNER_FRAC, LEAD_MS: LEAD_MS, BOTTOM: BOTTOM, EXIT: EXIT, APEX: APEX, T_APEX: T_APEX, X_RANGE: X_RANGE, FRUIT_PX: FRUIT_PX, MENU_FRUIT_PX: MENU_FRUIT_PX, FRUITS: FRUITS, PAIRS: PAIRS, SINGLES: SINGLES, SHAPES: SHAPES, MAX_LEVEL: MAX_LEVEL
         }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */

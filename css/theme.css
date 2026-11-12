@@ -263,6 +263,8 @@
     /* ── V1.34 反著滑（.swc-）：交通號誌的藍色圓牌 ── */
     --swc-blue: hsl(208, 72%, 42%);
     /* 自訂變數 --swc-blue（下面用 var(--swc-blue) 取用；可以由 JS 動態設定） */
+    --swc-red: hsl(4, 76%, 48%);
+    /* 自訂變數 --swc-red（紅色底色的箭頭：要逆著箭頭方向滑；V1.55.0 新增） */
 
     /* ── V1.34 敲幾下（.knk-）：木魚與木槌的木頭色、銅缽的銅色 ── */
     --knk-wood: hsl(28, 62%, 52%);
@@ -277,11 +279,11 @@
     /* 自訂變數 --knk-copper-dark（下面用 var(--knk-copper-dark) 取用；可以由 JS 動態設定） */
 
     /* ── V1.34 切菜單上的（.msl-）：黑板菜單與十二種水果的顏色 ── */
-    --msl-board: hsl(150, 16%, 22%);
+    --msl-board: var(--c-paper);
     /* 自訂變數 --msl-board（下面用 var(--msl-board) 取用；可以由 JS 動態設定） */
     --msl-frame: hsl(28, 45%, 42%);
     /* 自訂變數 --msl-frame（下面用 var(--msl-frame) 取用；可以由 JS 動態設定） */
-    --msl-chalk: hsl(48, 30%, 94%);
+    --msl-chalk: var(--c-ink);
     /* 自訂變數 --msl-chalk（下面用 var(--msl-chalk) 取用；可以由 JS 動態設定） */
     --msl-leaf: hsl(125, 48%, 38%);
     /* 自訂變數 --msl-leaf（下面用 var(--msl-leaf) 取用；可以由 JS 動態設定） */

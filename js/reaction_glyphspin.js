@@ -12,7 +12,8 @@
    · 答案按鈕＝這一組的字（不夠 OPT 個就從筆劃最接近的別組補）；按鈕上的字永遠是正常方向。
    · 題目字「不會消失」，一直顯示到玩家作答或時間到：
        - 旋轉：剛出現時很快（起始速度＝SPIN[0]→SPIN[1] 度／秒，是 V1.24 的 10 倍），隨時間慢慢變慢
-         （二次曲線，SLOW_S 秒降到最慢），最慢每秒一圈（SPIN_MIN ＝ 360 度／秒）；
+         （二次曲線，SLOW_S 秒降到最慢），最慢的轉速是 SPIN_MIN 度／秒；
+         V1.55.0（玩家意見）：SPIN_MIN、SLOW_S 改成跟其他難度參數一樣的 [第 1 關, 到頂] 格式，每關各自線性算出（spinMinAt、slowAt）；
        - 大小：剛出現時字寬是畫面寬度的 90%，隨時間線性縮小，作答時間用完時剛好是 10%（SIZE_PCT）。
    · 鏡射：每關 50% 機率（SYMMETRIC 裡的字左右對稱，鏡射看不出差異，所以不鏡射）；
      旋轉方向每關隨機（順時針或逆時針）。
@@ -32,9 +33,9 @@
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
-    var SPIN = [720, 3000];                     /* 剛出現時的旋轉角速度（度／秒）：第 1 關 → 到頂（V1.24 的 10 倍） */
-    var SPIN_MIN = 480;                         /* 最慢的旋轉角速度：每秒一圈 */
-    var SLOW_S = 5;                             /* 幾秒之後降到最慢 */
+    var SPIN = [1200, 2400];                     /* 剛出現時的旋轉角速度（度／秒）：第 1 關 → 到頂（V1.24 的 10 倍） */
+    var SPIN_MIN = [560, 960];                  /* 最慢的旋轉角速度（度／秒）：第 1 關 → 到頂（V1.55.0 改成 [第 1 關, 到頂]；目前兩頭一樣＝480） */
+    var SLOW_S = [8, 5];                        /* 幾秒之後降到最慢：第 1 關 → 到頂（V1.55.0 改成 [第 1 關, 到頂]；目前兩頭一樣＝5 秒） */
     var ANS_S = [10, 6];                        /* 作答限時（秒）：第 1 關 → 到頂；字不會消失，時間到就算失敗 */
     var SIZE_PCT = [90, 10];                    /* 字寬占畫面寬度的百分比：剛出現 → 作答時間用完時 */
     var STAGE_W = 500;                          /* 畫面寬度（px，舞台固定 500） */
@@ -52,19 +53,23 @@
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function spinAt(level) { return kit.ramp(level, SPIN[0], SPIN[1], RAMP_LEVELS); }       /* 這一關剛出現時的角速度 */
+    function spinMinAt(level) { return kit.ramp(level, SPIN_MIN[0], SPIN_MIN[1], RAMP_LEVELS); }  /* 這一關最慢的角速度（度／秒） */
+    function slowAt(level) { return kit.ramp(level, SLOW_S[0], SLOW_S[1], RAMP_LEVELS); }           /* 這一關幾秒之後降到最慢 */
     function optCount(level) { return Math.round(kit.ramp(level, OPT[0], OPT[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     function ansMs(level) { return Math.round(kit.ramp(level, ANS_S[0], ANS_S[1], RAMP_LEVELS) * 1000); }  /* Math.round：四捨五入成整數 */
     /* 這一關的目標筆劃數（線性，MAX_LEVEL 關之後維持） */
     function strokeTarget(level) { return kit.ramp(level, STROKES[0], STROKES[1], MAX_LEVEL); }
-    /* 角速度（度／秒）隨時間降低：t 秒時 ＝ SPIN_MIN ＋ (v0 − SPIN_MIN) × (1 − t/SLOW_S)²，SLOW_S 秒之後維持 SPIN_MIN */
-    function speedAt(v0, ms) {
-        var u = Math.max(0, 1 - ms / 1000 / SLOW_S);
-        return SPIN_MIN + (v0 - SPIN_MIN) * u * u;
+    /* 角速度（度／秒）隨時間降低：t 秒時 ＝ spinMin ＋ (v0 − spinMin) × (1 − t/slowS)²，slowS 秒之後維持 spinMin（spinMin、slowS 沒傳就用第 1 關的值） */
+    function speedAt(v0, ms, spinMin, slowS) {
+        if (spinMin == null) spinMin = SPIN_MIN[0]; if (slowS == null) slowS = SLOW_S[0];
+        var u = Math.max(0, 1 - ms / 1000 / slowS);
+        return spinMin + (v0 - spinMin) * u * u;
     }
     /* 某時刻（毫秒）的旋轉角度：speedAt 的積分（二次曲線降速，之後等速） */
     function angleAt(q, ms) {
-        var t = ms / 1000, v0 = Math.max(q.spin, SPIN_MIN), tt = Math.min(t, SLOW_S);
-        var travelled = SPIN_MIN * t + (v0 - SPIN_MIN) * SLOW_S / 3 * (1 - Math.pow(1 - tt / SLOW_S, 3));
+        var sm = q.spinMin == null ? SPIN_MIN[0] : q.spinMin, ss = q.slowS == null ? SLOW_S[0] : q.slowS;
+        var t = ms / 1000, v0 = Math.max(q.spin, sm), tt = Math.min(t, ss);
+        var travelled = sm * t + (v0 - sm) * ss / 3 * (1 - Math.pow(1 - tt / ss, 3));
         return q.start + q.dir * travelled;
     }
     /* 字寬占畫面寬度的比例（0～1）：剛出現 90% → 作答時間用完 10%，線性 */
@@ -98,7 +103,7 @@
         var mirror = SYMMETRIC.indexOf(target) < 0 && rand() < MIRROR_P;
         return {
             fam: fi, target: target, options: kit.shuffle(opts, rand), mirror: mirror,
-            dir: rand() < 0.5 ? 1 : -1, spin: spinAt(level), start: rand() * 360, strokes: FAMILIES[fi].s
+            dir: rand() < 0.5 ? 1 : -1, spin: spinAt(level), spinMin: spinMinAt(level), slowS: slowAt(level), start: rand() * 360, strokes: FAMILIES[fi].s
         };
     }
     /* 結算畫面的評語：依成績回傳一句話 */
@@ -130,7 +135,7 @@
         if (recent.length > RECENT_KEEP) recent.shift();
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         var limit = ansMs(level);
-        console.log('[鏡中旋轉字] 第 ' + level + ' 關：' + q.target + '（約 ' + q.strokes + ' 劃，' + (q.mirror ? '鏡射' : '不鏡射') + '，' + (q.dir > 0 ? '順' : '逆') + '時針，起始 ' + q.spin.toFixed(0) + ' 度／秒），選項 ' + q.options.join('') + '，限時 ' + limit + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
+        console.log('[鏡中旋轉字] 第 ' + level + ' 關：' + q.target + '（約 ' + q.strokes + ' 劃，' + (q.mirror ? '鏡射' : '不鏡射') + '，' + (q.dir > 0 ? '順' : '逆') + '時針，起始 ' + q.spin.toFixed(0) + ' 度／秒，最慢 ' + q.spinMin.toFixed(0) + '，' + q.slowS.toFixed(1) + ' 秒降到最慢），選項 ' + q.options.join('') + '，限時 ' + limit + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var glyph = h('div', { 'class': 'glyphspin-glyph', text: q.target });
         var note = h('div', { 'class': 'glyphspin-note', text: q.mirror ? '字被左右鏡射了，還在轉！' : '字在轉！' });
@@ -179,7 +184,7 @@
         rule: '畫面中央有一個大字，它會左右鏡射、**一直旋轉**，剛出現時轉得非常快，之後越轉越慢，但字也會越縮越小。下方有幾個長得很像的字，**點出「這個字原本是哪一個」**。答錯或來不及就結束，看你能過幾關。越後面的字筆劃越多！',
         mount: mount,
         score: SCORE,
-        test: { spinAt: spinAt, speedAt: speedAt, angleAt: angleAt, sizeFrac: sizeFrac, optCount: optCount, ansMs: ansMs, strokeTarget: strokeTarget, makeLevel: makeLevel, rating: rating, FAMILIES: FAMILIES, SYMMETRIC: SYMMETRIC, MIRROR_P: MIRROR_P, FAMILY_MAX: FAMILY_MAX, RAMP_LEVELS: RAMP_LEVELS, MAX_LEVEL: MAX_LEVEL, SPIN: SPIN, SPIN_MIN: SPIN_MIN, SLOW_S: SLOW_S, ANS_S: ANS_S, SIZE_PCT: SIZE_PCT, OPT: OPT, STROKES: STROKES, STROKE_SPREAD: STROKE_SPREAD, RECENT_KEEP: RECENT_KEEP }
+        test: { spinAt: spinAt, spinMinAt: spinMinAt, slowAt: slowAt, speedAt: speedAt, angleAt: angleAt, sizeFrac: sizeFrac, optCount: optCount, ansMs: ansMs, strokeTarget: strokeTarget, makeLevel: makeLevel, rating: rating, FAMILIES: FAMILIES, SYMMETRIC: SYMMETRIC, MIRROR_P: MIRROR_P, FAMILY_MAX: FAMILY_MAX, RAMP_LEVELS: RAMP_LEVELS, MAX_LEVEL: MAX_LEVEL, SPIN: SPIN, SPIN_MIN: SPIN_MIN, SLOW_S: SLOW_S, ANS_S: ANS_S, SIZE_PCT: SIZE_PCT, OPT: OPT, STROKES: STROKES, STROKE_SPREAD: STROKE_SPREAD, RECENT_KEEP: RECENT_KEEP }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */
     Reaction.register(G);

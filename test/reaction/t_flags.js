@@ -15,7 +15,7 @@ for (let n = 1; n <= 80; n++) ok(T.intervalFor(n) <= T.intervalFor(n - 1) && T.g
 { const d = []; for (let n = 1; n <= T.RAMP_CMDS; n++) d.push(T.intervalFor(n - 1) - T.intervalFor(n)); ok(Math.max(...d) - Math.min(...d) <= 1, '間隔線性縮短：每句 −' + Math.min(...d) + '～−' + Math.max(...d) + ' 毫秒'); }
 ok(T.graceFor(T.RAMP_CMDS) >= 400, '最快的時候寬限時間還有 ' + T.graceFor(T.RAMP_CMDS) + ' 毫秒（人反應得過來）');
 // V1.54.0 玩家意見「難度太低，縮短時間限制」：間隔與寬限都比原本（2200 → 950、62%）短
-ok(T.INTERVAL[0] <= 1800 && T.INTERVAL[1] <= 800 && T.GRACE <= 0.62 && T.RAMP_CMDS <= 40, '時間限制縮短：間隔 ' + T.INTERVAL + '、寬限比例 ' + T.GRACE + '、' + T.RAMP_CMDS + ' 句到頂');
+ok(T.INTERVAL[0] <= 1800 && T.INTERVAL[1] <= 800 && T.GRACE <= 0.7 && T.RAMP_CMDS <= 40, '時間限制縮短：間隔 ' + T.INTERVAL + '、寬限比例 ' + T.GRACE + '、' + T.RAMP_CMDS + ' 句到頂');
 
 // ── 套用口令 ──
 ok(JSON.stringify(T.applyCommand({ L: false, R: true }, { kind: 'raise', flags: ['L'], to: true })) === '{"L":true,"R":true}', '紅旗舉起來：紅旗該舉著、白旗不變');

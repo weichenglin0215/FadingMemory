@@ -10,6 +10,8 @@ ok(T.menuCountFor(1) === T.MENU_N[0] && T.menuCountFor(T.RAMP_LEVELS) === T.MENU
 ok(T.totalFor(1) === T.TOTAL[0] && T.totalFor(T.RAMP_LEVELS) === T.TOTAL[1], '水果總數 ' + T.TOTAL);
 ok(T.spawnMsFor(1) === T.SPAWN_MS[0] && T.spawnMsFor(T.RAMP_LEVELS) === T.SPAWN_MS[1], '拋出間隔 ' + T.SPAWN_MS);
 ok(T.VIEW_S === 3, '看菜單 3 秒');
+// V1.55.0 玩家意見：水果放大成 200%（含菜單框上的圖案）、菜單框改用遊戲畫面的底色
+ok(T.FRUIT_PX === 132 && T.MENU_FRUIT_PX === 104, '水果放大成 200%：拋出的 66 → ' + T.FRUIT_PX + '、菜單上的 52 → ' + T.MENU_FRUIT_PX);
 for (let l = 2; l <= 60; l++) ok(T.menuCountFor(l) >= T.menuCountFor(l - 1) && T.totalFor(l) >= T.totalFor(l - 1) && T.spawnMsFor(l) <= T.spawnMsFor(l - 1), '單調 ' + l);
 { const d = []; for (let l = 2; l <= T.RAMP_LEVELS; l++) d.push(T.totalFor(l) - T.totalFor(l - 1)); ok(Math.max(...d) - Math.min(...d) <= 1, '水果數線性成長：每關 +' + Math.min(...d) + '～' + Math.max(...d)); }
 
@@ -78,7 +80,10 @@ function maxAir(q) { let mx = 0; q.tosses.forEach(a => { let c = 0; q.tosses.for
 { const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_menuslice.js'), css = rd('../../css/games/reaction_menuslice.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
   ok(/api\.fail\(\{ delay: 3600/.test(src) && /showMenuAgain/.test(src) && /menuslice-cmp__box--ok/.test(src), '失敗：菜單再亮出來、錯的與菜單上的並排、停格 2 秒以上');
   ok(/\.menuslice-board \{[^}]*var\(--msl-board\)/.test(css) && /\.menuslice-cmp__box--bad \{[^}]*var\(--c-bad/.test(css) && /\.menuslice-f--orange \{[^}]*var\(--msl-orange\)/.test(css), '黑板、水果顏色用 CSS 變數');
-  ok(boot.indexOf("'js/reaction_menuslice.js'") > 0 && /長得像/.test(G.rule), 'boot.js 有載入、玩法說明提到長得像'); }
+  ok(boot.indexOf("'js/reaction_menuslice.js'") > 0 && /長得像/.test(G.rule), 'boot.js 有載入、玩法說明提到長得像');
+  ok(/fruitSvg\(id, MENU_FRUIT_PX\)/.test(src) && /fruitSvg\(tz\.fruit, FRUIT_PX\)/.test(src) && /board\.offsetHeight/.test(src), '菜單框與拋出的水果都用放大後的尺寸；失敗的對照圖排在菜單框下面');
+  const theme = rd('../../css/theme.css').replace(/\/\*[\s\S]*?\*\//g, '').split(/\s+/).join(' ');
+  ok(/--msl-board: var\(--c-paper\);/.test(theme) && /--msl-chalk: var\(--c-ink\);/.test(theme) && !/hsl\(150, 16%, 22%\)/.test(theme), '菜單框底色＝遊戲畫面的底色（--c-paper），字是深色（--c-ink），不再是黑底'); }
 // 每種水果都有對應的 CSS 顏色
 { const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_menuslice.css'), 'utf8'); T.FRUITS.forEach(f => ok(css.indexOf('.menuslice-f--' + f.id + ' ') >= 0, 'CSS 有 .menuslice-f--' + f.id)); }
 ok(T.rating(2) !== T.rating(4) && T.rating(4) !== T.rating(7) && T.rating(7) !== T.rating(12) && T.rating(12) !== T.rating(20), '評語分級');

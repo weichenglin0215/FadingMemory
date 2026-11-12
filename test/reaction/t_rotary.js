@@ -11,6 +11,22 @@ ok(T.viewMs(1) === T.VIEW_S[0] * 1000 && T.viewMs(T.RAMP_LEVELS) === T.VIEW_S[1]
 ok(T.repeatsFor(1) === T.REPEATS[0] && T.repeatsFor(T.RAMP_LEVELS) === T.REPEATS[1] && T.mirrorsFor(1) === T.MIRRORS[0] && T.mirrorsFor(T.RAMP_LEVELS) === T.MIRRORS[1], '容易混的數字串組數 ' + T.REPEATS + '／' + T.MIRRORS);
 for (let l = 2; l <= 60; l++) ok(T.digitsFor(l) >= T.digitsFor(l - 1) && (T.VIEW_S[1] >= T.VIEW_S[0] ? T.viewMs(l) >= T.viewMs(l - 1) : T.viewMs(l) <= T.viewMs(l - 1)) && T.repeatsFor(l) >= T.repeatsFor(l - 1) && T.mirrorsFor(l) >= T.mirrorsFor(l - 1), '單調（看的時間 VIEW_S 由使用者調，變長或變短都可以，方向一致就好） ' + l);
 { const d = []; for (let l = 2; l <= T.RAMP_LEVELS; l++) d.push(T.digitsFor(l) - T.digitsFor(l - 1)); ok(Math.max(...d) - Math.min(...d) <= 1, '號碼長度線性：每關 +' + Math.min(...d) + '～' + Math.max(...d)); }
+// V1.55.0 玩家意見：太容易 → 每關多 1 碼（起點與到頂由使用者調整）；一行放 10 個數字，超過換到下一行
+ok(T.digitsFor(1) === T.DIGITS[0] && T.DIGITS[0] >= 6, '題目從 ' + T.DIGITS[0] + ' 個數字開始（我設 8，使用者已手調成 6）');
+for (let l = 1; l < T.RAMP_LEVELS; l++) ok(T.digitsFor(l + 1) === T.digitsFor(l) + 1, '每關增加一個數字：第 ' + l + ' → ' + (l + 1) + ' 關');
+ok(T.ROW_DIGITS === 10, '一行放 10 個數字');
+{ const chars = n => Array.from({ length: n }, (_, i) => String(i % 10));
+  ok(T.chunkRows(chars(8)).length === 1 && T.chunkRows(chars(10)).length === 1 && T.chunkRows(chars(10))[0].length === 10, '10 個以內放在同一行');
+  ok(T.chunkRows(chars(11)).length === 2 && T.chunkRows(chars(11))[1].length === 1 && T.chunkRows(chars(20)).length === 2 && T.chunkRows(chars(21)).length === 3, '超過 10 個數字就放到下一行');
+  for (let n = 1; n <= 40; n++) { const rows = T.chunkRows(chars(n)); ok(rows.every((r, i) => r.length === (i < rows.length - 1 ? 10 : n - 10 * (rows.length - 1))) && rows.reduce((a, r) => a.concat(r), []).join('') === chars(n).join('') && rows.length === Math.ceil(n / 10), '切成一行一行：' + n + ' 碼 → ' + rows.length + ' 行（順序不變）'); }
+  // 字級：一行 10 個放得下寬度、所有行放得下高度（兩組並排時也是）
+  for (const [W, availH] of [[472, 266], [400, 240], [472, 180]]) for (let n = 8; n <= 40; n++) for (const two of [false, true]) {
+    const rows = Math.ceil(n / 10) * (two ? 2 : 1), px = T.digitPx(rows, W, availH, two);       // 撥錯時最壞的情況：「你撥的」跟正確號碼一樣長
+    ok(px >= 12 && px <= 58 && T.ROW_DIGITS * 0.85 * px <= W - 24 + 1e-9, n + ' 碼：一行 10 個數字寬 ' + (10 * 0.85 * px).toFixed(0) + ' 放得進 ' + (W - 24));
+    if (px > 12) ok(rows * 1.15 * px + (two ? 120 : 90) <= availH + 1e-9, n + ' 碼 ' + (two ? '兩組' : '一組') + '：總高度放得進 ' + availH);
+  }
+  ok(T.digitPx(1, 472, 266, false) > T.digitPx(4, 472, 266, false) && T.digitPx(4, 472, 266, false) >= 30 && T.digitPx(5, 472, 266, true) >= 24, '行數越多字級越小，但 37 碼（4 行）還是 ≥ 30px、撥錯時 5 行還是 ≥ 24px：' + T.digitPx(1, 472, 266, false) + ' → ' + T.digitPx(4, 472, 266, false) + '／' + T.digitPx(5, 472, 266, true));
+}
 
 // ── 轉盤幾何 ──
 ok(T.rotationFor(1) === 60 && T.rotationFor(2) === 87 && T.rotationFor(9) === 276 && T.rotationFor(0) === 303, '數字要轉的度數：1→60、2→87、9→276、0→303');
@@ -38,7 +54,7 @@ for (let d = 0; d <= 9; d++) { const cx = 200, cy = 300, r = 120; let rot = 0, l
 
 // ── 號碼 ──
 for (let i = 0; i < 400; i++) {
-  const len = 3 + Math.floor(rnd() * 10), reps = Math.floor(rnd() * 3), mir = Math.floor(rnd() * 3), r = T.makeNumber(len, reps, mir, rnd);
+  const len = 3 + Math.floor(rnd() * 36), reps = Math.floor(rnd() * 3), mir = Math.floor(rnd() * 3), r = T.makeNumber(len, reps, mir, rnd);
   ok(r.num.length === len && /^[0-9]+$/.test(r.num), '號碼 ' + r.num + ' 長度 ' + len);
   const f = T.feasible(len, reps, mir); ok(T.repeatCount(r.num) >= f.reps && T.mirrorCount(r.num) >= f.mirrors && r.want.reps === f.reps && r.want.mirrors === f.mirrors, '號碼 ' + r.num + '：連續相同 ' + T.repeatCount(r.num) + '（要 ' + f.reps + '）、abca 型 ' + T.mirrorCount(r.num) + '（要 ' + f.mirrors + '）');
 }
@@ -59,6 +75,13 @@ console.log('號碼長度分布 ' + JSON.stringify(lens) + '；平均每組號�
 { const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_rotary.js'), css = rd('../../css/games/reaction_rotary.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
   ok(/api\.fail\(\{ delay: 3600/.test(src) && /rotary-cmp__d--bad/.test(src) && /Sfx\.play\('tick'\)/.test(src), '失敗：正確號碼與你撥的並排、錯的標紅、停格 3 秒以上；轉回來有嗒嗒聲');
   ok(/\.rotary-cmp__d--bad \{[^}]*var\(--c-bad/.test(css) && /\.rotary-plate \{[^}]*var\(--rtr-plate\)/.test(css) && /\.rotary-metal \{[^}]*var\(--rtr-metal\)/.test(css), '紅色、轉盤顏色用 CSS 變數');
-  ok(boot.indexOf("'js/reaction_rotary.js'") > 0 && /轉盤/.test(G.rule), 'boot.js 有載入、玩法說明提到轉盤'); }
+  ok(boot.indexOf("'js/reaction_rotary.js'") > 0 && /轉盤/.test(G.rule), 'boot.js 有載入、玩法說明提到轉盤');
+  ok(/rotary-top/.test(src) && /chunkRows\(chars\)/.test(src) && /digitPx\(Math\.ceil\(len \/ ROW_DIGITS\), W, availH/.test(src), '號碼一行一行畫（chunkRows）、字級依行數（digitPx）、上方文字放在 rotary-top 容器');
+  ok(/一行放 10 個數字/.test(G.rule) && /多 1 碼/.test(G.rule), '玩法說明提到一行 10 個數字、每關多 1 碼');
+  // V1.55.0 玩家意見：看題目的時候下方整個轉盤半透明 33%（不能轉），開始撥號才恢復
+  ok(T.VIEW_OPACITY === 0.33, '看號碼時轉盤的不透明度 33%：' + T.VIEW_OPACITY);
+  const iv = src.indexOf('svg.style.opacity = String(VIEW_OPACITY)'), ib = src.indexOf("svg.style.opacity = '1'"), bg = src.indexOf('function begin()');
+  ok(iv > 0 && ib > bg && bg > 0 && iv < bg, '一開始轉盤半透明、begin()（號碼收起來、可以撥號）才恢復不透明');
+  ok(/\.rotary-svg \{[^}]*transition: opacity/.test(css.replace(/\/\*[\s\S]*?\*\//g, '')), '不透明度是慢慢變的（CSS transition）'); }
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !== T.rating(18) && T.rating(18) !== T.rating(30), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

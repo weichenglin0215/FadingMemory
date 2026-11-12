@@ -10,6 +10,7 @@
    · 每個字的「字」和「墨水顏色」一定不同（用另一種顏色寫，不會有一致的字讓你偷懶）。
    · 難度（線性）：字數 3 → 7（LEN）、每個字停留 800 → 380 毫秒（FLASH_MS）、空檔 200 → 100 毫秒（GAP_MS）、作答時間 10 → 5 秒（RESP_S）。
    · 答錯時把整串字並排（每個字用它的墨水顏色寫、下面寫出「字／墨色」），被問的那一個標起來。
+     V1.55.0（玩家意見）：答對也一樣把整串字並排、寫出正確答案，停 SHOW_ANS_MS（2 秒）之後才進下一題。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
@@ -30,6 +31,7 @@
     var RESP_S = [10, 5];                       /* 作答的時間（秒）：第 1 關 → 到頂 */
     var WHICH_FROM = 8, WHICH_P = [0.15, 0.4];  /* 第幾關起會問「第幾個字是用 X 色寫的」、機率（第 WHICH_FROM 關 → 到頂） */
     var LEAD_MS = 600;                              /* 出第一個字之前先等多久（毫秒） */
+    var SHOW_ANS_MS = 2000;                         /* 答對之後，把正確答案顯示多久（毫秒）才進下一題（V1.55.0 新增；原本答對只停 1.2 秒、也不顯示答案） */
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var COLORS = [                              /* 六種顏色：id 對應 CSS 的 .inkword-c--id 與 theme 的 --ikw-id */
         { id: 'red', name: '紅' }, { id: 'yellow', name: '黃' }, { id: 'green', name: '綠' }, { id: 'blue', name: '藍' }, { id: 'purple', name: '紫' }, { id: 'orange', name: '橘' }
@@ -138,8 +140,7 @@
             grid.btns[Q.answer].classList.add('inkword-ok');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
             if (pick >= 0 && !ok) grid.btns[pick].classList.add('inkword-bad');
             var ansText = Q.type === 'which' ? '第 ' + (Q.answer + 1) + ' 個' : COLORS[Q.answer].name;
-            if (ok) { info.textContent = '答對了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1200 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
-            /* 答錯：把整串字並排，被問的標起來 */
+            /* 把整串字並排（被問的標起來）：答對、答錯都會顯示；答對的話停 SHOW_ANS_MS 讓你看清楚正確答案 */
             ask.style.display = 'none';
             var strip = h('div', { 'class': 'inkword-strip' });
             q.seq.forEach(function (s, i) {             /* forEach：對陣列的每個元素各做一次 */
@@ -151,6 +152,7 @@
                 strip.appendChild(cell);
             });
             field.insertBefore(strip, info);
+            if (ok) { info.textContent = '答對了！' + questionText(Q) + ' 答案是「' + ansText + '」'; kit.flash(stage, true, api.my); api.pass({ delay: SHOW_ANS_MS }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
             info.textContent = questionText(Q) + ' 答案是「' + ansText + '」' + (pick >= 0 ? '，你選了「' + (Q.type === 'which' ? '第 ' + (pick + 1) + ' 個' : COLORS[pick].name) + '」' : '（時間到）');
             kit.flash(stage, false, api.my);
             api.fail({ delay: 3800, lines: [questionText(Q) + ' 答案是「' + ansText + '」', pick >= 0 ? '你選了「' + (Q.type === 'which' ? '第 ' + (pick + 1) + ' 個' : COLORS[pick].name) + '」' : '時間到！'] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
@@ -170,7 +172,7 @@
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             lenFor: lenFor, flashMsFor: flashMsFor, gapMsFor: gapMsFor, respMs: respMs, whichPFor: whichPFor, makeLevel: makeLevel, questionText: questionText, ordinal: ordinal, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, LEN: LEN, FLASH_MS: FLASH_MS, GAP_MS: GAP_MS, RESP_S: RESP_S, WHICH_FROM: WHICH_FROM, WHICH_P: WHICH_P, LEAD_MS: LEAD_MS, COLORS: COLORS, MAX_LEVEL: MAX_LEVEL
+            RAMP_LEVELS: RAMP_LEVELS, LEN: LEN, FLASH_MS: FLASH_MS, GAP_MS: GAP_MS, RESP_S: RESP_S, WHICH_FROM: WHICH_FROM, WHICH_P: WHICH_P, LEAD_MS: LEAD_MS, SHOW_ANS_MS: SHOW_ANS_MS, COLORS: COLORS, MAX_LEVEL: MAX_LEVEL
         }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */

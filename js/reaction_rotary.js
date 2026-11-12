@@ -10,9 +10,11 @@
    · 撥號：手指按在洞裡（hitHole），轉盤跟著手指繞中心轉（累加手指的角度變化，只能順時針，轉到擋片就卡住）；放手時轉到底（差 PULL_TOL 度以內）才算撥了這個數字，
      沒轉到底就彈回去（不算）。算撥了之後，轉盤用固定的速度（RETURN_DEG_S 度／秒）自己轉回來，每轉 30° 發出一聲「嗒」——**轉回來的時候不能撥**，
      所以撥 0（轉得最多）要等最久（returnTimeMs），這段時間要靠記憶撐住後面的號碼。
-   · 號碼（makeLevel）：長度 3 → 10 碼（DIGITS）；看的時間 3 → 2 秒（VIEW_S）；容易混的數字串隨關卡增加：
+   · 號碼（makeLevel）：長度每關多 1 碼（DIGITS 是 [第 1 關, 到頂]，30 關走完，所以每關剛好 +1；V1.55.0 玩家意見：太容易，儘快提高難度；使用者目前調成 6 → 35）；
+     號碼一行最多放 ROW_DIGITS（10）個數字，超過就換到下一行（chunkRows；字級依行數縮放，digitPx）；看的時間（VIEW_S）；容易混的數字串隨關卡增加：
      連續相同的數字（「22」、「2255」）、頭尾相同的短串（「0920」對「0902」那種：a b c a，只差中間兩碼的順序）。
    · 撥錯一碼就結束：把正確號碼和你撥的並排，錯的那一碼標紅。
+   · V1.55.0（玩家意見）：上方顯示號碼、要玩家專心看的時候，下方整個轉盤變成半透明（VIEW_OPACITY ＝ 33%），表示現在不能轉；號碼收起來、可以撥號時恢復不透明。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
@@ -27,10 +29,12 @@
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
-    var DIGITS = [6, 12];                       /* 號碼長度：第 1 關 → 到頂 */
-    var VIEW_S = [4, 24];                        /* 號碼閃現的時間（秒）：第 1 關 → 到頂 */
-    var REPEATS = [0, 2];                       /* 號碼裡「連續相同數字」的組數：第 1 關 → 到頂 */
-    var MIRRORS = [0, 2];                       /* 號碼裡「a b c a」型（頭尾相同、中間容易順序弄反）的組數：第 1 關 → 到頂 */
+    var DIGITS = [6, 35];                       /* 號碼長度：第 1 關 → 到頂（V1.55.0：每關多 1 碼；我設的是 8 → 37，你已手調成 6 → 35，原本 6 → 12） */
+    var VIEW_OPACITY = 0.33;                    /* 看號碼的時候，下方轉盤的不透明度（0.33＝半透明 33%，表示現在不能轉；V1.55.0 新增） */
+    var ROW_DIGITS = 10;                        /* 號碼一行放幾個數字，超過就換到下一行（V1.55.0） */
+    var VIEW_S = [8, 38];                        /* 號碼閃現的時間（秒）：第 1 關 → 到頂 */
+    var REPEATS = [1, 5];                       /* 號碼裡「連續相同數字」的組數：第 1 關 → 到頂 */
+    var MIRRORS = [1, 4];                       /* 號碼裡「a b c a」型（頭尾相同、中間容易順序弄反）的組數：第 1 關 → 到頂 */
     var STOP_ANGLE = 120;                       /* 金屬擋片的位置（度，從正上方順時針；120＝右下方） */
     var ROT_FIRST = 60, ROT_STEP = 27;          /* 數字 1 要轉幾度、每多一個數字多轉幾度（0 當作第 10 個） */
     var PULL_TOL = 8;                           /* 放手時離擋片差幾度以內算「拉到底」 */
@@ -45,6 +49,14 @@
     function viewMs(level) { return Math.round(ramp(level, VIEW_S) * 1000); }
     function repeatsFor(level) { return Math.round(ramp(level, REPEATS)); }
     function mirrorsFor(level) { return Math.round(ramp(level, MIRRORS)); }
+    /* 把號碼（字元陣列）切成一行一行：每行最多 ROW_DIGITS 個 */
+    function chunkRows(chars) { var rows = []; for (var i = 0; i < chars.length; i += ROW_DIGITS) rows.push(chars.slice(i, i + ROW_DIGITS)); return rows; }  /* slice(a, b)：取陣列的一段 */
+    /* 數字的字級（px）：rows ＝ 畫面上所有數字一共有幾行（撥錯時是「正確號碼」加「你撥的」兩組的行數加起來）；一行 ROW_DIGITS 個要放得下畫面寬度 W、所有行要放得下可用的高度 availH；
+       two＝撥錯時有兩個標籤（正確號碼、你撥的）要多留一些高度，沒有的話留的是提示與說明文字的高度 */
+    function digitPx(rows, W, availH, two) {
+        var byW = (W - 24) / (ROW_DIGITS * 0.85), byH = (availH - (two ? 120 : 90)) / (rows * 1.15);
+        return Math.floor(Math.max(12, Math.min(58, byW, byH)));
+    }
     function wrap180(a) { var x = ((a + 180) % 360 + 360) % 360 - 180; return x === -180 ? 180 : x; }
     function wrap360(a) { return ((a % 360) + 360) % 360; }
     /* 撥數字 d 要把轉盤順時針轉幾度（1 最少、0 最多） */
@@ -136,14 +148,22 @@
         var R = Math.min(W / 2 - 18, (H - 300) / 2, 190), cx = W / 2, cy = H - R - 18, ring = R * 0.72, holeR = R * 0.135, sc = R / 190;
         var field = h('div', { 'class': 'rotary-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+        /* 轉盤上方的文字（提示、號碼、你撥的、說明）由上往下排在同一個容器裡：號碼可能有好幾行，不能各自釘死位置（V1.55.0） */
+        var availH = Math.max(120, cy - R - 14);        /* 轉盤上緣以上可以用的高度 */
         var tip = h('div', { 'class': 'qz-note rotary-tip', text: '記住號碼，等一下照順序撥出來' });
-        field.appendChild(tip);
-        var numEl = h('div', { 'class': 'rotary-num', text: q.num.split('').join(' ') });
-        field.appendChild(numEl);
+        var numEl = h('div', { 'class': 'rotary-num' });
         var gotEl = h('div', { 'class': 'rotary-got', text: '' });
-        field.appendChild(gotEl);
         var info = h('div', { 'class': 'qz-note rotary-info', text: '' });
-        field.appendChild(info);
+        field.appendChild(h('div', { 'class': 'rotary-top' }, [tip, numEl, gotEl, info]));
+        numEl.style.fontSize = digitPx(Math.ceil(len / ROW_DIGITS), W, availH, false) + 'px';
+        /* 把一組數字畫成一行一行（每行 ROW_DIGITS 個）：chars 是字元陣列（''＝還沒撥的空格）；mark＝要標記的第幾碼（0 起算）、cls＝標記用的 class */
+        function rowsOf(chars, mark, cls) {
+            return chunkRows(chars).map(function (row, r) {
+                return h('div', { 'class': 'rotary-cmp' }, row.map(function (c, i) { return h('span', { 'class': 'rotary-cmp__d' + (c === '' ? ' rotary-cmp__d--blank' : '') + (r * ROW_DIGITS + i === mark ? ' ' + cls : ''), text: c }); }));  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+            });
+        }
+        function setNum(chars) { numEl.innerHTML = ''; rowsOf(chars, -1, '').forEach(function (r) { numEl.appendChild(r); }); }  /* innerHTML = ''：把元素裡面的東西全部清掉 */
+        setNum(q.num.split(''));
 
         /* 轉盤（SVG）：固定的底板（黑色，上面印著數字）→ 會轉的金屬盤（挖了十個洞）→ 固定的擋片 → 中心蓋子 */
         var svg = kit.svg('svg', { 'class': 'rotary-svg', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H }, field);  /* kit.svg(標籤, 屬性, 父元素)：建立 SVG 向量圖形元素（形狀、線條…），畫圖用，放大縮小不會糊 */
@@ -163,11 +183,12 @@
         var holeEls = [];
         for (var m = 0; m <= 9; m++) { var hh = polar(cx, cy, ring, holeAngle(m)); holeEls[m] = kit.svg('circle', { 'class': 'rotary-hole', cx: hh[0], cy: hh[1], r: holeR, 'data-d': m }, disc); }
 
+        svg.style.opacity = String(VIEW_OPACITY);        /* 看號碼的時候轉盤半透明（不能轉）；begin() 會恢復 */
         var rot = 0, grabbed = -1, drag = null, busy = true, step = 0, over = false, done = false, loop = null;
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() { disc.setAttribute('transform', 'rotate(' + rot.toFixed(2) + ' ' + cx + ' ' + cy + ')'); }  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
         paint();
-        function placeholders() { return q.num.split('').map(function (c, i) { return i < step ? c : '＿'; }).join(' '); }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
+        function placeholders() { return q.num.split('').map(function (c, i) { return i < step ? c : ''; }); }  /* 還沒撥的碼是空格 */
         /* 看號碼 */
         info.textContent = '看 ' + (q.viewMs / 1000).toFixed(0) + ' 秒';
         api.timer(q.viewMs, begin);                     /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
@@ -176,8 +197,8 @@
             api.after(q.viewMs + 300, function () { kit.hintOn(stage, null, { mode: 'drag', x: p0[0], y: p0[1], dx: tgt[0] - p0[0], dy: tgt[1] - p0[1], text: '手指伸進洞，順時針拉到底' }); });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
         }
         function begin() {
-            numEl.textContent = placeholders(); numEl.classList.add('rotary-num--hidden'); tip.textContent = '照順序撥號（順時針拉到底）';  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-            info.textContent = ''; busy = false;
+            setNum(placeholders()); numEl.classList.add('rotary-num--hidden'); tip.textContent = '照順序撥號（順時針拉到底）';  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
+            info.textContent = ''; busy = false; svg.style.opacity = '1';       /* 可以撥號了：轉盤恢復不透明 */
         }
         svg.addEventListener('pointerdown', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (busy || over || done || api.over || drag) return;
@@ -218,7 +239,7 @@
             busy = true; info.textContent = '';
             var ok = String(d2) === q.num[step];
             if (!ok) { fail(d2); return; }
-            step++; numEl.textContent = placeholders(); gotEl.textContent = '';
+            step++; setNum(placeholders()); gotEl.textContent = '';
             springBack(false, function () {
                 if (step >= len) { done = true; numEl.classList.remove('rotary-num--hidden'); numEl.classList.add('rotary-num--ok'); info.textContent = '撥通了！'; kit.flash(stage, true, api.my); api.pass({ delay: 1400 }); return; }  /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
                 busy = false;
@@ -229,10 +250,11 @@
             over = true;
             var right = q.num.split(''), mine = q.num.slice(0, step).split('').concat([String(wrong)]);
             numEl.classList.remove('rotary-num--hidden');
-            numEl.innerHTML = ''; numEl.appendChild(h('div', { 'class': 'rotary-cmp__label', text: '正確號碼' }));  /* innerHTML = ''：把元素裡面的東西全部清掉 */
-            numEl.appendChild(h('div', { 'class': 'rotary-cmp' }, right.map(function (c, i) { return h('span', { 'class': 'rotary-cmp__d' + (i === step ? ' rotary-cmp__d--ok' : ''), text: c }); })));
+            tip.style.display = 'none'; numEl.style.fontSize = gotEl.style.fontSize = digitPx(chunkRows(right).length + chunkRows(mine).length, W, availH, true) + 'px';   /* 兩組號碼要擠進轉盤上方：提示收起來、字縮小 */
+            numEl.innerHTML = ''; numEl.appendChild(h('div', { 'class': 'rotary-cmp__label', text: '正確號碼' }));
+            rowsOf(right, step, 'rotary-cmp__d--ok').forEach(function (r) { numEl.appendChild(r); });
             gotEl.innerHTML = ''; gotEl.appendChild(h('div', { 'class': 'rotary-cmp__label', text: '你撥的' }));
-            gotEl.appendChild(h('div', { 'class': 'rotary-cmp' }, mine.map(function (c, i) { return h('span', { 'class': 'rotary-cmp__d' + (i === step ? ' rotary-cmp__d--bad' : ''), text: c }); })));
+            rowsOf(mine, step, 'rotary-cmp__d--bad').forEach(function (r) { gotEl.appendChild(r); });
             info.textContent = '第 ' + (step + 1) + ' 碼撥錯了：應該是 ' + q.num[step] + '，你撥了 ' + wrong;
             springBack(true, function () { });
             kit.flash(stage, false, api.my);
@@ -257,14 +279,14 @@
     var G = {
         id: ID,
         name: '轉盤電話',
-        rule: '上方會閃過一組電話號碼，然後收起來。下面是一台老式轉盤電話：**手指伸進數字的洞，順時針畫圈拉到金屬擋片，放手**，轉盤會自己轉回來，這樣就撥了一個數字。**照順序把號碼撥完**，撥錯一碼就結束。注意：數字越大（0 最大）要轉越大一圈，**轉盤轉回來的時候不能撥**，要靠記憶撐住後面的號碼。號碼裡有容易混的數字串（像 0920 和 0902、連續的 2255）。越後面，號碼越長、看的時間越短！',
+        rule: '上方會閃過一組電話號碼（**每過一關多 1 碼**，一行放 10 個數字，放不下就換行），然後收起來。下面是一台老式轉盤電話：**手指伸進數字的洞，順時針畫圈拉到金屬擋片，放手**，轉盤會自己轉回來，這樣就撥了一個數字。**照順序把號碼撥完**，撥錯一碼就結束。注意：數字越大（0 最大）要轉越大一圈，**轉盤轉回來的時候不能撥**，要靠記憶撐住後面的號碼。號碼裡有容易混的數字串（像 0920 和 0902、連續的 2255）。越後面，號碼越長！',
         mount: mount,
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
-            digitsFor: digitsFor, viewMs: viewMs, repeatsFor: repeatsFor, mirrorsFor: mirrorsFor, wrap180: wrap180, wrap360: wrap360, rotationFor: rotationFor, holeAngle: holeAngle, returnTimeMs: returnTimeMs, isDialed: isDialed, hitHole: hitHole, angleOf: angleOf,
+            digitsFor: digitsFor, chunkRows: chunkRows, digitPx: digitPx, viewMs: viewMs, repeatsFor: repeatsFor, mirrorsFor: mirrorsFor, wrap180: wrap180, wrap360: wrap360, rotationFor: rotationFor, holeAngle: holeAngle, returnTimeMs: returnTimeMs, isDialed: isDialed, hitHole: hitHole, angleOf: angleOf,
             repeatCount: repeatCount, mirrorCount: mirrorCount, feasible: feasible, makeNumber: makeNumber, makeLevel: makeLevel, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, DIGITS: DIGITS, VIEW_S: VIEW_S, REPEATS: REPEATS, MIRRORS: MIRRORS, STOP_ANGLE: STOP_ANGLE, ROT_FIRST: ROT_FIRST, ROT_STEP: ROT_STEP, PULL_TOL: PULL_TOL, RETURN_DEG_S: RETURN_DEG_S, TICK_DEG: TICK_DEG, MAX_LEVEL: MAX_LEVEL
+            RAMP_LEVELS: RAMP_LEVELS, DIGITS: DIGITS, ROW_DIGITS: ROW_DIGITS, VIEW_OPACITY: VIEW_OPACITY, VIEW_S: VIEW_S, REPEATS: REPEATS, MIRRORS: MIRRORS, STOP_ANGLE: STOP_ANGLE, ROT_FIRST: ROT_FIRST, ROT_STEP: ROT_STEP, PULL_TOL: PULL_TOL, RETURN_DEG_S: RETURN_DEG_S, TICK_DEG: TICK_DEG, MAX_LEVEL: MAX_LEVEL
         }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */

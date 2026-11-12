@@ -42,6 +42,10 @@ ok(T.ordinal(0) === '第 1 個' && T.ordinal(6) === '第 7 個', 'ordinal');
 // 程式裡的接線
 { const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_inkword.js'), css = rd('../../css/games/reaction_inkword.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
   ok(/api\.fail\(\{ delay: 3800/.test(src) && /inkword-cell--ask/.test(src), '失敗：整串字並排、被問的標起來、停格 2 秒以上');
+  // V1.55.0 玩家意見：答對之後要顯示正確答案兩秒鐘，再繼續下一題
+  ok(T.SHOW_ANS_MS === 2000, '答對後顯示正確答案 2 秒：' + T.SHOW_ANS_MS);
+  ok(/api\.pass\(\{ delay: SHOW_ANS_MS \}\)/.test(src) && !/api\.pass\(\{ delay: 1200 \}\)/.test(src), '答對：用 SHOW_ANS_MS 當過關的等待時間');
+  ok(src.indexOf("field.insertBefore(strip, info);") > 0 && src.indexOf("field.insertBefore(strip, info);") < src.indexOf("api.pass({ delay: SHOW_ANS_MS })") && /info\.textContent = '答對了！' \+ questionText\(Q\) \+ ' 答案是「' \+ ansText/.test(src), '答對也把整串字並排（被問的標起來）、寫出問題與正確答案，才開始等 SHOW_ANS_MS');
   ok(/\.inkword-c--red \{[^}]*var\(--ikw-red\)/.test(css) && /\.inkword-bad \{[^}]*var\(--c-bad/.test(css), '六種顏色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_inkword.js'") > 0 && /兩樣都要記/.test(G.rule), 'boot.js 有載入、玩法說明提到兩樣都要記'); }
 { const css = require('fs').readFileSync(require('path').resolve(__dirname, '../../css/games/reaction_inkword.css'), 'utf8'); T.COLORS.forEach(c => { ok(css.indexOf('.inkword-c--' + c.id + ' ') >= 0 && css.indexOf('.inkword-sw--' + c.id + ' ') >= 0, 'CSS 有 ' + c.id + ' 的字色與按鈕色'); }); }

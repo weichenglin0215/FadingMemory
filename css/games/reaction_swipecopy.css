@@ -61,12 +61,10 @@
     }
 }
 
-/* 「swipecopy-flash」這個元素的樣式 */
+/* 滑完之後閃一下你滑的方向（V1.55.0）：只有白色箭頭、沒有圓底；大小與半透明 50% 由 JS 設定（FLASH_FRAC、FLASH_OPACITY） */
 .swipecopy-flash {
     position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
-    width: 72px;                                        /* 寬度：72px */
-    height: 72px;                                       /* 高度：72px */
-    opacity: 0.85;                                      /* 透明度 0.85（1＝完全不透明、0＝全透明） */
+    opacity: 0.5;                                       /* 透明度 0.5（1＝完全不透明、0＝全透明） */
     animation: swipecopy-fade 0.26s ease-out forwards;  /* 播放動畫（名稱、時間、緩動、次數）：swipecopy-fade 0.26s ease-out forwards */
     pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
@@ -75,7 +73,7 @@
 @keyframes swipecopy-fade {
     from {
         transform: scale(1);                            /* 變形：縮放 1 倍 */
-        opacity: 0.9;                                   /* 透明度 0.9（1＝完全不透明、0＝全透明） */
+        opacity: 0.5;                                   /* 透明度 0.5（1＝完全不透明、0＝全透明；V1.55.0 半透明 50%） */
     }
 
     to {
@@ -101,10 +99,24 @@
     fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
 }
 
-/* 你滑的方向（閃一下）、該滑的方向（綠）、滑錯的（紅） */
-.swipecopy-sign--mine .swipecopy-sign__disc {
-    fill: var(--c-orange);                              /* SVG 圖形的填色：主題變數 --c-orange */
+/* 紅色底色的箭頭（要逆著箭頭方向滑；V1.55.0）：藍色是預設 */
+.swipecopy-sign--red .swipecopy-sign__disc {
+    fill: var(--swc-red);                               /* SVG 圖形的填色：主題變數 --swc-red */
 }
+
+/* 白色箭頭（沒有圓底）：滑完之後閃一下用。加一圈很淡的暗色邊（drop-shadow），不然白色在淺色底上幾乎看不到 */
+.swipecopy-bare {
+    display: block;                                     /* 獨佔一整行的區塊 */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
+    filter: drop-shadow(0 0 2px var(--c-ink-soft));     /* 淡淡的暗色外框，讓白色箭頭看得見 */
+}
+
+/* 「swipecopy-bare」裡面的「arrow」部分的樣式 */
+.swipecopy-bare__arrow {
+    fill: var(--c-on-accent);                           /* SVG 圖形的填色：白色（主題變數 --c-on-accent） */
+}
+
+/* 該滑的方向（綠）、滑錯的（紅）：失敗時的對照 */
 
 /* 「swipecopy-sign」裡面的「disc」部分的樣式 */
 .swipecopy-sign--req .swipecopy-sign__disc {

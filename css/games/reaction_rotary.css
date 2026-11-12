@@ -20,28 +20,36 @@
     bottom: 0;                                          /* 離下邊 0 */
 }
 
-/* 「rotary-tip」這個元素的樣式 */
-.rotary-tip {
+/* 轉盤上方的文字容器（V1.55.0）：提示、號碼、你撥的、說明由上往下排；號碼可能有好幾行，所以不能各自釘死位置 */
+.rotary-top {
     position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
     left: 0;                                            /* 離左邊 0 */
     right: 0;                                           /* 離右邊 0 */
     top: 8px;                                           /* 離上邊 8px */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+}
+
+/* 共用的 .qz-note 是 absolute（各自釘位置）；在這個容器裡要改成一般排版（static），才會由上往下排、不互相蓋住 */
+.rotary-top .qz-note {
+    position: static;                                   /* 一般排版：跟著上一個元素往下排 */
+}
+
+/* 「rotary-tip」這個元素的樣式 */
+.rotary-tip {
     padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
     text-align: center;                                 /* 文字置中 */
     pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
-/* 號碼：閃現時是大字，收起來之後變成「＿ ＿ ＿」，撥對的碼一個個補上去 */
+/* 號碼：閃現時是大字（一行最多 10 個數字、超過換行，字級由 JS 依行數設定），收起來之後變成一格一格的空格，撥對的碼一個個補上去 */
 .rotary-num {
-    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
-    left: 0;                                            /* 離左邊 0 */
-    right: 0;                                           /* 離右邊 0 */
-    top: 48px;                                          /* 離上邊 48px */
+    margin-top: 6px;                                    /* 上方外距：6px */
     padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
     color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
     font-size: var(--fs-xxl);                           /* 字級：主題變數 --fs-xxl */
     font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
-    letter-spacing: 0.08em;                             /* 字與字之間的間距：0.08em */
     text-align: center;                                 /* 文字置中 */
     pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
@@ -58,10 +66,9 @@
 
 /* 「rotary-got」這個元素的樣式 */
 .rotary-got {
-    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
-    left: 0;                                            /* 離左邊 0 */
-    right: 0;                                           /* 離右邊 0 */
-    top: 138px;                                         /* 離上邊 138px */
+    margin-top: 4px;                                    /* 上方外距：4px */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl（撥錯時 JS 會依行數縮小） */
     padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
     text-align: center;                                 /* 文字置中 */
     pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
@@ -69,10 +76,7 @@
 
 /* 「rotary-info」這個元素的樣式 */
 .rotary-info {
-    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
-    left: 0;                                            /* 離左邊 0 */
-    right: 0;                                           /* 離右邊 0 */
-    top: 232px;                                         /* 離上邊 232px */
+    margin-top: 6px;                                    /* 上方外距：6px */
     padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
     text-align: center;                                 /* 文字置中 */
     font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
@@ -86,20 +90,31 @@
     font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
 }
 
-/* 「rotary-cmp」這個元素的樣式 */
+/* 一行號碼（V1.55.0）：最多 10 個數字排成一橫列，每個數字佔固定寬度（0.85em），所以 10 個剛好放得下 */
 .rotary-cmp {
     display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
-    flex-wrap: wrap;                                    /* 放不下就換行 */
+    flex-wrap: nowrap;                                  /* 不換行（換行是由 JS 把號碼切成一行一行） */
     justify-content: center;                            /* 子元素沿排列方向置中 */
-    gap: var(--sp-1);                                   /* 子元素之間的空隙：主題變數 --sp-1 */
 }
 
-/* 「rotary-cmp」裡面的「d」部分的樣式 */
+/* 「rotary-cmp」裡面的「d」部分的樣式：一個數字；字級跟著上一層（JS 依行數設定），顏色也跟著上一層 */
 .rotary-cmp__d {
-    min-width: 1.1em;                                   /* 最小寬度：1.1em */
-    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
-    font-size: var(--fs-xl);                            /* 字級：主題變數 --fs-xl */
+    flex: none;                                         /* 不放大也不縮小 */
+    width: 0.85em;                                      /* 寬度：0.85em */
+    height: 1.15em;                                     /* 高度：1.15em */
+    line-height: 1.15em;                                /* 行高：1.15em（文字每一行佔的高度） */
+    color: inherit;                                     /* 文字顏色：跟著上一層 */
+    font-size: inherit;                                 /* 字級：跟著上一層 */
     font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    text-align: center;                                 /* 文字置中 */
+}
+
+/* 「rotary-cmp__d」的「blank」變化版：還沒撥的碼，畫成一條底線 */
+.rotary-cmp__d--blank {
+    box-sizing: border-box;                             /* 寬高包含邊框 */
+    width: 0.6em;                                       /* 寬度：0.6em */
+    margin: 0 0.125em;                                  /* 左右外距：0.125em（加起來還是 0.85em） */
+    border-bottom: 0.08em solid currentColor;           /* 下邊框：一條底線，顏色跟文字一樣 */
 }
 
 /* 「rotary-cmp__d」在「正確（成功）時」的樣子的樣式 */
@@ -119,6 +134,7 @@
     left: 0;                                            /* 離左邊 0 */
     top: 0;                                             /* 離上邊 0 */
     touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    transition: opacity 0.25s;                          /* 看號碼時半透明、可以撥號時恢復：慢慢變（不透明度由 JS 設定） */
 }
 
 /* 「rotary-plate」這個元素的樣式 */

@@ -9,20 +9,28 @@ ok(near(T.spinAt(1), T.SPIN[0]) && near(T.spinAt(T.RAMP_LEVELS), T.SPIN[1]) && n
 { const d = T.spinAt(2) - T.spinAt(1); for (let l = 1; l < T.RAMP_LEVELS; l++) ok(near(T.spinAt(l + 1) - T.spinAt(l), d, 1e-9), '起始旋轉速度線性 ' + l); }
 ok(T.ansMs(1) === 10000 && T.ansMs(T.RAMP_LEVELS) === 6000 && T.ansMs(T.MAX_LEVEL) === 6000, '作答限時 10→6 秒');
 ok(T.optCount(1) === 3 && T.optCount(T.RAMP_LEVELS) === 5, '按鈕數端點');
-// 旋轉速度隨時間降低：剛出現＝起始值，SLOW_S 秒之後＝每秒一圈（360），中間單調下降、不低於 360
-ok(T.SPIN_MIN > 0 && T.SPIN_MIN < T.SPIN[0], '最慢的轉速 ' + T.SPIN_MIN + ' 度／秒');
-for (const v0 of [T.SPIN[0], (T.SPIN[0] + T.SPIN[1]) / 2, T.SPIN[1]]) {
-  ok(near(T.speedAt(v0, 0), v0) && near(T.speedAt(v0, T.SLOW_S * 1000), T.SPIN_MIN) && near(T.speedAt(v0, 60000), T.SPIN_MIN), '速度端點 v0=' + v0);
-  let prev = Infinity; for (let ms = 0; ms <= 8000; ms += 50) { const v = T.speedAt(v0, ms); ok(v <= prev + 1e-9 && v >= T.SPIN_MIN - 1e-9, '速度單調下降 ' + ms); prev = v; }
+// V1.55.0 玩家意見：SPIN_MIN、SLOW_S 是 [第 1 關, 到頂] 的成對格式，每關各自線性算出
+ok(Array.isArray(T.SPIN_MIN) && T.SPIN_MIN.length === 2 && Array.isArray(T.SLOW_S) && T.SLOW_S.length === 2, 'SPIN_MIN、SLOW_S 都是 [第一關, 到頂]：' + T.SPIN_MIN + '／' + T.SLOW_S);
+ok(near(T.spinMinAt(1), T.SPIN_MIN[0]) && near(T.spinMinAt(T.RAMP_LEVELS), T.SPIN_MIN[1]) && near(T.spinMinAt(T.MAX_LEVEL), T.SPIN_MIN[1]) && near(T.slowAt(1), T.SLOW_S[0]) && near(T.slowAt(T.RAMP_LEVELS), T.SLOW_S[1]) && near(T.slowAt(T.MAX_LEVEL), T.SLOW_S[1]), '最慢轉速、降速秒數的端點');
+{ const a = T.spinMinAt(2) - T.spinMinAt(1), b = T.slowAt(2) - T.slowAt(1); for (let l = 1; l < T.RAMP_LEVELS; l++) ok(near(T.spinMinAt(l + 1) - T.spinMinAt(l), a, 1e-9) && near(T.slowAt(l + 1) - T.slowAt(l), b, 1e-9), '最慢轉速、降速秒數線性 ' + l); }
+// 旋轉速度隨時間降低：剛出現＝起始值，slowS 秒之後＝最慢轉速，中間單調下降、不低於最慢轉速（用 [第一關, 到頂] 兩頭的值、與一組故意不同的值都測）
+ok(T.SPIN_MIN[0] > 0 && T.SPIN_MIN[0] < T.SPIN[0] && T.SPIN_MIN[1] > 0 && T.SLOW_S[0] > 0 && T.SLOW_S[1] > 0, '最慢的轉速 ' + T.SPIN_MIN + ' 度／秒、' + T.SLOW_S + ' 秒降到最慢');
+const SETS = [[T.spinMinAt(1), T.slowAt(1)], [T.spinMinAt(T.RAMP_LEVELS), T.slowAt(T.RAMP_LEVELS)], [200, 3], [600, 8]];
+for (const [sm, ss] of SETS) for (const v0 of [T.SPIN[0], (T.SPIN[0] + T.SPIN[1]) / 2, T.SPIN[1]]) {
+  ok(near(T.speedAt(v0, 0, sm, ss), v0) && near(T.speedAt(v0, ss * 1000, sm, ss), sm) && near(T.speedAt(v0, 60000, sm, ss), sm), '速度端點 v0=' + v0 + ' 最慢 ' + sm + ' ' + ss + ' 秒');
+  let prev = Infinity; for (let ms = 0; ms <= 9000; ms += 50) { const v = T.speedAt(v0, ms, sm, ss); ok(v <= prev + 1e-9 && v >= sm - 1e-9, '速度單調下降 ' + ms); prev = v; }
 }
-// 旋轉角度：speedAt 的積分（用數值積分核對）、方向正確、SLOW_S 秒之後等速
-for (const dir of [1, -1]) {
-  const q = { start: 10, dir, spin: 3000 }; let ang = 0; const dt = 1;
-  for (let ms = 0; ms < 9000; ms += dt) ang += T.speedAt(3000, ms + dt / 2) * dt / 1000;
-  ok(near(T.angleAt(q, 9000), 10 + dir * ang, 0.5), '角度＝速度的積分 dir=' + dir + '：' + T.angleAt(q, 9000) + ' vs ' + (10 + dir * ang));
+ok(near(T.speedAt(3000, 0), 3000) && near(T.speedAt(3000, T.SLOW_S[0] * 1000), T.SPIN_MIN[0]), '沒傳 spinMin、slowS 就用第 1 關的值');
+// 旋轉角度：speedAt 的積分（用數值積分核對）、方向正確、slowS 秒之後等速
+for (const [sm, ss] of SETS) for (const dir of [1, -1]) {
+  const q = { start: 10, dir, spin: 3000, spinMin: sm, slowS: ss }; let ang = 0; const dt = 1;
+  for (let ms = 0; ms < 9000; ms += dt) ang += T.speedAt(3000, ms + dt / 2, sm, ss) * dt / 1000;
+  ok(near(T.angleAt(q, 9000), 10 + dir * ang, 0.5), '角度＝速度的積分 dir=' + dir + ' 最慢 ' + sm + '／' + ss + ' 秒：' + T.angleAt(q, 9000) + ' vs ' + (10 + dir * ang));
 }
 ok(near(T.angleAt({ start: 7, dir: 1, spin: 3000 }, 0), 7), '角度起點');
-{ const q = { start: 0, dir: 1, spin: 800 }; ok(near(T.angleAt(q, 10000) - T.angleAt(q, 9000), T.SPIN_MIN, 1e-6), 'SLOW_S 秒之後維持最慢轉速'); }
+for (const [sm, ss] of SETS) { const q = { start: 0, dir: 1, spin: 800, spinMin: sm, slowS: ss }; ok(near(T.angleAt(q, 12000) - T.angleAt(q, 11000), sm, 1e-6), 'slowS 秒之後維持最慢轉速 ' + sm); }
+// 出題時每一關帶著自己的最慢轉速與降速秒數
+for (const l of [1, 7, 15, 30, 60]) { const q = T.makeLevel(l, rnd, []); ok(near(q.spinMin, T.spinMinAt(l)) && near(q.slowS, T.slowAt(l)), '第 ' + l + ' 關的 spinMin、slowS'); }
 // 字寬：90% → 作答時間用完 10%，線性
 ok(near(T.sizeFrac(0, 8000), 0.9) && near(T.sizeFrac(8000, 8000), 0.1) && near(T.sizeFrac(4000, 8000), 0.5) && near(T.sizeFrac(99999, 8000), 0.1), '字寬 90% → 10%');
 ok(T.SIZE_PCT[0] === 90 && T.SIZE_PCT[1] === 10, '字寬百分比參數');

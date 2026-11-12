@@ -5,11 +5,12 @@
    **翻出來的牌剛好等於你心裡數到的那個數字，就拍下去**（點畫面）。拍錯、或該拍沒拍，就結束。成績＝拍對幾次（越多越好）。
    ───────────────────────────────────────────────────────────────────
    · 這是「持續進行」的遊戲：用 kit.run 的 scoreOf（S.score ＝拍對的次數）；難度隨「拍對了幾次（hits）」增加。
-   · 數數：第 k 張牌（k 從 1 起）要數到 countFor(k)：順著數是 A、2、…、K、A…（1～13 循環）；拍對 REVERSE_AT 次之後改成「倒著數」K、Q、J、10…A、K…
-     （改的時候畫面會告訴你，而且下一張牌重新從 K 開始，前 3 張再顯示一次數到哪）。
+   · 數數：第 k 張牌（k 從 1 起）要數到 countFor(k)：永遠是 A、2、…、K（數到 13）再回到 A…（1～13 循環）。
+     V1.55.0（玩家意見）：取消「拍對 15 次之後改成倒著數（K、Q、J…）」的中途變形玩法，永遠維持數到 13。
+     ★ 少了倒著數，難度會下降：請自己把 INTERVAL（翻牌間隔）調快來補（需要人類親手測試手感）。
    · 發牌（nextCard）：這張牌的點數是「剛好等於現在該數的數字」（要拍）的機率是 MATCH_P；而且連續不會超過 MAX_GAP 張都不用拍。
      不用拍的牌，有 CONFUSE_P 的機率故意挑一張「跟上一張長得像」的點數（6 和 9、3 和 8、2 和 7、10 和 J…），讓你手滑。
-   · 難度（隨 hits 線性，到 RAMP_HITS 次為止）：翻牌的間隔 1400 → 650 毫秒（INTERVAL）。
+   · 難度（隨 hits 線性，到 RAMP_LEVELS 次為止）：翻牌的間隔 1400 → 650 毫秒（INTERVAL）。
    · 判定：這張牌翻出來之後、下一張翻出來之前，要拍的牌沒拍 → 結束；不用拍的牌拍了 → 結束。
    · 結束時把那一張牌和「你應該數到的數字」並排。
    ═══════════════════════════════════════════════════════════════════ */
@@ -25,11 +26,10 @@
     var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
-    var RAMP_HITS = 40;                         /* 拍對幾次之後難度到頂 */
-    var INTERVAL = [1400, 650];                 /* 翻牌的間隔（毫秒）：0 次 → 到頂 */
+    var RAMP_LEVELS = 30;                         /* 拍對幾次之後難度到頂 */
+    var INTERVAL = [1000, 250];                 /* 翻牌的間隔（毫秒）：0 次 → 到頂（V1.55.0 取消倒著數之後難度下降，建議把這兩個數字調小＝翻得更快；需要人類親手測試） */
     var MATCH_P = 0.28, MAX_GAP = 6;            /* 每張牌是「要拍的」的機率；連續最多幾張不用拍 */
     var CONFUSE_P = [0.1, 0.5];                 /* 不用拍的牌，挑「跟上一張長得像」的機率：0 次 → 到頂 */
-    var REVERSE_AT = 15;                        /* 拍對幾次之後改成倒著數 */
     var SHOW_COUNT = 3;                         /* 每次開始數（或改倒著數）的前幾張，畫面會顯示數到哪 */
     var LEAD_MS = 1200;                         /* 開始後多久翻第一張 */
     var SOLVE_CAP = 5;                          /* 驗證用：api.solve 最多幫你拍到幾次（再多就故意漏拍，遊戲才會結束） */
@@ -39,17 +39,16 @@
     var LOOK = { 6: [9], 9: [6], 3: [8], 8: [3, 5], 5: [8, 6], 2: [7], 7: [2], 10: [11], 11: [10, 12], 12: [11, 13], 13: [12], 1: [4] };       /* 長得像的點數（11＝J、12＝Q、13＝K、1＝A） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    function prog(hits) { return Math.min(1, Math.max(0, hits / RAMP_HITS)); }
+    function prog(hits) { return Math.min(1, Math.max(0, hits / RAMP_LEVELS)); }
     function intervalFor(hits) { return Math.round(INTERVAL[0] + (INTERVAL[1] - INTERVAL[0]) * prog(hits)); }  /* Math.round：四捨五入成整數 */
     function confuseP(hits) { return CONFUSE_P[0] + (CONFUSE_P[1] - CONFUSE_P[0]) * prog(hits); }
-    function dirFor(hits) { return hits >= REVERSE_AT ? -1 : 1; }                       /* 1＝順著數、−1＝倒著數 */
     function rankName(r) { return RANKS[r - 1]; }
-    /* 這個數數的階段裡，第 k 張（k 從 1 起）要數到幾（1～13）：順著數 1、2、…、13、1…；倒著數 13、12、…、1、13… */
-    function countFor(k, dir) { return dir > 0 ? ((k - 1) % 13) + 1 : 13 - ((k - 1) % 13); }
-    /* 發下一張牌。st = { k（這個階段的第幾張）, dir, gap（連續幾張不用拍）, prev（上一張的點數）}；回傳 { rank, suit, count, isMatch } */
+    /* 第 k 張（k 從 1 起）要數到幾（1～13）：1、2、…、13、1、2…（永遠是 A 數到 K 再回到 A） */
+    function countFor(k) { return ((k - 1) % 13) + 1; }
+    /* 發下一張牌。st = { k（第幾張）, gap（連續幾張不用拍）, prev（上一張的點數）}；回傳 { rank, suit, count, isMatch } */
     function nextCard(st, hits, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var count = countFor(st.k, st.dir), match = st.gap >= MAX_GAP || rand() < MATCH_P, rank;
+        var count = countFor(st.k), match = st.gap >= MAX_GAP || rand() < MATCH_P, rank;
         if (match) rank = count;
         else {
             var cands = LOOK[st.prev] ? LOOK[st.prev].filter(function (x) { return x !== count; }) : [];  /* filter：留下符合條件的元素，回傳新陣列 */
@@ -98,7 +97,7 @@
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, S = api.S;
-        var hits = 0, st = { k: 1, dir: 1, gap: 0, prev: 0 }, cur = null, slapped = false, over = false, shownSince = 0, since = 0, flips = 0;
+        var hits = 0, st = { k: 1, gap: 0, prev: 0 }, cur = null, slapped = false, over = false, shownSince = 0, since = 0, flips = 0;
         api.info = { get hits() { return hits; }, get card() { return cur; }, get flips() { return flips; } };
         S.score = 0; api.setInfo('拍對 0 次');
         console.log('[心臟病] 開始：翻牌間隔 ' + intervalFor(0) + ' 毫秒');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
@@ -116,7 +115,6 @@
         function flip() {
             if (over || api.over) return;
             if (cur && cur.isMatch && !slapped) { finish('missed'); return; }
-            if (hits === REVERSE_AT && st.dir > 0) { st = { k: 1, dir: -1, gap: st.gap, prev: st.prev }; since = 0; info.textContent = '改成倒著數！K、Q、J、10…'; }  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             cur = nextCard(st, hits, api.rand); slapped = false; flips++;
             st.gap = cur.isMatch ? 0 : st.gap + 1; st.prev = cur.rank; since++;
             showCard(cur);
@@ -158,13 +156,13 @@
     var G = {
         id: ID,
         name: '心臟病',
-        rule: '小時候玩的撲克牌遊戲。牌一張一張翻出來，你要在心裡一直數「A、2、3…K、A、2…」——**畫面只在前 3 張告訴你數到哪，之後要自己數**。**翻出來的牌剛好等於你心裡數到的數字，就拍下去**（點畫面任何地方）。**拍錯，或該拍沒拍，就結束**。成績是拍對幾次。小心：翻牌會越來越快，還會故意挑長得像的牌（6 後面接 9），拍對 15 次之後**要倒著數**（K、Q、J…）！',
+        rule: '小時候玩的撲克牌遊戲。牌一張一張翻出來，你要在心裡一直數「A、2、3…K、A、2…」——**畫面只在前 3 張告訴你數到哪，之後要自己數**。**翻出來的牌剛好等於你心裡數到的數字，就拍下去**（點畫面任何地方）。**拍錯，或該拍沒拍，就結束**。成績是拍對幾次。小心：翻牌會越來越快，還會故意挑長得像的牌（6 後面接 9）。數數永遠是 A、2、…、K（數到 13）再回到 A！',
         mount: mount,
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
-            intervalFor: intervalFor, confuseP: confuseP, dirFor: dirFor, rankName: rankName, countFor: countFor, nextCard: nextCard, rating: rating,
-            RAMP_HITS: RAMP_HITS, INTERVAL: INTERVAL, MATCH_P: MATCH_P, MAX_GAP: MAX_GAP, CONFUSE_P: CONFUSE_P, REVERSE_AT: REVERSE_AT, SHOW_COUNT: SHOW_COUNT, LEAD_MS: LEAD_MS, SOLVE_CAP: SOLVE_CAP, RANKS: RANKS, SUITS: SUITS, LOOK: LOOK, MAX_LEVEL: MAX_LEVEL
+            intervalFor: intervalFor, confuseP: confuseP, rankName: rankName, countFor: countFor, nextCard: nextCard, rating: rating,
+            RAMP_LEVELS: RAMP_LEVELS, INTERVAL: INTERVAL, MATCH_P: MATCH_P, MAX_GAP: MAX_GAP, CONFUSE_P: CONFUSE_P, SHOW_COUNT: SHOW_COUNT, LEAD_MS: LEAD_MS, SOLVE_CAP: SOLVE_CAP, RANKS: RANKS, SUITS: SUITS, LOOK: LOOK, MAX_LEVEL: MAX_LEVEL
         }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */

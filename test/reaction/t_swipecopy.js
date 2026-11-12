@@ -10,7 +10,7 @@ const near = (a, b, e) => Math.abs(a - b) <= (e == null ? 1e-9 : e);
 ok(T.showMsFor(1) === T.SHOW_MS[0] && T.showMsFor(T.RAMP_LEVELS) === T.SHOW_MS[1] && T.showMsFor(999) === T.SHOW_MS[1], '箭頭亮 ' + T.SHOW_MS + ' 毫秒');
 ok(T.respMsFor(1) === T.RESP_MS[0] && T.respMsFor(T.RAMP_LEVELS) === T.RESP_MS[1] && T.respMsFor(999) === T.RESP_MS[1], '可以滑的時間 ' + T.RESP_MS + ' 毫秒（從箭頭出現算起）');
 for (let l = 1; l <= 90; l++) ok(T.respMsFor(l) >= T.showMsFor(l), '第 ' + l + ' 關：可以滑的時間（' + T.respMsFor(l) + '）不比箭頭亮的時間（' + T.showMsFor(l) + '）短——箭頭消失之後還可以繼續滑');
-ok(T.RESP_MS[0] > T.SHOW_MS[0] && T.RESP_MS[1] > T.SHOW_MS[1], '參數：可以滑的時間比箭頭亮的時間長（使用者的例子：亮 0.5 秒、可以滑到 1.0 秒）');
+ok(T.RESP_MS[0] >= T.SHOW_MS[0] && T.RESP_MS[1] >= T.SHOW_MS[1], '參數：可以滑的時間不比箭頭亮的時間短（使用者手調成一樣長也可以；原本的例子：亮 0.5 秒、可以滑到 1.0 秒）');
 ok(T.dirCountFor(T.DIAG_FROM - 1) === 4 && T.dirCountFor(T.DIAG_FROM) === 8 && T.dirCountFor(40) === 8, '第 ' + T.DIAG_FROM + ' 關起 8 個方向');
 ok(T.scatterPFor(T.SCATTER_FROM - 1) === 0 && near(T.scatterPFor(T.SCATTER_FROM), T.scatterPFor(T.SCATTER_FROM)) && T.scatterPFor(T.SCATTER_FROM) >= T.SCATTER_P[0] - 1e-9 && near(T.scatterPFor(T.RAMP_LEVELS), T.SCATTER_P[1], 1e-6) && near(T.scatterPFor(999), T.SCATTER_P[1], 1e-6), '出現在任意一格的機率：第 ' + T.SCATTER_FROM + ' 關以前 0，之後 ' + T.SCATTER_P[0] + ' → 到頂 ' + T.SCATTER_P[1]);
 for (let l = 2; l <= 90; l++) ok(T.showMsFor(l) <= T.showMsFor(l - 1) && T.respMsFor(l) <= T.respMsFor(l - 1) && T.dirCountFor(l) >= T.dirCountFor(l - 1) && T.scatterPFor(l) >= T.scatterPFor(l - 1), '難度單調 ' + l);
@@ -49,13 +49,14 @@ ok(T.cellFor(0, false, rnd) === 1 && T.cellFor(6, false, rnd) === 3, 'scatter �
 { const c = T.cellCenter(0, 300, 330), e = T.cellCenter(8, 300, 330), m = T.cellCenter(4, 300, 330); ok(near(c.x, 50) && near(c.y, 55) && near(e.x, 250) && near(e.y, 275) && near(m.x, 150) && near(m.y, 165) && near(c.cw, 100) && near(c.ch, 110), 'cellCenter：每格中央（位置固定、不會偏移）'); }
 
 // ── 整關：一個箭頭 ──
-let total = 0, dist = [0, 0, 0, 0, 0, 0, 0, 0], diag = 0; const byLv = {};
+let total = 0, dist = [0, 0, 0, 0, 0, 0, 0, 0], diag = 0; const byLv = {}, blues = {}, cnt = {};
 for (let i = 0; i < 6000; i++) {
   const lv = 1 + (i % 60), q = T.makeLevel(lv, rnd); total++;
   ok(q.dirs.length === 1 && q.req.length === 1, '第 ' + lv + ' 關：只有一個箭頭');
-  ok(q.req[0] === T.opposite(q.dirs[0]), '要滑的方向＝箭頭的反方向');
+  ok(q.req[0] === (q.blue ? q.dirs[0] : T.opposite(q.dirs[0])) && q.req[0] === T.reqDir(q.dirs[0], q.blue), '要滑的方向：藍色箭頭＝箭頭的方向、紅色箭頭＝箭頭的反方向');
+  ok(typeof q.blue === 'boolean', '有 blue 欄位（藍色／紅色箭頭）'); if (q.blue) blues[lv] = (blues[lv] || 0) + 1; cnt[lv] = (cnt[lv] || 0) + 1;
   ok(q.showMs === T.showMsFor(lv) && q.respMs === T.respMsFor(lv) && q.nDir === T.dirCountFor(lv), '速度、時間、方向數');
-  ok(q.prepMs >= T.PREP_MS[0] && q.prepMs <= T.PREP_MS[1], '箭頭出現之前的等待 ' + q.prepMs + ' 毫秒在 ' + T.PREP_MS + ' 之內（隨機）');
+  ok(q.prepMs >= Math.min(...T.PREP_MS) && q.prepMs <= Math.max(...T.PREP_MS), '箭頭出現之前的等待 ' + q.prepMs + ' 毫秒在 ' + T.PREP_MS + ' 之內（隨機；PREP_MS 兩頭誰大誰小都行）');
   ok(Number.isInteger(q.cell) && q.cell >= 0 && q.cell <= 8 && q.matched === (q.cell === T.CELL_OF_DIR[q.dirs[0]]), '格子 ' + q.cell + '、matched 標記正確');
   if (q.nDir === 4) ok(q.dirs[0] % 2 === 0, '4 向的關卡只有上下左右'); else if (q.dirs[0] % 2 === 1) diag++;
   if (lv < T.SCATTER_FROM) ok(q.matched, '第 ' + lv + ' 關（簡單）：箭頭一定出現在它所指的那一格（朝上的在上方中間）');
@@ -68,6 +69,20 @@ ok(diag > 300, '8 向關卡確實出現斜箭頭：' + diag);
 // 越後面，箭頭越常出現在「不是它所指的那一格」（9 格任選時，剛好是所指那格的機率只有 1/9）
 ok(byLv[T.SCATTER_FROM].matched / byLv[T.SCATTER_FROM].n > byLv[T.RAMP_LEVELS].matched / byLv[T.RAMP_LEVELS].n + 0.3, '「所指的那一格」的比例越後面越低');
 ok(byLv[T.RAMP_LEVELS].matched / byLv[T.RAMP_LEVELS].n < 0.2, '到頂的關卡幾乎都是任意一格（所指那一格只有約 1/9）：' + (byLv[T.RAMP_LEVELS].matched / byLv[T.RAMP_LEVELS].n * 100).toFixed(1) + '%');
+// ── V1.55.0 玩家意見：藍色底色箭頭順著滑、紅色底色箭頭逆著滑；藍色箭頭的比例是 [第 1 關, 到頂] 的參數；滑完閃白色半透明箭頭 ──
+ok(Array.isArray(T.BLUE_P) && T.BLUE_P.length === 2 && T.BLUE_P.every(x => x >= 0 && x <= 1), '藍色箭頭比例參數 BLUE_P 是 [第一關, 到頂]：' + T.BLUE_P);
+ok(near(T.blueFor(1), T.BLUE_P[0], 1e-4) && near(T.blueFor(T.RAMP_LEVELS), T.BLUE_P[1], 1e-4) && near(T.blueFor(999), T.BLUE_P[1], 1e-4), '藍色比例端點：第 1 關 ' + T.blueFor(1) + '、到頂 ' + T.blueFor(T.RAMP_LEVELS));
+{ const d = T.blueFor(2) - T.blueFor(1); for (let l = 1; l < T.RAMP_LEVELS; l++) ok(near(T.blueFor(l + 1) - T.blueFor(l), d, 2e-4), '藍色比例線性 ' + l); }
+ok(T.reqDir(0, true) === 0 && T.reqDir(0, false) === 4 && T.reqDir(2, true) === 2 && T.reqDir(2, false) === 6 && T.reqDir(1, false) === 5 && T.reqDir(7, true) === 7, 'reqDir：藍色順著、紅色逆著');
+for (const lv of [1, 10, T.RAMP_LEVELS]) { const n = cnt[lv] || 0, p = n ? (blues[lv] || 0) / n : 0; ok(n > 50 && Math.abs(p - T.blueFor(lv)) < 0.12, '第 ' + lv + ' 關藍色箭頭佔 ' + (100 * p).toFixed(0) + '%（參數 ' + (100 * T.blueFor(lv)).toFixed(0) + '%）'); }
+{ const old = T.BLUE_P.slice(); const mk = (a, b) => { T.BLUE_P[0] = a; T.BLUE_P[1] = b; }; mk(0, 0); let anyBlue = false; for (let i = 0; i < 400; i++) if (T.makeLevel(1 + (i % 40), rnd).blue) anyBlue = true; ok(!anyBlue, 'BLUE_P 設 [0, 0]：全部紅色（跟以前的反著滑一樣）');
+  mk(1, 1); let allBlue = true; for (let i = 0; i < 400; i++) { const q = T.makeLevel(1 + (i % 40), rnd); if (!q.blue || q.req[0] !== q.dirs[0]) allBlue = false; } ok(allBlue, 'BLUE_P 設 [1, 1]：全部藍色、都順著滑'); T.BLUE_P[0] = old[0]; T.BLUE_P[1] = old[1]; }
+// 提示文字（依關卡）
+{ const old = T.BLUE_P.slice(); T.BLUE_P[0] = 0.2; T.BLUE_P[1] = 0.5;
+  ok(/藍色/.test(T.waitTip(1)) && /順著/.test(T.waitTip(1)) && /紅色/.test(T.waitTip(1)) && /逆著/.test(T.waitTip(1)), '有藍色箭頭的關卡：上方提示寫「藍色順著滑、紅色逆著滑」：' + T.waitTip(1));
+  ok(/藍色/.test(T.liveTip(1, true)) && /順著/.test(T.liveTip(1, true)) && /紅色/.test(T.liveTip(1, false)) && /逆著/.test(T.liveTip(1, false)), '箭頭出現後：藍色寫順著、紅色寫逆著：' + T.liveTip(1, true) + '／' + T.liveTip(1, false));
+  T.BLUE_P[0] = 0; T.BLUE_P[1] = 0.5; ok(/反方向/.test(T.waitTip(1)) && !/藍色/.test(T.waitTip(1)) && /藍色/.test(T.waitTip(10)), '這一關不會出現藍色（機率 0）：提示還是舊說法；後面的關卡才有顏色規則');
+  T.BLUE_P[0] = old[0]; T.BLUE_P[1] = old[1]; }
 // 程式裡的接線
 { const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_swipecopy.js'), css = rd('../../css/games/reaction_swipecopy.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
   ok(src.indexOf("phase = 'live'; t0 = performance.now()") > 0 && src.indexOf('if (d >= 0) judge(d, performance.now() - t0)') > 0, '箭頭一出現就開始計時，位移超過 MIN_SWIPE 就立刻判定（不用等手指放開）');
@@ -76,6 +91,12 @@ ok(byLv[T.RAMP_LEVELS].matched / byLv[T.RAMP_LEVELS].n < 0.2, '到頂的關卡�
   ok(src.indexOf("(rt / 1000).toFixed(4) + ' 秒'") > 0, '過關後顯示反應時間（4 位小數的秒）');
   ok(src.indexOf('api.fail({ delay: 2600') > 0 && /swipecopy-cell--bad/.test(src) && /opposite/.test(src), '失敗：箭頭、該滑的方向、你滑的方向並排、紅色標記、停格 2 秒以上');
   ok(css.indexOf('.swipecopy-gridline { position: absolute;') >= 0 && /\.swipecopy-sign__disc \{[^}]*var\(--swc-blue\)/.test(css) && /\.swipecopy-cell--bad \{[^}]*var\(--c-bad/.test(css), '九宮格線、藍色圓牌、紅色用 CSS 變數');
-  ok(boot.indexOf("'js/reaction_swipecopy.js'") > 0 && /反方向/.test(G.rule) && /九宮格/.test(G.rule) && /越快/.test(G.rule), 'boot.js 有載入、玩法說明提到九宮格、反方向、越快越好'); }
+  const cssNc = rd('../../css/games/reaction_swipecopy.css').replace(/\/\*[\s\S]*?\*\//g, '').split(/\s+/).join(' '), theme = rd('../../css/theme.css').replace(/\/\*[\s\S]*?\*\//g, '').split(/\s+/).join(' ');
+  ok(/\.swipecopy-sign--red \.swipecopy-sign__disc \{[^}]*var\(--swc-red\)/.test(cssNc) && /--swc-red: hsl\(/.test(theme), '紅色底色的箭頭用 CSS 變數 --swc-red');
+  ok(!/sign--mine/.test(cssNc) && !/sign--mine/.test(src) && !/--c-orange/.test(cssNc.split('@keyframes')[0].replace(/[^{}]*\.swipecopy-sign--req[^}]*\}/, '')), '取消答對之後的橘色圓牌箭頭');
+  ok(/\.swipecopy-bare__arrow \{[^}]*var\(--c-on-accent\)/.test(cssNc) && /bareArrow\(fl, d, FS\)/.test(src) && !/sign\(fl,/.test(src), '滑完閃一下的是白色箭頭（沒有圓底）');
+  ok(T.FLASH_OPACITY === 0.5 && T.FLASH_FRAC === 0.5 && /opacity:' \+ FLASH_OPACITY/.test(src) && /Math\.floor\(zw \/ 3 \* FLASH_FRAC \* 68 \/ 62\)/.test(src) && /@keyframes swipecopy-fade \{ from \{[^}]*opacity: 0\.5/.test(cssNc), '閃的箭頭半透明 50%、箭頭長度是九宮格一格寬度的 1/2');
+  ok(/藍色底色的箭頭要順著箭頭方向滑/.test(G.rule) && /紅色底色的箭頭要逆著箭頭方向滑/.test(G.rule), '玩法說明提到藍色順著、紅色逆著');
+  ok(boot.indexOf("'js/reaction_swipecopy.js'") > 0 && /逆著/.test(G.rule) && /九宮格/.test(G.rule) && /越快/.test(G.rule), 'boot.js 有載入、玩法說明提到九宮格、反方向、越快越好'); }
 ok(T.rating(2) !== T.rating(4) && T.rating(4) !== T.rating(7) && T.rating(7) !== T.rating(12) && T.rating(12) !== T.rating(20), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');
