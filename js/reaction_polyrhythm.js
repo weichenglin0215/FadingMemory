@@ -170,6 +170,7 @@
             var state = 'idle', t0 = 0, measures = [], notes = { L: [], R: [] }, noteEls = { L: [], R: [] }, health = HEALTH_MAX, streak = 0;
             /* penalized 記錄「滾奏」小節已扣過生命的邊；hits／misses／extras 打中／漏掉／多點；doneMeasures 已撐過的小節；biasSum 打擊時間偏差總和（算平均偏早／偏晚） */
             var penalized = {}, hits = 0, misses = 0, extras = 0, doneMeasures = 0, lastBeatIdx = -1, over = false, biasSum = 0, biasN = 0, curM = 0;
+            Reaction.leaveScore = function () { return doneMeasures > 0 ? doneMeasures : null; };      /* 玩到一半按「返回」時，目前撐過幾小節（V1.57.0；見 kit.settleOnLeave） */
 
             /* 建立畫面元素：說明、生命愛心、顏色圖例、左右軌道（各有紅色基準線與「左手／右手」標籤）、訊息 */
             var head = h('div', { 'class': 'polyrhythm-head', text: ' ' });

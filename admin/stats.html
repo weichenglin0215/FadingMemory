@@ -298,15 +298,17 @@ details.how summary { cursor: pointer; font-weight: 700; }
 
     /* >>> 自動產生開始（node test/leaderboard/gen_games_sql.cjs --write 會重寫這兩行標記之間的內容，請不要手改；來源：js/menu.js 的分類與遊戲清單、各遊戲檔案的 score 設定） */
     var CATS = [{"id":"memory","name":"記憶"},{"id":"visual","name":"視覺"},{"id":"reaction","name":"反應"},{"id":"number","name":"數字"},{"id":"logic","name":"邏輯"},{"id":"hand","name":"手感"},{"id":"guess","name":"目測"}];
-    var ORDER = ["rainbow","speed","impossible","shapes","racefirst","shapegrid","hexcolor","spot","huesort","kinetic","groupphoto","fishbite","matchcolor","colorrecall","mixcolor","tissue","scallion","pour","milktea","layerdrink","coinsort","coins","pendulum","landolt","fadee","drop","cups","chicks","illusion","diff","candy","bread","numline","curves","rps","balloon","skyshot","forestpeek","rocketland","bubblespray","emojisort","price","heartbeat","sticks","schulte","timestable","same","backnum","setclock","timeafter","tearcal","weekday","expiry","pillbox","fridge","hangpic","stamp","mirror","witness","halfchar","glyphspin","clearer","alignchar","flashlight","seenchars","doorslit","stars","mergechar","followme","bounce","cake","seven","teacher","flags","cardslap","pipes","carpet","wirelink","checkers","lightsout","lights","pattern","ghostleg","ghostleg2","euler","seq","polyrhythm","area","halfvol","blindcircle","samelen","rightangle","mathcheck","fracduel","primetrap","sum100","triple100","maxexpr","oddsock","twinsock","basket","passersby","seenit","whofirst","watchoff","handsmeet","stackup","bridge","halfcrowd","sneakmove","catroad","copycurve","isequal","orderops","remainder","hiddendigit","wrongline","fillop","farpair","dicechange","whosaid","tapback","nthshape","spingap","sudokuone","sudoku4","sudoku6e","sudoku6m","sudoku9e","sudoku9m","sudoku9h","sandwich","chequeamt","spinpick","boxstack","mahjong3","reversi","gomoku","swapeven","gearmark","seesaw","findsquare","gaspump","rotary","menuslice","inkword","calendar","slicechar","ordercut","butterfly","danmaku","windblow","pearls","fishtoy","countbills","pinwheel","dishes","beans","minus7","sushi","change","discount","timepair","eyebrow","dough","takuzu","sumdel","magicsq","nim","fifteen","tianji","flipten","piggybank","fruitstock","babyscale","timetable","twobags","fastblink","oneway","dualtask","paint","scratch","inout","swipecopy","knockcount","homerun","invoice"];
+    var ORDER = ["rainbow","inkword","speed","impossible","shapes","racefirst","shapegrid","hexcolor","swipecopy","spot","huesort","kinetic","groupphoto","fishbite","matchcolor","colorrecall","mixcolor","tissue","scallion","pour","milktea","layerdrink","coinsort","coins","pendulum","landolt","fadee","drop","cups","chicks","illusion","diff","candy","bread","numline","curves","rps","balloon","skyshot","forestpeek","rocketland","bubblespray","emojisort","price","sticks","schulte","timestable","same","backnum","setclock","timeafter","tearcal","weekday","expiry","pillbox","fridge","hangpic","stamp","mirror","witness","glyphspin","clearer","alignchar","flashlight","seenchars","doorslit","stars","mergechar","followme","bounce","cake","seven","teacher","flags","cardslap","pipes","carpet","wirelink","checkers","lightsout","lights","pattern","ghostleg","ghostleg2","euler","seq","polyrhythm","area","halfvol","blindcircle","samelen","rightangle","mathcheck","fracduel","primetrap","sum100","triple100","maxexpr","oddsock","twinsock","basket","passersby","seenit","whofirst","watchoff","handsmeet","stackup","bridge","halfcrowd","sneakmove","catroad","copycurve","isequal","orderops","remainder","hiddendigit","wrongline","fillop","farpair","dicechange","whosaid","tapback","nthshape","spingap","sudokuone","sudoku4","sudoku6e","sudoku6m","sudoku9e","sudoku9m","sudoku9h","sandwich","chequeamt","spinpick","boxstack","mahjong3","reversi","gomoku","swapeven","gearmark","seesaw","findsquare","gaspump","rotary","menuslice","calendar","slicechar","ordercut","butterfly","danmaku","windblow","pearls","fishtoy","countbills","pinwheel","dishes","beans","minus7","sushi","change","discount","timepair","eyebrow","dough","takuzu","sumdel","magicsq","nim","fifteen","tianji","flipten","flipcent","flip3cent","piggybank","fruitstock","babyscale","timetable","heartbeat","halfchar","blinkchar","twobags","fastblink","oneway","dualtask","paint","scratch","inout","knockcount","homerun","invoice"];
     var GAMES = {
         "rainbow": {"name":"七彩陷阱","cat":"reaction","better":"max","decimals":0,"format":"{v} 個"},
+        "inkword": {"name":"字的顏色","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
         "speed": {"name":"零秒出手","cat":"reaction","better":"min","decimals":4,"format":"{v} 秒"},
         "impossible": {"name":"不可能任務","cat":"reaction","better":"min","decimals":4,"format":"{v} 公分"},
         "shapes": {"name":"形形色色","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
         "racefirst": {"name":"誰先衝線","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
         "shapegrid": {"name":"形色不相鄰","cat":"logic","better":"max","decimals":0,"format":"{v} 關"},
         "hexcolor": {"name":"六角著色","cat":"logic","better":"max","decimals":0,"format":"{v} 關"},
+        "swipecopy": {"name":"反著滑","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"},
         "spot": {"name":"大家來找碴","cat":"visual","better":"max","decimals":0,"format":"第 {v} 關"},
         "huesort": {"name":"色票排隊","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
         "kinetic": {"name":"動態視力","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
@@ -342,7 +344,6 @@ details.how summary { cursor: pointer; font-weight: 700; }
         "bubblespray": {"name":"泡泡掃射","cat":"reaction","better":"max","decimals":0,"format":"{v} 顆"},
         "emojisort": {"name":"emoji選","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
         "price": {"name":"價格陷阱","cat":"number","better":"max","decimals":0,"format":"{v} 題"},
-        "heartbeat": {"name":"心跳複製","cat":"reaction","better":"max","decimals":0,"format":"{v} 拍"},
         "sticks": {"name":"落下棍子","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"},
         "schulte": {"name":"數字方陣","cat":"visual","better":"min","decimals":4,"format":"{v} 秒"},
         "timestable": {"name":"乘法表抓錯","cat":"number","better":"min","decimals":4,"format":"{v} 秒"},
@@ -359,7 +360,6 @@ details.how summary { cursor: pointer; font-weight: 700; }
         "stamp": {"name":"心在正中央","cat":"hand","better":"min","decimals":4,"format":"{v} 公釐"},
         "mirror": {"name":"左右顛倒","cat":"hand","better":"max","decimals":0,"format":"{v} 關"},
         "witness": {"name":"目擊證人","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
-        "halfchar": {"name":"半邊字","cat":"visual","better":"max","decimals":0,"format":"{v} 題"},
         "glyphspin": {"name":"鏡中旋轉字","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
         "clearer": {"name":"越看越清楚","cat":"visual","better":"max","decimals":4,"format":"{v} 分"},
         "alignchar": {"name":"對準才看到","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
@@ -445,7 +445,6 @@ details.how summary { cursor: pointer; font-weight: 700; }
         "gaspump": {"name":"加到五百","cat":"number","better":"max","decimals":0,"format":"{v} 關"},
         "rotary": {"name":"轉盤電話","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
         "menuslice": {"name":"切菜單上的","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"},
-        "inkword": {"name":"字的顏色","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
         "calendar": {"name":"記行事曆","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
         "slicechar": {"name":"切字","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"},
         "ordercut": {"name":"照號切水果","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"},
@@ -472,10 +471,15 @@ details.how summary { cursor: pointer; font-weight: 700; }
         "fifteen": {"name":"搶十五","cat":"number","better":"max","decimals":0,"format":"{v} 關"},
         "tianji": {"name":"田忌賽馬","cat":"number","better":"max","decimals":0,"format":"{v} 關"},
         "flipten": {"name":"翻牌湊十","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
+        "flipcent": {"name":"翻牌湊百","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
+        "flip3cent": {"name":"翻三湊百","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
         "piggybank": {"name":"撲滿有多少","cat":"number","better":"max","decimals":0,"format":"{v} 關"},
         "fruitstock": {"name":"水果進出貨","cat":"number","better":"max","decimals":0,"format":"{v} 關"},
         "babyscale": {"name":"抱著量體重","cat":"number","better":"max","decimals":0,"format":"{v} 關"},
         "timetable": {"name":"時刻表補字","cat":"number","better":"max","decimals":0,"format":"{v} 關"},
+        "heartbeat": {"name":"心跳複製","cat":"reaction","better":"max","decimals":0,"format":"{v} 下"},
+        "halfchar": {"name":"半邊字","cat":"visual","better":"max","decimals":0,"format":"{v} 題"},
+        "blinkchar": {"name":"瞬間識字","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
         "twobags": {"name":"兩袋一樣重","cat":"guess","better":"max","decimals":0,"format":"{v} 關"},
         "fastblink": {"name":"誰閃得快","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
         "oneway": {"name":"單行道","cat":"logic","better":"max","decimals":0,"format":"{v} 關"},
@@ -483,7 +487,6 @@ details.how summary { cursor: pointer; font-weight: 700; }
         "paint": {"name":"刷油漆","cat":"hand","better":"max","decimals":0,"format":"{v} 關"},
         "scratch": {"name":"刮刮樂推理","cat":"logic","better":"max","decimals":0,"format":"{v} 關"},
         "inout": {"name":"圈內圈外","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
-        "swipecopy": {"name":"反著滑","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"},
         "knockcount": {"name":"敲幾下","cat":"memory","better":"max","decimals":0,"format":"{v} 關"},
         "homerun": {"name":"全壘打","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"},
         "invoice": {"name":"對發票","cat":"number","better":"max","decimals":0,"format":"{v} 張"}

@@ -15,7 +15,9 @@
      位置和該滑的方向正好衝突（直覺會被位置帶著走，Simon 效應）；到了中難度（第 SCATTER_FROM 關起），箭頭有 SCATTER_P 的機率出現在任意一格（9 格都可能），
      玩家要完全不理位置、只看箭頭的方向；機率隨關卡線性增加，到頂 100%。
    · 難度（線性）：箭頭停留 SHOW_MS 500 → 200 毫秒、可以滑的時間 RESP_MS 1000 → 500 毫秒（從箭頭出現算起）；箭頭出現之前的準備時間 PREP_MS 在範圍內隨機（猜不到什麼時候出現）；第 DIAG_FROM 關起箭頭會有斜的（8 個方向，斜的箭頭在角落格）。
-   · 滑錯或超時：把箭頭、該滑的方向、你滑的方向並排畫出來。
+   · 手指與路徑（V1.57.0 玩家意見）：**整個遊戲畫面（標題列下面的全部範圍，不只九宮格裡）都可以滑**；手指滑過的路徑用白色粗線畫出來，路徑結尾加一個箭頭（方向是「起點指向終點」），過關、失敗之後都留著，下一關才清掉。
+   · 滑錯或超時（V1.57.0）：畫面原封不動留 FAIL_MS（3 秒）——九宮格、箭頭、你滑的路徑都不遮住；九宮格正下方橫排一個紅框：箭頭／要滑／你滑了，紅框的下面才是文字說明。
+   · 版面（V1.57.0）：標題列「第 N 關」與時間條的上下空隙縮小（跟泡泡掃射一樣，加 swipecopy-screen），省下的高度全部留給九宮格下面的說明。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
@@ -36,11 +38,13 @@
     var DIAG_FROM = 3;                         /* 第幾關起有斜的箭頭（8 個方向） */
     var SCATTER_FROM = 5;                       /* 第幾關起箭頭可能出現在「不是它所指的那一格」 */
     var SCATTER_P = [0.33, 1];                  /* 出現在任意一格的機率：第 SCATTER_FROM 關 → 到頂（其餘時候出現在它所指的那一格） */
-    var BLUE_P = [0.2, 0.5];                    /* 藍色底色箭頭（要順著箭頭方向滑）出現的機率：第 1 關 → 到頂；其餘是紅色底色箭頭（要逆著箭頭方向滑）。填 [0, 0] 就是全部紅色（跟以前一樣），[1, 1] 全部藍色（V1.55.0 新增） */
-    var FLASH_FRAC = 0.5;                       /* 滑完之後閃一下的白色箭頭，「箭頭的長度」是九宮格一格寬度的幾倍（V1.55.0：約 1/2） */
-    var FLASH_OPACITY = 0.5;                    /* 那個白色箭頭的不透明度（0.5＝半透明 50%） */
-    var MIN_SWIPE = 72;                         /* 手指位移至少幾 px 就立刻判定 */
+    var BLUE_P = [0.33, 0.5];                    /* 藍色底色箭頭（要順著箭頭方向滑）出現的機率：第 1 關 → 到頂；其餘是紅色底色箭頭（要逆著箭頭方向滑）。填 [0, 0] 就是全部紅色（跟以前一樣），[1, 1] 全部藍色（V1.55.0 新增） */
+    var FLASH_FRAC = 1.33;                       /* 滑完之後閃一下的白色箭頭，「箭頭的長度」是九宮格一格寬度的幾倍（V1.55.0：約 1/2） */
+    var FLASH_OPACITY = 0.66;                    /* 那個白色箭頭的不透明度（0.5＝半透明 50%） */
+    var MIN_SWIPE = 64;                         /* 手指位移至少幾 px 就立刻判定 */
     var REPLAY_MS = 170;                        /* 失敗後重播，每個箭頭亮多久（毫秒） */
+    var FAIL_MS = 3000;                         /* 失敗之後，遊戲畫面（九宮格、箭頭、你滑的路徑、紅框解說與文字說明）保留多久（毫秒）才進結算畫面（V1.57.0：2.6 秒 → 3 秒） */
+    var TRAIL_HEAD = [36, 21];                  /* 手指路徑結尾那個箭頭的大小（px）：[箭頭長度, 箭頭半寬]（V1.57.0；路徑線的粗細在 css 的 .swipecopy-trail__line） */
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var NAMES = ['上', '右上', '右', '右下', '下', '左下', '左', '左上'];      /* 方向編號 0～7 的名字（從正上方順時針） */
     var CELL_OF_DIR = [1, 2, 5, 8, 7, 6, 3, 0];                         /* 方向 → 九宮格裡「它所指的那一格」：上＝上方中間(1)、右上＝右上角(2)、右＝右邊中間(5)… */
@@ -68,6 +72,20 @@
         if (a < 0) a += 360;
         if (n === 4) return (Math.round(a / 90) % 4) * 2;
         return Math.round(a / 45) % 8;
+    }
+    /* 手指的路徑 pts（[{x, y}…]，第一點是起點、最後一點是現在的位置）→ 要畫的圖形（V1.57.0）：{ line：折線的點, head：結尾箭頭的三個頂點（太短就是 null）, dx／dy：起點指向終點的單位向量 }。
+       箭頭的方向是「起點指向終點」（不是最後一小段的方向）；hl、hw 是箭頭的長度與半寬。路徑短於 16 px 不畫箭頭（只畫一小段線）；路徑不夠長時箭頭按比例縮小（最長不超過路徑長度的 70%），免得箭頭比路徑還大。
+       箭頭「平的那一端（底邊）」畫在路徑的終點，尖端在終點再往前 L（V1.57.0 玩家意見：原本是尖端在終點）。
+       折線最後一點往前縮進箭頭裡面（箭頭底邊再往尖端 0.3 倍箭頭長），粗線的尾巴才不會從箭頭尖端戳出來。 */
+    function trailGeom(pts, hl, hw) {
+        var n = pts.length;
+        if (n < 2) return { line: pts.slice(), head: null, dx: 0, dy: 0 };
+        var a = pts[0], b = pts[n - 1], dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy);
+        if (len < 16) return { line: pts.slice(), head: null, dx: 0, dy: 0 };
+        var ux = dx / len, uy = dy / len, k = Math.min(1, len * 0.7 / hl), L = hl * k, Wd = hw * k;     /* ux、uy：起點指向終點的單位向量；k：箭頭的縮放比例 */
+        var bx = b.x, by = b.y;                                                                            /* 箭頭底邊（平的那一端）的中心：就是路徑的終點 */
+        var line = pts.slice(0, n - 1); line.push({ x: bx + ux * L * 0.3, y: by + uy * L * 0.3 });
+        return { line: line, head: [{ x: bx + ux * L, y: by + uy * L }, { x: bx - uy * Wd, y: by + ux * Wd }, { x: bx + uy * Wd, y: by - ux * Wd }], dx: ux, dy: uy };
     }
     /* 箭頭 d 出現在哪一格（九宮格編號 0～8，由左到右、由上到下）：scatter 為真時 9 格任選一格，否則是它所指的那一格 */
     function cellFor(d, scatter, rand) { return scatter ? kit.randInt(0, 8, rand || Math.random) : CELL_OF_DIR[d]; }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
@@ -120,17 +138,22 @@
     /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
-        var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
+        var stage = api.stage, level = api.level, root = api.root;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關；root：整個遊戲畫面（標題列、時間條、遊戲區都在裡面） */
         var q = makeLevel(level, api.rand);
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[反著滑] 第 ' + level + ' 關：' + (q.blue ? '藍色（順著滑）' : '紅色（逆著滑）') + '箭頭指 ' + NAMES[q.dirs[0]] + '、要滑 ' + NAMES[q.req[0]] + '；出現在第 ' + (q.cell + 1) + ' 格（' + (q.matched ? '它所指的那一格' : '別的格子') + '）；亮 ' + q.showMs + ' 毫秒、可以滑到 ' + q.respMs + ' 毫秒；準備 ' + q.prepMs + ' 毫秒；' + q.nDir + ' 個方向');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
+        root.classList.add('swipecopy-screen');         /* 加一個 class：上方「第 N 關」與時間條的上下空隙縮小、把高度讓給九宮格下面的說明文字（跟泡泡掃射一樣，樣式在 css/games/reaction_swipecopy.css），也讓整個遊戲畫面都不會被瀏覽器的觸控手勢搶走。要在量 stage 的大小之前加（加了之後遊戲區才變高）；離開遊戲時拿掉（V1.57.0） */
+        api.my.onDispose(function () { root.classList.remove('swipecopy-screen'); });
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var field = h('div', { 'class': 'swipecopy-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         var tip = h('div', { 'class': 'qz-note swipecopy-tip', text: waitTip(level) });
         field.appendChild(tip);
-        var areaT = 64, areaH = H - 230, zone = h('div', { 'class': 'swipecopy-zone' });
+        var info = h('div', { 'class': 'qz-note swipecopy-info', text: '' });     /* 文字說明（過關時寫反應時間、失敗時寫錯在哪）；先建出來，才量得到一行有多高 */
+        field.appendChild(info);
+        var SIGN = 64, lineH = parseFloat(getComputedStyle(info).lineHeight) || 36;      /* SIGN：失敗時紅框裡每個箭頭圓牌的大小；lineH：文字說明一行多高（量出來的） */
+        var areaT = 44, belowH = Math.ceil(10 + (SIGN + 44) + 8 + 3 * lineH + 6), areaH = H - areaT - belowH, zone = h('div', { 'class': 'swipecopy-zone' });   /* areaT：九宮格離遊戲區上緣；belowH：九宮格下面留給「紅框解說圖＋最多 3 行文字說明」的高度（V1.57.0：標題列空隙縮小後多出來的高度都留在這裡）＝ 與九宮格的空隙 10 ＋ 紅框（圓牌 ＋ 44 的字與內縮）＋ 空隙 8 ＋ 3 行字 ＋ 6 */
         zone.style.cssText = 'left:12px;right:12px;top:' + areaT + 'px;height:' + areaH + 'px;';
         field.appendChild(zone);
         var zw = (W - 24) - 6, zh = areaH - 6;                                  /* 九宮格的範圍（扣掉虛線框） */
@@ -138,13 +161,22 @@
             var v = h('div', { 'class': 'swipecopy-gridline swipecopy-gridline--v' }); v.style.left = (zw * i / 3) + 'px'; zone.appendChild(v);
             var hl = h('div', { 'class': 'swipecopy-gridline swipecopy-gridline--h' }); hl.style.top = (zh * i / 3) + 'px'; zone.appendChild(hl);
         });
-        var info = h('div', { 'class': 'qz-note swipecopy-info', text: '' });
         info.style.top = (areaT + areaH + 16) + 'px';
-        field.appendChild(info);
         var strip = h('div', { 'class': 'swipecopy-strip' });
         field.appendChild(strip);
+        /* 手指滑過的路徑（V1.57.0）：白色粗線，結尾加一個箭頭（方向是「起點指向終點」）。每個形狀外面各墊一層暗色的，白色在淺色底上才看得到。
+           疊在九宮格上面、但在紅框與文字說明下面（css 的 z-index；手指萬一是在說明的地方滑的，路徑也不會擋住說明）；不擋觸控；過關、失敗之後都留著，下一關重新建畫面才清掉。 */
+        var tsvg = kit.svg('svg', { 'class': 'swipecopy-trail', width: W, height: H, viewBox: '0 0 ' + W + ' ' + H }, field);
+        var tEdge = kit.svg('polyline', { 'class': 'swipecopy-trail__edge' }, tsvg), tEdgeHead = kit.svg('polygon', { 'class': 'swipecopy-trail__edge-head' }, tsvg);
+        var tLine = kit.svg('polyline', { 'class': 'swipecopy-trail__line' }, tsvg), tHead = kit.svg('polygon', { 'class': 'swipecopy-trail__head' }, tsvg);
+        function ptsText(a) { return a.map(function (p) { return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' '); }      /* 點的陣列 → SVG 的 points 文字（"x,y x,y …"） */
+        function drawTrail() {                                                  /* 依 trail（路徑上的點）重畫線與結尾的箭頭 */
+            var g = trailGeom(trail, TRAIL_HEAD[0], TRAIL_HEAD[1]), lt = g.line.length > 1 ? ptsText(g.line) : '', ht = g.head ? ptsText(g.head) : '';
+            tEdge.setAttribute('points', lt); tLine.setAttribute('points', lt);
+            tEdgeHead.setAttribute('points', ht); tHead.setAttribute('points', ht);
+        }
 
-        var phase = 'wait', done = false, down = null, cur = null, t0 = 0, popEl = null;
+        var phase = 'wait', done = false, down = null, cur = null, t0 = 0, popEl = null, keepPop = false, trail = [];
         /* 箭頭出現：放在九宮格的某一格正中央；從這一刻起就可以滑 */
         function appear() {
             if (api.over || done) return;
@@ -153,25 +185,31 @@
             popEl.style.cssText = 'left:' + (c.x - SZ / 2) + 'px;top:' + (c.y - SZ / 2) + 'px;width:' + SZ + 'px;height:' + SZ + 'px;';
             sign(popEl, q.dirs[0], SZ, q.blue ? '' : 'swipecopy-sign--red'); zone.appendChild(popEl); Sfx.play('ok');  /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
             phase = 'live'; t0 = performance.now(); tip.textContent = liveTip(level, q.blue);  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-            if (down && cur) { down.x = cur.x; down.y = cur.y; }                    /* 箭頭出現時手指已經按著：從這一刻的位置開始算 */
-            api.after(q.showMs, function () { if (popEl && popEl.parentNode) popEl.parentNode.removeChild(popEl); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+            if (down && cur) { down.x = cur.x; down.y = cur.y; trail = [cur]; drawTrail(); }                    /* 箭頭出現時手指已經按著：從這一刻的位置開始算（路徑也從這裡開始畫） */
+            api.after(q.showMs, function () { if (!keepPop && popEl && popEl.parentNode) popEl.parentNode.removeChild(popEl); });  /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去）。失敗之後箭頭要留在畫面上（keepPop），不再消失 */
             api.after(q.respMs, function () { if (phase === 'live') fail(-1, 0); });                /* 超過時間還沒滑出方向 */
         }
         api.after(q.prepMs, appear);
         if (level === 1 && kit.once('swipecopy.hint')) api.after(q.prepMs + 500, function () { if (phase === 'live') { var rv = vec(q.req[0]); kit.hintOn(stage, null, { mode: 'drag', x: W / 2 - rv.x * 45, y: areaT + areaH / 2 - rv.y * 45, dx: rv.x * 90, dy: rv.y * 90, text: (q.blue ? '藍色箭頭朝' : '紅色箭頭朝') + NAMES[q.dirs[0]] + '就往' + NAMES[q.req[0]] + '滑' }); } });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
 
-        /* 滑：按下之後，位移一超過 MIN_SWIPE 就判定（不用等手指放開）；箭頭出現之前的動作不算 */
-        zone.addEventListener('pointerdown', function (e) { if (done || api.over || down) return; e.preventDefault(); try { zone.setPointerCapture(e.pointerId); } catch (err) { } var p = kit.localPt(e, zone); cur = p; down = { id: e.pointerId, x: p.x, y: p.y }; });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
-        zone.addEventListener('pointermove', function (e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
+        /* 滑（V1.57.0：整個遊戲畫面都可以滑，不是只有九宮格裡——事件掛在 root，也就是標題列下面的全部範圍；root 每一關都是同一個元素，所以換關時要先把上一關掛的拿掉）。
+           按下之後，位移一超過 MIN_SWIPE 就判定（不用等手指放開）；箭頭出現之前的動作不算。座標都換算成 field（遊戲區）的座標，路徑才會畫在手指下面。 */
+        function onDown(e) { if (done || api.over || down) return; e.preventDefault(); try { root.setPointerCapture(e.pointerId); } catch (err) { } var p = kit.localPt(e, field); cur = p; down = { id: e.pointerId, x: p.x, y: p.y }; trail = [p]; drawTrail(); }  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
+        function onMove(e) {  /* 指標事件（pointer）：手指與滑鼠通用，分成按下、移動、放開三種 */
             if (!down || e.pointerId !== down.id) return;
-            var p = kit.localPt(e, zone); cur = p;
-            if (phase !== 'live' || done || api.over) { if (phase === 'wait') { down.x = p.x; down.y = p.y; } return; }          /* 還沒出現箭頭：不算，起點跟著手指走 */
+            var p = kit.localPt(e, field); cur = p;
+            if (phase !== 'live' || done || api.over) { if (phase === 'wait') { down.x = p.x; down.y = p.y; trail = [p]; } return; }          /* 還沒出現箭頭：不算，起點跟著手指走 */
+            trail.push(p); drawTrail();                                         /* 先把這一小段路徑畫出來，再判定（答錯時畫面上看得到你滑的路徑） */
             var d = swipeDir(p.x - down.x, p.y - down.y, q.nDir);
             if (d >= 0) judge(d, performance.now() - t0);  /* performance.now()：高精度的時間（毫秒），計時用 */
-        });
-        function up(e) { if (down && e.pointerId === down.id) down = null; }
-        zone.addEventListener('pointerup', up);
-        zone.addEventListener('pointercancel', up);
+        }
+        function onUp(e) { if (down && e.pointerId === down.id) down = null; }
+        function detach() { root.removeEventListener('pointerdown', onDown); root.removeEventListener('pointermove', onMove); root.removeEventListener('pointerup', onUp); root.removeEventListener('pointercancel', onUp); if (root.__swipecopyOff === detach) root.__swipecopyOff = null; }
+        if (root.__swipecopyOff) root.__swipecopyOff();                         /* 上一關掛在 root 上的拿掉 */
+        root.__swipecopyOff = detach;
+        root.addEventListener('pointerdown', onDown); root.addEventListener('pointermove', onMove);
+        root.addEventListener('pointerup', onUp); root.addEventListener('pointercancel', onUp);
+        api.my.onDispose(detach);                                               /* 離開遊戲、再玩一次時也拿掉 */
         /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(d, rt) {
             if (done || api.over || phase !== 'live') return;
@@ -185,25 +223,25 @@
         }
         /* 「藍色箭頭（順著滑）」「紅色箭頭（逆著滑）」；這一關不可能出現藍色（機率 0）時就只說「箭頭」 */
         function colorName(qq) { return blueFor(level) > 0 ? (qq.blue ? '藍色箭頭（順著滑）' : '紅色箭頭（逆著滑）') : '箭頭'; }
-        /* 滑錯（at ＝ 0，mine ＝你滑的方向）或超時（at ＝ −1）：把箭頭、該滑的方向、你滑的方向排出來 */
+        /* 滑錯（at ＝ 0，mine ＝你滑的方向）或超時（at ＝ −1）：遊戲畫面原封不動留 FAIL_MS（3 秒），九宮格、箭頭、你滑的路徑都不遮住；
+           九宮格正下方橫排一個紅框（箭頭／要滑／你滑了），紅框的下面才是文字說明（V1.57.0：原本是直式紅框、蓋在九宮格上） */
         function fail(at, mine) {
             if (done || api.over) return;
-            done = true; phase = 'end'; api.stopTimer();
-            zone.style.display = 'none';
+            done = true; phase = 'end'; api.stopTimer(); keepPop = true;
+            if (popEl && !popEl.parentNode) { popEl.className = 'swipecopy-pop swipecopy-pop--still'; zone.appendChild(popEl); }   /* 箭頭已經消失了：放回它出現的那一格（不再播放出現的動畫），讓玩家看到它出現在哪裡 */
             var timeout = at < 0;
             tip.textContent = timeout ? '來不及了' : '滑錯方向了';
             info.textContent = colorName(q) + '指 ' + NAMES[q.dirs[0]] + '，要往 ' + NAMES[q.req[0]] + ' 滑' + (timeout ? '；你沒有在 ' + (q.respMs / 1000).toFixed(4) + ' 秒內滑出方向' : '；你滑了 ' + NAMES[mine]);
-            strip.style.top = '90px';
+            strip.style.top = (areaT + areaH + 10) + 'px';                     /* 紅框緊貼在九宮格的下面 */
             var row = h('div', { 'class': 'swipecopy-strip__row' }), cell = h('div', { 'class': 'swipecopy-cell swipecopy-cell--bad swipecopy-cell--lit' });
-            cell.appendChild(h('div', { 'class': 'swipecopy-cell__no', text: '箭頭' }));
-            sign(cell, q.dirs[0], 96, q.blue ? '' : 'swipecopy-sign--red');
-            cell.appendChild(h('div', { 'class': 'swipecopy-cell__to', text: '要滑' }));
-            sign(cell, q.req[0], 72, 'swipecopy-sign--req');
-            if (!timeout) { cell.appendChild(h('div', { 'class': 'swipecopy-cell__to', text: '你滑了' })); sign(cell, mine, 72, 'swipecopy-sign--bad'); }
+            function item(label, d, size, cls) { var it = h('div', { 'class': 'swipecopy-cell__item' }); it.appendChild(h('div', { 'class': 'swipecopy-cell__no', text: label })); sign(it, d, size, cls); cell.appendChild(it); }   /* 紅框裡的一個小格：上面一行字、下面一個箭頭圓牌 */
+            item('箭頭', q.dirs[0], SIGN, q.blue ? '' : 'swipecopy-sign--red');
+            item('要滑', q.req[0], SIGN, 'swipecopy-sign--req');
+            if (!timeout) item('你滑了', mine, SIGN, 'swipecopy-sign--bad');
             row.appendChild(cell); strip.appendChild(row);
-            info.style.top = (strip.offsetTop + strip.offsetHeight + 14) + 'px';                /* 說明文字放在「箭頭／要滑／你滑了」那一欄的正下方（欄的高度要等內容放進去才量得到，所以排在這裡） */
+            info.style.top = (strip.offsetTop + strip.offsetHeight + 10) + 'px';                /* 文字說明放在紅框的正下方（紅框的高度要等內容放進去才量得到，所以排在這裡） */
             kit.flash(stage, false, api.my);
-            api.fail({ delay: 2600, lines: [(timeout ? '來不及：' : '滑錯了：') + colorName(q) + '指 ' + NAMES[q.dirs[0]] + '，要往 ' + NAMES[q.req[0]] + ' 滑' + (timeout ? '' : '，你滑了 ' + NAMES[mine]), '箭頭出現在九宮格的第 ' + (q.cell + 1) + ' 格' + (q.matched ? '（就是它所指的那一邊）' : '（不是它所指的那一邊）')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
+            api.fail({ delay: FAIL_MS, lines: [(timeout ? '來不及：' : '滑錯了：') + colorName(q) + '指 ' + NAMES[q.dirs[0]] + '，要往 ' + NAMES[q.req[0]] + ' 滑' + (timeout ? '' : '，你滑了 ' + NAMES[mine]), '箭頭出現在九宮格的第 ' + (q.cell + 1) + ' 格' + (q.matched ? '（就是它所指的那一邊）' : '（不是它所指的那一邊）')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 驗證用：api.solve 在箭頭出現之後立刻滑出正確的方向；api.wrong 滑相反的方向（藍色就逆著滑、紅色就順著滑，也就是看錯顏色）；箭頭還沒出現就等它出現 */
         api.solve = function () { if (phase === 'live' && !done) judge(q.req[0], 1); };
@@ -219,8 +257,8 @@
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
-            showMsFor: showMsFor, respMsFor: respMsFor, dirCountFor: dirCountFor, scatterPFor: scatterPFor, blueFor: blueFor, reqDir: reqDir, waitTip: waitTip, liveTip: liveTip, opposite: opposite, vec: vec, swipeDir: swipeDir, cellFor: cellFor, cellCenter: cellCenter, makeLevel: makeLevel, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, SHOW_MS: SHOW_MS, RESP_MS: RESP_MS, PREP_MS: PREP_MS, DIAG_FROM: DIAG_FROM, SCATTER_FROM: SCATTER_FROM, SCATTER_P: SCATTER_P, BLUE_P: BLUE_P, FLASH_FRAC: FLASH_FRAC, FLASH_OPACITY: FLASH_OPACITY, CELL_OF_DIR: CELL_OF_DIR, MIN_SWIPE: MIN_SWIPE, REPLAY_MS: REPLAY_MS, NAMES: NAMES, MAX_LEVEL: MAX_LEVEL
+            showMsFor: showMsFor, respMsFor: respMsFor, dirCountFor: dirCountFor, scatterPFor: scatterPFor, blueFor: blueFor, reqDir: reqDir, waitTip: waitTip, liveTip: liveTip, opposite: opposite, vec: vec, swipeDir: swipeDir, trailGeom: trailGeom, cellFor: cellFor, cellCenter: cellCenter, makeLevel: makeLevel, rating: rating,
+            RAMP_LEVELS: RAMP_LEVELS, SHOW_MS: SHOW_MS, RESP_MS: RESP_MS, PREP_MS: PREP_MS, DIAG_FROM: DIAG_FROM, SCATTER_FROM: SCATTER_FROM, SCATTER_P: SCATTER_P, BLUE_P: BLUE_P, FLASH_FRAC: FLASH_FRAC, FLASH_OPACITY: FLASH_OPACITY, CELL_OF_DIR: CELL_OF_DIR, MIN_SWIPE: MIN_SWIPE, REPLAY_MS: REPLAY_MS, FAIL_MS: FAIL_MS, TRAIL_HEAD: TRAIL_HEAD, NAMES: NAMES, MAX_LEVEL: MAX_LEVEL
         }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */

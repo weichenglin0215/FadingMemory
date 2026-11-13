@@ -276,6 +276,7 @@
             var A = D.A, deck = D.deck;
             /* idx 目前第幾張（已經答完幾張）；right 答對數；money 累計獎金；state 目前階段；cur 目前這張 */
             var idx = 0, right = 0, money = 0, state = 'idle', cur = null;
+            Reaction.leaveScore = function () { return right > 0 ? right : null; };      /* 玩到一半按「返回」時，目前答對幾張（V1.57.0；見 kit.settleOnLeave） */
             var rts = [];
             /* byBtn 統計每種按鈕的答題數與答對數，結算用 */
             var byBtn = BTNS.map(function () { return { n: 0, ok: 0 }; });  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */

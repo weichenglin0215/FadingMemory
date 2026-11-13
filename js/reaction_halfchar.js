@@ -1,23 +1,28 @@
 /* ═══════════════════════════════════════════════════════════════════
    reaction_halfchar.js — 秒反應・半邊字
    樣式：css/games/reaction_halfchar.css（這款專屬的 class 一律以「halfchar-」開頭；共用元件在 css/reaction_common.css）
-   畫面上的字被遮住了一半，從下面四個字裡選出最可能的那一個。
+   一個中文字被「旋轉的白色遮片」蓋住，只能從遮片的空隙偷看它的筆畫，從下面的字裡選出最可能的那一個。
    ───────────────────────────────────────────────────────────────────
-   · 題庫 ENTRIES 是**手工審校**的，不做自動產生：每題 { a:答案, side:差異部件在哪一側, d:[3 個干擾字] }。
-     side 指的是「答案跟干擾字不一樣的那個部件」在字的哪一側（left／top 取拆解的第 0 個部件，right／bottom 取第 1 個）。
-   · 遮法（重點）：**遮住差異處、露出相似處**。四個選項都有的那個部件（相似處，例：湖、河、海、油的「氵」）完整露出，
-     差異部件（例：胡、可、每、由）大部分遮住，只從貼著相似處的那一側露出一小段（SLIVER，占差異部件的比例）。
-     所以光看露出的部分，四個字都像，要靠露出的那一小段筆畫去分辨；越後面露出的那一小段越少。
-   · 題庫規則（checkData 逐題驗證）：3 個干擾字的拆解都含有那個相似部件，而且都不含答案的差異部件。
-   · 遮字用 CSS clip-path: inset()，不改字型。每個字有一條「兩個部件的分界線」b（占字寬或字高的比例，
-     預設依第一個部件查 BOUNDS 表，也可以在題庫裡寫 b 覆蓋）。
-   · 難度（玩家說「幾乎沒有難度」，所以從四個方向一起加難，全部隨題號線性變難，第 LEVEL_RAMP 題到頂）：
-        ① 露出的線索變少：差異部件露出的比例 SLIVER_START（40％）→ SLIVER_END（12％）；
-        ② 時間變短：每題限時 TIME_START（6 秒）→ TIME_END（2.5 秒）；
-        ③ 選項變多：4 個 → 6 個（OPT_START → OPT_END，第 OPT_RAMP 題起 6 個）。多出來的干擾字不用手工寫：
-           從拆字表 DECOMP 裡自動找「結構相同（左右／上下）、相似部件同一個位置、差異部件不一樣」的字（extraPool）；
-        ④ 字會歪斜：第 ROT_FROM 題之後，大字會隨機往左或往右歪（0° → ROT_MAX 24°），要先在腦中「轉正」再比對。
-   · 有 LIVES 次機會，成績＝答對題數（越多越好）。答完把整個字亮出來並說明「相似的是 X，關鍵是 Y」。
+   · V1.57.0（玩家意見）改規則：原本是「用 CSS 把字的一半遮住」，現在改成**不同形狀的白色遮片繞著字的中心旋轉**（畫在 canvas 上）。
+     遮片的形狀（SHAPE_FROM 是每種形狀從第幾題開始出現）：
+        pizza    切出開口的比薩（V1.57.0 起是 PIZZA_CUTS 個切口、平均分布在圓盤上，總空隙平均分給每個切口，開口越小越難辨識）；
+        stripes  交錯的白色條紋與空隙（轉起來有時是直條、有時是橫條）；
+        checker  交錯的黑白格（白色格子擋住字，「黑色」的格子是看得到字的空隙）；
+        wave     黑白相間的波紋（條紋彎成波浪，WAVE）；
+        spiral   螺旋紋（白色的螺旋帶，紋路的寬度決定難度）；
+        emoji    4／9／16／25／36／49 宮格的 emoji 方陣（人臉、水果、動物、交通工具、蔬果；圖案之間不留空隙，只剩圓形圖案四個角落的小縫）。
+   · **題目字盡量放大**（V1.57.0 玩家意見）：字（字級）是畫面寬度的 CHAR_W（90%），畫布也跟著撐大到放得下為止——標題兼做題目提示（只占一行）、時間條與選項之間的空隙縮小、選項按鈕變矮、解說先留兩行的高度（揭曉時字框才不會被擠小）。
+   · 題庫 ENTRIES 是**手工審校**的，不做自動產生：每題 { a:答案, side:差異部件在哪一側, d:[3 個干擾字] }（side 指的是「答案跟干擾字不一樣的那個部件」
+     在字的哪一側：left／top 取拆解的第 0 個部件，right／bottom 取第 1 個）。題庫規則（checkData 逐題驗證）：3 個干擾字的拆解都含有那個相似部件，而且都不含答案的差異部件。
+     遮片改版後，這份題庫還是用來出選項（干擾字都跟答案共用一個部件，長得很像），揭曉時也用它說明「相似的是 X，關鍵是 Y」。
+   · 難度（全部隨題號線性變難，第 LEVEL_RAMP 題到頂；參數格式都是 [第 1 題, 到頂]）：
+        ① **遮片的空隙 OPEN**：看得到字的部分占多少（0.5＝一半是空隙 → 0.15）；空隙露出越少越難；
+        ② **旋轉的速度 SPEED**（度／秒）：要適中——太慢，空隙幾乎停在原地，慢慢等它掃過就看得全；太快，眼睛會把一連串空隙的畫面疊在一起，反而認得出來。
+           所以這個參數只從「慢」加快到「最難的速度」，不會再更快；每一題的速度在這一關的基準上下隨機 SPEED_JITTER，方向（順時針或逆時針）也隨機；
+        ③ **遮片五彩繽紛 COLOR_P**：每一條條紋、每一格、每一段扇形都是不同的鮮豔顏色（機率隨題號增加；emoji 方陣本來就是彩色的）；
+        ④ emoji 方陣的格數 EMOJI_N（每邊 2 個＝4 宮格，到每邊 7 個＝49 宮格）；
+        ⑤ 時間變短 TIME_START → TIME_END；⑥ 選項變多 OPT_START → OPT_END（多出來的干擾字從拆字表 DECOMP 自動找「結構相同、相似部件同一個位置、差異部件不一樣」的字，見 extraPool）。
+   · 有 LIVES 次機會，成績＝答對題數（越多越好）。答完拿掉遮片、把整個字亮出來並說明「相似的是 X，關鍵是 Y」。
    ═══════════════════════════════════════════════════════════════════ */
 
 /* （檔案結構說明見 js/reaction_sticks.js 開頭的「新手導讀」） */
@@ -35,17 +40,26 @@
     /* 設定集中在這一區 */
     /* ═══ 可以自己調的參數 ═══ */
     var LEVEL_RAMP = 30;                            /* 難度升到頂的關卡：第 1 關線性變難，到第 30 關最難，之後維持不變 */
-    /* SLIVER：差異部件露出的比例，第 1 題露 40%，越後面越少（到 12%）——原本是 55% → 25%，玩家覺得幾乎沒有難度 */
-    var SLIVER_START = 0.40, SLIVER_END = 0.12; /* 差異部件從貼著相似處的那一側露出幾成（第 1 題最多，越後面越少）*/
-    var TIME_START = 6, TIME_END = 2.5;          /* 每題限時（秒），原本 8 → 3.5 */
+    var OPEN = [0.15, 0.025];                         /* 遮片的空隙（看得到字的部分）占多少：第 1 題 → 到頂。0.5＝一半是空隙，越小越難（棋盤格最多 0.5） */
+    var SPEED = [40, 180];                          /* 遮片旋轉的速度（度／秒）：第 1 題 → 到頂。要適中：太慢或太快都比較好認，所以最快只加到「最難的速度」 */
+    var SPEED_JITTER = 0.2;                         /* 每一題的速度，在這一關的基準上下隨機多少（0.2＝±20%） */
+    var COLOR_P = [0, 0.75];                        /* 遮片變成五彩繽紛（每個部分都是不同的鮮豔顏色）的機率：第 1 題 → 到頂 */
+    var EMOJI_N = [2, 7];                           /* emoji 方陣每邊有幾個圖案：第 1 題 → 到頂（2＝4 宮格、3＝9、4＝16、5＝25、6＝36、7＝49） */
+    var SHAPE_FROM = { pizza: 1, stripes: 1, checker: 2, wave: 3, spiral: 4, emoji: 5 };   /* 每一種遮片從第幾題開始出現（出現之後，每題從已經出現的形狀裡隨機挑一種） */
+    /* 各種遮片的紋路間距（占字大小的幾倍，每題在範圍內隨機，並非由關卡數量遞增）；間距越小，紋路越細密 */
+    var PITCH = { stripes: [0.1, 0.15], checker: [0.12, 0.20], wave: [0.1, 0.15], spiral: [0.025, 0.05] };
+    var WAVE_AMP = [0.1, 0.1];                      /* 波紋的振幅：間距的幾倍 */
+    var WAVE_LAMBDA = [0.30, 0.5];                 /* 波紋的波長：占字大小的幾倍 */
+    var PIZZA_CUTS = [3, 6];                        /* 比薩的切口有幾個：第 1 題 → 到頂（四捨五入，至少 2 個）。總空隙 OPEN 平均分給每個切口、切口平均分布在圓盤上，字不會因為轉速慢、只有一個窄窄的切口慢慢掃過去而看不清全貌 */
+    var EMOJI_SPAN = 1.5;                           /* emoji 方陣整個的邊長：占字大小的幾倍（至少 1.42，才轉到哪裡都蓋得住字） */
+    var TIME_START = 6, TIME_END = 20;          /* 每題限時（秒），原本 8 → 3.5 */
     /* 選項數：第 1 題 4 個，線性增加到第 OPT_RAMP 題起 6 個（四捨五入：第 4 題起 5 個、第 10 題起 6 個） */
-    var OPT_START = 4, OPT_END = 6, OPT_RAMP = 12;
-    /* 字歪斜的角度：第 ROT_FROM 題以前不歪，之後線性增加到第 LEVEL_RAMP 題的 ROT_MAX 度（方向隨機左或右） */
-    var ROT_FROM = 6, ROT_MAX = 24;
-    var LIVES = 3;                                  /* 命數（答錯一次扣一條，用完就結束） */
+    var OPT_START = 6, OPT_END = 6, OPT_RAMP = 12;
+    var LIVES = 1;                                  /* 命數（答錯一次扣一條，用完就結束） */
     var NEXT_MS = 1300;                             /* 答完一題後停多久才出下一題（毫秒，1300 毫秒＝1.3 秒） */
     /* 最近出過的 10 題不會再出現 */
     var AVOID_RECENT = 10;                      /* 最近出過的幾題不重複 */
+    var CHAR_W = 0.9;                               /* 題目字（字級）的大小是畫面寬度的幾倍：0.9＝90%（V1.57.0 玩家意見：盡量放大；畫布會撐到放得下為止，字太大放不下時縮到畫布那麼大）。原本的 CHAR_FRAC（字占畫布的 0.85）不用了 */
 
     /* 拆字表：每個字拆成兩個部件 [第一個, 第二個]。左右結構是 [左, 右]；上下結構是 [上, 下] */
     /* 拆字表：[第一個部件, 第二個部件]；左右結構＝[左, 右]，上下結構＝[上, 下] */
@@ -71,7 +85,7 @@
         '想': ['相', '心'], '思': ['田', '心'], '念': ['今', '心'], '息': ['自', '心'],
         '雲': ['雨', '云'], '雪': ['雨', '彐'], '電': ['雨', '电'], '霜': ['雨', '相']
     };
-    /* 只當「選項裡的干擾字」用的字（不會當答案，所以不用 BOUNDS）：格式跟上面的 DECOMP 一樣，用來讓選項增加到 6 個。
+    /* 只當「選項裡的干擾字」用的字（不會當答案，所以不用寫進題庫 ENTRIES）：格式跟上面的 DECOMP 一樣，用來讓選項增加到 6 個。
        每個字都是「相似部件同一個位置、差異部件不同」的同結構字：左右結構的左右兩個部件、上下結構的上下兩個部件（上下結構的字列在 TB 裡）。 */
     var EXTRA = {
         '鬍': ['髟', '胡'], '猢': ['犭', '胡'], '睛': ['目', '青'], '靖': ['立', '青'], '蜻': ['虫', '青'], '罵': ['罒', '馬'], '瑪': ['王', '馬'],
@@ -91,13 +105,6 @@
     '草花苦英家字守宅想思念息雲雪電霜桌菜茶荷若芳安完定室宇恩怒意忍感雷零露需霧'.split('').forEach(function (c) { TB[c] = true; });  /* forEach：對陣列的每個元素各做一次 */
     /* side 對應的部件索引：left/top 是第 0 個部件，right/bottom 是第 1 個 */
     var SIDE_IDX = { left: 0, top: 0, right: 1, bottom: 1 };
-    /* BOUNDS：第一個部件占整個字寬（或字高）的比例＝兩部件的分界線，用來決定遮罩的切點 */
-    /* 第一個部件（左或上）占整個字的寬／高幾成＝兩個部件的分界線；用 b 欄位可以逐字覆蓋 */
-    var BOUNDS = {
-        '氵': 0.32, '言': 0.42, '忄': 0.32, '日': 0.38, '女': 0.36, '金': 0.42, '食': 0.40, '米': 0.50, '扌': 0.36, '足': 0.48, '口': 0.40, '木': 0.40,
-        '亻': 0.34, '子': 0.34, '彳': 0.34, '目': 0.44, '片': 0.44, '土': 0.40, '石': 0.46, '虫': 0.44, '車': 0.46, '犭': 0.34, '王': 0.40, '田': 0.56,
-        '艹': 0.38, '宀': 0.45, '相': 0.58, '今': 0.54, '自': 0.58, '雨': 0.60, '卓': 0.55
-    };
     /* 題庫 ENTRIES（手工審校）：{ a 答案, side 差異部件在字的哪一側, d 三個干擾字 }。想新增題目只要加一筆，並跑 checkData 檢查 */
     var ENTRIES = [
         /* 這一組：差異部件在右側（被遮住），相似的左半部件（例如「氵」）露出 */
@@ -128,36 +135,129 @@
     function fmtBest(v) { return v == null ? '' : '最佳 ' + v + ' 題'; }
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
-    /* 這個字的分界線位置：題庫有寫 b 就用它，否則查 BOUNDS，再沒有就用 0.45 */
-    function boundOf(entry) { return entry.b != null ? entry.b : (BOUNDS[DECOMP[entry.a][0]] != null ? BOUNDS[DECOMP[entry.a][0]] : 0.45); }
-    /* 這題露出差異部件的比例（線性隨題號變少） */
-    function revealOf(level) { return kit.ramp(level, SLIVER_START, SLIVER_END, LEVEL_RAMP); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
-    /* 露出的是哪一側：差異部件的另一側（相似處那一側） */
-    /* 露出的是哪一側：差異部件的另一側（相似處那一側） */
-    function exposedSide(entry) { return { left: 'right', right: 'left', top: 'bottom', bottom: 'top' }[entry.side]; }
-    /* 算出要露出的區間 { from, to }（0～1）：相似部件整個露出，再加上差異部件貼著分界線的一小段 */
-    /* 露出的區間 { from, to }（占字寬或字高的比例，0～1）：相似部件整個露出，加上差異部件貼著分界線的 SLIVER 那一段。
-       差異在右／下（相似處在左／上）：[0, b + f·(1−b)]；差異在左／上（相似處在右／下）：[b − f·b, 1] */
-    function visRegion(entry, level) {
-        var b = boundOf(entry), f = revealOf(level);
-        if (entry.side === 'right' || entry.side === 'bottom') return { from: 0, to: b + f * (1 - b) };
-        return { from: b - f * b, to: 1 };
-    }
-    /* 把區間轉成 CSS clip-path: inset(上 右 下 左) 字串——clip-path 能「裁掉」元素的一部分不顯示 */
-    /* clip-path 的 inset(上 右 下 左) */
-    function clipFor(side, reg) {
-        var lo = (reg.from * 100).toFixed(1) + '%', hi = ((1 - reg.to) * 100).toFixed(1) + '%';
-        if (side === 'right') return 'inset(0 0 0 ' + lo + ')';
-        if (side === 'left') return 'inset(0 ' + hi + ' 0 0)';
-        if (side === 'bottom') return 'inset(' + lo + ' 0 0 0)';
-        return 'inset(0 0 ' + hi + ' 0)';
-    }
     /* 每題的限時 */
-    function timeFor(level) { return kit.ramp(level, TIME_START, TIME_END, LEVEL_RAMP); }
+    function timeFor(level) { return kit.ramp(level, TIME_START, TIME_END, LEVEL_RAMP); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
     /* 這題有幾個選項（4 → 6，隨題號線性增加，四捨五入） */
     function optCount(level) { return Math.round(kit.ramp(level, OPT_START, OPT_END, OPT_RAMP)); }  /* Math.round：四捨五入成整數 */
-    /* 這題大字要歪幾度（正的角度；方向由呼叫端隨機決定）：第 ROT_FROM 題以前 0，之後線性增加到第 LEVEL_RAMP 題的 ROT_MAX */
-    function rotOf(level) { return level <= ROT_FROM ? 0 : ROT_MAX * Math.min(1, (level - ROT_FROM) / (LEVEL_RAMP - ROT_FROM)); }
+
+    /* ─── 遮片（V1.57.0）─── */
+    function openFor(q) { return kit.ramp(q, OPEN[0], OPEN[1], LEVEL_RAMP); }          /* 這題遮片的空隙比例 */
+    function speedFor(q) { return kit.ramp(q, SPEED[0], SPEED[1], LEVEL_RAMP); }       /* 這題的基準轉速（度／秒） */
+    function colorPFor(q) { return kit.ramp(q, COLOR_P[0], COLOR_P[1], LEVEL_RAMP); }  /* 這題遮片變成五彩繽紛的機率 */
+    function emojiNFor(q) { return kit.clamp(Math.round(kit.ramp(q, EMOJI_N[0], EMOJI_N[1], LEVEL_RAMP)), Math.min(EMOJI_N[0], EMOJI_N[1]), Math.max(EMOJI_N[0], EMOJI_N[1])); }  /* kit.clamp(值, 最小, 最大)：把數值限制在範圍內 */
+    function pizzaCutsFor(q) { return Math.max(2, Math.round(kit.ramp(q, PIZZA_CUTS[0], PIZZA_CUTS[1], LEVEL_RAMP))); }   /* 這題比薩有幾個切口 */
+    /* 這題出現的遮片形狀有哪幾種：已經「開始出現」（SHAPE_FROM ≤ 題號）的全部 */
+    function shapesFor(q) { return Object.keys(SHAPE_FROM).filter(function (s) { return q >= SHAPE_FROM[s]; }); }  /* filter：留下符合條件的元素，回傳新陣列 */
+    /* emoji 方陣用的圖案：人臉、水果、動物、交通工具、蔬菜（都是 emoji 圖片庫 Reaction.emojiPng 裡有的） */
+    var EMOJI_CATS = {
+        faces: Array.from('😀😃😄😁😆😅🤣😂🙂🙃😉😊😍🤩😘😗😚😙😋😛😜🤪😝🤑🤗🤭🤫🤔🤐🤨😐😑😶😏😒🙄😬🤥😌😔😪🤤😴😷🤒🤕🤢🤮🤧🥵🥶🥴😵🤯🥳😎🤓'),
+        fruits: Array.from('🍇🍈🍉🍊🍋🍌🍍🥭🍎🍏🍐🍑🍒🍓🥝🍅🥥'),
+        animals: Array.from('🐒🐶🐺🦊🦝🐱🦁🐯🐴🦄🦓🦌🐮🐷🐗🐏🐐🐪🦙🦒🐘🐰🦔🐻🐨🐼🦨🦘🐔🐣🐸🐵'),
+        vehicles: Array.from('🚗🚘🚙🚚🚛🚜🛵🛺🚲🛴⛵🚢🚁🚟🚠🚀🛸'),
+        veggies: Array.from('🥑🍆🥔🥕🌽🥒🥬🥦🧄🧅🍄🥜🌰')
+    };
+    /* 這題的遮片：{ shape, open, colorful, speed（度／秒）, dir（1 順時針、−1 逆時針）, theta0（一開始的角度）, pitch（紋路間距，占字大小的幾倍）, amp／lambda／phase（波紋）, n／cat／cells（emoji 方陣）} */
+    function makeMask(q, rand) {
+        rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
+        var shapes = shapesFor(q), shape = kit.pick(shapes.length ? shapes : ['pizza'], rand);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
+        var m = { shape: shape, open: openFor(q), colorful: false, speed: speedFor(q) * (1 + SPEED_JITTER * (rand() * 2 - 1)), dir: rand() < 0.5 ? 1 : -1, theta0: rand() * 2 * Math.PI };
+        if (shape !== 'emoji') m.colorful = rand() < colorPFor(q);
+        if (PITCH[shape]) m.pitch = kit.randFloat(PITCH[shape][0], PITCH[shape][1], rand);  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+        if (shape === 'wave') { m.amp = m.pitch * kit.randFloat(WAVE_AMP[0], WAVE_AMP[1], rand); m.lambda = kit.randFloat(WAVE_LAMBDA[0], WAVE_LAMBDA[1], rand); m.phase = rand() * 2 * Math.PI; }
+        if (shape === 'pizza') m.cuts = pizzaCutsFor(q);                         /* 比薩：切口的個數（總空隙平均分給每個切口） */
+        if (shape === 'emoji') {
+            m.n = emojiNFor(q); m.cat = kit.pick(Object.keys(EMOJI_CATS), rand); m.cells = [];
+            for (var i = 0; i < m.n * m.n; i++) m.cells.push(kit.pick(EMOJI_CATS[m.cat], rand));
+        }
+        return m;
+    }
+    /* 第 tSec 秒時遮片轉到的角度（弧度） */
+    function maskAngle(m, tSec) { return m.theta0 + m.dir * m.speed * Math.PI / 180 * tSec; }
+    function mod(a, b) { return ((a % b) + b) % b; }
+    /* 遮片在「遮片自己的座標」（原點在字的中心，單位 px）的 (x, y) 這一點，是不是不透明（會擋住字）。U＝字的大小（px）。
+       畫遮片的程式（drawMask）跟它用同一組幾何，所以測試只要檢查這個函式，就知道實際露出多少。 */
+    function coverAt(m, x, y, U) {
+        var g, p, v;
+        if (m.shape === 'pizza') {                                       /* 圓盤；m.cuts 個切口平均分布（每隔 2π÷cuts 一個），每個切口是以那個角度為中心、寬 open×2π÷cuts 的扇形，所以總空隙是 open */
+            var n = m.cuts || 1, step = 2 * Math.PI / n, ph = mod(Math.atan2(y, x), step);   /* ph：在「這一個切口到下一個切口」之間轉了多少 */
+            return Math.min(ph, step - ph) > m.open * Math.PI / n;                          /* 離最近的切口中心比半寬還遠＝被擋住（半寬是 open×π÷cuts） */
+        }
+        if (m.shape === 'stripes') { p = m.pitch * U; g = m.open * p; v = mod(y, p); return !(v <= g / 2 || v >= p - g / 2); }
+        if (m.shape === 'wave') { p = m.pitch * U; g = m.open * p; v = mod(y - m.amp * U * Math.sin(2 * Math.PI * x / (m.lambda * U) + m.phase), p); return !(v <= g / 2 || v >= p - g / 2); }
+        if (m.shape === 'spiral') {                                      /* 阿基米德螺線 r ＝ p×θ÷2π ＋ 常數：空隙以螺線為中心、寬 open×p */
+            p = m.pitch * U; g = m.open * p;
+            v = mod(Math.hypot(x, y) - p * mod(Math.atan2(y, x), 2 * Math.PI) / (2 * Math.PI), p);
+            return !(v <= g / 2 || v >= p - g / 2);
+        }
+        if (m.shape === 'checker') {                                     /* 格子（i, j）：i＋j 是偶數的格子中間有空隙（邊長 w），其餘整格擋住 */
+            var c = m.pitch * U, w = Math.min(c, c * Math.sqrt(2 * m.open)), i = Math.floor(x / c), j = Math.floor(y / c);
+            if (mod(i + j, 2) !== 0) return true;
+            return Math.abs(x - (i + 0.5) * c) > w / 2 || Math.abs(y - (j + 0.5) * c) > w / 2;
+        }
+        /* emoji 方陣：每一格大約是一個圓形（直徑＝格邊長），圓外面的四個角是縫 */
+        var G = EMOJI_SPAN * U, e = G / m.n;
+        if (Math.abs(x) >= G / 2 || Math.abs(y) >= G / 2) return false;
+        var ci = Math.floor((x + G / 2) / e), cj = Math.floor((y + G / 2) / e);
+        return Math.hypot(x + G / 2 - (ci + 0.5) * e, y + G / 2 - (cj + 0.5) * e) <= e / 2;
+    }
+    /* 這片遮片露出多少：在字的範圍（邊長 U 的正方形）裡取 steps×steps 個點，沒被擋住的比例（0～1） */
+    function visibleFraction(m, U, steps) {
+        steps = steps || 60;
+        var open = 0, i, j;
+        for (i = 0; i < steps; i++) for (j = 0; j < steps; j++) if (!coverAt(m, (i + 0.5) / steps * U - U / 2, (j + 0.5) / steps * U - U / 2, U)) open++;
+        return open / (steps * steps);
+    }
+    /* 彩色遮片的顏色：第 k 個部分的色相（黃金角 137.5° 讓相鄰的部分顏色差很多） */
+    function hueOf(k) { return mod(k * 137.508, 360); }
+    function hsl(k, light) { return 'hsl(' + hueOf(k).toFixed(1) + ',85%,' + (light || 55) + '%)'; }
+    /* 畫遮片：ctx 的原點已經在畫布中心；U＝字的大小（px）；ang＝遮片轉到的角度；pal＝{ white, edge }（白色與邊線顏色）；drawEmoji(ctx, 圖案, 中心 x, 中心 y, 邊長)：畫 emoji（沒傳就用文字 emoji）。
+       每一種形狀都畫「擋住字」的部分（白色，或五彩繽紛 m.colorful），空隙就是沒畫的地方。 */
+    function drawMask(ctx, m, U, ang, pal, drawEmoji) {
+        var R = U * 1.0, k, i, j, p, g, a;                               /* R：遮片鋪多大（半徑）；字框的半對角線是 0.71×U，畫布的半對角線不到 U，所以轉到哪裡都鋪得滿 */
+        ctx.save();
+        ctx.rotate(ang);
+        if (m.shape === 'pizza') {
+            var n = m.cuts || 1, step = 2 * Math.PI / n, hw = m.open * Math.PI / n;          /* n 個切口平均分布，每個切口半寬 hw；兩個切口之間是一塊「比薩」 */
+            for (k = 0; k < n; k++) {
+                ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, R, k * step + hw, (k + 1) * step - hw); ctx.closePath();
+                ctx.fillStyle = m.colorful ? hsl(k) : pal.white; ctx.fill();                  /* 五彩繽紛：每一塊顏色不同。不畫邊線：切口很窄的時候，邊線會把切口吃掉 */
+            }
+        } else if (m.shape === 'stripes') {
+            p = m.pitch * U; g = m.open * p;
+            for (k = -Math.ceil(R / p) - 1; k <= Math.ceil(R / p) + 1; k++) { ctx.fillStyle = m.colorful ? hsl(k) : pal.white; ctx.fillRect(-R, k * p + g / 2, 2 * R, p - g); }
+        } else if (m.shape === 'wave') {
+            p = m.pitch * U; g = m.open * p; a = m.amp * U;
+            var K = Math.ceil((R + a) / p) + 1, lam = m.lambda * U;
+            ctx.lineWidth = p - g; ctx.lineJoin = 'round';
+            for (k = -K; k <= K; k++) {
+                ctx.beginPath();
+                for (var x = -R; x <= R + 4; x += 4) { var y = (k + 0.5) * p + a * Math.sin(2 * Math.PI * x / lam + m.phase); if (x === -R) ctx.moveTo(x, y); else ctx.lineTo(x, y); }
+                ctx.strokeStyle = m.colorful ? hsl(k) : pal.white; ctx.stroke();
+            }
+        } else if (m.shape === 'spiral') {
+            p = m.pitch * U; g = m.open * p;
+            ctx.lineWidth = p - g; ctx.lineJoin = 'round'; ctx.lineCap = 'butt';
+            var th = -Math.PI, step = 0.1, seg = 0, rr = function (t) { return p * t / (2 * Math.PI) + p / 2; };
+            ctx.beginPath(); ctx.moveTo(rr(th) * Math.cos(th), rr(th) * Math.sin(th));
+            while (rr(th) < R * 1.45) {
+                th += step; ctx.lineTo(rr(th) * Math.cos(th), rr(th) * Math.sin(th));
+                if (m.colorful && ++seg % 5 === 0) { ctx.strokeStyle = hsl(seg / 5); ctx.stroke(); ctx.beginPath(); ctx.moveTo(rr(th) * Math.cos(th), rr(th) * Math.sin(th)); }
+            }
+            ctx.strokeStyle = m.colorful ? hsl(seg / 5 + 1) : pal.white; ctx.stroke();
+        } else if (m.shape === 'checker') {
+            var c = m.pitch * U, w = Math.min(c, c * Math.sqrt(2 * m.open)), N = Math.ceil(R / c) + 1;
+            for (i = -N; i <= N; i++) for (j = -N; j <= N; j++) {
+                ctx.fillStyle = m.colorful ? hsl(i * 7 + j * 13 + 100) : pal.white;
+                ctx.beginPath(); ctx.rect(i * c, j * c, c, c);
+                if (mod(i + j, 2) === 0) { ctx.rect(i * c + (c - w) / 2, j * c + (c - w) / 2, w, w); ctx.fill('evenodd'); } else ctx.fill();
+            }
+        } else {
+            var Gd = EMOJI_SPAN * U, e = Gd / m.n;
+            for (i = 0; i < m.n; i++) for (j = 0; j < m.n; j++) drawEmoji(ctx, m.cells[j * m.n + i], -Gd / 2 + (i + 0.5) * e, -Gd / 2 + (j + 0.5) * e, e);
+        }
+        ctx.restore();
+    }
+
     /* visiblePart＝相似的部件（完整露出）；hiddenPart＝差異的部件（大部分被遮住） */
     /* visiblePart＝相似處（整個露出）；hiddenPart＝差異處（大部分遮住） */
     function visiblePart(entry) { return DECOMP[entry.a][1 - SIDE_IDX[entry.side]]; }
@@ -229,30 +329,51 @@
 
     /* mount：遊戲進場點 */
     function mount(root, ctx) {
-        var R = null;
+        var R = null, EP = Reaction.emojiPng;
 
         /* startAt：從第幾關開始（失敗後可從前 5 關繼續）*/
-        /* round：開一局 */
+        /* round：開一局。emoji 方陣要用 emoji 圖片，所以圖片載好才開始（限時遊戲要公平；載入失敗就退回文字 emoji） */
         function round(startAt) {
             if (R) R.dispose();
             R = kit.round();
             var my = R;
             root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
-
-            /* q 目前題號；right 答對數；lives 機會；state 目前階段；qid 每題 +1；recent 最近出過的題；E 這題的題庫資料；O 這題的選項 */
-            var q = (startAt || 1) - 1, right = q, lives = LIVES, newRec = false, state = 'idle', qid = 0, recent = [], cur = null, E = null, O = null;
-            /* 建立畫面元素：標題、提示、大字框、時間條、四個選項、解說 */
+            EP.whenReady(root, function () { if (!my.dead) begin(my, startAt); });
+        }
+        function begin(my, startAt) {
+            /* q 目前題號；right 答對數；lives 機會；state 目前階段；qid 每題 +1；recent 最近出過的題；E 這題的題庫資料；O 這題的選項；M 這題的遮片 */
+            var q = (startAt || 1) - 1, right = q, lives = LIVES, newRec = false, state = 'idle', qid = 0, recent = [], cur = null, E = null, O = null, M = null;
+            root.classList.add('halfchar-screen');      /* 加一個 class，讓標題與時間條的上下空隙縮小、把高度讓給題目字（樣式在 css/games/reaction_halfchar.css）；離開遊戲時拿掉 */
+            my.onDispose(function () { root.classList.remove('halfchar-screen'); });
+            /* 建立畫面元素：標題（兼題目提示）、大字框（裡面一塊 canvas）、時間條、選項、解說 */
             var head = h('div', { 'class': 'halfchar-head' });
-            var prompt = h('div', { 'class': 'halfchar-prompt' });
             var charBox = h('div', { 'class': 'halfchar-box' });
-            var big = h('div', { 'class': 'halfchar-char' });
-            charBox.appendChild(big);                   /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
+            var cv = h('canvas', { 'class': 'halfchar-canvas' });
+            charBox.appendChild(cv);                    /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
             var tb = kit.timebar();
             var opts = h('div', { 'class': 'halfchar-opts' });
             var tip = h('div', { 'class': 'halfchar-tip' });  /* tip：盤面下方的提示文字（操作說明、出錯的原因會寫在這裡） */
-            [head, prompt, charBox, tb.el, opts, tip].forEach(function (n) { root.appendChild(n); });
+            [head, charBox, tb.el, opts, tip].forEach(function (n) { root.appendChild(n); });
+            var g2 = cv.getContext('2d'), side = 300, DPR = Math.min(2, window.devicePixelRatio || 1), U = 0;
+            var cs = getComputedStyle(document.documentElement), css = function (n, d) { return (cs.getPropertyValue(n) || '').trim() || d; };
+            var pal = { white: css('--c-on-accent', '#ffffff'), edge: css('--c-ink-soft', '#7E6A3C'), ink: css('--c-black', '#000000'), bg: css('--c-gray-soft', '#e4e2de'), font: css('--font-note', 'serif') };
 
             function meta() { ctx.setMeta(kit.meta(['答對 ' + right, '機會 ' + lives])); }
+            /* 畫面的 emoji：圖片庫畫得出來就貼圖，不然退回文字 emoji（跟 EP.draw 一樣：中心 (x, y)、邊長 e） */
+            function drawEmoji(c2, ch, x, y, e) {
+                if (EP.draw(c2, ch, x, y, e)) return;
+                c2.font = Math.floor(e * 0.85) + 'px sans-serif'; c2.textAlign = 'center'; c2.textBaseline = 'middle'; c2.fillStyle = pal.ink; c2.fillText(ch, x, y);
+            }
+            /* 畫一個畫面：灰底、字，再蓋上轉到 tSec 秒時的遮片（masked 為 false＝揭曉，只畫字） */
+            function draw(tSec, masked) {
+                g2.setTransform(DPR, 0, 0, DPR, 0, 0);
+                g2.clearRect(0, 0, side, side); g2.fillStyle = pal.bg; g2.fillRect(0, 0, side, side);
+                g2.save(); g2.translate(side / 2, side / 2);
+                g2.fillStyle = pal.ink; g2.font = '700 ' + U + 'px ' + pal.font; g2.textAlign = 'center'; g2.textBaseline = 'middle';
+                g2.fillText(E.a, 0, U * 0.02);
+                if (masked) drawMask(g2, M, U, maskAngle(M, tSec), pal, drawEmoji);
+                g2.restore();
+            }
 
             /* 出下一題 */
             function next() {
@@ -261,41 +382,32 @@
                 var id = ++qid;
                 var idx = pickEntry(recent);
                 recent.push(idx); if (recent.length > AVOID_RECENT) recent.shift();
-                /* E 是題庫的一筆；O 是這題的四個選項 */
-                E = ENTRIES[idx]; O = makeOptions(E, null, optCount(q));
-                /* 算出這題要露出哪個區間 */
-                var reg = visRegion(E, q);
+                /* E 是題庫的一筆；O 是這題的選項；M 是這題的遮片 */
+                E = ENTRIES[idx]; O = makeOptions(E, null, optCount(q)); M = makeMask(q);
                 state = 'ask';
-                head.textContent = '第 ' + q + ' 題';     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-                prompt.textContent = '字被遮住一半（相似處露出、差異處遮住），是哪一個？';
+                head.textContent = '第 ' + q + ' 題　遮片蓋住了字，是哪一個？';     /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
                 tip.textContent = '';
-                big.textContent = E.a;
-                /* 用 CSS clip-path 把大字遮住一部分（webkitClipPath 是舊版 Safari 的寫法） */
-                big.style.clipPath = clipFor(exposedSide(E), reg);
-                big.style.webkitClipPath = big.style.clipPath;
                 charBox.className = 'halfchar-box';
                 opts.innerHTML = '';
                 /* 選項的欄數：4 個以內 2 欄（2×2），5～6 個 3 欄（3×2），兩種都是 2 列，所以占的高度一樣 */
                 opts.style.gridTemplateColumns = 'repeat(' + (O.options.length <= 4 ? 2 : 3) + ', 1fr)';
-                /* 建立四顆選項按鈕 */
+                /* 建立選項按鈕 */
                 O.options.forEach(function (c, i) {
                     var b = h('button', { 'class': 'halfchar-opt', text: c });
                     b.addEventListener('pointerdown', function (e) { e.preventDefault(); judge(i); });  /* preventDefault：取消瀏覽器的預設動作（例如拖曳時的捲動、文字選取） */
                     opts.appendChild(b);
                 });
-                /* 字級要先縮小再依字框大小放大，量到的框高度才準 */
-                big.style.fontSize = '120px';          /* 先縮小，量到的字框高度才不會被大字撐開 */
-                /* 字歪斜：第 ROT_FROM 題之後隨機往左或往右歪 rotOf(q) 度；歪了之後字的外接框會變大（邊長 × (cos＋sin)），
-                   所以字級要先除以這個倍數，才不會被字框裁到邊角 */
-                var rot = rotOf(q) * (Math.random() < 0.5 ? -1 : 1), rad = Math.abs(rot) * Math.PI / 180;  /* Math.abs：取絕對值（去掉負號） */
-                big.style.transform = rot ? 'rotate(' + rot.toFixed(1) + 'deg)' : '';
-                big.style.fontSize = Math.floor(Math.min(charBox.clientHeight, charBox.clientWidth) * 0.92 / (Math.cos(rad) + Math.sin(rad))) + 'px';  /* Math.floor：無條件捨去成整數 */
+                /* 畫布大小：字框裡放得下的最大正方形（要等選項放進去、版面排好才量得準）；字的大小 U ＝ 畫面寬度 × CHAR_W（90%），畫布放不下就縮到畫布那麼大 */
+                side = Math.max(120, Math.floor(Math.min(charBox.clientWidth, charBox.clientHeight) - 8));
+                cv.width = Math.round(side * DPR); cv.height = Math.round(side * DPR); cv.style.width = side + 'px'; cv.style.height = side + 'px';
+                U = Math.floor(Math.min(CHAR_W * charBox.offsetWidth, side));
                 meta();
-                /* 主控台印出這題的細節（答案、露出哪一側、相似與差異部件、分界線、限時），方便驗證 */
-                try { console.info('[半邊字] 第 ' + q + ' 題：答案「' + E.a + '」露出' + ({ left: '左', right: '右', top: '上', bottom: '下' })[exposedSide(E)] + '半（相似的「' + visiblePart(E) + '」整個露出，差異的「' + hiddenPart(E) + '」只露出 ' + (revealOf(q) * 100).toFixed(0) + '%，分界線 ' + boundOf(E).toFixed(2) + '）；選項 ' + O.options.join('、') + '；限時 ' + timeFor(q).toFixed(1) + ' 秒'); } catch (e) { }
+                /* 主控台印出這題的細節（答案、遮片形狀、空隙、轉速、彩色與否、限時），方便驗證 */
+                try { console.info('[半邊字] 第 ' + q + ' 題：答案「' + E.a + '」；遮片 ' + M.shape + '，空隙 ' + (M.open * 100).toFixed(0) + '%，轉速 ' + M.speed.toFixed(0) + ' 度／秒（' + (M.dir > 0 ? '順' : '逆') + '時針）' + (M.colorful ? '，五彩繽紛' : '') + (M.n ? '，' + M.n + '×' + M.n + ' 宮格（' + M.cat + '）' : '') + '；選項 ' + O.options.join('、') + '；限時 ' + timeFor(q).toFixed(1) + ' 秒'); } catch (e) { }
                 var t0 = performance.now(), lim = timeFor(q) * 1000;  /* performance.now()：高精度的時間（毫秒），計時用 */
-                /* 倒數時間條 */
-                my.loop(function (now) { if (id !== qid || state !== 'ask') return false; tb.set(1 - (now - t0) / lim); });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
+                draw(0, true);
+                /* 每個畫面更新：遮片轉一點、倒數時間條 */
+                my.loop(function (now) { if (id !== qid || state !== 'ask') return false; tb.set(1 - (now - t0) / lim); draw((now - t0) / 1000, true); });  /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
                 /* 時間到：judge(-1) 代表沒有選 */
                 my.after(lim, function () { if (id === qid && state === 'ask') judge(-1); });
             }
@@ -305,9 +417,7 @@
                 if (state !== 'ask') return;
                 state = 'reveal';
                 tb.set(0);
-                /* 揭曉：拿掉遮罩，整個字亮出來（同時轉正） */
-                big.style.clipPath = 'none'; big.style.webkitClipPath = 'none';        /* 揭曉：整個字亮出來 */
-                big.style.transform = '';
+                draw(0, false);                         /* 揭曉：拿掉遮片，整個字亮出來 */
                 var ok = i === O.answer;
                 /* 正確選項標綠，選錯的標橘 */
                 [].forEach.call(opts.children, function (b, k) { if (k === O.answer) b.classList.add('halfchar-opt--ok'); else if (k === i) b.classList.add('halfchar-opt--bad'); });  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
@@ -326,7 +436,7 @@
                 /* 答錯：扣機會 */
                 lives--;
                 Sfx.play('bad');
-                prompt.textContent = i < 0 ? '時間到！' : '選錯了…';
+                head.textContent = '第 ' + q + ' 題　' + (i < 0 ? '時間到！' : '選錯了…');
                 meta();
                 /* 沒有機會了 → 結算 */
                 if (lives <= 0) {
@@ -346,10 +456,12 @@
 
             /* G.debug：測試用後門 */
             G.debug = {
-                state: function () { return { q: q, state: state, right: right, lives: lives, E: E, O: O }; },
+                state: function () { return { q: q, state: state, right: right, lives: lives, E: E, O: O, M: M, U: U, side: side }; },
                 answerRight: function () { judge(O.answer); return state; },
-                answerWrong: function () { judge((O.answer + 1) % 4); return state; },
-                jump: function (n) { q = n - 1; }
+                answerWrong: function () { judge((O.answer + 1) % O.options.length); return state; },
+                jump: function (n) { q = n - 1; },
+                draw: function (t, masked) { draw(t || 0, masked !== false); },
+                setMask: function (m) { M = m; draw(0, true); }       /* 測試用：換成指定的遮片（看各種形狀長什麼樣子） */
             };
             /* 開場等 300 毫秒再出第一題 */
             my.after(300, next);
@@ -364,12 +476,17 @@
     var G = {
         id: ID,
         name: '半邊字',
-        rule: '畫面上的**字只露出一半**，從下面的字裡**選出最可能的那一個**。露出的部分會越來越少，選項會增加到六個，字還會越來越歪，每題時間也越來越短！',
+        rule: '畫面上的字被**旋轉的白色遮片**蓋住，只能從遮片的空隙偷看，**選出最可能的那一個字**。遮片有比薩缺口、條紋、黑白格、波紋、螺旋、emoji 方陣等不同形狀，越後面空隙越小，有時還會變成五彩繽紛。選項會增加到六個，每題時間也越來越短！',
         mount: mount,
         /* 世界排行榜的成績規格 */
         score: SCORE,
         /* test 匯出純函式給 Node 自動測試 */
-        test: { exposedSide: exposedSide, SLIVER_START: SLIVER_START, SLIVER_END: SLIVER_END, ENTRIES: ENTRIES, DECOMP: DECOMP, SIDE_IDX: SIDE_IDX, visRegion: visRegion, revealOf: revealOf, boundOf: boundOf, BOUNDS: BOUNDS, clipFor: clipFor, timeFor: timeFor, visiblePart: visiblePart, hiddenPart: hiddenPart, checkData: checkData, checkPool: checkPool, extraPool: extraPool, optCount: optCount, rotOf: rotOf, isTB: isTB, pickEntry: pickEntry, makeOptions: makeOptions, LEVEL_RAMP: LEVEL_RAMP, OPT_START: OPT_START, OPT_END: OPT_END, OPT_RAMP: OPT_RAMP, ROT_FROM: ROT_FROM, ROT_MAX: ROT_MAX, TIME_START: TIME_START, TIME_END: TIME_END, TB: TB }
+        test: {
+            ENTRIES: ENTRIES, DECOMP: DECOMP, SIDE_IDX: SIDE_IDX, timeFor: timeFor, visiblePart: visiblePart, hiddenPart: hiddenPart, checkData: checkData, checkPool: checkPool, extraPool: extraPool, optCount: optCount, isTB: isTB, pickEntry: pickEntry, makeOptions: makeOptions, TB: TB,
+            openFor: openFor, speedFor: speedFor, colorPFor: colorPFor, emojiNFor: emojiNFor, shapesFor: shapesFor, makeMask: makeMask, maskAngle: maskAngle, coverAt: coverAt, visibleFraction: visibleFraction, drawMask: drawMask, hueOf: hueOf, EMOJI_CATS: EMOJI_CATS,
+            pizzaCutsFor: pizzaCutsFor, PIZZA_CUTS: PIZZA_CUTS, CHAR_W: CHAR_W,
+            LEVEL_RAMP: LEVEL_RAMP, OPEN: OPEN, SPEED: SPEED, SPEED_JITTER: SPEED_JITTER, COLOR_P: COLOR_P, EMOJI_N: EMOJI_N, SHAPE_FROM: SHAPE_FROM, PITCH: PITCH, EMOJI_SPAN: EMOJI_SPAN, OPT_START: OPT_START, OPT_END: OPT_END, OPT_RAMP: OPT_RAMP, TIME_START: TIME_START, TIME_END: TIME_END, LIVES: LIVES
+        }
     };
     /* 登記到遊戲清單 */
     Reaction.register(G);

@@ -4,10 +4,11 @@
    ───────────────────────────────────────────────────────────────────
    · 玩法：數字牌蓋著排成方陣（數字 1～9）。每次翻兩張：**加起來是 10 就消掉；不是就蓋回去。**全部消完就過關。
      **翻牌的次數有上限**（畫面上有「剩 N 次」）。每翻錯一次，兩張牌的數字會露出 SHOW_MS（預設 1.5 秒）再蓋回——
-     這是給你看的時間，不是作答的時限；沒有計時，想多久都可以，但要記住它們在哪裡。
+     這是給你看的時間，不是作答的時限（但整關有寬鬆的時間限制，見 TIME_S）；要記住它們在哪裡。
    · 頓悟：記位置＋心算互補數（1-9、2-8、3-7、4-6、5-5）。翻到 1 之後，要去找 9 在哪；翻過的牌要記得。
    · V1.47（玩家意見）：發牌後**盡量不要讓「加起來是 10 的兩張牌」左右相鄰或上下相鄰**（相鄰的話，翻到一張順手翻旁邊那張就中了，太容易）。
      但也不要完全避免：每發現一組這樣的相鄰，就擲一次骰子，有 KEEP_ADJ_P（30%）的機會「保留」它們相鄰，其餘 70% 才把其中一張跟別處的牌對調（見 spread）。
+   · 時間限制（V1.57.0 玩家意見）：每一關有時間限制，給得很寬鬆——第 1 關 1 分鐘，之後隨關卡增加（TIME_S：60 → 240 秒，到第 RAMP_LEVELS 關為止）；時間到還沒消完就失敗。
    · 關卡：8 張（第 1～5 關）→ 16 張（第 6～15 關）→ 24 張（第 16 關起；每列 COLS 張，目前每列 6 張＝4 列 × 6 欄）。
    · 翻牌上限 ＝ 「完美記憶策略」在這個牌面要翻的次數 ＋ 寬限（第 1 → 30 關：SLACK 目前是 2 → 12，越後面寬限越多；原本是 12 → 4）。
      完美記憶策略（perfectFlips）：永遠記得每張翻過的牌；只要記得的牌裡有一組湊成十，就翻它們；
@@ -25,13 +26,23 @@
     var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
     /* ═══ 可以自己調的參數 ═══ */
-    var STAGES = [{ cards: 6, to: 1 }, { cards: 12, to: 3 },
-    { cards: 18, to: 5 }, { cards: 24, to: 8 },
-    { cards: 30, to: 11 }, { cards: 36, to: 15 },
-    { cards: 42, to: 19 }, { cards: 48, to: 9999 }];     /* 牌的張數與這個階段的最後一關 */
+    var STAGES = [{ cards: 6, to: 1 },
+    { cards: 8, to: 2 }, { cards: 10, to: 3 },
+    { cards: 12, to: 4 }, { cards: 14, to: 5 },
+    { cards: 16, to: 6 }, { cards: 18, to: 7 },
+    { cards: 20, to: 8 }, { cards: 22, to: 9 },
+    { cards: 24, to: 10 }, { cards: 26, to: 11 },
+    { cards: 28, to: 12 }, { cards: 30, to: 13 },
+    { cards: 32, to: 14 }, { cards: 34, to: 15 },
+    { cards: 36, to: 16 }, { cards: 38, to: 17 },
+    { cards: 40, to: 18 }, { cards: 42, to: 19 },
+    { cards: 44, to: 20 }, { cards: 46, to: 21 },
+    { cards: 48, to: 9999 }];     /* 牌的張數與這個階段的最後一關 */
     var COLS = 6;                               /* 每一列幾張 */
+    var CARD_H = 0.95;                          /* 牌（答案格子）的高度是牌寬的幾倍（預設 0.95，比寬度略矮）。調大牌會變高、調小牌會變扁；牌多、列數多的關卡如果放不下，會自動縮到「所有列都放得進畫面」為止 */
     var SLACK = [2, 12];                        /* 寬限：比完美記憶策略多出幾次：第 1 關 → 第 RAMP_LEVELS 關 */
     var RAMP_LEVELS = 30;                           /* 難度升到頂的關卡：第 1 關線性變難，到第 30 關最難，之後維持不變 */
+    var TIME_S = [60, 240];                     /* 每一關的時間限制（秒）：第 1 關 → 第 RAMP_LEVELS 關（之後維持不變）。第 1 關給 1 分鐘，牌越多給越久，給得很寬鬆；時間到還沒消完就失敗（V1.57.0 玩家意見） */
     var KEEP_ADJ_P = 0.3;                       /* V1.47：每發現一組「加起來是 10、又左右或上下相鄰」的牌，保留它們相鄰的機會（0＝完全避開、1＝不處理，跟以前一樣全憑運氣） */
     var SHOW_MS = 1500;                         /* 翻錯時，兩張牌露出多久才蓋回（毫秒；不是作答時限） */
     var MATCH_MS = 650;                         /* 翻對時，兩張牌停多久才消掉 */
@@ -40,6 +51,11 @@
     var MAX_LEVEL = 200;                            /* 最後一關：過了第 200 關就算全破（也是成績的上限） */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
+    /* 牌（答案格子）的大小：每列 cols 張，寬 cw 由舞台寬度 W 平分；高 ch ＝ 寬 × cardH（沒給就用 CARD_H），但所有列（共 ceil(n ÷ cols) 列）都要放得進畫面高度 H（上下的說明文字約占 200 px）。回傳 { cw, ch, rows } */
+    function cardSize(W, H, n, cols, cardH) {
+        var rows = Math.ceil(n / cols), cw = Math.floor(W * 0.96 / cols) - 8;  /* Math.floor：無條件捨去成整數 */
+        return { cw: cw, ch: Math.min(Math.floor(cw * (cardH == null ? CARD_H : cardH)), Math.floor((H - 200) / rows) - 8), rows: rows };
+    }
     /* 這一關有幾張牌：由上往下找第一個「關卡 ≤ to」的階段（STAGES），最後一個階段一路到底 */
     function cardsFor(level) {
         level = Math.max(1, level);
@@ -47,6 +63,8 @@
     }
     /* 這一關的「寬限」：比「完美記憶」的翻牌次數多給幾次（從 SLACK 第一個數字線性變到第二個） */
     function slackFor(level) { return Math.round(kit.ramp(level, SLACK[0], SLACK[1], RAMP_LEVELS)); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
+    /* 這一關的時間限制（毫秒）：從 TIME_S 第一個數字線性變到第二個 */
+    function timeFor(level) { return Math.round(kit.ramp(level, TIME_S[0], TIME_S[1], RAMP_LEVELS)) * 1000; }
     /* 發牌：n 張，一半是「一組一組湊成十」的牌（每組隨機是 1-9、2-8、3-7、4-6、5-5 其中一種），洗牌 */
     /* 發牌：n 張牌，一半的位置是「一組一組湊成十」的兩張（隨機是 1-9、2-8、3-7、4-6、5-5），全部洗牌，
        再用 spread 把「湊成十又相鄰」的牌拆開一些（V1.47）。cols＝每列幾張（沒給就用 COLS），算相鄰要用。 */
@@ -164,11 +182,10 @@
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
-        var pz = makePuzzle(level, api.rand), n = pz.n, deck = pz.deck;
+        var pz = makePuzzle(level, api.rand), n = pz.n, deck = pz.deck, timeMs = timeFor(level);     /* timeMs：這一關的時間限制（毫秒） */
         api.info = pz;                                  /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
         console.log('[翻牌湊十] 第 ' + level + ' 關：' + n + ' 張；完美記憶策略 ' + pz.perfect + ' 次，上限 ' + pz.limit + ' 次');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
-        var rows = n / COLS, W = stage.clientWidth || 472, H = stage.clientHeight || 700;  /* 算每張牌的大小：每列 COLS 張，寬 cw 由舞台寬度平分；高 ch 不超過寬度，也要讓所有列放得進畫面高度 */
-        var cw = Math.floor(W * 0.96 / COLS) - 8, ch = Math.min(Math.floor(cw * 0.95), Math.floor((H - 200) / rows) - 8);  /* Math.floor：無條件捨去成整數 */
+        var W = stage.clientWidth || 472, H = stage.clientHeight || 700, sz = cardSize(W, H, n, COLS), cw = sz.cw, ch = sz.ch;  /* 算每張牌的大小：寬 cw 由舞台寬度平分；高 ch ＝ 寬 × CARD_H，也要讓所有列放得進畫面高度（見 cardSize） */
         var up = [], gone = new Array(n).fill(false), pairsLeft = n / 2, used = 0, busy = false, over = false, first = -1;  /* up：目前翻開（還沒決定要不要蓋回）的牌；gone：每張牌是否已消掉；pairsLeft：還剩幾組；used：已經翻了幾次（一次＝兩張）；busy：動畫中不能再翻；over：這一關結束；first：第一張翻開的牌 */
 
         var wrap = h('div', { 'class': 'flipten-wrap' });  /* wrap：整個遊戲畫面的外框容器；下面建好的各個區塊（盤面、按鈕…）都放進它，最後再整個放進舞台 */
@@ -209,6 +226,7 @@
                 tip.textContent = deck[a] + ' + ' + deck[b] + ' = 10！';
                 Sfx.play('ok');                         /* Sfx.play(名稱)：播放音效（ok 答對、bad 答錯、click 點擊…；音效是程式即時合成的） */
                 api.after(MATCH_MS, function () {       /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
+                    if (over) return;                   /* 時間到、已經結束了 */
                     gone[a] = gone[b] = true; up = []; pairsLeft--; busy = false; first = -1; paint();
                     if (pairsLeft === 0) {
                         over = true; paint(); tip.textContent = '全部消完！用了 ' + used + ' 次（完美記憶策略 ' + pz.perfect + ' 次）';
@@ -219,15 +237,17 @@
             } else {
                 tip.textContent = deck[a] + ' + ' + deck[b] + ' = ' + (deck[a] + deck[b]) + '，不是 10，記住位置！';
                 api.after(SHOW_MS, function () {
+                    if (over) return;                   /* 時間到、已經結束了 */
                     up = []; busy = false; first = -1; paint();
                     if (used >= pz.limit) failNow(); else tip.textContent = '翻兩張：加起來是 10 就消掉';
                 });
             }
         }
         /* 次數用完：把還沒消掉的牌全部翻開給玩家看，顯示完美記憶需要幾次，然後失敗 */
-        function failNow() {
+        function failNow(timeUp) {                      /* timeUp 為真：是時間到（不是次數用完） */
+            if (over && !timeUp) return;
             over = true; busy = true; paint();
-            var text = '次數用完了（上限 ' + pz.limit + '）。完美記憶只要 ' + pz.perfect + ' 次，剩下的牌翻開給你看。';
+            var text = timeUp ? '時間到了！完美記憶只要 ' + pz.perfect + ' 次，剩下的牌翻開給你看。' : '次數用完了（上限 ' + pz.limit + '）。完美記憶只要 ' + pz.perfect + ' 次，剩下的牌翻開給你看。';
             tip.textContent = text;
             kit.flash(stage, false, api.my);
             api.fail({ delay: FAIL_HOLD_MS, lines: [text] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
@@ -244,20 +264,21 @@
             if (over) return;
             for (var i = 0; i < n; i++) for (var j = i + 1; j < n; j++) if (!gone[i] && !gone[j] && deck[i] + deck[j] !== 10) { busy = false; flip(i); flip(j); return; }
         };
-        api.state = function () { return { used: used, gone: gone.slice(), over: over, busy: busy }; };  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
+        api.state = function () { return { used: used, gone: gone.slice(), over: over, busy: busy, timeMs: timeMs }; };  /* slice()：複製一份陣列（之後改複本，不會動到原本的資料） */
         paint();
+        api.timer(timeMs, function () { if (!over) failNow(true); });     /* 時間限制（V1.57.0）：時間條跑完還沒消完就失敗（api.timer 會在時間條上顯示剩餘時間） */
     }
 
     /* 遊戲登記資料：id 代號、name 選單上的名稱、rule 玩法說明（**包起來的是粗體重點）、mount 進場函式、score 成績規格、test 給單元測試用的內部函式。 */
     var G = {
         id: ID,
         name: '翻牌湊十',
-        rule: '數字牌蓋著排成方陣（數字是 1～9）。**每次翻兩張：加起來是 10 就消掉；不是就蓋回去**。全部消完就過關。**翻牌的次數有上限**，畫面上會寫「還能翻幾次」。翻錯的時候，兩張牌的數字會停 1.5 秒再蓋回——那是給你看的時間，沒有計時，想多久都可以，但要記住它們在哪裡。提示：10 的搭檔是 1-9、2-8、3-7、4-6、5-5；翻到一張牌，就想想它的搭檔在不在你翻過的牌裡。',
+        rule: '數字牌蓋著排成方陣（數字是 1～9）。**每次翻兩張：加起來是 10 就消掉；不是就蓋回去**。全部消完就過關。**翻牌的次數有上限**，畫面上會寫「還能翻幾次」。翻錯的時候，兩張牌的數字會停 1.5 秒再蓋回——那是給你看的時間。**每一關有時間限制**（第 1 關 1 分鐘，後面的關卡越給越久），畫面上方的時間條跑完還沒消完就失敗，所以要記住它們在哪裡。提示：10 的搭檔是 1-9、2-8、3-7、4-6、5-5；翻到一張牌，就想想它的搭檔在不在你翻過的牌裡。',
         mount: mount,
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
-            STAGES: STAGES, COLS: COLS, SLACK: SLACK, RAMP_LEVELS: RAMP_LEVELS, SHOW_MS: SHOW_MS, cardsFor: cardsFor, slackFor: slackFor, deal: deal, spread: spread, adjacentPairs: adjacentPairs, neighborsOf: neighborsOf, KEEP_ADJ_P: KEEP_ADJ_P,
+            STAGES: STAGES, COLS: COLS, CARD_H: CARD_H, cardSize: cardSize, SLACK: SLACK, RAMP_LEVELS: RAMP_LEVELS, TIME_S: TIME_S, timeFor: timeFor, SHOW_MS: SHOW_MS, cardsFor: cardsFor, slackFor: slackFor, deal: deal, spread: spread, adjacentPairs: adjacentPairs, neighborsOf: neighborsOf, KEEP_ADJ_P: KEEP_ADJ_P,
             perfectFlips: perfectFlips, limitFor: limitFor, makePuzzle: makePuzzle, rating: rating, MAX_LEVEL: MAX_LEVEL
         }
     };

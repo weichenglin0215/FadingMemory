@@ -15,7 +15,9 @@ const menu = fs.readFileSync(ROOT + 'js/menu.js', 'utf8');
 
 ok(/barBack\.addEventListener\('click', function \(\) \{[\s\S]*?Sfx\.stopBgm\(\); location\.href = 'index\.html\?games=1';\s*\}\);/.test(rx), 'reaction.js：返回 → index.html?games=1（先 Sfx.stopBgm）');
 // V1.41.0：自由解題的遊戲按「返回」＝先結算（Reaction.onLeave 回傳 true 就不離開），結算後再按才離開
-ok(/Reaction\.onLeave && Reaction\.onLeave\(\) === true\) return;\s*Sfx\.stopBgm\(\)/.test(rx), 'reaction.js：返回鈕先問 Reaction.onLeave（回傳 true 就不離開）');
+ok(/Reaction\.onLeave && Reaction\.onLeave\(\) === true\) return;[\s\S]*?Sfx\.stopBgm\(\)/.test(rx), 'reaction.js：返回鈕先問 Reaction.onLeave（回傳 true 就不離開）');
+// V1.57.0：玩到一半按「返回」→ 刷新了個人最佳又有機會進前 30 名，先結算再離開（見 t_leaveback.js）
+ok(/Reaction\.onLeave\(\) === true\) return;[\s\S]*?kit\.settleOnLeave\(screen, game\) === true\) return;\s*Sfx\.stopBgm\(\)/.test(rx), 'reaction.js：Reaction.onLeave 之後、離開之前，先問 kit.settleOnLeave');
 ok(!/location\.href = 'index\.html';/.test(rx), 'reaction.js：不再有直接回 index.html 的返回');
 
 // 把 menu.js 裡的 wantsGameList 抽出來，用假的 location 驗證判斷規則

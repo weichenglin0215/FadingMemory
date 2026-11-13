@@ -5,6 +5,22 @@
    ═══════════════════════════════════════ */
 
 /* ═══ 反著滑（.swipecopy-）═══ */
+
+/* 整個遊戲畫面（.screen 是各遊戲共用的容器，JS 在 setup 加上 swipecopy-screen、離開時拿掉；V1.57.0）：
+   標題列（第 N 關）、時間條、遊戲區之間的空隙從 12px 縮成 2px、上方留白 14px → 4px、下方 14px → 6px，省下的高度全部留給九宮格下面的說明文字 */
+.screen.swipecopy-screen {
+    gap: 2px;                                           /* 子元素之間的空隙：2px */
+    padding-top: 4px;                                   /* 上方內縮：4px */
+    padding-bottom: 6px;                                /* 下方內縮：6px */
+    touch-action: none;                                 /* 整個遊戲畫面都關掉瀏覽器內建的觸控手勢（捲動、縮放）：手指在畫面任何地方滑，都由程式處理 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
+}
+
+/* 標題列（第 N 關）：行高縮到剛好包住文字，不要多撐出上下空白 */
+.screen.swipecopy-screen .rx-head {
+    line-height: 1.1;                                   /* 行高：1.1（文字每一行佔的高度） */
+}
 .swipecopy-stage {
     touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
     user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
@@ -82,6 +98,53 @@
     }
 }
 
+/* 失敗之後留在畫面上的箭頭：不再播放「出現」的動畫（它本來就在那一格，只是被放回來） */
+.swipecopy-pop--still {
+    animation: none;                                    /* 不播放動畫 */
+}
+
+/* 手指滑過的路徑（V1.57.0）：白色粗線＋結尾的箭頭。鋪滿遊戲區、不擋觸控；每個形狀外面墊一層暗色的邊，白色在淺色底上才看得到。
+   疊在九宮格的上面，但在紅框與文字說明的下面（z-index 1 < 2）：萬一手指是在說明的地方滑的，路徑也不會擋住說明 */
+.swipecopy-trail {
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    z-index: 1;                                         /* 疊放順序 1：在九宮格上面、紅框與文字說明（2）下面 */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    overflow: visible;                                  /* 超出的內容照樣顯示 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+}
+
+/* 路徑線底下那層暗色的邊（比白線寬一圈） */
+.swipecopy-trail__edge {
+    fill: none;                                         /* 線不填色 */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 19;                                   /* SVG 線條粗細：19（白線 12＋兩邊各 3.5） */
+    stroke-linecap: round;                              /* 線的兩端圓頭 */
+    stroke-linejoin: round;                             /* 轉角圓角 */
+}
+
+/* 結尾箭頭底下那層暗色的邊（填色加上同色的粗邊，整個箭頭外面就多出一圈） */
+.swipecopy-trail__edge-head {
+    fill: var(--c-ink-soft);                            /* SVG 圖形的填色：主題變數 --c-ink-soft */
+    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
+    stroke-width: 7;                                    /* SVG 線條粗細：7（箭頭外圍多出約 3.5px） */
+    stroke-linejoin: round;                             /* 轉角圓角 */
+}
+
+/* 白色粗線：手指滑過的路徑 */
+.swipecopy-trail__line {
+    fill: none;                                         /* 線不填色 */
+    stroke: var(--c-on-accent);                         /* SVG 線條顏色：白色（主題變數 --c-on-accent） */
+    stroke-width: 12;                                   /* SVG 線條粗細：12 */
+    stroke-linecap: round;                              /* 線的兩端圓頭 */
+    stroke-linejoin: round;                             /* 轉角圓角 */
+}
+
+/* 白色的結尾箭頭：方向是從滑動的起點指向終點 */
+.swipecopy-trail__head {
+    fill: var(--c-on-accent);                           /* SVG 圖形的填色：白色（主題變數 --c-on-accent） */
+}
+
 /* 交通號誌的箭頭：藍色圓牌、白色粗箭頭 */
 .swipecopy-sign {
     display: block;                                     /* 獨佔一整行的區塊 */
@@ -150,9 +213,10 @@
     height: 2px;                                        /* 高度：2px */
 }
 
-/* 「swipecopy-info」這個元素的樣式 */
+/* 「swipecopy-info」這個元素的樣式：過關時寫反應時間、失敗時寫錯在哪 */
 .swipecopy-info {
     position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    z-index: 2;                                         /* 疊放順序 2：蓋在手指路徑（1）上面，說明一定看得清楚 */
     left: 0;                                            /* 離左邊 0 */
     right: 0;                                           /* 離右邊 0 */
     padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上 0、左右 主題變數、下 --sp-3 */
@@ -161,9 +225,10 @@
     pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
-/* 失敗時整串箭頭排成一列（下面是該滑的方向），重播時一格一格亮起 */
+/* 失敗時：九宮格正下方橫排一個紅框（箭頭／要滑／你滑了；V1.57.0：原本是直式、蓋在九宮格上，現在九宮格留著，紅框放在它下面） */
 .swipecopy-strip {
     position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    z-index: 2;                                         /* 疊放順序 2：蓋在手指路徑（1）上面，說明一定看得清楚 */
     left: 12px;                                         /* 離左邊 12px */
     right: 12px;                                        /* 離右邊 12px */
     display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
@@ -178,17 +243,28 @@
     gap: 6px;                                           /* 子元素之間的空隙：6px */
 }
 
-/* 「swipecopy-cell」這個元素的樣式 */
+/* 紅框：裡面的小格由左到右橫排 */
 .swipecopy-cell {
+    flex: 1 1 auto;                                     /* 彈性縮放：橫向填滿整排 */
+    box-sizing: border-box;                             /* 寬度連邊框、內縮一起算 */
     display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
-    flex-direction: column;                             /* 子元素由上往下排 */
+    flex-direction: row;                                /* 子元素由左往右排（橫式） */
     align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
-    gap: 2px;                                           /* 子元素之間的空隙：2px */
-    padding: 4px;                                       /* 內縮（padding，內容跟邊框的距離）：四邊都是 4px */
+    justify-content: space-around;                      /* 子元素沿排列方向平均分開 */
+    gap: var(--sp-3);                                   /* 子元素之間的空隙：主題變數 --sp-3 */
+    padding: 6px 8px;                                   /* 內縮（padding，內容跟邊框的距離）：上下 6px、左右 8px */
     border: 3px solid transparent;                      /* 邊框（粗細、線型、顏色）：3px solid transparent */
     border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
     opacity: 0.45;                                      /* 透明度 0.45（1＝完全不透明、0＝全透明） */
     transition: opacity 0.15s;                          /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.15s */
+}
+
+/* 紅框裡的一個小格：上面一行字、下面一個箭頭圓牌 */
+.swipecopy-cell__item {
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    gap: 2px;                                           /* 子元素之間的空隙：2px */
 }
 
 /* 「swipecopy-cell」的「lit」變化版的樣式 */

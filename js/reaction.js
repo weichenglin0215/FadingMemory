@@ -9,7 +9,7 @@
      流程多一步：說明彈窗按「下一步」→ 世界前 30 名彈窗（js/leaderboard_ui.js）→ 按「開始挑戰」才進遊戲；
      榜單在進場那一刻就開始背景下載（Leaderboard.prefetch），看說明的時候就已經抓好了。
      右上角「?」重看說明時多一顆「世界排行榜」按鈕，隨時可以再看榜。
-   · 左上角「返回」回到主選單並直接打開「選一個想玩的遊戲」列表（index.html?games=1）；右上角「?」可以隨時重看規則；「喇叭」開關音效。
+   · 左上角「返回」回到主選單並直接打開「選一個想玩的遊戲」列表（index.html?games=1）——玩到一半按「返回」時，如果刷新了個人最佳、又有機會進前 30 名，會先結算（跳出恭喜彈窗、寫入紀錄）再離開（V1.57.0，見 kit.settleOnLeave）；右上角「?」可以隨時重看規則；「喇叭」開關音效。
    · 音效（js/sfx.js）統一在這裡接線：
        - 整個頁面的 pointerdown／pointerup／click／keydown 都呼叫 Sfx.unlock()
          （瀏覽器規定要有使用者手勢才能出聲）。
@@ -108,6 +108,8 @@
         barBack.addEventListener('click', function () {
             /* V1.41：自由解題的遊戲（沒有失敗、玩到不想玩為止）按「返回」是「結束這一局」——先結算，結算卡片出來後再按一次才離開 */
             if (Reaction.onLeave && Reaction.onLeave() === true) return;
+            /* V1.57.0：玩到一半有刷新個人最佳、又有機會進前 30 名 → 先結算（跳出恭喜彈窗、寫入紀錄），玩家再按一次才離開（見 kit.settleOnLeave） */
+            if (Reaction.kit && Reaction.kit.settleOnLeave && Reaction.kit.settleOnLeave(screen, game) === true) return;
             Sfx.stopBgm(); location.href = 'index.html?games=1';
         });
         barHelp.addEventListener('click', function () {

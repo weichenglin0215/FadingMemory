@@ -11,6 +11,9 @@ ok(T.digitsFor(1) === T.DIGITS[0] && T.digitsFor(30) === T.DIGITS[1] && T.digits
 ok(T.carsFor(1) === T.CARS[0] && T.carsFor(30) === T.CARS[1], '車廂數 ' + T.CARS[0] + ' → ' + T.CARS[1]);
 ok(T.decoysFor(1) === T.DECOY_STICKERS[0] && T.decoysFor(30) === T.DECOY_STICKERS[1], '干擾貼紙 ' + T.DECOY_STICKERS[0] + ' → ' + T.DECOY_STICKERS[1]);
 ok(near(T.simPFor(1), 0) && near(T.simPFor(30), 1), '選項相似度 0 → 1');
+ok(near(T.blurFor(1), T.BLUR_PX[0], 0.05) && near(T.blurFor(30), T.BLUR_PX[1], 0.05) && near(T.blurFor(99), T.BLUR_PX[1], 0.05) && T.blurFor(15) > Math.min(...T.BLUR_PX) && T.blurFor(15) < Math.max(...T.BLUR_PX) && T.blurFor(15) >= 0, '橫向模糊半徑 ' + T.BLUR_PX[0] + ' → ' + T.BLUR_PX[1] + ' px（參數 BLUR_PX，使用者可調）');
+for (let n = 2; n <= 30; n++) ok(T.BLUR_PX[1] >= T.BLUR_PX[0] ? T.blurFor(n) >= T.blurFor(n - 1) : T.blurFor(n) <= T.blurFor(n - 1), '模糊隨關卡單調 ' + n);
+ok(T.makeLevel(1, rnd).blur === T.blurFor(1) && T.makeLevel(30, rnd).blur === T.blurFor(30), '題目資料帶著這一關的模糊半徑 blur');
 { const d = []; for (let n = 2; n <= 30; n++) { ok(T.viewSFor(n) <= T.viewSFor(n - 1) && T.digitsFor(n) >= T.digitsFor(n - 1) && T.carsFor(n) >= T.carsFor(n - 1) && T.decoysFor(n) >= T.decoysFor(n - 1) && T.simPFor(n) >= T.simPFor(n - 1), '單調 ' + n); d.push(T.viewSFor(n - 1) - T.viewSFor(n)); }
   ok(Math.max(...d) - Math.min(...d) <= 0.002, '出現時間線性縮短：每關 −' + Math.min(...d).toFixed(4) + '～−' + Math.max(...d).toFixed(4) + ' 秒'); }
 
@@ -91,6 +94,11 @@ ok(Object.keys(ST.byCars).length >= 3 && Object.keys(ST.targetPos).length === T.
   ok(/phase === 'ask'/.test(src) && /api\.timer\(ANSWER_S/.test(src) && /api\.solve = /.test(src) && /api\.wrong = /.test(src), '火車開走才出現選項、有作答時限、solve／wrong 只在作答階段有效');
   ok(/\.kinetic-sticker \{[^}]*var\(--knt-sticker\)/.test(css) && /\.kinetic-ok \{[^}]*var\(--c-ok/.test(css) && /\.kinetic-bad \{[^}]*var\(--c-bad-light\)/.test(css) && /\.kinetic-band \{[^}]*var\(--knt-band\)/.test(css), '貼紙、選項顏色、車身用 CSS 變數');
   ok(/\.kinetic-field \{[^}]*overflow: hidden/.test(css) && /\.kinetic-train \{[^}]*will-change: transform/.test(css), '火車超出畫面的部分藏起來');
-  ok(boot.indexOf("'js/reaction_kinetic.js'") > 0 && /0\.5 秒/.test(G.rule), 'boot.js 有載入、玩法說明提到 0.5 秒'); }
+  ok(boot.indexOf("'js/reaction_kinetic.js'") > 0 && G.rule.includes(T.VIEW_S[1] + ' 秒') && /模糊/.test(G.rule), 'boot.js 有載入、玩法說明提到到頂的出現秒數（' + T.VIEW_S[1] + ' 秒）與模糊');
+  // 橫向動態模糊：SVG 濾鏡 feGaussianBlur「橫向 0」→ 只糊水平；套在整列火車上；火車開走（ask）就拿掉；濾鏡 id 每關不同
+  ok(/kit\.svg\('feGaussianBlur', \{ stdDeviation: q\.blur \+ ' 0' \}/.test(src), '濾鏡只糊橫向：stdDeviation「N 0」');
+  ok(/strip\.style\.filter = 'url\(#' \+ fid \+ '\)'/.test(src) && /id: fid/.test(src) && /'kinetic-hblur' \+ \(\+\+blurSeq\)/.test(src), '濾鏡套在整列火車（strip）上，每關的濾鏡 id 不重複');
+  ok(/'color-interpolation-filters': 'sRGB'/.test(src) && /if \(q\.blur > 0\)/.test(src), '顏色不被濾鏡改變；模糊半徑 0 就不做濾鏡');
+  ok(/phase = 'ask';[^\n]*\r?\n\s*strip\.style\.filter = '';/.test(src), '火車開走之後拿掉模糊（揭曉倒車時是清楚的）'); }
 ok(T.rating(1) !== T.rating(4) && T.rating(4) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20) !== T.rating(30), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

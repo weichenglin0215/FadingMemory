@@ -115,6 +115,7 @@
             /* n 目前是第幾個 E；passed 已答對幾個 */
             var n = (from || 1) - 1; /* 目前是第幾個 E（從 1 起算；0＝還沒開始） */
             var passed = n;          /* 已答對幾個（從前面繼續的話，前面的都算答對）*/
+            Reaction.leaveScore = function () { return passed > (from || 1) - 1 ? acuityShown(passed) : null; };      /* 玩到一半按「返回」時，目前的視力（V1.57.0；見 kit.settleOnLeave） */
             var rts = [];            /* 反應時間（毫秒） */
             var prevDir = null;
             var state = 'idle';      /* idle／ask／gap／done */

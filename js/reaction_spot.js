@@ -165,6 +165,7 @@
             root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             var best = fmtBest(Reaction.getBest(ID));   /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
             ctx.setMeta('第 ' + level + ' 關' + (best ? '・' + best : ''));
+            Reaction.leaveScore = function () { return level > 1 ? level - 1 : null; };      /* 玩到一半按「返回」時，已經完成到第幾關（V1.57.0；見 kit.settleOnLeave） */
 
             /* 決定這一關的底色、哪個頻道不同、不同的那一格的位置和顏色 */
             var base = randBase();

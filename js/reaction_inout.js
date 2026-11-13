@@ -1,24 +1,26 @@
 /* ═══════════════════════════════════════════════════════════════════
-   reaction_inout.js — 秒反應・圈內圈外（企劃 271）
+   reaction_inout.js — 秒反應・圈內圈外（企劃 271；V1.57.0 改成「指紋螺旋」）
    樣式：css/games/reaction_inout.css（這款專屬的 class 一律以「inout-」開頭；共用元件在 css/reaction_common.css）
-   一條很長、彎來彎去、首尾相連的紅色繩圈（自己不交叉），上面有一隻螞蟻。**螞蟻在繩圈裡面還是外面？** 點「裡面」或「外面」。
+   一條首尾相連、不自己交叉的紅色繩圈，繞成指紋似的螺旋紋，**螞蟻在畫面正中央、在繩圈的裡面還是外面？** 點「裡面」或「外面」。
    ───────────────────────────────────────────────────────────────────
-   · 繩圈怎麼造（makeLevel）：用「完美迷宮」——m×m 個房間、用隨機深度優先搜尋打通牆壁，房間與通道連成一棵樹（沒有環）。
-     把房間和打通的通道（P，繩圈裡面）加粗成「一整塊」，剩下的牆和外框（W，繩圈外面）也是連成一片。
-     因為 P 是一棵樹加粗、沒有洞，P 的邊界就是**剛好一條**不交叉、不碰到自己的封閉曲線——這就是繩圈（boundaryLoop 把邊界一段一段接起來，轉角畫成圓弧）。
-     格子座標：(2m+1)×(2m+1)，房間在奇數列奇數欄，其餘（牆、通道、柱子）在偶數列或偶數欄；每個 2×2 的小方塊一定有一個房間和一個柱子，所以不會有兩塊 P 只靠對角相連的「夾點」。
-   · 螞蟻放在哪：50% 在裡面（P 的格子）、50% 在外面（W 的格子）。「看起來被包住」的位置才有挑戰：
-     外面的格子要離外框夠遠（在 W 裡走到外框要走很多步＝很深的凹口），裡面的格子要離迷宮入口夠遠（深深的死巷）。
-     這個「深度下限」隨關卡增加（DEPTH_MIN），找不到夠深的格子就用最深的。
-   · **不規則的隨機曲線（V1.36.0，玩家意見：線條太規則整齊，一秒就看出內外）**：迷宮的骨架還是格子，但畫出來的繩圈不再是橫平豎直的——
-       ① 格線間隔不均勻（gridLines：每一格的寬度在 1 ± VARIANCE 之間隨機，再縮放到總長不變），通道有寬有窄；
-       ② 每個轉角的圓弧大小不一樣（ROUND × 0.5～1.5 倍）；
-       ③ 整條繩圈再經過一個平滑的「扭曲」（warpPoint：用幾個不同頻率的正弦波把每個點推開一點點，推開的幅度 WARP_A，梯度小於 1 所以不會讓線穿過自己）——直線變成蜿蜒的曲線。
-     扭曲是一對一的連續變形，繩圈還是剛好一條不交叉的封閉曲線，螞蟻的位置跟著一起扭曲，裡外不變；出題時用「線段兩兩不相交」與「射線法」驗證，
-     驗證不過就換一組扭曲參數，最後才退回沒有扭曲的版本。螞蟻縮小成原本的一半（ANT_SIZE ＝ 格子的 0.45 倍）。
-   · 答案用格子是否屬於 P 決定；測試另外用「點在多邊形內」（射線法）驗證螞蟻的位置跟繩圈的內外一致。
-   · 難度（線性）：迷宮 3×3 → 10×10 個房間（ROOMS）、深度下限 0 → 8 步（DEPTH_MIN）、格線不均勻程度 0.15 → 0.5（VARIANCE）、扭曲幅度 0.1 → 0.34 格（WARP_A）、限時 8 → 3 秒（TIME_S）。錯一次就結束，防亂按。
-   · 揭曉：繩圈裡面整塊塗上淡綠色，螞蟻在不在色塊裡一目了然。
+   · V1.57.0（玩家意見）：原本用「迷宮」做繩圈，有個漏洞——**從外圍找得到一條直線切進去**，很快就能判斷內外。現在改成指紋：
+       ① 繩圈是一條「很粗的螺旋帶」的邊界（makeSpine 造中心線、ropePolygon 往兩邊加寬，最後用兩條平行的邊＋兩個圓頭接成一圈）：
+          帶子裡面是「繩圈裡面」，帶子之間的縫是「繩圈外面」。帶子寬、縫寬幾乎一樣，而且各自隨機忽粗忽細，所以光看一小塊分不出哪個是帶子、哪個是縫；
+       ② **貼著前一段繩子往外長**（V1.57.0 玩家意見：以前繩子之間有時候空隙很寬，尤其是繩子的起點附近空了一大塊）：帶子從起點（一小段直線）開始，
+          每一步都沿著「已經畫好的繩子」的外緣前進、保持固定的縫寬（makeSpine 的做法：量離最近的舊繩子多遠，太近就推開、太遠就靠過去），
+          所以一圈貼著一圈，縫寬只有「縫的平均寬度（1 − STRIP_W）上下隨機變化」，不會有大片空白；共繞 RINGS 圈（離起點最遠的地方，離起點有 RINGS 個圈距）。
+       ③ **螞蟻放在「圓心」和「最外圍」的正中間**（V1.57.0 玩家意見：不要讓玩家從最外面、或從最中央一圈一圈數過去就找到）：從螞蟻往圓心（起點那一小段直線）要穿過 b 條線、
+          往最近的外面要穿過 a 條線，b ÷ (a ＋ b) 要落在 ANT_DEPTH（預設 0.4～0.6）——從外面數進來、從中央數出去，都要數差不多多的線。
+          （用「要數的線數」算，不是用幾何距離：指紋不是正圓，有迴轉的時候一邊鼓、一邊扁，量距離的話螞蟻會偏向一邊。）位置繞著圓心隨機（在帶子上、在縫裡各一半），
+          然後整個圖形平移，讓螞蟻剛好在畫面正中央。玩家要**從螞蟻開始，一條一條數到外面**，數穿過幾條線：奇數＝裡面、偶數＝外面；
+       ④ **不是一路往同一個方向繞**：每繞完一圈就有 REVERSE_P 的機會「急速迴轉」——帶子在轉彎處掉頭（半圓形的髮夾彎），沿著剛剛那一圈的外緣往相反的方向繞，
+          順時針的螺旋忽然變成逆時針，用來迷惑玩家；
+       ⑤ 整條繩圈再經過一個平滑的扭曲（warpPoint，V1.36.0 就有；WARP_A 是扭曲的幅度，單位是「圈距」），指紋的紋路微微蜿蜒，不是正圓。
+   · 出題時驗證（makeLevel）：繩圈是一條不自己交叉的封閉曲線、帶子與縫都沒有窄到看不清（MIN_GAP）、螞蟻的內外用射線法確定（也用好幾個方向的射線數穿過幾條線來交叉驗證），
+     而且**沒有捷徑**：從螞蟻往任何一個方向畫直線，穿過的線至少有 RAY_MIN 條（rayStats；第 1 關 → 到頂；螞蟻在正中間，離外面本來就有一半的圈數，這個只是保險）——驗證不過就重新造，最後才取最好的一個。
+   · 難度（線性，RAMP_LEVELS 關走到頂）：圈數 RINGS（要數的線越多）、迴轉機率 REVERSE_P、最少要穿過幾條線 RAY_MIN、
+     紋路與縫的粗細不均勻程度 VARIANCE、扭曲幅度 WARP_A、限時 TIME_S。螞蟻縮得很小（ANT_SIZE ＝ 圈距的 0.45 倍）。錯一次就結束，防亂按。
+   · 揭曉：繩圈裡面（帶子）整條塗上淡綠色，螞蟻在不在綠色裡一目了然。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
@@ -31,91 +33,151 @@
     var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
     var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
 
+    /* 下面所有長度的單位都是「圈距」＝相鄰兩圈（一條帶子加一條縫）的平均距離；畫面上再換算成 px */
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
-    var ROOMS = [3, 10];                        /* 迷宮每邊幾個房間：第 1 關 → 到頂（格子是 2m+1 邊） */
-    var DEPTH_MIN = [0, 8];                     /* 螞蟻所在格子的「深度」下限（步數）：第 1 關 → 到頂 */
-    var TIME_S = [8, 3];                        /* 每題限時（秒）：第 1 關 → 到頂 */
-    var ROUND = 0.3;                            /* 繩圈轉角的圓弧大小（佔一格的比例；每個轉角再乘 0.5～1.5 倍隨機） */
-    var VARIANCE = [0.15, 0.5];                 /* 格線間隔的不均勻程度：每一格的寬度在 1 ± 這個值 之間隨機：第 1 關 → 到頂 */
-    var WARP_A = [0.1, 0.34];                   /* 整條繩圈的扭曲幅度（格）：第 1 關 → 到頂（太大會讓窄通道的兩側碰在一起，出題時有驗證） */
-    var ANT_SIZE = 0.45;                        /* 螞蟻的大小（格子的幾倍）：V1.36.0 從 0.9 縮成一半 */
-    var STEP = 0.3;                             /* 把繩圈切成小段（格）再扭曲，直線才會被扭成曲線 */
+    var RINGS = [6, 16];                        /* 指紋從中央往外有幾圈：第 1 關 → 到頂（螞蟻要穿過的線大約是這個數字的 2 倍，越多越難數） */
+    var REVERSE_P = [0.33, 0.66];                 /* 每繞完一圈，紋路「急速迴轉」（在轉彎處掉頭、沿著剛剛那一圈的外緣往反方向繞）的機率：第 1 關 → 到頂 */
+    var TIME_S = [8, 12];                        /* 每題限時（秒）：第 1 關 → 到頂 */
+    var VARIANCE = [0.5, 0.75];                /* 紋路寬度與縫寬度的不均勻程度：每一圈的寬度在 1 ± (這個值 × 0.6，最多 0.45) 之間隨機：第 1 關 → 到頂 */
+    var WARP_A = [0.2, 0.5];                    /* 整條繩圈的扭曲幅度（圈距）：第 1 關 → 到頂（太大會讓相鄰的線碰在一起，出題時有驗證） */
+    var ANT_SIZE = 0.45;                        /* 螞蟻的大小（圈距的幾倍） */
+    var STRIP_W = 0.5;                          /* 一條紋路（繩圈裡面）的平均寬度（圈距的幾倍）；縫（繩圈外面）是 1 − STRIP_W */
+    var VIEW_FRAC = 0.6;                        /* 畫面（方形）只放得下「螞蟻到圖形最遠處」的這個比例（0.6＝60%）；螞蟻在圓心與最外圍的正中間，離最近的外面只有一半的圈數、離對面的外面卻有一倍半，全部塞進畫面會縮得很小，所以把遠的那一邊裁掉一點（1＝不裁，全部放進畫面） */
+    var VIEW_MARGIN = 3;                        /* 但是螞蟻離「最近的外面」，至少要看到外面再多這麼多圈距（圈距）——最近的外面一定在畫面裡，玩家才有辦法從螞蟻數到外面 */
+    var SEED_LEN = [0.8, 3];                    /* 繩子起點那一小段直線的長度（圈距，[最短, 最長]，每題隨機）：越長，指紋越像拉長的跑道，越短越像圓形的漩渦 */
+    var ANT_DEPTH = [0.4, 0.6];                 /* 螞蟻在「圓心 → 最外面」之間的位置（用要數的線數算）：往圓心要穿過 b 條線、往最近的外面要穿過 a 條線，b ÷ (a ＋ b) 落在這個範圍（[最小, 最大]，每題隨機）；0 ＝ 貼著圓心、1 ＝ 貼著最外面、0.5 ＝ 正中間（從外面數進來、從中央數出去都一樣多）；範圍越窄，越固定在正中間 */
+    var RAY_MIN = [3, 8];                       /* 沒有捷徑：從螞蟻往任何方向畫直線，穿過的線至少有幾條：第 1 關 → 到頂（螞蟻在圓心與最外圍的中間，離外面大約一半的圈數，所以這個通常自動滿足，是保險） */
+    var FOLLOW_GAIN = 1;                      /* 貼著前一段繩子長的力道：離理想的縫寬差多少，就往外推（或往內靠）多少倍（太大會抖，太小貼不緊） */
+    var MAX_TURN = 0.9;                         /* 繩子前進時，每一步最多轉幾弧度（太小，繞過尖角、凹進去的地方時轉不過來，會撞到旁邊的繩子；太大轉彎不圓滑——之後還會磨平） */
+    var SKIP_ARC = 2;                           /* 量「離前面的繩子多遠」時，忽略自己最近的這一段（弧長，圈距），不然會一直量到自己的尾巴 */
+    var MIN_GAP = 0.12;                         /* 兩條不相鄰的線之間至少要隔多遠（圈距），不然畫面上會黏在一起 */
+    var STEP = 0.3;                             /* 折線取點的間距（圈距） */
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
-    var DIRS = [[-1, 0], [1, 0], [0, -1], [0, 1]];  /* 四個方向的 [列差, 欄差]：上、下、左、右 */
 
     /* ═══ 純函式（也給 Node 測試用）═══ */
     function ramp(level, pair) { return kit.ramp(level, pair[0], pair[1], RAMP_LEVELS); }  /* kit.ramp(關卡, 起始值, 到頂值, 到頂關卡)：讓數值隨關卡「線性」從起始值變到到頂值（難度曲線的基本工具） */
-    function roomsFor(level) { return Math.round(ramp(level, ROOMS)); }  /* Math.round：四捨五入成整數 */
-    function depthMinFor(level) { return Math.round(ramp(level, DEPTH_MIN)); }
+    function ringsFor(level) { return Math.max(2, Math.round(ramp(level, RINGS))); }  /* Math.round：四捨五入成整數 */
+    function reverseFor(level) { return Math.round(ramp(level, REVERSE_P) * 10000) / 10000; }
+    function rayMinFor(level) { return Math.round(ramp(level, RAY_MIN)); }
     function timeMs(level) { return Math.round(ramp(level, TIME_S) * 1000); }
     function varianceFor(level) { return Math.round(ramp(level, VARIANCE) * 10000) / 10000; }
     function warpAFor(level) { return Math.round(ramp(level, WARP_A) * 10000) / 10000; }
-    /* 用隨機深度優先搜尋造 m×m 的完美迷宮；回傳格子表 P（(2m+1)² 個，1＝房間或通道＝繩圈裡面）和每個房間的「離入口幾步」depth（以房間為單位）*/
-    function makeMaze(m, rand) {
-        var G = 2 * m + 1, P = new Int8Array(G * G), seen = {}, stack = [], depth = {};
-        function cellOf(r, c) { return (2 * r + 1) * G + (2 * c + 1); }
-        var r0 = kit.randInt(0, m - 1, rand), c0 = kit.randInt(0, m - 1, rand);  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
-        stack.push([r0, c0]); seen[r0 + ',' + c0] = true; P[cellOf(r0, c0)] = 1; depth[cellOf(r0, c0)] = 0;
-        while (stack.length) {
-            var cur = stack[stack.length - 1], opts = [];
-            DIRS.forEach(function (d) { var nr = cur[0] + d[0], nc = cur[1] + d[1]; if (nr >= 0 && nr < m && nc >= 0 && nc < m && !seen[nr + ',' + nc]) opts.push([nr, nc]); });  /* forEach：對陣列的每個元素各做一次 */
-            if (!opts.length) { stack.pop(); continue; }
-            var nx = kit.pick(opts, rand), a = cellOf(cur[0], cur[1]), b = cellOf(nx[0], nx[1]);  /* kit.pick(陣列, rand)：從陣列隨機挑一個元素 */
-            P[(a + b) / 2] = 1; P[b] = 1;                                       /* 打通兩個房間中間的那一格 */
-            depth[b] = depth[a] + 1; seen[nx[0] + ',' + nx[1]] = true; stack.push(nx);
+    function smooth(u) { u = u < 0 ? 0 : (u > 1 ? 1 : u); return u * u * (3 - 2 * u); }   /* 平滑的 0→1（兩端的斜率是 0，接起來沒有折角） */
+
+    /* 平滑的亂數曲線（回傳函式：弧長 s → −1～1）：三個不同波長的正弦波疊起來。繩子的粗細與縫的寬度沿著繩子慢慢變化，一條帶子「忽粗忽細」 */
+    function smoothNoise(rand) {
+        var f = [], p = [], i;
+        for (i = 0; i < 3; i++) { f.push(2 * Math.PI / kit.randFloat(2.5, 7, rand)); p.push(kit.randFloat(0, 2 * Math.PI, rand)); }  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+        return function (s) { return 0.55 * Math.sin(f[0] * s + p[0]) + 0.3 * Math.sin(f[1] * s + p[1]) + 0.15 * Math.sin(f[2] * s + p[2]); };
+    }
+    /* 把折線磨平：每個點（頭尾除外）換成「前、自己、後」三點的平均，重複 times 次（直接改 pts） */
+    function smoothPath(pts, times) {
+        for (var t = 0; t < times; t++) {
+            var c = pts.map(function (p) { return [p[0], p[1]]; });
+            for (var i = 1; i < pts.length - 1; i++) { pts[i][0] = (c[i - 1][0] + c[i][0] + c[i + 1][0]) / 3; pts[i][1] = (c[i - 1][1] + c[i][1] + c[i + 1][1]) / 3; }
         }
-        return { G: G, m: m, P: P, depth: depth, root: cellOf(r0, c0) };
     }
-    /* P 的格子裡，每一格離入口多遠（把通道也算進去，用格子數）；W 的格子離外框多遠（走 W 的格子，4 個方向）；-1＝不可能 */
-    function distances(G, P, root) {
-        var dIn = new Int32Array(G * G).fill(-1), dOut = new Int32Array(G * G).fill(-1), q = [], i, head;
-        dIn[root] = 0; q.push(root); head = 0;
-        while (head < q.length) { var cur = q[head++], r = Math.floor(cur / G), c = cur % G; DIRS.forEach(function (d) { var nr = r + d[0], nc = c + d[1]; if (nr < 0 || nr >= G || nc < 0 || nc >= G) return; var nn = nr * G + nc; if (P[nn] && dIn[nn] < 0) { dIn[nn] = dIn[cur] + 1; q.push(nn); } }); }  /* Math.floor：無條件捨去成整數 */
-        q = []; for (i = 0; i < G * G; i++) { var rr = Math.floor(i / G), cc = i % G; if (!P[i] && (rr === 0 || cc === 0 || rr === G - 1 || cc === G - 1)) { dOut[i] = 0; q.push(i); } }
-        head = 0;
-        while (head < q.length) { var cu = q[head++], r2 = Math.floor(cu / G), c2 = cu % G; DIRS.forEach(function (d) { var nr = r2 + d[0], nc = c2 + d[1]; if (nr < 0 || nr >= G || nc < 0 || nc >= G) return; var nn = nr * G + nc; if (!P[nn] && dOut[nn] < 0) { dOut[nn] = dOut[cu] + 1; q.push(nn); } }); }
-        return { dIn: dIn, dOut: dOut };
-    }
-    /* 區域 P 的邊界：把每一格四邊中「對面不是 P」的邊收集起來（P 在左手邊的方向），接成一圈；回傳 { loops（每圈是頂點座標 [x,y] 的陣列，已合併同方向的邊）, edges（總邊數）} */
-    function boundaryLoop(G, P) {
-        var next = {}, count = 0, startKey = null;
-        function key(x, y) { return x + ',' + y; }
-        function add(x1, y1, x2, y2) { next[key(x1, y1)] = [x2, y2]; count++; if (startKey === null) startKey = key(x1, y1); }
-        for (var r = 0; r < G; r++) for (var c = 0; c < G; c++) {
-            if (!P[r * G + c]) continue;
-            if (r === 0 || !P[(r - 1) * G + c]) add(c, r, c + 1, r);               /* 上邊：往右走（P 在右下，順時針） */
-            if (c === G - 1 || !P[r * G + c + 1]) add(c + 1, r, c + 1, r + 1);      /* 右邊：往下 */
-            if (r === G - 1 || !P[(r + 1) * G + c]) add(c + 1, r + 1, c, r + 1);    /* 下邊：往左 */
-            if (c === 0 || !P[r * G + c - 1]) add(c, r + 1, c, r);                  /* 左邊：往上 */
+    /* 指紋帶子的「中心線」（V1.57.0：貼著前一段繩子往外長）。回傳 { pts（中心線上的點）, hw（每個點往兩邊各加寬多少）, S（每個點的累計弧長）, len（總長）, seed（起點那一小段直線的點，指紋的「圓心」）, revs（迴轉幾次）, seedLen（起點直線的長度）, K }；長不出來回傳 null。
+       · 起點：一小段直線（SEED_LEN），然後掉頭（半圓形髮夾彎）開始繞第一圈。
+       · 每一步：找出「離現在這個點最近的舊繩子」（忽略最近 SKIP_ARC 的弧長），理想距離 ＝ 兩邊各一半的帶寬 ＋ 縫寬（都隨弧長慢慢變化）；
+         沿著舊繩子的外緣走（方向＝離開舊繩子的方向轉 90 度），距離太近就往外推、太遠就往內靠（FOLLOW_GAIN），每一步最多轉 MAX_TURN 弧度。
+         所以一圈緊貼著一圈，縫寬就是理想的縫寬，不會有大片空白。
+       · 每繞完一圈（走過的弧長 ≥ 目前這一圈的周長），有 revP 的機會迴轉：往外畫半圓形的髮夾彎掉頭，沿著剛剛那一圈的外緣往反方向繞（blob 的符號換邊）。
+       · 結束：離起點直線 ≥ K − 0.3 圈距（＝繞了 K 圈）。 */
+    function makeSpine(K, revP, jitter, rand) {
+        var nzW = smoothNoise(rand), nzG = smoothNoise(rand);
+        function wAt(s) { return STRIP_W * (1 + jitter * nzW(s)); }                 /* 弧長 s 處的帶寬 */
+        function gAt(s) { return (1 - STRIP_W) * (1 + jitter * nzG(s)); }           /* 弧長 s 處的理想縫寬 */
+        var pts = [], hw = [], S = [], grid = new Map(), CELL = 1.6, lim = -1, revs = 0, seedLen = kit.randFloat(SEED_LEN[0], SEED_LEN[1], rand), hd = 0;
+        function add(x, y) {
+            var n = pts.length, s = n ? S[n - 1] + Math.hypot(x - pts[n - 1][0], y - pts[n - 1][1]) : 0;
+            if (n && s - S[n - 1] < 1e-6) return;
+            var key = Math.floor(x / CELL) * 100003 + Math.floor(y / CELL), l = grid.get(key);
+            if (!l) grid.set(key, l = []);
+            l.push(pts.length); pts.push([x, y]); hw.push(wAt(s) / 2); S.push(s);
         }
-        var loops = [], used = 0, visited = {};
-        Object.keys(next).forEach(function (k0) {
-            if (visited[k0]) return;
-            var pts = [], k = k0;
-            while (!visited[k]) { visited[k] = true; var p = k.split(',').map(Number); pts.push(p); used++; var nx = next[k]; k = key(nx[0], nx[1]); if (!next[k] && !visited[k]) break; }
-            /* 合併同方向的連續邊：只留轉角的頂點 */
-            var n = pts.length, out = [];
-            for (var i = 0; i < n; i++) { var a = pts[(i + n - 1) % n], b = pts[i], c2 = pts[(i + 1) % n]; if ((b[0] - a[0]) * (c2[1] - b[1]) - (b[1] - a[1]) * (c2[0] - b[0]) !== 0) out.push(b); }
-            loops.push(out);
-        });
-        return { loops: loops, edges: count, used: used };
+        /* 離 (x, y) 最近的「舊繩子」上的點（編號 ≤ lim：弧長離頭至少 SKIP_ARC）；回傳 { i, d }，沒有回傳 null */
+        function nearest(x, y, last) {
+            while (lim + 1 < last && S[last] - S[lim + 1] >= SKIP_ARC) lim++;
+            if (lim < 0) return null;
+            var rad, gx, gy, t, i, d, cx = Math.floor(x / CELL), cy = Math.floor(y / CELL), best, bd;
+            for (rad = 1; rad <= 3; rad++) {
+                best = -1; bd = 1e9;
+                for (gx = cx - rad; gx <= cx + rad; gx++) for (gy = cy - rad; gy <= cy + rad; gy++) {
+                    var l = grid.get(gx * 100003 + gy);
+                    if (!l) continue;
+                    for (t = 0; t < l.length; t++) { i = l[t]; if (i > lim) break; d = Math.hypot(pts[i][0] - x, pts[i][1] - y); if (d < bd) { bd = d; best = i; } }
+                }
+                if (best >= 0 && bd <= rad * CELL) return { i: best, d: bd };
+            }
+            best = -1; bd = 1e9;                                                      /* 附近都沒有：全部找一遍（很少發生） */
+            for (i = 0; i <= lim; i++) { d = Math.hypot(pts[i][0] - x, pts[i][1] - y); if (d < bd) { bd = d; best = i; } }
+            return best >= 0 ? { i: best, d: bd } : null;
+        }
+        /* 半圓形的髮夾彎：從最後一個點往 toLeft（左／右）掉頭，直徑＝帶寬＋縫寬，掉頭之後朝相反方向 */
+        function hairpin(toLeft) {
+            var n = pts.length - 1, px = pts[n][0], py = pts[n][1], sg = toLeft ? 1 : -1, nx = -Math.sin(hd) * sg, ny = Math.cos(hd) * sg, tx = Math.cos(hd), ty = Math.sin(hd);
+            var Dh = wAt(S[n]) + gAt(S[n]), m = Math.max(6, Math.ceil(Math.PI * Dh / 2 / STEP)), j, f;
+            for (j = 1; j <= m; j++) { f = Math.PI * j / m; add(px + nx * (Dh / 2) * (1 - Math.cos(f)) + tx * (Dh / 2) * Math.sin(f), py + ny * (Dh / 2) * (1 - Math.cos(f)) + ty * (Dh / 2) * Math.sin(f)); }
+            hd += Math.PI;
+        }
+        for (var x0 = 0; x0 <= seedLen + 1e-9; x0 += STEP) add(x0, 0);               /* 起點：一小段直線（往東） */
+        var seedN = pts.length;
+        function dSeed(x, y) { var d = 1e9; for (var i = 0; i < seedN; i++) d = Math.min(d, Math.hypot(pts[i][0] - x, pts[i][1] - y)); return d; }   /* 離起點直線多遠 */
+        var blob = rand() < 0.5 ? 1 : -1;                                             /* 舊繩子在前進方向的哪一邊：1＝左、−1＝右 */
+        hairpin(blob === 1);                                                          /* 掉頭，開始繞第一圈 */
+        var lapAcc = 0, guard = 0, stopR = K - 0.3;
+        while (guard++ < 40000) {
+            var n = pts.length - 1, x = pts[n][0], y = pts[n][1], dsd = dSeed(x, y);
+            if (dsd >= stopR) break;
+            if (lapAcc >= 2 * seedLen + 2 * Math.PI * Math.max(1, dsd)) {             /* 繞完一圈了：有機會迴轉 */
+                lapAcc = 0;
+                if (rand() < revP) { hairpin(blob === -1); blob = -blob; revs++; continue; }
+            }
+            var nb = nearest(x, y, n);
+            if (!nb) return null;
+            var q = pts[nb.i], dn = Math.max(1e-6, nb.d), ux = (x - q[0]) / dn, uy = (y - q[1]) / dn;          /* (ux, uy)：離開舊繩子的方向 */
+            var D = hw[n] + gAt(S[n]) + hw[nb.i];                                      /* 理想距離（中心線到中心線） */
+            var tx = blob === 1 ? -uy : uy, ty = blob === 1 ? ux : -ux;                /* 沿著舊繩子的外緣走：離開的方向轉 90 度 */
+            var want = Math.atan2(ty + FOLLOW_GAIN * (D - dn) * uy, tx + FOLLOW_GAIN * (D - dn) * ux), dh = want - hd;
+            dh = Math.atan2(Math.sin(dh), Math.cos(dh));
+            hd += Math.max(-MAX_TURN, Math.min(MAX_TURN, dh));
+            add(x + STEP * Math.cos(hd), y + STEP * Math.sin(hd)); lapAcc += STEP;
+        }
+        if (guard >= 40000) return null;
+        smoothPath(pts, 3);                                                        /* 把中心線再磨平一點（3 次三點平均；頭尾不動），小抖動變少 */
+        return { pts: pts, hw: hw, S: S, len: S[S.length - 1], seed: pts.slice(0, seedN).map(function (p) { return [p[0], p[1]]; }), revs: revs, seedLen: seedLen, K: K };
     }
-    /* 不均勻的格線座標（長度 G + 1，從 0 到 G）：每一格的寬度在 1 ± v 之間隨機，再縮放到總長剛好 G */
-    function gridLines(G, v, rand) {
-        var w = [], sum = 0, i, out = [0], acc = 0;
-        for (i = 0; i < G; i++) { w.push(1 + v * (rand() * 2 - 1)); sum += w[i]; }
-        for (i = 0; i < G; i++) { acc += w[i] * G / sum; out.push(acc); }
-        out[G] = G;
-        return out;
+    /* 最簡單的螺旋（備用，保證不會出錯）：半徑從 0.6 一圈長 1 圈距，K 圈；帶寬 STRIP_W 固定、不迴轉 */
+    function plainSpiral(K) {
+        var pts = [], hw = [], S = [], th = 0, r = 0.6, s = 0;
+        while (r < K + 0.6) {
+            pts.push([r * Math.cos(th), r * Math.sin(th)]); hw.push(STRIP_W / 2);
+            if (pts.length > 1) s += Math.hypot(pts[pts.length - 1][0] - pts[pts.length - 2][0], pts[pts.length - 1][1] - pts[pts.length - 2][1]);
+            S.push(s); th += STEP / r; r = 0.6 + th / (2 * Math.PI);
+        }
+        return { pts: pts, hw: hw, S: S, len: S[S.length - 1], seed: [[0, 0]], revs: 0, seedLen: 0, K: K };
     }
-    /* 扭曲的參數：幅度 a（格）、四個隨機頻率與相位。頻率對應 4～8 格的波長，a ≤ 0.34 時扭曲的梯度小於 1（一對一、不會讓線穿過自己） */
+    /* 把中心線加寬成一條「帶子」的邊界：左邊一路往前、末端接半圓頭、右邊一路倒回來、開頭接半圓頭——一圈封閉的折線（頂點 [x, y]），就是繩圈。hw[i]＝第 i 點往兩邊各加寬多少 */
+    function ropePolygon(spine, hw) {
+        var n = spine.length, Lf = [], Rt = [], T = [], i;
+        for (i = 0; i < n; i++) { var a = spine[Math.max(0, i - 1)], b = spine[Math.min(n - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1; T.push([dx / l, dy / l]); }
+        for (i = 0; i < n; i++) { var t = T[i], nx = -t[1], ny = t[0]; Lf.push([spine[i][0] + nx * hw[i], spine[i][1] + ny * hw[i]]); Rt.push([spine[i][0] - nx * hw[i], spine[i][1] - ny * hw[i]]); }
+        function cap(c, t, s, half) { var nx = -t[1], ny = t[0], out = []; for (var j = 1; j < 8; j++) { var f = Math.PI * j / 8; out.push([c[0] + half * s * (nx * Math.cos(f) + t[0] * Math.sin(f)), c[1] + half * s * (ny * Math.cos(f) + t[1] * Math.sin(f))]); } return out; }
+        var poly = Lf.slice();
+        cap(spine[n - 1], T[n - 1], 1, hw[n - 1]).forEach(function (p) { poly.push(p); });      /* forEach：對陣列的每個元素各做一次 */
+        for (i = n - 1; i >= 0; i--) poly.push(Rt[i]);
+        cap(spine[0], T[0], -1, hw[0]).forEach(function (p) { poly.push(p); });
+        return poly;
+    }
+    /* 扭曲的參數：幅度 a（圈距）、四個隨機頻率與相位。頻率對應 4～8 圈距的波長，a ≤ 0.34 時扭曲的梯度小於 1（一對一、不會讓線穿過自己） */
     function warpParams(a, rand) {
-        function k() { return 2 * Math.PI / kit.randFloat(4, 8, rand); }  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+        function k() { return 2 * Math.PI / kit.randFloat(4, 8, rand); }
         function p() { return kit.randFloat(0, 2 * Math.PI, rand); }
         return { a: a, k1: k(), k2: k(), k3: k(), k4: k(), p1: p(), p2: p(), p3: p(), p4: p() };
     }
-    /* 扭曲一個點（單位：格）：x、y 各被兩個不同方向、不同頻率的正弦波推開一點點 */
+    /* 扭曲一個點（單位：圈距）：x、y 各被兩個不同方向、不同頻率的正弦波推開一點點 */
     function warpPoint(x, y, w) {
         return [x + w.a * (Math.sin(w.k1 * y + w.p1) + 0.5 * Math.sin(w.k2 * (x + y) * 0.7 + w.p2)), y + w.a * (Math.sin(w.k3 * x + w.p3) + 0.5 * Math.sin(w.k4 * (x - y) * 0.7 + w.p4))];
     }
@@ -125,39 +187,51 @@
         var o1 = o(a, b, c), o2 = o(a, b, d), o3 = o(c, d, a), o4 = o(c, d, b);
         return ((o1 > 0 && o2 < 0) || (o1 < 0 && o2 > 0)) && ((o3 > 0 && o4 < 0) || (o3 < 0 && o4 > 0));
     }
+    /* 把封閉折線的每一段，放進「格子」裡（一段跨過哪些格子，就放進哪些）；只有放在同一格的線段才需要互相比較，速度快很多（有 5000 多個點）。回傳 Map：格子編號 → 線段編號的陣列 */
+    function segGrid(pts, cell) {
+        var n = pts.length, map = new Map(), i, x, y;
+        for (i = 0; i < n; i++) {
+            var a = pts[i], b = pts[(i + 1) % n], x0 = Math.floor(Math.min(a[0], b[0]) / cell), x1 = Math.floor(Math.max(a[0], b[0]) / cell), y0 = Math.floor(Math.min(a[1], b[1]) / cell), y1 = Math.floor(Math.max(a[1], b[1]) / cell);  /* Math.floor：無條件捨去成整數 */
+            for (x = x0; x <= x1; x++) for (y = y0; y <= y1; y++) { var key = x * 100003 + y, l = map.get(key); if (!l) map.set(key, l = []); l.push(i); }
+        }
+        return map;
+    }
     /* 這個封閉折線（點的陣列）有沒有自己穿過自己（相鄰的線段不比） */
     function selfCrosses(pts) {
-        var n = pts.length, i, j;
+        var n = pts.length, tot = 0, i;
+        for (i = 0; i < n; i++) tot += Math.hypot(pts[(i + 1) % n][0] - pts[i][0], pts[(i + 1) % n][1] - pts[i][1]);
+        var map = segGrid(pts, Math.max(1e-6, 2 * tot / n)), hit = false;
+        map.forEach(function (l) {
+            if (hit) return;
+            for (var x = 0; x < l.length && !hit; x++) for (var y = x + 1; y < l.length; y++) {
+                var p = l[x], q = l[y];
+                if (q === p + 1 || p === q + 1 || (p === 0 && q === n - 1) || (q === 0 && p === n - 1)) continue;
+                if (segCross(pts[p], pts[(p + 1) % n], pts[q], pts[(q + 1) % n])) { hit = true; break; }
+            }
+        });
+        return hit;
+    }
+    /* 點 p 到線段 (a, b) 的距離 */
+    function ptSeg(p, a, b) {
+        var dx = b[0] - a[0], dy = b[1] - a[1], L2 = dx * dx + dy * dy, s = L2 > 0 ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L2)) : 0;
+        return Math.hypot(p[0] - a[0] - s * dx, p[1] - a[1] - s * dy);
+    }
+    /* 封閉折線上「不相鄰」（沿著線至少隔 skip 個點）的兩處，最近有多近？（點到線段的距離，用格子找鄰居）。太近＝畫面上兩條線黏在一起 */
+    function minGap(pts, skip) {
+        skip = skip == null ? 14 : skip;
+        var n = pts.length, cell = 0.5, map = segGrid(pts, cell), best = 1e9, i, x, y;
         for (i = 0; i < n; i++) {
-            var a = pts[i], b = pts[(i + 1) % n];
-            for (j = i + 2; j < n; j++) {
-                if (i === 0 && j === n - 1) continue;
-                if (Math.min(a[0], b[0]) > Math.max(pts[j][0], pts[(j + 1) % n][0]) || Math.max(a[0], b[0]) < Math.min(pts[j][0], pts[(j + 1) % n][0])) continue;
-                if (segCross(a, b, pts[j], pts[(j + 1) % n])) return true;
+            var p = pts[i], cx = Math.floor(p[0] / cell), cy = Math.floor(p[1] / cell);
+            for (x = cx - 1; x <= cx + 1; x++) for (y = cy - 1; y <= cy + 1; y++) {
+                var l = map.get(x * 100003 + y);
+                if (!l) continue;
+                for (var t = 0; t < l.length; t++) { var j = l[t], dd = Math.min((i - j + n) % n, (j - i + n) % n); if (dd <= skip + 1) continue; var d = ptSeg(p, pts[j], pts[(j + 1) % n]); if (d < best) best = d; }
             }
         }
-        return false;
+        return best;
     }
-    /* 把迷宮的邊界（整數頂點的轉角序列）畫成「不規則的曲線」：先對應到不均勻的格線座標，轉角換成隨機大小的圓弧，直線切成小段，最後整條扭曲。
-       回傳封閉折線的點 [[x, y]…]（單位：格；跟螞蟻用同一套座標）。 */
-    function curvePoints(loop, xs, ys, warp, rand) {
-        var n = loop.length, P = loop.map(function (v) { return [xs[v[0]], ys[v[1]]]; }), arcs = [], i, t;  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
-        for (i = 0; i < n; i++) {
-            var a = P[(i + n - 1) % n], b = P[i], c = P[(i + 1) % n], la = Math.hypot(b[0] - a[0], b[1] - a[1]), lc = Math.hypot(c[0] - b[0], c[1] - b[1]);
-            var r = Math.min(ROUND * kit.randFloat(0.5, 1.5, rand), 0.5 * la, 0.5 * lc);
-            arcs.push({ p1: [b[0] + (a[0] - b[0]) * r / la, b[1] + (a[1] - b[1]) * r / la], b: b, p2: [b[0] + (c[0] - b[0]) * r / lc, b[1] + (c[1] - b[1]) * r / lc] });
-        }
-        var pts = [];
-        for (i = 0; i < n; i++) {
-            var A = arcs[i], B = arcs[(i + 1) % n];
-            for (t = 0; t <= 5; t++) { var u = t / 5; pts.push([(1 - u) * (1 - u) * A.p1[0] + 2 * u * (1 - u) * A.b[0] + u * u * A.p2[0], (1 - u) * (1 - u) * A.p1[1] + 2 * u * (1 - u) * A.b[1] + u * u * A.p2[1]]); }     /* 轉角的圓弧（二次貝茲曲線） */
-            var len = Math.hypot(B.p1[0] - A.p2[0], B.p1[1] - A.p2[1]), m = Math.max(1, Math.ceil(len / STEP));  /* Math.ceil：無條件進位成整數 */
-            for (t = 1; t < m; t++) pts.push([A.p2[0] + (B.p1[0] - A.p2[0]) * t / m, A.p2[1] + (B.p1[1] - A.p2[1]) * t / m]);                                                                              /* 直線切成小段 */
-        }
-        return warp ? pts.map(function (p) { return warpPoint(p[0], p[1], warp); }) : pts;
-    }
-    /* 封閉折線 → SVG path（單位：每格 cs px） */
-    function polyPath(pts, cs) { return pts.map(function (p, i) { return (i ? 'L' : 'M') + (p[0] * cs).toFixed(2) + ',' + (p[1] * cs).toFixed(2); }).join(' ') + ' Z'; }
+    /* 封閉折線 → SVG path（座標單位 × s，再平移 (ox, oy) px） */
+    function polyPath(pts, s, ox, oy) { return pts.map(function (p, i) { return (i ? 'L' : 'M') + (ox + p[0] * s).toFixed(2) + ',' + (oy + p[1] * s).toFixed(2); }).join(' ') + ' Z'; }  /* map：把陣列的每個元素轉換成別的東西，回傳新陣列 */
     /* 點 (x, y) 在不在多邊形 poly（頂點 [x,y] 的陣列）裡面：射線法 */
     function pointInPoly(x, y, poly) {
         var inside = false;
@@ -167,54 +241,131 @@
         }
         return inside;
     }
-    /* 把一圈頂點畫成圓角的 SVG path（單位：每格 cs px；r＝圓弧離頂點的距離）*/
-    function loopPath(loop, cs, round) {
-        var n = loop.length, d = '';
-        function pt(p, q, t) { return [(p[0] + (q[0] - p[0]) * t) * cs, (p[1] + (q[1] - p[1]) * t) * cs]; }
+    /* 從 (ox, oy) 往角度 ang（弧度）畫一條射線，穿過繩圈幾次（＝玩家要數的線） */
+    function rayCross(poly, ox, oy, ang) {
+        var dx = Math.cos(ang), dy = Math.sin(ang), c = 0, n = poly.length;
         for (var i = 0; i < n; i++) {
-            var a = loop[(i + n - 1) % n], b = loop[i], c = loop[(i + 1) % n];
-            var la = Math.hypot(b[0] - a[0], b[1] - a[1]), lc = Math.hypot(c[0] - b[0], c[1] - b[1]);
-            var p1 = pt(b, a, Math.min(round, 0.5 * 1) / Math.max(la, 1e-9) * 1), p2 = pt(b, c, Math.min(round, 0.5) / Math.max(lc, 1e-9));
-            d += (i === 0 ? 'M' : 'L') + p1[0].toFixed(2) + ',' + p1[1].toFixed(2) + ' Q' + (b[0] * cs).toFixed(2) + ',' + (b[1] * cs).toFixed(2) + ' ' + p2[0].toFixed(2) + ',' + p2[1].toFixed(2) + ' ';
+            var a = poly[i], b = poly[(i + 1) % n], sa = (a[0] - ox) * dy - (a[1] - oy) * dx, sb = (b[0] - ox) * dy - (b[1] - oy) * dx;
+            if ((sa > 0) === (sb > 0)) continue;
+            var den = dx * (b[1] - a[1]) - dy * (b[0] - a[0]), t = ((a[0] - ox) * (b[1] - a[1]) - (a[1] - oy) * (b[0] - a[0])) / (den || 1e-12);
+            if (t > 0) c++;
         }
-        return d + 'Z';
+        return c;
     }
-    /* 出一關：{ G, m, P, loop（繩圈的轉角頂點）, ant: { r, c, cell, inside }, depthMin, depth（螞蟻所在格子的深度）, level } */
+    /* 各個方向的射線穿過繩圈的次數：{ min, max, mean, odd（有幾條射線是奇數次）, n }（角度從 0.01 弧度開始，避開剛好壓在頂點上的方向） */
+    function rayStats(poly, ox, oy, n) {
+        n = n || 120;
+        var mn = 1e9, mx = 0, sum = 0, odd = 0;
+        for (var i = 0; i < n; i++) { var c = rayCross(poly, ox, oy, 0.01 + i / n * 2 * Math.PI); mn = Math.min(mn, c); mx = Math.max(mx, c); sum += c; if (c % 2) odd++; }
+        return { min: mn, max: mx, mean: sum / n, odd: odd, n: n };
+    }
+    /* 點 (x, y) 離「圓心」（指紋最中央，起點那一小段直線 seed）多遠 */
+    function dSeedOf(seed, x, y) {
+        var dd = Math.hypot(x - seed[0][0], y - seed[0][1]);
+        for (var k = 0; k + 1 < seed.length; k++) dd = Math.min(dd, ptSeg([x, y], seed[k], seed[k + 1]));
+        return dd;
+    }
+    /* 從 (ox, oy) 走直線到 (ex, ey)，穿過繩圈幾次（＝從螞蟻數到圓心要數的線） */
+    function segCount(poly, ox, oy, ex, ey) {
+        var c = 0, n = poly.length, o = [ox, oy], e = [ex, ey];
+        for (var i = 0; i < n; i++) if (segCross(o, e, poly[i], poly[(i + 1) % n])) c++;
+        return c;
+    }
+    /* 試著用一條中心線出題（makeLevel 用）：把螞蟻放在「圓心與最外圍的正中間」（往圓心要數 b 條線、往最近的外面要數 a 條線，b ÷ (a ＋ b) 落在 ANT_DEPTH），扭曲、平移、驗證；通過回傳題目，不通過回傳 null。
+       strict：要求沒有捷徑（往各方向的射線至少穿過 needRay 條線）而且位置在正中間；tr：這是第幾次造繩子（記在題目的 tries 裡）。 */
+    function tryLevel(sp, poly, tr, strict, level, v, a, needRay, rand) {
+        var seed = sp.seed, cen = seed[Math.floor(seed.length / 2)], i, need = 0.4 * ANT_SIZE, rOut = 0;
+        for (i = 0; i < poly.length; i++) rOut = Math.max(rOut, dSeedOf(seed, poly[i][0], poly[i][1]));     /* 最外圍：繩圈離圓心最遠的地方 */
+        var lo = 0.2 * rOut, hi = 0.8 * rOut, ring = [];                                                    /* 先在「離圓心 20%～80%」的環狀範圍裡撒點（粗篩），再用線數精挑 */
+        for (i = 0; i < sp.pts.length; i++) { var dr = dSeedOf(seed, sp.pts[i][0], sp.pts[i][1]); if (dr >= lo && dr <= hi) ring.push(i); }
+        if (!ring.length) return null;
+        /* 在環狀範圍裡隨機撒點：隨便挑一個在範圍內的中心線上的點，再往左右（垂直於繩子）偏一段，偏到帶子上、或縫裡；離線太近的不要。
+           格子（segGrid）：只跟附近的線段比距離，比整條繩圈全部比一遍快很多 */
+        var cell = 1, sg = segGrid(poly, cell), cands = [[], []], n = 0;
+        function nearD(px, py) {                                                      /* 點 (px, py) 離繩圈最近的線多遠（只看附近 3×3 格） */
+            var cx = Math.floor(px / cell), cy = Math.floor(py / cell), best = 1e9;
+            for (var gx = cx - 1; gx <= cx + 1; gx++) for (var gy = cy - 1; gy <= cy + 1; gy++) {
+                var l = sg.get(gx * 100003 + gy);
+                if (!l) continue;
+                for (var t = 0; t < l.length; t++) best = Math.min(best, ptSeg([px, py], poly[l[t]], poly[(l[t] + 1) % poly.length]));
+            }
+            return best;
+        }
+        while (n++ < 600 && (cands[0].length < 16 || cands[1].length < 16)) {
+            var k = ring[Math.floor(rand() * ring.length)], c0 = sp.pts[k], a0 = sp.pts[Math.max(0, k - 1)], b0 = sp.pts[Math.min(sp.pts.length - 1, k + 1)];
+            var tl = Math.hypot(b0[0] - a0[0], b0[1] - a0[1]) || 1, off = (rand() * 2 - 1) * 0.6;
+            var px = c0[0] - (b0[1] - a0[1]) / tl * off, py = c0[1] + (b0[0] - a0[0]) / tl * off, rr = dSeedOf(seed, px, py);
+            if (rr < lo || rr > hi) continue;
+            var dm = nearD(px, py);
+            if (dm < need * 0.75) continue;
+            cands[pointInPoly(px, py, poly) ? 1 : 0].push({ p: [px, py], d: dm });
+        }
+        /* 精挑：先試裡面或外面（各 50%，選不到再換另一邊）；每個候選位置算「往最近的外面要數幾條線 a（60 個方向裡最少的）」「往圓心要數幾條線 b」，
+           要 a 夠多（沒有捷徑）、b ÷ (a ＋ b) 在 ANT_DEPTH 範圍內（正中間；容許誤差 0.04）才收下。同一條繩子最多試 10 個位置（比重新造一條便宜很多） */
+        var ant = null, inside = false, first = rand() < 0.5 ? 1 : 0, side, pk;
+        for (side = 0; side < 2 && !ant; side++) {
+            var wi = side ? 1 - first : first, pool = kit.shuffle(cands[wi].filter(function (c) { return c.d >= need; }), rand).slice(0, strict ? 10 : 1);  /* kit.shuffle(陣列, rand)：隨機洗牌 */
+            for (pk = 0; pk < pool.length && !ant; pk++) {
+                var pc = pool[pk];
+                if (strict) {
+                    var ra = rayStats(poly, pc.p[0], pc.p[1], 60).min, rb = segCount(poly, pc.p[0], pc.p[1], cen[0], cen[1]), fr = rb / Math.max(1, ra + rb);
+                    if (ra < needRay * 0.8 || fr < ANT_DEPTH[0] - 0.04 || fr > ANT_DEPTH[1] + 0.04) continue;
+                }
+                ant = pc; inside = wi === 1;
+            }
+        }
+        if (!ant) return null;
+        /* 扭曲：驗證「不自己交叉」「兩條線沒有黏在一起」「螞蟻的內外沒變」，不過就換一組參數（越後面的嘗試幅度越小，最後不扭曲） */
+        for (var wi = 0; wi < 5; wi++) {                                             /* 同一條繩子最多換 5 組扭曲（比重新造一條便宜）：前 3 次用完整的幅度、第 4 次減半、最後一次不扭曲 */
+            var amp = wi < 3 ? a : (wi < 4 ? a / 2 : 0), w = amp > 0 ? warpParams(amp, rand) : null;
+            var wp = w ? poly.map(function (p) { return warpPoint(p[0], p[1], w); }) : poly, ap = w ? warpPoint(ant.p[0], ant.p[1], w) : ant.p;
+            if (w && (selfCrosses(wp) || minGap(wp) < MIN_GAP * 0.6)) continue;
+            if (pointInPoly(ap[0], ap[1], wp) !== inside) continue;
+            /* 平移，讓螞蟻在原點（＝畫面正中央）；離繩子最近的那一段的方向，就是螞蟻的朝向（順著紋路，不會橫著壓到線） */
+            var tp = wp.map(function (p) { return [p[0] - ap[0], p[1] - ap[1]]; }), bd = 1e9, bi = 0, ext = 0;
+            for (i = 0; i < tp.length; i++) { var d2 = ptSeg([0, 0], tp[i], tp[(i + 1) % tp.length]); if (d2 < bd) { bd = d2; bi = i; } ext = Math.max(ext, Math.abs(tp[i][0]), Math.abs(tp[i][1])); }
+            if (bd < 0.25 * ANT_SIZE) continue;
+            var nb = tp[(bi + 1) % tp.length], deg = Math.atan2(nb[1] - tp[bi][1], nb[0] - tp[bi][0]) * 180 / Math.PI + (rand() < 0.5 ? 0 : 180);
+            var rs = rayStats(tp, 0, 0, 120);
+            if (rs.odd !== (inside ? rs.n : 0)) continue;                           /* 每一個方向數穿過幾條線：裡面都是奇數、外面都是偶數（不一致代表有方向剛好壓在頂點上，換一組） */
+            var wc = w ? warpPoint(cen[0], cen[1], w) : cen, cp = [wc[0] - ap[0], wc[1] - ap[1]];     /* 圓心（起點直線的中間），扭曲、平移之後在哪裡 */
+            var toC = segCount(tp, 0, 0, cp[0], cp[1]), dep = toC / Math.max(1, rs.min + toC);        /* 最後的圖形上，螞蟻在「圓心 → 最外面」的哪裡（扭曲之後線數可能差一兩條，所以容許誤差 0.1） */
+            if (strict && (dep < ANT_DEPTH[0] - 0.1 || dep > ANT_DEPTH[1] + 0.1)) continue;
+            var x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+            tp.forEach(function (p) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); });
+            var dnear = Math.min(-x0, x1, -y0, y1), viewR = Math.min(ext + 0.3, Math.max(dnear + VIEW_MARGIN, VIEW_FRAC * (ext + 0.3)));      /* 畫面的半邊長（圈距）：不比整個圖形大；也不比「最近的外面再多 VIEW_MARGIN」小 */
+            return { K: sp.K, level: level, rope: tp, antXY: [0, 0], center: cp, toCenter: toC, depth: dep, ant: { inside: inside, deg: deg }, extent: ext + 0.3, viewR: viewR, dnear: dnear, revs: sp.revs, minRay: rs.min, meanRay: rs.mean, maxRay: rs.max, len: sp.len, seedLen: sp.seedLen, variance: v, warpA: amp, needRay: needRay, tries: tr + 1 };
+        }
+        return null;
+    }
+    /* 出一關：{ K（圈數）, rope（繩圈的封閉折線，螞蟻在原點 (0, 0)）, antXY（[0, 0]）, center（圓心＝起點直線的中間在哪裡）, toCenter（從螞蟻走直線到圓心，穿過幾條線）, depth（螞蟻在圓心 → 最外面的位置 ＝ toCenter ÷ (toCenter ＋ 往最近的外面最少穿過的線數 minRay)，約 0.5）, ant: { inside, deg（螞蟻朝哪個方向，順著附近的紋路）}, extent（折線離原點最遠多少）, viewR（畫面的半邊長，圈距；可能比 extent 小——遠的那一邊裁掉一點）, dnear（螞蟻離圖形最近一邊多遠）, revs（迴轉幾次）, minRay／meanRay／maxRay, len（繩子中心線的總長）, seedLen, variance, warpA, needRay（這一關要求的最少穿過幾條線）, tries, level } */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var m = roomsFor(level), dmin = depthMinFor(level), mz = makeMaze(m, rand), G = mz.G, P = mz.P, ds = distances(G, P, mz.root);
-        var wantInside = rand() < 0.5, cands = [], i;
-        function collect(inside, minDepth) {
-            var out = [];
-            for (i = 0; i < G * G; i++) {
-                var rr = Math.floor(i / G), cc = i % G;
-                if (inside) { if (P[i] && ds.dIn[i] >= minDepth) out.push(i); }
-                else if (!P[i] && rr > 0 && cc > 0 && rr < G - 1 && cc < G - 1 && ds.dOut[i] >= minDepth) out.push(i);
-            }
-            return out;
+        var K = ringsFor(level), v = varianceFor(level), jitter = Math.min(0.45, v * 0.6), a = warpAFor(level), needRay = rayMinFor(level), best = null, tr;
+        for (tr = 0; tr < 30; tr++) {
+            var strict = tr < 20, sp = makeSpine(K, reverseFor(level), jitter, rand);
+            if (!sp) continue;
+            var poly = ropePolygon(sp.pts, sp.hw);
+            if (selfCrosses(poly) || minGap(poly) < MIN_GAP) continue;
+            var cand = tryLevel(sp, poly, tr, strict, level, v, a, needRay, rand);
+            if (!cand) continue;
+            if (!best || cand.minRay > best.minRay) best = cand;                      /* 沒有捷徑（射線穿過的線最少的那個方向越多越好）才收下；不夠好就再造一個，最後取最好的 */
+            if (strict && cand.minRay >= needRay) break;
         }
-        var md = dmin;
-        while (md >= 0) { cands = collect(wantInside, md); if (cands.length) break; md--; }       /* 找不到夠深的就放寬，一路放寬到有為止 */
-        if (!cands.length) { wantInside = !wantInside; cands = collect(wantInside, 0); }
-        var cell = kit.pick(cands, rand), loops = boundaryLoop(G, P).loops, loop = loops[0], inside = !!P[cell], rr0 = Math.floor(cell / G), cc0 = cell % G;
-        /* 不規則的曲線：不均勻的格線＋整條扭曲；驗證「不自己交叉」和「螞蟻的內外沒變」，不過就換一組參數，最後退回沒有扭曲的版本 */
-        var curve = null, antXY = null, v = varianceFor(level), a = warpAFor(level), xs = gridLines(G, v, rand), ys = gridLines(G, v, rand);
-        for (var tr = 0; tr < 8; tr++) {
-            var amp = tr < 6 ? a : (tr === 6 ? a / 2 : 0), w = amp > 0 ? warpParams(amp, rand) : null;
-            var pts = curvePoints(loop, xs, ys, w, rand), cx = (xs[cc0] + xs[cc0 + 1]) / 2, cy = (ys[rr0] + ys[rr0 + 1]) / 2, ap = w ? warpPoint(cx, cy, w) : [cx, cy];
-            if (selfCrosses(pts) || pointInPoly(ap[0], ap[1], pts) !== inside) continue;
-            curve = pts; antXY = ap; break;
+        for (tr = 30; !best && tr < 60; tr++) {                                      /* 30 次都失敗（幾乎不可能）：用最簡單、不扭曲、不迴轉的螺旋 */
+            var sp0 = plainSpiral(K), poly0 = ropePolygon(sp0.pts, sp0.hw);
+            best = tryLevel(sp0, poly0, 26, false, level, v, a, needRay, rand);
+            if (best) best.tries = tr + 1;
         }
-        if (!curve) { curve = curvePoints(loop, gridLines(G, 0, rand), gridLines(G, 0, rand), null, rand); antXY = [cc0 + 0.5, rr0 + 0.5]; }
-        return { G: G, m: m, P: P, loop: loop, curve: curve, antXY: antXY, ant: { r: rr0, c: cc0, cell: cell, inside: inside }, depthMin: dmin, depth: P[cell] ? ds.dIn[cell] : ds.dOut[cell], variance: v, warpA: a, level: level };
+        return best;
     }
     /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
-        if (n >= 25) return '迷宮高手！';
+        if (n >= 25) return '指紋專家！';
         if (n >= 15) return '眼力很準！';
         if (n >= 8) return '不錯喔！';
         if (n >= 3) return '再接再厲！';
-        return '從螞蟻往外畫一條線，數穿過繩子幾次！';
+        return '從螞蟻往外畫一條線，一條一條數穿過繩子幾次！';
     }
 
     /* mount：選單按下這款遊戲時會呼叫它。把「闖關」的流程（第幾關、過關、失敗、結算、最佳紀錄）交給共用骨架 kit.run，我們只提供 setup（每一關怎麼畫）、rating（評語）等小零件。 */
@@ -247,20 +398,22 @@
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
         var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
-        var q = makeLevel(level, api.rand), G = q.G;
+        var q = makeLevel(level, api.rand);
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
-        console.log('[圈內圈外] 第 ' + level + ' 關：迷宮 ' + q.m + '×' + q.m + '（格子 ' + G + '×' + G + '）；螞蟻在 (' + q.ant.r + ',' + q.ant.c + ') ' + (q.ant.inside ? '裡面' : '外面') + '，深度 ' + q.depth + '（下限 ' + q.depthMin + '）；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
+        console.log('[圈內圈外] 第 ' + level + ' 關：指紋 ' + q.K + ' 圈、迴轉 ' + q.revs + ' 次、繩長 ' + q.len.toFixed(1) + '；螞蟻在畫面正中央（在圓心到最外面的 ' + (q.depth * 100).toFixed(0) + '% 處，往圓心數 ' + q.toCenter + ' 條線、往外數最少 ' + q.minRay + ' 條）、在繩圈' + (q.ant.inside ? '裡面' : '外面') + '；往各方向穿過 ' + q.minRay + '～' + q.maxRay + ' 條線（平均 ' + q.meanRay.toFixed(1) + '）；限時 ' + timeMs(level) + ' ms');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
-        var W = stage.clientWidth || 472, H = stage.clientHeight || 640, cs = Math.floor(Math.min((W - 16) / G, (H - 220) / G)), BS = cs * G, bx = Math.round((W - BS) / 2), by = 62;
+        var W = stage.clientWidth || 472, H = stage.clientHeight || 640, BS = Math.floor(Math.min(W - 16, H - 220)), bx = Math.round((W - BS) / 2), by = 62;
+        var u = (BS / 2 - 3) / q.viewR;                 /* 每個「圈距」是幾 px：畫面的半邊長剛好是 q.viewR 個圈距（螞蟻在正中央；離螞蟻很遠的那一邊可能被裁掉一點，svg 外面的部分不會顯示） */
         var field = h('div', { 'class': 'inout-field' });
         stage.appendChild(field);                       /* appendChild：把一個元素放進另一個元素裡（放進去，畫面上才看得到） */
         field.appendChild(h('div', { 'class': 'qz-note inout-tip', text: '螞蟻在繩圈的裡面還是外面？' }));
         var svg = kit.svg('svg', { 'class': 'inout-svg', viewBox: '0 0 ' + BS + ' ' + BS, width: BS, height: BS }, field);
         svg.style.cssText = 'left:' + bx + 'px;top:' + by + 'px;';
-        var d = polyPath(q.curve, cs);                                           /* 不規則的曲線（V1.36.0） */
+        var d = polyPath(q.rope, u, BS / 2, BS / 2);                                 /* 指紋繩圈 */
         var fill = kit.svg('path', { 'class': 'inout-fill', d: d }, svg);              /* 揭曉時才顯示的「裡面」淡綠色 */
-        kit.svg('path', { 'class': 'inout-rope', d: d }, svg);
-        drawAnt(svg, q.antXY[0] * cs, q.antXY[1] * cs, cs * ANT_SIZE, Math.floor(api.rand() * 360));
+        var rope = kit.svg('path', { 'class': 'inout-rope', d: d }, svg);
+        rope.style.strokeWidth = String(Math.max(1.3, Math.min(5, u * 0.16)));       /* 線的粗細跟著紋路的疏密走（紋路越密、線越細） */
+        drawAnt(svg, BS / 2, BS / 2, u * ANT_SIZE, q.ant.deg);
         var info = h('div', { 'class': 'qz-note inout-info', text: '' });
         info.style.top = (by + BS + 6) + 'px';
         field.appendChild(info);
@@ -293,13 +446,13 @@
     var G = {
         id: ID,
         name: '圈內圈外',
-        rule: '地上有一條彎來彎去、首尾相連的紅色繩圈（不會自己交叉），上面有一隻螞蟻。**螞蟻在繩圈的裡面還是外面？** 點「裡面」或「外面」。繩圈是一條彎彎曲曲、粗細不一的不規則曲線，螞蟻又小，常常卡在一條很深的凹口裡，**看起來被包住，其實在外面**。小技巧：**從螞蟻往旁邊畫一條線出去，數穿過繩子幾次**——奇數次在裡面、偶數次在外面。答錯或來不及就結束，看你能過幾關。越後面，繩圈越長、凹口越深、時間越短！',
+        rule: '一條首尾相連、不會自己交叉的紅色繩圈，繞成**指紋似的螺旋紋**，畫面正中央有一隻螞蟻。**螞蟻在繩圈的裡面還是外面？** 點「裡面」或「外面」。紋路一圈貼著一圈往外繞，而且**會突然掉頭、往反方向繞**，螞蟻在圓心與最外圍的正中間，找不到捷徑，要**從螞蟻開始，一條一條數穿過幾條線**——奇數條在裡面、偶數條在外面。答錯或來不及就結束，看你能過幾關。越後面，紋路越密、圈數越多、時間越短！',
         mount: mount,
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
-            roomsFor: roomsFor, depthMinFor: depthMinFor, timeMs: timeMs, varianceFor: varianceFor, warpAFor: warpAFor, gridLines: gridLines, warpParams: warpParams, warpPoint: warpPoint, segCross: segCross, selfCrosses: selfCrosses, curvePoints: curvePoints, polyPath: polyPath, makeMaze: makeMaze, distances: distances, boundaryLoop: boundaryLoop, pointInPoly: pointInPoly, loopPath: loopPath, makeLevel: makeLevel, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, ROOMS: ROOMS, DEPTH_MIN: DEPTH_MIN, TIME_S: TIME_S, ROUND: ROUND, VARIANCE: VARIANCE, WARP_A: WARP_A, ANT_SIZE: ANT_SIZE, STEP: STEP, MAX_LEVEL: MAX_LEVEL
+            ringsFor: ringsFor, reverseFor: reverseFor, rayMinFor: rayMinFor, timeMs: timeMs, varianceFor: varianceFor, warpAFor: warpAFor, smooth: smooth, makeSpine: makeSpine, plainSpiral: plainSpiral, smoothNoise: smoothNoise, ropePolygon: ropePolygon, warpParams: warpParams, warpPoint: warpPoint, segCross: segCross, selfCrosses: selfCrosses, ptSeg: ptSeg, minGap: minGap, polyPath: polyPath, pointInPoly: pointInPoly, rayCross: rayCross, rayStats: rayStats, makeLevel: makeLevel, rating: rating,
+            RAMP_LEVELS: RAMP_LEVELS, RINGS: RINGS, REVERSE_P: REVERSE_P, VIEW_FRAC: VIEW_FRAC, VIEW_MARGIN: VIEW_MARGIN, TIME_S: TIME_S, VARIANCE: VARIANCE, WARP_A: WARP_A, ANT_SIZE: ANT_SIZE, STRIP_W: STRIP_W, SEED_LEN: SEED_LEN, ANT_DEPTH: ANT_DEPTH, dSeedOf: dSeedOf, segCount: segCount, RAY_MIN: RAY_MIN, FOLLOW_GAIN: FOLLOW_GAIN, MAX_TURN: MAX_TURN, SKIP_ARC: SKIP_ARC, MIN_GAP: MIN_GAP, STEP: STEP, MAX_LEVEL: MAX_LEVEL
         }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */

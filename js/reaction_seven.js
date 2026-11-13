@@ -79,6 +79,7 @@
 
             /* n 目前的數字；passed 已通過的最大數字；state 目前階段（live 等待玩家/gap 兩數字之間的空檔/over 結束）；token 每個數字 +1；shownAt／deadline 這個數字出現／截止的時間；rts 每次的反應秒數 */
             var n = (startAt || 1) - 1, passed = n, state = 'idle', token = 0, shownAt = 0, deadline = 0, rts = [], over = false;
+            Reaction.leaveScore = function () { return passed > (startAt || 1) - 1 ? passed : null; };      /* 玩到一半按「返回」時，目前已過幾個數字（V1.57.0；見 kit.settleOnLeave） */
             /* 建立畫面元素：標題、說明、數字卡片、時間條、「跳過」按鈕 */
             var head = h('div', { 'class': 'seven-head', text: '7、7 的倍數、有 7 的要「跳過」' });
             var sub = h('div', { 'class': 'seven-sub', text: ' ' });

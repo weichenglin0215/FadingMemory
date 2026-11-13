@@ -8,17 +8,17 @@
 /* ═══ 半邊字（.hc-）═══ */
 .halfchar-head {
     text-align: center;                                 /* 文字置中 */
-    font-size: var(--fs-md);                            /* 字級：主題變數 --fs-md */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm（V1.57.0：標題兼題目提示，要放得進一行） */
     font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
     color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
 }
 
-/* 題目提示文字 */
-.halfchar-prompt {
-    text-align: center;                                 /* 文字置中 */
-    font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
-    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
-    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+/* 整個遊戲畫面（.screen 是各遊戲共用的容器，JS 在開局時加上 halfchar-screen、離開時拿掉；V1.57.0）：
+   標題、字框、時間條、選項、解說之間的空隙縮成 6px、上方留白 14px → 4px、下方 14px → 6px，把高度讓給題目字 */
+.screen.halfchar-screen {
+    gap: 6px;                                           /* 子元素之間的空隙：6px */
+    padding-top: 4px;                                   /* 上方內縮：4px */
+    padding-bottom: 6px;                                /* 下方內縮：6px */
 }
 
 /* 顯示被遮住的字的大框 */
@@ -46,14 +46,11 @@
     border-color: var(--c-bad);                         /* 邊框顏色：主題變數 --c-bad */
 }
 
-/* 被遮住的大字（用宋體風格的 --font-note）。高關卡會用 transform 歪斜，揭曉時轉正（transition 讓轉正有動畫） */
-.halfchar-char {
-    font-family: var(--font-note);                      /* 字型：主題變數 --font-note */
-    font-size: 300px;                                   /* 字級：300px */
-    font-weight: 700;                                   /* 字重（粗細）700（400 一般、700 粗體） */
-    line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
-    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
-    transition: transform 0.25s ease;                   /* 狀態改變時的過渡動畫（屬性、時間、緩動）：transform 0.25s ease */
+/* 畫字與旋轉遮片的畫布（V1.57.0）：大小、解析度由 js 依字框大小設定；字用宋體風格（--font-note）畫在 canvas 上，灰底、白色（或五彩繽紛）的遮片繞著字的中心旋轉 */
+.halfchar-canvas {
+    display: block;                                     /* 獨佔一整行的區塊（下面不會多出一條空隙） */
+    flex: none;                                         /* 彈性縮放：none（大小由 js 設定，不被字框拉伸） */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
 }
 
 /* 下方的選項：4 個 2×2 格、5～6 個 3×2 格（欄數由 JS 依選項數設定，reaction_halfchar.js 的 next；兩種都是 2 列，高度一樣） */
@@ -66,13 +63,13 @@
 
 /* 單個選項按鈕：固定高度、宋體大字 */
 .halfchar-opt {
-    height: 112px;                                      /* 高度：112px */
+    height: 84px;                                       /* 高度：84px（V1.57.0：原本 112，縮小讓出高度給題目字） */
     border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
     border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
     background: var(--c-card);                          /* 背景：主題變數 --c-card */
     color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
     font-family: var(--font-note);                      /* 字型：主題變數 --font-note */
-    font-size: 78px;                                    /* 字級：78px */
+    font-size: 62px;                                    /* 字級：62px（V1.57.0：原本 78，配合按鈕縮小） */
     font-weight: 700;                                   /* 字重（粗細）700（400 一般、700 粗體） */
     line-height: 1;                                     /* 行高：1（文字每一行佔的高度） */
 }
@@ -96,7 +93,7 @@
 
 /* 底下的說明文字（答案揭曉時顯示偏旁解說） */
 .halfchar-tip {
-    min-height: 1.4em;                                  /* 最小高度：1.4em */
+    min-height: 2.8em;                                  /* 最小高度：2.8em（V1.57.0：先留兩行的高度，揭曉時解說換成兩行字，字框的高度才不會被擠小、題目字也不會被切到） */
     text-align: center;                                 /* 文字置中 */
     font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
     font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */

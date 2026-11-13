@@ -50,7 +50,11 @@ const PREP = {
     Reaction.current.debug.goto(8);                                   // 第 8 關：4 色、37 格
     for (var t = 0; t < 40 && !(Reaction.current.debug.api().preview); t++) await new Promise(function (r) { setTimeout(r, 50); });
     Reaction.current.debug.api().preview(0.55);                       // 照答案塗一半多，再放一個「?」與一個顏色組合記號
-  })()`
+  })()`,
+  flipcent: `(function(){ Reaction.current.debug.goto(8); Reaction.current.debug.api().solve(); })()`,        // 第 8 關 24 張牌，翻對一組（兩張數字露出來，提示寫「43 + 57 = 100！」）
+  flip3cent: `(function(){ Reaction.current.debug.goto(10); Reaction.current.debug.api().solve(); })()`,     // 第 10 關 15 張牌，翻對一組（三張數字露出來）
+  blinkchar: `(async function(){ Reaction.current.debug.goto(4); await new Promise(function (r) { setTimeout(r, 3300); }); })()`,   // 第 4 關：等字閃過（最晚 3 秒），拍答案按鈕長出來的畫面
+  halfchar: `(function(){ var T = Reaction.list().find(function (g) { return g.id === 'halfchar'; }).test, m = T.makeMask(20); m.shape = 'spiral'; m.colorful = true; m.open = 0.35; m.speed = 0; m.theta0 = 0.6; Reaction.current.debug.setMask(m); })()`   // 五彩繽紛的螺旋遮片（停住）
 };
 
 // ─── 遊戲清單：讀 js/menu.js 的 GAME_CELLS（id 與名稱）───

@@ -246,6 +246,9 @@
        色不異空）時，彈窗改成貼在畫面上緣／下緣、背後不壓暗，按鈕併成一排，揭曉的畫面才不會被蓋住。
        回傳彈窗外框的 DOM 元素。 */
     kit.result = function (root, o) {
+        /* V1.57.0：因為按「返回」已經先結算過（卡片還在畫面上），遊戲晚一步才跳出的結算就不再疊第二張 */
+        if (Reaction.leaveCard && Reaction.leaveCard.isConnected) return Reaction.leaveCard;
+        if (o.bgm !== false) { Reaction.pendingBest = null; Reaction.leaveScore = null; }          /* 這一局正式結算了：沒有「待結算」的成績了 */
         var kids = [];
         if (o.num != null) kids.push(h('div', { 'class': 'rx-result__num', text: o.num }));
         if (o.label) kids.push(h('div', { 'class': 'rx-result__label', text: o.label }));
@@ -292,6 +295,51 @@
            （Reaction.resultShowing）判斷玩家是不是還在看結果，太早送的話，進榜的恭喜就只剩小提示。 */
         if (o.score != null && global.Leaderboard && Reaction.current) global.Leaderboard.submit(Reaction.current, o.score);
         return ctl.el;
+    };
+
+    /* ═══ 玩到一半按「返回」：把已經完成的關卡結算（V1.57.0，玩家意見）═══
+       為什麼：有些遊戲不限時（或限時很長），玩家臨時有事、按「返回」離開，剛剛的最高紀錄就沒送上世界排行榜，玩家覺得不公平。
+       做法：js/reaction.js 的返回鈕會先呼叫 Reaction.onLeave（kit.run 的遊戲）、再呼叫 kit.settleOnLeave（這裡）。
+         · 沒有刷新個人最佳 → 沒什麼要記，直接離開；
+         · 刷新了、但手上的榜單看起來進不了前 30 名 → 個人最佳照樣記下，直接離開（不打斷玩家）；
+         · 刷新了、而且有機會進前 30 名（或手上沒有榜單、不知道）→ 先跳出結算卡片並送排行榜（進榜的恭喜彈窗會照常跳出、新玩家會被請去建立暱稱），
+           玩家再按一次「返回」（或卡片上的「離開遊戲」）才真的離開。
+       kit.leaveVerdict(id, score, better)：回傳 'none'（沒刷新個人最佳）／'silent'（刷新了但進不了榜）／'card'（有機會進榜或不確定）。 */
+    kit.leaveVerdict = function (id, score, better) {
+        if (typeof score !== 'number' || !isFinite(score)) return 'none';
+        var b = Reaction.getBest(id);
+        if (b != null && !(better === 'min' ? score < b : score > b)) return 'none';
+        var L = global.Leaderboard, g = Reaction.current;
+        var q = L && L.wouldQualify && g ? L.wouldQualify(g, score) : false;
+        return q === false ? 'silent' : 'card';
+    };
+    /* 離開遊戲頁（回到選遊戲列表） */
+    function leavePage() { if (global.Sfx && Sfx.stopBgm) Sfx.stopBgm(); global.location.href = 'index.html?games=1'; }
+    /* 按「返回」時呼叫。回傳 true＝跳出了結算卡片（返回鈕這次不要離開）；false＝直接離開。
+       game：Reaction.current（要有 id 與 score 設定）；root：遊戲畫面（結算卡片疊在上面）。 */
+    kit.settleOnLeave = function (root, game) {
+        if (!game || !game.id) return false;
+        var L = global.Leaderboard, pend = Reaction.pendingBest, mine = pend && pend.id === game.id;
+        var minBetter = !!(game.score && game.score.better === 'min');
+        var fn = Reaction.leaveScore; Reaction.leaveScore = null;
+        if (!mine && typeof fn === 'function') {              /* 結算前不會先 setBest 的遊戲：問它「目前的成績」 */
+            var s = fn(), v = kit.leaveVerdict(game.id, s, minBetter ? 'min' : 'max');
+            if (v === 'none') return false;
+            Reaction.setBest(game.id, s, function (a, b) { return minBetter ? a < b : a > b; });
+            if (v === 'silent') { Reaction.pendingBest = null; return false; }
+            pend = Reaction.pendingBest; mine = pend && pend.id === game.id;
+        }
+        if (!mine) return false;
+        Reaction.pendingBest = null;
+        var q = L && L.wouldQualify ? L.wouldQualify(game, pend.val) : false;
+        if (q === false) return false;                          /* 個人最佳已經記下了；進不了榜就不打斷玩家 */
+        var num = L && L.fmt && game.score ? L.fmt(game.score, pend.val) : String(pend.val);
+        Reaction.leaveCard = kit.result(root, {
+            score: pend.val, num: num, label: '你目前的成績已經記下來了',
+            lines: ['有進榜的話，名次也一併登記了'], sfx: 'win', bgm: false, feedback: false,
+            againText: '離開遊戲', onAgain: leavePage
+        });
+        return true;
     };
 
     /* 按住／放開：down 在 pointerdown 呼叫，up 在放開時呼叫一次；分頁切到背景、視窗失焦一律視為放開 */

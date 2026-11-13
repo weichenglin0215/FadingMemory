@@ -10,6 +10,8 @@
        ④ 干擾貼紙 DECOY_STICKERS：0 → 3 張（別的車窗上也貼黃底黑字，但是是英文字母，不是號碼）；
        ⑤ 選項越來越像 SIM_P：0 → 1。第 1 關的錯誤選項跟答案有 2 個位數不同、而且換成「長得不像」的數字；
           到頂的時候，錯誤選項只差 1 個位數、而且換成「長得像」的數字（0↔8、3↔8、1↔7、6↔5 …，見 SIM 表）。
+       ⑥ 火車開過去的時候，整列火車（連號碼貼紙、干擾貼紙）都有「橫向動態模糊」（只糊水平方向，垂直不糊）：模糊半徑 BLUR_PX 1.5 → 6 px；
+          火車開走、出現選項之後，模糊就拿掉（揭曉倒車時是清楚的）。
    · 窗戶裡的干擾：乘客剪影、便當、報紙、窗簾、空窗，每節隨機。
    · 揭曉：火車「倒車」回來，停在貼著號碼的那一節，號碼貼紙放大；選項的正確答案變綠色、你選錯的變紅色。
    ═══════════════════════════════════════════════════════════════════ */
@@ -23,14 +25,16 @@
     var ID = 'kinetic';                                 /* 這款遊戲的代號：選單、成績、存檔、CSS class 前綴都用它 */
     var SCORE = { better: 'max', decimals: 0, format: '{v} 關', label: '關卡', min: 1, max: 90 };  /* 成績規格：better（max＝越大越好、min＝越小越好）、decimals 小數位數、format 顯示格式、label 名稱、min／max 合理範圍（超出範圍的成績不會送排行榜） */
     var h = UI.h, kit = Reaction.kit;                   /* h：建立網頁元素的小工具；kit：闖關遊戲共用的工具箱 */
+    var blurSeq = 0;                                    /* 橫向模糊濾鏡的編號：每一關各做一個（id 不重複），舊關卡的濾鏡就不會被新關卡誤用 */
 
     /* ═══ 可以自己調的參數 ═══ */
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂（使用者企劃：第 30 關只在畫面上 0.5 秒） */
-    var VIEW_S = [0.7, 0.25];                    /* 一節車廂從進畫面到出畫面的時間（秒）：第 1 關 → 到頂 */
+    var VIEW_S = [0.5, 0.10];                    /* 一節車廂從進畫面到出畫面的時間（秒）：第 1 關 → 到頂 */
     var DIGITS = [2, 5];                        /* 號碼位數：第 1 關 → 到頂（四捨五入） */
-    var CARS = [4, 10];                          /* 車廂數：第 1 關 → 到頂（四捨五入） */
+    var CARS = [5, 10];                          /* 車廂數：第 1 關 → 到頂（四捨五入） */
     var DECOY_STICKERS = [1, 5];                /* 干擾貼紙（英文字母）張數：第 1 關 → 到頂（四捨五入） */
     var SIM_P = [0, 1];                         /* 錯誤選項「長得像」的程度：第 1 關 → 到頂 */
+    var BLUR_PX = [1.5, 6];                     /* 火車開過去時的橫向動態模糊半徑（px，只糊水平方向）：第 1 關 → 到頂；兩個都填 0 就沒有模糊 */
     var ANSWER_S = 30;                           /* 火車開走之後，選號碼的時間（秒） */
     var LEAD_MS = 600;                          /* 進場後等多久火車才開始進來（讓玩家先看提示） */
     var CAR_GAP = 10;                           /* 車廂之間的距離（px，中間有連結器） */
@@ -51,6 +55,7 @@
     function carsFor(level) { return Math.round(ramp(level, CARS)); }
     function decoysFor(level) { return Math.round(ramp(level, DECOY_STICKERS)); }
     function simPFor(level) { return Math.round(ramp(level, SIM_P) * 1000) / 1000; }
+    function blurFor(level) { return Math.max(0, Math.round(ramp(level, BLUR_PX) * 10) / 10); }  /* 這一關的橫向模糊半徑（px，取到小數 1 位；最少 0） */
     /* 版面尺寸：stage 寬 W → 車廂寬、高、整列火車的寬 */
     function trainSize(W, cars) {
         var cw = Math.round(W * CAR_W_RATIO), ch = Math.round(cw * CAR_ASPECT);
@@ -95,7 +100,7 @@
     }
     /* 出一關：{
          level, number（號碼字串）, digits, options（4 個選項，已洗牌）, answerIdx, cars（車廂數）, target（貼號碼的車廂，從 0 算起）,
-         windows（每節車廂窗戶裡的東西）, stickers（{車廂編號: 字母}，干擾貼紙）, viewS, simP } */
+         windows（每節車廂窗戶裡的東西）, stickers（{車廂編號: 字母}，干擾貼紙）, viewS, simP, blur（橫向模糊半徑 px）} */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
         var d = digitsFor(level), cars = carsFor(level), simP = simPFor(level), number = randomNumber(d, rand);
@@ -107,7 +112,7 @@
         for (i = 0; i < cars; i++) windows.push(kit.pick(WINDOWS, rand));
         var others = []; for (i = 0; i < cars; i++) if (i !== target) others.push(i);
         var stickers = {}; kit.shuffle(others, rand).slice(0, Math.min(decoysFor(level), others.length)).forEach(function (ci) { stickers[ci] = kit.pick(LETTERS, rand); });
-        return { level: level, number: number, digits: d, options: opts, answerIdx: opts.indexOf(number), cars: cars, target: target, windows: windows, stickers: stickers, viewS: viewSFor(level), simP: simP };
+        return { level: level, number: number, digits: d, options: opts, answerIdx: opts.indexOf(number), cars: cars, target: target, windows: windows, stickers: stickers, viewS: viewSFor(level), simP: simP, blur: blurFor(level) };
     }
     /* 結算畫面的評語：依成績回傳一句話 */
     function rating(n) {
@@ -161,7 +166,7 @@
         var stage = api.stage, level = api.level;       /* stage：這一關的畫面容器（要畫的東西都放進去）；level：現在是第幾關 */
         var q = makeLevel(level, api.rand);
         api.info = q;                                   /* 把這一關的題目資料掛在 api.info，測試與 debug 用（玩家看不到） */
-        console.log('[動態視力] 第 ' + level + ' 關：號碼 ' + q.number + '（選項 ' + q.options.join('、') + '）；' + q.cars + ' 節車廂，貼在第 ' + (q.target + 1) + ' 節；每節在畫面上 ' + q.viewS + ' 秒；干擾貼紙 ' + Object.keys(q.stickers).length + ' 張');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
+        console.log('[動態視力] 第 ' + level + ' 關：號碼 ' + q.number + '（選項 ' + q.options.join('、') + '）；' + q.cars + ' 節車廂，貼在第 ' + (q.target + 1) + ' 節；每節在畫面上 ' + q.viewS + ' 秒；橫向模糊 ' + q.blur + ' px；干擾貼紙 ' + Object.keys(q.stickers).length + ' 張');  /* 在瀏覽器主控台（按 F12）印出這一關的出題內容，方便除錯與驗證 */
 
         var W = stage.clientWidth || 472, H = stage.clientHeight || 640;
         var T = trainSize(W, q.cars), v = speedFor(W, T.cw, q.viewS), endX = -(T.total + TAIL_PAD), passS = passSeconds(W, T.total + TAIL_PAD, v);
@@ -201,7 +206,16 @@
         }
         /* 窗戶的裁切範圍（讓窗內的東西不會超出玻璃）：放一個隱藏的 svg 定義 */
         var defs = kit.svg('svg', { 'class': 'kinetic-defs', width: 0, height: 0 }, field);
-        var cp = kit.svg('clipPath', { id: 'kinetic-clip' }, kit.svg('defs', {}, defs)); kit.svg('rect', { x: 0, y: 0, width: 160, height: 80, rx: 8 }, cp);
+        var defsEl = kit.svg('defs', {}, defs);
+        var cp = kit.svg('clipPath', { id: 'kinetic-clip' }, defsEl); kit.svg('rect', { x: 0, y: 0, width: 160, height: 80, rx: 8 }, cp);
+        /* 橫向動態模糊：SVG 濾鏡 feGaussianBlur 的 stdDeviation 填「橫向 縱向」兩個數字，縱向填 0 就只糊水平方向；
+           套在整列火車（strip）上，所以車身、窗戶、號碼貼紙、干擾貼紙會一起糊。color-interpolation-filters="sRGB" 讓顏色不會被濾鏡改變。 */
+        if (q.blur > 0) {
+            var fid = 'kinetic-hblur' + (++blurSeq);
+            var flt = kit.svg('filter', { id: fid, x: '-10%', y: '-5%', width: '120%', height: '110%', 'color-interpolation-filters': 'sRGB' }, defsEl);
+            kit.svg('feGaussianBlur', { stdDeviation: q.blur + ' 0' }, flt);
+            strip.style.filter = 'url(#' + fid + ')';
+        }
         var info = h('div', { 'class': 'qz-note kinetic-info', text: '' }); info.style.top = (trainTop + T.ch + 34) + 'px'; field.appendChild(info);
 
         var phase = 'run', done = false, grid = null, x0 = W;
@@ -220,6 +234,7 @@
         function ask() {
             if (phase !== 'run') return;
             phase = 'ask'; tip.textContent = '剛才窗戶上的號碼是？';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
+            strip.style.filter = '';                    /* 火車已經開走：拿掉模糊（之後揭曉倒車時，號碼要清清楚楚） */
             grid = kit.btnGrid(field, q.options.map(function (o, k) { return { text: o, kind: 'line', cls: 'kinetic-opt', onTap: function () { judge(k); } }; }), { cols: 2, h: 92, gap: 10, bottom: 8 });  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
             if (level === 1 && kit.once('kinetic.hint')) kit.hintOn(stage, grid.btns[q.answerIdx], { mode: 'tap', delay: 900, text: '請點剛才看到的號碼' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
             api.timer(ANSWER_S * 1000, function () { judge(-1); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
@@ -252,14 +267,14 @@
     var G = {
         id: ID,
         name: '動態視力',
-        rule: '一列火車從右往左開過去，**其中一節車廂的窗戶貼著黃底黑字的號碼**。火車開走之後，從下面 **4 個選項**點出那個號碼。別的窗戶裡有乘客、便當、報紙，後面還會貼**英文字母**的假貼紙來干擾你。越後面，火車開得越快（第 30 關每節車廂只在畫面上 **0.5 秒**）、號碼越長、錯的選項越像（0 和 8、3 和 8、1 和 7……）。點錯或時間到就結束，看你能過幾關。',
+        rule: '一列火車從右往左開過去，**其中一節車廂的窗戶貼著黃底黑字的號碼**。火車開走之後，從下面 4 個選項點出那個號碼。別的窗戶裡有乘客、便當、報紙，後面還會貼**英文字母**的假貼紙來干擾你。越後面，火車開得越快（第 30 關每節車廂只在畫面上 **0.25 秒**）、整列車越**橫向模糊**、號碼越長、錯的選項越像（0 和 8、3 和 8、1 和 7……）。點錯或時間到就結束，看你能過幾關。',
         mount: mount,
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
-            viewSFor: viewSFor, digitsFor: digitsFor, carsFor: carsFor, decoysFor: decoysFor, simPFor: simPFor, trainSize: trainSize, speedFor: speedFor, passSeconds: passSeconds, trainX: trainX, carOffset: carOffset, revealX: revealX,
+            viewSFor: viewSFor, digitsFor: digitsFor, carsFor: carsFor, decoysFor: decoysFor, simPFor: simPFor, blurFor: blurFor, trainSize: trainSize, speedFor: speedFor, passSeconds: passSeconds, trainX: trainX, carOffset: carOffset, revealX: revealX,
             diffPositions: diffPositions, allSimilar: allSimilar, randomNumber: randomNumber, swapDigit: swapDigit, makeDecoy: makeDecoy, makeLevel: makeLevel, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, VIEW_S: VIEW_S, DIGITS: DIGITS, CARS: CARS, DECOY_STICKERS: DECOY_STICKERS, SIM_P: SIM_P, ANSWER_S: ANSWER_S, CAR_GAP: CAR_GAP, SIM: SIM, LETTERS: LETTERS, WINDOWS: WINDOWS, MAX_LEVEL: MAX_LEVEL, REVERSE_MS: REVERSE_MS, ZOOM_MS: ZOOM_MS
+            RAMP_LEVELS: RAMP_LEVELS, VIEW_S: VIEW_S, DIGITS: DIGITS, CARS: CARS, DECOY_STICKERS: DECOY_STICKERS, SIM_P: SIM_P, BLUR_PX: BLUR_PX, ANSWER_S: ANSWER_S, CAR_GAP: CAR_GAP, SIM: SIM, LETTERS: LETTERS, WINDOWS: WINDOWS, MAX_LEVEL: MAX_LEVEL, REVERSE_MS: REVERSE_MS, ZOOM_MS: ZOOM_MS
         }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */

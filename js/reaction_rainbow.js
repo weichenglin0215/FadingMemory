@@ -129,6 +129,7 @@
       /* targets 目前要點的顏色清單；hits 成功點擊數（成績）；steps 已換過幾個方塊（決定間隔縮到多短）；pending 還沒被點掉的目標方塊 */
       var targets = [RED];
       var hits = 0;               /* 成功點擊的目標數（成績） */
+      Reaction.leaveScore = function () { return hits > 0 ? hits : null; };      /* 玩到一半按「返回」時，目前點中幾個（V1.57.0；見 kit.settleOnLeave） */
       var stageHits = 0;          /* 這個階段已經成功點擊的目標數 */
       var steps = 0;              /* 已經換過幾個方塊（決定間隔縮到多短） */
       var cur = -1;               /* 目前最新的方塊在 ORDER 裡的位置 */

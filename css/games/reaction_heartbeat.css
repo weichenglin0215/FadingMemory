@@ -1,11 +1,18 @@
 /* ═══════════════════════════════════════
    reaction_heartbeat.css — 心跳複製（js/reaction_heartbeat.js）的專屬樣式
    · 這個檔案裡的 class 名稱一律以「heartbeat-」開頭，只給這一款遊戲用，不會跟別款撞名。
-   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數。
+   · V1.57.0 改版：8 個白色圓形排成一圈，依序亮起藍色（要點，圓裡有手指）或橘色（不能點）；點對變綠色、點錯變紅色。
    ═══════════════════════════════════════ */
 
-/* 心跳複製：跟著節奏點擊（複製電腦的心跳節奏）。 */
 /* ═══ 心跳複製（.heartbeat-）═══ */
+/* 整個遊戲畫面（.screen 是各遊戲共用的容器，JS 在開局時加上 heartbeat-screen、離開時拿掉）：畫面上任何位置都可以點，所以整個畫面都關掉瀏覽器的觸控手勢 */
+.screen.heartbeat-screen {
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），畫面上任何位置的點擊都由程式處理 */
+    user-select: none;                                  /* 文字不能被選取（避免誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免誤選） */
+}
+
 /* 標題 */
 .heartbeat-head {
     text-align: center;                                 /* 文字置中 */
@@ -21,17 +28,15 @@
 /* 場地 */
 .heartbeat-field {
     position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的子元素以它為基準 */
-    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto（0 0 = 固定大小，1 1 auto = 有空間就長大） */
+    flex: 1 1 auto;                                     /* 彈性縮放：放大比例 1、縮小比例 1、基本大小 auto */
     min-height: 0;                                      /* 最小高度：0 */
     overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
     background: var(--c-card);                          /* 背景：主題變數 --c-card */
     border: var(--bd);                                  /* 邊框（粗細、線型、顏色）：主題變數 --bd */
     border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
-    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
-    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
 }
 
-/* SVG */
+/* SVG（畫 8 個圓） */
 .heartbeat-svg {
     position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
     inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
@@ -40,108 +45,68 @@
     display: block;                                     /* 獨佔一整行的區塊 */
 }
 
-/* 空位置（虛線圈） */
-.heartbeat-slot {
-    fill: none;                                         /* SVG 圖形的填色：none */
-    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
-    stroke-width: 3px;                                  /* SVG 線條粗細：3px */
-    stroke-dasharray: 6 8;                              /* SVG 虛線的「畫／空」長度：6 8 */
-    opacity: 0.5;                                       /* 透明度 0.5（1＝完全不透明、0＝全透明） */
-}
-
-/* 錯誤的位置（粗紅線） */
-.heartbeat-slot--bad {
-    stroke: var(--c-bad);                               /* SVG 線條顏色：主題變數 --c-bad */
-    stroke-width: 8px;                                  /* SVG 線條粗細：8px */
-    stroke-dasharray: none;                             /* SVG 虛線的「畫／空」長度：none */
-    opacity: 1;                                         /* 透明度 1（1＝完全不透明、0＝全透明） */
-}
-
-/* 心形球的外框 */
-.heartbeat-ball__body {
-    stroke: rgba(0, 0, 0, 0.3);                         /* SVG 線條顏色：rgba(0, 0, 0, 0.3) */
-    stroke-width: 3px;                                  /* SVG 線條粗細：3px */
-}
-
-/* 左邊的球（藍） */
-.heartbeat-ball--L .heartbeat-ball__body {
-    fill: #4A90D9;                                      /* SVG 圖形的填色：#4A90D9 */
-}
-
-/* 中間的球（橘） */
-.heartbeat-ball--C .heartbeat-ball__body {
-    fill: #F08A24;                                      /* SVG 圖形的填色：#F08A24 */
-}
-
-/* 右邊的球（綠） */
-.heartbeat-ball--R .heartbeat-ball__body {
-    fill: #3FA46A;                                      /* SVG 圖形的填色：#3FA46A */
-}
-
-/* 倒數圈 */
-.heartbeat-ring {
-    fill: none;                                         /* SVG 圖形的填色：none */
+/* 圓形：預設白色（沒有亮），黑褐色外框 */
+.heartbeat-disc {
+    fill: var(--c-on-accent);                           /* SVG 圖形的填色：白色（主題變數 --c-on-accent） */
     stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
-    stroke-width: 9px;                                  /* SVG 線條粗細：9px */
-    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke-width: 4px;                                  /* SVG 線條粗細：4px */
 }
 
-/* 晚了的倒數圈（紅） */
-.heartbeat-ring--late {
-    stroke: #E0342A;                                    /* SVG 線條顏色：#E0342A */
+/* 藍色：要點（圓裡有手指圖示） */
+.heartbeat-c--blue .heartbeat-disc {
+    fill: var(--c-blue);                                /* SVG 圖形的填色：主題變數 --c-blue */
 }
 
-/* 點掉心之後留在原位的倒數圈：綠色，繼續跑完 */
-.heartbeat-ring--done {
-    stroke: var(--c-ok);                                /* SVG 線條顏色：主題變數 --c-ok */
+/* 橘色：不能點 */
+.heartbeat-c--orange .heartbeat-disc {
+    fill: var(--c-orange);                              /* SVG 圖形的填色：主題變數 --c-orange */
 }
 
-/* 空拍的倒數圈：沒有心，用淺灰色 */
-.heartbeat-ring--empty {
-    stroke: var(--c-ink-soft);                          /* SVG 線條顏色：主題變數 --c-ink-soft */
-    opacity: 0.55;                                      /* 透明度 0.55（1＝完全不透明、0＝全透明） */
+/* 綠色：點對了 */
+.heartbeat-c--ok .heartbeat-disc {
+    fill: var(--c-green);                               /* SVG 圖形的填色：主題變數 --c-green */
 }
 
-/* 點中：放大並淡出（pop 動畫） */
-.heartbeat-ball--hit {
-    transform-origin: center;                           /* 變形的基準點：center */
-    animation: heartbeat-pop 0.26s ease-out forwards;   /* 播放動畫（名稱、時間、緩動、次數）：heartbeat-pop 0.26s ease-out forwards */
+/* 紅色：點錯了（點到橘色）或漏掉藍色 */
+.heartbeat-c--bad .heartbeat-disc {
+    fill: var(--c-red);                                 /* SVG 圖形的填色：主題變數 --c-red */
 }
 
-/* 漏掉：只淡出 */
-.heartbeat-ball--miss {
-    animation: heartbeat-fade 0.26s ease-out forwards;  /* 播放動畫（名稱、時間、緩動、次數）：heartbeat-fade 0.26s ease-out forwards */
+/* 手指圖示：只有藍色的圓才顯示（表示可以點擊） */
+.heartbeat-finger {
+    display: none;                                      /* 不顯示 */
+    fill: var(--c-card);                                /* SVG 圖形的填色：主題變數 --c-card */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 2.4px;                                /* SVG 線條粗細：2.4px */
+    stroke-linejoin: round;                             /* SVG 轉角形狀：round */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
-/* pop 動畫：1 倍不透明 → 1.5 倍透明 */
-@keyframes heartbeat-pop {
-    from {
-        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
-        transform: scale(1);                            /* 變形：縮放 1 倍 */
-    }
-
-    to {
-        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
-        transform: scale(1.5);                          /* 變形：縮放 1.5 倍 */
-    }
+/* 藍色的圓裡面才有手指 */
+.heartbeat-c--blue .heartbeat-finger {
+    display: block;                                     /* 顯示 */
 }
 
-/* 淡出動畫 */
-@keyframes heartbeat-fade {
-    from {
-        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
-    }
-
-    to {
-        opacity: 0;                                     /* 透明度 0（1＝完全不透明、0＝全透明） */
-    }
+/* 下方的提示文字：可點擊畫面任何位置 */
+.heartbeat-tip {
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 10px;                                       /* 離下邊 10px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 主題變數 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    white-space: pre-line;                              /* 文字裡的換行符號（\n）照樣換行，兩句各一行 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
 /* 受傷閃紅光（全畫面半透明紅） */
 .heartbeat-hurt {
     position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
     inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
-    background: rgba(224, 52, 42, 0.35);                /* 背景：rgba(224, 52, 42, 0.35) */
+    background: var(--c-red);                           /* 背景：主題變數 --c-red（用動畫把它變半透明） */
     opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
     pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
@@ -151,10 +116,10 @@
     animation: heartbeat-hurt 0.35s ease-out;           /* 播放動畫（名稱、時間、緩動、次數）：heartbeat-hurt 0.35s ease-out */
 }
 
-/* 閃光動畫 */
+/* 閃光動畫：一開始 35% 的紅，慢慢消失 */
 @keyframes heartbeat-hurt {
     from {
-        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
+        opacity: 0.35;                                  /* 透明度 0.35（1＝完全不透明、0＝全透明） */
     }
 
     to {

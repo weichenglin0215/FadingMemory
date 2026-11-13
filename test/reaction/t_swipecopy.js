@@ -1,5 +1,6 @@
 // 反著滑（swipecopy，企劃 312 依使用者修改；V1.36.0 改成一次一個箭頭、箭頭一出現就可以滑）的純函式檢查：
 // 方向編號與反方向、滑動方向判定（4／8 個扇形）、九宮格（箭頭所指的那一格、隨關卡增加的「任意一格」機率）、題目、難度線性、接線
+// V1.57.0：手指路徑的圖形（起點指向終點的箭頭）、整個畫面都能滑、失敗畫面留 3 秒、橫式紅框、標題列空隙縮小（畫面實測在 browser_swipecopy.mjs）
 const { game, rng, seedOf } = require('./load.js');
 const G = game('reaction_swipecopy.js'); const T = G.test;
 let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log('FAIL', m); } };
@@ -86,17 +87,49 @@ for (const lv of [1, 10, T.RAMP_LEVELS]) { const n = cnt[lv] || 0, p = n ? (blue
 // 程式裡的接線
 { const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_swipecopy.js'), css = rd('../../css/games/reaction_swipecopy.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
   ok(src.indexOf("phase = 'live'; t0 = performance.now()") > 0 && src.indexOf('if (d >= 0) judge(d, performance.now() - t0)') > 0, '箭頭一出現就開始計時，位移超過 MIN_SWIPE 就立刻判定（不用等手指放開）');
-  ok(src.indexOf("api.after(q.respMs, function () { if (phase === 'live') fail(-1, 0); })") > 0 && src.indexOf('api.after(q.showMs, function () { if (popEl') > 0, '箭頭亮 showMs 之後消失，但可以滑到 respMs 為止，超時就失敗');
+  ok(src.indexOf("api.after(q.respMs, function () { if (phase === 'live') fail(-1, 0); })") > 0 && src.indexOf('api.after(q.showMs, function () { if (!keepPop && popEl') > 0, '箭頭亮 showMs 之後消失，但可以滑到 respMs 為止，超時就失敗');
   ok(src.indexOf("if (phase !== 'live' || done || api.over) { if (phase === 'wait')") > 0, '箭頭出現之前的滑動不算');
   ok(src.indexOf("(rt / 1000).toFixed(4) + ' 秒'") > 0, '過關後顯示反應時間（4 位小數的秒）');
-  ok(src.indexOf('api.fail({ delay: 2600') > 0 && /swipecopy-cell--bad/.test(src) && /opposite/.test(src), '失敗：箭頭、該滑的方向、你滑的方向並排、紅色標記、停格 2 秒以上');
+  ok(src.indexOf('api.fail({ delay: FAIL_MS') > 0 && /swipecopy-cell--bad/.test(src) && /opposite/.test(src), '失敗：箭頭、該滑的方向、你滑的方向並排、紅色標記、停格 FAIL_MS（3 秒）');
   ok(css.indexOf('.swipecopy-gridline { position: absolute;') >= 0 && /\.swipecopy-sign__disc \{[^}]*var\(--swc-blue\)/.test(css) && /\.swipecopy-cell--bad \{[^}]*var\(--c-bad/.test(css), '九宮格線、藍色圓牌、紅色用 CSS 變數');
   const cssNc = rd('../../css/games/reaction_swipecopy.css').replace(/\/\*[\s\S]*?\*\//g, '').split(/\s+/).join(' '), theme = rd('../../css/theme.css').replace(/\/\*[\s\S]*?\*\//g, '').split(/\s+/).join(' ');
   ok(/\.swipecopy-sign--red \.swipecopy-sign__disc \{[^}]*var\(--swc-red\)/.test(cssNc) && /--swc-red: hsl\(/.test(theme), '紅色底色的箭頭用 CSS 變數 --swc-red');
   ok(!/sign--mine/.test(cssNc) && !/sign--mine/.test(src) && !/--c-orange/.test(cssNc.split('@keyframes')[0].replace(/[^{}]*\.swipecopy-sign--req[^}]*\}/, '')), '取消答對之後的橘色圓牌箭頭');
   ok(/\.swipecopy-bare__arrow \{[^}]*var\(--c-on-accent\)/.test(cssNc) && /bareArrow\(fl, d, FS\)/.test(src) && !/sign\(fl,/.test(src), '滑完閃一下的是白色箭頭（沒有圓底）');
-  ok(T.FLASH_OPACITY === 0.5 && T.FLASH_FRAC === 0.5 && /opacity:' \+ FLASH_OPACITY/.test(src) && /Math\.floor\(zw \/ 3 \* FLASH_FRAC \* 68 \/ 62\)/.test(src) && /@keyframes swipecopy-fade \{ from \{[^}]*opacity: 0\.5/.test(cssNc), '閃的箭頭半透明 50%、箭頭長度是九宮格一格寬度的 1/2');
+  ok(T.FLASH_OPACITY > 0 && T.FLASH_OPACITY <= 1 && T.FLASH_FRAC > 0 && /opacity:' \+ FLASH_OPACITY/.test(src) && /Math\.floor\(zw \/ 3 \* FLASH_FRAC \* 68 \/ 62\)/.test(src) && /@keyframes swipecopy-fade \{ from \{[^}]*opacity: 0\.5/.test(cssNc), '閃的箭頭半透明（FLASH_OPACITY；原本 50%，使用者手調過）、箭頭長度是九宮格一格寬度的 FLASH_FRAC 倍');
   ok(/藍色底色的箭頭要順著箭頭方向滑/.test(G.rule) && /紅色底色的箭頭要逆著箭頭方向滑/.test(G.rule), '玩法說明提到藍色順著、紅色逆著');
   ok(boot.indexOf("'js/reaction_swipecopy.js'") > 0 && /逆著/.test(G.rule) && /九宮格/.test(G.rule) && /越快/.test(G.rule), 'boot.js 有載入、玩法說明提到九宮格、反方向、越快越好'); }
+// ── V1.57.0 玩家意見：手指路徑用白色粗線畫出來、結尾加箭頭（起點指向終點）；失敗時畫面留 3 秒；整個遊戲畫面都能滑 ──
+{ const P = (x, y) => ({ x, y }), HL = 36, HW = 21;
+  ok(Array.isArray(T.TRAIL_HEAD) && T.TRAIL_HEAD.length === 2 && T.TRAIL_HEAD.every(x => x > 0), '結尾箭頭大小參數 TRAIL_HEAD 是 [長度, 半寬]：' + T.TRAIL_HEAD);
+  ok(T.FAIL_MS >= 3000, '失敗之後遊戲畫面保留至少 3 秒（FAIL_MS ' + T.FAIL_MS + '）');
+  ok(T.trailGeom([P(10, 10)], HL, HW).head === null && T.trailGeom([P(10, 10)], HL, HW).line.length === 1, '只有一個點（剛按下去）：沒有箭頭');
+  ok(T.trailGeom([P(0, 0), P(10, 5)], HL, HW).head === null, '路徑短於 16 px：不畫箭頭');
+  const gr = T.trailGeom([P(0, 0), P(50, 0), P(100, 0)], HL, HW);
+  ok(gr.head && gr.head.length === 3 && near(gr.head[0].x, 100 + HL) && near(gr.head[0].y, 0), '箭頭的尖端在路徑終點再往前 ' + HL + '（平的那一端才在終點）');
+  ok(near(gr.dx, 1) && near(gr.dy, 0), '往右滑：方向是 (1, 0)');
+  ok(near(gr.head[1].x, 100) && near(gr.head[2].x, 100) && near(gr.head[1].y, -gr.head[2].y) && near(Math.abs(gr.head[1].y), HW), '箭頭底邊（平的那一端）就在路徑終點，左右對稱、半寬 ' + HW);
+  ok(gr.line.length === 3 && near(gr.line[0].x, 0) && near(gr.line[1].x, 50) && near(gr.line[2].x, 100 + HL * 0.3), '路徑的線最後一點縮進箭頭裡（粗線的尾巴不會從箭頭尖端戳出來）');
+  const gc = T.trailGeom([P(0, 0), P(100, 0), P(100, 100)], HL, HW);
+  ok(near(gc.dx, Math.SQRT1_2) && near(gc.dy, Math.SQRT1_2) && near(gc.head[0].x, 100 + HL * Math.SQRT1_2) && near(gc.head[0].y, 100 + HL * Math.SQRT1_2), '箭頭方向是「起點指向終點」（先往右再往下的路徑，箭頭指向右下 45°），不是最後一小段的方向');
+  const gs = T.trailGeom([P(0, 0), P(30, 0)], HL, HW), base = { x: (gs.head[1].x + gs.head[2].x) / 2, y: (gs.head[1].y + gs.head[2].y) / 2 };
+  ok(Math.hypot(gs.head[0].x - base.x, gs.head[0].y - base.y) <= 30 * 0.7 + 1e-9 && Math.hypot(gs.head[0].x - base.x, gs.head[0].y - base.y) < HL && near(base.x, 30), '路徑不夠長（30 px）：箭頭按比例縮小（長度不超過路徑的 70%）');
+  for (let d = 0; d < 8; d++) { const v = T.vec(d), g = T.trailGeom([P(200, 300), P(200 + v.x * 100, 300 + v.y * 100)], HL, HW);
+    ok(near(g.dx, v.x, 1e-9) && near(g.dy, v.y, 1e-9) && T.swipeDir(g.dx * 100, g.dy * 100, 8) === d, '沿 ' + T.NAMES[d] + ' 滑：箭頭也指向 ' + T.NAMES[d]);
+    const b = { x: (g.head[1].x + g.head[2].x) / 2, y: (g.head[1].y + g.head[2].y) / 2 }; ok(near((g.head[1].x - b.x) * v.x + (g.head[1].y - b.y) * v.y, 0, 1e-9), '箭頭底邊跟方向垂直：' + T.NAMES[d]); } }
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_swipecopy.js'), cssNc = rd('../../css/games/reaction_swipecopy.css').replace(/\/\*[\s\S]*?\*\//g, '').split(/\s+/).join(' ');
+  ok(/root\.addEventListener\('pointerdown', onDown\)/.test(src) && /root\.addEventListener\('pointermove', onMove\)/.test(src) && /root\.addEventListener\('pointerup', onUp\)/.test(src) && !/zone\.addEventListener\('pointer/.test(src), '手指事件掛在整個遊戲畫面（root）上，不是只有九宮格');
+  ok(/root\.removeEventListener\('pointerdown', onDown\)/.test(src) && /root\.__swipecopyOff\(\)/.test(src) && /api\.my\.onDispose\(detach\)/.test(src), '換關時把上一關掛在畫面上的監聽拿掉、離開遊戲時也拿掉');
+  ok(/root\.classList\.add\('swipecopy-screen'\)/.test(src) && /root\.classList\.remove\('swipecopy-screen'\)/.test(src) && src.indexOf("root.classList.add('swipecopy-screen')") < src.indexOf('var W = stage.clientWidth'), '標題列空隙縮小的 class 有加（要在量遊戲區大小之前）、離開時有拿掉');
+  ok(!/zone\.style\.display\s*=\s*'none'/.test(src), '失敗時不再把九宮格藏起來');
+  ok(/api\.fail\(\{ delay: FAIL_MS/.test(src), '失敗之後等 FAIL_MS 才進結算');
+  ok(/keepPop = true/.test(src) && /if \(!keepPop && popEl/.test(src) && /popEl\.className = 'swipecopy-pop swipecopy-pop--still'; zone\.appendChild\(popEl\)/.test(src), '失敗時箭頭留在它出現的那一格（已經消失的放回來、之後不再消失）');
+  ok(src.indexOf('trail.push(p); drawTrail();') > 0 && src.indexOf('trail.push(p); drawTrail();') < src.indexOf('if (d >= 0) judge('), '先畫路徑、再判定（答錯時畫面上看得到你滑的路徑）');
+  ok(/trailGeom\(trail, TRAIL_HEAD\[0\], TRAIL_HEAD\[1\]\)/.test(src) && /swipecopy-trail__line/.test(src) && /swipecopy-trail__head/.test(src), '路徑與結尾箭頭有畫出來');
+  ok(/\.screen\.swipecopy-screen \{[^}]*gap: 2px[^}]*padding-top: 4px[^}]*padding-bottom: 6px/.test(cssNc) && /\.screen\.swipecopy-screen \.rx-head \{[^}]*line-height: 1\.1/.test(cssNc), '標題列、時間條、遊戲區的空隙縮小（gap 2px、上方 4px、下方 6px），標題列行高 1.1');
+  ok(/\.swipecopy-cell \{[^}]*flex-direction: row/.test(cssNc) && /\.swipecopy-cell__item \{[^}]*flex-direction: column/.test(cssNc), '失敗的紅框是橫式（小格由左往右排，每格上字下圖）');
+  ok(/\.swipecopy-trail__line \{[^}]*var\(--c-on-accent\)/.test(cssNc) && Number((/\.swipecopy-trail__line \{[^}]*stroke-width: (\d+)/.exec(cssNc) || [0, 0])[1]) >= 8 && /\.swipecopy-trail__head \{[^}]*var\(--c-on-accent\)/.test(cssNc), '路徑是白色粗線（stroke-width ≥ 8），結尾箭頭也是白色');
+  { const z = n => Number((new RegExp('\\.' + n + ' \\{[^}]*z-index: (\\d+)').exec(cssNc) || [0, -1])[1]); ok(z('swipecopy-trail') >= 1 && z('swipecopy-strip') > z('swipecopy-trail') && z('swipecopy-info') > z('swipecopy-trail'), '手指路徑疊在九宮格上面、紅框與文字說明下面（說明不會被路徑擋住）'); }
+  ok(/\.swipecopy-trail \{[^}]*pointer-events: none/.test(cssNc) && /\.swipecopy-pop--still \{[^}]*animation: none/.test(cssNc), '路徑圖層不擋觸控；放回來的箭頭不再播放出現動畫'); }
 ok(T.rating(2) !== T.rating(4) && T.rating(4) !== T.rating(7) && T.rating(7) !== T.rating(12) && T.rating(12) !== T.rating(20), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

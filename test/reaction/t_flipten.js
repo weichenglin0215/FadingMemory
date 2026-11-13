@@ -6,7 +6,7 @@ const SEED = seedOf(20261109); const rnd = rng(SEED);
 
 ok(G.id === 'flipten' && [...G.name].length <= 5 && /\*\*/.test(G.rule) && G.score.better === 'max' && G.score.min === 1 && G.score.max === 90, '登記資料');
 // 張數與寬限曲線
-T.STAGES.forEach((st, i) => { const from = i === 0 ? 1 : T.STAGES[i - 1].to + 1; ok(T.cardsFor(from) === st.cards && T.cardsFor(Math.min(st.to, from + 2)) === st.cards, '階段 ' + st.cards + ' 張'); ok(st.cards % T.COLS === 0, st.cards + ' 張排得成 ' + T.COLS + ' 欄'); });
+T.STAGES.forEach((st, i) => { const from = i === 0 ? 1 : T.STAGES[i - 1].to + 1; ok(T.cardsFor(from) === st.cards && T.cardsFor(Math.min(st.to, from + 2)) === st.cards, '階段 ' + st.cards + ' 張'); ok(st.cards >= 2 && st.cards % 2 === 0, st.cards + ' 張是偶數（兩張一組；使用者調過張數，最後一列可以不滿）'); });
 ok(T.slackFor(1) === T.SLACK[0] && T.slackFor(T.RAMP_LEVELS) === T.SLACK[1] && T.slackFor(200) === T.SLACK[1], '寬限 ' + T.SLACK);
 // 玩家自己調過 SLACK（目前 2 → 12，後面寬限反而變多）：測試跟著參數走，不假設是變多還是變少
 const slackDir = Math.sign(T.SLACK[1] - T.SLACK[0]);
@@ -100,6 +100,29 @@ ok(T.adjacentPairs([1, 2, 3, 4, 5, 6, 9, 7, 8, 1, 1, 1], 6).map(p => p.join('-')
   // 還是每個數字都有搭檔、全部可以消完
   for (const n of [6, 24, 48]) for (let i = 0; i < 30; i++) { const d = T.deal(n, rnd), c = new Array(11).fill(0); d.forEach(v => c[v]++); ok([1, 2, 3, 4].every(a => c[a] === c[10 - a]) && c[5] % 2 === 0, n + ' 張 spread 後每個數字還是有搭檔'); }
 }
+
+
+// ── 牌（答案格子）的高度參數 CARD_H（預設 0.95＝牌寬的 0.95 倍；翻牌湊十）──
+{ const size = T.cardSize, def = 0.95, W = 472, H = 700, base = size(W, H, 6, T.COLS, def);
+  ok(T.CARD_H > 0.3 && T.CARD_H < 3, '牌高參數 CARD_H 是牌寬的幾倍（預設 0.95；使用者可以調，目前 ' + T.CARD_H + '）');
+  ok(base.cw === Math.floor(W * 0.96 / T.COLS) - 8 && base.ch === Math.floor(base.cw * def) && base.rows === 1, '預設：6 張一列，牌寬 ' + base.cw + '、牌高 ' + base.ch + '＝牌寬 × 0.95');
+  ok(size(W, H, 6, T.COLS, 1.3).ch === Math.floor(base.cw * 1.3) && size(W, H, 6, T.COLS, 0.5).ch === Math.floor(base.cw * 0.5) && size(W, H, 6, T.COLS, 1.3).cw === base.cw, '調大／調小 CARD_H：牌高跟著變、牌寬不變');
+  for (const n of [6, 12, 24, 36, 48]) for (const hr of [0.4, 0.95, 1.3, 2, 5]) { const s = size(W, H, n, T.COLS, hr); ok(s.rows * (s.ch + 8) <= H - 200 && s.ch >= 20 && s.ch <= Math.floor(s.cw * hr), n + ' 張、CARD_H ' + hr + '：所有 ' + s.rows + ' 列放得進畫面（牌高 ' + s.ch + '，共 ' + s.rows * (s.ch + 8) + '／' + (H - 200) + '）'); }
+  { let prev = 0; for (const hr of [0.3, 0.6, 0.95, 1.2, 1.6, 3]) { const s = size(W, H, 30, T.COLS, hr); ok(s.ch >= prev, '牌高隨 CARD_H 增加（不會變矮）'); prev = s.ch; } }
+  ok(size(W, H, 48, T.COLS, 5).ch === Math.floor((H - 200) / 8) - 8 && size(W, H, 48, T.COLS, 5).ch < size(W, H, 6, T.COLS, 5).ch, '牌太多、調太高放不下時，縮到所有列放得進畫面：48 張最高 ' + size(W, H, 48, T.COLS, 5).ch + ' px');
+  { const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_flipten.js');
+    ok(/sz = cardSize\(W, H, n, COLS\)/.test(src) && /cardH == null \? CARD_H : cardH/.test(src), '遊戲真的用 CARD_H 算牌高'); } }
+// ── V1.57.0 玩家意見：加上時間限制，給得很寬鬆，第 1 關 1 分鐘 ──
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8');
+  ok(Array.isArray(T.TIME_S) && T.TIME_S.length === 2 && T.TIME_S.every(x => x > 0), '時間限制參數 TIME_S 是 [第 1 關, 到頂] 秒：' + T.TIME_S);
+  ok(T.timeFor(1) === 60000, '第 1 關給 1 分鐘（' + T.timeFor(1) + ' 毫秒）');
+  ok(T.TIME_S[1] >= T.TIME_S[0], '到頂的時間不比第 1 關短（給得很寬鬆）');
+  for (let lv = 2; lv <= 60; lv++) ok(T.timeFor(lv) >= T.timeFor(lv - 1), '時間限制隨關卡不減少：第 ' + lv + ' 關 ' + T.timeFor(lv) / 1000 + ' 秒');
+  ok(T.timeFor(T.RAMP_LEVELS) === T.TIME_S[1] * 1000 && T.timeFor(99) === T.timeFor(T.RAMP_LEVELS), '到第 ' + T.RAMP_LEVELS + ' 關到頂（' + T.TIME_S[1] + ' 秒），之後維持不變');
+  ok(Number.isInteger(T.timeFor(7)) && T.timeFor(7) % 1000 === 0, '時間限制是整數秒');
+  const src = rd('../../js/reaction_flipten.js'), core = rd('../../js/flipsum_core.js');
+  ok(/api\.timer\(timeMs, function \(\) \{ if \(!over\) failNow\(true\); \}\)/.test(src) && /timeUp \? '時間到了！/.test(src), '畫面真的啟動時間限制（api.timer）、時間到就失敗');
+  ok(/rule: '[^']*每一關有時間限制/.test(src) && !/沒有計時/.test(src.replace(/\/\*[\s\S]*?\*\//g, '')), '玩法說明改成有時間限制（不再寫「沒有計時」）'); }
 
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');
 process.exitCode = bad ? 1 : 0;

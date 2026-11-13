@@ -32,6 +32,9 @@
 
 /* 「inout-svg」這個元素的樣式 */
 .inout-svg {
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md（畫面是方形的框，遠的那一邊的繩子會被裁掉） */
+    outline: 3px solid var(--c-ink-soft);               /* 外框：把方形的畫面框出來，玩家知道框外的繩子看不到 */
+    outline-offset: -3px;                               /* 外框畫在框的裡面 */
     position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
     display: block;                                     /* 獨佔一整行的區塊 */
 }

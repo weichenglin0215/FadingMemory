@@ -1,0 +1,107 @@
+/* ═══════════════════════════════════════
+   reaction_blinkchar.css — 瞬間識字（js/reaction_blinkchar.js）的專屬樣式
+   · 這個檔案裡的 class 名稱一律以「blinkchar-」開頭，只給這一款遊戲用，不會跟別款撞名。
+   · 上方一塊白底（字會在裡面的隨機位置閃一下），下方是答案按鈕方陣（字消失之後才長出來）。
+   · 字的位置、大小、濃淡、按鈕的邊長與字級都由 js 算好寫在元素的 style 上。
+   ═══════════════════════════════════════ */
+
+.blinkchar-wrap {
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    inset: 0;                                           /* 上下左右都貼齊（＝ top／right／bottom／left 都是 0） */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    flex-direction: column;                             /* 子元素由上往下排 */
+    gap: 12px;                                          /* 子元素之間的空隙：12px */
+    touch-action: manipulation;                         /* 關掉雙擊放大，點擊反應更快 */
+    user-select: none;                                  /* 文字不能被選取（避免誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免誤選） */
+}
+
+/* 上方的白底：字會在裡面的隨機位置閃一下 */
+.blinkchar-zone {
+    position: relative;                                 /* 維持原位置，同時讓裡面 absolute 的字以它為基準 */
+    flex: none;                                         /* 彈性縮放：none（高度由 js 設定） */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去 */
+    background: var(--c-on-accent);                     /* 背景：白色（主題變數 --c-on-accent） */
+    border: 3px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-lg);                         /* 圓角：主題變數 --r-lg */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+}
+
+/* 白底正中間的提示文字（字閃出來的那一刻會先藏起來） */
+.blinkchar-msg {
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 50%;                                           /* 離上邊 50%（再往上拉自己高度的一半，就剛好置中） */
+    transform: translateY(-50%);                        /* 變形：往上移自己高度的 50% */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 主題變數 --sp-3 */
+    text-align: center;                                 /* 文字置中 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink-soft);                           /* 文字顏色：主題變數 --c-ink-soft */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+}
+
+/* 閃出來的字：黑色，平常看不見（濃度 0），位置、大小、字級由 js 設定；濃度（不透明度）由 js 依關卡設定 */
+.blinkchar-ch {
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    text-align: center;                                 /* 文字置中 */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    color: var(--c-black);                              /* 文字顏色：黑色（主題變數 --c-black） */
+    opacity: 0;                                         /* 透明度 0（平常看不見；閃的那一刻由 js 改成這一關的濃度） */
+    white-space: nowrap;                                /* 文字不換行 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+}
+
+/* 答對／答錯之後把字用全黑亮出來給玩家看（濃度由 js 設成 1） */
+.blinkchar-ch--reveal {
+    color: var(--c-black);                              /* 文字顏色：黑色（主題變數 --c-black） */
+}
+
+/* 作答之後，說明文字移到題目框的下緣（不壓在揭曉的正確答案字上）；字只會閃在下緣這一條（js 的 MSG_H）以上的範圍 */
+.blinkchar-msg--bottom {
+    top: auto;                                          /* 不再貼著正中央 */
+    bottom: 6px;                                        /* 離下邊 6px */
+    transform: none;                                    /* 取消往上拉的置中變形 */
+    line-height: var(--lh-tight);                       /* 行高：緊一點（一行約 31px），才放得進下緣那一條 */
+}
+
+/* 下方的答案按鈕：字消失之後才放進按鈕；寬度是畫面的 1/6（排滿一排 6 個），按鈕多了就換排，置中；寬、高、空隙由 js 設定 */
+.blinkchar-btns {
+    flex: none;                                         /* 彈性縮放：none（高度由 js 設定） */
+    display: flex;                                      /* 彈性盒子：按鈕排成一列，排不下就換行 */
+    flex-wrap: wrap;                                    /* 排不下就換行 */
+    justify-content: center;                            /* 每一排在水平方向置中（最後一排不滿也置中） */
+    align-content: flex-start;                          /* 按鈕靠上排 */
+    margin: 0 auto;                                     /* 左右置中 */
+}
+
+/* 一個答案按鈕：寬度是畫面的 1/6、高度依排數調整（盡量正方形），字寬是（寬、高較小的）邊的 80%（寬、高、字級由 js 設定） */
+.blinkchar-opt {
+    flex: none;                                         /* 寬高固定，不被拉伸或壓縮 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中、直排時是左右置中） */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    padding: 0;                                         /* 內縮：0 */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去 */
+    border: 3px solid var(--c-ink);                     /* 邊框（粗細、線型、顏色）：3px solid 主題變數 --c-ink */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    font-family: inherit;                               /* 字型：跟畫面一樣 */
+    font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
+    line-height: 1;                                     /* 行高：1（字不多撐出上下空白） */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指 */
+    touch-action: manipulation;                         /* 關掉雙擊放大，點擊反應更快 */
+}
+
+/* 正確答案（揭曉時標綠） */
+.blinkchar-opt--right {
+    background: var(--c-ok);                            /* 背景：主題變數 --c-ok */
+    color: var(--c-on-accent);                          /* 文字顏色：白色（主題變數 --c-on-accent） */
+}
+
+/* 選錯的那一個（揭曉時標橘紅） */
+.blinkchar-opt--wrong {
+    background: var(--c-bad-light);                     /* 背景：主題變數 --c-bad-light */
+}

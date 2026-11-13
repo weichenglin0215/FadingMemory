@@ -33,6 +33,14 @@
     /* Reaction.onLeave：玩家按左上角「返回」時，js/reaction.js 會先呼叫它——回傳 true 表示遊戲已經自己處理了（例如自由解題的遊戲
        先結算並顯示結算卡片），這次不要離開頁面；沒設定、或回傳其他值就直接離開。kit.run 的 o.leaveSettle 會設定它。 */
     Reaction.onLeave = null;
+    /* V1.57.0（玩家意見：玩到一半有事、按「返回」離開，剛剛的最高紀錄就沒送上世界排行榜，不公平）：
+       Reaction.pendingBest：{ id, val }——這一頁剛刷新了個人最佳、但還沒有「結算」（結算彈窗 kit.result 會清掉它、順便送排行榜）。
+         闖關遊戲每過一關就 setBest 一次，所以玩到一半它就有值；按「返回」時 js/reaction.js 會問 kit.settleOnLeave：有機會進前 30 名就先結算（跳出恭喜彈窗、寫入紀錄）再離開。
+       Reaction.leaveScore：遊戲自己登記的函式，回傳「這一局目前的成績」（沒有成績回傳 null）——給「結算前不會先 setBest」的遊戲用（只在結算時才記最佳的那種）。
+       Reaction.leaveCard：因為按「返回」而跳出的結算卡片（遊戲晚一步才跳出自己的結算時，kit.result 看到它還在就不再疊第二張）。 */
+    Reaction.pendingBest = null;
+    Reaction.leaveScore = null;
+    Reaction.leaveCard = null;
 
     /* 最佳紀錄用 localStorage 存，key 用 'fm.reaction.best.' + 遊戲 id 區分
        （例如 'fm.reaction.best.drop'），每款遊戲各自獨立不會互相覆蓋。 */
@@ -51,6 +59,7 @@
             /* V1.35.0：做個記號「這個最佳紀錄是現行版本寫的（單位正確）」——只有帶記號的才會同步到帳號（見 js/identity.js），
                也不會再被下面的 migrateBest 當成舊單位的紀錄去換算。 */
             UI.store.set(Reaction.bestKey(id) + '.sync', true);
+            Reaction.pendingBest = { id: id, val: val };      /* 還沒結算送排行榜（kit.result 會清掉；按「返回」時 kit.settleOnLeave 會看這個） */
             if (global.Identity && global.Identity.noteBest) global.Identity.noteBest(id);
         }
         return isNew;

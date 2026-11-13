@@ -459,7 +459,23 @@
             if (api) api.over = true;
             finish({}, false);
             return true;
-        } : null;
+        } : function () {
+            /* V1.57.0（玩家意見）：一般的闖關遊戲玩到一半按「返回」，用「已經完成的關卡」先結算——
+               刷新了個人最佳而且有機會進前 30 名 → 跳出結算卡片＋恭喜彈窗（再按一次「返回」才離開）；刷新了但進不了榜 → 個人最佳照樣記下、直接離開；沒刷新 → 直接離開 */
+            if (!S || S.finished || S.cleared < startAt) return false;
+            var score = o.scoreOf ? o.scoreOf(S) : (o.scoreBase ? Math.min(S.cleared + o.scoreBase, o.maxLevel || 1e9) : S.cleared);
+            if (!(score > 0)) return false;
+            var verdict = kit.leaveVerdict(o.id, score, 'max');
+            if (verdict === 'none') return false;
+            if (verdict === 'silent') {
+                Reaction.setBest(o.id, score, gt); Reaction.pendingBest = null;
+                if (o.resume !== false && !o.scoreOf && S.level > 1) kit.noteLevel(o.id, S.level);   /* 到過第幾關也記下（下次進場從最佳關卡 − 4 開始） */
+                return false;
+            }
+            if (api) api.over = true;
+            finish({}, false);
+            return true;
+        };
     };
 
     /* ═══════════════════════════════════════════════════════════════

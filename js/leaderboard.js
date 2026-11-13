@@ -823,6 +823,18 @@
     Leaderboard.load = load;
     Leaderboard.cached = cachedBoard;
     Leaderboard.prefetch = prefetch;
+    /* 這個成績「有機會進前 30 名」嗎？（V1.57.0：玩家按「返回」離開時，決定要不要先結算）
+       只看手上的榜單（進場時就抓好了），不連網。回傳 true＝有機會、false＝進不了（或這款遊戲沒有排行榜／成績不在有效範圍）、null＝手上沒有榜單、不知道。 */
+    function wouldQualify(ref, value) {
+        var g = resolveGame(ref);
+        if (!supports(g) || typeof value !== 'number' || !isFinite(value)) return false;
+        var spec = g.score, score = Math.round(value * 10000) / 10000;
+        if (typeof spec.min === 'number' && score < spec.min || typeof spec.max === 'number' && score > spec.max) return false;
+        var board = cachedBoard(g.id);
+        if (!board || !board.top) return null;
+        return qualifies(board, score, spec.better);
+    }
+    Leaderboard.wouldQualify = wouldQualify;
     Leaderboard.submit = submit;
     Leaderboard.getNick = getNick;
     Leaderboard.cleanNick = cleanNick;

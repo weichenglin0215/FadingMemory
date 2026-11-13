@@ -19,7 +19,7 @@
         ['rainbow', 'tap', 900, 1], ['pendulum', 'tap', 900, 1], ['tissue', 'drag', 900, 1], ['landolt', 'drag4', 900, 1], ['lights', 'tap', 12000, 1], ['cups', 'tap', 16000, 1],
         ['pattern', 'drag', 12000, 1], ['illusion', 'tap', 1500, 1], ['pour', 'hold', 900, 1], ['coins', 'tap', 1200, 1], ['invoice', null, 600], ['paint', 'tap', 900, 1],
         ['diff', 'tap', 1200, 1], ['bread', 'drag', 900, 1], ['candy', null, 600], ['curves', null, 600], ['rps', null, 600], ['balloon', 'hold', 900, 1],
-        ['price', 'tap', 1500, 1], ['heartbeat', 'tap', 900, 1], ['sticks', 'tap', 900, 1], ['schulte', 'tap', 900, 1], ['same', null, 600], ['backnum', 'tap', 16000, 1],
+        ['price', 'tap', 1500, 1], ['heartbeat', 'tap', 1800, 1], ['sticks', 'tap', 900, 1], ['schulte', 'tap', 900, 1], ['same', null, 600], ['backnum', 'tap', 16000, 1],
         ['setclock', 'drag', 1200, 1], ['tearcal', 'tap', 1200, 1], ['pillbox', 'drag', 16000, 1], ['fridge', null, 600], ['scallion', 'tap', 900, 1],
         /* V1.20.0 的 28 款裡有提示的（kit.fingerHint／kit.hintOn） */
         ['area', 'drag', 900], ['blindcircle', 'drag', 900], ['rightangle', 'drag', 900], ['samelen', 'drag', 900], ['stamp', 'drag', 900], ['colorrecall', 'drag', 4500],

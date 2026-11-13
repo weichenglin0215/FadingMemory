@@ -157,6 +157,7 @@
 
             /* i 目前第幾題；streak 連續答對數；history 已出過的指令；cmd 目前指令；state 目前階段；token 每題 +1，讓舊計時器知道自己過期；over 是否已失敗 */
             var i = (startAt || 1) - 1, streak = i, history = [], cmd = null, state = 'idle', token = 0, over = false, nowLimit = 1;
+            Reaction.leaveScore = function () { return streak > (startAt || 1) - 1 ? streak : null; };      /* 玩到一半按「返回」時，目前連對幾題（V1.57.0；見 kit.settleOnLeave） */
             var face = faceSvg();
             var pre = h('div', { 'class': 'teacher-bubble__pre', text: ' ' });
             var act = h('div', { 'class': 'teacher-bubble__act', text: ' ' });
