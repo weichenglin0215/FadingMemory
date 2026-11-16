@@ -71,8 +71,8 @@ ok(!/service_role['"]?\s*[:=]\s*['"]eyJ/.test(page) && !/sb_secret_/.test(page),
 }
 
 // ═══ 4. 版面規格 ═══
-ok(/id="tab-games"[^>]*>遊戲分析</.test(page) && /id="tab-players"[^>]*>玩家分析</.test(page) && /id="tab-time"[^>]*>時間分析</.test(page), '三個頁籤：遊戲分析、玩家分析、時間分析');
-ok(/role="tablist"/.test(page) && (page.match(/role="tabpanel"/g) || []).length === 3 && (page.match(/role="tab"/g) || []).length === 3, '頁籤的無障礙標記（tablist／tab／tabpanel）');
+ok(/id="tab-games"[^>]*>遊戲分析</.test(page) && /id="tab-players"[^>]*>玩家分析</.test(page) && /id="tab-time"[^>]*>時間分析</.test(page), '頁籤：遊戲分析、玩家分析、時間分析');
+ok(/role="tablist"/.test(page) && (page.match(/role="tabpanel"/g) || []).length === 4 && (page.match(/role="tab"/g) || []).length === 4, '頁籤的無障礙標記（tablist／tab／tabpanel，四個）');
 ok(/<label class="name" for="dFrom">起始日期<\/label>/.test(page) && /<label class="name" for="dTo">結束日期<\/label>/.test(page), '最上方有「起始日期」「結束日期」兩個分析參數');
 ok(/var DEFAULT_DAYS = 30;/.test(page) && /setDays\(DEFAULT_DAYS\);/.test(page), '預設：30 天前到今天');
 ok(/\{ key: 'name', label: '遊戲名稱'[^}]*\},\s*\{ key: 'cat', label: '遊戲類型', sortable: true[^}]*\},\s*\{ key: 'players', label: '進行遊戲的人數', sortable: true[^}]*\},\s*\{ key: 'plays', label: '遊戲總次數', sortable: true[^}]*\},\s*\{ key: 'stars', label: '星星數量平均值', sortable: true[^}]*\},\s*\{ key: 'best', label: '最佳成績', sortable: false[^}]*\},\s*\{ key: 'bestNick', label: '第一名的玩家', sortable: false/.test(page), '遊戲分析的欄位順序，以及只有類型、人數、次數、星星平均可以排序');
@@ -82,6 +82,42 @@ ok(/每天遊戲總次數/.test(page) && /每天遊戲總人數/.test(page) && /
 ok(!/dual[- ]axis|雙軸|yAxis2|secondary axis/i.test(page), '沒有雙縱軸');
 ok(/prefers-color-scheme: dark/.test(page) && /--s-plays: #2a78d6/.test(page) && /--s-players: #eb6834/.test(page) && /--s-plays: #3987e5; --s-players: #d95926/.test(page), '深色模式有自己的一組顏色（圖表兩個系列色在淺色與深色底都通過色差檢查）');
 ok(/<details class="tv card"/.test(page) && /表格檢視/.test(page), '有「表格檢視」（不靠滑鼠也看得到每天的數字）');
+
+// ═══ 5. 清除玩家遊戲歷程（第四個頁籤，V1.57.1.0；SQL 第 7C 節）═══
+ok(page.indexOf('id="tab-time"') < page.indexOf('id="tab-clear"') && /id="tab-clear"[^>]*data-tab="clear"[^>]*>清除玩家遊戲歷程</.test(page) && /var TABS = \['games', 'players', 'time', 'clear'\]/.test(page), '第四個頁籤「清除玩家遊戲歷程」在「時間分析」的右邊');
+ok(/id="panel-clear"[^>]*role="tabpanel"/.test(page) && /id="cNick"/.test(page) && /id="cPid"/.test(page) && /id="cFrom"/.test(page) && /id="cTo"/.test(page), '頁籤內容有暱稱、player_id、起始日期、結束日期四個輸入欄');
+ok(/for="cNick">玩家暱稱（nickname）</.test(page) && /for="cPid">player_id</.test(page) && /for="cFrom">起始日期</.test(page) && /for="cTo">結束日期</.test(page), '輸入欄的標籤文字');
+ok(/id="btnView">查看玩家遊戲歷程</.test(page) && /id="btnClear">刪除玩家遊戲歷程</.test(page), '兩個按鈕：查看玩家遊戲歷程、刪除玩家遊戲歷程');
+const devPid = /var CLEAR_DEFAULT_PID = '([0-9a-f-]+)'/.exec(page);
+ok(/var CLEAR_DEFAULT_NICK = '阿公好開心';/.test(page) && devPid && devPid[1] === '49a65eea-1af7-4220-accf-7d0de93cc2a3' && /var CLEAR_DEFAULT_DAYS = 7;/.test(page), '預設值：暱稱 阿公好開心、player_id 49a65eea-…、起始日期是 7 天前（結束日期是今天）');
+ok(/addDays\(t, -CLEAR_DEFAULT_DAYS\); cEls\.to\.value = t;/.test(page) && /resetClearForm\(\);/.test(page), '開頁面時把預設值填進去');
+ok(/rpc\('MF_dev_player_history'/.test(page) && /rpc\('MF_dev_clear_player_history'/.test(page), '頁面呼叫 MF_dev_player_history（查看）與 MF_dev_clear_player_history（刪除）');
+{
+  const script = page.slice(page.indexOf('<script>')), iClr = script.indexOf('async function clearHistory'), body = script.slice(iClr, script.indexOf('// ───────── 八、頁籤', iClr));
+  ok(body.indexOf('fetchHistory(f)') > 0 && body.indexOf('window.confirm(') > body.indexOf('fetchHistory(f)') && body.indexOf("rpc('MF_dev_clear_player_history'") > body.indexOf('window.confirm('), '刪除的順序：先查一次 → 跳出確認視窗 → 確定才呼叫刪除函式');
+  ok(/if \(!window\.confirm\(msg\)\) \{[^}]*return;/.test(body) && /沒有東西可以刪/.test(body), '按「取消」就不刪；沒有紀錄也不呼叫刪除');
+  ok(/UUID_RE\.test\(pid\)/.test(script) && /MAX_DAYS/.test(script.slice(script.indexOf('function readClearForm'), script.indexOf('function historyArgs'))), '送出前檢查：暱稱不能空、player_id 要是 UUID 格式、日期範圍最長 400 天');
+  ok(/if \(tab !== 'clear'\) saveSettings\(\{ tab: tab \}\)/.test(script) && /saved = \['games', 'players', 'time'\]/.test(script), '下次打開網頁不會自己停在「清除」頁籤（只有網址是 #clear 才會）');
+  ok(/els\.form\.hidden = tab === 'clear'/.test(script), '在清除頁籤，上面共用的分析日期參數列會隱藏（避免跟清除頁籤自己的日期混淆）');
+}
+{
+  const fnHead = (f) => { const b = sql.slice(sql.indexOf('create or replace function public."' + f + '"')); return b.slice(0, b.indexOf('$$;', b.indexOf('as $$')) + 3); };
+  for (const [f, sig, vol] of [['MF_dev_player_history', 'text, uuid, date, date', 'stable'], ['MF_dev_clear_player_history', 'text, uuid, date, date', 'volatile']]) {
+    ok(new RegExp('create or replace function public\\."' + f + '"\\(p_nick text, p_player_id uuid, p_from date, p_to date\\)').test(sql), 'SQL 有 ' + f + '（暱稱、玩家編號、起、迄）');
+    ok(new RegExp('revoke all on function public\\."' + f + '"\\(' + sig + '\\)\\s+from public;').test(sql) && new RegExp('grant execute on function public\\."' + f + '"\\(' + sig + '\\)\\s+to anon, authenticated;').test(sql), f + '：對 public 收回、開放給 anon／authenticated');
+    const h = fnHead(f);
+    ok(/security definer/.test(h) && /set search_path = ''/.test(h) && new RegExp('\\b' + vol + '\\b').test(h), f + '：security definer、固定 search_path、' + vol);
+    ok(/p_nick is null or btrim\(p_nick\) = '' or p_player_id is null or p_from is null or p_to is null/.test(h) && /"MF__dev_target"\(p_nick, p_player_id\)/.test(h) && /"MF__stats_range"\(p_from, p_to\)/.test(h), f + '：參數檢查、要通過測試帳號檢查（MF__dev_target）、日期範圍最長 400 天');
+  }
+  ok(/create table if not exists public\."MF_dev_accounts"/.test(sql) && /alter table public\."MF_dev_accounts" enable row level security;/.test(sql) && /revoke all on table public\."MF_dev_accounts" from public, anon, authenticated;/.test(sql), 'MF_dev_accounts（開發者測試帳號清單）：開 RLS、收回 anon 的所有權限（只有 SQL Editor 能改）');
+  ok(/revoke all on function public\."MF__dev_target"\(text, uuid\)\s+from public, anon, authenticated;/.test(sql) && /'not_allowed'/.test(fnHead('MF__dev_target')) && /'not_found'/.test(fnHead('MF__dev_target')), '內部函式 MF__dev_target 不開放給 anon；不在清單回 not_allowed、暱稱對不上回 not_found');
+  const seeded = /insert into public\."MF_dev_accounts" \(player_id, note\)\s+values \('([0-9a-f-]+)'/.exec(sql);
+  ok(seeded && devPid && seeded[1] === devPid[1], 'SQL 預先放進測試帳號清單的編號，跟網頁預設的 player_id 是同一個');
+  const clr = fnHead('MF_dev_clear_player_history');
+  ok(/delete from public\."MF_scores" s\s+where s\.player_id = p_player_id/.test(clr) && /delete from public\."MF_player_bests" b\s+where b\.player_id = p_player_id/.test(clr) && /delete from public\."MF_play_days" d\s+where d\.player_id = p_player_id/.test(clr), '刪除只刪這一位玩家（where player_id = 他）的三種紀錄：世界榜成績、個人最佳、遊玩統計');
+  ok(!/delete from public\."MF_players"|delete from public\."MF_ratings"|delete from public\."MF_feedback"/.test(clr), '不刪帳號、評價、意見');
+  ok(/第 7C 節/.test(sql.slice(0, 3200)), 'SQL 檔頭的說明有提到第 7C 節');
+}
 
 console.log((bad ? bad + ' FAIL / ' : '') + total + ' checks');
 console.log(bad ? 'SOME FAILED' : 'ALL PASS');

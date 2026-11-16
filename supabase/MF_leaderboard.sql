@@ -5,6 +5,7 @@
 --       玩家個人最佳（可跨裝置同步，第 1B 節 MF_player_bests）；玩家在結算彈窗寫下的意見（第 5 節，MF_feedback，分遊戲記錄）、
 --       五星評價（第 6 節，MF_ratings／MF_rating_stats）；第 7 節是「阿嬤都比你厲害」用的查詢（這位玩家在哪些遊戲被超越）；
 --       第 7B 節是遊玩統計（V1.39.0，MF_play_days：每天每款遊戲每位玩家完成幾局；MF_stats_* 給 admin/stats.html 看人數、次數、玩家名次）；
+--       第 7C 節是開發者用的「清除測試帳號的遊戲歷程」（MF_dev_*，只能處理 MF_dev_accounts 清單裡的測試帳號；admin/stats.html 的「清除玩家遊戲歷程」頁籤用）；
 --       第 8 節是給管理者（你）在 SQL Editor 執行的管理函式（重設密碼、合併帳號…）。
 -- 執行方式：Supabase 專案 LoveIsABitMessy-DB → 左側 SQL Editor → New query →
 --           貼上本檔全文 → Run。可以重複執行（全部都是「已存在就略過／覆蓋」的寫法）。
@@ -1949,6 +1950,179 @@ grant execute on function public."MF_log_plays"(uuid, jsonb)       to anon, auth
 grant execute on function public."MF_stats_games"(date, date)      to anon, authenticated;
 grant execute on function public."MF_stats_daily"(date, date)      to anon, authenticated;
 grant execute on function public."MF_stats_players"(date, date)    to anon, authenticated;
+
+
+-- ═══ 7C. 開發者用：查看／清除「開發者測試帳號」在某段日期內的遊戲歷程（給 admin/stats.html 的「清除玩家遊戲歷程」頁籤）═══
+-- 為什麼要有：開發遊戲時，你用自己的測試帳號（暱稱「阿公好開心」）玩，常常打出極高的分數、登上排行榜前面，擠掉真正的玩家。
+--   這一節讓你在 admin/stats.html 的「清除玩家遊戲歷程」頁籤，按一個按鈕就把「這個測試帳號在某段日期內」的紀錄清掉：
+--     · 世界排行榜成績（MF_scores，達成日期在範圍內的）——名次因此還給別的玩家；
+--     · 個人最佳（MF_player_bests，雲端同步的那份，最後更新日期在範圍內的）；
+--     · 遊玩統計（MF_play_days，日期在範圍內的）。
+--   不會動到：帳號本身（暱稱、密碼、裝置憑證）、五星評價、玩家意見。
+--   ★ 做不到的事：榜上每款遊戲只留前 30 名。測試帳號當年如果把某位玩家擠出前 30 名，那一列早就被刪掉了，清掉測試成績也不會把他補回來。
+--   ★ 瀏覽器（localStorage）裡的「本機最佳」不在資料庫，清不到：在遊戲頁的主控台執行 Identity.forgetBest('遊戲代號') 才會清（見 note/世界排行榜說明.md），
+--     不然下次同步又會把最佳傳回資料庫。
+-- 【安全】這兩個函式開放給 anon（網頁用公開金鑰呼叫）、而且會「刪資料」，所以多設了三道關卡：
+--   1) 玩家編號一定要在「開發者測試帳號清單」MF_dev_accounts 裡。這張表鎖住，只有你在 SQL Editor 能增減；不在清單裡的玩家，
+--      不管有沒有拿到他的玩家編號，一律回 not_allowed——所以外部玩家的資料不可能經由這兩個函式被查或被刪。
+--      （要多清一個測試帳號：在 SQL Editor 執行  insert into public."MF_dev_accounts" (player_id, note) values ('他的player_id', '備註');）
+--   2) 暱稱與玩家編號要「同時」對得上同一位玩家（防打錯）。
+--   3) 日期一定要給、範圍最長 400 天；一次只處理一位玩家；刪除是一個交易，要嘛全刪、要嘛都不刪。
+--   MF_dev_player_history   查看：列出這位玩家在範圍內的世界榜成績（含目前名次）、個人最佳、遊玩局數（只讀，什麼都不改）。
+--   MF_dev_clear_player_history   刪除：刪掉上面那三種紀錄，回傳各刪了幾筆。
+--   回傳 { ok:false, error:… }：bad_args（缺參數）／not_allowed（不在測試帳號清單裡）／not_found（暱稱與編號對不上）。
+create table if not exists public."MF_dev_accounts" (
+    player_id   uuid        primary key,
+    note        text,
+    created_at  timestamptz not null default now()
+);
+alter table public."MF_dev_accounts" enable row level security;
+revoke all on table public."MF_dev_accounts" from public, anon, authenticated;
+comment on table public."MF_dev_accounts" is '開發者測試帳號清單：只有清單裡的玩家，能被 MF_dev_player_history／MF_dev_clear_player_history 查看或清除；只能在 SQL Editor 增減';
+-- 預先放進你的測試帳號「阿公好開心」（重複執行不會重複放；不想用了就在 SQL Editor 刪掉這一列）
+insert into public."MF_dev_accounts" (player_id, note)
+values ('49a65eea-1af7-4220-accf-7d0de93cc2a3', '開發者測試帳號「阿公好開心」')
+on conflict (player_id) do nothing;
+
+-- 內部：檢查「這個暱稱＋玩家編號」能不能被處理。回傳 null＝可以；'not_allowed'＝不在測試帳號清單；'not_found'＝暱稱與編號對不上
+create or replace function public."MF__dev_target"(p_nick text, p_player_id uuid)
+returns text
+language sql
+stable
+set search_path = ''
+as $$
+    select case
+        when not exists (select 1 from public."MF_dev_accounts" a where a.player_id = p_player_id) then 'not_allowed'
+        when not exists (select 1 from public."MF_players" p where p.player_id = p_player_id and p.nick_key = public."MF__nick_key"(p_nick)) then 'not_found'
+        else null
+    end;
+$$;
+
+-- 查看：回傳 { ok:true, nick, from, to（實際用的台灣日期範圍，含頭尾）,
+--              scores: [ { game_id, title, score, achieved_at, rank（目前在整張榜上的名次）, top_n } ]   世界榜成績（達成日期在範圍內）
+--              bests:  [ { game_id, title, best_score, best_level, updated_at } ]                         個人最佳（最後更新日期在範圍內）
+--              plays:  [ { game_id, title, plays（局數）, days（有玩的天數）} ]                              遊玩統計，一款遊戲一列
+--              days:   [ { day, games（當天玩了幾款）, plays } ]                                            遊玩統計，一天一列
+--              counts: { scores, bests, play_rows（MF_play_days 的列數）, plays（總局數）} }
+create or replace function public."MF_dev_player_history"(p_nick text, p_player_id uuid, p_from date, p_to date)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+    v_err  text;
+    v_r    date[];
+    v_nick text;
+    v_sc   jsonb;
+    v_bs   jsonb;
+    v_pg   jsonb;
+    v_pd   jsonb;
+begin
+    if p_nick is null or btrim(p_nick) = '' or p_player_id is null or p_from is null or p_to is null then
+        return jsonb_build_object('ok', false, 'error', 'bad_args');
+    end if;
+    v_err := public."MF__dev_target"(p_nick, p_player_id);
+    if v_err is not null then return jsonb_build_object('ok', false, 'error', v_err); end if;
+    v_r := public."MF__stats_range"(p_from, p_to);
+    select nickname into v_nick from public."MF_players" where player_id = p_player_id;
+
+    select coalesce(jsonb_agg(jsonb_build_object('game_id', x.game_id, 'title', g.title, 'score', x.score, 'achieved_at', x.achieved_at, 'rank', x.pos, 'top_n', g.top_n) order by x.game_id), '[]'::jsonb)
+      into v_sc
+      from (select s.game_id, s.player_id, s.score, s.achieved_at,
+                   row_number() over (partition by s.game_id order by s.rank_key, s.achieved_at, s.id) as pos
+              from public."MF_scores" s) x
+      join public."MF_games" g on g.game_id = x.game_id
+     where x.player_id = p_player_id
+       and (x.achieved_at at time zone 'Asia/Taipei')::date between v_r[1] and v_r[2];
+
+    select coalesce(jsonb_agg(jsonb_build_object('game_id', b.game_id, 'title', g.title, 'best_score', b.best_score, 'best_level', b.best_level, 'updated_at', b.updated_at) order by b.game_id), '[]'::jsonb)
+      into v_bs
+      from public."MF_player_bests" b
+      join public."MF_games" g on g.game_id = b.game_id
+     where b.player_id = p_player_id
+       and (b.updated_at at time zone 'Asia/Taipei')::date between v_r[1] and v_r[2];
+
+    select coalesce(jsonb_agg(jsonb_build_object('game_id', t.game_id, 'title', g.title, 'plays', t.plays, 'days', t.days) order by t.game_id), '[]'::jsonb)
+      into v_pg
+      from (select d.game_id, sum(d.plays)::bigint as plays, count(*)::int as days
+              from public."MF_play_days" d
+             where d.player_id = p_player_id and d.day between v_r[1] and v_r[2]
+             group by d.game_id) t
+      join public."MF_games" g on g.game_id = t.game_id;
+
+    select coalesce(jsonb_agg(jsonb_build_object('day', t.day, 'games', t.games, 'plays', t.plays) order by t.day), '[]'::jsonb)
+      into v_pd
+      from (select d.day, count(*)::int as games, sum(d.plays)::bigint as plays
+              from public."MF_play_days" d
+             where d.player_id = p_player_id and d.day between v_r[1] and v_r[2]
+             group by d.day) t;
+
+    return jsonb_build_object(
+        'ok', true, 'nick', v_nick, 'from', v_r[1], 'to', v_r[2],
+        'scores', v_sc, 'bests', v_bs, 'plays', v_pg, 'days', v_pd,
+        'counts', jsonb_build_object(
+            'scores', jsonb_array_length(v_sc),
+            'bests', jsonb_array_length(v_bs),
+            'play_rows', (select coalesce(sum((e ->> 'days')::int), 0) from jsonb_array_elements(v_pg) e),
+            'plays', (select coalesce(sum((e ->> 'plays')::bigint), 0) from jsonb_array_elements(v_pg) e)));
+end;
+$$;
+
+-- 刪除：條件跟上面的查看完全一樣（暱稱＋玩家編號＋日期範圍），回傳 { ok:true, nick, from, to, deleted: { scores, bests, play_rows, plays } }。
+--   一個交易：三種紀錄一起刪；刪完不補位（榜上本來就只留前 30 名）。
+create or replace function public."MF_dev_clear_player_history"(p_nick text, p_player_id uuid, p_from date, p_to date)
+returns jsonb
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+    v_err  text;
+    v_r    date[];
+    v_nick text;
+    v_s    int;
+    v_b    int;
+    v_pr   int;
+    v_p    bigint;
+begin
+    if p_nick is null or btrim(p_nick) = '' or p_player_id is null or p_from is null or p_to is null then
+        return jsonb_build_object('ok', false, 'error', 'bad_args');
+    end if;
+    v_err := public."MF__dev_target"(p_nick, p_player_id);
+    if v_err is not null then return jsonb_build_object('ok', false, 'error', v_err); end if;
+    v_r := public."MF__stats_range"(p_from, p_to);
+    select nickname into v_nick from public."MF_players" where player_id = p_player_id;
+
+    delete from public."MF_scores" s
+     where s.player_id = p_player_id
+       and (s.achieved_at at time zone 'Asia/Taipei')::date between v_r[1] and v_r[2];
+    get diagnostics v_s = row_count;
+
+    delete from public."MF_player_bests" b
+     where b.player_id = p_player_id
+       and (b.updated_at at time zone 'Asia/Taipei')::date between v_r[1] and v_r[2];
+    get diagnostics v_b = row_count;
+
+    with del as (
+        delete from public."MF_play_days" d
+         where d.player_id = p_player_id and d.day between v_r[1] and v_r[2]
+        returning d.plays
+    )
+    select count(*)::int, coalesce(sum(del.plays), 0)::bigint into v_pr, v_p from del;
+
+    return jsonb_build_object('ok', true, 'nick', v_nick, 'from', v_r[1], 'to', v_r[2],
+        'deleted', jsonb_build_object('scores', v_s, 'bests', v_b, 'play_rows', v_pr, 'plays', v_p));
+end;
+$$;
+
+revoke all on function public."MF__dev_target"(text, uuid)                        from public, anon, authenticated;
+revoke all on function public."MF_dev_player_history"(text, uuid, date, date)       from public;
+revoke all on function public."MF_dev_clear_player_history"(text, uuid, date, date) from public;
+grant execute on function public."MF_dev_player_history"(text, uuid, date, date)       to anon, authenticated;
+grant execute on function public."MF_dev_clear_player_history"(text, uuid, date, date) to anon, authenticated;
 
 
 -- 讓 Supabase 的 API 層立刻認得新函式（不執行也會在幾秒內自動更新）

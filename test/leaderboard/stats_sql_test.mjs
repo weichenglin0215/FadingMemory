@@ -4,6 +4,8 @@
 //   · MF_log_plays：參數檢查（bad_args）、不合格的筆數略過、日期窗（最近 3 天～明天）、局數上限、同一天同一款同一個人累加、全站每分鐘上限（busy）；
 //   · MF_stats_games／MF_stats_daily：期間內的局數與不重複玩家、平均星數、世界第一名、期間預設與對調與上限、回傳不含 player_id；
 //   · MF_stats_players：每位玩家上榜的款數與名次、排序、依達成日期篩選、不含 player_id。
+//   · 第 7C 節 MF_dev_player_history／MF_dev_clear_player_history（admin/stats.html 的「清除玩家遊戲歷程」）：只有 MF_dev_accounts 清單裡的測試帳號能查、能刪（外部玩家一律 not_allowed）、
+//     暱稱與編號要同時對得上、日期範圍（最長 400 天）、只刪範圍內與這一位玩家的資料（世界榜成績、個人最佳、遊玩統計）、重複刪除安全、不含別人的資料。
 // 用法：test/leaderboard 底下先 npm install，再 node stats_sql_test.mjs
 import { PGlite } from '@electric-sql/pglite';
 import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
@@ -206,6 +208,106 @@ eq((await asAnon('select public."MF_stats_players"(null, null) as r'))[0].r, [],
 // ═══ F. 冪等：再執行一次整份 SQL，資料與函式都還在 ═══
 await db.exec(sql);
 ok((await plays()).length === 8 && (await stats('MF_stats_daily')).plays === 18, '再執行整份 SQL：統計資料不受影響');
+
+// ═══ G. 第 7C 節：開發者測試帳號的「查看／清除遊戲歷程」（MF_dev_player_history／MF_dev_clear_player_history）═══
+{
+  const DEV = '49a65eea-1af7-4220-accf-7d0de93cc2a3', NICK = '阿公好開心', OTHER = uuid(201), OTHER2 = uuid(202), GHOST = uuid(203);
+  const hist = async (n, p, a, b) => (await asAnon('select public."MF_dev_player_history"($1::text, $2::uuid, $3::date, $4::date) as r', [n, p, a ?? null, b ?? null]));
+  const clr = async (n, p, a, b) => (await asAnon('select public."MF_dev_clear_player_history"($1::text, $2::uuid, $3::date, $4::date) as r', [n, p, a ?? null, b ?? null]));
+  const H = async (...a) => (await hist(...a))[0].r, C = async (...a) => (await clr(...a))[0].r;
+  const cnt = async (t, where) => (await db.query(`select count(*)::int as n from public."${t}" where ${where}`)).rows[0].n;
+
+  // ── 權限：清單表鎖住、內部函式不開放、兩個新函式開給 anon 但不開給 public、security definer 固定 search_path ──
+  for (const q of ['select * from public."MF_dev_accounts"', `insert into public."MF_dev_accounts"(player_id) values ('${OTHER}')`, 'delete from public."MF_dev_accounts"', `select public."MF__dev_target"('x', '${DEV}')`]) {
+    const r = await asAnon(q);
+    ok(r.sqlError && /permission denied/i.test(r.sqlError), 'anon 不能碰測試帳號清單／內部函式：' + q.slice(0, 60) + ' → ' + JSON.stringify(r).slice(0, 80));
+  }
+  for (const f of ['MF_dev_player_history', 'MF_dev_clear_player_history']) {
+    const g = (await db.query(`select has_function_privilege('anon', p.oid, 'execute') as a, has_function_privilege('authenticated', p.oid, 'execute') as b, has_function_privilege('public', p.oid, 'execute') as pub, p.prosecdef as sd, p.proconfig::text as cfg
+                                 from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = $1`, [f])).rows[0];
+    ok(g && g.a && g.b && !g.pub && g.sd && /search_path=/.test(g.cfg), f + '：anon／authenticated 可以呼叫、public 不行、security definer、固定了 search_path');
+  }
+  ok((await db.query(`select has_function_privilege('public', p.oid, 'execute') as pub from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = 'MF__dev_target'`)).rows[0].pub === false, '內部函式 MF__dev_target 不對 public 開放');
+  ok((await cnt('MF_dev_accounts', `player_id = '${DEV}'`)) === 1 && (await cnt('MF_dev_accounts', 'true')) === 1, '測試帳號清單：預先放好「阿公好開心」的編號，連續執行 SQL 兩次也只有一列');
+
+  // ── 資料：開發者本人（有暱稱）、外部玩家兩位（一位在清單外、一位連暱稱都對得上），開發者另有一個「清單裡但沒有玩家資料」的編號 ──
+  await db.exec('delete from public."MF_scores"; delete from public."MF_player_bests"; delete from public."MF_play_days"; delete from public."MF_players";');
+  await db.query(`insert into public."MF_players"(player_id, nickname, nick_key, claimed, pin_hash) values
+    ($1::uuid, $2, public."MF__nick_key"($2), true, 'x'), ($3::uuid, '路人甲', public."MF__nick_key"('路人甲'), true, 'x'), ($4::uuid, '路人乙', public."MF__nick_key"('路人乙'), true, 'x')`, [DEV, NICK, OTHER, OTHER2]);
+  await db.query(`insert into public."MF_dev_accounts"(player_id, note) values ($1::uuid, '清單裡但沒有玩家資料')`, [GHOST]);
+  // 世界榜：speed（越小越好）開發者 0.05（第 1）、路人甲 0.5、路人乙 0.9；spot（越大越好）開發者 99（第 1）、路人甲 9；drop 開發者 77（10 天前達成）、路人甲 7
+  await db.query(`insert into public."MF_scores"(game_id, player_id, score, rank_key, achieved_at) values
+    ('speed', $1::uuid, 0.05, 0.05, now() - interval '2 days'), ('speed', $2::uuid, 0.5, 0.5, now() - interval '3 days'), ('speed', $3::uuid, 0.9, 0.9, now() - interval '4 days'),
+    ('spot',  $1::uuid, 99, -99, now() - interval '1 day'),  ('spot',  $2::uuid, 9, -9, now() - interval '3 days'),
+    ('drop',  $1::uuid, 77, -77, now() - interval '10 days'), ('drop',  $2::uuid, 7, -7, now() - interval '3 days')`, [DEV, OTHER, OTHER2]);
+  await db.query(`insert into public."MF_player_bests"(player_id, game_id, best_score, best_level, updated_at) values
+    ($1::uuid, 'speed', 0.05, 30, now() - interval '2 days'), ($1::uuid, 'spot', 99, 40, now() - interval '1 day'), ($1::uuid, 'drop', 77, 20, now() - interval '10 days'), ($2::uuid, 'speed', 0.5, 5, now() - interval '3 days')`, [DEV, OTHER]);
+  const T10 = await tp(-10);
+  const insP = (d, g, p, n) => db.query('insert into public."MF_play_days"(day, game_id, player_id, plays) values ($1::date, $2, $3::uuid, $4)', [d, g, p, n]);
+  await insP(T0, 'speed', DEV, 3); await insP(T0, 'spot', DEV, 1); await insP(Tm2, 'spot', DEV, 2); await insP(T10, 'drop', DEV, 4);
+  await insP(T0, 'speed', OTHER, 5); await insP(Tm2, 'speed', OTHER, 6);
+  const T7 = await tp(-7);
+
+  // ── 參數與資格：缺參數、不在清單、暱稱對不上 ──
+  for (const [label, args] of [['沒給暱稱', [null, DEV, T7, T0]], ['暱稱是空白', ['   ', DEV, T7, T0]], ['沒給玩家編號', [NICK, null, T7, T0]], ['沒給起始日期', [NICK, DEV, null, T0]], ['沒給結束日期', [NICK, DEV, T7, null]]]) {
+    eq(await H(...args), { ok: false, error: 'bad_args' }, '查看：' + label + ' → bad_args');
+    eq(await C(...args), { ok: false, error: 'bad_args' }, '刪除：' + label + ' → bad_args');
+  }
+  for (const [label, n, p] of [['外部玩家（暱稱與編號都對）', '路人甲', OTHER], ['隨便一個不存在的編號', NICK, uuid(999)], ['外部玩家的編號配開發者的暱稱', NICK, OTHER]]) {
+    eq(await H(n, p, T7, T0), { ok: false, error: 'not_allowed' }, '查看：' + label + ' → not_allowed（不在測試帳號清單）');
+    eq(await C(n, p, T7, T0), { ok: false, error: 'not_allowed' }, '刪除：' + label + ' → not_allowed');
+  }
+  eq(await H('不是這個暱稱', DEV, T7, T0), { ok: false, error: 'not_found' }, '查看：開發者的編號配錯暱稱 → not_found');
+  eq(await C('路人甲', DEV, T7, T0), { ok: false, error: 'not_found' }, '刪除：開發者的編號配別人的暱稱 → not_found（什麼都沒刪）');
+  eq(await H(NICK, GHOST, T7, T0), { ok: false, error: 'not_found' }, '清單裡但沒有玩家資料的編號 → not_found');
+  ok((await cnt('MF_scores', `player_id = '${DEV}'`)) === 3 && (await cnt('MF_play_days', `player_id = '${DEV}'`)) === 4 && (await cnt('MF_player_bests', `player_id = '${DEV}'`)) === 3, '上面這些被拒絕的刪除，一筆資料都沒動');
+
+  // ── 查看（最近 7 天）：只有範圍內的、帶目前名次；10 天前的不列 ──
+  const v = await H(NICK, DEV, T7, T0);
+  ok(v.ok === true && v.nick === NICK && v.from === T7 && v.to === T0, '查看：回傳 ok、暱稱、實際用的日期範圍：' + canon({ ok: v.ok, nick: v.nick, from: v.from, to: v.to }));
+  eq(v.scores.map(s => [s.game_id, s.score, s.rank, s.top_n]), [['speed', 0.05, 1, 30], ['spot', 99, 1, 30]], '世界榜成績：speed、spot（各是第 1 名）；10 天前達成的 drop 不在範圍內');
+  ok(v.scores.every(s => s.title && s.achieved_at), '每一筆都有遊戲名稱與達成時間');
+  eq(v.bests.map(b => [b.game_id, b.best_score, b.best_level]), [['speed', 0.05, 30], ['spot', 99, 40]], '個人最佳：speed、spot（drop 是 10 天前更新的，不在範圍內）');
+  eq(v.plays.map(p => [p.game_id, p.plays, p.days]), [['speed', 3, 1], ['spot', 3, 2]], '遊玩統計（一款一列，依遊戲代號排）：speed 3 局（1 天）、spot 3 局（2 天）');
+  eq(v.days.map(d => [d.day, d.games, d.plays]), [[Tm2, 1, 2], [T0, 2, 4]], '遊玩統計（一天一列）：兩天前 1 款 2 局、今天 2 款 4 局');
+  eq(v.counts, { scores: 2, bests: 2, play_rows: 3, plays: 6 }, '筆數：世界榜 2、個人最佳 2、遊玩統計 3 列共 6 局');
+  ok(!JSON.stringify(v).includes(OTHER) && !JSON.stringify(v).includes('路人'), '查看的回傳裡沒有別人的編號或暱稱');
+  // 範圍拉到 30 天：10 天前的也列出；起迄顛倒會對調
+  const v30 = await H(NICK, DEV, await tp(-30), T0);
+  eq(v30.counts, { scores: 3, bests: 3, play_rows: 4, plays: 10 }, '30 天：連 10 天前的 drop 也列出（世界榜 3、個人最佳 3、遊玩統計 4 列共 10 局）');
+  eq(v30.scores.find(s => s.game_id === 'drop').rank, 1, 'drop 的目前名次也算出來（第 1）');
+  const vr = await H(NICK, DEV, T0, T7);
+  ok(vr.ok && vr.from === T7 && vr.to === T0 && vr.counts.scores === 2, '起迄顛倒：自動對調，結果一樣');
+  const vc = await H(NICK, DEV, '2020-01-01', T0);
+  ok(vc.ok && vc.from === (await db.query(`select ($1::date - 400)::text as d`, [T0])).rows[0].d, '範圍超過 400 天會被截成 400 天');
+  // 暱稱比對跟遊戲一樣（MF__nick_key：大小寫、全形半形、空白視為相同）：開發者暱稱沒有英文，改用一個含英文的暱稱測
+  await db.query(`update public."MF_players" set nickname = 'Dev Test', nick_key = public."MF__nick_key"('Dev Test') where player_id = $1::uuid`, [DEV]);
+  ok((await H('dev test', DEV, T7, T0)).ok === true && (await H('ＤＥＶ　ＴＥＳＴ', DEV, T7, T0)).ok === true, '暱稱比對：大小寫、全形半形不分');
+  await db.query(`update public."MF_players" set nickname = $2, nick_key = public."MF__nick_key"($2) where player_id = $1::uuid`, [DEV, NICK]);
+
+  // ── 刪除（最近 7 天）：只刪範圍內的、只刪這一位；別人的、範圍外的都在 ──
+  const c1 = await C(NICK, DEV, T7, T0);
+  ok(c1.ok === true && c1.nick === NICK && c1.from === T7 && c1.to === T0, '刪除：回傳 ok、暱稱、實際用的範圍');
+  eq(c1.deleted, { scores: 2, bests: 2, play_rows: 3, plays: 6 }, '刪除了：世界榜 2、個人最佳 2、遊玩統計 3 列共 6 局（跟查看的筆數一樣）');
+  eq((await db.query(`select game_id from public."MF_scores" where player_id = '${DEV}'`)).rows.map(r => r.game_id), ['drop'], '開發者剩下 10 天前的 drop 成績（範圍外不動）');
+  eq((await db.query(`select game_id from public."MF_player_bests" where player_id = '${DEV}'`)).rows.map(r => r.game_id), ['drop'], '個人最佳也只剩 drop');
+  eq((await plays(`player_id = '${DEV}'`)).map(x => x.day + '|' + x.game_id + '|' + x.plays), [T10 + '|drop|4'], '遊玩統計只剩 10 天前的 drop');
+  ok((await cnt('MF_scores', `player_id <> '${DEV}'`)) === 4 && (await cnt('MF_player_bests', `player_id <> '${DEV}'`)) === 1 && (await cnt('MF_play_days', `player_id <> '${DEV}'`)) === 2, '外部玩家的世界榜成績 4、個人最佳 1、遊玩統計 2 列，一筆都沒少');
+  ok((await cnt('MF_players', 'true')) === 3, '帳號本身都還在（只清歷程，不刪帳號）');
+  // 名次還給別人：speed 現在路人甲第 1、路人乙第 2；spot 路人甲第 1
+  const top = (await asAnon(`select public."MF_get_top"('speed') as r`))[0].r;
+  ok(JSON.stringify(top).includes('路人甲') && !JSON.stringify(top).includes(NICK), '世界榜上已經看不到測試帳號（speed 榜的第 1 名換成路人甲）');
+  // 再刪一次＝什麼都沒有；查看＝空的
+  eq((await C(NICK, DEV, T7, T0)).deleted, { scores: 0, bests: 0, play_rows: 0, plays: 0 }, '再刪一次：都是 0（重複執行安全）');
+  eq((await H(NICK, DEV, T7, T0)).counts, { scores: 0, bests: 0, play_rows: 0, plays: 0 }, '刪完再查看：空的');
+  // 30 天的範圍把剩下的 drop 也刪掉
+  eq((await C(NICK, DEV, await tp(-30), T0)).deleted, { scores: 1, bests: 1, play_rows: 1, plays: 4 }, '範圍拉到 30 天：刪掉剩下的 drop（成績 1、個人最佳 1、遊玩統計 1 列 4 局）');
+  ok((await cnt('MF_scores', `player_id = '${DEV}'`)) === 0 && (await cnt('MF_player_bests', `player_id = '${DEV}'`)) === 0 && (await cnt('MF_play_days', `player_id = '${DEV}'`)) === 0, '開發者的歷程全清了');
+
+  // ── 冪等：再執行整份 SQL，測試帳號清單與資料不受影響 ──
+  await db.exec(sql);
+  ok((await cnt('MF_dev_accounts', 'true')) === 2 && (await cnt('MF_scores', 'true')) === 4, '再執行整份 SQL：測試帳號清單不重複（DEV 與 GHOST 共 2 列）、其他資料還在');
+}
 
 console.log((bad ? bad + ' FAIL / ' : '') + total + ' checks');
 console.log(bad ? 'SOME FAILED' : 'ALL PASS');

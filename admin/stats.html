@@ -183,6 +183,23 @@ table.matrix th.sorted { color: var(--accent); }
 details.tv { margin-top: 4px; }
 details.tv summary { cursor: pointer; font-weight: 700; padding: 6px 0; }
 
+/* 清除玩家遊戲歷程 */
+.cform { max-width: 820px; }
+.cform .crow { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 6px 14px; align-items: center; margin: 8px 0; }
+.cform .crow label { font-weight: 700; }
+.cform .crow .hint { grid-column: 2; margin-top: -2px; }
+.cform input[type=text], .cform input[type=date] { width: 100%; max-width: 440px; }
+.cform input.pid { font-family: ui-monospace, Consolas, "Courier New", monospace; font-size: 15px; }
+.cform .cactions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
+button.danger { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); font-weight: 700; }
+button.danger:hover:not(:disabled) { background: var(--danger); border-color: var(--danger); color: var(--card); }
+.warnbox { margin: 10px 0 0; padding: 8px 12px; border-radius: 8px; background: var(--warn-bg); color: var(--warn); font-size: 14px; }
+.warnbox ul { margin: 4px 0 0 20px; padding: 0; }
+.cresult h3 { margin: 14px 0 6px; font-size: 16px; }
+td.tiny, th.tiny { white-space: nowrap; color: var(--text2); font-size: 14px; }
+td.top30 { font-weight: 700; color: var(--danger); }
+@media (max-width: 640px) { .cform .crow { grid-template-columns: 1fr; } .cform .crow .hint { grid-column: 1; } }
+
 #toast {
     position: fixed; right: 22px; bottom: 22px; max-width: 420px; padding: 10px 16px; border-radius: 9px;
     background: #1f2937; color: #fff; box-shadow: 0 6px 18px rgba(0, 0, 0, .3);
@@ -198,7 +215,7 @@ details.how summary { cursor: pointer; font-weight: 700; }
 <body>
 <div class="page">
     <h1>後台資料分析</h1>
-    <p class="sub">記憶模糊・秒反應 的遊玩統計與世界排行榜。給你自己在電腦上用的管理工具，不是遊戲的一部分。資料全是統計與公開的排行榜（不含任何玩家編號），所以不需要金鑰或密碼。</p>
+    <p class="sub">記憶模糊・秒反應 的遊玩統計與世界排行榜。給你自己在電腦上用的管理工具，不是遊戲的一部分。資料全是統計與公開的排行榜（不含任何玩家編號），所以不需要金鑰或密碼。（例外：最右邊的「清除玩家遊戲歷程」頁籤會刪資料，要輸入暱稱與 player_id，而且資料庫只准它處理「開發者測試帳號清單」裡的帳號。）</p>
 
     <!-- ═══ 分析參數（下面所有頁籤共用）═══ -->
     <form class="card params" id="paramForm" autocomplete="off">
@@ -218,6 +235,7 @@ details.how summary { cursor: pointer; font-weight: 700; }
         <button type="button" class="tab" role="tab" id="tab-games" aria-controls="panel-games" aria-selected="true" data-tab="games">遊戲分析</button>
         <button type="button" class="tab" role="tab" id="tab-players" aria-controls="panel-players" aria-selected="false" data-tab="players" tabindex="-1">玩家分析</button>
         <button type="button" class="tab" role="tab" id="tab-time" aria-controls="panel-time" aria-selected="false" data-tab="time" tabindex="-1">時間分析</button>
+        <button type="button" class="tab" role="tab" id="tab-clear" aria-controls="panel-clear" aria-selected="false" data-tab="clear" tabindex="-1">清除玩家遊戲歷程</button>
     </div>
     <p class="status" id="status" role="status">查詢中…</p>
 
@@ -254,6 +272,48 @@ details.how summary { cursor: pointer; font-weight: 700; }
         </div>
     </section>
 
+    <!-- ═══ 四、清除玩家遊戲歷程（V1.57.1.0）═══ -->
+    <section class="panel" id="panel-clear" role="tabpanel" aria-labelledby="tab-clear" hidden>
+        <form class="card cform" id="clearForm" autocomplete="off">
+            <h2>清除特定玩家的遊戲歷程</h2>
+            <p class="note">開發遊戲時用測試帳號玩出的高分，會擠掉外部玩家的名次。這裡可以把「這個玩家在某段日期內」的紀錄清掉：世界排行榜成績、雲端的個人最佳、遊玩次數統計。這一頁的日期跟上面的分析日期無關。</p>
+            <div class="crow">
+                <label for="cNick">玩家暱稱（nickname）</label>
+                <input type="text" id="cNick" maxlength="12" spellcheck="false">
+            </div>
+            <div class="crow">
+                <label for="cPid">player_id</label>
+                <input type="text" id="cPid" class="pid" spellcheck="false">
+                <span class="note hint">暱稱與 player_id 要同時對得上同一位玩家才會動作（避免誤刪外部玩家）。</span>
+            </div>
+            <div class="crow">
+                <label for="cFrom">起始日期</label>
+                <input type="date" id="cFrom">
+            </div>
+            <div class="crow">
+                <label for="cTo">結束日期</label>
+                <input type="date" id="cTo">
+                <span class="note hint">日期以台灣時間計算（含頭尾）；最長 400 天。預設是 7 天前到今天。</span>
+            </div>
+            <div class="cactions">
+                <button type="submit" class="primary" id="btnView">查看玩家遊戲歷程</button>
+                <button type="button" class="danger" id="btnClear">刪除玩家遊戲歷程</button>
+            </div>
+            <div class="warnbox">
+                <b>刪除前請先知道：</b>
+                <ul>
+                    <li>刪掉就回不來了。按下「刪除」會先列出將刪掉幾筆，要你再確認一次。</li>
+                    <li>只能處理資料庫裡「開發者測試帳號清單」（<code>MF_dev_accounts</code>）上的帳號，外部玩家的資料不可能被刪到；要多加一個測試帳號，到 Supabase 的 SQL Editor 加（見 <code>supabase/MF_leaderboard.sql</code> 第 7C 節）。</li>
+                    <li>榜上每款遊戲只留前 30 名：測試帳號當年擠掉的玩家，已經不在資料庫，清掉測試成績也補不回來。</li>
+                    <li>不會刪帳號本身、五星評價與玩家意見。</li>
+                    <li>瀏覽器裡的「本機最佳」不在資料庫，要在遊戲頁的主控台執行 <code>Identity.forgetBest('遊戲代號')</code> 才會清；不然下次同步又會把最佳傳回資料庫。</li>
+                </ul>
+            </div>
+        </form>
+        <p class="status" id="clearStatus" role="status">輸入暱稱與 player_id，按「查看」看看有哪些紀錄。</p>
+        <div class="cresult" id="clearResult"></div>
+    </section>
+
     <details class="card how">
         <summary>怎麼看這些數字</summary>
         <ol>
@@ -262,7 +322,7 @@ details.how summary { cursor: pointer; font-weight: 700; }
             <li><b>星星數量平均值</b>＝期間內玩家給的五星評價平均（括號是評價次數）；<b>最佳成績、第一名的玩家</b>＝世界排行榜<b>目前</b>的第 1 名，不受期間影響。</li>
             <li>玩家分析的名次是目前在整張世界榜（每款前 30 名）上的名次；勾「名次只算期間內創下的成績」就只列出成績是在這段期間達成的。</li>
             <li>時間分析是兩張圖：上面每天完成幾局、下面每天有幾個不重複的玩家（兩個數字大小差很多，所以分成兩張圖、不共用同一條縱軸）。滑鼠移到圖上看某一天的數字；鍵盤可以先 Tab 到圖上，再用左右鍵移動。</li>
-            <li>這個網頁用的是遊戲本來就公開的 anon 金鑰，只能呼叫統計函式（<code>MF_stats_games／MF_stats_daily／MF_stats_players</code>），不能新增、修改或刪除任何東西，也拿不到任何玩家編號。</li>
+            <li>這個網頁用的是遊戲本來就公開的 anon 金鑰。前三個頁籤只呼叫統計函式（<code>MF_stats_games／MF_stats_daily／MF_stats_players</code>），不能新增、修改或刪除任何東西，也拿不到任何玩家編號。第四個頁籤「清除玩家遊戲歷程」呼叫 <code>MF_dev_player_history／MF_dev_clear_player_history</code>：要輸入暱稱與 player_id，而且資料庫只准處理「開發者測試帳號清單」上的帳號，其他玩家一律拒絕。</li>
         </ol>
     </details>
 </div>
@@ -278,6 +338,8 @@ details.how summary { cursor: pointer; font-weight: 700; }
           MF_stats_daily(p_from, p_to)   → 時間分析：每天的局數與人數
         網址長這樣：<網址>/rest/v1/rpc/MF_stats_games，POST 一個 JSON：{ "p_from": "2026-10-01", "p_to": "2026-10-30" }
      2. 把回來的資料畫成表格與圖（圖是自己畫的 SVG，不載入任何外部程式）。
+     3.（V1.57.1.0）第四個頁籤「清除玩家遊戲歷程」：呼叫 MF_dev_player_history（查看）與 MF_dev_clear_player_history（刪除）（第 7C 節）。
+        刪除前一定先查一次、列出筆數、跳出確認視窗，按了「確定」才真的刪；資料庫那邊再擋一次（不在測試帳號清單、暱稱與編號對不上，一律拒絕）。
    整份程式不用安裝任何東西，雙擊這個 html 檔就能用。
    為什麼不用密碼：這些函式只回傳統計與公開的排行榜（遊戲裡本來就看得到的名次與暱稱），永遠不回傳任何 player_id；
    這個網頁沒有任何祕密。
@@ -295,6 +357,10 @@ details.how summary { cursor: pointer; font-weight: 700; }
     var TIMEOUT_MS = 25000;             // 每次請求最多等幾毫秒
     var STORE_KEY = 'mf.stats.v1';      // 存在瀏覽器 localStorage 裡的名稱（只存你的選項，不存任何金鑰）
     var TOP_N = 30;                     // 世界榜每款保留前幾名（顏色深淺的基準）
+    var TABS = ['games', 'players', 'time', 'clear'];     // 頁籤（由左到右）
+    var CLEAR_DEFAULT_NICK = '阿公好開心';                  // 「清除玩家遊戲歷程」頁籤：暱稱的預設值（你的測試帳號）
+    var CLEAR_DEFAULT_PID = '49a65eea-1af7-4220-accf-7d0de93cc2a3';   // 同上：player_id 的預設值（資料庫的「開發者測試帳號清單」也預先放了這一個）
+    var CLEAR_DEFAULT_DAYS = 7;         // 「清除玩家遊戲歷程」頁籤：起始日期預設是幾天前（結束日期預設是今天）
 
     /* >>> 自動產生開始（node test/leaderboard/gen_games_sql.cjs --write 會重寫這兩行標記之間的內容，請不要手改；來源：js/menu.js 的分類與遊戲清單、各遊戲檔案的 score 設定） */
     var CATS = [{"id":"memory","name":"記憶"},{"id":"visual","name":"視覺"},{"id":"reaction","name":"反應"},{"id":"number","name":"數字"},{"id":"logic","name":"邏輯"},{"id":"hand","name":"手感"},{"id":"guess","name":"目測"}];
@@ -578,13 +644,14 @@ details.how summary { cursor: pointer; font-weight: 700; }
             return data;
         } finally { clearTimeout(timer); }
     }
-    function explainError(e) {
+    function explainError(e, missing) {
         if (e && e.name === 'AbortError') return '等太久沒有回應（超過 ' + (TIMEOUT_MS / 1000) + ' 秒），請檢查網路後再按一次查詢。';
         if (e && e.http) {
             var code = e.body && e.body.code;
             var msg = (e.body && (e.body.message || e.body.msg || e.body.error_description)) || '';
             // 找不到函式：資料庫還沒執行新版的 SQL（新版才有統計函式）
             if (e.http === 404 || code === 'PGRST202' || code === '42883' || /could not find the function|does not exist/i.test(msg)) {
+                if (missing) return missing;
                 return '資料庫還沒有統計函式：請到 Supabase 的 SQL Editor 重新執行最新的 supabase/MF_leaderboard.sql（新版多了第 7B 節的 MF_stats_games／MF_stats_daily／MF_stats_players），執行完再按一次查詢。';
             }
             if (e.http === 401 || e.http === 403) return '資料庫不接受這把公開金鑰（' + (msg || e.http) + '）：請確認網址是正確的 Supabase 專案。';
@@ -951,23 +1018,151 @@ details.how summary { cursor: pointer; font-weight: 700; }
         els.tableView.hidden = false;
     }
 
+    // ───────── 七B、清除玩家遊戲歷程（第四個頁籤）─────────
+    var cEls = {
+        form: $('clearForm'), nick: $('cNick'), pid: $('cPid'), from: $('cFrom'), to: $('cTo'),
+        view: $('btnView'), clear: $('btnClear'), status: $('clearStatus'), result: $('clearResult')
+    };
+    var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    var CLEAR_MISSING = '資料庫還沒有「清除玩家遊戲歷程」的函式：請到 Supabase 的 SQL Editor 重新執行最新的 supabase/MF_leaderboard.sql（新版多了第 7C 節的 MF_dev_player_history／MF_dev_clear_player_history），執行完再按一次。';
+    var clearBusy = false;
+    function setClearStatus(text, kind) { cEls.status.textContent = text; cEls.status.className = 'status' + (kind ? ' status--' + kind : ''); }
+    function setClearBusy(on) { clearBusy = on; cEls.view.disabled = on; cEls.clear.disabled = on; }
+    function resetClearForm() {
+        cEls.nick.value = CLEAR_DEFAULT_NICK; cEls.pid.value = CLEAR_DEFAULT_PID;
+        var t = taipeiToday(); cEls.from.value = addDays(t, -CLEAR_DEFAULT_DAYS); cEls.to.value = t;
+    }
+    // 讀表單；不合理就丟出錯誤（訊息顯示在狀態列）
+    function readClearForm() {
+        var nick = cEls.nick.value.trim(), pid = cEls.pid.value.trim().toLowerCase(), a = cEls.from.value, b = cEls.to.value;
+        if (!nick) throw new Error('請輸入玩家暱稱。');
+        if (!UUID_RE.test(pid)) throw new Error('player_id 的格式不對（要像 49a65eea-1af7-4220-accf-7d0de93cc2a3 這樣的 36 個字）。');
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(a) || !/^\d{4}-\d{2}-\d{2}$/.test(b)) throw new Error('請選好起始日期與結束日期。');
+        if (parseDay(a) > parseDay(b)) throw new Error('起始日期比結束日期晚，請對調。');
+        if (daysBetween(a, b) + 1 > MAX_DAYS) throw new Error('日期範圍最長 ' + MAX_DAYS + ' 天，請縮短。');
+        return { nick: nick, pid: pid, from: a, to: b };
+    }
+    function historyArgs(f) { return { p_nick: f.nick, p_player_id: f.pid, p_from: f.from, p_to: f.to }; }
+    // 資料庫回 ok:false 時的說明
+    function explainDevError(code) {
+        if (code === 'not_allowed') return '這個 player_id 不在資料庫的「開發者測試帳號清單」（MF_dev_accounts）裡，所以不能查看或刪除。要加入：到 Supabase 的 SQL Editor 執行  insert into public."MF_dev_accounts" (player_id, note) values (\'這個 player_id\', \'備註\');';
+        if (code === 'not_found') return '暱稱與 player_id 對不上同一位玩家：請檢查暱稱有沒有打錯（暱稱可能被改過），或 player_id 有沒有貼錯。';
+        if (code === 'bad_args') return '參數不完整：請填好暱稱、player_id、起始與結束日期。';
+        return '資料庫回報：' + code;
+    }
+    function fmtTaipei(iso) {      // '2026-11-13T04:30:00+00:00' → '11-13 12:30'（台灣時間）
+        var t = Date.parse(String(iso).replace(/(\.\d{3})\d+/, '$1'));      // 資料庫的時間有微秒（6 位小數），有些瀏覽器只吃到毫秒（3 位），先截斷
+        if (!isFinite(t)) return '—';
+        var s = new Date(t + 8 * 3600 * 1000).toISOString();
+        return s.slice(5, 10) + ' ' + s.slice(11, 16);
+    }
+    function nameOf(id, fallback) { return GAMES[id] ? GAMES[id].name : (fallback || id); }
+    // 把查看的結果畫成表格：每款遊戲一列（世界榜成績、目前名次、達成時間、個人最佳、遊玩局數）；每天一列的另放在摺疊裡
+    function renderHistory(data) {
+        var c = data.counts, top30 = data.scores.filter(function (s) { return s.rank <= s.top_n; }).length, host = cEls.result;
+        host.replaceChildren();
+        if (!c.scores && !c.bests && !c.play_rows) {
+            host.appendChild(mk('div', 'empty', '這段期間（' + rangeText(data.from, data.to) + '）沒有「' + data.nick + '」的遊戲歷程。'));
+            return;
+        }
+        var byGame = {};
+        function slot(id, title) { return byGame[id] || (byGame[id] = { id: id, title: title, score: null, best: null, play: null }); }
+        data.scores.forEach(function (s) { slot(s.game_id, s.title).score = s; });
+        data.bests.forEach(function (b) { slot(b.game_id, b.title).best = b; });
+        data.plays.forEach(function (p) { slot(p.game_id, p.title).play = p; });
+        var rows = Object.keys(byGame).map(function (k) { return byGame[k]; }).sort(function (a, b) {
+            var ia = ORDER.indexOf(a.id), ib = ORDER.indexOf(b.id);
+            return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib) || (a.id < b.id ? -1 : 1);
+        });
+        host.appendChild(mk('h3', '', '「' + data.nick + '」的遊戲歷程　' + rangeText(data.from, data.to)));
+        var table = mk('table', 'grid'), hr = table.createTHead().insertRow();
+        [['遊戲名稱', ''], ['世界榜成績', 'num'], ['目前名次', 'num'], ['成績達成時間（台灣）', ''], ['個人最佳（雲端）', 'num'], ['期間遊玩局數', 'num']].forEach(function (t) { hr.appendChild(mk('th', t[1], t[0])); });
+        var tb = table.createTBody();
+        rows.forEach(function (r) {
+            var tr = tb.insertRow(), spec = GAMES[r.id] || null;
+            tr.insertCell().textContent = nameOf(r.id, r.title);
+            var c1 = tr.insertCell(), c2 = tr.insertCell(), c3 = tr.insertCell(), c4 = tr.insertCell(), c5 = tr.insertCell();
+            c1.className = c2.className = c4.className = c5.className = 'num'; c3.className = 'tiny';
+            if (r.score) {
+                c1.textContent = fmtScore(spec, r.score.score);
+                c2.textContent = '第 ' + r.score.rank + ' 名'; if (r.score.rank <= r.score.top_n) c2.classList.add('top30');
+                c3.textContent = fmtTaipei(r.score.achieved_at);
+            } else { c1.textContent = c2.textContent = '—'; c3.textContent = '—'; c1.classList.add('dim0'); c2.classList.add('dim0'); }
+            if (r.best) { c4.textContent = fmtScore(spec, r.best.best_score) + (r.best.best_level != null ? '（最佳關卡 ' + r.best.best_level + '）' : ''); } else { c4.textContent = '—'; c4.classList.add('dim0'); }
+            if (r.play) { c5.textContent = fmtInt(r.play.plays) + ' 局（' + r.play.days + ' 天）'; } else { c5.textContent = '—'; c5.classList.add('dim0'); }
+        });
+        var wrap = mk('div', 'table-wrap'); wrap.appendChild(table); host.appendChild(wrap);
+        if (data.days.length) {
+            var det = mk('details', 'tv card'); det.appendChild(mk('summary', '', '遊玩統計：每一天的局數（' + data.days.length + ' 天）'));
+            var t2 = mk('table', 'grid'), h2 = t2.createTHead().insertRow();
+            [['日期', ''], ['玩了幾款遊戲', 'num'], ['完成局數', 'num']].forEach(function (t) { h2.appendChild(mk('th', t[1], t[0])); });
+            var b2 = t2.createTBody();
+            data.days.slice().reverse().forEach(function (d) {
+                var tr = b2.insertRow(); tr.insertCell().textContent = d.day + '（週' + weekdayOf(d.day) + '）';
+                var x = tr.insertCell(), y = tr.insertCell(); x.className = y.className = 'num'; x.textContent = fmtInt(d.games); y.textContent = fmtInt(d.plays);
+            });
+            var w2 = mk('div', 'table-wrap'); w2.appendChild(t2); det.appendChild(w2); host.appendChild(det);
+        }
+        setClearStatus('「' + data.nick + '」在 ' + rangeText(data.from, data.to) + '：世界排行榜成績 ' + c.scores + ' 筆（其中 ' + top30 + ' 筆在前 30 名內）、個人最佳 ' + c.bests + ' 筆、遊玩統計 ' + c.play_rows + ' 列（共 ' + fmtInt(c.plays) + ' 局）。', top30 ? 'warn' : 'ok');
+    }
+    // 向資料庫要這位玩家的歷程；失敗（ok:false 或連線錯誤）就在狀態列說明並回傳 null
+    async function fetchHistory(f) {
+        try {
+            var data = await rpc('MF_dev_player_history', historyArgs(f));
+            if (!data || data.ok !== true) { setClearStatus(explainDevError(data && data.error), 'error'); cEls.result.replaceChildren(); return null; }
+            return data;
+        } catch (e) { setClearStatus(explainError(e, CLEAR_MISSING), 'error'); return null; }
+    }
+    async function viewHistory() {
+        if (clearBusy) return;
+        var f; try { f = readClearForm(); } catch (e) { setClearStatus(e.message, 'error'); return; }
+        setClearBusy(true); setClearStatus('查詢中…');
+        try { var data = await fetchHistory(f); if (data) renderHistory(data); } finally { setClearBusy(false); }
+    }
+    async function clearHistory() {
+        if (clearBusy) return;
+        var f; try { f = readClearForm(); } catch (e) { setClearStatus(e.message, 'error'); return; }
+        setClearBusy(true); setClearStatus('先查一次有哪些紀錄…');
+        try {
+            var pre = await fetchHistory(f);                          // 第一步：先查（也等於檢查暱稱、player_id 對不對、在不在測試帳號清單）
+            if (!pre) return;
+            renderHistory(pre);
+            var c = pre.counts;
+            if (!c.scores && !c.bests && !c.play_rows) { setClearStatus('這段期間沒有「' + pre.nick + '」的遊戲歷程，沒有東西可以刪。', 'warn'); return; }
+            var msg = '即將刪除玩家「' + pre.nick + '」\n' + f.pid + '\n在 ' + rangeText(pre.from, pre.to) + ' 的遊戲歷程：\n\n'
+                + '　世界排行榜成績　' + c.scores + ' 筆\n　雲端個人最佳　　' + c.bests + ' 筆\n　遊玩次數統計　　' + c.play_rows + ' 列（共 ' + fmtInt(c.plays) + ' 局）\n\n刪掉就回不來了。確定要刪除嗎？';
+            if (!window.confirm(msg)) { setClearStatus('已取消，沒有刪除任何東西。'); return; }
+            setClearStatus('刪除中…');
+            var res;
+            try { res = await rpc('MF_dev_clear_player_history', historyArgs(f)); }                // 第二步：真的刪
+            catch (e) { setClearStatus(explainError(e, CLEAR_MISSING), 'error'); return; }
+            if (!res || res.ok !== true) { setClearStatus(explainDevError(res && res.error), 'error'); return; }
+            var after = await fetchHistory(f);                         // 第三步：再查一次，畫出刪完之後的樣子（應該是空的）
+            if (after) renderHistory(after);
+            var x = res.deleted;
+            setClearStatus('已刪除「' + res.nick + '」在 ' + rangeText(res.from, res.to) + ' 的歷程：世界排行榜成績 ' + x.scores + ' 筆、個人最佳 ' + x.bests + ' 筆、遊玩次數統計 ' + x.play_rows + ' 列（共 ' + fmtInt(x.plays) + ' 局）。記得瀏覽器裡的本機最佳要另外清（Identity.forgetBest）。', 'ok');
+            toast('已刪除');
+        } finally { setClearBusy(false); }
+    }
+
     // ───────── 八、頁籤 ─────────
     function render(tab) {
         if (tab !== state.tab) return;              // 不是目前看的頁籤：資料先存著（cache），切過去再畫
         if (tab === 'games') renderGames(); else if (tab === 'players') renderPlayers(); else renderTime();
     }
     function showTab(tab, focus) {
-        if (['games', 'players', 'time'].indexOf(tab) < 0) tab = 'games';
+        if (TABS.indexOf(tab) < 0) tab = 'games';
         state.tab = tab;
-        ['games', 'players', 'time'].forEach(function (t) {
+        els.form.hidden = tab === 'clear'; $('status').hidden = tab === 'clear';      // 清除頁籤有自己的日期與狀態列，上面共用的分析參數不適用
+        TABS.forEach(function (t) {
             var on = t === tab, b = $('tab-' + t);
             b.setAttribute('aria-selected', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1;
             $('panel-' + t).hidden = !on;
             if (on && focus) b.focus();
         });
-        saveSettings({ tab: tab });
+        if (tab !== 'clear') saveSettings({ tab: tab });                // 下次打開網頁不會自己停在「清除」頁籤（要刪資料一定是你主動切過去）
         try { history.replaceState(null, '', '#' + tab); } catch (e) { /* file:// 有些瀏覽器不給改 */ }
-        if (state.range) load(tab, false);
+        if (tab !== 'clear' && state.range) load(tab, false);
     }
 
     // ───────── 九、綁定事件與開頁面 ─────────
@@ -977,12 +1172,14 @@ details.how summary { cursor: pointer; font-weight: 700; }
     });
     document.querySelector('.tabs').addEventListener('click', function (e) { var b = e.target.closest('.tab'); if (b) showTab(b.dataset.tab); });
     document.querySelector('.tabs').addEventListener('keydown', function (e) {
-        var order = ['games', 'players', 'time'], i = order.indexOf(state.tab);
-        if (e.key === 'ArrowRight') { e.preventDefault(); showTab(order[(i + 1) % 3], true); }
-        else if (e.key === 'ArrowLeft') { e.preventDefault(); showTab(order[(i + 2) % 3], true); }
-        else if (e.key === 'Home') { e.preventDefault(); showTab('games', true); }
-        else if (e.key === 'End') { e.preventDefault(); showTab('time', true); }
+        var n = TABS.length, i = TABS.indexOf(state.tab);
+        if (e.key === 'ArrowRight') { e.preventDefault(); showTab(TABS[(i + 1) % n], true); }
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); showTab(TABS[(i + n - 1) % n], true); }
+        else if (e.key === 'Home') { e.preventDefault(); showTab(TABS[0], true); }
+        else if (e.key === 'End') { e.preventDefault(); showTab(TABS[n - 1], true); }
     });
+    cEls.form.addEventListener('submit', function (e) { e.preventDefault(); viewHistory(); });
+    cEls.clear.addEventListener('click', function () { clearHistory(); });
     els.gamesWrap.addEventListener('click', function (e) { var b = e.target.closest('button[data-sort]'); if (b) clickSort(b.dataset.sort); });
     els.onlyPlayed.addEventListener('change', function () { saveSettings({ onlyPlayed: els.onlyPlayed.checked }); renderGames(); });
     els.playersWrap.addEventListener('click', function (e) {
@@ -1021,8 +1218,9 @@ details.how summary { cursor: pointer; font-weight: 700; }
         if (s.sortKey && GAME_COLS.some(function (c) { return c.key === s.sortKey && c.sortable; })) state.sort = { key: s.sortKey, dir: s.sortDir === 'asc' ? 'asc' : 'desc' };
         // 日期：預設 30 天前到今天（不記住上次的日期：每次打開都是最新的）
         setDays(DEFAULT_DAYS);
-        var hash = (location.hash || '').replace('#', '');
-        var tab = ['games', 'players', 'time'].indexOf(hash) >= 0 ? hash : (['games', 'players', 'time'].indexOf(s.tab) >= 0 ? s.tab : 'games');
+        resetClearForm();
+        var hash = (location.hash || '').replace('#', ''), saved = ['games', 'players', 'time'];
+        var tab = TABS.indexOf(hash) >= 0 ? hash : (saved.indexOf(s.tab) >= 0 ? s.tab : 'games');
         try { state.range = readRange(); } catch (e) { state.range = null; }
         showTab(tab, false);
     })();
@@ -1030,8 +1228,8 @@ details.how summary { cursor: pointer; font-weight: 700; }
     // 給自動測試用的後門（test/admin/check_stats_viewer.mjs）；平常用不到
     window.__SV = {
         state: state, chartState: chartState, runQuery: runQuery, gameRows: gameRows, sortRows: sortRows, fillDays: fillDays, niceScale: niceScale, fmtScore: fmtScore,
-        fmtCompact: fmtCompact, playerColumns: playerColumns, rankAlpha: rankAlpha, cleanUrl: cleanUrl, taipeiToday: taipeiToday, addDays: addDays,
-        meta: { CATS: CATS, ORDER: ORDER, GAMES: GAMES }, config: { base: BASE, key: ANON_KEY, defaultDays: DEFAULT_DAYS, maxDays: MAX_DAYS }
+        fmtCompact: fmtCompact, readClearForm: readClearForm, fmtTaipei: fmtTaipei, playerColumns: playerColumns, rankAlpha: rankAlpha, cleanUrl: cleanUrl, taipeiToday: taipeiToday, addDays: addDays,
+        meta: { CATS: CATS, ORDER: ORDER, GAMES: GAMES }, config: { base: BASE, key: ANON_KEY, defaultDays: DEFAULT_DAYS, maxDays: MAX_DAYS, tabs: TABS, clearNick: CLEAR_DEFAULT_NICK, clearPid: CLEAR_DEFAULT_PID, clearDays: CLEAR_DEFAULT_DAYS }
     };
 })();
 </script>

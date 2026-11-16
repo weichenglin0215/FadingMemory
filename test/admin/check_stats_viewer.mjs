@@ -8,7 +8,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { connect, sleep } from '../reaction/cdp.mjs';
-import { startMock, MOCK_GAMES } from './mock_stats_rpc.mjs';
+import { startMock, MOCK_GAMES, DEV_ACCOUNT } from './mock_stats_rpc.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PAGE_FILE = path.resolve(HERE, '../../admin/stats.html');
@@ -281,6 +281,9 @@ try {
   await ev('document.getElementById("tab-time").focus()');
   await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 });
   await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 });
+  ok(await J('document.getElementById("tab-clear").getAttribute("aria-selected")') === 'true' && await J('document.activeElement.id') === 'tab-clear', 'F 鍵盤右鍵：從「時間分析」到第四個頁籤「清除玩家遊戲歷程」，焦點跟著移動');
+  await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 });
+  await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 });
   await idle();
   ok(await J('document.getElementById("tab-games").getAttribute("aria-selected")') === 'true' && await J('document.activeElement.id') === 'tab-games', 'F 鍵盤右鍵：從最後一個頁籤繞回第一個，焦點跟著移動');
   ok(await J('location.hash') === '#games', 'F 網址記著目前的頁籤（#games）');
@@ -326,7 +329,7 @@ try {
   ok(q(fn.fill.map(d => [d.day.slice(8), d.plays, d.players])) === q([['01', 0, 0], ['02', 4, 2], ['03', 0, 0], ['04', 0, 0], ['05', 1, 1]]), 'H fillDays：沒人玩的日子補 0');
   ok(fn.alpha[0] > fn.alpha[2] && fn.alpha[2] > fn.alpha[1] && fn.alpha[0] <= 0.7 && fn.alpha[1] >= 0.1, 'H 名次越前面底色越深：' + q(fn.alpha));
   ok(q(fn.add) === q(['2026-11-01', '2025-12-31', '2026-02-28']), 'H addDays 跨月跨年：' + q(fn.add));
-  ok(q(await J('window.__SV.meta.CATS.map(function (c) { return c.name; })')) === q(['記憶', '視覺', '反應', '數字', '邏輯', '手感', '目測']) && await J('window.__SV.meta.ORDER.length') === 160 && await J('Object.keys(window.__SV.meta.GAMES).length') === 160, 'H 七種分類、160 款遊戲的資料');
+  ok(q(await J('window.__SV.meta.CATS.map(function (c) { return c.name; })')) === q(['記憶', '視覺', '反應', '數字', '邏輯', '手感', '目測']) && await J('window.__SV.meta.ORDER.length') === 190 && await J('Object.keys(window.__SV.meta.GAMES).length') === 190, 'H 七種分類、190 款遊戲的資料');
 
   // ═══ I. 版面與深色 ═══
   await open(mock.url);
@@ -338,6 +341,123 @@ try {
   await sleep(200); await shot('06_time_dark');
   await tabTo('games'); await shot('07_games_dark');
   ok((await ev('window.__errs.length')) === 0, '整個過程沒有 JS 錯誤／CSP 違規：' + q(await ev('window.__errs')));
+
+  // ═══ J. 清除玩家遊戲歷程（第四個頁籤）═══
+  {
+    const openClear = async (api, hash) => {             // 清除頁籤不查統計，上面共用的狀態列不會更新，所以只等網頁載入完成（不能用 idle()）
+      await cdp.send('Page.navigate', { url: 'about:blank' }); await sleep(80);
+      await cdp.send('Page.navigate', { url: PAGE + '?api=' + encodeURIComponent(api) + (hash === undefined ? '#clear' : hash) });
+      await waitFor(async () => (await ev('document.readyState')) === 'complete' && (await ev('!!window.__SV')), 8000, '網頁載入');
+    };
+    const cStatus = () => J('document.getElementById("clearStatus").textContent');
+    const cIdle = () => waitFor(async () => !(await J('document.getElementById("btnView").disabled')) && !(await cStatus()).includes('查詢中') && !(await cStatus()).includes('刪除中') && !(await cStatus()).includes('先查一次'), 8000, '清除頁籤的請求結束');
+    const stubConfirm = (answer) => ev(`window.__confirmMsgs = []; window.confirm = function (m) { window.__confirmMsgs.push(m); return ${answer ? 'true' : 'false'}; }; 1`);
+    const resultRows = () => J('[].slice.call(document.querySelectorAll("#clearResult table.grid")[0].tBodies[0].rows).map(function (r) { return [].slice.call(r.cells).map(function (c) { return c.textContent; }); })');
+    const DEV = DEV_ACCOUNT;
+    const mock2 = await startMock({ goodKey: ANON });
+    const cdev = (fn) => mock2.requests.filter(r => r.fn === fn);
+    const fill = async (nick, pid, a, b) => { await setVal('cNick', nick); await setVal('cPid', pid); await setVal('cFrom', a); await setVal('cTo', b); };
+
+    // J1 打開：頁籤在「時間分析」右邊、預設值、不會自己送任何請求
+    await openClear(mock2.url);
+    ok(q(await J('[].slice.call(document.querySelectorAll(".tabs .tab")).map(function (b) { return b.textContent; })')) === q(['遊戲分析', '玩家分析', '時間分析', '清除玩家遊戲歷程']), 'J 四個頁籤，「清除玩家遊戲歷程」在「時間分析」的右邊');
+    ok(await J('document.getElementById("tab-clear").getAttribute("aria-selected")') === 'true' && await J('document.getElementById("panel-clear").hidden') === false && await J('document.getElementById("panel-time").hidden && document.getElementById("panel-games").hidden && document.getElementById("panel-players").hidden'), 'J 網址 #clear：直接開在清除頁籤');
+    ok(await J('document.getElementById("paramForm").hidden') === true && await J('document.getElementById("status").hidden') === true, 'J 清除頁籤：上面共用的分析日期與狀態列隱藏（避免混淆）');
+    ok(await J('document.getElementById("cNick").value') === '阿公好開心' && await J('document.getElementById("cPid").value') === DEV.pid, 'J 預設暱稱「阿公好開心」、player_id 49a65eea-…');
+    ok(await J('document.getElementById("cFrom").value') === addDays(today, -7) && await J('document.getElementById("cTo").value') === today, 'J 預設日期：起始＝7 天前、結束＝今天：' + await J('document.getElementById("cFrom").value + " ～ " + document.getElementById("cTo").value'));
+    ok(await J('document.getElementById("btnView").textContent') === '查看玩家遊戲歷程' && await J('document.getElementById("btnClear").textContent') === '刪除玩家遊戲歷程', 'J 兩個按鈕的文字');
+    ok(mock2.requests.length === 0, 'J 打開頁面不會自己查或刪任何東西：' + q(mock2.requests.map(r => r.fn)));
+    await shot('08_clear_default');
+
+    // J2 查看：只列「最近 7 天」的紀錄（cups 是 20 天前，不列）
+    await mouseClick('#btnView'); await cIdle();
+    const v1 = cdev('MF_dev_player_history');
+    ok(v1.length === 1 && v1[0].args.p_nick === '阿公好開心' && v1[0].args.p_player_id === DEV.pid && v1[0].args.p_from === addDays(today, -7) && v1[0].args.p_to === today, 'J 查看：送出暱稱、player_id、日期範圍：' + q(v1.map(c => c.args)));
+    ok(v1[0].headers.apikey === ANON && cdev('MF_dev_clear_player_history').length === 0, 'J 查看用公開的 anon 金鑰，而且沒有呼叫刪除');
+    const rows1 = await resultRows();
+    ok(q(rows1.map(r => r[0])) === q(['零秒出手', '神準落下']), 'J 列出 2 款遊戲（依選單順序；cups 是 20 天前，不在範圍內）：' + q(rows1.map(r => r[0])));
+    const rSpeed = rows1.find(r => r[0] === '零秒出手'), rDrop = rows1.find(r => r[0] === '神準落下');
+    ok(rSpeed && rSpeed[1] === '0.0123 秒' && rSpeed[2] === '第 1 名' && /^\d\d-\d\d \d\d:\d\d$/.test(rSpeed[3]) && rSpeed[4].startsWith('0.0123 秒') && rSpeed[4].includes('最佳關卡 30') && rSpeed[5] === '5 局（1 天）', 'J 零秒出手那列：成績、名次、達成時間、個人最佳（含關卡）、遊玩局數：' + q(rSpeed));
+    ok(rDrop && rDrop[1].includes('88') && rDrop[2] === '第 1 名' && rDrop[4].includes('最佳關卡 41') && rDrop[5] === '3 局（1 天）', 'J 神準落下那列：' + q(rDrop));
+    ok(await J('document.querySelectorAll("#clearResult td.top30").length') === 2, 'J 前 30 名內的名次用醒目的顏色標出來（2 筆）');
+    const st1 = await cStatus();
+    ok(st1.includes('世界排行榜成績 2 筆') && st1.includes('其中 2 筆在前 30 名內') && st1.includes('個人最佳 2 筆') && st1.includes('遊玩統計 2 列（共 8 局）') && await J('document.getElementById("clearStatus").className') === 'status status--warn', 'J 狀態列說明筆數：' + st1);
+    ok(await J('document.querySelectorAll("#clearResult details table.grid tbody tr").length') === 2, 'J 摺疊的「每一天的局數」有 2 天');
+    await shot('09_clear_view');
+
+    // J3 輸入檢查：不合理的輸入在網頁就擋下來，不送請求
+    const n0 = mock2.requests.length;
+    for (const [label, args, expect] of [
+      ['暱稱空白', ['  ', DEV.pid, addDays(today, -7), today], '請輸入玩家暱稱'],
+      ['player_id 格式不對', ['阿公好開心', '1234', addDays(today, -7), today], 'player_id 的格式不對'],
+      ['日期沒填', ['阿公好開心', DEV.pid, '', today], '請選好起始日期'],
+      ['起始比結束晚', ['阿公好開心', DEV.pid, today, addDays(today, -7)], '起始日期比結束日期晚'],
+      ['範圍超過 400 天', ['阿公好開心', DEV.pid, addDays(today, -401), today], '最長 400 天']]) {
+      await fill(...args); await mouseClick('#btnView');
+      ok((await cStatus()).includes(expect) && await J('document.getElementById("clearStatus").className') === 'status status--error', 'J 輸入檢查（' + label + '）：' + await cStatus());
+      await mouseClick('#btnClear');
+      ok((await cStatus()).includes(expect), 'J 輸入檢查（' + label + '，按刪除也一樣）');
+    }
+    ok(mock2.requests.length === n0, 'J 輸入不合理時，一個請求都沒有送出');
+    // 資料庫拒絕：不在測試帳號清單／暱稱對不上
+    await fill('阿公好開心', '00000000-0000-4000-8000-000000000001', addDays(today, -7), today); await mouseClick('#btnView'); await cIdle();
+    ok((await cStatus()).includes('開發者測試帳號清單') && (await cStatus()).includes('MF_dev_accounts') && await J('document.getElementById("clearStatus").className') === 'status status--error' && await J('document.getElementById("clearResult").children.length') === 0, 'J 不在測試帳號清單：說明原因與怎麼加（不顯示任何紀錄）：' + await cStatus());
+    await fill('路人甲', DEV.pid, addDays(today, -7), today); await mouseClick('#btnView'); await cIdle();
+    ok((await cStatus()).includes('暱稱與 player_id 對不上'), 'J 暱稱對不上：' + await cStatus());
+    // 刪除也一樣會被擋（而且擋在「先查」這一步，沒有送出刪除）
+    const clrBefore = cdev('MF_dev_clear_player_history').length;
+    await stubConfirm(true); await fill('阿公好開心', '00000000-0000-4000-8000-000000000001', addDays(today, -7), today); await mouseClick('#btnClear'); await cIdle();
+    ok((await cStatus()).includes('開發者測試帳號清單') && cdev('MF_dev_clear_player_history').length === clrBefore && (await J('window.__confirmMsgs.length')) === 0, 'J 刪除一個不在清單裡的編號：先查就被擋下，沒有跳出確認視窗、沒有呼叫刪除');
+
+    // J4 刪除：先查 → 確認視窗（列出筆數）→ 按「取消」什麼都不刪
+    await fill('阿公好開心', DEV.pid, addDays(today, -7), today);
+    await stubConfirm(false); await mouseClick('#btnClear'); await cIdle();
+    const msgs = await J('window.__confirmMsgs');
+    ok(msgs.length === 1 && msgs[0].includes('阿公好開心') && msgs[0].includes(DEV.pid) && msgs[0].includes('世界排行榜成績　2 筆') && msgs[0].includes('雲端個人最佳　　2 筆') && msgs[0].includes('2 列（共 8 局）') && msgs[0].includes('回不來'), 'J 確認視窗：寫出暱稱、player_id、日期範圍、各刪幾筆、「刪掉就回不來」：' + q(msgs[0]));
+    ok(cdev('MF_dev_clear_player_history').length === clrBefore && (await cStatus()).includes('已取消'), 'J 按「取消」：沒有呼叫刪除，狀態列寫「已取消」');
+    ok((await resultRows()).length === 2, 'J 取消之後，查到的紀錄還在畫面上');
+    // 按「確定」才真的刪
+    await stubConfirm(true); await mouseClick('#btnClear'); await cIdle();
+    const cl = cdev('MF_dev_clear_player_history');
+    ok(cl.length === clrBefore + 1 && cl.at(-1).args.p_nick === '阿公好開心' && cl.at(-1).args.p_player_id === DEV.pid && cl.at(-1).args.p_from === addDays(today, -7) && cl.at(-1).args.p_to === today, 'J 按「確定」：呼叫刪除，帶著同樣的暱稱、player_id、日期範圍：' + q(cl.at(-1) && cl.at(-1).args));
+    const stDel = await cStatus();
+    ok(stDel.includes('已刪除') && stDel.includes('世界排行榜成績 2 筆') && stDel.includes('個人最佳 2 筆') && stDel.includes('遊玩次數統計 2 列（共 8 局）') && stDel.includes('Identity.forgetBest') && await J('document.getElementById("clearStatus").className') === 'status status--ok', 'J 刪除完：狀態列說明刪了幾筆、提醒本機最佳要另外清：' + stDel);
+    ok((await J('document.getElementById("clearResult").textContent')).includes('沒有「阿公好開心」的遊戲歷程'), 'J 刪完之後再查一次，畫面是空的');
+    ok(await J('document.getElementById("toast").classList.contains("show")'), 'J 跳出「已刪除」提示');
+    await shot('10_clear_done');
+    ok(await J('document.getElementById("btnView").disabled') === false && await J('document.getElementById("btnClear").disabled') === false, 'J 做完之後兩個按鈕都可以再按');
+    // 範圍外的（cups，20 天前）沒被動到：把起始日期拉到 30 天前就看得到
+    await fill('阿公好開心', DEV.pid, addDays(today, -30), today); await mouseClick('#btnView'); await cIdle();
+    const rows30 = await resultRows();
+    ok(rows30.length === 1 && rows30[0][0] === '球在哪杯' && rows30[0][2] === '第 3 名', 'J 範圍外（20 天前）的 cups 沒被刪：' + q(rows30));
+    // 再刪一次 7 天範圍：沒有東西可以刪，不會跳確認視窗
+    await fill('阿公好開心', DEV.pid, addDays(today, -7), today); await stubConfirm(true);
+    const clrN = cdev('MF_dev_clear_player_history').length;
+    await mouseClick('#btnClear'); await cIdle();
+    ok((await cStatus()).includes('沒有東西可以刪') && cdev('MF_dev_clear_player_history').length === clrN && (await J('window.__confirmMsgs.length')) === 0, 'J 沒有紀錄可以刪：不跳確認視窗、不呼叫刪除');
+
+    // J5 切回別的頁籤：共用的日期與狀態列回來；鍵盤左右鍵、Home／End 涵蓋四個頁籤
+    await mouseClick('#tab-games'); await idle();
+    ok(await J('document.getElementById("paramForm").hidden') === false && await J('document.getElementById("status").hidden') === false && (await status()).includes('款遊戲有人玩'), 'J 切回「遊戲分析」：分析日期與狀態列回來、照常查詢');
+    await ev('document.getElementById("tab-games").focus()');
+    await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'End', code: 'End', windowsVirtualKeyCode: 35 }); await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'End', code: 'End', windowsVirtualKeyCode: 35 });
+    ok(await J('window.__SV.state.tab') === 'clear', 'J 鍵盤 End：跳到最右邊的「清除玩家遊戲歷程」');
+    await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 }); await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 });
+    ok(await J('window.__SV.state.tab') === 'games', 'J 鍵盤右鍵：從最後一個頁籤繞回第一個');
+    await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowLeft', code: 'ArrowLeft', windowsVirtualKeyCode: 37 }); await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'ArrowLeft', code: 'ArrowLeft', windowsVirtualKeyCode: 37 });
+    ok(await J('window.__SV.state.tab') === 'clear', 'J 鍵盤左鍵：從第一個繞到最後一個');
+    // 下次打開（網址沒有 #clear）不會停在清除頁籤
+    await openClear(mock2.url, ''); await idle().catch(() => {});
+    ok(await J('window.__SV.state.tab') !== 'clear', 'J 下次打開網頁不會自己停在「清除」頁籤：' + await J('window.__SV.state.tab'));
+    await mock2.close();
+
+    // J6 資料庫還沒執行新版 SQL：說明要重新執行
+    const old = await startMock({ goodKey: ANON, mode: 'nofunc' });
+    await openClear(old.url); await mouseClick('#btnView'); await cIdle();
+    ok((await cStatus()).includes('第 7C 節') && (await cStatus()).includes('MF_dev_player_history') && await J('document.getElementById("clearStatus").className') === 'status status--error', 'J 資料庫還沒有函式：提醒重新執行 SQL（第 7C 節）：' + await cStatus());
+    await old.close();
+    ok((await ev('window.__errs.length')) === 0, 'J 整個過程沒有 JS 錯誤／CSP 違規：' + q(await ev('window.__errs')));
+  }
 } finally {
   cdp.close();
   await mock.close();

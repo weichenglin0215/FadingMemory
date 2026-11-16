@@ -429,6 +429,7 @@
 | 遊戲在「選一個想玩的遊戲」裡的**名稱（最多 5 個字）與分類頁籤** | `js/menu.js` 的 `GAME_CELLS`（每款 `{ id, name, cat, img }`，`cat` 是 memory／visual／reaction／number／logic／hand／guess 其中一個）與 `GAME_TABS`（頁籤順序與名稱）；改名要同步改該遊戲檔案 `Reaction.register` 的 `name`，再執行 `node test/leaderboard/gen_games_sql.cjs --write` 並到 Supabase 重新執行 SQL（`t_menu.js`、`t_leaderboard.js` 會檢查兩邊一致） |
 | **查看玩家意見**（依時間、id 範圍查，只顯示 game_id／game_title／message 並一鍵複製貼給 Claude） | 用瀏覽器開 `admin/feedback.html`（不需要金鑰，打開就自動查 7 天前到今天；資料庫要先執行過最新的 `supabase/MF_leaderboard.sql`） |
 | **看遊玩人數、次數、玩家名次、每天趨勢**（遊戲分析／玩家分析／時間分析） | 用瀏覽器開 `admin/stats.html`（不需要金鑰；要先執行過最新的 `supabase/MF_leaderboard.sql`，統計從執行之後才開始累積） |
+| **清掉開發測試帳號（例如「阿公好開心」）在某段日期內的遊戲歷程**，不讓測試高分影響外部玩家的名次 | 開 `admin/stats.html` →「清除玩家遊戲歷程」頁籤：填暱稱、`player_id`、起訖日期，先按「查看」再按「刪除」（會再確認一次）。只能處理資料庫 `MF_dev_accounts` 清單裡的測試帳號（`MF_leaderboard.sql` 第 7C 節預先放了你的）；本機最佳仍要在遊戲頁主控台執行 `Identity.forgetBest('遊戲代號')` |
 | 手指／滑鼠拖曳＋慣性捲動的手感（遊戲列表、世界排行榜共用） | `js/scroller.js` 最上面的 `PHYS`（摩擦力 `tau`、橡皮筋 `rubber`、最大速度…） |
 | 遊戲開始前「玩法說明」彈窗的排版：一句一行、**重點句子粗體黑字** | 各遊戲檔案 `Reaction.register` 的 `rule` 字串：句尾標點（。！？；）後自動換行，`\n` 手動換行；要標重點就用兩個星號前後包起來（`**重點**`，粗體黑字）；排版程式 `Dlg.richText`（`js/dialog.js`），樣式 `.dlg__line`／`.dlg__em`（`css/dialog.css`，黑色是 `css/theme.css` 的 `--c-black`）；說明太長時卡片會自動縮小內文字級（最小 `--fs-xs`） |
 | 舞台（500×850）怎麼縮放、置中、充滿瀏覽器高度（iPad／手機） | `js/stage.js`（`readViewport`：visualViewport、innerHeight、100dvh 取最大，每 0.4 秒自己重量）；網址加 `?debug` 看各來源量到的數字 |
@@ -551,7 +552,7 @@ css/rating.css                         五星評價的樣式（平均星數的�
 css/leaderboard.css                    世界排行榜彈窗樣式（顏色與列高變數在 css/theme.css 的「世界排行榜」段）
 supabase/MF_leaderboard.sql            世界排行榜資料庫腳本（資料表以 MF_ 開頭；到 Supabase SQL Editor 執行一次，詳見 note/世界排行榜說明.md）
 admin/feedback.html                    玩家意見查閱頁（管理者在電腦上用，**不是遊戲**；雙擊就能開，不需要金鑰；可依時間、id 範圍查玩家意見，一鍵複製貼給 Claude）
-admin/stats.html                       後台資料分析頁（V1.39.0，管理者在電腦上用，**不是遊戲**；雙擊就能開、不需要金鑰）：分析參數（起訖日期）＋遊戲分析／玩家分析／時間分析三個頁籤；遊戲資料區塊由 gen_games_sql.cjs 產生
+admin/stats.html                       後台資料分析頁（V1.39.0，管理者在電腦上用，**不是遊戲**；雙擊就能開、不需要金鑰）：分析參數（起訖日期）＋遊戲分析／玩家分析／時間分析／清除玩家遊戲歷程（V1.57.1.0，會刪資料，只准處理測試帳號清單裡的帳號）四個頁籤；遊戲資料區塊由 gen_games_sql.cjs 產生
 js/quiz_pools.js                       「明明還記得...」題庫池（每一局從這裡抽參數）
 js/quiz_gen.js                         「明明還記得...」題目產生器引擎（可重現亂數、誘答、混淆類型、日期、主軸登記、回想題；不含任何關卡內容）
 js/quiz_happyBirthday.js               「明明還記得...」・生日主軸（1～8 關完整撰寫）

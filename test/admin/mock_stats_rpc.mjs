@@ -2,6 +2,8 @@
 //   不連網路、不會碰到真的資料庫。資料是程式產生的、固定不變（同一個 seed）：
 //     · 40 位玩家、14 款遊戲（含一款分類表裡沒有的 zz_test），最近 45 天的遊玩紀錄（有些日子故意沒人玩）；
 //     · 五星評價、世界排行榜（每款前 N 名）；暱稱裡有一個會害人的 <img onerror=…>，用來確認網頁把它當一般文字。
+//   （V1.57.1.0）另外實作「清除玩家遊戲歷程」的兩個函式 MF_dev_player_history／MF_dev_clear_player_history：只認一個測試帳號（DEV_ACCOUNT），
+//   其他編號回 not_allowed、暱稱不對回 not_found；測試帳號有幾筆世界榜成績、個人最佳、遊玩統計（一部分在最近 7 天內、一部分更久以前），刪除會真的改掉假資料。
 //   計算規則跟 supabase/MF_leaderboard.sql 的 MF_stats_games／MF_stats_daily／MF_stats_players 一樣
 //   （日期是台灣日期、含頭尾；沒給＝最近 30 天；起迄顛倒會對調；最長 400 天；players 可以只算期間內達成的名次）。
 //   opts.mode：'ok'（預設）｜'nofunc'（資料庫還沒執行新版 SQL：找不到函式 → 404／PGRST202）｜'denied'（金鑰不被接受 → 401）｜'slow'（回應慢 400 毫秒）
@@ -19,6 +21,9 @@ export const MOCK_GAMES = [
   ['lights', '點燈記憶', 'max'], ['pour', '倒到八分滿', 'min'], ['beans', '挑豆子', 'max'], ['teacher', '老師說', 'max'], ['bounce', '球會跑去哪', 'max'],
   ['samelen', '畫一樣長', 'min'], ['flags', '舉旗子', 'max'], ['minus7', '一路減七', 'max'], ['zz_test', '（測試用，可刪）', 'max']
 ];
+
+// 測試帳號（跟 admin/stats.html、supabase/MF_leaderboard.sql 的預設一樣）
+export const DEV_ACCOUNT = { nick: '阿公好開心', pid: '49a65eea-1af7-4220-accf-7d0de93cc2a3' };
 
 export function buildData(todayStr) {
   const r = rng(20261030);
@@ -42,7 +47,13 @@ export function buildData(todayStr) {
     pool.forEach((pid) => scores.push({ game: id, pid, score: better === 'min' ? +(r() * 5 + 0.1).toFixed(4) : 5 + Math.floor(r() * 90), ago: Math.floor(r() * 60) }));
   });
   scores.forEach((s) => { s.better = MOCK_GAMES.find((g) => g[0] === s.game)[2]; });
-  return { players, plays, ratings, scores };
+  // 測試帳號的歷程（ago＝幾天前）：speed、drop 在最近 7 天內（都是第 1 名），cups 是 20 天前
+  const dev = {
+    scores: [{ game: 'speed', score: 0.0123, ago: 2, rank: 1 }, { game: 'drop', score: 88, ago: 1, rank: 1 }, { game: 'cups', score: 40, ago: 20, rank: 3 }],
+    bests: [{ game: 'speed', best_score: 0.0123, best_level: 30, ago: 2 }, { game: 'drop', best_score: 88, best_level: 41, ago: 1 }, { game: 'cups', best_score: 40, best_level: 12, ago: 20 }],
+    plays: [{ day: todayStr, game: 'speed', n: 5 }, { day: addDays(todayStr, -2), game: 'drop', n: 3 }, { day: addDays(todayStr, -20), game: 'cups', n: 4 }]
+  };
+  return { players, plays, ratings, scores, dev };
 }
 
 export function startMock(opts) {
@@ -98,6 +109,41 @@ export function startMock(opts) {
     }).sort((a, b) => b.cnt - a.cnt || a.best - b.best || (a.nick < b.nick ? -1 : a.nick > b.nick ? 1 : 0) || a._pid - b._pid).map(({ _pid, ...x }) => x);
   }
 
+  // 清除玩家遊戲歷程：查看／刪除（規則跟 MF_dev_player_history／MF_dev_clear_player_history 一樣；只認 DEV_ACCOUNT）
+  const iso = (ago) => new Date(Date.parse(o.today + 'T04:00:00Z') - ago * 86400000).toISOString().replace('Z', '+00:00');   // 台灣時間中午 12 點
+  const titleOf = (id) => MOCK_GAMES.find((g) => g[0] === id)[1];
+  function devCheck(a) {
+    if (!a.p_nick || !String(a.p_nick).trim() || !a.p_player_id || !a.p_from || !a.p_to) return { ok: false, error: 'bad_args' };
+    if (a.p_player_id !== DEV_ACCOUNT.pid) return { ok: false, error: 'not_allowed' };
+    if (a.p_nick !== DEV_ACCOUNT.nick) return { ok: false, error: 'not_found' };
+    return null;
+  }
+  function devPick(a) {
+    const R = range(a.p_from, a.p_to), ago = (n) => inR(addDays(o.today, -n), R);
+    return { R, scores: data.dev.scores.filter((s) => ago(s.ago)), bests: data.dev.bests.filter((b) => ago(b.ago)), plays: data.dev.plays.filter((p) => inR(p.day, R)) };
+  }
+  function devHistory(a) {
+    const bad = devCheck(a); if (bad) return bad;
+    const p = devPick(a), byGame = {}, byDay = {};
+    p.plays.forEach((x) => { const g = (byGame[x.game] = byGame[x.game] || { plays: 0, days: 0 }); g.plays += x.n; g.days++; const y = (byDay[x.day] = byDay[x.day] || { games: 0, plays: 0 }); y.games++; y.plays += x.n; });
+    return {
+      ok: true, nick: DEV_ACCOUNT.nick, from: p.R[0], to: p.R[1],
+      scores: p.scores.map((s) => ({ game_id: s.game, title: titleOf(s.game), score: s.score, achieved_at: iso(s.ago), rank: s.rank, top_n: 30 })).sort((x, y) => (x.game_id < y.game_id ? -1 : 1)),
+      bests: p.bests.map((b) => ({ game_id: b.game, title: titleOf(b.game), best_score: b.best_score, best_level: b.best_level, updated_at: iso(b.ago) })).sort((x, y) => (x.game_id < y.game_id ? -1 : 1)),
+      plays: Object.keys(byGame).sort().map((g) => ({ game_id: g, title: titleOf(g), plays: byGame[g].plays, days: byGame[g].days })),
+      days: Object.keys(byDay).sort().map((day) => ({ day, games: byDay[day].games, plays: byDay[day].plays })),
+      counts: { scores: p.scores.length, bests: p.bests.length, play_rows: p.plays.length, plays: p.plays.reduce((s, x) => s + x.n, 0) }
+    };
+  }
+  function devClear(a) {
+    const bad = devCheck(a); if (bad) return bad;
+    const p = devPick(a);
+    data.dev.scores = data.dev.scores.filter((s) => !p.scores.includes(s));
+    data.dev.bests = data.dev.bests.filter((b) => !p.bests.includes(b));
+    data.dev.plays = data.dev.plays.filter((x) => !p.plays.includes(x));
+    return { ok: true, nick: DEV_ACCOUNT.nick, from: p.R[0], to: p.R[1], deleted: { scores: p.scores.length, bests: p.bests.length, play_rows: p.plays.length, plays: p.plays.reduce((s, x) => s + x.n, 0) } };
+  }
+
   const server = http.createServer((req, res) => {
     const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'apikey, authorization, content-type, accept, prefer', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' };
     if (req.method === 'OPTIONS') { res.writeHead(204, cors); res.end(); return; }
@@ -116,6 +162,8 @@ export function startMock(opts) {
         if (m[1] === 'MF_stats_games') return send(200, games(args.p_from, args.p_to));
         if (m[1] === 'MF_stats_daily') return send(200, daily(args.p_from, args.p_to));
         if (m[1] === 'MF_stats_players') return send(200, playersFn(args.p_from, args.p_to));
+        if (m[1] === 'MF_dev_player_history') return send(200, devHistory(args));
+        if (m[1] === 'MF_dev_clear_player_history') return send(200, devClear(args));
         return send(404, { code: 'PGRST202', message: 'unknown function' });
       };
       if (o.mode === 'slow') setTimeout(go, 400); else go();
