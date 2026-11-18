@@ -45,6 +45,28 @@
         return el;
     };
 
+    /* ─── 畫字：墨跡置中（V1.57.2.0）─── */
+    /* 為什麼要有：canvas 的 textBaseline = 'middle' 是「字型的 em 方塊中央」，不是「字看得到的筆畫的中央」。
+       每種字型（Windows 的明體、iPhone 的宋體／黑體…）em 方塊上下的留白都不一樣，所以同一行程式碼，電腦上看起來剛好在正中央，
+       iPhone 上字卻偏低（玩家意見：門縫偷看、對準才看到的字在 iPhone 的 Chrome 上偏低、字的下緣貼著方框下緣）。
+       做法：先用 measureText 量出這個字「實際筆畫」的上下左右邊界（actualBoundingBox…），再反推出 fillText 要放的座標，
+       讓筆畫的外框正好以 (cx, cy) 為中心——跟字型、瀏覽器無關。 */
+    /* kit.glyphAnchor(ctx, ch, cx, cy)：回傳 { x, y }：用 ctx.textAlign = 'left'、ctx.textBaseline = 'alphabetic' 畫在這個座標，字的筆畫外框中心就是 (cx, cy)。
+       ctx.font 要先設好。舊瀏覽器量不到筆畫邊界時，退回「em 方塊中央再往下一點」的估計（CJK 字的筆畫中心約在基線上方 0.38 個字級）。 */
+    kit.glyphAnchor = function (ctx, ch, cx, cy) {
+        ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+        var m = ctx.measureText(ch), a = m.actualBoundingBoxAscent, d = m.actualBoundingBoxDescent, l = m.actualBoundingBoxLeft, r = m.actualBoundingBoxRight;
+        if (isFinite(a) && isFinite(d) && isFinite(l) && isFinite(r) && a + d > 0 && l + r > 0) return { x: cx - (r - l) / 2, y: cy + (a - d) / 2 };
+        var px = /([\d.]+)px/.exec(ctx.font || ''), size = px ? parseFloat(px[1]) : 16;
+        return { x: cx - (m.width || size) / 2, y: cy + size * 0.38 };
+    };
+    /* kit.drawGlyph(ctx, ch, cx, cy)：把字畫在 (cx, cy)（筆畫外框的中心）；顏色（fillStyle）與字型（font）要先設好 */
+    kit.drawGlyph = function (ctx, ch, cx, cy) {
+        var p = kit.glyphAnchor(ctx, ch, cx, cy);
+        ctx.fillText(ch, p.x, p.y);
+        return p;
+    };
+
     /* 緩動函式：把進度 t（0～1）轉成「先快後慢」「先慢後快再慢」等不等速的進度，讓動畫看起來自然 */
     /* ─── 緩動 ─── */
     kit.easeOutCubic = function (t) { return 1 - Math.pow(1 - t, 3); };
@@ -249,6 +271,28 @@
         /* V1.57.0：因為按「返回」已經先結算過（卡片還在畫面上），遊戲晚一步才跳出的結算就不再疊第二張 */
         if (Reaction.leaveCard && Reaction.leaveCard.isConnected) return Reaction.leaveCard;
         if (o.bgm !== false) { Reaction.pendingBest = null; Reaction.leaveScore = null; }          /* 這一局正式結算了：沒有「待結算」的成績了 */
+        /* 進場關卡優惠送的成績不算（V1.57.2.0，見 reaction_core.js 的 Reaction.beginRun）：這一局一關都沒真的通過，
+           不說大數字與「新紀錄」、不送世界排行榜，只說明這次從第幾關開始、沒有通過新的關卡。 */
+        var cid = Reaction.current && Reaction.current.id, E0 = Reaction.entryRun;
+        if (cid && o.score != null && Reaction.creditOnly(cid, o.score)) {
+            var o2 = {};
+            for (var k2 in o) if (Object.prototype.hasOwnProperty.call(o, k2)) o2[k2] = o[k2];
+            o2.score = null; o2.num = null; o2.label = ''; o2.isNew = false;
+            o2.lines = ['這次從第 ' + E0.from + ' 關開始，還沒有通過新的關卡，不計入最佳紀錄。'].concat(o.lines || []);
+            o = o2;
+        }
+        /* 「再玩一次」「從前面繼續」是新的一局：優惠要重新登記（再玩一次＝從第 1 關，沒有優惠；從前面繼續＝從那一關開始，跳過的關卡仍算已過） */
+        if (cid && (o.onAgain || o.resume)) {
+            var o3 = {};
+            for (var k3 in o) if (Object.prototype.hasOwnProperty.call(o, k3)) o3[k3] = o[k3];
+            var againFn = o.onAgain, resumeObj = o.resume;           /* 先存下原本的（下面 o 會換成新的物件，不先存的話包起來的函式會呼叫到自己） */
+            if (againFn) o3.onAgain = function () { Reaction.entryRun = null; return againFn.apply(this, arguments); };
+            if (resumeObj && resumeObj.run) {
+                var add0 = E0 && E0.id === cid ? E0.add : 1;
+                o3.resume = { level: resumeObj.level, run: function () { Reaction.beginRun(cid, resumeObj.level, add0); return resumeObj.run.apply(this, arguments); } };
+            }
+            o = o3;
+        }
         var kids = [];
         if (o.num != null) kids.push(h('div', { 'class': 'rx-result__num', text: o.num }));
         if (o.label) kids.push(h('div', { 'class': 'rx-result__label', text: o.label }));
@@ -307,6 +351,7 @@
        kit.leaveVerdict(id, score, better)：回傳 'none'（沒刷新個人最佳）／'silent'（刷新了但進不了榜）／'card'（有機會進榜或不確定）。 */
     kit.leaveVerdict = function (id, score, better) {
         if (typeof score !== 'number' || !isFinite(score)) return 'none';
+        if (Reaction.creditOnly(id, score)) return 'none';      /* 這一局一關都沒真的通過，成績只是進場優惠送的關卡：不算刷新 */
         var b = Reaction.getBest(id);
         if (b != null && !(better === 'min' ? score < b : score > b)) return 'none';
         var L = global.Leaderboard, g = Reaction.current;
@@ -452,7 +497,9 @@
                 kit.noteLevel(id, lv);
             }
         }
-        return Math.max(1, lv - kit.ENTRY_BACK);
+        var from = Math.max(1, lv - kit.ENTRY_BACK);
+        Reaction.beginRun(id, from, legacyAdd);              /* 登記這一局從第幾關開始：優惠送的關卡不算成績（見 reaction_core.js） */
+        return from;
     };
     /* kit.enter(id, startFn, legacyAdd)：舊式闖關遊戲（自己有 round(從第幾關開始) 函式的那些）在 mount 最後一行呼叫它，
        取代原本的 round(1)——算出進場關卡、開局、再跳「這次從第幾關開始」的小提示。回傳進場關卡。 */

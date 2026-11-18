@@ -19,6 +19,7 @@ const require = createRequire(import.meta.url);
 let bad = 0, total = 0;
 const say = console.log.bind(console);      // 用戶端模組自己會 console.log 很多訊息，有些段落會把 console.log 靜音；測試自己的輸出一律用 say
 const ok = (c, m) => { total++; if (!c) { bad++; say('FAIL', m); } };
+const eq0 = (a, b, m) => ok(JSON.stringify(a) === JSON.stringify(b), m + '  期望 ' + JSON.stringify(b) + ' 實際 ' + JSON.stringify(a));
 
 // ─── 資料庫 ───
 const db = new PGlite({ extensions: { pgcrypto } });
@@ -330,6 +331,60 @@ const playerOf = async (nick) => (await db.query(`select * from public."MF_playe
   ok(LB.identityState() === 'guest' && !('fm.reaction.best.speed' in ls) && !('fm.reaction.lvbest.cake' in ls), '登出：回到訪客，本機個人最佳清掉（都存在帳號裡）');
   ok(await countOf('select count(*)::int as n from public."MF_sessions" where token_hash = public."MF__token_hash"($1)', [tokenB]) === 0, '登出：資料庫端這把憑證也刪了');
   ok((await ID.login('快樂阿嬤', '1234')).ok, '登出之後可以再登入');
+
+  // 6-4b 否定本機成績（V1.57.2.0）：玩家在兩台裝置上都偽造了最佳；管理者把雲端改成正確值、否定本機版本 → 每台裝置各自被重設一次，偽造值洗不回去
+  {
+    const snap = () => Object.assign({}, ls), restore = (o) => { mem.clear(); Object.assign(ls, o); T.state.boards = {}; T.state.inflight = {}; };
+    const cloud = async () => (await db.query(`select best_score::float8 as s, best_level as lv, reject_rev as r from public."MF_player_bests" where player_id = $1::uuid and game_id = 'cake'`, [phoneA.pid])).rows[0];
+    const dbq = async (sqlText, args) => (await db.query(sqlText, args)).rows[0];
+    // 裝置甲：登入（帶回真的 cake 17 / 關卡 21），在瀏覽器裡把最佳改成 150 → 同步 → 雲端被洗成 150（這就是以前清不掉的問題）
+    resetBrowser(); lg = await ID.login('快樂阿嬤', '1234'); await ID.finishSession(lg.data);
+    ok(ls['fm.reaction.best.cake'] === '17' && ls['fm.reaction.lvbest.cake'] === '21', '否定本機：裝置甲登入，帶回真的最佳 17／關卡 21');
+    ls['fm.reaction.best.cake'] = '150'; ls['fm.reaction.lvbest.cake'] = '150';
+    await ID.syncBests({ ids: ['cake'] });
+    eq0(await cloud(), { s: 150, lv: 150, r: 0 }, '否定本機：偽造的 150 被雲端收下（還沒有否定的時候取較好的）');
+    const devA = snap();
+    // 裝置乙：另一支手機登入同一個帳號 → 也帶著 150（偽造值已經擴散）
+    resetBrowser(); lg = await ID.login('快樂阿嬤', '1234'); await ID.finishSession(lg.data);
+    ok(ls['fm.reaction.best.cake'] === '150', '否定本機：裝置乙登入，也帶到 150');
+    const devB = snap();
+    // 管理者：雲端改回 17／21，並否定本機版本
+    const adm = (await dbq(`select public."MF_admin_reject_local"('快樂阿嬤', 'cake', 17, 21) as j`)).j;
+    ok(adm.ok === true && adm.reject_rev === 1 && adm.best_score === 17 && adm.best_level === 21, '否定本機：MF_admin_reject_local → 成績 17、關卡 21、版本 1：' + JSON.stringify(adm));
+    eq0(await cloud(), { s: 17, lv: 21, r: 1 }, '否定本機：雲端改成 17／21、版本 1');
+    // 裝置甲同步 → 本機被雲端取代（往下調），而且偽造的 150 沒有再傳上去
+    restore(devA);
+    let sy = await ID.syncBests({ ids: ['cake'] });
+    ok(sy.ok && sy.data.reset.includes('cake'), '否定本機：同步回傳 reset 含 cake');
+    ok(ls['fm.reaction.best.cake'] === '17' && ls['fm.reaction.lvbest.cake'] === '21' && ls['fm.reaction.rev.cake'] === '1' && ls['fm.reaction.best.cake.sync'] === 'true', '否定本機：裝置甲的本機最佳換成雲端的（150→17、150→21），記下版本 1');
+    eq0(await cloud(), { s: 17, lv: 21, r: 1 }, '否定本機：偽造值沒有傳回雲端（雲端還是 17／21）');
+    ok(Reaction.kit.entryLevel('cake', 0) === 21 - Reaction.kit.ENTRY_BACK, '否定本機：重設之後 kit.entryLevel 用的是正確的關卡 ' + Reaction.kit.entryLevel('cake', 0));
+    // 裝置甲再同步一次：版本相同 → 不再重設、也沒有 reset
+    sy = await ID.syncBests({ ids: ['cake'] });
+    ok(sy.ok && !sy.data.reset.length && ls['fm.reaction.best.cake'] === '17', '否定本機：版本相同的第二次同步不再重設');
+    // 裝置乙（一直沒上線、本機還是 150、版本 0）：這是「另一台裝置」——也各自被重設一次，不會因為甲已經重設過就漏掉
+    restore(devB);
+    await ID.syncBests({ ids: ['cake'] });
+    ok(ls['fm.reaction.best.cake'] === '17' && ls['fm.reaction.lvbest.cake'] === '21' && ls['fm.reaction.rev.cake'] === '1', '否定本機：裝置乙也被重設（每支瀏覽器各自比對版本，不是用完就沒了）');
+    eq0(await cloud(), { s: 17, lv: 21, r: 1 }, '否定本機：乙同步後雲端仍是 17／21');
+    // 還沒更新程式的舊版客戶端（上傳不帶 r）：偽造值一律不收
+    const rawSync = (await dbq(`select public."MF_sync_bests"($1::uuid, $2, $3::jsonb) as j`, [phoneA.pid, LB.token(), JSON.stringify([{ g: 'cake', s: 150, lv: 150 }])])).j;
+    ok(rawSync.ok && rawSync.reset.length === 1 && rawSync.items.find(x => x.g === 'cake').r === 1, '否定本機：舊版客戶端（沒帶 r）的上傳不收，回傳附上版本 r');
+    eq0(await cloud(), { s: 17, lv: 21, r: 1 }, '否定本機：舊版客戶端的偽造值沒有進雲端');
+    // 重設之後的真實新紀錄照常上傳（版本相同＝正常「取較好的」）
+    Reaction.setBest('cake', 18, (a, c) => a > c); Reaction.kit.noteLevel('cake', 22);
+    await sleep(80);
+    eq0(await cloud(), { s: 18, lv: 22, r: 1 }, '否定本機：重設之後的新紀錄 18／22 照常上傳');
+    // 管理者把雲端清空（成績與關卡都不要）→ 本機也清空
+    const adm2 = (await dbq(`select public."MF_admin_reject_local"('快樂阿嬤', 'cake', null, null) as j`)).j;
+    ok(adm2.ok && adm2.reject_rev === 2, '否定本機：再否定一次（清空）→ 版本 2');
+    await ID.syncBests({ ids: ['cake'] });
+    ok(!('fm.reaction.best.cake' in ls) && !('fm.reaction.best.cake.sync' in ls) && !('fm.reaction.lvbest.cake' in ls) && ls['fm.reaction.rev.cake'] === '2', '否定本機：雲端清空 → 本機的最佳成績、單位記號、最佳關卡都清掉，版本記 2');
+    // 登出：版本記錄也清掉（換帳號不能沿用）
+    await ID.logout();
+    ok(!Object.keys(ls).some(k => k.indexOf('fm.reaction.rev.') === 0), '否定本機：登出清掉本機的版本記錄');
+    ok((await ID.login('快樂阿嬤', '1234')).ok, '否定本機：登出後可以再登入');
+  }
 
   // 6-5 改密碼：其他裝置被登出（憑證失效→標記重新登入）
   resetBrowser(); lg = await ID.login('快樂阿嬤', '1234'); await ID.finishSession(lg.data);

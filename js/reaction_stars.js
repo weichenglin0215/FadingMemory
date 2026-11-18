@@ -11,7 +11,8 @@
    · 字畫在一張看不見的畫布上，再依每個小方塊目前的位置，一塊一塊貼到顯示的畫布上（每個畫格 N² 次 drawImage，N 最大 20＝400 次，沒問題）。
    · 選項：同一個字群的形近字（SimilarChars），4 個（第 FIVE_FROM 關起 5 個）；答案隨機。
    · 難度（線性）：小方塊 5×5 → 20×20（TILES）、回位時間 10 → 6 秒（RETURN_S）→ 作答時限 8 → 4.8 秒、字群的平均筆劃範圍 10～16 → 16～24（STROKES）。
-   · 揭曉：所有小方塊飛回原位，字整個露出來；答錯時標出正確的字。
+   · 揭曉（V1.57.2.0 玩家意見）：玩家點了任何答案、或時間到，所有小方塊**先定住不動 FREEZE_S（1.5）秒**，讓玩家看清楚「此刻拼到哪裡」；
+     然後**用慢動作（SLOWMO_S ＝ 4 秒）一起移到最後的位置**，字整個露出來；拼好之後停 PASS_HOLD_S／FAIL_HOLD_S 秒才進下一關／結算。答錯時標出正確的字。
    ═══════════════════════════════════════════════════════════════════ */
 (function () {
     /* 新手導讀：整個檔案包在 (function () { ... })(); 裡（叫「立即執行函式」），裡面的變數都是這個檔案私有的，不會跟別的遊戲檔案的同名變數打架。
@@ -29,11 +30,16 @@
     var TILES = [5, 20];                        /* 字切成 N×N 個小方塊：第 1 關 → 到頂 */
     var RETURN_S = [10, 6];                     /* 所有小方塊回到原位要多久（秒）：第 1 關 → 到頂 */
     var LIMIT = 0.8;                            /* 作答的時間限制 ＝ 回位時間 × 這個比例（看到完整的字之前就到時） */
-    var ARRIVE_MIN = 0.35;                      /* 每個小方塊最早在回位時間的幾成就到位 */
+    var ARRIVE_MIN = 0.5;                      /* 每個小方塊最早在回位時間的幾成就到位 */
     var MOVE = [0.3, 0.7];                      /* 每個小方塊走過去花回位時間的幾成（範圍） */
     var STRAGGLE = 0.15;                        /* 時限到的時候，至少要有幾成的小方塊還沒到位 */
     var STROKES_LO = [10, 16], STROKES_HI = [16, 24];   /* 字群的平均筆劃範圍：第 1 關 → 到頂 */
-    var FIVE_FROM = 12;                         /* 第幾關起有 5 個選項 */
+    var FREEZE_S = 1.5;                         /* 玩家點了答案（或時間到）之後，所有小方塊定住不動幾秒：讓玩家看清楚此刻拼到哪裡（V1.57.2.0 玩家意見；0＝不定住） */
+    var SLOWMO_S = 4;                           /* 定住之後，所有小方塊以慢動作一起移到最後位置要幾秒（0＝瞬間到位） */
+    var PASS_HOLD_S = 1;                        /* 答對：小方塊拼好之後，再停幾秒才進下一關 */
+    var FAIL_HOLD_S = 2.5;                      /* 答錯或時間到：小方塊拼好之後，再停幾秒才跳出結算畫面 */
+    var GLYPH_FIT = 0.94;                       /* 題目字的筆畫外框，最多佔畫布邊長的幾成（字會置中；比這個還大的字會縮小，免得被畫布邊緣切掉）；字級本身是畫布的 0.9 倍 */
+    var FIVE_FROM = 10;                         /* 第幾關起有 5 個選項 */
     var MIN_GROUP = 5;                          /* 字群至少幾個字（5 個選項要夠） */
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
 
@@ -108,7 +114,13 @@
         /* 看不見的畫布：把字畫上去（字大約佔 S 的 90%）；顯示用的畫布：依小方塊目前的位置一塊塊貼上去 */
         var off = document.createElement('canvas'); off.width = off.height = S;
         var ox = off.getContext('2d'), inkColor = getComputedStyle(document.documentElement).getPropertyValue('--c-ink').trim() || '#4A3B1E';
-        ox.fillStyle = inkColor; ox.font = '900 ' + Math.round(S * 0.9) + 'px "Noto Serif TC","Songti TC","PMingLiU",serif'; ox.textAlign = 'center'; ox.textBaseline = 'middle'; ox.fillText(q.answer, S / 2, S / 2 + S * 0.04);
+        /* 字置中（玩家意見：拼好的字偏下、下緣被切掉）：不用 textBaseline='middle'（那是字型 em 方塊的中央，每種字型上下留白不同，iPhone 上字會偏下），
+           改用 kit.drawGlyph 量字「實際筆畫」的外框，讓筆畫外框的中心剛好是畫布正中央；萬一字的筆畫外框比畫布的 GLYPH_FIT 還大（某些字型的字特別滿），就把字級縮小到剛好放進去 */
+        var fontOf = function (px) { return '900 ' + Math.round(px) + 'px "Noto Serif TC","Songti TC","PMingLiU",serif'; }, fs = S * 0.9;
+        ox.fillStyle = inkColor; ox.font = fontOf(fs); ox.textAlign = 'left'; ox.textBaseline = 'alphabetic';
+        var gm = ox.measureText(q.answer), gw = gm.actualBoundingBoxLeft + gm.actualBoundingBoxRight, gh = gm.actualBoundingBoxAscent + gm.actualBoundingBoxDescent;
+        if (gw > 0 && gh > 0 && Math.max(gw, gh) > S * GLYPH_FIT) { fs = fs * S * GLYPH_FIT / Math.max(gw, gh); ox.font = fontOf(fs); }
+        kit.drawGlyph(ox, q.answer, S / 2, S / 2);
         var cv = h('canvas', { 'class': 'stars-canvas' }); cv.width = W; cv.height = S + 20; cv.style.cssText = 'left:0;top:' + (fy - 10) + 'px;width:' + W + 'px;height:' + (S + 20) + 'px;';
         field.appendChild(cv);
         var cx = cv.getContext('2d'), tw = S / N;
@@ -130,20 +142,24 @@
         var loop = api.my.loop(function (now) {         /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
             if (!cv.isConnected) return false;
             if (phase === 'play') draw((now - t0) / 1000);
-            else if (snapAt) { var p = Math.min(1, (now - snapAt.t) / 500); draw(0, { from: snapAt.from, k: kit.easeOutCubic(p) }); if (p >= 1) return false; }
+            else if (snapAt) {                          /* 揭曉：先定住 FREEZE_S 秒，再用 SLOWMO_S 秒慢動作移到最後位置（同一個緩動 easeInOut，跟平常飛回來的動作一樣柔和） */
+                var el = now - snapAt.t, span = SLOWMO_S * 1000, p = span > 0 ? kit.clamp((el - FREEZE_S * 1000) / span, 0, 1) : (el >= FREEZE_S * 1000 ? 1 : 0);
+                draw(0, { from: snapAt.from, k: easeInOut(p) }); if (p >= 1) return false;
+            }
         });
         /* 判定玩家的答案：答對就過關（api.pass），答錯或超時就失敗（api.fail） */
         function judge(i) {
             if (done || api.over || phase !== 'play') return;
-            done = true; phase = 'end';
+            done = true; phase = 'end'; api.stopTimer();           /* 時間條停住（不然揭曉的這幾秒，時間條還會繼續走完） */
             var ok = i === q.answerIdx, nowT = (performance.now() - t0) / 1000;
             grid.btns[q.answerIdx].classList.add('stars-ok'); if (i >= 0 && !ok) grid.btns[i].classList.add('stars-bad');  /* classList.add／remove／toggle：加上／拿掉 CSS class，元素的外觀就跟著變（class 的樣式寫在 css 檔裡） */
-            /* 揭曉：所有小方塊在 0.5 秒內飛回原位 */
+            /* 揭曉：所有小方塊先定住（此刻的位置），再慢動作移到最後位置 */
             snapAt = { t: performance.now(), from: q.tiles.map(function (t, k) { return tilePos(t, starts[k], ends[k], nowT); }) };
             info.textContent = ok ? '是「' + q.answer + '」，答對了！（拼好了 ' + Math.round(100 * arrivedFraction(q.tiles, nowT)) + '%）' : '正確的字是「' + q.answer + '」' + (i >= 0 ? '，你選了「' + q.options[i] + '」' : '（時間到）');  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             kit.flash(stage, ok, api.my);               /* kit.flash(舞台, 對或錯, 計時器)：畫面閃一下綠光（答對）或紅光（答錯） */
-            if (ok) { api.pass({ delay: 1500 }); return; }  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
-            api.fail({ delay: 3000, lines: ['正確的字是「' + q.answer + '」' + (i >= 0 ? '，你選了「' + q.options[i] + '」' : '（時間到）'), '選項：' + q.options.join('、')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
+            var revealMs = Math.round((FREEZE_S + SLOWMO_S) * 1000);         /* 揭曉動作的總長（毫秒）：結算與過關都要等它做完 */
+            if (ok) { api.pass({ delay: revealMs + Math.round(PASS_HOLD_S * 1000) }); return; }  /* api.pass({ delay })：宣告「過關」，delay 毫秒後進下一關（最後一關則進結算） */
+            api.fail({ delay: revealMs + Math.round(FAIL_HOLD_S * 1000), lines: ['正確的字是「' + q.answer + '」' + (i >= 0 ? '，你選了「' + q.options[i] + '」' : '（時間到）'), '選項：' + q.options.join('、')] });  /* api.fail({ delay, lines })：宣告「失敗」，delay 毫秒後進結算畫面，lines 是結算要多寫的說明行 */
         }
         /* 給測試／debug 用：api.solve 自動走出正解、api.wrong 故意走錯一步、api.state 回報目前狀態（瀏覽器自動測試會呼叫它們，玩家用不到）。 */
         api.solve = function () { judge(q.answerIdx); };
@@ -154,13 +170,13 @@
     var G = {
         id: ID,
         name: '找星座',
-        rule: '題目是一個筆劃很多的字，大大的佔滿畫面。這個字被切成很多小方塊，散落在畫面各處，然後**一塊一塊慢慢飛回原來的位置**——每一塊的速度不同、開始的時間也不同。你要猜**這是哪個字**。**時間限制只有拼回來時間的 80%**，所以等不到完整的字，要靠先拼好的那些碎片猜！答錯或來不及就結束，看你能過幾關。越後面，碎片越多越小、拼得越快！',
+        rule: '題目是一個筆劃很多的字，大大的佔滿畫面。這個字被切成很多小方塊，散落在畫面各處，然後**一塊一塊慢慢飛回原來的位置**——每一塊的速度不同、開始的時間也不同。你要猜**這是哪個字**。**時間限制只有拼回來時間的 80%**，所以等不到完整的字，要靠先拼好的那些碎片猜！你點了答案（或時間到），碎片會先定住讓你看清楚，再慢慢拼回去。答錯或來不及就結束，看你能過幾關。越後面，碎片越多越小、拼得越快！',
         mount: mount,
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             tilesFor: tilesFor, returnS: returnS, limitMs: limitMs, optsFor: optsFor, strokeRange: strokeRange, easeInOut: easeInOut, tilePos: tilePos, arrivedFraction: arrivedFraction, makeLevel: makeLevel, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, TILES: TILES, RETURN_S: RETURN_S, LIMIT: LIMIT, ARRIVE_MIN: ARRIVE_MIN, MOVE: MOVE, STRAGGLE: STRAGGLE, STROKES_LO: STROKES_LO, STROKES_HI: STROKES_HI, FIVE_FROM: FIVE_FROM, MIN_GROUP: MIN_GROUP, MAX_LEVEL: MAX_LEVEL
+            RAMP_LEVELS: RAMP_LEVELS, TILES: TILES, RETURN_S: RETURN_S, LIMIT: LIMIT, FREEZE_S: FREEZE_S, SLOWMO_S: SLOWMO_S, PASS_HOLD_S: PASS_HOLD_S, FAIL_HOLD_S: FAIL_HOLD_S, GLYPH_FIT: GLYPH_FIT, ARRIVE_MIN: ARRIVE_MIN, MOVE: MOVE, STRAGGLE: STRAGGLE, STROKES_LO: STROKES_LO, STROKES_HI: STROKES_HI, FIVE_FROM: FIVE_FROM, MIN_GROUP: MIN_GROUP, MAX_LEVEL: MAX_LEVEL
         }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */

@@ -80,6 +80,44 @@ const calls = (name) => rpcLog.filter((c) => c.name === name);
   const perms = [[A, B, C], [C, B, A], [B, A, C], [B, C, A], [A, C, B], [C, A, B]].map(merge);
   ok(perms.every((p) => JSON.stringify(p) === JSON.stringify(perms[0])) && perms[0][0] === '0.05' && perms[0][1] === '9', 'applyServer：6 種先後順序結果相同（成績取小 0.05、關卡取大 9）');
 
+  // ═══ 2B. 否定本機成績（V1.57.2.0）：資料庫的「否定本機版本」r 比這支瀏覽器記的大 → 本機整批換成資料庫的 ═══
+  eq(T.cleanServerItem({ g: 'speed', b: 'min', s: 0.5, lv: 3, r: 2 }), { g: 'speed', b: 'min', s: 0.5, lv: 3, r: 2 }, 'cleanServerItem：帶版本 r');
+  eq(T.cleanServerItem({ g: 'cake', b: 'max', r: 1 }), { g: 'cake', b: 'max', r: 1 }, 'cleanServerItem：雲端被清空（沒有 s、lv）但有版本 r → 要收（客戶端才知道要清本機）');
+  ok(T.cleanServerItem({ g: 'cake', r: 0 }) === null && T.cleanServerItem({ g: 'cake', r: -1 }) === null && T.cleanServerItem({ g: 'cake', r: 1.5 }) === null && T.cleanServerItem({ g: 'cake', r: '2' }) === null, 'cleanServerItem：r 要是 1 以上的整數，不然當作沒有');
+  ok(!('r' in T.cleanServerItem({ g: 'speed', s: 1, r: 0 })), 'cleanServerItem：r＝0 不留在結果裡');
+  wipe();
+  ls['fm.reaction.best.speed'] = '0.01'; ls['fm.reaction.best.speed.sync'] = 'true'; ls['fm.reaction.lvbest.speed'] = '80';     // 偽造的最佳（比真的好很多）
+  ls['fm.reaction.best.spot'] = '5'; ls['fm.reaction.best.spot.sync'] = 'true'; ls['fm.reaction.lvbest.spot'] = '9';           // 沒被否定的
+  ls[T.KEY_BESTPEND] = JSON.stringify({ speed: 1, spot: 1 });
+  ok(T.localRev('speed') === 0 && T.PREFIX_REV === 'fm.reaction.rev.', 'localRev：沒記錄＝0');
+  eq(T.collect(['speed']), [{ g: 'speed', s: 0.01, lv: 80 }], 'collect：版本 0 不帶 r');
+  ls['fm.reaction.rev.speed'] = '1';
+  eq(T.collect(['speed']), [{ g: 'speed', s: 0.01, lv: 80, r: 1 }], 'collect：本機記著版本 1 → 上傳帶 r＝1');
+  delete ls['fm.reaction.rev.speed'];
+  T.applyServer([{ g: 'speed', b: 'min', s: 0.4, lv: 6, r: 1 }, { g: 'spot', b: 'max', s: 2, lv: 3 }]);
+  ok(ls['fm.reaction.best.speed'] === '0.4' && ls['fm.reaction.lvbest.speed'] === '6' && ls['fm.reaction.rev.speed'] === '1' && ls['fm.reaction.best.speed.sync'] === 'true', 'applyServer：版本 1 比本機的 0 新 → 本機換成雲端的（0.01→0.4 往下調、關卡 80→6），記下版本 1');
+  ok(ls['fm.reaction.best.spot'] === '5' && ls['fm.reaction.lvbest.spot'] === '9', 'applyServer：同一批裡沒被否定的 spot 照常「取較好的」（本機 5 比雲端 2 好，不動）');
+  eq(JSON.parse(ls[T.KEY_BESTPEND]), { spot: 1 }, 'applyServer：被否定的那款從「待上傳」名單拿掉（偽造值不能再傳），別款還在');
+  T.applyServer([{ g: 'speed', b: 'min', s: 0.9, lv: 3, r: 1 }]);
+  ok(ls['fm.reaction.best.speed'] === '0.4' && ls['fm.reaction.lvbest.speed'] === '6', 'applyServer：版本相同（1＝1）→ 不再重設，回到「取較好的」（0.9 比 0.4 差，不換）');
+  ls['fm.reaction.best.speed'] = '0.2';
+  T.applyServer([{ g: 'speed', b: 'min', s: 0.4, lv: 6, r: 1 }]);
+  ok(ls['fm.reaction.best.speed'] === '0.2', 'applyServer：版本相同時，本機比較好的新紀錄（0.2）不會被雲端的 0.4 蓋掉');
+  T.applyServer([{ g: 'speed', b: 'min', s: 0.4, r: 2 }]);
+  ok(ls['fm.reaction.best.speed'] === '0.4' && !('fm.reaction.lvbest.speed' in ls) && ls['fm.reaction.rev.speed'] === '2', 'applyServer：版本 2 → 再被重設一次；雲端沒有關卡（lv 空）→ 本機的最佳關卡也清掉');
+  T.applyServer([{ g: 'speed', b: 'min', r: 3 }]);
+  ok(!('fm.reaction.best.speed' in ls) && !('fm.reaction.best.speed.sync' in ls) && !('fm.reaction.lvbest.speed' in ls) && ls['fm.reaction.rev.speed'] === '3', 'applyServer：雲端被清空（只有 g、b、r）→ 本機的最佳成績、單位記號、最佳關卡全部清掉，記下版本 3');
+  T.applyServer([{ g: 'cake', b: 'max', lv: 4, r: 1 }]);
+  ok(ls['fm.reaction.lvbest.cake'] === '4' && ls['fm.reaction.rev.cake'] === '1', 'applyServer：本機原本沒有這款（新裝置）→ 一樣採用雲端的，並記下版本');
+  // 沒帶 r 的舊回應（版本 0 的列）：行為跟以前完全一樣
+  ls['fm.reaction.best.speed'] = '0.3'; ls['fm.reaction.best.speed.sync'] = 'true';
+  T.applyServer([{ g: 'speed', b: 'min', s: 0.5 }]);
+  ok(ls['fm.reaction.best.speed'] === '0.3', 'applyServer：沒有 r 的項目照舊「取較好的」');
+  // 登出：版本記錄一起清掉（換帳號不能沿用）；.v2 之類的遷移旗標照舊留著
+  ls['fm.reaction.best.speed.v2'] = 'true';
+  T.clearLocalBests();
+  ok(!Object.keys(ls).some((k) => k.indexOf('fm.reaction.rev.') === 0) && ls['fm.reaction.best.speed.v2'] === 'true', 'clearLocalBests：版本記錄清掉、遷移旗標留著');
+
   // ═══ 3. 最佳紀錄的接線：Reaction.setBest／migrateBest／kit.noteLevel ═══
   wipe(); ID.CFG.BEST_DEBOUNCE_MS = 25;
   const lowerBetter = (a, b) => a < b;
@@ -110,6 +148,13 @@ const calls = (name) => rpcLog.filter((c) => c.name === name);
   eq(sy[0].args.p_items.sort((a, b) => a.g < b.g ? -1 : 1), [{ g: 'speed', s: 0.45 }, { g: 'spot', s: 12 }].sort((a, b) => a.g < b.g ? -1 : 1), 'noteBest：上傳的是目前最好的成績');
   ok(ls['fm.reaction.best.speed'] === '0.4' && ls['fm.reaction.lvbest.speed'] === '6', '上傳之後把資料庫回的（更好的 0.4、關卡 6）合併回本機');
   eq(JSON.parse(ls[T.KEY_BESTPEND]), {}, '上傳成功 → 待上傳名單清空');
+  // 否定本機成績的完整流程：上傳的項目帶 r、資料庫回 reset 與帶版本的項目 → 本機被換掉
+  wipe(); logIn(); rpcLog = [];
+  ls['fm.reaction.best.speed'] = '0.01'; ls['fm.reaction.best.speed.sync'] = 'true'; ls['fm.reaction.lvbest.speed'] = '80'; ls['fm.reaction.rev.speed'] = '1';
+  reply = () => okData({ ok: true, items: [{ g: 'speed', b: 'min', s: 0.4, lv: 6, r: 2 }], rejected: [], reset: ['speed'] });
+  const rsy = await ID.syncBests({ ids: ['speed'] });
+  eq(calls('MF_sync_bests')[0].args.p_items, [{ g: 'speed', s: 0.01, lv: 80, r: 1 }], '否定本機：同步上傳帶著本機記的版本 r＝1');
+  ok(rsy.ok && ls['fm.reaction.best.speed'] === '0.4' && ls['fm.reaction.lvbest.speed'] === '6' && ls['fm.reaction.rev.speed'] === '2', '否定本機：同步回來 r＝2 → 本機換成雲端的、記下版本 2');
   // 上傳失敗：名單保留
   wipe(); logIn(); rpcLog = [];
   reply = () => ({ ok: false, error: 'network' });

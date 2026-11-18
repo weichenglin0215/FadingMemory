@@ -25,4 +25,13 @@ for (let lv = 1; lv <= 30; lv++) for (let k = 0; k < 300; k++) {
 }
 ok(forms.decimal > 2000 && forms.fraction > 2000 && forms.percent > 2000, '三種寫法都常出現：' + JSON.stringify(forms));
 ok(Array.from(tails.early).every(d => [2, 3, 4, 5, 6, 8, 10].includes(+d)) && tails.late.size >= 10, '前幾關的分母比較整齊，後面分母變多：early ' + Array.from(tails.early).join(',') + ' late ' + Array.from(tails.late).length + ' 種');
+// 玩家意見（V1.57.2.0）：圓點下方的短直線改成倒三角形，尖端碰到數線
+{ const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_numline.js').replace(/\/\*[\s\S]*?\*\//g, ''), css = rd('../../css/games/reaction_numline.css').replace(/\/\*[\s\S]*?\*\//g, '').split(/\s+/).join(' ');
+  ok(/kit\.svg\('polygon', \{ points: [^}]*'class': 'numline-tri' \}, svg\)/.test(src) && !/numline-stem/.test(src) && !/numline-stem/.test(css), '圓點下方改成倒三角形（polygon），舊的短直線（numline-stem）拿掉了');
+  ok(/stem\.setAttribute\('points', \(x - TRI_HALF\) \+ ',' \+ TRI_BASE \+ ' ' \+ \(x \+ TRI_HALF\) \+ ',' \+ TRI_BASE \+ ' ' \+ x \+ ',' \+ LY\)/.test(src), '三角形三個點：左上、右上、尖端（x, LY）——尖端正好在數線的高度，水平位置跟圓點一樣');
+  ok(/var TRI_HALF = 14, TRI_BASE = LY - 56;/.test(src) && 14 <= Math.sqrt(20 * 20 - 14 * 14) + 1, '底邊的兩個角（半寬 14、在圓點底部上方 6px）還在圓點（半徑 20）裡面，被圓點蓋住');
+  ok(src.indexOf("kit.svg('polygon'") < src.indexOf("kit.svg('circle', { cx: 0, cy: LY - 70"), '先畫三角形、後畫圓點（圓點蓋在三角形上面）');
+  ok(/\.numline-tri \{[^}]*fill: var\(--c-orange\)[^}]*stroke: var\(--c-ink\)[^}]*stroke-linejoin: round/.test(css), '三角形：橘色填滿、細外框、圓角接頭（顏色用 CSS 變數）');
+  // 用幾何算一次：尖端（x, LY）、底邊在 LY − 56：高度 56，圓點底部 LY − 50，所以三角形露出圓點的部分是 50px
+  const LY = 300, x = 123.4, pts = [[x - 14, LY - 56], [x + 14, LY - 56], [x, LY]]; ok(pts[2][1] === LY && pts[2][0] === x && Math.abs(pts[0][1] - pts[1][1]) < 1e-9, '三角形尖端在數線上、底邊水平'); }
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

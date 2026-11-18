@@ -48,6 +48,13 @@
     will-change: transform;                             /* 提示瀏覽器這個屬性會變動，先準備好（讓動畫更順） */
 }
 
+/* 預先繪製的火車（V1.57.2.0）：一節車廂一張 canvas，排成一列；整個容器用 translate 移動（跟 .kinetic-train 一樣） */
+.kinetic-baked {
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    display: block;                                     /* 獨佔一整行的區塊（canvas 預設是行內，下面會多出一小條空白） */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+}
+
 /* 「kinetic-car」這個元素的樣式 */
 .kinetic-car {
     position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */

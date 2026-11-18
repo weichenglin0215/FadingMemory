@@ -29,6 +29,12 @@
      所以本機的最佳成績「要確認是現行單位」才會上傳：Reaction.setBest 寫入時、或進遊戲 mount 完成之後（gameMounted），
      會在 fm.reaction.best.<id>.sync 做記號；從帳號下載下來的最佳成績也會做記號（migrateBest 看到記號就不再換算）。
      （將來如果又改了某款遊戲的成績單位，要連同資料庫裡的 MF_player_bests 一起處理。）
+   ★ 否定本機成績（V1.57.2.0 玩家意見：有人在瀏覽器裡改 localStorage 偽造最佳，管理者發現了也清不掉本機那份，下次同步又傳回去）：
+     資料庫 MF_player_bests 每一列有個「否定本機版本」reject_rev（預設 0）。管理者發現某位玩家某款遊戲的成績異常，就把雲端那一列改成正確值、
+     再把 reject_rev 加 1（或在 SQL Editor 執行 MF_admin_reject_local）。每支瀏覽器各自記著「這款遊戲我看過的版本」（fm.reaction.rev.<id>），同步時一起送；
+     資料庫發現自己的版本比較新，這一項的上傳就不收、並在回傳裡附上版本號 r；這裡的 applyServer 看到 r 比自己記的大，就**丟掉本機的最佳成績與最佳關卡、
+     整批換成資料庫的**（包含往下調、清空），記下新版本，並把這款遊戲「待上傳」的記號拿掉。每支瀏覽器各自只會被重設一次；沒收到回應的，下次同步再比一次。
+     （重設發生在進遊戲之後的同步——這次進場已經用本機的最佳算了進場關卡，下次進場才是對的；之後的新紀錄照常取較好的。）
    ═══════════════════════════════════════════════════════════════════ */
 
 (function (global) {
@@ -53,6 +59,7 @@
     var KEY_HINT = 'fm.lb.nickhint';            /* 舊暱稱的提示：資料庫沒有這個舊代號的紀錄（早就掉出榜外）時，保留他以前的暱稱當建立帳號的預設值 */
     var PREFIX_BEST = 'fm.reaction.best.';
     var PREFIX_LV = 'fm.reaction.lvbest.';
+    var PREFIX_REV = 'fm.reaction.rev.';        /* 這款遊戲「否定本機版本」我看過到第幾版（整數，沒有＝0）；資料庫的版本比它大，就以資料庫為準重設本機 */
     var ID_RE = /^[a-z0-9_]{1,32}$/;
 
     function store() { return global.UI.store; }
@@ -130,13 +137,15 @@
         return LB.isBetter(a, b, better) ? a : b;
     }
 
-    /* 資料庫回傳的一項最佳 { g, b, s, lv }：格式正確才收（防止壞資料寫進本機） */
+    /* 資料庫回傳的一項最佳 { g, b, s, lv, r }：格式正確才收（防止壞資料寫進本機）。
+       r（否定本機版本，>0 才有）：這一項被管理者否定過本機成績；這時就算 s、lv 都沒有（雲端被清空了）也要收，客戶端才知道要把本機清掉。 */
     function cleanServerItem(it) {
         if (!it || typeof it.g !== 'string' || !ID_RE.test(it.g)) return null;
         var out = { g: it.g, b: it.b === 'min' ? 'min' : 'max' };
         if (typeof it.s === 'number' && isFinite(it.s)) out.s = it.s;
         if (typeof it.lv === 'number' && isFinite(it.lv) && it.lv >= 1 && it.lv === Math.floor(it.lv)) out.lv = it.lv;
-        return (out.s == null && out.lv == null) ? null : out;
+        if (typeof it.r === 'number' && isFinite(it.r) && it.r >= 1 && it.r === Math.floor(it.r)) out.r = it.r;
+        return (out.s == null && out.lv == null && out.r == null) ? null : out;
     }
 
     /* ═══════════════════════════════════════════════════════════════
@@ -248,6 +257,11 @@
         var v = num(store().get(PREFIX_LV + id, 0));
         return v && v > 0 ? Math.floor(v) : 0;
     }
+    /* 這款遊戲「否定本機版本」我看過到第幾版（沒有記錄＝0） */
+    function localRev(id) {
+        var v = num(store().get(PREFIX_REV + id, 0));
+        return v && v > 0 ? Math.floor(v) : 0;
+    }
     /* 這款遊戲的本機最佳成績確認是現行單位（可以上傳、也不用換算）嗎 */
     function trusted(id) { return !!store().get(PREFIX_BEST + id + '.sync', false); }
     function markTrusted(id) { store().set(PREFIX_BEST + id + '.sync', true); }
@@ -260,12 +274,30 @@
             var it = { g: id }, s = localBest(id), lv = localLv(id);
             if (s != null && trusted(id)) it.s = s;
             if (lv > 0) it.lv = lv;
-            if (it.s != null || it.lv != null) items.push(it);
+            if (it.s != null || it.lv != null) {
+                var rv = localRev(id);
+                if (rv > 0) it.r = rv;                      /* 帶上我看過的「否定本機版本」，資料庫才知道這支瀏覽器是不是已經被重設過 */
+                items.push(it);
+            }
         });
         return items;
     }
 
+    /* 否定本機成績：這款遊戲在這支瀏覽器上的最佳成績、最佳關卡整批換成資料庫的（it.s／it.lv 沒有＝雲端是空的 → 本機也清掉），
+       記下新版本（it.r），並把這款遊戲「待上傳」的記號拿掉（本機偽造的值不能再傳上去）。 */
+    function resetLocal(it) {
+        var id = it.g;
+        if (it.s != null) { store().set(PREFIX_BEST + id, it.s); markTrusted(id); }
+        else { del(PREFIX_BEST + id); del(PREFIX_BEST + id + '.sync'); }
+        if (it.lv != null) store().set(PREFIX_LV + id, it.lv); else del(PREFIX_LV + id);
+        store().set(PREFIX_REV + id, it.r);
+        var pend = store().get(KEY_BESTPEND, {}) || {};
+        if (pend[id]) { delete pend[id]; store().set(KEY_BESTPEND, pend); }
+        log('「' + id + '」的本機最佳被否定了（管理者的決定）：以資料庫的為準 → 成績', it.s != null ? it.s : '（空）', '、最佳關卡', it.lv != null ? it.lv : '（空）');
+    }
+
     /* 把資料庫回傳的最佳合併進這支瀏覽器：
+         · 資料庫附的版本 r 比這支瀏覽器記的大（管理者否定了這款遊戲的本機成績）→ 本機整批換成資料庫的（包含往下調、清空），不比較好壞；
          · 這款遊戲的本機最佳還沒確認過單位（沒有 .sync 記號）→ 直接採用資料庫的（本機那份可能是舊單位，不能比）；
          · 已確認 → 取較好的；最佳關卡一律取較大的。 */
     function applyServer(items) {
@@ -273,6 +305,7 @@
         (items || []).forEach(function (raw) {
             var it = cleanServerItem(raw);
             if (!it) return;
+            if (it.r != null && it.r > localRev(it.g)) { resetLocal(it); changed++; return; }
             if (it.s != null) {
                 var cur = localBest(it.g);
                 if (cur == null || !trusted(it.g) || LB.isBetter(it.s, cur, it.b)) {
@@ -303,7 +336,7 @@
             var pend = store().get(KEY_BESTPEND, {}) || {};
             items.forEach(function (it) { delete pend[it.g]; });
             store().set(KEY_BESTPEND, pend);
-            log('個人最佳同步完成：上傳', items.length, '項、本機更新', n, '項' + (r.data.rejected && r.data.rejected.length ? '、被拒收 ' + r.data.rejected.join('／') : ''));
+            log('個人最佳同步完成：上傳', items.length, '項、本機更新', n, '項' + (r.data.rejected && r.data.rejected.length ? '、被拒收 ' + r.data.rejected.join('／') : '') + (r.data.reset && r.data.reset.length ? '、本機成績被否定（以資料庫為準）' + r.data.reset.join('／') : ''));
             return r;
         });
     }
@@ -367,6 +400,8 @@
                     if (ID_RE.test(rest) || (/\.sync$/.test(rest) && ID_RE.test(rest.slice(0, -5)))) global.localStorage.removeItem(k);
                 } else if (k.indexOf(PREFIX_LV) === 0 && ID_RE.test(k.slice(PREFIX_LV.length))) {
                     global.localStorage.removeItem(k);
+                } else if (k.indexOf(PREFIX_REV) === 0 && ID_RE.test(k.slice(PREFIX_REV.length))) {
+                    global.localStorage.removeItem(k);     /* 版本記錄是「這個帳號」的，換帳號不能沿用 */
                 }
             });
         } catch (e) { }
@@ -493,7 +528,7 @@
         cleanPin: cleanPin, validPin: validPin, fmtWait: fmtWait, fmtDate: fmtDate, errorText: errorText, isNetworkError: isNetworkError,
         betterOf: betterOf, cleanServerItem: cleanServerItem, localGameIds: localGameIds, collect: collect, applyServer: applyServer,
         clearLocalBests: clearLocalBests, bestKeysOf: bestKeysOf, forgetBest: forgetBest, call: call, KEY_BESTPEND: KEY_BESTPEND, KEY_SYNCAT: KEY_SYNCAT, KEY_HINT: KEY_HINT, KEY_WHOAMIAT: KEY_WHOAMIAT,
-        PREFIX_BEST: PREFIX_BEST, PREFIX_LV: PREFIX_LV, flushBests: flushBests, trusted: trusted
+        PREFIX_BEST: PREFIX_BEST, PREFIX_LV: PREFIX_LV, PREFIX_REV: PREFIX_REV, localRev: localRev, flushBests: flushBests, trusted: trusted
     };
 
     global.Identity = Identity;

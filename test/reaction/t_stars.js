@@ -53,7 +53,16 @@ ok(Math.abs(startMean[0] / startMean[2] - 0.5) < 0.03 && Math.abs(startMean[1] /
 { const t0 = Date.now(); for (let i = 0; i < 300; i++) T.makeLevel(1 + (i % 40), rnd); ok((Date.now() - t0) / 300 < 5, '出題夠快'); }
 // 程式裡的接線
 { const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_stars.js'), css = rd('../../css/games/reaction_stars.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
-  ok(/api\.fail\(\{ delay: 3000/.test(src) && /snapAt/.test(src) && /drawImage/.test(src), '失敗：小方塊飛回原位、標出正確的字、停格 2 秒以上');
+  ok(/api\.fail\(\{ delay: revealMs \+ Math\.round\(FAIL_HOLD_S \* 1000\)/.test(src) && /api\.pass\(\{ delay: revealMs \+ Math\.round\(PASS_HOLD_S \* 1000\)/.test(src) && /snapAt/.test(src) && /drawImage/.test(src), '失敗／過關：等「定住＋慢動作」做完（revealMs）再加停留秒數；小方塊飛回原位、標出正確的字');
+  // 玩家意見（V1.57.2.0）：點答案或時間到 → 小方塊先定住 FREEZE_S 秒 → 慢動作 SLOWMO_S 秒移到最後位置；秒數都是參數
+  ok(T.FREEZE_S === 1.5 && T.SLOWMO_S === 4 && T.PASS_HOLD_S > 0 && T.FAIL_HOLD_S > 0, '揭曉參數：定住 FREEZE_S＝1.5 秒、慢動作 SLOWMO_S＝4 秒（預設，使用者可調）、停留 PASS_HOLD_S／FAIL_HOLD_S：' + [T.FREEZE_S, T.SLOWMO_S, T.PASS_HOLD_S, T.FAIL_HOLD_S]);
+  ok(/var FREEZE_S = [\d.]+;/.test(src) && /var SLOWMO_S = [\d.]+;/.test(src), '參數寫在檔案最前面的參數區');
+  ok(/el - FREEZE_S \* 1000\) \/ span/.test(src) && /draw\(0, \{ from: snapAt\.from, k: easeInOut\(p\) \}\)/.test(src), '揭曉的畫面：前 FREEZE_S 秒停在點答案那一刻的位置，之後用 SLOWMO_S 秒（easeInOut）移到終點');
+  ok(/done = true; phase = 'end'; api\.stopTimer\(\);/.test(src), '點答案（或時間到）就停下時間條');
+  ok(/judge\(-1\)/.test(src) && /judge\(i\)/.test(src), '時間到（judge(-1)）與點答案（judge(i)）走同一個揭曉流程');
+  // 玩家意見（V1.57.2.0）：拼好的字偏下、下緣被切掉 → 用筆畫外框置中，過大的字縮小
+  ok(/kit\.drawGlyph\(ox, q\.answer, S \/ 2, S \/ 2\)/.test(src) && !/ox\.textBaseline = 'middle'/.test(src) && !/S \* 0\.04/.test(src), '題目字用 kit.drawGlyph 以筆畫外框置中（不再用 textBaseline=middle 再往下偏 4%）');
+  ok(T.GLYPH_FIT > 0.8 && T.GLYPH_FIT < 1 && /Math\.max\(gw, gh\) > S \* GLYPH_FIT/.test(src), '字太滿（筆畫外框超過 GLYPH_FIT）就縮小，才不會被畫布邊緣切掉');
   ok(/\.stars-ok \{[^}]*var\(--c-ok/.test(css) && /\.stars-bad \{[^}]*var\(--c-bad/.test(css), '綠色、紅色用 CSS 變數');
   ok(boot.indexOf("'js/reaction_stars.js'") > 0 && /80%/.test(G.rule), 'boot.js 有載入、玩法說明提到 80%'); }
 ok(T.rating(2) !== T.rating(4) && T.rating(4) !== T.rating(7) && T.rating(7) !== T.rating(12) && T.rating(12) !== T.rating(20), '評語分級');

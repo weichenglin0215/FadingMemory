@@ -99,6 +99,32 @@ ok(Object.keys(ST.byCars).length >= 3 && Object.keys(ST.targetPos).length === T.
   ok(/kit\.svg\('feGaussianBlur', \{ stdDeviation: q\.blur \+ ' 0' \}/.test(src), '濾鏡只糊橫向：stdDeviation「N 0」');
   ok(/strip\.style\.filter = 'url\(#' \+ fid \+ '\)'/.test(src) && /id: fid/.test(src) && /'kinetic-hblur' \+ \(\+\+blurSeq\)/.test(src), '濾鏡套在整列火車（strip）上，每關的濾鏡 id 不重複');
   ok(/'color-interpolation-filters': 'sRGB'/.test(src) && /if \(q\.blur > 0\)/.test(src), '顏色不被濾鏡改變；模糊半徑 0 就不做濾鏡');
-  ok(/phase = 'ask';[^\n]*\r?\n\s*strip\.style\.filter = '';/.test(src), '火車開走之後拿掉模糊（揭曉倒車時是清楚的）'); }
+  ok(/if \(baked\) \{ baked\.el\.remove\(\); strip\.style\.visibility = ''; mover = strip; setX\(x0\); \} else strip\.style\.filter = '';/.test(src.replace(/\r/g, '')), '火車開走之後拿掉模糊（預先畫好的模糊圖片丟掉、換回清楚的火車；用濾鏡的拿掉濾鏡），揭曉倒車時是清楚的');
+  // 玩家意見（V1.57.2.0）：SVG 濾鏡在手機上每幀重算會卡 → 進關時把整列火車預先畫成圖片、只模糊一次，開車時只移動圖片
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, '');
+  ok(/function bakeTrain\(carEls, clip, T, blur\)/.test(code) && /baked = bakeTrain\(\[\]\.slice\.call\(strip\.children\)/.test(code), '進關時預先繪製整列火車（bakeTrain）');
+  ok(/globalCompositeOperation = 'lighter'/.test(code) && /globalAlpha = 1 \/ sm\.offsets\.length/.test(code) && /dx\.drawImage\(src, d - M, 0\)/.test(code), '模糊＝把沒模糊的圖左右偏移、半透明相加平均（只做一次）');
+  ok(/baked\.el\.style\.cssText = strip\.style\.cssText; field\.appendChild\(baked\.el\); strip\.style\.visibility = 'hidden'; mover = baked\.el;/.test(code), '預先畫好的圖片容器取代 DOM 火車開車；DOM 火車先藏起來');
+  ok(/function setX\(x\) \{ x0 = x; mover\.style\.transform/.test(code), '開車時移動的是 mover（預先畫好的圖片容器），不是每幀重算濾鏡的 DOM');
+  ok(/\} catch \(err\) \{ baked = null; \}/.test(code) && /kit\.svg\('feGaussianBlur', \{ stdDeviation: q\.blur \+ ' 0' \}, flt\)/.test(code) && /strip\.style\.filter = 'url\(#' \+ fid \+ '\)'/.test(code), '預先繪製失敗才退回原本的 SVG 濾鏡（只糊橫向）');
+  ok(/function carPainter\(car, clip\)/.test(code) && /function svgNodePainter\(el, clip\)/.test(code) && /function stickerPainter\(st\)/.test(code) && /getComputedStyle\(el\)/.test(code) && /kit\.drawGlyph\(c, text, cx, cy\)/.test(code), '車廂、貼紙照 DOM 排好的樣式畫到 canvas（顏色讀算好的樣式、貼紙字置中）');
+  ok(/\.kinetic-baked \{[^}]*position: absolute/.test(css) && /\.kinetic-baked \{[^}]*pointer-events: none/.test(css), '預先畫好的 canvas 的樣式');
+}
+// 預先繪製的模糊取樣（blurSamples）：方框平均，標準差跟 SVG 濾鏡的 stdDeviation（BLUR_PX）一樣
+{ ok(T.BAKE_STEP >= 1 && T.BAKE_MAX_SAMPLES >= 4 && T.BAKE_DPR_MAX >= 1 && T.BAKE_PAD >= 0, '預先繪製的參數：取樣間隔、最多取樣數、解析度上限、上下留白');
+  const z = T.blurSamples(0, 3); ok(z.L === 0 && z.offsets.length === 1 && z.offsets[0] === 0, '模糊半徑 0 ＝ 一個樣本、偏移 0（沒有模糊）');
+  ok(T.blurSamples(0.1, 1).offsets.length === 1, '模糊小於 1 個裝置像素 ＝ 等於沒模糊');
+  for (const sigma of [0.5, 1.5, 3, 6, 12, 30]) for (const dpr of [1, 2, 3]) {
+    const s = T.blurSamples(sigma, dpr), L = sigma * Math.sqrt(12) * dpr, o = s.offsets, K = o.length;
+    ok(Math.abs(s.L - L) < 1e-9, 'L ＝ sigma × √12 × dpr（sigma ' + sigma + '、dpr ' + dpr + '）：' + s.L.toFixed(2));
+    if (L < 1) continue;
+    ok(K >= 2 && K <= T.BAKE_MAX_SAMPLES, '取樣數 ' + K + ' 在 2～' + T.BAKE_MAX_SAMPLES + '（sigma ' + sigma + '、dpr ' + dpr + '）');
+    ok(o.every(Number.isFinite) && o.every((v, i) => i === 0 || v > o[i - 1]), '偏移（裝置像素）由小到大、不重複');
+    ok(Math.abs(o[0] + o[K - 1]) < 0.02 && o[0] >= -L / 2 && o[K - 1] <= L / 2 && Math.abs(o[K - 1] - L / 2 * (1 - 1 / K)) < 0.02, '偏移左右對稱，每格的中間放一個樣本（' + o[0] + '～' + o[K - 1] + '，L/2 ＝ ' + (L / 2).toFixed(1) + '）');
+    const mean = o.reduce((a, b) => a + b, 0) / K, vr = o.reduce((a, b) => a + (b - mean) * (b - mean), 0) / K, sd = Math.sqrt(vr), want = sigma * dpr;
+    if (K < T.BAKE_MAX_SAMPLES || L / 2 < 40) ok(Math.abs(sd - want) <= Math.max(0.3, want * 0.15), '標準差 ' + sd.toFixed(2) + ' ≈ sigma × dpr ＝ ' + want.toFixed(2) + '（跟 SVG 濾鏡的 stdDeviation 同一個意思）');
+  }
+  const a = T.blurSamples(1.5, 3).offsets.length, b = T.blurSamples(6, 3).offsets.length; ok(b > a, '模糊越大取樣越多：' + a + ' → ' + b);
+  ok(T.blurSamples(1000, 3).offsets.length === T.BAKE_MAX_SAMPLES, '模糊再大，取樣數也會被封頂在 ' + T.BAKE_MAX_SAMPLES); }
 ok(T.rating(1) !== T.rating(4) && T.rating(4) !== T.rating(10) && T.rating(10) !== T.rating(20) && T.rating(20) !== T.rating(30), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

@@ -56,10 +56,12 @@
     font-weight: 900;                                   /* 字重（粗細）900（400 一般、700 粗體） */
 }
 
-/* 「numline-stem」這個元素的樣式 */
-.numline-stem {
-    stroke: var(--c-orange);                            /* SVG 線條顏色：主題變數 --c-orange */
-    stroke-width: 5;                                    /* SVG 線條粗細：5 */
+/* 圓點下面的倒三角形（V1.57.2.0）：尖端碰到數線；橘色填滿＋細外框，圓點在它上面（外框的圓角接頭，尖端只會多出約 1px，剛好嵌進數線的線寬裡） */
+.numline-tri {
+    fill: var(--c-orange);                              /* SVG 圖形的填色：主題變數 --c-orange */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
+    stroke-linejoin: round;                             /* 線條轉角處做成圓的（尖端不會因為尖角而戳出很長） */
 }
 
 /* 「numline-dot」這個元素的樣式 */

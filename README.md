@@ -155,7 +155,7 @@
 | <img src="img/reaction/fadee.png" alt="淡到看不見" height="110"> | **淡到看不見** | 黑色背景上有一個白色的 E，開口朝上、下、左、右其中一邊，手指往開口的方向滑。E 一個比一個暗，最後幾乎和背景一樣黑。答錯或來不及就結束，看你能看清楚幾個。請把螢幕亮度調到中等。遊戲視力，不是真正的視力檢查。 |
 | <img src="img/reaction/oddsock.png" alt="落單的襪子" height="110"> | **落單的襪子** | 九隻襪子排成九宮格，其中有四對圖案一模一樣，只有一隻沒有伴。找出那隻落單的襪子，點下去。襪子的底色只有彩虹七色，每一隻都轉成不同的角度。每關有時間限制，答錯或來不及就結束。越後面，底色種類越少，要靠條紋和圓點來分辨！ |
 | <img src="img/reaction/twinsock.png" alt="雙胞胎襪子" height="110"> | **雙胞胎襪子** | 左上角有一隻不會動的目標襪子（藍色底）。其他襪子都在慢慢轉動，其中只有一隻跟目標「完全一樣」（底色、腿上的條紋數、腳上的圓點數都相同），其他的至少有一處不同。找出它並點下去！ |
-| <img src="img/reaction/colorrecall.png" alt="記色調色" height="110"> | **記色調色** | 先看左邊的色塊 3 秒，記住它的顏色。3 秒後色塊消失，右邊會出現另一塊顏色，拖曳下方橫條，把它調回剛剛看到的顏色。每次只考色相、彩度、明度其中一項。只有一次機會，按「確定」後會告訴你色差。 |
+| <img src="img/reaction/colorrecall.png" alt="記色調色" height="110"> | **記色調色** | 先看左邊的色塊 3 秒，記住它的顏色。3 秒後色塊消失，右邊會出現另一塊顏色，拖曳下方橫條，把它調回剛剛看到的顏色。每次只考色相、彩度、明度其中一項。 |
 | <img src="img/reaction/mixcolor.png" alt="混出什麼色" height="110"> | **混出什麼色** | 左邊是目標顏色，右邊是你要調出來的顏色。下方三對按鈕分別控制右邊色塊的紅、綠、藍：亮色的「＋」按住會增加、暗色的「－」按住會減少，按越久變得越快。 |
 | <img src="img/reaction/whofirst.png" alt="誰先亮" height="110"> | **誰先亮** | 左右兩盞燈會先後亮起，兩盞都亮了之後，點「先亮的那一盞」。兩盞燈的時間差一關比一關短，最後只差幾個畫面影格。答錯或來不及就結束，看你能過幾關。請讓畫面保持在前景。 |
 | <img src="img/reaction/watchoff.png" alt="哪支錶不準" height="110"> | **哪支錶不準** | 三支錶一起走，秒針每秒跳一格。其中一支走得比較快或比較慢，選出不準的那一支。三支錶的秒針位置和錶面朝向都不一樣，要看的是跳動的節奏有沒有慢慢滑開。一開始就可以作答，點了答案按鈕就不能再按。答錯或來不及就結束。 |
@@ -429,7 +429,7 @@
 | 遊戲在「選一個想玩的遊戲」裡的**名稱（最多 5 個字）與分類頁籤** | `js/menu.js` 的 `GAME_CELLS`（每款 `{ id, name, cat, img }`，`cat` 是 memory／visual／reaction／number／logic／hand／guess 其中一個）與 `GAME_TABS`（頁籤順序與名稱）；改名要同步改該遊戲檔案 `Reaction.register` 的 `name`，再執行 `node test/leaderboard/gen_games_sql.cjs --write` 並到 Supabase 重新執行 SQL（`t_menu.js`、`t_leaderboard.js` 會檢查兩邊一致） |
 | **查看玩家意見**（依時間、id 範圍查，只顯示 game_id／game_title／message 並一鍵複製貼給 Claude） | 用瀏覽器開 `admin/feedback.html`（不需要金鑰，打開就自動查 7 天前到今天；資料庫要先執行過最新的 `supabase/MF_leaderboard.sql`） |
 | **看遊玩人數、次數、玩家名次、每天趨勢**（遊戲分析／玩家分析／時間分析） | 用瀏覽器開 `admin/stats.html`（不需要金鑰；要先執行過最新的 `supabase/MF_leaderboard.sql`，統計從執行之後才開始累積） |
-| **清掉開發測試帳號（例如「阿公好開心」）在某段日期內的遊戲歷程**，不讓測試高分影響外部玩家的名次 | 開 `admin/stats.html` →「清除玩家遊戲歷程」頁籤：填暱稱、`player_id`、起訖日期，先按「查看」再按「刪除」（會再確認一次）。只能處理資料庫 `MF_dev_accounts` 清單裡的測試帳號（`MF_leaderboard.sql` 第 7C 節預先放了你的）；本機最佳仍要在遊戲頁主控台執行 `Identity.forgetBest('遊戲代號')` |
+| **清掉開發測試帳號（例如「阿公好開心」）在某段日期內的遊戲歷程**，不讓測試高分影響外部玩家的名次 | 開 `admin/stats.html` →「清除玩家遊戲歷程」頁籤：填暱稱、`player_id`、起訖日期，先按「查看」再按「刪除」（會再確認一次）。只能處理資料庫 `MF_dev_accounts` 清單裡的測試帳號（`MF_leaderboard.sql` 第 7C 節預先放了你的）；個人最佳會一併「否定本機版本 +1」，這個帳號登入著的瀏覽器下次同步就會清掉本機最佳（沒登入的才要在遊戲頁主控台執行 `Identity.forgetBest('遊戲代號')`） |
 | 手指／滑鼠拖曳＋慣性捲動的手感（遊戲列表、世界排行榜共用） | `js/scroller.js` 最上面的 `PHYS`（摩擦力 `tau`、橡皮筋 `rubber`、最大速度…） |
 | 遊戲開始前「玩法說明」彈窗的排版：一句一行、**重點句子粗體黑字** | 各遊戲檔案 `Reaction.register` 的 `rule` 字串：句尾標點（。！？；）後自動換行，`\n` 手動換行；要標重點就用兩個星號前後包起來（`**重點**`，粗體黑字）；排版程式 `Dlg.richText`（`js/dialog.js`），樣式 `.dlg__line`／`.dlg__em`（`css/dialog.css`，黑色是 `css/theme.css` 的 `--c-black`）；說明太長時卡片會自動縮小內文字級（最小 `--fs-xs`） |
 | 舞台（500×850）怎麼縮放、置中、充滿瀏覽器高度（iPad／手機） | `js/stage.js`（`readViewport`：visualViewport、innerHeight、100dvh 取最大，每 0.4 秒自己重量）；網址加 `?debug` 看各來源量到的數字 |

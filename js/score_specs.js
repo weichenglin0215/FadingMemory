@@ -73,7 +73,7 @@ window.FM_SCORE_SPECS = {
     "ghostleg": {"better":"max","decimals":0,"format":"{v} 關"},
     "ghostleg2": {"better":"max","decimals":0,"format":"{v} 關"},
     "euler": {"better":"max","decimals":0,"format":"{v} 題"},
-    "colorrecall": {"better":"min","decimals":4,"format":"ΔE {v}"},
+    "colorrecall": {"better":"max","decimals":0,"format":"{v} 關"},
     "basket": {"better":"max","decimals":0,"format":"{v} 關"},
     "passersby": {"better":"max","decimals":0,"format":"{v} 關"},
     "seenit": {"better":"max","decimals":0,"format":"{v} 關"},

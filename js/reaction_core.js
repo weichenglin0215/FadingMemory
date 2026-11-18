@@ -42,6 +42,29 @@
     Reaction.leaveScore = null;
     Reaction.leaveCard = null;
 
+    /* ═══ 進場關卡優惠送的關卡，不算成績（V1.57.2.0 玩家意見）═══
+       高關卡玩家一進遊戲，就從「最佳關卡 − 4」開始（kit.entryLevel）；為了讓成績跟標題列的關卡一致，前面跳過的關卡算「已過」
+       （cleared 一開始就是 from − 1）。問題：這一局一關都沒真的通過、直接在進場那一關失敗，成績也是 from − 1
+       （例如最佳關卡 21 → 從第 17 關開始、第 17 關失敗，成績＝16 關），只要本機的最佳成績比它低（最佳關卡與最佳成績對不起來，例如在別台裝置同步來的、
+       或最佳成績被清過），就會被記成「新紀錄」、還送上世界排行榜——玩家根本沒有通過第 16 關。
+       做法：進場、「從前面繼續」、「再玩一次」的時候，用 Reaction.beginRun 登記「這一局從第幾關開始」；
+       成績 ≤ credit（優惠送的、一關都沒真的通過時的成績）一律不算：Reaction.setBest 不記、kit.leaveVerdict 當作沒有刷新、
+       kit.result 不送排行榜、不說「新紀錄」。真的通過至少一關，成績一定 > credit（每過一關成績加 1），照舊算。
+       Reaction.entryRun：{ id, from（從第幾關開始）, add（成績 ＝ 通過關數 ＋ add，kit.entryLevel 的 legacyAdd，預設 1）, credit }；沒有優惠（從第 1 關開始）就是 null。 */
+    Reaction.entryRun = null;
+    /* Reaction.beginRun(id, from, add, credit)：登記這一局。credit 預設 from − add（成績＝通過關數＋add 的遊戲，一關都沒過的成績）；
+       成績不是這種算法的遊戲（例如視力）自己傳 credit。from ≤ 1（沒有優惠）就清掉。 */
+    Reaction.beginRun = function (id, from, add, credit) {
+        var a = add == null ? 1 : add;
+        Reaction.entryRun = (id && from > 1) ? { id: id, from: from, add: a, credit: credit != null ? credit : from - a } : null;
+        return Reaction.entryRun;
+    };
+    /* Reaction.creditOnly(id, val)：成績 val 是不是「只靠優惠送的關卡」（這一局一關都沒真的通過）→ true 就不能算成績 */
+    Reaction.creditOnly = function (id, val) {
+        var E = Reaction.entryRun;
+        return !!(E && E.id === id && typeof val === 'number' && isFinite(val) && val <= E.credit);
+    };
+
     /* 最佳紀錄用 localStorage 存，key 用 'fm.reaction.best.' + 遊戲 id 區分
        （例如 'fm.reaction.best.drop'），每款遊戲各自獨立不會互相覆蓋。 */
     Reaction.bestKey = function (id) { return 'fm.reaction.best.' + id; };
@@ -52,6 +75,7 @@
        「時間越短越好」，這個共用函式完全不用改，呼叫端自己傳一個反過來比較的
        函式就行了。 */
     Reaction.setBest = function (id, val, better) {
+        if (Reaction.creditOnly(id, val)) return false;  /* 這一局一關都沒真的通過、成績只是進場優惠送的關卡：不算（見上面 Reaction.beginRun） */
         var b = Reaction.getBest(id);                   /* Reaction.getBest／setBest：讀／寫這款遊戲的個人最佳紀錄（存在手機的 localStorage） */
         var isNew = b == null || better(val, b);
         if (isNew) {

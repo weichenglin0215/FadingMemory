@@ -535,6 +535,43 @@ let A, B;
   await db.exec(`update public."MF_games" set enabled = false where game_id = 'cake'`);
   ok((await sync([{ g: 'cake', s: 99 }])).rejected.includes('cake'), '同步：停用的遊戲被拒收');
   await db.exec(`update public."MF_games" set enabled = true where game_id = 'cake'`);
+  // ── 否定本機版本（V1.57.2.0）：reject_rev ──
+  const rv = async (g) => (await q(`select best_score::float8 as s, best_level as lv, reject_rev as r from public."MF_player_bests" where player_id = $1::uuid and game_id = $2`, [P, g]))[0];
+  eq(await rv('cake'), { s: 9, lv: 5, r: 0 }, '否定本機：新欄位 reject_rev 預設 0');
+  ok(get(await sync([]), 'cake').r === undefined, '否定本機：版本 0 的項目回傳不帶 r（省流量）');
+  const colc = (await one(`select col_description('public."MF_player_bests"'::regclass, (select attnum from pg_attribute where attrelid = 'public."MF_player_bests"'::regclass and attname = 'reject_rev')) as c`)).c;
+  ok(/否定本機版本/.test(colc || ''), '否定本機：欄位有中文說明');
+  // 管理者：把 cake 改成正確值 4／3，版本 +1
+  await db.query(`update public."MF_player_bests" set best_score = 4, best_level = 3, reject_rev = 1 where player_id = $1::uuid and game_id = 'cake'`, [P]);
+  r = await sync([{ g: 'cake', s: 99, lv: 99 }, { g: 'zz_test', s: 11, lv: 9 }]);                  // 還沒更新的舊版客戶端：上傳不帶 r
+  eq(r.reset, ['cake'], '否定本機：版本比上傳的新 → 這一項列在 reset：' + canon(r.reset));
+  ok(!r.rejected.includes('cake'), '否定本機：reset 跟 rejected 是兩回事');
+  eq(await rv('cake'), { s: 4, lv: 3, r: 1 }, '否定本機：偽造的 99／99 完全不收（成績、關卡都沒動）');
+  has(get(r, 'cake'), { b: 'max', s: 4, lv: 3, r: 1 }, '否定本機：回傳那一款附上版本 r＝1、雲端的值');
+  has(get(r, 'zz_test'), { s: 11, lv: 9 }, '否定本機：同一批裡別款遊戲照常「取較好的」合併');
+  r = await sync([{ g: 'cake', s: 99, lv: 99, r: 0 }]);
+  ok(r.reset.includes('cake') && (await rv('cake')).s === 4, '否定本機：明確帶 r＝0 也一樣不收');
+  for (const badR of ['x', -1, 1.5, null, true, [1], 1e9]) {
+    r = await sync([{ g: 'cake', s: 99, r: badR }]);
+    ok(r.reset.includes('cake') && (await rv('cake')).s === 4, '否定本機：r 不是 0 以上的整數（' + JSON.stringify(badR) + '）→ 當成 0，一樣不收');
+  }
+  await db.query(`update public."MF_player_bests" set best_score = 4, best_level = 3 where player_id = $1::uuid and game_id = 'cake'`, [P]);
+  r = await sync([{ g: 'cake', s: 6, lv: 8, r: 1 }]);
+  ok(!r.reset.length, '否定本機：r 跟資料庫的版本一樣 → 照常收');
+  eq(await rv('cake'), { s: 6, lv: 8, r: 1 }, '否定本機：版本相同＝正常「取較好的」（成績 4→6、關卡 3→8），版本不變');
+  r = await sync([{ g: 'cake', s: 7, r: 5 }]);
+  ok(!r.reset.length && (await rv('cake')).s === 7, '否定本機：r 比資料庫的大（客戶端記得較新，例如資料庫版本被調低）→ 照常收');
+  // 雲端被清空（成績、關卡都是 null）：回傳那一款只剩 g、b、r
+  await db.query(`update public."MF_player_bests" set best_score = null, best_level = null, reject_rev = 2 where player_id = $1::uuid and game_id = 'cake'`, [P]);
+  r = await sync([{ g: 'cake', s: 50, lv: 50, r: 1 }]);
+  eq(get(r, 'cake'), { g: 'cake', b: 'max', r: 2 }, '否定本機：雲端清空 → 回傳只有 { g, b, r }（沒有 s、lv），客戶端才知道要把本機也清掉：' + canon(get(r, 'cake')));
+  ok(r.reset.includes('cake'), '否定本機：清空後版本較新，上傳的 50／50 不收');
+  r = await sync([{ g: 'cake', s: 3, lv: 2, r: 2 }]);
+  eq(await rv('cake'), { s: 3, lv: 2, r: 2 }, '否定本機：版本追上之後，新紀錄從空白長回來');
+  // 沒有這一列 → 版本是 0，一律照常收
+  await db.query(`delete from public."MF_player_bests" where player_id = $1::uuid and game_id = 'cake'`, [P]);
+  r = await sync([{ g: 'cake', s: 8, lv: 4 }]);
+  ok(!r.reset.length && (await rv('cake')).s === 8, '否定本機：資料庫沒有這一列（版本 0）→ 照常收');
   // 帳號刪除時最佳紀錄、憑證、成績一起刪（外鍵 cascade）
 }
 
@@ -542,7 +579,7 @@ let A, B;
 {
   // anon 不能呼叫管理函式、內部函式；舊函式不存在
   for (const q of [`select public."MF_admin_reset_pin"('小明', '0000')`, `select public."MF_admin_merge"('a', 'b')`, `select public."MF_admin_release_nick"('小明')`,
-    `select public."MF_admin_delete_player"('小明')`, `select public."MF__auth"('${uuid(1)}', 'x')`, `select public."MF__check_pin"('${uuid(1)}', '1234')`,
+    `select public."MF_admin_delete_player"('小明')`, `select public."MF_admin_reject_local"('小明', 'speed')`, `select public."MF__auth"('${uuid(1)}', 'x')`, `select public."MF__check_pin"('${uuid(1)}', '1234')`,
     `select public."MF__merge_player"('${uuid(1)}', '${uuid(2)}')`, `select public."MF__write_score"('speed', '${uuid(1)}', 1)`, `select public."MF__hash_pin"('1234')`,
     `select public."MF__new_session"('${uuid(1)}')`, `select public."MF__nick_key"('x')`, `select public."MF__find_player"('小明')`]) {
     const r = await asAnon(q);
@@ -575,8 +612,10 @@ let A, B;
   // merge：管理者手動合併
   tick(); const X = await call('MF_register', { p_nick: '甲甲甲', p_pin: '1111', p_game_id: 'hangpic', p_score: 4 });
   tick(); const Y = await call('MF_register', { p_nick: '乙乙乙', p_pin: '2222', p_game_id: 'hangpic', p_score: 6 });
+  await db.query(`insert into public."MF_player_bests"(player_id, game_id, best_level, reject_rev) values ($1::uuid, 'hangpic', 4, 3), ($2::uuid, 'hangpic', 9, 1), ($1::uuid, 'spot', 6, 2)`, [X.player_id, Y.player_id]);
   has(await adm('MF_admin_merge', '甲甲甲', '乙乙乙'), { ok: true, from: X.player_id, into: Y.player_id }, '管理：手動合併');
   ok((await q('select count(*)::int as n from public."MF_players" where player_id = $1::uuid', [X.player_id]))[0].n === 0, '管理：合併後來源消失');
+  eq((await q(`select game_id, best_level, reject_rev from public."MF_player_bests" where player_id = $1::uuid order by game_id`, [Y.player_id])).map(b => [b.game_id, b.best_level, b.reject_rev]), [['hangpic', 9, 3], ['spot', 6, 2]], '管理：合併個人最佳時「否定本機版本」取較大（hangpic 3、只有來源有的 spot 2 也帶過去）');
   eq(await adm('MF_admin_merge', '乙乙乙', '乙乙乙'), { ok: false, error: 'same_player' }, '管理：不能合併到自己');
   eq(await adm('MF_admin_merge', '乙乙乙', '沒有'), { ok: false, error: 'no_such_player' }, '管理：找不到玩家');
   // delete_player：成績、最佳、憑證跟著刪
@@ -584,6 +623,29 @@ let A, B;
   has(await adm('MF_admin_delete_player', '乙乙乙'), { ok: true }, '管理：刪除帳號');
   const left = (await one(`select (select count(*) from public."MF_scores" where player_id = $1::uuid)::int as s, (select count(*) from public."MF_player_bests" where player_id = $1::uuid)::int as b, (select count(*) from public."MF_sessions" where player_id = $1::uuid)::int as t`, [Y.player_id]));
   eq(left, { s: 0, b: 0, t: 0 }, '管理：刪除帳號後成績、最佳紀錄、憑證都沒了');
+  // reject_local：否定本機成績（V1.57.2.0）
+  const rvA = async (g) => (await q(`select best_score::float8 as s, best_level as lv, reject_rev as r from public."MF_player_bests" where player_id = $1::uuid and game_id = $2`, [A.player_id, g]))[0];
+  const rj = async (sqlArgs) => (await one(`select public."MF_admin_reject_local"(${sqlArgs}) as r`)).r;
+  const before = (await rvA('speed')).r;
+  has(await rj(`'小明', 'speed', 0.05, 9`), { ok: true, player_id: A.player_id, game_id: 'speed', best_score: 0.05, best_level: 9, reject_rev: before + 1, board_deleted: 0 }, '否定本機：管理函式 → 雲端改成 0.05／9、版本 +1');
+  eq(await rvA('speed'), { s: 0.05, lv: 9, r: before + 1 }, '否定本機：資料庫那一列：成績 0.05、關卡 9（可以往下調，不是取較好的）');
+  has(await rj(`'小明', 'speed', null, null`), { ok: true, best_score: null, best_level: null, reject_rev: before + 2 }, '否定本機：成績與關卡給 null → 清空、版本再 +1');
+  eq(await rvA('speed'), { s: null, lv: null, r: before + 2 }, '否定本機：清空之後那一列還在（只剩版本），客戶端才會被通知');
+  eq(await rj(`'不存在的人', 'speed'`), { ok: false, error: 'no_such_player' }, '否定本機：找不到玩家');
+  eq(await rj(`'小明', 'nope'`), { ok: false, error: 'unknown_game' }, '否定本機：沒有這款遊戲');
+  eq(await rj(`'小明', 'speed', 1000000000`), { ok: false, error: 'out_of_range' }, '否定本機：成績超出這款遊戲的合理範圍');
+  eq(await rj(`'小明', 'speed', null, 0`), { ok: false, error: 'bad_level' }, '否定本機：關卡 0 不合格');
+  eq(await rj(`'小明', 'speed', null, 201`), { ok: false, error: 'bad_level' }, '否定本機：關卡 201 不合格');
+  eq((await rvA('speed')).r, before + 2, '否定本機：被拒絕的呼叫沒有改到資料（版本不變）');
+  await db.query(`delete from public."MF_player_bests" where player_id = $1::uuid and game_id = 'hangpic'`, [A.player_id]);
+  has(await rj(`'小明', 'hangpic', null, 12`), { ok: true, best_level: 12, reject_rev: 1 }, '否定本機：這位玩家原本沒有這一列 → 新增一列，版本 1');
+  has(await rj(`'${A.player_id}', 'hangpic', null, 12`), { ok: true, reject_rev: 2 }, '否定本機：也可以用 player_id 找人');
+  // 連世界排行榜一起刪（p_also_board）
+  const bd0 = (await one(`select count(*)::int as n from public."MF_scores" where player_id = $1::uuid and game_id = 'speed'`, [A.player_id])).n;
+  ok(bd0 === 1, '否定本機：（前提）小明在 speed 世界榜上有一筆成績：' + bd0);
+  has(await rj(`'小明', 'speed', null, null, false`), { ok: true, board_deleted: 0 }, '否定本機：p_also_board＝false → 世界榜不動');
+  has(await rj(`'小明', 'speed', null, null, true`), { ok: true, board_deleted: 1 }, '否定本機：p_also_board＝true → 世界榜的成績也刪掉');
+  eq((await one(`select count(*)::int as n from public."MF_scores" where player_id = $1::uuid and game_id = 'speed'`, [A.player_id])).n, 0, '否定本機：世界榜上真的沒有了');
   // 中文欄位的檢視表
   const cols = (await db.query('select * from public."MF_players_admin" limit 1')).fields.map(f => f.name);
   eq(cols, ['暱稱', '狀態', '玩家編號', '首次出現', '建立密碼時間', '最後登入', '暱稱保留到', '密碼鎖定到', '連續打錯次數', '榜上成績數', '登入中的裝置數'], '管理：MF_players_admin 的欄位名稱都是中文');

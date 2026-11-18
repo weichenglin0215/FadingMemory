@@ -214,8 +214,7 @@
         var g = gl.getContext('2d');
         g.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--c-ink').trim() || '#4A3B1E';
         g.font = '900 ' + Math.round(ch * 0.84 * DPR) + 'px ' + (getComputedStyle(document.body).fontFamily || 'sans-serif');
-        g.textAlign = 'center'; g.textBaseline = 'middle';
-        g.fillText(q.ch, gl.width / 2, gl.height / 2 + ch * 0.04 * DPR);
+        kit.drawGlyph(g, q.ch, gl.width / 2, gl.height / 2);       /* 字的「筆畫外框」正好在方框正中央（V1.57.2.0；以前用 textBaseline = 'middle' 再往下 4%，iPhone 的字型上下留白不同，字會偏低、下緣貼到框的下緣） */
         var ctx = cv.getContext('2d');
         var sw = cw / q.n;
         function draw(t, aligned) {

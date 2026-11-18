@@ -114,7 +114,7 @@ ok(/rpc\('MF_dev_player_history'/.test(page) && /rpc\('MF_dev_clear_player_histo
   const seeded = /insert into public\."MF_dev_accounts" \(player_id, note\)\s+values \('([0-9a-f-]+)'/.exec(sql);
   ok(seeded && devPid && seeded[1] === devPid[1], 'SQL 預先放進測試帳號清單的編號，跟網頁預設的 player_id 是同一個');
   const clr = fnHead('MF_dev_clear_player_history');
-  ok(/delete from public\."MF_scores" s\s+where s\.player_id = p_player_id/.test(clr) && /delete from public\."MF_player_bests" b\s+where b\.player_id = p_player_id/.test(clr) && /delete from public\."MF_play_days" d\s+where d\.player_id = p_player_id/.test(clr), '刪除只刪這一位玩家（where player_id = 他）的三種紀錄：世界榜成績、個人最佳、遊玩統計');
+  ok(/delete from public\."MF_scores" s\s+where s\.player_id = p_player_id/.test(clr) && /update public\."MF_player_bests" b\s+set best_score = null, best_level = null, reject_rev = b\.reject_rev \+ 1\s+where b\.player_id = p_player_id/.test(clr) && /delete from public\."MF_play_days" d\s+where d\.player_id = p_player_id/.test(clr), '刪除只動這一位玩家（where player_id = 他）的三種紀錄：世界榜成績與遊玩統計刪列；個人最佳清空並把否定本機版本加 1（V1.57.2.0，本機最佳才會跟著被清）');
   ok(!/delete from public\."MF_players"|delete from public\."MF_ratings"|delete from public\."MF_feedback"/.test(clr), '不刪帳號、評價、意見');
   ok(/第 7C 節/.test(sql.slice(0, 3200)), 'SQL 檔頭的說明有提到第 7C 節');
 }

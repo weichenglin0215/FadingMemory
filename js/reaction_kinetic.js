@@ -12,6 +12,8 @@
           到頂的時候，錯誤選項只差 1 個位數、而且換成「長得像」的數字（0↔8、3↔8、1↔7、6↔5 …，見 SIM 表）。
        ⑥ 火車開過去的時候，整列火車（連號碼貼紙、干擾貼紙）都有「橫向動態模糊」（只糊水平方向，垂直不糊）：模糊半徑 BLUR_PX 1.5 → 6 px；
           火車開走、出現選項之後，模糊就拿掉（揭曉倒車時是清楚的）。
+          V1.57.2.0（玩家意見：手機上一開始十關很卡）：不再讓瀏覽器「每個畫面都重算一次」濾鏡，而是**進關時把整列火車預先畫成圖片（一節車廂一張 canvas），
+          只做一次橫向模糊**（bakeTrain），開車時直接移動這些圖片，所以不管幾幀都一樣順；畫不出來的瀏覽器才退回原本的 SVG 濾鏡。
    · 窗戶裡的干擾：乘客剪影、便當、報紙、窗簾、空窗，每節隨機。
    · 揭曉：火車「倒車」回來，停在貼著號碼的那一節，號碼貼紙放大；選項的正確答案變綠色、你選錯的變紅色。
    ═══════════════════════════════════════════════════════════════════ */
@@ -35,6 +37,10 @@
     var DECOY_STICKERS = [1, 5];                /* 干擾貼紙（英文字母）張數：第 1 關 → 到頂（四捨五入） */
     var SIM_P = [0, 1];                         /* 錯誤選項「長得像」的程度：第 1 關 → 到頂 */
     var BLUR_PX = [1.5, 6];                     /* 火車開過去時的橫向動態模糊半徑（px，只糊水平方向）：第 1 關 → 到頂；兩個都填 0 就沒有模糊 */
+    var BAKE_STEP = 2;                          /* 預先繪製模糊時，相鄰兩個取樣之間隔幾個裝置像素（越小越細緻、進關時畫得越久；2 肉眼看不出階梯） */
+    var BAKE_MAX_SAMPLES = 32;                  /* 預先繪製模糊時，一節車廂最多取幾個樣本（模糊很大的時候用它封頂，免得進關畫太久） */
+    var BAKE_DPR_MAX = 3;                       /* 預先畫的圖片，解析度最多是螢幕的幾倍（iPhone 是 3；調小可以省記憶體與進關的時間，字會稍微軟一點） */
+    var BAKE_PAD = 4;                           /* 預先畫的圖片上下各多留幾 px（車輪、玻璃的外框會超出車廂一點點） */
     var ANSWER_S = 30;                           /* 火車開走之後，選號碼的時間（秒） */
     var LEAD_MS = 600;                          /* 進場後等多久火車才開始進來（讓玩家先看提示） */
     var CAR_GAP = 10;                           /* 車廂之間的距離（px，中間有連結器） */
@@ -55,6 +61,18 @@
     function carsFor(level) { return Math.round(ramp(level, CARS)); }
     function decoysFor(level) { return Math.round(ramp(level, DECOY_STICKERS)); }
     function simPFor(level) { return Math.round(ramp(level, SIM_P) * 1000) / 1000; }
+    /* 預先繪製的橫向模糊要怎麼取樣：sigma＝模糊半徑（px，跟 SVG 濾鏡 feGaussianBlur 的 stdDeviation 同一個意思），dpr＝圖片的解析度倍率。
+       動態模糊就是「曝光時間內，物體走過的每個位置疊在一起取平均」＝一個「方框」的平均；方框寬 L ＝ sigma × √12（標準差跟高斯模糊一樣是 sigma）。
+       做法：把沒模糊的圖片，往左右各偏移一小段、半透明疊 K 次（相加平均）；把方框 −L/2 ～ +L/2 平均切成 K 格，每格的中間放一個樣本（這樣 K 很小的時候，標準差也不會偏大）。
+       回傳 { L（方框寬，裝置像素）, offsets（每個樣本的偏移，裝置像素，可以有小數；drawImage 會自己內插）}。
+       模糊半徑小於 1 個裝置像素（等於沒模糊）就只有一個樣本、偏移 0。 */
+    function blurSamples(sigma, dpr) {
+        var L = sigma * Math.sqrt(12) * dpr;
+        if (!(L >= 1)) return { L: 0, offsets: [0] };
+        var K = Math.min(BAKE_MAX_SAMPLES, Math.max(2, Math.ceil(L / BAKE_STEP))), offsets = [], j;
+        for (j = 0; j < K; j++) offsets.push(Math.round((-L / 2 + L * (j + 0.5) / K) * 100) / 100);
+        return { L: L, offsets: offsets };
+    }
     function blurFor(level) { return Math.max(0, Math.round(ramp(level, BLUR_PX) * 10) / 10); }  /* 這一關的橫向模糊半徑（px，取到小數 1 位；最少 0） */
     /* 版面尺寸：stage 寬 W → 車廂寬、高、整列火車的寬 */
     function trainSize(W, cars) {
@@ -160,6 +178,91 @@
         }
     }
 
+    /* ═══ 預先繪製（bake）：把整列火車畫成圖片、只模糊一次（V1.57.2.0 玩家意見）═══
+       為什麼：火車是 DOM（div）加 SVG，原本用 SVG 濾鏡 feGaussianBlur 蓋在整列火車上；火車一動，瀏覽器就要「每一個畫面」重算一次濾鏡，
+       手機（尤其 iPhone）上很吃力，關卡前面火車慢、玩家看得清楚，停頓反而更明顯。
+       現在：進關時，照 DOM 裡已經畫好的車廂（顏色、框線都讀「算好的樣式」，所以跟畫面上一模一樣），一節車廂畫一張 canvas，
+       橫向模糊只做這一次；開車時移動的只是幾張現成的圖片（跟沒有模糊的時候一樣便宜）。
+       只支援這款遊戲畫出來的圖形：rect（含圓角）、circle、path、g（平移＋裁切）和貼紙（圓角框＋字）。 */
+    /* 圓角方形路徑（Path2D 版本，p 是 Path2D） */
+    function roundRectPath(p, x, y, w, hh, r) {
+        r = Math.max(0, Math.min(r || 0, w / 2, hh / 2));
+        p.moveTo(x + r, y); p.lineTo(x + w - r, y); p.arcTo(x + w, y, x + w, y + r, r); p.lineTo(x + w, y + hh - r); p.arcTo(x + w, y + hh, x + w - r, y + hh, r);
+        p.lineTo(x + r, y + hh); p.arcTo(x, y + hh, x, y + hh - r, r); p.lineTo(x, y + r); p.arcTo(x, y, x + r, y, r); p.closePath();
+    }
+    /* 一個 SVG 元素 → 「畫到 canvas 上」的函式 painter(ctx)。顏色、框線粗細讀 getComputedStyle（CSS 變數已經換成真正的顏色），clip＝窗戶玻璃的裁切範圍 */
+    function svgNodePainter(el, clip) {
+        var tag = el.tagName.toLowerCase(), cs = getComputedStyle(el), num = function (a) { return parseFloat(el.getAttribute(a)) || 0; };
+        if (tag === 'g') {
+            var kids = [].slice.call(el.children).map(function (c) { return svgNodePainter(c, clip); }), m = /translate\(\s*([-\d.]+)[\s,]+([-\d.]+)\s*\)/.exec(el.getAttribute('transform') || '');
+            var tx = m ? +m[1] : 0, ty = m ? +m[2] : 0, clipped = /url\(/.test(el.getAttribute('clip-path') || '');
+            return function (c) {
+                c.save(); c.translate(tx, ty);
+                if (clipped && clip) { var cp0 = new Path2D(); roundRectPath(cp0, clip.x, clip.y, clip.w, clip.h, clip.rx); c.clip(cp0); }
+                kids.forEach(function (f) { f(c); }); c.restore();
+            };
+        }
+        var p = new Path2D();
+        if (tag === 'rect') roundRectPath(p, num('x'), num('y'), num('width'), num('height'), num('rx'));
+        else if (tag === 'circle') p.arc(num('cx'), num('cy'), num('r'), 0, Math.PI * 2);
+        else if (tag === 'path') p = new Path2D(el.getAttribute('d') || '');
+        else return function () { };
+        var fill = cs.fill, stroke = cs.stroke, sw = parseFloat(cs.strokeWidth) || 0, op = parseFloat(cs.opacity);
+        return function (c) {
+            if (isFinite(op) && op < 1) c.globalAlpha = op;
+            if (fill && fill !== 'none') { c.fillStyle = fill; c.fill(p); }
+            if (stroke && stroke !== 'none' && sw > 0) { c.lineWidth = sw; c.strokeStyle = stroke; c.lineJoin = 'round'; c.stroke(p); }
+            c.globalAlpha = 1;
+        };
+    }
+    /* 號碼／字母貼紙（div）→ painter：圓角框（邊框色先填滿，再填底色）＋置中的字；位置、大小、字型都讀排好版之後的實際值 */
+    function stickerPainter(st) {
+        var cs = getComputedStyle(st), w = st.offsetWidth, hh = st.offsetHeight, cx = st.offsetLeft, cy = st.offsetTop, bw = parseFloat(cs.borderTopWidth) || 0, r = parseFloat(cs.borderTopLeftRadius) || 0;
+        var font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily, text = st.textContent;         /* offsetLeft／offsetTop＝貼紙「左上角」在車廂裡的位置（不含 translate(-50%, -50%)），所以它就是貼紙的中心 */
+        return function (c) {
+            c.save();
+            var a = new Path2D(), b = new Path2D();
+            roundRectPath(a, cx - w / 2, cy - hh / 2, w, hh, r); c.fillStyle = cs.borderTopColor; c.fill(a);
+            roundRectPath(b, cx - w / 2 + bw, cy - hh / 2 + bw, w - 2 * bw, hh - 2 * bw, r - bw); c.fillStyle = cs.backgroundColor; c.fill(b);
+            c.font = font; if ('letterSpacing' in c) c.letterSpacing = cs.letterSpacing;
+            c.fillStyle = cs.color; kit.drawGlyph(c, text, cx, cy);                                        /* 字的筆畫外框置中（kit.drawGlyph） */
+            c.restore();
+        };
+    }
+    /* 一節車廂（.kinetic-car）→ painter：先畫車廂的 SVG（依 viewBox 縮放到車廂的實際大小），再畫貼紙 */
+    function carPainter(car, clip) {
+        var svg = car.querySelector('svg'), vb = (svg.getAttribute('viewBox') || '0 0 230 170').split(/\s+/).map(Number), cw = +svg.getAttribute('width'), ch = +svg.getAttribute('height');
+        var kids = [].slice.call(svg.children).map(function (e) { return svgNodePainter(e, clip); }), stickers = [].slice.call(car.querySelectorAll('.kinetic-sticker')).map(stickerPainter);
+        return function (c) { c.save(); c.scale(cw / vb[2], ch / vb[3]); kids.forEach(function (f) { f(c); }); c.restore(); stickers.forEach(function (f) { f(c); }); };
+    }
+    /* 預先繪製整列火車：carEls＝每節車廂（.kinetic-car）、clip＝窗戶玻璃的裁切 { x, y, w, h, rx }、T＝trainSize 的結果、blur＝橫向模糊半徑（px）。
+       一節車廂畫一張 canvas，負責「這節車廂左右各半個車廂間隔」那一段（相鄰的圖片剛好接起來、不重疊）；
+       要模糊，就要用到左右鄰居的邊緣，所以先把「前一節、這一節、後一節」一起畫在一張暫存圖上（左右多留 M 個像素給模糊用），
+       再依 blurSamples 的偏移，把暫存圖半透明疊 K 次（globalCompositeOperation = 'lighter'＝相加，每次 1/K 的亮度＝平均）。
+       回傳 { el（裝著所有 canvas、要移動的容器）, ms（花了幾毫秒）, samples, dpr }。 */
+    function bakeTrain(carEls, clip, T, blur) {
+        var t0 = performance.now(), dpr = Math.min(BAKE_DPR_MAX, window.devicePixelRatio || 1), sm = blurSamples(blur, dpr), n = carEls.length, G = CAR_GAP, pad = BAKE_PAD;
+        var M = Math.ceil(sm.L / 2) + 2, cellW = Math.round((T.cw + G) * dpr), H = Math.round((T.ch + 2 * pad) * dpr), i, k;
+        var painters = carEls.map(function (c) { return carPainter(c, clip); });
+        var src = document.createElement('canvas'); src.width = cellW + 2 * M; src.height = H;
+        var sx = src.getContext('2d'), root = document.createElement('div'); root.className = 'kinetic-train kinetic-train--baked';
+        for (i = 0; i < n; i++) {
+            sx.setTransform(1, 0, 0, 1, 0, 0); sx.clearRect(0, 0, src.width, src.height);
+            for (k = i - 1; k <= i + 1; k++) {
+                if (k < 0 || k >= n) continue;
+                sx.setTransform(dpr, 0, 0, dpr, M + (G / 2 + (k - i) * (T.cw + G)) * dpr, pad * dpr);        /* 這一節在暫存圖上的位置：左邊留 M 像素給模糊，再讓出半個車廂間隔 */
+                painters[k](sx);
+            }
+            var cv = document.createElement('canvas'); cv.width = cellW; cv.height = H; cv.className = 'kinetic-baked';
+            cv.style.cssText = 'left:' + (i * (T.cw + G) - G / 2) + 'px;top:' + (-pad) + 'px;width:' + (T.cw + G) + 'px;height:' + (T.ch + 2 * pad) + 'px;';
+            var dx = cv.getContext('2d');
+            if (sm.offsets.length > 1) { dx.globalCompositeOperation = 'lighter'; dx.globalAlpha = 1 / sm.offsets.length; sm.offsets.forEach(function (d) { dx.drawImage(src, d - M, 0); }); }
+            else dx.drawImage(src, -M, 0);
+            root.appendChild(cv);
+        }
+        return { el: root, ms: performance.now() - t0, samples: sm.offsets.length, dpr: dpr };
+    }
+
     /* setup(api)：每一關開始時呼叫一次，負責出題並把這一關的畫面建出來。api 是共用骨架給的工具：api.stage（這一關的畫面容器）、api.level（第幾關）、
        api.after（延遲執行，換關後自動作廢）、api.timer（倒數計時）、api.pass／api.fail（過關／失敗）。 */
     function setup(api) {
@@ -208,18 +311,31 @@
         var defs = kit.svg('svg', { 'class': 'kinetic-defs', width: 0, height: 0 }, field);
         var defsEl = kit.svg('defs', {}, defs);
         var cp = kit.svg('clipPath', { id: 'kinetic-clip' }, defsEl); kit.svg('rect', { x: 0, y: 0, width: 160, height: 80, rx: 8 }, cp);
-        /* 橫向動態模糊：SVG 濾鏡 feGaussianBlur 的 stdDeviation 填「橫向 縱向」兩個數字，縱向填 0 就只糊水平方向；
-           套在整列火車（strip）上，所以車身、窗戶、號碼貼紙、干擾貼紙會一起糊。color-interpolation-filters="sRGB" 讓顏色不會被濾鏡改變。 */
+        /* 橫向動態模糊（只糊水平方向，車身、窗戶、號碼貼紙、干擾貼紙一起糊）。
+           ① 優先用「預先繪製」（bakeTrain）：進關時把整列火車畫成圖片、模糊一次，開車時只移動圖片（玩家意見：手機上每幀套濾鏡會卡）；
+              原本的 DOM 火車先藏起來（visibility: hidden），火車開走之後再換回來給揭曉倒車用（那時要清清楚楚）；
+           ② 預先繪製失敗（舊瀏覽器沒有 Path2D 之類）才退回原本的做法：SVG 濾鏡 feGaussianBlur，stdDeviation 填「橫向 縱向」，縱向填 0 就只糊水平方向，
+              套在整列火車（strip）上；color-interpolation-filters="sRGB" 讓顏色不會被濾鏡改變。 */
+        var baked = null, mover = strip;                /* baked：預先畫好的圖片容器（沒有就是 null）；mover：開車時要移動的那一個容器 */
         if (q.blur > 0) {
-            var fid = 'kinetic-hblur' + (++blurSeq);
-            var flt = kit.svg('filter', { id: fid, x: '-10%', y: '-5%', width: '120%', height: '110%', 'color-interpolation-filters': 'sRGB' }, defsEl);
-            kit.svg('feGaussianBlur', { stdDeviation: q.blur + ' 0' }, flt);
-            strip.style.filter = 'url(#' + fid + ')';
+            try {
+                var cr = cp.firstChild;
+                baked = bakeTrain([].slice.call(strip.children), { x: +cr.getAttribute('x'), y: +cr.getAttribute('y'), w: +cr.getAttribute('width'), h: +cr.getAttribute('height'), rx: +cr.getAttribute('rx') }, T, q.blur);
+            } catch (err) { baked = null; }
+            if (baked) {
+                baked.el.style.cssText = strip.style.cssText; field.appendChild(baked.el); strip.style.visibility = 'hidden'; mover = baked.el;
+                console.log('[動態視力] 預先繪製橫向模糊 ' + q.blur + ' px：' + baked.ms.toFixed(0) + ' 毫秒、每節車廂取樣 ' + baked.samples + ' 次、解析度 ' + baked.dpr + ' 倍');
+            } else {
+                var fid = 'kinetic-hblur' + (++blurSeq);
+                var flt = kit.svg('filter', { id: fid, x: '-10%', y: '-5%', width: '120%', height: '110%', 'color-interpolation-filters': 'sRGB' }, defsEl);
+                kit.svg('feGaussianBlur', { stdDeviation: q.blur + ' 0' }, flt);
+                strip.style.filter = 'url(#' + fid + ')';
+            }
         }
         var info = h('div', { 'class': 'qz-note kinetic-info', text: '' }); info.style.top = (trainTop + T.ch + 34) + 'px'; field.appendChild(info);
 
         var phase = 'run', done = false, grid = null, x0 = W;
-        function setX(x) { x0 = x; strip.style.transform = 'translate3d(' + x.toFixed(1) + 'px,0,0)'; }
+        function setX(x) { x0 = x; mover.style.transform = 'translate3d(' + x.toFixed(1) + 'px,0,0)'; }
         api.after(LEAD_MS, function () {                /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
             var t0 = performance.now();                 /* performance.now()：高精度的時間（毫秒），計時用 */
             api.my.loop(function (now) {                /* my.loop(函式)：每個畫面更新（約每秒 60 次）就執行一次函式；函式回傳 false 就停止 */
@@ -234,7 +350,8 @@
         function ask() {
             if (phase !== 'run') return;
             phase = 'ask'; tip.textContent = '剛才窗戶上的號碼是？';  /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
-            strip.style.filter = '';                    /* 火車已經開走：拿掉模糊（之後揭曉倒車時，號碼要清清楚楚） */
+            /* 火車已經開走：拿掉模糊（之後揭曉倒車時，號碼要清清楚楚）：預先畫好的模糊圖片丟掉、換回清楚的 DOM 火車（停在同一個位置）；用濾鏡的就拿掉濾鏡 */
+            if (baked) { baked.el.remove(); strip.style.visibility = ''; mover = strip; setX(x0); } else strip.style.filter = '';
             grid = kit.btnGrid(field, q.options.map(function (o, k) { return { text: o, kind: 'line', cls: 'kinetic-opt', onTap: function () { judge(k); } }; }), { cols: 2, h: 92, gap: 10, bottom: 8 });  /* kit.btnGrid：共用的按鈕列（一排大按鈕） */
             if (level === 1 && kit.once('kinetic.hint')) kit.hintOn(stage, grid.btns[q.answerIdx], { mode: 'tap', delay: 900, text: '請點剛才看到的號碼' });  /* 操作提示（手指圖示指出該點哪裡）：玩家第一次按下就消失 */
             api.timer(ANSWER_S * 1000, function () { judge(-1); });  /* 開始倒數（畫面上方的時間條）：時間到就呼叫後面那個函式 */
@@ -267,14 +384,14 @@
     var G = {
         id: ID,
         name: '動態視力',
-        rule: '一列火車從右往左開過去，**其中一節車廂的窗戶貼著黃底黑字的號碼**。火車開走之後，從下面 4 個選項點出那個號碼。別的窗戶裡有乘客、便當、報紙，後面還會貼**英文字母**的假貼紙來干擾你。越後面，火車開得越快（第 30 關每節車廂只在畫面上 **0.25 秒**）、整列車越**橫向模糊**、號碼越長、錯的選項越像（0 和 8、3 和 8、1 和 7……）。點錯或時間到就結束，看你能過幾關。',
+        rule: '一列火車從右往左開過去，**其中一節車廂的窗戶貼著黃底黑字的號碼**。火車開走之後，從下面 4 個選項點出那個號碼。別的窗戶裡有乘客、便當、報紙，後面還會貼**英文字母**的假貼紙來干擾你。越後面，火車開得越快（第 30 關每節車廂只在畫面上 **0.1 秒**）、整列車越**橫向模糊**、號碼越長、錯的選項越像（0 和 8、3 和 8、1 和 7……）。點錯或時間到就結束，看你能過幾關。',
         mount: mount,
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
-            viewSFor: viewSFor, digitsFor: digitsFor, carsFor: carsFor, decoysFor: decoysFor, simPFor: simPFor, blurFor: blurFor, trainSize: trainSize, speedFor: speedFor, passSeconds: passSeconds, trainX: trainX, carOffset: carOffset, revealX: revealX,
+            viewSFor: viewSFor, digitsFor: digitsFor, carsFor: carsFor, decoysFor: decoysFor, simPFor: simPFor, blurFor: blurFor, blurSamples: blurSamples, trainSize: trainSize, speedFor: speedFor, passSeconds: passSeconds, trainX: trainX, carOffset: carOffset, revealX: revealX,
             diffPositions: diffPositions, allSimilar: allSimilar, randomNumber: randomNumber, swapDigit: swapDigit, makeDecoy: makeDecoy, makeLevel: makeLevel, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, VIEW_S: VIEW_S, DIGITS: DIGITS, CARS: CARS, DECOY_STICKERS: DECOY_STICKERS, SIM_P: SIM_P, BLUR_PX: BLUR_PX, ANSWER_S: ANSWER_S, CAR_GAP: CAR_GAP, SIM: SIM, LETTERS: LETTERS, WINDOWS: WINDOWS, MAX_LEVEL: MAX_LEVEL, REVERSE_MS: REVERSE_MS, ZOOM_MS: ZOOM_MS
+            RAMP_LEVELS: RAMP_LEVELS, VIEW_S: VIEW_S, DIGITS: DIGITS, CARS: CARS, DECOY_STICKERS: DECOY_STICKERS, SIM_P: SIM_P, BLUR_PX: BLUR_PX, BAKE_STEP: BAKE_STEP, BAKE_MAX_SAMPLES: BAKE_MAX_SAMPLES, BAKE_DPR_MAX: BAKE_DPR_MAX, BAKE_PAD: BAKE_PAD, ANSWER_S: ANSWER_S, CAR_GAP: CAR_GAP, SIM: SIM, LETTERS: LETTERS, WINDOWS: WINDOWS, MAX_LEVEL: MAX_LEVEL, REVERSE_MS: REVERSE_MS, ZOOM_MS: ZOOM_MS
         }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */

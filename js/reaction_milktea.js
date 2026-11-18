@@ -2,7 +2,8 @@
    reaction_milktea.js — 秒反應・奶茶調色（企劃 274）
    樣式：css/games/reaction_milktea.css（這款專屬的 class 一律以「milktea-」開頭；共用元件在 css/reaction_common.css）
    手搖飲店。左邊一杯客人點的「理想奶茶」（樣品色），右邊一杯純紅茶。**按住牛奶壺倒牛奶，奶茶的顏色慢慢變淡；放手就停**。
-   兩杯顏色一樣就過關。放手後兩杯靠攏並排，下方顯示「顏色差 2.3184%」（ΔE）。
+   兩杯顏色一樣就過關。放手後兩杯靠攏並排（V1.57.2.0 玩家意見：兩杯的奶茶**緊靠在一起，中間是垂直的切齊，中間沒有任何顏色的線條**，才看得清楚差異——
+   做法是併成一個大杯：左邊是「客人點的」那杯的左 2/3、右邊是「你的奶茶」那杯的右 2/3（JOIN_KEEP），分界是一條垂直的直線，沒有杯緣、桌面、邊框夾在中間），下方顯示「顏色差 2.3184%」（ΔE）。
    ───────────────────────────────────────────────────────────────────
    · 混色：奶茶的顏色 = 紅茶色 T0 和牛奶色 M 依「牛奶比例 f」混合（f 隨按住的時間增加，流量 rate／秒）。
      樣品色 = 同一個混合在 f* 的顏色（所以一定調得出來）。顏色差用 CIELAB 的 ΔE（兩個顏色在 Lab 色彩空間的距離，越小越像；ΔE 2.3 左右是專家才看得出的差別），
@@ -38,6 +39,7 @@
     var CREAMER_RATE = 1.5;                     /* 奶精的流量倍率 */
     var TIME_S = 20;                            /* 每關限時（秒）：免得一直不按 */
     var SETTLE_LAGS = 3;                        /* 放手後等幾倍的延遲時間才揭曉（顏色穩定了才比） */
+    var JOIN_KEEP = 2 / 3;                      /* 結算合併時，每杯留下的比例：左杯留左邊這麼多、右杯留右邊這麼多（1/2＝各留一半、杯子疊在同一個位置；2/3＝各留三分之二、合成的杯子寬 4/3 倍，奶茶面積更大、更好比）。要在 0.5～1 之間 */
     var MAX_LEVEL = 90;                             /* 最後一關：過了第 90 關就算全破（也是成績的上限） */
     var SWIRL_MAX = 260;                        /* 白色漩渦的粒子池上限 */
     var MILK = [250, 246, 234];                 /* 牛奶的顏色（RGB） */
@@ -254,7 +256,27 @@
             cctx.clearRect(0, 0, cw, chh); cctx.save();
             var cp = new Path2D(cupPath(cw, cwb, chh, 24)); cctx.clip(cp); swirl.draw(cctx); cctx.restore();
         });
-        /* 放手（或時間到、或滿了）：停止倒牛奶；等 SETTLE_LAGS 倍的延遲時間讓顏色穩定，再把兩杯靠攏並排，
+        /* 結算：兩杯「合成一杯」（V1.57.2.0 玩家意見）。兩個展示台換成同一個大展示台（背景一起變成中性色，不再有同時對比的錯覺），
+           兩個杯子先在原位，再一起滑到正中央併成一個大杯：左杯只留左邊 JOIN_KEEP（預設 2/3）、右杯只留右邊 JOIN_KEEP（CSS clip-path 裁掉另一邊），
+           右杯往右錯開 (2×JOIN_KEEP − 1) 個杯寬，讓兩塊剛好首尾相接：分界是一條垂直的直線；左塊多留 0.5px 蓋到右塊底下，免得邊緣縮圖抗鋸齒時露出一條細縫。
+           杯子的液體沒有框線，玻璃杯的外框只在整杯的外圍——中間沒有任何線。 */
+        function joinCups() {
+            var jw = (xR + pw) - xL, pJ = h('div', { 'class': 'milktea-panel milktea-panel--join milktea-panel--solo' });       /* 大展示台：從左邊展示台的左緣，到右邊展示台的右緣 */
+            pJ.style.cssText = 'left:' + xL + 'px;top:' + py + 'px;width:' + jw + 'px;height:' + ph + 'px;';
+            field.appendChild(pJ); field.classList.add('milktea-field--join');                                             /* 說明文字（客人點的／你的奶茶）淡出 */
+            var keep = Math.min(1, Math.max(0.5, JOIN_KEEP)), cut = (100 * (1 - keep)) + '%', shift = Math.round((2 * keep - 1) * cw);   /* cut：每杯要裁掉的那一邊佔幾％；shift：右杯要比左杯再往右幾 px */
+            cupL.svg.style.left = (pw / 2 - cw / 2) + 'px'; cupR.svg.style.left = ((xR - xL) + pw / 2 - cw / 2) + 'px';        /* 先放在跟分開時一模一樣的位置 */
+            cupL.svg.style.clipPath = 'inset(-8px calc(' + cut + ' - 0.5px) -8px -8px)';                                 /* 左杯：右邊裁掉 cut（上下左右各放寬 8px，玻璃杯外框的粗線才不會被切掉） */
+            cupR.svg.style.clipPath = 'inset(-8px -8px -8px calc(' + cut + ' - 0.5px))';                                 /* 右杯：左邊裁掉 cut */
+            pJ.appendChild(cupL.svg); pJ.appendChild(cupR.svg);                                                          /* 右杯後放進去，疊在左杯上面 */
+            pL.style.visibility = pR.style.visibility = 'hidden';                                                          /* 原本的兩個展示台（連同壺、漩渦）收起來 */
+            var midL = Math.round((jw - 6 - (cw + shift)) / 2);                                                            /* 併成的大杯（寬 cw + shift）放在大展示台正中央（扣掉左右框線各 3px），這是左杯的 left */
+            api.after(30, function () {                                                                                    /* 下一個畫格才開始滑：位置有先畫出來，CSS 的 left 過渡才有起點 */
+                cupL.svg.classList.add('milktea-cup--join'); cupR.svg.classList.add('milktea-cup--join');
+                cupL.svg.style.left = midL + 'px'; cupR.svg.style.left = (midL + shift) + 'px';
+            });
+        }
+        /* 放手（或時間到、或滿了）：停止倒牛奶；等 SETTLE_LAGS 倍的延遲時間讓顏色穩定，再把兩杯合成一杯，
            算最後的顏色差 ΔE：在容許範圍內就過關，否則失敗並說明牛奶倒太多或太少。 */
         function release() {
             if (done || api.over) return;
@@ -265,9 +287,7 @@
             var settleMs = Math.round(q.tau * 1000 * SETTLE_LAGS) + 200;
             info.textContent = '顏色還在攪勻……';              /* textContent：設定元素裡的文字（安全，不會被當成 HTML 解析） */
             api.after(settleMs, function () {           /* api.after(毫秒, 函式)：過幾毫秒再執行；這一關結束後會自動作廢（不會跑到下一關去） */
-                /* 兩杯靠攏並排，背景一起變成中性色（不再有同時對比的錯覺） */
-                pL.classList.add('milktea-panel--join'); pR.classList.add('milktea-panel--join'); field.classList.add('milktea-field--join');
-                pL.style.left = (W / 2 - pw) + 'px'; pR.style.left = (W / 2) + 'px';                              /* 兩杯（連同背景）往中間靠攏 */
+                joinCups();                                                                                          /* 兩杯合成一杯：靠攏、垂直切齊、沒有線條 */
                 api.after(750, function () {
                     var word = f < q.fTarget ? '牛奶倒太少了' : '牛奶倒太多了';
                     info.textContent = '顏色差 ' + de.toFixed(4) + '%' + (ok ? '，一樣了！' : '，' + word + '（要在 ' + q.tol + '% 內）');
@@ -292,7 +312,7 @@
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
             tolFor: tolFor, lagFor: lagFor, rateFor: rateFor, timeMs: timeMs, rgbToLab: rgbToLab, deltaE: deltaE, mixColor: mixColor, lagStep: lagStep, css: css, hslToRgb: hslToRgb, makeLevel: makeLevel, cupPath: cupPath, makeSwirl: makeSwirl, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, TOL: TOL, MIX_LAG: MIX_LAG, RATE: RATE, F_TARGET: F_TARGET, T_RANGE: T_RANGE, CONTRAST_FROM: CONTRAST_FROM, CREAMER_FROM: CREAMER_FROM, CREAMER_RATE: CREAMER_RATE, TIME_S: TIME_S, SETTLE_LAGS: SETTLE_LAGS, MILK: MILK, CREAMER: CREAMER, MAX_LEVEL: MAX_LEVEL, SWIRL_MAX: SWIRL_MAX
+            RAMP_LEVELS: RAMP_LEVELS, TOL: TOL, MIX_LAG: MIX_LAG, RATE: RATE, F_TARGET: F_TARGET, T_RANGE: T_RANGE, CONTRAST_FROM: CONTRAST_FROM, CREAMER_FROM: CREAMER_FROM, CREAMER_RATE: CREAMER_RATE, TIME_S: TIME_S, SETTLE_LAGS: SETTLE_LAGS, JOIN_KEEP: JOIN_KEEP, MILK: MILK, CREAMER: CREAMER, MAX_LEVEL: MAX_LEVEL, SWIRL_MAX: SWIRL_MAX
         }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */

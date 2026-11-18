@@ -106,13 +106,16 @@
         });
         var gAns = kit.svg('g', {}, svg);
         var pos = START;
-        var stem = kit.svg('line', { x1: 0, x2: 0, y1: LY - 70, y2: LY, 'class': 'numline-stem' }, svg);
+        /* 圓點下面原本是一條短直線，現在改成「倒三角形」（玩家意見）：尖端剛好碰到數線（y ＝ LY），玩家一眼就看出圓點指的是數線上的哪一個位置；
+           三角形的底邊在圓點裡面一點（先畫三角形、後畫圓點，底邊的兩個角被圓點蓋住，看起來是圓點長出一個箭頭） */
+        var TRI_HALF = 14, TRI_BASE = LY - 56;                                                  /* 三角形底邊的半寬（px）、底邊的高度（圓點的底在 LY − 50，底邊再往上 6px，兩個角剛好還在圓裡） */
+        var stem = kit.svg('polygon', { points: '0,' + TRI_BASE + ' 0,' + TRI_BASE + ' 0,' + LY, 'class': 'numline-tri' }, svg);
         var dot = kit.svg('circle', { cx: 0, cy: LY - 70, r: 20, 'class': 'numline-dot' }, svg);
         function xOf(v) { return X0 + v * LEN; }
         /* 重畫畫面：依目前的狀態（選中了什麼、填了什麼、對或錯…）更新每個元素的外觀 */
         function paint() {
             var x = xOf(pos);
-            stem.setAttribute('x1', x); stem.setAttribute('x2', x); dot.setAttribute('cx', x);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx） */
+            stem.setAttribute('points', (x - TRI_HALF) + ',' + TRI_BASE + ' ' + (x + TRI_HALF) + ',' + TRI_BASE + ' ' + x + ',' + LY); dot.setAttribute('cx', x);  /* setAttribute：設定元素的 HTML 屬性（例如 aria-label、data-xxx）；三角形：左上角、右上角、下面的尖端（正好在數線上） */
         }
         paint();
         /* 拖曳區：數線下方一大塊，手指在這裡橫向移動，圓點跟著走（手指不會擋住圓點） */

@@ -306,7 +306,7 @@ details.how summary { cursor: pointer; font-weight: 700; }
                     <li>只能處理資料庫裡「開發者測試帳號清單」（<code>MF_dev_accounts</code>）上的帳號，外部玩家的資料不可能被刪到；要多加一個測試帳號，到 Supabase 的 SQL Editor 加（見 <code>supabase/MF_leaderboard.sql</code> 第 7C 節）。</li>
                     <li>榜上每款遊戲只留前 30 名：測試帳號當年擠掉的玩家，已經不在資料庫，清掉測試成績也補不回來。</li>
                     <li>不會刪帳號本身、五星評價與玩家意見。</li>
-                    <li>瀏覽器裡的「本機最佳」不在資料庫，要在遊戲頁的主控台執行 <code>Identity.forgetBest('遊戲代號')</code> 才會清；不然下次同步又會把最佳傳回資料庫。</li>
+                    <li>「雲端個人最佳」不是刪列，而是清空並把「否定本機版本」加 1：這個帳號每一支<b>登入著</b>的瀏覽器，下次進那款遊戲（或每小時同步）時，本機的最佳也會被自動清掉，不會再傳回資料庫。沒登入的瀏覽器，本機最佳不在資料庫，要在遊戲頁的主控台執行 <code>Identity.forgetBest('遊戲代號')</code> 才會清。</li>
                 </ul>
             </div>
         </form>
@@ -381,7 +381,7 @@ details.how summary { cursor: pointer; font-weight: 700; }
         "groupphoto": {"name":"大合照","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"},
         "fishbite": {"name":"釣魚提竿","cat":"reaction","better":"max","decimals":0,"format":"{v} 關"},
         "matchcolor": {"name":"色不異空","cat":"visual","better":"min","decimals":4,"format":"{v}%"},
-        "colorrecall": {"name":"記色調色","cat":"visual","better":"min","decimals":4,"format":"ΔE {v}"},
+        "colorrecall": {"name":"記色調色","cat":"visual","better":"max","decimals":0,"format":"{v} 關"},
         "mixcolor": {"name":"混出什麼色","cat":"visual","better":"min","decimals":4,"format":"{v}%"},
         "tissue": {"name":"抽光衛生紙","cat":"hand","better":"min","decimals":4,"format":"{v} 秒"},
         "scallion": {"name":"切蔥花","cat":"hand","better":"max","decimals":0,"format":"{v} 段"},

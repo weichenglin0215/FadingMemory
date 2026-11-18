@@ -290,7 +290,7 @@ ok((await plays()).length === 8 && (await stats('MF_stats_daily')).plays === 18,
   ok(c1.ok === true && c1.nick === NICK && c1.from === T7 && c1.to === T0, '刪除：回傳 ok、暱稱、實際用的範圍');
   eq(c1.deleted, { scores: 2, bests: 2, play_rows: 3, plays: 6 }, '刪除了：世界榜 2、個人最佳 2、遊玩統計 3 列共 6 局（跟查看的筆數一樣）');
   eq((await db.query(`select game_id from public."MF_scores" where player_id = '${DEV}'`)).rows.map(r => r.game_id), ['drop'], '開發者剩下 10 天前的 drop 成績（範圍外不動）');
-  eq((await db.query(`select game_id from public."MF_player_bests" where player_id = '${DEV}'`)).rows.map(r => r.game_id), ['drop'], '個人最佳也只剩 drop');
+  eq((await db.query(`select game_id, best_score::float8 as s, best_level as lv, reject_rev as r from public."MF_player_bests" where player_id = '${DEV}' order by game_id`)).rows.map(r => [r.game_id, r.s, r.lv, r.r]), [['drop', 77, 20, 0], ['speed', null, null, 1], ['spot', null, null, 1]], '個人最佳：範圍內的 speed、spot 不刪列、改成清空並把否定本機版本 +1（這個帳號的每支瀏覽器下次同步時，本機最佳就會被清掉）；範圍外的 drop 不動');
   eq((await plays(`player_id = '${DEV}'`)).map(x => x.day + '|' + x.game_id + '|' + x.plays), [T10 + '|drop|4'], '遊玩統計只剩 10 天前的 drop');
   ok((await cnt('MF_scores', `player_id <> '${DEV}'`)) === 4 && (await cnt('MF_player_bests', `player_id <> '${DEV}'`)) === 1 && (await cnt('MF_play_days', `player_id <> '${DEV}'`)) === 2, '外部玩家的世界榜成績 4、個人最佳 1、遊玩統計 2 列，一筆都沒少');
   ok((await cnt('MF_players', 'true')) === 3, '帳號本身都還在（只清歷程，不刪帳號）');
@@ -302,7 +302,8 @@ ok((await plays()).length === 8 && (await stats('MF_stats_daily')).plays === 18,
   eq((await H(NICK, DEV, T7, T0)).counts, { scores: 0, bests: 0, play_rows: 0, plays: 0 }, '刪完再查看：空的');
   // 30 天的範圍把剩下的 drop 也刪掉
   eq((await C(NICK, DEV, await tp(-30), T0)).deleted, { scores: 1, bests: 1, play_rows: 1, plays: 4 }, '範圍拉到 30 天：刪掉剩下的 drop（成績 1、個人最佳 1、遊玩統計 1 列 4 局）');
-  ok((await cnt('MF_scores', `player_id = '${DEV}'`)) === 0 && (await cnt('MF_player_bests', `player_id = '${DEV}'`)) === 0 && (await cnt('MF_play_days', `player_id = '${DEV}'`)) === 0, '開發者的歷程全清了');
+  ok((await cnt('MF_scores', `player_id = '${DEV}'`)) === 0 && (await cnt('MF_player_bests', `player_id = '${DEV}' and (best_score is not null or best_level is not null)`)) === 0 && (await cnt('MF_play_days', `player_id = '${DEV}'`)) === 0, '開發者的歷程全清了（個人最佳沒有任何成績或關卡了）');
+  eq((await db.query(`select game_id, reject_rev as r from public."MF_player_bests" where player_id = '${DEV}' order by game_id`)).rows.map(r => [r.game_id, r.r]), [['drop', 1], ['speed', 1], ['spot', 1]], '三款都清空過一次：否定本機版本各 1（重複清只會對還有成績的那一列加，已清空的不再加）');
 
   // ── 冪等：再執行整份 SQL，測試帳號清單與資料不受影響 ──
   await db.exec(sql);

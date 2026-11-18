@@ -64,6 +64,16 @@ ok(creamer > 100 && contrast > 800, '奶精、背景對比都有出現');
 { const rd = p => require('fs').readFileSync(require('path').resolve(__dirname, p), 'utf8'), src = rd('../../js/reaction_milktea.js'), css = rd('../../css/games/reaction_milktea.css').split(/\s+/).join(' '), boot = rd('../../js/boot.js');
   ok(/api\.fail\(\{ delay: 2800/.test(src) && /de\.toFixed\(4\)/.test(src) && /lagStep/.test(src) && /touchInk/.test(src), '失敗：顏色差 4 位小數、停格 2 秒以上；有一階延遲；標明漩渦改寫自 touchInk.js');
   ok(/\.milktea-panel--wood \{[^}]*var\(--mlt-wood\)/.test(css) && /\.milktea-panel--tray \{[^}]*var\(--mlt-tray\)/.test(css) && /\.milktea-btn \{[^}]*var\(--c-blue\)/.test(css), '木桌、托盤用 CSS 變數');
-  ok(boot.indexOf("'js/reaction_milktea.js'") > 0 && /攪勻/.test(G.rule), 'boot.js 有載入、玩法說明提到攪勻'); }
+  ok(boot.indexOf("'js/reaction_milktea.js'") > 0 && /攪勻/.test(G.rule), 'boot.js 有載入、玩法說明提到攪勻');
+  // 玩家意見（V1.57.2.0）：結算時兩杯緊靠、中間垂直切齊、中間沒有任何線條
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, ''), cssNc = rd('../../css/games/reaction_milktea.css').replace(/\/\*[\s\S]*?\*\//g, '').split(/\s+/).join(' ');
+  ok(/function joinCups\(\)/.test(code) && /joinCups\(\);/.test(code), '結算呼叫 joinCups：兩杯合成一杯');
+  ok(/pJ\.appendChild\(cupL\.svg\); pJ\.appendChild\(cupR\.svg\)/.test(code) && /cupL\.svg\.style\.left = midL \+ 'px'; cupR\.svg\.style\.left = \(midL \+ shift\) \+ 'px'/.test(code), '兩個杯子放進「同一個」大展示台、右杯只比左杯再往右 shift（首尾相接）');
+  ok(/pL\.style\.visibility = pR\.style\.visibility = 'hidden'/.test(code) && !/pL\.style\.left|pR\.style\.left/.test(code), '原本的兩個展示台收起來，不再是「兩個有框線的展示台並排」（中間才不會有兩條框線）');
+  ok(T.JOIN_KEEP > 0.5 && T.JOIN_KEEP <= 1 && Math.abs(T.JOIN_KEEP - 2 / 3) < 1e-9, '結算每杯留下 ' + T.JOIN_KEEP.toFixed(3) + '（左杯左 2/3、右杯右 2/3，是參數 JOIN_KEEP）');
+  ok(/cupL\.svg\.style\.clipPath = 'inset\(-8px calc\(' \+ cut \+ ' - 0\.5px\) -8px -8px\)'/.test(code) && /cupR\.svg\.style\.clipPath = 'inset\(-8px -8px -8px calc\(' \+ cut \+ ' - 0\.5px\)\)'/.test(code), '左杯裁掉右邊 cut、右杯裁掉左邊 cut（垂直切齊，各多留 0.5px 蓋住細縫）');
+  ok(/cut = \(100 \* \(1 - keep\)\) \+ '%'/.test(code) && /shift = Math\.round\(\(2 \* keep - 1\) \* cw\)/.test(code), '裁掉的比例 = 1 − keep；右杯錯開 (2·keep − 1) 個杯寬，兩塊剛好首尾相接');
+  ok(/\.milktea-liquid \{[^}]*stroke/.test(cssNc) === false, '杯子的液體沒有框線（切齊的地方不會有顏色的線）');
+  ok(/\.milktea-panel--solo \{[^}]*transition: none/.test(cssNc) && /\.milktea-cup--join \{[^}]*transition: left/.test(cssNc), '大展示台不滑動、杯子用 left 過渡滑到中央'); }
 ok(T.rating(2) !== T.rating(5) && T.rating(5) !== T.rating(10) && T.rating(10) !== T.rating(18) && T.rating(18) !== T.rating(30), '評語分級');
 console.log(bad ? 'FAILED ' + bad + '（seed ' + SEED + '）' : 'ALL PASS');

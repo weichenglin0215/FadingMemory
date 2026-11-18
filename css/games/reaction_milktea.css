@@ -55,6 +55,16 @@
     background: var(--mlt-tray);                        /* 背景：主題變數 --mlt-tray */
 }
 
+/* 結算：兩杯合成一杯（V1.57.2.0 玩家意見）。大展示台沒有左右滑動的過渡（它一出現就在定位） */
+.milktea-panel--solo {
+    transition: none;                                   /* 沒有過渡 */
+}
+
+/* 結算：兩個杯子滑到正中央併成一個大杯。左杯留左邊、右杯留右邊，裁切用的 clip-path 由程式（JOIN_KEEP 參數）寫在杯子的 style 上，這裡只管滑動的過渡 */
+.milktea-cup--join {
+    transition: left 0.6s ease-in-out;                  /* 滑動的過渡 */
+}
+
 /* 「milktea-cap」這個元素的樣式 */
 .milktea-cap {
     position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */

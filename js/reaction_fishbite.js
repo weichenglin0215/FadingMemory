@@ -13,7 +13,8 @@
          咬鉤有時是「假沉變真咬」（SNEAK_P）：先像輕碰一樣沉到假沉的深度、停住 0.1～0.5 秒，然後**不浮起來**，繼續往下沉成真咬；
      所以判定只看「提竿的瞬間，浮標是不是沉在 0.9 以下」——不是看「有沒有動」，輕碰再怎麼深（最多 0.8）、停得再久也不算。
    · 難度（線性，到 RAMP_LEVELS 關到頂）：窗口 WINDOW_S（不能小於 WINDOW_MIN，見下面）；輕碰的深度上限 FAKE_HI（越來越像咬鉤）；
-     輕碰次數 FAKES；停住、兩段式、假沉變真咬的機率 HOLD_P／DOUBLE_P／SNEAK_P；水面波浪（讓浮標一直晃）的振幅 WAVE_PX。
+     輕碰次數 FAKES（V1.57.2.0 玩家意見：咬餌的次數太規律、太容易被預測——以前每一關的次數是關卡算出來的固定值，第 1～4 關都在第 3 下咬、第 5～8 關都在第 4 下…；
+     現在 FAKES 是「中心值」，每一關在「中心值 ± FAKES_SPREAD」之間**隨機**抽一個次數，最少 FAKES_MIN 次）；停住、兩段式、假沉變真咬的機率 HOLD_P／DOUBLE_P／SNEAK_P；水面波浪（讓浮標一直晃）的振幅 WAVE_PX。
    · V1.53 畫面：水面在畫面下方 1/3 的高度（WATER_AT）；浮標整體放大 300%（FLOAT_SCALE）；水面不再只是一圈圈白線——水面的線條本身會上下抖動，
      抖動從浮標的位置以波形往左右兩側傳出去（一維的波動方程式，makeWaves／stepWaves；浮標晃動、被魚拉下去都是波的來源 sourceAt）。
      浮標會不定時往左或往右傾斜（swayAt）；魚來拉（輕碰、咬鉤往下沉）的時候，浮標會快速往「跟平常傾斜相反」的另一邊歪、並被拉向一邊
@@ -37,9 +38,11 @@
     var RAMP_LEVELS = 30;                       /* 幾關之後難度到頂 */
     var WINDOW_S = [0.8, 0.2];                  /* 咬鉤的窗口（浮標沉在 0.9 以下的時間，秒）：第 1 關 → 到頂。不能小於 WINDOW_MIN（約 0.17 秒，由 DESC_S 與 RECOVER_S 算出；再小浮標會在沉到底之前就開始浮起來，畫面和判定對不上，所以 windowFor 會自動擋在 WINDOW_MIN） */
     var FAKE_HI = [0.66, 0.8];                  /* 輕碰的深度上限（比例）：第 1 關 → 到頂；必須 < BITE_LINE */
-    var FAKES = [2, 6];                         /* 輕碰的次數：第 1 關 → 到頂（四捨五入） */
+    var FAKES = [2, 6];                         /* 輕碰次數的「中心值」：第 1 關 → 到頂（四捨五入）；每一關實際的次數在中心值 ± FAKES_SPREAD 之間隨機抽（見 pickFakes） */
+    var FAKES_SPREAD = [1, 2];                  /* 輕碰次數隨機的幅度（± 幾次）：第 1 關 → 到頂（四捨五入）。例如中心值 4、幅度 2 → 這一關可能輕碰 2、3、4、5、6 次，咬鉤就在第 3～7 下；0＝跟以前一樣固定 */
+    var FAKES_MIN = 1;                          /* 輕碰最少幾次（0＝可能第一個動作就是咬鉤） */
     var WAVE_PX = [6, 20];                       /* 水面波浪讓浮標上下晃的振幅（px）：第 1 關 → 到頂 */
-    var BITE_LINE = 0.9;                        /* 浮標沉到這個比例以下才算「咬鉤」 */
+    var BITE_LINE = 1.0;                        /* 浮標沉到這個比例以下才算「咬鉤」 */
     var FAKE_DUR = [0.28, 0.42];                /* 一次輕碰「上下移動」要多久（秒，沉下去再浮起來；不含停住的時間） */
     var FAKE_HOLD = [0, 0.5];                   /* 輕碰沉到假沉深度之後，「停住不動」多久才浮起來（秒，在這個範圍隨機；0＝一到就浮起來） */
     var HOLD_P = [0.3, 0.6];                    /* 一次輕碰會「停住」的機率：第 1 關 → 到頂 */
@@ -64,8 +67,8 @@
     var PULL_DRIFT = [10, 30];                  /* 魚來拉的時候，浮標同時被拉向歪的那一邊的水平位移範圍（px；吃餌的位置不一定在浮標正下方） */
     var WAVE_C = 250;                           /* 水面的波往左右兩側傳的速度（px／秒）：越慢，一個畫面裡看得到的波峰越多 */
     var WAVE_DAMP = 1.0;                        /* 水面的波的阻尼（越大越快平靜、傳得越近；每秒） */
-    var WAVE_MAX = 36;                          /* 浮標帶動水面的目標位置最多上下多少 px（超過的會被壓住；彈簧一晃可以再多一點） */
-    var WAVE_PULL = 0.14;                       /* 浮標被魚拉下去時，浮標下的水面被帶著凹下去多少（浮標沉下的距離 px × 這個比例） */
+    var WAVE_MAX = 24;                          /* 浮標帶動水面的目標位置最多上下多少 px（超過的會被壓住；彈簧一晃可以再多一點） */
+    var WAVE_PULL = 0.10;                       /* 浮標被魚拉下去時，浮標下的水面被帶著凹下去多少（浮標沉下的距離 px × 這個比例） */
     var SRC_HZ = 2.4, SRC_ZETA = 0.1;           /* 浮標帶動水面的那一點像彈簧：平常跟著浮標走，被魚猛拉一下就會來回晃幾下（每秒 SRC_HZ 下、衰減 SRC_ZETA，越小晃越久），一晃就一圈圈往外傳 */
     var WAVE_DX = 12;                            /* 水面波形的取樣間隔（px）：越小波形越細緻、越吃效能 */
     var DRIVE_K = 4000;                         /* 浮標拉水面的力道（越大，浮標旁的水面越貼著浮標走；太大會算不穩，要 × WAVE_STEP² < 4） */
@@ -89,7 +92,11 @@
     function r3(x) { return Math.round(x * 1000) / 1000; }
     function pFor(level, pair) { return Math.max(0, Math.min(1, ramp(level, pair))); }          /* 機率：第 1 關 → 到頂，限制在 0～1 */  /* Math.round：四捨五入成整數 */
     function fakeHiFor(level) { return Math.round(ramp(level, FAKE_HI) * 1000) / 1000; }
-    function fakesFor(level) { return Math.round(ramp(level, FAKES)); }
+    function fakesFor(level) { return Math.round(ramp(level, FAKES)); }       /* 輕碰次數的中心值 */
+    /* 這一關輕碰次數的範圍 [最少, 最多]：中心值 ± 幅度（最少不低於 FAKES_MIN） */
+    function fakesRange(level) { var c = fakesFor(level), s = Math.max(0, Math.round(ramp(level, FAKES_SPREAD))); return [Math.max(FAKES_MIN, c - s), Math.max(FAKES_MIN, c + s)]; }
+    /* 這一關真正的輕碰次數：在範圍內隨機抽一個整數（咬鉤就是第 次數＋1 下） */
+    function pickFakes(level, rand) { var r = fakesRange(level); return kit.randInt(r[0], r[1], rand); }  /* kit.randInt(最小, 最大, rand)：隨機整數（含最小與最大） */
     function waveFor(level) { return Math.round(ramp(level, WAVE_PX) * 100) / 100; }
     function fishFor(level) { return FISH[(level - 1) % FISH.length]; }
     /* 做一次輕碰（假沉）：從第 t 秒開始，最深 hi 以內。回傳 { kind:'fake', t, dur（整段多久，含停住）, depth（最深）, shape, keys }。
@@ -117,7 +124,7 @@
          bite（咬鉤那一筆）, window, wave（水面波浪參數）, fish（魚的名字）} */
     function makeLevel(level, rand) {
         rand = rand || Math.random;                     /* 沒有傳亂數函式就用 Math.random（測試時可以傳固定的亂數，結果才能重現） */
-        var k = fakesFor(level), hi = fakeHiFor(level), win = windowFor(level), events = [], t = kit.randFloat(FIRST_AT[0], FIRST_AT[1], rand), i;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
+        var k = pickFakes(level, rand), hi = fakeHiFor(level), win = windowFor(level), events = [], t = kit.randFloat(FIRST_AT[0], FIRST_AT[1], rand), i;  /* kit.randFloat(最小, 最大, rand)：隨機小數 */
         for (i = 0; i < k; i++) {
             var f = makeFake(t, hi, level, rand);
             events.push(f);
@@ -445,8 +452,8 @@
         score: SCORE,
         /* test：把內部函式與參數交給單元測試（test/reaction/ 底下的 t_*.js）使用，遊戲本身不會用到。 */
         test: {
-            windowFor: windowFor, makeFake: makeFake, fakeHiFor: fakeHiFor, fakesFor: fakesFor, waveFor: waveFor, fishFor: fishFor, makeLevel: makeLevel, depthAt: depthAt, waveAt: waveAt, swayAt: swayAt, eventAt: eventAt, pullTiltAt: pullTiltAt, driftAt: driftAt, tiltAt: tiltAt, poseAt: poseAt, sourceAt: sourceAt, makeWaves: makeWaves, stepWaves: stepWaves, makeSource: makeSource, stepSource: stepSource, judgeSwipe: judgeSwipe, isUpSwipe: isUpSwipe, chartPoints: chartPoints, replayRange: replayRange, replayMs: replayMs, whyText: whyText, rating: rating,
-            RAMP_LEVELS: RAMP_LEVELS, WINDOW_S: WINDOW_S, WINDOW_MIN: WINDOW_MIN, U90: U90, FAKE_HOLD: FAKE_HOLD, HOLD_P: HOLD_P, DOUBLE_P: DOUBLE_P, SNEAK_P: SNEAK_P, FAKE_HI: FAKE_HI, FAKES: FAKES, WAVE_PX: WAVE_PX, BITE_LINE: BITE_LINE, FAKE_DUR: FAKE_DUR, U_REC: U_REC, DESC_S: DESC_S, RECOVER_S: RECOVER_S, FIRST_AT: FIRST_AT, GAP: GAP, LATE_GRACE: LATE_GRACE, SWIPE_MIN: SWIPE_MIN, WATER_AT: WATER_AT, FLOAT_SCALE: FLOAT_SCALE, SWAY_DEG: SWAY_DEG, SWAY_DUR: SWAY_DUR, SWAY_GAP: SWAY_GAP, PULL_DEG: PULL_DEG, PULL_DRIFT: PULL_DRIFT, WAVE_C: WAVE_C, WAVE_DAMP: WAVE_DAMP, WAVE_MAX: WAVE_MAX, WAVE_PULL: WAVE_PULL, SRC_HZ: SRC_HZ, SRC_ZETA: SRC_ZETA, WAVE_DX: WAVE_DX, WAVE_STEP: WAVE_STEP, DRIVE_K: DRIVE_K, VIS: VIS, FW: FW, FISH: FISH, MAX_LEVEL: MAX_LEVEL, REPLAY_SPEED: REPLAY_SPEED
+            windowFor: windowFor, makeFake: makeFake, fakeHiFor: fakeHiFor, fakesFor: fakesFor, fakesRange: fakesRange, pickFakes: pickFakes, waveFor: waveFor, fishFor: fishFor, makeLevel: makeLevel, depthAt: depthAt, waveAt: waveAt, swayAt: swayAt, eventAt: eventAt, pullTiltAt: pullTiltAt, driftAt: driftAt, tiltAt: tiltAt, poseAt: poseAt, sourceAt: sourceAt, makeWaves: makeWaves, stepWaves: stepWaves, makeSource: makeSource, stepSource: stepSource, judgeSwipe: judgeSwipe, isUpSwipe: isUpSwipe, chartPoints: chartPoints, replayRange: replayRange, replayMs: replayMs, whyText: whyText, rating: rating,
+            RAMP_LEVELS: RAMP_LEVELS, WINDOW_S: WINDOW_S, WINDOW_MIN: WINDOW_MIN, U90: U90, FAKE_HOLD: FAKE_HOLD, HOLD_P: HOLD_P, DOUBLE_P: DOUBLE_P, SNEAK_P: SNEAK_P, FAKE_HI: FAKE_HI, FAKES: FAKES, FAKES_SPREAD: FAKES_SPREAD, FAKES_MIN: FAKES_MIN, WAVE_PX: WAVE_PX, BITE_LINE: BITE_LINE, FAKE_DUR: FAKE_DUR, U_REC: U_REC, DESC_S: DESC_S, RECOVER_S: RECOVER_S, FIRST_AT: FIRST_AT, GAP: GAP, LATE_GRACE: LATE_GRACE, SWIPE_MIN: SWIPE_MIN, WATER_AT: WATER_AT, FLOAT_SCALE: FLOAT_SCALE, SWAY_DEG: SWAY_DEG, SWAY_DUR: SWAY_DUR, SWAY_GAP: SWAY_GAP, PULL_DEG: PULL_DEG, PULL_DRIFT: PULL_DRIFT, WAVE_C: WAVE_C, WAVE_DAMP: WAVE_DAMP, WAVE_MAX: WAVE_MAX, WAVE_PULL: WAVE_PULL, SRC_HZ: SRC_HZ, SRC_ZETA: SRC_ZETA, WAVE_DX: WAVE_DX, WAVE_STEP: WAVE_STEP, DRIVE_K: DRIVE_K, VIS: VIS, FW: FW, FISH: FISH, MAX_LEVEL: MAX_LEVEL, REPLAY_SPEED: REPLAY_SPEED
         }
     };
     /* 把這款遊戲登記給選單（沒有這行，選單就看不到它） */

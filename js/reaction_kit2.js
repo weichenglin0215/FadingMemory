@@ -320,6 +320,7 @@
             root.innerHTML = '';                        /* innerHTML = ''：把元素裡面的東西全部清掉 */
             from = from || 1;
             startAt = from;
+            if (o.resume !== false && !o.scoreOf) Reaction.beginRun(o.id, from, o.scoreBase ? 0 : 1); else Reaction.entryRun = null;   /* 登記這一局從第幾關開始：優惠送的關卡不算成績（見 reaction_core.js） */
             S = { level: from, cleared: from - 1, lives: o.lives || 1, score: 0, over: false, finished: false, log: [] };
             elLv = h('div', { 'class': 'rx-head__lv' });
             elInfo = h('div', { 'class': 'rx-head__info' });
@@ -423,14 +424,15 @@
                 var from = kit.resumeFrom(S.level);
                 resume = { level: from, run: function () { start(from); } };
             }
-            var lines = (o.lines ? o.lines(S, allClear) : []).concat((x && x.lines) || []);
-            console.log('[' + (G && G.name || o.id) + '] 結算：成績 ' + score + (S.level ? '（停在第 ' + S.level + ' 關）' : ''));
+            var credit = Reaction.creditOnly(o.id, score);      /* 這一局一關都沒真的通過：成績只是進場優惠送的關卡，不算（kit.result 會說明、不送排行榜） */
+            var lines = (credit ? [] : (o.lines ? o.lines(S, allClear) : [])).concat((x && x.lines) || []);
+            console.log('[' + (G && G.name || o.id) + '] 結算：成績 ' + score + (credit ? '（只是進場優惠送的關卡，不計入最佳）' : '') + (S.level ? '（停在第 ' + S.level + ' 關）' : ''));
             kit.result(root, {                          /* kit.result：顯示結算卡片（成績、評語、再玩一次…），並自動記最佳紀錄、送世界排行榜 */
                 score: score,
                 num: numText(score),
                 label: o.rating ? o.rating(score, S) : '',
                 lines: lines, isNew: isNew, note: o.note,
-                sfx: allClear ? 'perfect' : (score >= (o.goodAt || 5) ? 'win' : 'fail'),
+                sfx: allClear ? 'perfect' : (!credit && score >= (o.goodAt || 5) ? 'win' : 'fail'),
                 onAgain: function () { start(1); },
                 resume: resume,
                 level: leveled ? (allClear ? (o.maxLevel || S.level) : S.level) : null     /* V1.34.0：記住到過第幾關（見 kit.noteLevel） */

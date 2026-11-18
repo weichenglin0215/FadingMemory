@@ -25,9 +25,9 @@
 
     /* ═══ 可以自己調的參數 ═══ */
     var MAX_LEVEL = 90;                         /* 共幾個 E（要跟 SCORE.max 一致） */
-    var FADE_LEVELS = 25;                       /* 第幾個 E 暗到最低；之後維持最低 */
-    var FASE_RATE = 0.95;                        /* 每關的亮度遞減百分比 */
-    var PCT_MAX = 50, PCT_MIN = 1;             /* E 的白色百分比：第 1 個 → 第 FADE_LEVELS 個 */
+    var FADE_LEVELS = 30;                       /* 這個參數已失效，目前由FASE_RATE控制亮度降低比例，第幾個 E 暗到最低；之後維持最低 */
+    var FASE_RATE = 0.94;                        /* 每關的亮度遞減百分比 */
+    var PCT_MAX = 33, PCT_MIN = 0.4;             /* E 的白色百分比：第 1 個 → 第 FADE_LEVELS 個 */
     var TIME_S = 30.0;                           /* 每個 E 的限時（秒） */
     var SWIPE_PX = 24;                          /* 滑超過多少 px 就判定 */
     var CELL = 60, PANEL = 360;                 /* E 的每格大小（5×5 格）、灰色面板邊長（px） */
@@ -39,7 +39,7 @@
     function pctAt(level) {
         //var t = Math.min(1, Math.max(0, (level - 1) / (FADE_LEVELS - 1)));
         //return PCT_MAX + (PCT_MIN - PCT_MAX) * t;
-        /* 第 level 個 E 的白色百分比：第 1 個 100%，指數遞減 0.95，最低是1%*/
+        /* 第 level 個 E 的白色百分比：第 1 個 100%，指數遞減 0.95，最低是PCT_MIN*/
         var t = Math.pow(FASE_RATE, level - 1);
         return Math.max(PCT_MIN, PCT_MAX * t);
     }

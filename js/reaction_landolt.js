@@ -115,6 +115,7 @@
             /* n 目前是第幾個 E；passed 已答對幾個 */
             var n = (from || 1) - 1; /* 目前是第幾個 E（從 1 起算；0＝還沒開始） */
             var passed = n;          /* 已答對幾個（從前面繼續的話，前面的都算答對）*/
+            Reaction.beginRun(ID, from || 1, 1, (from || 1) > 1 ? acuityShown((from || 1) - 1) : 0);      /* 成績是視力、不是通過幾關：優惠送的成績＝前 from − 1 個 E 的視力，一個都沒答對就失敗不算成績（見 reaction_core.js 的 Reaction.beginRun） */
             Reaction.leaveScore = function () { return passed > (from || 1) - 1 ? acuityShown(passed) : null; };      /* 玩到一半按「返回」時，目前的視力（V1.57.0；見 kit.settleOnLeave） */
             var rts = [];            /* 反應時間（毫秒） */
             var prevDir = null;

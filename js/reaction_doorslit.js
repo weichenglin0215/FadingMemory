@@ -84,7 +84,8 @@
     function drawDiff(canvas, a, b, size) {
         var ctx = canvas.getContext('2d'); if (!ctx) return null;
         canvas.width = canvas.height = size;
-        function mask(ch) { var c = document.createElement('canvas'); c.width = c.height = size; var x = c.getContext('2d'); x.fillStyle = '#000'; x.font = '900 ' + Math.round(size * 0.82) + 'px "Noto Serif TC","Songti TC","PMingLiU",serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(ch, size / 2, size / 2 + size * 0.04); return x.getImageData(0, 0, size, size).data; }
+        var anchor = null;                                                                  /* 兩個字用「同一個」位置畫（以第一個字的筆畫外框置中），差異才對得準；不能各自置中 */
+        function mask(ch) { var c = document.createElement('canvas'); c.width = c.height = size; var x = c.getContext('2d'); x.fillStyle = '#000'; x.font = '900 ' + Math.round(size * 0.82) + 'px "Noto Serif TC","Songti TC","PMingLiU",serif'; if (!anchor) anchor = kit.glyphAnchor(x, ch, size / 2, size / 2); x.textAlign = 'left'; x.textBaseline = 'alphabetic'; x.fillText(ch, anchor.x, anchor.y); return x.getImageData(0, 0, size, size).data; }
         var da = mask(a), db = mask(b), out = ctx.createImageData(size, size), o = out.data, diff = 0;
         for (var i = 0; i < size * size; i++) {
             var ia = da[i * 4 + 3] > 100, ib = db[i * 4 + 3] > 100;
@@ -129,8 +130,15 @@
         field.appendChild(tip);
         /* 字盒：大大的黑字，上面蓋兩片白色方塊（左、右）；縫在兩片中間 */
         var box = h('div', { 'class': 'doorslit-box' }); box.style.cssText = 'left:12px;top:56px;width:' + BW + 'px;height:' + BH + 'px;';
-        var glyph = h('div', { 'class': 'doorslit-glyph', text: q.answer }); glyph.style.fontSize = Math.round(Math.min(BW, BH) * 0.92) + 'px'; glyph.style.lineHeight = BH + 'px';
+        /* 題目字（V1.57.2.0：改畫在 canvas 上，用 kit.drawGlyph 讓「筆畫的外框」正好在方框正中央——
+           以前是 div 加 line-height，字在行高裡的位置由字型的上下留白決定，iPhone 的 Chrome 上字會偏低） */
+        var glyph = h('canvas', { 'class': 'doorslit-glyph' });
         box.appendChild(glyph); field.appendChild(box);
+        var inW = box.clientWidth || BW, inH = box.clientHeight || BH, DPR = Math.min(2, window.devicePixelRatio || 1);      /* clientWidth／clientHeight：元素「框線裡面」的寬高（px） */
+        glyph.width = Math.round(inW * DPR); glyph.height = Math.round(inH * DPR); glyph.style.width = inW + 'px'; glyph.style.height = inH + 'px';
+        var gx = glyph.getContext('2d'), gcs = getComputedStyle(glyph);
+        gx.fillStyle = gcs.color || '#4A3B1E'; gx.font = '900 ' + Math.round(Math.min(BW, BH) * 0.92 * DPR) + 'px ' + (gcs.fontFamily || 'serif');
+        kit.drawGlyph(gx, q.answer, glyph.width / 2, glyph.height / 2);
         var CW = BW + q.gap + 40;                                                           /* 方塊要夠寬：左方塊的右緣貼著縫、要一路蓋到字的左邊；右方塊的左緣貼著縫、要一路蓋到右邊 */
         /* 字從上到下切成 q.slits 層：每層一個 band，裡面有自己的兩片白色方塊（左、右）和一條縫（V1.54.0）。
            每層的高度用百分比切；除了最後一層，多蓋 1px 跟下一層重疊，免得小數點的接縫透出黑字 */

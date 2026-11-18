@@ -8,13 +8,25 @@ const near = (a, b, e) => Math.abs(a - b) <= (e == null ? 1e-9 : e);
 // ── 難度（線性）──
 ok(near(T.windowFor(1), T.WINDOW_S[0]) && near(T.windowFor(T.RAMP_LEVELS), T.WINDOW_S[1]) && near(T.windowFor(99), T.WINDOW_S[1]), '咬鉤窗口 ' + T.WINDOW_S + ' 秒');
 ok(near(T.fakeHiFor(1), T.FAKE_HI[0]) && near(T.fakeHiFor(T.RAMP_LEVELS), T.FAKE_HI[1]), '輕碰深度上限 ' + T.FAKE_HI);
-ok(T.fakesFor(1) === T.FAKES[0] && T.fakesFor(T.RAMP_LEVELS) === T.FAKES[1], '輕碰次數 ' + T.FAKES);
+ok(T.fakesFor(1) === T.FAKES[0] && T.fakesFor(T.RAMP_LEVELS) === T.FAKES[1], '輕碰次數的中心值 ' + T.FAKES);
+// 玩家意見（V1.57.2.0）：咬餌的次數太規律。每一關的輕碰次數在「中心值 ± 幅度」之間隨機抽，最少 FAKES_MIN 次
+for (let n = 1; n <= T.RAMP_LEVELS + 2; n++) { const r = T.fakesRange(n), c = T.fakesFor(n), s = Math.max(0, Math.round(T.FAKES_SPREAD[0] + (T.FAKES_SPREAD[1] - T.FAKES_SPREAD[0]) * Math.min(1, (n - 1) / (T.RAMP_LEVELS - 1))));
+  ok(r[0] === Math.max(T.FAKES_MIN, c - s) && r[1] === Math.max(T.FAKES_MIN, c + s) && r[0] >= T.FAKES_MIN && r[0] <= c && r[1] >= c, '第 ' + n + ' 關輕碰次數範圍 ' + r + '（中心 ' + c + '、幅度 ' + s + '）'); }
+{ // 抽出來的次數：落在範圍內、每個值都出現、不會固定
+  for (const lv of [1, 3, 6, 10, 20, 30]) { const r = T.fakesRange(lv), seen = {}; for (let i = 0; i < 3000; i++) { const k = T.pickFakes(lv, rnd); ok(k >= r[0] && k <= r[1] && Number.isInteger(k), '抽到的次數在範圍內：' + k); seen[k] = (seen[k] || 0) + 1; }
+    const vals = Object.keys(seen).map(Number); ok(vals.length === r[1] - r[0] + 1 && Math.min(...vals) === r[0] && Math.max(...vals) === r[1], '第 ' + lv + ' 關：範圍 ' + r + ' 的每一個次數都會出現：' + JSON.stringify(seen));
+    if (r[1] > r[0]) ok(Math.max(...Object.values(seen)) / 3000 < 0.5, '第 ' + lv + ' 關：沒有哪一個次數占一半以上（' + (100 * Math.max(...Object.values(seen)) / 3000).toFixed(0) + '%）'); }
+  // 以前的規律：第 1～4 關咬鉤都在第 3 下、第 5～8 關都在第 4 下 → 現在同一關在不同次數出現咬鉤
+  for (const grp of [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]) { const bites = new Set(); grp.forEach(lv => { for (let i = 0; i < 200; i++) bites.add(T.makeLevel(lv, rnd).events.length); }); ok(bites.size >= 3, '第 ' + grp[0] + '～' + grp.at(-1) + ' 關：咬鉤出現在第 ' + [...bites].sort((a, b) => a - b).join('、') + ' 下（不再固定）'); }
+  // 連續幾關的咬鉤位置不會總是同一個（隨機序列）
+  { let same = 0, tot = 0, prev = null; for (let i = 0; i < 2000; i++) { const b = T.makeLevel(1 + (i % 4), rnd).events.length; if (prev !== null) { tot++; if (b === prev) same++; } prev = b; } ok(same / tot < 0.5, '前後兩關咬鉤位置一樣的比例 ' + (100 * same / tot).toFixed(0) + '%（太高就是太規律）'); } }
 ok(near(T.waveFor(1), T.WAVE_PX[0]) && near(T.waveFor(T.RAMP_LEVELS), T.WAVE_PX[1]), '波浪振幅 ' + T.WAVE_PX);
 ok(T.FAKE_HI[1] < T.BITE_LINE && T.FAKE_HI[0] < T.FAKE_HI[1], '輕碰再深也到不了咬鉤線 ' + T.BITE_LINE);
 for (let n = 2; n <= T.RAMP_LEVELS + 2; n++) ok(T.windowFor(n) <= T.windowFor(n - 1) && T.fakeHiFor(n) >= T.fakeHiFor(n - 1) && T.fakesFor(n) >= T.fakesFor(n - 1) && T.waveFor(n) >= T.waveFor(n - 1), '單調 ' + n);
 { const d = []; for (let n = 2; n <= T.RAMP_LEVELS; n++) d.push(T.windowFor(n - 1) - T.windowFor(n)); ok(Math.max(...d) - Math.min(...d) <= 0.002, '窗口線性縮短：每關 −' + Math.min(...d).toFixed(4) + '～−' + Math.max(...d).toFixed(4) + ' 秒'); }
+// （BITE_LINE 調成 1.0 之後：沉到 0.9 與沉到底是同一刻、回浮不用提早，所以下限是 0、「開始回浮」可以等於「回到 0.9」，這幾處用 ≥／≤）
 // WINDOW_MIN：窗口再短，浮標會在沉到底之前就開始浮起來（畫面跟判定對不上）。這是由 DESC_S、RECOVER_S、BITE_LINE 算出來的下限
-ok(near(T.WINDOW_MIN, Math.ceil(((1 - T.U90) * T.DESC_S + T.U_REC * T.RECOVER_S) * 1000) / 1000, 1e-9) && T.WINDOW_MIN > 0.16 && T.WINDOW_MIN < 0.18, '窗口下限 WINDOW_MIN ＝ ' + T.WINDOW_MIN + ' 秒（沉到 0.9 之後還要沉到底、再提早 ' + (T.U_REC * T.RECOVER_S).toFixed(3) + ' 秒開始回浮）');
+ok(near(T.WINDOW_MIN, Math.ceil(((1 - T.U90) * T.DESC_S + T.U_REC * T.RECOVER_S) * 1000) / 1000, 1e-9) && T.WINDOW_MIN >= 0 && T.WINDOW_MIN < 0.18, '窗口下限 WINDOW_MIN ＝ ' + T.WINDOW_MIN + ' 秒（沉到 0.9 之後還要沉到底、再提早 ' + (T.U_REC * T.RECOVER_S).toFixed(3) + ' 秒開始回浮）');
 ok(T.WINDOW_S[1] >= T.WINDOW_MIN && T.windowFor(T.RAMP_LEVELS) >= T.WINDOW_MIN && T.windowFor(1) > T.windowFor(T.RAMP_LEVELS), 'WINDOW_S 到頂 ' + T.WINDOW_S[1] + ' 秒 ≥ 下限 ' + T.WINDOW_MIN);
 { let minW = 9; for (let n = 1; n <= 80; n++) minW = Math.min(minW, T.windowFor(n)); ok(minW >= T.WINDOW_MIN - 1e-12, '任何一關的窗口都不會短過 ' + T.WINDOW_MIN + '（即使 WINDOW_S 設得更小也會被擋住）'); }
 ok(T.FISH.length >= 6 && new Set(T.FISH).size === T.FISH.length && T.fishFor(1) === T.FISH[0] && T.fishFor(7) === T.FISH[0] && T.fishFor(2) === T.FISH[1], '每關釣到的魚輪流');
@@ -25,7 +37,7 @@ const ST = { n: 0, maxEnd: 0, firstMin: 99, firstMax: 0, gapMin: 99, depthMax: 0
 for (let lv = 1; lv <= 40; lv++) for (let rep = 0; rep < 100; rep++) {
   const q = T.makeLevel(lv, rnd); ST.n++;
   const ev = q.events, fakes = ev.slice(0, -1), b = ev[ev.length - 1];
-  ok(ev.length === T.fakesFor(lv) + 1 && q.fakes === T.fakesFor(lv) && b === q.bite && b.kind === 'bite' && fakes.every(e => e.kind === 'fake'), '輕碰 ' + q.fakes + ' 次、最後一筆是咬鉤');
+  { const fr = T.fakesRange(lv); ok(ev.length === q.fakes + 1 && q.fakes >= fr[0] && q.fakes <= fr[1] && b === q.bite && b.kind === 'bite' && fakes.every(e => e.kind === 'fake'), '輕碰 ' + q.fakes + ' 次（範圍 ' + fr + '）、最後一筆是咬鉤'); }
   ok(ev[0].t >= T.FIRST_AT[0] - 1e-9 && ev[0].t <= T.FIRST_AT[1] + 1e-9, '第一次動作在 ' + T.FIRST_AT + ' 秒之間：' + ev[0].t); ST.firstMin = Math.min(ST.firstMin, ev[0].t); ST.firstMax = Math.max(ST.firstMax, ev[0].t);
   const hi = T.fakeHiFor(lv);
   fakes.forEach((e, i) => {
@@ -35,7 +47,7 @@ for (let lv = 1; lv <= 40; lv++) for (let rep = 0; rep < 100; rep++) {
     const nextT = (ev[i + 1]).t, gap = nextT - (e.t + e.dur); ok(gap >= T.GAP[0] - 1e-3 && gap <= T.GAP[1] + 1e-3, '兩次動作之間隔 ' + gap.toFixed(2)); ST.gapMin = Math.min(ST.gapMin, gap);
   });
   ok(near(b.tEnd - b.t90, q.window, 1e-9) && near(q.window, T.windowFor(lv)), '窗口長度 = tEnd − t90 = ' + q.window);
-  ok(b.t90 > b.tp && b.t90 - b.tp <= b.desc + 1e-9 && b.rec > b.tp + b.desc && b.rec < b.tEnd && b.tp >= b.t && (b.lead ? b.tp > b.t : b.tp === b.t && b.d0 === 0 && b.desc === T.DESC_S), '咬鉤的順序：（前導）< 開始往下沉 < 沉到 0.9 < 沉到底 < 開始回浮 < 回到 0.9：' + [b.t, b.tp, b.t90, b.tp + b.desc, b.rec, b.tEnd].map(v => v.toFixed(3)));
+  ok(b.t90 > b.tp && b.t90 - b.tp <= b.desc + 1e-9 && b.rec > b.tp + b.desc && b.rec <= b.tEnd + 1e-9 && b.tp >= b.t && (b.lead ? b.tp > b.t : b.tp === b.t && b.d0 === 0 && b.desc === T.DESC_S), '咬鉤的順序：（前導）< 開始往下沉 < 沉到 0.9 < 沉到底 < 開始回浮 < 回到 0.9：' + [b.t, b.tp, b.t90, b.tp + b.desc, b.rec, b.tEnd].map(v => v.toFixed(3)));
   ST.maxEnd = Math.max(ST.maxEnd, b.tEnd + T.RECOVER_S);
   ok(q.wave.A === T.waveFor(lv) && q.wave.f1 > 0 && q.wave.f2 > 0, '波浪參數');
 }

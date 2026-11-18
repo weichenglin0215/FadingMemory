@@ -185,9 +185,18 @@
             var x = sb[g], y = db2[g] = db2[g] || {};
             if (x.s != null) y.s = (y.s == null) ? x.s : (specOf(g) && specOf(g).better === 'min' ? Math.min(x.s, y.s) : Math.max(x.s, y.s));
             if (x.lv != null) y.lv = Math.max(y.lv || 0, x.lv);
+            if (x.rev) y.rev = Math.max(y.rev || 0, x.rev);                              /* 否定本機版本：合併取較大（同 SQL） */
         });
         delete F.bests[src]; delete F.legacy[src]; delete F.accounts[src];
     }
+    /* 管理者「否定本機成績」（同 SQL 的 MF_admin_reject_local）：雲端改成 s／lv（null＝清空），版本 +1 */
+    F.rejectLocal = function (pid, g, s, lv) {
+        var y = (F.bests[pid] = F.bests[pid] || {})[g] = (F.bests[pid] || {})[g] || {};
+        if (s == null) delete y.s; else y.s = s;
+        if (lv == null) delete y.lv; else y.lv = lv;
+        y.rev = (y.rev || 0) + 1;
+        return y.rev;
+    };
     function respond(obj, ms) { return new Promise(function (res) { setTimeout(function () { res({ ok: true, status: 200, json: function () { return Promise.resolve(obj); } }); }, ms); }); }
 
     window.__realFetch = window.__realFetch || window.fetch;
@@ -296,16 +305,19 @@
         }
         if (name === 'MF_sync_bests') {
             if (!authed(b.p_player_id, b.p_token)) return e('bad_token');
-            var mine = F.bests[b.p_player_id] = F.bests[b.p_player_id] || {}, rej = [];
+            var mine = F.bests[b.p_player_id] = F.bests[b.p_player_id] || {}, rej = [], reset = [];
             (b.p_items || []).forEach(function (it) {
                 var sp = specOf(it.g) || { better: 'max', min: -1e9, max: 1e9 };
                 if (!validGame(it.g)) { rej.push(it.g); return; }
                 var y = mine[it.g] = mine[it.g] || {};
+                /* 否定本機版本（V1.57.2.0，同 SQL）：資料庫的版本比這一項帶的 r 新 → 整項不收，列在 reset */
+                var cr = (typeof it.r === 'number' && it.r >= 0 && it.r === Math.floor(it.r) && it.r <= 1000000) ? it.r : 0;
+                if ((y.rev || 0) > cr) { reset.push(it.g); return; }
                 if (typeof it.s === 'number') { if (it.s < sp.min || it.s > sp.max) { rej.push(it.g); } else y.s = y.s == null ? it.s : (sp.better === 'min' ? Math.min(y.s, it.s) : Math.max(y.s, it.s)); }
                 if (typeof it.lv === 'number') { if (it.lv < 1 || it.lv > 200 || it.lv !== Math.floor(it.lv)) rej.push(it.g); else y.lv = Math.max(y.lv || 0, it.lv); }
             });
-            var items = Object.keys(mine).map(function (g) { var sp = specOf(g); var o = { g: g, b: sp ? sp.better : 'max' }; if (mine[g].s != null) o.s = mine[g].s; if (mine[g].lv != null) o.lv = mine[g].lv; return o; });
-            return respond({ ok: true, items: items, rejected: rej }, L);
+            var items = Object.keys(mine).map(function (g) { var sp = specOf(g); var o = { g: g, b: sp ? sp.better : 'max' }; if (mine[g].s != null) o.s = mine[g].s; if (mine[g].lv != null) o.lv = mine[g].lv; if (mine[g].rev) o.r = mine[g].rev; return o; });
+            return respond({ ok: true, items: items, rejected: rej, reset: reset }, L);
         }
 
         /* ─── 成績（要憑證）─── */

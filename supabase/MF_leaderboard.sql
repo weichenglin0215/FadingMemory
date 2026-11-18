@@ -6,7 +6,7 @@
 --       五星評價（第 6 節，MF_ratings／MF_rating_stats）；第 7 節是「阿嬤都比你厲害」用的查詢（這位玩家在哪些遊戲被超越）；
 --       第 7B 節是遊玩統計（V1.39.0，MF_play_days：每天每款遊戲每位玩家完成幾局；MF_stats_* 給 admin/stats.html 看人數、次數、玩家名次）；
 --       第 7C 節是開發者用的「清除測試帳號的遊戲歷程」（MF_dev_*，只能處理 MF_dev_accounts 清單裡的測試帳號；admin/stats.html 的「清除玩家遊戲歷程」頁籤用）；
---       第 8 節是給管理者（你）在 SQL Editor 執行的管理函式（重設密碼、合併帳號…）。
+--       第 8 節是給管理者（你）在 SQL Editor 執行的管理函式（重設密碼、合併帳號、否定本機成績…）。
 -- 執行方式：Supabase 專案 LoveIsABitMessy-DB → 左側 SQL Editor → New query →
 --           貼上本檔全文 → Run。可以重複執行（全部都是「已存在就略過／覆蓋」的寫法）。
 -- ★ V1.35.0 這一版會「一次切換」：把舊的、只靠 player_id 就能寫入的函式整個刪掉（沒有舊函式就沒有後門），
@@ -57,7 +57,8 @@
 --   select nickname, reserved_until from public."MF_players" where not claimed and reserved_until < now() + interval '7 days' order by reserved_until;
 --   select nickname, locked_until, fail_count from public."MF_players" where locked_until > now();
 --   select count(*) from public."MF_players" where created_at > now() - interval '1 day';
---   -- 忘記密碼、合併帳號、釋出暱稱、刪除帳號：見第 8 節的 MF_admin_* 函式。
+--   -- 忘記密碼、合併帳號、釋出暱稱、刪除帳號、否定某位玩家某款遊戲的（偽造的）本機成績：見第 8 節的 MF_admin_* 函式。
+--   --   否定本機成績 = 先把 MF_player_bests 那一列改成正確值、再把 reject_rev 加 1（或 select public."MF_admin_reject_local"('暱稱', '遊戲代號', 成績, 關卡)）。
 -- ═════════════════════════════════════════════════════════════════
 
 
@@ -210,9 +211,18 @@ create table if not exists public."MF_player_bests" (
     game_id     text          not null references public."MF_games" (game_id) on delete cascade on update cascade,
     best_score  numeric(14,4),
     best_level  int,
+    reject_rev  int           not null default 0,
     updated_at  timestamptz   not null default now(),
     primary key (player_id, game_id)
 );
+-- 否定本機版本（V1.57.2.0）：管理者發現某位玩家的某款遊戲成績異常（例如在瀏覽器裡改 localStorage 偽造的最佳），
+--   「先把這一列的 best_score／best_level 改成正確值（或清成空白），再把 reject_rev 加 1」（或用第 8 節的 MF_admin_reject_local 一步做完）。
+--   這位玩家的每一支瀏覽器，下次同步這款遊戲時發現「資料庫的版本比我看過的新」，就會丟掉本機的最佳、整批換成資料庫的（包含往下調、清空），
+--   而且每支瀏覽器各自只會被重設一次（版本號記在那支瀏覽器上）；這次同步送上來的本機成績，資料庫一律不收。
+--   為什麼用版本號、不用「勾選後改回 FALSE」：勾選只會被第一支同步的裝置消耗掉，他另一支手機的偽造值之後又會把雲端洗回去；
+--   而且資料庫改了旗標、手機卻沒收到回應（斷網）時，旗標白白用掉。版本號每支瀏覽器各自比對，沒收到下次再比一次。
+alter table public."MF_player_bests" add column if not exists reject_rev int not null default 0;
+comment on column public."MF_player_bests".reject_rev is '否定本機版本：管理者把它加 1（先把成績改成正確值），這位玩家的每支瀏覽器下次同步時，本機的最佳就會被資料庫的取代；預設 0';
 
 -- MF_player_merges：帳號合併紀錄（給管理者查帳用）。
 create table if not exists public."MF_player_merges" (
@@ -627,8 +637,8 @@ begin
         end if;
     end loop;
     -- 個人最佳
-    insert into public."MF_player_bests" as b (player_id, game_id, best_score, best_level)
-    select p_target, s.game_id, s.best_score, s.best_level from public."MF_player_bests" s where s.player_id = p_source
+    insert into public."MF_player_bests" as b (player_id, game_id, best_score, best_level, reject_rev)
+    select p_target, s.game_id, s.best_score, s.best_level, s.reject_rev from public."MF_player_bests" s where s.player_id = p_source
     on conflict (player_id, game_id) do update
         set best_score = case
                 when excluded.best_score is null then b.best_score
@@ -639,6 +649,7 @@ begin
                 when excluded.best_level is null then b.best_level
                 when b.best_level is null then excluded.best_level
                 else greatest(b.best_level, excluded.best_level) end,
+            reject_rev = greatest(b.reject_rev, excluded.reject_rev),
             updated_at = now();
     delete from public."MF_player_bests" where player_id = p_source;
     -- 評價、意見
@@ -1123,10 +1134,13 @@ end;
 $$;
 
 -- ─── 3-12 個人最佳同步（要裝置憑證）───
---   p_items：[ { g: 遊戲代號, s: 最佳成績（可省略）, lv: 最佳關卡（可省略） }, … ]（一次最多 400 項）。
+--   p_items：[ { g: 遊戲代號, s: 最佳成績（可省略）, lv: 最佳關卡（可省略）, r: 這支瀏覽器看過的「否定本機版本」（沒有就是 0，可省略） }, … ]（一次最多 400 項）。
 --   每一項「取較好的」合併進資料庫：成績依該遊戲的 better（min 取小、max 取大），關卡取大；
 --   遊戲不存在、成績超出範圍、關卡不是 1～200 的整數的項目不收，列在 rejected。
---   回傳 { ok:true, items: [ { g, b（better）, s, lv }, … ]（這位玩家資料庫裡全部的最佳）, rejected: [遊戲代號…] }。
+--   ★ 否定本機版本（V1.57.2.0）：資料庫那一列的 reject_rev 比這一項的 r 大（管理者否定過這位玩家這款遊戲的本機成績，這支瀏覽器還沒被重設）→
+--     這一項「完全不收」（不取較好的、不寫入），列在 reset；回傳的 items 裡那一款會帶 r（資料庫的版本），客戶端看到 r 比自己記的大，
+--     就丟掉本機的最佳、整批換成資料庫的（包含往下調、清空），並記下新版本。reject_rev 是 0 的不會帶 r（省流量）。
+--   回傳 { ok:true, items: [ { g, b（better）, s, lv, r（>0 才有） }, … ]（這位玩家資料庫裡全部的最佳）, rejected: [遊戲代號…], reset: [遊戲代號…] }。
 --   p_items 給空陣列＝只下載。
 create or replace function public."MF_sync_bests"(p_player_id uuid, p_token text, p_items jsonb default '[]'::jsonb)
 returns jsonb
@@ -1142,7 +1156,10 @@ declare
     g       public."MF_games"%rowtype;
     v_s     numeric;
     v_lv    int;
+    v_cr    int;
+    v_rev   int;
     v_rej   jsonb := '[]'::jsonb;
+    v_reset jsonb := '[]'::jsonb;
     v_out   jsonb;
 begin
     if not public."MF__auth"(p_player_id, p_token) then return jsonb_build_object('ok', false, 'error', 'bad_token'); end if;
@@ -1154,6 +1171,13 @@ begin
         begin
             select * into g from public."MF_games" where game_id = (it ->> 'g') and enabled;
             if not found then v_rej := v_rej || to_jsonb(coalesce(it ->> 'g', '')); continue; end if;
+            -- 否定本機版本：資料庫的版本比這支瀏覽器看過的新 → 這一項不收（客戶端會用回傳的 r 重設本機）
+            v_cr := 0;
+            if it ? 'r' and jsonb_typeof(it -> 'r') = 'number' and (it ->> 'r')::numeric = floor((it ->> 'r')::numeric) and (it ->> 'r')::numeric between 0 and 1000000 then
+                v_cr := (it ->> 'r')::int;
+            end if;
+            select b.reject_rev into v_rev from public."MF_player_bests" b where b.player_id = p_player_id and b.game_id = g.game_id;
+            if coalesce(v_rev, 0) > v_cr then v_reset := v_reset || to_jsonb(g.game_id); continue; end if;
             v_s := null; v_lv := null;
             if it ? 's' and jsonb_typeof(it -> 's') = 'number' then
                 v_s := round((it ->> 's')::numeric, 4);
@@ -1183,11 +1207,11 @@ begin
             v_rej := v_rej || to_jsonb(coalesce(it ->> 'g', ''));
         end;
     end loop;
-    select coalesce(jsonb_agg(jsonb_strip_nulls(jsonb_build_object('g', b.game_id, 'b', m.better, 's', b.best_score, 'lv', b.best_level)) order by b.game_id), '[]'::jsonb)
+    select coalesce(jsonb_agg(jsonb_strip_nulls(jsonb_build_object('g', b.game_id, 'b', m.better, 's', b.best_score, 'lv', b.best_level, 'r', nullif(b.reject_rev, 0))) order by b.game_id), '[]'::jsonb)
       into v_out
       from public."MF_player_bests" b join public."MF_games" m on m.game_id = b.game_id
      where b.player_id = p_player_id;
-    return jsonb_build_object('ok', true, 'items', v_out, 'rejected', v_rej);
+    return jsonb_build_object('ok', true, 'items', v_out, 'rejected', v_rej, 'reset', v_reset);
 end;
 $$;
 
@@ -1271,7 +1295,7 @@ insert into public."MF_games" (game_id, title, better, min_score, max_score) val
     ('ghostleg',     '鬼腳圖', 'max', 1, 30),
     ('ghostleg2',    '鬼腳圖減一', 'max', 1, 30),
     ('euler',        '能一筆畫嗎', 'max', 1, 90),
-    ('colorrecall',  '記色調色', 'min', 0, 260),
+    ('colorrecall',  '記色調色', 'max', 1, 90),
     ('basket',       '菜籃總價', 'max', 1, 90),
     ('passersby',    '路人走過', 'max', 1, 30),
     ('seenit',       '這個看過嗎', 'max', 1, 90),
@@ -1956,12 +1980,13 @@ grant execute on function public."MF_stats_players"(date, date)    to anon, auth
 -- 為什麼要有：開發遊戲時，你用自己的測試帳號（暱稱「阿公好開心」）玩，常常打出極高的分數、登上排行榜前面，擠掉真正的玩家。
 --   這一節讓你在 admin/stats.html 的「清除玩家遊戲歷程」頁籤，按一個按鈕就把「這個測試帳號在某段日期內」的紀錄清掉：
 --     · 世界排行榜成績（MF_scores，達成日期在範圍內的）——名次因此還給別的玩家；
---     · 個人最佳（MF_player_bests，雲端同步的那份，最後更新日期在範圍內的）；
+--     · 個人最佳（MF_player_bests，雲端同步的那份，最後更新日期在範圍內的）——清空成績與關卡、並把「否定本機版本」加 1
+--       （不刪列；V1.57.2.0 起，這個帳號的每支瀏覽器下次同步時，本機的最佳也會一起被清掉，不用再去主控台 Identity.forgetBest）；
 --     · 遊玩統計（MF_play_days，日期在範圍內的）。
 --   不會動到：帳號本身（暱稱、密碼、裝置憑證）、五星評價、玩家意見。
 --   ★ 做不到的事：榜上每款遊戲只留前 30 名。測試帳號當年如果把某位玩家擠出前 30 名，那一列早就被刪掉了，清掉測試成績也不會把他補回來。
---   ★ 瀏覽器（localStorage）裡的「本機最佳」不在資料庫，清不到：在遊戲頁的主控台執行 Identity.forgetBest('遊戲代號') 才會清（見 note/世界排行榜說明.md），
---     不然下次同步又會把最佳傳回資料庫。
+--   ★ 瀏覽器（localStorage）裡的「本機最佳」：V1.57.2.0 起，上面個人最佳的「否定本機版本 +1」會讓這個帳號的每支瀏覽器下次同步時清掉本機的最佳
+--     （要登入著、而且進那款遊戲或每小時同步時才會生效；沒登入的瀏覽器照舊要在主控台執行 Identity.forgetBest('遊戲代號')，見 note/世界排行榜說明.md）。
 -- 【安全】這兩個函式開放給 anon（網頁用公開金鑰呼叫）、而且會「刪資料」，所以多設了三道關卡：
 --   1) 玩家編號一定要在「開發者測試帳號清單」MF_dev_accounts 裡。這張表鎖住，只有你在 SQL Editor 能增減；不在清單裡的玩家，
 --      不管有沒有拿到他的玩家編號，一律回 not_allowed——所以外部玩家的資料不可能經由這兩個函式被查或被刪。
@@ -2042,6 +2067,7 @@ begin
       from public."MF_player_bests" b
       join public."MF_games" g on g.game_id = b.game_id
      where b.player_id = p_player_id
+       and (b.best_score is not null or b.best_level is not null)          -- 已被清空的列（只剩否定本機版本）不算
        and (b.updated_at at time zone 'Asia/Taipei')::date between v_r[1] and v_r[2];
 
     select coalesce(jsonb_agg(jsonb_build_object('game_id', t.game_id, 'title', g.title, 'plays', t.plays, 'days', t.days) order by t.game_id), '[]'::jsonb)
@@ -2071,7 +2097,7 @@ end;
 $$;
 
 -- 刪除：條件跟上面的查看完全一樣（暱稱＋玩家編號＋日期範圍），回傳 { ok:true, nick, from, to, deleted: { scores, bests, play_rows, plays } }。
---   一個交易：三種紀錄一起刪；刪完不補位（榜上本來就只留前 30 名）。
+--   一個交易：三種紀錄一起處理（世界榜成績、遊玩統計刪列；個人最佳清空＋否定本機版本加 1）；刪完不補位（榜上本來就只留前 30 名）。
 create or replace function public."MF_dev_clear_player_history"(p_nick text, p_player_id uuid, p_from date, p_to date)
 returns jsonb
 language plpgsql
@@ -2101,8 +2127,11 @@ begin
        and (s.achieved_at at time zone 'Asia/Taipei')::date between v_r[1] and v_r[2];
     get diagnostics v_s = row_count;
 
-    delete from public."MF_player_bests" b
+    -- 個人最佳：不刪列，清空成績與關卡、並把「否定本機版本」加 1，這個帳號的每支瀏覽器下次同步時，本機的最佳也會被清掉
+    update public."MF_player_bests" b
+       set best_score = null, best_level = null, reject_rev = b.reject_rev + 1
      where b.player_id = p_player_id
+       and (b.best_score is not null or b.best_level is not null)
        and (b.updated_at at time zone 'Asia/Taipei')::date between v_r[1] and v_r[2];
     get diagnostics v_b = row_count;
 
@@ -2135,6 +2164,9 @@ notify pgrst, 'reload schema';
 --   select public."MF_admin_merge"('小明417', '小明');             -- 玩家說「我有兩個帳號」：把「小明417」併進「小明」（兩邊成績每款取較好的）
 --   select public."MF_admin_release_nick"('小明');                 -- 釋出暱稱：尚未認領的舊玩家→提前結束保留；已建立的帳號→暱稱改成「原暱稱＋隨機數字」
 --   select public."MF_admin_delete_player"('小明');                -- 玩家要求刪除個資：刪掉帳號與他的成績、最佳紀錄、憑證
+--   select public."MF_admin_reject_local"('小明', 'swipecopy', 17, 17);      -- 小明的 swipecopy 成績異常：雲端改成成績 17、關卡 17，並否定他所有裝置的本機成績（下次同步就被雲端取代）
+--   select public."MF_admin_reject_local"('小明', 'swipecopy', null, null);  -- 同上，但雲端也清空（他這款遊戲的最佳全部不算）
+--   select public."MF_admin_reject_local"('小明', 'swipecopy', 17, 17, true); -- 最後一個參數 true：連世界排行榜（MF_scores）上他這款遊戲的成績一起刪
 --   select * from public."MF_players_admin" order by 1;            -- 看全部玩家（欄位名稱是中文）
 -- 每個函式都回傳一段 JSON，說明做了什麼（ok:false 表示沒做，error 是原因）。
 
@@ -2222,6 +2254,45 @@ begin
 end;
 $$;
 
+-- 否定本機成績（V1.57.2.0）：這位玩家這款遊戲的個人最佳異常（例如偽造）。把雲端那一列改成 p_score／p_level（null＝清空），
+--   並把「否定本機版本」加 1：他每一支瀏覽器下次同步這款遊戲時，本機的最佳會被雲端的取代（包含往下調、清空），之後的上傳才又照常「取較好的」。
+--   p_also_board＝true：同時刪掉他在世界排行榜（MF_scores）上這款遊戲的成績（名次因此還給別人；榜上只留前 30 名，不補位）。
+--   成績超出這款遊戲的合理範圍、遊戲不存在、找不到玩家都會回 ok:false。回傳 { ok:true, player_id, game_id, best_score, best_level, reject_rev, board_deleted }。
+--   也可以不用這個函式：在 Table Editor 開 MF_player_bests，改好 best_score／best_level，再把 reject_rev 加 1，效果一樣。
+create or replace function public."MF_admin_reject_local"(p_who text, p_game_id text, p_score numeric default null, p_level int default null, p_also_board boolean default false)
+returns jsonb
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+    v_id  uuid := public."MF__find_player"(p_who);
+    g     public."MF_games"%rowtype;
+    v_s   numeric;
+    v_rev int;
+    v_bd  int := 0;
+begin
+    if v_id is null then return jsonb_build_object('ok', false, 'error', 'no_such_player'); end if;
+    select * into g from public."MF_games" where game_id = p_game_id;
+    if not found then return jsonb_build_object('ok', false, 'error', 'unknown_game'); end if;
+    v_s := case when p_score is null then null else round(p_score, 4) end;
+    if v_s is not null and (v_s < g.min_score or v_s > g.max_score) then return jsonb_build_object('ok', false, 'error', 'out_of_range'); end if;
+    if p_level is not null and (p_level < 1 or p_level > 200) then return jsonb_build_object('ok', false, 'error', 'bad_level'); end if;
+    insert into public."MF_player_bests" as b (player_id, game_id, best_score, best_level, reject_rev)
+    values (v_id, g.game_id, v_s, p_level, 1)
+    on conflict (player_id, game_id) do update
+        set best_score = excluded.best_score, best_level = excluded.best_level, reject_rev = b.reject_rev + 1, updated_at = now()
+    returning b.reject_rev into v_rev;
+    if p_also_board then
+        perform pg_advisory_xact_lock(hashtextextended('MF_scores:' || g.game_id, 0));
+        delete from public."MF_scores" where game_id = g.game_id and player_id = v_id;
+        get diagnostics v_bd = row_count;
+    end if;
+    return jsonb_build_object('ok', true, 'player_id', v_id, 'game_id', g.game_id, 'best_score', v_s, 'best_level', p_level, 'reject_rev', v_rev, 'board_deleted', v_bd);
+end;
+$$;
+
 -- 給人翻閱的玩家清單：欄位名稱是中文（使用者的規定：資料庫給人看的東西要有中文名稱）。只有管理者看得到。
 create or replace view public."MF_players_admin" as
 select p.nickname                                         as "暱稱",
@@ -2264,6 +2335,7 @@ revoke all on function public."MF_admin_reset_pin"(text, text)                fr
 revoke all on function public."MF_admin_merge"(text, text)                    from public, anon, authenticated;
 revoke all on function public."MF_admin_release_nick"(text)                   from public, anon, authenticated;
 revoke all on function public."MF_admin_delete_player"(text)                  from public, anon, authenticated;
+revoke all on function public."MF_admin_reject_local"(text, text, numeric, int, boolean) from public, anon, authenticated;
 
 -- 公開函式（網頁用 anon 金鑰呼叫）
 revoke all on function public."MF_get_top"(text, uuid)                        from public;
