@@ -50,6 +50,7 @@
         SYNC_TTL_MS: 60 * 60 * 1000,     /* 已登入：開頁面時，距離上次同步超過這麼久才重新同步（多台裝置的紀錄才會過來） */
         WHOAMI_TTL_MS: 60 * 60 * 1000,   /* 已登入：多久確認一次憑證還有效、暱稱有沒有被改 */
         BOOT_DELAY_MS: 500,              /* 開頁面之後等一下才檢查（讓畫面先出來） */
+        PREPARE_WAIT_MS: 2500,           /* 按「開始挑戰」時，最多等「這款遊戲的個人最佳同步」多久才開局（網路慢就不等了；通常看玩法說明的時候早就同步完了） */
         PIN_LEN: 4,
         RENAME_PER_DAY: 2                /* 要跟資料庫 MF_rename 的 c_rename_per_day 一致 */
     };
@@ -294,6 +295,22 @@
         var pend = store().get(KEY_BESTPEND, {}) || {};
         if (pend[id]) { delete pend[id]; store().set(KEY_BESTPEND, pend); }
         log('「' + id + '」的本機最佳被否定了（管理者的決定）：以資料庫的為準 → 成績', it.s != null ? it.s : '（空）', '、最佳關卡', it.lv != null ? it.lv : '（空）');
+        if (mountedId === id) voidCurrentRun(id);
+    }
+
+    /* 這款遊戲已經開局了，才收到「本機最佳被否定」（網路慢，開局前沒等到同步）：這一局是用舊的（被否定的）最佳關卡進場的，
+       不能讓它的成績、到過的關卡寫回去（不然從第 13 關進場、玩到第 14 關，雲端又變成 14）。
+       做法：標記這一局作廢（Reaction.voidRun：setBest、kit.noteLevel 不記，結算不送排行榜），跳一個說明，按「確定」重新載入這款遊戲，
+       這次就用資料庫的正確紀錄進場。 */
+    function voidCurrentRun(id) {
+        if (global.Reaction) global.Reaction.voidRun = id;
+        if (!global.Dlg || !global.Dlg.open || !global.location || typeof global.location.reload !== 'function') return;
+        global.Dlg.open({
+            title: '紀錄已重設',
+            text: '你在這款遊戲的個人最佳被管理者重設了，以雲端的紀錄為準。這一局不計成績，按「確定」重新開始。',
+            buttons: [{ text: '確定', kind: 'primary' }],
+            onClose: function () { global.location.reload(); }      /* 按「確定」會先關掉彈窗（onClose），在這裡重新載入 */
+        });
     }
 
     /* 把資料庫回傳的最佳合併進這支瀏覽器：
@@ -359,11 +376,41 @@
         return syncBests({ ids: ids });
     }
 
-    /* 進遊戲：這款遊戲的 mount 已經跑完（舊單位的遷移都做完了），本機的最佳成績可以信任了——做記號；已登入就同步這一款 */
+    /* ── 進遊戲前先同步這一款（V1.57.3.2 修正「否定本機成績」沒有生效）──
+       以前是開局（mount）之後才同步：開局時已經用本機那份（被管理者否定的）最佳關卡算好進場關卡、跳出「你最高玩到第 17 關」，
+       同步回來才重設本機，玩家看到的還是 17；更糟的是這一局從第 13 關開始，玩到第 14 關就把 14 寫回本機、再傳回雲端。
+       現在：遊戲頁一選定遊戲就開始同步（prepareGame，玩家看玩法說明、排行榜的時候就做完了），按「開始挑戰」時等它（最多 PREPARE_WAIT_MS）才開局。 */
+    var preparing = {};      /* 遊戲 id → 同步的 Promise */
+    var prepared = {};       /* 遊戲 id → true：開局前已經同步成功（開局後就不用再同步一次） */
+    var mountedId = null;    /* 這一頁已經開局的遊戲（開局後才收到重設，要作廢這一局） */
+    function prepareGame(id) {
+        if (!id || !ID_RE.test(id) || !LB.isLoggedIn()) return Promise.resolve(null);
+        if (!preparing[id]) {
+            preparing[id] = syncBests({ ids: [id] }).then(function (r) {
+                if (r && r.ok) prepared[id] = true;
+                return r;
+            }, function () { return null; });
+        }
+        return preparing[id];
+    }
+    /* 等 prepareGame 做完，最多等 ms 毫秒（網路慢就先開局；之後才收到重設，由 voidCurrentRun 處理） */
+    function waitPrepared(id, ms) {
+        var p = preparing[id];
+        if (!p) return Promise.resolve(null);
+        return new Promise(function (resolve) {
+            var t = global.setTimeout(function () { resolve(null); }, ms == null ? CFG.PREPARE_WAIT_MS : ms);
+            p.then(function (r) { global.clearTimeout(t); resolve(r); });
+        });
+    }
+
+    /* 進遊戲：這款遊戲的 mount 已經跑完（舊單位的遷移都做完了），本機的最佳成績可以信任了——做記號；
+       已登入就同步這一款（開局前已經同步成功、而且沒有剛做記號的成績要上傳，就不用再同步一次） */
     function gameMounted(id) {
         if (!id || !ID_RE.test(id)) return;
-        if (localBest(id) != null && !trusted(id)) markTrusted(id);
-        if (LB.isLoggedIn()) syncBests({ ids: [id] });
+        mountedId = id;
+        var fresh = localBest(id) != null && !trusted(id);
+        if (fresh) markTrusted(id);
+        if (LB.isLoggedIn() && (fresh || !prepared[id])) syncBests({ ids: [id] });
     }
 
     /* 這款遊戲在這支瀏覽器上的個人最佳存在哪些 localStorage key（純函式，測試用）：最佳成績、單位記號 .sync、最佳關卡。
@@ -513,6 +560,8 @@
     Identity.noteBest = noteBest;
     Identity.flushBests = flushBests;
     Identity.gameMounted = gameMounted;
+    Identity.prepareGame = prepareGame;      /* 遊戲頁選定遊戲時：先同步這一款的個人最佳（js/reaction.js） */
+    Identity.waitPrepared = waitPrepared;    /* 按「開始挑戰」時：等上面的同步做完（最多 PREPARE_WAIT_MS）才開局 */
     Identity.forgetBest = forgetBest;        /* 開發測試用：忘掉某款遊戲在這支瀏覽器上的最佳成績（主控台：Identity.forgetBest('遊戲代號')） */
     Identity.ensureLegacy = ensureLegacy;
     Identity.gateForScore = gateForScore;
@@ -528,7 +577,8 @@
         cleanPin: cleanPin, validPin: validPin, fmtWait: fmtWait, fmtDate: fmtDate, errorText: errorText, isNetworkError: isNetworkError,
         betterOf: betterOf, cleanServerItem: cleanServerItem, localGameIds: localGameIds, collect: collect, applyServer: applyServer,
         clearLocalBests: clearLocalBests, bestKeysOf: bestKeysOf, forgetBest: forgetBest, call: call, KEY_BESTPEND: KEY_BESTPEND, KEY_SYNCAT: KEY_SYNCAT, KEY_HINT: KEY_HINT, KEY_WHOAMIAT: KEY_WHOAMIAT,
-        PREFIX_BEST: PREFIX_BEST, PREFIX_LV: PREFIX_LV, PREFIX_REV: PREFIX_REV, localRev: localRev, flushBests: flushBests, trusted: trusted
+        PREFIX_BEST: PREFIX_BEST, PREFIX_LV: PREFIX_LV, PREFIX_REV: PREFIX_REV, localRev: localRev, flushBests: flushBests, trusted: trusted,
+        resetForTest: function () { preparing = {}; prepared = {}; mountedId = null; }
     };
 
     global.Identity = Identity;

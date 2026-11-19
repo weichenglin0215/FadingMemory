@@ -182,6 +182,36 @@ const calls = (name) => rpcLog.filter((c) => c.name === name);
   ID.gameMounted('speed');
   await sleep(20);
   ok(calls('MF_sync_bests').length === 1 && calls('MF_sync_bests')[0].args.p_items[0].s === 0.3 && ls['fm.reaction.best.speed'] === '0.2', 'gameMounted：已登入 → 同步這一款（上傳 0.3、取回資料庫較好的 0.2）');
+  // ═══ 3b. 開局前先同步（V1.57.3.2：否定本機成績要在開局「之前」生效，進場關卡才會對）═══
+  const rejectReply = () => okData({ ok: true, items: [{ g: 'cake', b: 'max', s: 1, lv: 1, r: 2 }], rejected: [], reset: ['cake'] });
+  const fake17 = () => { ls['fm.reaction.best.cake'] = '16'; ls['fm.reaction.best.cake.sync'] = 'true'; ls['fm.reaction.lvbest.cake'] = '17'; ls['fm.reaction.rev.cake'] = '1'; };
+  wipe(); T.resetForTest(); Reaction.voidRun = null; rpcLog = [];
+  ok((await ID.prepareGame('cake')) === null && rpcLog.length === 0, 'prepareGame：沒登入 → 不連網');
+  wipe(); T.resetForTest(); logIn(); fake17(); rpcLog = []; reply = rejectReply;
+  const pr = await ID.prepareGame('cake');
+  ok(pr && pr.ok && calls('MF_sync_bests').length === 1 && calls('MF_sync_bests')[0].args.p_items[0].r === 1, 'prepareGame：已登入 → 同步這一款（帶上本機看過的版本 1）');
+  ok(ls['fm.reaction.best.cake'] === '1' && ls['fm.reaction.lvbest.cake'] === '1' && ls['fm.reaction.rev.cake'] === '2', 'prepareGame：雲端版本 2 比本機的 1 新 → 開局前本機就換成雲端的（16／17 → 1／1）');
+  ok(Reaction.kit.entryLevel('cake', 0) === 1 && Reaction.entryRun === null, 'prepareGame 之後開局：從第 1 關開始（不再是 17 − 4 ＝ 13）');
+  ok((await ID.waitPrepared('cake', 50)).ok === true, 'waitPrepared：同步做完就回傳結果');
+  ID.prepareGame('cake'); ok(calls('MF_sync_bests').length === 1, 'prepareGame：同一款只同步一次');
+  ID.gameMounted('cake'); await sleep(20);
+  ok(calls('MF_sync_bests').length === 1 && Reaction.voidRun === null, 'gameMounted：開局前已同步成功 → 不再同步一次、這一局不作廢');
+  wipe(); T.resetForTest(); logIn(); fake17(); rpcLog = []; reply = () => new Promise(() => { });   // 網路卡住，永遠不回
+  ID.prepareGame('cake');
+  const t0 = Date.now(), wr = await ID.waitPrepared('cake', 40);
+  ok(wr === null && Date.now() - t0 < 1000, 'waitPrepared：網路卡住 → 最多等指定的時間就先開局');
+  ok((await ID.waitPrepared('spot', 40)) === null, 'waitPrepared：沒有 prepareGame 過的遊戲 → 馬上回傳');
+  // 開局之後才收到重設（網路慢）：這一局作廢，成績、到過的關卡都不記
+  wipe(); T.resetForTest(); logIn(); fake17(); rpcLog = []; reply = rejectReply;
+  ID.gameMounted('cake'); await sleep(20);
+  ok(calls('MF_sync_bests').length === 1 && ls['fm.reaction.lvbest.cake'] === '1' && Reaction.voidRun === 'cake', '開局後才收到重設 → 本機換成雲端的，這一局作廢（Reaction.voidRun）');
+  ok(Reaction.kit.noteLevel('cake', 14) === false && ls['fm.reaction.lvbest.cake'] === '1', '作廢的一局：kit.noteLevel 不記（從第 13 關進場玩到第 14 關，不能把 14 寫回去）');
+  ok(Reaction.setBest('cake', 13, (a, b) => a > b) === false && ls['fm.reaction.best.cake'] === '1', '作廢的一局：Reaction.setBest 不記');
+  ok(Reaction.creditOnly('cake', 999) === true && Reaction.creditOnly('spot', 999) === false, '作廢的一局：creditOnly 一律 true（不送排行榜），只限這一款');
+  wipe(); T.resetForTest(); logIn(); ls['fm.reaction.lvbest.spot'] = '9'; rpcLog = []; Reaction.voidRun = null; reply = rejectReply;
+  ID.gameMounted('spot'); await sleep(20);
+  ok(Reaction.voidRun === null && ls['fm.reaction.lvbest.cake'] === '1', '別款遊戲（cake）被重設：正在玩的 spot 不作廢');
+  Reaction.voidRun = null; T.resetForTest();
 
   // ═══ 4. 登入／建立／認領／改名／改密碼的呼叫內容 ═══
   wipe(); rpcLog = []; reply = () => okData({ ok: true });
@@ -330,6 +360,8 @@ const calls = (name) => rpcLog.filter((c) => c.name === name);
   ok(menuP.css.indexOf("'css/identity.css'") >= 0 && reactP.css.indexOf("'css/identity.css'") >= 0, '兩頁都載入 css/identity.css');
   const reactionJs = fs.readFileSync(ROOT + 'js/reaction.js', 'utf8');
   ok(/Identity\.gameMounted/.test(reactionJs) && /game\.mount\(screen/.test(reactionJs), 'reaction.js：mount 之後呼叫 Identity.gameMounted');
+  ok(/Identity\.prepareGame\(game\.id\)/.test(reactionJs) && reactionJs.indexOf('Identity.waitPrepared') >= 0 && reactionJs.indexOf('Identity.waitPrepared') < reactionJs.indexOf('game.mount(screen'), 'reaction.js：選定遊戲就 prepareGame，按「開始挑戰」先 waitPrepared 才 mount');
+  ok(/ID\.syncBests\(\{ all: true \}\)/.test(fs.readFileSync(ROOT + 'js/menu_nav.js', 'utf8')), 'menu_nav.js：打開「成績」時同步全部個人最佳');
   const css = fs.readFileSync(ROOT + 'css/identity.css', 'utf8');
   ok(!/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/.test(css.replace(/[ \t]*\/\*[\s\S]*?\*\//g, '')), 'identity.css：沒有寫死的顏色（一律用 theme.css 的變數）');
   const html = fs.readFileSync(ROOT + 'index.html', 'utf8');

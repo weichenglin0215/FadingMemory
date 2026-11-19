@@ -385,6 +385,46 @@ const playerOf = async (nick) => (await db.query(`select * from public."MF_playe
     ok(!Object.keys(ls).some(k => k.indexOf('fm.reaction.rev.') === 0), '否定本機：登出清掉本機的版本記錄');
     ok((await ID.login('快樂阿嬤', '1234')).ok, '否定本機：登出後可以再登入');
   }
+  // 6-4c 否定本機成績要在「開局之前」生效（V1.57.3.2，管理者回報：Table Editor 改成 1／1、版本 +1，電腦上進遊戲還是「你最高玩到第 17 關」）
+  {
+    const IDT = ID.test;
+    const cloud = async () => (await db.query(`select best_score::float8 as s, best_level as lv, reject_rev as r from public."MF_player_bests" where player_id = $1::uuid and game_id = 'cake'`, [phoneA.pid])).rows[0];
+    resetBrowser(); IDT.resetForTest(); Reaction.voidRun = null; Reaction.entryRun = null;     // 前面的段落用 entryLevel 登記過進場優惠，先清掉
+    lg = await ID.login('快樂阿嬤', '1234'); await ID.finishSession(lg.data);
+    ok(ls['fm.reaction.rev.cake'] === '2', '開局前生效：登入時記下目前的版本 2');
+    // 電腦上玩到第 17 關（成績 16）→ 上傳
+    Reaction.kit.noteLevel('cake', 17); Reaction.setBest('cake', 16, (a, c) => a > c);
+    await sleep(80);
+    eq0(await cloud(), { s: 16, lv: 17, r: 2 }, '開局前生效：電腦的 16／17 上傳到雲端');
+    // 管理者在 Table Editor：best_score、best_level 改成 1，reject_rev 加 1（2 → 3）
+    await db.query(`update public."MF_player_bests" set best_score = 1, best_level = 1, reject_rev = reject_rev + 1 where player_id = $1::uuid and game_id = 'cake'`, [phoneA.pid]);
+    // 玩家打開遊戲頁：選定遊戲就 prepareGame，按「開始挑戰」waitPrepared → 開局
+    ID.prepareGame('cake');
+    await ID.waitPrepared('cake');
+    ok(ls['fm.reaction.best.cake'] === '1' && ls['fm.reaction.lvbest.cake'] === '1' && ls['fm.reaction.rev.cake'] === '3', '開局前生效：開局前本機就換成雲端的 1／1，記下版本 3');
+    ok(Reaction.kit.entryLevel('cake', 0) === 1, '開局前生效：從第 1 關開始（以前會用舊的 17 → 第 13 關）');
+    ID.gameMounted('cake'); await sleep(80);
+    ok(Reaction.voidRun === null, '開局前生效：開局前已重設 → 這一局正常算');
+    Reaction.kit.noteLevel('cake', 3); await sleep(80);
+    eq0(await cloud(), { s: 1, lv: 3, r: 3 }, '開局前生效：之後真的玩到第 3 關，照常上傳');
+    // 網路慢、開局後才收到重設：這一局作廢，從舊關卡進場打出來的關卡不能寫回去
+    Reaction.kit.noteLevel('cake', 17); await sleep(80);
+    await db.query(`update public."MF_player_bests" set best_score = 1, best_level = 1, reject_rev = reject_rev + 1 where player_id = $1::uuid and game_id = 'cake'`, [phoneA.pid]);
+    IDT.resetForTest();
+    ID.gameMounted('cake'); await sleep(80);
+    ok(Reaction.voidRun === 'cake' && ls['fm.reaction.lvbest.cake'] === '1' && ls['fm.reaction.rev.cake'] === '4', '開局後才收到重設：本機換成 1、這一局作廢');
+    Reaction.kit.noteLevel('cake', 14); Reaction.setBest('cake', 13, (a, c) => a > c); await sleep(80);
+    eq0(await cloud(), { s: 1, lv: 1, r: 4 }, '開局後才收到重設：作廢的這一局（從第 13 關進場玩到 14）沒有寫回雲端');
+    Reaction.voidRun = null; IDT.resetForTest();
+    // 常見的操作錯誤：reject_rev 沒有比這支瀏覽器記的大（例如原本就是 4，又「改成 4」）→ 不會重設，本機較好的照常取較好的
+    Reaction.kit.noteLevel('cake', 9); await sleep(80);
+    await db.query(`update public."MF_player_bests" set best_score = 1, best_level = 1 where player_id = $1::uuid and game_id = 'cake'`, [phoneA.pid]);
+    await ID.syncBests({ ids: ['cake'] });
+    ok(ls['fm.reaction.lvbest.cake'] === '9', '版本沒有加 1：不會重設（本機的 9 留著）');
+    eq0(await cloud(), { s: 1, lv: 9, r: 4 }, '版本沒有加 1：雲端又被取較好的洗回 9');
+    await ID.logout();
+    ok((await ID.login('快樂阿嬤', '1234')).ok, '開局前生效：測完登出再登入');
+  }
 
   // 6-5 改密碼：其他裝置被登出（憑證失效→標記重新登入）
   resetBrowser(); lg = await ID.login('快樂阿嬤', '1234'); await ID.finishSession(lg.data);

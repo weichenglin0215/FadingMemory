@@ -230,11 +230,19 @@
         var cached = LB.cachedMyRanks ? LB.cachedMyRanks() : null;
         render(cached, false);
         if (LB.myRanks && LB.isLoggedIn()) {
+            var latest = cached, offline = false;
             LB.myRanks().then(function (list2) {
                 if (closed) return;
-                if (list2) render(list2, false);
-                else render(cached, true);
+                if (list2) latest = list2; else offline = true;
+                render(latest, offline);
             });
+            /* V1.57.3.2：順便跟帳號同步全部的個人最佳（別台裝置的新紀錄、管理者「否定本機成績」的重設），本機有變才重畫。
+               以前只有進那款遊戲、或開頁面時距離上次同步超過一小時才同步，這裡看到的可能是舊的。 */
+            if (ID && ID.syncBests) {
+                ID.syncBests({ all: true }).then(function (r) {
+                    if (!closed && r && r.ok) render(latest, offline);
+                });
+            }
         }
     }
 

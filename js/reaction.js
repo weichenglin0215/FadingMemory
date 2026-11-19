@@ -154,7 +154,18 @@
            把畫面交給選中的那個遊戲模組自己接手畫、自己管理狀態，
            這個檔案從這之後就不再插手這局遊戲怎麼進行。
            有排行榜的遊戲：說明彈窗按「下一步」→ 世界前 30 名彈窗 → 按「開始挑戰」才開始。 */
+        /* V1.57.3.2：一選定遊戲就先跟帳號同步這一款的個人最佳（管理者「否定本機成績」時，開局前本機就換成正確的紀錄，
+           進場關卡、「你最高玩到第幾關」才會對）；玩家看玩法說明、排行榜的時候就同步完了。沒登入什麼都不做。 */
+        if (window.Identity && Identity.prepareGame) Identity.prepareGame(game.id);
+        var started = false;
         function startGame() {
+            if (started) return;
+            started = true;
+            /* 等上面的同步做完才開局（最多 Identity.CFG.PREPARE_WAIT_MS；網路慢就先開局） */
+            var wait = window.Identity && Identity.waitPrepared ? Identity.waitPrepared(game.id) : Promise.resolve();
+            wait.then(mountGame, mountGame);
+        }
+        function mountGame() {
             /* V1.39.0：按了「開始挑戰」就算「玩過」（本機記下今天的日期；要玩完一局才算一局，見 watchResults） */
             if (window.FMPlays) FMPlays.noteStart(game.id);
             game.mount(screen, { setMeta: setMeta });

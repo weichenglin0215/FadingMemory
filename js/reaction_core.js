@@ -52,6 +52,8 @@
        kit.result 不送排行榜、不說「新紀錄」。真的通過至少一關，成績一定 > credit（每過一關成績加 1），照舊算。
        Reaction.entryRun：{ id, from（從第幾關開始）, add（成績 ＝ 通過關數 ＋ add，kit.entryLevel 的 legacyAdd，預設 1）, credit }；沒有優惠（從第 1 關開始）就是 null。 */
     Reaction.entryRun = null;
+    /* Reaction.voidRun：遊戲 id——這一局作廢（用被管理者否定的舊最佳關卡進場的），成績、到過的關卡都不記；頁面重新載入後就清掉了（V1.57.3.2） */
+    Reaction.voidRun = null;
     /* Reaction.beginRun(id, from, add, credit)：登記這一局。credit 預設 from − add（成績＝通過關數＋add 的遊戲，一關都沒過的成績）；
        成績不是這種算法的遊戲（例如視力）自己傳 credit。from ≤ 1（沒有優惠）就清掉。 */
     Reaction.beginRun = function (id, from, add, credit) {
@@ -61,6 +63,7 @@
     };
     /* Reaction.creditOnly(id, val)：成績 val 是不是「只靠優惠送的關卡」（這一局一關都沒真的通過）→ true 就不能算成績 */
     Reaction.creditOnly = function (id, val) {
+        if (id && Reaction.voidRun === id) return true;     /* 這一局作廢了（開局後才收到管理者的「否定本機成績」，見 js/identity.js 的 voidCurrentRun）：什麼成績都不算 */
         var E = Reaction.entryRun;
         return !!(E && E.id === id && typeof val === 'number' && isFinite(val) && val <= E.credit);
     };

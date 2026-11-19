@@ -278,7 +278,7 @@
             var o2 = {};
             for (var k2 in o) if (Object.prototype.hasOwnProperty.call(o, k2)) o2[k2] = o[k2];
             o2.score = null; o2.num = null; o2.label = ''; o2.isNew = false;
-            o2.lines = ['這次從第 ' + E0.from + ' 關開始，還沒有通過新的關卡，不計入最佳紀錄。'].concat(o.lines || []);
+            o2.lines = [Reaction.voidRun === cid || !E0 ? '你的紀錄剛被管理者重設，這一局不計入最佳紀錄。' : '這次從第 ' + E0.from + ' 關開始，還沒有通過新的關卡，不計入最佳紀錄。'].concat(o.lines || []);
             o = o2;
         }
         /* 「再玩一次」「從前面繼續」是新的一局：優惠要重新登記（再玩一次＝從第 1 關，沒有優惠；從前面繼續＝從那一關開始，跳過的關卡仍算已過） */
@@ -478,6 +478,7 @@
     /* 這一局結束時停在第 level 關：比舊紀錄高才更新（所以從第 26 關開始、只玩到第 28 關，紀錄不會被改小） */
     kit.noteLevel = function (id, level) {
         if (!id || !(level > 1)) return false;
+        if (Reaction.voidRun === id) return false;          /* 這一局作廢了（見 reaction_core.js 的 Reaction.voidRun）：到過的關卡不記 */
         if (level <= kit.levelBest(id)) return false;
         UI.store.set(kit.lvKey(id), Math.floor(level));
         if (global.Identity && global.Identity.noteBest) global.Identity.noteBest(id);       /* V1.35.0：已登入的話，稍後把新的最佳關卡同步到帳號 */
