@@ -11,12 +11,26 @@
     -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
 }
 
-/* 「wirelink-tip」這個元素的樣式 */
+/* V1.57.3.2：上方三行（第 X 關、限時橫條、已接通…）靠緊一點，空間留給下面的盤面。
+   只對接電線生效：「#screen 裡面有 .wirelink-stage」時才套用（:has 選擇器），其他遊戲不受影響 */
+.screen:has(> .wirelink-stage) {
+    gap: 4px;                                           /* 子元素之間的空隙：4px（原本是主題變數 --sp-3） */
+}
+
+/* 「第 X 關」那一行：行高縮小 */
+.screen:has(> .wirelink-stage) .rx-head {
+    line-height: 1.15;                                  /* 行高：字高的 1.15 倍 */
+}
+
+/* 盤面上方「已接通 X／Y 條　填滿…」那一行：貼著盤面區的最上面（盤面從它下面 26px 開始，見 js 的 topPad） */
 .wirelink-tip {
     position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
     left: 0;                                            /* 離左邊 0 */
     right: 0;                                           /* 離右邊 0 */
-    top: 10px;                                          /* 離上邊 10px */
+    top: 0;                                             /* 離上邊 0 */
+    margin: 0;                                          /* 外距：0 */
+    padding: 0;                                         /* 內距：0 */
+    line-height: 22px;                                  /* 行高：22px */
     text-align: center;                                 /* 文字置中 */
 }
 
@@ -51,7 +65,7 @@
     pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
 }
 
-/* 每一種電線（以及它的插頭、時間到時畫出來的正確接法）用 --wc 當顏色，--wc 由 .wirelink-c0～.wirelink-c7 設定 */
+/* 每一種電線（以及它的插頭、時間到時畫出來的正確接法）用 --wc 當顏色，--wc 由 .wirelink-c0～.wirelink-c9 設定 */
 .wirelink-c0 {
     --wc: var(--wlk-0);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
 }
@@ -89,6 +103,16 @@
 /* 「wirelink-c7」這個元素的樣式 */
 .wirelink-c7 {
     --wc: var(--wlk-7);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
+}
+
+/* 「wirelink-c8」這個元素的樣式（棕色） */
+.wirelink-c8 {
+    --wc: var(--wlk-8);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
+}
+
+/* 「wirelink-c9」這個元素的樣式（灰色） */
+.wirelink-c9 {
+    --wc: var(--wlk-9);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
 }
 
 /* 「wirelink-wire」這個元素的樣式 */

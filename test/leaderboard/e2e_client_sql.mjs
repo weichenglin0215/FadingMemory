@@ -69,7 +69,7 @@ globalThis.fetch = async (url, opt) => {
   } finally { await db.exec('reset role'); }
 };
 
-// ─── 載入真正的用戶端程式與「全部 190 款真正的遊戲檔案」（用假的 UI 環境）───
+// ─── 載入真正的用戶端程式與「全部 192 款真正的遊戲檔案」（用假的 UI 環境）───
 // 遊戲檔案由 all_games.cjs 載入（依 js/boot.js 的清單），拿到的是各遊戲 register 時登記的真實 score 設定，
 // 所以這個測試驗證的是「遊戲檔案裡的設定」與「資料庫腳本」真的對得起來，不是測試自己抄的一份。
 // 瀏覽器儲存：ls 是真的物件（要能列出所有 key，identity.js 掃描個人最佳用）；mem 是跟舊測試相容的 Map 外觀
@@ -86,7 +86,7 @@ require(ROOT + 'js/leaderboard.js');
 require(ROOT + 'js/identity.js');
 const LB = globalThis.Leaderboard, T = LB.test, ID = globalThis.Identity;
 ID.CFG.BEST_DEBOUNCE_MS = 20;
-ok(GAME_LIST.length === 190 && GAMES.speed && GAMES.spot, '載入 190 款遊戲：' + GAME_LIST.length);
+ok(GAME_LIST.length === 192 && GAMES.speed && GAMES.spot, '載入 192 款遊戲：' + GAME_LIST.length);
 const celebrated = [], toasts = [];
 LB.ui = { celebrate: (i) => celebrated.push(i), toast: (t) => toasts.push(t) };
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -179,7 +179,7 @@ ok(!old2.ok && old2.error === 'http_404', '舊版的改暱稱函式已經不存�
 const nt = await T.rpc('MF_submit_score', { p_game_id: 'speed', p_player_id: LB.peekPid(), p_token: 'wrong', p_score: 0.001 }, 5000);
 ok(nt.ok && nt.data.ok === false && nt.data.error === 'bad_token', '亂填憑證 → bad_token');
 
-// ═══ 5. 全部 190 款遊戲：用戶端設定 ↔ 資料庫設定，真的走一遍 ═══
+// ═══ 5. 全部 192 款遊戲：用戶端設定 ↔ 資料庫設定，真的走一遍 ═══
 // 對每一款遊戲：
 //   · 讀榜單：資料庫認得這個 game_id，better 與遊戲檔案一致；
 //   · 兩位玩家分別送「最好端」與「最差端」的合法成績（min／max 兩個端點），名次方向要對（越小越好／越大越好）；

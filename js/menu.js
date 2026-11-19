@@ -138,6 +138,8 @@
         { id: 'pipes', name: '接水管', cat: 'logic', img: 'img/reaction/pipes.png' },
         { id: 'carpet', name: '鋪地毯', cat: 'logic', img: 'img/reaction/carpet.png' },
         { id: 'wirelink', name: '接電線', cat: 'logic', img: 'img/reaction/wirelink.png' },
+        { id: 'blockfill', name: '一筆填滿', cat: 'logic', img: 'img/reaction/blockfill.png' },
+        { id: 'multifill', name: '多色填滿', cat: 'logic', img: 'img/reaction/multifill.png' },
         { id: 'checkers', name: '跳棋跳最遠', cat: 'logic', img: 'img/reaction/checkers.png' },
         { id: 'lightsout', name: '關燈', cat: 'logic', img: 'img/reaction/lightsout.png' },
         { id: 'lights', name: '點燈記憶', cat: 'memory', img: 'img/reaction/lights.png' },

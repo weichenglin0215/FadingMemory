@@ -1415,6 +1415,8 @@ insert into public."MF_games" (game_id, title, better, min_score, max_score) val
     ('bubblespray',  '泡泡掃射', 'max', 1, 2000),
     ('emojisort',    'emoji選', 'max', 1, 22),
     ('hexcolor',     '六角著色', 'max', 1, 90),
+    ('blockfill',    '一筆填滿', 'max', 1, 90),
+    ('multifill',    '多色填滿', 'max', 1, 90),
     -- <<< 自動產生結束
     ('zz_test', '（測試用，可刪）', 'max', 0, 1000)
 on conflict (game_id) do update

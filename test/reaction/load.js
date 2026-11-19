@@ -17,6 +17,10 @@ require(ROOT + 'js/reaction_kit4.js');    // 第四批共用小工具（方格�
 require(ROOT + 'js/emoji_png.js');         // 共用的 emoji 圖片庫（V1.47；分類點擊、草叢找動物貼 PNG 用；Node 裡沒有 Image，只能查清單）
 require(ROOT + 'js/reaction_bgstripe.js');    // 干擾用的動態條紋背景共用元件（V1.44.0；kit.bgStripe）
 require(ROOT + 'js/similar_chars.js');    // 共用資料庫：長得很像的中文字（V1.33.0；對準才看到、手電筒猜圖、鏡中旋轉字…都用它）
+require(ROOT + 'js/fillpath_core.js');     // 「填滿」系列（一筆填滿、多色填滿）的共用引擎（V1.57.3.0；Reaction.fillPath）
+require(ROOT + 'js/fillpath_bank.js');     // 填滿系列的題庫（window.FM_FILLPATH_BANK）
+require(ROOT + 'js/wirelink_bank.js');    // 接電線的題庫（window.FM_WIRELINK_BANK；V1.57.3.2）
+require(ROOT + 'js/fillpath_ui.js');       // 填滿系列的畫面（Reaction.fillPath.build；Node 測試只載入、不執行畫面）
 require(ROOT + 'js/flipsum_core.js');     // 「翻牌湊 100」系列的共用引擎（V1.57；翻牌湊百、翻三湊百共用；Reaction.flipSum）
 require(ROOT + 'js/sudoku_engine.js');     // 數獨系列的出題與推理引擎（V1.41；數獨4／6／9、夾心數獨共用）
 require(ROOT + 'js/sudoku_lib.js');        // 數獨系列的共用畫面零件（Reaction.sudokuLib）

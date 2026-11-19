@@ -1,0 +1,203 @@
+/* ═══════════════════════════════════════
+   fillpath.css — 「填滿」系列（一筆填滿 blockfill、多色填滿 multifill 共用，js/fillpath_ui.js）的樣式
+   · 這個檔案裡的 class 名稱一律以「fillpath-」開頭（兩款遊戲共用一份，登記在 test/reaction/t_cssclass.js 的 FAMILY）。
+   · 顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼；電線顏色用接電線那組 --wlk-0～--wlk-9。
+   ═══════════════════════════════════════ */
+
+/* ═══ 填滿系列（.fillpath-）═══ */
+.fillpath-stage {
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
+}
+
+/* 上方的提示文字：已填幾格 */
+.fillpath-tip {
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    top: 10px;                                          /* 離上邊 10px */
+    text-align: center;                                 /* 文字置中 */
+}
+
+/* 棋盤：只是一塊定位用的區域（空洞的地方什麼都沒有，看得到底下的舞台背景） */
+.fillpath-board {
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    transition: box-shadow 0.4s;                        /* 狀態改變時的過渡動畫（屬性、時間、緩動）：box-shadow 0.4s */
+}
+
+/* 全部填滿：整塊板子發亮 */
+.fillpath-board--lit {
+    box-shadow: 0 0 28px var(--c-yellow);               /* 方塊陰影（立體感） */
+}
+
+/* 一個格子（沒蓋到的時候是淺灰色的方塊） */
+.fillpath-tile {
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+    border: 2px solid var(--c-ink-soft);                /* 邊框（粗細、線型、顏色）：2px solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    overflow: hidden;                                   /* 超出範圍的內容裁掉不顯示 */
+}
+
+/* 格子裡的「染色層」：蓋到的時候顯示那條路的顏色（淡淡的） */
+.fillpath-fill {
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    background: var(--wc, transparent);                 /* 背景：主題變數 --wc（沒蓋到就透明） */
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    transition: opacity 0.15s;                          /* 狀態改變時的過渡動畫（屬性、時間、緩動）：opacity 0.15s */
+}
+
+/* 蓋到的格子：染上顏色 */
+.fillpath-tile--on .fillpath-fill {
+    opacity: 0.38;                                      /* 透明度 0.38（1＝完全不透明、0＝全透明） */
+}
+
+/* 蓋到的格子：邊框也帶一點那條路的顏色 */
+.fillpath-tile--on {
+    border-color: var(--wc);                            /* 邊框顏色：主題變數 --wc */
+}
+
+/* 路與起點、星星畫在這一層 SVG 上（不接收點擊，點擊由舞台統一處理） */
+.fillpath-svg {
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    top: 0;                                             /* 離上邊 0 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+}
+
+/* 每一條路（以及它的起點、終點的星星、時間到時畫出來的填法）用 --wc 當顏色，--wc 由 .fillpath-c0～.fillpath-c9 設定（對應接電線的 --wlk-0～9） */
+.fillpath-c0 {
+    --wc: var(--wlk-0);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
+}
+
+/* 「fillpath-c1」這個元素的樣式 */
+.fillpath-c1 {
+    --wc: var(--wlk-1);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
+}
+
+/* 「fillpath-c2」這個元素的樣式 */
+.fillpath-c2 {
+    --wc: var(--wlk-2);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
+}
+
+/* 「fillpath-c3」這個元素的樣式 */
+.fillpath-c3 {
+    --wc: var(--wlk-3);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
+}
+
+/* 「fillpath-c4」這個元素的樣式 */
+.fillpath-c4 {
+    --wc: var(--wlk-4);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
+}
+
+/* 「fillpath-c5」這個元素的樣式 */
+.fillpath-c5 {
+    --wc: var(--wlk-5);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
+}
+
+/* 「fillpath-c6」這個元素的樣式 */
+.fillpath-c6 {
+    --wc: var(--wlk-6);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
+}
+
+/* 「fillpath-c7」這個元素的樣式 */
+.fillpath-c7 {
+    --wc: var(--wlk-7);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
+}
+
+/* 「fillpath-c8」這個元素的樣式 */
+.fillpath-c8 {
+    --wc: var(--wlk-8);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
+}
+
+/* 「fillpath-c9」這個元素的樣式 */
+.fillpath-c9 {
+    --wc: var(--wlk-9);                                 /* 自訂變數 --wc（下面用 var(--wc) 取用；可以由 JS 動態設定） */
+}
+
+/* 玩家鋪的路 */
+.fillpath-wire {
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--wc);                                  /* SVG 線條顏色：主題變數 --wc */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+}
+
+/* 起點（實心圓，中間一個小洞） */
+.fillpath-mark-body {
+    fill: var(--wc);                                    /* SVG 圖形的填色：主題變數 --wc */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 3;                                    /* SVG 線條粗細：3 */
+}
+
+/* 「fillpath-mark-in」這個元素的樣式 */
+.fillpath-mark-in {
+    fill: var(--c-ink);                                 /* SVG 圖形的填色：主題變數 --c-ink */
+}
+
+/* 終點的星星（全部填滿之後才出現；時間到時畫的是解題器找到的填法的終點） */
+.fillpath-star {
+    fill: var(--c-yellow);                              /* SVG 圖形的填色：主題變數 --c-yellow */
+    stroke: var(--c-ink);                               /* SVG 線條顏色：主題變數 --c-ink */
+    stroke-width: 2;                                    /* SVG 線條粗細：2 */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+}
+
+/* 時間到：解題器找到的填法一條一條畫出來（pathLength 設成 1，dasharray 1、dashoffset 1 → 0），玩家自己鋪的路變淡 */
+.fillpath-sol {
+    fill: none;                                         /* SVG 圖形的填色：none */
+    stroke: var(--wc);                                  /* SVG 線條顏色：主題變數 --wc */
+    stroke-linecap: round;                              /* SVG 線條端點形狀：round */
+    stroke-linejoin: round;                             /* SVG 線條轉角形狀：round */
+    stroke-dasharray: 1;                                /* SVG 虛線的「畫／空」長度：1 */
+    stroke-dashoffset: 1;                               /* SVG 虛線的起始位移：1 */
+}
+
+/* 「fillpath-sol」這個元素的樣式 */
+.fillpath-sol--draw .fillpath-sol {
+    animation: fillpath-draw 1.2s ease-out forwards;    /* 播放動畫（名稱、時間、緩動、次數）：fillpath-draw 1.2s ease-out forwards */
+}
+
+/* 動畫 fillpath-draw：定義動畫每個階段（from→to 或百分比）的樣子，由 animation 屬性呼叫 */
+@keyframes fillpath-draw {
+    to {
+        stroke-dashoffset: 0;                           /* SVG 虛線的起始位移：0 */
+    }
+}
+
+/* 時間到：玩家自己鋪的路變淡 */
+.fillpath-board--reveal .fillpath-wire {
+    opacity: 0.25;                                      /* 透明度 0.25（1＝完全不透明、0＝全透明） */
+}
+
+/* 時間到：解題器找到的填法的終點星星，晚一點才出現 */
+.fillpath-star--sol {
+    opacity: 0;                                         /* 透明度 0（1＝完全不透明、0＝全透明） */
+    animation: fillpath-pop 0.3s ease-out 1.6s forwards;  /* 播放動畫（名稱、時間、緩動、延遲、結束停在最後一格）：fillpath-pop 0.3s ease-out 1.6s forwards */
+}
+
+/* 動畫 fillpath-pop：由透明變不透明 */
+@keyframes fillpath-pop {
+    to {
+        opacity: 1;                                     /* 透明度 1（1＝完全不透明、0＝全透明） */
+    }
+}
+
+/* 「全部重來」鈕：放在棋盤下方正中間 */
+.fillpath-reset {
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 50%;                                          /* 離左邊 50% */
+    transform: translateX(-50%);                        /* 位移：往左移自己寬度的一半（水平置中） */
+    width: auto;                                        /* 寬度：依文字（不要撐滿整排） */
+    min-height: 0;                                      /* 最小高度 0（共用的按鈕很高，這顆要小一點，才放得進棋盤下方） */
+    height: 44px;                                       /* 高度：44px */
+    padding: 0 26px;                                    /* 內縮：上下 0、左右 26px */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+}

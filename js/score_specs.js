@@ -192,5 +192,7 @@ window.FM_SCORE_SPECS = {
     "rocketland": {"better":"max","decimals":0,"format":"{v} 關"},
     "bubblespray": {"better":"max","decimals":0,"format":"{v} 顆"},
     "emojisort": {"better":"max","decimals":0,"format":"{v} 關"},
-    "hexcolor": {"better":"max","decimals":0,"format":"{v} 關"}
+    "hexcolor": {"better":"max","decimals":0,"format":"{v} 關"},
+    "blockfill": {"better":"max","decimals":0,"format":"{v} 關"},
+    "multifill": {"better":"max","decimals":0,"format":"{v} 關"}
 };

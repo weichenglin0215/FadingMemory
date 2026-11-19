@@ -19,7 +19,7 @@ all.forEach(f => {
   nFiles++;
   let end = lines.length;
   for (let i = start + 1; i < lines.length; i++) {
-    if (/═══/.test(lines[i]) || /^\s*function\s/.test(lines[i])) { end = i; break; }
+    if ((/═══/.test(lines[i]) && !/重新產生題庫|題庫相關參數/.test(lines[i])) || /^\s*function\s/.test(lines[i])) { end = i; break; }   // 參數區裡「調整以下參數之後必須重新產生題庫」那種小標題不算結束
   }
   let bare = 0;
   for (let i = start + 1; i < end; i++) {
