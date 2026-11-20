@@ -176,7 +176,9 @@
         ]);
     }
 
+    var scoresCtl = null;                       /* 開著的「我的成績」彈窗（從選單標題列的 🏆 也能打開，避免連點疊兩層） */
     function openScores() {
+        if (scoresCtl && scoresCtl.isOpen()) return scoresCtl;
         var limit = LB.CFG.LIMIT_DEFAULT;
         var sub = h('div', { 'class': 'lb-sub' });
         var note = h('div', { 'class': 'lb-note' });
@@ -212,13 +214,13 @@
             scroller.refresh();
         }
 
-        Dlg.open({
-            tall: true, cls: 'dlg--scores',
+        scoresCtl = Dlg.open({
+            tall: true, cls: 'dlg--scores dlg--top',
             onClose: function () { closed = true; scroller.destroy(); },
             children: [
                 h('div', { 'class': 'lb-head' }, [
                     h('div', { 'class': 'lb-head__icon', html: global.UI.icon('trophy') }),
-                    h('div', { 'class': 'lb-head__txt' }, [h('div', { 'class': 'lb-title', text: '我的成績' }), sub])
+                    h('div', { 'class': 'lb-head__txt' }, [h('div', { 'class': 'lb-title', text: '🏆我的成績' }), sub])
                 ]),
                 viewport,
                 note
@@ -244,6 +246,7 @@
                 });
             }
         }
+        return scoresCtl;
     }
 
     /* ═══════════════════════════════════════════════════════════════
@@ -254,7 +257,8 @@
         if (!btn || !pop) return;
         byId('icon-nav').innerHTML = global.UI.icon('menu');
         byId('icon-nav-settings').innerHTML = global.UI.icon('gear');
-        byId('icon-nav-scores').innerHTML = global.UI.icon('trophy');
+        byId('icon-nav-scores').textContent = '🏆';        /* 「🏆我的成績」「👑我的強項」直接用 emoji 當圖示 */
+        byId('icon-nav-strengths').textContent = '👑';
         byId('icon-nav-offline').innerHTML = global.UI.icon('download');
 
         function setOpen(on) {
@@ -272,11 +276,12 @@
 
         byId('nav-settings').addEventListener('click', function () { setOpen(false); sfx('click'); openSettings(); });
         byId('nav-scores').addEventListener('click', function () { setOpen(false); sfx('click'); openScores(); });
+        byId('nav-strengths').addEventListener('click', function () { setOpen(false); sfx('click'); if (global.FMStrengths) global.FMStrengths.open(); });
         byId('nav-offline').addEventListener('click', function () { setOpen(false); sfx('click'); if (global.OfflineDialog) global.OfflineDialog.show(); });
     }
 
     /* 給 Node 測試用（test/reaction/t_menunav.js） */
-    global.FMNav = { buildRows: buildRows, scoreText: scoreText };
+    global.FMNav = { buildRows: buildRows, scoreText: scoreText, openScores: openScores };
 
     global.UI.ready(initNav);
 })(window);

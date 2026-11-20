@@ -67,18 +67,23 @@ function buildTable(games) {
   return lines.join('\n');
 }
 
-// js/score_specs.js 的全部內容（一款一行；只放顯示成績需要的欄位 format／decimals／group，加上 better 讓畫面知道越大還是越小越好）
+// js/score_specs.js 的全部內容（一款一行；只放顯示成績需要的欄位 format／decimals／group，加上 better 讓畫面知道越大還是越小越好，再加上算「學歷階段」要用的合理範圍 min／max 與可選的門檻 st）
 function buildSpecs(games) {
   const lines = games.filter(g => g.score).map(g => {
     const s = g.score;
     const o = { better: s.better, decimals: s.decimals || 0, format: s.format || '{v}' };
     if (s.group) o.group = true;
+    // V1.57.4：「學歷階段」（js/grade.js）要用合理範圍 min／max 把成績換成小學～博士；遊戲自己訂了六個門檻 st 的話一併帶過去
+    if (typeof s.min === 'number' && isFinite(s.min)) o.min = s.min;
+    if (typeof s.max === 'number' && isFinite(s.max)) o.max = s.max;
+    if (Array.isArray(s.st)) o.st = s.st;
     return '    ' + JSON.stringify(g.id) + ': ' + JSON.stringify(o);
   });
   return '/* ═══ score_specs.js — 每款遊戲的成績顯示格式（自動產生，請勿手改）═══\n'
     + '   來源：各遊戲檔案 Reaction.register 的 score 設定；重新產生：node test/leaderboard/gen_games_sql.cjs --write\n'
-    + '   用途：主選單（index.html）沒有載入遊戲檔案，「成績」彈窗（js/menu_nav.js）用這份表把成績數字說成 \'12.3456 秒\'、\'第 21 關\'\n'
-    + '        （格式化函式是 Leaderboard.fmt，跟遊戲裡、世界排行榜用的同一個）。 */\n'
+    + '   用途：主選單（index.html）沒有載入遊戲檔案，「我的成績」彈窗（js/menu_nav.js）用這份表把成績數字說成 \'12.3456 秒\'、\'第 21 關\'\n'
+    + '        （格式化函式是 Leaderboard.fmt，跟遊戲裡、世界排行榜用的同一個）；min／max／st 是 js/grade.js 把成績換成「小學～博士」用的\n'
+    + '        （選單格子右上角的階段、「我的強項」雷達圖）。 */\n'
     + 'window.FM_SCORE_SPECS = {\n' + lines.join(',\n') + '\n};\n';
 }
 

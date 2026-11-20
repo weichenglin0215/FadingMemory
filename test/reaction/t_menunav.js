@@ -55,7 +55,7 @@ const order = M.GAME_CELLS.map(c => c.id);
 // ═══ 2. 成績格式表 score_specs.js ═══
 {
   const specs = global.FM_SCORE_SPECS, scored = games.filter(g => g.score);
-  ok(specs && Object.keys(specs).length === scored.length && scored.length === 192, '每一款有 score 設定的遊戲都有格式（' + scored.length + ' 款）');
+  ok(specs && Object.keys(specs).length === scored.length && scored.length === 194, '每一款有 score 設定的遊戲都有格式（' + scored.length + ' 款）');
   scored.forEach(g => {
     const s = specs[g.id];
     ok(!!s && s.format === g.score.format && s.decimals === (g.score.decimals || 0) && s.better === g.score.better && !!s.group === !!g.score.group, g.id + '：格式與遊戲檔案一致');
@@ -123,7 +123,7 @@ const order = M.GAME_CELLS.map(c => c.id);
   // ═══ 4. 頁面接線 ═══
   const html = rd('index.html'), boot = rd('js/boot.js'), css = rd('css/menu_nav.css').split(/\s+/).join(' '), nav = rd('js/menu_nav.js'), idui = rd('js/identity_ui.js'), sql = rd('supabase/MF_leaderboard.sql');
   ok(/<button class="nav-btn" id="nav-btn" type="button" aria-label="選單" aria-haspopup="true" aria-expanded="false" aria-controls="nav-pop">/.test(html), 'index.html：左上角漢堡按鈕');
-  ok(/<div class="nav-pop" id="nav-pop" role="menu" hidden>/.test(html) && /id="nav-settings"[\s\S]*?<span>設定<\/span>/.test(html) && /id="nav-scores"[\s\S]*?<span>成績<\/span>/.test(html), 'index.html：往下展開的選單有「設定」「成績」兩項');
+  ok(/<div class="nav-pop" id="nav-pop" role="menu" hidden>/.test(html) && /id="nav-settings"[\s\S]*?<span>設定<\/span>/.test(html) && /id="nav-scores"[\s\S]*?<span>我的成績<\/span>/.test(html) && /id="nav-strengths"[\s\S]*?<span>我的強項<\/span>/.test(html) && html.indexOf('id="nav-strengths"') > html.indexOf('id="nav-scores"') && html.indexOf('id="nav-strengths"') < html.indexOf('id="nav-offline"'), 'index.html：往下展開的選單有「設定」「成績」兩項');
   ok(html.indexOf('id="nav-btn"') < html.indexOf('id="share-btn"') || html.indexOf('id="nav-btn"') < html.indexOf('class="menu__head"'), '漢堡按鈕在標題之前（左上角）');
   const menuJs = /menu: \{[\s\S]*?js: BASE_JS\.concat\(\[([^\]]*)\]\)/.exec(boot)[1], menuCss = /menu: \{\s*css: BASE_CSS\.concat\(\[([^\]]*)\]\)/.exec(boot)[1];
   const jsList = [...menuJs.matchAll(/'([^']+)'/g)].map(m => m[1]), cssList = [...menuCss.matchAll(/'([^']+)'/g)].map(m => m[1]);

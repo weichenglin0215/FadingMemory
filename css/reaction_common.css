@@ -55,6 +55,22 @@
     font-size: var(--fs-lg);                            /* 字級：主題變數 --fs-lg */
     font-weight: var(--fw-black);                       /* 字重（粗細）：主題變數 --fw-black */
     color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+}
+
+/* 結算評價後面的「學歷階段」（小學、中學、高中、大學、碩士、博士；js/grade.js）：藥丸形狀，細黑框、白底、黑字 */
+.rx-result__stage {
+    display: inline-block;                              /* 行內方塊：可以設定內縮與框線，又跟評價文字排在同一行 */
+    margin-left: var(--sp-2);                           /* 左外距（跟評價文字的距離）：主題變數 --sp-2 */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 --sp-3 */
+    border: 1px solid var(--c-black);                   /* 細黑框：1px 實線 */
+    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill（藥丸形狀） */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card（白底） */
+    color: var(--c-black);                              /* 文字顏色：黑 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: 1.5;                                   /* 行高：1.5 倍 */
+    vertical-align: middle;                             /* 跟評價文字上下置中對齊 */
+    white-space: nowrap;                                /* 不換行 */
 }
 
 /* 提示文字的「成功」版本（綠色） */

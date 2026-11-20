@@ -19,6 +19,7 @@ let bad = 0; const ok = (c, m) => { if (!c) { bad++; console.log('FAIL', m); } }
 // 同一個引擎做出的好幾款遊戲，共用一份 css 與一組前綴（遊戲 id → { css: 檔名（在 css/ 底下）, prefix: 共用的前綴 }）
 const FAMILY = {};
 ['sudoku4', 'sudoku6e', 'sudoku6m', 'sudoku9e', 'sudoku9m', 'sudoku9h', 'sandwich'].forEach(id => { FAMILY[id] = { css: 'sudoku_lib.css', prefix: 'sudokulib' }; });
+['numchain', 'sumten'].forEach(id => { FAMILY[id] = { css: 'numgrid.css', prefix: 'numgrid' }; });      // 連號長龍、拖曳湊十（V1.57.4）：共用 css/numgrid.css
 ['blockfill', 'multifill'].forEach(id => { FAMILY[id] = { css: 'fillpath.css', prefix: 'fillpath' }; });      // 一筆填滿、多色填滿（V1.57.3.0）：共用 css/fillpath.css
 // 共用元件：不是遊戲，但檔名也叫 reaction_*.js
 const NOT_GAME = /^reaction_(core|kit\d*|bgstripe)\.js$/;

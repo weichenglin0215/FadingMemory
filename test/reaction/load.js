@@ -10,6 +10,7 @@ global.crypto = require('crypto').webcrypto;
 // 彈窗公版（js/dialog.js）要操作真的 DOM，Node 裡用替身：kit.result 只需要「放進容器、回傳一個物件」
 global.Dlg = { open: (o) => { if (o && o.host && o.host.appendChild) o.host.appendChild({}); return { el: {}, card: {}, buttons: [], isOpen: () => true, close() { } }; }, ruleOpen: () => false, toast() { }, feedback() { }, rule() { } };
 global.UI.icon = () => '';
+require(ROOT + 'js/grade.js');             // 「學歷階段」（小學～博士）：把成績換成階段，結算彈窗、選單格子、雷達圖共用（V1.57.4）
 require(ROOT + 'js/reaction_core.js');
 require(ROOT + 'js/reaction_kit.js');
 require(ROOT + 'js/reaction_kit3.js');    // 第三批共用小工具（kit.mod／kit.sample…；V1.22.0）
@@ -20,6 +21,7 @@ require(ROOT + 'js/similar_chars.js');    // 共用資料庫：長得很像的�
 require(ROOT + 'js/fillpath_core.js');     // 「填滿」系列（一筆填滿、多色填滿）的共用引擎（V1.57.3.0；Reaction.fillPath）
 require(ROOT + 'js/fillpath_bank.js');     // 填滿系列的題庫（window.FM_FILLPATH_BANK）
 require(ROOT + 'js/wirelink_bank.js');    // 接電線的題庫（window.FM_WIRELINK_BANK；V1.57.3.2）
+require(ROOT + 'js/numgrid_ui.js');       // 「數字方格」系列（連號長龍、拖曳湊十）的共用引擎與介面（Reaction.numGrid；Node 測試只用裡面的純函式）
 require(ROOT + 'js/fillpath_ui.js');       // 填滿系列的畫面（Reaction.fillPath.build；Node 測試只載入、不執行畫面）
 require(ROOT + 'js/flipsum_core.js');     // 「翻牌湊 100」系列的共用引擎（V1.57；翻牌湊百、翻三湊百共用；Reaction.flipSum）
 require(ROOT + 'js/sudoku_engine.js');     // 數獨系列的出題與推理引擎（V1.41；數獨4／6／9、夾心數獨共用）

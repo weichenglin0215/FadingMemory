@@ -1,0 +1,99 @@
+/* ═══════════════════════════════════════
+   numgrid.css — 「數字方格」系列（連號長龍 numchain、拖曳湊十 sumten 共用，js/numgrid_ui.js）的樣式
+   · 這個檔案裡的 class 名稱一律以「numgrid-」開頭，只給這個系列用，不會跟別款撞名。
+   · 共用的畫面元件（底部按鈕排、操作提示…）在 css/reaction_common.css；顏色與尺寸一律用 css/theme.css 的 CSS 變數，不直接寫色碼。
+   ═══════════════════════════════════════ */
+
+/* ═══ 數字方格系列（.numgrid-）═══ */
+.numgrid-stage {
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢（捲動、縮放），改由程式處理拖曳 */
+    user-select: none;                                  /* 文字不能被選取（避免拖曳時誤選） */
+    -webkit-user-select: none;                          /* 文字不能被選取（避免拖曳時誤選） */
+}
+
+/* 上方兩行（第 X 關＋得分、限時橫條）靠緊一點，空間留給下面的盤面（第 1 關 5×7，第 20 關起 8×11）。
+   只對數字方格系列生效：「#screen 裡面有 .numgrid-stage」時才套用（:has 選擇器），其他遊戲不受影響 */
+.screen:has(> .numgrid-stage) {
+    gap: 4px;                                           /* 子元素之間的空隙：4px（原本是主題變數 --sp-3） */
+}
+
+/* 標題列右邊（得分 X／XX、暫時換成的提醒）：不換行（換行會把標題列撐高、盤面往下掉） */
+.screen:has(> .numgrid-stage) .rx-head__info {
+    white-space: nowrap;                                /* 不換行 */
+}
+
+/* 「第 X 關」那一行：行高縮小 */
+.screen:has(> .numgrid-stage) .rx-head {
+    line-height: 1.15;                                  /* 行高：字高的 1.15 倍 */
+}
+
+/* 盤面（canvas，大小與位置由 js 設定） */
+.numgrid-board {
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    border: var(--bd-w) solid var(--c-ink-soft);        /* 邊框（粗細、線型、顏色）：主題變數 --bd-w solid 主題變數 --c-ink-soft */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    box-sizing: content-box;                            /* 寬高不含邊框（邊框畫在盤面外面一圈，格子大小才不會被邊框吃掉） */
+    margin: calc(-1 * var(--bd-w));                     /* 邊框往外長，盤面的位置不動 */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card */
+    touch-action: none;                                 /* 關掉瀏覽器內建的觸控手勢，改由程式處理拖曳 */
+}
+
+/* 介面最下方那一排：「浮窗」勾選框、「快速拖曳」勾選框、「確定」按鈕（高度由 js 設定） */
+.numgrid-bar {
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    left: 0;                                            /* 離左邊 0 */
+    right: 0;                                           /* 離右邊 0 */
+    bottom: 0;                                          /* 離下邊 0 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中） */
+    justify-content: space-between;                     /* 頭尾貼邊，剩下的空間平均分給中間 */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
+    padding: 0 var(--sp-2);                             /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 --sp-2 */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去（不會因為加了 padding 就變大） */
+}
+
+/* 勾選框＋文字（「浮窗」「快速拖曳」） */
+.numgrid-check {
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中（橫排時是上下置中） */
+    gap: var(--sp-1);                                   /* 子元素之間的空隙：主題變數 --sp-1 */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    color: var(--c-ink);                                /* 文字顏色：主題變數 --c-ink */
+    white-space: nowrap;                                /* 不換行 */
+    cursor: pointer;                                    /* 滑鼠移上去變成手指（表示可以點） */
+}
+
+/* 勾選框本身：加大一點，手指好點 */
+.numgrid-check input {
+    width: 26px;                                        /* 寬度：26px */
+    height: 26px;                                       /* 高度：26px */
+    margin: 0;                                          /* 外距：0 */
+    accent-color: var(--c-blue);                        /* 勾選框打勾時的顏色：主題變數 --c-blue */
+}
+
+/* 「確定」按鈕：共用的 .btn 是整列寬，這裡改成自己的大小 */
+.numgrid-ok {
+    width: auto;                                        /* 寬度：依內容 */
+    min-width: 150px;                                   /* 最小寬度：150px（寫上「＋45」的時候不會跳動） */
+    height: 40px;                                       /* 高度：40px */
+    padding: 0 var(--sp-3);                             /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 --sp-3 */
+    font-size: var(--fs-sm);                            /* 字級：主題變數 --fs-sm */
+}
+
+/* 挑選的格子還湊不成一串：「確定」變淡（還是按得下去，會告訴玩家哪裡不對） */
+.numgrid-ok--off {
+    opacity: 0.55;                                      /* 透明度 0.55（1＝完全不透明、0＝全透明） */
+}
+
+/* 浮窗九宮格（canvas，大小與位置由 js 設定；不接收手指事件，才不會擋到拖曳） */
+.numgrid-loupe {
+    position: absolute;                                 /* 脫離一般排版，貼著上一層有定位的元素擺放（再用 top／left 等指定位置） */
+    pointer-events: none;                               /* 不接收手指／滑鼠事件（事件穿透到下面的盤面） */
+    border-style: solid;                                /* 邊框線型：實線（粗細由 js 設定） */
+    border-color: var(--c-ink-soft);                    /* 邊框顏色：主題變數 --c-ink-soft */
+    border-radius: var(--r-sm);                         /* 圓角：主題變數 --r-sm */
+    box-sizing: content-box;                            /* 寬高不含邊框 */
+    box-shadow: 0 6px 18px var(--c-gray);               /* 陰影（浮起來的感覺） */
+    z-index: 5;                                         /* 疊在最上面 */
+}

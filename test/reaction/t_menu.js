@@ -1,5 +1,5 @@
 // 主選單的遊戲清單（js/menu.js 的 GAME_CELLS／GAME_TABS，V1.23.0）：
-//   · 192 款（V1.57 新增翻牌湊百、翻三湊百、瞬間識字；V1.33 起 109 款，V1.34 新增 51 款，V1.41 新增深思篇 14 款，V1.42 新增原創篇 8 款，V1.43.1 刪除「按鍵搶三十」，V1.45 新增砲打飛機、草叢找動物、火箭回收，V1.46 新增泡泡掃射、分類點擊，V1.50 新增六角著色）、id 不重複、名稱最多 5 個字（格子下方的名稱列只放得下 5 個字）、縮圖檔存在且高 256 像素
+//   · 194 款（V1.57 新增翻牌湊百、翻三湊百、瞬間識字；V1.33 起 109 款，V1.34 新增 51 款，V1.41 新增深思篇 14 款，V1.42 新增原創篇 8 款，V1.43.1 刪除「按鍵搶三十」，V1.45 新增砲打飛機、草叢找動物、火箭回收，V1.46 新增泡泡掃射、分類點擊，V1.50 新增六角著色）、id 不重複、名稱最多 5 個字（格子下方的名稱列只放得下 5 個字）、縮圖檔存在且高 256 像素
 //   · 每一款都有分類（七個分類加起來剛好是全部，不重疊、沒有空的分類）、頁籤是「全部、最近＋七個分類」共 9 個、名稱都是 2 個字
 //   · 清單裡的 id 與名稱跟各遊戲檔案 Reaction.register 登記的完全一致（改名忘了改一邊，這裡會失敗）
 //   · 「最近」頁籤：最新的在最前面、去掉不存在與重複的、最多 12 款、沒有紀錄時用「上次玩的」當第一筆
@@ -25,7 +25,7 @@ const len = (s) => Array.from(s).length;
 const wid = (s) => Array.from(s).reduce((a, c) => a + (c.charCodeAt(0) < 128 ? 0.5 : 1), 0);   // 名稱列的寬度：英數字只有中文的一半寬
 
 // ═══ 1. 清單本身 ═══
-ok(CELLS.length === 192, '共 192 款（' + CELLS.length + '）');
+ok(CELLS.length === 194, '共 194 款（' + CELLS.length + '）');
 const ids = new Set(CELLS.map(c => c.id));
 ok(ids.size === CELLS.length, 'id 不重複');
 CELLS.forEach(c => {
@@ -70,14 +70,14 @@ ok(catTabs.length === 7, '除了「全部」「最近」，有七種分類');
 const counts = {};
 CELLS.forEach(c => { ok(catTabs.indexOf(c.cat) >= 0, c.id + ' 的分類「' + c.cat + '」是七個分類之一'); counts[c.cat] = (counts[c.cat] || 0) + 1; });
 catTabs.forEach(id => ok((counts[id] || 0) >= 5, id + ' 分類至少有 5 款（' + (counts[id] || 0) + '）'));
-ok(catTabs.reduce((a, id) => a + (counts[id] || 0), 0) === 192, '七個分類加起來剛好 192 款');
+ok(catTabs.reduce((a, id) => a + (counts[id] || 0), 0) === 194, '七個分類加起來剛好 194 款');
 console.log('各分類款數：' + TABS.slice(2).map(t => t.name + ' ' + counts[t.id]).join('、'));
 const tg = (t) => M.tabGames(t).map(c => c.id);
 ok(tg('all').join() === CELLS.map(c => c.id).join(), '「全部」＝清單順序');
 catTabs.forEach(id => ok(tg(id).join() === CELLS.filter(c => c.cat === id).map(c => c.id).join(), id + ' 頁籤的順序同「全部」'));
 const seen = new Set(); let overlap = 0;
 catTabs.forEach(id => tg(id).forEach(x => { if (seen.has(x)) overlap++; seen.add(x); }));
-ok(overlap === 0 && seen.size === 192, '分類之間沒有重複、也沒有漏掉（' + seen.size + '）');
+ok(overlap === 0 && seen.size === 194, '分類之間沒有重複、也沒有漏掉（' + seen.size + '）');
 ok(CELLS.filter(c => c.id === 'speed')[0].cat === 'reaction' && CELLS.filter(c => c.id === 'lights')[0].cat === 'memory' && CELLS.filter(c => c.id === 'remainder')[0].cat === 'number', '幾款代表性遊戲的分類');
 
 // ═══ 4. 「最近」頁籤 ═══
@@ -134,12 +134,12 @@ ok(nameFirst.length >= 6, '搜尋 id 片段 sudoku 會找到數獨系列（' + n
   ok(mm(null) === '{}' && mm(undefined) === '{}' && mm([]) === '{}' && mm('x') === '{}', '沒有資料（沒登入、連不上）就沒有徽章');
   ok(mm([{ game_id: 'spot', rank: 3 }, { game_id: 'spot', rank: 1 }]) === JSON.stringify({ spot: 1 }), '同一款有兩列時以後面的為準（資料庫一款只會有一列）');
   const src = fs.readFileSync(ROOT + 'js/menu.js', 'utf8'), lbCss = fs.readFileSync(ROOT + 'css/leaderboard.css', 'utf8').replace(/[ 	]*\/\*[\s\S]*?\*\//g, ''), menuCss = fs.readFileSync(ROOT + 'css/menu.css', 'utf8').replace(/[ 	]*\/\*[\s\S]*?\*\//g, '');
-  ok(/'lb-medal lb-medal--r' \+ rank \+ ' game-cell__medal /.test(src), '徽章用世界前 30 名彈窗同一個圓形牌子 .lb-medal');
+  ok(/'lb-medal lb-medal--r' \+ b\.rank \+ ' game-cell__medal /.test(src), '徽章用世界前 30 名彈窗同一個圓形牌子 .lb-medal');
   ok(/apply\(lb\.cachedMyRanks \? lb\.cachedMyRanks\(\) : null\);\s*lb\.myRanks\(\)\.then/.test(src) && /refreshMedals\(\);\s*checkPopup\(\)/.test(src), '列表一打開先畫上次存的名次、再背景更新（不讓玩家等網路）');
   ok(/paintMedal\(el, c\.id\);\s*grid\.appendChild\(el\)/.test(src), '切換頁籤、搜尋時新做的格子也有徽章');
   ok(!/paintMedal/.test(src.split('function popupCell')[1].split('function closePopup')[0]), '推薦彈窗的格子不加徽章（右上角已經是表情）');
   ok(/\.lb-medal--r1\s*\{[^}]*--lb-gold-bg/.test(lbCss) && /\.lb-medal--r2\s*\{[^}]*--lb-silver-bg/.test(lbCss) && /\.lb-medal--r3\s*\{[^}]*--lb-bronze-bg/.test(lbCss), '金、銀、銅三種顏色');
-  ok(/if \(rank === 1\) medal\.appendChild\(h\('span', \{ 'class': 'lb-crown', html: window\.UI\.icon\('crown'\) \}\)\)/.test(src), '第一名的徽章多一頂皇冠（跟世界前 30 名彈窗同一個 .lb-crown）');
+  ok(/if \(b\.rank === 1\) el\.appendChild\(h\('span', \{ 'class': 'lb-crown', html: window\.UI\.icon\('crown'\) \}\)\)/.test(src), '第一名的徽章多一頂皇冠（跟世界前 30 名彈窗同一個 .lb-crown）');
   ok(/\.lb-medal\.game-cell__medal--r1\s*\{[^}]*top:\s*20px/.test(menuCss) && /\.game-cell__medal \.lb-crown\s*\{[^}]*top:\s*-17px[^}]*font-size:\s*26px/.test(menuCss), '第一名的牌子往下移、皇冠縮小，放得進格子裡');
   ok(/\.lb-medal\.game-cell__medal\s*\{[^}]*position:\s*absolute;[^}]*top:\s*4px;[^}]*right:\s*4px;/.test(menuCss) && /\.lb-medal\.game-cell__medal\s*\{[^}]*pointer-events:\s*none/.test(menuCss), '徽章貼在格子右上角、不擋點擊'); }
 

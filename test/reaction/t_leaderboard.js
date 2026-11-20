@@ -76,7 +76,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok(LB.isBetter(2, 1, 'max') && !LB.isBetter(1, 2, 'max') && !LB.isBetter(1, 1, 'max'), 'isBetter max（同分不算更好）');
 
   // ═══ 3. 全部遊戲：score 設定合法，而且跟資料庫 MF_games 的設定一致 ═══
-  ok(games.length === 192, '秒反應共 192 款遊戲（boot.js 的清單）：' + games.length);
+  ok(games.length === 194, '秒反應共 194 款遊戲（boot.js 的清單）：' + games.length);
   ok(new Set(games.map(g => g.id)).size === games.length, '遊戲 id 不重複');
   ok(new Set(games.map(g => g.name)).size === games.length, '遊戲名稱不重複（排行榜標題靠名稱辨認）');
   const sql = fs.readFileSync(ROOT + 'supabase/MF_leaderboard.sql', 'utf8').replace(/\r\n/g, '\n');
@@ -151,6 +151,8 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     if (/Reaction\.sudokuLib\.game\(/.test(src)) src += '\n' + fs.readFileSync(ROOT + 'js/sudoku_lib.js', 'utf8');
     /* 翻牌湊百、翻三湊百（V1.57）的畫面與結算（kit.run）在共用的 js/flipsum_core.js 的 FS.mount 裡 */
     if (/FS\.mount\(/.test(src)) src += '\n' + fs.readFileSync(ROOT + 'js/flipsum_core.js', 'utf8');
+    /* 連號長龍、拖曳湊十（V1.57.4）的畫面與結算（kit.run）在共用的 js/numgrid_ui.js 的 NG.mount 裡 */
+    if (/NG\.mount\(/.test(src)) src += '\n' + fs.readFileSync(ROOT + 'js/numgrid_ui.js', 'utf8');
     const bodies = []; const reKit = /kit\.result\(\s*root\s*,\s*\{/g; let km;
     while ((km = reKit.exec(src))) bodies.push(braceBody(src, km.index + km[0].length - 1));
     ok(bodies.every(b => b !== null), g.id + ' kit.result 的大括號掃描失敗（測試本身的問題）');

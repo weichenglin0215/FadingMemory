@@ -46,6 +46,18 @@ const WAIT = {
 };
 // 有些遊戲剛開始幾乎是空的（例如六角著色第 1 關只有幾格有顏色）：拍之前先執行一段 JavaScript 把畫面布置得有特色一點（從按下「開始挑戰」起算，等 WAIT 之後才執行）
 const PREP = {
+  sumten: `(async function(){
+    Reaction.current.debug.goto(10);                                  // 第 10 關
+    for (var t = 0; t < 40 && !(Reaction.current.debug.api().preview); t++) await new Promise(function (r) { setTimeout(r, 50); });
+    var a = Reaction.current.debug.api(), T = Reaction.current.test, p = T.bestMove(a.info.gr, a.game.vals, 0, 20000);    // 最好的那一串選起來，後面再多拖一格（橘色斜線＝會被放棄的）
+    var ex = T.neighbors(a.info.gr, p[p.length - 1]).filter(function (k) { return p.indexOf(k) < 0 && a.game.vals[k] != null; })[0];
+    a.select(p.concat(ex == null ? [] : [ex]));
+  })()`,
+  numchain: `(async function(){
+    Reaction.current.debug.goto(10);                                  // 第 10 關
+    for (var t = 0; t < 40 && !(Reaction.current.debug.api().preview); t++) await new Promise(function (r) { setTimeout(r, 50); });
+    Reaction.current.debug.api().preview(8);                          // 最長的那條龍選起來 8 格（像手指正拖到一半）
+  })()`,
   hexcolor: `(async function(){
     Reaction.current.debug.goto(8);                                   // 第 8 關：4 色、37 格
     for (var t = 0; t < 40 && !(Reaction.current.debug.api().preview); t++) await new Promise(function (r) { setTimeout(r, 50); });

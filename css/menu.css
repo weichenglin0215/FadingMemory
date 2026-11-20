@@ -869,3 +869,71 @@
         transition: none;                               /* 狀態改變時的過渡動畫（屬性、時間、緩動）：none */
     }
 }
+
+/* ═══ 「選一個想玩的遊戲」標題列右邊的 🏆（我的成績）、👑（我的強項）按鈕（V1.57.4）═══ */
+/* 兩顆按鈕排成一列，向右靠齊；疊在置中的標題上面（標題是 absolute、不接收點擊，不會擋到它們） */
+.game-bar__tools {
+    position: relative;                                 /* 維持原位置，同時讓 z-index 生效 */
+    z-index: 1;                                         /* 疊放順序 1：在標題上面 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    gap: var(--sp-2);                                   /* 子元素之間的空隙：主題變數 --sp-2 */
+    margin-left: auto;                                  /* 左外距自動＝把這一組推到最右邊（向右靠齊） */
+}
+
+/* 單顆按鈕：圓角方塊，樣式沿用「返回」的藍框白底 */
+.game-bar__tool {
+    width: 50px;                                        /* 寬度：50px */
+    height: 50px;                                       /* 高度：50px */
+    padding: 0;                                         /* 內縮：0 */
+    border-radius: var(--r-md);                         /* 圓角：主題變數 --r-md */
+    border: var(--btn-line-bd);                         /* 邊框：主題變數 --btn-line-bd（跟「返回」一樣的藍框） */
+    background: var(--btn-line-bg);                     /* 背景：主題變數 --btn-line-bg */
+    font-size: 28px;                                    /* 字級（emoji 大小）：28px */
+    line-height: 1;                                     /* 行高：1 */
+}
+
+/* 按下去的回饋 */
+.game-bar__tool:active {
+    transform: scale(0.94);                             /* 變形：縮放 0.94 倍 */
+}
+
+/* 名次 4～30：格子右上角，細黑框、白底、黑字的小圓牌（前三名是金銀銅牌，見 .game-cell__medal） */
+.game-cell__rankn {
+    position: absolute;                                 /* 脫離一般排版，貼著格子右上角擺放 */
+    top: 4px;                                           /* 離上邊 4px */
+    right: 4px;                                         /* 離右邊 4px */
+    z-index: 2;                                         /* 疊放順序 2：蓋在縮圖上面 */
+    min-width: 34px;                                    /* 最小寬度：34px（個位數也是圓的） */
+    height: 34px;                                       /* 高度：34px */
+    padding: 0 6px;                                     /* 內縮（padding，內容跟邊框的距離）：上下 0、左右 6px */
+    box-sizing: border-box;                             /* 寬高把內縮與邊框也算進去 */
+    display: flex;                                      /* 彈性盒子：子元素排成一列（或一欄） */
+    align-items: center;                                /* 子元素在交叉方向置中 */
+    justify-content: center;                            /* 子元素沿排列方向置中 */
+    border: 1px solid var(--c-black);                   /* 細黑框：1px 實線 */
+    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card（白底） */
+    color: var(--c-black);                              /* 文字顏色：黑 */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: 1;                                     /* 行高：1 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去，點格子照常進遊戲） */
+}
+
+/* 超出前 30 名（或查不到名次）的學歷階段：藥丸形狀，細黑框、白底、黑字（小學、中學、高中、大學、碩士、博士） */
+.game-cell__stage {
+    position: absolute;                                 /* 脫離一般排版，貼著格子右上角擺放 */
+    top: 4px;                                           /* 離上邊 4px */
+    right: 4px;                                         /* 離右邊 4px */
+    z-index: 2;                                         /* 疊放順序 2：蓋在縮圖上面 */
+    padding: 2px 10px;                                  /* 內縮（padding，內容跟邊框的距離）：上下 2px、左右 10px */
+    border: 1px solid var(--c-black);                   /* 細黑框：1px 實線 */
+    border-radius: var(--r-pill);                       /* 圓角：主題變數 --r-pill（藥丸形狀） */
+    background: var(--c-card);                          /* 背景：主題變數 --c-card（白底） */
+    color: var(--c-black);                              /* 文字顏色：黑 */
+    font-size: var(--fs-xs);                            /* 字級：主題變數 --fs-xs */
+    font-weight: var(--fw-bold);                        /* 字重（粗細）：主題變數 --fw-bold */
+    line-height: 1.3;                                   /* 行高：1.3 倍 */
+    white-space: nowrap;                                /* 不換行 */
+    pointer-events: none;                               /* 不接收點擊／觸控（點下去會穿過去） */
+}

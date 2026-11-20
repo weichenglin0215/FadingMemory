@@ -295,7 +295,14 @@
         }
         var kids = [];
         if (o.num != null) kids.push(h('div', { 'class': 'rx-result__num', text: o.num }));
-        if (o.label) kids.push(h('div', { 'class': 'rx-result__label', text: o.label }));
+        /* V1.57.4：評價後面統一加上「學歷階段」（小學、中學、高中、大學、碩士、博士，js/grade.js）：這一局的成績在這款遊戲算哪一階段。
+           沒有成績（進場優惠送的關卡、o.score 被拿掉）或不認識的成績規格就不顯示。 */
+        var gs = o.score != null && global.Grade && Reaction.current ? global.Grade.stage(Reaction.current.score, o.score) : -1;
+        if (o.label || gs >= 0) {
+            var labKids = o.label ? [o.label] : [];
+            if (gs >= 0) labKids.push(h('span', { 'class': 'rx-result__stage', text: global.Grade.nameOf(gs), attrs: { 'data-stage': String(gs) } }));
+            kids.push(h('div', { 'class': 'rx-result__label' }, labKids));
+        }
         (o.lines || []).forEach(function (t) { kids.push(h('div', { 'class': 'hint rx-result__line', text: t })); });
         if (o.isNew) kids.push(h('div', { 'class': 'hint hint--ok', text: '新紀錄！' }));
         if (o.note) kids.push(h('div', { 'class': 'hint rx-result__note', text: o.note }));
